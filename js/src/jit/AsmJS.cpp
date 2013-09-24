@@ -12,7 +12,6 @@
 # include "vtune/VTuneWrapper.h"
 #endif
 
-#include "jsmath.h"
 #include "jsprf.h"
 #include "jsworkers.h"
 #include "prmjtime.h"
@@ -1772,6 +1771,16 @@ class MOZ_STACK_CLASS ModuleCompiler
         }
 #endif
 
+        // Absolute links
+        for (size_t i = 0; i < masm_.numAsmJSAbsoluteLinks(); i++) {
+            AsmJSAbsoluteLink src = masm_.asmJSAbsoluteLink(i);
+            AsmJSStaticLinkData::AbsoluteLink link;
+            link.patchAt = masm_.actualOffset(src.patchAt.offset());
+            link.target = src.target;
+            if (!linkData->absoluteLinks.append(link))
+                return false;
+        }
+
         *module = module_.forget();
         return true;
     }
@@ -2285,7 +2294,7 @@ class FunctionCompiler
         return callPrivate(MAsmJSCall::Callee(ptrFun), call, returnType, def);
     }
 
-    bool builtinCall(void *builtin, const Call &call, MIRType returnType, MDefinition **def)
+    bool builtinCall(AsmJSImmKind builtin, const Call &call, MIRType returnType, MDefinition **def)
     {
         return callPrivate(MAsmJSCall::Callee(builtin), call, returnType, def);
     }
@@ -3768,18 +3777,6 @@ CheckFFICall(FunctionCompiler &f, ParseNode *callNode, unsigned ffiIndex, RetTyp
     return true;
 }
 
-static inline void *
-UnaryMathFunCast(double (*pf)(double))
-{
-    return JS_FUNC_TO_DATA_PTR(void*, pf);
-}
-
-static inline void *
-BinaryMathFunCast(double (*pf)(double, double))
-{
-    return JS_FUNC_TO_DATA_PTR(void*, pf);
-}
-
 static bool
 CheckIsDoublish(FunctionCompiler &f, ParseNode *argNode, Type type)
 {
@@ -3793,23 +3790,23 @@ CheckMathBuiltinCall(FunctionCompiler &f, ParseNode *callNode, AsmJSMathBuiltin 
                      RetType retType, MDefinition **def, Type *type)
 {
     unsigned arity = 0;
-    void *callee = NULL;
+    AsmJSImmKind callee;
     switch (mathBuiltin) {
       case AsmJSMathBuiltin_imul:  return CheckMathIMul(f, callNode, retType, def, type);
       case AsmJSMathBuiltin_abs:   return CheckMathAbs(f, callNode, retType, def, type);
-      case AsmJSMathBuiltin_sin:   arity = 1; callee = UnaryMathFunCast(sin);        break;
-      case AsmJSMathBuiltin_cos:   arity = 1; callee = UnaryMathFunCast(cos);        break;
-      case AsmJSMathBuiltin_tan:   arity = 1; callee = UnaryMathFunCast(tan);        break;
-      case AsmJSMathBuiltin_asin:  arity = 1; callee = UnaryMathFunCast(asin);       break;
-      case AsmJSMathBuiltin_acos:  arity = 1; callee = UnaryMathFunCast(acos);       break;
-      case AsmJSMathBuiltin_atan:  arity = 1; callee = UnaryMathFunCast(atan);       break;
-      case AsmJSMathBuiltin_ceil:  arity = 1; callee = UnaryMathFunCast(ceil);       break;
-      case AsmJSMathBuiltin_floor: arity = 1; callee = UnaryMathFunCast(floor);      break;
-      case AsmJSMathBuiltin_exp:   arity = 1; callee = UnaryMathFunCast(exp);        break;
-      case AsmJSMathBuiltin_log:   arity = 1; callee = UnaryMathFunCast(log);        break;
       case AsmJSMathBuiltin_sqrt:  return CheckMathSqrt(f, callNode, retType, def, type);
-      case AsmJSMathBuiltin_pow:   arity = 2; callee = BinaryMathFunCast(ecmaPow);   break;
-      case AsmJSMathBuiltin_atan2: arity = 2; callee = BinaryMathFunCast(ecmaAtan2); break;
+      case AsmJSMathBuiltin_sin:   arity = 1; callee = AsmJSImm_SinD;   break;
+      case AsmJSMathBuiltin_cos:   arity = 1; callee = AsmJSImm_CosD;   break;
+      case AsmJSMathBuiltin_tan:   arity = 1; callee = AsmJSImm_TanD;   break;
+      case AsmJSMathBuiltin_asin:  arity = 1; callee = AsmJSImm_ASinD;  break;
+      case AsmJSMathBuiltin_acos:  arity = 1; callee = AsmJSImm_ACosD;  break;
+      case AsmJSMathBuiltin_atan:  arity = 1; callee = AsmJSImm_ATanD;  break;
+      case AsmJSMathBuiltin_ceil:  arity = 1; callee = AsmJSImm_CeilD;  break;
+      case AsmJSMathBuiltin_floor: arity = 1; callee = AsmJSImm_FloorD; break;
+      case AsmJSMathBuiltin_exp:   arity = 1; callee = AsmJSImm_ExpD;   break;
+      case AsmJSMathBuiltin_log:   arity = 1; callee = AsmJSImm_LogD;   break;
+      case AsmJSMathBuiltin_pow:   arity = 2; callee = AsmJSImm_PowD;   break;
+      case AsmJSMathBuiltin_atan2: arity = 2; callee = AsmJSImm_ATan2D; break;
     }
 
     FunctionCompiler::Call call(f, retType);
@@ -5444,7 +5441,10 @@ static const RegisterSet NonVolatileRegs =
 static void
 LoadAsmJSActivationIntoRegister(MacroAssembler &masm, Register reg)
 {
-    masm.loadPtr(AbsoluteAddress(GetIonContext()->runtime->mainThread.addressOfAsmJSActivationStackReadOnly()), reg);
+    masm.movePtr(AsmJSImm_Runtime, reg);
+    size_t offset = offsetof(JSRuntime, mainThread) +
+                    PerThreadData::offsetOfAsmJSActivationStackReadOnly();
+    masm.loadPtr(Address(reg, offset), reg);
 }
 
 static void
@@ -5645,7 +5645,9 @@ TryEnablingIon(JSContext *cx, AsmJSModule &module, HandleFunction fun, uint32_t 
     return true;
 }
 
-static int32_t
+namespace js {
+
+int32_t
 InvokeFromAsmJS_Ignore(JSContext *cx, int32_t exitIndex, int32_t argc, Value *argv)
 {
     AsmJSModule &module = cx->mainThread().asmJSActivationStackFromOwnerThread()->module();
@@ -5662,7 +5664,7 @@ InvokeFromAsmJS_Ignore(JSContext *cx, int32_t exitIndex, int32_t argc, Value *ar
     return true;
 }
 
-static int32_t
+int32_t
 InvokeFromAsmJS_ToInt32(JSContext *cx, int32_t exitIndex, int32_t argc, Value *argv)
 {
     AsmJSModule &module = cx->mainThread().asmJSActivationStackFromOwnerThread()->module();
@@ -5684,7 +5686,7 @@ InvokeFromAsmJS_ToInt32(JSContext *cx, int32_t exitIndex, int32_t argc, Value *a
     return true;
 }
 
-static int32_t
+int32_t
 InvokeFromAsmJS_ToNumber(JSContext *cx, int32_t exitIndex, int32_t argc, Value *argv)
 {
     AsmJSModule &module = cx->mainThread().asmJSActivationStackFromOwnerThread()->module();
@@ -5705,6 +5707,8 @@ InvokeFromAsmJS_ToNumber(JSContext *cx, int32_t exitIndex, int32_t argc, Value *
 
     return true;
 }
+
+}  // namespace js
 
 static void
 FillArgumentArray(ModuleCompiler &m, const VarTypeVector &argTypes,
@@ -5823,16 +5827,16 @@ GenerateFFIInterpreterExit(ModuleCompiler &m, const ModuleCompiler::ExitDescript
     AssertStackAlignment(masm);
     switch (exit.sig().retType().which()) {
       case RetType::Void:
-        masm.call(ImmPtr(InvokeFromAsmJS_Ignore));
+        masm.call(AsmJSImm_InvokeFromAsmJS_Ignore);
         masm.branchTest32(Assembler::Zero, ReturnReg, ReturnReg, throwLabel);
         break;
       case RetType::Signed:
-        masm.call(ImmPtr(InvokeFromAsmJS_ToInt32));
+        masm.call(AsmJSImm_InvokeFromAsmJS_ToInt32);
         masm.branchTest32(Assembler::Zero, ReturnReg, ReturnReg, throwLabel);
         masm.unboxInt32(argv, ReturnReg);
         break;
       case RetType::Double:
-        masm.call(ImmPtr(InvokeFromAsmJS_ToNumber));
+        masm.call(AsmJSImm_InvokeFromAsmJS_ToNumber);
         masm.branchTest32(Assembler::Zero, ReturnReg, ReturnReg, throwLabel);
         masm.loadDouble(argv, ReturnFloatReg);
         break;
@@ -5874,16 +5878,16 @@ GenerateFFIInterpreterExit(ModuleCompiler &m, const ModuleCompiler::ExitDescript
     AssertStackAlignment(masm);
     switch (exit.sig().retType().which()) {
       case RetType::Void:
-        masm.call(ImmPtr(InvokeFromAsmJS_Ignore));
+        masm.call(AsmJSImm_InvokeFromAsmJS_Ignore);
         masm.branchTest32(Assembler::Zero, ReturnReg, ReturnReg, throwLabel);
         break;
       case RetType::Signed:
-        masm.call(ImmPtr(InvokeFromAsmJS_ToInt32));
+        masm.call(AsmJSImm_InvokeFromAsmJS_ToInt32);
         masm.branchTest32(Assembler::Zero, ReturnReg, ReturnReg, throwLabel);
         masm.unboxInt32(argv, ReturnReg);
         break;
       case RetType::Double:
-        masm.call(ImmPtr(InvokeFromAsmJS_ToNumber));
+        masm.call(AsmJSImm_InvokeFromAsmJS_ToNumber);
         masm.branchTest32(Assembler::Zero, ReturnReg, ReturnReg, throwLabel);
 #if defined(JS_CPU_ARM) && !defined(JS_CPU_ARM_HARDFP)
         masm.loadValue(argv, softfpReturnOperand);
@@ -5896,28 +5900,6 @@ GenerateFFIInterpreterExit(ModuleCompiler &m, const ModuleCompiler::ExitDescript
     masm.freeStack(reserveSize + sizeof(int32_t));
     masm.ret();
 #endif
-}
-
-static int32_t
-ValueToInt32(JSContext *cx, MutableHandleValue val)
-{
-    int32_t i32;
-    if (!ToInt32(cx, val, &i32))
-        return false;
-    val.set(Int32Value(i32));
-
-    return true;
-}
-
-static int32_t
-ValueToNumber(JSContext *cx, MutableHandleValue val)
-{
-    double dbl;
-    if (!ToNumber(cx, val, &dbl))
-        return false;
-    val.set(DoubleValue(dbl));
-
-    return true;
 }
 
 static void
@@ -5970,12 +5952,12 @@ GenerateOOLConvert(ModuleCompiler &m, RetType retType, Label *throwLabel)
     // Call
     switch (retType.which()) {
       case RetType::Signed:
-          masm.call(ImmPtr(ValueToInt32));
+          masm.call(AsmJSImm_CoerceInPlace_ToInt32);
           masm.branchTest32(Assembler::Zero, ReturnReg, ReturnReg, throwLabel);
           masm.unboxInt32(Address(StackPointer, offsetToArgv), ReturnReg);
           break;
       case RetType::Double:
-          masm.call(ImmPtr(ValueToNumber));
+          masm.call(AsmJSImm_CoerceInPlace_ToNumber);
           masm.branchTest32(Assembler::Zero, ReturnReg, ReturnReg, throwLabel);
 #if defined(JS_CPU_ARM) && !defined(JS_CPU_ARM_HARDFP)
           masm.loadValue(Address(StackPointer, offsetToArgv), softfpReturnOperand);
@@ -5988,24 +5970,6 @@ GenerateOOLConvert(ModuleCompiler &m, RetType retType, Label *throwLabel)
     }
 
     masm.freeStack(stackDec);
-}
-
-static void
-EnableActivation(AsmJSActivation *activation)
-{
-    JSContext *cx = activation->cx();
-    Activation *act = cx->mainThread().activation();
-    JS_ASSERT(act->isJit());
-    act->asJit()->setActive(cx);
-}
-
-static void
-DisableActivation(AsmJSActivation *activation)
-{
-    JSContext *cx = activation->cx();
-    Activation *act = cx->mainThread().activation();
-    JS_ASSERT(act->isJit());
-    act->asJit()->setActive(cx, false);
 }
 
 static void
@@ -6097,7 +6061,7 @@ GenerateFFIIonExit(ModuleCompiler &m, const ModuleCompiler::ExitDescriptor &exit
     masm.push(scratch);
     masm.setupUnalignedABICall(1, scratch);
     masm.passABIArg(callee);
-    masm.callWithABI(JS_FUNC_TO_DATA_PTR(void *, EnableActivation));
+    masm.callWithABI(AsmJSImm_EnableActivationFromAsmJS);
     masm.pop(scratch);
 
     // 2. Call
@@ -6117,7 +6081,7 @@ GenerateFFIIonExit(ModuleCompiler &m, const ModuleCompiler::ExitDescriptor &exit
     LoadAsmJSActivationIntoRegister(masm, callee);
     masm.setupUnalignedABICall(1, scratch);
     masm.passABIArg(callee);
-    masm.callWithABI(JS_FUNC_TO_DATA_PTR(void *, DisableActivation));
+    masm.callWithABI(AsmJSImm_DisableActivationFromAsmJS);
     masm.pop(JSReturnReg_Data);
     masm.pop(JSReturnReg_Type);
 
@@ -6203,8 +6167,7 @@ GenerateStackOverflowExit(ModuleCompiler &m, Label *throwLabel)
     LoadAsmJSActivationIntoRegister(masm, IntArgReg0);
     LoadJSContextFromActivation(masm, IntArgReg0, IntArgReg0);
 #endif
-    void (*reportOverRecursed)(JSContext*) = js_ReportOverRecursed;
-    masm.call(ImmPtr(reportOverRecursed));
+    masm.call(AsmJSImm_ReportOverRecursed);
     masm.jump(throwLabel);
 
     return !masm.oom();
@@ -6261,7 +6224,7 @@ GenerateOperationCallbackExit(ModuleCompiler &m, Label *throwLabel)
     LoadJSContextFromActivation(masm, activation, IntArgReg0);
 #endif
 
-    masm.call(ImmPtr(js_HandleExecutionInterrupt));
+    masm.call(AsmJSImm_HandleExecutionInterrupt);
     masm.branchIfFalseBool(ReturnReg, throwLabel);
 
     // Restore the StackPointer to it's position before the call.
@@ -6292,7 +6255,7 @@ GenerateOperationCallbackExit(ModuleCompiler &m, Label *throwLabel)
     masm.loadPtr(Address(IntArgReg0, AsmJSActivation::offsetOfContext()), IntArgReg0);
 
     masm.PushRegsInMask(RegisterSet(GeneralRegisterSet(0), FloatRegisterSet(FloatRegisters::AllMask)));   // save all FP registers
-    masm.call(ImmPtr(js_HandleExecutionInterrupt));
+    masm.call(AsmJSImm_HandleExecutionInterrupt);
     masm.branchIfFalseBool(ReturnReg, throwLabel);
 
     // Restore the machine state to before the interrupt. this will set the pc!
@@ -6455,7 +6418,7 @@ CheckModule(ExclusiveContext *cx, AsmJSParser &parser, ParseNode *stmtList,
     if (!FinishModule(m, module, &linkData))
         return false;
 
-    (*module)->staticallyLink(linkData);
+    (*module)->staticallyLink(linkData, cx);
 
     m.buildCompilationTimeReport(compilationTimeReport);
     return true;
@@ -6489,12 +6452,12 @@ EstablishPreconditions(ExclusiveContext *cx, AsmJSParser &parser)
     if (cx->compartment()->debugMode())
         return Warn(parser, JSMSG_USE_ASM_TYPE_FAIL, "Disabled by debugger");
 
-# ifdef JS_WORKER_THREADS
+#ifdef JS_WORKER_THREADS
     if (ParallelCompilationEnabled(cx)) {
         if (!EnsureWorkerThreadsInitialized(cx))
             return Warn(parser, JSMSG_USE_ASM_TYPE_FAIL, "Failed compilation thread initialization");
     }
-# endif
+#endif
 
     return true;
 }

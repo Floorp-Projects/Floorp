@@ -58,7 +58,7 @@ X11Error(Display *display, XErrorEvent *event) {
       }
       XCloseDisplay(tmpDisplay);
 
-#ifdef MOZ_WIDGET_GTK2
+#if (MOZ_WIDGET_GTK == 2)
       // GDK2 calls XCloseDevice the devices that it opened on startup, but
       // the XI protocol no longer ensures that the devices will still exist.
       // If they have been removed, then a BadDevice error results.  Ignore

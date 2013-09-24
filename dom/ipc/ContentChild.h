@@ -9,11 +9,8 @@
 
 #include "mozilla/Attributes.h"
 #include "mozilla/dom/PContentChild.h"
-#include "mozilla/dom/TabContext.h"
 #include "mozilla/dom/ipc/Blob.h"
-
-#include "nsTArray.h"
-#include "nsIConsoleListener.h"
+#include "nsWeakPtr.h"
 
 struct ChromePackage;
 class nsIDOMBlob;
@@ -80,10 +77,10 @@ public:
     void SetProcessName(const nsAString& aName);
     const void GetProcessName(nsAString& aName);
 
-    PCompositorChild*
+    bool
     AllocPCompositorChild(mozilla::ipc::Transport* aTransport,
                           base::ProcessId aOtherProcess) MOZ_OVERRIDE;
-    PImageBridgeChild*
+    bool
     AllocPImageBridgeChild(mozilla::ipc::Transport* aTransport,
                            base::ProcessId aOtherProcess) MOZ_OVERRIDE;
 

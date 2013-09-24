@@ -12,16 +12,13 @@
 #include "mozilla/dom/PBlobParent.h"
 #include "mozilla/dom/PBlobStreamChild.h"
 #include "mozilla/dom/PBlobStreamParent.h"
-#include "mozilla/dom/PContent.h"
 
 #include "nsAutoPtr.h"
 #include "nsCOMPtr.h"
 #include "nsTArray.h"
-#include "nsThreadUtils.h"
 
 class nsIDOMBlob;
-class nsIIPCSerializableInputStream;
-class nsIInputStream;
+template<class T> class nsRevocableEventPtr;
 
 namespace mozilla {
 namespace dom {

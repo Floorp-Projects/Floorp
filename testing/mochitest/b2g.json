@@ -205,7 +205,6 @@
     "content/base/test/csp/test_CSP_frameancestors.html":"observer not working",
     "content/base/test/csp/test_CSP.html":"observer not working",
     "content/base/test/csp/test_bug836922_npolicies.html":"observer not working",
-    "content/base/test/csp/test_bug886164.html":"observer not working",
     "content/base/test/csp/test_CSP_bug916446.html":"observer not working",
 
     "content/base/test/test_CrossSiteXHR_origin.html":"https not working, bug 907770",
@@ -293,7 +292,6 @@
     "dom/file/test/test_workers.html":"",
     "dom/file/test/test_write_read_data.html":"",
 
-    "dom/imptests/editing/conformancetest/test_event.html":"1 failure, bug 908879",
     "dom/imptests/editing/conformancetest/test_runtest.html":"takes too long",
 
     "dom/media/tests/mochitest/test_dataChannel_basicAudio.html":"bug 908473",

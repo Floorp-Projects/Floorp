@@ -224,6 +224,20 @@ CommandChain.prototype = {
     this.insertBefore(id, commands);
 
     return oldCommands;
+  },
+
+  /**
+   * Remove all commands whose identifiers match the specified regex.
+   *
+   * @param {regex} id_match
+   *        Regular expression to match command identifiers.
+   */
+  filterOut : function (id_match) {
+    for (var i = this._commands.length - 1; i >= 0; i--) {
+      if (id_match.test(this._commands[i][0])) {
+        this._commands.splice(i, 1);
+      }
+    }
   }
 };
 
@@ -318,6 +332,10 @@ MediaElementChecker.prototype = {
  *        Optional options for the peer connection test
  * @param {object} [options.commands=commandsPeerConnection]
  *        Commands to run for the test
+ * @param {bool}   [options.is_local=true]
+ *        true if this test should run the tests for the "local" side.
+ * @param {bool}   [options.is_remote=true]
+ *        true if this test should run the tests for the "remote" side.
  * @param {object} [options.config_pc1=undefined]
  *        Configuration for the local peer connection instance
  * @param {object} [options.config_pc2=undefined]
@@ -328,19 +346,34 @@ function PeerConnectionTest(options) {
   // If no options are specified make it an empty object
   options = options || { };
   options.commands = options.commands || commandsPeerConnection;
+  options.is_local = "is_local" in options ? options.is_local : true;
+  options.is_remote = "is_remote" in options ? options.is_remote : true;
 
-  this.pcLocal = new PeerConnectionWrapper('pcLocal', options.config_pc1);
-  this.pcRemote = new PeerConnectionWrapper('pcRemote', options.config_pc2 || options.config_pc1);
+  if (options.is_local)
+    this.pcLocal = new PeerConnectionWrapper('pcLocal', options.config_pc1);
+  else
+    this.pcLocal = null;
+
+  if (options.is_remote)
+    this.pcRemote = new PeerConnectionWrapper('pcRemote', options.config_pc2 || options.config_pc1);
+  else
+    this.pcRemote = null;
 
   this.connected = false;
 
   // Create command chain instance and assign default commands
   this.chain = new CommandChain(this, options.commands);
+  if (!options.is_local) {
+    this.chain.filterOut(/^PC_LOCAL/);
+  }
+  if (!options.is_remote) {
+    this.chain.filterOut(/^PC_REMOTE/);
+  }
 
   var self = this;
   this.chain.onFinished = function () {
     self.teardown();
-  }
+  };
 }
 
 /**
@@ -354,8 +387,10 @@ PeerConnectionTest.prototype.close = function PCT_close(onSuccess) {
 
   // There is no onclose event for the remote peer existent yet. So close it
   // side-by-side with the local peer.
-  this.pcLocal.close();
-  this.pcRemote.close();
+  if (this.pcLocal)
+    this.pcLocal.close();
+  if (this.pcRemote)
+    this.pcRemote.close();
   this.connected = false;
 
   onSuccess();
@@ -444,8 +479,10 @@ function PCT_setLocalDescription(peer, desc, onSuccess) {
  */
 PeerConnectionTest.prototype.setMediaConstraints =
 function PCT_setMediaConstraints(constraintsLocal, constraintsRemote) {
-  this.pcLocal.constraints = constraintsLocal;
-  this.pcRemote.constraints = constraintsRemote;
+  if (this.pcLocal)
+    this.pcLocal.constraints = constraintsLocal;
+  if (this.pcRemote)
+    this.pcRemote.constraints = constraintsRemote;
 };
 
 /**
@@ -455,7 +492,8 @@ function PCT_setMediaConstraints(constraintsLocal, constraintsRemote) {
  */
 PeerConnectionTest.prototype.setOfferConstraints =
 function PCT_setOfferConstraints(constraints) {
-  this.pcLocal.offerConstraints = constraints;
+  if (this.pcLocal)
+    this.pcLocal.offerConstraints = constraints;
 };
 
 /**
@@ -506,7 +544,10 @@ PeerConnectionTest.prototype.run = function PCT_run() {
 PeerConnectionTest.prototype.teardown = function PCT_teardown() {
   this.close(function () {
     info("Test finished");
-    SimpleTest.finish();
+    if (window.SimpleTest)
+      SimpleTest.finish();
+    else
+      finish();
   });
 };
 

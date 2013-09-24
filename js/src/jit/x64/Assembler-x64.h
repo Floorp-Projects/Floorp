@@ -485,6 +485,11 @@ class Assembler : public AssemblerX86Shared
     void mov(ImmPtr imm, const Register &dest) {
         movq(imm, dest);
     }
+    void mov(AsmJSImmPtr imm, const Register &dest) {
+        masm.movq_i64r(-1, dest.code());
+        AsmJSAbsoluteLink link(masm.currentOffset(), imm.kind());
+        enoughMemory_ &= asmJSAbsoluteLinks_.append(link);
+    }
     void mov(const Imm32 &imm32, const Register &dest) {
         movl(imm32, dest);
     }

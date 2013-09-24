@@ -17,6 +17,7 @@
 #include <stdio.h>
 #include "nsComponentManagerUtils.h"
 #include "nsServiceManagerUtils.h"
+#include "nsISimpleEnumerator.h"
 
 #define TEST_URL "resource:/res/test.properties"
 static NS_DEFINE_CID(kPersistentPropertiesCID, NS_IPERSISTENTPROPERTIES_CID);

@@ -349,7 +349,7 @@ nsJARChannel::LookupFile()
         rv = mJarBaseURI->GetScheme(scheme);
         if (NS_SUCCEEDED(rv) && scheme.EqualsLiteral("remoteopenfile")) {
             nsRefPtr<RemoteOpenFileChild> remoteFile = new RemoteOpenFileChild();
-            rv = remoteFile->Init(mJarBaseURI);
+            rv = remoteFile->Init(mJarBaseURI, mAppURI);
             NS_ENSURE_SUCCESS(rv, rv);
             mJarFile = remoteFile;
 

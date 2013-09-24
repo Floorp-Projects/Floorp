@@ -4286,6 +4286,28 @@ class MOsrScopeChain : public MUnaryInstruction
     }
 };
 
+// MIR representation of a JSObject ArgumentsObject pointer on the OSR StackFrame.
+// The pointer is indexed off of OsrFrameReg.
+class MOsrArgumentsObject : public MUnaryInstruction
+{
+  private:
+    MOsrArgumentsObject(MOsrEntry *entry)
+      : MUnaryInstruction(entry)
+    {
+        setResultType(MIRType_Object);
+    }
+
+  public:
+    INSTRUCTION_HEADER(OsrArgumentsObject)
+    static MOsrArgumentsObject *New(MOsrEntry *entry) {
+        return new MOsrArgumentsObject(entry);
+    }
+
+    MOsrEntry *entry() {
+        return getOperand(0)->toOsrEntry();
+    }
+};
+
 // Check the current frame for over-recursion past the global stack limit.
 class MCheckOverRecursed : public MNullaryInstruction
 {
@@ -8767,17 +8789,17 @@ class MAsmJSCall MOZ_FINAL : public MInstruction
         union {
             Label *internal_;
             MDefinition *dynamic_;
-            const void *builtin_;
+            AsmJSImmKind builtin_;
         } u;
       public:
         Callee() {}
         Callee(Label *callee) : which_(Internal) { u.internal_ = callee; }
         Callee(MDefinition *callee) : which_(Dynamic) { u.dynamic_ = callee; }
-        Callee(const void *callee) : which_(Builtin) { u.builtin_ = callee; }
+        Callee(AsmJSImmKind callee) : which_(Builtin) { u.builtin_ = callee; }
         Which which() const { return which_; }
         Label *internal() const { JS_ASSERT(which_ == Internal); return u.internal_; }
         MDefinition *dynamic() const { JS_ASSERT(which_ == Dynamic); return u.dynamic_; }
-        const void *builtin() const { JS_ASSERT(which_ == Builtin); return u.builtin_; }
+        AsmJSImmKind builtin() const { JS_ASSERT(which_ == Builtin); return u.builtin_; }
     };
 
   private:

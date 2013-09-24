@@ -1312,6 +1312,13 @@ public:
         m_formatter.oneByteOp(OP_CMP_EvGv, reg, addr);
     }
 
+    void cmpl_rm_force32(RegisterID reg, const void* addr)
+    {
+        spew("cmpl       %s, %p",
+             nameIReg(4, reg), addr);
+        m_formatter.oneByteOp_disp32(OP_CMP_EvGv, reg, addr);
+    }
+
     void cmpl_im(int imm, const void* addr)
     {
         spew("cmpl       $0x%x, %p", imm, addr);
@@ -3359,6 +3366,13 @@ private:
             m_buffer.putByteUnchecked(opcode);
             memoryModRM(reg, address);
         }
+
+        void oneByteOp_disp32(OneByteOpcodeID opcode, int reg, const void* address)
+        {
+            m_buffer.ensureSpace(maxInstructionSize);
+            m_buffer.putByteUnchecked(opcode);
+            memoryModRM_disp32(reg, address);
+        }
 #if WTF_CPU_X86_64
         void oneByteRipOp(OneByteOpcodeID opcode, int reg, int ripOffset)
         {
@@ -3887,7 +3901,7 @@ private:
             m_buffer.putIntUnchecked(offset);
         }
 
-        void memoryModRM(int reg, const void* address)
+        void memoryModRM_disp32(int reg, const void* address)
         {
             int32_t disp = addressImmediate(address);
 
@@ -3899,6 +3913,11 @@ private:
             putModRm(ModRmMemoryNoDisp, reg, noBase);
 #endif
             m_buffer.putIntUnchecked(disp);
+        }
+
+        void memoryModRM(int reg, const void* address)
+        {
+            memoryModRM_disp32(reg, address);
         }
 
         AssemblerBuffer m_buffer;

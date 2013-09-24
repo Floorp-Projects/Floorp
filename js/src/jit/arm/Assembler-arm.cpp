@@ -1222,28 +1222,31 @@ BOffImm::getDest(Instruction *src)
 
 //VFPRegister implementation
 VFPRegister
-VFPRegister::doubleOverlay()
+VFPRegister::doubleOverlay() const
 {
     JS_ASSERT(!_isInvalid);
-    if (kind != Double)
+    if (kind != Double) {
+        JS_ASSERT(_code % 2 == 0);
         return VFPRegister(_code >> 1, Double);
+    }
     return *this;
 }
 VFPRegister
-VFPRegister::singleOverlay()
+VFPRegister::singleOverlay() const
 {
     JS_ASSERT(!_isInvalid);
     if (kind == Double) {
         // There are no corresponding float registers for d16-d31
-        ASSERT(_code < 16);
+        JS_ASSERT(_code < 16);
         return VFPRegister(_code << 1, Single);
     }
 
+    JS_ASSERT(_code % 2 == 0);
     return VFPRegister(_code, Single);
 }
 
 VFPRegister
-VFPRegister::sintOverlay()
+VFPRegister::sintOverlay() const
 {
     JS_ASSERT(!_isInvalid);
     if (kind == Double) {
@@ -1252,10 +1255,11 @@ VFPRegister::sintOverlay()
         return VFPRegister(_code << 1, Int);
     }
 
+    JS_ASSERT(_code % 2 == 0);
     return VFPRegister(_code, Int);
 }
 VFPRegister
-VFPRegister::uintOverlay()
+VFPRegister::uintOverlay() const
 {
     JS_ASSERT(!_isInvalid);
     if (kind == Double) {
@@ -1264,6 +1268,7 @@ VFPRegister::uintOverlay()
         return VFPRegister(_code << 1, UInt);
     }
 
+    JS_ASSERT(_code % 2 == 0);
     return VFPRegister(_code, UInt);
 }
 
@@ -1614,7 +1619,7 @@ class PoolHintData {
         JS_ASSERT(cond == cond_ >> 28);
         loadType = lt;
         ONES = expectedOnes;
-        destReg = destReg_.code();
+        destReg = destReg_.isDouble() ? destReg_.code() : destReg_.doubleOverlay().code();
         destType = destReg_.isDouble();
     }
     Assembler::Condition getCond() {
@@ -1625,8 +1630,8 @@ class PoolHintData {
         return Register::FromCode(destReg);
     }
     VFPRegister getVFPReg() {
-        return VFPRegister(FloatRegister::FromCode(destReg),
-                           destType ? VFPRegister::Double : VFPRegister::Single);
+        VFPRegister r = VFPRegister(FloatRegister::FromCode(destReg));
+        return destType ? r : r.singleOverlay();
     }
 
     int32_t getIndex() {
@@ -2557,7 +2562,8 @@ Assembler::patchWrite_NearCall(CodeLocationLabel start, CodeLocationLabel toCall
 
 }
 void
-Assembler::patchDataWithValueCheck(CodeLocationLabel label, ImmPtr newValue, ImmPtr expectedValue)
+Assembler::patchDataWithValueCheck(CodeLocationLabel label, PatchedImmPtr newValue,
+                                   PatchedImmPtr expectedValue)
 {
     Instruction *ptr = (Instruction *) label.raw();
     InstructionIterator iter(ptr);
@@ -2572,6 +2578,12 @@ Assembler::patchDataWithValueCheck(CodeLocationLabel label, ImmPtr newValue, Imm
         AutoFlushCache::updateTop(uintptr_t(ptr), 4);
         AutoFlushCache::updateTop(uintptr_t(ptr->next()), 4);
     }
+}
+
+void
+Assembler::patchDataWithValueCheck(CodeLocationLabel label, ImmPtr newValue, ImmPtr expectedValue)
+{
+    patchDataWithValueCheck(label, PatchedImmPtr(newValue.value), PatchedImmPtr(expectedValue.value));
 }
 
 // This just stomps over memory with 32 bits of raw data. Its purpose is to

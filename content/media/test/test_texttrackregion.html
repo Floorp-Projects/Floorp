@@ -1,0 +1,66 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=917945
+-->
+<head>
+  <meta charset='utf-8'>
+  <title>Test for Bug 917945 - VTTRegion</title>
+  <script type="text/javascript" src="/MochiKit/MochiKit.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<p id="display"></p>
+<div id="content">
+</div>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+SimpleTest.waitForExplicitFinish();
+SpecialPowers.pushPrefEnv({"set": [["media.webvtt.enabled", true]]},
+  function() {
+    var video = document.createElement("video");
+    video.src = "seek.webm";
+    video.preload = "auto";
+    var trackElement = document.createElement("track");
+    trackElement.src = "region.vtt";
+    trackElement.kind = "subtitles";
+    document.getElementById("content").appendChild(video);
+    video.appendChild(trackElement);
+    video.addEventListener("loadedmetadata", function run_tests() {
+      // Re-que run_tests() at the end of the event loop until the track
+      // element has loaded its data.
+      if (trackElement.readyState == 1) {
+        setTimeout(run_tests, 0);
+        return;
+      }
+      is(trackElement.readyState, 2, "Track::ReadyState should be set to LOADED.");
+
+      var cues = trackElement.track.cues,
+          regions = trackElement.track.regions;
+
+      is(regions.length, 1, "Region list length should be 1.");
+      is(cues.length, 1, "Cue list length should be 1.");
+
+      is(cues[0].regionId, "fred", "Cue regionId should be 'fred'.");
+
+      var region = regions[0];
+
+      is(region.id, "fred", "Region ID should be 'fred'.");
+      is(region.width, 62, "Region width should be 50.");
+      is(region.lines, 5, "Region lines should be 5.");
+      is(region.regionAnchorX, 4, "Region regionAnchorX should be 4.");
+      is(region.regionAnchorY, 78, "Region regionAnchorY should be 78.");
+      is(region.viewportAnchorX, 10, "Region viewportAnchorX should be 10.");
+      is(region.viewportAnchorY, 90, "Region viewportAnchorY should be 90.");
+      is(region.scroll, "up", "Region scroll should be 'up'");
+
+      SimpleTest.finish();
+    });
+  }
+);
+
+</script>
+</pre>
+</body>
+</html>

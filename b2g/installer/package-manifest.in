@@ -378,6 +378,8 @@
 @BINPATH@/components/PeerConnection.js
 @BINPATH@/components/PeerConnection.manifest
 #endif
+@BINPATH@/components/HttpDataUsage.manifest
+@BINPATH@/components/HttpDataUsage.js
 @BINPATH@/components/SiteSpecificUserAgent.js
 @BINPATH@/components/SiteSpecificUserAgent.manifest
 @BINPATH@/components/storage-Legacy.js

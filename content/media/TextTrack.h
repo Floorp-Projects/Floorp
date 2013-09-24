@@ -99,7 +99,7 @@ public:
   void Update(double aTime);
 
   void AddCue(TextTrackCue& aCue);
-  void RemoveCue(TextTrackCue& aCue);
+  void RemoveCue(TextTrackCue& aCue, ErrorResult& aRv);
   void CueChanged(TextTrackCue& aCue);
 
   IMPL_EVENT_HANDLER(cuechange)
