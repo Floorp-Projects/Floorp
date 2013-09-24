@@ -697,6 +697,7 @@ public:
 
 
   SurfaceDescriptor* GetBuffer() const { return mBuffer; }
+  virtual SurfaceDescriptor* LockSurfaceDescriptor() const { return GetBuffer(); }
 
   /**
    * Set a SurfaceDescriptor for this texture host. By setting a buffer and

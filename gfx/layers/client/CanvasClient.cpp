@@ -107,7 +107,7 @@ CanvasClient2D::CreateBufferTextureClient(gfx::SurfaceFormat aFormat)
 void
 DeprecatedCanvasClient2D::Updated()
 {
-  mForwarder->UpdateTexture(this, 1, mDeprecatedTextureClient->GetDescriptor());
+  mForwarder->UpdateTexture(this, 1, mDeprecatedTextureClient->LockSurfaceDescriptor());
 }
 
 
@@ -158,7 +158,7 @@ DeprecatedCanvasClient2D::Update(gfx::IntSize aSize, ClientCanvasLayer* aLayer)
 void
 DeprecatedCanvasClientSurfaceStream::Updated()
 {
-  mForwarder->UpdateTextureNoSwap(this, 1, mDeprecatedTextureClient->GetDescriptor());
+  mForwarder->UpdateTextureNoSwap(this, 1, mDeprecatedTextureClient->LockSurfaceDescriptor());
 }
 
 
@@ -204,7 +204,7 @@ DeprecatedCanvasClientSurfaceStream::Update(gfx::IntSize aSize, ClientCanvasLaye
     }
 
     SharedSurface_Gralloc* grallocSurf = SharedSurface_Gralloc::Cast(surf);
-    mDeprecatedTextureClient->SetDescriptor(grallocSurf->GetDescriptor());
+    mDeprecatedTextureClient->SetDescriptor(grallocSurf->LockSurfaceDescriptor());
 #else
     printf_stderr("isCrossProcess, but not MOZ_WIDGET_GONK! Someone needs to write some code!");
     MOZ_ASSERT(false);

@@ -449,7 +449,7 @@ DeprecatedImageClientSingle::UpdateImage(ImageContainer* aContainer,
 void
 DeprecatedImageClientSingle::Updated()
 {
-  mForwarder->UpdateTexture(this, 1, mDeprecatedTextureClient->GetDescriptor());
+  mForwarder->UpdateTexture(this, 1, mDeprecatedTextureClient->LockSurfaceDescriptor());
 }
 
 ImageClientBridge::ImageClientBridge(CompositableForwarder* aFwd,

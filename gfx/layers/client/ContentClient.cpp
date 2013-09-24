@@ -171,6 +171,8 @@ ContentClientRemoteBuffer::CreateAndAllocateDeprecatedTextureClient(RefPtr<Depre
     MOZ_ASSERT(aClient, "Failed to create texture client");
     if (!aClient->EnsureAllocated(mSize, mContentType)) {
       NS_WARNING("Could not allocate texture client");
+      aClient->SetFlags(0);
+      aClient = nullptr;
       return false;
     }
   }
@@ -207,6 +209,8 @@ ContentClientRemoteBuffer::BuildDeprecatedTextureClients(ContentType aType,
   
   if (aFlags & BUFFER_COMPONENT_ALPHA) {
     if (!CreateAndAllocateDeprecatedTextureClient(mDeprecatedTextureClientOnWhite)) {
+      mDeprecatedTextureClient->SetFlags(0);
+      mDeprecatedTextureClient = nullptr;
       return;
     }
     mTextureInfo.mTextureFlags |= TEXTURE_COMPONENT_ALPHA;
@@ -240,6 +244,9 @@ ContentClientRemoteBuffer::CreateBuffer(ContentType aType,
                                         RefPtr<gfx::DrawTarget>* aWhiteDT)
 {
   BuildDeprecatedTextureClients(aType, aRect, aFlags);
+  if (!mDeprecatedTextureClient) {
+    return;
+  }
 
   if (gfxPlatform::GetPlatform()->SupportsAzureContentForType(
         mDeprecatedTextureClient->BackendType())) {
@@ -337,11 +344,23 @@ void
 ContentClientDoubleBuffered::CreateFrontBufferAndNotify(const nsIntRect& aBufferRect)
 {
   if (!CreateAndAllocateDeprecatedTextureClient(mFrontClient)) {
+    mDeprecatedTextureClient->SetFlags(0);
+    mDeprecatedTextureClient = nullptr;
+    if (mDeprecatedTextureClientOnWhite) {
+      mDeprecatedTextureClientOnWhite->SetFlags(0);
+      mDeprecatedTextureClientOnWhite = nullptr;
+    }
     return;
   }
 
   if (mTextureInfo.mTextureFlags & TEXTURE_COMPONENT_ALPHA) {
     if (!CreateAndAllocateDeprecatedTextureClient(mFrontClientOnWhite)) {
+      mDeprecatedTextureClient->SetFlags(0);
+      mDeprecatedTextureClient = nullptr;
+      mDeprecatedTextureClientOnWhite->SetFlags(0);
+      mDeprecatedTextureClientOnWhite = nullptr;
+      mFrontClient->SetFlags(0);
+      mFrontClient = nullptr;
       return;
     }
   }
@@ -350,11 +369,11 @@ ContentClientDoubleBuffered::CreateFrontBufferAndNotify(const nsIntRect& aBuffer
   mFrontBufferRotation = nsIntPoint();
   
   mForwarder->CreatedDoubleBuffer(this,
-                                  *mFrontClient->GetDescriptor(),
-                                  *mDeprecatedTextureClient->GetDescriptor(),
+                                  *mFrontClient->LockSurfaceDescriptor(),
+                                  *mDeprecatedTextureClient->LockSurfaceDescriptor(),
                                   mTextureInfo,
-                                  mFrontClientOnWhite ? mFrontClientOnWhite->GetDescriptor() : nullptr,
-                                  mDeprecatedTextureClientOnWhite ? mDeprecatedTextureClientOnWhite->GetDescriptor() : nullptr);
+                                  mFrontClientOnWhite ? mFrontClientOnWhite->LockSurfaceDescriptor() : nullptr,
+                                  mDeprecatedTextureClientOnWhite ? mDeprecatedTextureClientOnWhite->LockSurfaceDescriptor() : nullptr);
 }
 
 void
@@ -566,9 +585,9 @@ void
 ContentClientSingleBuffered::CreateFrontBufferAndNotify(const nsIntRect& aBufferRect)
 {
   mForwarder->CreatedSingleBuffer(this,
-                                  *mDeprecatedTextureClient->GetDescriptor(),
+                                  *mDeprecatedTextureClient->LockSurfaceDescriptor(),
                                   mTextureInfo,
-                                  mDeprecatedTextureClientOnWhite ? mDeprecatedTextureClientOnWhite->GetDescriptor() : nullptr);
+                                  mDeprecatedTextureClientOnWhite ? mDeprecatedTextureClientOnWhite->LockSurfaceDescriptor() : nullptr);
 }
 
 void
