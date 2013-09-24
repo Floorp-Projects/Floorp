@@ -28,32 +28,10 @@ add_test(function testCloseInexistantApp() {
 
 // Install a test app
 add_test(function testInstallPackaged() {
-  // Copy our test webapp to tmp folder, where the actor retrieves it
-  let zip = do_get_file("data/app.zip");
-  let appDir = FileUtils.getDir("TmpD", ["b2g", gAppId], true, true);
-  zip.copyTo(appDir, "application.zip");
-
-  let request = {type: "install", appId: gAppId};
-  webappActorRequest(request, function (aResponse) {
-    do_check_eq(aResponse.appId, gAppId);
-  });
-
-  // The install request is asynchronous and send back an event to tell
-  // if the installation succeed or failed
-  gClient.addOneTimeListener("webappsEvent", function listener(aState, aType, aPacket) {
-    do_check_eq(aType.appId, gAppId);
-    if ("error" in aType) {
-      do_print("Error: " + aType.error);
-    }
-    if ("message" in aType) {
-      do_print("Error message: " + aType.message);
-    }
-    do_check_eq("error" in aType, false);
-
+  installTestApp("app.zip", gAppId, function () {
     run_next_test();
   });
 });
-
 
 // Now check that the app appear in getAll
 add_test(function testGetAll() {
@@ -68,7 +46,7 @@ add_test(function testGetAll() {
         do_check_eq(app.name, "Test app");
         do_check_eq(app.manifest.description, "Testing webapps actor");
         do_check_eq(app.manifest.launch_path, "/index.html");
-        do_check_eq(app.origin, "app://" + gAppId);
+        do_check_eq(app.origin, APP_ORIGIN);
         do_check_eq(app.installOrigin, app.origin);
         do_check_eq(app.manifestURL, app.origin + "/manifest.webapp");
         run_next_test();
@@ -80,7 +58,7 @@ add_test(function testGetAll() {
 });
 
 add_test(function testLaunchApp() {
-  let manifestURL = "app://" + gAppId + "/manifest.webapp";
+  let manifestURL = APP_ORIGIN + "/manifest.webapp";
   let startPoint = "/index.html";
   let request = {
     type: "launch",
@@ -101,7 +79,7 @@ add_test(function testLaunchApp() {
 });
 
 add_test(function testCloseApp() {
-  let manifestURL = "app://" + gAppId + "/manifest.webapp";
+  let manifestURL = APP_ORIGIN + "/manifest.webapp";
   let request = {
     type: "close",
     manifestURL: manifestURL
@@ -158,8 +136,7 @@ add_test(function testGetIconWithCustomSize() {
 });
 
 add_test(function testUninstall() {
-  let origin = "app://" + gAppId;
-  let manifestURL = origin + "/manifest.webapp";
+  let manifestURL = APP_ORIGIN + "/manifest.webapp";
   let request = {
     type: "uninstall",
     manifestURL: manifestURL
@@ -169,7 +146,7 @@ add_test(function testUninstall() {
     Services.obs.removeObserver(observer, topic);
     let json = JSON.parse(data);
     do_check_eq(json.manifestURL, manifestURL);
-    do_check_eq(json.origin, origin);
+    do_check_eq(json.origin, APP_ORIGIN);
     do_check_eq(json.id, gAppId);
     run_next_test();
   }, "webapps-uninstall", false);

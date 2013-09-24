@@ -95,8 +95,6 @@ class nsISupports;
 using namespace mozilla;
 using namespace mozilla::dom;
 
-const PRUnichar nbsp = 160;
-
 #define kInsertCookie  "_moz_Insert Here_moz_"
 
 // some little helpers

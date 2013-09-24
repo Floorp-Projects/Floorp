@@ -2187,14 +2187,6 @@ private:
 #endif
 };
 
-#define NS_HOLD_JS_OBJECTS(obj, clazz)                                         \
-  nsContentUtils::HoldJSObjects(NS_CYCLE_COLLECTION_UPCAST(obj, clazz),        \
-                                NS_CYCLE_COLLECTION_PARTICIPANT(clazz))
-
-#define NS_DROP_JS_OBJECTS(obj, clazz)                                         \
-  nsContentUtils::DropJSObjects(NS_CYCLE_COLLECTION_UPCAST(obj, clazz))
-
-
 class MOZ_STACK_CLASS nsAutoScriptBlocker {
 public:
   nsAutoScriptBlocker(MOZ_GUARD_OBJECT_NOTIFIER_ONLY_PARAM) {

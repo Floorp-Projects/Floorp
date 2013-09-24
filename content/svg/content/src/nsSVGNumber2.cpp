@@ -3,16 +3,16 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "nsError.h"
-#include "nsSVGAttrTearoffTable.h"
 #include "nsSVGNumber2.h"
-#include "prdtoa.h"
-#include "nsMathUtils.h"
-#include "nsContentUtils.h" // NS_ENSURE_FINITE
-#include "nsSMILValue.h"
-#include "nsSMILFloatType.h"
-#include "nsIDOMSVGNumber.h"
 #include "mozilla/Attributes.h"
+#include "nsContentUtils.h" // NS_ENSURE_FINITE
+#include "nsError.h"
+#include "nsIDOMSVGNumber.h"
+#include "nsSMILFloatType.h"
+#include "nsSMILValue.h"
+#include "nsSVGAttrTearoffTable.h"
+#include "prdtoa.h"
+#include "SVGContentUtils.h"
 
 using namespace mozilla;
 using namespace mozilla::dom;
@@ -58,7 +58,7 @@ GetValueFromString(const nsAString &aValueAsString,
   NS_ConvertUTF16toUTF8 value(aValueAsString);
   const char *str = value.get();
 
-  if (NS_IsAsciiWhitespace(*str))
+  if (IsSVGWhitespace(*str))
     return NS_ERROR_DOM_SYNTAX_ERR;
   
   char *rest;

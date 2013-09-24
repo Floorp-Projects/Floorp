@@ -95,8 +95,6 @@ class Registers {
     // Registers returned from a JS -> C call.
     static const uint32_t CallMask =
         (1 << JSC::X86Registers::eax);
-
-    typedef JSC::MacroAssembler::RegisterID RegisterID;
 };
 
 // Smallest integer type that can hold a register bitmask.

@@ -23,7 +23,7 @@
 #include "nsIWindowWatcher.h"
 #include "nsNetUtil.h"
 #include "nsRect.h"
-#include "nsStringGlue.h"
+#include "nsString.h"
 #include "nsWeakReference.h"
 #include "nsIWebBrowser.h"
 #include "nsIObserverService.h"

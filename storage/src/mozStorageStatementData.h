@@ -13,7 +13,7 @@
 #include "nsTArray.h"
 #include "nsIEventTarget.h"
 #include "mozilla/Util.h"
-#include "nsThreadUtils.h"
+#include "MainThreadUtils.h"
 
 #include "mozStorageBindingParamsArray.h"
 #include "mozIStorageBaseStatement.h"

@@ -40,6 +40,7 @@ using mozilla::unused;
 #include "LayerManagerOGL.h"
 #include "mozilla/layers/LayerManagerComposite.h"
 #include "mozilla/layers/AsyncCompositionManager.h"
+#include "mozilla/layers/APZCTreeManager.h"
 #include "GLContext.h"
 #include "GLContextProvider.h"
 
@@ -50,7 +51,8 @@ using mozilla::unused;
 
 #include "imgIEncoder.h"
 
-#include "nsStringGlue.h"
+#include "nsString.h"
+#include "GeckoProfiler.h" // For PROFILER_LABEL
 
 using namespace mozilla;
 using namespace mozilla::dom;
@@ -340,15 +342,21 @@ nsWindow::GetDPI()
 double
 nsWindow::GetDefaultScaleInternal()
 {
-    float dpi = GetDPI();
-    if (dpi < 200) { // includes desktop displays, LDPI, and MDPI Android devices
-        return 1.0;
+    static double density = 0.0;
+
+    if (density != 0.0) {
+        return density;
     }
-    if (dpi < 300) { // includes Nokia N900, HDPI Android devices
-        return 1.5;
+
+    if (AndroidBridge::Bridge()) {
+        density = AndroidBridge::Bridge()->GetDensity();
     }
-    // for very high-density displays calculate an integer ratio.
-    return floor(dpi / 150);
+
+    if (!density) {
+        density = 1.0;
+    }
+
+    return density;
 }
 
 NS_IMETHODIMP
@@ -2385,6 +2393,7 @@ nsWindow::DrawWindowUnderlay(LayerManager* aManager, nsIntRect aRect)
 void
 nsWindow::DrawWindowOverlay(LayerManager* aManager, nsIntRect aRect)
 {
+    PROFILER_LABEL("nsWindow", "DrawWindowOverlay");
     JNIEnv *env = GetJNIForThread();
     NS_ABORT_IF_FALSE(env, "No JNI environment at DrawWindowOverlay()!");
     if (!env)

@@ -5,9 +5,11 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "mozilla/dom/TabContext.h"
+#include "mozilla/dom/PTabContext.h"
 #include "mozilla/dom/TabParent.h"
 #include "mozilla/dom/TabChild.h"
 #include "nsIAppsService.h"
+#include "nsIScriptSecurityManager.h"
 
 #define NO_APP_ID (nsIScriptSecurityManager::NO_APP_ID)
 

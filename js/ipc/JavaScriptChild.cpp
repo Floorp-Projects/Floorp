@@ -118,7 +118,7 @@ JavaScriptChild::fail(JSContext *cx, ReturnStatus *rs)
     // to the IPC code, and we don't want a JS failure to cause the death
     // of the child process.
 
-    jsval exn;
+    RootedValue exn(cx);
     if (!JS_GetPendingException(cx, &exn))
         return true;
 

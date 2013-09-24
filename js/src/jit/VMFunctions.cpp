@@ -7,6 +7,7 @@
 #include "jit/VMFunctions.h"
 
 #include "builtin/ParallelArray.h"
+#include "builtin/TypedObject.h"
 #include "frontend/BytecodeCompiler.h"
 #include "jit/BaselineIC.h"
 #include "jit/Ion.h"
@@ -94,9 +95,9 @@ InvokeFunction(JSContext *cx, HandleObject obj0, uint32_t argc, Value *argv, Val
 }
 
 JSObject *
-NewGCThing(JSContext *cx, gc::AllocKind allocKind, size_t thingSize)
+NewGCThing(JSContext *cx, gc::AllocKind allocKind, size_t thingSize, gc::InitialHeap initialHeap)
 {
-    return gc::NewGCThing<JSObject, CanGC>(cx, allocKind, thingSize, gc::DefaultHeap);
+    return gc::NewGCThing<JSObject, CanGC>(cx, allocKind, thingSize, initialHeap);
 }
 
 bool
@@ -269,6 +270,8 @@ NewInitArray(JSContext *cx, uint32_t count, types::TypeObject *typeArg)
 {
     RootedTypeObject type(cx, typeArg);
     NewObjectKind newKind = !type ? SingletonObject : GenericObject;
+    if (type && type->isLongLivedForJITAlloc())
+        newKind = TenuredObject;
     RootedObject obj(cx, NewDenseAllocatedArray(cx, count, NULL, newKind));
     if (!obj)
         return NULL;
@@ -285,6 +288,8 @@ JSObject*
 NewInitObject(JSContext *cx, HandleObject templateObject)
 {
     NewObjectKind newKind = templateObject->hasSingletonType() ? SingletonObject : GenericObject;
+    if (!templateObject->hasLazyType() && templateObject->type()->isLongLivedForJITAlloc())
+        newKind = TenuredObject;
     RootedObject obj(cx, CopyInitializerObject(cx, templateObject, newKind));
 
     if (!obj)
@@ -302,11 +307,16 @@ JSObject *
 NewInitObjectWithClassPrototype(JSContext *cx, HandleObject templateObject)
 {
     JS_ASSERT(!templateObject->hasSingletonType());
+    JS_ASSERT(!templateObject->hasLazyType());
 
+    NewObjectKind newKind = templateObject->type()->isLongLivedForJITAlloc()
+                            ? TenuredObject
+                            : GenericObject;
     JSObject *obj = NewObjectWithGivenProto(cx,
                                             templateObject->getClass(),
                                             templateObject->getProto(),
-                                            cx->global());
+                                            cx->global(),
+                                            newKind);
     if (!obj)
         return NULL;
 
@@ -751,7 +761,10 @@ InitRestParameter(JSContext *cx, uint32_t length, Value *rest, HandleObject temp
         return arrRes;
     }
 
-    ArrayObject *arrRes = NewDenseCopiedArray(cx, length, rest, NULL);
+    NewObjectKind newKind = templateObj->type()->isLongLivedForJITAlloc()
+                            ? TenuredObject
+                            : GenericObject;
+    ArrayObject *arrRes = NewDenseCopiedArray(cx, length, rest, NULL, newKind);
     if (arrRes)
         arrRes->setType(templateObj->type());
     return arrRes;
@@ -859,6 +872,13 @@ InitBaselineFrameForOsr(BaselineFrame *frame, StackFrame *interpFrame, uint32_t 
 {
     return frame->initForOsr(interpFrame, numStackValues);
 }
+
+JSObject *CreateDerivedTypedObj(JSContext *cx, HandleObject type,
+                                HandleObject owner, int32_t offset)
+{
+    return BinaryBlock::createDerived(cx, type, owner, offset);
+}
+
 
 } // namespace jit
 } // namespace js

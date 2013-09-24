@@ -133,7 +133,10 @@ public:
   NS_IMETHOD Run()
   {
     MOZ_ASSERT(NS_IsMainThread());
-    delete gHalDiskSpaceWatcher;
+    if (gHalDiskSpaceWatcher) {
+      delete gHalDiskSpaceWatcher;
+      gHalDiskSpaceWatcher = nullptr;
+    }
     return NS_OK;
   }
 };

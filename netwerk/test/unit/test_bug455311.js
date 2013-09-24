@@ -1,6 +1,3 @@
-const Ci = Components.interfaces;
-const Cc = Components.classes;
-const Cr = Components.results;
 const isWindows = ("@mozilla.org/windows-registry-key;1" in Cc);
 const isLinux = ("@mozilla.org/gnome-gconf-service;1" in Cc);
 

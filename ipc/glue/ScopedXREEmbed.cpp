@@ -11,7 +11,7 @@
 
 #include "nsCOMPtr.h"
 #include "nsServiceManagerUtils.h"
-#include "nsStringGlue.h"
+#include "nsString.h"
 #include "nsXULAppAPI.h"
 
 using mozilla::ipc::ScopedXREEmbed;

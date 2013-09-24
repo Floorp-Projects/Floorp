@@ -13,9 +13,18 @@ import org.json.JSONArray;
 import org.json.JSONObject;
 
 import android.content.Context;
+import android.content.res.Configuration;
 import android.graphics.Color;
 import android.os.Build;
+import android.text.format.DateFormat;
+import android.text.Html;
+import android.text.InputType;
+import android.text.TextUtils;
+import android.util.Log;
+import android.view.inputmethod.InputMethodManager;
 import android.view.View;
+import android.view.ViewGroup.LayoutParams;
+import android.widget.ArrayAdapter;
 import android.widget.CheckBox;
 import android.widget.CheckedTextView;
 import android.widget.DatePicker;
@@ -24,14 +33,6 @@ import android.widget.LinearLayout;
 import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.TimePicker;
-import android.text.InputType;
-import android.text.TextUtils;
-import android.text.format.DateFormat;
-import android.util.Log;
-import android.text.Html;
-import android.widget.ArrayAdapter;
-import android.view.ViewGroup.LayoutParams;
-import android.view.inputmethod.InputMethodManager;
 
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
@@ -88,6 +89,21 @@ class PromptInput {
         public String getValue() {
             EditText edit = (EditText)mView;
             return edit.getText().toString();
+        }
+    }
+
+    public static class NumberInput extends EditInput {
+        public static final String INPUT_TYPE = "number";
+        public NumberInput(JSONObject obj) {
+            super(obj);
+        }
+
+        public View getView(final Context context) throws UnsupportedOperationException {
+            EditText input = (EditText) super.getView(context);
+            input.setRawInputType(Configuration.KEYBOARD_12KEY);
+            input.setInputType(InputType.TYPE_CLASS_NUMBER |
+                               InputType.TYPE_NUMBER_FLAG_SIGNED);
+            return input;
         }
     }
 
@@ -324,6 +340,8 @@ class PromptInput {
         String type = obj.optString("type");
         if (EditInput.INPUT_TYPE.equals(type)) {
             return new EditInput(obj);
+        } else if (NumberInput.INPUT_TYPE.equals(type)) {
+            return new NumberInput(obj);
         } else if (PasswordInput.INPUT_TYPE.equals(type)) {
             return new PasswordInput(obj);
         } else if (CheckboxInput.INPUT_TYPE.equals(type)) {

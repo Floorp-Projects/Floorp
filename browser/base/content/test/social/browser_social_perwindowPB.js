@@ -39,7 +39,7 @@ function test() {
     origin: "https://example.com",
     sidebarURL: "https://example.com/browser/browser/base/content/test/social/social_sidebar.html",
     workerURL: "https://example.com/browser/browser/base/content/test/social/social_worker.js",
-    iconURL: "https://example.com/browser/browser/base/content/test/social/moz.png"
+    iconURL: "https://example.com/browser/browser/base/content/test/general/moz.png"
   };
   runSocialTestWithProvider(manifest, function (finishcb) {
     openTab(window, "http://example.com", function(newTab) {

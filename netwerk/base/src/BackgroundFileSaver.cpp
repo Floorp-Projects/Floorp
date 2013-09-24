@@ -4,7 +4,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "mozilla/RefPtr.h"
 #include "pk11pub.h"
 #include "ScopedNSSTypes.h"
 #include "secoidt.h"
@@ -13,10 +12,10 @@
 #include "nsIPipe.h"
 #include "nsNetUtil.h"
 #include "nsThreadUtils.h"
-#include "nsXPCOMStrings.h"
 
 #include "BackgroundFileSaver.h"
 #include "mozilla/Telemetry.h"
+#include "nsIAsyncInputStream.h"
 
 namespace mozilla {
 namespace net {

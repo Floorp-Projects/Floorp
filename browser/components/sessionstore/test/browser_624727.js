@@ -2,13 +2,15 @@
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
 function test() {
-  waitForExplicitFinish();
+  TestRunner.run();
+}
 
-  let assertNumberOfTabs = function (num, msg) {
+function runTests() {
+  function assertNumberOfTabs(num, msg) {
     is(gBrowser.tabs.length, num, msg);
   }
 
-  let assertNumberOfPinnedTabs = function (num, msg) {
+  function assertNumberOfPinnedTabs(num, msg) {
     is(gBrowser._numPinnedTabs, num, msg);
   }
 
@@ -27,13 +29,13 @@ function test() {
   assertNumberOfPinnedTabs(2, "both tabs are now pinned");
 
   // run the test
-  waitForBrowserState(
+  yield waitForBrowserState(
     { windows: [{ tabs: [{ url: "about:blank" }] }] },
     function () {
       assertNumberOfTabs(1, "one tab left after setBrowserState()");
       assertNumberOfPinnedTabs(0, "there are no pinned tabs");
       is(gBrowser.tabs[0].linkedBrowser, linkedBrowser, "first tab's browser got re-used");
-      finish();
+      next();
     }
   );
 }

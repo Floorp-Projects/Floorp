@@ -65,10 +65,7 @@ function main() {
   animLength = null;
   baseVal = null;
   animVal = null;
-  netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
-  window.QueryInterface(Components.interfaces.nsIInterfaceRequestor)
-        .getInterface(Components.interfaces.nsIDOMWindowUtils)
-        .garbageCollect();
+  SpecialPowers.gc();
 
   // The tearoff objects should no longer exist and we should create new ones.
   // If somehow, the tearoff objects have died and yet not been removed from the

@@ -109,6 +109,56 @@ AudioBuffer::RestoreJSChannelData(JSContext* aJSContext)
 }
 
 void
+AudioBuffer::CopyFromChannel(const Float32Array& aDestination, uint32_t aChannelNumber,
+                             uint32_t aStartInChannel, ErrorResult& aRv)
+{
+  uint32_t length = aDestination.Length();
+  if (aChannelNumber >= NumberOfChannels() ||
+      aStartInChannel + length >= mLength) {
+    aRv.Throw(NS_ERROR_DOM_INDEX_SIZE_ERR);
+    return;
+  }
+
+  if (!mSharedChannels && JS_GetTypedArrayLength(mJSChannels[aChannelNumber]) != mLength) {
+    // The array was probably neutered
+    aRv.Throw(NS_ERROR_DOM_INDEX_SIZE_ERR);
+    return;
+  }
+
+  const float* sourceData = mSharedChannels ?
+    mSharedChannels->GetData(aChannelNumber) :
+    JS_GetFloat32ArrayData(mJSChannels[aChannelNumber]);
+  PodCopy(aDestination.Data(), sourceData + aStartInChannel, length);
+}
+
+void
+AudioBuffer::CopyToChannel(JSContext* aJSContext, const Float32Array& aSource,
+                           uint32_t aChannelNumber, uint32_t aStartInChannel,
+                           ErrorResult& aRv)
+{
+  uint32_t length = aSource.Length();
+  if (aChannelNumber >= NumberOfChannels() ||
+      aStartInChannel + length >= mLength) {
+    aRv.Throw(NS_ERROR_DOM_INDEX_SIZE_ERR);
+    return;
+  }
+
+  if (!mSharedChannels && JS_GetTypedArrayLength(mJSChannels[aChannelNumber]) != mLength) {
+    // The array was probably neutered
+    aRv.Throw(NS_ERROR_DOM_INDEX_SIZE_ERR);
+    return;
+  }
+
+  if (!RestoreJSChannelData(aJSContext)) {
+    aRv.Throw(NS_ERROR_OUT_OF_MEMORY);
+    return;
+  }
+
+  PodCopy(JS_GetFloat32ArrayData(mJSChannels[aChannelNumber]) + aStartInChannel,
+          aSource.Data(), length);
+}
+
+void
 AudioBuffer::SetRawChannelContents(JSContext* aJSContext, uint32_t aChannel,
                                    float* aContents)
 {

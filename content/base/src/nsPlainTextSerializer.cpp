@@ -29,7 +29,6 @@ using namespace mozilla::dom;
 #define PREF_HEADER_STRATEGY "converter.html2txt.header_strategy"
 
 static const  int32_t kTabSize=4;
-static const  int32_t kOLNumberWidth = 3;
 static const  int32_t kIndentSizeHeaders = 2;  /* Indention of h1, if
                                                 mHeaderStrategy = 1 or = 2.
                                                 Indention of other headers

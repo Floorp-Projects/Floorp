@@ -7,7 +7,6 @@
 #include "mozilla/net/WyciwygChannelParent.h"
 #include "nsWyciwygChannel.h"
 #include "nsNetUtil.h"
-#include "nsISupportsPriority.h"
 #include "nsCharsetSource.h"
 #include "nsISerializable.h"
 #include "nsSerializationHelper.h"

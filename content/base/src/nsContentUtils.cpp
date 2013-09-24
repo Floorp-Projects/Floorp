@@ -251,7 +251,6 @@ bool nsContentUtils::sDOMWindowDumpEnabled;
 
 namespace {
 
-static const char kJSStackContractID[] = "@mozilla.org/js/xpc/ContextStack;1";
 static NS_DEFINE_CID(kParserServiceCID, NS_PARSERSERVICE_CID);
 static NS_DEFINE_CID(kCParserCID, NS_PARSER_CID);
 
@@ -2218,13 +2217,6 @@ static inline void KeyAppendInt(int32_t aInt, nsACString& aKey)
   KeyAppendSep(aKey);
 
   aKey.Append(nsPrintfCString("%d", aInt));
-}
-
-static inline void KeyAppendAtom(nsIAtom* aAtom, nsACString& aKey)
-{
-  NS_PRECONDITION(aAtom, "KeyAppendAtom: aAtom can not be null!\n");
-
-  KeyAppendString(nsAtomCString(aAtom), aKey);
 }
 
 static inline bool IsAutocompleteOff(const nsIContent* aElement)
@@ -6125,9 +6117,9 @@ nsContentUtils::IsPatternMatching(nsAString& aValue, nsAString& aPattern,
   aPattern.Insert(NS_LITERAL_STRING("^(?:"), 0);
   aPattern.Append(NS_LITERAL_STRING(")$"));
 
-  JSObject* re = JS_NewUCRegExpObjectNoStatics(cx, static_cast<jschar*>
-                                                 (aPattern.BeginWriting()),
-                                               aPattern.Length(), 0);
+  JS::RootedObject re(cx, JS_NewUCRegExpObjectNoStatics(cx, static_cast<jschar*>
+                                                        (aPattern.BeginWriting()),
+                                                        aPattern.Length(), 0));
   if (!re) {
     JS_ClearPendingException(cx);
     return true;
@@ -6137,7 +6129,7 @@ nsContentUtils::IsPatternMatching(nsAString& aValue, nsAString& aPattern,
   size_t idx = 0;
   if (!JS_ExecuteRegExpNoStatics(cx, re,
                                  static_cast<jschar*>(aValue.BeginWriting()),
-                                 aValue.Length(), &idx, true, rval.address())) {
+                                 aValue.Length(), &idx, true, &rval)) {
     JS_ClearPendingException(cx);
     return true;
   }

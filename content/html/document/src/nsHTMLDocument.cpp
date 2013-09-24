@@ -117,10 +117,6 @@ using namespace mozilla::dom;
 
 #include "prtime.h"
 
-// Find/Search Includes
-const int32_t kForward  = 0;
-const int32_t kBackward = 1;
-
 //#define DEBUG_charset
 
 static NS_DEFINE_CID(kCParserCID, NS_PARSER_CID);

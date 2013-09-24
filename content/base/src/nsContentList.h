@@ -16,7 +16,7 @@
 #include "nsContentListDeclarations.h"
 #include "nsISupports.h"
 #include "nsTArray.h"
-#include "nsStringGlue.h"
+#include "nsString.h"
 #include "nsIHTMLCollection.h"
 #include "nsIDOMNodeList.h"
 #include "nsINodeList.h"

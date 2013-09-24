@@ -9,6 +9,9 @@
 #include "MediaSegment.h"
 #include "AudioSampleFormat.h"
 #include "SharedBuffer.h"
+#ifdef MOZILLA_INTERNAL_API
+#include "mozilla/TimeStamp.h"
+#endif
 
 namespace mozilla {
 
@@ -102,6 +105,9 @@ struct AudioChunk {
   nsTArray<const void*> mChannelData; // one pointer per channel; empty if and only if mBuffer is null
   float mVolume; // volume multiplier to apply (1.0f if mBuffer is nonnull)
   SampleFormat mBufferFormat; // format of frames in mBuffer (only meaningful if mBuffer is nonnull)
+#ifdef MOZILLA_INTERNAL_API
+  mozilla::TimeStamp mTimeStamp;           // time at which this has been fetched from the MediaEngine
+#endif
 };
 
 /**
@@ -125,6 +131,9 @@ public:
     }
     chunk->mVolume = 1.0f;
     chunk->mBufferFormat = AUDIO_FORMAT_FLOAT32;
+#ifdef MOZILLA_INTERNAL_API
+    chunk->mTimeStamp = TimeStamp::Now();
+#endif
   }
   void AppendFrames(already_AddRefed<ThreadSharedObject> aBuffer,
                     const nsTArray<const int16_t*>& aChannelData,
@@ -137,6 +146,9 @@ public:
     }
     chunk->mVolume = 1.0f;
     chunk->mBufferFormat = AUDIO_FORMAT_S16;
+#ifdef MOZILLA_INTERNAL_API
+    chunk->mTimeStamp = TimeStamp::Now();
+#endif
   }
   // Consumes aChunk, and returns a pointer to the persistent copy of aChunk
   // in the segment.
@@ -147,10 +159,13 @@ public:
     chunk->mChannelData.SwapElements(aChunk->mChannelData);
     chunk->mVolume = aChunk->mVolume;
     chunk->mBufferFormat = aChunk->mBufferFormat;
+#ifdef MOZILLA_INTERNAL_API
+    chunk->mTimeStamp = TimeStamp::Now();
+#endif
     return chunk;
   }
   void ApplyVolume(float aVolume);
-  void WriteTo(AudioStream* aOutput);
+  void WriteTo(uint64_t aID, AudioStream* aOutput);
 
   static Type StaticType() { return AUDIO; }
 };

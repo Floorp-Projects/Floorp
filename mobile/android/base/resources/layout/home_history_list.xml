@@ -11,7 +11,7 @@
               android:layout_height="fill_parent"/>
 
     <TextView android:id="@+id/title"
-              style="@style/Widget.Home.HistoryTabIndicator"
+              style="@style/Widget.Home.HistoryPageTitle"
               android:visibility="gone"/>
 
     <org.mozilla.gecko.home.HomeListView

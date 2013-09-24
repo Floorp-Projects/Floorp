@@ -54,19 +54,13 @@ function installTestApp(zipName, appId, onDone) {
   let request = {type: "install", appId: appId};
   webappActorRequest(request, function (aResponse) {
     do_check_eq(aResponse.appId, appId);
-  });
-
-  // The install request is asynchronous and send back an event to tell
-  // if the installation succeed or failed
-  gClient.addListener("webappsEvent", function (aState, aType, aPacket) {
-    do_check_eq(aType.appId, appId);
-    if ("error" in aType) {
-      do_throw("Error: " + aType.error);
+    if ("error" in aResponse) {
+      do_throw("Error: " + aResponse.error);
     }
-    if ("message" in aType) {
-      do_throw("Error message: " + aType.message);
+    if ("message" in aResponse) {
+      do_throw("Error message: " + aResponse.message);
     }
-    do_check_false("error" in aType);
+    do_check_false("error" in aResponse);
 
     onDone();
   });

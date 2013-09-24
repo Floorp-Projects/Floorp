@@ -15,11 +15,13 @@
 #include "jit/Ion.h"
 #include "jit/IonLinker.h"
 #include "jit/IonSpewer.h"
+#include "jit/Lowering.h"
 #include "jit/PerfSpewer.h"
 #include "jit/VMFunctions.h"
 #include "vm/Shape.h"
 
 #include "vm/Interpreter-inl.h"
+#include "vm/Shape-inl.h"
 
 using namespace js;
 using namespace js::jit;
@@ -1627,8 +1629,6 @@ GetPropertyIC::tryAttachArgumentsLength(JSContext *cx, IonScript *ion, HandleObj
     const Class *clasp = obj->is<StrictArgumentsObject>() ? &StrictArgumentsObject::class_
                                                           : &NormalArgumentsObject::class_;
 
-    Label fail;
-    Label pass;
     masm.branchTestObjClass(Assembler::NotEqual, object(), tmpReg, clasp, &failures);
 
     // Get initial ArgsObj length value, test if length has been overridden.
@@ -1949,7 +1949,7 @@ SetPropertyIC::attachNativeExisting(JSContext *cx, IonScript *ion, HandleObject 
     MacroAssembler masm(cx);
     RepatchStubAppender attacher(*this);
 
-    Label failures;
+    Label failures, barrierFailure;
     masm.branchPtr(Assembler::NotEqual,
                    Address(object(), JSObject::offsetOfShape()),
                    ImmGCPtr(obj->lastProperty()), &failures);
@@ -1973,20 +1973,10 @@ SetPropertyIC::attachNativeExisting(JSContext *cx, IonScript *ion, HandleObject 
             JS_ASSERT(propTypes);
             JS_ASSERT(!propTypes->unknown());
 
-            Label barrierSuccess;
-            Label barrierFailure;
-
             Register scratchReg = object();
             masm.push(scratchReg);
 
-            masm.guardTypeSet(valReg, propTypes, scratchReg,
-                                &barrierSuccess, &barrierFailure);
-
-            masm.bind(&barrierFailure);
-            masm.pop(object());
-            masm.jump(&failures);
-
-            masm.bind(&barrierSuccess);
+            masm.guardTypeSet(valReg, propTypes, scratchReg, &barrierFailure);
             masm.pop(object());
         }
     }
@@ -2011,6 +2001,11 @@ SetPropertyIC::attachNativeExisting(JSContext *cx, IonScript *ion, HandleObject 
     }
 
     attacher.jumpRejoin(masm);
+
+    if (barrierFailure.used()) {
+        masm.bind(&barrierFailure);
+        masm.pop(object());
+    }
 
     masm.bind(&failures);
     attacher.jumpNextStub(masm);
@@ -2156,7 +2151,7 @@ SetPropertyIC::attachGenericProxy(JSContext *cx, IonScript *ion, void *returnAdd
         RegisterSet regSet(RegisterSet::All());
         regSet.take(AnyRegister(object()));
         if (!value().constant())
-            regSet.maybeTake(value().reg());
+            regSet.takeUnchecked(value().reg());
 
         Register scratch = regSet.takeGeneral();
         masm.push(scratch);
@@ -2246,7 +2241,7 @@ GenerateCallSetter(JSContext *cx, IonScript *ion, MacroAssembler &masm,
         RegisterSet regSet(RegisterSet::All());
         regSet.take(AnyRegister(object));
         if (!value.constant())
-            regSet.maybeTake(value.reg());
+            regSet.takeUnchecked(value.reg());
         Register scratchReg = regSet.takeGeneral();
         masm.push(scratchReg);
 
@@ -2985,7 +2980,7 @@ GenerateGetTypedArrayElement(JSContext *cx, MacroAssembler &masm, IonCache::Stub
         // Part 2: Call to translate the str into index
         RegisterSet regs = RegisterSet::Volatile();
         masm.PushRegsInMask(regs);
-        regs.maybeTake(str);
+        regs.takeUnchecked(str);
 
         Register temp = regs.takeGeneral();
 
@@ -3074,8 +3069,6 @@ GetElementIC::attachArgumentsElement(JSContext *cx, IonScript *ion, JSObject *ob
     const Class *clasp = obj->is<StrictArgumentsObject>() ? &StrictArgumentsObject::class_
                                                           : &NormalArgumentsObject::class_;
 
-    Label fail;
-    Label pass;
     masm.branchTestObjClass(Assembler::NotEqual, object(), tmpReg, clasp, &failures);
 
     // Get initial ArgsObj length value, test if length has been overridden.
@@ -3402,8 +3395,13 @@ GenerateSetTypedArrayElement(JSContext *cx, MacroAssembler &masm, IonCache::Stub
     BaseIndex target(elements, index, ScaleFromElemWidth(width));
 
     if (arrayType == ScalarTypeRepresentation::TYPE_FLOAT32) {
-        if (!masm.convertConstantOrRegisterToFloat(cx, value, tempFloat, &failures))
-            return false;
+        if (LIRGenerator::allowFloat32Optimizations()) {
+            if (!masm.convertConstantOrRegisterToFloat(cx, value, tempFloat, &failures))
+                return false;
+        } else {
+            if (!masm.convertConstantOrRegisterToDouble(cx, value, tempFloat, &failures))
+                return false;
+        }
         masm.storeToTypedFloatArray(arrayType, tempFloat, target);
     } else if (arrayType == ScalarTypeRepresentation::TYPE_FLOAT64) {
         if (!masm.convertConstantOrRegisterToDouble(cx, value, tempFloat, &failures))

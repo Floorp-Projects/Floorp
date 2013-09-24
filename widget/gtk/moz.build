@@ -1,0 +1,82 @@
+# -*- Mode: python; c-basic-offset: 4; indent-tabs-mode: nil; tab-width: 40 -*-
+# vim: set filetype=python:
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+MODULE = 'widget'
+
+if CONFIG['MOZ_ENABLE_GTK2']:
+    LIBRARY_NAME = 'widget_gtk2'
+else:
+    LIBRARY_NAME = 'widget_gtk3'
+
+EXPORTS += [
+    'mozcontainer.h',
+    'nsGTKToolkit.h',
+    'nsIImageToPixbuf.h',
+]
+
+CPP_SOURCES += [
+    'WidgetTraceEvent.cpp',
+    'nsAppShell.cpp',
+    'nsBidiKeyboard.cpp',
+    'nsColorPicker.cpp',
+    'nsFilePicker.cpp',
+    'nsGtkIMModule.cpp',
+    'nsGtkKeyUtils.cpp',
+    'nsImageToPixbuf.cpp',
+    'nsLookAndFeel.cpp',
+    'nsNativeKeyBindings.cpp',
+    'nsNativeThemeGTK.cpp',
+    'nsScreenGtk.cpp',
+    'nsScreenManagerGtk.cpp',
+    'nsSound.cpp',
+    'nsToolkit.cpp',
+    'nsWidgetFactory.cpp',
+    'nsWindow.cpp',
+]
+
+if CONFIG['MOZ_X11']:
+    CPP_SOURCES += [
+        'nsIdleServiceGTK.cpp',
+    ]
+
+if CONFIG['NS_PRINTING']:
+    CPP_SOURCES += [
+        'nsDeviceContextSpecG.cpp',
+        'nsPrintOptionsGTK.cpp',
+        'nsPrintDialogGTK.cpp',
+        'nsPrintSettingsGTK.cpp',
+        'nsCUPSShim.cpp',
+        'nsPaperPS.cpp',
+        'nsPSPrinters.cpp',
+    ]
+
+if CONFIG['MOZ_X11']:
+    CPP_SOURCES += [
+        'nsClipboard.cpp',
+        'nsDragService.cpp',
+    ]
+
+FAIL_ON_WARNINGS = True
+
+CSRCS += [
+    'mozcontainer.c',
+]
+
+LIBXUL_LIBRARY = True
+
+if CONFIG['ACCESSIBILITY']:
+    CSRCS += [
+        'maiRedundantObjectFactory.c',
+    ]
+
+if CONFIG['MOZ_ENABLE_GTK2']:
+    CSRCS += [
+        'gtk2drawing.c',
+    ]
+else:
+    CSRCS += [
+        'gtk3drawing.c',
+    ]

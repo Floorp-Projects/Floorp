@@ -13,6 +13,7 @@
 #include "nsIWindowMediator.h"
 #include "nsXPCOMCID.h"
 #include "mozilla/ModuleUtils.h"
+#include "nsString.h"
 
 // just to do the reverse-lookup! sheesh.
 #include "nsIInterfaceRequestorUtils.h"

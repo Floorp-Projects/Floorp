@@ -11,14 +11,13 @@
 /* Threadsafe. */
 
 #include "nsMemory.h"
-#include "nsIServiceManager.h"
 #include "nsCOMArray.h"
 #include "nsThreadUtils.h"
 
 #include "nsConsoleService.h"
 #include "nsConsoleMessage.h"
 #include "nsIClassInfoImpl.h"
-#include "nsThreadUtils.h"
+#include "nsIConsoleListener.h"
 
 #include "mozilla/Preferences.h"
 

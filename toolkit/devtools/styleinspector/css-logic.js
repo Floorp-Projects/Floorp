@@ -51,6 +51,8 @@ const RX_PSEUDO = /\s*:?:([\w-]+)(\(?\)?)\s*/g;
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
+let {colorUtils} = require("devtools/css-color");
+
 function CssLogic()
 {
   // The cache of examined CSS properties.
@@ -1452,7 +1454,6 @@ CssPropertyInfo.prototype = {
         Services.console.logStringMessage(ex);
       }
     }
-
     return this._value;
   },
 
@@ -1601,9 +1602,8 @@ function CssSelectorInfo(aSelector, aProperty, aValue, aStatus)
 {
   this.selector = aSelector;
   this.property = aProperty;
-  this.value = aValue;
   this.status = aStatus;
-
+  this.value = colorUtils.processCSSString(aValue);
   let priority = this.selector.cssRule.getPropertyPriority(this.property);
   this.important = (priority === "important");
 }

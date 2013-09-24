@@ -150,19 +150,6 @@ static const char *kMinimumRegistryVersion = "0.9";
 static NS_DEFINE_IID(kIPluginTagInfoIID, NS_IPLUGINTAGINFO_IID);
 static const char kDirectoryServiceContractID[] = "@mozilla.org/file/directory_service;1";
 
-// Registry keys for caching plugin info
-static const char kPluginsRootKey[] = "software/plugins";
-static const char kPluginsNameKey[] = "name";
-static const char kPluginsDescKey[] = "description";
-static const char kPluginsFilenameKey[] = "filename";
-static const char kPluginsFullpathKey[] = "fullpath";
-static const char kPluginsModTimeKey[] = "lastModTimeStamp";
-static const char kPluginsCanUnload[] = "canUnload";
-static const char kPluginsVersionKey[] = "version";
-static const char kPluginsMimeTypeKey[] = "mimetype";
-static const char kPluginsMimeDescKey[] = "description";
-static const char kPluginsMimeExtKey[] = "extension";
-
 #define kPluginRegistryFilename NS_LITERAL_CSTRING("pluginreg.dat")
 
 #ifdef PLUGIN_LOGGING

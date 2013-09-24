@@ -44,3 +44,14 @@ MSVC_ENABLE_PGO = True
 
 LIBRARY_NAME = 'gkconxbl_s'
 
+LOCAL_INCLUDES += [
+    '/content/base/src',
+    '/content/events/src',
+    '/content/html/document/src',
+    '/content/xml/document/src',
+    '/content/xul/content/src',
+    '/content/xul/document/src',
+    '/dom/base',
+    '/layout/style',
+    '/xpcom/ds',
+]

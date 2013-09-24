@@ -202,8 +202,6 @@ struct PrefTraits<int32_t>
 {
   typedef int32_t PrefValueType;
 
-  static const PrefValueType kDefaultValue = 0;
-
   static inline PrefValueType
   Get(const char* aPref)
   {
@@ -700,7 +698,7 @@ ContentSecurityPolicyAllows(JSContext* aCx)
     nsString fileName;
     uint32_t lineNum = 0;
 
-    JSScript* script;
+    JS::RootedScript script(aCx);
     const char* file;
     if (JS_DescribeScriptedCaller(aCx, &script, &lineNum) &&
         (file = JS_GetScriptFilename(aCx, script))) {

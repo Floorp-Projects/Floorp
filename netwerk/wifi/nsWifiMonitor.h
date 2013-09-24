@@ -12,7 +12,7 @@
 #include "nsIThread.h"
 #include "nsIRunnable.h"
 #include "nsCOMArray.h"
-#include "nsIWifiMonitor.h"
+#include "nsIWifiListener.h"
 #include "mozilla/ReentrantMonitor.h"
 #include "prlog.h"
 #include "nsIObserver.h"

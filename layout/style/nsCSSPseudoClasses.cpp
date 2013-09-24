@@ -10,6 +10,7 @@
 #include "nsCSSPseudoClasses.h"
 #include "nsStaticAtom.h"
 #include "mozilla/Preferences.h"
+#include "nsString.h"
 
 using namespace mozilla;
 

@@ -6,13 +6,8 @@
 
 #include "nsFileProtocolHandler.h"
 #include "nsFileChannel.h"
-#include "nsInputStreamChannel.h"
 #include "nsStandardURL.h"
 #include "nsURLHelper.h"
-#include "nsNetCID.h"
-
-#include "nsIServiceManager.h"
-#include "nsIURL.h"
 
 #include "nsNetUtil.h"
 
@@ -78,7 +73,7 @@ nsFileProtocolHandler::ReadURLFile(nsIFile* aFile, nsIURI** aURI)
     rv = NS_ERROR_NOT_AVAILABLE;
 
     IUniformResourceLocatorW* urlLink = nullptr;
-    result = ::CoCreateInstance(CLSID_InternetShortcut, NULL, CLSCTX_INPROC_SERVER,
+    result = ::CoCreateInstance(CLSID_InternetShortcut, nullptr, CLSCTX_INPROC_SERVER,
                                 IID_IUniformResourceLocatorW, (void**)&urlLink);
     if (SUCCEEDED(result) && urlLink) {
         IPersistFile* urlFile = nullptr;

@@ -68,13 +68,14 @@ class StructuredHumanFormatter(logging.Formatter):
         self.last_time = None
 
     def format(self, record):
+        f = record.msg.format(**record.params)
+
         if not self.write_times:
-            return record.msg.format(**record.params)
+            return f
 
         elapsed = self._time(record)
 
-        return '%s %s' % (format_seconds(elapsed),
-            record.msg.format(**record.params))
+        return '%s %s' % (format_seconds(elapsed), f)
 
     def _time(self, record):
         t = record.created - self.start_time
@@ -94,8 +95,12 @@ class StructuredTerminalFormatter(StructuredHumanFormatter):
         self.terminal = terminal
 
     def format(self, record):
-        t = self.terminal.blue(format_seconds(self._time(record)))
         f = record.msg.format(**record.params)
+
+        if not self.write_times:
+            return f
+
+        t = self.terminal.blue(format_seconds(self._time(record)))
 
         return '%s %s' % (t, self._colorize(f))
 
@@ -177,15 +182,15 @@ class LoggingManager(object):
         self.json_handlers.append(handler)
 
     def add_terminal_logging(self, fh=sys.stdout, level=logging.INFO,
-            write_interval=False):
+            write_interval=False, write_times=True):
         """Enable logging to the terminal."""
 
         formatter = StructuredHumanFormatter(self.start_time,
-            write_interval=write_interval)
+            write_interval=write_interval, write_times=write_times)
 
         if self.terminal:
             formatter = StructuredTerminalFormatter(self.start_time,
-                write_interval=write_interval)
+                write_interval=write_interval, write_times=write_times)
             formatter.set_terminal(self.terminal)
 
         handler = logging.StreamHandler(stream=fh)

@@ -7,10 +7,7 @@
 #include "nsHTTPCompressConv.h"
 #include "nsMemory.h"
 #include "plstr.h"
-#include "prlog.h"
-#include "nsIChannel.h"
 #include "nsCOMPtr.h"
-#include "nsReadableUtils.h"
 #include "nsError.h"
 #include "nsStreamUtils.h"
 #include "nsStringStream.h"
@@ -26,8 +23,8 @@ NS_IMPL_ISUPPORTS3(nsHTTPCompressConv,
 nsHTTPCompressConv::nsHTTPCompressConv()
     : mListener(nullptr)
     , mMode(HTTP_COMPRESS_IDENTITY)
-    , mOutBuffer(NULL)
-    , mInpBuffer(NULL)
+    , mOutBuffer(nullptr)
+    , mInpBuffer(nullptr)
     , mOutBufferLen(0)
     , mInpBufferLen(0)
     , mCheckHeaderDone(false)
@@ -134,24 +131,24 @@ nsHTTPCompressConv::OnDataAvailable(nsIRequest* request,
 
         case HTTP_COMPRESS_DEFLATE:
 
-            if (mInpBuffer != NULL && streamLen > mInpBufferLen)
+            if (mInpBuffer != nullptr && streamLen > mInpBufferLen)
             {
                 mInpBuffer = (unsigned char *) nsMemory::Realloc(mInpBuffer, mInpBufferLen = streamLen);
                
                 if (mOutBufferLen < streamLen * 2)
                     mOutBuffer = (unsigned char *) nsMemory::Realloc(mOutBuffer, mOutBufferLen = streamLen * 3);
 
-                if (mInpBuffer == NULL || mOutBuffer == NULL)
+                if (mInpBuffer == nullptr || mOutBuffer == nullptr)
                     return NS_ERROR_OUT_OF_MEMORY;
             }
 
-            if (mInpBuffer == NULL)
+            if (mInpBuffer == nullptr)
                 mInpBuffer = (unsigned char *) nsMemory::Alloc(mInpBufferLen = streamLen);
 
-            if (mOutBuffer == NULL)
+            if (mOutBuffer == nullptr)
                 mOutBuffer = (unsigned char *) nsMemory::Alloc(mOutBufferLen = streamLen * 3);
 
-            if (mInpBuffer == NULL || mOutBuffer == NULL)
+            if (mInpBuffer == nullptr || mOutBuffer == nullptr)
                 return NS_ERROR_OUT_OF_MEMORY;
 
             uint32_t unused;

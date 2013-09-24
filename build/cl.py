@@ -3,9 +3,10 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 import ctypes
-import os, os.path
-import subprocess
+import os
 import sys
+
+from mozprocess.processhandler import ProcessHandlerMixin
 from mozbuild.makeutil import Makefile
 
 CL_INCLUDES_PREFIX = os.environ.get("CL_INCLUDES_PREFIX", "Note: including file:")
@@ -62,12 +63,12 @@ def InvokeClWithDependencyGeneration(cmdline):
     depstarget = os.path.basename(target) + ".pp"
 
     cmdline += ['-showIncludes']
-    cl = subprocess.Popen(cmdline, stdout=subprocess.PIPE)
 
     mk = Makefile()
     rule = mk.create_rule([target])
     rule.add_dependencies([normcase(source)])
-    for line in cl.stdout:
+
+    def on_line(line):
         # cl -showIncludes prefixes every header with "Note: including file:"
         # and an indentation corresponding to the depth (which we don't need)
         if line.startswith(CL_INCLUDES_PREFIX):
@@ -78,10 +79,20 @@ def InvokeClWithDependencyGeneration(cmdline):
             if ' ' not in dep:
                 rule.add_dependencies([normcase(dep)])
         else:
-            sys.stdout.write(line) # Make sure we preserve the relevant output
-                                   # from cl
+            # Make sure we preserve the relevant output from cl. mozprocess
+            # swallows the newline delimiter, so we need to re-add it.
+            sys.stdout.write(line)
+            sys.stdout.write('\n')
 
-    ret = cl.wait()
+    # We need to ignore children because MSVC can fire up a background process
+    # during compilation. This process is cleaned up on its own. If we kill it,
+    # we can run into weird compilation issues.
+    p = ProcessHandlerMixin(cmdline, processOutputLine=[on_line],
+        ignore_children=True)
+    p.run()
+    p.processOutput()
+    ret = p.wait()
+
     if ret != 0 or target == "":
         sys.exit(ret)
 

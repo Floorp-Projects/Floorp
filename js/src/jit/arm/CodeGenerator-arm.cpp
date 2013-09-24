@@ -22,12 +22,13 @@
 #include "jsscriptinlines.h"
 
 #include "jit/shared/CodeGenerator-shared-inl.h"
-#include "vm/Shape-inl.h"
 
 using namespace js;
 using namespace js::jit;
 
 using mozilla::FloorLog2;
+using mozilla::NegativeInfinity;
+using JS::GenericNaN;
 
 // shared
 CodeGeneratorARM::CodeGeneratorARM(MIRGenerator *gen, LIRGraph *graph, MacroAssembler *masm)
@@ -319,7 +320,7 @@ CodeGeneratorARM::visitMinMaxD(LMinMaxD *ins)
     masm.ma_b(&done);
 
     masm.bind(&nan);
-    masm.loadStaticDouble(&js_NaN, output);
+    masm.loadConstantDouble(GenericNaN(), output);
     masm.ma_b(&done);
 
     masm.bind(&returnSecond);
@@ -420,40 +421,43 @@ CodeGeneratorARM::visitMulI(LMulI *ins)
             break;
           default: {
             bool handled = false;
-            if (!mul->canOverflow()) {
-                // If it cannot overflow, we can do lots of optimizations
-                Register src = ToRegister(lhs);
-                uint32_t shift = FloorLog2(constant);
-                uint32_t rest = constant - (1 << shift);
-                // See if the constant has one bit set, meaning it can be encoded as a bitshift
-                if ((1 << shift) == constant) {
-                    masm.ma_lsl(Imm32(shift), src, ToRegister(dest));
-                    handled = true;
-                } else {
-                    // If the constant cannot be encoded as (1<<C1), see if it can be encoded as
-                    // (1<<C1) | (1<<C2), which can be computed using an add and a shift
-                    uint32_t shift_rest = FloorLog2(rest);
-                    if ((1u << shift_rest) == rest) {
-                        masm.as_add(ToRegister(dest), src, lsl(src, shift-shift_rest));
-                        if (shift_rest != 0)
-                            masm.ma_lsl(Imm32(shift_rest), ToRegister(dest), ToRegister(dest));
+            if (constant > 0) {
+                // Try shift and add sequences for a positive constant.
+                if (!mul->canOverflow()) {
+                    // If it cannot overflow, we can do lots of optimizations
+                    Register src = ToRegister(lhs);
+                    uint32_t shift = FloorLog2(constant);
+                    uint32_t rest = constant - (1 << shift);
+                    // See if the constant has one bit set, meaning it can be encoded as a bitshift
+                    if ((1 << shift) == constant) {
+                        masm.ma_lsl(Imm32(shift), src, ToRegister(dest));
+                        handled = true;
+                    } else {
+                        // If the constant cannot be encoded as (1<<C1), see if it can be encoded as
+                        // (1<<C1) | (1<<C2), which can be computed using an add and a shift
+                        uint32_t shift_rest = FloorLog2(rest);
+                        if ((1u << shift_rest) == rest) {
+                            masm.as_add(ToRegister(dest), src, lsl(src, shift-shift_rest));
+                            if (shift_rest != 0)
+                                masm.ma_lsl(Imm32(shift_rest), ToRegister(dest), ToRegister(dest));
+                            handled = true;
+                        }
+                    }
+                } else if (ToRegister(lhs) != ToRegister(dest)) {
+                    // To stay on the safe side, only optimize things that are a
+                    // power of 2.
+
+                    uint32_t shift = FloorLog2(constant);
+                    if ((1 << shift) == constant) {
+                        // dest = lhs * pow(2,shift)
+                        masm.ma_lsl(Imm32(shift), ToRegister(lhs), ToRegister(dest));
+                        // At runtime, check (lhs == dest >> shift), if this does not hold,
+                        // some bits were lost due to overflow, and the computation should
+                        // be resumed as a double.
+                        masm.as_cmp(ToRegister(lhs), asr(ToRegister(dest), shift));
+                        c = Assembler::NotEqual;
                         handled = true;
                     }
-                }
-            } else if (ToRegister(lhs) != ToRegister(dest)) {
-                // To stay on the safe side, only optimize things that are a
-                // power of 2.
-
-                uint32_t shift = FloorLog2(constant);
-                if ((1 << shift) == constant) {
-                    // dest = lhs * pow(2,shift)
-                    masm.ma_lsl(Imm32(shift), ToRegister(lhs), ToRegister(dest));
-                    // At runtime, check (lhs == dest >> shift), if this does not hold,
-                    // some bits were lost due to overflow, and the computation should
-                    // be resumed as a double.
-                    masm.as_cmp(ToRegister(lhs), asr(ToRegister(dest), shift));
-                    c = Assembler::NotEqual;
-                    handled = true;
                 }
             }
 
@@ -605,7 +609,10 @@ CodeGeneratorARM::visitSoftDivI(LSoftDivI *ins)
     masm.setupAlignedABICall(2);
     masm.passABIArg(lhs);
     masm.passABIArg(rhs);
-    masm.callWithABI(JS_FUNC_TO_DATA_PTR(void *, __aeabi_idivmod));
+    if (gen->compilingAsmJS())
+        masm.callWithABI(AsmJSImm_aeabi_idivmod);
+    else
+        masm.callWithABI(JS_FUNC_TO_DATA_PTR(void *, __aeabi_idivmod));
     // idivmod returns the quotient in r0, and the remainder in r1.
     if (!mir->isTruncated()) {
         JS_ASSERT(mir->fallible());
@@ -763,7 +770,10 @@ CodeGeneratorARM::visitSoftModI(LSoftModI *ins)
     masm.setupAlignedABICall(2);
     masm.passABIArg(lhs);
     masm.passABIArg(rhs);
-    masm.callWithABI(JS_FUNC_TO_DATA_PTR(void *, __aeabi_idivmod));
+    if (gen->compilingAsmJS())
+        masm.callWithABI(AsmJSImm_aeabi_idivmod);
+    else
+        masm.callWithABI(JS_FUNC_TO_DATA_PTR(void *, __aeabi_idivmod));
 
     // If X%Y == 0 and X < 0, then we *actually* wanted to return -0.0
     if (mir->isTruncated()) {
@@ -970,7 +980,7 @@ CodeGeneratorARM::visitPowHalfD(LPowHalfD *ins)
     Label done;
 
     // Masm.pow(-Infinity, 0.5) == Infinity.
-    masm.ma_vimm(js_NegativeInfinity, ScratchFloatReg);
+    masm.ma_vimm(NegativeInfinity(), ScratchFloatReg);
     masm.compareDouble(input, ScratchFloatReg);
     masm.ma_vneg(ScratchFloatReg, output, Assembler::Equal);
     masm.ma_b(&done, Assembler::Equal);
@@ -995,7 +1005,7 @@ CodeGeneratorARM::toMoveOperand(const LAllocation *a) const
         return MoveOperand(ToFloatRegister(a));
     JS_ASSERT((ToStackOffset(a) & 3) == 0);
     int32_t offset = ToStackOffset(a);
-    
+
     // The way the stack slots work, we assume that everything from depth == 0 downwards is writable
     // however, since our frame is included in this, ensure that the frame gets skipped
     if (gen->compilingAsmJS())
@@ -1127,6 +1137,32 @@ CodeGeneratorARM::visitMathD(LMathD *math)
         break;
       case JSOP_DIV:
         masm.ma_vdiv(ToFloatRegister(src1), ToFloatRegister(src2), ToFloatRegister(output));
+        break;
+      default:
+        MOZ_ASSUME_UNREACHABLE("unexpected opcode");
+    }
+    return true;
+}
+
+bool
+CodeGeneratorARM::visitMathF(LMathF *math)
+{
+    const LAllocation *src1 = math->getOperand(0);
+    const LAllocation *src2 = math->getOperand(1);
+    const LDefinition *output = math->getDef(0);
+
+    switch (math->jsop()) {
+      case JSOP_ADD:
+        masm.ma_vadd_f32(ToFloatRegister(src1), ToFloatRegister(src2), ToFloatRegister(output));
+        break;
+      case JSOP_SUB:
+        masm.ma_vsub_f32(ToFloatRegister(src1), ToFloatRegister(src2), ToFloatRegister(output));
+        break;
+      case JSOP_MUL:
+        masm.ma_vmul_f32(ToFloatRegister(src1), ToFloatRegister(src2), ToFloatRegister(output));
+        break;
+      case JSOP_DIV:
+        masm.ma_vdiv_f32(ToFloatRegister(src1), ToFloatRegister(src2), ToFloatRegister(output));
         break;
       default:
         MOZ_ASSUME_UNREACHABLE("unexpected opcode");
@@ -1306,6 +1342,14 @@ CodeGeneratorARM::visitDouble(LDouble *ins)
     const LDefinition *out = ins->getDef(0);
 
     masm.ma_vimm(ins->getDouble(), ToFloatRegister(out));
+    return true;
+}
+
+bool
+CodeGeneratorARM::visitFloat32(LFloat32 *ins)
+{
+    const LDefinition *out = ins->getDef(0);
+    masm.loadConstantFloat32(ins->getFloat(), ToFloatRegister(out));
     return true;
 }
 
@@ -1999,7 +2043,10 @@ CodeGeneratorARM::visitSoftUDivOrMod(LSoftUDivOrMod *ins)
     masm.setupAlignedABICall(2);
     masm.passABIArg(lhs);
     masm.passABIArg(rhs);
-    masm.callWithABI(JS_FUNC_TO_DATA_PTR(void *, __aeabi_uidivmod));
+    if (gen->compilingAsmJS())
+        masm.callWithABI(AsmJSImm_aeabi_uidivmod);
+    else
+        masm.callWithABI(JS_FUNC_TO_DATA_PTR(void *, __aeabi_uidivmod));
 
     masm.bind(&afterDiv);
     return true;
@@ -2083,5 +2130,13 @@ CodeGeneratorARM::visitNegD(LNegD *ins)
 {
     FloatRegister input = ToFloatRegister(ins->input());
     masm.ma_vneg(input, ToFloatRegister(ins->output()));
+    return true;
+}
+
+bool
+CodeGeneratorARM::visitNegF(LNegF *ins)
+{
+    FloatRegister input = ToFloatRegister(ins->input());
+    masm.ma_vneg_f32(input, ToFloatRegister(ins->output()));
     return true;
 }

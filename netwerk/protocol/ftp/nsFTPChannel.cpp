@@ -7,33 +7,12 @@
 #include "nsFTPChannel.h"
 #include "nsFtpConnectionThread.h"  // defines nsFtpState
 
-#include "nsIStreamListener.h"
-#include "nsIServiceManager.h"
 #include "nsThreadUtils.h"
-#include "nsNetUtil.h"
-#include "nsMimeTypes.h"
-#include "nsReadableUtils.h"
-#include "nsIPrefService.h"
-#include "nsIPrefBranch.h"
-#include "nsIStreamConverterService.h"
-#include "nsISocketTransport.h"
-#include "nsURLHelper.h"
 #include "mozilla/Attributes.h"
 
 #if defined(PR_LOGGING)
 extern PRLogModuleInfo* gFTPLog;
 #endif /* PR_LOGGING */
-
-////////////// this needs to move to nspr
-static inline uint32_t
-PRTimeToSeconds(PRTime t_usec)
-{
-    return uint32_t(t_usec / PR_USEC_PER_SEC);
-}
-
-#define NowInSeconds() PRTimeToSeconds(PR_Now())
-////////////// end
-
 
 // There are two transport connections established for an 
 // ftp connection. One is used for the command channel , and

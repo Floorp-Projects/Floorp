@@ -14,7 +14,7 @@
 namespace mozilla {
 namespace dom {
 class MessagePortList;
-class WindowProxyOrMessagePortReturnValue;
+class OwningWindowProxyOrMessagePort;
 }
 }
 
@@ -50,7 +50,7 @@ public:
 
   JS::Value GetData(JSContext* aCx, mozilla::ErrorResult& aRv);
 
-  void GetSource(Nullable<mozilla::dom::WindowProxyOrMessagePortReturnValue>& aValue) const;
+  void GetSource(Nullable<mozilla::dom::OwningWindowProxyOrMessagePort>& aValue) const;
 
   mozilla::dom::MessagePortList* GetPorts()
   {

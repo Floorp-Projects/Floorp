@@ -3,8 +3,10 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "txIFunctionEvaluationContext.idl"
-#include "txINodeSet.idl"
+#include "nsISupports.idl"
+
+interface txIFunctionEvaluationContext;
+interface txINodeSet;
 
 [scriptable, uuid(c180e993-aced-4839-95a0-ecd5ff138be9)]
 interface txIEXSLTRegExFunctions : nsISupports

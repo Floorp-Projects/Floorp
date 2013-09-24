@@ -116,6 +116,7 @@ class ParallelSafetyVisitor : public MInstructionVisitor
     SAFE_OP(Beta)
     UNSAFE_OP(OsrValue)
     UNSAFE_OP(OsrScopeChain)
+    UNSAFE_OP(OsrArgumentsObject)
     UNSAFE_OP(ReturnFromCtor)
     CUSTOM_OP(CheckOverRecursed)
     UNSAFE_OP(DefVar)
@@ -175,6 +176,7 @@ class ParallelSafetyVisitor : public MInstructionVisitor
     CUSTOM_OP(NewObject)
     CUSTOM_OP(NewCallObject)
     CUSTOM_OP(NewParallelArray)
+    UNSAFE_OP(NewDerivedTypedObject)
     UNSAFE_OP(InitElem)
     UNSAFE_OP(InitElemGetterSetter)
     UNSAFE_OP(InitProp)
@@ -207,6 +209,7 @@ class ParallelSafetyVisitor : public MInstructionVisitor
     SAFE_OP(ArrayLength)
     SAFE_OP(TypedArrayLength)
     SAFE_OP(TypedArrayElements)
+    SAFE_OP(TypedObjectElements)
     SAFE_OP(InitializedLength)
     WRITE_GUARDED_OP(SetInitializedLength, elements)
     SAFE_OP(Not)
@@ -513,9 +516,7 @@ ParallelSafetyVisitor::visitNewCallObject(MNewCallObject *ins)
 bool
 ParallelSafetyVisitor::visitLambda(MLambda *ins)
 {
-    if (ins->fun()->hasSingletonType() ||
-        types::UseNewTypeForClone(ins->fun()))
-    {
+    if (ins->info().singletonType || ins->info().useNewTypeForClone) {
         // slow path: bail on parallel execution.
         return markUnsafe();
     }

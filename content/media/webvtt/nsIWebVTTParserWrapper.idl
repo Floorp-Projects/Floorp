@@ -1,0 +1,68 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+
+interface nsIDOMHTMLElement;
+interface nsIWebVTTListener;
+interface nsIDOMWindow;
+
+/**
+ * Interface for a wrapper of a JS WebVTT parser (vtt.js).
+ */
+[scriptable, uuid(1604a67f-3b72-4027-bcba-6dddd5be6b10)]
+interface nsIWebVTTParserWrapper : nsISupports
+{
+  /**
+   * Loads the JS WebVTTParser and sets it to use the passed window to create
+   * VTTRegions and VTTCues. This function must be called before calling
+   * parse, flush, or watch.
+   *
+   * @param window The window that the parser will use to create VTTCues and
+   *               VTTRegions.
+   *
+   */
+  void loadParser(in nsIDOMWindow window);
+
+  /**
+   * Attempts to parse the stream's data as WebVTT format. When it successfully
+   * parses a WebVTT region or WebVTT cue it will create a VTTRegion or VTTCue
+   * object and pass it back to the callee through its callbacks.
+   *
+   * @param data   The buffer that contains the WebVTT data received by the
+   *               Necko consumer so far.
+   */
+  void parse(in ACString data);
+
+  /**
+   * Flush indicates that no more data is expected from the stream. As such the
+   * parser should try to parse any kind of partial data it has.
+   */
+  void flush();
+
+  /**
+   * Set this parser object to use an nsIWebVTTListener object for its onCue
+   * and onRegion callbacks.
+   *
+   * @param callback The nsIWebVTTListener object that exposes onCue and
+   *                 onRegion callbacks for the parser.
+   */
+  void watch(in nsIWebVTTListener callback);
+
+  /**
+   * Convert the text content of a WebVTT cue to a document fragment so that
+   * we can display it on the page.
+   *
+   * @param window A window object with which the document fragment will be
+   *               created.
+   * @param cue    The cue whose content will be converted to a document
+   *               fragment.
+   */
+  nsIDOMHTMLElement convertCueToDOMTree(in nsIDOMWindow window,
+                                        in nsISupports cue);
+};
+
+%{C++
+#define NS_WEBVTTPARSERWRAPPER_CONTRACTID "@mozilla.org/webvttParserWrapper;1"
+%}

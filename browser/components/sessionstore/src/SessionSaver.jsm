@@ -151,7 +151,7 @@ let SessionSaverInternal = {
     delay = Math.max(this._lastSaveTime + gInterval - Date.now(), delay, 0);
 
     // Schedule a state save.
-    this._timeoutID = setTimeout(() => this._saveState(), delay);
+    this._timeoutID = setTimeout(() => this._saveStateAsync(), delay);
   },
 
   /**
@@ -186,8 +186,7 @@ let SessionSaverInternal = {
    *        update the corresponding caches.
    */
   _saveState: function (forceUpdateAllWindows = false) {
-    // Cancel any pending timeouts or just clear
-    // the timeout if this is why we've been called.
+    // Cancel any pending timeouts.
     this.cancel();
 
     stopWatchStart("COLLECT_DATA_MS", "COLLECT_DATA_LONGEST_OP_MS");
@@ -244,6 +243,33 @@ let SessionSaverInternal = {
 
     stopWatchFinish("COLLECT_DATA_MS", "COLLECT_DATA_LONGEST_OP_MS");
     this._writeState(state);
+  },
+
+  /**
+   * Saves the current session state. Collects data asynchronously and calls
+   * _saveState() to collect data again (with a cache hit rate of hopefully
+   * 100%) and write to disk afterwards.
+   */
+  _saveStateAsync: function () {
+    // Allow scheduling delayed saves again.
+    this._timeoutID = null;
+
+    // Check whether asynchronous data collection is disabled.
+    if (!Services.prefs.getBoolPref("browser.sessionstore.async")) {
+      this._saveState();
+      return;
+    }
+
+    // Update the last save time to make sure we wait at least another interval
+    // length until we call _saveStateAsync() again.
+    this.updateLastSaveTime();
+
+    // Save state synchronously after all tab caches have been filled. The data
+    // for the tab caches is collected asynchronously. We will reuse this
+    // cached data if the tab hasn't been invalidated in the meantime. In that
+    // case we will just fall back to synchronous data collection for single
+    // tabs.
+    SessionStore.fillTabCachesAsynchronously().then(() => this._saveState());
   },
 
   /**

@@ -27,6 +27,8 @@ import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.net.Uri;
 import android.os.Environment;
+import android.support.v4.app.NotificationCompat;
+import android.support.v4.app.NotificationCompat.Builder;
 import android.util.Log;
 
 import java.io.BufferedInputStream;
@@ -71,6 +73,7 @@ public class UpdateService extends IntentService {
 
     private NotificationManager mNotificationManager;
     private ConnectivityManager mConnectivityManager;
+    private Builder mBuilder;
 
     private boolean mDownloading;
     private boolean mApplyImmediately;
@@ -116,6 +119,8 @@ public class UpdateService extends IntentService {
             registerForUpdates(false);
         } else if (UpdateServiceHelper.ACTION_CHECK_FOR_UPDATE.equals(intent.getAction())) {
             startUpdate(intent.getIntExtra(UpdateServiceHelper.EXTRA_UPDATE_FLAGS_NAME, 0));
+            // Use this instead for forcing a download from about:fennec
+            // startUpdate(UpdateServiceHelper.FLAG_FORCE_DOWNLOAD | UpdateServiceHelper.FLAG_REINSTALL);
         } else if (UpdateServiceHelper.ACTION_DOWNLOAD_UPDATE.equals(intent.getAction())) {
             // We always want to do the download here
             startUpdate(UpdateServiceHelper.FLAG_FORCE_DOWNLOAD);
@@ -269,7 +274,7 @@ public class UpdateService extends IntentService {
     }
 
     private URLConnection openConnectionWithProxy(URL url) throws java.net.URISyntaxException, java.io.IOException {
-        Log.i(LOGTAG, "openning connection with url: " + url);
+        Log.i(LOGTAG, "opening connection with url: " + url);
 
         ProxySelector ps = ProxySelector.getDefault();
         Proxy proxy = Proxy.NO_PROXY;
@@ -312,7 +317,7 @@ public class UpdateService extends IntentService {
             if (urlNode == null || hashFunctionNode == null ||
                 hashValueNode == null || sizeNode == null) {
                 return null;
-            }   
+            }
 
             // Fill in UpdateInfo from the XML data
             UpdateInfo info = new UpdateInfo();
@@ -364,7 +369,6 @@ public class UpdateService extends IntentService {
     }
 
     private void showDownloadNotification(File downloadFile) {
-        Notification notification = new Notification(android.R.drawable.stat_sys_download, null, System.currentTimeMillis());
 
         Intent notificationIntent = new Intent(UpdateServiceHelper.ACTION_APPLY_UPDATE);
         notificationIntent.setClass(this, UpdateService.class);
@@ -374,11 +378,14 @@ public class UpdateService extends IntentService {
 
         PendingIntent contentIntent = PendingIntent.getService(this, 0, notificationIntent, PendingIntent.FLAG_UPDATE_CURRENT);
 
-        notification.setLatestEventInfo(this, getResources().getString(R.string.updater_downloading_title),
-                                        mApplyImmediately ? "" : getResources().getString(R.string.updater_downloading_select),
-                                        contentIntent);
-        
-        mNotificationManager.notify(NOTIFICATION_ID, notification);
+        mBuilder = new NotificationCompat.Builder(this);
+        mBuilder.setContentTitle(getResources().getString(R.string.updater_downloading_title))
+    	    .setContentText(mApplyImmediately ? "" : getResources().getString(R.string.updater_downloading_select))
+    	    .setSmallIcon(android.R.drawable.stat_sys_download)
+    	    .setContentIntent(contentIntent);
+
+        mBuilder.setProgress(100, 0, true);
+        mNotificationManager.notify(NOTIFICATION_ID, mBuilder.build());
     }
 
     private void showDownloadFailure() {
@@ -433,11 +440,17 @@ public class UpdateService extends IntentService {
             int len = 0;
 
             int bytesRead = 0;
-            float lastPercent = 0.0f;
+            int lastNotify = 0;
 
             while ((len = input.read(buf, 0, BUFSIZE)) > 0) {
                 output.write(buf, 0, len);
                 bytesRead += len;
+                // Updating the notification takes time so only do it every 1MB
+                if(bytesRead - lastNotify > 1048576) {
+	                mBuilder.setProgress(length, bytesRead, false);
+	                mNotificationManager.notify(NOTIFICATION_ID, mBuilder.build());
+	                lastNotify = bytesRead;
+                }
             }
 
             Log.i(LOGTAG, "completed update download!");

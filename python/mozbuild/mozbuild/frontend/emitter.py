@@ -13,6 +13,7 @@ import mozpack.path as mozpath
 
 from .data import (
     ConfigFileSubstitution,
+    Defines,
     DirectoryTraversal,
     Exports,
     GeneratedEventWebIDLFile,
@@ -76,7 +77,6 @@ class TreeMetadataEmitter(LoggingMixin):
 
         This is a generator of mozbuild.frontend.data.SandboxDerived instances.
         """
-
         # We always emit a directory traversal descriptor. This is needed by
         # the recursive make backend.
         for o in self._emit_directory_traversal_from_sandbox(sandbox): yield o
@@ -123,7 +123,6 @@ class TreeMetadataEmitter(LoggingMixin):
             CPPSRCS='CPP_SOURCES',
             CPP_UNIT_TESTS='CPP_UNIT_TESTS',
             CSRCS='CSRCS',
-            DEFINES='DEFINES',
             EXPORT_LIBRARY='EXPORT_LIBRARY',
             EXTRA_COMPONENTS='EXTRA_COMPONENTS',
             EXTRA_JS_MODULES='EXTRA_JS_MODULES',
@@ -164,6 +163,10 @@ class TreeMetadataEmitter(LoggingMixin):
             yield Exports(sandbox, exports,
                 dist_install=not sandbox.get('NO_DIST_INSTALL', False))
 
+        defines = sandbox.get('DEFINES')
+        if defines:
+            yield Defines(sandbox, defines)
+
         program = sandbox.get('PROGRAM')
         if program:
             yield Program(sandbox, program, sandbox['CONFIG']['BIN_SUFFIX'])
@@ -191,6 +194,7 @@ class TreeMetadataEmitter(LoggingMixin):
         o.test_tool_dirs = sandbox.get('TEST_TOOL_DIRS', [])
         o.external_make_dirs = sandbox.get('EXTERNAL_MAKE_DIRS', [])
         o.parallel_external_make_dirs = sandbox.get('PARALLEL_EXTERNAL_MAKE_DIRS', [])
+        o.is_tool_dir = sandbox.get('IS_TOOL_DIR', False)
 
         if 'TIERS' in sandbox:
             for tier in sandbox['TIERS']:

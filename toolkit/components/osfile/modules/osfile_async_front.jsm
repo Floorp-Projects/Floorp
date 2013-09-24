@@ -1,5 +1,3 @@
-"use strict";
-
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -19,11 +17,16 @@
  * @rejects {B} reason
  */
 
+"use strict";
+
 this.EXPORTED_SYMBOLS = ["OS"];
 
+const Cu = Components.utils;
+const Ci = Components.interfaces;
+
 let SharedAll = {};
-Components.utils.import("resource://gre/modules/osfile/osfile_shared_allthreads.jsm", SharedAll);
-Components.utils.import("resource://gre/modules/Deprecated.jsm", this);
+Cu.import("resource://gre/modules/osfile/osfile_shared_allthreads.jsm", SharedAll);
+Cu.import("resource://gre/modules/Deprecated.jsm", this);
 
 // Boilerplate, to simplify the transition to require()
 let OS = SharedAll.OS;
@@ -35,27 +38,27 @@ let isTypedArray = OS.Shared.isTypedArray;
 // The constructor for file errors.
 let OSError;
 if (OS.Constants.Win) {
-  Components.utils.import("resource://gre/modules/osfile/osfile_win_allthreads.jsm", this);
-  Components.utils.import("resource://gre/modules/osfile/ospath_win_back.jsm", this);
+  Cu.import("resource://gre/modules/osfile/osfile_win_allthreads.jsm", this);
   OSError = OS.Shared.Win.Error;
 } else if (OS.Constants.libc) {
-  Components.utils.import("resource://gre/modules/osfile/osfile_unix_allthreads.jsm", this);
-  Components.utils.import("resource://gre/modules/osfile/ospath_unix_back.jsm", this);
+  Cu.import("resource://gre/modules/osfile/osfile_unix_allthreads.jsm", this);
   OSError = OS.Shared.Unix.Error;
 } else {
   throw new Error("I am neither under Windows nor under a Posix system");
 }
 let Type = OS.Shared.Type;
+let Path = {};
+Cu.import("resource://gre/modules/osfile/ospath.jsm", Path);
 
 // The library of promises.
-Components.utils.import("resource://gre/modules/Promise.jsm", this);
+Cu.import("resource://gre/modules/Promise.jsm", this);
 
 // The implementation of communications
-Components.utils.import("resource://gre/modules/osfile/_PromiseWorker.jsm", this);
+Cu.import("resource://gre/modules/osfile/_PromiseWorker.jsm", this);
 
-Components.utils.import("resource://gre/modules/Services.jsm", this);
+Cu.import("resource://gre/modules/Services.jsm", this);
 
-Components.utils.import("resource://gre/modules/AsyncShutdown.jsm", this);
+Cu.import("resource://gre/modules/AsyncShutdown.jsm", this);
 
 LOG("Checking profileDir", OS.Constants.Path);
 
@@ -66,7 +69,7 @@ if (!("profileDir" in OS.Constants.Path)) {
     get: function() {
       let path = undefined;
       try {
-        path = Services.dirsvc.get("ProfD", Components.interfaces.nsIFile).path;
+        path = Services.dirsvc.get("ProfD", Ci.nsIFile).path;
         delete OS.Constants.Path.profileDir;
         OS.Constants.Path.profileDir = path;
       } catch (ex) {
@@ -84,7 +87,7 @@ if (!("localProfileDir" in OS.Constants.Path)) {
     get: function() {
       let path = undefined;
       try {
-        path = Services.dirsvc.get("ProfLD", Components.interfaces.nsIFile).path;
+        path = Services.dirsvc.get("ProfLD", Ci.nsIFile).path;
         delete OS.Constants.Path.localProfileDir;
         OS.Constants.Path.localProfileDir = path;
       } catch (ex) {
@@ -158,8 +161,11 @@ let Scheduler = {
   latestPromise: Promise.resolve("OS.File scheduler hasn't been launched yet"),
 
   post: function post(...args) {
+    if (!this.launched && OS.Shared.DEBUG) {
+      // If we have delayed sending SET_DEBUG, do it now.
+      worker.post("SET_DEBUG", [true]);
+    }
     this.launched = true;
-
     if (this.shutdown) {
       LOG("OS.File is not available anymore. The following request has been rejected.", args);
       return Promise.reject(new Error("OS.File has been shut down."));
@@ -238,7 +244,10 @@ let readDebugPref = function readDebugPref(prefName, oldPref = false) {
 Services.prefs.addObserver(PREF_OSFILE_LOG,
   function prefObserver(aSubject, aTopic, aData) {
     OS.Shared.DEBUG = readDebugPref(PREF_OSFILE_LOG, OS.Shared.DEBUG);
-    Scheduler.post("SET_DEBUG", [OS.Shared.DEBUG]);
+    if (Scheduler.launched) {
+      // Don't start the worker just to set this preference.
+      Scheduler.post("SET_DEBUG", [OS.Shared.DEBUG]);
+    }
   }, false);
 OS.Shared.DEBUG = readDebugPref(PREF_OSFILE_LOG, false);
 
@@ -249,7 +258,8 @@ Services.prefs.addObserver(PREF_OSFILE_LOG_REDIRECT,
 OS.Shared.TEST = readDebugPref(PREF_OSFILE_LOG_REDIRECT, false);
 
 // Update worker's DEBUG flag if it's true.
-if (OS.Shared.DEBUG === true) {
+// Don't start the worker just for this, though.
+if (OS.Shared.DEBUG && Scheduler.launched) {
   Scheduler.post("SET_DEBUG", [true]);
 }
 
@@ -1002,6 +1012,7 @@ Object.defineProperty(File, "POS_END", {value: OS.Shared.POS_END});
 OS.File = File;
 OS.File.Error = OSError;
 OS.File.DirectoryIterator = DirectoryIterator;
+OS.Path = Path;
 
 
 // Auto-flush OS.File during profile-before-change. This ensures that any I/O

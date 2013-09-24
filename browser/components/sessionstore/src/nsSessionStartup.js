@@ -81,7 +81,8 @@ SessionStartup.prototype = {
     }
 
     _SessionFile.read().then(
-      this._onSessionFileRead.bind(this)
+      this._onSessionFileRead.bind(this),
+      Cu.reportError
     );
   },
 

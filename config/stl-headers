@@ -21,6 +21,7 @@ algorithm
 atomic
 deque
 ios
+iosfwd
 iostream
 iterator
 limits

@@ -33,8 +33,6 @@
 
 namespace WebCore {
 
-const int kBufferSize = 1024;
-
 Biquad::Biquad()
 {
     // Initialize as pass-thru (straight-wire, no filter effect)

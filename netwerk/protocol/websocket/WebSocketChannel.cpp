@@ -7,7 +7,6 @@
 #include "WebSocketLog.h"
 #include "WebSocketChannel.h"
 
-#include "nsISocketTransportService.h"
 #include "nsIURI.h"
 #include "nsIChannel.h"
 #include "nsICryptoHash.h"
@@ -22,12 +21,18 @@
 #include "nsIProtocolProxyService.h"
 #include "nsIProxyInfo.h"
 #include "nsIProxiedChannel.h"
+#include "nsIAsyncVerifyRedirectCallback.h"
+#include "nsIDashboardEventNotifier.h"
+#include "nsIEventTarget.h"
+#include "nsIHttpChannel.h"
+#include "nsILoadGroup.h"
+#include "nsIProtocolHandler.h"
+#include "nsIRandomGenerator.h"
+#include "nsISocketTransport.h"
 
 #include "nsAutoPtr.h"
-#include "nsStandardURL.h"
 #include "nsNetCID.h"
 #include "nsServiceManagerUtils.h"
-#include "nsXPIDLString.h"
 #include "nsCRT.h"
 #include "nsThreadUtils.h"
 #include "nsError.h"
@@ -46,6 +51,11 @@
 #include "prbit.h"
 #include "zlib.h"
 #include <algorithm>
+
+#ifdef MOZ_WIDGET_GONK
+#include "nsINetworkManager.h"
+#include "nsINetworkStatsServiceProxy.h"
+#endif
 
 // rather than slurp up all of nsIWebSocket.idl, which lives outside necko, just
 // dupe one constant we need from it
@@ -953,7 +963,12 @@ WebSocketChannel::WebSocketChannel() :
   mDynamicOutputSize(0),
   mDynamicOutput(nullptr),
   mPrivateBrowsing(false),
-  mConnectionLogService(nullptr)
+  mConnectionLogService(nullptr),
+  mCountRecv(0),
+  mCountSent(0),
+  mAppId(0),
+  mConnectionType(NETWORK_NO_TYPE),
+  mIsInBrowser(false)
 {
   NS_ABORT_IF_FALSE(NS_IsMainThread(), "not main thread");
 
@@ -1060,6 +1075,16 @@ WebSocketChannel::BeginOpen()
     LOG(("WebSocketChannel::BeginOpen: cannot async open\n"));
     AbortSession(NS_ERROR_UNEXPECTED);
     return;
+  }
+
+  // obtain app info
+  if (localChannel) {
+    NS_GetAppInfo(localChannel, &mAppId, &mIsInBrowser);
+  }
+
+  // obtain active connection type
+  if (mAppId != NECKO_NO_APP_ID) {
+    GetConnectionType(&mConnectionType);
   }
 
   rv = localChannel->AsyncOpen(this, mHttpChannel);
@@ -2709,6 +2734,9 @@ WebSocketChannel::Close(uint16_t code, const nsACString & reason)
   LOG(("WebSocketChannel::Close() %p\n", this));
   NS_ABORT_IF_FALSE(NS_IsMainThread(), "not main thread");
 
+  // save the networkstats (bug 855949)
+  SaveNetworkStats(true);
+
   if (mRequestedClose) {
     return NS_OK;
   }
@@ -3035,6 +3063,9 @@ WebSocketChannel::OnInputStreamReady(nsIAsyncInputStream *aStream)
     rv = mSocketIn->Read((char *)buffer, 2048, &count);
     LOG(("WebSocketChannel::OnInputStreamReady: read %u rv %x\n", count, rv));
 
+    // accumulate received bytes
+    CountRecvBytes(count);
+
     if (rv == NS_BASE_STREAM_WOULD_BLOCK) {
       mSocketIn->AsyncWait(this, 0, 0, mSocketThread);
       return NS_OK;
@@ -3113,6 +3144,9 @@ WebSocketChannel::OnOutputStreamReady(nsIAsyncOutputStream *aStream)
       rv = mSocketOut->Write(sndBuf, toSend, &amtSent);
       LOG(("WebSocketChannel::OnOutputStreamReady: write %u rv %x\n",
            amtSent, rv));
+
+      // accumulate sent bytes
+      CountSentBytes(amtSent);
 
       if (rv == NS_BASE_STREAM_WOULD_BLOCK) {
         mSocketOut->AsyncWait(this, 0, 0, nullptr);
@@ -3237,6 +3271,75 @@ WebSocketChannel::OnDataAvailable(nsIRequest *aRequest,
          aCount));
 
   return NS_OK;
+}
+
+nsresult
+WebSocketChannel::GetConnectionType(int32_t *type)
+{
+#ifdef MOZ_WIDGET_GONK
+  MOZ_ASSERT(NS_IsMainThread());
+
+  nsresult result;
+  nsCOMPtr<nsINetworkManager> networkManager = do_GetService("@mozilla.org/network/manager;1", &result);
+
+  if (NS_FAILED(result) || !networkManager) {
+    *type = NETWORK_NO_TYPE;
+  }
+
+  nsCOMPtr<nsINetworkInterface> networkInterface;
+  result = networkManager->GetActive(getter_AddRefs(networkInterface));
+
+  if (networkInterface) {
+    result = networkInterface->GetType(type);
+  }
+
+  return NS_OK;
+#else
+  return NS_ERROR_NOT_IMPLEMENTED;
+#endif
+}
+
+nsresult
+WebSocketChannel::SaveNetworkStats(bool enforce)
+{
+#ifdef MOZ_WIDGET_GONK
+  // Check if the connection type and app id are valid.
+  if(mConnectionType == NETWORK_NO_TYPE ||
+     mAppId == NECKO_NO_APP_ID) {
+    return NS_OK;
+  }
+
+  if (mCountRecv <= 0 && mCountSent <= 0) {
+    // There is no traffic, no need to save.
+    return NS_OK;
+  }
+
+  // If |enforce| is false, the traffic amount is saved
+  // only when the total amount exceeds the predefined
+  // threshold.
+  uint64_t totalBytes = mCountRecv + mCountSent;
+  if (!enforce && totalBytes < NETWORK_STATS_THRESHOLD) {
+    return NS_OK;
+  }
+
+  nsresult rv;
+  nsCOMPtr<nsINetworkStatsServiceProxy> mNetworkStatsServiceProxy =
+    do_GetService("@mozilla.org/networkstatsServiceProxy;1", &rv);
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+
+  mNetworkStatsServiceProxy->SaveAppStats(mAppId, mConnectionType, PR_Now() / 1000,
+                                          mCountRecv, mCountSent, nullptr);
+
+  // Reset the counters after saving.
+  mCountSent = 0;
+  mCountRecv = 0;
+
+  return NS_OK;
+#else
+  return NS_ERROR_NOT_IMPLEMENTED;
+#endif
 }
 
 } // namespace mozilla::net

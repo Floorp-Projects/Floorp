@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<style>
+
+@keyframes anim {
+  20% {
+    color: green;
+  }
+}
+
+a {
+  animation-name: anim;
+  animation-duration: 40s;
+}
+
+</style>
+<style>
+
+:link { background: red ! important; }
+
+</style>
+</head>
+
+<body onload="document.documentElement.style.border = 'initial';">
+<div><a href="data:text/html,unlikely to be visited"></a></div>
+</body>
+</html>

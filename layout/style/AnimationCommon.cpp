@@ -6,7 +6,6 @@
 #include "gfxPlatform.h"
 #include "AnimationCommon.h"
 #include "nsRuleData.h"
-#include "nsCSSFrameConstructor.h"
 #include "nsCSSValue.h"
 #include "nsStyleContext.h"
 #include "nsIFrame.h"
@@ -16,7 +15,6 @@
 #include "FrameLayerBuilder.h"
 #include "nsDisplayList.h"
 #include "mozilla/MemoryReporting.h"
-#include "mozilla/Preferences.h"
 #include "RestyleManager.h"
 
 using namespace mozilla::layers;

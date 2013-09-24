@@ -31,7 +31,7 @@ bool
 nsJSUtils::GetCallingLocation(JSContext* aContext, const char* *aFilename,
                               uint32_t* aLineno)
 {
-  JSScript* script = nullptr;
+  JS::RootedScript script(aContext);
   unsigned lineno = 0;
 
   if (!JS_DescribeScriptedCaller(aContext, &script, &lineno)) {
@@ -296,7 +296,11 @@ nsJSUtils::EvaluateString(JSContext* aCx,
     } else {
       rv = JS_IsExceptionPending(aCx) ? NS_ERROR_FAILURE
                                       : NS_ERROR_OUT_OF_MEMORY;
-      JS_GetPendingException(aCx, aRetValue);
+      JS::RootedValue exn(aCx);
+      JS_GetPendingException(aCx, &exn);
+      if (aRetValue) {
+        *aRetValue = exn;
+      }
       JS_ClearPendingException(aCx);
     }
   }

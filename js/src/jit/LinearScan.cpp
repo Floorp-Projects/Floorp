@@ -1080,7 +1080,7 @@ LinearScanAllocator::findBestBlockedRegister(CodePosition *nextUsed)
             if (nextUsePos[reg.code()] != CodePosition::MIN) {
                 CodePosition pos = i->intersect(current);
                 if (pos != CodePosition::MIN && pos < nextUsePos[reg.code()]) {
-                    nextUsePos[reg.code()] = pos;
+                    nextUsePos[reg.code()] = (pos == current->start()) ? CodePosition::MIN : pos;
                     IonSpew(IonSpew_RegAlloc, "   Register %s next used %u (fixed)", reg.name(), pos.pos());
                 }
             }

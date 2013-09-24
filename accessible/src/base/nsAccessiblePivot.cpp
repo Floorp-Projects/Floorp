@@ -300,47 +300,114 @@ nsAccessiblePivot::MoveNextByText(TextBoundaryType aBoundary, bool* aResult)
 
   *aResult = false;
 
-  int32_t oldStart = mStartOffset, oldEnd = mEndOffset;
-  HyperTextAccessible* text = mPosition->AsHyperText();
-  Accessible* oldPosition = mPosition;
-  while (!text) {
-    oldPosition = mPosition;
-    mPosition = mPosition->Parent();
-    text = mPosition->AsHyperText();
-  }
+  int32_t tempStart = mStartOffset, tempEnd = mEndOffset;
+  Accessible* tempPosition = mPosition;
+  Accessible* root = GetActiveRoot();
+  while (true) {
+    Accessible* curPosition = tempPosition;
+    HyperTextAccessible* text;
+    // Find the nearest text node using a preorder traversal starting from
+    // the current node.
+    if (!(text = tempPosition->AsHyperText())) {
+      text = SearchForText(tempPosition, false);
+      if (!text)
+        return NS_OK;
+      if (text != curPosition)
+        tempStart = tempEnd = -1;
+      tempPosition = text;
+    }
 
-  if (mEndOffset == -1)
-    mEndOffset = text != oldPosition ? text->GetChildOffset(oldPosition) : 0;
+    // If the search led to the parent of the node we started on (e.g. when
+    // starting on a text leaf), start the text movement from the end of that
+    // node, otherwise we just default to 0.
+    if (tempEnd == -1)
+      tempEnd = text == curPosition->Parent() ?
+                text->GetChildOffset(curPosition) : 0;
 
-  if (mEndOffset == text->CharacterCount())
+    // If there's no more text on the current node, try to find the next text
+    // node; if there isn't one, bail out.
+    if (tempEnd == text->CharacterCount()) {
+      if (tempPosition == root)
+        return NS_OK;
+
+      // If we're currently sitting on a link, try move to either the next
+      // sibling or the parent, whichever is closer to the current end
+      // offset. Otherwise, do a forward search for the next node to land on
+      // (we don't do this in the first case because we don't want to go to the
+      // subtree).
+      Accessible* sibling = tempPosition->NextSibling();
+      if (tempPosition->IsLink()) {
+        if (sibling && sibling->IsLink()) {
+          tempStart = tempEnd = -1;
+          tempPosition = sibling;
+        } else {
+          tempStart = tempPosition->StartOffset();
+          tempEnd = tempPosition->EndOffset();
+          tempPosition = tempPosition->Parent();
+        }
+      } else {
+        tempPosition = SearchForText(tempPosition, false);
+        if (!tempPosition)
+          return NS_OK;
+        tempStart = tempEnd = -1;
+      }
+      continue;
+    }
+
+    AccessibleTextBoundary startBoundary, endBoundary;
+    switch (aBoundary) {
+      case CHAR_BOUNDARY:
+        startBoundary = nsIAccessibleText::BOUNDARY_CHAR;
+        endBoundary = nsIAccessibleText::BOUNDARY_CHAR;
+        break;
+      case WORD_BOUNDARY:
+        startBoundary = nsIAccessibleText::BOUNDARY_WORD_START;
+        endBoundary = nsIAccessibleText::BOUNDARY_WORD_END;
+        break;
+      default:
+        return NS_ERROR_INVALID_ARG;
+    }
+
+    nsAutoString unusedText;
+    int32_t newStart = 0, newEnd = 0, currentEnd = tempEnd;
+    text->GetTextAtOffset(tempEnd, endBoundary, &newStart, &tempEnd, unusedText);
+    text->GetTextBeforeOffset(tempEnd, startBoundary, &newStart, &newEnd,
+                              unusedText);
+    int32_t potentialStart = newEnd == tempEnd ? newStart : newEnd;
+    tempStart = potentialStart > tempStart ? potentialStart : currentEnd;
+
+    // The offset range we've obtained might have embedded characters in it,
+    // limit the range to the start of the first occurrence of an embedded
+    // character.
+    Accessible* childAtOffset = nullptr;
+    for (int32_t i = tempStart; i < tempEnd; i++) {
+      childAtOffset = text->GetChildAtOffset(i);
+      if (childAtOffset && nsAccUtils::IsEmbeddedObject(childAtOffset)) {
+        tempEnd = i;
+        break;
+      }
+    }
+    // If there's an embedded character at the very start of the range, we
+    // instead want to traverse into it. So restart the movement with
+    // the child as the starting point.
+    if (childAtOffset && nsAccUtils::IsEmbeddedObject(childAtOffset) &&
+        tempStart == childAtOffset->StartOffset()) {
+      tempPosition = childAtOffset;
+      tempStart = tempEnd = -1;
+      continue;
+    }
+
+    *aResult = true;
+
+    Accessible* startPosition = mPosition;
+    int32_t oldStart = mStartOffset, oldEnd = mEndOffset;
+    mPosition = tempPosition;
+    mStartOffset = tempStart;
+    mEndOffset = tempEnd;
+    NotifyOfPivotChange(startPosition, oldStart, oldEnd,
+                        nsIAccessiblePivot::REASON_TEXT);
     return NS_OK;
-
-  AccessibleTextBoundary startBoundary, endBoundary;
-  switch (aBoundary) {
-    case CHAR_BOUNDARY:
-      startBoundary = nsIAccessibleText::BOUNDARY_CHAR;
-      endBoundary = nsIAccessibleText::BOUNDARY_CHAR;
-      break;
-    case WORD_BOUNDARY:
-      startBoundary = nsIAccessibleText::BOUNDARY_WORD_START;
-      endBoundary = nsIAccessibleText::BOUNDARY_WORD_END;
-      break;
-    default:
-      return NS_ERROR_INVALID_ARG;
   }
-
-  nsAutoString unusedText;
-  int32_t newStart = 0, newEnd = 0;
-  text->GetTextAtOffset(mEndOffset, endBoundary, &newStart, &mEndOffset, unusedText);
-  text->GetTextBeforeOffset(mEndOffset, startBoundary, &newStart, &newEnd,
-                            unusedText);
-  mStartOffset = newEnd == mEndOffset ? newStart : newEnd;
-
-  *aResult = true;
-
-  NotifyOfPivotChange(mPosition, oldStart, oldEnd,
-                      nsIAccessiblePivot::REASON_TEXT);
-  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -350,52 +417,127 @@ nsAccessiblePivot::MovePreviousByText(TextBoundaryType aBoundary, bool* aResult)
 
   *aResult = false;
 
-  int32_t oldStart = mStartOffset, oldEnd = mEndOffset;
-  HyperTextAccessible* text = mPosition->AsHyperText();
-  Accessible* oldPosition = mPosition;
-  while (!text) {
-    oldPosition = mPosition;
-    mPosition = mPosition->Parent();
-    text = mPosition->AsHyperText();
-  }
+  int32_t tempStart = mStartOffset, tempEnd = mEndOffset;
+  Accessible* tempPosition = mPosition;
+  Accessible* root = GetActiveRoot();
+  while (true) {
+    Accessible* curPosition = tempPosition;
+    HyperTextAccessible* text;
+    // Find the nearest text node using a reverse preorder traversal starting
+    // from the current node.
+    if (!(text = tempPosition->AsHyperText())) {
+      text = SearchForText(tempPosition, true);
+      if (!text)
+        return NS_OK;
+      if (text != curPosition)
+        tempStart = tempEnd = -1;
+      tempPosition = text;
+    }
 
-  if (mStartOffset == -1)
-    mStartOffset = text != oldPosition ? text->GetChildOffset(oldPosition) : 0;
+    // If the search led to the parent of the node we started on (e.g. when
+    // starting on a text leaf), start the text movement from the end of that
+    // node, otherwise we just default to 0.
+    if (tempStart == -1) {
+      if (tempPosition != curPosition)
+        tempStart = text == curPosition->Parent() ?
+                    text->GetChildOffset(curPosition) : text->CharacterCount();
+      else
+        tempStart = 0;
+    }
 
-  if (mStartOffset == 0)
+    // If there's no more text on the current node, try to find the previous
+    // text node; if there isn't one, bail out.
+    if (tempStart == 0) {
+      if (tempPosition == root)
+        return NS_OK;
+
+      // If we're currently sitting on a link, try move to either the previous
+      // sibling or the parent, whichever is closer to the current end
+      // offset. Otherwise, do a forward search for the next node to land on
+      // (we don't do this in the first case because we don't want to go to the
+      // subtree).
+      Accessible* sibling = tempPosition->PrevSibling();
+      if (tempPosition->IsLink()) {
+        if (sibling && sibling->IsLink()) {
+          HyperTextAccessible* siblingText = sibling->AsHyperText();
+          tempStart = tempEnd = siblingText ?
+                                siblingText->CharacterCount() : -1;
+          tempPosition = sibling;
+        } else {
+          tempStart = tempPosition->StartOffset();
+          tempEnd = tempPosition->EndOffset();
+          tempPosition = tempPosition->Parent();
+        }
+      } else {
+        HyperTextAccessible* tempText = SearchForText(tempPosition, true);
+        if (!tempText)
+          return NS_OK;
+        tempPosition = tempText;
+        tempStart = tempEnd = tempText->CharacterCount();
+      }
+      continue;
+    }
+
+    AccessibleTextBoundary startBoundary, endBoundary;
+    switch (aBoundary) {
+      case CHAR_BOUNDARY:
+        startBoundary = nsIAccessibleText::BOUNDARY_CHAR;
+        endBoundary = nsIAccessibleText::BOUNDARY_CHAR;
+        break;
+      case WORD_BOUNDARY:
+        startBoundary = nsIAccessibleText::BOUNDARY_WORD_START;
+        endBoundary = nsIAccessibleText::BOUNDARY_WORD_END;
+        break;
+      default:
+        return NS_ERROR_INVALID_ARG;
+    }
+
+    nsAutoString unusedText;
+    int32_t newStart = 0, newEnd = 0, currentStart = tempStart, potentialEnd = 0;
+    text->GetTextBeforeOffset(tempStart, startBoundary, &newStart, &newEnd,
+                              unusedText);
+    if (newStart < tempStart)
+      tempStart = newEnd >= currentStart ? newStart : newEnd;
+    else // XXX: In certain odd cases newStart is equal to tempStart
+      text->GetTextBeforeOffset(tempStart - 1, startBoundary, &newStart,
+                                &tempStart, unusedText);
+    text->GetTextAtOffset(tempStart, endBoundary, &newStart, &potentialEnd,
+                          unusedText);
+    tempEnd = potentialEnd < tempEnd ? potentialEnd : currentStart;
+
+    // The offset range we've obtained might have embedded characters in it,
+    // limit the range to the start of the last occurrence of an embedded
+    // character.
+    Accessible* childAtOffset = nullptr;
+    for (int32_t i = tempEnd - 1; i >= tempStart; i--) {
+      childAtOffset = text->GetChildAtOffset(i);
+      if (childAtOffset && nsAccUtils::IsEmbeddedObject(childAtOffset)) {
+        tempStart = childAtOffset->EndOffset();
+        break;
+      }
+    }
+    // If there's an embedded character at the very end of the range, we
+    // instead want to traverse into it. So restart the movement with
+    // the child as the starting point.
+    if (childAtOffset && nsAccUtils::IsEmbeddedObject(childAtOffset) &&
+        tempEnd == childAtOffset->EndOffset()) {
+      tempPosition = childAtOffset;
+      tempStart = tempEnd = childAtOffset->AsHyperText()->CharacterCount();
+      continue;
+    }
+
+    *aResult = true;
+
+    Accessible* startPosition = mPosition;
+    int32_t oldStart = mStartOffset, oldEnd = mEndOffset;
+    mPosition = tempPosition;
+    mStartOffset = tempStart;
+    mEndOffset = tempEnd;
+
+    NotifyOfPivotChange(startPosition, oldStart, oldEnd,
+                        nsIAccessiblePivot::REASON_TEXT);
     return NS_OK;
-
-  AccessibleTextBoundary startBoundary, endBoundary;
-  switch (aBoundary) {
-    case CHAR_BOUNDARY:
-      startBoundary = nsIAccessibleText::BOUNDARY_CHAR;
-      endBoundary = nsIAccessibleText::BOUNDARY_CHAR;
-      break;
-    case WORD_BOUNDARY:
-      startBoundary = nsIAccessibleText::BOUNDARY_WORD_START;
-      endBoundary = nsIAccessibleText::BOUNDARY_WORD_END;
-      break;
-    default:
-      return NS_ERROR_INVALID_ARG;
   }
-
-  nsAutoString unusedText;
-  int32_t newStart = 0, newEnd = 0;
-  text->GetTextBeforeOffset(mStartOffset, startBoundary, &newStart, &newEnd,
-                            unusedText);
-  if (newStart < mStartOffset)
-    mStartOffset = newEnd == mStartOffset ? newStart : newEnd;
-  else // XXX: In certain odd cases newStart is equal to mStartOffset
-    text->GetTextBeforeOffset(mStartOffset - 1, startBoundary, &newStart,
-                              &mStartOffset, unusedText);
-  text->GetTextAtOffset(mStartOffset, endBoundary, &newStart, &mEndOffset,
-                        unusedText);
-
-  *aResult = true;
-
-  NotifyOfPivotChange(mPosition, oldStart, oldEnd,
-                      nsIAccessiblePivot::REASON_TEXT);
-  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -635,6 +777,48 @@ nsAccessiblePivot::SearchForward(Accessible* aAccessible,
 
   return nullptr;
 }
+
+HyperTextAccessible*
+nsAccessiblePivot::SearchForText(Accessible* aAccessible, bool aBackward)
+{
+  Accessible* root = GetActiveRoot();
+  Accessible* accessible = aAccessible;
+  while (true) {
+    Accessible* child = nullptr;
+
+    while ((child = (aBackward ? accessible->LastChild() :
+                                 accessible->FirstChild()))) {
+      accessible = child;
+      if (child->IsHyperText())
+        return child->AsHyperText();
+    }
+
+    Accessible* sibling = nullptr;
+    Accessible* temp = accessible;
+    do {
+      if (temp == root)
+        break;
+
+      if (temp != aAccessible && temp->IsHyperText())
+        return temp->AsHyperText();
+
+      sibling = aBackward ? temp->PrevSibling() : temp->NextSibling();
+
+      if (sibling)
+        break;
+    } while ((temp = temp->Parent()));
+
+    if (!sibling)
+      break;
+
+    accessible = sibling;
+    if (accessible->IsHyperText())
+      return accessible->AsHyperText();
+  }
+
+  return nullptr;
+}
+
 
 bool
 nsAccessiblePivot::NotifyOfPivotChange(Accessible* aOldPosition,

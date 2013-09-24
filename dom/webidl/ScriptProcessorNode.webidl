@@ -13,7 +13,6 @@
 [PrefControlled]
 interface ScriptProcessorNode : AudioNode {
 
-    [SetterThrows]
     attribute EventHandler onaudioprocess;
 
     readonly attribute long bufferSize;

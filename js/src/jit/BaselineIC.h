@@ -3125,7 +3125,7 @@ class ICGetElemNativeCompiler : public ICStubCompiler
         acctype_(acctype),
         needsAtomize_(needsAtomize),
         offset_(offset),
-        getter_(NULL),
+        getter_(js::NullPtr()),
         pcOffset_(0)
     {}
 
@@ -3373,6 +3373,13 @@ class ICSetElem_Fallback : public ICFallbackStub
         if (!code)
             return NULL;
         return space->allocate<ICSetElem_Fallback>(code);
+    }
+
+    void noteArrayWriteHole() {
+        extra_ = 1;
+    }
+    bool hasArrayWriteHole() const {
+        return extra_;
     }
 
     // Compiler for this stub kind.

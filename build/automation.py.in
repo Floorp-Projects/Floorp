@@ -512,6 +512,12 @@ class Automation(object):
 
     # ASan specific environment stuff
     if self.IS_ASAN and (self.IS_LINUX or self.IS_MAC):
+      # Symbolizer support
+      llvmsym = os.path.join(xrePath, "llvm-symbolizer")
+      if os.path.isfile(llvmsym):
+        env["ASAN_SYMBOLIZER_PATH"] = llvmsym
+        self.log.info("INFO | automation.py | ASan using symbolizer at %s", llvmsym)
+
       try:
         totalMemory = int(os.popen("free").readlines()[1].split()[1])
 
@@ -683,16 +689,15 @@ class Automation(object):
   def killAndGetStackNoScreenshot(self, processPID, utilityPath, debuggerInfo):
     """Kill the process, preferrably in a way that gets us a stack trace."""
     if self.CRASHREPORTER and not debuggerInfo:
-      if self.UNIXISH:
+      if not self.IS_WIN32:
         # ABRT will get picked up by Breakpad's signal handler
         os.kill(processPID, signal.SIGABRT)
         return
-      elif self.IS_WIN32:
+      else:
         # We should have a "crashinject" program in our utility path
         crashinject = os.path.normpath(os.path.join(utilityPath, "crashinject.exe"))
         if os.path.exists(crashinject) and subprocess.Popen([crashinject, str(processPID)]).wait() == 0:
           return
-      #TODO: kill the process such that it triggers Breakpad on OS X (bug 525296)
     self.log.info("Can't trigger Breakpad, just killing process")
     self.killPid(processPID)
 

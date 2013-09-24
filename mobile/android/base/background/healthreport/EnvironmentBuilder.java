@@ -9,6 +9,7 @@ import java.util.Iterator;
 import org.json.JSONObject;
 import org.mozilla.gecko.AppConstants;
 import org.mozilla.gecko.SysInfo;
+import org.mozilla.gecko.background.common.GlobalConstants;
 import org.mozilla.gecko.background.common.log.Logger;
 
 import android.content.ContentProvider;
@@ -31,8 +32,11 @@ public class EnvironmentBuilder {
    * Fetch the storage object associated with the provided
    * {@link ContentProviderClient}. If no storage instance can be found --
    * perhaps because the {@link ContentProvider} is running in a different
-   * process -- returns <code>null</code>.
-   * 
+   * process -- returns <code>null</code>. On success, the returned
+   * {@link HealthReportDatabaseStorage} instance is owned by the underlying
+   * {@link HealthReportProvider} and thus does not need to be closed by the
+   * caller.
+   *
    * If the provider is not a {@link HealthReportProvider}, throws a
    * {@link ClassCastException}, because that would be disastrous.
    */
@@ -77,7 +81,7 @@ public class EnvironmentBuilder {
     e.sysName = SysInfo.getName();
     e.sysVersion = SysInfo.getReleaseVersion();
 
-    e.profileCreation = (int) (info.getProfileCreationTime() / HealthReportConstants.MILLISECONDS_PER_DAY);
+    e.profileCreation = (int) (info.getProfileCreationTime() / GlobalConstants.MILLISECONDS_PER_DAY);
 
     // Corresponds to Gecko pref "extensions.blocklist.enabled".
     e.isBlocklistEnabled = (info.isBlocklistEnabled() ? 1 : 0);

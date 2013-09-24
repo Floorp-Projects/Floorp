@@ -21,21 +21,21 @@ function sendTouch(aType, aX, aY) {
 
 function test()
 {
-  netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
-
   var selection = window.getSelection();
   selection.removeAllRanges();
   var rect = div1.getBoundingClientRect();
 
   // Position the caret using a fake mouse click
+  var Ci = SpecialPowers.Ci;
   var cwu = SpecialPowers.getDOMWindowUtils(window);
   cwu.sendMouseEventToWindow("mousedown", rect.left + rect.width/2, rect.top + rect.height/2, 0, 0, 0, true);
   cwu.sendMouseEventToWindow("mouseup",   rect.left + rect.width/2, rect.top + rect.height/2, 0, 0, 0, true);
-  var selectionController = window.QueryInterface(Components.interfaces.nsIInterfaceRequestor).
-                                   getInterface(Components.interfaces.nsIWebNavigation).
-                                   QueryInterface(Components.interfaces.nsIInterfaceRequestor).
-                                   getInterface(Components.interfaces.nsISelectionDisplay).
-                                   QueryInterface(Components.interfaces.nsISelectionController);
+  var selectionController = SpecialPowers.wrap(window).
+                              QueryInterface(Ci.nsIInterfaceRequestor).
+                              getInterface(Ci.nsIWebNavigation).
+                              QueryInterface(Ci.nsIInterfaceRequestor).
+                              getInterface(Ci.nsISelectionDisplay).
+                              QueryInterface(Ci.nsISelectionController);
 
   selectionController.wordMove(false, false);
   selectionController.wordMove(true, true);

@@ -28,6 +28,7 @@ public:
     virtual bool GetFontImpl(FontID aID, nsString& aName, gfxFontStyle& aStyle,
                              float aDevPixPerCSSPixel);
     virtual nsresult GetIntImpl(IntID aID, int32_t &aResult);
+    virtual nsresult GetFloatImpl(FloatID aID, float &aResult);
     virtual bool GetEchoPasswordImpl();
     virtual uint32_t GetPasswordMaskDelayImpl();
     virtual PRUnichar GetPasswordCharacterImpl();

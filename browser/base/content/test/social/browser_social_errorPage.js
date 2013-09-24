@@ -20,7 +20,7 @@ function goOffline() {
     BrowserOffline.toggleOfflineStatus();
   Services.prefs.setIntPref('network.proxy.type', 0);
   // LOAD_FLAGS_BYPASS_CACHE isn't good enough. So clear the cache.
-  Services.cache.evictEntries(Components.interfaces.nsICache.STORE_ANYWHERE);
+  Services.cache2.clear();
 }
 
 function goOnline(callback) {
@@ -74,7 +74,7 @@ let manifest = { // normal provider
   origin: "https://example.com",
   sidebarURL: "https://example.com/browser/browser/base/content/test/social/social_sidebar.html",
   workerURL: "https://example.com/browser/browser/base/content/test/social/social_worker.js",
-  iconURL: "https://example.com/browser/browser/base/content/test/moz.png"
+  iconURL: "https://example.com/browser/browser/base/content/test/general/moz.png"
 };
 
 function test() {

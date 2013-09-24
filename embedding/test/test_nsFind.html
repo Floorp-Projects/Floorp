@@ -4,6 +4,7 @@
 https://bugzilla.mozilla.org/show_bug.cgi?id=450048
 -->
 <head>
+  <meta charset="UTF-8">
   <title>Test for nsFind::Find()</title>
   <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
@@ -11,6 +12,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=450048
 <body>
 <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=450048">Mozilla Bug 450048</a>
 <p id="display">This is the text to search i<b>n&shy;t</b>o</p>
+<p id="quotes">"straight" and &ldquo;curly&rdquo; and &lsquo;didn't&rsquo; and 'doesn&rsquo;t'</p>
 <div id="content" style="display: none">
   
 </div>
@@ -135,6 +137,88 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=450048
   // searchValue = "the";
   retRange = rf.Find(searchValue, searchRange, startPt, endPt);
   ok(retRange, "\"" + searchValue + "\" not found (backward)");
+
+
+  // Curly quotes and straight quotes should match.
+
+  rf.caseSensitive = false;
+  rf.findBackwards = false;
+
+  function find(node, searchValue) {
+    var range = document.createRange();
+    range.setStart(node, 0);
+    range.setEnd(node, node.childNodes.length);
+    return rf.Find(searchValue, range, range, range);
+  }
+
+  function assertFound(node, searchValue) {
+    ok(find(node, searchValue), "\"" + searchValue + "\" not found");
+  }
+
+  function assertNotFound(node, searchValue) {
+    ok(!find(node, searchValue), "\"" + searchValue + "\" found");
+  }
+
+  var quotes = document.getElementById("quotes");
+
+  assertFound(quotes, "\"straight\"");
+  assertFound(quotes, "\u201Cstraight\u201D");
+
+  assertNotFound(quotes, "'straight'");
+  assertNotFound(quotes, "\u2018straight\u2019");
+  assertNotFound(quotes, "\u2019straight\u2018");
+  assertNotFound(quotes, ".straight.");
+
+  assertFound(quotes, "\"curly\"");
+  assertFound(quotes, "\u201Ccurly\u201D");
+
+  assertNotFound(quotes, "'curly'");
+  assertNotFound(quotes, "\u2018curly\u2019");
+  assertNotFound(quotes, ".curly.");
+
+  assertFound(quotes, "didn't");
+  assertFound(quotes, "didn\u2018t");
+  assertFound(quotes, "didn\u2019t");
+
+  assertNotFound(quotes, "didnt");
+  assertNotFound(quotes, "didn t");
+  assertNotFound(quotes, "didn.t");
+
+  assertFound(quotes, "'didn't'");
+  assertFound(quotes, "'didn\u2018t'");
+  assertFound(quotes, "'didn\u2019t'");
+  assertFound(quotes, "\u2018didn't\u2019");
+  assertFound(quotes, "\u2019didn't\u2018");
+  assertFound(quotes, "\u2018didn't\u2018");
+  assertFound(quotes, "\u2019didn't\u2019");
+  assertFound(quotes, "\u2018didn\u2019t\u2019");
+  assertFound(quotes, "\u2019didn\u2018t\u2019");
+  assertFound(quotes, "\u2018didn\u2019t\u2018");
+
+  assertNotFound(quotes, "\"didn't\"");
+  assertNotFound(quotes, "\u201Cdidn't\u201D");
+
+  assertFound(quotes, "doesn't");
+  assertFound(quotes, "doesn\u2018t");
+  assertFound(quotes, "doesn\u2019t");
+
+  assertNotFound(quotes, "doesnt");
+  assertNotFound(quotes, "doesn t");
+  assertNotFound(quotes, "doesn.t");
+
+  assertFound(quotes, "'doesn't'");
+  assertFound(quotes, "'doesn\u2018t'");
+  assertFound(quotes, "'doesn\u2019t'");
+  assertFound(quotes, "\u2018doesn't\u2019");
+  assertFound(quotes, "\u2019doesn't\u2018");
+  assertFound(quotes, "\u2018doesn't\u2018");
+  assertFound(quotes, "\u2019doesn't\u2019");
+  assertFound(quotes, "\u2018doesn\u2019t\u2019");
+  assertFound(quotes, "\u2019doesn\u2018t\u2019");
+  assertFound(quotes, "\u2018doesn\u2019t\u2018");
+
+  assertNotFound(quotes, "\"doesn't\"");
+  assertNotFound(quotes, "\u201Cdoesn't\u201D");
 </script>
 </pre>
 </body>

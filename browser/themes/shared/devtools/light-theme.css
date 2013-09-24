@@ -51,6 +51,10 @@
   background: #EFEFEF;
 }
 
+.theme-bg-contrast { /* contrast bg color to attract attention on a container */
+  background: #a18650;
+}
+
 .theme-link { /* blue */
   color: hsl(208,56%,40%);
 }
@@ -95,4 +99,8 @@
 
 .theme-fg-color7 { /* Red */
   color: #bf5656;
+}
+
+.theme-fg-contrast { /* To be used for text on theme-bg-contrast */
+  color: black;
 }

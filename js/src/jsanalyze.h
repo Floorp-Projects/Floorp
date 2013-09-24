@@ -78,13 +78,6 @@ class Bytecode
     /* Whether this is a catch/finally entry point. */
     bool exceptionEntry : 1;
 
-    /*
-     * Dynamically observed state about the execution of this opcode. These are
-     * hints about the script for use during compilation.
-     */
-    bool arrayWriteHole: 1;     /* SETELEM which has written to an array hole. */
-    bool accessGetter: 1;       /* Property read on a shape with a getter hook. */
-
     /* Stack depth before this opcode. */
     uint32_t stackDepth;
 
@@ -633,10 +626,10 @@ class ScriptAnalysis
 
     bool usesScopeChain_:1;
     bool localsAliasStack_:1;
-    bool isIonInlineable:1;
     bool canTrackVars:1;
     bool hasLoops_:1;
     bool hasTryFinally_:1;
+    bool argumentsContentsObserved_:1;
 
     uint32_t numReturnSites_;
 
@@ -664,9 +657,6 @@ class ScriptAnalysis
 
     bool OOM() const { return outOfMemory; }
     bool failed() const { return hadFailure; }
-    bool ionInlineable() const { return isIonInlineable; }
-    bool ionInlineable(uint32_t argc) const { return isIonInlineable && argc == script_->function()->nargs; }
-    void setIonUninlineable() { isIonInlineable = false; }
 
     /* Whether the script has a |finally| block. */
     bool hasTryFinally() const { return hasTryFinally_; }

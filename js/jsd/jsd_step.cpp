@@ -20,7 +20,7 @@ static char*
 _indentSpaces(int i)
 {
 #define MAX_INDENT 63
-    static char* p = NULL;
+    static char* p = nullptr;
     if(!p)
     {
         p = calloc(1, MAX_INDENT+1);
@@ -35,10 +35,10 @@ static void
 _interpreterTrace(JSDContext* jsdc, JSContext *cx, JSAbstractFramePtr frame,
                   bool isConstructing, bool before)
 {
-    JSDScript* jsdscript = NULL;
+    JSDScript* jsdscript = nullptr;
     JSScript * script;
     static indent = 0;
-    JSString* funName = NULL;
+    JSString* funName = nullptr;
 
     script = frame.script();
     if(script)
@@ -200,7 +200,7 @@ _callHook(JSDContext *jsdc, JSContext *cx, JSAbstractFramePtr frame, bool isCons
                         /* Current function is now our caller. */
                         jsdc->callingFunctionPData = pdata->caller;
                         /* No hanging pointers, please. */
-                        pdata->caller = NULL;
+                        pdata->caller = nullptr;
                         /* Mark the time we returned, and indicate this
                          * function is no longer running. */
                         jsdc->lastReturnTime = now;
@@ -255,7 +255,7 @@ jsd_FunctionCallHook(JSContext *cx, JSAbstractFramePtr frame, bool isConstructin
         return closure;
     }
     
-    return NULL;
+    return nullptr;
 }
 
 void *
@@ -281,6 +281,6 @@ jsd_TopLevelCallHook(JSContext *cx, JSAbstractFramePtr frame, bool isConstructin
         return closure;
     }
     
-    return NULL;
+    return nullptr;
     
 }

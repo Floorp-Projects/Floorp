@@ -9,8 +9,8 @@
 
 #include "nsHttp.h"
 #include "NullHttpTransaction.h"
-#include "nsProxyRelease.h"
 #include "nsHttpHandler.h"
+#include "nsHttpRequestHead.h"
 
 namespace mozilla {
 namespace net {

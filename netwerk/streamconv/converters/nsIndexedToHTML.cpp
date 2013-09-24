@@ -10,15 +10,18 @@
 #include "nsIFileURL.h"
 #include "nsEscape.h"
 #include "nsIDirIndex.h"
-#include "prtime.h"
 #include "nsDateTimeFormatCID.h"
 #include "nsURLHelper.h"
-#include "nsCRT.h"
 #include "nsIPlatformCharset.h"
 #include "nsIPrefService.h"
 #include "nsIPrefBranch.h"
 #include "nsIPrefLocalizedString.h"
 #include "nsIChromeRegistry.h"
+#include "nsICharsetConverterManager.h"
+#include "nsIDateTimeFormat.h"
+#include "nsIStringBundle.h"
+#include "nsITextToSubURI.h"
+#include "nsXPIDLString.h"
 #include <algorithm>
 
 NS_IMPL_ISUPPORTS4(nsIndexedToHTML,

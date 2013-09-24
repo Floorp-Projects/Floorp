@@ -40,7 +40,10 @@ function test() {
 
     provideWindow(function onTestURLLoaded(win) {
       win.close();
-      openWindowRec(windowsToOpen, expectedResults, recCallback);
+      // Give it time to close
+      executeSoon(function() {
+        openWindowRec(windowsToOpen, expectedResults, recCallback);
+      });
     }, url, settings);
   }
 
