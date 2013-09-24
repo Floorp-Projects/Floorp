@@ -4904,17 +4904,16 @@
 
       <method name="_calcMouseTargetRect">
         <body><![CDATA[
-          let alignRight = false;
+          let container = this.parentNode;
+          let alignRight = (getComputedStyle(container).direction == "rtl");
+          let panelRect = this.getBoundingClientRect();
+          let containerRect = container.getBoundingClientRect();
 
-          if (getComputedStyle(document.documentElement).direction == "rtl")
-            alignRight = !alignRight;
-
-          let rect = this.getBoundingClientRect();
           this._mouseTargetRect = {
-            top:    rect.top,
-            bottom: rect.bottom,
-            left:   alignRight ? window.innerWidth - rect.width : 0,
-            right:  alignRight ? window.innerWidth : rect.width
+            top:    panelRect.top,
+            bottom: panelRect.bottom,
+            left:   alignRight ? containerRect.right - panelRect.width : containerRect.left,
+            right:  alignRight ? containerRect.right : containerRect.left + panelRect.width
           };
         ]]></body>
       </method>
