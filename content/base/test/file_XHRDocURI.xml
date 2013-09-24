@@ -1,1 +1,1 @@
-<res>data</res>
+<res xml:base="http://www.example.com/">data</res>

@@ -2004,14 +2004,18 @@ nsXMLHttpRequest::OnStartRequest(nsIRequest *request, nsISupports *ctxt)
 
   if (mState & XML_HTTP_REQUEST_PARSEBODY) {
     nsCOMPtr<nsIURI> baseURI, docURI;
+    rv = mChannel->GetURI(getter_AddRefs(docURI));
+    NS_ENSURE_SUCCESS(rv, rv);
+    baseURI = docURI;
+
     nsIScriptContext* sc = GetContextForEventHandlers(&rv);
     NS_ENSURE_SUCCESS(rv, rv);
     nsCOMPtr<nsIDocument> doc =
       nsContentUtils::GetDocumentFromScriptContext(sc);
-
+    nsCOMPtr<nsIURI> chromeXHRDocURI, chromeXHRDocBaseURI;
     if (doc) {
-      docURI = doc->GetDocumentURI();
-      baseURI = doc->GetBaseURI();
+      chromeXHRDocURI = doc->GetDocumentURI();
+      chromeXHRDocBaseURI = doc->GetBaseURI();
     }
 
     // Create an empty document from it.  Here we have to cheat a little bit...
@@ -2029,6 +2033,8 @@ nsXMLHttpRequest::OnStartRequest(nsIRequest *request, nsISupports *ctxt)
     NS_ENSURE_SUCCESS(rv, rv);
     mResponseXML = do_QueryInterface(responseDoc);
     mResponseXML->SetPrincipal(documentPrincipal);
+    mResponseXML->SetChromeXHRDocURI(chromeXHRDocURI);
+    mResponseXML->SetChromeXHRDocBaseURI(chromeXHRDocBaseURI);
 
     if (nsContentUtils::IsSystemPrincipal(mPrincipal)) {
       mResponseXML->ForceEnableXULXBL();
