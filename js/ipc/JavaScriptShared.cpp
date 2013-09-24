@@ -105,7 +105,7 @@ ObjectIdCache::keyMarkCallback(JSTracer *trc, void *k, void *d) {
     ObjectIdCache* self = static_cast<ObjectIdCache*>(d);
     JSObject *prior = key;
     JS_CallObjectTracer(trc, &key, "ObjectIdCache::table_ key");
-    self->table_.rekey(prior, key);
+    self->table_.rekeyIfMoved(prior, key);
 }
 
 void

@@ -90,7 +90,7 @@ private:
         JSObject2WrappedJSMap* self = static_cast<JSObject2WrappedJSMap*>(d);
         JSObject *prior = key;
         JS_CallObjectTracer(trc, &key, "XPCJSRuntime::mWrappedJSMap key");
-        self->mTable.rekey(prior, key);
+        self->mTable.rekeyIfMoved(prior, key);
     }
 
     Map mTable;
@@ -699,7 +699,7 @@ private:
         JSObject2JSObjectMap *self = static_cast<JSObject2JSObjectMap *>(d);
         JSObject *prior = key;
         JS_CallObjectTracer(trc, &key, "XPCWrappedNativeScope::mWaiverWrapperMap key");
-        self->mTable.rekey(prior, key);
+        self->mTable.rekeyIfMoved(prior, key);
     }
 
     Map mTable;
