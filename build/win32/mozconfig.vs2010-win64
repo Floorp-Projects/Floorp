@@ -1,6 +1,7 @@
 
-if [ -d "/c/Program Files (x86)/Microsoft Visual Studio 10.0" ]; then
-  _VSPATH="/c/Program Files (x86)/Microsoft Visual Studio 10.0"
+if [ -d "/c/PROGRA~2/MICROS~2.0" ]; then
+  # /c/Program Files (x86)/Microsoft Visual Studio 10.0
+  _VSPATH="/c/PROGRA~2/MICROS~2.0"
 else
   _VSPATH="/c/tools/msvs10"
 fi
