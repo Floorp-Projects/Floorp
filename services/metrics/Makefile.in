@@ -12,8 +12,6 @@ MAIN_JS_MODULE := Metrics.jsm
 MAIN_JS_MODULE_PATH = $(FINAL_TARGET)/modules
 PP_TARGETS += MAIN_JS_MODULE
 
-JS_MODULES_PATH = modules/services/metrics
-
 TESTING_JS_MODULES := $(addprefix modules-testing/,$(testing_modules))
 TESTING_JS_MODULE_DIR := services/metrics
 
