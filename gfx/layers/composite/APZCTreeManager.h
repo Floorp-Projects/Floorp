@@ -249,6 +249,11 @@ public:
   void ClearTree();
 
   /**
+   * Tests if a screen point intersect an apz in the tree.
+   */
+  bool HitTestAPZC(const ScreenPoint& aPoint);
+
+  /**
    * Set the dpi value used by all AsyncPanZoomControllers.
    * DPI defaults to 72 if not set using SetDPI() at any point.
    */
