@@ -152,7 +152,7 @@ cprSendMessage (cprMsgQueue_t msgQueue,
     sendMsg->mtype = PHONE_IPC_MSG;
 
     /* Save the address of the message */
-    memcpy(&sendMsg->msgPtr, &msg, sizeof(uint32_t));
+    sendMsg->msgPtr = msg;
 
     /* Allow the usrPtr to be optional */
     if (usrPtr) {
@@ -160,7 +160,7 @@ cprSendMessage (cprMsgQueue_t msgQueue,
     }
 
     /* Post the message */
-	if ( hThread == NULL || PostThreadMessage(pCprThread->threadId, MSG_BUF, (unsigned long)sendMsg, 0) == 0 ) {
+	if ( hThread == NULL || PostThreadMessage(pCprThread->threadId, MSG_BUF, (WPARAM)sendMsg, 0) == 0 ) {
         CPR_ERROR("%s - Msg not sent: %d\n", fname, GetLastError());
         cpr_free(sendMsg);
         return CPR_FAILURE;
@@ -189,7 +189,7 @@ cprGetMessage (cprMsgQueue_t msgQueue,
 {
     static const char fname[] = "cprGetMessage";
     struct msgbuffer *rcvMsg = (struct msgbuffer *)rcvBuffer;
-    uint32_t bufferPtr = 0;
+    void *bufferPtr = 0;
     cpr_msg_queue_t *pCprMsgQueue;
     MSG msg;
     cpr_thread_t *pThreadPtr;
@@ -256,7 +256,7 @@ cprGetMessage (cprMsgQueue_t msgQueue,
             break;
         case MSG_BUF:
             rcvMsg = (struct msgbuffer *)msg.wParam;
-            memcpy(&bufferPtr, &rcvMsg->msgPtr, sizeof(uint32_t));
+            bufferPtr = rcvMsg->msgPtr;
             if (usrPtr) {
                 *usrPtr = rcvMsg->usrPtr;
             }
@@ -276,6 +276,6 @@ cprGetMessage (cprMsgQueue_t msgQueue,
         default:
             break;
     }
-    return (void *)bufferPtr;
+    return bufferPtr;
 }
 
