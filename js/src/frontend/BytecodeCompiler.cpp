@@ -40,10 +40,20 @@ CheckLength(ExclusiveContext *cx, size_t length)
 }
 
 static bool
+SetSourceURL(ExclusiveContext *cx, TokenStream &tokenStream, ScriptSource *ss)
+{
+    if (tokenStream.hasSourceURL()) {
+        if (!ss->setSourceURL(cx, tokenStream.sourceURL()))
+            return false;
+    }
+    return true;
+}
+
+static bool
 SetSourceMap(ExclusiveContext *cx, TokenStream &tokenStream, ScriptSource *ss)
 {
-    if (tokenStream.hasSourceMap()) {
-        if (!ss->setSourceMap(cx, tokenStream.releaseSourceMap()))
+    if (tokenStream.hasSourceMapURL()) {
+        if (!ss->setSourceMapURL(cx, tokenStream.sourceMapURL()))
             return false;
     }
     return true;
@@ -357,8 +367,20 @@ frontend::CompileScript(ExclusiveContext *cx, LifoAlloc *alloc, HandleObject sco
     if (!MaybeCheckEvalFreeVariables(cx, evalCaller, scopeChain, parser, pc.ref()))
         return NULL;
 
+    if (!SetSourceURL(cx, parser.tokenStream, ss))
+        return NULL;
+
     if (!SetSourceMap(cx, parser.tokenStream, ss))
         return NULL;
+
+    /*
+     * Source map URLs passed as a compile option (usually via a HTTP source map
+     * header) override any source map urls passed as comment pragmas.
+     */
+    if (options.sourceMapURL) {
+        if (!ss->setSourceMapURL(cx, options.sourceMapURL))
+            return NULL;
+    }
 
     /*
      * Nowadays the threaded interpreter needs a stop instruction, so we
@@ -568,6 +590,9 @@ CompileFunctionBody(JSContext *cx, MutableHandleFunction fun, CompileOptions opt
         fun.set(fn->pn_funbox->function());
         JS_ASSERT(IsAsmJSModuleNative(fun->native()));
     }
+
+    if (!SetSourceURL(cx, parser.tokenStream, ss))
+        return false;
 
     if (!SetSourceMap(cx, parser.tokenStream, ss))
         return false;

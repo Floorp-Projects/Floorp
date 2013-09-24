@@ -95,7 +95,7 @@ nsDOMMessageEvent::GetSource(nsIDOMWindow** aSource)
 }
 
 void
-nsDOMMessageEvent::GetSource(Nullable<mozilla::dom::WindowProxyOrMessagePortReturnValue>& aValue) const
+nsDOMMessageEvent::GetSource(Nullable<mozilla::dom::OwningWindowProxyOrMessagePort>& aValue) const
 {
   if (mWindowSource) {
     aValue.SetValue().SetAsWindowProxy() = mWindowSource;

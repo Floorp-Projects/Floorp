@@ -5,7 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "FileInfo.h"
-
+#include "nsThreadUtils.h"
 #include "mozilla/dom/quota/QuotaManager.h"
 
 USING_INDEXEDDB_NAMESPACE

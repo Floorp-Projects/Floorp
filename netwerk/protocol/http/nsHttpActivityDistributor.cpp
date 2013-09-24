@@ -6,10 +6,8 @@
 #include "HttpLog.h"
 
 #include "nsHttpActivityDistributor.h"
-#include "nsIChannel.h"
 #include "nsCOMPtr.h"
 #include "nsAutoPtr.h"
-#include "nsNetUtil.h"
 #include "nsThreadUtils.h"
 
 using namespace mozilla;

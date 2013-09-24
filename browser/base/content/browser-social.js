@@ -159,11 +159,10 @@ SocialUI = {
           }
           break;
         case "social:profile-changed":
-          // make sure anything that happens here only affects the provider for
-          // which the profile is changing, and that anything we call actually
-          // needs to change based on profile data.
           if (this._matchesCurrentProvider(data)) {
             SocialToolbar.updateProvider();
+            SocialMarks.update();
+            SocialChatBar.update();
           }
           break;
         case "social:frameworker-error":
@@ -876,19 +875,17 @@ SocialToolbar = {
     toggleNotificationsCommand.setAttribute("hidden", !socialEnabled);
 
     let parent = document.getElementById("social-notification-panel");
+    while (parent.hasChildNodes()) {
+      let frame = parent.firstChild;
+      SharedFrame.forgetGroup(frame.id);
+      parent.removeChild(frame);
+    }
+
     let tbi = document.getElementById("social-provider-button");
     if (tbi) {
-      // buttons after social-provider-button are ambient icons, remove the
-      // button and the attached shared frame.
+      // buttons after social-provider-button are ambient icons
       while (tbi.nextSibling) {
-        let tb = tbi.nextSibling;
-        let nid = tb.getAttribute("notificationFrameId");
-        let frame = document.getElementById(nid);
-        if (frame) {
-          SharedFrame.forgetGroup(frame.id);
-          parent.removeChild(frame);
-        }
-        tbi.parentNode.removeChild(tb);
+        tbi.parentNode.removeChild(tbi.nextSibling);
       }
     }
   },

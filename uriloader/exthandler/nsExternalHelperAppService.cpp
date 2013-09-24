@@ -1812,63 +1812,55 @@ NS_IMETHODIMP
 nsExternalAppHandler::OnSaveComplete(nsIBackgroundFileSaver *aSaver,
                                      nsresult aStatus)
 {
-  if (mCanceled)
-    return NS_OK;
-
-  // Save the hash
-  nsresult rv = mSaver->GetSha256Hash(mHash);
-  // Free the reference that the saver keeps on us, even if we couldn't get the
-  // hash.
-  mSaver = nullptr;
-
-  if (NS_FAILED(aStatus)) {
-    nsAutoString path;
-    mTempFile->GetPath(path);
-    SendStatusChange(kWriteError, aStatus, nullptr, path);
-    if (!mCanceled)
-      Cancel(aStatus);
-    return NS_OK;
+  if (!mCanceled) {
+    // Save the hash
+    (void)mSaver->GetSha256Hash(mHash);
+    // Free the reference that the saver keeps on us, even if we couldn't get
+    // the hash.
+    mSaver = nullptr;
+  
+    if (NS_FAILED(aStatus)) {
+      nsAutoString path;
+      mTempFile->GetPath(path);
+      SendStatusChange(kWriteError, aStatus, nullptr, path);
+      if (!mCanceled)
+        Cancel(aStatus);
+      return NS_OK;
+    }
   }
 
   // Notify the transfer object that we are done if the user has chosen an
   // action. If the user hasn't chosen an action, the progress listener
   // (nsITransfer) will be notified in CreateTransfer.
   if (mTransfer) {
-    rv = NotifyTransfer();
-    NS_ENSURE_SUCCESS(rv, rv);
+    NotifyTransfer(aStatus);
   }
 
   return NS_OK;
 }
 
-nsresult nsExternalAppHandler::NotifyTransfer()
+void nsExternalAppHandler::NotifyTransfer(nsresult aStatus)
 {
   MOZ_ASSERT(NS_IsMainThread(), "Must notify on main thread");
-  MOZ_ASSERT(!mCanceled, "Can't notify if canceled or action "
-             "hasn't been chosen");
   MOZ_ASSERT(mTransfer, "We must have an nsITransfer");
 
   LOG(("Notifying progress listener"));
 
-  nsresult rv = mTransfer->SetSha256Hash(mHash);
-  NS_ENSURE_SUCCESS(rv, rv);
+  if (NS_SUCCEEDED(aStatus)) {
+    (void)mTransfer->SetSha256Hash(mHash);
+    (void)mTransfer->OnProgressChange64(nullptr, nullptr, mProgress,
+      mContentLength, mProgress, mContentLength);
+  }
 
-  rv = mTransfer->OnProgressChange64(nullptr, nullptr, mProgress,
-    mContentLength, mProgress, mContentLength);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  rv = mTransfer->OnStateChange(nullptr, nullptr,
+  (void)mTransfer->OnStateChange(nullptr, nullptr,
     nsIWebProgressListener::STATE_STOP |
     nsIWebProgressListener::STATE_IS_REQUEST |
-    nsIWebProgressListener::STATE_IS_NETWORK, NS_OK);
-  NS_ENSURE_SUCCESS(rv, rv);
+    nsIWebProgressListener::STATE_IS_NETWORK, aStatus);
 
   // This nsITransfer object holds a reference to us (we are its observer), so
   // we need to release the reference to break a reference cycle (and therefore
-  // to prevent leaking)
+  // to prevent leaking).  We do this even if the previous calls failed.
   mTransfer = nullptr;
-
-  return NS_OK;
 }
 
 NS_IMETHODIMP nsExternalAppHandler::GetMIMEInfo(nsIMIMEInfo ** aMIMEInfo)
@@ -1966,7 +1958,7 @@ nsresult nsExternalAppHandler::CreateTransfer()
   // processing the url. If that's the case then mStopRequestIssued will be
   // true and OnSaveComplete has been called.
   if (mStopRequestIssued && !mSaver && mTransfer) {
-    return NotifyTransfer();
+    NotifyTransfer(NS_OK);
   }
 
   return rv;
@@ -2203,17 +2195,31 @@ NS_IMETHODIMP nsExternalAppHandler::LaunchWithApplication(nsIFile * aApplication
 NS_IMETHODIMP nsExternalAppHandler::Cancel(nsresult aReason)
 {
   NS_ENSURE_ARG(NS_FAILED(aReason));
-  // XXX should not ignore the reason
 
+  if (mCanceled) {
+    return NS_OK;
+  }
   mCanceled = true;
+
   if (mSaver) {
+    // We are still writing to the target file.  Give the saver a chance to
+    // close the target file, then notify the transfer object if necessary in
+    // the OnSaveComplete callback.
     mSaver->Finish(aReason);
     mSaver = nullptr;
-  } else if (mStopRequestIssued && mTempFile) {
-    // This branch can only happen when the user cancels the helper app dialog
-    // when the request has completed. The temp file has to be removed here,
-    // because mSaver has been released at that time with the temp file left.
-    (void)mTempFile->Remove(false);
+  } else {
+    if (mStopRequestIssued && mTempFile) {
+      // This branch can only happen when the user cancels the helper app dialog
+      // when the request has completed. The temp file has to be removed here,
+      // because mSaver has been released at that time with the temp file left.
+      (void)mTempFile->Remove(false);
+    }
+
+    // Notify the transfer object that the download has been canceled, if the
+    // user has already chosen an action and we didn't notify already.
+    if (mTransfer) {
+      NotifyTransfer(aReason);
+    }
   }
 
   // Break our reference cycle with the helper app dialog (set up in
@@ -2225,7 +2231,6 @@ NS_IMETHODIMP nsExternalAppHandler::Cancel(nsresult aReason)
   // Release the listener, to break the reference cycle with it (we are the
   // observer of the listener).
   mDialogProgressListener = nullptr;
-  mTransfer = nullptr;
 
   return NS_OK;
 }

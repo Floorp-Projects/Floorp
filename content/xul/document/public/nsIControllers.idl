@@ -3,8 +3,9 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "nsIController.idl"
+#include "nsISupports.idl"
 
+interface nsIController;
 interface nsIDOMXULCommandDispatcher;
 
 [scriptable, uuid(f36e3ec1-9197-4ad8-8d4c-d3b1927fd6df)]

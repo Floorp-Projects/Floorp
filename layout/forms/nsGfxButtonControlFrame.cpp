@@ -15,8 +15,6 @@
 #include "nsIDOMHTMLInputElement.h"
 #include "nsTextNode.h"
 
-const nscoord kSuggestedNotSet = -1;
-
 nsGfxButtonControlFrame::nsGfxButtonControlFrame(nsStyleContext* aContext):
   nsHTMLButtonControlFrame(aContext)
 {

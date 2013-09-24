@@ -122,7 +122,8 @@ BEGIN_TEST(test_cloneScriptWithPrincipals)
         CHECK(cloned = JS_CloneFunctionObject(cx, obj, B));
 
         JSFunction *fun;
-        CHECK(fun = JS_ValueToFunction(cx, JS::ObjectValue(*cloned)));
+        JS::RootedValue clonedValue(cx, JS::ObjectValue(*cloned));
+        CHECK(fun = JS_ValueToFunction(cx, clonedValue));
 
         JSScript *script;
         CHECK(script = JS_GetFunctionScript(cx, fun));

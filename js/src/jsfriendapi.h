@@ -203,13 +203,33 @@ struct JSFunctionSpecWithHelp {
 extern JS_FRIEND_API(bool)
 JS_DefineFunctionsWithHelp(JSContext *cx, JSObject *obj, const JSFunctionSpecWithHelp *fs);
 
-typedef bool (* JS_SourceHook)(JSContext *cx, JS::Handle<JSScript*> script,
-                               jschar **src, uint32_t *length);
-
-extern JS_FRIEND_API(void)
-JS_SetSourceHook(JSRuntime *rt, JS_SourceHook hook);
-
 namespace js {
+
+/*
+ * A class of objects that return source code on demand.
+ *
+ * When code is compiled with CompileOptions::LAZY_SOURCE, SpiderMonkey
+ * doesn't retain the source code (and doesn't do lazy bytecode
+ * generation). If we ever need the source code, say, in response to a call
+ * to Function.prototype.toSource or Debugger.Source.prototype.text, then
+ * we call the 'load' member function of the instance of this class that
+ * has hopefully been registered with the runtime, passing the code's URL,
+ * and hope that it will be able to find the source.
+ */
+class SourceHook {
+  public:
+    virtual ~SourceHook() { }
+
+    /* Set |*src| and |*length| to refer to the source code for |filename|. */
+    virtual bool load(JSContext *cx, const char *filename, jschar **src, size_t *length) = 0;
+};
+
+/*
+ * Have |rt| use |hook| to retrieve LAZY_SOURCE source code.
+ * See the comments for SourceHook.
+ */
+extern JS_FRIEND_API(void)
+SetSourceHook(JSRuntime *rt, SourceHook *hook);
 
 inline JSRuntime *
 GetRuntime(const JSContext *cx)
@@ -1573,31 +1593,6 @@ DefaultValue(JSContext *cx, JS::HandleObject obj, JSType hint, JS::MutableHandle
 extern JS_FRIEND_API(bool)
 CheckDefineProperty(JSContext *cx, JS::HandleObject obj, JS::HandleId id, JS::HandleValue value,
                     JSPropertyOp getter, JSStrictPropertyOp setter, unsigned attrs);
-
-class ScriptSource;
-
-// An AsmJSModuleSourceDesc object holds a reference to the ScriptSource
-// containing an asm.js module as well as the [begin, end) range of the
-// module's chars within the ScriptSource.
-class AsmJSModuleSourceDesc
-{
-    ScriptSource *scriptSource_;
-    uint32_t bufStart_;
-    uint32_t bufEnd_;
-
-  public:
-    AsmJSModuleSourceDesc() : scriptSource_(NULL), bufStart_(UINT32_MAX), bufEnd_(UINT32_MAX) {}
-    void init(ScriptSource *scriptSource, uint32_t bufStart, uint32_t bufEnd);
-    ~AsmJSModuleSourceDesc();
-
-    ScriptSource *scriptSource() const { JS_ASSERT(scriptSource_ != NULL); return scriptSource_; }
-    uint32_t bufStart() const { JS_ASSERT(bufStart_ != UINT32_MAX); return bufStart_; }
-    uint32_t bufEnd() const { JS_ASSERT(bufStart_ != UINT32_MAX); return bufEnd_; }
-
-  private:
-    AsmJSModuleSourceDesc(const AsmJSModuleSourceDesc &) MOZ_DELETE;
-    void operator=(const AsmJSModuleSourceDesc &) MOZ_DELETE;
-};
 
 } /* namespace js */
 

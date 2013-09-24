@@ -32,8 +32,8 @@ CreateErrorEvent(JSContext* aCx, JS::Handle<JSString*> aMessage,
                  uint32_t aLineNumber, bool aMainRuntime);
 
 JSObject*
-CreateProgressEvent(JSContext* aCx, JSString* aType, bool aLengthComputable,
-                    double aLoaded, double aTotal);
+CreateProgressEvent(JSContext* aCx, JS::Handle<JSString*> aType,
+                    bool aLengthComputable, double aLoaded, double aTotal);
 
 bool
 IsSupportedEventClass(JSObject* aEvent);

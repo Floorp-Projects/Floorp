@@ -1,0 +1,31 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+DEPTH           = @DEPTH@
+topsrcdir       = @top_srcdir@
+srcdir          = @srcdir@
+VPATH           = @srcdir@
+relativesrcdir = @relativesrcdir@
+
+include $(DEPTH)/config/autoconf.mk
+
+# The mochitest doesn't work on fennec yet
+ifneq (android,$(MOZ_WIDGET_TOOLKIT))
+MOCHITEST_FILES = \
+    test_webapps_actor.html \
+    debugger-protocol-helper.js \
+    data/ \
+    redirect.sjs \
+    $(NULL)
+
+MOCHITEST_DATA_FILES = \
+    data/app-redirect.zip \
+    data/app-updated.zip \
+    data/app.zip \
+    $(NULL)
+MOCHITEST_DATA_DEST = $(MOCHITEST_DEST)/data
+INSTALL_TARGETS += MOCHITEST_DATA
+endif
+
+include $(topsrcdir)/config/rules.mk

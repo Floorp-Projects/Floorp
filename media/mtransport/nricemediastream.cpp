@@ -73,12 +73,9 @@ namespace mozilla {
 
 MOZ_MTLOG_MODULE("mtransport")
 
-// Make an NrIceCandidate from the candidate |cand|.
-// This is not a member fxn because we want to hide the
-// defn of nr_ice_candidate but we pass by reference.
-static NrIceCandidate* MakeNrIceCandidate(const nr_ice_candidate& candc) {
-  ScopedDeletePtr<NrIceCandidate> out(new NrIceCandidate());
-
+static bool ToNrIceCandidate(const nr_ice_candidate& candc,
+                             NrIceCandidate* out) {
+  MOZ_ASSERT(out);
   int r;
   // Const-cast because the internal nICEr code isn't const-correct.
   nr_ice_candidate *cand = const_cast<nr_ice_candidate *>(&candc);
@@ -86,16 +83,16 @@ static NrIceCandidate* MakeNrIceCandidate(const nr_ice_candidate& candc) {
 
   r = nr_transport_addr_get_addrstring(&cand->addr, addr, sizeof(addr));
   if (r)
-    return nullptr;
+    return false;
 
   int port;
-  r=nr_transport_addr_get_port(&cand->addr, &port);
+  r = nr_transport_addr_get_port(&cand->addr, &port);
   if (r)
-    return nullptr;
+    return false;
 
   NrIceCandidate::Type type;
 
-  switch(cand->type) {
+  switch (cand->type) {
     case HOST:
       type = NrIceCandidate::ICE_HOST;
       break;
@@ -109,13 +106,24 @@ static NrIceCandidate* MakeNrIceCandidate(const nr_ice_candidate& candc) {
       type = NrIceCandidate::ICE_RELAYED;
       break;
     default:
-      return nullptr;
+      return false;
   }
 
   out->host = addr;
   out->port = port;
   out->type = type;
+  return true;
+}
 
+// Make an NrIceCandidate from the candidate |cand|.
+// This is not a member fxn because we want to hide the
+// defn of nr_ice_candidate but we pass by reference.
+static NrIceCandidate* MakeNrIceCandidate(const nr_ice_candidate& candc) {
+  ScopedDeletePtr<NrIceCandidate> out(new NrIceCandidate());
+
+  if (!ToNrIceCandidate(candc, out)) {
+    return nullptr;
+  }
   return out.forget();
 }
 
@@ -253,6 +261,66 @@ void NrIceMediaStream::EmitAllCandidates() {
   }
 
   RFREE(attrs);
+}
+
+nsresult NrIceMediaStream::GetCandidatePairs(std::vector<NrIceCandidatePair>*
+                                             out_pairs) const {
+  MOZ_ASSERT(out_pairs);
+
+  // Get the check_list on the peer stream (this is where the check_list
+  // actually lives, not in stream_)
+  nr_ice_media_stream* peer_stream;
+  int r = nr_ice_peer_ctx_find_pstream(ctx_->peer(), stream_, &peer_stream);
+  if (r != 0) {
+    return NS_ERROR_FAILURE;
+  }
+
+  nr_ice_cand_pair *p1;
+  out_pairs->clear();
+
+  TAILQ_FOREACH(p1, &peer_stream->check_list, entry) {
+    MOZ_ASSERT(p1);
+    MOZ_ASSERT(p1->local);
+    MOZ_ASSERT(p1->remote);
+    NrIceCandidatePair pair;
+
+    switch (p1->state) {
+      case NR_ICE_PAIR_STATE_FROZEN:
+        pair.state = NrIceCandidatePair::State::STATE_FROZEN;
+        break;
+      case NR_ICE_PAIR_STATE_WAITING:
+        pair.state = NrIceCandidatePair::State::STATE_WAITING;
+        break;
+      case NR_ICE_PAIR_STATE_IN_PROGRESS:
+        pair.state = NrIceCandidatePair::State::STATE_IN_PROGRESS;
+        break;
+      case NR_ICE_PAIR_STATE_FAILED:
+        pair.state = NrIceCandidatePair::State::STATE_FAILED;
+        break;
+      case NR_ICE_PAIR_STATE_SUCCEEDED:
+        pair.state = NrIceCandidatePair::State::STATE_SUCCEEDED;
+        break;
+      case NR_ICE_PAIR_STATE_CANCELLED:
+        pair.state = NrIceCandidatePair::State::STATE_CANCELLED;
+        break;
+      default:
+        MOZ_ASSERT(0);
+    }
+
+    pair.priority = p1->priority;
+    pair.nominated = p1->peer_nominated || p1->nominated;
+    pair.selected = p1->local->component &&
+                    p1->local->component->active == p1;
+
+    if (!ToNrIceCandidate(*(p1->local), &pair.local) ||
+        !ToNrIceCandidate(*(p1->remote), &pair.remote)) {
+      return NS_ERROR_FAILURE;
+    }
+
+    out_pairs->push_back(pair);
+  }
+
+  return NS_OK;
 }
 
 nsresult NrIceMediaStream::GetDefaultCandidate(int component,

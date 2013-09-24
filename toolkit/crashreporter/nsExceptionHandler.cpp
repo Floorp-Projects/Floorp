@@ -3,21 +3,23 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include "nsExceptionHandler.h"
+#include "nsDataHashtable.h"
 #include "mozilla/dom/CrashReporterChild.h"
 #include "mozilla/Services.h"
 #include "nsIObserverService.h"
 #include "mozilla/Util.h"
 
-#include "nsXULAppAPI.h"
-
-#include "nsExceptionHandler.h"
 #include "nsThreadUtils.h"
+#include "nsXULAppAPI.h"
 
 #if defined(XP_WIN32)
 #ifdef WIN32_LEAN_AND_MEAN
 #undef WIN32_LEAN_AND_MEAN
 #endif
 
+#include "nsXULAppAPI.h"
+#include "nsIXULAppInfo.h"
 #include "nsIWindowsRegKey.h"
 #include "client/windows/crash_generation/client_info.h"
 #include "client/windows/crash_generation/crash_generation_server.h"
@@ -42,15 +44,12 @@
 #include <unistd.h>
 #include "mac_utils.h"
 #elif defined(XP_LINUX)
-#include "nsDirectoryServiceDefs.h"
 #include "nsIINIParser.h"
 #include "common/linux/linux_libc_support.h"
 #include "third_party/lss/linux_syscall_support.h"
 #include "client/linux/crash_generation/client_info.h"
 #include "client/linux/crash_generation/crash_generation_server.h"
 #include "client/linux/handler/exception_handler.h"
-#include "client/linux/minidump_writer/linux_dumper.h"
-#include "client/linux/minidump_writer/minidump_writer.h"
 #include <fcntl.h>
 #include <sys/types.h>
 #include <unistd.h>
@@ -77,10 +76,7 @@ using mozilla::InjectCrashRunnable;
 #include "nsDebug.h"
 #include "nsCRT.h"
 #include "nsIFile.h"
-#include "nsIFileStreams.h"
-#include "nsInterfaceHashtable.h"
 #include "prprf.h"
-#include "nsIXULAppInfo.h"
 #include <map>
 #include <vector>
 
@@ -93,8 +89,6 @@ CFStringRef reporterClientAppID = CFSTR("org.mozilla.crashreporter");
 #if defined(MOZ_WIDGET_ANDROID)
 #include "common/linux/file_id.h"
 #endif
-
-#include "nsIUUIDGenerator.h"
 
 using google_breakpad::CrashGenerationServer;
 using google_breakpad::ClientInfo;

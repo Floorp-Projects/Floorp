@@ -93,7 +93,7 @@ public class Tab {
         mUserSearch = "";
         mExternal = external;
         mParentId = parentId;
-        mAboutHomePage = HomePager.Page.BOOKMARKS;
+        mAboutHomePage = HomePager.Page.TOP_SITES;
         mTitle = title == null ? "" : title;
         mFavicon = null;
         mFaviconUrl = null;
@@ -184,7 +184,7 @@ public class Tab {
         return mFavicon;
     }
 
-    public Drawable getThumbnail() {
+    public BitmapDrawable getThumbnail() {
         return mThumbnail;
     }
 

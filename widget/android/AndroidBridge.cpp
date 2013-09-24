@@ -1694,7 +1694,7 @@ AndroidBridge::AddPluginView(jobject view, const LayoutDeviceRect& rect, bool is
     if (!win)
         return;
 
-    CSSRect cssRect = rect / CSSToLayoutDeviceScale(win->GetDefaultScale());
+    CSSRect cssRect = rect / win->GetDefaultScale();
     AddPluginViewWrapper(view, cssRect.x, cssRect.y, cssRect.width, cssRect.height, isFullScreen);
 }
 

@@ -9,7 +9,7 @@ let manifest = { // builtin provider
   origin: "https://example.com",
   sidebarURL: "https://example.com/browser/browser/base/content/test/social/social_sidebar.html",
   workerURL: "https://example.com/browser/browser/base/content/test/social/social_worker.js",
-  iconURL: "https://example.com/browser/browser/base/content/test/moz.png"
+  iconURL: "https://example.com/browser/browser/base/content/test/general/moz.png"
 };
 let manifest2 = { // used for testing install
   name: "provider test1",
@@ -19,14 +19,14 @@ let manifest2 = { // used for testing install
   markedIcon: "https://test1.example.com/browser/browser/base/content/test/social/unchecked.jpg",
   unmarkedIcon: "https://test1.example.com/browser/browser/base/content/test/social/checked.jpg",
 
-  iconURL: "https://test1.example.com/browser/browser/base/content/test/moz.png",
+  iconURL: "https://test1.example.com/browser/browser/base/content/test/general/moz.png",
   version: 1
 };
 let manifest3 = { // used for testing install
   name: "provider test2",
   origin: "https://test2.example.com",
   sidebarURL: "https://test2.example.com/browser/browser/base/content/test/social/social_sidebar.html",
-  iconURL: "https://test2.example.com/browser/browser/base/content/test/moz.png",
+  iconURL: "https://test2.example.com/browser/browser/base/content/test/general/moz.png",
   version: 1
 };
 function makeMarkProvider(origin) {
@@ -38,7 +38,7 @@ function makeMarkProvider(origin) {
     markedIcon: "https://" + origin + ".example.com/browser/browser/base/content/test/social/unchecked.jpg",
     unmarkedIcon: "https://" + origin + ".example.com/browser/browser/base/content/test/social/checked.jpg",
 
-    iconURL: "https://" + origin + ".example.com/browser/browser/base/content/test/moz.png",
+    iconURL: "https://" + origin + ".example.com/browser/browser/base/content/test/general/moz.png",
     version: 1
   }
 }

@@ -4,15 +4,11 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "mozTXTToHTMLConv.h"
-#include "nsIServiceManager.h"
-#include "nsNetCID.h"
 #include "nsNetUtil.h"
-#include "nsReadableUtils.h"
 #include "nsUnicharUtils.h"
 #include "nsCRT.h"
 #include "nsIExternalProtocolHandler.h"
-
-static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
+#include "nsIIOService.h"
 
 #ifdef DEBUG_BenB_Perf
 #include "prtime.h"

@@ -7,6 +7,8 @@
 #ifndef js_GCAPI_h
 #define js_GCAPI_h
 
+#include "mozilla/NullPtr.h"
+ 
 #include "js/HeapAPI.h"
 #include "js/RootingAPI.h"
 #include "js/Value.h"
@@ -17,7 +19,7 @@ namespace JS {
     /* Reasons internal to the JS engine */     \
     D(API)                                      \
     D(MAYBEGC)                                  \
-    D(LAST_CONTEXT)                             \
+    D(DESTROY_RUNTIME)                          \
     D(DESTROY_CONTEXT)                          \
     D(LAST_DITCH)                               \
     D(TOO_MUCH_MALLOC)                          \
@@ -208,12 +210,25 @@ PokeGC(JSRuntime *rt);
 extern JS_FRIEND_API(bool)
 WasIncrementalGC(JSRuntime *rt);
 
+extern JS_FRIEND_API(size_t)
+GetGCNumber();
+
+class AutoAssertNoGC {
+#ifdef DEBUG
+    size_t gcNumber;
+
+  public:
+    AutoAssertNoGC();
+    ~AutoAssertNoGC();
+#endif
+};
+
 class JS_PUBLIC_API(ObjectPtr)
 {
     Heap<JSObject *> value;
 
   public:
-    ObjectPtr() : value(NULL) {}
+    ObjectPtr() : value(nullptr) {}
 
     ObjectPtr(JSObject *obj) : value(obj) {}
 
@@ -223,7 +238,7 @@ class JS_PUBLIC_API(ObjectPtr)
     void finalize(JSRuntime *rt) {
         if (IsIncrementalBarrierNeeded(rt))
             IncrementalObjectBarrier(value);
-        value = NULL;
+        value = nullptr;
     }
 
     void init(JSObject *obj) { value = obj; }

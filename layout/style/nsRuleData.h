@@ -12,6 +12,7 @@
 #define nsRuleData_h_
 
 #include "nsCSSProps.h"
+#include "nsCSSValue.h"
 #include "nsStyleStructFwd.h"
 
 class nsPresContext;

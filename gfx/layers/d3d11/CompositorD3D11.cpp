@@ -750,17 +750,15 @@ CompositorD3D11::VerifyBufferSize()
 
   mDefaultRT = nullptr;
 
-  if (gfxWindowsPlatform::IsOptimus()) {
-    mSwapChain->ResizeBuffers(1, mSize.width, mSize.height,
-                              DXGI_FORMAT_B8G8R8A8_UNORM,
-                              0);
-#ifdef MOZ_METRO
-  } else if (IsRunningInWindowsMetro()) {
+  if (IsRunningInWindowsMetro()) {
     mSwapChain->ResizeBuffers(2, mSize.width, mSize.height,
                               DXGI_FORMAT_B8G8R8A8_UNORM,
                               0);
     mDisableSequenceForNextFrame = true;
-#endif
+  } else if (gfxWindowsPlatform::IsOptimus()) {
+    mSwapChain->ResizeBuffers(1, mSize.width, mSize.height,
+                              DXGI_FORMAT_B8G8R8A8_UNORM,
+                              0);
   } else {
     mSwapChain->ResizeBuffers(1, mSize.width, mSize.height,
                               DXGI_FORMAT_B8G8R8A8_UNORM,

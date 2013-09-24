@@ -2,9 +2,6 @@
 //  HTTP Accept-Language header test
 //
 
-const Cc = Components.classes;
-const Ci = Components.interfaces;
-
 var testpath = "/bug672448";
 
 function run_test() {

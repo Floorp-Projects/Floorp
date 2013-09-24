@@ -9,7 +9,6 @@
 #include "nsIDNSListener.h"
 #include "nsIDNSRecord.h"
 #include "nsIDNSService.h"
-#include "nsNetUtil.h"
 #include "nsThreadUtils.h"
 #include "nsIConsoleService.h"
 #include "nsJSUtils.h"
@@ -17,6 +16,8 @@
 #include "prnetdb.h"
 #include "nsITimer.h"
 #include "mozilla/net/DNS.h"
+#include "nsServiceManagerUtils.h"
+#include "nsNetCID.h"
 
 namespace mozilla {
 namespace net {
@@ -324,6 +325,14 @@ bool PACResolve(const nsCString &aHostName, NetAddr *aNetAddr,
   }
 
   return sRunning->ResolveAddress(aHostName, aNetAddr, aTimeout);
+}
+
+ProxyAutoConfig::ProxyAutoConfig()
+  : mJSRuntime(nullptr)
+  , mJSNeedsSetup(false)
+  , mShutdown(false)
+{
+  MOZ_COUNT_CTOR(ProxyAutoConfig);
 }
 
 bool

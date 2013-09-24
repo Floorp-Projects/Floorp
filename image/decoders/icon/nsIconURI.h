@@ -9,7 +9,7 @@
 
 #include "nsIIconURI.h"
 #include "nsCOMPtr.h"
-#include "nsStringGlue.h"
+#include "nsString.h"
 
 #define NS_MOZICONURI_CID                            \
 {                                                    \

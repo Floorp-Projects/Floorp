@@ -7,12 +7,15 @@
 /* The long avoided variant support for xpcom. */
 
 #include "nsVariant.h"
-#include "nsString.h"
 #include "prprf.h"
 #include "prdtoa.h"
 #include <math.h>
-#include "nsCRT.h"
 #include "nsCycleCollectionParticipant.h"
+#include "xpt_struct.h"
+#include "nsReadableUtils.h"
+#include "nsMemory.h"
+#include "nsString.h"
+#include "nsCRTGlue.h"
 
 /***************************************************************************/
 // Helpers for static convert functions...

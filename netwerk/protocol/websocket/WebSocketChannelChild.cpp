@@ -10,10 +10,10 @@
 #include "mozilla/net/NeckoChild.h"
 #include "WebSocketChannelChild.h"
 #include "nsITabChild.h"
-#include "nsILoadContext.h"
 #include "nsNetUtil.h"
 #include "mozilla/ipc/InputStreamUtils.h"
 #include "mozilla/ipc/URIUtils.h"
+#include "mozilla/net/ChannelEventQueue.h"
 
 using namespace mozilla::ipc;
 

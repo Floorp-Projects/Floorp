@@ -57,16 +57,25 @@ BasicContainerLayer::ComputeEffectiveTransforms(const gfx3DMatrix& aTransformToS
   ComputeEffectiveTransformsForChildren(idealTransform);
 
   ComputeEffectiveTransformForMaskLayer(aTransformToSurface);
+  
+  Layer* child = GetFirstChild();
+  bool hasSingleBlendingChild = false;
+  if (!HasMultipleChildren() && child) {
+    hasSingleBlendingChild = child->GetMixBlendMode() != gfxContext::OPERATOR_OVER;
+  }
 
-  /* If we have a single child, it can just inherit our opacity,
+  /* If we have a single childand it is not blending,, it can just inherit our opacity,
    * otherwise we need a PushGroup and we need to mark ourselves as using
    * an intermediate surface so our children don't inherit our opacity
    * via GetEffectiveOpacity.
    * Having a mask layer always forces our own push group
+   * Having a blend mode also always forces our own push group
    */
   mUseIntermediateSurface =
-    GetMaskLayer() || (GetEffectiveOpacity() != 1.0 &&
-                       HasMultipleChildren());
+    GetMaskLayer() ||
+    GetForceIsolatedGroup() ||
+    (GetMixBlendMode() != gfxContext::OPERATOR_OVER && HasMultipleChildren()) ||
+    (GetEffectiveOpacity() != 1.0 && (HasMultipleChildren() || hasSingleBlendingChild));
 }
 
 bool

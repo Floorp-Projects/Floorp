@@ -1526,33 +1526,27 @@ void
 Debugger::markAll(JSTracer *trc)
 {
     JSRuntime *rt = trc->runtime;
-    for (CompartmentsIter c(rt); !c.done(); c.next()) {
-        GlobalObjectSet &debuggees = c->getDebuggees();
+    for (Debugger *dbg = rt->debuggerList.getFirst(); dbg; dbg = dbg->getNext()) {
+        GlobalObjectSet &debuggees = dbg->debuggees;
         for (GlobalObjectSet::Enum e(debuggees); !e.empty(); e.popFront()) {
             GlobalObject *global = e.front();
 
             MarkObjectUnbarriered(trc, &global, "Global Object");
             if (global != e.front())
                 e.rekeyFront(global);
+        }
 
-            const GlobalObject::DebuggerVector *debuggers = global->getDebuggers();
-            JS_ASSERT(debuggers);
-            for (Debugger * const *p = debuggers->begin(); p != debuggers->end(); p++) {
-                Debugger *dbg = *p;
+        HeapPtrObject &dbgobj = dbg->toJSObjectRef();
+        MarkObject(trc, &dbgobj, "Debugger Object");
 
-                HeapPtrObject &dbgobj = dbg->toJSObjectRef();
-                MarkObject(trc, &dbgobj, "Debugger Object");
+        dbg->scripts.trace(trc);
+        dbg->sources.trace(trc);
+        dbg->objects.trace(trc);
+        dbg->environments.trace(trc);
 
-                dbg->scripts.trace(trc);
-                dbg->sources.trace(trc);
-                dbg->objects.trace(trc);
-                dbg->environments.trace(trc);
-
-                for (Breakpoint *bp = dbg->firstBreakpoint(); bp; bp = bp->nextInDebugger()) {
-                    MarkScriptUnbarriered(trc, &bp->site->script, "breakpoint script");
-                    MarkObject(trc, &bp->getHandlerRef(), "breakpoint handler");
-                }
-            }
+        for (Breakpoint *bp = dbg->firstBreakpoint(); bp; bp = bp->nextInDebugger()) {
+            MarkScriptUnbarriered(trc, &bp->site->script, "breakpoint script");
+            MarkObject(trc, &bp->getHandlerRef(), "breakpoint handler");
         }
     }
 }
@@ -2665,6 +2659,20 @@ Debugger::findAllGlobals(JSContext *cx, unsigned argc, Value *vp)
     return true;
 }
 
+bool
+Debugger::makeGlobalObjectReference(JSContext *cx, unsigned argc, Value *vp)
+{
+    REQUIRE_ARGC("Debugger.makeGlobalObjectReference", 1);
+    THIS_DEBUGGER(cx, argc, vp, "makeGlobalObjectReference", args, dbg);
+
+    Rooted<GlobalObject *> global(cx, dbg->unwrapDebuggeeArgument(cx, args[0]));
+    if (!global)
+        return false;
+
+    args.rval().setObject(*global);
+    return dbg->wrapDebuggeeValue(cx, args.rval());
+}
+
 const JSPropertySpec Debugger::properties[] = {
     JS_PSGS("enabled", Debugger::getEnabled, Debugger::setEnabled, 0),
     JS_PSGS("onDebuggerStatement", Debugger::getOnDebuggerStatement,
@@ -2690,6 +2698,7 @@ const JSFunctionSpec Debugger::methods[] = {
     JS_FN("clearAllBreakpoints", Debugger::clearAllBreakpoints, 1, 0),
     JS_FN("findScripts", Debugger::findScripts, 1, 0),
     JS_FN("findAllGlobals", Debugger::findAllGlobals, 0, 0),
+    JS_FN("makeGlobalObjectReference", Debugger::makeGlobalObjectReference, 1, 0),
     JS_FS_END
 };
 
@@ -2701,13 +2710,6 @@ GetScriptReferent(JSObject *obj)
 {
     JS_ASSERT(obj->getClass() == &DebuggerScript_class);
     return static_cast<JSScript *>(obj->getPrivate());
-}
-
-static inline void
-SetScriptReferent(JSObject *obj, JSScript *script)
-{
-    JS_ASSERT(obj->getClass() == &DebuggerScript_class);
-    obj->setPrivateGCThing(script);
 }
 
 static void
@@ -2900,8 +2902,8 @@ DebuggerScript_getSourceMapUrl(JSContext *cx, unsigned argc, Value *vp)
     ScriptSource *source = script->scriptSource();
     JS_ASSERT(source);
 
-    if (source->hasSourceMap()) {
-        JSString *str = JS_NewUCStringCopyZ(cx, source->sourceMap());
+    if (source->hasSourceMapURL()) {
+        JSString *str = JS_NewUCStringCopyZ(cx, source->sourceMapURL());
         if (!str)
             return false;
         args.rval().setString(str);
@@ -3715,7 +3717,12 @@ DebuggerSource_getText(JSContext *cx, unsigned argc, Value *vp)
     THIS_DEBUGSOURCE_REFERENT(cx, argc, vp, "(get text)", args, obj, sourceObject);
 
     ScriptSource *ss = sourceObject->source();
-    JSString *str = ss->substring(cx, 0, ss->length());
+    bool hasSourceData = ss->hasSourceData();
+    if (!ss->hasSourceData() && !JSScript::loadSource(cx, ss, &hasSourceData))
+        return false;
+
+    JSString *str = hasSourceData ? ss->substring(cx, 0, ss->length())
+                                  : js_NewStringCopyZ<CanGC>(cx, "[no source]");
     if (!str)
         return false;
 
@@ -3740,9 +3747,30 @@ DebuggerSource_getUrl(JSContext *cx, unsigned argc, Value *vp)
     return true;
 }
 
+static bool
+DebuggerSource_getDisplayURL(JSContext *cx, unsigned argc, Value *vp)
+{
+    THIS_DEBUGSOURCE_REFERENT(cx, argc, vp, "(get url)", args, obj, sourceObject);
+
+    ScriptSource *ss = sourceObject->source();
+    JS_ASSERT(ss);
+
+    if (ss->hasSourceURL()) {
+        JSString *str = JS_NewUCStringCopyZ(cx, ss->sourceURL());
+        if (!str)
+            return false;
+        args.rval().setString(str);
+    } else {
+        args.rval().setNull();
+    }
+
+    return true;
+}
+
 static const JSPropertySpec DebuggerSource_properties[] = {
     JS_PSG("text", DebuggerSource_getText, 0),
     JS_PSG("url", DebuggerSource_getUrl, 0),
+    JS_PSG("displayURL", DebuggerSource_getDisplayURL, 0),
     JS_PS_END
 };
 

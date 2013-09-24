@@ -803,7 +803,12 @@ nsresult ChannelMediaResource::Read(char* aBuffer,
 {
   NS_ASSERTION(!NS_IsMainThread(), "Don't call on main thread");
 
-  return mCacheStream.Read(aBuffer, aCount, aBytes);
+  int64_t offset = mCacheStream.Tell();
+  nsresult rv = mCacheStream.Read(aBuffer, aCount, aBytes);
+  if (NS_SUCCEEDED(rv)) {
+    DispatchBytesConsumed(*aBytes, offset);
+  }
+  return rv;
 }
 
 nsresult ChannelMediaResource::ReadAt(int64_t aOffset,
@@ -813,7 +818,11 @@ nsresult ChannelMediaResource::ReadAt(int64_t aOffset,
 {
   NS_ASSERTION(!NS_IsMainThread(), "Don't call on main thread");
 
-  return mCacheStream.ReadAt(aOffset, aBuffer, aCount, aBytes);
+  nsresult rv = mCacheStream.ReadAt(aOffset, aBuffer, aCount, aBytes);
+  if (NS_SUCCEEDED(rv)) {
+    DispatchBytesConsumed(*aBytes, aOffset);
+  }
+  return rv;
 }
 
 nsresult ChannelMediaResource::Seek(int32_t aWhence, int64_t aOffset)
@@ -1597,8 +1606,17 @@ nsresult FileMediaResource::ReadFromCache(char* aBuffer, int64_t aOffset, uint32
 
 nsresult FileMediaResource::Read(char* aBuffer, uint32_t aCount, uint32_t* aBytes)
 {
-  MutexAutoLock lock(mLock);
-  return UnsafeRead(aBuffer, aCount, aBytes);
+  nsresult rv;
+  int64_t offset = 0;
+  {
+    MutexAutoLock lock(mLock);
+    mSeekable->Tell(&offset);
+    rv = UnsafeRead(aBuffer, aCount, aBytes);
+  }
+  if (NS_SUCCEEDED(rv)) {
+    DispatchBytesConsumed(*aBytes, offset);
+  }
+  return rv;
 }
 
 nsresult FileMediaResource::UnsafeRead(char* aBuffer, uint32_t aCount, uint32_t* aBytes)
@@ -1612,10 +1630,17 @@ nsresult FileMediaResource::ReadAt(int64_t aOffset, char* aBuffer,
 {
   NS_ASSERTION(!NS_IsMainThread(), "Don't call on main thread");
 
-  MutexAutoLock lock(mLock);
-  nsresult rv = UnsafeSeek(nsISeekableStream::NS_SEEK_SET, aOffset);
-  if (NS_FAILED(rv)) return rv;
-  return UnsafeRead(aBuffer, aCount, aBytes);
+  nsresult rv;
+  {
+    MutexAutoLock lock(mLock);
+    rv = UnsafeSeek(nsISeekableStream::NS_SEEK_SET, aOffset);
+    if (NS_FAILED(rv)) return rv;
+    rv = UnsafeRead(aBuffer, aCount, aBytes);
+  }
+  if (NS_SUCCEEDED(rv)) {
+    DispatchBytesConsumed(*aBytes, aOffset);
+  }
+  return rv;
 }
 
 nsresult FileMediaResource::Seek(int32_t aWhence, int64_t aOffset)
@@ -1731,6 +1756,42 @@ void BaseMediaResource::ModifyLoadFlags(nsLoadFlags aFlags)
     rv = loadGroup->AddRequest(mChannel, nullptr);
     NS_ASSERTION(NS_SUCCEEDED(rv), "AddRequest() failed!");
   }
+}
+
+class DispatchBytesConsumedEvent : public nsRunnable {
+public:
+  DispatchBytesConsumedEvent(MediaDecoder* aDecoder,
+                             int64_t aNumBytes,
+                             int64_t aOffset)
+    : mDecoder(aDecoder),
+      mNumBytes(aNumBytes),
+      mOffset(aOffset)
+  {
+    MOZ_COUNT_CTOR(DispatchBytesConsumedEvent);
+  }
+
+  ~DispatchBytesConsumedEvent()
+  {
+    MOZ_COUNT_DTOR(DispatchBytesConsumedEvent);
+  }
+
+  NS_IMETHOD Run() {
+    mDecoder->NotifyBytesConsumed(mNumBytes, mOffset);
+    // Drop ref to decoder on main thread, just in case this reference
+    // ends up being the last owning reference somehow.
+    mDecoder = nullptr;
+    return NS_OK;
+  }
+
+  RefPtr<MediaDecoder> mDecoder;
+  int64_t mNumBytes;
+  int64_t mOffset;
+};
+
+void BaseMediaResource::DispatchBytesConsumed(int64_t aNumBytes, int64_t aOffset)
+{
+  RefPtr<nsIRunnable> event(new DispatchBytesConsumedEvent(mDecoder, aNumBytes, aOffset));
+  NS_DispatchToMainThread(event, NS_DISPATCH_NORMAL);
 }
 
 } // namespace mozilla

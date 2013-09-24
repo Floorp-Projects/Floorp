@@ -29,7 +29,7 @@ ParseIntegerOptionalInteger(const nsAString& aValue,
   nsCharSeparatedTokenizerTemplate<IsSVGWhitespace>
     tokenizer(aValue, ',',
               nsCharSeparatedTokenizer::SEPARATOR_OPTIONAL);
-  if (tokenizer.firstTokenBeganWithWhitespace()) {
+  if (tokenizer.whitespaceBeforeFirstToken()) {
     return NS_ERROR_DOM_SYNTAX_ERR;
   }
 
@@ -53,8 +53,8 @@ ParseIntegerOptionalInteger(const nsAString& aValue,
 
   if (i == 0                    ||                // Too few values.
       tokenizer.hasMoreTokens() ||                // Too many values.
-      tokenizer.lastTokenEndedWithWhitespace() || // Trailing whitespace.
-      tokenizer.lastTokenEndedWithSeparator()) {  // Trailing comma.
+      tokenizer.whitespaceAfterCurrentToken() ||  // Trailing whitespace.
+      tokenizer.separatorAfterCurrentToken()) {   // Trailing comma.
     return NS_ERROR_DOM_SYNTAX_ERR;
   }
 

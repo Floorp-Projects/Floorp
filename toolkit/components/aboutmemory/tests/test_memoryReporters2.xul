@@ -1,0 +1,112 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="chrome://global/skin" type="text/css"?>
+<?xml-stylesheet href="chrome://mochikit/content/tests/SimpleTest/test.css"
+                 type="text/css"?>
+<window title="Memory reporters with child processes"
+  xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+  <script type="application/javascript"
+          src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"/>
+
+  <!-- test results are displayed in the html:body -->
+  <body xmlns="http://www.w3.org/1999/xhtml">
+  </body>
+
+  <!-- test code goes here -->
+  <script type="application/javascript"><![CDATA[
+
+  const Cc = Components.classes;
+  const Ci = Components.interfaces;
+
+  SimpleTest.waitForExplicitFinish();
+
+  // We want to know when a remote process sends us an update.
+  let os = Cc["@mozilla.org/observer-service;1"]
+             .getService(Ci.nsIObserverService);
+  os.addObserver(childMemoryReporterUpdate, "child-memory-reporter-update", false);
+
+  let numRemotes = 3;
+
+  // Create some remote processes, and set up message-passing so that go() is
+  // called once per process, once it is fully initialized.
+  let remotes = [];
+  SpecialPowers.pushPrefEnv({"set": [["dom.ipc.processCount", 3]]}, function() {
+    for (let i = 0; i < numRemotes; i++) {
+      let w = remotes[i] = window.open("remote.xul", "", "chrome");
+
+      w.addEventListener("load", function loadHandler() {
+        w.removeEventListener("load", loadHandler);
+        let remoteBrowser = w.document.getElementById("remote");
+        let mm = remoteBrowser.messageManager;
+        mm.addMessageListener("test:ready", function readyHandler() {
+          mm.removeMessageListener("test:ready", readyHandler);
+          remoteReady();
+        });
+        mm.loadFrameScript("data:," + encodeURI("sendAsyncMessage('test:ready');"), true);
+      });
+    }
+  });
+
+  let numReady = 0;
+
+  function remoteReady()
+  {
+    numReady++;
+    if (numReady == numRemotes) {
+      // All the remote processes are ready.  Ask them for memory reports.
+      os.notifyObservers(null, "child-memory-reporter-request", null);
+    }
+  }
+
+  let numUpdates = 0;
+
+  function childMemoryReporterUpdate()
+  {
+    numUpdates++;
+    if (numUpdates == numRemotes) {
+      // All the remote processes have reported back.  Check reports.
+      let vsizes = {};
+
+      // Get all the reports.
+      let mgr = Cc["@mozilla.org/memory-reporter-manager;1"].
+                getService(Ci.nsIMemoryReporterManager);
+      let e = mgr.enumerateReporters();
+      while (e.hasMoreElements()) {
+        let r = e.getNext().QueryInterface(Ci.nsIMemoryReporter);
+        r.collectReports(function(aProcess, aPath, aKind, aUnits, aAmount, aDesc) {
+          if (aPath === "vsize") {
+            ok(100 * 1000 <= aAmount && aAmount <= 10 * 1000 * 1000 * 1000,
+               "vsize is reasonable");
+            vsizes[aProcess] = aAmount;
+          }
+        }, null);
+      }
+
+      // Close the remote processes.
+      for (let i = 0; i < numRemotes; i++) {
+        remotes[i].close();
+      }
+
+      // Check the results.
+
+      let processes = Object.keys(vsizes);
+      ok(processes.length == numRemotes + 1, "correct vsize count");
+
+      let numEmptyProcesses = 0, numNonEmptyProcesses = 0;
+      for (let i = 0; i < processes.length; i++) {
+        if (processes[i] == "") {
+          numEmptyProcesses++;
+        } else {
+          ok(processes[i].startsWith("Content ("),
+             "correct non-empty process name prefix");
+          numNonEmptyProcesses++;
+        }
+      }
+      ok(numEmptyProcesses == 1, "correct empty process name count");
+      ok(numNonEmptyProcesses == numRemotes,
+                                 "correct non-empty process name count");
+
+      SimpleTest.finish();
+    }
+  }
+  ]]></script>
+</window>

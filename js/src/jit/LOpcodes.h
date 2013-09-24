@@ -32,6 +32,7 @@
     _(NewPar)                       \
     _(NewDenseArrayPar)             \
     _(NewCallObjectPar)             \
+    _(NewDerivedTypedObject)        \
     _(AbortPar)                     \
     _(InitElem)                     \
     _(InitElemGetterSetter)         \
@@ -133,6 +134,7 @@
     _(OsrEntry)                     \
     _(OsrValue)                     \
     _(OsrScopeChain)                \
+    _(OsrArgumentsObject)           \
     _(RegExp)                       \
     _(RegExpTest)                   \
     _(Lambda)                       \
@@ -156,6 +158,7 @@
     _(MonitorTypes)                 \
     _(PostWriteBarrierO)            \
     _(PostWriteBarrierV)            \
+    _(PostWriteBarrierAllSlots)     \
     _(InitializedLength)            \
     _(SetInitializedLength)         \
     _(BoundsCheck)                  \
@@ -220,6 +223,7 @@
     _(ArrayLength)                  \
     _(TypedArrayLength)             \
     _(TypedArrayElements)           \
+    _(TypedObjectElements)          \
     _(StringLength)                 \
     _(ArgumentsLength)              \
     _(GetArgument)                  \

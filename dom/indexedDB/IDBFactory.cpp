@@ -44,6 +44,7 @@
 #include "IndexedDatabaseManager.h"
 #include "Key.h"
 #include "ProfilerHelpers.h"
+#include "nsNetUtil.h"
 
 #include "ipc/IndexedDBChild.h"
 
@@ -191,10 +192,8 @@ IDBFactory::Create(JSContext* aCx,
   nsCString origin;
   StoragePrivilege privilege;
   PersistenceType defaultPersistenceType;
-  nsresult rv =
-    QuotaManager::GetInfoFromWindow(nullptr, &group, &origin, &privilege,
-                                    &defaultPersistenceType);
-  NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
+  QuotaManager::GetInfoForChrome(&group, &origin, &privilege,
+                                 &defaultPersistenceType);
 
   nsRefPtr<IDBFactory> factory = new IDBFactory();
   factory->mGroup = group;
@@ -231,6 +230,15 @@ IDBFactory::Create(ContentParent* aContentParent,
 
   NS_ASSERTION(!nsContentUtils::GetCurrentJSContext(), "Should be called from C++");
 
+  // We need to get this information before we push a null principal to avoid
+  // IsCallerChrome() assertion in quota manager.
+  nsCString group;
+  nsCString origin;
+  StoragePrivilege privilege;
+  PersistenceType defaultPersistenceType;
+  QuotaManager::GetInfoForChrome(&group, &origin, &privilege,
+                                 &defaultPersistenceType);
+
   nsCOMPtr<nsIPrincipal> principal =
     do_CreateInstance("@mozilla.org/nullprincipal;1");
   NS_ENSURE_TRUE(principal, NS_ERROR_FAILURE);
@@ -253,9 +261,13 @@ IDBFactory::Create(ContentParent* aContentParent,
 
   JSAutoCompartment ac(cx, global);
 
-  nsRefPtr<IDBFactory> factory;
-  rv = Create(cx, global, aContentParent, getter_AddRefs(factory));
-  NS_ENSURE_SUCCESS(rv, rv);
+  nsRefPtr<IDBFactory> factory = new IDBFactory();
+  factory->mGroup = group;
+  factory->mASCIIOrigin = origin;
+  factory->mPrivilege = privilege;
+  factory->mDefaultPersistenceType = defaultPersistenceType;
+  factory->mOwningObject = global;
+  factory->mContentParent = aContentParent;
 
   mozilla::HoldJSObjects(factory.get());
   factory->mRootedOwningObject = true;
@@ -558,8 +570,6 @@ NS_IMPL_CYCLE_COLLECTION_TRACE_BEGIN(IDBFactory)
   NS_IMPL_CYCLE_COLLECTION_TRACE_JS_MEMBER_CALLBACK(mOwningObject)
 NS_IMPL_CYCLE_COLLECTION_TRACE_END
 
-DOMCI_DATA(IDBFactory, IDBFactory)
-
 nsresult
 IDBFactory::OpenInternal(const nsAString& aName,
                          int64_t aVersion,
@@ -611,12 +621,7 @@ IDBFactory::OpenInternal(const nsAString& aName,
       rv = openHelper->WaitForOpenAllowed();
     }
     else {
-      StoragePrivilege openerPrivilege;
-      rv = QuotaManager::GetInfoFromWindow(window, nullptr, nullptr,
-                                           &openerPrivilege, nullptr);
-      NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
-
-      if (openerPrivilege != Chrome &&
+      if (mPrivilege != Chrome &&
           aPersistenceType == PERSISTENCE_TYPE_PERSISTENT) {
         nsRefPtr<CheckPermissionsHelper> permissionHelper =
           new CheckPermissionsHelper(openHelper, window);

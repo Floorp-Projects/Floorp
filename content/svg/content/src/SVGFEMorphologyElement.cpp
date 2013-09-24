@@ -19,7 +19,6 @@ SVGFEMorphologyElement::WrapNode(JSContext* aCx, JS::Handle<JSObject*> aScope)
 }
 
 // Morphology Operators
-static const unsigned short SVG_OPERATOR_UNKNOWN = 0;
 static const unsigned short SVG_OPERATOR_ERODE = 1;
 static const unsigned short SVG_OPERATOR_DILATE = 2;
 

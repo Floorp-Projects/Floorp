@@ -85,7 +85,6 @@ function runTest() {
   var treec = document.getElementById('tc');
 
   try {
-    netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
     var rdfService = Components.classes["@mozilla.org/rdf/rdf-service;1"].
                        getService(Components.interfaces.nsIRDFService);
 

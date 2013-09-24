@@ -20,9 +20,7 @@ interface DesktopNotification : EventTarget
   [Throws]
   void show();
 
-  [SetterThrows]
   attribute EventHandler onclick;
 
-  [SetterThrows]
   attribute EventHandler onclose;
 };

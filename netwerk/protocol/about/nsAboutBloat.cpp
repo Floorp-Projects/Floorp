@@ -9,13 +9,9 @@
 #ifdef NS_BUILD_REFCNT_LOGGING
 
 #include "nsAboutBloat.h"
-#include "nsIIOService.h"
-#include "nsIServiceManager.h"
 #include "nsStringStream.h"
-#include "nsXPIDLString.h"
 #include "nsIURI.h"
 #include "nsCOMPtr.h"
-#include "nsIFileStreams.h"
 #include "nsNetUtil.h"
 #include "nsDirectoryServiceDefs.h"
 #include "nsIFile.h"

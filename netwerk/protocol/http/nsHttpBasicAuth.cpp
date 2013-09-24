@@ -6,7 +6,6 @@
 // HttpLog.h should generally be included first
 #include "HttpLog.h"
 
-#include "nsHttp.h"
 #include "nsHttpBasicAuth.h"
 #include "plbase64.h"
 #include "nsString.h"

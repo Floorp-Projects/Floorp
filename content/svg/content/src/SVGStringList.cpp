@@ -54,11 +54,11 @@ SVGStringList::SetValue(const nsAString& aValue)
         return NS_ERROR_OUT_OF_MEMORY;
       }
     }
-    if (tokenizer.lastTokenEndedWithSeparator()) {
+    if (tokenizer.separatorAfterCurrentToken()) {
       return NS_ERROR_DOM_SYNTAX_ERR; // trailing comma
     }
   } else {
-    nsWhitespaceTokenizer tokenizer(aValue);
+    nsWhitespaceTokenizerTemplate<IsSVGWhitespace> tokenizer(aValue);
 
     while (tokenizer.hasMoreTokens()) {
       if (!temp.AppendItem(tokenizer.nextToken())) {

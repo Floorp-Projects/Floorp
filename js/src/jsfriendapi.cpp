@@ -46,7 +46,7 @@ PerThreadDataFriendFields::PerThreadDataFriendFields()
 }
 
 JS_FRIEND_API(void)
-JS_SetSourceHook(JSRuntime *rt, JS_SourceHook hook)
+js::SetSourceHook(JSRuntime *rt, SourceHook *hook)
 {
     rt->sourceHook = hook;
 }
@@ -1142,22 +1142,6 @@ js::IsInRequest(JSContext *cx)
 #endif
 }
 #endif
-
-void
-AsmJSModuleSourceDesc::init(ScriptSource *scriptSource, uint32_t bufStart, uint32_t bufEnd)
-{
-    JS_ASSERT(scriptSource_ == NULL);
-    scriptSource_ = scriptSource;
-    bufStart_ = bufStart;
-    bufEnd_ = bufEnd;
-    scriptSource_->incref();
-}
-
-AsmJSModuleSourceDesc::~AsmJSModuleSourceDesc()
-{
-    if (scriptSource_)
-        scriptSource_->decref();
-}
 
 #ifdef JSGC_GENERATIONAL
 JS_FRIEND_API(void)

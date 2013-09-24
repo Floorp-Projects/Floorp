@@ -178,6 +178,27 @@ OptionsPanel.prototype = {
         gDevTools.emit("pref-changed", data);
       }.bind(radiogroup));
     }
+    let prefMenulists = this.panelDoc.querySelectorAll("menulist[data-pref]");
+    for (let menulist of prefMenulists) {
+      let pref = Services.prefs.getCharPref(menulist.getAttribute("data-pref"));
+      let menuitems = menulist.querySelectorAll("menuitem");
+      for (let menuitem of menuitems) {
+        let value = menuitem.getAttribute("value");
+        if (value === pref) {
+          menulist.selectedItem = menuitem;
+          break;
+        }
+      }
+      menulist.addEventListener("command", function() {
+        let data = {
+          pref: this.getAttribute("data-pref"),
+          newValue: this.value
+        };
+        data.oldValue = Services.prefs.getCharPref(data.pref);
+        Services.prefs.setCharPref(data.pref, data.newValue);
+        gDevTools.emit("pref-changed", data);
+      }.bind(menulist));
+    }
   },
 
   /**

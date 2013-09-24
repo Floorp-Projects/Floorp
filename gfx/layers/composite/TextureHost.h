@@ -120,10 +120,6 @@ public:
 
   virtual void SetCompositableQuirks(CompositableQuirks* aQuirks);
 
-#ifdef MOZ_LAYERS_HAVE_LOG
-  virtual void PrintInfo(nsACString& aTo, const char* aPrefix);
-#endif
-
 protected:
   RefPtr<CompositableQuirks> mQuirks;
 };
@@ -389,13 +385,8 @@ public:
   virtual void SetCompositableQuirks(CompositableQuirks* aQuirks);
 
 #ifdef MOZ_LAYERS_HAVE_LOG
-  virtual void PrintInfo(nsACString& aTo, const char* aPrefix)
-  {
-    RefPtr<TextureSource> source = GetTextureSources();
-    if (source) {
-      source->PrintInfo(aTo, aPrefix);
-    }
-  }
+  virtual const char *Name() { return "TextureHost"; }
+  virtual void PrintInfo(nsACString& aTo, const char* aPrefix);
 #endif
 
 protected:
@@ -489,6 +480,10 @@ public:
 
   virtual uint8_t* GetBuffer() MOZ_OVERRIDE;
 
+#ifdef MOZ_LAYERS_HAVE_LOG
+  virtual const char *Name() MOZ_OVERRIDE { return "ShmemTextureHost"; }
+#endif
+
 protected:
   ipc::Shmem* mShmem;
   ISurfaceAllocator* mDeallocator;
@@ -513,6 +508,10 @@ public:
   virtual void DeallocateSharedData() MOZ_OVERRIDE;
 
   virtual uint8_t* GetBuffer() MOZ_OVERRIDE;
+
+#ifdef MOZ_LAYERS_HAVE_LOG
+  virtual const char *Name() MOZ_OVERRIDE { return "MemoryTextureHost"; }
+#endif
 
 protected:
   uint8_t* mBuffer;
@@ -709,7 +708,7 @@ public:
   // see bug 865908 about fixing this.
   virtual void SetBuffer(SurfaceDescriptor* aBuffer, ISurfaceAllocator* aAllocator)
   {
-    MOZ_ASSERT(!mBuffer, "Will leak the old mBuffer");
+    MOZ_ASSERT(!mBuffer || mBuffer == aBuffer, "Will leak the old mBuffer");
     mBuffer = aBuffer;
     mDeAllocator = aAllocator;
   }

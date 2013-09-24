@@ -7,13 +7,8 @@
 
 #include "nsAboutProtocolHandler.h"
 #include "nsIURI.h"
-#include "nsIIOService.h"
-#include "nsCRT.h"
-#include "nsIComponentManager.h"
-#include "nsIServiceManager.h"
 #include "nsIAboutModule.h"
 #include "nsString.h"
-#include "nsReadableUtils.h"
 #include "nsNetCID.h"
 #include "nsAboutProtocolUtils.h"
 #include "nsError.h"

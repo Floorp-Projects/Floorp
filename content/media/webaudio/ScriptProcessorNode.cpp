@@ -98,6 +98,7 @@ public:
     : mOutputQueue("SharedBuffers::outputQueue")
     , mDelaySoFar(TRACK_TICKS_MAX)
     , mSampleRate(aSampleRate)
+    , mLatency(0.0)
     , mDroppingBuffers(false)
   {
   }

@@ -7,9 +7,9 @@
 #define nsUDPServerSocket_h__
 
 #include "nsIUDPServerSocket.h"
-#include "nsSocketTransportService2.h"
 #include "mozilla/Mutex.h"
 #include "nsIOutputStream.h"
+#include "nsAutoPtr.h"
 
 //-----------------------------------------------------------------------------
 

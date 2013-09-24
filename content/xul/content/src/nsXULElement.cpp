@@ -89,6 +89,7 @@
 #include "nsAttrValueOrString.h"
 #include "nsAttrValueInlines.h"
 #include "mozilla/Attributes.h"
+#include "nsIController.h"
 #include <algorithm>
 
 // The XUL doc interface
@@ -108,12 +109,6 @@
 
 using namespace mozilla;
 using namespace mozilla::dom;
-
-//----------------------------------------------------------------------
-
-static NS_DEFINE_CID(kXULPopupListenerCID,        NS_XULPOPUPLISTENER_CID);
-
-//----------------------------------------------------------------------
 
 #ifdef XUL_PROTOTYPE_ATTRIBUTE_METERING
 uint32_t             nsXULPrototypeAttribute::gNumElements;

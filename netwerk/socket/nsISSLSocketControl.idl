@@ -9,7 +9,7 @@
 interface nsIInterfaceRequestor;
 
 %{C++
-#include "nsTArray.h"
+template<class T> class nsTArray;
 class nsCString;
 %}
 [ref] native nsCStringTArrayRef(nsTArray<nsCString>);

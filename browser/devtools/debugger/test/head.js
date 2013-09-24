@@ -16,10 +16,11 @@ let { Task } = Cu.import("resource://gre/modules/Task.jsm", {});
 let { Promise: promise } = Cu.import("resource://gre/modules/commonjs/sdk/core/promise.js", {});
 let { gDevTools } = Cu.import("resource:///modules/devtools/gDevTools.jsm", {});
 let { devtools } = Cu.import("resource://gre/modules/devtools/Loader.jsm", {});
+let { DevToolsUtils } = Cu.import("resource://gre/modules/devtools/DevToolsUtils.jsm", {});
 let { BrowserDebuggerProcess } = Cu.import("resource:///modules/devtools/DebuggerProcess.jsm", {});
 let { DebuggerServer } = Cu.import("resource://gre/modules/devtools/dbg-server.jsm", {});
 let { DebuggerClient } = Cu.import("resource://gre/modules/devtools/dbg-client.jsm", {});
-let { SourceEditor } = Cu.import("resource:///modules/source-editor.jsm", {});
+let { SourceEditor } = Cu.import("resource:///modules/devtools/sourceeditor/source-editor.jsm", {});
 let { AddonManager } = Cu.import("resource://gre/modules/AddonManager.jsm", {});
 let TargetFactory = devtools.TargetFactory;
 let Toolbox = devtools.Toolbox;
@@ -416,18 +417,18 @@ function backspaceText(aElement, aTimes) {
   }
 }
 
-function getTab(aTarget) {
+function getTab(aTarget, aWindow) {
   if (aTarget instanceof XULElement) {
     return promise.resolve(aTarget);
   } else {
-    return addTab(aTarget);
+    return addTab(aTarget, aWindow);
   }
 }
 
 function initDebugger(aTarget, aWindow) {
   info("Initializing a debugger panel.");
 
-  return getTab(aTarget).then(aTab => {
+  return getTab(aTarget, aWindow).then(aTab => {
     info("Debugee tab added successfully: " + aTarget);
 
     let deferred = promise.defer();
@@ -445,7 +446,7 @@ function initDebugger(aTarget, aWindow) {
         info("Debugger client resumed successfully.");
 
         prepareDebugger(debuggerPanel);
-        deferred.resolve([aTab, debuggee, debuggerPanel]);
+        deferred.resolve([aTab, debuggee, debuggerPanel, aWindow]);
       });
     });
 

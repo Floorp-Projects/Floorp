@@ -8,13 +8,11 @@
 #define mozilla_dom_TextTrackCue_h
 
 #include "mozilla/dom/DocumentFragment.h"
-#include "mozilla/dom/TextTrack.h"
 #include "mozilla/dom/VTTCueBinding.h"
 #include "nsCycleCollectionParticipant.h"
 #include "nsDOMEventTargetHelper.h"
-#include "nsIDocument.h"
-
-struct webvtt_node;
+#include "nsIWebVTTParserWrapper.h"
+#include "mozilla/StaticPtr.h"
 
 namespace mozilla {
 namespace dom {
@@ -46,9 +44,7 @@ public:
 
   TextTrackCue(nsISupports* aGlobal, double aStartTime, double aEndTime,
                const nsAString& aText, HTMLTrackElement* aTrackElement,
-               webvtt_node* head, ErrorResult& aRv);
-
-  ~TextTrackCue();
+               ErrorResult& aRv);
 
   virtual JSObject* WrapObject(JSContext* aCx,
                                JS::Handle<JSObject*> aScope) MOZ_OVERRIDE;
@@ -120,20 +116,30 @@ public:
     CueChanged();
   }
 
-  void GetVertical(nsAString& aVertical)
+  void GetRegionId(nsAString& aRegionId) const
   {
-    aVertical = mVertical;
+    aRegionId = mRegionId;
   }
 
-  void SetVertical(const nsAString& aVertical, ErrorResult& aRv)
+  void SetRegionId(const nsAString& aRegionId)
+  {
+    if (mRegionId == aRegionId) {
+      return;
+    }
+
+    mRegionId = aRegionId;
+    CueChanged();
+  }
+
+  DirectionSetting Vertical() const
+  {
+    return mVertical;
+  }
+
+  void SetVertical(const DirectionSetting& aVertical)
   {
     if (mVertical == aVertical)
       return;
-
-    if (!aVertical.EqualsLiteral("rl") && !aVertical.EqualsLiteral("lr") && !aVertical.IsEmpty()){
-      aRv.Throw(NS_ERROR_DOM_SYNTAX_ERR);
-      return;
-    }
 
     mReset = true;
     mVertical = aVertical;
@@ -239,12 +245,6 @@ public:
     CueChanged();
   }
 
-  already_AddRefed<DocumentFragment> GetCueAsHTML() const
-  {
-    // XXXhumph: todo. Bug 868509.
-    return nullptr;
-  }
-
   IMPL_EVENT_HANDLER(enter)
   IMPL_EVENT_HANDLER(exit)
 
@@ -261,17 +261,17 @@ public:
   }
 
   /**
-   * Overview of WEBVTT cuetext and anonymous content setup.
+   * Overview of WebVTT cuetext and anonymous content setup.
    *
-   * webvtt_nodes are the parsed version of WEBVTT cuetext. WEBVTT cuetext is
-   * the portion of a WEBVTT cue that specifies what the caption will actually
+   * WebVTT nodes are the parsed version of WebVTT cuetext. WebVTT cuetext is
+   * the portion of a WebVTT cue that specifies what the caption will actually
    * show up as on screen.
    *
-   * WEBVTT cuetext can contain markup that loosely relates to HTML markup. It
+   * WebVTT cuetext can contain markup that loosely relates to HTML markup. It
    * can contain tags like <b>, <u>, <i>, <c>, <v>, <ruby>, <rt>, <lang>,
    * including timestamp tags.
    *
-   * When the caption is ready to be displayed the webvtt_nodes are converted
+   * When the caption is ready to be displayed the WebVTT nodes are converted
    * over to anonymous DOM content. <i>, <u>, <b>, <ruby>, and <rt> all become
    * HTMLElements of their corresponding HTML markup tags. <c> and <v> are
    * converted to <span> tags. Timestamp tags are converted to XML processing
@@ -279,7 +279,7 @@ public:
    * This takes the form of <foo.class.subclass>. These classes are then parsed
    * and set as the anonymous content's class attribute.
    *
-   * Rules on constructing DOM objects from webvtt_nodes can be found here
+   * Rules on constructing DOM objects from WebVTT nodes can be found here
    * http://dev.w3.org/html5/webvtt/#webvtt-cue-text-dom-construction-rules.
    * Current rules are taken from revision on April 15, 2013.
    */
@@ -292,38 +292,14 @@ public:
 
   /**
    * Produces a tree of anonymous content based on the tree of the processed
-   * cue text. This lives in a tree of C nodes whose head is mHead.
+   * cue text.
    *
    * Returns a DocumentFragment that is the head of the tree of anonymous
    * content.
    */
   already_AddRefed<DocumentFragment> GetCueAsHTML();
 
-  /**
-   * Converts mHead to a list of DOM elements and attaches it to aParentContent.
-   *
-   * Processes the C node tree in a depth-first pre-order traversal and creates
-   * a mirrored DOM tree. The conversion rules come from the webvtt DOM
-   * construction rules:
-   * http://dev.w3.org/html5/webvtt/#webvtt-cue-text-dom-construction-rules
-   * Current rules taken from revision on May 13, 2013.
-   */
-  void
-  ConvertNodeTreeToDOMTree(nsIContent* aParentContent);
-
-  /**
-   * Converts an internal webvtt node, i.e. one that has children, to an
-   * anonymous HTMLElement.
-   */
-  already_AddRefed<nsIContent>
-  ConvertInternalNodeToContent(const webvtt_node* aWebVTTNode);
-
-  /**
-   * Converts a leaf webvtt node, i.e. one that does not have children, to
-   * either a text node or processing instruction.
-   */
-  already_AddRefed<nsIContent>
-  ConvertLeafNodeToContent(const webvtt_node* aWebVTTNode);
+  void SetTrackElement(HTMLTrackElement* aTrackElement);
 
 private:
   void CueChanged();
@@ -338,13 +314,13 @@ private:
 
   nsRefPtr<TextTrack> mTrack;
   nsRefPtr<HTMLTrackElement> mTrackElement;
-  webvtt_node *mHead;
   nsString mId;
   int32_t mPosition;
   int32_t mSize;
   bool mPauseOnExit;
   bool mSnapToLines;
-  nsString mVertical;
+  nsString mRegionId;
+  DirectionSetting mVertical;
   int mLine;
   TextTrackCueAlign mAlign;
 
@@ -355,6 +331,8 @@ private:
   // anytime a property that relates to the display of the TextTrackCue is
   // changed.
   bool mReset;
+
+  static StaticRefPtr<nsIWebVTTParserWrapper> sParserWrapper;
 };
 
 } // namespace dom

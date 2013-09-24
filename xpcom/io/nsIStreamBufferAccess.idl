@@ -4,7 +4,6 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "nsISupports.idl"
-#include "nsrootidl.idl"
 
 /**
  * An interface for access to a buffering stream implementation's underlying

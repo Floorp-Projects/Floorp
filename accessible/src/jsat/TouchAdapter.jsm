@@ -428,10 +428,10 @@ TouchPoint.prototype = {
     }
 
     // To be considered an explore...
-    if (!this.done &&
-        duration > TouchAdapter.SWIPE_MAX_DURATION &&
+    if (duration > TouchAdapter.SWIPE_MAX_DURATION &&
         (this.distanceTraveled / this.dpi) > TouchAdapter.TAP_MAX_RADIUS) {
-      return {type: 'explore', x: this.x, y: this.y};
+      return {type: this.done ? 'exploreend' : 'explore',
+              x: this.x, y: this.y};
     }
 
     return null;

@@ -7,9 +7,15 @@
 #include "mozilla/net/HttpInfo.h"
 #include "nsCxPusher.h"
 #include "nsHttp.h"
+#include "nsICancelable.h"
 #include "nsIDNSService.h"
+#include "nsIDNSRecord.h"
+#include "nsIInputStream.h"
+#include "nsISocketTransport.h"
 #include "nsIThread.h"
-#include "nsSocketTransport2.h"
+#include "nsSocketTransportService2.h"
+#include "nsThreadUtils.h"
+#include "nsURLHelper.h"
 
 using mozilla::AutoSafeJSContext;
 namespace mozilla {
@@ -735,7 +741,7 @@ Dashboard::GetErrorString(nsresult rv)
         if (errors[i].key == rv)
             return errors[i].error;
 
-    return NULL;
+    return nullptr;
 }
 
 } } // namespace mozilla::net

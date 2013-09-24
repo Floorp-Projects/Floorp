@@ -67,5 +67,8 @@ gfxQuartzImageSurface::GetAsImageSurface()
         return nullptr;
     }
 
-    return gfxASurface::Wrap(isurf).downcast<gfxImageSurface>();
+    nsRefPtr<gfxImageSurface> result = gfxASurface::Wrap(isurf).downcast<gfxImageSurface>();
+    result->SetOpaqueRect(GetOpaqueRect());
+
+    return result.forget();
 }

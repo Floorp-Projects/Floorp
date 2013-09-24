@@ -4,19 +4,12 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "nsUnknownDecoder.h"
-#include "nsIServiceManager.h"
-#include "nsIStreamConverterService.h"
-
 #include "nsIPipe.h"
 #include "nsIInputStream.h"
 #include "nsIOutputStream.h"
 #include "nsMimeTypes.h"
-#include "netCore.h"
-#include "nsXPIDLString.h"
 #include "nsIPrefService.h"
 #include "nsIPrefBranch.h"
-#include "nsICategoryManager.h"
-#include "nsISupportsPrimitives.h"
 
 #include "nsCRT.h"
 

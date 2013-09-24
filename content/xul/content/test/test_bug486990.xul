@@ -85,22 +85,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=486990
     evt.preventDefault();
   }
 
-  function allowDisableContextMenu(allow) {
-    const prefSvcContractID = "@mozilla.org/preferences-service;1";
-    const prefSvcIID = SpecialPowers.Ci.nsIPrefService;
-    var prefs = SpecialPowers.Cc[prefSvcContractID].getService(prefSvcIID)
-                                                   .getBranch("dom.event.contextmenu.");
-    try {
-      if (allow) {
-        if (prefs.prefHasUserValue("enabled")) {
-          prefs.clearUserPref("enabled");
-        }
-      } else {
-        prefs.setBoolPref("enabled", allow);
-      }
-    } catch(ex) {}
-  }
-  
+  var tb;
   function runTests() {
     document.addEventListener("foo", fooListener, true);
     var e1 = document.createEvent("Event");
@@ -116,7 +101,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=486990
     is(eventCount, 2, "Wrong event count");
     ok(prevented, "Default handling should have been prevented.");
 
-    var tb = document.getElementById("testbutton");
+    tb = document.getElementById("testbutton");
     dispatchTrustedContextMenuEvent(tb);
     is(popupshowingcount, 1, "Should have got 'popupShowing' event!");
 
@@ -128,11 +113,17 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=486990
     dispatchTrustedContextMenuEvent(tb);
     is(popupshowingcount, 2, "Should not have got 'popupShowing' event!");
 
-    allowDisableContextMenu(false);
+    SpecialPowers.pushPrefEnv({"set": [["dom.event.contextmenu.enabled", false]]}, test2);
+  }
+
+  function test2() {
     dispatchTrustedContextMenuEvent(tb);
     is(popupshowingcount, 3, "Should have got 'popupShowing' event!");
 
-    allowDisableContextMenu(true);
+    SpecialPowers.pushPrefEnv({"set": [["dom.event.contextmenu.enabled", true]]}, test3);
+  }
+
+  function test3() {
     dispatchTrustedContextMenuEvent(tb);
     is(popupshowingcount, 3, "Should not have got 'popupshowing' event!");
 
@@ -156,11 +147,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=486990
   }
 
   function dispatchTrustedContextMenuEvent(target) {
-    netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
-    var e = document.createEvent("MouseEvent");
-    e.initMouseEvent("contextmenu", true, true, window, 0, 0, 0, 0, 0, 
-                      false, false, false, false, 2, null);
-    return target.dispatchEvent(e);
+    return sendMouseEvent({type:"contextmenu"}, target, window);
   }
 
   ]]>

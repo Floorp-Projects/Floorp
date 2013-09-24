@@ -6,16 +6,12 @@
 // HttpLog.h should generally be included first
 #include "HttpLog.h"
 
-#include "nsHttp.h"
 #include "nsHttpPipeline.h"
 #include "nsHttpHandler.h"
 #include "nsIOService.h"
-#include "nsIRequest.h"
 #include "nsISocketTransport.h"
-#include "nsIStringStream.h"
 #include "nsIPipe.h"
 #include "nsCOMPtr.h"
-#include "nsComponentManagerUtils.h"
 #include <algorithm>
 
 #ifdef DEBUG

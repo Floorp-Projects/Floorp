@@ -7,30 +7,28 @@
 #ifndef mozilla_net_WebSocketChannel_h
 #define mozilla_net_WebSocketChannel_h
 
-#include "nsIURI.h"
 #include "nsISupports.h"
 #include "nsIInterfaceRequestor.h"
-#include "nsIEventTarget.h"
 #include "nsIStreamListener.h"
-#include "nsIProtocolHandler.h"
-#include "nsISocketTransport.h"
 #include "nsIAsyncInputStream.h"
 #include "nsIAsyncOutputStream.h"
-#include "nsILoadGroup.h"
 #include "nsITimer.h"
 #include "nsIDNSListener.h"
-#include "nsIHttpChannel.h"
 #include "nsIChannelEventSink.h"
-#include "nsIAsyncVerifyRedirectCallback.h"
-#include "nsIStringStream.h"
 #include "nsIHttpChannelInternal.h"
-#include "nsIRandomGenerator.h"
 #include "BaseWebSocketChannel.h"
-#include "nsIDashboardEventNotifier.h"
 
 #include "nsCOMPtr.h"
 #include "nsString.h"
 #include "nsDeque.h"
+
+class nsIAsyncVerifyRedirectCallback;
+class nsIDashboardEventNotifier;
+class nsIEventTarget;
+class nsIHttpChannel;
+class nsIRandomGenerator;
+class nsISocketTransport;
+class nsIURI;
 
 namespace mozilla { namespace net {
 
@@ -118,7 +116,7 @@ private:
 
   // Common send code for binary + text msgs
   nsresult SendMsgCommon(const nsACString *aMsg, bool isBinary,
-                         uint32_t length, nsIInputStream *aStream = NULL);
+                         uint32_t length, nsIInputStream *aStream = nullptr);
 
   void EnqueueOutgoingMessage(nsDeque &aQueue, OutboundMessage *aMsg);
 
@@ -252,6 +250,31 @@ private:
   nsCOMPtr<nsIDashboardEventNotifier> mConnectionLogService;
   uint32_t mSerial;
   static uint32_t sSerialSeed;
+
+// These members are used for network per-app metering (bug 855949)
+// Currently, they are only available on gonk.
+public:
+  const static int32_t NETWORK_NO_TYPE = -1; // default conntection type
+  const static uint64_t NETWORK_STATS_THRESHOLD = 65536;
+
+private:
+  uint64_t                        mCountRecv;
+  uint64_t                        mCountSent;
+  uint32_t                        mAppId;
+  int32_t                         mConnectionType;
+  bool                            mIsInBrowser;
+  nsresult                        GetConnectionType(int32_t *);
+  nsresult                        SaveNetworkStats(bool);
+  void                            CountRecvBytes(uint64_t recvBytes)
+  {
+    mCountRecv += recvBytes;
+    SaveNetworkStats(false);
+  }
+  void                            CountSentBytes(uint64_t sentBytes)
+  {
+    mCountSent += sentBytes;
+    SaveNetworkStats(false);
+  }
 };
 
 class WebSocketSSLChannel : public WebSocketChannel

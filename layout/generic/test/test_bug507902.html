@@ -28,11 +28,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=507902
 //
 
 // Boilerplate
-netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
-const Cc = Components.classes;
-const Ci = Components.interfaces;
-gWindowUtils = window.QueryInterface(Ci.nsIInterfaceRequestor).
-                 getInterface(Ci.nsIDOMWindowUtils);
+gWindowUtils = SpecialPowers.getDOMWindowUtils(window);
 
 // URL + paths
 //
@@ -362,7 +358,6 @@ function disableBorderAndPad() {
 //
 
 function drawWindowToCanvas(canvasName) {
-  netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
   var win = testFrameElem.contentWindow;
   var ctx = canvases[canvasName].getContext("2d");
   // drawWindow always draws one canvas pixel for each CSS pixel in the source
@@ -375,8 +370,6 @@ function drawWindowToCanvas(canvasName) {
 }
 
 function canvasesAreEqual(canvas1Name, canvas2Name) {
-
-  netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
   var c1 = canvases[canvas1Name];
   var c2 = canvases[canvas2Name];
   var differences = gWindowUtils.compareCanvases(c1, c2, {});

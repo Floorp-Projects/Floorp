@@ -28,7 +28,7 @@ _clearText(JSDContext* jsdc, JSDSourceText* jsdsrc)
 {
     if( jsdsrc->text )
         free(jsdsrc->text);
-    jsdsrc->text        = NULL;
+    jsdsrc->text        = nullptr;
     jsdsrc->textLength  = 0;
     jsdsrc->textSpace   = 0;
     jsdsrc->status      = JSD_SOURCE_CLEARED;
@@ -85,7 +85,7 @@ _newSource(JSDContext* jsdc, char* url)
 {
     JSDSourceText* jsdsrc = (JSDSourceText*)calloc(1,sizeof(JSDSourceText));
     if( ! jsdsrc )
-        return NULL;
+        return nullptr;
     
     jsdsrc->url        = url;
     jsdsrc->status     = JSD_SOURCE_INITED;
@@ -98,7 +98,7 @@ _newSource(JSDContext* jsdc, char* url)
 static void
 _destroySource(JSDContext* jsdc, JSDSourceText* jsdsrc)
 {
-    JS_ASSERT(NULL == jsdsrc->text);  /* must _clearText() first */
+    JS_ASSERT(nullptr == jsdsrc->text);  /* must _clearText() first */
     free(jsdsrc->url);
     free(jsdsrc);
 }
@@ -116,7 +116,7 @@ _addSource(JSDContext* jsdc, char* url)
 {
     JSDSourceText* jsdsrc = _newSource(jsdc, url);
     if( ! jsdsrc )
-        return NULL;
+        return nullptr;
     JS_INSERT_LINK(&jsdsrc->links, &jsdc->sources);
     return jsdsrc;
 }
@@ -182,7 +182,7 @@ jsd_BuildNormalizedURL( const char* url_string )
     char *new_url_string;
 
     if( ! url_string )
-        return NULL;
+        return nullptr;
 
     if (!strncasecomp(url_string, file_url_prefix, FILE_URL_PREFIX_LEN) &&
         url_string[FILE_URL_PREFIX_LEN + 0] == '/' &&
@@ -230,7 +230,7 @@ jsd_IterateSources(JSDContext* jsdc, JSDSourceText **iterp)
     if( !jsdsrc )
         jsdsrc = (JSDSourceText *)jsdc->sources.next;
     if( jsdsrc == (JSDSourceText *)&jsdc->sources )
-        return NULL;
+        return nullptr;
     *iterp = (JSDSourceText *)jsdsrc->links.next;
     return jsdsrc;
 }
@@ -247,7 +247,7 @@ jsd_FindSourceForURL(JSDContext* jsdc, const char* url)
         if( 0 == strcmp(jsdsrc->url, url) )
             return jsdsrc;
     }
-    return NULL;
+    return nullptr;
 }
 
 const char*
@@ -310,11 +310,11 @@ jsd_IncrementSourceAlterCount(JSDContext* jsdc, JSDSourceText* jsdsrc)
 #if defined(DEBUG) && 0
 void DEBUG_ITERATE_SOURCES( JSDContext* jsdc )
 {
-    JSDSourceText* iterp = NULL;
-    JSDSourceText* jsdsrc = NULL;
+    JSDSourceText* iterp = nullptr;
+    JSDSourceText* jsdsrc = nullptr;
     int dummy;
     
-    while( NULL != (jsdsrc = jsd_IterateSources(jsdc, &iterp)) )
+    while( nullptr != (jsdsrc = jsd_IterateSources(jsdc, &iterp)) )
     {
         const char*     url;
         const char*     text;
@@ -348,7 +348,7 @@ jsd_NewSourceText(JSDContext* jsdc, const char* url)
     new_url_string = jsd_BuildNormalizedURL(url);
 
     if( ! new_url_string )
-        return NULL;
+        return nullptr;
 
     jsdsrc = jsd_FindSourceForURL(jsdc, new_url_string);
 
@@ -358,7 +358,7 @@ jsd_NewSourceText(JSDContext* jsdc, const char* url)
         {
             free(new_url_string);
             JSD_UNLOCK_SOURCE_TEXT(jsdc);
-            return NULL;
+            return nullptr;
         }
         else    
             _moveSourceToRemovedList(jsdc, jsdsrc);
@@ -383,14 +383,14 @@ jsd_AppendSourceText(JSDContext* jsdc,
     if( jsdsrc->doingEval )
     {
         JSD_UNLOCK_SOURCE_TEXT(jsdc);
-        return NULL;
+        return nullptr;
     }
 
     if( ! _isSourceInSourceList( jsdc, jsdsrc ) )
     {
         _removeSourceFromRemovedList( jsdc, jsdsrc );
         JSD_UNLOCK_SOURCE_TEXT(jsdc);
-        return NULL;
+        return nullptr;
     }
 
     if( text && length && ! _appendText( jsdc, jsdsrc, text, length ) )
@@ -400,7 +400,7 @@ jsd_AppendSourceText(JSDContext* jsdc,
         jsdsrc->status = JSD_SOURCE_FAILED;
         _moveSourceToRemovedList(jsdc, jsdsrc);
         JSD_UNLOCK_SOURCE_TEXT(jsdc);
-        return NULL;    
+        return nullptr;    
     }
 
     jsdsrc->dirty  = true;
@@ -419,11 +419,11 @@ jsd_AppendUCSourceText(JSDContext* jsdc,
                        JSDSourceStatus status)
 {
 #define UNICODE_TRUNCATE_BUF_SIZE 1024
-    static char* buf = NULL;
+    static char* buf = nullptr;
     int remaining = length;
 
     if(!text || !length)
-        return jsd_AppendSourceText(jsdc, jsdsrc, NULL, 0, status);
+        return jsd_AppendSourceText(jsdc, jsdsrc, nullptr, 0, status);
 
     JSD_LOCK_SOURCE_TEXT(jsdc);
     if(!buf)
@@ -432,7 +432,7 @@ jsd_AppendUCSourceText(JSDContext* jsdc,
         if(!buf)
         {
             JSD_UNLOCK_SOURCE_TEXT(jsdc);
-            return NULL;
+            return nullptr;
         }
     }
     while(remaining && jsdsrc) {
@@ -446,7 +446,7 @@ jsd_AppendUCSourceText(JSDContext* jsdc,
         remaining -= bytes;
     }
     if(jsdsrc && status != JSD_SOURCE_PARTIAL)
-        jsdsrc = jsd_AppendSourceText(jsdc, jsdsrc, NULL, 0, status);
+        jsdsrc = jsd_AppendSourceText(jsdc, jsdsrc, nullptr, 0, status);
 
     JSD_UNLOCK_SOURCE_TEXT(jsdc);
     return jsdsrc;
@@ -469,7 +469,7 @@ jsd_AddFullSourceText(JSDContext* jsdc,
                                       text, length, JSD_SOURCE_PARTIAL );
     if( jsdsrc )
         jsdsrc = jsd_AppendSourceText(jsdc, jsdsrc,
-                                      NULL, 0, JSD_SOURCE_COMPLETED );
+                                      nullptr, 0, JSD_SOURCE_COMPLETED );
 
     JSD_UNLOCK_SOURCE_TEXT(jsdc);
 

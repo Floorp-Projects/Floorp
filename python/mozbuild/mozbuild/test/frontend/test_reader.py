@@ -72,6 +72,13 @@ class TestBuildReader(unittest.TestCase):
         sandboxes = list(reader.read_topsrcdir())
         self.assertEqual(len(sandboxes), 4)
 
+        for sandbox in sandboxes:
+            self.assertIsInstance(sandbox.metadata, dict)
+            self.assertIn('tier', sandbox.metadata)
+
+            if sandbox['RELATIVEDIR'].startswith('foo'):
+                self.assertEqual(sandbox.metadata['tier'], 't1')
+
     def test_tier_subdir(self):
         # add_tier_dir() should fail when not in the top directory.
         reader = self.reader('traversal-tier-fails-in-subdir')
@@ -237,6 +244,14 @@ class TestBuildReader(unittest.TestCase):
         self.assertIn('A moz.build file called the error() function.', str(e))
         self.assertIn('    Some error.', str(e))
 
+    def test_error_traversal_tools(self):
+        reader = self.reader('reader-error-traversal-tools')
+
+        with self.assertRaises(BuildReaderError) as bre:
+            list(reader.read_topsrcdir())
+
+        e = bre.exception
+        self.assertIn('The DIRS variable is not allowed in such directories.', str(e))
 
 if __name__ == '__main__':
     main()

@@ -12,6 +12,8 @@ const promise = require("sdk/core/promise");
 let {CssLogic} = require("devtools/styleinspector/css-logic");
 let {InplaceEditor, editableField, editableItem} = require("devtools/shared/inplace-editor");
 let {ELEMENT_STYLE, PSEUDO_ELEMENTS} = require("devtools/server/actors/styles");
+let {colorUtils} = require("devtools/css-color");
+let {gDevTools} = Cu.import("resource:///modules/devtools/gDevTools.jsm", {});
 
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
@@ -910,7 +912,7 @@ function TextProperty(aRule, aName, aValue, aPriority)
 {
   this.rule = aRule;
   this.name = aName;
-  this.value = aValue;
+  this.value = colorUtils.processCSSString(aValue);
   this.priority = aPriority;
   this.enabled = true;
   this.updateComputed();
@@ -1000,7 +1002,7 @@ TextProperty.prototype = {
   remove: function TextProperty_remove()
   {
     this.rule.removeProperty(this);
-  }
+  },
 };
 
 
@@ -1045,8 +1047,15 @@ function CssRuleView(aDoc, aStore, aPageStyle)
   this.element.className = "ruleview devtools-monospace";
   this.element.flex = 1;
 
-  this._boundCopy = this._onCopy.bind(this);
-  this.element.addEventListener("copy", this._boundCopy);
+  this._buildContextMenu = this._buildContextMenu.bind(this);
+  this._contextMenuUpdate = this._contextMenuUpdate.bind(this);
+  this._onSelectAll = this._onSelectAll.bind(this);
+  this._onCopy = this._onCopy.bind(this);
+
+  this.element.addEventListener("copy", this._onCopy);
+
+  this._handlePrefChange = this._handlePrefChange.bind(this);
+  gDevTools.on("pref-changed", this._handlePrefChange);
 
   let options = {
     fixedWidth: true,
@@ -1055,6 +1064,7 @@ function CssRuleView(aDoc, aStore, aPageStyle)
   };
   this.popup = new AutocompletePopup(aDoc.defaultView.parent.document, options);
 
+  this._buildContextMenu();
   this._showEmpty();
 }
 
@@ -1063,6 +1073,118 @@ exports.CssRuleView = CssRuleView;
 CssRuleView.prototype = {
   // The element that we're inspecting.
   _viewedElement: null,
+
+  /**
+   * Build the context menu.
+   */
+  _buildContextMenu: function() {
+    let doc = this.doc.defaultView.parent.document;
+
+    this._contextmenu = doc.createElementNS(XUL_NS, "menupopup");
+    this._contextmenu.addEventListener("popupshowing", this._contextMenuUpdate);
+    this._contextmenu.id = "rule-view-context-menu";
+
+    this.menuitemSelectAll = createMenuItem(this._contextmenu, {
+      label: "ruleView.contextmenu.selectAll",
+      accesskey: "ruleView.contextmenu.selectAll.accessKey",
+      command: this._onSelectAll
+    });
+    this.menuitemCopy = createMenuItem(this._contextmenu, {
+      label: "ruleView.contextmenu.copy",
+      accesskey: "ruleView.contextmenu.copy.accessKey",
+      command: this._onCopy
+    });
+
+    let popupset = doc.documentElement.querySelector("popupset");
+    if (!popupset) {
+      popupset = doc.createElementNS(XUL_NS, "popupset");
+      doc.documentElement.appendChild(popupset);
+    }
+
+    popupset.appendChild(this._contextmenu);
+  },
+
+  /**
+   * Update the context menu. This means enabling or disabling menuitems as
+   * appropriate.
+   */
+  _contextMenuUpdate: function() {
+    let win = this.doc.defaultView;
+
+    // Copy selection.
+    let selection = win.getSelection();
+    let copy;
+
+    if (selection.toString()) {
+      // Panel text selected
+      copy = true;
+    } else if (selection.anchorNode) {
+      // input type="text"
+      let { selectionStart, selectionEnd } = this.doc.popupNode;
+
+      if (isFinite(selectionStart) && isFinite(selectionEnd) &&
+          selectionStart !== selectionEnd) {
+        copy = true;
+      }
+    } else {
+      // No text selected, disable copy.
+      copy = false;
+    }
+
+    this.menuitemCopy.disabled = !copy;
+  },
+
+  /**
+   * Select all text.
+   */
+  _onSelectAll: function()
+  {
+    let win = this.doc.defaultView;
+    let selection = win.getSelection();
+
+    selection.selectAllChildren(this.doc.documentElement);
+  },
+
+  /**
+   * Copy selected text from the rule view.
+   *
+   * @param {Event} event
+   *        The event object.
+   */
+  _onCopy: function(event)
+  {
+    try {
+      let target = event.target;
+      let text;
+
+      if (event.target.nodeName === "menuitem") {
+        target = this.doc.popupNode;
+      }
+
+      if (target.nodeName == "input") {
+        let start = Math.min(target.selectionStart, target.selectionEnd);
+        let end = Math.max(target.selectionStart, target.selectionEnd);
+        let count = end - start;
+        text = target.value.substr(start, count);
+      } else {
+        let win = this.doc.defaultView;
+        text = win.getSelection().toString();
+
+        // Remove any double newlines.
+        text = text.replace(/(\r?\n)\r?\n/g, "$1");
+
+        // Remove "inline"
+        let inline = _strings.GetStringFromName("rule.sourceInline");
+        let rx = new RegExp("^" + inline + "\\r?\\n?", "g");
+        text = text.replace(rx, "");
+      }
+
+      clipboardHelper.copyString(text, this.doc);
+      event.preventDefault();
+    } catch(e) {
+      console.error(e);
+    }
+  },
 
   setPageStyle: function(aPageStyle) {
     this.pageStyle = aPageStyle;
@@ -1075,12 +1197,41 @@ CssRuleView.prototype = {
     return this.element.querySelectorAll(".styleinspector-propertyeditor").length > 0;
   },
 
+  _handlePrefChange: function(event, data) {
+    if (data.pref == "devtools.defaultColorUnit") {
+      let element = this._viewedElement;
+      this._viewedElement = null;
+      this.highlight(element);
+    }
+  },
+
   destroy: function CssRuleView_destroy()
   {
     this.clear();
 
-    this.element.removeEventListener("copy", this._boundCopy);
-    delete this._boundCopy;
+    gDevTools.off("pref-changed", this._handlePrefChange);
+
+    this.element.removeEventListener("copy", this._onCopy);
+    delete this._onCopy;
+
+    // Remove context menu
+    if (this._contextmenu) {
+      // Destroy the Select All menuitem.
+      this.menuitemSelectAll.removeEventListener("command", this._onSelectAll);
+      this.menuitemSelectAll = null;
+
+      // Destroy the Copy menuitem.
+      this.menuitemCopy.removeEventListener("command", this._onCopy);
+      this.menuitemCopy = null;
+
+      // Destroy the context menu.
+      this._contextmenu.removeEventListener("popupshowing", this._contextMenuUpdate);
+      this._contextmenu.parentNode.removeChild(this._contextmenu);
+      this._contextmenu = null;
+    }
+
+    // We manage the popupNode ourselves so we also need to destroy it.
+    this.doc.popupNode = null;
 
     if (this.element.parentNode) {
       this.element.parentNode.removeChild(this.element);
@@ -1132,13 +1283,13 @@ CssRuleView.prototype = {
   {
     // Ignore refreshes during editing or when no element is selected.
     if (this.isEditing || !this._elementStyle) {
-      return promise.resolve(null);
+      return;
     }
 
     this._clearRules();
 
     // Repopulate the element style.
-    return this._populate();
+    this._populate();
   },
 
   _populate: function() {
@@ -1327,41 +1478,6 @@ CssRuleView.prototype = {
     this.togglePseudoElementVisibility(this.showPseudoElements);
   },
 
-  /**
-   * Copy selected text from the rule view.
-   *
-   * @param {Event} aEvent
-   *        The event object.
-   */
-  _onCopy: function CssRuleView_onCopy(aEvent)
-  {
-    let target = aEvent.target;
-
-    let text;
-
-    if (target.nodeName == "input") {
-      let start = Math.min(target.selectionStart, target.selectionEnd);
-      let end = Math.max(target.selectionStart, target.selectionEnd);
-      let count = end - start;
-      text = target.value.substr(start, count);
-    } else {
-      let win = this.doc.defaultView;
-      text = win.getSelection().toString();
-
-      // Remove any double newlines.
-      text = text.replace(/(\r?\n)\r?\n/g, "$1");
-
-      // Remove "inline"
-      let inline = _strings.GetStringFromName("rule.sourceInline");
-      let rx = new RegExp("^" + inline + "\\r?\\n?", "g");
-      text = text.replace(rx, "");
-    }
-
-    clipboardHelper.copyString(text, this.doc);
-
-    aEvent.preventDefault();
-  },
-
 };
 
 /**
@@ -1442,6 +1558,22 @@ RuleEditor.prototype = {
     this.element.addEventListener("mousedown", function() {
       this.doc.defaultView.focus();
     }.bind(this), false);
+
+    this.element.addEventListener("contextmenu", event => {
+      try {
+        // In the sidebar we do not have this.doc.popupNode so we need to save
+        // the node ourselves.
+        this.doc.popupNode = event.explicitOriginalTarget;
+        let win = this.doc.defaultView;
+        win.focus();
+
+        this.ruleView._contextmenu.openPopup(
+          event.target.ownerDocument.documentElement,
+          "overlap", event.clientX, event.clientY, true, false, null);
+      } catch(e) {
+        console.error(e);
+      }
+    }, false);
 
     this.propertyList = createChild(code, "ul", {
       class: "ruleview-propertylist"
@@ -2181,6 +2313,7 @@ function createChild(aParent, aTag, aAttributes)
 function createMenuItem(aMenu, aAttributes)
 {
   let item = aMenu.ownerDocument.createElementNS(XUL_NS, "menuitem");
+
   item.setAttribute("label", _strings.GetStringFromName(aAttributes.label));
   item.setAttribute("accesskey", _strings.GetStringFromName(aAttributes.accesskey));
   item.addEventListener("command", aAttributes.command);

@@ -15,6 +15,105 @@
 namespace js {
 namespace jit {
 
+class Operand
+{
+  public:
+    enum Kind {
+        REG,
+        MEM_REG_DISP,
+        FPREG,
+        MEM_SCALE,
+        MEM_ADDRESS32
+    };
+
+  private:
+    Kind kind_ : 4;
+    int32_t base_ : 5;
+    Scale scale_ : 3;
+    int32_t index_ : 5;
+    int32_t disp_;
+
+  public:
+    explicit Operand(Register reg)
+      : kind_(REG),
+        base_(reg.code())
+    { }
+    explicit Operand(FloatRegister reg)
+      : kind_(FPREG),
+        base_(reg.code())
+    { }
+    explicit Operand(const Address &address)
+      : kind_(MEM_REG_DISP),
+        base_(address.base.code()),
+        disp_(address.offset)
+    { }
+    explicit Operand(const BaseIndex &address)
+      : kind_(MEM_SCALE),
+        base_(address.base.code()),
+        scale_(address.scale),
+        index_(address.index.code()),
+        disp_(address.offset)
+    { }
+    Operand(Register base, Register index, Scale scale, int32_t disp = 0)
+      : kind_(MEM_SCALE),
+        base_(base.code()),
+        scale_(scale),
+        index_(index.code()),
+        disp_(disp)
+    { }
+    Operand(Register reg, int32_t disp)
+      : kind_(MEM_REG_DISP),
+        base_(reg.code()),
+        disp_(disp)
+    { }
+    explicit Operand(const AbsoluteAddress &address)
+      : kind_(MEM_ADDRESS32),
+        disp_(JSC::X86Assembler::addressImmediate(address.addr))
+    { }
+
+    Address toAddress() {
+        JS_ASSERT(kind() == MEM_REG_DISP);
+        return Address(Register::FromCode(base()), disp());
+    }
+
+    BaseIndex toBaseIndex() {
+        JS_ASSERT(kind() == MEM_SCALE);
+        return BaseIndex(Register::FromCode(base()), Register::FromCode(index()), scale(), disp());
+    }
+
+    Kind kind() const {
+        return kind_;
+    }
+    Registers::Code reg() const {
+        JS_ASSERT(kind() == REG);
+        return (Registers::Code)base_;
+    }
+    Registers::Code base() const {
+        JS_ASSERT(kind() == MEM_REG_DISP || kind() == MEM_SCALE);
+        return (Registers::Code)base_;
+    }
+    Registers::Code index() const {
+        JS_ASSERT(kind() == MEM_SCALE);
+        return (Registers::Code)index_;
+    }
+    Scale scale() const {
+        JS_ASSERT(kind() == MEM_SCALE);
+        return scale_;
+    }
+    FloatRegisters::Code fpu() const {
+        JS_ASSERT(kind() == FPREG);
+        return (FloatRegisters::Code)base_;
+    }
+    int32_t disp() const {
+        JS_ASSERT(kind() == MEM_REG_DISP || kind() == MEM_SCALE);
+        return disp_;
+    }
+    void *address() const {
+        JS_ASSERT(kind() == MEM_ADDRESS32);
+        return reinterpret_cast<void *>(disp_);
+    }
+};
+
 class AssemblerX86Shared
 {
   protected:
@@ -32,6 +131,7 @@ class AssemblerX86Shared
 
     Vector<CodeLabel, 0, SystemAllocPolicy> codeLabels_;
     Vector<RelativePatch, 8, SystemAllocPolicy> jumps_;
+    AsmJSAbsoluteLinkVector asmJSAbsoluteLinks_;
     CompactBufferWriter jumpRelocations_;
     CompactBufferWriter dataRelocations_;
     CompactBufferWriter preBarriers_;
@@ -189,6 +289,16 @@ class AssemblerX86Shared
     size_t numCodeLabels() const {
         return codeLabels_.length();
     }
+    CodeLabel codeLabel(size_t i) {
+        return codeLabels_[i];
+    }
+
+    size_t numAsmJSAbsoluteLinks() const {
+        return asmJSAbsoluteLinks_.length();
+    }
+    const AsmJSAbsoluteLink &asmJSAbsoluteLink(size_t i) const {
+        return asmJSAbsoluteLinks_[i];
+    }
 
     // Size of the instruction stream, in bytes.
     size_t size() const {
@@ -295,13 +405,16 @@ class AssemblerX86Shared
 
     void movsd(const FloatRegister &src, const FloatRegister &dest) {
         JS_ASSERT(HasSSE2());
-        masm.movsd_rr(src.code(), dest.code());
+        // Use movapd instead of movsd so that we define the entire output
+        // register and avoid false dependencies.
+        masm.movapd_rr(src.code(), dest.code());
     }
     void movsd(const Operand &src, const FloatRegister &dest) {
         JS_ASSERT(HasSSE2());
         switch (src.kind()) {
           case Operand::FPREG:
-            masm.movsd_rr(src.fpu(), dest.code());
+            // As above; use movapd instead of movsd to avoid dependencies.
+            masm.movapd_rr(src.fpu(), dest.code());
             break;
           case Operand::MEM_REG_DISP:
             masm.movsd_mr(src.disp(), src.base(), dest.code());
@@ -317,7 +430,8 @@ class AssemblerX86Shared
         JS_ASSERT(HasSSE2());
         switch (dest.kind()) {
           case Operand::FPREG:
-            masm.movsd_rr(src.code(), dest.fpu());
+            // As above; use movapd instead of movsd to avoid dependencies.
+            masm.movapd_rr(src.code(), dest.fpu());
             break;
           case Operand::MEM_REG_DISP:
             masm.movsd_rm(src.code(), dest.disp(), dest.base());
@@ -331,13 +445,15 @@ class AssemblerX86Shared
     }
     void movss(const FloatRegister &src, const FloatRegister &dest) {
         JS_ASSERT(HasSSE2());
-        masm.movss_rr(src.code(), dest.code());
+        // As with movsd; use movaps instead of movss to avoid dependencies.
+        masm.movaps_rr(src.code(), dest.code());
     }
     void movss(const Operand &src, const FloatRegister &dest) {
         JS_ASSERT(HasSSE2());
         switch (src.kind()) {
           case Operand::FPREG:
-            masm.movss_rr(src.fpu(), dest.code());
+            // As above; use movaps instead of movss to avoid dependencies.
+            masm.movaps_rr(src.fpu(), dest.code());
             break;
           case Operand::MEM_REG_DISP:
             masm.movss_mr(src.disp(), src.base(), dest.code());
@@ -353,7 +469,8 @@ class AssemblerX86Shared
         JS_ASSERT(HasSSE2());
         switch (dest.kind()) {
           case Operand::FPREG:
-            masm.movss_rr(src.code(), dest.fpu());
+            // As above; use movaps instead of movss to avoid dependencies.
+            masm.movaps_rr(src.code(), dest.fpu());
             break;
           case Operand::MEM_REG_DISP:
             masm.movss_rm(src.code(), dest.disp(), dest.base());
@@ -657,6 +774,11 @@ class AssemblerX86Shared
             } while (src != AbsoluteLabel::INVALID_OFFSET);
         }
         label->bind();
+    }
+
+    // See Bind and JSC::X86Assembler::setPointer.
+    size_t labelOffsetToPatchOffset(size_t offset) {
+        return offset - sizeof(void*);
     }
 
     void ret() {
@@ -1468,12 +1590,15 @@ class AssemblerX86Shared
         *((int32_t *) dataLabel.raw() - 1) = toWrite.value;
     }
 
-    static void patchDataWithValueCheck(CodeLocationLabel data, ImmPtr newData,
-                                        ImmPtr expectedData) {
+    static void patchDataWithValueCheck(CodeLocationLabel data, PatchedImmPtr newData,
+                                        PatchedImmPtr expectedData) {
         // The pointer given is a pointer to *after* the data.
         uintptr_t *ptr = ((uintptr_t *) data.raw()) - 1;
         JS_ASSERT(*ptr == (uintptr_t)expectedData.value);
         *ptr = (uintptr_t)newData.value;
+    }
+    static void patchDataWithValueCheck(CodeLocationLabel data, ImmPtr newData, ImmPtr expectedData) {
+        patchDataWithValueCheck(data, PatchedImmPtr(newData.value), PatchedImmPtr(expectedData.value));
     }
     static uint32_t nopSize() {
         return 1;

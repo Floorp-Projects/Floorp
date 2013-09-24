@@ -7,9 +7,9 @@
 
 
 #include "nsISupports.idl"
-#include "nsIInterfaceInfo.idl"
-#include "nsIEnumerator.idl"
-#include "nsISimpleEnumerator.idl"
+
+interface nsIInterfaceInfo;
+interface nsIEnumerator;
 
 /* this is NOT intended to be scriptable */
 [uuid(1d53d8d9-1d92-428f-b5cc-198b55e897d7)]

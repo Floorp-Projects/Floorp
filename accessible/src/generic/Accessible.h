@@ -18,7 +18,7 @@
 #include "nsIAccessibleStates.h"
 
 #include "nsIContent.h"
-#include "nsStringGlue.h"
+#include "nsString.h"
 #include "nsTArray.h"
 #include "nsRefPtrHashtable.h"
 
@@ -432,6 +432,11 @@ public:
    * Return true if this accessible allows accessible children from anonymous subtree.
    */
   virtual bool CanHaveAnonChildren();
+
+  /**
+   * Return true if the accessible is an acceptable child.
+   */
+  virtual bool IsAcceptableChild(Accessible* aPossibleChild) const { return true; }
 
   /**
    * Returns text of accessible if accessible has text role otherwise empty

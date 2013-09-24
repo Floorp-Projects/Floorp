@@ -8,7 +8,7 @@
 #ifndef nsStyleAnimation_h_
 #define nsStyleAnimation_h_
 
-#include "nsAString.h"
+#include "nsStringFwd.h"
 #include "nsCRTGlue.h"
 #include "nsStringBuffer.h"
 #include "nsCSSProperty.h"

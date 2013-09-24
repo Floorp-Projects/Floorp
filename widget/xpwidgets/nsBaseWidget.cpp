@@ -419,7 +419,7 @@ float nsBaseWidget::GetDPI()
   return 96.0f;
 }
 
-double nsIWidget::GetDefaultScale()
+CSSToLayoutDeviceScale nsIWidget::GetDefaultScale()
 {
   double devPixelsPerCSSPixel = DefaultScaleOverride();
 
@@ -427,7 +427,7 @@ double nsIWidget::GetDefaultScale()
     devPixelsPerCSSPixel = GetDefaultScaleInternal();
   }
 
-  return devPixelsPerCSSPixel;
+  return CSSToLayoutDeviceScale(devPixelsPerCSSPixel);
 }
 
 /* static */
@@ -748,11 +748,11 @@ NS_IMETHODIMP nsBaseWidget::MakeFullScreen(bool aFullScreen)
       mOriginalBounds = new nsIntRect();
     GetScreenBounds(*mOriginalBounds);
     // convert dev pix to display pix for window manipulation 
-    double scale = GetDefaultScale();
-    mOriginalBounds->x = NSToIntRound(mOriginalBounds->x / scale);
-    mOriginalBounds->y = NSToIntRound(mOriginalBounds->y / scale);
-    mOriginalBounds->width = NSToIntRound(mOriginalBounds->width / scale);
-    mOriginalBounds->height = NSToIntRound(mOriginalBounds->height / scale);
+    CSSToLayoutDeviceScale scale = GetDefaultScale();
+    mOriginalBounds->x = NSToIntRound(mOriginalBounds->x / scale.scale);
+    mOriginalBounds->y = NSToIntRound(mOriginalBounds->y / scale.scale);
+    mOriginalBounds->width = NSToIntRound(mOriginalBounds->width / scale.scale);
+    mOriginalBounds->height = NSToIntRound(mOriginalBounds->height / scale.scale);
 
     // Move to top-left corner of screen and size to the screen dimensions
     nsCOMPtr<nsIScreenManager> screenManager;
@@ -1114,9 +1114,11 @@ NS_METHOD nsBaseWidget::MoveClient(double aX, double aY)
 
   // GetClientOffset returns device pixels; scale back to display pixels
   // if that's what this widget uses for the Move/Resize APIs
-  double scale = BoundsUseDisplayPixels() ? 1.0 / GetDefaultScale() : 1.0;
-  aX -= clientOffset.x * scale;
-  aY -= clientOffset.y * scale;
+  CSSToLayoutDeviceScale scale = BoundsUseDisplayPixels()
+                                    ? GetDefaultScale()
+                                    : CSSToLayoutDeviceScale(1.0);
+  aX -= clientOffset.x * 1.0 / scale.scale;
+  aY -= clientOffset.y * 1.0 / scale.scale;
 
   return Move(aX, aY);
 }
@@ -1133,9 +1135,12 @@ NS_METHOD nsBaseWidget::ResizeClient(double aWidth,
 
   // GetClientBounds and mBounds are device pixels; scale back to display pixels
   // if that's what this widget uses for the Move/Resize APIs
-  double scale = BoundsUseDisplayPixels() ? 1.0 / GetDefaultScale() : 1.0;
-  aWidth = mBounds.width * scale + (aWidth - clientBounds.width * scale);
-  aHeight = mBounds.height * scale + (aHeight - clientBounds.height * scale);
+  CSSToLayoutDeviceScale scale = BoundsUseDisplayPixels()
+                                    ? GetDefaultScale()
+                                    : CSSToLayoutDeviceScale(1.0);
+  double invScale = 1.0 / scale.scale;
+  aWidth = mBounds.width * invScale + (aWidth - clientBounds.width * invScale);
+  aHeight = mBounds.height * invScale + (aHeight - clientBounds.height * invScale);
 
   return Resize(aWidth, aHeight, aRepaint);
 }
@@ -1152,7 +1157,7 @@ NS_METHOD nsBaseWidget::ResizeClient(double aX,
   nsIntRect clientBounds;
   GetClientBounds(clientBounds);
 
-  double scale = BoundsUseDisplayPixels() ? 1.0 / GetDefaultScale() : 1.0;
+  double scale = BoundsUseDisplayPixels() ? 1.0 / GetDefaultScale().scale : 1.0;
   aWidth = mBounds.width * scale + (aWidth - clientBounds.width * scale);
   aHeight = mBounds.height * scale + (aHeight - clientBounds.height * scale);
 

@@ -1046,7 +1046,7 @@ PluginScriptableObjectParent::AnswerEnumerate(InfallibleTArray<PPluginIdentifier
     // Because of GC hazards, all identifiers returned from enumerate
     // must be made permanent.
     if (_identifierisstring(ids[index])) {
-      JSString* str = NPIdentifierToString(ids[index]);
+      JS::RootedString str(cx, NPIdentifierToString(ids[index]));
       if (!JS_StringHasBeenInterned(cx, str)) {
         DebugOnly<JSString*> str2 = JS_InternJSString(cx, str);
         NS_ASSERTION(str2 == str, "Interning a JS string which is currently an ID should return itself.");

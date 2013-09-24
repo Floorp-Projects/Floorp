@@ -6,8 +6,8 @@
 #ifndef nsServerSocket_h__
 #define nsServerSocket_h__
 
+#include "nsASocketHandler.h"
 #include "nsIServerSocket.h"
-#include "nsSocketTransportService2.h"
 #include "mozilla/Mutex.h"
 
 //-----------------------------------------------------------------------------

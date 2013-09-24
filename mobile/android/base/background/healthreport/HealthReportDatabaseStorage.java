@@ -12,6 +12,7 @@ import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 
 import org.json.JSONObject;
+import org.mozilla.gecko.background.common.DateUtils;
 import org.mozilla.gecko.background.common.log.Logger;
 import org.mozilla.gecko.background.healthreport.HealthReportStorage.MeasurementFields.FieldSpec;
 
@@ -246,111 +247,104 @@ public class HealthReportDatabaseStorage implements HealthReportStorage {
 
     @Override
     public void onCreate(SQLiteDatabase db) {
-      db.beginTransaction();
-      try {
-        db.execSQL("CREATE TABLE addons (id INTEGER PRIMARY KEY AUTOINCREMENT, " +
-                   "                     body TEXT, " +
-                   "                     UNIQUE (body) " +
-                   ")");
+      db.execSQL("CREATE TABLE addons (id INTEGER PRIMARY KEY AUTOINCREMENT, " +
+                 "                     body TEXT, " +
+                 "                     UNIQUE (body) " +
+                 ")");
 
-        db.execSQL("CREATE TABLE environments (id INTEGER PRIMARY KEY AUTOINCREMENT, " +
-                   "                           hash TEXT, " +
-                   "                           profileCreation INTEGER, " +
-                   "                           cpuCount        INTEGER, " +
-                   "                           memoryMB        INTEGER, " +
-                   "                           isBlocklistEnabled INTEGER, " +
-                   "                           isTelemetryEnabled INTEGER, " +
-                   "                           extensionCount     INTEGER, " +
-                   "                           pluginCount        INTEGER, " +
-                   "                           themeCount         INTEGER, " +
-                   "                           architecture    TEXT, " +
-                   "                           sysName         TEXT, " +
-                   "                           sysVersion      TEXT, " +
-                   "                           vendor          TEXT, " +
-                   "                           appName         TEXT, " +
-                   "                           appID           TEXT, " +
-                   "                           appVersion      TEXT, " +
-                   "                           appBuildID      TEXT, " +
-                   "                           platformVersion TEXT, " +
-                   "                           platformBuildID TEXT, " +
-                   "                           os              TEXT, " +
-                   "                           xpcomabi        TEXT, " +
-                   "                           updateChannel   TEXT, " +
-                   "                           addonsID        INTEGER, " +
-                   "                           FOREIGN KEY (addonsID) REFERENCES addons(id) ON DELETE RESTRICT, " +
-                   "                           UNIQUE (hash) " +
-                   ")");
+      db.execSQL("CREATE TABLE environments (id INTEGER PRIMARY KEY AUTOINCREMENT, " +
+                 "                           hash TEXT, " +
+                 "                           profileCreation INTEGER, " +
+                 "                           cpuCount        INTEGER, " +
+                 "                           memoryMB        INTEGER, " +
+                 "                           isBlocklistEnabled INTEGER, " +
+                 "                           isTelemetryEnabled INTEGER, " +
+                 "                           extensionCount     INTEGER, " +
+                 "                           pluginCount        INTEGER, " +
+                 "                           themeCount         INTEGER, " +
+                 "                           architecture    TEXT, " +
+                 "                           sysName         TEXT, " +
+                 "                           sysVersion      TEXT, " +
+                 "                           vendor          TEXT, " +
+                 "                           appName         TEXT, " +
+                 "                           appID           TEXT, " +
+                 "                           appVersion      TEXT, " +
+                 "                           appBuildID      TEXT, " +
+                 "                           platformVersion TEXT, " +
+                 "                           platformBuildID TEXT, " +
+                 "                           os              TEXT, " +
+                 "                           xpcomabi        TEXT, " +
+                 "                           updateChannel   TEXT, " +
+                 "                           addonsID        INTEGER, " +
+                 "                           FOREIGN KEY (addonsID) REFERENCES addons(id) ON DELETE RESTRICT, " +
+                 "                           UNIQUE (hash) " +
+                 ")");
 
-        db.execSQL("CREATE TABLE measurements (id INTEGER PRIMARY KEY AUTOINCREMENT, " +
-                   "                           name TEXT, " +
-                   "                           version INTEGER, " +
-                   "                           UNIQUE (name, version) " +
-                   ")");
+      db.execSQL("CREATE TABLE measurements (id INTEGER PRIMARY KEY AUTOINCREMENT, " +
+                 "                           name TEXT, " +
+                 "                           version INTEGER, " +
+                 "                           UNIQUE (name, version) " +
+                 ")");
 
-        db.execSQL("CREATE TABLE fields (id INTEGER PRIMARY KEY AUTOINCREMENT, " +
-                   "                     measurement INTEGER, " +
-                   "                     name TEXT, " +
-                   "                     flags INTEGER, " +
-                   "                     FOREIGN KEY (measurement) REFERENCES measurements(id) ON DELETE CASCADE, " +
-                   "                     UNIQUE (measurement, name)" +
-                   ")");
+      db.execSQL("CREATE TABLE fields (id INTEGER PRIMARY KEY AUTOINCREMENT, " +
+                 "                     measurement INTEGER, " +
+                 "                     name TEXT, " +
+                 "                     flags INTEGER, " +
+                 "                     FOREIGN KEY (measurement) REFERENCES measurements(id) ON DELETE CASCADE, " +
+                 "                     UNIQUE (measurement, name)" +
+                 ")");
 
-        db.execSQL("CREATE TABLE " + EVENTS_INTEGER + "(" +
-                   "                 date  INTEGER, " +
-                   "                 env   INTEGER, " +
-                   "                 field INTEGER, " +
-                   "                 value INTEGER, " +
-                   "                 FOREIGN KEY (field) REFERENCES fields(id) ON DELETE CASCADE, " +
-                   "                 FOREIGN KEY (env) REFERENCES environments(id) ON DELETE CASCADE" +
-                   ")");
+      db.execSQL("CREATE TABLE " + EVENTS_INTEGER + "(" +
+                 "                 date  INTEGER, " +
+                 "                 env   INTEGER, " +
+                 "                 field INTEGER, " +
+                 "                 value INTEGER, " +
+                 "                 FOREIGN KEY (field) REFERENCES fields(id) ON DELETE CASCADE, " +
+                 "                 FOREIGN KEY (env) REFERENCES environments(id) ON DELETE CASCADE" +
+                 ")");
 
-        db.execSQL("CREATE TABLE " + EVENTS_TEXTUAL + "(" +
-                   "                 date  INTEGER, " +
-                   "                 env   INTEGER, " +
-                   "                 field INTEGER, " +
-                   "                 value TEXT, " +
-                   "                 FOREIGN KEY (field) REFERENCES fields(id) ON DELETE CASCADE, " +
-                   "                 FOREIGN KEY (env) REFERENCES environments(id) ON DELETE CASCADE" +
-                   ")");
+      db.execSQL("CREATE TABLE " + EVENTS_TEXTUAL + "(" +
+                 "                 date  INTEGER, " +
+                 "                 env   INTEGER, " +
+                 "                 field INTEGER, " +
+                 "                 value TEXT, " +
+                 "                 FOREIGN KEY (field) REFERENCES fields(id) ON DELETE CASCADE, " +
+                 "                 FOREIGN KEY (env) REFERENCES environments(id) ON DELETE CASCADE" +
+                 ")");
 
-        db.execSQL("CREATE INDEX idx_events_integer_date_env_field ON events_integer (date, env, field)");
-        db.execSQL("CREATE INDEX idx_events_textual_date_env_field ON events_textual (date, env, field)");
+      db.execSQL("CREATE INDEX idx_events_integer_date_env_field ON events_integer (date, env, field)");
+      db.execSQL("CREATE INDEX idx_events_textual_date_env_field ON events_textual (date, env, field)");
 
-        db.execSQL("CREATE VIEW events AS " +
-                   "SELECT date, env, field, value FROM " + EVENTS_INTEGER + " " +
-                   "UNION ALL " +
-                   "SELECT date, env, field, value FROM " + EVENTS_TEXTUAL);
+      db.execSQL("CREATE VIEW events AS " +
+                 "SELECT date, env, field, value FROM " + EVENTS_INTEGER + " " +
+                 "UNION ALL " +
+                 "SELECT date, env, field, value FROM " + EVENTS_TEXTUAL);
 
-        db.execSQL("CREATE VIEW named_events AS " +
-                   "SELECT date, " +
-                   "       environments.hash AS environment, " +
-                   "       measurements.name AS measurement_name, " +
-                   "       measurements.version AS measurement_version, " +
-                   "       fields.name AS field_name, " +
-                   "       fields.flags AS field_flags, " +
-                   "       value FROM " +
-                   "events JOIN environments ON events.env = environments.id " +
-                   "       JOIN fields ON events.field = fields.id " +
-                   "       JOIN measurements ON fields.measurement = measurements.id");
+      db.execSQL("CREATE VIEW named_events AS " +
+                 "SELECT date, " +
+                 "       environments.hash AS environment, " +
+                 "       measurements.name AS measurement_name, " +
+                 "       measurements.version AS measurement_version, " +
+                 "       fields.name AS field_name, " +
+                 "       fields.flags AS field_flags, " +
+                 "       value FROM " +
+                 "events JOIN environments ON events.env = environments.id " +
+                 "       JOIN fields ON events.field = fields.id " +
+                 "       JOIN measurements ON fields.measurement = measurements.id");
 
-        db.execSQL("CREATE VIEW named_fields AS " +
-                   "SELECT measurements.name AS measurement_name, " +
-                   "       measurements.id AS measurement_id, " +
-                   "       measurements.version AS measurement_version, " +
-                   "       fields.name AS field_name, " +
-                   "       fields.id AS field_id, " +
-                   "       fields.flags AS field_flags " +
-                   "FROM fields JOIN measurements ON fields.measurement = measurements.id");
+      db.execSQL("CREATE VIEW named_fields AS " +
+                 "SELECT measurements.name AS measurement_name, " +
+                 "       measurements.id AS measurement_id, " +
+                 "       measurements.version AS measurement_version, " +
+                 "       fields.name AS field_name, " +
+                 "       fields.id AS field_id, " +
+                 "       fields.flags AS field_flags " +
+                 "FROM fields JOIN measurements ON fields.measurement = measurements.id");
 
-        db.execSQL("CREATE VIEW current_measurements AS " +
-                   "SELECT name, MAX(version) AS version FROM measurements GROUP BY name");
+      db.execSQL("CREATE VIEW current_measurements AS " +
+                 "SELECT name, MAX(version) AS version FROM measurements GROUP BY name");
 
-        createAddonsEnvironmentsView(db);
-
-        db.setTransactionSuccessful();
-      } finally {
-        db.endTransaction();
-      }
+      createAddonsEnvironmentsView(db);
     }
 
     @Override
@@ -431,7 +425,6 @@ public class HealthReportDatabaseStorage implements HealthReportStorage {
 
       Logger.info(LOG_TAG, "onUpgrade: from " + oldVersion + " to " + newVersion + ".");
       try {
-        db.beginTransaction();
         switch (oldVersion) {
         case 2:
           upgradeDatabaseFrom2To3(db);
@@ -440,12 +433,9 @@ public class HealthReportDatabaseStorage implements HealthReportStorage {
         case 4:
           upgradeDatabaseFrom4to5(db);
         }
-        db.setTransactionSuccessful();
       } catch (Exception e) {
         Logger.error(LOG_TAG, "Failure in onUpgrade.", e);
         throw new RuntimeException(e);
-      } finally {
-        db.endTransaction();
       }
    }
 
@@ -1027,9 +1017,22 @@ public class HealthReportDatabaseStorage implements HealthReportStorage {
     this.helper.getWritableDatabase().endTransaction();
   }
 
+  protected int getIntFromQuery(final String sql, final String[] selectionArgs) {
+    final SQLiteDatabase db = this.helper.getReadableDatabase();
+    final Cursor c = db.rawQuery(sql, selectionArgs);
+    try {
+      if (!c.moveToFirst()) {
+        throw new IllegalStateException("Cursor is empty.");
+      }
+      return c.getInt(0);
+    } finally {
+      c.close();
+    }
+  }
+
   @Override
   public int getDay(long time) {
-    return HealthReportUtils.getDay(time);
+    return DateUtils.getDay(time);
   }
 
   @Override
@@ -1250,6 +1253,135 @@ public class HealthReportDatabaseStorage implements HealthReportStorage {
                     "date, environment, measurement_name, measurement_version, field_name");
   }
 
+  public int getEventCount() {
+    return getRowCount("events");
+  }
+
+  public int getEnvironmentCount() {
+    return getRowCount("environments");
+  }
+
+  private int getRowCount(String table) {
+    // table should be parameterized, but SQL throws a compilation error if the table in unknown
+    // in advance.
+    return getIntFromQuery("SELECT COUNT(*) from " + table, null);
+  }
+
+  /**
+   * Deletes all environments, addons, and events from the database before the given time. If this
+   * data does not have recorded dates but are no longer referenced by other fields, they are also
+   * removed (with exception to the current environment).
+   *
+   * @param time milliseconds since epoch. Will be converted by {@link #getDay(long)}.
+   * @param curEnv The ID of the current environment.
+   * @return The number of environments and addon entries deleted.
+   */
+  public int deleteDataBefore(final long time, final int curEnv) {
+    final SQLiteDatabase db = this.helper.getWritableDatabase();
+    db.beginTransaction();
+    int numRowsDeleted = 0;
+    try {
+      numRowsDeleted += deleteEnvAndEventsBefore(db, time, curEnv);
+      numRowsDeleted += deleteOrphanedAddons(db);
+      db.setTransactionSuccessful();
+    } finally {
+      db.endTransaction();
+    }
+    return numRowsDeleted;
+  }
+
+  /**
+   * Deletes environments and their referring events recorded before the given time. Environments
+   * referenced by no events are deleted, except for the current environment.
+   *
+   * @param time milliseconds since epoch. Will be converted by {@link #getDay(long)}.
+   * @param curEnv The ID of the current environment.
+   * @return The number of environments (not events) deleted.
+   */
+  protected int deleteEnvAndEventsBefore(final long time, final int curEnv) {
+    final SQLiteDatabase db = this.helper.getWritableDatabase();
+    return deleteEnvAndEventsBefore(db, time, curEnv);
+  }
+
+  // Called internally only to ensure the same db instance is used.
+  protected int deleteEnvAndEventsBefore(final SQLiteDatabase db, final long time, final int curEnv) {
+    // Delete environments only referenced by events occuring before the given time. Cascade
+    // delete these events.
+    String whereClause =
+        "(SELECT COUNT(*) FROM events WHERE date >= ? " +
+        "    AND events.env = environments.id) = 0 " +
+        "AND id IN (SELECT DISTINCT env FROM events WHERE date < ?)";
+    final int day = this.getDay(time);
+    final String dayString = Integer.toString(day, 10);
+    String[] whereArgs = new String[] {dayString, dayString};
+
+    int numEnvDeleted = 0;
+    db.beginTransaction();
+    try {
+      numEnvDeleted += db.delete("environments", whereClause, whereArgs);
+      numEnvDeleted += deleteOrphanedEnv(db, curEnv);
+      // We can't get the number of events deleted through cascading deletions so we do not record
+      // the number of events deleted here.
+      deleteEventsBefore(db, dayString);
+      db.setTransactionSuccessful();
+    } finally {
+      db.endTransaction();
+    }
+    return numEnvDeleted;
+  }
+
+  /**
+   * Deletes environments not referenced by any events except for the given current environment.
+   */
+  protected int deleteOrphanedEnv(final int curEnv) {
+    final SQLiteDatabase db = this.helper.getWritableDatabase();
+    return deleteOrphanedEnv(db, curEnv);
+  }
+
+  // Called internally only to ensure the same db instance is used.
+  protected int deleteOrphanedEnv(final SQLiteDatabase db, final int curEnv) {
+    final String whereClause =
+        "id != ? AND " +
+        "id NOT IN (SELECT env FROM events)";
+    final String[] whereArgs = new String[] {Integer.toString(curEnv)};
+    return db.delete("environments", whereClause, whereArgs);
+  }
+
+  protected int deleteEventsBefore(final String dayString) {
+    final SQLiteDatabase db = this.helper.getWritableDatabase();
+    return deleteEventsBefore(db, dayString);
+  }
+
+  // Called internally only to ensure the same db instance is used.
+  protected int deleteEventsBefore(final SQLiteDatabase db, final String dayString) {
+    final String whereClause = "date < ?";
+    final String[] whereArgs = new String[] {dayString};
+    int numEventsDeleted = 0;
+    db.beginTransaction();
+    try {
+      numEventsDeleted += db.delete("events_integer", whereClause, whereArgs);
+      numEventsDeleted += db.delete("events_textual", whereClause, whereArgs);
+      db.setTransactionSuccessful();
+    } finally {
+      db.endTransaction();
+    }
+    return numEventsDeleted;
+  }
+
+  /**
+   * Deletes addons not referenced by any environments.
+   */
+  protected int deleteOrphanedAddons() {
+    final SQLiteDatabase db = this.helper.getWritableDatabase();
+    return deleteOrphanedAddons(db);
+  }
+
+  // Called internally only to ensure the same db instance is used.
+  protected int deleteOrphanedAddons(final SQLiteDatabase db) {
+    final String whereClause = "id NOT IN (SELECT addonsID FROM environments)";
+    return db.delete("addons", whereClause, null);
+  }
+
   /**
    * Retrieve a mapping from a table. Keys should be unique; only one key-value
    * pair will be returned for each key.
@@ -1334,5 +1466,79 @@ public class HealthReportDatabaseStorage implements HealthReportStorage {
     } finally {
       db.endTransaction();
     }
+  }
+
+  /**
+   * Prunes the given number of least-recently used environments. Note that orphaned environments
+   * are not removed.
+   */
+  public void pruneEnvironments(final int numToPrune) {
+    final SQLiteDatabase db = this.helper.getWritableDatabase();
+    db.beginTransaction();
+    try {
+      db.delete("environments",
+          "id in (SELECT env " +
+          "       FROM events " +
+          "       GROUP BY env " +
+          "       ORDER BY MAX(date), env " +
+          "       LIMIT " + numToPrune + ")",
+          null);
+      db.setTransactionSuccessful();
+    } finally {
+      db.endTransaction();
+    }
+  }
+
+  /**
+   * Prunes up to a maximum of the given number of the oldest events. While it is more correct to
+   * prune the exact given amount, there is no unique identifier among events so we cannot be so
+   * precise. Instead, we prune on date, deleting all events up to the day before our count of
+   * events reaches the given maximum. Note that this technicality means this method cannot be
+   * used to delete all events.
+   */
+  public void pruneEvents(final int maxNumToPrune) {
+    final SQLiteDatabase db = this.helper.getWritableDatabase();
+
+    final Cursor c = db.rawQuery(
+        "SELECT MAX(date) " +
+        "FROM (SELECT date " +
+        "      FROM events " +
+        "      ORDER BY date " +
+        "      LIMIT " + maxNumToPrune + ")",
+        null);
+    long pruneDate = -1;
+    try {
+      if (!c.moveToFirst()) {
+        Logger.debug(LOG_TAG, "No max date found in events: table is likely empty. Not pruning " +
+            "events.");
+        return;
+      }
+      pruneDate = c.getLong(0);
+    } finally {
+      c.close();
+    }
+
+    final String selection = "date < " + pruneDate;
+    db.beginTransaction();
+    try {
+      db.delete(EVENTS_INTEGER, selection, null);
+      db.delete(EVENTS_TEXTUAL, selection, null);
+      db.setTransactionSuccessful();
+    } finally {
+      db.endTransaction();
+    }
+  }
+
+  public void vacuum() {
+    final SQLiteDatabase db = this.helper.getWritableDatabase();
+    db.execSQL("vacuum");
+  }
+
+  /**
+   * Disables auto_vacuuming. Changes may only take effect after a "vacuum" command.
+   */
+  public void disableAutoVacuuming() {
+    final SQLiteDatabase db = this.helper.getWritableDatabase();
+    db.execSQL("PRAGMA auto_vacuum=0");
   }
 }

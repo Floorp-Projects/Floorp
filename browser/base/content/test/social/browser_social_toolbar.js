@@ -2,36 +2,18 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-let manifests = [{ // normal provider
-  name: "provider example.com",
+let manifest = { // normal provider
+  name: "provider 1",
   origin: "https://example.com",
   workerURL: "https://example.com/browser/browser/base/content/test/social/social_worker.js",
-  iconURL: "https://example.com/browser/browser/base/content/test/moz.png"
-}, { // used for testing install
-  name: "provider test1",
-  origin: "https://test1.example.com",
-  statusURL: "https://test1.example.com/browser/browser/base/content/test/social/social_panel.html",
-  iconURL: "https://test1.example.com/browser/browser/base/content/test/moz.png",
-}];
+  iconURL: "https://example.com/browser/browser/base/content/test/general/moz.png"
+};
 
 function test() {
   waitForExplicitFinish();
 
-  // required to test status button in combination with the toolbaritem
-  Services.prefs.setBoolPref("social.allowMultipleWorkers", true);
-
-  // Preset the currentSet so the statusbutton is in the toolbar on addition. We
-  // bypass the SocialStatus class here since it requires the manifest already
-  // be installed.
-  let tbh = SocialStatus._toolbarHelper;
-  tbh.setPersistentPosition(tbh.idFromOrgin(manifests[1].origin));
-
-  runSocialTestWithProvider(manifests, function (finishcb) {
-    runSocialTests(tests, undefined, undefined, function() {
-      Services.prefs.clearUserPref("social.allowMultipleWorkers");
-      SocialStatus.removePosition(manifests[1].origin);
-      finishcb();
-    });
+  runSocialTestWithProvider(manifest, function (finishcb) {
+    runSocialTests(tests, undefined, undefined, finishcb);
   });
 }
 
@@ -55,13 +37,13 @@ var tests = {
   },
   testProfileSet: function(next) {
     let statusIcon = document.getElementById("social-provider-button").style.listStyleImage;
-    is(statusIcon, "url(\"" + manifests[0].iconURL + "\")", "manifest iconURL is showing");
+    is(statusIcon, "url(\"" + manifest.iconURL + "\")", "manifest iconURL is showing");
     let profile = {
       portrait: "https://example.com/portrait.jpg",
       userName: "trickster",
       displayName: "Kuma Lisa",
       profileURL: "http://example.com/Kuma_Lisa",
-      iconURL: "https://example.com/browser/browser/base/content/test/social/moz.png"
+      iconURL: "https://example.com/browser/browser/base/content/test/general/moz.png"
     }
     Social.provider.updateUserProfile(profile);
     // check dom values
@@ -98,7 +80,7 @@ var tests = {
   testAmbientNotifications: function(next) {
     let ambience = {
       name: "testIcon",
-      iconURL: "https://example.com/browser/browser/base/content/test/moz.png",
+      iconURL: "https://example.com/browser/browser/base/content/test/general/moz.png",
       contentPanel: "about:blank",
       counter: 42,
       label: "Test Ambient 1 \u2046",
@@ -106,7 +88,7 @@ var tests = {
     };
     let ambience2 = {
       name: "testIcon2",
-      iconURL: "https://example.com/browser/browser/base/content/test/moz.png",
+      iconURL: "https://example.com/browser/browser/base/content/test/general/moz.png",
       contentPanel: "about:blank",
       counter: 0,
       label: "Test Ambient 2",
@@ -114,7 +96,7 @@ var tests = {
     };
     let ambience3 = {
       name: "testIcon3",
-      iconURL: "https://example.com/browser/browser/base/content/test/moz.png",
+      iconURL: "https://example.com/browser/browser/base/content/test/general/moz.png",
       contentPanel: "about:blank",
       counter: 0,
       label: "Test Ambient 3",
@@ -122,7 +104,7 @@ var tests = {
     };
     let ambience4 = {
       name: "testIcon4",
-      iconURL: "https://example.com/browser/browser/base/content/test/moz.png",
+      iconURL: "https://example.com/browser/browser/base/content/test/general/moz.png",
       contentPanel: "about:blank",
       counter: 0,
       label: "Test Ambient 4",
@@ -185,32 +167,14 @@ var tests = {
     }, "statusIcon was never found");
   },
   testProfileUnset: function(next) {
-    let panel = document.getElementById("social-notification-panel");
-    // load the status button for provider 2
-    let provider = Social._getProviderFromOrigin(manifests[1].origin);
-    let id = SocialStatus._toolbarHelper.idFromOrgin(provider.origin);
-    let btn = document.getElementById(id)
-    ok(btn, "got a status button");
-    // cheat a little, we want the iframe for the status button to be created,
-    // not testing the statusbutton itself here.
-    SocialStatus._attachNotificatonPanel(btn, provider);
-
-    let numIcons = Object.keys(Social.provider.ambientNotificationIcons).length;
-    let ambientIcons = document.querySelectorAll("#social-toolbar-item > toolbarbutton[type='badged']");
-    is(numIcons, ambientIcons.length, "all ambient icons exist");
-    is(panel.childNodes.length, ambientIcons.length + 1, "frames all exist");
-    
-    // we need to wait until after social:profile-changed has completed
-    waitForNotification("social:profile-changed", function() {
-      // let the notifications finish first
-      executeSoon(function() {
-        let icons = document.querySelectorAll("#social-toolbar-item > toolbarbutton[type='badged']");
-        is(icons.length, 0, "ambient icons have been removed");
-        is(panel.childNodes.length, 1, "frame still exists");
-        next();
-      });
-    });
     Social.provider.updateUserProfile({});
+    // check dom values
+    let ambientIcons = document.querySelectorAll("#social-toolbar-item > box");
+    for (let ambientIcon of ambientIcons) {
+      ok(ambientIcon.collapsed, "ambient icon (" + ambientIcon.id + ") is collapsed");
+    }
+    
+    next();
   },
   testMenuitemsExist: function(next) {
     let toggleSidebarMenuitems = document.getElementsByClassName("social-toggle-sidebar-menuitem");
@@ -230,5 +194,5 @@ var tests = {
     is(cmd.getAttribute("checked"), enabled ? "true" : "false");
     Services.prefs.clearUserPref("social.toast-notifications.enabled");
     next();
-  }
+  },
 }

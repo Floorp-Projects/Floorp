@@ -400,29 +400,16 @@ function shutdownManager() {
   if (!gInternalManager)
     return;
 
-  let xpiShutdown = false;
-  Services.obs.addObserver({
-    observe: function(aSubject, aTopic, aData) {
-      xpiShutdown = true;
-      gXPISaveError = aData;
-      Services.obs.removeObserver(this, "xpi-provider-shutdown");
-    }
-  }, "xpi-provider-shutdown", false);
-
-  let repositoryShutdown = false;
-  Services.obs.addObserver({
-    observe: function(aSubject, aTopic, aData) {
-      repositoryShutdown = true;
-      Services.obs.removeObserver(this, "addon-repository-shutdown");
-    }
-  }, "addon-repository-shutdown", false);
+  let shutdownDone = false;
 
   Services.obs.notifyObservers(null, "quit-application-granted", null);
   let scope = Components.utils.import("resource://gre/modules/AddonManager.jsm");
-  scope.AddonManagerInternal.shutdown();
-  gInternalManager = null;
+  scope.AddonManagerInternal.shutdown()
+    .then(
+        () => shutdownDone = true,
+        err => shutdownDone = true);
 
-  AddonRepository.shutdown();
+  gInternalManager = null;
 
   // Load the add-ons list as it was after application shutdown
   loadAddonsList();
@@ -433,13 +420,16 @@ function shutdownManager() {
   let thr = Services.tm.mainThread;
 
   // Wait until we observe the shutdown notifications
-  while (!repositoryShutdown || !xpiShutdown) {
+  while (!shutdownDone) {
     thr.processNextEvent(true);
   }
 
   // Force the XPIProvider provider to reload to better
   // simulate real-world usage.
   scope = Components.utils.import("resource://gre/modules/XPIProvider.jsm");
+  // This would be cleaner if I could get it as the rejection reason from
+  // the AddonManagerInternal.shutdown() promise
+  gXPISaveError = scope.XPIProvider._shutdownError;
   AddonManagerPrivate.unregisterProvider(scope.XPIProvider);
   Components.utils.unload("resource://gre/modules/XPIProvider.jsm");
 }

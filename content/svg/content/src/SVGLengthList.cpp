@@ -41,13 +41,6 @@ SVGLengthList::GetValueAsString(nsAString& aValue) const
   }
 }
 
-static inline char* SkipWhitespace(char* str)
-{
-  while (IsSVGWhitespace(*str))
-    ++str;
-  return str;
-}
-
 nsresult
 SVGLengthList::SetValueFromString(const nsAString& aValue)
 {
@@ -67,7 +60,7 @@ SVGLengthList::SetValueFromString(const nsAString& aValue)
       return NS_ERROR_OUT_OF_MEMORY;
     }
   }
-  if (tokenizer.lastTokenEndedWithSeparator()) {
+  if (tokenizer.separatorAfterCurrentToken()) {
     return NS_ERROR_DOM_SYNTAX_ERR; // trailing comma
   }
   return CopyFrom(temp);

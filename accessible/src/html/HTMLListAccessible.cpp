@@ -51,8 +51,7 @@ HTMLLIAccessible::
   nsBlockFrame* blockFrame = do_QueryFrame(GetFrame());
   if (blockFrame && blockFrame->HasBullet()) {
     mBullet = new HTMLListBulletAccessible(mContent, mDoc);
-    if (!Document()->BindToDocument(mBullet, nullptr))
-      mBullet = nullptr;
+    Document()->BindToDocument(mBullet, nullptr);
   }
 }
 
@@ -112,9 +111,8 @@ HTMLLIAccessible::UpdateBullet(bool aHasBullet)
   DocAccessible* document = Document();
   if (aHasBullet) {
     mBullet = new HTMLListBulletAccessible(mContent, mDoc);
-    if (document->BindToDocument(mBullet, nullptr)) {
-      InsertChildAt(0, mBullet);
-    }
+    document->BindToDocument(mBullet, nullptr);
+    InsertChildAt(0, mBullet);
   } else {
     RemoveChild(mBullet);
     document->UnbindFromDocument(mBullet);

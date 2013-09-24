@@ -14,14 +14,16 @@
     <span template='{"type":"textContent","path":"title"}'></span>
     <span template='{"type":"attribute","name":"title","path":"title"}'></span>
     <span template='{"type":"localizedContent","paths":["foo2.foo_l10n","foo2.bar_l10n"],"property":"foo2"}'></span>
-    <div template-loop='{"arrayPath":"foo1.bar1","childSelector":"#template"}'></div>
+    <div template-for='{"path":"mop","childSelector":"#template-for"}'></div>
+    <div template-loop='{"arrayPath":"foo1.bar1","childSelector":"#template-loop"}'></div>
   </div>
 
   <div id="ref0">
     <span template='{"type":"textContent","path":"title"}'>ttt</span>
     <span title="ttt" template='{"type":"attribute","name":"title","path":"title"}'></span>
     <span template='{"type":"localizedContent","paths":["foo2.foo_l10n","foo2.bar_l10n"],"property":"foo2"}'>foo2:foo_l10n/bar_l10n</span>
-    <div template-loop='{"arrayPath":"foo1.bar1","childSelector":"#template"}'>
+    <div template-for='{"path":"mop","childSelector":"#template-for"}'><span template='{"type":"textContent","path":"name","rootPath":"mop."}'>meh</span></div>
+    <div template-loop='{"arrayPath":"foo1.bar1","childSelector":"#template-loop"}'>
       <div>
         <span template='{"type":"textContent","path":"idx","rootPath":"foo1.bar1.0."}'>xx0</span>
         <span template='{"type":"textContent","path":"a","rootPath":"foo1.bar1.0."}'>a</span>
@@ -40,7 +42,8 @@
     <span template='{"type":"textContent","path":"title"}'>xxx</span>
     <span title="xxx" template='{"type":"attribute","name":"title","path":"title"}'></span>
     <span template='{"type":"localizedContent","paths":["foo2.foo_l10n","foo2.bar_l10n"],"property":"foo2"}'>foo2:foo2_l10n/bar_l10n</span>
-    <div template-loop='{"arrayPath":"foo1.bar1","childSelector":"#template"}'>
+    <div template-for='{"path":"mop","childSelector":"#template-for"}'><span template='{"type":"textContent","path":"name","rootPath":"mop."}'>meh2</span></div>
+    <div template-loop='{"arrayPath":"foo1.bar1","childSelector":"#template-loop"}'>
       <div>
         <span template='{"type":"textContent","path":"idx","rootPath":"foo1.bar1.0."}'>xx0</span>
         <span template='{"type":"textContent","path":"a","rootPath":"foo1.bar1.0."}'>a</span>
@@ -58,7 +61,8 @@
     <span template='{"type":"textContent","path":"title"}'>xxx</span>
     <span title="xxx" template='{"type":"attribute","name":"title","path":"title"}'></span>
     <span template='{"type":"localizedContent","paths":["foo2.foo_l10n","foo2.bar_l10n"],"property":"foo2"}'>foo2:yyy/zzz</span>
-    <div template-loop='{"arrayPath":"foo1.bar1","childSelector":"#template"}'>
+    <div template-for='{"path":"","childSelector":"#template-for"}'></div>
+    <div template-loop='{"arrayPath":"foo1.bar1","childSelector":"#template-loop"}'>
       <div>
         <span template='{"type":"textContent","path":"idx","rootPath":"foo1.bar1.0."}'>xx0</span>
         <span template='{"type":"textContent","path":"a","rootPath":"foo1.bar1.0."}'>a</span>
@@ -76,7 +80,8 @@
     <span template='{"type":"textContent","path":"title"}'>xxx</span>
     <span title="xxx" template='{"type":"attribute","name":"title","path":"title"}'></span>
     <span template='{"type":"localizedContent","paths":["foo2.foo_l10n","foo2.bar_l10n"],"property":"foo2"}'>foo2:yyy/zzz</span>
-    <div template-loop='{"arrayPath":"foo1.bar1","childSelector":"#template"}'>
+    <div template-for='{"path":"","childSelector":"#template-for"}'></div>
+    <div template-loop='{"arrayPath":"foo1.bar1","childSelector":"#template-loop"}'>
       <div>
         <span template='{"type":"textContent","path":"idx","rootPath":"foo1.bar1.0."}'>xx0</span>
         <span template='{"type":"textContent","path":"a","rootPath":"foo1.bar1.0."}'>a</span>
@@ -109,7 +114,8 @@
     <span template='{"type":"textContent","path":"title"}'>xxx</span>
     <span title="xxx" template='{"type":"attribute","name":"title","path":"title"}'></span>
     <span template='{"type":"localizedContent","paths":["foo2.foo_l10n","foo2.bar_l10n"],"property":"foo2"}'>foo2:yyy/zzz</span>
-    <div template-loop='{"arrayPath":"foo1.bar1","childSelector":"#template"}'>
+    <div template-for='{"path":"","childSelector":"#template-for"}'></div>
+    <div template-loop='{"arrayPath":"foo1.bar1","childSelector":"#template-loop"}'>
       <div>
         <span template='{"type":"textContent","path":"idx","rootPath":"foo1.bar1.0."}'>xx0</span>
         <span template='{"type":"textContent","path":"a","rootPath":"foo1.bar1.0."}'>a</span>
@@ -135,12 +141,16 @@
 
 
 
-  <template id="template">
+  <template id="template-loop">
     <div>
       <span template='{"type":"textContent","path":"idx"}'></span>
       <span template='{"type":"textContent","path":"a"}'></span>
       <span template='{"type":"textContent","path":"b"}'></span>
     </div>
+  </template>
+
+  <template id="template-for">
+  <span template='{"type":"textContent","path":"name"}'></span>
   </template>
 
   <script type="application/javascript;version=1.8" src="chrome://browser/content/devtools/app-manager/template.js"></script>
@@ -155,6 +165,9 @@
 
     let data = {
       title: "ttt",
+      mop: {
+        name: "meh",
+      },
       foo1: {
         bar1: [
           {idx: "xx0", a: "a", b: "b"},
@@ -178,6 +191,7 @@
         exec: function() {
           store.object.title = "xxx";
           store.object.foo2.foo_l10n = "foo2_l10n";
+          store.object.mop.name = "meh2";
         },
         reference: document.querySelector("#ref1")
       },
@@ -187,6 +201,9 @@
             foo_l10n: "yyy",
             bar_l10n: "zzz",
           }
+          let forElt = document.querySelector("#root > [template-for]");
+          forElt.setAttribute("template-for", '{"path":"","childSelector":"#template-for"}');
+          t._processFor(forElt);
         },
         reference: document.querySelector("#ref2")
       },

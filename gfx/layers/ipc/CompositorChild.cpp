@@ -51,7 +51,7 @@ CompositorChild::Destroy()
   SendStop();
 }
 
-/*static*/ PCompositorChild*
+/*static*/ bool
 CompositorChild::Create(Transport* aTransport, ProcessId aOtherProcess)
 {
   // There's only one compositor per child process.
@@ -62,15 +62,16 @@ CompositorChild::Create(Transport* aTransport, ProcessId aOtherProcess)
   if (!base::OpenProcessHandle(aOtherProcess, &handle)) {
     // We can't go on without a compositor.
     NS_RUNTIMEABORT("Couldn't OpenProcessHandle() to parent process.");
-    return nullptr;
+    return false;
   }
   if (!child->Open(aTransport, handle, XRE_GetIOMessageLoop(),
                 AsyncChannel::Child)) {
     NS_RUNTIMEABORT("Couldn't Open() Compositor channel.");
-    return nullptr;
+    return false;
   }
   // We release this ref in ActorDestroy().
-  return sCompositor = child.forget().get();
+  sCompositor = child.forget().get();
+  return true;
 }
 
 /*static*/ PCompositorChild*

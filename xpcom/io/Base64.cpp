@@ -6,7 +6,7 @@
 #include "Base64.h"
 
 #include "nsIInputStream.h"
-#include "nsStringGlue.h"
+#include "nsString.h"
 
 #include "plbase64.h"
 

@@ -8,9 +8,14 @@
 #include "gfxXlibSurface.h"
 #include "gfxImageSurface.h"
 #include "gfxContext.h"
+#include "gfxPlatform.h"
 #include "gfxAlphaRecovery.h"
 #include "cairo-xlib.h"
 #include "cairo-xlib-xrender.h"
+#include "mozilla/gfx/BorrowedContext.h"
+
+using namespace mozilla;
+using namespace mozilla::gfx;
 
 #if 0
 #include <stdio.h>
@@ -134,15 +139,35 @@ gfxXlibNativeRenderer::DrawDirect(gfxContext *ctx, nsIntSize size,
                                   uint32_t flags,
                                   Screen *screen, Visual *visual)
 {
-    cairo_t *cr = ctx->GetCairo();
+    if (ctx->IsCairo()) {
+        return DrawCairo(ctx->GetCairo(), size, flags, screen, visual);
+    }
 
+    // We need to actually borrow the context because we want to read out the
+    // clip rectangles.
+    BorrowedCairoContext borrowed(ctx->GetDrawTarget());
+    if (!borrowed.mCairo) {
+      return false;
+    }
+
+    bool direct = DrawCairo(borrowed.mCairo, size, flags, screen, visual);
+    borrowed.Finish();
+
+    return direct;
+}
+
+bool
+gfxXlibNativeRenderer::DrawCairo(cairo_t* cr, nsIntSize size,
+                                 uint32_t flags,
+                                 Screen *screen, Visual *visual)
+{
     /* Check that the target surface is an xlib surface. */
     cairo_surface_t *target = cairo_get_group_target (cr);
     if (cairo_surface_get_type (target) != CAIRO_SURFACE_TYPE_XLIB) {
         NATIVE_DRAWING_NOTE("FALLBACK: non-X surface");
         return false;
     }
-    
+
     cairo_matrix_t matrix;
     cairo_get_matrix (cr, &matrix);
     double device_offset_x, device_offset_y;
@@ -156,7 +181,7 @@ gfxXlibNativeRenderer::DrawDirect(gfxContext *ctx, nsIntSize size,
                  "Expected integer device offsets");
     nsIntPoint offset(NS_lroundf(matrix.x0 + device_offset_x),
                       NS_lroundf(matrix.y0 + device_offset_y));
-    
+
     int max_rectangles = 0;
     if (flags & DRAW_SUPPORTS_CLIP_RECT) {
       max_rectangles = 1;
@@ -193,10 +218,10 @@ gfxXlibNativeRenderer::DrawDirect(gfxContext *ctx, nsIntSize size,
     /* Stop now if everything is clipped out */
     if (needs_clip && rect_count == 0)
         return true;
-      
+
     /* Check that the screen is supported.
        Visuals belong to screens, so, if alternate visuals are not supported,
-       then alternate screens cannot be supported. */  
+       then alternate screens cannot be supported. */
     bool supports_alternate_visual =
         (flags & DRAW_SUPPORTS_ALTERNATE_VISUAL) != 0;
     bool supports_alternate_screen = supports_alternate_visual &&
@@ -206,13 +231,13 @@ gfxXlibNativeRenderer::DrawDirect(gfxContext *ctx, nsIntSize size,
         NATIVE_DRAWING_NOTE("FALLBACK: non-default screen");
         return false;
     }
-        
+
     /* Check that there is a visual */
     Visual *target_visual = cairo_xlib_surface_get_visual (target);
     if (!target_visual) {
         NATIVE_DRAWING_NOTE("FALLBACK: no Visual for surface");
         return false;
-    }        
+    }
     /* Check that the visual is supported */
     if (!supports_alternate_visual && target_visual != visual) {
         // Only the format of the visual is important (not the GLX properties)
@@ -226,7 +251,7 @@ gfxXlibNativeRenderer::DrawDirect(gfxContext *ctx, nsIntSize size,
             return false;
         }
     }
-  
+
     /* we're good to go! */
     NATIVE_DRAWING_NOTE("TAKING FAST PATH\n");
     cairo_surface_flush (target);
@@ -450,7 +475,6 @@ gfxXlibNativeRenderer::Draw(gfxContext* ctx, nsIntSize size,
         result->mUniformColor = false;
     }
 
-    bool drawIsOpaque = (flags & DRAW_IS_OPAQUE) != 0;
     gfxMatrix matrix = ctx->CurrentMatrix();
 
     // We can only draw direct or onto a copied background if pixels align and
@@ -488,7 +512,7 @@ gfxXlibNativeRenderer::Draw(gfxContext* ctx, nsIntSize size,
 
         if (canDrawOverBackground &&
             DrawDirect(ctx, size, flags, screen, visual))
-            return;
+          return;
     }
 
     nsIntRect drawingRect(nsIntPoint(0, 0), size);
@@ -506,29 +530,56 @@ gfxXlibNativeRenderer::Draw(gfxContext* ctx, nsIntSize size,
                          int32_t(clipExtents.Width()),
                          int32_t(clipExtents.Height()));
     drawingRect.IntersectRect(drawingRect, intExtents);
+
+    if (ctx->IsCairo()) {
+        nsRefPtr<gfxASurface> target(ctx->CurrentSurface());
+        DrawFallback(nullptr, ctx, target, size, drawingRect, canDrawOverBackground,
+                     flags, screen, visual, result);
+    } else {
+        DrawTarget* drawTarget = ctx->GetDrawTarget();
+        if (!drawTarget) {
+            return;
+        }
+
+        nsRefPtr<gfxASurface> target = gfxPlatform::GetPlatform()->
+            GetThebesSurfaceForDrawTarget(drawTarget);
+        if (!target) {
+            return;
+        }
+        DrawFallback(drawTarget, ctx, target, size, drawingRect, canDrawOverBackground,
+                     flags, screen, visual, result);
+    }
+}
+
+void
+gfxXlibNativeRenderer::DrawFallback(DrawTarget* drawTarget, gfxContext* ctx, gfxASurface* target,
+                                    nsIntSize& size, nsIntRect& drawingRect,
+                                    bool canDrawOverBackground, uint32_t flags,
+                                    Screen* screen, Visual* visual, DrawOutput* result)
+{
     gfxPoint offset(drawingRect.x, drawingRect.y);
 
     DrawingMethod method;
-    nsRefPtr<gfxASurface> target = ctx->CurrentSurface();
     nsRefPtr<gfxXlibSurface> tempXlibSurface = 
         CreateTempXlibSurface(target, drawingRect.Size(),
                               canDrawOverBackground, flags, screen, visual,
                               &method);
     if (!tempXlibSurface)
         return;
-  
+
     if (drawingRect.Size() != size || method == eCopyBackground) {
         // Only drawing a portion, or copying background,
         // so won't return a result.
         result = nullptr;
     }
-
+  
     nsRefPtr<gfxContext> tmpCtx;
+    bool drawIsOpaque = (flags & DRAW_IS_OPAQUE) != 0;
     if (!drawIsOpaque) {
         tmpCtx = new gfxContext(tempXlibSurface);
         if (method == eCopyBackground) {
             tmpCtx->SetOperator(gfxContext::OPERATOR_SOURCE);
-            tmpCtx->SetSource(target, -(offset + matrix.GetTranslation()));
+            tmpCtx->SetSource(target, -(offset + ctx->CurrentMatrix().GetTranslation()));
             // The copy from the tempXlibSurface to the target context should
             // use operator SOURCE, but that would need a mask to bound the
             // operation.  Here we only copy opaque backgrounds so operator
@@ -547,8 +598,16 @@ gfxXlibNativeRenderer::Draw(gfxContext* ctx, nsIntSize size,
     }
   
     if (method != eAlphaExtraction) {
-        ctx->SetSource(tempXlibSurface, offset);
-        ctx->Paint();
+        if (drawTarget) {
+            RefPtr<SourceSurface> sourceSurface = gfxPlatform::GetPlatform()->
+                GetSourceSurfaceForSurface(drawTarget, tempXlibSurface);
+            drawTarget->DrawSurface(sourceSurface,
+                Rect(offset.x, offset.y, size.width, size.height),
+                Rect(0, 0, size.width, size.height));
+        } else {
+            ctx->SetSource(tempXlibSurface, offset);
+            ctx->Paint();
+        }
         if (result) {
             result->mSurface = tempXlibSurface;
             /* fill in the result with what we know, which is really just what our
@@ -576,8 +635,7 @@ gfxXlibNativeRenderer::Draw(gfxContext* ctx, nsIntSize size,
                                             result ? &analysis : nullptr))
             return;
 
-        ctx->SetSource(blackImage, offset);
-
+        gfxASurface* paintSurface = blackImage;
         /* if the caller wants to retrieve the rendered image, put it into
            a 'similar' surface, and use that as the source for the drawing right
            now. This means we always return a surface similar to the surface
@@ -604,10 +662,18 @@ gfxXlibNativeRenderer::Draw(gfxContext* ctx, nsIntSize size,
                 copyCtx.SetOperator(gfxContext::OPERATOR_SOURCE);
                 copyCtx.Paint();
 
-                ctx->SetSource(result->mSurface);
+                paintSurface = result->mSurface;
             }
         }
-        
-        ctx->Paint();
+        if (drawTarget) {
+            RefPtr<SourceSurface> sourceSurface = gfxPlatform::GetPlatform()->
+                GetSourceSurfaceForSurface(drawTarget, paintSurface);
+            drawTarget->DrawSurface(sourceSurface,
+                Rect(offset.x, offset.y, size.width, size.height),
+                Rect(0, 0, size.width, size.height));
+        } else {
+            ctx->SetSource(paintSurface, offset);
+            ctx->Paint();
+        }
     }
 }

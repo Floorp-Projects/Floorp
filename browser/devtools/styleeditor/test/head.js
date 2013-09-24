@@ -9,12 +9,14 @@ const TEST_HOST = 'mochi.test:8888';
 let tempScope = {};
 Cu.import("resource://gre/modules/devtools/Loader.jsm", tempScope);
 let TargetFactory = tempScope.devtools.TargetFactory;
-Components.utils.import("resource://gre/modules/devtools/Console.jsm", tempScope);
+Cu.import("resource://gre/modules/LoadContextInfo.jsm", tempScope);
+let LoadContextInfo = tempScope.LoadContextInfo;
+Cu.import("resource://gre/modules/devtools/Console.jsm", tempScope);
 let console = tempScope.console;
 
 let gPanelWindow;
-let cache = Cc["@mozilla.org/network/cache-service;1"]
-              .getService(Ci.nsICacheService);
+let cache = Cc["@mozilla.org/netwerk/cache-storage-service;1"]
+              .getService(Ci.nsICacheStorageService);
 
 
 // Import the GCLI test helper
@@ -84,25 +86,30 @@ function addTabAndLaunchStyleEditorChromeWhenLoaded(aCallback, aSheet, aLine, aC
 }
 */
 
-function checkDiskCacheFor(host)
+function checkDiskCacheFor(host, done)
 {
   let foundPrivateData = false;
 
-  let visitor = {
-    visitDevice: function(deviceID, deviceInfo) {
-      if (deviceID == "disk")
-        info("disk device contains " + deviceInfo.entryCount + " entries");
-      return deviceID == "disk";
+  Visitor.prototype = {
+    onCacheStorageInfo: function(num, consumption)
+    {
+      info("disk storage contains " + num + " entries");
     },
-
-    visitEntry: function(deviceID, entryInfo) {
-      info(entryInfo.key);
-      foundPrivateData |= entryInfo.key.contains(host);
+    onCacheEntryInfo: function(entry)
+    {
+      info(entry.key);
+      foundPrivateData |= entry.key.contains(host);
+    },
+    onCacheEntryVisitCompleted: function()
+    {
       is(foundPrivateData, false, "web content present in disk cache");
+      done();
     }
   };
-  cache.visitEntries(visitor);
-  is(foundPrivateData, false, "private data present in disk cache");
+  function Visitor() {}
+
+  var storage = cache.diskCacheStorage(LoadContextInfo.default, false);
+  storage.asyncVisitStorage(new Visitor(), true /* Do walk entries */);
 }
 
 registerCleanupFunction(cleanup);

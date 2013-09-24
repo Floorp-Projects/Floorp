@@ -184,8 +184,6 @@ enum eNPPStreamTypeInternal {
   eNPPStreamTypeInternal_Post
 };
 
-static NS_DEFINE_IID(kMemoryCID, NS_MEMORY_CID);
-
 PRIntervalTime NS_NotifyBeginPluginCall(NSPluginCallReentry aReentryState)
 {
   nsNPAPIPluginInstance::BeginPluginCall(aReentryState);
@@ -1924,7 +1922,7 @@ _getvalue(NPP npp, NPNVariable variable, void *result)
         return NPERR_NO_ERROR;
       }
     }
-#ifdef MOZ_WIDGET_GTK2
+#if (MOZ_WIDGET_GTK == 2)
     // adobe nppdf calls XtGetApplicationNameAndClass(display,
     // &instance, &class) we have to init Xt toolkit before get
     // XtDisplay just call gtk_xtbin_new(w,0) once
@@ -1945,7 +1943,7 @@ _getvalue(NPP npp, NPNVariable variable, void *result)
     return NPERR_GENERIC_ERROR;
 #endif
 
-#if defined(XP_WIN) || defined(XP_OS2) || defined(MOZ_WIDGET_GTK2) \
+#if defined(XP_WIN) || defined(XP_OS2) || (MOZ_WIDGET_GTK == 2) \
  || defined(MOZ_WIDGET_QT)
   case NPNVnetscapeWindow: {
     if (!npp || !npp->ndata)

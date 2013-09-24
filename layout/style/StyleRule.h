@@ -12,8 +12,6 @@
 #define mozilla_css_StyleRule_h__
 
 #include "mozilla/Attributes.h"
-
-#include "mozilla/Attributes.h"
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/css/Rule.h"
 
@@ -21,7 +19,6 @@
 #include "nsCOMPtr.h"
 #include "nsCSSPseudoElements.h"
 #include "nsCSSPseudoClasses.h"
-#include "nsAutoPtr.h"
 
 class nsIAtom;
 class nsCSSStyleSheet;

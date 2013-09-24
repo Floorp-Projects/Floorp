@@ -25,12 +25,9 @@ interface EventSource : EventTarget {
   readonly attribute unsigned short readyState;
 
   // networking
-  [SetterThrows]
-           attribute EventHandler onopen;
-  [SetterThrows]
-           attribute EventHandler onmessage;
-  [SetterThrows]
-           attribute EventHandler onerror;
+  attribute EventHandler onopen;
+  attribute EventHandler onmessage;
+  attribute EventHandler onerror;
   void close();
 };
 

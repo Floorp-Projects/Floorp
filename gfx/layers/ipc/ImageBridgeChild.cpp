@@ -521,7 +521,7 @@ ImageBridgeChild::EndTransaction()
 }
 
 
-PImageBridgeChild*
+bool
 ImageBridgeChild::StartUpInChildProcess(Transport* aTransport,
                                         ProcessId aOtherProcess)
 {
@@ -529,12 +529,12 @@ ImageBridgeChild::StartUpInChildProcess(Transport* aTransport,
 
   ProcessHandle processHandle;
   if (!base::OpenProcessHandle(aOtherProcess, &processHandle)) {
-    return nullptr;
+    return false;
   }
 
   sImageBridgeChildThread = new Thread("ImageBridgeChild");
   if (!sImageBridgeChildThread->Start()) {
-    return nullptr;
+    return false;
   }
 
   sImageBridgeChildSingleton = new ImageBridgeChild();
@@ -543,7 +543,7 @@ ImageBridgeChild::StartUpInChildProcess(Transport* aTransport,
     NewRunnableFunction(ConnectImageBridgeInChildProcess,
                         aTransport, processHandle));
 
-  return sImageBridgeChildSingleton;
+  return true;
 }
 
 void ImageBridgeChild::ShutDown()

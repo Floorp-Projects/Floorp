@@ -18,7 +18,6 @@
 #include "nsCSSStyleSheet.h"
 #include "nsTArray.h"
 #include "nsAutoPtr.h"
-#include "nsCSSRules.h"
 #include "nsRuleWalker.h"
 #include "nsEventStates.h"
 
@@ -28,6 +27,8 @@ struct nsCSSSelectorList;
 struct RuleCascadeData;
 struct TreeMatchContext;
 class nsCSSKeyframesRule;
+class nsCSSPageRule;
+class nsCSSFontFeatureValuesRule;
 
 /**
  * The CSS style rule processor provides a mechanism for sibling style

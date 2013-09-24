@@ -37,8 +37,10 @@
   <script type="application/javascript;version=1.8"><![CDATA[
     const {classes: Cc, interfaces: Ci, manager: Cm, utils: Cu} = Components;
     Cu.import("resource://gre/modules/Services.jsm");
+    Cu.import("resource://gre/modules/Prompt.jsm");
 
     let gStringBundle = Services.strings.createBundle("chrome://browser/locale/config.properties");
+    let gCommonBundle = Services.strings.createBundle("chrome://global/locale/commonDialogs.properties");
 
     function dump(a) {
       Cc["@mozilla.org/consoleservice;1"].getService(Ci.nsIConsoleService).logStringMessage(a);
@@ -144,31 +146,37 @@
           }
 
           Services.prefs.setBoolPref(aPref.name, result.value);
-        } else {
-          let result = { value: aPref.value };
-          let text = gStringBundle.formatStringFromName("modifyPref.promptText", [aPref.name], 1);
-          if (!Services.prompt.prompt(window, title, text, result, null, {}))
-            return;
-
-          if (aPref.type == Ci.nsIPrefBranch.PREF_INT) {
-            // | 0 converts to integer or 0; - 0 to float or NaN.
-            // Thus, this check should catch all cases.
-            let val = result.value | 0;
-            if (val != result.value - 0) {
-              let errorTitle = gStringBundle.GetStringFromName("modifyPref.numberErrorTitle");
-              let errorText = gStringBundle.GetStringFromName("modifyPref.numberErrorText");
-              Services.prompt.alert(window, errorTitle, errorText);
-              return;
-            }
-            Services.prefs.setIntPref(aPref.name, val);
-          } else {
-            let supportsString = Cc["@mozilla.org/supports-string;1"].createInstance(Ci.nsISupportsString);
-            supportsString.data = result.value;
-            Services.prefs.setComplexValue(aPref.name, Ci.nsISupportsString, supportsString);
-          }
+          Services.prefs.savePrefFile(null);
+          return;
         }
 
-        Services.prefs.savePrefFile(null);
+        // If not a boolean, we're a number or string
+        let p = new Prompt({
+          window: window,
+          title: title,
+          message: gStringBundle.formatStringFromName("modifyPref.promptText", [aPref.name], 1),
+          buttons: [
+            gCommonBundle.GetStringFromName("OK"),
+            gCommonBundle.GetStringFromName("Cancel")
+          ]
+        });
+
+        (aPref.type == Ci.nsIPrefBranch.PREF_INT) ?
+          p.addNumber({ value: aPref.value, autofocus: true }) :
+          p.addTextbox({ value: aPref.value, autofocus: true });
+
+        p.show(function(result) {
+          if (result.button == 0) {
+            if (aPref.type == Ci.nsIPrefBranch.PREF_INT) {
+              Services.prefs.setIntPref(aPref.name, result.number0);
+            } else {
+              let supportsString = Cc["@mozilla.org/supports-string;1"].createInstance(Ci.nsISupportsString);
+              supportsString.data = result.textbox0;
+              Services.prefs.setComplexValue(aPref.name, Ci.nsISupportsString, supportsString);
+            }
+            Services.prefs.savePrefFile(null);
+          }
+        });
       },
 
       resetPref: function AC_resetPref(aPref) {

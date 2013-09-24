@@ -216,8 +216,11 @@ this.DownloadIntegration = {
       // After the list of persistent downloads has been loaded, add the
       // DownloadAutoSaveView and the DownloadHistoryObserver (even if the load
       // operation failed).  These objects are kept alive by the underlying
-      // DownloadList and by the history service respectively.
-      new DownloadAutoSaveView(aList, this._store);
+      // DownloadList and by the history service respectively.  We wait for a
+      // complete initialization of the view used for detecting changes to
+      // downloads to be persisted, before other callers get a chance to modify
+      // the list without being detected.
+      yield new DownloadAutoSaveView(aList, this._store).initialize();
       new DownloadHistoryObserver(aList);
     }.bind(this));
   },
@@ -696,6 +699,13 @@ this.DownloadIntegration = {
       Services.obs.addObserver(DownloadObserver, "offline-requested", true);
       Services.obs.addObserver(DownloadObserver, "last-pb-context-exiting", true);
       Services.obs.addObserver(DownloadObserver, "last-pb-context-exited", true);
+
+      Services.obs.addObserver(DownloadObserver, "sleep_notification", true);
+      Services.obs.addObserver(DownloadObserver, "suspend_process_notification", true);
+      Services.obs.addObserver(DownloadObserver, "wake_notification", true);
+      Services.obs.addObserver(DownloadObserver, "resume_process_notification", true);
+      Services.obs.addObserver(DownloadObserver, "network:offline-about-to-go-offline", true);
+      Services.obs.addObserver(DownloadObserver, "network:offline-status-changed", true);
     }
     return Promise.resolve();
   },
@@ -725,23 +735,37 @@ this.DownloadObserver = {
   observersAdded: false,
 
   /**
+   * Timer used to delay restarting canceled downloads upon waking and returning
+   * online.
+   */
+  _wakeTimer: null,
+
+  /**
    * Set that contains the in progress publics downloads.
-   * It's keep updated when a public download is added, removed or change its
+   * It's kept updated when a public download is added, removed or changes its
    * properties.
    */
   _publicInProgressDownloads: new Set(),
 
   /**
    * Set that contains the in progress private downloads.
-   * It's keep updated when a private download is added, removed or change its
+   * It's kept updated when a private download is added, removed or changes its
    * properties.
    */
   _privateInProgressDownloads: new Set(),
 
   /**
+   * Set that contains the downloads that have been canceled when going offline
+   * or to sleep. These are started again when returning online or waking. This
+   * list is not persisted so when exiting and restarting, the downloads will not
+   * be started again.
+   */
+  _canceledOfflineDownloads: new Set(),
+
+  /**
    * Registers a view that updates the corresponding downloads state set, based
    * on the aIsPrivate argument. The set is updated when a download is added,
-   * removed or changed its properties.
+   * removed or changes its properties.
    *
    * @param aList
    *        The public or private downloads list.
@@ -752,24 +776,27 @@ this.DownloadObserver = {
     let downloadsSet = aIsPrivate ? this._privateInProgressDownloads
                                   : this._publicInProgressDownloads;
     let downloadsView = {
-      onDownloadAdded: function DO_V_onDownloadAdded(aDownload) {
+      onDownloadAdded: aDownload => {
         if (!aDownload.stopped) {
           downloadsSet.add(aDownload);
         }
       },
-      onDownloadChanged: function DO_V_onDownloadChanged(aDownload) {
+      onDownloadChanged: aDownload => {
         if (aDownload.stopped) {
           downloadsSet.delete(aDownload);
         } else {
           downloadsSet.add(aDownload);
         }
       },
-      onDownloadRemoved: function DO_V_onDownloadRemoved(aDownload) {
+      onDownloadRemoved: aDownload => {
         downloadsSet.delete(aDownload);
+        // The download must also be removed from the canceled when offline set.
+        this._canceledOfflineDownloads.delete(aDownload);
       }
     };
 
-    aList.addView(downloadsView);
+    // We register the view asynchronously.
+    aList.addView(downloadsView).then(null, Cu.reportError);
   },
 
   /**
@@ -801,6 +828,18 @@ this.DownloadObserver = {
     aCancel.data = aPrompter.confirmCancelDownloads(aDownloadsCount, aPromptType);
   },
 
+  /**
+   * Resume all downloads that were paused when going offline, used when waking
+   * from sleep or returning from being offline.
+   */
+  _resumeOfflineDownloads: function DO_resumeOfflineDownloads() {
+    this._wakeTimer = null;
+
+    for (let download of this._canceledOfflineDownloads) {
+      download.start();
+    }
+  },
+
   ////////////////////////////////////////////////////////////////////////////
   //// nsIObserver
 
@@ -828,8 +867,9 @@ this.DownloadObserver = {
           let list = yield Downloads.getList(Downloads.PRIVATE);
           let downloads = yield list.getAll();
 
+          // We can remove the downloads and finalize them in parallel.
           for (let download of downloads) {
-            list.remove(download);
+            list.remove(download).then(null, Cu.reportError);
             download.finalize(true).then(null, Cu.reportError);
           }
         });
@@ -837,6 +877,35 @@ this.DownloadObserver = {
         if (DownloadIntegration.testMode) {
           deferred.then((value) => { DownloadIntegration._deferTestClearPrivateList.resolve("success"); },
                         (error) => { DownloadIntegration._deferTestClearPrivateList.reject(error); });
+        }
+        break;
+      case "sleep_notification":
+      case "suspend_process_notification":
+      case "network:offline-about-to-go-offline":
+        for (let download of this._publicInProgressDownloads) {
+          download.cancel();
+          this._canceledOfflineDownloads.add(download);
+        }
+        for (let download of this._privateInProgressDownloads) {
+          download.cancel();
+          this._canceledOfflineDownloads.add(download);
+        }
+        break;
+      case "wake_notification":
+      case "resume_process_notification":
+        let wakeDelay = 10000;
+        try {
+          wakeDelay = Services.prefs.getIntPref("browser.download.manager.resumeOnWakeDelay");
+        } catch(e) {}
+
+        if (wakeDelay >= 0) {
+          this._wakeTimer = new Timer(this._resumeOfflineDownloads.bind(this), wakeDelay,
+                                      Ci.nsITimer.TYPE_ONE_SHOT);
+        }
+        break;
+      case "network:offline-status-changed":
+        if (aData == "online") {
+          this._resumeOfflineDownloads();
         }
         break;
     }
@@ -904,7 +973,9 @@ DownloadHistoryObserver.prototype = {
 
 /**
  * This view can be added to a DownloadList object to trigger a save operation
- * in the given DownloadStore object when a relevant change occurs.
+ * in the given DownloadStore object when a relevant change occurs.  You should
+ * call the "initialize" method in order to register the view and load the
+ * current state from disk.
  *
  * You do not need to keep a reference to this object in order to keep it alive,
  * because the DownloadList object already keeps a strong reference to it.
@@ -915,25 +986,40 @@ DownloadHistoryObserver.prototype = {
  *        The DownloadStore object used for saving.
  */
 function DownloadAutoSaveView(aList, aStore) {
+  this._list = aList;
   this._store = aStore;
   this._downloadsMap = new Map();
-
-  // We set _initialized to true after adding the view, so that onDownloadAdded
-  // doesn't cause a save to occur.
-  aList.addView(this);
-  this._initialized = true;
 }
 
 DownloadAutoSaveView.prototype = {
+  /**
+   * DownloadList object linked to this view.
+   */
+  _list: null,
+
+  /**
+   * The DownloadStore object used for saving.
+   */
+  _store: null,
+
   /**
    * True when the initial state of the downloads has been loaded.
    */
   _initialized: false,
 
   /**
-   * The DownloadStore object used for saving.
+   * Registers the view and loads the current state from disk.
+   *
+   * @return {Promise}
+   * @resolves When the view has been registered.
+   * @rejects JavaScript exception.
    */
-  _store: null,
+  initialize: function ()
+  {
+    // We set _initialized to true after adding the view, so that
+    // onDownloadAdded doesn't cause a save to occur.
+    return this._list.addView(this).then(() => this._initialized = true);
+  },
 
   /**
    * This map contains only Download objects that should be saved to disk, and

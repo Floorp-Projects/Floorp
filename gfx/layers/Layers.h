@@ -12,6 +12,7 @@
 #include "FrameMetrics.h"               // for FrameMetrics
 #include "Units.h"                      // for LayerMargin, LayerPoint
 #include "gfx3DMatrix.h"                // for gfx3DMatrix
+#include "gfxContext.h"                 // for GraphicsOperator
 #include "gfxASurface.h"                // for gfxASurface, etc
 #include "gfxColor.h"                   // for gfxRGBA
 #include "gfxMatrix.h"                  // for gfxMatrix
@@ -732,6 +733,29 @@ public:
     }
   }
 
+  void SetMixBlendMode(gfxContext::GraphicsOperator aMixBlendMode)
+  {
+    if (mMixBlendMode != aMixBlendMode) {
+      MOZ_LAYERS_LOG_IF_SHADOWABLE(this, ("Layer::Mutated(%p) MixBlendMode", this));
+      mMixBlendMode = aMixBlendMode;
+      Mutated();
+    }
+  }
+  
+  void SetForceIsolatedGroup(bool aForceIsolatedGroup)
+  {
+    if(mForceIsolatedGroup != aForceIsolatedGroup) {
+      MOZ_LAYERS_LOG_IF_SHADOWABLE(this, ("Layer::Mutated(%p) ForceIsolatedGroup", this));
+      mForceIsolatedGroup = aForceIsolatedGroup;
+      Mutated();
+    }
+  }
+  
+  bool GetForceIsolatedGroup() const
+  {
+    return mForceIsolatedGroup;
+  }
+
   /**
    * CONSTRUCTION PHASE ONLY
    * Set a clip rect which will be applied to this layer as it is
@@ -937,6 +961,7 @@ public:
 
   // These getters can be used anytime.
   float GetOpacity() { return mOpacity; }
+  gfxContext::GraphicsOperator GetMixBlendMode() const { return mMixBlendMode; }
   const nsIntRect* GetClipRect() { return mUseClipRect ? &mClipRect : nullptr; }
   uint32_t GetContentFlags() { return mContentFlags; }
   const nsIntRegion& GetVisibleRegion() { return mVisibleRegion; }
@@ -1102,11 +1127,18 @@ public:
   // accounting for this layer possibly being a shadow.
   const nsIntRect* GetEffectiveClipRect();
   const nsIntRegion& GetEffectiveVisibleRegion();
+
   /**
    * Returns the product of the opacities of this layer and all ancestors up
    * to and excluding the nearest ancestor that has UseIntermediateSurface() set.
    */
   float GetEffectiveOpacity();
+  
+  /**
+   * Returns the blendmode of this layer.
+   */
+  gfxContext::GraphicsOperator GetEffectiveMixBlendMode();
+  
   /**
    * This returns the effective transform computed by
    * ComputeEffectiveTransforms. Typically this is a transform that transforms
@@ -1304,6 +1336,8 @@ protected:
   AnimationArray mAnimations;
   InfallibleTArray<AnimData> mAnimationData;
   float mOpacity;
+  gfxContext::GraphicsOperator mMixBlendMode;
+  bool mForceIsolatedGroup;
   nsIntRect mClipRect;
   nsIntRect mTileSourceRect;
   nsIntRegion mInvalidRegion;

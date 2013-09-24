@@ -45,16 +45,10 @@ function main()
   var svg = SMILUtil.getSVGRoot();
   ok(svg.animationsPaused(), "should be paused by <svg> load handler");
   is(svg.getCurrentTime(), 0, "should be paused at 0 in <svg> load handler");
-  
-  // Get handle on nsIMarkupDocumentViewer
-  netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
-  const CI = Components.interfaces;
-  var docshell = window.QueryInterface(CI.nsIInterfaceRequestor).getInterface(CI.nsIWebNavigation).QueryInterface(CI.nsIDocShell);
-  var mudv = docshell.contentViewer.QueryInterface(CI.nsIMarkupDocumentViewer);
 
   // Set text zoom to 2x
-  var origTextZoom = mudv.textZoom;
-  mudv.textZoom = 2;
+  var origTextZoom =  SpecialPowers.getTextZoom(window);
+  SpecialPowers.setTextZoom(window, 2);
 
   try {
     // Verify computed style values at various points during animation.
@@ -83,12 +77,13 @@ function main()
   } catch (e) {
     // If anything goes wrong, make sure we restore textZoom before bubbling
     // the exception upwards, so that we don't mess up subsequent tests.
-    mudv.textZoom = origTextZoom;
+    SpecialPowers.setTextZoom(window, origTextZoom);
+
     throw e;
   }
 
   // We're done! Restore original text-zoom before finishing
-  mudv.textZoom = origTextZoom;
+  SpecialPowers.setTextZoom(window, origTextZoom);
   SimpleTest.finish();
 }
 

@@ -19,6 +19,7 @@
 #include "nsIDOMHTMLInputElement.h"
 #include "nsIDOMHTMLTextAreaElement.h"
 #include "nsIControllers.h"
+#include "nsIController.h"
 
 #include "nsCycleCollectionParticipant.h"
 
@@ -28,8 +29,6 @@
 
 using namespace mozilla;
 using namespace mozilla::dom;
-
-static NS_DEFINE_CID(kEventListenerManagerCID,    NS_EVENTLISTENERMANAGER_CID);
 
 nsWindowRoot::nsWindowRoot(nsPIDOMWindow* aWindow)
 {

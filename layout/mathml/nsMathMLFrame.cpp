@@ -346,9 +346,6 @@ nsMathMLFrame::ParseNumericValue(const nsString&   aString,
 // is not scheduled to be fixed anytime soon)
 //
 
-static const int32_t kMathMLversion1 = 1;
-static const int32_t kMathMLversion2 = 2;
-
 struct
 nsCSSMapping {
   int32_t        compatibility;

@@ -9,7 +9,7 @@
 %{ C++
 #include "nsIUnicodeDecoder.h"
 #include "nsIUnicodeEncoder.h"
-#include "nsStringGlue.h"
+#include "nsString.h"
 
 
 // XXX change to NS_CHARSETCONVERTERMANAGER_CID

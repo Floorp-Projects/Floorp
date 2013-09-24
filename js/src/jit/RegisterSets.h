@@ -601,33 +601,26 @@ class RegisterSet {
         return other.gpr_ == gpr_ && other.fpu_ == fpu_;
     }
 
-    void maybeTake(Register reg) {
+    void takeUnchecked(Register reg) {
         gpr_.takeUnchecked(reg);
     }
-    void maybeTake(FloatRegister reg) {
+    void takeUnchecked(FloatRegister reg) {
         fpu_.takeUnchecked(reg);
     }
-    void maybeTake(AnyRegister reg) {
+    void takeUnchecked(AnyRegister reg) {
         if (reg.isFloat())
             fpu_.takeUnchecked(reg.fpu());
         else
             gpr_.takeUnchecked(reg.gpr());
     }
-    void maybeTake(ValueOperand value) {
-#if defined(JS_NUNBOX32)
-        gpr_.takeUnchecked(value.typeReg());
-        gpr_.takeUnchecked(value.payloadReg());
-#elif defined(JS_PUNBOX64)
-        gpr_.takeUnchecked(value.valueReg());
-#else
-#error "Bad architecture"
-#endif
+    void takeUnchecked(ValueOperand value) {
+        gpr_.takeUnchecked(value);
     }
-    void maybeTake(TypedOrValueRegister reg) {
+    void takeUnchecked(TypedOrValueRegister reg) {
         if (reg.hasValue())
-            maybeTake(reg.valueReg());
+            takeUnchecked(reg.valueReg());
         else if (reg.hasTyped())
-            maybeTake(reg.typedReg());
+            takeUnchecked(reg.typedReg());
     }
 };
 
@@ -792,6 +785,11 @@ class ABIArg
     AnyRegister reg() const { return kind_ == GPR ? AnyRegister(gpr()) : AnyRegister(fpu()); }
 };
 
+// Summarizes a heap access made by asm.js code that needs to be patched later
+// and/or looked up by the asm.js signal handlers. Different architectures need
+// to know different things (x64: offset and length, ARM: where to patch in
+// heap length, x86: where to patch in heap length and base) hence the massive
+// #ifdefery.
 class AsmJSHeapAccess
 {
     uint32_t offset_;
@@ -801,10 +799,10 @@ class AsmJSHeapAccess
 #if defined(JS_CPU_X86) || defined(JS_CPU_X64)
     uint8_t opLength_;  // the length of the load/store instruction
     uint8_t isFloat32Load_;
-    jit::AnyRegister::Code loadedReg_ : 8;
+    AnyRegister::Code loadedReg_ : 8;
 #endif
 
-    JS_STATIC_ASSERT(jit::AnyRegister::Total < UINT8_MAX);
+    JS_STATIC_ASSERT(AnyRegister::Total < UINT8_MAX);
 
   public:
 #if defined(JS_CPU_X86) || defined(JS_CPU_X64)
@@ -846,7 +844,7 @@ class AsmJSHeapAccess
     unsigned opLength() const { return opLength_; }
     bool isLoad() const { return loadedReg_ != UINT8_MAX; }
     bool isFloat32Load() const { return isFloat32Load_; }
-    jit::AnyRegister loadedReg() const { return jit::AnyRegister::FromCode(loadedReg_); }
+    AnyRegister loadedReg() const { return AnyRegister::FromCode(loadedReg_); }
 #endif
 };
 

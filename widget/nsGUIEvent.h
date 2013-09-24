@@ -11,7 +11,7 @@
 #include "nsPoint.h"
 #include "nsRect.h"
 #include "nsEvent.h"
-#include "nsStringGlue.h"
+#include "nsString.h"
 #include "nsCOMPtr.h"
 #include "nsIAtom.h"
 #include "nsIDOMKeyEvent.h"

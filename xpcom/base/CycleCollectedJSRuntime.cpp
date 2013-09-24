@@ -459,18 +459,28 @@ CycleCollectedJSRuntime::CycleCollectedJSRuntime(uint32_t aMaxbytes,
   nsCycleCollector_registerJSRuntime(this);
 }
 
-CycleCollectedJSRuntime::~CycleCollectedJSRuntime()
+void
+CycleCollectedJSRuntime::DestroyRuntime()
 {
+  if (!mJSRuntime) {
+    return;
+  }
+
   MOZ_ASSERT(!mDeferredFinalizerTable.Count());
   MOZ_ASSERT(!mDeferredSupports.Length());
 
   // Clear mPendingException first, since it might be cycle collected.
   mPendingException = nullptr;
 
-  nsCycleCollector_forgetJSRuntime();
-
   JS_DestroyRuntime(mJSRuntime);
   mJSRuntime = nullptr;
+  nsCycleCollector_forgetJSRuntime();
+}
+
+CycleCollectedJSRuntime::~CycleCollectedJSRuntime()
+{
+  // Destroy our runtime if the subclass hasn't done it already.
+  DestroyRuntime();
 }
 
 size_t

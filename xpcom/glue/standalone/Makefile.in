@@ -10,10 +10,6 @@ LOCAL_INCLUDES	= \
 	-I$(srcdir)/../../build \
 	$(NULL)
 
-SDK_LIBRARY     	= \
-	$(LIB_PREFIX)xpcomglue.$(LIB_SUFFIX) \
-	$(NULL)
-
 FORCE_STATIC_LIB = 1
 
 # Don't use STL wrappers here (i.e. wrapped <new>); they require mozalloc

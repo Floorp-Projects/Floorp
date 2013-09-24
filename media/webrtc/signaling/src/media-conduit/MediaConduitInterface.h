@@ -156,6 +156,17 @@ public:
    */
   static RefPtr<VideoSessionConduit> Create();
 
+  enum FrameRequestType
+  {
+    FrameRequestNone,
+    FrameRequestFir,
+    FrameRequestPli,
+    FrameRequestUnknown
+  };
+
+  VideoSessionConduit() : mFrameRequestMethod(FrameRequestNone),
+                          mUsingNackBasic(false) {}
+
   virtual ~VideoSessionConduit() {}
 
   virtual Type type() const { return VIDEO; }
@@ -208,6 +219,23 @@ public:
   virtual MediaConduitErrorCode ConfigureRecvMediaCodecs(
                                 const std::vector<VideoCodecConfig* >& recvCodecConfigList) = 0;
 
+
+  /**
+    * These methods allow unit tests to double-check that the
+    * rtcp-fb settings are as expected.
+    */
+    FrameRequestType FrameRequestMethod() const {
+      return mFrameRequestMethod;
+    }
+
+    bool UsingNackBasic() const {
+      return mUsingNackBasic;
+    }
+
+   protected:
+     /* RTCP feedback settings, for unit testing purposes */
+     FrameRequestType mFrameRequestMethod;
+     bool mUsingNackBasic;
 };
 
 /**

@@ -44,7 +44,7 @@ function getElement(id) {
 this.$ = this.getElement;
 
 function sendMouseEvent(aEvent, aTarget, aWindow) {
-  if (['click', 'dblclick', 'mousedown', 'mouseup', 'mouseover', 'mouseout'].indexOf(aEvent.type) == -1) {
+  if (['click', 'contextmenu', 'dblclick', 'mousedown', 'mouseup', 'mouseover', 'mouseout'].indexOf(aEvent.type) == -1) {
     throw new Error("sendMouseEvent doesn't know about event type '" + aEvent.type + "'");
   }
 
@@ -74,7 +74,7 @@ function sendMouseEvent(aEvent, aTarget, aWindow) {
   var altKeyArg        = aEvent.altKey        || false;
   var shiftKeyArg      = aEvent.shiftKey      || false;
   var metaKeyArg       = aEvent.metaKey       || false;
-  var buttonArg        = aEvent.button        || 0;
+  var buttonArg        = aEvent.button        || (aEvent.type == 'contextmenu' ? 2 : 0);
   var relatedTargetArg = aEvent.relatedTarget || null;
 
   event.initMouseEvent(typeArg, canBubbleArg, cancelableArg, viewArg, detailArg,
@@ -82,7 +82,7 @@ function sendMouseEvent(aEvent, aTarget, aWindow) {
                        ctrlKeyArg, altKeyArg, shiftKeyArg, metaKeyArg,
                        buttonArg, relatedTargetArg);
 
-  SpecialPowers.dispatchEvent(aWindow, aTarget, event);
+  return SpecialPowers.dispatchEvent(aWindow, aTarget, event);
 }
 
 /**
