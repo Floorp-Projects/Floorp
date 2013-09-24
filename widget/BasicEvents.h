@@ -29,6 +29,13 @@ enum nsEventStructType
   NS_INPUT_EVENT,                    // WidgetInputEvent
   NS_UI_EVENT,                       // InternalUIEvent
 
+  // TextEvents.h
+  NS_KEY_EVENT,                      // WidgetKeyboardEvent
+  NS_COMPOSITION_EVENT,              // WidgetCompositionEvent
+  NS_TEXT_EVENT,                     // WidgetTextEvent
+  NS_QUERY_CONTENT_EVENT,            // WidgetQueryContentEvent
+  NS_SELECTION_EVENT,                // WidgetSelectionEvent
+
   // Mouse related events
   NS_MOUSE_EVENT,                    // nsMouseEvent
   NS_MOUSE_SCROLL_EVENT,             // nsMouseScrollEvent
@@ -39,15 +46,6 @@ enum nsEventStructType
   NS_GESTURENOTIFY_EVENT,            // nsGestureNotifyEvent
   NS_SIMPLE_GESTURE_EVENT,           // nsSimpleGestureEvent
   NS_TOUCH_EVENT,                    // nsTouchEvent
-
-  // Key or IME events
-  NS_KEY_EVENT,                      // nsKeyEvent
-  NS_COMPOSITION_EVENT,              // nsCompositionEvent
-  NS_TEXT_EVENT,                     // nsTextEvent
-
-  // IME related events
-  NS_QUERY_CONTENT_EVENT,            // nsQueryContentEvent
-  NS_SELECTION_EVENT,                // nsSelectionEvent
 
   // Scroll related events
   NS_SCROLLPORT_EVENT,               // nsScrollPortEvent

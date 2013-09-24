@@ -114,6 +114,7 @@ EXPORTS.mozilla += [
     'BasicEvents.h',
     'EventForwards.h',
     'LookAndFeel.h',
+    'TextEvents.h',
     'WidgetUtils.h',
 ]
 
