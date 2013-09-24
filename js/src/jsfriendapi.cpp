@@ -1068,6 +1068,24 @@ js::detail::IdMatchesAtom(jsid id, JSAtom *atom)
     return id == INTERNED_STRING_TO_JSID(NULL, atom);
 }
 
+JS_FRIEND_API(JSContext *)
+js::DefaultJSContext(JSRuntime *rt)
+{
+    if (rt->defaultJSContextCallback) {
+        JSContext *cx = rt->defaultJSContextCallback(rt);
+        JS_ASSERT(cx);
+        return cx;
+    }
+    JS_ASSERT(rt->contextList.getFirst() == rt->contextList.getLast());
+    return rt->contextList.getFirst();
+}
+
+JS_FRIEND_API(void)
+js::SetDefaultJSContextCallback(JSRuntime *rt, DefaultJSContextCallback cb)
+{
+    rt->defaultJSContextCallback = cb;
+}
+
 JS_FRIEND_API(void)
 js::SetCTypesActivityCallback(JSRuntime *rt, CTypesActivityCallback cb)
 {

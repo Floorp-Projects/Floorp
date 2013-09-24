@@ -764,6 +764,7 @@ public:
     void AddContextCallback(xpcContextCallback cb);
     void RemoveContextCallback(xpcContextCallback cb);
 
+    static JSContext* DefaultJSContextCallback(JSRuntime *rt);
     static void ActivityCallback(void *arg, bool active);
     static void CTypesActivityCallback(JSContext *cx,
                                        js::CTypesActivityType type);
