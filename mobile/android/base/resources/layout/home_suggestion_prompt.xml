@@ -6,7 +6,7 @@
 <FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
              android:layout_width="match_parent"
              android:layout_height="wrap_content"
-             android:background="@drawable/url_bar_bg">
+             android:background="@color/background_light">
 
     <LinearLayout android:id="@+id/prompt"
                   android:focusable="true"
@@ -20,16 +20,15 @@
         <TextView android:id="@+id/suggestions_prompt_title"
                   android:layout_height="wrap_content"
                   android:layout_width="0dp"
-                  android:textColor="@color/url_bar_title"
                   android:layout_marginLeft="6dip"
-                  android:textSize="14sp"
-                  android:layout_weight="1" />
+                  android:layout_weight="1"
+                  android:textAppearance="@style/TextAppearance.Widget.SuggestionsPrompt"/>
 
         <TextView android:id="@+id/suggestions_prompt_yes"
                   android:layout_height="wrap_content"
                   android:layout_width="wrap_content"
-                  android:textSize="14sp"
                   android:layout_marginLeft="15dip"
+                  android:textAppearance="@style/TextAppearance.Widget.SuggestionsPrompt"
                   android:background="@drawable/suggestion_selector"
                   android:paddingLeft="15dp"
                   android:paddingRight="15dp"
@@ -41,8 +40,8 @@
         <TextView android:id="@+id/suggestions_prompt_no"
                   android:layout_height="wrap_content"
                   android:layout_width="wrap_content"
-                  android:textSize="14sp"
                   android:layout_marginLeft="6dip"
+                  android:textAppearance="@style/TextAppearance.Widget.SuggestionsPrompt"
                   android:background="@drawable/suggestion_selector"
                   android:nextFocusRight="@+id/suggestions_prompt_no"
                   android:paddingLeft="15dp"
