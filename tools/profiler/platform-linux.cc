@@ -403,9 +403,20 @@ bool Sampler::RegisterCurrentThread(const char* aName,
 
   mozilla::MutexAutoLock lock(*Sampler::sRegisteredThreadsMutex);
 
+  int id = gettid();
+  for (uint32_t i = 0; i < sRegisteredThreads->size(); i++) {
+    ThreadInfo* info = sRegisteredThreads->at(i);
+    if (info->ThreadId() == id) {
+      // Thread already registered. This means the first unregister will be
+      // too early.
+      ASSERT(false);
+      return false;
+    }
+  }
+
   set_tls_stack_top(stackTop);
 
-  ThreadInfo* info = new ThreadInfo(aName, gettid(),
+  ThreadInfo* info = new ThreadInfo(aName, id,
     aIsMainThread, aPseudoStack, stackTop);
 
   if (sActiveSampler) {
