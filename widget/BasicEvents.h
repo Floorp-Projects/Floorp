@@ -62,8 +62,8 @@ enum nsEventStructType
   NS_CONTENT_COMMAND_EVENT,          // WidgetContentCommandEvent
   NS_PLUGIN_EVENT,                   // WidgetPluginEvent
 
-  // DOM events
-  NS_MUTATION_EVENT,                 // nsMutationEvent
+  // MutationEvent.h (content/events/public)
+  NS_MUTATION_EVENT,                 // InternalMutationEvent
 
   // Follwoing struct type values are ugly.  They indicate other struct type
   // actually.  However, they are used for distinguishing which DOM event
@@ -193,7 +193,15 @@ enum nsEventStructType
 #define NS_SCROLLPORT_UNDERFLOW       (NS_SCROLLPORT_START)
 #define NS_SCROLLPORT_OVERFLOW        (NS_SCROLLPORT_START+1)
 
-// Mutation events defined elsewhere starting at 1800
+#define NS_MUTATION_START                    1800
+#define NS_MUTATION_SUBTREEMODIFIED          (NS_MUTATION_START)
+#define NS_MUTATION_NODEINSERTED             (NS_MUTATION_START+1)
+#define NS_MUTATION_NODEREMOVED              (NS_MUTATION_START+2)
+#define NS_MUTATION_NODEREMOVEDFROMDOCUMENT  (NS_MUTATION_START+3)
+#define NS_MUTATION_NODEINSERTEDINTODOCUMENT (NS_MUTATION_START+4)
+#define NS_MUTATION_ATTRMODIFIED             (NS_MUTATION_START+5)
+#define NS_MUTATION_CHARACTERDATAMODIFIED    (NS_MUTATION_START+6)
+#define NS_MUTATION_END                      (NS_MUTATION_START+6)
 
 #define NS_USER_DEFINED_EVENT         2000
  

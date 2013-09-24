@@ -3,19 +3,22 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef nsMutationEvent_h__
-#define nsMutationEvent_h__
+#ifndef mozilla_MutationEvent_h__
+#define mozilla_MutationEvent_h__
 
-#include "nsGUIEvent.h"
-#include "nsIDOMNode.h"
+#include "mozilla/BasicEvents.h"
+#include "nsCOMPtr.h"
 #include "nsIAtom.h"
+#include "nsIDOMNode.h"
 
-class nsMutationEvent : public nsEvent
+namespace mozilla {
+
+class InternalMutationEvent : public WidgetEvent
 {
 public:
-  nsMutationEvent(bool isTrusted, uint32_t msg)
-    : nsEvent(isTrusted, msg, NS_MUTATION_EVENT),
-      mAttrChange(0)
+  InternalMutationEvent(bool aIsTrusted, uint32_t aMessage) :
+    WidgetEvent(aIsTrusted, aMessage, NS_MUTATION_EVENT),
+    mAttrChange(0)
   {
     mFlags.mCancelable = false;
   }
@@ -26,7 +29,8 @@ public:
   nsCOMPtr<nsIAtom>    mNewAttrValue;
   unsigned short       mAttrChange;
 
-  void AssignMutationEventData(const nsMutationEvent& aEvent, bool aCopyTargets)
+  void AssignMutationEventData(const InternalMutationEvent& aEvent,
+                               bool aCopyTargets)
   {
     AssignEventData(aEvent, aCopyTargets);
 
@@ -37,16 +41,6 @@ public:
     mAttrChange = aEvent.mAttrChange;
   }
 };
-
-#define NS_MUTATION_START           1800
-#define NS_MUTATION_SUBTREEMODIFIED                   (NS_MUTATION_START)
-#define NS_MUTATION_NODEINSERTED                      (NS_MUTATION_START+1)
-#define NS_MUTATION_NODEREMOVED                       (NS_MUTATION_START+2)
-#define NS_MUTATION_NODEREMOVEDFROMDOCUMENT           (NS_MUTATION_START+3)
-#define NS_MUTATION_NODEINSERTEDINTODOCUMENT          (NS_MUTATION_START+4)
-#define NS_MUTATION_ATTRMODIFIED                      (NS_MUTATION_START+5)
-#define NS_MUTATION_CHARACTERDATAMODIFIED             (NS_MUTATION_START+6)
-#define NS_MUTATION_END                               (NS_MUTATION_START+6)
 
 // Bits are actually checked to optimize mutation event firing.
 // That's why I don't number from 0x00.  The first event should
@@ -59,4 +53,9 @@ public:
 #define NS_EVENT_BITS_MUTATION_ATTRMODIFIED                   0x20
 #define NS_EVENT_BITS_MUTATION_CHARACTERDATAMODIFIED          0x40
 
-#endif // nsMutationEvent_h__
+} // namespace mozilla
+
+// TODO: Remove following typedef
+typedef mozilla::InternalMutationEvent nsMutationEvent;
+
+#endif // mozilla_MutationEvent_h__

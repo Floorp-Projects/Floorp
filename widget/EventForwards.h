@@ -97,10 +97,10 @@ class InternalAnimationEvent;
 class WidgetCommandEvent;
 class WidgetContentCommandEvent;
 class WidgetPluginEvent;
-} // namespace mozilla
 
-// content/events/public/nsMutationEvent.h
-class nsMutationEvent;
+// MutationEvent.h (content/events/public)
+class InternalMutationEvent;
+} // namespace mozilla
 
 // TODO: Remove following typedefs
 typedef mozilla::WidgetEvent               nsEvent;
@@ -139,5 +139,6 @@ typedef mozilla::InternalAnimationEvent    nsAnimationEvent;
 typedef mozilla::WidgetContentCommandEvent nsContentCommandEvent;
 typedef mozilla::WidgetCommandEvent        nsCommandEvent;
 typedef mozilla::WidgetPluginEvent         nsPluginEvent;
+typedef mozilla::InternalMutationEvent     nsMutationEvent;
 
 #endif // mozilla_EventForwards_h__

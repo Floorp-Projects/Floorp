@@ -120,7 +120,7 @@
 #include "nsDateTimeFormatCID.h"
 #include "nsIDateTimeFormat.h"
 #include "nsEventDispatcher.h"
-#include "nsMutationEvent.h"
+#include "mozilla/MutationEvent.h"
 #include "nsDOMCID.h"
 
 #include "jsapi.h"
