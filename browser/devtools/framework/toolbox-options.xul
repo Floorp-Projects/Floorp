@@ -74,21 +74,11 @@
             <checkbox label="&options.enableChrome.label3;"
                       tooltiptext="&options.enableChrome.tooltip;"
                       data-pref="devtools.chrome.enabled"/>
-            <label class="options-citation-label"
-                   value="&options.context.requiresRestart2;"/>
-            <label class="text-link"
-                   onclick="restart()"
-                   value="&options.restartButton.label;"/>
           </hbox>
           <hbox class="hidden-labels-box">
             <checkbox label="&options.enableRemote.label3;"
                       tooltiptext="&options.enableRemote.tooltip;"
                       data-pref="devtools.debugger.remote-enabled"/>
-            <label class="options-citation-label"
-                   value="&options.context.requiresRestart2;"/>
-            <label class="text-link"
-                   onclick="restart()"
-                   value="&options.restartButton.label;"/>
           </hbox>
         </vbox>
       </vbox>
