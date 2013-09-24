@@ -631,6 +631,16 @@ PostWriteBarrier(JSRuntime *rt, JSObject *obj)
     JS_ASSERT(!IsInsideNursery(rt, obj));
     rt->gcStoreBuffer.putWholeCell(obj);
 }
+
+void
+PostGlobalWriteBarrier(JSRuntime *rt, JSObject *obj)
+{
+    JS_ASSERT(obj->is<GlobalObject>());
+    if (!obj->compartment()->globalWriteBarriered) {
+        PostWriteBarrier(rt, obj);
+        obj->compartment()->globalWriteBarriered = true;
+    }
+}
 #endif
 
 uint32_t
