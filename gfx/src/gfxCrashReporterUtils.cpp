@@ -25,7 +25,7 @@
 #include "nsIObserverService.h"         // for nsIObserverService
 #include "nsIRunnable.h"                // for nsIRunnable
 #include "nsISupports.h"
-#include "nsStringGlue.h"               // for nsAutoCString, nsCString, etc
+#include "nsString.h"               // for nsAutoCString, nsCString, etc
 #include "nsTArray.h"                   // for nsTArray
 #include "nsThreadUtils.h"              // for NS_DispatchToMainThread, etc
 #include "nscore.h"                     // for NS_IMETHOD, NS_IMETHODIMP, etc

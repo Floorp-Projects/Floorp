@@ -19,10 +19,16 @@ var commandsPeerConnection = [
     }
   ],
   [
-    'PC_CHECK_INITIAL_SIGNALINGSTATE',
+    'PC_LOCAL_CHECK_INITIAL_SIGNALINGSTATE',
     function (test) {
       is(test.pcLocal.signalingState, "stable",
          "Initial local signalingState is 'stable'");
+      test.next();
+    }
+  ],
+  [
+    'PC_REMOTE_CHECK_INITIAL_SIGNALINGSTATE',
+    function (test) {
       is(test.pcRemote.signalingState, "stable",
          "Initial remote signalingState is 'stable'");
       test.next();
@@ -34,6 +40,10 @@ var commandsPeerConnection = [
       test.createOffer(test.pcLocal, function () {
         is(test.pcLocal.signalingState, "stable",
            "Local create offer does not change signaling state");
+        if (!test.pcRemote) {
+          send_message({"offer": test.pcLocal._last_offer,
+                        "media_constraints": test.pcLocal.constraints});
+        }
         test.next();
       });
     }
@@ -49,9 +59,26 @@ var commandsPeerConnection = [
     }
   ],
   [
+    'PC_REMOTE_GET_OFFER',
+    function (test) {
+      if (test.pcLocal) {
+        test._local_offer = test.pcLocal._last_offer;
+        test._local_constraints = test.pcLocal.constraints;
+        test.next();
+      } else {
+        wait_for_message().then(function(message) {
+          ok("offer" in message, "Got an offer message");
+          test._local_offer = new mozRTCSessionDescription(message.offer);
+          test._local_constraints = message.media_constraints;
+          test.next();
+        });
+      }
+    }
+  ],
+  [
     'PC_REMOTE_SET_REMOTE_DESCRIPTION',
     function (test) {
-      test.setRemoteDescription(test.pcRemote, test.pcLocal._last_offer, function () {
+      test.setRemoteDescription(test.pcRemote, test._local_offer, function () {
         is(test.pcRemote.signalingState, "have-remote-offer",
            "signalingState after remote setRemoteDescription is 'have-remote-offer'");
         test.next();
@@ -64,14 +91,35 @@ var commandsPeerConnection = [
       test.createAnswer(test.pcRemote, function () {
         is(test.pcRemote.signalingState, "have-remote-offer",
            "Remote createAnswer does not change signaling state");
+        if (!test.pcLocal) {
+          send_message({"answer": test.pcRemote._last_answer,
+                        "media_constraints": test.pcRemote.constraints});
+        }
         test.next();
       });
     }
   ],
   [
+    'PC_LOCAL_GET_ANSWER',
+    function (test) {
+      if (test.pcRemote) {
+        test._remote_answer = test.pcRemote._last_answer;
+        test._remote_constraints = test.pcRemote.constraints;
+        test.next();
+      } else {
+        wait_for_message().then(function(message) {
+          ok("answer" in message, "Got an answer message");
+          test._remote_answer = new mozRTCSessionDescription(message.answer);
+          test._remote_constraints = message.media_constraints;
+          test.next();
+        });
+      }
+    }
+  ],
+  [
     'PC_LOCAL_SET_REMOTE_DESCRIPTION',
     function (test) {
-      test.setRemoteDescription(test.pcLocal, test.pcRemote._last_answer, function () {
+      test.setRemoteDescription(test.pcLocal, test._remote_answer, function () {
         is(test.pcLocal.signalingState, "stable",
            "signalingState after local setRemoteDescription is 'stable'");
         test.next();
@@ -91,14 +139,14 @@ var commandsPeerConnection = [
   [
     'PC_LOCAL_CHECK_MEDIA_STREAMS',
     function (test) {
-      test.pcLocal.checkMediaStreams(test.pcRemote.constraints);
+      test.pcLocal.checkMediaStreams(test._remote_constraints);
       test.next();
     }
   ],
   [
     'PC_REMOTE_CHECK_MEDIA_STREAMS',
     function (test) {
-      test.pcRemote.checkMediaStreams(test.pcLocal.constraints);
+      test.pcRemote.checkMediaStreams(test._local_constraints);
       test.next();
     }
   ],

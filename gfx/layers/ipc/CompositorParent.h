@@ -172,7 +172,7 @@ public:
    * A new child process has been configured to push transactions
    * directly to us.  Transport is to its thread context.
    */
-  static PCompositorParent*
+  static bool
   Create(Transport* aTransport, ProcessId aOtherProcess);
 
   /**

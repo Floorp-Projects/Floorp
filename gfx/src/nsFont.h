@@ -13,7 +13,7 @@
 #include "nsAutoPtr.h"                  // for nsRefPtr
 #include "nsCoord.h"                    // for nscoord
 #include "nsStringFwd.h"                // for nsSubstring
-#include "nsStringGlue.h"               // for nsString
+#include "nsString.h"               // for nsString
 #include "nsTArray.h"                   // for nsTArray
 
 struct gfxFontStyle;

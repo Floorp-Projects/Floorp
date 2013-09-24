@@ -231,6 +231,11 @@ class Assembler : public AssemblerX86Shared
     void mov(ImmPtr imm, Register dest) {
         movl(imm, dest);
     }
+    void mov(AsmJSImmPtr imm, Register dest) {
+        masm.movl_i32r(-1, dest.code());
+        AsmJSAbsoluteLink link(masm.currentOffset(), imm.kind());
+        enoughMemory_ &= asmJSAbsoluteLinks_.append(link);
+    }
     void mov(Imm32 imm, Register dest) {
         movl(imm, dest);
     }
@@ -291,6 +296,11 @@ class Assembler : public AssemblerX86Shared
             MOZ_ASSUME_UNREACHABLE("unexpected operand kind");
         }
     }
+    void cmpl(const AsmJSAbsoluteAddress &lhs, const Register &rhs) {
+        masm.cmpl_rm_force32(rhs.code(), (void*)-1);
+        AsmJSAbsoluteLink link(masm.currentOffset(), lhs.kind());
+        enoughMemory_ &= asmJSAbsoluteLinks_.append(link);
+    }
     CodeOffsetLabel cmplWithPatch(const Register &lhs, Imm32 rhs) {
         masm.cmpl_ir_force32(rhs.value, lhs.code());
         return masm.currentOffset();
@@ -322,6 +332,13 @@ class Assembler : public AssemblerX86Shared
     void call(ImmPtr target) {
         JmpSrc src = masm.call();
         addPendingJump(src, target, Relocation::HARDCODED);
+    }
+    void call(AsmJSImmPtr target) {
+        // Moving to a register is suboptimal. To fix (use a single
+        // call-immediate instruction) we'll need to distinguish a new type of
+        // relative patch to an absolute address in AsmJSAbsoluteLink.
+        mov(target, eax);
+        call(eax);
     }
 
     // Emit a CALL or CMP (nop) instruction. ToggleCall can be used to patch

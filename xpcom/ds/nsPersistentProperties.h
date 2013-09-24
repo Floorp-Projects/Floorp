@@ -9,7 +9,7 @@
 #include "nsIPersistentProperties2.h"
 #include "pldhash.h"
 #include "plarena.h"
-#include "nsStringGlue.h"
+#include "nsString.h"
 #include "nsCOMPtr.h"
 #include "mozilla/Attributes.h"
 

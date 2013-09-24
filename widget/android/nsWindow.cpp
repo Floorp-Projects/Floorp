@@ -51,7 +51,7 @@ using mozilla::unused;
 
 #include "imgIEncoder.h"
 
-#include "nsStringGlue.h"
+#include "nsString.h"
 #include "GeckoProfiler.h" // For PROFILER_LABEL
 
 using namespace mozilla;

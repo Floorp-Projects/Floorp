@@ -14,7 +14,7 @@
 #include "nsCycleCollectionParticipant.h"
 #include "nsDebug.h"
 #include "nsDOMEventTargetHelper.h"
-#include "nsStringGlue.h"
+#include "nsString.h"
 #include "nsTArray.h"
 
 #define BEGIN_TELEPHONY_NAMESPACE \

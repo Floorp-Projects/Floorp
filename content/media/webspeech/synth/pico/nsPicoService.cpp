@@ -9,6 +9,7 @@
 #include "nsPrintfCString.h"
 #include "nsIWeakReferenceUtils.h"
 #include "SharedBuffer.h"
+#include "nsISimpleEnumerator.h"
 
 #include "mozilla/dom/nsSynthVoiceRegistry.h"
 #include "mozilla/dom/nsSpeechTask.h"

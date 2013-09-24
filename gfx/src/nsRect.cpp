@@ -6,7 +6,7 @@
 #include "nsRect.h"
 #include "mozilla/gfx/Types.h"          // for NS_SIDE_BOTTOM, etc
 #include "nsDeviceContext.h"            // for nsDeviceContext
-#include "nsStringGlue.h"               // for nsAutoString, etc
+#include "nsString.h"               // for nsAutoString, etc
 #include "prtypes.h"                    // for PR_STATIC_ASSERT
 #include "nsMargin.h"                   // for nsMargin
 

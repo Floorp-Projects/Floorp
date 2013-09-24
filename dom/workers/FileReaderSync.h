@@ -11,7 +11,7 @@
 #include "mozilla/dom/workers/bindings/DOMBindingBase.h"
 
 #include "nsICharsetDetectionObserver.h"
-#include "nsStringGlue.h"
+#include "nsString.h"
 #include "mozilla/Attributes.h"
 
 class nsIInputStream;
