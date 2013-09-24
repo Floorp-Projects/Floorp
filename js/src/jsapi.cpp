@@ -5946,7 +5946,10 @@ JS_ReportPendingException(JSContext *cx)
     AssertHeapIsIdle(cx);
     CHECK_REQUEST(cx);
 
-    return js_ReportUncaughtException(cx);
+    // This can only fail due to oom.
+    bool ok = js_ReportUncaughtException(cx);
+    JS_ASSERT(!cx->isExceptionPending());
+    return ok;
 }
 
 struct JSExceptionState {
