@@ -10,6 +10,7 @@
 
 #include "nsIIDBKeyRange.h"
 
+#include <algorithm>
 #include "mozilla/dom/ContentChild.h"
 #include "mozilla/dom/ContentParent.h"
 #include "mozilla/dom/ipc/Blob.h"
@@ -563,6 +564,7 @@ IDBIndex::GetAllKeysInternal(IDBKeyRange* aKeyRange, uint32_t aLimit,
   IDBTransaction* transaction = mObjectStore->Transaction();
   if (!transaction->IsOpen()) {
     aRv.Throw(NS_ERROR_DOM_INDEXEDDB_TRANSACTION_INACTIVE_ERR);
+    return nullptr;
   }
 
   nsRefPtr<IDBRequest> request = GenerateRequest(this);
@@ -1367,10 +1369,11 @@ GetHelper::UnpackResponseFromParentProcess(const ResponseValue& aResponseValue)
 nsresult
 GetAllKeysHelper::DoDatabaseWork(mozIStorageConnection* /* aConnection */)
 {
-  NS_ASSERTION(!NS_IsMainThread(), "Wrong thread!");
-  NS_ASSERTION(IndexedDatabaseManager::IsMainProcess(), "Wrong process!");
+  MOZ_ASSERT(!NS_IsMainThread());
+  MOZ_ASSERT(IndexedDatabaseManager::IsMainProcess());
 
-  PROFILER_LABEL("IndexedDB", "GetAllKeysHelper::DoDatabaseWork");
+  PROFILER_LABEL("IndexedDB",
+                 "GetAllKeysHelper::DoDatabaseWork [IDBIndex.cpp]");
 
   nsCString tableName;
   if (mIndex->IsUnique()) {
@@ -1410,7 +1413,7 @@ GetAllKeysHelper::DoDatabaseWork(mozIStorageConnection* /* aConnection */)
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
-  mKeys.SetCapacity(50);
+  mKeys.SetCapacity(std::min<uint32_t>(50, mLimit));
 
   bool hasResult;
   while(NS_SUCCEEDED((rv = stmt->ExecuteStep(&hasResult))) && hasResult) {
@@ -1433,7 +1436,12 @@ nsresult
 GetAllKeysHelper::GetSuccessResult(JSContext* aCx,
                                    JS::MutableHandle<JS::Value> aVal)
 {
-  NS_ASSERTION(mKeys.Length() <= mLimit, "Too many results!");
+  MOZ_ASSERT(NS_IsMainThread());
+  MOZ_ASSERT(mKeys.Length() <= mLimit);
+
+  PROFILER_MAIN_THREAD_LABEL("IndexedDB",
+                             "GetAllKeysHelper::GetSuccessResult "
+                             "[IDBIndex.cpp]");
 
   nsTArray<Key> keys;
   mKeys.SwapElements(keys);
@@ -1475,11 +1483,12 @@ GetAllKeysHelper::GetSuccessResult(JSContext* aCx,
 nsresult
 GetAllKeysHelper::PackArgumentsForParentProcess(IndexRequestParams& aParams)
 {
-  NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
-  NS_ASSERTION(!IndexedDatabaseManager::IsMainProcess(), "Wrong process!");
+  MOZ_ASSERT(NS_IsMainThread());
+  MOZ_ASSERT(!IndexedDatabaseManager::IsMainProcess());
 
   PROFILER_MAIN_THREAD_LABEL("IndexedDB",
-                             "GetAllKeysHelper::PackArgumentsForParentProcess");
+                             "GetAllKeysHelper::PackArgumentsForParentProcess "
+                             "[IDBIndex.cpp]");
 
   GetAllKeysParams params;
 
@@ -1501,11 +1510,12 @@ GetAllKeysHelper::PackArgumentsForParentProcess(IndexRequestParams& aParams)
 AsyncConnectionHelper::ChildProcessSendResult
 GetAllKeysHelper::SendResponseToChildProcess(nsresult aResultCode)
 {
-  NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
-  NS_ASSERTION(IndexedDatabaseManager::IsMainProcess(), "Wrong process!");
+  MOZ_ASSERT(NS_IsMainThread());
+  MOZ_ASSERT(IndexedDatabaseManager::IsMainProcess());
 
   PROFILER_MAIN_THREAD_LABEL("IndexedDB",
-                             "GetAllKeysHelper::SendResponseToChildProcess");
+                             "GetAllKeysHelper::SendResponseToChildProcess "
+                             "[IDBIndex.cpp]");
 
   IndexedDBRequestParentBase* actor = mRequest->GetActorParent();
   NS_ASSERTION(actor, "How did we get this far without an actor?");
@@ -1531,8 +1541,9 @@ nsresult
 GetAllKeysHelper::UnpackResponseFromParentProcess(
                                             const ResponseValue& aResponseValue)
 {
-  NS_ASSERTION(aResponseValue.type() == ResponseValue::TGetAllKeysResponse,
-               "Bad response type!");
+  MOZ_ASSERT(NS_IsMainThread());
+  MOZ_ASSERT(!IndexedDatabaseManager::IsMainProcess());
+  MOZ_ASSERT(aResponseValue.type() == ResponseValue::TGetAllKeysResponse);
 
   mKeys.AppendElements(aResponseValue.get_GetAllKeysResponse().keys());
   return NS_OK;
