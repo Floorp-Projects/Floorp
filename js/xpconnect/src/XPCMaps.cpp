@@ -157,7 +157,7 @@ Native2WrappedNativeMap::SizeOfEntryExcludingThis(PLDHashEntryHdr *hdr,
 /***************************************************************************/
 // implement IID2WrappedJSClassMap...
 
-struct PLDHashTableOps IID2WrappedJSClassMap::Entry::sOps =
+const struct PLDHashTableOps IID2WrappedJSClassMap::Entry::sOps =
 {
     PL_DHashAllocTable,
     PL_DHashFreeTable,
@@ -194,7 +194,7 @@ IID2WrappedJSClassMap::~IID2WrappedJSClassMap()
 /***************************************************************************/
 // implement IID2NativeInterfaceMap...
 
-struct PLDHashTableOps IID2NativeInterfaceMap::Entry::sOps =
+const struct PLDHashTableOps IID2NativeInterfaceMap::Entry::sOps =
 {
     PL_DHashAllocTable,
     PL_DHashFreeTable,
@@ -401,7 +401,7 @@ NativeSetMap::Entry::Match(PLDHashTable *table,
     return true;
 }
 
-struct PLDHashTableOps NativeSetMap::Entry::sOps =
+const struct PLDHashTableOps NativeSetMap::Entry::sOps =
 {
     PL_DHashAllocTable,
     PL_DHashFreeTable,
@@ -468,7 +468,7 @@ IID2ThisTranslatorMap::Entry::Clear(PLDHashTable *table, PLDHashEntryHdr *entry)
     memset(entry, 0, table->entrySize);
 }
 
-struct PLDHashTableOps IID2ThisTranslatorMap::Entry::sOps =
+const struct PLDHashTableOps IID2ThisTranslatorMap::Entry::sOps =
 {
     PL_DHashAllocTable,
     PL_DHashFreeTable,
@@ -548,7 +548,7 @@ XPCNativeScriptableSharedMap::Entry::Match(PLDHashTable *table,
     return 0 == strcmp(name1, name2);
 }
 
-struct PLDHashTableOps XPCNativeScriptableSharedMap::Entry::sOps =
+const struct PLDHashTableOps XPCNativeScriptableSharedMap::Entry::sOps =
 {
     PL_DHashAllocTable,
     PL_DHashFreeTable,

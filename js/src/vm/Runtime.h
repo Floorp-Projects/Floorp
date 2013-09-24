@@ -1393,10 +1393,10 @@ struct JSRuntime : public JS::shadow::Runtime,
     }
 
   private:
-    JSPrincipals        *trustedPrincipals_;
+    const JSPrincipals  *trustedPrincipals_;
   public:
-    void setTrustedPrincipals(JSPrincipals *p) { trustedPrincipals_ = p; }
-    JSPrincipals *trustedPrincipals() const { return trustedPrincipals_; }
+    void setTrustedPrincipals(const JSPrincipals *p) { trustedPrincipals_ = p; }
+    const JSPrincipals *trustedPrincipals() const { return trustedPrincipals_; }
 
     // Set of all currently-living atoms, and the compartment in which they
     // reside. The atoms compartment is additionally used to hold runtime
