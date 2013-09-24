@@ -42,10 +42,10 @@ enum nsEventStructType
   NS_MOUSE_SCROLL_EVENT,             // WidgetMouseScrollEvent
   NS_WHEEL_EVENT,                    // WidgetWheelEvent
 
-  // Touchpad related events
-  NS_GESTURENOTIFY_EVENT,            // nsGestureNotifyEvent
-  NS_SIMPLE_GESTURE_EVENT,           // nsSimpleGestureEvent
-  NS_TOUCH_EVENT,                    // nsTouchEvent
+  // TouchEvents.h
+  NS_GESTURENOTIFY_EVENT,            // WidgetGestureNotifyEvent
+  NS_SIMPLE_GESTURE_EVENT,           // WidgetSimpleGestureEvent
+  NS_TOUCH_EVENT,                    // WidgetTouchEvent
 
   // Scroll related events
   NS_SCROLLPORT_EVENT,               // nsScrollPortEvent
