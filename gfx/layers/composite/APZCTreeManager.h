@@ -164,6 +164,14 @@ public:
                                   nsInputEvent* aOutEvent);
 
   /**
+   * nsInputEvent handler with inline dom transform of the passed in
+   * nsInputEvent. Must be called on the main thread.
+   *
+   * @param aEvent input event object
+   */
+  nsEventStatus ReceiveInputEvent(nsInputEvent& aEvent);
+
+  /**
    * Updates the composition bounds, i.e. the dimensions of the final size of
    * the frame this is tied to during composition onto, in device pixels. In
    * general, this will just be:

@@ -427,6 +427,32 @@ APZCTreeManager::ReceiveInputEvent(const nsInputEvent& aEvent,
   }
 }
 
+nsEventStatus
+APZCTreeManager::ReceiveInputEvent(nsInputEvent& aEvent)
+{
+  MOZ_ASSERT(NS_IsMainThread());
+
+  switch (aEvent.eventStructType) {
+    case NS_TOUCH_EVENT: {
+      nsTouchEvent& touchEvent = static_cast<nsTouchEvent&>(aEvent);
+      if (!touchEvent.touches.Length()) {
+        return nsEventStatus_eIgnore;
+      }
+      if (touchEvent.message == NS_TOUCH_START) {
+        ScreenPoint point = ScreenPoint(touchEvent.touches[0]->mRefPoint.x, touchEvent.touches[0]->mRefPoint.y);
+        mApzcForInputBlock = GetTouchInputBlockAPZC(touchEvent, point);
+      }
+      if (!mApzcForInputBlock) {
+        return nsEventStatus_eIgnore;
+      }
+      return ProcessTouchEvent(touchEvent, &touchEvent);
+    }
+    default: {
+      return ProcessEvent(aEvent, &aEvent);
+    }
+  }
+}
+
 void
 APZCTreeManager::UpdateCompositionBounds(const ScrollableLayerGuid& aGuid,
                                          const ScreenIntRect& aCompositionBounds)
