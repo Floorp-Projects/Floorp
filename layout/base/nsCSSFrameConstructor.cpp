@@ -1031,6 +1031,10 @@ nsFrameConstructorState::PushFloatContainingBlock(nsIFrame* aNewFloatContainingB
   NS_PRECONDITION(!aNewFloatContainingBlock ||
                   aNewFloatContainingBlock->IsFloatContainingBlock(),
                   "Please push a real float containing block!");
+  NS_ASSERTION(!aNewFloatContainingBlock ||
+               !ShouldSuppressFloatingOfDescendants(aNewFloatContainingBlock),
+               "We should not push a frame that is supposed to _suppress_ "
+               "floats as a float containing block!");
   aSaveState.mItems = &mFloatedItems;
   aSaveState.mSavedItems = mFloatedItems;
   aSaveState.mChildListID = nsIFrame::kFloatList;
@@ -3588,12 +3592,11 @@ nsCSSFrameConstructor::ConstructFrameFromItemInternal(FrameConstructionItem& aIt
     }
 
     if (bits & FCDATA_USE_CHILD_ITEMS) {
-      NS_ASSERTION(!ShouldSuppressFloatingOfDescendants(newFrame),
-                   "uh oh -- this frame is supposed to _suppress_ floats, but "
-                   "we're about to push it as a float containing block...");
-
       nsFrameConstructorSaveState floatSaveState;
-      if (newFrame->IsFloatContainingBlock()) {
+
+      if (ShouldSuppressFloatingOfDescendants(newFrame)) {
+        aState.PushFloatContainingBlock(nullptr, floatSaveState);
+      } else if (newFrame->IsFloatContainingBlock()) {
         aState.PushFloatContainingBlock(newFrame, floatSaveState);
       }
       ConstructFramesFromItemList(aState, aItem.mChildItems, newFrame,
