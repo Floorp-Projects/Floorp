@@ -248,8 +248,6 @@ js::DestroyContext(JSContext *cx, DestroyContextMode mode)
     cx->remove();
     bool last = !rt->hasContexts();
     if (last) {
-        JS_ASSERT(!rt->isHeapBusy());
-
         /*
          * Dump remaining type inference results while we still have a context.
          * This printing depends on atoms still existing.
