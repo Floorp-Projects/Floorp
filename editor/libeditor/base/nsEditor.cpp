@@ -44,7 +44,6 @@
 #include "nsEditorEventListener.h"      // for nsEditorEventListener
 #include "nsEditorUtils.h"              // for nsAutoRules, etc
 #include "nsError.h"                    // for NS_OK, etc
-#include "nsEvent.h"                    // for nsEventStatus, etc
 #include "nsFocusManager.h"             // for nsFocusManager
 #include "nsFrameSelection.h"           // for nsFrameSelection
 #include "nsGUIEvent.h"                 // for nsKeyEvent, nsEvent, etc

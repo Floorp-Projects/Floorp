@@ -9,13 +9,13 @@
 #define nsCanvasFrame_h___
 
 #include "mozilla/Attributes.h"
+#include "mozilla/EventForwards.h"
 #include "nsContainerFrame.h"
 #include "nsIScrollPositionListener.h"
 #include "nsDisplayList.h"
 
 class nsPresContext;
 class nsRenderingContext;
-class nsEvent;
 
 /**
  * Root frame class.

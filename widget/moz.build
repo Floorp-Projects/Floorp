@@ -99,7 +99,6 @@ MODULE = 'widget'
 
 EXPORTS += [
     'InputData.h',
-    'nsEvent.h',
     'nsGUIEvent.h',
     'nsIDeviceContextSpec.h',
     'nsINativeKeyBindings.h',
@@ -112,6 +111,7 @@ EXPORTS += [
 ]
 
 EXPORTS.mozilla += [
+    'EventForwards.h',
     'LookAndFeel.h',
     'WidgetUtils.h',
 ]

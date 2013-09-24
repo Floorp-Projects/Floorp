@@ -8,10 +8,10 @@
 // Moz headers (alphabetical)
 #include "keyboardlayout.h"   // mModifierKeyState
 #include "nsBaseHashtable.h"  // mTouches
-#include "nsGUIEvent.h"       // mTouchEvent (nsTouchEvent)
 #include "nsHashKeys.h"       // type of key for mTouches
 #include "mozwrlbase.h"
 #include "nsDeque.h"
+#include "mozilla/EventForwards.h"
 
 // System headers (alphabetical)
 #include <EventToken.h>     // EventRegistrationToken
@@ -21,8 +21,6 @@
 
 // Moz forward declarations
 class MetroWidget;
-enum nsEventStatus;
-class nsGUIEvent;
 struct nsIntPoint;
 
 namespace mozilla {

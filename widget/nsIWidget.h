@@ -11,11 +11,11 @@
 #include "nsRect.h"
 #include "nsString.h"
 
-#include "nsEvent.h"
 #include "nsCOMPtr.h"
 #include "nsWidgetInitData.h"
 #include "nsTArray.h"
 #include "nsXULAppAPI.h"
+#include "mozilla/EventForwards.h"
 #include "mozilla/layers/LayersTypes.h"
 #include "mozilla/RefPtr.h"
 #include "Units.h"
@@ -26,7 +26,6 @@ class   nsRenderingContext;
 class   nsDeviceContext;
 struct  nsFont;
 class   nsIRollupListener;
-class   nsGUIEvent;
 class   imgIContainer;
 class   gfxASurface;
 class   nsIContent;

@@ -7,8 +7,8 @@
 #ifndef nsEventDispatcher_h___
 #define nsEventDispatcher_h___
 
+#include "mozilla/EventForwards.h"
 #include "nsCOMPtr.h"
-#include "nsEvent.h"
 
 class nsEventTargetChainItem;
 class nsIDOMEvent;
