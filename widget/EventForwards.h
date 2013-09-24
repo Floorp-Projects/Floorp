@@ -28,25 +28,6 @@ enum nsEventStatus
 
 namespace mozilla {
 
-/**
- * All modifier keys should be defined here.  This is used for managing
- * modifier states for DOM Level 3 or later.
- */
-enum Modifier
-{
-  MODIFIER_ALT        = 0x0001,
-  MODIFIER_ALTGRAPH   = 0x0002,
-  MODIFIER_CAPSLOCK   = 0x0004,
-  MODIFIER_CONTROL    = 0x0008,
-  MODIFIER_FN         = 0x0010,
-  MODIFIER_META       = 0x0020,
-  MODIFIER_NUMLOCK    = 0x0040,
-  MODIFIER_SCROLLLOCK = 0x0080,
-  MODIFIER_SHIFT      = 0x0100,
-  MODIFIER_SYMBOLLOCK = 0x0200,
-  MODIFIER_OS         = 0x0400
-};
-
 typedef uint16_t Modifiers;
 
 #define NS_DEFINE_KEYNAME(aCPPName, aDOMKeyName) \
@@ -71,12 +52,12 @@ enum KeyNameIndex
 // BasicEvents.h
 namespace mozilla {
 struct EventFlags;
-} // namespace mozilla
 
-class nsEvent;
-class nsGUIEvent;
-class nsInputEvent;
-class nsUIEvent;
+class WidgetEvent;
+class WidgetGUIEvent;
+class WidgetInputEvent;
+class InternalUIEvent;
+} // namespace mozilla
 
 // TextEvents.h
 struct nsAlternativeCharCode;
@@ -121,5 +102,11 @@ class nsPluginEvent;
 
 // content/events/public/nsMutationEvent.h
 class nsMutationEvent;
+
+// TODO: Remove following typedefs
+typedef mozilla::WidgetEvent      nsEvent;
+typedef mozilla::WidgetGUIEvent   nsGUIEvent;
+typedef mozilla::WidgetInputEvent nsInputEvent;
+typedef mozilla::InternalUIEvent  nsUIEvent;
 
 #endif // mozilla_EventForwards_h__
