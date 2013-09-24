@@ -23,7 +23,7 @@
 #include "gfxRect.h"
 #include "nsRect.h"
 #include "nsRegion.h"
-#include "gfxASurface.h"
+#include "gfxTypes.h"
 #include "mozilla/layers/LayersTypes.h"
 #include "mozilla/layers/CompositorTypes.h"
 #include "FrameMetrics.h"

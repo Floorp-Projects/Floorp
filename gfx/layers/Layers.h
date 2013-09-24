@@ -13,7 +13,7 @@
 #include "Units.h"                      // for LayerMargin, LayerPoint
 #include "gfx3DMatrix.h"                // for gfx3DMatrix
 #include "gfxContext.h"                 // for GraphicsOperator
-#include "gfxASurface.h"                // for gfxASurface, etc
+#include "gfxTypes.h"
 #include "gfxColor.h"                   // for gfxRGBA
 #include "gfxMatrix.h"                  // for gfxMatrix
 #include "gfxPattern.h"                 // for gfxPattern, etc
@@ -46,7 +46,7 @@
 #include "nscore.h"                     // for nsACString, nsAString
 #include "prlog.h"                      // for PRLogModuleInfo
 
-
+class gfxASurface;
 class gfxContext;
 
 extern uint8_t gLayerManagerLayerBuilder;

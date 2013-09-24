@@ -11,7 +11,7 @@
 #include "SurfaceTypes.h"
 #include "GLContextTypes.h"
 #include "nsAutoPtr.h"
-#include "gfxASurface.h"
+#include "gfxTypes.h"
 #include "mozilla/Mutex.h"
 
 #include <queue>

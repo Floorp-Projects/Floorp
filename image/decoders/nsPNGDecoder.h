@@ -9,7 +9,7 @@
 
 #include "Decoder.h"
 
-#include "gfxASurface.h"
+#include "gfxTypes.h"
 
 #include "nsCOMPtr.h"
 

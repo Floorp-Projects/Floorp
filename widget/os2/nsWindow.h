@@ -48,7 +48,7 @@
 #define _nswindow_h
 
 #include "nsBaseWidget.h"
-#include "gfxASurface.h"
+#include "gfxTypes.h"
 
 #define INCL_DOS
 #define INCL_WIN
@@ -71,6 +71,8 @@
 #ifndef WM_FOCUSCHANGED
 #define WM_FOCUSCHANGED 0x000E
 #endif
+
+class gfxASurface;
 
 extern "C" {
   PVOID  APIENTRY WinQueryProperty(HWND hwnd, PCSZ pszNameOrAtom);
