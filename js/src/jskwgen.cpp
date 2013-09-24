@@ -13,7 +13,7 @@
 
 #include "vm/Keywords.h"
 
-static const char * const keyword_list[] = {
+const char * const keyword_list[] = {
 #define KEYWORD_STRING(keyword, name, type, version) #keyword,
     FOR_EACH_JAVASCRIPT_KEYWORD(KEYWORD_STRING)
 #undef KEYWORD_STRING

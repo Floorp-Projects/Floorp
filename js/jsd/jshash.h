@@ -56,7 +56,7 @@ struct JSHashTable {
     JSHashFunction      keyHash;        /* key hash function */
     JSHashComparator    keyCompare;     /* key comparison function */
     JSHashComparator    valueCompare;   /* value comparison function */
-    const JSHashAllocOps *allocOps;     /* allocation operations */
+    JSHashAllocOps      *allocOps;      /* allocation operations */
     void                *allocPriv;     /* allocation private data */
 #ifdef JS_HASHMETER
     uint32_t            nlookups;       /* total number of lookups */
@@ -73,7 +73,7 @@ struct JSHashTable {
 extern JSHashTable * 
 JS_NewHashTable(uint32_t n, JSHashFunction keyHash,
                 JSHashComparator keyCompare, JSHashComparator valueCompare,
-                const JSHashAllocOps *allocOps, void *allocPriv);
+                JSHashAllocOps *allocOps, void *allocPriv);
 
 extern void
 JS_HashTableDestroy(JSHashTable *ht);

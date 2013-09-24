@@ -4790,7 +4790,7 @@ js::NewCompartment(JSContext *cx, Zone *zone, JSPrincipals *principals,
 
         zone->setGCLastBytes(8192, GC_NORMAL);
 
-        const JSPrincipals *trusted = rt->trustedPrincipals();
+        JSPrincipals *trusted = rt->trustedPrincipals();
         zone->isSystem = principals && principals == trusted;
     }
 
