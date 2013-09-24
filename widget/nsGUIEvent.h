@@ -8,103 +8,13 @@
 
 #include "mozilla/BasicEvents.h"
 #include "mozilla/ContentEvents.h"
+#include "mozilla/MiscEvents.h"
 #include "mozilla/MouseEvents.h"
 #include "mozilla/TextEvents.h"
 #include "mozilla/TouchEvents.h"
 
-#include "nsPoint.h"
-#include "nsRect.h"
-#include "nsWeakPtr.h"
-#include "nsITransferable.h"
-
 #define NS_EVENT_TYPE_NULL                   0
 #define NS_EVENT_TYPE_ALL                  1 // Not a real event type
-
-class nsContentCommandEvent : public nsGUIEvent
-{
-public:
-  nsContentCommandEvent(bool aIsTrusted, uint32_t aMsg, nsIWidget *aWidget,
-                        bool aOnlyEnabledCheck = false) :
-    nsGUIEvent(aIsTrusted, aMsg, aWidget, NS_CONTENT_COMMAND_EVENT),
-    mOnlyEnabledCheck(bool(aOnlyEnabledCheck)),
-    mSucceeded(false), mIsEnabled(false)
-  {
-  }
-
-  // NS_CONTENT_COMMAND_PASTE_TRANSFERABLE
-  nsCOMPtr<nsITransferable> mTransferable;                 // [in]
-
-  // NS_CONTENT_COMMAND_SCROLL
-  // for mScroll.mUnit
-  enum {
-    eCmdScrollUnit_Line,
-    eCmdScrollUnit_Page,
-    eCmdScrollUnit_Whole
-  };
-
-  struct ScrollInfo {
-    ScrollInfo() :
-      mAmount(0), mUnit(eCmdScrollUnit_Line), mIsHorizontal(false)
-    {
-    }
-
-    int32_t      mAmount;                                  // [in]
-    uint8_t      mUnit;                                    // [in]
-    bool mIsHorizontal;                            // [in]
-  } mScroll;
-
-  bool mOnlyEnabledCheck;                          // [in]
-
-  bool mSucceeded;                                 // [out]
-  bool mIsEnabled;                                 // [out]
-};
-
-/**
- * Command event
- *
- * Custom commands for example from the operating system.
- */
-
-class nsCommandEvent : public nsGUIEvent
-{
-public:
-  nsCommandEvent(bool isTrusted, nsIAtom* aEventType,
-                 nsIAtom* aCommand, nsIWidget* w)
-    : nsGUIEvent(isTrusted, NS_USER_DEFINED_EVENT, w, NS_COMMAND_EVENT)
-  {
-    userType = aEventType;
-    command = aCommand;
-  }
-
-  nsCOMPtr<nsIAtom> command;
-
-  // XXX Not tested by test_assign_event_data.html
-  void AssignCommandEventData(const nsCommandEvent& aEvent, bool aCopyTargets)
-  {
-    AssignGUIEventData(aEvent, aCopyTargets);
-
-    // command must have been initialized with the constructor.
-  }
-};
-
-/**
- * Native event pluginEvent for plugins.
- */
-
-class nsPluginEvent : public nsGUIEvent
-{
-public:
-  nsPluginEvent(bool isTrusted, uint32_t msg, nsIWidget *w)
-    : nsGUIEvent(isTrusted, msg, w, NS_PLUGIN_EVENT),
-      retargetToFocusedDocument(false)
-  {
-  }
-
-  // If TRUE, this event needs to be retargeted to focused document.
-  // Otherwise, never retargeted.
-  // Defaults to false.
-  bool retargetToFocusedDocument;
-};
 
 #define NS_IS_INPUT_EVENT(evnt) \
        (((evnt)->eventStructType == NS_INPUT_EVENT) || \
