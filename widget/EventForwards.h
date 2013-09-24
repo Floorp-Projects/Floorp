@@ -82,17 +82,17 @@ class WidgetWheelEvent;
 class WidgetGestureNotifyEvent;
 class WidgetSimpleGestureEvent;
 class WidgetTouchEvent;
-} // namespace mozilla
 
 // ContentEvents.h
-class nsScriptErrorEvent;
-class nsScrollPortEvent;
-class nsScrollAreaEvent;
-class nsFormEvent;
-class nsClipboardEvent;
-class nsFocusEvent;
-class nsTransitionEvent;
-class nsAnimationEvent;
+class InternalScriptErrorEvent;
+class InternalScrollPortEvent;
+class InternalScrollAreaEvent;
+class InternalFormEvent;
+class InternalClipboardEvent;
+class InternalFocusEvent;
+class InternalTransitionEvent;
+class InternalAnimationEvent;
+} // namespace mozilla
 
 // MiscEvents.h
 class nsCommandEvent;
@@ -128,5 +128,13 @@ typedef WidgetWheelEvent                  WheelEvent;
 typedef mozilla::WidgetGestureNotifyEvent nsGestureNotifyEvent;
 typedef mozilla::WidgetSimpleGestureEvent nsSimpleGestureEvent;
 typedef mozilla::WidgetTouchEvent         nsTouchEvent;
+typedef mozilla::InternalScriptErrorEvent nsScriptErrorEvent;
+typedef mozilla::InternalScrollPortEvent  nsScrollPortEvent;
+typedef mozilla::InternalScrollAreaEvent  nsScrollAreaEvent;
+typedef mozilla::InternalFormEvent        nsFormEvent;
+typedef mozilla::InternalClipboardEvent   nsClipboardEvent;
+typedef mozilla::InternalFocusEvent       nsFocusEvent;
+typedef mozilla::InternalTransitionEvent  nsTransitionEvent;
+typedef mozilla::InternalAnimationEvent   nsAnimationEvent;
 
 #endif // mozilla_EventForwards_h__

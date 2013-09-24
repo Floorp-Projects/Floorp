@@ -47,24 +47,22 @@ enum nsEventStructType
   NS_SIMPLE_GESTURE_EVENT,           // WidgetSimpleGestureEvent
   NS_TOUCH_EVENT,                    // WidgetTouchEvent
 
-  // Scroll related events
-  NS_SCROLLPORT_EVENT,               // nsScrollPortEvent
-  NS_SCROLLAREA_EVENT,               // nsScrollAreaEvent
+  // ContentEvents.h
+  NS_SCRIPT_ERROR_EVENT,             // InternalScriptErrorEvent
+  NS_SCROLLPORT_EVENT,               // InternalScrollPortEvent
+  NS_SCROLLAREA_EVENT,               // InternalScrollAreaEvent
+  NS_FORM_EVENT,                     // InternalFormEvent
+  NS_FOCUS_EVENT,                    // InternalFocusEvent
+  NS_CLIPBOARD_EVENT,                // InternalClipboardEvent
+  NS_TRANSITION_EVENT,               // InternalTransitionEvent
+  NS_ANIMATION_EVENT,                // InternalAnimationEvent
 
   // DOM events
-  NS_SCRIPT_ERROR_EVENT,             // nsScriptErrorEvent
   NS_MUTATION_EVENT,                 // nsMutationEvent
-  NS_FORM_EVENT,                     // nsFormEvent
-  NS_FOCUS_EVENT,                    // nsFocusEvent
-  NS_CLIPBOARD_EVENT,                // nsClipboardEvent
 
   // SVG events
   NS_SVGZOOM_EVENT,                  // GUIEvent
   NS_SMIL_TIME_EVENT,                // UIEvent
-
-  // CSS events
-  NS_TRANSITION_EVENT,               // nsTransitionEvent
-  NS_ANIMATION_EVENT,                // nsAnimationEvent
 
   // Command events
   NS_COMMAND_EVENT,                  // nsCommandEvent
@@ -874,6 +872,14 @@ public:
 
 class InternalUIEvent : public WidgetGUIEvent
 {
+protected:
+  InternalUIEvent(bool aIsTrusted, uint32_t aMessage,
+                  nsEventStructType aStructType, int32_t aDetail) :
+    WidgetGUIEvent(aIsTrusted, aMessage, nullptr, aStructType),
+    detail(aDetail)
+  {
+  }
+
 public:
   InternalUIEvent(bool aIsTrusted, uint32_t aMessage, int32_t aDetail) :
     WidgetGUIEvent(aIsTrusted, aMessage, nullptr, NS_UI_EVENT),
