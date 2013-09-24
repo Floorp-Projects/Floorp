@@ -143,12 +143,18 @@ public class testSettingsMenuItems extends PixelTest {
             ClassLoader classLoader = getActivity().getClassLoader();
             Class appConstants = classLoader.loadClass("org.mozilla.gecko.AppConstants");
 
-            // Text reflow
-            Field textReflowField = appConstants.getField("RELEASE_BUILD");
-            boolean textReflow = textReflowField.getBoolean(appConstants);
-            if (textReflow) {
+            // Preferences dependent on RELEASE_BUILD
+            Field releaseBuildField = appConstants.getField("RELEASE_BUILD");
+            boolean releaseBuild = releaseBuildField.getBoolean(appConstants);
+            if (!releaseBuild) {
+                // Text reflow - only built if *not* release build
                 String[] textReflowUi = { "Text reflow" };
                 settingsMap.get("Display").add(textReflowUi);
+
+                // Anonymous cell tower/wifi collection - only built if *not* release build
+                String[] networkReportingUi = { "Mozilla location services", "Help improve geolocation services for the Open Web by letting " + BRAND_NAME + " collect and send anonymous cellular tower data" };
+                settingsMap.get("Mozilla").add(networkReportingUi);
+
             }
 
             // Automatic updates
@@ -165,14 +171,6 @@ public class testSettingsMenuItems extends PixelTest {
             if (crashReporter) {
                 String[] crashReporterUi = { "Crash Reporter", BRAND_NAME + " submits crash reports to help Mozilla make your browser more stable and secure" };
                 settingsMap.get("Mozilla").add(crashReporterUi);
-            }
-
-            // Anonymous cell tower/wifi collection; built if *not* a RELEASE_BUILD
-            Field releaseBuildField = appConstants.getField("RELEASE_BUILD");
-            boolean releaseBuild = releaseBuildField.getBoolean(appConstants);
-            if (!releaseBuild) {
-                String[] networkReportingUi = { "Mozilla location services", "Help improve geolocation services for the Open Web by letting " + BRAND_NAME + " collect and send anonymous cellular tower data" };
-                settingsMap.get("Mozilla").add(networkReportingUi);
             }
 
             // Telemetry
