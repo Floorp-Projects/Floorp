@@ -1,5 +1,9 @@
 <!DOCTYPE HTML>
-<html><body onload="focus_area()">
+<html>
+<head>
+  <script type="text/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
+</head>
+<body onload="focus_area()">
 <pre tabindex="1" id="pre">
 STEPS TO REPRODUCE:
 1. TAB to the image map area below
@@ -13,36 +17,31 @@ a focus border is painted just inside the image edge
 <map name="bug" id="bug"><area id="area" shape="rect" coords="0,0,275,109" href="#area_1" onclick="alert( 'click' ); return false;"></map>
 
 <script>
-function synthesizeKey(aKey, aEvent, aWindow)
-{
-  netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
-
-  if (!aWindow)
-    aWindow = window;
-
-  var utils = aWindow.QueryInterface(Components.interfaces.nsIInterfaceRequestor).
-                      getInterface(Components.interfaces.nsIDOMWindowUtils);
-  if (utils) {
-    var keyCode = 0, charCode = 0;
-    if (aKey.indexOf("VK_") == 0)
-      keyCode = KeyEvent["DOM_" + aKey];
-    else
-      charCode = aKey.charCodeAt(0);
-
-    if (aEvent.type) {
-      utils.sendKeyEvent(aEvent.type, keyCode, charCode, 0);
-    }
-    else {
-      utils.sendKeyEvent("keydown", keyCode, charCode, 0);
-      utils.sendKeyEvent("keypress", keyCode, charCode, 0);
-      utils.sendKeyEvent("keyup", keyCode, charCode, 0);
-    }
-  }
-}
-
+var timer;
+var shiftKeyOn = false;
+var counter = 0;
 function focus_area() {
+  document.getElementById("pre").onfocus = function() {
+    document.getElementById("pre").onfocus = null;
+    document.getElementById("area").onfocus = function() {
+      clearInterval(timer);
+      parent.SimpleTest.executeSoon(parent.secondIframeLoaded, 0);
+    }
+
+    //XXX This code tries to shift focus to the image map for some reason. This is not 
+    // working directly after page load, hence it is retried 10 times, see bug bug 922524
+    timer = setInterval(function() {
+      if (counter > 10) {
+        parent.ok(false, "Too often tried to focus image map, giving up");
+        parent.Simpletest.finish();
+        return;
+      }
+      synthesizeKey("VK_TAB", { shiftKey: shiftKeyOn }, window); 
+      shiftKeyOn = !shiftKeyOn;
+      counter++;
+    }, 100);
+  };
   document.getElementById("pre").focus();
-  synthesizeKey("VK_TAB",{},window)
 }
 </script>
 
