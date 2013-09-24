@@ -65,4 +65,10 @@ partial interface IDBObjectStore {
     // Success fires IDBTransactionEvent, result == array of values for given keys
     [Throws]
     IDBRequest mozGetAll (optional any key, optional unsigned long limit);
+
+    [Pref="dom.indexedDB.experimental", Throws]
+    IDBRequest getAll (optional any key, optional unsigned long limit);
+
+    [Pref="dom.indexedDB.experimental", Throws]
+    IDBRequest getAllKeys (optional any key, optional unsigned long limit);
 };
