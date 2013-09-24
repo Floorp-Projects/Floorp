@@ -111,6 +111,9 @@ function test() {
 
   function onExamineResponse(subject) {
     let channel = subject.QueryInterface(Ci.nsIHttpChannel);
+    if (channel.URI.spec != "http://mochi.test:8888/browser/browser/base/content/test/general/bug792517.sjs") {
+      return;
+    }
     try {
       let cookies = channel.getResponseHeader("set-cookie");
       // From browser/base/content/test/bug792715.sjs, we receive a Set-Cookie
@@ -122,6 +125,9 @@ function test() {
 
   function onModifyRequest(subject) {
     let channel = subject.QueryInterface(Ci.nsIHttpChannel);
+    if (channel.URI.spec != "http://mochi.test:8888/browser/browser/base/content/test/general/bug792517.sjs") {
+      return;
+    }
     try {
       let cookies = channel.getRequestHeader("cookie");
       // From browser/base/content/test/bug792715.sjs, we should never send a
