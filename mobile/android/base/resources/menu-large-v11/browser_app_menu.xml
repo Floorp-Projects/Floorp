@@ -62,6 +62,11 @@
                   android:icon="@drawable/ic_menu_apps"
                   android:title="@string/apps"/>
 
+            <item android:id="@+id/new_guest_session"
+                  android:icon="@drawable/ic_menu_guest"
+                  android:visible="false"
+                  android:title="@string/new_guest_session"/>
+
         </menu>
 
     </item>
@@ -74,11 +79,6 @@
     <item android:id="@+id/settings"
           android:icon="@drawable/ic_menu_settings"
           android:title="@string/settings" />
-
-    <item android:id="@+id/new_guest_session"
-          android:icon="@drawable/ic_menu_guest"
-          android:visible="false"
-          android:title="@string/new_guest_session"/>
 
     <item android:id="@+id/exit_guest_session"
           android:icon="@drawable/ic_menu_guest"
