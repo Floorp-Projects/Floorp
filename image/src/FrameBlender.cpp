@@ -6,6 +6,7 @@
 #include "FrameBlender.h"
 
 #include "mozilla/MemoryReporting.h"
+#include "MainThreadUtils.h"
 
 #include "pixman.h"
 

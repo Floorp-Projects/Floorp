@@ -42,6 +42,8 @@
 #include "mozilla/GenericRefCounted.h"
 
 class nsIntRegion;
+class nsIRunnable;
+class nsIThread;
 
 namespace android {
     class GraphicBuffer;
