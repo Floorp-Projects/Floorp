@@ -3157,9 +3157,7 @@ for (uint32_t i = 0; i < length; ++i) {
             return handleJSObjectType(type, isMember, isInOwningUnion,
                                       failureCode)
 
-        if (descriptor.interface.isCallback() and
-            (descriptor.interface.identifier.name != "EventListener" or
-             descriptorProvider.workers)):
+        if descriptor.interface.isCallback():
             name = descriptor.interface.identifier.name
             if type.nullable() or isCallbackReturnValue:
                 declType = CGGeneric("nsRefPtr<%s>" % name);
@@ -4115,10 +4113,7 @@ if (!returnArray) {
           CGIndenter(exceptionCodeIndented, 4).define())) +
                 setValue("JS::ObjectValue(*returnArray)"), False)
 
-    if (type.isGeckoInterface() and
-        (not type.isCallbackInterface() or
-         (type.unroll().inner.identifier.name == "EventListener" and
-          not descriptorProvider.workers))):
+    if type.isGeckoInterface() and not type.isCallbackInterface():
         descriptor = descriptorProvider.getDescriptor(type.unroll().inner.identifier.name)
         if type.nullable():
             wrappingCode = ("if (!%s) {\n" % (result) +
@@ -9224,9 +9219,7 @@ class CGNativeMember(ClassMethod):
                 type = type.inner
             return str(type), True, True
 
-        if (type.isGeckoInterface() and
-            (not type.isCallbackInterface() or
-             type.unroll().inner.identifier.name == "EventListener")):
+        if type.isGeckoInterface() and not type.isCallbackInterface():
             iface = type.unroll().inner
             argIsPointer = type.nullable() or iface.isExternal()
             forceOwningType = iface.isCallback() or isMember
