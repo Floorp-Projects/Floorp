@@ -6,6 +6,7 @@
 
 #include "base/logging.h"
 #include "base/scoped_nsautorelease_pool.h"
+#include "GeckoProfiler.h"
 
 namespace base {
 
@@ -39,10 +40,12 @@ void MessagePumpDefault::Run(Delegate* delegate) {
       continue;
 
     if (delayed_work_time_.is_null()) {
+      PROFILER_LABEL("MessagePump", "Wait");
       event_.Wait();
     } else {
       TimeDelta delay = delayed_work_time_ - TimeTicks::Now();
       if (delay > TimeDelta()) {
+        PROFILER_LABEL("MessagePump", "Wait");
         event_.TimedWait(delay);
       } else {
         // It looks like delayed_work_time_ indicates a time in the past, so we
