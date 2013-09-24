@@ -1696,7 +1696,7 @@ nsCSSFrameConstructor::CreateGeneratedContentItem(nsFrameConstructorState& aStat
   nsresult rv = NS_NewXMLElement(getter_AddRefs(container), nodeInfo.forget());
   if (NS_FAILED(rv))
     return;
-  container->SetNativeAnonymous();
+  container->SetIsNativeAnonymousRoot();
 
   rv = container->BindToTree(mDocument, aParentContent, aParentContent, true);
   if (NS_FAILED(rv)) {
@@ -3767,7 +3767,7 @@ nsCSSFrameConstructor::GetAnonymousContent(nsIContent* aParent,
     if (aParentFrame->GetType() == nsGkAtoms::svgUseFrame) {
       content->SetFlags(NODE_IS_ANONYMOUS_ROOT);
     } else {
-      content->SetNativeAnonymous();
+      content->SetIsNativeAnonymousRoot();
     }
 
     bool anonContentIsEditable = content->HasFlag(NODE_IS_EDITABLE);
