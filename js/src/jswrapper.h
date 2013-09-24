@@ -169,8 +169,7 @@ typedef SecurityWrapper<CrossCompartmentWrapper> CrossCompartmentSecurityWrapper
 class JS_FRIEND_API(DeadObjectProxy) : public BaseProxyHandler
 {
   public:
-    // This variable exists solely to provide a unique address for use as an identifier.
-    static const char sDeadObjectFamily;
+    static int sDeadObjectFamily;
 
     explicit DeadObjectProxy();
 
@@ -220,8 +219,7 @@ TransparentObjectWrapper(JSContext *cx, HandleObject existing, HandleObject obj,
 
 // Proxy family for wrappers. Public so that IsWrapper() can be fully inlined by
 // jsfriendapi users.
-// This variable exists solely to provide a unique address for use as an identifier.
-extern JS_FRIEND_DATA(const char) sWrapperFamily;
+extern JS_FRIEND_DATA(int) sWrapperFamily;
 
 inline bool
 IsWrapper(JSObject *obj)

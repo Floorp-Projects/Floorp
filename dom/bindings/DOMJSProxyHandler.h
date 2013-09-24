@@ -27,9 +27,8 @@ enum {
 
 template<typename T> struct Prefable;
 
-// This variable exists solely to provide a unique address for use as an identifier.
-extern const char HandlerFamily;
-inline const void* ProxyFamily() { return &HandlerFamily; }
+extern int HandlerFamily;
+inline void* ProxyFamily() { return &HandlerFamily; }
 
 inline bool IsDOMProxy(JSObject *obj, const js::Class* clasp)
 {
@@ -46,7 +45,7 @@ inline bool IsDOMProxy(JSObject *obj)
 class BaseDOMProxyHandler : public js::BaseProxyHandler
 {
 public:
-  BaseDOMProxyHandler(const void* aProxyFamily)
+  BaseDOMProxyHandler(void* aProxyFamily)
     : js::BaseProxyHandler(aProxyFamily)
   {}
 
