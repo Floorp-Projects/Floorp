@@ -467,9 +467,18 @@ GeckoInputReaderPolicy::setDisplayInfo()
                   "Orientation enums not matched!");
 
     DisplayViewport viewport;
-    viewport.setNonDisplayViewport(gScreenBounds.width, gScreenBounds.height);
     viewport.displayId = 0;
     viewport.orientation = nsScreenGonk::GetRotation();
+    viewport.physicalRight = viewport.deviceWidth = gScreenBounds.width;
+    viewport.physicalBottom = viewport.deviceHeight = gScreenBounds.height;
+    if (viewport.orientation == DISPLAY_ORIENTATION_90 ||
+        viewport.orientation == DISPLAY_ORIENTATION_270) {
+        viewport.logicalRight = gScreenBounds.height;
+        viewport.logicalBottom = gScreenBounds.width;
+    } else {
+        viewport.logicalRight = gScreenBounds.width;
+        viewport.logicalBottom = gScreenBounds.height;
+    }
     mConfig.setDisplayInfo(false, viewport);
 }
 
