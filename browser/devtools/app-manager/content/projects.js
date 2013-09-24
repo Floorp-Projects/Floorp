@@ -318,10 +318,11 @@ let UI = {
            // And only when the toolbox is opened, release the button
            button.disabled = false;
          },
-         (msg) => {
+         (err) => {
            button.disabled = false;
-           alert(msg);
-           this.connection.log(msg);
+           let message = err.error ? err.error + ": " + err.message : String(err);
+           alert(message);
+           this.connection.log(message);
          });
   },
 
