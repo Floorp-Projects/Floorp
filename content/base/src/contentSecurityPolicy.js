@@ -49,9 +49,9 @@ function ContentSecurityPolicy() {
 
   this._request = "";
   this._requestOrigin = "";
-  this._weakRequestPrincipal = null;
+  this._requestPrincipal = "";
   this._referrer = "";
-  this._weakDocRequest = { get : function() { return null; } };
+  this._docRequest = null;
   CSPdebug("CSP object initialized, no policies to enforce yet");
 
   this._cache = { };
@@ -249,7 +249,7 @@ ContentSecurityPolicy.prototype = {
       return;
 
     // Save the docRequest for fetching a policy-uri
-    this._weakDocRequest = Cu.getWeakReference(aChannel);
+    this._docRequest = aChannel;
 
     // save the document URI (minus <fragment>) and referrer for reporting
     let uri = aChannel.URI.cloneIgnoringRef();
@@ -260,9 +260,8 @@ ContentSecurityPolicy.prototype = {
     this._requestOrigin = uri;
 
     //store a reference to the principal, that can later be used in shouldLoad
-    this._weakRequestPrincipal = Cu.getWeakReference(Cc["@mozilla.org/scriptsecuritymanager;1"]
-                                                       .getService(Ci.nsIScriptSecurityManager)
-                                                       .getChannelPrincipal(aChannel));
+    this._requestPrincipal = Components.classes["@mozilla.org/scriptsecuritymanager;1"].
+    getService(Components.interfaces.nsIScriptSecurityManager).getChannelPrincipal(aChannel);
 
     if (aChannel.referrer) {
       let referrer = aChannel.referrer.cloneIgnoringRef();
@@ -311,13 +310,13 @@ ContentSecurityPolicy.prototype = {
     if (aSpecCompliant) {
       newpolicy = CSPRep.fromStringSpecCompliant(aPolicy,
                                                  selfURI,
-                                                 this._weakDocRequest.get(),
+                                                 this._docRequest,
                                                  this,
                                                  aReportOnly);
     } else {
       newpolicy = CSPRep.fromString(aPolicy,
                                     selfURI,
-                                    this._weakDocRequest.get(),
+                                    this._docRequest,
                                     this,
                                     aReportOnly);
     }
@@ -435,8 +434,8 @@ ContentSecurityPolicy.prototype = {
           // we need to set an nsIChannelEventSink on the channel object
           // so we can tell it to not follow redirects when posting the reports
           chan.notificationCallbacks = new CSPReportRedirectSink(policy);
-          if (this._weakDocRequest.get()) {
-            chan.loadGroup = this._weakDocRequest.get().loadGroup;
+          if (this._docRequest) {
+            chan.loadGroup = this._docRequest.loadGroup;
           }
 
           chan.QueryInterface(Ci.nsIUploadChannel)
@@ -455,7 +454,7 @@ ContentSecurityPolicy.prototype = {
                                   .getService(Ci.nsIContentPolicy);
             if (contentPolicy.shouldLoad(Ci.nsIContentPolicy.TYPE_CSP_REPORT,
                                          chan.URI, this._requestOrigin,
-                                         null, null, null, this._weakRequestPrincipal.get())
+                                         null, null, null, this._requestPrincipal)
                 != Ci.nsIContentPolicy.ACCEPT) {
               continue; // skip unauthorized URIs
             }
