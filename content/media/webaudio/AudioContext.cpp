@@ -137,7 +137,6 @@ AudioContext::CreateBufferSource()
 {
   nsRefPtr<AudioBufferSourceNode> bufferNode =
     new AudioBufferSourceNode(this);
-  mAudioBufferSourceNodes.PutEntry(bufferNode);
   return bufferNode.forget();
 }
 
@@ -459,7 +458,6 @@ AudioContext::UnregisterActiveNode(AudioNode* aNode)
 void
 AudioContext::UnregisterAudioBufferSourceNode(AudioBufferSourceNode* aNode)
 {
-  mAudioBufferSourceNodes.RemoveEntry(aNode);
   UpdatePannerSource();
 }
 
@@ -512,22 +510,6 @@ AudioContext::CurrentTime() const
   return MediaTimeToSeconds(Destination()->Stream()->GetCurrentTime());
 }
 
-template <class T>
-static PLDHashOperator
-GetHashtableEntry(nsPtrHashKey<T>* aEntry, void* aData)
-{
-  nsTArray<T*>* array = static_cast<nsTArray<T*>*>(aData);
-  array->AppendElement(aEntry->GetKey());
-  return PL_DHASH_NEXT;
-}
-
-template <class T>
-static void
-GetHashtableElements(nsTHashtable<nsPtrHashKey<T> >& aHashtable, nsTArray<T*>& aArray)
-{
-  aHashtable.EnumerateEntries(&GetHashtableEntry<T>, &aArray);
-}
-
 void
 AudioContext::Shutdown()
 {
@@ -539,19 +521,6 @@ AudioContext::Shutdown()
   // Active AudioNodes don't unregister in destructors, at which point the
   // Node is already unregistered.
   mActiveNodes.Clear();
-
-  // Stop all audio buffer source nodes, to make sure that they release
-  // their self-references.
-  // We first gather an array of the nodes and then call Stop on each one,
-  // since Stop may delete the object and therefore trigger a re-entrant
-  // hashtable call to remove the pointer from the hashtable, which is
-  // not safe.
-  nsTArray<AudioBufferSourceNode*> sourceNodes;
-  GetHashtableElements(mAudioBufferSourceNodes, sourceNodes);
-  for (uint32_t i = 0; i < sourceNodes.Length(); ++i) {
-    ErrorResult rv;
-    sourceNodes[i]->Stop(0.0, rv, true);
-  }
 
   // For offline contexts, we can destroy the MediaStreamGraph at this point.
   if (mIsOffline && mDestination) {
