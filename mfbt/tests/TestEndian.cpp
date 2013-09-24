@@ -396,10 +396,5 @@ main()
   TestBulkInPlaceNoSwap(uint64_values);
   TestBulkInPlaceNoSwap(int64_values);
 
-  // Make sure we don't incorrectly cry overlap for zero-length buffers.
-  uint64_t scratch = 0xdeadbeef;
-  NativeEndian::copyAndSwapFromLittleEndian(&scratch, &scratch, 0);
-  MOZ_ASSERT(scratch == 0xdeadbeef);
-
   return 0;
 }
