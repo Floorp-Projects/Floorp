@@ -70,8 +70,7 @@
   border-top: 1px solid rgba(0,0,0,0.65);
 }
 
-#navigator-toolbox > toolbar:not(#toolbar-menubar):not(#TabsToolbar) {
-  -moz-box-align: center;
+#navigator-toolbox > toolbar:not(#toolbar-menubar):not(#TabsToolbar):not(#nav-bar) {
   padding: 2px 4px;
 }
 
@@ -88,8 +87,6 @@ toolbarseparator {
 
 #nav-bar {
   -moz-appearance: none;
-  padding-top: 4px !important;
-  padding-bottom: 4px !important;
   background: url(chrome://browser/skin/Toolbar-background-noise.png),
               linear-gradient(hsl(0,0%,93%), hsl(0,0%,83%));
   background-clip: border-box;
@@ -99,6 +96,10 @@ toolbarseparator {
   /* Position the toolbar above the bottom of background tabs */
   position: relative;
   z-index: 1;
+}
+
+#nav-bar-customizationtarget {
+  padding: 4px;
 }
 
 #navigator-toolbox > toolbar:not(#TabsToolbar):-moz-lwtheme {
