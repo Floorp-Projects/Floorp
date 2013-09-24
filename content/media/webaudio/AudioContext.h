@@ -229,7 +229,6 @@ public:
 
   void UnregisterAudioBufferSourceNode(AudioBufferSourceNode* aNode);
   void UnregisterPannerNode(PannerNode* aNode);
-  void UnregisterScriptProcessorNode(ScriptProcessorNode* aNode);
   void UpdatePannerSource();
 
   uint32_t MaxChannelCount() const;
@@ -261,9 +260,6 @@ private:
   // These are all weak pointers.
   nsTHashtable<nsPtrHashKey<PannerNode> > mPannerNodes;
   nsTHashtable<nsPtrHashKey<AudioBufferSourceNode> > mAudioBufferSourceNodes;
-  // Hashset containing all ScriptProcessorNodes in order to stop them.
-  // These are all weak pointers.
-  nsTHashtable<nsPtrHashKey<ScriptProcessorNode> > mScriptProcessorNodes;
   // Number of channels passed in the OfflineAudioContext ctor.
   uint32_t mNumberOfChannels;
   bool mIsOffline;
