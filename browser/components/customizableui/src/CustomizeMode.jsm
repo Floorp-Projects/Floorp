@@ -627,7 +627,11 @@ CustomizeMode.prototype = {
     if (aContainer.id == CustomizableUI.AREA_PANEL) {
       this._removePanelCustomizationPlaceholders();
     }
-    this.unwrapToolbarItem(aNodeToChange.parentNode);
+    // If we get called for widgets that aren't in the window yet, they might not have
+    // a parentNode at all.
+    if (aNodeToChange.parentNode) {
+      this.unwrapToolbarItem(aNodeToChange.parentNode);
+    }
     if (aSecondaryNode) {
       this.unwrapToolbarItem(aSecondaryNode.parentNode);
     }
