@@ -807,6 +807,9 @@ class IDLInterface(IDLObjectWithScope):
     def isSingleOperationInterface(self):
         assert self.isCallback() or self.isJSImplemented()
         return (
+            # JS-implemented things should never need the
+            # this-handling weirdness of single-operation interfaces.
+            not self.isJSImplemented() and
             # Not inheriting from another interface
             not self.parent and
             # No consequential interfaces
