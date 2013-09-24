@@ -312,6 +312,10 @@
         <item name="android:textColor">?android:attr/textColorSecondary</item>
     </style>
 
+    <style name="TextAppearance.Widget.SuggestionsPrompt" parent="TextAppearance.Small">
+        <item name="android:textColor">@color/url_bar_title</item>
+    </style>
+
     <style name="TextAppearance.Widget.Home" />
 
     <style name="TextAppearance.Widget.Home.Header" parent="TextAppearance.Small">
