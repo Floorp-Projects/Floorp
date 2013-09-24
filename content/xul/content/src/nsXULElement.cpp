@@ -73,7 +73,7 @@
 #include "nsIListBoxObject.h"
 #include "nsContentUtils.h"
 #include "nsContentList.h"
-#include "nsMutationEvent.h"
+#include "mozilla/MutationEvent.h"
 #include "nsAsyncDOMEvent.h"
 #include "nsIDOMMutationEvent.h"
 #include "nsPIDOMWindow.h"
