@@ -16,7 +16,6 @@ using nsIntPoint;
 using nsIntRect;
 using nsIntRegion;
 using nsIntSize;
-using mozilla::gfxContentType;
 using mozilla::GraphicsFilterType;
 using mozilla::layers::FrameMetrics;
 using mozilla::layers::MagicGrallocBufferHandle;
