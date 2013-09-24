@@ -1,3 +1,5 @@
+.. _mozconfig:
+
 ===============
 mozconfig Files
 ===============
