@@ -1440,9 +1440,12 @@ CodeGenerator::visitOutOfLineCallPostWriteBarrier(OutOfLineCallPostWriteBarrier 
     regs.add(CallTempReg2);
 
     Register objreg;
+    bool isGlobal = false;
     if (obj->isConstant()) {
+        JSObject *object = &obj->toConstant()->toObject();
+        isGlobal = object->is<GlobalObject>();
         objreg = regs.takeAny();
-        masm.movePtr(ImmGCPtr(&obj->toConstant()->toObject()), objreg);
+        masm.movePtr(ImmGCPtr(object), objreg);
     } else {
         objreg = ToRegister(obj);
         regs.takeUnchecked(objreg);
@@ -1451,10 +1454,11 @@ CodeGenerator::visitOutOfLineCallPostWriteBarrier(OutOfLineCallPostWriteBarrier 
     Register runtimereg = regs.takeAny();
     masm.mov(ImmPtr(GetIonContext()->runtime), runtimereg);
 
+    void (*fun)(JSRuntime*, JSObject*) = isGlobal ? PostGlobalWriteBarrier : PostWriteBarrier;
     masm.setupUnalignedABICall(2, regs.takeAny());
     masm.passABIArg(runtimereg);
     masm.passABIArg(objreg);
-    masm.callWithABI(JS_FUNC_TO_DATA_PTR(void *, PostWriteBarrier));
+    masm.callWithABI(JS_FUNC_TO_DATA_PTR(void *, fun));
 
     restoreLive(ool->lir());
 
