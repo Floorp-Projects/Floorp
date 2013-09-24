@@ -186,7 +186,7 @@ CallbackObject::CallSetup::~CallSetup()
       mErrorResult.MightThrowJSException();
       if (JS_IsExceptionPending(mCx)) {
         JS::Rooted<JS::Value> exn(mCx);
-        if (JS_GetPendingException(mCx, exn.address()) &&
+        if (JS_GetPendingException(mCx, &exn) &&
             ShouldRethrowException(exn)) {
           mErrorResult.ThrowJSException(mCx, exn);
           JS_ClearPendingException(mCx);

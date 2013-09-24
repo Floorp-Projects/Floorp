@@ -142,6 +142,39 @@ class TestMozbuildObject(unittest.TestCase):
         finally:
             shutil.rmtree(d)
 
+    @unittest.skipIf(not hasattr(os, 'symlink'), 'symlinks not available.')
+    def test_symlink_objdir(self):
+        """Objdir that is a symlink is loaded properly."""
+        d = os.path.realpath(tempfile.mkdtemp())
+        try:
+            topobjdir_real = os.path.join(d, 'objdir')
+            topobjdir_link = os.path.join(d, 'objlink')
+
+            os.mkdir(topobjdir_real)
+            os.symlink(topobjdir_real, topobjdir_link)
+
+            mozconfig = os.path.join(d, 'mozconfig')
+            with open(mozconfig, 'wt') as fh:
+                fh.write('mk_add_options MOZ_OBJDIR=%s' % topobjdir_link)
+
+            mozinfo = os.path.join(topobjdir_real, 'mozinfo.json')
+            with open(mozinfo, 'wt') as fh:
+                json.dump(dict(
+                    topsrcdir=d,
+                    mozconfig=mozconfig,
+                ), fh)
+
+            os.chdir(topobjdir_link)
+            obj = MozbuildObject.from_environment(detect_virtualenv_mozinfo=False)
+            self.assertEqual(obj.topobjdir, topobjdir_real)
+
+            os.chdir(topobjdir_real)
+            obj = MozbuildObject.from_environment(detect_virtualenv_mozinfo=False)
+            self.assertEqual(obj.topobjdir, topobjdir_real)
+
+        finally:
+            shutil.rmtree(d)
+
     def test_config_guess(self):
         # It's difficult to test for exact values from the output of
         # config.guess because they vary depending on platform.

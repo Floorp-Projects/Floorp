@@ -713,32 +713,6 @@ IonCode::togglePreBarriers(bool enabled)
     }
 }
 
-void
-IonCode::readBarrier(IonCode *code)
-{
-#ifdef JSGC_INCREMENTAL
-    if (!code)
-        return;
-
-    Zone *zone = code->zone();
-    if (zone->needsBarrier())
-        MarkIonCodeUnbarriered(zone->barrierTracer(), &code, "ioncode read barrier");
-#endif
-}
-
-void
-IonCode::writeBarrierPre(IonCode *code)
-{
-#ifdef JSGC_INCREMENTAL
-    if (!code || !code->runtimeFromMainThread()->needsBarrier())
-        return;
-
-    Zone *zone = code->zone();
-    if (zone->needsBarrier())
-        MarkIonCodeUnbarriered(zone->barrierTracer(), &code, "ioncode write barrier");
-#endif
-}
-
 IonScript::IonScript()
   : method_(NULL),
     deoptTable_(NULL),
@@ -1606,9 +1580,6 @@ IonCompile(JSContext *cx, JSScript *script,
                         script);
 #endif
 
-    if (!script->ensureRanAnalysis(cx))
-        return AbortReason_Alloc;
-
     LifoAlloc *alloc = cx->new_<LifoAlloc>(BUILDER_LIFO_ALLOC_PRIMARY_CHUNK_SIZE);
     if (!alloc)
         return AbortReason_Alloc;
@@ -1732,12 +1703,6 @@ CheckScript(JSContext *cx, JSScript *script, bool osr)
         return false;
     }
 
-    if (osr && script->needsArgsObj()) {
-        // OSR-ing into functions with arguments objects is not supported.
-        IonSpew(IonSpew_Abort, "OSR script has argsobj");
-        return false;
-    }
-
     if (!script->compileAndGo) {
         IonSpew(IonSpew_Abort, "not compile-and-go");
         return false;
@@ -1846,6 +1811,11 @@ Compile(JSContext *cx, HandleScript script, BaselineFrame *osrFrame, jsbytecode 
 
     if (reason == AbortReason_Disable)
         return Method_CantCompile;
+
+    if (reason == AbortReason_Alloc) {
+        js_ReportOutOfMemory(cx);
+        return Method_Error;
+    }
 
     // Compilation succeeded or we invalidated right away or an inlining/alloc abort
     return HasIonScript(script, executionMode) ? Method_Compiled : Method_Skipped;

@@ -6,17 +6,15 @@
 #include "mozilla/Util.h"
 
 #include "nsSVGAngle.h"
-#include "prdtoa.h"
-#include "nsTextFormatter.h"
-#include "nsSVGAttrTearoffTable.h"
 #include "mozilla/dom/SVGMarkerElement.h"
-#include "nsMathUtils.h"
 #include "nsContentUtils.h" // NS_ENSURE_FINITE
 #include "nsSMILValue.h"
-#include "SVGOrientSMILType.h"
-#include "nsAttrValueInlines.h"
+#include "nsSVGAttrTearoffTable.h"
+#include "nsTextFormatter.h"
+#include "prdtoa.h"
 #include "SVGAngle.h"
 #include "SVGAnimatedAngle.h"
+#include "SVGOrientSMILType.h"
 
 using namespace mozilla;
 using namespace mozilla::dom;
@@ -104,7 +102,7 @@ GetValueFromString(const nsAString &aValueAsString,
   NS_ConvertUTF16toUTF8 value(aValueAsString);
   const char *str = value.get();
 
-  if (NS_IsAsciiWhitespace(*str))
+  if (IsSVGWhitespace(*str))
     return NS_ERROR_DOM_SYNTAX_ERR;
   
   char *rest;

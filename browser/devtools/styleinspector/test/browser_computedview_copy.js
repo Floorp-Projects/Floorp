@@ -32,7 +32,7 @@ function createDocument()
     '</div>';
   doc.title = "Computed view context menu test";
 
-  openComputedView(selectNode)
+  openComputedView(selectNode);
 }
 
 function selectNode(aInspector, aComputedView)
@@ -64,24 +64,51 @@ function checkCopySelection()
   ok(props, "captain, we have the property-view nodes");
 
   let range = document.createRange();
-  range.setStart(props[0], 0);
+  range.setStart(props[1], 0);
   range.setEnd(props[3], 3);
   win.getSelection().addRange(range);
 
   info("Checking that cssHtmlTree.siBoundCopy() " +
        " returns the correct clipboard value");
 
-  let expectedPattern = "color: rgb\\(255, 255, 0\\);[\\r\\n]+" +
-                 "font-family: helvetica,sans-serif;[\\r\\n]+" +
-                 "font-size: 16px;[\\r\\n]+" +
-                 "font-variant: small-caps;[\\r\\n]*";
+  let expectedPattern = "font-family: helvetica,sans-serif;[\\r\\n]+" +
+                        "font-size: 16px;[\\r\\n]+" +
+                        "font-variant: small-caps;[\\r\\n]*";
 
   SimpleTest.waitForClipboard(function CS_boundCopyCheck() {
-      return checkClipboardData(expectedPattern);
-    },
-    function() {fireCopyEvent(props[0])}, closeStyleInspector, function() {
-      failedClipboard(expectedPattern, closeStyleInspector);
-    });
+    return checkClipboardData(expectedPattern);
+  },
+  function() {
+    fireCopyEvent(props[0]);
+  },
+  checkSelectAll,
+  function() {
+    failedClipboard(expectedPattern, checkSelectAll);
+  });
+}
+
+function checkSelectAll()
+{
+  let contentDoc = computedView.styleDocument;
+  let prop = contentDoc.querySelector(".property-view");
+
+  info("Checking that _SelectAll() then copy returns the correct clipboard value");
+  computedView._onSelectAll();
+  let expectedPattern = "color: #FF0;[\\r\\n]+" +
+                        "font-family: helvetica,sans-serif;[\\r\\n]+" +
+                        "font-size: 16px;[\\r\\n]+" +
+                        "font-variant: small-caps;[\\r\\n]*";
+
+  SimpleTest.waitForClipboard(function() {
+    return checkClipboardData(expectedPattern);
+  },
+  function() {
+    fireCopyEvent(prop);
+  },
+  finishUp,
+  function() {
+    failedClipboard(expectedPattern, finishUp);
+  });
 }
 
 function checkClipboardData(aExpectedPattern)
@@ -111,11 +138,6 @@ function failedClipboard(aExpectedPattern, aCallback)
   info("Actual: " + escape(actual));
   info("Expected: " + escape(aExpectedPattern));
   aCallback();
-}
-
-function closeStyleInspector()
-{
-  finishUp();
 }
 
 function finishUp()

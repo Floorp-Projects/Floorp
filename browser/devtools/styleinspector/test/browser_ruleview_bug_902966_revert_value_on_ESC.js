@@ -9,7 +9,7 @@ let doc;
 let ruleWindow;
 let ruleView;
 let inspector;
-let originalValue = "blue";
+let originalValue = "#00F";
 
 // Test data format
 // {
@@ -54,7 +54,7 @@ function runTestData(index)
   let idRuleEditor = ruleView.element.children[1]._ruleEditor;
   let propEditor = idRuleEditor.rule.textProps[0].editor;
   waitForEditorFocus(propEditor.element, function(aEditor) {
-    is(inplaceEditor(propEditor.valueSpan), aEditor, "Focused editor should be the value.");
+    is(inplaceEditor(propEditor.valueSpan), aEditor, "Focused editor should be the value span.");
 
     for (let ch of testData[index].value) {
       EventUtils.sendChar(ch, ruleWindow);

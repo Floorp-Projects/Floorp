@@ -168,106 +168,6 @@ static const uint32_t AlignmentMidPrologue = AlignmentAtPrologue;
 
 static const Scale ScalePointer = TimesEight;
 
-class Operand
-{
-  public:
-    enum Kind {
-        REG,
-        MEM_REG_DISP,
-        FPREG,
-        MEM_SCALE,
-        MEM_ADDRESS32
-    };
-
-  private:
-    Kind kind_ : 4;
-    int32_t base_ : 5;
-    Scale scale_ : 3;
-    int32_t index_ : 5;
-    int32_t disp_;
-
-  public:
-    explicit Operand(Register reg)
-      : kind_(REG),
-        base_(reg.code())
-    { }
-    explicit Operand(FloatRegister reg)
-      : kind_(FPREG),
-        base_(reg.code())
-    { }
-    explicit Operand(const Address &address)
-      : kind_(MEM_REG_DISP),
-        base_(address.base.code()),
-        disp_(address.offset)
-    { }
-    explicit Operand(const BaseIndex &address)
-      : kind_(MEM_SCALE),
-        base_(address.base.code()),
-        scale_(address.scale),
-        index_(address.index.code()),
-        disp_(address.offset)
-    { }
-    Operand(Register base, Register index, Scale scale, int32_t disp = 0)
-      : kind_(MEM_SCALE),
-        base_(base.code()),
-        scale_(scale),
-        index_(index.code()),
-        disp_(disp)
-    { }
-    Operand(Register reg, int32_t disp)
-      : kind_(MEM_REG_DISP),
-        base_(reg.code()),
-        disp_(disp)
-    { }
-    explicit Operand(const AbsoluteAddress &address)
-      : kind_(MEM_ADDRESS32)
-    {
-        disp_ = JSC::X86Assembler::addressImmediate(address.addr);
-    }
-
-    Address toAddress() const {
-        JS_ASSERT(kind() == MEM_REG_DISP);
-        return Address(Register::FromCode(base()), disp());
-    }
-
-    BaseIndex toBaseIndex() const {
-        JS_ASSERT(kind() == MEM_SCALE);
-        return BaseIndex(Register::FromCode(base()), Register::FromCode(index()), scale(), disp());
-    }
-
-    Kind kind() const {
-        return kind_;
-    }
-    Register::Code reg() const {
-        JS_ASSERT(kind() == REG);
-        return (Registers::Code)base_;
-    }
-    Registers::Code base() const {
-        JS_ASSERT(kind() == MEM_REG_DISP || kind() == MEM_SCALE);
-        return (Registers::Code)base_;
-    }
-    Registers::Code index() const {
-        JS_ASSERT(kind() == MEM_SCALE);
-        return (Registers::Code)index_;
-    }
-    Scale scale() const {
-        JS_ASSERT(kind() == MEM_SCALE);
-        return scale_;
-    }
-    FloatRegisters::Code fpu() const {
-        JS_ASSERT(kind() == FPREG);
-        return (FloatRegisters::Code)base_;
-    }
-    int32_t disp() const {
-        JS_ASSERT(kind() == MEM_REG_DISP || kind() == MEM_SCALE);
-        return disp_;
-    }
-    void *address() const {
-        JS_ASSERT(kind() == MEM_ADDRESS32);
-        return reinterpret_cast<void *>(intptr_t(disp_));
-    }
-};
-
 } // namespace jit
 } // namespace js
 
@@ -313,7 +213,7 @@ class Assembler : public AssemblerX86Shared
 
   private:
     void writeRelocation(JmpSrc src, Relocation::Kind reloc);
-    void addPendingJump(JmpSrc src, void *target, Relocation::Kind reloc);
+    void addPendingJump(JmpSrc src, ImmPtr target, Relocation::Kind reloc);
 
   protected:
     size_t addPatchableJump(JmpSrc src, Relocation::Kind reloc);
@@ -585,6 +485,11 @@ class Assembler : public AssemblerX86Shared
     void mov(ImmPtr imm, const Register &dest) {
         movq(imm, dest);
     }
+    void mov(AsmJSImmPtr imm, const Register &dest) {
+        masm.movq_i64r(-1, dest.code());
+        AsmJSAbsoluteLink link(masm.currentOffset(), imm.kind());
+        enoughMemory_ &= asmJSAbsoluteLinks_.append(link);
+    }
     void mov(const Imm32 &imm32, const Register &dest) {
         movl(imm32, dest);
     }
@@ -714,25 +619,25 @@ class Assembler : public AssemblerX86Shared
         }
     }
 
-    void jmp(void *target, Relocation::Kind reloc = Relocation::HARDCODED) {
+    void jmp(ImmPtr target, Relocation::Kind reloc = Relocation::HARDCODED) {
         JmpSrc src = masm.jmp();
         addPendingJump(src, target, reloc);
     }
-    void j(Condition cond, void *target,
+    void j(Condition cond, ImmPtr target,
            Relocation::Kind reloc = Relocation::HARDCODED) {
         JmpSrc src = masm.jCC(static_cast<JSC::X86Assembler::Condition>(cond));
         addPendingJump(src, target, reloc);
     }
 
     void jmp(IonCode *target) {
-        jmp(target->raw(), Relocation::IONCODE);
+        jmp(ImmPtr(target->raw()), Relocation::IONCODE);
     }
     void j(Condition cond, IonCode *target) {
-        j(cond, target->raw(), Relocation::IONCODE);
+        j(cond, ImmPtr(target->raw()), Relocation::IONCODE);
     }
     void call(IonCode *target) {
         JmpSrc src = masm.call();
-        addPendingJump(src, target->raw(), Relocation::IONCODE);
+        addPendingJump(src, ImmPtr(target->raw()), Relocation::IONCODE);
     }
 
     // Emit a CALL or CMP (nop) instruction. ToggleCall can be used to patch
@@ -740,7 +645,7 @@ class Assembler : public AssemblerX86Shared
     CodeOffsetLabel toggledCall(IonCode *target, bool enabled) {
         CodeOffsetLabel offset(size());
         JmpSrc src = enabled ? masm.call() : masm.cmp_eax();
-        addPendingJump(src, target->raw(), Relocation::IONCODE);
+        addPendingJump(src, ImmPtr(target->raw()), Relocation::IONCODE);
         JS_ASSERT(size() - offset.offset() == ToggledCallSize());
         return offset;
     }

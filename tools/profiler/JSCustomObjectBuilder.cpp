@@ -7,7 +7,7 @@
 
 #include "mozilla/Util.h" // for ArrayLength
 #include "nsDataHashtable.h"
-#include "nsStringGlue.h"
+#include "nsString.h"
 #include "nsTArray.h"
 #include "nsUTF8Utils.h"
 

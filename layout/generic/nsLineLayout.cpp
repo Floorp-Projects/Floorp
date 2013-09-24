@@ -2196,7 +2196,13 @@ nsLineLayout::VerticalAlignFrames(PerSpanData* psd)
 
 static void SlideSpanFrameRect(nsIFrame* aFrame, nscoord aDeltaWidth)
 {
-  aFrame->MovePositionBy(nsPoint(-aDeltaWidth, 0));
+  // This should not use nsIFrame::MovePositionBy because it happens
+  // prior to relative positioning.  In particular, because
+  // nsBlockFrame::PlaceLine calls aLineLayout.TrimTrailingWhiteSpace()
+  // prior to calling aLineLayout.RelativePositionFrames().
+  nsPoint p = aFrame->GetPosition();
+  p.x -= aDeltaWidth;
+  aFrame->SetPosition(p);
 }
 
 bool

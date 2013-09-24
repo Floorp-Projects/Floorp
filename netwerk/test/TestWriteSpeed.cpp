@@ -36,7 +36,7 @@ Test(const char* filename, int32_t minSize, int32_t maxSize,
     for (int32_t size = minSize; size <= maxSize; size += sizeIncrement) {
         // create a buffer of stuff to write
         char* buf = (char*)PR_Malloc(size);
-        if (buf == NULL)
+        if (buf == nullptr)
             return -1;
 
         // initialize it with a pattern
@@ -54,7 +54,7 @@ Test(const char* filename, int32_t minSize, int32_t maxSize,
             char name[1024];
             sprintf(name, "%s_%d", filename, i);
             PRFileDesc* fd = PR_Open(name, PR_WRONLY | PR_CREATE_FILE | PR_TRUNCATE, 0664);
-            if (fd == NULL)
+            if (fd == nullptr)
                 return -1;
 
             PRIntervalTime writeStart = PR_IntervalNow();

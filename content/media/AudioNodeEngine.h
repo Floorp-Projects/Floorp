@@ -15,6 +15,7 @@ namespace mozilla {
 namespace dom {
 struct ThreeDPoint;
 class AudioParamTimeline;
+class DelayNodeEngine;
 }
 
 class AudioNodeStream;
@@ -135,6 +136,11 @@ void BufferComplexMultiply(const float* aInput,
                            uint32_t aSize);
 
 /**
+ * Vector maximum element magnitude ( max(abs(aInput)) ).
+ */
+float AudioBufferPeakValue(const float* aInput, uint32_t aSize);
+
+/**
  * In place gain. aScale == 1.0f should be optimized.
  */
 void AudioBufferInPlaceScale(float aBlock[WEBAUDIO_BLOCK_SIZE],
@@ -200,6 +206,8 @@ public:
     MOZ_ASSERT(!mNode, "The node reference must be already cleared");
     MOZ_COUNT_DTOR(AudioNodeEngine);
   }
+
+  virtual dom::DelayNodeEngine* AsDelayNodeEngine() { return nullptr; }
 
   virtual void SetStreamTimeParameter(uint32_t aIndex, TrackTicks aParam)
   {

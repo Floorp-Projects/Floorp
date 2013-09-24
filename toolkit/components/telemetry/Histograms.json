@@ -869,6 +869,34 @@
     "kind": "boolean",
     "description": "Whether a HTTP base page load was over SSL or not."
   },
+  "HTTPDATA_DAILY_ETHERNET_IN": {
+    "kind": "exponential",
+    "high": "10000",
+    "n_buckets": 200,
+    "extended_statistics_ok": true,
+    "description": "MB of http ethernet data recvd in one day"
+  },
+  "HTTPDATA_DAILY_ETHERNET_OUT": {
+    "kind": "exponential",
+    "high": "10000",
+    "n_buckets": 200,
+    "extended_statistics_ok": true,
+    "description": "MB of http ethernet data sent in one day"
+  },
+  "HTTPDATA_DAILY_CELL_IN": {
+    "kind": "exponential",
+    "high": "10000",
+    "n_buckets": 200,
+    "extended_statistics_ok": true,
+    "description": "MB of http cell data recvd in one day"
+  },
+  "HTTPDATA_DAILY_CELL_OUT": {
+    "kind": "exponential",
+    "high": "10000",
+    "n_buckets": 200,
+    "extended_statistics_ok": true,
+    "description": "MB of http cell data sent in one day"
+  },
   "SSL_HANDSHAKE_VERSION": {
     "kind": "enumerated",
     "n_values": 16,
@@ -3553,6 +3581,18 @@
     "high": "10000",
     "n_buckets": "1000",
     "description": "The time (in milliseconds) that it took a 'detach' request to go round trip."
+  },
+  "DEVTOOLS_DEBUGGER_DISPLAY_SOURCE_LOCAL_MS": {
+    "kind": "exponential",
+    "high": "10000",
+    "n_buckets": "1000",
+    "description": "The time (in milliseconds) that it took to display a selected source to the user."
+  },
+  "DEVTOOLS_DEBUGGER_DISPLAY_SOURCE_REMOTE_MS":{
+    "kind": "exponential",
+    "high": "10000",
+    "n_buckets": "1000",
+    "description": "The time (in milliseconds) that it took to display a selected source to the user."
   },
   "WEBRTC_ICE_SUCCESS_RATE":{
     "kind": "boolean",

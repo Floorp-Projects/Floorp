@@ -661,7 +661,7 @@ js::gc::MarkRuntime(JSTracer *trc, bool useSavedRoots)
 
     AutoGCRooter::traceAll(trc);
 
-    if (rt->hasContexts()) {
+    if (!rt->isBeingDestroyed()) {
 #ifdef JSGC_USE_EXACT_ROOTING
         MarkExactStackRoots(trc);
 #else
@@ -689,7 +689,7 @@ js::gc::MarkRuntime(JSTracer *trc, bool useSavedRoots)
             MarkScriptRoot(trc, &vec[i].script, "scriptAndCountsVector");
     }
 
-    if (rt->hasContexts() &&
+    if (!rt->isBeingDestroyed() &&
         !trc->runtime->isHeapMinorCollecting() &&
         (!IS_GC_MARKING_TRACER(trc) || rt->atomsCompartment()->zone()->isCollecting()))
     {
@@ -713,7 +713,7 @@ js::gc::MarkRuntime(JSTracer *trc, bool useSavedRoots)
         }
 
         /* Do not discard scripts with counts while profiling. */
-        if (rt->profilingScripts && rt->hasContexts() && !rt->isHeapMinorCollecting()) {
+        if (rt->profilingScripts && !rt->isHeapMinorCollecting()) {
             for (CellIterUnderGC i(zone, FINALIZE_SCRIPT); !i.done(); i.next()) {
                 JSScript *script = i.get<JSScript>();
                 if (script->hasScriptCounts) {

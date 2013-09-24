@@ -70,7 +70,7 @@ public:
 
     void FindDyingJSObjects(nsTArray<nsXPCWrappedJS*>* dying);
 
-    void ShutdownMarker(JSRuntime* rt);
+    void ShutdownMarker();
 
     size_t SizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf) {
         size_t n = mallocSizeOf(this);

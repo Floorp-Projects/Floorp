@@ -26,7 +26,6 @@ static const char kCookiesPermissions[] = "network.cookie.cookieBehavior";
 static const char kCookiesLifetimeEnabled[] = "network.cookie.lifetime.enabled";
 static const char kCookiesLifetimeDays[] = "network.cookie.lifetime.days";
 static const char kCookiesLifetimeCurrentSession[] = "network.cookie.lifetime.behavior";
-static const char kCookiesP3PString[] = "network.cookie.p3p";
 static const char kCookiesAskPermission[] = "network.cookie.warnAboutCookies";
 static const char kCookiesMaxPerHost[] = "network.cookie.maxPerHost";
 

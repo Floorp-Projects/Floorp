@@ -24,7 +24,11 @@
     <content>
       <xul:stringbundle src="chrome://browser/locale/search.properties"
                         anonid="searchbar-stringbundle"/>
-
+      <!--
+      There is a dependency between "maxrows" attribute and
+      "SuggestAutoComplete._historyLimit" (nsSearchSuggestions.js). Changing
+      one of them requires changing the other one.
+      -->
       <xul:textbox class="searchbar-textbox"
                    anonid="searchbar-textbox"
                    type="autocomplete"

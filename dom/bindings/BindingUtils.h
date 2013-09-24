@@ -7,8 +7,6 @@
 #ifndef mozilla_dom_BindingUtils_h__
 #define mozilla_dom_BindingUtils_h__
 
-#include <algorithm>
-
 #include "jsfriendapi.h"
 #include "jswrapper.h"
 #include "mozilla/Alignment.h"
@@ -25,7 +23,7 @@
 #include "mozilla/Util.h"
 #include "nsCycleCollector.h"
 #include "nsIXPConnect.h"
-#include "nsThreadUtils.h" // Hacky work around for some bindings needing NS_IsMainThread.
+#include "MainThreadUtils.h"
 #include "nsTraceRefcnt.h"
 #include "qsObjectHelper.h"
 #include "xpcpublic.h"
@@ -2205,7 +2203,9 @@ class DeferredFinalizer
     MOZ_ASSERT(aSlice > 0, "nonsensical/useless call with aSlice == 0");
     SmartPtrArray* pointers = static_cast<SmartPtrArray*>(aData);
     uint32_t oldLen = pointers->Length();
-    aSlice = std::min(oldLen, aSlice);
+    if (oldLen < aSlice) {
+      aSlice = oldLen;
+    }
     uint32_t newLen = oldLen - aSlice;
     pointers->RemoveElementsAt(newLen, aSlice);
     if (newLen == 0) {

@@ -233,7 +233,9 @@ function doTest() {
 
       privateWin.close();
 
-      testOnWindow(true, function(newPrivateWin) {
+      // The .close() call above will operate asynchronously, so execute the
+      // code below asynchronously as well.
+      function callback(newPrivateWin) {
         is(newPrivateWin.content.localStorage.getItem("must disappear"), null, "private browsing values threw away");
         is(newPrivateWin.content.localStorage.length, 0, "No items");
 
@@ -245,7 +247,8 @@ function doTest() {
         prefBranch.clearUserPref("browser.startup.page")
         prefBranch.clearUserPref("browser.startup.homepage_override.mstone");
         SimpleTest.finish();
-      });
+      };
+      SimpleTest.executeSoon(function() testOnWindow(true, callback));
     });
   });
 }

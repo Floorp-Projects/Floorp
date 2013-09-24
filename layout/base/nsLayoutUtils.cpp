@@ -114,18 +114,6 @@ typedef FrameMetrics::ViewID ViewID;
 
 static ViewID sScrollIdCounter = FrameMetrics::START_SCROLL_ID;
 
-// These are indices into kDisplayKTable.  They'll be initialized
-// the first time that FlexboxEnabledPrefChangeCallback() is invoked.
-static int32_t sIndexOfFlexInDisplayTable;
-static int32_t sIndexOfInlineFlexInDisplayTable;
-// This tracks whether those ^^ indices have been initialized
-static bool sAreFlexKeywordIndicesInitialized = false;
-
-// This is an index into kPositionKTable. It will be initialized
-// the first time that StickyEnabledPrefChangeCallback() is invoked.
-static int32_t sIndexOfStickyInPositionTable;
-static bool sIsStickyKeywordIndexInitialized = false;
-
 typedef nsDataHashtable<nsUint64HashKey, nsIContent*> ContentMap;
 static ContentMap* sContentMap = nullptr;
 static ContentMap& GetContentMap() {
@@ -146,6 +134,10 @@ FlexboxEnabledPrefChangeCallback(const char* aPrefName, void* aClosure)
              "We only registered this callback for a single pref, so it "
              "should only be called for that pref");
 
+  static int32_t sIndexOfFlexInDisplayTable;
+  static int32_t sIndexOfInlineFlexInDisplayTable;
+  static bool sAreFlexKeywordIndicesInitialized; // initialized to false
+
   bool isFlexboxEnabled =
     Preferences::GetBool(FLEXBOX_ENABLED_PREF_NAME, false);
 
@@ -155,9 +147,14 @@ FlexboxEnabledPrefChangeCallback(const char* aPrefName, void* aClosure)
     sIndexOfFlexInDisplayTable =
       nsCSSProps::FindIndexOfKeyword(eCSSKeyword_flex,
                                      nsCSSProps::kDisplayKTable);
+    MOZ_ASSERT(sIndexOfFlexInDisplayTable >= 0,
+               "Couldn't find flex in kDisplayKTable");
+
     sIndexOfInlineFlexInDisplayTable =
       nsCSSProps::FindIndexOfKeyword(eCSSKeyword_inline_flex,
                                      nsCSSProps::kDisplayKTable);
+    MOZ_ASSERT(sIndexOfInlineFlexInDisplayTable >= 0,
+               "Couldn't find inline-flex in kDisplayKTable");
 
     sAreFlexKeywordIndicesInitialized = true;
   }
@@ -186,6 +183,9 @@ StickyEnabledPrefChangeCallback(const char* aPrefName, void* aClosure)
                      NS_ARRAY_LENGTH(STICKY_ENABLED_PREF_NAME)) == 0,
              "We only registered this callback for a single pref, so it "
              "should only be called for that pref");
+
+  static int32_t sIndexOfStickyInPositionTable;
+  static bool sIsStickyKeywordIndexInitialized; // initialized to false
 
   bool isStickyEnabled =
     Preferences::GetBool(STICKY_ENABLED_PREF_NAME, false);
@@ -5494,7 +5494,24 @@ nsLayoutUtils::UpdateImageVisibilityForFrame(nsIFrame* aImageFrame)
         visible = false;
         break;
       }
-      rect = sf->GetScrollPortRect();
+      // Move transformedRect to be contained in the scrollport as best we can
+      // (it might not fit) to pretend that it was scrolled into view.
+      nsRect scrollPort = sf->GetScrollPortRect();
+      if (transformedRect.XMost() > scrollPort.XMost()) {
+        transformedRect.x -= transformedRect.XMost() - scrollPort.XMost();
+      }
+      if (transformedRect.x < scrollPort.x) {
+        transformedRect.x = scrollPort.x;
+      }
+      if (transformedRect.YMost() > scrollPort.YMost()) {
+        transformedRect.y -= transformedRect.YMost() - scrollPort.YMost();
+      }
+      if (transformedRect.y < scrollPort.y) {
+        transformedRect.y = scrollPort.y;
+      }
+      transformedRect.width = std::min(transformedRect.width, scrollPort.width);
+      transformedRect.height = std::min(transformedRect.height, scrollPort.height);
+      rect = transformedRect;
       rectFrame = f;
     }
     nsIFrame* parent = f->GetParent();

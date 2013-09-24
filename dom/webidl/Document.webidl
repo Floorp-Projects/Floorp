@@ -136,17 +136,17 @@ partial interface Document {
   //(Not implemented)readonly attribute HTMLCollection commands;
 
   // special event handler IDL attributes that only apply to Document objects
-  [LenientThis, SetterThrows] attribute EventHandler onreadystatechange;
+  [LenientThis] attribute EventHandler onreadystatechange;
 
   // Gecko extensions?
-  [LenientThis, SetterThrows] attribute EventHandler onmouseenter;
-  [LenientThis, SetterThrows] attribute EventHandler onmouseleave;
-  [SetterThrows] attribute EventHandler onwheel;
-  [SetterThrows] attribute EventHandler oncopy;
-  [SetterThrows] attribute EventHandler oncut;
-  [SetterThrows] attribute EventHandler onpaste;
-  [SetterThrows] attribute EventHandler onbeforescriptexecute;
-  [SetterThrows] attribute EventHandler onafterscriptexecute;
+  [LenientThis] attribute EventHandler onmouseenter;
+  [LenientThis] attribute EventHandler onmouseleave;
+                attribute EventHandler onwheel;
+                attribute EventHandler oncopy;
+                attribute EventHandler oncut;
+                attribute EventHandler onpaste;
+                attribute EventHandler onbeforescriptexecute;
+                attribute EventHandler onafterscriptexecute;
   /**
    * True if this document is synthetic : stand alone image, video, audio file,
    * etc.

@@ -60,6 +60,7 @@
 #include "shell/jsheaptools.h"
 #include "shell/jsoptparse.h"
 #include "vm/ArgumentsObject.h"
+#include "vm/Monitor.h"
 #include "vm/Shape.h"
 #include "vm/TypedArrayObject.h"
 #include "vm/WrapperObject.h"
@@ -645,7 +646,7 @@ static JSScript *
 GetTopScript(JSContext *cx)
 {
     RootedScript script(cx);
-    JS_DescribeScriptedCaller(cx, script.address(), NULL);
+    JS_DescribeScriptedCaller(cx, &script, NULL);
     return script;
 }
 
@@ -850,7 +851,7 @@ class AutoNewContext
             RootedValue exc(oldcx);
             bool throwing = JS_IsExceptionPending(newcx);
             if (throwing)
-                JS_GetPendingException(newcx, exc.address());
+                JS_GetPendingException(newcx, &exc);
             newCompartment.destroy();
             newRequest.destroy();
             if (throwing)
@@ -906,6 +907,7 @@ Evaluate(JSContext *cx, unsigned argc, jsval *vp)
     const char *fileName = "@evaluate";
     RootedObject element(cx);
     JSAutoByteString fileNameBytes;
+    RootedString sourceURL(cx);
     RootedString sourceMapURL(cx);
     unsigned lineNumber = 1;
     RootedObject global(cx, NULL);
@@ -965,6 +967,14 @@ Evaluate(JSContext *cx, unsigned argc, jsval *vp)
             return false;
         if (!JSVAL_IS_PRIMITIVE(v))
             element = JSVAL_TO_OBJECT(v);
+
+        if (!JS_GetProperty(cx, opts, "sourceURL", &v))
+            return false;
+        if (!JSVAL_IS_VOID(v)) {
+            sourceURL = JS_ValueToString(cx, v);
+            if (!sourceURL)
+                return false;
+        }
 
         if (!JS_GetProperty(cx, opts, "sourceMapURL", &v))
             return false;
@@ -1054,12 +1064,18 @@ Evaluate(JSContext *cx, unsigned argc, jsval *vp)
         if (!script)
             return false;
 
-        if (sourceMapURL && !script->scriptSource()->hasSourceMap()) {
+        if (sourceURL && !script->scriptSource()->hasSourceURL()) {
+            const jschar *surl = JS_GetStringCharsZ(cx, sourceURL);
+            if (!surl)
+                return false;
+            if (!script->scriptSource()->setSourceURL(cx, surl))
+                return false;
+        }
+        if (sourceMapURL && !script->scriptSource()->hasSourceMapURL()) {
             const jschar *smurl = JS_GetStringCharsZ(cx, sourceMapURL);
             if (!smurl)
                 return false;
-            jschar *smurl_copy = js_strdup(cx, smurl);
-            if (!smurl_copy || !script->scriptSource()->setSourceMap(cx, smurl_copy))
+            if (!script->scriptSource()->setSourceMapURL(cx, smurl))
                 return false;
         }
         if (!JS_ExecuteScript(cx, global, script, vp)) {
@@ -1418,8 +1434,9 @@ AssertEq(JSContext *cx, unsigned argc, jsval *vp)
 }
 
 static JSScript *
-ValueToScript(JSContext *cx, jsval v, JSFunction **funp = NULL)
+ValueToScript(JSContext *cx, jsval vArg, JSFunction **funp = NULL)
 {
+    RootedValue v(cx, vArg);
     RootedFunction fun(cx, JS_ValueToFunction(cx, v));
     if (!fun)
         return NULL;
@@ -2333,7 +2350,7 @@ Clone(JSContext *cx, unsigned argc, jsval *vp)
     }
 
     if (argc > 1) {
-        if (!JS_ValueToObject(cx, args[1], parent.address()))
+        if (!JS_ValueToObject(cx, args[1], &parent))
             return false;
     } else {
         parent = JS_GetParent(JSVAL_TO_OBJECT(JS_CALLEE(cx, vp)));
@@ -2354,17 +2371,18 @@ GetPDA(JSContext *cx, unsigned argc, jsval *vp)
     JSPropertyDescArray pda;
     JSPropertyDesc *pd;
 
-    if (!JS_ValueToObject(cx, argc == 0 ? UndefinedValue() : vp[2], vobj.address()))
+    CallArgs args = CallArgsFromVp(argc, vp);
+    if (!JS_ValueToObject(cx, args[0], &vobj))
         return false;
     if (!vobj) {
-        JS_SET_RVAL(cx, vp, UndefinedValue());
+        args.rval().setUndefined();
         return true;
     }
 
     RootedObject aobj(cx, JS_NewArrayObject(cx, 0, NULL));
     if (!aobj)
         return false;
-    JS_SET_RVAL(cx, vp, OBJECT_TO_JSVAL(aobj));
+    args.rval().setObject(*aobj);
 
     ok = !!JS_GetPropertyDescArray(cx, vobj, &pda);
     if (!ok)
@@ -2553,7 +2571,7 @@ EvalInContext(JSContext *cx, unsigned argc, jsval *vp)
     RootedScript script(cx);
     unsigned lineno;
 
-    JS_DescribeScriptedCaller(cx, script.address(), &lineno);
+    JS_DescribeScriptedCaller(cx, &script, &lineno);
     RootedValue rval(cx);
     {
         Maybe<JSAutoCompartment> ac;
@@ -3227,11 +3245,91 @@ SyntaxParse(JSContext *cx, unsigned argc, jsval *vp)
 
 #ifdef JS_THREADSAFE
 
+class OffThreadState {
+  public:
+    enum State {
+        IDLE,           /* ready to work; no token, no source */
+        COMPILING,      /* working; no token, have source */
+        DONE            /* compilation done: have token and source */
+    };
+
+    OffThreadState() : monitor(), state(IDLE), token() { }
+    bool init() { return monitor.init(); }
+
+    bool startIfIdle(JSContext *cx, JSString *newSource) {
+        AutoLockMonitor alm(monitor);
+        if (state != IDLE)
+            return false;
+
+        JS_ASSERT(!token);
+        JS_ASSERT(!source);
+
+        source = newSource;
+        if (!JS_AddStringRoot(cx, &source))
+            return false;
+
+        state = COMPILING;
+        return true;
+    }
+
+    void abandon(JSContext *cx) {
+        AutoLockMonitor alm(monitor);
+        JS_ASSERT(state == COMPILING);
+        JS_ASSERT(!token);
+        JS_ASSERT(source);
+
+        JS_RemoveStringRoot(cx, &source);
+        source = NULL;
+
+        state = IDLE;
+    }
+
+    void markDone(void *newToken) {
+        AutoLockMonitor alm(monitor);
+        JS_ASSERT(state == COMPILING);
+        JS_ASSERT(!token);
+        JS_ASSERT(source);
+        JS_ASSERT(newToken);
+
+        token = newToken;
+        state = DONE;
+        alm.notify();
+    }
+
+    void *waitUntilDone(JSContext *cx) {
+        AutoLockMonitor alm(monitor);
+        if (state == IDLE)
+            return NULL;
+
+        if (state == COMPILING) {
+            while (state != DONE)
+                alm.wait();
+        }
+
+        JS_ASSERT(source);
+        JS_RemoveStringRoot(cx, &source);
+        source = NULL;
+
+        JS_ASSERT(token);
+        void *holdToken = token;
+        token = NULL;
+        state = IDLE;
+        return holdToken;
+    }
+
+  private:
+    Monitor monitor;
+    State state;
+    void *token;
+    JSString *source;
+};
+
+static OffThreadState offThreadState;
+
 static void
 OffThreadCompileScriptCallback(void *token, void *callbackData)
 {
-    // This callback is invoked off the main thread and there isn't a good way
-    // to pass the script on to the main thread. Just let the script leak.
+    offThreadState.markDone(token);
 }
 
 static bool
@@ -3256,28 +3354,49 @@ OffThreadCompileScript(JSContext *cx, unsigned argc, jsval *vp)
            .setCompileAndGo(true)
            .setSourcePolicy(CompileOptions::SAVE_SOURCE);
 
+    if (!JS::CanCompileOffThread(cx, options)) {
+        JS_ReportError(cx, "cannot compile code on worker thread");
+        return false;
+    }
+
     const jschar *chars = JS_GetStringCharsZ(cx, scriptContents);
     if (!chars)
         return false;
     size_t length = JS_GetStringLength(scriptContents);
 
-    // Prevent the string contents from ever being GC'ed. This will leak memory
-    // but since the compiled script is never consumed there isn't much choice.
-    JSString **permanentRoot = cx->new_<JSString *>();
-    if (!permanentRoot)
+    if (!offThreadState.startIfIdle(cx, scriptContents)) {
+        JS_ReportError(cx, "called offThreadCompileScript without calling runOffThreadScript"
+                       " to receive prior off-thread compilation");
         return false;
-    *permanentRoot = scriptContents;
-    if (!JS_AddStringRoot(cx, permanentRoot))
-        return false;
+    }
 
-    if (!StartOffThreadParseScript(cx, options, chars, length, cx->global(),
-                                   OffThreadCompileScriptCallback, NULL))
+    if (!JS::CompileOffThread(cx, cx->global(), options, chars, length,
+                              OffThreadCompileScriptCallback, NULL))
     {
+        offThreadState.abandon(cx);
         return false;
     }
 
     args.rval().setUndefined();
     return true;
+}
+
+static bool
+runOffThreadScript(JSContext *cx, unsigned argc, jsval *vp)
+{
+    CallArgs args = CallArgsFromVp(argc, vp);
+
+    void *token = offThreadState.waitUntilDone(cx);
+    if (!token) {
+        JS_ReportError(cx, "called runOffThreadScript when no compilation is pending");
+        return false;
+    }
+
+    RootedScript script(cx, JS::FinishOffThreadScript(cx, cx->runtime(), token));
+    if (!script)
+        return false;
+
+    return JS_ExecuteScript(cx, cx->global(), script, args.rval().address());
 }
 
 #endif // JS_THREADSAFE
@@ -3465,7 +3584,7 @@ DecompileThisScript(JSContext *cx, unsigned argc, Value *vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
     RootedScript script (cx);
-    if (!JS_DescribeScriptedCaller(cx, script.address(), NULL)) {
+    if (!JS_DescribeScriptedCaller(cx, &script, NULL)) {
         args.rval().setString(cx->runtime()->emptyString);
         return true;
     }
@@ -3481,7 +3600,7 @@ ThisFilename(JSContext *cx, unsigned argc, Value *vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
     RootedScript script (cx);
-    if (!JS_DescribeScriptedCaller(cx, script.address(), NULL) || !script->filename()) {
+    if (!JS_DescribeScriptedCaller(cx, &script, NULL) || !script->filename()) {
         args.rval().setString(cx->runtime()->emptyString);
         return true;
     }
@@ -3916,6 +4035,13 @@ static const JSFunctionSpecWithHelp shell_functions[] = {
     JS_FN_HELP("offThreadCompileScript", OffThreadCompileScript, 1, 0,
 "offThreadCompileScript(code)",
 "  Trigger an off thread parse/emit for the input string"),
+
+    JS_FN_HELP("runOffThreadScript", runOffThreadScript, 0, 0,
+"runOffThreadScript()",
+"  Wait for off-thread compilation to complete. If an error occurred,\n"
+"  throw the appropriate exception; otherwise, run the script and return\n"
+               "  its value."),
+
 #endif
 
     JS_FN_HELP("timeout", Timeout, 1, 0,
@@ -4128,248 +4254,6 @@ Help(JSContext *cx, unsigned argc, jsval *vp)
     return true;
 }
 
-/*
- * Define a JS object called "it".  Give it class operations that printf why
- * they're being called for tutorial purposes.
- */
-enum its_tinyid {
-    ITS_COLOR, ITS_HEIGHT, ITS_WIDTH, ITS_FUNNY, ITS_ARRAY, ITS_RDONLY,
-    ITS_CUSTOM, ITS_CUSTOMRDONLY
-};
-
-static bool
-its_getter(JSContext *cx, HandleObject obj, HandleId id, MutableHandleValue vp);
-
-static bool
-its_setter(JSContext *cx, HandleObject obj, HandleId id, bool strict, MutableHandleValue vp);
-
-static bool
-its_get_customNative(JSContext *cx, unsigned argc, jsval *vp);
-
-static bool
-its_set_customNative(JSContext *cx, unsigned argc, jsval *vp);
-
-static const JSPropertySpec its_props[] = {
-    {"color",           ITS_COLOR,      JSPROP_ENUMERATE,       JSOP_NULLWRAPPER, JSOP_NULLWRAPPER},
-    {"height",          ITS_HEIGHT,     JSPROP_ENUMERATE,       JSOP_NULLWRAPPER, JSOP_NULLWRAPPER},
-    {"width",           ITS_WIDTH,      JSPROP_ENUMERATE,       JSOP_NULLWRAPPER, JSOP_NULLWRAPPER},
-    {"funny",           ITS_FUNNY,      JSPROP_ENUMERATE,       JSOP_NULLWRAPPER, JSOP_NULLWRAPPER},
-    {"array",           ITS_ARRAY,      JSPROP_ENUMERATE,       JSOP_NULLWRAPPER, JSOP_NULLWRAPPER},
-    {"rdonly",          ITS_RDONLY,     JSPROP_READONLY,        JSOP_NULLWRAPPER, JSOP_NULLWRAPPER},
-    {"custom",          ITS_CUSTOM,     JSPROP_ENUMERATE,
-                        JSOP_WRAPPER(its_getter),     JSOP_WRAPPER(its_setter)},
-    {"customRdOnly",    ITS_CUSTOMRDONLY, JSPROP_ENUMERATE | JSPROP_READONLY,
-                        JSOP_WRAPPER(its_getter),     JSOP_WRAPPER(its_setter)},
-    JS_PSGS("customNative", its_get_customNative, its_set_customNative, JSPROP_ENUMERATE),
-    JS_PS_END
-};
-
-static bool its_noisy;    /* whether to be noisy when finalizing it */
-static bool its_enum_fail;/* whether to fail when enumerating it */
-
-static bool
-its_addProperty(JSContext *cx, HandleObject obj, HandleId id, MutableHandleValue vp)
-{
-    if (!its_noisy)
-        return true;
-
-    ToStringHelper idString(cx, id);
-    fprintf(gOutFile, "adding its property %s,", idString.getBytes());
-    ToStringHelper valueString(cx, vp);
-    fprintf(gOutFile, " initial value %s\n", valueString.getBytes());
-    return true;
-}
-
-static bool
-its_delProperty(JSContext *cx, HandleObject obj, HandleId id, bool *succeeded)
-{
-    if (!its_noisy) {
-        *succeeded = true;
-        return true;
-    }
-
-    ToStringHelper idString(cx, id);
-    if (idString.threw())
-        return false;
-
-    fprintf(gOutFile, "deleting its property %s,", idString.getBytes());
-
-    *succeeded = true;
-    return true;
-}
-
-static bool
-its_getProperty(JSContext *cx, HandleObject obj, HandleId id, MutableHandleValue vp)
-{
-    if (!its_noisy)
-        return true;
-
-    ToStringHelper idString(cx, id);
-    fprintf(gOutFile, "getting its property %s,", idString.getBytes());
-    ToStringHelper valueString(cx, vp);
-    fprintf(gOutFile, " initial value %s\n", valueString.getBytes());
-    return true;
-}
-
-static bool
-its_setProperty(JSContext *cx, HandleObject obj, HandleId id, bool strict, MutableHandleValue vp)
-{
-    ToStringHelper idString(cx, id);
-    if (its_noisy) {
-        fprintf(gOutFile, "setting its property %s,", idString.getBytes());
-        ToStringHelper valueString(cx, vp);
-        fprintf(gOutFile, " new value %s\n", valueString.getBytes());
-    }
-
-    if (!JSID_IS_ATOM(id))
-        return true;
-
-    if (!strcmp(idString.getBytes(), "noisy"))
-        JS_ValueToBoolean(cx, vp, &its_noisy);
-    else if (!strcmp(idString.getBytes(), "enum_fail"))
-        JS_ValueToBoolean(cx, vp, &its_enum_fail);
-
-    return true;
-}
-
-/*
- * Its enumerator, implemented using the "new" enumerate API,
- * see class flags.
- */
-static bool
-its_enumerate(JSContext *cx, HandleObject obj, JSIterateOp enum_op,
-              jsval *statep, jsid *idp)
-{
-    RootedObject iterator(cx);
-
-    switch (enum_op) {
-      case JSENUMERATE_INIT:
-      case JSENUMERATE_INIT_ALL:
-        if (its_noisy)
-            fprintf(gOutFile, "enumerate its properties\n");
-
-        iterator = JS_NewPropertyIterator(cx, obj);
-        if (!iterator)
-            return false;
-
-        *statep = OBJECT_TO_JSVAL(iterator);
-        if (idp)
-            *idp = INT_TO_JSID(0);
-        break;
-
-      case JSENUMERATE_NEXT:
-        if (its_enum_fail) {
-            JS_ReportError(cx, "its enumeration failed");
-            return false;
-        }
-
-        iterator = (JSObject *) JSVAL_TO_OBJECT(*statep);
-        if (!JS_NextProperty(cx, iterator, idp))
-            return false;
-
-        if (!JSID_IS_VOID(*idp))
-            break;
-        /* Fall through. */
-
-      case JSENUMERATE_DESTROY:
-        /* Allow our iterator object to be GC'd. */
-        *statep = NullValue();
-        break;
-    }
-
-    return true;
-}
-
-static bool
-its_resolve(JSContext *cx, HandleObject obj, HandleId id, unsigned flags,
-            MutableHandleObject objp)
-{
-    if (its_noisy) {
-        ToStringHelper idString(cx, id);
-        fprintf(gOutFile, "resolving its property %s, flags {%s}\n",
-               idString.getBytes(),
-               (flags & JSRESOLVE_ASSIGNING) ? "assigning" : "");
-    }
-    return true;
-}
-
-static bool
-its_convert(JSContext *cx, HandleObject obj, JSType type, MutableHandleValue vp)
-{
-    if (its_noisy)
-        fprintf(gOutFile, "converting it to %s type\n", JS_GetTypeName(cx, type));
-    return JS_ConvertStub(cx, obj, type, vp);
-}
-
-static void
-its_finalize(JSFreeOp *fop, JSObject *obj)
-{
-    if (its_noisy)
-        fprintf(gOutFile, "finalizing it\n");
-}
-
-static const JSClass its_class = {
-    "It", JSCLASS_NEW_RESOLVE | JSCLASS_NEW_ENUMERATE | JSCLASS_HAS_RESERVED_SLOTS(1),
-    its_addProperty,  its_delProperty,  its_getProperty,  its_setProperty,
-    (JSEnumerateOp)its_enumerate, (JSResolveOp)its_resolve,
-    its_convert,      its_finalize,
-};
-
-static bool
-its_getter(JSContext *cx, HandleObject obj, HandleId id, MutableHandleValue vp)
-{
-    if (JS_GetClass(obj) != &its_class) {
-        vp.set(UndefinedValue());
-        return true;
-    }
-
-    vp.set(JS_GetReservedSlot(obj, 0));
-    return true;
-}
-
-static bool
-its_setter(JSContext *cx, HandleObject obj, HandleId id, bool strict, MutableHandleValue vp)
-{
-    if (JS_GetClass(obj) != &its_class)
-        return true;
-
-    JS_SetReservedSlot(obj, 0, vp);
-
-    vp.set(UndefinedValue());
-    return true;
-}
-
-static bool
-its_get_customNative(JSContext *cx, unsigned argc, jsval *vp)
-{
-    JSObject *obj = JS_THIS_OBJECT(cx, vp);
-    if (!obj)
-        return false;
-
-    if (JS_GetClass(obj) != &its_class) {
-        JS_SET_RVAL(cx, vp, UndefinedValue());
-        return true;
-    }
-
-    JS_SET_RVAL(cx, vp, JS_GetReservedSlot(obj, 0));
-    return true;
-}
-
-static bool
-its_set_customNative(JSContext *cx, unsigned argc, jsval *vp)
-{
-    JSObject *obj = JS_THIS_OBJECT(cx, vp);
-    if (!obj)
-        return false;
-
-    if (JS_GetClass(obj) != &its_class)
-        return true;
-
-    JS_SetReservedSlot(obj, 0, argc >= 1 ? JS_ARGV(cx, vp)[0] : UndefinedValue());
-    JS_SET_RVAL(cx, vp, UndefinedValue());
-    return true;
-}
-
 JSErrorFormatString jsShell_ErrorFormatString[JSShellErr_Limit] = {
 #define MSG_DEF(name, number, count, exception, format) \
     { format, count, JSEXN_ERR } ,
@@ -4413,7 +4297,8 @@ Exec(JSContext *cx, unsigned argc, jsval *vp)
 
     JS_SET_RVAL(cx, vp, UndefinedValue());
 
-    fun = JS_ValueToFunction(cx, vp[0]);
+    RootedValue arg(cx, vp[0]);
+    fun = JS_ValueToFunction(cx, arg);
     if (!fun)
         return false;
     if (!fun->atom)
@@ -4968,27 +4853,6 @@ NewGlobalObject(JSContext *cx, JS::CompartmentOptions &options)
         if (!fuzzingSafe && !JS_DefineFunctionsWithHelp(cx, glob, fuzzing_unsafe_functions))
             return NULL;
 
-        RootedObject it(cx, JS_DefineObject(cx, glob, "it", &its_class, NULL, 0));
-        if (!it)
-            return NULL;
-        if (!JS_DefineProperties(cx, it, its_props))
-            return NULL;
-
-        if (!JS_DefineProperty(cx, glob, "custom", UndefinedValue(), its_getter,
-                               its_setter, 0))
-            return NULL;
-        if (!JS_DefineProperty(cx, glob, "customRdOnly", UndefinedValue(), its_getter,
-                               its_setter, JSPROP_READONLY))
-            return NULL;
-
-        if (!JS_DefineProperty(cx, glob, "customNative", UndefinedValue(),
-                               JS_CAST_NATIVE_TO(its_get_customNative, JSPropertyOp),
-                               JS_CAST_NATIVE_TO(its_set_customNative, JSStrictPropertyOp),
-                               JSPROP_SHARED | JSPROP_NATIVE_ACCESSORS))
-        {
-            return NULL;
-        }
-
         /* Initialize FakeDOMObject. */
         static const js::DOMCallbacks DOMcallbacks = {
             InstanceClassHasProtoAtDepth
@@ -5527,6 +5391,11 @@ main(int argc, char **argv, char **envp)
     JS_SetOperationCallback(rt, ShellOperationCallback);
 
     JS_SetNativeStackQuota(rt, gMaxStackSize);
+
+#ifdef JS_THREADSAFE
+    if (!offThreadState.init())
+        return 1;
+#endif
 
     if (!InitWatchdog(rt))
         return 1;

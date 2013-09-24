@@ -164,6 +164,12 @@ function forwardToChild(aMessage, aListener, aVCPosition) {
 function activateCurrent(aMessage) {
   Logger.debug('activateCurrent');
   function activateAccessible(aAccessible) {
+    if (aMessage.json.activateIfKey &&
+        aAccessible.role != Ci.nsIAccessibleRole.ROLE_KEY) {
+      // Only activate keys, don't do anything on other objects.
+      return;
+    }
+
     if (aAccessible.actionCount > 0) {
       aAccessible.doAction(0);
     } else {

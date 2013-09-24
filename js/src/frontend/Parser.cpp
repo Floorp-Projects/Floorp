@@ -2998,7 +2998,8 @@ Parser<FullParseHandler>::makeSetCall(ParseNode *pn, unsigned msg)
 {
     JS_ASSERT(pn->isKind(PNK_CALL));
     JS_ASSERT(pn->isArity(PN_LIST));
-    JS_ASSERT(pn->isOp(JSOP_CALL) || pn->isOp(JSOP_EVAL) ||
+    JS_ASSERT(pn->isOp(JSOP_CALL) || pn->isOp(JSOP_SPREADCALL) ||
+              pn->isOp(JSOP_EVAL) || pn->isOp(JSOP_SPREADEVAL) ||
               pn->isOp(JSOP_FUNCALL) || pn->isOp(JSOP_FUNAPPLY));
 
     if (!report(ParseStrictError, pc->sc->strict, pn, msg))
@@ -4576,16 +4577,14 @@ Parser<ParseHandler>::yieldExpression()
 
         pc->lastYieldOffset = begin;
 
-        bool isDelegatingYield = tokenStream.matchToken(TOK_MUL);
+        ParseNodeKind kind = tokenStream.matchToken(TOK_MUL) ? PNK_YIELD_STAR : PNK_YIELD;
 
         // ES6 generators require a value.
         Node exprNode = assignExpr();
         if (!exprNode)
             return null();
 
-        // FIXME: Plumb isDelegatingYield appropriately.
-        (void) isDelegatingYield;
-        return handler.newUnary(PNK_YIELD, JSOP_YIELD, begin, exprNode);
+        return handler.newUnary(kind, JSOP_NOP, begin, exprNode);
       }
 
       case NotGenerator:
@@ -4647,7 +4646,7 @@ Parser<ParseHandler>::yieldExpression()
                 return null();
         }
 
-        return handler.newUnary(PNK_YIELD, JSOP_YIELD, begin, exprNode);
+        return handler.newUnary(PNK_YIELD, JSOP_NOP, begin, exprNode);
       }
     }
 
@@ -5433,8 +5432,8 @@ Parser<FullParseHandler>::checkAndMarkAsIncOperand(ParseNode *kid, TokenKind tt,
         !kid->isKind(PNK_DOT) &&
         !kid->isKind(PNK_ELEM) &&
         !(kid->isKind(PNK_CALL) &&
-          (kid->isOp(JSOP_CALL) ||
-           kid->isOp(JSOP_EVAL) ||
+          (kid->isOp(JSOP_CALL) || kid->isOp(JSOP_SPREADCALL) ||
+           kid->isOp(JSOP_EVAL) || kid->isOp(JSOP_SPREADEVAL) ||
            kid->isOp(JSOP_FUNCALL) ||
            kid->isOp(JSOP_FUNAPPLY))))
     {
@@ -6093,7 +6092,7 @@ Parser<FullParseHandler>::generatorExpr(ParseNode *kid)
     ParseNode *pn = UnaryNode::create(PNK_YIELD, &handler);
     if (!pn)
         return null();
-    pn->setOp(JSOP_YIELD);
+    pn->setOp(JSOP_NOP);
     pn->setInParens(true);
     pn->pn_pos = kid->pn_pos;
     pn->pn_kid = kid;
@@ -6194,7 +6193,7 @@ Parser<ParseHandler>::assignExprWithoutYield(unsigned msg)
 
 template <typename ParseHandler>
 bool
-Parser<ParseHandler>::argumentList(Node listNode)
+Parser<ParseHandler>::argumentList(Node listNode, bool *isSpread)
 {
     if (tokenStream.matchToken(TOK_RP, TokenStream::Operand))
         return true;
@@ -6203,9 +6202,22 @@ Parser<ParseHandler>::argumentList(Node listNode)
     bool arg0 = true;
 
     do {
+        bool spread = false;
+        uint32_t begin = 0;
+        if (tokenStream.matchToken(TOK_TRIPLEDOT, TokenStream::Operand)) {
+            spread = true;
+            begin = pos().begin;
+            *isSpread = true;
+        }
+
         Node argNode = assignExpr();
         if (!argNode)
             return false;
+        if (spread) {
+            argNode = handler.newUnary(PNK_SPREAD, JSOP_NOP, begin, argNode);
+            if (!argNode)
+                return null();
+        }
 
         if (handler.isOperationWithoutParens(argNode, PNK_YIELD) &&
             tokenStream.peekToken() == TOK_COMMA) {
@@ -6213,7 +6225,7 @@ Parser<ParseHandler>::argumentList(Node listNode)
             return false;
         }
 #if JS_HAS_GENERATOR_EXPRS
-        if (tokenStream.matchToken(TOK_FOR)) {
+        if (!spread && tokenStream.matchToken(TOK_FOR)) {
             if (pc->lastYieldOffset != startYieldOffset) {
                 reportWithOffset(ParseError, false, pc->lastYieldOffset,
                                  JSMSG_BAD_GENEXP_BODY, js_yield_str);
@@ -6263,8 +6275,13 @@ Parser<ParseHandler>::memberExpr(TokenKind tt, bool allowCallSyntax)
 
         handler.addList(lhs, ctorExpr);
 
-        if (tokenStream.matchToken(TOK_LP) && !argumentList(lhs))
-            return null();
+        if (tokenStream.matchToken(TOK_LP)) {
+            bool isSpread = false;
+            if (!argumentList(lhs, &isSpread))
+                return null();
+            if (isSpread)
+                handler.setOp(lhs, JSOP_SPREADNEW);
+        }
     } else {
         lhs = primaryExpr(tt);
         if (!lhs)
@@ -6297,6 +6314,7 @@ Parser<ParseHandler>::memberExpr(TokenKind tt, bool allowCallSyntax)
             if (!nextMember)
                 return null();
         } else if (allowCallSyntax && tt == TOK_LP) {
+            JSOp op = JSOP_CALL;
             nextMember = handler.newList(PNK_CALL, null(), JSOP_CALL);
             if (!nextMember)
                 return null();
@@ -6304,7 +6322,7 @@ Parser<ParseHandler>::memberExpr(TokenKind tt, bool allowCallSyntax)
             if (JSAtom *atom = handler.isName(lhs)) {
                 if (atom == context->names().eval) {
                     /* Select JSOP_EVAL and flag pc as heavyweight. */
-                    handler.setOp(nextMember, JSOP_EVAL);
+                    op = JSOP_EVAL;
                     pc->sc->setBindingsAccessedDynamically();
 
                     /*
@@ -6317,19 +6335,23 @@ Parser<ParseHandler>::memberExpr(TokenKind tt, bool allowCallSyntax)
             } else if (JSAtom *atom = handler.isGetProp(lhs)) {
                 /* Select JSOP_FUNAPPLY given foo.apply(...). */
                 if (atom == context->names().apply) {
-                    handler.setOp(nextMember, JSOP_FUNAPPLY);
+                    op = JSOP_FUNAPPLY;
                     if (pc->sc->isFunctionBox())
                         pc->sc->asFunctionBox()->usesApply = true;
                 } else if (atom == context->names().call) {
-                    handler.setOp(nextMember, JSOP_FUNCALL);
+                    op = JSOP_FUNCALL;
                 }
             }
 
             handler.setBeginPosition(nextMember, lhs);
             handler.addList(nextMember, lhs);
 
-            if (!argumentList(nextMember))
+            bool isSpread = false;
+            if (!argumentList(nextMember, &isSpread))
                 return null();
+            if (isSpread)
+                op = (op == JSOP_EVAL ? JSOP_SPREADEVAL : JSOP_SPREADCALL);
+            handler.setOp(nextMember, op);
         } else {
             tokenStream.ungetToken();
             return lhs;

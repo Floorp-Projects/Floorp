@@ -7,14 +7,11 @@
 #include "nsCOMPtr.h"
 #include "nsString.h"
 
-#include "nsNetUtil.h"
-
 #include "nsIDNSListener.h"
-#include "nsIDNSRecord.h"
 #include "nsIDNSService.h"
 #include "nsICancelable.h"
+#include "nsIURI.h"
 
-static NS_DEFINE_CID(kDNSServiceCID, NS_DNSSERVICE_CID);
 static nsIDNSService *sDNSService = nullptr;
 
 nsresult

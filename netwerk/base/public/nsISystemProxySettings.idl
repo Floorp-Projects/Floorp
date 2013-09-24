@@ -4,7 +4,6 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "nsISupports.idl"
-#include "nsIURI.idl"
 
 /** 
  * This interface allows the proxy code to use platform-specific proxy

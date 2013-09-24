@@ -27,7 +27,6 @@
 #include "nsContentPolicyUtils.h"
 #include "nsCrossSiteListenerProxy.h"
 #include "nsIContentSecurityPolicy.h"
-#include "nsChannelPolicy.h"
 #include "nsIDocShell.h"
 #include "nsIWebNavigation.h"
 

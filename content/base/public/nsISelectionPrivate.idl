@@ -3,8 +3,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "nsISupports.idl"
-#include "nsISelectionListener.idl"
 #include "nsISelection.idl"
 
 interface nsRange;
@@ -18,8 +16,8 @@ class nsIFrame;
 struct nsTextRangeStyle;
 struct nsPoint;
 struct ScrollAxis;
+template<class T> class nsTArray;
 #include "nsDirection.h"
-#include "nsTArray.h"
 #include "nsIPresShell.h" // TODO: Remove this include
 %}
 

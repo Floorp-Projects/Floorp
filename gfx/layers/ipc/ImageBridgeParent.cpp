@@ -103,12 +103,12 @@ ConnectImageBridgeInParentProcess(ImageBridgeParent* aBridge,
                 XRE_GetIOMessageLoop(), AsyncChannel::Parent);
 }
 
-/*static*/ PImageBridgeParent*
+/*static*/ bool
 ImageBridgeParent::Create(Transport* aTransport, ProcessId aOtherProcess)
 {
   ProcessHandle processHandle;
   if (!base::OpenProcessHandle(aOtherProcess, &processHandle)) {
-    return nullptr;
+    return false;
   }
 
   MessageLoop* loop = CompositorParent::CompositorLoop();
@@ -117,7 +117,7 @@ ImageBridgeParent::Create(Transport* aTransport, ProcessId aOtherProcess)
   loop->PostTask(FROM_HERE,
                  NewRunnableFunction(ConnectImageBridgeInParentProcess,
                                      bridge.get(), aTransport, processHandle));
-  return bridge.get();
+  return true;
 }
 
 bool ImageBridgeParent::RecvStop()

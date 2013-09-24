@@ -31,6 +31,7 @@ _MOZBUILD_EXTERNAL_VARIABLES := \
   GTEST_CSRCS \
   HOST_CSRCS \
   HOST_LIBRARY_NAME \
+  IS_COMPONENT \
   LIBRARY_NAME \
   LIBXUL_LIBRARY \
   MODULE \
@@ -47,6 +48,8 @@ _MOZBUILD_EXTERNAL_VARIABLES := \
 
 _DEPRECATED_VARIABLES := \
   XPIDL_FLAGS \
+  MOCHITEST_FILES_PARTS \
+  MOCHITEST_BROWSER_FILES_PARTS \
   $(NULL)
 
 ifndef EXTERNALLY_MANAGED_MAKE_FILE
@@ -692,7 +695,9 @@ SUBMAKEFILES += $(addsuffix /Makefile, $(DIRS) $(TOOL_DIRS) $(PARALLEL_DIRS))
 ifndef SUPPRESS_DEFAULT_RULES
 default all::
 	$(MAKE) export
+ifdef MOZ_PSEUDO_DERECURSE
 	$(MAKE) compile
+endif
 	$(MAKE) libs
 	$(MAKE) tools
 endif # SUPPRESS_DEFAULT_RULES
@@ -734,6 +739,13 @@ endif
 compile:: $(OBJS) $(HOST_OBJS)
 
 include $(topsrcdir)/config/makefiles/target_libs.mk
+
+ifdef IS_TOOL_DIR
+# One would think "tools:: libs" would work, but it turns out that combined with
+# bug 907365, this makes make forget to run some rules sometimes.
+tools::
+	@$(MAKE) libs
+endif
 
 ##############################################
 ifndef NO_PROFILE_GUIDED_OPTIMIZE
@@ -1213,7 +1225,7 @@ endif
 ###############################################################################
 # Java rules
 ###############################################################################
-ifneq (,$(value JAVAFILES)$(value RESFILES))
+ifneq (,$(value JAVAFILES)$(value ANDROID_RESFILES))
   include $(topsrcdir)/config/makefiles/java-build.mk
 endif
 
@@ -1739,10 +1751,8 @@ FREEZE_VARIABLES = \
   EXTRA_COMPONENTS \
   EXTRA_PP_COMPONENTS \
   MOCHITEST_FILES \
-  MOCHITEST_FILES_PARTS \
   MOCHITEST_CHROME_FILES \
   MOCHITEST_BROWSER_FILES \
-  MOCHITEST_BROWSER_FILES_PARTS \
   MOCHITEST_A11Y_FILES \
   MOCHITEST_METRO_FILES \
   MOCHITEST_ROBOCOP_FILES \

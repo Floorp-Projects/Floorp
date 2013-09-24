@@ -34,18 +34,16 @@ SpecialPowers.pushPrefEnv({"set": [["media.webvtt.enabled", true]]},
         setTimeout(run_tests, 0);
         return;
       }
-      todo_is(trackElement.readyState, 2, "Track::ReadyState should be set to LOADED.");
+      is(trackElement.readyState, 2, "Track::ReadyState should be set to LOADED.");
 
       var cueList = trackElement.track.cues;
-      todo_is(cueList.length, 4, "Cue list length should be 4.");
+      is(cueList.length, 4, "Cue list length should be 4.");
 
       // Check that the typedef of TextTrackCue works in Gecko.
       is(window.TextTrackCue, undefined, "TextTrackCue should be undefined.");
       isnot(window.VTTCue, undefined, "VTTCue should be defined.");
 
       // Check if first cue was parsed correctly.
-      // FIXME: disabled by bug 887463.
-      if (false) {
       var cue = cueList[0];
       is(cue.id, "1", "Cue's ID should be 1.");
       is(cue.startTime, 0.5, "Cue's start time should be 0.5.");
@@ -86,43 +84,29 @@ SpecialPowers.pushPrefEnv({"set": [["media.webvtt.enabled", true]]},
       is(cue.text, "foo", "Cue's text should be foo.");
 
       // Adding the same cue again should not increase the cue count.
-      // TODO: https://bugzilla.mozilla.org/show_bug.cgi?id=867823
-      //       http://www.whatwg.org/specs/web-apps/current-work/multipage/the-video-element.html#dom-texttrack-addcue
       trackElement.track.addCue(vttCue);
-      todo_is(cueList.length, 5, "Cue list length should be 5.");
+      is(cueList.length, 5, "Cue list length should be 5.");
 
       // Check that we are able to remove cues.
       trackElement.track.removeCue(cue);
-      // TODO: Marked as todo as incorrect addition up top increases cue count
-      // to 4 -- https://bugzilla.mozilla.org/show_bug.cgi?id=867823
-      todo_is(cueList.length, 4, "Cue list length should be 4.");
-
-      // FIXME: end of bug 887463 disable.
-      }
+      is(cueList.length, 4, "Cue list length should be 4.");
 
       var exceptionHappened = false;
       try {
         // We should not be able to remove a cue that is not in the list.
         cue = new VTTCue(1, 2, "foo");
-        trackElement.removeCue(cue);
+        trackElement.track.removeCue(cue);
       } catch (e) {
         // "NotFoundError" should be thrown when trying to remove a cue that is
         // not in the list.
-        // TODO: https://bugzilla.mozilla.org/show_bug.cgi?id=867823
-        //       http://www.whatwg.org/specs/web-apps/current-work/multipage/the-video-element.html#dom-texttrack-removecue
-        todo_is(e.name, "NotFoundError", "We should have caught an error.");
+        is(e.name, "NotFoundError", "Should have thrown NotFoundError.");
         exceptionHappened = true;
       }
       // If this is false then we did not throw an error and probably removed a cue
       // when we shouln't have.
       ok(exceptionHappened, "Exception should have happened.");
 
-      // We should not have removed a cue so the cue list length should not
-      // have changed.
-      // TODO: Marked as todo as incorrect addition of cue up top increases
-      // count erroneously.
-      // https://bugzilla.mozilla.org/show_bug.cgi?id=867823
-      todo_is(cueList.length, 4, "Cue list length should be 4.");
+      is(cueList.length, 4, "Cue list length should be 4.");
 
       SimpleTest.finish();
     });

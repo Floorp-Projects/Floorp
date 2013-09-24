@@ -31,8 +31,8 @@ function onTabViewWindowLoaded(win) {
   let mozilla  = win.gBrowser.loadOneTab("about:mozilla", bg);
   let synclog   = win.gBrowser.loadOneTab("about:sync-log", bg);
   let html     = win.gBrowser.loadOneTab("http://example.com", bg);
-  let png      = win.gBrowser.loadOneTab("http://mochi.test:8888/browser/browser/base/content/test/moz.png", bg);
-  let svg      = win.gBrowser.loadOneTab("http://mochi.test:8888/browser/browser/base/content/test/title_test.svg", bg);
+  let png      = win.gBrowser.loadOneTab("http://mochi.test:8888/browser/browser/base/content/test/general/moz.png", bg);
+  let svg      = win.gBrowser.loadOneTab("http://mochi.test:8888/browser/browser/base/content/test/general/title_test.svg", bg);
   
   ok(!group.shouldStack(group._children.length), "Group should not stack.");
   

@@ -5,6 +5,7 @@
 MOCHITEST_BROWSER_FILES = \
 		head.js \
 		browser_devtools_api.js \
+		browser_dynamic_tool_enabling.js \
 		browser_new_activation_workflow.js \
 		browser_toolbox_dynamic_registration.js \
 		browser_toolbox_hosts.js \

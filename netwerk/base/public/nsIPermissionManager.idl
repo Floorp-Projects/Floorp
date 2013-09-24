@@ -29,13 +29,13 @@
  */
 
 #include "nsISupports.idl"
-#include "nsISimpleEnumerator.idl"
 
 interface nsIURI;
 interface nsIObserver;
 interface nsIPrincipal;
 interface nsIDOMWindow;
 interface nsIPermission;
+interface nsISimpleEnumerator;
 
 [scriptable, uuid(c9fec678-f194-43c9-96b0-7bd9dbdd6bb0)]
 interface nsIPermissionManager : nsISupports

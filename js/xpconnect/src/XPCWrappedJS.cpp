@@ -160,6 +160,7 @@ nsXPCWrappedJS::AddRef(void)
     NS_LOG_ADDREF(this, cnt, "nsXPCWrappedJS", sizeof(*this));
 
     if (2 == cnt && IsValid()) {
+        GetJSObject(); // Unmark gray JSObject.
         XPCJSRuntime* rt = mClass->GetRuntime();
         rt->AddWrappedJSRoot(this);
     }
@@ -246,7 +247,9 @@ nsXPCWrappedJS::GetWeakReference(nsIWeakReference** aInstancePtr)
 JSObject*
 nsXPCWrappedJS::GetJSObject()
 {
-    JS::ExposeObjectToActiveJS(mJSObj);
+    if (mJSObj) {
+        JS::ExposeObjectToActiveJS(mJSObj);
+    }
     return mJSObj;
 }
 
@@ -598,7 +601,7 @@ nsXPCWrappedJS::GetInterfaceIID(nsIID** iid)
 }
 
 void
-nsXPCWrappedJS::SystemIsBeingShutDown(JSRuntime* rt)
+nsXPCWrappedJS::SystemIsBeingShutDown()
 {
     // XXX It turns out that it is better to leak here then to do any Releases
     // and have them propagate into all sorts of mischief as the system is being
@@ -610,11 +613,15 @@ nsXPCWrappedJS::SystemIsBeingShutDown(JSRuntime* rt)
 
     // NOTE: that mClass is retained so that GetInterfaceInfo can continue to
     // work (and avoid crashing some platforms).
-    mJSObj = nullptr;
+
+    // Use of unsafeGet() is to avoid triggering post barriers in shutdown, as
+    // this will access the chunk containing mJSObj, which may have been freed
+    // at this point.
+    *mJSObj.unsafeGet() = nullptr;
 
     // Notify other wrappers in the chain.
     if (mNext)
-        mNext->SystemIsBeingShutDown(rt);
+        mNext->SystemIsBeingShutDown();
 }
 
 /***************************************************************************/

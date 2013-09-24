@@ -31,8 +31,6 @@ SimpleTest.waitForExplicitFinish();
 
 function doTests()
 {
-  netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
-
   var box = document.getElementById("box");
 
   const sortService = Components.classes["@mozilla.org/xul/xul-sort-service;1"].

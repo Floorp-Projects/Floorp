@@ -73,15 +73,13 @@ TextTrack::SetMode(TextTrackMode aValue)
 void
 TextTrack::AddCue(TextTrackCue& aCue)
 {
-  //XXX: If cue exists, remove. Bug 867823.
   mCueList->AddCue(aCue);
 }
 
 void
-TextTrack::RemoveCue(TextTrackCue& aCue)
+TextTrack::RemoveCue(TextTrackCue& aCue, ErrorResult& aRv)
 {
-  //XXX: If cue does not exists throw NotFoundError. Bug 867823.
-  mCueList->RemoveCue(aCue);
+  mCueList->RemoveCue(aCue, aRv);
 }
 
 void

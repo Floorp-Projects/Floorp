@@ -12,9 +12,8 @@
 #define nsCSSProps_h___
 
 #include "nsString.h"
-#include "nsChangeHint.h"
 #include "nsCSSProperty.h"
-#include "nsStyleStruct.h"
+#include "nsStyleStructFwd.h"
 #include "nsCSSKeywords.h"
 
 // Flags for ParseVariant method
@@ -187,6 +186,10 @@ static_assert((CSS_PROPERTY_PARSE_PROPERTY_MASK &
 
 // This property is allowed in an @page rule.
 #define CSS_PROPERTY_APPLIES_TO_PAGE_RULE         (1<<19)
+
+// This property's getComputedStyle implementation requires layout to be
+// flushed.
+#define CSS_PROPERTY_GETCS_NEEDS_LAYOUT_FLUSH     (1<<20)
 
 /**
  * Types of animatable values.

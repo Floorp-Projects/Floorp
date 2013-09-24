@@ -34,8 +34,6 @@
 #include "nsAttrName.h"
 #include "nsParserConstants.h"
 
-static const char kMozStr[] = "moz";
-
 static const int32_t kLongLineLen = 128;
 
 #define kXMLNS "xmlns"

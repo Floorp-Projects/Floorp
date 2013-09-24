@@ -457,7 +457,8 @@ ThrowJSException(JSContext *cx, const char *message)
                                           ucex.Length());
 
     if (str) {
-      ::JS_SetPendingException(cx, STRING_TO_JSVAL(str));
+      JS::RootedValue exn(cx, JS::StringValue(str));
+      ::JS_SetPendingException(cx, exn);
     }
 
     PopException();
@@ -886,8 +887,9 @@ nsJSObjWrapper::NP_Enumerate(NPObject *npobj, NPIdentifier **idarray,
     }
 
     NPIdentifier id;
-    if (JSVAL_IS_STRING(v)) {
-      JSString *str = JS_InternJSString(cx, JSVAL_TO_STRING(v));
+    if (v.isString()) {
+      JS::Rooted<JSString*> str(cx, v.toString());
+      str = JS_InternJSString(cx, str);
       if (!str) {
         PR_Free(*idarray);
         return false;
@@ -1398,7 +1400,8 @@ CallNPMethodInternal(JSContext *cx, JS::Handle<JSObject*> obj, unsigned argc,
 
     if (npobj->_class->invoke) {
       JSFunction *fun = ::JS_GetObjectFunction(funobj);
-      JSString *name = ::JS_InternJSString(cx, ::JS_GetFunctionId(fun));
+      JS::Rooted<JSString*> funId(cx, ::JS_GetFunctionId(fun));
+      JSString *name = ::JS_InternJSString(cx, funId);
       NPIdentifier id = StringToNPIdentifier(cx, name);
 
       ok = npobj->_class->invoke(npobj, id, npargs, argc, &v);

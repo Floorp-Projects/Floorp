@@ -1024,16 +1024,16 @@ JS_ConvertArgumentsVA(JSContext *cx, unsigned argc, jsval *argv,
 #endif
 
 extern JS_PUBLIC_API(bool)
-JS_ConvertValue(JSContext *cx, jsval v, JSType type, jsval *vp);
+JS_ConvertValue(JSContext *cx, JS::HandleValue v, JSType type, JS::MutableHandleValue vp);
 
 extern JS_PUBLIC_API(bool)
-JS_ValueToObject(JSContext *cx, jsval v, JSObject **objp);
+JS_ValueToObject(JSContext *cx, JS::HandleValue v, JS::MutableHandleObject objp);
 
 extern JS_PUBLIC_API(JSFunction *)
-JS_ValueToFunction(JSContext *cx, jsval v);
+JS_ValueToFunction(JSContext *cx, JS::HandleValue v);
 
 extern JS_PUBLIC_API(JSFunction *)
-JS_ValueToConstructor(JSContext *cx, jsval v);
+JS_ValueToConstructor(JSContext *cx, JS::HandleValue v);
 
 extern JS_PUBLIC_API(JSString *)
 JS_ValueToString(JSContext *cx, jsval v);
@@ -3249,6 +3249,7 @@ class JS_PUBLIC_API(CompileOptions)
     bool versionSet;
     bool utf8;
     const char *filename;
+    const jschar *sourceMapURL;
     unsigned lineno;
     unsigned column;
     Handle<JSObject*> element;
@@ -3275,6 +3276,7 @@ class JS_PUBLIC_API(CompileOptions)
     CompileOptions &setFileAndLine(const char *f, unsigned l) {
         filename = f; lineno = l; return *this;
     }
+    CompileOptions &setSourceMapURL(const jschar *s) { sourceMapURL = s; return *this; }
     CompileOptions &setColumn(unsigned c) { column = c; return *this; }
     CompileOptions &setElement(Handle<JSObject*> e) { element = e; return *this; }
     CompileOptions &setCompileAndGo(bool cng) { compileAndGo = cng; return *this; }
@@ -3597,7 +3599,7 @@ extern JS_PUBLIC_API(JSString *)
 JS_NewStringCopyZ(JSContext *cx, const char *s);
 
 extern JS_PUBLIC_API(JSString *)
-JS_InternJSString(JSContext *cx, JSString *str);
+JS_InternJSString(JSContext *cx, JS::HandleString str);
 
 extern JS_PUBLIC_API(JSString *)
 JS_InternStringN(JSContext *cx, const char *s, size_t length);
@@ -3722,19 +3724,12 @@ extern JS_PUBLIC_API(size_t)
 JS_PutEscapedFlatString(char *buffer, size_t size, JSFlatString *str, char quote);
 
 /*
- * This function is now obsolete and behaves the same as JS_NewUCString.  Use
- * JS_NewUCString instead.
- */
-extern JS_PUBLIC_API(JSString *)
-JS_NewGrowableString(JSContext *cx, jschar *chars, size_t length);
-
-/*
  * Create a dependent string, i.e., a string that owns no character storage,
  * but that refers to a slice of another string's chars.  Dependent strings
  * are mutable by definition, so the thread safety comments above apply.
  */
 extern JS_PUBLIC_API(JSString *)
-JS_NewDependentString(JSContext *cx, JSString *str, size_t start,
+JS_NewDependentString(JSContext *cx, JS::HandleString str, size_t start,
                       size_t length);
 
 /*
@@ -3742,7 +3737,7 @@ JS_NewDependentString(JSContext *cx, JSString *str, size_t start,
  * See above for thread safety comments.
  */
 extern JS_PUBLIC_API(JSString *)
-JS_ConcatStrings(JSContext *cx, JSString *left, JSString *right);
+JS_ConcatStrings(JSContext *cx, JS::HandleString left, JS::HandleString right);
 
 /*
  * For JS_DecodeBytes, set *dstlenp to the size of the destination buffer before
@@ -3874,18 +3869,18 @@ typedef bool (* JSONWriteCallback)(const jschar *buf, uint32_t len, void *data);
  * JSON.stringify as specified by ES5.
  */
 JS_PUBLIC_API(bool)
-JS_Stringify(JSContext *cx, jsval *vp, JSObject *replacer, jsval space,
-             JSONWriteCallback callback, void *data);
+JS_Stringify(JSContext *cx, JS::MutableHandleValue value, JS::HandleObject replacer,
+             JS::HandleValue space, JSONWriteCallback callback, void *data);
 
 /*
  * JSON.parse as specified by ES5.
  */
 JS_PUBLIC_API(bool)
-JS_ParseJSON(JSContext *cx, const jschar *chars, uint32_t len, JS::MutableHandle<JS::Value> vp);
+JS_ParseJSON(JSContext *cx, const jschar *chars, uint32_t len, JS::MutableHandleValue vp);
 
 JS_PUBLIC_API(bool)
-JS_ParseJSONWithReviver(JSContext *cx, const jschar *chars, uint32_t len, jsval reviver,
-                        jsval *vp);
+JS_ParseJSONWithReviver(JSContext *cx, const jschar *chars, uint32_t len, JS::HandleValue reviver,
+                        JS::MutableHandleValue vp);
 
 /************************************************************************/
 
@@ -4067,7 +4062,7 @@ JS_NewDateObjectMsec(JSContext *cx, double msec);
  * Infallible predicate to test whether obj is a date object.
  */
 extern JS_PUBLIC_API(bool)
-JS_ObjectIsDate(JSContext *cx, JSObject *obj);
+JS_ObjectIsDate(JSContext *cx, JS::HandleObject obj);
 
 /*
  * Clears the cache of calculated local time from each Date object.
@@ -4087,20 +4082,24 @@ JS_ClearDateCaches(JSContext *cx);
 #define JSREG_STICKY    0x08    /* only match starting at lastIndex */
 
 extern JS_PUBLIC_API(JSObject *)
-JS_NewRegExpObject(JSContext *cx, JSObject *obj, char *bytes, size_t length, unsigned flags);
+JS_NewRegExpObject(JSContext *cx, JS::HandleObject obj, char *bytes, size_t length,
+                   unsigned flags);
 
 extern JS_PUBLIC_API(JSObject *)
-JS_NewUCRegExpObject(JSContext *cx, JSObject *obj, jschar *chars, size_t length, unsigned flags);
+JS_NewUCRegExpObject(JSContext *cx, JS::HandleObject obj, jschar *chars, size_t length,
+                     unsigned flags);
 
 extern JS_PUBLIC_API(void)
-JS_SetRegExpInput(JSContext *cx, JSObject *obj, JSString *input, bool multiline);
+JS_SetRegExpInput(JSContext *cx, JS::HandleObject obj, JS::HandleString input,
+                  bool multiline);
 
 extern JS_PUBLIC_API(void)
-JS_ClearRegExpStatics(JSContext *cx, JSObject *obj);
+JS_ClearRegExpStatics(JSContext *cx, JS::HandleObject obj);
 
 extern JS_PUBLIC_API(bool)
-JS_ExecuteRegExp(JSContext *cx, JSObject *obj, JSObject *reobj, jschar *chars, size_t length,
-                 size_t *indexp, bool test, jsval *rval);
+JS_ExecuteRegExp(JSContext *cx, JS::HandleObject obj, JS::HandleObject reobj,
+                 jschar *chars, size_t length, size_t *indexp, bool test,
+                 JS::MutableHandleValue rval);
 
 /* RegExp interface for clients without a global object. */
 
@@ -4111,17 +4110,17 @@ extern JS_PUBLIC_API(JSObject *)
 JS_NewUCRegExpObjectNoStatics(JSContext *cx, jschar *chars, size_t length, unsigned flags);
 
 extern JS_PUBLIC_API(bool)
-JS_ExecuteRegExpNoStatics(JSContext *cx, JSObject *reobj, jschar *chars, size_t length,
-                          size_t *indexp, bool test, jsval *rval);
+JS_ExecuteRegExpNoStatics(JSContext *cx, JS::HandleObject reobj, jschar *chars, size_t length,
+                          size_t *indexp, bool test, JS::MutableHandleValue rval);
 
 extern JS_PUBLIC_API(bool)
-JS_ObjectIsRegExp(JSContext *cx, JSObject *obj);
+JS_ObjectIsRegExp(JSContext *cx, JS::HandleObject obj);
 
 extern JS_PUBLIC_API(unsigned)
-JS_GetRegExpFlags(JSContext *cx, JSObject *obj);
+JS_GetRegExpFlags(JSContext *cx, JS::HandleObject obj);
 
 extern JS_PUBLIC_API(JSString *)
-JS_GetRegExpSource(JSContext *cx, JSObject *obj);
+JS_GetRegExpSource(JSContext *cx, JS::HandleObject obj);
 
 /************************************************************************/
 
@@ -4129,10 +4128,10 @@ extern JS_PUBLIC_API(bool)
 JS_IsExceptionPending(JSContext *cx);
 
 extern JS_PUBLIC_API(bool)
-JS_GetPendingException(JSContext *cx, jsval *vp);
+JS_GetPendingException(JSContext *cx, JS::MutableHandleValue vp);
 
 extern JS_PUBLIC_API(void)
-JS_SetPendingException(JSContext *cx, jsval v);
+JS_SetPendingException(JSContext *cx, JS::HandleValue v);
 
 extern JS_PUBLIC_API(void)
 JS_ClearPendingException(JSContext *cx);
@@ -4168,7 +4167,7 @@ JS_DropExceptionState(JSContext *cx, JSExceptionState *state);
  * of the exception object.
  */
 extern JS_PUBLIC_API(JSErrorReport *)
-JS_ErrorFromException(JSContext *cx, jsval v);
+JS_ErrorFromException(JSContext *cx, JS::HandleValue v);
 
 /*
  * Given a reported error's message and JSErrorReport struct pointer, throw
@@ -4201,31 +4200,6 @@ extern JS_PUBLIC_API(void)
 JS_AbortIfWrongThread(JSRuntime *rt);
 
 /************************************************************************/
-
-/*
- * JS_IsConstructing must be called from within a native given the
- * native's original cx and vp arguments. If JS_IsConstructing is true,
- * JS_THIS must not be used; the constructor should construct and return a
- * new object. Otherwise, the native is called as an ordinary function and
- * JS_THIS may be used.
- */
-static JS_ALWAYS_INLINE bool
-JS_IsConstructing(JSContext *cx, const jsval *vp)
-{
-#ifdef DEBUG
-    JSObject *callee = JSVAL_TO_OBJECT(JS_CALLEE(cx, vp));
-    if (JS_ObjectIsFunction(cx, callee)) {
-        JSFunction *fun = JS_ValueToFunction(cx, JS_CALLEE(cx, vp));
-        JS_ASSERT(JS_IsConstructor(fun));
-    } else {
-        JS_ASSERT(JS_GetClass(callee)->construct != NULL);
-    }
-#else
-    (void)cx;
-#endif
-
-    return JSVAL_IS_MAGIC_IMPL(JSVAL_TO_IMPL(vp[1]));
-}
 
 /*
  * A constructor can request that the JS engine create a default new 'this'
@@ -4274,7 +4248,7 @@ JS_SetGlobalJitCompilerOption(JSContext *cx, JSJitCompilerOption opt, uint32_t v
  * Convert a uint32_t index into a jsid.
  */
 extern JS_PUBLIC_API(bool)
-JS_IndexToId(JSContext *cx, uint32_t index, jsid *id);
+JS_IndexToId(JSContext *cx, uint32_t index, JS::MutableHandleId);
 
 /*
  * Convert chars into a jsid.
@@ -4282,20 +4256,20 @@ JS_IndexToId(JSContext *cx, uint32_t index, jsid *id);
  * |chars| may not be an index.
  */
 extern JS_PUBLIC_API(bool)
-JS_CharsToId(JSContext* cx, JS::TwoByteChars chars, jsid *idp);
+JS_CharsToId(JSContext* cx, JS::TwoByteChars chars, JS::MutableHandleId);
 
 /*
  *  Test if the given string is a valid ECMAScript identifier
  */
 extern JS_PUBLIC_API(bool)
-JS_IsIdentifier(JSContext *cx, JSString *str, bool *isIdentifier);
+JS_IsIdentifier(JSContext *cx, JS::HandleString str, bool *isIdentifier);
 
 /*
  * Return the current script and line number of the most currently running
  * frame. Returns true if a scripted frame was found, false otherwise.
  */
 extern JS_PUBLIC_API(bool)
-JS_DescribeScriptedCaller(JSContext *cx, JSScript **script, unsigned *lineno);
+JS_DescribeScriptedCaller(JSContext *cx, JS::MutableHandleScript script, unsigned *lineno);
 
 
 /*
@@ -4303,10 +4277,10 @@ JS_DescribeScriptedCaller(JSContext *cx, JSScript **script, unsigned *lineno);
  */
 
 extern JS_PUBLIC_API(void *)
-JS_EncodeScript(JSContext *cx, JSScript *script, uint32_t *lengthp);
+JS_EncodeScript(JSContext *cx, JS::HandleScript script, uint32_t *lengthp);
 
 extern JS_PUBLIC_API(void *)
-JS_EncodeInterpretedFunction(JSContext *cx, JSObject *funobj, uint32_t *lengthp);
+JS_EncodeInterpretedFunction(JSContext *cx, JS::HandleObject funobj, uint32_t *lengthp);
 
 extern JS_PUBLIC_API(JSScript *)
 JS_DecodeScript(JSContext *cx, const void *data, uint32_t length,

@@ -574,6 +574,21 @@ WebrtcVideoConduit::ConfigureRecvMediaCodecs(
     }
   }
 
+  switch (kf_request) {
+    case webrtc::kViEKeyFrameRequestNone:
+      mFrameRequestMethod = FrameRequestNone;
+      break;
+    case webrtc::kViEKeyFrameRequestPliRtcp:
+      mFrameRequestMethod = FrameRequestPli;
+      break;
+    case webrtc::kViEKeyFrameRequestFirRtcp:
+      mFrameRequestMethod = FrameRequestFir;
+      break;
+    default:
+      MOZ_ASSERT(PR_FALSE);
+      mFrameRequestMethod = FrameRequestUnknown;
+  }
+
   if(use_nack_basic)
   {
     CSFLogDebug(logTag, "Enabling NACK (recv) for video stream\n");
@@ -584,6 +599,7 @@ WebrtcVideoConduit::ConfigureRecvMediaCodecs(
       return kMediaConduitNACKStatusError;
     }
   }
+  mUsingNackBasic = use_nack_basic;
 
   //Start Receive on the video engine
   if(mPtrViEBase->StartReceive(mChannel) == -1)

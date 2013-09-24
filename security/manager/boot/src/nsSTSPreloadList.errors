@@ -9,7 +9,7 @@ bcrook.com: max-age too low: 86400
 betnet.fr: could not connect to host
 bigshinylock.minazo.net: could not connect to host
 blueseed.co: did not receive HSTS header
-braintreegateway.com: could not connect to host
+braintreegateway.com: did not receive HSTS header
 braintreepayments.com: did not receive HSTS header
 browserid.org: did not receive HSTS header
 carlolly.co.uk: did not receive HSTS header
@@ -29,7 +29,6 @@ dropcam.com: did not receive HSTS header
 emailprivacytester.com: did not receive HSTS header
 encrypted.google.com: did not receive HSTS header
 epoxate.com: max-age too low: 259200
-factor.cc: could not connect to host
 fatzebra.com.au: did not receive HSTS header
 fj.simple.com: did not receive HSTS header
 gmail.com: did not receive HSTS header
@@ -65,6 +64,7 @@ plus.sandbox.google.com: did not receive HSTS header
 profiles.google.com: did not receive HSTS header
 romab.com: max-age too low: 2628000
 sah3.net: could not connect to host
+saturngames.co.uk: did not receive HSTS header
 script.google.com: did not receive HSTS header
 security.google.com: did not receive HSTS header
 serverdensity.io: did not receive HSTS header

@@ -1,0 +1,49 @@
+// Test that each yield* loop just checks "done", and "value" is only
+// fetched once at the end.
+
+var log = "";
+
+function collect_results(iter) {
+    var ret = [];
+    var result;
+    do {
+        result = iter.next();
+        ret.push(result);
+    } while (!result.done);
+    return ret;
+}
+
+function Iter(val, count) {
+    function next() {
+        return {
+            get done() { log += "d"; return count-- == 0; },
+            get value() { log += "v"; return val; }
+        }
+    }
+
+    this.next = next;
+}
+
+function* delegate(iter) { return yield* iter; }
+
+var inner = new Iter(42, 5);
+var outer = delegate(inner);
+
+// Five values, and one terminal value.
+outer.next();
+outer.next();
+outer.next();
+outer.next();
+outer.next();
+outer.next();
+
+assertEq(log, "ddddddv");
+
+// Outer's dead, man.  Outer's dead.
+assertThrowsInstanceOf(outer.next.bind(outer), TypeError);
+
+// No more checking the iterator.
+assertEq(log, "ddddddv");
+
+if (typeof reportCompare == "function")
+    reportCompare(true, true);

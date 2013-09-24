@@ -62,6 +62,8 @@ public:
 
   already_AddRefed<gfxImageSurface> GetAsSurface();
 
+  GLuint GetGLTexture();
+
 protected:
   CompositorOGL* mCompositor;
   android::sp<android::GraphicBuffer> mGraphicBuffer;
@@ -109,7 +111,7 @@ public:
   bool IsValid() const;
 
 #ifdef MOZ_LAYERS_HAVE_LOG
-  virtual const char* Name() { return "GrallocTextureHostOGL"; }
+  virtual const char* Name() MOZ_OVERRIDE { return "GrallocTextureHostOGL"; }
 #endif
 
 private:

@@ -4666,14 +4666,14 @@ const ElementTouchHelper = {
   anyElementFromPoint: function(aX, aY, aWindow) {
     let win = (aWindow ? aWindow : BrowserApp.selectedBrowser.contentWindow);
     let cwu = win.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIDOMWindowUtils);
-    let elem = cwu.elementFromPoint(aX, aY, false, true);
+    let elem = cwu.elementFromPoint(aX, aY, true, true);
 
     while (elem && (elem instanceof HTMLIFrameElement || elem instanceof HTMLFrameElement)) {
       let rect = elem.getBoundingClientRect();
       aX -= rect.left;
       aY -= rect.top;
       cwu = elem.contentDocument.defaultView.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIDOMWindowUtils);
-      elem = cwu.elementFromPoint(aX, aY, false, true);
+      elem = cwu.elementFromPoint(aX, aY, true, true);
     }
 
     return elem;

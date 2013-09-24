@@ -273,6 +273,12 @@ EmitJump(ExclusiveContext *cx, BytecodeEmitter *bce, JSOp op, ptrdiff_t off)
     return offset;
 }
 
+static ptrdiff_t
+EmitCall(ExclusiveContext *cx, BytecodeEmitter *bce, JSOp op, uint16_t argc)
+{
+    return Emit3(cx, bce, op, ARGC_HI(argc), ARGC_LO(argc));
+}
+
 /* XXX too many "... statement" L10N gaffes below -- fix via js.msg! */
 const char js_with_statement_str[] = "with statement";
 const char js_finally_block_str[]  = "finally block";
@@ -604,8 +610,6 @@ EmitNonLocalJumpFixup(ExclusiveContext *cx, BytecodeEmitter *bce, StmtInfoBCE *t
 
 #undef FLUSH_POPS
 }
-
-static const jsatomid INVALID_ATOMID = -1;
 
 static ptrdiff_t
 EmitGoto(ExclusiveContext *cx, BytecodeEmitter *bce, StmtInfoBCE *toStmt, ptrdiff_t *lastp,
@@ -1644,10 +1648,10 @@ CheckSideEffects(ExclusiveContext *cx, BytecodeEmitter *bce, ParseNode *pn, bool
 
           default:
             /*
-             * All of PNK_INC, PNK_DEC, PNK_THROW, and PNK_YIELD have direct
-             * effects. Of the remaining unary-arity node types, we can't
-             * easily prove that the operand never denotes an object with a
-             * toString or valueOf method.
+             * All of PNK_INC, PNK_DEC, PNK_THROW, PNK_YIELD, and PNK_YIELD_STAR
+             * have direct effects. Of the remaining unary-arity node types, we
+             * can't easily prove that the operand never denotes an object with
+             * a toString or valueOf method.
              */
             *answer = true;
             return true;
@@ -4895,6 +4899,157 @@ EmitReturn(ExclusiveContext *cx, BytecodeEmitter *bce, ParseNode *pn)
 }
 
 static bool
+EmitYieldStar(ExclusiveContext *cx, BytecodeEmitter *bce, ParseNode *iter)
+{
+    JS_ASSERT(bce->sc->isFunctionBox());
+    JS_ASSERT(bce->sc->asFunctionBox()->isStarGenerator());
+
+    if (!EmitTree(cx, bce, iter))                                // ITER
+        return false;
+
+    int depth = bce->stackDepth;
+    JS_ASSERT(depth >= 1);
+
+    // Initial send value is undefined.
+    if (Emit1(cx, bce, JSOP_UNDEFINED) < 0)                      // ITER RECEIVED
+        return false;
+    ptrdiff_t initialSend = -1;
+    if (EmitBackPatchOp(cx, bce, &initialSend) < 0)              // goto initialSend
+        return false;
+
+    // Try prologue.                                             // ITER RESULT
+    StmtInfoBCE stmtInfo(cx);
+    PushStatementBCE(bce, &stmtInfo, STMT_TRY, bce->offset());
+    ptrdiff_t noteIndex = NewSrcNote(cx, bce, SRC_TRY);
+    if (noteIndex < 0 || Emit1(cx, bce, JSOP_TRY) < 0)
+        return false;
+    ptrdiff_t tryStart = bce->offset();                          // tryStart:
+    JS_ASSERT(bce->stackDepth == depth + 1);
+
+    // Yield RESULT as-is, without re-boxing.
+    if (Emit1(cx, bce, JSOP_YIELD) < 0)                          // ITER RECEIVED
+        return false;
+
+    // Try epilogue.
+    if (!SetSrcNoteOffset(cx, bce, noteIndex, 0, bce->offset() - tryStart + JSOP_TRY_LENGTH))
+        return false;
+    if (NewSrcNote(cx, bce, SRC_HIDDEN) < 0)
+        return false;
+    ptrdiff_t subsequentSend = -1;
+    if (EmitBackPatchOp(cx, bce, &subsequentSend) < 0)           // goto subsequentSend
+        return false;
+    ptrdiff_t tryEnd = bce->offset();                            // tryEnd:
+
+    // Catch location.
+    // THROW? = 'throw' in ITER                                  // ITER
+    bce->stackDepth = (unsigned) depth;
+    if (Emit1(cx, bce, JSOP_EXCEPTION) < 0)                      // ITER EXCEPTION
+        return false;
+    if (Emit1(cx, bce, JSOP_SWAP) < 0)                           // EXCEPTION ITER
+        return false;
+    if (Emit1(cx, bce, JSOP_DUP) < 0)                            // EXCEPTION ITER ITER
+        return false;
+    if (!EmitAtomOp(cx, cx->names().throw_, JSOP_STRING, bce))   // EXCEPTION ITER ITER "throw"
+        return false;
+    if (Emit1(cx, bce, JSOP_SWAP) < 0)                           // EXCEPTION ITER "throw" ITER
+        return false;
+    if (Emit1(cx, bce, JSOP_IN) < 0)                             // EXCEPTION ITER THROW?
+        return false;
+    // if (THROW?) goto delegate
+    ptrdiff_t checkThrow = EmitJump(cx, bce, JSOP_IFNE, 0);      // EXCEPTION ITER
+    if (checkThrow < 0)
+        return false;
+    if (Emit1(cx, bce, JSOP_POP) < 0)                            // EXCEPTION
+        return false;
+    if (Emit1(cx, bce, JSOP_THROW) < 0)                          // throw EXCEPTION
+        return false;
+
+    SetJumpOffsetAt(bce, checkThrow);                            // delegate:
+    // RESULT = ITER.throw(EXCEPTION)                            // EXCEPTION ITER
+    bce->stackDepth = (unsigned) depth + 1;
+    if (Emit1(cx, bce, JSOP_DUP) < 0)                            // EXCEPTION ITER ITER
+        return false;
+    if (Emit1(cx, bce, JSOP_DUP) < 0)                            // EXCEPTION ITER ITER ITER
+        return false;
+    if (!EmitAtomOp(cx, cx->names().throw_, JSOP_CALLPROP, bce)) // EXCEPTION ITER ITER THROW
+        return false;
+    if (Emit1(cx, bce, JSOP_SWAP) < 0)                           // EXCEPTION ITER THROW ITER
+        return false;
+    if (Emit1(cx, bce, JSOP_NOTEARG) < 0)                        // EXCEPTION ITER THROW ITER
+        return false;
+    if (Emit2(cx, bce, JSOP_PICK, (jsbytecode)3) < 0)            // ITER THROW ITER EXCEPTION
+        return false;
+    if (Emit1(cx, bce, JSOP_NOTEARG) < 0)                        // ITER THROW ITER EXCEPTION
+        return false;
+    if (EmitCall(cx, bce, JSOP_CALL, 1) < 0)                     // ITER RESULT
+        return false;
+    JS_ASSERT(bce->stackDepth == depth + 1);
+    ptrdiff_t checkResult = -1;
+    if (EmitBackPatchOp(cx, bce, &checkResult) < 0)              // goto checkResult
+        return false;
+
+    // Catch epilogue.
+    if (!PopStatementBCE(cx, bce))
+        return false;
+    // This is a peace offering to ReconstructPCStack.  See the note in EmitTry.
+    if (Emit1(cx, bce, JSOP_NOP) < 0)
+        return false;
+    if (!bce->tryNoteList.append(JSTRY_CATCH, depth, tryStart, tryEnd))
+        return false;
+
+    // After the try/catch block: send the received value to the iterator.
+    if (!BackPatch(cx, bce, initialSend, bce->code().end(), JSOP_GOTO)) // initialSend:
+        return false;
+    if (!BackPatch(cx, bce, subsequentSend, bce->code().end(), JSOP_GOTO)) // subsequentSend:
+        return false;
+
+    // Send location.
+    // result = iter.next(received)                              // ITER RECEIVED
+    if (Emit1(cx, bce, JSOP_SWAP) < 0)                           // RECEIVED ITER
+        return false;
+    if (Emit1(cx, bce, JSOP_DUP) < 0)                            // RECEIVED ITER ITER
+        return false;
+    if (Emit1(cx, bce, JSOP_DUP) < 0)                            // RECEIVED ITER ITER ITER
+        return false;
+    if (!EmitAtomOp(cx, cx->names().next, JSOP_CALLPROP, bce))   // RECEIVED ITER ITER NEXT
+        return false;
+    if (Emit1(cx, bce, JSOP_SWAP) < 0)                           // RECEIVED ITER NEXT ITER
+        return false;
+    if (Emit1(cx, bce, JSOP_NOTEARG) < 0)                        // RECEIVED ITER NEXT ITER
+        return false;
+    if (Emit2(cx, bce, JSOP_PICK, (jsbytecode)3) < 0)            // ITER NEXT ITER RECEIVED
+        return false;
+    if (Emit1(cx, bce, JSOP_NOTEARG) < 0)                        // ITER NEXT ITER RECEIVED
+        return false;
+    if (EmitCall(cx, bce, JSOP_CALL, 1) < 0)                     // ITER RESULT
+        return false;
+    JS_ASSERT(bce->stackDepth == depth + 1);
+
+    if (!BackPatch(cx, bce, checkResult, bce->code().end(), JSOP_GOTO)) // checkResult:
+        return false;
+    // if (!result.done) goto tryStart;                          // ITER RESULT
+    if (Emit1(cx, bce, JSOP_DUP) < 0)                            // ITER RESULT RESULT
+        return false;
+    if (!EmitAtomOp(cx, cx->names().done, JSOP_GETPROP, bce))    // ITER RESULT DONE
+        return false;
+    // if (!DONE) goto tryStart;
+    if (EmitJump(cx, bce, JSOP_IFEQ, tryStart - bce->offset()) < 0) // ITER RESULT
+        return false;
+
+    // result.value
+    if (Emit1(cx, bce, JSOP_SWAP) < 0)                           // RESULT ITER
+        return false;
+    if (Emit1(cx, bce, JSOP_POP) < 0)                            // RESULT
+        return false;
+    if (!EmitAtomOp(cx, cx->names().value, JSOP_GETPROP, bce))   // VALUE
+        return false;
+
+    JS_ASSERT(bce->stackDepth == depth);
+
+    return true;
+}
+
+static bool
 EmitStatementList(ExclusiveContext *cx, BytecodeEmitter *bce, ParseNode *pn, ptrdiff_t top)
 {
     JS_ASSERT(pn->isArity(PN_LIST));
@@ -5049,6 +5204,9 @@ EmitDelete(ExclusiveContext *cx, BytecodeEmitter *bce, ParseNode *pn)
 }
 
 static bool
+EmitArray(ExclusiveContext *cx, BytecodeEmitter *bce, ParseNode *pn, uint32_t count);
+
+static bool
 EmitCallOrNew(ExclusiveContext *cx, BytecodeEmitter *bce, ParseNode *pn)
 {
     bool callop = pn->isKind(PNK_CALL);
@@ -5079,18 +5237,20 @@ EmitCallOrNew(ExclusiveContext *cx, BytecodeEmitter *bce, ParseNode *pn)
 
     bool emitArgs = true;
     ParseNode *pn2 = pn->pn_head;
+    bool spread = JOF_OPTYPE(pn->getOp()) == JOF_BYTE;
     switch (pn2->getKind()) {
       case PNK_NAME:
         if (bce->emitterMode == BytecodeEmitter::SelfHosting &&
-            pn2->name() == cx->names().callFunction)
+            pn2->name() == cx->names().callFunction &&
+            !spread)
         {
             /*
              * Special-casing of callFunction to emit bytecode that directly
              * invokes the callee with the correct |this| object and arguments.
-             * callFunction(fun, thisArg, ...args) thus becomes:
+             * callFunction(fun, thisArg, arg0, arg1) thus becomes:
              * - emit lookup for fun
              * - emit lookup for thisArg
-             * - emit lookups for ...args
+             * - emit lookups for arg0, arg1
              *
              * argc is set to the amount of actually emitted args and the
              * emitting of args below is disabled by setting emitArgs to false.
@@ -5176,19 +5336,29 @@ EmitCallOrNew(ExclusiveContext *cx, BytecodeEmitter *bce, ParseNode *pn)
          */
         bool oldEmittingForInit = bce->emittingForInit;
         bce->emittingForInit = false;
-        for (ParseNode *pn3 = pn2->pn_next; pn3; pn3 = pn3->pn_next) {
-            if (!EmitTree(cx, bce, pn3))
-                return false;
-            if (Emit1(cx, bce, JSOP_NOTEARG) < 0)
+        if (!spread) {
+            for (ParseNode *pn3 = pn2->pn_next; pn3; pn3 = pn3->pn_next) {
+                if (!EmitTree(cx, bce, pn3))
+                    return false;
+                if (Emit1(cx, bce, JSOP_NOTEARG) < 0)
+                    return false;
+            }
+        } else {
+            if (!EmitArray(cx, bce, pn2->pn_next, argc))
                 return false;
         }
         bce->emittingForInit = oldEmittingForInit;
     }
 
-    if (Emit3(cx, bce, pn->getOp(), ARGC_HI(argc), ARGC_LO(argc)) < 0)
-        return false;
+    if (!spread) {
+        if (EmitCall(cx, bce, pn->getOp(), argc) < 0)
+            return false;
+    } else {
+        if (Emit1(cx, bce, pn->getOp()) < 0)
+            return false;
+    }
     CheckTypeSet(cx, bce, pn->getOp());
-    if (pn->isOp(JSOP_EVAL)) {
+    if (pn->isOp(JSOP_EVAL) || pn->isOp(JSOP_SPREADEVAL)) {
         uint32_t lineNum = bce->parser->tokenStream.srcCoords.lineNum(pn->pn_pos.begin);
         EMIT_UINT16_IMM_OP(JSOP_LINENO, lineNum);
     }
@@ -5559,7 +5729,29 @@ EmitObject(ExclusiveContext *cx, BytecodeEmitter *bce, ParseNode *pn)
 }
 
 static bool
-EmitArray(ExclusiveContext *cx, BytecodeEmitter *bce, ParseNode *pn)
+EmitArrayComp(ExclusiveContext *cx, BytecodeEmitter *bce, ParseNode *pn)
+{
+    if (!EmitNewInit(cx, bce, JSProto_Array, pn))
+        return false;
+
+    /*
+     * Pass the new array's stack index to the PNK_ARRAYPUSH case via
+     * bce->arrayCompDepth, then simply traverse the PNK_FOR node and
+     * its kids under pn2 to generate this comprehension.
+     */
+    JS_ASSERT(bce->stackDepth > 0);
+    unsigned saveDepth = bce->arrayCompDepth;
+    bce->arrayCompDepth = (uint32_t) (bce->stackDepth - 1);
+    if (!EmitTree(cx, bce, pn->pn_head))
+        return false;
+    bce->arrayCompDepth = saveDepth;
+
+    /* Emit the usual op needed for decompilation. */
+    return Emit1(cx, bce, JSOP_ENDINIT) >= 0;
+}
+
+static bool
+EmitArray(ExclusiveContext *cx, BytecodeEmitter *bce, ParseNode *pn, uint32_t count)
 {
     /*
      * Emit code for [a, b, c] that is equivalent to constructing a new
@@ -5570,31 +5762,8 @@ EmitArray(ExclusiveContext *cx, BytecodeEmitter *bce, ParseNode *pn)
      * JSOP_SETELEM/JSOP_SETPROP would do.
      */
 
-    if (pn->isKind(PNK_ARRAYCOMP)) {
-        if (!EmitNewInit(cx, bce, JSProto_Array, pn))
-            return false;
-
-        /*
-         * Pass the new array's stack index to the PNK_ARRAYPUSH case via
-         * bce->arrayCompDepth, then simply traverse the PNK_FOR node and
-         * its kids under pn2 to generate this comprehension.
-         */
-        JS_ASSERT(bce->stackDepth > 0);
-        unsigned saveDepth = bce->arrayCompDepth;
-        bce->arrayCompDepth = (uint32_t) (bce->stackDepth - 1);
-        if (!EmitTree(cx, bce, pn->pn_head))
-            return false;
-        bce->arrayCompDepth = saveDepth;
-
-        /* Emit the usual op needed for decompilation. */
-        return Emit1(cx, bce, JSOP_ENDINIT) >= 0;
-    }
-
-    if (!(pn->pn_xflags & PNX_NONCONST) && pn->pn_head && bce->checkSingletonContext())
-        return EmitSingletonInitialiser(cx, bce, pn);
-
     int32_t nspread = 0;
-    for (ParseNode *elt = pn->pn_head; elt; elt = elt->pn_next) {
+    for (ParseNode *elt = pn; elt; elt = elt->pn_next) {
         if (elt->isKind(PNK_SPREAD))
             nspread++;
     }
@@ -5607,9 +5776,9 @@ EmitArray(ExclusiveContext *cx, BytecodeEmitter *bce, ParseNode *pn)
 
     // For arrays with spread, this is a very pessimistic allocation, the
     // minimum possible final size.
-    SET_UINT24(pc, pn->pn_count - nspread);
+    SET_UINT24(pc, count - nspread);
 
-    ParseNode *pn2 = pn->pn_head;
+    ParseNode *pn2 = pn;
     jsatomid atomIndex;
     if (nspread && !EmitNumberOp(cx, 0, bce))
         return false;
@@ -5635,7 +5804,7 @@ EmitArray(ExclusiveContext *cx, BytecodeEmitter *bce, ParseNode *pn)
             SET_UINT24(bce->code(off), atomIndex);
         }
     }
-    JS_ASSERT(atomIndex == pn->pn_count);
+    JS_ASSERT(atomIndex == count);
     if (nspread) {
         if (Emit1(cx, bce, JSOP_POP) < 0)
             return false;
@@ -5877,6 +6046,10 @@ frontend::EmitTree(ExclusiveContext *cx, BytecodeEmitter *bce, ParseNode *pn)
         ok = EmitReturn(cx, bce, pn);
         break;
 
+      case PNK_YIELD_STAR:
+        ok = EmitYieldStar(cx, bce, pn->pn_kid);
+        break;
+
       case PNK_YIELD:
         JS_ASSERT(bce->sc->isFunctionBox());
         if (bce->sc->asFunctionBox()->isStarGenerator()) {
@@ -6064,8 +6237,14 @@ frontend::EmitTree(ExclusiveContext *cx, BytecodeEmitter *bce, ParseNode *pn)
       }
 
       case PNK_ARRAY:
-      case PNK_ARRAYCOMP:
-        ok = EmitArray(cx, bce, pn);
+        if (!(pn->pn_xflags & PNX_NONCONST) && pn->pn_head && bce->checkSingletonContext())
+            ok = EmitSingletonInitialiser(cx, bce, pn);
+        else
+            ok = EmitArray(cx, bce, pn->pn_head, pn->pn_count);
+        break;
+
+       case PNK_ARRAYCOMP:
+        ok = EmitArrayComp(cx, bce, pn);
         break;
 
       case PNK_OBJECT:

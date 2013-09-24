@@ -440,13 +440,12 @@ protected:
    * allowed to be null.  The nsListenerStruct that results, if any, is returned
    * in aListenerStruct.
    */
-  nsresult SetEventHandlerInternal(nsIScriptContext *aContext,
-                                   JS::Handle<JSObject*> aScopeGlobal,
-                                   nsIAtom* aName,
-                                   const nsAString& aTypeString,
-                                   const nsEventHandler& aHandler,
-                                   bool aPermitUntrustedEvents,
-                                   nsListenerStruct **aListenerStruct);
+  nsListenerStruct* SetEventHandlerInternal(nsIScriptContext *aContext,
+                                            JS::Handle<JSObject*> aScopeGlobal,
+                                            nsIAtom* aName,
+                                            const nsAString& aTypeString,
+                                            const nsEventHandler& aHandler,
+                                            bool aPermitUntrustedEvents);
 
   bool IsDeviceType(uint32_t aType);
   void EnableDevice(uint32_t aType);
@@ -457,11 +456,11 @@ public:
    * Set the "inline" event listener for aEventName to aHandler.  If
    * aHandler is null, this will actually remove the event listener
    */
-  nsresult SetEventHandler(nsIAtom* aEventName,
-                           const nsAString& aTypeString,
-                           mozilla::dom::EventHandlerNonNull* aHandler);
-  nsresult SetEventHandler(mozilla::dom::OnErrorEventHandlerNonNull* aHandler);
-  nsresult SetEventHandler(mozilla::dom::BeforeUnloadEventHandlerNonNull* aHandler);
+  void SetEventHandler(nsIAtom* aEventName,
+                       const nsAString& aTypeString,
+                       mozilla::dom::EventHandlerNonNull* aHandler);
+  void SetEventHandler(mozilla::dom::OnErrorEventHandlerNonNull* aHandler);
+  void SetEventHandler(mozilla::dom::BeforeUnloadEventHandlerNonNull* aHandler);
 
   /**
    * Get the value of the "inline" event listener for aEventName.

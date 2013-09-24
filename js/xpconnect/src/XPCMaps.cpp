@@ -98,13 +98,13 @@ JSObject2WrappedJSMap::FindDyingJSObjects(nsTArray<nsXPCWrappedJS*>* dying)
 }
 
 void
-JSObject2WrappedJSMap::ShutdownMarker(JSRuntime* rt)
+JSObject2WrappedJSMap::ShutdownMarker()
 {
     for (Map::Range r = mTable.all(); !r.empty(); r.popFront()) {
         nsXPCWrappedJS* wrapper = r.front().value;
         MOZ_ASSERT(wrapper, "found a null JS wrapper!");
         MOZ_ASSERT(wrapper->IsValid(), "found an invalid JS wrapper!");
-        wrapper->SystemIsBeingShutDown(rt);
+        wrapper->SystemIsBeingShutDown();
     }
 }
 

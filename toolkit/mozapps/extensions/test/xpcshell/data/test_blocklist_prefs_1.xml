@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<blocklist xmlns="http://www.mozilla.org/2006/addons-blocklist">
+  <emItems>
+    <emItem id="block1@tests.mozilla.org">
+      <prefs>
+        <pref>test.blocklist.pref1</pref>
+        <pref>test.blocklist.pref2</pref>
+      </prefs>
+      <versionRange severity="1">
+        <targetApplication id="xpcshell@tests.mozilla.org">
+          <versionRange minVersion="1" maxVersion="2.*"/>
+        </targetApplication>
+      </versionRange>
+    </emItem>
+    <emItem id="block2@tests.mozilla.org">
+      <prefs>
+        <pref>test.blocklist.pref3</pref>
+        <pref>test.blocklist.pref4</pref>
+      </prefs>
+      <versionRange severity="3">
+        <targetApplication id="xpcshell@tests.mozilla.org">
+          <versionRange minVersion="1" maxVersion="2.*"/>
+        </targetApplication>
+      </versionRange>
+    </emItem>
+  </emItems>
+</blocklist>

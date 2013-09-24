@@ -65,13 +65,14 @@ function checkInstalledApp(aMiniManifestURL,
                            aCb) {
   var req = navigator.mozApps.checkInstalled(aMiniManifestURL);
   req.onsuccess = function(evt) {
-    ok(true, "The app is installed");
+    ok(req.result, "The app is installed");
+
+    if (!req.result) {
+      PackagedTestHelper.finish();
+    }
+
     PackagedTestHelper.checkAppState(evt.application, aVersion, aExpectedApp,
                                      aLaunchable, false, aCb);
-  };
-  req.onerror = function() {
-    ok(false, "The app is not installed");
-    PackagedTestHelper.finish();
   };
 }
 

@@ -112,8 +112,8 @@ this.DownloadsTaskbar = {
           return;
         }
         this._summary = summary;
-        this._summary.addView(this);
-      });
+        return this._summary.addView(this);
+      }).then(null, Cu.reportError);
     }
   },
 

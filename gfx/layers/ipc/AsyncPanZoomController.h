@@ -15,8 +15,8 @@
 #include "InputData.h"
 #include "Axis.h"
 #include "TaskThrottler.h"
-#include "mozilla/layers/APZCTreeManager.h"
 #include "gfx3DMatrix.h"
+#include "nsEvent.h"
 
 #include "base/message_loop.h"
 
@@ -28,6 +28,7 @@ class CompositorParent;
 class GestureEventListener;
 class ContainerLayer;
 class ViewTransform;
+class APZCTreeManager;
 
 /**
  * Controller for all panning and zooming logic. Any time a user input is
@@ -73,6 +74,7 @@ public:
   static float GetTouchStartTolerance();
 
   AsyncPanZoomController(uint64_t aLayersId,
+                         APZCTreeManager* aTreeManager,
                          GeckoContentController* aController,
                          GestureBehavior aGestures = DEFAULT_GESTURES);
   ~AsyncPanZoomController();
@@ -258,6 +260,17 @@ public:
    * animation's responsibility to check this before advancing.
    */
   void CancelAnimation();
+
+  /**
+   * Attempt to scroll in response to a touch-move from |aStartPoint| to
+   * |aEndPoint|, which are in our (transformed) screen coordinates.
+   * Due to overscroll handling, there may not actually have been a touch-move
+   * at these points, but this function will scroll as if there had been.
+   * If this attempt causes overscroll (i.e. the layer cannot be scrolled
+   * by the entire amount requested), the overscroll is passed back to the
+   * tree manager via APZCTreeManager::HandleOverscroll().
+   */
+  void AttemptScroll(const ScreenPoint& aStartPoint, const ScreenPoint& aEndPoint);
 
 protected:
   /**
@@ -630,6 +643,13 @@ public:
   }
 
 private:
+  // This is a raw pointer to avoid introducing a reference cycle between
+  // AsyncPanZoomController and APZCTreeManager. Since these objects don't
+  // live on the main thread, we can't use the cycle collector with them.
+  // The APZCTreeManager owns the lifetime of the APZCs, so nulling this
+  // pointer out in Destroy() will prevent accessing deleted memory.
+  APZCTreeManager* mTreeManager;
+
   nsRefPtr<AsyncPanZoomController> mLastChild;
   nsRefPtr<AsyncPanZoomController> mPrevSibling;
   nsRefPtr<AsyncPanZoomController> mParent;

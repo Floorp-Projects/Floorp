@@ -1,0 +1,57 @@
+<?xml version="1.0"?>
+<?xml-stylesheet type="text/css" href="chrome://global/skin"?>
+<?xml-stylesheet type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css"?>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=860494
+-->
+<window title="Mozilla Bug 860494"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+  <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"/>
+
+  <!-- test results are displayed in the html:body -->
+  <body xmlns="http://www.w3.org/1999/xhtml">
+  <a href="https://bugzilla.mozilla.org/show_bug.cgi?id=860494"
+     target="_blank">Mozilla Bug 860494</a>
+  </body>
+
+  <!-- test code goes here -->
+  <script type="application/javascript">
+  <![CDATA[
+  /** Test for Bug 860494 **/
+  SimpleTest.waitForExplicitFinish();
+  const Cu = Components.utils;
+
+  function go() {
+    var iwin = $('ifr').contentWindow;
+    // NB: mochitest-chrome actually runs the test as a content docshell.
+    is(iwin.top, window.top, "iframe names shouldn't shadow |top| via Xray");
+    is(iwin.parent, window, "iframe names shouldn't shadow |parent| via Xray");
+    ok(!!/http/.exec(iwin.location), "iframe names shouldn't shadow |location| via Xray");
+    is(iwin.length, 7, "iframe names shouldn't shadow |length| via Xray");
+    is(iwin.window, iwin, "iframe names shouldn't shadow |window| via Xray");
+    is(iwin.navigator, XPCNativeWrapper(iwin.wrappedJSObject.navigator),
+       "iframe names shouldn't shadow |navigator| via Xray");
+    ok(iwin.alert instanceof Function,
+       "iframe names shouldn't shadow |alert| via Xray");
+
+    // Now test XOWs.
+    var sb = new Cu.Sandbox('http://www.example.com');
+    sb.win = iwin;
+    sb.topWin = top;
+    sb.parentWin = window;
+    sb.is = is;
+    sb.ok = ok;
+    Cu.evalInSandbox('is(win.top, topWin, "iframe names shouldnt shadow |top| via cross-origin Xray");', sb);
+    Cu.evalInSandbox('is(win.parent, parentWin, "iframe names shouldnt shadow |parent| via cross-origin Xray");', sb);
+    Cu.evalInSandbox('is(win.length, 7, "iframe names shouldnt shadow |length| via cross-origin Xray");', sb);
+    Cu.evalInSandbox('is(win.window, win, "iframe names shouldnt shadow |window| via cross-origin Xray");', sb);
+    Cu.evalInSandbox('var exn = "nothrow"; try { win.navigator; } catch (e) { exn = e; } ok(!!/denied/.exec(exn), "cross-origin Xray blocks subframes that shadow: navigator: " + exn);', sb);
+    Cu.evalInSandbox('var exn = "nothrow"; try { win.alert; } catch (e) { exn = e; } ok(!!/denied/.exec(exn), "cross-origin Xray blocks subframes that shadow: alert: " + exn);', sb);
+
+    SimpleTest.finish();
+  }
+
+  ]]>
+  </script>
+  <iframe id="ifr" type="content" onload="go();" src="http://example.org/tests/js/xpconnect/tests/mochitest/file_bug860494.html" />
+</window>

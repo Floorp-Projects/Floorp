@@ -23,6 +23,7 @@ struct cubeb_ops {
   int (* stream_start)(cubeb_stream * stream);
   int (* stream_stop)(cubeb_stream * stream);
   int (* stream_get_position)(cubeb_stream * stream, uint64_t * position);
+  int (* stream_get_latency)(cubeb_stream * stream, uint32_t * latency);
 };
 
 #endif /* CUBEB_INTERNAL_0eb56756_4e20_4404_a76d_42bf88cd15a5 */

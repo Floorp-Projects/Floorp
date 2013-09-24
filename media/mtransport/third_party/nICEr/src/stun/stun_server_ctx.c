@@ -234,7 +234,7 @@ int nr_stun_server_process_request(nr_stun_server_ctx *ctx, nr_socket *sock, cha
     nr_stun_server_client *clnt = 0;
     nr_stun_server_request info;
     int error;
-    int dont_free;
+    int dont_free = 0;
 
     r_log(NR_LOG_STUN,LOG_DEBUG,"STUN-SERVER(%s): Received(my_addr=%s,peer_addr=%s)",ctx->label,ctx->my_addr.as_string,peer_addr->as_string);
 

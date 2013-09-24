@@ -596,16 +596,20 @@ class MOZ_STACK_CLASS TokenStream
         return pos.buf - userbuf.base();
     }
 
-    bool hasSourceMap() const {
-        return sourceMap != NULL;
+    bool hasSourceURL() const {
+        return sourceURL_ != NULL;
     }
 
-    // Give up responsibility for managing the sourceMap filename's memory.
-    jschar *releaseSourceMap() {
-        JS_ASSERT(hasSourceMap());
-        jschar *sm = sourceMap;
-        sourceMap = NULL;
-        return sm;
+    jschar *sourceURL() {
+        return sourceURL_;
+    }
+
+    bool hasSourceMapURL() const {
+        return sourceMapURL_ != NULL;
+    }
+
+    jschar *sourceMapURL() {
+        return sourceMapURL_;
     }
 
     // If the name at s[0:length] is not a keyword in this version, return
@@ -807,6 +811,12 @@ class MOZ_STACK_CLASS TokenStream
     bool matchUnicodeEscapeIdStart(int32_t *c);
     bool matchUnicodeEscapeIdent(int32_t *c);
     bool peekChars(int n, jschar *cp);
+
+    bool getDirectives(bool isMultiline, bool shouldWarnDeprecated);
+    bool getDirective(bool isMultiline, bool shouldWarnDeprecated,
+                      const char *directive, int directiveLength,
+                      const char *errorMsgPragma, jschar **destination);
+    bool getSourceURL(bool isMultiline, bool shouldWarnDeprecated);
     bool getSourceMappingURL(bool isMultiline, bool shouldWarnDeprecated);
 
     // |expect| cannot be an EOL char.
@@ -847,7 +857,8 @@ class MOZ_STACK_CLASS TokenStream
     const jschar        *prevLinebase;      // start of previous line;  NULL if on the first line
     TokenBuf            userbuf;            // user input buffer
     const char          *filename;          // input filename or null
-    jschar              *sourceMap;         // source map's filename or null
+    jschar              *sourceURL_;        // the user's requested source URL or null
+    jschar              *sourceMapURL_;     // source map's filename or null
     CharBuffer          tokenbuf;           // current token string buffer
     bool                maybeEOL[256];      // probabilistic EOL lookup table
     bool                maybeStrSpecial[256];   // speeds up string scanning

@@ -146,7 +146,7 @@ Tools.styleEditor = {
   icon: "chrome://browser/skin/devtools/tool-styleeditor.png",
   url: "chrome://browser/content/devtools/styleeditor.xul",
   label: l10n("ToolboxStyleEditor.label", styleEditorStrings),
-  tooltip: l10n("ToolboxStyleEditor.tooltip", styleEditorStrings),
+  tooltip: l10n("ToolboxStyleEditor.tooltip2", styleEditorStrings),
 
   isTargetSupported: function(target) {
     return true;
@@ -193,7 +193,7 @@ Tools.netMonitor = {
   tooltip: l10n("netmonitor.tooltip", netMonitorStrings),
 
   isTargetSupported: function(target) {
-    return true;
+    return !target.isApp;
   },
 
   build: function(iframeWindow, toolbox) {

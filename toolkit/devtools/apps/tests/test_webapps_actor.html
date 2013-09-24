@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id={821589}
+-->
+<head>
+  <title>Test for Bug {821589} Packaged apps installation and update</title>
+  <script type="text/javascript" src="/MochiKit/MochiKit.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id={821589}">Mozilla Bug {821589}</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+
+</div>
+<pre id="test">
+<script class="testbody" type="application/javascript;version=1.8">
+
+"use strict";
+
+var launchableValue = undefined;
+
+var index = -1;
+
+function debug(aMsg) {
+  //dump("== Tests debug == " + aMsg + "\n");
+}
+
+function next() {
+  index += 1;
+  if (index >= steps.length) {
+    ok(false, "Shouldn't get here!");
+    return;
+  }
+  try {
+    steps[index]();
+  } catch(ex) {
+    ok(false, "Caught exception", ex);
+  }
+}
+
+function start() {
+  next();
+}
+
+function finish() {
+  SpecialPowers.setAllAppsLaunchable(launchableValue);
+  SpecialPowers.removePermission("webapps-manage", document);
+  SimpleTest.finish();
+}
+
+function cbError(aError) {
+  ok(false, "Error callback invoked " + aError);
+  finish();
+}
+
+
+SimpleTest.waitForExplicitFinish();
+
+var installTestApp;
+
+var steps = [
+  function() {
+    ok(true, "Start setting up");
+    // Set up
+    launchableValue = SpecialPowers.setAllAppsLaunchable(true);
+    SpecialPowers.addPermission("webapps-manage", true, document);
+    SpecialPowers.addPermission("browser", true, document);
+    SpecialPowers.addPermission("embed-apps", true, document);
+
+    // Required on firefox as these prefs are only set on b2g:
+    SpecialPowers.pushPrefEnv({
+      set: [["dom.mozBrowserFramesEnabled", true],
+            ["security.apps.privileged.CSP.default",
+             "default-src *; script-src 'self'; object-src 'none'; style-src 'self' 'unsafe-inline'"]
+           ]
+    }, next);
+  },
+  function () {
+    // Load a chrome script in order to dispatch devtool debugger requests.
+    // Because of wrapping issues, we can't use SpecialPowers.Cu.import to load
+    // devtools jsm into mochitest scope. We end up not receiving
+    // DebuggerClient.addListener callback arguments...
+    let scriptUrl = SimpleTest.getTestFileURL("debugger-protocol-helper.js");
+    let mm = SpecialPowers.loadChromeScript(scriptUrl);
+    installTestApp = function (url, appId, callback) {
+      let installResponse, appObject;
+      mm.sendAsyncMessage("install", {url: url, appId: appId});
+      mm.addMessageListener("installed", function onInstalled(aResponse) {
+        mm.removeMessageListener("installed", onInstalled);
+        installResponse = aResponse;
+        if (appObject)
+          callback(aResponse, appObject);
+      });
+      navigator.mozApps.mgmt.oninstall = function(evt) {
+        appObject = evt.application;
+        if (installResponse)
+          callback(installResponse, appObject);
+      };
+    };
+    SpecialPowers.autoConfirmAppInstall(next);
+  },
+  function() {
+    ok(true, "== TEST == Install packaged app");
+    let appId = "test-app-id";
+    let url = SimpleTest.getTestFileURL("data/app.zip");
+    installTestApp(url, appId,
+      function (aResponse, aApp) {
+        ok(true, "Installed");
+        is(aResponse.appId, appId, "Got same app id");
+        if ("error" in aResponse) {
+          ok(false, "Error: " + aResponse.error);
+        }
+        if ("message" in aResponse) {
+          ok(false, "Error message: " + aResponse.message);
+        }
+        ok(!("error" in aResponse), "app installed without any error");
+        is(aApp.manifest.name, "Test app", "app name is correct");
+        next();
+      }
+    );
+  },
+  function () {
+    ok(true, "== TEST == Reinstall packaged app");
+    let appId = "test-app-id";
+    let url = SimpleTest.getTestFileURL("data/app-updated.zip");
+    installTestApp(url, appId,
+      function (aResponse, aApp) {
+        ok(true, "Reinstalled");
+        is(aResponse.appId, appId, "Got same app id");
+        if ("error" in aResponse) {
+          ok(false, "Error: " + aResponse.error);
+        }
+        if ("message" in aResponse) {
+          ok(false, "Error message: " + aResponse.message);
+        }
+        ok(!("error" in aResponse), "app installed without any error");
+        is(aApp.manifest.name, "updated-name", "app name on update is correct");
+        next();
+      }
+    );
+  },
+  function() {
+    ok(true, "all done!\n");
+    SpecialPowers.popPrefEnv(finish);
+  }
+];
+
+addLoadEvent(start);
+
+</script>
+</pre>
+</body>
+</html>

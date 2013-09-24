@@ -155,7 +155,7 @@ nsNotifyAddrListener::Init(void)
                                                false);
     NS_ENSURE_SUCCESS(rv, rv);
 
-    mShutdownEvent = CreateEvent(NULL, FALSE, FALSE, NULL);
+    mShutdownEvent = CreateEvent(nullptr, FALSE, FALSE, nullptr);
     NS_ENSURE_TRUE(mShutdownEvent, NS_ERROR_OUT_OF_MEMORY);
 
     rv = NS_NewThread(getter_AddRefs(mThread), this);
@@ -186,7 +186,7 @@ nsNotifyAddrListener::Shutdown(void)
     mThread = nullptr;
 
     CloseHandle(mShutdownEvent);
-    mShutdownEvent = NULL;
+    mShutdownEvent = nullptr;
 
     return rv;
 }
@@ -256,7 +256,7 @@ nsNotifyAddrListener::CheckICSStatus(PWCHAR aAdapterName)
     nsRefPtr<INetSharingManager> netSharingManager;
     hr = CoCreateInstance(
                 CLSID_NetSharingManager,
-                NULL,
+                nullptr,
                 CLSCTX_INPROC_SERVER,
                 IID_INetSharingManager,
                 getter_AddRefs(netSharingManager));
@@ -326,16 +326,16 @@ nsNotifyAddrListener::CheckAdaptersAddresses(void)
     if (!addresses)
         return ERROR_OUTOFMEMORY;
 
-    DWORD ret = GetAdaptersAddresses(AF_UNSPEC, 0, NULL, addresses, &len);
+    DWORD ret = GetAdaptersAddresses(AF_UNSPEC, 0, nullptr, addresses, &len);
     if (ret == ERROR_BUFFER_OVERFLOW) {
         free(addresses);
         addresses = (PIP_ADAPTER_ADDRESSES) malloc(len);
         if (!addresses)
             return ERROR_BUFFER_OVERFLOW;
-        ret = GetAdaptersAddresses(AF_UNSPEC, 0, NULL, addresses, &len);
+        ret = GetAdaptersAddresses(AF_UNSPEC, 0, nullptr, addresses, &len);
     }
 
-    if (FAILED(CoInitializeEx(NULL, COINIT_MULTITHREADED))) {
+    if (FAILED(CoInitializeEx(nullptr, COINIT_MULTITHREADED))) {
         free(addresses);
         return ERROR_NOT_SUPPORTED;
     }

@@ -2672,6 +2672,24 @@ bool nsPresContext::GetPaintFlashing() const
   return mPaintFlashing;
 }
 
+int32_t
+nsPresContext::AppUnitsPerDevPixel() const
+{
+  return mDeviceContext->AppUnitsPerDevPixel();
+}
+
+nscoord
+nsPresContext::GfxUnitsToAppUnits(gfxFloat aGfxUnits) const
+{
+  return mDeviceContext->GfxUnitsToAppUnits(aGfxUnits);
+}
+
+gfxFloat
+nsPresContext::AppUnitsToGfxUnits(nscoord aAppUnits) const
+{
+  return mDeviceContext->AppUnitsToGfxUnits(aAppUnits);
+}
+
 nsRootPresContext::nsRootPresContext(nsIDocument* aDocument,
                                      nsPresContextType aType)
   : nsPresContext(aDocument, aType),

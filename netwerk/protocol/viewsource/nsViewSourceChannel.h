@@ -8,12 +8,9 @@
 
 #include "nsString.h"
 #include "nsCOMPtr.h"
-#include "nsXPIDLString.h"
 #include "nsIViewSourceChannel.h"
 #include "nsIURI.h"
 #include "nsIStreamListener.h"
-#include "nsViewSourceHandler.h"
-#include "nsNetCID.h"
 #include "nsIHttpChannel.h"
 #include "nsIHttpChannelInternal.h"
 #include "nsICachingChannel.h"

@@ -248,6 +248,22 @@ MediaEngineWebRTC::EnumerateAudioDevices(nsTArray<nsRefPtr<MediaEngineAudioSourc
     }
   }
 
+  PRLogModuleInfo *logs = GetWebRTCLogInfo();
+  if (!gWebrtcTraceLoggingOn && logs && logs->level > 0) {
+    // no need to a critical section or lock here
+    gWebrtcTraceLoggingOn = 1;
+
+    const char *file = PR_GetEnv("WEBRTC_TRACE_FILE");
+    if (!file) {
+      file = "WebRTC.log";
+    }
+
+    LOG(("Logging webrtc to %s level %d", __FUNCTION__, file, logs->level));
+
+    mVoiceEngine->SetTraceFilter(logs->level);
+    mVoiceEngine->SetTraceFile(file);
+  }
+
   ptrVoEBase = webrtc::VoEBase::GetInterface(mVoiceEngine);
   if (!ptrVoEBase) {
     return;

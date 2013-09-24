@@ -10,7 +10,7 @@
 
 #include "nsISupports.h"
 #include "nscore.h"
-#include "nsStringGlue.h"
+#include "nsString.h"
 #include "nsILocale.h"
 #include "nsIScriptableDateFormat.h"
 #include "prtime.h"

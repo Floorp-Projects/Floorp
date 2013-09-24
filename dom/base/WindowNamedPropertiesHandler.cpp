@@ -27,16 +27,6 @@ WindowNamedPropertiesHandler::getOwnPropertyDescriptor(JSContext* aCx,
   }
 
   JS::Rooted<JSObject*> global(aCx, JS_GetGlobalForObject(aCx, aProxy));
-  nsresult rv =
-    nsDOMClassInfo::ScriptSecurityManager()->CheckPropertyAccess(aCx, global,
-                                                                 "Window", aId,
-                                                                 nsIXPCSecurityManager::ACCESS_GET_PROPERTY);
-  if (NS_FAILED(rv)) {
-    // The security check failed. The security manager set a JS exception for
-    // us.
-    return false;
-  }
-
   if (HasPropertyOnPrototype(aCx, aProxy, aId)) {
     return true;
   }
@@ -164,10 +154,15 @@ WindowNamedPropertiesHandler::Install(JSContext* aCx,
     return;
   }
 
+  // Note: since the scope polluter proxy lives on the window's prototype
+  // chain, it needs a singleton type to avoid polluting type information
+  // for properties on the window.
   JS::Rooted<JSObject*> gsp(aCx);
   gsp = js::NewProxyObject(aCx, WindowNamedPropertiesHandler::getInstance(),
                            JS::NullHandleValue, protoProto,
-                           js::GetGlobalForObjectCrossCompartment(aProto));
+                           js::GetGlobalForObjectCrossCompartment(aProto),
+                           js::ProxyNotCallable,
+                           /* singleton = */ true);
   if (!gsp) {
     return;
   }

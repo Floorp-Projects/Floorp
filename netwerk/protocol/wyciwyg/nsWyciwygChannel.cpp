@@ -6,14 +6,21 @@
 
 #include "nsWyciwyg.h"
 #include "nsWyciwygChannel.h"
-#include "nsIServiceManager.h"
 #include "nsILoadGroup.h"
-#include "nsIScriptSecurityManager.h"
 #include "nsNetUtil.h"
 #include "nsICacheService.h"
 #include "nsICacheSession.h"
 #include "nsCharsetSource.h"
 #include "nsProxyRelease.h"
+#include "nsThreadUtils.h"
+#include "nsICacheEntryDescriptor.h"
+#include "nsIEventTarget.h"
+#include "nsIInputStream.h"
+#include "nsIInputStreamPump.h"
+#include "nsIOutputStream.h"
+#include "nsIProgressEventSink.h"
+#include "nsIURI.h"
+#include "nsWyciwygProtocolHandler.h"
 
 // Must release mChannel on the main thread
 class nsWyciwygAsyncEvent : public nsRunnable {

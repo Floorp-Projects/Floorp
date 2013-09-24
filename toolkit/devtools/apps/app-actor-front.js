@@ -2,6 +2,7 @@ const {Ci, Cc, Cu, Cr} = require("chrome");
 Cu.import("resource://gre/modules/osfile.jsm");
 const {Services} = Cu.import("resource://gre/modules/Services.jsm");
 const {FileUtils} = Cu.import("resource://gre/modules/FileUtils.jsm");
+const {devtools} = Cu.import("resource://gre/modules/devtools/Loader.jsm", {});
 const promise = require("sdk/core/promise");
 
 // XXX: bug 912476 make this module a real protocol.js front
@@ -170,12 +171,10 @@ function installPackaged(client, webappsActor, packagePath, appId) {
             if (res.error) {
               deferred.reject(res);
             }
-          });
-          client.addOneTimeListener("webappsEvent", function (aState, aType, aPacket) {
-            if ("error" in aType)
-              deferred.reject({error: aType.error, message: aType.message});
+            if ("error" in res)
+              deferred.reject({error: res.error, message: res.message});
             else
-              deferred.resolve({appId: aType.appId});
+              deferred.resolve({appId: res.appId});
           });
           // Ensure deleting the temporary package file, but only if that a temporary
           // package created when we pass a directory as `packagePath`
@@ -203,14 +202,41 @@ function installHosted(client, webappsActor, appId, metadata, manifest) {
     if (res.error) {
       deferred.reject(res);
     }
-  });
-  client.addOneTimeListener("webappsEvent", function (aState, aType, aPacket) {
-    if ("error" in aType)
-      deferred.reject({error: aType.error, message: aType.message});
+    if ("error" in res)
+      deferred.reject({error: res.error, message: res.message});
     else
-      deferred.resolve({appId: aType.appId});
+      deferred.resolve({appId: res.appId});
   });
   return deferred.promise;
 }
 exports.installHosted = installHosted;
+
+function getTargetForApp(client, webappsActor, manifestURL) {
+  let deferred = promise.defer();
+  let request = {
+    to: webappsActor,
+    type: "getAppActor",
+    manifestURL: manifestURL,
+  }
+  client.request(request, (res) => {
+    if (res.error) {
+      deferred.reject(res.error);
+    } else {
+      let options = {
+        form: res.actor,
+        client: client,
+        chrome: false
+      };
+
+      devtools.TargetFactory.forRemoteTab(options).then((target) => {
+        target.isApp = true;
+        deferred.resolve(target)
+      }, (error) => {
+        deferred.reject(error);
+      });
+    }
+  });
+  return deferred.promise;
+}
+exports.getTargetForApp = getTargetForApp;
 

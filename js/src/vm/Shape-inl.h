@@ -9,13 +9,9 @@
 
 #include "vm/Shape.h"
 
-#include "mozilla/PodOperations.h"
-
-#include "jscntxt.h"
-#include "jsgc.h"
 #include "jsobj.h"
 
-#include "gc/Marking.h"
+#include "vm/Interpreter.h"
 #include "vm/ScopeObject.h"
 
 #include "jsatominlines.h"

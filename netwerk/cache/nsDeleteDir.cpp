@@ -14,6 +14,7 @@
 #include "nsThreadUtils.h"
 #include "nsISupportsPriority.h"
 #include "nsCacheUtils.h"
+#include "prtime.h"
 #include <time.h>
 
 using namespace mozilla;

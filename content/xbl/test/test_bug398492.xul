@@ -33,7 +33,6 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=398492
     SimpleTest.waitForExplicitFinish();
 
     function getXBLParent(node) {
-      netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
       var utils = Components.classes["@mozilla.org/inspector/dom-utils;1"]
                             .getService(Components.interfaces.inIDOMUtils);
       return utils.getParentForNode(node, true);

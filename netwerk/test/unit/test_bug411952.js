@@ -1,6 +1,3 @@
-const Cc = Components.classes;
-const Ci = Components.interfaces;
-
 function run_test() {
   try {
     var cm = Cc["@mozilla.org/cookiemanager;1"].

@@ -176,7 +176,7 @@ let Util = {
    */
   getDownloadSize: function dv__getDownloadSize (aSize) {
     let [size, units] = DownloadUtils.convertByteUnits(aSize);
-    if (size > 0)
+    if (aSize > 0)
       return size + units;
     else
       return Strings.browser.GetStringFromName("downloadsUnknownSize");

@@ -93,6 +93,16 @@ Parser.prototype = {
     this._cache.clear();
   },
 
+  /**
+   * Clears the AST for a particular source.
+   *
+   * @param String aUrl
+   *        The URL of the source that is being cleared.
+   */
+  clearSource: function P_clearSource(aUrl) {
+    this._cache.delete(aUrl);
+  },
+
   _cache: null
 };
 

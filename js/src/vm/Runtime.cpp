@@ -22,6 +22,7 @@
 #include "jsnativestack.h"
 #include "jsobj.h"
 #include "jsscript.h"
+#include "jswatchpoint.h"
 #include "jswrapper.h"
 
 #include "jit/AsmJSSignalHandlers.h"
@@ -38,9 +39,13 @@ using namespace js::gc;
 
 using mozilla::Atomic;
 using mozilla::DebugOnly;
+using mozilla::NegativeInfinity;
 using mozilla::PodZero;
 using mozilla::PodArrayZero;
+using mozilla::PositiveInfinity;
 using mozilla::ThreadLocal;
+using JS::GenericNaN;
+using JS::DoubleNaNValue;
 
 /* static */ ThreadLocal<PerThreadData*> js::TlsPerThreadData;
 
@@ -109,9 +114,7 @@ JSRuntime::JSRuntime(JSUseHelperThreads useHelperThreads)
     operationCallback(NULL),
 #ifdef JS_THREADSAFE
     operationCallbackLock(NULL),
-#ifdef DEBUG
     operationCallbackOwner(NULL),
-#endif
 #endif
 #ifdef JS_WORKER_THREADS
     workerThreadState(NULL),
@@ -227,16 +230,16 @@ JSRuntime::JSRuntime(JSUseHelperThreads useHelperThreads)
     gcFinalizeCallback(NULL),
     gcMallocBytes(0),
     scriptAndCountsVector(NULL),
-    NaNValue(UndefinedValue()),
-    negativeInfinityValue(UndefinedValue()),
-    positiveInfinityValue(UndefinedValue()),
+    NaNValue(DoubleNaNValue()),
+    negativeInfinityValue(DoubleValue(NegativeInfinity())),
+    positiveInfinityValue(DoubleValue(PositiveInfinity())),
     emptyString(NULL),
-    sourceHook(NULL),
     debugMode(false),
     spsProfiler(thisFromCtor()),
     profilingScripts(false),
     alwaysPreserveCode(false),
     hadOutOfMemory(false),
+    haveCreatedContext(false),
     data(NULL),
     gcLock(NULL),
     gcHelperThread(thisFromCtor()),
@@ -257,6 +260,7 @@ JSRuntime::JSRuntime(JSUseHelperThreads useHelperThreads)
     mathCache_(NULL),
     trustedPrincipals_(NULL),
     atomsCompartment_(NULL),
+    beingDestroyed_(false),
     wrapObjectCallback(TransparentObjectWrapper),
     sameCompartmentWrapObjectCallback(NULL),
     preWrapObjectCallback(NULL),
@@ -392,6 +396,52 @@ JSRuntime::init(uint32_t maxbytes)
 
 JSRuntime::~JSRuntime()
 {
+    JS_ASSERT(!isHeapBusy());
+
+    /* Free source hook early, as its destructor may want to delete roots. */
+    sourceHook = NULL;
+
+    /* Off thread compilation and parsing depend on atoms still existing. */
+    for (CompartmentsIter comp(this); !comp.done(); comp.next())
+        CancelOffThreadIonCompile(comp, NULL);
+    WaitForOffThreadParsingToFinish(this);
+
+#ifdef JS_WORKER_THREADS
+    if (workerThreadState)
+        workerThreadState->cleanup(this);
+#endif
+
+    /* Poison common names before final GC. */
+    FinishCommonNames(this);
+
+    /* Clear debugging state to remove GC roots. */
+    for (CompartmentsIter comp(this); !comp.done(); comp.next()) {
+        comp->clearTraps(defaultFreeOp());
+        if (WatchpointMap *wpmap = comp->watchpointMap)
+            wpmap->clear();
+    }
+
+    /* Clear the statics table to remove GC roots. */
+    staticStrings.finish();
+
+    /*
+     * Flag us as being destroyed. This allows the GC to free things like
+     * interned atoms and Ion trampolines.
+     */
+    beingDestroyed_ = true;
+
+    /* Allow the GC to release scripts that were being profiled. */
+    profilingScripts = false;
+
+    JS::PrepareForFullGC(this);
+    GC(this, GC_NORMAL, JS::gcreason::DESTROY_RUNTIME);
+
+    /*
+     * Clear the self-hosted global and delete self-hosted classes *after*
+     * GC, as finalizers for objects check for clasp->finalize during GC.
+     */
+    finishSelfHosting();
+
     mainThread.removeFromThreadList();
 
 #ifdef JS_WORKER_THREADS
@@ -448,6 +498,7 @@ JSRuntime::~JSRuntime()
         PR_DestroyLock(gcLock);
 #endif
 
+    js_free(defaultLocale);
     js_delete(bumpAlloc_);
     js_delete(mathCache_);
 #ifdef JS_ION

@@ -60,17 +60,6 @@ using namespace js::types;
 using mozilla::DebugOnly;
 using mozilla::PodCopy;
 
-/* Some objects (e.g., With) delegate 'this' to another object. */
-static inline JSObject *
-CallThisObjectHook(JSContext *cx, HandleObject obj, Value *argv)
-{
-    JSObject *thisp = JSObject::thisObject(cx, obj);
-    if (!thisp)
-        return NULL;
-    argv[-1].setObject(*thisp);
-    return thisp;
-}
-
 /*
  * Note: when Clang 3.2 (32-bit) inlines the two functions below in Interpret,
  * the conservative stack scanner leaks a ton of memory and this negatively
@@ -1224,24 +1213,23 @@ ModOperation(JSContext *cx, HandleScript script, jsbytecode *pc, HandleValue lhs
 
 static JS_ALWAYS_INLINE bool
 SetObjectElementOperation(JSContext *cx, Handle<JSObject*> obj, HandleId id, const Value &value,
-                          bool strict, JSScript *maybeScript = NULL, jsbytecode *pc = NULL)
+                          bool strict, JSScript *script = NULL, jsbytecode *pc = NULL)
 {
-    RootedScript script(cx, maybeScript);
     types::TypeScript::MonitorAssign(cx, obj, id);
 
+#ifdef JS_ION
     if (obj->isNative() && JSID_IS_INT(id)) {
         uint32_t length = obj->getDenseInitializedLength();
         int32_t i = JSID_TO_INT(id);
         if ((uint32_t)i >= length) {
             // Annotate script if provided with information (e.g. baseline)
-            if (script && script->hasAnalysis()) {
-                JS_ASSERT(pc);
-                script->analysis()->getCode(pc).arrayWriteHole = true;
-            }
+            if (script && script->hasBaselineScript() && *pc == JSOP_SETELEM)
+                script->baselineScript()->noteArrayWriteHole(pc - script->code);
         }
     }
+#endif
 
-    if (obj->isNative() && !obj->setHadElementsAccess(cx))
+    if (obj->isNative() && !JSID_IS_INT(id) && !obj->setHadElementsAccess(cx))
         return false;
 
     RootedValue tmp(cx, value);
@@ -1650,14 +1638,14 @@ BEGIN_CASE(JSOP_STOP)
      */
     CHECK_BRANCH();
 
-#if JS_TRACE_LOGGING
-    TraceLogging::defaultLogger()->log(TraceLogging::SCRIPT_STOP);
-#endif
-
     interpReturnOK = true;
     if (entryFrame != regs.fp())
   inline_return:
     {
+#if JS_TRACE_LOGGING
+        TraceLogging::defaultLogger()->log(TraceLogging::SCRIPT_STOP);
+#endif
+
         if (cx->compartment()->debugMode())
             interpReturnOK = ScriptDebugEpilogue(cx, regs.fp(), interpReturnOK);
 
@@ -1914,7 +1902,7 @@ END_CASE(JSOP_BINDGNAME)
 
 BEGIN_CASE(JSOP_BINDINTRINSIC)
     PUSH_OBJECT(*cx->global()->intrinsicsHolder());
-END_CASE(JSOP_BINDGNAME)
+END_CASE(JSOP_BINDINTRINSIC)
 
 BEGIN_CASE(JSOP_BINDNAME)
 {
@@ -2404,6 +2392,61 @@ BEGIN_CASE(JSOP_EVAL)
     TypeScript::Monitor(cx, script, regs.pc, regs.sp[-1]);
 }
 END_CASE(JSOP_EVAL)
+
+BEGIN_CASE(JSOP_SPREADNEW)
+BEGIN_CASE(JSOP_SPREADCALL)
+    if (regs.fp()->hasPushedSPSFrame())
+        cx->runtime()->spsProfiler.updatePC(script, regs.pc);
+    /* FALL THROUGH */
+
+BEGIN_CASE(JSOP_SPREADEVAL)
+{
+    JS_ASSERT(regs.stackDepth() >= 3);
+    RootedObject &aobj = rootObject0;
+    aobj = &regs.sp[-1].toObject();
+
+    uint32_t length = aobj->as<ArrayObject>().length();
+
+    if (length > ARGS_LENGTH_MAX) {
+        JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
+                             op == JSOP_SPREADNEW ? JSMSG_TOO_MANY_CON_SPREADARGS
+                                                  : JSMSG_TOO_MANY_FUN_SPREADARGS);
+        goto error;
+    }
+
+    InvokeArgs args(cx);
+
+    if (!args.init(length))
+        return false;
+
+    args.setCallee(regs.sp[-3]);
+    args.setThis(regs.sp[-2]);
+
+    if (!GetElements(cx, aobj, length, args.array()))
+        goto error;
+
+    if (op == JSOP_SPREADNEW) {
+        if (!InvokeConstructor(cx, args))
+            goto error;
+    } else if (op == JSOP_SPREADCALL) {
+        if (!Invoke(cx, args))
+            goto error;
+    } else {
+        JS_ASSERT(op == JSOP_SPREADEVAL);
+        if (IsBuiltinEvalForScope(regs.fp()->scopeChain(), args.calleev())) {
+            if (!DirectEval(cx, args))
+                goto error;
+        } else {
+            if (!Invoke(cx, args))
+                goto error;
+        }
+    }
+
+    regs.sp -= 2;
+    regs.sp[-1] = args.rval();
+    TypeScript::Monitor(cx, script, regs.pc, regs.sp[-1]);
+}
+END_CASE(JSOP_SPREADCALL)
 
 BEGIN_CASE(JSOP_FUNAPPLY)
 {
@@ -3309,7 +3352,7 @@ default:
 
             switch (tn->kind) {
               case JSTRY_CATCH:
-                  JS_ASSERT(*regs.pc == JSOP_ENTERBLOCK);
+                JS_ASSERT(*regs.pc == JSOP_ENTERBLOCK || *regs.pc == JSOP_EXCEPTION);
 
                 /* Catch cannot intercept the closing of a generator. */
                   if (JS_UNLIKELY(cx->getPendingException().isMagic(JS_GENERATOR_CLOSING)))
@@ -3383,6 +3426,10 @@ default:
         Probes::exitScript(cx, script, script->function(), regs.fp());
 
     gc::MaybeVerifyBarriers(cx, true);
+
+#if JS_TRACE_LOGGING
+        TraceLogging::defaultLogger()->log(TraceLogging::SCRIPT_STOP);
+#endif
 
 #ifdef JS_ION
     /*

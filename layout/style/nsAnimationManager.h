@@ -8,15 +8,12 @@
 #include "mozilla/Attributes.h"
 #include "AnimationCommon.h"
 #include "nsCSSPseudoElements.h"
-#include "nsStyleContext.h"
-#include "nsDataHashtable.h"
 #include "nsGUIEvent.h"
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/TimeStamp.h"
-#include "mozilla/Preferences.h"
-#include "nsThreadUtils.h"
 
 class nsCSSKeyframesRule;
+class nsStyleContext;
 
 namespace mozilla {
 namespace css {

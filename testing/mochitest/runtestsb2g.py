@@ -142,7 +142,7 @@ class B2GMochitest(MochitestUtilsMixin):
             status = -1
         except:
             traceback.print_exc()
-            log.error("runtests.py | Received unexpected exception while running application\n")
+            log.error("Automation Error: Received unexpected exception while running application\n")
             status = 1
 
         self.stopWebServer(options)
@@ -197,7 +197,7 @@ class B2GDeviceMochitest(B2GMochitest):
         d['profilePath'] = tempfile.mkdtemp()
         if d.get('httpdPath') is None:
             d['httpdPath'] = os.path.abspath(os.path.join(self.local_binary_dir, 'components'))
-        self.server = MochitestServer(None, d)
+        self.server = MochitestServer(d)
         self.server.start()
 
         if (options.pidFile != ""):

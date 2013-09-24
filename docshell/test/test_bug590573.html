@@ -96,11 +96,8 @@ function page2PageShow()
 
 function dumpSHistory(theWindow)
 {
-  netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
-
-  const Ci = Components.interfaces;
-  let sh = theWindow.QueryInterface(Ci.nsIInterfaceRequestor)
-                    .getInterface(Ci.nsIWebNavigation)
+  let sh = SpecialPowers.wrap(theWindow).QueryInterface(SpecialPowers.Ci.nsIInterfaceRequestor)
+                    .getInterface(SpecialPowers.Ci.nsIWebNavigation)
                     .sessionHistory;
   if (!sh) {
     dump(" window has no shistory.\n");
@@ -114,7 +111,7 @@ function dumpSHistory(theWindow)
   for (let i = 0; i < sh.count; i++) {
     let shentry = sh.getEntryAtIndex(i, false);
     dump(" " + i + ": " + shentry.URI.spec + '\n');
-    shentry.QueryInterface(Ci.nsISHContainer);
+    shentry.QueryInterface(SpecialPowers.Ci.nsISHContainer);
     for (let j = 0; j < shentry.childCount; j++) {
       let child = shentry.GetChildAt(j);
       dump("   child " + j + ": " + child.URI.spec + '\n');

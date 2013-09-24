@@ -62,7 +62,8 @@ NS_IMPL_ISUPPORTS1(mozJSSubScriptLoader, mozIJSSubScriptLoader)
 static nsresult
 ReportError(JSContext *cx, const char *msg)
 {
-    JS_SetPendingException(cx, STRING_TO_JSVAL(JS_NewStringCopyZ(cx, msg)));
+    RootedValue exn(cx, JS::StringValue(JS_NewStringCopyZ(cx, msg)));
+    JS_SetPendingException(cx, exn);
     return NS_OK;
 }
 
@@ -159,10 +160,10 @@ mozJSSubScriptLoader::ReadScript(nsIURI *uri, JSContext *cx, JSObject *targetObj
 
 NS_IMETHODIMP
 mozJSSubScriptLoader::LoadSubScript(const nsAString& url,
-                                    const JS::Value& target,
+                                    const Value& targetArg,
                                     const nsAString& charset,
                                     JSContext* cx,
-                                    JS::Value* retval)
+                                    Value* retval)
 {
     /*
      * Loads a local url and evals it into the current cx
@@ -198,8 +199,9 @@ mozJSSubScriptLoader::LoadSubScript(const nsAString& url,
 
     // We base reusingGlobal off of what the loader told us, but we may not
     // actually be using that object.
+    RootedValue target(cx, targetArg);
     RootedObject passedObj(cx);
-    if (!JS_ValueToObject(cx, target, passedObj.address()))
+    if (!JS_ValueToObject(cx, target, &passedObj))
         return NS_ERROR_ILLEGAL_VALUE;
 
     if (passedObj)
@@ -234,7 +236,7 @@ mozJSSubScriptLoader::LoadSubScript(const nsAString& url,
     RootedScript script(cx);
 
     // Figure out who's calling us
-    if (!JS_DescribeScriptedCaller(cx, script.address(), nullptr)) {
+    if (!JS_DescribeScriptedCaller(cx, &script, nullptr)) {
         // No scripted frame means we don't know who's calling, bail.
         return NS_ERROR_FAILURE;
     }
@@ -291,7 +293,7 @@ mozJSSubScriptLoader::LoadSubScript(const nsAString& url,
     RootedFunction function(cx);
     script = nullptr;
     if (cache)
-        rv = ReadCachedScript(cache, cachePath, cx, mSystemPrincipal, script.address());
+        rv = ReadCachedScript(cache, cachePath, cx, mSystemPrincipal, &script);
     if (!script) {
         rv = ReadScript(uri, cx, targetObj, charset,
                         static_cast<const char*>(uriStr.get()), serv,

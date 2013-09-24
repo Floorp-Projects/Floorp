@@ -358,6 +358,7 @@ done:
 	status = PR_Access(olddbname, PR_ACCESS_EXISTS);
 	if (status == PR_SUCCESS) {
 	    PR_smprintf_free(olddbname);
+	    PORT_ZFree(moduleList, useCount*sizeof(char **));
 	    PORT_SetError(SEC_ERROR_LEGACY_DATABASE);
 	    return NULL;
 	}

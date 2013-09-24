@@ -331,8 +331,16 @@ Template.prototype = {
           !("childSelector" in json)) {
         throw new Error("missing property");
       }
+
       if (rootPath) {
         json.path = rootPath + "." + json.path;
+      }
+
+      if (!json.path) {
+        // Nothing to show.
+        this._unregisterNodes(e.querySelectorAll("[template]"));
+        e.innerHTML = "";
+        return;
       }
 
       let templateParent = this._doc.querySelector(json.childSelector);

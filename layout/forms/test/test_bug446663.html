@@ -23,16 +23,15 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=446663
 /** Test for Bug 446663 **/
 
 function test_edit_cmds(id) {
-  netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
 
   var elm = document.getElementById(id);
   elm.focus();
   elm.select();
-  elm.controllers.getControllerForCommand('cmd_cut')
+  SpecialPowers.wrap(elm).controllers.getControllerForCommand('cmd_cut')
                          .doCommand('cmd_cut');
   is(elm.value, '', id + " cut");
 
-  elm.controllers.getControllerForCommand('cmd_undo')
+  SpecialPowers.wrap(elm).controllers.getControllerForCommand('cmd_undo')
                          .doCommand('cmd_undo');
   is(elm.value, '123', id + " undo");
 }

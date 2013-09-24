@@ -51,6 +51,8 @@ class GradientStopsCairo : public GradientStops
 class DrawTargetCairo : public DrawTarget
 {
 public:
+  friend class BorrowedCairoContext;
+
   DrawTargetCairo();
   virtual ~DrawTargetCairo();
 

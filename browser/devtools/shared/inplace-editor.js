@@ -201,9 +201,11 @@ function InplaceEditor(aOptions, aEvent)
   this.input.addEventListener("blur", this._onBlur, false);
   this.input.addEventListener("keypress", this._onKeyPress, false);
   this.input.addEventListener("input", this._onInput, false);
-  this.input.addEventListener("mousedown", function(aEvt) {
-                                             aEvt.stopPropagation();
-                                           }, false);
+
+  this.input.addEventListener("dblclick",
+    (e) => { e.stopPropagation(); }, false);
+  this.input.addEventListener("mousedown",
+    (e) => { e.stopPropagation(); }, false);
 
   this.validate = aOptions.validate;
 

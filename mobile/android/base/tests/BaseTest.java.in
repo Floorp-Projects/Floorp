@@ -49,8 +49,8 @@ abstract class BaseTest extends ActivityInstrumentationTestCase2<Activity> {
     private static final int VERIFY_URL_TIMEOUT = 2000;
     private static final int MAX_LIST_ATTEMPTS = 3;
     private static final int MAX_WAIT_ENABLED_TEXT_MS = 10000;
-    private static final int MAX_WAIT_HOME_PAGER_HIDDEN_MS = 10000;
-    public static final int MAX_WAIT_MS = 3000;
+    private static final int MAX_WAIT_HOME_PAGER_HIDDEN_MS = 15000;
+    public static final int MAX_WAIT_MS = 4500;
 
     // IDs for UI views
     private static final String BROWSER_TOOLBAR_ID = "browser_toolbar";
@@ -616,6 +616,7 @@ abstract class BaseTest extends ActivityInstrumentationTestCase2<Activity> {
         public String type; // "tablet" or "phone"
         public final int width;
         public final int height;
+        public final float density;
 
         public Device() {
             // Determine device version
@@ -634,6 +635,7 @@ abstract class BaseTest extends ActivityInstrumentationTestCase2<Activity> {
             getActivity().getWindowManager().getDefaultDisplay().getMetrics(dm);
             height = dm.heightPixels;
             width = dm.widthPixels;
+            density = dm.density;
             // Determine device type
             type = "phone";
             try {

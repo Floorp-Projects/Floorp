@@ -38,6 +38,7 @@
 #include "nsReadableUtils.h"
 #include "nsStyleConsts.h"
 #include "nsTextEditorState.h"
+#include "nsIController.h"
 
 static NS_DEFINE_CID(kXULControllersCID,  NS_XULCONTROLLERS_CID);
 

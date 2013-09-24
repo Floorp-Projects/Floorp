@@ -89,6 +89,7 @@ class LIRGenerator : public LIRGeneratorSpecific
     bool visitNewDeclEnvObject(MNewDeclEnvObject *ins);
     bool visitNewCallObject(MNewCallObject *ins);
     bool visitNewStringObject(MNewStringObject *ins);
+    bool visitNewDerivedTypedObject(MNewDerivedTypedObject *ins);
     bool visitNewPar(MNewPar *ins);
     bool visitNewCallObjectPar(MNewCallObjectPar *ins);
     bool visitNewDenseArrayPar(MNewDenseArrayPar *ins);
@@ -154,6 +155,7 @@ class LIRGenerator : public LIRGeneratorSpecific
     bool visitNop(MNop *nop);
     bool visitOsrValue(MOsrValue *value);
     bool visitOsrScopeChain(MOsrScopeChain *object);
+    bool visitOsrArgumentsObject(MOsrArgumentsObject *object);
     bool visitToDouble(MToDouble *convert);
     bool visitToFloat32(MToFloat32 *convert);
     bool visitToInt32(MToInt32 *convert);
@@ -182,6 +184,7 @@ class LIRGenerator : public LIRGeneratorSpecific
     bool visitArrayLength(MArrayLength *ins);
     bool visitTypedArrayLength(MTypedArrayLength *ins);
     bool visitTypedArrayElements(MTypedArrayElements *ins);
+    bool visitTypedObjectElements(MTypedObjectElements *ins);
     bool visitInitializedLength(MInitializedLength *ins);
     bool visitSetInitializedLength(MSetInitializedLength *ins);
     bool visitNot(MNot *ins);

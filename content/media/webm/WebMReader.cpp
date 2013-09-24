@@ -49,12 +49,9 @@ PRLogModuleInfo* gNesteggLog;
 
 static const unsigned NS_PER_USEC = 1000;
 static const double NS_PER_S = 1e9;
+#ifdef MOZ_DASH
 static const double USEC_PER_S = 1e6;
-
-// If a seek request is within SEEK_DECODE_MARGIN microseconds of the
-// current time, decode ahead from the current frame rather than performing
-// a full seek.
-static const int SEEK_DECODE_MARGIN = 250000;
+#endif
 
 // Functions for reading and seeking using MediaResource required for
 // nestegg_io. The 'user data' passed to these functions is the
@@ -77,7 +74,6 @@ static int webm_read(void *aBuffer, size_t aLength, void *aUserData)
       eof = true;
       break;
     }
-    decoder->NotifyBytesConsumed(bytes);
     aLength -= bytes;
     p += bytes;
   }

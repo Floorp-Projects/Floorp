@@ -13,6 +13,8 @@
 using namespace js;
 using namespace js::jit;
 
+using JS::DoubleNaNValue;
+
 MDefinition *
 BoxInputsPolicy::boxAt(MInstruction *at, MDefinition *operand)
 {
@@ -414,6 +416,7 @@ IntPolicy<Op>::staticAdjustInputs(MInstruction *def)
 
 template bool IntPolicy<0>::staticAdjustInputs(MInstruction *def);
 template bool IntPolicy<1>::staticAdjustInputs(MInstruction *def);
+template bool IntPolicy<2>::staticAdjustInputs(MInstruction *def);
 
 template <unsigned Op>
 bool
@@ -621,7 +624,7 @@ StoreTypedArrayPolicy::adjustValueInput(MInstruction *ins, int arrayType,
       case MIRType_Object:
       case MIRType_Undefined:
         value->setFoldedUnchecked();
-        value = MConstant::New(DoubleValue(js_NaN));
+        value = MConstant::New(DoubleNaNValue());
         ins->block()->insertBefore(ins, value->toInstruction());
         break;
       case MIRType_String:

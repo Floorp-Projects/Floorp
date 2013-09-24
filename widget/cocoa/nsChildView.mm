@@ -63,6 +63,7 @@
 #include "mozilla/layers/BasicCompositor.h"
 #include "gfxUtils.h"
 #include "mozilla/gfx/2D.h"
+#include "mozilla/gfx/BorrowedContext.h"
 #ifdef ACCESSIBILITY
 #include "nsAccessibilityService.h"
 #include "mozilla/a11y/Platform.h"
@@ -3838,8 +3839,6 @@ NSEvent* gLastDragMouseDownEvent = nil;
 
 - (void)beginGestureWithEvent:(NSEvent *)anEvent
 {
-  NS_ASSERTION(mGestureState == eGestureState_None, "mGestureState should be eGestureState_None");
-
   if (!anEvent)
     return;
 
@@ -4062,18 +4061,6 @@ NSEvent* gLastDragMouseDownEvent = nil;
   return eventCancelled; // event cancelled == swipe should start
 }
 
-- (void)cancelSwipeIfRunning
-{
-  // Clear gesture state.
-  mGestureState = eGestureState_None;
-
-  if (mCancelSwipeAnimation) {
-    mCancelSwipeAnimation();
-    [mCancelSwipeAnimation release];
-    mCancelSwipeAnimation = nil;
-  }
-}
-
 - (void)sendSwipeEndEvent:(NSEvent *)anEvent
         allowedDirections:(uint32_t)aAllowedDirections
 {
@@ -4111,7 +4098,9 @@ NSEvent* gLastDragMouseDownEvent = nil;
     return;
   }
 
-  if ([anEvent type] != NSScrollWheel) {
+  // Verify that this is a scroll wheel event with proper phase to be tracked
+  // by the OS.
+  if ([anEvent type] != NSScrollWheel || [anEvent phase] == NSEventPhaseNone) {
     return;
   }
 
@@ -4125,12 +4114,6 @@ NSEvent* gLastDragMouseDownEvent = nil;
     return;
   }
 
-  // Only initiate tracking for gestures that have just begun -- otherwise a
-  // scroll to one side of the page can have a swipe tacked on to it.
-  if ([anEvent phase] != NSEventPhaseBegan) {
-    return;
-  }
-
   CGFloat deltaX, deltaY;
   if ([anEvent hasPreciseScrollingDeltas]) {
     deltaX = [anEvent scrollingDeltaX];
@@ -4139,29 +4122,48 @@ NSEvent* gLastDragMouseDownEvent = nil;
     deltaX = [anEvent deltaX];
     deltaY = [anEvent deltaY];
   }
-  // Only initiate tracking for events whose horizontal element is at least
-  // eight times larger than its vertical element.  This minimizes performance
-  // problems with vertical scrolls (by minimizing the possibility that they'll
-  // be misinterpreted as horizontal swipes), while still tolerating a small
-  // vertical element to a true horizontal swipe.  The number '8' was arrived
-  // at by trial and error.
-  if ((deltaX == 0) || (fabs(deltaX) <= fabs(deltaY) * 8)) {
+
+  uint32_t direction = 0;
+  // Only initiate horizontal tracking for events whose horizontal element is
+  // at least eight times larger than its vertical element. This minimizes
+  // performance problems with vertical scrolls (by minimizing the possibility
+  // that they'll be misinterpreted as horizontal swipes), while still
+  // tolerating a small vertical element to a true horizontal swipe.  The number
+  // '8' was arrived at by trial and error.
+  if (overflow != 0.0 && deltaX != 0.0 &&
+      fabsf(deltaX) > fabsf(deltaY) * 8) {
+    // Only initiate horizontal tracking for gestures that have just begun --
+    // otherwise a scroll to one side of the page can have a swipe tacked on
+    // to it.
+    if ([anEvent phase] != NSEventPhaseBegan) {
+      return;
+    }
+
+    if (deltaX < 0.0) {
+      direction = (uint32_t)nsIDOMSimpleGestureEvent::DIRECTION_RIGHT;
+    } else {
+      direction = (uint32_t)nsIDOMSimpleGestureEvent::DIRECTION_LEFT;
+    }
+  } else {
     return;
   }
 
-  // If a swipe is currently being tracked kill it -- it's been interrupted by
-  // another gesture or legacy scroll wheel event.
-  [self cancelSwipeIfRunning];
+  // If a swipe is currently being tracked kill it -- it's been interrupted
+  // by another gesture event.
+  if (mCancelSwipeAnimation && *mCancelSwipeAnimation == NO) {
+    *mCancelSwipeAnimation = YES;
+    mCancelSwipeAnimation = nil;
+  }
 
+  uint32_t allowedDirections = 0;
   // We're ready to start the animation. Tell Gecko about it, and at the same
   // time ask it if it really wants to start an animation for this event.
   // This event also reports back the directions that we can swipe in.
-  uint32_t allowedDirections = 0;
   bool shouldStartSwipe = [self sendSwipeEvent:anEvent
-                                        withKind:NS_SIMPLE_GESTURE_SWIPE_START
-                               allowedDirections:&allowedDirections
-                                       direction:0
-                                           delta:0.0];
+                                      withKind:NS_SIMPLE_GESTURE_SWIPE_START
+                             allowedDirections:&allowedDirections
+                                     direction:direction
+                                         delta:0.0];
 
   if (!shouldStartSwipe) {
     return;
@@ -4170,7 +4172,7 @@ NSEvent* gLastDragMouseDownEvent = nil;
   double min = (allowedDirections & nsIDOMSimpleGestureEvent::DIRECTION_RIGHT) ? -1 : 0;
   double max = (allowedDirections & nsIDOMSimpleGestureEvent::DIRECTION_LEFT) ? 1 : 0;
 
-  __block BOOL animationCancelled = NO;
+  __block BOOL animationCanceled = NO;
   __block BOOL geckoSwipeEventSent = NO;
   // At this point, anEvent is the first scroll wheel event in a two-finger
   // horizontal gesture that we've decided to treat as a swipe.  When we call
@@ -4187,67 +4189,70 @@ NSEvent* gLastDragMouseDownEvent = nil;
   // the anEvent object because it's retained by the block, see bug 682445.
   // The block will release it when the block goes away at the end of the
   // animation, or when the animation is canceled.
-  [anEvent trackSwipeEventWithOptions:NSEventSwipeTrackingLockDirection
+  [anEvent trackSwipeEventWithOptions:NSEventSwipeTrackingLockDirection |
+                                      NSEventSwipeTrackingClampGestureAmount
              dampenAmountThresholdMin:min
                                   max:max
-                         usingHandler:^(CGFloat gestureAmount, NSEventPhase phase, BOOL isComplete, BOOL *stop) {
-      // Since this tracking handler can be called asynchronously, mGeckoChild
-      // might have become NULL here (our child widget might have been
-      // destroyed).
-      if (animationCancelled || !mGeckoChild) {
-        *stop = YES;
-        return;
+                         usingHandler:^(CGFloat gestureAmount,
+                                        NSEventPhase phase,
+                                        BOOL isComplete,
+                                        BOOL *stop) {
+    uint32_t allowedDirectionsCopy = allowedDirections;
+    // Since this tracking handler can be called asynchronously, mGeckoChild
+    // might have become NULL here (our child widget might have been
+    // destroyed).
+    // Checking for gestureAmount == 0.0 also works around bug 770626, which
+    // happens when DispatchWindowEvent() triggers a modal dialog, which spins
+    // the event loop and confuses the OS. This results in several re-entrant
+    // calls to this handler.
+    if (animationCanceled || !mGeckoChild || gestureAmount == 0.0) {
+      *stop = YES;
+      animationCanceled = YES;
+      if (gestureAmount == 0.0) {
+        if (mCancelSwipeAnimation)
+          *mCancelSwipeAnimation = YES;
+        mCancelSwipeAnimation = nil;
+        [self sendSwipeEndEvent:anEvent
+              allowedDirections:allowedDirectionsCopy];
       }
+      return;
+    }
 
-      uint32_t allowedDirectionsCopy = allowedDirections;
+    // Update animation overlay to match gestureAmount.
+    [self sendSwipeEvent:anEvent
+                withKind:NS_SIMPLE_GESTURE_SWIPE_UPDATE
+       allowedDirections:&allowedDirectionsCopy
+               direction:0.0
+                   delta:gestureAmount];
 
-      // Update animation overlay to match gestureAmount.
+    if (phase == NSEventPhaseEnded && !geckoSwipeEventSent) {
+      // The result of the swipe is now known, so the main event can be sent.
+      // The animation might continue even after this event was sent, so
+      // don't tear down the animation overlay yet.
+
+      uint32_t directionCopy = direction;
+
+      // gestureAmount is documented to be '-1', '0' or '1' when isComplete
+      // is TRUE, but the docs don't say anything about its value at other
+      // times.  However, tests show that, when phase == NSEventPhaseEnded,
+      // gestureAmount is negative when it will be '-1' at isComplete, and
+      // positive when it will be '1'.  And phase is never equal to
+      // NSEventPhaseEnded when gestureAmount will be '0' at isComplete.
+      geckoSwipeEventSent = YES;
       [self sendSwipeEvent:anEvent
-                  withKind:NS_SIMPLE_GESTURE_SWIPE_UPDATE
+                  withKind:NS_SIMPLE_GESTURE_SWIPE
          allowedDirections:&allowedDirectionsCopy
-                 direction:0
-                     delta:gestureAmount];
+                 direction:directionCopy
+                     delta:0.0];
+    }
 
-      if (phase == NSEventPhaseEnded && !geckoSwipeEventSent) {
-        // The result of the swipe is now known, so the main event can be sent.
-        // The animation might continue even after this event was sent, so
-        // don't tear down the animation overlay yet.
-        // gestureAmount is documented to be '-1', '0' or '1' when isComplete
-        // is TRUE, but the docs don't say anything about its value at other
-        // times.  However, tests show that, when phase == NSEventPhaseEnded,
-        // gestureAmount is negative when it will be '-1' at isComplete, and
-        // positive when it will be '1'.  And phase is never equal to
-        // NSEventPhaseEnded when gestureAmount will be '0' at isComplete.
-        uint32_t direction = gestureAmount > 0 ?
-          (uint32_t)nsIDOMSimpleGestureEvent::DIRECTION_LEFT :
-          (uint32_t)nsIDOMSimpleGestureEvent::DIRECTION_RIGHT;
-        // If DispatchWindowEvent() does something to trigger a modal dialog
-        // (which spins the event loop), the OS gets confused and makes
-        // several re-entrant calls to this handler, all of which have
-        // 'phase' set to NSEventPhaseEnded.  Unless we do something about
-        // it, this results in an equal number of re-entrant calls to
-        // DispatchWindowEvent(), and to our modal-event handling code.
-        // Probably because of bug 478703, this really messes things up,
-        // and requires a force quit to get out of.  We avoid this by
-        // avoiding re-entrant calls to DispatchWindowEvent().  See bug
-        // 770626.
-        geckoSwipeEventSent = YES;
-        [self sendSwipeEvent:anEvent
-                    withKind:NS_SIMPLE_GESTURE_SWIPE
-           allowedDirections:&allowedDirectionsCopy
-                  direction:direction
-                       delta:0.0];
-      }
+    if (isComplete) {
+      [self sendSwipeEndEvent:anEvent allowedDirections:allowedDirectionsCopy];
+      mCancelSwipeAnimation = nil;
+    }
+  }];
 
-      if (isComplete) {
-        [self cancelSwipeIfRunning];
-        [self sendSwipeEndEvent:anEvent allowedDirections:allowedDirections];
-      }
-    }];
-
-  mCancelSwipeAnimation = [^{
-    animationCancelled = YES;
-  } copy];
+  mCancelSwipeAnimation = &animationCanceled;
 }
 #endif // #ifdef __LP64__
 
@@ -4341,20 +4346,11 @@ NSEvent* gLastDragMouseDownEvent = nil;
   // This is going to our child view so we don't need to look up the destination
   // event type.
   NPCocoaEvent cocoaEvent;
-  if (mPluginEventModel == NPEventModelCocoa) {
-    nsCocoaUtils::InitNPCocoaEvent(&cocoaEvent);
-    NSPoint point = [self convertPoint:[theEvent locationInWindow] fromView:nil];
-    cocoaEvent.type = NPCocoaEventMouseDown;
-    cocoaEvent.data.mouse.modifierFlags = modifierFlags;
-    cocoaEvent.data.mouse.pluginX = point.x;
-    cocoaEvent.data.mouse.pluginY = point.y;
-    cocoaEvent.data.mouse.buttonNumber = [theEvent buttonNumber];
-    cocoaEvent.data.mouse.clickCount = clickCount;
-    cocoaEvent.data.mouse.deltaX = [theEvent deltaX];
-    cocoaEvent.data.mouse.deltaY = [theEvent deltaY];
-    cocoaEvent.data.mouse.deltaZ = [theEvent deltaZ];
-    geckoEvent.pluginEvent = &cocoaEvent;
-  }
+  ChildViewMouseTracker::AttachPluginEvent(geckoEvent, self, theEvent,
+                                           NPCocoaEventMouseDown,
+                                           &cocoaEvent);
+  // Don't lose possible changes made above to clickCount
+  cocoaEvent.data.mouse.clickCount = clickCount;
 
   mGeckoChild->DispatchWindowEvent(geckoEvent);
   mBlockedLastMouseDown = NO;
@@ -4385,22 +4381,9 @@ NSEvent* gLastDragMouseDownEvent = nil;
   // Create event for use by plugins.
   // This is going to our child view so we don't need to look up the destination
   // event type.
-  if (mIsPluginView) {
-    if (mPluginEventModel == NPEventModelCocoa) {
-      nsCocoaUtils::InitNPCocoaEvent(&cocoaEvent);
-      NSPoint point = [self convertPoint:[theEvent locationInWindow] fromView:nil];
-      cocoaEvent.type = NPCocoaEventMouseUp;
-      cocoaEvent.data.mouse.modifierFlags = [theEvent modifierFlags];
-      cocoaEvent.data.mouse.pluginX = point.x;
-      cocoaEvent.data.mouse.pluginY = point.y;
-      cocoaEvent.data.mouse.buttonNumber = [theEvent buttonNumber];
-      cocoaEvent.data.mouse.clickCount = [theEvent clickCount];
-      cocoaEvent.data.mouse.deltaX = [theEvent deltaX];
-      cocoaEvent.data.mouse.deltaY = [theEvent deltaY];
-      cocoaEvent.data.mouse.deltaZ = [theEvent deltaZ];
-      geckoEvent.pluginEvent = &cocoaEvent;
-    }
-  }
+  ChildViewMouseTracker::AttachPluginEvent(geckoEvent, self, theEvent,
+                                           NPCocoaEventMouseUp,
+                                           &cocoaEvent);
 
   // This might destroy our widget (and null out mGeckoChild).
   bool defaultPrevented = mGeckoChild->DispatchWindowEvent(geckoEvent);
@@ -4422,27 +4405,7 @@ NSEvent* gLastDragMouseDownEvent = nil;
   // happen if it came at the end of a dragging operation), also send our
   // Gecko frame a mouse-exit event.
   if (mGeckoChild && mIsPluginView) {
-    if (mPluginEventModel == NPEventModelCocoa) {
-      if (ChildViewMouseTracker::ViewForEvent(theEvent) != self) {
-        nsMouseEvent geckoExitEvent(true, NS_MOUSE_EXIT, mGeckoChild, nsMouseEvent::eReal);
-        [self convertCocoaMouseEvent:theEvent toGeckoEvent:&geckoExitEvent];
-
-        NPCocoaEvent cocoaEvent;
-        nsCocoaUtils::InitNPCocoaEvent(&cocoaEvent);
-        NSPoint point = [self convertPoint:[theEvent locationInWindow] fromView:nil];
-        cocoaEvent.type = NPCocoaEventMouseExited;
-        cocoaEvent.data.mouse.modifierFlags = [theEvent modifierFlags];
-        cocoaEvent.data.mouse.pluginX = point.x;
-        cocoaEvent.data.mouse.pluginY = point.y;
-        cocoaEvent.data.mouse.buttonNumber = [theEvent buttonNumber];
-        cocoaEvent.data.mouse.deltaX = [theEvent deltaX];
-        cocoaEvent.data.mouse.deltaY = [theEvent deltaY];
-        cocoaEvent.data.mouse.deltaZ = [theEvent deltaZ];
-        geckoExitEvent.pluginEvent = &cocoaEvent;
-
-        mGeckoChild->DispatchWindowEvent(geckoExitEvent);
-      }
-    }
+    ChildViewMouseTracker::ReEvaluateMouseEnterState(theEvent, self);
   }
 
   NS_OBJC_END_TRY_ABORT_BLOCK;
@@ -4467,20 +4430,10 @@ NSEvent* gLastDragMouseDownEvent = nil;
   // This is going to our child view so we don't need to look up the destination
   // event type.
   NPCocoaEvent cocoaEvent;
-  if (mIsPluginView) {
-    if (mPluginEventModel == NPEventModelCocoa) {
-      nsCocoaUtils::InitNPCocoaEvent(&cocoaEvent);
-      cocoaEvent.type = ((msg == NS_MOUSE_ENTER) ? NPCocoaEventMouseEntered : NPCocoaEventMouseExited);
-      cocoaEvent.data.mouse.modifierFlags = [aEvent modifierFlags];
-      cocoaEvent.data.mouse.pluginX = 5;
-      cocoaEvent.data.mouse.pluginY = 5;
-      cocoaEvent.data.mouse.buttonNumber = [aEvent buttonNumber];
-      cocoaEvent.data.mouse.deltaX = [aEvent deltaX];
-      cocoaEvent.data.mouse.deltaY = [aEvent deltaY];
-      cocoaEvent.data.mouse.deltaZ = [aEvent deltaZ];
-      event.pluginEvent = &cocoaEvent;
-    }
-  }
+  ChildViewMouseTracker::AttachPluginEvent(event, self, aEvent,
+                                           (msg == NS_MOUSE_ENTER) ?
+                                             NPCocoaEventMouseEntered : NPCocoaEventMouseExited,
+                                           &cocoaEvent);
 
   event.exit = aType;
 
@@ -4521,22 +4474,9 @@ NSEvent* gLastDragMouseDownEvent = nil;
   // This is going to our child view so we don't need to look up the destination
   // event type.
   NPCocoaEvent cocoaEvent;
-  if (mIsPluginView) {
-    if (mPluginEventModel == NPEventModelCocoa) {
-      nsCocoaUtils::InitNPCocoaEvent(&cocoaEvent);
-      NSPoint point = [self convertPoint:[theEvent locationInWindow] fromView:nil];
-      cocoaEvent.type = NPCocoaEventMouseMoved;
-      cocoaEvent.data.mouse.modifierFlags = [theEvent modifierFlags];
-      cocoaEvent.data.mouse.pluginX = point.x;
-      cocoaEvent.data.mouse.pluginY = point.y;
-      cocoaEvent.data.mouse.buttonNumber = [theEvent buttonNumber];
-      cocoaEvent.data.mouse.clickCount = [theEvent clickCount];
-      cocoaEvent.data.mouse.deltaX = [theEvent deltaX];
-      cocoaEvent.data.mouse.deltaY = [theEvent deltaY];
-      cocoaEvent.data.mouse.deltaZ = [theEvent deltaZ];
-      geckoEvent.pluginEvent = &cocoaEvent;
-    }
-  }
+  ChildViewMouseTracker::AttachPluginEvent(geckoEvent, self, theEvent,
+                                           NPCocoaEventMouseMoved,
+                                           &cocoaEvent);
   mGeckoChild->DispatchWindowEvent(geckoEvent);
 
   NS_OBJC_END_TRY_ABORT_BLOCK;
@@ -4557,22 +4497,9 @@ NSEvent* gLastDragMouseDownEvent = nil;
   [self convertCocoaMouseEvent:theEvent toGeckoEvent:&geckoEvent];
 
   // create event for use by plugins
-  if (mIsPluginView) {
-    if (mPluginEventModel == NPEventModelCocoa) {
-      nsCocoaUtils::InitNPCocoaEvent(&cocoaEvent);
-      NSPoint point = [self convertPoint:[theEvent locationInWindow] fromView:nil];
-      cocoaEvent.type = NPCocoaEventMouseDragged;
-      cocoaEvent.data.mouse.modifierFlags = [theEvent modifierFlags];
-      cocoaEvent.data.mouse.pluginX = point.x;
-      cocoaEvent.data.mouse.pluginY = point.y;
-      cocoaEvent.data.mouse.buttonNumber = [theEvent buttonNumber];
-      cocoaEvent.data.mouse.clickCount = [theEvent clickCount];
-      cocoaEvent.data.mouse.deltaX = [theEvent deltaX];
-      cocoaEvent.data.mouse.deltaY = [theEvent deltaY];
-      cocoaEvent.data.mouse.deltaZ = [theEvent deltaZ];
-      geckoEvent.pluginEvent = &cocoaEvent;
-    }
-  }
+  ChildViewMouseTracker::AttachPluginEvent(geckoEvent, self, theEvent,
+                                           NPCocoaEventMouseDragged,
+                                           &cocoaEvent);
 
   mGeckoChild->DispatchWindowEvent(geckoEvent);
 
@@ -4603,20 +4530,9 @@ NSEvent* gLastDragMouseDownEvent = nil;
 
   // create event for use by plugins
   NPCocoaEvent cocoaEvent;
-  if (mPluginEventModel == NPEventModelCocoa) {
-    nsCocoaUtils::InitNPCocoaEvent(&cocoaEvent);
-    NSPoint point = [self convertPoint:[theEvent locationInWindow] fromView:nil];
-    cocoaEvent.type = NPCocoaEventMouseDown;
-    cocoaEvent.data.mouse.modifierFlags = [theEvent modifierFlags];
-    cocoaEvent.data.mouse.pluginX = point.x;
-    cocoaEvent.data.mouse.pluginY = point.y;
-    cocoaEvent.data.mouse.buttonNumber = [theEvent buttonNumber];
-    cocoaEvent.data.mouse.clickCount = [theEvent clickCount];
-    cocoaEvent.data.mouse.deltaX = [theEvent deltaX];
-    cocoaEvent.data.mouse.deltaY = [theEvent deltaY];
-    cocoaEvent.data.mouse.deltaZ = [theEvent deltaZ];
-    geckoEvent.pluginEvent = &cocoaEvent;
-  }
+  ChildViewMouseTracker::AttachPluginEvent(geckoEvent, self, theEvent,
+                                           NPCocoaEventMouseDown,
+                                           &cocoaEvent);
 
   mGeckoChild->DispatchWindowEvent(geckoEvent);
   if (!mGeckoChild)
@@ -4643,25 +4559,19 @@ NSEvent* gLastDragMouseDownEvent = nil;
   geckoEvent.clickCount = [theEvent clickCount];
 
   // create event for use by plugins
-  if (mIsPluginView) {
-    if (mPluginEventModel == NPEventModelCocoa) {
-      nsCocoaUtils::InitNPCocoaEvent(&cocoaEvent);
-      NSPoint point = [self convertPoint:[theEvent locationInWindow] fromView:nil];
-      cocoaEvent.type = NPCocoaEventMouseUp;
-      cocoaEvent.data.mouse.modifierFlags = [theEvent modifierFlags];
-      cocoaEvent.data.mouse.pluginX = point.x;
-      cocoaEvent.data.mouse.pluginY = point.y;
-      cocoaEvent.data.mouse.buttonNumber = [theEvent buttonNumber];
-      cocoaEvent.data.mouse.clickCount = [theEvent clickCount];
-      cocoaEvent.data.mouse.deltaX = [theEvent deltaX];
-      cocoaEvent.data.mouse.deltaY = [theEvent deltaY];
-      cocoaEvent.data.mouse.deltaZ = [theEvent deltaZ];
-      geckoEvent.pluginEvent = &cocoaEvent;
-    }
-  }
+  ChildViewMouseTracker::AttachPluginEvent(geckoEvent, self, theEvent,
+                                           NPCocoaEventMouseUp,
+                                           &cocoaEvent);
 
   nsAutoRetainCocoaObject kungFuDeathGrip(self);
   mGeckoChild->DispatchWindowEvent(geckoEvent);
+
+  // If our mouse-up event's location is over some other object (as might
+  // happen if it came at the end of a dragging operation), also send our
+  // Gecko frame a mouse-exit event.
+  if (mGeckoChild && mIsPluginView) {
+    ChildViewMouseTracker::ReEvaluateMouseEnterState(theEvent, self);
+  }
 
   NS_OBJC_END_TRY_ABORT_BLOCK;
 }
@@ -4674,6 +4584,12 @@ NSEvent* gLastDragMouseDownEvent = nil;
   nsMouseEvent geckoEvent(true, NS_MOUSE_MOVE, mGeckoChild, nsMouseEvent::eReal);
   [self convertCocoaMouseEvent:theEvent toGeckoEvent:&geckoEvent];
   geckoEvent.button = nsMouseEvent::eRightButton;
+
+  // create event for use by plugins
+  NPCocoaEvent cocoaEvent;
+  ChildViewMouseTracker::AttachPluginEvent(geckoEvent, self, theEvent,
+                                           NPCocoaEventMouseDragged,
+                                           &cocoaEvent);
 
   // send event into Gecko by going directly to the
   // the widget.
@@ -4698,6 +4614,12 @@ NSEvent* gLastDragMouseDownEvent = nil;
   geckoEvent.button = nsMouseEvent::eMiddleButton;
   geckoEvent.clickCount = [theEvent clickCount];
 
+  // create event for use by plugins
+  NPCocoaEvent cocoaEvent;
+  ChildViewMouseTracker::AttachPluginEvent(geckoEvent, self, theEvent,
+                                           NPCocoaEventMouseDown,
+                                           &cocoaEvent);
+
   mGeckoChild->DispatchWindowEvent(geckoEvent);
 
   NS_OBJC_END_TRY_ABORT_BLOCK;
@@ -4712,7 +4634,21 @@ NSEvent* gLastDragMouseDownEvent = nil;
   [self convertCocoaMouseEvent:theEvent toGeckoEvent:&geckoEvent];
   geckoEvent.button = nsMouseEvent::eMiddleButton;
 
+  // create event for use by plugins
+  NPCocoaEvent cocoaEvent;
+  ChildViewMouseTracker::AttachPluginEvent(geckoEvent, self, theEvent,
+                                           NPCocoaEventMouseUp,
+                                           &cocoaEvent);
+
+  nsAutoRetainCocoaObject kungFuDeathGrip(self);
   mGeckoChild->DispatchWindowEvent(geckoEvent);
+
+  // If our mouse-up event's location is over some other object (as might
+  // happen if it came at the end of a dragging operation), also send our
+  // Gecko frame a mouse-exit event.
+  if (mGeckoChild && mIsPluginView) {
+    ChildViewMouseTracker::ReEvaluateMouseEnterState(theEvent, self);
+  }
 }
 
 - (void)otherMouseDragged:(NSEvent*)theEvent
@@ -4723,6 +4659,12 @@ NSEvent* gLastDragMouseDownEvent = nil;
   nsMouseEvent geckoEvent(true, NS_MOUSE_MOVE, mGeckoChild, nsMouseEvent::eReal);
   [self convertCocoaMouseEvent:theEvent toGeckoEvent:&geckoEvent];
   geckoEvent.button = nsMouseEvent::eMiddleButton;
+
+  // create event for use by plugins
+  NPCocoaEvent cocoaEvent;
+  ChildViewMouseTracker::AttachPluginEvent(geckoEvent, self, theEvent,
+                                           NPCocoaEventMouseDragged,
+                                           &cocoaEvent);
 
   // send event into Gecko by going directly to the
   // the widget.
@@ -4803,20 +4745,9 @@ static int32_t RoundUp(double aDouble)
   wheelEvent.isMomentum = nsCocoaUtils::IsMomentumScrollEvent(theEvent);
 
   NPCocoaEvent cocoaEvent;
-  if (mPluginEventModel == NPEventModelCocoa) {
-    nsCocoaUtils::InitNPCocoaEvent(&cocoaEvent);
-    NSPoint point = [self convertPoint:[theEvent locationInWindow] fromView:nil];
-    cocoaEvent.type = NPCocoaEventScrollWheel;
-    cocoaEvent.data.mouse.modifierFlags = [theEvent modifierFlags];
-    cocoaEvent.data.mouse.pluginX = point.x;
-    cocoaEvent.data.mouse.pluginY = point.y;
-    cocoaEvent.data.mouse.buttonNumber = [theEvent buttonNumber];
-    cocoaEvent.data.mouse.clickCount = 0;
-    cocoaEvent.data.mouse.deltaX = [theEvent deltaX];
-    cocoaEvent.data.mouse.deltaY = [theEvent deltaY];
-    cocoaEvent.data.mouse.deltaZ = [theEvent deltaZ];
-    wheelEvent.pluginEvent = &cocoaEvent;
-  }
+  ChildViewMouseTracker::AttachPluginEvent(wheelEvent, self, theEvent,
+                                           NPCocoaEventScrollWheel,
+                                           &cocoaEvent);
 
   mGeckoChild->DispatchWindowEvent(wheelEvent);
   if (!mGeckoChild) {
@@ -6119,9 +6050,9 @@ ChildViewMouseTracker::MouseExitedWindow(NSEvent* aEvent)
 }
 
 void
-ChildViewMouseTracker::ReEvaluateMouseEnterState(NSEvent* aEvent)
+ChildViewMouseTracker::ReEvaluateMouseEnterState(NSEvent* aEvent, ChildView* aOldView)
 {
-  ChildView* oldView = sLastMouseEventView;
+  ChildView* oldView = aOldView ? aOldView : sLastMouseEventView;
   sLastMouseEventView = ViewForEvent(aEvent);
   if (sLastMouseEventView != oldView) {
     // Send enter and / or exit events.
@@ -6182,6 +6113,54 @@ ChildViewMouseTracker::ViewForEvent(NSEvent* aEvent)
   if (![childView widget])
     return nil;
   return WindowAcceptsEvent(window, aEvent, childView) ? childView : nil;
+}
+
+void
+ChildViewMouseTracker::AttachPluginEvent(nsMouseEvent_base& aMouseEvent,
+                                         ChildView* aView,
+                                         NSEvent* aNativeMouseEvent,
+                                         int aPluginEventType,
+                                         void* aPluginEventHolder)
+{
+  if (![aView isPluginView] ||
+      [aView pluginEventModel] != NPEventModelCocoa) {
+    return;
+  }
+
+  NPCocoaEvent* cocoaEvent = (NPCocoaEvent*)aPluginEventHolder;
+  nsCocoaUtils::InitNPCocoaEvent(cocoaEvent);
+  NSPoint point = [aView convertPoint:[aNativeMouseEvent locationInWindow]
+                             fromView:nil];
+  NPCocoaEventType type = (NPCocoaEventType)aPluginEventType;
+  // XXX We should consider dropping this code, which causes data.mouse.pluginX
+  // and data.mouse.pluginY to be set to '5' for mouse-entered and mouse-exited
+  // events.  But note that it's been in the tree since the Cocoa NPAPI event
+  // model was first implemented four years ago, without any known complaints.
+  //
+  // Similar code first appeared (without explanation) in a very early version
+  // ("fix 0.3") of the patch for bug 435041 ("Implement Cocoa NPAPI event
+  // model for Mac OS X").  But there's no trace of it in the WebKit code that
+  // was used as a model for much of that patch.
+  if (type == NPCocoaEventMouseEntered ||
+      type == NPCocoaEventMouseExited) {
+    point.x = point.y = 5;
+  }
+  NSUInteger clickCount = 0;
+  if (type != NPCocoaEventMouseEntered &&
+      type != NPCocoaEventMouseExited &&
+      type != NPCocoaEventScrollWheel) {
+    clickCount = [aNativeMouseEvent clickCount];
+  }
+  cocoaEvent->type = type;
+  cocoaEvent->data.mouse.modifierFlags = [aNativeMouseEvent modifierFlags];
+  cocoaEvent->data.mouse.pluginX = point.x;
+  cocoaEvent->data.mouse.pluginY = point.y;
+  cocoaEvent->data.mouse.buttonNumber = [aNativeMouseEvent buttonNumber];
+  cocoaEvent->data.mouse.clickCount = clickCount;
+  cocoaEvent->data.mouse.deltaX = [aNativeMouseEvent deltaX];
+  cocoaEvent->data.mouse.deltaY = [aNativeMouseEvent deltaY];
+  cocoaEvent->data.mouse.deltaZ = [aNativeMouseEvent deltaZ];
+  aMouseEvent.pluginEvent = cocoaEvent;
 }
 
 BOOL

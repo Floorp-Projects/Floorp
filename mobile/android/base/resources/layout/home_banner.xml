@@ -9,13 +9,13 @@
                 android:layout_width="48dip"
                 android:layout_height="48dip"
                 android:layout_marginLeft="10dp"
-                android:layout_marginRight="10dp"
                 android:scaleType="centerInside"/>
 
      <TextView android:id="@+id/text"
                android:layout_width="0dip"
                android:layout_height="fill_parent"
                android:layout_weight="1"
+               android:layout_marginLeft="10dp"
                android:paddingTop="7dp"
                android:paddingBottom="7dp"
                android:textAppearance="@style/TextAppearance.Widget.HomeBanner"
