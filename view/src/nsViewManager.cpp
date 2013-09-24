@@ -690,7 +690,7 @@ nsViewManager::DispatchEvent(nsGUIEvent *aEvent, nsView* aView, nsEventStatus* a
 {
   PROFILER_LABEL("event", "nsViewManager::DispatchEvent");
 
-  if ((NS_IS_MOUSE_EVENT(aEvent) &&
+  if ((aEvent->HasMouseEventMessage() &&
        // Ignore mouse events that we synthesize.
        static_cast<nsMouseEvent*>(aEvent)->reason == nsMouseEvent::eReal &&
        // Ignore mouse exit and enter (we'll get moves if the user
@@ -698,15 +698,15 @@ nsViewManager::DispatchEvent(nsGUIEvent *aEvent, nsView* aView, nsEventStatus* a
        // create and destroy widgets.
        aEvent->message != NS_MOUSE_EXIT &&
        aEvent->message != NS_MOUSE_ENTER) ||
-      NS_IS_KEY_EVENT(aEvent) ||
-      NS_IS_IME_EVENT(aEvent) ||
+      aEvent->HasKeyEventMessage() ||
+      aEvent->HasIMEEventMessage() ||
       aEvent->message == NS_PLUGIN_INPUT_EVENT) {
     gLastUserEventTime = PR_IntervalToMicroseconds(PR_IntervalNow());
   }
 
   // Find the view whose coordinates system we're in.
   nsView* view = aView;
-  bool dispatchUsingCoordinates = NS_IsEventUsingCoordinates(aEvent);
+  bool dispatchUsingCoordinates = aEvent->IsUsingCoordinates();
   if (dispatchUsingCoordinates) {
     // Will dispatch using coordinates. Pretty bogus but it's consistent
     // with what presshell does.
@@ -716,11 +716,10 @@ nsViewManager::DispatchEvent(nsGUIEvent *aEvent, nsView* aView, nsEventStatus* a
   // If the view has no frame, look for a view that does.
   nsIFrame* frame = view->GetFrame();
   if (!frame &&
-      (dispatchUsingCoordinates || NS_IS_KEY_EVENT(aEvent) ||
-       NS_IS_IME_RELATED_EVENT(aEvent) ||
-       NS_IS_NON_RETARGETED_PLUGIN_EVENT(aEvent) ||
-       aEvent->message == NS_PLUGIN_ACTIVATE ||
-       aEvent->message == NS_PLUGIN_FOCUS ||
+      (dispatchUsingCoordinates || aEvent->HasKeyEventMessage() ||
+       aEvent->IsIMERelatedEvent() ||
+       aEvent->IsNonRetargetedNativeEventDelivererForPlugin() ||
+       aEvent->HasPluginActivationEventMessage() ||
        aEvent->message == NS_PLUGIN_RESOLUTION_CHANGED)) {
     while (view && !view->GetFrame()) {
       view = view->GetParent();
