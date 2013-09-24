@@ -410,8 +410,6 @@ public:
     return gfx::BACKEND_NONE;
   }
 
-
-  virtual SurfaceDescriptor* LockSurfaceDescriptor() { return GetDescriptor(); }
   virtual void ReleaseResources() {}
   /**
    * This unlocks the current DrawableTexture and allows the host to composite
@@ -441,6 +439,11 @@ public:
     mDescriptor = aDescriptor;
   }
   SurfaceDescriptor* GetDescriptor() { return &mDescriptor; }
+  /**
+   * Use LockSurfaceDescriptor to get the descriptor if it will be sent across IPC.
+   * Use GetDescriptor if you want to keep the descriptor on one thread.
+   */
+  virtual SurfaceDescriptor* LockSurfaceDescriptor() { return GetDescriptor(); }
 
   CompositableForwarder* GetForwarder() const
   {

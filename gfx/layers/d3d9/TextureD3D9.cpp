@@ -513,10 +513,13 @@ DeprecatedTextureHostDIB::UpdateImpl(const SurfaceDescriptor& aImage,
   MOZ_ASSERT(aImage.type() == SurfaceDescriptor::TSurfaceDescriptorDIB);
   MOZ_ASSERT(mCompositor, "Must have compositor to update.");
 
+  if (!mCompositor->device()) {
+    return;
+  }
+
+  // We added an extra ref for transport, so we shouldn't AddRef now.
   nsRefPtr<gfxWindowsSurface> surf =
-    reinterpret_cast<gfxWindowsSurface*>(aImage.get_SurfaceDescriptorDIB().surface());
-  // We added an extra ref for transport, we can release it now.
-  surf->Release();
+    dont_AddRef(reinterpret_cast<gfxWindowsSurface*>(aImage.get_SurfaceDescriptorDIB().surface()));
 
   gfxIntSize size = surf->GetSize();
   mSize = IntSize(size.width, size.height);
@@ -728,6 +731,8 @@ DeprecatedTextureClientDIB::~DeprecatedTextureClientDIB()
 {
   MOZ_COUNT_DTOR(DeprecatedTextureClientDIB);
   Unlock();
+  // It is OK not to dealloc the surface descriptor because it is only a pointer
+  // to mSurface and we will release our strong reference to that automatically.
   mDescriptor = SurfaceDescriptor();
   mDrawTarget = nullptr;
 }
@@ -753,17 +758,26 @@ DeprecatedTextureClientDIB::EnsureAllocated(gfx::IntSize aSize,
   {
     NS_WARNING("Could not create surface");
     mSurface = nullptr;
+    mDescriptor = SurfaceDescriptor();
     return false;
   }
   mSize = aSize;
   mContentType = aType;
 
   mDescriptor = SurfaceDescriptorDIB(reinterpret_cast<uintptr_t>(mSurface.get()));
-  // The host will release this ref when it receives the surface descriptor.
-  // We AddRef in case we die before the host receives the pointer.
-  mSurface->AddRef();
 
   return true;
+}
+
+SurfaceDescriptor*
+DeprecatedTextureClientDIB::LockSurfaceDescriptor()
+{
+  // The host will release this ref when it receives the surface descriptor.
+  // We AddRef in case we die before the host receives the pointer.
+  NS_ASSERTION(mSurface == reinterpret_cast<gfxWindowsSurface*>(mDescriptor.get_SurfaceDescriptorDIB().surface()),
+                "SurfaceDescriptor is not up to date");
+  mSurface->AddRef();
+  return GetDescriptor();
 }
 
 gfxASurface*
