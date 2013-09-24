@@ -10,7 +10,6 @@
 
 #include "nsPoint.h"
 #include "nsRect.h"
-#include "nsEvent.h"
 #include "nsString.h"
 #include "nsCOMPtr.h"
 #include "nsIAtom.h"
@@ -25,6 +24,7 @@
 #include "nsITransferable.h"
 #include "nsStyleConsts.h"
 #include "nsAutoPtr.h"
+#include "mozilla/EventForwards.h"
 #include "mozilla/dom/EventTarget.h"
 #include "mozilla/dom/Touch.h"
 #include "Units.h"
@@ -477,18 +477,19 @@ enum nsEventStructType {
 #endif
 
 /**
- * Return status for event processors, nsEventStatus, is defined in
- * nsEvent.h.
+ * Modifier key names.
  */
-
-/**
- * different types of (top-level) window z-level positioning
- */
-enum nsWindowZ {
-  nsWindowZTop = 0,   // on top
-  nsWindowZBottom,    // on bottom
-  nsWindowZRelative   // just below some specified widget
-};
+#define NS_DOM_KEYNAME_ALT        "Alt"
+#define NS_DOM_KEYNAME_ALTGRAPH   "AltGraph"
+#define NS_DOM_KEYNAME_CAPSLOCK   "CapsLock"
+#define NS_DOM_KEYNAME_CONTROL    "Control"
+#define NS_DOM_KEYNAME_FN         "Fn"
+#define NS_DOM_KEYNAME_META       "Meta"
+#define NS_DOM_KEYNAME_NUMLOCK    "NumLock"
+#define NS_DOM_KEYNAME_SCROLLLOCK "ScrollLock"
+#define NS_DOM_KEYNAME_SHIFT      "Shift"
+#define NS_DOM_KEYNAME_SYMBOLLOCK "SymbolLock"
+#define NS_DOM_KEYNAME_OS         "OS"
 
 namespace mozilla {
 

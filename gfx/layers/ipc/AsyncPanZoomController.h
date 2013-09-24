@@ -9,6 +9,7 @@
 
 #include "GeckoContentController.h"
 #include "mozilla/Attributes.h"
+#include "mozilla/EventForwards.h"
 #include "mozilla/Monitor.h"
 #include "mozilla/ReentrantMonitor.h"
 #include "mozilla/RefPtr.h"
@@ -16,7 +17,6 @@
 #include "Axis.h"
 #include "TaskThrottler.h"
 #include "gfx3DMatrix.h"
-#include "nsEvent.h"
 
 #include "base/message_loop.h"
 

@@ -7,7 +7,7 @@
 #define nsINativeKeyBindings_h_
 
 #include "nsISupports.h"
-#include "nsEvent.h"
+#include "mozilla/EventForwards.h"
 
 #define NS_INATIVEKEYBINDINGS_IID \
 {0xc2baecc3, 0x1758, 0x4211, {0x96, 0xbe, 0xee, 0x1b, 0x1b, 0x7c, 0xd7, 0x6d}}

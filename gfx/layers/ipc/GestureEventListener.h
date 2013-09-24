@@ -11,8 +11,8 @@
 #include "InputData.h"                  // for MultiTouchInput, etc
 #include "Units.h"                      // for ScreenIntPoint
 #include "mozilla/Assertions.h"         // for MOZ_ASSERT_HELPER2
+#include "mozilla/EventForwards.h"      // for nsEventStatus
 #include "nsAutoPtr.h"                  // for nsRefPtr
-#include "nsEvent.h"                    // for nsEventStatus
 #include "nsISupportsImpl.h"
 #include "nsTArray.h"                   // for nsTArray
 
