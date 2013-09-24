@@ -11,6 +11,7 @@
 #include "mozilla/dom/ipc/nsIRemoteBlob.h"
 #include "nsIOutputStream.h"
 
+#include <algorithm>
 #include "jsfriendapi.h"
 #include "mozilla/dom/ContentChild.h"
 #include "mozilla/dom/ContentParent.h"
@@ -439,6 +440,46 @@ protected:
 private:
   // Out-params.
   nsTArray<StructuredCloneReadInfo> mCloneReadInfos;
+};
+
+class GetAllKeysHelper MOZ_FINAL : public ObjectStoreHelper
+{
+public:
+  GetAllKeysHelper(IDBTransaction* aTransaction,
+                   IDBRequest* aRequest,
+                   IDBObjectStore* aObjectStore,
+                   IDBKeyRange* aKeyRange,
+                   const uint32_t aLimit)
+  : ObjectStoreHelper(aTransaction, aRequest, aObjectStore),
+    mKeyRange(aKeyRange), mLimit(aLimit)
+  { }
+
+  virtual nsresult
+  DoDatabaseWork(mozIStorageConnection* aConnection) MOZ_OVERRIDE;
+
+  virtual nsresult
+  GetSuccessResult(JSContext* aCx, JS::MutableHandleValue aVal) MOZ_OVERRIDE;
+
+  virtual void
+  ReleaseMainThreadObjects() MOZ_OVERRIDE;
+
+  virtual nsresult
+  PackArgumentsForParentProcess(ObjectStoreRequestParams& aParams) MOZ_OVERRIDE;
+
+  virtual ChildProcessSendResult
+  SendResponseToChildProcess(nsresult aResultCode) MOZ_OVERRIDE;
+
+  virtual nsresult
+  UnpackResponseFromParentProcess(const ResponseValue& aResponseValue)
+                                  MOZ_OVERRIDE;
+
+private:
+  ~GetAllKeysHelper()
+  { }
+
+  nsRefPtr<IDBKeyRange> mKeyRange;
+  const uint32_t mLimit;
+  nsTArray<Key> mKeys;
 };
 
 class CountHelper : public ObjectStoreHelper
@@ -2082,6 +2123,47 @@ IDBObjectStore::GetAllInternal(IDBKeyRange* aKeyRange,
 }
 
 already_AddRefed<IDBRequest>
+IDBObjectStore::GetAllKeysInternal(IDBKeyRange* aKeyRange, uint32_t aLimit,
+                                   ErrorResult& aRv)
+{
+  MOZ_ASSERT(NS_IsMainThread());
+
+  if (!mTransaction->IsOpen()) {
+    aRv.Throw(NS_ERROR_DOM_INDEXEDDB_TRANSACTION_INACTIVE_ERR);
+    return nullptr;
+  }
+
+  nsRefPtr<IDBRequest> request = GenerateRequest(this);
+  if (!request) {
+    NS_WARNING("Failed to generate request!");
+    aRv.Throw(NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
+    return nullptr;
+  }
+
+  nsRefPtr<GetAllKeysHelper> helper =
+    new GetAllKeysHelper(mTransaction, request, this, aKeyRange, aLimit);
+
+  nsresult rv = helper->DispatchToTransactionPool();
+  if (NS_FAILED(rv)) {
+    NS_WARNING("Failed to dispatch!");
+    aRv.Throw(NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
+    return nullptr;
+  }
+
+  IDB_PROFILER_MARK("IndexedDB Request %llu: "
+                    "database(%s).transaction(%s).objectStore(%s)."
+                    "getAllKeys(%s, %lu)",
+                    "IDBRequest[%llu] MT IDBObjectStore.getAllKeys()",
+                    request->GetSerialNumber(),
+                    IDB_PROFILER_STRING(Transaction()->Database()),
+                    IDB_PROFILER_STRING(Transaction()),
+                    IDB_PROFILER_STRING(this), IDB_PROFILER_STRING(aKeyRange),
+                    aLimit);
+
+  return request.forget();
+}
+
+already_AddRefed<IDBRequest>
 IDBObjectStore::DeleteInternal(IDBKeyRange* aKeyRange,
                                ErrorResult& aRv)
 {
@@ -2765,6 +2847,32 @@ IDBObjectStore::Count(JSContext* aCx,
   }
 
   return CountInternal(keyRange, aRv);
+}
+
+already_AddRefed<IDBRequest>
+IDBObjectStore::GetAllKeys(JSContext* aCx,
+                           const Optional<JS::HandleValue>& aKey,
+                           const Optional<uint32_t>& aLimit, ErrorResult& aRv)
+{
+  MOZ_ASSERT(NS_IsMainThread());
+
+  if (!mTransaction->IsOpen()) {
+    aRv.Throw(NS_ERROR_DOM_INDEXEDDB_TRANSACTION_INACTIVE_ERR);
+    return nullptr;
+  }
+
+  nsRefPtr<IDBKeyRange> keyRange;
+  if (aKey.WasPassed()) {
+    aRv = IDBKeyRange::FromJSVal(aCx, aKey.Value(), getter_AddRefs(keyRange));
+    ENSURE_SUCCESS(aRv, nullptr);
+  }
+
+  uint32_t limit = UINT32_MAX;
+  if (aLimit.WasPassed() && aLimit.Value() != 0) {
+    limit = aLimit.Value();
+  }
+
+  return GetAllKeysInternal(keyRange, limit, aRv);
 }
 
 inline nsresult
@@ -4294,6 +4402,195 @@ GetAllHelper::UnpackResponseFromParentProcess(
     IDBObjectStore::ConvertActorsToBlobs(blobs, destInfo->mFiles);
   }
 
+  return NS_OK;
+}
+
+nsresult
+GetAllKeysHelper::DoDatabaseWork(mozIStorageConnection* /* aConnection */)
+{
+  MOZ_ASSERT(!NS_IsMainThread());
+  MOZ_ASSERT(IndexedDatabaseManager::IsMainProcess());
+
+  PROFILER_LABEL("IndexedDB",
+                 "GetAllKeysHelper::DoDatabaseWork [IDObjectStore.cpp]");
+
+  NS_NAMED_LITERAL_CSTRING(keyValue, "key_value");
+
+  nsAutoCString keyRangeClause;
+  if (mKeyRange) {
+    mKeyRange->GetBindingClause(keyValue, keyRangeClause);
+  }
+
+  nsAutoCString limitClause;
+  if (mLimit != UINT32_MAX) {
+    limitClause = NS_LITERAL_CSTRING(" LIMIT ");
+    limitClause.AppendInt(mLimit);
+  }
+
+  NS_NAMED_LITERAL_CSTRING(osid, "osid");
+
+  nsCString query = NS_LITERAL_CSTRING("SELECT ") + keyValue +
+                    NS_LITERAL_CSTRING(" FROM object_data WHERE "
+                                       "object_store_id = :") +
+                    osid + keyRangeClause +
+                    NS_LITERAL_CSTRING(" ORDER BY key_value ASC") +
+                    limitClause;
+
+  nsCOMPtr<mozIStorageStatement> stmt = mTransaction->GetCachedStatement(query);
+  NS_ENSURE_TRUE(stmt, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
+
+  mozStorageStatementScoper scoper(stmt);
+
+  nsresult rv = stmt->BindInt64ByName(osid, mObjectStore->Id());
+  NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
+
+  if (mKeyRange) {
+    rv = mKeyRange->BindToStatement(stmt);
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
+
+  mKeys.SetCapacity(std::min<uint32_t>(50, mLimit));
+
+  bool hasResult;
+  while(NS_SUCCEEDED((rv = stmt->ExecuteStep(&hasResult))) && hasResult) {
+    if (mKeys.Capacity() == mKeys.Length()) {
+      mKeys.SetCapacity(mKeys.Capacity() * 2);
+    }
+
+    Key* key = mKeys.AppendElement();
+    NS_ASSERTION(key, "This shouldn't fail!");
+
+    rv = key->SetFromStatement(stmt, 0);
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
+  NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
+
+  return NS_OK;
+}
+
+nsresult
+GetAllKeysHelper::GetSuccessResult(JSContext* aCx, JS::MutableHandleValue aVal)
+{
+  MOZ_ASSERT(NS_IsMainThread());
+  MOZ_ASSERT(mKeys.Length() <= mLimit);
+
+  PROFILER_MAIN_THREAD_LABEL("IndexedDB",
+                             "GetAllKeysHelper::GetSuccessResult "
+                             "[IDBObjectStore.cpp]");
+
+  nsTArray<Key> keys;
+  mKeys.SwapElements(keys);
+
+  JS::RootedObject array(aCx, JS_NewArrayObject(aCx, 0, NULL));
+  if (!array) {
+    NS_WARNING("Failed to make array!");
+    return NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR;
+  }
+
+  if (!keys.IsEmpty()) {
+    if (!JS_SetArrayLength(aCx, array, keys.Length())) {
+      NS_WARNING("Failed to set array length!");
+      return NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR;
+    }
+
+    for (uint32_t index = 0, count = keys.Length(); index < count; index++) {
+      const Key& key = keys[index];
+      MOZ_ASSERT(!key.IsUnset());
+
+      JS::RootedValue value(aCx);
+      nsresult rv = key.ToJSVal(aCx, &value);
+      if (NS_FAILED(rv)) {
+        NS_WARNING("Failed to get jsval for key!");
+        return rv;
+      }
+
+      if (!JS_SetElement(aCx, array, index, &value)) {
+        NS_WARNING("Failed to set array element!");
+        return NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR;
+      }
+    }
+  }
+
+  aVal.setObject(*array);
+  return NS_OK;
+}
+
+void
+GetAllKeysHelper::ReleaseMainThreadObjects()
+{
+  MOZ_ASSERT(NS_IsMainThread());
+
+  mKeyRange = nullptr;
+
+  ObjectStoreHelper::ReleaseMainThreadObjects();
+}
+
+nsresult
+GetAllKeysHelper::PackArgumentsForParentProcess(
+                                              ObjectStoreRequestParams& aParams)
+{
+  MOZ_ASSERT(NS_IsMainThread());
+  MOZ_ASSERT(!IndexedDatabaseManager::IsMainProcess());
+
+  PROFILER_MAIN_THREAD_LABEL("IndexedDB",
+                             "GetAllKeysHelper::PackArgumentsForParentProcess "
+                             "[IDBObjectStore.cpp]");
+
+  GetAllKeysParams params;
+
+  if (mKeyRange) {
+    KeyRange keyRange;
+    mKeyRange->ToSerializedKeyRange(keyRange);
+    params.optionalKeyRange() = keyRange;
+  } else {
+    params.optionalKeyRange() = mozilla::void_t();
+  }
+
+  params.limit() = mLimit;
+
+  aParams = params;
+  return NS_OK;
+}
+
+AsyncConnectionHelper::ChildProcessSendResult
+GetAllKeysHelper::SendResponseToChildProcess(nsresult aResultCode)
+{
+  MOZ_ASSERT(NS_IsMainThread());
+  MOZ_ASSERT(IndexedDatabaseManager::IsMainProcess());
+
+  PROFILER_MAIN_THREAD_LABEL("IndexedDB",
+                             "GetAllKeysHelper::SendResponseToChildProcess "
+                             "[IDBObjectStore.cpp]");
+
+  IndexedDBRequestParentBase* actor = mRequest->GetActorParent();
+  MOZ_ASSERT(actor);
+
+  ResponseValue response;
+  if (NS_FAILED(aResultCode)) {
+    response = aResultCode;
+  }
+  else {
+    GetAllKeysResponse getAllKeysResponse;
+    getAllKeysResponse.keys().AppendElements(mKeys);
+    response = getAllKeysResponse;
+  }
+
+  if (!actor->SendResponse(response)) {
+    return Error;
+  }
+
+  return Success_Sent;
+}
+
+nsresult
+GetAllKeysHelper::UnpackResponseFromParentProcess(
+                                            const ResponseValue& aResponseValue)
+{
+  MOZ_ASSERT(NS_IsMainThread());
+  MOZ_ASSERT(!IndexedDatabaseManager::IsMainProcess());
+  MOZ_ASSERT(aResponseValue.type() == ResponseValue::TGetAllKeysResponse);
+
+  mKeys.AppendElements(aResponseValue.get_GetAllKeysResponse().keys());
   return NS_OK;
 }
 
