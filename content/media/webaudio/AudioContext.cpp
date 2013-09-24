@@ -379,7 +379,6 @@ AudioContext::CreateOscillator()
 {
   nsRefPtr<OscillatorNode> oscillatorNode =
     new OscillatorNode(this);
-  mOscillatorNodes.PutEntry(oscillatorNode);
   return oscillatorNode.forget();
 }
 
@@ -475,12 +474,6 @@ AudioContext::UnregisterPannerNode(PannerNode* aNode)
 }
 
 void
-AudioContext::UnregisterOscillatorNode(OscillatorNode* aNode)
-{
-  mOscillatorNodes.RemoveEntry(aNode);
-}
-
-void
 AudioContext::UnregisterScriptProcessorNode(ScriptProcessorNode* aNode)
 {
   mScriptProcessorNodes.RemoveEntry(aNode);
@@ -565,14 +558,6 @@ AudioContext::Shutdown()
   for (uint32_t i = 0; i < sourceNodes.Length(); ++i) {
     ErrorResult rv;
     sourceNodes[i]->Stop(0.0, rv, true);
-  }
-  // Stop all Oscillator nodes to make sure they release their
-  // playing reference.
-  nsTArray<OscillatorNode*> oscNodes;
-  GetHashtableElements(mOscillatorNodes, oscNodes);
-  for (uint32_t i = 0; i < oscNodes.Length(); ++i) {
-    ErrorResult rv;
-    oscNodes[i]->Stop(0.0, rv);
   }
   // Stop all script processor nodes, to make sure that they release
   // their self-references.
