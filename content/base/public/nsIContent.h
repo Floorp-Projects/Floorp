@@ -186,7 +186,7 @@ public:
    * Makes this content anonymous
    * @see nsIAnonymousContentCreator
    */
-  void SetNativeAnonymous()
+  void SetIsNativeAnonymousRoot()
   {
     SetFlags(NODE_IS_ANONYMOUS_ROOT | NODE_IS_IN_ANONYMOUS_SUBTREE |
              NODE_IS_NATIVE_ANONYMOUS_ROOT);
