@@ -2401,7 +2401,6 @@ SourceActor.prototype = {
    * Handler for the "prettyPrint" packet.
    */
   onPrettyPrint: function ({ indent }) {
-    console.time('pretty print');
     return this._getSourceText()
       .then(this._parseAST)
       .then(this._generatePrettyCodeAndMap(indent))
@@ -2412,11 +2411,7 @@ SourceActor.prototype = {
         from: this.actorID,
         error: "prettyPrintError",
         message: DevToolsUtils.safeErrorString(error)
-      }))
-      .then(p => {
-        console.timeEnd('pretty print');
-        return p;
-      });
+      }));
   },
 
   /**
@@ -2441,8 +2436,8 @@ SourceActor.prototype = {
           style: indent
         }
       },
-      // sourceMap: this._url,
-      // sourceMapWithCode: true
+      sourceMap: this._url,
+      sourceMapWithCode: true
     });
   },
 
@@ -2451,37 +2446,37 @@ SourceActor.prototype = {
    * source map from b to a. We need to do this because the source map we get
    * from _generatePrettyCodeAndMap goes the opposite way we want it to for
    * debugging.
-   *
-   * Note that the source map is modified in place.
    */
   _invertSourceMap: function SA__invertSourceMap({ code, map }) {
-    // XXX bug 918802: Monkey punch the source map consumer, because iterating
-    // over all mappings and inverting each of them, and then creating a new
-    // SourceMapConsumer is *way* too slow.
-
-    map.setSourceContent(this._url, code);
-    const consumer = new SourceMapConsumer.fromSourceMap(map);
-    const getOrigPos = consumer.originalPositionFor.bind(consumer);
-    const getGenPos = consumer.generatedPositionFor.bind(consumer);
-
-    consumer.originalPositionFor = ({ line, column }) => {
-      const location = getGenPos({
-        line: line,
-        column: column,
-        source: this._url
-      });
-      location.source = this._url;
-      return location;
-    };
-
-    consumer.generatedPositionFor = ({ line, column }) => getOrigPos({
-      line: line,
-      column: column
+    const smc = new SourceMapConsumer(map.toJSON());
+    const invertedMap = new SourceMapGenerator({
+      file: this._url
     });
+
+    smc.eachMapping(m => {
+      if (!m.originalLine || !m.originalColumn) {
+        return;
+      }
+      const invertedMapping = {
+        source: m.source,
+        name: m.name,
+        original: {
+          line: m.generatedLine,
+          column: m.generatedColumn
+        },
+        generated: {
+          line: m.originalLine,
+          column: m.originalColumn
+        }
+      };
+      invertedMap.addMapping(invertedMapping);
+    });
+
+    invertedMap.setSourceContent(this._url, code);
 
     return {
       code: code,
-      map: consumer
+      map: new SourceMapConsumer(invertedMap.toJSON())
     };
   },
 
@@ -2496,7 +2491,7 @@ SourceActor.prototype = {
       // Compose the source maps
       this._sourceMap = SourceMapGenerator.fromSourceMap(this._sourceMap);
       this._sourceMap.applySourceMap(map, this._url);
-      this._sourceMap = SourceMapConsumer.fromSourceMap(this._sourceMap);
+      this._sourceMap = new SourceMapConsumer(this._sourceMap.toJSON());
       this._threadActor.sources.saveSourceMap(this._sourceMap,
                                               this._generatedSource);
     } else {
