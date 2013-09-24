@@ -219,6 +219,7 @@ class LiveInterval
   private:
     Vector<Range, 1, IonAllocPolicy> ranges_;
     LAllocation alloc_;
+    LiveInterval *spillInterval_;
     uint32_t vreg_;
     uint32_t index_;
     Requirement requirement_;
@@ -229,13 +230,15 @@ class LiveInterval
   public:
 
     LiveInterval(uint32_t vreg, uint32_t index)
-      : vreg_(vreg),
+      : spillInterval_(NULL),
+        vreg_(vreg),
         index_(index),
         lastProcessedRange_(size_t(-1))
     { }
 
     LiveInterval(uint32_t index)
-      : vreg_(UINT32_MAX),
+      : spillInterval_(NULL),
+        vreg_(UINT32_MAX),
         index_(index),
         lastProcessedRange_(size_t(-1))
     { }
@@ -280,6 +283,12 @@ class LiveInterval
     }
     void setAllocation(LAllocation alloc) {
         alloc_ = alloc;
+    }
+    void setSpillInterval(LiveInterval *spill) {
+        spillInterval_ = spill;
+    }
+    LiveInterval *spillInterval() {
+        return spillInterval_;
     }
     bool hasVreg() const {
         return vreg_ != UINT32_MAX;

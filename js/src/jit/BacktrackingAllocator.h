@@ -201,6 +201,7 @@ class BacktrackingAllocator : public LiveRangeAllocator<BacktrackingVirtualRegis
     bool isRegisterUse(LUse *use, LInstruction *ins);
     bool isRegisterDefinition(LiveInterval *interval);
     bool addLiveInterval(LiveIntervalVector &intervals, uint32_t vreg,
+                         LiveInterval *spillInterval,
                          CodePosition from, CodePosition to);
 
     bool resolveControlFlow();
