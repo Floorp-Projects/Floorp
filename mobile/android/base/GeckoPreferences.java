@@ -77,6 +77,7 @@ public class GeckoPreferences
     private static String PREFS_HEALTHREPORT_LINK = NON_PREF_PREFIX + "healthreport.link";
     private static String PREFS_DEVTOOLS_REMOTE_ENABLED = "devtools.debugger.remote-enabled";
     private static String PREFS_DISPLAY_REFLOW_ON_ZOOM = "browser.zoom.reflowOnZoom";
+    private static String PREFS_SYNC = NON_PREF_PREFIX + "sync";
 
     // These values are chosen to be distinct from other Activity constants.
     private static int REQUEST_CODE_PREF_SCREEN = 5;
@@ -333,6 +334,11 @@ public class GeckoPreferences
                             return true;
                         }
                     });
+                } else if (PREFS_SYNC.equals(key) && GeckoProfile.get(this).inGuestMode()) {
+                    // Don't show sync prefs while in guest mode.
+                    preferences.removePreference(pref);
+                    i--;
+                    continue;
                 }
 
                 // Some Preference UI elements are not actually preferences,
