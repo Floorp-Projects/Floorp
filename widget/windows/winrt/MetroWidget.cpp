@@ -1204,7 +1204,7 @@ MetroWidget::DispatchWindowEvent(nsGUIEvent* aEvent)
 NS_IMETHODIMP
 MetroWidget::DispatchEvent(nsGUIEvent* event, nsEventStatus & aStatus)
 {
-  if (NS_IS_INPUT_EVENT(event)) {
+  if (event->IsInputDerivedEvent()) {
     UserActivity();
   }
 

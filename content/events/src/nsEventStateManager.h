@@ -880,7 +880,8 @@ private:
 // Click and double-click events need to be handled even for content that
 // has no frame. This is required for Web compatibility.
 #define NS_EVENT_NEEDS_FRAME(event) \
-    (!NS_IS_ACTIVATION_EVENT(event) && (event)->message != NS_MOUSE_CLICK && \
+    (!(event)->HasPluginActivationEventMessage() && \
+     (event)->message != NS_MOUSE_CLICK && \
      (event)->message != NS_MOUSE_DOUBLECLICK)
 
 #endif // nsEventStateManager_h__
