@@ -45,7 +45,6 @@ class CompositableForwarder : public ISurfaceAllocator
   friend class AutoOpenSurface;
   friend class DeprecatedTextureClientShmem;
 public:
-  typedef gfxContentType gfxContentType;
 
   CompositableForwarder()
     : mMultiProcess(false)
