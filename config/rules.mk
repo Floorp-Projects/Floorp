@@ -39,6 +39,7 @@ _MOZBUILD_EXTERNAL_VARIABLES := \
   MSVC_ENABLE_PGO \
   NO_DIST_INSTALL \
   PARALLEL_DIRS \
+  SDK_HEADERS \
   SIMPLE_PROGRAMS \
   TEST_DIRS \
   TIERS \
@@ -103,11 +104,6 @@ automatically use pymake or invoke pymake directly via \
 |python build/pymake/make.py|.)
 endif
 endif
-endif
-
-ifdef SDK_HEADERS
-_EXTRA_EXPORTS := $(filter-out $(EXPORTS),$(SDK_HEADERS))
-EXPORTS += $(_EXTRA_EXPORTS)
 endif
 
 ifdef REBUILD_CHECK
