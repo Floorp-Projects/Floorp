@@ -139,7 +139,7 @@ public:
                                                  const nsIntRegion& aRegion,
                                                  bool* aNeedsClipToVisibleRegion);
   already_AddRefed<gfxContext> PushGroupWithCachedSurface(gfxContext *aTarget,
-                                                          gfxASurface::gfxContentType aContent);
+                                                          gfxContentType aContent);
   void PopGroupToSourceWithCachedSurface(gfxContext *aTarget, gfxContext *aPushed);
 
   virtual bool IsCompositingCheap() { return false; }

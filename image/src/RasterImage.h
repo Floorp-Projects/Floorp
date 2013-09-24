@@ -197,7 +197,7 @@ public:
    */
   nsresult EnsureFrame(uint32_t aFramenum, int32_t aX, int32_t aY,
                        int32_t aWidth, int32_t aHeight,
-                       gfxASurface::gfxImageFormat aFormat,
+                       gfxImageFormat aFormat,
                        uint8_t aPaletteDepth,
                        uint8_t** imageData,
                        uint32_t* imageLength,
@@ -211,7 +211,7 @@ public:
    */
   nsresult EnsureFrame(uint32_t aFramenum, int32_t aX, int32_t aY,
                        int32_t aWidth, int32_t aHeight,
-                       gfxASurface::gfxImageFormat aFormat,
+                       gfxImageFormat aFormat,
                        uint8_t** imageData,
                        uint32_t* imageLength,
                        imgFrame** aFrame);
@@ -539,7 +539,7 @@ private:
   imgFrame* GetCurrentImgFrame();
   uint32_t GetCurrentImgFrameIndex() const;
 
-  size_t SizeOfDecodedWithComputedFallbackIfHeap(gfxASurface::MemoryLocation aLocation,
+  size_t SizeOfDecodedWithComputedFallbackIfHeap(gfxMemoryLocation aLocation,
                                                  mozilla::MallocSizeOf aMallocSizeOf) const;
 
   void EnsureAnimExists();
@@ -549,7 +549,7 @@ private:
                                   uint32_t **paletteData, uint32_t *paletteLength,
                                   imgFrame** aRetFrame);
   nsresult InternalAddFrame(uint32_t framenum, int32_t aX, int32_t aY, int32_t aWidth, int32_t aHeight,
-                            gfxASurface::gfxImageFormat aFormat, uint8_t aPaletteDepth,
+                            gfxImageFormat aFormat, uint8_t aPaletteDepth,
                             uint8_t **imageData, uint32_t *imageLength,
                             uint32_t **paletteData, uint32_t *paletteLength,
                             imgFrame** aRetFrame);

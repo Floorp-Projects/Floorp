@@ -109,7 +109,7 @@ CompositableChild::Destroy()
 
 TemporaryRef<DeprecatedTextureClient>
 CompositableClient::CreateDeprecatedTextureClient(DeprecatedTextureClientType aDeprecatedTextureClientType,
-                                                  gfxASurface::gfxContentType aContentType)
+                                                  gfxContentType aContentType)
 {
   MOZ_ASSERT(GetForwarder(), "Can't create a texture client if the compositable is not connected to the compositor.");
   LayersBackend parentBackend = GetForwarder()->GetCompositorBackendType();
@@ -147,7 +147,7 @@ CompositableClient::CreateDeprecatedTextureClient(DeprecatedTextureClientType aD
     }
     if (parentBackend == LAYERS_D3D9 &&
         !GetForwarder()->ForwardsToDifferentProcess()) {
-      if (aContentType == gfxASurface::CONTENT_COLOR_ALPHA) {
+      if (aContentType == GFX_CONTENT_COLOR_ALPHA) {
         result = new DeprecatedTextureClientDIB(GetForwarder(), GetTextureInfo());
       } else {
         result = new DeprecatedTextureClientD3D9(GetForwarder(), GetTextureInfo());

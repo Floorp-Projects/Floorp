@@ -223,7 +223,7 @@ ImageClientSingle::UpdateImage(ImageContainer* aContainer,
 
     bool bufferCreated = false;
     if (!mFrontBuffer) {
-      gfxASurface::gfxImageFormat format
+      gfxImageFormat format
         = gfxPlatform::GetPlatform()->OptimalFormatForContent(surface->GetContentType());
       mFrontBuffer = CreateBufferTextureClient(gfx::ImageFormatToSurfaceFormat(format),
                                                TEXTURE_DEALLOCATE_HOST);

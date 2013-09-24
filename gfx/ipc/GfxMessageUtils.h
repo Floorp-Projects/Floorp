@@ -34,9 +34,9 @@
 
 namespace mozilla {
 
-typedef gfxASurface::gfxContentType gfxContentType;
-typedef gfxASurface::gfxImageFormat PixelFormat;
-typedef gfxASurface::gfxSurfaceType gfxSurfaceType;
+typedef gfxContentType gfxContentType;
+typedef gfxImageFormat PixelFormat;
+typedef gfxSurfaceType gfxSurfaceType;
 typedef gfxPattern::GraphicsFilter GraphicsFilterType;
 
 } // namespace mozilla
@@ -188,15 +188,15 @@ struct ParamTraits<gfx3DMatrix>
 template <>
 struct ParamTraits<mozilla::gfxContentType>
   : public EnumSerializer<mozilla::gfxContentType,
-                          gfxASurface::CONTENT_COLOR,
-                          gfxASurface::CONTENT_SENTINEL>
+                          GFX_CONTENT_COLOR,
+                          GFX_CONTENT_SENTINEL>
 {};
 
 template <>
 struct ParamTraits<mozilla::gfxSurfaceType>
-  : public EnumSerializer<gfxASurface::gfxSurfaceType,
-                          gfxASurface::SurfaceTypeImage,
-                          gfxASurface::SurfaceTypeMax>
+  : public EnumSerializer<gfxSurfaceType,
+                          gfxSurfaceTypeImage,
+                          gfxSurfaceTypeMax>
 {};
 
 template <>
@@ -223,8 +223,8 @@ struct ParamTraits<mozilla::layers::ScaleMode>
 template <>
 struct ParamTraits<mozilla::PixelFormat>
   : public EnumSerializer<mozilla::PixelFormat,
-                          gfxASurface::ImageFormatARGB32,
-                          gfxASurface::ImageFormatUnknown>
+                          gfxImageFormatARGB32,
+                          gfxImageFormatUnknown>
 {};
 
 

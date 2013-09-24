@@ -121,7 +121,7 @@ const uint32_t kMaxLenPrefLangList = 32;
 
 #define UNINITIALIZED_VALUE  (-1)
 
-typedef gfxASurface::gfxImageFormat gfxImageFormat;
+typedef gfxImageFormat gfxImageFormat;
 
 inline const char*
 GetBackendName(mozilla::gfx::BackendType aBackend)
@@ -168,7 +168,7 @@ public:
      * and image format.
      */
     virtual already_AddRefed<gfxASurface> CreateOffscreenSurface(const gfxIntSize& size,
-                                                                 gfxASurface::gfxContentType contentType) = 0;
+                                                                 gfxContentType contentType) = 0;
 
     /**
      * Create an offscreen surface of the given dimensions and image format which
@@ -180,10 +180,10 @@ public:
      */
     virtual already_AddRefed<gfxASurface>
       CreateOffscreenImageSurface(const gfxIntSize& aSize,
-                                  gfxASurface::gfxContentType aContentType);
+                                  gfxContentType aContentType);
 
     virtual already_AddRefed<gfxASurface> OptimizeImage(gfxImageSurface *aSurface,
-                                                        gfxASurface::gfxImageFormat format);
+                                                        gfxImageFormat format);
 
     /**
      * Beware that these methods may return DrawTargets which are not fully supported
@@ -575,12 +575,12 @@ public:
      */
     gfxASurface* ScreenReferenceSurface() { return mScreenReferenceSurface; }
 
-    virtual mozilla::gfx::SurfaceFormat Optimal2DFormatForContent(gfxASurface::gfxContentType aContent);
+    virtual mozilla::gfx::SurfaceFormat Optimal2DFormatForContent(gfxContentType aContent);
 
-    virtual gfxImageFormat OptimalFormatForContent(gfxASurface::gfxContentType aContent);
+    virtual gfxImageFormat OptimalFormatForContent(gfxContentType aContent);
 
     virtual gfxImageFormat GetOffscreenFormat()
-    { return gfxASurface::ImageFormatRGB24; }
+    { return gfxImageFormatRGB24; }
 
     /**
      * Returns a logger if one is available and logging is enabled

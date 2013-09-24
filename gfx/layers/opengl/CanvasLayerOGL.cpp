@@ -129,7 +129,7 @@ CanvasLayerOGL::Initialize(const Data& aData)
     mCanvasSurface = aData.mSurface;
     mNeedsYFlip = false;
 #if defined(GL_PROVIDER_GLX)
-    if (aData.mSurface->GetType() == gfxASurface::SurfaceTypeXlib) {
+    if (aData.mSurface->GetType() == gfxSurfaceTypeXlib) {
         gfxXlibSurface *xsurf = static_cast<gfxXlibSurface*>(aData.mSurface);
         mPixmap = xsurf->GetGLXPixmap();
         if (mPixmap) {

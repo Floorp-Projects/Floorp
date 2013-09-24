@@ -262,17 +262,17 @@ DeprecatedTextureHostShmemD3D9::UpdateImpl(const SurfaceDescriptor& aImage,
 
   _D3DFORMAT format = D3DFMT_A8R8G8B8;
   switch (surf->Format()) {
-  case gfxImageSurface::ImageFormatRGB24:
+  case gfxImageFormatRGB24:
     mFormat = FORMAT_B8G8R8X8;
     format = D3DFMT_X8R8G8B8;
     bpp = 4;
     break;
-  case gfxImageSurface::ImageFormatARGB32:
+  case gfxImageFormatARGB32:
     mFormat = FORMAT_B8G8R8A8;
     format = D3DFMT_A8R8G8B8;
     bpp = 4;
     break;
-  case gfxImageSurface::ImageFormatA8:
+  case gfxImageFormatA8:
     mFormat = FORMAT_A8;
     format = D3DFMT_A8;
     bpp = 1;
@@ -528,17 +528,17 @@ DeprecatedTextureHostDIB::UpdateImpl(const SurfaceDescriptor& aImage,
 
   _D3DFORMAT format = D3DFMT_A8R8G8B8;
   switch (gfxPlatform::GetPlatform()->OptimalFormatForContent(surf->GetContentType())) {
-  case gfxImageSurface::ImageFormatRGB24:
+  case gfxImageFormatRGB24:
     mFormat = FORMAT_B8G8R8X8;
     format = D3DFMT_X8R8G8B8;
     bpp = 4;
     break;
-  case gfxImageSurface::ImageFormatARGB32:
+  case gfxImageFormatARGB32:
     mFormat = FORMAT_B8G8R8A8;
     format = D3DFMT_A8R8G8B8;
     bpp = 4;
     break;
-  case gfxImageSurface::ImageFormatA8:
+  case gfxImageFormatA8:
     mFormat = FORMAT_A8;
     format = D3DFMT_A8;
     bpp = 1;
@@ -593,7 +593,7 @@ DeprecatedTextureClientD3D9::~DeprecatedTextureClientD3D9()
 
 bool
 DeprecatedTextureClientD3D9::EnsureAllocated(gfx::IntSize aSize,
-                                   gfxASurface::gfxContentType aType)
+                                   gfxContentType aType)
 {
   if (mTexture) {
     D3DSURFACE_DESC desc;
@@ -613,13 +613,13 @@ DeprecatedTextureClientD3D9::EnsureAllocated(gfx::IntSize aSize,
 
   _D3DFORMAT format = D3DFMT_A8R8G8B8;
   switch (aType) {
-  case gfxASurface::CONTENT_COLOR:
+  case GFX_CONTENT_COLOR:
     format = D3DFMT_X8R8G8B8;
     break;
-  case gfxASurface::CONTENT_COLOR_ALPHA:
+  case GFX_CONTENT_COLOR_ALPHA:
     // fallback to DIB texture client
     return false;
-  case gfxASurface::CONTENT_ALPHA:
+  case GFX_CONTENT_ALPHA:
     format = D3DFMT_A8;
     break;
   default:
@@ -739,7 +739,7 @@ DeprecatedTextureClientDIB::~DeprecatedTextureClientDIB()
 
 bool
 DeprecatedTextureClientDIB::EnsureAllocated(gfx::IntSize aSize,
-                                            gfxASurface::gfxContentType aType)
+                                            gfxContentType aType)
 {
   if (mSurface) {
     gfxIntSize size = mSurface->GetSize();

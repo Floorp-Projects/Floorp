@@ -66,7 +66,7 @@ gfxCachedTempSurface::~gfxCachedTempSurface()
 }
 
 already_AddRefed<gfxContext>
-gfxCachedTempSurface::Get(gfxASurface::gfxContentType aContentType,
+gfxCachedTempSurface::Get(gfxContentType aContentType,
                           const gfxRect& aRect,
                           gfxASurface* aSimilarTo)
 {
@@ -94,7 +94,7 @@ gfxCachedTempSurface::Get(gfxASurface::gfxContentType aContentType,
   nsRefPtr<gfxContext> ctx = new gfxContext(mSurface);
   ctx->Rectangle(aRect);
   ctx->Clip();
-  if (!cleared && aContentType != gfxASurface::CONTENT_COLOR) {
+  if (!cleared && aContentType != GFX_CONTENT_COLOR) {
     ctx->SetOperator(gfxContext::OPERATOR_CLEAR);
     ctx->Paint();
     ctx->SetOperator(gfxContext::OPERATOR_OVER);

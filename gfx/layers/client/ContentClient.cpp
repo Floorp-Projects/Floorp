@@ -88,7 +88,7 @@ ContentClientBasic::CreateBuffer(ContentType aType,
 {
   MOZ_ASSERT(!(aFlags & BUFFER_COMPONENT_ALPHA));
   if (gfxPlatform::GetPlatform()->SupportsAzureContent()) {
-    gfxASurface::gfxImageFormat format =
+    gfxImageFormat format =
       gfxPlatform::GetPlatform()->OptimalFormatForContent(aType);
 
     *aBlackDT = gfxPlatform::GetPlatform()->CreateOffscreenContentDrawTarget(
@@ -706,7 +706,7 @@ ContentClientIncremental::BeginPaintBuffer(ThebesLayer* aLayer,
           !aLayer->GetParent()->SupportsComponentAlphaChildren()) {
         mode = Layer::SURFACE_SINGLE_CHANNEL_ALPHA;
       } else {
-        contentType = gfxASurface::CONTENT_COLOR;
+        contentType = GFX_CONTENT_COLOR;
       }
     }
 
@@ -715,10 +715,10 @@ ContentClientIncremental::BeginPaintBuffer(ThebesLayer* aLayer,
          neededRegion.GetNumRects() > 1)) {
       // The area we add to neededRegion might not be painted opaquely
       if (mode == Layer::SURFACE_OPAQUE) {
-        contentType = gfxASurface::CONTENT_COLOR_ALPHA;
+        contentType = GFX_CONTENT_COLOR_ALPHA;
         mode = Layer::SURFACE_SINGLE_CHANNEL_ALPHA;
       }
-      // For component alpha layers, we leave contentType as CONTENT_COLOR.
+      // For component alpha layers, we leave contentType as GFX_CONTENT_COLOR.
 
       // We need to validate the entire buffer, to make sure that only valid
       // pixels are sampled
@@ -903,7 +903,7 @@ ContentClientIncremental::BeginPaintBuffer(ThebesLayer* aLayer,
   // clip and draw regions.
   gfxUtils::ClipToRegion(result.mContext, result.mRegionToDraw);
 
-  if (mContentType == gfxASurface::CONTENT_COLOR_ALPHA) {
+  if (mContentType == GFX_CONTENT_COLOR_ALPHA) {
     result.mContext->SetOperator(gfxContext::OPERATOR_CLEAR);
     result.mContext->Paint();
     result.mContext->SetOperator(gfxContext::OPERATOR_OVER);

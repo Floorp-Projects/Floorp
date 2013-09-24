@@ -596,7 +596,7 @@ class SharedDeprecatedTextureHostOGL : public DeprecatedTextureHost
                            , public TextureSourceOGL
 {
 public:
-  typedef gfxASurface::gfxContentType ContentType;
+  typedef gfxContentType ContentType;
   typedef mozilla::gl::GLContext GLContext;
   typedef mozilla::gl::TextureImage TextureImage;
 
@@ -664,8 +664,8 @@ public:
   ContentType GetContentType()
   {
     return (mFormat == gfx::FORMAT_B8G8R8A8) ?
-             gfxASurface::CONTENT_COLOR_ALPHA :
-             gfxASurface::CONTENT_COLOR;
+             GFX_CONTENT_COLOR_ALPHA :
+             GFX_CONTENT_COLOR;
   }
 
   virtual gfx3DMatrix GetTextureTransform() MOZ_OVERRIDE;
@@ -692,7 +692,7 @@ class SurfaceStreamHostOGL : public DeprecatedTextureHost
                            , public TextureSourceOGL
 {
 public:
-  typedef gfxASurface::gfxContentType ContentType;
+  typedef gfxContentType ContentType;
   typedef mozilla::gl::GLContext GLContext;
   typedef mozilla::gl::TextureImage TextureImage;
 
@@ -747,8 +747,8 @@ public:
   GLuint GetTextureID() { return mTextureHandle; }
   ContentType GetContentType() {
     return (mFormat == gfx::FORMAT_B8G8R8A8) ?
-             gfxASurface::CONTENT_COLOR_ALPHA :
-             gfxASurface::CONTENT_COLOR;
+             GFX_CONTENT_COLOR_ALPHA :
+             GFX_CONTENT_COLOR;
   }
 
   virtual already_AddRefed<gfxImageSurface> GetAsSurface() MOZ_OVERRIDE;

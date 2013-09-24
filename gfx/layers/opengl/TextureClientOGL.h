@@ -65,9 +65,9 @@ public:
   ~DeprecatedTextureClientSharedOGL() { ReleaseResources(); }
 
   virtual bool SupportsType(DeprecatedTextureClientType aType) MOZ_OVERRIDE { return aType == TEXTURE_SHARED_GL; }
-  virtual bool EnsureAllocated(gfx::IntSize aSize, gfxASurface::gfxContentType aType);
+  virtual bool EnsureAllocated(gfx::IntSize aSize, gfxContentType aType);
   virtual void ReleaseResources();
-  virtual gfxASurface::gfxContentType GetContentType() MOZ_OVERRIDE { return gfxASurface::CONTENT_COLOR_ALPHA; }
+  virtual gfxContentType GetContentType() MOZ_OVERRIDE { return GFX_CONTENT_COLOR_ALPHA; }
 
 protected:
   gl::GLContext* mGL;
@@ -97,9 +97,9 @@ public:
   ~DeprecatedTextureClientStreamOGL() { ReleaseResources(); }
 
   virtual bool SupportsType(DeprecatedTextureClientType aType) MOZ_OVERRIDE { return aType == TEXTURE_STREAM_GL; }
-  virtual bool EnsureAllocated(gfx::IntSize aSize, gfxASurface::gfxContentType aType) { return true; }
+  virtual bool EnsureAllocated(gfx::IntSize aSize, gfxContentType aType) { return true; }
   virtual void ReleaseResources() { mDescriptor = SurfaceDescriptor(); }
-  virtual gfxASurface::gfxContentType GetContentType() MOZ_OVERRIDE { return gfxASurface::CONTENT_COLOR_ALPHA; }
+  virtual gfxContentType GetContentType() MOZ_OVERRIDE { return GFX_CONTENT_COLOR_ALPHA; }
 };
 
 } // namespace

@@ -649,7 +649,7 @@ VectorImage::GetFrame(uint32_t aWhichFrame,
   gfxIntSize surfaceSize(imageIntSize.width, imageIntSize.height);
 
   nsRefPtr<gfxImageSurface> surface =
-    new gfxImageSurface(surfaceSize, gfxASurface::ImageFormatARGB32);
+    new gfxImageSurface(surfaceSize, gfxImageFormatARGB32);
   nsRefPtr<gfxContext> context = new gfxContext(surface);
 
   // Draw to our surface!
@@ -761,7 +761,7 @@ VectorImage::Draw(gfxContext* aContext,
   gfxUtils::DrawPixelSnapped(aContext, drawable, unscaledTransform,
                              drawableSubimage, drawableSourceRect,
                              drawableImageRect, aFill,
-                             gfxASurface::ImageFormatARGB32, aFilter, aFlags);
+                             gfxImageFormatARGB32, aFilter, aFlags);
 
   MOZ_ASSERT(mRenderingObserver, "Should have a rendering observer by now");
   mRenderingObserver->ResumeHonoringInvalidations();

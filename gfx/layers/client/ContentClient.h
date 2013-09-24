@@ -193,7 +193,7 @@ public:
     , mDeprecatedTextureClient(nullptr)
     , mIsNewBuffer(false)
     , mFrontAndBackBufferDiffer(false)
-    , mContentType(gfxASurface::CONTENT_COLOR_ALPHA)
+    , mContentType(GFX_CONTENT_COLOR_ALPHA)
   {}
 
   typedef ThebesLayerBuffer::PaintState PaintState;
@@ -355,7 +355,7 @@ class ContentClientIncremental : public ContentClientRemote
 public:
   ContentClientIncremental(CompositableForwarder* aFwd)
     : ContentClientRemote(aFwd)
-    , mContentType(gfxASurface::CONTENT_COLOR_ALPHA)
+    , mContentType(GFX_CONTENT_COLOR_ALPHA)
     , mHasBuffer(false)
     , mHasBufferOnWhite(false)
   {

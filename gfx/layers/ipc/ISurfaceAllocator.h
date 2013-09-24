@@ -97,15 +97,15 @@ ISurfaceAllocator() {}
 
   // was AllocBuffer
   virtual bool AllocSharedImageSurface(const gfxIntSize& aSize,
-                                       gfxASurface::gfxContentType aContent,
+                                       gfxContentType aContent,
                                        gfxSharedImageSurface** aBuffer);
   virtual bool AllocSurfaceDescriptor(const gfxIntSize& aSize,
-                                      gfxASurface::gfxContentType aContent,
+                                      gfxContentType aContent,
                                       SurfaceDescriptor* aBuffer);
 
   // was AllocBufferWithCaps
   virtual bool AllocSurfaceDescriptorWithCaps(const gfxIntSize& aSize,
-                                              gfxASurface::gfxContentType aContent,
+                                              gfxContentType aContent,
                                               uint32_t aCaps,
                                               SurfaceDescriptor* aBuffer);
 
@@ -125,7 +125,7 @@ protected:
   virtual bool IsOnCompositorSide() const = 0;
   static bool PlatformDestroySharedSurface(SurfaceDescriptor* aSurface);
   virtual bool PlatformAllocSurfaceDescriptor(const gfxIntSize& aSize,
-                                              gfxASurface::gfxContentType aContent,
+                                              gfxContentType aContent,
                                               uint32_t aCaps,
                                               SurfaceDescriptor* aBuffer);
 
