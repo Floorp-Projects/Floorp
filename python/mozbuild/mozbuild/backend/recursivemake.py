@@ -36,7 +36,10 @@ from ..frontend.data import (
     XpcshellManifests,
     WebIDLFile,
 )
-from ..util import FileAvoidWrite
+from ..util import (
+    ensureParentDir,
+    FileAvoidWrite,
+)
 from ..makeutil import Makefile
 
 
@@ -612,6 +615,8 @@ class RecursiveMakeBackend(CommonBackend):
             self.summary.managed_count += 1
 
         self._write_manifests('install', self._install_manifests)
+
+        ensureParentDir(os.path.join(self.environment.topobjdir, 'dist', 'foo'))
 
     def _process_directory_traversal(self, obj, backend_file):
         """Process a data.DirectoryTraversal instance."""
