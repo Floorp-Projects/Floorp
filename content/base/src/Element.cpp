@@ -2213,7 +2213,7 @@ Element::PostHandleEventForLinks(nsEventChainPostVisitor& aVisitor)
     break;
 
   case NS_MOUSE_CLICK:
-    if (NS_IS_MOUSE_LEFT_CLICK(aVisitor.mEvent)) {
+    if (aVisitor.mEvent->IsLeftClickEvent()) {
       nsInputEvent* inputEvent = static_cast<nsInputEvent*>(aVisitor.mEvent);
       if (inputEvent->IsControl() || inputEvent->IsMeta() ||
           inputEvent->IsAlt() ||inputEvent->IsShift()) {

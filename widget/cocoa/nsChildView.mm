@@ -1589,10 +1589,10 @@ NS_IMETHODIMP nsChildView::DispatchEvent(nsGUIEvent* event, nsEventStatus& aStat
 #endif
 
   NS_ASSERTION(!(mTextInputHandler && mTextInputHandler->IsIMEComposing() &&
-                 NS_IS_KEY_EVENT(event)),
+                 event->HasKeyEventMessage()),
     "Any key events should not be fired during IME composing");
 
-  if (event->mFlags.mIsSynthesizedForTests && NS_IS_KEY_EVENT(event)) {
+  if (event->mFlags.mIsSynthesizedForTests && event->HasKeyEventMessage()) {
     nsKeyEvent* keyEvent = reinterpret_cast<nsKeyEvent*>(event);
     nsresult rv = mTextInputHandler->AttachNativeKeyEvent(*keyEvent);
     NS_ENSURE_SUCCESS(rv, rv);

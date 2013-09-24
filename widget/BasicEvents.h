@@ -669,6 +669,118 @@ public:
     currentTarget = aCopyTargets ? aEvent.currentTarget : nullptr;
     originalTarget = aCopyTargets ? aEvent.originalTarget : nullptr;
   }
+
+  /**
+   * Utils for checking event types
+   */
+
+  /**
+   * Returns true if the event is WidgetInputEvent or inherits it.
+   */
+  bool IsInputDerivedEvent() const;
+  /**
+   * Returns true if the event is WidgetMouseEvent or inherits it.
+   */
+  bool IsMouseDerivedEvent() const;
+  /**
+   * Returns true if the event is a query content event.
+   */
+  bool IsQueryContentEvent() const;
+  /**
+   * Returns true if the event is a selection event.
+   */
+  bool IsSelectionEvent() const;
+  /**
+   * Returns true if the event is a content command event.
+   */
+  bool IsContentCommandEvent() const;
+  /**
+   * Returns true if the event is a native event deliverer event for plugin.
+   */
+  bool IsNativeEventDelivererForPlugin() const;
+
+  /**
+   * Returns true if the event message is one of mouse events.
+   */
+  bool HasMouseEventMessage() const;
+  /**
+   * Returns true if the event message is one of drag events.
+   */
+  bool HasDragEventMessage() const;
+  /**
+   * Returns true if the event message is one of key events.
+   */
+  bool HasKeyEventMessage() const;
+  /**
+   * Returns true if the event message is one of composition events or text
+   * event.
+   */
+  bool HasIMEEventMessage() const;
+  /**
+   * Returns true if the event message is one of plugin activation events.
+   */
+  bool HasPluginActivationEventMessage() const;
+
+  /**
+   * Returns true if left click event.
+   */
+  bool IsLeftClickEvent() const;
+  /**
+   * Returns true if the event is a context menu event caused by key.
+   */
+  bool IsContextMenuKeyEvent() const;
+  /**
+   * Returns true if the event is native event deliverer event for plugin and
+   * it should be retarted to focused document.
+   */
+  bool IsRetargetedNativeEventDelivererForPlugin() const;
+  /**
+   * Returns true if the event is native event deliverer event for plugin and
+   * it should NOT be retarted to focused document.
+   */
+  bool IsNonRetargetedNativeEventDelivererForPlugin() const;
+  /**
+   * Returns true if the event is related to IME handling.  It includes
+   * IME events, query content events and selection events.
+   * Be careful when you use this.
+   */
+  bool IsIMERelatedEvent() const;
+
+  /**
+   * Whether the event should be handled by the frame of the mouse cursor
+   * position or not.  When it should be handled there (e.g., the mouse events),
+   * this returns true.
+   */
+  bool IsUsingCoordinates() const;
+  /**
+   * Whether the event should be handled by the focused DOM window in the
+   * same top level window's or not.  E.g., key events, IME related events
+   * (including the query content events, they are used in IME transaction)
+   * should be handled by the (last) focused window rather than the dispatched
+   * window.
+   *
+   * NOTE: Even if this returns true, the event isn't going to be handled by the
+   * application level active DOM window which is on another top level window.
+   * So, when the event is fired on a deactive window, the event is going to be
+   * handled by the last focused DOM window in the last focused window.
+   */
+  bool IsTargetedAtFocusedWindow() const;
+  /**
+   * Whether the event should be handled by the focused content or not.  E.g.,
+   * key events, IME related events and other input events which are not handled
+   * by the frame of the mouse cursor position.
+   *
+   * NOTE: Even if this returns true, the event isn't going to be handled by the
+   * application level active DOM window which is on another top level window.
+   * So, when the event is fired on a deactive window, the event is going to be
+   * handled by the last focused DOM element of the last focused DOM window in
+   * the last focused window.
+   */
+  bool IsTargetedAtFocusedContent() const;
+  /**
+   * Whether the event should cause a DOM event.
+   */
+  bool IsAllowedToDispatchDOMEvent() const;
 };
 
 /******************************************************************************
