@@ -669,8 +669,9 @@ class RecursiveMakeBackend(CommonBackend):
 
         if obj.test_dirs:
             fh.write('TEST_DIRS := %s\n' % ' '.join(obj.test_dirs))
-            self._traversal.add(backend_file.relobjdir,
-                                tests=relativize(obj.test_dirs))
+            if self.environment.substs.get('ENABLE_TESTS', False):
+                self._traversal.add(backend_file.relobjdir,
+                                    tests=relativize(obj.test_dirs))
 
         if obj.test_tool_dirs and \
             self.environment.substs.get('ENABLE_TESTS', False):
