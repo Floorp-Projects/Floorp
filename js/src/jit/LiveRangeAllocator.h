@@ -346,6 +346,10 @@ class LiveInterval
         return uses_.end();
     }
 
+    UsePosition *usesBack() {
+        return uses_.back();
+    }
+
 #ifdef DEBUG
     void validateRanges();
 #endif
@@ -366,6 +370,9 @@ class VirtualRegister
 
     // Whether def_ is a temp or an output.
     bool isTemp_ : 1;
+
+    void operator=(const VirtualRegister &) MOZ_DELETE;
+    VirtualRegister(const VirtualRegister &) MOZ_DELETE;
 
   public:
     bool init(uint32_t id, LBlock *block, LInstruction *ins, LDefinition *def, bool isTemp) {
@@ -446,6 +453,9 @@ class VirtualRegisterMap
   private:
     VREG *vregs_;
     uint32_t numVregs_;
+
+    void operator=(const VirtualRegisterMap &) MOZ_DELETE;
+    VirtualRegisterMap(const VirtualRegisterMap &) MOZ_DELETE;
 
   public:
     VirtualRegisterMap()
