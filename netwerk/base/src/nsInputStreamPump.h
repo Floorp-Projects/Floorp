@@ -18,12 +18,14 @@
 #include "nsIThreadRetargetableRequest.h"
 #include "nsCOMPtr.h"
 #include "mozilla/Attributes.h"
+#include "mozilla/ReentrantMonitor.h"
 
 class nsInputStreamPump MOZ_FINAL : public nsIInputStreamPump
                                   , public nsIInputStreamCallback
                                   , public nsIThreadRetargetableRequest
 {
 public:
+    typedef mozilla::ReentrantMonitorAutoEnter ReentrantMonitorAutoEnter;
     NS_DECL_THREADSAFE_ISUPPORTS
     NS_DECL_NSIREQUEST
     NS_DECL_NSIINPUTSTREAMPUMP
@@ -91,9 +93,15 @@ protected:
     uint32_t                      mSuspendCount;
     uint32_t                      mLoadFlags;
     bool                          mIsPending;
-    bool                          mWaiting; // true if waiting on async source
+    // True while in OnInputStreamReady, calling OnStateStart, OnStateTransfer
+    // and OnStateStop. Used to prevent calls to AsyncWait during callbacks.
+    bool                          mProcessingCallbacks;
+    // True if waiting on the "input stream ready" callback.
+    bool                          mWaitingForInputStreamReady;
     bool                          mCloseWhenDone;
     bool                          mRetargeting;
+    // Protects state/member var accesses across multiple threads.
+    mozilla::ReentrantMonitor     mMonitor;
 };
 
 #endif // !nsInputStreamChannel_h__
