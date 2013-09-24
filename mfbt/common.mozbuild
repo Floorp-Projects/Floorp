@@ -48,6 +48,7 @@ mfbt_headers = [
     'RangedPtr.h',
     'ReentrancyGuard.h',
     'RefPtr.h',
+    'RollingMean.h',
     'Scoped.h',
     'SHA1.h',
     'SplayTree.h',
