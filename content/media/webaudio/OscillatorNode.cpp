@@ -424,15 +424,15 @@ public:
       return;
     }
 
-    if (ticks + WEBAUDIO_BLOCK_SIZE < mStart) {
-      // We're not playing yet.
-      ComputeSilence(aOutput);
-      return;
-    }
     if (ticks >= mStop) {
       // We've finished playing.
       ComputeSilence(aOutput);
       *aFinished = true;
+      return;
+    }
+    if (ticks + WEBAUDIO_BLOCK_SIZE < mStart) {
+      // We're not playing yet.
+      ComputeSilence(aOutput);
       return;
     }
 
