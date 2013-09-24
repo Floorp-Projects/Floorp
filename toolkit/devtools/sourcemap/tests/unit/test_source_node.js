@@ -262,11 +262,17 @@ define("test/source-map/test-source-node", ["require", "exports", "module"], fun
 
   exports['test .fromStringWithSourceMap() merging duplicate mappings'] = function (assert, util) {
     var input = new SourceNode(null, null, null, [
-      new SourceNode(1, 0, "a.js", "(function"), new SourceNode(1, 0, "a.js", "() {\n"),
-        "  ", new SourceNode(1, 0, "a.js", "var Test = "), new SourceNode(1, 0, "b.js", "{};\n"),
-        new SourceNode(2, 0, "b.js", "Test"), new SourceNode(2, 0, "b.js", ".A", "A"), new SourceNode(2, 20, "b.js", " = { value: 1234 };\n", "A"),
-        "}());\n",
-        "/* Generated Source */"]);
+      new SourceNode(1, 0, "a.js", "(function"),
+      new SourceNode(1, 0, "a.js", "() {\n"),
+      "  ",
+      new SourceNode(1, 0, "a.js", "var Test = "),
+      new SourceNode(1, 0, "b.js", "{};\n"),
+      new SourceNode(2, 0, "b.js", "Test"),
+      new SourceNode(2, 0, "b.js", ".A", "A"),
+      new SourceNode(2, 20, "b.js", " = { value: 1234 };\n", "A"),
+      "}());\n",
+      "/* Generated Source */"
+    ]);
     input = input.toStringWithSourceMap({
       file: 'foo.js'
     });
