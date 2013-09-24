@@ -9,14 +9,13 @@
 #include "mozilla/BasicEvents.h"
 #include "mozilla/MouseEvents.h"
 #include "mozilla/TextEvents.h"
+#include "mozilla/TouchEvents.h"
 
 #include "nsPoint.h"
 #include "nsRect.h"
 #include "nsIDOMDataTransfer.h"
 #include "nsWeakPtr.h"
 #include "nsITransferable.h"
-#include "nsAutoPtr.h"
-#include "mozilla/dom/Touch.h"
 
 class nsIContent;
 
@@ -100,38 +99,6 @@ public:
   }
 };
 
-/*
- * Gesture Notify Event:
- *
- * This event is the first event generated when the user touches
- * the screen with a finger, and it's meant to decide what kind
- * of action we'll use for that touch interaction.
- *
- * The event is dispatched to the layout and based on what is underneath
- * the initial contact point it's then decided if we should pan
- * (finger scrolling) or drag the target element.
- */
-class nsGestureNotifyEvent : public nsGUIEvent
-{
-public:
-  enum ePanDirection {
-    ePanNone,
-    ePanVertical,
-    ePanHorizontal,
-    ePanBoth
-  };
-  
-  ePanDirection panDirection;
-  bool          displayPanFeedback;
-  
-  nsGestureNotifyEvent(bool aIsTrusted, uint32_t aMsg, nsIWidget *aWidget):
-    nsGUIEvent(aIsTrusted, aMsg, aWidget, NS_GESTURENOTIFY_EVENT),
-    panDirection(ePanNone),
-    displayPanFeedback(false)
-  {
-  }
-};
-
 class nsContentCommandEvent : public nsGUIEvent
 {
 public:
@@ -169,43 +136,6 @@ public:
 
   bool mSucceeded;                                 // [out]
   bool mIsEnabled;                                 // [out]
-};
-
-class nsTouchEvent : public nsInputEvent
-{
-public:
-  nsTouchEvent()
-  {
-  }
-  nsTouchEvent(bool isTrusted, nsTouchEvent *aEvent)
-    : nsInputEvent(isTrusted,
-                   aEvent->message,
-                   aEvent->widget,
-                   NS_TOUCH_EVENT)
-  {
-    modifiers = aEvent->modifiers;
-    time = aEvent->time;
-    touches.AppendElements(aEvent->touches);
-    MOZ_COUNT_CTOR(nsTouchEvent);
-  }
-  nsTouchEvent(bool isTrusted, uint32_t msg, nsIWidget* w)
-    : nsInputEvent(isTrusted, msg, w, NS_TOUCH_EVENT)
-  {
-    MOZ_COUNT_CTOR(nsTouchEvent);
-  }
-  ~nsTouchEvent()
-  {
-    MOZ_COUNT_DTOR(nsTouchEvent);
-  }
-
-  nsTArray< nsRefPtr<mozilla::dom::Touch> > touches;
-
-  void AssignTouchEventData(const nsTouchEvent& aEvent, bool aCopyTargets)
-  {
-    AssignInputEventData(aEvent, aCopyTargets);
-
-    // Currently, we don't need to copy touches.
-  }
 };
 
 /**
@@ -308,45 +238,6 @@ public:
     relatedTarget = aCopyTargets ? aEvent.relatedTarget : nullptr;
     fromRaise = aEvent.fromRaise;
     isRefocus = aEvent.isRefocus;
-  }
-};
-
-/**
- * Simple gesture event
- */
-class nsSimpleGestureEvent : public nsMouseEvent_base
-{
-public:
-  nsSimpleGestureEvent(bool isTrusted, uint32_t msg, nsIWidget* w,
-                         uint32_t directionArg, double deltaArg)
-    : nsMouseEvent_base(isTrusted, msg, w, NS_SIMPLE_GESTURE_EVENT),
-      allowedDirections(0), direction(directionArg), delta(deltaArg),
-      clickCount(0)
-  {
-  }
-
-  nsSimpleGestureEvent(const nsSimpleGestureEvent& other)
-    : nsMouseEvent_base(other.mFlags.mIsTrusted,
-                        other.message, other.widget, NS_SIMPLE_GESTURE_EVENT),
-      allowedDirections(other.allowedDirections), direction(other.direction),
-      delta(other.delta), clickCount(0)
-  {
-  }
-  uint32_t allowedDirections; // See nsIDOMSimpleGestureEvent for values
-  uint32_t direction;         // See nsIDOMSimpleGestureEvent for values
-  double delta;               // Delta for magnify and rotate events
-  uint32_t clickCount;        // The number of taps for tap events
-
-  // XXX Not tested by test_assign_event_data.html
-  void AssignSimpleGestureEventData(const nsSimpleGestureEvent& aEvent,
-                                    bool aCopyTargets)
-  {
-    AssignMouseEventBaseData(aEvent, aCopyTargets);
-
-    // allowedDirections isn't copied
-    direction = aEvent.direction;
-    delta = aEvent.delta;
-    clickCount = aEvent.clickCount;
   }
 };
 
