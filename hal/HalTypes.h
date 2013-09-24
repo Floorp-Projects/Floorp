@@ -83,6 +83,7 @@ enum ProcessPriority {
   PROCESS_PRIORITY_BACKGROUND,
   PROCESS_PRIORITY_BACKGROUND_HOMESCREEN,
   PROCESS_PRIORITY_BACKGROUND_PERCEIVABLE,
+  PROCESS_PRIORITY_FOREGROUND_KEYBOARD,
   // Any priority greater than or equal to FOREGROUND is considered
   // "foreground" for the purposes of priority testing, for example
   // CurrentProcessIsForeground().

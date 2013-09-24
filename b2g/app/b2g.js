@@ -596,6 +596,10 @@ pref("dom.ipc.processPriorityManager.temporaryPriorityLockMS", 5000);
 // /still/ have the same niceness; we'd effectively have erased NSPR's thread
 // priorities.
 
+// The kernel can only accept 6 (OomScoreAdjust, KillUnderMB) pairs. But it is
+// okay, kernel will still kill processes with larger OomScoreAdjust first even
+// its OomScoreAdjust don't have a corresponding KillUnderMB.
+
 pref("hal.processPriorityManager.gonk.MASTER.OomScoreAdjust", 0);
 pref("hal.processPriorityManager.gonk.MASTER.KillUnderMB", 4);
 pref("hal.processPriorityManager.gonk.MASTER.Nice", 0);
@@ -607,6 +611,9 @@ pref("hal.processPriorityManager.gonk.FOREGROUND_HIGH.Nice", 0);
 pref("hal.processPriorityManager.gonk.FOREGROUND.OomScoreAdjust", 134);
 pref("hal.processPriorityManager.gonk.FOREGROUND.KillUnderMB", 6);
 pref("hal.processPriorityManager.gonk.FOREGROUND.Nice", 1);
+
+pref("hal.processPriorityManager.gonk.FOREGROUND_KEYBOARD.OomScoreAdjust", 200);
+pref("hal.processPriorityManager.gonk.FOREGROUND_KEYBOARD.Nice", 1);
 
 pref("hal.processPriorityManager.gonk.BACKGROUND_PERCEIVABLE.OomScoreAdjust", 400);
 pref("hal.processPriorityManager.gonk.BACKGROUND_PERCEIVABLE.KillUnderMB", 7);

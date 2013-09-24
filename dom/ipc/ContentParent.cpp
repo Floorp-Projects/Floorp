@@ -502,14 +502,17 @@ PrivilegesForApp(mozIApplication* aApp)
 ContentParent::GetInitialProcessPriority(Element* aFrameElement)
 {
     // Frames with mozapptype == critical which are expecting a system message
-    // get FOREGROUND_HIGH priority.  All other frames get FOREGROUND priority.
+    // get FOREGROUND_HIGH priority.
 
     if (!aFrameElement) {
         return PROCESS_PRIORITY_FOREGROUND;
     }
 
-    if (!aFrameElement->AttrValueIs(kNameSpaceID_None, nsGkAtoms::mozapptype,
-                                    NS_LITERAL_STRING("critical"), eCaseMatters)) {
+    if (aFrameElement->AttrValueIs(kNameSpaceID_None, nsGkAtoms::mozapptype,
+                                   NS_LITERAL_STRING("keyboard"), eCaseMatters)) {
+        return PROCESS_PRIORITY_FOREGROUND_KEYBOARD;
+    } else if (!aFrameElement->AttrValueIs(kNameSpaceID_None, nsGkAtoms::mozapptype,
+                                           NS_LITERAL_STRING("critical"), eCaseMatters)) {
         return PROCESS_PRIORITY_FOREGROUND;
     }
 
