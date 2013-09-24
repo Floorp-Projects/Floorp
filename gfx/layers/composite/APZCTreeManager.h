@@ -146,14 +146,19 @@ public:
   nsEventStatus ReceiveInputEvent(const InputData& aEvent);
 
   /**
-   * Special handler for nsInputEvents. Also sets |aOutEvent| (which is assumed
-   * to be an already-existing instance of an nsInputEvent which may be an
-   * nsTouchEvent) to have its touch points in DOM space. This is so that the
-   * touches can be passed through the DOM and content can handle them.
+   * nsInputEvent handler. Sets |aOutEvent| (which is assumed to be an
+   * already-existing instance of an nsInputEvent which may be an
+   * nsTouchEvent) to have its coordinates in DOM space. This is so that the
+   * event can be passed through the DOM and content can handle them.
    *
    * NOTE: Be careful of invoking the nsInputEvent variant. This can only be
    * called on the main thread. See widget/InputData.h for more information on
    * why we have InputData and nsInputEvent separated.
+   * NOTE: On unix, mouse events are treated as touch and are forwarded
+   * to the appropriate apz as such.
+   *
+   * @param aEvent input event object, will not be modified
+   * @param aOutEvent event object transformed to DOM coordinate space.
    */
   nsEventStatus ReceiveInputEvent(const nsInputEvent& aEvent,
                                   nsInputEvent* aOutEvent);
@@ -282,6 +287,10 @@ private:
   AsyncPanZoomController* GetAPZCAtPoint(AsyncPanZoomController* aApzc, const gfxPoint& aHitTestPoint);
   AsyncPanZoomController* CommonAncestor(AsyncPanZoomController* aApzc1, AsyncPanZoomController* aApzc2);
   AsyncPanZoomController* RootAPZCForLayersId(AsyncPanZoomController* aApzc);
+  AsyncPanZoomController* GetTouchInputBlockAPZC(const nsTouchEvent& aEvent, ScreenPoint aPoint);
+  nsEventStatus ProcessTouchEvent(const nsTouchEvent& touchEvent, nsTouchEvent* aOutEvent);
+  nsEventStatus ProcessMouseEvent(const nsMouseEvent& mouseEvent, nsMouseEvent* aOutEvent);
+  nsEventStatus ProcessEvent(const nsInputEvent& inputEvent, nsInputEvent* aOutEvent);
 
   /**
    * Recursive helper function to build the APZC tree. The tree of APZC instances has
