@@ -20,7 +20,7 @@
 
 #include "nsID.h"
 #include "nsMemory.h"
-#include "nsStringGlue.h"
+#include "nsString.h"
 #include "nsTArray.h"
 #include "js/StructuredClone.h"
 #include "nsCSSProperty.h"

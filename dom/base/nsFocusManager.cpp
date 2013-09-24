@@ -41,6 +41,7 @@
 #include "mozilla/dom/Element.h"
 #include "mozilla/LookAndFeel.h"
 #include "mozilla/Preferences.h"
+#include "mozilla/Services.h"
 #include <algorithm>
 
 #ifdef MOZ_XUL

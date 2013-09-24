@@ -7,25 +7,19 @@
 #ifndef mozilla_tabs_TabParent_h
 #define mozilla_tabs_TabParent_h
 
-#include "base/basictypes.h"
-
-#include "mozilla/dom/ContentParent.h"
 #include "mozilla/dom/PBrowserParent.h"
 #include "mozilla/dom/PContentDialogParent.h"
 #include "mozilla/dom/TabContext.h"
-#include "mozilla/ipc/GeckoChildProcessHost.h"
 #include "nsCOMPtr.h"
 #include "nsIAuthPromptProvider.h"
 #include "nsIBrowserDOMWindow.h"
 #include "nsIDialogParamBlock.h"
 #include "nsISecureBrowserUI.h"
 #include "nsITabParent.h"
-#include "nsWeakReference.h"
 #include "Units.h"
 #include "js/TypeDecls.h"
 
 struct gfxMatrix;
-class mozIApplication;
 class nsFrameLoader;
 class nsIURI;
 class CpowHolder;
@@ -44,6 +38,7 @@ class RenderFrameParent;
 namespace dom {
 
 class ClonedMessageData;
+class ContentParent;
 class Element;
 struct StructuredCloneData;
 

@@ -8,6 +8,8 @@
 #ifndef mozilla_layer_RenderFrameUtils_h
 #define mozilla_layer_RenderFrameUtils_h
 
+#include "ipc/IPCMessageUtils.h"
+
 namespace mozilla {
 namespace layout {
 

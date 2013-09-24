@@ -38,7 +38,7 @@ public:
    * or Bridge() request from our parent process.  The Transport is to
    * the compositor's context.
    */
-  static PCompositorChild*
+  static bool
   Create(Transport* aTransport, ProcessId aOtherProcess);
 
   static PCompositorChild* Get();

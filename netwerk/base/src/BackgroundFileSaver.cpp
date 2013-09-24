@@ -15,6 +15,7 @@
 
 #include "BackgroundFileSaver.h"
 #include "mozilla/Telemetry.h"
+#include "nsIAsyncInputStream.h"
 
 namespace mozilla {
 namespace net {

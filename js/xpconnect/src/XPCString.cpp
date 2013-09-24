@@ -19,7 +19,7 @@
  */
 
 #include "nscore.h"
-#include "nsStringGlue.h"
+#include "nsString.h"
 #include "nsStringBuffer.h"
 #include "jsapi.h"
 #include "xpcpublic.h"

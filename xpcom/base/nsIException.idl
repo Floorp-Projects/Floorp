@@ -9,7 +9,6 @@
 
 
 #include "nsISupports.idl"
-#include "nsIProgrammingLanguage.idl"
 
 // XXX - most "string"s in this file should probably move to Unicode
 //       so may as well use AStrings...

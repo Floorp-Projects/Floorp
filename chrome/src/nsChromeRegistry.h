@@ -6,31 +6,24 @@
 #ifndef nsChromeRegistry_h
 #define nsChromeRegistry_h
 
-#include "nsIChromeRegistry.h"
 #include "nsIToolkitChromeRegistry.h"
 #include "nsIObserver.h"
 #include "nsWeakReference.h"
-#include "nsIPrefBranch.h"
 
 #ifdef MOZ_XUL
 #include "nsIXULOverlayProvider.h"
 #endif
 
-#include "pldhash.h"
-
-#include "nsCOMArray.h"
 #include "nsString.h"
-#include "nsTHashtable.h"
 #include "nsURIHashKey.h"
 #include "nsInterfaceHashtable.h"
 #include "nsXULAppAPI.h"
-#include "nsIResProtocolHandler.h"
 #include "nsIXPConnect.h"
 
-#include "mozilla/Omnijar.h"
 #include "mozilla/FileLocation.h"
 
 class nsIDOMWindow;
+class nsIPrefBranch;
 class nsIURL;
 
 // The chrome registry is actually split between nsChromeRegistryChrome and

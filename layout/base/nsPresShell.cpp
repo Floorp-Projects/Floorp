@@ -156,6 +156,10 @@
 #include "nsIDOMHTMLElement.h"
 #include "nsIDragSession.h"
 
+#ifdef ANDROID
+#include "nsIDocShellTreeOwner.h"
+#endif
+
 #define ANCHOR_SCROLL_FLAGS \
   (nsIPresShell::SCROLL_OVERFLOW_HIDDEN | nsIPresShell::SCROLL_NO_PARENT_FRAMES)
 
