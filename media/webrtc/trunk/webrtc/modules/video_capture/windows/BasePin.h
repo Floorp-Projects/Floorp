@@ -198,6 +198,15 @@ protected:
                         IEnumMediaTypes *aEnum);
 };
 
+// For mingw __uuidof support
+#ifdef __CRT_UUID_DECL
+}
+}
+__CRT_UUID_DECL(mozilla::media::BasePin, 0x199669c6,0x672a,0x4130,0xb1,0x3e,0x57,0xaa,0x83,0x0e,0xae,0x55);
+namespace mozilla {
+namespace media {
+#endif
+
 _COM_SMARTPTR_TYPEDEF(BasePin, __uuidof(BasePin));
 
 }
