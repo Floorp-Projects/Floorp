@@ -787,14 +787,14 @@ bool
 BacktrackingAllocator::split(LiveInterval *interval,
                              const LiveIntervalVector &newIntervals)
 {
-    JS_ASSERT(newIntervals.length() >= 2);
-
     if (IonSpewEnabled(IonSpew_RegAlloc)) {
         IonSpew(IonSpew_RegAlloc, "splitting interval v%u %s:",
                 interval->vreg(), IntervalString(interval));
         for (size_t i = 0; i < newIntervals.length(); i++)
             IonSpew(IonSpew_RegAlloc, "    %s", IntervalString(newIntervals[i]));
     }
+
+    JS_ASSERT(newIntervals.length() >= 2);
 
     // Find the earliest interval in the new list.
     LiveInterval *first = newIntervals[0];
@@ -1765,11 +1765,8 @@ BacktrackingAllocator::splitAcrossCalls(LiveInterval *interval)
         } else {
             start = inputOf(insData[newInterval->usesBegin()->pos].ins());
         }
-        for (UsePositionIterator iter(newInterval->usesBegin());
-             iter != newInterval->usesEnd();
-             iter++) {
-            end = iter->pos.next();
-        }
+        if (newInterval->usesBegin() != newInterval->usesEnd())
+            end = newInterval->usesBack()->pos.next();
         if (!newInterval->addRange(start, end))
             return false;
     }

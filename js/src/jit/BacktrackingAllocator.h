@@ -75,6 +75,7 @@ class BacktrackingVirtualRegister : public VirtualRegister
     }
 
     void setCanonicalSpill(LAllocation alloc) {
+        JS_ASSERT(!alloc.isUse());
         canonicalSpill_ = alloc;
     }
     const LAllocation *canonicalSpill() const {
