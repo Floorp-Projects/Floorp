@@ -13,12 +13,12 @@ interface nsINode;
 
 %{C++
 class nsIFrame;
-struct nsTextRangeStyle;
 struct nsPoint;
 struct ScrollAxis;
 template<class T> class nsTArray;
 #include "nsDirection.h"
 #include "nsIPresShell.h" // TODO: Remove this include
+#include "mozilla/EventForwards.h"
 %}
 
 [ptr] native nsIFrame(nsIFrame);
