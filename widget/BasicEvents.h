@@ -57,19 +57,19 @@ enum nsEventStructType
   NS_TRANSITION_EVENT,               // InternalTransitionEvent
   NS_ANIMATION_EVENT,                // InternalAnimationEvent
 
+  // MiscEvents.h
+  NS_COMMAND_EVENT,                  // WidgetCommandEvent
+  NS_CONTENT_COMMAND_EVENT,          // WidgetContentCommandEvent
+  NS_PLUGIN_EVENT,                   // WidgetPluginEvent
+
   // DOM events
   NS_MUTATION_EVENT,                 // nsMutationEvent
 
-  // SVG events
-  NS_SVGZOOM_EVENT,                  // GUIEvent
-  NS_SMIL_TIME_EVENT,                // UIEvent
-
-  // Command events
-  NS_COMMAND_EVENT,                  // nsCommandEvent
-  NS_CONTENT_COMMAND_EVENT,          // nsContentCommandEvent
-
-  // Plugin event
-  NS_PLUGIN_EVENT                    // nsPluginEvent
+  // Follwoing struct type values are ugly.  They indicate other struct type
+  // actually.  However, they are used for distinguishing which DOM event
+  // should be created for the event.
+  NS_SVGZOOM_EVENT,                  // WidgetGUIEvent
+  NS_SMIL_TIME_EVENT                 // InternalUIEvent
 };
 
 /******************************************************************************

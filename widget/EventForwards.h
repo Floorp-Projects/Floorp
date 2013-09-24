@@ -92,49 +92,52 @@ class InternalClipboardEvent;
 class InternalFocusEvent;
 class InternalTransitionEvent;
 class InternalAnimationEvent;
-} // namespace mozilla
 
 // MiscEvents.h
-class nsCommandEvent;
-class nsContentCommandEvent;
-class nsPluginEvent;
+class WidgetCommandEvent;
+class WidgetContentCommandEvent;
+class WidgetPluginEvent;
+} // namespace mozilla
 
 // content/events/public/nsMutationEvent.h
 class nsMutationEvent;
 
 // TODO: Remove following typedefs
-typedef mozilla::WidgetEvent              nsEvent;
-typedef mozilla::WidgetGUIEvent           nsGUIEvent;
-typedef mozilla::WidgetInputEvent         nsInputEvent;
-typedef mozilla::InternalUIEvent          nsUIEvent;
-typedef mozilla::AlternativeCharCode      nsAlternativeCharCode;
-typedef mozilla::WidgetKeyboardEvent      nsKeyEvent;
-typedef mozilla::TextRangeStyle           nsTextRangeStyle;
-typedef mozilla::TextRange                nsTextRange;
-typedef mozilla::TextRangeArray           nsTextRangeArray;
-typedef mozilla::WidgetTextEvent          nsTextEvent;
-typedef mozilla::WidgetCompositionEvent   nsCompositionEvent;
-typedef mozilla::WidgetQueryContentEvent  nsQueryContentEvent;
-typedef mozilla::WidgetSelectionEvent     nsSelectionEvent;
-typedef mozilla::WidgetMouseEventBase     nsMouseEvent_base;
-typedef mozilla::WidgetMouseEvent         nsMouseEvent;
-typedef mozilla::WidgetDragEvent          nsDragEvent;
-typedef mozilla::WidgetMouseScrollEvent   nsMouseScrollEvent;
+typedef mozilla::WidgetEvent               nsEvent;
+typedef mozilla::WidgetGUIEvent            nsGUIEvent;
+typedef mozilla::WidgetInputEvent          nsInputEvent;
+typedef mozilla::InternalUIEvent           nsUIEvent;
+typedef mozilla::AlternativeCharCode       nsAlternativeCharCode;
+typedef mozilla::WidgetKeyboardEvent       nsKeyEvent;
+typedef mozilla::TextRangeStyle            nsTextRangeStyle;
+typedef mozilla::TextRange                 nsTextRange;
+typedef mozilla::TextRangeArray            nsTextRangeArray;
+typedef mozilla::WidgetTextEvent           nsTextEvent;
+typedef mozilla::WidgetCompositionEvent    nsCompositionEvent;
+typedef mozilla::WidgetQueryContentEvent   nsQueryContentEvent;
+typedef mozilla::WidgetSelectionEvent      nsSelectionEvent;
+typedef mozilla::WidgetMouseEventBase      nsMouseEvent_base;
+typedef mozilla::WidgetMouseEvent          nsMouseEvent;
+typedef mozilla::WidgetDragEvent           nsDragEvent;
+typedef mozilla::WidgetMouseScrollEvent    nsMouseScrollEvent;
 
 namespace mozilla {
-typedef WidgetWheelEvent                  WheelEvent;
+typedef WidgetWheelEvent                   WheelEvent;
 }
 
-typedef mozilla::WidgetGestureNotifyEvent nsGestureNotifyEvent;
-typedef mozilla::WidgetSimpleGestureEvent nsSimpleGestureEvent;
-typedef mozilla::WidgetTouchEvent         nsTouchEvent;
-typedef mozilla::InternalScriptErrorEvent nsScriptErrorEvent;
-typedef mozilla::InternalScrollPortEvent  nsScrollPortEvent;
-typedef mozilla::InternalScrollAreaEvent  nsScrollAreaEvent;
-typedef mozilla::InternalFormEvent        nsFormEvent;
-typedef mozilla::InternalClipboardEvent   nsClipboardEvent;
-typedef mozilla::InternalFocusEvent       nsFocusEvent;
-typedef mozilla::InternalTransitionEvent  nsTransitionEvent;
-typedef mozilla::InternalAnimationEvent   nsAnimationEvent;
+typedef mozilla::WidgetGestureNotifyEvent  nsGestureNotifyEvent;
+typedef mozilla::WidgetSimpleGestureEvent  nsSimpleGestureEvent;
+typedef mozilla::WidgetTouchEvent          nsTouchEvent;
+typedef mozilla::InternalScriptErrorEvent  nsScriptErrorEvent;
+typedef mozilla::InternalScrollPortEvent   nsScrollPortEvent;
+typedef mozilla::InternalScrollAreaEvent   nsScrollAreaEvent;
+typedef mozilla::InternalFormEvent         nsFormEvent;
+typedef mozilla::InternalClipboardEvent    nsClipboardEvent;
+typedef mozilla::InternalFocusEvent        nsFocusEvent;
+typedef mozilla::InternalTransitionEvent   nsTransitionEvent;
+typedef mozilla::InternalAnimationEvent    nsAnimationEvent;
+typedef mozilla::WidgetContentCommandEvent nsContentCommandEvent;
+typedef mozilla::WidgetCommandEvent        nsCommandEvent;
+typedef mozilla::WidgetPluginEvent         nsPluginEvent;
 
 #endif // mozilla_EventForwards_h__
