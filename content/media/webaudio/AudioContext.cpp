@@ -38,8 +38,25 @@
 namespace mozilla {
 namespace dom {
 
-NS_IMPL_CYCLE_COLLECTION_INHERITED_2(AudioContext, nsDOMEventTargetHelper,
-                                     mDestination, mListener)
+NS_IMPL_CYCLE_COLLECTION_CLASS(AudioContext)
+
+NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(AudioContext)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK(mDestination)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK(mListener)
+  if (!tmp->mIsStarted) {
+    NS_IMPL_CYCLE_COLLECTION_UNLINK(mActiveNodes)
+  }
+NS_IMPL_CYCLE_COLLECTION_UNLINK_END_INHERITED(nsDOMEventTargetHelper)
+
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(AudioContext, nsDOMEventTargetHelper)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mDestination)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mListener)
+  if (!tmp->mIsStarted) {
+    MOZ_ASSERT(tmp->mIsOffline,
+               "Online AudioContexts should always be started");
+    NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mActiveNodes)
+  }
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
 NS_IMPL_ADDREF_INHERITED(AudioContext, nsDOMEventTargetHelper)
 NS_IMPL_RELEASE_INHERITED(AudioContext, nsDOMEventTargetHelper)
