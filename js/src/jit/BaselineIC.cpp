@@ -5965,13 +5965,8 @@ DoGetPropFallback(JSContext *cx, BaselineFrame *frame, ICGetProp_Fallback *stub,
     if (!obj)
         return false;
 
-    if (obj->getOps()->getProperty) {
-        if (!JSObject::getGeneric(cx, obj, obj, id, res))
-            return false;
-    } else {
-        if (!GetPropertyHelper(cx, obj, id, 0, res))
-            return false;
-    }
+    if (!JSObject::getGeneric(cx, obj, obj, id, res))
+        return false;
 
 #if JS_HAS_NO_SUCH_METHOD
     // Handle objects with __noSuchMethod__.
