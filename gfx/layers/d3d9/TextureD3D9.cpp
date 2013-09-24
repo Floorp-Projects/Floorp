@@ -27,6 +27,8 @@ CreateDeprecatedTextureHostD3D9(SurfaceDescriptorType aDescriptorType,
     result = new DeprecatedTextureHostYCbCrD3D9();
   } else if (aDescriptorType == SurfaceDescriptor::TSurfaceDescriptorD3D9) {
     result = new DeprecatedTextureHostSystemMemD3D9();
+  } else if (aDescriptorType == SurfaceDescriptor::TSurfaceDescriptorDIB) {
+    result = new DeprecatedTextureHostDIB();
   } else {
     result = new DeprecatedTextureHostShmemD3D9();
   }

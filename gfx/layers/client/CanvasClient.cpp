@@ -121,10 +121,15 @@ DeprecatedCanvasClient2D::DeprecatedCanvasClient2D(CompositableForwarder* aFwd,
 void
 DeprecatedCanvasClient2D::Update(gfx::IntSize aSize, ClientCanvasLayer* aLayer)
 {
+  bool isOpaque = (aLayer->GetContentFlags() & Layer::CONTENT_OPAQUE);
+  gfxASurface::gfxContentType contentType = isOpaque
+                                              ? gfxASurface::CONTENT_COLOR
+                                              : gfxASurface::CONTENT_COLOR_ALPHA;
+
   if (!mDeprecatedTextureClient) {
-    mDeprecatedTextureClient = CreateDeprecatedTextureClient(TEXTURE_CONTENT);
+    mDeprecatedTextureClient = CreateDeprecatedTextureClient(TEXTURE_CONTENT, contentType);
     if (!mDeprecatedTextureClient) {
-      mDeprecatedTextureClient = CreateDeprecatedTextureClient(TEXTURE_FALLBACK);
+      mDeprecatedTextureClient = CreateDeprecatedTextureClient(TEXTURE_FALLBACK, contentType);
       if (!mDeprecatedTextureClient) {
         NS_WARNING("Could not create texture client");
         return;
@@ -132,17 +137,12 @@ DeprecatedCanvasClient2D::Update(gfx::IntSize aSize, ClientCanvasLayer* aLayer)
     }
   }
 
-  bool isOpaque = (aLayer->GetContentFlags() & Layer::CONTENT_OPAQUE);
-  gfxASurface::gfxContentType contentType = isOpaque
-                                              ? gfxASurface::CONTENT_COLOR
-                                              : gfxASurface::CONTENT_COLOR_ALPHA;
-
   if (!mDeprecatedTextureClient->EnsureAllocated(aSize, contentType)) {
     // We might already be on the fallback texture client if we couldn't create a
     // better one above. In which case this call to create is wasted. But I don't
     // think this will happen often enough to be worth complicating the code with
     // further checks.
-    mDeprecatedTextureClient = CreateDeprecatedTextureClient(TEXTURE_FALLBACK);
+    mDeprecatedTextureClient = CreateDeprecatedTextureClient(TEXTURE_FALLBACK, contentType);
     MOZ_ASSERT(mDeprecatedTextureClient, "Failed to create texture client");
     if (!mDeprecatedTextureClient->EnsureAllocated(aSize, contentType)) {
       NS_WARNING("Could not allocate texture client");
@@ -173,7 +173,10 @@ void
 DeprecatedCanvasClientSurfaceStream::Update(gfx::IntSize aSize, ClientCanvasLayer* aLayer)
 {
   if (!mDeprecatedTextureClient) {
-    mDeprecatedTextureClient = CreateDeprecatedTextureClient(TEXTURE_STREAM_GL);
+    mDeprecatedTextureClient = CreateDeprecatedTextureClient(TEXTURE_STREAM_GL,
+                                                             aLayer->GetSurfaceMode() == Layer::SURFACE_OPAQUE
+                                                               ? gfxASurface::CONTENT_COLOR
+                                                               : gfxASurface::CONTENT_COLOR_ALPHA);
     MOZ_ASSERT(mDeprecatedTextureClient, "Failed to create texture client");
   }
 
