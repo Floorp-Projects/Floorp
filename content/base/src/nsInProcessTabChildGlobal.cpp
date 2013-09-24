@@ -20,6 +20,7 @@
 #include "nsIMozBrowserFrame.h"
 #include "nsDOMClassInfoID.h"
 #include "mozilla/dom/StructuredCloneUtils.h"
+#include "js/StructuredClone.h"
 
 using mozilla::dom::StructuredCloneData;
 using mozilla::dom::StructuredCloneClosure;

@@ -2562,7 +2562,8 @@ Assembler::patchWrite_NearCall(CodeLocationLabel start, CodeLocationLabel toCall
 
 }
 void
-Assembler::patchDataWithValueCheck(CodeLocationLabel label, ImmPtr newValue, ImmPtr expectedValue)
+Assembler::patchDataWithValueCheck(CodeLocationLabel label, PatchedImmPtr newValue,
+                                   PatchedImmPtr expectedValue)
 {
     Instruction *ptr = (Instruction *) label.raw();
     InstructionIterator iter(ptr);
@@ -2577,6 +2578,12 @@ Assembler::patchDataWithValueCheck(CodeLocationLabel label, ImmPtr newValue, Imm
         AutoFlushCache::updateTop(uintptr_t(ptr), 4);
         AutoFlushCache::updateTop(uintptr_t(ptr->next()), 4);
     }
+}
+
+void
+Assembler::patchDataWithValueCheck(CodeLocationLabel label, ImmPtr newValue, ImmPtr expectedValue)
+{
+    patchDataWithValueCheck(label, PatchedImmPtr(newValue.value), PatchedImmPtr(expectedValue.value));
 }
 
 // This just stomps over memory with 32 bits of raw data. Its purpose is to

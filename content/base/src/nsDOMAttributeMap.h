@@ -16,7 +16,7 @@
 #include "nsCycleCollectionParticipant.h"
 #include "nsIDOMMozNamedAttrMap.h"
 #include "nsRefPtrHashtable.h"
-#include "nsStringGlue.h"
+#include "nsString.h"
 #include "nsWrapperCache.h"
 
 class nsIAtom;

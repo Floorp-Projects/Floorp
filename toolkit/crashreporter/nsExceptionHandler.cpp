@@ -11,6 +11,7 @@
 #include "mozilla/Util.h"
 
 #include "nsThreadUtils.h"
+#include "nsXULAppAPI.h"
 
 #if defined(XP_WIN32)
 #ifdef WIN32_LEAN_AND_MEAN

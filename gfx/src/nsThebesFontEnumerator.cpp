@@ -13,7 +13,7 @@
 #include "nsIAtom.h"                    // for nsIAtom, do_GetAtom
 #include "nsID.h"
 #include "nsMemory.h"                   // for nsMemory
-#include "nsStringGlue.h"               // for nsAutoCString, nsAutoString, etc
+#include "nsString.h"               // for nsAutoCString, nsAutoString, etc
 #include "nsTArray.h"                   // for nsTArray, nsTArray_Impl, etc
 #include "nscore.h"                     // for PRUnichar, NS_IMETHODIMP
 

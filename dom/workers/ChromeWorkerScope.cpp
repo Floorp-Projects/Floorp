@@ -9,7 +9,7 @@
 
 #include "nsXPCOM.h"
 #include "nsNativeCharsetUtils.h"
-#include "nsStringGlue.h"
+#include "nsString.h"
 
 #include "WorkerPrivate.h"
 

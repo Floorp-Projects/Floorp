@@ -11,6 +11,7 @@
 #include "prmem.h"
 #include "prenv.h"
 #include "prerror.h"
+#include "prio.h"
 #include <sys/stat.h>
 #include "nsString.h"
 #include "nsIFile.h"

@@ -3,12 +3,11 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "nsISupports.idl"
 #include "nsIProperties.idl"
-#include "nsISimpleEnumerator.idl"
 
 interface nsIInputStream;
 interface nsIOutputStream;
+interface nsISimpleEnumerator;
 
 [scriptable, uuid(283EE646-1AEF-11D4-98B3-00C04fA0CE9A)]
 interface nsIPropertyElement : nsISupports {

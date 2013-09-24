@@ -11,6 +11,8 @@
 # include <sys/mman.h>
 #endif
 
+#include "jslibmath.h"
+#include "jsmath.h"
 #ifdef XP_WIN
 # include "jswin.h"
 #endif
@@ -40,6 +42,7 @@ AsmJSModule::initHeap(Handle<ArrayBufferObject*> heap, JSContext *cx)
             JSC::X86Assembler::setPointer(access.patchLengthAt(code_), heapLength);
         void *addr = access.patchOffsetAt(code_);
         uint32_t disp = reinterpret_cast<uint32_t>(JSC::X86Assembler::getPointer(addr));
+        JS_ASSERT(disp <= INT32_MAX);
         JSC::X86Assembler::setPointer(addr, (void *)(heapOffset + disp));
     }
 #elif defined(JS_CPU_ARM)
@@ -109,8 +112,148 @@ AsmJSModule::allocateAndCopyCode(ExclusiveContext *cx, MacroAssembler &masm)
     return true;
 }
 
+static int32_t
+CoerceInPlace_ToInt32(JSContext *cx, MutableHandleValue val)
+{
+    int32_t i32;
+    if (!ToInt32(cx, val, &i32))
+        return false;
+    val.set(Int32Value(i32));
+
+    return true;
+}
+
+static int32_t
+CoerceInPlace_ToNumber(JSContext *cx, MutableHandleValue val)
+{
+    double dbl;
+    if (!ToNumber(cx, val, &dbl))
+        return false;
+    val.set(DoubleValue(dbl));
+
+    return true;
+}
+
+static void
+EnableActivationFromAsmJS(AsmJSActivation *activation)
+{
+    JSContext *cx = activation->cx();
+    Activation *act = cx->mainThread().activation();
+    JS_ASSERT(act->isJit());
+    act->asJit()->setActive(cx);
+}
+
+static void
+DisableActivationFromAsmJS(AsmJSActivation *activation)
+{
+    JSContext *cx = activation->cx();
+    Activation *act = cx->mainThread().activation();
+    JS_ASSERT(act->isJit());
+    act->asJit()->setActive(cx, false);
+}
+
+namespace js {
+
+// Defined in AsmJS.cpp:
+
+int32_t
+InvokeFromAsmJS_Ignore(JSContext *cx, int32_t exitIndex, int32_t argc, Value *argv);
+
+int32_t
+InvokeFromAsmJS_ToInt32(JSContext *cx, int32_t exitIndex, int32_t argc, Value *argv);
+
+int32_t
+InvokeFromAsmJS_ToNumber(JSContext *cx, int32_t exitIndex, int32_t argc, Value *argv);
+
+}
+
+#if defined(JS_CPU_ARM)
+extern "C" {
+
+extern int
+__aeabi_idivmod(int, int);
+
+extern int
+__aeabi_uidivmod(int, int);
+
+}
+#endif
+
+template <class F>
+static inline void *
+FuncCast(F *pf)
+{
+    return JS_FUNC_TO_DATA_PTR(void *, pf);
+}
+
+static void *
+AddressOf(AsmJSImmKind kind, ExclusiveContext *cx)
+{
+    switch (kind) {
+      case AsmJSImm_Runtime:
+        return cx->runtimeAddressForJit();
+      case AsmJSImm_StackLimit:
+        return cx->stackLimitAddress(StackForUntrustedScript);
+      case AsmJSImm_ReportOverRecursed:
+        return FuncCast<void (JSContext*)>(js_ReportOverRecursed);
+      case AsmJSImm_HandleExecutionInterrupt:
+        return FuncCast(js_HandleExecutionInterrupt);
+      case AsmJSImm_InvokeFromAsmJS_Ignore:
+        return FuncCast(InvokeFromAsmJS_Ignore);
+      case AsmJSImm_InvokeFromAsmJS_ToInt32:
+        return FuncCast(InvokeFromAsmJS_ToInt32);
+      case AsmJSImm_InvokeFromAsmJS_ToNumber:
+        return FuncCast(InvokeFromAsmJS_ToNumber);
+      case AsmJSImm_CoerceInPlace_ToInt32:
+        return FuncCast(CoerceInPlace_ToInt32);
+      case AsmJSImm_CoerceInPlace_ToNumber:
+        return FuncCast(CoerceInPlace_ToNumber);
+      case AsmJSImm_ToInt32:
+        return FuncCast<int32_t (double)>(js::ToInt32);
+      case AsmJSImm_EnableActivationFromAsmJS:
+        return FuncCast(EnableActivationFromAsmJS);
+      case AsmJSImm_DisableActivationFromAsmJS:
+        return FuncCast(DisableActivationFromAsmJS);
+#if defined(JS_CPU_ARM)
+      case AsmJSImm_aeabi_idivmod:
+        return FuncCast(__aeabi_idivmod);
+      case AsmJSImm_aeabi_uidivmod:
+        return FuncCast(__aeabi_uidivmod);
+#endif
+      case AsmJSImm_ModD:
+        return FuncCast(NumberMod);
+      case AsmJSImm_SinD:
+        return FuncCast<double (double)>(sin);
+      case AsmJSImm_CosD:
+        return FuncCast<double (double)>(cos);
+      case AsmJSImm_TanD:
+        return FuncCast<double (double)>(tan);
+      case AsmJSImm_ASinD:
+        return FuncCast<double (double)>(asin);
+      case AsmJSImm_ACosD:
+        return FuncCast<double (double)>(acos);
+      case AsmJSImm_ATanD:
+        return FuncCast<double (double)>(atan);
+      case AsmJSImm_CeilD:
+        return FuncCast<double (double)>(ceil);
+      case AsmJSImm_FloorD:
+        return FuncCast<double (double)>(floor);
+      case AsmJSImm_ExpD:
+        return FuncCast<double (double)>(exp);
+      case AsmJSImm_LogD:
+        return FuncCast<double (double)>(log);
+      case AsmJSImm_PowD:
+        return FuncCast(ecmaPow);
+      case AsmJSImm_ATan2D:
+        return FuncCast(ecmaAtan2);
+    }
+
+    MOZ_ASSUME_UNREACHABLE("Bad AsmJSImmKind");
+    return NULL;
+}
+
 void
-AsmJSModule::staticallyLink(const AsmJSStaticLinkData &linkData)
+AsmJSModule::staticallyLink(const AsmJSStaticLinkData &linkData, ExclusiveContext *cx)
 {
     // Process AsmJSStaticLinkData:
 
@@ -119,6 +262,13 @@ AsmJSModule::staticallyLink(const AsmJSStaticLinkData &linkData)
     for (size_t i = 0; i < linkData.relativeLinks.length(); i++) {
         AsmJSStaticLinkData::RelativeLink link = linkData.relativeLinks[i];
         *(void **)(code_ + link.patchAtOffset) = code_ + link.targetOffset;
+    }
+
+    for (size_t i = 0; i < linkData.absoluteLinks.length(); i++) {
+        AsmJSStaticLinkData::AbsoluteLink link = linkData.absoluteLinks[i];
+        Assembler::patchDataWithValueCheck(code_ + link.patchAt.offset(),
+                                           PatchedImmPtr(AddressOf(link.target, cx)),
+                                           PatchedImmPtr((void*)-1));
     }
 
     // Initialize global data segment

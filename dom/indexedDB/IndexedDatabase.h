@@ -15,7 +15,7 @@
 #include "nsCOMPtr.h"
 #include "nsDebug.h"
 #include "nsError.h"
-#include "nsStringGlue.h"
+#include "nsString.h"
 #include "nsTArray.h"
 #include "nsIInputStream.h"
 

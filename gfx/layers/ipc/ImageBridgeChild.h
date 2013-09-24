@@ -114,7 +114,7 @@ public:
    */
   static void StartUp();
 
-  static PImageBridgeChild*
+  static bool
   StartUpInChildProcess(Transport* aTransport, ProcessId aOtherProcess);
 
   /**

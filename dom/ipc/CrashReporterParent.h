@@ -5,7 +5,6 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 #include "mozilla/dom/PCrashReporterParent.h"
 #include "mozilla/dom/TabMessageUtils.h"
-#include "nsXULAppAPI.h"
 #include "nsIFile.h"
 #ifdef MOZ_CRASHREPORTER
 #include "nsExceptionHandler.h"

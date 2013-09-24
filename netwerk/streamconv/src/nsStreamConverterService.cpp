@@ -32,6 +32,7 @@
 #include "nsTArray.h"
 #include "nsServiceManagerUtils.h"
 #include "nsHashtable.h"
+#include "nsISimpleEnumerator.h"
 
 ///////////////////////////////////////////////////////////////////
 // Breadth-First-Search (BFS) algorithm state classes and types.
