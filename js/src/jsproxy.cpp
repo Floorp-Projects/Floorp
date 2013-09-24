@@ -76,7 +76,7 @@ js::assertEnteredPolicy(JSContext *cx, JSObject *proxy, jsid id)
 }
 #endif
 
-BaseProxyHandler::BaseProxyHandler(void *family)
+BaseProxyHandler::BaseProxyHandler(const void *family)
   : mFamily(family),
     mHasPrototype(false),
     mHasPolicy(false)
@@ -524,7 +524,7 @@ DirectProxyHandler::weakmapKeyDelegate(JSObject *proxy)
     return UncheckedUnwrap(proxy);
 }
 
-DirectProxyHandler::DirectProxyHandler(void *family)
+DirectProxyHandler::DirectProxyHandler(const void *family)
   : BaseProxyHandler(family)
 {
 }
@@ -785,7 +785,8 @@ class ScriptedIndirectProxyHandler : public BaseProxyHandler
 
 } /* anonymous namespace */
 
-static int sScriptedIndirectProxyHandlerFamily = 0;
+// This variable exists solely to provide a unique address for use as an identifier.
+static const char sScriptedIndirectProxyHandlerFamily = 0;
 
 ScriptedIndirectProxyHandler::ScriptedIndirectProxyHandler()
         : BaseProxyHandler(&sScriptedIndirectProxyHandlerFamily)
@@ -1083,7 +1084,8 @@ class ScriptedDirectProxyHandler : public DirectProxyHandler {
     static ScriptedDirectProxyHandler singleton;
 };
 
-static int sScriptedDirectProxyHandlerFamily = 0;
+// This variable exists solely to provide a unique address for use as an identifier.
+static const char sScriptedDirectProxyHandlerFamily = 0;
 
 // Aux.2 FromGenericPropertyDescriptor(Desc)
 static bool
