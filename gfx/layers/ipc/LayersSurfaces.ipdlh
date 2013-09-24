@@ -42,6 +42,11 @@ struct SurfaceDescriptorD3D9 {
   uintptr_t texture;
 };
 
+struct SurfaceDescriptorDIB {
+  // gfxWindowsSurface*
+  uintptr_t surface;
+};
+
 struct SurfaceDescriptorD3D10 {
   WindowsHandle handle;
   bool hasAlpha;
@@ -167,6 +172,7 @@ union SurfaceDescriptor {
   SurfaceDescriptorShmem;
   SurfaceDescriptorMemory;
   SurfaceDescriptorD3D9;
+  SurfaceDescriptorDIB;
   SurfaceDescriptorD3D10;
   SurfaceDescriptorX11;
   SharedTextureDescriptor;
