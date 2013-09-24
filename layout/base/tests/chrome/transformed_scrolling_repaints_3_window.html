@@ -53,7 +53,11 @@ function startTest() {
 
   function nextIteration() {
     var painted = utils.checkAndClearPaintedState(e);
-    is(painted, false, "Fully-visible scrolled element should not have been painted");
+    if (isLinux && is64) {
+      todo(false, "Fully-visible scrolled element should not have been painted (random on Linux-64)");
+    } else {
+      is(painted, false, "Fully-visible scrolled element should not have been painted");
+    }
     if (++iterations == 10) {
       SpecialPowers.clearUserPref(smoothScrollPref);
       SimpleTest.finish();
