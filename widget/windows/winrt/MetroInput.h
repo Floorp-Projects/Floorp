@@ -145,8 +145,8 @@ public:
   HRESULT OnRightTapped(IGestureRecognizer* aSender,
                         IRightTappedEventArgs* aArgs);
 
-  void HandleSingleTap(const mozilla::LayoutDeviceIntPoint& aPoint);
-  void HandleLongTap(const mozilla::LayoutDeviceIntPoint& aPoint);
+  void HandleSingleTap(const Point& aPoint);
+  void HandleLongTap(const Point& aPoint);
 
 private:
   Microsoft::WRL::ComPtr<ICoreWindow> mWindow;
@@ -159,7 +159,13 @@ private:
   void RegisterInputEvents();
   void UnregisterInputEvents();
 
+  // Hit testing for chrome content
+  bool mChromeHitTestCacheForTouch;
+  bool HitTestChrome(const LayoutDeviceIntPoint& pt);
+
   // Event processing helpers.  See function definitions for more info.
+  void TransformRefPoint(const Point& aPosition,
+                         LayoutDeviceIntPoint& aRefPointOut);
   void OnPointerNonTouch(IPointerPoint* aPoint);
   void InitGeckoMouseEventFromPointerPoint(nsMouseEvent* aEvent,
                                            IPointerPoint* aPoint);
