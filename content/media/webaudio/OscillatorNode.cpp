@@ -506,6 +506,7 @@ OscillatorNode::OscillatorNode(AudioContext* aContext)
   OscillatorNodeEngine* engine = new OscillatorNodeEngine(this, aContext->Destination());
   mStream = aContext->Graph()->CreateAudioNodeStream(engine, MediaStreamGraph::SOURCE_STREAM);
   engine->SetSourceStream(static_cast<AudioNodeStream*> (mStream.get()));
+  mStream->AddMainThreadListener(this);
 }
 
 OscillatorNode::~OscillatorNode()
