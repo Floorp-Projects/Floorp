@@ -310,6 +310,16 @@ private:
   nsRefPtr<T> mKey;
 };
 
+template <class T>
+inline void
+ImplCycleCollectionTraverse(nsCycleCollectionTraversalCallback& aCallback,
+                            nsRefPtrHashKey<T>& aField,
+                            const char* aName,
+                            uint32_t aFlags = 0)
+{
+  CycleCollectionNoteChild(aCallback, aField.GetKey(), aName, aFlags);
+}
+
 /**
  * hashkey wrapper using T* KeyType
  *
