@@ -39,8 +39,8 @@ enum nsLinkState {
 
 // IID for the nsIContent interface
 #define NS_ICONTENT_IID \
-{ 0x4b05faf2, 0x12e0, 0x4f56, \
-  { 0xb5, 0x2e, 0x3e, 0xb6, 0xad, 0x9c, 0x6e, 0xbe } }
+{ 0xafa52dfb, 0x9d92, 0x4592, \
+  { 0xa1, 0xd2, 0x08, 0xc4, 0x92, 0x89, 0x7f, 0xce } }
 
 /**
  * A node of content in a document's content model. This interface
@@ -919,7 +919,7 @@ public:
   }
 
   // Overloaded from nsINode
-  virtual already_AddRefed<nsIURI> GetBaseURI() const MOZ_OVERRIDE;
+  virtual already_AddRefed<nsIURI> GetBaseURI(bool aTryUseXHRDocBaseURI = false) const MOZ_OVERRIDE;
 
   virtual nsresult PreHandleEvent(
                      mozilla::EventChainPreVisitor& aVisitor) MOZ_OVERRIDE;

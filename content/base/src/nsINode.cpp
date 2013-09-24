@@ -609,6 +609,23 @@ nsINode::GetBaseURI(nsAString &aURI) const
 }
 
 void
+nsINode::GetBaseURIFromJS(nsAString& aURI) const
+{
+  nsCOMPtr<nsIURI> baseURI = GetBaseURI(nsContentUtils::IsCallerChrome());
+  nsAutoCString spec;
+  if (baseURI) {
+    baseURI->GetSpec(spec);
+  }
+  CopyUTF8toUTF16(spec, aURI);
+}
+
+already_AddRefed<nsIURI>
+nsINode::GetBaseURIObject() const
+{
+  return GetBaseURI(true);
+}
+
+void
 nsINode::LookupPrefix(const nsAString& aNamespaceURI, nsAString& aPrefix)
 {
   Element *element = GetNameSpaceElement();
