@@ -1002,9 +1002,11 @@ jsdScript::CreatePPLineMap()
         }
 
         JS::Anchor<JSString *> kungFuDeathGrip(jsstr);
-        const char *argnames[] = {"arg1", "arg2", "arg3", "arg4", 
-                                  "arg5", "arg6", "arg7", "arg8",
-                                  "arg9", "arg10", "arg11", "arg12" };
+        static const char *const argnames[] = {
+            "arg1", "arg2", "arg3", "arg4",
+            "arg5", "arg6", "arg7", "arg8",
+            "arg9", "arg10", "arg11", "arg12"
+        };
         fun = JS_CompileUCFunction (cx, obj, "ppfun", nargs, argnames, chars,
                                     length, "x-jsd:ppbuffer?type=function", 3);
         if (!fun || !(script = JS_GetFunctionScript(cx, fun)))
