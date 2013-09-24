@@ -73,7 +73,7 @@ static void do_qt_pixmap_unref (void *data)
     delete pmap;
 }
 
-static gfxImageFormat sOffscreenFormat = gfxASurface::ImageFormatRGB24;
+static gfxImageFormat sOffscreenFormat = gfxImageFormatRGB24;
 
 #ifndef MOZ_PANGO
 typedef nsDataHashtable<nsStringHashKey, nsRefPtr<FontFamily> > FontTable;
@@ -134,7 +134,7 @@ gfxQtPlatform::gfxQtPlatform()
     // around this by checking what type of graphicssystem a test QPixmap uses.
     QPixmap pixmap(1, 1);
     if (pixmap.depth() == 16) {
-        sOffscreenFormat = gfxASurface::ImageFormatRGB16_565;
+        sOffscreenFormat = gfxImageFormatRGB16_565;
     }
     mScreenDepth = pixmap.depth();
 #if (QT_VERSION < QT_VERSION_CHECK(4,8,0))
@@ -211,11 +211,11 @@ gfxQtPlatform::GetXScreen(QWidget* aWindow)
 
 already_AddRefed<gfxASurface>
 gfxQtPlatform::CreateOffscreenSurface(const gfxIntSize& size,
-                                      gfxASurface::gfxContentType contentType)
+                                      gfxContentType contentType)
 {
     nsRefPtr<gfxASurface> newSurface = nullptr;
 
-    gfxASurface::gfxImageFormat imageFormat = OptimalFormatForContent(contentType);
+    gfxImageFormat imageFormat = OptimalFormatForContent(contentType);
 
 #ifdef CAIRO_HAS_QT_SURFACE
     if (mRenderMode == RENDER_QPAINTER) {

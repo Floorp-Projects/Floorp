@@ -39,7 +39,7 @@ class nsShmImage {
     typedef mozilla::ipc::SharedMemorySysV SharedMemorySysV;
 
 public:
-    typedef gfxASurface::gfxImageFormat Format;
+    typedef gfxImageFormat Format;
 
     static bool UseShm();
     static already_AddRefed<nsShmImage>

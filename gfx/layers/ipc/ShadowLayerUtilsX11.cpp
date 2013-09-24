@@ -48,7 +48,7 @@ UsingXCompositing()
   if (!PR_GetEnv("MOZ_LAYERS_ENABLE_XLIB_SURFACES")) {
       return false;
   }
-  return (gfxASurface::SurfaceTypeXlib ==
+  return (gfxSurfaceTypeXlib ==
           gfxPlatform::GetPlatform()->ScreenReferenceSurface()->GetType());
 }
 
@@ -116,7 +116,7 @@ SurfaceDescriptorX11::OpenForeign() const
 
 bool
 ISurfaceAllocator::PlatformAllocSurfaceDescriptor(const gfxIntSize& aSize,
-                                                  gfxASurface::gfxContentType aContent,
+                                                  gfxContentType aContent,
                                                   uint32_t aCaps,
                                                   SurfaceDescriptor* aBuffer)
 {
@@ -135,7 +135,7 @@ ISurfaceAllocator::PlatformAllocSurfaceDescriptor(const gfxIntSize& aSize,
   gfxPlatform* platform = gfxPlatform::GetPlatform();
   nsRefPtr<gfxASurface> buffer = platform->CreateOffscreenSurface(aSize, aContent);
   if (!buffer ||
-      buffer->GetType() != gfxASurface::SurfaceTypeXlib) {
+      buffer->GetType() != gfxSurfaceTypeXlib) {
     NS_ERROR("creating Xlib front/back surfaces failed!");
     return false;
   }

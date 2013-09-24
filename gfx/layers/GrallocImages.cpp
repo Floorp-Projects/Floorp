@@ -229,7 +229,7 @@ GrallocImage::GetAsSurface()
   }
 
   nsRefPtr<gfxImageSurface> imageSurface =
-    new gfxImageSurface(GetSize(), gfxASurface::ImageFormatRGB16_565);
+    new gfxImageSurface(GetSize(), gfxImageFormatRGB16_565);
 
   uint32_t width = GetSize().width;
   uint32_t height = GetSize().height;

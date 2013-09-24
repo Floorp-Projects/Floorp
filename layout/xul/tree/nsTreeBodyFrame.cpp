@@ -3525,7 +3525,7 @@ nsTreeBodyFrame::PaintImage(int32_t              aRowIndex,
 
     gfxContext* ctx = aRenderingContext.ThebesContext();
     if (opacity != 1.0f) {
-      ctx->PushGroup(gfxASurface::CONTENT_COLOR_ALPHA);
+      ctx->PushGroup(GFX_CONTENT_COLOR_ALPHA);
     }
 
     nsLayoutUtils::DrawImage(&aRenderingContext, image,
@@ -3642,7 +3642,7 @@ nsTreeBodyFrame::PaintText(int32_t              aRowIndex,
 
   gfxContext* ctx = aRenderingContext.ThebesContext();
   if (opacity != 1.0f) {
-    ctx->PushGroup(gfxASurface::CONTENT_COLOR_ALPHA);
+    ctx->PushGroup(GFX_CONTENT_COLOR_ALPHA);
   }
 
   nsLayoutUtils::DrawString(this, &aRenderingContext, text.get(), text.Length(),

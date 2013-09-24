@@ -830,14 +830,14 @@ protected:
 
   already_AddRefed<gfxASurface> GetAsSurface();
 
-  void SetOffscreenFormat(gfxASurface::gfxImageFormat aFormat) { mOffscreenFormat = aFormat; }
-  gfxASurface::gfxImageFormat GetOffscreenFormat();
+  void SetOffscreenFormat(gfxImageFormat aFormat) { mOffscreenFormat = aFormat; }
+  gfxImageFormat GetOffscreenFormat();
 
   nsAutoArrayPtr<uint8_t> mBuffer;
   uint32_t mBufferSize;
   Data mData;
   gfxIntSize mSize;
-  gfxASurface::gfxImageFormat mOffscreenFormat;
+  gfxImageFormat mOffscreenFormat;
   nsCountedRef<nsMainThreadSurfaceRef> mSurface;
   nsRefPtr<BufferRecycleBin> mRecycleBin;
 };

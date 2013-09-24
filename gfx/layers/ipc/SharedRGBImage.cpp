@@ -52,9 +52,9 @@ CreateSharedRGBImage(ImageContainer *aImageContainer,
                      nsIntSize aSize,
                      gfxImageFormat aImageFormat)
 {
-  NS_ASSERTION(aImageFormat == gfxASurface::ImageFormatARGB32 ||
-               aImageFormat == gfxASurface::ImageFormatRGB24 ||
-               aImageFormat == gfxASurface::ImageFormatRGB16_565,
+  NS_ASSERTION(aImageFormat == gfxImageFormatARGB32 ||
+               aImageFormat == gfxImageFormatRGB24 ||
+               aImageFormat == gfxImageFormatRGB16_565,
                "RGB formats supported only");
 
   if (!aImageContainer) {

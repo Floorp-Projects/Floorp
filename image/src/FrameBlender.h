@@ -63,7 +63,7 @@ public:
 
   void SetSize(nsIntSize aSize) { mSize = aSize; }
 
-  size_t SizeOfDecodedWithComputedFallbackIfHeap(gfxASurface::MemoryLocation aLocation,
+  size_t SizeOfDecodedWithComputedFallbackIfHeap(gfxMemoryLocation aLocation,
                                                  mozilla::MallocSizeOf aMallocSizeOf) const;
 
   void ResetAnimation();

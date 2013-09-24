@@ -212,7 +212,7 @@ protected:
                                      uint32_t aHeight, uint32_t aDepth);
   HBITMAP               CreateBitmapRGB(uint8_t* aImageData,
                                         uint32_t aWidth, uint32_t aHeight);
-  HBITMAP               CreateTransparencyMask(gfxASurface::gfxImageFormat format,
+  HBITMAP               CreateTransparencyMask(gfxImageFormat format,
                                                uint8_t* aImageData,
                                                uint32_t aWidth, uint32_t aHeight);
   static bool           EventIsInsideWindow(nsWindow* aWindow); 

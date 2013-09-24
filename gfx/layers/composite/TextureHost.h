@@ -675,7 +675,7 @@ public:
    * Ensure that a buffer of the given size/type has been allocated so that
    * we can update it using Update and/or CopyTo.
    */
-  virtual void EnsureBuffer(const nsIntSize& aSize, gfxASurface::gfxContentType aType)
+  virtual void EnsureBuffer(const nsIntSize& aSize, gfxContentType aType)
   {
     NS_RUNTIMEABORT("DeprecatedTextureHost doesn't support EnsureBuffer");
   }

@@ -220,7 +220,7 @@ protected:
   BasicTiledLayerTile GetPlaceholderTile() const { return BasicTiledLayerTile(); }
 
 private:
-  gfxASurface::gfxContentType GetContentType() const;
+  gfxContentType GetContentType() const;
   ClientTiledThebesLayer* mThebesLayer;
   ClientLayerManager* mManager;
   LayerManager::DrawThebesLayerCallback mCallback;
