@@ -57,18 +57,20 @@ class WidgetEvent;
 class WidgetGUIEvent;
 class WidgetInputEvent;
 class InternalUIEvent;
-} // namespace mozilla
 
 // TextEvents.h
-struct nsAlternativeCharCode;
-struct nsTextRangeStyle;
-struct nsTextRange;
+struct AlternativeCharCode;
+struct TextRangeStyle;
+struct TextRange;
 
-class nsKeyEvent;
-class nsTextEvent;
-class nsCompositionEvent;
-class nsQueryContentEvent;
-class nsSelectionEvent;
+typedef TextRange* TextRangeArray;
+
+class WidgetKeyboardEvent;
+class WidgetTextEvent;
+class WidgetCompositionEvent;
+class WidgetQueryContentEvent;
+class WidgetSelectionEvent;
+} // namespace mozilla
 
 // MouseEvents.h
 class nsMouseEvent_base;
@@ -104,9 +106,18 @@ class nsPluginEvent;
 class nsMutationEvent;
 
 // TODO: Remove following typedefs
-typedef mozilla::WidgetEvent      nsEvent;
-typedef mozilla::WidgetGUIEvent   nsGUIEvent;
-typedef mozilla::WidgetInputEvent nsInputEvent;
-typedef mozilla::InternalUIEvent  nsUIEvent;
+typedef mozilla::WidgetEvent              nsEvent;
+typedef mozilla::WidgetGUIEvent           nsGUIEvent;
+typedef mozilla::WidgetInputEvent         nsInputEvent;
+typedef mozilla::InternalUIEvent          nsUIEvent;
+typedef mozilla::AlternativeCharCode      nsAlternativeCharCode;
+typedef mozilla::WidgetKeyboardEvent      nsKeyEvent;
+typedef mozilla::TextRangeStyle           nsTextRangeStyle;
+typedef mozilla::TextRange                nsTextRange;
+typedef mozilla::TextRangeArray           nsTextRangeArray;
+typedef mozilla::WidgetTextEvent          nsTextEvent;
+typedef mozilla::WidgetCompositionEvent   nsCompositionEvent;
+typedef mozilla::WidgetQueryContentEvent  nsQueryContentEvent;
+typedef mozilla::WidgetSelectionEvent     nsSelectionEvent;
 
 #endif // mozilla_EventForwards_h__
