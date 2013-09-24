@@ -149,7 +149,8 @@ nsNullPrincipal::GetHashValue(uint32_t *aResult)
 NS_IMETHODIMP
 nsNullPrincipal::GetSecurityPolicy(void** aSecurityPolicy)
 {
-  // We don't actually do security policy caching.
+  // We don't actually do security policy caching.  And it's not like anyone
+  // can set a security policy for us anyway.
   *aSecurityPolicy = nullptr;
   return NS_OK;
 }
@@ -157,7 +158,8 @@ nsNullPrincipal::GetSecurityPolicy(void** aSecurityPolicy)
 NS_IMETHODIMP
 nsNullPrincipal::SetSecurityPolicy(void* aSecurityPolicy)
 {
-  // We don't actually do security policy caching.
+  // We don't actually do security policy caching.  And it's not like anyone
+  // can set a security policy for us anyway.
   return NS_OK;
 }
 
@@ -170,20 +172,16 @@ nsNullPrincipal::GetURI(nsIURI** aURI)
 NS_IMETHODIMP
 nsNullPrincipal::GetCsp(nsIContentSecurityPolicy** aCsp)
 {
-  NS_IF_ADDREF(*aCsp = mCSP);
+  // CSP on a null principal makes no sense
+  *aCsp = nullptr;
   return NS_OK;
 }
 
 NS_IMETHODIMP
 nsNullPrincipal::SetCsp(nsIContentSecurityPolicy* aCsp)
 {
-  // If CSP was already set, it should not be destroyed!  Instead, it should
-  // get set anew when a new principal is created.
-  if (mCSP)
-    return NS_ERROR_ALREADY_INITIALIZED;
-
-  mCSP = aCsp;
-  return NS_OK;
+  // CSP on a null principal makes no sense
+  return NS_ERROR_NOT_AVAILABLE;
 }
 
 NS_IMETHODIMP
