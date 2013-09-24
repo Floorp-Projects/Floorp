@@ -8,7 +8,7 @@
 #define mozilla_imagelib_FrameBlender_h_
 
 #include "mozilla/MemoryReporting.h"
-#include "gfxASurface.h"
+#include "gfxTypes.h"
 #include "FrameSequence.h"
 #include "nsCOMPtr.h"
 

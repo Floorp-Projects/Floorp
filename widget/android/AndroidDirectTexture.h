@@ -6,7 +6,7 @@
 #ifndef AndroidDirectTexture_h_
 #define AndroidDirectTexture_h_
 
-#include "gfxASurface.h"
+#include "gfxTypes.h"
 #include "mozilla/Mutex.h"
 #include "AndroidGraphicBuffer.h"
 

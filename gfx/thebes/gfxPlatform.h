@@ -14,7 +14,6 @@
 #include "nsAutoPtr.h"
 
 #include "gfxTypes.h"
-#include "gfxASurface.h"
 #include "gfxColor.h"
 #include "nsRect.h"
 
@@ -31,6 +30,7 @@
 #undef OS2EMX_PLAIN_CHAR
 #endif
 
+class gfxASurface;
 class gfxImageSurface;
 class gfxFont;
 class gfxFontGroup;

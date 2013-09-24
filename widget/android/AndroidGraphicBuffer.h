@@ -6,7 +6,7 @@
 #ifndef AndroidGraphicBuffer_h_
 #define AndroidGraphicBuffer_h_
 
-#include "gfxASurface.h"
+#include "gfxTypes.h"
 
 typedef void* EGLImageKHR;
 typedef void* EGLClientBuffer;

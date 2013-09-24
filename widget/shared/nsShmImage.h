@@ -16,7 +16,7 @@
 #ifdef MOZ_HAVE_SHMIMAGE
 
 #include "nsIWidget.h"
-#include "gfxASurface.h"
+#include "gfxTypes.h"
 #include "nsAutoPtr.h"
 
 #include "mozilla/X11Util.h"
@@ -32,6 +32,7 @@
 
 class QRect;
 class QWidget;
+class gfxASurface;
 
 class nsShmImage {
     NS_INLINE_DECL_REFCOUNTING(nsShmImage)
