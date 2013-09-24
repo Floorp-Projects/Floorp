@@ -197,7 +197,7 @@ class B2GDeviceMochitest(B2GMochitest):
         d['profilePath'] = tempfile.mkdtemp()
         if d.get('httpdPath') is None:
             d['httpdPath'] = os.path.abspath(os.path.join(self.local_binary_dir, 'components'))
-        self.server = MochitestServer(None, d)
+        self.server = MochitestServer(d)
         self.server.start()
 
         if (options.pidFile != ""):

@@ -14,7 +14,7 @@
 #include "xpt_struct.h"
 #include "nsReadableUtils.h"
 #include "nsMemory.h"
-#include "nsStringGlue.h"
+#include "nsString.h"
 #include "nsCRTGlue.h"
 
 /***************************************************************************/

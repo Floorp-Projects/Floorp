@@ -13,7 +13,7 @@ JAVAFILES = \
   WatcherService.java \
   $(NULL)
 
-RES_FILES = \
+ANDROID_RESFILES = \
   res/drawable-hdpi/icon.png \
   res/drawable-hdpi/ateamlogo.png \
   res/drawable-ldpi/icon.png \

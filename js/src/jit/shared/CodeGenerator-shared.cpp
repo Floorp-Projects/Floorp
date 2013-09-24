@@ -706,7 +706,10 @@ CodeGeneratorShared::visitOutOfLineTruncateSlow(OutOfLineTruncateSlow *ool)
 
     masm.setupUnalignedABICall(1, dest);
     masm.passABIArg(src);
-    masm.callWithABI(JS_FUNC_TO_DATA_PTR(void *, js::ToInt32));
+    if (gen->compilingAsmJS())
+        masm.callWithABI(AsmJSImm_ToInt32);
+    else
+        masm.callWithABI(JS_FUNC_TO_DATA_PTR(void *, js::ToInt32));
     masm.storeCallResult(dest);
 
     restoreVolatile(dest);

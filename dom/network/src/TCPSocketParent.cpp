@@ -14,6 +14,7 @@
 #include "mozilla/net/PNeckoParent.h"
 #include "mozilla/dom/ContentParent.h"
 #include "mozilla/dom/TabParent.h"
+#include "nsIScriptSecurityManager.h"
 
 namespace IPC {
 

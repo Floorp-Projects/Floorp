@@ -31,7 +31,7 @@ public:
     void Main();
 
 protected:
-    virtual PTestBridgeMainSubParent*
+    virtual bool
     AllocPTestBridgeMainSubParent(Transport* transport,
                                   ProcessId otherProcess) MOZ_OVERRIDE;
 
@@ -105,7 +105,7 @@ public:
 protected:
     virtual bool RecvPing() MOZ_OVERRIDE;
 
-    virtual PTestBridgeMainSubChild*
+    virtual bool
     AllocPTestBridgeMainSubChild(Transport* transport,
                                  ProcessId otherProcess) MOZ_OVERRIDE;
 

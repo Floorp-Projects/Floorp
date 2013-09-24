@@ -53,21 +53,29 @@ add_task(function test_simple_async() {
   do_print("Testing various combinations of a phase with a single condition");
   for (let arg of [undefined, null, "foo", 100, new Error("BOOM")]) {
     for (let resolution of [arg, Promise.reject(arg)]) {
-      // Asynchronous phase
-      do_print("Asynchronous test with " + arg + ", " + resolution);
-      let topic = getUniqueTopic();
-      let outParam = { isFinished: false };
-      AsyncShutdown._getPhase(topic).addBlocker(
-        "Async test",
-          () => longRunningAsyncTask(resolution, outParam)
-      );
-      do_check_false(outParam.isFinished);
-      Services.obs.notifyObservers(null, topic, null);
-      do_check_true(outParam.isFinished);
+      for (let success of [false, true]) {
+        // Asynchronous phase
+        do_print("Asynchronous test with " + arg + ", " + resolution);
+        let topic = getUniqueTopic();
+        let outParam = { isFinished: false };
+        AsyncShutdown._getPhase(topic).addBlocker(
+          "Async test",
+            function() {
+              if (success) {
+                return longRunningAsyncTask(resolution, outParam);
+              } else {
+                throw resolution;
+              }
+            }
+        );
+        do_check_false(outParam.isFinished);
+        Services.obs.notifyObservers(null, topic, null);
+        do_check_eq(outParam.isFinished, success);
+      }
 
       // Synchronous phase - just test that we don't throw/freeze
       do_print("Synchronous test with " + arg + ", " + resolution);
-      topic = getUniqueTopic();
+      let topic = getUniqueTopic();
       AsyncShutdown._getPhase(topic).addBlocker(
         "Sync test",
         resolution

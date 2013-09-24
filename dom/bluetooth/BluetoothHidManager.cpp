@@ -17,6 +17,7 @@
 #include "mozilla/Services.h"
 #include "mozilla/StaticPtr.h"
 #include "nsIObserverService.h"
+#include "MainThreadUtils.h"
 
 using namespace mozilla;
 USING_BLUETOOTH_NAMESPACE

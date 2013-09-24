@@ -95,7 +95,13 @@ this.UserAgentUpdates = {
       let file = FileUtils.getFile(dir, [FILE_UPDATES], true).path;
       // tryNext returns promise to read file under dir and parse it
       let tryNext = () => OS.File.read(file).then(
-        (bytes) => JSON.parse(gDecoder.decode(bytes))
+        (bytes) => {
+          let update = JSON.parse(gDecoder.decode(bytes));
+          if (!update) {
+            throw new Error("invalid update");
+          }
+          return update;
+        }
       );
       // try to load next one if the previous load failed
       return prevLoad ? prevLoad.then(null, tryNext) : tryNext();
@@ -170,7 +176,10 @@ this.UserAgentUpdates = {
     request.overrideMimeType("application/json");
     request.responseType = "json";
 
-    request.addEventListener("load", function() success(request.response));
+    request.addEventListener("load", function() {
+      let response = request.response;
+      response ? success(response) : error();
+    });
     request.addEventListener("error", error);
     request.send();
   },

@@ -111,6 +111,10 @@ class MacroAssemblerX64 : public MacroAssemblerX86Shared
     void call(ImmPtr target) {
         call(ImmWord(uintptr_t(target.value)));
     }
+    void call(AsmJSImmPtr target) {
+        mov(target, rax);
+        call(rax);
+    }
 
     // Refers to the upper 32 bits of a 64-bit Value operand.
     // On x86_64, the upper 32 bits do not necessarily only contain the type.
@@ -545,6 +549,11 @@ class MacroAssemblerX64 : public MacroAssemblerX86Shared
             branchPtr(cond, Operand(ScratchReg, 0x0), ptr, label);
         }
     }
+    void branchPtr(Condition cond, const AsmJSAbsoluteAddress &addr, const Register &ptr, Label *label) {
+        JS_ASSERT(ptr != ScratchReg);
+        mov(AsmJSImmPtr(addr.kind()), ScratchReg);
+        branchPtr(cond, Operand(ScratchReg, 0x0), ptr, label);
+    }
 
     void branchPrivatePtr(Condition cond, Address lhs, ImmPtr ptr, Label *label) {
         branchPtr(cond, lhs, ImmWord(uintptr_t(ptr.value) >> 1), label);
@@ -609,6 +618,9 @@ class MacroAssemblerX64 : public MacroAssemblerX86Shared
         mov(imm, dest);
     }
     void movePtr(ImmPtr imm, Register dest) {
+        mov(imm, dest);
+    }
+    void movePtr(AsmJSImmPtr imm, const Register &dest) {
         mov(imm, dest);
     }
     void movePtr(ImmGCPtr imm, Register dest) {
@@ -1137,6 +1149,7 @@ class MacroAssemblerX64 : public MacroAssemblerX86Shared
   public:
     // Emits a call to a C/C++ function, resolving all argument moves.
     void callWithABI(void *fun, Result result = GENERAL);
+    void callWithABI(AsmJSImmPtr imm, Result result = GENERAL);
     void callWithABI(Address fun, Result result = GENERAL);
 
     void handleFailureWithHandler(void *handler);

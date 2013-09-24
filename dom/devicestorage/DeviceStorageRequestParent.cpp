@@ -13,6 +13,7 @@
 #include "nsProxyRelease.h"
 #include "AppProcessChecker.h"
 #include "mozilla/Preferences.h"
+#include "nsNetCID.h"
 
 namespace mozilla {
 namespace dom {

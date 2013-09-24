@@ -154,9 +154,13 @@ nsSystemInfo::Init()
 #endif
 
 #ifdef MOZ_WIDGET_GONK
-    char sdk[PROP_VALUE_MAX];
+    char sdk[PROP_VALUE_MAX], characteristics[PROP_VALUE_MAX];
     if (__system_property_get("ro.build.version.sdk", sdk))
       android_sdk_version = atoi(sdk);
+    if (__system_property_get("ro.build.characteristics", characteristics)) {
+      if (!strcmp(characteristics, "tablet"))
+        SetPropertyAsBool(NS_LITERAL_STRING("tablet"), true);
+    }
 #endif
 
     return NS_OK;

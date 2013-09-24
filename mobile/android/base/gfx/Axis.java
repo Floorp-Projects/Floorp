@@ -144,6 +144,8 @@ abstract class Axis {
     protected abstract float getViewportLength();
     protected abstract float getPageStart();
     protected abstract float getPageLength();
+    protected abstract float getMarginStart();
+    protected abstract float getMarginEnd();
     protected abstract boolean marginsHidden();
 
     Axis(SubdocumentScrollHelper subscroller) {
@@ -377,11 +379,11 @@ abstract class Axis {
         // getOverscroll which doesn't take into account any new displacment being applied.
         // If we using a subscroller, we don't want to alter the scrolling being done
         if (getOverScrollMode() == View.OVER_SCROLL_NEVER && !mSubscroller.scrolling()) {
-            if (mDisplacement + getOrigin() < getPageStart()) {
-                mDisplacement = getPageStart() - getOrigin();
+            if (mDisplacement + getOrigin() < getPageStart() - getMarginStart()) {
+                mDisplacement = getPageStart() - getMarginStart() - getOrigin();
                 stopFling();
-            } else if (mDisplacement + getViewportEnd() > getPageEnd()) {
-                mDisplacement = getPageEnd() - getViewportEnd();
+            } else if (mDisplacement + getViewportEnd() > getPageEnd() + getMarginEnd()) {
+                mDisplacement = getPageEnd() - getMarginEnd() - getViewportEnd();
                 stopFling();
             }
         }

@@ -609,7 +609,10 @@ CodeGeneratorARM::visitSoftDivI(LSoftDivI *ins)
     masm.setupAlignedABICall(2);
     masm.passABIArg(lhs);
     masm.passABIArg(rhs);
-    masm.callWithABI(JS_FUNC_TO_DATA_PTR(void *, __aeabi_idivmod));
+    if (gen->compilingAsmJS())
+        masm.callWithABI(AsmJSImm_aeabi_idivmod);
+    else
+        masm.callWithABI(JS_FUNC_TO_DATA_PTR(void *, __aeabi_idivmod));
     // idivmod returns the quotient in r0, and the remainder in r1.
     if (!mir->isTruncated()) {
         JS_ASSERT(mir->fallible());
@@ -767,7 +770,10 @@ CodeGeneratorARM::visitSoftModI(LSoftModI *ins)
     masm.setupAlignedABICall(2);
     masm.passABIArg(lhs);
     masm.passABIArg(rhs);
-    masm.callWithABI(JS_FUNC_TO_DATA_PTR(void *, __aeabi_idivmod));
+    if (gen->compilingAsmJS())
+        masm.callWithABI(AsmJSImm_aeabi_idivmod);
+    else
+        masm.callWithABI(JS_FUNC_TO_DATA_PTR(void *, __aeabi_idivmod));
 
     // If X%Y == 0 and X < 0, then we *actually* wanted to return -0.0
     if (mir->isTruncated()) {
@@ -2037,7 +2043,10 @@ CodeGeneratorARM::visitSoftUDivOrMod(LSoftUDivOrMod *ins)
     masm.setupAlignedABICall(2);
     masm.passABIArg(lhs);
     masm.passABIArg(rhs);
-    masm.callWithABI(JS_FUNC_TO_DATA_PTR(void *, __aeabi_uidivmod));
+    if (gen->compilingAsmJS())
+        masm.callWithABI(AsmJSImm_aeabi_uidivmod);
+    else
+        masm.callWithABI(JS_FUNC_TO_DATA_PTR(void *, __aeabi_uidivmod));
 
     masm.bind(&afterDiv);
     return true;

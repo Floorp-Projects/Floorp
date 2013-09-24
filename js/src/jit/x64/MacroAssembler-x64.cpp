@@ -237,6 +237,15 @@ MacroAssemblerX64::callWithABI(void *fun, Result result)
     callWithABIPost(stackAdjust, result);
 }
 
+void
+MacroAssemblerX64::callWithABI(AsmJSImmPtr imm, Result result)
+{
+    uint32_t stackAdjust;
+    callWithABIPre(&stackAdjust);
+    call(imm);
+    callWithABIPost(stackAdjust, result);
+}
+
 static bool
 IsIntArgReg(Register reg)
 {

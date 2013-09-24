@@ -11,6 +11,7 @@
 #include "prmem.h"
 #include "prenv.h"
 #include "prerror.h"
+#include "prio.h"
 #include <sys/stat.h>
 #include "nsString.h"
 #include "nsIFile.h"
@@ -39,7 +40,7 @@
 #define DEFAULT_X11_PATH ""
 #endif
 
-#if defined(MOZ_WIDGET_GTK2)
+#if (MOZ_WIDGET_GTK == 2)
 
 #define PLUGIN_MAX_LEN_OF_TMP_ARR 512
 
@@ -265,7 +266,7 @@ nsresult nsPluginFile::LoadPlugin(PRLibrary **outLibrary)
 
     libSpec.value.pathname = path.get();
 
-#if defined(MOZ_WIDGET_GTK2)
+#if (MOZ_WIDGET_GTK == 2)
 
     // Normally, Mozilla isn't linked against libXt and libXext
     // since it's a Gtk/Gdk application.  On the other hand,
