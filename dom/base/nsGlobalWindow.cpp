@@ -2182,7 +2182,7 @@ nsGlobalWindow::SetNewDocument(nsIDocument* aDocument,
 
 #ifndef MOZ_DISABLE_CRYPTOLEGACY
   // clear smartcard events, our document has gone away.
-  if (mCrypto) {
+  if (mCrypto && XRE_GetProcessType() != GeckoProcessType_Content) {
     nsresult rv = mCrypto->SetEnableSmartCardEvents(false);
     NS_ENSURE_SUCCESS(rv, rv);
   }
