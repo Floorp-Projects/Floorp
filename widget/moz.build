@@ -116,6 +116,7 @@ EXPORTS.mozilla += [
     'LookAndFeel.h',
     'MouseEvents.h',
     'TextEvents.h',
+    'TouchEvents.h',
     'WidgetUtils.h',
 ]
 
