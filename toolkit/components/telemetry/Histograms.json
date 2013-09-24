@@ -3582,6 +3582,18 @@
     "n_buckets": "1000",
     "description": "The time (in milliseconds) that it took a 'detach' request to go round trip."
   },
+  "DEVTOOLS_DEBUGGER_DISPLAY_SOURCE_LOCAL_MS": {
+    "kind": "exponential",
+    "high": "10000",
+    "n_buckets": "1000",
+    "description": "The time (in milliseconds) that it took to display a selected source to the user."
+  },
+  "DEVTOOLS_DEBUGGER_DISPLAY_SOURCE_REMOTE_MS":{
+    "kind": "exponential",
+    "high": "10000",
+    "n_buckets": "1000",
+    "description": "The time (in milliseconds) that it took to display a selected source to the user."
+  },
   "WEBRTC_ICE_SUCCESS_RATE":{
     "kind": "boolean",
     "description": "The number of failed ICE Connections (0) vs. number of successful ICE connections (1)."
