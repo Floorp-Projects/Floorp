@@ -34,10 +34,21 @@ CompositingRenderTargetOGL::BindRenderTarget()
     mGL->fBindFramebuffer(LOCAL_GL_FRAMEBUFFER, mFBO);
     GLenum result = mGL->fCheckFramebufferStatus(LOCAL_GL_FRAMEBUFFER);
     if (result != LOCAL_GL_FRAMEBUFFER_COMPLETE) {
-      nsAutoCString msg;
-      msg.AppendPrintf("Framebuffer not complete -- error 0x%x, aFBOTextureTarget 0x%x, aRect.width %d, aRect.height %d",
-                        result, mInitParams.mFBOTextureTarget, mInitParams.mSize.width, mInitParams.mSize.height);
-      NS_WARNING(msg.get());
+      // The main framebuffer (0) of non-offscreen contexts
+      // might be backed by a EGLSurface that needs to be renewed.
+      if (mFBO == 0 && !mGL->IsOffscreen()) {
+        mGL->RenewSurface();
+        result = mGL->fCheckFramebufferStatus(LOCAL_GL_FRAMEBUFFER);
+      }
+      if (result != LOCAL_GL_FRAMEBUFFER_COMPLETE) {
+        nsAutoCString msg;
+        msg.AppendPrintf("Framebuffer not complete -- CheckFramebufferStatus returned 0x%x, "
+                         "GLContext=%p, IsOffscreen()=%d, mFBO=%d, aFBOTextureTarget=0x%x, "
+                         "aRect.width=%d, aRect.height=%d",
+                         result, mGL, mGL->IsOffscreen(), mFBO, mInitParams.mFBOTextureTarget,
+                         mInitParams.mSize.width, mInitParams.mSize.height);
+        NS_WARNING(msg.get());
+      }
     }
 
     mCompositor->PrepareViewport(mInitParams.mSize, mTransform);
