@@ -7,97 +7,18 @@
 #define nsGUIEvent_h__
 
 #include "mozilla/BasicEvents.h"
+#include "mozilla/ContentEvents.h"
 #include "mozilla/MouseEvents.h"
 #include "mozilla/TextEvents.h"
 #include "mozilla/TouchEvents.h"
 
 #include "nsPoint.h"
 #include "nsRect.h"
-#include "nsIDOMDataTransfer.h"
 #include "nsWeakPtr.h"
 #include "nsITransferable.h"
 
-class nsIContent;
-
 #define NS_EVENT_TYPE_NULL                   0
 #define NS_EVENT_TYPE_ALL                  1 // Not a real event type
-
-/**
- * Script error event
- */
-
-class nsScriptErrorEvent : public nsEvent
-{
-public:
-  nsScriptErrorEvent(bool isTrusted, uint32_t msg)
-    : nsEvent(isTrusted, msg, NS_SCRIPT_ERROR_EVENT),
-      lineNr(0), errorMsg(nullptr), fileName(nullptr)
-  {
-  }
-
-  int32_t           lineNr;
-  const PRUnichar*  errorMsg;
-  const PRUnichar*  fileName;
-
-  // XXX Not tested by test_assign_event_data.html
-  void AssignScriptErrorEventData(const nsScriptErrorEvent& aEvent,
-                                  bool aCopyTargets)
-  {
-    AssignEventData(aEvent, aCopyTargets);
-
-    lineNr = aEvent.lineNr;
-
-    // We don't copy errorMsg and fileName.  If it's necessary, perhaps, this
-    // should duplicate the characters and free them at destructing.
-    errorMsg = nullptr;
-    fileName = nullptr;
-  }
-};
-
-class nsScrollPortEvent : public nsGUIEvent
-{
-public:
-  enum orientType {
-    vertical   = 0,
-    horizontal = 1,
-    both       = 2
-  };
-
-  nsScrollPortEvent(bool isTrusted, uint32_t msg, nsIWidget *w)
-    : nsGUIEvent(isTrusted, msg, w, NS_SCROLLPORT_EVENT),
-      orient(vertical)
-  {
-  }
-
-  orientType orient;
-
-  void AssignScrollPortEventData(const nsScrollPortEvent& aEvent,
-                                 bool aCopyTargets)
-  {
-    AssignGUIEventData(aEvent, aCopyTargets);
-
-    orient = aEvent.orient;
-  }
-};
-
-class nsScrollAreaEvent : public nsGUIEvent
-{
-public:
-  nsScrollAreaEvent(bool isTrusted, uint32_t msg, nsIWidget *w)
-    : nsGUIEvent(isTrusted, msg, w, NS_SCROLLAREA_EVENT)
-  {
-  }
-
-  nsRect mArea;
-
-  void AssignScrollAreaEventData(const nsScrollAreaEvent& aEvent,
-                                 bool aCopyTargets)
-  {
-    AssignGUIEventData(aEvent, aCopyTargets);
-
-    mArea = aEvent.mArea;
-  }
-};
 
 class nsContentCommandEvent : public nsGUIEvent
 {
@@ -139,32 +60,6 @@ public:
 };
 
 /**
- * Form event
- * 
- * We hold the originating form control for form submit and reset events.
- * originator is a weak pointer (does not hold a strong reference).
- */
-
-class nsFormEvent : public nsEvent
-{
-public:
-  nsFormEvent(bool isTrusted, uint32_t msg)
-    : nsEvent(isTrusted, msg, NS_FORM_EVENT),
-      originator(nullptr)
-  {
-  }
-
-  nsIContent *originator;
-
-  void AssignFormEventData(const nsFormEvent& aEvent, bool aCopyTargets)
-  {
-    AssignEventData(aEvent, aCopyTargets);
-
-    // Don't copy originator due to a weak pointer.
-  }
-};
-
-/**
  * Command event
  *
  * Custom commands for example from the operating system.
@@ -189,107 +84,6 @@ public:
     AssignGUIEventData(aEvent, aCopyTargets);
 
     // command must have been initialized with the constructor.
-  }
-};
-
-/**
- * Clipboard event
- */
-class nsClipboardEvent : public nsEvent
-{
-public:
-  nsClipboardEvent(bool isTrusted, uint32_t msg)
-    : nsEvent(isTrusted, msg, NS_CLIPBOARD_EVENT)
-  {
-  }
-
-  nsCOMPtr<nsIDOMDataTransfer> clipboardData;
-
-  void AssignClipboardEventData(const nsClipboardEvent& aEvent,
-                                bool aCopyTargets)
-  {
-    AssignEventData(aEvent, aCopyTargets);
-
-    clipboardData = aEvent.clipboardData;
-  }
-};
-
-class nsFocusEvent : public nsUIEvent
-{
-public:
-  nsFocusEvent(bool isTrusted, uint32_t msg)
-    : nsUIEvent(isTrusted, msg, 0),
-      fromRaise(false),
-      isRefocus(false)
-  {
-    eventStructType = NS_FOCUS_EVENT;
-  }
-
-  /// The possible related target
-  nsCOMPtr<mozilla::dom::EventTarget> relatedTarget;
-
-  bool fromRaise;
-  bool isRefocus;
-
-  void AssignFocusEventData(const nsFocusEvent& aEvent, bool aCopyTargets)
-  {
-    AssignUIEventData(aEvent, aCopyTargets);
-
-    relatedTarget = aCopyTargets ? aEvent.relatedTarget : nullptr;
-    fromRaise = aEvent.fromRaise;
-    isRefocus = aEvent.isRefocus;
-  }
-};
-
-class nsTransitionEvent : public nsEvent
-{
-public:
-  nsTransitionEvent(bool isTrusted, uint32_t msg,
-                    const nsAString& propertyNameArg, float elapsedTimeArg,
-                    const nsAString& pseudoElementArg)
-    : nsEvent(isTrusted, msg, NS_TRANSITION_EVENT),
-      propertyName(propertyNameArg), elapsedTime(elapsedTimeArg),
-      pseudoElement(pseudoElementArg)
-  {
-  }
-
-  nsString propertyName;
-  float elapsedTime;
-  nsString pseudoElement;
-
-  void AssignTransitionEventData(const nsTransitionEvent& aEvent,
-                                 bool aCopyTargets)
-  {
-    AssignEventData(aEvent, aCopyTargets);
-
-    // propertyName, elapsedTime and pseudoElement must have been initialized
-    // with the constructor.
-  }
-};
-
-class nsAnimationEvent : public nsEvent
-{
-public:
-  nsAnimationEvent(bool isTrusted, uint32_t msg,
-                   const nsAString &animationNameArg, float elapsedTimeArg,
-                   const nsAString &pseudoElementArg)
-    : nsEvent(isTrusted, msg, NS_ANIMATION_EVENT),
-      animationName(animationNameArg), elapsedTime(elapsedTimeArg),
-      pseudoElement(pseudoElementArg)
-  {
-  }
-
-  nsString animationName;
-  float elapsedTime;
-  nsString pseudoElement;
-
-  void AssignAnimationEventData(const nsAnimationEvent& aEvent,
-                                bool aCopyTargets)
-  {
-    AssignEventData(aEvent, aCopyTargets);
-
-    // animationName, elapsedTime and pseudoElement must have been initialized
-    // with the constructor.
   }
 };
 
