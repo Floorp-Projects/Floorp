@@ -163,10 +163,6 @@ ifdef ENABLE_TESTS
 # locally against non-current test code.
 DIRS += $(TEST_DIRS)
 
-ifndef INCLUDED_TESTS_XPCSHELL_MK #{
-  include $(topsrcdir)/config/makefiles/xpcshell.mk
-endif #}
-
 ifndef INCLUDED_TESTS_MOCHITEST_MK #{
   include $(topsrcdir)/config/makefiles/mochitest.mk
 endif #}
