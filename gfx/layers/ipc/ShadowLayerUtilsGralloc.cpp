@@ -28,6 +28,8 @@
 
 #include "cutils/properties.h"
 
+#include "MainThreadUtils.h"
+
 using namespace android;
 using namespace base;
 using namespace mozilla::layers;
