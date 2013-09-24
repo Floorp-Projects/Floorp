@@ -204,7 +204,7 @@ DeprecatedCanvasClientSurfaceStream::Update(gfx::IntSize aSize, ClientCanvasLaye
     }
 
     SharedSurface_Gralloc* grallocSurf = SharedSurface_Gralloc::Cast(surf);
-    mDeprecatedTextureClient->SetDescriptor(grallocSurf->LockSurfaceDescriptor());
+    mDeprecatedTextureClient->SetDescriptor(grallocSurf->GetDescriptor());
 #else
     printf_stderr("isCrossProcess, but not MOZ_WIDGET_GONK! Someone needs to write some code!");
     MOZ_ASSERT(false);
