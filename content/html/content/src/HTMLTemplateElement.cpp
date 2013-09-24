@@ -65,9 +65,20 @@ HTMLTemplateElement::~HTMLTemplateElement()
 NS_IMPL_ADDREF_INHERITED(HTMLTemplateElement, Element)
 NS_IMPL_RELEASE_INHERITED(HTMLTemplateElement, Element)
 
-NS_IMPL_CYCLE_COLLECTION_INHERITED_1(HTMLTemplateElement,
-                                     nsGenericHTMLElement,
-                                     mContent)
+NS_IMPL_CYCLE_COLLECTION_CLASS(HTMLTemplateElement)
+
+NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(HTMLTemplateElement,
+                                                nsGenericHTMLElement)
+  if (tmp->mContent) {
+    tmp->mContent->SetHost(nullptr);
+    tmp->mContent = nullptr;
+  }
+NS_IMPL_CYCLE_COLLECTION_UNLINK_END
+
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(HTMLTemplateElement,
+                                                  nsGenericHTMLElement)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mContent)
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
 // QueryInterface implementation for HTMLTemplateElement
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION_INHERITED(HTMLTemplateElement)
