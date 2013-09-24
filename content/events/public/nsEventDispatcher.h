@@ -220,7 +220,7 @@ public:
    *
    * If aTargets is non-null, event target chain will be created, but
    * event won't be handled. In this case aEvent->message should be
-   * NS_EVENT_TYPE_NULL.
+   * NS_EVENT_NULL.
    * @note Use this method when dispatching an nsEvent.
    */
   static nsresult Dispatch(nsISupports* aTarget,
