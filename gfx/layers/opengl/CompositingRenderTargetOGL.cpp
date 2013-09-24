@@ -41,11 +41,13 @@ CompositingRenderTargetOGL::BindRenderTarget()
         result = mGL->fCheckFramebufferStatus(LOCAL_GL_FRAMEBUFFER);
       }
       if (result != LOCAL_GL_FRAMEBUFFER_COMPLETE) {
-        NS_WARNING("Framebuffer not complete -- CheckFramebufferStatus returned 0x%x, "
-                   "GLContext=%p, IsOffscreen()=%d, mFBO=%d, aFBOTextureTarget=0x%x, "
-                   "aRect.width=%d, aRect.height=%d",
-                   result, mGL, mGL->IsOffscreen(), mFBO, mInitParams.mFBOTextureTarget,
-                   mInitParams.mSize.width, mInitParams.mSize.height);
+        nsAutoCString msg;
+        msg.AppendPrintf("Framebuffer not complete -- CheckFramebufferStatus returned 0x%x, "
+                         "GLContext=%p, IsOffscreen()=%d, mFBO=%d, aFBOTextureTarget=0x%x, "
+                         "aRect.width=%d, aRect.height=%d",
+                         result, mGL, mGL->IsOffscreen(), mFBO, mInitParams.mFBOTextureTarget,
+                         mInitParams.mSize.width, mInitParams.mSize.height);
+        NS_WARNING(msg.get());
       }
     }
 
