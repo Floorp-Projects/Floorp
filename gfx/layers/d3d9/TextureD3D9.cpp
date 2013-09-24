@@ -132,6 +132,83 @@ DeprecatedTextureHostD3D9::SetCompositor(Compositor* aCompositor)
   mDevice = mCompositor ? mCompositor->device() : nullptr;
 }
 
+/**
+ * Helper method for DataToTexture and SurfaceToTexture.
+ * The last four params are out params.
+ * Returns success.
+ */
+static bool
+InitTextures(IDirect3DDevice9* aDevice,
+             const gfxIntSize &aSize,
+             _D3DFORMAT aFormat,
+             RefPtr<IDirect3DTexture9>& aTexture,
+             RefPtr<IDirect3DSurface9>& aSurface,
+             D3DLOCKED_RECT& aLockedRect,
+             bool& aUsingD3D9Ex)
+{
+  nsRefPtr<IDirect3DDevice9Ex> deviceEx;
+  aDevice->QueryInterface(IID_IDirect3DDevice9Ex,
+                          (void**)getter_AddRefs(deviceEx));
+  aUsingD3D9Ex = !!deviceEx;
+
+  if (aUsingD3D9Ex) {
+    // D3D9Ex doesn't support managed textures. We could use dynamic textures
+    // here but since Images are immutable that probably isn't such a great
+    // idea.
+    if (FAILED(aDevice->
+               CreateTexture(aSize.width, aSize.height,
+                             1, 0, aFormat, D3DPOOL_DEFAULT,
+                             byRef(aTexture), nullptr)))
+    {
+      return false;
+    }
+
+    RefPtr<IDirect3DTexture9> tmpTexture;
+    if (FAILED(aDevice->
+               CreateTexture(aSize.width, aSize.height,
+                             1, 0, aFormat, D3DPOOL_SYSTEMMEM,
+                             byRef(tmpTexture), nullptr)))
+    {
+      return false;
+    }
+
+    tmpTexture->GetSurfaceLevel(0, byRef(aSurface));
+    aSurface->LockRect(&aLockedRect, NULL, 0);
+    NS_ASSERTION(aLockedRect.pBits, "Could not lock surface");
+  } else {
+    if (FAILED(aDevice->
+               CreateTexture(aSize.width, aSize.height,
+                             1, 0, aFormat, D3DPOOL_MANAGED,
+                             byRef(aTexture), nullptr))) {
+      return false;
+    }
+
+    /* lock the entire texture */
+    aTexture->LockRect(0, &aLockedRect, nullptr, 0);
+  }
+
+  return true;
+}
+
+/**
+ * Helper method for DataToTexture and SurfaceToTexture.
+ */
+static void
+FinishTextures(IDirect3DDevice9* aDevice,
+               RefPtr<IDirect3DTexture9>& aTexture,
+               RefPtr<IDirect3DSurface9> aSurface,
+               bool aUsingD3D9Ex)
+{
+  if (aUsingD3D9Ex) {
+    aSurface->UnlockRect();
+    nsRefPtr<IDirect3DSurface9> dstSurface;
+    aTexture->GetSurfaceLevel(0, getter_AddRefs(dstSurface));
+    aDevice->UpdateSurface(aSurface, NULL, dstSurface, NULL);
+  } else {
+    aTexture->UnlockRect(0);
+  }
+}
+
 static TemporaryRef<IDirect3DTexture9>
 DataToTexture(IDirect3DDevice9 *aDevice,
               unsigned char *aData,
@@ -141,46 +218,13 @@ DataToTexture(IDirect3DDevice9 *aDevice,
               uint32_t aBPP)
 {
   RefPtr<IDirect3DTexture9> texture;
-  nsRefPtr<IDirect3DDevice9Ex> deviceEx;
-  aDevice->QueryInterface(IID_IDirect3DDevice9Ex,
-                          (void**)getter_AddRefs(deviceEx));
-
   RefPtr<IDirect3DSurface9> surface;
   D3DLOCKED_RECT lockedRect;
-  if (deviceEx) {
-    // D3D9Ex doesn't support managed textures. We could use dynamic textures
-    // here but since Images are immutable that probably isn't such a great
-    // idea.
-    if (FAILED(aDevice->
-               CreateTexture(aSize.width, aSize.height,
-                             1, 0, aFormat, D3DPOOL_DEFAULT,
-                             byRef(texture), nullptr)))
-    {
-      return nullptr;
-    }
+  bool usingD3D9Ex;
 
-    RefPtr<IDirect3DTexture9> tmpTexture;
-    if (FAILED(aDevice->
-               CreateTexture(aSize.width, aSize.height,
-                             1, 0, aFormat, D3DPOOL_SYSTEMMEM,
-                             byRef(tmpTexture), nullptr)))
-    {
-      return nullptr;
-    }
-
-    tmpTexture->GetSurfaceLevel(0, byRef(surface));
-    surface->LockRect(&lockedRect, NULL, 0);
-    NS_ASSERTION(lockedRect.pBits, "Could not lock surface");
-  } else {
-    if (FAILED(aDevice->
-               CreateTexture(aSize.width, aSize.height,
-                             1, 0, aFormat, D3DPOOL_MANAGED,
-                             byRef(texture), nullptr))) {
-      return nullptr;
-    }
-
-    /* lock the entire texture */
-    texture->LockRect(0, &lockedRect, nullptr, 0);
+  if (!InitTextures(aDevice, aSize, aFormat,
+                    texture, surface, lockedRect, usingD3D9Ex)) {
+    return nullptr;
   }
 
   uint32_t width = aSize.width * aBPP;
@@ -191,14 +235,7 @@ DataToTexture(IDirect3DDevice9 *aDevice,
             width);
   }
 
-  if (deviceEx) {
-    surface->UnlockRect();
-    nsRefPtr<IDirect3DSurface9> dstSurface;
-    texture->GetSurfaceLevel(0, getter_AddRefs(dstSurface));
-    aDevice->UpdateSurface(surface, NULL, dstSurface, NULL);
-  } else {
-    texture->UnlockRect(0);
-  }
+  FinishTextures(aDevice, texture, surface, usingD3D9Ex);
 
   return texture.forget();
 }
