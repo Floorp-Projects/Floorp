@@ -39,6 +39,7 @@
 #include "nsGUIEvent.h"
 #include "nsIFrame.h"
 #include "nsIURI.h"
+#include "nsISimpleEnumerator.h"
 
 // image copy stuff
 #include "nsIImageLoadingContent.h"

@@ -232,7 +232,6 @@
 
   <string name="history_removed">&history_removed;</string>
 
-  <string name="bookmark_add">&bookmark_add;</string>
   <string name="bookmark_edit_title">&bookmark_edit_title;</string>
   <string name="bookmark_edit_name">&bookmark_edit_name;</string>
   <string name="bookmark_edit_location">&bookmark_edit_location;</string>
@@ -253,6 +252,7 @@
   <string name="button_no">&button_no;</string>
 
   <string name="home_top_sites_title">&home_top_sites_title;</string>
+  <string name="home_top_sites_add">&home_top_sites_add;</string>
   <string name="home_history_title">&home_history_title;</string>
   <string name="home_last_tabs_title">&home_last_tabs_title;</string>
   <string name="home_last_tabs_open">&home_last_tabs_open;</string>

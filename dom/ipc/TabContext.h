@@ -7,15 +7,14 @@
 #ifndef mozilla_dom_TabContext_h
 #define mozilla_dom_TabContext_h
 
-#include "mozilla/Assertions.h"
-#include "mozilla/dom/PContent.h"
-#include "mozilla/dom/PBrowser.h"
 #include "mozilla/layout/RenderFrameUtils.h"
-#include "nsIScriptSecurityManager.h"
 #include "mozIApplication.h"
+#include "nsCOMPtr.h"
 
 namespace mozilla {
 namespace dom {
+
+struct IPCTabContext;
 
 /**
  * TabContext encapsulates information about an iframe that may be a mozbrowser

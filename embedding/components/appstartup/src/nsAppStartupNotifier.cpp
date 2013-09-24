@@ -11,7 +11,7 @@
 #include "nsXPCOM.h"
 #include "nsISupportsPrimitives.h"
 #include "nsAppStartupNotifier.h"
-
+#include "nsISimpleEnumerator.h"
 
 NS_IMPL_ISUPPORTS1(nsAppStartupNotifier, nsIObserver)
 

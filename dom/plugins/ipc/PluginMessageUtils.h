@@ -18,7 +18,7 @@
 #include "npruntime.h"
 #include "npfunctions.h"
 #include "nsAutoPtr.h"
-#include "nsStringGlue.h"
+#include "nsString.h"
 #include "nsTArray.h"
 #include "prlog.h"
 #include "nsHashKeys.h"

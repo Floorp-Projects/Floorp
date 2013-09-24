@@ -7,11 +7,7 @@
 #ifndef mozilla_dom_ContentParent_h
 #define mozilla_dom_ContentParent_h
 
-#include "base/waitable_event_watcher.h"
-
 #include "mozilla/dom/PContentParent.h"
-#include "mozilla/dom/PMemoryReportRequestParent.h"
-#include "mozilla/dom/TabContext.h"
 #include "mozilla/ipc/GeckoChildProcessHost.h"
 #include "mozilla/dom/ipc/Blob.h"
 #include "mozilla/Attributes.h"
@@ -22,12 +18,7 @@
 #include "nsFrameMessageManager.h"
 #include "nsIObserver.h"
 #include "nsIThreadInternal.h"
-#include "nsNetUtil.h"
-#include "nsIPermissionManager.h"
 #include "nsIDOMGeoPositionCallback.h"
-#include "nsCOMArray.h"
-#include "nsDataHashtable.h"
-#include "nsHashKeys.h"
 #include "PermissionMessageUtils.h"
 
 #define CHILD_PROCESS_SHUTDOWN_MESSAGE NS_LITERAL_STRING("child-process-shutdown")
@@ -36,6 +27,7 @@ class mozIApplication;
 class nsConsoleService;
 class nsIDOMBlob;
 class nsIMemoryReporter;
+template<class KeyClass,class DataType> class nsDataHashtable;
 
 namespace mozilla {
 
@@ -59,6 +51,8 @@ class Element;
 class TabParent;
 class PStorageParent;
 class ClonedMessageData;
+class MemoryReport;
+class TabContext;
 
 class ContentParent : public PContentParent
                     , public nsIObserver
@@ -256,10 +250,10 @@ private:
      */
     void ShutDownProcess(bool aCloseWithError);
 
-    PCompositorParent*
+    bool
     AllocPCompositorParent(mozilla::ipc::Transport* aTransport,
                            base::ProcessId aOtherProcess) MOZ_OVERRIDE;
-    PImageBridgeParent*
+    bool
     AllocPImageBridgeParent(mozilla::ipc::Transport* aTransport,
                             base::ProcessId aOtherProcess) MOZ_OVERRIDE;
 

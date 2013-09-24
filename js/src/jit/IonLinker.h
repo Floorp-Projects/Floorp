@@ -32,6 +32,8 @@ class Linker
         JS_ASSERT(kind == JSC::ION_CODE ||
                   kind == JSC::BASELINE_CODE ||
                   kind == JSC::OTHER_CODE);
+        JS_ASSERT(masm.numAsmJSAbsoluteLinks() == 0);
+
         gc::AutoSuppressGC suppressGC(cx);
         if (masm.oom())
             return fail(cx);

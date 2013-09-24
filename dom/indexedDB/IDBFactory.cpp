@@ -44,6 +44,7 @@
 #include "IndexedDatabaseManager.h"
 #include "Key.h"
 #include "ProfilerHelpers.h"
+#include "nsNetUtil.h"
 
 #include "ipc/IndexedDBChild.h"
 

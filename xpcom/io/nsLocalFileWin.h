@@ -15,6 +15,7 @@
 #include "nsILocalFileWin.h"
 #include "nsIHashable.h"
 #include "nsIClassInfoImpl.h"
+#include "prio.h"
 
 #include "mozilla/Attributes.h"
 

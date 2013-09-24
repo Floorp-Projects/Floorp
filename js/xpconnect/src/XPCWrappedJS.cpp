@@ -160,6 +160,7 @@ nsXPCWrappedJS::AddRef(void)
     NS_LOG_ADDREF(this, cnt, "nsXPCWrappedJS", sizeof(*this));
 
     if (2 == cnt && IsValid()) {
+        GetJSObject(); // Unmark gray JSObject.
         XPCJSRuntime* rt = mClass->GetRuntime();
         rt->AddWrappedJSRoot(this);
     }
@@ -246,7 +247,9 @@ nsXPCWrappedJS::GetWeakReference(nsIWeakReference** aInstancePtr)
 JSObject*
 nsXPCWrappedJS::GetJSObject()
 {
-    JS::ExposeObjectToActiveJS(mJSObj);
+    if (mJSObj) {
+        JS::ExposeObjectToActiveJS(mJSObj);
+    }
     return mJSObj;
 }
 

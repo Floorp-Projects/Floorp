@@ -20,11 +20,9 @@
 #include "mozilla/dom/ExternalHelperAppChild.h"
 #include "mozilla/dom/PCrashReporterChild.h"
 #include "mozilla/dom/DOMStorageIPC.h"
-#include "mozilla/Hal.h"
 #include "mozilla/hal_sandbox/PHalChild.h"
 #include "mozilla/ipc/GeckoChildProcessHost.h"
 #include "mozilla/ipc/TestShellChild.h"
-#include "mozilla/ipc/XPCShellEnvironment.h"
 #include "mozilla/layers/CompositorChild.h"
 #include "mozilla/layers/ImageBridgeChild.h"
 #include "mozilla/layers/PCompositorChild.h"
@@ -35,17 +33,17 @@
 #endif
 #include "mozilla/unused.h"
 
+#include "nsIConsoleListener.h"
+#include "nsIInterfaceRequestorUtils.h"
 #include "nsIMemoryReporter.h"
 #include "nsIMemoryInfoDumper.h"
 #include "nsIMutable.h"
 #include "nsIObserverService.h"
-#include "nsTObserverArray.h"
 #include "nsIObserver.h"
 #include "nsIScriptSecurityManager.h"
 #include "nsServiceManagerUtils.h"
 #include "nsStyleSheetService.h"
 #include "nsXULAppAPI.h"
-#include "nsWeakReference.h"
 #include "nsIScriptError.h"
 #include "nsIConsoleService.h"
 #include "nsJSEnvironment.h"
@@ -56,7 +54,6 @@
 #include "nsIJSRuntimeService.h"
 
 #include "IHistory.h"
-#include "nsDocShellCID.h"
 #include "nsNetUtil.h"
 
 #include "base/message_loop.h"
@@ -64,14 +61,13 @@
 #include "base/task.h"
 
 #include "nsChromeRegistryContent.h"
-#include "mozilla/chrome/RegistryMessageUtils.h"
 #include "nsFrameMessageManager.h"
 
 #include "nsIGeolocationProvider.h"
-#include "JavaScriptParent.h"
 #include "mozilla/dom/PMemoryReportRequestChild.h"
 
 #ifdef MOZ_PERMISSIONS
+#include "nsIScriptSecurityManager.h"
 #include "nsPermission.h"
 #include "nsPermissionManager.h"
 #endif
@@ -96,7 +92,6 @@
 
 #include "mozilla/dom/indexedDB/PIndexedDBChild.h"
 #include "mozilla/dom/mobilemessage/SmsChild.h"
-#include "mozilla/dom/telephony/TelephonyChild.h"
 #include "mozilla/dom/devicestorage/DeviceStorageRequestChild.h"
 #include "mozilla/dom/bluetooth/PBluetoothChild.h"
 #include "mozilla/dom/PFMRadioChild.h"
@@ -111,13 +106,12 @@
 #include "ProcessUtils.h"
 #include "StructuredCloneUtils.h"
 #include "URIUtils.h"
-#include "nsIScriptSecurityManager.h"
 #include "nsContentUtils.h"
 #include "nsIPrincipal.h"
 #include "nsDeviceStorage.h"
 #include "AudioChannelService.h"
 #include "JavaScriptChild.h"
-#include "ProcessPriorityManager.h"
+#include "mozilla/dom/telephony/PTelephonyChild.h"
 
 using namespace base;
 using namespace mozilla;
@@ -509,14 +503,14 @@ ContentChild::RecvDumpGCAndCCLogsToFile(const nsString& aIdentifier,
     return true;
 }
 
-PCompositorChild*
+bool
 ContentChild::AllocPCompositorChild(mozilla::ipc::Transport* aTransport,
                                     base::ProcessId aOtherProcess)
 {
     return CompositorChild::Create(aTransport, aOtherProcess);
 }
 
-PImageBridgeChild*
+bool
 ContentChild::AllocPImageBridgeChild(mozilla::ipc::Transport* aTransport,
                                      base::ProcessId aOtherProcess)
 {

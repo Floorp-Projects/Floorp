@@ -1,0 +1,27 @@
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+
+/**
+ * nsIHttpDataUsage contains counters for the amount of HTTP data transferred
+ * in and out of this session since the last time it was reset with the
+ * resetHttpDataUsage() method. These counters are normally reset on each
+ * telemetry ping.
+ *
+ * Data is split into ethernet and cell. ethernet includes wifi.
+ *
+ */
+
+[scriptable, uuid(79dee3eb-9323-4d5c-b0a8-1baa18934d9e)]
+interface nsIHttpDataUsage : nsISupports
+{
+    readonly attribute unsigned long long ethernetBytesRead;
+    readonly attribute unsigned long long ethernetBytesWritten;
+    readonly attribute unsigned long long cellBytesRead;
+    readonly attribute unsigned long long cellBytesWritten;
+    
+    void resetHttpDataUsage();
+};

@@ -12,7 +12,7 @@
 #include "nsThreadUtils.h"
 #include "nsCOMPtr.h"
 #include "nsProxyRelease.h"
-#include "nsStringGlue.h"
+#include "nsString.h"
 #include "mozilla/Base64.h"
 #include "mozilla/Util.h" // ArrayLength
 #include "ScopedNSSTypes.h"

@@ -13,6 +13,8 @@
 #include "nsIRunnable.h"
 #include "nsISafeOutputStream.h"
 #include "nsString.h"
+#include "nsIAsyncInputStream.h"
+#include "nsIAsyncOutputStream.h"
 
 using namespace mozilla;
 

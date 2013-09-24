@@ -11,7 +11,7 @@
 
 #include "nsAtomTable.h"
 #include "nsStaticAtom.h"
-#include "nsStringGlue.h"
+#include "nsString.h"
 #include "nsCRT.h"
 #include "pldhash.h"
 #include "prenv.h"

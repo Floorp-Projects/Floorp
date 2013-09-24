@@ -10,6 +10,7 @@
 #include "mozilla/dom/ContentChild.h"
 #include "mozilla/unused.h"
 #include "nsIDiskSpaceWatcher.h"
+#include "nsThreadUtils.h"
 
 namespace mozilla {
 namespace dom {

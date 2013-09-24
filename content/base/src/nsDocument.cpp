@@ -2681,8 +2681,7 @@ nsDocument::InitCSP(nsIChannel* aChannel)
   if (csp) {
     // Copy into principal
     nsIPrincipal* principal = GetPrincipal();
-    rv = principal->SetCsp(csp);
-    NS_ENSURE_SUCCESS(rv, rv);
+    principal->SetCsp(csp);
 #ifdef PR_LOGGING
     PR_LOG(gCspPRLog, PR_LOG_DEBUG,
            ("Inserted CSP into principal %p", principal));

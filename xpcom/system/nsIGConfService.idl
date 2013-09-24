@@ -4,7 +4,8 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "nsISupports.idl"
-#include "nsIArray.idl"
+
+interface nsIArray;
 
 [scriptable, uuid(5009acae-6973-48c3-b6d6-52c692cc5d9d)]
 interface nsIGConfService : nsISupports

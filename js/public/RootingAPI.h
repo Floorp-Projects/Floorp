@@ -715,12 +715,15 @@ class MOZ_STACK_CLASS Rooted : public js::RootedBase<T>
         init(js::PerThreadDataFriendFields::getMainThread(rt));
     }
 
-    ~Rooted() {
+    // Note that we need to let the compiler generate the default destructor in
+    // non-exact-rooting builds because of a bug in the instrumented PGO builds
+    // using MSVC, see bug 915735 for more details.
 #ifdef JSGC_TRACK_EXACT_ROOTS
+    ~Rooted() {
         JS_ASSERT(*stack == reinterpret_cast<Rooted<void*>*>(this));
         *stack = prev;
-#endif
     }
+#endif
 
 #ifdef JSGC_TRACK_EXACT_ROOTS
     Rooted<T> *previous() { return prev; }
