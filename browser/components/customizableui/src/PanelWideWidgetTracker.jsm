@@ -59,8 +59,8 @@ let PanelWideWidgetTracker = {
   },
   // When widgets get destroyed, we remove them from our sets of stuff we care about:
   onWidgetDestroyed: function(aWidgetId) {
-    gSeenWidgets.remove(aWidgetId);
-    gWideWidgets.remove(aWidgetId);
+    gSeenWidgets.delete(aWidgetId);
+    gWideWidgets.delete(aWidgetId);
   },
   shouldMoveForward: function(aWidgetId, aPosition) {
     let currentWidgetAtPosition = gPanelPlacements[aPosition];
