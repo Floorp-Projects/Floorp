@@ -76,7 +76,7 @@ public:
 
     // This surface is a wrapper around X pixmaps, which are stored in the X
     // server, not the main application.
-    virtual gfxASurface::MemoryLocation GetMemoryLocation() const;
+    virtual gfxMemoryLocation GetMemoryLocation() const;
 
 #if defined(GL_PROVIDER_GLX)
     GLXPixmap GetGLXPixmap();

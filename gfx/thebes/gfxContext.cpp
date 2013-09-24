@@ -1542,7 +1542,7 @@ gfxContext::Paint(gfxFloat alpha)
 // groups
 
 void
-gfxContext::PushGroup(gfxASurface::gfxContentType content)
+gfxContext::PushGroup(gfxContentType content)
 {
   if (mCairo) {
     cairo_push_group_with_content(mCairo, (cairo_content_t) content);
@@ -1578,20 +1578,20 @@ CopySurface(gfxASurface* aSrc, gfxASurface* aDest, const gfxPoint& aTranslation)
 }
 
 void
-gfxContext::PushGroupAndCopyBackground(gfxASurface::gfxContentType content)
+gfxContext::PushGroupAndCopyBackground(gfxContentType content)
 {
   if (mCairo) {
-    if (content == gfxASurface::CONTENT_COLOR_ALPHA &&
+    if (content == GFX_CONTENT_COLOR_ALPHA &&
       !(GetFlags() & FLAG_DISABLE_COPY_BACKGROUND)) {
       nsRefPtr<gfxASurface> s = CurrentSurface();
-      if ((s->GetAllowUseAsSource() || s->GetType() == gfxASurface::SurfaceTypeTee) &&
-          (s->GetContentType() == gfxASurface::CONTENT_COLOR ||
+      if ((s->GetAllowUseAsSource() || s->GetType() == gfxSurfaceTypeTee) &&
+          (s->GetContentType() == GFX_CONTENT_COLOR ||
               s->GetOpaqueRect().Contains(GetRoundOutDeviceClipExtents(this)))) {
         cairo_push_group_with_content(mCairo, CAIRO_CONTENT_COLOR);
         nsRefPtr<gfxASurface> d = CurrentSurface();
 
-        if (d->GetType() == gfxASurface::SurfaceTypeTee) {
-          NS_ASSERTION(s->GetType() == gfxASurface::SurfaceTypeTee, "Mismatched types");
+        if (d->GetType() == gfxSurfaceTypeTee) {
+          NS_ASSERTION(s->GetType() == gfxSurfaceTypeTee, "Mismatched types");
           nsAutoTArray<nsRefPtr<gfxASurface>,2> ss;
           nsAutoTArray<nsRefPtr<gfxASurface>,2> ds;
           static_cast<gfxTeeSurface*>(s.get())->GetSurfaces(&ss);
@@ -1620,7 +1620,7 @@ gfxContext::PushGroupAndCopyBackground(gfxASurface::gfxContentType content)
       RefPtr<SourceSurface> source = mDT->Snapshot();
       Point oldDeviceOffset = CurrentState().deviceOffset;
 
-      PushNewDT(gfxASurface::CONTENT_COLOR);
+      PushNewDT(GFX_CONTENT_COLOR);
 
       Point offset = CurrentState().deviceOffset - oldDeviceOffset;
       Rect surfRect(0, 0, Float(mDT->GetSize().width), Float(mDT->GetSize().height));
@@ -2279,7 +2279,7 @@ gfxContext::GetDTTransform() const
 }
 
 void
-gfxContext::PushNewDT(gfxASurface::gfxContentType content)
+gfxContext::PushNewDT(gfxContentType content)
 {
   Rect clipBounds = GetAzureDeviceSpaceClipBounds();
   clipBounds.RoundOut();

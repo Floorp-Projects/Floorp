@@ -173,7 +173,7 @@ public:
   /* The total number of frames in this image. */
   uint32_t GetNumFrames() const;
 
-  size_t SizeOfDecodedWithComputedFallbackIfHeap(gfxASurface::MemoryLocation aLocation,
+  size_t SizeOfDecodedWithComputedFallbackIfHeap(gfxMemoryLocation aLocation,
                                                  mozilla::MallocSizeOf aMallocSizeOf) const;
 
 private: // data

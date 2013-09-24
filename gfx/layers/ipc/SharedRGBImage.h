@@ -31,7 +31,7 @@ class SurfaceDescriptor;
 
 already_AddRefed<Image> CreateSharedRGBImage(ImageContainer* aImageContainer,
                                              nsIntSize aSize,
-                                             gfxASurface::gfxImageFormat aImageFormat);
+                                             gfxImageFormat aImageFormat);
 
 /**
  * Stores RGB data in shared memory
@@ -42,9 +42,9 @@ class DeprecatedSharedRGBImage : public Image,
 {
 friend already_AddRefed<Image> CreateSharedRGBImage(ImageContainer* aImageContainer,
                                                     nsIntSize aSize,
-                                                    gfxASurface::gfxImageFormat aImageFormat);
+                                                    gfxImageFormat aImageFormat);
 public:
-  typedef gfxASurface::gfxImageFormat gfxImageFormat;
+  typedef gfxImageFormat gfxImageFormat;
   struct Header {
     gfxImageFormat mImageFormat;
   };
@@ -103,7 +103,7 @@ protected:
 class SharedRGBImage : public Image
                      , public ISharedImage
 {
-  typedef gfxASurface::gfxImageFormat gfxImageFormat;
+  typedef gfxImageFormat gfxImageFormat;
 public:
   SharedRGBImage(ImageClient* aCompositable);
   ~SharedRGBImage();

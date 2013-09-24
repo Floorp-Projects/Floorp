@@ -137,7 +137,7 @@ protected:
     SharedSurface_Basic(GLContext* gl,
                         const gfxIntSize& size,
                         bool hasAlpha,
-                        gfxASurface::gfxImageFormat format,
+                        gfxImageFormat format,
                         GLuint tex);
 
 public:

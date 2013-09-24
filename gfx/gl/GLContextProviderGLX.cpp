@@ -279,7 +279,7 @@ GLXLibrary::SupportsTextureFromPixmap(gfxASurface* aSurface)
         return false;
     }
     
-    if (aSurface->GetType() != gfxASurface::SurfaceTypeXlib || !mUseTextureFromPixmap) {
+    if (aSurface->GetType() != gfxSurfaceTypeXlib || !mUseTextureFromPixmap) {
         return false;
     }
 
@@ -945,7 +945,7 @@ TRY_AGAIN_NO_SHARING:
                        TextureImage::ContentType aContentType,
                        GLenum aWrapMode,
                        TextureImage::Flags aFlags = TextureImage::NoFlags,
-                       TextureImage::ImageFormat aImageFormat = gfxASurface::ImageFormatUnknown);
+                       TextureImage::ImageFormat aImageFormat = gfxImageFormatUnknown);
 
 private:
     friend class GLContextProviderGLX;
@@ -1069,7 +1069,7 @@ private:
         , mTexture(aTexture)
         , sGLXLib(sGLXLibrary[aLibType])
     {
-        if (aSurface->GetContentType() == gfxASurface::CONTENT_COLOR_ALPHA) {
+        if (aSurface->GetContentType() == GFX_CONTENT_COLOR_ALPHA) {
             mTextureFormat = FORMAT_R8G8B8A8;
         } else {
             mTextureFormat = FORMAT_R8G8B8X8;
@@ -1106,7 +1106,7 @@ GLContextGLX::CreateTextureImage(const nsIntSize& aSize,
 
     Display *display = DefaultXDisplay();
     int xscreen = DefaultScreen(display);
-    gfxASurface::gfxImageFormat imageFormat =
+    gfxImageFormat imageFormat =
         gfxPlatform::GetPlatform()->OptimalFormatForContent(aContentType);
 
     XRenderPictFormat* xrenderFormat =
@@ -1121,7 +1121,7 @@ GLContextGLX::CreateTextureImage(const nsIntSize& aSize,
 
     NS_ASSERTION(surface, "Failed to create xlib surface!");
 
-    if (aContentType == gfxASurface::CONTENT_COLOR_ALPHA) {
+    if (aContentType == GFX_CONTENT_COLOR_ALPHA) {
         nsRefPtr<gfxContext> ctx = new gfxContext(surface);
         ctx->SetOperator(gfxContext::OPERATOR_CLEAR);
         ctx->Paint();
@@ -1131,7 +1131,7 @@ GLContextGLX::CreateTextureImage(const nsIntSize& aSize,
     GLXPixmap pixmap = mGLX->CreatePixmap(surface);
     // GLX might not be able to give us an A8 pixmap. If so, just use CPU
     // memory.
-    if (!pixmap && imageFormat == gfxASurface::ImageFormatA8) {
+    if (!pixmap && imageFormat == gfxImageFormatA8) {
         return GLContext::CreateTextureImage(aSize,
                                              aContentType,
                                              aWrapMode,
