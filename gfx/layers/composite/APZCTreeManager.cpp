@@ -571,6 +571,22 @@ APZCTreeManager::HandleOverscroll(AsyncPanZoomController* aChild, ScreenPoint aS
   parent->AttemptScroll(aStartPoint, aEndPoint);
 }
 
+bool
+APZCTreeManager::HitTestAPZC(const ScreenPoint& aPoint)
+{
+  MonitorAutoLock lock(mTreeLock);
+  nsRefPtr<AsyncPanZoomController> target;
+  // The root may have siblings, so check those too
+  gfxPoint point(aPoint.x, aPoint.y);
+  for (AsyncPanZoomController* apzc = mRootApzc; apzc; apzc = apzc->GetPrevSibling()) {
+    target = GetAPZCAtPoint(apzc, point);
+    if (target) {
+      return true;
+    }
+  }
+  return false;
+}
+
 already_AddRefed<AsyncPanZoomController>
 APZCTreeManager::GetTargetAPZC(const ScrollableLayerGuid& aGuid)
 {
