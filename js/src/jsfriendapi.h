@@ -1507,6 +1507,20 @@ IsReadOnlyDateMethod(JS::IsAcceptableThis test, JS::NativeImpl method);
 extern JS_FRIEND_API(bool)
 IsTypedArrayThisCheck(JS::IsAcceptableThis test);
 
+/*
+ * If the embedder has registered a default JSContext callback, returns the
+ * result of the callback. Otherwise, asserts that |rt| has exactly one
+ * JSContext associated with it, and returns that context.
+ */
+extern JS_FRIEND_API(JSContext *)
+DefaultJSContext(JSRuntime *rt);
+
+typedef JSContext*
+(* DefaultJSContextCallback)(JSRuntime *rt);
+
+JS_FRIEND_API(void)
+SetDefaultJSContextCallback(JSRuntime *rt, DefaultJSContextCallback cb);
+
 enum CTypesActivityType {
     CTYPES_CALL_BEGIN,
     CTYPES_CALL_END,
