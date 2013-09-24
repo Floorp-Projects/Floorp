@@ -1,0 +1,64 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=448987
+-->
+<head>
+  <title>Test for Bug 448987</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/WindowSnapshot.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <style>
+    iframe {
+      width: 500px;
+      height: 300px;
+    }
+  </style>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=448987">Mozilla Bug 448987</a>
+<p id="display"></p>
+<div id="content">
+<iframe id="f1"></iframe>
+<iframe id="f2"></iframe>
+<iframe id="f3"></iframe>
+</div>
+<pre id="test">
+<script type="application/javascript">
+
+/** Test for Bug 448987 **/
+SimpleTest.waitForExplicitFinish();
+
+var f1 = document.getElementById("f1");
+var f2 = document.getElementById("f2");
+var f3 = document.getElementById("f3");
+
+var snapshotf1;
+
+SimpleTest.waitForFocus(function() {
+  f1.src = "file_bug448987.html";
+});
+
+function firstIframeLoaded() {
+  snapshotf1 = snapshotWindow(f1.contentWindow);
+  f2.src="file_bug448987_ref.html";
+}
+
+function secondIframeLoaded() {
+  ok(compareSnapshots(snapshotf1,
+                      snapshotWindow(f2.contentWindow), true)[0],
+     "<area shape=default> should render focus outline");
+  f3.src="file_bug448987_notref.html";
+}
+
+function thirdIframeLoaded() {
+  ok(compareSnapshots(snapshotf1,
+                      snapshotWindow(f3.contentWindow), false)[0],
+     "file_bug448987.html should render focus outline, file_bug448987_notref.html should not");
+  SimpleTest.finish();
+}
+</script>
+</pre>
+</body>
+</html>
