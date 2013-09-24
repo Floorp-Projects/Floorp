@@ -13,9 +13,6 @@
 #include "mozilla/TextEvents.h"
 #include "mozilla/TouchEvents.h"
 
-#define NS_EVENT_TYPE_NULL                   0
-#define NS_EVENT_TYPE_ALL                  1 // Not a real event type
-
 #define NS_IS_INPUT_EVENT(evnt) \
        (((evnt)->eventStructType == NS_INPUT_EVENT) || \
         ((evnt)->eventStructType == NS_MOUSE_EVENT) || \

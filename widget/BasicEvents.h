@@ -80,6 +80,9 @@ enum nsEventStructType
 
 #define NS_EVENT_NULL                   0
 
+// This is a dummy event message for all event listener implementation in
+// nsEventListenerManager.
+#define NS_EVENT_ALL                    1
 
 #define NS_WINDOW_START                 100
 
