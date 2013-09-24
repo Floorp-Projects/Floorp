@@ -1,0 +1,15 @@
+<!DOCTYPE html>
+<html class="reftest-wait">
+<script>
+function createContext() {
+  var context = new window.AudioContext();
+  var source = context.createOscillator();
+  source.onended = function(e) {
+    document.documentElement.removeAttribute("class");
+  };
+  source.connect(context.destination);
+  source.start(0.49);
+  source.stop(0.5);
+}
+createContext();
+</script>
