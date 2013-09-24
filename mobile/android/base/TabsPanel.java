@@ -116,8 +116,10 @@ public class TabsPanel extends LinearLayout
         button = mTabWidget.addTab(R.drawable.tabs_private);
         button.setContentDescription(resources.getString(R.string.tabs_private));
 
-        button = mTabWidget.addTab(R.drawable.tabs_synced);
-        button.setContentDescription(resources.getString(R.string.tabs_synced));
+        if (!GeckoProfile.get(mContext).inGuestMode()) {
+            button = mTabWidget.addTab(R.drawable.tabs_synced);
+            button.setContentDescription(resources.getString(R.string.tabs_synced));
+        }
 
         mTabWidget.setTabSelectionListener(this);
     }
