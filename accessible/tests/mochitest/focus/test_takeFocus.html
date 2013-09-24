@@ -71,6 +71,7 @@
     }
 
     SimpleTest.waitForExplicitFinish();
+    setTestPluginEnabledState(SpecialPowers.Ci.nsIPluginTag.STATE_ENABLED);
     addA11yLoadEvent(waitForPlugin);
   </script>
 </head>
