@@ -476,6 +476,19 @@ MetroInput::OnPointerPressedCallback()
   }
 }
 
+void
+MetroInput::AddPointerMoveDataToRecognizer(UI::Core::IPointerEventArgs* aArgs)
+{
+  // Only feed move input to the recognizer if the first touchstart and
+  // subsequent touchmove return results were not eConsumeNoDefault.
+  if (!mTouchStartDefaultPrevented && !mTouchMoveDefaultPrevented) {
+    WRL::ComPtr<Foundation::Collections::IVector<UI::Input::PointerPoint*>>
+        pointerPoints;
+    aArgs->GetIntermediatePoints(pointerPoints.GetAddressOf());
+    mGestureRecognizer->ProcessMoveEvents(pointerPoints.Get());
+  }
+}
+
 // This event is raised when the user moves the mouse, moves a pen that is
 // in contact with the surface, or moves a finger that is in contact with
 // a touch screen.
@@ -499,10 +512,7 @@ MetroInput::OnPointerMoved(UI::Core::ICoreWindow* aSender,
   if (deviceType !=
           Devices::Input::PointerDeviceType::PointerDeviceType_Touch) {
     OnPointerNonTouch(currentPoint.Get());
-    WRL::ComPtr<Foundation::Collections::IVector<UI::Input::PointerPoint*>>
-        pointerPoints;
-    aArgs->GetIntermediatePoints(pointerPoints.GetAddressOf());
-    mGestureRecognizer->ProcessMoveEvents(pointerPoints.Get());
+    AddPointerMoveDataToRecognizer(aArgs);
     return S_OK;
   }
 
@@ -524,6 +534,8 @@ MetroInput::OnPointerMoved(UI::Core::ICoreWindow* aSender,
   // this as well, but we need to know when our first touchmove is going to
   // get delivered so we can check the result.
   if (!HasPointMoved(touch, currentPoint.Get())) {
+    // The recognizer needs the intermediate data otherwise it acts flaky
+    AddPointerMoveDataToRecognizer(aArgs);
     return S_OK;
   }
 
@@ -552,16 +564,9 @@ MetroInput::OnPointerMoved(UI::Core::ICoreWindow* aSender,
     InitTouchEventTouchList(touchEvent);
     DispatchAsyncTouchEventWithCallback(touchEvent, &MetroInput::OnFirstPointerMoveCallback);
     mIsFirstTouchMove = false;
-  } else {
-    // Only feed move input to the recognizer if the first touchstart and
-    // subsequent touchmove return results were not eConsumeNoDefault.
-    if (!mTouchStartDefaultPrevented && !mTouchMoveDefaultPrevented) {
-      WRL::ComPtr<Foundation::Collections::IVector<UI::Input::PointerPoint*>>
-          pointerPoints;
-      aArgs->GetIntermediatePoints(pointerPoints.GetAddressOf());
-      mGestureRecognizer->ProcessMoveEvents(pointerPoints.Get());
-    }
   }
+
+  AddPointerMoveDataToRecognizer(aArgs);
 
   return S_OK;
 }
@@ -575,6 +580,8 @@ MetroInput::OnFirstPointerMoveCallback()
   // Let the apz know whether content wants to consume touch events
   if (mTouchMoveDefaultPrevented) {
     mWidget->ApzContentConsumingTouch();
+    // reset the recognizer
+    mGestureRecognizer->CompleteGesture();
   } else if (!mTouchMoveDefaultPrevented && !mTouchStartDefaultPrevented) {
     mWidget->ApzContentIgnoringTouch();
   }
@@ -633,7 +640,7 @@ MetroInput::OnPointerReleased(UI::Core::ICoreWindow* aSender,
 
   // If content didn't cancel the first touchstart feed touchend data to the
   // recognizer.
-  if (!mTouchStartDefaultPrevented) {
+  if (!mTouchStartDefaultPrevented && !mTouchMoveDefaultPrevented) {
     mGestureRecognizer->ProcessUpEvent(currentPoint.Get());
   }
 

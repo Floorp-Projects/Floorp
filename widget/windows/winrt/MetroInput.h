@@ -167,6 +167,7 @@ private:
   void TransformRefPoint(const Point& aPosition,
                          LayoutDeviceIntPoint& aRefPointOut);
   void OnPointerNonTouch(IPointerPoint* aPoint);
+  void AddPointerMoveDataToRecognizer(IPointerEventArgs* aArgs);
   void InitGeckoMouseEventFromPointerPoint(nsMouseEvent* aEvent,
                                            IPointerPoint* aPoint);
   void ProcessManipulationDelta(ManipulationDelta const& aDelta,
