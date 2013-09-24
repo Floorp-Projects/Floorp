@@ -598,8 +598,6 @@ OscillatorNode::Stop(double aWhen, ErrorResult& aRv)
     return;
   }
 
-  MarkInactive();
-
   AudioNodeStream* ns = static_cast<AudioNodeStream*>(mStream.get());
   if (!ns || !Context()) {
     // We've already stopped and had our stream shut down
