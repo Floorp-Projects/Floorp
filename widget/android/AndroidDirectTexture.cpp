@@ -6,6 +6,7 @@
 #include <unistd.h>
 #include <errno.h>
 #include "AndroidDirectTexture.h"
+#include "nsRect.h"
 
 typedef gfxASurface::gfxImageFormat gfxImageFormat;
 
