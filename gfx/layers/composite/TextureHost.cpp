@@ -535,9 +535,6 @@ MemoryTextureHost::~MemoryTextureHost()
 void
 MemoryTextureHost::DeallocateSharedData()
 {
-  if (mBuffer) {
-    GfxHeapTexturesReporter::OnFree(mBuffer);
-  }
   delete[] mBuffer;
 }
 
