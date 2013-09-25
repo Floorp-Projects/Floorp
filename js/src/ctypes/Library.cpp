@@ -58,7 +58,7 @@ Library::Name(JSContext* cx, unsigned argc, jsval *vp)
   }
 
   jsval arg = JS_ARGV(cx, vp)[0];
-  JSString* str = NULL;
+  JSString* str = nullptr;
   if (JSVAL_IS_STRING(arg)) {
     str = JSVAL_TO_STRING(arg);
   }
@@ -85,32 +85,33 @@ JSObject*
 Library::Create(JSContext* cx, jsval path_, JSCTypesCallbacks* callbacks)
 {
   RootedValue path(cx, path_);
-  RootedObject libraryObj(cx, JS_NewObject(cx, &sLibraryClass, NULL, NULL));
+  RootedObject libraryObj(cx,
+                          JS_NewObject(cx, &sLibraryClass, nullptr, nullptr));
   if (!libraryObj)
-    return NULL;
+    return nullptr;
 
   // initialize the library
-  JS_SetReservedSlot(libraryObj, SLOT_LIBRARY, PRIVATE_TO_JSVAL(NULL));
+  JS_SetReservedSlot(libraryObj, SLOT_LIBRARY, PRIVATE_TO_JSVAL(nullptr));
 
   // attach API functions
   if (!JS_DefineFunctions(cx, libraryObj, sLibraryFunctions))
-    return NULL;
+    return nullptr;
 
   if (!JSVAL_IS_STRING(path)) {
     JS_ReportError(cx, "open takes a string argument");
-    return NULL;
+    return nullptr;
   }
 
   PRLibSpec libSpec;
   RootedFlatString pathStr(cx, JS_FlattenString(cx, JSVAL_TO_STRING(path)));
   if (!pathStr)
-    return NULL;
+    return nullptr;
 #ifdef XP_WIN
   // On Windows, converting to native charset may corrupt path string.
   // So, we have to use Unicode path directly.
   const PRUnichar* pathChars = JS_GetFlatStringChars(pathStr);
   if (!pathChars)
-    return NULL;
+    return nullptr;
 
   libSpec.value.pathname_u = pathChars;
   libSpec.type = PR_LibSpec_PathnameU;
@@ -122,7 +123,7 @@ Library::Create(JSContext* cx, jsval path_, JSCTypesCallbacks* callbacks)
     pathBytes = 
       callbacks->unicodeToNative(cx, pathStr->chars(), pathStr->length());
     if (!pathBytes)
-      return NULL;
+      return nullptr;
 
   } else {
     // Fallback: assume the platform native charset is UTF-8. This is true
@@ -130,11 +131,11 @@ Library::Create(JSContext* cx, jsval path_, JSCTypesCallbacks* callbacks)
     size_t nbytes =
       GetDeflatedUTF8StringLength(cx, pathStr->chars(), pathStr->length());
     if (nbytes == (size_t) -1)
-      return NULL;
+      return nullptr;
 
     pathBytes = static_cast<char*>(JS_malloc(cx, nbytes + 1));
     if (!pathBytes)
-      return NULL;
+      return nullptr;
 
     ASSERT_OK(DeflateStringToUTF8Buffer(cx, pathStr->chars(),
                 pathStr->length(), pathBytes, &nbytes));
@@ -154,7 +155,7 @@ Library::Create(JSContext* cx, jsval path_, JSCTypesCallbacks* callbacks)
     JS_ReportError(cx, "couldn't open library %s", pathBytes);
     JS_free(cx, pathBytes);
 #endif
-    return NULL;
+    return nullptr;
   }
 
 #ifndef XP_WIN
@@ -238,7 +239,7 @@ Library::Close(JSContext* cx, unsigned argc, jsval* vp)
 
   // delete our internal objects
   UnloadLibrary(obj);
-  JS_SetReservedSlot(obj, SLOT_LIBRARY, PRIVATE_TO_JSVAL(NULL));
+  JS_SetReservedSlot(obj, SLOT_LIBRARY, PRIVATE_TO_JSVAL(nullptr));
 
   JS_SET_RVAL(cx, vp, JSVAL_VOID);
   return true;
@@ -282,7 +283,7 @@ Library::Declare(JSContext* cx, unsigned argc, jsval* vp)
     return false;
   }
 
-  RootedObject fnObj(cx, NULL);
+  RootedObject fnObj(cx, nullptr);
   RootedObject typeObj(cx);
   bool isFunction = argc > 2;
   if (isFunction) {

@@ -96,8 +96,8 @@ public:
       aNextInFlow->AddStateBits(NS_FRAME_IS_FLUID_CONTINUATION);
     return NS_OK;
   }
-  virtual nsIFrame* GetLastInFlow() const MOZ_OVERRIDE;
-  virtual nsIFrame* GetLastContinuation() const MOZ_OVERRIDE;
+  virtual nsIFrame* LastInFlow() const MOZ_OVERRIDE;
+  virtual nsIFrame* LastContinuation() const MOZ_OVERRIDE;
   
   virtual nsSplittableType GetSplittableType() const MOZ_OVERRIDE {
     return NS_FRAME_SPLITTABLE;

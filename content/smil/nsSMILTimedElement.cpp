@@ -5,6 +5,7 @@
 
 #include "mozilla/DebugOnly.h"
 
+#include "mozilla/BasicEvents.h"
 #include "mozilla/dom/SVGAnimationElement.h"
 #include "nsSMILTimedElement.h"
 #include "nsAttrValueInlines.h"
@@ -15,7 +16,6 @@
 #include "nsSMILParserUtils.h"
 #include "nsSMILTimeContainer.h"
 #include "nsGkAtoms.h"
-#include "nsGUIEvent.h"
 #include "nsEventDispatcher.h"
 #include "nsReadableUtils.h"
 #include "nsMathUtils.h"

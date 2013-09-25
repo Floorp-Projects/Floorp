@@ -23,7 +23,6 @@
 #include "nsUnicharUtils.h"
 #include "plstr.h"
 #include "nsGkAtoms.h"
-#include "nsGUIEvent.h"
 #include "nsCRT.h"
 #include "nsBaseWidget.h"
 
@@ -43,6 +42,8 @@
 #include "nsIScriptGlobalObject.h"
 #include "nsIScriptContext.h"
 #include "nsIXPConnect.h"
+
+#include "mozilla/MouseEvents.h"
 
 static bool gConstructingMenu = false;
 static bool gMenuMethodsSwizzled = false;

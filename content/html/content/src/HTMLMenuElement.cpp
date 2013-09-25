@@ -5,12 +5,12 @@
 
 #include "mozilla/dom/HTMLMenuElement.h"
 
+#include "mozilla/BasicEvents.h"
 #include "mozilla/dom/HTMLMenuElementBinding.h"
 #include "mozilla/dom/HTMLMenuItemElement.h"
 #include "nsAttrValueInlines.h"
 #include "nsContentUtils.h"
 #include "nsEventDispatcher.h"
-#include "nsGUIEvent.h"
 #include "nsXULContextMenuBuilder.h"
 #include "nsIURI.h"
 
