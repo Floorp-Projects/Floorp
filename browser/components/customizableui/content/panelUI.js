@@ -39,6 +39,9 @@ const PanelUI = {
         return this[getKey] = document.getElementById(id);
       });
     }
+
+    this.menuButton.addEventListener("mousedown", this);
+    this.menuButton.addEventListener("keypress", this);
   },
 
   _eventListenersAdded: false,
@@ -68,6 +71,8 @@ const PanelUI = {
     }
     this.helpView.removeEventListener("ViewShowing", this._onHelpViewShow);
     this.helpView.removeEventListener("ViewHiding", this._onHelpViewHide);
+    this.menuButton.removeEventListener("mousedown", this);
+    this.menuButton.removeEventListener("keypress", this);
   },
 
   /**
@@ -92,6 +97,11 @@ const PanelUI = {
    * @param aEvent the event that triggers the toggle.
    */
   toggle: function(aEvent) {
+    // Don't show the panel if the window is in customization mode,
+    // since this button doubles as an exit path for the user in this case.
+    if (document.documentElement.hasAttribute("customizing")) {
+      return;
+    }
     this._ensureEventListenersAdded();
     if (this.panel.state == "open") {
       this.hide();
@@ -104,7 +114,8 @@ const PanelUI = {
         }
 
         let anchor;
-        if (aEvent.type == "command") {
+        if (aEvent.type == "mousedown" ||
+            aEvent.type == "command") {
           anchor = this.menuButton;
         } else {
           anchor = aEvent.target;
@@ -142,6 +153,11 @@ const PanelUI = {
         this._updatePanelButton(aEvent.target);
         break;
       }
+      case "mousedown":
+        // Fall through
+      case "keypress":
+        this.toggle(aEvent);
+        break;
     }
   },
 
