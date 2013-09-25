@@ -72,4 +72,21 @@ void uwt__release_full_buffer(ThreadProfile* aProfile,
                               UnwinderThreadBuffer* utb,
                               void* /* ucontext_t*, really */ ucV);
 
+struct LinkedUWTBuffer;
+
+// Get an empty buffer for synchronous unwinding.
+// This function is NOT signal-safe.
+LinkedUWTBuffer* utb__acquire_sync_buffer(void* stackTop);
+
+void utb__finish_sync_buffer(ThreadProfile* aProfile,
+                             UnwinderThreadBuffer* utb,
+                             void* /* ucontext_t*, really */ ucV);
+
+// Free an empty buffer that was previously allocated by
+// utb__acquire_sync_buffer.
+void utb__release_sync_buffer(LinkedUWTBuffer* utb);
+
+// This typedef must match uwt__release_full_buffer and uwt__finish_sync_buffer
+typedef void (*UTB_RELEASE_FUNC)(ThreadProfile*,UnwinderThreadBuffer*,void*);
+
 #endif /* ndef MOZ_UNWINDER_THREAD_2_H */

@@ -10,6 +10,7 @@
 #include "GeckoProfilerImpl.h"
 #include "SaveProfileTask.h"
 #include "ProfileEntry.h"
+#include "SyncProfile.h"
 #include "platform.h"
 #include "nsThreadUtils.h"
 #include "prenv.h"
@@ -48,6 +49,18 @@
 #endif
 #ifdef USE_NS_STACKWALK
  #include "nsStackWalk.h"
+#endif
+
+#if defined(XP_WIN)
+typedef CONTEXT tickcontext_t;
+#elif defined(LINUX)
+#include <ucontext.h>
+typedef ucontext_t tickcontext_t;
+#endif
+
+#if defined(LINUX) || defined(XP_MACOSX)
+#include <sys/types.h>
+pid_t gettid();
 #endif
 
 #if defined(SPS_ARCH_arm) && defined(MOZ_WIDGET_GONK)
@@ -416,6 +429,27 @@ void StackWalkCallback(void* aPC, void* aSP, void* aClosure)
 
 void TableTicker::doNativeBacktrace(ThreadProfile &aProfile, TickSample* aSample)
 {
+#ifdef XP_WIN
+  /* For the purpose of SPS it is currently too expensive to call NS_StackWalk()
+     on itself on Windows. For each call to NS_StackWalk(), we currently have to
+     use another thread to suspend the calling thread, obtain its context, and
+     walk its stack. We shouldn't do that every time we need a thread to obtain
+     its own backtrace in SPS.*/
+  if (aSample->isSamplingCurrentThread) {
+    void* ptrs[100];
+    USHORT count = RtlCaptureStackBackTrace(0, 100, ptrs, nullptr);
+    aProfile.addTag(ProfileEntry('s', "(root)"));
+    if (count) {
+      USHORT i = count;
+      do {
+        --i;
+        aProfile.addTag(ProfileEntry('l', ptrs[i]));
+      } while (i != 0);
+    }
+    return;
+  }
+#endif
+
 #ifndef XP_MACOSX
   uintptr_t thread = GetThreadHandle(aSample->threadProfile->GetPlatformData());
   MOZ_ASSERT(thread);
@@ -510,34 +544,39 @@ void TableTicker::InplaceTick(TickSample* sample)
 {
   ThreadProfile& currThreadProfile = *sample->threadProfile;
 
-  // Marker(s) come before the sample
   PseudoStack* stack = currThreadProfile.GetPseudoStack();
-  ProfilerMarkerLinkedList* pendingMarkersList = stack->getPendingMarkers();
-  while (pendingMarkersList && pendingMarkersList->peek()) {
-    ProfilerMarker* marker = pendingMarkersList->popHead();
-    stack->addStoredMarker(marker);
-    currThreadProfile.addTag(ProfileEntry('m', marker));
-  }
-  stack->updateGeneration(currThreadProfile.GetGenerationID());
-
   bool recordSample = true;
-  if (mJankOnly) {
-    // if we are on a different event we can discard any temporary samples
-    // we've kept around
-    if (sLastSampledEventGeneration != sCurrentEventGeneration) {
-      // XXX: we also probably want to add an entry to the profile to help
-      // distinguish which samples are part of the same event. That, or record
-      // the event generation in each sample
-      currThreadProfile.erase();
-    }
-    sLastSampledEventGeneration = sCurrentEventGeneration;
 
-    recordSample = false;
-    // only record the events when we have a we haven't seen a tracer event for 100ms
-    if (!sLastTracerEvent.IsNull()) {
-      TimeDuration delta = sample->timestamp - sLastTracerEvent;
-      if (delta.ToMilliseconds() > 100.0) {
-          recordSample = true;
+  /* Don't process the PeudoStack's markers or honour jankOnly if we're
+     immediately sampling the current thread. */
+  if (!sample->isSamplingCurrentThread) {
+    // Marker(s) come before the sample
+    ProfilerMarkerLinkedList* pendingMarkersList = stack->getPendingMarkers();
+    while (pendingMarkersList && pendingMarkersList->peek()) {
+      ProfilerMarker* marker = pendingMarkersList->popHead();
+      stack->addStoredMarker(marker);
+      currThreadProfile.addTag(ProfileEntry('m', marker));
+    }
+    stack->updateGeneration(currThreadProfile.GetGenerationID());
+
+    if (mJankOnly) {
+      // if we are on a different event we can discard any temporary samples
+      // we've kept around
+      if (sLastSampledEventGeneration != sCurrentEventGeneration) {
+        // XXX: we also probably want to add an entry to the profile to help
+        // distinguish which samples are part of the same event. That, or record
+        // the event generation in each sample
+        currThreadProfile.erase();
+      }
+      sLastSampledEventGeneration = sCurrentEventGeneration;
+
+      recordSample = false;
+      // only record the events when we have a we haven't seen a tracer event for 100ms
+      if (!sLastTracerEvent.IsNull()) {
+        TimeDuration delta = sample->timestamp - sLastTracerEvent;
+        if (delta.ToMilliseconds() > 100.0) {
+            recordSample = true;
+        }
       }
     }
   }
@@ -571,7 +610,57 @@ void TableTicker::InplaceTick(TickSample* sample)
   }
 }
 
-static void print_callback(const ProfileEntry& entry, const char* tagStringData) {
+namespace {
+
+SyncProfile* NewSyncProfile()
+{
+  PseudoStack* stack = tlsPseudoStack.get();
+  if (!stack) {
+    MOZ_ASSERT(stack);
+    return nullptr;
+  }
+  Thread::tid_t tid = Thread::GetCurrentId();
+
+  SyncProfile* profile = new SyncProfile("SyncProfile",
+                                         GET_BACKTRACE_DEFAULT_ENTRY,
+                                         stack, tid, NS_IsMainThread());
+  return profile;
+}
+
+} // anonymous namespace
+
+SyncProfile* TableTicker::GetBacktrace()
+{
+  SyncProfile* profile = NewSyncProfile();
+
+  TickSample sample;
+  sample.threadProfile = profile;
+
+#if defined(XP_WIN) || defined(LINUX)
+  tickcontext_t context;
+  sample.PopulateContext(&context);
+#elif defined(XP_MACOSX)
+  sample.PopulateContext(nullptr);
+#endif
+
+  sample.isSamplingCurrentThread = true;
+  sample.timestamp = mozilla::TimeStamp::Now();
+
+  if (!HasUnwinderThread()) {
+    profile->BeginUnwind();
+  }
+
+  Tick(&sample);
+
+  if (!HasUnwinderThread()) {
+    profile->EndUnwind();
+  }
+
+  return profile;
+}
+
+static void print_callback(const ProfileEntry& entry, const char* tagStringData)
+{
   switch (entry.getTagName()) {
     case 's':
     case 'c':
@@ -584,25 +673,18 @@ void mozilla_sampler_print_location1()
   if (!stack_key_initialized)
     profiler_init(NULL);
 
-  PseudoStack *stack = tlsPseudoStack.get();
-  if (!stack) {
-    MOZ_ASSERT(false);
+  SyncProfile* syncProfile = NewSyncProfile();
+  if (!syncProfile) {
     return;
   }
 
-  // This won't allow unwinding past this function, but it will be safe.
-  void *stackTop = &stack;
-
-  ThreadProfile threadProfile("Temp", PROFILE_DEFAULT_ENTRY, stack,
-                              0, Sampler::AllocPlatformData(0), false,
-                              stackTop);
-
-  doSampleStackTrace(stack, threadProfile, NULL);
-
-  threadProfile.flush();
+  syncProfile->BeginUnwind();
+  doSampleStackTrace(syncProfile->GetPseudoStack(), *syncProfile, NULL);
+  syncProfile->EndUnwind();
 
   printf_stderr("Backtrace:\n");
-  threadProfile.IterateTags(print_callback);
+  syncProfile->IterateTags(print_callback);
+  delete syncProfile;
 }
 
 
