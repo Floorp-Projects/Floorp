@@ -2127,7 +2127,7 @@ nsWindow::OnExposeEvent(cairo_t *cr)
             CreateDrawTargetForSurface(surf, intSize));
     } else if (gfxPlatform::GetPlatform()->
                    SupportsAzureContentForType(BACKEND_SKIA) &&
-               surf->GetType() != gfxASurface::SurfaceTypeImage) {
+               surf->GetType() != gfxSurfaceTypeImage) {
        gfxImageSurface* imgSurf = static_cast<gfxImageSurface*>(surf);
        SurfaceFormat format = ImageFormatToSurfaceFormat(imgSurf->Format());
        IntSize intSize(surf->GetSize().width, surf->GetSize().height);
@@ -2160,7 +2160,7 @@ nsWindow::OnExposeEvent(cairo_t *cr)
         // (The shape mask won't be necessary when a visual with an alpha
         // channel is used on compositing window managers.)
         layerBuffering = mozilla::layers::BUFFER_NONE;
-        ctx->PushGroup(gfxASurface::CONTENT_COLOR_ALPHA);
+        ctx->PushGroup(GFX_CONTENT_COLOR_ALPHA);
 #ifdef MOZ_HAVE_SHMIMAGE
     } else if (nsShmImage::UseShm()) {
         // We're using an xshm mapping as a back buffer.
@@ -2271,7 +2271,7 @@ nsWindow::UpdateAlpha(gfxPattern* aPattern, nsIntRect aBoundsRect)
   } else {
       nsRefPtr<gfxImageSurface> img =
           new gfxImageSurface(ThebesIntSize(aBoundsRect.Size()),
-                              gfxImageSurface::ImageFormatA8);
+                              gfxImageFormatA8);
       if (img && !img->CairoStatus()) {
           img->SetDeviceOffset(-aBoundsRect.TopLeft());
 

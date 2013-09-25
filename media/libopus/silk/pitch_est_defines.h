@@ -1,9 +1,5 @@
 /***********************************************************************
-Copyright (c) 2006-2012 IETF Trust and Skype Limited. All rights reserved.
-
-This file is extracted from RFC6716. Please see that RFC for additional
-information.
-
+Copyright (c) 2006-2011, Skype Limited. All rights reserved.
 Redistribution and use in source and binary forms, with or without
 modification, are permitted provided that the following conditions
 are met:
@@ -16,7 +12,7 @@ documentation and/or other materials provided with the distribution.
 names of specific contributors, may be used to endorse or promote
 products derived from this software without specific prior written
 permission.
-THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS “AS IS”
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
 AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
 IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
 ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE
@@ -49,7 +45,6 @@ POSSIBILITY OF SUCH DAMAGE.
 #define PE_MAX_FRAME_LENGTH         ( PE_MAX_FRAME_LENGTH_MS * PE_MAX_FS_KHZ )
 #define PE_MAX_FRAME_LENGTH_ST_1    ( PE_MAX_FRAME_LENGTH >> 2 )
 #define PE_MAX_FRAME_LENGTH_ST_2    ( PE_MAX_FRAME_LENGTH >> 1 )
-#define PE_MAX_SF_FRAME_LENGTH      ( PE_SUB_FRAME * PE_MAX_FS_KHZ )
 
 #define PE_MAX_LAG_MS               18           /* 18 ms -> 56 Hz */
 #define PE_MIN_LAG_MS               2            /* 2 ms -> 500 Hz */
@@ -62,9 +57,6 @@ POSSIBILITY OF SUCH DAMAGE.
 
 #define PE_NB_CBKS_STAGE2           3
 #define PE_NB_CBKS_STAGE2_EXT       11
-
-#define PE_CB_mn2                   1
-#define PE_CB_mx2                   2
 
 #define PE_NB_CBKS_STAGE3_MAX       34
 #define PE_NB_CBKS_STAGE3_MID       24

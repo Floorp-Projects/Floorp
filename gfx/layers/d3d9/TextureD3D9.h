@@ -169,8 +169,6 @@ protected:
   virtual void UpdateImpl(const SurfaceDescriptor& aSurface,
                           nsIntRegion* aRegion,
                           nsIntPoint *aOffset = nullptr) MOZ_OVERRIDE;
-
-  nsRefPtr<IDirect3DTexture9> mTexture;
 };
 
 class DeprecatedTextureHostYCbCrD3D9 : public DeprecatedTextureHost
@@ -212,6 +210,46 @@ private:
   RefPtr<IDirect3DDevice9> mDevice;
 };
 
+class DeprecatedTextureHostDIB : public DeprecatedTextureHostD3D9
+{
+public:
+#ifdef MOZ_LAYERS_HAVE_LOG
+  virtual const char* Name() { return "DeprecatedTextureHostDIB"; }
+#endif
+  virtual void SetBuffer(SurfaceDescriptor* aBuffer, ISurfaceAllocator* aAllocator) MOZ_OVERRIDE
+  {
+    MOZ_ASSERT(aBuffer->type() == SurfaceDescriptor::TSurfaceDescriptorDIB);
+    // We are responsible for keeping the surface alive. But the client will have AddRefed it
+    // for transport to the host. So we don't need to AddRef here.
+    mSurface = dont_AddRef(reinterpret_cast<gfxWindowsSurface*>(aBuffer->get_SurfaceDescriptorDIB().surface()));
+    DeprecatedTextureHost::SetBuffer(aBuffer, aAllocator);
+  }
+  virtual SurfaceDescriptor* LockSurfaceDescriptor() const MOZ_OVERRIDE
+  {
+    NS_ASSERTION(!mBuffer ||
+      (mBuffer->type() == SurfaceDescriptor::TSurfaceDescriptorDIB &&
+       mSurface == reinterpret_cast<gfxWindowsSurface*>(mBuffer->get_SurfaceDescriptorDIB().surface())),
+                 "SurfaceDescriptor is not up to date");
+    // We are either going to pass the surface descriptor to the content thread
+    // or we are going to give the our surface descriptor to a compositable host,
+    // pretending that it is from the client thread. In either case it is going to
+    // get released, so we need to AddRef here.
+    if (mBuffer) {
+      mSurface->AddRef();
+    }
+    return DeprecatedTextureHost::LockSurfaceDescriptor();
+  }
+
+protected:
+  virtual void UpdateImpl(const SurfaceDescriptor& aSurface,
+                          nsIntRegion* aRegion,
+                          nsIntPoint *aOffset = nullptr) MOZ_OVERRIDE;
+
+  // Used to keep the surface alive if the host has responsibility for the
+  // lifetime of the surface.
+  nsRefPtr<gfxWindowsSurface> mSurface;
+};
+
 // If we want to use d3d9 textures for transport, use this class.
 // If we are using shmem, then use DeprecatedTextureClientShmem with DeprecatedTextureHostShmemD3D9
 // Since we pass a raw pointer, you should not use this texture client for
@@ -229,7 +267,7 @@ public:
   }
 
   virtual bool EnsureAllocated(gfx::IntSize aSize,
-                               gfxASurface::gfxContentType aType) MOZ_OVERRIDE;
+                               gfxContentType aType) MOZ_OVERRIDE;
 
   virtual gfxASurface* LockSurface() MOZ_OVERRIDE;
   virtual gfx::DrawTarget* LockDrawTarget() MOZ_OVERRIDE;
@@ -240,23 +278,58 @@ public:
   virtual void Unlock() MOZ_OVERRIDE;
 
   virtual void SetDescriptor(const SurfaceDescriptor& aDescriptor) MOZ_OVERRIDE;
-  virtual gfxASurface::gfxContentType GetContentType() MOZ_OVERRIDE
+  virtual gfxContentType GetContentType() MOZ_OVERRIDE
   {
     return mContentType;
   }
 
 private:
-  void ClearDT();
-
   nsRefPtr<IDirect3DTexture9> mTexture;
   nsRefPtr<gfxASurface> mSurface;
   nsRefPtr<IDirect3DSurface9> mD3D9Surface;
-  HDC mDC;
   RefPtr<gfx::DrawTarget> mDrawTarget;
   gfx::IntSize mSize;
   gfxContentType mContentType;
-  bool mTextureLocked;
-  bool mIsOpaque;
+};
+
+// Retains a DIB and uses it for transport.
+// Used where we can't efficently use a gfxWindowsSurface wrapped around
+// a DC from a IDirect3DSurface9, which is for surfaces with alpha.
+class DeprecatedTextureClientDIB : public DeprecatedTextureClient
+{
+public:
+  DeprecatedTextureClientDIB(CompositableForwarder* aCompositableForwarder,
+                             const TextureInfo& aTextureInfo);
+  virtual ~DeprecatedTextureClientDIB();
+
+  virtual bool SupportsType(DeprecatedTextureClientType aType) MOZ_OVERRIDE
+  {
+    return aType == TEXTURE_CONTENT;
+  }
+
+  virtual bool EnsureAllocated(gfx::IntSize aSize,
+                               gfxContentType aType) MOZ_OVERRIDE;
+
+  virtual gfxASurface* LockSurface() MOZ_OVERRIDE;
+  virtual gfx::DrawTarget* LockDrawTarget() MOZ_OVERRIDE;
+  virtual gfx::BackendType BackendType() MOZ_OVERRIDE
+  {
+    return gfx::BACKEND_CAIRO;
+  }
+  virtual void Unlock() MOZ_OVERRIDE;
+
+  virtual SurfaceDescriptor* LockSurfaceDescriptor() MOZ_OVERRIDE;
+  virtual void SetDescriptor(const SurfaceDescriptor& aDescriptor) MOZ_OVERRIDE;
+  virtual gfxContentType GetContentType() MOZ_OVERRIDE
+  {
+    return mContentType;
+  }
+
+private:
+  nsRefPtr<gfxWindowsSurface> mSurface;
+  RefPtr<gfx::DrawTarget> mDrawTarget;
+  gfx::IntSize mSize;
+  gfxContentType mContentType;
 };
 
 }

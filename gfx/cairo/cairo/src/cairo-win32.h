@@ -147,6 +147,7 @@ cairo_dwrite_get_cleartype_rendering_mode();
 
 #endif /* CAIRO_HAS_DWRITE_FONT */
 
+struct IDirect3DSurface9;
 cairo_public cairo_surface_t *
 cairo_win32_surface_create_with_d3dsurface9 (struct IDirect3DSurface9 *surface);
 

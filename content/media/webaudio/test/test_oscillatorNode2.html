@@ -1,0 +1,53 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test OscillatorNode lifetime and sine phase</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<pre id="test">
+<script src="webaudio.js" type="text/javascript"></script>
+<script class="testbody" type="text/javascript">
+
+const signalLength = 2048;
+
+function createOscillator(context) {
+  var osc = context.createOscillator();
+  osc.start(0);
+  osc.stop(signalLength/context.sampleRate);
+  return osc;
+}
+
+function connectUnreferencedOscillator(context, destination) {
+  var osc = createOscillator(context);
+  osc.connect(destination);
+}
+
+var gTest = {
+  length: signalLength,
+  numberOfChannels: 1,
+  createGraph: function(context) {
+    var blend = context.createGain();
+
+    connectUnreferencedOscillator(context, blend);
+    // Test that the unreferenced oscillator remains alive until it has finished.
+    SpecialPowers.forceGC();
+    SpecialPowers.forceCC();
+
+    // Create another sine wave oscillator in negative time, which should
+    // cancel when mixed with the unreferenced oscillator.
+    var oscillator = createOscillator(context);
+    oscillator.frequency.value = -440;
+    oscillator.connect(blend);
+
+    return blend;
+  },
+};
+
+runTest();
+
+</script>
+</pre>
+</body>
+</html>

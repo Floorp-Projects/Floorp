@@ -53,14 +53,14 @@ nsClipboard::~nsClipboard()
 }
 
 static inline QImage::Format
-_gfximage_to_qformat(gfxASurface::gfxImageFormat aFormat)
+_gfximage_to_qformat(gfxImageFormat aFormat)
 {
     switch (aFormat) {
-    case gfxASurface::ImageFormatARGB32:
+    case gfxImageFormatARGB32:
         return QImage::Format_ARGB32_Premultiplied;
-    case gfxASurface::ImageFormatRGB24:
+    case gfxImageFormatRGB24:
         return QImage::Format_ARGB32;
-    case gfxASurface::ImageFormatRGB16_565:
+    case gfxImageFormatRGB16_565:
         return QImage::Format_RGB16;
     default:
         return QImage::Format_Invalid;

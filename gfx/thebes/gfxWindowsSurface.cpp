@@ -82,7 +82,7 @@ gfxWindowsSurface::gfxWindowsSurface(HDC dc, const gfxIntSize& realSize, gfxImag
 
     if (mSurfaceValid) {
         // DDBs will generally only use 3 bytes per pixel when RGB24
-        int bytesPerPixel = ((imageFormat == gfxASurface::ImageFormatRGB24) ? 3 : 4);
+        int bytesPerPixel = ((imageFormat == gfxImageFormatRGB24) ? 3 : 4);
         RecordMemoryUsed(size.width * size.height * bytesPerPixel + sizeof(gfxWindowsSurface));
     }
 
@@ -125,13 +125,13 @@ gfxWindowsSurface::CreateSimilarSurface(gfxContentType aContent,
     }
 
     cairo_surface_t *surface;
-    if (GetContentType() == CONTENT_COLOR_ALPHA) {
+    if (GetContentType() == GFX_CONTENT_COLOR_ALPHA) {
         // When creating a similar surface to a transparent surface, ensure
         // the new surface uses a DIB. cairo_surface_create_similar won't
-        // use  a DIB for a CONTENT_COLOR surface if this surface doesn't
+        // use  a DIB for a GFX_CONTENT_COLOR surface if this surface doesn't
         // have a DIB (e.g. if we're a transparent window surface). But
         // we need a DIB to perform well if the new surface is composited into
-        // a surface that's the result of create_similar(CONTENT_COLOR_ALPHA)
+        // a surface that's the result of create_similar(GFX_CONTENT_COLOR_ALPHA)
         // (e.g. a backbuffer for the window) --- that new surface *would*
         // have a DIB.
         surface =
@@ -205,7 +205,7 @@ gfxWindowsSurface::OptimizeToDDB(HDC dc, const gfxIntSize& size, gfxImageFormat 
     if (mForPrinting)
         return nullptr;
 
-    if (format != ImageFormatRGB24)
+    if (format != gfxImageFormatRGB24)
         return nullptr;
 
     nsRefPtr<gfxWindowsSurface> wsurf = new gfxWindowsSurface(dc, size, format);
@@ -333,8 +333,8 @@ gfxWindowsSurface::GetSize() const
                       cairo_win32_surface_get_height(mSurface));
 }
 
-gfxASurface::MemoryLocation
+gfxMemoryLocation
 gfxWindowsSurface::GetMemoryLocation() const
 {
-    return MEMORY_IN_PROCESS_NONHEAP;
+    return GFX_MEMORY_IN_PROCESS_NONHEAP;
 }

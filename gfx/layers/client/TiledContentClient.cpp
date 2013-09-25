@@ -115,13 +115,13 @@ BasicTiledLayerBuffer::HasFormatChanged() const
 }
 
 
-gfxASurface::gfxContentType
+gfxContentType
 BasicTiledLayerBuffer::GetContentType() const
 {
   if (mThebesLayer->CanUseOpaqueSurface()) {
-    return gfxASurface::CONTENT_COLOR;
+    return GFX_CONTENT_COLOR;
   } else {
-    return gfxASurface::CONTENT_COLOR_ALPHA;
+    return GFX_CONTENT_COLOR_ALPHA;
   }
 }
 
@@ -239,7 +239,7 @@ BasicTiledLayerBuffer::PaintThebes(const nsIntRegion& aNewValidRegion,
     const nsIntRect bounds = aPaintRegion.GetBounds();
     {
       PROFILER_LABEL("BasicTiledLayerBuffer", "PaintThebesSingleBufferAlloc");
-      gfxASurface::gfxImageFormat format =
+      gfxImageFormat format =
         gfxPlatform::GetPlatform()->OptimalFormatForContent(
           GetContentType());
 

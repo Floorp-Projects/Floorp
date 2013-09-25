@@ -1,9 +1,5 @@
 /***********************************************************************
-Copyright (c) 2006-2012 IETF Trust and Skype Limited. All rights reserved.
-
-This file is extracted from RFC6716. Please see that RFC for additional
-information.
-
+Copyright (c) 2006-2011, Skype Limited. All rights reserved.
 Redistribution and use in source and binary forms, with or without
 modification, are permitted provided that the following conditions
 are met:
@@ -16,7 +12,7 @@ documentation and/or other materials provided with the distribution.
 names of specific contributors, may be used to endorse or promote
 products derived from this software without specific prior written
 permission.
-THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS “AS IS”
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
 AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
 IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
 ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE
@@ -168,17 +164,17 @@ void silk_find_LTP_FLP(
 
 void silk_LTP_analysis_filter_FLP(
     silk_float                      *LTP_res,                           /* O    LTP res MAX_NB_SUBFR*(pre_lgth+subfr_lngth) */
-    const silk_float                *x,                                 /* I    Input signal, with preceeding samples       */
+    const silk_float                *x,                                 /* I    Input signal, with preceding samples        */
     const silk_float                B[ LTP_ORDER * MAX_NB_SUBFR ],      /* I    LTP coefficients for each subframe          */
     const opus_int                  pitchL[   MAX_NB_SUBFR ],           /* I    Pitch lags                                  */
     const silk_float                invGains[ MAX_NB_SUBFR ],           /* I    Inverse quantization gains                  */
     const opus_int                  subfr_length,                       /* I    Length of each subframe                     */
     const opus_int                  nb_subfr,                           /* I    number of subframes                         */
-    const opus_int                  pre_length                          /* I    Preceeding samples for each subframe        */
+    const opus_int                  pre_length                          /* I    Preceding samples for each subframe         */
 );
 
 /* Calculates residual energies of input subframes where all subframes have LPC_order   */
-/* of preceeding samples                                                                */
+/* of preceding samples                                                                 */
 void silk_residual_energy_FLP(
     silk_float                      nrgs[ MAX_NB_SUBFR ],               /* O    Residual energy per subframe                */
     const silk_float                x[],                                /* I    Input signal                                */

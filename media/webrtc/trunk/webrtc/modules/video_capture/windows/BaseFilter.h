@@ -151,6 +151,15 @@ protected:
   unsigned long mRefCnt;
 };
 
+// For mingw __uuidof support
+#ifdef __CRT_UUID_DECL
+}
+}
+__CRT_UUID_DECL(mozilla::media::BaseFilter, 0x4debd354,0xb0c6,0x44ab,0x93,0xcf,0x49,0xf6,0x4e,0xd3,0x6a,0xb8);
+namespace mozilla {
+namespace media {
+#endif
+
 _COM_SMARTPTR_TYPEDEF(BaseFilter, __uuidof(BaseFilter));
 
 }

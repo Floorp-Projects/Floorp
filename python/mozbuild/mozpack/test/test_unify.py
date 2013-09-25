@@ -2,13 +2,14 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+from mozbuild.util import ensureParentDir
+
 from mozpack.unify import (
     UnifiedFinder,
     UnifiedBuildFinder,
 )
 import mozunit
 from mozpack.test.test_files import TestWithTmpDir
-from mozpack.copier import ensure_parent_dir
 from mozpack.files import FileFinder
 from mozpack.mozjar import JarWriter
 from mozpack.test.test_files import MockDest
@@ -25,7 +26,7 @@ from mozpack.errors import (
 class TestUnified(TestWithTmpDir):
     def create_one(self, which, path, content):
         file = self.tmppath(os.path.join(which, path))
-        ensure_parent_dir(file)
+        ensureParentDir(file)
         open(file, 'wb').write(content)
 
     def create_both(self, path, content):

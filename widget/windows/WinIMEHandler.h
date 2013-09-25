@@ -7,7 +7,6 @@
 #define WinIMEHandler_h_
 
 #include "nscore.h"
-#include "nsEvent.h"
 #include "nsIWidget.h"
 #include <windows.h>
 #include <inputscope.h>

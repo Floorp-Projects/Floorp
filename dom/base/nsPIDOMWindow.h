@@ -52,6 +52,13 @@ enum PopupControlState {
   openOverridden    // disallow window open
 };
 
+enum UIStateChangeType
+{
+  UIStateChangeType_NoChange,
+  UIStateChangeType_Set,
+  UIStateChangeType_Clear
+};
+
 #define NS_PIDOMWINDOW_IID \
 { 0x4f4eadf9, 0xe795, 0x48e5, \
   { 0x89, 0x4b, 0x04, 0x40, 0xb2, 0x5d, 0xa6, 0xfa } }

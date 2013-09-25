@@ -138,7 +138,7 @@ nsPNGDecoder::~nsPNGDecoder()
 // CreateFrame() is used for both simple and animated images
 void nsPNGDecoder::CreateFrame(png_uint_32 x_offset, png_uint_32 y_offset,
                                int32_t width, int32_t height,
-                               gfxASurface::gfxImageFormat format)
+                               gfxImageFormat format)
 {
   // Our first full frame is automatically created by the image decoding
   // infrastructure. Just use it as long as it matches up.
@@ -148,7 +148,7 @@ void nsPNGDecoder::CreateFrame(png_uint_32 x_offset, png_uint_32 y_offset,
     NeedNewFrame(mNumFrames, x_offset, y_offset, width, height, format);
   } else if (mNumFrames == 0) {
     // Our preallocated frame matches up, with the possible exception of alpha.
-    if (format == gfxASurface::ImageFormatRGB24) {
+    if (format == gfxImageFormatRGB24) {
       GetCurrentFrame()->SetHasNoAlpha();
     }
   }
@@ -627,9 +627,9 @@ nsPNGDecoder::info_callback(png_structp png_ptr, png_infop info_ptr)
 #endif
 
   if (channels == 1 || channels == 3)
-    decoder->format = gfxASurface::ImageFormatRGB24;
+    decoder->format = gfxImageFormatRGB24;
   else if (channels == 2 || channels == 4)
-    decoder->format = gfxASurface::ImageFormatARGB32;
+    decoder->format = gfxImageFormatARGB32;
 
 #ifdef PNG_APNG_SUPPORTED
   if (png_get_valid(png_ptr, info_ptr, PNG_INFO_acTL))
@@ -743,7 +743,7 @@ nsPNGDecoder::row_callback(png_structp png_ptr, png_bytep new_row,
      }
 
     switch (decoder->format) {
-      case gfxASurface::ImageFormatRGB24:
+      case gfxImageFormatRGB24:
       {
         // counter for while() loops below
         uint32_t idx = iwidth;
@@ -770,7 +770,7 @@ nsPNGDecoder::row_callback(png_structp png_ptr, png_bytep new_row,
         }
       }
       break;
-      case gfxASurface::ImageFormatARGB32:
+      case gfxImageFormatARGB32:
       {
         if (!decoder->mDisablePremultipliedAlpha) {
           for (uint32_t x=width; x>0; --x) {

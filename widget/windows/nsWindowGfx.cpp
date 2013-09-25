@@ -307,10 +307,10 @@ bool nsWindow::OnPaint(HDC aDC, uint32_t aNestingLevel)
               IsRenderMode(gfxWindowsPlatform::RENDER_DIRECT2D))
           {
             if (!mD2DWindowSurface) {
-              gfxASurface::gfxContentType content = gfxASurface::CONTENT_COLOR;
+              gfxContentType content = GFX_CONTENT_COLOR;
 #if defined(MOZ_XUL)
               if (mTransparencyMode != eTransparencyOpaque) {
-                content = gfxASurface::CONTENT_COLOR_ALPHA;
+                content = GFX_CONTENT_COLOR_ALPHA;
               }
 #endif
               mD2DWindowSurface = new gfxD2DSurface(mWnd, content);
@@ -352,7 +352,7 @@ bool nsWindow::OnPaint(HDC aDC, uint32_t aNestingLevel)
             targetSurfaceImage = new gfxImageSurface(sSharedSurfaceData.get(),
                                                      surfaceSize,
                                                      surfaceSize.width * 4,
-                                                     gfxASurface::ImageFormatRGB24);
+                                                     gfxImageFormatRGB24);
 
             if (targetSurfaceImage && !targetSurfaceImage->CairoStatus()) {
               targetSurfaceImage->SetDeviceOffset(gfxPoint(-ps.rcPaint.left, -ps.rcPaint.top));
@@ -657,7 +657,7 @@ nsresult nsWindowGfx::CreateIcon(imgIContainer *aContainer,
     NS_ENSURE_ARG(aScaledSize.width > 0);
     NS_ENSURE_ARG(aScaledSize.height > 0);
     // Draw a scaled version of the image to a temporary surface
-    dest = new gfxImageSurface(aScaledSize, gfxASurface::ImageFormatARGB32);
+    dest = new gfxImageSurface(aScaledSize, gfxImageFormatARGB32);
     if (!dest)
       return NS_ERROR_OUT_OF_MEMORY;
 

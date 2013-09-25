@@ -59,7 +59,7 @@ class HashKeyRef : public BufferableRef
             return;
         JS_SET_TRACING_LOCATION(trc, (void*)&*p);
         Mark(trc, &key, "HashKeyRef");
-        map->rekey(prior, key);
+        map->rekeyIfMoved(prior, key);
     }
 };
 

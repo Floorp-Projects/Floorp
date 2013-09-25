@@ -304,7 +304,7 @@ class MacroAssembler : public MacroAssemblerSpecific
         branchPtr(cond, Address(obj, JSObject::offsetOfShape()), shape, label);
     }
     void branchTestProxyHandlerFamily(Condition cond, Register proxy, Register scratch,
-                                      void *handlerp, Label *label) {
+                                      const void *handlerp, Label *label) {
         Address handlerAddr(proxy, ProxyObject::offsetOfHandler());
         loadPrivate(handlerAddr, scratch);
         Address familyAddr(scratch, BaseProxyHandler::offsetOfFamily());

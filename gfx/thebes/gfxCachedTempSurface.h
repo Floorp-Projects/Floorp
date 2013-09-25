@@ -8,6 +8,7 @@
 
 #include "gfxASurface.h"
 #include "nsExpirationTracker.h"
+#include "nsSize.h"
 
 class gfxContext;
 
@@ -37,7 +38,7 @@ public:
    * invocation, this will not be efficient if the new |aSimilarTo| has a
    * different format, size, or gfxSurfaceType.
    */
-  already_AddRefed<gfxContext> Get(gfxASurface::gfxContentType aContentType,
+  already_AddRefed<gfxContext> Get(gfxContentType aContentType,
                                    const gfxRect& aRect,
                                    gfxASurface* aSimilarTo);
 
@@ -51,7 +52,7 @@ private:
   nsRefPtr<gfxASurface> mSurface;
   gfxIntSize mSize;
   nsExpirationState mExpirationState;
-  gfxASurface::gfxSurfaceType mType;
+  gfxSurfaceType mType;
 };
 
 #endif /* GFX_CACHED_TEMP_SURFACE_H */

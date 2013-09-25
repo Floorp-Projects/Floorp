@@ -1819,8 +1819,8 @@ nsresult AndroidBridge::CaptureThumbnail(nsIDOMWindow *window, int32_t bufW, int
 
     nsRefPtr<gfxImageSurface> surf =
         new gfxImageSurface(static_cast<unsigned char*>(data), nsIntSize(bufW, bufH), stride,
-                            is24bit ? gfxASurface::ImageFormatRGB24 :
-                                      gfxASurface::ImageFormatRGB16_565);
+                            is24bit ? gfxImageFormatRGB24 :
+                                      gfxImageFormatRGB16_565);
     if (surf->CairoStatus() != 0) {
         ALOG_BRIDGE("Error creating gfxImageSurface");
         return NS_ERROR_FAILURE;

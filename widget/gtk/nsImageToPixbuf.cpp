@@ -72,7 +72,7 @@ nsImageToPixbuf::ImgSurfaceToPixbuf(gfxImageSurface* aImgSurface, int32_t aWidth
     long cairoStride = aImgSurface->Stride();
     unsigned char* cairoData = aImgSurface->Data();
 
-    gfxASurface::gfxImageFormat format = aImgSurface->Format();
+    gfxImageFormat format = aImgSurface->Format();
 
     for (int32_t row = 0; row < aHeight; ++row) {
         for (int32_t col = 0; col < aWidth; ++col) {
@@ -81,7 +81,7 @@ nsImageToPixbuf::ImgSurfaceToPixbuf(gfxImageSurface* aImgSurface, int32_t aWidth
             uint32_t* cairoPixel = reinterpret_cast<uint32_t*>
                                                    ((cairoData + row * cairoStride + 4 * col));
 
-            if (format == gfxASurface::ImageFormatARGB32) {
+            if (format == gfxImageFormatARGB32) {
                 const uint8_t a = (*cairoPixel >> 24) & 0xFF;
                 const uint8_t r = unpremultiply((*cairoPixel >> 16) & 0xFF, a);
                 const uint8_t g = unpremultiply((*cairoPixel >>  8) & 0xFF, a);
@@ -92,7 +92,7 @@ nsImageToPixbuf::ImgSurfaceToPixbuf(gfxImageSurface* aImgSurface, int32_t aWidth
                 *pixel++ = b;
                 *pixel++ = a;
             } else {
-                NS_ASSERTION(format == gfxASurface::ImageFormatRGB24,
+                NS_ASSERTION(format == gfxImageFormatRGB24,
                              "unexpected format");
                 const uint8_t r = (*cairoPixel >> 16) & 0xFF;
                 const uint8_t g = (*cairoPixel >>  8) & 0xFF;
@@ -118,12 +118,12 @@ nsImageToPixbuf::SurfaceToPixbuf(gfxASurface* aSurface, int32_t aWidth, int32_t 
     }
 
     nsRefPtr<gfxImageSurface> imgSurface;
-    if (aSurface->GetType() == gfxASurface::SurfaceTypeImage) {
+    if (aSurface->GetType() == gfxSurfaceTypeImage) {
         imgSurface = static_cast<gfxImageSurface*>
                                 (static_cast<gfxASurface*>(aSurface));
     } else {
         imgSurface = new gfxImageSurface(gfxIntSize(aWidth, aHeight),
-					 gfxImageSurface::ImageFormatARGB32);
+					 gfxImageFormatARGB32);
                                        
         if (!imgSurface)
             return nullptr;

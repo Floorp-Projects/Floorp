@@ -16,6 +16,8 @@
 #include "nsAutoPtr.h"
 #include "nsIRollupListener.h"
 #include "nsIObserver.h"
+#include "nsIWidgetListener.h"
+#include "nsPIDOMWindow.h"
 #include <algorithm>
 class nsIContent;
 class nsAutoRollup;

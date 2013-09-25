@@ -16,7 +16,7 @@ class gfxSharedQuartzSurface : public gfxBaseSharedMemorySurface<gfxQuartzSurfac
   friend class gfxBaseSharedMemorySurface<gfxQuartzSurface, gfxSharedQuartzSurface>;
 private:
     gfxSharedQuartzSurface(const gfxIntSize& aSize, long aStride, 
-                           gfxASurface::gfxImageFormat aFormat, 
+                           gfxImageFormat aFormat, 
                            const mozilla::ipc::Shmem& aShmem)
       : Super(aSize, aStride, aFormat, aShmem)
     {}

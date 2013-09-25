@@ -1,15 +1,12 @@
-/* Copyright (c) 2003-2012 IETF Trust, Jean-Marc Valin, CSIRO,
-                           Xiph.Org Foundation. All rights reserved.
+/* Copyright (c) 2003-2008 Jean-Marc Valin
+   Copyright (c) 2007-2008 CSIRO
+   Copyright (c) 2007-2009 Xiph.Org Foundation
    Written by Jean-Marc Valin */
 /**
    @file arch.h
    @brief Various architecture definitions for CELT
 */
 /*
-
-   This file is extracted from RFC6716. Please see that RFC for additional
-   information.
-
    Redistribution and use in source and binary forms, with or without
    modification, are permitted provided that the following conditions
    are met:
@@ -20,11 +17,6 @@
    - Redistributions in binary form must reproduce the above copyright
    notice, this list of conditions and the following disclaimer in the
    documentation and/or other materials provided with the distribution.
-
-   - Neither the name of Internet Society, IETF or IETF Trust, nor the
-   names of specific contributors, may be used to endorse or promote
-   products derived from this software without specific prior written
-   permission.
 
    THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
    ``AS IS'' AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
@@ -108,6 +100,7 @@ typedef opus_val32 celt_ener;
 #define DB_SHIFT 10
 
 #define EPSILON 1
+#define VERY_SMALL 0
 #define VERY_LARGE16 ((opus_val16)32767)
 #define Q15_ONE ((opus_val16)32767)
 
@@ -120,10 +113,10 @@ typedef opus_val32 celt_ener;
 
 #include "fixed_generic.h"
 
-#ifdef ARM5E_ASM
-#include "fixed_arm5e.h"
-#elif defined (ARM4_ASM)
-#include "fixed_arm4.h"
+#ifdef ARMv5E_ASM
+#include "arm/fixed_armv5e.h"
+#elif defined (ARMv4_ASM)
+#include "arm/fixed_armv4.h"
 #elif defined (BFIN_ASM)
 #include "fixed_bfin.h"
 #elif defined (TI_C5X_ASM)
@@ -148,6 +141,7 @@ typedef float celt_ener;
 #define NORM_SCALING 1.f
 
 #define EPSILON 1e-15f
+#define VERY_SMALL 1e-30f
 #define VERY_LARGE16 1e15f
 #define Q15_ONE ((opus_val16)1.f)
 
@@ -169,6 +163,7 @@ typedef float celt_ener;
 #define SHR(a,shift)    (a)
 #define SHL(a,shift)    (a)
 #define SATURATE(x,a)   (x)
+#define SATURATE16(x)   (x)
 
 #define ROUND16(a,shift)  (a)
 #define HALF16(x)       (.5f*(x))
@@ -196,6 +191,7 @@ typedef float celt_ener;
 #define MULT16_16_P15(a,b)     ((a)*(b))
 #define MULT16_16_P13(a,b)     ((a)*(b))
 #define MULT16_16_P14(a,b)     ((a)*(b))
+#define MULT16_32_P16(a,b)     ((a)*(b))
 
 #define DIV32_16(a,b)     (((opus_val32)(a))/(opus_val16)(b))
 #define DIV32(a,b)     (((opus_val32)(a))/(opus_val32)(b))

@@ -8,7 +8,7 @@
 
 #include "GLDefs.h"                     // for GLint, GLenum, GLuint, etc
 #include "gfx3DMatrix.h"                // for gfx3DMatrix
-#include "gfxASurface.h"                // for gfxASurface, etc
+#include "gfxTypes.h"
 #include "mozilla/Assertions.h"         // for MOZ_ASSERT, etc
 #include "mozilla/RefPtr.h"             // for RefPtr
 #include "mozilla/gfx/Matrix.h"         // for Matrix4x4
@@ -93,9 +93,9 @@ ShaderProgramFromTargetAndFormat(GLenum aTarget,
 }
 
 static inline ShaderProgramType
-ShaderProgramFromContentType(gfxASurface::gfxContentType aContentType)
+ShaderProgramFromContentType(gfxContentType aContentType)
 {
-  if (aContentType == gfxASurface::CONTENT_COLOR_ALPHA)
+  if (aContentType == GFX_CONTENT_COLOR_ALPHA)
     return RGBALayerProgramType;
   return RGBXLayerProgramType;
 }

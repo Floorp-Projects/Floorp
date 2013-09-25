@@ -46,6 +46,27 @@ using namespace mozilla::layers;
 using namespace mozilla::gl;
 using namespace mozilla::gfx;
 
+CanvasLayerOGL::CanvasLayerOGL(LayerManagerOGL *aManager)
+  : CanvasLayer(aManager, nullptr)
+  , LayerOGL(aManager)
+  , mLayerProgram(RGBALayerProgramType)
+  , mTexture(0)
+  , mTextureTarget(LOCAL_GL_TEXTURE_2D)
+  , mDelayedUpdates(false)
+  , mIsGLAlphaPremult(false)
+  , mUploadTexture(0)
+#if defined(GL_PROVIDER_GLX)
+  , mPixmap(0)
+#endif
+{
+  mImplData = static_cast<LayerOGL*>(this);
+  mForceReadback = Preferences::GetBool("webgl.force-layers-readback", false);
+}
+
+CanvasLayerOGL::~CanvasLayerOGL() {
+  Destroy();
+}
+
 static void
 MakeTextureIfNeeded(GLContext* gl, GLuint& aTexture)
 {
@@ -129,7 +150,7 @@ CanvasLayerOGL::Initialize(const Data& aData)
     mCanvasSurface = aData.mSurface;
     mNeedsYFlip = false;
 #if defined(GL_PROVIDER_GLX)
-    if (aData.mSurface->GetType() == gfxASurface::SurfaceTypeXlib) {
+    if (aData.mSurface->GetType() == gfxSurfaceTypeXlib) {
         gfxXlibSurface *xsurf = static_cast<gfxXlibSurface*>(aData.mSurface);
         mPixmap = xsurf->GetGLXPixmap();
         if (mPixmap) {
@@ -360,4 +381,21 @@ CanvasLayerOGL::CleanupResources()
     gl()->fDeleteTextures(1, &mUploadTexture);
     mUploadTexture = 0;
   }
+}
+
+gfxImageSurface*
+CanvasLayerOGL::GetTempSurface(const gfxIntSize& aSize,
+                               const gfxImageFormat aFormat)
+{
+  if (!mCachedTempSurface ||
+      aSize.width != mCachedSize.width ||
+      aSize.height != mCachedSize.height ||
+      aFormat != mCachedFormat)
+  {
+    mCachedTempSurface = new gfxImageSurface(aSize, aFormat);
+    mCachedSize = aSize;
+    mCachedFormat = aFormat;
+  }
+
+  return mCachedTempSurface;
 }

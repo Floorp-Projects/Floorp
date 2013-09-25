@@ -1,9 +1,5 @@
 /***********************************************************************
-Copyright (c) 2006-2012 IETF Trust and Skype Limited. All rights reserved.
-
-This file is extracted from RFC6716. Please see that RFC for additional
-information.
-
+Copyright (c) 2006-2011, Skype Limited. All rights reserved.
 Redistribution and use in source and binary forms, with or without
 modification, are permitted provided that the following conditions
 are met:
@@ -16,7 +12,7 @@ documentation and/or other materials provided with the distribution.
 names of specific contributors, may be used to endorse or promote
 products derived from this software without specific prior written
 permission.
-THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS “AS IS”
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
 AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
 IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
 ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE
@@ -45,7 +41,7 @@ POSSIBILITY OF SUCH DAMAGE.
 /* Matlab code for table:
    for k=16:9*4:16+2*9*4, fprintf(' %7.d,', -round(65536*pi ./ (k:4:k+8*4))); fprintf('\n'); end
 */
-static opus_int16 freq_table_Q16[ 27 ] = {
+static const opus_int16 freq_table_Q16[ 27 ] = {
    12111,    9804,    8235,    7100,    6239,    5565,    5022,    4575,    4202,
     3885,    3612,    3375,    3167,    2984,    2820,    2674,    2542,    2422,
     2313,    2214,    2123,    2038,    1961,    1889,    1822,    1760,    1702,
@@ -73,7 +69,7 @@ void silk_apply_sine_window(
     f_Q16 = (opus_int)freq_table_Q16[ k ];
 
     /* Factor used for cosine approximation */
-    c_Q16 = silk_SMULWB( f_Q16, -f_Q16 );
+    c_Q16 = silk_SMULWB( (opus_int32)f_Q16, -f_Q16 );
     silk_assert( c_Q16 >= -32768 );
 
     /* initialize state */
@@ -84,9 +80,9 @@ void silk_apply_sine_window(
         S1_Q16 = f_Q16 + silk_RSHIFT( length, 3 );
     } else {
         /* start from 1 */
-        S0_Q16 = ( 1 << 16 );
+        S0_Q16 = ( (opus_int32)1 << 16 );
         /* approximation of cos(f) */
-        S1_Q16 = ( 1 << 16 ) + silk_RSHIFT( c_Q16, 1 ) + silk_RSHIFT( length, 4 );
+        S1_Q16 = ( (opus_int32)1 << 16 ) + silk_RSHIFT( c_Q16, 1 ) + silk_RSHIFT( length, 4 );
     }
 
     /* Uses the recursive equation:   sin(n*f) = 2 * cos(f) * sin((n-1)*f) - sin((n-2)*f)    */
@@ -95,11 +91,11 @@ void silk_apply_sine_window(
         px_win[ k ]     = (opus_int16)silk_SMULWB( silk_RSHIFT( S0_Q16 + S1_Q16, 1 ), px[ k ] );
         px_win[ k + 1 ] = (opus_int16)silk_SMULWB( S1_Q16, px[ k + 1] );
         S0_Q16 = silk_SMULWB( S1_Q16, c_Q16 ) + silk_LSHIFT( S1_Q16, 1 ) - S0_Q16 + 1;
-        S0_Q16 = silk_min( S0_Q16, ( 1 << 16 ) );
+        S0_Q16 = silk_min( S0_Q16, ( (opus_int32)1 << 16 ) );
 
         px_win[ k + 2 ] = (opus_int16)silk_SMULWB( silk_RSHIFT( S0_Q16 + S1_Q16, 1 ), px[ k + 2] );
         px_win[ k + 3 ] = (opus_int16)silk_SMULWB( S0_Q16, px[ k + 3 ] );
         S1_Q16 = silk_SMULWB( S0_Q16, c_Q16 ) + silk_LSHIFT( S0_Q16, 1 ) - S1_Q16;
-        S1_Q16 = silk_min( S1_Q16, ( 1 << 16 ) );
+        S1_Q16 = silk_min( S1_Q16, ( (opus_int32)1 << 16 ) );
     }
 }

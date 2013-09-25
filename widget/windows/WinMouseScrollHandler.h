@@ -9,8 +9,8 @@
 
 #include "nscore.h"
 #include "nsDebug.h"
-#include "nsEvent.h"
 #include "mozilla/Assertions.h"
+#include "mozilla/EventForwards.h"
 #include "mozilla/TimeStamp.h"
 #include <windows.h>
 

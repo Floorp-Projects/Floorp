@@ -256,7 +256,7 @@ nsXBLBinding::InstallAnonymousContent(nsIContent* aAnonParent, nsIContent* aElem
       return;
     }        
 
-    child->SetFlags(NODE_IS_ANONYMOUS);
+    child->SetFlags(NODE_IS_ANONYMOUS_ROOT);
 
 #ifdef MOZ_XUL
     // To make XUL templates work (and other goodies that happen when

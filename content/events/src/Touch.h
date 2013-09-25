@@ -7,12 +7,12 @@
 #define mozilla_dom_Touch_h
 
 #include "mozilla/Attributes.h"
+#include "mozilla/EventForwards.h"
 #include "nsWrapperCache.h"
 #include "nsAutoPtr.h"
 #include "Units.h"
 
 class nsPresContext;
-class nsEvent;
 
 namespace mozilla {
 namespace dom {

@@ -192,7 +192,7 @@ nsEventListenerService::GetEventTargetChainFor(nsIDOMEventTarget* aEventTarget,
   *aCount = 0;
   *aOutArray = nullptr;
   NS_ENSURE_ARG(aEventTarget);
-  nsEvent event(true, NS_EVENT_TYPE_NULL);
+  nsEvent event(true, NS_EVENT_NULL);
   nsCOMArray<EventTarget> targets;
   nsresult rv = nsEventDispatcher::Dispatch(aEventTarget, nullptr, &event,
                                             nullptr, nullptr, nullptr, &targets);

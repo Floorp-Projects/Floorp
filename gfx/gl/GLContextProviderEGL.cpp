@@ -611,14 +611,14 @@ public:
                        TextureImage::ContentType aContentType,
                        GLenum aWrapMode,
                        TextureImage::Flags aFlags = TextureImage::NoFlags,
-                       TextureImage::ImageFormat aImageFormat = gfxASurface::ImageFormatUnknown);
+                       TextureImage::ImageFormat aImageFormat = gfxImageFormatUnknown);
 
     // a function to generate Tiles for Tiled Texture Image
     virtual already_AddRefed<TextureImage>
     TileGenFunc(const nsIntSize& aSize,
                 TextureImage::ContentType aContentType,
                 TextureImage::Flags aFlags = TextureImage::NoFlags,
-                TextureImage::ImageFormat aImageFormat = gfxASurface::ImageFormatUnknown) MOZ_OVERRIDE;
+                TextureImage::ImageFormat aImageFormat = gfxImageFormatUnknown) MOZ_OVERRIDE;
     // hold a reference to the given surface
     // for the lifetime of this context.
     void HoldSurface(gfxASurface *aSurf) {
@@ -1063,16 +1063,16 @@ GetGlobalContextEGL()
 }
 
 static GLenum
-GLFormatForImage(gfxASurface::gfxImageFormat aFormat)
+GLFormatForImage(gfxImageFormat aFormat)
 {
     switch (aFormat) {
-    case gfxASurface::ImageFormatARGB32:
-    case gfxASurface::ImageFormatRGB24:
+    case gfxImageFormatARGB32:
+    case gfxImageFormatRGB24:
         // Thebes only supports RGBX, not packed RGB.
         return LOCAL_GL_RGBA;
-    case gfxASurface::ImageFormatRGB16_565:
+    case gfxImageFormatRGB16_565:
         return LOCAL_GL_RGB;
-    case gfxASurface::ImageFormatA8:
+    case gfxImageFormatA8:
         return LOCAL_GL_LUMINANCE;
     default:
         NS_WARNING("Unknown GL format for Image format");
@@ -1081,14 +1081,14 @@ GLFormatForImage(gfxASurface::gfxImageFormat aFormat)
 }
 
 static GLenum
-GLTypeForImage(gfxASurface::gfxImageFormat aFormat)
+GLTypeForImage(gfxImageFormat aFormat)
 {
     switch (aFormat) {
-    case gfxASurface::ImageFormatARGB32:
-    case gfxASurface::ImageFormatRGB24:
-    case gfxASurface::ImageFormatA8:
+    case gfxImageFormatARGB32:
+    case gfxImageFormatRGB24:
+    case gfxImageFormatA8:
         return LOCAL_GL_UNSIGNED_BYTE;
-    case gfxASurface::ImageFormatRGB16_565:
+    case gfxImageFormatRGB16_565:
         return LOCAL_GL_UNSIGNED_SHORT_5_6_5;
     default:
         NS_WARNING("Unknown GL format for Image format");
@@ -1107,7 +1107,7 @@ public:
                     GLContext* aContext,
                     Flags aFlags = TextureImage::NoFlags,
                     TextureState aTextureState = Created,
-                    TextureImage::ImageFormat aImageFormat = gfxASurface::ImageFormatUnknown)
+                    TextureImage::ImageFormat aImageFormat = gfxImageFormatUnknown)
         : TextureImage(aSize, aWrapMode, aContentType, aFlags)
         , mGLContext(aContext)
         , mUpdateFormat(aImageFormat)
@@ -1118,21 +1118,21 @@ public:
         , mTextureState(aTextureState)
         , mBound(false)
     {
-        if (mUpdateFormat == gfxASurface::ImageFormatUnknown) {
+        if (mUpdateFormat == gfxImageFormatUnknown) {
             mUpdateFormat = gfxPlatform::GetPlatform()->OptimalFormatForContent(GetContentType());
         }
 
         if (gUseBackingSurface) {
-            if (mUpdateFormat != gfxASurface::ImageFormatARGB32) {
+            if (mUpdateFormat != gfxImageFormatARGB32) {
                 mTextureFormat = FORMAT_R8G8B8X8;
             } else {
                 mTextureFormat = FORMAT_R8G8B8A8;
             }
             Resize(aSize);
         } else {
-            if (mUpdateFormat == gfxASurface::ImageFormatRGB16_565) {
+            if (mUpdateFormat == gfxImageFormatRGB16_565) {
                 mTextureFormat = FORMAT_R8G8B8X8;
-            } else if (mUpdateFormat == gfxASurface::ImageFormatRGB24) {
+            } else if (mUpdateFormat == gfxImageFormatRGB24) {
                 // RGB24 means really RGBX for Thebes, which means we have to
                 // use the right shader and ignore the uninitialized alpha
                 // value.
@@ -1222,7 +1222,7 @@ public:
 
         if (mBackingSurface && mUpdateSurface == mBackingSurface) {
 #ifdef MOZ_X11
-            if (mBackingSurface->GetType() == gfxASurface::SurfaceTypeXlib) {
+            if (mBackingSurface->GetType() == gfxSurfaceTypeXlib) {
                 FinishX(DefaultXDisplay());
             }
 #endif
@@ -1247,7 +1247,7 @@ public:
         nsRefPtr<gfxImageSurface> uploadImage = nullptr;
         gfxIntSize updateSize(mUpdateRect.width, mUpdateRect.height);
 
-        NS_ASSERTION(mUpdateSurface->GetType() == gfxASurface::SurfaceTypeImage &&
+        NS_ASSERTION(mUpdateSurface->GetType() == gfxSurfaceTypeImage &&
                      mUpdateSurface->GetSize() == updateSize,
                      "Upload image isn't an image surface when one is expected, or is wrong size!");
 
@@ -1418,7 +1418,7 @@ public:
             return false;
         }
 
-        if (aSurface->GetType() != gfxASurface::SurfaceTypeXlib) {
+        if (aSurface->GetType() != gfxSurfaceTypeXlib) {
             NS_WARNING("wrong surface type, must be xlib");
             return false;
         }
@@ -1508,7 +1508,7 @@ public:
     }
 
 protected:
-    typedef gfxASurface::gfxImageFormat ImageFormat;
+    typedef gfxImageFormat ImageFormat;
 
     GLContext* mGLContext;
 
@@ -1855,7 +1855,7 @@ CreateEGLSurfaceForXSurface(gfxASurface* aSurface, EGLConfig* aConfig)
 {
     gfxXlibSurface* xsurface = static_cast<gfxXlibSurface*>(aSurface);
     bool opaque =
-        aSurface->GetContentType() == gfxASurface::CONTENT_COLOR;
+        aSurface->GetContentType() == GFX_CONTENT_COLOR;
 
     static EGLint pixmap_config_rgb[] = {
         LOCAL_EGL_TEXTURE_TARGET,       LOCAL_EGL_TEXTURE_2D,
@@ -1941,7 +1941,7 @@ GLContextEGL::CreateEGLPixmapOffscreenContext(const gfxIntSize& size)
     nsRefPtr<gfxXlibSurface> xsurface =
         gfxXlibSurface::Create(DefaultScreenOfDisplay(DefaultXDisplay()),
                                gfxXlibSurface::FindRenderFormat(DefaultXDisplay(),
-                                                                gfxASurface::ImageFormatRGB24),
+                                                                gfxImageFormatRGB24),
                                size);
 
     // XSync required after gfxXlibSurface::Create, otherwise EGL will fail with BadDrawable error

@@ -95,6 +95,7 @@ var TouchModule = {
     window.addEventListener("CancelTouchSequence", this, true);
     window.addEventListener("dblclick", this, true);
     window.addEventListener("keydown", this, true);
+    window.addEventListener("MozMouseHittest", this, true);
 
     // bubble phase
     window.addEventListener("contextmenu", this, false);
@@ -159,6 +160,13 @@ var TouchModule = {
             break;
           case "keydown":
             this._handleKeyDown(aEvent);
+            break;
+          case "MozMouseHittest":
+            // Used by widget to hit test chrome vs content
+            if (aEvent.target.ownerDocument == document) {
+              aEvent.preventDefault();
+            }
+            aEvent.stopPropagation();
             break;
         }
       }

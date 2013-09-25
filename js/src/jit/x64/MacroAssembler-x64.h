@@ -944,6 +944,9 @@ class MacroAssemblerX64 : public MacroAssemblerX86Shared
     // Unbox any non-double value into dest. Prefer unboxInt32 or unboxBoolean
     // instead if the source type is known.
     void unboxNonDouble(const ValueOperand &src, const Register &dest) {
+        // In a non-trivial coupling, we're not permitted to use ScratchReg when
+        // src and dest are different registers, because of how extractObject is
+        // implemented.
         if (src.valueReg() == dest) {
             movq(ImmWord(JSVAL_PAYLOAD_MASK), ScratchReg);
             andq(ScratchReg, dest);
@@ -972,6 +975,8 @@ class MacroAssemblerX64 : public MacroAssemblerX86Shared
     Register extractObject(const Address &address, Register scratch) {
         JS_ASSERT(scratch != ScratchReg);
         loadPtr(address, ScratchReg);
+        // We have a special coupling with unboxObject. As long as the registers
+        // aren't equal, it doesn't use ScratchReg.
         unboxObject(ValueOperand(ScratchReg), scratch);
         return scratch;
     }

@@ -8,12 +8,12 @@
 #define mozilla_TextComposition_h
 
 #include "nsCOMPtr.h"
-#include "nsEvent.h"
 #include "nsINode.h"
 #include "nsIWidget.h"
 #include "nsTArray.h"
 #include "nsThreadUtils.h"
 #include "mozilla/Attributes.h"
+#include "mozilla/EventForwards.h"
 
 class nsDispatchingCallback;
 class nsIMEStateManager;
