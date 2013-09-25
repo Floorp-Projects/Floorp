@@ -7,27 +7,6 @@ to Google. -->
 <script src=/resources/testharness.js></script>
 <script src=/resources/testharnessreport.js></script>
 <script>
-// From WebIDL:
-//
-// * The value of the Function object’s length property is a Number determined
-//   as follows:
-//
-//   1. Let S be the effective overload set for regular operations (if the
-//      operation is a regular operation) or for static operations (if the
-//      operation is a static operation) with identifier id on interface I and
-//      with argument count 0 (for the ECMAScript language binding).
-//   2. Return the maximum argument list length of the functions in the entries
-//      of S.
-//
-// As far as I understand it, this means the length must be 1 here.
-test(function() {
-	assert_equals(btoa.length, 1);
-}, "btoa.length must equal the maximum number of arguments, namely 1");
-
-test(function() {
-	assert_equals(atob.length, 1);
-}, "atob.length must equal the maximum number of arguments, namely 1");
-
 /**
  * btoa() as defined by the HTML5 spec, which mostly just references RFC4648.
  */
