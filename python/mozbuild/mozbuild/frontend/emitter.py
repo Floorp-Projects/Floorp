@@ -237,7 +237,7 @@ class TreeMetadataEmitter(LoggingMixin):
         path = mozpath.normpath(mozpath.join(sandbox['SRCDIR'], manifest_path))
         manifest_dir = mozpath.dirname(path)
         manifest_reldir = mozpath.dirname(mozpath.relpath(path,
-            self.config.topsrcdir))
+            sandbox['TOPSRCDIR']))
 
         try:
             m = manifestparser.TestManifest(manifests=[path], strict=True)
