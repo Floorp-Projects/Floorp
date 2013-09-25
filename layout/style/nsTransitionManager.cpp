@@ -19,7 +19,7 @@
 #include "nsCSSPropertySet.h"
 #include "nsStyleAnimation.h"
 #include "nsEventDispatcher.h"
-#include "nsGUIEvent.h"
+#include "mozilla/ContentEvents.h"
 #include "mozilla/dom/Element.h"
 #include "nsIFrame.h"
 #include "Layers.h"

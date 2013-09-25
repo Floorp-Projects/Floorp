@@ -3742,9 +3742,11 @@ CodeGenerator::visitMathFunctionD(LMathFunctionD *ins)
 
     MathCache *mathCache = ins->mir()->cache();
 
-    masm.setupUnalignedABICall(2, temp);
-    masm.movePtr(ImmPtr(mathCache), temp);
-    masm.passABIArg(temp);
+    masm.setupUnalignedABICall(mathCache ? 2 : 1, temp);
+    if (mathCache) {
+        masm.movePtr(ImmPtr(mathCache), temp);
+        masm.passABIArg(temp);
+    }
     masm.passABIArg(input);
 
 #   define MAYBE_CACHED(fcn) (mathCache ? (void*)fcn ## _impl : (void*)fcn ## _uncached)
@@ -3813,6 +3815,12 @@ CodeGenerator::visitMathFunctionD(LMathFunctionD *ins)
         break;
       case MMathFunction::Cbrt:
         funptr = JS_FUNC_TO_DATA_PTR(void *, MAYBE_CACHED(js::math_cbrt));
+        break;
+      case MMathFunction::Floor:
+        funptr = JS_FUNC_TO_DATA_PTR(void *, js::math_floor_impl);
+        break;
+      case MMathFunction::Round:
+        funptr = JS_FUNC_TO_DATA_PTR(void *, js::math_round_impl);
         break;
       default:
         MOZ_ASSUME_UNREACHABLE("Unknown math function");

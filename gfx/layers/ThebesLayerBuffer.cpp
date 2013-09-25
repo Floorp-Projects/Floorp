@@ -599,7 +599,7 @@ ThebesLayerBuffer::BeginPaint(ThebesLayer* aLayer, ContentType aContentType,
     // have transitioned into/out of component alpha, then we need to recreate it.
     if (HaveBuffer() &&
         (contentType != BufferContentType() ||
-         mode == Layer::SURFACE_COMPONENT_ALPHA) != (HaveBufferOnWhite())) {
+        (mode == Layer::SURFACE_COMPONENT_ALPHA) != HaveBufferOnWhite())) {
 
       // We're effectively clearing the valid region, so we need to draw
       // the entire needed region now.

@@ -4,9 +4,9 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "nsDOMTimeEvent.h"
-#include "nsGUIEvent.h"
 #include "nsPresContext.h"
 #include "nsIInterfaceRequestorUtils.h"
+#include "mozilla/BasicEvents.h"
 
 nsDOMTimeEvent::nsDOMTimeEvent(mozilla::dom::EventTarget* aOwner,
                                nsPresContext* aPresContext, nsEvent* aEvent)

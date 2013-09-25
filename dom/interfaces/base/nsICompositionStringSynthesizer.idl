@@ -18,7 +18,7 @@ interface nsICompositionStringSynthesizer : nsISupports
    */
   void setString(in AString aString);
 
-  // NOTE: These values must be same to NS_TEXTRANGE_* in nsGUIEvent.h
+  // NOTE: These values must be same to NS_TEXTRANGE_* in TextEvents.h
   const unsigned long ATTR_RAWINPUT              = 0x02;
   const unsigned long ATTR_SELECTEDRAWTEXT       = 0x03;
   const unsigned long ATTR_CONVERTEDTEXT         = 0x04;

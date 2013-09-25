@@ -38,9 +38,9 @@ IonBuilder::inlineNativeCall(CallInfo &callInfo, JSNative native)
     // Math natives.
     if (native == js_math_abs)
         return inlineMathAbs(callInfo);
-    if (native == js_math_floor)
+    if (native == js::math_floor)
         return inlineMathFloor(callInfo);
-    if (native == js_math_round)
+    if (native == js::math_round)
         return inlineMathRound(callInfo);
     if (native == js_math_sqrt)
         return inlineMathSqrt(callInfo);
@@ -573,19 +573,26 @@ IonBuilder::inlineMathFloor(CallInfo &callInfo)
         return InliningStatus_NotInlined;
 
     MIRType argType = callInfo.getArg(0)->type();
-    if (getInlineReturnType() != MIRType_Int32)
-        return InliningStatus_NotInlined;
+    MIRType returnType = getInlineReturnType();
 
     // Math.floor(int(x)) == int(x)
-    if (argType == MIRType_Int32) {
+    if (argType == MIRType_Int32 && returnType == MIRType_Int32) {
         callInfo.unwrapArgs();
         current->push(callInfo.getArg(0));
         return InliningStatus_Inlined;
     }
 
-    if (argType == MIRType_Double) {
+    if (argType == MIRType_Double && returnType == MIRType_Int32) {
         callInfo.unwrapArgs();
         MFloor *ins = new MFloor(callInfo.getArg(0));
+        current->add(ins);
+        current->push(ins);
+        return InliningStatus_Inlined;
+    }
+
+    if (argType == MIRType_Double && returnType == MIRType_Double) {
+        callInfo.unwrapArgs();
+        MMathFunction *ins = MMathFunction::New(callInfo.getArg(0), MMathFunction::Floor, nullptr);
         current->add(ins);
         current->push(ins);
         return InliningStatus_Inlined;
@@ -616,6 +623,14 @@ IonBuilder::inlineMathRound(CallInfo &callInfo)
     if (argType == MIRType_Double && returnType == MIRType_Int32) {
         callInfo.unwrapArgs();
         MRound *ins = new MRound(callInfo.getArg(0));
+        current->add(ins);
+        current->push(ins);
+        return InliningStatus_Inlined;
+    }
+
+    if (argType == MIRType_Double && returnType == MIRType_Double) {
+        callInfo.unwrapArgs();
+        MMathFunction *ins = MMathFunction::New(callInfo.getArg(0), MMathFunction::Round, nullptr);
         current->add(ins);
         current->push(ins);
         return InliningStatus_Inlined;

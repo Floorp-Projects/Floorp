@@ -37,10 +37,10 @@ const Class TypeRepresentation::class_ = {
     JS_ResolveStub,
     JS_ConvertStub,
     obj_finalize,
-    NULL,           /* checkAccess */
-    NULL,           /* call        */
-    NULL,           /* hasInstance */
-    NULL,           /* construct   */
+    nullptr,        /* checkAccess */
+    nullptr,        /* call        */
+    nullptr,        /* hasInstance */
+    nullptr,        /* construct   */
     obj_trace,
 };
 
@@ -226,7 +226,7 @@ StructTypeRepresentation::init(JSContext *cx,
 
         uint32_t alignedSize = alignTo(totalSize, fieldTypeRepr->alignment());
         if (alignedSize < totalSize) {
-            JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
+            JS_ReportErrorNumber(cx, js_GetErrorMessage, nullptr,
                                  JSMSG_TYPEDOBJECT_TOO_BIG);
             return false;
         }
@@ -236,7 +236,7 @@ StructTypeRepresentation::init(JSContext *cx,
 
         uint32_t incrementedSize = alignedSize + fieldTypeRepr->size();
         if (incrementedSize < alignedSize) {
-            JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
+            JS_ReportErrorNumber(cx, js_GetErrorMessage, nullptr,
                                  JSMSG_TYPEDOBJECT_TOO_BIG);
             return false;
         }
@@ -246,7 +246,7 @@ StructTypeRepresentation::init(JSContext *cx,
 
     uint32_t alignedSize = alignTo(totalSize, alignment_);
     if (alignedSize < totalSize) {
-        JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
+        JS_ReportErrorNumber(cx, js_GetErrorMessage, nullptr,
                              JSMSG_TYPEDOBJECT_TOO_BIG);
         return false;
     }
@@ -269,7 +269,7 @@ TypeRepresentation::addToTableOrFree(JSContext *cx,
     if (!comp->typeReprs.add(p, this)) {
         js_ReportOutOfMemory(cx);
         js_free(this); // do not finalize, not present in the table
-        return NULL;
+        return nullptr;
     }
 
     // Now that the object is in the table, try to make the owner
@@ -283,7 +283,7 @@ TypeRepresentation::addToTableOrFree(JSContext *cx,
     if (!ownerObject) {
         comp->typeReprs.remove(this);
         js_free(this);
-        return NULL;
+        return nullptr;
     }
     ownerObject->setPrivate(this);
     ownerObject_.init(ownerObject);
@@ -307,7 +307,7 @@ ScalarTypeRepresentation::Create(JSContext *cx,
         (ScalarTypeRepresentation *) cx->malloc_(
             sizeof(ScalarTypeRepresentation));
     if (!ptr)
-        return NULL;
+        return nullptr;
     new(ptr) ScalarTypeRepresentation(type);
 
     return ptr->addToTableOrFree(cx, p);
@@ -326,9 +326,9 @@ ArrayTypeRepresentation::Create(JSContext *cx,
     // should be good enough for now.
     int32_t temp;
     if (!SafeMul(element->size(), length, &temp)) {
-        JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
+        JS_ReportErrorNumber(cx, js_GetErrorMessage, nullptr,
                              JSMSG_TYPEDOBJECT_TOO_BIG);
-        return NULL;
+        return nullptr;
     }
 
     ArrayTypeRepresentation sample(element, length);
@@ -341,7 +341,7 @@ ArrayTypeRepresentation::Create(JSContext *cx,
         (ArrayTypeRepresentation *) cx->malloc_(
             sizeof(ArrayTypeRepresentation));
     if (!ptr)
-        return NULL;
+        return nullptr;
     new(ptr) ArrayTypeRepresentation(element, length);
 
     return ptr->addToTableOrFree(cx, p);
@@ -362,7 +362,7 @@ StructTypeRepresentation::Create(JSContext *cx,
         (StructTypeRepresentation *) cx->malloc_(size);
     new(ptr) StructTypeRepresentation();
     if (!ptr->init(cx, ids, typeReprOwners))
-        return NULL;
+        return nullptr;
 
     TypeRepresentationHash::AddPtr p = comp->typeReprs.lookupForAdd(ptr);
     if (p) {
@@ -546,7 +546,7 @@ StructTypeRepresentation::fieldNamed(jsid id) const
         if (field(i).id.get() == id)
             return &field(i);
     }
-    return NULL;
+    return nullptr;
 }
 
 /*static*/ bool
