@@ -450,17 +450,11 @@ JS::CollectRuntimeStats(JSRuntime *rt, RuntimeStats *rtStats, ObjectPrivateVisit
     // Take the "explicit/js/runtime/" measurements.
     rt->sizeOfIncludingThis(rtStats->mallocSizeOf_, &rtStats->runtime);
 
-    DebugOnly<size_t> totalArenaSize = 0;
-
-    rtStats->gcHeapGcThings = 0;
+    rtStats->gcHeapGCThings = 0;
     for (size_t i = 0; i < rtStats->zoneStatsVector.length(); i++) {
         ZoneStats &zStats = rtStats->zoneStatsVector[i];
 
         rtStats->zTotals.add(zStats);
-        rtStats->gcHeapGcThings += zStats.sizeOfLiveGCThings();
-#ifdef DEBUG
-        totalArenaSize += zStats.gcHeapArenaAdmin + zStats.unusedGCThings;
-#endif
 
         // Move any strings which take up more than the sundries threshold
         // (counting all of their copies together) into notableStrings.
@@ -471,13 +465,17 @@ JS::CollectRuntimeStats(JSRuntime *rt, RuntimeStats *rtStats, ObjectPrivateVisit
 
     for (size_t i = 0; i < rtStats->compartmentStatsVector.length(); i++) {
         CompartmentStats &cStats = rtStats->compartmentStatsVector[i];
-
         rtStats->cTotals.add(cStats);
-        rtStats->gcHeapGcThings += cStats.sizeOfLiveGCThings();
     }
 
+    rtStats->gcHeapGCThings = rtStats->zTotals.sizeOfLiveGCThings() +
+                              rtStats->cTotals.sizeOfLiveGCThings();
+
 #ifdef DEBUG
-    totalArenaSize += rtStats->gcHeapGcThings;
+    // Check that the in-arena measurements look ok.
+    size_t totalArenaSize = rtStats->zTotals.gcHeapArenaAdmin +
+                            rtStats->zTotals.unusedGCThings +
+                            rtStats->gcHeapGCThings;
     JS_ASSERT(totalArenaSize % gc::ArenaSize == 0);
 #endif
 
@@ -489,7 +487,6 @@ JS::CollectRuntimeStats(JSRuntime *rt, RuntimeStats *rtStats, ObjectPrivateVisit
     size_t perChunkAdmin =
         sizeof(gc::Chunk) - (sizeof(gc::Arena) * gc::ArenasPerChunk);
     rtStats->gcHeapChunkAdmin = numDirtyChunks * perChunkAdmin;
-    rtStats->gcHeapUnusedArenas -= rtStats->gcHeapChunkAdmin;
 
     // |gcHeapUnusedArenas| is the only thing left.  Compute it in terms of
     // all the others.  See the comment in RuntimeStats for explanation.
@@ -499,7 +496,7 @@ JS::CollectRuntimeStats(JSRuntime *rt, RuntimeStats *rtStats, ObjectPrivateVisit
                                   rtStats->zTotals.unusedGCThings -
                                   rtStats->gcHeapChunkAdmin -
                                   rtStats->zTotals.gcHeapArenaAdmin -
-                                  rtStats->gcHeapGcThings;
+                                  rtStats->gcHeapGCThings;
     return true;
 }
 
