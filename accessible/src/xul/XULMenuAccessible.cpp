@@ -23,7 +23,6 @@
 #include "nsIServiceManager.h"
 #include "nsIPresShell.h"
 #include "nsIContent.h"
-#include "nsGUIEvent.h"
 #include "nsMenuBarFrame.h"
 #include "nsMenuPopupFrame.h"
 

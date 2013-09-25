@@ -38,6 +38,7 @@
 #include "nsIObjectFrame.h"
 #include "nsBindingManager.h"
 
+#include "mozilla/ContentEvents.h"
 #include "mozilla/dom/Element.h"
 #include "mozilla/LookAndFeel.h"
 #include "mozilla/Preferences.h"

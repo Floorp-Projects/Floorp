@@ -39,7 +39,7 @@
 #include "nsDOMClassInfo.h"
 #include "nsCxPusher.h"
 
-#include "nsGUIEvent.h"
+#include "mozilla/BasicEvents.h"
 #include "nsAsyncDOMEvent.h"
 #include "nsIDOMNodeFilter.h"
 

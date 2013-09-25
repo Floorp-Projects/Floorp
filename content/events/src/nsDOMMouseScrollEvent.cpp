@@ -5,6 +5,7 @@
 
 #include "nsDOMMouseScrollEvent.h"
 #include "prtime.h"
+#include "mozilla/MouseEvents.h"
 
 nsDOMMouseScrollEvent::nsDOMMouseScrollEvent(mozilla::dom::EventTarget* aOwner,
                                              nsPresContext* aPresContext,

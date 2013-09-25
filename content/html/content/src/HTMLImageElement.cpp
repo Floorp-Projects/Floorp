@@ -22,7 +22,7 @@
 #include "nsContentUtils.h"
 #include "nsIFrame.h"
 #include "nsNodeInfoManager.h"
-#include "nsGUIEvent.h"
+#include "mozilla/MouseEvents.h"
 #include "nsContentPolicyUtils.h"
 #include "nsIDOMWindow.h"
 #include "nsFocusManager.h"

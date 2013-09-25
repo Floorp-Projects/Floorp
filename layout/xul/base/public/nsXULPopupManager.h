@@ -11,7 +11,6 @@
 #define nsXULPopupManager_h__
 
 #include "prlog.h"
-#include "nsGUIEvent.h"
 #include "nsIContent.h"
 #include "nsIRollupListener.h"
 #include "nsIDOMEventListener.h"
@@ -22,6 +21,7 @@
 #include "nsIReflowCallback.h"
 #include "nsThreadUtils.h"
 #include "nsStyleConsts.h"
+#include "nsWidgetInitData.h"
 #include "mozilla/Attributes.h"
 
 // X.h defines KeyPress
@@ -103,11 +103,6 @@ enum nsNavigationDirection {
                                             dir == eNavigationDirection_Last)
 
 PR_STATIC_ASSERT(NS_STYLE_DIRECTION_LTR == 0 && NS_STYLE_DIRECTION_RTL == 1);
-PR_STATIC_ASSERT((NS_VK_HOME == NS_VK_END + 1) &&
-                 (NS_VK_LEFT == NS_VK_END + 2) &&
-                 (NS_VK_UP == NS_VK_END + 3) &&
-                 (NS_VK_RIGHT == NS_VK_END + 4) &&
-                 (NS_VK_DOWN == NS_VK_END + 5));
 
 /**
  * DirectionFromKeyCodeTable: two arrays, the first for left-to-right and the
@@ -118,7 +113,7 @@ extern const nsNavigationDirection DirectionFromKeyCodeTable[2][6];
 
 #define NS_DIRECTION_FROM_KEY_CODE(frame, keycode)                     \
   (DirectionFromKeyCodeTable[frame->StyleVisibility()->mDirection]  \
-                            [keycode - NS_VK_END])
+                            [keycode - nsIDOMKeyEvent::DOM_VK_END])
 
 // nsMenuChainItem holds info about an open popup. Items are stored in a
 // doubly linked list. Note that the linked list is stored beginning from
