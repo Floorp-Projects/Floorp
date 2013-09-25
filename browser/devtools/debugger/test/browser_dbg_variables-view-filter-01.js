@@ -81,8 +81,6 @@ function testVariablesAndPropertiesFiltering() {
     isnot(globalScope.target.querySelectorAll(".variables-view-variable:not([non-match])").length, 0,
       "There should be some variables displayed in the global scope.");
 
-    is(localScope.target.querySelectorAll(".variables-view-property:not([non-match])").length, 3,
-      "There should be 3 properties displayed in the local scope.");
     is(withScope.target.querySelectorAll(".variables-view-property:not([non-match])").length, 0,
       "There should be 0 properties displayed in the with scope.");
     is(functionScope.target.querySelectorAll(".variables-view-property:not([non-match])").length, 0,
