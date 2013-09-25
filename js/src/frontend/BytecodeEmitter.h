@@ -41,7 +41,7 @@ struct CGObjectList {
     uint32_t            length;     /* number of emitted so far objects */
     ObjectBox           *lastbox;   /* last emitted object */
 
-    CGObjectList() : length(0), lastbox(NULL) {}
+    CGObjectList() : length(0), lastbox(nullptr) {}
 
     unsigned add(ObjectBox *objbox);
     unsigned indexOf(JSObject *obj);
