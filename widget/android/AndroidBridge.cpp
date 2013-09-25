@@ -49,6 +49,7 @@ NS_IMPL_ISUPPORTS0(nsFilePickerCallback)
 
 StaticRefPtr<AndroidBridge> AndroidBridge::sBridge;
 static unsigned sJavaEnvThreadIndex = 0;
+static jobject sGlobalContext = nullptr;
 static void JavaThreadDetachFunc(void *arg);
 
 // This is a dummy class that can be used in the template for android::sp
@@ -1434,18 +1435,40 @@ AndroidBridge::LockWindow(void *window, unsigned char **bits, int *width, int *h
 
 jobject
 AndroidBridge::GetGlobalContextRef() {
-    JNIEnv *env = GetJNIForThread();
-    if (!env)
-        return 0;
+    if (sGlobalContext == nullptr) {
+        JNIEnv *env = GetJNIForThread();
+        if (!env)
+            return 0;
 
-    AutoLocalJNIFrame jniFrame(env, 2);
+        AutoLocalJNIFrame jniFrame(env, 4);
 
-    jobject context = GetContext();
+        jobject context = GetContext();
+        if (!context) {
+            ALOG_BRIDGE("%s: Could not GetContext()", __FUNCTION__);
+            return 0;
+        }
+        jclass contextClass = env->FindClass("android/content/Context");
+        if (!contextClass) {
+            ALOG_BRIDGE("%s: Could not find Context class.", __FUNCTION__);
+            return 0;
+        }
+        jmethodID mid = env->GetMethodID(contextClass, "getApplicationContext",
+                                         "()Landroid/content/Context;");
+        if (!mid) {
+            ALOG_BRIDGE("%s: Could not find getApplicationContext.", __FUNCTION__);
+            return 0;
+        }
+        jobject appContext = env->CallObjectMethod(context, mid);
+        if (!appContext) {
+            ALOG_BRIDGE("%s: getApplicationContext failed.", __FUNCTION__);
+            return 0;
+        }
 
-    jobject globalRef = env->NewGlobalRef(context);
-    MOZ_ASSERT(globalRef);
+        sGlobalContext = env->NewGlobalRef(appContext);
+        MOZ_ASSERT(sGlobalContext);
+    }
 
-    return globalRef;
+    return sGlobalContext;
 }
 
 bool
