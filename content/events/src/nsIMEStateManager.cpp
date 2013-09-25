@@ -29,10 +29,10 @@
 #include "nsIForm.h"
 #include "mozilla/dom/HTMLFormElement.h"
 #include "mozilla/Attributes.h"
+#include "mozilla/TextEvents.h"
 #include "TextComposition.h"
 #include "mozilla/Preferences.h"
 #include "nsAsyncDOMEvent.h"
-#include "nsGUIEvent.h"
 
 using namespace mozilla;
 using namespace mozilla::widget;

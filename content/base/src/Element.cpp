@@ -50,6 +50,7 @@
 #include "nsIDOMMutationEvent.h"
 #include "mozilla/MouseEvents.h"
 #include "mozilla/MutationEvent.h"
+#include "mozilla/TextEvents.h"
 #include "nsNodeUtils.h"
 #include "mozilla/dom/DirectionalityUtils.h"
 #include "nsDocument.h"

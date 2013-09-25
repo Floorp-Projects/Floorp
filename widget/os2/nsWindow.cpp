@@ -46,6 +46,7 @@
 #include "nsIDOMWheelEvent.h"
 #include "mozilla/MouseEvents.h"
 #include "mozilla/Preferences.h"
+#include "mozilla/TextEvents.h"
 #include <os2im.h>
 #include <algorithm>    // std::max
 using namespace mozilla;

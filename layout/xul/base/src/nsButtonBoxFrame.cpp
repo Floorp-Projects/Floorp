@@ -17,6 +17,7 @@
 #include "nsDisplayList.h"
 #include "nsContentUtils.h"
 #include "mozilla/dom/Element.h"
+#include "mozilla/TextEvents.h"
 
 
 //

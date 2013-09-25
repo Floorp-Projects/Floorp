@@ -11,6 +11,7 @@
 #include "nsIWidget.h"
 #include "nsPIDOMWindow.h"
 #include "nsView.h"
+#include "mozilla/TextEvents.h"
 
 namespace mozilla {
 namespace dom {
