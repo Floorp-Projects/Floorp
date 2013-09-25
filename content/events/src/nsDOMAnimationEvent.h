@@ -7,6 +7,7 @@
 
 #include "nsDOMEvent.h"
 #include "nsIDOMAnimationEvent.h"
+#include "mozilla/ContentEvents.h"
 #include "mozilla/dom/AnimationEventBinding.h"
 
 class nsAString;
