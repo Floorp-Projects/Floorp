@@ -235,7 +235,7 @@ StatsArenaCallback(JSRuntime *rt, void *data, gc::Arena *arena,
     // unused space like this:  arenaUnused = maxArenaUnused - arenaUsed.
     // We do this by setting arenaUnused to maxArenaUnused here, and then
     // subtracting thingSize for every used cell, in StatsCellCallback().
-    rtStats->currZoneStats->gcHeapUnusedGcThings += allocationSpace;
+    rtStats->currZoneStats->unusedGCThings += allocationSpace;
 }
 
 static CompartmentStats *
@@ -297,9 +297,9 @@ StatsCellCallback(JSRuntime *rt, void *data, void *thing, JSGCTraceKind traceKin
             p->value.add(shortStringThingSize, normalStringThingSize, strCharsSize);
         }
 
-        zStats->gcHeapStringsShort += shortStringThingSize;
-        zStats->gcHeapStringsNormal += normalStringThingSize;
-        zStats->stringCharsNonNotable += strCharsSize;
+        zStats->stringsShortGCHeap += shortStringThingSize;
+        zStats->stringsNormalGCHeap += normalStringThingSize;
+        zStats->stringsNormalMallocHeap += strCharsSize;
 
         break;
       }
@@ -357,14 +357,14 @@ StatsCellCallback(JSRuntime *rt, void *data, void *thing, JSGCTraceKind traceKin
 
       case JSTRACE_LAZY_SCRIPT: {
         LazyScript *lazy = static_cast<LazyScript *>(thing);
-        zStats->gcHeapLazyScripts += thingSize;
-        zStats->lazyScripts += lazy->sizeOfExcludingThis(rtStats->mallocSizeOf_);
+        zStats->lazyScriptsGCHeap += thingSize;
+        zStats->lazyScriptsMallocHeap += lazy->sizeOfExcludingThis(rtStats->mallocSizeOf_);
         break;
       }
 
       case JSTRACE_IONCODE: {
 #ifdef JS_ION
-        zStats->gcHeapIonCodes += thingSize;
+        zStats->ionCodesGCHeap += thingSize;
         // The code for a script is counted in ExecutableAllocator::sizeOfCode().
 #endif
         break;
@@ -372,15 +372,15 @@ StatsCellCallback(JSRuntime *rt, void *data, void *thing, JSGCTraceKind traceKin
 
       case JSTRACE_TYPE_OBJECT: {
         types::TypeObject *obj = static_cast<types::TypeObject *>(thing);
-        zStats->gcHeapTypeObjects += thingSize;
-        zStats->typeObjects += obj->sizeOfExcludingThis(rtStats->mallocSizeOf_);
+        zStats->typeObjectsGCHeap += thingSize;
+        zStats->typeObjectsMallocHeap += obj->sizeOfExcludingThis(rtStats->mallocSizeOf_);
         break;
       }
 
     }
 
     // Yes, this is a subtraction:  see StatsArenaCallback() for details.
-    zStats->gcHeapUnusedGcThings -= thingSize;
+    zStats->unusedGCThings -= thingSize;
 }
 
 static void
@@ -408,12 +408,12 @@ FindNotableStrings(ZoneStats &zStats)
 
         // We're moving this string from a non-notable to a notable bucket, so
         // subtract it out of the non-notable tallies.
-        MOZ_ASSERT(zStats.gcHeapStringsShort >= info.sizeOfShortStringGCThings);
-        MOZ_ASSERT(zStats.gcHeapStringsNormal >= info.sizeOfNormalStringGCThings);
-        MOZ_ASSERT(zStats.stringCharsNonNotable >= info.sizeOfAllStringChars);
-        zStats.gcHeapStringsShort -= info.sizeOfShortStringGCThings;
-        zStats.gcHeapStringsNormal -= info.sizeOfNormalStringGCThings;
-        zStats.stringCharsNonNotable -= info.sizeOfAllStringChars;
+        MOZ_ASSERT(zStats.stringsShortGCHeap >= info.shortGCHeap);
+        MOZ_ASSERT(zStats.stringsNormalGCHeap >= info.normalGCHeap);
+        MOZ_ASSERT(zStats.stringsNormalMallocHeap >= info.normalMallocHeap);
+        zStats.stringsShortGCHeap -= info.shortGCHeap;
+        zStats.stringsNormalGCHeap -= info.normalGCHeap;
+        zStats.stringsNormalMallocHeap -= info.normalMallocHeap;
     }
 
     // zStats.strings holds unrooted JSString pointers, which we don't want to
@@ -459,7 +459,7 @@ JS::CollectRuntimeStats(JSRuntime *rt, RuntimeStats *rtStats, ObjectPrivateVisit
         rtStats->zTotals.add(zStats);
         rtStats->gcHeapGcThings += zStats.sizeOfLiveGCThings();
 #ifdef DEBUG
-        totalArenaSize += zStats.gcHeapArenaAdmin + zStats.gcHeapUnusedGcThings;
+        totalArenaSize += zStats.gcHeapArenaAdmin + zStats.unusedGCThings;
 #endif
 
         // Move any strings which take up more than the sundries threshold
@@ -496,7 +496,7 @@ JS::CollectRuntimeStats(JSRuntime *rt, RuntimeStats *rtStats, ObjectPrivateVisit
     rtStats->gcHeapUnusedArenas = rtStats->gcHeapChunkTotal -
                                   rtStats->gcHeapDecommittedArenas -
                                   rtStats->gcHeapUnusedChunks -
-                                  rtStats->zTotals.gcHeapUnusedGcThings -
+                                  rtStats->zTotals.unusedGCThings -
                                   rtStats->gcHeapChunkAdmin -
                                   rtStats->zTotals.gcHeapArenaAdmin -
                                   rtStats->gcHeapGcThings;
