@@ -24,6 +24,7 @@
 #include "mozilla/layers/ShadowLayers.h"
 #include "mozilla/layout/RenderFrameChild.h"
 #include "mozilla/StaticPtr.h"
+#include "mozilla/TouchEvents.h"
 #include "mozilla/unused.h"
 #include "mozIApplication.h"
 #include "nsContentUtils.h"

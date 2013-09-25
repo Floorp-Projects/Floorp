@@ -25,6 +25,7 @@
 #include "nsISelectionPrivate.h"
 #include "nsISelectionController.h"
 #include "nsGUIEvent.h"
+#include "mozilla/TouchEvents.h"
 #include "nsView.h"
 #include "nsGkAtoms.h"
 #include "nsDOMTouchEvent.h"

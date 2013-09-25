@@ -6,6 +6,7 @@
 
 #include "mozilla/Attributes.h"
 #include "mozilla/MathAlgorithms.h"
+#include "mozilla/TouchEvents.h"
 #include "mozilla/dom/TabParent.h"
 
 #include "nsCOMPtr.h"
