@@ -5,11 +5,12 @@
 
 /* state and methods used while laying out a single line of a block frame */
 
+// This has to be defined before nsLineLayout.h is included, because
+// nsLineLayout.h has a #include for plarena.h, which needs this defined:
 #define PL_ARENA_CONST_ALIGN_MASK (sizeof(void*)-1)
-#include "plarena.h"
+#include "nsLineLayout.h"
 
 #include "mozilla/Util.h"
-#include "nsLineLayout.h"
 #include "nsBlockFrame.h"
 #include "nsStyleConsts.h"
 #include "nsContainerFrame.h"
