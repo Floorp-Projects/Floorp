@@ -93,6 +93,10 @@ class InlineForwardList : protected InlineForwardListNode<T>
         removeAfter(this, result);
         return result;
     }
+    T *back() {
+        JS_ASSERT(!empty());
+        return static_cast<T *>(tail_);
+    }
     void insertAfter(Node *at, Node *item) {
         modifyCount_++;
         if (at == tail_)

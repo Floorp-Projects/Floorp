@@ -1,9 +1,5 @@
 /***********************************************************************
-Copyright (c) 2006-2012 IETF Trust and Skype Limited. All rights reserved.
-
-This file is extracted from RFC6716. Please see that RFC for additional
-information.
-
+Copyright (c) 2006-2011, Skype Limited. All rights reserved.
 Redistribution and use in source and binary forms, with or without
 modification, are permitted provided that the following conditions
 are met:
@@ -16,7 +12,7 @@ documentation and/or other materials provided with the distribution.
 names of specific contributors, may be used to endorse or promote
 products derived from this software without specific prior written
 permission.
-THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS “AS IS”
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
 AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
 IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
 ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE
@@ -34,6 +30,7 @@ POSSIBILITY OF SUCH DAMAGE.
 #endif
 
 #include "main.h"
+#include "stack_alloc.h"
 
 /* Generates excitation for CNG LPC synthesis */
 static inline void silk_CNG_exc(
@@ -90,8 +87,8 @@ void silk_CNG(
     opus_int   i, subfr;
     opus_int32 sum_Q6, max_Gain_Q16;
     opus_int16 A_Q12[ MAX_LPC_ORDER ];
-    opus_int32 CNG_sig_Q10[ MAX_FRAME_LENGTH + MAX_LPC_ORDER ];
     silk_CNG_struct *psCNG = &psDec->sCNG;
+    SAVE_STACK;
 
     if( psDec->fs_kHz != psCNG->fs_kHz ) {
         /* Reset state */
@@ -104,7 +101,7 @@ void silk_CNG(
 
         /* Smoothing of LSF's  */
         for( i = 0; i < psDec->LPC_order; i++ ) {
-            psCNG->CNG_smth_NLSF_Q15[ i ] += silk_SMULWB( psDec->prevNLSF_Q15[ i ] - psCNG->CNG_smth_NLSF_Q15[ i ], CNG_NLSF_SMTH_Q16 );
+            psCNG->CNG_smth_NLSF_Q15[ i ] += silk_SMULWB( (opus_int32)psDec->prevNLSF_Q15[ i ] - (opus_int32)psCNG->CNG_smth_NLSF_Q15[ i ], CNG_NLSF_SMTH_Q16 );
         }
         /* Find the subframe with the highest gain */
         max_Gain_Q16 = 0;
@@ -127,6 +124,9 @@ void silk_CNG(
 
     /* Add CNG when packet is lost or during DTX */
     if( psDec->lossCnt ) {
+        VARDECL( opus_int32, CNG_sig_Q10 );
+
+        ALLOC( CNG_sig_Q10, length + MAX_LPC_ORDER, opus_int32 );
 
         /* Generate CNG excitation */
         silk_CNG_exc( CNG_sig_Q10 + MAX_LPC_ORDER, psCNG->CNG_exc_buf_Q14, psCNG->CNG_smth_Gain_Q16, length, &psCNG->rand_seed );
@@ -168,4 +168,5 @@ void silk_CNG(
     } else {
         silk_memset( psCNG->CNG_synth_state, 0, psDec->LPC_order *  sizeof( opus_int32 ) );
     }
+    RESTORE_STACK;
 }

@@ -364,32 +364,6 @@ nsWinMetroUtils::ShowNativeToast(const nsAString &aTitle,
 }
 
 NS_IMETHODIMP
-nsWinMetroUtils::GetSnappedState(int32_t *aSnappedState)
-{
-  if (XRE_GetWindowsEnvironment() == WindowsEnvironmentType_Desktop) {
-    NS_WARNING("GetSnappedState can't be called on the desktop.");
-    return NS_ERROR_FAILURE;
-  }
-  NS_ENSURE_ARG_POINTER(aSnappedState);
-  ApplicationViewState viewState;
-  AssertRetHRESULT(MetroUtils::GetViewState(viewState), NS_ERROR_UNEXPECTED);
-  *aSnappedState = (int32_t) viewState;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsWinMetroUtils::Unsnap()
-{
-  if (XRE_GetWindowsEnvironment() == WindowsEnvironmentType_Desktop) {
-    NS_WARNING("Unsnap can't be called on the desktop.");
-    return NS_ERROR_FAILURE;
-  }
-
-  HRESULT hr = MetroUtils::TryUnsnap();
-  return SUCCEEDED(hr) ? NS_OK : NS_ERROR_FAILURE;
-}
-
-NS_IMETHODIMP
 nsWinMetroUtils::ShowSettingsFlyout()
 {
   if (XRE_GetWindowsEnvironment() == WindowsEnvironmentType_Desktop) {

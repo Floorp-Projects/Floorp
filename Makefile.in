@@ -23,7 +23,7 @@ endif
 
 include $(topsrcdir)/config/config.mk
 
-GARBAGE_DIRS += dist _javagen _profile _tests staticlib
+GARBAGE_DIRS += dist _javagen _profile staticlib
 DIST_GARBAGE = config.cache config.log config.status* config-defs.h \
    config/autoconf.mk \
    mozilla-config.h \
@@ -80,6 +80,13 @@ $(addprefix install-dist-,$(install_manifests)): install-dist-%: $(install_manif
 install-manifests: install-tests
 install-tests: $(install_manifest_depends)
 	$(call py_action,process_install_manifest,$(if $(NO_REMOVE),--no-remove )_tests _build_manifests/install/tests js/src/_build_manifests/install/tests)
+
+
+# _tests should be purged during cleaning. However, we don't want it purged
+# during PGO builds because it contains some auto-generated files.
+ifneq ($(filter-out maybe_clobber_profiledbuild,$(MAKECMDGOALS)),)
+GARBAGE_DIRS += _tests
+endif
 
 # Windows PGO builds don't perform a clean before the 2nd pass. So, we want
 # to preserve content for the 2nd pass on Windows. Everywhere else, we always

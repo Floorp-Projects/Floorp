@@ -26,7 +26,7 @@
 #include "nsCOMPtr.h"
 #include "nsError.h"
 #include "nsIDocument.h"
-#include "nsMutationEvent.h"
+#include "mozilla/MutationEvent.h"
 #include "nsIXPConnect.h"
 #include "nsDOMCID.h"
 #include "nsContentUtils.h"
@@ -236,7 +236,7 @@ nsEventListenerManager::AddEventListenerInternal(
     }
   }
 
-  mNoListenerForEvent = NS_EVENT_TYPE_NULL;
+  mNoListenerForEvent = NS_EVENT_NULL;
   mNoListenerForEventAtom = nullptr;
 
   ls = aAllEvents ? mListeners.InsertElementAt(0) : mListeners.AppendElement();
@@ -474,7 +474,7 @@ nsEventListenerManager::RemoveEventListenerInternal(
         nsRefPtr<nsEventListenerManager> kungFuDeathGrip = this;
         mListeners.RemoveElementAt(i);
         --count;
-        mNoListenerForEvent = NS_EVENT_TYPE_NULL;
+        mNoListenerForEvent = NS_EVENT_NULL;
         mNoListenerForEventAtom = nullptr;
         if (mTarget && aUserType) {
           mTarget->EventListenerRemoved(aUserType);
@@ -771,7 +771,7 @@ nsEventListenerManager::RemoveEventHandler(nsIAtom* aName,
 
   if (ls) {
     mListeners.RemoveElementAt(uint32_t(ls - &mListeners.ElementAt(0)));
-    mNoListenerForEvent = NS_EVENT_TYPE_NULL;
+    mNoListenerForEvent = NS_EVENT_NULL;
     mNoListenerForEventAtom = nullptr;
     if (mTarget) {
       mTarget->EventListenerRemoved(aName);
@@ -1084,7 +1084,7 @@ nsEventListenerManager::AddListenerForAllEvents(nsIDOMEventListener* aListener,
   flags.mAllowUntrustedEvents = aWantsUntrusted;
   flags.mInSystemGroup = aSystemEventGroup;
   EventListenerHolder holder(aListener);
-  AddEventListenerInternal(holder, NS_EVENT_TYPE_ALL, nullptr, EmptyString(),
+  AddEventListenerInternal(holder, NS_EVENT_ALL, nullptr, EmptyString(),
                            flags, false, true);
 }
 
@@ -1097,7 +1097,7 @@ nsEventListenerManager::RemoveListenerForAllEvents(nsIDOMEventListener* aListene
   flags.mCapture = aUseCapture;
   flags.mInSystemGroup = aSystemEventGroup;
   EventListenerHolder holder(aListener);
-  RemoveEventListenerInternal(holder, NS_EVENT_TYPE_ALL, nullptr, EmptyString(),
+  RemoveEventListenerInternal(holder, NS_EVENT_ALL, nullptr, EmptyString(),
                               flags, true);
 }
 

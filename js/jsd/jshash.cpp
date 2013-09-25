@@ -64,7 +64,7 @@ DefaultFreeEntry(void *pool, JSHashEntry *he, unsigned flag)
         js_free(he);
 }
 
-static JSHashAllocOps defaultHashAllocOps = {
+static const JSHashAllocOps defaultHashAllocOps = {
     DefaultAllocTable, DefaultFreeTable,
     DefaultAllocEntry, DefaultFreeEntry
 };
@@ -72,7 +72,7 @@ static JSHashAllocOps defaultHashAllocOps = {
 JSHashTable *
 JS_NewHashTable(uint32_t n, JSHashFunction keyHash,
                 JSHashComparator keyCompare, JSHashComparator valueCompare,
-                JSHashAllocOps *allocOps, void *allocPriv)
+                const JSHashAllocOps *allocOps, void *allocPriv)
 {
     JSHashTable *ht;
     size_t nb;
@@ -114,7 +114,7 @@ JS_HashTableDestroy(JSHashTable *ht)
 {
     uint32_t i, n;
     JSHashEntry *he, **hep;
-    JSHashAllocOps *allocOps = ht->allocOps;
+    const JSHashAllocOps *allocOps = ht->allocOps;
     void *allocPriv = ht->allocPriv;
 
     n = NBUCKETS(ht);

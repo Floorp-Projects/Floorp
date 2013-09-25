@@ -16,6 +16,7 @@
 #include "mozilla/layers/LayersTypes.h"  // for LayersBackend
 #include "mozilla/layers/PCompositableChild.h"  // for PCompositableChild
 #include "nsTraceRefcnt.h"              // for MOZ_COUNT_CTOR, etc
+#include "gfxASurface.h"                // for gfxContentType
 
 namespace mozilla {
 namespace layers {
@@ -80,7 +81,8 @@ public:
   LayersBackend GetCompositorBackendType() const;
 
   TemporaryRef<DeprecatedTextureClient>
-  CreateDeprecatedTextureClient(DeprecatedTextureClientType aDeprecatedTextureClientType);
+  CreateDeprecatedTextureClient(DeprecatedTextureClientType aDeprecatedTextureClientType,
+                                gfxContentType aContentType = GFX_CONTENT_SENTINEL);
 
   virtual TemporaryRef<BufferTextureClient>
   CreateBufferTextureClient(gfx::SurfaceFormat aFormat, TextureFlags aFlags);

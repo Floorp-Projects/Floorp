@@ -12,8 +12,6 @@
 #include "GLTextureImage.h"             // for TextureImage
 #include "ImageContainer.h"             // for PlanarYCbCrImage, etc
 #include "ImageTypes.h"                 // for StereoMode
-#include "gfxASurface.h"                // for gfxASurface, etc
-#include "gfxImageSurface.h"            // for gfxImageSurface
 #include "mozilla/Assertions.h"         // for MOZ_ASSERT, etc
 #include "mozilla/Attributes.h"         // for MOZ_OVERRIDE
 #include "mozilla/RefPtr.h"             // for RefPtr, RefCounted
@@ -29,6 +27,8 @@
 #include "nsISupportsImpl.h"            // for TextureImage::AddRef, etc
 
 class gfxReusableSurfaceWrapper;
+class gfxASurface;
+class gfxImageSurface;
 
 namespace mozilla {
 namespace layers {
@@ -410,8 +410,6 @@ public:
     return gfx::BACKEND_NONE;
   }
 
-
-  virtual SurfaceDescriptor* LockSurfaceDescriptor() { return GetDescriptor(); }
   virtual void ReleaseResources() {}
   /**
    * This unlocks the current DrawableTexture and allows the host to composite
@@ -425,7 +423,7 @@ public:
    * Returns true if succeeded, false if failed.
    */
   virtual bool EnsureAllocated(gfx::IntSize aSize,
-                               gfxASurface::gfxContentType aType) = 0;
+                               gfxContentType aType) = 0;
 
   /**
    * _Only_ used at the end of the layer transaction when receiving a reply from
@@ -441,6 +439,11 @@ public:
     mDescriptor = aDescriptor;
   }
   SurfaceDescriptor* GetDescriptor() { return &mDescriptor; }
+  /**
+   * Use LockSurfaceDescriptor to get the descriptor if it will be sent across IPC.
+   * Use GetDescriptor if you want to keep the descriptor on one thread.
+   */
+  virtual SurfaceDescriptor* LockSurfaceDescriptor() { return GetDescriptor(); }
 
   CompositableForwarder* GetForwarder() const
   {
@@ -469,7 +472,7 @@ public:
     return mAccessMode;
   }
 
-  virtual gfxASurface::gfxContentType GetContentType() = 0;
+  virtual gfxContentType GetContentType() = 0;
 
 protected:
   DeprecatedTextureClient(CompositableForwarder* aForwarder,
@@ -487,8 +490,7 @@ class DeprecatedTextureClientShmem : public DeprecatedTextureClient
 {
 public:
   DeprecatedTextureClientShmem(CompositableForwarder* aForwarder, const TextureInfo& aTextureInfo);
-  ~DeprecatedTextureClientShmem() { ReleaseResources(); }
-
+  ~DeprecatedTextureClientShmem();
   virtual bool SupportsType(DeprecatedTextureClientType aType) MOZ_OVERRIDE
   {
     return aType == TEXTURE_SHMEM || aType == TEXTURE_CONTENT || aType == TEXTURE_FALLBACK;
@@ -501,11 +503,11 @@ public:
     return gfx::BACKEND_CAIRO;
   }
   virtual void Unlock() MOZ_OVERRIDE;
-  virtual bool EnsureAllocated(gfx::IntSize aSize, gfxASurface::gfxContentType aType) MOZ_OVERRIDE;
+  virtual bool EnsureAllocated(gfx::IntSize aSize, gfxContentType aType) MOZ_OVERRIDE;
 
   virtual void ReleaseResources() MOZ_OVERRIDE;
   virtual void SetDescriptor(const SurfaceDescriptor& aDescriptor) MOZ_OVERRIDE;
-  virtual gfxASurface::gfxContentType GetContentType() MOZ_OVERRIDE { return mContentType; }
+  virtual gfxContentType GetContentType() MOZ_OVERRIDE { return mContentType; }
 private:
   gfxASurface* GetSurface();
 
@@ -513,7 +515,7 @@ private:
   nsRefPtr<gfxImageSurface> mSurfaceAsImage;
   RefPtr<gfx::DrawTarget> mDrawTarget;
 
-  gfxASurface::gfxContentType mContentType;
+  gfxContentType mContentType;
   gfx::IntSize mSize;
 
   friend class CompositingFactory;
@@ -529,11 +531,11 @@ public:
   ~DeprecatedTextureClientShmemYCbCr() { ReleaseResources(); }
 
   virtual bool SupportsType(DeprecatedTextureClientType aType) MOZ_OVERRIDE { return aType == TEXTURE_YCBCR; }
-  bool EnsureAllocated(gfx::IntSize aSize, gfxASurface::gfxContentType aType) MOZ_OVERRIDE;
+  bool EnsureAllocated(gfx::IntSize aSize, gfxContentType aType) MOZ_OVERRIDE;
   virtual void SetDescriptorFromReply(const SurfaceDescriptor& aDescriptor) MOZ_OVERRIDE;
   virtual void SetDescriptor(const SurfaceDescriptor& aDescriptor) MOZ_OVERRIDE;
   virtual void ReleaseResources();
-  virtual gfxASurface::gfxContentType GetContentType() MOZ_OVERRIDE { return gfxASurface::CONTENT_COLOR_ALPHA; }
+  virtual gfxContentType GetContentType() MOZ_OVERRIDE { return GFX_CONTENT_COLOR_ALPHA; }
 };
 
 class DeprecatedTextureClientTile : public DeprecatedTextureClient
@@ -546,7 +548,7 @@ public:
   ~DeprecatedTextureClientTile();
 
   virtual bool EnsureAllocated(gfx::IntSize aSize,
-                               gfxASurface::gfxContentType aType) MOZ_OVERRIDE;
+                               gfxContentType aType) MOZ_OVERRIDE;
 
   virtual gfxImageSurface* LockImageSurface() MOZ_OVERRIDE;
 
@@ -561,10 +563,10 @@ public:
   }
 
 
-  virtual gfxASurface::gfxContentType GetContentType() { return mContentType; }
+  virtual gfxContentType GetContentType() { return mContentType; }
 
 private:
-  gfxASurface::gfxContentType mContentType;
+  gfxContentType mContentType;
   nsRefPtr<gfxReusableSurfaceWrapper> mSurface;
 
   friend class CompositingFactory;
