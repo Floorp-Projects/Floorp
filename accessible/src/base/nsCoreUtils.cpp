@@ -24,7 +24,6 @@
 #include "nsEventStateManager.h"
 #include "nsISelectionPrivate.h"
 #include "nsISelectionController.h"
-#include "nsGUIEvent.h"
 #include "mozilla/MouseEvents.h"
 #include "mozilla/TouchEvents.h"
 #include "nsView.h"

@@ -23,7 +23,6 @@
 #include "nsUnicharUtils.h"
 #include "plstr.h"
 #include "nsGkAtoms.h"
-#include "nsGUIEvent.h"
 #include "nsCRT.h"
 #include "nsBaseWidget.h"
 

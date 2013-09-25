@@ -9,7 +9,6 @@
 #include "nsIAndroidBridge.h"
 #include "nsIDOMKeyEvent.h"
 #include "nsIWidget.h"
-#include "nsGUIEvent.h"
 #include "mozilla/TouchEvents.h"
 
 using namespace mozilla;

@@ -886,13 +886,13 @@ class nsIWidget : public nsISupports {
 
     /**
      * Minimize, maximize or normalize the window size.
-     * Takes a value from nsSizeMode (see nsGUIEvent.h)
+     * Takes a value from nsSizeMode (see nsIWidgetListener.h)
      */
     NS_IMETHOD SetSizeMode(int32_t aMode) = 0;
 
     /**
      * Return size mode (minimized, maximized, normalized).
-     * Returns a value from nsSizeMode (see nsGUIEvent.h)
+     * Returns a value from nsSizeMode (see nsIWidgetListener.h)
      */
     virtual int32_t SizeMode() = 0;
 

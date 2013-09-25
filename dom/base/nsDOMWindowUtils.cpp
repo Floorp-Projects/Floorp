@@ -29,7 +29,6 @@
 
 #include "nsIFrame.h"
 #include "nsIWidget.h"
-#include "nsGUIEvent.h"
 #include "nsCharsetSource.h"
 #include "nsJSEnvironment.h"
 #include "nsJSUtils.h"

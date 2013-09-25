@@ -38,7 +38,6 @@
 #include "nsAccessibilityService.h"
 #endif
 #include "nsIDOMNode.h"
-#include "nsGUIEvent.h"
 #include "nsLayoutUtils.h"
 #include "nsDisplayList.h"
 

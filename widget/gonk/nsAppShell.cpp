@@ -43,7 +43,6 @@
 #include "nsAppShell.h"
 #include "mozilla/dom/Touch.h"
 #include "nsGkAtoms.h"
-#include "nsGUIEvent.h"
 #include "nsIObserverService.h"
 #include "nsIScreen.h"
 #include "nsScreenManagerGonk.h"

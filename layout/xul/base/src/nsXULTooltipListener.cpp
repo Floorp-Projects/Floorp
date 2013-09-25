@@ -19,7 +19,6 @@
 #ifdef MOZ_XUL
 #include "nsITreeView.h"
 #endif
-#include "nsGUIEvent.h"
 #include "nsIScriptContext.h"
 #include "nsPIDOMWindow.h"
 #ifdef MOZ_XUL

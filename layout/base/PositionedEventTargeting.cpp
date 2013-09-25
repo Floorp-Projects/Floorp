@@ -6,7 +6,6 @@
 
 #include "mozilla/MouseEvents.h"
 #include "mozilla/Preferences.h"
-#include "nsGUIEvent.h"
 #include "nsLayoutUtils.h"
 #include "nsGkAtoms.h"
 #include "nsEventListenerManager.h"
