@@ -20,6 +20,7 @@
 #include "nsIDOMWindowUtils.h"
 #include "nsIDOMWheelEvent.h"
 
+#include "mozilla/MiscEvents.h"
 #include "mozilla/MouseEvents.h"
 #include "mozilla/Preferences.h"
 

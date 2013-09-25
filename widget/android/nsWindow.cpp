@@ -7,6 +7,7 @@
 #include <math.h>
 #include <unistd.h>
 
+#include "mozilla/MiscEvents.h"
 #include "mozilla/MouseEvents.h"
 #include "mozilla/TextEvents.h"
 #include "mozilla/TouchEvents.h"

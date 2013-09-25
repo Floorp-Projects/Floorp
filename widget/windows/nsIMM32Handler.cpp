@@ -16,6 +16,7 @@
 #include "KeyboardLayout.h"
 #include <algorithm>
 
+#include "mozilla/MiscEvents.h"
 #include "mozilla/TextEvents.h"
 
 using namespace mozilla::widget;
