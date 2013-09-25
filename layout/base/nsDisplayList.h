@@ -370,15 +370,15 @@ public:
 
   /**
    * Determines if this item is scrolled by content-document display-port
-   * scrolling. aActiveScrolledRoot will be set to the active scrolled root
-   * of the item. This may not necessarily correspond to the active scrolled
+   * scrolling. aAnimatedGeometryRoot will be set to the animated geometry root
+   * of the item. This may not necessarily correspond to the animated geometry
    * root of the item's underlying frame.
-   * If specified, aOverrideActiveScrolledRoot will be treated as the active
+   * If specified, aOverrideAnimatedGeometryRoot will be treated as the active
    * scrolled root.
    */
   bool IsFixedItem(nsDisplayItem* aItem,
-                   const nsIFrame** aActiveScrolledRoot = nullptr,
-                   const nsIFrame* aOverrideActiveScrolledRoot = nullptr);
+                   const nsIFrame** aAnimatedGeometryRoot = nullptr,
+                   const nsIFrame* aOverrideAnimatedGeometryScrolledRoot = nullptr);
 
   /**
    * @return true if images have been set to decode synchronously.
@@ -2417,13 +2417,13 @@ public:
   /**
    * Returns true if all descendant display items can be placed in the same
    * ThebesLayer --- GetLayerState returns LAYER_INACTIVE or LAYER_NONE,
-   * and they all have the given aActiveScrolledRoot.
+   * and they all have the given aAnimatedGeometryRoot.
    */
   static LayerState RequiredLayerStateForChildren(nsDisplayListBuilder* aBuilder,
                                                   LayerManager* aManager,
                                                   const ContainerParameters& aParameters,
                                                   const nsDisplayList& aList,
-                                                  nsIFrame* aActiveScrolledRoot);
+                                                  nsIFrame* aItemFrame);
 
 protected:
   nsDisplayWrapList() {}
@@ -2655,10 +2655,13 @@ public:
 
   NS_DISPLAY_DECL_NAME("FixedPosition", TYPE_FIXED_POSITION)
 
+  static void SetFixedPositionLayerData(Layer* aLayer, const nsIFrame* aViewportFrame,
+                                        nsSize aViewportSize,
+                                        const nsIFrame* aFixedPosFrame,
+                                        const nsIFrame* aReferenceFrame,
+                                        nsPresContext* aPresContext,
+                                        const ContainerParameters& aContainerParameters);
 protected:
-  void SetFixedPositionLayerData(Layer* const aLayer, nsIFrame* aViewportFrame,
-                                 nsSize aViewportSize, nsPresContext* aPresContext,
-                                 const ContainerParameters& aContainerParameters);
   nsIFrame* mFixedPosFrame;
 };
 

@@ -1199,8 +1199,8 @@ nsLayoutUtils::GetScrollableFrameFor(const nsIFrame *aScrolledFrame)
 }
 
 nsIFrame*
-nsLayoutUtils::GetActiveScrolledRootFor(nsIFrame* aFrame,
-                                        const nsIFrame* aStopAtAncestor)
+nsLayoutUtils::GetAnimatedGeometryRootFor(nsIFrame* aFrame,
+                                          const nsIFrame* aStopAtAncestor)
 {
   nsIFrame* f = aFrame;
   nsIFrame* stickyFrame = nullptr;
@@ -1245,18 +1245,11 @@ nsLayoutUtils::GetActiveScrolledRootFor(nsIFrame* aFrame,
 }
 
 nsIFrame*
-nsLayoutUtils::GetActiveScrolledRootFor(nsDisplayItem* aItem,
-                                        nsDisplayListBuilder* aBuilder,
-                                        bool* aShouldFixToViewport)
+nsLayoutUtils::GetAnimatedGeometryRootFor(nsDisplayItem* aItem,
+                                          nsDisplayListBuilder* aBuilder)
 {
   nsIFrame* f = aItem->Frame();
-  if (aShouldFixToViewport) {
-    *aShouldFixToViewport = false;
-  }
   if (aItem->ShouldFixToViewport(aBuilder)) {
-    if (aShouldFixToViewport) {
-      *aShouldFixToViewport = true;
-    }
     // Make its active scrolled root be the active scrolled root of
     // the enclosing viewport, since it shouldn't be scrolled by scrolled
     // frames in its document. InvalidateFixedBackgroundFramesFromList in
@@ -1264,17 +1257,17 @@ nsLayoutUtils::GetActiveScrolledRootFor(nsDisplayItem* aItem,
     nsIFrame* viewportFrame =
       nsLayoutUtils::GetClosestFrameOfType(f, nsGkAtoms::viewportFrame);
     NS_ASSERTION(viewportFrame, "no viewport???");
-    return nsLayoutUtils::GetActiveScrolledRootFor(viewportFrame, aBuilder->FindReferenceFrameFor(viewportFrame));
-  } else {
-    return nsLayoutUtils::GetActiveScrolledRootFor(f, aItem->ReferenceFrame());
+    return nsLayoutUtils::GetAnimatedGeometryRootFor(viewportFrame,
+        aBuilder->FindReferenceFrameFor(viewportFrame));
   }
+  return nsLayoutUtils::GetAnimatedGeometryRootFor(f, aItem->ReferenceFrame());
 }
 
 bool
-nsLayoutUtils::IsScrolledByRootContentDocumentDisplayportScrolling(const nsIFrame* aActiveScrolledRoot,
+nsLayoutUtils::IsScrolledByRootContentDocumentDisplayportScrolling(const nsIFrame* aAnimatedGeometryRoot,
                                                                    nsDisplayListBuilder* aBuilder)
 {
-  nsPresContext* presContext = aActiveScrolledRoot->PresContext()->
+  nsPresContext* presContext = aAnimatedGeometryRoot->PresContext()->
           GetToplevelContentDocumentPresContext();
   if (!presContext)
     return false;
@@ -1282,7 +1275,7 @@ nsLayoutUtils::IsScrolledByRootContentDocumentDisplayportScrolling(const nsIFram
   nsIFrame* rootScrollFrame = presContext->GetPresShell()->GetRootScrollFrame();
   if (!rootScrollFrame || !nsLayoutUtils::GetDisplayPort(rootScrollFrame->GetContent(), nullptr))
     return false;
-  return nsLayoutUtils::IsAncestorFrameCrossDoc(rootScrollFrame, aActiveScrolledRoot);
+  return nsLayoutUtils::IsAncestorFrameCrossDoc(rootScrollFrame, aAnimatedGeometryRoot);
 }
 
 // static
