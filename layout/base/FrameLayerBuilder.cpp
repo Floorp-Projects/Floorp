@@ -325,7 +325,7 @@ protected:
   class ThebesLayerData {
   public:
     ThebesLayerData() :
-      mActiveScrolledRoot(nullptr), mLayer(nullptr),
+      mAnimatedGeometryRoot(nullptr), mLayer(nullptr),
       mIsSolidColorInVisibleRegion(false),
       mNeedComponentAlpha(false),
       mForceTransparentSurface(false),
@@ -350,7 +350,7 @@ protected:
                     const nsIntRect& aVisibleRect,
                     const nsIntRect& aDrawRect,
                     const DisplayItemClip& aClip);
-    const nsIFrame* GetActiveScrolledRoot() { return mActiveScrolledRoot; }
+    const nsIFrame* GetAnimatedGeometryRoot() { return mAnimatedGeometryRoot; }
 
     /**
      * If this represents only a nsDisplayImage, and the image type
@@ -437,7 +437,7 @@ protected:
      * be non-null; all content in a ThebesLayer must have the same
      * active scrolled root.
      */
-    const nsIFrame* mActiveScrolledRoot;
+    const nsIFrame* mAnimatedGeometryRoot;
     ThebesLayer* mLayer;
     /**
      * If mIsSolidColorInVisibleRegion is true, this is the color of the visible
@@ -522,7 +522,7 @@ protected:
    * a recycled ThebesLayer, and sets up the transform on the ThebesLayer
    * to account for scrolling.
    */
-  already_AddRefed<ThebesLayer> CreateOrRecycleThebesLayer(const nsIFrame* aActiveScrolledRoot, 
+  already_AddRefed<ThebesLayer> CreateOrRecycleThebesLayer(const nsIFrame* aAnimatedGeometryRoot, 
                                                            const nsIFrame *aReferenceFrame, 
                                                            const nsPoint& aTopLeft);
   /**
@@ -580,7 +580,7 @@ protected:
    * layer is found. If we choose a ThebesLayer that's already on the
    * ThebesLayerData stack, later elements on the stack will be popped off.
    * @param aVisibleRect the area of the next display item that's visible
-   * @param aActiveScrolledRoot the active scrolled root for the next
+   * @param aAnimatedGeometryRoot the active scrolled root for the next
    * display item
    * @param aOpaqueRect if non-null, a region of the display item that is opaque
    * @param aSolidColor if non-null, indicates that every pixel in aVisibleRect
@@ -590,7 +590,7 @@ protected:
                                                    const nsIntRect& aVisibleRect,
                                                    const nsIntRect& aDrawRect,
                                                    const DisplayItemClip& aClip,
-                                                   const nsIFrame* aActiveScrolledRoot,
+                                                   const nsIFrame* aAnimatedGeometryRoot,
                                                    const nsPoint& aTopLeft);
   ThebesLayerData* GetTopThebesLayerData()
   {
@@ -610,8 +610,8 @@ protected:
   void SetupMaskLayer(Layer *aLayer, const DisplayItemClip& aClip,
                       uint32_t aRoundedRectClipCount = UINT32_MAX);
 
-  bool ChooseActiveScrolledRoot(const nsDisplayList& aList,
-                                const nsIFrame **aActiveScrolledRoot);
+  bool ChooseAnimatedGeometryRoot(const nsDisplayList& aList,
+                                  const nsIFrame **aAnimatedGeometryRoot);
 
   nsDisplayListBuilder*            mBuilder;
   LayerManager*                    mManager;
@@ -651,7 +651,7 @@ public:
     mXScale(1.f), mYScale(1.f),
     mAppUnitsPerDevPixel(0),
     mTranslation(0, 0),
-    mActiveScrolledRootPosition(0, 0) {}
+    mAnimatedGeometryRootPosition(0, 0) {}
 
   /**
    * Record the number of clips in the Thebes layer's mask layer.
@@ -694,15 +694,15 @@ public:
    * store the coordinates in ThebesLayer space of the top-left of the
    * active scrolled root.
    */
-  gfxPoint mActiveScrolledRootPosition;
+  gfxPoint mAnimatedGeometryRootPosition;
 
   nsIntRegion mRegionToInvalidate;
 
   // The offset between the active scrolled root of this layer
   // and the root of the container for the previous and current 
   // paints respectively.
-  nsPoint mLastActiveScrolledRootOrigin;
-  nsPoint mActiveScrolledRootOrigin;
+  nsPoint mLastAnimatedGeometryRootOrigin;
+  nsPoint mAnimatedGeometryRootOrigin;
 
   nsRefPtr<ColorLayer> mColorLayer;
   nsRefPtr<ImageLayer> mImageLayer;
@@ -1321,16 +1321,16 @@ RoundToMatchResidual(double aValue, double aOldResidual)
 }
 
 static void
-ResetScrollPositionForLayerPixelAlignment(const nsIFrame* aActiveScrolledRoot)
+ResetScrollPositionForLayerPixelAlignment(const nsIFrame* aAnimatedGeometryRoot)
 {
-  nsIScrollableFrame* sf = nsLayoutUtils::GetScrollableFrameFor(aActiveScrolledRoot);
+  nsIScrollableFrame* sf = nsLayoutUtils::GetScrollableFrameFor(aAnimatedGeometryRoot);
   if (sf) {
     sf->ResetScrollPositionForLayerPixelAlignment();
   }
 }
 
 static void
-InvalidateEntireThebesLayer(ThebesLayer* aLayer, const nsIFrame* aActiveScrolledRoot)
+InvalidateEntireThebesLayer(ThebesLayer* aLayer, const nsIFrame* aAnimatedGeometryRoot)
 {
 #ifdef MOZ_DUMP_PAINTING
   if (nsLayoutUtils::InvalidationDebuggingIsEnabled()) {
@@ -1339,11 +1339,11 @@ InvalidateEntireThebesLayer(ThebesLayer* aLayer, const nsIFrame* aActiveScrolled
 #endif
   nsIntRect invalidate = aLayer->GetValidRegion().GetBounds();
   aLayer->InvalidateRegion(invalidate);
-  ResetScrollPositionForLayerPixelAlignment(aActiveScrolledRoot);
+  ResetScrollPositionForLayerPixelAlignment(aAnimatedGeometryRoot);
 }
 
 already_AddRefed<ThebesLayer>
-ContainerState::CreateOrRecycleThebesLayer(const nsIFrame* aActiveScrolledRoot,
+ContainerState::CreateOrRecycleThebesLayer(const nsIFrame* aAnimatedGeometryRoot,
                                            const nsIFrame* aReferenceFrame,
                                            const nsPoint& aTopLeft)
 {
@@ -1376,7 +1376,7 @@ ContainerState::CreateOrRecycleThebesLayer(const nsIFrame* aActiveScrolledRoot,
     if (!FuzzyEqual(data->mXScale, mParameters.mXScale, 0.00001f) ||
         !FuzzyEqual(data->mYScale, mParameters.mYScale, 0.00001f) ||
         data->mAppUnitsPerDevPixel != mAppUnitsPerDevPixel) {
-      InvalidateEntireThebesLayer(layer, aActiveScrolledRoot);
+      InvalidateEntireThebesLayer(layer, aAnimatedGeometryRoot);
 #ifndef MOZ_ANDROID_OMTC
       didResetScrollPositionForLayerPixelAlignment = true;
 #endif
@@ -1409,31 +1409,31 @@ ContainerState::CreateOrRecycleThebesLayer(const nsIFrame* aActiveScrolledRoot,
     // Mark this layer as being used for Thebes-painting display items
     data = new ThebesDisplayItemLayerUserData();
     layer->SetUserData(&gThebesDisplayItemLayerUserData, data);
-    ResetScrollPositionForLayerPixelAlignment(aActiveScrolledRoot);
+    ResetScrollPositionForLayerPixelAlignment(aAnimatedGeometryRoot);
 #ifndef MOZ_ANDROID_OMTC
     didResetScrollPositionForLayerPixelAlignment = true;
 #endif
   }
   data->mXScale = mParameters.mXScale;
   data->mYScale = mParameters.mYScale;
-  data->mLastActiveScrolledRootOrigin = data->mActiveScrolledRootOrigin;
-  data->mActiveScrolledRootOrigin = aTopLeft;
+  data->mLastAnimatedGeometryRootOrigin = data->mAnimatedGeometryRootOrigin;
+  data->mAnimatedGeometryRootOrigin = aTopLeft;
   data->mAppUnitsPerDevPixel = mAppUnitsPerDevPixel;
   layer->SetAllowResidualTranslation(mParameters.AllowResidualTranslation());
 
   mLayerBuilder->SaveLastPaintOffset(layer);
 
   // Set up transform so that 0,0 in the Thebes layer corresponds to the
-  // (pixel-snapped) top-left of the aActiveScrolledRoot.
-  nsPoint offset = aActiveScrolledRoot->GetOffsetToCrossDoc(aReferenceFrame);
-  nscoord appUnitsPerDevPixel = aActiveScrolledRoot->PresContext()->AppUnitsPerDevPixel();
+  // (pixel-snapped) top-left of the aAnimatedGeometryRoot.
+  nsPoint offset = aAnimatedGeometryRoot->GetOffsetToCrossDoc(aReferenceFrame);
+  nscoord appUnitsPerDevPixel = aAnimatedGeometryRoot->PresContext()->AppUnitsPerDevPixel();
   gfxPoint scaledOffset(
       NSAppUnitsToDoublePixels(offset.x, appUnitsPerDevPixel)*mParameters.mXScale,
       NSAppUnitsToDoublePixels(offset.y, appUnitsPerDevPixel)*mParameters.mYScale);
   // We call RoundToMatchResidual here so that the residual after rounding
-  // is close to data->mActiveScrolledRootPosition if possible.
-  nsIntPoint pixOffset(RoundToMatchResidual(scaledOffset.x, data->mActiveScrolledRootPosition.x),
-                       RoundToMatchResidual(scaledOffset.y, data->mActiveScrolledRootPosition.y));
+  // is close to data->mAnimatedGeometryRootPosition if possible.
+  nsIntPoint pixOffset(RoundToMatchResidual(scaledOffset.x, data->mAnimatedGeometryRootPosition.x),
+                       RoundToMatchResidual(scaledOffset.y, data->mAnimatedGeometryRootPosition.y));
   data->mTranslation = pixOffset;
   pixOffset += mParameters.mOffset;
   gfxMatrix matrix;
@@ -1444,15 +1444,15 @@ ContainerState::CreateOrRecycleThebesLayer(const nsIFrame* aActiveScrolledRoot,
 #ifndef MOZ_ANDROID_OMTC
   // Calculate exact position of the top-left of the active scrolled root.
   // This might not be 0,0 due to the snapping in ScaleToNearestPixels.
-  gfxPoint activeScrolledRootTopLeft = scaledOffset - matrix.GetTranslation() + mParameters.mOffset;
+  gfxPoint animatedGeometryRootTopLeft = scaledOffset - matrix.GetTranslation() + mParameters.mOffset;
   // If it has changed, then we need to invalidate the entire layer since the
   // pixels in the layer buffer have the content at a (subpixel) offset
   // from what we need.
-  if (!activeScrolledRootTopLeft.WithinEpsilonOf(data->mActiveScrolledRootPosition, SUBPIXEL_OFFSET_EPSILON)) {
-    data->mActiveScrolledRootPosition = activeScrolledRootTopLeft;
-    InvalidateEntireThebesLayer(layer, aActiveScrolledRoot);
+  if (!animatedGeometryRootTopLeft.WithinEpsilonOf(data->mAnimatedGeometryRootPosition, SUBPIXEL_OFFSET_EPSILON)) {
+    data->mAnimatedGeometryRootPosition = animatedGeometryRootTopLeft;
+    InvalidateEntireThebesLayer(layer, aAnimatedGeometryRoot);
   } else if (didResetScrollPositionForLayerPixelAlignment) {
-    data->mActiveScrolledRootPosition = activeScrolledRootTopLeft;
+    data->mAnimatedGeometryRootPosition = animatedGeometryRootTopLeft;
   }
 #endif
 
@@ -1907,7 +1907,7 @@ ContainerState::FindThebesLayerFor(nsDisplayItem* aItem,
       ++i;
       break;
     }
-    if (data->mActiveScrolledRoot == aActiveScrolledRoot) {
+    if (data->mAnimatedGeometryRoot == aActiveScrolledRoot) {
       lowestUsableLayerWithScrolledRoot = i;
       if (topmostLayerWithScrolledRoot < 0) {
         topmostLayerWithScrolledRoot = i;
@@ -1920,7 +1920,7 @@ ContainerState::FindThebesLayerFor(nsDisplayItem* aItem,
     --i;
     for (; i >= 0; --i) {
       ThebesLayerData* data = mThebesLayerDataStack[i];
-      if (data->mActiveScrolledRoot == aActiveScrolledRoot) {
+      if (data->mAnimatedGeometryRoot == aActiveScrolledRoot) {
         topmostLayerWithScrolledRoot = i;
         break;
       }
@@ -1944,7 +1944,7 @@ ContainerState::FindThebesLayerFor(nsDisplayItem* aItem,
     thebesLayerData = new ThebesLayerData();
     mThebesLayerDataStack.AppendElement(thebesLayerData);
     thebesLayerData->mLayer = layer;
-    thebesLayerData->mActiveScrolledRoot = aActiveScrolledRoot;
+    thebesLayerData->mAnimatedGeometryRoot = aActiveScrolledRoot;
   } else {
     thebesLayerData = mThebesLayerDataStack[lowestUsableLayerWithScrolledRoot];
     layer = thebesLayerData->mLayer;
@@ -2032,8 +2032,8 @@ PaintInactiveLayer(nsDisplayListBuilder* aBuilder,
  * when we are flattening layers.
  */
 bool
-ContainerState::ChooseActiveScrolledRoot(const nsDisplayList& aList,
-                                         const nsIFrame **aActiveScrolledRoot)
+ContainerState::ChooseAnimatedGeometryRoot(const nsDisplayList& aList,
+                                         const nsIFrame **aAnimatedGeometryRoot)
 {
   for (nsDisplayItem* item = aList.GetBottom(); item; item = item->GetAbove()) {
     LayerState layerState = item->GetLayerState(mBuilder, mManager, mParameters);
@@ -2045,8 +2045,8 @@ ContainerState::ChooseActiveScrolledRoot(const nsDisplayList& aList,
 
     // Try using the actual active scrolled root of the backmost item, as that
     // should result in the least invalidation when scrolling.
-    mBuilder->IsFixedItem(item, aActiveScrolledRoot);
-    if (*aActiveScrolledRoot) {
+    mBuilder->IsFixedItem(item, aAnimatedGeometryRoot);
+    if (*aAnimatedGeometryRoot) {
       return true;
     }
   }
@@ -2073,18 +2073,18 @@ ContainerState::ProcessDisplayItems(const nsDisplayList& aList,
 {
   PROFILER_LABEL("ContainerState", "ProcessDisplayItems");
 
-  const nsIFrame* lastActiveScrolledRoot = nullptr;
+  const nsIFrame* lastAnimatedGeometryRoot = nullptr;
   nsPoint topLeft;
 
   // When NO_COMPONENT_ALPHA is set, items will be flattened into a single
   // layer, so we need to choose which active scrolled root to use for all
   // items.
   if (aFlags & NO_COMPONENT_ALPHA) {
-    if (!ChooseActiveScrolledRoot(aList, &lastActiveScrolledRoot)) {
-      lastActiveScrolledRoot = mContainerReferenceFrame;
+    if (!ChooseAnimatedGeometryRoot(aList, &lastAnimatedGeometryRoot)) {
+      lastAnimatedGeometryRoot = mContainerReferenceFrame;
     }
 
-    topLeft = lastActiveScrolledRoot->GetOffsetToCrossDoc(mContainerReferenceFrame);
+    topLeft = lastAnimatedGeometryRoot->GetOffsetToCrossDoc(mContainerReferenceFrame);
   }
 
   int32_t maxLayers = nsDisplayItem::MaxActiveLayers();
@@ -2118,17 +2118,17 @@ ContainerState::ProcessDisplayItems(const nsDisplayList& aList,
 
     bool isFixed;
     bool forceInactive;
-    const nsIFrame* activeScrolledRoot;
+    const nsIFrame* AnimatedGeometryRoot;
     if (aFlags & NO_COMPONENT_ALPHA) {
       forceInactive = true;
-      activeScrolledRoot = lastActiveScrolledRoot;
-      isFixed = mBuilder->IsFixedItem(item, nullptr, activeScrolledRoot);
+      AnimatedGeometryRoot = lastAnimatedGeometryRoot;
+      isFixed = mBuilder->IsFixedItem(item, nullptr, AnimatedGeometryRoot);
     } else {
       forceInactive = false;
-      isFixed = mBuilder->IsFixedItem(item, &activeScrolledRoot);
-      if (activeScrolledRoot != lastActiveScrolledRoot) {
-        lastActiveScrolledRoot = activeScrolledRoot;
-        topLeft = activeScrolledRoot->GetOffsetToCrossDoc(mContainerReferenceFrame);
+      isFixed = mBuilder->IsFixedItem(item, &AnimatedGeometryRoot);
+      if (AnimatedGeometryRoot != lastAnimatedGeometryRoot) {
+        lastAnimatedGeometryRoot = AnimatedGeometryRoot;
+        topLeft = AnimatedGeometryRoot->GetOffsetToCrossDoc(mContainerReferenceFrame);
       }
     }
 
@@ -2264,7 +2264,7 @@ ContainerState::ProcessDisplayItems(const nsDisplayList& aList,
     } else {
       ThebesLayerData* data =
         FindThebesLayerFor(item, itemVisibleRect, itemDrawRect, itemClip,
-                           activeScrolledRoot, topLeft);
+                           AnimatedGeometryRoot, topLeft);
 
       data->mLayer->SetIsFixedPosition(isFixed);
 
@@ -2344,7 +2344,7 @@ ContainerState::InvalidateForLayerChange(nsDisplayItem* aItem,
   // If we do get an invalid rect, then we want to add this on top of the change areas.
   nsRect invalid;
   nsRegion combined;
-  nsPoint shift = aTopLeft - data->mLastActiveScrolledRootOrigin;
+  nsPoint shift = aTopLeft - data->mLastAnimatedGeometryRootOrigin;
   if (!oldLayer) {
     // This item is being added for the first time, invalidate its entire area.
     //TODO: We call GetGeometry again in AddThebesDisplayItem, we should reuse this.
@@ -2429,7 +2429,7 @@ FrameLayerBuilder::AddThebesDisplayItem(ThebesLayer* aLayer,
     DisplayItemClip* oldClip = nullptr;
     GetOldLayerFor(aItem, nullptr, &oldClip);
     hasClip = aClip.ComputeRegionInClips(oldClip,
-                                         aTopLeft - thebesData->mLastActiveScrolledRootOrigin,
+                                         aTopLeft - thebesData->mLastAnimatedGeometryRootOrigin,
                                          &clip);
 
     if (hasClip) {
