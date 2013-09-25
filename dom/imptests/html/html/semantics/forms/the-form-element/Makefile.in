@@ -5,4 +5,5 @@ MOCHITEST_FILES := \
   test_form-elements-matches.html \
   test_form-elements-nameditem-01.html \
   test_form-elements-nameditem-02.html \
+  test_form-nameditem.html \
   $(NULL)
