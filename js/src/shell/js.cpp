@@ -80,23 +80,23 @@ using namespace js::cli;
 using mozilla::ArrayLength;
 using mozilla::Maybe;
 
-typedef enum JSShellExitCode {
+enum JSShellExitCode {
     EXITCODE_RUNTIME_ERROR      = 3,
     EXITCODE_FILE_NOT_FOUND     = 4,
     EXITCODE_OUT_OF_MEMORY      = 5,
     EXITCODE_TIMEOUT            = 6
-} JSShellExitCode;
+};
 
-size_t gStackChunkSize = 8192;
+static size_t gStackChunkSize = 8192;
 
 /*
  * Note: This limit should match the stack limit set by the browser in
  *       js/xpconnect/src/XPCJSRuntime.cpp
  */
 #if defined(MOZ_ASAN) || (defined(DEBUG) && !defined(XP_WIN))
-size_t gMaxStackSize = 2 * 128 * sizeof(size_t) * 1024;
+static size_t gMaxStackSize = 2 * 128 * sizeof(size_t) * 1024;
 #else
-size_t gMaxStackSize = 128 * sizeof(size_t) * 1024;
+static size_t gMaxStackSize = 128 * sizeof(size_t) * 1024;
 #endif
 
 #ifdef JS_THREADSAFE
@@ -156,11 +156,11 @@ static JSRuntime *gRuntime = NULL;
 
 #endif
 
-int gExitCode = 0;
-bool gQuitting = false;
-bool gGotError = false;
-FILE *gErrFile = NULL;
-FILE *gOutFile = NULL;
+static int gExitCode = 0;
+static bool gQuitting = false;
+static bool gGotError = false;
+static FILE *gErrFile = NULL;
+static FILE *gOutFile = NULL;
 
 static bool reportWarnings = true;
 static bool compileOnly = false;
@@ -171,13 +171,13 @@ static bool dumpEntrainedVariables = false;
 static bool OOM_printAllocationCount = false;
 #endif
 
-typedef enum JSShellErrNum {
+enum JSShellErrNum {
 #define MSG_DEF(name, number, count, exception, format) \
     name = number,
 #include "jsshell.msg"
 #undef MSG_DEF
     JSShellErr_Limit
-} JSShellErrNum;
+};
 
 static JSContext *
 NewContext(JSRuntime *rt);
@@ -611,8 +611,6 @@ MapContextOptionNameToFlag(JSContext* cx, const char* name)
     }
     return 0;
 }
-
-extern const JSClass global_class;
 
 static bool
 Version(JSContext *cx, unsigned argc, jsval *vp)
@@ -4254,7 +4252,7 @@ Help(JSContext *cx, unsigned argc, jsval *vp)
     return true;
 }
 
-JSErrorFormatString jsShell_ErrorFormatString[JSShellErr_Limit] = {
+static const JSErrorFormatString jsShell_ErrorFormatString[JSShellErr_Limit] = {
 #define MSG_DEF(name, number, count, exception, format) \
     { format, count, JSEXN_ERR } ,
 #include "jsshell.msg"
@@ -4426,7 +4424,7 @@ global_resolve(JSContext *cx, HandleObject obj, HandleId id, unsigned flags,
 #endif
 }
 
-const JSClass global_class = {
+static const JSClass global_class = {
     "global", JSCLASS_NEW_RESOLVE | JSCLASS_GLOBAL_FLAGS,
     JS_PropertyStub,  JS_DeletePropertyStub,
     JS_PropertyStub,  JS_StrictPropertyStub,
@@ -4588,7 +4586,7 @@ dom_doFoo(JSContext* cx, HandleObject obj, void *self, const JSJitMethodCallArgs
     return true;
 }
 
-const JSJitInfo dom_x_getterinfo = {
+static const JSJitInfo dom_x_getterinfo = {
     { (JSJitGetterOp)dom_get_x },
     0,        /* protoID */
     0,        /* depth */
@@ -4597,7 +4595,7 @@ const JSJitInfo dom_x_getterinfo = {
     true      /* isConstant. Only relevant for getters. */
 };
 
-const JSJitInfo dom_x_setterinfo = {
+static const JSJitInfo dom_x_setterinfo = {
     { (JSJitGetterOp)dom_set_x },
     0,        /* protoID */
     0,        /* depth */
@@ -4606,7 +4604,7 @@ const JSJitInfo dom_x_setterinfo = {
     false     /* isConstant. Only relevant for getters. */
 };
 
-const JSJitInfo doFoo_methodinfo = {
+static const JSJitInfo doFoo_methodinfo = {
     { (JSJitGetterOp)dom_doFoo },
     0,        /* protoID */
     0,        /* depth */
@@ -5128,7 +5126,7 @@ ProcessArgs(JSContext *cx, JSObject *obj_, OptionParser *op)
     return gExitCode ? gExitCode : EXIT_SUCCESS;
 }
 
-int
+static int
 Shell(JSContext *cx, OptionParser *op, char **envp)
 {
     JSAutoRequest ar(cx);
@@ -5180,16 +5178,16 @@ MaybeOverrideOutFileFromEnv(const char* const envVar,
 }
 
 /* Set the initial counter to 1 so the principal will never be destroyed. */
-JSPrincipals shellTrustedPrincipals = { 1 };
+static const JSPrincipals shellTrustedPrincipals = { 1 };
 
-bool
+static bool
 CheckObjectAccess(JSContext *cx, HandleObject obj, HandleId id, JSAccessMode mode,
                   MutableHandleValue vp)
 {
     return true;
 }
 
-const JSSecurityCallbacks securityCallbacks = {
+static const JSSecurityCallbacks securityCallbacks = {
     CheckObjectAccess,
     NULL
 };

@@ -3,6 +3,8 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 import os
+import stat
+
 from mozpack.errors import errors
 from mozpack.files import (
     BaseFile,
@@ -13,24 +15,6 @@ import errno
 from collections import (
     OrderedDict,
 )
-
-
-def ensure_parent_dir(file):
-    '''Ensures the directory parent to the given file exists'''
-    dir = os.path.dirname(file)
-    if not dir:
-        return
-
-    try:
-        os.makedirs(dir)
-    except OSError as error:
-        if error.errno != errno.EEXIST:
-            raise
-
-    if not os.access(dir, os.W_OK):
-        umask = os.umask(0077)
-        os.umask(umask)
-        os.chmod(dir, 0777 & ~umask)
 
 
 class FileRegistry(object):
@@ -180,43 +164,159 @@ class FileCopier(FileRegistry):
         '''
         assert isinstance(destination, basestring)
         assert not os.path.exists(destination) or os.path.isdir(destination)
+
         result = FileCopyResult()
+        have_symlinks = hasattr(os, 'symlink')
         destination = os.path.normpath(destination)
+
+        # Because we could be handling thousands of files, code in this
+        # function is optimized to minimize system calls. We prefer CPU time
+        # in Python over possibly I/O bound filesystem calls to stat() and
+        # friends.
+
+        required_dirs = set()
         dest_files = set()
-        for path, file in self:
-            destfile = os.path.normpath(os.path.join(destination, path))
-            dest_files.add(destfile)
-            ensure_parent_dir(destfile)
-            if file.copy(destfile, skip_if_older):
-                result.updated_files.add(destfile)
-            else:
-                result.existing_files.add(destfile)
 
-        actual_dest_files = set()
+        for p, f in self:
+            required_dirs.add(os.path.normpath(os.path.dirname(p)))
+            dest_files.add(os.path.normpath(os.path.join(destination, p)))
+
+        # Ensure all parent directories are present in required_dirs.
+        extra = set()
+        for d in required_dirs:
+            parent = d
+            while parent:
+                parent = os.path.dirname(parent)
+                extra.add(parent)
+
+        required_dirs |= extra
+        required_dirs = set(os.path.normpath(os.path.join(destination, d))
+            for d in required_dirs)
+
+        # Ensure destination directories are in place and proper.
+        #
+        # The "proper" bit is important. We need to ensure that directories
+        # have appropriate permissions or we will be unable to discover
+        # and write files. Furthermore, we need to verify directories aren't
+        # symlinks.
+        #
+        # Symlinked directories (a symlink whose target is a directory) are
+        # incompatible with us because our manifest talks in terms of files,
+        # not directories. If we leave symlinked directories unchecked, we
+        # would blindly follow symlinks and this might confuse file
+        # installation. For example, if an existing directory is a symlink
+        # to directory X and we attempt to install a symlink in this directory
+        # to a file in directory X, we may create a recursive symlink!
+        for d in sorted(required_dirs, key=len):
+            try:
+                os.mkdir(d)
+            except OSError as error:
+                if error.errno != errno.EEXIST:
+                    raise
+
+            # We allow the destination to be a symlink because the caller
+            # is responsible for managing the destination and we assume
+            # they know what they are doing.
+            if have_symlinks and d != destination:
+                st = os.lstat(d)
+                if stat.S_ISLNK(st.st_mode):
+                    # While we have remove_unaccounted, it doesn't apply
+                    # to directory symlinks because if it did, our behavior
+                    # could be very wrong.
+                    os.remove(d)
+                    os.mkdir(d)
+
+            if not os.access(d, os.W_OK):
+                umask = os.umask(0077)
+                os.umask(umask)
+                os.chmod(d, 0777 & ~umask)
+
+        # While we have remove_unaccounted, it doesn't apply to empty
+        # directories because it wouldn't make sense: an empty directory
+        # is empty, so removing it should have no effect.
+        existing_dirs = set()
+        existing_files = set()
         for root, dirs, files in os.walk(destination):
-            for f in files:
-                actual_dest_files.add(os.path.normpath(os.path.join(root, f)))
+            # We need to perform the same symlink detection as above. os.walk()
+            # doesn't follow symlinks into directories by default, so we need
+            # to check dirs (we can't wait for root).
+            if have_symlinks:
+                filtered = []
+                for d in dirs:
+                    full = os.path.join(root, d)
+                    st = os.lstat(full)
+                    if stat.S_ISLNK(st.st_mode):
+                        os.remove(full)
+                        # We don't need to recreate it because the code above
+                        # would have created it as necessary.
+                    else:
+                        filtered.append(d)
 
+                dirs[:] = filtered
+
+            existing_dirs.add(os.path.normpath(root))
+
+            for d in dirs:
+                existing_dirs.add(os.path.normpath(os.path.join(root, d)))
+
+            for f in files:
+                existing_files.add(os.path.normpath(os.path.join(root, f)))
+
+        # Now we reconcile the state of the world against what we want.
+
+        # Remove files no longer accounted for.
         if remove_unaccounted:
-            for f in actual_dest_files - dest_files:
+            for f in existing_files - dest_files:
                 # Windows requires write access to remove files.
                 if os.name == 'nt' and not os.access(f, os.W_OK):
-                    # It doesn't matter what we set the permissions to since we
+                    # It doesn't matter what we set permissions to since we
                     # will remove this file shortly.
                     os.chmod(f, 0600)
 
                 os.remove(f)
                 result.removed_files.add(f)
 
-        for root, dirs, files in os.walk(destination):
-            if files or dirs:
-                continue
+        # Install files.
+        for p, f in self:
+            destfile = os.path.normpath(os.path.join(destination, p))
+            if f.copy(destfile, skip_if_older):
+                result.updated_files.add(destfile)
+            else:
+                result.existing_files.add(destfile)
 
-            # Like files, permissions may not allow deletion. So, ensure write
-            # access is in place before attempting delete.
-            os.chmod(root, 0700)
-            os.removedirs(root)
-            result.removed_directories.add(root)
+        # Figure out which directories can be removed. This is complicated
+        # by the fact we optionally remove existing files. This would be easy
+        # if we walked the directory tree after installing files. But, we're
+        # trying to minimize system calls.
+
+        # Start with the ideal set.
+        remove_dirs = existing_dirs - required_dirs
+
+        # Then don't remove directories if we didn't remove unaccounted files
+        # and one of those files exists.
+        if not remove_unaccounted:
+            for f in existing_files:
+                parent = f
+                previous = ''
+                parents = set()
+                while True:
+                    parent = os.path.dirname(parent)
+                    parents.add(parent)
+
+                    if previous == parent:
+                        break
+
+                    previous = parent
+
+                remove_dirs -= parents
+
+        # Remove empty directories that aren't required.
+        for d in sorted(remove_dirs, key=len, reverse=True):
+            # Permissions may not allow deletion. So ensure write access is
+            # in place before attempting delete.
+            os.chmod(d, 0700)
+            os.rmdir(d)
+            result.removed_directories.add(d)
 
         return result
 

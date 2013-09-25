@@ -347,7 +347,7 @@ private:
 
   /**
    * Create a content node for the given generated content style.
-   * The caller takes care of making it SetNativeAnonymous, binding it
+   * The caller takes care of making it SetIsNativeAnonymousRoot, binding it
    * to the document, and creating frames for it.
    * @param aParentContent is the node that has the before/after style
    * @param aStyleContext is the 'before' or 'after' pseudo-element

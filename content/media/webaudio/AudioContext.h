@@ -229,8 +229,6 @@ public:
 
   void UnregisterAudioBufferSourceNode(AudioBufferSourceNode* aNode);
   void UnregisterPannerNode(PannerNode* aNode);
-  void UnregisterOscillatorNode(OscillatorNode* aNode);
-  void UnregisterScriptProcessorNode(ScriptProcessorNode* aNode);
   void UpdatePannerSource();
 
   uint32_t MaxChannelCount() const;
@@ -257,15 +255,9 @@ private:
   // See RegisterActiveNode.  These will keep the AudioContext alive while it
   // is rendering and the window remains alive.
   nsTHashtable<nsRefPtrHashKey<AudioNode> > mActiveNodes;
-  // Two hashsets containing all the PannerNodes and AudioBufferSourceNodes,
-  // to compute the doppler shift, and also to stop AudioBufferSourceNodes.
-  // These are all weak pointers.
+  // Hashsets containing all the PannerNodes, to compute the doppler shift.
+  // These are weak pointers.
   nsTHashtable<nsPtrHashKey<PannerNode> > mPannerNodes;
-  nsTHashtable<nsPtrHashKey<AudioBufferSourceNode> > mAudioBufferSourceNodes;
-  nsTHashtable<nsPtrHashKey<OscillatorNode> > mOscillatorNodes;
-  // Hashset containing all ScriptProcessorNodes in order to stop them.
-  // These are all weak pointers.
-  nsTHashtable<nsPtrHashKey<ScriptProcessorNode> > mScriptProcessorNodes;
   // Number of channels passed in the OfflineAudioContext ctor.
   uint32_t mNumberOfChannels;
   bool mIsOffline;

@@ -11,7 +11,7 @@
 #include "SurfaceTypes.h"
 #include "GLContextTypes.h"
 #include "nsAutoPtr.h"
-#include "gfxASurface.h"
+#include "gfxTypes.h"
 #include "mozilla/Mutex.h"
 
 #include <queue>
@@ -137,7 +137,7 @@ protected:
     SharedSurface_Basic(GLContext* gl,
                         const gfxIntSize& size,
                         bool hasAlpha,
-                        gfxASurface::gfxImageFormat format,
+                        gfxImageFormat format,
                         GLuint tex);
 
 public:

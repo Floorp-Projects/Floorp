@@ -909,6 +909,7 @@ class JSObject : public js::ObjectImpl
     static bool getGeneric(JSContext *cx, js::HandleObject obj, js::HandleObject receiver,
                            js::HandleId id, js::MutableHandleValue vp)
     {
+        JS_ASSERT(!!obj->getOps()->getGeneric == !!obj->getOps()->getProperty);
         js::GenericIdOp op = obj->getOps()->getGeneric;
         if (op) {
             if (!op(cx, obj, receiver, id, vp))
@@ -1397,31 +1398,15 @@ LookupNameWithGlobalDefault(JSContext *cx, HandlePropertyName name, HandleObject
 extern JSObject *
 js_FindVariableScope(JSContext *cx, JSFunction **funp);
 
-/*
- * NB: js_NativeGet and js_NativeSet are called with the scope containing shape
- * (pobj's scope for Get, obj's for Set) locked, and on successful return, that
- * scope is again locked.  But on failure, both functions return false with the
- * scope containing shape unlocked.
- */
 extern bool
 js_NativeGet(JSContext *cx, js::Handle<JSObject*> obj, js::Handle<JSObject*> pobj,
-             js::Handle<js::Shape*> shape, unsigned getHow, js::MutableHandle<js::Value> vp);
+             js::Handle<js::Shape*> shape, js::MutableHandle<js::Value> vp);
 
 extern bool
 js_NativeSet(JSContext *cx, js::Handle<JSObject*> obj, js::Handle<JSObject*> receiver,
              js::Handle<js::Shape*> shape, bool strict, js::MutableHandleValue vp);
 
 namespace js {
-
-bool
-GetPropertyHelper(JSContext *cx, HandleObject obj, HandleId id, uint32_t getHow, MutableHandleValue vp);
-
-inline bool
-GetPropertyHelper(JSContext *cx, HandleObject obj, PropertyName *name, uint32_t getHow, MutableHandleValue vp)
-{
-    RootedId id(cx, NameToId(name));
-    return GetPropertyHelper(cx, obj, id, getHow, vp);
-}
 
 bool
 LookupPropertyPure(JSObject *obj, jsid id, JSObject **objp, Shape **propp);

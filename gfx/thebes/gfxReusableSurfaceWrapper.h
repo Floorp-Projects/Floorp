@@ -43,7 +43,7 @@ public:
   /**
    * Returns the image surface format.
    */
-  virtual gfxASurface::gfxImageFormat Format() = 0;
+  virtual gfxImageFormat Format() = 0;
 
   /**
    * Returns a writable copy of the image.

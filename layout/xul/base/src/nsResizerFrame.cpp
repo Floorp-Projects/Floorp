@@ -287,7 +287,7 @@ nsResizerFrame::HandleEvent(nsPresContext* aPresContext,
   break;
 
   case NS_MOUSE_CLICK:
-    if (NS_IS_MOUSE_LEFT_CLICK(aEvent))
+    if (aEvent->IsLeftClickEvent())
     {
       MouseClicked(aPresContext, aEvent);
     }

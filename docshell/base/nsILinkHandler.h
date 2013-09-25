@@ -6,8 +6,8 @@
 #define nsILinkHandler_h___
 
 #include "nsISupports.h"
+#include "mozilla/EventForwards.h"
 
-class nsGUIEvent;
 class nsIContent;
 class nsIDocShell;
 class nsIInputStream;

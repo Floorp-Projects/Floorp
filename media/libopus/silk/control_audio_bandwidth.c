@@ -1,9 +1,5 @@
 /***********************************************************************
-Copyright (c) 2006-2012 IETF Trust and Skype Limited. All rights reserved.
-
-This file is extracted from RFC6716. Please see that RFC for additional
-information.
-
+Copyright (c) 2006-2011, Skype Limited. All rights reserved.
 Redistribution and use in source and binary forms, with or without
 modification, are permitted provided that the following conditions
 are met:
@@ -16,7 +12,7 @@ documentation and/or other materials provided with the distribution.
 names of specific contributors, may be used to endorse or promote
 products derived from this software without specific prior written
 permission.
-THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS “AS IS”
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
 AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
 IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
 ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE
@@ -84,6 +80,8 @@ opus_int silk_control_audio_bandwidth(
                 } else {
                    if( psEncC->sLP.transition_frame_no <= 0 ) {
                        encControl->switchReady = 1;
+                       /* Make room for redundancy */
+                       encControl->maxBits -= encControl->maxBits * 5 / ( encControl->payloadSize_ms + 5 );
                    } else {
                        /* Direction: down (at double speed) */
                        psEncC->sLP.mode = -2;
@@ -110,11 +108,16 @@ opus_int silk_control_audio_bandwidth(
                 } else {
                    if( psEncC->sLP.mode == 0 ) {
                        encControl->switchReady = 1;
+                       /* Make room for redundancy */
+                       encControl->maxBits -= encControl->maxBits * 5 / ( encControl->payloadSize_ms + 5 );
                    } else {
                        /* Direction: up */
                        psEncC->sLP.mode = 1;
                    }
                 }
+            } else {
+               if (psEncC->sLP.mode<0)
+                  psEncC->sLP.mode = 1;
             }
         }
     }

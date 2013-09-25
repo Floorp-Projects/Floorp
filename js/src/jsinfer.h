@@ -1206,9 +1206,20 @@ struct TypeObjectEntry : DefaultHasher<ReadBarriered<TypeObject> >
 {
     struct Lookup {
         const Class *clasp;
-        TaggedProto proto;
+        TaggedProto hashProto;
+        TaggedProto matchProto;
 
-        Lookup(const Class *clasp, TaggedProto proto) : clasp(clasp), proto(proto) {}
+        Lookup(const Class *clasp, TaggedProto proto)
+          : clasp(clasp), hashProto(proto), matchProto(proto) {}
+
+#ifdef JSGC_GENERATIONAL
+        /*
+         * For use by generational post barriers only.  Look up an entry whose
+         * proto has been moved, but was hashed with the original value.
+         */
+        Lookup(const Class *clasp, TaggedProto hashProto, TaggedProto matchProto)
+          : clasp(clasp), hashProto(hashProto), matchProto(matchProto) {}
+#endif
     };
 
     static inline HashNumber hash(const Lookup &lookup);

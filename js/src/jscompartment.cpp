@@ -52,6 +52,7 @@ JSCompartment::JSCompartment(Zone *zone, const JS::CompartmentOptions &options =
     lastAnimationTime(0),
     regExps(runtime_),
     typeReprs(runtime_),
+    globalWriteBarriered(false),
     propertyTree(thisForCtor()),
     gcIncomingGrayPointers(NULL),
     gcLiveArrayBuffers(NULL),

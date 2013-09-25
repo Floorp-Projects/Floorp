@@ -248,8 +248,6 @@ js::DestroyContext(JSContext *cx, DestroyContextMode mode)
     cx->remove();
     bool last = !rt->hasContexts();
     if (last) {
-        JS_ASSERT(!rt->isHeapBusy());
-
         /*
          * Dump remaining type inference results while we still have a context.
          * This printing depends on atoms still existing.
@@ -1192,7 +1190,7 @@ ComputeIsJITBroken()
     std::ifstream cpuinfo("/proc/cpuinfo");
     do {
         if (0 == line.find("Hardware")) {
-            const char* blacklist[] = {
+            static const char* const blacklist[] = {
                 "SCH-I400",     // Samsung Continuum
                 "SGH-T959",     // Samsung i9000, Vibrant device
                 "SGH-I897",     // Samsung i9000, Captivate device
@@ -1201,7 +1199,7 @@ ComputeIsJITBroken()
                 "GT-I9000",     // Samsung i9000, UK/Europe device
                 NULL
             };
-            for (const char** hw = &blacklist[0]; *hw; ++hw) {
+            for (const char* const* hw = &blacklist[0]; *hw; ++hw) {
                 if (line.npos != line.find(*hw)) {
                     __android_log_print(ANDROID_LOG_INFO, "Gecko",
                                         "Blacklisted device `%s'", *hw);

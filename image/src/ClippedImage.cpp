@@ -249,7 +249,7 @@ ClippedImage::GetFrameInternal(const nsIntSize& aViewportSize,
     gfxRect imageRect(0, 0, mClip.width, mClip.height);
     gfxUtils::DrawPixelSnapped(ctx, drawable, gfxMatrix(),
                                imageRect, imageRect, imageRect, imageRect,
-                               gfxASurface::ImageFormatARGB32,
+                               gfxImageFormatARGB32,
                                gfxPattern::FILTER_FAST);
 
     // Cache the resulting surface.
@@ -336,7 +336,7 @@ ClippedImage::Draw(gfxContext* aContext,
     gfxRect subimage(aSubimage.x, aSubimage.y, aSubimage.width, aSubimage.height);
     gfxUtils::DrawPixelSnapped(aContext, drawable, aUserSpaceToImageSpace,
                                subimage, sourceRect, imageRect, aFill,
-                               gfxASurface::ImageFormatARGB32, aFilter);
+                               gfxImageFormatARGB32, aFilter);
 
     return NS_OK;
   }

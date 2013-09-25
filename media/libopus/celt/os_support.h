@@ -1,12 +1,8 @@
-/* Copyright (C) 2007-2012 IETF Trust, Jean-Marc Valin. All rights reserved.
+/* Copyright (C) 2007 Jean-Marc Valin
 
    File: os_support.h
    This is the (tiny) OS abstraction layer. Aside from math.h, this is the
    only place where system headers are allowed.
-
-
-   This file is extracted from RFC6716. Please see that RFC for additional
-   information.
 
    Redistribution and use in source and binary forms, with or without
    modification, are permitted provided that the following conditions are
@@ -18,11 +14,6 @@
    2. Redistributions in binary form must reproduce the above copyright
    notice, this list of conditions and the following disclaimer in the
    documentation and/or other materials provided with the distribution.
-
-   - Neither the name of Internet Society, IETF or IETF Trust, nor the
-   names of specific contributors, may be used to endorse or promote
-   products derived from this software without specific prior written
-   permission.
 
    THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR
    IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES

@@ -136,11 +136,11 @@ nsImageToClipboard::CreateFromImage ( imgIContainer* inImage, HANDLE* outBitmap 
       options.AppendLiteral("version=3;bpp=");
     }
     switch (frame->Format()) {
-    case gfxASurface::ImageFormatARGB32:
+    case gfxImageFormatARGB32:
         format = imgIEncoder::INPUT_FORMAT_HOSTARGB;
         options.AppendInt(32);
         break;
-    case gfxASurface::ImageFormatRGB24:
+    case gfxImageFormatRGB24:
         format = imgIEncoder::INPUT_FORMAT_RGB;
         options.AppendInt(24);
         break;

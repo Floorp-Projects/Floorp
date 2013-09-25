@@ -63,8 +63,9 @@ public:
   NS_DECL_NSIFILE
   NS_DECL_NSIHASHABLE
 
-  // URI must be scheme 'remoteopenfile://': otherwise looks like a file:// uri.
-  nsresult Init(nsIURI* aRemoteOpenUri);
+  // aRemoteOpenUri must be scheme 'remoteopenfile://': otherwise looks like
+  // a file:// uri.
+  nsresult Init(nsIURI* aRemoteOpenUri, nsIURI* aAppUri);
 
   // Send message to parent to tell it to open file handle for file.
   // TabChild is required, for IPC security.
@@ -100,6 +101,7 @@ protected:
   // regular nsIFile object, that we forward most calls to.
   nsCOMPtr<nsIFile> mFile;
   nsCOMPtr<nsIURI> mURI;
+  nsCOMPtr<nsIURI> mAppURI;
   nsCOMPtr<nsIRemoteOpenFileListener> mListener;
   nsRefPtr<TabChild> mTabChild;
   PRFileDesc* mNSPRFileDesc;

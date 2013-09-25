@@ -9,6 +9,9 @@
 #include "mozilla/layers/Compositor.h"
 #include "mozilla/layers/TextureHost.h"
 #include "mozilla/gfx/2D.h"
+#include "nsAutoPtr.h"
+
+class gfxContext;
 
 namespace mozilla {
 namespace layers {

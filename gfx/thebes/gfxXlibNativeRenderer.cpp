@@ -353,7 +353,7 @@ CreateTempXlibSurface (gfxASurface *destination, nsIntSize size,
             target_format = cairo_xlib_surface_get_xrender_format (target);
             break;
         case CAIRO_SURFACE_TYPE_IMAGE: {
-            gfxASurface::gfxImageFormat imageFormat =
+            gfxImageFormat imageFormat =
                 static_cast<gfxImageSurface*>(destination)->Format();
             target_visual = gfxXlibSurface::FindVisual(screen, imageFormat);
             Display *dpy = DisplayOfScreen(screen);
@@ -395,7 +395,7 @@ CreateTempXlibSurface (gfxASurface *destination, nsIntSize size,
             supportsAlternateScreen ? target_screen : screen;
         Visual *argbVisual =
             gfxXlibSurface::FindVisual(visualScreen,
-                                       gfxASurface::ImageFormatARGB32);
+                                       gfxImageFormatARGB32);
         if (argbVisual) {
             visual = argbVisual;
             screen = visualScreen;
@@ -405,7 +405,7 @@ CreateTempXlibSurface (gfxASurface *destination, nsIntSize size,
             // No advantage in using the target screen.
             Visual *rgb24Visual =
                 gfxXlibSurface::FindVisual(screen,
-                                           gfxASurface::ImageFormatRGB24);
+                                           gfxImageFormatRGB24);
             if (rgb24Visual) {
                 visual = rgb24Visual;
             }
@@ -422,7 +422,7 @@ CreateTempXlibSurface (gfxASurface *destination, nsIntSize size,
                                drawable);
 
     if (drawIsOpaque ||
-        surface->GetContentType() == gfxASurface::CONTENT_COLOR_ALPHA) {
+        surface->GetContentType() == GFX_CONTENT_COLOR_ALPHA) {
         NATIVE_DRAWING_NOTE(drawIsOpaque ?
                             ", SIMPLE OPAQUE\n" : ", SIMPLE WITH ALPHA");
         *method = eSimple;
@@ -451,7 +451,7 @@ gfxXlibNativeRenderer::DrawOntoTempSurface(gfxXlibSurface *tempXlibSurface,
 
 static already_AddRefed<gfxImageSurface>
 CopyXlibSurfaceToImage(gfxXlibSurface *tempXlibSurface,
-                       gfxASurface::gfxImageFormat format)
+                       gfxImageFormat format)
 {
     nsRefPtr<gfxImageSurface> result =
         new gfxImageSurface(tempXlibSurface->GetSize(), format);
@@ -585,7 +585,7 @@ gfxXlibNativeRenderer::DrawFallback(DrawTarget* drawTarget, gfxContext* ctx, gfx
             // operation.  Here we only copy opaque backgrounds so operator
             // OVER will behave like SOURCE masked by the surface.
             NS_ASSERTION(tempXlibSurface->GetContentType()
-                         == gfxASurface::CONTENT_COLOR,
+                         == GFX_CONTENT_COLOR,
                          "Don't copy background with a transparent surface");
         } else {
             tmpCtx->SetOperator(gfxContext::OPERATOR_CLEAR);
@@ -619,14 +619,14 @@ gfxXlibNativeRenderer::DrawFallback(DrawTarget* drawTarget, gfxContext* ctx, gfx
     }
     
     nsRefPtr<gfxImageSurface> blackImage =
-        CopyXlibSurfaceToImage(tempXlibSurface, gfxASurface::ImageFormatARGB32);
+        CopyXlibSurfaceToImage(tempXlibSurface, gfxImageFormatARGB32);
     
     tmpCtx->SetDeviceColor(gfxRGBA(1.0, 1.0, 1.0));
     tmpCtx->SetOperator(gfxContext::OPERATOR_SOURCE);
     tmpCtx->Paint();
     DrawOntoTempSurface(tempXlibSurface, -drawingRect.TopLeft());
     nsRefPtr<gfxImageSurface> whiteImage =
-        CopyXlibSurfaceToImage(tempXlibSurface, gfxASurface::ImageFormatRGB24);
+        CopyXlibSurfaceToImage(tempXlibSurface, gfxImageFormatRGB24);
   
     if (blackImage->CairoStatus() == CAIRO_STATUS_SUCCESS &&
         whiteImage->CairoStatus() == CAIRO_STATUS_SUCCESS) {
@@ -654,7 +654,7 @@ gfxXlibNativeRenderer::DrawFallback(DrawTarget* drawTarget, gfxContext* ctx, gfx
                 result->mColor.b = analysis.b;
             } else {
                 result->mSurface = target->
-                    CreateSimilarSurface(gfxASurface::CONTENT_COLOR_ALPHA,
+                    CreateSimilarSurface(GFX_CONTENT_COLOR_ALPHA,
                                          gfxIntSize(size.width, size.height));
 
                 gfxContext copyCtx(result->mSurface);

@@ -398,7 +398,7 @@ HTMLCanvasElement::ExtractData(const nsAString& aType,
   nsRefPtr<gfxImageSurface> emptyCanvas;
   nsIntSize size = GetWidthHeight();
   if (!mCurrentContext) {
-    emptyCanvas = new gfxImageSurface(gfxIntSize(size.width, size.height), gfxASurface::ImageFormatARGB32);
+    emptyCanvas = new gfxImageSurface(gfxIntSize(size.width, size.height), gfxImageFormatARGB32);
     if (emptyCanvas->CairoStatus()) {
       return NS_ERROR_INVALID_ARG;
     }

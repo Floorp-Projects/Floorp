@@ -8,6 +8,9 @@
 const TAB_URL = EXAMPLE_URL + "doc_script-switching-01.html";
 
 function test() {
+  // Debug test slaves are a bit slow at this test.
+  requestLongerTimeout(2);
+
   let gTab, gDebuggee, gPanel, gDebugger;
   let gEditor, gSources, gBreakpoints;
 

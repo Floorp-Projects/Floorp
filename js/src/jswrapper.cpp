@@ -21,7 +21,7 @@
 using namespace js;
 using namespace js::gc;
 
-int js::sWrapperFamily;
+const char js::sWrapperFamily = 0;
 
 /*
  * Wrapper forwards this call directly to the wrapped object for efficiency
@@ -833,7 +833,7 @@ DeadObjectProxy::getPrototypeOf(JSContext *cx, HandleObject proxy, MutableHandle
 }
 
 DeadObjectProxy DeadObjectProxy::singleton;
-int DeadObjectProxy::sDeadObjectFamily;
+const char DeadObjectProxy::sDeadObjectFamily = 0;
 
 JSObject *
 js::NewDeadProxyObject(JSContext *cx, JSObject *parent)

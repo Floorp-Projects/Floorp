@@ -581,7 +581,7 @@ already_AddRefed<gfxASurface>
 LayerManagerOGL::CreateOptimalMaskSurface(const gfxIntSize &aSize)
 {
   return gfxPlatform::GetPlatform()->
-    CreateOffscreenImageSurface(aSize, gfxASurface::CONTENT_ALPHA);
+    CreateOffscreenImageSurface(aSize, GFX_CONTENT_ALPHA);
 }
 
 already_AddRefed<ThebesLayer>
@@ -875,7 +875,7 @@ LayerManagerOGL::Render()
     } else {
       mWidget->GetClientBounds(rect);
     }
-    nsRefPtr<gfxASurface> surf = gfxPlatform::GetPlatform()->CreateOffscreenSurface(rect.Size(), gfxASurface::CONTENT_COLOR_ALPHA);
+    nsRefPtr<gfxASurface> surf = gfxPlatform::GetPlatform()->CreateOffscreenSurface(rect.Size(), GFX_CONTENT_COLOR_ALPHA);
     nsRefPtr<gfxContext> ctx = new gfxContext(surf);
     CopyToTarget(ctx);
 
@@ -1124,7 +1124,7 @@ LayerManagerOGL::CopyToTarget(gfxContext *aTarget)
 
   nsRefPtr<gfxImageSurface> imageSurface =
     new gfxImageSurface(gfxIntSize(width, height),
-                        gfxASurface::ImageFormatARGB32);
+                        gfxImageFormatARGB32);
 
   mGLContext->fBindFramebuffer(LOCAL_GL_FRAMEBUFFER,
                                mGLContext->IsDoubleBuffered() ? 0 : mBackBufferFBO);
