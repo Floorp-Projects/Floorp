@@ -197,7 +197,7 @@ StatsCompartmentCallback(JSRuntime *rt, void *data, JSCompartment *compartment)
     compartment->sizeOfIncludingThis(rtStats->mallocSizeOf_,
                                      &cStats.compartmentObject,
                                      &cStats.typeInference,
-                                     &cStats.shapesCompartmentTables,
+                                     &cStats.shapesMallocHeapCompartmentTables,
                                      &cStats.crossCompartmentWrappersTable,
                                      &cStats.regexpCompartment,
                                      &cStats.debuggeesSet,
@@ -256,13 +256,13 @@ StatsCellCallback(JSRuntime *rt, void *data, void *thing, JSGCTraceKind traceKin
         JSObject *obj = static_cast<JSObject *>(thing);
         CompartmentStats *cStats = GetCompartmentStats(obj->compartment());
         if (obj->is<JSFunction>())
-            cStats->gcHeapObjectsFunction += thingSize;
+            cStats->objectsGCHeapFunction += thingSize;
         else if (obj->is<ArrayObject>())
-            cStats->gcHeapObjectsDenseArray += thingSize;
+            cStats->objectsGCHeapDenseArray += thingSize;
         else if (obj->is<CrossCompartmentWrapperObject>())
-            cStats->gcHeapObjectsCrossCompartmentWrapper += thingSize;
+            cStats->objectsGCHeapCrossCompartmentWrapper += thingSize;
         else
-            cStats->gcHeapObjectsOrdinary += thingSize;
+            cStats->objectsGCHeapOrdinary += thingSize;
 
         JS::ObjectsExtraSizes objectsExtra;
         obj->sizeOfExcludingThis(rtStats->mallocSizeOf_, &objectsExtra);
@@ -310,17 +310,17 @@ StatsCellCallback(JSRuntime *rt, void *data, void *thing, JSGCTraceKind traceKin
         size_t propTableSize, kidsSize;
         shape->sizeOfExcludingThis(rtStats->mallocSizeOf_, &propTableSize, &kidsSize);
         if (shape->inDictionary()) {
-            cStats->gcHeapShapesDict += thingSize;
-            cStats->shapesExtraDictTables += propTableSize;
+            cStats->shapesGCHeapDict += thingSize;
+            cStats->shapesMallocHeapDictTables += propTableSize;
             JS_ASSERT(kidsSize == 0);
         } else {
             JSObject *parent = shape->base()->getObjectParent();
             if (parent && parent->is<GlobalObject>())
-                cStats->gcHeapShapesTreeGlobalParented += thingSize;
+                cStats->shapesGCHeapTreeGlobalParented += thingSize;
             else
-                cStats->gcHeapShapesTreeNonGlobalParented += thingSize;
-            cStats->shapesExtraTreeTables += propTableSize;
-            cStats->shapesExtraTreeShapeKids += kidsSize;
+                cStats->shapesGCHeapTreeNonGlobalParented += thingSize;
+            cStats->shapesMallocHeapTreeTables += propTableSize;
+            cStats->shapesMallocHeapTreeShapeKids += kidsSize;
         }
         break;
       }
@@ -328,15 +328,15 @@ StatsCellCallback(JSRuntime *rt, void *data, void *thing, JSGCTraceKind traceKin
       case JSTRACE_BASE_SHAPE: {
         BaseShape *base = static_cast<BaseShape *>(thing);
         CompartmentStats *cStats = GetCompartmentStats(base->compartment());
-        cStats->gcHeapShapesBase += thingSize;
+        cStats->shapesGCHeapBase += thingSize;
         break;
       }
 
       case JSTRACE_SCRIPT: {
         JSScript *script = static_cast<JSScript *>(thing);
         CompartmentStats *cStats = GetCompartmentStats(script->compartment());
-        cStats->gcHeapScripts += thingSize;
-        cStats->scriptData += script->sizeOfData(rtStats->mallocSizeOf_);
+        cStats->scriptsGCHeap += thingSize;
+        cStats->scriptsMallocHeapData += script->sizeOfData(rtStats->mallocSizeOf_);
 #ifdef JS_ION
         size_t baselineData = 0, baselineStubsFallback = 0;
         jit::SizeOfBaselineData(script, rtStats->mallocSizeOf_, &baselineData,
