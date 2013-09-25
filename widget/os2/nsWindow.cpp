@@ -44,6 +44,7 @@
 #include "nsGkAtoms.h"
 #include "wdgtos2rc.h"
 #include "nsIDOMWheelEvent.h"
+#include "mozilla/MiscEvents.h"
 #include "mozilla/MouseEvents.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/TextEvents.h"

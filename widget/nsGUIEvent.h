@@ -8,6 +8,5 @@
 
 #include "mozilla/BasicEvents.h"
 #include "mozilla/ContentEvents.h"
-#include "mozilla/MiscEvents.h"
 
 #endif // nsGUIEvent_h__
