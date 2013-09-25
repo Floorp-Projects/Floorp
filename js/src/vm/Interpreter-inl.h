@@ -130,7 +130,7 @@ ValuePropertyBearer(JSContext *cx, StackFrame *fp, HandleValue v, int spindex)
 
 inline bool
 NativeGet(JSContext *cx, JSObject *objArg, JSObject *pobjArg, Shape *shapeArg,
-          unsigned getHow, MutableHandleValue vp)
+          MutableHandleValue vp)
 {
     if (shapeArg->isDataDescriptor() && shapeArg->hasDefaultGetter()) {
         /* Fast path for Object instance properties. */
@@ -140,7 +140,7 @@ NativeGet(JSContext *cx, JSObject *objArg, JSObject *pobjArg, Shape *shapeArg,
         RootedObject obj(cx, objArg);
         RootedObject pobj(cx, pobjArg);
         RootedShape shape(cx, shapeArg);
-        if (!js_NativeGet(cx, obj, pobj, shape, getHow, vp))
+        if (!js_NativeGet(cx, obj, pobj, shape, vp))
             return false;
     }
     return true;
@@ -204,7 +204,7 @@ FetchName(JSContext *cx, HandleObject obj, HandleObject obj2, HandlePropertyName
         Rooted<JSObject*> normalized(cx, obj);
         if (normalized->getClass() == &WithObject::class_ && !shape->hasDefaultGetter())
             normalized = &normalized->as<WithObject>().object();
-        if (!NativeGet(cx, normalized, obj2, shape, 0, vp))
+        if (!NativeGet(cx, normalized, obj2, shape, vp))
             return false;
     }
     return true;

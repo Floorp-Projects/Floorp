@@ -22,13 +22,14 @@
 #include "nsDataHashtable.h"
 #include "nsHashKeys.h"
 #include "nsRect.h"
-#include "gfxASurface.h"
 
 #ifdef MOZ_X11
 class gfxXlibSurface;
 #endif
 #include "nsGUIEvent.h"
 #include "mozilla/unused.h"
+
+class gfxASurface;
 
 namespace mozilla {
 namespace layers {

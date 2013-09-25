@@ -13,6 +13,7 @@ include protocol PPluginSurface;
 
 include "mozilla/plugins/PluginMessageUtils.h";
 include "ipc/nsGUIEventIPC.h";
+include "gfxTypes.h";
 
 using NPError;
 using NPRemoteWindow;
@@ -23,7 +24,7 @@ using NPNURLVariable;
 using NPCoordinateSpace;
 using NPNVariable;
 using mozilla::plugins::NativeWindowHandle;
-using mozilla::gfxSurfaceType;
+using gfxSurfaceType;
 using gfxIntSize;
 using mozilla::null_t;
 using mozilla::plugins::WindowsSharedMemoryHandle;

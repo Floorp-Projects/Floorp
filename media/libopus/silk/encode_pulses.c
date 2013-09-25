@@ -1,9 +1,5 @@
 /***********************************************************************
-Copyright (c) 2006-2012 IETF Trust and Skype Limited. All rights reserved.
-
-This file is extracted from RFC6716. Please see that RFC for additional
-information.
-
+Copyright (c) 2006-2011, Skype Limited. All rights reserved.
 Redistribution and use in source and binary forms, with or without
 modification, are permitted provided that the following conditions
 are met:
@@ -16,7 +12,7 @@ documentation and/or other materials provided with the distribution.
 names of specific contributors, may be used to endorse or promote
 products derived from this software without specific prior written
 permission.
-THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS “AS IS”
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
 AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
 IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
 ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE
@@ -34,6 +30,7 @@ POSSIBILITY OF SUCH DAMAGE.
 #endif
 
 #include "main.h"
+#include "stack_alloc.h"
 
 /*********************************************/
 /* Encode quantization indices of excitation */
@@ -70,14 +67,15 @@ void silk_encode_pulses(
 {
     opus_int   i, k, j, iter, bit, nLS, scale_down, RateLevelIndex = 0;
     opus_int32 abs_q, minSumBits_Q5, sumBits_Q5;
-    opus_int   abs_pulses[ MAX_FRAME_LENGTH ];
-    opus_int   sum_pulses[ MAX_NB_SHELL_BLOCKS ];
-    opus_int   nRshifts[   MAX_NB_SHELL_BLOCKS ];
+    VARDECL( opus_int, abs_pulses );
+    VARDECL( opus_int, sum_pulses );
+    VARDECL( opus_int, nRshifts );
     opus_int   pulses_comb[ 8 ];
     opus_int   *abs_pulses_ptr;
     const opus_int8 *pulses_ptr;
     const opus_uint8 *cdf_ptr;
     const opus_uint8 *nBits_ptr;
+    SAVE_STACK;
 
     silk_memset( pulses_comb, 0, 8 * sizeof( opus_int ) ); /* Fixing Valgrind reported problem*/
 
@@ -94,6 +92,8 @@ void silk_encode_pulses(
     }
 
     /* Take the absolute value of the pulses */
+    ALLOC( abs_pulses, iter * SHELL_CODEC_FRAME_LENGTH, opus_int );
+    silk_assert( !( SHELL_CODEC_FRAME_LENGTH & 3 ) );
     for( i = 0; i < iter * SHELL_CODEC_FRAME_LENGTH; i+=4 ) {
         abs_pulses[i+0] = ( opus_int )silk_abs( pulses[ i + 0 ] );
         abs_pulses[i+1] = ( opus_int )silk_abs( pulses[ i + 1 ] );
@@ -102,6 +102,8 @@ void silk_encode_pulses(
     }
 
     /* Calc sum pulses per shell code frame */
+    ALLOC( sum_pulses, iter, opus_int );
+    ALLOC( nRshifts, iter, opus_int );
     abs_pulses_ptr = abs_pulses;
     for( i = 0; i < iter; i++ ) {
         nRshifts[ i ] = 0;
@@ -200,4 +202,5 @@ void silk_encode_pulses(
     /* Encode signs */
     /****************/
     silk_encode_signs( psRangeEnc, pulses, frame_length, signalType, quantOffsetType, sum_pulses );
+    RESTORE_STACK;
 }

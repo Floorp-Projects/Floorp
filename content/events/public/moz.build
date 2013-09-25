@@ -20,8 +20,11 @@ EXPORTS += [
     'nsEventStates.h',
     'nsIPrivateTextEvent.h',
     'nsIPrivateTextRange.h',
-    'nsMutationEvent.h',
     'nsVKList.h',
+]
+
+EXPORTS.mozilla += [
+    'MutationEvent.h',
 ]
 
 EXPORTS.mozilla.dom += [

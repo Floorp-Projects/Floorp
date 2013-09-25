@@ -59,7 +59,7 @@
 #include "cairo-private.h"
 #include <wchar.h>
 #include <windows.h>
-#include <D3D9.h>
+#include <d3d9.h>
 
 #if defined(__MINGW32__) && !defined(ETO_PDY)
 # define ETO_PDY 0x2000

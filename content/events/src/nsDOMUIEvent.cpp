@@ -460,7 +460,7 @@ nsDOMUIEvent::ComputeModifierState(const nsAString& aModifiersList)
 bool
 nsDOMUIEvent::GetModifierStateInternal(const nsAString& aKey)
 {
-  if (!NS_IS_INPUT_EVENT(mEvent)) {
+  if (!mEvent->IsInputDerivedEvent()) {
     MOZ_CRASH("mEvent must be nsInputEvent or derived class");
   }
   nsInputEvent* inputEvent = static_cast<nsInputEvent*>(mEvent);
