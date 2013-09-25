@@ -571,8 +571,7 @@ menuitem.bookmark-item {
               0 0 0 1px hsla(0,0%,100%,.3) inset,
               0 0 0 1px hsla(210,54%,20%,.25),
               0 1px 0 hsla(210,54%,20%,.35) !important;
-  transition-property: background-color, box-shadow;
-  transition-duration: 250ms;
+  transition-property: background-color, box-shadow !important;
 }
 
 #back-button:not([disabled="true"]):not([open="true"]):not(:active):hover > .toolbarbutton-icon {
