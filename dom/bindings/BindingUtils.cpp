@@ -881,6 +881,13 @@ XrayResolveUnforgeableProperty(JSContext* cx, JS::Handle<JSObject*> wrapper,
                                JS::MutableHandle<JSPropertyDescriptor> desc,
                                const NativeProperties* nativeProperties);
 
+static bool
+XrayResolveNativeProperty(JSContext* cx, JS::Handle<JSObject*> wrapper,
+                          const NativePropertyHooks* nativePropertyHooks,
+                          DOMObjectType type, JS::Handle<JSObject*> obj,
+                          JS::Handle<jsid> id,
+                          JS::MutableHandle<JSPropertyDescriptor> desc);
+
 bool
 XrayResolveOwnProperty(JSContext* cx, JS::Handle<JSObject*> wrapper,
                        JS::Handle<JSObject*> obj, JS::Handle<jsid> id,
@@ -891,7 +898,10 @@ XrayResolveOwnProperty(JSContext* cx, JS::Handle<JSObject*> wrapper,
     GetNativePropertyHooks(cx, obj, type);
 
   if (type != eInstance) {
-    return true;
+    // For prototype objects and interface objects, just return their
+    // normal set of properties.
+    return XrayResolveNativeProperty(cx, wrapper, nativePropertyHooks, type,
+                                     obj, id, desc);
   }
 
   // Check for unforgeable properties before doing mResolveOwnProperty weirdness
@@ -1101,7 +1111,7 @@ ResolvePrototypeOrConstructor(JSContext* cx, JS::Handle<JSObject*> wrapper,
   return JS_WrapPropertyDescriptor(cx, desc);
 }
 
-bool
+/* static */ bool
 XrayResolveNativeProperty(JSContext* cx, JS::Handle<JSObject*> wrapper,
                           const NativePropertyHooks* nativePropertyHooks,
                           DOMObjectType type, JS::Handle<JSObject*> obj,
