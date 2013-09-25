@@ -1752,34 +1752,34 @@ ReportZoneStats(const JS::ZoneStats &zStats,
                       "align GC things.");
 
     ZCREPORT_GC_BYTES(pathPrefix + NS_LITERAL_CSTRING("unused-gc-things"),
-                      zStats.gcHeapUnusedGcThings,
+                      zStats.unusedGCThings,
                       "Memory on the garbage-collected JavaScript "
                       "heap taken by empty GC thing slots within non-empty "
                       "arenas.");
 
     ZCREPORT_GC_BYTES(pathPrefix + NS_LITERAL_CSTRING("lazy-scripts/gc-heap"),
-                      zStats.gcHeapLazyScripts,
+                      zStats.lazyScriptsGCHeap,
                       "Memory on the garbage-collected JavaScript "
                       "heap that represents scripts which haven't executed yet.");
 
     ZCREPORT_GC_BYTES(pathPrefix + NS_LITERAL_CSTRING("type-objects/gc-heap"),
-                      zStats.gcHeapTypeObjects,
+                      zStats.typeObjectsGCHeap,
                       "Memory on the garbage-collected JavaScript "
                       "heap that holds type inference information.");
 
-    ZCREPORT_GC_BYTES(pathPrefix + NS_LITERAL_CSTRING("ion-codes/gc-heap"),
-                      zStats.gcHeapIonCodes,
+    ZCREPORT_GC_BYTES(pathPrefix + NS_LITERAL_CSTRING("ion-codes-gc-heap"),
+                      zStats.ionCodesGCHeap,
                       "Memory on the garbage-collected JavaScript "
                       "heap that holds references to executable code pools "
                       "used by the IonMonkey JIT.");
 
     ZCREPORT_BYTES(pathPrefix + NS_LITERAL_CSTRING("lazy-scripts/malloc-heap"),
-                   zStats.lazyScripts,
+                   zStats.lazyScriptsMallocHeap,
                    "Memory holding miscellaneous additional information associated with lazy "
                    "scripts.  This memory is allocated on the malloc heap.");
 
-    ZCREPORT_BYTES(pathPrefix + NS_LITERAL_CSTRING("type-objects"),
-                   zStats.typeObjects,
+    ZCREPORT_BYTES(pathPrefix + NS_LITERAL_CSTRING("type-objects/malloc-heap"),
+                   zStats.typeObjectsMallocHeap,
                    "Memory holding miscellaneous additional information associated with type "
                    "objects.");
 
@@ -1787,8 +1787,8 @@ ReportZoneStats(const JS::ZoneStats &zStats,
                    zStats.typePool,
                    "Memory holding contents of type sets and related data.");
 
-    size_t gcHeapStringsAboutMemory = 0;
-    size_t stringCharsAboutMemory = 0;
+    size_t stringsNotableAboutMemoryGCHeap = 0;
+    size_t stringsNotableAboutMemoryMallocHeap = 0;
 
     for (size_t i = 0; i < zStats.notableStrings.length(); i++) {
         const JS::NotableStringInfo& info = zStats.notableStrings[i];
@@ -1805,8 +1805,8 @@ ReportZoneStats(const JS::ZoneStats &zStats,
         // bucket.
 #       define STRING_LENGTH "string(length="
         if (FindInReadable(NS_LITERAL_CSTRING(STRING_LENGTH), notableString)) {
-            gcHeapStringsAboutMemory += info.totalGCThingSizeOf();
-            stringCharsAboutMemory += info.sizeOfAllStringChars;
+            stringsNotableAboutMemoryGCHeap += info.totalGCHeapSizeOf();
+            stringsNotableAboutMemoryMallocHeap += info.normalMallocHeap;
             continue;
         }
 
@@ -1825,7 +1825,7 @@ ReportZoneStats(const JS::ZoneStats &zStats,
 
         REPORT_BYTES2(path + NS_LITERAL_CSTRING("gc-heap"),
             KIND_NONHEAP,
-            info.totalGCThingSizeOf(),
+            info.totalGCHeapSizeOf(),
             nsPrintfCString("Memory allocated to hold headers for copies of "
             "the given notable string.  A string is notable if all of its copies "
             "together use more than %d bytes total of JS GC heap and malloc heap "
@@ -1834,12 +1834,12 @@ ReportZoneStats(const JS::ZoneStats &zStats,
             "is short enough.  If so, the string won't have any memory reported "
             "under 'string-chars'.",
             JS::NotableStringInfo::notableSize()));
-        gcTotal += info.totalGCThingSizeOf();
+        gcTotal += info.totalGCHeapSizeOf();
 
-        if (info.sizeOfAllStringChars > 0) {
+        if (info.normalMallocHeap > 0) {
             REPORT_BYTES2(path + NS_LITERAL_CSTRING("malloc-heap"),
                 KIND_HEAP,
-                info.sizeOfAllStringChars,
+                info.normalMallocHeap,
                 nsPrintfCString("Memory allocated on the malloc heap to hold "
                 "string data for copies of the given notable string.  A string is "
                 "notable if all of its copies together use more than %d bytes "
@@ -1848,15 +1848,15 @@ ReportZoneStats(const JS::ZoneStats &zStats,
         }
     }
 
-    ZCREPORT_GC_BYTES(pathPrefix + NS_LITERAL_CSTRING("strings/short/gc-heap"),
-                      zStats.gcHeapStringsShort,
+    ZCREPORT_GC_BYTES(pathPrefix + NS_LITERAL_CSTRING("strings/short-gc-heap"),
+                      zStats.stringsShortGCHeap,
                       "Memory on the garbage-collected JavaScript "
                       "heap that holds headers for strings which are short "
                       "enough to be stored completely within the header.  That "
                       "is, a 'short' string uses no string-chars.");
 
     ZCREPORT_GC_BYTES(pathPrefix + NS_LITERAL_CSTRING("strings/normal/gc-heap"),
-                      zStats.gcHeapStringsNormal,
+                      zStats.stringsNormalGCHeap,
                       "Memory on the garbage-collected JavaScript "
                       "heap that holds string headers for strings which are too "
                       "long to fit entirely within the header.  The character "
@@ -1864,15 +1864,15 @@ ReportZoneStats(const JS::ZoneStats &zStats,
                       "strings/normal/malloc-heap.");
 
     ZCREPORT_BYTES(pathPrefix + NS_LITERAL_CSTRING("strings/normal/malloc-heap"),
-                   zStats.stringCharsNonNotable,
+                   zStats.stringsNormalMallocHeap,
                    "Memory allocated to hold characters for strings which are too long "
                    "to fit entirely within their string headers.\n\n"
                    "Sometimes more memory is allocated than necessary, to "
                    "simplify string concatenation.");
 
-    if (gcHeapStringsAboutMemory > 0) {
+    if (stringsNotableAboutMemoryGCHeap > 0) {
         ZCREPORT_GC_BYTES(pathPrefix + NS_LITERAL_CSTRING("strings/notable/about-memory/gc-heap"),
-                          gcHeapStringsAboutMemory,
+                          stringsNotableAboutMemoryGCHeap,
                           "Memory allocated on the garbage-collected JavaScript "
                           "heap that holds headers for notable strings which "
                           "contain the string '" STRING_LENGTH "'.  These "
@@ -1882,10 +1882,10 @@ ReportZoneStats(const JS::ZoneStats &zStats,
                           "time you refresh about:memory.");
     }
 
-    if (stringCharsAboutMemory > 0) {
+    if (stringsNotableAboutMemoryMallocHeap > 0) {
         ZCREPORT_BYTES(pathPrefix +
                        NS_LITERAL_CSTRING("strings/notable/about-memory/malloc-heap"),
-                       stringCharsAboutMemory,
+                       stringsNotableAboutMemoryMallocHeap,
                        "Memory allocated to hold characters of notable strings "
                        "which contain the string '" STRING_LENGTH "'.  These "
                        "strings are likely from about:memory itself.  We filter "
@@ -2637,8 +2637,8 @@ JSReporter::CollectReports(WindowPaths *windowPaths,
 
     REPORT_BYTES(NS_LITERAL_CSTRING("js-main-runtime-gc-heap-committed/unused/gc-things"),
                  KIND_OTHER,
-                 rtStats.zTotals.gcHeapUnusedGcThings,
-                 "The same as 'js-main-runtime/compartments/gc-heap/unused-gc-things'.");
+                 rtStats.zTotals.unusedGCThings,
+                 "The same as 'js-main-runtime/zones/unused-gc-things'.");
 
     REPORT_BYTES(NS_LITERAL_CSTRING("js-main-runtime-gc-heap-committed/used/chunk-admin"),
                  KIND_OTHER,
@@ -2648,7 +2648,7 @@ JSReporter::CollectReports(WindowPaths *windowPaths,
     REPORT_BYTES(NS_LITERAL_CSTRING("js-main-runtime-gc-heap-committed/used/arena-admin"),
                  KIND_OTHER,
                  rtStats.zTotals.gcHeapArenaAdmin,
-                 "The same as 'js-main-runtime/compartments/gc-heap/arena-admin'.");
+                 "The same as 'js-main-runtime/zones/gc-heap-arena-admin'.");
 
     REPORT_BYTES(NS_LITERAL_CSTRING("js-main-runtime-gc-heap-committed/used/gc-things"),
                  KIND_OTHER,
