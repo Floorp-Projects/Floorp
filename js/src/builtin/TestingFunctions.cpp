@@ -33,7 +33,7 @@ using mozilla::ArrayLength;
 static bool
 GetBuildConfiguration(JSContext *cx, unsigned argc, jsval *vp)
 {
-    RootedObject info(cx, JS_NewObject(cx, NULL, NULL, NULL));
+    RootedObject info(cx, JS_NewObject(cx, nullptr, nullptr, nullptr));
     if (!info)
         return false;
     RootedValue value(cx);
@@ -598,7 +598,7 @@ NondeterministicGetWeakMapKeys(JSContext *cx, unsigned argc, jsval *vp)
         return false;
     }
     if (!args[0].isObject()) {
-        JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_NOT_EXPECTED_TYPE,
+        JS_ReportErrorNumber(cx, js_GetErrorMessage, nullptr, JSMSG_NOT_EXPECTED_TYPE,
                              "nondeterministicGetWeakMapKeys", "WeakMap",
                              InformalValueTypeName(args[0]));
         return false;
@@ -607,7 +607,7 @@ NondeterministicGetWeakMapKeys(JSContext *cx, unsigned argc, jsval *vp)
     if (!JS_NondeterministicGetWeakMapKeys(cx, &args[0].toObject(), arr.address()))
         return false;
     if (!arr) {
-        JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_NOT_EXPECTED_TYPE,
+        JS_ReportErrorNumber(cx, js_GetErrorMessage, nullptr, JSMSG_NOT_EXPECTED_TYPE,
                              "nondeterministicGetWeakMapKeys", "WeakMap",
                              args[0].toObject().getClass()->name);
         return false;
@@ -728,8 +728,8 @@ CountHeap(JSContext *cx, unsigned argc, jsval *vp)
         return false;
     }
     countTracer.ok = true;
-    countTracer.traceList = NULL;
-    countTracer.recycleList = NULL;
+    countTracer.traceList = nullptr;
+    countTracer.recycleList = nullptr;
 
     if (startValue.isUndefined()) {
         JS_TraceRuntime(&countTracer.base);
@@ -738,7 +738,7 @@ CountHeap(JSContext *cx, unsigned argc, jsval *vp)
     }
 
     counter = 0;
-    while ((node = countTracer.traceList) != NULL) {
+    while ((node = countTracer.traceList) != nullptr) {
         if (traceKind == -1 || node->kind == traceKind)
             counter++;
         countTracer.traceList = node->next;
@@ -746,7 +746,7 @@ CountHeap(JSContext *cx, unsigned argc, jsval *vp)
         countTracer.recycleList = node;
         JS_TraceChildren(&countTracer.base, node->thing, node->kind);
     }
-    while ((node = countTracer.recycleList) != NULL) {
+    while ((node = countTracer.recycleList) != nullptr) {
         countTracer.recycleList = node->next;
         js_free(node);
     }
@@ -809,7 +809,7 @@ MakeFinalizeObserver(JSContext *cx, unsigned argc, jsval *vp)
     if (!scope)
         return false;
 
-    JSObject *obj = JS_NewObjectWithGivenProto(cx, &FinalizeCounterClass, NULL, scope);
+    JSObject *obj = JS_NewObjectWithGivenProto(cx, &FinalizeCounterClass, nullptr, scope);
     if (!obj)
         return false;
 
@@ -827,7 +827,7 @@ FinalizeCount(JSContext *cx, unsigned argc, jsval *vp)
 static bool
 DumpHeapComplete(JSContext *cx, unsigned argc, jsval *vp)
 {
-    const char *fileName = NULL;
+    const char *fileName = nullptr;
     JSAutoByteString fileNameBytes;
     if (argc > 0) {
         Value v = JS_ARGV(cx, vp)[0];
@@ -916,7 +916,7 @@ DisplayName(JSContext *cx, unsigned argc, jsval *vp)
 
     JSFunction *fun = &args[0].toObject().as<JSFunction>();
     JSString *str = fun->displayAtom();
-    vp->setString(str == NULL ? cx->runtime()->emptyString : str);
+    vp->setString(str == nullptr ? cx->runtime()->emptyString : str);
     return true;
 }
 
@@ -940,7 +940,7 @@ ShellObjectMetadataCallback(JSContext *cx, JSObject **pmetadata)
         return false;
 
     RootedValue rval(cx);
-    if (!Invoke(cx, UndefinedValue(), fun, 0, NULL, &rval))
+    if (!Invoke(cx, UndefinedValue(), fun, 0, nullptr, &rval))
         return false;
 
     if (rval.isObject())
@@ -959,11 +959,11 @@ SetObjectMetadataCallback(JSContext *cx, unsigned argc, jsval *vp)
     if (argc == 0 || !args[0].isObject() || !args[0].toObject().is<JSFunction>()) {
         if (!JS_DeleteProperty(cx, cx->global(), ObjectMetadataPropertyName))
             return false;
-        js::SetObjectMetadataCallback(cx, NULL);
+        js::SetObjectMetadataCallback(cx, nullptr);
         return true;
     }
 
-    if (!JS_DefineProperty(cx, cx->global(), ObjectMetadataPropertyName, args[0], NULL, NULL, 0))
+    if (!JS_DefineProperty(cx, cx->global(), ObjectMetadataPropertyName, args[0], nullptr, nullptr, 0))
         return false;
 
     js::SetObjectMetadataCallback(cx, ShellObjectMetadataCallback);
