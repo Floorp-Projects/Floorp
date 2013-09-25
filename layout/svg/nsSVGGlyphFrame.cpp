@@ -1143,6 +1143,7 @@ mozilla::SVGTextContextPaint::Paint::GetPattern(float aOpacity,
     // cache it, we'll have to compute mPatternMatrix, which is annoying.
     return pattern.forget();
   default:
+    MOZ_ASSERT(false, "invalid paint type");
     return nullptr;
   }
 
