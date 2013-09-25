@@ -108,6 +108,14 @@ static inline void profiler_start(int aProfileEntries, double aInterval,
 // to retrieve the profile.
 static inline void profiler_stop() {}
 
+class ProfilerBacktrace;
+
+// Immediately capture the current thread's call stack and return it
+static inline ProfilerBacktrace* profiler_get_backtrace() { return nullptr; }
+
+// Free a ProfilerBacktrace returned by profiler_get_backtrace()
+static inline void profiler_free_backtrace(ProfilerBacktrace* aBacktrace) {}
+
 static inline bool profiler_is_active() { return false; }
 
 // Internal-only. Used by the event tracer.
@@ -150,6 +158,7 @@ static inline void profiler_unregister_thread() {}
 static inline void profiler_js_operation_callback() {}
 
 static inline double profiler_time() { return 0; }
+static inline double profiler_time(const mozilla::TimeStamp& aTime) { return 0; }
 
 static inline bool profiler_in_privacy_mode() { return false; }
 
