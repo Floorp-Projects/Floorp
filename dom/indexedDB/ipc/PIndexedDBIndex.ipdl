@@ -9,8 +9,6 @@ include protocol PIndexedDBRequest;
 
 include IndexedDBParams;
 
-using mozilla::dom::indexedDB::SerializedStructuredCloneReadInfo;
-
 namespace mozilla {
 namespace dom {
 namespace indexedDB {
@@ -22,12 +20,6 @@ struct GetKeyParams
   KeyRange keyRange;
 };
 
-struct OpenKeyCursorParams
-{
-  OptionalKeyRange optionalKeyRange;
-  Direction direction;
-};
-
 union IndexRequestParams
 {
   GetParams;
@@ -37,12 +29,6 @@ union IndexRequestParams
   CountParams;
   OpenCursorParams;
   OpenKeyCursorParams;
-};
-
-union OptionalStructuredCloneReadInfo
-{
-  SerializedStructuredCloneReadInfo;
-  void_t;
 };
 
 struct IndexCursorConstructorParams
