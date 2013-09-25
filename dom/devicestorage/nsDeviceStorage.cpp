@@ -3351,7 +3351,7 @@ nsDOMDeviceStorage::AddEventListener(const nsAString & aType,
 
 void
 nsDOMDeviceStorage::AddEventListener(const nsAString & aType,
-                                     nsIDOMEventListener *aListener,
+                                     EventListener *aListener,
                                      bool aUseCapture,
                                      const Nullable<bool>& aWantsUntrusted,
                                      ErrorResult& aRv)
@@ -3407,7 +3407,7 @@ nsDOMDeviceStorage::RemoveEventListener(const nsAString & aType,
 
 void
 nsDOMDeviceStorage::RemoveEventListener(const nsAString& aType,
-                                        nsIDOMEventListener* aListener,
+                                        EventListener* aListener,
                                         bool aCapture,
                                         ErrorResult& aRv)
 {

@@ -8,11 +8,11 @@
 
 #include "nscore.h"
 #include "nsView.h"
-#include "nsEvent.h"
 #include "nsCOMPtr.h"
 #include "nsCRT.h"
 #include "nsVoidArray.h"
 #include "nsDeviceContext.h"
+#include "mozilla/EventForwards.h"
 
 class nsIWidget;
 struct nsRect;

@@ -295,94 +295,162 @@ APZCTreeManager::ReceiveInputEvent(const InputData& aEvent)
   return result;
 }
 
+AsyncPanZoomController*
+APZCTreeManager::GetTouchInputBlockAPZC(const nsTouchEvent& aEvent, ScreenPoint aPoint)
+{
+  nsRefPtr<AsyncPanZoomController> apzc = GetTargetAPZC(aPoint);
+  gfx3DMatrix transformToApzc, transformToScreen;
+  // Reset the cached apz transform
+  mCachedTransformToApzcForInputBlock = transformToApzc;
+  if (!apzc) {
+    return nullptr;
+  }
+  for (size_t i = 1; i < aEvent.touches.Length(); i++) {
+    nsIntPoint point = aEvent.touches[i]->mRefPoint;
+    nsRefPtr<AsyncPanZoomController> apzc2 =
+      GetTargetAPZC(ScreenPoint(point.x, point.y));
+    apzc = CommonAncestor(apzc.get(), apzc2.get());
+    APZC_LOG("Using APZC %p as the common ancestor\n", apzc.get());
+    // For now, we only ever want to do pinching on the root APZC for a given layers id. So
+    // when we find the common ancestor of multiple points, also walk up to the root APZC.
+    apzc = RootAPZCForLayersId(apzc);
+    APZC_LOG("Using APZC %p as the root APZC for multi-touch\n", apzc.get());
+  }
+  if (apzc) {
+    // Cache apz transform so it can be used for future events in this block.
+    GetInputTransforms(apzc, mCachedTransformToApzcForInputBlock, transformToScreen);
+  }
+  return apzc.get();
+}
+
+nsEventStatus
+APZCTreeManager::ProcessTouchEvent(const nsTouchEvent& aEvent,
+                                   nsTouchEvent* aOutEvent)
+{
+  // For computing the input for the APZC, used the cached transform.
+  // This ensures that the sequence of touch points an APZC sees in an
+  // input block are all in the same coordinate space.
+  gfx3DMatrix transformToApzc = mCachedTransformToApzcForInputBlock;
+  MultiTouchInput inputForApzc(aEvent);
+  for (size_t i = 0; i < inputForApzc.mTouches.Length(); i++) {
+    ApplyTransform(&(inputForApzc.mTouches[i].mScreenPoint), transformToApzc);
+  }
+  nsEventStatus ret = mApzcForInputBlock->ReceiveInputEvent(inputForApzc);
+
+  // For computing the event to pass back to Gecko, use the up-to-date transforms.
+  // This ensures that transformToApzc and transformToScreen are in sync
+  // (note that transformToScreen isn't cached).
+  gfx3DMatrix transformToScreen;
+  GetInputTransforms(mApzcForInputBlock, transformToApzc, transformToScreen);
+  gfx3DMatrix outTransform = transformToApzc * transformToScreen;
+  nsTouchEvent* outEvent = static_cast<nsTouchEvent*>(aOutEvent);
+  for (size_t i = 0; i < outEvent->touches.Length(); i++) {
+    ApplyTransform(&(outEvent->touches[i]->mRefPoint), outTransform);
+  }
+
+  // If we have an mApzcForInputBlock and it's the end of the touch sequence
+  // then null it out so we don't keep a dangling reference and leak things.
+  if (aEvent.message == NS_TOUCH_CANCEL ||
+      (aEvent.message == NS_TOUCH_END && aEvent.touches.Length() == 1)) {
+    mApzcForInputBlock = nullptr;
+  }
+  return ret;
+}
+
+nsEventStatus
+APZCTreeManager::ProcessMouseEvent(const nsMouseEvent& aEvent,
+                                   nsMouseEvent* aOutEvent)
+{
+  nsRefPtr<AsyncPanZoomController> apzc = GetTargetAPZC(ScreenPoint(aEvent.refPoint.x, aEvent.refPoint.y));
+  if (!apzc) {
+    return nsEventStatus_eIgnore;
+  }
+  gfx3DMatrix transformToApzc;
+  gfx3DMatrix transformToScreen;
+  GetInputTransforms(apzc, transformToApzc, transformToScreen);
+  MultiTouchInput inputForApzc(aEvent);
+  ApplyTransform(&(inputForApzc.mTouches[0].mScreenPoint), transformToApzc);
+  gfx3DMatrix outTransform = transformToApzc * transformToScreen;
+  ApplyTransform(&(static_cast<nsMouseEvent*>(aOutEvent)->refPoint), outTransform);
+  return apzc->ReceiveInputEvent(inputForApzc);
+}
+
+nsEventStatus
+APZCTreeManager::ProcessEvent(const nsInputEvent& aEvent,
+                              nsInputEvent* aOutEvent)
+{
+  // Transform the refPoint
+  nsRefPtr<AsyncPanZoomController> apzc = GetTargetAPZC(ScreenPoint(aEvent.refPoint.x, aEvent.refPoint.y));
+  if (!apzc) {
+    return nsEventStatus_eIgnore;
+  }
+  gfx3DMatrix transformToApzc;
+  gfx3DMatrix transformToScreen;
+  GetInputTransforms(apzc, transformToApzc, transformToScreen);
+  ApplyTransform(&(aOutEvent->refPoint), transformToApzc);
+  gfx3DMatrix outTransform = transformToApzc * transformToScreen;
+  ApplyTransform(&(aOutEvent->refPoint), outTransform);
+  return nsEventStatus_eIgnore;
+}
+
 nsEventStatus
 APZCTreeManager::ReceiveInputEvent(const nsInputEvent& aEvent,
                                    nsInputEvent* aOutEvent)
 {
   MOZ_ASSERT(NS_IsMainThread());
 
-  gfx3DMatrix transformToApzc;
-  gfx3DMatrix transformToScreen;
   switch (aEvent.eventStructType) {
     case NS_TOUCH_EVENT: {
       const nsTouchEvent& touchEvent = static_cast<const nsTouchEvent&>(aEvent);
-      if (touchEvent.touches.Length() == 0) {
-        break;
+      if (!touchEvent.touches.Length()) {
+        return nsEventStatus_eIgnore;
       }
       if (touchEvent.message == NS_TOUCH_START) {
-        nsIntPoint point = touchEvent.touches[0]->mRefPoint;
-        mApzcForInputBlock = GetTargetAPZC(ScreenPoint(point.x, point.y));
-        for (size_t i = 1; i < touchEvent.touches.Length(); i++) {
-          point = touchEvent.touches[i]->mRefPoint;
-          nsRefPtr<AsyncPanZoomController> apzc2 =
-            GetTargetAPZC(ScreenPoint(point.x, point.y));
-          mApzcForInputBlock = CommonAncestor(mApzcForInputBlock.get(), apzc2.get());
-          APZC_LOG("Using APZC %p as the common ancestor\n", mApzcForInputBlock.get());
-          // For now, we only ever want to do pinching on the root APZC for a given layers id. So
-          // when we find the common ancestor of multiple points, also walk up to the root APZC.
-          mApzcForInputBlock = RootAPZCForLayersId(mApzcForInputBlock);
-          APZC_LOG("Using APZC %p as the root APZC for multi-touch\n", mApzcForInputBlock.get());
-        }
-        if (mApzcForInputBlock) {
-          // Cache transformToApzc so it can be used for future events in this block.
-          GetInputTransforms(mApzcForInputBlock, transformToApzc, transformToScreen);
-          mCachedTransformToApzcForInputBlock = transformToApzc;
-        }
-      } else if (mApzcForInputBlock) {
-        APZC_LOG("Re-using APZC %p as continuation of event block\n", mApzcForInputBlock.get());
+        ScreenPoint point = ScreenPoint(touchEvent.touches[0]->mRefPoint.x, touchEvent.touches[0]->mRefPoint.y);
+        mApzcForInputBlock = GetTouchInputBlockAPZC(touchEvent, point);
       }
-      if (mApzcForInputBlock) {
-        // For computing the input for the APZC, used the cached transform.
-        // This ensures that the sequence of touch points an APZC sees in an
-        // input block are all in the same coordinate space.
-        transformToApzc = mCachedTransformToApzcForInputBlock;
-        MultiTouchInput inputForApzc(touchEvent);
-        for (size_t i = 0; i < inputForApzc.mTouches.Length(); i++) {
-          ApplyTransform(&(inputForApzc.mTouches[i].mScreenPoint), transformToApzc);
-        }
-
-        // For computing the event to pass back to Gecko, use the up-to-date transforms.
-        // This ensures that transformToApzc and transformToScreen are in sync
-        // (note that transformToScreen isn't cached).
-        GetInputTransforms(mApzcForInputBlock, transformToApzc, transformToScreen);
-        gfx3DMatrix outTransform = transformToApzc * transformToScreen;
-        nsTouchEvent* outEvent = static_cast<nsTouchEvent*>(aOutEvent);
-        for (size_t i = 0; i < outEvent->touches.Length(); i++) {
-          ApplyTransform(&(outEvent->touches[i]->mRefPoint), outTransform);
-        }
-
-        nsEventStatus ret = mApzcForInputBlock->ReceiveInputEvent(inputForApzc);
-
-        // If we have an mApzcForInputBlock and it's the end of the touch sequence
-        // then null it out so we don't keep a dangling reference and leak things.
-        if (touchEvent.message == NS_TOUCH_CANCEL ||
-            (touchEvent.message == NS_TOUCH_END && touchEvent.touches.Length() == 1)) {
-          mApzcForInputBlock = nullptr;
-        }
-
-        return ret;
+      if (!mApzcForInputBlock) {
+        return nsEventStatus_eIgnore;
       }
-      break;
-    } case NS_MOUSE_EVENT: {
+      nsTouchEvent* outEvent = static_cast<nsTouchEvent*>(aOutEvent);
+      return ProcessTouchEvent(touchEvent, outEvent);
+    }
+    case NS_MOUSE_EVENT: {
+      // For b2g emulation
       const nsMouseEvent& mouseEvent = static_cast<const nsMouseEvent&>(aEvent);
-      nsRefPtr<AsyncPanZoomController> apzc = GetTargetAPZC(ScreenPoint(mouseEvent.refPoint.x, mouseEvent.refPoint.y));
-      if (apzc) {
-        GetInputTransforms(apzc, transformToApzc, transformToScreen);
-        MultiTouchInput inputForApzc(mouseEvent);
-        ApplyTransform(&(inputForApzc.mTouches[0].mScreenPoint), transformToApzc);
-
-        gfx3DMatrix outTransform = transformToApzc * transformToScreen;
-        ApplyTransform(&(static_cast<nsMouseEvent*>(aOutEvent)->refPoint), outTransform);
-
-        return apzc->ReceiveInputEvent(inputForApzc);
-      }
-      break;
-    } default: {
-      // Ignore other event types
-      break;
+      nsMouseEvent* outEvent = static_cast<nsMouseEvent*>(aOutEvent);
+      return ProcessMouseEvent(mouseEvent, outEvent);
+    }
+    default: {
+      return ProcessEvent(aEvent, aOutEvent);
     }
   }
-  return nsEventStatus_eIgnore;
+}
+
+nsEventStatus
+APZCTreeManager::ReceiveInputEvent(nsInputEvent& aEvent)
+{
+  MOZ_ASSERT(NS_IsMainThread());
+
+  switch (aEvent.eventStructType) {
+    case NS_TOUCH_EVENT: {
+      nsTouchEvent& touchEvent = static_cast<nsTouchEvent&>(aEvent);
+      if (!touchEvent.touches.Length()) {
+        return nsEventStatus_eIgnore;
+      }
+      if (touchEvent.message == NS_TOUCH_START) {
+        ScreenPoint point = ScreenPoint(touchEvent.touches[0]->mRefPoint.x, touchEvent.touches[0]->mRefPoint.y);
+        mApzcForInputBlock = GetTouchInputBlockAPZC(touchEvent, point);
+      }
+      if (!mApzcForInputBlock) {
+        return nsEventStatus_eIgnore;
+      }
+      return ProcessTouchEvent(touchEvent, &touchEvent);
+    }
+    default: {
+      return ProcessEvent(aEvent, &aEvent);
+    }
+  }
 }
 
 void
@@ -501,6 +569,22 @@ APZCTreeManager::HandleOverscroll(AsyncPanZoomController* aChild, ScreenPoint aS
   ApplyTransform(&aEndPoint, transformToApzc);
 
   parent->AttemptScroll(aStartPoint, aEndPoint);
+}
+
+bool
+APZCTreeManager::HitTestAPZC(const ScreenPoint& aPoint)
+{
+  MonitorAutoLock lock(mTreeLock);
+  nsRefPtr<AsyncPanZoomController> target;
+  // The root may have siblings, so check those too
+  gfxPoint point(aPoint.x, aPoint.y);
+  for (AsyncPanZoomController* apzc = mRootApzc; apzc; apzc = apzc->GetPrevSibling()) {
+    target = GetAPZCAtPoint(apzc, point);
+    if (target) {
+      return true;
+    }
+  }
+  return false;
 }
 
 already_AddRefed<AsyncPanZoomController>

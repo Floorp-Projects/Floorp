@@ -278,16 +278,56 @@ class Program(SandboxDerived):
             program += bin_suffix
         self.program = program
 
-class XpcshellManifests(SandboxDerived):
-    """Build object container for XPCSHELL_TESTS_MANIFESTS (was: XPCSHELL_TESTS).
 
-    This object contains a list of xpcshell.ini manifest files.
-    """
-    __slots__ = ('xpcshell_manifests')
+class TestManifest(SandboxDerived):
+    """Represents a manifest file containing information about tests."""
 
-    def __init__(self, sandbox, manifests):
+    __slots__ = (
+        # The type of test manifest this is.
+        'flavor',
+
+        # Maps source filename to destination filename. The destination
+        # path is relative from the tests root directory.
+        'installs',
+
+        # Where all files for this manifest flavor are installed in the unified
+        # test package directory.
+        'install_prefix',
+
+        # Set of files provided by an external mechanism.
+        'external_installs',
+
+        # The full path of this manifest file.
+        'path',
+
+        # The directory where this manifest is defined.
+        'directory',
+
+        # The parsed manifestparser.TestManifest instance.
+        'manifest',
+
+        # The relative path of the parsed manifest within the srcdir.
+        'manifest_relpath',
+
+        # If this manifest is a duplicate of another one, this is the
+        # manifestparser.TestManifest of the other one.
+        'dupe_manifest',
+    )
+
+    def __init__(self, sandbox, path, manifest, flavor=None,
+            install_prefix=None, relpath=None, dupe_manifest=False):
         SandboxDerived.__init__(self, sandbox)
-        self.xpcshell_manifests = manifests
+
+        self.path = path
+        self.directory = os.path.dirname(path)
+        self.manifest = manifest
+        self.flavor = flavor
+        self.install_prefix = install_prefix
+        self.manifest_relpath = relpath
+        self.dupe_manifest = dupe_manifest
+        self.installs = {}
+        self.external_installs = set()
+
 
 class LocalInclude(SandboxDerived):
     """Describes an individual local include path."""

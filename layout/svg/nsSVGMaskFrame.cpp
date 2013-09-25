@@ -77,7 +77,7 @@ nsSVGMaskFrame::ComputeMaskAlpha(nsRenderingContext *aContext,
     return nullptr;
 
   nsRefPtr<gfxImageSurface> image =
-    new gfxImageSurface(surfaceSize, gfxASurface::ImageFormatARGB32);
+    new gfxImageSurface(surfaceSize, gfxImageFormatARGB32);
   if (!image || image->CairoStatus())
     return nullptr;
 

@@ -1,9 +1,5 @@
 /***********************************************************************
-Copyright (c) 2006-2012 IETF Trust and Skype Limited. All rights reserved.
-
-This file is extracted from RFC6716. Please see that RFC for additional
-information.
-
+Copyright (c) 2006-2011, Skype Limited. All rights reserved.
 Redistribution and use in source and binary forms, with or without
 modification, are permitted provided that the following conditions
 are met:
@@ -16,7 +12,7 @@ documentation and/or other materials provided with the distribution.
 names of specific contributors, may be used to endorse or promote
 products derived from this software without specific prior written
 permission.
-THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS “AS IS”
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
 AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
 IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
 ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE
@@ -35,6 +31,7 @@ POSSIBILITY OF SUCH DAMAGE.
 
 #include "SigProc_FIX.h"
 #include "resampler_private.h"
+#include "stack_alloc.h"
 
 static inline opus_int16 *silk_resampler_private_down_FIR_INTERPOL(
     opus_int16          *out,
@@ -155,11 +152,14 @@ void silk_resampler_private_down_FIR(
     silk_resampler_state_struct *S = (silk_resampler_state_struct *)SS;
     opus_int32 nSamplesIn;
     opus_int32 max_index_Q16, index_increment_Q16;
-    opus_int32 buf[ RESAMPLER_MAX_BATCH_SIZE_IN + SILK_RESAMPLER_MAX_FIR_ORDER ];
+    VARDECL( opus_int32, buf );
     const opus_int16 *FIR_Coefs;
+    SAVE_STACK;
+
+    ALLOC( buf, S->batchSize + S->FIR_Order, opus_int32 );
 
     /* Copy buffered samples to start of buffer */
-    silk_memcpy( buf, S->sFIR, S->FIR_Order * sizeof( opus_int32 ) );
+    silk_memcpy( buf, S->sFIR.i32, S->FIR_Order * sizeof( opus_int32 ) );
 
     FIR_Coefs = &S->Coefs[ 2 ];
 
@@ -189,5 +189,6 @@ void silk_resampler_private_down_FIR(
     }
 
     /* Copy last part of filtered signal to the state for the next call */
-    silk_memcpy( S->sFIR, &buf[ nSamplesIn ], S->FIR_Order * sizeof( opus_int32 ) );
+    silk_memcpy( S->sFIR.i32, &buf[ nSamplesIn ], S->FIR_Order * sizeof( opus_int32 ) );
+    RESTORE_STACK;
 }

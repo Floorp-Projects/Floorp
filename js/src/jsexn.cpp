@@ -1016,13 +1016,10 @@ js_ReportUncaughtException(JSContext *cx)
 {
     JSErrorReport *reportp, report;
 
-    if (!JS_IsExceptionPending(cx))
+    if (!cx->isExceptionPending())
         return true;
 
-    RootedValue exn(cx);
-    if (!JS_GetPendingException(cx, &exn))
-        return false;
-
+    RootedValue exn(cx, cx->getPendingException());
     AutoValueVector roots(cx);
     roots.resize(6);
 
@@ -1126,9 +1123,9 @@ js_ReportUncaughtException(JSContext *cx)
         /* Pass the exception object. */
         JS_SetPendingException(cx, exn);
         js_ReportErrorAgain(cx, bytes, reportp);
-        JS_ClearPendingException(cx);
     }
 
+    JS_ClearPendingException(cx);
     return true;
 }
 

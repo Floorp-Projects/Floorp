@@ -43,5 +43,7 @@ MOCHITEST_BROWSER_FILES := \
 		browser_inspector_select_last_selected.html \
 		browser_inspector_select_last_selected2.html \
 		browser_inspector_basic_highlighter.js \
+    browser_inspector_dead_node_exception.html \
+    browser_inspector_dead_node_exception.js \
 		head.js \
 		$(NULL)

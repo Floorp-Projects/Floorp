@@ -14,22 +14,8 @@
 namespace mozilla {
 namespace dom {
 
-NS_IMPL_CYCLE_COLLECTION_CLASS(OscillatorNode)
-
-NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(OscillatorNode)
-  NS_IMPL_CYCLE_COLLECTION_UNLINK(mPeriodicWave)
-  NS_IMPL_CYCLE_COLLECTION_UNLINK(mFrequency)
-  NS_IMPL_CYCLE_COLLECTION_UNLINK(mDetune)
-  if (tmp->Context()) {
-    tmp->Context()->UnregisterOscillatorNode(tmp);
-  }
-NS_IMPL_CYCLE_COLLECTION_UNLINK_END_INHERITED(AudioNode);
-
-NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(OscillatorNode, AudioNode)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mPeriodicWave)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mFrequency)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mDetune)
-NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
+NS_IMPL_CYCLE_COLLECTION_INHERITED_3(OscillatorNode, AudioNode,
+                                     mPeriodicWave, mFrequency, mDetune)
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION_INHERITED(OscillatorNode)
 NS_INTERFACE_MAP_END_INHERITING(AudioNode)
@@ -438,15 +424,15 @@ public:
       return;
     }
 
-    if (ticks + WEBAUDIO_BLOCK_SIZE < mStart) {
-      // We're not playing yet.
-      ComputeSilence(aOutput);
-      return;
-    }
     if (ticks >= mStop) {
       // We've finished playing.
       ComputeSilence(aOutput);
       *aFinished = true;
+      return;
+    }
+    if (ticks + WEBAUDIO_BLOCK_SIZE < mStart) {
+      // We're not playing yet.
+      ComputeSilence(aOutput);
       return;
     }
 
@@ -520,13 +506,11 @@ OscillatorNode::OscillatorNode(AudioContext* aContext)
   OscillatorNodeEngine* engine = new OscillatorNodeEngine(this, aContext->Destination());
   mStream = aContext->Graph()->CreateAudioNodeStream(engine, MediaStreamGraph::SOURCE_STREAM);
   engine->SetSourceStream(static_cast<AudioNodeStream*> (mStream.get()));
+  mStream->AddMainThreadListener(this);
 }
 
 OscillatorNode::~OscillatorNode()
 {
-  if (Context()) {
-    Context()->UnregisterOscillatorNode(this);
-  }
 }
 
 JSObject*
@@ -598,8 +582,7 @@ OscillatorNode::Start(double aWhen, ErrorResult& aRv)
                              Context()->DestinationStream(),
                              aWhen);
 
-  MOZ_ASSERT(!mPlayingRef, "We can only accept a successful start() call once");
-  mPlayingRef.Take(this);
+  MarkActive();
 }
 
 void
@@ -614,8 +597,6 @@ OscillatorNode::Stop(double aWhen, ErrorResult& aRv)
     aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
     return;
   }
-
-  mPlayingRef.Drop(this);
 
   AudioNodeStream* ns = static_cast<AudioNodeStream*>(mStream.get());
   if (!ns || !Context()) {
@@ -660,7 +641,7 @@ OscillatorNode::NotifyMainThreadStateChanged()
 
     // Drop the playing reference
     // Warning: The below line might delete this.
-    mPlayingRef.Drop(this);
+    MarkInactive();
   }
 }
 

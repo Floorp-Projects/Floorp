@@ -450,11 +450,25 @@ VARIABLES = {
          These will be preprocessed before being parsed and converted.
          """),
 
-    'XPCSHELL_TESTS_MANIFESTS': (StrictOrderingOnAppendList, list, [],
-        """XPCSHELL Test Manifest list
+    # Test declaration.
+    'A11Y_MANIFESTS': (StrictOrderingOnAppendList, list, [],
+        """List of manifest files defining a11y tests.
+        """),
 
-        This is a list of xpcshell.ini manifest files.
-        Formerly XPCSHELL_TESTS=
+    'BROWSER_CHROME_MANIFESTS': (StrictOrderingOnAppendList, list, [],
+        """List of manifest files defining browser chrome tests.
+        """),
+
+    'MOCHITEST_MANIFESTS': (StrictOrderingOnAppendList, list, [],
+        """List of manifest files defining mochitest tests.
+        """),
+
+    'MOCHITEST_CHROME_MANIFESTS': (StrictOrderingOnAppendList, list, [],
+        """List of manifest files defining mochitest chrome tests.
+        """),
+
+    'XPCSHELL_TESTS_MANIFESTS': (StrictOrderingOnAppendList, list, [],
+        """List of manifest files defining xpcshell tests.
         """),
 }
 

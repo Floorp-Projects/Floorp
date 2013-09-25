@@ -8,7 +8,7 @@
 
 #include <stdint.h>                     // for uint32_t
 #include "ThebesLayerBuffer.h"          // for ThebesLayerBuffer, etc
-#include "gfxASurface.h"                // for gfxASurface, etc
+#include "gfxTypes.h"
 #include "gfxPlatform.h"                // for gfxPlatform
 #include "mozilla/Assertions.h"         // for MOZ_CRASH
 #include "mozilla/Attributes.h"         // for MOZ_OVERRIDE
@@ -29,6 +29,7 @@
 
 class gfxContext;
 struct gfxMatrix;
+class gfxASurface;
 
 namespace mozilla {
 namespace gfx {
@@ -193,7 +194,7 @@ public:
     , mDeprecatedTextureClient(nullptr)
     , mIsNewBuffer(false)
     , mFrontAndBackBufferDiffer(false)
-    , mContentType(gfxASurface::CONTENT_COLOR_ALPHA)
+    , mContentType(GFX_CONTENT_COLOR_ALPHA)
   {}
 
   typedef ThebesLayerBuffer::PaintState PaintState;
@@ -355,7 +356,7 @@ class ContentClientIncremental : public ContentClientRemote
 public:
   ContentClientIncremental(CompositableForwarder* aFwd)
     : ContentClientRemote(aFwd)
-    , mContentType(gfxASurface::CONTENT_COLOR_ALPHA)
+    , mContentType(GFX_CONTENT_COLOR_ALPHA)
     , mHasBuffer(false)
     , mHasBufferOnWhite(false)
   {
