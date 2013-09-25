@@ -29,7 +29,7 @@ public:
   imgFrame();
   ~imgFrame();
 
-  nsresult Init(int32_t aX, int32_t aY, int32_t aWidth, int32_t aHeight, gfxASurface::gfxImageFormat aFormat, uint8_t aPaletteDepth = 0);
+  nsresult Init(int32_t aX, int32_t aY, int32_t aWidth, int32_t aHeight, gfxImageFormat aFormat, uint8_t aPaletteDepth = 0);
   nsresult Optimize();
 
   void Draw(gfxContext *aContext, gfxPattern::GraphicsFilter aFilter,
@@ -41,7 +41,7 @@ public:
   bool GetIsDirty() const;
 
   nsIntRect GetRect() const;
-  gfxASurface::gfxImageFormat GetFormat() const;
+  gfxImageFormat GetFormat() const;
   bool GetNeedsBackground() const;
   uint32_t GetImageBytesPerRow() const;
   uint32_t GetImageDataLength() const;
@@ -103,7 +103,7 @@ public:
   }
 
   size_t SizeOfExcludingThisWithComputedFallbackIfHeap(
-           gfxASurface::MemoryLocation aLocation,
+           gfxMemoryLocation aLocation,
            mozilla::MallocSizeOf aMallocSizeOf) const;
 
   uint8_t GetPaletteDepth() const { return mPaletteDepth; }
@@ -118,9 +118,9 @@ private: // methods
 
   struct SurfaceWithFormat {
     nsRefPtr<gfxDrawable> mDrawable;
-    gfxImageSurface::gfxImageFormat mFormat;
+    gfxImageFormat mFormat;
     SurfaceWithFormat() {}
-    SurfaceWithFormat(gfxDrawable* aDrawable, gfxImageSurface::gfxImageFormat aFormat)
+    SurfaceWithFormat(gfxDrawable* aDrawable, gfxImageFormat aFormat)
      : mDrawable(aDrawable), mFormat(aFormat) {}
     bool IsValid() { return !!mDrawable; }
   };
@@ -166,7 +166,7 @@ private: // data
   /** Indicates how many readers currently have locked this frame */
   int32_t mLockCount;
 
-  gfxASurface::gfxImageFormat mFormat;
+  gfxImageFormat mFormat;
   uint8_t      mPaletteDepth;
   int8_t       mBlendMethod;
   bool mSinglePixel;

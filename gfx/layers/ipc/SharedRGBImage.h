@@ -8,13 +8,15 @@
 #include <stddef.h>                     // for size_t
 #include <stdint.h>                     // for uint8_t
 #include "ImageContainer.h"             // for ISharedImage, Image, etc
-#include "gfxASurface.h"                // for gfxASurface, etc
+#include "gfxTypes.h"
 #include "gfxPoint.h"                   // for gfxIntSize
 #include "mozilla/Attributes.h"         // for MOZ_OVERRIDE
 #include "mozilla/RefPtr.h"             // for RefPtr
 #include "mozilla/gfx/Point.h"          // for IntSize
 #include "mozilla/gfx/Types.h"          // for SurfaceFormat
 #include "nsCOMPtr.h"                   // for already_AddRefed
+
+class gfxASurface;
 
 namespace mozilla {
 namespace ipc {
@@ -31,7 +33,7 @@ class SurfaceDescriptor;
 
 already_AddRefed<Image> CreateSharedRGBImage(ImageContainer* aImageContainer,
                                              nsIntSize aSize,
-                                             gfxASurface::gfxImageFormat aImageFormat);
+                                             gfxImageFormat aImageFormat);
 
 /**
  * Stores RGB data in shared memory
@@ -42,9 +44,8 @@ class DeprecatedSharedRGBImage : public Image,
 {
 friend already_AddRefed<Image> CreateSharedRGBImage(ImageContainer* aImageContainer,
                                                     nsIntSize aSize,
-                                                    gfxASurface::gfxImageFormat aImageFormat);
+                                                    gfxImageFormat aImageFormat);
 public:
-  typedef gfxASurface::gfxImageFormat gfxImageFormat;
   struct Header {
     gfxImageFormat mImageFormat;
   };
@@ -103,7 +104,6 @@ protected:
 class SharedRGBImage : public Image
                      , public ISharedImage
 {
-  typedef gfxASurface::gfxImageFormat gfxImageFormat;
 public:
   SharedRGBImage(ImageClient* aCompositable);
   ~SharedRGBImage();

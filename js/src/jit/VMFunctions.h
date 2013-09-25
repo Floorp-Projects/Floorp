@@ -641,6 +641,7 @@ bool FilterArguments(JSContext *cx, JSString *str);
 
 #ifdef JSGC_GENERATIONAL
 void PostWriteBarrier(JSRuntime *rt, JSObject *obj);
+void PostGlobalWriteBarrier(JSRuntime *rt, JSObject *obj);
 #endif
 
 uint32_t GetIndexFromString(JSString *str);

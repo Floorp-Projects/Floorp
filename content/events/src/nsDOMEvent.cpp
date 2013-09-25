@@ -14,7 +14,7 @@
 #include "nsIContent.h"
 #include "nsIPresShell.h"
 #include "nsIDocument.h"
-#include "nsMutationEvent.h"
+#include "mozilla/MutationEvent.h"
 #include "nsContentUtils.h"
 #include "nsJSEnvironment.h"
 #include "mozilla/Preferences.h"

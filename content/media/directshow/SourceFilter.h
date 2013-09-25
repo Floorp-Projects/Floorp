@@ -68,4 +68,9 @@ protected:
 
 } // namespace mozilla
 
+// For mingw __uuidof support
+#ifdef __CRT_UUID_DECL
+__CRT_UUID_DECL(mozilla::SourceFilter, 0x5c2a7ad0,0xba82,0x4659,0x91,0x78,0xc4,0x71,0x9a,0x27,0x65,0xd6);
+#endif
+
 #endif

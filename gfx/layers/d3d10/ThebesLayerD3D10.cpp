@@ -286,8 +286,8 @@ void
 ThebesLayerD3D10::VerifyContentType(SurfaceMode aMode)
 {
   if (mD2DSurface) {
-    gfxASurface::gfxContentType type = aMode != SURFACE_SINGLE_CHANNEL_ALPHA ?
-      gfxASurface::CONTENT_COLOR : gfxASurface::CONTENT_COLOR_ALPHA;
+    gfxContentType type = aMode != SURFACE_SINGLE_CHANNEL_ALPHA ?
+      GFX_CONTENT_COLOR : GFX_CONTENT_COLOR_ALPHA;
 
     if (type != mD2DSurface->GetContentType()) {  
       mD2DSurface = new gfxD2DSurface(mTexture, type);
@@ -479,7 +479,7 @@ ThebesLayerD3D10::CreateNewTextures(const gfxIntSize &aSize, SurfaceMode aMode)
 
     if (!gfxPlatform::GetPlatform()->SupportsAzureContent()) {
       mD2DSurface = new gfxD2DSurface(mTexture, aMode != SURFACE_SINGLE_CHANNEL_ALPHA ?
-                                                gfxASurface::CONTENT_COLOR : gfxASurface::CONTENT_COLOR_ALPHA);
+                                                GFX_CONTENT_COLOR : GFX_CONTENT_COLOR_ALPHA);
 
       if (!mD2DSurface || mD2DSurface->CairoStatus()) {
         NS_WARNING("Failed to create surface for ThebesLayerD3D10.");
@@ -506,7 +506,7 @@ ThebesLayerD3D10::CreateNewTextures(const gfxIntSize &aSize, SurfaceMode aMode)
     }
 
     if (!gfxPlatform::GetPlatform()->SupportsAzureContent()) {
-      mD2DSurfaceOnWhite = new gfxD2DSurface(mTextureOnWhite, gfxASurface::CONTENT_COLOR);
+      mD2DSurfaceOnWhite = new gfxD2DSurface(mTextureOnWhite, GFX_CONTENT_COLOR);
 
       if (!mD2DSurfaceOnWhite || mD2DSurfaceOnWhite->CairoStatus()) {
         NS_WARNING("Failed to create surface for ThebesLayerD3D10.");

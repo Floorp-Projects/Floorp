@@ -1,9 +1,5 @@
 /***********************************************************************
-Copyright (c) 2006-2012 IETF Trust and Skype Limited. All rights reserved.
-
-This file is extracted from RFC6716. Please see that RFC for additional
-information.
-
+Copyright (c) 2006-2011, Skype Limited. All rights reserved.
 Redistribution and use in source and binary forms, with or without
 modification, are permitted provided that the following conditions
 are met:
@@ -16,7 +12,7 @@ documentation and/or other materials provided with the distribution.
 names of specific contributors, may be used to endorse or promote
 products derived from this software without specific prior written
 permission.
-THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS “AS IS”
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
 AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
 IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
 ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE
@@ -39,16 +35,16 @@ const opus_uint8 silk_LTP_per_index_iCDF[3] = {
        179,     99,      0
 };
 
-const opus_uint8 silk_LTP_gain_iCDF_0[8] = {
+static const opus_uint8 silk_LTP_gain_iCDF_0[8] = {
         71,     56,     43,     30,     21,     12,      6,      0
 };
 
-const opus_uint8 silk_LTP_gain_iCDF_1[16] = {
+static const opus_uint8 silk_LTP_gain_iCDF_1[16] = {
        199,    165,    144,    124,    109,     96,     84,     71,
         61,     51,     42,     32,     23,     15,      8,      0
 };
 
-const opus_uint8 silk_LTP_gain_iCDF_2[32] = {
+static const opus_uint8 silk_LTP_gain_iCDF_2[32] = {
        241,    225,    211,    199,    187,    175,    164,    153,
        142,    132,    123,    114,    105,     96,     88,     80,
         72,     64,     57,     50,     44,     38,     33,     29,
@@ -57,16 +53,16 @@ const opus_uint8 silk_LTP_gain_iCDF_2[32] = {
 
 const opus_int16 silk_LTP_gain_middle_avg_RD_Q14 = 12304;
 
-const opus_uint8 silk_LTP_gain_BITS_Q5_0[8] = {
+static const opus_uint8 silk_LTP_gain_BITS_Q5_0[8] = {
         15,    131,    138,    138,    155,    155,    173,    173
 };
 
-const opus_uint8 silk_LTP_gain_BITS_Q5_1[16] = {
+static const opus_uint8 silk_LTP_gain_BITS_Q5_1[16] = {
         69,     93,    115,    118,    131,    138,    141,    138,
        150,    150,    155,    150,    155,    160,    166,    160
 };
 
-const opus_uint8 silk_LTP_gain_BITS_Q5_2[32] = {
+static const opus_uint8 silk_LTP_gain_BITS_Q5_2[32] = {
        131,    128,    134,    141,    141,    141,    145,    145,
        145,    150,    155,    155,    155,    155,    160,    160,
        160,    160,    166,    166,    173,    173,    182,    192,
@@ -85,7 +81,7 @@ const opus_uint8 * const silk_LTP_gain_BITS_Q5_ptrs[NB_LTP_CBKS] = {
     silk_LTP_gain_BITS_Q5_2
 };
 
-const opus_int8 silk_LTP_gain_vq_0[8][5] =
+static const opus_int8 silk_LTP_gain_vq_0[8][5] =
 {
 {
          4,      6,     24,      7,      5
@@ -113,7 +109,7 @@ const opus_int8 silk_LTP_gain_vq_0[8][5] =
 }
 };
 
-const opus_int8 silk_LTP_gain_vq_1[16][5] =
+static const opus_int8 silk_LTP_gain_vq_1[16][5] =
 {
 {
         13,     22,     39,     23,     12
@@ -165,7 +161,7 @@ const opus_int8 silk_LTP_gain_vq_1[16][5] =
 }
 };
 
-const opus_int8 silk_LTP_gain_vq_2[32][5] =
+static const opus_int8 silk_LTP_gain_vq_2[32][5] =
 {
 {
         -6,     27,     61,     39,      5

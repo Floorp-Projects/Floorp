@@ -4347,6 +4347,13 @@ nsDocShell::DisplayLoadError(nsresult aError, nsIURI *aURI,
         nsCOMPtr<Element> element = do_QueryInterface(handler);
         element->GetAttribute(NS_LITERAL_STRING("crashedPageTitle"), messageStr);
       }
+
+      // DisplayLoadError requires a non-empty messageStr to proceed and call LoadErrorPage.
+      // If the page doesn't have a title, we will use a blank space which will be trimmed
+      // and thus treated as empty by the front-end.
+      if (messageStr.IsEmpty()) {
+        messageStr.Assign(NS_LITERAL_STRING(" "));
+      }
     }
     else {
         // Errors requiring simple formatting

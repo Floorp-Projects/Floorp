@@ -163,7 +163,7 @@ nsDragService::ConstructDragImage(nsIDOMNode* aDOMNode,
   uint32_t height = aDragRect->height;
 
   nsRefPtr<gfxImageSurface> imgSurface = new gfxImageSurface(
-    gfxIntSize(width, height), gfxImageSurface::ImageFormatARGB32);
+    gfxIntSize(width, height), gfxImageFormatARGB32);
   if (!imgSurface)
     return nil;
 
