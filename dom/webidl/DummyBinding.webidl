@@ -7,8 +7,7 @@
 // Dummy bindings that we need to force generation of things that
 // aren't actually referenced anywhere in IDL yet but are used in C++.
 
-[Global]
-interface DummyInterface : EventTarget {
+interface DummyInterface {
   readonly attribute OnErrorEventHandlerNonNull onErrorEventHandler;
   FilePropertyBag fileBag();
   InspectorRGBTriple rgbTriple();
