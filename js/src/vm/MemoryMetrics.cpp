@@ -164,39 +164,6 @@ struct StatsClosure
     }
 };
 
-size_t
-ZoneStats::GCHeapThingsSize()
-{
-    // These are just the GC-thing measurements.
-    size_t n = 0;
-    n += gcHeapStringsNormal;
-    n += gcHeapStringsShort;
-    n += gcHeapLazyScripts;
-    n += gcHeapTypeObjects;
-    n += gcHeapIonCodes;
-
-    return n;
-}
-
-size_t
-CompartmentStats::GCHeapThingsSize()
-{
-    // These are just the GC-thing measurements.
-    size_t n = 0;
-    n += gcHeapObjectsOrdinary;
-    n += gcHeapObjectsFunction;
-    n += gcHeapObjectsDenseArray;
-    n += gcHeapObjectsSlowArray;
-    n += gcHeapObjectsCrossCompartmentWrapper;
-    n += gcHeapShapesTreeGlobalParented;
-    n += gcHeapShapesTreeNonGlobalParented;
-    n += gcHeapShapesDict;
-    n += gcHeapShapesBase;
-    n += gcHeapScripts;
-
-    return n;
-}
-
 static void
 DecommittedArenasChunkCallback(JSRuntime *rt, void *data, gc::Chunk *chunk)
 {
@@ -490,7 +457,7 @@ JS::CollectRuntimeStats(JSRuntime *rt, RuntimeStats *rtStats, ObjectPrivateVisit
         ZoneStats &zStats = rtStats->zoneStatsVector[i];
 
         rtStats->zTotals.add(zStats);
-        rtStats->gcHeapGcThings += zStats.GCHeapThingsSize();
+        rtStats->gcHeapGcThings += zStats.sizeOfLiveGCThings();
 #ifdef DEBUG
         totalArenaSize += zStats.gcHeapArenaAdmin + zStats.gcHeapUnusedGcThings;
 #endif
@@ -506,7 +473,7 @@ JS::CollectRuntimeStats(JSRuntime *rt, RuntimeStats *rtStats, ObjectPrivateVisit
         CompartmentStats &cStats = rtStats->compartmentStatsVector[i];
 
         rtStats->cTotals.add(cStats);
-        rtStats->gcHeapGcThings += cStats.GCHeapThingsSize();
+        rtStats->gcHeapGcThings += cStats.sizeOfLiveGCThings();
     }
 
 #ifdef DEBUG
