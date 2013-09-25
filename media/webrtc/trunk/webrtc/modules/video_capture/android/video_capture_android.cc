@@ -48,12 +48,19 @@ VideoCaptureModule* VideoCaptureImpl::Create(
   return implementation;
 }
 
+#ifdef DEBUG
 // Android logging, uncomment to print trace to
 // logcat instead of trace file/callback
-// #include <android/log.h>
+#include <android/log.h>
 // #undef WEBRTC_TRACE
 // #define WEBRTC_TRACE(a,b,c,...)
 // __android_log_print(ANDROID_LOG_DEBUG, "*WEBRTCN*", __VA_ARGS__)
+// Some functions are called before before the WebRTC logging can be brought up,
+// log those to the Android log.
+#define EARLY_WEBRTC_TRACE(a,b,c,...) __android_log_print(ANDROID_LOG_DEBUG, "*WEBRTC-VCA", __VA_ARGS__)
+#else
+#define EARLY_WEBRTC_TRACE(a,b,c,...)
+#endif
 
 JavaVM* VideoCaptureAndroid::g_jvm = NULL;
 //VideoCaptureAndroid.java
@@ -70,6 +77,8 @@ int32_t VideoCaptureAndroid::SetAndroidObjects(void* javaVM,
                                                void* javaContext) {
 
   MOZ_ASSERT(javaVM != nullptr || g_javaCmDevInfoClass != nullptr);
+  EARLY_WEBRTC_TRACE(webrtc::kTraceStateInfo, webrtc::kTraceVideoCapture, -1,
+               "%s: running", __FUNCTION__);
 
   g_jvm = static_cast<JavaVM*> (javaVM);
 
@@ -78,19 +87,21 @@ int32_t VideoCaptureAndroid::SetAndroidObjects(void* javaVM,
     if (g_javaCmClass != NULL
         && g_javaCmDevInfoClass != NULL
         && g_javaCmDevInfoObject != NULL) {
+        EARLY_WEBRTC_TRACE(webrtc::kTraceStateInfo, webrtc::kTraceVideoCapture, -1,
+                     "%s: early exit", __FUNCTION__);
         return 0;
     }
 
     JNIEnv* env = NULL;
     if (g_jvm->GetEnv((void**) &env, JNI_VERSION_1_4) != JNI_OK) {
-      WEBRTC_TRACE(webrtc::kTraceError, webrtc::kTraceVideoCapture, -1,
+      EARLY_WEBRTC_TRACE(webrtc::kTraceError, webrtc::kTraceVideoCapture, -1,
                    "%s: could not get Java environment", __FUNCTION__);
       return -1;
     }
     // get java capture class type (note path to class packet)
     g_javaCmClass = jsjni_GetGlobalClassRef(AndroidJavaCaptureClass);
     if (!g_javaCmClass) {
-      WEBRTC_TRACE(webrtc::kTraceError, webrtc::kTraceVideoCapture, -1,
+      EARLY_WEBRTC_TRACE(webrtc::kTraceError, webrtc::kTraceVideoCapture, -1,
                    "%s: could not find java class", __FUNCTION__);
       return -1;
     }
@@ -98,11 +109,11 @@ int32_t VideoCaptureAndroid::SetAndroidObjects(void* javaVM,
         { "ProvideCameraFrame", "([BIIJ)V",
           (void*) &VideoCaptureAndroid::ProvideCameraFrame };
     if (env->RegisterNatives(g_javaCmClass, &nativeFunctions, 1) == 0) {
-      WEBRTC_TRACE(webrtc::kTraceDebug, webrtc::kTraceVideoCapture, -1,
+      EARLY_WEBRTC_TRACE(webrtc::kTraceDebug, webrtc::kTraceVideoCapture, -1,
                    "%s: Registered native functions", __FUNCTION__);
     }
     else {
-      WEBRTC_TRACE(webrtc::kTraceError, webrtc::kTraceVideoCapture, -1,
+      EARLY_WEBRTC_TRACE(webrtc::kTraceError, webrtc::kTraceVideoCapture, -1,
                    "%s: Failed to register native functions",
                    __FUNCTION__);
       return -1;
@@ -112,12 +123,12 @@ int32_t VideoCaptureAndroid::SetAndroidObjects(void* javaVM,
     g_javaCmDevInfoClass = jsjni_GetGlobalClassRef(
                  AndroidJavaCaptureDeviceInfoClass);
     if (!g_javaCmDevInfoClass) {
-      WEBRTC_TRACE(webrtc::kTraceError, webrtc::kTraceVideoCapture, -1,
+      EARLY_WEBRTC_TRACE(webrtc::kTraceError, webrtc::kTraceVideoCapture, -1,
                    "%s: could not find java class", __FUNCTION__);
       return -1;
     }
 
-    WEBRTC_TRACE(webrtc::kTraceDebug, webrtc::kTraceVideoCapture, -1,
+    EARLY_WEBRTC_TRACE(webrtc::kTraceDebug, webrtc::kTraceVideoCapture, -1,
                  "VideoCaptureDeviceInfoAndroid get method id");
 
     // get the method ID for the Android Java CaptureClass static
@@ -128,14 +139,14 @@ int32_t VideoCaptureAndroid::SetAndroidObjects(void* javaVM,
         "(ILandroid/content/Context;)"
         "Lorg/webrtc/videoengine/VideoCaptureDeviceInfoAndroid;");
     if (cid == NULL) {
-      WEBRTC_TRACE(webrtc::kTraceError, webrtc::kTraceVideoCapture, -1,
+      EARLY_WEBRTC_TRACE(webrtc::kTraceError, webrtc::kTraceVideoCapture, -1,
                    "%s: could not get java"
                    "VideoCaptureDeviceInfoAndroid constructor ID",
                    __FUNCTION__);
       return -1;
     }
 
-    WEBRTC_TRACE(webrtc::kTraceDebug, webrtc::kTraceVideoCapture, -1,
+    EARLY_WEBRTC_TRACE(webrtc::kTraceDebug, webrtc::kTraceVideoCapture, -1,
                  "%s: construct static java device object", __FUNCTION__);
 
     // construct the object by calling the static constructor object
@@ -144,7 +155,7 @@ int32_t VideoCaptureAndroid::SetAndroidObjects(void* javaVM,
                                     cid, (int) -1,
                                     javaContext);
     if (!javaCameraDeviceInfoObjLocal) {
-      WEBRTC_TRACE(webrtc::kTraceWarning, webrtc::kTraceVideoCapture, -1,
+      EARLY_WEBRTC_TRACE(webrtc::kTraceWarning, webrtc::kTraceVideoCapture, -1,
                    "%s: could not create Java Capture Device info object",
                    __FUNCTION__);
       return -1;
@@ -153,7 +164,7 @@ int32_t VideoCaptureAndroid::SetAndroidObjects(void* javaVM,
     // we are referencing it after this function has returned)
     g_javaCmDevInfoObject = env->NewGlobalRef(javaCameraDeviceInfoObjLocal);
     if (!g_javaCmDevInfoObject) {
-      WEBRTC_TRACE(webrtc::kTraceError,
+      EARLY_WEBRTC_TRACE(webrtc::kTraceError,
                    webrtc::kTraceAudioDevice,
                    -1,
                    "%s: could not create Java"
@@ -163,13 +174,16 @@ int32_t VideoCaptureAndroid::SetAndroidObjects(void* javaVM,
     }
     // Delete local object ref, we only use the global ref
     env->DeleteLocalRef(javaCameraDeviceInfoObjLocal);
+
+    EARLY_WEBRTC_TRACE(webrtc::kTraceStateInfo, webrtc::kTraceVideoCapture, -1,
+                 "%s: success", __FUNCTION__);
     return 0;
   }
   else {
-    WEBRTC_TRACE(webrtc::kTraceStateInfo, webrtc::kTraceVideoCapture, -1,
+    EARLY_WEBRTC_TRACE(webrtc::kTraceStateInfo, webrtc::kTraceVideoCapture, -1,
                  "%s: JVM is NULL, assuming deinit", __FUNCTION__);
     if (!g_jvm) {
-      WEBRTC_TRACE(webrtc::kTraceError, webrtc::kTraceVideoCapture, -1,
+      EARLY_WEBRTC_TRACE(webrtc::kTraceError, webrtc::kTraceVideoCapture, -1,
                    "%s: SetAndroidObjects not called with a valid JVM.",
                    __FUNCTION__);
       return -1;
@@ -181,7 +195,7 @@ int32_t VideoCaptureAndroid::SetAndroidObjects(void* javaVM,
       // Attach this thread to JVM
       jint res = g_jvm->AttachCurrentThread(&env, NULL);
       if ((res < 0) || !env) {
-        WEBRTC_TRACE(webrtc::kTraceError, webrtc::kTraceVideoCapture,
+        EARLY_WEBRTC_TRACE(webrtc::kTraceError, webrtc::kTraceVideoCapture,
                      -1, "%s: Could not attach thread to JVM (%d, %p)",
                      __FUNCTION__, res, env);
         return -1;
@@ -192,7 +206,7 @@ int32_t VideoCaptureAndroid::SetAndroidObjects(void* javaVM,
     env->DeleteGlobalRef(g_javaCmDevInfoClass);
     env->DeleteGlobalRef(g_javaCmClass);
     if (attached && g_jvm->DetachCurrentThread() < 0) {
-      WEBRTC_TRACE(webrtc::kTraceWarning, webrtc::kTraceVideoCapture, -1,
+      EARLY_WEBRTC_TRACE(webrtc::kTraceWarning, webrtc::kTraceVideoCapture, -1,
                    "%s: Could not detach thread from JVM", __FUNCTION__);
       return -1;
     }
@@ -207,6 +221,11 @@ int32_t VideoCaptureAndroid::AttachAndUseAndroidDeviceInfoObjects(
     jclass& javaCmDevInfoClass,
     jobject& javaCmDevInfoObject,
     bool& attached) {
+
+    WEBRTC_TRACE(webrtc::kTraceError, webrtc::kTraceVideoCapture, -1,
+                 "%s: AttachAndUseAndroidDeviceInfoObj.",
+                 __FUNCTION__);
+
   // get the JNI env for this thread
   if (!g_jvm) {
     WEBRTC_TRACE(webrtc::kTraceError, webrtc::kTraceVideoCapture, -1,
@@ -226,6 +245,11 @@ int32_t VideoCaptureAndroid::AttachAndUseAndroidDeviceInfoObjects(
       return -1;
     }
     attached = true;
+    WEBRTC_TRACE(webrtc::kTraceStateInfo, webrtc::kTraceVideoCapture, -1,
+                 "%s: attach success", __FUNCTION__);
+  } else {
+    WEBRTC_TRACE(webrtc::kTraceStateInfo, webrtc::kTraceVideoCapture, -1,
+                 "%s: did not attach because JVM Env present", __FUNCTION__);
   }
   MOZ_ASSERT(g_javaCmDevInfoClass != nullptr);
   MOZ_ASSERT(g_javaCmDevInfoObject != nullptr);
@@ -241,6 +265,9 @@ int32_t VideoCaptureAndroid::ReleaseAndroidDeviceInfoObjects(
     WEBRTC_TRACE(webrtc::kTraceWarning, webrtc::kTraceVideoCapture, -1,
                  "%s: Could not detach thread from JVM", __FUNCTION__);
     return -1;
+  } else if (!attached) {
+      WEBRTC_TRACE(webrtc::kTraceStateInfo, webrtc::kTraceVideoCapture, -1,
+                   "%s: not attached, no detach", __FUNCTION__);
   }
   return 0;
 }
