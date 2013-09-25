@@ -7285,14 +7285,16 @@ class CGDOMJSProxyHandler_getOwnPropertyDescriptor(ClassMethod):
   return false;
 }
 MOZ_ASSERT_IF(desc.object(), desc.object() == ${holder});"""
+            # We don't want to look at the unforgeable holder at all
+            # in the xray case; that part got handled already.
             getUnforgeable = CallOnUnforgeableHolder(self.descriptor,
-                                                     getUnforgeable, "isXray")
+                                                     getUnforgeable)
             getUnforgeable += """if (desc.object()) {
   desc.object().set(proxy);
-  return !isXray || JS_WrapPropertyDescriptor(cx, desc);
-}
-
-"""
+  return true;
+}"""
+            getUnforgeable = CGIfWrapper(CGGeneric(getUnforgeable),
+                                         "!isXray").define() + "\n\n"
         else:
             getUnforgeable = ""
 
