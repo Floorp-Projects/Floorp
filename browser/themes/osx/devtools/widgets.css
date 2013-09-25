@@ -476,7 +476,7 @@
 /* Custom configurable/enumerable/writable or frozen/sealed/extensible
  * variables and properties */
 
-.variable-or-property[non-enumerable]:not([self]):not([exception]):not([return]) > .title > .name {
+.variable-or-property[non-enumerable]:not([self]):not([exception]):not([return]):not([scope]) > .title > .name {
   opacity: 0.5;
 }
 
@@ -528,6 +528,11 @@
 .variable-or-property[return]:not(:focus) > .title > .name {
   color: #0a0;
   text-shadow: 0 0 8px #cfc;
+}
+
+.variable-or-property[scope]:not(:focus) > .title > .name {
+  color: #00a;
+  text-shadow: 0 0 8px #ccf;
 }
 
 /* Variables and properties tooltips */
