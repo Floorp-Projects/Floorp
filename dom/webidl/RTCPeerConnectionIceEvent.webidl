@@ -12,7 +12,6 @@ dictionary RTCPeerConnectionIceEventInit : EventInit {
 };
 
 [Pref="media.peerconnection.enabled",
- JSImplementation="@mozilla.org/dom/rtcpeerconnectioniceevent;1",
  Constructor(DOMString type,
              optional RTCPeerConnectionIceEventInit eventInitDict)]
 interface RTCPeerConnectionIceEvent : Event {
