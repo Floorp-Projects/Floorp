@@ -5,6 +5,7 @@
 
 #include "mozilla/DebugOnly.h"
 #include "mozilla/MouseEvents.h"
+#include "mozilla/TextEvents.h"
 #include "mozilla/Util.h"
 
 #include "KeyboardLayout.h"

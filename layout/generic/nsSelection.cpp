@@ -56,6 +56,7 @@ static NS_DEFINE_CID(kFrameTraversalCID, NS_FRAMETRAVERSAL_CID);
 #include "nsCaret.h"
 
 #include "mozilla/MouseEvents.h"
+#include "mozilla/TextEvents.h"
 
 #include "nsITimer.h"
 #include "nsFrameManager.h"

@@ -14,6 +14,7 @@
 #include "prlog.h"
 
 #include "mozilla/MouseEvents.h"
+#include "mozilla/TextEvents.h"
 
 #include "nsChildView.h"
 #include "nsObjCExceptions.h"

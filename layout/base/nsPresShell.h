@@ -37,6 +37,7 @@
 #include "mozilla/Attributes.h"
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/MouseEvents.h"
+#include "mozilla/TextEvents.h"
 
 class nsRange;
 class nsIDragService;

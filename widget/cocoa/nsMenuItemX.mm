@@ -21,6 +21,7 @@
 #include "nsIDocument.h"
 #include "nsIDOMDocument.h"
 #include "nsIDOMElement.h"
+#include "nsIDOMEvent.h"
 
 nsMenuItemX::nsMenuItemX()
 {

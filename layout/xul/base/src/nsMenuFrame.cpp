@@ -43,6 +43,7 @@
 #include "mozilla/MouseEvents.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/Services.h"
+#include "mozilla/TextEvents.h"
 #include "mozilla/dom/Element.h"
 #include <algorithm>
 

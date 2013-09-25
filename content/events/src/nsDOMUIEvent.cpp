@@ -16,6 +16,7 @@
 #include "nsIFrame.h"
 #include "mozilla/Util.h"
 #include "mozilla/Assertions.h"
+#include "mozilla/TextEvents.h"
 #include "prtime.h"
 
 using namespace mozilla;
