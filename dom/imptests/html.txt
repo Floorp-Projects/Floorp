@@ -1,4 +1,5 @@
 git|git://github.com/w3c/web-platform-tests.git|html
+dom
 domxpath
 html/browsers/browsing-the-web/read-media
 html/browsers/the-window-object
