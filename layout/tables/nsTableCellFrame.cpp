@@ -182,7 +182,7 @@ nsresult
 nsTableCellFrame::GetColIndex(int32_t &aColIndex) const
 {
   if (GetPrevInFlow()) {
-    return ((nsTableCellFrame*)FirstInFlow())->GetColIndex(aColIndex);
+    return static_cast<nsTableCellFrame*>(FirstInFlow())->GetColIndex(aColIndex);
   }
   else {
     aColIndex = mColIndex;
@@ -787,12 +787,14 @@ CalcUnpaginagedHeight(nsPresContext*        aPresContext,
                       nsTableFrame&         aTableFrame,
                       nscoord               aVerticalBorderPadding)
 {
-  const nsTableCellFrame* firstCellInFlow   = (nsTableCellFrame*)aCellFrame.FirstInFlow();
-  nsTableFrame*           firstTableInFlow  = (nsTableFrame*)aTableFrame.FirstInFlow();
-  nsTableRowFrame*        row
-    = static_cast<nsTableRowFrame*>(firstCellInFlow->GetParent());
-  nsTableRowGroupFrame*   firstRGInFlow
-    = static_cast<nsTableRowGroupFrame*>(row->GetParent());
+  const nsTableCellFrame* firstCellInFlow =
+    static_cast<nsTableCellFrame*>(aCellFrame.FirstInFlow());
+  nsTableFrame* firstTableInFlow  =
+    static_cast<nsTableFrame*>(aTableFrame.FirstInFlow());
+  nsTableRowFrame* row =
+    static_cast<nsTableRowFrame*>(firstCellInFlow->GetParent());
+  nsTableRowGroupFrame* firstRGInFlow =
+    static_cast<nsTableRowGroupFrame*>(row->GetParent());
 
   int32_t rowIndex;
   firstCellInFlow->GetRowIndex(rowIndex);

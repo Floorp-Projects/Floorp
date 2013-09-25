@@ -273,7 +273,8 @@ nsTableCellMap::Synchronize(nsTableFrame* aTableFrame)
   nsCellMap* map = nullptr;
   for (uint32_t rgX = 0; rgX < orderedRowGroups.Length(); rgX++) {
     nsTableRowGroupFrame* rgFrame = orderedRowGroups[rgX];
-    map = GetMapFor((nsTableRowGroupFrame*)rgFrame->FirstInFlow(), map);
+    map = GetMapFor(static_cast<nsTableRowGroupFrame*>(rgFrame->FirstInFlow()),
+                    map);
     if (map) {
       if (!maps.AppendElement(map)) {
         delete map;
@@ -550,7 +551,8 @@ nsTableCellMap::AppendCell(nsTableCellFrame& aCellFrame,
                            bool              aRebuildIfNecessary,
                            nsIntRect&        aDamageArea)
 {
-  NS_ASSERTION(&aCellFrame == aCellFrame.FirstInFlow(), "invalid call on continuing frame");
+  MOZ_ASSERT(&aCellFrame == aCellFrame.FirstInFlow(),
+             "invalid call on continuing frame");
   nsIFrame* rgFrame = aCellFrame.GetParent(); // get the row
   if (!rgFrame) return 0;
   rgFrame = rgFrame->GetParent();   // get the row group
@@ -611,8 +613,8 @@ nsTableCellMap::RemoveCell(nsTableCellFrame* aCellFrame,
                            nsIntRect&        aDamageArea)
 {
   if (!aCellFrame) ABORT0();
-  NS_ASSERTION(aCellFrame == (nsTableCellFrame *)aCellFrame->FirstInFlow(),
-               "invalid call on continuing frame");
+  MOZ_ASSERT(aCellFrame == aCellFrame->FirstInFlow(),
+             "invalid call on continuing frame");
   int32_t rowIndex = aRowIndex;
   int32_t rgStartRowIndex = 0;
   nsCellMap* cellMap = mFirstMap;
