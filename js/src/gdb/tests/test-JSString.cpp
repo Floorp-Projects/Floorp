@@ -7,7 +7,7 @@
 #include "vm/String.h"
 
 FRAGMENT(JSString, simple) {
-  JS::Rooted<JSString *> empty(cx, JS_NewStringCopyN(cx, NULL, 0));
+  JS::Rooted<JSString *> empty(cx, JS_NewStringCopyN(cx, nullptr, 0));
   JS::Rooted<JSString *> x(cx, JS_NewStringCopyN(cx, "x", 1));
   JS::Rooted<JSString *> z(cx, JS_NewStringCopyZ(cx, "z"));
 
@@ -39,7 +39,7 @@ FRAGMENT(JSString, simple) {
 }
 
 FRAGMENT(JSString, null) {
-  JS::Rooted<JSString *> null(cx, NULL);
+  JS::Rooted<JSString *> null(cx, nullptr);
   JSString *nullRaw = null;
 
   breakpoint();
