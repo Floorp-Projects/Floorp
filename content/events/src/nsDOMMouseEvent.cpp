@@ -4,10 +4,10 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "nsDOMMouseEvent.h"
-#include "nsGUIEvent.h"
 #include "nsIContent.h"
 #include "nsContentUtils.h"
 #include "prtime.h"
+#include "mozilla/MouseEvents.h"
 
 using namespace mozilla;
 

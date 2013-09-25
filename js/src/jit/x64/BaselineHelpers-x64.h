@@ -33,8 +33,8 @@ EmitCallIC(CodeOffsetLabel *patchOffset, MacroAssembler &masm)
     *patchOffset = offset;
 
     // Load stub pointer into BaselineStubReg
-    masm.movq(Operand(BaselineStubReg, (int32_t) ICEntry::offsetOfFirstStub()),
-              BaselineStubReg);
+    masm.loadPtr(Address(BaselineStubReg, (int32_t) ICEntry::offsetOfFirstStub()),
+                 BaselineStubReg);
 
     // Call the stubcode.
     masm.call(Operand(BaselineStubReg, ICStub::offsetOfStubCode()));
@@ -46,7 +46,7 @@ EmitEnterTypeMonitorIC(MacroAssembler &masm,
 {
     // This is expected to be called from within an IC, when BaselineStubReg
     // is properly initialized to point to the stub.
-    masm.movq(Operand(BaselineStubReg, (int32_t) monitorStubOffset), BaselineStubReg);
+    masm.loadPtr(Address(BaselineStubReg, (int32_t) monitorStubOffset), BaselineStubReg);
 
     // Jump to the stubcode.
     masm.jmp(Operand(BaselineStubReg, (int32_t) ICStub::offsetOfStubCode()));
@@ -214,8 +214,8 @@ EmitCallTypeUpdateIC(MacroAssembler &masm, IonCode *code, uint32_t objectOffset)
 
     // This is expected to be called from within an IC, when BaselineStubReg
     // is properly initialized to point to the stub.
-    masm.movq(Operand(BaselineStubReg, (int32_t) ICUpdatedStub::offsetOfFirstUpdateStub()),
-              BaselineStubReg);
+    masm.loadPtr(Address(BaselineStubReg, (int32_t) ICUpdatedStub::offsetOfFirstUpdateStub()),
+                 BaselineStubReg);
 
     // Call the stubcode.
     masm.call(Operand(BaselineStubReg, ICStub::offsetOfStubCode()));
@@ -265,7 +265,7 @@ EmitStubGuardFailure(MacroAssembler &masm)
     // BaselineStubEntry points to the current stub.
 
     // Load next stub into BaselineStubReg
-    masm.movq(Operand(BaselineStubReg, ICStub::offsetOfNext()), BaselineStubReg);
+    masm.loadPtr(Address(BaselineStubReg, ICStub::offsetOfNext()), BaselineStubReg);
 
     // Return address is already loaded, just jump to the next stubcode.
     masm.jmp(Operand(BaselineStubReg, ICStub::offsetOfStubCode()));

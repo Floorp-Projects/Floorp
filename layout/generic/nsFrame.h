@@ -9,6 +9,7 @@
 #define nsFrame_h___
 
 #include "mozilla/Attributes.h"
+#include "mozilla/EventForwards.h"
 #include "mozilla/Likely.h"
 #include "nsBox.h"
 #include "prlog.h"

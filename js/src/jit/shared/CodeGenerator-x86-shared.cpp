@@ -224,14 +224,14 @@ bool
 CodeGeneratorX86Shared::visitAsmJSPassStackArg(LAsmJSPassStackArg *ins)
 {
     const MAsmJSPassStackArg *mir = ins->mir();
-    Operand dst(StackPointer, mir->spOffset());
+    Address dst(StackPointer, mir->spOffset());
     if (ins->arg()->isConstant()) {
-        masm.mov(Imm32(ToInt32(ins->arg())), dst);
+        masm.store32(Imm32(ToInt32(ins->arg())), dst);
     } else {
         if (ins->arg()->isGeneralReg())
-            masm.mov(ToRegister(ins->arg()), dst);
+            masm.storePtr(ToRegister(ins->arg()), dst);
         else
-            masm.movsd(ToFloatRegister(ins->arg()), dst);
+            masm.storeDouble(ToFloatRegister(ins->arg()), dst);
     }
     return true;
 }

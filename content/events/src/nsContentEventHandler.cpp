@@ -11,7 +11,6 @@
 #include "nsISelection.h"
 #include "nsIDOMRange.h"
 #include "nsRange.h"
-#include "nsGUIEvent.h"
 #include "nsCaret.h"
 #include "nsCopySupport.h"
 #include "nsFrameSelection.h"

@@ -6,9 +6,9 @@
 #define nsIWidgetListener_h__
 
 #include "nscore.h"
-#include "nsGUIEvent.h"
 #include "nsIXULWindow.h"
 #include "nsRegion.h"
+#include "mozilla/BasicEvents.h"
 
 class nsView;
 class nsIPresShell;
