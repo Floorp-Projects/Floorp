@@ -186,10 +186,12 @@ ParallelArrayObject::initClass(JSContext *cx, HandleObject obj)
 
     // Cache constructor names.
     {
-        const char *ctorStrs[NumCtors] = { "ParallelArrayConstructEmpty",
-                                           "ParallelArrayConstructFromArray",
-                                           "ParallelArrayConstructFromFunction",
-                                           "ParallelArrayConstructFromFunctionMode" };
+        static const char *const ctorStrs[NumCtors] = {
+            "ParallelArrayConstructEmpty",
+            "ParallelArrayConstructFromArray",
+            "ParallelArrayConstructFromFunction",
+            "ParallelArrayConstructFromFunctionMode"
+        };
         for (uint32_t i = 0; i < NumCtors; i++) {
             JSAtom *atom = Atomize(cx, ctorStrs[i], strlen(ctorStrs[i]), InternAtom);
             if (!atom)

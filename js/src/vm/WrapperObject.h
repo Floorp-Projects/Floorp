@@ -15,7 +15,8 @@
 namespace js {
 
 // Proxy family for wrappers.
-extern int sWrapperFamily;
+// This variable exists solely to provide a unique address for use as an identifier.
+extern const char sWrapperFamily;
 
 class WrapperObject : public ProxyObject
 {

@@ -475,8 +475,8 @@ GLScreenBuffer::Readback(SharedSurface_GL* src, gfxImageSurface* dest)
 {
     MOZ_ASSERT(src && dest);
     MOZ_ASSERT(dest->GetSize() == src->Size());
-    MOZ_ASSERT(dest->Format() == (src->HasAlpha() ? gfxImageSurface::ImageFormatARGB32
-                                                  : gfxImageSurface::ImageFormatRGB24));
+    MOZ_ASSERT(dest->Format() == (src->HasAlpha() ? gfxImageFormatARGB32
+                                                  : gfxImageFormatRGB24));
 
     mGL->MakeCurrent();
 

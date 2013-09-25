@@ -225,7 +225,7 @@ nsDisplayCanvasBackgroundImage::Paint(nsDisplayListBuilder* aBuilder,
         return;
       }
       surf = destSurf->CreateSimilarSurface(
-          gfxASurface::CONTENT_COLOR_ALPHA,
+          GFX_CONTENT_COLOR_ALPHA,
           gfxIntSize(ceil(destRect.width), ceil(destRect.height)));
     } else {
       if (surf) {
@@ -242,7 +242,7 @@ nsDisplayCanvasBackgroundImage::Paint(nsDisplayListBuilder* aBuilder,
       }
       surf = gfxPlatform::GetPlatform()->CreateOffscreenImageSurface(
           gfxIntSize(ceil(destRect.width), ceil(destRect.height)),
-          gfxASurface::CONTENT_COLOR_ALPHA);
+          GFX_CONTENT_COLOR_ALPHA);
     }
     if (surf) {
       ctx = new gfxContext(surf);

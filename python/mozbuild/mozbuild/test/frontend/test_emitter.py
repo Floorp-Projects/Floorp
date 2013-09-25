@@ -17,12 +17,15 @@ from mozbuild.frontend.data import (
     Defines,
     Exports,
     Program,
-    XpcshellManifests,
     IPDLFile,
     LocalInclude,
+    TestManifest,
 )
 from mozbuild.frontend.emitter import TreeMetadataEmitter
-from mozbuild.frontend.reader import BuildReader
+from mozbuild.frontend.reader import (
+    BuildReader,
+    SandboxValidationError,
+)
 
 from mozbuild.test.common import MockConfig
 
@@ -217,23 +220,105 @@ class TestEmitterBasic(unittest.TestCase):
         program = objs[1].program
         self.assertEqual(program, 'test_program.prog')
 
-    def test_xpcshell_manifests(self):
-        reader = self.reader('xpcshell_manifests')
-        objs = self.read_topsrcdir(reader)
+    def test_test_manifest_missing_manifest(self):
+        """A missing manifest file should result in an error."""
+        reader = self.reader('test-manifest-missing-manifest')
 
-        inis = []
+        with self.assertRaisesRegexp(SandboxValidationError, 'IOError: Missing files'):
+            self.read_topsrcdir(reader)
+
+    def test_empty_test_manifest_rejected(self):
+        """A test manifest without any entries is rejected."""
+        reader = self.reader('test-manifest-empty')
+
+        with self.assertRaisesRegexp(SandboxValidationError, 'Empty test manifest'):
+            self.read_topsrcdir(reader)
+
+    def test_test_manifest_keys_extracted(self):
+        """Ensure all metadata from test manifests is extracted."""
+        reader = self.reader('test-manifest-keys-extracted')
+
+        objs = [o for o in self.read_topsrcdir(reader)
+                if isinstance(o, TestManifest)]
+
+        self.assertEqual(len(objs), 5)
+
+        metadata = {
+            'a11y.ini': {
+                'flavor': 'a11y',
+                'installs': {
+                    'a11y.ini',
+                    'test_a11y.js',
+                    # From ** wildcard.
+                    'a11y-support/foo',
+                    'a11y-support/dir1/bar',
+                },
+            },
+            'browser.ini': {
+                'flavor': 'browser-chrome',
+                'installs': {
+                    'browser.ini',
+                    'test_browser.js',
+                    'support1',
+                    'support2',
+                },
+            },
+            'mochitest.ini': {
+                'flavor': 'mochitest',
+                'installs': {
+                    'mochitest.ini',
+                    'test_mochitest.js',
+                },
+                'external': {
+                    'external1',
+                    'external2',
+                },
+            },
+            'chrome.ini': {
+                'flavor': 'chrome',
+                'installs': {
+                    'chrome.ini',
+                    'test_chrome.js',
+                },
+            },
+            'xpcshell.ini': {
+                'flavor': 'xpcshell',
+                'dupe': True,
+                'installs': {
+                    'xpcshell.ini',
+                    'test_xpcshell.js',
+                    'head1',
+                    'head2',
+                    'tail1',
+                    'tail2',
+                },
+            },
+        }
+
         for o in objs:
-            if isinstance(o, XpcshellManifests):
-                inis.append(o.xpcshell_manifests)
+            m = metadata[os.path.basename(o.manifest_relpath)]
 
-        iniByDir = [
-            'bar/xpcshell.ini',
-            'enabled_var/xpcshell.ini',
-            'foo/xpcshell.ini',
-            'tans/xpcshell.ini',
-            ]
+            self.assertTrue(o.path.startswith(o.directory))
+            self.assertEqual(o.flavor, m['flavor'])
+            self.assertEqual(o.dupe_manifest, m.get('dupe', False))
 
-        self.assertEqual(sorted(inis), iniByDir)
+            external_normalized = set(os.path.basename(p) for p in
+                    o.external_installs)
+            self.assertEqual(external_normalized, m.get('external', set()))
+
+            self.assertEqual(len(o.installs), len(m['installs']))
+            for path in o.installs.keys():
+                self.assertTrue(path.startswith(o.directory))
+                path = path[len(o.directory)+1:]
+
+                self.assertIn(path, m['installs'])
+
+    def test_test_manifest_unmatched_generated(self):
+        reader = self.reader('test-manifest-unmatched-generated')
+
+        with self.assertRaisesRegexp(SandboxValidationError,
+            'entry in generated-files not present elsewhere'):
+            self.read_topsrcdir(reader),
 
     def test_ipdl_sources(self):
         reader = self.reader('ipdl_sources')

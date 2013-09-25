@@ -23,7 +23,7 @@ namespace layers {
 static inline _D3DFORMAT
 D3dFormatForGfxFormat(gfxImageFormat aFormat)
 {
-  if (aFormat == gfxASurface::ImageFormatA8) {
+  if (aFormat == gfxImageFormatA8) {
     return D3DFMT_A8;
   }
 
@@ -137,7 +137,7 @@ SurfaceToTexture(IDirect3DDevice9 *aDevice,
 
   if (!imageSurface) {
     imageSurface = new gfxImageSurface(aSize,
-                                       gfxASurface::ImageFormatARGB32);
+                                       gfxImageFormatARGB32);
 
     nsRefPtr<gfxContext> context = new gfxContext(imageSurface);
     context->SetSource(aSurface);
@@ -352,7 +352,7 @@ ImageLayerD3D9::GetTexture(Image *aImage, bool& aHasAlpha)
       }
     }
 
-    aHasAlpha = cairoImage->mSurface->GetContentType() == gfxASurface::CONTENT_COLOR_ALPHA;
+    aHasAlpha = cairoImage->mSurface->GetContentType() == GFX_CONTENT_COLOR_ALPHA;
   } else if (aImage->GetFormat() == D3D9_RGB32_TEXTURE) {
     if (!aImage->GetBackendData(mozilla::layers::LAYERS_D3D9)) {
       // The texture in which the frame is stored belongs to DXVA's D3D9 device.
@@ -411,7 +411,7 @@ ImageLayerD3D9::RenderLayer()
   {
     NS_ASSERTION(image->GetFormat() != CAIRO_SURFACE ||
                  !static_cast<CairoImage*>(image)->mSurface ||
-                 static_cast<CairoImage*>(image)->mSurface->GetContentType() != gfxASurface::CONTENT_ALPHA,
+                 static_cast<CairoImage*>(image)->mSurface->GetContentType() != GFX_CONTENT_ALPHA,
                  "Image layer has alpha image");
 
     bool hasAlpha = false;

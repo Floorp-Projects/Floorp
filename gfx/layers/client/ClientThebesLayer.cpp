@@ -48,7 +48,7 @@ SetAntialiasingFlags(Layer* aLayer, gfxContext* aTarget)
                             dt->GetOpaqueRect().Contains(intTransformedBounds));
   } else {
     nsRefPtr<gfxASurface> surface = aTarget->CurrentSurface();
-    if (surface->GetContentType() != gfxASurface::CONTENT_COLOR_ALPHA) {
+    if (surface->GetContentType() != GFX_CONTENT_COLOR_ALPHA) {
       // Destination doesn't have alpha channel; no need to set any special flags
       return;
     }
@@ -75,8 +75,8 @@ ClientThebesLayer::PaintThebes()
 
   bool canUseOpaqueSurface = CanUseOpaqueSurface();
   ContentType contentType =
-    canUseOpaqueSurface ? gfxASurface::CONTENT_COLOR :
-                          gfxASurface::CONTENT_COLOR_ALPHA;
+    canUseOpaqueSurface ? GFX_CONTENT_COLOR :
+                          GFX_CONTENT_COLOR_ALPHA;
 
   {
     uint32_t flags = 0;

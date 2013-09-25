@@ -12,6 +12,7 @@
 #include "mozilla/DebugOnly.h"          // for DebugOnly
 #include "mozilla/layers/CompositorTypes.h"
 #include "mozilla/layers/ISurfaceAllocator.h"
+#include "AutoMaskData.h"
 
 using namespace mozilla::gfx;
 
@@ -90,7 +91,7 @@ PaintWithMask(gfxContext* aContext, float aOpacity, Layer* aMaskLayer)
   AutoMaskData mask;
   if (GetMaskData(aMaskLayer, &mask)) {
     if (aOpacity < 1.0) {
-      aContext->PushGroup(gfxASurface::CONTENT_COLOR_ALPHA);
+      aContext->PushGroup(GFX_CONTENT_COLOR_ALPHA);
       aContext->Paint(aOpacity);
       aContext->PopGroupToSource();
     }
@@ -109,7 +110,7 @@ FillWithMask(gfxContext* aContext, float aOpacity, Layer* aMaskLayer)
   AutoMaskData mask;
   if (GetMaskData(aMaskLayer, &mask)) {
     if (aOpacity < 1.0) {
-      aContext->PushGroup(gfxASurface::CONTENT_COLOR_ALPHA);
+      aContext->PushGroup(GFX_CONTENT_COLOR_ALPHA);
       aContext->FillWithOpacity(aOpacity);
       aContext->PopGroupToSource();
       aContext->SetMatrix(mask.GetTransform());

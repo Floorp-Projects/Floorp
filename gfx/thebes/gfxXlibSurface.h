@@ -15,6 +15,8 @@
 #include "GLXLibrary.h"
 #endif
 
+#include "nsSize.h"
+
 class gfxXlibSurface : public gfxASurface {
 public:
     // construct a wrapper around the specified drawable with dpy/visual.
@@ -74,7 +76,7 @@ public:
 
     // This surface is a wrapper around X pixmaps, which are stored in the X
     // server, not the main application.
-    virtual gfxASurface::MemoryLocation GetMemoryLocation() const;
+    virtual gfxMemoryLocation GetMemoryLocation() const;
 
 #if defined(GL_PROVIDER_GLX)
     GLXPixmap GetGLXPixmap();

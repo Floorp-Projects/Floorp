@@ -263,13 +263,8 @@ GetPropertyOperation(JSContext *cx, StackFrame *fp, HandleScript script, jsbytec
 
     bool wasObject = lval.isObject();
 
-    if (obj->getOps()->getProperty) {
-        if (!JSObject::getGeneric(cx, obj, obj, id, vp))
-            return false;
-    } else {
-        if (!GetPropertyHelper(cx, obj, id, 0, vp))
-            return false;
-    }
+    if (!JSObject::getGeneric(cx, obj, obj, id, vp))
+        return false;
 
 #if JS_HAS_NO_SUCH_METHOD
     if (op == JSOP_CALLPROP &&

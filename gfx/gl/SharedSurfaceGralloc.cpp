@@ -72,8 +72,8 @@ SharedSurface_Gralloc::Create(GLContext* prodGL,
     SurfaceDescriptor baseDesc;
     SurfaceDescriptorGralloc desc;
 
-    gfxASurface::gfxContentType type = hasAlpha ? gfxASurface::CONTENT_COLOR_ALPHA
-                                                : gfxASurface::CONTENT_COLOR;
+    gfxContentType type = hasAlpha ? GFX_CONTENT_COLOR_ALPHA
+                                                : GFX_CONTENT_COLOR;
     if (!allocator->AllocSurfaceDescriptorWithCaps(size, type, USING_GL_RENDERING_ONLY, &baseDesc))
         return false;
 

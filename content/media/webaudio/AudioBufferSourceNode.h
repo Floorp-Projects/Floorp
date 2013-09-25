@@ -56,7 +56,7 @@ public:
     duration.Construct(aDuration);
     Start(aWhen, aOffset, duration, aRv);
   }
-  void Stop(double aWhen, ErrorResult& aRv, bool aShuttingDown = false);
+  void Stop(double aWhen, ErrorResult& aRv);
   void NoteOff(double aWhen, ErrorResult& aRv)
   {
     Stop(aWhen, aRv);
@@ -141,7 +141,6 @@ private:
   double mDuration;
   nsRefPtr<AudioBuffer> mBuffer;
   nsRefPtr<AudioParam> mPlaybackRate;
-  SelfReference<AudioBufferSourceNode> mPlayingRef; // a reference to self while playing
   bool mLoop;
   bool mStartCalled;
   bool mStopped;
