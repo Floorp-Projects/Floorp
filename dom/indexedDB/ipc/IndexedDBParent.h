@@ -710,6 +710,7 @@ class IndexedDBObjectStoreRequestParent : public IndexedDBRequestParentBase
   typedef ipc::GetAllKeysParams GetAllKeysParams;
   typedef ipc::CountParams CountParams;
   typedef ipc::OpenCursorParams OpenCursorParams;
+  typedef ipc::OpenKeyCursorParams OpenKeyCursorParams;
 
 public:
   IndexedDBObjectStoreRequestParent(IDBObjectStore* aObjectStore,
@@ -742,6 +743,9 @@ public:
 
   bool
   OpenCursor(const OpenCursorParams& aParams);
+
+  bool
+  OpenKeyCursor(const OpenKeyCursorParams& aParams);
 
 protected:
   void

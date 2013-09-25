@@ -1118,6 +1118,9 @@ IndexedDBObjectStoreParent::RecvPIndexedDBRequestConstructor(
     case ObjectStoreRequestParams::TOpenCursorParams:
       return actor->OpenCursor(aParams.get_OpenCursorParams());
 
+    case ObjectStoreRequestParams::TOpenKeyCursorParams:
+      return actor->OpenKeyCursor(aParams.get_OpenKeyCursorParams());
+
     default:
       MOZ_CRASH("Unknown type!");
   }
@@ -1767,6 +1770,47 @@ IndexedDBObjectStoreRequestParent::OpenCursor(const OpenCursorParams& aParams)
 
     ErrorResult rv;
     request = mObjectStore->OpenCursorInternal(keyRange, direction, rv);
+    ENSURE_SUCCESS(rv, false);
+  }
+
+  request->SetActor(this);
+  mRequest.swap(request);
+  return true;
+}
+
+bool
+IndexedDBObjectStoreRequestParent::OpenKeyCursor(
+                                             const OpenKeyCursorParams& aParams)
+{
+  MOZ_ASSERT(mRequestType == ParamsUnionType::TOpenKeyCursorParams);
+  MOZ_ASSERT(mObjectStore);
+
+  const ipc::OptionalKeyRange keyRangeUnion = aParams.optionalKeyRange();
+
+  nsRefPtr<IDBKeyRange> keyRange;
+
+  switch (keyRangeUnion.type()) {
+    case ipc::OptionalKeyRange::TKeyRange:
+      keyRange =
+        IDBKeyRange::FromSerializedKeyRange(keyRangeUnion.get_KeyRange());
+      break;
+
+    case ipc::OptionalKeyRange::Tvoid_t:
+      break;
+
+    default:
+      MOZ_CRASH("Unknown param type!");
+  }
+
+  size_t direction = static_cast<size_t>(aParams.direction());
+
+  nsRefPtr<IDBRequest> request;
+
+  {
+    AutoSetCurrentTransaction asct(mObjectStore->Transaction());
+
+    ErrorResult rv;
+    request = mObjectStore->OpenKeyCursorInternal(keyRange, direction, rv);
     ENSURE_SUCCESS(rv, false);
   }
 

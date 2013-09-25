@@ -71,4 +71,7 @@ partial interface IDBObjectStore {
 
     [Pref="dom.indexedDB.experimental", Throws]
     IDBRequest getAllKeys (optional any key, optional unsigned long limit);
+
+    [Pref="dom.indexedDB.experimental", Throws]
+    IDBRequest openKeyCursor (optional any range, optional IDBCursorDirection direction = "next");
 };
