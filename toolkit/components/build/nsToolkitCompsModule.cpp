@@ -79,6 +79,7 @@ nsUrlClassifierDBServiceConstructor(nsISupports *aOuter, REFNSIID aIID,
 }
 #endif
 
+NS_GENERIC_FACTORY_CONSTRUCTOR(ApplicationReputationQuery)
 NS_GENERIC_FACTORY_SINGLETON_CONSTRUCTOR(ApplicationReputationService,
                                          ApplicationReputationService::GetSingleton)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsBrowserStatusFilter)
@@ -86,6 +87,7 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsBrowserStatusFilter)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsUpdateProcessor)
 #endif
 
+NS_DEFINE_NAMED_CID(NS_APPLICATION_REPUTATION_QUERY_CID);
 NS_DEFINE_NAMED_CID(NS_APPLICATION_REPUTATION_SERVICE_CID);
 NS_DEFINE_NAMED_CID(NS_TOOLKIT_APPSTARTUP_CID);
 NS_DEFINE_NAMED_CID(NS_USERINFO_CID);
@@ -111,6 +113,7 @@ NS_DEFINE_NAMED_CID(NS_UPDATEPROCESSOR_CID);
 #endif
 
 static const mozilla::Module::CIDEntry kToolkitCIDs[] = {
+  { &kNS_APPLICATION_REPUTATION_QUERY_CID, false, NULL, ApplicationReputationQueryConstructor },
   { &kNS_APPLICATION_REPUTATION_SERVICE_CID, false, NULL, ApplicationReputationServiceConstructor },
   { &kNS_TOOLKIT_APPSTARTUP_CID, false, NULL, nsAppStartupConstructor },
   { &kNS_USERINFO_CID, false, NULL, nsUserInfoConstructor },
@@ -138,6 +141,7 @@ static const mozilla::Module::CIDEntry kToolkitCIDs[] = {
 };
 
 static const mozilla::Module::ContractIDEntry kToolkitContracts[] = {
+  { NS_APPLICATION_REPUTATION_QUERY_CONTRACTID, &kNS_APPLICATION_REPUTATION_QUERY_CID },
   { NS_APPLICATION_REPUTATION_SERVICE_CONTRACTID, &kNS_APPLICATION_REPUTATION_SERVICE_CID },
   { NS_APPSTARTUP_CONTRACTID, &kNS_TOOLKIT_APPSTARTUP_CID },
   { NS_USERINFO_CONTRACTID, &kNS_USERINFO_CID },

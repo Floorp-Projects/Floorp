@@ -43,12 +43,12 @@ interface nsIApplicationReputationService : nsISupports {
  * downloaded file. nsIApplicationReputationService.Start() may only be called
  * once with a single query.
  */
-[scriptable, uuid(5a054991-e489-4a1c-a0aa-ea7c69b20e3d)]
+[scriptable, uuid(857da2c0-cfe5-11e2-8b8b-0800200c9a66)]
 interface nsIApplicationReputationQuery : nsISupports {
   /*
    * The nsIURI from which the file was downloaded. This may not be null.
    */
-  readonly attribute nsIURI sourceURI;
+  attribute nsIURI sourceURI;
 
   /*
    * The target filename for the downloaded file, as inferred from the source
@@ -56,19 +56,24 @@ interface nsIApplicationReputationQuery : nsISupports {
    * is not set by the caller, it will be passed as an empty string but the
    * query won't produce any useful information.
    */
-  readonly attribute AString suggestedFileName;
+  attribute AString suggestedFileName;
 
   /*
    * The size of the downloaded file in bytes.
    */
-  readonly attribute unsigned long fileSize;
+  attribute unsigned long fileSize;
 
   /*
    * The SHA256 hash of the downloaded file in raw bytes. If this is not set by
    * the caller, it will be passed as an empty string but the query won't
    * produce any useful information.
    */
-  readonly attribute ACString sha256Hash;
+  attribute ACString sha256Hash;
+
+  /**
+   * The callback object listening to this query.
+   */
+  attribute nsIApplicationReputationCallback callback;
 };
 
 [scriptable, function, uuid(9a228470-cfe5-11e2-8b8b-0800200c9a66)]
