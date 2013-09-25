@@ -221,7 +221,6 @@ class TreeMetadataEmitter(LoggingMixin):
             BROWSER_CHROME=('browser-chrome', 'testing/mochitest/browser', True),
             MOCHITEST=('mochitest', 'testing/mochitest/tests', True),
             MOCHITEST_CHROME=('chrome', 'testing/mochitest/chrome', True),
-            WEBRTC_SIGNALLING_TEST=('steeplechase', 'steeplechase', True),
             XPCSHELL_TESTS=('xpcshell', 'xpcshell', False),
         )
 
