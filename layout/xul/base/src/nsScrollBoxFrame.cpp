@@ -6,10 +6,10 @@
 #include "nsCOMPtr.h"
 #include "nsPresContext.h"
 #include "nsGkAtoms.h"
-#include "nsGUIEvent.h"
 #include "nsButtonBoxFrame.h"
 #include "nsITimer.h"
 #include "nsRepeatService.h"
+#include "mozilla/BasicEvents.h"
 
 class nsAutoRepeatBoxFrame : public nsButtonBoxFrame
 {

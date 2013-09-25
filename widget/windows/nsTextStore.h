@@ -13,6 +13,7 @@
 #include "nsIWidget.h"
 #include "nsWindowBase.h"
 #include "mozilla/Attributes.h"
+#include "mozilla/TextEvents.h"
 
 #include <msctf.h>
 #include <textstor.h>

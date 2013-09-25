@@ -39,7 +39,7 @@ enum BlockCommonSlots {
     // The type descriptor with which this block is associated.
     SLOT_DATATYPE = 0,
 
-    // If this value is NULL, then the block instance owns the
+    // If this value is nullptr, then the block instance owns the
     // uint8_t* in its priate data. Otherwise, this field contains the
     // owner, and thus keeps the owner alive.
     SLOT_BLOCKREFOWNER,
@@ -115,7 +115,7 @@ class BinaryBlock
 {
   private:
     // Creates a binary data object of the given type and class, but with
-    // a NULL memory pointer. Caller must use setPrivate() to set the
+    // a nullptr memory pointer. Caller must use setPrivate() to set the
     // memory pointer properly.
     static JSObject *createNull(JSContext *cx, HandleObject type,
                                 HandleValue owner);

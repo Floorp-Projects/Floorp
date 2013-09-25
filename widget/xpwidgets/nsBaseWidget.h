@@ -5,6 +5,7 @@
 #ifndef nsBaseWidget_h__
 #define nsBaseWidget_h__
 
+#include "mozilla/EventForwards.h"
 #include "mozilla/WidgetUtils.h"
 #include "nsRect.h"
 #include "nsIWidget.h"
@@ -12,7 +13,6 @@
 #include "nsIFile.h"
 #include "nsString.h"
 #include "nsCOMPtr.h"
-#include "nsGUIEvent.h"
 #include "nsAutoPtr.h"
 #include "nsIRollupListener.h"
 #include "nsIObserver.h"

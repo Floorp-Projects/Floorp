@@ -1490,10 +1490,10 @@ public:
   NS_IMETHOD SetPrevContinuation(nsIFrame*) = 0;
   virtual nsIFrame* GetNextContinuation() const = 0;
   NS_IMETHOD SetNextContinuation(nsIFrame*) = 0;
-  virtual nsIFrame* GetFirstContinuation() const {
+  virtual nsIFrame* FirstContinuation() const {
     return const_cast<nsIFrame*>(this);
   }
-  virtual nsIFrame* GetLastContinuation() const {
+  virtual nsIFrame* LastContinuation() const {
     return const_cast<nsIFrame*>(this);
   }
 
@@ -1518,14 +1518,14 @@ public:
   /**
    * Return the first frame in our current flow. 
    */
-  virtual nsIFrame* GetFirstInFlow() const {
+  virtual nsIFrame* FirstInFlow() const {
     return const_cast<nsIFrame*>(this);
   }
 
   /**
    * Return the last frame in our current flow.
    */
-  virtual nsIFrame* GetLastInFlow() const {
+  virtual nsIFrame* LastInFlow() const {
     return const_cast<nsIFrame*>(this);
   }
 

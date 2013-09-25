@@ -7,12 +7,12 @@
 #define nsDOMEvent_h__
 
 #include "mozilla/Attributes.h"
+#include "mozilla/BasicEvents.h"
 #include "nsIDOMEvent.h"
 #include "nsISupports.h"
 #include "nsCOMPtr.h"
 #include "nsPIDOMWindow.h"
 #include "nsPoint.h"
-#include "nsGUIEvent.h"
 #include "nsCycleCollectionParticipant.h"
 #include "nsAutoPtr.h"
 #include "mozilla/dom/EventBinding.h"

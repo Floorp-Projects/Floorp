@@ -16,8 +16,9 @@
 #include "nsIServiceManager.h"
 #include "nsMenuUtilsX.h"
 #include "nsToolkit.h"
-#include "nsGUIEvent.h"
+#include "mozilla/MiscEvents.h"
 #include "mozilla/Preferences.h"
+#include "mozilla/TextEvents.h"
 
 using namespace mozilla;
 using namespace mozilla::widget;

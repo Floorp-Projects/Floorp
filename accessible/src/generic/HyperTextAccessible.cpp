@@ -775,7 +775,7 @@ HyperTextAccessible::FindOffset(int32_t aOffset, nsDirection aDirection,
       return -1;
 
     // We're on the last continuation since we're on the last character.
-    frameAtOffset = frameAtOffset->GetLastContinuation();
+    frameAtOffset = frameAtOffset->LastContinuation();
   }
 
   // Return hypertext offset of the boundary of the found word.

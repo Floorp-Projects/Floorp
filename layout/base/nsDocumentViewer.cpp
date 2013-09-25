@@ -32,6 +32,7 @@
 #include "nsIDOMHTMLElement.h"
 #include "nsContentUtils.h"
 #include "nsLayoutStylesheetCache.h"
+#include "mozilla/BasicEvents.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/dom/EncodingUtils.h"
 
@@ -50,7 +51,6 @@
 #include "nsIBaseWindow.h"
 #include "nsILayoutHistoryState.h"
 #include "nsCharsetSource.h"
-#include "nsGUIEvent.h"
 #include "nsHTMLReflowState.h"
 #include "nsIImageLoadingContent.h"
 #include "nsCopySupport.h"

@@ -7,6 +7,7 @@
 #include "inLayoutUtils.h"
 
 #include "nsIServiceManager.h"
+#include "nsISupportsArray.h"
 #include "nsString.h"
 #include "nsIDOMElement.h"
 #include "nsIDocument.h"

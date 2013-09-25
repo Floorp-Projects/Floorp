@@ -6,7 +6,7 @@
 #include "nsPresContext.h"
 #include "nsEventDispatcher.h"
 #include "nsIPresShell.h"
-#include "nsGUIEvent.h"
+#include "mozilla/BasicEvents.h"
 
 nsHtml5SVGLoadDispatcher::nsHtml5SVGLoadDispatcher(nsIContent* aElement)
   : mElement(aElement)

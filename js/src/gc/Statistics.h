@@ -121,7 +121,7 @@ struct Statistics {
 
     struct SliceData {
         SliceData(JS::gcreason::Reason reason, int64_t start, size_t startFaults)
-          : reason(reason), resetReason(NULL), start(start), startFaults(startFaults)
+          : reason(reason), resetReason(nullptr), start(start), startFaults(startFaults)
         {
             mozilla::PodArrayZero(phaseTimes);
         }

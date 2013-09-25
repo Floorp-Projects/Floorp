@@ -4,7 +4,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "nsPrivateTextRange.h"
-
+#include "mozilla/TextEvents.h"
 
 nsPrivateTextRange::nsPrivateTextRange(const nsTextRange &aTextRange)
   : mRangeStart(uint16_t(aTextRange.mStartOffset)),
