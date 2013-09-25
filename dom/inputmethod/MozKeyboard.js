@@ -331,7 +331,7 @@ MozInputMethod.prototype = {
       if (perm != Ci.nsIPermissionManager.ALLOW_ACTION) {
         dump("No permission to use the keyboard API for " +
              principal.origin + "\n");
-        return null;
+        return;
       }
     }
 
