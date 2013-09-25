@@ -2341,13 +2341,9 @@ ssl_Poll(PRFileDesc *fd, PRInt16 how_flags, PRInt16 *p_out_flags)
 	    } else if (new_flags & PR_POLL_WRITE) {
 		    /* The caller is trying to write, but the handshake is 
 		    ** blocked waiting for data to read, and the first 
-		    ** handshake has been sent.  So do NOT to poll on write
-		    ** unless we did false start.
+		    ** handshake has been sent.  so do NOT to poll on write.
 		    */
-		    if (!(ss->version >= SSL_LIBRARY_VERSION_3_0 &&
-			ss->ssl3.hs.canFalseStart)) {
-			new_flags ^=  PR_POLL_WRITE;   /* don't select on write. */
-		    }
+		    new_flags ^=  PR_POLL_WRITE;   /* don't select on write. */
 		    new_flags |=  PR_POLL_READ;	   /* do    select on read. */
 	    }
 	}

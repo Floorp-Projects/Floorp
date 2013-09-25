@@ -6669,51 +6669,35 @@ done:
     return rv;
 }
 
-static SECStatus
-ssl3_CheckFalseStart(sslSocket *ss)
-{
-    SECStatus rv;
-    PRBool maybeFalseStart = PR_TRUE;
+PRBool
+ssl3_CanFalseStart(sslSocket *ss) {
+    PRBool rv;
 
     PORT_Assert( ss->opt.noLocks || ssl_HaveSSL3HandshakeLock(ss) );
-    PORT_Assert( !ss->ssl3.hs.authCertificatePending );
 
-    /* An attacker can control the selected ciphersuite so we only wish to
-     * do False Start in the case that the selected ciphersuite is
-     * sufficiently strong that the attack can gain no advantage.
-     * Therefore we always require an 80-bit cipher. */
+    /* XXX: does not take into account whether we are waiting for
+     * SSL_AuthCertificateComplete or SSL_RestartHandshakeAfterCertReq. If/when
+     * that is done, this function could return different results each time it
+     * would be called.
+     */
 
     ssl_GetSpecReadLock(ss);
-    if (ss->ssl3.cwSpec->cipher_def->secret_key_size < 10) {
-	ss->ssl3.hs.canFalseStart = PR_FALSE;
-	maybeFalseStart = PR_FALSE;
-    }
+    rv = ss->opt.enableFalseStart &&
+	 !ss->sec.isServer &&
+	 !ss->ssl3.hs.isResuming &&
+	 ss->ssl3.cwSpec &&
+
+	 /* An attacker can control the selected ciphersuite so we only wish to
+	  * do False Start in the case that the selected ciphersuite is
+	  * sufficiently strong that the attack can gain no advantage.
+	  * Therefore we require an 80-bit cipher and a forward-secret key
+	  * exchange. */
+	 ss->ssl3.cwSpec->cipher_def->secret_key_size >= 10 &&
+	(ss->ssl3.hs.kea_def->kea == kea_dhe_dss ||
+	 ss->ssl3.hs.kea_def->kea == kea_dhe_rsa ||
+	 ss->ssl3.hs.kea_def->kea == kea_ecdhe_ecdsa ||
+	 ss->ssl3.hs.kea_def->kea == kea_ecdhe_rsa);
     ssl_ReleaseSpecReadLock(ss);
-    if (!maybeFalseStart) {
-	return SECSuccess;
-    }
-
-    if (!ss->canFalseStartCallback) {
-	rv = SSL_DefaultCanFalseStart(ss->fd, &ss->ssl3.hs.canFalseStart);
-
-	if (rv == SECSuccess &&
-            ss->ssl3.hs.canFalseStart && ss->handshakeCallback) {
-	    /* Call the handshake callback here for backwards compatibility
-	     * with applications that were using false start before
-	     * canFalseStartCallback was added.
-	     */
-	    (ss->handshakeCallback)(ss->fd, ss->handshakeCallbackData);
-	}
-    } else {
-	rv = (ss->canFalseStartCallback)(ss->fd,
- 					 ss->canFalseStartCallbackData,
-					 &ss->ssl3.hs.canFalseStart);
-    }
-
-    if (rv != SECSuccess) {
-	ss->ssl3.hs.canFalseStart = PR_FALSE;
-    }
-
     return rv;
 }
 
@@ -6743,7 +6727,6 @@ ssl3_HandleServerHelloDone(sslSocket *ss)
 	return SECFailure;
     }
 
-    ss->enoughFirstHsDone = PR_TRUE;
     rv = ssl3_SendClientSecondRound(ss);
 
     return rv;
@@ -6842,23 +6825,6 @@ ssl3_SendClientSecondRound(sslSocket *ss)
 	if (rv != SECSuccess) {
 	    goto loser;	/* err code was set. */
 	}
-
-	if (ss->opt.enableFalseStart) {
-	    if (!ss->ssl3.hs.authCertificatePending) {
-		rv = ssl3_CheckFalseStart(ss);
-		if (rv != SECSuccess) {
-		    goto loser;
-		}
-	    } else {
-		/* The certificate authentication and the server's Finished
-		 * message are going to race each other. If the certificate
-		 * authentication wins, then we will try to false start. If the
-		 * server's Finished message wins, then ssl3_HandleFinished will
-		 * reset restartTarget to ssl3_FinishHandshake.
-		 */
-		ss->ssl3.hs.restartTarget = ssl3_CheckFalseStart;
-	    }
-	}
     }
 
     rv = ssl3_SendFinished(ss, 0);
@@ -6872,6 +6838,11 @@ ssl3_SendClientSecondRound(sslSocket *ss)
 	ss->ssl3.hs.ws = wait_new_session_ticket;
     else
 	ss->ssl3.hs.ws = wait_change_cipher;
+
+    /* Do the handshake callback for sslv3 here, if we can false start. */
+    if (ss->handshakeCallback != NULL && ssl3_CanFalseStart(ss)) {
+	(ss->handshakeCallback)(ss->fd, ss->handshakeCallbackData);
+    }
 
     return SECSuccess;
 
@@ -9445,6 +9416,13 @@ ssl3_AuthCertificate(sslSocket *ss)
 
 	    ss->ssl3.hs.authCertificatePending = PR_TRUE;
 	    rv = SECSuccess;
+
+	    /* XXX: Async cert validation and False Start don't work together
+	     * safely yet; if we leave False Start enabled, we may end up false
+	     * starting (sending application data) before we
+	     * SSL_AuthCertificateComplete has been called.
+	     */
+	    ss->opt.enableFalseStart = PR_FALSE;
 	}
 
 	if (rv != SECSuccess) {
@@ -10092,11 +10070,6 @@ xmit_loser:
 	ss->ssl3.hs.cacheSID = rv == SECSuccess;
     }
 
-    /* Cancel false start check since we already completed the handshake */
-    if (ss->ssl3.hs.restartTarget == ssl3_CheckFalseStart) {
-	ss->ssl3.hs.restartTarget = NULL;
-    }
-
     if (ss->ssl3.hs.authCertificatePending) {
 	if (ss->ssl3.hs.restartTarget) {
 	    PR_NOT_REACHED("ssl3_HandleFinished: unexpected restartTarget");
@@ -10115,8 +10088,6 @@ xmit_loser:
 SECStatus
 ssl3_FinishHandshake(sslSocket * ss)
 {
-    PRBool falseStarted;
-
     PORT_Assert( ss->opt.noLocks || ssl_HaveRecvBufLock(ss) );
     PORT_Assert( ss->opt.noLocks || ssl_HaveSSL3HandshakeLock(ss) );
     PORT_Assert( ss->ssl3.hs.restartTarget == NULL );
@@ -10124,7 +10095,6 @@ ssl3_FinishHandshake(sslSocket * ss)
     /* The first handshake is now completed. */
     ss->handshake           = NULL;
     ss->firstHsDone         = PR_TRUE;
-    ss->enoughFirstHsDone   = PR_TRUE;
 
     if (ss->ssl3.hs.cacheSID) {
 	(*ss->sec.cache)(ss->sec.ci.sid);
@@ -10132,14 +10102,9 @@ ssl3_FinishHandshake(sslSocket * ss)
     }
 
     ss->ssl3.hs.ws = idle_handshake;
-    falseStarted = ss->ssl3.hs.canFalseStart;
-    ss->ssl3.hs.canFalseStart = PR_FALSE; /* False Start phase is complete */
 
-    /* Call the handshake callback for sslv3 here, unless we called it already
-     * for the case where false start was done without a canFalseStartCallback.
-     */
-    if (ss->handshakeCallback != NULL &&
-	!(falseStarted && !ss->canFalseStartCallback)) {
+    /* Do the handshake callback for sslv3 here, if we cannot false start. */
+    if (ss->handshakeCallback != NULL && !ssl3_CanFalseStart(ss)) {
 	(ss->handshakeCallback)(ss->fd, ss->handshakeCallbackData);
     }
 
