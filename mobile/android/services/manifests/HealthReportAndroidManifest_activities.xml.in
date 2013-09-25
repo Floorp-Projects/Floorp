@@ -3,12 +3,9 @@
                   android:permission="@ANDROID_PACKAGE_NAME@.permissions.HEALTH_PROVIDER">
         </provider>
 
-        <!-- As well as system actions, we also listen for "Health
-             Report upload preference changed" notifications sent by
-             Fennec: @ANDROID_PACKAGE_NAME@.HEALTHREPORT_UPLOAD_PREF.
-
-             BroadcastReceiver is a thin receiver whose purpose is to
-             start the background service in response to external events.
+        <!-- BroadcastReceiver is a thin receiver whose purpose is to
+             start the background service in response to external events,
+             some sent by the system and some particular to Health Report.
           -->
         <receiver android:name="org.mozilla.gecko.background.healthreport.HealthReportBroadcastReceiver" >
             <intent-filter>
@@ -20,9 +17,11 @@
                 <action android:name="android.intent.action.EXTERNAL_APPLICATIONS_AVAILABLE" />
             </intent-filter>
             <intent-filter >
-              <action android:name="@ANDROID_PACKAGE_NAME@.HEALTHREPORT_UPLOAD_PREF" />
+                <!-- Toggle Health Report upload service alarm (based on preferences value) -->
+                <action android:name="@ANDROID_PACKAGE_NAME@.HEALTHREPORT_UPLOAD_PREF" />
             </intent-filter>
             <intent-filter >
-              <action android:name="@ANDROID_PACKAGE_NAME@.HEALTHREPORT_PRUNE" />
+                <!-- Enable Health Report prune service alarm -->
+                <action android:name="@ANDROID_PACKAGE_NAME@.HEALTHREPORT_PRUNE" />
             </intent-filter>
         </receiver>
