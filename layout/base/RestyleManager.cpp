@@ -683,7 +683,10 @@ RestyleManager::ProcessRestyledFrames(nsStyleChangeList& aChangeList)
       }
 
       if (hint & nsChangeHint_UpdateEffects) {
-        nsSVGEffects::UpdateEffects(frame);
+        for (nsIFrame *cont = frame; cont;
+             cont = nsLayoutUtils::GetNextContinuationOrSpecialSibling(cont)) {
+          nsSVGEffects::UpdateEffects(cont);
+        }
       }
       if (hint & nsChangeHint_NeedReflow) {
         StyleChangeReflow(frame, hint);
