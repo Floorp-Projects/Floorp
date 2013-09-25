@@ -67,6 +67,8 @@
 // Needed for Print Preview
 #include "nsIURI.h"
 
+#include "mozilla/TouchEvents.h"
+
 using namespace mozilla;
 using namespace mozilla::dom;
 

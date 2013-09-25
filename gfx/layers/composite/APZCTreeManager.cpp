@@ -14,6 +14,7 @@
 #include "mozilla/gfx/Point.h"          // for Point
 #include "mozilla/layers/AsyncPanZoomController.h"
 #include "mozilla/mozalloc.h"           // for operator new
+#include "mozilla/TouchEvents.h"
 #include "nsGUIEvent.h"                 // for nsMouseEvent, nsTouchEvent, etc
 #include "nsPoint.h"                    // for nsIntPoint
 #include "nsTArray.h"                   // for nsTArray, nsTArray_Impl, etc

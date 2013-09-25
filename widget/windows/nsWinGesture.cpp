@@ -15,6 +15,7 @@
 #include "nsIDOMWheelEvent.h"
 #include "mozilla/Constants.h"
 #include "mozilla/Preferences.h"
+#include "mozilla/TouchEvents.h"
 
 using namespace mozilla;
 using namespace mozilla::widget;

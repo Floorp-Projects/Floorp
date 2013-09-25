@@ -18,6 +18,7 @@
 #include "GeneratedEvents.h"
 #include "mozilla/dom/EventTarget.h"
 #include "mozilla/MutationEvent.h"
+#include "mozilla/TouchEvents.h"
 
 using namespace mozilla;
 using namespace mozilla::dom;

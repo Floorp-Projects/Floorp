@@ -34,6 +34,8 @@
 #include "nsJSEnvironment.h"
 #include "nsJSUtils.h"
 
+#include "mozilla/TouchEvents.h"
+
 #include "nsViewManager.h"
 
 #include "nsIDOMHTMLCanvasElement.h"
