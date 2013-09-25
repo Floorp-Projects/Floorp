@@ -24,29 +24,29 @@ load 874952.html
 load 875144.html
 load 875596.html
 load 875911.html
-skip-if(B2G) load 876024-1.html # timeout-prone, bug 908306
+load 876024-1.html
 load 876024-2.html
-skip-if(B2G) load 876118.html # timeout-prone, bug 908306
+load 876118.html
 load 876207.html
 load 876215.html
 load 876249.html
-skip-if(B2G) load 876252.html # timeout-prone, bug 908306
+load 876252.html
 load 876834.html
-skip-if(B2G) load 877820.html # timeout-prone, bug 908306
-skip-if(B2G) load 878014.html # timeout-prone, bug 908306
+load 877820.html
+load 878014.html
 load 878328.html
 load 878407.html
-skip-if(B2G) load 878478.html # timeout-prone, bug 908306
+load 878478.html
 load 877527.html
 load 880129.html
 skip-if(B2G) test-pref(media.webaudio.enabled,true) load 880202.html # load failed, bug 908306 for B2G
-skip-if(B2G) load 880342-1.html # timeout-prone, bug 908306
+load 880342-1.html
 load 880342-2.html
 load 880384.html
-skip-if(B2G) load 880404.html # timeout-prone, bug 908306
-skip-if(B2G) load 880724.html # timeout-prone, bug 908306
+load 880404.html
+load 880724.html
 load 881775.html
-skip-if(B2G) load 882956.html # timeout-prone, bug 908306
+load 882956.html
 test-pref(media.webvtt.enabled,true) load 882549.html
 load 884459.html
 load 889042.html
@@ -56,3 +56,5 @@ load 907986-2.html
 load 907986-3.html
 load 907986-4.html
 load 910171-1.html
+load oscillator-ended-1.html
+load oscillator-ended-2.html

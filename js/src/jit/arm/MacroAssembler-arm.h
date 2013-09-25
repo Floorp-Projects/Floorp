@@ -598,6 +598,10 @@ class MacroAssemblerARMCompat : public MacroAssemblerARM
         ma_mov(imm, ScratchRegister);
         ma_push(ScratchRegister);
     }
+    void push(const Address &address) {
+        ma_ldr(Operand(address.base, address.offset), ScratchRegister);
+        ma_push(ScratchRegister);
+    }
     void push(const Register &reg) {
         ma_push(reg);
     }
@@ -656,6 +660,10 @@ class MacroAssemblerARMCompat : public MacroAssemblerARM
     }
     void jump(Register reg) {
         ma_bx(reg);
+    }
+    void jump(const Address &address) {
+        ma_ldr(Operand(address.base, address.offset), ScratchRegister);
+        ma_bx(ScratchRegister);
     }
 
     void neg32(Register reg) {

@@ -477,7 +477,6 @@ jsd_GetValueProperty(JSDContext* jsdc, JSDValue* jsdval, JSString* nameStr)
     JSDProperty* jsdprop;
     JSDProperty* iter = nullptr;
     JS::RootedObject obj(cx);
-    bool found;
     JS::RootedValue val(cx), nameval(cx);
     JS::RootedId nameid(cx);
     JS::RootedValue propId(cx);

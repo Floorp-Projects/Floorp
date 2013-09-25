@@ -79,7 +79,7 @@ DeprecatedTextureClientD3D11::~DeprecatedTextureClientD3D11()
 
 bool
 DeprecatedTextureClientD3D11::EnsureAllocated(gfx::IntSize aSize,
-                                              gfxASurface::gfxContentType aType)
+                                              gfxContentType aType)
 {
   D3D10_TEXTURE2D_DESC desc;
 
@@ -124,7 +124,7 @@ DeprecatedTextureClientD3D11::EnsureAllocated(gfx::IntSize aSize,
   }
 
   mDescriptor = SurfaceDescriptorD3D10((WindowsHandle)sharedHandle,
-                                       aType == gfxASurface::CONTENT_COLOR_ALPHA);
+                                       aType == GFX_CONTENT_COLOR_ALPHA);
 
   mContentType = aType;
   return true;
@@ -204,13 +204,13 @@ DeprecatedTextureClientD3D11::EnsureDrawTarget()
 
   SurfaceFormat format;
   switch (mContentType) {
-  case gfxASurface::CONTENT_ALPHA:
+  case GFX_CONTENT_ALPHA:
     format = FORMAT_A8;
     break;
-  case gfxASurface::CONTENT_COLOR:
+  case GFX_CONTENT_COLOR:
     format = FORMAT_B8G8R8X8;
     break;
-  case gfxASurface::CONTENT_COLOR_ALPHA:
+  case GFX_CONTENT_COLOR_ALPHA:
     format = FORMAT_B8G8R8A8;
     break;
   default:
@@ -317,17 +317,17 @@ DeprecatedTextureHostShmemD3D11::UpdateImpl(const SurfaceDescriptor& aImage,
 
   DXGI_FORMAT dxgiFormat;
   switch (surf->Format()) {
-  case gfxImageSurface::ImageFormatRGB24:
+  case gfxImageFormatRGB24:
     mFormat = FORMAT_B8G8R8X8;
     dxgiFormat = DXGI_FORMAT_B8G8R8X8_UNORM;
     bpp = 4;
     break;
-  case gfxImageSurface::ImageFormatARGB32:
+  case gfxImageFormatARGB32:
     mFormat = FORMAT_B8G8R8A8;
     dxgiFormat = DXGI_FORMAT_B8G8R8A8_UNORM;
     bpp = 4;
     break;
-  case gfxImageSurface::ImageFormatA8:
+  case gfxImageFormatA8:
     mFormat = FORMAT_A8;
     dxgiFormat = DXGI_FORMAT_A8_UNORM;
     bpp = 1;

@@ -8,8 +8,8 @@
 #ifndef __nsGdkKeyUtils_h__
 #define __nsGdkKeyUtils_h__
 
-#include "nsEvent.h"
 #include "nsTArray.h"
+#include "mozilla/EventForwards.h"
 
 #include <gdk/gdk.h>
 

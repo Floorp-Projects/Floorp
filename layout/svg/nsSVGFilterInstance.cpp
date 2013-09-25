@@ -69,7 +69,7 @@ nsSVGFilterInstance::CreateImage()
 {
   nsRefPtr<gfxImageSurface> surface =
     new gfxImageSurface(gfxIntSize(mSurfaceRect.width, mSurfaceRect.height),
-                        gfxASurface::ImageFormatARGB32);
+                        gfxImageFormatARGB32);
 
   if (!surface || surface->CairoStatus())
     return nullptr;
@@ -329,7 +329,7 @@ nsSVGFilterInstance::BuildSourcePaint(PrimitiveInfo *aPrimitive)
   nsRefPtr<gfxASurface> offscreen =
     gfxPlatform::GetPlatform()->CreateOffscreenSurface(
             gfxIntSize(mSurfaceRect.width, mSurfaceRect.height),
-            gfxASurface::CONTENT_COLOR_ALPHA);
+            GFX_CONTENT_COLOR_ALPHA);
   if (!offscreen || offscreen->CairoStatus())
     return NS_ERROR_OUT_OF_MEMORY;
   offscreen->SetDeviceOffset(gfxPoint(-mSurfaceRect.x, -mSurfaceRect.y));
@@ -410,7 +410,7 @@ nsSVGFilterInstance::BuildSourceImages()
     nsRefPtr<gfxASurface> offscreen =
       gfxPlatform::GetPlatform()->CreateOffscreenSurface(
               gfxIntSize(mSurfaceRect.width, mSurfaceRect.height),
-              gfxASurface::CONTENT_COLOR_ALPHA);
+              GFX_CONTENT_COLOR_ALPHA);
     if (!offscreen || offscreen->CairoStatus())
       return NS_ERROR_OUT_OF_MEMORY;
     offscreen->SetDeviceOffset(gfxPoint(-mSurfaceRect.x, -mSurfaceRect.y));

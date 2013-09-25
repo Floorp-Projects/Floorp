@@ -33,10 +33,10 @@ gfxAlphaRecovery::RecoverAlphaSSE2(gfxImageSurface* blackSurf,
     gfxIntSize size = blackSurf->GetSize();
 
     if (size != whiteSurf->GetSize() ||
-        (blackSurf->Format() != gfxASurface::ImageFormatARGB32 &&
-         blackSurf->Format() != gfxASurface::ImageFormatRGB24) ||
-        (whiteSurf->Format() != gfxASurface::ImageFormatARGB32 &&
-         whiteSurf->Format() != gfxASurface::ImageFormatRGB24))
+        (blackSurf->Format() != gfxImageFormatARGB32 &&
+         blackSurf->Format() != gfxImageFormatRGB24) ||
+        (whiteSurf->Format() != gfxImageFormatARGB32 &&
+         whiteSurf->Format() != gfxImageFormatRGB24))
         return false;
 
     blackSurf->Flush();
@@ -140,7 +140,7 @@ ByteAlignment(int32_t aAlignToLog2, int32_t aX, int32_t aY=0, int32_t aStride=1)
 gfxAlphaRecovery::AlignRectForSubimageRecovery(const nsIntRect& aRect,
                                                gfxImageSurface* aSurface)
 {
-    NS_ASSERTION(gfxASurface::ImageFormatARGB32 == aSurface->Format(),
+    NS_ASSERTION(gfxImageFormatARGB32 == aSurface->Format(),
                  "Thebes grew support for non-ARGB32 COLOR_ALPHA?");
     static const int32_t kByteAlignLog2 = GoodAlignmentLog2();
     static const int32_t bpp = 4;

@@ -1,9 +1,5 @@
 /***********************************************************************
-Copyright (c) 2006-2012 IETF Trust and Skype Limited. All rights reserved.
-
-This file is extracted from RFC6716. Please see that RFC for additional
-information.
-
+Copyright (c) 2006-2011, Skype Limited. All rights reserved.
 Redistribution and use in source and binary forms, with or without
 modification, are permitted provided that the following conditions
 are met:
@@ -16,7 +12,7 @@ documentation and/or other materials provided with the distribution.
 names of specific contributors, may be used to endorse or promote
 products derived from this software without specific prior written
 permission.
-THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS “AS IS”
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
 AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
 IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
 ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE
@@ -34,6 +30,7 @@ POSSIBILITY OF SUCH DAMAGE.
 #endif
 
 #include "SigProc_FIX.h"
+#include "celt_lpc.h"
 
 /* Compute autocorrelation */
 void silk_autocorr(
@@ -44,37 +41,7 @@ void silk_autocorr(
     const opus_int              correlationCount    /* I    Number of correlation taps to compute                       */
 )
 {
-    opus_int   i, lz, nRightShifts, corrCount;
-    opus_int64 corr64;
-
+    opus_int   corrCount;
     corrCount = silk_min_int( inputDataSize, correlationCount );
-
-    /* compute energy (zero-lag correlation) */
-    corr64 = silk_inner_prod16_aligned_64( inputData, inputData, inputDataSize );
-
-    /* deal with all-zero input data */
-    corr64 += 1;
-
-    /* number of leading zeros */
-    lz = silk_CLZ64( corr64 );
-
-    /* scaling: number of right shifts applied to correlations */
-    nRightShifts = 35 - lz;
-    *scale = nRightShifts;
-
-    if( nRightShifts <= 0 ) {
-        results[ 0 ] = silk_LSHIFT( (opus_int32)silk_CHECK_FIT32( corr64 ), -nRightShifts );
-
-        /* compute remaining correlations based on int32 inner product */
-          for( i = 1; i < corrCount; i++ ) {
-            results[ i ] = silk_LSHIFT( silk_inner_prod_aligned( inputData, inputData + i, inputDataSize - i ), -nRightShifts );
-        }
-    } else {
-        results[ 0 ] = (opus_int32)silk_CHECK_FIT32( silk_RSHIFT64( corr64, nRightShifts ) );
-
-        /* compute remaining correlations based on int64 inner product */
-          for( i = 1; i < corrCount; i++ ) {
-            results[ i ] =  (opus_int32)silk_CHECK_FIT32( silk_RSHIFT64( silk_inner_prod16_aligned_64( inputData, inputData + i, inputDataSize - i ), nRightShifts ) );
-        }
-    }
+    *scale = _celt_autocorr(inputData, results, NULL, 0, corrCount-1, inputDataSize);
 }
