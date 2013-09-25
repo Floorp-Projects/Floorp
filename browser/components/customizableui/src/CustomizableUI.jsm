@@ -1614,7 +1614,6 @@ let CustomizableUIInternal = {
       removable: false,
       overflows: true,
       defaultArea: null,
-      allowedAreas: [],
       shortcut: null,
       tooltiptext: null,
       showInPrivateBrowsing: true,
@@ -1654,11 +1653,6 @@ let CustomizableUIInternal = {
 
     if (aData.defaultArea && gAreas.has(aData.defaultArea)) {
       widget.defaultArea = aData.defaultArea;
-    }
-
-    if (Array.isArray(aData.allowedAreas)) {
-      widget.allowedAreas =
-        [area for (area of aData.allowedAreas) if (gAreas.has(area))];
     }
 
     if ("type" in aData && gSupportedWidgetTypes.has(aData.type)) {
