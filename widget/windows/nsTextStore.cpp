@@ -19,6 +19,7 @@
 #include "nsPrintfCString.h"
 #include "WinUtils.h"
 #include "mozilla/Preferences.h"
+#include "mozilla/TextEvents.h"
 
 #define INPUTSCOPE_INIT_GUID
 #include "nsTextStore.h"

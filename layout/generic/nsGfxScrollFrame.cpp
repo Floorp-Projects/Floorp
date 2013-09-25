@@ -5,13 +5,14 @@
 
 /* rendering object to wrap rendering objects that should be scrollable */
 
+#include "nsGfxScrollFrame.h"
+
 #include "base/compiler_specific.h"
 #include "nsCOMPtr.h"
 #include "nsPresContext.h"
 #include "nsView.h"
 #include "nsIScrollable.h"
 #include "nsContainerFrame.h"
-#include "nsGfxScrollFrame.h"
 #include "nsGkAtoms.h"
 #include "nsINameSpaceManager.h"
 #include "nsContentList.h"
@@ -24,7 +25,6 @@
 #include "nsITextControlFrame.h"
 #include "nsIDOMHTMLTextAreaElement.h"
 #include "nsNodeInfoManager.h"
-#include "nsGUIEvent.h"
 #include "nsContentCreatorFunctions.h"
 #include "nsAutoPtr.h"
 #include "nsPresState.h"
@@ -33,6 +33,7 @@
 #include "nsContentUtils.h"
 #include "nsLayoutUtils.h"
 #include "nsBidiUtils.h"
+#include "mozilla/ContentEvents.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/LookAndFeel.h"
 #include "mozilla/dom/Element.h"

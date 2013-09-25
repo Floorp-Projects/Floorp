@@ -29,6 +29,7 @@
 #include "nsPIDOMWindow.h"
 #include "nsIInterfaceRequestorUtils.h"
 #include "nsIBaseWindow.h"
+#include "nsIDOMKeyEvent.h"
 #include "nsIDOMMouseEvent.h"
 #include "nsCaret.h"
 #include "nsIDocument.h"
@@ -37,27 +38,35 @@
 #include "nsIObserverService.h"
 #include "mozilla/dom/Element.h"
 #include "mozilla/LookAndFeel.h"
+#include "mozilla/MouseEvents.h"
 #include "mozilla/Services.h"
 
 using namespace mozilla;
 using namespace mozilla::dom;
 
+static_assert(nsIDOMKeyEvent::DOM_VK_HOME  == nsIDOMKeyEvent::DOM_VK_END + 1 &&
+              nsIDOMKeyEvent::DOM_VK_LEFT  == nsIDOMKeyEvent::DOM_VK_END + 2 &&
+              nsIDOMKeyEvent::DOM_VK_UP    == nsIDOMKeyEvent::DOM_VK_END + 3 &&
+              nsIDOMKeyEvent::DOM_VK_RIGHT == nsIDOMKeyEvent::DOM_VK_END + 4 &&
+              nsIDOMKeyEvent::DOM_VK_DOWN  == nsIDOMKeyEvent::DOM_VK_END + 5,
+              "nsXULPopupManager assumes some keyCode values are consecutive");
+
 const nsNavigationDirection DirectionFromKeyCodeTable[2][6] = {
   {
-    eNavigationDirection_Last,   // NS_VK_END
-    eNavigationDirection_First,  // NS_VK_HOME
-    eNavigationDirection_Start,  // NS_VK_LEFT
-    eNavigationDirection_Before, // NS_VK_UP
-    eNavigationDirection_End,    // NS_VK_RIGHT
-    eNavigationDirection_After   // NS_VK_DOWN
+    eNavigationDirection_Last,   // nsIDOMKeyEvent::DOM_VK_END
+    eNavigationDirection_First,  // nsIDOMKeyEvent::DOM_VK_HOME
+    eNavigationDirection_Start,  // nsIDOMKeyEvent::DOM_VK_LEFT
+    eNavigationDirection_Before, // nsIDOMKeyEvent::DOM_VK_UP
+    eNavigationDirection_End,    // nsIDOMKeyEvent::DOM_VK_RIGHT
+    eNavigationDirection_After   // nsIDOMKeyEvent::DOM_VK_DOWN
   },
   {
-    eNavigationDirection_Last,   // NS_VK_END
-    eNavigationDirection_First,  // NS_VK_HOME
-    eNavigationDirection_End,    // NS_VK_LEFT
-    eNavigationDirection_Before, // NS_VK_UP
-    eNavigationDirection_Start,  // NS_VK_RIGHT
-    eNavigationDirection_After   // NS_VK_DOWN
+    eNavigationDirection_Last,   // nsIDOMKeyEvent::DOM_VK_END
+    eNavigationDirection_First,  // nsIDOMKeyEvent::DOM_VK_HOME
+    eNavigationDirection_End,    // nsIDOMKeyEvent::DOM_VK_LEFT
+    eNavigationDirection_Before, // nsIDOMKeyEvent::DOM_VK_UP
+    eNavigationDirection_Start,  // nsIDOMKeyEvent::DOM_VK_RIGHT
+    eNavigationDirection_After   // nsIDOMKeyEvent::DOM_VK_DOWN
   }
 };
 

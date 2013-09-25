@@ -6,7 +6,7 @@
 
 #include "WidgetUtils.h"
 
-#include "nsGUIEvent.h"
+#include "mozilla/TextEvents.h"
 
 #include "nsIBaseWindow.h"
 #include "nsIDocShellTreeItem.h"

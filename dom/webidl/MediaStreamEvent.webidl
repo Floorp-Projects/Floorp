@@ -12,7 +12,6 @@ dictionary MediaStreamEventInit : EventInit {
 };
 
 [Pref="media.peerconnection.enabled",
- JSImplementation="@mozilla.org/dom/mediastreamevent;1",
  Constructor(DOMString type, optional MediaStreamEventInit eventInitDict)]
 interface MediaStreamEvent : Event {
   readonly attribute MediaStream? stream;

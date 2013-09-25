@@ -236,7 +236,7 @@ MacroAssemblerX86::callWithABIPost(uint32_t stackAdjust, Result result)
     if (result == DOUBLE) {
         reserveStack(sizeof(double));
         fstp(Operand(esp, 0));
-        movsd(Operand(esp, 0), ReturnFloatReg);
+        loadDouble(Operand(esp, 0), ReturnFloatReg);
         freeStack(sizeof(double));
     }
     if (dynamicAlignment_)
@@ -311,15 +311,15 @@ MacroAssemblerX86::handleFailureWithHandlerTail()
     // and return from the entry frame.
     bind(&entryFrame);
     moveValue(MagicValue(JS_ION_ERROR), JSReturnOperand);
-    movl(Operand(esp, offsetof(ResumeFromException, stackPointer)), esp);
+    loadPtr(Address(esp, offsetof(ResumeFromException, stackPointer)), esp);
     ret();
 
     // If we found a catch handler, this must be a baseline frame. Restore state
     // and jump to the catch block.
     bind(&catch_);
-    movl(Operand(esp, offsetof(ResumeFromException, target)), eax);
-    movl(Operand(esp, offsetof(ResumeFromException, framePointer)), ebp);
-    movl(Operand(esp, offsetof(ResumeFromException, stackPointer)), esp);
+    loadPtr(Address(esp, offsetof(ResumeFromException, target)), eax);
+    loadPtr(Address(esp, offsetof(ResumeFromException, framePointer)), ebp);
+    loadPtr(Address(esp, offsetof(ResumeFromException, stackPointer)), esp);
     jmp(Operand(eax));
 
     // If we found a finally block, this must be a baseline frame. Push
@@ -327,11 +327,11 @@ MacroAssemblerX86::handleFailureWithHandlerTail()
     // exception.
     bind(&finally);
     ValueOperand exception = ValueOperand(ecx, edx);
-    loadValue(Operand(esp, offsetof(ResumeFromException, exception)), exception);
+    loadValue(Address(esp, offsetof(ResumeFromException, exception)), exception);
 
-    movl(Operand(esp, offsetof(ResumeFromException, target)), eax);
-    movl(Operand(esp, offsetof(ResumeFromException, framePointer)), ebp);
-    movl(Operand(esp, offsetof(ResumeFromException, stackPointer)), esp);
+    loadPtr(Address(esp, offsetof(ResumeFromException, target)), eax);
+    loadPtr(Address(esp, offsetof(ResumeFromException, framePointer)), ebp);
+    loadPtr(Address(esp, offsetof(ResumeFromException, stackPointer)), esp);
 
     pushValue(BooleanValue(true));
     pushValue(exception);
@@ -339,8 +339,8 @@ MacroAssemblerX86::handleFailureWithHandlerTail()
 
     // Only used in debug mode. Return BaselineFrame->returnValue() to the caller.
     bind(&return_);
-    movl(Operand(esp, offsetof(ResumeFromException, framePointer)), ebp);
-    movl(Operand(esp, offsetof(ResumeFromException, stackPointer)), esp);
+    loadPtr(Address(esp, offsetof(ResumeFromException, framePointer)), ebp);
+    loadPtr(Address(esp, offsetof(ResumeFromException, stackPointer)), esp);
     loadValue(Address(ebp, BaselineFrame::reverseOffsetOfReturnValue()), JSReturnOperand);
     movl(ebp, esp);
     pop(ebp);
@@ -349,7 +349,7 @@ MacroAssemblerX86::handleFailureWithHandlerTail()
     // If we are bailing out to baseline to handle an exception, jump to
     // the bailout tail stub.
     bind(&bailout);
-    movl(Operand(esp, offsetof(ResumeFromException, bailoutInfo)), ecx);
+    loadPtr(Address(esp, offsetof(ResumeFromException, bailoutInfo)), ecx);
     movl(Imm32(BAILOUT_RETURN_OK), eax);
     jmp(Operand(esp, offsetof(ResumeFromException, target)));
 }

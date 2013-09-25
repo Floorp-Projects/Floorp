@@ -308,7 +308,7 @@ js::math_atan2(JSContext *cx, unsigned argc, Value *vp)
 }
 
 double
-js_math_ceil_impl(double x)
+js::math_ceil_impl(double x)
 {
 #ifdef __APPLE__
     if (x < 0 && x > -1.0)
@@ -318,7 +318,7 @@ js_math_ceil_impl(double x)
 }
 
 bool
-js_math_ceil(JSContext *cx, unsigned argc, Value *vp)
+js::math_ceil(JSContext *cx, unsigned argc, Value *vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
 
@@ -331,7 +331,7 @@ js_math_ceil(JSContext *cx, unsigned argc, Value *vp)
     if (!ToNumber(cx, args[0], &x))
         return false;
 
-    double z = js_math_ceil_impl(x);
+    double z = math_ceil_impl(x);
     args.rval().setNumber(z);
     return true;
 }
@@ -423,13 +423,13 @@ js::math_exp(JSContext *cx, unsigned argc, Value *vp)
 }
 
 double
-js_math_floor_impl(double x)
+js::math_floor_impl(double x)
 {
     return floor(x);
 }
 
 bool
-js_math_floor(JSContext *cx, unsigned argc, Value *vp)
+js::math_floor(JSContext *cx, unsigned argc, Value *vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
 
@@ -442,7 +442,7 @@ js_math_floor(JSContext *cx, unsigned argc, Value *vp)
     if (!ToNumber(cx, args[0], &x))
         return false;
 
-    double z = js_math_floor_impl(x);
+    double z = math_floor_impl(x);
     args.rval().setNumber(z);
     return true;
 }
@@ -770,8 +770,22 @@ js_math_random(JSContext *cx, unsigned argc, Value *vp)
     return true;
 }
 
+double
+js::math_round_impl(double x)
+{
+    int32_t i;
+    if (DoubleIsInt32(x, &i))
+        return double(i);
+
+    /* Some numbers are so big that adding 0.5 would give the wrong number. */
+    if (ExponentComponent(x) >= 52)
+        return x;
+
+    return js_copysign(floor(x + 0.5), x);
+}
+
 bool /* ES5 15.8.2.15. */
-js_math_round(JSContext *cx, unsigned argc, Value *vp)
+js::math_round(JSContext *cx, unsigned argc, Value *vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
 
@@ -784,19 +798,8 @@ js_math_round(JSContext *cx, unsigned argc, Value *vp)
     if (!ToNumber(cx, args[0], &x))
         return false;
 
-    int32_t i;
-    if (DoubleIsInt32(x, &i)) {
-        args.rval().setInt32(i);
-        return true;
-    }
-
-    /* Some numbers are so big that adding 0.5 would give the wrong number. */
-    if (ExponentComponent(x) >= 52) {
-        args.rval().setNumber(x);
-        return true;
-    }
-
-    args.rval().setNumber(js_copysign(floor(x + 0.5), x));
+    double z = math_round_impl(x);
+    args.rval().setNumber(z);
     return true;
 }
 
@@ -1440,10 +1443,10 @@ static const JSFunctionSpec math_static_methods[] = {
     JS_FN("asin",           math_asin,            1, 0),
     JS_FN("atan",           math_atan,            1, 0),
     JS_FN("atan2",          math_atan2,           2, 0),
-    JS_FN("ceil",           js_math_ceil,         1, 0),
+    JS_FN("ceil",           math_ceil,            1, 0),
     JS_FN("cos",            math_cos,             1, 0),
     JS_FN("exp",            math_exp,             1, 0),
-    JS_FN("floor",          js_math_floor,        1, 0),
+    JS_FN("floor",          math_floor,           1, 0),
     JS_FN("imul",           math_imul,            2, 0),
     JS_FN("fround",         math_fround,          1, 0),
     JS_FN("log",            math_log,             1, 0),
@@ -1451,7 +1454,7 @@ static const JSFunctionSpec math_static_methods[] = {
     JS_FN("min",            js_math_min,          2, 0),
     JS_FN("pow",            js_math_pow,          2, 0),
     JS_FN("random",         js_math_random,       0, 0),
-    JS_FN("round",          js_math_round,        1, 0),
+    JS_FN("round",          math_round,           1, 0),
     JS_FN("sin",            math_sin,             1, 0),
     JS_FN("sqrt",           js_math_sqrt,         1, 0),
     JS_FN("tan",            math_tan,             1, 0),
