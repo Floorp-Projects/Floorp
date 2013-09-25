@@ -4404,6 +4404,9 @@ pref("dom.forms.inputmode", false);
 pref("dom.forms.inputmode", true);
 #endif
 
+// InputMethods for soft keyboards in B2G
+pref("dom.mozInputMethod.enabled", false);
+
 // Telephony API
 pref("dom.telephony.enabled", false);
 

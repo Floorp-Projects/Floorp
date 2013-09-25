@@ -186,6 +186,7 @@ WEBIDL_FILES = [
     'IDBVersionChangeEvent.webidl',
     'ImageData.webidl',
     'ImageDocument.webidl',
+    'InputMethod.webidl',
     'InspectorUtils.webidl',
     'InterAppConnection.webidl',
     'InterAppConnectionRequest.webidl',
@@ -530,11 +531,6 @@ if CONFIG['ENABLE_TESTS']:
         'TestJSImplGen.webidl',
         'TestJSImplInheritanceGen.webidl',
         'TestTypedef.webidl',
-    ]
-
-if CONFIG['MOZ_B2G']:
-    WEBIDL_FILES += [
-        'InputMethod.webidl',
     ]
 
 GENERATED_EVENTS_WEBIDL_FILES = [

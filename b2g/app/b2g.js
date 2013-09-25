@@ -787,6 +787,9 @@ pref("dom.inter-app-communication-api.enabled", true);
 // 0 disables the timer.
 pref("b2g.adb.timeout-hours", 12);
 
+// InputMethod so we can do soft keyboards
+pref("dom.mozInputMethod.enabled", true);
+
 // Absolute path to the devtool unix domain socket file used
 // to communicate with a usb cable via adb forward
 pref("devtools.debugger.unix-domain-socket", "/data/local/debugger-socket");
