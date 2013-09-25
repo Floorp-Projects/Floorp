@@ -2067,7 +2067,7 @@ ReportCompartmentStats(const JS::CompartmentStats &cStats,
     // DOM nodes in the JS reporter, but we want to report them in a "dom"
     // sub-tree rather than a "js" sub-tree.
     ZCREPORT_BYTES(cDOMPathPrefix + NS_LITERAL_CSTRING("orphan-nodes"),
-                   cStats.objectsExtra.private_,
+                   cStats.objectsPrivate,
                    "Memory used by orphan DOM nodes that are only reachable "
                    "from JavaScript objects.");
 

@@ -108,8 +108,6 @@ struct ObjectsExtraSizes
     size_t regExpStatics;
     size_t propertyIteratorData;
     size_t ctypesData;
-    size_t private_;    // The '_' suffix is required because |private| is a keyword.
-                        // Note that this field is measured separately from the others.
 
     ObjectsExtraSizes() { memset(this, 0, sizeof(ObjectsExtraSizes)); }
 
@@ -124,7 +122,6 @@ struct ObjectsExtraSizes
         this->regExpStatics        += sizes.regExpStatics;
         this->propertyIteratorData += sizes.propertyIteratorData;
         this->ctypesData           += sizes.ctypesData;
-        this->private_             += sizes.private_;
     }
 };
 
@@ -330,6 +327,7 @@ struct CompartmentStats
         gcHeapShapesDict(0),
         gcHeapShapesBase(0),
         gcHeapScripts(0),
+        objectsPrivate(0),
         objectsExtra(),
         shapesExtraTreeTables(0),
         shapesExtraDictTables(0),
@@ -359,6 +357,7 @@ struct CompartmentStats
         gcHeapShapesDict(other.gcHeapShapesDict),
         gcHeapShapesBase(other.gcHeapShapesBase),
         gcHeapScripts(other.gcHeapScripts),
+        objectsPrivate(other.objectsPrivate),
         objectsExtra(other.objectsExtra),
         shapesExtraTreeTables(other.shapesExtraTreeTables),
         shapesExtraDictTables(other.shapesExtraDictTables),
@@ -392,6 +391,7 @@ struct CompartmentStats
     size_t gcHeapShapesDict;
     size_t gcHeapShapesBase;
     size_t gcHeapScripts;
+    size_t objectsPrivate;      // measured via ObjectPrivateVisitor
     ObjectsExtraSizes objectsExtra;
 
     size_t shapesExtraTreeTables;
@@ -424,6 +424,7 @@ struct CompartmentStats
         ADD(gcHeapShapesDict);
         ADD(gcHeapShapesBase);
         ADD(gcHeapScripts);
+        ADD(objectsPrivate);
         objectsExtra.add(cStats.objectsExtra);
 
         ADD(shapesExtraTreeTables);
