@@ -13,7 +13,9 @@
 #include <cmath>
 #include <algorithm>
 
+#include <mozilla/Services.h>
 #include <mozilla/StaticPtr.h>
+#include "nsContentUtils.h"
 
 using namespace mozilla;
 
@@ -59,12 +61,12 @@ protected:
   int64_t mValue;
 };
 
-// This is the only function that clients should use.
 void LogLatency(AsyncLatencyLogger::LatencyLogIndex aIndex, uint64_t aID, int64_t aValue)
 {
   AsyncLatencyLogger::Get()->Log(aIndex, aID, aValue);
 }
 
+/* static */
 void AsyncLatencyLogger::InitializeStatics()
 {
   NS_ASSERTION(NS_IsMainThread(), "Main thread only");
@@ -72,7 +74,8 @@ void AsyncLatencyLogger::InitializeStatics()
   gAsyncLogger = new AsyncLatencyLogger();
 }
 
-void AsyncLatencyLogger::Shutdown()
+/* static */
+void AsyncLatencyLogger::ShutdownLogger()
 {
   gAsyncLogger = nullptr;
 }
@@ -80,34 +83,60 @@ void AsyncLatencyLogger::Shutdown()
 /* static */
 AsyncLatencyLogger* AsyncLatencyLogger::Get(bool aStartTimer)
 {
+  // Users don't generally null-check the result since we should live longer than they
+  MOZ_ASSERT(gAsyncLogger);
+
   if (aStartTimer) {
     gAsyncLogger->Init();
   }
   return gAsyncLogger;
 }
 
+NS_IMPL_ISUPPORTS1(AsyncLatencyLogger, nsIObserver)
+
 AsyncLatencyLogger::AsyncLatencyLogger()
   : mThread(nullptr),
     mMutex("AsyncLatencyLogger")
-{ }
+{
+  NS_ASSERTION(NS_IsMainThread(), "Main thread only");
+  nsContentUtils::RegisterShutdownObserver(this);
+}
 
 AsyncLatencyLogger::~AsyncLatencyLogger()
 {
+  AsyncLatencyLogger::Shutdown();
+}
+
+void AsyncLatencyLogger::Shutdown()
+{
+  nsContentUtils::UnregisterShutdownObserver(this);
+
   MutexAutoLock lock(mMutex);
   if (mThread) {
     mThread->Shutdown();
   }
-  mStart = TimeStamp();
+  mStart = TimeStamp(); // make sure we don't try to restart it for any reason
 }
 
 void AsyncLatencyLogger::Init()
 {
   MutexAutoLock lock(mMutex);
   if (mStart.IsNull()) {
-    mStart = TimeStamp::Now();
     nsresult rv = NS_NewNamedThread("Latency Logger", getter_AddRefs(mThread));
     NS_ENSURE_SUCCESS_VOID(rv);
+    mStart = TimeStamp::Now();
   }
+}
+
+nsresult
+AsyncLatencyLogger::Observe(nsISupports* aSubject, const char* aTopic,
+                            const PRUnichar* aData)
+{
+  MOZ_ASSERT(NS_IsMainThread());
+  if (strcmp(aTopic, NS_XPCOM_SHUTDOWN_OBSERVER_ID) == 0) {
+    Shutdown();
+  }
+  return NS_OK;
 }
 
 // aID is a sub-identifier (in particular a specific MediaStramTrack)
@@ -133,4 +162,3 @@ void AsyncLatencyLogger::Log(LatencyLogIndex aIndex, uint64_t aID, int64_t aValu
     }
   }
 }
-

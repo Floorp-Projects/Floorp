@@ -905,8 +905,8 @@ BufferedAudioStream::DataCallback(void* aBuffer, long aFrames)
     if (cubeb_stream_get_latency(mCubebStream, &latency)) {
       NS_WARNING("Could not get latency from cubeb.");
     }
-    LogLatency(AsyncLatencyLogger::AudioStream, 0, (mBuffer.Length() * 1000) / mOutRate);
-    LogLatency(AsyncLatencyLogger::Cubeb, 0, (latency * 1000) / mOutRate);
+    mLatencyLog->Log(AsyncLatencyLogger::AudioStream, 0, (mBuffer.Length() * 1000) / mOutRate);
+    mLatencyLog->Log(AsyncLatencyLogger::Cubeb, 0, (latency * 1000) / mOutRate);
   }
 
   mAudioClock.UpdateWritePosition(servicedFrames);
