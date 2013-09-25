@@ -1991,7 +1991,7 @@ OpenKeyCursorHelper::PackArgumentsForParentProcess(IndexRequestParams& aParams)
 
   PROFILER_MAIN_THREAD_LABEL("IndexedDB",
                              "OpenKeyCursorHelper::"
-                             "PackArgumentsForParentProcess");
+                             "PackArgumentsForParentProcess [IDBIndex.cpp]");
 
   OpenKeyCursorParams params;
 
