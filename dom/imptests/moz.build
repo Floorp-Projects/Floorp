@@ -7,6 +7,11 @@
 DIRS += [
     'failures/editing/conformancetest',
     'failures/editing/selecttest',
+    'failures/html/dom',
+    'failures/html/dom/collections',
+    'failures/html/dom/errors',
+    'failures/html/dom/nodes',
+    'failures/html/dom/ranges',
     'failures/html/html/browsers/the-window-object',
     'failures/html/html/browsers/the-window-object/named-access-on-the-window-object',
     'failures/html/html/dom/documents/dta',
@@ -22,9 +27,6 @@ DIRS += [
     'failures/html/js/builtins',
     'failures/html/old-tests/submission/Opera/microdata',
     'failures/html/typedarrays',
-    'failures/webapps/DOMCore/tests/approved',
-    'failures/webapps/DOMCore/tests/submissions/Ms2ger',
-    'failures/webapps/DOMCore/tests/submissions/Opera',
     'failures/webapps/WebStorage/tests/submissions/Infraware',
     'failures/webapps/WebStorage/tests/submissions/Ms2ger',
     'failures/webapps/XMLHttpRequest/tests/submissions/Ms2ger'
