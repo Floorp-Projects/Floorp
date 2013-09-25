@@ -2563,7 +2563,6 @@ nsSSLIOLayerImportFD(PRFileDesc *fd,
   }
   SSL_SetPKCS11PinArg(sslSock, (nsIInterfaceRequestor*)infoObject);
   SSL_HandshakeCallback(sslSock, HandshakeCallback, infoObject);
-  SSL_SetCanFalseStartCallback(sslSock, CanFalseStartCallback, infoObject);
 
   // Disable this hook if we connect anonymously. See bug 466080.
   uint32_t flags = 0;

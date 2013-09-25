@@ -1222,10 +1222,10 @@ nsNSSComponent::InitializeNSS(bool showWarningBox)
       SSL_OptionSetDefault(SSL_ENABLE_RENEGOTIATION, 
         enabled ? SSL_RENEGOTIATE_UNRESTRICTED : SSL_RENEGOTIATE_REQUIRES_XTN);
 
-#ifdef SSL_ENABLE_FALSE_START // Requires NSS 3.12.8
-      mPrefBranch->GetBoolPref("security.ssl.enable_false_start", &enabled);
-      SSL_OptionSetDefault(SSL_ENABLE_FALSE_START, enabled);
-#endif
+//    Bug 920248: temporarily disable false start
+//    bool falseStartEnabled = Preferences::GetBool("security.ssl.enable_false_start",
+//                                                  FALSE_START_ENABLED_DEFAULT);
+      SSL_OptionSetDefault(SSL_ENABLE_FALSE_START, false);
 
       // Disable any ciphers that NSS might have enabled by default
       for (uint16_t i = 0; i < SSL_NumImplementedCiphers; ++i)
@@ -1656,11 +1656,11 @@ nsNSSComponent::Observe(nsISupports *aSubject, const char *aTopic,
       mPrefBranch->GetBoolPref("security.ssl.allow_unrestricted_renego_everywhere__temporarily_available_pref", &enabled);
       SSL_OptionSetDefault(SSL_ENABLE_RENEGOTIATION, 
         enabled ? SSL_RENEGOTIATE_UNRESTRICTED : SSL_RENEGOTIATE_REQUIRES_XTN);
-#ifdef SSL_ENABLE_FALSE_START // Requires NSS 3.12.8
     } else if (prefName.Equals("security.ssl.enable_false_start")) {
-      mPrefBranch->GetBoolPref("security.ssl.enable_false_start", &enabled);
-      SSL_OptionSetDefault(SSL_ENABLE_FALSE_START, enabled);
-#endif
+//    Bug 920248: temporarily disable false start
+//    bool falseStartEnabled = Preferences::GetBool("security.ssl.enable_false_start",
+//                                                  FALSE_START_ENABLED_DEFAULT);
+      SSL_OptionSetDefault(SSL_ENABLE_FALSE_START, false);
     } else if (prefName.Equals("security.OCSP.enabled")
                || prefName.Equals("security.CRL_download.enabled")
                || prefName.Equals("security.fresh_revocation_info.require")
