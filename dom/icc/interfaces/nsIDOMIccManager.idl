@@ -10,7 +10,7 @@ interface nsIDOMDOMRequest;
 interface nsIDOMEventListener;
 interface nsIDOMMozIccInfo;
 
-[scriptable, builtinclass, uuid(904b92cb-dad3-416f-88cf-0291012cf448)]
+[scriptable, builtinclass, uuid(6b5875dc-de44-4681-84a1-9ea12d60fbe2)]
 interface nsIDOMMozIccManager : nsIDOMEventTarget
 {
   /**
@@ -457,16 +457,6 @@ interface nsIDOMMozIccManager : nsIDOMEventTarget
    *     }
    */
   nsIDOMDOMRequest setCardLock(in jsval info);
-
-  /**
-   * The 'icccardlockerror' event is notified whenever 'unlockCardLock' or
-   * 'setCardLock' fails.
-   *
-   * The result will be an object containing information
-   * about the specified lock's status,
-   * e.g. {lockType: "pin", retryCount: 2}.
-   */
-  [implicit_jscontext] attribute jsval onicccardlockerror;
 
   /**
    * Retrieve the number of remaining tries for unlocking the card.
