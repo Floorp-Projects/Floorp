@@ -2182,7 +2182,7 @@ function UpdateUrlbarSearchSplitterState()
       splitter.setAttribute("resizebefore", "flex");
       splitter.setAttribute("resizeafter", "flex");
       splitter.setAttribute("skipintoolbarset", "true");
-      splitter.setAttribute("nooverflow", "true");
+      splitter.setAttribute("overflows", "false");
       splitter.className = "chromeclass-toolbar-additional";
     }
     urlbar.parentNode.insertBefore(splitter, ibefore);
