@@ -12,7 +12,7 @@ namespace dom {
 
 void
 EventTarget::RemoveEventListener(const nsAString& aType,
-                                 nsIDOMEventListener* aListener,
+                                 EventListener* aListener,
                                  bool aUseCapture,
                                  ErrorResult& aRv)
 {

@@ -1783,6 +1783,14 @@ DocAccessible::UpdateTree(Accessible* aContainer, nsIContent* aChildNode,
       nsINode* containerNode = aContainer->GetNode();
       for (uint32_t idx = 0; idx < aContainer->ContentChildCount();) {
         Accessible* child = aContainer->ContentChildAt(idx);
+
+        // If accessible doesn't have its own content then we assume parent
+        // will handle its update.
+        if (!child->HasOwnContent()) {
+          idx++;
+          continue;
+        }
+
         nsINode* childNode = child->GetContent();
         while (childNode != aChildNode && childNode != containerNode &&
                (childNode = childNode->GetParentNode()));

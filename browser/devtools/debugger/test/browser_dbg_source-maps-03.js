@@ -46,7 +46,7 @@ function testSetBreakpoint() {
   let deferred = promise.defer();
 
   gDebugger.gThreadClient.interrupt(aResponse => {
-    gDebugger.gThreadClient.setBreakpoint({ url: JS_URL, line: 30, column: 10 }, aResponse => {
+    gDebugger.gThreadClient.setBreakpoint({ url: JS_URL, line: 30, column: 21 }, aResponse => {
       ok(!aResponse.error,
         "Should be able to set a breakpoint in a js file.");
       ok(!aResponse.actualLocation,

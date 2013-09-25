@@ -238,6 +238,9 @@ class MacroAssemblerX86Shared : public Assembler
     void jump(Register reg) {
         jmp(Operand(reg));
     }
+    void jump(const Address &addr) {
+        jmp(Operand(addr));
+    }
 
     void convertInt32ToDouble(const Register &src, const FloatRegister &dest) {
         // cvtsi2sd and friends write only part of their output register, which

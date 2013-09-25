@@ -3074,7 +3074,7 @@ JS_GetSecurityCallbacks(JSRuntime *rt);
  * called again, passing NULL for 'prin'.
  */
 extern JS_PUBLIC_API(void)
-JS_SetTrustedPrincipals(JSRuntime *rt, JSPrincipals *prin);
+JS_SetTrustedPrincipals(JSRuntime *rt, const JSPrincipals *prin);
 
 /*
  * Initialize the callback that is called to destroy JSPrincipals instance
@@ -3216,20 +3216,20 @@ JS_GetGlobalFromScript(JSScript *script);
 
 extern JS_PUBLIC_API(JSFunction *)
 JS_CompileFunction(JSContext *cx, JSObject *obj, const char *name,
-                   unsigned nargs, const char **argnames,
+                   unsigned nargs, const char *const *argnames,
                    const char *bytes, size_t length,
                    const char *filename, unsigned lineno);
 
 extern JS_PUBLIC_API(JSFunction *)
 JS_CompileFunctionForPrincipals(JSContext *cx, JSObject *obj,
                                 JSPrincipals *principals, const char *name,
-                                unsigned nargs, const char **argnames,
+                                unsigned nargs, const char *const *argnames,
                                 const char *bytes, size_t length,
                                 const char *filename, unsigned lineno);
 
 extern JS_PUBLIC_API(JSFunction *)
 JS_CompileUCFunction(JSContext *cx, JSObject *obj, const char *name,
-                     unsigned nargs, const char **argnames,
+                     unsigned nargs, const char *const *argnames,
                      const jschar *chars, size_t length,
                      const char *filename, unsigned lineno);
 
@@ -3330,12 +3330,12 @@ FinishOffThreadScript(JSContext *maybecx, JSRuntime *rt, void *token);
 
 extern JS_PUBLIC_API(JSFunction *)
 CompileFunction(JSContext *cx, JS::Handle<JSObject*> obj, CompileOptions options,
-                const char *name, unsigned nargs, const char **argnames,
+                const char *name, unsigned nargs, const char *const *argnames,
                 const char *bytes, size_t length);
 
 extern JS_PUBLIC_API(JSFunction *)
 CompileFunction(JSContext *cx, JS::Handle<JSObject*> obj, CompileOptions options,
-                const char *name, unsigned nargs, const char **argnames,
+                const char *name, unsigned nargs, const char *const *argnames,
                 const jschar *chars, size_t length);
 
 } /* namespace JS */

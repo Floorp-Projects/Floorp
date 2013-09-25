@@ -6,7 +6,7 @@
 #ifndef AndroidGraphicBuffer_h_
 #define AndroidGraphicBuffer_h_
 
-#include "gfxASurface.h"
+#include "gfxTypes.h"
 
 typedef void* EGLImageKHR;
 typedef void* EGLClientBuffer;
@@ -35,13 +35,13 @@ public:
     Usage2D = 1 << 4
   };
 
-  AndroidGraphicBuffer(uint32_t width, uint32_t height, uint32_t usage, gfxASurface::gfxImageFormat format);
+  AndroidGraphicBuffer(uint32_t width, uint32_t height, uint32_t usage, gfxImageFormat format);
   virtual ~AndroidGraphicBuffer();
 
   int Lock(uint32_t usage, unsigned char **bits);
   int Lock(uint32_t usage, const nsIntRect& rect, unsigned char **bits);
   int Unlock();
-  bool Reallocate(uint32_t aWidth, uint32_t aHeight, gfxASurface::gfxImageFormat aFormat);
+  bool Reallocate(uint32_t aWidth, uint32_t aHeight, gfxImageFormat aFormat);
 
   uint32_t Width() { return mWidth; }
   uint32_t Height() { return mHeight; }
@@ -54,7 +54,7 @@ private:
   uint32_t mWidth;
   uint32_t mHeight;
   uint32_t mUsage;
-  gfxASurface::gfxImageFormat mFormat;
+  gfxImageFormat mFormat;
 
   bool EnsureInitialized();
   bool EnsureEGLImage();
@@ -63,7 +63,7 @@ private:
   bool EnsureBufferCreated();
 
   uint32_t GetAndroidUsage(uint32_t aUsage);
-  uint32_t GetAndroidFormat(gfxASurface::gfxImageFormat aFormat);
+  uint32_t GetAndroidFormat(gfxImageFormat aFormat);
 
   void *mHandle;
   void *mEGLImage;

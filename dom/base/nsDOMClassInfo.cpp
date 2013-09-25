@@ -3725,69 +3725,8 @@ nsWindowSH::NewResolve(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
     }
   }
 
-  rv = nsDOMGenericSH::NewResolve(wrapper, cx, obj, id, flags, objp,
-                                  _retval);
-
-  if (NS_FAILED(rv) || *objp) {
-    // Something went wrong, or the property got resolved. Return.
-    return rv;
-  }
-
-  // Make a fast expando if we're assigning to (not declaring or
-  // binding a name) a new undefined property that's not already
-  // defined on our prototype chain. This way we can access this
-  // expando w/o ever getting back into XPConnect.
-  if (flags & JSRESOLVE_ASSIGNING) {
-    JS::Rooted<JSObject*> realObj(cx, wrapper->GetJSObject());
-
-    if (obj == realObj) {
-      JS::Rooted<JSObject*> proto(cx);
-      if (!js::GetObjectProto(cx, obj, &proto)) {
-          *_retval = false;
-          return NS_OK;
-      }
-      if (proto) {
-        JS::Rooted<JSObject*> pobj(cx);
-        JS::Rooted<JS::Value> val(cx);
-
-        if (!::JS_LookupPropertyWithFlagsById(cx, proto, id, flags,
-                                              pobj.address(), &val)) {
-          *_retval = false;
-
-          return NS_OK;
-        }
-
-        if (pobj) {
-          // A property was found on the prototype chain.
-          *objp = pobj;
-          return NS_OK;
-        }
-      }
-
-      // Define a fast expando.  The key here is to use JS_PropertyStub as the
-      // getter/setter, which makes us stay out of XPConnect when using this
-      // property.
-      //
-      // We're adding a new property here, so we don't need to worry about
-      // conflicting with any existing ones.
-      //
-      // Since we always create the undeclared property here, shortcutting the
-      // normal process, we go out of our way to tell the JS engine to report
-      // strict warnings/errors using js::ReportIfUndeclaredVarAssignment.
-      JS::Rooted<JSString*> str(cx, JSID_TO_STRING(id));
-      if (!js::ReportIfUndeclaredVarAssignment(cx, str) ||
-          !::JS_DefinePropertyById(cx, obj, id, JSVAL_VOID, JS_PropertyStub,
-                                   JS_StrictPropertyStub, JSPROP_ENUMERATE)) {
-        *_retval = false;
-
-        return NS_OK;
-      }
-
-      *objp = obj;
-    }
-  }
-
-  return NS_OK;
+  return nsDOMGenericSH::NewResolve(wrapper, cx, obj, id, flags, objp,
+                                    _retval);
 }
 
 NS_IMETHODIMP

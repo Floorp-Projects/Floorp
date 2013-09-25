@@ -32,12 +32,14 @@ _MOZBUILD_EXTERNAL_VARIABLES := \
   HOST_CSRCS \
   HOST_LIBRARY_NAME \
   IS_COMPONENT \
+  JS_MODULES_PATH \
   LIBRARY_NAME \
   LIBXUL_LIBRARY \
   MODULE \
   MSVC_ENABLE_PGO \
   NO_DIST_INSTALL \
   PARALLEL_DIRS \
+  SDK_HEADERS \
   SIMPLE_PROGRAMS \
   TEST_DIRS \
   TIERS \
@@ -104,11 +106,6 @@ endif
 endif
 endif
 
-ifdef SDK_HEADERS
-_EXTRA_EXPORTS := $(filter-out $(EXPORTS),$(SDK_HEADERS))
-EXPORTS += $(_EXTRA_EXPORTS)
-endif
-
 ifdef REBUILD_CHECK
 ifdef .PYMAKE
 REPORT_BUILD = @%rebuild_check rebuild_check $@ $^
@@ -165,10 +162,6 @@ ifdef ENABLE_TESTS
 # that changes to tests may not be updated and code could assume to pass
 # locally against non-current test code.
 DIRS += $(TEST_DIRS)
-
-ifndef INCLUDED_TESTS_XPCSHELL_MK #{
-  include $(topsrcdir)/config/makefiles/xpcshell.mk
-endif #}
 
 ifndef INCLUDED_TESTS_MOCHITEST_MK #{
   include $(topsrcdir)/config/makefiles/mochitest.mk

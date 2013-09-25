@@ -5,6 +5,13 @@
 
 #include "domstubs.idl"
 
+// undef the GetMessage macro defined in winuser.h from the MS Platform SDK
+%{C++
+#ifdef GetMessage
+#undef GetMessage
+#endif
+%}
+
 [scriptable, uuid(85255CC3-07BA-49FD-BC9B-18D2963DAF7F)]
 interface nsIDOMGeoPositionError : nsISupports
 {

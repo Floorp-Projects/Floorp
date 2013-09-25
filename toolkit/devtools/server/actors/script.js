@@ -2446,37 +2446,37 @@ SourceActor.prototype = {
    * source map from b to a. We need to do this because the source map we get
    * from _generatePrettyCodeAndMap goes the opposite way we want it to for
    * debugging.
+   *
+   * Note that the source map is modified in place.
    */
   _invertSourceMap: function SA__invertSourceMap({ code, map }) {
-    const smc = new SourceMapConsumer(map.toJSON());
-    const invertedMap = new SourceMapGenerator({
-      file: this._url
-    });
+    // XXX bug 918802: Monkey punch the source map consumer, because iterating
+    // over all mappings and inverting each of them, and then creating a new
+    // SourceMapConsumer is *way* too slow.
 
-    smc.eachMapping(m => {
-      if (!m.originalLine || !m.originalColumn) {
-        return;
-      }
-      const invertedMapping = {
-        source: m.source,
-        name: m.name,
-        original: {
-          line: m.generatedLine,
-          column: m.generatedColumn
-        },
-        generated: {
-          line: m.originalLine,
-          column: m.originalColumn
-        }
-      };
-      invertedMap.addMapping(invertedMapping);
-    });
+    map.setSourceContent(this._url, code);
+    const consumer = new SourceMapConsumer.fromSourceMap(map);
+    const getOrigPos = consumer.originalPositionFor.bind(consumer);
+    const getGenPos = consumer.generatedPositionFor.bind(consumer);
 
-    invertedMap.setSourceContent(this._url, code);
+    consumer.originalPositionFor = ({ line, column }) => {
+      const location = getGenPos({
+        line: line,
+        column: column,
+        source: this._url
+      });
+      location.source = this._url;
+      return location;
+    };
+
+    consumer.generatedPositionFor = ({ line, column }) => getOrigPos({
+      line: line,
+      column: column
+    });
 
     return {
       code: code,
-      map: new SourceMapConsumer(invertedMap.toJSON())
+      map: consumer
     };
   },
 
@@ -2491,7 +2491,7 @@ SourceActor.prototype = {
       // Compose the source maps
       this._sourceMap = SourceMapGenerator.fromSourceMap(this._sourceMap);
       this._sourceMap.applySourceMap(map, this._url);
-      this._sourceMap = new SourceMapConsumer(this._sourceMap.toJSON());
+      this._sourceMap = SourceMapConsumer.fromSourceMap(this._sourceMap);
       this._threadActor.sources.saveSourceMap(this._sourceMap,
                                               this._generatedSource);
     } else {

@@ -130,14 +130,7 @@ var Browser = {
     window.controllers.appendController(this);
     window.controllers.appendController(BrowserUI);
 
-    let os = Services.obs;
-    os.addObserver(SessionHistoryObserver, "browser:purge-session-history", false);
-    os.addObserver(ActivityObserver, "application-background", false);
-    os.addObserver(ActivityObserver, "application-foreground", false);
-    os.addObserver(ActivityObserver, "system-active", false);
-    os.addObserver(ActivityObserver, "system-idle", false);
-    os.addObserver(ActivityObserver, "system-display-on", false);
-    os.addObserver(ActivityObserver, "system-display-off", false);
+    Services.obs.addObserver(SessionHistoryObserver, "browser:purge-session-history", false);
 
     window.QueryInterface(Ci.nsIDOMChromeWindow).browserDOMWindow = new nsBrowserAccess();
 
@@ -247,14 +240,7 @@ var Browser = {
     messageManager.removeMessageListener("Browser:PluginClickToPlayClicked", this);
     messageManager.removeMessageListener("Browser:TapOnSelection", this);
 
-    var os = Services.obs;
-    os.removeObserver(SessionHistoryObserver, "browser:purge-session-history");
-    os.removeObserver(ActivityObserver, "application-background");
-    os.removeObserver(ActivityObserver, "application-foreground");
-    os.removeObserver(ActivityObserver, "system-active");
-    os.removeObserver(ActivityObserver, "system-idle");
-    os.removeObserver(ActivityObserver, "system-display-on");
-    os.removeObserver(ActivityObserver, "system-display-off");
+    Services.obs.removeObserver(SessionHistoryObserver, "browser:purge-session-history");
 
     window.controllers.removeController(this);
     window.controllers.removeController(BrowserUI);
@@ -1390,37 +1376,6 @@ var SessionHistoryObserver = {
     if (urlbar) {
       // Clear undo history of the URL bar
       urlbar.editor.transactionManager.clear();
-    }
-  }
-};
-
-var ActivityObserver = {
-  _inBackground : false,
-  _notActive : false,
-  _isDisplayOff : false,
-  _timeoutID: 0,
-  observe: function ao_observe(aSubject, aTopic, aData) {
-    if (aTopic == "application-background") {
-      this._inBackground = true;
-    } else if (aTopic == "application-foreground") {
-      this._inBackground = false;
-    } else if (aTopic == "system-idle") {
-      this._notActive = true;
-    } else if (aTopic == "system-active") {
-      this._notActive = false;
-    } else if (aTopic == "system-display-on") {
-      this._isDisplayOff = false;
-    } else if (aTopic == "system-display-off") {
-      this._isDisplayOff = true;
-    }
-    let activeTabState = !this._inBackground && !this._notActive && !this._isDisplayOff;
-    if (this._timeoutID)
-      clearTimeout(this._timeoutID);
-    if (Browser.selectedTab.active != activeTabState) {
-      // On Maemo all backgrounded applications getting portrait orientation
-      // so if browser had landscape mode then we need timeout in order
-      // to finish last rotate/paint operation and have nice lookine browser in TS
-      this._timeoutID = setTimeout(function() { Browser.selectedTab.active = activeTabState; }, activeTabState ? 0 : kSetInactiveStateTimeout);
     }
   }
 };

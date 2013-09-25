@@ -912,7 +912,7 @@ CompositorD3D11::PaintToTarget()
     new gfxImageSurface((unsigned char*)map.pData,
                         gfxIntSize(bbDesc.Width, bbDesc.Height),
                         map.RowPitch,
-                        gfxASurface::ImageFormatARGB32);
+                        gfxImageFormatARGB32);
 
   mTarget->SetSource(tmpSurface);
   mTarget->SetOperator(gfxContext::OPERATOR_SOURCE);

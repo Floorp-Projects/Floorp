@@ -24,7 +24,10 @@ function test()
     ok(hud, "browser console opened");
 
     hud.jsterm.clearOutput();
-    hud.jsterm.execute("foobarzTezt = content.document", onAddVariable);
+    hud.jsterm.execute("Cu = Components.utils;" +
+                       "Cu.import('resource://gre/modules/Services.jsm');" +
+                       "chromeWindow = Services.wm.getMostRecentWindow('navigator:browser');" +
+                       "foobarzTezt = chromeWindow.content.document", onAddVariable);
   }
 
   function onAddVariable()
