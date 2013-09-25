@@ -27,7 +27,7 @@ class PinchGestureInput;
 class TapGestureInput;
 
 // This looks unnecessary now, but as we add more and more classes that derive
-// from InputType (eventually probably almost as many as nsGUIEvent.h has), it
+// from InputType (eventually probably almost as many as *Events.h has), it
 // will be more and more clear what's going on with a macro that shortens the
 // definition of the RTTI functions.
 #define INPUTDATA_AS_CHILD_TYPE(type, enumID) \

@@ -94,7 +94,6 @@
 #include "WinMouseScrollHandler.h"
 #include "nsFontMetrics.h"
 #include "nsIFontEnumerator.h"
-#include "nsGUIEvent.h"
 #include "nsFont.h"
 #include "nsRect.h"
 #include "nsThreadUtils.h"

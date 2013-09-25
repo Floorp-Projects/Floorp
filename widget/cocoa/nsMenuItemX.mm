@@ -14,7 +14,6 @@
 
 #include "nsCOMPtr.h"
 #include "nsGkAtoms.h"
-#include "nsGUIEvent.h"
 
 #include "mozilla/dom/Element.h"
 #include "nsIWidget.h"

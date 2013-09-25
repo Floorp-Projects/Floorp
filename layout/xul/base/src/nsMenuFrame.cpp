@@ -30,7 +30,6 @@
 #include "nsReadableUtils.h"
 #include "nsUnicharUtils.h"
 #include "nsIStringBundle.h"
-#include "nsGUIEvent.h"
 #include "nsContentUtils.h"
 #include "nsDisplayList.h"
 #include "nsIReflowCallback.h"

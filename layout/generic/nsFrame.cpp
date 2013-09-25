@@ -25,7 +25,6 @@
 #include "nsViewManager.h"
 #include "nsIScrollableFrame.h"
 #include "nsPresContext.h"
-#include "nsGUIEvent.h"
 #include "nsAsyncDOMEvent.h"
 #include "nsStyleConsts.h"
 #include "nsIPresShell.h"

@@ -21,7 +21,6 @@
 #include "nsIDOMNode.h"
 #include "nsRange.h"
 #include "nsCOMArray.h"
-#include "nsGUIEvent.h"
 #include "nsIDOMKeyEvent.h"
 #include "nsITableCellLayout.h"
 #include "nsTArray.h"

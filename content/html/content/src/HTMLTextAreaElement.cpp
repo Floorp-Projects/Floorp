@@ -18,7 +18,6 @@
 #include "nsEventDispatcher.h"
 #include "nsFocusManager.h"
 #include "nsFormSubmission.h"
-#include "nsGUIEvent.h"
 #include "nsIComponentManager.h"
 #include "nsIConstraintValidation.h"
 #include "nsIControllers.h"

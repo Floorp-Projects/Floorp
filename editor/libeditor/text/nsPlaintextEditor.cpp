@@ -23,7 +23,6 @@
 #include "nsEditRules.h"
 #include "nsEditorUtils.h"  // nsAutoEditBatch, nsAutoRules
 #include "nsError.h"
-#include "nsGUIEvent.h"
 #include "nsGkAtoms.h"
 #include "nsIClipboard.h"
 #include "nsIContent.h"

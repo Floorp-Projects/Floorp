@@ -31,7 +31,6 @@
 #include "nsIWidget.h"
 #include "nsStyleSet.h"
 #include "nsFrameSelection.h"
-#include "nsGUIEvent.h"
 #include "nsContentUtils.h" // For AddScriptBlocker().
 #include "nsRefreshDriver.h"
 #include "mozilla/Attributes.h"

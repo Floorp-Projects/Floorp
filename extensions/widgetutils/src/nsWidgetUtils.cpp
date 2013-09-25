@@ -34,7 +34,6 @@
 #include "nsIDOMMouseEvent.h"
 #include "nsIDOMWheelEvent.h"
 #include "nsView.h"
-#include "nsGUIEvent.h"
 #include "nsViewManager.h"
 #include "nsIContentPolicy.h"
 #include "nsIDocShellTreeItem.h"

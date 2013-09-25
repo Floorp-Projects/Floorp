@@ -36,7 +36,6 @@
 #include "nsIDOMDocument.h"
 #include "nsIHTMLDocument.h"
 #include "nsGkAtoms.h"
-#include "nsGUIEvent.h"
 #include "nsIFrame.h"
 #include "nsIURI.h"
 #include "nsISimpleEnumerator.h"
