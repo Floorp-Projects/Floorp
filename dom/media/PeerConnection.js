@@ -13,17 +13,11 @@ const PC_CONTRACT = "@mozilla.org/dom/peerconnection;1";
 const PC_ICE_CONTRACT = "@mozilla.org/dom/rtcicecandidate;1";
 const PC_SESSION_CONTRACT = "@mozilla.org/dom/rtcsessiondescription;1";
 const PC_MANAGER_CONTRACT = "@mozilla.org/dom/peerconnectionmanager;1";
-const PC_ICEEVENT_CONTRACT = "@mozilla.org/dom/rtcpeerconnectioniceevent;1";
-const MSEVENT_CONTRACT = "@mozilla.org/dom/mediastreamevent;1";
-const DCEVENT_CONTRACT = "@mozilla.org/dom/datachannelevent;1";
 
 const PC_CID = Components.ID("{9878b414-afaa-4176-a887-1e02b3b047c2}");
 const PC_ICE_CID = Components.ID("{02b9970c-433d-4cc2-923d-f7028ac66073}");
 const PC_SESSION_CID = Components.ID("{1775081b-b62d-4954-8ffe-a067bbf508a7}");
 const PC_MANAGER_CID = Components.ID("{7293e901-2be3-4c02-b4bd-cbef6fc24f78}");
-const PC_ICEEVENT_CID = Components.ID("{b9cd25a7-9859-4f9e-8f84-ef5181ff36c0}");
-const MSEVENT_CID = Components.ID("{a722a8a9-2290-4e99-a5ed-07b504292d08}");
-const DCEVENT_CID = Components.ID("{d5ed7fbf-01a8-4b18-af6c-861cf2aac920}");
 
 // Global list of PeerConnection objects, so they can be cleaned up when
 // a page is torn down. (Maps inner window ID to an array of PC objects).
@@ -154,72 +148,6 @@ RTCSessionDescription.prototype = {
     this.type = dict.type;
     this.sdp  = dict.sdp;
   }
-};
-
-function MediaStreamEvent() {
-  this.type = this._stream = null;
-}
-MediaStreamEvent.prototype = {
-  classDescription: "MediaStreamEvent",
-  classID: MSEVENT_CID,
-  contractID: MSEVENT_CONTRACT,
-  QueryInterface: XPCOMUtils.generateQI([Ci.nsISupports,
-                                         Ci.nsIDOMGlobalPropertyInitializer]),
-
-  init: function(win) { this._win = win; },
-
-  __init: function(type, dict) {
-    this.type = type;
-    this.__DOM_IMPL__.initEvent(type, dict.bubbles || false,
-                                dict.cancelable || false);
-    this._stream = dict.stream;
-  },
-
-  get stream() { return this._stream; }
-};
-
-function RTCDataChannelEvent() {
-  this.type = this._channel = null;
-}
-RTCDataChannelEvent.prototype = {
-  classDescription: "RTCDataChannelEvent",
-  classID: DCEVENT_CID,
-  contractID: DCEVENT_CONTRACT,
-  QueryInterface: XPCOMUtils.generateQI([Ci.nsISupports,
-                                         Ci.nsIDOMGlobalPropertyInitializer]),
-
-  init: function(win) { this._win = win; },
-
-  __init: function(type, dict) {
-    this.type = type;
-    this.__DOM_IMPL__.initEvent(type, dict.bubbles || false,
-                                dict.cancelable || false);
-    this._channel = dict.channel;
-  },
-
-  get channel() { return this._channel; }
-};
-
-function RTCPeerConnectionIceEvent() {
-  this.type = this._candidate = null;
-}
-RTCPeerConnectionIceEvent.prototype = {
-  classDescription: "RTCPeerConnectionIceEvent",
-  classID: PC_ICEEVENT_CID,
-  contractID: PC_ICEEVENT_CONTRACT,
-  QueryInterface: XPCOMUtils.generateQI([Ci.nsISupports,
-                                         Ci.nsIDOMGlobalPropertyInitializer]),
-
-  init: function(win) { this._win = win; },
-
-  __init: function(type, dict) {
-    this.type = type;
-    this.__DOM_IMPL__.initEvent(type, dict.bubbles || false,
-                                dict.cancelable || false);
-    this._candidate = dict.candidate;
-  },
-
-  get candidate() { return this._candidate; }
 };
 
 function RTCPeerConnection() {
@@ -1101,6 +1029,5 @@ PeerConnectionObserver.prototype = {
 };
 
 this.NSGetFactory = XPCOMUtils.generateNSGetFactory(
-  [GlobalPCList, RTCIceCandidate, RTCSessionDescription, RTCPeerConnection,
-   RTCPeerConnectionIceEvent, MediaStreamEvent, RTCDataChannelEvent]
+  [GlobalPCList, RTCIceCandidate, RTCSessionDescription, RTCPeerConnection]
 );
