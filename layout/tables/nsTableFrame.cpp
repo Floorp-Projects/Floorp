@@ -79,7 +79,7 @@ struct nsTableReflowState {
             nscoord         aAvailWidth,
             nscoord         aAvailHeight)
   {
-    nsTableFrame* table = (nsTableFrame*)aTableFrame.FirstInFlow();
+    nsTableFrame* table = static_cast<nsTableFrame*>(aTableFrame.FirstInFlow());
     nsMargin borderPadding = table->GetChildAreaOffset(&reflowState);
     nscoord cellSpacingX = table->GetCellSpacingX();
 
@@ -574,12 +574,12 @@ void nsTableFrame::RemoveCol(nsTableColGroupFrame* aColGroupFrame,
 }
 
 /** Get the cell map for this table frame.  It is not always mCellMap.
-  * Only the firstInFlow has a legit cell map
+  * Only the first-in-flow has a legit cell map.
   */
-nsTableCellMap* nsTableFrame::GetCellMap() const
+nsTableCellMap*
+nsTableFrame::GetCellMap() const
 {
-  nsTableFrame* firstInFlow = (nsTableFrame *)FirstInFlow();
-  return firstInFlow->mCellMap;
+  return static_cast<nsTableFrame*>(FirstInFlow())->mCellMap;
 }
 
 // XXX this needs to be moved to nsCSSFrameConstructor
@@ -1976,7 +1976,7 @@ nsTableFrame::AdjustForCollapsingRowsCols(nsHTMLReflowMetrics& aDesiredSize,
   RowGroupArray rowGroups;
   OrderRowGroups(rowGroups);
 
-  nsTableFrame* firstInFlow = static_cast<nsTableFrame*> (FirstInFlow());
+  nsTableFrame* firstInFlow = static_cast<nsTableFrame*>(FirstInFlow());
   nscoord width = firstInFlow->GetCollapsedWidth(aBorderPadding);
   nscoord rgWidth = width - 2 * GetCellSpacingX();
   nsOverflowAreas overflow;
@@ -2334,7 +2334,7 @@ nsTableFrame::DoRemoveFrame(ChildListID     aListID,
       nsIntRect damageArea;
       cellMap->RebuildConsideringCells(nullptr, nullptr, 0, 0, false, damageArea);
 
-      ((nsTableFrame*)FirstInFlow())->MatchCellMapToColCache(cellMap);
+      static_cast<nsTableFrame*>(FirstInFlow())->MatchCellMapToColCache(cellMap);
     }
   }
 }
@@ -6130,7 +6130,7 @@ BCPaintBorderIterator::BCPaintBorderIterator(nsTableFrame* aTable)
   mTable      = aTable;
   mVerInfo    = nullptr;
   nsMargin childAreaOffset = mTable->GetChildAreaOffset(nullptr);
-  mTableFirstInFlow    = (nsTableFrame*) mTable->FirstInFlow();
+  mTableFirstInFlow    = static_cast<nsTableFrame*>(mTable->FirstInFlow());
   mTableCellMap        = mTable->GetCellMap();
   // y position of first row in damage area
   mInitialOffsetY = mTable->GetPrevInFlow() ? 0 : childAreaOffset.top;

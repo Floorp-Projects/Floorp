@@ -74,23 +74,25 @@ NS_METHOD nsSplittableFrame::SetNextContinuation(nsIFrame* aFrame)
   return NS_OK;
 }
 
-nsIFrame* nsSplittableFrame::FirstContinuation() const
+nsIFrame*
+nsSplittableFrame::FirstContinuation() const
 {
   nsSplittableFrame* firstContinuation = const_cast<nsSplittableFrame*>(this);
   while (firstContinuation->mPrevContinuation)  {
     firstContinuation = static_cast<nsSplittableFrame*>(firstContinuation->mPrevContinuation);
   }
-  NS_POSTCONDITION(firstContinuation, "illegal state in continuation chain.");
+  MOZ_ASSERT(firstContinuation, "post-condition failed");
   return firstContinuation;
 }
 
-nsIFrame* nsSplittableFrame::LastContinuation() const
+nsIFrame*
+nsSplittableFrame::LastContinuation() const
 {
   nsSplittableFrame* lastContinuation = const_cast<nsSplittableFrame*>(this);
   while (lastContinuation->mNextContinuation)  {
     lastContinuation = static_cast<nsSplittableFrame*>(lastContinuation->mNextContinuation);
   }
-  NS_POSTCONDITION(lastContinuation, "illegal state in continuation chain.");
+  MOZ_ASSERT(lastContinuation, "post-condition failed");
   return lastContinuation;
 }
 
@@ -152,23 +154,25 @@ NS_METHOD nsSplittableFrame::SetNextInFlow(nsIFrame* aFrame)
   return NS_OK;
 }
 
-nsIFrame* nsSplittableFrame::FirstInFlow() const
+nsIFrame*
+nsSplittableFrame::FirstInFlow() const
 {
   nsSplittableFrame* firstInFlow = const_cast<nsSplittableFrame*>(this);
-  while (nsIFrame *prev = firstInFlow->GetPrevInFlow())  {
+  while (nsIFrame* prev = firstInFlow->GetPrevInFlow())  {
     firstInFlow = static_cast<nsSplittableFrame*>(prev);
   }
-  NS_POSTCONDITION(firstInFlow, "illegal state in flow chain.");
+  MOZ_ASSERT(firstInFlow, "post-condition failed");
   return firstInFlow;
 }
 
-nsIFrame* nsSplittableFrame::LastInFlow() const
+nsIFrame*
+nsSplittableFrame::LastInFlow() const
 {
   nsSplittableFrame* lastInFlow = const_cast<nsSplittableFrame*>(this);
   while (nsIFrame* next = lastInFlow->GetNextInFlow())  {
     lastInFlow = static_cast<nsSplittableFrame*>(next);
   }
-  NS_POSTCONDITION(lastInFlow, "illegal state in flow chain.");
+  MOZ_ASSERT(lastInFlow, "post-condition failed");
   return lastInFlow;
 }
 
