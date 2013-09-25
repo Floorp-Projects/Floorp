@@ -5,10 +5,11 @@
 
 /* rendering object for HTML <frameset> elements */
 
+#include "nsFrameSetFrame.h"
+
 #include "mozilla/DebugOnly.h"
 #include "mozilla/Likely.h"
 
-#include "nsFrameSetFrame.h"
 #include "nsGenericHTMLElement.h"
 #include "nsAttrValueInlines.h"
 #include "nsLeafFrame.h"

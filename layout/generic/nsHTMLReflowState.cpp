@@ -5,6 +5,8 @@
 
 /* struct containing the input to nsIFrame::Reflow */
 
+#include "nsHTMLReflowState.h"
+
 #include "nsStyleConsts.h"
 #include "nsCSSAnonBoxes.h"
 #include "nsFrame.h"
