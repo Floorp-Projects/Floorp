@@ -10,12 +10,8 @@ const Cu = Components.utils;
 
 Cu.import("resource://gre/modules/Services.jsm");
 
-const phishingList = Services.prefs.getCharPref("urlclassifier.phish_table");
-const malwareList = Services.prefs.getCharPref("urlclassifier.malware_table");
-const downloadBlockList =
-  Services.prefs.getCharPref("urlclassifier.download_block_table");
-const downloadAllowList =
-  Services.prefs.getCharPref("urlclassifier.download_allow_table");
+const [phishingList, malwareList] =
+  Services.prefs.getCharPref("urlclassifier.gethashtables").split(",").map(function(value) value.trim());
 
 var debug = false;
 function log(...stuff) {
@@ -43,8 +39,6 @@ this.SafeBrowsing = {
                       getService(Ci.nsIUrlListManager);
     listManager.registerTable(phishingList, false);
     listManager.registerTable(malwareList, false);
-    listManager.registerTable(downloadBlockList, false);
-    listManager.registerTable(downloadAllowList, false);
     this.addMozEntries();
 
     this.controlUpdateChecking();
