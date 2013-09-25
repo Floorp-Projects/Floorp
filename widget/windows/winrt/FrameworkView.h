@@ -195,7 +195,6 @@ private:
   static Rect sKeyboardRect;
   bool mWinVisible;
   bool mWinActiveState;
-  ApplicationViewState mViewState;
 };
 
 } } }

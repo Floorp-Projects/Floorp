@@ -1127,7 +1127,7 @@ var ViewMenu = {
    * Set up the content of the view menu.
    */
   populateSortMenu: function VM_populateSortMenu(event) {
-    this.fillWithColumns(event, "viewUnsorted", "directionSeparator", "radio", "view.sortBy.");
+    this.fillWithColumns(event, "viewUnsorted", "directionSeparator", "radio", "view.sortBy.1.");
 
     var sortColumn = this._getSortColumn();
     var viewSortAscending = document.getElementById("viewSortAscending");

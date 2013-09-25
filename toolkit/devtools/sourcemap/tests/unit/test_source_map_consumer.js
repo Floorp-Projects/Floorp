@@ -393,6 +393,66 @@ define("test/source-map/test-source-map-consumer", ["require", "exports", "modul
     assert.equal(pos.column, 5);
   };
 
+  exports['test SourceMapConsumer.fromSourceMap'] = function (assert, util) {
+    var smg = new SourceMapGenerator({
+      sourceRoot: 'http://example.com/',
+      file: 'foo.js'
+    });
+    smg.addMapping({
+      original: { line: 1, column: 1 },
+      generated: { line: 2, column: 2 },
+      source: 'bar.js'
+    });
+    smg.addMapping({
+      original: { line: 2, column: 2 },
+      generated: { line: 4, column: 4 },
+      source: 'baz.js',
+      name: 'dirtMcGirt'
+    });
+    smg.setSourceContent('baz.js', 'baz.js content');
+
+    var smc = SourceMapConsumer.fromSourceMap(smg);
+    assert.equal(smc.file, 'foo.js');
+    assert.equal(smc.sourceRoot, 'http://example.com/');
+    assert.equal(smc.sources.length, 2);
+    assert.equal(smc.sources[0], 'http://example.com/bar.js');
+    assert.equal(smc.sources[1], 'http://example.com/baz.js');
+    assert.equal(smc.sourceContentFor('baz.js'), 'baz.js content');
+
+    var pos = smc.originalPositionFor({
+      line: 2,
+      column: 2
+    });
+    assert.equal(pos.line, 1);
+    assert.equal(pos.column, 1);
+    assert.equal(pos.source, 'http://example.com/bar.js');
+    assert.equal(pos.name, null);
+
+    pos = smc.generatedPositionFor({
+      line: 1,
+      column: 1,
+      source: 'http://example.com/bar.js'
+    });
+    assert.equal(pos.line, 2);
+    assert.equal(pos.column, 2);
+
+    pos = smc.originalPositionFor({
+      line: 4,
+      column: 4
+    });
+    assert.equal(pos.line, 2);
+    assert.equal(pos.column, 2);
+    assert.equal(pos.source, 'http://example.com/baz.js');
+    assert.equal(pos.name, 'dirtMcGirt');
+
+    pos = smc.generatedPositionFor({
+      line: 2,
+      column: 2,
+      source: 'http://example.com/baz.js'
+    });
+    assert.equal(pos.line, 4);
+    assert.equal(pos.column, 4);
+  };
 });
 function run_test() {
   runSourceMapTests('test/source-map/test-source-map-consumer', do_throw);

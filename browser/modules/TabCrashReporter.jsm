@@ -64,6 +64,9 @@ this.TabCrashReporter = {
   },
 
   onAboutTabCrashedLoad: function (aBrowser) {
+    if (!this.childMap)
+      return;
+
     let dumpID = this.childMap.get(this.browserMap.get(aBrowser));
     if (!dumpID)
       return;

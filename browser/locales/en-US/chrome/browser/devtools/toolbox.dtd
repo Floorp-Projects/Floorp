@@ -52,15 +52,6 @@
   -  -->
 <!ENTITY options.defaultColorUnit.name "Color Names">
 
-<!-- LOCALIZATION NOTE (options.context.requiresRestart2): This is the requires
-  -  restart label at right of settings that require a browser restart to be
-  -  effective. -->
-<!ENTITY options.context.requiresRestart2  "Requires browser restart">
-
-<!-- LOCALIZATION NOTE (options.restartButton.label): This is the label for the
-  -  restart button next to options.context.requiresRestart2 label. -->
-<!ENTITY options.restartButton.label  "Restart now">
-
 <!-- LOCALIZATION NOTE (options.context.triggersPageRefresh2): This is the
   -  triggers page refresh label next to the settings in the advanced settings
   -  group in the options panel which trigger page reload. -->

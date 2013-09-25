@@ -98,6 +98,7 @@ public class GeckoApplication extends Application {
     public void onCreate() {
         HardwareUtils.init(getApplicationContext());
         Clipboard.init(getApplicationContext());
+        NotificationHelper.init(getApplicationContext());
         GeckoLoader.loadMozGlue();
         super.onCreate();
     }

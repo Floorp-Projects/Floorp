@@ -406,18 +406,8 @@ const WITH_EXTENSION_CACHE = [{
 
 /*
  * Trigger an AddonManager background update check
- *
- * @param  aCallback
- *         Callback to call once the background update is complete
  */
-function trigger_background_update(aCallback) {
-  Services.obs.addObserver({
-    observe: function(aSubject, aTopic, aData) {
-      Services.obs.removeObserver(this, "addons-background-update-complete");
-      do_execute_soon(aCallback);
-    }
-  }, "addons-background-update-complete", false);
-
+function trigger_background_update() {
   gInternalManager.notify(null);
 }
 
@@ -707,15 +697,21 @@ function run_test_13() {
   check_database_exists(true);
   Services.prefs.setCharPref(PREF_GETADDONS_BYIDS_PERF, GETADDONS_EMPTY);
 
-  trigger_background_update(function() {
-    // Database should have been deleted
-    check_database_exists(false);
+  Services.obs.addObserver({
+    observe: function(aSubject, aTopic, aData) {
+      Services.obs.removeObserver(this, "addons-background-update-complete");
 
-    AddonManager.getAddonsByIDs(ADDON_IDS, function(aAddons) {
-      check_results(aAddons, WITHOUT_CACHE);
-      do_execute_soon(run_test_14);
-    });
-  });
+      // Database should have been deleted with the background update.
+      check_database_exists(false);
+
+      AddonManager.getAddonsByIDs(ADDON_IDS, function(aAddons) {
+        check_results(aAddons, WITHOUT_CACHE);
+        do_execute_soon(run_test_14);
+      });
+    }
+  }, "addons-background-update-complete", false);
+
+  trigger_background_update();
 }
 
 // Tests that the XPI add-ons have the correct properties if caching is
@@ -740,12 +736,14 @@ function run_test_14() {
 function run_test_15() {
   Services.prefs.setCharPref(PREF_GETADDONS_BYIDS_PERF, GETADDONS_RESULTS);
 
-  trigger_background_update(function() {
+  waitForFlushedData(function() {
     AddonManager.getAddonsByIDs(ADDON_IDS, function(aAddons) {
       check_results(aAddons, WITH_CACHE);
       do_execute_soon(run_test_16);
     });
   });
+
+  trigger_background_update();
 }
 
 // Tests that restarting the manager does not change the checked properties
@@ -764,11 +762,13 @@ function run_test_16() {
 function run_test_17() {
   Services.prefs.setCharPref(PREF_GETADDONS_CACHE_TYPES, "foo,bar,extension,baz");
 
-  trigger_background_update(function() {
+  waitForFlushedData(function() {
     AddonManager.getAddonsByIDs(ADDON_IDS, function(aAddons) {
       check_results(aAddons, WITH_EXTENSION_CACHE);
       end_test();
     });
   });
+
+  trigger_background_update();
 }
 
