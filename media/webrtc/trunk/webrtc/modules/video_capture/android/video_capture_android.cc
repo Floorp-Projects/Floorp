@@ -216,62 +216,6 @@ int32_t VideoCaptureAndroid::SetAndroidObjects(void* javaVM,
   return 0;
 }
 
-int32_t VideoCaptureAndroid::AttachAndUseAndroidDeviceInfoObjects(
-    JNIEnv*& env,
-    jclass& javaCmDevInfoClass,
-    jobject& javaCmDevInfoObject,
-    bool& attached) {
-
-    WEBRTC_TRACE(webrtc::kTraceError, webrtc::kTraceVideoCapture, -1,
-                 "%s: AttachAndUseAndroidDeviceInfoObj.",
-                 __FUNCTION__);
-
-  // get the JNI env for this thread
-  if (!g_jvm) {
-    WEBRTC_TRACE(webrtc::kTraceError, webrtc::kTraceVideoCapture, -1,
-                 "%s: SetAndroidObjects not called with a valid JVM.",
-                 __FUNCTION__);
-    return -1;
-  }
-  attached = false;
-  if (g_jvm->GetEnv((void**) &env, JNI_VERSION_1_4) != JNI_OK) {
-    // try to attach the thread and get the env
-    // Attach this thread to JVM
-    jint res = g_jvm->AttachCurrentThread(&env, NULL);
-    if ((res < 0) || !env) {
-      WEBRTC_TRACE(webrtc::kTraceError, webrtc::kTraceVideoCapture, -1,
-                   "%s: Could not attach thread to JVM (%d, %p)",
-                   __FUNCTION__, res, env);
-      return -1;
-    }
-    attached = true;
-    WEBRTC_TRACE(webrtc::kTraceStateInfo, webrtc::kTraceVideoCapture, -1,
-                 "%s: attach success", __FUNCTION__);
-  } else {
-    WEBRTC_TRACE(webrtc::kTraceStateInfo, webrtc::kTraceVideoCapture, -1,
-                 "%s: did not attach because JVM Env present", __FUNCTION__);
-  }
-  MOZ_ASSERT(g_javaCmDevInfoClass != nullptr);
-  MOZ_ASSERT(g_javaCmDevInfoObject != nullptr);
-  javaCmDevInfoClass = g_javaCmDevInfoClass;
-  javaCmDevInfoObject = g_javaCmDevInfoObject;
-  return 0;
-
-}
-
-int32_t VideoCaptureAndroid::ReleaseAndroidDeviceInfoObjects(
-    bool attached) {
-  if (attached && g_jvm->DetachCurrentThread() < 0) {
-    WEBRTC_TRACE(webrtc::kTraceWarning, webrtc::kTraceVideoCapture, -1,
-                 "%s: Could not detach thread from JVM", __FUNCTION__);
-    return -1;
-  } else if (!attached) {
-      WEBRTC_TRACE(webrtc::kTraceStateInfo, webrtc::kTraceVideoCapture, -1,
-                   "%s: not attached, no detach", __FUNCTION__);
-  }
-  return 0;
-}
-
 /*
  * JNI callback from Java class. Called
  * when the camera has a new frame to deliver
@@ -355,34 +299,25 @@ int32_t VideoCaptureAndroid::Init(const int32_t id,
                  "%s: Not a valid Java VM pointer", __FUNCTION__);
     return -1;
   }
-  // get the JNI env for this thread
-  JNIEnv *env;
-  bool isAttached = false;
-  int32_t rotation = 0;
 
-  // get the JNI env for this thread
-  if (g_jvm->GetEnv((void**) &env, JNI_VERSION_1_4) != JNI_OK) {
-    // try to attach the thread and get the env
-    // Attach this thread to JVM
-    jint res = g_jvm->AttachCurrentThread(&env, NULL);
-    if ((res < 0) || !env) {
-      WEBRTC_TRACE(webrtc::kTraceError, webrtc::kTraceVideoCapture, _id,
-                   "%s: Could not attach thread to JVM (%d, %p)",
-                   __FUNCTION__, res, env);
+  AutoLocalJNIFrame jniFrame;
+  JNIEnv* env = jniFrame.GetEnv();
+  if (!env)
       return -1;
-    }
-    isAttached = true;
-  }
+
+  jclass javaCmDevInfoClass = jniFrame.GetCmDevInfoClass();
+  jobject javaCmDevInfoObject = jniFrame.GetCmDevInfoObject();
+
+  int32_t rotation = 0;
 
   WEBRTC_TRACE(webrtc::kTraceDebug, webrtc::kTraceVideoCapture, _id,
                "get method id");
-
   // get the method ID for the Android Java
   // CaptureDeviceInfoClass AllocateCamera factory method.
   char signature[256];
   sprintf(signature, "(IJLjava/lang/String;)L%s;", AndroidJavaCaptureClass);
 
-  jmethodID cid = env->GetMethodID(g_javaCmDevInfoClass, "AllocateCamera",
+  jmethodID cid = env->GetMethodID(javaCmDevInfoClass, "AllocateCamera",
                                    signature);
   if (cid == NULL) {
     WEBRTC_TRACE(webrtc::kTraceError, webrtc::kTraceVideoCapture, _id,
@@ -392,7 +327,7 @@ int32_t VideoCaptureAndroid::Init(const int32_t id,
 
   jstring capureIdString = env->NewStringUTF((char*) deviceUniqueIdUTF8);
   // construct the object by calling the static constructor object
-  jobject javaCameraObjLocal = env->CallObjectMethod(g_javaCmDevInfoObject,
+  jobject javaCameraObjLocal = env->CallObjectMethod(javaCmDevInfoObject,
                                                      cid, (jint) id,
                                                      (jlong) this,
                                                      capureIdString);
@@ -412,17 +347,6 @@ int32_t VideoCaptureAndroid::Init(const int32_t id,
     return -1;
   }
 
-  // Delete local object ref, we only use the global ref
-  env->DeleteLocalRef(javaCameraObjLocal);
-
-  // Detach this thread if it was attached
-  if (isAttached) {
-    if (g_jvm->DetachCurrentThread() < 0) {
-      WEBRTC_TRACE(webrtc::kTraceWarning, webrtc::kTraceAudioDevice, _id,
-                   "%s: Could not detach thread from JVM", __FUNCTION__);
-    }
-  }
-
   return 0;
 }
 
@@ -434,57 +358,30 @@ VideoCaptureAndroid::~VideoCaptureAndroid() {
                  "%s: Nothing to clean", __FUNCTION__);
   }
   else {
-    bool isAttached = false;
-    // get the JNI env for this thread
-    JNIEnv *env;
-    if (g_jvm->GetEnv((void**) &env, JNI_VERSION_1_4) != JNI_OK) {
-      // try to attach the thread and get the env
-      // Attach this thread to JVM
-      jint res = g_jvm->AttachCurrentThread(&env, NULL);
-      if ((res < 0) || !env) {
-        WEBRTC_TRACE(webrtc::kTraceError, webrtc::kTraceVideoCapture,
-                     _id,
-                     "%s: Could not attach thread to JVM (%d, %p)",
-                     __FUNCTION__, res, env);
-      }
-      else {
-        isAttached = true;
-      }
-    }
+    AutoLocalJNIFrame jniFrame;
+    JNIEnv* env = jniFrame.GetEnv();
+    if (!env)
+        return;
 
-    if (env) {
-      // get the method ID for the Android Java CaptureClass static
-      // DeleteVideoCaptureAndroid  method. Call this to release the camera so
-      // another application can use it.
-      jmethodID cid = env->GetStaticMethodID(
-          g_javaCmClass,
-          "DeleteVideoCaptureAndroid",
-          "(Lorg/webrtc/videoengine/VideoCaptureAndroid;)V");
-      if (cid != NULL) {
-        WEBRTC_TRACE(webrtc::kTraceDebug, webrtc::kTraceVideoCapture, -1,
-                     "%s: Call DeleteVideoCaptureAndroid", __FUNCTION__);
-        // Close the camera by calling the static destruct function.
-        env->CallStaticVoidMethod(g_javaCmClass, cid, _javaCaptureObj);
+    // get the method ID for the Android Java CaptureClass static
+    // DeleteVideoCaptureAndroid  method. Call this to release the camera so
+    // another application can use it.
+    jmethodID cid = env->GetStaticMethodID(g_javaCmClass,
+                                           "DeleteVideoCaptureAndroid",
+                                           "(Lorg/webrtc/videoengine/VideoCaptureAndroid;)V");
+    if (cid != NULL) {
+      WEBRTC_TRACE(webrtc::kTraceDebug, webrtc::kTraceVideoCapture, -1,
+                   "%s: Call DeleteVideoCaptureAndroid", __FUNCTION__);
+      // Close the camera by calling the static destruct function.
+      env->CallStaticVoidMethod(g_javaCmClass, cid, _javaCaptureObj);
 
-        // Delete global object ref to the camera.
-        env->DeleteGlobalRef(_javaCaptureObj);
-
-        _javaCaptureObj = NULL;
-      }
-      else {
+      // Delete global object ref to the camera.
+      env->DeleteGlobalRef(_javaCaptureObj);
+      _javaCaptureObj = NULL;
+    } else {
         WEBRTC_TRACE(webrtc::kTraceError, webrtc::kTraceVideoCapture, -1,
                      "%s: Failed to find DeleteVideoCaptureAndroid id",
                      __FUNCTION__);
-      }
-    }
-
-    // Detach this thread if it was attached
-    if (isAttached) {
-      if (g_jvm->DetachCurrentThread() < 0) {
-        WEBRTC_TRACE(webrtc::kTraceWarning, webrtc::kTraceAudioDevice,
-                     _id, "%s: Could not detach thread from JVM",
-                     __FUNCTION__);
-      }
     }
   }
 }
@@ -495,24 +392,13 @@ int32_t VideoCaptureAndroid::StartCapture(
   WEBRTC_TRACE(webrtc::kTraceStateInfo, webrtc::kTraceVideoCapture, -1,
                "%s: ", __FUNCTION__);
 
-  bool isAttached = false;
   int32_t result = 0;
   int32_t rotation = 0;
-  // get the JNI env for this thread
-  JNIEnv *env;
-  if (g_jvm->GetEnv((void**) &env, JNI_VERSION_1_4) != JNI_OK) {
-    // try to attach the thread and get the env
-    // Attach this thread to JVM
-    jint res = g_jvm->AttachCurrentThread(&env, NULL);
-    if ((res < 0) || !env) {
-      WEBRTC_TRACE(webrtc::kTraceError, webrtc::kTraceVideoCapture, _id,
-                   "%s: Could not attach thread to JVM (%d, %p)",
-                   __FUNCTION__, res, env);
-    }
-    else {
-      isAttached = true;
-    }
-  }
+
+  AutoLocalJNIFrame jniFrame;
+  JNIEnv* env = jniFrame.GetEnv();
+  if (!env)
+      return -1;
 
   if (_capInfo.GetBestMatchedCapability(_deviceUniqueId, capability,
                                         _frameInfo) < 0) {
@@ -544,14 +430,6 @@ int32_t VideoCaptureAndroid::StartCapture(
                  "%s: Failed to find StartCapture id", __FUNCTION__);
   }
 
-  // Detach this thread if it was attached
-  if (isAttached) {
-    if (g_jvm->DetachCurrentThread() < 0) {
-      WEBRTC_TRACE(webrtc::kTraceWarning, webrtc::kTraceAudioDevice, _id,
-                   "%s: Could not detach thread from JVM", __FUNCTION__);
-    }
-  }
-
   if (result == 0) {
     _requestedCapability = capability;
     _captureStarted = true;
@@ -566,23 +444,12 @@ int32_t VideoCaptureAndroid::StopCapture() {
   WEBRTC_TRACE(webrtc::kTraceStateInfo, webrtc::kTraceVideoCapture, -1,
                "%s: ", __FUNCTION__);
 
-  bool isAttached = false;
   int32_t result = 0;
-  // get the JNI env for this thread
-  JNIEnv *env = NULL;
-  if (g_jvm->GetEnv((void**) &env, JNI_VERSION_1_4) != JNI_OK) {
-    // try to attach the thread and get the env
-    // Attach this thread to JVM
-    jint res = g_jvm->AttachCurrentThread(&env, NULL);
-    if ((res < 0) || !env) {
-      WEBRTC_TRACE(webrtc::kTraceError, webrtc::kTraceVideoCapture, _id,
-                   "%s: Could not attach thread to JVM (%d, %p)",
-                   __FUNCTION__, res, env);
-    }
-    else {
-      isAttached = true;
-    }
-  }
+
+  AutoLocalJNIFrame jniFrame;
+  JNIEnv* env = jniFrame.GetEnv();
+  if (!env)
+      return -1;
 
   memset(&_requestedCapability, 0, sizeof(_requestedCapability));
   memset(&_frameInfo, 0, sizeof(_frameInfo));
@@ -600,13 +467,6 @@ int32_t VideoCaptureAndroid::StopCapture() {
                  "%s: Failed to find StopCapture id", __FUNCTION__);
   }
 
-  // Detach this thread if it was attached
-  if (isAttached) {
-    if (g_jvm->DetachCurrentThread() < 0) {
-      WEBRTC_TRACE(webrtc::kTraceWarning, webrtc::kTraceAudioDevice, _id,
-                   "%s: Could not detach thread from JVM", __FUNCTION__);
-    }
-  }
   _captureStarted = false;
 
   WEBRTC_TRACE(webrtc::kTraceStateInfo, webrtc::kTraceVideoCapture, -1,
