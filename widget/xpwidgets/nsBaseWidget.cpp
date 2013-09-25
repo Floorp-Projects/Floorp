@@ -39,6 +39,7 @@
 #include "nsContentUtils.h"
 #include "gfxPlatform.h"
 #include "mozilla/gfx/2D.h"
+#include "mozilla/MouseEvents.h"
 
 #ifdef ACCESSIBILITY
 #include "nsAccessibilityService.h"

@@ -14,13 +14,13 @@
 
 #include "nsCOMPtr.h"
 #include "nsGkAtoms.h"
-#include "nsGUIEvent.h"
 
 #include "mozilla/dom/Element.h"
 #include "nsIWidget.h"
 #include "nsIDocument.h"
 #include "nsIDOMDocument.h"
 #include "nsIDOMElement.h"
+#include "nsIDOMEvent.h"
 
 nsMenuItemX::nsMenuItemX()
 {

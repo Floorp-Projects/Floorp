@@ -255,7 +255,7 @@
             <observes element="bcast_urlbarState" attribute="*"/>
             <hbox id="toolbar-context-page" pack="end">
               <circularprogressindicator id="download-progress"
-                                     oncommand="Downloads.onDownloadButton()"/>
+                                     oncommand="MetroDownloadsView.onDownloadButton()"/>
               <toolbarbutton id="star-button" class="appbar-primary"
                              type="checkbox"
                              oncommand="Appbar.onStarButton()"/>

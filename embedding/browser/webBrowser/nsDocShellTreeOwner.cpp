@@ -18,7 +18,6 @@
 #include "nsReadableUtils.h"
 #include "nsUnicharUtils.h"
 #include "nsISimpleEnumerator.h"
-#include "nsGUIEvent.h"
 #include "mozilla/LookAndFeel.h"
 
 // Interfaces needed to be included

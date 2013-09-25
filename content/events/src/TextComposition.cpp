@@ -8,11 +8,12 @@
 #include "nsContentEventHandler.h"
 #include "nsContentUtils.h"
 #include "nsEventDispatcher.h"
-#include "nsGUIEvent.h"
 #include "nsIContent.h"
 #include "nsIMEStateManager.h"
 #include "nsIPresShell.h"
 #include "nsPresContext.h"
+#include "mozilla/MiscEvents.h"
+#include "mozilla/TextEvents.h"
 
 namespace mozilla {
 

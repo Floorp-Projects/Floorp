@@ -8,7 +8,6 @@
 #include "nsObjCExceptions.h"
 #include "nsCOMPtr.h"
 #include "nsWidgetsCID.h"
-#include "nsGUIEvent.h"
 #include "nsIRollupListener.h"
 #include "nsChildView.h"
 #include "TextInputHandler.h"
@@ -36,6 +35,7 @@
 #include "gfxPlatform.h"
 #include "qcms.h"
 
+#include "mozilla/BasicEvents.h"
 #include "mozilla/Preferences.h"
 #include <algorithm>
 

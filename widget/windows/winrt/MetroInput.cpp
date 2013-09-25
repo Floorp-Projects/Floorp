@@ -13,6 +13,8 @@
 #include "InputData.h"
 #include "UIABridgePrivate.h"
 #include "MetroAppShell.h"
+#include "mozilla/MouseEvents.h"
+#include "mozilla/TouchEvents.h"
 
 // System headers (alphabetical)
 #include <windows.ui.core.h> // ABI::Window::UI::Core namespace

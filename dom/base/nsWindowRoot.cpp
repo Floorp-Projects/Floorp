@@ -3,6 +3,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include "mozilla/BasicEvents.h"
 #include "nsCOMPtr.h"
 #include "nsWindowRoot.h"
 #include "nsPIDOMWindow.h"
@@ -12,7 +13,6 @@
 #include "nsContentCID.h"
 #include "nsString.h"
 #include "nsEventDispatcher.h"
-#include "nsGUIEvent.h"
 #include "nsGlobalWindow.h"
 #include "nsFocusManager.h"
 #include "nsIContent.h"

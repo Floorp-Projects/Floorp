@@ -146,8 +146,8 @@ ValidateMathBuiltin(JSContext *cx, AsmJSModule::Global &global, HandleValue glob
       case AsmJSMathBuiltin_asin: native = math_asin; break;
       case AsmJSMathBuiltin_acos: native = math_acos; break;
       case AsmJSMathBuiltin_atan: native = math_atan; break;
-      case AsmJSMathBuiltin_ceil: native = js_math_ceil; break;
-      case AsmJSMathBuiltin_floor: native = js_math_floor; break;
+      case AsmJSMathBuiltin_ceil: native = math_ceil; break;
+      case AsmJSMathBuiltin_floor: native = math_floor; break;
       case AsmJSMathBuiltin_exp: native = math_exp; break;
       case AsmJSMathBuiltin_log: native = math_log; break;
       case AsmJSMathBuiltin_pow: native = js_math_pow; break;

@@ -7,7 +7,6 @@
 #include "nsMenuBarFrame.h"
 #include "nsMenuPopupFrame.h"
 #include "nsIDOMEvent.h"
-#include "nsGUIEvent.h"
 
 // Drag & Drop, Clipboard
 #include "nsIServiceManager.h"
@@ -20,6 +19,7 @@
 
 #include "nsContentUtils.h"
 #include "mozilla/Preferences.h"
+#include "mozilla/TextEvents.h"
 
 using namespace mozilla;
 

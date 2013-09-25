@@ -9,13 +9,13 @@
 #include "nsCxPusher.h"
 #include "nsIXPConnect.h"
 #include "nsJSUtils.h"
-#include "nsGUIEvent.h"
 #include "nsEventDispatcher.h"
 #include "nsIJSEventListener.h"
 #ifdef MOZ_JSDEBUGGER
 #include "jsdIDebuggerService.h"
 #endif
 #include "nsDOMClassInfoID.h"
+#include "mozilla/BasicEvents.h"
 #include "mozilla/Maybe.h"
 #include "nsServiceManagerUtils.h"
 

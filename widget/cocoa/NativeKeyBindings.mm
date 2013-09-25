@@ -7,8 +7,8 @@
 
 #include "nsTArray.h"
 #include "nsCocoaUtils.h"
-#include "nsGUIEvent.h"
 #include "prlog.h"
+#include "mozilla/TextEvents.h"
 
 using namespace mozilla;
 using namespace mozilla::widget;
