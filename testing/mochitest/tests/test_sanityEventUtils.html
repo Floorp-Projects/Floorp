@@ -160,7 +160,6 @@ function starttest() {
 
       var querySelectedText = synthesizeQuerySelectedText();
       ok(querySelectedText, "query selected text event result is null");
-      netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect'); //get permission to check members of querySelectedText
       ok(querySelectedText.succeeded, "query selected text event failed");
       is(querySelectedText.offset, 1,
          "query selected text event returns wrong offset");
