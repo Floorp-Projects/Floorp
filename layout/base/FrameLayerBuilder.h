@@ -76,7 +76,7 @@ public:
  * return it as a candidate for recycling.
  * 
  * FrameLayerBuilder sets up ThebesLayers so that 0,0 in the Thebes layer
- * corresponds to the (pixel-snapped) top-left of the aActiveScrolledRoot.
+ * corresponds to the (pixel-snapped) top-left of the aAnimatedGeometryRoot.
  * It sets up ContainerLayers so that 0,0 in the container layer
  * corresponds to the snapped top-left of the display item reference frame.
  *

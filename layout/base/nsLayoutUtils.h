@@ -362,25 +362,34 @@ public:
                                         const nsIFrame* aCommonAncestor = nullptr);
 
   /**
-   * Finds the nearest ancestor frame that is the root of an "actively
-   * scrolled" frame subtree, or aStopAtAncestor if there is no
-   * such ancestor before we reach aStopAtAncestor in the ancestor chain.
-   * We expect frames with the same "active scrolled root" to be
-   * scrolled together, so we'll place them in the same ThebesLayer.
+   * Finds the nearest ancestor frame that is considered to have (or will have)
+   * "animated geometry". For example the scrolled frames of scrollframes which
+   * are actively being scrolled fall into this category. Frames with certain
+   * CSS properties that are being animated (e.g. 'left'/'top' etc) are also
+   * placed in this category. Frames with animated CSS transforms are not
+   * put in this category because they can be handled directly by
+   * nsDisplayTransform.
+   * Stop searching at aStopAtAncestor if there is no such ancestor before it
+   * in the ancestor chain.
+   * Frames with different active geometry roots are in different ThebesLayers,
+   * so that we can animate the geometry root by changing its transform (either
+   * on the main thread or in the compositor).
+   * This function is idempotent: a frame returned by GetAnimatedGeometryRootFor
+   * is always returned again if you pass it to GetAnimatedGeometryRootFor.
    */
-  static nsIFrame* GetActiveScrolledRootFor(nsIFrame* aFrame,
-                                            const nsIFrame* aStopAtAncestor);
+  static nsIFrame* GetAnimatedGeometryRootFor(nsIFrame* aFrame,
+                                              const nsIFrame* aStopAtAncestor = nullptr);
 
-  static nsIFrame* GetActiveScrolledRootFor(nsDisplayItem* aItem,
-                                            nsDisplayListBuilder* aBuilder,
-                                            bool* aShouldFixToViewport = nullptr);
+  static nsIFrame* GetAnimatedGeometryRootFor(nsDisplayItem* aItem,
+                                              nsDisplayListBuilder* aBuilder);
+
 
   /**
    * Returns true if aActiveScrolledRoot is in a content document,
    * and its topmost content document ancestor has a root scroll frame with
    * a displayport set, and aActiveScrolledRoot is scrolled by that scrollframe.
    */
-  static bool IsScrolledByRootContentDocumentDisplayportScrolling(const nsIFrame* aActiveScrolledRoot,
+  static bool IsScrolledByRootContentDocumentDisplayportScrolling(const nsIFrame* aAnimatedGeometryRoot,
                                                                   nsDisplayListBuilder* aBuilder);
 
   /**
