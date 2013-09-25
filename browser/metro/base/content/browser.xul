@@ -424,6 +424,7 @@
       <label id="about-policy-label"
             onclick="FlyoutPanelsUI.AboutFlyoutPanel.onPolicyClick(event);"
             class="text-link" value="&aboutHeader.policy.label;"/>
+      <spacer class="flyoutpanel-hack"/>
     </flyoutpanel>
 
 #ifdef MOZ_SERVICES_SYNC
@@ -682,9 +683,12 @@
         <description>&doNotTrack.desc;</description>
         <setting id="prefs-dnt-value" pref="privacy.donottrackheader.value" type="radio" >
           <radiogroup id="prefs-dnt-options">
-            <radio id="prefs-dnt-notrack" label="&doNotTrack.options.trackingNotOkay;" value="1"/>
-            <radio id="prefs-dnt-nopref" label="&doNotTrack.options.noPreference;" value="-1"/>
-            <radio id="prefs-dnt-oktrack" label="&doNotTrack.options.trackingOkay;" value="0"/>
+            <radio id="prefs-dnt-notrack" class="flyoutpanel-hack"
+                   label="&doNotTrack.options.trackingNotOkay;" value="1"/>
+            <radio id="prefs-dnt-nopref" class="flyoutpanel-hack"
+                   label="&doNotTrack.options.noPreference;" value="-1"/>
+            <radio id="prefs-dnt-oktrack" class="flyoutpanel-hack"
+                   label="&doNotTrack.options.trackingOkay;" value="0"/>
           </radiogroup>
         </setting>
       </settings>
