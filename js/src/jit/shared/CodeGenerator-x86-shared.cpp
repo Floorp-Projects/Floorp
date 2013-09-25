@@ -231,7 +231,7 @@ CodeGeneratorX86Shared::visitAsmJSPassStackArg(LAsmJSPassStackArg *ins)
         if (ins->arg()->isGeneralReg())
             masm.storePtr(ToRegister(ins->arg()), dst);
         else
-            masm.movsd(ToFloatRegister(ins->arg()), Operand(dst));
+            masm.storeDouble(ToFloatRegister(ins->arg()), dst);
     }
     return true;
 }

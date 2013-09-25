@@ -236,7 +236,7 @@ MacroAssemblerX86::callWithABIPost(uint32_t stackAdjust, Result result)
     if (result == DOUBLE) {
         reserveStack(sizeof(double));
         fstp(Operand(esp, 0));
-        movsd(Operand(esp, 0), ReturnFloatReg);
+        loadDouble(Operand(esp, 0), ReturnFloatReg);
         freeStack(sizeof(double));
     }
     if (dynamicAlignment_)

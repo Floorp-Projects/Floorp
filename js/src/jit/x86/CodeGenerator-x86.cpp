@@ -185,7 +185,7 @@ CodeGeneratorX86::visitStoreSlotT(LStoreSlotT *store)
         emitPreBarrier(Address(base, offset), store->mir()->slotType());
 
     if (valueType == MIRType_Double) {
-        masm.movsd(ToFloatRegister(value), Operand(base, offset));
+        masm.storeDouble(ToFloatRegister(value), Operand(base, offset));
         return true;
     }
 
@@ -237,7 +237,7 @@ CodeGeneratorX86::storeElementTyped(const LAllocation *value, MIRType valueType,
     Operand dest = createArrayElementOperand(elements, index);
 
     if (valueType == MIRType_Double) {
-        masm.movsd(ToFloatRegister(value), dest);
+        masm.storeDouble(ToFloatRegister(value), dest);
         return;
     }
 
@@ -710,7 +710,7 @@ CodeGeneratorX86::postAsmJSCall(LAsmJSCall *lir)
 
     masm.reserveStack(sizeof(double));
     masm.fstp(Operand(esp, 0));
-    masm.movsd(Operand(esp, 0), ReturnFloatReg);
+    masm.loadDouble(Operand(esp, 0), ReturnFloatReg);
     masm.freeStack(sizeof(double));
 }
 
@@ -796,7 +796,7 @@ CodeGeneratorX86::visitOutOfLineTruncate(OutOfLineTruncate *ool)
     if (Assembler::HasSSE3()) {
         // Push double.
         masm.subl(Imm32(sizeof(double)), esp);
-        masm.movsd(input, Operand(esp, 0));
+        masm.storeDouble(input, Operand(esp, 0));
 
         static const uint32_t EXPONENT_MASK = 0x7ff00000;
         static const uint32_t EXPONENT_SHIFT = DoubleExponentShift - 32;

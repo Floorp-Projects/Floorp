@@ -209,10 +209,10 @@ MoveEmitterX86::breakCycle(const MoveOperand &to, Move::Kind kind)
     // the original move to continue.
     if (kind == Move::DOUBLE) {
         if (to.isMemory()) {
-            masm.movsd(toOperand(to), ScratchFloatReg);
-            masm.movsd(ScratchFloatReg, cycleSlot());
+            masm.loadDouble(toOperand(to), ScratchFloatReg);
+            masm.storeDouble(ScratchFloatReg, cycleSlot());
         } else {
-            masm.movsd(to.floatReg(), cycleSlot());
+            masm.storeDouble(to.floatReg(), cycleSlot());
         }
     } else {
         if (to.isMemory())
@@ -233,10 +233,10 @@ MoveEmitterX86::completeCycle(const MoveOperand &to, Move::Kind kind)
     // saved value of B, to A.
     if (kind == Move::DOUBLE) {
         if (to.isMemory()) {
-            masm.movsd(cycleSlot(), ScratchFloatReg);
-            masm.movsd(ScratchFloatReg, toOperand(to));
+            masm.loadDouble(cycleSlot(), ScratchFloatReg);
+            masm.storeDouble(ScratchFloatReg, toOperand(to));
         } else {
-            masm.movsd(cycleSlot(), to.floatReg());
+            masm.loadDouble(cycleSlot(), to.floatReg());
         }
     } else {
         if (to.isMemory()) {
@@ -292,12 +292,12 @@ MoveEmitterX86::emitDoubleMove(const MoveOperand &from, const MoveOperand &to)
     if (from.isFloatReg()) {
         masm.movsd(from.floatReg(), toOperand(to));
     } else if (to.isFloatReg()) {
-        masm.movsd(toOperand(from), to.floatReg());
+        masm.loadDouble(toOperand(from), to.floatReg());
     } else {
         // Memory to memory float move.
         JS_ASSERT(from.isMemory());
-        masm.movsd(toOperand(from), ScratchFloatReg);
-        masm.movsd(ScratchFloatReg, toOperand(to));
+        masm.loadDouble(toOperand(from), ScratchFloatReg);
+        masm.storeDouble(ScratchFloatReg, toOperand(to));
     }
 }
 
