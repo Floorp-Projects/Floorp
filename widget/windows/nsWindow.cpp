@@ -55,6 +55,7 @@
  **************************************************************/
 
 #include "mozilla/MathAlgorithms.h"
+#include "mozilla/TouchEvents.h"
 #include "mozilla/Util.h"
 
 #include "mozilla/ipc/RPCChannel.h"

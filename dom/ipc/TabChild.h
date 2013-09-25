@@ -35,6 +35,7 @@
 #include "nsITabChild.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/dom/TabContext.h"
+#include "mozilla/EventForwards.h"
 
 struct gfxMatrix;
 class nsICachedFileDescriptorListener;

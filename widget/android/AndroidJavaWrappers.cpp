@@ -10,6 +10,7 @@
 #include "nsIDOMKeyEvent.h"
 #include "nsIWidget.h"
 #include "nsGUIEvent.h"
+#include "mozilla/TouchEvents.h"
 
 using namespace mozilla;
 using namespace mozilla::dom;

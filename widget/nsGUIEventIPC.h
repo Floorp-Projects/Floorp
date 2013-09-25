@@ -9,6 +9,7 @@
 #include "ipc/IPCMessageUtils.h"
 #include "mozilla/GfxMessageUtils.h"
 #include "mozilla/dom/Touch.h"
+#include "mozilla/TouchEvents.h"
 #include "nsGUIEvent.h"
 
 namespace IPC

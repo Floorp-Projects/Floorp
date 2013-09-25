@@ -6,6 +6,7 @@
 #ifndef nsEventStateManager_h__
 #define nsEventStateManager_h__
 
+#include "mozilla/EventForwards.h"
 #include "mozilla/TypedEnum.h"
 
 #include "nsGUIEvent.h"

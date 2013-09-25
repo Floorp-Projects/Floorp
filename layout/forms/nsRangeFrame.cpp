@@ -5,6 +5,8 @@
 
 #include "nsRangeFrame.h"
 
+#include "mozilla/TouchEvents.h"
+
 #include "nsContentCreatorFunctions.h"
 #include "nsContentList.h"
 #include "nsContentUtils.h"

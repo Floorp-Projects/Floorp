@@ -33,6 +33,7 @@
 #ifdef MOZ_OMX_DECODER
 #include "MediaResourceManagerService.h"
 #endif
+#include "mozilla/TouchEvents.h"
 #include "mozilla/FileUtils.h"
 #include "mozilla/Hal.h"
 #include "mozilla/Mutex.h"

@@ -59,6 +59,7 @@
 
 #include "nsIDOMMutationEvent.h"
 #include "mozilla/MutationEvent.h"
+#include "mozilla/TouchEvents.h"
 #include "nsEventListenerManager.h"
 
 #include "nsRuleData.h"
