@@ -902,7 +902,7 @@ class MacroAssemblerX64 : public MacroAssemblerX86Shared
         unboxInt32(Operand(src), dest);
     }
     void unboxDouble(const Address &src, const FloatRegister &dest) {
-        movsd(Operand(src), dest);
+        loadDouble(Operand(src), dest);
     }
 
     void unboxArgObjMagic(const ValueOperand &src, const Register &dest) {
@@ -1075,7 +1075,7 @@ class MacroAssemblerX64 : public MacroAssemblerX86Shared
         convertInt32ToDouble(operand, dest);
         jump(&end);
         bind(&notInt32);
-        movsd(operand, dest);
+        loadDouble(operand, dest);
         bind(&end);
     }
 
