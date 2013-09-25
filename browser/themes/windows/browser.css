@@ -78,21 +78,21 @@
   }
 
   #main-window[tabsintitlebar]:not([inFullscreen]) #TabsToolbar:not(:-moz-lwtheme) {
-    background: linear-gradient(to top, @toolbarShadowColor@ 2px, transparent 2px),
-                linear-gradient(rgba(50%,50%,50%,0), ActiveCaption 85%);
     color: CaptionText;
   }
+
   #main-window[tabsintitlebar]:not([inFullscreen]) #TabsToolbar:not(:-moz-lwtheme):-moz-window-inactive {
-    background: linear-gradient(to top, @toolbarShadowColor@ 2px, transparent 2px),
-                linear-gradient(rgba(50%,50%,50%,0), InactiveCaption 85%);
     color: InactiveCaptionText;
   }
+
   #TabsToolbar:-moz-lwtheme {
     background: linear-gradient(to top, @toolbarShadowColor@ 2px, transparent 2px);
   }
+
   #main-window[tabsintitlebar] #titlebar:-moz-lwtheme {
     visibility: hidden;
   }
+
   #main-window[tabsintitlebar] #titlebar-content:-moz-lwtheme {
     -moz-binding: url("chrome://global/content/bindings/general.xml#windowdragbox");
     visibility: visible;
@@ -100,6 +100,24 @@
 %ifdef WINDOWS_AERO
 }
 %endif
+
+/**
+ * In the classic themes, the titlebar has a horizontal gradient, which is
+ * problematic for reading the text of background tabs when they're in the
+ * titlebar. We side-step this issue by layering our own gradient underneath
+ * the tabs.
+ */
+@media (-moz-windows-classic) {
+  #main-window[tabsintitlebar]:not([inFullscreen]) #TabsToolbar:not(:-moz-lwtheme) {
+    background: linear-gradient(to top, @toolbarShadowColor@ 2px, transparent 2px),
+                linear-gradient(rgba(50%,50%,50%,0), ActiveCaption 85%);
+  }
+
+  #main-window[tabsintitlebar]:not([inFullscreen]) #TabsToolbar:not(:-moz-lwtheme):-moz-window-inactive {
+    background: linear-gradient(to top, @toolbarShadowColor@ 2px, transparent 2px),
+                linear-gradient(rgba(50%,50%,50%,0), InactiveCaption 85%);
+  }
+}
 
 #nav-bar {
   background-image: linear-gradient(@toolbarHighlight@, rgba(255,255,255,0));
