@@ -2062,7 +2062,7 @@ InterfaceHasInstance(JSContext* cx, int prototypeID, int depth,
 // Helper for lenient getters/setters to report to console.  If this
 // returns false, we couldn't even get a global.
 bool
-ReportLenientThisUnwrappingFailure(JSContext* cx, JS::Handle<JSObject*> obj);
+ReportLenientThisUnwrappingFailure(JSContext* cx, JSObject* obj);
 
 inline JSObject*
 GetUnforgeableHolder(JSObject* aGlobal, prototypes::ID aId)
