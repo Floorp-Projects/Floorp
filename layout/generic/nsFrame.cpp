@@ -4249,10 +4249,7 @@ nsIFrame* nsFrame::GetPrevContinuation() const
 void
 nsFrame::SetPrevContinuation(nsIFrame* aPrevContinuation)
 {
-  // Ignore harmless requests to set it to NULL
-  if (aPrevContinuation) {
-    NS_ERROR("not splittable");
-  }
+  MOZ_ASSERT(false, "not splittable");
 }
 
 nsIFrame* nsFrame::GetNextContinuation() const
@@ -4263,7 +4260,7 @@ nsIFrame* nsFrame::GetNextContinuation() const
 void
 nsFrame::SetNextContinuation(nsIFrame*)
 {
-  NS_ERROR("not splittable");
+  MOZ_ASSERT(false, "not splittable");
 }
 
 nsIFrame* nsFrame::GetPrevInFlowVirtual() const
@@ -4274,10 +4271,7 @@ nsIFrame* nsFrame::GetPrevInFlowVirtual() const
 void
 nsFrame::SetPrevInFlow(nsIFrame* aPrevInFlow)
 {
-  // Ignore harmless requests to set it to NULL
-  if (aPrevInFlow) {
-    NS_ERROR("not splittable");
-  }
+  MOZ_ASSERT(false, "not splittable");
 }
 
 nsIFrame* nsFrame::GetNextInFlowVirtual() const
@@ -4288,7 +4282,7 @@ nsIFrame* nsFrame::GetNextInFlowVirtual() const
 void
 nsFrame::SetNextInFlow(nsIFrame*)
 {
-  NS_ERROR("not splittable");
+  MOZ_ASSERT(false, "not splittable");
 }
 
 nsIFrame* nsIFrame::GetTailContinuation()
