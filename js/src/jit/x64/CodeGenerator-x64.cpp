@@ -73,7 +73,7 @@ CodeGeneratorX64::visitOsrValue(LOsrValue *value)
 
     const ptrdiff_t valueOffset = value->mir()->frameOffset();
 
-    masm.movq(Operand(ToRegister(frame), valueOffset), ToRegister(target));
+    masm.loadPtr(Address(ToRegister(frame), valueOffset), ToRegister(target));
 
     return true;
 }
@@ -153,7 +153,7 @@ CodeGeneratorX64::visitLoadSlotV(LLoadSlotV *load)
     Register base = ToRegister(load->input());
     int32_t offset = load->mir()->slot() * sizeof(js::Value);
 
-    masm.movq(Operand(base, offset), dest);
+    masm.loadPtr(Address(base, offset), dest);
     return true;
 }
 

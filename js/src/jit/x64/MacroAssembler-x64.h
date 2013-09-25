@@ -1090,7 +1090,7 @@ class MacroAssemblerX64 : public MacroAssemblerX86Shared
     }
 
     void loadInstructionPointerAfterCall(const Register &dest) {
-        movq(Operand(StackPointer, 0x0), dest);
+        loadPtr(Address(StackPointer, 0x0), dest);
     }
 
     void convertUInt32ToDouble(const Register &src, const FloatRegister &dest) {
@@ -1182,7 +1182,7 @@ class MacroAssemblerX64 : public MacroAssemblerX86Shared
     // Save an exit frame to the thread data of the current thread, given a
     // register that holds a PerThreadData *.
     void linkParallelExitFrame(const Register &pt) {
-        mov(StackPointer, Operand(pt, offsetof(PerThreadData, ionTop)));
+        storePtr(StackPointer, Address(pt, offsetof(PerThreadData, ionTop)));
     }
 
     void enterOsr(Register calleeToken, Register code) {

@@ -5793,7 +5793,7 @@ GenerateFFIInterpreterExit(ModuleCompiler &m, const ModuleCompiler::ExitDescript
         LoadJSContextFromActivation(masm, activation, i->gpr());
     } else {
         LoadJSContextFromActivation(masm, activation, scratch);
-        masm.movePtr(scratch, Operand(StackPointer, i->offsetFromArgBase()));
+        masm.storePtr(scratch, Address(StackPointer, i->offsetFromArgBase()));
     }
     i++;
 
@@ -5801,7 +5801,7 @@ GenerateFFIInterpreterExit(ModuleCompiler &m, const ModuleCompiler::ExitDescript
     if (i->kind() == ABIArg::GPR)
         masm.mov(Imm32(exitIndex), i->gpr());
     else
-        masm.mov(Imm32(exitIndex), Operand(StackPointer, i->offsetFromArgBase()));
+        masm.store32(Imm32(exitIndex), Address(StackPointer, i->offsetFromArgBase()));
     i++;
 
     // argument 2: argc
@@ -5809,7 +5809,7 @@ GenerateFFIInterpreterExit(ModuleCompiler &m, const ModuleCompiler::ExitDescript
     if (i->kind() == ABIArg::GPR)
         masm.mov(Imm32(argc), i->gpr());
     else
-        masm.move32(Imm32(argc), Operand(StackPointer, i->offsetFromArgBase()));
+        masm.store32(Imm32(argc), Address(StackPointer, i->offsetFromArgBase()));
     i++;
 
     // argument 3: argv
@@ -5818,7 +5818,7 @@ GenerateFFIInterpreterExit(ModuleCompiler &m, const ModuleCompiler::ExitDescript
         masm.computeEffectiveAddress(argv, i->gpr());
     } else {
         masm.computeEffectiveAddress(argv, scratch);
-        masm.movePtr(scratch, Operand(StackPointer, i->offsetFromArgBase()));
+        masm.storePtr(scratch, Address(StackPointer, i->offsetFromArgBase()));
     }
     i++;
     JS_ASSERT(i.done());
