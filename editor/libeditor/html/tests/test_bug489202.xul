@@ -28,8 +28,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=489202
   </body>
   <script class="testbody" type="application/javascript">
   <![CDATA[
-  netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
-  var utils = window.QueryInterface(Components.interfaces.nsIInterfaceRequestor).getInterface(Components.interfaces.nsIDOMWindowUtils);
+  var utils = SpecialPowers.getDOMWindowUtils(window);
   var Cc = Components.classes;
   var Ci = Components.interfaces;
 
@@ -40,8 +39,6 @@ function getLoadContext() {
 }
 
 function runTest() {
-  netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
-
   var trans = Cc["@mozilla.org/widget/transferable;1"]
       .createInstance(Ci.nsITransferable);
   trans.init(getLoadContext());

@@ -30,7 +30,22 @@ function done() {
 
 addLoadEvent(run);
 SimpleTest.waitForExplicitFinish();
-  
+
+
+window.addEventListener("message", receiveMessage, false);
+
+function receiveMessage(event)
+{
+  if (event.origin !== "http://example.org") {
+    ok(false, "Received message from wrong domain");
+    return;
+  }
+
+  if (event.data.done == "true")
+    return done();
+
+  ok(event.data.result, event.data.message);
+}
 </script>
 </pre>
 </body>
