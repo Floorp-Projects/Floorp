@@ -74,7 +74,7 @@ NS_METHOD nsSplittableFrame::SetNextContinuation(nsIFrame* aFrame)
   return NS_OK;
 }
 
-nsIFrame* nsSplittableFrame::GetFirstContinuation() const
+nsIFrame* nsSplittableFrame::FirstContinuation() const
 {
   nsSplittableFrame* firstContinuation = const_cast<nsSplittableFrame*>(this);
   while (firstContinuation->mPrevContinuation)  {
@@ -84,7 +84,7 @@ nsIFrame* nsSplittableFrame::GetFirstContinuation() const
   return firstContinuation;
 }
 
-nsIFrame* nsSplittableFrame::GetLastContinuation() const
+nsIFrame* nsSplittableFrame::LastContinuation() const
 {
   nsSplittableFrame* lastContinuation = const_cast<nsSplittableFrame*>(this);
   while (lastContinuation->mNextContinuation)  {
@@ -152,7 +152,7 @@ NS_METHOD nsSplittableFrame::SetNextInFlow(nsIFrame* aFrame)
   return NS_OK;
 }
 
-nsIFrame* nsSplittableFrame::GetFirstInFlow() const
+nsIFrame* nsSplittableFrame::FirstInFlow() const
 {
   nsSplittableFrame* firstInFlow = const_cast<nsSplittableFrame*>(this);
   while (nsIFrame *prev = firstInFlow->GetPrevInFlow())  {
@@ -162,7 +162,7 @@ nsIFrame* nsSplittableFrame::GetFirstInFlow() const
   return firstInFlow;
 }
 
-nsIFrame* nsSplittableFrame::GetLastInFlow() const
+nsIFrame* nsSplittableFrame::LastInFlow() const
 {
   nsSplittableFrame* lastInFlow = const_cast<nsSplittableFrame*>(this);
   while (nsIFrame* next = lastInFlow->GetNextInFlow())  {
