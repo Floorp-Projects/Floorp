@@ -32,6 +32,8 @@
         "Getting element.dataset[''] should return the value of element.getAttribute('data-')'");
       test(function() { assert_true(testGet('data-\xE0', '\xE0')); },
         "Getting element.dataset['\xE0'] should return the value of element.getAttribute('data-\xE0')'");
+      test(function() { assert_true(testGet('data-to-string', 'toString')); },
+        "Getting element.dataset['toString'] should return the value of element.getAttribute('data-to-string')'");
 
       function matchesNothingInDataset(attr)
       {

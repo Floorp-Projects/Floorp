@@ -18,6 +18,6 @@ html/webappapis/scripting/events
 html/webappapis/scripting/processing-model-2
 html/webappapis/timers
 js/builtins
-old-tests/submission/Opera/microdata
+microdata/microdata-dom-api
 typedarrays
 webgl

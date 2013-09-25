@@ -22,7 +22,7 @@ DIRS += [
     'html/html/webappapis/scripting/processing-model-2',
     'html/html/webappapis/timers',
     'html/js/builtins',
-    'html/old-tests/submission/Opera/microdata',
+    'html/microdata/microdata-dom-api',
     'html/typedarrays',
     'html/webgl',
 ]
