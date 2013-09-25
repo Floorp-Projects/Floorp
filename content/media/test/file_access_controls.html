@@ -78,11 +78,11 @@ var gVideo = null;
 var gTestedRemoved = false;
 
 function eventHandler(event) {
-  netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
   //dump((gTestNum - 1) + ": " + event.type + "\n");
   var video = event.target;
-  opener.is(event.type, video.expectedResult, video.testDescription +
-    (gTestedRemoved ? " (element not in document)" : " (element in document)"));
+  opener.postMessage({"result": (event.type == video.expectedResult),
+                      "message":  video.testDescription + (gTestedRemoved ? " (element not in document)" : " (element in document)")},
+                     "http://mochi.test:8888");
   // Make sure any extra events cause an error
   video.expectedResult = "<none>";
   nextTest();
@@ -97,10 +97,9 @@ function createVideo() {
 }
 
 function load() {
-  netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
-  opener.is(window.location.href,
-            "http://example.org/tests/content/media/test/file_access_controls.html",
-            "We must be on a example.org:80");
+  opener.postMessage({"result": (window.location.href == "http://example.org/tests/content/media/test/file_access_controls.html"),
+                      "message":  "We must be on a example.org:80"},
+                     "http://mochi.test:8888");
 
   nextTest();
 }
@@ -125,7 +124,7 @@ function nextTest() {
     gVideo.parentNode.removeChild(gVideo);
 
   gVideo = null;
-  opener.SpecialPowers.forceGC();  
+  SpecialPowers.forceGC();  
   
   gVideo = createVideo();
   gVideo.expectedResult = gTests[gTestNum].result;
@@ -148,7 +147,7 @@ function nextTest() {
 }
 
 function done() {
-  opener.done();
+  opener.postMessage({"done": "true"}, "http://mochi.test:8888");
 }
 
 </script>
