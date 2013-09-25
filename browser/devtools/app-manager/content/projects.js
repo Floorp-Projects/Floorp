@@ -39,10 +39,8 @@ let UI = {
     this.template = new Template(document.body, AppProjects.store, Utils.l10n);
     this.template.start();
 
-    AppProjects.store.on("set", (event,path,value) => {
-      if (path == "projects") {
-        AppProjects.store.object.projects.forEach(UI.validate);
-      }
+    AppProjects.load().then(() => {
+      AppProjects.store.object.projects.forEach(UI.validate);
     });
   },
 
