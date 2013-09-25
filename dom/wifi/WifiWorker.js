@@ -3337,11 +3337,11 @@ WifiWorker.prototype = {
       this.queueRequest(false, function(data) {
         if (this.tetheringSettings[SETTINGS_WIFI_TETHERING_ENABLED] ||
             WifiManager.tetheringState != "UNINITIALIZED") {
+          this.disconnectedByWifi = true;
           this.setWifiApEnabled(false, this.notifyTetheringOff.bind(this));
         } else {
           this.requestDone();
         }
-        this.disconnectedByWifi = true;
       }.bind(this));
     }
 
@@ -3366,11 +3366,11 @@ WifiWorker.prototype = {
     if (enabled) {
       this.queueRequest(false, function(data) {
         if (WifiManager.enabled || WifiManager.state != "UNINITIALIZED") {
+          this.disconnectedByWifiTethering = true;
           this.setWifiEnabled(false, this._setWifiEnabledCallback.bind(this));
         } else {
           this.requestDone();
         }
-        this.disconnectedByWifiTethering = true;
       }.bind(this));
     }
 
