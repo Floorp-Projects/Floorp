@@ -523,6 +523,7 @@ class IDLInterface(IDLObjectWithScope):
         # have self as a consequential interface
         self.interfacesImplementingSelf = set()
         self._hasChildInterfaces = False
+        self._isOnGlobalProtoChain = False
 
         IDLObjectWithScope.__init__(self, location, parentScope, name)
 
@@ -585,6 +586,15 @@ class IDLInterface(IDLObjectWithScope):
             self.parent.finish(scope)
 
             self.parent._hasChildInterfaces = True
+
+            # Interfaces with [Global] must not have anything inherit from them
+            if self.parent.getExtendedAttribute("Global"):
+                # Note: This is not a self.parent.isOnGlobalProtoChain() check
+                # because ancestors of a [Global] interface can have other
+                # descendants.
+                raise WebIDLError("[Global] interface has another interface "
+                                  "inheriting from it",
+                                  [self.location, self.parent.location])
 
             # Callbacks must not inherit from non-callbacks or inherit from
             # anything that has consequential interfaces.
@@ -740,6 +750,31 @@ class IDLInterface(IDLObjectWithScope):
                                     member.location])
 
             specialMembersSeen[memberType] = member
+
+        if self._isOnGlobalProtoChain:
+            # Make sure we have no named setters, creators, or deleters
+            for memberType in ["setter", "creator", "deleter"]:
+                memberId = "named " + memberType + "s"
+                if memberId in specialMembersSeen:
+                    raise WebIDLError("Interface with [Global] has a named %s" %
+                                      memberType,
+                                      [self.location,
+                                       specialMembersSeen[memberId].location])
+            # Make sure we're not [OverrideBuiltins]
+            if self.getExtendedAttribute("OverrideBuiltins"):
+                raise WebIDLError("Interface with [Global] also has "
+                                  "[OverrideBuiltins]",
+                                  [self.location])
+            # Mark all of our ancestors as being on the global's proto chain too
+            parent = self.parent
+            while parent:
+                # Must not inherit from an interface with [OverrideBuiltins]
+                if parent.getExtendedAttribute("OverrideBuiltins"):
+                    raise WebIDLError("Interface with [Global] inherits from "
+                                      "interface with [OverrideBuiltins]",
+                                      [self.location, parent.location])
+                parent._isOnGlobalProtoChain = True
+                parent = parent.parent
 
     def validate(self):
         for member in self.members:
@@ -924,6 +959,11 @@ class IDLInterface(IDLObjectWithScope):
                     raise WebIDLError("[ArrayClass] must not be specified on "
                                       "an interface with inherited interfaces",
                                       [attr.location, self.location])
+            elif identifier == "Global":
+                if not attr.noArguments():
+                    raise WebIDLError("[Global] must take no arguments",
+                                      [attr.location])
+                self._isOnGlobalProtoChain = True
             elif (identifier == "PrefControlled" or
                   identifier == "NeedNewResolve" or
                   identifier == "OverrideBuiltins" or
@@ -1041,6 +1081,9 @@ class IDLInterface(IDLObjectWithScope):
 
     def hasChildInterfaces(self):
         return self._hasChildInterfaces
+
+    def isOnGlobalProtoChain(self):
+        return self._isOnGlobalProtoChain
 
     def _getDependentObjects(self):
         deps = set(self.members)
