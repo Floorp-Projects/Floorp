@@ -46,7 +46,7 @@ struct SVGTextContextPaint : public gfxTextContextPaint {
   float GetStrokeOpacity() MOZ_OVERRIDE { return mStrokeOpacity; }
 
   struct Paint {
-    Paint() {}
+    Paint() : mPaintType(eStyleSVGPaintType_None) {}
 
     void SetPaintServer(nsIFrame *aFrame, const gfxMatrix& aContextMatrix,
                         nsSVGPaintServerFrame *aPaintServerFrame) {
