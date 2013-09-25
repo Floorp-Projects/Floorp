@@ -5321,18 +5321,9 @@ class CGAbstractBindingMethod(CGAbstractStaticMethod):
     |this| object.  Subclasses are expected to override the generate_code
     function to do the rest of the work.  This function should return a
     CGThing which is already properly indented.
-
-    getThisObj should be code for getting a JSObject* for the binding
-    object.  If this is None, we will auto-generate code based on
-    descriptor to do the right thing.  "" can be passed in if the
-    binding object is already stored in 'obj'.
-
-    callArgs should be code for getting a JS::CallArgs into a variable
-    called 'args'.  This can be "" if there is already such a variable
-    around.
     """
     def __init__(self, descriptor, name, args, unwrapFailureCode=None,
-                 getThisObj=None,
+                 getThisObj="args.computeThis(cx).toObjectOrNull()",
                  callArgs="JS::CallArgs args = JS::CallArgsFromVp(argc, vp);"):
         CGAbstractStaticMethod.__init__(self, descriptor, name, "bool", args)
 
@@ -5340,26 +5331,7 @@ class CGAbstractBindingMethod(CGAbstractStaticMethod):
             self.unwrapFailureCode = 'return ThrowErrorMessage(cx, MSG_THIS_DOES_NOT_IMPLEMENT_INTERFACE, "Value", "%s");' % descriptor.interface.identifier.name
         else:
             self.unwrapFailureCode = unwrapFailureCode
-
-        if getThisObj == "":
-            self.getThisObj = None
-        else:
-            if getThisObj is None:
-                if descriptor.interface.isOnGlobalProtoChain():
-                    ensureCondition = "!args.thisv().isNullOrUndefined() && !args.thisv().isObject()"
-                    getThisObj = "args.thisv().isObject() ? &args.thisv().toObject() : js::GetGlobalForObjectCrossCompartment(&args.callee())"
-                else:
-                    ensureCondition = "!args.thisv().isObject()"
-                    getThisObj = "&args.thisv().toObject()"
-                ensureThisObj = CGIfWrapper(CGGeneric(self.unwrapFailureCode),
-                                            ensureCondition)
-            else:
-                ensureThisObj = None
-            self.getThisObj = CGList(
-                [ensureThisObj,
-                 CGGeneric("JS::RootedObject obj(cx, %s);\n" %
-                           getThisObj)],
-                "\n")
+        self.getThisObj = getThisObj
         self.callArgs = callArgs
 
     def definition_body(self):
@@ -5369,7 +5341,10 @@ class CGAbstractBindingMethod(CGAbstractStaticMethod):
         # consumption by CastableObjectUnwrapper.
         getThis = CGList([
                 CGGeneric(self.callArgs) if self.callArgs != "" else None,
-                self.getThisObj,
+                CGGeneric("JS::RootedObject obj(cx, %s);\n"
+                          "if (!obj) {\n"
+                          "  return false;\n"
+                          "}" % self.getThisObj) if self.getThisObj else None,
                 CGGeneric("%s* self;" % self.descriptor.nativeType)
                 ], "\n")
         unwrapThis = CGGeneric(
@@ -5610,7 +5585,7 @@ class CGGenericGetter(CGAbstractBindingMethod):
             name = "genericLenientGetter"
             unwrapFailureCode = (
                 "MOZ_ASSERT(!JS_IsExceptionPending(cx));\n"
-                "if (!ReportLenientThisUnwrappingFailure(cx, &args.callee())) {\n"
+                "if (!ReportLenientThisUnwrappingFailure(cx, obj)) {\n"
                 "  return false;\n"
                 "}\n"
                 "args.rval().set(JS::UndefinedValue());\n"
@@ -5690,7 +5665,7 @@ class CGGenericSetter(CGAbstractBindingMethod):
             name = "genericLenientSetter"
             unwrapFailureCode = (
                 "MOZ_ASSERT(!JS_IsExceptionPending(cx));\n"
-                "if (!ReportLenientThisUnwrappingFailure(cx, &args.callee())) {\n"
+                "if (!ReportLenientThisUnwrappingFailure(cx, obj)) {\n"
                 "  return false;\n"
                 "}\n"
                 "args.rval().set(JS::UndefinedValue());\n"
@@ -7305,6 +7280,22 @@ class CGDOMJSProxyHandler_getOwnPropertyDescriptor(ClassMethod):
                    CGIndenter(CGProxyIndexedGetter(self.descriptor, templateValues)).define() + "\n" +
                    "}\n") % (self.descriptor.nativeType)
 
+        if UseHolderForUnforgeable(self.descriptor):
+            getUnforgeable = """if (!JS_GetPropertyDescriptorById(cx, ${holder}, id, flags, desc)) {
+  return false;
+}
+MOZ_ASSERT_IF(desc.object(), desc.object() == ${holder});"""
+            getUnforgeable = CallOnUnforgeableHolder(self.descriptor,
+                                                     getUnforgeable, "isXray")
+            getUnforgeable += """if (desc.object()) {
+  desc.object().set(proxy);
+  return !isXray || JS_WrapPropertyDescriptor(cx, desc);
+}
+
+"""
+        else:
+            getUnforgeable = ""
+
         if indexedSetter or self.descriptor.operations['NamedSetter']:
             setOrIndexedGet += "if (flags & JSRESOLVE_ASSIGNING) {\n"
             if indexedSetter:
@@ -7318,6 +7309,7 @@ class CGDOMJSProxyHandler_getOwnPropertyDescriptor(ClassMethod):
                 setOrIndexedGet += ("    FillPropertyDescriptor(desc, proxy, JSVAL_VOID, false);\n" +
                                     "    return true;\n" +
                                     "  }\n")
+            setOrIndexedGet += CGIndenter(CGGeneric(getUnforgeable)).define()
             if self.descriptor.operations['NamedSetter']:
                 if not 'NamedCreator' in self.descriptor.operations:
                     # FIXME need to check that this is a 'supported property name'
@@ -7332,7 +7324,11 @@ class CGDOMJSProxyHandler_getOwnPropertyDescriptor(ClassMethod):
             setOrIndexedGet += "}"
             if indexedGetter:
                 setOrIndexedGet += (" else {\n" +
-                                    CGIndenter(CGGeneric(get)).define() +
+                                    CGIndenter(CGGeneric(get + "\n" + getUnforgeable)).define() +
+                                    "}")
+            else:
+                setOrIndexedGet += (" else {\n" +
+                                    CGIndenter(CGGeneric(getUnforgeable)).define() +
                                     "}")
             setOrIndexedGet += "\n\n"
         else:
@@ -7340,6 +7336,7 @@ class CGDOMJSProxyHandler_getOwnPropertyDescriptor(ClassMethod):
                 setOrIndexedGet += ("if (!(flags & JSRESOLVE_ASSIGNING)) {\n" +
                                     CGIndenter(CGGeneric(get)).define() +
                                     "}\n\n")
+            setOrIndexedGet += getUnforgeable
 
         if self.descriptor.supportsNamedProperties():
             readonly = toStringBool(self.descriptor.operations['NamedSetter'] is None)
