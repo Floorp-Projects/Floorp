@@ -7,6 +7,5 @@
 #define nsGUIEvent_h__
 
 #include "mozilla/BasicEvents.h"
-#include "mozilla/ContentEvents.h"
 
 #endif // nsGUIEvent_h__
