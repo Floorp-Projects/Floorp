@@ -22,7 +22,7 @@ BumpChunk::new_(size_t chunkSize)
     JS_ASSERT(RoundUpPow2(chunkSize) == chunkSize);
     void *mem = js_malloc(chunkSize);
     if (!mem)
-        return NULL;
+        return nullptr;
     BumpChunk *result = new (mem) BumpChunk(chunkSize - sizeof(BumpChunk));
 
     // We assume that the alignment of sAlign is less than that of
@@ -65,7 +65,7 @@ LifoAlloc::freeAll()
         decrementCurSize(victim->computedSizeOfIncludingThis());
         BumpChunk::delete_(victim);
     }
-    first = latest = last = NULL;
+    first = latest = last = nullptr;
 
     // Nb: maintaining curSize_ correctly isn't easy.  Fortunately, this is an
     // excellent sanity check.
@@ -93,7 +93,7 @@ LifoAlloc::getOrCreateChunk(size_t n)
         // Guard for overflow.
         if (allocSizeWithHeader < n ||
             (allocSizeWithHeader & (size_t(1) << (BitSize<size_t>::value - 1)))) {
-            return NULL;
+            return nullptr;
         }
 
         chunkSize = RoundUpPow2(allocSizeWithHeader);
@@ -104,7 +104,7 @@ LifoAlloc::getOrCreateChunk(size_t n)
     // If we get here, we couldn't find an existing BumpChunk to fill the request.
     BumpChunk *newChunk = BumpChunk::new_(chunkSize);
     if (!newChunk)
-        return NULL;
+        return nullptr;
     if (!first) {
         latest = first = last = newChunk;
     } else {
@@ -134,7 +134,7 @@ LifoAlloc::transferFrom(LifoAlloc *other)
         appendUnused(other->first, other->last);
     else
         appendUsed(other->first, other->latest, other->last);
-    other->first = other->last = other->latest = NULL;
+    other->first = other->last = other->latest = nullptr;
     other->curSize_ = 0;
 }
 
@@ -164,7 +164,7 @@ LifoAlloc::transferUnusedFrom(LifoAlloc *other)
         }
 
         appendUnused(other->latest->next(), other->last);
-        other->latest->setNext(NULL);
+        other->latest->setNext(nullptr);
         other->last = other->latest;
     }
 }

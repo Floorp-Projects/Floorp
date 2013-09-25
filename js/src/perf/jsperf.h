@@ -122,7 +122,7 @@ extern JS_FRIEND_API(JSObject*)
 
 /*
  * Given a Value which contains an instance of the aforementioned
- * wrapper class, extract the C++ object.  Returns NULL if the
+ * wrapper class, extract the C++ object.  Returns nullptr if the
  * Value is not an instance of the wrapper.
  */
 extern JS_FRIEND_API(PerfMeasurement*)
