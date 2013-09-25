@@ -1630,6 +1630,9 @@ extern JS_PUBLIC_API(void)
 JS_SetDestroyZoneCallback(JSRuntime *rt, JSZoneCallback callback);
 
 extern JS_PUBLIC_API(void)
+JS_SetSweepZoneCallback(JSRuntime *rt, JSZoneCallback callback);
+
+extern JS_PUBLIC_API(void)
 JS_SetCompartmentNameCallback(JSRuntime *rt, JSCompartmentNameCallback callback);
 
 extern JS_PUBLIC_API(JSWrapObjectCallback)
