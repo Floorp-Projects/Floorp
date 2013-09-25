@@ -336,7 +336,6 @@ private:
    */
   void CaptureChange(nsStyleContext* aOldContext,
                      nsStyleContext* aNewContext,
-                     nsIFrame* aContinuation, // TEMPORARY (until bug 828312 patch 11)
                      nsChangeHint aChangeToAssume);
 
   /**
