@@ -191,7 +191,7 @@ js::gc::GetAddressableGCThing(JSRuntime *rt, uintptr_t w)
     ConservativeGCTest status =
         IsAddressableGCThing(rt, w, false, &thingKind, &aheader, &thing);
     if (status != CGCT_VALID)
-        return NULL;
+        return nullptr;
     return thing;
 }
 #endif
