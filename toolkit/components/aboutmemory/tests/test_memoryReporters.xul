@@ -45,7 +45,16 @@
   let heapAllocatedAmounts = [];
   let storageSqliteAmounts = [];
 
-  let present = {}
+  let areJsNonWindowCompartmentsPresent = false;
+  let areWindowObjectsJsCompartmentsPresent = false;
+  let isSandboxLocationShown = false;
+  let isPlacesPresent = false;
+  let isImagesPresent = false;
+  let isXptiWorkingSetPresent = false;
+  let isAtomTablePresent = false;
+  let isBigStringPresent = false;
+  let isSmallString1Present = false;
+  let isSmallString2Present = false;
 
   // Generate a long, random string.  We'll check that this string is
   // reported in at least one of the memory reporters.
@@ -83,36 +92,35 @@
 
     // Check the presence of some other notable reporters.
     } else if (aPath.search(/^explicit\/js-non-window\/.*compartment\(/) >= 0) {
-      present.jsNonWindowCompartments = true;
+      areJsNonWindowCompartmentsPresent = true;
     } else if (aPath.search(/^explicit\/window-objects\/top\(.*\/js-compartment\(/) >= 0) {
-      present.windowObjectsJsCompartments = true;
+      areWindowObjectsJsCompartmentsPresent = true;
     } else if (aPath.search(/^explicit\/storage\/sqlite\/places.sqlite/) >= 0) {
-      present.places = true;
+      isPlacesPresent = true;
     } else if (aPath.search(/^explicit\/images/) >= 0) {
-      present.images = true;
+      isImagesPresent = true;
     } else if (aPath.search(/^explicit\/xpti-working-set$/) >= 0) {
-      present.xptiWorkingSet = true;
+      isXptiWorkingSetPresent = true;
     } else if (aPath.search(/^explicit\/atom-tables$/) >= 0) {
-      present.atomTable = true;
+      isAtomTablePresent = true;
     } else if (/\[System Principal\].*this-is-a-sandbox-name/.test(aPath)) {
       // A system compartment with a location (such as a sandbox) should
       // show that location.
-      present.sandboxLocation = true;
+      isSandboxLocationShown = true;
     } else if (aPath.contains(bigStringPrefix)) {
-      present.bigString = true;
+      isBigStringPresent = true;
     } else if (aPath.contains("!)(*&")) {
-      present.smallString1 = true;
+      isSmallString1Present = true;
     } else if (aPath.contains("@)(*&")) {
-      present.smallString2 = true;
+      isSmallString2Present = true;
     }
   }
 
   let mgr = Cc["@mozilla.org/memory-reporter-manager;1"].
             getService(Ci.nsIMemoryReporterManager);
 
-  // Access the distinguished amounts (mgr.explicit et al.) just to make sure
-  // they don't crash.  We can't check their actual values because they're
-  // non-deterministic.
+  // Access mgr.explicit and mgr.resident just to make sure they don't crash.
+  // We can't check their actual values because they're non-deterministic.
   //
   // Nb: mgr.explicit will throw NS_ERROR_NOT_AVAILABLE if this is a
   // --enable-trace-malloc build.  Allow for that exception, but *only* that
@@ -125,35 +133,7 @@
     is(ex.result, Cr.NS_ERROR_NOT_AVAILABLE, "mgr.explicit exception");
     haveExplicit = false;
   }
-  let amounts = [
-    "vsize",
-    "resident",
-    "residentFast",
-    "heapAllocated",
-    "heapOverheadRatio",
-    "JSMainRuntimeGCHeap",
-    "JSMainRuntimeTemporaryPeak",
-    "JSMainRuntimeCompartmentsSystem",
-    "JSMainRuntimeCompartmentsUser",
-    "imagesContentUsedUncompressed",
-    "storageSQLite",
-    "lowMemoryEventsVirtual",
-    "lowMemoryEventsPhysical",
-    "ghostWindows",
-    "pageFaultsHard",
-  ];
-  for (let i = 0; i < amounts.length; i++) {
-    try {
-      // If mgr[amounts[i]] throws an exception, just move on -- some amounts
-      // aren't available on all platforms.  But if the attribute simply
-      // isn't present, that indicates the distinguished amounts have changed
-      // and this file hasn't been updated appropriately.
-      dummy = mgr[amounts[i]];
-      ok(dummy !== undefined,
-         "accessed an unknown distinguished amount: " + amounts[i]);
-    } catch (ex) {
-    }
-  }
+  dummy = mgr.resident;
 
   let e = mgr.enumerateReporters();
   while (e.hasMoreElements()) {
@@ -180,17 +160,18 @@
   checkSpecialReport("vsize",          vsizeAmounts);
   checkSpecialReport("resident",       residentAmounts);
   checkSpecialReport("js-main-runtime-gc-heap-committed/used/gc-things", jsGcHeapAmounts);
+  checkSpecialReport("storage-sqlite", storageSqliteAmounts);
 
-  ok(present.jsNonWindowCompartments,     "js-non-window compartments are present");
-  ok(present.windowObjectsJsCompartments, "window-objects/.../js compartments are present");
-  ok(present.places,                      "places is present");
-  ok(present.images,                      "images is present");
-  ok(present.xptiWorkingSet,              "xpti-working-set is present");
-  ok(present.atomTable,                   "atom-table is present");
-  ok(present.sandboxLocation,             "sandbox locations are present");
-  ok(present.bigString,                   "large string is present");
-  ok(present.smallString1,                "small string 1 is present");
-  ok(present.smallString2,                "small string 2 is present");
+  ok(areJsNonWindowCompartmentsPresent,     "js-non-window compartments are present");
+  ok(areWindowObjectsJsCompartmentsPresent, "window-objects/.../js compartments are present");
+  ok(isSandboxLocationShown,                "sandbox locations are present");
+  ok(isPlacesPresent,                       "places is present");
+  ok(isImagesPresent,                       "images is present");
+  ok(isXptiWorkingSetPresent,               "xpti-working-set is present");
+  ok(isAtomTablePresent,                    "atom-table is present");
+  ok(isBigStringPresent,                    "large string is present");
+  ok(isSmallString1Present,                 "small string 1 is present");
+  ok(isSmallString2Present,                 "small string 2 is present");
 
   ]]>
   </script>

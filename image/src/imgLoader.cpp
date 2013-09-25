@@ -137,7 +137,7 @@ public:
     return NS_OK;
   }
 
-  static int64_t ImagesContentUsedUncompressedDistinguishedAmount()
+  static int64_t GetImagesContentUsedUncompressed()
   {
     size_t n = 0;
     for (uint32_t i = 0; i < imgLoader::sMemReporter->mKnownLoaders.Length(); i++) {
@@ -222,6 +222,26 @@ private:
 };
 
 NS_IMPL_ISUPPORTS1(imgMemoryReporter, nsIMemoryReporter)
+
+// This is used by telemetry.
+class ImagesContentUsedUncompressedReporter MOZ_FINAL
+  : public MemoryUniReporter
+{
+public:
+  ImagesContentUsedUncompressedReporter()
+    : MemoryUniReporter("images-content-used-uncompressed",
+                         KIND_OTHER, UNITS_BYTES,
+"This is the sum of the 'explicit/images/content/used/uncompressed-heap' "
+"and 'explicit/images/content/used/uncompressed-nonheap' numbers.  However, "
+"it is measured at a different time and so may give slightly different "
+"results.")
+  {}
+private:
+  int64_t Amount() MOZ_OVERRIDE
+  {
+    return imgMemoryReporter::GetImagesContentUsedUncompressed();
+  }
+};
 
 NS_IMPL_ISUPPORTS3(nsProgressNotificationProxy,
                      nsIProgressEventSink,
@@ -819,7 +839,7 @@ void imgLoader::GlobalInit()
 
   sMemReporter = new imgMemoryReporter();
   NS_RegisterMemoryReporter(sMemReporter);
-  RegisterImagesContentUsedUncompressedDistinguishedAmount(imgMemoryReporter::ImagesContentUsedUncompressedDistinguishedAmount);
+  NS_RegisterMemoryReporter(new ImagesContentUsedUncompressedReporter());
 }
 
 nsresult imgLoader::InitCache()
