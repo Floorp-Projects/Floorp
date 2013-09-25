@@ -118,10 +118,18 @@ WebConsoleActor.prototype =
   conn: null,
 
   /**
-   * The content window we work with.
+   * The window we work with.
    * @type nsIDOMWindow
    */
-  get window() this.parentActor.window,
+  get window() {
+    if (this.parentActor.isRootActor) {
+      // Try to find the Browser Console window, otherwise use the window of
+      // the root actor.
+      let window = Services.wm.getMostRecentWindow("devtools:webconsole");
+      return window || this.parentActor.window;
+    }
+    return this.parentActor.window;
+  },
 
   /**
    * The ConsoleServiceListener instance.

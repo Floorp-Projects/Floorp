@@ -375,6 +375,7 @@ documenttab[selected] .documenttab-selection {
   background-position: left 6px center;
 }
 
+#stack[viewstate="snapped"] > .overlay-button,
 #stack[keyboardVisible] > .overlay-button,
 #stack[autocomplete] > .overlay-button,
 #stack[fullscreen] > .overlay-button,

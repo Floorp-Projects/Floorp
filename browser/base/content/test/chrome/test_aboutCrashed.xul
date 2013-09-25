@@ -1,0 +1,86 @@
+<?xml version="1.0"?>
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+
+<?xml-stylesheet href="chrome://global/skin/" type="text/css"?>
+<?xml-stylesheet href="chrome://mochikit/content/tests/SimpleTest/test.css" type="text/css"?>
+
+<window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+  <script type="application/javascript"
+          src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js" />
+  <iframe type="content" id="frame1"/>
+  <iframe type="content" id="frame2" onload="doTest()"/>
+  <script type="application/javascript"><![CDATA[
+    const Ci = Components.interfaces;
+    const Cu = Components.utils;
+
+    Cu.import("resource://gre/modules/Services.jsm");
+    Cu.import("resource://gre/modules/Task.jsm");
+    Cu.import("resource://gre/modules/Promise.jsm");
+    Cu.import("resource://gre/modules/XPCOMUtils.jsm");
+
+    SimpleTest.waitForExplicitFinish();
+
+    // Load error pages do not fire "load" events, so let's use a progressListener.
+    function waitForErrorPage(frame) {
+      let errorPageDeferred = Promise.defer();
+
+      let progressListener = {
+        onLocationChange: function(aWebProgress, aRequest, aLocation, aFlags) {
+          if (aFlags & Ci.nsIWebProgressListener.LOCATION_CHANGE_ERROR_PAGE) {
+            frame.docShell.QueryInterface(Ci.nsIInterfaceRequestor)
+                          .getInterface(Ci.nsIWebProgress)
+                          .removeProgressListener(progressListener,
+                                                  Ci.nsIWebProgress.NOTIFY_LOCATION);
+
+            errorPageDeferred.resolve();
+          }
+        },
+
+        QueryInterface: XPCOMUtils.generateQI([Ci.nsIWebProgressListener,
+                                               Ci.nsISupportsWeakReference])
+      };
+
+      frame.docShell.QueryInterface(Ci.nsIInterfaceRequestor)
+                    .getInterface(Ci.nsIWebProgress)
+                    .addProgressListener(progressListener,
+                                         Ci.nsIWebProgress.NOTIFY_LOCATION);
+
+      return errorPageDeferred.promise;
+    }
+
+  function doTest() {
+    Task.spawn(function test_aboutCrashed() {
+      let frame1 = document.getElementById("frame1");
+      let frame2 = document.getElementById("frame2");
+      let uri1 = Services.io.newURI("http://www.example.com/1", null, null);
+      let uri2 = Services.io.newURI("http://www.example.com/2", null, null);
+
+      let errorPageReady = waitForErrorPage(frame1);
+      frame1.docShell.chromeEventHandler.setAttribute("crashedPageTitle", "pageTitle");
+      frame1.docShell.displayLoadError(Components.results.NS_ERROR_CONTENT_CRASHED, uri1, null);
+
+      yield errorPageReady;
+      frame1.docShell.chromeEventHandler.removeAttribute("crashedPageTitle");
+
+      SimpleTest.is(frame1.contentDocument.documentURI,
+                    "about:tabcrashed?e=tabcrashed&u=http%3A//www.example.com/1&c=UTF-8&d=pageTitle",
+                    "Correct about:tabcrashed displayed for page with title.");
+
+      errorPageReady = waitForErrorPage(frame2);
+      frame2.docShell.displayLoadError(Components.results.NS_ERROR_CONTENT_CRASHED, uri2, null);
+
+      yield errorPageReady;
+
+      SimpleTest.is(frame2.contentDocument.documentURI,
+                    "about:tabcrashed?e=tabcrashed&u=http%3A//www.example.com/2&c=UTF-8&d=%20",
+                    "Correct about:tabcrashed displayed for page with no title.");
+
+      SimpleTest.finish();
+  });
+  }
+  ]]></script>
+
+  <body xmlns="http://www.w3.org/1999/xhtml" style="height: 300px; overflow: auto;" />
+</window>

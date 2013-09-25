@@ -1426,7 +1426,12 @@ gfxFT2FontList::GetDefaultFont(const gfxFontStyle* aStyle)
             return FindFamily(resolvedName);
         }
     }
-#elif defined(ANDROID)
+#elif defined(MOZ_WIDGET_GONK)
+    nsAutoString resolvedName;
+    if (ResolveFontName(NS_LITERAL_STRING("Fira Sans OT"), resolvedName)) {
+        return FindFamily(resolvedName);
+    }
+#elif defined(MOZ_WIDGET_ANDROID)
     nsAutoString resolvedName;
     if (ResolveFontName(NS_LITERAL_STRING("Roboto"), resolvedName) ||
         ResolveFontName(NS_LITERAL_STRING("Droid Sans"), resolvedName)) {

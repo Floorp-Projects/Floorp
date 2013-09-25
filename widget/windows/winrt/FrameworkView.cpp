@@ -109,7 +109,6 @@ FrameworkView::ActivateView()
   LogFunction();
 
   UpdateWidgetSizeAndPosition();
-  MetroUtils::GetViewState(mViewState);
 
   nsIntRegion region(nsIntRect(0, 0, mWindowBounds.width, mWindowBounds.height));
   mWidget->Paint(region);
@@ -386,36 +385,6 @@ FrameworkView::OnWindowClosed(ICoreWindow* aSender, ICoreWindowEventArgs* aArgs)
   return S_OK;
 }
 
-void
-FrameworkView::FireViewStateObservers()
-{
-  ApplicationViewState state;
-  MetroUtils::GetViewState(state);
-  if (state == mViewState) {
-    return;
-  }
-  mViewState = state;
-  nsAutoString name;
-  switch (mViewState) {
-    case ApplicationViewState_FullScreenLandscape:
-      name.AssignLiteral("landscape");
-    break;
-    case ApplicationViewState_Filled:
-      name.AssignLiteral("filled");
-    break;
-    case ApplicationViewState_Snapped:
-      name.AssignLiteral("snapped");
-    break;
-    case ApplicationViewState_FullScreenPortrait:
-      name.AssignLiteral("portrait");
-    break;
-    default:
-      NS_WARNING("Unknown view state");
-    return;
-  };
-  MetroUtils::FireObserver("metro_viewstate_changed", name.get());
-}
-
 HRESULT
 FrameworkView::OnWindowSizeChanged(ICoreWindow* aSender, IWindowSizeChangedEventArgs* aArgs)
 {
@@ -431,7 +400,6 @@ FrameworkView::OnWindowSizeChanged(ICoreWindow* aSender, IWindowSizeChangedEvent
   mWindowBounds = MetroUtils::LogToPhys(logicalBounds);
 
   UpdateWidgetSizeAndPosition();
-  FireViewStateObservers();
   return S_OK;
 }
 

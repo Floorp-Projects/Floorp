@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>iframe creation/deletion test</title>
+</head>
+<body>
+  <div id="yay"></div>
+  <script type="text/javascript">
+      var yay = document.querySelector("#yay");
+      yay.textContent = "nothing";
+
+      var iframe = document.createElement('iframe');
+      document.body.appendChild(iframe);
+      iframe.parentNode.removeChild(iframe);
+
+      yay.textContent = "before events";
+
+      document.addEventListener("DOMContentLoaded", function() {
+        var iframe = document.createElement('iframe');
+        document.body.appendChild(iframe);
+        iframe.parentNode.removeChild(iframe);
+
+        yay.textContent = "DOMContentLoaded";
+      });
+      window.addEventListener("load", function() {
+        var iframe = document.createElement('iframe');
+        document.body.appendChild(iframe);
+        iframe.parentNode.removeChild(iframe);
+
+        yay.textContent = "load";
+      });
+  </script>
+</body>
+</html>

@@ -40,9 +40,6 @@ function OptionsPanel(iframeWindow, toolbox) {
   this.toolbox = toolbox;
   this.isReady = false;
 
-  // Make restart method available from xul
-  this.panelWin.restart = this.restart;
-
   EventEmitter.decorate(this);
 };
 
@@ -57,7 +54,6 @@ OptionsPanel.prototype = {
 
     this.setupToolsList();
     this.populatePreferences();
-    this.prepareRestartPreferences();
 
     this._disableJSClicked = this._disableJSClicked.bind(this);
 
@@ -199,34 +195,6 @@ OptionsPanel.prototype = {
         gDevTools.emit("pref-changed", data);
       }.bind(menulist));
     }
-  },
-
-  /**
-   * Handles checkbox click inside hbox with class "hidden-labels-box". The
-   * labels inside the hbox are shown again when the user click on the checkbox
-   * in the box.
-   */
-  prepareRestartPreferences: function() {
-    let checkboxes = this.panelDoc.querySelectorAll(".hidden-labels-box > checkbox");
-    for (let checkbox of checkboxes) {
-      checkbox.addEventListener("command", function(target) {
-        target.parentNode.classList.toggle("visible");
-      }.bind(null, checkbox));
-    }
-  },
-
-  restart: function() {
-    let canceled = Cc["@mozilla.org/supports-PRBool;1"]
-                     .createInstance(Ci.nsISupportsPRBool);
-    Services.obs.notifyObservers(canceled, "quit-application-requested", "restart");
-    if (canceled.data) {
-      return;
-    }
-
-    // restart
-    Cc['@mozilla.org/toolkit/app-startup;1']
-      .getService(Ci.nsIAppStartup)
-      .quit(Ci.nsIAppStartup.eAttemptQuit | Ci.nsIAppStartup.eRestart);
   },
 
   /**

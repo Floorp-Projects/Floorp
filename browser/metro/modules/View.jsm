@@ -23,10 +23,23 @@ function makeURI(aURL, aOriginCharset, aBaseURI) {
 // --------------------------------
 // View prototype for shared functionality
 
-function View() {
+function View(aSet) {
+  this._set = aSet;
+  this._set.controller = this;
+
+  this.viewStateObserver = {
+    observe: (aSubject, aTopic, aData) => this._adjustDOMforViewState(aData)
+  };
+  Services.obs.addObserver(this.viewStateObserver, "metro_viewstate_changed", false);
+
+  this._adjustDOMforViewState();
 }
 
 View.prototype = {
+  destruct: function () {
+    Services.obs.removeObserver(this.viewStateObserver, "metro_viewstate_changed");
+  },
+
   _adjustDOMforViewState: function _adjustDOMforViewState(aState) {
     if (this._set) {
       if (undefined == aState)
@@ -42,10 +55,6 @@ View.prototype = {
 
       this._set.arrangeItems();
     }
-  },
-
-  onViewStateChange: function (aState) {
-    this._adjustDOMforViewState(aState);
   },
 
   _updateFavicon: function pv__updateFavicon(aItem, aUri) {
