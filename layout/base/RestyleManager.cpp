@@ -635,26 +635,29 @@ RestyleManager::ProcessRestyledFrames(nsStyleChangeList& aChangeList)
       if (NeedToReframeForAddingOrRemovingTransform(frame)) {
         NS_UpdateHint(hint, nsChangeHint_ReconstructFrame);
       } else {
-        // Normally frame construction would set state bits as needed,
-        // but we're not going to reconstruct the frame so we need to set them.
-        // It's because we need to set this state on each affected frame
-        // that we can't coalesce nsChangeHint_AddOrRemoveTransform hints up
-        // to ancestors (i.e. it can't be an inherited change hint).
-        if (frame->IsPositioned()) {
-          // If a transform has been added, we'll be taking this path,
-          // but we may be taking this path even if a transform has been
-          // removed. It's OK to add the bit even if it's not needed.
-          frame->AddStateBits(NS_FRAME_MAY_BE_TRANSFORMED);
-          if (!frame->IsAbsoluteContainer() &&
-              (frame->GetStateBits() & NS_FRAME_CAN_HAVE_ABSPOS_CHILDREN)) {
-            frame->MarkAsAbsoluteContainingBlock();
-          }
-        } else {
-          // Don't remove NS_FRAME_MAY_BE_TRANSFORMED since it may still by
-          // transformed by other means. It's OK to have the bit even if it's
-          // not needed.
-          if (frame->IsAbsoluteContainer()) {
-            frame->MarkAsNotAbsoluteContainingBlock();
+        for (nsIFrame *cont = frame; cont;
+             cont = nsLayoutUtils::GetNextContinuationOrSpecialSibling(cont)) {
+          // Normally frame construction would set state bits as needed,
+          // but we're not going to reconstruct the frame so we need to set them.
+          // It's because we need to set this state on each affected frame
+          // that we can't coalesce nsChangeHint_AddOrRemoveTransform hints up
+          // to ancestors (i.e. it can't be an inherited change hint).
+          if (cont->IsPositioned()) {
+            // If a transform has been added, we'll be taking this path,
+            // but we may be taking this path even if a transform has been
+            // removed. It's OK to add the bit even if it's not needed.
+            cont->AddStateBits(NS_FRAME_MAY_BE_TRANSFORMED);
+            if (!cont->IsAbsoluteContainer() &&
+                (cont->GetStateBits() & NS_FRAME_CAN_HAVE_ABSPOS_CHILDREN)) {
+              cont->MarkAsAbsoluteContainingBlock();
+            }
+          } else {
+            // Don't remove NS_FRAME_MAY_BE_TRANSFORMED since it may still by
+            // transformed by other means. It's OK to have the bit even if it's
+            // not needed.
+            if (cont->IsAbsoluteContainer()) {
+              cont->MarkAsNotAbsoluteContainingBlock();
+            }
           }
         }
       }
