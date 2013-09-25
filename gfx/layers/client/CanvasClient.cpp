@@ -121,13 +121,17 @@ DeprecatedCanvasClient2D::Update(gfx::IntSize aSize, ClientCanvasLayer* aLayer)
 void
 DeprecatedCanvasClientSurfaceStream::Updated()
 {
-  mForwarder->UpdateTextureNoSwap(this, 1, mDeprecatedTextureClient->GetDescriptor());
+  if (mNeedsUpdate) {
+    mForwarder->UpdateTextureNoSwap(this, 1, mDeprecatedTextureClient->GetDescriptor());
+    mNeedsUpdate = false;
+  }
 }
 
 
 DeprecatedCanvasClientSurfaceStream::DeprecatedCanvasClientSurfaceStream(CompositableForwarder* aFwd,
                                                                          TextureFlags aFlags)
 : CanvasClient(aFwd, aFlags)
+, mNeedsUpdate(false)
 {
   mTextureInfo.mCompositableType = BUFFER_IMAGE_SINGLE;
 }
@@ -169,6 +173,7 @@ DeprecatedCanvasClientSurfaceStream::Update(gfx::IntSize aSize, ClientCanvasLaye
     printf_stderr("isCrossProcess, but not MOZ_WIDGET_GONK! Someone needs to write some code!");
     MOZ_ASSERT(false);
 #endif
+    mNeedsUpdate = true;
   } else {
     SurfaceStreamHandle handle = stream->GetShareHandle();
     SurfaceDescriptor *desc = mDeprecatedTextureClient->GetDescriptor();
@@ -181,6 +186,7 @@ DeprecatedCanvasClientSurfaceStream::Update(gfx::IntSize aSize, ClientCanvasLaye
       // Ref this so the SurfaceStream doesn't disappear unexpectedly. The
       // Compositor will need to unref it when finished.
       aLayer->mGLContext->AddRef();
+      mNeedsUpdate = true;
     }
   }
 
