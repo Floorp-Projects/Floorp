@@ -9,8 +9,8 @@
 #include "nscore.h"
 #include <windows.h>
 #include "nsString.h"
-#include "nsGUIEvent.h"
 #include "nsTArray.h"
+#include "mozilla/EventForwards.h"
 
 class nsIWidget;
 class nsWindow;

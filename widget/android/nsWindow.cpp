@@ -8,6 +8,7 @@
 #include <unistd.h>
 
 #include "mozilla/MouseEvents.h"
+#include "mozilla/TextEvents.h"
 #include "mozilla/TouchEvents.h"
 
 #include "mozilla/dom/ContentParent.h"

@@ -9,12 +9,12 @@
 
 #include "nsIWeakReference.h"
 
-#include "nsGUIEvent.h"
 #include "nsISelection.h"
 #include "nsISelectionController.h"
 #include "nsISelectionPrivate.h"
 #include "nsRange.h"
 #include "nsThreadUtils.h"
+#include "mozilla/TextEvents.h"
 
 struct CachedOffsetForFrame;
 class nsAutoScrollTimer;

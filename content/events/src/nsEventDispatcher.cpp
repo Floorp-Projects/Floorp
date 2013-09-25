@@ -19,6 +19,7 @@
 #include "mozilla/dom/EventTarget.h"
 #include "mozilla/MouseEvents.h"
 #include "mozilla/MutationEvent.h"
+#include "mozilla/TextEvents.h"
 #include "mozilla/TouchEvents.h"
 
 using namespace mozilla;

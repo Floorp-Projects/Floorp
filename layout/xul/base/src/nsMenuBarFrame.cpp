@@ -26,6 +26,7 @@
 #endif
 #include "nsContentUtils.h"
 #include "nsUTF8Utils.h"
+#include "mozilla/TextEvents.h"
 
 
 //

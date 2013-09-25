@@ -20,6 +20,7 @@
 
 #include "nsContentUtils.h"
 #include "mozilla/Preferences.h"
+#include "mozilla/TextEvents.h"
 
 using namespace mozilla;
 

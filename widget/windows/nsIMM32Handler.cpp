@@ -16,6 +16,8 @@
 #include "KeyboardLayout.h"
 #include <algorithm>
 
+#include "mozilla/TextEvents.h"
+
 using namespace mozilla::widget;
 
 static nsIMM32Handler* gIMM32Handler = nullptr;
