@@ -102,6 +102,8 @@ Components.utils.import("resource://gre/modules/XPCOMUtils.jsm");
 Components.utils.import("resource://gre/modules/DownloadLastDir.jsm", downloadModule);
 Components.utils.import("resource://gre/modules/DownloadPaths.jsm");
 Components.utils.import("resource://gre/modules/DownloadUtils.jsm");
+Components.utils.import("resource://gre/modules/Downloads.jsm");
+Components.utils.import("resource://gre/modules/Task.jsm");
 
 /* ctor
  */
@@ -203,115 +205,113 @@ nsUnknownContentTypeDialog.prototype = {
                             getService(Components.interfaces.nsIStringBundleService).
                             createBundle("chrome://mozapps/locale/downloads/unknownContentType.properties");
 
-    if (!aForcePrompt) {
-      // Check to see if the user wishes to auto save to the default download
-      // folder without prompting. Note that preference might not be set.
-      let autodownload = false;
-      try {
-        autodownload = prefs.getBoolPref(PREF_BD_USEDOWNLOADDIR);
-      } catch (e) { }
-
-      if (autodownload) {
-        // Retrieve the user's default download directory
-        let dnldMgr = Components.classes["@mozilla.org/download-manager;1"]
-                                .getService(Components.interfaces.nsIDownloadManager);
-        let defaultFolder = dnldMgr.userDownloadsDirectory;
-
+    Task.spawn(function() {
+      if (!aForcePrompt) {
+        // Check to see if the user wishes to auto save to the default download
+        // folder without prompting. Note that preference might not be set.
+        let autodownload = false;
         try {
-          result = this.validateLeafName(defaultFolder, aDefaultFile, aSuggestedFileExtension);
-        }
-        catch (ex) {
-          if (ex.result == Components.results.NS_ERROR_FILE_ACCESS_DENIED) {
-            let prompter = Components.classes["@mozilla.org/embedcomp/prompt-service;1"].
-                                      getService(Components.interfaces.nsIPromptService);
+          autodownload = prefs.getBoolPref(PREF_BD_USEDOWNLOADDIR);
+        } catch (e) { }
 
-            // Display error alert (using text supplied by back-end)
-            prompter.alert(this.dialog,
-                           bundle.GetStringFromName("badPermissions.title"),
-                           bundle.GetStringFromName("badPermissions"));
+        if (autodownload) {
+          // Retrieve the user's default download directory
+          let defaultFolder = yield Downloads.getPreferredDownloadsDirectory();
 
-            aLauncher.saveDestinationAvailable(null);
+          try {
+            result = this.validateLeafName(defaultFolder, aDefaultFile, aSuggestedFileExtension);
+          }
+          catch (ex) {
+            if (ex.result == Components.results.NS_ERROR_FILE_ACCESS_DENIED) {
+              let prompter = Components.classes["@mozilla.org/embedcomp/prompt-service;1"].
+                                        getService(Components.interfaces.nsIPromptService);
+
+              // Display error alert (using text supplied by back-end)
+              prompter.alert(this.dialog,
+                             bundle.GetStringFromName("badPermissions.title"),
+                             bundle.GetStringFromName("badPermissions"));
+
+              aLauncher.saveDestinationAvailable(null);
+              return;
+            }
+          }
+
+          // Check to make sure we have a valid directory, otherwise, prompt
+          if (result) {
+            aLauncher.saveDestinationAvailable(result);
             return;
           }
         }
+      }
 
-        // Check to make sure we have a valid directory, otherwise, prompt
-        if (result) {
-          aLauncher.saveDestinationAvailable(result);
+      // Use file picker to show dialog.
+      var nsIFilePicker = Components.interfaces.nsIFilePicker;
+      var picker = Components.classes["@mozilla.org/filepicker;1"].createInstance(nsIFilePicker);
+      var windowTitle = bundle.GetStringFromName("saveDialogTitle");
+      var parent = aContext.QueryInterface(Components.interfaces.nsIInterfaceRequestor).getInterface(Components.interfaces.nsIDOMWindow);
+      picker.init(parent, windowTitle, nsIFilePicker.modeSave);
+      picker.defaultString = aDefaultFile;
+
+      let gDownloadLastDir = new downloadModule.DownloadLastDir(parent);
+
+      if (aSuggestedFileExtension) {
+        // aSuggestedFileExtension includes the period, so strip it
+        picker.defaultExtension = aSuggestedFileExtension.substring(1);
+      }
+      else {
+        try {
+          picker.defaultExtension = this.mLauncher.MIMEInfo.primaryExtension;
+        }
+        catch (ex) { }
+      }
+
+      var wildCardExtension = "*";
+      if (aSuggestedFileExtension) {
+        wildCardExtension += aSuggestedFileExtension;
+        picker.appendFilter(this.mLauncher.MIMEInfo.description, wildCardExtension);
+      }
+
+      picker.appendFilters( nsIFilePicker.filterAll );
+
+      // Default to lastDir if it is valid, otherwise use the user's default
+      // downloads directory.  userDownloadsDirectory should always return a
+      // valid directory, so we can safely default to it.
+      picker.displayDirectory = yield Downloads.getPreferredDownloadsDirectory();
+
+      gDownloadLastDir.getFileAsync(aLauncher.source, function LastDirCallback(lastDir) {
+        if (lastDir && isUsableDirectory(lastDir))
+          picker.displayDirectory = lastDir;
+
+        if (picker.show() == nsIFilePicker.returnCancel) {
+          // null result means user cancelled.
+          aLauncher.saveDestinationAvailable(null);
           return;
         }
-      }
-    }
 
-    // Use file picker to show dialog.
-    var nsIFilePicker = Components.interfaces.nsIFilePicker;
-    var picker = Components.classes["@mozilla.org/filepicker;1"].createInstance(nsIFilePicker);
-    var windowTitle = bundle.GetStringFromName("saveDialogTitle");
-    var parent = aContext.QueryInterface(Components.interfaces.nsIInterfaceRequestor).getInterface(Components.interfaces.nsIDOMWindow);
-    picker.init(parent, windowTitle, nsIFilePicker.modeSave);
-    picker.defaultString = aDefaultFile;
+        // Be sure to save the directory the user chose through the Save As...
+        // dialog  as the new browser.download.dir since the old one
+        // didn't exist.
+        result = picker.file;
 
-    let gDownloadLastDir = new downloadModule.DownloadLastDir(parent);
+        if (result) {
+          try {
+            // Remove the file so that it's not there when we ensure non-existence later;
+            // this is safe because for the file to exist, the user would have had to
+            // confirm that he wanted the file overwritten.
+            if (result.exists())
+              result.remove(false);
+          }
+          catch (e) { }
+          var newDir = result.parent.QueryInterface(Components.interfaces.nsILocalFile);
 
-    if (aSuggestedFileExtension) {
-      // aSuggestedFileExtension includes the period, so strip it
-      picker.defaultExtension = aSuggestedFileExtension.substring(1);
-    }
-    else {
-      try {
-        picker.defaultExtension = this.mLauncher.MIMEInfo.primaryExtension;
-      }
-      catch (ex) { }
-    }
+          // Do not store the last save directory as a pref inside the private browsing mode
+          gDownloadLastDir.setFile(aLauncher.source, newDir);
 
-    var wildCardExtension = "*";
-    if (aSuggestedFileExtension) {
-      wildCardExtension += aSuggestedFileExtension;
-      picker.appendFilter(this.mLauncher.MIMEInfo.description, wildCardExtension);
-    }
-
-    picker.appendFilters( nsIFilePicker.filterAll );
-
-    // Default to lastDir if it is valid, otherwise use the user's default
-    // downloads directory.  userDownloadsDirectory should always return a
-    // valid directory, so we can safely default to it.
-    var dnldMgr = Components.classes["@mozilla.org/download-manager;1"]
-                            .getService(Components.interfaces.nsIDownloadManager);
-    picker.displayDirectory = dnldMgr.userDownloadsDirectory;
-
-    gDownloadLastDir.getFileAsync(aLauncher.source, function LastDirCallback(lastDir) {
-      if (lastDir && isUsableDirectory(lastDir))
-        picker.displayDirectory = lastDir;
-
-      if (picker.show() == nsIFilePicker.returnCancel) {
-        // null result means user cancelled.
-        aLauncher.saveDestinationAvailable(null);
-        return;
-      }
-
-      // Be sure to save the directory the user chose through the Save As...
-      // dialog  as the new browser.download.dir since the old one
-      // didn't exist.
-      result = picker.file;
-
-      if (result) {
-        try {
-          // Remove the file so that it's not there when we ensure non-existence later;
-          // this is safe because for the file to exist, the user would have had to
-          // confirm that he wanted the file overwritten.
-          if (result.exists())
-            result.remove(false);
+          result = this.validateLeafName(newDir, result.leafName, null);
         }
-        catch (e) { }
-        var newDir = result.parent.QueryInterface(Components.interfaces.nsILocalFile);
-
-        // Do not store the last save directory as a pref inside the private browsing mode
-        gDownloadLastDir.setFile(aLauncher.source, newDir);
-
-        result = this.validateLeafName(newDir, result.leafName, null);
-      }
-      aLauncher.saveDestinationAvailable(result);
-    }.bind(this));
+        aLauncher.saveDestinationAvailable(result);
+      }.bind(this));
+    }.bind(this)).then(null, Components.utils.reportError);
   },
 
   /**

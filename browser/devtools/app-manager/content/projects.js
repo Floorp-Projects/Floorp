@@ -39,10 +39,8 @@ let UI = {
     this.template = new Template(document.body, AppProjects.store, Utils.l10n);
     this.template.start();
 
-    AppProjects.store.on("set", (event,path,value) => {
-      if (path == "projects") {
-        AppProjects.store.object.projects.forEach(UI.validate);
-      }
+    AppProjects.load().then(() => {
+      AppProjects.store.object.projects.forEach(UI.validate);
     });
   },
 
@@ -320,10 +318,11 @@ let UI = {
            // And only when the toolbox is opened, release the button
            button.disabled = false;
          },
-         (msg) => {
+         (err) => {
            button.disabled = false;
-           alert(msg);
-           this.connection.log(msg);
+           let message = err.error ? err.error + ": " + err.message : String(err);
+           alert(message);
+           this.connection.log(message);
          });
   },
 

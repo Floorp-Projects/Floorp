@@ -142,7 +142,7 @@ var BrowserUI = {
       messageManager.addMessageListener("Browser:MozApplicationManifest", OfflineApps);
 
       try {
-        Downloads.init();
+        MetroDownloadsView.init();
         DialogUI.init();
         FormHelperUI.init();
         FindHelperUI.init();
@@ -175,7 +175,7 @@ var BrowserUI = {
 
     PanelUI.uninit();
     FlyoutPanelsUI.uninit();
-    Downloads.uninit();
+    MetroDownloadsView.uninit();
     SettingsCharm.uninit();
     messageManager.removeMessageListener("Content:StateChange", this);
     PageThumbs.uninit();
