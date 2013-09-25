@@ -3481,13 +3481,20 @@ JSTerm.prototype = {
       view.delete = null;
     }
 
-    let { variable, expanded } = view.controller.setSingleVariable(aOptions);
-    variable.evaluationMacro = simpleValueEvalMacro;
+    let scope = view.addScope(aOptions.label);
+    scope.expanded = true;
+    scope.locked = true;
+
+    let container = scope.addItem();
+    container.evaluationMacro = simpleValueEvalMacro;
 
     if (aOptions.objectActor) {
+      view.controller.expand(container, aOptions.objectActor);
       view._consoleLastObjectActor = aOptions.objectActor.actor;
     }
     else if (aOptions.rawObject) {
+      container.populate(aOptions.rawObject);
+      view.commitHierarchy();
       view._consoleLastObjectActor = null;
     }
     else {
@@ -3495,9 +3502,7 @@ JSTerm.prototype = {
                       "display.");
     }
 
-    expanded.then(() => {
-      this.emit("variablesview-updated", view, aOptions);
-    });
+    this.emit("variablesview-updated", view, aOptions);
   },
 
   /**
