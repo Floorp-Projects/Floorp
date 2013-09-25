@@ -840,7 +840,14 @@ appbar toolbar[labelled] toolbarbutton > .toolbarbutton-text {
   list-style-image: url(chrome://browser/skin/images/appbar-icons.png);
 }
 
-.flyout-narrow description,
-.flyout-narrow label {
-  max-width: 266px; /* Accounts for a 40px padding on each side of the flyout */
+/* Flyout panels (sidebars) ------------------------------------------------- */
+
+.flyout-narrow {
+  width: 346px;
+}
+
+/* Some elements don't resize to fit their container properly for some reason.
+ * Setting max-width on the element or a child fixes it. */
+.flyout-narrow .flyoutpanel-hack {
+  max-width: calc(346px - 2 * 40px);
 }
