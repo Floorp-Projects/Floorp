@@ -42,7 +42,6 @@ const CustomizableWidgets = [{
     viewId: "PanelUI-history",
     removable: true,
     defaultArea: CustomizableUI.AREA_PANEL,
-    allowedAreas: [CustomizableUI.AREA_PANEL, CustomizableUI.AREA_NAVBAR],
     onViewShowing: function(aEvent) {
       // Populate our list of history
       const kMaxResults = 15;
@@ -104,7 +103,6 @@ const CustomizableWidgets = [{
     id: "privatebrowsing-button",
     removable: true,
     defaultArea: CustomizableUI.AREA_PANEL,
-    allowedAreas: [CustomizableUI.AREA_PANEL],
     onCommand: function(e) {
       if (e.target && e.target.ownerDocument && e.target.ownerDocument.defaultView) {
         let win = e.target.ownerDocument.defaultView;
@@ -117,7 +115,6 @@ const CustomizableWidgets = [{
     id: "save-page-button",
     removable: true,
     defaultArea: CustomizableUI.AREA_PANEL,
-    allowedAreas: [CustomizableUI.AREA_PANEL],
     onCommand: function(aEvent) {
       let win = aEvent.target &&
                 aEvent.target.ownerDocument &&
@@ -130,7 +127,6 @@ const CustomizableWidgets = [{
     id: "find-button",
     removable: true,
     defaultArea: CustomizableUI.AREA_PANEL,
-    allowedAreas: [CustomizableUI.AREA_PANEL],
     onCommand: function(aEvent) {
       let win = aEvent.target &&
                 aEvent.target.ownerDocument &&
@@ -143,7 +139,6 @@ const CustomizableWidgets = [{
     id: "open-file-button",
     removable: true,
     defaultArea: CustomizableUI.AREA_PANEL,
-    allowedAreas: [CustomizableUI.AREA_PANEL],
     onCommand: function(aEvent) {
       let win = aEvent.target
                 && aEvent.target.ownerDocument
@@ -158,7 +153,6 @@ const CustomizableWidgets = [{
     viewId: "PanelUI-developer",
     removable: true,
     defaultArea: CustomizableUI.AREA_PANEL,
-    allowedAreas: [CustomizableUI.AREA_PANEL],
     onViewShowing: function(aEvent) {
       // Populate the subview with whatever menuitems are in the developer
       // menu. We skip menu elements, because the menu panel has no way
@@ -217,7 +211,6 @@ const CustomizableWidgets = [{
     id: "add-ons-button",
     removable: true,
     defaultArea: CustomizableUI.AREA_PANEL,
-    allowedAreas: [CustomizableUI.AREA_PANEL],
     onCommand: function(aEvent) {
       let win = aEvent.target &&
                 aEvent.target.ownerDocument &&
@@ -230,7 +223,6 @@ const CustomizableWidgets = [{
     id: "preferences-button",
     removable: true,
     defaultArea: CustomizableUI.AREA_PANEL,
-    allowedAreas: [CustomizableUI.AREA_PANEL],
 #ifdef XP_WIN
     label: "preferences-button.labelWin",
     tooltiptext: "preferences-button.tooltipWin",
@@ -248,7 +240,6 @@ const CustomizableWidgets = [{
     type: "custom",
     removable: true,
     defaultArea: CustomizableUI.AREA_PANEL,
-    allowedAreas: [CustomizableUI.AREA_PANEL, CustomizableUI.AREA_NAVBAR],
     onBuild: function(aDocument) {
       const kPanelId = "PanelUI-popup";
       let inPanel = (this.currentArea == CustomizableUI.AREA_PANEL);
@@ -400,7 +391,6 @@ const CustomizableWidgets = [{
     type: "custom",
     removable: true,
     defaultArea: CustomizableUI.AREA_PANEL,
-    allowedAreas: [CustomizableUI.AREA_PANEL, CustomizableUI.AREA_NAVBAR],
     onBuild: function(aDocument) {
       let inPanel = (this.currentArea == CustomizableUI.AREA_PANEL);
       let cls = inPanel ? "panel-combined-button" : "toolbarbutton-1";
@@ -506,7 +496,6 @@ const CustomizableWidgets = [{
     viewId: "PanelUI-feeds",
     removable: true,
     defaultArea: CustomizableUI.AREA_PANEL,
-    allowedAreas: [CustomizableUI.AREA_PANEL, CustomizableUI.AREA_NAVBAR],
     onClick: function(aEvent) {
       let win = aEvent.target.ownerDocument.defaultView;
       let feeds = win.gBrowser.selectedBrowser.feeds;
@@ -547,7 +536,6 @@ const CustomizableWidgets = [{
     viewId: "PanelUI-characterEncodingView",
     removable: true,
     defaultArea: CustomizableUI.AREA_PANEL,
-    allowedAreas: [CustomizableUI.AREA_PANEL],
     maybeDisableMenu: function(aDocument) {
       let window = aDocument.defaultView;
       return !(window.gBrowser &&
