@@ -38,31 +38,12 @@ function testPinChangeFailed() {
 
   request.onerror = function onerror() {
     is(request.error.name, "IncorrectPassword");
+    is(request.error.lockType, "pin");
+    // The default pin retries is 3, failed once becomes to 2
+    is(request.error.retryCount, 2);
 
     resetPinRetries("0000", runNextTest);
   };
-}
-
-/* Test PIN code changes fail notification */
-function testPinChangeFailedNotification() {
-  icc.addEventListener("icccardlockerror", function onicccardlockerror(result) {
-    icc.removeEventListener("icccardlockerror", onicccardlockerror);
-
-    is(result.lockType, "pin");
-    // The default pin retries is 3, failed once becomes to 2
-    is(result.retryCount, 2);
-
-    resetPinRetries("0000", runNextTest);
-  });
-
-  // The default pin is '0000' in emulator
-  let request = icc.setCardLock(
-    {lockType: "pin",
-     pin: "1111",
-     newPin: "0000"});
-
-  ok(request instanceof DOMRequest,
-     "request instanceof " + request.constructor);
 }
 
 /* Test PIN code changes success */
@@ -159,7 +140,6 @@ function testInvalidCardLockRetryCount() {
 
 let tests = [
   testPinChangeFailed,
-  testPinChangeFailedNotification,
   testPinChangeSuccess,
   testPinCardLockRetryCount,
   testPukCardLockRetryCount,
