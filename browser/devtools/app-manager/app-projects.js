@@ -88,12 +88,19 @@ const IDB = {
 
 const store = new ObservableObject({ projects:[] });
 
+let loadDeferred = promise.defer();
+
 IDB.open().then(function (projects) {
   store.object.projects = projects;
   AppProjects.emit("ready", store.object.projects);
+  loadDeferred.resolve();
 });
 
 const AppProjects = {
+  load: function() {
+    return loadDeferred.promise;
+  },
+
   addPackaged: function(folder) {
     let project = {
       type: "packaged",
