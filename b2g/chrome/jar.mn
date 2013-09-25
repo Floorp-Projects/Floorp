@@ -24,14 +24,10 @@ chrome.jar:
 * content/payment.js                    (content/payment.js)
   content/identity.js                   (content/identity.js)
 
-% override chrome://global/content/netError.xhtml chrome://browser/content/netError.xhtml
-% override chrome://global/skin/netError.css chrome://browser/content/netError.css
 % override chrome://global/skin/media/videocontrols.css chrome://browser/content/touchcontrols.css
 % override chrome://global/content/aboutCertError.xhtml chrome://browser/content/aboutCertError.xhtml
 
   content/ErrorPage.js                  (content/ErrorPage.js)
-  content/netError.xhtml                (content/netError.xhtml)
-  content/netError.css                  (content/netError.css)
   content/aboutCertError.xhtml          (content/aboutCertError.xhtml)
   content/images/errorpage-larry-black.png (content/images/errorpage-larry-black.png)
   content/images/errorpage-larry-white.png (content/images/errorpage-larry-white.png)

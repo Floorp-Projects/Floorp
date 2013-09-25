@@ -26,7 +26,7 @@ public:
      * If aDestSurface is given, it must have identical format, dimensions, and
      * stride as the source.
      *
-     * If the source is not ImageFormatARGB32, no operation is performed.  If
+     * If the source is not gfxImageFormatARGB32, no operation is performed.  If
      * aDestSurface is given, the data is copied over.
      */
     static void PremultiplyImageSurface(gfxImageSurface *aSourceSurface,
@@ -57,7 +57,7 @@ public:
                                  const gfxRect&   aSourceRect,
                                  const gfxRect&   aImageRect,
                                  const gfxRect&   aFill,
-                                 const gfxImageSurface::gfxImageFormat aFormat,
+                                 const gfxImageFormat aFormat,
                                  gfxPattern::GraphicsFilter aFilter,
                                  uint32_t         aImageFlags = imgIContainer::FLAG_NONE);
 
@@ -94,7 +94,7 @@ public:
     /*
      * Convert image format to depth value
      */
-    static int ImageFormatToDepth(gfxASurface::gfxImageFormat aFormat);
+    static int ImageFormatToDepth(gfxImageFormat aFormat);
 
     /**
      * Return the transform matrix that maps aFrom to the rectangle defined by
@@ -122,7 +122,7 @@ public:
     /**
      * Helper function for ConvertYCbCrToRGB that finds the
      * RGB buffer size and format for given YCbCrImage.
-     * @param aSuggestedFormat will be set to ImageFormatRGB24
+     * @param aSuggestedFormat will be set to gfxImageFormatRGB24
      *   if the desired format is not supported.
      * @param aSuggestedSize will be set to the picture size from aData
      *   if either the suggested size was {0,0}
@@ -130,7 +130,7 @@ public:
      */
     static void
     GetYCbCrToRGBDestFormatAndSize(const mozilla::layers::PlanarYCbCrImage::Data& aData,
-                                   gfxASurface::gfxImageFormat& aSuggestedFormat,
+                                   gfxImageFormat& aSuggestedFormat,
                                    gfxIntSize& aSuggestedSize);
 
     /**
@@ -140,7 +140,7 @@ public:
      */
     static void
     ConvertYCbCrToRGB(const mozilla::layers::PlanarYCbCrImage::Data& aData,
-                      const gfxASurface::gfxImageFormat& aDestFormat,
+                      const gfxImageFormat& aDestFormat,
                       const gfxIntSize& aDestSize,
                       unsigned char* aDestBuffer,
                       int32_t aStride);

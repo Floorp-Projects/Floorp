@@ -7,9 +7,10 @@
 #define GFX_CANVASLAYERD3D10_H
 
 #include "LayerManagerD3D10.h"
-#include "gfxASurface.h"
 
 #include "mozilla/Preferences.h"
+
+class gfxASurface;
 
 namespace mozilla {
 

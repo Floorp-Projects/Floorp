@@ -199,52 +199,52 @@ inline gfxMatrix ThebesMatrix(const Matrix &aMatrix)
                    aMatrix._22, aMatrix._31, aMatrix._32);
 }
 
-inline gfxASurface::gfxImageFormat SurfaceFormatToImageFormat(SurfaceFormat aFormat)
+inline gfxImageFormat SurfaceFormatToImageFormat(SurfaceFormat aFormat)
 {
   switch (aFormat) {
   case FORMAT_B8G8R8A8:
-    return gfxASurface::ImageFormatARGB32;
+    return gfxImageFormatARGB32;
   case FORMAT_B8G8R8X8:
-    return gfxASurface::ImageFormatRGB24;
+    return gfxImageFormatRGB24;
   case FORMAT_R5G6B5:
-    return gfxASurface::ImageFormatRGB16_565;
+    return gfxImageFormatRGB16_565;
   case FORMAT_A8:
-    return gfxASurface::ImageFormatA8;
+    return gfxImageFormatA8;
   default:
-    return gfxASurface::ImageFormatUnknown;
+    return gfxImageFormatUnknown;
   }
 }
 
-inline SurfaceFormat ImageFormatToSurfaceFormat(gfxASurface::gfxImageFormat aFormat)
+inline SurfaceFormat ImageFormatToSurfaceFormat(gfxImageFormat aFormat)
 {
   switch (aFormat) {
-  case gfxASurface::ImageFormatARGB32:
+  case gfxImageFormatARGB32:
     return FORMAT_B8G8R8A8;
-  case gfxASurface::ImageFormatRGB24:
+  case gfxImageFormatRGB24:
     return FORMAT_B8G8R8X8;
-  case gfxASurface::ImageFormatRGB16_565:
+  case gfxImageFormatRGB16_565:
     return FORMAT_R5G6B5;
-  case gfxASurface::ImageFormatA8:
+  case gfxImageFormatA8:
     return FORMAT_A8;
   default:
-  case gfxASurface::ImageFormatUnknown:
+  case gfxImageFormatUnknown:
     return FORMAT_B8G8R8A8;
   }
 }
 
-inline gfxASurface::gfxContentType ContentForFormat(const SurfaceFormat &aFormat)
+inline gfxContentType ContentForFormat(const SurfaceFormat &aFormat)
 {
   switch (aFormat) {
   case FORMAT_R5G6B5:
   case FORMAT_B8G8R8X8:
   case FORMAT_R8G8B8X8:
-    return gfxASurface::CONTENT_COLOR;
+    return GFX_CONTENT_COLOR;
   case FORMAT_A8:
-    return gfxASurface::CONTENT_ALPHA;
+    return GFX_CONTENT_ALPHA;
   case FORMAT_B8G8R8A8:
   case FORMAT_R8G8B8A8:
   default:
-    return gfxASurface::CONTENT_COLOR_ALPHA;
+    return GFX_CONTENT_COLOR_ALPHA;
   }
 }
 

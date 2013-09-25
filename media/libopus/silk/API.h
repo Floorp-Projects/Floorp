@@ -1,9 +1,5 @@
 /***********************************************************************
-Copyright (c) 2006-2012 IETF Trust and Skype Limited. All rights reserved.
-
-This file is extracted from RFC6716. Please see that RFC for additional
-information.
-
+Copyright (c) 2006-2011, Skype Limited. All rights reserved.
 Redistribution and use in source and binary forms, with or without
 modification, are permitted provided that the following conditions
 are met:
@@ -16,7 +12,7 @@ documentation and/or other materials provided with the distribution.
 names of specific contributors, may be used to endorse or promote
 products derived from this software without specific prior written
 permission.
-THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS “AS IS”
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
 AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
 IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
 ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE
@@ -71,14 +67,6 @@ opus_int silk_InitEncoder(                              /* O    Returns error co
     silk_EncControlStruct           *encStatus          /* O    Encoder Status                                  */
 );
 
-/***************************************/
-/* Read control structure from encoder */
-/***************************************/
-opus_int silk_QueryEncoder(                             /* O    Returns error code                              */
-    const void                      *encState,          /* I    State                                           */
-    silk_EncControlStruct           *encStatus          /* O    Encoder Status                                  */
-);
-
 /**************************/
 /* Encode frame with Silk */
 /**************************/
@@ -90,7 +78,7 @@ opus_int silk_Encode(                                   /* O    Returns error co
     const opus_int16                *samplesIn,         /* I    Speech sample input vector                      */
     opus_int                        nSamplesIn,         /* I    Number of samples in input vector               */
     ec_enc                          *psRangeEnc,        /* I/O  Compressor data structure                       */
-    opus_int                        *nBytesOut,         /* I/O  Number of bytes in payload (input: Max bytes)   */
+    opus_int32                      *nBytesOut,         /* I/O  Number of bytes in payload (input: Max bytes)   */
     const opus_int                  prefillFlag         /* I    Flag to indicate prefilling buffers no coding   */
 );
 
@@ -125,6 +113,7 @@ opus_int silk_Decode(                                   /* O    Returns error co
     opus_int32                      *nSamplesOut        /* O    Number of samples decoded                       */
 );
 
+#if 0
 /**************************************/
 /* Get table of contents for a packet */
 /**************************************/
@@ -134,6 +123,7 @@ opus_int silk_get_TOC(
     const opus_int                  nFramesPerPayload,  /* I    Number of SILK frames per payload           */
     silk_TOC_struct                 *Silk_TOC           /* O    Type of content                             */
 );
+#endif
 
 #ifdef __cplusplus
 }

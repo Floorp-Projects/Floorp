@@ -1,10 +1,6 @@
-/* Copyright (c) 2010-2012 IETF Trust, Xiph.Org Foundation, Skype Limited. All rights reserved.
+/* Copyright (c) 2010 Xiph.Org Foundation, Skype Limited
    Written by Jean-Marc Valin and Koen Vos */
 /*
-
-   This file is extracted from RFC6716. Please see that RFC for additional
-   information.
-
    Redistribution and use in source and binary forms, with or without
    modification, are permitted provided that the following conditions
    are met:
@@ -15,11 +11,6 @@
    - Redistributions in binary form must reproduce the above copyright
    notice, this list of conditions and the following disclaimer in the
    documentation and/or other materials provided with the distribution.
-
-   - Neither the name of Internet Society, IETF or IETF Trust, nor the
-   names of specific contributors, may be used to endorse or promote
-   products derived from this software without specific prior written
-   permission.
 
    THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
    ``AS IS'' AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
@@ -38,6 +29,10 @@
 #include "config.h"
 #endif
 
+#ifndef OPUS_BUILD
+#error "OPUS_BUILD _MUST_ be defined to build Opus. This probably means you need other defines as well, as in a config.h. See the included build files for details."
+#endif
+
 #include <stdarg.h>
 #include "celt.h"
 #include "opus.h"
@@ -50,6 +45,8 @@
 #include "os_support.h"
 #include "structs.h"
 #include "define.h"
+#include "mathops.h"
+#include "cpu_support.h"
 
 struct OpusDecoder {
    int          celt_dec_offset;
@@ -57,6 +54,7 @@ struct OpusDecoder {
    int          channels;
    opus_int32   Fs;          /** Sampling rate (at the API level) */
    silk_DecControlStruct DecControl;
+   int          decode_gain;
 
    /* Everything beyond this point gets cleared on a reset */
 #define OPUS_DECODER_RESET_START stream_channels
@@ -67,14 +65,19 @@ struct OpusDecoder {
    int          prev_mode;
    int          frame_size;
    int          prev_redundancy;
+   int          last_packet_duration;
+#ifndef FIXED_POINT
+   opus_val16   softclip_mem[2];
+#endif
 
    opus_uint32  rangeFinal;
+   int arch;
 };
 
 #ifdef FIXED_POINT
 static inline opus_int16 SAT16(opus_int32 x) {
    return x > 32767 ? 32767 : x < -32768 ? -32768 : (opus_int16)x;
-};
+}
 #endif
 
 
@@ -118,6 +121,7 @@ int opus_decoder_init(OpusDecoder *st, opus_int32 Fs, int channels)
    st->Fs = Fs;
    st->DecControl.API_sampleRate = st->Fs;
    st->DecControl.nChannelsAPI      = st->channels;
+   st->arch = opus_select_arch();
 
    /* Reset decoder */
    ret = silk_InitDecoder( silk_dec );
@@ -196,15 +200,21 @@ static int opus_packet_get_mode(const unsigned char *data)
 }
 
 static int opus_decode_frame(OpusDecoder *st, const unsigned char *data,
-      int len, opus_val16 *pcm, int frame_size, int decode_fec)
+      opus_int32 len, opus_val16 *pcm, int frame_size, int decode_fec)
 {
    void *silk_dec;
    CELTDecoder *celt_dec;
    int i, silk_ret=0, celt_ret=0;
    ec_dec dec;
    opus_int32 silk_frame_size;
+   int pcm_silk_size;
    VARDECL(opus_int16, pcm_silk);
-   VARDECL(opus_val16, pcm_transition);
+   int pcm_transition_silk_size;
+   VARDECL(opus_val16, pcm_transition_silk);
+   int pcm_transition_celt_size;
+   VARDECL(opus_val16, pcm_transition_celt);
+   opus_val16 *pcm_transition;
+   int redundant_audio_size;
    VARDECL(opus_val16, redundant_audio);
 
    int audiosize;
@@ -227,7 +237,12 @@ static int opus_decode_frame(OpusDecoder *st, const unsigned char *data,
    F5 = F10>>1;
    F2_5 = F5>>1;
    if (frame_size < F2_5)
+   {
+      RESTORE_STACK;
       return OPUS_BUFFER_TOO_SMALL;
+   }
+   /* Limit frame_size to avoid excessive stack allocations. */
+   frame_size = IMIN(frame_size, st->Fs/25*3);
    /* Payloads of 1 (2 including ToC) or 0 trigger the PLC/DTX */
    if (len<=1)
    {
@@ -255,30 +270,30 @@ static int opus_decode_frame(OpusDecoder *st, const unsigned char *data,
       }
    }
 
-   /* For CELT/hybrid PLC of more than 20 ms, do multiple calls */
-   if (data==NULL && frame_size > F20 && mode != MODE_SILK_ONLY)
-   {
-      int nb_samples = 0;
-      do {
-         int ret = opus_decode_frame(st, NULL, 0, pcm, F20, 0);
-         if (ret != F20)
-            return OPUS_INTERNAL_ERROR;
-         pcm += F20*st->channels;
-         nb_samples += F20;
-      } while (nb_samples < frame_size);
-      RESTORE_STACK;
-      return frame_size;
-   }
-   ALLOC(pcm_transition, F5*st->channels, opus_val16);
+   /* For CELT/hybrid PLC of more than 20 ms, opus_decode_native() will do
+      multiple calls */
+   if (data==NULL  && mode != MODE_SILK_ONLY)
+      frame_size = IMIN(frame_size, F20);
 
+   pcm_transition_silk_size = 0;
+   pcm_transition_celt_size = 0;
    if (data!=NULL && st->prev_mode > 0 && (
        (mode == MODE_CELT_ONLY && st->prev_mode != MODE_CELT_ONLY && !st->prev_redundancy)
     || (mode != MODE_CELT_ONLY && st->prev_mode == MODE_CELT_ONLY) )
       )
    {
       transition = 1;
+      /* Decide where to allocate the stack memory for pcm_transition */
       if (mode == MODE_CELT_ONLY)
-         opus_decode_frame(st, NULL, 0, pcm_transition, IMIN(F5, audiosize), 0);
+         pcm_transition_celt_size = F5*st->channels;
+      else
+         pcm_transition_silk_size = F5*st->channels;
+   }
+   ALLOC(pcm_transition_celt, pcm_transition_celt_size, opus_val16);
+   if (transition && mode == MODE_CELT_ONLY)
+   {
+      pcm_transition = pcm_transition_celt;
+      opus_decode_frame(st, NULL, 0, pcm_transition, IMIN(F5, audiosize), 0);
    }
    if (audiosize > frame_size)
    {
@@ -289,8 +304,9 @@ static int opus_decode_frame(OpusDecoder *st, const unsigned char *data,
       frame_size = audiosize;
    }
 
-   ALLOC(pcm_silk, IMAX(F10, frame_size)*st->channels, opus_int16);
-   ALLOC(redundant_audio, F5*st->channels, opus_val16);
+   /* Don't allocate any memory when in CELT-only mode */
+   pcm_silk_size = (mode != MODE_CELT_ONLY) ? IMAX(F10, frame_size)*st->channels : 0;
+   ALLOC(pcm_silk, pcm_silk_size, opus_int16);
 
    /* SILK processing */
    if (mode != MODE_CELT_ONLY)
@@ -404,10 +420,22 @@ static int opus_decode_frame(OpusDecoder *st, const unsigned char *data,
    }
 
    if (redundancy)
+   {
       transition = 0;
+      pcm_transition_silk_size=0;
+   }
+
+   ALLOC(pcm_transition_silk, pcm_transition_silk_size, opus_val16);
 
    if (transition && mode != MODE_CELT_ONLY)
+   {
+      pcm_transition = pcm_transition_silk;
       opus_decode_frame(st, NULL, 0, pcm_transition, IMIN(F5, audiosize), 0);
+   }
+
+   /* Only allocation memory for redundancy if/when needed */
+   redundant_audio_size = redundancy ? F5*st->channels : 0;
+   ALLOC(redundant_audio, redundant_audio_size, opus_val16);
 
    /* 5 ms redundant frame for CELT->SILK*/
    if (redundancy && celt_to_silk)
@@ -450,7 +478,7 @@ static int opus_decode_frame(OpusDecoder *st, const unsigned char *data,
          pcm[i] = SAT16(pcm[i] + pcm_silk[i]);
 #else
       for (i=0;i<frame_size*st->channels;i++)
-         pcm[i] = pcm[i] + (opus_val16)((1./32768.)*pcm_silk[i]);
+         pcm[i] = pcm[i] + (opus_val16)((1.f/32768.f)*pcm_silk[i]);
 #endif
    }
 
@@ -502,6 +530,18 @@ static int opus_decode_frame(OpusDecoder *st, const unsigned char *data,
       }
    }
 
+   if(st->decode_gain)
+   {
+      opus_val32 gain;
+      gain = celt_exp2(MULT16_16_P15(QCONST16(6.48814081e-4f, 25), st->decode_gain));
+      for (i=0;i<frame_size*st->channels;i++)
+      {
+         opus_val32 x;
+         x = MULT16_32_P16(pcm[i],gain);
+         pcm[i] = SATURATE(x, 32767);
+      }
+   }
+
    if (len <= 1)
       st->rangeFinal = 0;
    else
@@ -509,12 +549,19 @@ static int opus_decode_frame(OpusDecoder *st, const unsigned char *data,
 
    st->prev_mode = mode;
    st->prev_redundancy = redundancy && !celt_to_silk;
+
+   if (celt_ret>=0)
+   {
+      if (OPUS_CHECK_ARRAY(pcm, audiosize*st->channels))
+         OPUS_PRINT_INT(audiosize);
+   }
+
    RESTORE_STACK;
    return celt_ret < 0 ? celt_ret : audiosize;
 
 }
 
-static int parse_size(const unsigned char *data, int len, short *size)
+static int parse_size(const unsigned char *data, opus_int32 len, opus_int16 *size)
 {
    if (len<1)
    {
@@ -534,16 +581,16 @@ static int parse_size(const unsigned char *data, int len, short *size)
    }
 }
 
-static int opus_packet_parse_impl(const unsigned char *data, int len,
+static int opus_packet_parse_impl(const unsigned char *data, opus_int32 len,
       int self_delimited, unsigned char *out_toc,
-      const unsigned char *frames[48], short size[48], int *payload_offset)
+      const unsigned char *frames[48], opus_int16 size[48], int *payload_offset)
 {
    int i, bytes;
    int count;
    int cbr;
    unsigned char ch, toc;
    int framesize;
-   int last_size;
+   opus_int32 last_size;
    const unsigned char *data0 = data;
 
    if (size==NULL)
@@ -569,7 +616,9 @@ static int opus_packet_parse_impl(const unsigned char *data, int len,
       {
          if (len&0x1)
             return OPUS_INVALID_PACKET;
-         size[0] = last_size = len/2;
+         last_size = len/2;
+         /* If last_size doesn't fit in size[0], we'll catch it later */
+         size[0] = (opus_int16)last_size;
       }
       break;
    /* Two VBR frames */
@@ -630,7 +679,7 @@ static int opus_packet_parse_impl(const unsigned char *data, int len,
          if (last_size*count!=len)
             return OPUS_INVALID_PACKET;
          for (i=0;i<count-1;i++)
-            size[i] = last_size;
+            size[i] = (opus_int16)last_size;
       }
       break;
    }
@@ -658,7 +707,7 @@ static int opus_packet_parse_impl(const unsigned char *data, int len,
          1275. Reject them here.*/
       if (last_size > 1275)
          return OPUS_INVALID_PACKET;
-      size[count-1] = last_size;
+      size[count-1] = (opus_int16)last_size;
    }
 
    if (frames)
@@ -674,79 +723,149 @@ static int opus_packet_parse_impl(const unsigned char *data, int len,
       *out_toc = toc;
 
    if (payload_offset)
-      *payload_offset = data-data0;
+      *payload_offset = (int)(data-data0);
 
    return count;
 }
 
-int opus_packet_parse(const unsigned char *data, int len,
+int opus_packet_parse(const unsigned char *data, opus_int32 len,
       unsigned char *out_toc, const unsigned char *frames[48],
-      short size[48], int *payload_offset)
+      opus_int16 size[48], int *payload_offset)
 {
    return opus_packet_parse_impl(data, len, 0, out_toc,
                                  frames, size, payload_offset);
 }
 
 int opus_decode_native(OpusDecoder *st, const unsigned char *data,
-      int len, opus_val16 *pcm, int frame_size, int decode_fec,
-      int self_delimited, int *packet_offset)
+      opus_int32 len, opus_val16 *pcm, int frame_size, int decode_fec,
+      int self_delimited, int *packet_offset, int soft_clip)
 {
    int i, nb_samples;
    int count, offset;
    unsigned char toc;
    int tot_offset;
+   int packet_frame_size, packet_bandwidth, packet_mode, packet_stream_channels;
    /* 48 x 2.5 ms = 120 ms */
-   short size[48];
+   opus_int16 size[48];
    if (decode_fec<0 || decode_fec>1)
       return OPUS_BAD_ARG;
+   /* For FEC/PLC, frame_size has to be to have a multiple of 2.5 ms */
+   if ((decode_fec || len==0 || data==NULL) && frame_size%(st->Fs/400)!=0)
+      return OPUS_BAD_ARG;
    if (len==0 || data==NULL)
-      return opus_decode_frame(st, NULL, 0, pcm, frame_size, 0);
-   else if (len<0)
+   {
+      int pcm_count=0;
+      do {
+         int ret;
+         ret = opus_decode_frame(st, NULL, 0, pcm+pcm_count*st->channels, frame_size-pcm_count, 0);
+         if (ret<0)
+            return ret;
+         pcm_count += ret;
+      } while (pcm_count < frame_size);
+      celt_assert(pcm_count == frame_size);
+      if (OPUS_CHECK_ARRAY(pcm, pcm_count*st->channels))
+         OPUS_PRINT_INT(pcm_count);
+      st->last_packet_duration = pcm_count;
+      return pcm_count;
+   } else if (len<0)
       return OPUS_BAD_ARG;
 
-   tot_offset = 0;
-   st->mode = opus_packet_get_mode(data);
-   st->bandwidth = opus_packet_get_bandwidth(data);
-   st->frame_size = opus_packet_get_samples_per_frame(data, st->Fs);
-   st->stream_channels = opus_packet_get_nb_channels(data);
+   packet_mode = opus_packet_get_mode(data);
+   packet_bandwidth = opus_packet_get_bandwidth(data);
+   packet_frame_size = opus_packet_get_samples_per_frame(data, st->Fs);
+   packet_stream_channels = opus_packet_get_nb_channels(data);
 
    count = opus_packet_parse_impl(data, len, self_delimited, &toc, NULL, size, &offset);
+
+   data += offset;
+
+   if (decode_fec)
+   {
+      int duration_copy;
+      int ret;
+      /* If no FEC can be present, run the PLC (recursive call) */
+      if (frame_size < packet_frame_size || packet_mode == MODE_CELT_ONLY || st->mode == MODE_CELT_ONLY)
+         return opus_decode_native(st, NULL, 0, pcm, frame_size, 0, 0, NULL, soft_clip);
+      /* Otherwise, run the PLC on everything except the size for which we might have FEC */
+      duration_copy = st->last_packet_duration;
+      if (frame_size-packet_frame_size!=0)
+      {
+         ret = opus_decode_native(st, NULL, 0, pcm, frame_size-packet_frame_size, 0, 0, NULL, soft_clip);
+         if (ret<0)
+         {
+            st->last_packet_duration = duration_copy;
+            return ret;
+         }
+         celt_assert(ret==frame_size-packet_frame_size);
+      }
+      /* Complete with FEC */
+      st->mode = packet_mode;
+      st->bandwidth = packet_bandwidth;
+      st->frame_size = packet_frame_size;
+      st->stream_channels = packet_stream_channels;
+      ret = opus_decode_frame(st, data, size[0], pcm+st->channels*(frame_size-packet_frame_size),
+            packet_frame_size, 1);
+      if (ret<0)
+         return ret;
+      else {
+         if (OPUS_CHECK_ARRAY(pcm, frame_size*st->channels))
+            OPUS_PRINT_INT(frame_size);
+         st->last_packet_duration = frame_size;
+         return frame_size;
+      }
+   }
+   tot_offset = 0;
    if (count < 0)
       return count;
 
-   data += offset;
    tot_offset += offset;
 
-   if (count*st->frame_size > frame_size)
+   if (count*packet_frame_size > frame_size)
       return OPUS_BUFFER_TOO_SMALL;
+
+   /* Update the state as the last step to avoid updating it on an invalid packet */
+   st->mode = packet_mode;
+   st->bandwidth = packet_bandwidth;
+   st->frame_size = packet_frame_size;
+   st->stream_channels = packet_stream_channels;
+
    nb_samples=0;
    for (i=0;i<count;i++)
    {
       int ret;
-      ret = opus_decode_frame(st, data, size[i], pcm, frame_size-nb_samples, decode_fec);
+      ret = opus_decode_frame(st, data, size[i], pcm+nb_samples*st->channels, frame_size-nb_samples, 0);
       if (ret<0)
          return ret;
+      celt_assert(ret==packet_frame_size);
       data += size[i];
       tot_offset += size[i];
-      pcm += ret*st->channels;
       nb_samples += ret;
    }
    if (packet_offset != NULL)
       *packet_offset = tot_offset;
+   st->last_packet_duration = nb_samples;
+   if (OPUS_CHECK_ARRAY(pcm, nb_samples*st->channels))
+      OPUS_PRINT_INT(nb_samples);
+#ifndef FIXED_POINT
+   if (soft_clip)
+      opus_pcm_soft_clip(pcm, nb_samples, st->channels, st->softclip_mem);
+   else
+      st->softclip_mem[0]=st->softclip_mem[1]=0;
+#endif
    return nb_samples;
 }
 
 #ifdef FIXED_POINT
 
 int opus_decode(OpusDecoder *st, const unsigned char *data,
-      int len, opus_val16 *pcm, int frame_size, int decode_fec)
+      opus_int32 len, opus_val16 *pcm, int frame_size, int decode_fec)
 {
-   return opus_decode_native(st, data, len, pcm, frame_size, decode_fec, 0, NULL);
+   return opus_decode_native(st, data, len, pcm, frame_size, decode_fec, 0, NULL, 0);
 }
 
 #ifndef DISABLE_FLOAT_API
 int opus_decode_float(OpusDecoder *st, const unsigned char *data,
-      int len, float *pcm, int frame_size, int decode_fec)
+      opus_int32 len, float *pcm, int frame_size, int decode_fec)
 {
    VARDECL(opus_int16, out);
    int ret, i;
@@ -754,7 +873,7 @@ int opus_decode_float(OpusDecoder *st, const unsigned char *data,
 
    ALLOC(out, frame_size*st->channels, opus_int16);
 
-   ret = opus_decode_native(st, data, len, out, frame_size, decode_fec, 0, NULL);
+   ret = opus_decode_native(st, data, len, out, frame_size, decode_fec, 0, NULL, 0);
    if (ret > 0)
    {
       for (i=0;i<ret*st->channels;i++)
@@ -768,17 +887,21 @@ int opus_decode_float(OpusDecoder *st, const unsigned char *data,
 
 #else
 int opus_decode(OpusDecoder *st, const unsigned char *data,
-      int len, opus_int16 *pcm, int frame_size, int decode_fec)
+      opus_int32 len, opus_int16 *pcm, int frame_size, int decode_fec)
 {
    VARDECL(float, out);
    int ret, i;
    ALLOC_STACK;
 
-   if(frame_size<0)return OPUS_BAD_ARG;
+   if(frame_size<0)
+   {
+      RESTORE_STACK;
+      return OPUS_BAD_ARG;
+   }
 
    ALLOC(out, frame_size*st->channels, float);
 
-   ret = opus_decode_native(st, data, len, out, frame_size, decode_fec, 0, NULL);
+   ret = opus_decode_native(st, data, len, out, frame_size, decode_fec, 0, NULL, 1);
    if (ret > 0)
    {
       for (i=0;i<ret*st->channels;i++)
@@ -789,9 +912,9 @@ int opus_decode(OpusDecoder *st, const unsigned char *data,
 }
 
 int opus_decode_float(OpusDecoder *st, const unsigned char *data,
-      int len, opus_val16 *pcm, int frame_size, int decode_fec)
+      opus_int32 len, opus_val16 *pcm, int frame_size, int decode_fec)
 {
-   return opus_decode_native(st, data, len, pcm, frame_size, decode_fec, 0, NULL);
+   return opus_decode_native(st, data, len, pcm, frame_size, decode_fec, 0, NULL, 0);
 }
 
 #endif
@@ -814,12 +937,20 @@ int opus_decoder_ctl(OpusDecoder *st, int request, ...)
    case OPUS_GET_BANDWIDTH_REQUEST:
    {
       opus_int32 *value = va_arg(ap, opus_int32*);
+      if (!value)
+      {
+         goto bad_arg;
+      }
       *value = st->bandwidth;
    }
    break;
    case OPUS_GET_FINAL_RANGE_REQUEST:
    {
       opus_uint32 *value = va_arg(ap, opus_uint32*);
+      if (!value)
+      {
+         goto bad_arg;
+      }
       *value = st->rangeFinal;
    }
    break;
@@ -835,18 +966,57 @@ int opus_decoder_ctl(OpusDecoder *st, int request, ...)
       st->frame_size = st->Fs/400;
    }
    break;
+   case OPUS_GET_SAMPLE_RATE_REQUEST:
+   {
+      opus_int32 *value = va_arg(ap, opus_int32*);
+      if (!value)
+      {
+         goto bad_arg;
+      }
+      *value = st->Fs;
+   }
+   break;
    case OPUS_GET_PITCH_REQUEST:
    {
-      int *value = va_arg(ap, opus_int32*);
-      if (value==NULL)
+      opus_int32 *value = va_arg(ap, opus_int32*);
+      if (!value)
       {
-         ret = OPUS_BAD_ARG;
-         break;
+         goto bad_arg;
       }
       if (st->prev_mode == MODE_CELT_ONLY)
          celt_decoder_ctl(celt_dec, OPUS_GET_PITCH(value));
       else
          *value = st->DecControl.prevPitchLag;
+   }
+   break;
+   case OPUS_GET_GAIN_REQUEST:
+   {
+      opus_int32 *value = va_arg(ap, opus_int32*);
+      if (!value)
+      {
+         goto bad_arg;
+      }
+      *value = st->decode_gain;
+   }
+   break;
+   case OPUS_SET_GAIN_REQUEST:
+   {
+       opus_int32 value = va_arg(ap, opus_int32);
+       if (value<-32768 || value>32767)
+       {
+          goto bad_arg;
+       }
+       st->decode_gain = value;
+   }
+   break;
+   case OPUS_GET_LAST_PACKET_DURATION_REQUEST:
+   {
+      opus_uint32 *value = va_arg(ap, opus_uint32*);
+      if (!value)
+      {
+         goto bad_arg;
+      }
+      *value = st->last_packet_duration;
    }
    break;
    default:
@@ -857,6 +1027,9 @@ int opus_decoder_ctl(OpusDecoder *st, int request, ...)
 
    va_end(ap);
    return ret;
+bad_arg:
+   va_end(ap);
+   return OPUS_BAD_ARG;
 }
 
 void opus_decoder_destroy(OpusDecoder *st)
@@ -909,7 +1082,7 @@ int opus_packet_get_nb_channels(const unsigned char *data)
    return (data[0]&0x4) ? 2 : 1;
 }
 
-int opus_packet_get_nb_frames(const unsigned char packet[], int len)
+int opus_packet_get_nb_frames(const unsigned char packet[], opus_int32 len)
 {
    int count;
    if (len<1)
@@ -925,8 +1098,8 @@ int opus_packet_get_nb_frames(const unsigned char packet[], int len)
       return packet[1]&0x3F;
 }
 
-int opus_decoder_get_nb_samples(const OpusDecoder *dec,
-      const unsigned char packet[], int len)
+int opus_packet_get_nb_samples(const unsigned char packet[], opus_int32 len,
+      opus_int32 Fs)
 {
    int samples;
    int count = opus_packet_get_nb_frames(packet, len);
@@ -934,10 +1107,16 @@ int opus_decoder_get_nb_samples(const OpusDecoder *dec,
    if (count<0)
       return count;
 
-   samples = count*opus_packet_get_samples_per_frame(packet, dec->Fs);
+   samples = count*opus_packet_get_samples_per_frame(packet, Fs);
    /* Can't have more than 120 ms */
-   if (samples*25 > dec->Fs*3)
+   if (samples*25 > Fs*3)
       return OPUS_INVALID_PACKET;
    else
       return samples;
+}
+
+int opus_decoder_get_nb_samples(const OpusDecoder *dec,
+      const unsigned char packet[], opus_int32 len)
+{
+   return opus_packet_get_nb_samples(packet, len, dec->Fs);
 }

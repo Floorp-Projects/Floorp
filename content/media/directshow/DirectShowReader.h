@@ -7,7 +7,7 @@
 #if !defined(DirectShowReader_h_)
 #define DirectShowReader_h_
 
-#include "Windows.h" // HRESULT, DWORD
+#include "windows.h" // HRESULT, DWORD
 #include "MediaDecoderReader.h"
 #include "mozilla/RefPtr.h"
 #include "MP3FrameParser.h"

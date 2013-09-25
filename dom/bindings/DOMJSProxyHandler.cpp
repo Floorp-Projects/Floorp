@@ -33,7 +33,7 @@ DefineStaticJSVals(JSContext* cx)
 }
 
 
-int HandlerFamily;
+const char HandlerFamily = 0;
 
 js::DOMProxyShadowsResult
 DOMProxyShadows(JSContext* cx, JS::Handle<JSObject*> proxy, JS::Handle<jsid> id)
@@ -62,7 +62,7 @@ DOMProxyShadows(JSContext* cx, JS::Handle<JSObject*> proxy, JS::Handle<jsid> id)
 struct SetDOMProxyInformation
 {
   SetDOMProxyInformation() {
-    js::SetDOMProxyInformation((void*) &HandlerFamily,
+    js::SetDOMProxyInformation((const void*) &HandlerFamily,
                                js::PROXY_EXTRA_SLOT + JSPROXYSLOT_EXPANDO, DOMProxyShadows);
   }
 };

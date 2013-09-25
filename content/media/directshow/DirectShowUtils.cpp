@@ -4,9 +4,9 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "dshow.h"
-#include "Dmodshow.h"
-#include "Wmcodecdsp.h"
-#include "Dmoreg.h"
+#include "dmodshow.h"
+#include "wmcodecdsp.h"
+#include "dmoreg.h"
 #include "DirectShowUtils.h"
 #include "nsAutoPtr.h"
 #include "mozilla/RefPtr.h"

@@ -9,7 +9,7 @@
 #include "nsISupports.h"
 #include "nsString.h"
 #include "nsCOMPtr.h"
-#include "nsGUIEvent.h"
+#include "mozilla/EventForwards.h"
 
 #define NS_IPRIVATETEXTRANGE_IID \
 { 0xf795a44d, 0x413a, 0x4c63, \

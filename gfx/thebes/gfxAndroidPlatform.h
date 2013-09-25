@@ -34,7 +34,7 @@ public:
 
     virtual already_AddRefed<gfxASurface>
     CreateOffscreenSurface(const gfxIntSize& size,
-                           gfxASurface::gfxContentType contentType);
+                           gfxContentType contentType);
     
     virtual gfxImageFormat GetOffscreenFormat() { return mOffscreenFormat; }
     

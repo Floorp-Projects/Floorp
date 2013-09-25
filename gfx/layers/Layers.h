@@ -13,7 +13,7 @@
 #include "Units.h"                      // for LayerMargin, LayerPoint
 #include "gfx3DMatrix.h"                // for gfx3DMatrix
 #include "gfxContext.h"                 // for GraphicsOperator
-#include "gfxASurface.h"                // for gfxASurface, etc
+#include "gfxTypes.h"
 #include "gfxColor.h"                   // for gfxRGBA
 #include "gfxMatrix.h"                  // for gfxMatrix
 #include "gfxPattern.h"                 // for gfxPattern, etc
@@ -21,6 +21,7 @@
 #include "gfxRect.h"                    // for gfxRect
 #include "mozilla/Assertions.h"         // for MOZ_ASSERT_HELPER2, etc
 #include "mozilla/DebugOnly.h"          // for DebugOnly
+#include "mozilla/EventForwards.h"      // for nsPaintEvent
 #include "mozilla/RefPtr.h"             // for TemporaryRef
 #include "mozilla/TimeStamp.h"          // for TimeStamp, TimeDuration
 #include "mozilla/gfx/BaseMargin.h"     // for BaseMargin
@@ -45,9 +46,8 @@
 #include "nscore.h"                     // for nsACString, nsAString
 #include "prlog.h"                      // for PRLogModuleInfo
 
-
+class gfxASurface;
 class gfxContext;
-class nsPaintEvent;
 
 extern uint8_t gLayerManagerLayerBuilder;
 
@@ -396,7 +396,7 @@ public:
    */
   virtual already_AddRefed<gfxASurface>
     CreateOptimalSurface(const gfxIntSize &aSize,
-                         gfxASurface::gfxImageFormat imageFormat);
+                         gfxImageFormat imageFormat);
 
   /**
    * Creates a surface for alpha masks which is optimized for inter-operating

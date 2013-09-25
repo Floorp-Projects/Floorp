@@ -10,8 +10,7 @@
 #include "GLDefs.h"                     // for GLuint, LOCAL_GL_TEXTURE_2D
 #include "LayerManagerOGL.h"            // for LayerOGL::GLContext, etc
 #include "Layers.h"                     // for CanvasLayer, etc
-#include "gfxASurface.h"                // for gfxASurface, etc
-#include "gfxImageSurface.h"            // for gfxImageSurface
+#include "gfxTypes.h"
 #include "gfxPoint.h"                   // for gfxIntSize
 #include "mozilla/Preferences.h"        // for Preferences
 #include "mozilla/RefPtr.h"             // for RefPtr
@@ -25,7 +24,8 @@
 #endif
 
 struct nsIntPoint;
-
+class gfxASurface;
+class gfxImageSurface;
 
 namespace mozilla {
 namespace layers {
@@ -35,26 +35,8 @@ class CanvasLayerOGL :
   public LayerOGL
 {
 public:
-  CanvasLayerOGL(LayerManagerOGL *aManager)
-    : CanvasLayer(aManager, nullptr)
-    , LayerOGL(aManager)
-    , mLayerProgram(RGBALayerProgramType)
-    , mTexture(0)
-    , mTextureTarget(LOCAL_GL_TEXTURE_2D)
-    , mDelayedUpdates(false)
-    , mIsGLAlphaPremult(false)
-    , mUploadTexture(0)
-#if defined(GL_PROVIDER_GLX)
-    , mPixmap(0)
-#endif
-  { 
-    mImplData = static_cast<LayerOGL*>(this);
-    mForceReadback = Preferences::GetBool("webgl.force-layers-readback", false);
-  }
-
-  ~CanvasLayerOGL() {
-    Destroy();
-  }
+  CanvasLayerOGL(LayerManagerOGL *aManager);
+  ~CanvasLayerOGL();
 
   // CanvasLayer implementation
   virtual void Initialize(const Data& aData);
@@ -88,23 +70,10 @@ protected:
 
   nsRefPtr<gfxImageSurface> mCachedTempSurface;
   gfxIntSize mCachedSize;
-  gfxASurface::gfxImageFormat mCachedFormat;
+  gfxImageFormat mCachedFormat;
 
   gfxImageSurface* GetTempSurface(const gfxIntSize& aSize,
-                                  const gfxASurface::gfxImageFormat aFormat)
-  {
-    if (!mCachedTempSurface ||
-        aSize.width != mCachedSize.width ||
-        aSize.height != mCachedSize.height ||
-        aFormat != mCachedFormat)
-    {
-      mCachedTempSurface = new gfxImageSurface(aSize, aFormat);
-      mCachedSize = aSize;
-      mCachedFormat = aFormat;
-    }
-
-    return mCachedTempSurface;
-  }
+                                  const gfxImageFormat aFormat);
 
   void DiscardTempSurface() {
     mCachedTempSurface = nullptr;

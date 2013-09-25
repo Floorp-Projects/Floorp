@@ -4,6 +4,7 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
+[ArrayClass]
 interface ClientRectList {
   readonly attribute unsigned long length;
   getter ClientRect? item(unsigned long index);

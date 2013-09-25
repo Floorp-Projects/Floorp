@@ -18,7 +18,7 @@ using namespace mozilla::gfx;
 gfxImageSurface::gfxImageSurface()
   : mSize(0, 0),
     mOwnsData(false),
-    mFormat(ImageFormatUnknown),
+    mFormat(gfxImageFormatUnknown),
     mStride(0)
 {
 }
@@ -177,15 +177,15 @@ gfxImageSurface::ComputeStride(const gfxIntSize& aSize, gfxImageFormat aFormat)
 {
     long stride;
 
-    if (aFormat == ImageFormatARGB32)
+    if (aFormat == gfxImageFormatARGB32)
         stride = aSize.width * 4;
-    else if (aFormat == ImageFormatRGB24)
+    else if (aFormat == gfxImageFormatRGB24)
         stride = aSize.width * 4;
-    else if (aFormat == ImageFormatRGB16_565)
+    else if (aFormat == gfxImageFormatRGB16_565)
         stride = aSize.width * 2;
-    else if (aFormat == ImageFormatA8)
+    else if (aFormat == gfxImageFormatA8)
         stride = aSize.width;
-    else if (aFormat == ImageFormatA1) {
+    else if (aFormat == gfxImageFormatA1) {
         stride = (aSize.width + 7) / 8;
     } else {
         NS_WARNING("Unknown format specified to gfxImageSurface!");
@@ -238,13 +238,13 @@ CopyForStride(unsigned char* aDest, unsigned char* aSrc, const gfxIntSize& aSize
 
 // helper function for the CopyFrom methods
 static bool
-FormatsAreCompatible(gfxASurface::gfxImageFormat a1, gfxASurface::gfxImageFormat a2)
+FormatsAreCompatible(gfxImageFormat a1, gfxImageFormat a2)
 {
     if (a1 != a2 &&
-        !(a1 == gfxASurface::ImageFormatARGB32 &&
-          a2 == gfxASurface::ImageFormatRGB24) &&
-        !(a1 == gfxASurface::ImageFormatRGB24 &&
-          a2 == gfxASurface::ImageFormatARGB32)) {
+        !(a1 == gfxImageFormatARGB32 &&
+          a2 == gfxImageFormatRGB24) &&
+        !(a1 == gfxImageFormatRGB24 &&
+          a2 == gfxImageFormatARGB32)) {
         return false;
     }
 
@@ -305,9 +305,9 @@ gfxImageSurface::GetSubimage(const gfxRect& aRect)
         (Stride() * (int)r.Y()) +
         (int)r.X() * gfxASurface::BytePerPixelFromFormat(Format());
 
-    if (format == ImageFormatARGB32 &&
+    if (format == gfxImageFormatARGB32 &&
         GetOpaqueRect().Contains(aRect)) {
-        format = ImageFormatRGB24;
+        format = gfxImageFormatRGB24;
     }
 
     nsRefPtr<gfxSubimageSurface> image =

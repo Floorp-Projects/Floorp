@@ -48,7 +48,7 @@
 #define _nswindow_h
 
 #include "nsBaseWidget.h"
-#include "gfxASurface.h"
+#include "gfxTypes.h"
 
 #define INCL_DOS
 #define INCL_WIN
@@ -71,6 +71,8 @@
 #ifndef WM_FOCUSCHANGED
 #define WM_FOCUSCHANGED 0x000E
 #endif
+
+class gfxASurface;
 
 extern "C" {
   PVOID  APIENTRY WinQueryProperty(HWND hwnd, PCSZ pszNameOrAtom);
@@ -212,7 +214,7 @@ protected:
                                      uint32_t aHeight, uint32_t aDepth);
   HBITMAP               CreateBitmapRGB(uint8_t* aImageData,
                                         uint32_t aWidth, uint32_t aHeight);
-  HBITMAP               CreateTransparencyMask(gfxASurface::gfxImageFormat format,
+  HBITMAP               CreateTransparencyMask(gfxImageFormat format,
                                                uint8_t* aImageData,
                                                uint32_t aWidth, uint32_t aHeight);
   static bool           EventIsInsideWindow(nsWindow* aWindow); 

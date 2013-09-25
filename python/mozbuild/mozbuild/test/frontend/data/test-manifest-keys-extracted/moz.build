@@ -1,0 +1,8 @@
+# Any copyright is dedicated to the Public Domain.
+# http://creativecommons.org/publicdomain/zero/1.0/
+
+A11Y_MANIFESTS += ['a11y.ini']
+BROWSER_CHROME_MANIFESTS += ['browser.ini']
+MOCHITEST_MANIFESTS += ['mochitest.ini']
+MOCHITEST_CHROME_MANIFESTS += ['chrome.ini']
+XPCSHELL_TESTS_MANIFESTS += ['xpcshell.ini']

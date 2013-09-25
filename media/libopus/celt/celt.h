@@ -1,5 +1,6 @@
-/* Copyright (c) 2007-2012 IETF Trust, CSIRO, Xiph.Org Foundation,
-                           Gregory Maxwell. All rights reserved.
+/* Copyright (c) 2007-2008 CSIRO
+   Copyright (c) 2007-2009 Xiph.Org Foundation
+   Copyright (c) 2008 Gregory Maxwell
    Written by Jean-Marc Valin and Gregory Maxwell */
 /**
   @file celt.h
@@ -7,10 +8,6 @@
  */
 
 /*
-
-   This file is extracted from RFC6716. Please see that RFC for additional
-   information.
-
    Redistribution and use in source and binary forms, with or without
    modification, are permitted provided that the following conditions
    are met:
@@ -21,11 +18,6 @@
    - Redistributions in binary form must reproduce the above copyright
    notice, this list of conditions and the following disclaimer in the
    documentation and/or other materials provided with the distribution.
-
-   - Neither the name of Internet Society, IETF or IETF Trust, nor the
-   names of specific contributors, may be used to endorse or promote
-   products derived from this software without specific prior written
-   permission.
 
    THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
    ``AS IS'' AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
@@ -58,7 +50,19 @@ extern "C" {
 #define CELTDecoder OpusCustomDecoder
 #define CELTMode OpusCustomMode
 
-#define _celt_check_mode_ptr_ptr(ptr) ((ptr) + ((ptr) - (const CELTMode**)(ptr)))
+typedef struct {
+   int valid;
+   opus_val16 tonality;
+   opus_val16 tonality_slope;
+   opus_val16 noisiness;
+   opus_val16 activity;
+   opus_val16 music_prob;
+   int        bandwidth;
+}AnalysisInfo;
+
+#define __celt_check_mode_ptr_ptr(ptr) ((ptr) + ((ptr) - (const CELTMode**)(ptr)))
+
+#define __celt_check_analysis_ptr(ptr) ((ptr) + ((ptr) - (const AnalysisInfo*)(ptr)))
 
 /* Encoder/decoder Requests */
 
@@ -89,18 +93,33 @@ extern "C" {
 
 #define CELT_GET_MODE_REQUEST    10015
 /** Get the CELTMode used by an encoder or decoder */
-#define CELT_GET_MODE(x) CELT_GET_MODE_REQUEST, _celt_check_mode_ptr_ptr(x)
+#define CELT_GET_MODE(x) CELT_GET_MODE_REQUEST, __celt_check_mode_ptr_ptr(x)
 
 #define CELT_SET_SIGNALLING_REQUEST    10016
 #define CELT_SET_SIGNALLING(x) CELT_SET_SIGNALLING_REQUEST, __opus_check_int(x)
 
+#define CELT_SET_TONALITY_REQUEST    10018
+#define CELT_SET_TONALITY(x) CELT_SET_TONALITY_REQUEST, __opus_check_int(x)
+#define CELT_SET_TONALITY_SLOPE_REQUEST    10020
+#define CELT_SET_TONALITY_SLOPE(x) CELT_SET_TONALITY_SLOPE_REQUEST, __opus_check_int(x)
 
+#define CELT_SET_ANALYSIS_REQUEST    10022
+#define CELT_SET_ANALYSIS(x) CELT_SET_ANALYSIS_REQUEST, __celt_check_analysis_ptr(x)
+
+#define OPUS_SET_LFE_REQUEST    10024
+#define OPUS_SET_LFE(x) OPUS_SET_LFE_REQUEST, __opus_check_int(x)
+
+#define OPUS_SET_ENERGY_SAVE_REQUEST    10026
+#define OPUS_SET_ENERGY_SAVE(x) OPUS_SET_ENERGY_SAVE_REQUEST, __opus_check_val16_ptr(x)
+
+#define OPUS_SET_ENERGY_MASK_REQUEST    10028
+#define OPUS_SET_ENERGY_MASK(x) OPUS_SET_ENERGY_MASK_REQUEST, __opus_check_val16_ptr(x)
 
 /* Encoder stuff */
 
 int celt_encoder_get_size(int channels);
 
-int celt_encode_with_ec(OpusCustomEncoder * restrict st, const opus_val16 * pcm, int frame_size, unsigned char *compressed, int nbCompressedBytes, ec_enc *enc);
+int celt_encode_with_ec(OpusCustomEncoder * OPUS_RESTRICT st, const opus_val16 * pcm, int frame_size, unsigned char *compressed, int nbCompressedBytes, ec_enc *enc);
 
 int celt_encoder_init(CELTEncoder *st, opus_int32 sampling_rate, int channels);
 
@@ -113,10 +132,79 @@ int celt_decoder_get_size(int channels);
 
 int celt_decoder_init(CELTDecoder *st, opus_int32 sampling_rate, int channels);
 
-int celt_decode_with_ec(OpusCustomDecoder * restrict st, const unsigned char *data, int len, opus_val16 * restrict pcm, int frame_size, ec_dec *dec);
+int celt_decode_with_ec(OpusCustomDecoder * OPUS_RESTRICT st, const unsigned char *data, int len, opus_val16 * OPUS_RESTRICT pcm, int frame_size, ec_dec *dec);
 
 #define celt_encoder_ctl opus_custom_encoder_ctl
 #define celt_decoder_ctl opus_custom_decoder_ctl
+
+
+#ifdef CUSTOM_MODES
+#define OPUS_CUSTOM_NOSTATIC
+#else
+#define OPUS_CUSTOM_NOSTATIC static inline
+#endif
+
+static const unsigned char trim_icdf[11] = {126, 124, 119, 109, 87, 41, 19, 9, 4, 2, 0};
+/* Probs: NONE: 21.875%, LIGHT: 6.25%, NORMAL: 65.625%, AGGRESSIVE: 6.25% */
+static const unsigned char spread_icdf[4] = {25, 23, 2, 0};
+
+static const unsigned char tapset_icdf[3]={2,1,0};
+
+#ifdef CUSTOM_MODES
+static const unsigned char toOpusTable[20] = {
+      0xE0, 0xE8, 0xF0, 0xF8,
+      0xC0, 0xC8, 0xD0, 0xD8,
+      0xA0, 0xA8, 0xB0, 0xB8,
+      0x00, 0x00, 0x00, 0x00,
+      0x80, 0x88, 0x90, 0x98,
+};
+
+static const unsigned char fromOpusTable[16] = {
+      0x80, 0x88, 0x90, 0x98,
+      0x40, 0x48, 0x50, 0x58,
+      0x20, 0x28, 0x30, 0x38,
+      0x00, 0x08, 0x10, 0x18
+};
+
+static inline int toOpus(unsigned char c)
+{
+   int ret=0;
+   if (c<0xA0)
+      ret = toOpusTable[c>>3];
+   if (ret == 0)
+      return -1;
+   else
+      return ret|(c&0x7);
+}
+
+static inline int fromOpus(unsigned char c)
+{
+   if (c<0x80)
+      return -1;
+   else
+      return fromOpusTable[(c>>3)-16] | (c&0x7);
+}
+#endif /* CUSTOM_MODES */
+
+#define COMBFILTER_MAXPERIOD 1024
+#define COMBFILTER_MINPERIOD 15
+
+extern const signed char tf_select_table[4][8];
+
+int resampling_factor(opus_int32 rate);
+
+void comb_filter(opus_val32 *y, opus_val32 *x, int T0, int T1, int N,
+      opus_val16 g0, opus_val16 g1, int tapset0, int tapset1,
+      const opus_val16 *window, int overlap);
+
+void init_caps(const CELTMode *m,int *cap,int LM,int C);
+
+#ifdef RESYNTH
+void deemphasis(celt_sig *in[], opus_val16 *pcm, int N, int C, int downsample, const opus_val16 *coef, celt_sig *mem, celt_sig * OPUS_RESTRICT scratch);
+
+void compute_inv_mdcts(const CELTMode *mode, int shortBlocks, celt_sig *X,
+      celt_sig * OPUS_RESTRICT out_mem[], int C, int LM);
+#endif
 
 #ifdef __cplusplus
 }

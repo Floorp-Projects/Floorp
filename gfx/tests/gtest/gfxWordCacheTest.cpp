@@ -82,7 +82,7 @@ MakeContext ()
 
    surface = gfxPlatform::GetPlatform()->
        CreateOffscreenSurface(gfxIntSize(size, size),
-                              gfxASurface::ContentFromFormat(gfxASurface::ImageFormatRGB24));
+                              gfxASurface::ContentFromFormat(gfxImageFormatRGB24));
    nsRefPtr<gfxContext> ctx = new gfxContext(surface);
    return ctx.forget();
 }

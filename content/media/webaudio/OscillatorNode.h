@@ -129,7 +129,6 @@ private:
   nsRefPtr<PeriodicWave> mPeriodicWave;
   nsRefPtr<AudioParam> mFrequency;
   nsRefPtr<AudioParam> mDetune;
-  SelfReference<OscillatorNode> mPlayingRef;
   bool mStartCalled;
   bool mStopped;
 };

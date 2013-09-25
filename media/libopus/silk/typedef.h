@@ -1,9 +1,5 @@
 /***********************************************************************
-Copyright (c) 2006-2012 IETF Trust and Skype Limited. All rights reserved.
-
-This file is extracted from RFC6716. Please see that RFC for additional
-information.
-
+Copyright (c) 2006-2011, Skype Limited. All rights reserved.
 Redistribution and use in source and binary forms, with or without
 modification, are permitted provided that the following conditions
 are met:
@@ -16,7 +12,7 @@ documentation and/or other materials provided with the distribution.
 names of specific contributors, may be used to endorse or promote
 products derived from this software without specific prior written
 permission.
-THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS “AS IS”
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
 AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
 IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
 ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE
@@ -34,29 +30,10 @@ POSSIBILITY OF SUCH DAMAGE.
 
 #include "opus_types.h"
 
-#ifndef silk_USE_DOUBLE_PRECISION_FLOATS
-#define silk_USE_DOUBLE_PRECISION_FLOATS     0
-#endif
-
-#include <float.h>
-#if defined( __GNUC__ )
-#include <stdint.h>
-#endif
-
-#define silk_int_ptr_size intptr_t
-
-#if silk_USE_DOUBLE_PRECISION_FLOATS
-# define silk_float      double
-# define silk_float_MAX  DBL_MAX
-#else
+#ifndef FIXED_POINT
+# include <float.h>
 # define silk_float      float
 # define silk_float_MAX  FLT_MAX
-#endif
-
-#ifdef _WIN32
-# define silk_STR_CASEINSENSITIVE_COMPARE(x, y) _stricmp(x, y)
-#else
-# define silk_STR_CASEINSENSITIVE_COMPARE(x, y) strcasecmp(x, y)
 #endif
 
 #define silk_int64_MAX   ((opus_int64)0x7FFFFFFFFFFFFFFFLL)   /*  2^63 - 1 */
@@ -67,13 +44,7 @@ POSSIBILITY OF SUCH DAMAGE.
 #define silk_int16_MIN   ((opus_int16)0x8000)                 /* -2^15     = -32768 */
 #define silk_int8_MAX    0x7F                                 /*  2^7 - 1  =  127 */
 #define silk_int8_MIN    ((opus_int8)0x80)                    /* -2^7      = -128 */
-
-#define silk_uint32_MAX  0xFFFFFFFF  /* 2^32 - 1 = 4294967295 */
-#define silk_uint32_MIN  0x00000000
-#define silk_uint16_MAX  0xFFFF      /* 2^16 - 1 = 65535 */
-#define silk_uint16_MIN  0x0000
-#define silk_uint8_MAX   0xFF        /*  2^8 - 1 = 255 */
-#define silk_uint8_MIN   0x00
+#define silk_uint8_MAX   0xFF                                 /*  2^8 - 1 = 255 */
 
 #define silk_TRUE        1
 #define silk_FALSE       0

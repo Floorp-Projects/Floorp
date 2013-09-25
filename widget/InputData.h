@@ -10,9 +10,8 @@
 #include "nsPoint.h"
 #include "nsTArray.h"
 #include "Units.h"
+#include "mozilla/EventForwards.h"
 
-class nsTouchEvent;
-class nsMouseEvent;
 namespace mozilla {
 
 

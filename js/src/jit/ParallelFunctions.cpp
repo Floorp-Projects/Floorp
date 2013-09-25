@@ -54,16 +54,14 @@ printTrace(const char *prefix, struct IonLIRTraceData *cached)
 {
     fprintf(stderr, "%s / Block %3u / LIR %3u / Mode %u / LIR %s\n",
             prefix,
-            cached->bblock, cached->lir, cached->execModeInt, cached->lirOpName);
+            cached->blockIndex, cached->lirIndex, cached->execModeInt, cached->lirOpName);
 }
 
 struct IonLIRTraceData seqTraceData;
 #endif
 
 void
-jit::TraceLIR(uint32_t bblock, uint32_t lir, uint32_t execModeInt,
-              const char *lirOpName, const char *mirOpName,
-              JSScript *script, jsbytecode *pc)
+jit::TraceLIR(IonLIRTraceData *current)
 {
 #ifdef DEBUG
     static enum { NotSet, All, Bailouts } traceMode;
@@ -73,7 +71,7 @@ jit::TraceLIR(uint32_t bblock, uint32_t lir, uint32_t execModeInt,
     // You can either modify it to do whatever you like, or use gdb scripting.
     // For example:
     //
-    // break TracePar
+    // break TraceLIR
     // commands
     // continue
     // exit
@@ -88,27 +86,19 @@ jit::TraceLIR(uint32_t bblock, uint32_t lir, uint32_t execModeInt,
     }
 
     IonLIRTraceData *cached;
-    if (execModeInt == 0)
+    if (current->execModeInt == 0)
         cached = &seqTraceData;
     else
         cached = &ForkJoinSlice::Current()->traceData;
 
-    if (bblock == 0xDEADBEEF) {
-        if (execModeInt == 0)
+    if (current->blockIndex == 0xDEADBEEF) {
+        if (current->execModeInt == 0)
             printTrace("BAILOUT", cached);
         else
-            SpewBailoutIR(cached->bblock, cached->lir,
-                          cached->lirOpName, cached->mirOpName,
-                          cached->script, cached->pc);
+            SpewBailoutIR(cached);
     }
 
-    cached->bblock = bblock;
-    cached->lir = lir;
-    cached->execModeInt = execModeInt;
-    cached->lirOpName = lirOpName;
-    cached->mirOpName = mirOpName;
-    cached->script = script;
-    cached->pc = pc;
+    memcpy(cached, current, sizeof(IonLIRTraceData));
 
     if (traceMode == All)
         printTrace("Exec", cached);

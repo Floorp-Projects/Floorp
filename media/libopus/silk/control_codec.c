@@ -1,9 +1,5 @@
 /***********************************************************************
-Copyright (c) 2006-2012 IETF Trust and Skype Limited. All rights reserved.
-
-This file is extracted from RFC6716. Please see that RFC for additional
-information.
-
+Copyright (c) 2006-2011, Skype Limited. All rights reserved.
 Redistribution and use in source and binary forms, with or without
 modification, are permitted provided that the following conditions
 are met:
@@ -16,7 +12,7 @@ documentation and/or other materials provided with the distribution.
 names of specific contributors, may be used to endorse or promote
 products derived from this software without specific prior written
 permission.
-THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS “AS IS”
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
 AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
 IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
 ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE
@@ -39,21 +35,22 @@ POSSIBILITY OF SUCH DAMAGE.
 #include "main_FLP.h"
 #define silk_encoder_state_Fxx      silk_encoder_state_FLP
 #endif
+#include "stack_alloc.h"
 #include "tuning_parameters.h"
 #include "pitch_est_defines.h"
 
-opus_int silk_setup_resamplers(
+static opus_int silk_setup_resamplers(
     silk_encoder_state_Fxx          *psEnc,             /* I/O                      */
     opus_int                        fs_kHz              /* I                        */
 );
 
-opus_int silk_setup_fs(
+static opus_int silk_setup_fs(
     silk_encoder_state_Fxx          *psEnc,             /* I/O                      */
     opus_int                        fs_kHz,             /* I                        */
     opus_int                        PacketSize_ms       /* I                        */
 );
 
-opus_int silk_setup_complexity(
+static opus_int silk_setup_complexity(
     silk_encoder_state              *psEncC,            /* I/O                      */
     opus_int                        Complexity          /* I                        */
 );
@@ -135,13 +132,13 @@ opus_int silk_control_encoder(
     return ret;
 }
 
-opus_int silk_setup_resamplers(
+static opus_int silk_setup_resamplers(
     silk_encoder_state_Fxx          *psEnc,             /* I/O                      */
     opus_int                         fs_kHz              /* I                        */
 )
 {
     opus_int   ret = SILK_NO_ERROR;
-    opus_int32 nSamples_temp;
+    SAVE_STACK;
 
     if( psEnc->sCmn.fs_kHz != fs_kHz || psEnc->sCmn.prev_API_fs_Hz != psEnc->sCmn.API_fs_Hz )
     {
@@ -149,48 +146,58 @@ opus_int silk_setup_resamplers(
             /* Initialize the resampler for enc_API.c preparing resampling from API_fs_Hz to fs_kHz */
             ret += silk_resampler_init( &psEnc->sCmn.resampler_state, psEnc->sCmn.API_fs_Hz, fs_kHz * 1000, 1 );
         } else {
-            /* Allocate worst case space for temporary upsampling, 8 to 48 kHz, so a factor 6 */
-            opus_int16 x_buf_API_fs_Hz[ ( 2 * MAX_FRAME_LENGTH_MS + LA_SHAPE_MS ) * MAX_API_FS_KHZ ];
-            silk_resampler_state_struct  temp_resampler_state;
+            VARDECL( opus_int16, x_buf_API_fs_Hz );
+            VARDECL( silk_resampler_state_struct, temp_resampler_state );
 #ifdef FIXED_POINT
             opus_int16 *x_bufFIX = psEnc->x_buf;
 #else
-            opus_int16 x_bufFIX[ 2 * MAX_FRAME_LENGTH + LA_SHAPE_MAX ];
+            VARDECL( opus_int16, x_bufFIX );
+            opus_int32 new_buf_samples;
 #endif
+            opus_int32 api_buf_samples;
+            opus_int32 old_buf_samples;
+            opus_int32 buf_length_ms;
 
-            nSamples_temp = silk_LSHIFT( psEnc->sCmn.frame_length, 1 ) + LA_SHAPE_MS * psEnc->sCmn.fs_kHz;
+            buf_length_ms = silk_LSHIFT( psEnc->sCmn.nb_subfr * 5, 1 ) + LA_SHAPE_MS;
+            old_buf_samples = buf_length_ms * psEnc->sCmn.fs_kHz;
 
 #ifndef FIXED_POINT
-            silk_float2short_array( x_bufFIX, psEnc->x_buf, nSamples_temp );
+            new_buf_samples = buf_length_ms * fs_kHz;
+            ALLOC( x_bufFIX, silk_max( old_buf_samples, new_buf_samples ),
+                   opus_int16 );
+            silk_float2short_array( x_bufFIX, psEnc->x_buf, old_buf_samples );
 #endif
 
             /* Initialize resampler for temporary resampling of x_buf data to API_fs_Hz */
-            ret += silk_resampler_init( &temp_resampler_state, silk_SMULBB( psEnc->sCmn.fs_kHz, 1000 ), psEnc->sCmn.API_fs_Hz, 0 );
+            ALLOC( temp_resampler_state, 1, silk_resampler_state_struct );
+            ret += silk_resampler_init( temp_resampler_state, silk_SMULBB( psEnc->sCmn.fs_kHz, 1000 ), psEnc->sCmn.API_fs_Hz, 0 );
+
+            /* Calculate number of samples to temporarily upsample */
+            api_buf_samples = buf_length_ms * silk_DIV32_16( psEnc->sCmn.API_fs_Hz, 1000 );
 
             /* Temporary resampling of x_buf data to API_fs_Hz */
-            ret += silk_resampler( &temp_resampler_state, x_buf_API_fs_Hz, x_bufFIX, nSamples_temp );
-
-            /* Calculate number of samples that has been temporarily upsampled */
-            nSamples_temp = silk_DIV32_16( nSamples_temp * psEnc->sCmn.API_fs_Hz, silk_SMULBB( psEnc->sCmn.fs_kHz, 1000 ) );
+            ALLOC( x_buf_API_fs_Hz, api_buf_samples, opus_int16 );
+            ret += silk_resampler( temp_resampler_state, x_buf_API_fs_Hz, x_bufFIX, old_buf_samples );
 
             /* Initialize the resampler for enc_API.c preparing resampling from API_fs_Hz to fs_kHz */
             ret += silk_resampler_init( &psEnc->sCmn.resampler_state, psEnc->sCmn.API_fs_Hz, silk_SMULBB( fs_kHz, 1000 ), 1 );
 
             /* Correct resampler state by resampling buffered data from API_fs_Hz to fs_kHz */
-            ret += silk_resampler( &psEnc->sCmn.resampler_state, x_bufFIX, x_buf_API_fs_Hz, nSamples_temp );
+            ret += silk_resampler( &psEnc->sCmn.resampler_state, x_bufFIX, x_buf_API_fs_Hz, api_buf_samples );
 
 #ifndef FIXED_POINT
-            silk_short2float_array( psEnc->x_buf, x_bufFIX, ( 2 * MAX_FRAME_LENGTH_MS + LA_SHAPE_MS ) * fs_kHz );
+            silk_short2float_array( psEnc->x_buf, x_bufFIX, new_buf_samples);
 #endif
         }
     }
 
     psEnc->sCmn.prev_API_fs_Hz = psEnc->sCmn.API_fs_Hz;
 
+    RESTORE_STACK;
     return ret;
 }
 
-opus_int silk_setup_fs(
+static opus_int silk_setup_fs(
     silk_encoder_state_Fxx          *psEnc,             /* I/O                      */
     opus_int                        fs_kHz,             /* I                        */
     opus_int                        PacketSize_ms       /* I                        */
@@ -303,7 +310,7 @@ opus_int silk_setup_fs(
     return ret;
 }
 
-opus_int silk_setup_complexity(
+static opus_int silk_setup_complexity(
     silk_encoder_state              *psEncC,            /* I/O                      */
     opus_int                        Complexity          /* I                        */
 )
@@ -407,7 +414,7 @@ static inline opus_int silk_setup_LBRR(
         if( TargetRate_bps > LBRR_rate_thres_bps ) {
             /* Set gain increase for coding LBRR excitation */
             psEncC->LBRR_enabled = 1;
-            psEncC->LBRR_GainIncreases = silk_max_int( 7 - silk_SMULWB( psEncC->PacketLoss_perc, SILK_FIX_CONST( 0.4, 16 ) ), 2 );
+            psEncC->LBRR_GainIncreases = silk_max_int( 7 - silk_SMULWB( (opus_int32)psEncC->PacketLoss_perc, SILK_FIX_CONST( 0.4, 16 ) ), 2 );
         }
     }
 

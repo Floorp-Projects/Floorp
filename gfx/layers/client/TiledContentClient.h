@@ -13,8 +13,7 @@
 #include "TiledLayerBuffer.h"           // for TiledLayerBuffer
 #include "Units.h"                      // for CSSPoint
 #include "gfx3DMatrix.h"                // for gfx3DMatrix
-#include "gfxASurface.h"                // for gfxASurface, etc
-#include "gfxImageSurface.h"            // for gfxImageSurface
+#include "gfxTypes.h"
 #include "gfxPoint.h"                   // for gfxSize
 #include "mozilla/Attributes.h"         // for MOZ_OVERRIDE
 #include "mozilla/RefPtr.h"             // for RefPtr
@@ -30,6 +29,8 @@
 #include "nsTraceRefcnt.h"              // for MOZ_COUNT_DTOR
 #include "mozilla/layers/ISurfaceAllocator.h"
 #include "gfxReusableSurfaceWrapper.h"
+
+class gfxImageSurface;
 
 namespace mozilla {
 namespace layers {
@@ -220,7 +221,7 @@ protected:
   BasicTiledLayerTile GetPlaceholderTile() const { return BasicTiledLayerTile(); }
 
 private:
-  gfxASurface::gfxContentType GetContentType() const;
+  gfxContentType GetContentType() const;
   ClientTiledThebesLayer* mThebesLayer;
   ClientLayerManager* mManager;
   LayerManager::DrawThebesLayerCallback mCallback;

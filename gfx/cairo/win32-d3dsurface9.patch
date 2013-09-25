@@ -74,7 +74,7 @@ diff --git a/gfx/cairo/cairo/src/cairo-win32-surface.c b/gfx/cairo/cairo/src/cai
  #include "cairo-private.h"
  #include <wchar.h>
  #include <windows.h>
-+#include <D3D9.h>
++#include <d3d9.h>
  
  #if defined(__MINGW32__) && !defined(ETO_PDY)
  # define ETO_PDY 0x2000
@@ -423,7 +423,7 @@ diff --git a/gfx/cairo/cairo/src/cairo-win32-surface.c b/gfx/cairo/cairo/src/cai
 diff --git a/gfx/cairo/cairo/src/cairo-win32.h b/gfx/cairo/cairo/src/cairo-win32.h
 --- a/gfx/cairo/cairo/src/cairo-win32.h
 +++ b/gfx/cairo/cairo/src/cairo-win32.h
-@@ -59,17 +59,16 @@ cairo_win32_surface_create_with_ddb (HDC
+@@ -59,17 +59,16 @@ cairo_win32_surface_create_with_ddb (HDC hdc,
                                       cairo_format_t format,
                                       int width,
                                       int height);
@@ -441,7 +441,7 @@ diff --git a/gfx/cairo/cairo/src/cairo-win32.h b/gfx/cairo/cairo/src/cairo-win32
  
  cairo_public cairo_surface_t *
  cairo_win32_surface_get_image (cairo_surface_t *surface);
-@@ -143,16 +142,20 @@ cairo_dwrite_scaled_font_get_force_GDI_c
+@@ -143,16 +142,21 @@ cairo_dwrite_scaled_font_get_force_GDI_classic(cairo_scaled_font_t *dwrite_scale
  void
  cairo_dwrite_set_cleartype_params(FLOAT gamma, FLOAT contrast, FLOAT level, int geometry, int mode);
  
@@ -450,6 +450,7 @@ diff --git a/gfx/cairo/cairo/src/cairo-win32.h b/gfx/cairo/cairo/src/cairo-win32
  
  #endif /* CAIRO_HAS_DWRITE_FONT */
  
++struct IDirect3DSurface9;
 +cairo_public cairo_surface_t *
 +cairo_win32_surface_create_with_d3dsurface9 (struct IDirect3DSurface9 *surface);
 +

@@ -95,10 +95,6 @@
 
 #include "mozilla/unused.h"
 
-using namespace mozilla;
-using mozilla::unused;
-using mozilla::scache::StartupCache;
-
 #ifdef XP_WIN
 #include "nsIWinAppHelper.h"
 #include <windows.h>
@@ -248,6 +244,9 @@ namespace mozilla {
 int (*RunGTest)() = 0;
 }
 
+using namespace mozilla;
+using mozilla::unused;
+using mozilla::scache::StartupCache;
 using mozilla::dom::ContentParent;
 using mozilla::dom::ContentChild;
 

@@ -122,7 +122,7 @@ D3D9SurfaceImage::GetAsSurface()
 
   HRESULT hr;
   nsRefPtr<gfxImageSurface> surface =
-    new gfxImageSurface(mSize, gfxASurface::ImageFormatRGB24);
+    new gfxImageSurface(mSize, gfxImageFormatRGB24);
 
   if (!surface->CairoSurface() || surface->CairoStatus()) {
     NS_WARNING("Failed to created Cairo image surface for D3D9SurfaceImage.");

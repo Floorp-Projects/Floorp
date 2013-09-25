@@ -193,7 +193,7 @@ def main(argv):
     prefix = [os.path.abspath(args[0])] + shlex.split(options.shell_args)
     prolog = os.path.join(jittests.LIB_DIR, 'prolog.js')
     if options.remote:
-        prolog = posixpath.join(options.remote_test_root, 'jit-tests/lib/prolog.js')
+        prolog = posixpath.join(options.remote_test_root, 'jit-tests', 'jit-tests', 'lib', 'prolog.js')
 
     prefix += ['-f', prolog]
     if options.debug:

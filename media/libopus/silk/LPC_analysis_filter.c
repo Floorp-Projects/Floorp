@@ -1,9 +1,5 @@
 /***********************************************************************
-Copyright (c) 2006-2012 IETF Trust and Skype Limited. All rights reserved.
-
-This file is extracted from RFC6716. Please see that RFC for additional
-information.
-
+Copyright (c) 2006-2011, Skype Limited. All rights reserved.
 Redistribution and use in source and binary forms, with or without
 modification, are permitted provided that the following conditions
 are met:
@@ -16,7 +12,7 @@ documentation and/or other materials provided with the distribution.
 names of specific contributors, may be used to endorse or promote
 products derived from this software without specific prior written
 permission.
-THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS “AS IS”
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
 AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
 IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
 ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE
@@ -34,6 +30,7 @@ POSSIBILITY OF SUCH DAMAGE.
 #endif
 
 #include "SigProc_FIX.h"
+#include "celt_lpc.h"
 
 /*******************************************/
 /* LPC analysis filter                     */
@@ -50,14 +47,33 @@ void silk_LPC_analysis_filter(
     const opus_int32            d                   /* I    Filter order                                                */
 )
 {
-    opus_int         ix, j;
+    opus_int   j;
+#ifdef FIXED_POINT
+    opus_int16 mem[SILK_MAX_ORDER_LPC];
+    opus_int16 num[SILK_MAX_ORDER_LPC];
+#else
+    int ix;
     opus_int32       out32_Q12, out32;
     const opus_int16 *in_ptr;
+#endif
 
     silk_assert( d >= 6 );
     silk_assert( (d & 1) == 0 );
     silk_assert( d <= len );
 
+#ifdef FIXED_POINT
+    silk_assert( d <= SILK_MAX_ORDER_LPC );
+    for ( j = 0; j < d; j++ ) {
+        num[ j ] = -B[ j ];
+    }
+    for (j=0;j<d;j++) {
+        mem[ j ] = in[ d - j - 1 ];
+    }
+    celt_fir( in + d, num, out + d, len - d, d, mem );
+    for ( j = 0; j < d; j++ ) {
+        out[ j ] = 0;
+    }
+#else
     for( ix = d; ix < len; ix++ ) {
         in_ptr = &in[ ix - 1 ];
 
@@ -86,4 +102,5 @@ void silk_LPC_analysis_filter(
 
     /* Set first d output samples to zero */
     silk_memset( out, 0, d * sizeof( opus_int16 ) );
+#endif
 }

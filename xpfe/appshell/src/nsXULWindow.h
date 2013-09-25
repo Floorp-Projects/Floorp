@@ -28,9 +28,9 @@
 #include "nsIXULWindow.h"
 #include "nsIPrompt.h"
 #include "nsIAuthPrompt.h"
-#include "nsGUIEvent.h"
 #include "nsIXULBrowserWindow.h"
 #include "nsIWeakReference.h"
+#include "nsIWidgetListener.h"
 
 namespace mozilla {
 namespace dom {

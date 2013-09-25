@@ -1,0 +1,9 @@
+# Any copyright is dedicated to the Public Domain.
+# http://creativecommons.org/publicdomain/zero/1.0/
+
+XPCSHELL_TESTS_MANIFESTS += [
+  'dir1/xpcshell.ini',
+  'xpcshell.ini',
+]
+
+MOCHITEST_MANIFESTS += ['mochitest.ini']

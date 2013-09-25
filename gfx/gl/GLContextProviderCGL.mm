@@ -186,13 +186,13 @@ public:
                        TextureImage::ContentType aContentType,
                        GLenum aWrapMode,
                        TextureImage::Flags aFlags = TextureImage::NoFlags,
-                       TextureImage::ImageFormat aImageFormat = gfxASurface::ImageFormatUnknown) MOZ_OVERRIDE;
+                       TextureImage::ImageFormat aImageFormat = gfxImageFormatUnknown) MOZ_OVERRIDE;
 
     virtual already_AddRefed<TextureImage>
     TileGenFunc(const nsIntSize& aSize,
                 TextureImage::ContentType aContentType,
                 TextureImage::Flags aFlags = TextureImage::NoFlags,
-                TextureImage::ImageFormat aImageFormat = gfxASurface::ImageFormatUnknown) MOZ_OVERRIDE;
+                TextureImage::ImageFormat aImageFormat = gfxImageFormatUnknown) MOZ_OVERRIDE;
 
     virtual SharedTextureHandle CreateSharedHandle(SharedTextureShareType shareType,
                                                    void* buffer,
@@ -340,7 +340,7 @@ private:
                     ContentType aContentType,
                     GLContext* aContext,
                     TextureImage::Flags aFlags = TextureImage::NoFlags,
-                    TextureImage::ImageFormat aImageFormat = gfxASurface::ImageFormatUnknown)
+                    TextureImage::ImageFormat aImageFormat = gfxImageFormatUnknown)
         : BasicTextureImage(aTexture, aSize, aWrapMode, aContentType,
                             aContext, aFlags, aImageFormat)
         , mPixelBuffer(0)
@@ -547,7 +547,7 @@ GLContextProviderCGL::GetSharedHandleAsSurface(SharedTextureShareType shareType,
   unsigned char* ioData = (unsigned char*)surf->GetBaseAddress();
 
   nsRefPtr<gfxImageSurface> imgSurface =
-    new gfxImageSurface(gfxIntSize(ioWidth, ioHeight), gfxASurface::ImageFormatARGB32);
+    new gfxImageSurface(gfxIntSize(ioWidth, ioHeight), gfxImageFormatARGB32);
 
   for (size_t i = 0; i < ioHeight; i++) {
     memcpy(imgSurface->Data() + i * imgSurface->Stride(),

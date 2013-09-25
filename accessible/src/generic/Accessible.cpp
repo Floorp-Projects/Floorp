@@ -1460,9 +1460,9 @@ Accessible::GroupPosition()
 }
 
 NS_IMETHODIMP
-Accessible::GroupPosition(int32_t* aGroupLevel,
-                          int32_t* aSimilarItemsInGroup,
-                          int32_t* aPositionInGroup)
+Accessible::ScriptableGroupPosition(int32_t* aGroupLevel,
+                                    int32_t* aSimilarItemsInGroup,
+                                    int32_t* aPositionInGroup)
 {
   NS_ENSURE_ARG_POINTER(aGroupLevel);
   *aGroupLevel = 0;
