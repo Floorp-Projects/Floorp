@@ -22,7 +22,7 @@
 #include "nsIFormControlFrame.h"
 #include "nsIDOMEvent.h"
 #include "nsIDocument.h"
-#include "nsGUIEvent.h"
+#include "mozilla/ContentEvents.h"
 #include "mozilla/MouseEvents.h"
 #include "mozilla/TextEvents.h"
 #include "nsUnicharUtils.h"

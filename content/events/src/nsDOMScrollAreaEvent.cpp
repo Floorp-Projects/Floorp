@@ -5,9 +5,9 @@
 
 #include "base/basictypes.h"
 #include "ipc/IPCMessageUtils.h"
+#include "mozilla/ContentEvents.h"
 
 #include "nsDOMScrollAreaEvent.h"
-#include "nsGUIEvent.h"
 #include "nsClientRect.h"
 
 nsDOMScrollAreaEvent::nsDOMScrollAreaEvent(mozilla::dom::EventTarget* aOwner,

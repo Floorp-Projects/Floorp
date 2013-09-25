@@ -15,6 +15,7 @@
 
 #include "mozilla/ClearOnShutdown.h"
 #include "mozilla/CondVar.h"
+#include "mozilla/ContentEvents.h"
 #include "mozilla/dom/quota/OriginOrPatternString.h"
 #include "mozilla/dom/quota/QuotaManager.h"
 #include "mozilla/dom/quota/Utilities.h"

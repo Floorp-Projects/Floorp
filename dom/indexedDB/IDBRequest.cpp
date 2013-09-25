@@ -8,6 +8,7 @@
 
 #include "nsIScriptContext.h"
 
+#include "mozilla/ContentEvents.h"
 #include "mozilla/dom/IDBOpenDBRequestBinding.h"
 #include "mozilla/dom/UnionTypes.h"
 #include "nsComponentManagerUtils.h"
