@@ -79,9 +79,7 @@ void AbortPar(ParallelBailoutCause cause, JSScript *outermostScript, JSScript *c
               jsbytecode *bytecode);
 void PropagateAbortPar(JSScript *outermostScript, JSScript *currentScript);
 
-void TraceLIR(uint32_t bblock, uint32_t lir, uint32_t execModeInt,
-              const char *lirOpName, const char *mirOpName,
-              JSScript *script, jsbytecode *pc);
+void TraceLIR(IonLIRTraceData *current);
 
 void CallToUncompiledScriptPar(JSObject *obj);
 

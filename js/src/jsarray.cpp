@@ -894,8 +894,107 @@ array_toSource(JSContext *cx, unsigned argc, Value *vp)
 }
 #endif
 
+struct EmptySeparatorOp
+{
+    bool operator()(JSContext *, StringBuffer &sb) { return true; }
+};
+
+struct CharSeparatorOp
+{
+    jschar sep;
+    CharSeparatorOp(jschar sep) : sep(sep) {};
+    bool operator()(JSContext *, StringBuffer &sb) { return sb.append(sep); }
+};
+
+struct StringSeparatorOp
+{
+    const jschar *sepchars;
+    size_t seplen;
+
+    StringSeparatorOp(const jschar *sepchars, size_t seplen)
+      : sepchars(sepchars), seplen(seplen) {};
+
+    bool operator()(JSContext *cx, StringBuffer &sb) {
+        return sb.append(sepchars, seplen);
+    }
+};
+
+template <bool Locale, typename SeparatorOp>
 static bool
-array_join_sub(JSContext *cx, CallArgs &args, bool locale)
+ArrayJoinKernel(JSContext *cx, SeparatorOp sepOp, HandleObject obj, uint32_t length,
+               StringBuffer &sb)
+{
+    uint32_t i = 0;
+
+    if (!Locale && obj->is<ArrayObject>() && !ObjectMayHaveExtraIndexedProperties(obj)) {
+        // This loop handles all elements up to initializedLength. If
+        // length > initLength we rely on the second loop to add the
+        // other elements.
+        uint32_t initLength = obj->getDenseInitializedLength();
+        while (i < initLength) {
+            if (!JS_CHECK_OPERATION_LIMIT(cx))
+                return false;
+
+            const Value &elem = obj->getDenseElement(i);
+
+            if (elem.isString()) {
+                if (!sb.append(elem.toString()))
+                    return false;
+            } else if (elem.isNumber()) {
+                if (!NumberValueToStringBuffer(cx, elem, sb))
+                    return false;
+            } else if (elem.isBoolean()) {
+                if (!BooleanToStringBuffer(cx, elem.toBoolean(), sb))
+                    return false;
+            } else if (elem.isObject()) {
+                /*
+                 * Object stringifying could modify the initialized length or make
+                 * the array sparse. Delegate it to a separate loop to keep this
+                 * one tight.
+                 */
+                break;
+            } else {
+                JS_ASSERT(elem.isMagic(JS_ELEMENTS_HOLE) || elem.isNullOrUndefined());
+            }
+
+            if (++i != length && !sepOp(cx, sb))
+                return false;
+        }
+    }
+
+    if (i != length) {
+        RootedValue v(cx);
+        while (i < length) {
+            if (!JS_CHECK_OPERATION_LIMIT(cx))
+                return false;
+
+            bool hole;
+            if (!GetElement(cx, obj, i, &hole, &v))
+                return false;
+            if (!hole && !v.isNullOrUndefined()) {
+                if (Locale) {
+                    JSObject *robj = ToObject(cx, v);
+                    if (!robj)
+                        return false;
+                    RootedId id(cx, NameToId(cx->names().toLocaleString));
+                    if (!robj->callMethod(cx, id, 0, NULL, &v))
+                        return false;
+                }
+                if (!ValueToStringBuffer(cx, v, sb))
+                    return false;
+            }
+
+            if (++i != length && !sepOp(cx, sb))
+                return false;
+        }
+    }
+
+    return true;
+}
+
+template <bool Locale>
+static bool
+ArrayJoin(JSContext *cx, CallArgs &args)
 {
     // This method is shared by Array.prototype.join and
     // Array.prototype.toLocaleString. The steps in ES5 are nearly the same, so
@@ -922,19 +1021,21 @@ array_join_sub(JSContext *cx, CallArgs &args, bool locale)
 
     // Steps 4 and 5
     RootedString sepstr(cx, NULL);
-    if (!locale && args.hasDefined(0)) {
+    if (!Locale && args.hasDefined(0)) {
         sepstr = ToString<CanGC>(cx, args[0]);
         if (!sepstr)
             return false;
     }
-    static const jschar comma = ',';
-    const jschar *sep;
+    const jschar *sepchars;
     size_t seplen;
     if (sepstr) {
-        sep = NULL;
+        sepchars = sepstr->getChars(cx);
+        if (!sepchars)
+            return false;
         seplen = sepstr->length();
     } else {
-        sep = &comma;
+        static const jschar comma = ',';
+        sepchars = &comma;
         seplen = 1;
     }
 
@@ -942,70 +1043,24 @@ array_join_sub(JSContext *cx, CallArgs &args, bool locale)
 
     StringBuffer sb(cx);
 
+    // The separator will be added |length - 1| times, reserve space for that
+    // so that we don't have to unnecessarily grow the buffer.
+    if (length > 0 && !sb.reserve(seplen * (length - 1)))
+        return false;
+
     // Various optimized versions of steps 7-10
-    if (!locale && !seplen && obj->is<ArrayObject>() && !ObjectMayHaveExtraIndexedProperties(obj)) {
-        uint32_t i;
-        for (i = 0; i < obj->getDenseInitializedLength(); ++i) {
-            if (!JS_CHECK_OPERATION_LIMIT(cx))
-                return false;
-
-            const Value *elem = &obj->getDenseElement(i);
-
-            /*
-             * Object stringifying is slow; delegate it to a separate loop to
-             * keep this one tight.
-             */
-            if (elem->isObject())
-                break;
-
-            if (!elem->isMagic(JS_ELEMENTS_HOLE) && !elem->isNullOrUndefined()) {
-                if (!ValueToStringBuffer(cx, *elem, sb))
-                    return false;
-            }
-        }
-
-        RootedValue v(cx);
-        for (; i < length; ++i) {
-            if (!JS_CHECK_OPERATION_LIMIT(cx))
-                return false;
-
-            bool hole;
-            if (!GetElement(cx, obj, i, &hole, &v))
-                return false;
-            if (!hole && !v.isNullOrUndefined()) {
-                if (!ValueToStringBuffer(cx, v, sb))
-                    return false;
-            }
-        }
+    if (seplen == 0) {
+        EmptySeparatorOp op;
+        if (!ArrayJoinKernel<Locale>(cx, op, obj, length, sb))
+            return false;
+    } else if (seplen == 1) {
+        CharSeparatorOp op(sepchars[0]);
+        if (!ArrayJoinKernel<Locale>(cx, op, obj, length, sb))
+            return false;
     } else {
-        RootedValue elt(cx);
-        for (uint32_t index = 0; index < length; index++) {
-            if (!JS_CHECK_OPERATION_LIMIT(cx))
-                return false;
-
-            bool hole;
-            if (!GetElement(cx, obj, index, &hole, &elt))
-                return false;
-
-            if (!hole && !elt.isNullOrUndefined()) {
-                if (locale) {
-                    JSObject *robj = ToObject(cx, elt);
-                    if (!robj)
-                        return false;
-                    RootedId id(cx, NameToId(cx->names().toLocaleString));
-                    if (!robj->callMethod(cx, id, 0, NULL, &elt))
-                        return false;
-                }
-                if (!ValueToStringBuffer(cx, elt, sb))
-                    return false;
-            }
-
-            if (index + 1 != length) {
-                const jschar *sepchars = sep ? sep : sepstr->getChars(cx);
-                if (!sepchars || !sb.append(sepchars, seplen))
-                    return false;
-            }
-        }
+        StringSeparatorOp op(sepchars, seplen);
+        if (!ArrayJoinKernel<Locale>(cx, op, obj, length, sb))
+            return false;
     }
 
     // Step 11
@@ -1060,8 +1115,7 @@ array_toLocaleString(JSContext *cx, unsigned argc, Value *vp)
     JS_CHECK_RECURSION(cx, return false);
 
     CallArgs args = CallArgsFromVp(argc, vp);
-
-    return array_join_sub(cx, args, true);
+    return ArrayJoin<true>(cx, args);
 }
 
 /* ES5 15.4.4.5 */
@@ -1071,7 +1125,7 @@ array_join(JSContext *cx, unsigned argc, Value *vp)
     JS_CHECK_RECURSION(cx, return false);
 
     CallArgs args = CallArgsFromVp(argc, vp);
-    return array_join_sub(cx, args, false);
+    return ArrayJoin<false>(cx, args);
 }
 
 static inline bool
@@ -1304,7 +1358,7 @@ CompareStringValues(JSContext *cx, const Value &a, const Value &b, bool *lessOrE
     return true;
 }
 
-static uint64_t const powersOf10[] = {
+static const uint64_t powersOf10[] = {
     1, 10, 100, 1000, 10000, 100000, 1000000, 10000000, 100000000, 1000000000, 1000000000000ULL
 };
 

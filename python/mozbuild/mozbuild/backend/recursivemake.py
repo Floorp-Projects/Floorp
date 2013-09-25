@@ -33,10 +33,13 @@ from ..frontend.data import (
     TestWebIDLFile,
     VariablePassthru,
     XPIDLFile,
-    XpcshellManifests,
+    TestManifest,
     WebIDLFile,
 )
-from ..util import FileAvoidWrite
+from ..util import (
+    ensureParentDir,
+    FileAvoidWrite,
+)
 from ..makeutil import Makefile
 
 
@@ -275,7 +278,7 @@ class RecursiveMakeBackend(CommonBackend):
         self.summary.backend_detailed_summary = types.MethodType(detailed,
             self.summary)
 
-        self.xpcshell_manifests = []
+        self._test_manifests = {}
 
         self.backend_input_files.add(os.path.join(self.environment.topobjdir,
             'config', 'autoconf.mk'))
@@ -381,8 +384,8 @@ class RecursiveMakeBackend(CommonBackend):
         elif isinstance(obj, Program):
             self._process_program(obj.program, backend_file)
 
-        elif isinstance(obj, XpcshellManifests):
-            self._process_xpcshell_manifests(obj, backend_file)
+        elif isinstance(obj, TestManifest):
+            self._process_test_manifest(obj, backend_file)
 
         elif isinstance(obj, LocalInclude):
             self._process_local_include(obj.path, backend_file)
@@ -498,7 +501,6 @@ class RecursiveMakeBackend(CommonBackend):
         self._update_from_avoid_write(root.close())
         self._update_from_avoid_write(root_deps.close())
 
-
     def consume_finished(self):
         CommonBackend.consume_finished(self)
 
@@ -599,19 +601,23 @@ class RecursiveMakeBackend(CommonBackend):
         self._update_from_avoid_write(backend_deps.close())
         self.summary.managed_count += 1
 
-        # Make the master xpcshell.ini file
-        self.xpcshell_manifests.sort()
-        if len(self.xpcshell_manifests) > 0:
-            mastermanifest = FileAvoidWrite(os.path.join(
-                self.environment.topobjdir, 'testing', 'xpcshell', 'xpcshell.ini'))
-            mastermanifest.write(
-                '; THIS FILE WAS AUTOMATICALLY GENERATED. DO NOT MODIFY BY HAND.\n\n')
-            for manifest in self.xpcshell_manifests:
-                mastermanifest.write("[include:%s]\n" % manifest)
-            self._update_from_avoid_write(mastermanifest.close())
-            self.summary.managed_count += 1
+        # Make the master test manifest files.
+        for flavor, t in self._test_manifests.items():
+            install_prefix, manifests = t
+            manifest_stem = os.path.join(install_prefix, '%s.ini' % flavor)
+            self._write_master_test_manifest(os.path.join(
+                self.environment.topobjdir, '_tests', manifest_stem),
+                manifests)
+
+            # Catch duplicate inserts.
+            try:
+                self._install_manifests['tests'].add_optional_exists(manifest_stem)
+            except ValueError:
+                pass
 
         self._write_manifests('install', self._install_manifests)
+
+        ensureParentDir(os.path.join(self.environment.topobjdir, 'dist', 'foo'))
 
     def _process_directory_traversal(self, obj, backend_file):
         """Process a data.DirectoryTraversal instance."""
@@ -669,8 +675,9 @@ class RecursiveMakeBackend(CommonBackend):
 
         if obj.test_dirs:
             fh.write('TEST_DIRS := %s\n' % ' '.join(obj.test_dirs))
-            self._traversal.add(backend_file.relobjdir,
-                                tests=relativize(obj.test_dirs))
+            if self.environment.substs.get('ENABLE_TESTS', False):
+                self._traversal.add(backend_file.relobjdir,
+                                    tests=relativize(obj.test_dirs))
 
         if obj.test_tool_dirs and \
             self.environment.substs.get('ENABLE_TESTS', False):
@@ -789,12 +796,28 @@ class RecursiveMakeBackend(CommonBackend):
         header = 'mozilla/dom/%sBinding.h' % os.path.splitext(basename)[0]
         self._install_manifests['dist_include'].add_optional_exists(header)
 
-    def _process_xpcshell_manifests(self, obj, backend_file, namespace=""):
-        manifest = obj.xpcshell_manifests
-        backend_file.write('XPCSHELL_TESTS += %s\n' % os.path.dirname(manifest))
-        if obj.relativedir != '':
-            manifest = '%s/%s' % (obj.relativedir, manifest)
-        self.xpcshell_manifests.append(manifest)
+    def _process_test_manifest(self, obj, backend_file):
+        self.backend_input_files.add(os.path.join(obj.topsrcdir,
+            obj.manifest_relpath))
+
+        # Duplicate manifests may define the same file. That's OK.
+        for source, dest in obj.installs.items():
+            try:
+                self._install_manifests['tests'].add_symlink(source, dest)
+            except ValueError:
+                if not obj.dupe_manifest:
+                    raise
+
+        for dest in obj.external_installs:
+            try:
+                self._install_manifests['tests'].add_optional_exists(dest)
+            except ValueError:
+                if not obj.dupe_manifest:
+                    raise
+
+        m = self._test_manifests.setdefault(obj.flavor,
+            (obj.install_prefix, set()))
+        m[1].add(obj.manifest_relpath)
 
     def _process_local_include(self, local_include, backend_file):
         if local_include.startswith('/'):
@@ -819,3 +842,14 @@ class RecursiveMakeBackend(CommonBackend):
             self._update_from_avoid_write(fh.close())
 
         purger.purge(man_dir)
+
+    def _write_master_test_manifest(self, path, manifests):
+        master = FileAvoidWrite(path)
+        master.write(
+            '; THIS FILE WAS AUTOMATICALLY GENERATED. DO NOT MODIFY BY HAND.\n\n')
+
+        for manifest in sorted(manifests):
+            master.write('[include:%s]\n' % manifest)
+
+        self._update_from_avoid_write(master.close())
+        self.summary.managed_count += 1

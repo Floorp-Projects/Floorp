@@ -527,18 +527,14 @@ class CGIncludeGuard(CGWrapper):
                            declarePre='#ifndef %s\n#define %s\n\n' % (define, define),
                            declarePost='\n#endif // %s\n' % define)
 
-def getRelevantProviders(descriptor, dictionary, config):
-    assert not descriptor or not dictionary
+def getRelevantProviders(descriptor, config):
     if descriptor is not None:
         return [descriptor]
-    if dictionary is not None:
-        # Do both the non-worker and worker versions
-        return [
-            config.getDescriptorProvider(False),
-            config.getDescriptorProvider(True)
-            ]
-    # Do non-workers only for callbacks
-    return [ config.getDescriptorProvider(False) ]
+    # Do both the non-worker and worker versions
+    return [
+        config.getDescriptorProvider(False),
+        config.getDescriptorProvider(True)
+        ]
 
 
 def getAllTypes(descriptors, dictionaries, callbacks):
@@ -654,8 +650,7 @@ class CGHeaders(CGWrapper):
                         headerSet = bindingHeaders
                     headerSet.add("mozilla/dom/TypedArray.h")
                 else:
-                    providers = getRelevantProviders(descriptor, dictionary,
-                                                     config)
+                    providers = getRelevantProviders(descriptor, config)
                     for p in providers:
                         try:
                             typeDesc = p.getDescriptor(unrolled.inner.identifier.name)
@@ -808,8 +803,7 @@ def UnionTypes(descriptors, dictionaries, callbacks, config):
             return
         name = str(t)
         if not name in unionStructs:
-            providers = getRelevantProviders(descriptor, dictionary,
-                                             config)
+            providers = getRelevantProviders(descriptor, config)
             # FIXME: Unions are broken in workers.  See bug 809899.
             unionStructs[name] = CGUnionStruct(t, providers[0])
             owningUnionStructs[name] = CGUnionStruct(t, providers[0],
@@ -863,8 +857,7 @@ def UnionConversions(descriptors, dictionaries, callbacks, config):
             return
         name = str(t)
         if not name in unionConversions:
-            providers = getRelevantProviders(descriptor, dictionary,
-                                             config)
+            providers = getRelevantProviders(descriptor, config)
             unionConversions[name] = CGUnionConversionStruct(t, providers[0])
             for f in t.flatMemberTypes:
                 f = f.unroll()
@@ -2429,61 +2422,6 @@ class FailureFatalCastableObjectUnwrapper(CastableObjectUnwrapper):
             exceptionCode,
             isCallbackReturnValue)
 
-class CallbackObjectUnwrapper:
-    """
-    A class for unwrapping objects implemented in JS.
-
-    |source| is the JSObject we want to use in native code.
-    |target| is an nsCOMPtr of the appropriate type in which we store the result.
-    """
-    def __init__(self, descriptor, source, target, exceptionCode,
-                 sourceDescription, codeOnFailure=None):
-        if codeOnFailure is None:
-            codeOnFailure = (
-                'ThrowErrorMessage(cx, MSG_DOES_NOT_IMPLEMENT_INTERFACE, "%s", "%s");\n'
-                '%s' % (sourceDescription, descriptor.interface.identifier.name,
-                        exceptionCode))
-        self.descriptor = descriptor
-        self.substitution = { "nativeType" : descriptor.nativeType,
-                              "source" : source,
-                              "target" : target,
-                              "codeOnFailure" : CGIndenter(CGGeneric(codeOnFailure)).define() }
-
-    def __str__(self):
-        checkObjectType = CGIfWrapper(
-            CGGeneric(self.substitution["codeOnFailure"]),
-            "!IsConvertibleToCallbackInterface(cx, %(source)s)" %
-            self.substitution).define() + "\n\n"
-        if self.descriptor.workers:
-            return checkObjectType + string.Template(
-                "${target} = ${source};"
-                ).substitute(self.substitution)
-
-        return checkObjectType + string.Template(
-            """nsISupports* supp = nullptr;
-if (XPCConvert::GetISupportsFromJSObject(${source}, &supp)) {
-  nsCOMPtr<nsIXPConnectWrappedNative> xpcwn = do_QueryInterface(supp);
-  if (xpcwn) {
-    supp = xpcwn->Native();
-  }
-}
-
-const nsIID& iid = NS_GET_IID(${nativeType});
-nsRefPtr<nsXPCWrappedJS> wrappedJS;
-nsresult rv = nsXPCWrappedJS::GetNewOrUsed(${source}, iid,
-                                           supp, getter_AddRefs(wrappedJS));
-if (NS_FAILED(rv) || !wrappedJS) {
-${codeOnFailure}
-}
-
-// Use a temp nsCOMPtr for the null-check, because ${target} might be
-// OwningNonNull, not an nsCOMPtr.
-nsCOMPtr<${nativeType}> tmp = do_QueryObject(wrappedJS.get());
-if (!tmp) {
-${codeOnFailure}
-}
-${target} = tmp.forget();""").substitute(self.substitution)
-
 class JSToNativeConversionInfo():
     """
     An object representing information about a JS-to-native conversion.
@@ -3157,9 +3095,7 @@ for (uint32_t i = 0; i < length; ++i) {
             return handleJSObjectType(type, isMember, isInOwningUnion,
                                       failureCode)
 
-        if (descriptor.interface.isCallback() and
-            (descriptor.interface.identifier.name != "EventListener" or
-             descriptorProvider.workers)):
+        if descriptor.interface.isCallback():
             name = descriptor.interface.identifier.name
             if type.nullable() or isCallbackReturnValue:
                 declType = CGGeneric("nsRefPtr<%s>" % name);
@@ -3219,21 +3155,7 @@ for (uint32_t i = 0; i < length; ++i) {
                 declType = "NonNull<" + typeName + ">"
 
         templateBody = ""
-        if descriptor.interface.isCallback():
-            # NOTE: This is only used for EventListener at this point
-            callbackConversion = str(CallbackObjectUnwrapper(
-                    descriptor,
-                    "callbackObj",
-                    "${declName}",
-                    exceptionCode,
-                    firstCap(sourceDescription),
-                    codeOnFailure=failureCode))
-            templateBody += (
-                "{ // Scope for callbackObj\n"
-                "  JS::Rooted<JSObject*> callbackObj(cx, &${val}.toObject());\n" +
-                CGIndenter(CGGeneric(callbackConversion)).define() +
-                "\n}")
-        elif not descriptor.skipGen and not descriptor.interface.isConsequential() and not descriptor.interface.isExternal():
+        if not descriptor.skipGen and not descriptor.interface.isConsequential() and not descriptor.interface.isExternal():
             if failureCode is not None:
                 templateBody += str(CastableObjectUnwrapper(
                         descriptor,
@@ -4115,10 +4037,7 @@ if (!returnArray) {
           CGIndenter(exceptionCodeIndented, 4).define())) +
                 setValue("JS::ObjectValue(*returnArray)"), False)
 
-    if (type.isGeckoInterface() and
-        (not type.isCallbackInterface() or
-         (type.unroll().inner.identifier.name == "EventListener" and
-          not descriptorProvider.workers))):
+    if type.isGeckoInterface() and not type.isCallbackInterface():
         descriptor = descriptorProvider.getDescriptor(type.unroll().inner.identifier.name)
         if type.nullable():
             wrappingCode = ("if (!%s) {\n" % (result) +
@@ -8937,17 +8856,17 @@ class CGBindingRoot(CGThing):
                                                CGDictionary.getDictionaryDependencies,
                                                lambda d: d.identifier.name)])
 
-        # Do codegen for all the callbacks.  Only do non-worker codegen for now,
-        # since we don't have a sane setup yet for invoking callbacks in workers
-        # and managing their lifetimes.
+        # Do codegen for all the callbacks.
         cgthings.extend(CGCallbackFunction(c, config.getDescriptorProvider(False))
                         for c in mainCallbacks)
+
+        cgthings.extend(CGCallbackFunction(c, config.getDescriptorProvider(True))
+                        for c in workerCallbacks if c not in mainCallbacks)
 
         # Do codegen for all the descriptors
         cgthings.extend([CGDescriptor(x) for x in descriptors])
 
-        # Do codegen for all the callback interfaces.  Again, skip
-        # worker callbacks.
+        # Do codegen for all the callback interfaces.  Skip worker callbacks.
         cgthings.extend([CGCallbackInterface(x) for x in callbackDescriptors if
                          not x.workers])
 
@@ -9224,9 +9143,7 @@ class CGNativeMember(ClassMethod):
                 type = type.inner
             return str(type), True, True
 
-        if (type.isGeckoInterface() and
-            (not type.isCallbackInterface() or
-             type.unroll().inner.identifier.name == "EventListener")):
+        if type.isGeckoInterface() and not type.isCallbackInterface():
             iface = type.unroll().inner
             argIsPointer = type.nullable() or iface.isExternal()
             forceOwningType = iface.isCallback() or isMember
@@ -9942,8 +9859,6 @@ class CGCallback(CGClass):
         self.baseName = baseName
         self._deps = idlObject.getDeps()
         name = idlObject.identifier.name
-        if descriptorProvider.workers:
-            name += "Workers"
         if isJSImplementedDescriptor(descriptorProvider):
             name = jsImplName(name)
         # For our public methods that needThisHandling we want most of the

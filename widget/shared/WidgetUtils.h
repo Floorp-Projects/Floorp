@@ -9,9 +9,9 @@
 
 #include "nsCOMPtr.h"
 #include "nsIWidget.h"
-#include "nsEvent.h"
 #include "nsPIDOMWindow.h"
 #include "nsIDOMWindow.h"
+#include "mozilla/EventForwards.h"
 
 namespace mozilla {
 namespace widget {

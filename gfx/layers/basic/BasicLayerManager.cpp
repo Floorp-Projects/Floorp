@@ -92,19 +92,19 @@ BasicLayerManager::PushGroupForLayer(gfxContext* aContext, Layer* aLayer,
   if (aLayer->CanUseOpaqueSurface() &&
       ((didCompleteClip && aRegion.GetNumRects() == 1) ||
        !aContext->CurrentMatrix().HasNonIntegerTranslation())) {
-    // If the layer is opaque in its visible region we can push a CONTENT_COLOR
+    // If the layer is opaque in its visible region we can push a GFX_CONTENT_COLOR
     // group. We need to make sure that only pixels inside the layer's visible
     // region are copied back to the destination. Remember if we've already
     // clipped precisely to the visible region.
     *aNeedsClipToVisibleRegion = !didCompleteClip || aRegion.GetNumRects() > 1;
-    result = PushGroupWithCachedSurface(aContext, gfxASurface::CONTENT_COLOR);
+    result = PushGroupWithCachedSurface(aContext, GFX_CONTENT_COLOR);
   } else {
     *aNeedsClipToVisibleRegion = false;
     result = aContext;
     if (aLayer->GetContentFlags() & Layer::CONTENT_COMPONENT_ALPHA) {
-      aContext->PushGroupAndCopyBackground(gfxASurface::CONTENT_COLOR_ALPHA);
+      aContext->PushGroupAndCopyBackground(GFX_CONTENT_COLOR_ALPHA);
     } else {
-      aContext->PushGroup(gfxASurface::CONTENT_COLOR_ALPHA);
+      aContext->PushGroup(GFX_CONTENT_COLOR_ALPHA);
     }
   }
   return result.forget();
@@ -290,7 +290,7 @@ BasicLayerManager::BeginTransaction()
 
 already_AddRefed<gfxContext>
 BasicLayerManager::PushGroupWithCachedSurface(gfxContext *aTarget,
-                                              gfxASurface::gfxContentType aContent)
+                                              gfxContentType aContent)
 {
   nsRefPtr<gfxContext> ctx;
   // We can't cache Azure DrawTargets at this point.
@@ -590,7 +590,7 @@ BasicLayerManager::EndTransactionInternal(DrawThebesLayerCallback aCallback,
     if (!mDummyTarget) {
       // XXX: We should really just set mTarget to null and make sure we can handle that further down the call chain
       // Creating this temporary surface can be expensive on some platforms (d2d in particular), so cache it between paints.
-      nsRefPtr<gfxASurface> surf = gfxPlatform::GetPlatform()->CreateOffscreenSurface(gfxIntSize(1, 1), gfxASurface::CONTENT_COLOR);
+      nsRefPtr<gfxASurface> surf = gfxPlatform::GetPlatform()->CreateOffscreenSurface(gfxIntSize(1, 1), GFX_CONTENT_COLOR);
       mDummyTarget = new gfxContext(surf);
     }
     mTarget = mDummyTarget;
@@ -738,14 +738,14 @@ PixmanTransform(const gfxImageSurface *aDest,
                 gfxPoint aDestOffset)
 {
   gfxIntSize destSize = aDest->GetSize();
-  pixman_image_t* dest = pixman_image_create_bits(aDest->Format() == gfxASurface::ImageFormatARGB32 ? PIXMAN_a8r8g8b8 : PIXMAN_x8r8g8b8,
+  pixman_image_t* dest = pixman_image_create_bits(aDest->Format() == gfxImageFormatARGB32 ? PIXMAN_a8r8g8b8 : PIXMAN_x8r8g8b8,
                                                   destSize.width,
                                                   destSize.height,
                                                   (uint32_t*)aDest->Data(),
                                                   aDest->Stride());
 
   gfxIntSize srcSize = aSrc->GetSize();
-  pixman_image_t* src = pixman_image_create_bits(aSrc->Format() == gfxASurface::ImageFormatARGB32 ? PIXMAN_a8r8g8b8 : PIXMAN_x8r8g8b8,
+  pixman_image_t* src = pixman_image_create_bits(aSrc->Format() == gfxImageFormatARGB32 ? PIXMAN_a8r8g8b8 : PIXMAN_x8r8g8b8,
                                                  srcSize.width,
                                                  srcSize.height,
                                                  (uint32_t*)aSrc->Data(),
@@ -825,7 +825,7 @@ Transform3D(gfxASurface* aSource, gfxContext* aDest,
   bool blitComplete;
   if (!destImage || aDontBlit || !aDest->ClipContainsRect(aDestRect)) {
     destImage = new gfxImageSurface(gfxIntSize(aDestRect.width, aDestRect.height),
-                                    gfxASurface::ImageFormatARGB32);
+                                    gfxImageFormatARGB32);
     offset = aDestRect.TopLeft();
     blitComplete = false;
   } else {
@@ -1000,7 +1000,7 @@ BasicLayerManager::PaintLayer(gfxContext* aTarget,
     const nsIntRect& bounds = visibleRegion.GetBounds();
     nsRefPtr<gfxASurface> untransformedSurface =
       gfxPlatform::GetPlatform()->CreateOffscreenSurface(gfxIntSize(bounds.width, bounds.height),
-                                                         gfxASurface::CONTENT_COLOR_ALPHA);
+                                                         GFX_CONTENT_COLOR_ALPHA);
     if (!untransformedSurface) {
       return;
     }

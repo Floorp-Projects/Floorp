@@ -272,6 +272,7 @@ JSRuntime::JSRuntime(JSUseHelperThreads useHelperThreads)
     jitSupportsFloatingPoint(false),
     ionPcScriptCache(NULL),
     threadPool(this),
+    defaultJSContextCallback(NULL),
     ctypesActivityCallback(NULL),
     parallelWarmup(0),
     ionReturnOverride_(MagicValue(JS_ARG_POISON)),

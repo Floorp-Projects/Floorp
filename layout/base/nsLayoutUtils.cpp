@@ -4116,7 +4116,7 @@ nsLayoutUtils::DrawPixelSnapped(nsRenderingContext* aRenderingContext,
   gfxUtils::DrawPixelSnapped(ctx, aDrawable,
                              drawingParams.mUserSpaceToImageSpace, subimage,
                              sourceRect, imageRect, drawingParams.mFillRect,
-                             gfxASurface::ImageFormatARGB32, aFilter);
+                             gfxImageFormatARGB32, aFilter);
 }
 
 /* static */ nsresult
@@ -4628,17 +4628,17 @@ nsLayoutUtils::SurfaceFromElement(nsIImageLoadingContent* aElement,
   if (NS_FAILED(rv) || NS_FAILED(rv2))
     return result;
 
-  if (wantImageSurface && framesurf->GetType() != gfxASurface::SurfaceTypeImage) {
+  if (wantImageSurface && framesurf->GetType() != gfxSurfaceTypeImage) {
     forceCopy = true;
   }
 
   nsRefPtr<gfxASurface> gfxsurf = framesurf;
   if (forceCopy) {
     if (wantImageSurface) {
-      gfxsurf = new gfxImageSurface (gfxIntSize(imgWidth, imgHeight), gfxASurface::ImageFormatARGB32);
+      gfxsurf = new gfxImageSurface (gfxIntSize(imgWidth, imgHeight), gfxImageFormatARGB32);
     } else {
       gfxsurf = gfxPlatform::GetPlatform()->CreateOffscreenSurface(gfxIntSize(imgWidth, imgHeight),
-                                                                   gfxASurface::CONTENT_COLOR_ALPHA);
+                                                                   GFX_CONTENT_COLOR_ALPHA);
     }
 
     nsRefPtr<gfxContext> ctx = new gfxContext(gfxsurf);
@@ -4699,14 +4699,14 @@ nsLayoutUtils::SurfaceFromElement(HTMLCanvasElement* aElement,
       surf = nullptr;
   }
 
-  if (surf && wantImageSurface && surf->GetType() != gfxASurface::SurfaceTypeImage)
+  if (surf && wantImageSurface && surf->GetType() != gfxSurfaceTypeImage)
     surf = nullptr;
 
   if (!surf) {
     if (wantImageSurface) {
-      surf = new gfxImageSurface(size, gfxASurface::ImageFormatARGB32);
+      surf = new gfxImageSurface(size, gfxImageFormatARGB32);
     } else {
-      surf = gfxPlatform::GetPlatform()->CreateOffscreenSurface(size, gfxASurface::CONTENT_COLOR_ALPHA);
+      surf = gfxPlatform::GetPlatform()->CreateOffscreenSurface(size, GFX_CONTENT_COLOR_ALPHA);
     }
 
     if (!surf)
@@ -4767,9 +4767,9 @@ nsLayoutUtils::SurfaceFromElement(HTMLVideoElement* aElement,
   if (!surf)
     return result;
 
-  if (wantImageSurface && surf->GetType() != gfxASurface::SurfaceTypeImage) {
+  if (wantImageSurface && surf->GetType() != gfxSurfaceTypeImage) {
     nsRefPtr<gfxImageSurface> imgSurf =
-      new gfxImageSurface(size, gfxASurface::ImageFormatARGB32);
+      new gfxImageSurface(size, gfxImageFormatARGB32);
 
     nsRefPtr<gfxContext> ctx = new gfxContext(imgSurf);
     ctx->SetOperator(gfxContext::OPERATOR_SOURCE);

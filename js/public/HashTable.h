@@ -250,12 +250,17 @@ class HashMap
             remove(p);
     }
 
+    // Infallibly rekey one entry, if necessary.
+    // Requires template parameters Key and HashPolicy::Lookup to be the same type.
+    void rekeyIfMoved(const Key &old_key, const Key &new_key) {
+        if (old_key != new_key)
+            rekeyAs(old_key, new_key, new_key);
+    }
+
     // Infallibly rekey one entry, if present.
-    void rekey(const Lookup &old_key, const Key &new_key) {
-        if (old_key != new_key) {
-            if (Ptr p = lookup(old_key))
-                impl.rekeyAndMaybeRehash(p, new_key, new_key);
-        }
+    void rekeyAs(const Lookup &old_lookup, const Lookup &new_lookup, const Key &new_key) {
+        if (Ptr p = lookup(old_lookup))
+            impl.rekeyAndMaybeRehash(p, new_lookup, new_key);
     }
 
     // HashMap is movable
@@ -450,11 +455,16 @@ class HashSet
     }
 
     // Infallibly rekey one entry, if present.
-    void rekey(const Lookup &old_key, const T &new_key) {
-        if (old_key != new_key) {
-            if (Ptr p = lookup(old_key))
-                impl.rekeyAndMaybeRehash(p, new_key, new_key);
-        }
+    // Requires template parameters T and HashPolicy::Lookup to be the same type.
+    void rekeyIfMoved(const Lookup &old_value, const T &new_value) {
+        if (old_value != new_value)
+            rekeyAs(old_value, new_value, new_value);
+    }
+
+    // Infallibly rekey one entry, if present.
+    void rekeyAs(const Lookup &old_lookup, const Lookup &new_lookup, const T &new_value) {
+        if (Ptr p = lookup(old_lookup))
+            impl.rekeyAndMaybeRehash(p, new_lookup, new_value);
     }
 
     // HashSet is movable

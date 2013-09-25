@@ -597,8 +597,8 @@ ShadowLayerForwarder::OpenDescriptor(OpenMode aMode,
     return surf.forget();
   } case SurfaceDescriptor::TRGBImage: {
     const RGBImage& rgb = aSurface.get_RGBImage();
-    gfxASurface::gfxImageFormat rgbFormat
-      = static_cast<gfxASurface::gfxImageFormat>(rgb.rgbFormat());
+    gfxImageFormat rgbFormat
+      = static_cast<gfxImageFormat>(rgb.rgbFormat());
     uint32_t stride = gfxASurface::BytesPerPixel(rgbFormat) * rgb.picture().width;
     nsIntSize size(rgb.picture().width, rgb.picture().height);
     surf = new gfxImageSurface(rgb.data().get<uint8_t>(),
@@ -609,8 +609,8 @@ ShadowLayerForwarder::OpenDescriptor(OpenMode aMode,
   }
   case SurfaceDescriptor::TMemoryImage: {
     const MemoryImage& image = aSurface.get_MemoryImage();
-    gfxASurface::gfxImageFormat format
-      = static_cast<gfxASurface::gfxImageFormat>(image.format());
+    gfxImageFormat format
+      = static_cast<gfxImageFormat>(image.format());
     surf = new gfxImageSurface((unsigned char *)image.data(),
                                image.size(),
                                image.stride(),
@@ -667,13 +667,13 @@ ShadowLayerForwarder::GetDescriptorSurfaceImageFormat(
   }
 
   nsRefPtr<gfxASurface> surface = OpenDescriptor(aMode, aDescriptor);
-  NS_ENSURE_TRUE(surface, gfxASurface::ImageFormatUnknown);
+  NS_ENSURE_TRUE(surface, gfxImageFormatUnknown);
 
   nsRefPtr<gfxImageSurface> img = surface->GetAsImageSurface();
-  NS_ENSURE_TRUE(img, gfxASurface::ImageFormatUnknown);
+  NS_ENSURE_TRUE(img, gfxImageFormatUnknown);
 
   format = img->Format();
-  NS_ASSERTION(format != gfxASurface::ImageFormatUnknown,
+  NS_ASSERTION(format != gfxImageFormatUnknown,
                "ImageSurface RGB format should be known");
 
   *aSurface = surface.forget().get();
@@ -791,7 +791,7 @@ AutoOpenSurface::ImageFormat()
     nsRefPtr<gfxImageSurface> img = mSurface->GetAsImageSurface();
     if (img) {
       gfxImageFormat format = img->Format();
-      NS_ASSERTION(format != gfxASurface::ImageFormatUnknown,
+      NS_ASSERTION(format != gfxImageFormatUnknown,
                    "ImageSurface RGB format should be known");
 
       return format;

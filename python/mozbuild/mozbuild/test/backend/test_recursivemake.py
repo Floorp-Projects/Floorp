@@ -376,20 +376,23 @@ class TestRecursiveMakeBackend(BackendTester):
         self.assertIn('mozilla/mozilla1.h', m)
         self.assertIn('mozilla/dom/dom2.h', m)
 
-    def test_xpcshell_manifests(self):
-        """Ensure XPCSHELL_TESTS_MANIFESTS is written out correctly."""
-        env = self._consume('xpcshell_manifests', RecursiveMakeBackend)
+    def test_test_manifests_files_written(self):
+        """Ensure test manifests get turned into files."""
+        env = self._consume('test-manifests-written', RecursiveMakeBackend)
 
-        backend_path = os.path.join(env.topobjdir, 'backend.mk')
-        lines = [l.strip() for l in open(backend_path, 'rt').readlines()[2:]]
+        tests_dir = os.path.join(env.topobjdir, '_tests')
+        m_master = os.path.join(tests_dir, 'testing', 'mochitest', 'tests', 'mochitest.ini')
+        x_master = os.path.join(tests_dir, 'xpcshell', 'xpcshell.ini')
+        self.assertTrue(os.path.exists(m_master))
+        self.assertTrue(os.path.exists(x_master))
 
-        # Avoid positional parameter and async related breakage
-        var = 'XPCSHELL_TESTS'
-        xpclines = sorted([val for val in lines if val.startswith(var)])
-
-        # Assignment[aa], append[cc], conditional[valid]
-        expected = ('aa', 'bb', 'cc', 'dd', 'valid_val')
-        self.assertEqual(xpclines, ["XPCSHELL_TESTS += %s" % val for val in expected])
+        lines = [l.strip() for l in open(x_master, 'rt').readlines()]
+        self.assertEqual(lines, [
+            '; THIS FILE WAS AUTOMATICALLY GENERATED. DO NOT MODIFY BY HAND.',
+            '',
+            '[include:dir1/xpcshell.ini]',
+            '[include:xpcshell.ini]',
+        ])
 
     def test_xpidl_generation(self):
         """Ensure xpidl files and directories are written out."""
@@ -417,18 +420,6 @@ class TestRecursiveMakeBackend(BackendTester):
         self.assertTrue(os.path.isdir(p))
 
         self.assertTrue(os.path.isfile(os.path.join(p, 'Makefile')))
-
-    def test_xpcshell_master_manifest(self):
-        """Ensure that the master xpcshell manifest is written out correctly."""
-        env = self._consume('xpcshell_manifests', RecursiveMakeBackend)
-
-        manifest_path = os.path.join(env.topobjdir,
-            'testing', 'xpcshell', 'xpcshell.ini')
-        lines = [l.strip() for l in open(manifest_path, 'rt').readlines()]
-        expected = ('aa', 'bb', 'cc', 'dd', 'valid_val')
-        self.assertEqual(lines, [
-            '; THIS FILE WAS AUTOMATICALLY GENERATED. DO NOT MODIFY BY HAND.',
-            ''] + ['[include:%s/xpcshell.ini]' % x for x in expected])
 
     def test_old_install_manifest_deleted(self):
         # Simulate an install manifest from a previous backend version. Ensure

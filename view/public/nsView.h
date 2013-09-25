@@ -11,8 +11,8 @@
 #include "nsPoint.h"
 #include "nsRegion.h"
 #include "nsCRT.h"
-#include "nsEvent.h"
 #include "nsIWidgetListener.h"
+#include "mozilla/EventForwards.h"
 
 class nsViewManager;
 class nsIWidget;

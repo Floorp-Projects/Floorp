@@ -2,6 +2,8 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+from mozbuild.util import ensureParentDir
+
 from mozpack.errors import ErrorMessage
 from mozpack.files import (
     AbsoluteSymlinkFile,
@@ -30,11 +32,9 @@ import unittest
 import mozfile
 import mozunit
 import os
-import shutil
 import random
 import string
 import mozpack.path
-from mozpack.copier import ensure_parent_dir
 from tempfile import mkdtemp
 from io import BytesIO
 from xpt import Typelib
@@ -43,6 +43,26 @@ from xpt import Typelib
 class TestWithTmpDir(unittest.TestCase):
     def setUp(self):
         self.tmpdir = mkdtemp()
+
+        self.symlink_supported = False
+
+        if not hasattr(os, 'symlink'):
+            return
+
+        dummy_path = self.tmppath('dummy_file')
+        with open(dummy_path, 'a'):
+            pass
+
+        try:
+            os.symlink(dummy_path, self.tmppath('dummy_symlink'))
+            os.remove(self.tmppath('dummy_symlink'))
+        except EnvironmentError:
+            pass
+        finally:
+            os.remove(dummy_path)
+
+        self.symlink_supported = True
+
 
     def tearDown(self):
         mozfile.rmtree(self.tmpdir)
@@ -220,26 +240,6 @@ class TestFile(TestWithTmpDir):
 
 
 class TestAbsoluteSymlinkFile(TestWithTmpDir):
-    def setUp(self):
-        TestWithTmpDir.setUp(self)
-
-        self.symlink_supported = False
-
-        if not hasattr(os, 'symlink'):
-            return
-
-        dummy_path = self.tmppath('dummy_file')
-        with open(dummy_path, 'a'):
-            pass
-
-        try:
-            os.symlink(dummy_path, self.tmppath('dummy_symlink'))
-            os.remove(self.tmppath('dummy_symlink'))
-        except EnvironmentError:
-            pass
-        finally:
-            os.remove(dummy_path)
-
     def test_absolute_relative(self):
         AbsoluteSymlinkFile('/foo')
 
@@ -291,7 +291,10 @@ class TestAbsoluteSymlinkFile(TestWithTmpDir):
         if not self.symlink_supported:
             return
 
-        source= self.tmppath('source')
+        source = self.tmppath('source')
+        with open(source, 'a'):
+            pass
+
         dest = self.tmppath('dest')
 
         os.symlink(self.tmppath('bad'), dest)
@@ -709,7 +712,7 @@ def do_check(test, finder, pattern, result):
 
 class TestFileFinder(MatchTestTemplate, TestWithTmpDir):
     def add(self, path):
-        ensure_parent_dir(self.tmppath(path))
+        ensureParentDir(self.tmppath(path))
         open(self.tmppath(path), 'wb').write(path)
 
     def do_check(self, pattern, result):
