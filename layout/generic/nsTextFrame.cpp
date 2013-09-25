@@ -656,7 +656,7 @@ int32_t nsTextFrame::GetInFlowContentLength() {
     return flowLength->mEndFlowOffset - mContentOffset;
   }
 
-  nsTextFrame* nextBidi = static_cast<nsTextFrame*>(GetLastInFlow()->GetNextContinuation());
+  nsTextFrame* nextBidi = static_cast<nsTextFrame*>(LastInFlow()->GetNextContinuation());
   int32_t endFlow = nextBidi ? nextBidi->GetContentOffset() : mContent->TextLength();
 
   if (!flowLength) {
@@ -3924,8 +3924,8 @@ public:
     AddStateBits(NS_FRAME_IS_FLUID_CONTINUATION);
     return NS_OK;
   }
-  virtual nsIFrame* GetFirstInFlow() const;
-  virtual nsIFrame* GetFirstContinuation() const;
+  virtual nsIFrame* FirstInFlow() const;
+  virtual nsIFrame* FirstContinuation() const;
 
   virtual void AddInlineMinWidth(nsRenderingContext *aRenderingContext,
                                  InlineMinWidthData *aData);
@@ -4047,7 +4047,7 @@ nsContinuingTextFrame::DestroyFrom(nsIFrame* aDestructRoot)
 }
 
 nsIFrame*
-nsContinuingTextFrame::GetFirstInFlow() const
+nsContinuingTextFrame::FirstInFlow() const
 {
   // Can't cast to |nsContinuingTextFrame*| because the first one isn't.
   nsIFrame *firstInFlow,
@@ -4061,7 +4061,7 @@ nsContinuingTextFrame::GetFirstInFlow() const
 }
 
 nsIFrame*
-nsContinuingTextFrame::GetFirstContinuation() const
+nsContinuingTextFrame::FirstContinuation() const
 {
   // Can't cast to |nsContinuingTextFrame*| because the first one isn't.
   nsIFrame *firstContinuation,
@@ -4199,7 +4199,7 @@ nsTextFrame::GetCursor(const nsPoint& aPoint,
 }
 
 nsIFrame*
-nsTextFrame::GetLastInFlow() const
+nsTextFrame::LastInFlow() const
 {
   nsTextFrame* lastInFlow = const_cast<nsTextFrame*>(this);
   while (lastInFlow->GetNextInFlow())  {
@@ -4210,7 +4210,7 @@ nsTextFrame::GetLastInFlow() const
 }
 
 nsIFrame*
-nsTextFrame::GetLastContinuation() const
+nsTextFrame::LastContinuation() const
 {
   nsTextFrame* lastInFlow = const_cast<nsTextFrame*>(this);
   while (lastInFlow->mNextContinuation)  {

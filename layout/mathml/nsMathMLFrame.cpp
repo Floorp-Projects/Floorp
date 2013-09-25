@@ -192,7 +192,7 @@ nsMathMLFrame::GetPresentationDataFrom(nsIFrame*           aFrame,
         aPresentationData.flags |= NS_MATHML_DISPLAYSTYLE;
       }
       FindAttrDisplaystyle(content, aPresentationData);
-      aPresentationData.mstyle = frame->GetFirstContinuation();
+      aPresentationData.mstyle = frame->FirstContinuation();
       break;
     }
     frame = frame->GetParent();
