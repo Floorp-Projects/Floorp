@@ -174,15 +174,15 @@ EscapeNakedForwardSlashes(JSContext *cx, HandleAtom unescaped)
             if (sb.empty()) {
                 /* This is the first one we've seen, copy everything up to this point. */
                 if (!sb.reserve(oldLen + 1))
-                    return NULL;
+                    return nullptr;
                 sb.infallibleAppend(oldChars, size_t(it - oldChars));
             }
             if (!sb.append('\\'))
-                return NULL;
+                return nullptr;
         }
 
         if (!sb.empty() && !sb.append(*it))
-            return NULL;
+            return nullptr;
     }
 
     return sb.empty() ? (JSAtom *)unescaped : sb.finishAtom();
@@ -227,7 +227,7 @@ CompileRegExpObject(JSContext *cx, RegExpObjectBuilder &builder, CallArgs args)
         RootedObject sourceObj(cx, &sourceValue.toObject());
 
         if (args.hasDefined(1)) {
-            JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_NEWREGEXP_FLAGGED);
+            JS_ReportErrorNumber(cx, js_GetErrorMessage, nullptr, JSMSG_NEWREGEXP_FLAGGED);
             return false;
         }
 
@@ -285,7 +285,7 @@ CompileRegExpObject(JSContext *cx, RegExpObjectBuilder &builder, CallArgs args)
     if (!escapedSourceStr)
         return false;
 
-    if (!js::RegExpShared::checkSyntax(cx, NULL, escapedSourceStr))
+    if (!js::RegExpShared::checkSyntax(cx, nullptr, escapedSourceStr))
         return false;
 
     RegExpStatics *res = cx->global()->getRegExpStatics();
@@ -485,31 +485,31 @@ js_InitRegExpClass(JSContext *cx, HandleObject obj)
 
     RootedObject proto(cx, global->createBlankPrototype(cx, &RegExpObject::class_));
     if (!proto)
-        return NULL;
-    proto->setPrivate(NULL);
+        return nullptr;
+    proto->setPrivate(nullptr);
 
     HandlePropertyName empty = cx->names().empty;
     RegExpObjectBuilder builder(cx, &proto->as<RegExpObject>());
     if (!builder.build(empty, RegExpFlag(0)))
-        return NULL;
+        return nullptr;
 
-    if (!DefinePropertiesAndBrand(cx, proto, NULL, regexp_methods))
-        return NULL;
+    if (!DefinePropertiesAndBrand(cx, proto, nullptr, regexp_methods))
+        return nullptr;
 
     RootedFunction ctor(cx);
     ctor = global->createConstructor(cx, regexp_construct, cx->names().RegExp, 2);
     if (!ctor)
-        return NULL;
+        return nullptr;
 
     if (!LinkConstructorAndPrototype(cx, ctor, proto))
-        return NULL;
+        return nullptr;
 
     /* Add static properties to the RegExp constructor. */
     if (!JS_DefineProperties(cx, ctor, regexp_static_props))
-        return NULL;
+        return nullptr;
 
     if (!DefineConstructorAndPrototype(cx, global, JSProto_RegExp, ctor, proto))
-        return NULL;
+        return nullptr;
 
     return proto;
 }
@@ -527,7 +527,7 @@ js::ExecuteRegExp(JSContext *cx, HandleObject regexp, HandleString string,
 
     RegExpStatics *res = (staticsUpdate == UpdateRegExpStatics)
                          ? cx->global()->getRegExpStatics()
-                         : NULL;
+                         : nullptr;
 
     /* Step 3. */
     Rooted<JSLinearString*> input(cx, string->ensureLinear(cx));
