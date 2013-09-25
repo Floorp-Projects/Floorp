@@ -113,19 +113,10 @@ MediaConduitErrorCode WebrtcVideoConduit::Init()
   // get the JVM
   JavaVM *jvm = jsjni_GetVM();
 
-  JNIEnv* env;
-  if (jvm->GetEnv((void**)&env, JNI_VERSION_1_4) != JNI_OK) {
-      CSFLogError(logTag,  "%s: could not get Java environment", __FUNCTION__);
-      return kMediaConduitSessionNotInited;
-  }
-  jvm->AttachCurrentThread(&env, nullptr);
-
   if (webrtc::VideoEngine::SetAndroidObjects(jvm, (void*)context) != 0) {
     CSFLogError(logTag,  "%s: could not set Android objects", __FUNCTION__);
     return kMediaConduitSessionNotInited;
   }
-
-  env->DeleteGlobalRef(context);
 #endif
 
   if( !(mVideoEngine = webrtc::VideoEngine::Create()) )
