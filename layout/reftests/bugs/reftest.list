@@ -1717,7 +1717,7 @@ random-if(Android) == 753329-1.html about:blank
 == 758561-1.html 758561-1-ref.html
 fuzzy-if(true,1,19) fails-if(d2d) random-if(Android&&AndroidVersion<15) == 759036-1.html 759036-1-ref.html
 fuzzy-if(true,17,5860) random-if(Android&&AndroidVersion<15) == 759036-2.html 759036-2-ref.html
-== 776265-1a.html 776265-1-ref.html
+random-if(Android&&AndroidVersion<15) == 776265-1a.html 776265-1-ref.html
 == 776265-1b.html 776265-1-ref.html
 == 776265-1c.html 776265-1-ref.html
 == 776265-1d.html 776265-1-ref.html
