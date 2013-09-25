@@ -727,11 +727,9 @@ RestyleManager::ProcessRestyledFrames(nsStyleChangeList& aChangeList)
         // overflows since that will happen when it's reflowed.
         if (!(frame->GetStateBits() &
               (NS_FRAME_IS_DIRTY | NS_FRAME_HAS_DIRTY_CHILDREN))) {
-          while (frame) {
-            mOverflowChangedTracker.AddFrame(frame);
-
-            frame =
-              nsLayoutUtils::GetNextContinuationOrSpecialSibling(frame);
+          for (nsIFrame *cont = frame; cont; cont =
+                 nsLayoutUtils::GetNextContinuationOrSpecialSibling(cont)) {
+            mOverflowChangedTracker.AddFrame(cont);
           }
         }
       }
