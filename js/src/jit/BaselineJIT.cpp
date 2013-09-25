@@ -467,14 +467,14 @@ BaselineScript::maybeICEntryFromReturnOffset(CodeOffsetLabel returnOffset)
 {
     size_t bottom = 0;
     size_t top = numICEntries();
-    size_t mid = (bottom + top) / 2;
+    size_t mid = bottom + (top - bottom) / 2;
     while (mid < top) {
         ICEntry &midEntry = icEntry(mid);
         if (midEntry.returnOffset().offset() < returnOffset.offset())
             bottom = mid + 1;
         else // if (midEntry.returnOffset().offset() >= returnOffset.offset())
             top = mid;
-        mid = (bottom + top) / 2;
+        mid = bottom + (top - bottom) / 2;
     }
     if (mid >= numICEntries())
         return NULL;
@@ -506,7 +506,7 @@ BaselineScript::icEntryFromPCOffset(uint32_t pcOffset)
     // those which have isForOp() set.
     size_t bottom = 0;
     size_t top = numICEntries();
-    size_t mid = (bottom + top) / 2;
+    size_t mid = bottom + (top - bottom) / 2;
     while (mid < top) {
         ICEntry &midEntry = icEntry(mid);
         if (midEntry.pcOffset() < pcOffset)
@@ -515,7 +515,7 @@ BaselineScript::icEntryFromPCOffset(uint32_t pcOffset)
             top = mid;
         else
             break;
-        mid = (bottom + top) / 2;
+        mid = bottom + (top - bottom) / 2;
     }
     // Found an IC entry with a matching PC offset.  Search backward, and then
     // forward from this IC entry, looking for one with the same PC offset which
