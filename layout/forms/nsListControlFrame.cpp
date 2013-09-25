@@ -18,7 +18,6 @@
 #include "nsIDOMMouseEvent.h"
 #include "nsFontMetrics.h"
 #include "nsIScrollableFrame.h"
-#include "nsGUIEvent.h"
 #include "nsCSSRendering.h"
 #include "nsIDOMEventListener.h"
 #include "nsLayoutUtils.h"

@@ -20,7 +20,6 @@
 #include "nsGkAtoms.h"
 
 #include "nsBaseWidget.h"
-#include "nsGUIEvent.h"
 #include <gdk/gdk.h>
 #include <gtk/gtk.h>
 

@@ -30,7 +30,6 @@
 #include "nsBoxLayoutState.h"
 #include "nsSprocketLayout.h"
 #include "nsIServiceManager.h"
-#include "nsGUIEvent.h"
 #include "nsContentUtils.h"
 #include "nsLayoutUtils.h"
 #include "nsDisplayList.h"

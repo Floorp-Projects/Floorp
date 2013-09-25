@@ -20,7 +20,6 @@
 #include "nsStyleConsts.h"
 #include "nsStyleContext.h"
 #include "nsHTMLParts.h"
-#include "nsGUIEvent.h"
 #include "nsRenderingContext.h"
 #include "nsIDOMMutationEvent.h"
 #include "nsINameSpaceManager.h"

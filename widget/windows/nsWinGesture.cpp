@@ -11,7 +11,6 @@
 #include "nsWinGesture.h"
 #include "nsUXThemeData.h"
 #include "nsIDOMSimpleGestureEvent.h"
-#include "nsGUIEvent.h"
 #include "nsIDOMWheelEvent.h"
 #include "mozilla/Constants.h"
 #include "mozilla/MouseEvents.h"

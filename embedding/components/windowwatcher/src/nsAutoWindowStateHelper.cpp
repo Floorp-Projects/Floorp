@@ -6,13 +6,11 @@
 #include "nsAutoWindowStateHelper.h"
 
 #include "nsDOMEvent.h"
-#include "nsGUIEvent.h"
 #include "nsIDocument.h"
 #include "nsIDOMEvent.h"
 #include "nsIDOMWindow.h"
 #include "nsPIDOMWindow.h"
 #include "nsString.h"
-#include "nsGUIEvent.h"
 
 using namespace mozilla;
 using namespace mozilla::dom;

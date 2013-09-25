@@ -11,7 +11,6 @@
 #include "nsINameSpaceManager.h"
 #include "nsPresContext.h"
 #include "nsIPresShell.h"
-#include "nsGUIEvent.h"
 #include "nsEventStateManager.h"
 #include "nsIDOMElement.h"
 #include "nsDisplayList.h"

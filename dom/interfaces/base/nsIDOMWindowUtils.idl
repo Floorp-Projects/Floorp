@@ -815,7 +815,7 @@ interface nsIDOMWindowUtils : nsISupports {
                                                    in long aX,
                                                    in long aY);
 
-  // NOTE: following values are same as NS_QUERY_* in nsGUIEvent.h
+  // NOTE: following values are same as NS_QUERY_* in BasicEvents.h
 
   /**
    * QUERY_SELECTED_TEXT queries the first selection range's information.

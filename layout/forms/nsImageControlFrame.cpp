@@ -8,7 +8,6 @@
 #include "nsGkAtoms.h"
 #include "nsStyleConsts.h"
 #include "nsFormControlFrame.h"
-#include "nsGUIEvent.h"
 #include "nsLayoutUtils.h"
 #include "mozilla/MouseEvents.h"
 

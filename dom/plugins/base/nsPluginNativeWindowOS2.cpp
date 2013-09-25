@@ -9,7 +9,6 @@
 #include "os2.h"
 
 #include "nsDebug.h"
-#include "nsGUIEvent.h"
 #include "nsPluginNativeWindow.h"
 #include "nsThreadUtils.h"
 #include "nsAutoPtr.h"

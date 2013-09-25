@@ -15,7 +15,6 @@
 #include "nsToolkit.h"
 #include "nsQuickSort.h"
 #include "nsAlgorithm.h"
-#include "nsGUIEvent.h"
 #include "nsUnicharUtils.h"
 #include "WidgetUtils.h"
 #include "WinUtils.h"

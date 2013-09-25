@@ -14,7 +14,6 @@
 #include "nsEditor.h"
 #include "nsEditorUtils.h"
 #include "nsError.h"
-#include "nsGUIEvent.h"
 #include "nsIClipboard.h"
 #include "nsIContent.h"
 #include "nsIDOMDataTransfer.h"

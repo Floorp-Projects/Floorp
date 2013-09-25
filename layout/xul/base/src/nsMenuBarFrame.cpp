@@ -15,7 +15,6 @@
 #include "nsGkAtoms.h"
 #include "nsMenuFrame.h"
 #include "nsMenuPopupFrame.h"
-#include "nsGUIEvent.h"
 #include "nsUnicharUtils.h"
 #include "nsPIDOMWindow.h"
 #include "nsIInterfaceRequestorUtils.h"

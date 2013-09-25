@@ -6,6 +6,7 @@
 
 #include "nsLayoutUtils.h"
 
+#include "mozilla/BasicEvents.h"
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/Util.h"
 #include "nsPresContext.h"
@@ -22,7 +23,6 @@
 #include "nsPlaceholderFrame.h"
 #include "nsIScrollableFrame.h"
 #include "nsIDOMEvent.h"
-#include "nsGUIEvent.h"
 #include "nsDisplayList.h"
 #include "nsRegion.h"
 #include "nsFrameManager.h"
