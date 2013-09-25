@@ -5,14 +5,28 @@ const Cc = Components.classes;
 const Ci = Components.interfaces;
 
 Components.utils.import("resource://gre/modules/XPCOMUtils.jsm");
+Components.utils.import("resource://gre/modules/Services.jsm");
 
 function debug(msg) {
   //dump("B2GAboutRedirector: " + msg + "\n");
 }
 
+function netErrorURL() {
+  let uri = "app://system.gaiamobile.org/net_error.html";
+  try {
+    uri = Services.prefs.getCharPref("b2g.neterror.url");
+  } catch(e) {}
+  return uri;
+}
+
 let modules = {
   certerror: {
     uri: "chrome://browser/content/aboutCertError.xhtml",
+    privileged: false,
+    hide: true
+  },
+  neterror: {
+    uri: netErrorURL(),
     privileged: false,
     hide: true
   }

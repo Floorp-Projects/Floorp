@@ -43,7 +43,7 @@ fuzzy-if(azureSkiaGL,10,400) == text-not-in-doc-test.html text-not-in-doc-ref.ht
 != text-bidi-ltr-test.html text-bidi-ltr-notref.html # for bug 698185
 == text-bidi-rtl-test.html text-bidi-rtl-ref.html
 
-!= text-font-lang.html text-font-lang-notref.html
+skip-if(B2G) != text-font-lang.html text-font-lang-notref.html
 
 == text-measure.html text-measure-ref.html
 

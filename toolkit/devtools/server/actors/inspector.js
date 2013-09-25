@@ -724,25 +724,26 @@ var ProgressListener = Class({
     this.webProgress = null;
   },
 
-  onStateChange: makeInfallible(function stateChange(progress, request, flag, status) {
+  onStateChange: makeInfallible(function stateChange(progress, request, flags, status) {
     if (!this.webProgress) {
       console.warn("got an onStateChange after destruction");
       return;
     }
 
-    let isWindow = flag & Ci.nsIWebProgressListener.STATE_IS_WINDOW;
-    let isDocument = flag & Ci.nsIWebProgressListener.STATE_IS_DOCUMENT;
+    let isWindow = flags & Ci.nsIWebProgressListener.STATE_IS_WINDOW;
+    let isDocument = flags & Ci.nsIWebProgressListener.STATE_IS_DOCUMENT;
     if (!(isWindow || isDocument)) {
       return;
     }
 
-    if (isDocument && (flag & Ci.nsIWebProgressListener.STATE_START)) {
+    if (isDocument && (flags & Ci.nsIWebProgressListener.STATE_START)) {
       events.emit(this, "windowchange-start", progress.DOMWindow);
     }
-    if (isWindow && (flag & Ci.nsIWebProgressListener.STATE_STOP)) {
+    if (isWindow && (flags & Ci.nsIWebProgressListener.STATE_STOP)) {
       events.emit(this, "windowchange-stop", progress.DOMWindow);
     }
   }),
+
   onProgressChange: function() {},
   onSecurityChange: function() {},
   onStatusChange: function() {},
@@ -1736,7 +1737,8 @@ var WalkerActor = protocol.ActorClass({
 
   onFrameLoad: function(window) {
     let frame = this.layoutHelpers.getFrameElement(window);
-    if (!frame && !this.rootDoc) {
+    let isTopLevel = this.layoutHelpers.isTopLevelWindow(window);
+    if (!frame && !this.rootDoc && isTopLevel) {
       this.rootDoc = window.document;
       this.rootNode = this.document();
       this.queueMutation({

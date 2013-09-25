@@ -7,10 +7,8 @@
 @AB_CD@.jar:
 % locale b2g-l10n @AB_CD@ %locale/@AB_CD@/b2g-l10n/
 
-% override chrome://global/locale/netError.dtd           chrome://b2g-l10n/locale/netError.dtd
 % override chrome://global/locale/aboutCertError.dtd     chrome://b2g-l10n/locale/aboutCertError.dtd
 % override chrome://global/locale/appstrings.properties  chrome://b2g-l10n/locale/appstrings.properties
-* locale/@AB_CD@/b2g-l10n/netError.dtd             (%chrome/overrides/netError.dtd)
 * locale/@AB_CD@/b2g-l10n/aboutCertError.dtd       (%chrome/overrides/aboutCertError.dtd)
 * locale/@AB_CD@/b2g-l10n/appstrings.properties    (%chrome/overrides/appstrings.properties)
 

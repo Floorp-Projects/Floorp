@@ -168,7 +168,7 @@ InspectorPanel.prototype = {
     // as default selected, else set documentElement
     return walker.getRootNode().then(aRootNode => {
       rootNode = aRootNode;
-      return walker.querySelector(aRootNode, this.selectionCssSelector);
+      return walker.querySelector(rootNode, this.selectionCssSelector);
     }).then(front => {
       if (front) {
         return front;

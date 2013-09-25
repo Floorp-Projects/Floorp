@@ -384,7 +384,7 @@
             <treecol label="&col.url.label;" id="placesContentUrl" anonid="url" flex="5"
                       persist="width hidden ordinal sortActive sortDirection"/>
             <splitter class="tree-splitter"/>
-            <treecol label="&col.lastvisit.label;" id="placesContentDate" anonid="date" flex="1" hidden="true"
+            <treecol label="&col.mostrecentvisit.label;" id="placesContentDate" anonid="date" flex="1" hidden="true"
                       persist="width hidden ordinal sortActive sortDirection"/>
             <splitter class="tree-splitter"/>
             <treecol label="&col.visitcount.label;" id="placesContentVisitCount" anonid="visitCount" flex="1" hidden="true"
