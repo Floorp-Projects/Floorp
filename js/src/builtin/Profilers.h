@@ -20,7 +20,7 @@
  * The profileName is used by some profilers to describe the current profiling
  * run. It may be used for part of the filename of the output, but the
  * specifics depend on the profiler. Many profilers will ignore it. Passing in
- * NULL is legal; some profilers may use it to output to stdout or similar.
+ * nullptr is legal; some profilers may use it to output to stdout or similar.
  *
  * Returns true if no profilers fail to start.
  */
