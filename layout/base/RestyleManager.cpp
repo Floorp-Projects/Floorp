@@ -712,6 +712,10 @@ RestyleManager::ProcessRestyledFrames(nsStyleChangeList& aChangeList)
           // The overflow areas of the child frames need to be updated:
           nsIFrame* hintFrame = GetFrameForChildrenOnlyTransformHint(frame);
           nsIFrame* childFrame = hintFrame->GetFirstPrincipalChild();
+          NS_ASSERTION(!nsLayoutUtils::GetNextContinuationOrSpecialSibling(frame),
+                       "SVG frames should not have continuations or special siblings");
+          NS_ASSERTION(!nsLayoutUtils::GetNextContinuationOrSpecialSibling(hintFrame),
+                       "SVG frames should not have continuations or special siblings");
           for ( ; childFrame; childFrame = childFrame->GetNextSibling()) {
             NS_ABORT_IF_FALSE(childFrame->IsFrameOfType(nsIFrame::eSVG),
                               "Not expecting non-SVG children");
