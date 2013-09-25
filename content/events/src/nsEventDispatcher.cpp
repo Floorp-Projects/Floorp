@@ -16,8 +16,13 @@
 #include "nsDOMTouchEvent.h"
 #include "GeckoProfiler.h"
 #include "GeneratedEvents.h"
+#include "mozilla/ContentEvents.h"
 #include "mozilla/dom/EventTarget.h"
+#include "mozilla/MiscEvents.h"
+#include "mozilla/MouseEvents.h"
 #include "mozilla/MutationEvent.h"
+#include "mozilla/TextEvents.h"
+#include "mozilla/TouchEvents.h"
 
 using namespace mozilla;
 using namespace mozilla::dom;

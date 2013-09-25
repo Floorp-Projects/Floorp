@@ -313,15 +313,15 @@ MacroAssemblerX64::handleFailureWithHandlerTail()
     // and return from the entry frame.
     bind(&entryFrame);
     moveValue(MagicValue(JS_ION_ERROR), JSReturnOperand);
-    movq(Operand(rsp, offsetof(ResumeFromException, stackPointer)), rsp);
+    loadPtr(Address(rsp, offsetof(ResumeFromException, stackPointer)), rsp);
     ret();
 
     // If we found a catch handler, this must be a baseline frame. Restore state
     // and jump to the catch block.
     bind(&catch_);
-    movq(Operand(rsp, offsetof(ResumeFromException, target)), rax);
-    movq(Operand(rsp, offsetof(ResumeFromException, framePointer)), rbp);
-    movq(Operand(rsp, offsetof(ResumeFromException, stackPointer)), rsp);
+    loadPtr(Address(rsp, offsetof(ResumeFromException, target)), rax);
+    loadPtr(Address(rsp, offsetof(ResumeFromException, framePointer)), rbp);
+    loadPtr(Address(rsp, offsetof(ResumeFromException, stackPointer)), rsp);
     jmp(Operand(rax));
 
     // If we found a finally block, this must be a baseline frame. Push
@@ -329,11 +329,11 @@ MacroAssemblerX64::handleFailureWithHandlerTail()
     // exception.
     bind(&finally);
     ValueOperand exception = ValueOperand(rcx);
-    loadValue(Operand(esp, offsetof(ResumeFromException, exception)), exception);
+    loadValue(Address(esp, offsetof(ResumeFromException, exception)), exception);
 
-    movq(Operand(rsp, offsetof(ResumeFromException, target)), rax);
-    movq(Operand(rsp, offsetof(ResumeFromException, framePointer)), rbp);
-    movq(Operand(rsp, offsetof(ResumeFromException, stackPointer)), rsp);
+    loadPtr(Address(rsp, offsetof(ResumeFromException, target)), rax);
+    loadPtr(Address(rsp, offsetof(ResumeFromException, framePointer)), rbp);
+    loadPtr(Address(rsp, offsetof(ResumeFromException, stackPointer)), rsp);
 
     pushValue(BooleanValue(true));
     pushValue(exception);
@@ -341,8 +341,8 @@ MacroAssemblerX64::handleFailureWithHandlerTail()
 
     // Only used in debug mode. Return BaselineFrame->returnValue() to the caller.
     bind(&return_);
-    movq(Operand(rsp, offsetof(ResumeFromException, framePointer)), rbp);
-    movq(Operand(rsp, offsetof(ResumeFromException, stackPointer)), rsp);
+    loadPtr(Address(rsp, offsetof(ResumeFromException, framePointer)), rbp);
+    loadPtr(Address(rsp, offsetof(ResumeFromException, stackPointer)), rsp);
     loadValue(Address(rbp, BaselineFrame::reverseOffsetOfReturnValue()), JSReturnOperand);
     movq(rbp, rsp);
     pop(rbp);
@@ -351,7 +351,7 @@ MacroAssemblerX64::handleFailureWithHandlerTail()
     // If we are bailing out to baseline to handle an exception, jump to
     // the bailout tail stub.
     bind(&bailout);
-    movq(Operand(esp, offsetof(ResumeFromException, bailoutInfo)), r9);
+    loadPtr(Address(esp, offsetof(ResumeFromException, bailoutInfo)), r9);
     movl(Imm32(BAILOUT_RETURN_OK), rax);
     jmp(Operand(rsp, offsetof(ResumeFromException, target)));
 }

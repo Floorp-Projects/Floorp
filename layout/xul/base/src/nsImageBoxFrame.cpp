@@ -41,13 +41,14 @@
 #include "nsIURI.h"
 #include "nsNetUtil.h"
 #include "nsThreadUtils.h"
-#include "nsGUIEvent.h"
 #include "nsEventDispatcher.h"
 #include "nsDisplayList.h"
 #include "ImageLayers.h"
 #include "ImageContainer.h"
 
 #include "nsContentUtils.h"
+
+#include "mozilla/BasicEvents.h"
 
 #define ONLOAD_CALLED_TOO_EARLY 1
 

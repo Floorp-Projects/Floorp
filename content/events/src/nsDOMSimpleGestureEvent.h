@@ -7,6 +7,7 @@
 
 #include "nsIDOMSimpleGestureEvent.h"
 #include "nsDOMMouseEvent.h"
+#include "mozilla/TouchEvents.h"
 #include "mozilla/dom/SimpleGestureEventBinding.h"
 
 class nsPresContext;

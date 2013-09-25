@@ -257,16 +257,16 @@ enum ParseNodeKind
  * PNK_FOR      binary      pn_left: either PNK_FORIN (for-in statement) or
  *                            PNK_FORHEAD (for(;;) statement)
  *                          pn_right: body
- * PNK_FORIN    ternary     pn_kid1:  PNK_VAR to left of 'in', or NULL
+ * PNK_FORIN    ternary     pn_kid1:  PNK_VAR to left of 'in', or nullptr
  *                            its pn_xflags may have PNX_POPVAR
  *                            bit set
  *                          pn_kid2: PNK_NAME or destructuring expr
  *                            to left of 'in'; if pn_kid1, then this
  *                            is a clone of pn_kid1->pn_head
  *                          pn_kid3: object expr to right of 'in'
- * PNK_FORHEAD  ternary     pn_kid1:  init expr before first ';' or NULL
- *                          pn_kid2:  cond expr before second ';' or NULL
- *                          pn_kid3:  update expr after second ';' or NULL
+ * PNK_FORHEAD  ternary     pn_kid1:  init expr before first ';' or nullptr
+ *                          pn_kid2:  cond expr before second ';' or nullptr
+ *                          pn_kid3:  update expr after second ';' or nullptr
  * PNK_THROW    unary       pn_op: JSOP_THROW, pn_kid: exception
  * PNK_TRY      ternary     pn_kid1: try block
  *                          pn_kid2: null or PNK_CATCHLIST list of
@@ -442,7 +442,7 @@ class ParseNode
   public:
     ParseNode(ParseNodeKind kind, JSOp op, ParseNodeArity arity)
       : pn_type(kind), pn_op(op), pn_arity(arity), pn_parens(0), pn_used(0), pn_defn(0),
-        pn_pos(0, 0), pn_offset(0), pn_next(NULL), pn_link(NULL)
+        pn_pos(0, 0), pn_offset(0), pn_next(nullptr), pn_link(nullptr)
     {
         JS_ASSERT(kind < PNK_LIMIT);
         memset(&pn_u, 0, sizeof pn_u);
@@ -450,7 +450,7 @@ class ParseNode
 
     ParseNode(ParseNodeKind kind, JSOp op, ParseNodeArity arity, const TokenPos &pos)
       : pn_type(kind), pn_op(op), pn_arity(arity), pn_parens(0), pn_used(0), pn_defn(0),
-        pn_pos(pos), pn_offset(0), pn_next(NULL), pn_link(NULL)
+        pn_pos(pos), pn_offset(0), pn_next(nullptr), pn_link(nullptr)
     {
         JS_ASSERT(kind < PNK_LIMIT);
         memset(&pn_u, 0, sizeof pn_u);
@@ -581,7 +581,7 @@ class ParseNode
         pn_parens = false;
         JS_ASSERT(!pn_used);
         JS_ASSERT(!pn_defn);
-        pn_next = pn_link = NULL;
+        pn_next = pn_link = nullptr;
     }
 
     static ParseNode *create(ParseNodeKind kind, ParseNodeArity arity, FullParseHandler *handler);
@@ -625,8 +625,8 @@ class ParseNode
         return pn_lexdef;
     }
 
-    ParseNode  *maybeExpr()   { return pn_used ? NULL : expr(); }
-    Definition *maybeLexDef() { return pn_used ? lexdef() : NULL; }
+    ParseNode  *maybeExpr()   { return pn_used ? nullptr : expr(); }
+    Definition *maybeLexDef() { return pn_used ? lexdef() : nullptr; }
 
     Definition *resolve();
 
@@ -709,7 +709,7 @@ class ParseNode
             if (kid && kid->getKind() == PNK_STRING && !kid->pn_parens)
                 return kid->pn_atom;
         }
-        return NULL;
+        return nullptr;
     }
 
     inline bool test(unsigned flag) const;
@@ -766,7 +766,7 @@ class ParseNode
 
     void makeEmpty() {
         JS_ASSERT(pn_arity == PN_LIST);
-        pn_head = NULL;
+        pn_head = nullptr;
         pn_tail = &pn_head;
         pn_count = 0;
         pn_xflags = 0;
@@ -985,7 +985,7 @@ struct NameNode : public ParseNode
       : ParseNode(kind, op, PN_NAME, pos)
     {
         pn_atom = atom;
-        pn_expr = NULL;
+        pn_expr = nullptr;
         pn_cookie.makeFree();
         pn_dflags = 0;
         pn_blockid = blockid;
@@ -1176,8 +1176,8 @@ class PropertyAccess : public ParseNode
     PropertyAccess(ParseNode *lhs, PropertyName *name, uint32_t begin, uint32_t end)
       : ParseNode(PNK_DOT, JSOP_NOP, PN_NAME, TokenPos(begin, end))
     {
-        JS_ASSERT(lhs != NULL);
-        JS_ASSERT(name != NULL);
+        JS_ASSERT(lhs != nullptr);
+        JS_ASSERT(name != nullptr);
         pn_u.name.expr = lhs;
         pn_u.name.atom = name;
     }
@@ -1350,7 +1350,7 @@ class ParseNodeAllocator
 {
   public:
     explicit ParseNodeAllocator(ExclusiveContext *cx, LifoAlloc &alloc)
-      : cx(cx), alloc(alloc), freelist(NULL)
+      : cx(cx), alloc(alloc), freelist(nullptr)
     {}
 
     void *allocNode();

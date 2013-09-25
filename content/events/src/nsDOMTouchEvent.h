@@ -8,9 +8,11 @@
 #include "nsDOMUIEvent.h"
 #include "nsTArray.h"
 #include "mozilla/Attributes.h"
+#include "mozilla/TouchEvents.h"
 #include "nsJSEnvironment.h"
 #include "mozilla/dom/TouchEventBinding.h"
 #include "nsWrapperCache.h"
+
 
 class nsAString;
 

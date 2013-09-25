@@ -27,7 +27,6 @@
 #include "nsIComponentManager.h"
 #include "nsBoxLayoutState.h"
 #include "nsIScrollableFrame.h"
-#include "nsGUIEvent.h"
 #include "nsIRootBox.h"
 #include "nsIDocShellTreeItem.h"
 #include "nsReadableUtils.h"
@@ -49,6 +48,7 @@
 #include "nsDisplayList.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/LookAndFeel.h"
+#include "mozilla/MouseEvents.h"
 #include "mozilla/dom/Element.h"
 #include <algorithm>
 

@@ -3842,7 +3842,7 @@ nsDisplayTransform::GetFrameBoundsForTransform(const nsIFrame* aFrame)
   /* Iterate through the continuation list, unioning together all the
    * bounding rects.
    */
-  for (const nsIFrame *currFrame = aFrame->GetFirstContinuation();
+  for (const nsIFrame *currFrame = aFrame->FirstContinuation();
        currFrame != nullptr;
        currFrame = currFrame->GetNextContinuation())
     {
@@ -4753,7 +4753,7 @@ nsDisplaySVGEffects::BuildLayer(nsDisplayListBuilder* aBuilder,
     return nullptr;
 
   nsIFrame* firstFrame =
-    nsLayoutUtils::GetFirstContinuationOrSpecialSibling(mFrame);
+    nsLayoutUtils::FirstContinuationOrSpecialSibling(mFrame);
   nsSVGEffects::EffectProperties effectProperties =
     nsSVGEffects::GetEffectProperties(firstFrame);
 
@@ -4813,7 +4813,7 @@ void
 nsDisplaySVGEffects::PrintEffects(FILE* aOutput)
 {
   nsIFrame* firstFrame =
-    nsLayoutUtils::GetFirstContinuationOrSpecialSibling(mFrame);
+    nsLayoutUtils::FirstContinuationOrSpecialSibling(mFrame);
   nsSVGEffects::EffectProperties effectProperties =
     nsSVGEffects::GetEffectProperties(firstFrame);
   bool isOK = true;

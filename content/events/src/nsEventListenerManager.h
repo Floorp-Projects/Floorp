@@ -6,12 +6,12 @@
 #ifndef nsEventListenerManager_h__
 #define nsEventListenerManager_h__
 
+#include "mozilla/BasicEvents.h"
 #include "mozilla/dom/EventListenerBinding.h"
 #include "mozilla/MemoryReporting.h"
 #include "nsCOMPtr.h"
 #include "nsCycleCollectionParticipant.h"
 #include "nsGkAtoms.h"
-#include "nsGUIEvent.h"
 #include "nsIDOMEventListener.h"
 #include "nsIJSEventListener.h"
 #include "nsTObserverArray.h"

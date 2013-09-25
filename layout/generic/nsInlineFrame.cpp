@@ -130,7 +130,7 @@ nsInlineFrame::IsSelfEmpty()
 
       // Get the first continuation eagerly, as a performance optimization, to
       // avoid having to get it twice..
-      nsIFrame* firstCont = GetFirstContinuation();
+      nsIFrame* firstCont = FirstContinuation();
       return
         (!haveStart || nsLayoutUtils::FrameIsNonFirstInIBSplit(firstCont)) &&
         (!haveEnd || nsLayoutUtils::FrameIsNonLastInIBSplit(firstCont));
@@ -640,7 +640,7 @@ nsInlineFrame::ReflowFrames(nsPresContext* aPresContext,
    * chain.
    */
   if (NS_FRAME_IS_COMPLETE(aStatus) &&
-      !GetLastInFlow()->GetNextContinuation() &&
+      !LastInFlow()->GetNextContinuation() &&
       !nsLayoutUtils::FrameIsNonLastInIBSplit(this)) {
     aMetrics.width += ltr ? aReflowState.mComputedBorderPadding.right
                           : aReflowState.mComputedBorderPadding.left;
@@ -886,7 +886,7 @@ nsInlineFrame::GetSkipSides(const nsHTMLReflowState* aReflowState) const
     if (((startBit | endBit) & skip) != (startBit | endBit)) {
       // We're missing one of the skip bits, so check whether we need to set it.
       // Only get the first continuation once, as an optimization.
-      nsIFrame* firstContinuation = GetFirstContinuation();
+      nsIFrame* firstContinuation = FirstContinuation();
       if (nsLayoutUtils::FrameIsNonLastInIBSplit(firstContinuation)) {
         skip |= endBit;
       }
@@ -946,7 +946,7 @@ nsFirstLineFrame::Init(nsIContent* aContent, nsIFrame* aParent,
   // This frame is a continuation - fixup the style context if aPrevInFlow
   // is the first-in-flow (the only one with a ::first-line pseudo).
   if (aPrevInFlow->StyleContext()->GetPseudo() == nsCSSPseudoElements::firstLine) {
-    MOZ_ASSERT(GetFirstInFlow() == aPrevInFlow);
+    MOZ_ASSERT(FirstInFlow() == aPrevInFlow);
     // Create a new style context that is a child of the parent
     // style context thus removing the ::first-line style. This way
     // we behave as if an anonymous (unstyled) span was the child
@@ -956,7 +956,7 @@ nsFirstLineFrame::Init(nsIContent* aContent, nsIFrame* aParent,
       ResolveAnonymousBoxStyle(nsCSSAnonBoxes::mozLineFrame, parentContext);
     SetStyleContext(newSC);
   } else {
-    MOZ_ASSERT(GetFirstInFlow() != aPrevInFlow);
+    MOZ_ASSERT(FirstInFlow() != aPrevInFlow);
     MOZ_ASSERT(aPrevInFlow->StyleContext()->GetPseudo() ==
                  nsCSSAnonBoxes::mozLineFrame);
   }

@@ -6,7 +6,7 @@
 #ifndef nsIPlatformCharset_h__
 #define nsIPlatformCharset_h__
 
-#include "nsString.h"
+#include "nsStringGlue.h"
 #include "nsISupports.h"
 
 // Interface ID for our nsIPlatformCharset interface

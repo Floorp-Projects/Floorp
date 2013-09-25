@@ -10,6 +10,7 @@
 #include "mozilla/dom/indexedDB/IndexedDatabase.h"
 
 #include "mozilla/Attributes.h"
+#include "mozilla/EventForwards.h"
 #include "mozilla/dom/DOMError.h"
 #include "mozilla/dom/IDBRequestBinding.h"
 #include "mozilla/ErrorResult.h"

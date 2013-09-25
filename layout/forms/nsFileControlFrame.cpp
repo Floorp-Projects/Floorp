@@ -15,6 +15,7 @@
 #include "nsContentCreatorFunctions.h"
 #include "nsContentUtils.h"
 #include "nsEventStates.h"
+#include "nsIDOMDataTransfer.h"
 #include "nsIDOMDOMStringList.h"
 #include "nsIDOMDragEvent.h"
 #include "nsIDOMFileList.h"

@@ -12,7 +12,7 @@
 #include "nsSMILInstanceTime.h"
 #include "nsSMILParserUtils.h"
 #include "nsEventListenerManager.h"
-#include "nsGUIEvent.h"
+#include "nsIDOMKeyEvent.h"
 #include "nsIDOMTimeEvent.h"
 #include "nsString.h"
 #include <limits>

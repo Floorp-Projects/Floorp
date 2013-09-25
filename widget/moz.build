@@ -99,7 +99,6 @@ MODULE = 'widget'
 
 EXPORTS += [
     'InputData.h',
-    'nsGUIEvent.h',
     'nsIDeviceContextSpec.h',
     'nsINativeKeyBindings.h',
     'nsIPluginWidget.h',

@@ -1309,7 +1309,7 @@ nsBidiPresUtils::IsLeftOrRightMost(nsIFrame*              aFrame,
     // For ib splits, don't treat anything except the last part as
     // endmost or anything except the first part as startmost.
     // As an optimization, only get the first continuation once.
-    nsIFrame* firstContinuation = aFrame->GetFirstContinuation();
+    nsIFrame* firstContinuation = aFrame->FirstContinuation();
     if (nsLayoutUtils::FrameIsNonLastInIBSplit(firstContinuation)) {
       // We are not endmost
       if (isLTR) {

@@ -29,10 +29,14 @@
 
 #include "nsIFrame.h"
 #include "nsIWidget.h"
-#include "nsGUIEvent.h"
 #include "nsCharsetSource.h"
 #include "nsJSEnvironment.h"
 #include "nsJSUtils.h"
+
+#include "mozilla/MiscEvents.h"
+#include "mozilla/MouseEvents.h"
+#include "mozilla/TextEvents.h"
+#include "mozilla/TouchEvents.h"
 
 #include "nsViewManager.h"
 
