@@ -99,7 +99,7 @@ CodeGeneratorX86::visitOsrValue(LOsrValue *value)
     const ValueOperand out     = ToOutValue(value);
     const ptrdiff_t frameOffset = value->mir()->frameOffset();
 
-    masm.loadValue(Operand(ToRegister(frame), frameOffset), out);
+    masm.loadValue(Address(ToRegister(frame), frameOffset), out);
     return true;
 }
 
@@ -155,7 +155,7 @@ CodeGeneratorX86::visitLoadSlotV(LLoadSlotV *load)
     Register base = ToRegister(load->input());
     int32_t offset = load->mir()->slot() * sizeof(js::Value);
 
-    masm.loadValue(Operand(base, offset), out);
+    masm.loadValue(Address(base, offset), out);
     return true;
 }
 
@@ -168,7 +168,7 @@ CodeGeneratorX86::visitLoadSlotT(LLoadSlotT *load)
     if (load->mir()->type() == MIRType_Double)
         masm.loadInt32OrDouble(Operand(base, offset), ToFloatRegister(load->output()));
     else
-        masm.movl(Operand(base, offset + NUNBOX32_PAYLOAD_OFFSET), ToRegister(load->output()));
+        masm.load32(Address(base, offset + NUNBOX32_PAYLOAD_OFFSET), ToRegister(load->output()));
     return true;
 }
 
@@ -804,7 +804,7 @@ CodeGeneratorX86::visitOutOfLineTruncate(OutOfLineTruncate *ool)
 
         // Check exponent to avoid fp exceptions.
         Label failPopDouble;
-        masm.movl(Operand(esp, 4), output);
+        masm.load32(Address(esp, 4), output);
         masm.and32(Imm32(EXPONENT_MASK), output);
         masm.branch32(Assembler::GreaterThanOrEqual, output, Imm32(TOO_BIG_EXPONENT), &failPopDouble);
 
@@ -813,7 +813,7 @@ CodeGeneratorX86::visitOutOfLineTruncate(OutOfLineTruncate *ool)
         masm.fisttp(Operand(esp, 0));
 
         // Load low word, pop double and jump back.
-        masm.movl(Operand(esp, 0), output);
+        masm.load32(Address(esp, 0), output);
         masm.addl(Imm32(sizeof(double)), esp);
         masm.jump(ool->rejoin());
 
