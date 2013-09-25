@@ -2325,6 +2325,7 @@ MediaStreamGraphImpl::MediaStreamGraphImpl(bool aRealtime)
   , mRealtime(aRealtime)
   , mNonRealtimeProcessing(false)
   , mStreamOrderDirty(false)
+  , mLatencyLog(AsyncLatencyLogger::Get())
 {
 #ifdef PR_LOGGING
   if (!gMediaStreamGraphLog) {
