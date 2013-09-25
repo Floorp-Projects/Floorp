@@ -1,0 +1,32 @@
+<!DOCTYPE HTML>
+<html>
+  <head>
+    <meta charset='utf-8'/>
+    <title>Debugger Test for Closure Inspection</title>
+    <!-- Any copyright is dedicated to the Public Domain.
+         http://creativecommons.org/publicdomain/zero/1.0/ -->
+    <script type="text/javascript">
+      window.addEventListener("load", function onload() {
+        window.removeEventListener("load", onload);
+        function clickHandler(event) {
+          button.removeEventListener("click", clickHandler, false);
+          var PersonFactory = function _pfactory(name) {
+              var foo = 10;
+              return {
+                getName: function() { return name; },
+                getFoo: function() { foo = Date.now(); return foo; }
+              };
+          };
+          var person = new PersonFactory("Bob");
+          debugger;
+        }
+        var button = document.querySelector("button");
+        button.addEventListener("click", clickHandler, false);
+      });
+    </script>
+
+  </head>
+  <body>
+    <button>Click me!</button>
+  </body>
+</html>

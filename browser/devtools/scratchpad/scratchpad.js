@@ -56,6 +56,9 @@ XPCOMUtils.defineLazyModuleGetter(this, "VariablesView",
 XPCOMUtils.defineLazyModuleGetter(this, "VariablesViewController",
   "resource:///modules/devtools/VariablesViewController.jsm");
 
+XPCOMUtils.defineLazyModuleGetter(this, "EnvironmentClient",
+  "resource://gre/modules/devtools/dbg-client.jsm");
+
 XPCOMUtils.defineLazyModuleGetter(this, "ObjectClient",
   "resource://gre/modules/devtools/dbg-client.jsm");
 
@@ -1744,6 +1747,9 @@ ScratchpadSidebar.prototype = {
         });
 
         VariablesViewController.attach(this.variablesView, {
+          getEnvironmentClient: aGrip => {
+            return new EnvironmentClient(this._scratchpad.debuggerClient, aGrip);
+          },
           getObjectClient: aGrip => {
             return new ObjectClient(this._scratchpad.debuggerClient, aGrip);
           },
