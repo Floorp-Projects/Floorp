@@ -26,13 +26,13 @@
 #include "nsRDFCID.h"
 #include "nsXULCommandDispatcher.h"
 #include "prlog.h"
-#include "nsGUIEvent.h"
 #include "nsContentUtils.h"
 #include "nsReadableUtils.h"
 #include "nsCRT.h"
 #include "nsError.h"
 #include "nsEventDispatcher.h"
 #include "nsDOMClassInfoID.h"
+#include "mozilla/BasicEvents.h"
 #include "mozilla/dom/Element.h"
 
 #ifdef PR_LOGGING

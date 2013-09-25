@@ -75,6 +75,7 @@
 #endif
 
 #include "mozilla/Assertions.h"
+#include "mozilla/MouseEvents.h"
 #include "mozilla/unused.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/dom/Element.h"

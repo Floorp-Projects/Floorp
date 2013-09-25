@@ -87,6 +87,8 @@ types::TypeIdStringImpl(jsid id)
 // Logging
 /////////////////////////////////////////////////////////////////////
 
+#ifdef DEBUG
+
 static bool InferSpewActive(SpewChannel channel)
 {
     static bool active[SPEW_COUNT];
@@ -108,8 +110,6 @@ static bool InferSpewActive(SpewChannel channel)
     }
     return active[channel];
 }
-
-#ifdef DEBUG
 
 static bool InferSpewColorable()
 {

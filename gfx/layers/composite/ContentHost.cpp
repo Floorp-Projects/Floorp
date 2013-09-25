@@ -229,28 +229,26 @@ ContentHostBase::Dump(FILE* aFile,
                       const char* aPrefix,
                       bool aDumpHtml)
 {
+  if (!aDumpHtml) {
+    return;
+  }
   if (!aFile) {
     aFile = stderr;
   }
-  if (aDumpHtml) {
-    fprintf(aFile, "<ul>");
-  }
+  fprintf(aFile, "<ul>");
   if (mDeprecatedTextureHost) {
     fprintf(aFile, "%s", aPrefix);
-    fprintf(aFile, aDumpHtml ? "<li> <a href=" : "Front buffer: ");
+    fprintf(aFile, "<li> <a href=");
     DumpDeprecatedTextureHost(aFile, mDeprecatedTextureHost);
-    fprintf(aFile, aDumpHtml ? "> Front buffer </a></li> " : " ");
+    fprintf(aFile, "> Front buffer </a></li> ");
   }
   if (mDeprecatedTextureHostOnWhite) {
     fprintf(aFile, "%s", aPrefix);
-    fprintf(aFile, aDumpHtml ? "<li> <a href=" : "DeprecatedTextureHost on white: ");
+    fprintf(aFile, "<li> <a href=");
     DumpDeprecatedTextureHost(aFile, mDeprecatedTextureHostOnWhite);
-    fprintf(aFile, aDumpHtml ? "> Front buffer on white </a> </li> " : " ");
+    fprintf(aFile, "> Front buffer on white </a> </li> ");
   }
-  if (aDumpHtml) {
-    fprintf(aFile, "</ul>");
-  }
-
+  fprintf(aFile, "</ul>");
 }
 
 #endif
@@ -754,28 +752,26 @@ ContentHostDoubleBuffered::Dump(FILE* aFile,
                                 bool aDumpHtml)
 {
   ContentHostBase::Dump(aFile, aPrefix, aDumpHtml);
+  if (!aDumpHtml) {
+    return;
+  }
   if (!aFile) {
     aFile = stderr;
   }
-  if (aDumpHtml) {
-    fprintf(aFile, "<ul>");
-  }
+  fprintf(aFile, "<ul>");
   if (mBackHost) {
     fprintf(aFile, "%s", aPrefix);
-    fprintf(aFile, aDumpHtml ? "<li> <a href=" : "Back buffer: ");
+    fprintf(aFile, "<li> <a href=");
     DumpDeprecatedTextureHost(aFile, mBackHost);
-    fprintf(aFile, aDumpHtml ? " >Back buffer</a></li>" : " ");
+    fprintf(aFile, " >Back buffer</a></li>");
   }
   if (mBackHostOnWhite) {
     fprintf(aFile, "%s", aPrefix);
-    fprintf(aFile, aDumpHtml ? "<li> <a href=" : "Back buffer on white: ");
+    fprintf(aFile, "<li> <a href=");
     DumpDeprecatedTextureHost(aFile, mBackHostOnWhite);
-    fprintf(aFile, aDumpHtml ? " >Back buffer on white</a> </li>" : " ");
+    fprintf(aFile, " >Back buffer on white</a> </li>");
   }
-  if (aDumpHtml) {
-    fprintf(aFile, "</ul>");
-  }
-
+  fprintf(aFile, "</ul>");
 }
 #endif
 

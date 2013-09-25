@@ -14,10 +14,10 @@
 #include "nsPresContext.h"
 #include "nsIDocShellTreeItem.h"
 #include "nsPIDOMWindow.h"
-#include "nsGUIEvent.h"
 #include "nsEventDispatcher.h"
 #include "nsDisplayList.h"
 #include "nsContentUtils.h"
+#include "mozilla/MouseEvents.h"
 
 using namespace mozilla;
 

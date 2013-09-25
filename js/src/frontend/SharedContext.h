@@ -178,8 +178,8 @@ class SharedContext
     bool strict;
     bool extraWarnings;
 
-    // If it's function code, funbox must be non-NULL and scopeChain must be NULL.
-    // If it's global code, funbox must be NULL.
+    // If it's function code, funbox must be non-nullptr and scopeChain must be
+    // nullptr. If it's global code, funbox must be nullptr.
     SharedContext(ExclusiveContext *cx, Directives directives, bool extraWarnings)
       : context(cx),
         anyCxFlags(),
@@ -188,7 +188,7 @@ class SharedContext
     {}
 
     virtual ObjectBox *toObjectBox() = 0;
-    inline bool isGlobalSharedContext() { return toObjectBox() == NULL; }
+    inline bool isGlobalSharedContext() { return toObjectBox() == nullptr; }
     inline bool isModuleBox() { return toObjectBox() && toObjectBox()->isModuleBox(); }
     inline bool isFunctionBox() { return toObjectBox() && toObjectBox()->isFunctionBox(); }
     inline GlobalSharedContext *asGlobalSharedContext();
@@ -221,7 +221,7 @@ class GlobalSharedContext : public SharedContext
         scopeChain_(cx, scopeChain)
     {}
 
-    ObjectBox *toObjectBox() { return NULL; }
+    ObjectBox *toObjectBox() { return nullptr; }
     JSObject *scopeChain() const { return scopeChain_; }
 };
 
@@ -437,15 +437,15 @@ PushStatement(ContextT *ct, typename ContextT::StmtInfo *stmt, StmtType type)
     stmt->type = type;
     stmt->isBlockScope = false;
     stmt->isForLetBlock = false;
-    stmt->label = NULL;
-    stmt->blockObj = NULL;
+    stmt->label = nullptr;
+    stmt->blockObj = nullptr;
     stmt->down = ct->topStmt;
     ct->topStmt = stmt;
     if (stmt->linksScope()) {
         stmt->downScope = ct->topScopeStmt;
         ct->topScopeStmt = stmt;
     } else {
-        stmt->downScope = NULL;
+        stmt->downScope = nullptr;
     }
 }
 

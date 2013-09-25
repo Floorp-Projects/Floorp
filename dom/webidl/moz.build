@@ -203,7 +203,6 @@ WEBIDL_FILES = [
     'MediaStream.webidl',
     'MediaStreamAudioDestinationNode.webidl',
     'MediaStreamAudioSourceNode.webidl',
-    'MediaStreamEvent.webidl',
     'MediaStreamTrack.webidl',
     'MessageChannel.webidl',
     'MessageEvent.webidl',
@@ -253,10 +252,8 @@ WEBIDL_FILES = [
     'Rect.webidl',
     'RGBColor.webidl',
     'RTCConfiguration.webidl',
-    'RTCDataChannelEvent.webidl',
     'RTCIceCandidate.webidl',
     'RTCPeerConnection.webidl',
-    'RTCPeerConnectionIceEvent.webidl',
     'RTCSessionDescription.webidl',
     'Screen.webidl',
     'ScriptProcessorNode.webidl',
@@ -541,6 +538,9 @@ GENERATED_EVENTS_WEBIDL_FILES = [
     'BlobEvent.webidl',
     'DeviceLightEvent.webidl',
     'DeviceProximityEvent.webidl',
+    'MediaStreamEvent.webidl',
+    'RTCDataChannelEvent.webidl',
+    'RTCPeerConnectionIceEvent.webidl',
     'UserProximityEvent.webidl',
 ]
 

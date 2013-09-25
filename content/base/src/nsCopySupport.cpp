@@ -36,7 +36,6 @@
 #include "nsIDOMDocument.h"
 #include "nsIHTMLDocument.h"
 #include "nsGkAtoms.h"
-#include "nsGUIEvent.h"
 #include "nsIFrame.h"
 #include "nsIURI.h"
 #include "nsISimpleEnumerator.h"
@@ -47,6 +46,7 @@
 #include "nsContentUtils.h"
 #include "nsContentCID.h"
 
+#include "mozilla/ContentEvents.h"
 #include "mozilla/dom/Element.h"
 #include "mozilla/Selection.h"
 

@@ -6,8 +6,8 @@
 #ifndef nsWindowBase_h_
 #define nsWindowBase_h_
 
+#include "mozilla/MiscEvents.h"
 #include "nsBaseWidget.h"
-#include "nsGUIEvent.h"
 #include "npapi.h"
 #include <windows.h>
 

@@ -103,7 +103,7 @@ js::Nursery::allocate(size_t size)
 
     if (position() + size > currentEnd()) {
         if (currentChunk_ + 1 == numActiveChunks_)
-            return NULL;
+            return nullptr;
         setCurrentChunk(currentChunk_ + 1);
     }
 
@@ -237,7 +237,7 @@ class MinorCollectionTracer : public JSTracer
     JS_ALWAYS_INLINE void insertIntoFixupList(RelocationOverlay *entry) {
         *tail = entry;
         tail = &entry->next_;
-        *tail = NULL;
+        *tail = nullptr;
     }
 
     MinorCollectionTracer(JSRuntime *rt, Nursery *nursery)
@@ -245,7 +245,7 @@ class MinorCollectionTracer : public JSTracer
         nursery(nursery),
         session(rt, MinorCollecting),
         tenuredSize(0),
-        head(NULL),
+        head(nullptr),
         tail(&head),
         savedRuntimeNeedBarrier(rt->needsBarrier()),
         disableStrictProxyChecking(rt)

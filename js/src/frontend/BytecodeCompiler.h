@@ -24,8 +24,8 @@ JSScript *
 CompileScript(ExclusiveContext *cx, LifoAlloc *alloc,
               HandleObject scopeChain, HandleScript evalCaller,
               const CompileOptions &options, const jschar *chars, size_t length,
-              JSString *source_ = NULL, unsigned staticLevel = 0,
-              SourceCompressionTask *extraSct = NULL);
+              JSString *source_ = nullptr, unsigned staticLevel = 0,
+              SourceCompressionTask *extraSct = nullptr);
 
 bool
 CompileLazyFunction(JSContext *cx, LazyScript *lazy, const jschar *chars, size_t length);

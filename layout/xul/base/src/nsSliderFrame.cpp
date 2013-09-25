@@ -30,12 +30,12 @@
 #include "nsBoxLayoutState.h"
 #include "nsSprocketLayout.h"
 #include "nsIServiceManager.h"
-#include "nsGUIEvent.h"
 #include "nsContentUtils.h"
 #include "nsLayoutUtils.h"
 #include "nsDisplayList.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/LookAndFeel.h"
+#include "mozilla/MouseEvents.h"
 #include <algorithm>
 
 using namespace mozilla;

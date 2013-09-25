@@ -42,7 +42,6 @@
 #include "nsIServiceManager.h"
 #include "nsError.h"
 #include "nsIEditor.h"
-#include "nsGUIEvent.h"
 #include "nsIIOService.h"
 #include "nsDocument.h"
 #include "nsAttrValueOrString.h"
@@ -58,7 +57,10 @@
 #include "nsLayoutUtils.h"
 
 #include "nsIDOMMutationEvent.h"
+#include "mozilla/ContentEvents.h"
 #include "mozilla/MutationEvent.h"
+#include "mozilla/TextEvents.h"
+#include "mozilla/TouchEvents.h"
 #include "nsEventListenerManager.h"
 
 #include "nsRuleData.h"
