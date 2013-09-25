@@ -5,6 +5,7 @@
 
 #include "mozilla/DebugOnly.h"
 #include "mozilla/MathAlgorithms.h"
+#include "mozilla/MouseEvents.h"
 #include "mozilla/Likely.h"
 
 #include "nsCOMPtr.h"

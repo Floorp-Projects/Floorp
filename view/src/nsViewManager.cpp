@@ -12,6 +12,7 @@
 #include "nsView.h"
 #include "nsCOMPtr.h"
 #include "nsGUIEvent.h"
+#include "mozilla/MouseEvents.h"
 #include "nsRegion.h"
 #include "nsCOMArray.h"
 #include "nsIPluginWidget.h"

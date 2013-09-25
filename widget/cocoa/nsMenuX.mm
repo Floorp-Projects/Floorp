@@ -44,6 +44,8 @@
 #include "nsIScriptContext.h"
 #include "nsIXPConnect.h"
 
+#include "mozilla/MouseEvents.h"
+
 static bool gConstructingMenu = false;
 static bool gMenuMethodsSwizzled = false;
 

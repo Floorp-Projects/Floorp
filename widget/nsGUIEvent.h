@@ -9,7 +9,6 @@
 #include "mozilla/BasicEvents.h"
 #include "mozilla/ContentEvents.h"
 #include "mozilla/MiscEvents.h"
-#include "mozilla/MouseEvents.h"
 #include "mozilla/TextEvents.h"
 
 #endif // nsGUIEvent_h__

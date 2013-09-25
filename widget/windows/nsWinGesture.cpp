@@ -14,6 +14,7 @@
 #include "nsGUIEvent.h"
 #include "nsIDOMWheelEvent.h"
 #include "mozilla/Constants.h"
+#include "mozilla/MouseEvents.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/TouchEvents.h"
 

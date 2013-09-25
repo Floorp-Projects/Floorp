@@ -13,6 +13,8 @@
 #endif // MOZ_LOGGING
 #include "prlog.h"
 
+#include "mozilla/MouseEvents.h"
+
 #include "nsChildView.h"
 #include "nsObjCExceptions.h"
 #include "nsBidiUtils.h"

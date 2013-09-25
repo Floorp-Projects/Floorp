@@ -11,6 +11,7 @@
 #include "nsEventDispatcher.h"
 #include "nsFocusManager.h"
 #include "nsGUIEvent.h"
+#include "mozilla/MouseEvents.h"
 #include "nsIDOMMouseEvent.h"
 
 // construction, destruction

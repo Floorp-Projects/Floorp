@@ -23,6 +23,7 @@
 #include "nsIDOMEvent.h"
 #include "nsIDocument.h"
 #include "nsGUIEvent.h"
+#include "mozilla/MouseEvents.h"
 #include "nsUnicharUtils.h"
 #include "nsLayoutUtils.h"
 #include "nsEventDispatcher.h"

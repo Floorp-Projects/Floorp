@@ -31,6 +31,7 @@
 #ifdef ACCESSIBILITY
 #include "mozilla/a11y/Accessible.h"
 #endif
+#include "mozilla/MouseEvents.h"
 
 #include "nsGtkIMModule.h"
 
