@@ -18,6 +18,7 @@ MOCHITEST_FILES = \
   file_cached_app.template.appcache \
   file_hosted_app.template.webapp \
   test_app_update.html \
+  test_bug_795164.html \
   $(NULL)
 
 ifdef MOZ_B2G
