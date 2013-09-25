@@ -17,6 +17,7 @@
 #include "trace.h"
 
 #include "AndroidJNIWrapper.h"
+#include "mozilla/Assertions.h"
 
 namespace webrtc
 {
@@ -67,6 +68,8 @@ jobject VideoCaptureAndroid::g_javaCmDevInfoObject = NULL;
  */
 int32_t VideoCaptureAndroid::SetAndroidObjects(void* javaVM,
                                                void* javaContext) {
+
+  MOZ_ASSERT(javaVM != nullptr || g_javaCmDevInfoClass != nullptr);
 
   g_jvm = static_cast<JavaVM*> (javaVM);
 
@@ -224,6 +227,8 @@ int32_t VideoCaptureAndroid::AttachAndUseAndroidDeviceInfoObjects(
     }
     attached = true;
   }
+  MOZ_ASSERT(g_javaCmDevInfoClass != nullptr);
+  MOZ_ASSERT(g_javaCmDevInfoObject != nullptr);
   javaCmDevInfoClass = g_javaCmDevInfoClass;
   javaCmDevInfoObject = g_javaCmDevInfoObject;
   return 0;
