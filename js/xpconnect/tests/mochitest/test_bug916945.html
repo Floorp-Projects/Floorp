@@ -1,0 +1,62 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=916945
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug 916945</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <script type="application/javascript">
+
+  /** Test for Bug 916945 **/
+  SimpleTest.waitForExplicitFinish();
+
+  var gLoadCount = 0;
+  function loaded() {
+    if (++gLoadCount == 2)
+      go();
+  }
+  function go() {
+    // Both same-origin and cross-origin names should be visible if they're set
+    // on the iframe element.
+    ok('winA' in window, "same-origin named access works");
+    ok(winA instanceof Window, "same-origin named access works");
+    ok('winB' in window, "cross-origin named access works when iframe name matches");
+    // XXXbholley - flip me when Window moves to new bindings.
+    todo_is(winB instanceof Window, "cross-origin named access works when iframe name matches");
+
+    // Setting the 'name' attribute should propagate to the docshell.
+    var ifrB = document.getElementById('ifrB');
+    ifrB.setAttribute('name', 'foo');
+    is(SpecialPowers.wrap(ifrB).contentWindow.name, 'foo', 'attribute sets propagate to the docshell');
+    ok('foo' in window, "names are dynamic if updated via setAttribute");
+    // XXXbholley - flip me when Window moves to new bindings.
+    todo('foo' instanceof Window, "names are dynamic if updated via setAttribute");
+
+    // Setting window.name on the subframe should not propagate to the attribute.
+    SpecialPowers.wrap(ifrB).contentWindow.name = 'bar';
+    is(ifrB.getAttribute('name'), 'foo', 'docshell updates dont propagate to the attribute');
+
+    // When the frame element attribute and docshell name don't match, nothing is returned.
+    ok(!('foo' in window), "frame element name not resolved if it doesn't match the docshell");
+    ok(!('bar' in window), "docshell name not resolved if it doesn't match the frame element");
+
+    SimpleTest.finish();
+  }
+
+  </script>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=916945">Mozilla Bug 916945</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+
+</div>
+<iframe id="ifrA" name="winA" onload="loaded();" src="file_empty.html"></iframe>
+<iframe id="ifrB" name="winB" onload="loaded();" src="http://example.org/tests/js/xpconnect/tests/mochitest/file_empty.html"></iframe>
+<pre id="test">
+</pre>
+</body>
+</html>
