@@ -22,6 +22,7 @@
 #include "nsRepeatService.h"
 #include "nsGUIEvent.h"
 #include "mozilla/LookAndFeel.h"
+#include "mozilla/MouseEvents.h"
 
 using namespace mozilla;
 

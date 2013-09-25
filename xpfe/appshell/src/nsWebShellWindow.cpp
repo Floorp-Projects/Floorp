@@ -69,6 +69,7 @@
 
 #include "nsIMarkupDocumentViewer.h"
 #include "mozilla/Attributes.h"
+#include "mozilla/MouseEvents.h"
 
 #ifdef XP_MACOSX
 #include "nsINativeMenuService.h"

@@ -4,6 +4,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "mozilla/DebugOnly.h"
+#include "mozilla/MouseEvents.h"
 #include "mozilla/Util.h"
 
 #include "KeyboardLayout.h"

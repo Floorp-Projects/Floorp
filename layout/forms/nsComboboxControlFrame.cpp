@@ -38,6 +38,7 @@
 #include <algorithm>
 #include "nsTextNode.h"
 #include "mozilla/LookAndFeel.h"
+#include "mozilla/MouseEvents.h"
 
 using namespace mozilla;
 

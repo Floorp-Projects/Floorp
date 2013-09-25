@@ -38,6 +38,7 @@
 #include "mozilla/dom/HTMLTemplateElement.h"
 #include "mozilla/dom/TextDecoder.h"
 #include "mozilla/Likely.h"
+#include "mozilla/MouseEvents.h"
 #include "mozilla/MutationEvent.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/Selection.h"

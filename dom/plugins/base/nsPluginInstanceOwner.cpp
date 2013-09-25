@@ -59,6 +59,7 @@ using mozilla::DefaultXDisplay;
 #include "ImageContainer.h"
 #include "nsIDOMHTMLCollection.h"
 #include "GLContext.h"
+#include "mozilla/MouseEvents.h"
 
 #include "nsContentCID.h"
 #include "nsWidgetsCID.h"

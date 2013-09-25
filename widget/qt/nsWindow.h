@@ -17,6 +17,7 @@
 
 #include "nsBaseWidget.h"
 #include "nsGUIEvent.h"
+#include "mozilla/MouseEvents.h"
 
 #include "nsWeakReference.h"
 

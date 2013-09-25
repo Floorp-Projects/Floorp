@@ -36,6 +36,7 @@
 #include "nsRefreshDriver.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/MemoryReporting.h"
+#include "mozilla/MouseEvents.h"
 
 class nsRange;
 class nsIDragService;

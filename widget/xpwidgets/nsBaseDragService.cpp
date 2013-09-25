@@ -33,6 +33,7 @@
 #include "nsGUIEvent.h"
 #include "nsXULPopupManager.h"
 #include "nsMenuPopupFrame.h"
+#include "mozilla/MouseEvents.h"
 #include "mozilla/Preferences.h"
 
 #include "gfxContext.h"
