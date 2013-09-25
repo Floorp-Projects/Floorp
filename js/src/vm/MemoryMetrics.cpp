@@ -301,12 +301,12 @@ StatsCellCallback(JSRuntime *rt, void *data, void *thing, JSGCTraceKind traceKin
         obj->sizeOfExcludingThis(rtStats->mallocSizeOf_, &objectsExtra);
         cStats->objectsExtra.add(objectsExtra);
 
-        // JSObject::sizeOfExcludingThis() doesn't measure objectsExtraPrivate,
+        // JSObject::sizeOfExcludingThis() doesn't measure objectsPrivate,
         // so we do it here.
         if (ObjectPrivateVisitor *opv = closure->opv) {
             nsISupports *iface;
             if (opv->getISupports_(obj, &iface) && iface) {
-                cStats->objectsExtra.private_ += opv->sizeOfIncludingThis(iface);
+                cStats->objectsPrivate += opv->sizeOfIncludingThis(iface);
             }
         }
         break;
