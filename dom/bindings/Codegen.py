@@ -7280,22 +7280,6 @@ class CGDOMJSProxyHandler_getOwnPropertyDescriptor(ClassMethod):
                    CGIndenter(CGProxyIndexedGetter(self.descriptor, templateValues)).define() + "\n" +
                    "}\n") % (self.descriptor.nativeType)
 
-        if UseHolderForUnforgeable(self.descriptor):
-            getUnforgeable = """if (!JS_GetPropertyDescriptorById(cx, ${holder}, id, flags, desc)) {
-  return false;
-}
-MOZ_ASSERT_IF(desc.object(), desc.object() == ${holder});"""
-            getUnforgeable = CallOnUnforgeableHolder(self.descriptor,
-                                                     getUnforgeable, "isXray")
-            getUnforgeable += """if (desc.object()) {
-  desc.object().set(proxy);
-  return !isXray || JS_WrapPropertyDescriptor(cx, desc);
-}
-
-"""
-        else:
-            getUnforgeable = ""
-
         if indexedSetter or self.descriptor.operations['NamedSetter']:
             setOrIndexedGet += "if (flags & JSRESOLVE_ASSIGNING) {\n"
             if indexedSetter:
@@ -7309,7 +7293,6 @@ MOZ_ASSERT_IF(desc.object(), desc.object() == ${holder});"""
                 setOrIndexedGet += ("    FillPropertyDescriptor(desc, proxy, JSVAL_VOID, false);\n" +
                                     "    return true;\n" +
                                     "  }\n")
-            setOrIndexedGet += CGIndenter(CGGeneric(getUnforgeable)).define()
             if self.descriptor.operations['NamedSetter']:
                 if not 'NamedCreator' in self.descriptor.operations:
                     # FIXME need to check that this is a 'supported property name'
@@ -7324,11 +7307,7 @@ MOZ_ASSERT_IF(desc.object(), desc.object() == ${holder});"""
             setOrIndexedGet += "}"
             if indexedGetter:
                 setOrIndexedGet += (" else {\n" +
-                                    CGIndenter(CGGeneric(get + "\n" + getUnforgeable)).define() +
-                                    "}")
-            else:
-                setOrIndexedGet += (" else {\n" +
-                                    CGIndenter(CGGeneric(getUnforgeable)).define() +
+                                    CGIndenter(CGGeneric(get)).define() +
                                     "}")
             setOrIndexedGet += "\n\n"
         else:
@@ -7336,7 +7315,6 @@ MOZ_ASSERT_IF(desc.object(), desc.object() == ${holder});"""
                 setOrIndexedGet += ("if (!(flags & JSRESOLVE_ASSIGNING)) {\n" +
                                     CGIndenter(CGGeneric(get)).define() +
                                     "}\n\n")
-            setOrIndexedGet += getUnforgeable
 
         if self.descriptor.supportsNamedProperties():
             readonly = toStringBool(self.descriptor.operations['NamedSetter'] is None)
