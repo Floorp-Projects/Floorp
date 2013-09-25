@@ -68,11 +68,13 @@ MOCHITEST_FILES := \
   test_exception_messages.html \
   test_bug707564.html \
   test_defineProperty.html \
+  file_document_location_set_via_xray.html \
   $(NULL)
 
 MOCHITEST_CHROME_FILES = \
   test_bug775543.html \
   test_bug707564-chrome.html \
+  test_document_location_set_via_xray.html \
   $(NULL)
 
 ifdef GNU_CC
