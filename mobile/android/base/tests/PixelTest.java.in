@@ -2,7 +2,6 @@
 package @ANDROID_PACKAGE_NAME@.tests;
 
 import @ANDROID_PACKAGE_NAME@.*;
-import android.os.Build;
 
 abstract class PixelTest extends BaseTest {
     private static final long PAINT_CLEAR_DELAY = 10000; // milliseconds
@@ -10,11 +9,7 @@ abstract class PixelTest extends BaseTest {
     protected final PaintedSurface loadAndGetPainted(String url) {
         Actions.RepeatedEventExpecter paintExpecter = mActions.expectPaint();
         loadUrl(url);
-        // Skip this on the Tegras (Android 2.2) since they are too slow,
-        // which results in too many intermittent failures.
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.GINGERBREAD) {
-            verifyHomePagerHidden();
-        }
+        verifyHomePagerHidden();
         paintExpecter.blockUntilClear(PAINT_CLEAR_DELAY);
         paintExpecter.unregisterListener();
         PaintedSurface p = mDriver.getPaintedSurface();

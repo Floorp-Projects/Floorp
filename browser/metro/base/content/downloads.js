@@ -6,7 +6,7 @@
 const URI_GENERIC_ICON_DOWNLOAD = "chrome://browser/skin/images/alert-downloads-30.png";
 const TOAST_URI_GENERIC_ICON_DOWNLOAD = "ms-appx:///metro/chrome/chrome/skin/images/alert-downloads-30.png"
 
-var Downloads = {
+var MetroDownloadsView = {
   /**
    * _downloadCount keeps track of the number of downloads that a single
    * notification bar groups together. A download is grouped with other
@@ -217,15 +217,15 @@ var Downloads = {
         label: tryAgainButtonText,
         accessKey: "",
         callback: function() {
-          Downloads.manager.retryDownload(aDownload.id);
+          MetroDownloadsView.manager.retryDownload(aDownload.id);
         }
       },
       {
         label: cancelButtonText,
         accessKey: "",
         callback: function() {
-          Downloads.cancelDownload(aDownload);
-          Downloads._downloadProgressIndicator.reset();
+          MetroDownloadsView.cancelDownload(aDownload);
+          MetroDownloadsView._downloadProgressIndicator.reset();
         }
       }
     ];
@@ -243,7 +243,7 @@ var Downloads = {
         accessKey: "",
         callback: function() {
           let fileURI = aDownload.target;
-          let file = Downloads._getLocalFile(fileURI);
+          let file = MetroDownloadsView._getLocalFile(fileURI);
           file.reveal();
         }
       }
@@ -264,7 +264,7 @@ var Downloads = {
         label: runButtonText,
         accessKey: "",
         callback: function() {
-          Downloads.openDownload(aDownload);
+          MetroDownloadsView.openDownload(aDownload);
         }
       });
     }
@@ -288,12 +288,12 @@ var Downloads = {
           switch (aTopic) {
             case "alertclickcallback":
               let fileURI = aDownload.target;
-              let file = Downloads._getLocalFile(fileURI);
+              let file = MetroDownloadsView._getLocalFile(fileURI);
               file.reveal();
 
               let downloadCompleteNotification =
-                Downloads._notificationBox.getNotificationWithValue("download-complete");
-              Downloads._notificationBox.removeNotification(downloadCompleteNotification);
+                MetroDownloadsView._notificationBox.getNotificationWithValue("download-complete");
+              MetroDownloadsView._notificationBox.removeNotification(downloadCompleteNotification);
               break;
           }
         }
@@ -306,11 +306,11 @@ var Downloads = {
         observe: function (aSubject, aTopic, aData) {
           switch (aTopic) {
             case "alertclickcallback":
-              Downloads.openDownload(aDownload);
+              MetroDownloadsView.openDownload(aDownload);
 
               let downloadCompleteNotification =
-                Downloads._notificationBox.getNotificationWithValue("download-complete");
-              Downloads._notificationBox.removeNotification(downloadCompleteNotification);
+                MetroDownloadsView._notificationBox.getNotificationWithValue("download-complete");
+              MetroDownloadsView._notificationBox.removeNotification(downloadCompleteNotification);
               break;
           }
         }
@@ -406,8 +406,8 @@ var Downloads = {
           label: cancelButtonText,
           accessKey: "",
           callback: function() {
-            Downloads.cancelDownloads();
-            Downloads._downloadProgressIndicator.reset();
+            MetroDownloadsView.cancelDownloads();
+            MetroDownloadsView._downloadProgressIndicator.reset();
           }
         }
       ];
@@ -446,8 +446,8 @@ var Downloads = {
     switch (aEvent.type) {
       case "AlertClose":
         if (aEvent.notification.value == "download-complete" &&
-            !Downloads._notificationBox.getNotificationWithValue("download-complete")) {
-          Downloads._downloadProgressIndicator.reset();
+            !MetroDownloadsView._notificationBox.getNotificationWithValue("download-complete")) {
+          MetroDownloadsView._downloadProgressIndicator.reset();
         }
         break;
     }
@@ -562,10 +562,10 @@ AlertDownloadProgressListener.prototype = {
 
     let contentLength = aDownload.size;
     if (availableSpace > 0 && contentLength > 0 && contentLength > availableSpace) {
-      Downloads.showAlert(aDownload.target.spec.replace("file:", "download:"),
-                          strings.GetStringFromName("alertDownloadsNoSpace"),
-                          strings.GetStringFromName("alertDownloadsSize"));
-      Downloads.cancelDownload(aDownload);
+      MetroDownloadsView.showAlert(aDownload.target.spec.replace("file:", "download:"),
+                                   strings.GetStringFromName("alertDownloadsNoSpace"),
+                                   strings.GetStringFromName("alertDownloadsSize"));
+      MetroDownloadsView.cancelDownload(aDownload);
     }
   },
 

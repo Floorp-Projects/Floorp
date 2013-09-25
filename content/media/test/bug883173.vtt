@@ -1,0 +1,16 @@
+WEBVTT
+
+00:03.000 --> 00:04.000
+Should display fifth.
+
+00:01.000 --> 00:02.000
+Should display first.
+
+00:01.000 --> 00:03.000
+Should display second.
+
+00:02.000 --> 00:04.000
+Should display forth.
+
+00:02.000 --> 00:03.000
+Should display third.
