@@ -8,6 +8,7 @@
 #include "nsImageFrame.h"
 
 #include "mozilla/DebugOnly.h"
+#include "mozilla/MouseEvents.h"
 
 #include "nsCOMPtr.h"
 #include "nsIImageLoadingContent.h"

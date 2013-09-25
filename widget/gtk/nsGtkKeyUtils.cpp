@@ -27,6 +27,7 @@
 PRLogModuleInfo* gKeymapWrapperLog = nullptr;
 #endif // PR_LOGGING
 
+#include "mozilla/MouseEvents.h"
 #include "mozilla/Util.h"
 
 namespace mozilla {

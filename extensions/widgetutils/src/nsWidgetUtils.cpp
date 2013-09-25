@@ -40,6 +40,7 @@
 #include "nsIDocShellTreeItem.h"
 #include "nsIContent.h"
 #include "nsITimer.h"
+#include "mozilla/MouseEvents.h"
 
 using namespace mozilla;
 

@@ -34,6 +34,7 @@
 #include "mozilla/Preferences.h"
 #include "mozilla/dom/HTMLFrameSetElement.h"
 #include "mozilla/LookAndFeel.h"
+#include "mozilla/MouseEvents.h"
 #include "nsSubDocumentFrame.h"
 
 using namespace mozilla;

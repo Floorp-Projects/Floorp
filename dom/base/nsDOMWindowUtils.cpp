@@ -34,6 +34,7 @@
 #include "nsJSEnvironment.h"
 #include "nsJSUtils.h"
 
+#include "mozilla/MouseEvents.h"
 #include "mozilla/TouchEvents.h"
 
 #include "nsViewManager.h"
