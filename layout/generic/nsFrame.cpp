@@ -4246,15 +4246,13 @@ nsIFrame* nsFrame::GetPrevContinuation() const
   return nullptr;
 }
 
-NS_IMETHODIMP nsFrame::SetPrevContinuation(nsIFrame* aPrevContinuation)
+void
+nsFrame::SetPrevContinuation(nsIFrame* aPrevContinuation)
 {
   // Ignore harmless requests to set it to NULL
   if (aPrevContinuation) {
     NS_ERROR("not splittable");
-    return NS_ERROR_NOT_IMPLEMENTED;
   }
-  
-  return NS_OK;
 }
 
 nsIFrame* nsFrame::GetNextContinuation() const
@@ -4262,10 +4260,10 @@ nsIFrame* nsFrame::GetNextContinuation() const
   return nullptr;
 }
 
-NS_IMETHODIMP nsFrame::SetNextContinuation(nsIFrame*)
+void
+nsFrame::SetNextContinuation(nsIFrame*)
 {
   NS_ERROR("not splittable");
-  return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 nsIFrame* nsFrame::GetPrevInFlowVirtual() const
@@ -4273,15 +4271,13 @@ nsIFrame* nsFrame::GetPrevInFlowVirtual() const
   return nullptr;
 }
 
-NS_IMETHODIMP nsFrame::SetPrevInFlow(nsIFrame* aPrevInFlow)
+void
+nsFrame::SetPrevInFlow(nsIFrame* aPrevInFlow)
 {
   // Ignore harmless requests to set it to NULL
   if (aPrevInFlow) {
     NS_ERROR("not splittable");
-    return NS_ERROR_NOT_IMPLEMENTED;
   }
-
-  return NS_OK;
 }
 
 nsIFrame* nsFrame::GetNextInFlowVirtual() const
@@ -4289,10 +4285,10 @@ nsIFrame* nsFrame::GetNextInFlowVirtual() const
   return nullptr;
 }
 
-NS_IMETHODIMP nsFrame::SetNextInFlow(nsIFrame*)
+void
+nsFrame::SetNextInFlow(nsIFrame*)
 {
   NS_ERROR("not splittable");
-  return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 nsIFrame* nsIFrame::GetTailContinuation()

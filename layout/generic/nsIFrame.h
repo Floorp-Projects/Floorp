@@ -1485,9 +1485,9 @@ public:
    * Continuation member functions
    */
   virtual nsIFrame* GetPrevContinuation() const = 0;
-  NS_IMETHOD SetPrevContinuation(nsIFrame*) = 0;
+  virtual void SetPrevContinuation(nsIFrame*) = 0;
   virtual nsIFrame* GetNextContinuation() const = 0;
-  NS_IMETHOD SetNextContinuation(nsIFrame*) = 0;
+  virtual void SetNextContinuation(nsIFrame*) = 0;
   virtual nsIFrame* FirstContinuation() const {
     return const_cast<nsIFrame*>(this);
   }
@@ -1507,11 +1507,11 @@ public:
    */
   virtual nsIFrame* GetPrevInFlowVirtual() const = 0;
   nsIFrame* GetPrevInFlow() const { return GetPrevInFlowVirtual(); }
-  NS_IMETHOD SetPrevInFlow(nsIFrame*) = 0;
+  virtual void SetPrevInFlow(nsIFrame*) = 0;
 
   virtual nsIFrame* GetNextInFlowVirtual() const = 0;
   nsIFrame* GetNextInFlow() const { return GetNextInFlowVirtual(); }
-  NS_IMETHOD SetNextInFlow(nsIFrame*) = 0;
+  virtual void SetNextInFlow(nsIFrame*) = 0;
 
   /**
    * Return the first frame in our current flow. 
