@@ -41,8 +41,8 @@ public:
   virtual nsIFrame* GetNextContinuation() const MOZ_OVERRIDE;
 
   // Set a previous/next non-fluid continuation.
-  NS_IMETHOD SetPrevContinuation(nsIFrame*) MOZ_OVERRIDE;
-  NS_IMETHOD SetNextContinuation(nsIFrame*) MOZ_OVERRIDE;
+  virtual void SetPrevContinuation(nsIFrame*) MOZ_OVERRIDE;
+  virtual void SetNextContinuation(nsIFrame*) MOZ_OVERRIDE;
 
   // Get the first/last continuation for this frame.
   virtual nsIFrame* FirstContinuation() const MOZ_OVERRIDE;
@@ -62,8 +62,8 @@ public:
   virtual nsIFrame* GetNextInFlowVirtual() const MOZ_OVERRIDE { return GetNextInFlow(); }
   
   // Set a previous/next fluid continuation.
-  NS_IMETHOD  SetPrevInFlow(nsIFrame*) MOZ_OVERRIDE;
-  NS_IMETHOD  SetNextInFlow(nsIFrame*) MOZ_OVERRIDE;
+  virtual void SetPrevInFlow(nsIFrame*) MOZ_OVERRIDE;
+  virtual void SetNextInFlow(nsIFrame*) MOZ_OVERRIDE;
 
   // Get the first/last frame in the current flow.
   virtual nsIFrame* FirstInFlow() const MOZ_OVERRIDE;
