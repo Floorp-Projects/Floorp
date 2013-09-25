@@ -1923,14 +1923,16 @@ RestyleManager::ReparentStyleContext(nsIFrame* aFrame)
 
       // Make sure to call CalcStyleDifference so that the new context ends
       // up resolving all the structs the old context resolved.
-      DebugOnly<nsChangeHint> styleChange =
-        oldContext->CalcStyleDifference(newContext, nsChangeHint(0));
-      // The style change is always 0 because we have the same rulenode and
-      // CalcStyleDifference optimizes us away.  That's OK, though:
-      // reparenting should never trigger a frame reconstruct, and whenever
-      // it's happening we already plan to reflow and repaint the frames.
-      NS_ASSERTION(!(styleChange & nsChangeHint_ReconstructFrame),
-                   "Our frame tree is likely to be bogus!");
+      if (!copyFromContinuation) {
+        DebugOnly<nsChangeHint> styleChange =
+          oldContext->CalcStyleDifference(newContext, nsChangeHint(0));
+        // The style change is always 0 because we have the same rulenode and
+        // CalcStyleDifference optimizes us away.  That's OK, though:
+        // reparenting should never trigger a frame reconstruct, and whenever
+        // it's happening we already plan to reflow and repaint the frames.
+        NS_ASSERTION(!(styleChange & nsChangeHint_ReconstructFrame),
+                     "Our frame tree is likely to be bogus!");
+      }
 
       aFrame->SetStyleContext(newContext);
 
@@ -1986,7 +1988,7 @@ RestyleManager::ReparentStyleContext(nsIFrame* aFrame)
             // Make sure to call CalcStyleDifference so that the new
             // context ends up resolving all the structs the old context
             // resolved.
-            styleChange =
+            DebugOnly<nsChangeHint> styleChange =
               oldExtraContext->CalcStyleDifference(newExtraContext,
                                                    nsChangeHint(0));
             // The style change is always 0 because we have the same
@@ -2112,7 +2114,6 @@ ElementRestyler::ElementRestyler(ParentContextFromChildFrame,
 void
 ElementRestyler::CaptureChange(nsStyleContext* aOldContext,
                                nsStyleContext* aNewContext,
-                               nsIFrame* aContinuation, // TEMPORARY (until bug 828312 patch 11)
                                nsChangeHint aChangeToAssume)
 {
   // Check some invariants about replacing one style context with another.
@@ -2138,7 +2139,7 @@ ElementRestyler::CaptureChange(nsStyleContext* aOldContext,
   NS_UpdateHint(ourChange, aChangeToAssume);
   if (NS_UpdateHint(mHintsHandled, ourChange)) {
     if (!(ourChange & nsChangeHint_ReconstructFrame) || mContent) {
-      mChangeList->AppendChange(aContinuation, mContent, ourChange);
+      mChangeList->AppendChange(mFrame, mContent, ourChange);
     }
   }
   NS_UpdateHint(mHintsNotHandledForDescendants,
@@ -2197,15 +2198,9 @@ ElementRestyler::Restyle(nsRestyleHint aRestyleHint)
 
     // TEMPORARY (until bug 918064):  Call RestyleSelf for each
     // continuation or block-in-inline sibling.
-    nsChangeHint hintsHandled = mHintsHandled;
 
     for (nsIFrame* f = mFrame; f;
          f = GetNextContinuationWithSameStyle(f, oldContext)) {
-      // restore for each continuation, since we need the change hint
-      // posted for each continuation and failing to restore would
-      // suppress that.
-      mHintsHandled = hintsHandled;
-
       RestyleSelf(f, aRestyleHint);
     }
   }
@@ -2380,11 +2375,18 @@ ElementRestyler::RestyleSelf(nsIFrame* aSelf, nsRestyleHint aRestyleHint)
     if (!copyFromContinuation) {
       TryStartingTransition(mPresContext, aSelf->GetContent(),
                             oldContext, &newContext);
+
+      CaptureChange(oldContext, newContext, assumeDifferenceHint);
     }
 
-    CaptureChange(oldContext, newContext, aSelf, assumeDifferenceHint);
     if (!(mHintsHandled & nsChangeHint_ReconstructFrame)) {
-      // if frame gets regenerated, let it keep old context
+      // If the frame gets regenerated, let it keep its old context,
+      // which is important to maintain various invariants about
+      // frame types matching their style contexts.
+      // Note that this check even makes sense if we didn't call
+      // CaptureChange because of copyFromContinuation being true,
+      // since we'll have copied the existing context from the
+      // previous continuation, so newContext == oldContext.
       aSelf->SetStyleContext(newContext);
     }
   }
@@ -2422,8 +2424,7 @@ ElementRestyler::RestyleSelf(nsIFrame* aSelf, nsRestyleHint aRestyleHint)
     MOZ_ASSERT(newExtraContext);
 
     if (oldExtraContext != newExtraContext) {
-      CaptureChange(oldExtraContext, newExtraContext, aSelf,
-                    assumeDifferenceHint);
+      CaptureChange(oldExtraContext, newExtraContext, assumeDifferenceHint);
       if (!(mHintsHandled & nsChangeHint_ReconstructFrame)) {
         aSelf->SetAdditionalStyleContext(contextIndex, newExtraContext);
       }
