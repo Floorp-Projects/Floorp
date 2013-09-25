@@ -15,7 +15,6 @@ MOCHITEST_CHROME_FILES = \
     cross_origin.html \
     head.js \
     test_bug_765063.xul \
-    test_bug_795164.xul \
     test_cross_origin.xul \
     test_install_app.xul \
     test_list_api.xul \
