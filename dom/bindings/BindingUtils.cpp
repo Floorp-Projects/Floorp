@@ -872,6 +872,15 @@ GetNativePropertyHooks(JSContext *cx, JS::Handle<JSObject*> obj,
   return ifaceAndProtoJSClass->mNativeHooks;
 }
 
+// Try to resolve a property as an unforgeable property from the given
+// NativeProperties, if it's there.  nativeProperties is allowed to be null (in
+// which case we of course won't resolve anything).
+static bool
+XrayResolveUnforgeableProperty(JSContext* cx, JS::Handle<JSObject*> wrapper,
+                               JS::Handle<JSObject*> obj, JS::Handle<jsid> id,
+                               JS::MutableHandle<JSPropertyDescriptor> desc,
+                               const NativeProperties* nativeProperties);
+
 bool
 XrayResolveOwnProperty(JSContext* cx, JS::Handle<JSObject*> wrapper,
                        JS::Handle<JSObject*> obj, JS::Handle<jsid> id,
@@ -881,7 +890,29 @@ XrayResolveOwnProperty(JSContext* cx, JS::Handle<JSObject*> wrapper,
   const NativePropertyHooks *nativePropertyHooks =
     GetNativePropertyHooks(cx, obj, type);
 
-  return type != eInstance || !nativePropertyHooks->mResolveOwnProperty ||
+  if (type != eInstance) {
+    return true;
+  }
+
+  // Check for unforgeable properties before doing mResolveOwnProperty weirdness
+  const NativePropertiesHolder& nativeProperties =
+    nativePropertyHooks->mNativeProperties;
+  if (!XrayResolveUnforgeableProperty(cx, wrapper, obj, id, desc,
+                                      nativeProperties.regular)) {
+    return false;
+  }
+  if (desc.object()) {
+    return true;
+  }
+  if (!XrayResolveUnforgeableProperty(cx, wrapper, obj, id, desc,
+                                      nativeProperties.chromeOnly)) {
+    return false;
+  }
+  if (desc.object()) {
+    return true;
+  }
+
+  return !nativePropertyHooks->mResolveOwnProperty ||
          nativePropertyHooks->mResolveOwnProperty(cx, wrapper, obj, id, desc, flags);
 }
 
@@ -934,6 +965,20 @@ XrayResolveAttribute(JSContext* cx, JS::Handle<JSObject*> wrapper,
     }
   }
   return true;
+}
+
+/* static */ bool
+XrayResolveUnforgeableProperty(JSContext* cx, JS::Handle<JSObject*> wrapper,
+                               JS::Handle<JSObject*> obj, JS::Handle<jsid> id,
+                               JS::MutableHandle<JSPropertyDescriptor> desc,
+                               const NativeProperties* nativeProperties)
+{
+  return !nativeProperties || !nativeProperties->unforgeableAttributes ||
+         XrayResolveAttribute(cx, wrapper, obj, id,
+                              nativeProperties->unforgeableAttributes,
+                              nativeProperties->unforgeableAttributeIds,
+                              nativeProperties->unforgeableAttributeSpecs,
+                              desc);
 }
 
 static bool
@@ -1002,18 +1047,6 @@ XrayResolveProperty(JSContext* cx, JS::Handle<JSObject*> wrapper,
                                 nativeProperties->attributes,
                                 nativeProperties->attributeIds,
                                 nativeProperties->attributeSpecs, desc)) {
-        return false;
-      }
-      if (desc.object()) {
-        return true;
-      }
-    }
-    if (nativeProperties->unforgeableAttributes) {
-      if (!XrayResolveAttribute(cx, wrapper, obj, id,
-                                nativeProperties->unforgeableAttributes,
-                                nativeProperties->unforgeableAttributeIds,
-                                nativeProperties->unforgeableAttributeSpecs,
-                                desc)) {
         return false;
       }
       if (desc.object()) {
