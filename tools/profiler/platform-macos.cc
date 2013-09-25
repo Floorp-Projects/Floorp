@@ -349,12 +349,20 @@ pid_t gettid()
   return (pid_t) syscall(SYS_thread_selfid);
 }
 
+/* static */ Thread::tid_t
+Thread::GetCurrentId()
+{
+  return gettid();
+}
+
 bool Sampler::RegisterCurrentThread(const char* aName,
                                     PseudoStack* aPseudoStack,
                                     bool aIsMainThread, void* stackTop)
 {
   if (!Sampler::sRegisteredThreadsMutex)
     return false;
+
+  set_tls_stack_top(stackTop);
 
   mozilla::MutexAutoLock lock(*Sampler::sRegisteredThreadsMutex);
 
@@ -376,6 +384,8 @@ void Sampler::UnregisterCurrentThread()
   if (!Sampler::sRegisteredThreadsMutex)
     return;
 
+  tlsStackTop.set(nullptr);
+
   mozilla::MutexAutoLock lock(*Sampler::sRegisteredThreadsMutex);
 
   int id = gettid();
@@ -389,3 +399,33 @@ void Sampler::UnregisterCurrentThread()
     }
   }
 }
+
+__attribute__((noinline)) static Address GetPC()
+{
+  return reinterpret_cast<Address>(__builtin_return_address(0));
+}
+
+void TickSample::PopulateContext(void* aContext)
+{
+#if defined(SPS_PLAT_amd64_darwin)
+  asm (
+      "movq %%rsp, %0\n\t"
+      "movq %%rbp, %1\n\t"
+      :
+      "=g"(sp),
+      "=g"(fp)
+  );
+#elif defined(SPS_PLAT_x86_darwin)
+  asm (
+      "movl %%esp, %0\n\t"
+      "movl %%ebp, %1\n\t"
+      :
+      "=g"(sp),
+      "=g"(fp)
+  );
+#else
+# error "Unsupported architecture"
+#endif
+  pc = GetPC();
+}
+

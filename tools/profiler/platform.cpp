@@ -31,6 +31,7 @@
 
 mozilla::ThreadLocal<PseudoStack *> tlsPseudoStack;
 mozilla::ThreadLocal<TableTicker *> tlsTicker;
+mozilla::ThreadLocal<void *> tlsStackTop;
 // We need to track whether we've been initialized otherwise
 // we end up using tlsStack without initializing it.
 // Because tlsStack is totally opaque to us we can't reuse
@@ -131,35 +132,6 @@ ProfilerMarker::BuildJSObject<JSCustomObjectBuilder>(JSCustomObjectBuilder& b,
 template void
 ProfilerMarker::BuildJSObject<JSObjectBuilder>(JSObjectBuilder& b,
                                     JSObjectBuilder::ArrayHandle markers) const;
-
-void
-ProfilerMarkerLinkedList::insert(ProfilerMarker* elem) {
-  if (!mTail) {
-    mHead = elem;
-    mTail = elem;
-  } else {
-    mTail->mNext = elem;
-    mTail = elem;
-  }
-  elem->mNext = nullptr;
-}
-
-ProfilerMarker*
-ProfilerMarkerLinkedList::popHead() {
-  if (!mHead) {
-    MOZ_ASSERT(false);
-    return nullptr;
-  }
-
-  ProfilerMarker* head = mHead;
-
-  mHead = head->mNext;
-  if (!mHead) {
-    mTail = nullptr;
-  }
-
-  return head;
-}
 
 PendingMarkers::~PendingMarkers() {
   clearMarkers();
@@ -382,6 +354,19 @@ void read_profiler_env_vars()
   return;
 }
 
+void set_tls_stack_top(void* stackTop)
+{
+  // Round |stackTop| up to the end of the containing page.  We may
+  // as well do this -- there's no danger of a fault, and we might
+  // get a few more base-of-the-stack frames as a result.  This
+  // assumes that no target has a page size smaller than 4096.
+  uintptr_t stackTopR = (uintptr_t)stackTop;
+  if (stackTop) {
+    stackTopR = (stackTopR & ~(uintptr_t)4095) + (uintptr_t)4095;
+  }
+  tlsStackTop.set((void*)stackTopR);
+}
+
 ////////////////////////////////////////////////////////////////////////
 // BEGIN externally visible functions
 
@@ -393,7 +378,7 @@ void mozilla_sampler_init(void* stackTop)
     return;
 
   LOG("BEGIN mozilla_sampler_init");
-  if (!tlsPseudoStack.init() || !tlsTicker.init()) {
+  if (!tlsPseudoStack.init() || !tlsTicker.init() || !tlsStackTop.init()) {
     LOG("Failed to init.");
     return;
   }
@@ -759,13 +744,46 @@ void mozilla_sampler_unregister_thread()
 #endif
 }
 
-double mozilla_sampler_time()
+double mozilla_sampler_time(const TimeStamp& aTime)
 {
   if (!mozilla_sampler_is_active()) {
     return 0.0;
   }
-  TimeDuration delta = TimeStamp::Now() - sStartTime;
+  TimeDuration delta = aTime - sStartTime;
   return delta.ToMilliseconds();
+}
+
+double mozilla_sampler_time()
+{
+  return mozilla_sampler_time(TimeStamp::Now());
+}
+
+ProfilerBacktrace* mozilla_sampler_get_backtrace()
+{
+  if (!stack_key_initialized)
+    return nullptr;
+
+  // Don't capture a stack if we're not profiling
+  if (!profiler_is_active()) {
+    return nullptr;
+  }
+
+  // Don't capture a stack if we don't want to include personal information
+  if (profiler_in_privacy_mode()) {
+    return nullptr;
+  }
+
+  TableTicker* t = tlsTicker.get();
+  if (!t) {
+    return nullptr;
+  }
+
+  return new ProfilerBacktrace(t->GetBacktrace());
+}
+
+void mozilla_sampler_free_backtrace(ProfilerBacktrace* aBacktrace)
+{
+  delete aBacktrace;
 }
 
 // END externally visible functions

@@ -1,4 +1,5 @@
 /* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -9,6 +10,7 @@
 #include <ostream>
 #include "GeckoProfilerImpl.h"
 #include "platform.h"
+#include "ProfilerBacktrace.h"
 #include "mozilla/Mutex.h"
 
 class ThreadProfile;
@@ -62,9 +64,9 @@ class ThreadProfile
 {
 public:
   ThreadProfile(const char* aName, int aEntrySize, PseudoStack *aStack,
-                int aThreadId, PlatformData* aPlatformData,
+                Thread::tid_t aThreadId, PlatformData* aPlatformData,
                 bool aIsMainThread, void *aStackTop);
-  ~ThreadProfile();
+  virtual ~ThreadProfile();
   void addTag(ProfileEntry aTag);
   void flush();
   void erase();
@@ -77,10 +79,13 @@ public:
   PseudoStack* GetPseudoStack();
   mozilla::Mutex* GetMutex();
   template <typename Builder> void BuildJSObject(Builder& b, typename Builder::ObjectHandle profile);
+  void BeginUnwind();
+  virtual void EndUnwind();
+  virtual SyncProfile* AsSyncProfile() { return nullptr; }
 
   bool IsMainThread() const { return mIsMainThread; }
   const char* Name() const { return mName; }
-  int ThreadId() const { return mThreadId; }
+  Thread::tid_t ThreadId() const { return mThreadId; }
 
   PlatformData* GetPlatformData() { return mPlatformData; }
   int GetGenerationID() const { return mGeneration; }
@@ -91,7 +96,7 @@ public:
 private:
   // Circular buffer 'Keep One Slot Open' implementation
   // for simplicity
-  ProfileEntry* mEntries;
+  ProfileEntry*  mEntries;
   int            mWritePos; // points to the next entry we will write to
   int            mLastFlushPos; // points to the next entry since the last flush()
   int            mReadPos;  // points to the next entry we will read to
@@ -99,7 +104,7 @@ private:
   PseudoStack*   mPseudoStack;
   mozilla::Mutex mMutex;
   char*          mName;
-  int            mThreadId;
+  Thread::tid_t  mThreadId;
   bool           mIsMainThread;
   PlatformData*  mPlatformData;  // Platform specific data.
   int            mGeneration;
