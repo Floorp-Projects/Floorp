@@ -56,7 +56,7 @@ class RelocationOverlay
         JS_ASSERT(!isForwarded());
         magic_ = Relocated;
         newLocation_ = cell;
-        next_ = NULL;
+        next_ = nullptr;
     }
 
     RelocationOverlay *next() const {
