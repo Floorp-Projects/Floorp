@@ -603,6 +603,8 @@ RestyleManager::ProcessRestyledFrames(nsStyleChangeList& aChangeList)
 
   index = count;
 
+  bool didUpdateCursor = false;
+
   while (0 <= --index) {
     nsIFrame* frame;
     nsIContent* content;
@@ -730,8 +732,9 @@ RestyleManager::ProcessRestyledFrames(nsStyleChangeList& aChangeList)
           }
         }
       }
-      if (hint & nsChangeHint_UpdateCursor) {
+      if ((hint & nsChangeHint_UpdateCursor) && !didUpdateCursor) {
         mPresContext->PresShell()->SynthesizeMouseMove(false);
+        didUpdateCursor = true;
       }
     }
   }
