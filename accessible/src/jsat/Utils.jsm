@@ -557,7 +557,7 @@ PivotContext.prototype = {
         include = true;
       } else {
         let [state,] = Utils.getStates(child);
-        include = !(state.value & Ci.nsIAccessibleStates.STATE_INVISIBLE);
+        include = !(state & Ci.nsIAccessibleStates.STATE_INVISIBLE);
       }
       if (include) {
         if (aPreorder) {
