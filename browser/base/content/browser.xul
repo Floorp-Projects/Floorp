@@ -555,7 +555,7 @@
         <toolbaritem id="urlbar-container" align="center" flex="400" persist="width"
                      forwarddisabled="true" title="&locationItem.title;" removable="false"
                      customizableui-areatype="toolbar"
-                     class="chromeclass-location" nooverflow="true">
+                     class="chromeclass-location" overflows="false">
           <toolbarbutton id="back-button" class="toolbarbutton-1 chromeclass-toolbar-additional"
                          label="&backCmd.label;"
                          command="Browser:BackOrBackDuplicate"
@@ -676,7 +676,7 @@
                        label="&webrtcIndicatorButton.label;"
                        tooltiptext="&webrtcIndicatorButton.tooltip;"
                        customizableui-areatype="toolbar"
-                       nooverflow="true">
+                       overflows="false">
           <menupopup onpopupshowing="WebrtcIndicator.fillPopup(this);"
                      onpopuphiding="WebrtcIndicator.clearPopup(this);"
                      oncommand="WebrtcIndicator.menuCommand(event.target);"/>
@@ -799,7 +799,7 @@
         <toolbarbutton id="social-share-button"
                        class="toolbarbutton-1 chromeclass-toolbar-additional"
                        hidden="true"
-                       nooverflow="true"
+                       overflows="false"
                        label="&sharePageCmd.label;"
                        tooltiptext="&sharePageCmd.label;"
                        customizableui-areatype="toolbar"
@@ -810,7 +810,7 @@
                      removable="false"
                      title="&socialToolbar.title;"
                      hidden="true"
-                     nooverflow="true"
+                     overflows="false"
                      customizableui-areatype="toolbar"
                      observes="socialActiveBroadcaster">
         <toolbarbutton id="social-notification-icon" class="default-notification-icon toolbarbutton-1 notification-anchor-icon"
