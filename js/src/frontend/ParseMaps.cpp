@@ -47,11 +47,11 @@ ParseMapPool::allocateFresh()
 {
     size_t newAllLength = all.length() + 1;
     if (!all.reserve(newAllLength) || !recyclable.reserve(newAllLength))
-        return NULL;
+        return nullptr;
 
     AtomMapT *map = js_new<AtomMapT>();
     if (!map)
-        return NULL;
+        return nullptr;
 
     all.infallibleAppend(map);
     return (void *) map;
