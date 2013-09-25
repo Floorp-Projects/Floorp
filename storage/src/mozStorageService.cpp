@@ -53,13 +53,22 @@ namespace storage {
 ////////////////////////////////////////////////////////////////////////////////
 //// Memory Reporting
 
-static int64_t
-StorageSQLiteDistinguishedAmount()
+// We don't need an "explicit" reporter for total SQLite memory usage, because
+// the multi-reporter provides reports that add up to the total.  But it's
+// useful to have the total in the "Other Measurements" list in about:memory,
+// and more importantly, we also gather the total via telemetry.
+class StorageSQLiteUniReporter MOZ_FINAL : public MemoryUniReporter
 {
-  return ::sqlite3_memory_used();
-}
+public:
+  StorageSQLiteUniReporter()
+    : MemoryUniReporter("storage-sqlite", KIND_OTHER, UNITS_BYTES,
+                         "Memory used by SQLite.")
+  {}
+private:
+  int64_t Amount() MOZ_OVERRIDE { return ::sqlite3_memory_used(); }
+};
 
-class StorageSQLiteReporter MOZ_FINAL : public nsIMemoryReporter
+class StorageSQLiteMultiReporter MOZ_FINAL : public nsIMemoryReporter
 {
 private:
   Service *mService;    // a weakref because Service contains a strongref to this
@@ -70,7 +79,7 @@ private:
 public:
   NS_DECL_THREADSAFE_ISUPPORTS
 
-  StorageSQLiteReporter(Service *aService)
+  StorageSQLiteMultiReporter(Service *aService)
   : mService(aService)
   {
     mStmtDesc = NS_LITERAL_CSTRING(
@@ -205,7 +214,7 @@ private:
 };
 
 NS_IMPL_ISUPPORTS1(
-  StorageSQLiteReporter,
+  StorageSQLiteMultiReporter,
   nsIMemoryReporter
 )
 
@@ -298,8 +307,8 @@ Service::Service()
 
 Service::~Service()
 {
-  (void)::NS_UnregisterMemoryReporter(mStorageSQLiteReporter);
-  mozilla::UnregisterStorageSQLiteDistinguishedAmount();
+  (void)::NS_UnregisterMemoryReporter(mStorageSQLiteUniReporter);
+  (void)::NS_UnregisterMemoryReporter(mStorageSQLiteMultiReporter);
 
   int rc = sqlite3_vfs_unregister(mSqliteVFS);
   if (rc != SQLITE_OK)
@@ -529,12 +538,12 @@ Service::initialize()
   sDefaultPageSize =
       Preferences::GetInt(PREF_TS_PAGESIZE, PREF_TS_PAGESIZE_DEFAULT);
 
-  // Create and register our SQLite memory reporter and distinguished amount
-  // function.  Registration can only happen on the main thread (otherwise
-  // you'll get cryptic crashes).
-  mStorageSQLiteReporter = new StorageSQLiteReporter(this);
-  (void)::NS_RegisterMemoryReporter(mStorageSQLiteReporter);
-  mozilla::RegisterStorageSQLiteDistinguishedAmount(StorageSQLiteDistinguishedAmount);
+  // Create and register our SQLite memory reporters.  Registration can only
+  // happen on the main thread (otherwise you'll get cryptic crashes).
+  mStorageSQLiteUniReporter = new StorageSQLiteUniReporter();
+  mStorageSQLiteMultiReporter = new StorageSQLiteMultiReporter(this);
+  (void)::NS_RegisterMemoryReporter(mStorageSQLiteUniReporter);
+  (void)::NS_RegisterMemoryReporter(mStorageSQLiteMultiReporter);
 
   return NS_OK;
 }
