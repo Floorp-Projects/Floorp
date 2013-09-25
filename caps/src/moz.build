@@ -22,3 +22,8 @@ LIBXUL_LIBRARY = True
 
 MSVC_ENABLE_PGO = True
 
+LOCAL_INCLUDES += [
+    '../include',
+    '/dom/base',
+    '/js/xpconnect/src',
+]
