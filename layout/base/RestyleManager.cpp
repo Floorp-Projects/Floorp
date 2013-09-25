@@ -2374,13 +2374,6 @@ ElementRestyler::RestyleChildren(nsRestyleHint aChildRestyleHint)
     RestyleBeforePseudo();
   }
 
-  // Check whether we might need to create a new ::after frame.
-  // See comments above regarding :before.
-  if (!(mHintsHandled & nsChangeHint_ReconstructFrame) &&
-      aChildRestyleHint) {
-    RestyleAfterPseudo();
-  }
-
   // There is no need to waste time crawling into a frame's children
   // on a frame change.  The act of reconstructing frames will force
   // new style contexts to be resolved on all of this frame's
@@ -2396,6 +2389,13 @@ ElementRestyler::RestyleChildren(nsRestyleHint aChildRestyleHint)
     RestyleContentChildren(aChildRestyleHint);
 
     SendAccessibilityNotifications();
+  }
+
+  // Check whether we might need to create a new ::after frame.
+  // See comments above regarding :before.
+  if (!(mHintsHandled & nsChangeHint_ReconstructFrame) &&
+      aChildRestyleHint) {
+    RestyleAfterPseudo();
   }
 }
 
