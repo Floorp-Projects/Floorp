@@ -72,7 +72,7 @@ public:
       new gfxImageSurface((unsigned char*)mappedTex.pData,
                           gfxIntSize(desc.Width, desc.Height),
                           mappedTex.RowPitch,
-                          gfxASurface::ImageFormatRGB24);
+                          gfxImageFormatRGB24);
 
     nsRefPtr<gfxContext> ctx =
       update->mLayer->GetSink()->BeginUpdate(update->mUpdateRect + offset,

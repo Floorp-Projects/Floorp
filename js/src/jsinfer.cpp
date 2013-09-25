@@ -3487,14 +3487,14 @@ JSObject::makeLazyType(JSContext *cx, HandleObject obj)
 /* static */ inline HashNumber
 TypeObjectEntry::hash(const Lookup &lookup)
 {
-    return PointerHasher<JSObject *, 3>::hash(lookup.proto.raw()) ^
+    return PointerHasher<JSObject *, 3>::hash(lookup.hashProto.raw()) ^
            PointerHasher<const Class *, 3>::hash(lookup.clasp);
 }
 
 /* static */ inline bool
 TypeObjectEntry::match(TypeObject *key, const Lookup &lookup)
 {
-    return key->proto == lookup.proto.raw() && key->clasp == lookup.clasp;
+    return key->proto == lookup.matchProto.raw() && key->clasp == lookup.clasp;
 }
 
 #ifdef DEBUG
@@ -3531,6 +3531,39 @@ JSObject::setNewTypeUnknown(JSContext *cx, const Class *clasp, HandleObject obj)
     return true;
 }
 
+#ifdef JSGC_GENERATIONAL
+/*
+ * This class is used to add a post barrier on the newTypeObjects set, as the
+ * key is calculated from a prototype object which may be moved by generational
+ * GC.
+ */
+class NewTypeObjectsSetRef : public BufferableRef
+{
+    TypeObjectSet *set;
+    TypeObject    *typeObject;
+    JSObject      *proto;
+
+  public:
+    NewTypeObjectsSetRef(TypeObjectSet *s, TypeObject *t, JSObject *p)
+      : set(s), typeObject(t), proto(p) {}
+
+    void mark(JSTracer *trc) {
+        const Class *clasp = typeObject->clasp;
+        JSObject *prior = proto;
+        JS_SET_TRACING_LOCATION(trc, (void*)&*prior);
+        Mark(trc, &proto, "newTypeObjects set prototype");
+        if (prior == proto)
+            return;
+
+        TypeObjectSet::Ptr p = set->lookup(TypeObjectSet::Lookup(clasp, prior, proto));
+        JS_ASSERT(p);  // newTypeObjects set must still contain original entry.
+
+        set->rekeyAs(TypeObjectSet::Lookup(clasp, prior, proto),
+                     TypeObjectSet::Lookup(clasp, proto), typeObject);
+    }
+};
+#endif
+
 TypeObject *
 ExclusiveContext::getNewType(const Class *clasp, TaggedProto proto_, JSFunction *fun_)
 {
@@ -3547,6 +3580,8 @@ ExclusiveContext::getNewType(const Class *clasp, TaggedProto proto_, JSFunction 
     uint64_t originalGcNumber = gcNumber();
     if (p) {
         TypeObject *type = *p;
+        JS_ASSERT(type->clasp == clasp);
+        JS_ASSERT(type->proto.get() == proto_.raw());
 
         /*
          * If set, the type's newScript indicates the script used to create
@@ -3590,6 +3625,13 @@ ExclusiveContext::getNewType(const Class *clasp, TaggedProto proto_, JSFunction 
                    : newTypeObjects.relookupOrAdd(p, TypeObjectSet::Lookup(clasp, proto), type.get());
     if (!added)
         return NULL;
+
+#ifdef JSGC_GENERATIONAL
+    if (proto.isObject() && hasNursery() && nursery().isInside(proto.toObject())) {
+        asJSContext()->runtime()->gcStoreBuffer.putGeneric(
+            NewTypeObjectsSetRef(&newTypeObjects, type.get(), proto.toObject()));
+    }
+#endif
 
     if (!typeInferenceEnabled())
         return type;

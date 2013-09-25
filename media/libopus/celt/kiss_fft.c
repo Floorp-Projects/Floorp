@@ -1,9 +1,9 @@
-/*Copyright (c) 2003-2012 IETF Trust, Mark Borgerding, Jean-Marc Valin
-                          Xiph.Org Foundation, CSIRO. All rights reserved.
+/*Copyright (c) 2003-2004, Mark Borgerding
+  Lots of modifications by Jean-Marc Valin
+  Copyright (c) 2005-2007, Xiph.Org Foundation
+  Copyright (c) 2008,      Xiph.Org Foundation, CSIRO
 
-
-  This file is extracted from RFC6716. Please see that RFC for additional
-  information.
+  All rights reserved.
 
   Redistribution and use in source and binary forms, with or without
    modification, are permitted provided that the following conditions are met:
@@ -13,11 +13,6 @@
     * Redistributions in binary form must reproduce the above copyright notice,
        this list of conditions and the following disclaimer in the
        documentation and/or other materials provided with the distribution.
-
-   - Neither the name of Internet Society, IETF or IETF Trust, nor the
-   names of specific contributors, may be used to endorse or promote
-   products derived from this software without specific prior written
-   permission.
 
   THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
   AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
@@ -45,7 +40,6 @@
 #include "os_support.h"
 #include "mathops.h"
 #include "stack_alloc.h"
-#include "os_support.h"
 
 /* The guts header contains all the multiplication and addition macros that are defined for
    complex numbers.  It also delares the kf_ internal functions.
@@ -72,8 +66,8 @@ static void kf_bfly2(
       for(j=0;j<m;j++)
       {
          kiss_fft_cpx t;
-         Fout->r = SHR(Fout->r, 1);Fout->i = SHR(Fout->i, 1);
-         Fout2->r = SHR(Fout2->r, 1);Fout2->i = SHR(Fout2->i, 1);
+         Fout->r = SHR32(Fout->r, 1);Fout->i = SHR32(Fout->i, 1);
+         Fout2->r = SHR32(Fout2->r, 1);Fout2->i = SHR32(Fout2->i, 1);
          C_MUL (t,  *Fout2 , *tw1);
          tw1 += fstride;
          C_SUB( *Fout2 ,  *Fout , t );
@@ -141,14 +135,12 @@ static void kf_bfly4(
          C_MUL4(scratch[1],Fout[m2] , *tw2 );
          C_MUL4(scratch[2],Fout[m3] , *tw3 );
 
-         Fout->r = PSHR(Fout->r, 2);
-         Fout->i = PSHR(Fout->i, 2);
+         Fout->r = PSHR32(Fout->r, 2);
+         Fout->i = PSHR32(Fout->i, 2);
          C_SUB( scratch[5] , *Fout, scratch[1] );
          C_ADDTO(*Fout, scratch[1]);
          C_ADD( scratch[3] , scratch[0] , scratch[2] );
          C_SUB( scratch[4] , scratch[0] , scratch[2] );
-         Fout[m2].r = PSHR(Fout[m2].r, 2);
-         Fout[m2].i = PSHR(Fout[m2].i, 2);
          C_SUB( Fout[m2], *Fout, scratch[3] );
          tw1 += fstride;
          tw2 += fstride*2;
@@ -564,7 +556,7 @@ kiss_fft_state *opus_fft_alloc_twiddles(int nfft,void * mem,size_t * lenmem,  co
 
         st->nfft=nfft;
 #ifndef FIXED_POINT
-        st->scale = 1./nfft;
+        st->scale = 1.f/nfft;
 #endif
         if (base != NULL)
         {

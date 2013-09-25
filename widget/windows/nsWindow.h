@@ -18,12 +18,12 @@
 #include "nsToolkit.h"
 #include "nsString.h"
 #include "nsTArray.h"
-#include "nsEvent.h"
 #include "gfxWindowsSurface.h"
 #include "nsWindowDbg.h"
 #include "cairo.h"
 #include "nsITimer.h"
 #include "nsRegion.h"
+#include "mozilla/EventForwards.h"
 #include "mozilla/TimeStamp.h"
 #include "nsMargin.h"
 

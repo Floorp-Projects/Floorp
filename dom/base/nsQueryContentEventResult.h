@@ -7,8 +7,8 @@
 #include "nsString.h"
 #include "nsRect.h"
 #include "mozilla/Attributes.h"
+#include "mozilla/EventForwards.h"
 
-class nsQueryContentEvent;
 class nsIWidget;
 
 class nsQueryContentEventResult MOZ_FINAL : public nsIQueryContentEventResult

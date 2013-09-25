@@ -10,11 +10,10 @@
 
 #include "nsISelection.h"
 #include "nsRange.h"
+#include "mozilla/EventForwards.h"
 
 class nsCaret;
 class nsPresContext;
-class nsQueryContentEvent;
-class nsSelectionEvent;
 
 struct nsRect;
 

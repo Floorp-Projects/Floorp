@@ -130,7 +130,7 @@ RoundDown(double aDouble)
 static inline bool
 IsMouseEventReal(nsEvent* aEvent)
 {
-  NS_ABORT_IF_FALSE(NS_IS_MOUSE_EVENT_STRUCT(aEvent), "Not a mouse event");
+  NS_ABORT_IF_FALSE(aEvent->IsMouseDerivedEvent(), "Not a mouse event");
   // Return true if not synthesized.
   return static_cast<nsMouseEvent*>(aEvent)->reason == nsMouseEvent::eReal;
 }
@@ -796,7 +796,7 @@ nsEventStateManager::PreHandleEvent(nsPresContext* aPresContext,
     if (!mCurrentTarget) return NS_ERROR_NULL_POINTER;
   }
 #ifdef DEBUG
-  if (NS_IS_DRAG_EVENT(aEvent) && sIsPointerLocked) {
+  if (aEvent->HasDragEventMessage() && sIsPointerLocked) {
     NS_ASSERTION(sIsPointerLocked,
       "sIsPointerLocked is true. Drag events should be suppressed when the pointer is locked.");
   }
@@ -804,8 +804,7 @@ nsEventStateManager::PreHandleEvent(nsPresContext* aPresContext,
   // Store last known screenPoint and clientPoint so pointer lock
   // can use these values as constants.
   if (aEvent->mFlags.mIsTrusted &&
-      ((NS_IS_MOUSE_EVENT_STRUCT(aEvent) &&
-       IsMouseEventReal(aEvent)) ||
+      ((aEvent->IsMouseDerivedEvent() && IsMouseEventReal(aEvent)) ||
        aEvent->eventStructType == NS_WHEEL_EVENT)) {
     if (!sIsPointerLocked) {
       sLastScreenPoint = nsDOMUIEvent::CalculateScreenPoint(aPresContext, aEvent);
@@ -976,7 +975,7 @@ nsEventStateManager::PreHandleEvent(nsPresContext* aPresContext,
       WheelPrefs::GetInstance()->ApplyUserPrefsToDelta(wheelEvent);
 
       // If we won't dispatch a DOM event for this event, nothing to do anymore.
-      if (!NS_IsAllowedToDispatchDOMEvent(wheelEvent)) {
+      if (!wheelEvent->IsAllowedToDispatchDOMEvent()) {
         break;
       }
 

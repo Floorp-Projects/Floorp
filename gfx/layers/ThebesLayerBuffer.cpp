@@ -125,7 +125,7 @@ RotatedBuffer::DrawBufferQuadrant(gfxContext* aTarget,
       aTarget->SetMatrix(*aMaskTransform);
       aTarget->Mask(aMask);
     } else {
-      aTarget->PushGroup(gfxASurface::CONTENT_COLOR_ALPHA);
+      aTarget->PushGroup(GFX_CONTENT_COLOR_ALPHA);
       aTarget->Paint(aOpacity);
       aTarget->PopGroupToSource();
       aTarget->SetMatrix(*aMaskTransform);
@@ -399,7 +399,7 @@ ThebesLayerBuffer::GetContextForQuadrantUpdate(const nsIntRect& aBounds, Context
   return ctx.forget();
 }
 
-gfxASurface::gfxContentType
+gfxContentType
 ThebesLayerBuffer::BufferContentType()
 {
   if (mBuffer) {
@@ -411,15 +411,15 @@ ThebesLayerBuffer::BufferContentType()
   if (mDTBuffer) {
     switch (mDTBuffer->GetFormat()) {
     case FORMAT_A8:
-      return gfxASurface::CONTENT_ALPHA;
+      return GFX_CONTENT_ALPHA;
     case FORMAT_B8G8R8A8:
     case FORMAT_R8G8B8A8:
-      return gfxASurface::CONTENT_COLOR_ALPHA;
+      return GFX_CONTENT_COLOR_ALPHA;
     default:
-      return gfxASurface::CONTENT_COLOR;
+      return GFX_CONTENT_COLOR;
     }
   }
-  return gfxASurface::CONTENT_SENTINEL;
+  return GFX_CONTENT_SENTINEL;
 }
 
 bool
@@ -576,7 +576,7 @@ ThebesLayerBuffer::BeginPaint(ThebesLayer* aLayer, ContentType aContentType,
           !gfxPlatform::ComponentAlphaEnabled()) {
         mode = Layer::SURFACE_SINGLE_CHANNEL_ALPHA;
       } else {
-        contentType = gfxASurface::CONTENT_COLOR;
+        contentType = GFX_CONTENT_COLOR;
       }
 #endif
     }
@@ -586,7 +586,7 @@ ThebesLayerBuffer::BeginPaint(ThebesLayer* aLayer, ContentType aContentType,
          neededRegion.GetNumRects() > 1)) {
       // The area we add to neededRegion might not be painted opaquely
       if (mode == Layer::SURFACE_OPAQUE) {
-        contentType = gfxASurface::CONTENT_COLOR_ALPHA;
+        contentType = GFX_CONTENT_COLOR_ALPHA;
         mode = Layer::SURFACE_SINGLE_CHANNEL_ALPHA;
       }
 
@@ -800,7 +800,7 @@ ThebesLayerBuffer::BeginPaint(ThebesLayer* aLayer, ContentType aContentType,
       FillSurface(mBufferOnWhite, result.mRegionToDraw, topLeft, gfxRGBA(1.0, 1.0, 1.0, 1.0));
     }
     gfxUtils::ClipToRegionSnapped(result.mContext, result.mRegionToDraw);
-  } else if (contentType == gfxASurface::CONTENT_COLOR_ALPHA && !isClear) {
+  } else if (contentType == GFX_CONTENT_COLOR_ALPHA && !isClear) {
     if (IsAzureBuffer()) {
       nsIntRegionRectIterator iter(result.mRegionToDraw);
       const nsIntRect *iterRect;

@@ -184,7 +184,7 @@ public:
     PlanarYCbCrImage::Data data;
     DeserializerToPlanarYCbCrImageData(deserializer, data);
 
-    gfxASurface::gfxImageFormat format = gfxASurface::ImageFormatRGB24;
+    gfxImageFormat format = gfxImageFormatRGB24;
     gfxIntSize size;
     gfxUtils::GetYCbCrToRGBDestFormatAndSize(data, format, size);
     if (size.width > PlanarYCbCrImage::MAX_DIMENSION ||
@@ -202,7 +202,7 @@ public:
 
     mSize = IntSize(size.width, size.height);
     mFormat =
-      (format == gfxASurface::ImageFormatARGB32) ? FORMAT_B8G8R8A8 :
+      (format == gfxImageFormatARGB32) ? FORMAT_B8G8R8A8 :
                                                    FORMAT_B8G8R8X8;
   }
 

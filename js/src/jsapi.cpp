@@ -884,7 +884,7 @@ JS_SetVersionForCompartment(JSCompartment *compartment, JSVersion version)
     compartment->options().setVersion(version);
 }
 
-static struct v2smap {
+static const struct v2smap {
     JSVersion   version;
     const char  *string;
 } v2smap[] = {
@@ -3992,7 +3992,7 @@ JS_GetSecurityCallbacks(JSRuntime *rt)
 }
 
 JS_PUBLIC_API(void)
-JS_SetTrustedPrincipals(JSRuntime *rt, JSPrincipals *prin)
+JS_SetTrustedPrincipals(JSRuntime *rt, const JSPrincipals *prin)
 {
     rt->setTrustedPrincipals(prin);
 }
@@ -4661,7 +4661,7 @@ JS_GetGlobalFromScript(JSScript *script)
 
 JS_PUBLIC_API(JSFunction *)
 JS::CompileFunction(JSContext *cx, HandleObject obj, CompileOptions options,
-                    const char *name, unsigned nargs, const char **argnames,
+                    const char *name, unsigned nargs, const char *const *argnames,
                     const jschar *chars, size_t length)
 {
     JS_ASSERT(!cx->runtime()->isAtomsCompartment(cx->compartment()));
@@ -4705,7 +4705,7 @@ JS::CompileFunction(JSContext *cx, HandleObject obj, CompileOptions options,
 
 JS_PUBLIC_API(JSFunction *)
 JS::CompileFunction(JSContext *cx, HandleObject obj, CompileOptions options,
-                    const char *name, unsigned nargs, const char **argnames,
+                    const char *name, unsigned nargs, const char *const *argnames,
                     const char *bytes, size_t length)
 {
     jschar *chars;
@@ -4723,7 +4723,7 @@ JS::CompileFunction(JSContext *cx, HandleObject obj, CompileOptions options,
 
 JS_PUBLIC_API(JSFunction *)
 JS_CompileUCFunction(JSContext *cx, JSObject *objArg, const char *name,
-                     unsigned nargs, const char **argnames,
+                     unsigned nargs, const char *const *argnames,
                      const jschar *chars, size_t length,
                      const char *filename, unsigned lineno)
 {
@@ -4737,7 +4737,7 @@ JS_CompileUCFunction(JSContext *cx, JSObject *objArg, const char *name,
 JS_PUBLIC_API(JSFunction *)
 JS_CompileFunctionForPrincipals(JSContext *cx, JSObject *objArg,
                                 JSPrincipals *principals, const char *name,
-                                unsigned nargs, const char **argnames,
+                                unsigned nargs, const char *const *argnames,
                                 const char *ascii, size_t length,
                                 const char *filename, unsigned lineno)
 {
@@ -4751,7 +4751,7 @@ JS_CompileFunctionForPrincipals(JSContext *cx, JSObject *objArg,
 
 JS_PUBLIC_API(JSFunction *)
 JS_CompileFunction(JSContext *cx, JSObject *objArg, const char *name,
-                   unsigned nargs, const char **argnames,
+                   unsigned nargs, const char *const *argnames,
                    const char *ascii, size_t length,
                    const char *filename, unsigned lineno)
 {
@@ -5946,7 +5946,10 @@ JS_ReportPendingException(JSContext *cx)
     AssertHeapIsIdle(cx);
     CHECK_REQUEST(cx);
 
-    return js_ReportUncaughtException(cx);
+    // This can only fail due to oom.
+    bool ok = js_ReportUncaughtException(cx);
+    JS_ASSERT(!cx->isExceptionPending());
+    return ok;
 }
 
 struct JSExceptionState {

@@ -1,8 +1,6 @@
-/*Copyright (c) 2003-2012 IETF Trust, Mark Borgerding. All rights reserved.
+/*Copyright (c) 2003-2004, Mark Borgerding
 
-
-  This file is extracted from RFC6716. Please see that RFC for additional
-  information.
+  All rights reserved.
 
   Redistribution and use in source and binary forms, with or without
    modification, are permitted provided that the following conditions are met:
@@ -12,11 +10,6 @@
     * Redistributions in binary form must reproduce the above copyright notice,
        this list of conditions and the following disclaimer in the
        documentation and/or other materials provided with the distribution.
-
-   - Neither the name of Internet Society, IETF or IETF Trust, nor the
-   names of specific contributors, may be used to endorse or promote
-   products derived from this software without specific prior written
-   permission.
 
   THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
   AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
@@ -55,7 +48,6 @@
 #include "arch.h"
 
 
-# define SAMPPROD long long
 #define SAMP_MAX 2147483647
 #define TWID_MAX 32767
 #define TRIG_UPSCALE 1
@@ -74,8 +66,8 @@
           (m).i = SUB32(S_MUL((a).i,(b).r) , S_MUL((a).r,(b).i)); }while(0)
 
 #   define C_MUL4(m,a,b) \
-      do{ (m).r = SHR(SUB32(S_MUL((a).r,(b).r) , S_MUL((a).i,(b).i)),2); \
-          (m).i = SHR(ADD32(S_MUL((a).r,(b).i) , S_MUL((a).i,(b).r)),2); }while(0)
+      do{ (m).r = SHR32(SUB32(S_MUL((a).r,(b).r) , S_MUL((a).i,(b).i)),2); \
+          (m).i = SHR32(ADD32(S_MUL((a).r,(b).i) , S_MUL((a).i,(b).r)),2); }while(0)
 
 #   define C_MULBYSCALAR( c, s ) \
       do{ (c).r =  S_MUL( (c).r , s ) ;\
@@ -101,6 +93,14 @@
 #define C_SUBFROM( res , a)\
     do {(res).r = ADD32((res).r,(a).r);  (res).i = SUB32((res).i,(a).i); \
     }while(0)
+
+#if defined(ARMv4_ASM)
+#include "arm/kiss_fft_armv4.h"
+#endif
+
+#if defined(ARMv5E_ASM)
+#include "arm/kiss_fft_armv5e.h"
+#endif
 
 #else  /* not FIXED_POINT*/
 

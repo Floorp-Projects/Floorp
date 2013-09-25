@@ -504,6 +504,7 @@ else
 endif
 	$(NSINSTALL) $(topsrcdir)/testing/runcppunittests.py $(PKG_STAGE)/cppunittests
 	$(NSINSTALL) $(topsrcdir)/testing/remotecppunittests.py $(PKG_STAGE)/cppunittests
+	$(NSINSTALL) $(topsrcdir)/testing/android_cppunittest_manifest.txt $(PKG_STAGE)/cppunittests
 
 stage-jittest:
 	$(NSINSTALL) -D $(PKG_STAGE)/jit-test/tests
