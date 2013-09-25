@@ -115,16 +115,16 @@ namespace JS {
 struct ObjectsExtraSizes
 {
 #define FOR_EACH_SIZE(macro) \
-    macro(js::NotLiveGCThing, slots) \
-    macro(js::NotLiveGCThing, elementsNonAsmJS) \
-    macro(js::NotLiveGCThing, elementsAsmJSHeap) \
-    macro(js::NotLiveGCThing, elementsAsmJSNonHeap) \
-    macro(js::NotLiveGCThing, asmJSModuleCode) \
-    macro(js::NotLiveGCThing, asmJSModuleData) \
-    macro(js::NotLiveGCThing, argumentsData) \
-    macro(js::NotLiveGCThing, regExpStatics) \
-    macro(js::NotLiveGCThing, propertyIteratorData) \
-    macro(js::NotLiveGCThing, ctypesData)
+    macro(js::NotLiveGCThing, mallocHeapSlots) \
+    macro(js::NotLiveGCThing, mallocHeapElementsNonAsmJS) \
+    macro(js::NotLiveGCThing, mallocHeapElementsAsmJS) \
+    macro(js::NotLiveGCThing, nonHeapElementsAsmJS) \
+    macro(js::NotLiveGCThing, nonHeapCodeAsmJS) \
+    macro(js::NotLiveGCThing, mallocHeapAsmJSModuleData) \
+    macro(js::NotLiveGCThing, mallocHeapArgumentsData) \
+    macro(js::NotLiveGCThing, mallocHeapRegExpStatics) \
+    macro(js::NotLiveGCThing, mallocHeapPropertyIteratorData) \
+    macro(js::NotLiveGCThing, mallocHeapCtypesData)
 
     ObjectsExtraSizes()
       : FOR_EACH_SIZE(ZERO_SIZE)
@@ -359,22 +359,22 @@ struct ZoneStats : js::ZoneStatsPod
 struct CompartmentStats
 {
 #define FOR_EACH_SIZE(macro) \
-    macro(js::IsLiveGCThing,  gcHeapObjectsOrdinary) \
-    macro(js::IsLiveGCThing,  gcHeapObjectsFunction) \
-    macro(js::IsLiveGCThing,  gcHeapObjectsDenseArray) \
-    macro(js::IsLiveGCThing,  gcHeapObjectsSlowArray) \
-    macro(js::IsLiveGCThing,  gcHeapObjectsCrossCompartmentWrapper) \
-    macro(js::IsLiveGCThing,  gcHeapShapesTreeGlobalParented) \
-    macro(js::IsLiveGCThing,  gcHeapShapesTreeNonGlobalParented) \
-    macro(js::IsLiveGCThing,  gcHeapShapesDict) \
-    macro(js::IsLiveGCThing,  gcHeapShapesBase) \
-    macro(js::IsLiveGCThing,  gcHeapScripts) \
+    macro(js::IsLiveGCThing,  objectsGCHeapOrdinary) \
+    macro(js::IsLiveGCThing,  objectsGCHeapFunction) \
+    macro(js::IsLiveGCThing,  objectsGCHeapDenseArray) \
+    macro(js::IsLiveGCThing,  objectsGCHeapSlowArray) \
+    macro(js::IsLiveGCThing,  objectsGCHeapCrossCompartmentWrapper) \
+    macro(js::IsLiveGCThing,  shapesGCHeapTreeGlobalParented) \
+    macro(js::IsLiveGCThing,  shapesGCHeapTreeNonGlobalParented) \
+    macro(js::IsLiveGCThing,  shapesGCHeapDict) \
+    macro(js::IsLiveGCThing,  shapesGCHeapBase) \
+    macro(js::IsLiveGCThing,  scriptsGCHeap) \
     macro(js::NotLiveGCThing, objectsPrivate) \
-    macro(js::NotLiveGCThing, shapesExtraTreeTables) \
-    macro(js::NotLiveGCThing, shapesExtraDictTables) \
-    macro(js::NotLiveGCThing, shapesExtraTreeShapeKids) \
-    macro(js::NotLiveGCThing, shapesCompartmentTables) \
-    macro(js::NotLiveGCThing, scriptData) \
+    macro(js::NotLiveGCThing, shapesMallocHeapTreeTables) \
+    macro(js::NotLiveGCThing, shapesMallocHeapDictTables) \
+    macro(js::NotLiveGCThing, shapesMallocHeapTreeShapeKids) \
+    macro(js::NotLiveGCThing, shapesMallocHeapCompartmentTables) \
+    macro(js::NotLiveGCThing, scriptsMallocHeapData) \
     macro(js::NotLiveGCThing, baselineData) \
     macro(js::NotLiveGCThing, baselineStubsFallback) \
     macro(js::NotLiveGCThing, baselineStubsOptimized) \
