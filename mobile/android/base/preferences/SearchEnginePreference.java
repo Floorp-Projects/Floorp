@@ -16,8 +16,10 @@ import android.util.Log;
 import android.view.View;
 import android.widget.TextView;
 import android.widget.Toast;
+
 import org.json.JSONException;
 import org.json.JSONObject;
+
 import org.mozilla.gecko.R;
 import org.mozilla.gecko.gfx.BitmapUtils;
 import org.mozilla.gecko.util.ThreadUtils;
@@ -26,7 +28,7 @@ import org.mozilla.gecko.widget.FaviconView;
 /**
  * Represents an element in the list of search engines on the preferences menu.
  */
-public class SearchEnginePreference extends Preference {
+public class SearchEnginePreference extends Preference implements View.OnLongClickListener {
     private static final String LOGTAG = "SearchEnginePreference";
 
     // Indices in button array of the AlertDialog of the three buttons.
@@ -102,6 +104,13 @@ public class SearchEnginePreference extends Preference {
         // Set the icon in the FaviconView.
         mFaviconView = ((FaviconView) view.findViewById(R.id.search_engine_icon));
         mFaviconView.updateAndScaleImage(mIconBitmap, getTitle().toString());
+    }
+
+    @Override
+    public boolean onLongClick(View view) {
+        // Show the preference dialog on long-press.
+        showDialog();
+        return true;
     }
 
     /**

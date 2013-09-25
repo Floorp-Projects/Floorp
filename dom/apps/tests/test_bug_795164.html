@@ -1,16 +1,16 @@
 <!DOCTYPE HTML>
 <html>
 <!--
-https://bugzilla.mozilla.org/show_bug.cgi?id=830258
+https://bugzilla.mozilla.org/show_bug.cgi?id=795164
 -->
 <head>
   <meta charset="utf-8">
-  <title>Test for Bug 830258</title>
+  <title>Test for Bug 795164</title>
   <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
   <script type="application/javascript;version=1.7">
 
-  /** Test for Bug 830258 **/
+  /** Test for Bug 795164 **/
 
   SimpleTest.waitForExplicitFinish();
 
@@ -42,6 +42,13 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=830258
     SpecialPowers.autoConfirmAppInstall(continueTest);
     yield undefined;
 
+    // Keeping track of the number of times `mozApps.mgmt.onuninstall` gets triggered
+    let uninstallCount = 0;
+
+    navigator.mozApps.mgmt.onuninstall = function() {
+      uninstallCount++;
+    };
+
     let request = navigator.mozApps.install(url1);
     request.onerror = mozAppsError;
     request.onsuccess = continueTest;
@@ -67,17 +74,6 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=830258
     };
     yield undefined;
 
-    request = navigator.mozApps.mgmt.uninstall(app1);
-    request.onsuccess = function() {
-      ok(false, "Shouldn't be able to uninstall the app1 again");
-      continueTest();
-    };
-    request.onerror = function() {
-      is(this.error.name, "NOT_INSTALLED", "Error name should be 'NOT_INSTALLED'");
-      continueTest();
-    };
-    yield undefined;
-
     request = navigator.mozApps.mgmt.uninstall(app2);
     request.onsuccess = function() {
       ok(true, "Succeed to uninstall the app2 as expected");
@@ -88,6 +84,10 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=830258
       continueTest();
     };
     yield undefined;
+
+    is(uninstallCount, 2, "mgmt.onuninstall got triggered only twice");
+
+    navigator.mozApps.mgmt.onuninstall = null;
 
     // All done.
     ok(true, "All done");
@@ -101,7 +101,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=830258
   </script>
 </head>
 <body onload="go()">
-<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=830258">Mozilla Bug 830258</a>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=795164">Mozilla Bug 795164</a>
 <p id="display"></p>
 <div id="content" style="display: none">
 
