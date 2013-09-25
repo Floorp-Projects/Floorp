@@ -7,7 +7,9 @@
 #include <unistd.h>
 #include <stdio.h>
 #include <sys/ptrace.h>
+#include <sys/prctl.h>
 #include <signal.h>
+#include <string.h>
 
 #include "mozilla/Util.h"
 #if defined(ANDROID)
@@ -38,8 +40,8 @@ struct sock_filter seccomp_filter[] = {
 };
 
 struct sock_fprog seccomp_prog = {
-  len: (unsigned short)MOZ_ARRAY_LENGTH(seccomp_filter),
-  filter: seccomp_filter,
+  (unsigned short)MOZ_ARRAY_LENGTH(seccomp_filter),
+  seccomp_filter,
 };
 
 /**
