@@ -346,6 +346,15 @@ struct ZoneStats : js::ZoneStatsPod
         }
     }
 
+    size_t sizeOfLiveGCThings() const {
+        size_t n = ZoneStatsPod::sizeOfLiveGCThings();
+        for (size_t i = 0; i < notableStrings.length(); i++) {
+            const JS::NotableStringInfo& info = notableStrings[i];
+            n += info.totalGCHeapSizeOf();
+        }
+        return n;
+    }
+
     typedef js::HashMap<JSString*,
                         StringInfo,
                         js::InefficientNonFlatteningStringHashPolicy,
@@ -428,9 +437,8 @@ struct RuntimeStats
     macro(_, gcHeapDecommittedArenas) \
     macro(_, gcHeapUnusedChunks) \
     macro(_, gcHeapUnusedArenas) \
-    macro(_, gcHeapUnusedGcThings) \
     macro(_, gcHeapChunkAdmin) \
-    macro(_, gcHeapGcThings) \
+    macro(_, gcHeapGCThings) \
 
     RuntimeStats(mozilla::MallocSizeOf mallocSizeOf)
       : FOR_EACH_SIZE(ZERO_SIZE)
@@ -455,7 +463,8 @@ struct RuntimeStats
     //   - used bytes
     //     - rtStats.gcHeapChunkAdmin
     //     - rtStats.zTotals.gcHeapArenaAdmin
-    //     - rtStats.gcHeapGcThings (in-use GC things)
+    //     - rtStats.gcHeapGCThings (in-use GC things)
+    //       == rtStats.zTotals.sizeOfLiveGCThings() + rtStats.cTotals.sizeOfLiveGCThings()
     //
     // It's possible that some arenas in empty chunks may be decommitted, but
     // we don't count those under rtStats.gcHeapDecommittedArenas because (a)

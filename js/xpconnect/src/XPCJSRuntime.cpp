@@ -2652,7 +2652,7 @@ JSReporter::CollectReports(WindowPaths *windowPaths,
 
     REPORT_BYTES(NS_LITERAL_CSTRING("js-main-runtime-gc-heap-committed/used/gc-things"),
                  KIND_OTHER,
-                 rtStats.gcHeapGcThings,
+                 rtStats.gcHeapGCThings,
                  "Memory on the garbage-collected JavaScript heap that holds GC things such "
                  "as objects, strings, scripts, etc.")
 
