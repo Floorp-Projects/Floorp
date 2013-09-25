@@ -870,8 +870,7 @@
         <toolbarbutton id="PanelUI-menu-button"
                        class="toolbarbutton-1"
                        label="&brandShortName;"
-                       tooltiptext="&appmenu.title;"
-                       oncommand="PanelUI.toggle(event);"/>
+                       tooltiptext="&appmenu.title;"/>
       </toolbaritem>
 
       <hbox id="window-controls" hidden="true" pack="end" skipintoolbarset="true"

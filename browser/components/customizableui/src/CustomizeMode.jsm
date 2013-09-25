@@ -104,17 +104,17 @@ CustomizeMode.prototype = {
 
     CustomizableUI.addListener(this);
 
-    // Add a keypress listener and click listener to the tab-view-deck so that
+    // Add a keypress listener and mousedown listener to the tab-view-deck so that
     // we can quickly exit customization mode when pressing ESC or clicking on
     // the blueprint outside the customization container.
     let deck = document.getElementById("tab-view-deck");
-    deck.addEventListener("keypress", this, false);
-    deck.addEventListener("click", this, false);
+    deck.addEventListener("keypress", this);
+    deck.addEventListener("mousedown", this);
 
-    // Same goes for the menu button - if we're customizing, a click to the
+    // Same goes for the menu button - if we're customizing, a mousedown to the
     // menu button means a quick exit from customization mode.
     window.PanelUI.hide();
-    window.PanelUI.menuButton.addEventListener("click", this, false);
+    window.PanelUI.menuButton.addEventListener("mousedown", this);
     window.PanelUI.menuButton.open = true;
     window.PanelUI.beginBatchUpdate();
 
@@ -156,11 +156,6 @@ CustomizeMode.prototype = {
 
       window.gNavToolbox.addEventListener("toolbarvisibilitychange", this);
 
-      // Same goes for the menu button - if we're customizing, a click to the
-      // menu button means a quick exit from customization mode.
-      window.PanelUI.menuButton.addEventListener("click", this, false);
-      window.PanelUI.menuButton.disabled = true;
-
       document.getElementById("PanelUI-help").setAttribute("disabled", true);
       document.getElementById("PanelUI-quit").setAttribute("disabled", true);
 
@@ -188,9 +183,9 @@ CustomizeMode.prototype = {
     CustomizableUI.removeListener(this);
 
     let deck = this.document.getElementById("tab-view-deck");
-    deck.removeEventListener("keypress", this, false);
-    deck.removeEventListener("click", this, false);
-    this.window.PanelUI.menuButton.removeEventListener("click", this, false);
+    deck.removeEventListener("keypress", this);
+    deck.removeEventListener("mousedown", this);
+    this.window.PanelUI.menuButton.removeEventListener("mousedown", this);
     this.window.PanelUI.menuButton.open = false;
 
     this.window.PanelUI.beginBatchUpdate();
@@ -703,6 +698,13 @@ CustomizeMode.prototype = {
         this._onDragEnd(aEvent);
         break;
       case "mousedown":
+        if (aEvent.button == 0 &&
+            (aEvent.originalTarget == this.window.PanelUI.menuButton) ||
+            (aEvent.originalTarget == this.document.getElementById("tab-view-deck"))) {
+          this.exit();
+          aEvent.preventDefault();
+          return;
+        }
         this._onMouseDown(aEvent);
         break;
       case "mouseup":
@@ -711,14 +713,6 @@ CustomizeMode.prototype = {
       case "keypress":
         if (aEvent.keyCode == aEvent.DOM_VK_ESCAPE) {
           this.exit();
-        }
-        break;
-      case "click":
-        if (aEvent.button == 0 &&
-            (aEvent.originalTarget == this.window.PanelUI.menuButton) ||
-            (aEvent.originalTarget == this.document.getElementById("tab-view-deck"))) {
-          this.exit();
-          aEvent.preventDefault();
         }
         break;
     }
