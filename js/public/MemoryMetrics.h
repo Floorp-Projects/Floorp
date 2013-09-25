@@ -73,15 +73,15 @@ struct ZoneStatsPod
 {
 #define FOR_EACH_SIZE(macro) \
     macro(NotLiveGCThing, gcHeapArenaAdmin) \
-    macro(NotLiveGCThing, gcHeapUnusedGcThings) \
-    macro(IsLiveGCThing,  gcHeapStringsNormal) \
-    macro(IsLiveGCThing,  gcHeapStringsShort) \
-    macro(IsLiveGCThing,  gcHeapLazyScripts) \
-    macro(IsLiveGCThing,  gcHeapTypeObjects) \
-    macro(IsLiveGCThing,  gcHeapIonCodes) \
-    macro(NotLiveGCThing, stringCharsNonNotable) \
-    macro(NotLiveGCThing, lazyScripts) \
-    macro(NotLiveGCThing, typeObjects) \
+    macro(NotLiveGCThing, unusedGCThings) \
+    macro(IsLiveGCThing,  stringsNormalGCHeap) \
+    macro(IsLiveGCThing,  stringsShortGCHeap) \
+    macro(IsLiveGCThing,  lazyScriptsGCHeap) \
+    macro(IsLiveGCThing,  typeObjectsGCHeap) \
+    macro(IsLiveGCThing,  ionCodesGCHeap) \
+    macro(NotLiveGCThing, stringsNormalMallocHeap) \
+    macro(NotLiveGCThing, lazyScriptsMallocHeap) \
+    macro(NotLiveGCThing, typeObjectsMallocHeap) \
     macro(NotLiveGCThing, typePool)
 
     ZoneStatsPod()
@@ -206,40 +206,39 @@ struct CodeSizes
 struct StringInfo
 {
     StringInfo()
-      : length(0), numCopies(0), sizeOfShortStringGCThings(0),
-        sizeOfNormalStringGCThings(0), sizeOfAllStringChars(0)
+      : length(0), numCopies(0), shortGCHeap(0), normalGCHeap(0), normalMallocHeap(0)
     {}
 
     StringInfo(size_t len, size_t shorts, size_t normals, size_t chars)
       : length(len),
         numCopies(1),
-        sizeOfShortStringGCThings(shorts),
-        sizeOfNormalStringGCThings(normals),
-        sizeOfAllStringChars(chars)
+        shortGCHeap(shorts),
+        normalGCHeap(normals),
+        normalMallocHeap(chars)
     {}
 
     void add(size_t shorts, size_t normals, size_t chars) {
-        sizeOfShortStringGCThings += shorts;
-        sizeOfNormalStringGCThings += normals;
-        sizeOfAllStringChars += chars;
+        shortGCHeap += shorts;
+        normalGCHeap += normals;
+        normalMallocHeap += chars;
         numCopies++;
     }
 
     void add(const StringInfo& info) {
         MOZ_ASSERT(length == info.length);
 
-        sizeOfShortStringGCThings += info.sizeOfShortStringGCThings;
-        sizeOfNormalStringGCThings += info.sizeOfNormalStringGCThings;
-        sizeOfAllStringChars += info.sizeOfAllStringChars;
+        shortGCHeap += info.shortGCHeap;
+        normalGCHeap += info.normalGCHeap;
+        normalMallocHeap += info.normalMallocHeap;
         numCopies += info.numCopies;
     }
 
     size_t totalSizeOf() const {
-        return sizeOfShortStringGCThings + sizeOfNormalStringGCThings + sizeOfAllStringChars;
+        return shortGCHeap + normalGCHeap + normalMallocHeap;
     }
 
-    size_t totalGCThingSizeOf() const {
-        return sizeOfShortStringGCThings + sizeOfNormalStringGCThings;
+    size_t totalGCHeapSizeOf() const {
+        return shortGCHeap + normalGCHeap;
     }
 
     // The string's length, excluding the null-terminator.
@@ -249,9 +248,9 @@ struct StringInfo
     size_t numCopies;
 
     // These are all totals across all copies of the string we've seen.
-    size_t sizeOfShortStringGCThings;
-    size_t sizeOfNormalStringGCThings;
-    size_t sizeOfAllStringChars;
+    size_t shortGCHeap;
+    size_t normalGCHeap;
+    size_t normalMallocHeap;
 };
 
 // Holds data about a notable string (one which uses more than
@@ -452,10 +451,10 @@ struct RuntimeStats
     //   - unused bytes
     //     - rtStats.gcHeapUnusedChunks (empty chunks)
     //     - rtStats.gcHeapUnusedArenas (empty arenas within non-empty chunks)
-    //     - rtStats.total.gcHeapUnusedGcThings (empty GC thing slots within non-empty arenas)
+    //     - rtStats.zTotals.unusedGCThings (empty GC thing slots within non-empty arenas)
     //   - used bytes
     //     - rtStats.gcHeapChunkAdmin
-    //     - rtStats.total.gcHeapArenaAdmin
+    //     - rtStats.zTotals.gcHeapArenaAdmin
     //     - rtStats.gcHeapGcThings (in-use GC things)
     //
     // It's possible that some arenas in empty chunks may be decommitted, but
