@@ -951,7 +951,7 @@ let CustomizableUIInternal = {
         node.setAttribute("disabled", true);
       }
       node.setAttribute("removable", aWidget.removable);
-      node.setAttribute("nooverflow", aWidget.nooverflow);
+      node.setAttribute("overflows", aWidget.overflows);
       node.setAttribute("label", this.getLocalizedProperty(aWidget, "label"));
       node.setAttribute("tooltiptext", this.getLocalizedProperty(aWidget, "tooltiptext"));
       //XXXunf Need to hook this up to a <key> element or something.
@@ -1612,7 +1612,7 @@ let CustomizableUIInternal = {
       instances: new Map(),
       currentArea: null,
       removable: false,
-      nooverflow: false,
+      overflows: true,
       defaultArea: null,
       allowedAreas: [],
       shortcut: null,
@@ -1645,7 +1645,7 @@ let CustomizableUIInternal = {
       }
     }
 
-    const kOptBoolProps = ["removable", "showInPrivateBrowsing", "nooverflow"]
+    const kOptBoolProps = ["removable", "showInPrivateBrowsing", "overflows"];
     for (let prop of kOptBoolProps) {
       if (typeof aData[prop] == "boolean") {
         widget[prop] = aData[prop];
@@ -2396,7 +2396,7 @@ OverflowableToolbar.prototype = {
     while (child && this._target.clientWidth < this._target.scrollWidth) {
       let prevChild = child.previousSibling;
 
-      if (!child.hasAttribute("nooverflow")) {
+      if (child.getAttribute("overflows") != "false") {
         this._collapsed.set(child.id, this._target.clientWidth);
         child.classList.add("overflowedItem");
         child.setAttribute("customizableui-anchorid", this._chevron.id);
