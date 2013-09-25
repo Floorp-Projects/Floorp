@@ -325,11 +325,10 @@ Mark##base##Unbarriered(JSTracer *trc, type **thingp, const char *name)         
     MarkUnbarriered<type>(trc, thingp, name);                                                     \
 }                                                                                                 \
                                                                                                   \
-/* This is a hack that forces the compiler to generate code for */                                \
-/* MarkUnbarriered<type>. Without it, some compilers will completely inline it */                 \
-/* away, causing linking errors in other translation units. */                                    \
-void (*Mark##base##type##UnbarrieredVar)(JSTracer *, type **, const char *) =                     \
-    MarkUnbarriered<type>;                                                                        \
+/* Explicitly instantiate MarkUnbarriered<type>. It is referenced from */                         \
+/* other translation units and the instantiation might otherwise get */                           \
+/* inlined away. */                                                                               \
+template void MarkUnbarriered<type>(JSTracer *, type **, const char *);                           \
                                                                                                   \
 void                                                                                              \
 Mark##base##Range(JSTracer *trc, size_t len, HeapPtr<type> *vec, const char *name)                \
@@ -367,14 +366,9 @@ Is##base##AboutToBeFinalized(EncapsulatedPtr<type> *thingp)                     
     return IsAboutToBeFinalized<type>(thingp->unsafeGet());                                       \
 }
 
-// The arguments to DeclMarkerImpl cannot be qualified names due to the
-// Mark##base##type##UnbarrieredVar hack in DeclMarkerImpl.
-using jit::IonCode;
-using js::types::TypeObject;
-
 DeclMarkerImpl(BaseShape, BaseShape)
 DeclMarkerImpl(BaseShape, UnownedBaseShape)
-DeclMarkerImpl(IonCode, IonCode)
+DeclMarkerImpl(IonCode, jit::IonCode)
 DeclMarkerImpl(Object, ArgumentsObject)
 DeclMarkerImpl(Object, ArrayBufferObject)
 DeclMarkerImpl(Object, ArrayBufferViewObject)
@@ -392,7 +386,7 @@ DeclMarkerImpl(String, JSString)
 DeclMarkerImpl(String, JSFlatString)
 DeclMarkerImpl(String, JSLinearString)
 DeclMarkerImpl(String, PropertyName)
-DeclMarkerImpl(TypeObject, TypeObject)
+DeclMarkerImpl(TypeObject, js::types::TypeObject)
 
 } /* namespace gc */
 } /* namespace js */
