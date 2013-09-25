@@ -240,6 +240,7 @@ public:
   virtual mozilla::a11y::role NativeRole();
   virtual uint64_t NativeState();
   virtual bool CanHaveAnonChildren();
+  virtual bool IsAcceptableChild(Accessible* aPossibleChild) const MOZ_OVERRIDE;
 
   // ActionAccessible
   virtual uint8_t ActionCount();
