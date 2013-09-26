@@ -1041,6 +1041,7 @@ var gBrowserInit = {
     // We do this before the session restore service gets initialized so we can
     // apply full zoom settings to tabs restored by the session restore service.
     FullZoom.init();
+    PanelUI.init();
     LightweightThemeListener.init();
     WebrtcIndicator.init();
 
