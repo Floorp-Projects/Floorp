@@ -470,7 +470,7 @@ class ClonedBlockObject : public BlockObject
 
 template<XDRMode mode>
 bool
-XDRStaticBlockObject(XDRState<mode> *xdr, HandleObject enclosingScope, HandleScript script,
+XDRStaticBlockObject(XDRState<mode> *xdr, HandleObject enclosingScope,
                      StaticBlockObject **objp);
 
 extern JSObject *
