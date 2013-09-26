@@ -2554,7 +2554,6 @@ def getJSToNativeConversionInfo(type, descriptorProvider, failureCode=None,
                                 lenientFloatCode=None,
                                 allowTreatNonCallableAsNull=False,
                                 isCallbackReturnValue=False,
-                                isInOwningUnion=False,
                                 sourceDescription="value"):
     """
     Get a template for converting a JS value to a native object based on the
@@ -2575,9 +2574,9 @@ def getJSToNativeConversionInfo(type, descriptorProvider, failureCode=None,
     if isMember is not False, we're being converted from a property of some JS
     object, not from an actual method argument, so we can't rely on our jsval
     being rooted or outliving us in any way.  Callers can pass "Dictionary",
-    "Variadic", or "Sequence" to indicate that the conversion is for something
-    that is a dictionary member, a variadic argument, or a sequence
-    respectively.
+    "Variadic", "Sequence", or "OwningUnion" to indicate that the conversion is
+    for something that is a dictionary member, a variadic argument, a sequence,
+    or an owning union respectively.
 
     If isOptional is true, then we are doing conversion of an optional
     argument with no default value.
@@ -2720,8 +2719,8 @@ def getJSToNativeConversionInfo(type, descriptorProvider, failureCode=None,
         return templateBody
 
     # A helper function for converting things that look like a JSObject*.
-    def handleJSObjectType(type, isMember, isInOwningUnion, failureCode):
-        if not isMember and not isInOwningUnion:
+    def handleJSObjectType(type, isMember, failureCode):
+        if not isMember:
             if isOptional:
                 # We have a specialization of Optional that will use a
                 # Rooted for the storage here.
@@ -2730,7 +2729,7 @@ def getJSToNativeConversionInfo(type, descriptorProvider, failureCode=None,
                 declType = CGGeneric("JS::Rooted<JSObject*>")
         else:
             assert (isMember == "Sequence" or isMember == "Variadic" or
-                    isMember == "Dictionary" or isInOwningUnion)
+                    isMember == "Dictionary" or isMember == "OwningUnion")
             # We'll get traced by the sequence or dictionary or union tracer
             declType = CGGeneric("JSObject*")
         templateBody = "${declName} = &${val}.toObject();"
@@ -3119,8 +3118,7 @@ for (uint32_t i = 0; i < length; ++i) {
         if descriptor.nativeType == 'JSObject':
             # XXXbz Workers code does this sometimes
             assert descriptor.workers
-            return handleJSObjectType(type, isMember, isInOwningUnion,
-                                      failureCode)
+            return handleJSObjectType(type, isMember, failureCode)
 
         if descriptor.interface.isCallback():
             name = descriptor.interface.identifier.name
@@ -3156,7 +3154,6 @@ for (uint32_t i = 0; i < length; ++i) {
         forceOwningType = ((descriptor.interface.isCallback() and
                             not descriptor.workers) or
                            isMember or
-                           isInOwningUnion or
                            isCallbackReturnValue)
 
         typeName = descriptor.nativeType
@@ -3266,7 +3263,7 @@ for (uint32_t i = 0; i < length; ++i) {
              CGIndenter(onFailureBadType(failureCode, type.name)).define()))
         template = wrapObjectTemplate(template, type, "${declName}.SetNull()",
                                       failureCode)
-        if not isMember and not isInOwningUnion:
+        if not isMember:
             # This is a bit annoying.  In a union we don't want to have a
             # holder, since unions don't support that.  But if we're optional we
             # want to have a holder, so that the callee doesn't see
@@ -3358,22 +3355,14 @@ for (uint32_t i = 0; i < length; ++i) {
 
         if isOptional:
             declType = "Optional<nsAString>"
-        elif isInOwningUnion:
-            declType = "nsString"
         else:
             declType = "NonNull<nsAString>"
 
         # No need to deal with optional here; we handled it already
-        decl = ""
-        if isInOwningUnion:
-            decl += "FakeDependentString str;\n"
         return JSToNativeConversionInfo(
-            "%s"
-            "%s\n"
-            "${declName} = %s" %
-              (decl,
-               getConversionCode("str" if isInOwningUnion else "${holderName}"),
-               ("str;" if isInOwningUnion else "&${holderName};")),
+            ("%s\n"
+             "${declName} = &${holderName};" %
+             getConversionCode("${holderName}")),
             declType=CGGeneric(declType),
             holderType=CGGeneric("FakeDependentString"))
 
@@ -3526,7 +3515,7 @@ for (uint32_t i = 0; i < length; ++i) {
 
     if type.isObject():
         assert not isEnforceRange and not isClamp
-        return handleJSObjectType(type, isMember, isInOwningUnion, failureCode)
+        return handleJSObjectType(type, isMember, failureCode)
 
     if type.isDictionary():
         if failureCode is not None and not isDefinitelyObject:
@@ -6123,7 +6112,8 @@ def getUnionTypeTemplateVars(unionType, type, descriptorProvider,
                         "}") % (prefix, prefix, prefix, name) + tryNextCode
     conversionInfo = getJSToNativeConversionInfo(
         type, descriptorProvider, failureCode=tryNextCode,
-        isDefinitelyObject=True, isInOwningUnion=ownsMembers,
+        isDefinitelyObject=True,
+        isMember=("OwningUnion" if ownsMembers else None),
         sourceDescription="member of %s" % unionType)
 
     # This is ugly, but UnionMember needs to call a constructor with no
@@ -8150,8 +8140,6 @@ class CGDictionary(CGThing):
                             isClamp=member.clamp,
                             isMember="Dictionary",
                             isOptional=(not member.defaultValue),
-                            # Set this to true so that we get an owning union.
-                            isInOwningUnion=True,
                             defaultValue=member.defaultValue,
                             sourceDescription=("'%s' member of %s" %
                                                (member.identifier.name,
