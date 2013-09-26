@@ -128,6 +128,9 @@ class TableTicker: public Sampler {
   // Called within a signal. This function must be reentrant
   virtual void Tick(TickSample* sample);
 
+  // Immediately captures the calling thread's call stack and returns it.
+  virtual SyncProfile* GetBacktrace();
+
   // Called within a signal. This function must be reentrant
   virtual void RequestSave()
   {
