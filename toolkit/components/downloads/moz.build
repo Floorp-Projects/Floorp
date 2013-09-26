@@ -19,9 +19,13 @@ MODULE = 'downloads'
 CPP_SOURCES += [
     'SQLFunctions.cpp',
     'nsDownloadManager.cpp',
-    'ApplicationReputation.cpp',
-    'csd.pb.cc'
 ]
+
+if CONFIG['MOZ_URL_CLASSIFIER']:
+    CPP_SOURCES += [
+        'ApplicationReputation.cpp',
+        'csd.pb.cc'
+    ]
 
 if CONFIG['OS_ARCH'] == 'WINNT':
     CPP_SOURCES += [
