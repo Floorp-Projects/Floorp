@@ -48,9 +48,6 @@ public class MostRecentPage extends HomeFragment {
     // The view shown by the fragment.
     private ListView mList;
 
-    // The title for this HomeFragment page.
-    private TextView mTitle;
-
     // Reference to the View to display when there are no results.
     private View mEmptyView;
 
@@ -93,11 +90,6 @@ public class MostRecentPage extends HomeFragment {
 
     @Override
     public void onViewCreated(View view, Bundle savedInstanceState) {
-        mTitle = (TextView) view.findViewById(R.id.title);
-        if (mTitle != null) {
-            mTitle.setText(R.string.home_most_recent_title);
-        }
-
         mList = (ListView) view.findViewById(R.id.list);
         mList.setTag(HomePager.LIST_TAG_MOST_RECENT);
 
@@ -120,7 +112,6 @@ public class MostRecentPage extends HomeFragment {
     public void onDestroyView() {
         super.onDestroyView();
         mList = null;
-        mTitle = null;
         mEmptyView = null;
     }
 
@@ -159,18 +150,10 @@ public class MostRecentPage extends HomeFragment {
 
     private void updateUiFromCursor(Cursor c) {
         if (c != null && c.getCount() > 0) {
-            if (mTitle != null) {
-                mTitle.setVisibility(View.VISIBLE);
-            }
             return;
         }
 
-        // Cursor is empty, so hide the title and set the
-        // empty view if it hasn't been set already.
-        if (mTitle != null) {
-            mTitle.setVisibility(View.GONE);
-        }
-
+        // Cursor is empty, so set the empty view if it hasn't been set already.
         if (mEmptyView == null) {
             // Set empty page view. We delay this so that the empty view won't flash.
             final ViewStub emptyViewStub = (ViewStub) getView().findViewById(R.id.home_empty_view_stub);
