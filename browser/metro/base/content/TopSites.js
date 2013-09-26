@@ -8,10 +8,6 @@
  * singleton to provide data-level functionality to the views
  */
 let TopSites = {
-  _initialized: false,
-
-  Site: Site,
-
   prepareCache: function(aForce){
     // front to the NewTabUtils' links cache
     //  -ensure NewTabUtils.links links are pre-cached
@@ -151,6 +147,7 @@ let TopSites = {
     this._sitesDirty.clear();
     this.update();
   },
+
   _linkFromNode: function _linkFromNode(aNode) {
     return {
       url: aNode.getAttribute("value"),
