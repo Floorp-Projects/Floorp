@@ -208,7 +208,7 @@ function test() {
     b = [];
     b[255] = 1;
     check(b);
-    assertEq(serialize(b).length < 255, true);
+    assertEq(serialize(b).clonebuffer.length < 255, true);
 
     // Self-modifying object.
     // This should never read through to b's prototype.

@@ -18,6 +18,7 @@
 
 #include "jit/AsmJS.h"
 #include "jit/AsmJSLink.h"
+#include "js/StructuredClone.h"
 #include "vm/ForkJoin.h"
 #include "vm/GlobalObject.h"
 #include "vm/Interpreter.h"
@@ -29,6 +30,10 @@ using namespace js;
 using namespace JS;
 
 using mozilla::ArrayLength;
+
+// If fuzzingSafe is set, remove functionality that could cause problems with
+// fuzzers. Set this via the environment variable MOZ_FUZZING_SAFE.
+static bool fuzzingSafe = false;
 
 static bool
 GetBuildConfiguration(JSContext *cx, unsigned argc, jsval *vp)
@@ -1091,6 +1096,228 @@ SetIonAssertGraphCoherency(JSContext *cx, unsigned argc, jsval *vp)
     return true;
 }
 
+class CloneBufferObject : public JSObject {
+    static const JSPropertySpec props_[2];
+    static const size_t DATA_SLOT   = 0;
+    static const size_t LENGTH_SLOT = 1;
+    static const size_t NUM_SLOTS   = 2;
+
+  public:
+    static const Class class_;
+
+    static CloneBufferObject *Create(JSContext *cx) {
+        RootedObject obj(cx, JS_NewObject(cx, Jsvalify(&class_), nullptr, nullptr));
+        if (!obj)
+            return nullptr;
+        obj->setReservedSlot(DATA_SLOT, PrivateValue(nullptr));
+        obj->setReservedSlot(LENGTH_SLOT, Int32Value(0));
+
+        if (!JS_DefineProperties(cx, obj, props_))
+            return nullptr;
+
+        return &obj->as<CloneBufferObject>();
+    }
+
+    static CloneBufferObject *Create(JSContext *cx, JSAutoStructuredCloneBuffer *buffer) {
+        Rooted<CloneBufferObject*> obj(cx, Create(cx));
+        if (!obj)
+            return nullptr;
+        uint64_t *datap;
+        size_t nbytes;
+        buffer->steal(&datap, &nbytes);
+        obj->setData(datap);
+        obj->setNBytes(nbytes);
+        return obj;
+    }
+
+    uint64_t *data() const {
+        return static_cast<uint64_t*>(getReservedSlot(0).toPrivate());
+    }
+
+    void setData(uint64_t *aData) {
+        JS_ASSERT(!data());
+        setReservedSlot(DATA_SLOT, PrivateValue(aData));
+    }
+
+    size_t nbytes() const {
+        return getReservedSlot(LENGTH_SLOT).toInt32();
+    }
+
+    void setNBytes(size_t nbytes) {
+        JS_ASSERT(nbytes <= UINT32_MAX);
+        setReservedSlot(LENGTH_SLOT, Int32Value(nbytes));
+    }
+
+    // Discard an owned clone buffer.
+    void discard() {
+        if (data())
+            JS_ClearStructuredClone(data(), nbytes());
+        setReservedSlot(DATA_SLOT, PrivateValue(nullptr));
+    }
+
+    static bool
+    setCloneBuffer_impl(JSContext* cx, CallArgs args) {
+        if (args.length() != 1 || !args[0].isString()) {
+            JS_ReportError(cx,
+                           "the first argument argument must be maxBytes, "
+                           "maxMallocBytes, gcStackpoolLifespan, gcBytes or "
+                           "gcNumber");
+            JS_ReportError(cx, "clonebuffer setter requires a single string argument");
+            return false;
+        }
+
+        if (fuzzingSafe) {
+            // A manually-created clonebuffer could easily trigger a crash
+            args.rval().setUndefined();
+            return true;
+        }
+
+        Rooted<CloneBufferObject*> obj(cx, &args.thisv().toObject().as<CloneBufferObject>());
+        obj->discard();
+
+        char *str = JS_EncodeString(cx, args[0].toString());
+        if (!str)
+            return false;
+        obj->setData(reinterpret_cast<uint64_t*>(str));
+        obj->setNBytes(JS_GetStringLength(args[0].toString()));
+
+        args.rval().setUndefined();
+        return true;
+    }
+
+    static bool
+    is(HandleValue v) {
+        return v.isObject() && v.toObject().is<CloneBufferObject>();
+    }
+
+    static bool
+    setCloneBuffer(JSContext* cx, unsigned int argc, JS::Value* vp) {
+        CallArgs args = CallArgsFromVp(argc, vp);
+        return CallNonGenericMethod<is, setCloneBuffer_impl>(cx, args);
+    }
+
+    static bool
+    getCloneBuffer_impl(JSContext* cx, CallArgs args) {
+        Rooted<CloneBufferObject*> obj(cx, &args.thisv().toObject().as<CloneBufferObject>());
+        JS_ASSERT(args.length() == 0);
+
+        if (!obj->data()) {
+            args.rval().setUndefined();
+            return true;
+        }
+
+        bool hasTransferable;
+        if (!JS_StructuredCloneHasTransferables(obj->data(), obj->nbytes(), &hasTransferable))
+            return false;
+
+        if (hasTransferable) {
+            JS_ReportError(cx, "cannot retrieve structured clone buffer with transferables");
+            return false;
+        }
+
+        JSString *str = JS_NewStringCopyN(cx, reinterpret_cast<char*>(obj->data()), obj->nbytes());
+        if (!str)
+            return false;
+        args.rval().setString(str);
+        return true;
+    }
+
+    static bool
+    getCloneBuffer(JSContext* cx, unsigned int argc, JS::Value* vp) {
+        CallArgs args = CallArgsFromVp(argc, vp);
+        return CallNonGenericMethod<is, getCloneBuffer_impl>(cx, args);
+    }
+
+    static void Finalize(FreeOp *fop, JSObject *obj) {
+        obj->as<CloneBufferObject>().discard();
+    }
+};
+
+const Class CloneBufferObject::class_ = {
+    "CloneBuffer", JSCLASS_HAS_RESERVED_SLOTS(CloneBufferObject::NUM_SLOTS),
+    JS_PropertyStub,       /* addProperty */
+    JS_DeletePropertyStub, /* delProperty */
+    JS_PropertyStub,       /* getProperty */
+    JS_StrictPropertyStub, /* setProperty */
+    JS_EnumerateStub,
+    JS_ResolveStub,
+    JS_ConvertStub,
+    Finalize,
+    nullptr,                  /* checkAccess */
+    nullptr,                  /* call */
+    nullptr,                  /* hasInstance */
+    nullptr,                  /* construct */
+    nullptr,                  /* trace */
+    JS_NULL_CLASS_EXT,
+    JS_NULL_OBJECT_OPS
+};
+
+const JSPropertySpec CloneBufferObject::props_[] = {
+    JS_PSGS("clonebuffer", getCloneBuffer, setCloneBuffer, 0),
+    JS_PS_END
+};
+
+static bool
+Serialize(JSContext *cx, unsigned argc, jsval *vp)
+{
+    CallArgs args = CallArgsFromVp(argc, vp);
+
+    Value v = args.length() > 0 ? args[0] : UndefinedValue();
+    Value transferables = args.length() > 1 ? args[1] : UndefinedValue();
+
+    JSAutoStructuredCloneBuffer clonebuf;
+    if (!clonebuf.write(cx, v, transferables))
+        return false;
+
+    RootedObject obj(cx, CloneBufferObject::Create(cx, &clonebuf));
+    if (!obj)
+        return false;
+
+    args.rval().setObject(*obj);
+    return true;
+}
+
+static bool
+Deserialize(JSContext *cx, unsigned argc, jsval *vp)
+{
+    CallArgs args = CallArgsFromVp(argc, vp);
+
+    if (args.length() != 1 || !args[0].isObject()) {
+        JS_ReportError(cx, "deserialize requires a single clonebuffer argument");
+        return false;
+    }
+
+    if (!args[0].toObject().is<CloneBufferObject>()) {
+        JS_ReportError(cx, "deserialize requires a clonebuffer");
+        return false;
+    }
+
+    Rooted<CloneBufferObject*> obj(cx, &args[0].toObject().as<CloneBufferObject>());
+
+    // Clone buffer was already consumed?
+    if (!obj->data()) {
+        JS_ReportError(cx, "deserialize given invalid clone buffer "
+                       "(transferables already consumed?)");
+        return false;
+    }
+
+    bool hasTransferable;
+    if (!JS_StructuredCloneHasTransferables(obj->data(), obj->nbytes(), &hasTransferable))
+        return false;
+
+    RootedValue deserialized(cx);
+    if (!JS_ReadStructuredClone(cx, obj->data(), obj->nbytes(),
+                                JS_STRUCTURED_CLONE_VERSION, deserialized.address(), NULL, NULL)) {
+        return false;
+    }
+    args.rval().set(deserialized);
+
+    if (hasTransferable)
+        obj->discard();
+
+    return true;
+}
+
 static const JSFunctionSpecWithHelp TestingFunctions[] = {
     JS_FN_HELP("gc", ::GC, 0, 0,
 "gc([obj] | 'compartment')",
@@ -1296,11 +1523,23 @@ static const JSFunctionSpecWithHelp TestingFunctions[] = {
 "  are valuable and should be generally enabled, however they can be very expensive for large\n"
 "  (asm.js) programs."),
 
+    JS_FN_HELP("serialize", Serialize, 1, 0,
+"serialize(data, [transferables])",
+"  Serialize 'data' using JS_WriteStructuredClone. Returns a structured\n"
+"  clone buffer object."),
+
+    JS_FN_HELP("deserialize", Deserialize, 1, 0,
+"deserialize(clonebuffer)",
+"  Deserialize data generated by serialize."),
+
     JS_FS_HELP_END
 };
 
 bool
-js::DefineTestingFunctions(JSContext *cx, HandleObject obj)
+js::DefineTestingFunctions(JSContext *cx, HandleObject obj, bool fuzzingSafe_)
 {
+    fuzzingSafe = fuzzingSafe_;
+    if (getenv("MOZ_FUZZING_SAFE") && getenv("MOZ_FUZZING_SAFE")[0] != '0')
+        fuzzingSafe = true;
     return JS_DefineFunctionsWithHelp(cx, obj, TestingFunctions);
 }
