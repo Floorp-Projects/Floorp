@@ -17,6 +17,7 @@
 #include "mozilla/dom/Exceptions.h"
 #include "mozilla/dom/NonRefcountedDOMObject.h"
 #include "mozilla/dom/Nullable.h"
+#include "mozilla/dom/RootedDictionary.h"
 #include "mozilla/dom/workers/Workers.h"
 #include "mozilla/ErrorResult.h"
 #include "mozilla/Likely.h"
@@ -1754,42 +1755,6 @@ public:
   };
 
   SequenceType mSequenceType;
-};
-
-template<typename T>
-class MOZ_STACK_CLASS RootedDictionary : public T,
-                                         private JS::CustomAutoRooter
-{
-public:
-  RootedDictionary(JSContext* cx MOZ_GUARD_OBJECT_NOTIFIER_PARAM) :
-    T(),
-    JS::CustomAutoRooter(cx MOZ_GUARD_OBJECT_NOTIFIER_PARAM_TO_PARENT)
-  {
-  }
-
-  virtual void trace(JSTracer *trc) MOZ_OVERRIDE
-  {
-    this->TraceDictionary(trc);
-  }
-};
-
-template<typename T>
-class MOZ_STACK_CLASS NullableRootedDictionary : public Nullable<T>,
-                                                 private JS::CustomAutoRooter
-{
-public:
-  NullableRootedDictionary(JSContext* cx MOZ_GUARD_OBJECT_NOTIFIER_PARAM) :
-    Nullable<T>(),
-    JS::CustomAutoRooter(cx MOZ_GUARD_OBJECT_NOTIFIER_PARAM_TO_PARENT)
-  {
-  }
-
-  virtual void trace(JSTracer *trc) MOZ_OVERRIDE
-  {
-    if (!this->IsNull()) {
-      this->Value().TraceDictionary(trc);
-    }
-  }
 };
 
 template<typename T>
