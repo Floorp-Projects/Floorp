@@ -16,14 +16,14 @@ function Finder(docShell) {
   this._fastFind.init(docShell);
 
   this._docShell = docShell;
-  this._document = docShell.QueryInterface(Ci.nsIInterfaceRequestor)
-                           .getInterface(Ci.nsIDOMWindow).document;
   this._listeners = [];
-
   this._previousLink = null;
   this._drewOutline = false;
-
   this._searchString = null;
+
+  docShell.QueryInterface(Ci.nsIInterfaceRequestor)
+          .getInterface(Ci.nsIWebProgress)
+          .addProgressListener(this, Ci.nsIWebProgress.NOTIFY_LOCATION);
 }
 
 Finder.prototype = {
@@ -125,10 +125,11 @@ Finder.prototype = {
           this._fastFind.foundLink.click();
         break;
       case Ci.nsIDOMKeyEvent.DOM_VK_TAB:
-        if (aEvent.shiftKey)
-          this._document.commandDispatcher.rewindFocus();
-        else
-          this._document.commandDispatcher.advanceFocus();
+        let direction = Services.focus.MOVEFOCUS_FORWARD;
+        if (aEvent.shiftKey) {
+          direction = Services.focus.MOVEFOCUS_BACKWARD;
+        }
+        Services.focus.moveFocus(this._getWindow(), null, direction, 0);
         break;
       case Ci.nsIDOMKeyEvent.DOM_VK_PAGE_UP:
         controller.scrollPage(false);
@@ -420,6 +421,16 @@ Finder.prototype = {
     return null;
   },
 
+  // Start of nsIWebProgressListener implementation.
+
+  onLocationChange: function(aWebProgress, aRequest, aLocation, aFlags) {
+    if (!aWebProgress.isTopLevel)
+      return;
+
+    // Avoid leaking if we change the page.
+    this._previousLink = null;
+  },
+
   // Start of nsIEditActionListener implementations
 
   WillDeleteText: function (aTextNode, aOffset, aLength) {
@@ -588,5 +599,8 @@ Finder.prototype = {
       notifyDocumentCreated: function() {},
       notifyDocumentStateChanged: function(aDirty) {}
     };
-  }
+  },
+
+  QueryInterface: XPCOMUtils.generateQI([Ci.nsIWebProgressListener,
+                                         Ci.nsISupportsWeakReference])
 };
