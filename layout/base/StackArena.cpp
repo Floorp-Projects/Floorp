@@ -10,11 +10,10 @@ namespace mozilla {
 
 // A block of memory that the stack will chop up and hand out.
 struct StackBlock {
-  // A bit under 4096, for malloc overhead.
-  static const size_t MAX_USABLE_SIZE = 4044;
+  // Subtract sizeof(StackBlock*) to give space for the |mNext| field.
+  static const size_t MAX_USABLE_SIZE = 4096 - sizeof(StackBlock*);
 
-  // A block of memory.  Note that this must be first so that it will
-  // be aligned.
+  // A block of memory.
   char mBlock[MAX_USABLE_SIZE];
 
   // Another block of memory that would only be created if our stack
@@ -24,6 +23,8 @@ struct StackBlock {
   StackBlock() : mNext(nullptr) { }
   ~StackBlock() { }
 };
+
+static_assert(sizeof(StackBlock) == 4096, "StackBlock must be 4096 bytes");
 
 // We hold an array of marks. A push pushes a mark on the stack.
 // A pop pops it off.
