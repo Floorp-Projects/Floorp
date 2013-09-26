@@ -344,6 +344,7 @@ LayerManagerComposite::Render()
   }
 
   if (actualBounds.IsEmpty()) {
+    mCompositor->GetWidget()->PostRender(this);
     return;
   }
 
@@ -369,6 +370,8 @@ LayerManagerComposite::Render()
     PROFILER_LABEL("LayerManagerComposite", "EndFrame");
     mCompositor->EndFrame();
   }
+
+  mCompositor->GetWidget()->PostRender(this);
 }
 
 void
