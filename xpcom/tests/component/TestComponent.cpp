@@ -19,7 +19,6 @@ DummyConstructorFunc(nsISupports* aOuter, const nsIID& aIID, void** aResult)
 
 static const mozilla::Module::CIDEntry kTestCIDs[] = {
   { &kNS_TESTING_CID, false, NULL, DummyConstructorFunc },
-  { &kNS_TESTING_CID, false, NULL, DummyConstructorFunc },
   { NULL }
 };
 
@@ -29,3 +28,5 @@ static const mozilla::Module kTestModule = {
 };
 
 NSMODULE_DEFN(dummy) = &kTestModule;
+
+  
