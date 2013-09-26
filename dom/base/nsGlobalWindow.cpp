@@ -5999,7 +5999,7 @@ nsGlobalWindow::ResizeTo(int32_t aWidth, int32_t aHeight)
    * If caller is a browser-element then dispatch a resize event to
    * the embedder.
    */
-  if (mDocShell->GetIsBrowserOrApp()) {
+  if (mDocShell && mDocShell->GetIsBrowserOrApp()) {
     nsIntSize size(aWidth, aHeight);
     if (!DispatchResizeEvent(size)) {
       // The embedder chose to prevent the default action for this
@@ -6039,7 +6039,7 @@ nsGlobalWindow::ResizeBy(int32_t aWidthDif, int32_t aHeightDif)
    * If caller is a browser-element then dispatch a resize event to
    * parent.
    */
-  if (mDocShell->GetIsBrowserOrApp()) {
+  if (mDocShell && mDocShell->GetIsBrowserOrApp()) {
     CSSIntSize size;
     nsresult rv = GetInnerSize(size);
     NS_ENSURE_SUCCESS(rv, NS_OK);
