@@ -52,8 +52,12 @@ MOCHITEST_BROWSER_FILES += \
   browser_bug705707_is_content_stylesheet_xul.css \
   browser_bug722196_identify_media_queries.html \
   browser_styleinspector_bug_677930_urls_clickable.html \
-  browser_styleinspector_bug_677930_urls_clickable \
-  browser_styleinspector_bug_677930_urls_clickable/browser_styleinspector_bug_677930_urls_clickable.css \
   test-image.png \
   browser_ruleview_pseudoelement.html \
   $(NULL)
+
+MOCHITEST_BUG_677940_DATA_FILES = \
+  browser_styleinspector_bug_677930_urls_clickable/browser_styleinspector_bug_677930_urls_clickable.css \
+  $(NULL)
+MOCHITEST_BUG_677940_DATA_DEST = $(MOCHITEST_BROWSER_DEST)/browser_styleinspector_bug_677930_urls_clickable
+INSTALL_TARGETS += MOCHITEST_BUG_677940_DATA
