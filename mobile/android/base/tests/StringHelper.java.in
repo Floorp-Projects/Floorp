@@ -93,7 +93,7 @@ class StringHelper {
     public static final String TOP_SITES_LABEL = "TOP SITES";
     public static final String BOOKMARKS_LABEL = "BOOKMARKS";
     public static final String READING_LIST_LABEL = "READING LIST";
-    public static final String MOST_RECENT_LABEL = "Most recent";
+    public static final String TODAY_LABEL = "Today";
     public static final String TABS_FROM_LAST_TIME_LABEL = "Open all tabs from last time";
 
     // Desktop default bookmarks folders
