@@ -193,6 +193,7 @@ WEBIDL_FILES = [
     'InterAppMessagePort.webidl',
     'KeyboardEvent.webidl',
     'KeyEvent.webidl',
+    'LegacyQueryInterface.webidl',
     'LinkStyle.webidl',
     'LocalMediaStream.webidl',
     'Location.webidl',

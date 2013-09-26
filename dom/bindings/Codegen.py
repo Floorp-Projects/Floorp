@@ -1462,6 +1462,41 @@ class MethodDefiner(PropertyDefiner):
         self.chrome = []
         self.regular = []
         for m in methods:
+            if m.identifier.name == 'queryInterface':
+                if self.descriptor.workers:
+                    continue
+                if m.isStatic():
+                    raise TypeError("Legacy queryInterface member shouldn't be static")
+                signatures = m.signatures()
+                def argTypeIsIID(arg):
+                    return arg.type.inner.isExternal() and arg.type.inner.identifier.name == 'IID'
+                if len(signatures) > 1 or len(signatures[0][1]) > 1 or not argTypeIsIID(signatures[0][1][0]):
+                    raise TypeError("There should be only one queryInterface method with 1 argument of type IID")
+                # Make sure to not stick QueryInterface on abstract interfaces that
+                # have hasXPConnectImpls (like EventTarget).  So only put it on
+                # interfaces that are concrete and all of whose ancestors are abstract.
+                def allAncestorsAbstract(iface):
+                    if not iface.parent:
+                        return True
+                    desc = self.descriptor.getDescriptor(iface.parent.identifier.name)
+                    if desc.concrete:
+                        return False
+                    return allAncestorsAbstract(iface.parent)
+                if (not self.descriptor.interface.hasInterfacePrototypeObject() or
+                    not self.descriptor.concrete or
+                    not allAncestorsAbstract(self.descriptor.interface)):
+                    raise TypeError("QueryInterface is only supported on "
+                                    "interfaces that are concrete and all "
+                                    "of whose ancestors are abstract: " +
+                                    self.descriptor.name)
+                condition = "WantsQueryInterface<%s>::Enabled" % descriptor.nativeType
+                self.regular.append({"name": 'QueryInterface',
+                                     "methodInfo": False,
+                                     "length": 1,
+                                     "flags": "0",
+                                     "condition": MemberCondition(None, condition) })
+                continue
+
             method = { "name": m.identifier.name,
                        "methodInfo": not m.isStatic(),
                        "length": methodLength(m),
@@ -1480,14 +1515,6 @@ class MethodDefiner(PropertyDefiner):
                                  "length": 0,
                                  "flags": "JSPROP_ENUMERATE",
                                  "condition": MemberCondition(None, None) })
-
-        if not static and descriptor.wantsQI():
-            condition = "WantsQueryInterface<%s>::Enabled" % descriptor.nativeType
-            self.regular.append({"name": 'QueryInterface',
-                                 "methodInfo": False,
-                                 "length": 1,
-                                 "flags": "0",
-                                 "condition": MemberCondition(None, condition) })
 
         if not static:
             stringifier = descriptor.operations['Stringifier']
@@ -7860,6 +7887,8 @@ class CGDescriptor(CGThing):
             cgThings.append(CGClassConstructor(descriptor, n,
                                                NamedConstructorName(n)))
         for m in descriptor.interface.members:
+            if m.isMethod() and m.identifier.name == 'queryInterface':
+                continue
             if (m.isMethod() and m == descriptor.operations['Jsonifier']):
                 hasJsonifier = True
                 hasMethod = True

@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<!-- Any copyright is dedicated to the Public Domain.
+   - http://creativecommons.org/publicdomain/zero/1.0/ -->
+<html>
+  <head>
+    <title>CSS Test: Sticky Positioning - block inside inline, stuck position</title>
+    <link rel="author" title="L. David Baron" href="mailto:dbaron@mozilla.com">
+    <link rel="match" href="block-in-inline-2-ref.html">
+    <meta name="assert" content="Inline elements split because they contain blocks should always have all parts moved the same offset from their normal position">
+    <link rel="stylesheet" type="text/css" href="ahem.css">
+    <style>
+      #scroll {
+        height: 100px;
+        overflow: hidden;
+        font: 20px/1 Ahem;
+      }
+      #contain {
+        height: 100px;
+      }
+      #sticky {
+        display: inline;
+        position: sticky;
+        top: 10px;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="scroll">
+      <div style="height: 20px"></div>
+      <div id="contain">
+        before inline
+        <div id="sticky">
+          before block
+          <div>in block</div>
+          after block
+        </div>
+        after inline
+      </div>
+      <div style="height: 100px"></div>
+    </div>
+    <script type="application/javascript">
+      document.getElementById("scroll").scrollTop = 30;
+    </script>
+  </body>
+</html>

@@ -780,10 +780,8 @@ static bool
 AddCallTarget(HandleScript script, CallTargetVector &targets);
 
 bool
-jit::AddPossibleCallees(MIRGraph &graph, CallTargetVector &targets)
+jit::AddPossibleCallees(JSContext *cx, MIRGraph &graph, CallTargetVector &targets)
 {
-    JSContext *cx = GetIonContext()->cx;
-
     for (ReversePostorderIterator block(graph.rpoBegin()); block != graph.rpoEnd(); block++) {
         for (MInstructionIterator ins(block->begin()); ins != block->end(); ins++)
         {
@@ -797,8 +795,8 @@ jit::AddPossibleCallees(MIRGraph &graph, CallTargetVector &targets)
                 JS_ASSERT_IF(!target->isInterpreted(), target->hasParallelNative());
 
                 if (target->isInterpreted()) {
-                    RootedScript script(cx, target->nonLazyScript());
-                    if (!AddCallTarget(script, targets))
+                    RootedScript script(cx, target->getOrCreateScript(cx));
+                    if (!script || !AddCallTarget(script, targets))
                         return false;
                 }
 
