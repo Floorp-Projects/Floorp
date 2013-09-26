@@ -74,5 +74,12 @@ if test "$?" != 0; then
     AC_MSG_ERROR([Python environment does not appear to be sane.])
 fi
 AC_MSG_RESULT([yes])
+
+PYTHON_SITE_PACKAGES=`$PYTHON -c "import distutils.sysconfig; print distutils.sysconfig.get_python_lib()"`
+if test -z "$PYTHON_SITE_PACKAGES"; then
+    AC_MSG_ERROR([Could not determine python site packages directory.])
+fi
+AC_SUBST([PYTHON_SITE_PACKAGES])
+
 ])
 
