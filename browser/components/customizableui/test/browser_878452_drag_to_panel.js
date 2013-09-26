@@ -22,7 +22,6 @@ let gTests = [
       simulateItemDrag(btn, palette);
       ok(CustomizableUI.inDefaultState, "Should be in default state again.");
     },
-    teardown: endCustomizing
   },
   {
     desc: "Dragging an item from the palette to the panel itself should also work.",
@@ -40,7 +39,6 @@ let gTests = [
       simulateItemDrag(btn, palette);
       ok(CustomizableUI.inDefaultState, "Should be in default state again.");
     },
-    teardown: endCustomizing
   },
   {
     desc: "Dragging an item from the palette to an empty panel should also work.",
@@ -65,11 +63,11 @@ let gTests = [
       simulateItemDrag(btn, palette);
       assertAreaPlacements(panel.id, []);
     },
-    teardown: endCustomizing
   }
 ];
 
 function asyncCleanup() {
+  yield endCustomizing();
   Services.prefs.clearUserPref("browser.uiCustomization.skipSourceNodeCheck");
   yield resetCustomization();
 }
