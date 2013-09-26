@@ -26,6 +26,7 @@ from .data import (
     GeneratedWebIDLFile,
     IPDLFile,
     LocalInclude,
+    PreprocessedTestWebIDLFile,
     PreprocessedWebIDLFile,
     Program,
     ReaderSummary,
@@ -189,6 +190,7 @@ class TreeMetadataEmitter(LoggingMixin):
             ('GENERATED_WEBIDL_FILES', GeneratedWebIDLFile),
             ('IPDL_SOURCES', IPDLFile),
             ('LOCAL_INCLUDES', LocalInclude),
+            ('PREPROCESSED_TEST_WEBIDL_FILES', PreprocessedTestWebIDLFile),
             ('PREPROCESSED_WEBIDL_FILES', PreprocessedWebIDLFile),
             ('TEST_WEBIDL_FILES', TestWebIDLFile),
             ('WEBIDL_FILES', WebIDLFile),
@@ -237,7 +239,7 @@ class TreeMetadataEmitter(LoggingMixin):
         path = mozpath.normpath(mozpath.join(sandbox['SRCDIR'], manifest_path))
         manifest_dir = mozpath.dirname(path)
         manifest_reldir = mozpath.dirname(mozpath.relpath(path,
-            self.config.topsrcdir))
+            sandbox['TOPSRCDIR']))
 
         try:
             m = manifestparser.TestManifest(manifests=[path], strict=True)

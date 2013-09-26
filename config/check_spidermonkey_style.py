@@ -317,10 +317,6 @@ def is_module_header(enclosing_inclname, header_inclname):
     if m is not None and module.endswith('/' + m.group(1)):
         return True
 
-    # A weird public header case.
-    if module == 'jsmemorymetrics' and header_inclname == 'js/MemoryMetrics.h':
-        return True
-
     return False
 
 
