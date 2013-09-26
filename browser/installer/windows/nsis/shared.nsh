@@ -415,7 +415,7 @@ FunctionEnd
                                  "${AppRegName} HTML Document" ""
 
   ${AddDisabledDDEHandlerValues} "FirefoxURL" "$2" "$8,1" "${AppRegName} URL" \
-                                 "delete"
+                                 "true"
   Call RegisterCEH
 
   ; An empty string is used for the 4th & 5th params because the following
@@ -653,7 +653,7 @@ FunctionEnd
   ${IsHandlerForInstallDir} "FirefoxURL" $R9
   ${If} "$R9" == "true"
     ${AddDisabledDDEHandlerValues} "FirefoxURL" "$2" "$8,1" \
-                                   "${AppRegName} URL" "delete"
+                                   "${AppRegName} URL" "true"
   ${EndIf}
 
   ; An empty string is used for the 4th & 5th params because the following
