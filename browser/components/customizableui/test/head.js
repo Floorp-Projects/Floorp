@@ -143,13 +143,24 @@ function startCustomizing() {
   return deferred.promise;
 }
 
-function openAndLoadWindow(aOptions) {
+function openAndLoadWindow(aOptions, aWaitForDelayedStartup=false) {
   let deferred = Promise.defer();
   let win = OpenBrowserWindow(aOptions);
-  win.addEventListener("load", function onLoad() {
-    win.removeEventListener("load", onLoad);
-    deferred.resolve(win);
-  });
+  if (aWaitForDelayedStartup) {
+    Services.obs.addObserver(function onDS(aSubject, aTopic, aData) {
+      if (aSubject != win) {
+        return;
+      }
+      Services.obs.removeObserver(onDS, "browser-delayed-startup-finished");
+      deferred.resolve(win);
+    }, "browser-delayed-startup-finished", false);
+
+  } else {
+    win.addEventListener("load", function onLoad() {
+      win.removeEventListener("load", onLoad);
+      deferred.resolve(win);
+    });
+  }
   return deferred.promise;
 }
 
