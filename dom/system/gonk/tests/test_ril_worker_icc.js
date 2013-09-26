@@ -492,13 +492,13 @@ add_test(function test_icc_get_card_lock_state_fdn() {
 
   buf.sendParcel = function () {
     // Request Type.
-    do_check_eq(this.readUint32(), REQUEST_QUERY_FACILITY_LOCK)
+    do_check_eq(this.readInt32(), REQUEST_QUERY_FACILITY_LOCK)
 
     // Token : we don't care.
-    this.readUint32();
+    this.readInt32();
 
     // String Array Length.
-    do_check_eq(this.readUint32(), worker.RILQUIRKS_V5_LEGACY ? 3 : 4);
+    do_check_eq(this.readInt32(), worker.RILQUIRKS_V5_LEGACY ? 3 : 4);
 
     // Facility.
     do_check_eq(this.readString(), ICC_CB_FACILITY_FDN);
@@ -513,7 +513,7 @@ add_test(function test_icc_get_card_lock_state_fdn() {
 
     if (!worker.RILQUIRKS_V5_LEGACY) {
       // AID. Ignore because it's from modem.
-      this.readUint32();
+      this.readInt32();
     }
 
     run_next_test();
@@ -759,7 +759,7 @@ add_test(function test_read_pbr() {
     ];
 
     // Write data size
-    buf.writeUint32(pbr_1.length * 2);
+    buf.writeInt32(pbr_1.length * 2);
 
     // Write pbr
     for (let i = 0; i < pbr_1.length; i++) {
@@ -820,7 +820,7 @@ add_test(function test_read_email() {
       0x6F, 0x6D, 0x02, 0x23];
 
     // Write data size
-    buf.writeUint32(email_1.length * 2);
+    buf.writeInt32(email_1.length * 2);
 
     // Write email
     for (let i = 0; i < email_1.length; i++) {
@@ -888,32 +888,32 @@ add_test(function test_update_email() {
       count++;
 
       // Request Type.
-      do_check_eq(this.readUint32(), REQUEST_SIM_IO);
+      do_check_eq(this.readInt32(), REQUEST_SIM_IO);
 
       // Token : we don't care
-      this.readUint32();
+      this.readInt32();
 
       // command.
-      do_check_eq(this.readUint32(), ICC_COMMAND_UPDATE_RECORD);
+      do_check_eq(this.readInt32(), ICC_COMMAND_UPDATE_RECORD);
 
       // fileId.
-      do_check_eq(this.readUint32(), fileId);
+      do_check_eq(this.readInt32(), fileId);
 
       // pathId.
       do_check_eq(this.readString(),
                   EF_PATH_MF_SIM + EF_PATH_DF_TELECOM + EF_PATH_DF_PHONEBOOK);
 
       // p1.
-      do_check_eq(this.readUint32(), recordNumber);
+      do_check_eq(this.readInt32(), recordNumber);
 
       // p2.
-      do_check_eq(this.readUint32(), READ_RECORD_ABSOLUTE_MODE);
+      do_check_eq(this.readInt32(), READ_RECORD_ABSOLUTE_MODE);
 
       // p3.
-      do_check_eq(this.readUint32(), recordSize);
+      do_check_eq(this.readInt32(), recordSize);
 
       // data.
-      let strLen = this.readUint32();
+      let strLen = this.readInt32();
       let email;
       if (pbr.email.fileType === ICC_USIM_TYPE1_TAG) {
         email = pduHelper.read8BitUnpackedToString(recordSize);
@@ -930,7 +930,7 @@ add_test(function test_update_email() {
 
       if (!worker.RILQUIRKS_V5_LEGACY) {
         // AID. Ignore because it's from modem.
-        this.readUint32();
+        this.readInt32();
       }
 
       if (count == NUM_TESTS) {
@@ -962,7 +962,7 @@ add_test(function test_read_anr() {
       0x54, 0xF6, 0xFF, 0xFF];
 
     // Write data size
-    buf.writeUint32(anr_1.length * 2);
+    buf.writeInt32(anr_1.length * 2);
 
     // Write anr
     for (let i = 0; i < anr_1.length; i++) {
@@ -1029,32 +1029,32 @@ add_test(function test_update_anr() {
       count++;
 
       // Request Type.
-      do_check_eq(this.readUint32(), REQUEST_SIM_IO);
+      do_check_eq(this.readInt32(), REQUEST_SIM_IO);
 
       // Token : we don't care
-      this.readUint32();
+      this.readInt32();
 
       // command.
-      do_check_eq(this.readUint32(), ICC_COMMAND_UPDATE_RECORD);
+      do_check_eq(this.readInt32(), ICC_COMMAND_UPDATE_RECORD);
 
       // fileId.
-      do_check_eq(this.readUint32(), fileId);
+      do_check_eq(this.readInt32(), fileId);
 
       // pathId.
       do_check_eq(this.readString(),
                   EF_PATH_MF_SIM + EF_PATH_DF_TELECOM + EF_PATH_DF_PHONEBOOK);
 
       // p1.
-      do_check_eq(this.readUint32(), recordNumber);
+      do_check_eq(this.readInt32(), recordNumber);
 
       // p2.
-      do_check_eq(this.readUint32(), READ_RECORD_ABSOLUTE_MODE);
+      do_check_eq(this.readInt32(), READ_RECORD_ABSOLUTE_MODE);
 
       // p3.
-      do_check_eq(this.readUint32(), recordSize);
+      do_check_eq(this.readInt32(), recordSize);
 
       // data.
-      let strLen = this.readUint32();
+      let strLen = this.readInt32();
       // EF_AAS, ignore.
       pduHelper.readHexOctet();
       do_check_eq(pduHelper.readNumberWithLength(), expectedANR);
@@ -1073,7 +1073,7 @@ add_test(function test_update_anr() {
 
       if (!worker.RILQUIRKS_V5_LEGACY) {
         // AID. Ignore because it's from modem.
-        this.readUint32();
+        this.readInt32();
       }
 
       if (count == NUM_TESTS) {
@@ -1103,7 +1103,7 @@ add_test(function test_read_iap() {
     let iap_1 = [0x01, 0x02];
 
     // Write data size/
-    buf.writeUint32(iap_1.length * 2);
+    buf.writeInt32(iap_1.length * 2);
 
     // Write iap.
     for (let i = 0; i < iap_1.length; i++) {
@@ -1172,32 +1172,32 @@ add_test(function test_update_iap() {
   function do_test(expectedIAP) {
     buf.sendParcel = function () {
       // Request Type.
-      do_check_eq(this.readUint32(), REQUEST_SIM_IO);
+      do_check_eq(this.readInt32(), REQUEST_SIM_IO);
 
       // Token : we don't care
-      this.readUint32();
+      this.readInt32();
 
       // command.
-      do_check_eq(this.readUint32(), ICC_COMMAND_UPDATE_RECORD);
+      do_check_eq(this.readInt32(), ICC_COMMAND_UPDATE_RECORD);
 
       // fileId.
-      do_check_eq(this.readUint32(), fileId);
+      do_check_eq(this.readInt32(), fileId);
 
       // pathId.
       do_check_eq(this.readString(),
                   EF_PATH_MF_SIM + EF_PATH_DF_TELECOM + EF_PATH_DF_PHONEBOOK);
 
       // p1.
-      do_check_eq(this.readUint32(), recordNumber);
+      do_check_eq(this.readInt32(), recordNumber);
 
       // p2.
-      do_check_eq(this.readUint32(), READ_RECORD_ABSOLUTE_MODE);
+      do_check_eq(this.readInt32(), READ_RECORD_ABSOLUTE_MODE);
 
       // p3.
-      do_check_eq(this.readUint32(), recordSize);
+      do_check_eq(this.readInt32(), recordSize);
 
       // data.
-      let strLen = this.readUint32();
+      let strLen = this.readInt32();
       for (let i = 0; i < recordSize; i++) {
         do_check_eq(expectedIAP[i], pduHelper.readHexOctet());
       }
@@ -1208,7 +1208,7 @@ add_test(function test_update_iap() {
 
       if (!worker.RILQUIRKS_V5_LEGACY) {
         // AID. Ignore because it's from modem.
-        this.readUint32();
+        this.readInt32();
       }
 
       run_next_test();
@@ -1246,28 +1246,28 @@ add_test(function test_update_adn_like() {
 
   buf.sendParcel = function () {
     // Request Type.
-    do_check_eq(this.readUint32(), REQUEST_SIM_IO);
+    do_check_eq(this.readInt32(), REQUEST_SIM_IO);
 
     // Token : we don't care
-    this.readUint32();
+    this.readInt32();
 
     // command.
-    do_check_eq(this.readUint32(), ICC_COMMAND_UPDATE_RECORD);
+    do_check_eq(this.readInt32(), ICC_COMMAND_UPDATE_RECORD);
 
     // fileId.
-    do_check_eq(this.readUint32(), fileId);
+    do_check_eq(this.readInt32(), fileId);
 
     // pathId.
     do_check_eq(this.readString(), EF_PATH_MF_SIM + EF_PATH_DF_TELECOM);
 
     // p1.
-    do_check_eq(this.readUint32(), 1);
+    do_check_eq(this.readInt32(), 1);
 
     // p2.
-    do_check_eq(this.readUint32(), READ_RECORD_ABSOLUTE_MODE);
+    do_check_eq(this.readInt32(), READ_RECORD_ABSOLUTE_MODE);
 
     // p3.
-    do_check_eq(this.readUint32(), 0x20);
+    do_check_eq(this.readInt32(), 0x20);
 
     // data.
     let contact = pdu.readAlphaIdDiallingNumber(0x20);
@@ -1283,7 +1283,7 @@ add_test(function test_update_adn_like() {
 
     if (!worker.RILQUIRKS_V5_LEGACY) {
       // AID. Ignore because it's from modem.
-      this.readUint32();
+      this.readInt32();
     }
 
     if (fileId == ICC_EF_FDN) {
@@ -1313,7 +1313,7 @@ add_test(function test_find_free_record_id() {
 
   function writeRecord (record) {
     // Write data size
-    buf.writeUint32(record.length * 2);
+    buf.writeInt32(record.length * 2);
 
     for (let i = 0; i < record.length; i++) {
       pduHelper.writeHexOctet(record[i]);
@@ -1733,10 +1733,10 @@ add_test(function test_set_icc_card_lock_facility_lock() {
   function do_test(aLock, aPassword, aEnabled) {
     buf.sendParcel = function fakeSendParcel () {
       // Request Type.
-      do_check_eq(this.readUint32(), REQUEST_SET_FACILITY_LOCK);
+      do_check_eq(this.readInt32(), REQUEST_SET_FACILITY_LOCK);
 
       // Token : we don't care
-      this.readUint32();
+      this.readInt32();
 
       let parcel = this.readStringList();
       do_check_eq(parcel.length, 5);
@@ -1783,14 +1783,14 @@ add_test(function test_unlock_card_lock_corporateLocked() {
   function do_test(aLock, aPassword) {
     buf.sendParcel = function fakeSendParcel () {
       // Request Type.
-      do_check_eq(this.readUint32(), REQUEST_ENTER_NETWORK_DEPERSONALIZATION_CODE);
+      do_check_eq(this.readInt32(), REQUEST_ENTER_NETWORK_DEPERSONALIZATION_CODE);
 
       // Token : we don't care
-      this.readUint32();
+      this.readInt32();
 
       let lockType = GECKO_PERSO_LOCK_TO_CARD_PERSO_LOCK[aLock];
       // Lock Type
-      do_check_eq(this.readUint32(), lockType);
+      do_check_eq(this.readInt32(), lockType);
 
       // Pin/Puk.
       do_check_eq(this.readString(), aPassword);
@@ -1867,7 +1867,7 @@ add_test(function test_reading_ad_and_parsing_mcc_mnc() {
       }
 
       // Write data size
-      buf.writeUint32(ad.length * 2);
+      buf.writeInt32(ad.length * 2);
 
       // Write data
       for (let i = 0; i < ad.length; i++) {
