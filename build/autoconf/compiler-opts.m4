@@ -194,7 +194,17 @@ if test -z "$GNU_CC"; then
     esac
 fi
 
-if test "$GNU_CC" -a -n "$DEVELOPER_OPTIONS"; then
+if test -n "$DEVELOPER_OPTIONS"; then
+    MOZ_FORCE_GOLD=1
+fi
+
+MOZ_ARG_ENABLE_BOOL(gold,
+[  --enable-gold           Enable GNU Gold Linker when it is not already the default],
+    MOZ_FORCE_GOLD=1,
+    MOZ_FORCE_GOLD=
+    )
+
+if test "$GNU_CC" -a -n "$MOZ_FORCE_GOLD"; then
     dnl if the default linker is BFD ld, check if gold is available and try to use it
     dnl for local builds only.
     if $CC -Wl,--version 2>&1 | grep -q "GNU ld"; then
@@ -208,6 +218,7 @@ if test "$GNU_CC" -a -n "$DEVELOPER_OPTIONS"; then
         esac
         if test -n "$GOLD"; then
             mkdir -p $_objdir/build/unix/gold
+            rm -f $_objdir/build/unix/gold/ld
             ln -s "$GOLD" $_objdir/build/unix/gold/ld
             if $CC -B $_objdir/build/unix/gold -Wl,--version 2>&1 | grep -q "GNU gold"; then
                 LDFLAGS="$LDFLAGS -B $_objdir/build/unix/gold"
