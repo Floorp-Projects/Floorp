@@ -3341,6 +3341,11 @@ SetElementIC::attachDenseElement(JSContext *cx, IonScript *ion, JSObject *obj, c
                 masm.callPreBarrier(target, MIRType_Value);
         }
 
+        // Call post barrier if necessary, and recalculate elements pointer if it got cobbered.
+        Register postBarrierScratch = elements;
+        if (masm.maybeCallPostBarrier(object(), value(), postBarrierScratch))
+            masm.loadPtr(Address(object(), JSObject::offsetOfElements()), elements);
+
         // Store the value.
         masm.bind(&storeElem);
         masm.storeConstantOrRegister(value(), target);
