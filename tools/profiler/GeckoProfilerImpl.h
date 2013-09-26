@@ -32,7 +32,6 @@
 #undef min
 #endif
 
-struct PseudoStack;
 class TableTicker;
 class JSCustomObject;
 
@@ -42,6 +41,7 @@ class TimeStamp;
 
 extern mozilla::ThreadLocal<PseudoStack *> tlsPseudoStack;
 extern mozilla::ThreadLocal<TableTicker *> tlsTicker;
+extern mozilla::ThreadLocal<void *> tlsStackTop;
 extern bool stack_key_initialized;
 
 #ifndef SAMPLE_FUNCTION_NAME
@@ -81,13 +81,25 @@ void profiler_stop()
 }
 
 static inline
+ProfilerBacktrace* profiler_get_backtrace()
+{
+  return mozilla_sampler_get_backtrace();
+}
+
+static inline
+void profiler_free_backtrace(ProfilerBacktrace* aBacktrace)
+{
+  mozilla_sampler_free_backtrace(aBacktrace);
+}
+
+static inline
 bool profiler_is_active()
 {
   return mozilla_sampler_is_active();
 }
 
 static inline
-void profiler_responsiveness(const TimeStamp& aTime)
+void profiler_responsiveness(const mozilla::TimeStamp& aTime)
 {
   mozilla_sampler_responsiveness(aTime);
 }
@@ -174,6 +186,12 @@ double profiler_time()
 }
 
 static inline
+double profiler_time(const mozilla::TimeStamp& aTime)
+{
+  return mozilla_sampler_time(aTime);
+}
+
+static inline
 bool profiler_in_privacy_mode()
 {
   PseudoStack *stack = tlsPseudoStack.get();
@@ -211,6 +229,10 @@ bool profiler_in_privacy_mode()
 #else
 # define PROFILE_DEFAULT_ENTRY 100000
 #endif
+
+// In the case of profiler_get_backtrace we know that we only need enough space
+// for a single backtrace.
+#define GET_BACKTRACE_DEFAULT_ENTRY 1000
 
 #if defined(PLATFORM_LIKELY_MEMORY_CONSTRAINED)
 /* A 1ms sampling interval has been shown to be a large perf hit

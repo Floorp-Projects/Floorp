@@ -18,7 +18,10 @@
 #include "mozilla/ipc/DocumentRendererParent.h"
 #include "mozilla/layers/CompositorParent.h"
 #include "mozilla/layout/RenderFrameParent.h"
+#include "mozilla/MouseEvents.h"
 #include "mozilla/Preferences.h"
+#include "mozilla/TextEvents.h"
+#include "mozilla/TouchEvents.h"
 #include "mozilla/unused.h"
 #include "nsCOMPtr.h"
 #include "nsContentPermissionHelper.h"
@@ -889,6 +892,28 @@ TabParent::RecvNotifyIMETextHint(const nsString& aText)
 {
   // Replace our cache with new text
   mIMECacheText = aText;
+  return true;
+}
+
+bool
+TabParent::RecvRequestFocus(const bool& aCanRaise)
+{
+  nsCOMPtr<nsIFocusManager> fm = nsFocusManager::GetFocusManager();
+  if (!fm) {
+    return true;
+  }
+
+  nsCOMPtr<nsIContent> content = do_QueryInterface(mFrameElement);
+  if (!content || !content->OwnerDoc()) {
+    return true;
+  }
+
+  uint32_t flags = nsIFocusManager::FLAG_NOSCROLL;
+  if (aCanRaise)
+    flags |= nsIFocusManager::FLAG_RAISE;
+
+  nsCOMPtr<nsIDOMElement> node = do_QueryInterface(mFrameElement);
+  fm->SetFocus(node, flags);
   return true;
 }
 

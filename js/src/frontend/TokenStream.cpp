@@ -49,8 +49,8 @@ static const KeywordInfo keywords[] = {
 #undef KEYWORD_INFO
 };
 
-// Returns a KeywordInfo for the specified characters, or NULL if the string is
-// not a keyword.
+// Returns a KeywordInfo for the specified characters, or nullptr if the string
+// is not a keyword.
 static const KeywordInfo *
 FindKeyword(const jschar *s, size_t length)
 {
@@ -85,7 +85,7 @@ FindKeyword(const jschar *s, size_t length)
     return kw;
 
   no_match:
-    return NULL;
+    return nullptr;
 }
 
 bool
@@ -111,7 +111,7 @@ frontend::IsIdentifier(JSLinearString *str)
 bool
 frontend::IsKeyword(JSLinearString *str)
 {
-    return FindKeyword(str->chars(), str->length()) != NULL;
+    return FindKeyword(str->chars(), str->length()) != nullptr;
 }
 
 TokenStream::SourceCoords::SourceCoords(ExclusiveContext *cx, uint32_t ln)
@@ -216,7 +216,7 @@ TokenStream::SourceCoords::lineIndexOf(uint32_t offset) const
     // want one before that.
     iMax = lineStartOffsets_.length() - 2;
     while (iMax > iMin) {
-        iMid = (iMin + iMax) / 2;
+        iMid = iMin + (iMax - iMin) / 2;
         if (offset >= lineStartOffsets_[iMid + 1])
             iMin = iMid + 1;    // offset is above lineStartOffsets_[iMid]
         else
@@ -271,11 +271,11 @@ TokenStream::TokenStream(ExclusiveContext *cx, const CompileOptions &options,
     lineno(options.lineno),
     flags(),
     linebase(base - options.column),
-    prevLinebase(NULL),
+    prevLinebase(nullptr),
     userbuf(cx, base - options.column, length + options.column), // See comment below
     filename(options.filename),
-    sourceURL_(NULL),
-    sourceMapURL_(NULL),
+    sourceURL_(nullptr),
+    sourceMapURL_(nullptr),
     tokenbuf(cx),
     cx(cx),
     originPrincipals(options.originPrincipals()),
@@ -442,7 +442,7 @@ TokenStream::ungetChar(int32_t c)
 
         JS_ASSERT(prevLinebase);    // we should never get more than one EOL char
         linebase = prevLinebase;
-        prevLinebase = NULL;
+        prevLinebase = nullptr;
         lineno--;
     } else {
         JS_ASSERT(userbuf.peekRawChar() == c);
@@ -580,7 +580,7 @@ CompileError::throwError(JSContext *cx)
     // as the non-top-level "load", "eval", or "compile" native function
     // returns false, the top-level reporter will eventually receive the
     // uncaught exception report.
-    if (!js_ErrorToException(cx, message, &report, NULL, NULL)) {
+    if (!js_ErrorToException(cx, message, &report, nullptr, nullptr)) {
         // If debugErrorHook is present then we give it a chance to veto
         // sending the error on to the regular error reporter.
         bool reportError = true;
@@ -600,7 +600,7 @@ CompileError::~CompileError()
     js_free((void*)report.linebuf);
     js_free((void*)report.ucmessage);
     js_free(message);
-    message = NULL;
+    message = nullptr;
 
     if (report.messageArgs) {
         if (argumentsType == ArgumentsAreASCII) {
@@ -644,7 +644,7 @@ TokenStream::reportCompileErrorNumberVA(uint32_t offset, unsigned flags, unsigne
 
     err.argumentsType = (flags & JSREPORT_UC) ? ArgumentsAreUnicode : ArgumentsAreASCII;
 
-    if (!js_ExpandErrorArguments(cx, js_GetErrorMessage, NULL, errorNumber, &err.message,
+    if (!js_ExpandErrorArguments(cx, js_GetErrorMessage, nullptr, errorNumber, &err.message,
                                  &err.report, err.argumentsType, args))
     {
         return false;

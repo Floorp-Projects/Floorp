@@ -9,8 +9,6 @@
 %{ C++
 #include "nsIUnicodeDecoder.h"
 #include "nsIUnicodeEncoder.h"
-#include "nsString.h"
-
 
 // XXX change to NS_CHARSETCONVERTERMANAGER_CID
 #define NS_ICHARSETCONVERTERMANAGER_CID \

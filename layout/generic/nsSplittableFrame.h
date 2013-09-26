@@ -41,12 +41,12 @@ public:
   virtual nsIFrame* GetNextContinuation() const MOZ_OVERRIDE;
 
   // Set a previous/next non-fluid continuation.
-  NS_IMETHOD SetPrevContinuation(nsIFrame*) MOZ_OVERRIDE;
-  NS_IMETHOD SetNextContinuation(nsIFrame*) MOZ_OVERRIDE;
+  virtual void SetPrevContinuation(nsIFrame*) MOZ_OVERRIDE;
+  virtual void SetNextContinuation(nsIFrame*) MOZ_OVERRIDE;
 
   // Get the first/last continuation for this frame.
-  virtual nsIFrame* GetFirstContinuation() const MOZ_OVERRIDE;
-  virtual nsIFrame* GetLastContinuation() const MOZ_OVERRIDE;
+  virtual nsIFrame* FirstContinuation() const MOZ_OVERRIDE;
+  virtual nsIFrame* LastContinuation() const MOZ_OVERRIDE;
 
 #ifdef DEBUG
   // Can aFrame2 be reached from aFrame1 by following prev/next continuations?
@@ -62,12 +62,12 @@ public:
   virtual nsIFrame* GetNextInFlowVirtual() const MOZ_OVERRIDE { return GetNextInFlow(); }
   
   // Set a previous/next fluid continuation.
-  NS_IMETHOD  SetPrevInFlow(nsIFrame*) MOZ_OVERRIDE;
-  NS_IMETHOD  SetNextInFlow(nsIFrame*) MOZ_OVERRIDE;
+  virtual void SetPrevInFlow(nsIFrame*) MOZ_OVERRIDE;
+  virtual void SetNextInFlow(nsIFrame*) MOZ_OVERRIDE;
 
   // Get the first/last frame in the current flow.
-  virtual nsIFrame* GetFirstInFlow() const MOZ_OVERRIDE;
-  virtual nsIFrame* GetLastInFlow() const MOZ_OVERRIDE;
+  virtual nsIFrame* FirstInFlow() const MOZ_OVERRIDE;
+  virtual nsIFrame* LastInFlow() const MOZ_OVERRIDE;
 
   // Remove the frame from the flow. Connects the frame's prev-in-flow
   // and its next-in-flow. This should only be called in frame Destroy() methods.

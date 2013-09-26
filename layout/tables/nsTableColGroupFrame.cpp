@@ -225,7 +225,7 @@ nsTableColGroupFrame::InsertFrames(ChildListID     aListID,
     col = nextCol;
   }
 
-  NS_ASSERTION(!aPrevFrame || aPrevFrame == aPrevFrame->GetLastContinuation(),
+  NS_ASSERTION(!aPrevFrame || aPrevFrame == aPrevFrame->LastContinuation(),
                "Prev frame should be last in continuation chain");
   NS_ASSERTION(!aPrevFrame || !GetNextColumn(aPrevFrame) ||
                GetNextColumn(aPrevFrame)->GetColType() != eColAnonymousCol,

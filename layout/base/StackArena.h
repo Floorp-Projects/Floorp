@@ -12,10 +12,8 @@ namespace mozilla {
 struct StackBlock;
 struct StackMark;
 class AutoStackArena;
- 
-/**
- * Private helper class for AutoStackArena.
- */
+
+// Private helper class for AutoStackArena.
 class StackArena {
 private:
   friend class AutoStackArena;
@@ -24,49 +22,49 @@ private:
 
   nsresult Init() { return mBlocks ? NS_OK : NS_ERROR_OUT_OF_MEMORY; }
 
-  // Memory management functions
+  // Memory management functions.
   void* Allocate(size_t aSize);
   void Push();
   void Pop();
 
   size_t SizeOfExcludingThis(mozilla::MallocSizeOf aMallocSizeOf) const;
 
-  // our current position in memory
+  // Our current position in memory.
   size_t mPos;
 
-  // a list of memory block. Usually there is only one
+  // A list of memory blocks. Usually there is only one
   // but if we overrun our stack size we can get more memory.
   StackBlock* mBlocks;
 
-  // the current block of memory we are passing our chucks of
+  // The current block.
   StackBlock* mCurBlock;
 
-  // our stack of mark where push has been called
+  // Our stack of mark where push has been called.
   StackMark* mMarks;
 
-  // the current top of the mark list
+  // The current top of the mark list.
   uint32_t mStackTop;
 
-  // the size of the mark array
+  // The size of the mark array.
   uint32_t mMarkLength;
 };
 
-
-/**
- * Class for stack scoped arena memory allocations.
- *
- * Callers who wish to allocate memory whose lifetime corresponds to
- * the lifetime of a stack-allocated object can use this class.
- * First, declare an AutoStackArena object on the stack.
- * Then all subsequent calls to Allocate will allocate memory from an
- * arena pool that will be freed when that variable goes out of scope.
- * Nesting is allowed.
- *
- * The allocations cannot be for more than 4044 bytes.
- */
+// Class for stack scoped arena memory allocations.
+//
+// Callers who wish to allocate memory whose lifetime corresponds to the
+// lifetime of a stack-allocated object can use this class.  First,
+// declare an AutoStackArena object on the stack.  Then all subsequent
+// calls to Allocate will allocate memory from an arena pool that will
+// be freed when that variable goes out of scope.  Nesting is allowed.
+//
+// Individual allocations cannot exceed StackBlock::MAX_USABLE_SIZE
+// bytes.
+//
 class MOZ_STACK_CLASS AutoStackArena {
 public:
-  AutoStackArena() : mOwnsStackArena(false) {
+  AutoStackArena()
+    : mOwnsStackArena(false)
+  {
     if (!gStackArena) {
       gStackArena = new StackArena();
       mOwnsStackArena = true;
@@ -84,7 +82,6 @@ public:
   }
 
   static void* Allocate(size_t aSize) {
-    MOZ_ASSERT(aSize <= 4044);
     return gStackArena->Allocate(aSize);
   }
 
@@ -92,6 +89,5 @@ private:
   static StackArena* gStackArena;
   bool mOwnsStackArena;
 };
-
 
 } // namespace mozilla

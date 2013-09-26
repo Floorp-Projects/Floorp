@@ -49,6 +49,7 @@
 
 #include "nsBaseWidget.h"
 #include "gfxTypes.h"
+#include "mozilla/MouseEvents.h"
 
 #define INCL_DOS
 #define INCL_WIN

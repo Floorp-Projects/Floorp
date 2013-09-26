@@ -6,11 +6,12 @@
 
 /* base class of all rendering objects */
 
+#include "nsFrame.h"
+
 #include "mozilla/Attributes.h"
 #include "mozilla/DebugOnly.h"
 
 #include "nsCOMPtr.h"
-#include "nsFrame.h"
 #include "nsFrameList.h"
 #include "nsPlaceholderFrame.h"
 #include "nsIContent.h"
@@ -24,7 +25,6 @@
 #include "nsViewManager.h"
 #include "nsIScrollableFrame.h"
 #include "nsPresContext.h"
-#include "nsGUIEvent.h"
 #include "nsAsyncDOMEvent.h"
 #include "nsStyleConsts.h"
 #include "nsIPresShell.h"
@@ -80,6 +80,7 @@
 
 #include "mozilla/Preferences.h"
 #include "mozilla/LookAndFeel.h"
+#include "mozilla/MouseEvents.h"
 #include "mozilla/css/ImageLoader.h"
 #include "mozilla/gfx/Tools.h"
 
@@ -344,7 +345,7 @@ NS_MergeReflowStatusInto(nsReflowStatus* aPrimary, nsReflowStatus aSecondary)
 }
 
 void
-nsWeakFrame::InitInternal(nsIFrame* aFrame)
+nsWeakFrame::Init(nsIFrame* aFrame)
 {
   Clear(mFrame ? mFrame->PresContext()->GetPresShell() : nullptr);
   mFrame = aFrame;
@@ -514,6 +515,11 @@ nsFrame::Init(nsIContent*      aContent,
   if (disp->mPosition == NS_STYLE_POSITION_STICKY &&
       !aPrevInFlow &&
       !(mState & NS_FRAME_IS_NONDISPLAY)) {
+    // Note that we only add first continuations, but we really only
+    // want to add first continuation-or-special-siblings.  But since we
+    // don't yet know if we're a later part of a block-in-inline split,
+    // we'll just add later members of a block-in-inline split here, and
+    // then StickyScrollContainer will remove them later.
     StickyScrollContainer* ssc =
       StickyScrollContainer::GetStickyScrollContainerForFrame(this);
     if (ssc) {
@@ -4245,15 +4251,10 @@ nsIFrame* nsFrame::GetPrevContinuation() const
   return nullptr;
 }
 
-NS_IMETHODIMP nsFrame::SetPrevContinuation(nsIFrame* aPrevContinuation)
+void
+nsFrame::SetPrevContinuation(nsIFrame* aPrevContinuation)
 {
-  // Ignore harmless requests to set it to NULL
-  if (aPrevContinuation) {
-    NS_ERROR("not splittable");
-    return NS_ERROR_NOT_IMPLEMENTED;
-  }
-  
-  return NS_OK;
+  MOZ_ASSERT(false, "not splittable");
 }
 
 nsIFrame* nsFrame::GetNextContinuation() const
@@ -4261,10 +4262,10 @@ nsIFrame* nsFrame::GetNextContinuation() const
   return nullptr;
 }
 
-NS_IMETHODIMP nsFrame::SetNextContinuation(nsIFrame*)
+void
+nsFrame::SetNextContinuation(nsIFrame*)
 {
-  NS_ERROR("not splittable");
-  return NS_ERROR_NOT_IMPLEMENTED;
+  MOZ_ASSERT(false, "not splittable");
 }
 
 nsIFrame* nsFrame::GetPrevInFlowVirtual() const
@@ -4272,15 +4273,10 @@ nsIFrame* nsFrame::GetPrevInFlowVirtual() const
   return nullptr;
 }
 
-NS_IMETHODIMP nsFrame::SetPrevInFlow(nsIFrame* aPrevInFlow)
+void
+nsFrame::SetPrevInFlow(nsIFrame* aPrevInFlow)
 {
-  // Ignore harmless requests to set it to NULL
-  if (aPrevInFlow) {
-    NS_ERROR("not splittable");
-    return NS_ERROR_NOT_IMPLEMENTED;
-  }
-
-  return NS_OK;
+  MOZ_ASSERT(false, "not splittable");
 }
 
 nsIFrame* nsFrame::GetNextInFlowVirtual() const
@@ -4288,10 +4284,10 @@ nsIFrame* nsFrame::GetNextInFlowVirtual() const
   return nullptr;
 }
 
-NS_IMETHODIMP nsFrame::SetNextInFlow(nsIFrame*)
+void
+nsFrame::SetNextInFlow(nsIFrame*)
 {
-  NS_ERROR("not splittable");
-  return NS_ERROR_NOT_IMPLEMENTED;
+  MOZ_ASSERT(false, "not splittable");
 }
 
 nsIFrame* nsIFrame::GetTailContinuation()
@@ -6608,7 +6604,7 @@ nsFrame::GetLineNumber(nsIFrame *aFrame, bool aLockScroll, nsIFrame** aContainin
       //we must instead look for its placeholder
       if (thisBlock->GetStateBits() & NS_FRAME_IS_OVERFLOW_CONTAINER) {
         // abspos continuations don't have placeholders, get the fif
-        thisBlock = thisBlock->GetFirstInFlow();
+        thisBlock = thisBlock->FirstInFlow();
       }
       thisBlock = frameManager->GetPlaceholderFrameFor(thisBlock);
       if (!thisBlock)
@@ -7208,7 +7204,7 @@ GetIBSpecialSiblingForAnonymousBlock(const nsIFrame* aFrame)
 
   // Find the first continuation of the frame.  (Ugh.  This ends up
   // being O(N^2) when it is called O(N) times.)
-  aFrame = aFrame->GetFirstContinuation();
+  aFrame = aFrame->FirstContinuation();
 
   /*
    * Now look up the nsGkAtoms::IBSplitSpecialPrevSibling
@@ -7345,7 +7341,7 @@ nsFrame::DoGetParentStyleContextFrame() const
       GetPrevInFlow()) {
     // Out of flows that are continuations do not
     // have placeholders. Use their first-in-flow's placeholder.
-    oofFrame = oofFrame->GetFirstInFlow();
+    oofFrame = oofFrame->FirstInFlow();
   }
   nsIFrame* placeholder = oofFrame->PresContext()->FrameManager()->
                             GetPlaceholderFrameFor(oofFrame);

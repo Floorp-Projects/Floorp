@@ -47,7 +47,7 @@ function equalNumbers(){
 }
 
 function getPromisedDbResult(aStatement) {
-  let dbConnection = Downloads.manager.DBConnection;
+  let dbConnection = MetroDownloadsView.manager.DBConnection;
   let statement = ("string" == typeof aStatement) ?
         dbConnection.createAsyncStatement(
           aStatement
@@ -129,7 +129,7 @@ function resetDownloads(){
     // Services.prefs.clearUserPref("browser.download.panel.shown");
 
     // Ensure that data is unloaded.
-    let dlMgr = Downloads.manager;
+    let dlMgr = MetroDownloadsView.manager;
     let dlsToRemove = [];
     // Clear all completed/cancelled downloads
     dlMgr.cleanUp();
@@ -247,11 +247,11 @@ gTests.push({
       // we're going to add stuff to the downloads db.
       yield spawn( gen_addDownloadRows( DownloadData ) );
 
-      todo( false, "Check that Downloads._progressNotificationInfo and Downloads._downloadCount \
+      todo( false, "Check that MetroDownloadsView._progressNotificationInfo and MetroDownloadsView._downloadCount \
         have the correct length (DownloadData.length) \
         May also test that the correct notifications show up for various states.");
 
-      todo(false, "Iterate through download objects in Downloads._progressNotificationInfo \
+      todo(false, "Iterate through download objects in MetroDownloadsView._progressNotificationInfo \
         and confirm that the downloads they refer to are the same as those in \
         DownloadData.");
     } catch(e) {
@@ -299,7 +299,7 @@ gTests.push({
 
       is(downloadRows.length, 3, "Correct number of downloads in the db before removal");
 
-      todo(false, "Get some download from Downloads._progressNotificationInfo, \
+      todo(false, "Get some download from MetroDownloadsView._progressNotificationInfo, \
         confirm that its file exists, then remove it.");
 
       // remove is async(?), wait a bit
