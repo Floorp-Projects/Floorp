@@ -101,7 +101,7 @@ private:
   bool mInUpdate;
 
   // The list of tables that can use the default hash completer object.
-  nsTArray<nsCString> mGethashWhitelist;
+  nsTArray<nsCString> mGethashTables;
 
   // Thread that we do the updates on.
   static nsIThread* gDbBackgroundThread;
