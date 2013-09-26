@@ -39,7 +39,7 @@ CompositableHost::~CompositableHost()
 
   RefPtr<TextureHost> it = mFirstTexture;
   while (it) {
-    if (!(it->GetFlags() & TEXTURE_DEALLOCATE_CLIENT)) {
+    if (it->GetFlags() & TEXTURE_DEALLOCATE_HOST) {
       it->DeallocateSharedData();
     }
     it = it->GetNextSibling();

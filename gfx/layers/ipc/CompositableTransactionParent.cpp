@@ -260,7 +260,7 @@ CompositableParentManager::ReceiveCompositableUpdate(const CompositableOperation
 
       TextureFlags flags = texture->GetFlags();
 
-      if (!(flags & TEXTURE_DEALLOCATE_CLIENT)) {
+      if (flags & TEXTURE_DEALLOCATE_HOST) {
         texture->DeallocateSharedData();
       }
 
@@ -269,7 +269,7 @@ CompositableParentManager::ReceiveCompositableUpdate(const CompositableOperation
       // if it is not the host that deallocates the shared data, then we need
       // to notfy the client side to tell when it is safe to deallocate or
       // reuse it.
-      if (flags & TEXTURE_DEALLOCATE_CLIENT) {
+      if (!(flags & TEXTURE_DEALLOCATE_HOST)) {
         replyv.push_back(ReplyTextureRemoved(op.compositableParent(), nullptr,
                                              op.textureID()));
       }
