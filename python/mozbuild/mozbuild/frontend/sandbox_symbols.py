@@ -467,6 +467,10 @@ VARIABLES = {
         """List of manifest files defining mochitest chrome tests.
         """),
 
+    'WEBRTC_SIGNALLING_TEST_MANIFESTS': (StrictOrderingOnAppendList, list, [],
+        """List of manifest files defining WebRTC signalling tests.
+        """),
+
     'XPCSHELL_TESTS_MANIFESTS': (StrictOrderingOnAppendList, list, [],
         """List of manifest files defining xpcshell tests.
         """),

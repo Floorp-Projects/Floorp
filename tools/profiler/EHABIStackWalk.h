@@ -14,12 +14,7 @@
 #define mozilla_EHABIStackWalk_h__
 
 #include <stddef.h>
-
-#ifdef ANDROID
-# include "android-signal-defs.h"
-#else
-# include <ucontext.h>
-#endif
+#include <ucontext.h>
 
 namespace mozilla {
 
