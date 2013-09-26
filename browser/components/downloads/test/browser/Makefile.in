@@ -4,5 +4,6 @@
 MOCHITEST_BROWSER_FILES = \
   browser_basic_functionality.js \
   browser_first_download_panel.js \
+  browser_overflow_anchor.js \
   head.js \
   $(NULL)

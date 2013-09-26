@@ -1,0 +1,194 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+/* Customization mode */
+
+#tab-view-deck {
+  transition-property: padding;
+  transition-duration: 150ms;
+  transition-timing-function: ease-out;
+}
+
+#tab-view-deck[fastcustomizeanimation] {
+  transition-duration: 1ms;
+  transition-timing-function: linear;
+}
+
+#main-window[customizing] .customization-target {
+  margin: 3px;
+}
+
+#main-window[customizing] .customization-target,
+#PanelUI-contents > .panel-customization-placeholder {
+  outline: 1px dashed transparent;
+}
+
+#main-window[customizing-movingItem] .customization-target,
+#main-window[customizing-movingItem] .panel-customization-placeholder {
+  outline-color: #bbb;
+}
+
+#PanelUI-contents > .panel-customization-placeholder {
+  cursor: auto;
+  outline-offset: -5px;
+}
+
+#PanelUI-contents > .panel-customization-placeholder > .panel-customization-placeholder-child {
+  list-style-image: none;
+}
+
+#customization-panelHolder {
+  overflow-y: hidden;
+}
+
+#customization-panelWrapper,
+#customization-panelWrapper > .panel-arrowcontent {
+  -moz-box-flex: 1;
+}
+
+#customization-panelHolder > #PanelUI-mainView {
+  display: flex;
+  flex-direction: column;
+  /* Hack alert - by manually setting the preferred height to 0, we convince
+     #PanelUI-mainView to shrink when the window gets smaller in customization
+     mode. Not sure why that is - might have to do with our intermingling of
+     XUL flex, and CSS3 Flexbox. */
+  height: 0;
+}
+
+#customization-panelHolder > #PanelUI-mainView > #PanelUI-contents-scroller {
+  display: flex;
+  flex: auto;
+  flex-direction: column;
+}
+
+#customization-panelHolder > #PanelUI-mainView > #PanelUI-mainView-spring {
+  display: none;
+}
+
+#main-window[customizing] .customization-target {
+  min-width: 100px;
+  padding-left: 10px;
+  padding-right: 10px;
+}
+
+#customization-container {
+  background-color: rgb(247,247,247);
+}
+
+#customization-palette-container {
+  padding: 25px;
+}
+
+#customization-header {
+  font-size: 1.5em;
+  line-height: 1.5em;
+  color: rgb(64,100,128);
+  font-weight: lighter;
+  margin-bottom: 1em;
+}
+
+#customization-panel-container {
+  padding: 15px 25px 25px;
+  background-image: url("chrome://browser/skin/customizableui/customizeMode-separatorHorizontal.png"),
+                    url("chrome://browser/skin/customizableui/customizeMode-separatorVertical.png"),
+                    url("chrome://browser/skin/customizableui/customizeMode-gridTexture.png"),
+                    url("chrome://browser/skin/customizableui/background-noise-toolbar.png"),
+                    linear-gradient(to bottom, #3e86ce, #3878ba);
+  background-position: center top, left center, left top, left top, left top;
+  background-repeat: no-repeat, no-repeat, repeat, repeat, no-repeat;
+  background-size: auto 12px, 12px 100%, auto, auto, auto;
+  background-attachment: scroll, scroll, fixed, fixed, scroll;
+  overflow-y: auto;
+}
+
+#customization-panelWrapper > .panel-arrowcontent {
+  padding: 0 !important;
+}
+
+toolbarpaletteitem {
+  transition: background-color, border-color, box-shadow, border-width;
+  transition-duration: 10ms, 10ms, 10ms, 250ms;
+  transition-timing-function: linear, linear, linear, ease-in-out;
+}
+
+toolbarpaletteitem[mousedown] {
+  box-shadow: inset 0 0 3px hsl(204,100%,40%);
+  cursor: -moz-grabbing;
+  opacity: 0.8;
+}
+
+toolbarpaletteitem > toolbarbutton > .toolbarbutton-icon {
+  transition: transform 50ms ease-in-out;
+}
+
+toolbarpaletteitem[mousedown] > toolbarbutton > .toolbarbutton-icon {
+  transform: scale(1.1);
+}
+
+/* Override the toolkit styling for items being dragged over. */
+toolbarpaletteitem[dragover] {
+  border-left-color: transparent;
+  border-right-color: transparent;
+}
+
+#customization-palette:not([hidden]) {
+  display: block;
+  overflow: auto;
+  min-height: 3em;
+  margin-bottom: 25px;
+}
+
+#customization-palette > toolbarpaletteitem {
+  width: 110px;
+  height: 94px;
+  overflow: hidden;
+  display: inline-block;
+}
+
+#customization-palette > #wrapper-edit-controls,
+#customization-palette > #wrapper-zoom-controls {
+  width: 225px;
+}
+
+#customization-palette .toolbarpaletteitem-box {
+  -moz-box-pack: center;
+  -moz-box-flex: 1;
+  width: 110px;
+  max-width: 110px;
+}
+
+#wrapper-edit-controls[place="palette"] > .toolbarpaletteitem-box,
+#wrapper-zoom-controls[place="palette"] > .toolbarpaletteitem-box {
+  width: 225px;
+  max-width: 225px;
+}
+
+#wrapper-edit-controls[place="palette"] > #edit-controls > toolbarbutton,
+#wrapper-zoom-controls[place="palette"] > #zoom-controls > toolbarbutton {
+  margin-left: 0;
+  margin-right: 0;
+  max-width: 70px;
+  min-width: 70px;
+  max-height: 24px;
+  height: 24px;
+  margin-top: 24px;
+}
+
+#wrapper-edit-controls[place="palette"] > #edit-controls > toolbarbutton > .toolbarbutton-text,
+#wrapper-zoom-controls[place="palette"] > #zoom-controls > #zoom-reset-button > .toolbarbutton-text {
+  display: inline;
+}
+
+#wrapper-edit-controls[place="palette"] > #edit-controls > toolbarbutton > .toolbarbutton-icon,
+#wrapper-zoom-controls[place="palette"] > #zoom-controls > toolbarbutton > .toolbarbutton-icon {
+  margin: 0;
+  -moz-margin-start: 5px;
+}
+
+#customization-palette > toolbarpaletteitem > label {
+  text-align: center;
+  margin-left: 0;
+  margin-right: 0;
+}
