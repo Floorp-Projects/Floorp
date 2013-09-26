@@ -4014,5 +4014,40 @@
     "n_buckets": 15,
     "extended_statistics_ok": true,
     "description": "BACKGROUND THUMBNAILS: Time it took to draw the capture's window to canvas (ms)"
+  },
+  "NETWORK_CACHE_V2_MISS_TIME_MS": {
+    "kind": "exponential",
+    "high": "10000",
+    "n_buckets": 50,
+    "extended_statistics_ok": true,
+    "description": "Time spent to find out a cache entry file is missing"
+  },
+  "NETWORK_CACHE_V2_HIT_TIME_MS": {
+    "kind": "exponential",
+    "high": "10000",
+    "n_buckets": 50,
+    "extended_statistics_ok": true,
+    "description": "Time spent to open an existing file"
+  },
+  "NETWORK_CACHE_V1_TRUNCATE_TIME_MS": {
+    "kind": "exponential",
+    "high": "10000",
+    "n_buckets": 50,
+    "extended_statistics_ok": true,
+    "description": "Time spent to reopen an entry with OPEN_TRUNCATE"
+  },
+  "NETWORK_CACHE_V1_MISS_TIME_MS": {
+    "kind": "exponential",
+    "high": "10000",
+    "n_buckets": 50,
+    "extended_statistics_ok": true,
+    "description": "Time spent to find out a cache entry is missing"
+  },
+  "NETWORK_CACHE_V1_HIT_TIME_MS": {
+    "kind": "exponential",
+    "high": "10000",
+    "n_buckets": 50,
+    "extended_statistics_ok": true,
+    "description": "Time spent to open an existing cache entry"
   }
 }
