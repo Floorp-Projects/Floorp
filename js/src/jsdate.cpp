@@ -2946,9 +2946,9 @@ static const JSFunctionSpec date_methods[] = {
     JS_FN("toUTCString",         date_toGMTString,        0,0),
     JS_FN("toLocaleFormat",      date_toLocaleFormat,     0,0),
 #if EXPOSE_INTL_API
-         {js_toLocaleString_str, {NULL, NULL},            0,0, "Date_toLocaleString"},
-         {"toLocaleDateString",  {NULL, NULL},            0,0, "Date_toLocaleDateString"},
-         {"toLocaleTimeString",  {NULL, NULL},            0,0, "Date_toLocaleTimeString"},
+    JS_SELF_HOSTED_FN(js_toLocaleString_str, "Date_toLocaleString", 0,0),
+    JS_SELF_HOSTED_FN("toLocaleDateString", "Date_toLocaleDateString", 0,0),
+    JS_SELF_HOSTED_FN("toLocaleTimeString", "Date_toLocaleTimeString", 0,0),
 #else
     JS_FN(js_toLocaleString_str, date_toLocaleString,     0,0),
     JS_FN("toLocaleDateString",  date_toLocaleDateString, 0,0),

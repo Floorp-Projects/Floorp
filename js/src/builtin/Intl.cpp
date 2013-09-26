@@ -570,12 +570,12 @@ collator_toSource(JSContext *cx, unsigned argc, Value *vp)
 #endif
 
 static const JSFunctionSpec collator_static_methods[] = {
-    {"supportedLocalesOf", JSOP_NULLWRAPPER, 1, JSFunction::INTERPRETED, "Intl_Collator_supportedLocalesOf"},
+    JS_SELF_HOSTED_FN("supportedLocalesOf", "Intl_Collator_supportedLocalesOf", 1, 0),
     JS_FS_END
 };
 
 static const JSFunctionSpec collator_methods[] = {
-    {"resolvedOptions", JSOP_NULLWRAPPER, 0, JSFunction::INTERPRETED, "Intl_Collator_resolvedOptions"},
+    JS_SELF_HOSTED_FN("resolvedOptions", "Intl_Collator_resolvedOptions", 0, 0),
 #if JS_HAS_TOSOURCE
     JS_FN(js_toSource_str, collator_toSource, 0, 0),
 #endif
@@ -1053,12 +1053,12 @@ numberFormat_toSource(JSContext *cx, unsigned argc, Value *vp)
 #endif
 
 static const JSFunctionSpec numberFormat_static_methods[] = {
-    {"supportedLocalesOf", JSOP_NULLWRAPPER, 1, JSFunction::INTERPRETED, "Intl_NumberFormat_supportedLocalesOf"},
+    JS_SELF_HOSTED_FN("supportedLocalesOf", "Intl_NumberFormat_supportedLocalesOf", 1, 0),
     JS_FS_END
 };
 
 static const JSFunctionSpec numberFormat_methods[] = {
-    {"resolvedOptions", JSOP_NULLWRAPPER, 0, JSFunction::INTERPRETED, "Intl_NumberFormat_resolvedOptions"},
+    JS_SELF_HOSTED_FN("resolvedOptions", "Intl_NumberFormat_resolvedOptions", 0, 0),
 #if JS_HAS_TOSOURCE
     JS_FN(js_toSource_str, numberFormat_toSource, 0, 0),
 #endif
@@ -1510,12 +1510,12 @@ dateTimeFormat_toSource(JSContext *cx, unsigned argc, Value *vp)
 #endif
 
 static const JSFunctionSpec dateTimeFormat_static_methods[] = {
-    {"supportedLocalesOf", JSOP_NULLWRAPPER, 1, JSFunction::INTERPRETED, "Intl_DateTimeFormat_supportedLocalesOf"},
+    JS_SELF_HOSTED_FN("supportedLocalesOf", "Intl_DateTimeFormat_supportedLocalesOf", 1, 0),
     JS_FS_END
 };
 
 static const JSFunctionSpec dateTimeFormat_methods[] = {
-    {"resolvedOptions", JSOP_NULLWRAPPER, 0, JSFunction::INTERPRETED, "Intl_DateTimeFormat_resolvedOptions"},
+    JS_SELF_HOSTED_FN("resolvedOptions", "Intl_DateTimeFormat_resolvedOptions", 0, 0),
 #if JS_HAS_TOSOURCE
     JS_FN(js_toSource_str, dateTimeFormat_toSource, 0, 0),
 #endif
