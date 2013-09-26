@@ -2,23 +2,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-# This make file defines the precompile tier. This tier effectively fans out
-# to other make files and specialized targets.
-
-SUPPRESS_DEFAULT_RULES := 1
-
-default::
-	+$(MAKE) export
-
-export:: ipdl webidl xpidl
-
-ipdl:
-	$(call SUBMAKE,ipdl,$(DEPTH)/ipc/ipdl)
-
-webidl:
-	$(call SUBMAKE,webidl,$(DEPTH)/dom/bindings)
-
-xpidl:
+export::
 	$(call SUBMAKE,xpidl-parser,$(DEPTH)/xpcom/idl-parser)
 	$(call py_action,process_install_manifest,$(DIST)/idl $(DEPTH)/_build_manifests/install/dist_idl)
 	$(call SUBMAKE,xpidl,$(DEPTH)/config/makefiles/xpidl)
