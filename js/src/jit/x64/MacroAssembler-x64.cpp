@@ -8,6 +8,7 @@
 
 #include "jit/Bailouts.h"
 #include "jit/BaselineFrame.h"
+#include "jit/IonCompartment.h"
 #include "jit/IonFrames.h"
 #include "jit/MoveEmitter.h"
 

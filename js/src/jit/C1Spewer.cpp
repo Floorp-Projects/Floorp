@@ -10,8 +10,6 @@
 
 #include <time.h>
 
-#include "jit/Ion.h"
-#include "jit/IonBuilder.h"
 #include "jit/LinearScan.h"
 #include "jit/LIR.h"
 #include "jit/MIRGraph.h"

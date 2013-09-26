@@ -4,7 +4,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "mozilla/DebugOnly.h"
 #include "mozilla/Util.h"
 
 #ifdef MOZ_VALGRIND
@@ -23,7 +22,6 @@
 #include "gc/GCInternals.h"
 #include "gc/Marking.h"
 #ifdef JS_ION
-# include "jit/IonFrameIterator.h"
 # include "jit/IonMacroAssembler.h"
 #endif
 #include "js/HashTable.h"
