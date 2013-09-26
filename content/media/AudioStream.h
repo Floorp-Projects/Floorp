@@ -252,6 +252,7 @@ public:
 
   int GetRate() { return mOutRate; }
   int GetChannels() { return mChannels; }
+  int GetOutChannels() { return mOutChannels; }
 
   // This should be called before attempting to use the time stretcher.
   nsresult EnsureTimeStretcherInitialized();
@@ -309,6 +310,7 @@ private:
   // Output rate in Hz (characteristic of the playback rate)
   int mOutRate;
   int mChannels;
+  int mOutChannels;
   // Number of frames written to the buffers.
   int64_t mWritten;
   AudioClock mAudioClock;
