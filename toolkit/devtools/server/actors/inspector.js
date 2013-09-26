@@ -933,7 +933,6 @@ var WalkerActor = protocol.ActorClass({
     }
 
     this._installHelperSheet(node);
-    this.layoutHelpers.scrollIntoViewIfNeeded(node.rawNode);
     DOMUtils.addPseudoClassLock(node.rawNode, HIGHLIGHTED_PSEUDO_CLASS);
     this._highlightTimeout = setTimeout(this._unhighlight.bind(this), HIGHLIGHTED_TIMEOUT);
 
