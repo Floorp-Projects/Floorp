@@ -44,7 +44,7 @@ public:
 
   virtual void ActorDestroy(ActorDestroyReason aWhy) MOZ_OVERRIDE;
 
-  static bool
+  static PImageBridgeParent*
   Create(Transport* aTransport, ProcessId aOtherProcess);
 
   virtual PGrallocBufferParent*
