@@ -31,7 +31,7 @@ using mozilla::PodArrayZero;
 static void *
 zlib_alloc(void *cx, uInt items, uInt size)
 {
-    return js_malloc(items * size);
+    return js_calloc(items, size);
 }
 
 static void

@@ -209,8 +209,8 @@
 
 *|*::-moz-anonymous-positioned-block {
   display: block !important;
-  position: relative;
-  top: inherit; 
+  position: inherit; /* relative or sticky */
+  top: inherit;
   left: inherit;
   bottom: inherit;
   right: inherit;
