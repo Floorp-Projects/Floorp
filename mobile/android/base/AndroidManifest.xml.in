@@ -201,6 +201,7 @@
 
         <activity android:name="org.mozilla.gecko.Restarter"
                   android:process="@ANDROID_PACKAGE_NAME@Restarter"
+                  android:noHistory="true"
                   android:theme="@style/Gecko">
           <intent-filter>
             <action android:name="org.mozilla.gecko.restart"/>
