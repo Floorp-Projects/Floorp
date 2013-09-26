@@ -229,6 +229,9 @@ public:
 
   NS_IMETHODIMP Notify(nsITimer* aTimer) MOZ_FINAL
   {
+    if (!mContent->IsInDoc())
+      return NS_OK;
+
     nsIPresShell* ps = mContent->OwnerDoc()->GetShell();
     if (ps) {
       DocAccessible* doc = ps->GetDocAccessible();
