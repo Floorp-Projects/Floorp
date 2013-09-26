@@ -66,10 +66,17 @@ GLScreenBuffer::Create(GLContext* gl,
 
 GLScreenBuffer::~GLScreenBuffer()
 {
-    delete mFactory;
     delete mStream;
     delete mDraw;
     delete mRead;
+
+    // bug 914823: it is crucial to destroy the Factory _after_ we destroy
+    // the SharedSurfaces around here! Reason: the shared surfaces will want
+    // to ask the Allocator (e.g. the ClientLayerManager) to destroy their
+    // buffers, but that Allocator may be kept alive by the Factory,
+    // as it currently the case in SurfaceFactory_Gralloc holding a nsRefPtr
+    // to the Allocator!
+    delete mFactory;
 }
 
 
