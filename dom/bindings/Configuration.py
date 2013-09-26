@@ -356,8 +356,6 @@ class Descriptor(DescriptorProvider):
                                 (self.interface.identifier.name, self.nativeOwnership))
         self.customTrace = desc.get('customTrace', self.workers)
         self.customFinalize = desc.get('customFinalize', self.workers)
-        if desc.get('wantsQI', None) != None:
-            self._wantsQI = desc.get('wantsQI', None)
         self.wrapperCache = (not self.interface.isCallback() and
                              (self.nativeOwnership == 'worker' or
                               (self.nativeOwnership != 'owned' and
@@ -476,26 +474,6 @@ class Descriptor(DescriptorProvider):
             self.interface.hasInterfacePrototypeObject() or
             any((m.isAttr() or m.isMethod()) and m.isStatic() for m
                 in self.interface.members))
-
-    def wantsQI(self):
-        # If it was specified explicitly use that.
-        if hasattr(self, '_wantsQI'):
-            return self._wantsQI
-
-        # Make sure to not stick QueryInterface on abstract interfaces that
-        # have hasXPConnectImpls (like EventTarget).  So only put it on
-        # interfaces that are concrete and all of whose ancestors are abstract.
-        def allAncestorsAbstract(iface):
-            if not iface.parent:
-                return True
-            desc = self.getDescriptor(iface.parent.identifier.name)
-            if desc.concrete:
-                return False
-            return allAncestorsAbstract(iface.parent)
-        return (not self.workers and
-                self.interface.hasInterfacePrototypeObject() and
-                self.concrete and
-                allAncestorsAbstract(self.interface))
 
 # Some utility methods
 def getTypesFromDescriptor(descriptor):

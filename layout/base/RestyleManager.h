@@ -322,7 +322,7 @@ private:
   /**
    * First half of Restyle().
    */
-  void RestyleSelf(nsRestyleHint aRestyleHint);
+  void RestyleSelf(nsIFrame* aSelf, nsRestyleHint aRestyleHint);
 
   /**
    * Restyle the children of this frame (and, in turn, their children).
@@ -343,8 +343,9 @@ private:
    */
   void RestyleUndisplayedChildren(nsRestyleHint aChildRestyleHint);
   void RestyleBeforePseudo();
-  void RestyleAfterPseudo();
-  void RestyleContentChildren(nsRestyleHint aChildRestyleHint);
+  void RestyleAfterPseudo(nsIFrame* aFrame);
+  void RestyleContentChildren(nsIFrame* aParent,
+                              nsRestyleHint aChildRestyleHint);
   void InitializeAccessibilityNotifications();
   void SendAccessibilityNotifications();
 

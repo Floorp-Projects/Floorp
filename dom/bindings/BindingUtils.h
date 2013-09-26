@@ -1378,19 +1378,12 @@ InitIds(JSContext* cx, const Prefable<Spec>* prefableSpecs, jsid* ids)
 bool
 QueryInterface(JSContext* cx, unsigned argc, JS::Value* vp);
 
-template <class T, bool isISupports=IsBaseOf<nsISupports, T>::value>
+template <class T>
 struct
 WantsQueryInterface
 {
-  static bool Enabled(JSContext* aCx, JSObject* aGlobal)
-  {
-    return false;
-  }
-};
-template <class T>
-struct
-WantsQueryInterface<T, true>
-{
+  static_assert(IsBaseOf<nsISupports, T>::value,
+                "QueryInterface can't work without an nsISupports.");
   static bool Enabled(JSContext* aCx, JSObject* aGlobal)
   {
     return NS_IsMainThread() && IsChromeOrXBL(aCx, aGlobal);

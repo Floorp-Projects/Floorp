@@ -5,7 +5,13 @@
 ac_add_options --enable-update-channel=${MOZ_UPDATE_CHANNEL}
 ac_add_options --enable-update-packaging
 ac_add_options --enable-jemalloc
-ac_add_options --with-google-api-keyfile=/e/builds/gapi.data
+if [ -f /c/builds/gapi.data ]; then
+  _gapi_keyfile=/c/builds/gapi.data
+else
+  _gapi_keyfile=/e/builds/gapi.data
+fi
+ac_add_options --with-google-api-keyfile=${_gapi_keyfile}
+
 
 # Needed to enable breakpad in application.ini
 export MOZILLA_OFFICIAL=1

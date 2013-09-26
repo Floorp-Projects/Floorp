@@ -1,0 +1,10 @@
+# -*- mode: ruby -*-
+# vi: set ft=ruby :
+
+# We intentionally use the old config format because Mozilla's Jenkins
+# server doesn't run a modern Vagrant.
+Vagrant::Config.run do |config|
+  config.vm.box = "precise64"
+  config.vm.box_url = "http://files.vagrantup.com/precise64.box"
+  config.vm.share_folder("gecko", "/gecko", "../..")
+end
