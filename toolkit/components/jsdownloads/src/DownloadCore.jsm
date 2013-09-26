@@ -408,12 +408,12 @@ Download.prototype = {
         }
       }
 
-      // Disallow download if parental controls service restricts it.
-      if (yield DownloadIntegration.shouldBlockForParentalControls(this)) {
-        throw new DownloadError({ becauseBlockedByParentalControls: true });
-      }
-
       try {
+        // Disallow download if parental controls service restricts it.
+        if (yield DownloadIntegration.shouldBlockForParentalControls(this)) {
+          throw new DownloadError({ becauseBlockedByParentalControls: true });
+        }
+
         // Execute the actual download through the saver object.
         yield this.saver.execute(DS_setProgressBytes.bind(this),
                                  DS_setProperties.bind(this));
@@ -428,6 +428,15 @@ Download.prototype = {
         // download was canceled or failed because of other reasons.
         if (this._promiseCanceled) {
           throw new DownloadError({ message: "Download canceled." });
+        }
+
+        // An HTTP 450 error code is used by Windows to indicate that a uri is
+        // blocked by parental controls. This will prevent the download from
+        // occuring, so an error needs to be raised. This is not performed
+        // during the parental controls check above as it requires the request
+        // to start.
+        if (this._blockedByParentalControls) {
+          ex = new DownloadError({ becauseBlockedByParentalControls: true });
         }
 
         // Update the download error, unless a new attempt already started. The
@@ -472,7 +481,7 @@ Download.prototype = {
 
     // Notify the new download state before returning.
     this._notifyChange();
-    return this._currentAttempt;
+    return currentAttempt;
   },
 
   /*
@@ -1332,6 +1341,31 @@ DownloadSaver.prototype = {
   },
 
   /**
+   * Return true if the request's response has been blocked by Windows parental
+   * controls with an HTTP 450 error code.
+   *
+   * @param aRequest
+   *        nsIRequest object
+   * @return True if the response is blocked.
+   */
+  isResponseParentalBlocked: function(aRequest)
+  {
+    // If the HTTP status is 450, then Windows Parental Controls have
+    // blocked this download.
+    if (aRequest instanceof Ci.nsIHttpChannel &&
+        aRequest.responseStatus == 450) {
+      // Cancel the request, but set a flag on the download that can be
+      // retrieved later when handling the cancellation so that the proper
+      // blocked by parental controls error can be thrown.
+      this.download._blockedByParentalControls = true;
+      aRequest.cancel(Cr.NS_BINDING_ABORTED);
+      return true;
+    }
+
+    return false;
+  },
+
+  /**
    * Returns a static representation of the current object state.
    *
    * @return A JavaScript object that can be serialized to JSON.
@@ -1527,6 +1561,10 @@ DownloadCopySaver.prototype = {
           channel.asyncOpen({
             onStartRequest: function (aRequest, aContext) {
               backgroundFileSaver.onStartRequest(aRequest, aContext);
+
+              if (this.isResponseParentalBlocked(aRequest)) {
+                return;
+              }
 
               aSetPropertiesFn({ contentType: channel.contentType });
 
@@ -1797,6 +1835,10 @@ DownloadLegacySaver.prototype = {
         this.entityID = aRequest.entityID;
       } catch (ex if ex instanceof Components.Exception &&
                      ex.result == Cr.NS_ERROR_NOT_RESUMABLE) { }
+    }
+
+    if (this.isResponseParentalBlocked(aRequest)) {
+      return;
     }
 
     // For legacy downloads, we must update the referrer at this time.
