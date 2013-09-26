@@ -511,6 +511,8 @@ public:
   void PassUnion7(JSContext*, const ObjectOrStringOrLong& arg);
   void PassUnion8(JSContext*, const ObjectOrStringOrBoolean& arg);
   void PassUnion9(JSContext*, const ObjectOrStringOrLongOrBoolean& arg);
+  void PassUnion10(const EventInitOrLong& arg);
+  void PassUnion11(JSContext*, const CustomEventInitOrLong& arg);
 #endif
   void PassNullableUnion(JSContext*, const Nullable<ObjectOrLong>&);
   void PassOptionalUnion(JSContext*, const Optional<ObjectOrLong>&);

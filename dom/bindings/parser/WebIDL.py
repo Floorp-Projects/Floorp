@@ -2501,6 +2501,7 @@ class IDLNullValue(IDLObject):
     def coerceToType(self, type, location):
         if (not isinstance(type, IDLNullableType) and
             not (type.isUnion() and type.hasNullableType) and
+            not (type.isUnion() and type.hasDictionaryType) and
             not type.isDictionary() and
             not type.isAny()):
             raise WebIDLError("Cannot coerce null value to type %s." % type,
@@ -2840,7 +2841,9 @@ class IDLArgument(IDLObjectWithIdentifier):
             assert not isinstance(type.name, IDLUnresolvedIdentifier)
             self.type = type
 
-        if self.type.isDictionary() and self.optional and not self.defaultValue:
+        if ((self.type.isDictionary() or
+             self.type.isUnion() and self.type.unroll().hasDictionaryType) and
+            self.optional and not self.defaultValue):
             # Default optional dictionaries to null, for simplicity,
             # so the codegen doesn't have to special-case this.
             self.defaultValue = IDLNullValue(self.location)
