@@ -347,6 +347,8 @@ interface TestExampleInterface {
   void passUnion7((object or DOMString or long) arg);
   void passUnion8((object or DOMString or boolean) arg);
   void passUnion9((object or DOMString or long or boolean) arg);
+  void passUnion10(optional (EventInit or long) arg);
+  void passUnion11(optional (CustomEventInit or long) arg);
 #endif
   void passUnionWithNullable((object? or long) arg);
   void passNullableUnion((object or long)? arg);
