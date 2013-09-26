@@ -451,7 +451,8 @@ template <typename T>
 static void
 copyAndSwapFromLittleEndian(T *dest, const void *src, size_t nelems)
 {
-    NativeEndian::copyAndSwapFromLittleEndian(dest, src, nelems);
+    if (nelems > 0)
+        NativeEndian::copyAndSwapFromLittleEndian(dest, src, nelems);
 }
 
 template <>
@@ -565,7 +566,8 @@ template <typename T>
 static void
 copyAndSwapToLittleEndian(void *dest, const T *src, size_t nelems)
 {
-    NativeEndian::copyAndSwapToLittleEndian(dest, src, nelems);
+    if (nelems > 0)
+        NativeEndian::copyAndSwapToLittleEndian(dest, src, nelems);
 }
 
 template <>
