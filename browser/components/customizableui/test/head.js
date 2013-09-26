@@ -133,6 +133,9 @@ function endCustomizing() {
 }
 
 function startCustomizing() {
+  if (document.documentElement.getAttribute("customizing") == "true") {
+    return;
+  }
   let deferred = Promise.defer();
   function onCustomizing() {
     window.gNavToolbox.removeEventListener("customizationready", onCustomizing);
