@@ -47,7 +47,6 @@ include $(topsrcdir)/ipc/chromium/chromium-config.mk
 
 DEFINES += \
   -DJS_THREADSAFE \
-  -DEXPORT_XPC_API \
   $(NULL)
 
 ifdef MOZ_JSDEBUGGER
