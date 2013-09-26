@@ -502,6 +502,18 @@ public:
       returnValue.SetAsLong() = i;
     }
   }
+#ifdef DEBUG
+  void PassUnion2(const LongOrBoolean& arg);
+  void PassUnion3(JSContext*, const ObjectOrLongOrBoolean& arg);
+  void PassUnion4(const NodeOrLongOrBoolean& arg);
+  void PassUnion5(JSContext*, const ObjectOrBoolean& arg);
+  void PassUnion6(JSContext*, const ObjectOrString& arg);
+  void PassUnion7(JSContext*, const ObjectOrStringOrLong& arg);
+  void PassUnion8(JSContext*, const ObjectOrStringOrBoolean& arg);
+  void PassUnion9(JSContext*, const ObjectOrStringOrLongOrBoolean& arg);
+  void PassUnion10(const EventInitOrLong& arg);
+  void PassUnion11(JSContext*, const CustomEventInitOrLong& arg);
+#endif
   void PassNullableUnion(JSContext*, const Nullable<ObjectOrLong>&);
   void PassOptionalUnion(JSContext*, const Optional<ObjectOrLong>&);
   void PassOptionalNullableUnion(JSContext*, const Optional<Nullable<ObjectOrLong> >&);

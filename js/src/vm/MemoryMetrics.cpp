@@ -153,49 +153,16 @@ NotableStringInfo &NotableStringInfo::operator=(MoveRef<NotableStringInfo> info)
 
 typedef HashSet<ScriptSource *, DefaultHasher<ScriptSource *>, SystemAllocPolicy> SourceSet;
 
-struct IteratorClosure
+struct StatsClosure
 {
     RuntimeStats *rtStats;
     ObjectPrivateVisitor *opv;
     SourceSet seenSources;
-    IteratorClosure(RuntimeStats *rt, ObjectPrivateVisitor *v) : rtStats(rt), opv(v) {}
+    StatsClosure(RuntimeStats *rt, ObjectPrivateVisitor *v) : rtStats(rt), opv(v) {}
     bool init() {
         return seenSources.init();
     }
 };
-
-size_t
-ZoneStats::GCHeapThingsSize()
-{
-    // These are just the GC-thing measurements.
-    size_t n = 0;
-    n += gcHeapStringsNormal;
-    n += gcHeapStringsShort;
-    n += gcHeapLazyScripts;
-    n += gcHeapTypeObjects;
-    n += gcHeapIonCodes;
-
-    return n;
-}
-
-size_t
-CompartmentStats::GCHeapThingsSize()
-{
-    // These are just the GC-thing measurements.
-    size_t n = 0;
-    n += gcHeapObjectsOrdinary;
-    n += gcHeapObjectsFunction;
-    n += gcHeapObjectsDenseArray;
-    n += gcHeapObjectsSlowArray;
-    n += gcHeapObjectsCrossCompartmentWrapper;
-    n += gcHeapShapesTreeGlobalParented;
-    n += gcHeapShapesTreeNonGlobalParented;
-    n += gcHeapShapesDict;
-    n += gcHeapShapesBase;
-    n += gcHeapScripts;
-
-    return n;
-}
 
 static void
 DecommittedArenasChunkCallback(JSRuntime *rt, void *data, gc::Chunk *chunk)
@@ -217,7 +184,7 @@ static void
 StatsCompartmentCallback(JSRuntime *rt, void *data, JSCompartment *compartment)
 {
     // Append a new CompartmentStats to the vector.
-    RuntimeStats *rtStats = static_cast<IteratorClosure *>(data)->rtStats;
+    RuntimeStats *rtStats = static_cast<StatsClosure *>(data)->rtStats;
 
     // CollectRuntimeStats reserves enough space.
     MOZ_ALWAYS_TRUE(rtStats->compartmentStatsVector.growBy(1));
@@ -241,7 +208,7 @@ static void
 StatsZoneCallback(JSRuntime *rt, void *data, Zone *zone)
 {
     // Append a new CompartmentStats to the vector.
-    RuntimeStats *rtStats = static_cast<IteratorClosure *>(data)->rtStats;
+    RuntimeStats *rtStats = static_cast<StatsClosure *>(data)->rtStats;
 
     // CollectRuntimeStats reserves enough space.
     MOZ_ALWAYS_TRUE(rtStats->zoneStatsVector.growBy(1));
@@ -257,7 +224,7 @@ static void
 StatsArenaCallback(JSRuntime *rt, void *data, gc::Arena *arena,
                    JSGCTraceKind traceKind, size_t thingSize)
 {
-    RuntimeStats *rtStats = static_cast<IteratorClosure *>(data)->rtStats;
+    RuntimeStats *rtStats = static_cast<StatsClosure *>(data)->rtStats;
 
     // The admin space includes (a) the header and (b) the padding between the
     // end of the header and the start of the first GC thing.
@@ -281,7 +248,7 @@ static void
 StatsCellCallback(JSRuntime *rt, void *data, void *thing, JSGCTraceKind traceKind,
                   size_t thingSize)
 {
-    IteratorClosure *closure = static_cast<IteratorClosure *>(data);
+    StatsClosure *closure = static_cast<StatsClosure *>(data);
     RuntimeStats *rtStats = closure->rtStats;
     ZoneStats *zStats = rtStats->currZoneStats;
     switch (traceKind) {
@@ -301,12 +268,12 @@ StatsCellCallback(JSRuntime *rt, void *data, void *thing, JSGCTraceKind traceKin
         obj->sizeOfExcludingThis(rtStats->mallocSizeOf_, &objectsExtra);
         cStats->objectsExtra.add(objectsExtra);
 
-        // JSObject::sizeOfExcludingThis() doesn't measure objectsExtraPrivate,
+        // JSObject::sizeOfExcludingThis() doesn't measure objectsPrivate,
         // so we do it here.
         if (ObjectPrivateVisitor *opv = closure->opv) {
             nsISupports *iface;
             if (opv->getISupports_(obj, &iface) && iface) {
-                cStats->objectsExtra.private_ += opv->sizeOfIncludingThis(iface);
+                cStats->objectsPrivate += opv->sizeOfIncludingThis(iface);
             }
         }
         break;
@@ -473,7 +440,7 @@ JS::CollectRuntimeStats(JSRuntime *rt, RuntimeStats *rtStats, ObjectPrivateVisit
                   DecommittedArenasChunkCallback);
 
     // Take the per-compartment measurements.
-    IteratorClosure closure(rtStats, opv);
+    StatsClosure closure(rtStats, opv);
     if (!closure.init())
         return false;
     rtStats->runtime.scriptSources = 0;
@@ -490,7 +457,7 @@ JS::CollectRuntimeStats(JSRuntime *rt, RuntimeStats *rtStats, ObjectPrivateVisit
         ZoneStats &zStats = rtStats->zoneStatsVector[i];
 
         rtStats->zTotals.add(zStats);
-        rtStats->gcHeapGcThings += zStats.GCHeapThingsSize();
+        rtStats->gcHeapGcThings += zStats.sizeOfLiveGCThings();
 #ifdef DEBUG
         totalArenaSize += zStats.gcHeapArenaAdmin + zStats.gcHeapUnusedGcThings;
 #endif
@@ -506,7 +473,7 @@ JS::CollectRuntimeStats(JSRuntime *rt, RuntimeStats *rtStats, ObjectPrivateVisit
         CompartmentStats &cStats = rtStats->compartmentStatsVector[i];
 
         rtStats->cTotals.add(cStats);
-        rtStats->gcHeapGcThings += cStats.GCHeapThingsSize();
+        rtStats->gcHeapGcThings += cStats.sizeOfLiveGCThings();
     }
 
 #ifdef DEBUG

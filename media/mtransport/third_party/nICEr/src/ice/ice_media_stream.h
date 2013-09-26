@@ -95,7 +95,7 @@ int nr_ice_media_stream_addrs(nr_ice_peer_ctx *pctx, nr_ice_media_stream *str, i
 int
 nr_ice_peer_ctx_parse_media_stream_attribute(nr_ice_peer_ctx *pctx, nr_ice_media_stream *stream, char *attr);
 int nr_ice_media_stream_disable_component(nr_ice_media_stream *stream, int component_id);
-
+int nr_ice_media_stream_pair_new_trickle_candidate(nr_ice_peer_ctx *pctx, nr_ice_media_stream *pstream, nr_ice_candidate *cand);
 
 #ifdef __cplusplus
 }

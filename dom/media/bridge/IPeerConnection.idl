@@ -24,7 +24,7 @@ interface IPeerConnectionManager : nsISupports
  *
  * See media/webrtc/signaling/include/PeerConnectionImpl.h
  */
-[scriptable, uuid(cf9152f0-c9a8-4093-9435-1daa056e0177)]
+[scriptable, uuid(896dc16a-05d6-45e4-bdbf-aba57123ed3e)]
 interface IPeerConnectionObserver : nsISupports
 {
   /* Constants */
@@ -45,6 +45,7 @@ interface IPeerConnectionObserver : nsISupports
   void onSetRemoteDescriptionError(in unsigned long name, in string message);
   void onAddIceCandidateSuccess();
   void onAddIceCandidateError(in unsigned long name, in string message);
+  void onIceCandidate(in unsigned short level, in string mid, in string candidate);
 
   /* Data channel callbacks */
   void notifyDataChannel(in nsIDOMDataChannel channel);
@@ -59,13 +60,6 @@ interface IPeerConnectionObserver : nsISupports
   void onRemoveStream();
   void onAddTrack();
   void onRemoveTrack();
-
-  /* When SDP is parsed and a candidate line is found this method is called.
-   * It should hook back into the media transport to notify it of ICE candidates
-   * listed in the SDP PeerConnectionImpl does not parse ICE candidates, just
-   * pulls them out of the SDP.
-   */
-  void foundIceCandidate(in string candidate);
 };
 
 [scriptable, uuid(930dce8b-7c5e-4393-b8c0-cb3a928f68bd)]
