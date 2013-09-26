@@ -119,7 +119,8 @@ public class HealthReportBroadcastService extends BackgroundService {
     }
 
     final String action = intent.getAction();
-    Logger.debug(LOG_TAG, "Health report upload feature is compile-time enabled; handling intent with action " + action + ".");
+    Logger.debug(LOG_TAG, "Health report upload feature is compile-time enabled; attempting to " +
+        "handle intent with action " + action + ".");
 
     if (HealthReportConstants.ACTION_HEALTHREPORT_UPLOAD_PREF.equals(action)) {
       handleUploadPrefIntent(intent);
@@ -196,7 +197,7 @@ public class HealthReportBroadcastService extends BackgroundService {
    */
   protected boolean attemptHandleIntentForPrune(final Intent intent) {
     final String action = intent.getAction();
-    Logger.debug(LOG_TAG, "Prune: Handling intent with action, " + action + ".");
+    Logger.debug(LOG_TAG, "Prune: Attempting to handle intent with action, " + action + ".");
 
     if (HealthReportConstants.ACTION_HEALTHREPORT_PRUNE.equals(action)) {
       handlePruneIntent(intent);
