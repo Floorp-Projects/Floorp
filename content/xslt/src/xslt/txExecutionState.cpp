@@ -16,7 +16,8 @@
 
 const int32_t txExecutionState::kMaxRecursionDepth = 20000;
 
-nsresult txLoadedDocumentsHash::init(txXPathNode* aSourceDocument)
+void
+txLoadedDocumentsHash::init(txXPathNode* aSourceDocument)
 {
     Init(8);
 
@@ -25,14 +26,7 @@ nsresult txLoadedDocumentsHash::init(txXPathNode* aSourceDocument)
     nsAutoString baseURI;
     txXPathNodeUtils::getBaseURI(*mSourceDocument, baseURI);
 
-    txLoadedDocumentEntry* entry = PutEntry(baseURI);
-    if (!entry) {
-        return NS_ERROR_FAILURE;
-    }
-
-    entry->mDocument = mSourceDocument;
-
-    return NS_OK;
+    PutEntry(baseURI)->mDocument = mSourceDocument;
 }
 
 txLoadedDocumentsHash::~txLoadedDocumentsHash()
@@ -41,12 +35,14 @@ txLoadedDocumentsHash::~txLoadedDocumentsHash()
         return;
     }
 
-    nsAutoString baseURI;
-    txXPathNodeUtils::getBaseURI(*mSourceDocument, baseURI);
+    if (mSourceDocument) {
+        nsAutoString baseURI;
+        txXPathNodeUtils::getBaseURI(*mSourceDocument, baseURI);
 
-    txLoadedDocumentEntry* entry = GetEntry(baseURI);
-    if (entry) {
-        delete entry->mDocument.forget();
+        txLoadedDocumentEntry* entry = GetEntry(baseURI);
+        if (entry) {
+            delete entry->mDocument.forget();
+        }
     }
 }
 
@@ -124,14 +120,7 @@ txExecutionState::init(const txXPathNode& aNode,
     mOutputHandler->startDocument();
 
     // Set up loaded-documents-hash
-    nsAutoPtr<txXPathNode> document(txXPathNodeUtils::getOwnerDocument(aNode));
-    NS_ENSURE_TRUE(document, NS_ERROR_FAILURE);
-
-    rv = mLoadedDocuments.init(document);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    // loaded-documents-hash owns this now
-    document.forget();
+    mLoadedDocuments.init(txXPathNodeUtils::getOwnerDocument(aNode));
 
     // Init members
     rv = mKeyHash.init();
