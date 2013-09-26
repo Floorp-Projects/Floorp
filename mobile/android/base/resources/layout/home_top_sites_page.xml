@@ -3,17 +3,16 @@
    - License, v. 2.0. If a copy of the MPL was not distributed with this
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
 
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-              android:layout_width="fill_parent"
-              android:layout_height="fill_parent"
-              android:orientation="vertical">
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+             android:layout_width="fill_parent"
+             android:layout_height="fill_parent"
+             android:orientation="vertical">
 
     <org.mozilla.gecko.home.HomeListView
             android:id="@+id/list"
             style="@style/Widget.TopSitesListView"
             android:layout_width="fill_parent"
-            android:layout_height="0dp"
-            android:layout_weight="1"/>
+            android:layout_height="fill_parent"/>
 
     <org.mozilla.gecko.home.HomeBanner android:id="@+id/home_banner"
                                        style="@style/Widget.HomeBanner"
@@ -26,4 +25,4 @@
                                        android:clickable="true"
                                        android:focusable="true"/>
 
-</LinearLayout>
+</FrameLayout>
