@@ -494,7 +494,6 @@ nsComponentManagerImpl::RegisterCIDEntryLocked(
         else
             existing = "<unknown module>";
 
-        mLock.Unlock();
         LogMessage("While registering XPCOM module %s, trying to re-register CID '%s' already registered by %s.",
                    aModule->Description().get(),
                    idstr,
