@@ -338,8 +338,8 @@ Download.prototype = {
     // While shutting down or disposing of this object, we prevent the download
     // from returning to be in progress.
     if (this._finalized) {
-      return Promise.reject(new DownloadError(Cr.NS_ERROR_FAILURE,
-                                "Cannot start after finalization."));
+      return Promise.reject(new DownloadError({
+                                message: "Cannot start after finalization."}));
     }
 
     // Initialize all the status properties for a new or restarted download.
@@ -410,10 +410,7 @@ Download.prototype = {
 
       // Disallow download if parental controls service restricts it.
       if (yield DownloadIntegration.shouldBlockForParentalControls(this)) {
-        let error = new DownloadError(Cr.NS_ERROR_FAILURE, "Download blocked.");
-        error.becauseBlocked = true;
-        error.becauseBlockedByParentalControls = true;
-        throw error;
+        throw new DownloadError({ becauseBlockedByParentalControls: true });
       }
 
       try {
@@ -430,7 +427,7 @@ Download.prototype = {
         // is forced to actually check the status properties to see if the
         // download was canceled or failed because of other reasons.
         if (this._promiseCanceled) {
-          throw new DownloadError(Cr.NS_ERROR_FAILURE, "Download canceled.");
+          throw new DownloadError({ message: "Download canceled." });
         }
 
         // Update the download error, unless a new attempt already started. The
@@ -1152,18 +1149,22 @@ DownloadTarget.fromSerializable = function (aSerializable) {
 /**
  * Provides detailed information about a download failure.
  *
- * @param aResult
- *        The result code associated with the error.
- * @param aMessage
- *        The message to be displayed, or null to use the message associated
- *        with the result code.
- * @param aInferCause
- *        If true, attempts to determine if the cause of the download is a
- *        network failure or a local file failure, based on a set of known
- *        values of the result code.  This is useful when the error is received
- *        by a component that handles both aspects of the download.
+ * @param aProperties
+ *        Object which may contain any of the following properties:
+ *          {
+ *            result: Result error code, defaulting to Cr.NS_ERROR_FAILURE
+ *            message: String error message to be displayed, or null to use the
+ *                     message associated with the result code.
+ *            inferCause: If true, attempts to determine if the cause of the
+ *                        download is a network failure or a local file failure,
+ *                        based on a set of known values of the result code.
+ *                        This is useful when the error is received by a
+ *                        component that handles both aspects of the download.
+ *          }
+ *        The properties object may also contain any of the DownloadError's
+ *        because properties, which will be set accordingly in the error object.
  */
-function DownloadError(aResult, aMessage, aInferCause)
+function DownloadError(aProperties)
 {
   const NS_ERROR_MODULE_BASE_OFFSET = 0x45;
   const NS_ERROR_MODULE_NETWORK = 6;
@@ -1171,18 +1172,39 @@ function DownloadError(aResult, aMessage, aInferCause)
 
   // Set the error name used by the Error object prototype first.
   this.name = "DownloadError";
-  this.result = aResult || Cr.NS_ERROR_FAILURE;
-  if (aMessage) {
-    this.message = aMessage;
+  this.result = aProperties.result || Cr.NS_ERROR_FAILURE;
+  if (aProperties.message) {
+    this.message = aProperties.message;
+  } else if (aProperties.becauseBlocked ||
+             aProperties.becauseBlockedByParentalControls) {
+    this.message = "Download blocked.";
   } else {
     let exception = new Components.Exception("", this.result);
     this.message = exception.toString();
   }
-  if (aInferCause) {
-    let module = ((aResult & 0x7FFF0000) >> 16) - NS_ERROR_MODULE_BASE_OFFSET;
+  if (aProperties.inferCause) {
+    let module = ((this.result & 0x7FFF0000) >> 16) -
+                 NS_ERROR_MODULE_BASE_OFFSET;
     this.becauseSourceFailed = (module == NS_ERROR_MODULE_NETWORK);
     this.becauseTargetFailed = (module == NS_ERROR_MODULE_FILES);
   }
+  else {
+    if (aProperties.becauseSourceFailed) {
+      this.becauseSourceFailed = true;
+    }
+    if (aProperties.becauseTargetFailed) {
+      this.becauseTargetFailed = true;
+    }
+  }
+
+  if (aProperties.becauseBlockedByParentalControls) {
+    this.becauseBlocked = true;
+    this.becauseBlockedByParentalControls = true;
+  }
+  else if (aProperties.becauseBlocked) {
+    this.becauseBlocked = true;
+  }
+
   this.stack = new Error().stack;
 }
 
@@ -1420,7 +1442,7 @@ DownloadCopySaver.prototype = {
         // Throw a DownloadError indicating that the operation failed because of
         // the target file.  We cannot translate this into a specific result
         // code, but we preserve the original message using the toString method.
-        let error = new DownloadError(Cr.NS_ERROR_FAILURE, ex.toString());
+        let error = new DownloadError({ message: ex.toString() });
         error.becauseTargetFailed = true;
         throw error;
       }
@@ -1431,7 +1453,7 @@ DownloadCopySaver.prototype = {
         if (this._canceled) {
           // Don't create the BackgroundFileSaver object if we have been
           // canceled meanwhile.
-          throw new DownloadError(Cr.NS_ERROR_FAILURE, "Saver canceled.");
+          throw new DownloadError({ message: "Saver canceled." });
         }
 
         // Create the object that will save the file in a background thread.
@@ -1453,8 +1475,8 @@ DownloadCopySaver.prototype = {
               } else {
                 // Infer the origin of the error from the failure code, because
                 // BackgroundFileSaver does not provide more specific data.
-                deferSaveComplete.reject(new DownloadError(aStatus, null,
-                                                           true));
+                let properties = { result: aStatus, inferCause: true };
+                deferSaveComplete.reject(new DownloadError(properties));
               }
             },
           };
@@ -1805,7 +1827,8 @@ DownloadLegacySaver.prototype = {
     } else {
       // Infer the origin of the error from the failure code, because more
       // specific data is not available through the nsITransfer implementation.
-      this.deferExecuted.reject(new DownloadError(aStatus, null, true));
+      let properties = { result: aStatus, inferCause: true };
+      this.deferExecuted.reject(new DownloadError(properties));
     }
   },
 
