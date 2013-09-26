@@ -16,7 +16,6 @@
 
 #include "jsinfer.h"
 
-#include "jit/Bailouts.h"
 #include "jit/CompilerRoot.h"
 #include "jit/FixedList.h"
 #include "jit/InlineList.h"
@@ -26,6 +25,7 @@
 #include "jit/TypePolicy.h"
 #include "jit/TypeRepresentationSet.h"
 #include "vm/ScopeObject.h"
+#include "vm/TypedArrayObject.h"
 
 namespace js {
 

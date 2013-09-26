@@ -7,10 +7,12 @@
 #define ctypes_CTypes_h
 
 #include "ffi.h"
-#include "jscntxt.h"
+#include "jsalloc.h"
 #include "prlink.h"
 
 #include "js/HashTable.h"
+#include "js/Vector.h"
+#include "vm/String.h"
 
 namespace js {
 namespace ctypes {
