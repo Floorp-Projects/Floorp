@@ -113,7 +113,7 @@ let gTests = [
     desc: "Moving widgets in two windows, one with customize mode and one without, should work",
     setup: startCustomizing,
     run: function() {
-      otherWin = yield openAndLoadWindow();
+      otherWin = yield openAndLoadWindow(null, true);
       // Open panel to force its construction:
       yield afterPanelOpen(otherWin);
 
