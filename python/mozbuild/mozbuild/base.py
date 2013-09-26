@@ -394,7 +394,7 @@ class MozbuildObject(ProcessExecutionMixin):
         """
         self._ensure_objdir_exists()
 
-        args = [self._make_path(force_pymake=force_pymake)]
+        args = self._make_path(force_pymake=force_pymake)
 
         if directory:
             args.extend(['-C', directory])
@@ -457,12 +457,17 @@ class MozbuildObject(ProcessExecutionMixin):
 
     def _make_path(self, force_pymake=False):
         if self._is_windows() or force_pymake:
-            return os.path.join(self.topsrcdir, 'build', 'pymake',
+            make_py = os.path.join(self.topsrcdir, 'build', 'pymake',
                 'make.py').replace(os.sep, '/')
+
+            # We might want to consider invoking with the virtualenv's Python
+            # some day. But, there is a chicken-and-egg problem w.r.t. when the
+            # virtualenv is created.
+            return [sys.executable, make_py]
 
         for test in ['gmake', 'make']:
             try:
-                return which.which(test)
+                return [which.which(test)]
             except which.WhichError:
                 continue
 
