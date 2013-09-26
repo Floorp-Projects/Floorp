@@ -1666,6 +1666,42 @@ add_test(function test_personalization_state() {
 });
 
 /**
+ * Verify SIM app_state in _processICCStatus
+ */
+add_test(function test_card_app_state() {
+  let worker = newUint8Worker();
+  let ril = worker.RIL;
+
+  function testCardAppState(cardAppState, geckoCardState) {
+    let iccStatus = {
+      gsmUmtsSubscriptionAppIndex: 0,
+      apps: [
+      {
+        app_state: cardAppState
+      }],
+    };
+
+    ril._processICCStatus(iccStatus);
+    do_check_eq(ril.cardState, geckoCardState);
+  }
+
+  testCardAppState(CARD_APPSTATE_ILLEGAL,
+                   GECKO_CARDSTATE_ILLEGAL);
+  testCardAppState(CARD_APPSTATE_PIN,
+                   GECKO_CARDSTATE_PIN_REQUIRED);
+  testCardAppState(CARD_APPSTATE_PUK,
+                   GECKO_CARDSTATE_PUK_REQUIRED);
+  testCardAppState(CARD_APPSTATE_READY,
+                   GECKO_CARDSTATE_READY);
+  testCardAppState(CARD_APPSTATE_UNKNOWN,
+                   GECKO_CARDSTATE_UNKNOWN);
+  testCardAppState(CARD_APPSTATE_DETECTED,
+                   GECKO_CARDSTATE_UNKNOWN);
+
+  run_next_test();
+});
+
+/**
  * Verify iccSetCardLock - Facility Lock.
  */
 add_test(function test_set_icc_card_lock_facility_lock() {

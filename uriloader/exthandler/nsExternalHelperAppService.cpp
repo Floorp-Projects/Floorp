@@ -489,6 +489,7 @@ static nsExtraMimeTypeEntry extraMimeEntries [] =
   { TEXT_XUL, "xul", "XML-Based User Interface Language" },
   { TEXT_XML, "xml,xsl,xbl", "Extensible Markup Language" },
   { TEXT_CSS, "css", "Style Sheet" },
+  { TEXT_VCARD, "vcf,vcard", "Contact Information" },
   { VIDEO_OGG, "ogv", "Ogg Video" },
   { VIDEO_OGG, "ogg", "Ogg Video" },
   { APPLICATION_OGG, "ogg", "Ogg Video"},
