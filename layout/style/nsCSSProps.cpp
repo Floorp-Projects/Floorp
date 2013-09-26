@@ -911,6 +911,8 @@ const int32_t nsCSSProps::kCursorKTable[] = {
   eCSSKeyword_ns_resize, NS_STYLE_CURSOR_NS_RESIZE,
   eCSSKeyword_ew_resize, NS_STYLE_CURSOR_EW_RESIZE,
   eCSSKeyword_none, NS_STYLE_CURSOR_NONE,
+  eCSSKeyword_grab, NS_STYLE_CURSOR_GRAB,
+  eCSSKeyword_grabbing, NS_STYLE_CURSOR_GRABBING,
   eCSSKeyword_zoom_in, NS_STYLE_CURSOR_ZOOM_IN,
   eCSSKeyword_zoom_out, NS_STYLE_CURSOR_ZOOM_OUT,
   // -moz- prefixed vendor specific

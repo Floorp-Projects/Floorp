@@ -720,7 +720,7 @@ TypeScript::BytecodeTypes(JSScript *script, jsbytecode *pc)
     // Fall back to a binary search.
     size_t bottom = 0;
     size_t top = script->nTypeSets - 1;
-    size_t mid = (bottom + top) / 2;
+    size_t mid = bottom + (top - bottom) / 2;
     while (mid < top) {
         if (bytecodeMap[mid] < offset)
             bottom = mid + 1;
@@ -728,7 +728,7 @@ TypeScript::BytecodeTypes(JSScript *script, jsbytecode *pc)
             top = mid;
         else
             break;
-        mid = (bottom + top) / 2;
+        mid = bottom + (top - bottom) / 2;
     }
 
     // We should have have zeroed in on either the exact offset, unless there

@@ -2546,6 +2546,20 @@ nsLayoutUtils::FirstContinuationOrSpecialSibling(nsIFrame *aFrame)
 }
 
 bool
+nsLayoutUtils::IsFirstContinuationOrSpecialSibling(nsIFrame *aFrame)
+{
+  if (aFrame->GetPrevContinuation()) {
+    return false;
+  }
+  if ((aFrame->GetStateBits() & NS_FRAME_IS_SPECIAL) &&
+      aFrame->Properties().Get(nsIFrame::IBSplitSpecialPrevSibling())) {
+    return false;
+  }
+
+  return true;
+}
+
+bool
 nsLayoutUtils::IsViewportScrollbarFrame(nsIFrame* aFrame)
 {
   if (!aFrame)
