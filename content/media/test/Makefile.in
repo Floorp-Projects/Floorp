@@ -124,6 +124,7 @@ MOCHITEST_FILES = \
 		test_mediarecorder_record_no_timeslice.html \
 		test_mediarecorder_reload_crash.html \
 		test_mediarecorder_record_immediate_stop.html \
+		test_mediarecorder_record_session.html \
 		test_media_selection.html \
 		test_playback.html \
 		test_seekLies.html \
