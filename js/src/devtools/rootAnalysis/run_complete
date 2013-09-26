@@ -24,6 +24,7 @@
 # and the reports will only reflect the changes since the earlier run.
 
 use strict;
+use warnings;
 use IO::Handle;
 use File::Basename qw(dirname);
 use Getopt::Long;
@@ -193,7 +194,7 @@ sub get_manager_address
     my $log_data = `cat $log_file`;
     my ($port) = $log_data =~ /Listening on ([\.\:0-9]*)/
       or die "no manager found";
-    print OUT "Connecting to manager on port $port\n";
+    print OUT "Connecting to manager on port $port\n" unless $suppress_logs;
     print "Connecting to manager on port $port.\n";
     return $1;
 }
@@ -310,7 +311,7 @@ sub run_pass
 
     # collate the worker's output into a single file. make this asynchronous
     # so we can wait a bit and make sure we get all worker output.
-    defined(my $pid = fork) or die;
+    defined($pid = fork) or die;
 
     if (!$pid) {
         sleep(20);

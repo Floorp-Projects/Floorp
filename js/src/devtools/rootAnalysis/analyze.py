@@ -197,7 +197,7 @@ parser.add_argument('--source', metavar='SOURCE', type=str, nargs='?',
                     help='source code to analyze')
 parser.add_argument('--upto', metavar='UPTO', type=str, nargs='?',
                     help='last step to execute')
-parser.add_argument('--jobs', '-j', default=4, metavar='JOBS', type=int,
+parser.add_argument('--jobs', '-j', default=None, metavar='JOBS', type=int,
                     help='number of simultaneous analyzeRoots.js jobs')
 parser.add_argument('--list', const=True, nargs='?', type=bool,
                     help='display available steps')

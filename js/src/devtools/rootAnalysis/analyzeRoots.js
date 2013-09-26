@@ -556,7 +556,10 @@ for (var nameIndex = start; nameIndex <= end; nameIndex++) {
     var name = xdb.read_key(nameIndex);
     var functionName = name.readString();
     var data = xdb.read_entry(name);
-    functionBodies = JSON.parse(data.readString());
+    xdb.free_string(name);
+    var json = data.readString();
+    xdb.free_string(data);
+    functionBodies = JSON.parse(json);
 
     for (var body of functionBodies)
         body.suppressed = [];
@@ -565,7 +568,4 @@ for (var nameIndex = start; nameIndex <= end; nameIndex++) {
             pbody.suppressed[id] = true;
     }
     processBodies(functionName);
-
-    xdb.free_string(name);
-    xdb.free_string(data);
 }
