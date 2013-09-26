@@ -1499,7 +1499,7 @@
   </binding>
 
   <binding id="click-to-play-plugins-notification" extends="chrome://global/content/bindings/notification.xml#popup-notification">
-    <content align="start" class="click-to-play-plugins-notification-content">
+    <content align="start" style="width: &pluginNotification.width;;">
       <xul:vbox flex="1" align="stretch" class="popup-notification-main-box"
                 xbl:inherits="popupid">
         <xul:hbox class="click-to-play-plugins-notification-description-box" flex="1" align="start">
