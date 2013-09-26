@@ -531,14 +531,14 @@ ContentChild::RecvDumpGCAndCCLogsToFile(const nsString& aIdentifier,
     return true;
 }
 
-bool
+PCompositorChild*
 ContentChild::AllocPCompositorChild(mozilla::ipc::Transport* aTransport,
                                     base::ProcessId aOtherProcess)
 {
     return CompositorChild::Create(aTransport, aOtherProcess);
 }
 
-bool
+PImageBridgeChild*
 ContentChild::AllocPImageBridgeChild(mozilla::ipc::Transport* aTransport,
                                      base::ProcessId aOtherProcess)
 {
