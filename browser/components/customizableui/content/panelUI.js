@@ -403,3 +403,5 @@ const PanelUI = {
     return deferred.promise;
   }
 };
+
+PanelUI.init();
