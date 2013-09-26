@@ -451,6 +451,8 @@ interface TestInterface {
   void passUnion7((object or DOMString or long) arg);
   void passUnion8((object or DOMString or boolean) arg);
   void passUnion9((object or DOMString or long or boolean) arg);
+  void passUnion10(optional (EventInit or long) arg);
+  void passUnion11(optional (CustomEventInit or long) arg);
 #endif
   void passUnionWithNullable((object? or long) arg);
   void passNullableUnion((object or long)? arg);
@@ -747,6 +749,15 @@ dictionary Dict : ParentDict {
 
   (float or DOMString) floatOrString = "str";
   (object or long) objectOrLong;
+#ifdef DEBUG
+  (EventInit or long) eventInitOrLong;
+  // CustomEventInit is useful to test because it needs rooting.
+  (CustomEventInit or long) eventInitOrLong2;
+  (EventInit or long) eventInitOrLongWithDefaultValue = null;
+  (CustomEventInit or long) eventInitOrLongWithDefaultValue2 = null;
+  (EventInit or long) eventInitOrLongWithDefaultValue3 = 5;
+  (CustomEventInit or long) eventInitOrLongWithDefaultValue4 = 5;
+#endif
 
   ArrayBuffer arrayBuffer;
   ArrayBuffer? nullableArrayBuffer;

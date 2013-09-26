@@ -826,8 +826,13 @@ def UnionTypes(descriptors, dictionaries, callbacks, config):
                             declarations.add((typeDesc.nativeType, False))
                             implheaders.add(typeDesc.headerFile)
                 elif f.isDictionary():
-                    declarations.add((f.inner.identifier.name, True))
-                    implheaders.add(CGHeaders.getDeclarationFilename(f.inner))
+                    # For a dictionary, we need to see its declaration in
+                    # UnionTypes.h so we have its sizeof and know how big to
+                    # make our union.
+                    headers.add(CGHeaders.getDeclarationFilename(f.inner))
+                    # And if it needs rooting, we need RootedDictionary too
+                    if typeNeedsRooting(f):
+                        headers.add("mozilla/dom/RootedDictionary.h")
                 elif t.isPrimitive():
                     implheaders.add("mozilla/dom/PrimitiveConversions.h")
 
@@ -2727,18 +2732,20 @@ def getJSToNativeConversionInfo(type, descriptorProvider, failureCode=None,
                 declType = CGGeneric("JS::Handle<JSObject*>")
             else:
                 declType = CGGeneric("JS::Rooted<JSObject*>")
+            declArgs="cx"
         else:
             assert (isMember == "Sequence" or isMember == "Variadic" or
                     isMember == "Dictionary" or isMember == "OwningUnion")
             # We'll get traced by the sequence or dictionary or union tracer
             declType = CGGeneric("JSObject*")
+            declArgs = None
         templateBody = "${declName} = &${val}.toObject();"
         setToNullCode = "${declName} = nullptr;"
         template = wrapObjectTemplate(templateBody, type, setToNullCode,
                                       failureCode)
         return JSToNativeConversionInfo(template, declType=declType,
                                         dealWithOptional=isOptional,
-                                        declArgs="cx")
+                                        declArgs=declArgs)
 
     assert not (isEnforceRange and isClamp) # These are mutually exclusive
 
@@ -2924,31 +2931,31 @@ for (uint32_t i = 0; i < length; ++i) {
 
         dictionaryMemberTypes = filter(lambda t: t.isDictionary(), memberTypes)
         if len(dictionaryMemberTypes) > 0:
-            raise TypeError("No support for unwrapping dictionaries as member "
-                            "of a union")
+            assert len(dictionaryMemberTypes) == 1
+            name = dictionaryMemberTypes[0].inner.identifier.name
+            setDictionary = CGGeneric("done = (failed = !%s.TrySetTo%s(cx, ${val}, ${mutableVal}, tryNext)) || !tryNext;" % (unionArgumentObj, name))
         else:
-            dictionaryObject = None
+            setDictionary = None
 
         objectMemberTypes = filter(lambda t: t.isObject(), memberTypes)
         if len(objectMemberTypes) > 0:
+            assert len(objectMemberTypes) == 1
             object = CGGeneric("%s.SetToObject(cx, argObj);\n"
                                "done = true;" % unionArgumentObj)
         else:
             object = None
 
-        hasObjectTypes = interfaceObject or arrayObject or dateObject or callbackObject or dictionaryObject or object
+        hasObjectTypes = interfaceObject or arrayObject or dateObject or callbackObject or object
         if hasObjectTypes:
             # "object" is not distinguishable from other types
-            assert not object or not (interfaceObject or arrayObject or dateObject or callbackObject or dictionaryObject)
-            if arrayObject or dateObject or callbackObject or dictionaryObject:
+            assert not object or not (interfaceObject or arrayObject or dateObject or callbackObject)
+            if arrayObject or dateObject or callbackObject:
                 # An object can be both an array object and a callback or
                 # dictionary, but we shouldn't have both in the union's members
                 # because they are not distinguishable.
                 assert not (arrayObject and callbackObject)
-                assert not (arrayObject and dictionaryObject)
-                assert not (dictionaryObject and callbackObject)
-                templateBody = CGList([arrayObject, dateObject, callbackObject,
-                                       dictionaryObject], " else ")
+                templateBody = CGList([arrayObject, dateObject, callbackObject],
+                                      " else ")
             else:
                 templateBody = None
             if interfaceObject:
@@ -2959,12 +2966,16 @@ for (uint32_t i = 0; i < length; ++i) {
             else:
                 templateBody = CGList([templateBody, object], "\n")
 
-            if any([arrayObject, dateObject, callbackObject, dictionaryObject,
-                    object]):
+            if any([arrayObject, dateObject, callbackObject, object]):
                 templateBody.prepend(CGGeneric("JS::Rooted<JSObject*> argObj(cx, &${val}.toObject());"))
             templateBody = CGIfWrapper(templateBody, "${val}.isObject()")
         else:
             templateBody = CGGeneric()
+
+        if setDictionary:
+            assert not object
+            templateBody = CGList([templateBody,
+                                   CGIfWrapper(setDictionary, "!done")], "\n")
 
         stringTypes = [t for t in memberTypes if t.isString() or t.isEnum()]
         numericTypes = [t for t in memberTypes if t.isNumeric()]
@@ -3004,7 +3015,7 @@ for (uint32_t i = 0; i < length; ++i) {
                 other.append(booleanConversion[0])
 
             other = CGWrapper(CGIndenter(other), pre="do {\n", post="\n} while (0);")
-            if hasObjectTypes:
+            if hasObjectTypes or setDictionary:
                 other = CGWrapper(CGIndenter(other), "{\n", post="\n}")
                 if object:
                     join = " else "
@@ -3518,10 +3529,6 @@ for (uint32_t i = 0; i < length; ++i) {
         return handleJSObjectType(type, isMember, failureCode)
 
     if type.isDictionary():
-        if failureCode is not None and not isDefinitelyObject:
-            raise TypeError("Can't handle dictionaries when failureCode is "
-                            "not None and we don't know we're an object")
-
         # There are no nullable dictionaries
         assert not type.nullable()
         # All optional dictionaries always have default values, so we
@@ -3546,12 +3553,15 @@ for (uint32_t i = 0; i < length; ++i) {
             val = "${val}"
 
         if failureCode is not None:
-            assert isDefinitelyObject
+            if isDefinitelyObject:
+                dictionaryTest = "IsObjectValueConvertibleToDictionary"
+            else:
+                dictionaryTest = "IsConvertibleToDictionary"
             # Check that the value we have can in fact be converted to
             # a dictionary, and return failureCode if not.
             template = CGIfWrapper(
                 CGGeneric(failureCode),
-                "!IsObjectValueConvertibleToDictionary(cx, ${val})").define() + "\n\n"
+                "!%s(cx, ${val})" % dictionaryTest).define() + "\n\n"
         else:
             template = ""
 
@@ -6081,6 +6091,9 @@ def getUnionAccessorSignatureType(type, descriptorProvider):
     if type.isObject():
         return CGGeneric("JSObject*")
 
+    if type.isDictionary():
+        return CGGeneric("const %s&" % type.inner.identifier.name)
+
     if not type.isPrimitive():
         raise TypeError("Need native type for argument type '%s'" % str(type))
 
@@ -6095,13 +6108,10 @@ def getUnionTypeTemplateVars(unionType, type, descriptorProvider,
     # for getJSToNativeConversionInfo.
     # Also, for dictionaries we would need to handle conversion of
     # null/undefined to the dictionary correctly.
-    if type.isDictionary() or type.isSequence():
-        raise TypeError("Can't handle dictionaries or sequences in unions")
+    if type.isSequence():
+        raise TypeError("Can't handle sequences in unions")
 
     name = getUnionMemberName(type)
-
-    ctorNeedsCx = type.isSpiderMonkeyInterface() and not ownsMembers
-    ctorArgs = "cx" if ctorNeedsCx else ""
 
     tryNextCode = ("tryNext = true;\n"
                    "return true;")
@@ -6112,9 +6122,12 @@ def getUnionTypeTemplateVars(unionType, type, descriptorProvider,
                         "}") % (prefix, prefix, prefix, name) + tryNextCode
     conversionInfo = getJSToNativeConversionInfo(
         type, descriptorProvider, failureCode=tryNextCode,
-        isDefinitelyObject=True,
+        isDefinitelyObject=not type.isDictionary(),
         isMember=("OwningUnion" if ownsMembers else None),
         sourceDescription="member of %s" % unionType)
+
+    ctorNeedsCx = conversionInfo.declArgs == "cx"
+    ctorArgs = "cx" if ctorNeedsCx else ""
 
     # This is ugly, but UnionMember needs to call a constructor with no
     # arguments so the type can't be const.
@@ -6282,6 +6295,11 @@ class CGUnionStruct(CGThing):
                                CGGeneric('JS_CallObjectTracer(trc, %s, "%s");' %
                                          ("&mValue.m" + vars["name"] + ".Value()",
                                           "mValue.m" + vars["name"]))))
+                elif t.isDictionary():
+                    traceCases.append(
+                        CGCase("e" + vars["name"],
+                               CGGeneric("mValue.m%s.Value().TraceDictionary(trc);" %
+                                         vars["name"])))
                 else:
                     assert t.isSpiderMonkeyInterface()
                     traceCases.append(
@@ -8145,6 +8163,21 @@ class CGDictionary(CGThing):
                                                (member.identifier.name,
                                                 dictionary.identifier.name))))
             for member in dictionary.members ]
+        # If we have a union member containing something in the same
+        # file as us, bail: the C++ includes won't work out.
+        for member in dictionary.members:
+            type = member.type.unroll()
+            if type.isUnion():
+                for t in type.flatMemberTypes:
+                    if (t.isDictionary() and
+                        CGHeaders.getDeclarationFilename(t.inner) ==
+                        CGHeaders.getDeclarationFilename(dictionary)):
+                        raise TypeError(
+                            "Dictionary contains a union that contains a "
+                            "dictionary in the same WebIDL file.  This won't "
+                            "compile.  Move the inner dictionary to a "
+                            "different file.\n%s\n%s" %
+                            (t.location, t.inner.location))
         self.structs = self.getStructs()
 
     def declare(self):
