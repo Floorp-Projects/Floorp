@@ -111,7 +111,6 @@ richgriditem:not([tiletype="thumbnail"]) .tile-start-container {
 richgriditem:not([iconURI]) .tile-icon-box,
 richgriditem[iconURI=""] .tile-icon-box,
 richgriditem[iconsize="large"] .tile-icon-box {
-  background-color: transparent!important;
   border-color: transparent!important;
   padding: 4px;
 }
@@ -129,6 +128,7 @@ richgriditem[iconsize="large"] .tile-icon-box > image,
   left: 52px; /* label goes to the right of the favicon */
   right: 0;
   padding: 1em 6px 6px 12px;
+  background: white;
   color: #333;
   margin: 0;
   -moz-margin-start: 0;
