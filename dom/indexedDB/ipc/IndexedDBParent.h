@@ -707,10 +707,8 @@ class IndexedDBObjectStoreRequestParent : public IndexedDBRequestParentBase
   typedef ipc::DeleteParams DeleteParams;
   typedef ipc::GetParams GetParams;
   typedef ipc::GetAllParams GetAllParams;
-  typedef ipc::GetAllKeysParams GetAllKeysParams;
   typedef ipc::CountParams CountParams;
   typedef ipc::OpenCursorParams OpenCursorParams;
-  typedef ipc::OpenKeyCursorParams OpenKeyCursorParams;
 
 public:
   IndexedDBObjectStoreRequestParent(IDBObjectStore* aObjectStore,
@@ -722,9 +720,6 @@ public:
 
   bool
   GetAll(const GetAllParams& aParams);
-
-  bool
-  GetAllKeys(const GetAllKeysParams& aParams);
 
   bool
   Add(const AddParams& aParams);
@@ -743,9 +738,6 @@ public:
 
   bool
   OpenCursor(const OpenCursorParams& aParams);
-
-  bool
-  OpenKeyCursor(const OpenKeyCursorParams& aParams);
 
 protected:
   void
