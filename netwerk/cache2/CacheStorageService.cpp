@@ -1040,7 +1040,7 @@ CacheStorageService::PurgeOverMemoryLimit()
 
   LOG(("CacheStorageService::PurgeOverMemoryLimit"));
 
-#ifdef MOZ_LOGGING
+#ifdef PR_LOG
   TimeStamp start(TimeStamp::Now());
 #endif
 

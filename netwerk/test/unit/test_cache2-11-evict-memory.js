@@ -20,7 +20,7 @@ function run_test()
         );
       })
     );
-  });
+  }, !newCacheBackEndUsed());
 
   asyncOpenCacheEntry("http://mem1/", "memory", Ci.nsICacheStorage.OPEN_NORMALLY, null,
     new OpenCallback(NEW, "m2m", "m2d", function(entry) {

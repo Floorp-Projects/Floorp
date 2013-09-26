@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<!-- Any copyright is dedicated to the Public Domain.
+   - http://creativecommons.org/publicdomain/zero/1.0/ -->
+<html>
+  <head>
+    <title>CSS Test: Sticky Positioning - block inside inline, normal position</title>
+    <link rel="author" title="L. David Baron" href="mailto:dbaron@mozilla.com">
+    <link rel="stylesheet" type="text/css" href="ahem.css">
+    <style>
+      #scroll {
+        height: 100px;
+        overflow: hidden;
+        font: 20px/1 Ahem;
+      }
+      #contain {
+        height: 100px;
+      }
+      .sticky {
+        position: relative;
+        top: -10px;
+      }
+      .notsticky {
+        position: relative;
+        top: -30px;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="scroll">
+      <div style="height: 20px"></div>
+      <div id="contain">
+        <span class="notsticky">before inline</span>
+        <span class="sticky">before block</span>
+        <div><span class="sticky">in block</span></div>
+        <span class="sticky">after block</span>
+        <span class="notsticky">after inline</span>
+      </div>
+      <div style="height: 100px"></div>
+    </div>
+  </body>
+</html>

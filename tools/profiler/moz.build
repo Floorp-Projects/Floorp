@@ -39,8 +39,10 @@ if CONFIG['MOZ_ENABLE_PROFILER_SPS']:
         'JSCustomObjectBuilder.cpp',
         'IOInterposer.cpp',
         'NSPRInterposer.cpp',
+        'ProfilerBacktrace.cpp',
         'ProfilerIOInterposeObserver.cpp',
         'ProfilerMarkers.cpp',
+        'SyncProfile.cpp',
     ]
 
     if CONFIG['OS_TARGET'] in ('Android', 'Linux'):
