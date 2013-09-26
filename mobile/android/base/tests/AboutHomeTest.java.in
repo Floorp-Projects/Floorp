@@ -215,7 +215,8 @@ abstract class AboutHomeTest extends BaseTest {
                 switch (tab) {
                     case MOST_RECENT: {
                         mSolo.clickOnView(tabwidget.getChildAt(0));
-                        mAsserter.ok(waitForText(StringHelper.MOST_RECENT_LABEL), "Checking that we are in the most recent tab of about:home", "We are in the most recent tab");
+                        // We can determine if we are on the MOST_RECENT tab only if pages were first visited during the test
+                        mAsserter.ok(waitForText(StringHelper.TODAY_LABEL), "Checking that we are in the most recent tab of about:home", "We are in the most recent tab");
                         break;
                     }
                     case TABS_FROM_LAST_TIME: {
@@ -251,7 +252,8 @@ abstract class AboutHomeTest extends BaseTest {
                 waitForAboutHomeTab(aboutHomeTabs.indexOf(StringHelper.HISTORY_LABEL));
                 TabWidget tabwidget = (TabWidget)mSolo.getView(TabWidget.class, 0);
                 mSolo.clickOnView(tabwidget.getChildAt(0));
-                mAsserter.ok(waitForText(StringHelper.MOST_RECENT_LABEL), "Checking that we are in the most recent tab of about:home", "We are in the most recent tab");
+                // We can determine if we are on the MOST_RECENT tab only if pages were first visited during the test
+                mAsserter.ok(waitForText(StringHelper.TODAY_LABEL), "Checking that we are in the most recent tab of about:home", "We are in the most recent tab");
                 break;
             }
             case TABS_FROM_LAST_TIME: {
