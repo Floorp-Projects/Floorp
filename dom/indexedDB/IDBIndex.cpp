@@ -10,7 +10,6 @@
 
 #include "nsIIDBKeyRange.h"
 
-#include <algorithm>
 #include "mozilla/dom/ContentChild.h"
 #include "mozilla/dom/ContentParent.h"
 #include "mozilla/dom/ipc/Blob.h"
@@ -564,7 +563,6 @@ IDBIndex::GetAllKeysInternal(IDBKeyRange* aKeyRange, uint32_t aLimit,
   IDBTransaction* transaction = mObjectStore->Transaction();
   if (!transaction->IsOpen()) {
     aRv.Throw(NS_ERROR_DOM_INDEXEDDB_TRANSACTION_INACTIVE_ERR);
-    return nullptr;
   }
 
   nsRefPtr<IDBRequest> request = GenerateRequest(this);
@@ -1369,11 +1367,10 @@ GetHelper::UnpackResponseFromParentProcess(const ResponseValue& aResponseValue)
 nsresult
 GetAllKeysHelper::DoDatabaseWork(mozIStorageConnection* /* aConnection */)
 {
-  MOZ_ASSERT(!NS_IsMainThread());
-  MOZ_ASSERT(IndexedDatabaseManager::IsMainProcess());
+  NS_ASSERTION(!NS_IsMainThread(), "Wrong thread!");
+  NS_ASSERTION(IndexedDatabaseManager::IsMainProcess(), "Wrong process!");
 
-  PROFILER_LABEL("IndexedDB",
-                 "GetAllKeysHelper::DoDatabaseWork [IDBIndex.cpp]");
+  PROFILER_LABEL("IndexedDB", "GetAllKeysHelper::DoDatabaseWork");
 
   nsCString tableName;
   if (mIndex->IsUnique()) {
@@ -1413,7 +1410,7 @@ GetAllKeysHelper::DoDatabaseWork(mozIStorageConnection* /* aConnection */)
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
-  mKeys.SetCapacity(std::min<uint32_t>(50, mLimit));
+  mKeys.SetCapacity(50);
 
   bool hasResult;
   while(NS_SUCCEEDED((rv = stmt->ExecuteStep(&hasResult))) && hasResult) {
@@ -1436,12 +1433,7 @@ nsresult
 GetAllKeysHelper::GetSuccessResult(JSContext* aCx,
                                    JS::MutableHandle<JS::Value> aVal)
 {
-  MOZ_ASSERT(NS_IsMainThread());
-  MOZ_ASSERT(mKeys.Length() <= mLimit);
-
-  PROFILER_MAIN_THREAD_LABEL("IndexedDB",
-                             "GetAllKeysHelper::GetSuccessResult "
-                             "[IDBIndex.cpp]");
+  NS_ASSERTION(mKeys.Length() <= mLimit, "Too many results!");
 
   nsTArray<Key> keys;
   mKeys.SwapElements(keys);
@@ -1483,12 +1475,11 @@ GetAllKeysHelper::GetSuccessResult(JSContext* aCx,
 nsresult
 GetAllKeysHelper::PackArgumentsForParentProcess(IndexRequestParams& aParams)
 {
-  MOZ_ASSERT(NS_IsMainThread());
-  MOZ_ASSERT(!IndexedDatabaseManager::IsMainProcess());
+  NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
+  NS_ASSERTION(!IndexedDatabaseManager::IsMainProcess(), "Wrong process!");
 
   PROFILER_MAIN_THREAD_LABEL("IndexedDB",
-                             "GetAllKeysHelper::PackArgumentsForParentProcess "
-                             "[IDBIndex.cpp]");
+                             "GetAllKeysHelper::PackArgumentsForParentProcess");
 
   GetAllKeysParams params;
 
@@ -1510,12 +1501,11 @@ GetAllKeysHelper::PackArgumentsForParentProcess(IndexRequestParams& aParams)
 AsyncConnectionHelper::ChildProcessSendResult
 GetAllKeysHelper::SendResponseToChildProcess(nsresult aResultCode)
 {
-  MOZ_ASSERT(NS_IsMainThread());
-  MOZ_ASSERT(IndexedDatabaseManager::IsMainProcess());
+  NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
+  NS_ASSERTION(IndexedDatabaseManager::IsMainProcess(), "Wrong process!");
 
   PROFILER_MAIN_THREAD_LABEL("IndexedDB",
-                             "GetAllKeysHelper::SendResponseToChildProcess "
-                             "[IDBIndex.cpp]");
+                             "GetAllKeysHelper::SendResponseToChildProcess");
 
   IndexedDBRequestParentBase* actor = mRequest->GetActorParent();
   NS_ASSERTION(actor, "How did we get this far without an actor?");
@@ -1541,9 +1531,8 @@ nsresult
 GetAllKeysHelper::UnpackResponseFromParentProcess(
                                             const ResponseValue& aResponseValue)
 {
-  MOZ_ASSERT(NS_IsMainThread());
-  MOZ_ASSERT(!IndexedDatabaseManager::IsMainProcess());
-  MOZ_ASSERT(aResponseValue.type() == ResponseValue::TGetAllKeysResponse);
+  NS_ASSERTION(aResponseValue.type() == ResponseValue::TGetAllKeysResponse,
+               "Bad response type!");
 
   mKeys.AppendElements(aResponseValue.get_GetAllKeysResponse().keys());
   return NS_OK;
@@ -1991,7 +1980,7 @@ OpenKeyCursorHelper::PackArgumentsForParentProcess(IndexRequestParams& aParams)
 
   PROFILER_MAIN_THREAD_LABEL("IndexedDB",
                              "OpenKeyCursorHelper::"
-                             "PackArgumentsForParentProcess [IDBIndex.cpp]");
+                             "PackArgumentsForParentProcess");
 
   OpenKeyCursorParams params;
 

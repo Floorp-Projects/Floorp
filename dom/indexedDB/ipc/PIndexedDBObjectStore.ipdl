@@ -12,6 +12,7 @@ include IndexedDBParams;
 
 using mozilla::dom::indexedDB::IndexInfo;
 using mozilla::dom::indexedDB::IndexUpdateInfo;
+using mozilla::dom::indexedDB::SerializedStructuredCloneReadInfo;
 using mozilla::dom::indexedDB::SerializedStructuredCloneWriteInfo;
 
 namespace mozilla {
@@ -51,14 +52,12 @@ union ObjectStoreRequestParams
 {
   GetParams;
   GetAllParams;
-  GetAllKeysParams;
   AddParams;
   PutParams;
   DeleteParams;
   ClearParams;
   CountParams;
   OpenCursorParams;
-  OpenKeyCursorParams;
 };
 
 struct CreateIndexParams
@@ -82,7 +81,7 @@ struct ObjectStoreCursorConstructorParams
   PIndexedDBRequest request;
   Direction direction;
   Key key;
-  OptionalStructuredCloneReadInfo optionalCloneInfo;
+  SerializedStructuredCloneReadInfo cloneInfo;
   PBlob[] blobs;
 };
 

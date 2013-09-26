@@ -36,7 +36,8 @@ using mozilla::dom::OwningIDBObjectStoreOrIDBIndex;
 using mozilla::ErrorResult;
 
 static_assert(sizeof(size_t) >= sizeof(IDBCursor::Direction),
-              "Relying on conversion between size_t and IDBCursor::Direction");
+              "Relying on conversion between size_t and "
+              "IDBCursor::Direction");
 
 namespace {
 
@@ -61,9 +62,6 @@ public:
   UnpackResponseFromParentProcess(const ResponseValue& aResponseValue) = 0;
 
 protected:
-  virtual ~CursorHelper()
-  { }
-
   nsRefPtr<IDBCursor> mCursor;
 
 private:
@@ -81,17 +79,19 @@ public:
                  int32_t aCount)
   : CursorHelper(aCursor), mCount(aCount)
   {
-    MOZ_ASSERT(NS_IsMainThread());
-    MOZ_ASSERT(aCursor);
-    MOZ_ASSERT(aCount > 0);
+    NS_ASSERTION(aCount > 0, "Must have a count!");
+  }
+
+  ~ContinueHelper()
+  {
+    IDBObjectStore::ClearCloneReadInfo(mCloneReadInfo);
   }
 
   virtual nsresult DoDatabaseWork(mozIStorageConnection* aConnection)
                                   MOZ_OVERRIDE;
 
   virtual nsresult GetSuccessResult(JSContext* aCx,
-                                    JS::MutableHandle<JS::Value> aVal)
-                                    MOZ_OVERRIDE;
+                                    JS::MutableHandle<JS::Value> aVal) MOZ_OVERRIDE;
 
   virtual void ReleaseMainThreadObjects() MOZ_OVERRIDE;
 
@@ -106,11 +106,6 @@ public:
                                   MOZ_OVERRIDE;
 
 protected:
-  virtual ~ContinueHelper()
-  {
-    IDBObjectStore::ClearCloneReadInfo(mCloneReadInfo);
-  }
-
   virtual nsresult
   BindArgumentsToStatement(mozIStorageStatement* aStatement) = 0;
 
@@ -129,10 +124,10 @@ protected:
 
     if (mKey.IsUnset()) {
       mCursor->mHaveValue = false;
-    } else {
-      MOZ_ASSERT(mCursor->mType == IDBCursor::OBJECTSTORE ||
-                 mCursor->mType == IDBCursor::OBJECTSTOREKEY ||
-                 !mObjectKey.IsUnset());
+    }
+    else {
+      NS_ASSERTION(mCursor->mType == IDBCursor::OBJECTSTORE ||
+                   !mObjectKey.IsUnset(), "Bad key!");
 
       // Set new values.
       mCursor->mKey = mKey;
@@ -158,29 +153,9 @@ public:
   : ContinueHelper(aCursor, aCount)
   { }
 
-protected:
-  virtual ~ContinueObjectStoreHelper()
-  { }
-
 private:
   nsresult BindArgumentsToStatement(mozIStorageStatement* aStatement);
   nsresult GatherResultsFromStatement(mozIStorageStatement* aStatement);
-};
-
-class ContinueObjectStoreKeyHelper : public ContinueObjectStoreHelper
-{
-public:
-  ContinueObjectStoreKeyHelper(IDBCursor* aCursor,
-                               uint32_t aCount)
-  : ContinueObjectStoreHelper(aCursor, aCount)
-  { }
-
-private:
-  virtual ~ContinueObjectStoreKeyHelper()
-  { }
-
-  virtual nsresult
-  GatherResultsFromStatement(mozIStorageStatement* aStatement) MOZ_OVERRIDE;
 };
 
 class ContinueIndexHelper : public ContinueHelper
@@ -189,10 +164,6 @@ public:
   ContinueIndexHelper(IDBCursor* aCursor,
                       uint32_t aCount)
   : ContinueHelper(aCursor, aCount)
-  { }
-
-protected:
-  virtual ~ContinueIndexHelper()
   { }
 
 private:
@@ -209,9 +180,6 @@ public:
   { }
 
 private:
-  virtual ~ContinueIndexObjectHelper()
-  { }
-
   nsresult GatherResultsFromStatement(mozIStorageStatement* aStatement);
 };
 
@@ -241,32 +209,6 @@ IDBCursor::Create(IDBRequest* aRequest,
   cursor->mType = OBJECTSTORE;
   cursor->mKey = aKey;
   cursor->mCloneReadInfo.Swap(aCloneReadInfo);
-
-  return cursor.forget();
-}
-
-// static
-already_AddRefed<IDBCursor>
-IDBCursor::Create(IDBRequest* aRequest,
-                  IDBTransaction* aTransaction,
-                  IDBObjectStore* aObjectStore,
-                  Direction aDirection,
-                  const Key& aRangeKey,
-                  const nsACString& aContinueQuery,
-                  const nsACString& aContinueToQuery,
-                  const Key& aKey)
-{
-  MOZ_ASSERT(aObjectStore);
-  MOZ_ASSERT(!aKey.IsUnset());
-
-  nsRefPtr<IDBCursor> cursor =
-    IDBCursor::CreateCommon(aRequest, aTransaction, aObjectStore, aDirection,
-                            aRangeKey, aContinueQuery, aContinueToQuery);
-  NS_ASSERTION(cursor, "This shouldn't fail!");
-
-  cursor->mObjectStore = aObjectStore;
-  cursor->mType = OBJECTSTOREKEY;
-  cursor->mKey = aKey;
 
   return cursor.forget();
 }
@@ -351,7 +293,7 @@ IDBCursor::ConvertDirection(mozilla::dom::IDBCursorDirection aDirection)
       return PREV_UNIQUE;
 
     default:
-      MOZ_ASSUME_UNREACHABLE("Unknown direction!");
+      MOZ_CRASH("Unknown direction!");
   }
 }
 
@@ -454,8 +396,8 @@ IDBCursor::DropJSObjects()
 void
 IDBCursor::ContinueInternal(const Key& aKey, int32_t aCount, ErrorResult& aRv)
 {
-  MOZ_ASSERT(NS_IsMainThread());
-  MOZ_ASSERT(aCount > 0);
+  NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
+  NS_ASSERTION(aCount > 0, "Must have a count!");
 
   if (!mTransaction->IsOpen()) {
     aRv.Throw(NS_ERROR_DOM_INDEXEDDB_TRANSACTION_INACTIVE_ERR);
@@ -469,7 +411,10 @@ IDBCursor::ContinueInternal(const Key& aKey, int32_t aCount, ErrorResult& aRv)
 
   mContinueToKey = aKey;
 
-  MOZ_ASSERT(mRequest->ReadyState() == IDBRequestReadyState::Done);
+#ifdef DEBUG
+  NS_ASSERTION(mRequest->ReadyState() == IDBRequestReadyState::Done,
+               "Should be DONE!");
+#endif
 
   mRequest->Reset();
 
@@ -477,10 +422,6 @@ IDBCursor::ContinueInternal(const Key& aKey, int32_t aCount, ErrorResult& aRv)
   switch (mType) {
     case OBJECTSTORE:
       helper = new ContinueObjectStoreHelper(this, aCount);
-      break;
-
-    case OBJECTSTOREKEY:
-      helper = new ContinueObjectStoreKeyHelper(this, aCount);
       break;
 
     case INDEXKEY:
@@ -492,7 +433,7 @@ IDBCursor::ContinueInternal(const Key& aKey, int32_t aCount, ErrorResult& aRv)
       break;
 
     default:
-      MOZ_ASSUME_UNREACHABLE("Unknown cursor type!");
+      NS_NOTREACHED("Unknown cursor type!");
   }
 
   nsresult rv = helper->DispatchToTransactionPool();
@@ -548,26 +489,15 @@ NS_IMPL_CYCLE_COLLECTING_RELEASE(IDBCursor)
 JSObject*
 IDBCursor::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aScope)
 {
-  MOZ_ASSERT(NS_IsMainThread());
-
-  switch (mType) {
-    case OBJECTSTORE:
-    case INDEXOBJECT:
-      return IDBCursorWithValueBinding::Wrap(aCx, aScope, this);
-
-    case OBJECTSTOREKEY:
-    case INDEXKEY:
-      return IDBCursorBinding::Wrap(aCx, aScope, this);
-
-    default:
-      MOZ_ASSUME_UNREACHABLE("Bad type!");
-  }
+  return mType != INDEXKEY
+          ? IDBCursorWithValueBinding::Wrap(aCx, aScope, this)
+          : IDBCursorBinding::Wrap(aCx, aScope, this);
 }
 
 mozilla::dom::IDBCursorDirection
 IDBCursor::GetDirection() const
 {
-  MOZ_ASSERT(NS_IsMainThread());
+  NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
 
   switch (mDirection) {
     case NEXT:
@@ -582,39 +512,33 @@ IDBCursor::GetDirection() const
     case PREV_UNIQUE:
       return mozilla::dom::IDBCursorDirection::Prevunique;
 
+    case DIRECTION_INVALID:
     default:
-      MOZ_ASSUME_UNREACHABLE("Bad direction!");
+      MOZ_CRASH("Unknown direction!");
+      return mozilla::dom::IDBCursorDirection::Next;
   }
 }
+
 
 void
 IDBCursor::GetSource(OwningIDBObjectStoreOrIDBIndex& aSource) const
 {
-  MOZ_ASSERT(NS_IsMainThread());
+  NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
 
-  switch (mType) {
-    case OBJECTSTORE:
-    case OBJECTSTOREKEY:
-      MOZ_ASSERT(mObjectStore);
-      aSource.SetAsIDBObjectStore() = mObjectStore;
-      break;
-
-    case INDEXKEY:
-    case INDEXOBJECT:
-      MOZ_ASSERT(mIndex);
-      aSource.SetAsIDBIndex() = mIndex;
-      break;
-
-    default:
-      MOZ_ASSUME_UNREACHABLE("Bad type!");
+  if (mType == OBJECTSTORE) {
+    aSource.SetAsIDBObjectStore() = mObjectStore;
+  }
+  else {
+    aSource.SetAsIDBIndex() = mIndex;
   }
 }
 
 JS::Value
 IDBCursor::GetKey(JSContext* aCx, ErrorResult& aRv)
 {
-  MOZ_ASSERT(NS_IsMainThread());
-  MOZ_ASSERT(!mKey.IsUnset() || !mHaveValue);
+  NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
+
+  NS_ASSERTION(!mKey.IsUnset() || !mHaveValue, "Bad key!");
 
   if (!mHaveValue) {
     return JSVAL_VOID;
@@ -638,7 +562,7 @@ IDBCursor::GetKey(JSContext* aCx, ErrorResult& aRv)
 JS::Value
 IDBCursor::GetPrimaryKey(JSContext* aCx, ErrorResult& aRv)
 {
-  MOZ_ASSERT(NS_IsMainThread());
+  NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
 
   if (!mHaveValue) {
     return JSVAL_VOID;
@@ -650,9 +574,12 @@ IDBCursor::GetPrimaryKey(JSContext* aCx, ErrorResult& aRv)
       mRooted = true;
     }
 
-    const Key& key =
-      (mType == OBJECTSTORE || mType == OBJECTSTOREKEY) ? mKey : mObjectKey;
-    MOZ_ASSERT(!key.IsUnset());
+    JSAutoRequest ar(aCx);
+
+    NS_ASSERTION(mType == OBJECTSTORE ? !mKey.IsUnset() :
+                                        !mObjectKey.IsUnset(), "Bad key!");
+
+    const Key& key = mType == OBJECTSTORE ? mKey : mObjectKey;
 
     aRv = key.ToJSVal(aCx, mCachedPrimaryKey);
     ENSURE_SUCCESS(aRv, JSVAL_VOID);
@@ -666,8 +593,8 @@ IDBCursor::GetPrimaryKey(JSContext* aCx, ErrorResult& aRv)
 JS::Value
 IDBCursor::GetValue(JSContext* aCx, ErrorResult& aRv)
 {
-  MOZ_ASSERT(NS_IsMainThread());
-  MOZ_ASSERT(mType == OBJECTSTORE || mType == INDEXOBJECT);
+  NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
+  NS_ASSERTION(mType != INDEXKEY, "GetValue shouldn't exist on index keys");
 
   if (!mHaveValue) {
     return JSVAL_VOID;
@@ -699,7 +626,7 @@ IDBCursor::Continue(JSContext* aCx,
                     const Optional<JS::Handle<JS::Value> >& aKey,
                     ErrorResult &aRv)
 {
-  MOZ_ASSERT(NS_IsMainThread());
+  NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
 
   Key key;
   if (aKey.WasPassed()) {
@@ -726,7 +653,7 @@ IDBCursor::Continue(JSContext* aCx,
         break;
 
       default:
-        MOZ_ASSUME_UNREACHABLE("Unknown direction type!");
+        NS_NOTREACHED("Unknown direction type!");
     }
   }
 
@@ -736,7 +663,7 @@ IDBCursor::Continue(JSContext* aCx,
   }
 
 #ifdef IDB_PROFILER_USE_MARKS
-  if (mType == OBJECTSTORE || mType == OBJECTSTOREKEY) {
+  if (mType == OBJECTSTORE) {
     IDB_PROFILER_MARK("IndexedDB Request %llu: "
                       "database(%s).transaction(%s).objectStore(%s).cursor(%s)."
                       "continue(%s)",
@@ -768,7 +695,7 @@ already_AddRefed<IDBRequest>
 IDBCursor::Update(JSContext* aCx, JS::Handle<JS::Value> aValue,
                   ErrorResult& aRv)
 {
-  MOZ_ASSERT(NS_IsMainThread());
+  NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
 
   if (!mTransaction->IsOpen()) {
     aRv.Throw(NS_ERROR_DOM_INDEXEDDB_TRANSACTION_INACTIVE_ERR);
@@ -780,17 +707,18 @@ IDBCursor::Update(JSContext* aCx, JS::Handle<JS::Value> aValue,
     return nullptr;
   }
 
-  if (!mHaveValue || mType == OBJECTSTOREKEY || mType == INDEXKEY) {
+  if (!mHaveValue || mType == INDEXKEY) {
     aRv.Throw(NS_ERROR_DOM_INDEXEDDB_NOT_ALLOWED_ERR);
     return nullptr;
   }
 
-  MOZ_ASSERT(mObjectStore);
-  MOZ_ASSERT(!mKey.IsUnset());
-  MOZ_ASSERT(mType == OBJECTSTORE || mType == INDEXOBJECT);
-  MOZ_ASSERT_IF(mType == INDEXOBJECT, !mObjectKey.IsUnset());
+  NS_ASSERTION(mObjectStore, "This cannot be null!");
+  NS_ASSERTION(!mKey.IsUnset() , "Bad key!");
+  NS_ASSERTION(mType != INDEXOBJECT || !mObjectKey.IsUnset(), "Bad key!");
 
-  const Key& objectKey = (mType == OBJECTSTORE) ? mKey : mObjectKey;
+  JSAutoRequest ar(aCx);
+
+  Key& objectKey = (mType == OBJECTSTORE) ? mKey : mObjectKey;
 
   nsRefPtr<IDBRequest> request;
   if (mObjectStore->HasValidKeyPath()) {
@@ -868,7 +796,7 @@ IDBCursor::Update(JSContext* aCx, JS::Handle<JS::Value> aValue,
 already_AddRefed<IDBRequest>
 IDBCursor::Delete(JSContext* aCx, ErrorResult& aRv)
 {
-  MOZ_ASSERT(NS_IsMainThread());
+  NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
 
   if (!mTransaction->IsOpen()) {
     aRv.Throw(NS_ERROR_DOM_INDEXEDDB_TRANSACTION_INACTIVE_ERR);
@@ -880,23 +808,24 @@ IDBCursor::Delete(JSContext* aCx, ErrorResult& aRv)
     return nullptr;
   }
 
-  if (!mHaveValue || mType == OBJECTSTOREKEY || mType == INDEXKEY) {
+  if (!mHaveValue || mType == INDEXKEY) {
     aRv.Throw(NS_ERROR_DOM_INDEXEDDB_NOT_ALLOWED_ERR);
     return nullptr;
   }
 
-  MOZ_ASSERT(mObjectStore);
-  MOZ_ASSERT(mType == OBJECTSTORE || mType == INDEXOBJECT);
-  MOZ_ASSERT(!mKey.IsUnset());
+  NS_ASSERTION(mObjectStore, "This cannot be null!");
+  NS_ASSERTION(!mKey.IsUnset() , "Bad key!");
 
-  const Key& objectKey = (mType == OBJECTSTORE) ? mKey : mObjectKey;
+  Key& objectKey = (mType == OBJECTSTORE) ? mKey : mObjectKey;
 
   JS::Rooted<JS::Value> key(aCx);
   aRv = objectKey.ToJSVal(aCx, &key);
   ENSURE_SUCCESS(aRv, nullptr);
 
   nsRefPtr<IDBRequest> request = mObjectStore->Delete(aCx, key, aRv);
-  ENSURE_SUCCESS(aRv, nullptr);
+  if (aRv.Failed()) {
+    return nullptr;
+  }
 
 #ifdef IDB_PROFILER_USE_MARKS
   {
@@ -937,7 +866,7 @@ IDBCursor::Delete(JSContext* aCx, ErrorResult& aRv)
 void
 IDBCursor::Advance(uint32_t aCount, ErrorResult &aRv)
 {
-  MOZ_ASSERT(NS_IsMainThread());
+  NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
 
   if (aCount < 1) {
     aRv.ThrowTypeError(MSG_INVALID_ADVANCE_COUNT);
@@ -950,7 +879,7 @@ IDBCursor::Advance(uint32_t aCount, ErrorResult &aRv)
 
 #ifdef IDB_PROFILER_USE_MARKS
   {
-    if (mType == OBJECTSTORE || mType == OBJECTSTOREKEY) {
+    if (mType == OBJECTSTORE) {
       IDB_PROFILER_MARK("IndexedDB Request %llu: "
                         "database(%s).transaction(%s).objectStore(%s)."
                         "cursor(%s).advance(%ld)",
@@ -1206,9 +1135,6 @@ nsresult
 ContinueObjectStoreHelper::BindArgumentsToStatement(
                                                mozIStorageStatement* aStatement)
 {
-  MOZ_ASSERT(!NS_IsMainThread());
-  MOZ_ASSERT(aStatement);
-
   // Bind object store id.
   nsresult rv = aStatement->BindInt64ByName(NS_LITERAL_CSTRING("id"),
                                             mCursor->mObjectStore->Id());
@@ -1240,29 +1166,12 @@ nsresult
 ContinueObjectStoreHelper::GatherResultsFromStatement(
                                                mozIStorageStatement* aStatement)
 {
-  MOZ_ASSERT(!NS_IsMainThread());
-  MOZ_ASSERT(aStatement);
-
   // Figure out what kind of key we have next.
   nsresult rv = mKey.SetFromStatement(aStatement, 0);
   NS_ENSURE_SUCCESS(rv, rv);
 
   rv = IDBObjectStore::GetStructuredCloneReadInfoFromStatement(aStatement, 1, 2,
-                                                               mDatabase,
-                                                               mCloneReadInfo);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  return NS_OK;
-}
-
-nsresult
-ContinueObjectStoreKeyHelper::GatherResultsFromStatement(
-                                               mozIStorageStatement* aStatement)
-{
-  MOZ_ASSERT(!NS_IsMainThread());
-  MOZ_ASSERT(aStatement);
-
-  nsresult rv = mKey.SetFromStatement(aStatement, 0);
+    mDatabase, mCloneReadInfo);
   NS_ENSURE_SUCCESS(rv, rv);
 
   return NS_OK;

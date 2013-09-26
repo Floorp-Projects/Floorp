@@ -742,40 +742,17 @@ IndexedDBObjectStoreChild::RecvPIndexedDBCursorConstructor(
 
   size_t direction = static_cast<size_t>(aParams.direction());
 
+  nsTArray<StructuredCloneFile> blobs;
+  IDBObjectStore::ConvertActorsToBlobs(aParams.blobsChild(), blobs);
+
   nsRefPtr<IDBCursor> cursor;
-  nsresult rv;
+  nsresult rv =
+    mObjectStore->OpenCursorFromChildProcess(request, direction, aParams.key(),
+                                             aParams.cloneInfo(), blobs,
+                                             getter_AddRefs(cursor));
+  NS_ENSURE_SUCCESS(rv, false);
 
-  typedef ipc::OptionalStructuredCloneReadInfo CursorUnionType;
-
-  switch (aParams.optionalCloneInfo().type()) {
-    case CursorUnionType::TSerializedStructuredCloneReadInfo: {
-      nsTArray<StructuredCloneFile> blobs;
-      IDBObjectStore::ConvertActorsToBlobs(aParams.blobsChild(), blobs);
-
-      const SerializedStructuredCloneReadInfo& cloneInfo =
-        aParams.optionalCloneInfo().get_SerializedStructuredCloneReadInfo();
-
-      rv = mObjectStore->OpenCursorFromChildProcess(request, direction,
-                                                    aParams.key(), cloneInfo,
-                                                    blobs,
-                                                    getter_AddRefs(cursor));
-      NS_ENSURE_SUCCESS(rv, false);
-
-      MOZ_ASSERT(blobs.IsEmpty(), "Should have swapped blob elements!");
-    } break;
-
-    case CursorUnionType::Tvoid_t:
-      MOZ_ASSERT(aParams.blobsChild().IsEmpty());
-
-      rv = mObjectStore->OpenCursorFromChildProcess(request, direction,
-                                                    aParams.key(),
-                                                    getter_AddRefs(cursor));
-      NS_ENSURE_SUCCESS(rv, false);
-      break;
-
-    default:
-      MOZ_CRASH("Unknown union type!");
-  }
+  MOZ_ASSERT(blobs.IsEmpty(), "Should have swapped blob elements!");
 
   actor->SetCursor(cursor);
   return true;
@@ -1092,9 +1069,6 @@ IndexedDBObjectStoreRequestChild::Recv__delete__(const ResponseValue& aResponse)
     case ResponseValue::TGetAllResponse:
       MOZ_ASSERT(mRequestType == ParamsUnionType::TGetAllParams);
       break;
-    case ResponseValue::TGetAllKeysResponse:
-      MOZ_ASSERT(mRequestType == ParamsUnionType::TGetAllKeysParams);
-      break;
     case ResponseValue::TAddResponse:
       MOZ_ASSERT(mRequestType == ParamsUnionType::TAddParams);
       break;
@@ -1111,8 +1085,7 @@ IndexedDBObjectStoreRequestChild::Recv__delete__(const ResponseValue& aResponse)
       MOZ_ASSERT(mRequestType == ParamsUnionType::TCountParams);
       break;
     case ResponseValue::TOpenCursorResponse:
-      MOZ_ASSERT(mRequestType == ParamsUnionType::TOpenCursorParams ||
-                 mRequestType == ParamsUnionType::TOpenKeyCursorParams);
+      MOZ_ASSERT(mRequestType == ParamsUnionType::TOpenCursorParams);
       break;
 
     default:
