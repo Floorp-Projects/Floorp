@@ -21,7 +21,7 @@
 !define NO_UNINSTALL_SURVEY
 
 !define CERTIFICATE_NAME      "Mozilla Corporation"
-!define CERTIFICATE_ISSUER    "Thawte Code Signing CA - G2"
+!define CERTIFICATE_ISSUER    "DigiCert Assured ID Code Signing CA-1"
 
 # LSP_CATEGORIES is the permitted LSP categories for the application. Each LSP
 # category value is ANDed together to set multiple permitted categories.
