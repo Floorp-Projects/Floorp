@@ -1762,10 +1762,10 @@ ReportZoneStats(const JS::ZoneStats &zStats,
                       "Memory on the garbage-collected JavaScript "
                       "heap that represents scripts which haven't executed yet.");
 
-    ZCREPORT_GC_BYTES(pathPrefix + NS_LITERAL_CSTRING("type-objects/gc-heap"),
-                      zStats.typeObjectsGCHeap,
-                      "Memory on the garbage-collected JavaScript "
-                      "heap that holds type inference information.");
+    ZCREPORT_BYTES(pathPrefix + NS_LITERAL_CSTRING("lazy-scripts/malloc-heap"),
+                   zStats.lazyScriptsMallocHeap,
+                   "Memory holding miscellaneous additional information associated with lazy "
+                   "scripts.  This memory is allocated on the malloc heap.");
 
     ZCREPORT_GC_BYTES(pathPrefix + NS_LITERAL_CSTRING("ion-codes-gc-heap"),
                       zStats.ionCodesGCHeap,
@@ -1773,10 +1773,10 @@ ReportZoneStats(const JS::ZoneStats &zStats,
                       "heap that holds references to executable code pools "
                       "used by the IonMonkey JIT.");
 
-    ZCREPORT_BYTES(pathPrefix + NS_LITERAL_CSTRING("lazy-scripts/malloc-heap"),
-                   zStats.lazyScriptsMallocHeap,
-                   "Memory holding miscellaneous additional information associated with lazy "
-                   "scripts.  This memory is allocated on the malloc heap.");
+    ZCREPORT_GC_BYTES(pathPrefix + NS_LITERAL_CSTRING("type-objects/gc-heap"),
+                      zStats.typeObjectsGCHeap,
+                      "Memory on the garbage-collected JavaScript "
+                      "heap that holds type inference information.");
 
     ZCREPORT_BYTES(pathPrefix + NS_LITERAL_CSTRING("type-objects/malloc-heap"),
                    zStats.typeObjectsMallocHeap,
@@ -1976,12 +1976,13 @@ ReportCompartmentStats(const JS::CompartmentStats &cStats,
                       "Memory on the garbage-collected JavaScript "
                       "heap that holds cross-compartment wrapper objects.");
 
-    ZCREPORT_GC_BYTES(cJSPathPrefix + NS_LITERAL_CSTRING("scripts/gc-heap"),
-                      cStats.scriptsGCHeap,
-                      "Memory on the garbage-collected JavaScript "
-                      "heap that holds JSScript instances. A JSScript is "
-                      "created for each user-defined function in a script. One "
-                      "is also created for the top-level code in a script.");
+    // Note that we use cDOMPathPrefix here.  This is because we measure orphan
+    // DOM nodes in the JS reporter, but we want to report them in a "dom"
+    // sub-tree rather than a "js" sub-tree.
+    ZCREPORT_BYTES(cDOMPathPrefix + NS_LITERAL_CSTRING("orphan-nodes"),
+                   cStats.objectsPrivate,
+                   "Memory used by orphan DOM nodes that are only reachable "
+                   "from JavaScript objects.");
 
     ZCREPORT_GC_BYTES(cJSPathPrefix + NS_LITERAL_CSTRING("shapes/gc-heap/tree/global-parented"),
                       cStats.shapesGCHeapTreeGlobalParented,
@@ -2004,6 +2005,74 @@ ReportCompartmentStats(const JS::CompartmentStats &cStats,
                       cStats.shapesGCHeapBase,
                       "Memory on the garbage-collected JavaScript "
                       "heap that collates data common to many shapes.");
+
+    ZCREPORT_BYTES(cJSPathPrefix + NS_LITERAL_CSTRING("shapes/malloc-heap/tree-tables"),
+                   cStats.shapesMallocHeapTreeTables,
+                   "Memory allocated on the malloc heap for the property tables "
+                   "that belong to shapes that are in a property tree.");
+
+    ZCREPORT_BYTES(cJSPathPrefix + NS_LITERAL_CSTRING("shapes/malloc-heap/dict-tables"),
+                   cStats.shapesMallocHeapDictTables,
+                   "Memory allocated on the malloc heap for the property tables "
+                   "that belong to shapes that are in dictionary mode.");
+
+    ZCREPORT_BYTES(cJSPathPrefix + NS_LITERAL_CSTRING("shapes/malloc-heap/tree-shape-kids"),
+                   cStats.shapesMallocHeapTreeShapeKids,
+                   "Memory allocated on the malloc heap for the kid hashes that "
+                   "belong to shapes that are in a property tree.");
+
+    ZCREPORT_BYTES(cJSPathPrefix + NS_LITERAL_CSTRING("shapes/malloc-heap/compartment-tables"),
+                   cStats.shapesMallocHeapCompartmentTables,
+                   "Memory on the malloc heap used by compartment-wide tables storing shape "
+                   "information for use during object construction.");
+
+    ZCREPORT_GC_BYTES(cJSPathPrefix + NS_LITERAL_CSTRING("scripts/gc-heap"),
+                      cStats.scriptsGCHeap,
+                      "Memory on the garbage-collected JavaScript "
+                      "heap that holds JSScript instances. A JSScript is "
+                      "created for each user-defined function in a script. One "
+                      "is also created for the top-level code in a script.");
+
+    ZCREPORT_BYTES(cJSPathPrefix + NS_LITERAL_CSTRING("scripts/malloc-heap/data"),
+                   cStats.scriptsMallocHeapData,
+                   "Memory on the malloc heap allocated for various variable-length tables in "
+                   "JSScript.");
+
+    ZCREPORT_BYTES(cJSPathPrefix + NS_LITERAL_CSTRING("baseline/data"),
+                   cStats.baselineData,
+                   "Memory used by the Baseline JIT for compilation data: "
+                   "BaselineScripts.");
+
+    ZCREPORT_BYTES(cJSPathPrefix + NS_LITERAL_CSTRING("baseline/stubs/fallback"),
+                   cStats.baselineStubsFallback,
+                   "Memory used by the Baseline JIT for fallback IC stubs "
+                   "(excluding code).");
+
+    ZCREPORT_BYTES(cJSPathPrefix + NS_LITERAL_CSTRING("baseline/stubs/optimized"),
+                   cStats.baselineStubsOptimized,
+                   "Memory used by the Baseline JIT for optimized IC stubs "
+                   "(excluding code).");
+
+    ZCREPORT_BYTES(cJSPathPrefix + NS_LITERAL_CSTRING("ion-data"),
+                   cStats.ionData,
+                   "Memory used by the IonMonkey JIT for compilation data: "
+                   "IonScripts.");
+
+    ZCREPORT_BYTES(cJSPathPrefix + NS_LITERAL_CSTRING("compartment-object"),
+                   cStats.compartmentObject,
+                   "Memory used for the JSCompartment object itself.");
+
+    ZCREPORT_BYTES(cJSPathPrefix + NS_LITERAL_CSTRING("cross-compartment-wrapper-table"),
+                   cStats.crossCompartmentWrappersTable,
+                   "Memory used by the cross-compartment wrapper table.");
+
+    ZCREPORT_BYTES(cJSPathPrefix + NS_LITERAL_CSTRING("regexp-compartment"),
+                   cStats.regexpCompartment,
+                   "Memory used by the regexp compartment.");
+
+    ZCREPORT_BYTES(cJSPathPrefix + NS_LITERAL_CSTRING("debuggees-set"),
+                   cStats.debuggeesSet,
+                   "Memory used by the debuggees set.");
 
     ZCREPORT_BYTES(cJSPathPrefix + NS_LITERAL_CSTRING("objects/malloc-heap/slots"),
                    cStats.objectsExtra.mallocHeapSlots,
@@ -2062,75 +2131,6 @@ ReportCompartmentStats(const JS::CompartmentStats &cStats,
     ZCREPORT_BYTES(cJSPathPrefix + NS_LITERAL_CSTRING("objects/malloc-heap/ctypes-data"),
                    cStats.objectsExtra.mallocHeapCtypesData,
                    "Memory allocated on the malloc heap for data belonging to ctypes objects.");
-
-    // Note that we use cDOMPathPrefix here.  This is because we measure orphan
-    // DOM nodes in the JS reporter, but we want to report them in a "dom"
-    // sub-tree rather than a "js" sub-tree.
-    ZCREPORT_BYTES(cDOMPathPrefix + NS_LITERAL_CSTRING("orphan-nodes"),
-                   cStats.objectsPrivate,
-                   "Memory used by orphan DOM nodes that are only reachable "
-                   "from JavaScript objects.");
-
-    ZCREPORT_BYTES(cJSPathPrefix + NS_LITERAL_CSTRING("shapes/malloc-heap/tree-tables"),
-                   cStats.shapesMallocHeapTreeTables,
-                   "Memory allocated on the malloc heap for the property tables "
-                   "that belong to shapes that are in a property tree.");
-
-    ZCREPORT_BYTES(cJSPathPrefix + NS_LITERAL_CSTRING("shapes/malloc-heap/dict-tables"),
-                   cStats.shapesMallocHeapDictTables,
-                   "Memory allocated on the malloc heap for the property tables "
-                   "that belong to shapes that are in dictionary mode.");
-
-    ZCREPORT_BYTES(cJSPathPrefix + NS_LITERAL_CSTRING("shapes/malloc-heap/tree-shape-kids"),
-                   cStats.shapesMallocHeapTreeShapeKids,
-                   "Memory allocated on the malloc heap for the kid hashes that "
-                   "belong to shapes that are in a property tree.");
-
-    ZCREPORT_BYTES(cJSPathPrefix + NS_LITERAL_CSTRING("shapes/malloc-heap/compartment-tables"),
-                   cStats.shapesMallocHeapCompartmentTables,
-                   "Memory on the malloc heap used by compartment-wide tables storing shape "
-                   "information for use during object construction.");
-
-    ZCREPORT_BYTES(cJSPathPrefix + NS_LITERAL_CSTRING("scripts/malloc-heap/data"),
-                   cStats.scriptsMallocHeapData,
-                   "Memory on the malloc heap allocated for various variable-length tables in "
-                   "JSScript.");
-
-    ZCREPORT_BYTES(cJSPathPrefix + NS_LITERAL_CSTRING("baseline/data"),
-                   cStats.baselineData,
-                   "Memory used by the Baseline JIT for compilation data: "
-                   "BaselineScripts.");
-
-    ZCREPORT_BYTES(cJSPathPrefix + NS_LITERAL_CSTRING("baseline/stubs/fallback"),
-                   cStats.baselineStubsFallback,
-                   "Memory used by the Baseline JIT for fallback IC stubs "
-                   "(excluding code).");
-
-    ZCREPORT_BYTES(cJSPathPrefix + NS_LITERAL_CSTRING("baseline/stubs/optimized"),
-                   cStats.baselineStubsOptimized,
-                   "Memory used by the Baseline JIT for optimized IC stubs "
-                   "(excluding code).");
-
-    ZCREPORT_BYTES(cJSPathPrefix + NS_LITERAL_CSTRING("ion-data"),
-                   cStats.ionData,
-                   "Memory used by the IonMonkey JIT for compilation data: "
-                   "IonScripts.");
-
-    ZCREPORT_BYTES(cJSPathPrefix + NS_LITERAL_CSTRING("compartment-object"),
-                   cStats.compartmentObject,
-                   "Memory used for the JSCompartment object itself.");
-
-    ZCREPORT_BYTES(cJSPathPrefix + NS_LITERAL_CSTRING("cross-compartment-wrapper-table"),
-                   cStats.crossCompartmentWrappersTable,
-                   "Memory used by the cross-compartment wrapper table.");
-
-    ZCREPORT_BYTES(cJSPathPrefix + NS_LITERAL_CSTRING("regexp-compartment"),
-                   cStats.regexpCompartment,
-                   "Memory used by the regexp compartment.");
-
-    ZCREPORT_BYTES(cJSPathPrefix + NS_LITERAL_CSTRING("debuggees-set"),
-                   cStats.debuggeesSet,
-                   "Memory used by the debuggees set.");
 
     ZCREPORT_BYTES(cJSPathPrefix + NS_LITERAL_CSTRING("type-inference/type-scripts"),
                    cStats.typeInference.typeScripts,
@@ -2234,28 +2234,6 @@ ReportJSRuntimeExplicitTreeStats(const JS::RuntimeStats &rtStats,
                   "Memory held transiently in JSRuntime and used during "
                   "compilation.  It mostly holds parse nodes.");
 
-    RREPORT_BYTES(rtPath + NS_LITERAL_CSTRING("runtime/code/ion"),
-                  KIND_NONHEAP, rtStats.runtime.code.ion,
-                  "Memory used by the IonMonkey JIT to hold generated code.");
-
-    RREPORT_BYTES(rtPath + NS_LITERAL_CSTRING("runtime/code/baseline"),
-                  KIND_NONHEAP, rtStats.runtime.code.baseline,
-                  "Memory used by the Baseline JIT to hold generated code.");
-
-    RREPORT_BYTES(rtPath + NS_LITERAL_CSTRING("runtime/code/regexp"),
-                  KIND_NONHEAP, rtStats.runtime.code.regexp,
-                  "Memory used by the regexp JIT to hold generated code.");
-
-    RREPORT_BYTES(rtPath + NS_LITERAL_CSTRING("runtime/code/other"),
-                  KIND_NONHEAP, rtStats.runtime.code.other,
-                  "Memory used by the JITs to hold generated code for "
-                  "wrappers and trampolines.");
-
-    RREPORT_BYTES(rtPath + NS_LITERAL_CSTRING("runtime/code/unused"),
-                  KIND_NONHEAP, rtStats.runtime.code.unused,
-                  "Memory allocated by one of the JITs to hold code, "
-                  "but which is currently unused.");
-
     RREPORT_BYTES(rtPath + NS_LITERAL_CSTRING("runtime/regexp-data"),
                   KIND_NONHEAP, rtStats.runtime.regexpData,
                   "Memory used by the regexp JIT to hold data.");
@@ -2280,6 +2258,28 @@ ReportJSRuntimeExplicitTreeStats(const JS::RuntimeStats &rtStats,
     RREPORT_BYTES(rtPath + NS_LITERAL_CSTRING("runtime/script-sources"),
                   KIND_HEAP, rtStats.runtime.scriptSources,
                   "Memory use for storing JavaScript source code and filenames.");
+
+    RREPORT_BYTES(rtPath + NS_LITERAL_CSTRING("runtime/code/ion"),
+                  KIND_NONHEAP, rtStats.runtime.code.ion,
+                  "Memory used by the IonMonkey JIT to hold generated code.");
+
+    RREPORT_BYTES(rtPath + NS_LITERAL_CSTRING("runtime/code/baseline"),
+                  KIND_NONHEAP, rtStats.runtime.code.baseline,
+                  "Memory used by the Baseline JIT to hold generated code.");
+
+    RREPORT_BYTES(rtPath + NS_LITERAL_CSTRING("runtime/code/regexp"),
+                  KIND_NONHEAP, rtStats.runtime.code.regexp,
+                  "Memory used by the regexp JIT to hold generated code.");
+
+    RREPORT_BYTES(rtPath + NS_LITERAL_CSTRING("runtime/code/other"),
+                  KIND_NONHEAP, rtStats.runtime.code.other,
+                  "Memory used by the JITs to hold generated code for "
+                  "wrappers and trampolines.");
+
+    RREPORT_BYTES(rtPath + NS_LITERAL_CSTRING("runtime/code/unused"),
+                  KIND_NONHEAP, rtStats.runtime.code.unused,
+                  "Memory allocated by one of the JITs to hold code, "
+                  "but which is currently unused.");
 
     if (rtTotalOut)
         *rtTotalOut = rtTotal;

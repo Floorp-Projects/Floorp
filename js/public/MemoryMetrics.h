@@ -74,15 +74,15 @@ struct ZoneStatsPod
 #define FOR_EACH_SIZE(macro) \
     macro(NotLiveGCThing, gcHeapArenaAdmin) \
     macro(NotLiveGCThing, unusedGCThings) \
-    macro(IsLiveGCThing,  stringsNormalGCHeap) \
-    macro(IsLiveGCThing,  stringsShortGCHeap) \
     macro(IsLiveGCThing,  lazyScriptsGCHeap) \
-    macro(IsLiveGCThing,  typeObjectsGCHeap) \
-    macro(IsLiveGCThing,  ionCodesGCHeap) \
-    macro(NotLiveGCThing, stringsNormalMallocHeap) \
     macro(NotLiveGCThing, lazyScriptsMallocHeap) \
+    macro(IsLiveGCThing,  ionCodesGCHeap) \
+    macro(IsLiveGCThing,  typeObjectsGCHeap) \
     macro(NotLiveGCThing, typeObjectsMallocHeap) \
-    macro(NotLiveGCThing, typePool)
+    macro(NotLiveGCThing, typePool) \
+    macro(IsLiveGCThing,  stringsShortGCHeap) \
+    macro(IsLiveGCThing,  stringsNormalGCHeap) \
+    macro(NotLiveGCThing, stringsNormalMallocHeap)
 
     ZoneStatsPod()
       : FOR_EACH_SIZE(ZERO_SIZE)
@@ -372,16 +372,16 @@ struct CompartmentStats
     macro(js::IsLiveGCThing,  objectsGCHeapDenseArray) \
     macro(js::IsLiveGCThing,  objectsGCHeapSlowArray) \
     macro(js::IsLiveGCThing,  objectsGCHeapCrossCompartmentWrapper) \
+    macro(js::NotLiveGCThing, objectsPrivate) \
     macro(js::IsLiveGCThing,  shapesGCHeapTreeGlobalParented) \
     macro(js::IsLiveGCThing,  shapesGCHeapTreeNonGlobalParented) \
     macro(js::IsLiveGCThing,  shapesGCHeapDict) \
     macro(js::IsLiveGCThing,  shapesGCHeapBase) \
-    macro(js::IsLiveGCThing,  scriptsGCHeap) \
-    macro(js::NotLiveGCThing, objectsPrivate) \
     macro(js::NotLiveGCThing, shapesMallocHeapTreeTables) \
     macro(js::NotLiveGCThing, shapesMallocHeapDictTables) \
     macro(js::NotLiveGCThing, shapesMallocHeapTreeShapeKids) \
     macro(js::NotLiveGCThing, shapesMallocHeapCompartmentTables) \
+    macro(js::IsLiveGCThing,  scriptsGCHeap) \
     macro(js::NotLiveGCThing, scriptsMallocHeapData) \
     macro(js::NotLiveGCThing, baselineData) \
     macro(js::NotLiveGCThing, baselineStubsFallback) \
