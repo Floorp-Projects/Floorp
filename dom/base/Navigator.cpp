@@ -1784,6 +1784,16 @@ bool Navigator::HasPushNotificationsSupport(JSContext* /* unused */,
 }
 
 /* static */
+bool Navigator::HasInputMethodSupport(JSContext* /* unused */,
+                                      JSObject* aGlobal)
+{
+  nsCOMPtr<nsPIDOMWindow> win = GetWindowFromGlobal(aGlobal);
+  return Preferences::GetBool("dom.mozInputMethod.testing", false) ||
+         (Preferences::GetBool("dom.mozInputMethod.enabled", false) &&
+          win && CheckPermission(win, "keyboard"));
+}
+
+/* static */
 already_AddRefed<nsPIDOMWindow>
 Navigator::GetWindowFromGlobal(JSObject* aGlobal)
 {
