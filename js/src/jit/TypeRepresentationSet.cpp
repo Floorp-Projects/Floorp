@@ -10,8 +10,6 @@
 
 #include "jit/IonBuilder.h"
 
-#include "jsinferinlines.h"
-
 using namespace js;
 using namespace jit;
 

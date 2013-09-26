@@ -31,13 +31,11 @@
 #include <windows.h>
 #endif
 
-#include "jscompartment.h"
 #include "jsnum.h"
 #include "jsprf.h"
 
 #include "builtin/TypeRepresentation.h"
 #include "ctypes/Library.h"
-#include "vm/TypedArrayObject.h"
 
 using namespace std;
 

@@ -10,9 +10,7 @@
 #include "vm/Runtime.h"
 
 #include "jscompartment.h"
-#include "jsworkers.h"
 
-#include "jit/IonFrames.h"
 #include "vm/Probes.h"
 
 #include "jsgcinlines.h"
