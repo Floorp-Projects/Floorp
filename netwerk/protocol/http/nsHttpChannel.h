@@ -334,7 +334,6 @@ private:
     nsRefPtr<nsInputStreamPump>       mCachePump;
     nsAutoPtr<nsHttpResponseHead>     mCachedResponseHead;
     nsCOMPtr<nsISupports>             mCachedSecurityInfo;
-    mozilla::Telemetry::ID            mCacheEntryDeviceTelemetryID;
     uint32_t                          mPostID;
     uint32_t                          mRequestTime;
 
