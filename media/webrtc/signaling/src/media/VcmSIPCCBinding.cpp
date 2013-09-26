@@ -125,10 +125,14 @@ VcmSIPCCBinding::~VcmSIPCCBinding ()
 {
     assert(gSelf);
     gSelf = NULL;
-    SyncRunnable::DispatchToThread(gSTSThread,
-                                   WrapRunnable(this,
-                                                &VcmSIPCCBinding::disconnect_all));
-    disconnect_all();
+    // In case we're torn down while STS is still running,
+    // we try to dispatch to STS to disconnect all of the
+    // ICE signals. If STS is no longer running, this will
+    // harmlessly fail.
+    SyncRunnable::DispatchToThread(
+      gSTSThread,
+      WrapRunnable(this, &VcmSIPCCBinding::disconnect_all),
+      true);
 }
 
 void VcmSIPCCBinding::CandidateReady(NrIceMediaStream* stream,
