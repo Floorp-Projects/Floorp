@@ -1786,6 +1786,17 @@ bool Navigator::HasPushNotificationsSupport(JSContext* /* unused */,
   return win && Preferences::GetBool("services.push.enabled", false) && CheckPermission(win, "push");
 }
 
+#ifdef MOZ_B2G
+/* static */
+bool Navigator::HasInputMethodSupport(JSContext* /* unused */,
+                                      JSObject* aGlobal)
+{
+  nsCOMPtr<nsPIDOMWindow> win = GetWindowFromGlobal(aGlobal);
+  return Preferences::GetBool("dom.mozInputMethod.testing", false) ||
+         (win && CheckPermission(win, "keyboard"));
+}
+#endif
+
 /* static */
 already_AddRefed<nsPIDOMWindow>
 Navigator::GetWindowFromGlobal(JSObject* aGlobal)
