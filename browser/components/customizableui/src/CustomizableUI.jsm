@@ -723,6 +723,9 @@ let CustomizableUIInternal = {
     // We ensure that the window is registered to have its customization data
     // cleaned up when unloading.
     let window = aNode.ownerDocument.defaultView;
+    if (window.closed) {
+      return;
+    }
     this.registerBuildWindow(window);
 
     // Also register this build area's toolbox.
@@ -740,10 +743,10 @@ let CustomizableUIInternal = {
   registerBuildWindow: function(aWindow) {
     if (!gBuildWindows.has(aWindow)) {
       gBuildWindows.set(aWindow, new Set());
-    }
 
-    aWindow.addEventListener("unload", this);
-    aWindow.addEventListener("command", this, true);
+      aWindow.addEventListener("unload", this);
+      aWindow.addEventListener("command", this, true);
+    }
   },
 
   unregisterBuildWindow: function(aWindow) {
