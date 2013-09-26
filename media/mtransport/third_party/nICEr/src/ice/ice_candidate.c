@@ -416,8 +416,8 @@ static void nr_ice_candidate_fire_ready_cb(NR_SOCKET s, int how, void *cb_arg)
   {
     nr_ice_candidate *cand = cb_arg;
 
-    cand->ready_cb(0, 0, cand->ready_cb_arg);
     cand->ready_cb_timer = 0;
+    cand->ready_cb(0, 0, cand->ready_cb_arg);
   }
 
 int nr_ice_candidate_initialize(nr_ice_candidate *cand, NR_async_cb ready_cb, void *cb_arg)

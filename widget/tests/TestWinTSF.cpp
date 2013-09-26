@@ -68,7 +68,6 @@ template<class T> class nsReadingIterator;
 #include "nsISelectionController.h"
 #include "nsViewManager.h"
 #include "nsTArray.h"
-#include "nsGUIEvent.h"
 
 #ifndef MOZILLA_INTERNAL_API
 #undef nsString_h___

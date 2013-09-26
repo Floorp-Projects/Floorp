@@ -1,3 +1,0 @@
-{
-  "If the context node is not a node that can contain children, a NotFoundError exception should be thrown": true
-}

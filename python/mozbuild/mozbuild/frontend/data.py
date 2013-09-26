@@ -235,6 +235,19 @@ class TestWebIDLFile(SandboxDerived):
 
         self.basename = path
 
+class PreprocessedTestWebIDLFile(SandboxDerived):
+    """Describes an individual test-only .webidl source file that requires
+    preprocessing."""
+
+    __slots__ = (
+        'basename',
+    )
+
+    def __init__(self, sandbox, path):
+        SandboxDerived.__init__(self, sandbox)
+
+        self.basename = path
+
 class PreprocessedWebIDLFile(SandboxDerived):
     """Describes an individual .webidl source file that requires preprocessing."""
 

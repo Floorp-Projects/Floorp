@@ -65,7 +65,7 @@ IonRuntime::generateEnterJIT(JSContext *cx, EnterJitType type)
     masm.movl(esp, esi);
 
     // eax <- 8*argc, eax is now the offset betwen argv and the last
-    masm.movl(Operand(ebp, ARG_ARGC), eax);
+    masm.loadPtr(Address(ebp, ARG_ARGC), eax);
     masm.shll(Imm32(3), eax);
 
     // We need to ensure that the stack is aligned on a 12-byte boundary, so
@@ -89,7 +89,7 @@ IonRuntime::generateEnterJIT(JSContext *cx, EnterJitType type)
     ***************************************************************/
 
     // ebx = argv   --argv pointer is in ebp + 16
-    masm.movl(Operand(ebp, ARG_ARGV), ebx);
+    masm.loadPtr(Address(ebp, ARG_ARGV), ebx);
 
     // eax = argv[8(argc)]  --eax now points one value past the last argument
     masm.addl(ebx, eax);
@@ -126,7 +126,7 @@ IonRuntime::generateEnterJIT(JSContext *cx, EnterJitType type)
 
     // Load the StackFrame address into the OsrFrameReg.
     // This address is also used for setting the constructing bit on all paths.
-    masm.movl(Operand(ebp, ARG_STACKFRAME), OsrFrameReg);
+    masm.loadPtr(Address(ebp, ARG_STACKFRAME), OsrFrameReg);
 
     /*****************************************************************
     Push the number of bytes we've pushed so far on the stack and call
@@ -151,10 +151,10 @@ IonRuntime::generateEnterJIT(JSContext *cx, EnterJitType type)
         masm.branchTestPtr(Assembler::Zero, OsrFrameReg, OsrFrameReg, &notOsr);
 
         Register numStackValues = regs.takeAny();
-        masm.movl(Operand(ebp, ARG_STACKVALUES), numStackValues);
+        masm.loadPtr(Address(ebp, ARG_STACKVALUES), numStackValues);
 
         Register jitcode = regs.takeAny();
-        masm.movl(Operand(ebp, ARG_JITCODE), jitcode);
+        masm.loadPtr(Address(ebp, ARG_JITCODE), jitcode);
 
         // Push return address, previous frame pointer.
         masm.mov(returnLabel.dest(), scratch);
@@ -230,7 +230,7 @@ IonRuntime::generateEnterJIT(JSContext *cx, EnterJitType type)
         masm.jump(scratch);
 
         masm.bind(&notOsr);
-        masm.movl(Operand(ebp, ARG_SCOPECHAIN), R1.scratchReg());
+        masm.loadPtr(Address(ebp, ARG_SCOPECHAIN), R1.scratchReg());
     }
 
     /***************************************************************
@@ -260,7 +260,7 @@ IonRuntime::generateEnterJIT(JSContext *cx, EnterJitType type)
     //  +8  ebx
     //  +4  esi
     //  +0  edi
-    masm.movl(Operand(esp, ARG_RESULT + 3 * sizeof(void *)), eax);
+    masm.loadPtr(Address(esp, ARG_RESULT + 3 * sizeof(void *)), eax);
     masm.storeValue(JSReturnOperand, Operand(eax, 0));
 
     /**************************************************************
@@ -353,13 +353,13 @@ IonRuntime::generateArgumentsRectifier(JSContext *cx, ExecutionMode mode, void *
     JS_ASSERT(ArgumentsRectifierReg == esi);
 
     // Load the number of |undefined|s to push into %ecx.
-    masm.movl(Operand(esp, IonRectifierFrameLayout::offsetOfCalleeToken()), eax);
+    masm.loadPtr(Address(esp, IonRectifierFrameLayout::offsetOfCalleeToken()), eax);
     masm.clearCalleeTag(eax, mode);
     masm.movzwl(Operand(eax, offsetof(JSFunction, nargs)), ecx);
     masm.subl(esi, ecx);
 
     // Copy the number of actual arguments.
-    masm.movl(Operand(esp, IonRectifierFrameLayout::offsetOfNumActualArgs()), edx);
+    masm.loadPtr(Address(esp, IonRectifierFrameLayout::offsetOfNumActualArgs()), edx);
 
     masm.moveValue(UndefinedValue(), ebx, edi);
 
@@ -412,7 +412,7 @@ IonRuntime::generateArgumentsRectifier(JSContext *cx, ExecutionMode mode, void *
 
     // Call the target function.
     // Note that this assumes the function is JITted.
-    masm.movl(Operand(eax, JSFunction::offsetOfNativeOrScript()), eax);
+    masm.loadPtr(Address(eax, JSFunction::offsetOfNativeOrScript()), eax);
     masm.loadBaselineOrIonRaw(eax, eax, mode, NULL);
     masm.call(eax);
     uint32_t returnOffset = masm.currentOffset();

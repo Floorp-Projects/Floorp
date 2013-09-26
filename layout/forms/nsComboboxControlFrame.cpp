@@ -24,7 +24,6 @@
 #include "nsINodeInfo.h"
 #include "nsIScrollableFrame.h"
 #include "nsListControlFrame.h"
-#include "nsGUIEvent.h"
 #include "nsAutoPtr.h"
 #include "nsStyleSet.h"
 #include "nsNodeInfoManager.h"
@@ -38,6 +37,7 @@
 #include <algorithm>
 #include "nsTextNode.h"
 #include "mozilla/LookAndFeel.h"
+#include "mozilla/MouseEvents.h"
 
 using namespace mozilla;
 

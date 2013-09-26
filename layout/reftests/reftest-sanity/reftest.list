@@ -92,7 +92,7 @@ needs-focus == data:text/plain, about:blank
 # Sanity check of viewport+displayport overrides
 random-if(!browserIsRemote) == test-displayport.html test-displayport-ref.html # bug 593168
 skip-if(!browserIsRemote) != test-displayport-2.html test-displayport-ref.html # bug 593168
-skip-if(!browserIsRemote) fails-if(OSX&&layersGPUAccelerated) fuzzy-if(layersOMTC,1,1390) == 647192-1.html 647192-1-ref.html
+skip-if(!browserIsRemote) fails-if(OSX&&layersGPUAccelerated) fuzzy-if(layersOMTC,1,1390) random-if(Android&&AndroidVersion<15) == 647192-1.html 647192-1-ref.html
 skip-if(!browserIsRemote) == 656041-1.html 656041-1-ref.html
 skip-if(!browserIsRemote||layersOMTC) == test-displayport-bg.html test-displayport-ref.html # bug 694706
 

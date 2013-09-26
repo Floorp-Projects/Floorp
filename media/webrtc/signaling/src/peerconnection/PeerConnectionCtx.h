@@ -34,7 +34,7 @@ namespace sipcc {
 // * The observer class that demuxes events onto individual PCs.
 class PeerConnectionCtx : public CSF::CC_Observer {
  public:
-  static nsresult InitializeGlobal(nsIThread *mainThread);
+  static nsresult InitializeGlobal(nsIThread *mainThread, nsIEventTarget *stsThread);
   static PeerConnectionCtx* GetInstance();
   static bool isActive();
   static void Destroy();

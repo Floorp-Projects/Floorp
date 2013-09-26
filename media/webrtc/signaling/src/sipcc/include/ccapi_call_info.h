@@ -303,6 +303,13 @@ cc_boolean CCAPI_CallInfo_isVideoMuted(cc_callinfo_ref_t handle);
 cc_string_t CCAPI_CallInfo_getSDP(cc_callinfo_ref_t handle);
 
 /**
+ * get trickle candidate
+ * @param [in] handle - call info handle
+ * @return sdp
+ */
+cc_string_t CCAPI_CallInfo_getCandidate(cc_callinfo_ref_t handle);
+
+/**
  * get status code from internal JSEP functions
  * @param [in] handle - call info handle
  * @return status code

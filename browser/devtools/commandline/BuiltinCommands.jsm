@@ -27,6 +27,10 @@ XPCOMUtils.defineLazyModuleGetter(this, "gDevTools",
                                   "resource:///modules/devtools/gDevTools.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "AppCacheUtils",
                                   "resource:///modules/devtools/AppCacheUtils.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "Downloads",
+                                  "resource://gre/modules/Downloads.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "Task",
+                                  "resource://gre/modules/Task.jsm");
 
 /* CmdAddon ---------------------------------------------------------------- */
 
@@ -1721,160 +1725,159 @@ XPCOMUtils.defineLazyModuleGetter(this, "AppCacheUtils",
       }
       var document = args.chrome? context.environment.chromeDocument
                                 : context.environment.document;
+      var deferred = context.defer();
       if (args.delay > 0) {
-        var deferred = context.defer();
         document.defaultView.setTimeout(function Command_screenshotDelay() {
-          let reply = this.grabScreen(document, args.filename, args.clipboard,
-                                      args.fullpage);
-          deferred.resolve(reply);
+          let promise = this.grabScreen(document, args.filename, args.clipboard,
+                                        args.fullpage);
+          promise.then(deferred.resolve, deferred.reject);
         }.bind(this), args.delay * 1000);
-        return deferred.promise;
       }
       else {
-        return this.grabScreen(document, args.filename, args.clipboard,
-                              args.fullpage, args.selector);
+        let promise = this.grabScreen(document, args.filename, args.clipboard,
+                                      args.fullpage, args.selector);
+        promise.then(deferred.resolve, deferred.reject);
       }
+      return deferred.promise;
     },
     grabScreen: function(document, filename, clipboard, fullpage, node) {
-      let window = document.defaultView;
-      let canvas = document.createElementNS("http://www.w3.org/1999/xhtml", "canvas");
-      let left = 0;
-      let top = 0;
-      let width;
-      let height;
-      let div = document.createElementNS("http://www.w3.org/1999/xhtml", "div");
+      return Task.spawn(function() {
+        let window = document.defaultView;
+        let canvas = document.createElementNS("http://www.w3.org/1999/xhtml", "canvas");
+        let left = 0;
+        let top = 0;
+        let width;
+        let height;
+        let div = document.createElementNS("http://www.w3.org/1999/xhtml", "div");
 
-      if (!fullpage) {
-        if (!node) {
-          left = window.scrollX;
-          top = window.scrollY;
-          width = window.innerWidth;
-          height = window.innerHeight;
-        } else {
-          let lh = new LayoutHelpers(window);
-          let rect = lh.getRect(node, window);
-          top = rect.top;
-          left = rect.left;
-          width = rect.width;
-          height = rect.height;
-        }
-      } else {
-        width = window.innerWidth + window.scrollMaxX;
-        height = window.innerHeight + window.scrollMaxY;
-      }
-      canvas.width = width;
-      canvas.height = height;
-
-      let ctx = canvas.getContext("2d");
-      ctx.drawWindow(window, left, top, width, height, "#fff");
-      let data = canvas.toDataURL("image/png", "");
-
-      let loadContext = document.defaultView
-                                .QueryInterface(Ci.nsIInterfaceRequestor)
-                                .getInterface(Ci.nsIWebNavigation)
-                                .QueryInterface(Ci.nsILoadContext);
-
-      try {
-        if (clipboard) {
-          let io = Cc["@mozilla.org/network/io-service;1"]
-                    .getService(Ci.nsIIOService);
-          let channel = io.newChannel(data, null, null);
-          let input = channel.open();
-          let imgTools = Cc["@mozilla.org/image/tools;1"]
-                          .getService(Ci.imgITools);
-
-          let container = {};
-          imgTools.decodeImageData(input, channel.contentType, container);
-
-          let wrapped = Cc["@mozilla.org/supports-interface-pointer;1"]
-                          .createInstance(Ci.nsISupportsInterfacePointer);
-          wrapped.data = container.value;
-
-          let trans = Cc["@mozilla.org/widget/transferable;1"]
-                        .createInstance(Ci.nsITransferable);
-          trans.init(loadContext);
-          trans.addDataFlavor(channel.contentType);
-          trans.setTransferData(channel.contentType, wrapped, -1);
-
-          let clipid = Ci.nsIClipboard;
-          let clip = Cc["@mozilla.org/widget/clipboard;1"].getService(clipid);
-          clip.setData(trans, null, clipid.kGlobalClipboard);
-          div.textContent = gcli.lookup("screenshotCopied");
-          return div;
-        }
-      }
-      catch (ex) {
-        div.textContent = gcli.lookup("screenshotErrorCopying");
-        return div;
-      }
-
-      let file = Cc["@mozilla.org/file/local;1"].createInstance(Ci.nsILocalFile);
-
-      // Create a name for the file if not present
-      if (filename == FILENAME_DEFAULT_VALUE) {
-        let date = new Date();
-        let dateString = date.getFullYear() + "-" + (date.getMonth() + 1) +
-                        "-" + date.getDate();
-        dateString = dateString.split("-").map(function(part) {
-          if (part.length == 1) {
-            part = "0" + part;
+        if (!fullpage) {
+          if (!node) {
+            left = window.scrollX;
+            top = window.scrollY;
+            width = window.innerWidth;
+            height = window.innerHeight;
+          } else {
+            let lh = new LayoutHelpers(window);
+            let rect = lh.getRect(node, window);
+            top = rect.top;
+            left = rect.left;
+            width = rect.width;
+            height = rect.height;
           }
-          return part;
-        }).join("-");
-        let timeString = date.toTimeString().replace(/:/g, ".").split(" ")[0];
-        filename = gcli.lookupFormat("screenshotGeneratedFilename",
-                                    [dateString, timeString]) + ".png";
-      }
-      // Check there is a .png extension to filename
-      else if (!filename.match(/.png$/i)) {
-        filename += ".png";
-      }
+        } else {
+          width = window.innerWidth + window.scrollMaxX;
+          height = window.innerHeight + window.scrollMaxY;
+        }
+        canvas.width = width;
+        canvas.height = height;
 
-      // If the filename is relative, tack it onto the download directory
-      if (!filename.match(/[\\\/]/)) {
-        let downloadMgr = Cc["@mozilla.org/download-manager;1"]
-                            .getService(Ci.nsIDownloadManager);
-        let tempfile = downloadMgr.userDownloadsDirectory;
-        tempfile.append(filename);
-        filename = tempfile.path;
-      }
+        let ctx = canvas.getContext("2d");
+        ctx.drawWindow(window, left, top, width, height, "#fff");
+        let data = canvas.toDataURL("image/png", "");
 
-      try {
-        file.initWithPath(filename);
-      } catch (ex) {
-        div.textContent = gcli.lookup("screenshotErrorSavingToFile") + " " + filename;
-        return div;
-      }
+        let loadContext = document.defaultView
+                                  .QueryInterface(Ci.nsIInterfaceRequestor)
+                                  .getInterface(Ci.nsIWebNavigation)
+                                  .QueryInterface(Ci.nsILoadContext);
 
-      let ioService = Cc["@mozilla.org/network/io-service;1"]
-                        .getService(Ci.nsIIOService);
+        if (clipboard) {
+          try {
+            let io = Cc["@mozilla.org/network/io-service;1"]
+                      .getService(Ci.nsIIOService);
+            let channel = io.newChannel(data, null, null);
+            let input = channel.open();
+            let imgTools = Cc["@mozilla.org/image/tools;1"]
+                            .getService(Ci.imgITools);
 
-      let Persist = Ci.nsIWebBrowserPersist;
-      let persist = Cc["@mozilla.org/embedding/browser/nsWebBrowserPersist;1"]
-                      .createInstance(Persist);
-      persist.persistFlags = Persist.PERSIST_FLAGS_REPLACE_EXISTING_FILES |
-                            Persist.PERSIST_FLAGS_AUTODETECT_APPLY_CONVERSION;
+            let container = {};
+            imgTools.decodeImageData(input, channel.contentType, container);
 
-      let source = ioService.newURI(data, "UTF8", null);
-      persist.saveURI(source, null, null, null, null, file, loadContext);
+            let wrapped = Cc["@mozilla.org/supports-interface-pointer;1"]
+                            .createInstance(Ci.nsISupportsInterfacePointer);
+            wrapped.data = container.value;
 
-      div.textContent = gcli.lookup("screenshotSavedToFile") + " \"" + filename +
-                        "\"";
-      div.addEventListener("click", function openFile() {
-        div.removeEventListener("click", openFile);
-        file.reveal();
+            let trans = Cc["@mozilla.org/widget/transferable;1"]
+                          .createInstance(Ci.nsITransferable);
+            trans.init(loadContext);
+            trans.addDataFlavor(channel.contentType);
+            trans.setTransferData(channel.contentType, wrapped, -1);
+
+            let clipid = Ci.nsIClipboard;
+            let clip = Cc["@mozilla.org/widget/clipboard;1"].getService(clipid);
+            clip.setData(trans, null, clipid.kGlobalClipboard);
+            div.textContent = gcli.lookup("screenshotCopied");
+          }
+          catch (ex) {
+            div.textContent = gcli.lookup("screenshotErrorCopying");
+          }
+          throw new Task.Result(div);
+        }
+
+        let file = Cc["@mozilla.org/file/local;1"].createInstance(Ci.nsILocalFile);
+
+        // Create a name for the file if not present
+        if (filename == FILENAME_DEFAULT_VALUE) {
+          let date = new Date();
+          let dateString = date.getFullYear() + "-" + (date.getMonth() + 1) +
+                          "-" + date.getDate();
+          dateString = dateString.split("-").map(function(part) {
+            if (part.length == 1) {
+              part = "0" + part;
+            }
+            return part;
+          }).join("-");
+          let timeString = date.toTimeString().replace(/:/g, ".").split(" ")[0];
+          filename = gcli.lookupFormat("screenshotGeneratedFilename",
+                                      [dateString, timeString]) + ".png";
+        }
+        // Check there is a .png extension to filename
+        else if (!filename.match(/.png$/i)) {
+          filename += ".png";
+        }
+        // If the filename is relative, tack it onto the download directory
+        if (!filename.match(/[\\\/]/)) {
+          let tempfile = yield Downloads.getPreferredDownloadsDirectory();
+          tempfile.append(filename);
+          filename = tempfile.path;
+        }
+
+        try {
+          file.initWithPath(filename);
+        } catch (ex) {
+          div.textContent = gcli.lookup("screenshotErrorSavingToFile") + " " + filename;
+          throw new Task.Result(div);
+        }
+
+        let ioService = Cc["@mozilla.org/network/io-service;1"]
+                          .getService(Ci.nsIIOService);
+
+        let Persist = Ci.nsIWebBrowserPersist;
+        let persist = Cc["@mozilla.org/embedding/browser/nsWebBrowserPersist;1"]
+                        .createInstance(Persist);
+        persist.persistFlags = Persist.PERSIST_FLAGS_REPLACE_EXISTING_FILES |
+                               Persist.PERSIST_FLAGS_AUTODETECT_APPLY_CONVERSION;
+
+        let source = ioService.newURI(data, "UTF8", null);
+        persist.saveURI(source, null, null, null, null, file, loadContext);
+
+        div.textContent = gcli.lookup("screenshotSavedToFile") + " \"" + filename +
+                          "\"";
+        div.addEventListener("click", function openFile() {
+          div.removeEventListener("click", openFile);
+          file.reveal();
+        });
+        div.style.cursor = "pointer";
+        let image = document.createElement("div");
+        let previewHeight = parseInt(256*height/width);
+        image.setAttribute("style",
+                          "width:256px; height:" + previewHeight + "px;" +
+                          "max-height: 256px;" +
+                          "background-image: url('" + data + "');" +
+                          "background-size: 256px " + previewHeight + "px;" +
+                          "margin: 4px; display: block");
+        div.appendChild(image);
+        throw new Task.Result(div);
       });
-      div.style.cursor = "pointer";
-      let image = document.createElement("div");
-      let previewHeight = parseInt(256*height/width);
-      image.setAttribute("style",
-                        "width:256px; height:" + previewHeight + "px;" +
-                        "max-height: 256px;" +
-                        "background-image: url('" + data + "');" +
-                        "background-size: 256px " + previewHeight + "px;" +
-                        "margin: 4px; display: block");
-      div.appendChild(image);
-      return div;
     }
   });
 }(this));

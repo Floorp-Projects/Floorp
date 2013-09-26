@@ -429,6 +429,7 @@ typedef struct {
     char digest_alg[FSMDEF_MAX_DIGEST_ALG_LEN];
     char digest[FSMDEF_MAX_DIGEST_LEN];
 
+    sll_lite_list_t candidate_list;
 } fsmdef_dcb_t;
 
 typedef enum fsm_types_t_ {
@@ -497,6 +498,11 @@ typedef enum fsmxfr_modes_t_ {
     FSMXFR_MODE_TRANSFEREE,
     FSMXFR_MODE_TARGET
 } fsmxfr_modes_t;
+
+typedef struct fsmdef_candidate_t_ {
+    sll_lite_node_t node;     /* link node, must be first member of struct */
+    string_t candidate;       /* the candidate value */
+} fsmdef_candidate_t;
 
 struct fsmxfr_xcb_t_;
 typedef struct fsmxfr_xcb_t_ {

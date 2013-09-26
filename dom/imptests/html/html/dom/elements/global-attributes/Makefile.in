@@ -6,7 +6,7 @@ MOCHITEST_FILES := \
   test_dataset-enumeration.html \
   test_dataset-get.html \
   test_dataset.html \
-  test_dataset-instanceof.html \
+  test_dataset-prototype.html \
   test_dataset-set.html \
   test_document-dir.html \
   test_id-attribute.html \

@@ -10,8 +10,14 @@ Cu.import("resource://gre/modules/Services.jsm");
  * JS modules
  */
 
-XPCOMUtils.defineLazyModuleGetter(this , "FormHistory",
+XPCOMUtils.defineLazyModuleGetter(this, "Downloads",
+                                  "resource://gre/modules/Downloads.jsm");
+
+XPCOMUtils.defineLazyModuleGetter(this, "FormHistory",
                                   "resource://gre/modules/FormHistory.jsm");
+
+XPCOMUtils.defineLazyModuleGetter(this, "PageThumbs",
+                                  "resource://gre/modules/PageThumbs.jsm");
 
 XPCOMUtils.defineLazyModuleGetter(this, "PluralForm",
                                   "resource://gre/modules/PluralForm.jsm");
@@ -97,7 +103,7 @@ let ScriptContexts = {};
   ["CommandUpdater", "chrome://browser/content/commandUtil.js"],
   ["ContextCommands", "chrome://browser/content/ContextCommands.js"],
   ["Bookmarks", "chrome://browser/content/bookmarks.js"],
-  ["Downloads", "chrome://browser/content/downloads.js"],
+  ["MetroDownloadsView", "chrome://browser/content/downloads.js"],
   ["ConsolePanelView", "chrome://browser/content/console.js"],
   ["Site", "chrome://browser/content/Site.js"],
   ["TopSites", "chrome://browser/content/TopSites.js"],
