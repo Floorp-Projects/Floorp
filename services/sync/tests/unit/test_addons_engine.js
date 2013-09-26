@@ -111,7 +111,8 @@ add_test(function test_get_changed_ids() {
   do_check_eq("object", typeof(changes));
   do_check_eq(1, Object.keys(changes).length);
   do_check_true(addon.syncGUID in changes);
-  do_check_true(changes[addon.syncGUID] > changeTime);
+  _("Change time: " + changeTime + ", addon change: " + changes[addon.syncGUID]);
+  do_check_true(changes[addon.syncGUID] >= changeTime);
 
   let oldTime = changes[addon.syncGUID];
   let guid2 = addon.syncGUID;
