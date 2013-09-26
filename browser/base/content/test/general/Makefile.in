@@ -192,6 +192,7 @@ MOCHITEST_BROWSER_FILES = \
                  browser_contextSearchTabPosition.js \
                  browser_CTP_drag_drop.js \
                  browser_CTP_data_urls.js \
+                 browser_CTP_nonplugins.js \
                  browser_CTP_resize.js \
                  browser_ctrlTab.js \
                  browser_customize_popupNotification.js \
