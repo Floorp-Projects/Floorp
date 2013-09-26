@@ -1889,9 +1889,10 @@ NetworkDetailsView.prototype = {
             ? L10N.getFormatStr("jsonpScopeName", callbackPadding[0].slice(0, -1))
             : L10N.getStr("jsonScopeName");
 
-          let jsonScope = this._json.addScope(jsonScopeName);
-          jsonScope.addItem().populate(jsonObject, { expanded: true });
-          jsonScope.expanded = true;
+          this._json.controller.setSingleVariable({
+            label: jsonScopeName,
+            rawObject: jsonObject,
+          });
         }
         // Malformed JSON.
         else {
