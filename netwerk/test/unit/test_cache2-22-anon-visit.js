@@ -40,7 +40,7 @@ function run_test()
     });
   }
 
-  var mc = new MultipleCallbacks(2, newCacheBackEndUsed() ? checkNewBackEnd : checkOldBackEnd);
+  var mc = new MultipleCallbacks(2, newCacheBackEndUsed() ? checkNewBackEnd : checkOldBackEnd, !newCacheBackEndUsed());
 
   asyncOpenCacheEntry("http://an2/", "disk", Ci.nsICacheStorage.OPEN_NORMALLY, LoadContextInfo.default,
     new OpenCallback(NEW|WAITFORWRITE, "an2", "an2", function(entry) {
