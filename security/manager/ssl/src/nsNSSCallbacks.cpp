@@ -18,7 +18,7 @@
 #include "nsProxyRelease.h"
 #include "PSMRunnable.h"
 #include "ScopedNSSTypes.h"
-#include "nsIConsoleService.h"
+#include "nsContentUtils.h"
 #include "nsIHttpChannelInternal.h"
 #include "nsNetUtil.h"
 #include "SharedSSLState.h"
@@ -1042,16 +1042,14 @@ void HandshakeCallback(PRFileDesc* fd, void* client_data) {
   // localized.
   if (!siteSupportsSafeRenego &&
       ioLayerHelpers.getWarnLevelMissingRFC5746() > 0) {
-    nsCOMPtr<nsIConsoleService> console = do_GetService(NS_CONSOLESERVICE_CONTRACTID);
-    if (console) {
-      nsXPIDLCString hostName;
-      infoObject->GetHostName(getter_Copies(hostName));
+    nsXPIDLCString hostName;
+    infoObject->GetHostName(getter_Copies(hostName));
 
-      nsAutoString msg;
-      msg.Append(NS_ConvertASCIItoUTF16(hostName));
-      msg.Append(NS_LITERAL_STRING(" : server does not support RFC 5746, see CVE-2009-3555"));
-      console->LogStringMessage(msg.get());
-    }
+    nsAutoString msg;
+    msg.Append(NS_ConvertASCIItoUTF16(hostName));
+    msg.Append(NS_LITERAL_STRING(" : server does not support RFC 5746, see CVE-2009-3555"));
+
+    nsContentUtils::LogSimpleConsoleError(msg, "SSL");
   }
 
   ScopedCERTCertificate serverCert(SSL_PeerCertificate(fd));
