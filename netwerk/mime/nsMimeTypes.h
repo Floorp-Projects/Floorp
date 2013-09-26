@@ -126,7 +126,7 @@
 #define TEXT_MDL                            "text/mdl"
 #define TEXT_PLAIN                          "text/plain"
 #define TEXT_RICHTEXT                       "text/richtext"
-#define TEXT_VCARD                          "text/x-vcard"
+#define TEXT_VCARD                          "text/vcard"
 #define TEXT_CSS                            "text/css"
 #define TEXT_JSSS                           "text/jsss"
 #define TEXT_XML                            "text/xml"
