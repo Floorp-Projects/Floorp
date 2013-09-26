@@ -525,7 +525,7 @@ ImageBridgeChild::EndTransaction()
 }
 
 
-bool
+PImageBridgeChild*
 ImageBridgeChild::StartUpInChildProcess(Transport* aTransport,
                                         ProcessId aOtherProcess)
 {
@@ -533,12 +533,12 @@ ImageBridgeChild::StartUpInChildProcess(Transport* aTransport,
 
   ProcessHandle processHandle;
   if (!base::OpenProcessHandle(aOtherProcess, &processHandle)) {
-    return false;
+    return nullptr;
   }
 
   sImageBridgeChildThread = new Thread("ImageBridgeChild");
   if (!sImageBridgeChildThread->Start()) {
-    return false;
+    return nullptr;
   }
 
 #ifdef MOZ_NUWA_PROCESS
@@ -557,7 +557,7 @@ ImageBridgeChild::StartUpInChildProcess(Transport* aTransport,
     NewRunnableFunction(ConnectImageBridgeInChildProcess,
                         aTransport, processHandle));
 
-  return true;
+  return sImageBridgeChildSingleton;
 }
 
 void ImageBridgeChild::ShutDown()
