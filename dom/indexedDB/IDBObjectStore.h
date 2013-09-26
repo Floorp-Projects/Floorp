@@ -239,11 +239,6 @@ public:
                      size_t aDirection,
                      ErrorResult& aRv);
 
-  already_AddRefed<IDBRequest>
-  OpenKeyCursorInternal(IDBKeyRange* aKeyRange,
-                        size_t aDirection,
-                        ErrorResult& aRv);
-
   nsresult
   OpenCursorFromChildProcess(
                             IDBRequest* aRequest,
@@ -252,12 +247,6 @@ public:
                             const SerializedStructuredCloneReadInfo& aCloneInfo,
                             nsTArray<StructuredCloneFile>& aBlobs,
                             IDBCursor** _retval);
-
-  nsresult
-  OpenCursorFromChildProcess(IDBRequest* aRequest,
-                             size_t aDirection,
-                             const Key& aKey,
-                             IDBCursor** _retval);
 
   void
   SetInfo(ObjectStoreInfo* aInfo);
@@ -357,10 +346,6 @@ public:
   already_AddRefed<IDBRequest>
   GetAllKeys(JSContext* aCx, const Optional<JS::HandleValue>& aKey,
              const Optional<uint32_t>& aLimit, ErrorResult& aRv);
-
-  already_AddRefed<IDBRequest>
-  OpenKeyCursor(JSContext* aCx, const Optional<JS::HandleValue>& aRange,
-                IDBCursorDirection aDirection, ErrorResult& aRv);
 
 protected:
   IDBObjectStore();
