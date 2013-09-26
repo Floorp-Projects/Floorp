@@ -202,7 +202,7 @@ Section "MaintenanceService"
   ; These keys are used to bypass the installation dir is a valid installation
   ; check from the service so that tests can be run.
   WriteRegStr HKLM "${FallbackKey}\0" "name" "Mozilla Corporation"
-  WriteRegStr HKLM "${FallbackKey}\0" "issuer" "Thawte Code Signing CA - G2"
+  WriteRegStr HKLM "${FallbackKey}\0" "issuer" "DigiCert Assured ID Code Signing CA-1"
   WriteRegStr HKLM "${FallbackKey}\1" "name" "Mozilla Fake SPC"
   WriteRegStr HKLM "${FallbackKey}\1" "issuer" "Mozilla Fake CA"
   ${If} ${RunningX64}
