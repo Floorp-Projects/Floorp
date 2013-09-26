@@ -210,6 +210,11 @@ public:
     return mHandler;
   }
 
+  void ForgetHandler()
+  {
+    mHandler.ForgetHandler();
+  }
+
   nsIAtom* EventName() const
   {
     return mEventName;
