@@ -290,7 +290,8 @@ GrallocImage::GetTextureClient()
       return nullptr;
     }
     const SurfaceDescriptorGralloc& desc = sd.get_SurfaceDescriptorGralloc();
-    TextureFlags flags = desc.external() ? TEXTURE_DEALLOCATE_CLIENT : 0;
+    TextureFlags flags = desc.external() ? TEXTURE_DEALLOCATE_CLIENT
+                                         : TEXTURE_DEALLOCATE_HOST;
     if (desc.isRBSwapped()) {
       flags |= TEXTURE_RB_SWAPPED;
     }

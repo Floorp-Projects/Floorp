@@ -404,7 +404,7 @@ private:
 
   void NotifyBufferCreated(ContentType aType, uint32_t aFlags)
   {
-    mTextureInfo.mTextureFlags = aFlags & ~TEXTURE_DEALLOCATE_CLIENT;
+    mTextureInfo.mTextureFlags = aFlags | TEXTURE_DEALLOCATE_HOST;
     mContentType = aType;
 
     mForwarder->CreatedIncrementalBuffer(this,
