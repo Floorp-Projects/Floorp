@@ -872,6 +872,22 @@ GetNativePropertyHooks(JSContext *cx, JS::Handle<JSObject*> obj,
   return ifaceAndProtoJSClass->mNativeHooks;
 }
 
+// Try to resolve a property as an unforgeable property from the given
+// NativeProperties, if it's there.  nativeProperties is allowed to be null (in
+// which case we of course won't resolve anything).
+static bool
+XrayResolveUnforgeableProperty(JSContext* cx, JS::Handle<JSObject*> wrapper,
+                               JS::Handle<JSObject*> obj, JS::Handle<jsid> id,
+                               JS::MutableHandle<JSPropertyDescriptor> desc,
+                               const NativeProperties* nativeProperties);
+
+static bool
+XrayResolveNativeProperty(JSContext* cx, JS::Handle<JSObject*> wrapper,
+                          const NativePropertyHooks* nativePropertyHooks,
+                          DOMObjectType type, JS::Handle<JSObject*> obj,
+                          JS::Handle<jsid> id,
+                          JS::MutableHandle<JSPropertyDescriptor> desc);
+
 bool
 XrayResolveOwnProperty(JSContext* cx, JS::Handle<JSObject*> wrapper,
                        JS::Handle<JSObject*> obj, JS::Handle<jsid> id,
@@ -881,7 +897,32 @@ XrayResolveOwnProperty(JSContext* cx, JS::Handle<JSObject*> wrapper,
   const NativePropertyHooks *nativePropertyHooks =
     GetNativePropertyHooks(cx, obj, type);
 
-  return type != eInstance || !nativePropertyHooks->mResolveOwnProperty ||
+  if (type != eInstance) {
+    // For prototype objects and interface objects, just return their
+    // normal set of properties.
+    return XrayResolveNativeProperty(cx, wrapper, nativePropertyHooks, type,
+                                     obj, id, desc);
+  }
+
+  // Check for unforgeable properties before doing mResolveOwnProperty weirdness
+  const NativePropertiesHolder& nativeProperties =
+    nativePropertyHooks->mNativeProperties;
+  if (!XrayResolveUnforgeableProperty(cx, wrapper, obj, id, desc,
+                                      nativeProperties.regular)) {
+    return false;
+  }
+  if (desc.object()) {
+    return true;
+  }
+  if (!XrayResolveUnforgeableProperty(cx, wrapper, obj, id, desc,
+                                      nativeProperties.chromeOnly)) {
+    return false;
+  }
+  if (desc.object()) {
+    return true;
+  }
+
+  return !nativePropertyHooks->mResolveOwnProperty ||
          nativePropertyHooks->mResolveOwnProperty(cx, wrapper, obj, id, desc, flags);
 }
 
@@ -934,6 +975,20 @@ XrayResolveAttribute(JSContext* cx, JS::Handle<JSObject*> wrapper,
     }
   }
   return true;
+}
+
+/* static */ bool
+XrayResolveUnforgeableProperty(JSContext* cx, JS::Handle<JSObject*> wrapper,
+                               JS::Handle<JSObject*> obj, JS::Handle<jsid> id,
+                               JS::MutableHandle<JSPropertyDescriptor> desc,
+                               const NativeProperties* nativeProperties)
+{
+  return !nativeProperties || !nativeProperties->unforgeableAttributes ||
+         XrayResolveAttribute(cx, wrapper, obj, id,
+                              nativeProperties->unforgeableAttributes,
+                              nativeProperties->unforgeableAttributeIds,
+                              nativeProperties->unforgeableAttributeSpecs,
+                              desc);
 }
 
 static bool
@@ -1008,18 +1063,6 @@ XrayResolveProperty(JSContext* cx, JS::Handle<JSObject*> wrapper,
         return true;
       }
     }
-    if (nativeProperties->unforgeableAttributes) {
-      if (!XrayResolveAttribute(cx, wrapper, obj, id,
-                                nativeProperties->unforgeableAttributes,
-                                nativeProperties->unforgeableAttributeIds,
-                                nativeProperties->unforgeableAttributeSpecs,
-                                desc)) {
-        return false;
-      }
-      if (desc.object()) {
-        return true;
-      }
-    }
   }
 
   if (nativeProperties->constants) {
@@ -1068,7 +1111,7 @@ ResolvePrototypeOrConstructor(JSContext* cx, JS::Handle<JSObject*> wrapper,
   return JS_WrapPropertyDescriptor(cx, desc);
 }
 
-bool
+/* static */ bool
 XrayResolveNativeProperty(JSContext* cx, JS::Handle<JSObject*> wrapper,
                           const NativePropertyHooks* nativePropertyHooks,
                           DOMObjectType type, JS::Handle<JSObject*> obj,
@@ -1904,9 +1947,10 @@ InterfaceHasInstance(JSContext* cx, int prototypeID, int depth,
 }
 
 bool
-ReportLenientThisUnwrappingFailure(JSContext* cx, JS::Handle<JSObject*> obj)
+ReportLenientThisUnwrappingFailure(JSContext* cx, JSObject* obj)
 {
-  GlobalObject global(cx, obj);
+  JS::Rooted<JSObject*> rootedObj(cx, obj);
+  GlobalObject global(cx, rootedObj);
   if (global.Failed()) {
     return false;
   }

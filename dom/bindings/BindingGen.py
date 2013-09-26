@@ -36,7 +36,7 @@ def generate_binding_files(config, outputprefix, srcprefix, webidlfile,
     # too much.  See the comment explaining $(binding_dependency_trackers) in
     # Makefile.in.
     rule = mk.create_rule([outputprefix])
-    rule.add_dependencies(os.path.join(srcprefix, x) for x in root.deps())
+    rule.add_dependencies(os.path.join(srcprefix, x) for x in sorted(root.deps()))
     rule.add_dependencies(iter_modules_in_path(topsrcdir))
     with open(depsname, 'w') as f:
         mk.dump(f)

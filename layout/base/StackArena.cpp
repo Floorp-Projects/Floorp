@@ -8,37 +8,32 @@
 
 namespace mozilla {
 
-#define STACK_ARENA_MARK_INCREMENT 50
-/* a bit under 4096, for malloc overhead */
-#define STACK_ARENA_BLOCK_INCREMENT 4044
-
-/**A block of memory that the stack will 
- * chop up and hand out
- */
+// A block of memory that the stack will chop up and hand out.
 struct StackBlock {
-   
-   // a block of memory.  Note that this must be first so that it will
-   // be aligned.
-   char mBlock[STACK_ARENA_BLOCK_INCREMENT];
+  // Subtract sizeof(StackBlock*) to give space for the |mNext| field.
+  static const size_t MAX_USABLE_SIZE = 4096 - sizeof(StackBlock*);
 
-   // another block of memory that would only be created
-   // if our stack overflowed. Yes we have the ability
-   // to grow on a stack overflow
-   StackBlock* mNext;
+  // A block of memory.
+  char mBlock[MAX_USABLE_SIZE];
 
-   StackBlock() : mNext(nullptr) { }
-   ~StackBlock() { }
+  // Another block of memory that would only be created if our stack
+  // overflowed.
+  StackBlock* mNext;
+
+  StackBlock() : mNext(nullptr) { }
+  ~StackBlock() { }
 };
 
-/* we hold an array of marks. A push pushes a mark on the stack
- * a pop pops it off.
- */
+static_assert(sizeof(StackBlock) == 4096, "StackBlock must be 4096 bytes");
+
+// We hold an array of marks. A push pushes a mark on the stack.
+// A pop pops it off.
 struct StackMark {
-   // the block of memory we are currently handing out chunks of
-   StackBlock* mBlock;
-   
-   // our current position in the memory
-   size_t mPos;
+  // The block of memory from which we are currently handing out chunks.
+  StackBlock* mBlock;
+
+  // Our current position in the block.
+  size_t mPos;
 };
 
 StackArena* AutoStackArena::gStackArena;
@@ -48,7 +43,7 @@ StackArena::StackArena()
   mMarkLength = 0;
   mMarks = nullptr;
 
-  // allocate our stack memory
+  // Allocate our stack memory.
   mBlocks = new StackBlock();
   mCurBlock = mBlocks;
 
@@ -58,15 +53,14 @@ StackArena::StackArena()
 
 StackArena::~StackArena()
 {
-  // free up our data
-  delete[] mMarks;
-  while(mBlocks)
-  {
+  // Free up our data.
+  delete [] mMarks;
+  while (mBlocks) {
     StackBlock* toDelete = mBlocks;
     mBlocks = mBlocks->mNext;
     delete toDelete;
   }
-} 
+}
 
 size_t
 StackArena::SizeOfExcludingThis(mozilla::MallocSizeOf aMallocSizeOf) const
@@ -81,19 +75,21 @@ StackArena::SizeOfExcludingThis(mozilla::MallocSizeOf aMallocSizeOf) const
   return n;
 }
 
+static const int STACK_ARENA_MARK_INCREMENT = 50;
+
 void
 StackArena::Push()
 {
   // Resize the mark array if we overrun it.  Failure to allocate the
   // mark array is not fatal; we just won't free to that mark.  This
   // allows callers not to worry about error checking.
-  if (mStackTop >= mMarkLength)
-  {
+  if (mStackTop >= mMarkLength) {
     uint32_t newLength = mStackTop + STACK_ARENA_MARK_INCREMENT;
     StackMark* newMarks = new StackMark[newLength];
     if (newMarks) {
-      if (mMarkLength)
+      if (mMarkLength) {
         memcpy(newMarks, mMarks, sizeof(StackMark)*mMarkLength);
+      }
       // Fill in any marks that we couldn't allocate during a prior call
       // to Push().
       for (; mMarkLength < mStackTop; ++mMarkLength) {
@@ -107,7 +103,7 @@ StackArena::Push()
     }
   }
 
-  // set a mark at the top (if we can)
+  // Set a mark at the top (if we can).
   NS_ASSERTION(mStackTop < mMarkLength, "out of memory");
   if (mStackTop < mMarkLength) {
     mMarks[mStackTop].mBlock = mCurBlock;
@@ -122,23 +118,22 @@ StackArena::Allocate(size_t aSize)
 {
   NS_ASSERTION(mStackTop > 0, "Allocate called without Push");
 
-  // make sure we are aligned. Beard said 8 was safer then 4. 
-  // Round size to multiple of 8
+  // Align to a multiple of 8.
   aSize = NS_ROUNDUP<size_t>(aSize, 8);
 
-  // if the size makes the stack overflow. Grab another block for the stack
-  if (mPos + aSize >= STACK_ARENA_BLOCK_INCREMENT)
-  {
-    NS_ASSERTION(aSize <= STACK_ARENA_BLOCK_INCREMENT,
+  // On stack overflow, grab another block.
+  if (mPos + aSize >= StackBlock::MAX_USABLE_SIZE) {
+    NS_ASSERTION(aSize <= StackBlock::MAX_USABLE_SIZE,
                  "Requested memory is greater that our block size!!");
-    if (mCurBlock->mNext == nullptr)
+    if (mCurBlock->mNext == nullptr) {
       mCurBlock->mNext = new StackBlock();
+    }
 
-    mCurBlock =  mCurBlock->mNext;
+    mCurBlock = mCurBlock->mNext;
     mPos = 0;
   }
 
-  // return the chunk they need.
+  // Return the chunk they need.
   void *result = mCurBlock->mBlock + mPos;
   mPos += aSize;
 
@@ -148,7 +143,7 @@ StackArena::Allocate(size_t aSize)
 void
 StackArena::Pop()
 {
-  // pop off the mark
+  // Pop off the mark.
   NS_ASSERTION(mStackTop > 0, "unmatched pop");
   mStackTop--;
 

@@ -1731,7 +1731,7 @@ private:
         rtTotal += amount;                                                    \
     } while (0)
 
-NS_MEMORY_REPORTER_MALLOC_SIZEOF_FUN(JsMallocSizeOf)
+NS_MEMORY_REPORTER_MALLOC_SIZEOF_FUN(JSMallocSizeOf)
 
 namespace xpc {
 
@@ -2067,7 +2067,7 @@ ReportCompartmentStats(const JS::CompartmentStats &cStats,
     // DOM nodes in the JS reporter, but we want to report them in a "dom"
     // sub-tree rather than a "js" sub-tree.
     ZCREPORT_BYTES(cDOMPathPrefix + NS_LITERAL_CSTRING("orphan-nodes"),
-                   cStats.objectsExtra.private_,
+                   cStats.objectsPrivate,
                    "Memory used by orphan DOM nodes that are only reachable "
                    "from JavaScript objects.");
 
@@ -2441,7 +2441,7 @@ class XPCJSRuntimeStats : public JS::RuntimeStats
   public:
     XPCJSRuntimeStats(WindowPaths *windowPaths, WindowPaths *topWindowPaths,
                       bool getLocations)
-      : JS::RuntimeStats(JsMallocSizeOf),
+      : JS::RuntimeStats(JSMallocSizeOf),
         mWindowPaths(windowPaths),
         mTopWindowPaths(topWindowPaths),
         mGetLocations(getLocations)
@@ -2574,8 +2574,8 @@ JSReporter::CollectReports(WindowPaths *windowPaths,
         return NS_ERROR_FAILURE;
 
     size_t xpconnect =
-        xpcrt->SizeOfIncludingThis(JsMallocSizeOf) +
-        XPCWrappedNativeScope::SizeOfAllScopesIncludingThis(JsMallocSizeOf);
+        xpcrt->SizeOfIncludingThis(JSMallocSizeOf) +
+        XPCWrappedNativeScope::SizeOfAllScopesIncludingThis(JSMallocSizeOf);
 
     // This is the second step (see above).  First we report stuff in the
     // "explicit" tree, then we report other stuff.
@@ -3047,7 +3047,7 @@ XPCJSRuntime::newXPCJSRuntime(nsXPConnect* aXPConnect)
     XPCJSRuntime* self = new XPCJSRuntime(aXPConnect);
 
     if (self                                    &&
-        self->Runtime()                    &&
+        self->Runtime()                         &&
         self->GetWrappedJSMap()                 &&
         self->GetWrappedJSClassMap()            &&
         self->GetIID2NativeInterfaceMap()       &&

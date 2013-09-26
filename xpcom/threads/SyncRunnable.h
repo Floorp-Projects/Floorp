@@ -34,16 +34,19 @@ public:
     , mMonitor("SyncRunnable")
   { }
 
-  void DispatchToThread(nsIEventTarget* thread)
+  void DispatchToThread(nsIEventTarget* thread,
+                        bool forceDispatch = false)
   {
     nsresult rv;
     bool on;
 
-    rv = thread->IsOnCurrentThread(&on);
-    MOZ_ASSERT(NS_SUCCEEDED(rv));
-    if (NS_SUCCEEDED(rv) && on) {
-      mRunnable->Run();
-      return;
+    if (!forceDispatch) {
+      rv = thread->IsOnCurrentThread(&on);
+      MOZ_ASSERT(NS_SUCCEEDED(rv));
+      if (NS_SUCCEEDED(rv) && on) {
+        mRunnable->Run();
+        return;
+      }
     }
 
     mozilla::MonitorAutoLock lock(mMonitor);
@@ -54,10 +57,11 @@ public:
   }
 
   static void DispatchToThread(nsIEventTarget* thread,
-                               nsIRunnable* r)
+                               nsIRunnable* r,
+                               bool forceDispatch = false)
   {
     nsRefPtr<SyncRunnable> s(new SyncRunnable(r));
-    s->DispatchToThread(thread);
+    s->DispatchToThread(thread, forceDispatch);
   }
 
 protected:

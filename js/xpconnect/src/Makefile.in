@@ -46,9 +46,7 @@ include $(topsrcdir)/config/rules.mk
 include $(topsrcdir)/ipc/chromium/chromium-config.mk
 
 DEFINES += \
-  -DJSFILE \
   -DJS_THREADSAFE \
-  -DEXPORT_XPC_API \
   $(NULL)
 
 ifdef MOZ_JSDEBUGGER
