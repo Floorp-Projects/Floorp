@@ -28,7 +28,6 @@ let gTests = [
       simulateItemDrag(zoomControls, newWindowButton);
       ok(CustomizableUI.inDefaultState, "Should be in default state again.");
     },
-    teardown: endCustomizing
   },
   {
     desc: "Dragging the zoom controls to be before the save button " +
@@ -52,7 +51,6 @@ let gTests = [
       assertAreaPlacements(CustomizableUI.AREA_PANEL, placementsAfterMove);
       ok(CustomizableUI.inDefaultState, "Should be in default state.");
     },
-    teardown: endCustomizing
   },
   {
     desc: "Dragging the zoom controls to be before the new-window " +
@@ -76,7 +74,6 @@ let gTests = [
       assertAreaPlacements(CustomizableUI.AREA_PANEL, placementsAfterMove);
       ok(CustomizableUI.inDefaultState, "Should still be in default state.");
     },
-    teardown: endCustomizing
   },
   {
     desc: "Dragging the zoom controls to be before the history-panelmenu " +
@@ -104,7 +101,6 @@ let gTests = [
       simulateItemDrag(zoomControls, newWindowButton);
       ok(CustomizableUI.inDefaultState, "Should be in default state again.");
     },
-    teardown: endCustomizing
   },
   {
     desc: "Dragging the zoom controls to be before the preferences-button " +
@@ -132,7 +128,6 @@ let gTests = [
       simulateItemDrag(zoomControls, newWindowButton);
       ok(CustomizableUI.inDefaultState, "Should be in default state again.");
     },
-    teardown: endCustomizing
   },
   {
     desc: "Dragging an item from the palette to before the zoom-controls " +
@@ -173,7 +168,6 @@ let gTests = [
       simulateItemDrag(zoomControls, newWindowButton);
       ok(CustomizableUI.inDefaultState, "Should be in default state again.");
     },
-    teardown: endCustomizing
   },
   {
     desc: "Dragging the edit-controls to be before the zoom-controls button " +
@@ -197,7 +191,6 @@ let gTests = [
       assertAreaPlacements(CustomizableUI.AREA_PANEL, placementsAfterMove);
       ok(CustomizableUI.inDefaultState, "Should still be in default state.");
     },
-    teardown: endCustomizing
   },
   {
     desc: "Dragging the edit-controls to be before the new-window-button should " +
@@ -223,7 +216,6 @@ let gTests = [
       simulateItemDrag(editControls, zoomControls);
       ok(CustomizableUI.inDefaultState, "Should still be in default state.");
     },
-    teardown: endCustomizing
   },
   {
     desc: "Dragging the edit-controls to be before the privatebrowsing-button " +
@@ -250,7 +242,6 @@ let gTests = [
       simulateItemDrag(editControls, zoomControls);
       ok(CustomizableUI.inDefaultState, "Should still be in default state.");
     },
-    teardown: endCustomizing
   },
   {
     desc: "Dragging the edit-controls to be before the save-page-button " +
@@ -277,7 +268,6 @@ let gTests = [
       simulateItemDrag(editControls, zoomControls);
       ok(CustomizableUI.inDefaultState, "Should still be in default state.");
     },
-    teardown: endCustomizing
   },
   {
     desc: "Dragging the edit-controls to the panel itself should append " +
@@ -303,7 +293,6 @@ let gTests = [
       simulateItemDrag(editControls, zoomControls);
       ok(CustomizableUI.inDefaultState, "Should still be in default state.");
     },
-    teardown: endCustomizing
   },
   {
     desc: "Dragging the edit-controls to the customization-palette and " +
@@ -337,7 +326,6 @@ let gTests = [
          "The palette child count should have returned to its prior value.");
       ok(CustomizableUI.inDefaultState, "Should still be in default state.");
     },
-    teardown: endCustomizing
   },
   {
     desc: "Dragging the edit-controls to each of the panel placeholders " +
@@ -368,7 +356,6 @@ let gTests = [
         ok(CustomizableUI.inDefaultState, "Should still be in default state.");
       }
     },
-    teardown: endCustomizing
   },
   {
     desc: "Dragging the developer-button back on to itself should work.",
@@ -385,11 +372,11 @@ let gTests = [
          "edit-controls should be wrapped by a toolbarpaletteitem");
       ok(CustomizableUI.inDefaultState, "Should still be in default state.");
     },
-    teardown: endCustomizing
   },
 ];
 
 function asyncCleanup() {
+  yield endCustomizing();
   Services.prefs.clearUserPref("browser.uiCustomization.skipSourceNodeCheck");
   yield resetCustomization();
 }
