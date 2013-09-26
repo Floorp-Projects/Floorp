@@ -6,6 +6,7 @@
 #include "nsDOMClipboardEvent.h"
 #include "nsDOMDataTransfer.h"
 #include "nsIClipboard.h"
+#include "mozilla/ContentEvents.h"
 
 nsDOMClipboardEvent::nsDOMClipboardEvent(mozilla::dom::EventTarget* aOwner,
                                          nsPresContext* aPresContext,

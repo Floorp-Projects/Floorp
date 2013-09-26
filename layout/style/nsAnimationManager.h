@@ -6,9 +6,9 @@
 #define nsAnimationManager_h_
 
 #include "mozilla/Attributes.h"
+#include "mozilla/ContentEvents.h"
 #include "AnimationCommon.h"
 #include "nsCSSPseudoElements.h"
-#include "nsGUIEvent.h"
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/TimeStamp.h"
 

@@ -163,6 +163,12 @@ parent:
      */
     sync EndIMEComposition(bool cancel) returns (nsString composition);
 
+    /**
+     * Request that the parent process move focus to the browser's frame. If
+     * canRaise is true, the window can be raised if it is inactive.
+     */
+    RequestFocus(bool canRaise);
+
     sync GetInputContext() returns (int32_t IMEEnabled, int32_t IMEOpen,
                                     intptr_t NativeIMEContext);
 

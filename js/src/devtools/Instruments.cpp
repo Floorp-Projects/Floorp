@@ -70,7 +70,7 @@ private:
   SYMBOL(DTPerformanceSessionSave)
 
 #define SYMBOL(_sym) \
-  _sym##Function _sym = NULL;
+  _sym##Function _sym = nullptr;
 
 DTPERFORMANCE_SYMBOLS
 
@@ -106,7 +106,7 @@ LoadDTPerformanceLibrary()
   _sym = reinterpret_cast<_sym##Function>(dlsym(DTPerformanceLibrary, #_sym)); \
   if (!_sym) { \
     dlclose(DTPerformanceLibrary); \
-    DTPerformanceLibrary = NULL; \
+    DTPerformanceLibrary = nullptr; \
     return false; \
   }
 
@@ -125,16 +125,17 @@ bool
 Error(CFErrorRef error)
 {
   if (gSession) {
-    CFErrorRef unused = NULL;
-    DTPerformanceSessionStop(gSession, NULL, &unused);
+    CFErrorRef unused = nullptr;
+    DTPerformanceSessionStop(gSession, nullptr, &unused);
     CFRelease(gSession);
-    gSession = NULL;
+    gSession = nullptr;
   }
 #ifdef DEBUG
   AutoReleased<CFDataRef> data =
-    CFStringCreateExternalRepresentation(NULL, CFErrorCopyDescription(error),
+    CFStringCreateExternalRepresentation(nullptr,
+                                         CFErrorCopyDescription(error),
                                          kCFStringEncodingUTF8, '?');
-  if (data != NULL) {
+  if (data != nullptr) {
     printf("%.*s\n\n", (int)CFDataGetLength(data), CFDataGetBytePtr(data));
   }
 #endif
@@ -153,12 +154,13 @@ Start()
   }
 
   AutoReleased<CFStringRef> process =
-    CFStringCreateWithFormat(kCFAllocatorDefault, NULL, CFSTR("%d"), getpid());
+    CFStringCreateWithFormat(kCFAllocatorDefault, nullptr, CFSTR("%d"),
+                             getpid());
   if (!process) {
     return false;
   }
-  CFErrorRef error = NULL;
-  gSession = DTPerformanceSessionCreate(NULL, process, NULL, &error);
+  CFErrorRef error = nullptr;
+  gSession = DTPerformanceSessionCreate(nullptr, process, nullptr, &error);
   if (!gSession) {
     return Error(error);
   }
@@ -180,7 +182,7 @@ Start()
 
   if (!DTPerformanceSessionAddInstrument(gSession,
                                          CFSTR(DTPerformanceSession_TimeProfiler),
-                                         options, NULL, &error)) {
+                                         options, nullptr, &error)) {
     return Error(error);
   }
 
@@ -191,8 +193,8 @@ void
 Pause()
 {
   if (gSession && DTPerformanceSessionIsRecording(gSession)) {
-    CFErrorRef error = NULL;
-    if (!DTPerformanceSessionStop(gSession, NULL, &error)) {
+    CFErrorRef error = nullptr;
+    if (!DTPerformanceSessionStop(gSession, nullptr, &error)) {
       Error(error);
     }
   }
@@ -205,8 +207,8 @@ Resume()
     return false;
   }
 
-  CFErrorRef error = NULL;
-  return DTPerformanceSessionStart(gSession, NULL, &error) ||
+  CFErrorRef error = nullptr;
+  return DTPerformanceSessionStart(gSession, nullptr, &error) ||
          Error(error);
 }
 
@@ -215,17 +217,17 @@ Stop(const char* profileName)
 {
   Pause();
 
-  CFErrorRef error = NULL;
+  CFErrorRef error = nullptr;
   AutoReleased<CFStringRef> name =
-    CFStringCreateWithFormat(kCFAllocatorDefault, NULL, CFSTR("%s%s"), "/tmp/",
-                             profileName ? profileName : "mozilla");
+    CFStringCreateWithFormat(kCFAllocatorDefault, nullptr, CFSTR("%s%s"),
+                             "/tmp/", profileName ? profileName : "mozilla");
   if (!DTPerformanceSessionSave(gSession, name, &error)) {
     Error(error);
     return;
   }
 
   CFRelease(gSession);
-  gSession = NULL;
+  gSession = nullptr;
 }
 
 } // namespace Instruments

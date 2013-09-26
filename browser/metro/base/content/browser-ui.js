@@ -4,7 +4,6 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
-Cu.import("resource://gre/modules/PageThumbs.jsm");
 Cu.import("resource://gre/modules/devtools/dbg-server.jsm")
 
 /**
@@ -108,6 +107,7 @@ var BrowserUI = {
     PanelUI.init();
     FlyoutPanelsUI.init();
     PageThumbs.init();
+    NewTabUtils.init();
     SettingsCharm.init();
     NavButtonSlider.init();
 
@@ -142,7 +142,7 @@ var BrowserUI = {
       messageManager.addMessageListener("Browser:MozApplicationManifest", OfflineApps);
 
       try {
-        Downloads.init();
+        MetroDownloadsView.init();
         DialogUI.init();
         FormHelperUI.init();
         FindHelperUI.init();
@@ -175,7 +175,7 @@ var BrowserUI = {
 
     PanelUI.uninit();
     FlyoutPanelsUI.uninit();
-    Downloads.uninit();
+    MetroDownloadsView.uninit();
     SettingsCharm.uninit();
     messageManager.removeMessageListener("Content:StateChange", this);
     PageThumbs.uninit();

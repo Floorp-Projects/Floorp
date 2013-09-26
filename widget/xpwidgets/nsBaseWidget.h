@@ -5,6 +5,7 @@
 #ifndef nsBaseWidget_h__
 #define nsBaseWidget_h__
 
+#include "mozilla/EventForwards.h"
 #include "mozilla/WidgetUtils.h"
 #include "nsRect.h"
 #include "nsIWidget.h"
@@ -12,7 +13,6 @@
 #include "nsIFile.h"
 #include "nsString.h"
 #include "nsCOMPtr.h"
-#include "nsGUIEvent.h"
 #include "nsAutoPtr.h"
 #include "nsIRollupListener.h"
 #include "nsIObserver.h"
@@ -137,6 +137,7 @@ public:
   virtual void            PrepareWindowEffects() {}
   virtual void            CleanupWindowEffects() {}
   virtual void            PreRender(LayerManager* aManager) {}
+  virtual void            PostRender(LayerManager* aManager) {}
   virtual void            DrawWindowUnderlay(LayerManager* aManager, nsIntRect aRect) {}
   virtual void            DrawWindowOverlay(LayerManager* aManager, nsIntRect aRect) {}
   virtual mozilla::TemporaryRef<mozilla::gfx::DrawTarget> StartRemoteDrawing();

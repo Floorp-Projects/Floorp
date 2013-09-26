@@ -66,6 +66,7 @@ typedef struct {
   int          cause;
   string_t     reason_text;
   string_t     sdp;
+  string_t     extra;
   unsigned int media_stream_id;
   unsigned int media_stream_track_id;
   Timecard *   timecard;

@@ -10,6 +10,7 @@
 #include "mozilla/dom/PBrowserParent.h"
 #include "mozilla/dom/PContentDialogParent.h"
 #include "mozilla/dom/TabContext.h"
+#include "mozilla/TouchEvents.h"
 #include "nsCOMPtr.h"
 #include "nsIAuthPromptProvider.h"
 #include "nsIBrowserDOMWindow.h"
@@ -144,6 +145,7 @@ public:
                                      const nsString& aActionHint,
                                      const int32_t& aCause,
                                      const int32_t& aFocusChange);
+    virtual bool RecvRequestFocus(const bool& aCanRaise);
     virtual bool RecvSetCursor(const uint32_t& aValue);
     virtual bool RecvSetBackgroundColor(const nscolor& aValue);
     virtual bool RecvSetStatus(const uint32_t& aType, const nsString& aStatus);

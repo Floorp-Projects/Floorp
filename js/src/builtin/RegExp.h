@@ -30,8 +30,8 @@ ExecuteRegExp(JSContext *cx, HandleObject regexp, HandleString string,
 /*
  * Legacy behavior of ExecuteRegExp(), which is baked into the JSAPI.
  *
- * |res| may be NULL if the RegExpStatics are not to be updated.
- * |input| may be NULL if there is no JSString corresponding to
+ * |res| may be nullptr if the RegExpStatics are not to be updated.
+ * |input| may be nullptr if there is no JSString corresponding to
  * |chars| and |length|.
  */
 bool

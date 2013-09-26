@@ -17,6 +17,7 @@
 #include "nsIObserver.h"
 #include "mozilla/gfx/Rect.h"
 #include "mozilla/dom/Touch.h"
+#include "mozilla/EventForwards.h"
 #include "InputData.h"
 #include "Units.h"
 

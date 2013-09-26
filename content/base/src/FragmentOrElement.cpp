@@ -51,6 +51,7 @@
 #include "nsDOMString.h"
 #include "nsIScriptSecurityManager.h"
 #include "nsIDOMMutationEvent.h"
+#include "mozilla/MouseEvents.h"
 #include "mozilla/MutationEvent.h"
 #include "nsNodeUtils.h"
 #include "nsDocument.h"

@@ -33,14 +33,16 @@
 #ifdef MOZ_OMX_DECODER
 #include "MediaResourceManagerService.h"
 #endif
+#include "mozilla/TouchEvents.h"
 #include "mozilla/FileUtils.h"
 #include "mozilla/Hal.h"
+#include "mozilla/MouseEvents.h"
 #include "mozilla/Mutex.h"
 #include "mozilla/Services.h"
+#include "mozilla/TextEvents.h"
 #include "nsAppShell.h"
 #include "mozilla/dom/Touch.h"
 #include "nsGkAtoms.h"
-#include "nsGUIEvent.h"
 #include "nsIObserverService.h"
 #include "nsIScreen.h"
 #include "nsScreenManagerGonk.h"

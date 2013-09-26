@@ -9,7 +9,7 @@
 #include "nsISupports.h"
 #include "nsColor.h"
 #include "nsRect.h"
-#include "nsString.h"
+#include "nsStringGlue.h"
 
 #include "nsCOMPtr.h"
 #include "nsWidgetInitData.h"
@@ -886,13 +886,13 @@ class nsIWidget : public nsISupports {
 
     /**
      * Minimize, maximize or normalize the window size.
-     * Takes a value from nsSizeMode (see nsGUIEvent.h)
+     * Takes a value from nsSizeMode (see nsIWidgetListener.h)
      */
     NS_IMETHOD SetSizeMode(int32_t aMode) = 0;
 
     /**
      * Return size mode (minimized, maximized, normalized).
-     * Returns a value from nsSizeMode (see nsGUIEvent.h)
+     * Returns a value from nsSizeMode (see nsIWidgetListener.h)
      */
     virtual int32_t SizeMode() = 0;
 
@@ -1216,6 +1216,7 @@ class nsIWidget : public nsISupports {
     virtual void CleanupWindowEffects() = 0;
 
     virtual void PreRender(LayerManager* aManager) = 0;
+    virtual void PostRender(LayerManager* aManager) = 0;
 
     /**
      * Called before the LayerManager draws the layer tree.

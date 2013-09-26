@@ -23,7 +23,7 @@ exported_generated_events_headers := $(subst .webidl,.h,$(generated_events_webid
 linked_binding_cpp_files := $(subst .webidl,Binding.cpp,$(all_webidl_files))
 linked_generated_events_cpp_files := $(subst .webidl,.cpp,$(generated_events_webidl_files))
 
-all_webidl_files += $(test_webidl_files)
+all_webidl_files += $(test_webidl_files) $(preprocessed_test_webidl_files)
 
 generated_header_files := $(subst .webidl,Binding.h,$(all_webidl_files)) $(exported_generated_events_headers)
 generated_cpp_files := $(subst .webidl,Binding.cpp,$(all_webidl_files)) $(linked_generated_events_cpp_files)
@@ -167,6 +167,12 @@ $(preprocessed_webidl_files): %: $(webidl_base)/% $(GLOBAL_DEPS)
 	$(RM) $@
 	PYTHONDONTWRITEBYTECODE=1 $(PYTHON) \
           $(topsrcdir)/config/Preprocessor.py $(DEFINES) $(ACDEFINES) $(XULPPFLAGS) $(webidl_base)/$* -o $@
+
+# See the comment about PP_TARGETS for $(preprocessed_webidl_files)
+$(preprocessed_test_webidl_files): %: $(srcdir)/test/% $(GLOBAL_DEPS)
+	$(RM) $@
+	PYTHONDONTWRITEBYTECODE=1 $(PYTHON) \
+          $(topsrcdir)/config/Preprocessor.py $(DEFINES) $(ACDEFINES) $(XULPPFLAGS) $(srcdir)/test/$* -o $@
 
 # Make is dumb and can get confused between "foo" and "$(CURDIR)/foo".  Make
 # sure that the latter depends on the former, since the latter gets used in .pp

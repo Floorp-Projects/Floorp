@@ -21,8 +21,8 @@ struct GraphNodeBase
     unsigned       gcLowLink;
 
     GraphNodeBase()
-      : gcNextGraphNode(NULL),
-        gcNextGraphComponent(NULL),
+      : gcNextGraphNode(nullptr),
+        gcNextGraphComponent(nullptr),
         gcDiscoveryTime(0),
         gcLowLink(0) {}
 
@@ -31,7 +31,7 @@ struct GraphNodeBase
     Node *nextNodeInGroup() const {
         if (gcNextGraphNode && gcNextGraphNode->gcNextGraphComponent == gcNextGraphComponent)
             return gcNextGraphNode;
-        return NULL;
+        return nullptr;
     }
 
     Node *nextGroup() const {
@@ -65,9 +65,9 @@ class ComponentFinder
   public:
     ComponentFinder(uintptr_t sl)
       : clock(1),
-        stack(NULL),
-        firstComponent(NULL),
-        cur(NULL),
+        stack(nullptr),
+        firstComponent(nullptr),
+        cur(nullptr),
         stackLimit(sl),
         stackFull(false)
     {}
@@ -106,7 +106,7 @@ class ComponentFinder
         JS_ASSERT(!stack);
 
         Node *result = firstComponent;
-        firstComponent = NULL;
+        firstComponent = nullptr;
 
         for (Node *v = result; v; v = v->gcNextGraphNode) {
             v->gcDiscoveryTime = Undefined;
@@ -118,7 +118,7 @@ class ComponentFinder
 
     static void mergeGroups(Node *first) {
         for (Node *v = first; v; v = v->gcNextGraphNode)
-            v->gcNextGraphComponent = NULL;
+            v->gcNextGraphComponent = nullptr;
     }
 
   public:

@@ -14,7 +14,7 @@
 
 #include "nsAutoPtr.h"
 #include "nsCOMPtr.h"
-#include "nsString.h"
+#include "nsStringGlue.h"
 #include "nsError.h"
 #include "nsIAsyncVerifyRedirectCallback.h"
 

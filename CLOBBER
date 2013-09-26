@@ -18,4 +18,4 @@
 # Modifying this file will now automatically clobber the buildbot machines \o/
 #
 
-Bug 785884 - Implement support for temporary storage (aka shared pool) 
+Bug 913260 needed a clobber to not break tons of tests 

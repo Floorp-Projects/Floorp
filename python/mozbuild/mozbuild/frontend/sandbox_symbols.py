@@ -444,6 +444,13 @@ VARIABLES = {
          These will be generated from some other files.
          """),
 
+    'PREPROCESSED_TEST_WEBIDL_FILES': (StrictOrderingOnAppendList, list, [],
+         """Preprocessed test WebIDL source files.
+
+         These will be preprocessed, then parsed and converted to .cpp
+         and .h files if tests are enabled.
+         """),
+
     'PREPROCESSED_WEBIDL_FILES': (StrictOrderingOnAppendList, list, [],
          """Preprocessed WebIDL source files.
 
@@ -465,6 +472,10 @@ VARIABLES = {
 
     'MOCHITEST_CHROME_MANIFESTS': (StrictOrderingOnAppendList, list, [],
         """List of manifest files defining mochitest chrome tests.
+        """),
+
+    'WEBRTC_SIGNALLING_TEST_MANIFESTS': (StrictOrderingOnAppendList, list, [],
+        """List of manifest files defining WebRTC signalling tests.
         """),
 
     'XPCSHELL_TESTS_MANIFESTS': (StrictOrderingOnAppendList, list, [],

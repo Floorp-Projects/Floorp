@@ -16,6 +16,11 @@
 #include "nsChildView.h"
 #include "nsCocoaWindow.h"
 
+#include "mozilla/MiscEvents.h"
+#include "mozilla/MouseEvents.h"
+#include "mozilla/TextEvents.h"
+#include "mozilla/TouchEvents.h"
+
 #include "nsObjCExceptions.h"
 #include "nsCOMPtr.h"
 #include "nsToolkit.h"
@@ -2039,6 +2044,17 @@ nsChildView::PreRender(LayerManager* aManager)
 }
 
 void
+nsChildView::PostRender(LayerManager* aManager)
+{
+  nsAutoPtr<GLManager> manager(GLManager::CreateGLManager(aManager));
+  if (!manager) {
+    return;
+  }
+  NSOpenGLContext *glContext = (NSOpenGLContext *)manager->gl()->GetNativeData(GLContext::NativeGLContext);
+  [(ChildView*)mView postRender:glContext];
+}
+
+void
 nsChildView::DrawWindowOverlay(LayerManager* aManager, nsIntRect aRect)
 {
   nsAutoPtr<GLManager> manager(GLManager::CreateGLManager(aManager));
@@ -2880,6 +2896,17 @@ NSEvent* gLastDragMouseDownEvent = nil;
   [aGLContext setView:self];
   [aGLContext update];
 
+  CGLLockContext((CGLContextObj)[aGLContext CGLContextObj]);
+
+  NS_OBJC_END_TRY_ABORT_BLOCK;
+}
+
+-(void)postRender:(NSOpenGLContext *)aGLContext
+{
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
+
+  CGLUnlockContext((CGLContextObj)[aGLContext CGLContextObj]);
+
   NS_OBJC_END_TRY_ABORT_BLOCK;
 }
 
@@ -3218,7 +3245,7 @@ NSEvent* gLastDragMouseDownEvent = nil;
 
   [super lockFocus];
 
-  if (mGLContext) {
+  if (mGLContext && !mUsingOMTCompositor) {
     if ([mGLContext view] != self) {
       [mGLContext setView:self];
     }

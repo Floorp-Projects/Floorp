@@ -440,15 +440,20 @@ interface TestInterface {
 
   // Union types
   void passUnion((object or long) arg);
-  // Commented out tests 2-9 to avoid creating all those unused union types
-  /* void passUnion2((long or boolean) arg);
+  // Some  union tests are debug-only to avoid creating all those
+  // unused union types in opt builds.
+#ifdef DEBUG
+  void passUnion2((long or boolean) arg);
   void passUnion3((object or long or boolean) arg);
   void passUnion4((Node or long or boolean) arg);
   void passUnion5((object or boolean) arg);
   void passUnion6((object or DOMString) arg);
   void passUnion7((object or DOMString or long) arg);
   void passUnion8((object or DOMString or boolean) arg);
-  void passUnion9((object or DOMString or long or boolean) arg); */
+  void passUnion9((object or DOMString or long or boolean) arg);
+  void passUnion10(optional (EventInit or long) arg);
+  void passUnion11(optional (CustomEventInit or long) arg);
+#endif
   void passUnionWithNullable((object? or long) arg);
   void passNullableUnion((object or long)? arg);
   void passOptionalUnion(optional (object or long) arg);
@@ -744,6 +749,15 @@ dictionary Dict : ParentDict {
 
   (float or DOMString) floatOrString = "str";
   (object or long) objectOrLong;
+#ifdef DEBUG
+  (EventInit or long) eventInitOrLong;
+  // CustomEventInit is useful to test because it needs rooting.
+  (CustomEventInit or long) eventInitOrLong2;
+  (EventInit or long) eventInitOrLongWithDefaultValue = null;
+  (CustomEventInit or long) eventInitOrLongWithDefaultValue2 = null;
+  (EventInit or long) eventInitOrLongWithDefaultValue3 = 5;
+  (CustomEventInit or long) eventInitOrLongWithDefaultValue4 = 5;
+#endif
 
   ArrayBuffer arrayBuffer;
   ArrayBuffer? nullableArrayBuffer;

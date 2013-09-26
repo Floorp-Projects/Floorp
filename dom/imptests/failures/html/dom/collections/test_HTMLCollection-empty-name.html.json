@@ -1,0 +1,9 @@
+{
+  "Empty string as a name for Document.getElementsByTagName": true,
+  "Empty string as a name for Element.getElementsByTagName": true,
+  "Empty string as a name for Document.getElementsByTagNameNS": true,
+  "Empty string as a name for Element.getElementsByTagNameNS": true,
+  "Empty string as a name for Document.getElementsByClassName": true,
+  "Empty string as a name for Element.getElementsByClassName": true,
+  "Empty string as a name for Element.children": true
+}
