@@ -187,7 +187,7 @@ void
 SourceBuffer::QueueAsyncSimpleEvent(const char* aName)
 {
   LOG(PR_LOG_DEBUG, ("%p Queuing event %s to SourceBuffer", this, aName));
-  nsCOMPtr<nsIRunnable> event = new AsyncEventRunnner<SourceBuffer>(this, aName);
+  nsCOMPtr<nsIRunnable> event = new AsyncEventRunner<SourceBuffer>(this, aName);
   NS_DispatchToMainThread(event, NS_DISPATCH_NORMAL);
 }
 

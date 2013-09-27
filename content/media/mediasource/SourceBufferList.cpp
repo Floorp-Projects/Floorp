@@ -106,7 +106,7 @@ void
 SourceBufferList::QueueAsyncSimpleEvent(const char* aName)
 {
   LOG(PR_LOG_DEBUG, ("%p Queuing event %s to SourceBufferList", this, aName));
-  nsCOMPtr<nsIRunnable> event = new AsyncEventRunnner<SourceBufferList>(this, aName);
+  nsCOMPtr<nsIRunnable> event = new AsyncEventRunner<SourceBufferList>(this, aName);
   NS_DispatchToMainThread(event, NS_DISPATCH_NORMAL);
 }
 

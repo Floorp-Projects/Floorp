@@ -21,6 +21,10 @@
 class nsIInputStream;
 
 namespace mozilla {
+
+class ErrorResult;
+template <typename T> class AsyncEventRunner;
+
 namespace dom {
 
 class HTMLMediaElement;
@@ -102,7 +106,7 @@ public:
 private:
   explicit MediaSource(nsPIDOMWindow* aWindow);
 
-  friend class AsyncEventRunnner<MediaSource>;
+  friend class AsyncEventRunner<MediaSource>;
   void DispatchSimpleEvent(const char* aName);
   void QueueAsyncSimpleEvent(const char* aName);
 
