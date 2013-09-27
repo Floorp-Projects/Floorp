@@ -24,7 +24,7 @@ class Mutex;
 
 namespace net {
     enum {
-        SPDY_VERSION_2 = 2,
+        SPDY_VERSION_2_REMOVED = 2,
         SPDY_VERSION_3 = 3,
         SPDY_VERSION_31 = 4
     };
