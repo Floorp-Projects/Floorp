@@ -107,12 +107,12 @@ public:
   /**
    * Get display port for the given element.
    */
-  static bool GetDisplayPort(nsIContent* aContent, nsRect *aResult);
+  static bool GetDisplayPort(nsIContent* aContent, nsRect *aResult = nullptr);
 
   /**
    * Get the critical display port for the given element.
    */
-  static bool GetCriticalDisplayPort(nsIContent* aContent, nsRect* aResult);
+  static bool GetCriticalDisplayPort(nsIContent* aContent, nsRect* aResult = nullptr);
 
   /**
    * Use heuristics to figure out the child list that
