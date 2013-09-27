@@ -38,11 +38,6 @@ public:
     mBufferLocked = nullptr;
   }
 
-  virtual void ForgetSharedData() MOZ_OVERRIDE
-  {
-    mBufferLocked = nullptr;
-  }
-
 private:
   RefPtr<GraphicBufferLocked> mBufferLocked;
 };
@@ -71,11 +66,6 @@ public:
     mGrallocActor = nullptr;
   }
 
-  virtual void ForgetSharedData() MOZ_OVERRIDE
-  {
-    mGrallocActor = nullptr;
-  }
-
 private:
   GrallocBufferActor* mGrallocActor;
 };
@@ -83,7 +73,6 @@ private:
 TextureClientData*
 GrallocTextureClientOGL::DropTextureData()
 {
-  MarkInvalid();
   if (mBufferLocked) {
     TextureClientData* result = new GraphicBufferLockedTextureClientData(mBufferLocked);
     mBufferLocked = nullptr;

@@ -231,16 +231,14 @@ CompositableClient::RemoveTextureClient(TextureClient* aClient)
   MOZ_ASSERT(aClient);
   mTexturesToRemove.AppendElement(TextureIDAndFlags(aClient->GetID(),
                                                     aClient->GetFlags()));
-  TextureClientData* data = aClient->DropTextureData();
-  if (data) {
-    if (!(aClient->GetFlags() & TEXTURE_DEALLOCATE_HOST)) {
+  if (!(aClient->GetFlags() & TEXTURE_DEALLOCATE_HOST)) {
+    TextureClientData* data = aClient->DropTextureData();
+    if (data) {
       mTexturesToRemoveCallbacks[aClient->GetID()] = data;
-    } else {
-      data->ForgetSharedData();
-      delete data;
     }
   }
   aClient->ClearID();
+  aClient->MarkInvalid();
 }
 
 void
