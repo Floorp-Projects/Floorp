@@ -107,7 +107,7 @@ GetCairoSurfaceSize(cairo_surface_t* surface, IntSize& size)
       // It's valid to call these CGBitmapContext functions on non-bitmap
       // contexts; they'll just return 0 in that case.
       size.width = CGBitmapContextGetWidth(cgc);
-      size.height = CGBitmapContextGetWidth(cgc);
+      size.height = CGBitmapContextGetHeight(cgc);
       return true;
     }
 #endif
