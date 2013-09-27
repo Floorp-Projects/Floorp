@@ -361,13 +361,12 @@ protected:
    * Event handlers
    */
   virtual void            OnDestroy();
-  virtual bool            OnMove(int32_t aX, int32_t aY);
   virtual bool            OnResize(nsIntRect &aWindowRect);
   bool                    OnGesture(WPARAM wParam, LPARAM lParam);
   bool                    OnTouch(WPARAM wParam, LPARAM lParam);
   bool                    OnHotKey(WPARAM wParam, LPARAM lParam);
   bool                    OnPaint(HDC aDC, uint32_t aNestingLevel);
-  void                    OnWindowPosChanged(WINDOWPOS *wp, bool& aResult);
+  void                    OnWindowPosChanged(WINDOWPOS* wp);
   void                    OnWindowPosChanging(LPWINDOWPOS& info);
   void                    OnSysColorChanged();
 
