@@ -876,7 +876,7 @@ nsDOMWindowUtils::SendTouchEvent(const nsAString& aType,
   } else {
     return NS_ERROR_UNEXPECTED;
   }
-  nsTouchEvent event(true, msg, widget);
+  WidgetTouchEvent event(true, msg, widget);
   event.modifiers = GetWidgetModifiers(aModifiers);
   event.widget = widget;
   event.time = PR_Now();

@@ -1399,7 +1399,7 @@ nsEventStateManager::DispatchCrossProcessEvent(nsEvent* aEvent,
     // Let the child process synthesize a mouse event if needed, and
     // ensure we don't synthesize one in this process.
     *aStatus = nsEventStatus_eConsumeNoDefault;
-    nsTouchEvent* touchEvent = static_cast<nsTouchEvent*>(aEvent);
+    WidgetTouchEvent* touchEvent = static_cast<WidgetTouchEvent*>(aEvent);
     return remote->SendRealTouchEvent(*touchEvent);
   }
   default: {
@@ -1516,7 +1516,7 @@ nsEventStateManager::HandleCrossProcessEvent(nsEvent *aEvent,
     //
     // This loop is similar to the one used in
     // PresShell::DispatchTouchEvent().
-    nsTouchEvent* touchEvent = static_cast<nsTouchEvent*>(aEvent);
+    WidgetTouchEvent* touchEvent = static_cast<WidgetTouchEvent*>(aEvent);
     const nsTArray< nsRefPtr<Touch> >& touches = touchEvent->touches;
     for (uint32_t i = 0; i < touches.Length(); ++i) {
       Touch* touch = touches[i];

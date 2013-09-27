@@ -6080,8 +6080,8 @@ bool nsWindow::OnTouch(WPARAM wParam, LPARAM lParam)
   PTOUCHINPUT pInputs = new TOUCHINPUT[cInputs];
 
   if (mGesture.GetTouchInputInfo((HTOUCHINPUT)lParam, cInputs, pInputs)) {
-    nsTouchEvent* touchEventToSend = nullptr;
-    nsTouchEvent* touchEndEventToSend = nullptr;
+    WidgetTouchEvent* touchEventToSend = nullptr;
+    WidgetTouchEvent* touchEndEventToSend = nullptr;
     nsEventStatus status;
 
     // Walk across the touch point array processing each contact point
@@ -6091,7 +6091,7 @@ bool nsWindow::OnTouch(WPARAM wParam, LPARAM lParam)
       if (pInputs[i].dwFlags & (TOUCHEVENTF_DOWN | TOUCHEVENTF_MOVE)) {
         // Create a standard touch event to send
         if (!touchEventToSend) {
-          touchEventToSend = new nsTouchEvent(true, NS_TOUCH_MOVE, this);
+          touchEventToSend = new WidgetTouchEvent(true, NS_TOUCH_MOVE, this);
           touchEventToSend->time = ::GetMessageTime();
           ModifierKeyState modifierKeyState;
           modifierKeyState.InitInputEvent(*touchEventToSend);
@@ -6109,7 +6109,7 @@ bool nsWindow::OnTouch(WPARAM wParam, LPARAM lParam)
         // separate NS_TOUCH_END event containing only the contact points
         // that were removed.
         if (!touchEndEventToSend) {
-          touchEndEventToSend = new nsTouchEvent(true, NS_TOUCH_END, this);
+          touchEndEventToSend = new WidgetTouchEvent(true, NS_TOUCH_END, this);
           touchEndEventToSend->time = ::GetMessageTime();
           ModifierKeyState modifierKeyState;
           modifierKeyState.InitInputEvent(*touchEndEventToSend);
