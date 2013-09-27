@@ -8,7 +8,6 @@
 
 #include "jit/LIR.h"
 #include "jit/MIR.h"
-#include "jit/MIRGraph.h"
 
 using namespace js;
 using namespace jit;

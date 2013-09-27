@@ -1,8 +1,8 @@
 
 /* pngtrans.c - transforms the data in a row (used by both readers and writers)
  *
- * Last changed in libpng 1.5.11 [June 14, 2012]
- * Copyright (c) 1998-2012 Glenn Randers-Pehrson
+ * Last changed in libpng 1.6.2 [April 25, 2013]
+ * Copyright (c) 1998-2013 Glenn Randers-Pehrson
  * (Version 0.96 Copyright (c) 1996, 1997 Andreas Dilger)
  * (Version 0.88 Copyright (c) 1995, 1996 Guy Eric Schalnat, Group 42, Inc.)
  *
@@ -18,7 +18,7 @@
 #if defined(PNG_READ_BGR_SUPPORTED) || defined(PNG_WRITE_BGR_SUPPORTED)
 /* Turn on BGR-to-RGB mapping */
 void PNGAPI
-png_set_bgr(png_structp png_ptr)
+png_set_bgr(png_structrp png_ptr)
 {
    png_debug(1, "in png_set_bgr");
 
@@ -32,7 +32,7 @@ png_set_bgr(png_structp png_ptr)
 #if defined(PNG_READ_SWAP_SUPPORTED) || defined(PNG_WRITE_SWAP_SUPPORTED)
 /* Turn on 16 bit byte swapping */
 void PNGAPI
-png_set_swap(png_structp png_ptr)
+png_set_swap(png_structrp png_ptr)
 {
    png_debug(1, "in png_set_swap");
 
@@ -47,7 +47,7 @@ png_set_swap(png_structp png_ptr)
 #if defined(PNG_READ_PACK_SUPPORTED) || defined(PNG_WRITE_PACK_SUPPORTED)
 /* Turn on pixel packing */
 void PNGAPI
-png_set_packing(png_structp png_ptr)
+png_set_packing(png_structrp png_ptr)
 {
    png_debug(1, "in png_set_packing");
 
@@ -65,7 +65,7 @@ png_set_packing(png_structp png_ptr)
 #if defined(PNG_READ_PACKSWAP_SUPPORTED)||defined(PNG_WRITE_PACKSWAP_SUPPORTED)
 /* Turn on packed pixel swapping */
 void PNGAPI
-png_set_packswap(png_structp png_ptr)
+png_set_packswap(png_structrp png_ptr)
 {
    png_debug(1, "in png_set_packswap");
 
@@ -79,7 +79,7 @@ png_set_packswap(png_structp png_ptr)
 
 #if defined(PNG_READ_SHIFT_SUPPORTED) || defined(PNG_WRITE_SHIFT_SUPPORTED)
 void PNGAPI
-png_set_shift(png_structp png_ptr, png_const_color_8p true_bits)
+png_set_shift(png_structrp png_ptr, png_const_color_8p true_bits)
 {
    png_debug(1, "in png_set_shift");
 
@@ -94,7 +94,7 @@ png_set_shift(png_structp png_ptr, png_const_color_8p true_bits)
 #if defined(PNG_READ_INTERLACING_SUPPORTED) || \
     defined(PNG_WRITE_INTERLACING_SUPPORTED)
 int PNGAPI
-png_set_interlace_handling(png_structp png_ptr)
+png_set_interlace_handling(png_structrp png_ptr)
 {
    png_debug(1, "in png_set_interlace handling");
 
@@ -115,44 +115,91 @@ png_set_interlace_handling(png_structp png_ptr)
  * that don't like bytes as parameters.
  */
 void PNGAPI
-png_set_filler(png_structp png_ptr, png_uint_32 filler, int filler_loc)
+png_set_filler(png_structrp png_ptr, png_uint_32 filler, int filler_loc)
 {
    png_debug(1, "in png_set_filler");
 
    if (png_ptr == NULL)
       return;
 
+   /* In libpng 1.6 it is possible to determine whether this is a read or write
+    * operation and therefore to do more checking here for a valid call.
+    */
+   if (png_ptr->mode & PNG_IS_READ_STRUCT)
+   {
+#     ifdef PNG_READ_FILLER_SUPPORTED
+         /* On read png_set_filler is always valid, regardless of the base PNG
+          * format, because other transformations can give a format where the
+          * filler code can execute (basically an 8 or 16-bit component RGB or G
+          * format.)
+          *
+          * NOTE: usr_channels is not used by the read code!  (This has led to
+          * confusion in the past.)  The filler is only used in the read code.
+          */
+         png_ptr->filler = (png_uint_16)filler;
+#     else
+         png_app_error(png_ptr, "png_set_filler not supported on read");
+         PNG_UNUSED(filler) /* not used in the write case */
+         return;
+#     endif
+   }
+
+   else /* write */
+   {
+#     ifdef PNG_WRITE_FILLER_SUPPORTED
+         /* On write the usr_channels parameter must be set correctly at the
+          * start to record the number of channels in the app-supplied data.
+          */
+         switch (png_ptr->color_type)
+         {
+            case PNG_COLOR_TYPE_RGB:
+               png_ptr->usr_channels = 4;
+               break;
+
+            case PNG_COLOR_TYPE_GRAY:
+               if (png_ptr->bit_depth >= 8)
+               {
+                  png_ptr->usr_channels = 2;
+                  break;
+               }
+
+               else
+               {
+                  /* There simply isn't any code in libpng to strip out bits
+                   * from bytes when the components are less than a byte in
+                   * size!
+                   */
+                  png_app_error(png_ptr,
+                     "png_set_filler is invalid for low bit depth gray output");
+                  return;
+               }
+
+            default:
+               png_app_error(png_ptr,
+                  "png_set_filler: inappropriate color type");
+               return;
+         }
+#     else
+         png_app_error(png_ptr, "png_set_filler not supported on write");
+         return;
+#     endif
+   }
+
+   /* Here on success - libpng supports the operation, set the transformation
+    * and the flag to say where the filler channel is.
+    */
    png_ptr->transformations |= PNG_FILLER;
-   png_ptr->filler = (png_uint_16)filler;
 
    if (filler_loc == PNG_FILLER_AFTER)
       png_ptr->flags |= PNG_FLAG_FILLER_AFTER;
 
    else
       png_ptr->flags &= ~PNG_FLAG_FILLER_AFTER;
-
-   /* This should probably go in the "do_read_filler" routine.
-    * I attempted to do that in libpng-1.0.1a but that caused problems
-    * so I restored it in libpng-1.0.2a
-   */
-
-   if (png_ptr->color_type == PNG_COLOR_TYPE_RGB)
-   {
-      png_ptr->usr_channels = 4;
-   }
-
-   /* Also I added this in libpng-1.0.2a (what happens when we expand
-    * a less-than-8-bit grayscale to GA?) */
-
-   if (png_ptr->color_type == PNG_COLOR_TYPE_GRAY && png_ptr->bit_depth >= 8)
-   {
-      png_ptr->usr_channels = 2;
-   }
 }
 
 /* Added to libpng-1.2.7 */
 void PNGAPI
-png_set_add_alpha(png_structp png_ptr, png_uint_32 filler, int filler_loc)
+png_set_add_alpha(png_structrp png_ptr, png_uint_32 filler, int filler_loc)
 {
    png_debug(1, "in png_set_add_alpha");
 
@@ -160,7 +207,9 @@ png_set_add_alpha(png_structp png_ptr, png_uint_32 filler, int filler_loc)
       return;
 
    png_set_filler(png_ptr, filler, filler_loc);
-   png_ptr->transformations |= PNG_ADD_ALPHA;
+   /* The above may fail to do anything. */
+   if (png_ptr->transformations & PNG_FILLER)
+      png_ptr->transformations |= PNG_ADD_ALPHA;
 }
 
 #endif
@@ -168,7 +217,7 @@ png_set_add_alpha(png_structp png_ptr, png_uint_32 filler, int filler_loc)
 #if defined(PNG_READ_SWAP_ALPHA_SUPPORTED) || \
     defined(PNG_WRITE_SWAP_ALPHA_SUPPORTED)
 void PNGAPI
-png_set_swap_alpha(png_structp png_ptr)
+png_set_swap_alpha(png_structrp png_ptr)
 {
    png_debug(1, "in png_set_swap_alpha");
 
@@ -182,7 +231,7 @@ png_set_swap_alpha(png_structp png_ptr)
 #if defined(PNG_READ_INVERT_ALPHA_SUPPORTED) || \
     defined(PNG_WRITE_INVERT_ALPHA_SUPPORTED)
 void PNGAPI
-png_set_invert_alpha(png_structp png_ptr)
+png_set_invert_alpha(png_structrp png_ptr)
 {
    png_debug(1, "in png_set_invert_alpha");
 
@@ -195,7 +244,7 @@ png_set_invert_alpha(png_structp png_ptr)
 
 #if defined(PNG_READ_INVERT_SUPPORTED) || defined(PNG_WRITE_INVERT_SUPPORTED)
 void PNGAPI
-png_set_invert_mono(png_structp png_ptr)
+png_set_invert_mono(png_structrp png_ptr)
 {
    png_debug(1, "in png_set_invert_mono");
 
@@ -623,7 +672,7 @@ png_do_bgr(png_row_infop row_info, png_bytep row)
     defined(PNG_WRITE_CHECK_FOR_INVALID_INDEX_SUPPORTED)
 /* Added at libpng-1.5.10 */
 void /* PRIVATE */
-png_do_check_palette_indexes(png_structp png_ptr, png_row_infop row_info)
+png_do_check_palette_indexes(png_structrp png_ptr, png_row_infop row_info)
 {
    if (png_ptr->num_palette < (1 << row_info->bit_depth) &&
       png_ptr->num_palette > 0) /* num_palette can be 0 in MNG files */
@@ -726,13 +775,24 @@ png_do_check_palette_indexes(png_structp png_ptr, png_row_infop row_info)
     defined(PNG_WRITE_USER_TRANSFORM_SUPPORTED)
 #ifdef PNG_USER_TRANSFORM_PTR_SUPPORTED
 void PNGAPI
-png_set_user_transform_info(png_structp png_ptr, png_voidp
+png_set_user_transform_info(png_structrp png_ptr, png_voidp
    user_transform_ptr, int user_transform_depth, int user_transform_channels)
 {
    png_debug(1, "in png_set_user_transform_info");
 
    if (png_ptr == NULL)
       return;
+
+#ifdef PNG_READ_USER_TRANSFORM_SUPPORTED
+   if ((png_ptr->mode & PNG_IS_READ_STRUCT) != 0 &&
+      (png_ptr->flags & PNG_FLAG_ROW_INIT) != 0)
+   {
+      png_app_error(png_ptr,
+            "info change after png_start_read_image or png_read_update_info");
+      return;
+   }
+#endif
+
    png_ptr->user_transform_ptr = user_transform_ptr;
    png_ptr->user_transform_depth = (png_byte)user_transform_depth;
    png_ptr->user_transform_channels = (png_byte)user_transform_channels;
@@ -746,18 +806,18 @@ png_set_user_transform_info(png_structp png_ptr, png_voidp
  */
 #ifdef PNG_USER_TRANSFORM_PTR_SUPPORTED
 png_voidp PNGAPI
-png_get_user_transform_ptr(png_const_structp png_ptr)
+png_get_user_transform_ptr(png_const_structrp png_ptr)
 {
    if (png_ptr == NULL)
       return (NULL);
 
-   return ((png_voidp)png_ptr->user_transform_ptr);
+   return png_ptr->user_transform_ptr;
 }
 #endif
 
 #ifdef PNG_USER_TRANSFORM_INFO_SUPPORTED
 png_uint_32 PNGAPI
-png_get_current_row_number(png_const_structp png_ptr)
+png_get_current_row_number(png_const_structrp png_ptr)
 {
    /* See the comments in png.h - this is the sub-image row when reading and
     * interlaced image.
@@ -769,7 +829,7 @@ png_get_current_row_number(png_const_structp png_ptr)
 }
 
 png_byte PNGAPI
-png_get_current_pass_number(png_const_structp png_ptr)
+png_get_current_pass_number(png_const_structrp png_ptr)
 {
    if (png_ptr != NULL)
       return png_ptr->pass;

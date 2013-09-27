@@ -116,6 +116,34 @@ MacroAssemblerARM::convertDoubleToInt32(const FloatRegister &src, const Register
     }
 }
 
+// Checks whether a float32 is representable as a 32-bit integer. If so, the
+// integer is written to the output register. Otherwise, a bailout is taken to
+// the given snapshot. This function overwrites the scratch float register.
+void
+MacroAssemblerARM::convertFloat32ToInt32(const FloatRegister &src, const Register &dest, Label *fail, bool negativeZeroCheck)
+{
+    // convert the floating point value to an integer, if it did not fit,
+    //     then when we convert it *back* to  a float, it will have a
+    //     different value, which we can test.
+    ma_vcvt_F32_I32(src, ScratchFloatReg);
+    // move the value into the dest register.
+    ma_vxfer(ScratchFloatReg, dest);
+    ma_vcvt_I32_F32(ScratchFloatReg, ScratchFloatReg);
+    ma_vcmp_f32(src, ScratchFloatReg);
+    as_vmrs(pc);
+    ma_b(fail, Assembler::VFP_NotEqualOrUnordered);
+
+    if (negativeZeroCheck) {
+        ma_cmp(dest, Imm32(0));
+        // Test and bail for -0.0, when integer result is 0
+        // Move the top word of the double into the output reg, if it is non-zero,
+        // then the original value was -0.0
+        as_vxfer(dest, InvalidReg, src, FloatToCore, Assembler::Equal, 0);
+        ma_cmp(dest, Imm32(0x80000000), Assembler::Equal);
+        ma_b(fail, Assembler::Equal);
+    }
+}
+
 void
 MacroAssemblerARM::convertFloatToDouble(const FloatRegister &src, const FloatRegister &dest) {
     as_vcvt(VFPRegister(dest), VFPRegister(src).singleOverlay());
@@ -1484,6 +1512,11 @@ void
 MacroAssemblerARM::ma_vcmp(FloatRegister src1, FloatRegister src2, Condition cc)
 {
     as_vcmp(VFPRegister(src1), VFPRegister(src2), cc);
+}
+void
+MacroAssemblerARM::ma_vcmp_f32(FloatRegister src1, FloatRegister src2, Condition cc)
+{
+    as_vcmp(VFPRegister(src1).singleOverlay(), VFPRegister(src2).singleOverlay(), cc);
 }
 void
 MacroAssemblerARM::ma_vcmpz(FloatRegister src1, Condition cc)

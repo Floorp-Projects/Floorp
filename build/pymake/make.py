@@ -19,8 +19,10 @@ if __name__ == '__main__':
 
   # This is meant as a temporary workaround until issues with many targets
   # and prerequisites is addressed. Bug 874210 tracks.
+  #
+  # The default recursion limit for CPython is 1000.
   try:
-      sys.setrecursionlimit(2 * sys.getrecursionlimit())
+      sys.setrecursionlimit(10000)
   except Exception:
       print >>sys.stderr, 'Unable to increase Python recursion limit.'
 

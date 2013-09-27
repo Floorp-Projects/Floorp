@@ -51,7 +51,7 @@ add_test_incoming_parcel(null,
   function test_normal_parcel_handling(worker) {
     do_check_throws(function normal_handler() {
       // reads exactly the same size, should not throw anything.
-      worker.Buf.readUint32();
+      worker.Buf.readInt32();
     });
   }
 );

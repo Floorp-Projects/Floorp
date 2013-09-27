@@ -20,11 +20,9 @@
 #endif
 #include "jit/IonCompartment.h"
 #include "jit/IonInstrumentation.h"
-#include "jit/ParallelFunctions.h"
 #include "jit/VMFunctions.h"
 #include "vm/ProxyObject.h"
 #include "vm/Shape.h"
-#include "vm/TypedArrayObject.h"
 
 namespace js {
 namespace jit {
@@ -661,6 +659,14 @@ class MacroAssembler : public MacroAssemblerSpecific
         align(8);
         bind(&done);
     }
+
+    /*
+     * Call the post barrier if necessary when writing value to a slot or
+     * element of object.
+     *
+     * Returns whether the maybeScratch register was used.
+     */
+    bool maybeCallPostBarrier(Register object, ConstantOrRegister value, Register maybeScratch);
 
     void branchNurseryPtr(Condition cond, const Address &ptr1, const ImmMaybeNurseryPtr &ptr2,
                           Label *label);

@@ -141,6 +141,18 @@ function runTest()
   is(iBounds.width, 200, "i.getBoundingClientRect().width");
   is(iBounds.height, 200, "i.getBoundingClientRect().height");
 
+  var text4Bounds = doc.getElementById("text4").getBoundingClientRect();
+  is(text4Bounds.left, 0, "text4.getBoundingClientRect().left");
+  is(text4Bounds.top, 0, "text4.getBoundingClientRect().top");
+  is(text4Bounds.width, 0, "text4.getBoundingClientRect().width");
+  is(text4Bounds.height, 0, "text4.getBoundingClientRect().height");
+
+  var gBounds = doc.getElementById("g2").getBoundingClientRect();
+  is(gBounds.left, 100, "g2.getBoundingClientRect().left");
+  is(gBounds.top, 100, "g2.getBoundingClientRect().top");
+  is(gBounds.width, 50, "g2.getBoundingClientRect().width");
+  is(gBounds.height, 50, "g2.getBoundingClientRect().height");
+
   SimpleTest.finish();
 }
 

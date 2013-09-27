@@ -7,8 +7,6 @@
 #ifndef vm_GlobalObject_h
 #define vm_GlobalObject_h
 
-#include "mozilla/DebugOnly.h"
-
 #include "jsarray.h"
 #include "jsbool.h"
 #include "jsexn.h"
@@ -456,8 +454,9 @@ class GlobalObject : public JSObject
         RootedValue valCopy(cx, value);
         return JSObject::setProperty(cx, holder, holder, name, &valCopy, false);
     }
-    bool getSelfHostedFunction(JSContext *cx, const JSFunctionSpec *fs, HandleAtom atom,
-                               MutableHandleValue funVal);
+
+    bool getSelfHostedFunction(JSContext *cx, HandleAtom selfHostedName, HandleAtom name,
+                               unsigned nargs, MutableHandleValue funVal);
 
     RegExpStatics *getRegExpStatics() const {
         JSObject &resObj = getSlot(REGEXP_STATICS).toObject();

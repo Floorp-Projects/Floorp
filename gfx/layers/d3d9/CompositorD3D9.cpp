@@ -65,7 +65,7 @@ CompositorD3D9::GetTextureFactoryIdentifier()
 }
 
 bool
-CompositorD3D9::CanUseCanvasLayerForSize(const gfxIntSize &aSize)
+CompositorD3D9::CanUseCanvasLayerForSize(const IntSize &aSize)
 {
   int32_t maxTextureSize = GetMaxTextureSize();
 
@@ -565,14 +565,15 @@ CompositorD3D9::PaintToTarget()
 
   D3DLOCKED_RECT rect;
   destSurf->LockRect(&rect, NULL, D3DLOCK_READONLY);
-  mTarget->SetOperator(gfxContext::OPERATOR_SOURCE);
-  nsRefPtr<gfxImageSurface> imageSurface =
-    new gfxImageSurface((unsigned char*)rect.pBits,
-                        gfxIntSize(desc.Width, desc.Height),
-                        rect.Pitch,
-                        gfxImageFormatARGB32);
-  mTarget->SetSource(imageSurface);
-  mTarget->Paint();
+  RefPtr<DataSourceSurface> sourceSurface =
+    Factory::CreateWrappingDataSourceSurface((uint8_t*)rect.pBits,
+                                             rect.Pitch,
+                                             IntSize(desc.Width, desc.Height),
+                                             FORMAT_B8G8R8A8);
+  mTarget->CopySurface(sourceSurface,
+                       IntRect(0, 0, desc.Width, desc.Height),
+                       IntPoint());
+  mTarget->Flush();
   destSurf->UnlockRect();
 }
 

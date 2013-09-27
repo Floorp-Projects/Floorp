@@ -82,7 +82,7 @@ add_test(function test_read_cdmahome() {
     let cdmaHome = [0xc1, 0x34, 0xff, 0xff, 0x00];
 
     // Write data size
-    buf.writeUint32(cdmaHome.length * 2);
+    buf.writeInt32(cdmaHome.length * 2);
 
     // Write cdma home file.
     for (let i = 0; i < cdmaHome.length; i++) {
@@ -128,7 +128,7 @@ add_test(function test_read_cdmaspn() {
   function testReadSpn(file, expectedSpn, expectedDisplayCondition) {
     io.loadTransparentEF = function fakeLoadTransparentEF(options)  {
       // Write data size
-      buf.writeUint32(file.length * 2);
+      buf.writeInt32(file.length * 2);
 
       // Write file.
       for (let i = 0; i < file.length; i++) {

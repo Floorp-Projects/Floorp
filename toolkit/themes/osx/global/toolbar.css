@@ -41,7 +41,7 @@ toolbarseparator {
 /* ::::: toolbarpaletteitem ::::: */
 
 toolbarpaletteitem {
-  cursor: -moz-grab;
+  cursor: grab;
 }
 
 toolbar[iconsize="small"] toolbarpaletteitem[type="spacer"] {
