@@ -96,8 +96,7 @@ protected:
                             nsHTMLReflowMetrics& aDesiredSize,
                             const nsHTMLReflowState& aButtonReflowState,
                             nsIFrame* aFirstKid,
-                            nsMargin aFocusPadding,
-                            nsReflowStatus& aStatus);
+                            nsMargin aFocusPadding);
 
   nsButtonFrameRenderer mRenderer;
 };
