@@ -723,13 +723,13 @@ nsDOMEvent::DuplicatePrivateData()
     }
     case NS_ANIMATION_EVENT:
     {
-      nsAnimationEvent* oldAnimationEvent =
-        static_cast<nsAnimationEvent*>(mEvent);
-      nsAnimationEvent* animationEvent =
-        new nsAnimationEvent(false, msg,
-                             oldAnimationEvent->animationName,
-                             oldAnimationEvent->elapsedTime,
-                             oldAnimationEvent->pseudoElement);
+      InternalAnimationEvent* oldAnimationEvent =
+        static_cast<InternalAnimationEvent*>(mEvent);
+      InternalAnimationEvent* animationEvent =
+        new InternalAnimationEvent(false, msg,
+                                   oldAnimationEvent->animationName,
+                                   oldAnimationEvent->elapsedTime,
+                                   oldAnimationEvent->pseudoElement);
       animationEvent->AssignAnimationEventData(*oldAnimationEvent, true);
       newEvent = animationEvent;
       break;
