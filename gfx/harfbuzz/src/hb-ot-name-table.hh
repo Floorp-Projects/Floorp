@@ -74,7 +74,7 @@ struct NameRecord
 
 struct name
 {
-  static const hb_tag_t tableTag	= HB_OT_TAG_name;
+  static const hb_tag_t Tag	= HB_OT_TAG_name;
 
   inline unsigned int get_name (unsigned int platform_id,
 				unsigned int encoding_id,
@@ -98,9 +98,6 @@ struct name
     return length;
   }
 
-  inline unsigned int get_size (void) const
-  { return min_size + count * nameRecord[0].min_size; }
-
   inline bool sanitize_records (hb_sanitize_context_t *c) {
     TRACE_SANITIZE (this);
     char *string_pool = (char *) this + stringOffset;
@@ -119,6 +116,7 @@ struct name
   }
 
   /* We only implement format 0 for now. */
+  protected:
   USHORT	format;			/* Format selector (=0/1). */
   USHORT	count;			/* Number of name records. */
   Offset	stringOffset;		/* Offset to start of string storage (from start of table). */

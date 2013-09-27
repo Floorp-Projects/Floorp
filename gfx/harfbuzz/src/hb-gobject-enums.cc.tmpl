@@ -45,12 +45,13 @@
 /*** END file-production ***/
 
 /*** BEGIN value-header ***/
+inline static /* TODO(behdad) disable these for now until we fix them... */
 GType
 @enum_name@_get_type (void)
 {
-  static gsize type_id = 0;
+  static volatile gsize g_define_type_id__volatile = 0;
 
-  if (g_once_init_enter (&type_id))
+  if (g_once_init_enter (&g_define_type_id__volatile))
     {
       static const G@Type@Value values[] = {
 /*** END value-header ***/
@@ -62,12 +63,12 @@ GType
 /*** BEGIN value-tail ***/
         { 0, NULL, NULL }
       };
-      GType id =
+      GType g_define_type_id =
         g_@type@_register_static (g_intern_static_string ("@EnumName@"), values);
-      g_once_init_leave (&type_id, id);
+      g_once_init_leave (&g_define_type_id__volatile, g_define_type_id);
     }
 
-  return type_id;
+  return g_define_type_id__volatile;
 }
 
 /*** END value-tail ***/

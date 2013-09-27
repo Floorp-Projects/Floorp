@@ -36,8 +36,6 @@
 HB_BEGIN_DECLS
 
 
-#define HB_SET_VALUE_INVALID ((hb_codepoint_t) -1)
-
 typedef struct hb_set_t hb_set_t;
 
 

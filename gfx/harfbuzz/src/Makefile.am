@@ -28,8 +28,6 @@ HBSOURCES =  \
 	hb-cache-private.hh \
 	hb-common.cc \
 	hb-fallback-shape.cc \
-	hb-face-private.hh \
-	hb-face.cc \
 	hb-font-private.hh \
 	hb-font.cc \
 	hb-mutex-private.hh \
@@ -63,8 +61,6 @@ HBHEADERS = \
 	hb-blob.h \
 	hb-buffer.h \
 	hb-common.h \
-	hb-deprecated.h \
-	hb-face.h \
 	hb-font.h \
 	hb-set.h \
 	hb-shape.h \
@@ -83,7 +79,6 @@ HBSOURCES += \
 	hb-ot-layout-gpos-table.hh \
 	hb-ot-layout-gsubgpos-private.hh \
 	hb-ot-layout-gsub-table.hh \
-	hb-ot-layout-jstf-table.hh \
 	hb-ot-layout-private.hh \
 	hb-ot-map.cc \
 	hb-ot-map-private.hh \
@@ -127,6 +122,28 @@ HBSOURCES += hb-glib.cc
 HBHEADERS += hb-glib.h
 endif
 
+if HAVE_GOBJECT
+HBCFLAGS += $(GOBJECT_CFLAGS)
+HBLIBS   += $(GOBJECT_LIBS)
+HBSOURCES += hb-gobject-structs.cc
+nodist_HBSOURCES = hb-gobject-enums.cc
+HBHEADERS += hb-gobject.h
+BUILT_SOURCES += hb-gobject-enums.cc
+EXTRA_DIST += hb-gobject-enums.cc.tmpl
+DISTCLEANFILES += hb-gobject-enums.cc
+
+hb-gobject-enums.cc: hb-gobject-enums.cc.tmpl $(HBHEADERS)
+	$(AM_V_GEN) $(GLIB_MKENUMS) --template $^ > "$@.tmp" && \
+	mv "$@.tmp" "$@" || ( $(RM) "@.tmp" && false )
+endif
+
+if HAVE_ICU
+HBCFLAGS += $(ICU_CFLAGS)
+HBLIBS   += $(ICU_LIBS)
+HBSOURCES += hb-icu.cc
+HBHEADERS += hb-icu.h
+endif
+
 if HAVE_FREETYPE
 HBCFLAGS += $(FREETYPE_CFLAGS)
 HBLIBS   += $(FREETYPE_LIBS)
@@ -155,6 +172,22 @@ HBSOURCES += hb-coretext.cc
 HBHEADERS += hb-coretext.h
 endif
 
+if HAVE_HB_OLD
+SUBDIRS += hb-old
+HBCFLAGS += -I$(srcdir)/hb-old
+HBLIBS   += hb-old/libhb-old.la
+HBSOURCES += hb-old.cc
+endif
+DIST_SUBDIRS += hb-old
+
+if HAVE_ICU_LE
+SUBDIRS += hb-icu-le
+HBCFLAGS += -I$(srcdir)/hb-icu-le
+HBLIBS   += hb-icu-le/libhb-icu-le.la
+HBSOURCES += hb-icu-le.cc
+endif
+DIST_SUBDIRS += hb-icu-le
+
 if HAVE_UCDN
 SUBDIRS += hb-ucdn
 HBCFLAGS += -I$(srcdir)/hb-ucdn
@@ -171,6 +204,9 @@ export_symbols = -export-symbols harfbuzz.def
 harfbuzz_def_dependency = harfbuzz.def
 libharfbuzz_la_LINK = $(CXXLINK) $(libharfbuzz_la_LDFLAGS)
 else
+if HAVE_ICU
+libharfbuzz_la_LINK = $(CXXLINK) $(libharfbuzz_la_LDFLAGS)
+else
 # Use a C linker for GCC, not C++; Don't link to libstdc++
 if HAVE_GCC
 libharfbuzz_la_LINK = $(LINK) $(libharfbuzz_la_LDFLAGS)
@@ -178,74 +214,16 @@ else
 libharfbuzz_la_LINK = $(CXXLINK) $(libharfbuzz_la_LDFLAGS)
 endif
 endif
+endif
 
 libharfbuzz_la_SOURCES = $(HBSOURCES) $(HBHEADERS) $(HBNODISTHEADERS)
+nodist_libharfbuzz_la_SOURCES = $(nodist_HBSOURCES)
 libharfbuzz_la_CPPFLAGS = $(HBCFLAGS)
 libharfbuzz_la_LDFLAGS = $(AM_LDFLAGS) -version-info $(HB_LIBTOOL_VERSION_INFO) $(export_symbols) -no-undefined
 libharfbuzz_la_LIBADD = $(HBLIBS)
 EXTRA_libharfbuzz_la_DEPENDENCIES = $(harfbuzz_def_dependency)
 pkginclude_HEADERS = $(HBHEADERS)
 nodist_pkginclude_HEADERS = $(HBNODISTHEADERS)
-pkgconfigdir = $(libdir)/pkgconfig
-pkgconfig_DATA = harfbuzz.pc
-EXTRA_DIST += harfbuzz.pc.in
-
-if HAVE_ICU
-lib_LTLIBRARIES += libharfbuzz-icu.la
-libharfbuzz_icu_la_SOURCES = hb-icu.cc
-libharfbuzz_icu_la_CPPFLAGS = $(ICU_CFLAGS)
-libharfbuzz_icu_la_LDFLAGS = $(AM_LDFLAGS) -version-info $(HB_LIBTOOL_VERSION_INFO) -no-undefined
-libharfbuzz_icu_la_LIBADD = $(ICU_LIBS) libharfbuzz.la
-pkginclude_HEADERS += hb-icu.h
-pkgconfig_DATA += harfbuzz-icu.pc
-endif
-EXTRA_DIST += harfbuzz-icu.pc.in
-
-if HAVE_GOBJECT
-lib_LTLIBRARIES += libharfbuzz-gobject.la
-libharfbuzz_gobject_la_SOURCES = hb-gobject-structs.cc
-nodist_libharfbuzz_gobject_la_SOURCES = hb-gobject-enums.cc
-libharfbuzz_gobject_la_CPPFLAGS = $(GOBJECT_CFLAGS)
-libharfbuzz_gobject_la_LDFLAGS = $(AM_LDFLAGS) -version-info $(HB_LIBTOOL_VERSION_INFO) -no-undefined
-libharfbuzz_gobject_la_LIBADD = $(GOBJECT_LIBS) libharfbuzz.la
-pkginclude_HEADERS += hb-gobject.h hb-gobject-structs.h
-nodist_pkginclude_HEADERS += hb-gobject-enums.h
-pkgconfig_DATA += harfbuzz-gobject.pc
-
-BUILT_SOURCES += \
-	hb-gobject-enums.cc \
-	hb-gobject-enums.h \
-	$(NULL)
-DISTCLEANFILES += \
-	hb-gobject-enums.cc \
-	hb-gobject-enums.h \
-	$(NULL)
-hb-gobject-enums.%: hb-gobject-enums.%.tmpl $(HBHEADERS)
-	$(AM_V_GEN) $(GLIB_MKENUMS) \
-		--identifier-prefix hb_ --symbol-prefix hb_gobject \
-		--template $^ | \
-	sed 's/_t_get_type/_get_type/g; s/_T (/ (/g' > "$@.tmp" && \
-	mv "$@.tmp" "$@" || ( $(RM) "@.tmp" && false )
-endif
-EXTRA_DIST += \
-	harfbuzz-gobject.pc.in \
-	hb-gobject-enums.cc.tmpl \
-	hb-gobject-enums.h.tmpl \
-	$(NULL)
-
-
-%.pc: %.pc.in $(top_builddir)/config.status
-	$(AM_V_GEN) \
-	$(SED)	-e 's@%prefix%@$(prefix)@g' \
-		-e 's@%exec_prefix%@$(exec_prefix)@g' \
-		-e 's@%libdir%@$(libdir)@g' \
-		-e 's@%includedir%@$(includedir)@g' \
-		-e 's@%VERSION%@$(VERSION)@g' \
-	"$<" \
-	> "$@.tmp" && mv "$@.tmp" "$@" || ( $(RM) "$@.tmp"; false )
-
-CLEANFILES += $(pkgconfig_DATA)
-
 
 CLEANFILES += harfbuzz.def
 harfbuzz.def: $(HBHEADERS) $(HBNODISTHEADERS)
@@ -263,6 +241,7 @@ GENERATORS = \
 	gen-arabic-table.py \
 	gen-indic-table.py \
 	$(NULL)
+
 EXTRA_DIST += $(GENERATORS)
 
 unicode-tables: arabic-table indic-table
@@ -294,7 +273,7 @@ EXTRA_DIST += \
 	hb-ot-shape-complex-myanmar-machine.rl \
 	hb-ot-shape-complex-sea-machine.rl \
 	$(NULL)
-.rl.hh:
+%.hh: %.rl
 	$(AM_V_GEN)$(top_srcdir)/missing --run ragel -e -F1 -o "$@.tmp" "$<" && \
 	mv "$@.tmp" "$@" || ( $(RM) "$@.tmp" && false )
 
@@ -329,13 +308,20 @@ test_buffer_serialize_LDADD = libharfbuzz.la $(HBLIBS)
 
 dist_check_SCRIPTS = \
 	check-c-linkage-decls.sh \
-	check-defs.sh \
 	check-header-guards.sh \
 	check-includes.sh \
-	check-libstdc++.sh \
-	check-static-inits.sh \
 	check-symbols.sh \
 	$(NULL)
+
+if HAVE_ICU
+else
+dist_check_SCRIPTS += check-libstdc++.sh
+endif
+
+if HAVE_ICU_LE
+else
+dist_check_SCRIPTS += check-static-inits.sh
+endif
 
 TESTS = $(dist_check_SCRIPTS)
 TESTS_ENVIRONMENT = \
@@ -345,47 +331,26 @@ TESTS_ENVIRONMENT = \
 	HBHEADERS="$(HBHEADERS) $(HBNODISTHEADERS)" \
 	$(NULL)
 
-if HAVE_INTROSPECTION
-
--include $(INTROSPECTION_MAKEFILE)
-INTROSPECTION_GIRS = HarfBuzz-$(HB_VERSION_MAJOR).0.gir # What does the 0 mean anyway?!
-INTROSPECTION_SCANNER_ARGS = -I$(srcdir) -n hb --identifier-prefix=hb_ --warn-all
-INTROSPECTION_COMPILER_ARGS = --includedir=$(srcdir)
-
-HarfBuzz-0.0.gir: libharfbuzz.la libharfbuzz-gobject.la
-HarfBuzz_0_0_gir_INCLUDES = GObject-2.0
-HarfBuzz_0_0_gir_CFLAGS = \
-	$(INCLUDES) \
-	$(HBCFLAGS) \
-	-DHB_H \
-	-DHB_H_IN \
-	-DHB_OT_H \
-	-DHB_OT_H_IN \
-	-DHB_GOBJECT_H \
-	-DHB_GOBJECT_H_IN \
-	$(NULL)
-HarfBuzz_0_0_gir_LIBS = \
-	libharfbuzz.la \
-	libharfbuzz-gobject.la \
-	$(NULL)
-HarfBuzz_0_0_gir_FILES = \
-	$(HBHEADERS) \
-	$(HBNODISTHEADERS) \
-	$(HBSOURCES) \
-	hb-gobject-enums.cc \
-	hb-gobject-enums.h \
-	hb-gobject-structs.cc \
-	hb-gobject-structs.h \
-	$(NULL)
-
-girdir = $(datadir)/gir-1.0
-gir_DATA = $(INTROSPECTION_GIRS)
-
-typelibdir = $(libdir)/girepository-1.0
-typelib_DATA = $(INTROSPECTION_GIRS:.gir=.typelib)
-
-CLEANFILES += $(gir_DATA) $(typelib_DATA)
-
-endif
+#-include $(INTROSPECTION_MAKEFILE)
+#INTROSPECTION_GIRS = hb-1.0.gir
+#INTROSPECTION_SCANNER_ARGS = -I$(srcdir) -n hb --identifier-prefix=hb_
+#INTROSPECTION_COMPILER_ARGS = --includedir=$(srcdir)
+#
+#if HAVE_INTROSPECTION
+#
+#hb-1.0.gir: libharfbuzz.la
+#hb_1_0_gir_INCLUDES = GObject-2.0
+#hb_1_0_gir_CFLAGS = $(INCLUDES) $(HBCFLAGS) -DHB_H -DHB_H_IN -DHB_OT_H -DHB_OT_H_IN
+#hb_1_0_gir_LIBS = libharfbuzz.la
+#hb_1_0_gir_FILES = $(HBHEADERS) $(HBNODISTHEADERS)
+#
+#girdir = $(datadir)/gir-1.0
+#gir_DATA = $(INTROSPECTION_GIRS)
+#
+#typelibdir = $(libdir)/girepository-1.0
+#typelib_DATA = $(INTROSPECTION_GIRS:.gir=.typelib)
+#
+#CLEANFILES += $(gir_DATA) $(typelib_DATA)
+#endif
 
 -include $(top_srcdir)/git.mk

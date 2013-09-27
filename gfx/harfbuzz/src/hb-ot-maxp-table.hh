@@ -41,7 +41,7 @@ namespace OT {
 
 struct maxp
 {
-  static const hb_tag_t tableTag	= HB_OT_TAG_maxp;
+  static const hb_tag_t Tag	= HB_OT_TAG_maxp;
 
   inline unsigned int get_num_glyphs (void) const {
     return numGlyphs;

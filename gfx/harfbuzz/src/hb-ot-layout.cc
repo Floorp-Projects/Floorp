@@ -2,7 +2,7 @@
  * Copyright © 1998-2004  David Turner and Werner Lemberg
  * Copyright © 2006  Behdad Esfahbod
  * Copyright © 2007,2008,2009  Red Hat, Inc.
- * Copyright © 2012,2013  Google, Inc.
+ * Copyright © 2012  Google, Inc.
  *
  *  This is part of HarfBuzz, a text shaping library.
  *
@@ -33,9 +33,6 @@
 #include "hb-ot-layout-gdef-table.hh"
 #include "hb-ot-layout-gsub-table.hh"
 #include "hb-ot-layout-gpos-table.hh"
-#include "hb-ot-layout-jstf-table.hh"
-
-#include "hb-ot-map-private.hh"
 
 #include <stdlib.h>
 #include <string.h>
@@ -62,20 +59,26 @@ _hb_ot_layout_create (hb_face_t *face)
   layout->gsub_lookup_count = layout->gsub->get_lookup_count ();
   layout->gpos_lookup_count = layout->gpos->get_lookup_count ();
 
-  layout->gsub_accels = (hb_ot_layout_lookup_accelerator_t *) calloc (layout->gsub->get_lookup_count (), sizeof (hb_ot_layout_lookup_accelerator_t));
-  layout->gpos_accels = (hb_ot_layout_lookup_accelerator_t *) calloc (layout->gpos->get_lookup_count (), sizeof (hb_ot_layout_lookup_accelerator_t));
+  layout->gsub_digests = (hb_set_digest_t *) calloc (layout->gsub->get_lookup_count (), sizeof (hb_set_digest_t));
+  layout->gpos_digests = (hb_set_digest_t *) calloc (layout->gpos->get_lookup_count (), sizeof (hb_set_digest_t));
 
-  if (unlikely ((layout->gsub_lookup_count && !layout->gsub_accels) ||
-		(layout->gpos_lookup_count && !layout->gpos_accels)))
+  if (unlikely ((layout->gsub_lookup_count && !layout->gsub_digests) ||
+		(layout->gpos_lookup_count && !layout->gpos_digests)))
   {
     _hb_ot_layout_destroy (layout);
     return NULL;
   }
 
   for (unsigned int i = 0; i < layout->gsub_lookup_count; i++)
-    layout->gsub_accels[i].init (layout->gsub->get_lookup (i));
+  {
+    layout->gsub_digests[i].init ();
+    layout->gsub->get_lookup (i).add_coverage (&layout->gsub_digests[i]);
+  }
   for (unsigned int i = 0; i < layout->gpos_lookup_count; i++)
-    layout->gpos_accels[i].init (layout->gpos->get_lookup (i));
+  {
+    layout->gpos_digests[i].init ();
+    layout->gpos->get_lookup (i).add_coverage (&layout->gpos_digests[i]);
+  }
 
   return layout;
 }
@@ -83,17 +86,12 @@ _hb_ot_layout_create (hb_face_t *face)
 void
 _hb_ot_layout_destroy (hb_ot_layout_t *layout)
 {
-  for (unsigned int i = 0; i < layout->gsub_lookup_count; i++)
-    layout->gsub_accels[i].fini (layout->gsub->get_lookup (i));
-  for (unsigned int i = 0; i < layout->gpos_lookup_count; i++)
-    layout->gpos_accels[i].fini (layout->gpos->get_lookup (i));
-
-  free (layout->gsub_accels);
-  free (layout->gpos_accels);
-
   hb_blob_destroy (layout->gdef_blob);
   hb_blob_destroy (layout->gsub_blob);
   hb_blob_destroy (layout->gpos_blob);
+
+  free (layout->gsub_digests);
+  free (layout->gpos_digests);
 
   free (layout);
 }
@@ -447,19 +445,19 @@ _hb_ot_layout_collect_lookups_features (hb_face_t      *face,
 					const hb_tag_t *features,
 					hb_set_t       *lookup_indexes /* OUT */)
 {
+  unsigned int required_feature_index;
+  if (hb_ot_layout_language_get_required_feature_index (face,
+							table_tag,
+							script_index,
+							language_index,
+							&required_feature_index))
+    _hb_ot_layout_collect_lookups_lookups (face,
+					   table_tag,
+					   required_feature_index,
+					   lookup_indexes);
+
   if (!features)
   {
-    unsigned int required_feature_index;
-    if (hb_ot_layout_language_get_required_feature_index (face,
-							  table_tag,
-							  script_index,
-							  language_index,
-							  &required_feature_index))
-      _hb_ot_layout_collect_lookups_lookups (face,
-					     table_tag,
-					     required_feature_index,
-					     lookup_indexes);
-
     /* All features */
     unsigned int feature_indices[32];
     unsigned int offset, len;
@@ -615,13 +613,13 @@ hb_ot_layout_lookup_collect_glyphs (hb_face_t    *face,
     case HB_OT_TAG_GSUB:
     {
       const OT::SubstLookup& l = hb_ot_layout_from_face (face)->gsub->get_lookup (lookup_index);
-      l.collect_glyphs (&c);
+      l.collect_glyphs_lookup (&c);
       return;
     }
     case HB_OT_TAG_GPOS:
     {
       const OT::PosLookup& l = hb_ot_layout_from_face (face)->gpos->get_lookup (lookup_index);
-      l.collect_glyphs (&c);
+      l.collect_glyphs_lookup (&c);
       return;
     }
   }
@@ -661,13 +659,29 @@ hb_ot_layout_lookup_would_substitute_fast (hb_face_t            *face,
 
   const OT::SubstLookup& l = hb_ot_layout_from_face (face)->gsub->get_lookup (lookup_index);
 
-  return l.would_apply (&c, &hb_ot_layout_from_face (face)->gsub_accels[lookup_index].digest);
+  return l.would_apply (&c, &hb_ot_layout_from_face (face)->gsub_digests[lookup_index]);
 }
 
 void
 hb_ot_layout_substitute_start (hb_font_t *font, hb_buffer_t *buffer)
 {
   OT::GSUB::substitute_start (font, buffer);
+}
+
+hb_bool_t
+hb_ot_layout_substitute_lookup (hb_font_t    *font,
+				hb_buffer_t  *buffer,
+				unsigned int  lookup_index,
+				hb_mask_t     mask,
+				hb_bool_t     auto_zwj)
+{
+  if (unlikely (lookup_index >= hb_ot_layout_from_face (font->face)->gsub_lookup_count)) return false;
+
+  OT::hb_apply_context_t c (0, font, buffer, mask, auto_zwj);
+
+  const OT::SubstLookup& l = hb_ot_layout_from_face (font->face)->gsub->get_lookup (lookup_index);
+
+  return l.apply_string (&c, &hb_ot_layout_from_face (font->face)->gsub_digests[lookup_index]);
 }
 
 void
@@ -702,6 +716,22 @@ void
 hb_ot_layout_position_start (hb_font_t *font, hb_buffer_t *buffer)
 {
   OT::GPOS::position_start (font, buffer);
+}
+
+hb_bool_t
+hb_ot_layout_position_lookup (hb_font_t    *font,
+			      hb_buffer_t  *buffer,
+			      unsigned int  lookup_index,
+			      hb_mask_t     mask,
+			      hb_bool_t     auto_zwj)
+{
+  if (unlikely (lookup_index >= hb_ot_layout_from_face (font->face)->gpos_lookup_count)) return false;
+
+  OT::hb_apply_context_t c (1, font, buffer, mask, auto_zwj);
+
+  const OT::PosLookup& l = hb_ot_layout_from_face (font->face)->gpos->get_lookup (lookup_index);
+
+  return l.apply_string (&c, &hb_ot_layout_from_face (font->face)->gpos_digests[lookup_index]);
 }
 
 void
@@ -753,159 +783,4 @@ hb_ot_layout_get_size_params (hb_face_t    *face,
 #undef PARAM
 
   return false;
-}
-
-
-/*
- * Parts of different types are implemented here such that they have direct
- * access to GSUB/GPOS lookups.
- */
-
-
-struct GSUBProxy
-{
-  static const unsigned int table_index = 0;
-  typedef OT::SubstLookup Lookup;
-
-  GSUBProxy (hb_face_t *face) :
-    table (*hb_ot_layout_from_face (face)->gsub),
-    accels (hb_ot_layout_from_face (face)->gsub_accels) {}
-
-  const OT::GSUB &table;
-  const hb_ot_layout_lookup_accelerator_t *accels;
-};
-
-struct GPOSProxy
-{
-  static const unsigned int table_index = 1;
-  typedef OT::PosLookup Lookup;
-
-  GPOSProxy (hb_face_t *face) :
-    table (*hb_ot_layout_from_face (face)->gpos),
-    accels (hb_ot_layout_from_face (face)->gpos_accels) {}
-
-  const OT::GPOS &table;
-  const hb_ot_layout_lookup_accelerator_t *accels;
-};
-
-
-template <typename Lookup>
-static inline bool apply_once (OT::hb_apply_context_t *c,
-			       const Lookup &lookup)
-{
-  if (!c->check_glyph_property (&c->buffer->cur(), c->lookup_props))
-    return false;
-  return lookup.dispatch (c);
-}
-
-template <typename Proxy>
-static inline bool
-apply_string (OT::hb_apply_context_t *c,
-	      const typename Proxy::Lookup &lookup,
-	      const hb_ot_layout_lookup_accelerator_t &accel)
-{
-  bool ret = false;
-  OT::hb_is_inplace_context_t inplace_c (c->face);
-  bool inplace = lookup.is_inplace (&inplace_c);
-
-  if (unlikely (!c->buffer->len || !c->lookup_mask))
-    return false;
-
-  c->set_lookup (lookup);
-
-  if (likely (!lookup.is_reverse ()))
-  {
-    /* in/out forward substitution/positioning */
-    if (Proxy::table_index == 0)
-      c->buffer->clear_output ();
-    c->buffer->idx = 0;
-
-    while (c->buffer->idx < c->buffer->len)
-    {
-      if (accel.digest.may_have (c->buffer->cur().codepoint) &&
-	  (c->buffer->cur().mask & c->lookup_mask) &&
-	  apply_once (c, lookup))
-	ret = true;
-      else
-	c->buffer->next_glyph ();
-    }
-    if (ret)
-    {
-      if (!inplace)
-	c->buffer->swap_buffers ();
-      else
-        assert (!c->buffer->has_separate_output ());
-    }
-  }
-  else
-  {
-    /* in-place backward substitution/positioning */
-    if (Proxy::table_index == 0)
-      c->buffer->remove_output ();
-    c->buffer->idx = c->buffer->len - 1;
-    do
-    {
-      if (accel.digest.may_have (c->buffer->cur().codepoint) &&
-	  (c->buffer->cur().mask & c->lookup_mask) &&
-	  apply_once (c, lookup))
-	ret = true;
-      else
-	c->buffer->idx--;
-
-    }
-    while ((int) c->buffer->idx >= 0);
-  }
-
-  return ret;
-}
-
-template <typename Proxy>
-inline void hb_ot_map_t::apply (const Proxy &proxy,
-				const hb_ot_shape_plan_t *plan,
-				hb_font_t *font,
-				hb_buffer_t *buffer) const
-{
-  const unsigned int table_index = proxy.table_index;
-  unsigned int i = 0;
-  OT::hb_apply_context_t c (table_index, font, buffer);
-  c.set_recurse_func (Proxy::Lookup::apply_recurse_func);
-
-  for (unsigned int stage_index = 0; stage_index < stages[table_index].len; stage_index++) {
-    const stage_map_t *stage = &stages[table_index][stage_index];
-    for (; i < stage->last_lookup; i++)
-    {
-      unsigned int lookup_index = lookups[table_index][i].index;
-      c.set_lookup_mask (lookups[table_index][i].mask);
-      c.set_auto_zwj (lookups[table_index][i].auto_zwj);
-      apply_string<Proxy> (&c,
-			   proxy.table.get_lookup (lookup_index),
-			   proxy.accels[lookup_index]);
-    }
-
-    if (stage->pause_func)
-    {
-      buffer->clear_output ();
-      stage->pause_func (plan, font, buffer);
-    }
-  }
-}
-
-void hb_ot_map_t::substitute (const hb_ot_shape_plan_t *plan, hb_font_t *font, hb_buffer_t *buffer) const
-{
-  GSUBProxy proxy (font->face);
-  apply (proxy, plan, font, buffer);
-}
-
-void hb_ot_map_t::position (const hb_ot_shape_plan_t *plan, hb_font_t *font, hb_buffer_t *buffer) const
-{
-  GPOSProxy proxy (font->face);
-  apply (proxy, plan, font, buffer);
-}
-
-HB_INTERNAL void
-hb_ot_layout_substitute_lookup (OT::hb_apply_context_t *c,
-				const OT::SubstLookup &lookup,
-				const hb_ot_layout_lookup_accelerator_t &accel)
-{
-  apply_string<GSUBProxy> (c, lookup, accel);
 }

@@ -248,7 +248,7 @@ typedef hb_bool_t			(*hb_unicode_decompose_func_t)		(hb_unicode_funcs_t *ufuncs,
 
 /**
  * hb_unicode_decompose_compatibility_func_t:
- * @ufuncs: a Unicode function structure
+ * @ufuncs: Unicode function structure
  * @u: codepoint to decompose
  * @decomposed: address of codepoint array (of length %HB_UNICODE_MAX_DECOMPOSITION_LEN) to write decomposition into
  * @user_data: user data pointer as passed to hb_unicode_funcs_set_decompose_compatibility_func()
@@ -274,132 +274,44 @@ typedef unsigned int			(*hb_unicode_decompose_compatibility_func_t)	(hb_unicode_
 
 /* setters */
 
-/**
- * hb_unicode_funcs_set_combining_class_func:
- * @ufuncs: a Unicode function structure
- * @func: (closure user_data) (destroy destroy) (scope notified):
- * @user_data:
- * @destroy:
- *
- * 
- *
- * Since: 1.0
- **/
 void
 hb_unicode_funcs_set_combining_class_func (hb_unicode_funcs_t *ufuncs,
-					   hb_unicode_combining_class_func_t func,
+					   hb_unicode_combining_class_func_t combining_class_func,
 					   void *user_data, hb_destroy_func_t destroy);
 
-/**
- * hb_unicode_funcs_set_eastasian_width_func:
- * @ufuncs: a Unicode function structure
- * @func: (closure user_data) (destroy destroy) (scope notified):
- * @user_data:
- * @destroy:
- *
- * 
- *
- * Since: 1.0
- **/
 void
 hb_unicode_funcs_set_eastasian_width_func (hb_unicode_funcs_t *ufuncs,
-					   hb_unicode_eastasian_width_func_t func,
+					   hb_unicode_eastasian_width_func_t eastasian_width_func,
 					   void *user_data, hb_destroy_func_t destroy);
 
-/**
- * hb_unicode_funcs_set_general_category_func:
- * @ufuncs: a Unicode function structure
- * @func: (closure user_data) (destroy destroy) (scope notified):
- * @user_data:
- * @destroy:
- *
- * 
- *
- * Since: 1.0
- **/
 void
 hb_unicode_funcs_set_general_category_func (hb_unicode_funcs_t *ufuncs,
-					    hb_unicode_general_category_func_t func,
+					    hb_unicode_general_category_func_t general_category_func,
 					    void *user_data, hb_destroy_func_t destroy);
 
-/**
- * hb_unicode_funcs_set_mirroring_func:
- * @ufuncs: a Unicode function structure
- * @func: (closure user_data) (destroy destroy) (scope notified):
- * @user_data:
- * @destroy:
- *
- * 
- *
- * Since: 1.0
- **/
 void
 hb_unicode_funcs_set_mirroring_func (hb_unicode_funcs_t *ufuncs,
-				     hb_unicode_mirroring_func_t func,
+				     hb_unicode_mirroring_func_t mirroring_func,
 				     void *user_data, hb_destroy_func_t destroy);
 
-/**
- * hb_unicode_funcs_set_script_func:
- * @ufuncs: a Unicode function structure
- * @func: (closure user_data) (destroy destroy) (scope notified):
- * @user_data:
- * @destroy:
- *
- * 
- *
- * Since: 1.0
- **/
 void
 hb_unicode_funcs_set_script_func (hb_unicode_funcs_t *ufuncs,
-				  hb_unicode_script_func_t func,
+				  hb_unicode_script_func_t script_func,
 				  void *user_data, hb_destroy_func_t destroy);
 
-/**
- * hb_unicode_funcs_set_compose_func:
- * @ufuncs: a Unicode function structure
- * @func: (closure user_data) (destroy destroy) (scope notified):
- * @user_data:
- * @destroy:
- *
- * 
- *
- * Since: 1.0
- **/
 void
 hb_unicode_funcs_set_compose_func (hb_unicode_funcs_t *ufuncs,
-				   hb_unicode_compose_func_t func,
+				   hb_unicode_compose_func_t compose_func,
 				   void *user_data, hb_destroy_func_t destroy);
 
-/**
- * hb_unicode_funcs_set_decompose_func:
- * @ufuncs: a Unicode function structure
- * @func: (closure user_data) (destroy destroy) (scope notified):
- * @user_data:
- * @destroy:
- *
- * 
- *
- * Since: 1.0
- **/
 void
 hb_unicode_funcs_set_decompose_func (hb_unicode_funcs_t *ufuncs,
-				     hb_unicode_decompose_func_t func,
+				     hb_unicode_decompose_func_t decompose_func,
 				     void *user_data, hb_destroy_func_t destroy);
 
-/**
- * hb_unicode_funcs_set_decompose_compatibility_func:
- * @ufuncs: a Unicode function structure
- * @func: (closure user_data) (destroy destroy) (scope notified):
- * @user_data:
- * @destroy:
- *
- * 
- *
- * Since: 1.0
- **/
 void
 hb_unicode_funcs_set_decompose_compatibility_func (hb_unicode_funcs_t *ufuncs,
-						   hb_unicode_decompose_compatibility_func_t func,
+						   hb_unicode_decompose_compatibility_func_t decompose_compatibility_func,
 						   void *user_data, hb_destroy_func_t destroy);
 
 /* accessors */

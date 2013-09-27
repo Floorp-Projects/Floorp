@@ -642,21 +642,15 @@ struct LongOffset : ULONG
 /* CheckSum */
 struct CheckSum : ULONG
 {
-  /* This is reference implementation from the spec. */
-  static inline uint32_t CalcTableChecksum (const ULONG *Table, uint32_t Length)
+  static uint32_t CalcTableChecksum (ULONG *Table, uint32_t Length)
   {
     uint32_t Sum = 0L;
-    const ULONG *EndPtr = Table+((Length+3) & ~3) / ULONG::static_size;
+    ULONG *EndPtr = Table+((Length+3) & ~3) / ULONG::static_size;
 
     while (Table < EndPtr)
       Sum += *Table++;
     return Sum;
   }
-
-  /* Note: data should be 4byte aligned and have 4byte padding at the end. */
-  inline void set_for_data (const void *data, unsigned int length)
-  { set (CalcTableChecksum ((const ULONG *) data, length)); }
-
   public:
   DEFINE_SIZE_STATIC (4);
 };
