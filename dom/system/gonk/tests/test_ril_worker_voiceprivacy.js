@@ -72,7 +72,7 @@ add_test(function test_queryVoicePrivacyMode_success_enabled_true() {
   let workerHelper = _getWorker();
   let worker = workerHelper.worker;
 
-  worker.Buf.readUint32List = function fakeReadUint32List() {
+  worker.Buf.readInt32List = function fakeReadUint32List() {
     return [1];
   };
 
@@ -95,7 +95,7 @@ add_test(function test_queryVoicePrivacyMode_success_enabled_false() {
   let workerHelper = _getWorker();
   let worker = workerHelper.worker;
 
-  worker.Buf.readUint32List = function fakeReadUint32List() {
+  worker.Buf.readInt32List = function fakeReadUint32List() {
     return [0];
   };
 
