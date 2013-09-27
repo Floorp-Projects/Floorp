@@ -487,9 +487,9 @@ struct ParamTraits<nsIMEUpdatePreference>
 };
 
 template<>
-struct ParamTraits<nsPluginEvent>
+struct ParamTraits<mozilla::WidgetPluginEvent>
 {
-  typedef nsPluginEvent paramType;
+  typedef mozilla::WidgetPluginEvent paramType;
 
   static void Write(Message* aMsg, const paramType& aParam)
   {
