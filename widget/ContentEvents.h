@@ -253,6 +253,5 @@ typedef mozilla::InternalScrollPortEvent  nsScrollPortEvent;
 typedef mozilla::InternalScrollAreaEvent  nsScrollAreaEvent;
 typedef mozilla::InternalFormEvent        nsFormEvent;
 typedef mozilla::InternalClipboardEvent   nsClipboardEvent;
-typedef mozilla::InternalFocusEvent       nsFocusEvent;
 
 #endif // mozilla_ContentEvents_h__
