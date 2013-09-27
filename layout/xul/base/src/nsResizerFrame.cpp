@@ -20,7 +20,7 @@
 #include "nsIDocShellTreeOwner.h"
 #include "nsIBaseWindow.h"
 #include "nsPIDOMWindow.h"
-#include "nsGUIEvent.h"
+#include "mozilla/MouseEvents.h"
 #include "nsEventDispatcher.h"
 #include "nsContentUtils.h"
 #include "nsMenuPopupFrame.h"
@@ -287,7 +287,7 @@ nsResizerFrame::HandleEvent(nsPresContext* aPresContext,
   break;
 
   case NS_MOUSE_CLICK:
-    if (NS_IS_MOUSE_LEFT_CLICK(aEvent))
+    if (aEvent->IsLeftClickEvent())
     {
       MouseClicked(aPresContext, aEvent);
     }

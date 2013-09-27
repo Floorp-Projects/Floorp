@@ -243,26 +243,6 @@ nsresult NrIceMediaStream::GetActivePair(int component,
 }
 
 
-void NrIceMediaStream::EmitAllCandidates() {
-  char **attrs = 0;
-  int attrct;
-  int r;
-  r = nr_ice_media_stream_get_attributes(stream_,
-                                         &attrs, &attrct);
-  if (r) {
-    MOZ_MTLOG(ML_ERROR, "Couldn't get ICE candidates for '"
-         << name_ << "'");
-    return;
-  }
-
-  for (int i=0; i<attrct; i++) {
-    SignalCandidate(this, attrs[i]);
-    RFREE(attrs[i]);
-  }
-
-  RFREE(attrs);
-}
-
 nsresult NrIceMediaStream::GetCandidatePairs(std::vector<NrIceCandidatePair>*
                                              out_pairs) const {
   MOZ_ASSERT(out_pairs);
@@ -332,23 +312,35 @@ nsresult NrIceMediaStream::GetDefaultCandidate(int component,
   r = nr_ice_media_stream_get_default_candidate(stream_,
                                                 component, &cand);
   if (r) {
-    MOZ_MTLOG(ML_ERROR, "Couldn't get default ICE candidate for '"
-              << name_ << "'");
-    return NS_ERROR_NOT_AVAILABLE;
+    if (ctx_->generating_trickle()) {
+      // Generate default trickle candidates.
+      // draft-ivov-mmusic-trickle-ice-01.txt says to use port 9
+      // but "::" instead of "0.0.0.0". Since we don't do any
+      // IPv6 we are ignoring that for now.
+      *addrp = "0.0.0.0";
+      *portp = 9;
+    }
+    else {
+      MOZ_MTLOG(ML_ERROR, "Couldn't get default ICE candidate for '"
+                << name_ << "'");
+
+      return NS_ERROR_NOT_AVAILABLE;
+    }
   }
+  else {
+    char addr[64];  // Enough for IPv6 with colons.
+    r = nr_transport_addr_get_addrstring(&cand->addr,addr,sizeof(addr));
+    if (r)
+      return NS_ERROR_FAILURE;
 
-  char addr[64];  // Enough for IPv6 with colons.
-  r = nr_transport_addr_get_addrstring(&cand->addr,addr,sizeof(addr));
-  if (r)
-    return NS_ERROR_FAILURE;
+    int port;
+    r=nr_transport_addr_get_port(&cand->addr,&port);
+    if (r)
+      return NS_ERROR_FAILURE;
 
-  int port;
-  r=nr_transport_addr_get_port(&cand->addr,&port);
-  if (r)
-    return NS_ERROR_FAILURE;
-
-  *addrp = addr;
-  *portp = port;
+    *addrp = addr;
+    *portp = port;
+  }
 
   return NS_OK;
 }

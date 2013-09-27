@@ -67,6 +67,7 @@
 #include "mozilla/dom/workers/Workers.h"
 #include "nsJSPrincipals.h"
 #include "mozilla/Attributes.h"
+#include "mozilla/MouseEvents.h"
 
 // Interfaces Needed
 #include "nsIFrame.h"
@@ -215,6 +216,7 @@
 #include "mozilla/dom/BrowserElementDictionariesBinding.h"
 #include "mozilla/dom/FunctionBinding.h"
 #include "mozilla/dom/WindowBinding.h"
+#include "mozilla/dom/TabChild.h"
 
 #ifdef MOZ_WEBSPEECH
 #include "mozilla/dom/SpeechSynthesis.h"
@@ -2182,7 +2184,7 @@ nsGlobalWindow::SetNewDocument(nsIDocument* aDocument,
 
 #ifndef MOZ_DISABLE_CRYPTOLEGACY
   // clear smartcard events, our document has gone away.
-  if (mCrypto) {
+  if (mCrypto && XRE_GetProcessType() != GeckoProcessType_Content) {
     nsresult rv = mCrypto->SetEnableSmartCardEvents(false);
     NS_ENSURE_SUCCESS(rv, rv);
   }
@@ -2877,8 +2879,8 @@ nsGlobalWindow::PreHandleEvent(nsEventChainPreVisitor& aVisitor)
   // Handle 'active' event.
   if (!mIdleObservers.IsEmpty() &&
       aVisitor.mEvent->mFlags.mIsTrusted &&
-      (NS_IS_MOUSE_EVENT(aVisitor.mEvent) ||
-       NS_IS_DRAG_EVENT(aVisitor.mEvent))) {
+      (aVisitor.mEvent->HasMouseEventMessage() ||
+       aVisitor.mEvent->HasDragEventMessage())) {
     mAddActiveEventFuzzTime = false;
   }
 
@@ -5712,6 +5714,9 @@ nsGlobalWindow::Focus()
       return fm->SetFocus(frameElement, flags);
     }
   }
+  else if (TabChild *child = TabChild::GetFrom(this)) {
+    child->SendRequestFocus(canFocus);
+  }
   else if (canFocus) {
     // if there is no parent, this must be a toplevel window, so raise the
     // window if canFocus is true
@@ -5994,7 +5999,7 @@ nsGlobalWindow::ResizeTo(int32_t aWidth, int32_t aHeight)
    * If caller is a browser-element then dispatch a resize event to
    * the embedder.
    */
-  if (mDocShell->GetIsBrowserOrApp()) {
+  if (mDocShell && mDocShell->GetIsBrowserOrApp()) {
     nsIntSize size(aWidth, aHeight);
     if (!DispatchResizeEvent(size)) {
       // The embedder chose to prevent the default action for this
@@ -6034,7 +6039,7 @@ nsGlobalWindow::ResizeBy(int32_t aWidthDif, int32_t aHeightDif)
    * If caller is a browser-element then dispatch a resize event to
    * parent.
    */
-  if (mDocShell->GetIsBrowserOrApp()) {
+  if (mDocShell && mDocShell->GetIsBrowserOrApp()) {
     CSSIntSize size;
     nsresult rv = GetInnerSize(size);
     NS_ENSURE_SUCCESS(rv, NS_OK);
@@ -8097,7 +8102,7 @@ nsGlobalWindow::AddEventListener(const nsAString& aType,
 
 void
 nsGlobalWindow::AddEventListener(const nsAString& aType,
-                                 nsIDOMEventListener* aListener,
+                                 EventListener* aListener,
                                  bool aUseCapture,
                                  const Nullable<bool>& aWantsUntrusted,
                                  ErrorResult& aRv)

@@ -15,6 +15,7 @@
 #include "nsContentCreatorFunctions.h"
 #include "nsContentUtils.h"
 #include "nsEventStates.h"
+#include "nsIDOMDataTransfer.h"
 #include "nsIDOMDOMStringList.h"
 #include "nsIDOMDragEvent.h"
 #include "nsIDOMFileList.h"
@@ -82,8 +83,9 @@ nsFileControlFrame::CreateAnonymousContent(nsTArray<ContentInfo>& aElements)
                                                  nsIDOMNode::ELEMENT_NODE);
   NS_NewHTMLElement(getter_AddRefs(mBrowse), nodeInfo.forget(),
                     dom::NOT_FROM_PARSER);
-  // NOTE: SetNativeAnonymous() has to be called before setting any attribute.
-  mBrowse->SetNativeAnonymous();
+  // NOTE: SetIsNativeAnonymousRoot() has to be called before setting any
+  // attribute.
+  mBrowse->SetIsNativeAnonymousRoot();
   mBrowse->SetAttr(kNameSpaceID_None, nsGkAtoms::type,
                    NS_LITERAL_STRING("button"), false);
 
@@ -124,8 +126,9 @@ nsFileControlFrame::CreateAnonymousContent(nsTArray<ContentInfo>& aElements)
                                                  kNameSpaceID_XUL,
                                                  nsIDOMNode::ELEMENT_NODE);
   NS_TrustedNewXULElement(getter_AddRefs(mTextContent), nodeInfo.forget());
-  // NOTE: SetNativeAnonymous() has to be called before setting any attribute.
-  mTextContent->SetNativeAnonymous();
+  // NOTE: SetIsNativeAnonymousRoot() has to be called before setting any
+  // attribute.
+  mTextContent->SetIsNativeAnonymousRoot();
   mTextContent->SetAttr(kNameSpaceID_None, nsGkAtoms::crop,
                         NS_LITERAL_STRING("center"), false);
 

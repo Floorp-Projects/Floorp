@@ -135,11 +135,11 @@ gfxPlatformGtk::~gfxPlatformGtk()
 
 already_AddRefed<gfxASurface>
 gfxPlatformGtk::CreateOffscreenSurface(const gfxIntSize& size,
-                                       gfxASurface::gfxContentType contentType)
+                                       gfxContentType contentType)
 {
     nsRefPtr<gfxASurface> newSurface;
     bool needsClear = true;
-    gfxASurface::gfxImageFormat imageFormat = OptimalFormatForContent(contentType);
+    gfxImageFormat imageFormat = OptimalFormatForContent(contentType);
 #ifdef MOZ_X11
     // XXX we really need a different interface here, something that passes
     // in more context, including the display and/or target surface type that
@@ -475,10 +475,10 @@ gfxPlatformGtk::GetOffscreenFormat()
     // Make sure there is a screen
     GdkScreen *screen = gdk_screen_get_default();
     if (screen && gdk_visual_get_depth(gdk_visual_get_system()) == 16) {
-        return gfxASurface::ImageFormatRGB16_565;
+        return gfxImageFormatRGB16_565;
     }
 
-    return gfxASurface::ImageFormatRGB24;
+    return gfxImageFormatRGB24;
 }
 
 static int sDepth = 0;
@@ -750,7 +750,7 @@ gfxPlatformGtk::GetGdkDrawable(gfxASurface *target)
         return result;
 
 #ifdef MOZ_X11
-    if (target->GetType() != gfxASurface::SurfaceTypeXlib)
+    if (target->GetType() != gfxSurfaceTypeXlib)
         return nullptr;
 
     gfxXlibSurface *xs = static_cast<gfxXlibSurface*>(target);

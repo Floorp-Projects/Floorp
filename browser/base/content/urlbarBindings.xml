@@ -1499,7 +1499,7 @@
   </binding>
 
   <binding id="click-to-play-plugins-notification" extends="chrome://global/content/bindings/notification.xml#popup-notification">
-    <content align="start" class="click-to-play-plugins-notification-content">
+    <content align="start" style="width: &pluginNotification.width;;">
       <xul:vbox flex="1" align="stretch" class="popup-notification-main-box"
                 xbl:inherits="popupid">
         <xul:hbox class="click-to-play-plugins-notification-description-box" flex="1" align="start">
@@ -2132,8 +2132,7 @@
       <method name="onLinkClick">
         <body><![CDATA[
           // Open a new selected tab and close the current panel.
-          gBrowser.loadOneTab(this._promolink.getAttribute("href"),
-                              { inBackground: false });
+          openUILinkIn(this._promolink.getAttribute("href"), "tab");
           this._panel.hidePopup();
         ]]></body>
       </method>

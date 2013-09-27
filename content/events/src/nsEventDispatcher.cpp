@@ -10,14 +10,19 @@
 #include "nsContentUtils.h"
 #include "nsCxPusher.h"
 #include "nsError.h"
-#include "nsMutationEvent.h"
 #include <new>
 #include "nsINode.h"
 #include "nsPIDOMWindow.h"
 #include "nsDOMTouchEvent.h"
 #include "GeckoProfiler.h"
 #include "GeneratedEvents.h"
+#include "mozilla/ContentEvents.h"
 #include "mozilla/dom/EventTarget.h"
+#include "mozilla/MiscEvents.h"
+#include "mozilla/MouseEvents.h"
+#include "mozilla/MutationEvent.h"
+#include "mozilla/TextEvents.h"
+#include "mozilla/TouchEvents.h"
 
 using namespace mozilla;
 using namespace mozilla::dom;

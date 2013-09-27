@@ -806,11 +806,9 @@ public:
   #include "nsStyleStructList.h"
   #undef STYLE_STRUCT
 
-#ifdef MOZILLA_INTERNAL_API
   /** Also forward GetVisitedDependentColor to the style context */
   nscolor GetVisitedDependentColor(nsCSSProperty aProperty)
     { return mStyleContext->GetVisitedDependentColor(aProperty); }
-#endif
 
   /**
    * These methods are to access any additional style contexts that
@@ -1487,13 +1485,13 @@ public:
    * Continuation member functions
    */
   virtual nsIFrame* GetPrevContinuation() const = 0;
-  NS_IMETHOD SetPrevContinuation(nsIFrame*) = 0;
+  virtual void SetPrevContinuation(nsIFrame*) = 0;
   virtual nsIFrame* GetNextContinuation() const = 0;
-  NS_IMETHOD SetNextContinuation(nsIFrame*) = 0;
-  virtual nsIFrame* GetFirstContinuation() const {
+  virtual void SetNextContinuation(nsIFrame*) = 0;
+  virtual nsIFrame* FirstContinuation() const {
     return const_cast<nsIFrame*>(this);
   }
-  virtual nsIFrame* GetLastContinuation() const {
+  virtual nsIFrame* LastContinuation() const {
     return const_cast<nsIFrame*>(this);
   }
 
@@ -1509,23 +1507,23 @@ public:
    */
   virtual nsIFrame* GetPrevInFlowVirtual() const = 0;
   nsIFrame* GetPrevInFlow() const { return GetPrevInFlowVirtual(); }
-  NS_IMETHOD SetPrevInFlow(nsIFrame*) = 0;
+  virtual void SetPrevInFlow(nsIFrame*) = 0;
 
   virtual nsIFrame* GetNextInFlowVirtual() const = 0;
   nsIFrame* GetNextInFlow() const { return GetNextInFlowVirtual(); }
-  NS_IMETHOD SetNextInFlow(nsIFrame*) = 0;
+  virtual void SetNextInFlow(nsIFrame*) = 0;
 
   /**
    * Return the first frame in our current flow. 
    */
-  virtual nsIFrame* GetFirstInFlow() const {
+  virtual nsIFrame* FirstInFlow() const {
     return const_cast<nsIFrame*>(this);
   }
 
   /**
    * Return the last frame in our current flow.
    */
-  virtual nsIFrame* GetLastInFlow() const {
+  virtual nsIFrame* LastInFlow() const {
     return const_cast<nsIFrame*>(this);
   }
 
@@ -3249,29 +3247,7 @@ public:
     Clear(mFrame ? mFrame->PresContext()->GetPresShell() : nullptr);
   }
 private:
-  void InitInternal(nsIFrame* aFrame);
-
-  void InitExternal(nsIFrame* aFrame) {
-    Clear(mFrame ? mFrame->PresContext()->GetPresShell() : nullptr);
-    mFrame = aFrame;
-    if (mFrame) {
-      nsIPresShell* shell = mFrame->PresContext()->GetPresShell();
-      NS_WARN_IF_FALSE(shell, "Null PresShell in nsWeakFrame!");
-      if (shell) {
-        shell->AddWeakFrame(this);
-      } else {
-        mFrame = nullptr;
-      }
-    }
-  }
-
-  void Init(nsIFrame* aFrame) {
-#ifdef MOZILLA_INTERNAL_API
-    InitInternal(aFrame);
-#else
-    InitExternal(aFrame);
-#endif
-  }
+  void Init(nsIFrame* aFrame);
 
   nsWeakFrame*  mPrev;
   nsIFrame*     mFrame;

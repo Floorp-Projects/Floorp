@@ -113,9 +113,9 @@
 #include "nsXPCOMCIDInternal.h"
 #include "nsComponentManagerUtils.h"
 #include "nsServiceManagerUtils.h"
-#include "nsIConsoleService.h"
 #include "PSMRunnable.h"
 #include "SharedSSLState.h"
+#include "nsContentUtils.h"
 
 #include "ssl.h"
 #include "secerr.h"
@@ -213,11 +213,7 @@ LogInvalidCertError(TransportSecurityInfo *socketInfo,
   socketInfo->GetErrorLogMessage(errorCode, errorMessageType, message);
   
   if (!message.IsEmpty()) {
-    nsCOMPtr<nsIConsoleService> console;
-    console = do_GetService(NS_CONSOLESERVICE_CONTRACTID);
-    if (console) {
-      console->LogStringMessage(message.get());
-    }
+    nsContentUtils::LogSimpleConsoleError(message, "SSL");
   }
 }
 

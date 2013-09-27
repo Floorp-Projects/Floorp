@@ -37,6 +37,8 @@ pref("layers.offmainthreadcomposition.enabled", true);
 pref("layers.async-pan-zoom.enabled", true);
 pref("layers.componentalpha.enabled", false);
 pref("gfx.azpc.touch_start_tolerance", "0.1"); // dpi * tolerance = pixel threshold
+pref("gfx.azpc.pan_repaint_interval", "50");   // prefer 20 fps
+pref("gfx.azpc.fling_repaint_interval", "50"); // prefer 20 fps
 pref("gfx.axis.fling_friction", "0.002");
 
 // Enable Microsoft TSF support by default for imes.
@@ -375,6 +377,9 @@ pref("geo.wifi.uri", "https://www.googleapis.com/geolocation/v1/geolocate?key=%G
 // JS error console
 pref("devtools.errorconsole.enabled", false);
 
+// snapped view
+pref("browser.ui.snapped.maxWidth", 600);
+
 // kinetic tweakables
 pref("browser.ui.kinetic.updateInterval", 16);
 pref("browser.ui.kinetic.exponentialC", 1400);
@@ -601,9 +606,6 @@ pref("urlclassifier.alternate_error_page", "blocked");
 
 // The number of random entries to send with a gethash request.
 pref("urlclassifier.gethashnoise", 4);
-
-// The list of tables that use the gethash request to confirm partial results.
-pref("urlclassifier.gethashtables", "goog-phish-shavar,goog-malware-shavar");
 
 // If an urlclassifier table has not been updated in this number of seconds,
 // a gethash request will be forced to check that the result is still in

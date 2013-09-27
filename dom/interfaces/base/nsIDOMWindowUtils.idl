@@ -43,7 +43,7 @@ interface nsIDOMEventTarget;
 interface nsIRunnable;
 interface nsICompositionStringSynthesizer;
 
-[scriptable, uuid(a1383ae5-e828-4c9a-929d-5293e61beb64)]
+[scriptable, uuid(750a47b6-8bdb-4cad-ba2c-b7d3e66d8021)]
 interface nsIDOMWindowUtils : nsISupports {
 
   /**
@@ -815,7 +815,7 @@ interface nsIDOMWindowUtils : nsISupports {
                                                    in long aX,
                                                    in long aY);
 
-  // NOTE: following values are same as NS_QUERY_* in nsGUIEvent.h
+  // NOTE: following values are same as NS_QUERY_* in BasicEvents.h
 
   /**
    * QUERY_SELECTED_TEXT queries the first selection range's information.
@@ -1086,6 +1086,12 @@ interface nsIDOMWindowUtils : nsISupports {
    * @deprecated Use nsIWindowMediator.getOuterWindowWithId.  See bug 865664.
    */
   nsIDOMWindow getOuterWindowWithId(in unsigned long long aOuterWindowID);
+
+  /**
+   * Return this window's frame element.
+   * Ignores all chrome/content or mozbrowser boundaries.
+   */
+  readonly attribute nsIDOMElement containerElement;
 
   [noscript] void RenderDocument(in nsConstRect aRect,
                                  in uint32_t aFlags,

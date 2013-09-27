@@ -14,7 +14,6 @@ dictionary RTCDataChannelEventInit : EventInit {
 };
 
 [Pref="media.peerconnection.enabled",
- JSImplementation="@mozilla.org/dom/datachannelevent;1",
  Constructor(DOMString type, optional RTCDataChannelEventInit eventInitDict)]
 interface RTCDataChannelEvent : Event {
   readonly attribute RTCDataChannel? channel;

@@ -37,6 +37,7 @@
 #define mozHunspellDirProvider_h__
 
 #include "nsIDirectoryService.h"
+#include "nsIFile.h"
 #include "nsISimpleEnumerator.h"
 #include "mozilla/Attributes.h"
 

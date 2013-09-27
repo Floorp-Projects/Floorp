@@ -12,8 +12,10 @@
 
 #include "nsGtkIMModule.h"
 #include "nsWindow.h"
-#include "mozilla/Preferences.h"
 #include "mozilla/Likely.h"
+#include "mozilla/MiscEvents.h"
+#include "mozilla/Preferences.h"
+#include "mozilla/TextEvents.h"
 
 using namespace mozilla;
 using namespace mozilla::widget;

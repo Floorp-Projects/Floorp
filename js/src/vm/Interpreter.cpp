@@ -263,13 +263,8 @@ GetPropertyOperation(JSContext *cx, StackFrame *fp, HandleScript script, jsbytec
 
     bool wasObject = lval.isObject();
 
-    if (obj->getOps()->getProperty) {
-        if (!JSObject::getGeneric(cx, obj, obj, id, vp))
-            return false;
-    } else {
-        if (!GetPropertyHelper(cx, obj, id, 0, vp))
-            return false;
-    }
+    if (!JSObject::getGeneric(cx, obj, obj, id, vp))
+        return false;
 
 #if JS_HAS_NO_SUCH_METHOD
     if (op == JSOP_CALLPROP &&
@@ -1084,13 +1079,9 @@ AddOperation(JSContext *cx, HandleScript script, jsbytecode *pc,
 {
     if (lhs.isInt32() && rhs.isInt32()) {
         int32_t l = lhs.toInt32(), r = rhs.toInt32();
-        int32_t sum = l + r;
-        if (JS_UNLIKELY(bool((l ^ sum) & (r ^ sum) & 0x80000000))) {
-            res->setDouble(double(l) + double(r));
+        double d = double(l) + double(r);
+        if (!res->setNumber(d))
             types::TypeScript::MonitorOverflow(cx, script, pc);
-        } else {
-            res->setInt32(sum);
-        }
         return true;
     }
 

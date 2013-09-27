@@ -12,6 +12,7 @@
 #include "mozilla/TimeStamp.h"
 #include "nsIThread.h"
 #include "nsIRunnable.h"
+#include "Latency.h"
 
 namespace mozilla {
 
@@ -566,6 +567,10 @@ public:
    * blocking order.
    */
   bool mStreamOrderDirty;
+  /**
+   * Hold a ref to the Latency logger
+   */
+  nsRefPtr<AsyncLatencyLogger> mLatencyLog;
 };
 
 }

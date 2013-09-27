@@ -7,6 +7,11 @@
 #include <math.h>
 #include <unistd.h>
 
+#include "mozilla/MiscEvents.h"
+#include "mozilla/MouseEvents.h"
+#include "mozilla/TextEvents.h"
+#include "mozilla/TouchEvents.h"
+
 #include "mozilla/dom/ContentParent.h"
 #include "mozilla/dom/ContentChild.h"
 #include "mozilla/unused.h"
@@ -1088,10 +1093,10 @@ nsWindow::OnDraw(AndroidGeckoEvent *ae)
     }
 
     int bytesPerPixel = 2;
-    gfxASurface::gfxImageFormat format = gfxASurface::ImageFormatRGB16_565;
+    gfxImageFormat format = gfxImageFormatRGB16_565;
     if (AndroidBridge::Bridge()->GetScreenDepth() == 24) {
         bytesPerPixel = 4;
-        format = gfxASurface::ImageFormatRGB24;
+        format = gfxImageFormatRGB24;
     }
 
     layers::renderTraceEventStart("Get surface", "424545");

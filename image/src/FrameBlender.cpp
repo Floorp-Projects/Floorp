@@ -6,6 +6,7 @@
 #include "FrameBlender.h"
 
 #include "mozilla/MemoryReporting.h"
+#include "MainThreadUtils.h"
 
 #include "pixman.h"
 
@@ -225,7 +226,7 @@ FrameBlender::DoBlend(nsIntRect* aDirtyRect,
   if (!mAnim->compositingFrame) {
     mAnim->compositingFrame.SetFrame(new imgFrame());
     nsresult rv = mAnim->compositingFrame->Init(0, 0, mSize.width, mSize.height,
-                                                gfxASurface::ImageFormatARGB32);
+                                                gfxImageFormatARGB32);
     if (NS_FAILED(rv)) {
       mAnim->compositingFrame.SetFrame(nullptr);
       return false;
@@ -355,7 +356,7 @@ FrameBlender::DoBlend(nsIntRect* aDirtyRect,
     if (!mAnim->compositingPrevFrame) {
       mAnim->compositingPrevFrame.SetFrame(new imgFrame());
       nsresult rv = mAnim->compositingPrevFrame->Init(0, 0, mSize.width, mSize.height,
-                                                      gfxASurface::ImageFormatARGB32);
+                                                      gfxImageFormatARGB32);
       if (NS_FAILED(rv)) {
         mAnim->compositingPrevFrame.SetFrame(nullptr);
         return false;
@@ -548,7 +549,7 @@ FrameBlender::Discard()
 }
 
 size_t
-FrameBlender::SizeOfDecodedWithComputedFallbackIfHeap(gfxASurface::MemoryLocation aLocation,
+FrameBlender::SizeOfDecodedWithComputedFallbackIfHeap(gfxMemoryLocation aLocation,
                                                       MallocSizeOf aMallocSizeOf) const
 {
   size_t n = mFrames->SizeOfDecodedWithComputedFallbackIfHeap(aLocation, aMallocSizeOf);

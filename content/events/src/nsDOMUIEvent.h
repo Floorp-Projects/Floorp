@@ -10,7 +10,6 @@
 #include "nsIDOMUIEvent.h"
 #include "nsDOMEvent.h"
 #include "nsLayoutUtils.h"
-#include "nsEvent.h"
 #include "mozilla/dom/UIEventBinding.h"
 #include "nsPresContext.h"
 #include "nsDeviceContext.h"

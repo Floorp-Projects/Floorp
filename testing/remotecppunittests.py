@@ -227,7 +227,7 @@ def main():
             print "Error: you must provide a device IP to connect to via the --deviceIP option"
             sys.exit(1)
     options.xre_path = os.path.abspath(options.xre_path)
-    progs = cppunittests.extract_unittests_from_args(args)
+    progs = cppunittests.extract_unittests_from_args(args, options.manifest_file)
     tester = RemoteCPPUnitTests(dm, options, progs)
     try:
         result = tester.run_tests(progs, options.xre_path, options.symbols_path)

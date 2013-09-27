@@ -5,8 +5,8 @@
 #include "nsISupportsUtils.h"
 #include "nsIMenuBoxObject.h"
 #include "nsBoxObject.h"
+#include "nsIDOMKeyEvent.h"
 #include "nsIFrame.h"
-#include "nsGUIEvent.h"
 #include "nsMenuBarFrame.h"
 #include "nsMenuBarListener.h"
 #include "nsMenuFrame.h"
@@ -105,10 +105,10 @@ NS_IMETHODIMP nsMenuBoxObject::HandleKeyPress(nsIDOMKeyEvent* aKeyEvent, bool* a
   uint32_t keyCode;
   aKeyEvent->GetKeyCode(&keyCode);
   switch (keyCode) {
-    case NS_VK_UP:
-    case NS_VK_DOWN:
-    case NS_VK_HOME:
-    case NS_VK_END:
+    case nsIDOMKeyEvent::DOM_VK_UP:
+    case nsIDOMKeyEvent::DOM_VK_DOWN:
+    case nsIDOMKeyEvent::DOM_VK_HOME:
+    case nsIDOMKeyEvent::DOM_VK_END:
     {
       nsNavigationDirection theDirection;
       theDirection = NS_DIRECTION_FROM_KEY_CODE(popupFrame, keyCode);

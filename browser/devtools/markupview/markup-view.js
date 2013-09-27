@@ -397,7 +397,6 @@ MarkupView.prototype = {
    */
   _mutationObserver: function MT__mutationObserver(aMutations)
   {
-    let requiresLayoutChange = false;
     for (let mutation of aMutations) {
       let type = mutation.type;
       let target = mutation.target;
@@ -420,11 +419,6 @@ MarkupView.prototype = {
       }
       if (type === "attributes" || type === "characterData") {
         container.update(false);
-
-        // Auto refresh style properties on selected node when they change.
-        if (type === "attributes" && container.selected) {
-          requiresLayoutChange = true;
-        }
       } else if (type === "childList") {
         container.childrenDirty = true;
         // Update the children to take care of changes in the DOM
@@ -432,10 +426,6 @@ MarkupView.prototype = {
         // new nodes
         this._updateChildren(container, {flash: true});
       }
-    }
-
-    if (requiresLayoutChange) {
-      this._inspector.immediateLayoutChange();
     }
     this._waitForChildren().then(() => {
       this._flashMutatedNodes(aMutations);

@@ -4,7 +4,6 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
-Cu.import("resource://gre/modules/PageThumbs.jsm");
 Cu.import("resource://gre/modules/devtools/dbg-server.jsm")
 
 /**
@@ -102,18 +101,15 @@ var BrowserUI = {
     window.addEventListener("MozImprecisePointer", this, true);
 
     Services.prefs.addObserver("browser.cache.disk_cache_ssl", this, false);
-    Services.obs.addObserver(this, "metro_viewstate_changed", false);
 
     // Init core UI modules
     ContextUI.init();
     PanelUI.init();
     FlyoutPanelsUI.init();
     PageThumbs.init();
+    NewTabUtils.init();
     SettingsCharm.init();
     NavButtonSlider.init();
-
-    // show the right toolbars, awesomescreen, etc for the os viewstate
-    BrowserUI._adjustDOMforViewState();
 
     // We can delay some initialization until after startup.  We wait until
     // the first page is shown, then dispatch a UIReadyDelayed event.
@@ -146,7 +142,7 @@ var BrowserUI = {
       messageManager.addMessageListener("Browser:MozApplicationManifest", OfflineApps);
 
       try {
-        Downloads.init();
+        MetroDownloadsView.init();
         DialogUI.init();
         FormHelperUI.init();
         FindHelperUI.init();
@@ -178,7 +174,8 @@ var BrowserUI = {
     messageManager.removeMessageListener("Browser:MozApplicationManifest", OfflineApps);
 
     PanelUI.uninit();
-    Downloads.uninit();
+    FlyoutPanelsUI.uninit();
+    MetroDownloadsView.uninit();
     SettingsCharm.uninit();
     messageManager.removeMessageListener("Content:StateChange", this);
     PageThumbs.uninit();
@@ -593,13 +590,6 @@ var BrowserUI = {
             break;
         }
         break;
-      case "metro_viewstate_changed":
-        this._adjustDOMforViewState(aData);
-        if (aData == "snapped") {
-          FlyoutPanelsUI.hide();
-        }
-
-        break;
     }
   },
 
@@ -636,28 +626,6 @@ var BrowserUI = {
     pullDesktopControlledPrefType(Ci.nsIPrefBranch.PREF_INT, "setIntPref");
     pullDesktopControlledPrefType(Ci.nsIPrefBranch.PREF_BOOL, "setBoolPref");
     pullDesktopControlledPrefType(Ci.nsIPrefBranch.PREF_STRING, "setCharPref");
-  },
-
-  _adjustDOMforViewState: function(aState) {
-    let currViewState = aState;
-    if (!currViewState && Services.metro.immersive) {
-      switch (Services.metro.snappedState) {
-        case Ci.nsIWinMetroUtils.fullScreenLandscape:
-          currViewState = "landscape";
-          break;
-        case Ci.nsIWinMetroUtils.fullScreenPortrait:
-          currViewState = "portrait";
-          break;
-        case Ci.nsIWinMetroUtils.filled:
-          currViewState = "filled";
-          break;
-        case Ci.nsIWinMetroUtils.snapped:
-          currViewState = "snapped";
-          break;
-      }
-    }
-
-    Elements.windowState.setAttribute("viewstate", currViewState);
   },
 
   _titleChanged: function(aBrowser) {

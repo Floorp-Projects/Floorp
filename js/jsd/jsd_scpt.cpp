@@ -186,7 +186,7 @@ jsd_free_script_entry(void *priv, JSHashEntry *he, unsigned flag)
     }
 }
 
-static JSHashAllocOps script_alloc_ops = {
+static const JSHashAllocOps script_alloc_ops = {
     jsd_alloc_script_table, jsd_free_script_table,
     jsd_alloc_script_entry, jsd_free_script_entry
 };

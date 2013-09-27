@@ -21,7 +21,6 @@
 #include "nsIDOMNode.h"
 #include "nsRange.h"
 #include "nsCOMArray.h"
-#include "nsGUIEvent.h"
 #include "nsIDOMKeyEvent.h"
 #include "nsITableCellLayout.h"
 #include "nsTArray.h"
@@ -55,6 +54,8 @@ static NS_DEFINE_CID(kFrameTraversalCID, NS_FRAMETRAVERSAL_CID);
 #include "nsIPresShell.h"
 #include "nsCaret.h"
 
+#include "mozilla/MouseEvents.h"
+#include "mozilla/TextEvents.h"
 
 #include "nsITimer.h"
 #include "nsFrameManager.h"
@@ -4382,7 +4383,7 @@ Selection::Collapse(nsINode* aParentNode, int32_t aOffset)
   nsresult result;
 
   nsRefPtr<nsPresContext> presContext = GetPresContext();
-  if (presContext->Document() != aParentNode->OwnerDoc())
+  if (!presContext || presContext->Document() != aParentNode->OwnerDoc())
     return NS_ERROR_FAILURE;
 
   // Delete all of the current ranges
@@ -4623,7 +4624,7 @@ Selection::Extend(nsINode* aParentNode, int32_t aOffset)
     return NS_ERROR_FAILURE;
 
   nsRefPtr<nsPresContext> presContext = GetPresContext();
-  if (presContext->Document() != aParentNode->OwnerDoc())
+  if (!presContext || presContext->Document() != aParentNode->OwnerDoc())
     return NS_ERROR_FAILURE;
 
   //mFrameSelection->InvalidateDesiredX();

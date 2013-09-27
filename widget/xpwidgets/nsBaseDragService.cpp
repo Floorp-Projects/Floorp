@@ -30,9 +30,9 @@
 #include "imgIContainer.h"
 #include "imgIRequest.h"
 #include "nsRegion.h"
-#include "nsGUIEvent.h"
 #include "nsXULPopupManager.h"
 #include "nsMenuPopupFrame.h"
+#include "mozilla/MouseEvents.h"
 #include "mozilla/Preferences.h"
 
 #include "gfxContext.h"
@@ -622,7 +622,7 @@ nsBaseDragService::DrawDragForImage(nsPresContext* aPresContext,
 
   nsRefPtr<gfxASurface> surface =
     gfxPlatform::GetPlatform()->CreateOffscreenSurface(gfxIntSize(destSize.width, destSize.height),
-                                                       gfxASurface::CONTENT_COLOR_ALPHA);
+                                                       GFX_CONTENT_COLOR_ALPHA);
   if (!surface)
     return NS_ERROR_FAILURE;
 

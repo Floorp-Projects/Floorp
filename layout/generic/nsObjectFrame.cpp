@@ -6,6 +6,9 @@
 
 /* rendering objects for replaced elements implemented by a plugin */
 
+#include "nsObjectFrame.h"
+
+#include "mozilla/BasicEvents.h"
 #ifdef XP_WIN
 // This is needed for DoublePassRenderingEvent.
 #include "mozilla/plugins/PluginMessageUtils.h"
@@ -23,7 +26,6 @@
 #include "nsIPluginInstanceOwner.h"
 #include "nsNPAPIPluginInstance.h"
 #include "nsIDOMElement.h"
-#include "nsGUIEvent.h"
 #include "nsRenderingContext.h"
 #include "npapi.h"
 #include "nsIObjectLoadingContent.h"
@@ -36,7 +38,6 @@
 #include "GeckoProfiler.h"
 #include <algorithm>
 
-#include "nsObjectFrame.h"
 #include "nsIObjectFrame.h"
 #include "nsPluginNativeWindow.h"
 #include "FrameLayerBuilder.h"
@@ -1993,7 +1994,7 @@ nsObjectFrame::HandleEvent(nsPresContext* aPresContext,
 #endif
 
   if (mInstanceOwner->SendNativeEvents() &&
-      NS_IS_PLUGIN_EVENT(anEvent)) {
+      anEvent->IsNativeEventDelivererForPlugin()) {
     *anEventStatus = mInstanceOwner->ProcessEvent(*anEvent);
     // Due to plugin code reentering Gecko, this frame may be dead at this
     // point.

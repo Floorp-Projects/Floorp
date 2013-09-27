@@ -283,7 +283,7 @@ struct FreeSpan
              */
             *this = *reinterpret_cast<FreeSpan *>(thing);
         } else {
-            return NULL;
+            return nullptr;
         }
         checkSpan();
         return reinterpret_cast<void *>(thing);

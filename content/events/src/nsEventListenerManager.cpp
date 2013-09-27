@@ -3,6 +3,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include "mozilla/BasicEvents.h"
 #ifdef MOZ_B2G
 #include "mozilla/Hal.h"
 #endif
@@ -12,7 +13,6 @@
 #undef CreateEvent
 
 #include "nsISupports.h"
-#include "nsGUIEvent.h"
 #include "nsDOMEvent.h"
 #include "nsEventListenerManager.h"
 #include "nsIDOMEventListener.h"
@@ -26,7 +26,7 @@
 #include "nsCOMPtr.h"
 #include "nsError.h"
 #include "nsIDocument.h"
-#include "nsMutationEvent.h"
+#include "mozilla/MutationEvent.h"
 #include "nsIXPConnect.h"
 #include "nsDOMCID.h"
 #include "nsContentUtils.h"
@@ -236,7 +236,7 @@ nsEventListenerManager::AddEventListenerInternal(
     }
   }
 
-  mNoListenerForEvent = NS_EVENT_TYPE_NULL;
+  mNoListenerForEvent = NS_EVENT_NULL;
   mNoListenerForEventAtom = nullptr;
 
   ls = aAllEvents ? mListeners.InsertElementAt(0) : mListeners.AppendElement();
@@ -474,7 +474,7 @@ nsEventListenerManager::RemoveEventListenerInternal(
         nsRefPtr<nsEventListenerManager> kungFuDeathGrip = this;
         mListeners.RemoveElementAt(i);
         --count;
-        mNoListenerForEvent = NS_EVENT_TYPE_NULL;
+        mNoListenerForEvent = NS_EVENT_NULL;
         mNoListenerForEventAtom = nullptr;
         if (mTarget && aUserType) {
           mTarget->EventListenerRemoved(aUserType);
@@ -771,7 +771,7 @@ nsEventListenerManager::RemoveEventHandler(nsIAtom* aName,
 
   if (ls) {
     mListeners.RemoveElementAt(uint32_t(ls - &mListeners.ElementAt(0)));
-    mNoListenerForEvent = NS_EVENT_TYPE_NULL;
+    mNoListenerForEvent = NS_EVENT_NULL;
     mNoListenerForEventAtom = nullptr;
     if (mTarget) {
       mTarget->EventListenerRemoved(aName);
@@ -900,7 +900,9 @@ nsEventListenerManager::CompileEventHandlerInternal(nsListenerStruct *aListenerS
     JS::Rooted<JSObject*> boundHandler(cx);
     JS::Rooted<JSObject*> scope(cx, listener->GetEventScope());
     context->BindCompiledEventHandler(mTarget, scope, handler, &boundHandler);
-    if (listener->EventName() == nsGkAtoms::onerror && win) {
+    if (!boundHandler) {
+      listener->ForgetHandler();
+    } else if (listener->EventName() == nsGkAtoms::onerror && win) {
       nsRefPtr<OnErrorEventHandlerNonNull> handlerCallback =
         new OnErrorEventHandlerNonNull(boundHandler);
       listener->SetHandler(handlerCallback);
@@ -1084,7 +1086,7 @@ nsEventListenerManager::AddListenerForAllEvents(nsIDOMEventListener* aListener,
   flags.mAllowUntrustedEvents = aWantsUntrusted;
   flags.mInSystemGroup = aSystemEventGroup;
   EventListenerHolder holder(aListener);
-  AddEventListenerInternal(holder, NS_EVENT_TYPE_ALL, nullptr, EmptyString(),
+  AddEventListenerInternal(holder, NS_EVENT_ALL, nullptr, EmptyString(),
                            flags, false, true);
 }
 
@@ -1097,7 +1099,7 @@ nsEventListenerManager::RemoveListenerForAllEvents(nsIDOMEventListener* aListene
   flags.mCapture = aUseCapture;
   flags.mInSystemGroup = aSystemEventGroup;
   EventListenerHolder holder(aListener);
-  RemoveEventListenerInternal(holder, NS_EVENT_TYPE_ALL, nullptr, EmptyString(),
+  RemoveEventListenerInternal(holder, NS_EVENT_ALL, nullptr, EmptyString(),
                               flags, true);
 }
 

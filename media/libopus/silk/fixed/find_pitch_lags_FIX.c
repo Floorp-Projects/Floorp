@@ -1,9 +1,5 @@
 /***********************************************************************
-Copyright (c) 2006-2012 IETF Trust and Skype Limited. All rights reserved.
-
-This file is extracted from RFC6716. Please see that RFC for additional
-information.
-
+Copyright (c) 2006-2011, Skype Limited. All rights reserved.
 Redistribution and use in source and binary forms, with or without
 modification, are permitted provided that the following conditions
 are met:
@@ -16,7 +12,7 @@ documentation and/or other materials provided with the distribution.
 names of specific contributors, may be used to endorse or promote
 products derived from this software without specific prior written
 permission.
-THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS “AS IS”
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
 AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
 IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
 ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE
@@ -34,6 +30,7 @@ POSSIBILITY OF SUCH DAMAGE.
 #endif
 
 #include "main_FIX.h"
+#include "stack_alloc.h"
 #include "tuning_parameters.h"
 
 /* Find pitch lags */
@@ -45,20 +42,22 @@ void silk_find_pitch_lags_FIX(
 )
 {
     opus_int   buf_len, i, scale;
-    opus_int32 thrhld_Q15, res_nrg;
+    opus_int32 thrhld_Q13, res_nrg;
     const opus_int16 *x_buf, *x_buf_ptr;
-    opus_int16 Wsig[      FIND_PITCH_LPC_WIN_MAX ], *Wsig_ptr;
+    VARDECL( opus_int16, Wsig );
+    opus_int16 *Wsig_ptr;
     opus_int32 auto_corr[ MAX_FIND_PITCH_LPC_ORDER + 1 ];
     opus_int16 rc_Q15[    MAX_FIND_PITCH_LPC_ORDER ];
     opus_int32 A_Q24[     MAX_FIND_PITCH_LPC_ORDER ];
     opus_int16 A_Q12[     MAX_FIND_PITCH_LPC_ORDER ];
+    SAVE_STACK;
 
     /******************************************/
     /* Set up buffer lengths etc based on Fs  */
     /******************************************/
     buf_len = psEnc->sCmn.la_pitch + psEnc->sCmn.frame_length + psEnc->sCmn.ltp_mem_length;
 
-    /* Safty check */
+    /* Safety check */
     silk_assert( buf_len >= psEnc->sCmn.pitch_LPC_win_length );
 
     x_buf = x - psEnc->sCmn.ltp_mem_length;
@@ -68,6 +67,8 @@ void silk_find_pitch_lags_FIX(
     /*************************************/
 
     /* Calculate windowed signal */
+
+    ALLOC( Wsig, psEnc->sCmn.pitch_LPC_win_length, opus_int16 );
 
     /* First LA_LTP samples */
     x_buf_ptr = x_buf + buf_len - psEnc->sCmn.pitch_LPC_win_length;
@@ -105,7 +106,7 @@ void silk_find_pitch_lags_FIX(
     }
 
     /* Do BWE */
-    silk_bwexpander( A_Q12, psEnc->sCmn.pitchEstimationLPCOrder, SILK_FIX_CONST( FIND_PITCH_BANDWITH_EXPANSION, 16 ) );
+    silk_bwexpander( A_Q12, psEnc->sCmn.pitchEstimationLPCOrder, SILK_FIX_CONST( FIND_PITCH_BANDWIDTH_EXPANSION, 16 ) );
 
     /*****************************************/
     /* LPC analysis filtering                */
@@ -114,19 +115,19 @@ void silk_find_pitch_lags_FIX(
 
     if( psEnc->sCmn.indices.signalType != TYPE_NO_VOICE_ACTIVITY && psEnc->sCmn.first_frame_after_reset == 0 ) {
         /* Threshold for pitch estimator */
-        thrhld_Q15 = SILK_FIX_CONST( 0.6, 15 );
-        thrhld_Q15 = silk_SMLABB( thrhld_Q15, SILK_FIX_CONST( -0.004, 15 ), psEnc->sCmn.pitchEstimationLPCOrder );
-        thrhld_Q15 = silk_SMLABB( thrhld_Q15, SILK_FIX_CONST( -0.1,   7  ), psEnc->sCmn.speech_activity_Q8 );
-        thrhld_Q15 = silk_SMLABB( thrhld_Q15, SILK_FIX_CONST( -0.15,  15 ), silk_RSHIFT( psEnc->sCmn.prevSignalType, 1 ) );
-        thrhld_Q15 = silk_SMLAWB( thrhld_Q15, SILK_FIX_CONST( -0.1,   16 ), psEnc->sCmn.input_tilt_Q15 );
-        thrhld_Q15 = silk_SAT16(  thrhld_Q15 );
+        thrhld_Q13 = SILK_FIX_CONST( 0.6, 13 );
+        thrhld_Q13 = silk_SMLABB( thrhld_Q13, SILK_FIX_CONST( -0.004, 13 ), psEnc->sCmn.pitchEstimationLPCOrder );
+        thrhld_Q13 = silk_SMLAWB( thrhld_Q13, SILK_FIX_CONST( -0.1,   21  ), psEnc->sCmn.speech_activity_Q8 );
+        thrhld_Q13 = silk_SMLABB( thrhld_Q13, SILK_FIX_CONST( -0.15,  13 ), silk_RSHIFT( psEnc->sCmn.prevSignalType, 1 ) );
+        thrhld_Q13 = silk_SMLAWB( thrhld_Q13, SILK_FIX_CONST( -0.1,   14 ), psEnc->sCmn.input_tilt_Q15 );
+        thrhld_Q13 = silk_SAT16(  thrhld_Q13 );
 
         /*****************************************/
         /* Call pitch estimator                  */
         /*****************************************/
         if( silk_pitch_analysis_core( res, psEncCtrl->pitchL, &psEnc->sCmn.indices.lagIndex, &psEnc->sCmn.indices.contourIndex,
                 &psEnc->LTPCorr_Q15, psEnc->sCmn.prevLag, psEnc->sCmn.pitchEstimationThreshold_Q16,
-                (opus_int16)thrhld_Q15, psEnc->sCmn.fs_kHz, psEnc->sCmn.pitchEstimationComplexity, psEnc->sCmn.nb_subfr ) == 0 )
+                (opus_int)thrhld_Q13, psEnc->sCmn.fs_kHz, psEnc->sCmn.pitchEstimationComplexity, psEnc->sCmn.nb_subfr ) == 0 )
         {
             psEnc->sCmn.indices.signalType = TYPE_VOICED;
         } else {
@@ -138,4 +139,5 @@ void silk_find_pitch_lags_FIX(
         psEnc->sCmn.indices.contourIndex = 0;
         psEnc->LTPCorr_Q15 = 0;
     }
+    RESTORE_STACK;
 }

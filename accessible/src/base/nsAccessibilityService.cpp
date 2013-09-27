@@ -1022,8 +1022,11 @@ nsAccessibilityService::GetOrCreateAccessible(nsINode* aNode,
       } else if (content->Tag() == nsGkAtoms::svg) {
         newAcc = new EnumRoleAccessible(content, document, roles::DIAGRAM);
       }
-    } else if (content->IsMathML(nsGkAtoms::math)) {
-      newAcc = new EnumRoleAccessible(content, document, roles::EQUATION);
+    } else if (content->IsMathML()){
+      if (content->Tag() == nsGkAtoms::math)
+        newAcc = new EnumRoleAccessible(content, document, roles::EQUATION);
+      else
+        newAcc = new HyperTextAccessible(content, document);
     }
   }
 

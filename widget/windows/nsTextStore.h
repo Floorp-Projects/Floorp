@@ -13,6 +13,7 @@
 #include "nsIWidget.h"
 #include "nsWindowBase.h"
 #include "mozilla/Attributes.h"
+#include "mozilla/TextEvents.h"
 
 #include <msctf.h>
 #include <textstor.h>
@@ -32,7 +33,6 @@ struct ITfDocumentMgr;
 struct ITfDisplayAttributeMgr;
 struct ITfCategoryMgr;
 class nsWindow;
-class nsTextEvent;
 #ifdef MOZ_METRO
 class MetroWidget;
 #endif

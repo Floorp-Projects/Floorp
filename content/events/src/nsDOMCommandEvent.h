@@ -9,6 +9,7 @@
 #include "nsIDOMCommandEvent.h"
 #include "nsDOMEvent.h"
 #include "mozilla/dom/CommandEventBinding.h"
+#include "mozilla/EventForwards.h"
 
 class nsDOMCommandEvent : public nsDOMEvent,
                           public nsIDOMCommandEvent

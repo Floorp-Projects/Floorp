@@ -748,6 +748,24 @@ cc_string_t CCAPI_CallInfo_getSDP(cc_callinfo_ref_t handle){
 }
 
 /**
+ * get candidate for trickle ICE
+ * @param handle - call handle
+ * @return sdp
+ */
+cc_string_t CCAPI_CallInfo_getCandidate(cc_callinfo_ref_t handle){
+  static const char *fname="CCAPI_CallInfo_getCandiate";
+  session_data_t *data = (session_data_t *)handle;
+  CCAPP_DEBUG(DEB_F_PREFIX"Entering", DEB_F_PREFIX_ARGS(SIP_CC_PROV, fname));
+
+  if (data){
+     CCAPP_DEBUG(DEB_F_PREFIX"returned %s", DEB_F_PREFIX_ARGS(SIP_CC_PROV, fname), data->candidate);
+     return data->candidate;
+  }
+
+  return strlib_empty();
+}
+
+/**
  * get status code from internal JSEP functions
  * @param handle - call handle
  * @return status code

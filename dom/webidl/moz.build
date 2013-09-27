@@ -193,6 +193,7 @@ WEBIDL_FILES = [
     'InterAppMessagePort.webidl',
     'KeyboardEvent.webidl',
     'KeyEvent.webidl',
+    'LegacyQueryInterface.webidl',
     'LinkStyle.webidl',
     'LocalMediaStream.webidl',
     'Location.webidl',
@@ -203,7 +204,6 @@ WEBIDL_FILES = [
     'MediaStream.webidl',
     'MediaStreamAudioDestinationNode.webidl',
     'MediaStreamAudioSourceNode.webidl',
-    'MediaStreamEvent.webidl',
     'MediaStreamTrack.webidl',
     'MessageChannel.webidl',
     'MessageEvent.webidl',
@@ -253,10 +253,8 @@ WEBIDL_FILES = [
     'Rect.webidl',
     'RGBColor.webidl',
     'RTCConfiguration.webidl',
-    'RTCDataChannelEvent.webidl',
     'RTCIceCandidate.webidl',
     'RTCPeerConnection.webidl',
-    'RTCPeerConnectionIceEvent.webidl',
     'RTCSessionDescription.webidl',
     'Screen.webidl',
     'ScriptProcessorNode.webidl',
@@ -524,12 +522,14 @@ if CONFIG['MOZ_B2G_FM']:
 
 if CONFIG['ENABLE_TESTS']:
     TEST_WEBIDL_FILES += [
-        'TestCodeGen.webidl',
         'TestDictionary.webidl',
-        'TestExampleGen.webidl',
-        'TestJSImplGen.webidl',
         'TestJSImplInheritanceGen.webidl',
         'TestTypedef.webidl',
+    ]
+    PREPROCESSED_TEST_WEBIDL_FILES += [
+        'TestCodeGen.webidl',
+        'TestExampleGen.webidl',
+        'TestJSImplGen.webidl',
     ]
 
 if CONFIG['MOZ_B2G']:
@@ -541,6 +541,9 @@ GENERATED_EVENTS_WEBIDL_FILES = [
     'BlobEvent.webidl',
     'DeviceLightEvent.webidl',
     'DeviceProximityEvent.webidl',
+    'MediaStreamEvent.webidl',
+    'RTCDataChannelEvent.webidl',
+    'RTCPeerConnectionIceEvent.webidl',
     'UserProximityEvent.webidl',
 ]
 

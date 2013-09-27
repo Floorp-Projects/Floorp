@@ -6,10 +6,10 @@
 #ifndef nsEventStateManager_h__
 #define nsEventStateManager_h__
 
+#include "mozilla/BasicEvents.h"
+#include "mozilla/EventForwards.h"
 #include "mozilla/TypedEnum.h"
 
-#include "nsEvent.h"
-#include "nsGUIEvent.h"
 #include "nsIObserver.h"
 #include "nsWeakReference.h"
 #include "nsCOMPtr.h"
@@ -28,7 +28,6 @@ class nsIDocShellTreeItem;
 class imgIContainer;
 class nsDOMDataTransfer;
 class MouseEnterLeaveDispatcher;
-class nsEventStates;
 class nsIMarkupDocumentViewer;
 class nsIScrollableFrame;
 class nsITimer;
@@ -882,7 +881,8 @@ private:
 // Click and double-click events need to be handled even for content that
 // has no frame. This is required for Web compatibility.
 #define NS_EVENT_NEEDS_FRAME(event) \
-    (!NS_IS_ACTIVATION_EVENT(event) && (event)->message != NS_MOUSE_CLICK && \
+    (!(event)->HasPluginActivationEventMessage() && \
+     (event)->message != NS_MOUSE_CLICK && \
      (event)->message != NS_MOUSE_DOUBLECLICK)
 
 #endif // nsEventStateManager_h__

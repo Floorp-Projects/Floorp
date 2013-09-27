@@ -1330,12 +1330,6 @@ public class GeckoAppShell
                 return;
             }
         }
-
-        // Also send a notification to the observer service
-        // New listeners should register for these notifications since they will be called even if
-        // Gecko has been killed and restared between when your notification was shown and when the
-        // user clicked on it.
-        sendEventToGecko(GeckoEvent.createBroadcastEvent("Notification:Clicked", aAlertCookie));
         closeNotification(aAlertName);
     }
 

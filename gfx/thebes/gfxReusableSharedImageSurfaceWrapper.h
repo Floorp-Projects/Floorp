@@ -21,7 +21,7 @@ public:
   ~gfxReusableSharedImageSurfaceWrapper();
 
   const unsigned char* GetReadOnlyData() const MOZ_OVERRIDE;
-  gfxASurface::gfxImageFormat Format() MOZ_OVERRIDE;
+  gfxImageFormat Format() MOZ_OVERRIDE;
   gfxReusableSurfaceWrapper* GetWritable(gfxImageSurface** aSurface) MOZ_OVERRIDE;
   void ReadLock() MOZ_OVERRIDE;
   void ReadUnlock() MOZ_OVERRIDE;

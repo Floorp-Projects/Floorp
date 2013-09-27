@@ -9,6 +9,7 @@
 #include "nsIMobileConnectionProvider.h"
 #include "nsDOMEventTargetHelper.h"
 #include "nsCycleCollectionParticipant.h"
+#include "nsWeakPtr.h"
 
 namespace mozilla {
 namespace dom {

@@ -175,12 +175,6 @@
 { 0xf3dcf644, 0x79e8, 0x4f59, { 0xa1, 0xbb, 0x87, 0x84, 0x54, 0x48, 0x8e, 0xf9 } }
 #endif
 
-#define NS_APPLICATION_REPUTATION_QUERY_CONTRACTID \
-  "@mozilla.org/downloads/application-reputation-query;1"
-
-#define NS_APPLICATION_REPUTATION_QUERY_CID \
-{ 0x857da2c0, 0xcfe5, 0x11e2, { 0x8b, 0x8b, 0x08, 0x00, 0x20, 0x0c, 0x9a, 0x66 } }
-
 #define NS_APPLICATION_REPUTATION_SERVICE_CONTRACTID \
   "@mozilla.org/downloads/application-reputation-service;1"
 
