@@ -43,7 +43,7 @@ namespace OT {
 
 struct head
 {
-  static const hb_tag_t tableTag	= HB_OT_TAG_head;
+  static const hb_tag_t Tag	= HB_OT_TAG_head;
 
   inline unsigned int get_upem (void) const {
     unsigned int upem = unitsPerEm;

@@ -1,6 +1,6 @@
 /*
  * Copyright © 2007,2008,2009,2010  Red Hat, Inc.
- * Copyright © 2010,2012,2013  Google, Inc.
+ * Copyright © 2010,2012  Google, Inc.
  *
  *  This is part of HarfBuzz, a text shaping library.
  *
@@ -710,6 +710,8 @@ struct PairPosFormat2
     TRACE_COLLECT_GLYPHS (this);
     /* (this+coverage).add_coverage (c->input); // Don't need this. */
 
+    /* TODO only add values for pairs that have nonzero adjustments. */
+
     unsigned int count1 = class1Count;
     const ClassDef &klass1 = this+classDef1;
     for (unsigned int i = 0; i < count1; i++)
@@ -1012,6 +1014,7 @@ struct MarkBasePosFormat1
     TRACE_COLLECT_GLYPHS (this);
     (this+markCoverage).add_coverage (c->input);
     (this+baseCoverage).add_coverage (c->input);
+    /* TODO only add combinations that have nonzero adjustment. */
   }
 
   inline const Coverage &get_coverage (void) const
@@ -1115,6 +1118,7 @@ struct MarkLigPosFormat1
     TRACE_COLLECT_GLYPHS (this);
     (this+markCoverage).add_coverage (c->input);
     (this+ligatureCoverage).add_coverage (c->input);
+    /* TODO only add combinations that have nonzero adjustment. */
   }
 
   inline const Coverage &get_coverage (void) const
@@ -1230,6 +1234,7 @@ struct MarkMarkPosFormat1
     TRACE_COLLECT_GLYPHS (this);
     (this+mark1Coverage).add_coverage (c->input);
     (this+mark2Coverage).add_coverage (c->input);
+    /* TODO only add combinations that have nonzero adjustment. */
   }
 
   inline const Coverage &get_coverage (void) const
@@ -1429,18 +1434,7 @@ struct PosLookup : Lookup
   inline const PosLookupSubTable& get_subtable (unsigned int i) const
   { return this+CastR<OffsetArrayOf<PosLookupSubTable> > (subTable)[i]; }
 
-  inline bool is_reverse (void) const
-  {
-    return false;
-  }
-
-  inline hb_is_inplace_context_t::return_t is_inplace (hb_is_inplace_context_t *c) const
-  {
-    TRACE_IS_INPLACE (this);
-    return TRACE_RETURN (true);
-  }
-
-  inline hb_collect_glyphs_context_t::return_t collect_glyphs (hb_collect_glyphs_context_t *c) const
+  inline hb_collect_glyphs_context_t::return_t collect_glyphs_lookup (hb_collect_glyphs_context_t *c) const
   {
     TRACE_COLLECT_GLYPHS (this);
     c->set_recurse_func (NULL);
@@ -1471,6 +1465,31 @@ struct PosLookup : Lookup
   }
 
   static bool apply_recurse_func (hb_apply_context_t *c, unsigned int lookup_index);
+
+  inline bool apply_string (hb_apply_context_t *c, const hb_set_digest_t *digest) const
+  {
+    bool ret = false;
+
+    if (unlikely (!c->buffer->len || !c->lookup_mask))
+      return false;
+
+    c->set_recurse_func (apply_recurse_func);
+    c->set_lookup (*this);
+
+    c->buffer->idx = 0;
+
+    while (c->buffer->idx < c->buffer->len)
+    {
+      if (digest->may_have (c->buffer->cur().codepoint) &&
+	  (c->buffer->cur().mask & c->lookup_mask) &&
+	  apply_once (c))
+	ret = true;
+      else
+	c->buffer->idx++;
+    }
+
+    return ret;
+  }
 
   template <typename context_t>
   static inline typename context_t::return_t dispatch_recurse_func (context_t *c, unsigned int lookup_index);
@@ -1505,7 +1524,7 @@ typedef OffsetListOf<PosLookup> PosLookupList;
 
 struct GPOS : GSUBGPOS
 {
-  static const hb_tag_t tableTag	= HB_OT_TAG_GPOS;
+  static const hb_tag_t Tag	= HB_OT_TAG_GPOS;
 
   inline const PosLookup& get_lookup (unsigned int i) const
   { return CastR<PosLookup> (GSUBGPOS::get_lookup (i)); }

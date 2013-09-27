@@ -324,7 +324,7 @@ struct MarkGlyphSets
 
 struct GDEF
 {
-  static const hb_tag_t tableTag	= HB_OT_TAG_GDEF;
+  static const hb_tag_t Tag	= HB_OT_TAG_GDEF;
 
   enum GlyphClasses {
     UnclassifiedGlyph	= 0,

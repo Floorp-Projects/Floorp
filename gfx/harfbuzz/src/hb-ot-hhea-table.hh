@@ -42,7 +42,7 @@ namespace OT {
 
 struct hhea
 {
-  static const hb_tag_t tableTag	= HB_OT_TAG_hhea;
+  static const hb_tag_t Tag	= HB_OT_TAG_hhea;
 
   inline bool sanitize (hb_sanitize_context_t *c) {
     TRACE_SANITIZE (this);

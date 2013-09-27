@@ -30,9 +30,10 @@
 #define hb_graphite2_shaper_font_data_t gr_font
 #include "hb-shaper-impl-private.hh"
 
-#include "hb-graphite2.h"
-
+#include <graphite2/Font.h>
 #include <graphite2/Segment.h>
+
+#include "hb-graphite2.h"
 
 #include "hb-ot-tag.h"
 

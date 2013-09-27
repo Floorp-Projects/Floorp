@@ -50,7 +50,7 @@ struct LongHorMetric
 
 struct hmtx
 {
-  static const hb_tag_t tableTag	= HB_OT_TAG_hmtx;
+  static const hb_tag_t Tag	= HB_OT_TAG_hmtx;
 
   inline bool sanitize (hb_sanitize_context_t *c) {
     TRACE_SANITIZE (this);
