@@ -9,7 +9,6 @@
 #include "mozilla/DebugOnly.h"
 
 #include "jit/BitSet.h"
-#include "jit/IonBuilder.h"
 #include "jit/IonSpewer.h"
 
 using namespace js;

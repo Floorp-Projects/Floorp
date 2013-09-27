@@ -15,14 +15,15 @@
 #include "jsweakmap.h"
 
 #include "builtin/Eval.h"
-#include "builtin/Intl.h"
+#if EXPOSE_INTL_API
+# include "builtin/Intl.h"
+#endif
 #include "builtin/MapObject.h"
 #include "builtin/Object.h"
 #include "builtin/RegExp.h"
 #include "vm/RegExpStatics.h"
 
 #include "jscompartmentinlines.h"
-#include "jsfuninlines.h"
 #include "jsobjinlines.h"
 #include "jsscriptinlines.h"
 

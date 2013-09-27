@@ -6,6 +6,7 @@
 #ifndef MOZILLA_GFX_COMPOSITORD3D11_H
 #define MOZILLA_GFX_COMPOSITORD3D11_H
 
+#include "mozilla/gfx/2D.h"
 #include "mozilla/layers/Compositor.h"
 #include "TextureD3D11.h"
 #include <d3d11.h>
@@ -50,10 +51,10 @@ public:
   virtual TemporaryRef<DataTextureSource>
     CreateDataTextureSource(TextureFlags aFlags = 0) MOZ_OVERRIDE { return nullptr; }
 
-  virtual bool CanUseCanvasLayerForSize(const gfxIntSize& aSize) MOZ_OVERRIDE;
+  virtual bool CanUseCanvasLayerForSize(const gfx::IntSize& aSize) MOZ_OVERRIDE;
   virtual int32_t GetMaxTextureSize() const MOZ_FINAL;
 
-  virtual void SetTargetContext(gfxContext* aTarget)  MOZ_OVERRIDE
+  virtual void SetTargetContext(gfx::DrawTarget* aTarget)  MOZ_OVERRIDE
   {
     mTarget = aTarget;
   }
@@ -167,7 +168,7 @@ private:
 
   DeviceAttachmentsD3D11* mAttachments;
 
-  nsRefPtr<gfxContext> mTarget;
+  RefPtr<gfx::DrawTarget> mTarget;
 
   nsIWidget* mWidget;
 

@@ -53,6 +53,8 @@ class MacroAssemblerARM : public Assembler
     void branchTruncateDouble(const FloatRegister &src, const Register &dest, Label *fail);
     void convertDoubleToInt32(const FloatRegister &src, const Register &dest, Label *fail,
                               bool negativeZeroCheck = true);
+    void convertFloat32ToInt32(const FloatRegister &src, const Register &dest, Label *fail,
+                               bool negativeZeroCheck = true);
 
     void convertFloatToDouble(const FloatRegister &src, const FloatRegister &dest);
     void branchTruncateFloat32(const FloatRegister &src, const Register &dest, Label *fail);
@@ -322,6 +324,7 @@ class MacroAssemblerARM : public Assembler
     void ma_vimm_f32(float value, FloatRegister dest, Condition cc = Always);
 
     void ma_vcmp(FloatRegister src1, FloatRegister src2, Condition cc = Always);
+    void ma_vcmp_f32(FloatRegister src1, FloatRegister src2, Condition cc = Always);
     void ma_vcmpz(FloatRegister src1, Condition cc = Always);
 
     void ma_vadd_f32(FloatRegister src1, FloatRegister src2, FloatRegister dst);

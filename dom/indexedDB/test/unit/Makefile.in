@@ -38,6 +38,7 @@ MOCHITEST_FILES = \
   test_names_sorted.js \
   test_object_identity.js \
   test_objectCursors.js \
+  test_objectStore_getAllKeys.js \
   test_objectStore_inline_autoincrement_key_added_on_put.js \
   test_objectStore_remove_values.js \
   test_odd_result_order.js \

@@ -171,6 +171,12 @@ AC_DEFUN([MOZ_COMPILER_OPTS],
 
   AC_SUBST(DEVELOPER_OPTIONS)
 
+  if test -n "$DEVELOPER_OPTIONS" -a "${MOZ_PSEUDO_DERECURSE-unset}" = unset; then
+    dnl Don't enable on pymake, because of bug 918652. Bug 912979 is an annoyance
+    dnl with pymake, too.
+    MOZ_PSEUDO_DERECURSE=no-parallel-export,no-pymake
+  fi
+
   MOZ_DEBUGGING_OPTS
   MOZ_RTTI
 if test "$CLANG_CXX"; then
@@ -194,7 +200,17 @@ if test -z "$GNU_CC"; then
     esac
 fi
 
-if test "$GNU_CC" -a -n "$DEVELOPER_OPTIONS"; then
+if test -n "$DEVELOPER_OPTIONS"; then
+    MOZ_FORCE_GOLD=1
+fi
+
+MOZ_ARG_ENABLE_BOOL(gold,
+[  --enable-gold           Enable GNU Gold Linker when it is not already the default],
+    MOZ_FORCE_GOLD=1,
+    MOZ_FORCE_GOLD=
+    )
+
+if test "$GNU_CC" -a -n "$MOZ_FORCE_GOLD"; then
     dnl if the default linker is BFD ld, check if gold is available and try to use it
     dnl for local builds only.
     if $CC -Wl,--version 2>&1 | grep -q "GNU ld"; then
@@ -208,6 +224,7 @@ if test "$GNU_CC" -a -n "$DEVELOPER_OPTIONS"; then
         esac
         if test -n "$GOLD"; then
             mkdir -p $_objdir/build/unix/gold
+            rm -f $_objdir/build/unix/gold/ld
             ln -s "$GOLD" $_objdir/build/unix/gold/ld
             if $CC -B $_objdir/build/unix/gold -Wl,--version 2>&1 | grep -q "GNU gold"; then
                 LDFLAGS="$LDFLAGS -B $_objdir/build/unix/gold"
