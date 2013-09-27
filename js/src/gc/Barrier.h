@@ -10,7 +10,9 @@
 #include "NamespaceImports.h"
 
 #include "gc/Heap.h"
-#include "gc/StoreBuffer.h"
+#ifdef JSGC_GENERATIONAL
+# include "gc/StoreBuffer.h"
+#endif
 #include "js/HashTable.h"
 #include "js/Id.h"
 #include "js/RootingAPI.h"

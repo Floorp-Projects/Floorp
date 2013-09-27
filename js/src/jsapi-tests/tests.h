@@ -7,8 +7,6 @@
 #ifndef jsapi_tests_tests_h
 #define jsapi_tests_tests_h
 
-#include "mozilla/Util.h"
-
 #include <errno.h>
 #include <stdio.h>
 #include <stdlib.h>

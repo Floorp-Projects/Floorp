@@ -9,9 +9,6 @@
 
 #ifdef JS_ION
 
-#include "jscntxt.h"
-#include "jscompartment.h"
-
 #include "jit/IonFrames.h"
 #include "vm/Stack.h"
 

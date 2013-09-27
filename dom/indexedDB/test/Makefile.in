@@ -70,6 +70,7 @@ MOCHITEST_FILES = \
   test_multientry.html \
   test_names_sorted.html \
   test_objectCursors.html \
+  test_objectStore_getAllKeys.html \
   test_objectStore_inline_autoincrement_key_added_on_put.html \
   test_objectStore_remove_values.html \
   test_object_identity.html \

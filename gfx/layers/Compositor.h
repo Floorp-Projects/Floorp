@@ -7,7 +7,6 @@
 #define MOZILLA_GFX_COMPOSITOR_H
 
 #include "Units.h"                      // for ScreenPoint
-#include "gfxPoint.h"                   // for gfxIntSize
 #include "mozilla/Assertions.h"         // for MOZ_ASSERT, etc
 #include "mozilla/RefPtr.h"             // for TemporaryRef, RefCounted
 #include "mozilla/gfx/Point.h"          // for IntSize, Point
@@ -102,7 +101,6 @@
  * add specific TextureClient implementations.
  */
 
-class gfxContext;
 class nsIWidget;
 struct gfxMatrix;
 struct nsIntSize;
@@ -110,6 +108,7 @@ struct nsIntSize;
 namespace mozilla {
 namespace gfx {
 class Matrix4x4;
+class DrawTarget;
 }
 
 namespace layers {
@@ -210,7 +209,7 @@ public:
   /**
    * Properties of the compositor.
    */
-  virtual bool CanUseCanvasLayerForSize(const gfxIntSize& aSize) = 0;
+  virtual bool CanUseCanvasLayerForSize(const gfx::IntSize& aSize) = 0;
   virtual int32_t GetMaxTextureSize() const = 0;
 
   /**
@@ -220,7 +219,7 @@ public:
    * If this method is not used, or we pass in nullptr, we target the compositor's
    * usual swap chain and render to the screen.
    */
-  virtual void SetTargetContext(gfxContext* aTarget) = 0;
+  virtual void SetTargetContext(gfx::DrawTarget* aTarget) = 0;
 
   typedef uint32_t MakeCurrentFlags;
   static const MakeCurrentFlags ForceMakeCurrent = 0x1;

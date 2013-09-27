@@ -15,7 +15,6 @@
 #include "jsstr.h"
 
 #include "jit/Ion.h"
-#include "jit/IonCompartment.h"
 #include "vm/ArgumentsObject.h"
 #include "vm/ForkJoin.h"
 

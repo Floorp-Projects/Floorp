@@ -13,12 +13,8 @@
 
 #include "jscntxt.h"
 #include "jsfun.h"
-#include "jstypes.h"
-#include "jsutil.h"
 
-#include "jit/IonCode.h"
 #include "jit/IonFrameIterator.h"
-#include "jit/Registers.h"
 
 namespace js {
 namespace jit {

@@ -10,7 +10,7 @@
 #include "jit/shared/Lowering-shared.h"
 
 #include "jit/MIR.h"
-#include "jit/MIRGraph.h"
+#include "jit/MIRGenerator.h"
 
 namespace js {
 namespace jit {
