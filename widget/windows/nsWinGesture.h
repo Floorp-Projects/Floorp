@@ -198,7 +198,7 @@ public:
   nsWinGesture();
 
 public:
-  bool SetWinGestureSupport(HWND hWnd, nsGestureNotifyEvent::ePanDirection aDirection);
+  bool SetWinGestureSupport(HWND hWnd, mozilla::WidgetGestureNotifyEvent::ePanDirection aDirection);
   bool ShutdownWinGestureSupport();
   bool RegisterTouchWindow(HWND hWnd);
   bool UnregisterTouchWindow(HWND hWnd);
