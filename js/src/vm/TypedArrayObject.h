@@ -63,7 +63,7 @@ class ArrayBufferObject : public JSObject
 
     static bool class_constructor(JSContext *cx, unsigned argc, Value *vp);
 
-    static JSObject *create(JSContext *cx, uint32_t nbytes, uint8_t *contents = NULL);
+    static JSObject *create(JSContext *cx, uint32_t nbytes, uint8_t *contents = nullptr);
 
     static JSObject *createSlice(JSContext *cx, ArrayBufferObject &arrayBuffer,
                                  uint32_t begin, uint32_t end);
@@ -150,8 +150,9 @@ class ArrayBufferObject : public JSObject
         header->flags = 0;
         header->initializedLength = bytes;
 
-        // NB: one or both of these fields is clobbered by GetViewList to store the
-        // 'views' link. Set them to 0 to effectively initialize 'views' to NULL.
+        // NB: one or both of these fields is clobbered by GetViewList to store
+        // the 'views' link. Set them to 0 to effectively initialize 'views'
+        // to nullptr.
         header->length = 0;
         header->capacity = 0;
     }
@@ -162,7 +163,7 @@ class ArrayBufferObject : public JSObject
 
     void addView(ArrayBufferViewObject *view);
 
-    bool allocateSlots(JSContext *cx, uint32_t size, uint8_t *contents = NULL);
+    bool allocateSlots(JSContext *cx, uint32_t size, uint8_t *contents = nullptr);
     void changeContents(JSContext *cx, ObjectElements *newHeader);
 
     /*
@@ -318,7 +319,7 @@ class TypedArrayObject : public ArrayBufferViewObject
         return static_cast<void*>(getPrivate(DATA_SLOT));
     }
 
-    inline bool isArrayIndex(jsid id, uint32_t *ip = NULL);
+    inline bool isArrayIndex(jsid id, uint32_t *ip = nullptr);
     void copyTypedArrayElement(uint32_t index, MutableHandleValue vp);
 
     void neuter();
