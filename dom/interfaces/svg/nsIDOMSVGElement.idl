@@ -19,7 +19,4 @@ interface nsIDOMSVGElement : nsIDOMElement
 
   readonly attribute nsISupports   className;
   readonly attribute nsIDOMCSSStyleDeclaration style;
-
-  // Not implemented
-  // nsIDOMCSSValue getPresentationAttribute(in DOMString name);
 };
