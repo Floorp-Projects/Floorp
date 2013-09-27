@@ -117,7 +117,7 @@ typename Builder::Object TableTicker::GetMetaJSCustomObject(Builder& b)
   b.DefineProperty(meta, "processType", XRE_GetProcessType());
 
   TimeDuration delta = TimeStamp::Now() - sStartTime;
-  b.DefineProperty(meta, "startTime", PR_Now()/1000.0f - delta.ToMilliseconds());
+  b.DefineProperty(meta, "startTime", PR_Now()/1000.0 - delta.ToMilliseconds());
 
   nsresult res;
   nsCOMPtr<nsIHttpProtocolHandler> http = do_GetService(NS_NETWORK_PROTOCOL_CONTRACTID_PREFIX "http", &res);

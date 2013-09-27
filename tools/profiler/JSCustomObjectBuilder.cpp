@@ -155,6 +155,16 @@ struct SendToStreamImpl<char *>
 };
 
 template <>
+struct SendToStreamImpl<double>
+{
+  static void run(std::ostream& stream, double p) {
+    // 13 for ms, 16 of microseconds, plus an extra 2
+    stream.precision(18);
+    stream << p;
+  }
+};
+
+template <>
 struct SendToStreamImpl<JSCustomObject*>
 {
   static void run(std::ostream& stream, JSCustomObject* p) {
