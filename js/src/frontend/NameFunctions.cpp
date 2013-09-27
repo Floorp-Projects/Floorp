@@ -76,6 +76,9 @@ class NameResolver
           case PNK_NAME:
             return buf->append(n->pn_atom);
 
+          case PNK_THIS:
+            return buf->append("this");
+
           case PNK_ELEM:
             return nameExpression(n->pn_left) &&
                    buf->append("[") &&
@@ -118,6 +121,7 @@ class NameResolver
 
             switch (cur->getKind()) {
               case PNK_NAME:     return cur;  /* found the initialized declaration */
+              case PNK_THIS:     return cur;  /* Setting a property of 'this'. */
               case PNK_FUNCTION: return nullptr; /* won't find an assignment or declaration */
 
               case PNK_RETURN:
