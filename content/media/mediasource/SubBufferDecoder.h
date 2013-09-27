@@ -30,15 +30,15 @@ public:
     mReader = aReader;
   }
 
-  ReentrantMonitor& GetReentrantMonitor() MOZ_OVERRIDE;
-  bool OnStateMachineThread() const MOZ_OVERRIDE;
-  bool OnDecodeThread() const MOZ_OVERRIDE;
-  SourceBufferResource* GetResource() const MOZ_OVERRIDE;
-  void SetMediaDuration(int64_t aDuration) MOZ_OVERRIDE;
-  void UpdateEstimatedMediaDuration(int64_t aDuration) MOZ_OVERRIDE;
-  void SetMediaSeekable(bool aMediaSeekable) MOZ_OVERRIDE;
-  void SetTransportSeekable(bool aTransportSeekable) MOZ_OVERRIDE;
-  layers::ImageContainer* GetImageContainer() MOZ_OVERRIDE;
+  virtual ReentrantMonitor& GetReentrantMonitor() MOZ_OVERRIDE;
+  virtual bool OnStateMachineThread() const MOZ_OVERRIDE;
+  virtual bool OnDecodeThread() const MOZ_OVERRIDE;
+  virtual SourceBufferResource* GetResource() const MOZ_OVERRIDE;
+  virtual void SetMediaDuration(int64_t aDuration) MOZ_OVERRIDE;
+  virtual void UpdateEstimatedMediaDuration(int64_t aDuration) MOZ_OVERRIDE;
+  virtual void SetMediaSeekable(bool aMediaSeekable) MOZ_OVERRIDE;
+  virtual void SetTransportSeekable(bool aTransportSeekable) MOZ_OVERRIDE;
+  virtual layers::ImageContainer* GetImageContainer() MOZ_OVERRIDE;
 
   void NotifyDataArrived(const char* aBuffer, uint32_t aLength, int64_t aOffset)
   {
