@@ -985,7 +985,7 @@ js::ValueToIterator(JSContext *cx, unsigned flags, MutableHandleValue vp)
                 return false;
             /* fall through */
         } else {
-            obj = js_ValueToNonNullObject(cx, vp);
+            obj = ToObject(cx, vp);
             if (!obj)
                 return false;
         }

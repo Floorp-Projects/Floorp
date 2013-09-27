@@ -1175,7 +1175,7 @@ MapObject::construct(JSContext *cx, unsigned argc, Value *vp)
     if (args.hasDefined(0)) {
         ForOfIterator iter(cx, args[0]);
         while (iter.next()) {
-            RootedObject pairobj(cx, js_ValueToNonNullObject(cx, iter.value()));
+            RootedObject pairobj(cx, ToObject(cx, iter.value()));
             if (!pairobj)
                 return false;
 
