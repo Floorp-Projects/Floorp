@@ -8,7 +8,7 @@
 #define MOZ_PROFILE_ENTRY_H
 
 #include <ostream>
-#include "GeckoProfilerImpl.h"
+#include "GeckoProfiler.h"
 #include "platform.h"
 #include "ProfilerBacktrace.h"
 #include "mozilla/Mutex.h"
