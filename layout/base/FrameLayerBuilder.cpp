@@ -1668,7 +1668,7 @@ ContainerState::SetFixedPositionLayerData(Layer* aLayer,
       GetScrollPositionClampingScrollPortSize();
   }
 
-  nsDisplayFixedPosition::SetFixedPositionLayerData(aLayer,
+  nsLayoutUtils::SetFixedPositionLayerData(aLayer,
       viewportFrame, viewportSize, aFixedPosFrame, mContainerReferenceFrame,
       presContext, mParameters);
 }
