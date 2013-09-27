@@ -194,6 +194,7 @@ FENNEC_JAVA_FILES = \
   gfx/LayerView.java \
   gfx/NativePanZoomController.java \
   gfx/NinePatchTileLayer.java \
+  gfx/Overscroll.java \
   gfx/PanningPerfAPI.java \
   gfx/PanZoomController.java \
   gfx/PanZoomTarget.java \
