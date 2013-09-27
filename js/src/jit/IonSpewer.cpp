@@ -61,7 +61,7 @@ FilterContainsLocation(HandleScript function)
             if (index[filelen] == 0 || index[filelen] == ',')
                 return true;
             if (index[filelen] == ':' && line != size_t(-1)) {
-                size_t read_line = strtoul(&index[filelen + 1], NULL, 10);
+                size_t read_line = strtoul(&index[filelen + 1], nullptr, 10);
                 if (read_line == line)
                     return true;
             }
@@ -209,11 +209,11 @@ IonSpewer::endFunction()
     c1Spewer.endFunction();
     jsonSpewer.endFunction();
 
-    this->graph = NULL;
+    this->graph = nullptr;
 }
 
 
-FILE *jit::IonSpewFile = NULL;
+FILE *jit::IonSpewFile = nullptr;
 
 static bool
 ContainsFlag(const char *str, const char *flag)
@@ -238,7 +238,7 @@ jit::CheckLogging()
     if (!env)
         return;
     if (strstr(env, "help")) {
-        fflush(NULL);
+        fflush(nullptr);
         printf(
             "\n"
             "usage: IONFLAGS=option,option,option,... where options can be:\n"
