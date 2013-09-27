@@ -59,6 +59,18 @@ SYNC_JAVA_FILES := \
   background/healthreport/upload/ObsoleteDocumentTracker.java \
   background/healthreport/upload/SubmissionClient.java \
   background/healthreport/upload/SubmissionPolicy.java \
+  browserid/ASNUtils.java \
+  browserid/BrowserIDKeyPair.java \
+  browserid/DSACryptoImplementation.java \
+  browserid/JSONWebTokenUtils.java \
+  browserid/MockMyIDTokenFactory.java \
+  browserid/RSACryptoImplementation.java \
+  browserid/SigningPrivateKey.java \
+  browserid/verifier/BrowserIDRemoteVerifierClient.java \
+  browserid/verifier/BrowserIDVerifierClient.java \
+  browserid/verifier/BrowserIDVerifierDelegate.java \
+  browserid/verifier/BrowserIDVerifierException.java \
+  browserid/VerifyingPublicKey.java \
   fxa/authenticator/FxAccountAuthenticator.java \
   fxa/authenticator/FxAccountAuthenticatorService.java \
   fxa/sync/FxAccountBookmarksSyncService.java \
@@ -355,8 +367,8 @@ SYNC_RES_XML := \
   $(NULL)
 
 SYNC_PP_RES_XML := \
-  res/xml/sync_options.xml \
   res/xml/sync_syncadapter.xml \
+  res/xml/sync_options.xml \
   res/xml/sync_authenticator.xml \
   res/xml/fxaccount_tabs_syncadapter.xml \
   res/xml/fxaccount_passwords_syncadapter.xml \
