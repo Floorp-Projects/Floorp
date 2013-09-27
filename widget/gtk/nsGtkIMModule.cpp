@@ -1524,9 +1524,9 @@ nsGtkIMModule::DeleteText(const int32_t aOffset, const uint32_t aNChars)
     }
 
     // Delete the selection
-    nsContentCommandEvent contentCommandEvent(true,
-                                              NS_CONTENT_COMMAND_DELETE,
-                                              mLastFocusedWindow);
+    WidgetContentCommandEvent contentCommandEvent(true,
+                                                  NS_CONTENT_COMMAND_DELETE,
+                                                  mLastFocusedWindow);
     mLastFocusedWindow->DispatchEvent(&contentCommandEvent, status);
 
     if (!contentCommandEvent.mSucceeded ||

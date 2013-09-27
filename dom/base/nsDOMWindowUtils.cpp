@@ -2015,7 +2015,7 @@ nsDOMWindowUtils::SendContentCommandEvent(const nsAString& aType,
   else
     return NS_ERROR_FAILURE;
 
-  nsContentCommandEvent event(true, msg, widget);
+  WidgetContentCommandEvent event(true, msg, widget);
   if (msg == NS_CONTENT_COMMAND_PASTE_TRANSFERABLE) {
     event.mTransferable = aTransferable;
   }

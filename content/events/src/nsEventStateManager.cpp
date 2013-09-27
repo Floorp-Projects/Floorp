@@ -1073,12 +1073,13 @@ nsEventStateManager::PreHandleEvent(nsPresContext* aPresContext,
   case NS_CONTENT_COMMAND_REDO:
   case NS_CONTENT_COMMAND_PASTE_TRANSFERABLE:
     {
-      DoContentCommandEvent(static_cast<nsContentCommandEvent*>(aEvent));
+      DoContentCommandEvent(static_cast<WidgetContentCommandEvent*>(aEvent));
     }
     break;
   case NS_CONTENT_COMMAND_SCROLL:
     {
-      DoContentCommandScrollEvent(static_cast<nsContentCommandEvent*>(aEvent));
+      DoContentCommandScrollEvent(
+        static_cast<WidgetContentCommandEvent*>(aEvent));
     }
     break;
   case NS_TEXT_TEXT:
@@ -4921,7 +4922,7 @@ nsEventStateManager::IsShellVisible(nsIDocShell* aShell)
 }
 
 nsresult
-nsEventStateManager::DoContentCommandEvent(nsContentCommandEvent* aEvent)
+nsEventStateManager::DoContentCommandEvent(WidgetContentCommandEvent* aEvent)
 {
   EnsureDocument(mPresContext);
   NS_ENSURE_TRUE(mDocument, NS_ERROR_FAILURE);
@@ -4996,7 +4997,8 @@ nsEventStateManager::DoContentCommandEvent(nsContentCommandEvent* aEvent)
 }
 
 nsresult
-nsEventStateManager::DoContentCommandScrollEvent(nsContentCommandEvent* aEvent)
+nsEventStateManager::DoContentCommandScrollEvent(
+                       WidgetContentCommandEvent* aEvent)
 {
   NS_ENSURE_TRUE(mPresContext, NS_ERROR_NOT_AVAILABLE);
   nsIPresShell* ps = mPresContext->GetPresShell();
@@ -5005,13 +5007,13 @@ nsEventStateManager::DoContentCommandScrollEvent(nsContentCommandEvent* aEvent)
 
   nsIScrollableFrame::ScrollUnit scrollUnit;
   switch (aEvent->mScroll.mUnit) {
-    case nsContentCommandEvent::eCmdScrollUnit_Line:
+    case WidgetContentCommandEvent::eCmdScrollUnit_Line:
       scrollUnit = nsIScrollableFrame::LINES;
       break;
-    case nsContentCommandEvent::eCmdScrollUnit_Page:
+    case WidgetContentCommandEvent::eCmdScrollUnit_Page:
       scrollUnit = nsIScrollableFrame::PAGES;
       break;
-    case nsContentCommandEvent::eCmdScrollUnit_Whole:
+    case WidgetContentCommandEvent::eCmdScrollUnit_Whole:
       scrollUnit = nsIScrollableFrame::WHOLE;
       break;
     default:

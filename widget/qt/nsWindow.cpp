@@ -1470,7 +1470,7 @@ nsWindow::DispatchCommandEvent(nsIAtom* aCommand)
 nsEventStatus
 nsWindow::DispatchContentCommandEvent(int32_t aMsg)
 {
-    nsContentCommandEvent event(true, aMsg, this);
+    WidgetContentCommandEvent event(true, aMsg, this);
 
     nsEventStatus status;
     DispatchEvent(&event, status);

@@ -5778,7 +5778,9 @@ static int32_t RoundUp(double aDouble)
 
       // Determine if we can paste (if receiving data from the service).
       if (mGeckoChild && returnType) {
-        nsContentCommandEvent command(true, NS_CONTENT_COMMAND_PASTE_TRANSFERABLE, mGeckoChild, true);
+        WidgetContentCommandEvent command(true,
+                                          NS_CONTENT_COMMAND_PASTE_TRANSFERABLE,
+                                          mGeckoChild, true);
         // This might possibly destroy our widget (and null out mGeckoChild).
         mGeckoChild->DispatchWindowEvent(command);
         if (!mGeckoChild || !command.mSucceeded || !command.mIsEnabled)
@@ -5875,9 +5877,9 @@ static int32_t RoundUp(double aDouble)
 
   NS_ENSURE_TRUE(mGeckoChild, false);
 
-  nsContentCommandEvent command(true,
-                                NS_CONTENT_COMMAND_PASTE_TRANSFERABLE,
-                                mGeckoChild);
+  WidgetContentCommandEvent command(true,
+                                    NS_CONTENT_COMMAND_PASTE_TRANSFERABLE,
+                                    mGeckoChild);
   command.mTransferable = trans;
   mGeckoChild->DispatchWindowEvent(command);
   

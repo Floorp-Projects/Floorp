@@ -136,6 +136,5 @@ typedef mozilla::InternalClipboardEvent    nsClipboardEvent;
 typedef mozilla::InternalFocusEvent        nsFocusEvent;
 typedef mozilla::InternalTransitionEvent   nsTransitionEvent;
 typedef mozilla::InternalAnimationEvent    nsAnimationEvent;
-typedef mozilla::WidgetContentCommandEvent nsContentCommandEvent;
 
 #endif // mozilla_EventForwards_h__
