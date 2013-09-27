@@ -127,7 +127,7 @@ jit::CheckOverRecursedPar(ForkJoinSlice *slice)
 
     if (!JS_CHECK_STACK_SIZE(realStackLimit, &stackDummy_)) {
         slice->bailoutRecord->setCause(ParallelBailoutOverRecursed,
-                                       NULL, NULL, NULL);
+                                       nullptr, nullptr, nullptr);
         return false;
     }
 
@@ -160,7 +160,7 @@ jit::PushPar(PushParArgs *args)
     JSObject::EnsureDenseResult res =
         args->object->parExtendDenseElements(slice, &args->value, 1);
     if (res != JSObject::ED_OK)
-        return NULL;
+        return nullptr;
     return args->object;
 }
 
@@ -168,9 +168,9 @@ JSObject *
 jit::ExtendArrayPar(ForkJoinSlice *slice, JSObject *array, uint32_t length)
 {
     JSObject::EnsureDenseResult res =
-        array->parExtendDenseElements(slice, NULL, length);
+        array->parExtendDenseElements(slice, nullptr, length);
     if (res != JSObject::ED_OK)
-        return NULL;
+        return nullptr;
     return array;
 }
 
@@ -471,8 +471,8 @@ jit::AbortPar(ParallelBailoutCause cause, JSScript *outermostScript, JSScript *c
          (currentScript ? PCToLineNumber(currentScript, bytecode) : 0));
 
     JS_ASSERT(InParallelSection());
-    JS_ASSERT(outermostScript != NULL);
-    JS_ASSERT(currentScript != NULL);
+    JS_ASSERT(outermostScript != nullptr);
+    JS_ASSERT(currentScript != nullptr);
     JS_ASSERT(outermostScript->hasParallelIonScript());
 
     ForkJoinSlice *slice = ForkJoinSlice::Current();
@@ -497,7 +497,7 @@ jit::PropagateAbortPar(JSScript *outermostScript, JSScript *currentScript)
 
     ForkJoinSlice *slice = ForkJoinSlice::Current();
     if (currentScript)
-        slice->bailoutRecord->addTrace(currentScript, NULL);
+        slice->bailoutRecord->addTrace(currentScript, nullptr);
 }
 
 void

@@ -95,7 +95,7 @@ BinaryStringPolicy::adjustInputs(MInstruction *ins)
         if (in->type() == MIRType_String)
             continue;
 
-        MInstruction *replace = NULL;
+        MInstruction *replace = nullptr;
         if (in->type() == MIRType_Int32 || in->type() == MIRType_Double) {
             replace = MToString::New(in);
         } else {

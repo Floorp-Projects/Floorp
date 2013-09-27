@@ -91,7 +91,7 @@ MIRGraph::removeBlock(MBasicBlock *block)
     // share the same resumepoints and we cannot distinguish between them.
 
     if (block == osrBlock_)
-        osrBlock_ = NULL;
+        osrBlock_ = nullptr;
 
     if (exitAccumulator_) {
         size_t i = 0;
@@ -140,7 +140,7 @@ MIRGraph::forkJoinSlice()
     MBasicBlock *entry = entryBlock();
     JS_ASSERT(entry->info().executionMode() == ParallelExecution);
 
-    MInstruction *start = NULL;
+    MInstruction *start = nullptr;
     for (MInstructionIterator ins(entry->begin()); ins != entry->end(); ins++) {
         if (ins->isForkJoinSlice())
             return *ins;
@@ -158,14 +158,14 @@ MBasicBlock *
 MBasicBlock::New(MIRGraph &graph, BytecodeAnalysis *analysis, CompileInfo &info,
                  MBasicBlock *pred, jsbytecode *entryPc, Kind kind)
 {
-    JS_ASSERT(entryPc != NULL);
+    JS_ASSERT(entryPc != nullptr);
 
     MBasicBlock *block = new MBasicBlock(graph, info, entryPc, kind);
     if (!block->init())
-        return NULL;
+        return nullptr;
 
     if (!block->inherit(analysis, pred, 0))
-        return NULL;
+        return nullptr;
 
     return block;
 }
@@ -176,10 +176,10 @@ MBasicBlock::NewPopN(MIRGraph &graph, CompileInfo &info,
 {
     MBasicBlock *block = new MBasicBlock(graph, info, entryPc, kind);
     if (!block->init())
-        return NULL;
+        return nullptr;
 
-    if (!block->inherit(NULL, pred, popped))
-        return NULL;
+    if (!block->inherit(nullptr, pred, popped))
+        return nullptr;
 
     return block;
 }
@@ -195,10 +195,10 @@ MBasicBlock::NewWithResumePoint(MIRGraph &graph, CompileInfo &info,
     block->entryResumePoint_ = resumePoint;
 
     if (!block->init())
-        return NULL;
+        return nullptr;
 
     if (!block->inheritResumePoint(pred))
-        return NULL;
+        return nullptr;
 
     return block;
 }
@@ -207,14 +207,14 @@ MBasicBlock *
 MBasicBlock::NewPendingLoopHeader(MIRGraph &graph, CompileInfo &info,
                                   MBasicBlock *pred, jsbytecode *entryPc)
 {
-    return MBasicBlock::New(graph, NULL, info, pred, entryPc, PENDING_LOOP_HEADER);
+    return MBasicBlock::New(graph, nullptr, info, pred, entryPc, PENDING_LOOP_HEADER);
 }
 
 MBasicBlock *
 MBasicBlock::NewSplitEdge(MIRGraph &graph, CompileInfo &info, MBasicBlock *pred)
 {
     return pred->pc()
-           ? MBasicBlock::New(graph, NULL, info, pred, pred->pc(), SPLIT_EDGE)
+           ? MBasicBlock::New(graph, nullptr, info, pred, pred->pc(), SPLIT_EDGE)
            : MBasicBlock::NewAsmJS(graph, info, pred, SPLIT_EDGE);
 }
 
@@ -229,10 +229,10 @@ MBasicBlock::NewAbortPar(MIRGraph &graph, CompileInfo &info,
     block->entryResumePoint_ = resumePoint;
 
     if (!block->init())
-        return NULL;
+        return nullptr;
 
     if (!block->addPredecessorWithoutPhis(pred))
-        return NULL;
+        return nullptr;
 
     block->end(new MAbortPar());
     return block;
@@ -241,9 +241,9 @@ MBasicBlock::NewAbortPar(MIRGraph &graph, CompileInfo &info,
 MBasicBlock *
 MBasicBlock::NewAsmJS(MIRGraph &graph, CompileInfo &info, MBasicBlock *pred, Kind kind)
 {
-    MBasicBlock *block = new MBasicBlock(graph, info, /* entryPC = */ NULL, kind);
+    MBasicBlock *block = new MBasicBlock(graph, info, /* entryPC = */ nullptr, kind);
     if (!block->init())
-        return NULL;
+        return nullptr;
 
     if (pred) {
         block->stackPosition_ = pred->stackPosition_;
@@ -266,7 +266,7 @@ MBasicBlock::NewAsmJS(MIRGraph &graph, CompileInfo &info, MBasicBlock *pred, Kin
         }
 
         if (!block->predecessors_.append(pred))
-            return NULL;
+            return nullptr;
     }
 
     return block;
@@ -277,19 +277,19 @@ MBasicBlock::MBasicBlock(MIRGraph &graph, CompileInfo &info, jsbytecode *pc, Kin
     graph_(graph),
     info_(info),
     stackPosition_(info_.firstStackSlot()),
-    lastIns_(NULL),
+    lastIns_(nullptr),
     pc_(pc),
-    lir_(NULL),
-    start_(NULL),
-    entryResumePoint_(NULL),
-    successorWithPhis_(NULL),
+    lir_(nullptr),
+    start_(nullptr),
+    entryResumePoint_(nullptr),
+    successorWithPhis_(nullptr),
     positionInPhiSuccessor_(0),
     kind_(kind),
     loopDepth_(0),
     mark_(false),
-    immediateDominator_(NULL),
+    immediateDominator_(nullptr),
     numDominated_(0),
-    loopHeader_(NULL),
+    loopHeader_(nullptr),
     trackedPc_(pc)
 #if defined (JS_ION_PERF)
     , lineno_(0u),
@@ -339,7 +339,7 @@ MBasicBlock::inherit(BytecodeAnalysis *analysis, MBasicBlock *pred, uint32_t pop
     JS_ASSERT(!entryResumePoint_);
 
     // Propagate the caller resume point from the inherited block.
-    MResumePoint *callerResumePoint = pred ? pred->callerResumePoint() : NULL;
+    MResumePoint *callerResumePoint = pred ? pred->callerResumePoint() : nullptr;
 
     // Create a resume point using our initial stack state.
     entryResumePoint_ = new MResumePoint(this, pc(), callerResumePoint, MResumePoint::ResumeAt);
@@ -385,7 +385,7 @@ MBasicBlock::inheritResumePoint(MBasicBlock *pred)
 
     JS_ASSERT(info_.nslots() >= stackPosition_);
     JS_ASSERT(kind_ != PENDING_LOOP_HEADER);
-    JS_ASSERT(pred != NULL);
+    JS_ASSERT(pred != nullptr);
 
     if (!predecessors_.append(pred))
         return false;
@@ -622,7 +622,7 @@ MBasicBlock::discardLastIns()
 {
     JS_ASSERT(lastIns_);
     discard(lastIns_);
-    lastIns_ = NULL;
+    lastIns_ = nullptr;
 }
 
 void
@@ -710,7 +710,7 @@ MBasicBlock::discardAllInstructions()
             iter->discardOperand(i);
         iter = instructions_.removeAt(iter);
     }
-    lastIns_ = NULL;
+    lastIns_ = nullptr;
 }
 
 void
@@ -723,7 +723,7 @@ MBasicBlock::discardAllPhiOperands()
     }
 
     for (MBasicBlock **pred = predecessors_.begin(); pred != predecessors_.end(); pred++)
-        (*pred)->setSuccessorWithPhis(NULL, 0);
+        (*pred)->setSuccessorWithPhis(nullptr, 0);
 }
 
 void
@@ -804,7 +804,7 @@ MBasicBlock::discardPhiAt(MPhiIterator &at)
 
     if (phis_.empty()) {
         for (MBasicBlock **pred = predecessors_.begin(); pred != predecessors_.end(); pred++)
-            (*pred)->setSuccessorWithPhis(NULL, 0);
+            (*pred)->setSuccessorWithPhis(nullptr, 0);
     }
     return result;
 }
@@ -1072,7 +1072,7 @@ MBasicBlock::replacePredecessor(MBasicBlock *old, MBasicBlock *split)
 void
 MBasicBlock::clearDominatorInfo()
 {
-    setImmediateDominator(NULL);
+    setImmediateDominator(nullptr);
     immediatelyDominated_.clear();
     numDominated_ = 0;
 }
@@ -1155,11 +1155,11 @@ MBasicBlock::immediateDominatorBranch(BranchDirection *pdirection)
     *pdirection = FALSE_BRANCH;
 
     if (numPredecessors() != 1)
-        return NULL;
+        return nullptr;
 
     MBasicBlock *dom = immediateDominator();
     if (dom != getPredecessor(0))
-        return NULL;
+        return nullptr;
 
     // Look for a trailing MTest branching to this block.
     MInstruction *ins = dom->lastIns();
@@ -1168,13 +1168,13 @@ MBasicBlock::immediateDominatorBranch(BranchDirection *pdirection)
 
         JS_ASSERT(test->ifTrue() == this || test->ifFalse() == this);
         if (test->ifTrue() == this && test->ifFalse() == this)
-            return NULL;
+            return nullptr;
 
         *pdirection = (test->ifTrue() == this) ? TRUE_BRANCH : FALSE_BRANCH;
         return test;
     }
 
-    return NULL;
+    return nullptr;
 }
 
 void

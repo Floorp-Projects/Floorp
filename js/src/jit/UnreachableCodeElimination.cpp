@@ -112,16 +112,16 @@ UnreachableCodeElimination::optimizableSuccessor(MBasicBlock *block)
 {
     // If the last instruction in `block` is a test instruction of a
     // constant value, returns the successor that the branch will
-    // always branch to at runtime. Otherwise, returns NULL.
+    // always branch to at runtime. Otherwise, returns nullptr.
 
     MControlInstruction *ins = block->lastIns();
     if (!ins->isTest())
-        return NULL;
+        return nullptr;
 
     MTest *testIns = ins->toTest();
     MDefinition *v = testIns->getOperand(0);
     if (!v->isConstant())
-        return NULL;
+        return nullptr;
 
     const Value &val = v->toConstant()->value();
     BranchDirection bdir = ToBoolean(val) ? TRUE_BRANCH : FALSE_BRANCH;
@@ -194,7 +194,7 @@ UnreachableCodeElimination::prunePointlessBranchesAndMarkReachableBlocks()
         block->end(gotoIns);
         MBasicBlock *successorWithPhis = block->successorWithPhis();
         if (successorWithPhis && successorWithPhis != succ)
-            block->setSuccessorWithPhis(NULL, 0);
+            block->setSuccessorWithPhis(nullptr, 0);
     }
 
     return true;
@@ -250,7 +250,7 @@ UnreachableCodeElimination::removeUnmarkedBlocksAndClearDominators()
                 // predecessors need to have the successorWithPhis
                 // flag cleared.
                 for (size_t i = 0; i < block->numPredecessors(); i++)
-                    block->getPredecessor(i)->setSuccessorWithPhis(NULL, 0);
+                    block->getPredecessor(i)->setSuccessorWithPhis(nullptr, 0);
             }
 
             if (block->isLoopBackedge()) {
