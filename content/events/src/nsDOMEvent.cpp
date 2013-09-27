@@ -574,9 +574,10 @@ nsDOMEvent::DuplicatePrivateData()
     }
     case NS_SCRIPT_ERROR_EVENT:
     {
-      nsScriptErrorEvent* oldScriptErrorEvent =
-        static_cast<nsScriptErrorEvent*>(mEvent);
-      nsScriptErrorEvent* scriptErrorEvent = new nsScriptErrorEvent(false, msg);
+      InternalScriptErrorEvent* oldScriptErrorEvent =
+        static_cast<InternalScriptErrorEvent*>(mEvent);
+      InternalScriptErrorEvent* scriptErrorEvent =
+        new InternalScriptErrorEvent(false, msg);
       scriptErrorEvent->AssignScriptErrorEventData(*oldScriptErrorEvent, true);
       newEvent = scriptErrorEvent;
       break;
