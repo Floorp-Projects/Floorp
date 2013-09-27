@@ -3246,138 +3246,12 @@ nsDisplayResolution::BuildLayer(nsDisplayListBuilder* aBuilder,
   return layer.forget();
 }
 
-nsDisplayFixedPosition::nsDisplayFixedPosition(nsDisplayListBuilder* aBuilder,
-                                               nsIFrame* aFrame,
-                                               nsIFrame* aFixedPosFrame,
-                                               nsDisplayList* aList)
-    : nsDisplayOwnLayer(aBuilder, aFrame, aList)
-    , mFixedPosFrame(aFixedPosFrame) {
-  MOZ_COUNT_CTOR(nsDisplayFixedPosition);
-}
-
-#ifdef NS_BUILD_REFCNT_LOGGING
-nsDisplayFixedPosition::~nsDisplayFixedPosition() {
-  MOZ_COUNT_DTOR(nsDisplayFixedPosition);
-}
-#endif
-
-/* static */ void
-nsDisplayFixedPosition::SetFixedPositionLayerData(Layer* aLayer,
-                                                  const nsIFrame* aViewportFrame,
-                                                  nsSize aViewportSize,
-                                                  const nsIFrame* aFixedPosFrame,
-                                                  const nsIFrame* aReferenceFrame,
-                                                  nsPresContext* aPresContext,
-                                                  const ContainerLayerParameters& aContainerParameters) {
-  // Find out the rect of the viewport frame relative to the reference frame.
-  // This, in conjunction with the container scale, will correspond to the
-  // coordinate-space of the built layer.
-  float factor = aPresContext->AppUnitsPerDevPixel();
-  nsPoint origin = aViewportFrame->GetOffsetToCrossDoc(aReferenceFrame);
-  LayerRect anchorRect(NSAppUnitsToFloatPixels(origin.x, factor) *
-                         aContainerParameters.mXScale,
-                       NSAppUnitsToFloatPixels(origin.y, factor) *
-                         aContainerParameters.mYScale,
-                       NSAppUnitsToFloatPixels(aViewportSize.width, factor) *
-                         aContainerParameters.mXScale,
-                       NSAppUnitsToFloatPixels(aViewportSize.height, factor) *
-                         aContainerParameters.mYScale);
-
-  // Work out the anchor point for this fixed position layer. We assume that
-  // any positioning set (left/top/right/bottom) indicates that the
-  // corresponding side of its container should be the anchor point,
-  // defaulting to top-left. If both sides of an axis are specified, we align
-  // to the center.
-  LayerPoint anchor = anchorRect.TopLeft();
-
-  const nsStylePosition* position = aFixedPosFrame->StylePosition();
-  if (position->mOffset.GetRightUnit() != eStyleUnit_Auto) {
-    if (position->mOffset.GetLeftUnit() != eStyleUnit_Auto) {
-      anchor.x = anchorRect.x + anchorRect.width / 2.f;
-    } else {
-      anchor.x = anchorRect.XMost();
-    }
-  }
-  if (position->mOffset.GetBottomUnit() != eStyleUnit_Auto) {
-    if (position->mOffset.GetTopUnit() != eStyleUnit_Auto) {
-      anchor.y = anchorRect.y + anchorRect.height / 2.f;
-    } else {
-      anchor.y = anchorRect.YMost();
-    }
-  }
-
-  aLayer->SetFixedPositionAnchor(anchor);
-
-  // Also make sure the layer is aware of any fixed position margins that have
-  // been set.
-  nsMargin fixedMargins = aPresContext->PresShell()->GetContentDocumentFixedPositionMargins();
-  LayerMargin fixedLayerMargins(NSAppUnitsToFloatPixels(fixedMargins.top, factor) *
-                                  aContainerParameters.mYScale,
-                                NSAppUnitsToFloatPixels(fixedMargins.right, factor) *
-                                  aContainerParameters.mXScale,
-                                NSAppUnitsToFloatPixels(fixedMargins.bottom, factor) *
-                                  aContainerParameters.mYScale,
-                                NSAppUnitsToFloatPixels(fixedMargins.left, factor) *
-                                  aContainerParameters.mXScale);
-
-  // If the frame is auto-positioned on either axis, set the top/left layer
-  // margins to -1, to indicate to the compositor that this layer is
-  // unaffected by fixed margins.
-  if (position->mOffset.GetLeftUnit() == eStyleUnit_Auto &&
-      position->mOffset.GetRightUnit() == eStyleUnit_Auto) {
-    fixedLayerMargins.left = -1;
-  }
-  if (position->mOffset.GetTopUnit() == eStyleUnit_Auto &&
-      position->mOffset.GetBottomUnit() == eStyleUnit_Auto) {
-    fixedLayerMargins.top = -1;
-  }
-
-  aLayer->SetFixedPositionMargins(fixedLayerMargins);
-}
-
-already_AddRefed<Layer>
-nsDisplayFixedPosition::BuildLayer(nsDisplayListBuilder* aBuilder,
-                                   LayerManager* aManager,
-                                   const ContainerLayerParameters& aContainerParameters) {
-  nsRefPtr<Layer> layer =
-    nsDisplayOwnLayer::BuildLayer(aBuilder, aManager, aContainerParameters);
-
-  nsIFrame* viewportFrame = mFixedPosFrame->GetParent();
-  nsPresContext *presContext = viewportFrame->PresContext();
-
-  // Fixed position frames are reflowed into the scroll-port size if one has
-  // been set.
-  nsSize viewportSize = viewportFrame->GetSize();
-  if (presContext->PresShell()->IsScrollPositionClampingScrollPortSizeSet()) {
-    viewportSize = presContext->PresShell()->
-      GetScrollPositionClampingScrollPortSize();
-  }
-
-  SetFixedPositionLayerData(layer, viewportFrame, viewportSize, mFixedPosFrame,
-                            ReferenceFrame(), presContext,
-                            aContainerParameters);
-
-  return layer.forget();
-}
-
-bool nsDisplayFixedPosition::TryMerge(nsDisplayListBuilder* aBuilder, nsDisplayItem* aItem) {
-  if (aItem->GetType() != TYPE_FIXED_POSITION)
-    return false;
-  // Items with the same fixed position frame can be merged.
-  nsDisplayFixedPosition* other = static_cast<nsDisplayFixedPosition*>(aItem);
-  if (other->mFixedPosFrame != mFixedPosFrame)
-    return false;
-  if (aItem->GetClip() != GetClip())
-    return false;
-  MergeFromTrackingMergedFrames(other);
-  return true;
-}
-
 nsDisplayStickyPosition::nsDisplayStickyPosition(nsDisplayListBuilder* aBuilder,
                                                  nsIFrame* aFrame,
                                                  nsIFrame* aStickyPosFrame,
                                                  nsDisplayList* aList)
-    : nsDisplayFixedPosition(aBuilder, aFrame, aStickyPosFrame, aList) {
+  : nsDisplayOwnLayer(aBuilder, aFrame, aList)
+  , mStickyPosFrame(aStickyPosFrame) {
   MOZ_COUNT_CTOR(nsDisplayStickyPosition);
 }
 
@@ -3412,10 +3286,10 @@ nsDisplayStickyPosition::BuildLayer(nsDisplayListBuilder* aBuilder,
       GetScrollPositionClampingScrollPortSize();
   }
 
-  SetFixedPositionLayerData(layer, scrollFrame, scrollFrameSize,
-                            mFixedPosFrame, ReferenceFrame(),
-                            presContext,
-                            aContainerParameters);
+  nsLayoutUtils::SetFixedPositionLayerData(layer, scrollFrame, scrollFrameSize,
+                                           mStickyPosFrame, ReferenceFrame(),
+                                           presContext,
+                                           aContainerParameters);
 
   ViewID scrollId = nsLayoutUtils::FindOrCreateIDFor(
     stickyScrollContainer->ScrollFrame()->GetScrolledFrame()->GetContent());
@@ -3443,6 +3317,19 @@ nsDisplayStickyPosition::BuildLayer(nsDisplayListBuilder* aBuilder,
   layer->SetStickyPositionData(scrollId, stickyOuter, stickyInner);
 
   return layer.forget();
+}
+
+bool nsDisplayStickyPosition::TryMerge(nsDisplayListBuilder* aBuilder, nsDisplayItem* aItem) {
+  if (aItem->GetType() != TYPE_STICKY_POSITION)
+    return false;
+  // Items with the same fixed position frame can be merged.
+  nsDisplayStickyPosition* other = static_cast<nsDisplayStickyPosition*>(aItem);
+  if (other->mStickyPosFrame != mStickyPosFrame)
+    return false;
+  if (aItem->GetClip() != GetClip())
+    return false;
+  MergeFromTrackingMergedFrames(other);
+  return true;
 }
 
 nsDisplayScrollLayer::nsDisplayScrollLayer(nsDisplayListBuilder* aBuilder,

@@ -58,6 +58,7 @@ struct nsOverflowAreas;
 namespace mozilla {
 class SVGImageContext;
 struct IntrinsicSize;
+struct ContainerLayerParameters;
 namespace dom {
 class DOMRectList;
 class Element;
@@ -65,6 +66,9 @@ class HTMLImageElement;
 class HTMLCanvasElement;
 class HTMLVideoElement;
 } // namespace dom
+namespace layers {
+class Layer;
+}
 } // namespace mozilla
 
 /**
@@ -76,6 +80,8 @@ class nsLayoutUtils
 {
   typedef ::GraphicsFilter GraphicsFilter;
   typedef mozilla::dom::DOMRectList DOMRectList;
+  typedef mozilla::layers::Layer Layer;
+  typedef mozilla::ContainerLayerParameters ContainerLayerParameters;
 
 public:
   typedef mozilla::layers::FrameMetrics FrameMetrics;
@@ -360,6 +366,13 @@ public:
    */
   static bool IsAncestorFrameCrossDoc(const nsIFrame* aAncestorFrame, const nsIFrame* aFrame,
                                         const nsIFrame* aCommonAncestor = nullptr);
+
+  static void SetFixedPositionLayerData(Layer* aLayer, const nsIFrame* aViewportFrame,
+                                        nsSize aViewportSize,
+                                        const nsIFrame* aFixedPosFrame,
+                                        const nsIFrame* aReferenceFrame,
+                                        nsPresContext* aPresContext,
+                                        const ContainerLayerParameters& aContainerParameters);
 
   /**
    * Return true if aFrame is a fixed-pos frame and is a child of a viewport
