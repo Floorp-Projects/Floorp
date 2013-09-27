@@ -1,31 +1,34 @@
-<html xmlns="http://www.w3.org/1999/xhtml" xmlns:mathml="http://www.w3.org/1998/Math/MathML">
+<html xmlns="http://www.w3.org/1999/xhtml" xmlns:mathml="http://www.w3.org/1998/Math/MathML" class="reftest-wait">
 <mathml:mfenced/>
 
 
 <script><![CDATA[
 var docviewer;
 function do_onload() {
-netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
-var navigator1 = parent.QueryInterface(Components.interfaces.nsIInterfaceRequestor).getInterface(Components.interfaces.nsIWebNavigation);
-var docShell = navigator1.QueryInterface(Components.interfaces.nsIDocShell);
-docviewer = docShell.contentViewer.QueryInterface(Components.interfaces.nsIMarkupDocumentViewer);
+  var navigator1 = SpecialPowers.wrap(parent).QueryInterface(SpecialPowers.Ci.nsIInterfaceRequestor).getInterface(SpecialPowers.Ci.nsIWebNavigation);
+  var docShell = navigator1.QueryInterface(SpecialPowers.Ci.nsIDocShell);
+  docviewer = docShell.contentViewer.QueryInterface(SpecialPowers.Ci.nsIMarkupDocumentViewer);
 
-setTimeout(function() {window.location.reload()}, 500);
-setTimeout(doe,50, 0.2);
+  setTimeout(function() {
+    clearTimeout(timer);
+    docviewer.textZoom = 1;
+    document.documentElement.removeAttribute("class");
+  }, 500);
+  setTimeout(doe,50, 0.2);
 }
 do_onload();
 
+var timer;
 function doe(i) {
-netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
- docviewer.textZoom += i;
+  docviewer.textZoom += i;
 
-if (docviewer.textZoom >=4)
-  i = -0.2;
+  if (docviewer.textZoom >=4)
+    i = -0.2;
 
-if (docviewer.textZoom <=0)
-  i = 0.2;
-window.status = docviewer.textZoom;
-setTimeout(doe, 50, i);
+  if (docviewer.textZoom <=0)
+    i = 0.2;
+  window.status = docviewer.textZoom;
+  timer = setTimeout(doe, 50, i);
 }
 ]]></script>
 </html>

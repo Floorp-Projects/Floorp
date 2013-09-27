@@ -738,6 +738,14 @@ public:
   }
 
   /**
+   * Report simple error message to the browser console
+   *   @param aErrorText the error message
+   *   @param classification Name of the module reporting error
+   */
+  static void LogSimpleConsoleError(const nsAString& aErrorText,
+                                    const char * classification);
+
+  /**
    * Report a non-localized error message to the error console.
    *   @param aErrorText the error message
    *   @param aErrorFlags See nsIScriptError.
