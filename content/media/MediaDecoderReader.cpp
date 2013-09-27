@@ -535,8 +535,8 @@ nsresult MediaDecoderReader::DecodeToTarget(int64_t aTarget)
       const AudioData* audio = AudioQueue().PeekFront();
       if (!audio)
         break;
-      CheckedInt64 startFrame = UsecsToFrames(audio->mTime, mInfo.mAudioRate);
-      CheckedInt64 targetFrame = UsecsToFrames(aTarget, mInfo.mAudioRate);
+      CheckedInt64 startFrame = UsecsToFrames(audio->mTime, mInfo.mAudio.mRate);
+      CheckedInt64 targetFrame = UsecsToFrames(aTarget, mInfo.mAudio.mRate);
       if (!startFrame.isValid() || !targetFrame.isValid()) {
         return NS_ERROR_FAILURE;
       }
@@ -580,7 +580,7 @@ nsresult MediaDecoderReader::DecodeToTarget(int64_t aTarget)
       memcpy(audioData.get(),
              audio->mAudioData.get() + (framesToPrune * channels),
              frames * channels * sizeof(AudioDataValue));
-      CheckedInt64 duration = FramesToUsecs(frames, mInfo.mAudioRate);
+      CheckedInt64 duration = FramesToUsecs(frames, mInfo.mAudio.mRate);
       if (!duration.isValid()) {
         return NS_ERROR_FAILURE;
       }

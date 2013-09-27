@@ -73,7 +73,7 @@ static const GUID CLSID_MPEG_LAYER_3_DECODER_FILTER =
 { 0x38BE3000, 0xDBF4, 0x11D0, 0x86, 0x0E, 0x00, 0xA0, 0x24, 0xCF, 0xEF, 0x6D };
 
 nsresult
-DirectShowReader::ReadMetadata(VideoInfo* aInfo,
+DirectShowReader::ReadMetadata(MediaInfo* aInfo,
                                MetadataTags** aTags)
 {
   MOZ_ASSERT(mDecoder->OnDecodeThread(), "Should be on decode thread.");
@@ -164,11 +164,10 @@ DirectShowReader::ReadMetadata(VideoInfo* aInfo,
   mAudioSinkFilter->GetSampleSink()->GetAudioFormat(&format);
   NS_ENSURE_TRUE(format.wFormatTag == WAVE_FORMAT_PCM, NS_ERROR_FAILURE);
 
-  mInfo.mAudioChannels = mNumChannels = format.nChannels;
-  mInfo.mAudioRate = mAudioRate = format.nSamplesPerSec;
+  mInfo.mAudio.mChannels = mNumChannels = format.nChannels;
+  mInfo.mAudio.mRate = mAudioRate = format.nSamplesPerSec;
   mBytesPerSample = format.wBitsPerSample / 8;
-  mInfo.mHasAudio = true;
-  mInfo.mHasVideo = false;
+  mInfo.mAudio.mHasAudio = true;
 
   *aInfo = mInfo;
   // Note: The SourceFilter strips ID3v2 tags out of the stream.
@@ -194,8 +193,8 @@ DirectShowReader::ReadMetadata(VideoInfo* aInfo,
 
   LOG("Successfully initialized DirectShow MP3 decoder.");
   LOG("Channels=%u Hz=%u duration=%lld bytesPerSample=%d",
-      mInfo.mAudioChannels,
-      mInfo.mAudioRate,
+      mInfo.mAudio.mChannels,
+      mInfo.mAudio.mRate,
       RefTimeToUsecs(duration),
       mBytesPerSample);
 

@@ -63,15 +63,15 @@ public:
 
   bool HasVideo() MOZ_OVERRIDE
   {
-    return mInfo.mHasVideo;
+    return mInfo.HasVideo();
   }
 
   bool HasAudio() MOZ_OVERRIDE
   {
-    return mInfo.mHasAudio;
+    return mInfo.HasAudio();
   }
 
-  nsresult ReadMetadata(VideoInfo* aInfo, MetadataTags** aTags) MOZ_OVERRIDE;
+  nsresult ReadMetadata(MediaInfo* aInfo, MetadataTags** aTags) MOZ_OVERRIDE;
 
   nsresult Seek(int64_t aTime, int64_t aStartTime, int64_t aEndTime,
                 int64_t aCurrentTime) MOZ_OVERRIDE
@@ -177,7 +177,7 @@ MediaSourceDecoder::CreateSubDecoder(const nsACString& aType)
 }
 
 nsresult
-MediaSourceReader::ReadMetadata(VideoInfo* aInfo, MetadataTags** aTags)
+MediaSourceReader::ReadMetadata(MediaInfo* aInfo, MetadataTags** aTags)
 {
   mDecoder->SetMediaSeekable(true);
   mDecoder->SetTransportSeekable(false);
@@ -186,22 +186,18 @@ MediaSourceReader::ReadMetadata(VideoInfo* aInfo, MetadataTags** aTags)
   const nsTArray<MediaDecoderReader*>& readers = decoder->GetReaders();
   for (uint32_t i = 0; i < readers.Length(); ++i) {
     MediaDecoderReader* reader = readers[i];
-    VideoInfo vi;
-    nsresult rv = reader->ReadMetadata(&vi, aTags);
+    MediaInfo mi;
+    nsresult rv = reader->ReadMetadata(&mi, aTags);
     LOG(PR_LOG_DEBUG, ("ReadMetadata on SB reader %p", reader));
     if (NS_FAILED(rv)) {
       return rv;
     }
-    if (vi.mHasVideo && !mInfo.mHasVideo) {
-      mInfo.mDisplay = vi.mDisplay;
-      mInfo.mStereoMode = vi.mStereoMode;
-      mInfo.mHasVideo = true;
+    if (mi.HasVideo() && !mInfo.HasVideo()) {
+      mInfo.mVideo = mi.mVideo;
       decoder->SetVideoReader(reader);
     }
-    if (vi.mHasAudio && !mInfo.mHasAudio) {
-      mInfo.mAudioRate = vi.mAudioRate;
-      mInfo.mAudioChannels = vi.mAudioChannels;
-      mInfo.mHasAudio = true;
+    if (mi.HasAudio() && !mInfo.HasAudio()) {
+      mInfo.mAudio = mi.mAudio;
       decoder->SetAudioReader(reader);
     }
   }
