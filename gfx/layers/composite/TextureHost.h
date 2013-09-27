@@ -384,6 +384,10 @@ public:
 
   virtual void SetCompositableBackendSpecificData(CompositableBackendSpecificData* aBackendData);
 
+  // If a texture host holds a reference to shmem, it should override this method
+  // to forget about the shmem _without_ releasing it.
+  virtual void OnActorDestroy() {}
+
 #ifdef MOZ_LAYERS_HAVE_LOG
   virtual const char *Name() { return "TextureHost"; }
   virtual void PrintInfo(nsACString& aTo, const char* aPrefix);
@@ -483,6 +487,8 @@ public:
 #ifdef MOZ_LAYERS_HAVE_LOG
   virtual const char *Name() MOZ_OVERRIDE { return "ShmemTextureHost"; }
 #endif
+
+  virtual void OnActorDestroy() MOZ_OVERRIDE;
 
 protected:
   ipc::Shmem* mShmem;
@@ -717,6 +723,8 @@ public:
   // used only for hacky fix in gecko 23 for bug 862324
   // see bug 865908 about fixing this.
   virtual void ForgetBuffer() {}
+
+  void OnActorDestroy();
 
 protected:
   /**

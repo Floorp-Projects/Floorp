@@ -102,6 +102,8 @@ public:
 
   virtual void FlushAllImages(bool aExceptFront) MOZ_OVERRIDE;
 
+  virtual void OnActorDestroy() MOZ_OVERRIDE;
+
 protected:
   RefPtr<TextureClient> mFrontBuffer;
   // Some layers may want to enforce some flags to all their textures
@@ -124,6 +126,8 @@ public:
   virtual void OnDetach() MOZ_OVERRIDE;
 
   virtual void FlushAllImages(bool aExceptFront) MOZ_OVERRIDE;
+
+  virtual void OnActorDestroy() MOZ_OVERRIDE;
 
 protected:
   RefPtr<TextureClient> mBackBuffer;
@@ -169,6 +173,8 @@ public:
   virtual already_AddRefed<Image> CreateImage(const uint32_t *aFormats,
                                               uint32_t aNumFormats) MOZ_OVERRIDE;
 
+  virtual void OnActorDestroy() MOZ_OVERRIDE;
+
 private:
   RefPtr<DeprecatedTextureClient> mDeprecatedTextureClient;
   TextureInfo mTextureInfo;
@@ -209,6 +215,8 @@ public:
     NS_WARNING("Should not create an image through an ImageClientBridge");
     return nullptr;
   }
+
+  virtual void OnActorDestroy() MOZ_OVERRIDE {}
 
 protected:
   uint64_t mAsyncContainerID;
