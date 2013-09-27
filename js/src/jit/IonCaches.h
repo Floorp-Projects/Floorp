@@ -160,7 +160,7 @@ class IonCache
 
     CodeLocationLabel fallbackLabel_;
 
-    // Location of this operation, NULL for idempotent caches.
+    // Location of this operation, nullptr for idempotent caches.
     JSScript *script_;
     jsbytecode *pc_;
 
@@ -180,8 +180,8 @@ class IonCache
         disabled_(false),
         stubCount_(0),
         fallbackLabel_(),
-        script_(NULL),
-        pc_(NULL)
+        script_(nullptr),
+        pc_(nullptr)
     {
     }
 
@@ -463,7 +463,7 @@ class DispatchIonCache : public IonCache
 
   public:
     DispatchIonCache()
-      : firstStub_(NULL),
+      : firstStub_(nullptr),
         rejoinLabel_(),
         dispatchLabel_()
     {
@@ -985,7 +985,7 @@ class ParallelIonCache : public DispatchIonCache
     ShapeSet *stubbedShapes_;
 
     ParallelIonCache()
-      : stubbedShapes_(NULL)
+      : stubbedShapes_(nullptr)
     {
     }
 

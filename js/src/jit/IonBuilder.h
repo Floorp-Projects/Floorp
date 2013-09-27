@@ -121,7 +121,7 @@ class IonBuilder : public MIRGenerator
                 // pc for 'continue' jumps.
                 jsbytecode *continuepc;
 
-                // Common exit point. Created lazily, so it may be NULL.
+                // Common exit point. Created lazily, so it may be nullptr.
                 MBasicBlock *successor;
 
                 // Deferred break and continue targets.
@@ -264,7 +264,7 @@ class IonBuilder : public MIRGenerator
     bool pushLoop(CFGState::State state, jsbytecode *stopAt, MBasicBlock *entry, bool osr,
                   jsbytecode *loopHead, jsbytecode *initialPc,
                   jsbytecode *bodyStart, jsbytecode *bodyEnd, jsbytecode *exitpc,
-                  jsbytecode *continuepc = NULL);
+                  jsbytecode *continuepc = nullptr);
     void analyzeNewLoopTypes(MBasicBlock *entry, jsbytecode *start, jsbytecode *end);
 
     MBasicBlock *addBlock(MBasicBlock *block, uint32_t loopDepth);
@@ -276,10 +276,10 @@ class IonBuilder : public MIRGenerator
     MBasicBlock *newOsrPreheader(MBasicBlock *header, jsbytecode *loopEntry);
     MBasicBlock *newPendingLoopHeader(MBasicBlock *predecessor, jsbytecode *pc, bool osr);
     MBasicBlock *newBlock(jsbytecode *pc) {
-        return newBlock(NULL, pc);
+        return newBlock(nullptr, pc);
     }
     MBasicBlock *newBlockAfter(MBasicBlock *at, jsbytecode *pc) {
-        return newBlockAfter(at, NULL, pc);
+        return newBlockAfter(at, nullptr, pc);
     }
 
     // Given a list of pending breaks, creates a new block and inserts a Goto
@@ -322,7 +322,7 @@ class IonBuilder : public MIRGenerator
     bool initParameters();
     void rewriteParameter(uint32_t slotIdx, MDefinition *param, int32_t argIndex);
     void rewriteParameters();
-    bool initScopeChain(MDefinition *callee = NULL);
+    bool initScopeChain(MDefinition *callee = nullptr);
     bool initArgumentsObject();
     bool pushConstant(const Value &v);
 
@@ -696,7 +696,7 @@ class IonBuilder : public MIRGenerator
     /* Information used for inline-call builders. */
     MResumePoint *callerResumePoint_;
     jsbytecode *callerPC() {
-        return callerResumePoint_ ? callerResumePoint_->pc() : NULL;
+        return callerResumePoint_ ? callerResumePoint_->pc() : nullptr;
     }
     IonBuilder *callerBuilder_;
 
@@ -754,8 +754,8 @@ class CallInfo
 
   public:
     CallInfo(bool constructing)
-      : fun_(NULL),
-        thisArg_(NULL),
+      : fun_(nullptr),
+        thisArg_(nullptr),
         constructing_(constructing),
         setter_(false)
     { }
