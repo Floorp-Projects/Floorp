@@ -4,7 +4,6 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 #ifndef nsShiftJISToUnicode_h__
 #define nsShiftJISToUnicode_h__
-#include "nsISupports.h"
 #include "nsUCSupport.h"
 
 

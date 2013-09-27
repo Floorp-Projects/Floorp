@@ -5,23 +5,19 @@
 
 #include "nsCOMPtr.h"
 #include "nsString.h"
-#include "nsReadableUtils.h"
 #include "nsUnicharUtils.h"
 #include "nsCharsetAlias.h"
-#include "nsIServiceManager.h"
 #include "nsICategoryManager.h"
 #include "nsICharsetConverterManager.h"
 #include "nsEncoderDecoderUtils.h"
 #include "nsIStringBundle.h"
-#include "nsCRT.h"
 #include "nsTArray.h"
 #include "nsStringEnumerator.h"
-#include "nsThreadUtils.h"
 #include "mozilla/Services.h"
 
-#include "nsXPCOM.h"
 #include "nsComponentManagerUtils.h"
 #include "nsISupportsPrimitives.h"
+#include "nsServiceManagerUtils.h"
 
 // just for CONTRACTIDs
 #include "nsCharsetConverterManager.h"

@@ -6,7 +6,9 @@
 #ifndef nsUnicodeToCP949_h___
 #define nsUnicodeToCP949_h___
 
-#include "nsISupports.h"
+#include "nsID.h"
+
+class nsISupports;
 
 /**
  * A character set converter from Unicode to CP949.

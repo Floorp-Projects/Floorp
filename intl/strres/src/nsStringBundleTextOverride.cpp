@@ -6,7 +6,6 @@
 
 #include "nsStringBundleTextOverride.h"
 #include "nsString.h"
-#include "nsEscape.h"
 
 #include "nsNetUtil.h"
 #include "nsAppDirectoryServiceDefs.h"

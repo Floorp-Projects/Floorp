@@ -5,13 +5,11 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 #include "nsString.h"
-#include "nsIUnicodeEncoder.h"
 #include "nsICharsetConverterManager.h"
-#include "nsReadableUtils.h"
-#include "nsIServiceManager.h"
 #include "nsUTF8ConverterService.h"
 #include "nsEscape.h"
 #include "nsAutoPtr.h"
+#include "nsServiceManagerUtils.h"
 
 NS_IMPL_ISUPPORTS1(nsUTF8ConverterService, nsIUTF8ConverterService)
 
