@@ -722,7 +722,7 @@ RenderFrameParent::BuildLayer(nsDisplayListBuilder* aBuilder,
                               LayerManager* aManager,
                               const nsIntRect& aVisibleRect,
                               nsDisplayItem* aItem,
-                              const ContainerParameters& aContainerParameters)
+                              const ContainerLayerParameters& aContainerParameters)
 {
   NS_ABORT_IF_FALSE(aFrame,
                     "makes no sense to have a shadow tree without a frame");
@@ -1057,7 +1057,7 @@ RenderFrameParent::HitTest(const nsRect& aRect)
 already_AddRefed<Layer>
 nsDisplayRemote::BuildLayer(nsDisplayListBuilder* aBuilder,
                             LayerManager* aManager,
-                            const ContainerParameters& aContainerParameters)
+                            const ContainerLayerParameters& aContainerParameters)
 {
   int32_t appUnitsPerDevPixel = mFrame->PresContext()->AppUnitsPerDevPixel();
   nsIntRect visibleRect = GetVisibleRect().ToNearestPixels(appUnitsPerDevPixel);
