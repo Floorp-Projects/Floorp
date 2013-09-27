@@ -10,6 +10,7 @@
 #include "nsPresContext.h"
 #include "nsGkAtoms.h"
 #include "nsButtonFrameRenderer.h"
+#include "nsCSSAnonBoxes.h"
 #include "nsFormControlFrame.h"
 #include "nsINameSpaceManager.h"
 #include "nsStyleSet.h"
@@ -179,6 +180,13 @@ nsHTMLButtonControlFrame::Reflow(nsPresContext* aPresContext,
 
   // Reflow the child
   nsIFrame* firstKid = mFrames.FirstChild();
+
+  MOZ_ASSERT(firstKid, "Button should have a child frame for its contents");
+  MOZ_ASSERT(!firstKid->GetNextSibling(),
+             "Button should have exactly one child frame");
+  MOZ_ASSERT(firstKid->StyleContext()->GetPseudo() ==
+             nsCSSAnonBoxes::buttonContent,
+             "Button's child frame has unexpected pseudo type!");
 
   // XXXbz Eventually we may want to check-and-bail if
   // !aReflowState.ShouldReflowAllKids() &&
