@@ -6,7 +6,10 @@
 #ifndef nsUnicodeToCP1252_h___
 #define nsUnicodeToCP1252_h___
 
-#include "nsISupports.h"
+#include "nsID.h"
+
+class nsISupports;
+
 // Class ID for our UnicodeToCP1252 charset converter
 // {7B8556AC-EC79-11d2-8AAC-00600811A836}
 #define NS_UNICODETOCP1252_CID \
