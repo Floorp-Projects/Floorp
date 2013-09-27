@@ -250,63 +250,141 @@ static inline void js_free(void* p)
     }\
 \
     template <class T, class P1>\
-    QUALIFIERS T *NEWNAME(P1 p1) {\
-        JS_NEW_BODY(ALLOCATOR, T, (p1))\
+    QUALIFIERS T *NEWNAME(P1 &&p1) {\
+        JS_NEW_BODY(ALLOCATOR, T,\
+                    (mozilla::Forward<P1>(p1)))\
     }\
 \
     template <class T, class P1, class P2>\
-    QUALIFIERS T *NEWNAME(P1 p1, P2 p2) {\
-        JS_NEW_BODY(ALLOCATOR, T, (p1, p2))\
+    QUALIFIERS T *NEWNAME(P1 &&p1, P2 &&p2) {\
+        JS_NEW_BODY(ALLOCATOR, T,\
+                    (mozilla::Forward<P1>(p1),\
+                     mozilla::Forward<P2>(p2)))\
     }\
 \
     template <class T, class P1, class P2, class P3>\
-    QUALIFIERS T *NEWNAME(P1 p1, P2 p2, P3 p3) {\
-        JS_NEW_BODY(ALLOCATOR, T, (p1, p2, p3))\
+    QUALIFIERS T *NEWNAME(P1 &&p1, P2 &&p2, P3 &&p3) {\
+        JS_NEW_BODY(ALLOCATOR, T,\
+                    (mozilla::Forward<P1>(p1),\
+                     mozilla::Forward<P2>(p2),\
+                     mozilla::Forward<P3>(p3)))\
     }\
 \
     template <class T, class P1, class P2, class P3, class P4>\
-    QUALIFIERS T *NEWNAME(P1 p1, P2 p2, P3 p3, P4 p4) {\
-        JS_NEW_BODY(ALLOCATOR, T, (p1, p2, p3, p4))\
+    QUALIFIERS T *NEWNAME(P1 &&p1, P2 &&p2, P3 &&p3, P4 &&p4) {\
+        JS_NEW_BODY(ALLOCATOR, T,\
+                    (mozilla::Forward<P1>(p1),\
+                     mozilla::Forward<P2>(p2),\
+                     mozilla::Forward<P3>(p3),\
+                     mozilla::Forward<P4>(p4)))\
     }\
 \
     template <class T, class P1, class P2, class P3, class P4, class P5>\
-    QUALIFIERS T *NEWNAME(P1 p1, P2 p2, P3 p3, P4 p4, P5 p5) {\
-        JS_NEW_BODY(ALLOCATOR, T, (p1, p2, p3, p4, p5))\
+    QUALIFIERS T *NEWNAME(P1 &&p1, P2 &&p2, P3 &&p3, P4 &&p4, P5 &&p5) {\
+        JS_NEW_BODY(ALLOCATOR, T,\
+                    (mozilla::Forward<P1>(p1),\
+                     mozilla::Forward<P2>(p2),\
+                     mozilla::Forward<P3>(p3),\
+                     mozilla::Forward<P4>(p4),\
+                     mozilla::Forward<P5>(p5)))\
     }\
 \
     template <class T, class P1, class P2, class P3, class P4, class P5, class P6>\
-    QUALIFIERS T *NEWNAME(P1 p1, P2 p2, P3 p3, P4 p4, P5 p5, P6 p6) {\
-        JS_NEW_BODY(ALLOCATOR, T, (p1, p2, p3, p4, p5, p6))\
+    QUALIFIERS T *NEWNAME(P1 &&p1, P2 &&p2, P3 &&p3, P4 &&p4, P5 &&p5, P6 &&p6) {\
+        JS_NEW_BODY(ALLOCATOR, T,\
+                    (mozilla::Forward<P1>(p1),\
+                     mozilla::Forward<P2>(p2),\
+                     mozilla::Forward<P3>(p3),\
+                     mozilla::Forward<P4>(p4),\
+                     mozilla::Forward<P5>(p5),\
+                     mozilla::Forward<P6>(p6)))\
     }\
 \
     template <class T, class P1, class P2, class P3, class P4, class P5, class P6, class P7>\
-    QUALIFIERS T *NEWNAME(P1 p1, P2 p2, P3 p3, P4 p4, P5 p5, P6 p6, P7 p7) {\
-        JS_NEW_BODY(ALLOCATOR, T, (p1, p2, p3, p4, p5, p6, p7))\
+    QUALIFIERS T *NEWNAME(P1 &&p1, P2 &&p2, P3 &&p3, P4 &&p4, P5 &&p5, P6 &&p6, P7 &&p7) {\
+        JS_NEW_BODY(ALLOCATOR, T,\
+                    (mozilla::Forward<P1>(p1),\
+                     mozilla::Forward<P2>(p2),\
+                     mozilla::Forward<P3>(p3),\
+                     mozilla::Forward<P4>(p4),\
+                     mozilla::Forward<P5>(p5),\
+                     mozilla::Forward<P6>(p6),\
+                     mozilla::Forward<P7>(p7)))\
     }\
 \
     template <class T, class P1, class P2, class P3, class P4, class P5, class P6, class P7, class P8>\
-    QUALIFIERS T *NEWNAME(P1 p1, P2 p2, P3 p3, P4 p4, P5 p5, P6 p6, P7 p7, P8 p8) {\
-        JS_NEW_BODY(ALLOCATOR, T, (p1, p2, p3, p4, p5, p6, p7, p8))\
+    QUALIFIERS T *NEWNAME(P1 &&p1, P2 &&p2, P3 &&p3, P4 &&p4, P5 &&p5, P6 &&p6, P7 &&p7, P8 &&p8) {\
+        JS_NEW_BODY(ALLOCATOR, T,\
+                    (mozilla::Forward<P1>(p1),\
+                     mozilla::Forward<P2>(p2),\
+                     mozilla::Forward<P3>(p3),\
+                     mozilla::Forward<P4>(p4),\
+                     mozilla::Forward<P5>(p5),\
+                     mozilla::Forward<P6>(p6),\
+                     mozilla::Forward<P7>(p7),\
+                     mozilla::Forward<P8>(p8)))\
     }\
 \
     template <class T, class P1, class P2, class P3, class P4, class P5, class P6, class P7, class P8, class P9>\
-    QUALIFIERS T *NEWNAME(P1 p1, P2 p2, P3 p3, P4 p4, P5 p5, P6 p6, P7 p7, P8 p8, P9 p9) {\
-        JS_NEW_BODY(ALLOCATOR, T, (p1, p2, p3, p4, p5, p6, p7, p8, p9))\
+    QUALIFIERS T *NEWNAME(P1 &&p1, P2 &&p2, P3 &&p3, P4 &&p4, P5 &&p5, P6 &&p6, P7 &&p7, P8 &&p8, P9 &&p9) {\
+        JS_NEW_BODY(ALLOCATOR, T,\
+                    (mozilla::Forward<P1>(p1),\
+                     mozilla::Forward<P2>(p2),\
+                     mozilla::Forward<P3>(p3),\
+                     mozilla::Forward<P4>(p4),\
+                     mozilla::Forward<P5>(p5),\
+                     mozilla::Forward<P6>(p6),\
+                     mozilla::Forward<P7>(p7),\
+                     mozilla::Forward<P8>(p8),\
+                     mozilla::Forward<P9>(p9)))\
     }\
 \
     template <class T, class P1, class P2, class P3, class P4, class P5, class P6, class P7, class P8, class P9, class P10>\
-    QUALIFIERS T *NEWNAME(P1 p1, P2 p2, P3 p3, P4 p4, P5 p5, P6 p6, P7 p7, P8 p8, P9 p9, P10 p10) {\
-        JS_NEW_BODY(ALLOCATOR, T, (p1, p2, p3, p4, p5, p6, p7, p8, p9, p10))\
+    QUALIFIERS T *NEWNAME(P1 &&p1, P2 &&p2, P3 &&p3, P4 &&p4, P5 &&p5, P6 &&p6, P7 &&p7, P8 &&p8, P9 &&p9, P10 &&p10) {\
+        JS_NEW_BODY(ALLOCATOR, T,\
+                    (mozilla::Forward<P1>(p1),\
+                     mozilla::Forward<P2>(p2),\
+                     mozilla::Forward<P3>(p3),\
+                     mozilla::Forward<P4>(p4),\
+                     mozilla::Forward<P5>(p5),\
+                     mozilla::Forward<P6>(p6),\
+                     mozilla::Forward<P7>(p7),\
+                     mozilla::Forward<P8>(p8),\
+                     mozilla::Forward<P9>(p9),\
+                     mozilla::Forward<P10>(p10)))\
     }\
 \
     template <class T, class P1, class P2, class P3, class P4, class P5, class P6, class P7, class P8, class P9, class P10, class P11>\
-    QUALIFIERS T *NEWNAME(P1 p1, P2 p2, P3 p3, P4 p4, P5 p5, P6 p6, P7 p7, P8 p8, P9 p9, P10 p10, P11 p11) {\
-        JS_NEW_BODY(ALLOCATOR, T, (p1, p2, p3, p4, p5, p6, p7, p8, p9, p10, p11))\
+    QUALIFIERS T *NEWNAME(P1 &&p1, P2 &&p2, P3 &&p3, P4 &&p4, P5 &&p5, P6 &&p6, P7 &&p7, P8 &&p8, P9 &&p9, P10 &&p10, P11 &&p11) {\
+        JS_NEW_BODY(ALLOCATOR, T,\
+                    (mozilla::Forward<P1>(p1),\
+                     mozilla::Forward<P2>(p2),\
+                     mozilla::Forward<P3>(p3),\
+                     mozilla::Forward<P4>(p4),\
+                     mozilla::Forward<P5>(p5),\
+                     mozilla::Forward<P6>(p6),\
+                     mozilla::Forward<P7>(p7),\
+                     mozilla::Forward<P8>(p8),\
+                     mozilla::Forward<P9>(p9),\
+                     mozilla::Forward<P10>(p10),\
+                     mozilla::Forward<P11>(p11)))\
     }\
 \
     template <class T, class P1, class P2, class P3, class P4, class P5, class P6, class P7, class P8, class P9, class P10, class P11, class P12>\
-    QUALIFIERS T *NEWNAME(P1 p1, P2 p2, P3 p3, P4 p4, P5 p5, P6 p6, P7 p7, P8 p8, P9 p9, P10 p10, P11 p11, P12 p12) {\
-        JS_NEW_BODY(ALLOCATOR, T, (p1, p2, p3, p4, p5, p6, p7, p8, p9, p10, p11, p12))\
+    QUALIFIERS T *NEWNAME(P1 &&p1, P2 &&p2, P3 &&p3, P4 &&p4, P5 &&p5, P6 &&p6, P7 &&p7, P8 &&p8, P9 &&p9, P10 &&p10, P11 &&p11, P12 &&p12) {\
+        JS_NEW_BODY(ALLOCATOR, T,\
+                    (mozilla::Forward<P1>(p1),\
+                     mozilla::Forward<P2>(p2),\
+                     mozilla::Forward<P3>(p3),\
+                     mozilla::Forward<P4>(p4),\
+                     mozilla::Forward<P5>(p5),\
+                     mozilla::Forward<P6>(p6),\
+                     mozilla::Forward<P7>(p7),\
+                     mozilla::Forward<P8>(p8),\
+                     mozilla::Forward<P9>(p9),\
+                     mozilla::Forward<P10>(p10),\
+                     mozilla::Forward<P11>(p11),\
+                     mozilla::Forward<P12>(p12)))\
     }\
 
 JS_DECLARE_NEW_METHODS(js_new, js_malloc, static JS_ALWAYS_INLINE)
