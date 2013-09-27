@@ -308,8 +308,8 @@ enum {
      *   and do not have constraints attached to them.
      *
      * - HeapTypeSet are associated with the properties of TypeObjects. These
-     *   may have constraints added to them to propagate types around or to
-     *   trigger invalidation of compiled code.
+     *   may have constraints added to them to trigger invalidation of compiled
+     *   code.
      *
      * - TemporaryTypeSet are created during compilation and do not outlive
      *   that compilation.
@@ -318,15 +318,6 @@ enum {
     TYPE_FLAG_HEAP_SET            = 0x00040000,
 
     /* Additional flags for HeapTypeSet sets. */
-
-    /*
-     * Whether there are subset constraints propagating the possible types
-     * for this property inherited from the object's prototypes. Reset on GC.
-     */
-    TYPE_FLAG_PROPAGATED_PROPERTY = 0x00080000,
-
-    /* Whether this property has ever been directly written. */
-    TYPE_FLAG_OWN_PROPERTY        = 0x00100000,
 
     /*
      * Whether the property has ever been deleted or reconfigured to behave
@@ -472,8 +463,8 @@ class TypeSet
         return !!(baseFlags() & flags);
     }
 
-    bool ownProperty(bool configurable) const {
-        return flags & (configurable ? TYPE_FLAG_CONFIGURED_PROPERTY : TYPE_FLAG_OWN_PROPERTY);
+    bool configuredProperty() const {
+        return flags & TYPE_FLAG_CONFIGURED_PROPERTY;
     }
     bool definiteProperty() const { return flags & TYPE_FLAG_DEFINITE_PROPERTY; }
     unsigned definiteSlot() const {
@@ -490,8 +481,8 @@ class TypeSet
      */
     inline void addType(ExclusiveContext *cx, Type type);
 
-    /* Mark this type set as representing an own property or configured property. */
-    inline void setOwnProperty(ExclusiveContext *cx, bool configured);
+    /* Mark this type set as representing a configured property. */
+    inline void setConfiguredProperty(ExclusiveContext *cx);
 
     /*
      * Iterate through the objects in this set. getObjectCount overapproximates
@@ -507,18 +498,13 @@ class TypeSet
     /* The Class of an object in this set. */
     inline const Class *getObjectClass(unsigned i) const;
 
-    void setOwnProperty(bool configurable) {
-        flags |= TYPE_FLAG_OWN_PROPERTY;
-        if (configurable)
-            flags |= TYPE_FLAG_CONFIGURED_PROPERTY;
+    void setConfiguredProperty() {
+        flags |= TYPE_FLAG_CONFIGURED_PROPERTY;
     }
     void setDefinite(unsigned slot) {
         JS_ASSERT(slot <= (TYPE_FLAG_DEFINITE_MASK >> TYPE_FLAG_DEFINITE_SHIFT));
         flags |= TYPE_FLAG_DEFINITE_PROPERTY | (slot << TYPE_FLAG_DEFINITE_SHIFT);
     }
-
-    bool hasPropagatedProperty() { return !!(flags & TYPE_FLAG_PROPAGATED_PROPERTY); }
-    void setPropagatedProperty() { flags |= TYPE_FLAG_PROPAGATED_PROPERTY; }
 
     bool isStackSet() {
         return flags & TYPE_FLAG_STACK_SET;
@@ -561,18 +547,12 @@ class StackTypeSet : public TypeSet
 {
   public:
     StackTypeSet() { flags |= TYPE_FLAG_STACK_SET; }
-
-    /* Propagate any types from this set into target. */
-    void addSubset(JSContext *cx, StackTypeSet *target);
 };
 
 class HeapTypeSet : public TypeSet
 {
   public:
     HeapTypeSet() { flags |= TYPE_FLAG_HEAP_SET; }
-
-    /* Propagate any types from this set into target. */
-    void addSubset(JSContext *cx, HeapTypeSet *target);
 
     /* Completely freeze the contents of this type set. */
     void addFreeze(JSContext *cx);
@@ -594,7 +574,7 @@ class HeapTypeSet : public TypeSet
      * or non-writable (this only applies to properties that have changed after
      * having been created, not to e.g. properties non-writable on creation).
      */
-    bool isOwnProperty(JSContext *cx, TypeObject *object, bool configurable);
+    bool isConfiguredProperty(JSContext *cx, TypeObject *object);
 
     /* Get whether this type set is non-empty. */
     bool knownNonEmpty(JSContext *cx);
@@ -757,91 +737,6 @@ struct TypeResult
 
 /* Is this a reasonable PC to be doing inlining on? */
 inline bool isInlinableCall(jsbytecode *pc);
-
-/*
- * Type barriers overview.
- *
- * Type barriers are a technique for using dynamic type information to improve
- * the inferred types within scripts. At certain opcodes --- those with the
- * JOF_TYPESET format --- we will construct a type set storing the set of types
- * which we have observed to be pushed at that opcode, and will only use those
- * observed types when doing propagation downstream from the bytecode. For
- * example, in the following script:
- *
- * function foo(x) {
- *   return x.f + 10;
- * }
- *
- * Suppose we know the type of 'x' and that the type of its 'f' property is
- * either an int or float. To account for all possible behaviors statically,
- * we would mark the result of the 'x.f' access as an int or float, as well
- * as the result of the addition and the return value of foo (and everywhere
- * the result of 'foo' is used). When dealing with polymorphic code, this is
- * undesirable behavior --- the type imprecision surrounding the polymorphism
- * will tend to leak to many places in the program.
- *
- * Instead, we will keep track of the types that have been dynamically observed
- * to have been produced by the 'x.f', and only use those observed types
- * downstream from the access. If the 'x.f' has only ever produced integers,
- * we will treat its result as an integer and mark the result of foo as an
- * integer.
- *
- * The set of observed types will be a subset of the set of possible types,
- * and if the two sets are different, a type barriers will be added at the
- * bytecode which checks the dynamic result every time the bytecode executes
- * and makes sure it is in the set of observed types. If it is not, that
- * observed set is updated, and the new type information is automatically
- * propagated along the already-generated type constraints to the places
- * where the result of the bytecode is used.
- *
- * Observing new types at a bytecode removes type barriers at the bytecode
- * (this removal happens lazily, see ScriptAnalysis::pruneTypeBarriers), and if
- * all type barriers at a bytecode are removed --- the set of observed types
- * grows to match the set of possible types --- then the result of the bytecode
- * no longer needs to be dynamically checked (unless the set of possible types
- * grows, triggering the generation of new type barriers).
- *
- * Barriers are only relevant for accesses on properties whose types inference
- * actually tracks (see propertySet comment under TypeObject). Accesses on
- * other properties may be able to produce additional unobserved types even
- * without a barrier present, and can only be compiled to jitcode with special
- * knowledge of the property in question (e.g. for lengths of arrays, or
- * elements of typed arrays).
- */
-
-/*
- * Barrier introduced at some bytecode. These are added when, during inference,
- * we block a type from being propagated as would normally be done for a subset
- * constraint. The propagation is technically possible, but we suspect it will
- * not happen dynamically and this type needs to be watched for. These are only
- * added at reads of properties and at scripted call sites.
- */
-struct TypeBarrier
-{
-    /* Next barrier on the same bytecode. */
-    TypeBarrier *next;
-
-    /* Target type set into which propagation was blocked. */
-    TypeSet *target;
-
-    /*
-     * Type which was not added to the target. If target ends up containing the
-     * type somehow, this barrier can be removed.
-     */
-    Type type;
-
-    /*
-     * If specified, this barrier can be removed if object has a non-undefined
-     * value in property id.
-     */
-    JSObject *singleton;
-    jsid singletonId;
-
-    TypeBarrier(TypeSet *target, Type type, JSObject *singleton, jsid singletonId)
-        : next(NULL), target(target), type(type),
-          singleton(singleton), singletonId(singletonId)
-    {}
-};
 
 /* Type information about a property. */
 struct Property
@@ -1107,11 +1002,9 @@ struct TypeObject : gc::BarrieredCell<TypeObject>
 
     /*
      * Get or create a property of this object. Only call this for properties which
-     * a script accesses explicitly. 'assign' indicates whether this is for an
-     * assignment, and the own types of the property will be used instead of
-     * aggregate types.
+     * a script accesses explicitly.
      */
-    inline HeapTypeSet *getProperty(ExclusiveContext *cx, jsid id, bool own);
+    inline HeapTypeSet *getProperty(ExclusiveContext *cx, jsid id);
 
     /* Get a property only if it already exists. */
     inline HeapTypeSet *maybeGetProperty(ExclusiveContext *cx, jsid id);
@@ -1178,7 +1071,6 @@ struct TypeObject : gc::BarrieredCell<TypeObject>
     void clearAddendum(ExclusiveContext *cx);
     void clearNewScriptAddendum(ExclusiveContext *cx);
     void clearTypedObjectAddendum(ExclusiveContext *cx);
-    void getFromPrototypes(JSContext *cx, jsid id, HeapTypeSet *types, bool force = false);
 
     void print();
 
