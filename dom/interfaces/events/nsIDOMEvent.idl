@@ -365,7 +365,7 @@ nsresult
 NS_NewDOMTransitionEvent(nsIDOMEvent** aInstancePtrResult,
                          mozilla::dom::EventTarget* aOwner,
                          nsPresContext* aPresContext,
-                         nsTransitionEvent* aEvent);
+                         mozilla::InternalTransitionEvent* aEvent);
 nsresult
 NS_NewDOMAnimationEvent(nsIDOMEvent** aInstancePtrResult,
                         mozilla::dom::EventTarget* aOwner,

@@ -744,7 +744,7 @@ nsEventDispatcher::CreateEvent(mozilla::dom::EventTarget* aOwner,
                                  static_cast<nsTouchEvent*>(aEvent));
     case NS_TRANSITION_EVENT:
       return NS_NewDOMTransitionEvent(aDOMEvent, aOwner, aPresContext,
-                                      static_cast<nsTransitionEvent*>(aEvent));
+               static_cast<InternalTransitionEvent*>(aEvent));
     case NS_ANIMATION_EVENT:
       return NS_NewDOMAnimationEvent(aDOMEvent, aOwner, aPresContext,
                static_cast<InternalAnimationEvent*>(aEvent));

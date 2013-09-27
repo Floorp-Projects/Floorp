@@ -710,13 +710,13 @@ nsDOMEvent::DuplicatePrivateData()
     }
     case NS_TRANSITION_EVENT:
     {
-      nsTransitionEvent* oldTransitionEvent =
-        static_cast<nsTransitionEvent*>(mEvent);
-      nsTransitionEvent* transitionEvent =
-         new nsTransitionEvent(false, msg,
-                               oldTransitionEvent->propertyName,
-                               oldTransitionEvent->elapsedTime,
-                               oldTransitionEvent->pseudoElement);
+      InternalTransitionEvent* oldTransitionEvent =
+        static_cast<InternalTransitionEvent*>(mEvent);
+      InternalTransitionEvent* transitionEvent =
+         new InternalTransitionEvent(false, msg,
+                                     oldTransitionEvent->propertyName,
+                                     oldTransitionEvent->elapsedTime,
+                                     oldTransitionEvent->pseudoElement);
       transitionEvent->AssignTransitionEventData(*oldTransitionEvent, true);
       newEvent = transitionEvent;
       break;
