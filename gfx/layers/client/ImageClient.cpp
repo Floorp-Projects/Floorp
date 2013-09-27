@@ -269,25 +269,6 @@ ImageClientBuffered::UpdateImage(ImageContainer* aContainer,
 }
 
 void
-ImageClientSingle::OnActorDestroy()
-{
-  if (mFrontBuffer) {
-    mFrontBuffer->OnActorDestroy();
-  }
-}
-
-void
-ImageClientBuffered::OnActorDestroy()
-{
-  if (mFrontBuffer) {
-    mFrontBuffer->OnActorDestroy();
-  }
-  if (mBackBuffer) {
-    mBackBuffer->OnActorDestroy();
-  }
-}
-
-void
 ImageClientSingle::AddTextureClient(TextureClient* aTexture)
 {
   MOZ_ASSERT((mTextureFlags & aTexture->GetFlags()) == mTextureFlags);
@@ -477,14 +458,6 @@ ImageClientBridge::ImageClientBridge(CompositableForwarder* aFwd,
 , mAsyncContainerID(0)
 , mLayer(nullptr)
 {
-}
-
-void
-DeprecatedImageClientSingle::OnActorDestroy()
-{
-  if (mDeprecatedTextureClient) {
-    mDeprecatedTextureClient->OnActorDestroy();
-  }
 }
 
 bool

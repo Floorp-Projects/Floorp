@@ -90,12 +90,9 @@ public:
     mBuffer = nullptr;
   }
 
-  virtual void OnActorDestroy() MOZ_OVERRIDE;
-
 private:
   RefPtr<TextureClient> mBuffer;
 };
-
 class DeprecatedCanvasClient2D : public CanvasClient
 {
 public:
@@ -115,8 +112,6 @@ public:
   {
     mDeprecatedTextureClient->SetDescriptorFromReply(aDescriptor);
   }
-
-  virtual void OnActorDestroy() MOZ_OVERRIDE;
 
 private:
   RefPtr<DeprecatedTextureClient> mDeprecatedTextureClient;
@@ -143,8 +138,6 @@ public:
   {
     mDeprecatedTextureClient->SetDescriptorFromReply(aDescriptor);
   }
-
-  virtual void OnActorDestroy() MOZ_OVERRIDE;
 
 private:
   RefPtr<DeprecatedTextureClient> mDeprecatedTextureClient;
