@@ -41,3 +41,7 @@ load truncated-second-frame.png # bug 863975
 # This icon's size is such that it leads to multiple writes to the PNG decoder
 # after we've gotten our size.
 load multiple-png-hassize.ico
+
+# Bug 856615
+# Asserts in the debug build
+load 856616.gif

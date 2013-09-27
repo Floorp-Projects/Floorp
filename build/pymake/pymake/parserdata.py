@@ -171,8 +171,8 @@ class Rule(Statement):
         # Skip targets with no rules and no dependencies
         if not deps:
             return
-        targets = self.targetexp.resolvesplit(makefile, makefile.variables)
-        rule = data.Rule(deps, self.doublecolon, loc=self.targetexp.loc, weakdeps=True)
+        targets = data.stripdotslashes(self.targetexp.resolvesplit(makefile, makefile.variables))
+        rule = data.Rule(list(data.stripdotslashes(deps)), self.doublecolon, loc=self.targetexp.loc, weakdeps=True)
         for target in targets:
             makefile.gettarget(target).addrule(rule)
             makefile.foundtarget(target)

@@ -3624,11 +3624,11 @@ static const JSFunctionSpec string_methods[] = {
     JS_FN("toLocaleLowerCase", str_toLocaleLowerCase, 0,JSFUN_GENERIC_NATIVE),
     JS_FN("toLocaleUpperCase", str_toLocaleUpperCase, 0,JSFUN_GENERIC_NATIVE),
 #if EXPOSE_INTL_API
-         {"localeCompare",     {NULL, NULL},          1,0, "String_localeCompare"},
+    JS_SELF_HOSTED_FN("localeCompare", "String_localeCompare", 1,0),
 #else
     JS_FN("localeCompare",     str_localeCompare,     1,JSFUN_GENERIC_NATIVE),
 #endif
-         {"repeat",            {NULL, NULL},          1,0, "String_repeat"},
+    JS_SELF_HOSTED_FN("repeat", "String_repeat",      1,0),
 
     /* Perl-ish methods (search is actually Python-esque). */
     JS_FN("match",             str_match,             1,JSFUN_GENERIC_NATIVE),
@@ -3732,7 +3732,7 @@ static const JSFunctionSpec string_static_methods[] = {
     // This must be at the end because of bug 853075: functions listed after
     // self-hosted methods aren't available in self-hosted code.
 #if EXPOSE_INTL_API
-         {"localeCompare",     {NULL, NULL},          2,0, "String_static_localeCompare"},
+    JS_SELF_HOSTED_FN("localeCompare", "String_static_localeCompare", 2,0),
 #endif
     JS_FS_END
 };
