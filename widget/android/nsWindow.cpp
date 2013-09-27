@@ -1708,7 +1708,7 @@ nsWindow::HandleSpecialKey(AndroidGeckoEvent *ae)
         }
     }
     if (doCommand) {
-        nsCommandEvent event(true, nsGkAtoms::onAppCommand, command, this);
+        WidgetCommandEvent event(true, nsGkAtoms::onAppCommand, command, this);
         InitEvent(event);
         DispatchEvent(&event);
     }

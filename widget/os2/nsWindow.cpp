@@ -3087,7 +3087,7 @@ bool nsWindow::DispatchCommandEvent(uint32_t aEventCommand)
       return false;
   }
 
-  nsCommandEvent event(true, nsGkAtoms::onAppCommand, command, this);
+  WidgetCommandEvent event(true, nsGkAtoms::onAppCommand, command, this);
   InitEvent(event);
   return DispatchWindowEvent(&event);
 }
