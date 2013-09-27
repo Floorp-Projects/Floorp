@@ -884,17 +884,17 @@ xpc::SandboxOptions::GlobalProperties::Parse(JSContext* cx, JS::HandleObject obj
         ok = JS_GetElement(cx, obj, i, &nameValue);
         NS_ENSURE_TRUE(ok, false);
         NS_ENSURE_TRUE(nameValue.isString(), false);
-        char *name = JS_EncodeString(cx, nameValue.toString());
+        JSAutoByteString name(cx, nameValue.toString());
         NS_ENSURE_TRUE(name, false);
-        if (!strcmp(name, "XMLHttpRequest")) {
+        if (!strcmp(name.ptr(), "XMLHttpRequest")) {
             XMLHttpRequest = true;
-        } else if (!strcmp(name, "TextEncoder")) {
+        } else if (!strcmp(name.ptr(), "TextEncoder")) {
             TextEncoder = true;
-        } else if (!strcmp(name, "TextDecoder")) {
+        } else if (!strcmp(name.ptr(), "TextDecoder")) {
             TextDecoder = true;
-        } else if (!strcmp(name, "atob")) {
+        } else if (!strcmp(name.ptr(), "atob")) {
             atob = true;
-        } else if (!strcmp(name, "btoa")) {
+        } else if (!strcmp(name.ptr(), "btoa")) {
             btoa = true;
         } else {
             // Reporting error, if one of the global property names is unknown.
