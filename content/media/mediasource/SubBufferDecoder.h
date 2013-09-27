@@ -8,6 +8,7 @@
 #define MOZILLA_SUBBUFFERDECODER_H_
 
 #include "BufferDecoder.h"
+#include "SourceBufferResource.h"
 
 namespace mozilla {
 
@@ -32,6 +33,7 @@ public:
   ReentrantMonitor& GetReentrantMonitor() MOZ_OVERRIDE;
   bool OnStateMachineThread() const MOZ_OVERRIDE;
   bool OnDecodeThread() const MOZ_OVERRIDE;
+  SourceBufferResource* GetResource() const MOZ_OVERRIDE;
   void SetMediaDuration(int64_t aDuration) MOZ_OVERRIDE;
   void UpdateEstimatedMediaDuration(int64_t aDuration) MOZ_OVERRIDE;
   void SetMediaSeekable(bool aMediaSeekable) MOZ_OVERRIDE;
