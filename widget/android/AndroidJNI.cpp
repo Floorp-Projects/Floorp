@@ -861,10 +861,10 @@ Java_org_mozilla_gecko_gfx_NativePanZoomController_init(JNIEnv* env, jobject ins
         return;
     }
 
-    jobject oldRef = AndroidBridge::Bridge()->SetNativePanZoomController(env->NewGlobalRef(instance));
-    if (oldRef) {
+    NativePanZoomController* oldRef = AndroidBridge::Bridge()->SetNativePanZoomController(instance);
+    if (oldRef && !oldRef->isNull()) {
         MOZ_ASSERT(false, "Registering a new NPZC when we already have one");
-        env->DeleteGlobalRef(oldRef);
+        delete oldRef;
     }
 }
 
@@ -905,11 +905,11 @@ Java_org_mozilla_gecko_gfx_NativePanZoomController_destroy(JNIEnv* env, jobject 
         return;
     }
 
-    jobject oldRef = AndroidBridge::Bridge()->SetNativePanZoomController(NULL);
-    if (!oldRef) {
+    NativePanZoomController* oldRef = AndroidBridge::Bridge()->SetNativePanZoomController(NULL);
+    if (!oldRef || oldRef->isNull()) {
         MOZ_ASSERT(false, "Clearing a non-existent NPZC");
     } else {
-        env->DeleteGlobalRef(oldRef);
+        delete oldRef;
     }
 }
 
