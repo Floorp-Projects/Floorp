@@ -808,3 +808,6 @@ pref("dom.telephony.enabled", true);
 
 // The url of the page used to display network error details.
 pref("b2g.neterror.url", "app://system.gaiamobile.org/net_error.html");
+
+// Enable Web Speech synthesis API
+pref("media.webspeech.synth.enabled", true);
