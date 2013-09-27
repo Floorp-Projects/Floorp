@@ -10,9 +10,12 @@
 #include "mozilla/NullPtr.h"
 #include "mozilla/Range.h"
 
-#include "jspubtd.h"
-
+#include "js/TypeDecls.h"
 #include "js/Utility.h"
+
+namespace js {
+struct ThreadSafeContext;
+}
 
 namespace JS {
 

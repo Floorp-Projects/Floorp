@@ -894,9 +894,8 @@ MOZ_PNG_LIBS='$(call EXPAND_LIBNAME_PATH,mozpng,$(DEPTH)/media/libpng)'
 
 MOZ_JS_STATIC_LIBS='$(call EXPAND_LIBNAME_PATH,js_static,$(LIBXUL_DIST)/lib)'
 MOZ_JS_SHARED_LIBS='$(call EXPAND_LIBNAME_PATH,mozjs,$(LIBXUL_DIST)/lib)'
-DYNAMIC_XPCOM_LIBS='-L$(LIBXUL_DIST)/bin -lxul -lxpcom_core -lmozalloc'
 MOZ_FIX_LINK_PATHS='-Wl,-rpath-link,$(LIBXUL_DIST)/bin -Wl,-rpath-link,$(prefix)/lib'
-XPCOM_FROZEN_LDOPTS='-L$(LIBXUL_DIST)/bin -lxul -lmozalloc'
+XPCOM_FROZEN_LDOPTS='$(call EXPAND_LIBNAME_PATH,xul mozalloc,$(LIBXUL_DIST)/bin)'
 LIBXUL_LIBS='$(XPCOM_FROZEN_LDOPTS)'
 XPCOM_GLUE_LDOPTS='$(LIBXUL_DIST)/lib/$(LIB_PREFIX)xpcomglue_s.$(LIB_SUFFIX) $(XPCOM_FROZEN_LDOPTS)'
 XPCOM_STANDALONE_GLUE_LDOPTS='$(LIBXUL_DIST)/lib/$(LIB_PREFIX)xpcomglue.$(LIB_SUFFIX)'
@@ -1978,6 +1977,7 @@ ia64*-hpux*)
     MC=mc.exe
     # certain versions of cygwin's makedepend barf on the
     # #include <string> vs -I./dist/include/string issue so don't use it
+    XPCOM_FROZEN_LDOPTS='$(call EXPAND_LIBNAME_PATH,xul mozalloc,$(LIBXUL_DIST)/lib)'
     if test -n "$GNU_CC" -o -n "$CLANG_CC"; then
         CC="$CC -mwindows"
         CXX="$CXX -mwindows"
@@ -1996,8 +1996,6 @@ ia64*-hpux*)
         # mingw doesn't require kernel32, user32, and advapi32 explicitly
         LIBS="$LIBS -luuid -lgdi32 -lwinmm -lwsock32 -luserenv -lsecur32 -lnetapi32"
         MOZ_FIX_LINK_PATHS=
-        DYNAMIC_XPCOM_LIBS='-L$(LIBXUL_DIST)/lib -lxul -lxpcom_core -lmozalloc'
-        XPCOM_FROZEN_LDOPTS='-L$(LIBXUL_DIST)/lib -lxul -lmozalloc'
         DLL_PREFIX=
         IMPORT_LIB_SUFFIX=dll.a
 
@@ -2072,9 +2070,6 @@ ia64*-hpux*)
         WARNINGS_AS_ERRORS='-WX'
         MOZ_OPTIMIZE_FLAGS='-O1'
         MOZ_FIX_LINK_PATHS=
-        DYNAMIC_XPCOM_LIBS='$(LIBXUL_DIST)/lib/xul.lib $(LIBXUL_DIST)/lib/xpcom_core.lib $(LIBXUL_DIST)/lib/mozalloc.lib'
-        XPCOM_FROZEN_LDOPTS='$(LIBXUL_DIST)/lib/xul.lib $(LIBXUL_DIST)/lib/mozalloc.lib'
-        LIBXUL_LIBS='$(LIBXUL_DIST)/lib/xul.lib $(LIBXUL_DIST)/lib/mozalloc.lib'
         MOZ_COMPONENT_NSPR_LIBS='$(NSPR_LIBS)'
         LDFLAGS="$LDFLAGS -LARGEADDRESSAWARE -NXCOMPAT"
         if test -z "$DEVELOPER_OPTIONS"; then
@@ -2246,7 +2241,6 @@ ia64*-hpux*)
     MOZ_DEBUG_FLAGS="-g -fno-inline"
     MOZ_OPTIMIZE_FLAGS="-O2"
     MOZ_OPTIMIZE_LDFLAGS="-s -Zlinker /EXEPACK:2 -Zlinker /PACKCODE -Zlinker /PACKDATA"
-    DYNAMIC_XPCOM_LIBS='-L$(LIBXUL_DIST)/lib $(LIBXUL_DIST)/lib/xul.lib $(LIBXUL_DIST)/lib/xpcom_core.lib $(LIBXUL_DIST)/lib/mozalloc.lib'
     LIBXUL_LIBS='-L$(LIBXUL_DIST)/lib $(LIBXUL_DIST)/lib/xul.lib $(LIBXUL_DIST)/lib/mozalloc.lib'
     TARGET_MD_ARCH=os2
     _PLATFORM_DEFAULT_TOOLKIT="cairo-os2"
@@ -3198,7 +3192,6 @@ AC_CACHE_CHECK(
     )
 if test "$ac_cv_func_iconv" = "yes"; then
     AC_DEFINE(HAVE_ICONV)
-    DYNAMIC_XPCOM_LIBS="$DYNAMIC_XPCOM_LIBS $_ICONV_LIBS"
     LIBXUL_LIBS="$LIBXUL_LIBS $_ICONV_LIBS"
     LIBICONV="$_ICONV_LIBS"
     AC_CACHE_CHECK(
@@ -4429,8 +4422,7 @@ cairo-cocoa)
     TK_CFLAGS="-DNO_X11"
     CFLAGS="$CFLAGS $TK_CFLAGS"
     CXXFLAGS="$CXXFLAGS $TK_CFLAGS"
-    DYNAMIC_XPCOM_LIBS='$(LIBXUL_DIST)/bin/XUL -lxpcom_core -lmozalloc'
-    XPCOM_FROZEN_LDOPTS='$(LIBXUL_DIST)/bin/XUL -lmozalloc'
+    XPCOM_FROZEN_LDOPTS='$(LIBXUL_DIST)/bin/XUL $(call EXPAND_LIBNAME_PATH,mozalloc,$(LIBXUL_DIST)/bin)'
     MOZ_USER_DIR="Mozilla"
     MOZ_FS_LAYOUT=bundle
     MOZ_WEBGL=1
@@ -4445,8 +4437,7 @@ cairo-uikit)
     TK_LIBS='-framework Foundation -framework CoreFoundation -framework CoreGraphics -framework CoreText'
     CFLAGS="$CFLAGS $TK_CFLAGS"
     CXXFLAGS="$CXXFLAGS $TK_CFLAGS"
-    DYNAMIC_XPCOM_LIBS='$(LIBXUL_DIST)/bin/XUL -lxpcom_core -lmozalloc'
-    XPCOM_FROZEN_LDOPTS='$(LIBXUL_DIST)/bin/XUL -lmozalloc'
+    XPCOM_FROZEN_LDOPTS='$(LIBXUL_DIST)/bin/XUL $(call EXPAND_LIBNAME_PATH,mozalloc,$(LIBXUL_DIST)/bin)'
     MOZ_USER_DIR="Mozilla"
     MOZ_FS_LAYOUT=bundle
     ;;
@@ -4462,6 +4453,7 @@ cairo-android)
     ;;
 
 cairo-gonk)
+    XPCOM_FROZEN_LDOPTS='$(call EXPAND_LIBNAME_PATH,xul mozalloc,$(LIBXUL_DIST)/lib)'
     AC_DEFINE(MOZ_WIDGET_GONK)
     AC_DEFINE(MOZ_TOUCH)
     MOZ_WIDGET_TOOLKIT=gonk

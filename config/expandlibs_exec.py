@@ -23,7 +23,14 @@ symbols appear in the resulting binary. Only works for ELF targets.
 from __future__ import with_statement
 import sys
 import os
-from expandlibs import ExpandArgs, relativize, isObject, ensureParentDir, ExpandLibsDeps
+from expandlibs import (
+    ExpandArgs,
+    relativize,
+    isDynamicLib,
+    isObject,
+    ensureParentDir,
+    ExpandLibsDeps,
+)
 import expandlibs_config as conf
 from optparse import OptionParser
 import subprocess
@@ -31,6 +38,7 @@ import tempfile
 import shutil
 import subprocess
 import re
+from mozbuild.makeutil import Makefile
 
 # The are the insert points for a GNU ld linker script, assuming a more
 # or less "standard" default linker script. This is not a dict because
@@ -333,12 +341,15 @@ def main():
     if not options.depend:
         return
     ensureParentDir(options.depend)
-    with open(options.depend, 'w') as depfile:
-        depfile.write("%s : %s\n" % (options.target, ' '.join(dep for dep in deps if os.path.isfile(dep) and dep != options.target)))
+    mk = Makefile()
+    deps = [dep for dep in deps if os.path.isfile(dep) and dep != options.target]
+    no_dynamic_lib = [dep for dep in deps if not isDynamicLib(dep)]
+    mk.create_rule([options.target]).add_dependencies(no_dynamic_lib)
+    if len(deps) != len(no_dynamic_lib):
+        mk.create_rule(['%s_order_only' % options.target]).add_dependencies(dep for dep in deps if isDynamicLib(dep))
 
-        for dep in deps:
-            if os.path.isfile(dep) and dep != options.target:
-                depfile.write("%s :\n" % dep)
+    with open(options.depend, 'w') as depfile:
+        mk.dump(depfile, removal_guard=True)
 
 if __name__ == '__main__':
     main()

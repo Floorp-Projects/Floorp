@@ -11,12 +11,16 @@
 #include <stdarg.h>
 
 #ifdef MOZ_CALLGRIND
-#include <valgrind/callgrind.h>
+# include <valgrind/callgrind.h>
 #endif
 
 #ifdef __APPLE__
-#include "devtools/Instruments.h"
-#include "devtools/sharkctl.h"
+#ifdef MOZ_INSTRUMENTS
+# include "devtools/Instruments.h"
+#endif
+#ifdef MOZ_SHARK
+# include "devtools/sharkctl.h"
+#endif
 #endif
 
 #include "vm/Probes.h"

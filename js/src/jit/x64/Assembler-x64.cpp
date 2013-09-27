@@ -7,7 +7,6 @@
 #include "jit/x64/Assembler-x64.h"
 
 #include "gc/Marking.h"
-#include "jit/LIR.h"
 
 using namespace js;
 using namespace js::jit;
