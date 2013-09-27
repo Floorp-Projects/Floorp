@@ -20,7 +20,7 @@ namespace mozilla {
 class BufferDecoder : public AbstractMediaDecoder
 {
 public:
-  // This class holds a weak pointer to MediaResouce.  It's the responsibility
+  // This class holds a weak pointer to MediaResource.  It's the responsibility
   // of the caller to manage the memory of the MediaResource object.
   explicit BufferDecoder(MediaResource* aResource);
   virtual ~BufferDecoder();
