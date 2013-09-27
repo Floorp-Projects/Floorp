@@ -18,8 +18,9 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=362788
 <![CDATA[
 
 /** Test for Bug 362788 **/
-var Cc = SpecialPowers.Cc;
-var Ci = SpecialPowers.Ci;
+netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
+var Cc = Components.classes;
+var Ci = Components.interfaces;
 var lib = Cc["@mozilla.org/url-classifier/jslib;1"]
           .getService().wrappedJSObject;
 ok(!!lib, "unable to get wrapped js object");
