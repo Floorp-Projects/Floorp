@@ -27,7 +27,7 @@ class BitSet : private TempObject
   private:
     BitSet(unsigned int max) :
         max_(max),
-        bits_(NULL) {}
+        bits_(nullptr) {}
 
     unsigned int max_;
     uint32_t *bits_;

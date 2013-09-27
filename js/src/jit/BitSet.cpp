@@ -14,7 +14,7 @@ BitSet::New(unsigned int max)
 {
     BitSet *result = new BitSet(max);
     if (!result->init())
-        return NULL;
+        return nullptr;
     return result;
 }
 

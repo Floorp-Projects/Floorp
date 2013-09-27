@@ -39,7 +39,7 @@ PCMappingSlotInfo::ToSlotLocation(const StackValue *stackVal)
 }
 
 BaselineScript::BaselineScript(uint32_t prologueOffset, uint32_t spsPushToggleOffset)
-  : method_(NULL),
+  : method_(nullptr),
     fallbackStubSpace_(),
     prologueOffset_(prologueOffset),
 #ifdef DEBUG
@@ -106,7 +106,7 @@ EnterBaseline(JSContext *cx, EnterJitData &data)
     data.result.setInt32(data.numActualArgs);
     {
         AssertCompartmentUnchanged pcc(cx);
-        IonContext ictx(cx, NULL);
+        IonContext ictx(cx, nullptr);
         JitActivation activation(cx, data.constructing);
         JSAutoResolveFlags rf(cx, RESOLVE_INFER);
         AutoFlushInhibitor afi(cx->runtime()->ionRuntime());
@@ -182,7 +182,7 @@ jit::EnterBaselineAtBranch(JSContext *cx, StackFrame *fp, jsbytecode *pc)
         data.numActualArgs = fp->numActualArgs();
         data.maxArgc = Max(fp->numActualArgs(), fp->numFormalArgs()) + 1; // +1 = include |this|
         data.maxArgv = fp->argv() - 1; // -1 = include |this|
-        data.scopeChain = NULL;
+        data.scopeChain = nullptr;
         data.calleeToken = CalleeToToken(&fp->callee());
     } else {
         thisv = fp->thisValue();
@@ -376,7 +376,7 @@ BaselineScript::New(JSContext *cx, uint32_t prologueOffset,
 
     uint8_t *buffer = (uint8_t *)cx->malloc_(allocBytes);
     if (!buffer)
-        return NULL;
+        return nullptr;
 
     BaselineScript *script = reinterpret_cast<BaselineScript *>(buffer);
     new (script) BaselineScript(prologueOffset, spsPushToggleOffset);
@@ -477,10 +477,10 @@ BaselineScript::maybeICEntryFromReturnOffset(CodeOffsetLabel returnOffset)
         mid = bottom + (top - bottom) / 2;
     }
     if (mid >= numICEntries())
-        return NULL;
+        return nullptr;
 
     if (icEntry(mid).returnOffset().offset() != returnOffset.offset())
-        return NULL;
+        return nullptr;
 
     return &icEntry(mid);
 }
@@ -737,7 +737,7 @@ BaselineScript::toggleDebugTraps(JSScript *script, jsbytecode *pc)
     SrcNoteLineScanner scanner(script->notes(), script->lineno);
 
     JSRuntime *rt = script->runtimeFromMainThread();
-    IonContext ictx(rt, script->compartment(), NULL);
+    IonContext ictx(rt, script->compartment(), nullptr);
     AutoFlushCache afc("DebugTraps", rt->ionRuntime());
 
     for (uint32_t i = 0; i < numPCMappingIndexEntries(); i++) {
@@ -807,7 +807,7 @@ BaselineScript::purgeOptimizedStubs(Zone *zone)
         if (lastStub->isFallback()) {
             // Unlink all stubs allocated in the optimized space.
             ICStub *stub = entry.firstStub();
-            ICStub *prev = NULL;
+            ICStub *prev = nullptr;
 
             while (stub->next()) {
                 if (!stub->allocatedInFallbackSpace()) {
@@ -868,7 +868,7 @@ jit::FinishDiscardBaselineScript(FreeOp *fop, JSScript *script)
     }
 
     BaselineScript *baseline = script->baselineScript();
-    script->setBaselineScript(NULL);
+    script->setBaselineScript(nullptr);
     BaselineScript::Destroy(fop, baseline);
 }
 

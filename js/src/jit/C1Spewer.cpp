@@ -21,7 +21,7 @@ bool
 C1Spewer::init(const char *path)
 {
     spewout_ = fopen(path, "w");
-    return (spewout_ != NULL);
+    return (spewout_ != nullptr);
 }
 
 void
@@ -41,7 +41,7 @@ C1Spewer::beginFunction(MIRGraph *graph, HandleScript script)
         fprintf(spewout_, "  name \"asm.js compilation\"\n");
         fprintf(spewout_, "  method \"asm.js compilation\"\n");
     }
-    fprintf(spewout_, "  date %d\n", (int)time(NULL));
+    fprintf(spewout_, "  date %d\n", (int)time(nullptr));
     fprintf(spewout_, "end_compilation\n");
 }
 
