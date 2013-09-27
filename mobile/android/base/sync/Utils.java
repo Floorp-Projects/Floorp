@@ -83,6 +83,10 @@ public class Utils {
    * Helper to convert a byte array to a hex-encoded string
    */
   public static String byte2hex(byte[] b) {
+    return byte2hex(b, b.length);
+  }
+
+  public static String byte2hex(byte[] b, int hexLength) {
     // StringBuffer should be used instead.
     String hs = "";
     String stmp;
@@ -99,6 +103,10 @@ public class Utils {
       if (n < b.length - 1) {
         hs = hs + "";
       }
+    }
+
+    while (hs.length() < hexLength) {
+      hs = "0" + hs;
     }
 
     return hs;
@@ -141,6 +149,17 @@ public class Utils {
     Base32 converter = new Base32();
     final String translated = base32.replace('8', 'l').replace('9', 'o');
     return converter.decode(translated.toUpperCase());
+  }
+
+  public static byte[] hex2Byte(String str, int byteLength) {
+    byte[] second = hex2Byte(str);
+    if (second.length >= byteLength) {
+      return second;
+    }
+    // New Java arrays are zeroed:
+    // http://docs.oracle.com/javase/specs/jls/se7/html/jls-4.html#jls-4.12.5
+    byte[] first = new byte[byteLength - second.length];
+    return Utils.concatAll(first, second);
   }
 
   public static byte[] hex2Byte(String str) {
