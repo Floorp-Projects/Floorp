@@ -114,7 +114,7 @@ main (int argc, char **argv)
     hb_buffer_serialize_glyphs (buf, 0, hb_buffer_get_length (buf),
 				out, sizeof (out), NULL,
 				font, HB_BUFFER_SERIALIZE_FORMAT_JSON,
-				HB_BUFFER_SERIALIZE_FLAG_DEFAULT);
+				HB_BUFFER_SERIALIZE_FLAGS_DEFAULT);
     puts (out);
   }
 

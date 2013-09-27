@@ -44,55 +44,6 @@ namespace OT {
 	 "");
 
 
-
-#ifndef HB_DEBUG_IS_INPLACE
-#define HB_DEBUG_IS_INPLACE (HB_DEBUG+0)
-#endif
-
-#define TRACE_IS_INPLACE(this) \
-	hb_auto_trace_t<HB_DEBUG_IS_INPLACE, bool> trace \
-	(&c->debug_depth, c->get_name (), this, HB_FUNC, \
-	 "");
-
-struct hb_is_inplace_context_t
-{
-  inline const char *get_name (void) { return "IS_INPLACE"; }
-  static const unsigned int max_debug_depth = HB_DEBUG_IS_INPLACE;
-  typedef bool return_t;
-  typedef return_t (*recurse_func_t) (hb_is_inplace_context_t *c, unsigned int lookup_index);
-  template <typename T>
-  inline return_t dispatch (const T &obj) { return obj.is_inplace (this); }
-  static return_t default_return_value (void) { return true; }
-  bool stop_sublookup_iteration (return_t r) const { return !r; }
-
-  return_t recurse (unsigned int lookup_index)
-  {
-    if (unlikely (nesting_level_left == 0 || !recurse_func))
-      return default_return_value ();
-
-    nesting_level_left--;
-    bool ret = recurse_func (this, lookup_index);
-    nesting_level_left++;
-    return ret;
-  }
-
-  hb_face_t *face;
-  recurse_func_t recurse_func;
-  unsigned int nesting_level_left;
-  unsigned int debug_depth;
-
-  hb_is_inplace_context_t (hb_face_t *face_,
-			   unsigned int nesting_level_left_ = MAX_NESTING_LEVEL) :
-			   face (face_),
-			   recurse_func (NULL),
-			   nesting_level_left (nesting_level_left_),
-			   debug_depth (0) {}
-
-  void set_recurse_func (recurse_func_t func) { recurse_func = func; }
-};
-
-
-
 #ifndef HB_DEBUG_CLOSURE
 #define HB_DEBUG_CLOSURE (HB_DEBUG+0)
 #endif
@@ -207,13 +158,7 @@ struct hb_collect_glyphs_context_t
 
     /* Note that GPOS sets recurse_func to NULL already, so it doesn't get
      * past the previous check.  For GSUB, we only want to collect the output
-     * glyphs in the recursion.  If output is not requested, we can go home now.
-     *
-     * Note further, that the above is not exactly correct.  A recursed lookup
-     * is allowed to match input that is not matched in the context, but that's
-     * not how most fonts are built.  It's possible to relax that and recurse
-     * with all sets here if it proves to be an issue.
-     */
+     * glyphs in the recursion.  If output is not requested, we can go home now. */
 
     if (output == hb_set_get_empty ())
       return HB_VOID;
@@ -327,12 +272,14 @@ struct hb_apply_context_t
 
   hb_apply_context_t (unsigned int table_index_,
 		      hb_font_t *font_,
-		      hb_buffer_t *buffer_) :
+		      hb_buffer_t *buffer_,
+		      hb_mask_t lookup_mask_,
+		      bool auto_zwj_) :
 			table_index (table_index_),
 			font (font_), face (font->face), buffer (buffer_),
 			direction (buffer_->props.direction),
-			lookup_mask (1),
-			auto_zwj (true),
+			lookup_mask (lookup_mask_),
+			auto_zwj (auto_zwj_),
 			recurse_func (NULL),
 			nesting_level_left (MAX_NESTING_LEVEL),
 			lookup_props (0),
@@ -340,8 +287,6 @@ struct hb_apply_context_t
 			has_glyph_classes (gdef.has_glyph_classes ()),
 			debug_depth (0) {}
 
-  inline void set_lookup_mask (hb_mask_t mask) { lookup_mask = mask; }
-  inline void set_auto_zwj (bool auto_zwj_) { auto_zwj = auto_zwj_; }
   inline void set_recurse_func (recurse_func_t func) { recurse_func = func; }
   inline void set_lookup_props (unsigned int lookup_props_) { lookup_props = lookup_props_; }
   inline void set_lookup (const Lookup &l) { lookup_props = l.get_props (); }
@@ -872,11 +817,7 @@ static inline void ligate_input (hb_apply_context_t *c,
   unsigned int components_so_far = last_num_components;
 
   if (!is_mark_ligature)
-  {
     set_lig_props_for_ligature (c->buffer->cur(), lig_id, total_component_count);
-    if (_hb_glyph_info_get_general_category (&c->buffer->cur()) == HB_UNICODE_GENERAL_CATEGORY_NON_SPACING_MARK)
-      _hb_glyph_info_set_general_category (&c->buffer->cur(), HB_UNICODE_GENERAL_CATEGORY_OTHER_LETTER);
-  }
   c->replace_glyph (lig_glyph, klass);
 
   for (unsigned int i = 1; i < count; i++)
@@ -977,7 +918,7 @@ static inline void recurse_lookups (context_t *c,
 				    const LookupRecord lookupRecord[] /* Array of LookupRecords--in design order */)
 {
   for (unsigned int i = 0; i < lookupCount; i++)
-    c->recurse (lookupRecord[i].lookupListIndex);
+    c->recurse (lookupRecord->lookupListIndex);
 }
 
 static inline bool apply_lookup (hb_apply_context_t *c,
@@ -1016,14 +957,13 @@ static inline bool apply_lookup (hb_apply_context_t *c,
 
     lookupRecord++;
     lookupCount--;
-    i++;
+    /* Err, this is wrong if the lookup jumped over some glyphs */
+    i += c->buffer->idx - old_pos;
 
     if (!done)
       goto not_applied;
     else
     {
-      if (c->table_index == 1)
-        c->buffer->idx = old_pos + 1;
       /* Reinitialize iterator. */
       hb_apply_context_t::skipping_forward_iterator_t tmp (c, c->buffer->idx - 1, count - i);
       tmp.set_syllable (syllable);
@@ -1052,14 +992,13 @@ static inline bool apply_lookup (hb_apply_context_t *c,
 
       lookupRecord++;
       lookupCount--;
-      i++;
+      /* Err, this is wrong if the lookup jumped over some glyphs */
+      i += c->buffer->idx - old_pos;
 
       if (!done)
 	goto not_applied2;
       else
       {
-	if (c->table_index == 1)
-	  c->buffer->idx = old_pos + 1;
         /* Reinitialize iterator. */
 	hb_apply_context_t::skipping_forward_iterator_t tmp (c, c->buffer->idx - 1, count - i);
 	tmp.set_syllable (syllable);
@@ -1157,17 +1096,6 @@ static inline bool context_apply_lookup (hb_apply_context_t *c,
 
 struct Rule
 {
-  inline bool is_inplace (hb_is_inplace_context_t *c) const
-  {
-    TRACE_IS_INPLACE (this);
-    const LookupRecord *lookupRecord = &StructAtOffset<LookupRecord> (input, input[0].static_size * (inputCount ? inputCount - 1 : 0));
-    unsigned int count = lookupCount;
-    for (unsigned int i = 0; i < count; i++)
-      if (!c->recurse (lookupRecord[i].lookupListIndex))
-        return TRACE_RETURN (false);
-    return TRACE_RETURN (true);
-  }
-
   inline void closure (hb_closure_context_t *c, ContextClosureLookupContext &lookup_context) const
   {
     TRACE_CLOSURE (this);
@@ -1227,16 +1155,6 @@ struct Rule
 
 struct RuleSet
 {
-  inline bool is_inplace (hb_is_inplace_context_t *c) const
-  {
-    TRACE_IS_INPLACE (this);
-    unsigned int num_rules = rule.len;
-    for (unsigned int i = 0; i < num_rules; i++)
-      if (!(this+rule[i]).is_inplace (c))
-        return TRACE_RETURN (false);
-    return TRACE_RETURN (true);
-  }
-
   inline void closure (hb_closure_context_t *c, ContextClosureLookupContext &lookup_context) const
   {
     TRACE_CLOSURE (this);
@@ -1293,16 +1211,6 @@ struct RuleSet
 
 struct ContextFormat1
 {
-  inline bool is_inplace (hb_is_inplace_context_t *c) const
-  {
-    TRACE_IS_INPLACE (this);
-    unsigned int count = ruleSet.len;
-    for (unsigned int i = 0; i < count; i++)
-      if (!(this+ruleSet[i]).is_inplace (c))
-        return TRACE_RETURN (false);
-    return TRACE_RETURN (true);
-  }
-
   inline void closure (hb_closure_context_t *c) const
   {
     TRACE_CLOSURE (this);
@@ -1389,16 +1297,6 @@ struct ContextFormat1
 
 struct ContextFormat2
 {
-  inline bool is_inplace (hb_is_inplace_context_t *c) const
-  {
-    TRACE_IS_INPLACE (this);
-    unsigned int count = ruleSet.len;
-    for (unsigned int i = 0; i < count; i++)
-      if (!(this+ruleSet[i]).is_inplace (c))
-        return TRACE_RETURN (false);
-    return TRACE_RETURN (true);
-  }
-
   inline void closure (hb_closure_context_t *c) const
   {
     TRACE_CLOSURE (this);
@@ -1494,17 +1392,6 @@ struct ContextFormat2
 
 struct ContextFormat3
 {
-  inline bool is_inplace (hb_is_inplace_context_t *c) const
-  {
-    TRACE_IS_INPLACE (this);
-    const LookupRecord *lookupRecord = &StructAtOffset<LookupRecord> (coverage, coverage[0].static_size * glyphCount);
-    unsigned int count = lookupCount;
-    for (unsigned int i = 0; i < count; i++)
-      if (!c->recurse (lookupRecord[i].lookupListIndex))
-        return TRACE_RETURN (false);
-    return TRACE_RETURN (true);
-  }
-
   inline void closure (hb_closure_context_t *c) const
   {
     TRACE_CLOSURE (this);
@@ -1667,7 +1554,7 @@ static inline void chain_context_closure_lookup (hb_closure_context_t *c,
    && intersects_array (c,
 			inputCount ? inputCount - 1 : 0, input,
 			lookup_context.funcs.intersects, lookup_context.intersects_data[1])
-   && intersects_array (c,
+  && intersects_array (c,
 		       lookaheadCount, lookahead,
 		       lookup_context.funcs.intersects, lookup_context.intersects_data[2]))
     recurse_lookups (c,
@@ -1746,19 +1633,6 @@ static inline bool chain_context_apply_lookup (hb_apply_context_t *c,
 
 struct ChainRule
 {
-  inline bool is_inplace (hb_is_inplace_context_t *c) const
-  {
-    TRACE_IS_INPLACE (this);
-    const HeadlessArrayOf<USHORT> &input = StructAfter<HeadlessArrayOf<USHORT> > (backtrack);
-    const ArrayOf<USHORT> &lookahead = StructAfter<ArrayOf<USHORT> > (input);
-    const ArrayOf<LookupRecord> &lookup = StructAfter<ArrayOf<LookupRecord> > (lookahead);
-    unsigned int count = lookup.len;
-    for (unsigned int i = 0; i < count; i++)
-      if (!c->recurse (lookup.array[i].lookupListIndex))
-        return TRACE_RETURN (false);
-    return TRACE_RETURN (true);
-  }
-
   inline void closure (hb_closure_context_t *c, ChainContextClosureLookupContext &lookup_context) const
   {
     TRACE_CLOSURE (this);
@@ -1844,16 +1718,6 @@ struct ChainRule
 
 struct ChainRuleSet
 {
-  inline bool is_inplace (hb_is_inplace_context_t *c) const
-  {
-    TRACE_IS_INPLACE (this);
-    unsigned int num_rules = rule.len;
-    for (unsigned int i = 0; i < num_rules; i++)
-      if (!(this+rule[i]).is_inplace (c))
-        return TRACE_RETURN (false);
-    return TRACE_RETURN (true);
-  }
-
   inline void closure (hb_closure_context_t *c, ChainContextClosureLookupContext &lookup_context) const
   {
     TRACE_CLOSURE (this);
@@ -1907,16 +1771,6 @@ struct ChainRuleSet
 
 struct ChainContextFormat1
 {
-  inline bool is_inplace (hb_is_inplace_context_t *c) const
-  {
-    TRACE_IS_INPLACE (this);
-    unsigned int count = ruleSet.len;
-    for (unsigned int i = 0; i < count; i++)
-      if (!(this+ruleSet[i]).is_inplace (c))
-        return TRACE_RETURN (false);
-    return TRACE_RETURN (true);
-  }
-
   inline void closure (hb_closure_context_t *c) const
   {
     TRACE_CLOSURE (this);
@@ -2000,16 +1854,6 @@ struct ChainContextFormat1
 
 struct ChainContextFormat2
 {
-  inline bool is_inplace (hb_is_inplace_context_t *c) const
-  {
-    TRACE_IS_INPLACE (this);
-    unsigned int count = ruleSet.len;
-    for (unsigned int i = 0; i < count; i++)
-      if (!(this+ruleSet[i]).is_inplace (c))
-        return TRACE_RETURN (false);
-    return TRACE_RETURN (true);
-  }
-
   inline void closure (hb_closure_context_t *c) const
   {
     TRACE_CLOSURE (this);
@@ -2134,20 +1978,6 @@ struct ChainContextFormat2
 
 struct ChainContextFormat3
 {
-  inline bool is_inplace (hb_is_inplace_context_t *c) const
-  {
-    TRACE_IS_INPLACE (this);
-    const OffsetArrayOf<Coverage> &input = StructAfter<OffsetArrayOf<Coverage> > (backtrack);
-    const OffsetArrayOf<Coverage> &lookahead = StructAfter<OffsetArrayOf<Coverage> > (input);
-    const ArrayOf<LookupRecord> &lookup = StructAfter<ArrayOf<LookupRecord> > (lookahead);
-
-    unsigned int count = lookup.len;
-    for (unsigned int i = 0; i < count; i++)
-      if (!c->recurse (lookup.array[i].lookupListIndex))
-        return TRACE_RETURN (false);
-    return TRACE_RETURN (true);
-  }
-
   inline void closure (hb_closure_context_t *c) const
   {
     TRACE_CLOSURE (this);
