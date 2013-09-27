@@ -14,7 +14,20 @@ let container = homescreen.contentWindow.document.getElementById('test-container
 
 function openWindow(aEvent) {
   var popupIframe = aEvent.detail.frameElement;
-  popupIframe.setAttribute('style', 'position: absolute; left: 0; top: 300px; background: white; ');
+  popupIframe.setAttribute('style', 'position: absolute; left: 0; top: 0px; background: white;');
+
+  // This is to size the iframe to what is requested in the window.open call,
+  // e.g. window.open("", "", "width=600,height=600");
+  if (aEvent.detail.features.indexOf('width') != -1) {
+    let width = aEvent.detail.features.substr(aEvent.detail.features.indexOf('width')+6);
+    width = width.substr(0,width.indexOf(',') == -1 ? width.length : width.indexOf(','));
+    popupIframe.style.width = width + 'px';
+  }
+  if (aEvent.detail.features.indexOf('height') != -1) {
+    let height = aEvent.detail.features.substr(aEvent.detail.features.indexOf('height')+7);
+    height = height.substr(0, height.indexOf(',') == -1 ? height.length : height.indexOf(','));
+    popupIframe.style.height = height + 'px';
+  }
 
   popupIframe.addEventListener('mozbrowserclose', function(e) {
     container.parentNode.removeChild(popupIframe);
@@ -26,6 +39,11 @@ function openWindow(aEvent) {
 
   popupIframe.addEventListener('mozbrowserloadstart', function(e) {
     popupIframe.focus();
+    let mm = popupIframe.QueryInterface(Ci.nsIFrameLoaderOwner).frameLoader.messageManager;
+    mm.loadFrameScript(CHILD_LOGGER_SCRIPT, true);
+    mm.loadFrameScript(CHILD_SCRIPT_API, true);
+    mm.loadFrameScript(CHILD_SCRIPT, true);
+    mm.loadFrameScript('data:,attachSpecialPowersToWindow%28content%29%3B', true);
   });
 
   container.parentNode.appendChild(popupIframe);
