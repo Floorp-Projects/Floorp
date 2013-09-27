@@ -2700,7 +2700,7 @@ bool
 LIRGenerator::visitAssertRange(MAssertRange *ins)
 {
     MDefinition *input = ins->input();
-    LInstruction *lir = NULL;
+    LInstruction *lir = nullptr;
 
     switch (input->type()) {
       case MIRType_Int32:
@@ -3254,7 +3254,7 @@ LIRGenerator::updateResumeState(MInstruction *ins)
 {
     lastResumePoint_ = ins->resumePoint();
     if (IonSpewEnabled(IonSpew_Snapshots) && lastResumePoint_)
-        SpewResumePoint(NULL, ins, lastResumePoint_);
+        SpewResumePoint(nullptr, ins, lastResumePoint_);
 }
 
 void
@@ -3262,7 +3262,7 @@ LIRGenerator::updateResumeState(MBasicBlock *block)
 {
     lastResumePoint_ = block->entryResumePoint();
     if (IonSpewEnabled(IonSpew_Snapshots) && lastResumePoint_)
-        SpewResumePoint(block, NULL, lastResumePoint_);
+        SpewResumePoint(block, nullptr, lastResumePoint_);
 }
 
 void

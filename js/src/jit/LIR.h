@@ -585,9 +585,9 @@ class LInstruction
 
     LInstruction()
       : id_(0),
-        snapshot_(NULL),
-        safepoint_(NULL),
-        mir_(NULL)
+        snapshot_(nullptr),
+        safepoint_(nullptr),
+        mir_(nullptr)
     { }
 
   public:
@@ -613,7 +613,7 @@ class LInstruction
     // Hook for opcodes to add extra high level detail about what code will be
     // emitted for the op.
     virtual const char *extraName() const {
-        return NULL;
+        return nullptr;
     }
 
   public:
@@ -713,8 +713,8 @@ class LInstructionVisitor
     }
 
     LInstructionVisitor()
-      : ins_(NULL),
-        lastPC_(NULL)
+      : ins_(nullptr),
+        lastPC_(nullptr)
     {}
 
   public:
@@ -738,8 +738,8 @@ class LBlock : public TempObject
 
     LBlock(MBasicBlock *block)
       : block_(block),
-        entryMoveGroup_(NULL),
-        exitMoveGroup_(NULL)
+        entryMoveGroup_(nullptr),
+        exitMoveGroup_(nullptr)
     { }
 
   public:
@@ -844,7 +844,7 @@ class LInstructionHelper : public LInstruction
     }
     MBasicBlock *getSuccessor(size_t i) const {
         JS_ASSERT(false);
-        return NULL;
+        return nullptr;
     }
     void setSuccessor(size_t i, MBasicBlock *successor) {
         JS_ASSERT(false);
@@ -1343,7 +1343,7 @@ class LIRGraph
     // Snapshot taken before any LIR has been lowered.
     LSnapshot *entrySnapshot_;
 
-    // LBlock containing LOsrEntry, or NULL.
+    // LBlock containing LOsrEntry, or nullptr.
     LBlock *osrBlock_;
 
     MIRGraph &mir_;

@@ -55,12 +55,12 @@ class TypeWrapper {
     inline JSObject *getSingleObject(unsigned) const {
         if (t_.isSingleObject())
             return t_.singleObject();
-        return NULL;
+        return nullptr;
     }
     inline types::TypeObject *getTypeObject(unsigned) const {
         if (t_.isTypeObject())
             return t_.typeObject();
-        return NULL;
+        return nullptr;
     }
 };
 
@@ -517,7 +517,7 @@ MacroAssembler::loadFromTypedArray(int arrayType, const T &src, const ValueOpera
       case ScalarTypeRepresentation::TYPE_INT16:
       case ScalarTypeRepresentation::TYPE_UINT16:
       case ScalarTypeRepresentation::TYPE_INT32:
-        loadFromTypedArray(arrayType, src, AnyRegister(dest.scratchReg()), InvalidReg, NULL);
+        loadFromTypedArray(arrayType, src, AnyRegister(dest.scratchReg()), InvalidReg, nullptr);
         tagValue(JSVAL_TYPE_INT32, dest.scratchReg(), dest);
         break;
       case ScalarTypeRepresentation::TYPE_UINT32:
@@ -546,13 +546,15 @@ MacroAssembler::loadFromTypedArray(int arrayType, const T &src, const ValueOpera
         }
         break;
       case ScalarTypeRepresentation::TYPE_FLOAT32:
-        loadFromTypedArray(arrayType, src, AnyRegister(ScratchFloatReg), dest.scratchReg(), NULL);
+        loadFromTypedArray(arrayType, src, AnyRegister(ScratchFloatReg), dest.scratchReg(),
+                           nullptr);
         if (LIRGenerator::allowFloat32Optimizations())
             convertFloatToDouble(ScratchFloatReg, ScratchFloatReg);
         boxDouble(ScratchFloatReg, dest);
         break;
       case ScalarTypeRepresentation::TYPE_FLOAT64:
-        loadFromTypedArray(arrayType, src, AnyRegister(ScratchFloatReg), dest.scratchReg(), NULL);
+        loadFromTypedArray(arrayType, src, AnyRegister(ScratchFloatReg), dest.scratchReg(),
+                           nullptr);
         boxDouble(ScratchFloatReg, dest);
         break;
       default:
@@ -820,7 +822,7 @@ MacroAssembler::initGCThing(const Register &obj, JSObject *templateObject)
 
     storePtr(ImmGCPtr(templateObject->lastProperty()), Address(obj, JSObject::offsetOfShape()));
     storePtr(ImmGCPtr(templateObject->type()), Address(obj, JSObject::offsetOfType()));
-    storePtr(ImmPtr(NULL), Address(obj, JSObject::offsetOfSlots()));
+    storePtr(ImmPtr(nullptr), Address(obj, JSObject::offsetOfSlots()));
 
     if (templateObject->is<ArrayObject>()) {
         JS_ASSERT(!templateObject->getDenseInitializedLength());
@@ -1060,7 +1062,7 @@ MacroAssembler::generateBailoutTail(Register scratch, Register bailoutInfo)
         Label done;
         branchPtr(Assembler::Equal,
                   Address(bailoutInfo, offsetof(BaselineBailoutInfo, monitorStub)),
-                  ImmPtr(NULL),
+                  ImmPtr(nullptr),
                   &noMonitor);
 
         //
@@ -1244,7 +1246,7 @@ MacroAssembler::enterFakeParallelExitFrame(Register slice, Register scratch,
     loadPtr(Address(slice, offsetof(ForkJoinSlice, perThreadData)), scratch);
     linkParallelExitFrame(scratch);
     Push(ImmPtr(codeVal));
-    Push(ImmPtr(NULL));
+    Push(ImmPtr(nullptr));
 }
 
 void
@@ -1380,7 +1382,7 @@ MacroAssembler::printf(const char *output)
 }
 
 void printf1_(const char *output, uintptr_t value) {
-    char *line = JS_sprintf_append(NULL, output, value);
+    char *line = JS_sprintf_append(nullptr, output, value);
     printf("%s", line);
     js_free(line);
 }
@@ -1566,7 +1568,7 @@ MacroAssembler::PushEmptyRooted(VMFunction::RootType rootType)
       case VMFunction::RootPropertyName:
       case VMFunction::RootFunction:
       case VMFunction::RootCell:
-        Push(ImmPtr(NULL));
+        Push(ImmPtr(nullptr));
         break;
       case VMFunction::RootValue:
         Push(UndefinedValue());
@@ -1850,7 +1852,7 @@ MacroAssembler::convertTypedOrValueToInt(TypedOrValueRegister src, FloatRegister
             clampIntToUint8(output);
         break;
       case MIRType_Double:
-        convertDoubleToInt(src.typedReg().fpu(), output, temp, NULL, fail, behavior);
+        convertDoubleToInt(src.typedReg().fpu(), output, temp, nullptr, fail, behavior);
         break;
       case MIRType_String:
       case MIRType_Object:
