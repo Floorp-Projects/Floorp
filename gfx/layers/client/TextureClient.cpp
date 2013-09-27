@@ -21,7 +21,6 @@
 #include "mozilla/layers/YCbCrImageDataSerializer.h"
 #include "nsDebug.h"                    // for NS_ASSERTION, NS_WARNING, etc
 #include "nsTraceRefcnt.h"              // for MOZ_COUNT_CTOR, etc
-#include "nsIMemoryReporter.h"
 
 #ifdef MOZ_ANDROID_OMTC
 #  include "gfxReusableImageSurfaceWrapper.h"
@@ -35,72 +34,6 @@ using namespace mozilla::gl;
 
 namespace mozilla {
 namespace layers {
-
-/**
- * Adds some memory reporting for the shared data.
- *
- * Due to the memory model of texture client/host we count memory only on the
- * client side because:
- * - If we count it also on the host side it would mean counting it twice since
- *   TextureClient/Host do not transfer ownership. They actually do share the data.
- * - Counting on the client side means we get per app reports on B2G which is nice.
- *
- * When a texture client allocates its memory, we add the amount of bytes
- * allocated (no suprise here).
- * When we destroy the texture client there are two possibilities:
- * - eiter the shared memory will be deallocated on the client-side in which
- *   case we basically count the deallocation where we deallocate the memory.
- * - or the shared memory will be deallocated on the host process, but we still
- *   need to count it in the client process, since the memory reports are per
- *   process and we added the amount allocated in the client process. In this
- *   case we count the deallocation in TextureClientData::ForgetSharedData which
- *   is always called when the client gives up its references to the shared data
- *   to let the host deallocate it.
- *
- * More info about the lifetime of shared texture data here:
- * https://wiki.mozilla.org/Platform/GFX/textures#Deallocating_the_shared_data
- */
-class TextureClientReporter : public MemoryUniReporter
-{
-public:
-  TextureClientReporter(const char* name, uint32_t aKind)
-    : MemoryUniReporter(name, aKind, UNITS_BYTES,
-      "Texture data that is shared between the content process and the compositor process.")
-    , mAmount(0)
-  {}
-
-  int64_t Amount() MOZ_OVERRIDE { return mAmount; }
-
-  void Add(uint64_t val) { mAmount += val; }
-
-  void Remove(uint64_t val) { mAmount -= val; }
-
-private:
-  int64_t mAmount;
-};
-
-static TextureClientReporter* sMemoryTextureClientReporter = nullptr;
-static TextureClientReporter* sShmemTextureClientReporter = nullptr;
-
-TextureClientReporter* GetMemoryTextureReporter()
-{
-  if (!sMemoryTextureClientReporter) {
-    sMemoryTextureClientReporter
-      = new TextureClientReporter("gfx-MemoryTexture", nsIMemoryReporter::KIND_HEAP);
-    NS_RegisterMemoryReporter(sMemoryTextureClientReporter);
-  }
-  return sMemoryTextureClientReporter;
-}
-
-TextureClientReporter* GetShmemTextureReporter()
-{
-  if (!sShmemTextureClientReporter) {
-    sShmemTextureClientReporter
-      = new TextureClientReporter("gfx-ShmemTexture", nsIMemoryReporter::KIND_OTHER);
-    NS_RegisterMemoryReporter(sShmemTextureClientReporter);
-  }
-  return sShmemTextureClientReporter;
-}
 
 class ShmemTextureClientData : public TextureClientData
 {
@@ -116,20 +49,9 @@ public:
     MOZ_COUNT_CTOR(ShmemTextureClientData);
   }
 
-  virtual void DeallocateSharedData(ISurfaceAllocator* allocator) MOZ_OVERRIDE
+  virtual void DeallocateSharedData(ISurfaceAllocator* allocator)
   {
-    MOZ_ASSERT(mShmem.IsReadable());
-    GetShmemTextureReporter()->Remove(mShmem.Size<uint8_t>());
     allocator->DeallocShmem(mShmem);
-    mShmem = ipc::Shmem();
-  }
-
-  virtual void ForgetSharedData() MOZ_OVERRIDE
-  {
-    MOZ_ASSERT(mShmem.IsReadable());
-    // This is called when the shmem is about to be deallocated on the host
-    // side, but we must always count memory on the client side.
-    GetShmemTextureReporter()->Remove(mShmem.Size<uint8_t>());
     mShmem = ipc::Shmem();
   }
 
@@ -140,9 +62,8 @@ private:
 class MemoryTextureClientData : public TextureClientData
 {
 public:
-  MemoryTextureClientData(uint8_t* aBuffer, uint64_t aBufferSize)
+  MemoryTextureClientData(uint8_t* aBuffer)
   : mBuffer(aBuffer)
-  , mBufferSize(aBufferSize)
   {
     MOZ_COUNT_CTOR(MemoryTextureClientData);
   }
@@ -153,35 +74,22 @@ public:
     MOZ_COUNT_CTOR(MemoryTextureClientData);
   }
 
-  virtual void DeallocateSharedData(ISurfaceAllocator*) MOZ_OVERRIDE
+  virtual void DeallocateSharedData(ISurfaceAllocator*)
   {
-    MOZ_ASSERT(mBuffer);
-    GetMemoryTextureReporter()->Remove(mBufferSize);
     delete[] mBuffer;
-  }
-
-  virtual void ForgetSharedData() MOZ_OVERRIDE
-  {
-    MOZ_ASSERT(mBuffer);
-    // This is called when the buffer is about to be deallocated on the host
-    // side, but we must always count memory on the client side.
-    GetMemoryTextureReporter()->Remove(mBufferSize);
-    mBuffer = nullptr;
   }
 
 private:
   uint8_t* mBuffer;
-  uint64_t mBufferSize;
 };
 
 TextureClientData*
 MemoryTextureClient::DropTextureData()
 {
-  MOZ_ASSERT(IsValid());
   if (!mBuffer) {
     return nullptr;
   }
-  TextureClientData* result = new MemoryTextureClientData(mBuffer, mBufSize);
+  TextureClientData* result = new MemoryTextureClientData(mBuffer);
   MarkInvalid();
   mBuffer = nullptr;
   return result;
@@ -190,7 +98,6 @@ MemoryTextureClient::DropTextureData()
 TextureClientData*
 ShmemTextureClient::DropTextureData()
 {
-  MOZ_ASSERT(IsValid());
   if (!mShmem.IsReadable()) {
     return nullptr;
   }
@@ -248,7 +155,6 @@ ShmemTextureClient::Allocate(uint32_t aSize)
   MOZ_ASSERT(IsValid());
   ipc::SharedMemory::SharedMemoryType memType = OptimalShmemType();
   mAllocated = GetAllocator()->AllocUnsafeShmem(aSize, memType, &mShmem);
-  GetShmemTextureReporter()->Add(aSize);
   return mAllocated;
 }
 
@@ -281,10 +187,9 @@ ShmemTextureClient::ShmemTextureClient(CompositableClient* aCompositable,
 ShmemTextureClient::~ShmemTextureClient()
 {
   MOZ_COUNT_DTOR(ShmemTextureClient);
-  if (mShmem.IsReadable() && ShouldDeallocateInDestructor()) {
+  if (ShouldDeallocateInDestructor()) {
     // if the buffer has never been shared we must deallocate it or ir would
     // leak.
-    GetShmemTextureReporter()->Remove(mShmem.Size<uint8_t>());
     mCompositable->GetForwarder()->DeallocShmem(mShmem);
   }
 }
@@ -307,7 +212,6 @@ MemoryTextureClient::Allocate(uint32_t aSize)
   MOZ_ASSERT(!mBuffer);
   mBuffer = new uint8_t[aSize];
   mBufSize = aSize;
-  GetMemoryTextureReporter()->Add(aSize);
   return true;
 }
 
@@ -324,10 +228,9 @@ MemoryTextureClient::MemoryTextureClient(CompositableClient* aCompositable,
 MemoryTextureClient::~MemoryTextureClient()
 {
   MOZ_COUNT_DTOR(MemoryTextureClient);
-  if (mBuffer && ShouldDeallocateInDestructor()) {
+  if (ShouldDeallocateInDestructor()) {
     // if the buffer has never been shared we must deallocate it or ir would
     // leak.
-    GetMemoryTextureReporter()->Remove(mBufSize);
     delete mBuffer;
   }
 }
