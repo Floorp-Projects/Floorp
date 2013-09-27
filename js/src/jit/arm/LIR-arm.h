@@ -292,7 +292,7 @@ class LTableSwitch : public LInstructionHelper<0, 1, 1>
     }
     // This is added to share the same CodeGenerator prefixes.
     const LAllocation *tempPointer() {
-        return NULL;
+        return nullptr;
     }
 };
 
@@ -323,7 +323,7 @@ class LTableSwitchV : public LInstructionHelper<0, BOX_PIECES, 2>
         return getTemp(1)->output();
     }
     const LAllocation *tempPointer() {
-        return NULL;
+        return nullptr;
     }
 };
 
