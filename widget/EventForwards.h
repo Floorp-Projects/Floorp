@@ -129,6 +129,5 @@ typedef mozilla::WidgetGestureNotifyEvent  nsGestureNotifyEvent;
 typedef mozilla::WidgetSimpleGestureEvent  nsSimpleGestureEvent;
 typedef mozilla::WidgetTouchEvent          nsTouchEvent;
 typedef mozilla::InternalScriptErrorEvent  nsScriptErrorEvent;
-typedef mozilla::InternalScrollPortEvent   nsScrollPortEvent;
 
 #endif // mozilla_EventForwards_h__
