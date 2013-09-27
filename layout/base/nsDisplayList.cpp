@@ -593,7 +593,7 @@ static void RecordFrameMetrics(nsIFrame* aForFrame,
                                nsRect* aDisplayPort,
                                nsRect* aCriticalDisplayPort,
                                ViewID aScrollId,
-                               const nsDisplayItem::ContainerParameters& aContainerParameters) {
+                               const ContainerLayerParameters& aContainerParameters) {
   nsPresContext* presContext = aForFrame->PresContext();
   int32_t auPerDevPixel = presContext->AppUnitsPerDevPixel();
   LayoutDeviceToLayerScale resolution(aContainerParameters.mXScale, aContainerParameters.mYScale);
@@ -1123,7 +1123,7 @@ void nsDisplayList::PaintForFrame(nsDisplayListBuilder* aBuilder,
                                      LayerProperties::CloneFrom(layerManager->GetRoot()) : 
                                      nullptr);
 
-  nsDisplayItem::ContainerParameters containerParameters
+  ContainerLayerParameters containerParameters
     (presShell->GetXResolution(), presShell->GetYResolution());
   nsRefPtr<ContainerLayer> root = layerBuilder->
     BuildContainerLayerFor(aBuilder, layerManager, aForFrame, nullptr, *this,
@@ -1839,7 +1839,7 @@ nsDisplayBackgroundImage::GetContainer(LayerManager* aManager,
 LayerState
 nsDisplayBackgroundImage::GetLayerState(nsDisplayListBuilder* aBuilder,
                                         LayerManager* aManager,
-                                        const FrameLayerBuilder::ContainerParameters& aParameters)
+                                        const ContainerLayerParameters& aParameters)
 {
   bool animated = false;
   if (mBackgroundStyle) {
@@ -1897,7 +1897,7 @@ nsDisplayBackgroundImage::GetLayerState(nsDisplayListBuilder* aBuilder,
 already_AddRefed<Layer>
 nsDisplayBackgroundImage::BuildLayer(nsDisplayListBuilder* aBuilder,
                                      LayerManager* aManager,
-                                     const ContainerParameters& aParameters)
+                                     const ContainerLayerParameters& aParameters)
 {
   nsRefPtr<ImageLayer> layer = static_cast<ImageLayer*>
     (aManager->GetLayerBuilder()->GetLeafLayerFor(aBuilder, this));
@@ -2841,7 +2841,7 @@ void nsDisplayWrapList::Paint(nsDisplayListBuilder* aBuilder,
 static LayerState
 RequiredLayerStateForChildrenInternal(nsDisplayListBuilder* aBuilder,
                                       LayerManager* aManager,
-                                      const FrameLayerBuilder::ContainerParameters& aParameters,
+                                      const ContainerLayerParameters& aParameters,
                                       const nsDisplayList& aList,
                                       nsIFrame* aAnimatedGeometryRoot)
 {
@@ -2876,7 +2876,7 @@ RequiredLayerStateForChildrenInternal(nsDisplayListBuilder* aBuilder,
 LayerState
 nsDisplayWrapList::RequiredLayerStateForChildren(nsDisplayListBuilder* aBuilder,
                                                  LayerManager* aManager,
-                                                 const ContainerParameters& aParameters,
+                                                 const ContainerLayerParameters& aParameters,
                                                  const nsDisplayList& aList,
                                                  nsIFrame* aItemFrame)
 {
@@ -2989,7 +2989,7 @@ nsRegion nsDisplayOpacity::GetOpaqueRegion(nsDisplayListBuilder* aBuilder,
 already_AddRefed<Layer>
 nsDisplayOpacity::BuildLayer(nsDisplayListBuilder* aBuilder,
                              LayerManager* aManager,
-                             const ContainerParameters& aContainerParameters) {
+                             const ContainerLayerParameters& aContainerParameters) {
   if (mFrame->StyleDisplay()->mOpacity == 0 && mFrame->GetContent() &&
       !nsLayoutUtils::HasAnimations(mFrame->GetContent(), eCSSProperty_opacity)) {
     return nullptr;
@@ -3024,7 +3024,7 @@ IsItemTooSmallForActiveLayer(nsDisplayItem* aItem)
 nsDisplayItem::LayerState
 nsDisplayOpacity::GetLayerState(nsDisplayListBuilder* aBuilder,
                                 LayerManager* aManager,
-                                const ContainerParameters& aParameters) {
+                                const ContainerLayerParameters& aParameters) {
   if (ActiveLayerTracker::IsStyleAnimated(mFrame, eCSSProperty_opacity) &&
       !IsItemTooSmallForActiveLayer(this))
     return LAYER_ACTIVE;
@@ -3093,8 +3093,8 @@ nsRegion nsDisplayMixBlendMode::GetOpaqueRegion(nsDisplayListBuilder* aBuilder,
 already_AddRefed<Layer>
 nsDisplayMixBlendMode::BuildLayer(nsDisplayListBuilder* aBuilder,
                                   LayerManager* aManager,
-                                  const ContainerParameters& aContainerParameters) {
-  ContainerParameters newContainerParameters = aContainerParameters;
+                                  const ContainerLayerParameters& aContainerParameters) {
+  ContainerLayerParameters newContainerParameters = aContainerParameters;
   newContainerParameters.mDisableSubpixelAntialiasingInDescendants = true;
 
   nsRefPtr<Layer> container = aManager->GetLayerBuilder()->
@@ -3157,10 +3157,10 @@ nsDisplayBlendContainer::~nsDisplayBlendContainer() {
 already_AddRefed<Layer>
 nsDisplayBlendContainer::BuildLayer(nsDisplayListBuilder* aBuilder,
                                     LayerManager* aManager,
-                                    const ContainerParameters& aContainerParameters) {
+                                    const ContainerLayerParameters& aContainerParameters) {
   // turn off anti-aliasing in the parent stacking context because it changes
   // how the group is initialized.
-  ContainerParameters newContainerParameters = aContainerParameters;
+  ContainerLayerParameters newContainerParameters = aContainerParameters;
   newContainerParameters.mDisableSubpixelAntialiasingInDescendants = true;
 
   nsRefPtr<Layer> container = aManager->GetLayerBuilder()->
@@ -3206,7 +3206,7 @@ nsDisplayOwnLayer::~nsDisplayOwnLayer() {
 already_AddRefed<Layer>
 nsDisplayOwnLayer::BuildLayer(nsDisplayListBuilder* aBuilder,
                               LayerManager* aManager,
-                              const ContainerParameters& aContainerParameters) {
+                              const ContainerLayerParameters& aContainerParameters) {
   nsRefPtr<ContainerLayer> layer = aManager->GetLayerBuilder()->
     BuildContainerLayerFor(aBuilder, aManager, mFrame, this, mList,
                            aContainerParameters, nullptr);
@@ -3233,9 +3233,9 @@ nsDisplayResolution::~nsDisplayResolution() {
 already_AddRefed<Layer>
 nsDisplayResolution::BuildLayer(nsDisplayListBuilder* aBuilder,
                                 LayerManager* aManager,
-                                const ContainerParameters& aContainerParameters) {
+                                const ContainerLayerParameters& aContainerParameters) {
   nsIPresShell* presShell = mFrame->PresContext()->PresShell();
-  nsDisplayItem::ContainerParameters containerParameters(
+  ContainerLayerParameters containerParameters(
     presShell->GetXResolution(), presShell->GetYResolution(), nsIntPoint(),
     aContainerParameters);
 
@@ -3268,7 +3268,7 @@ nsDisplayFixedPosition::SetFixedPositionLayerData(Layer* aLayer,
                                                   const nsIFrame* aFixedPosFrame,
                                                   const nsIFrame* aReferenceFrame,
                                                   nsPresContext* aPresContext,
-                                                  const ContainerParameters& aContainerParameters) {
+                                                  const ContainerLayerParameters& aContainerParameters) {
   // Find out the rect of the viewport frame relative to the reference frame.
   // This, in conjunction with the container scale, will correspond to the
   // coordinate-space of the built layer.
@@ -3338,7 +3338,7 @@ nsDisplayFixedPosition::SetFixedPositionLayerData(Layer* aLayer,
 already_AddRefed<Layer>
 nsDisplayFixedPosition::BuildLayer(nsDisplayListBuilder* aBuilder,
                                    LayerManager* aManager,
-                                   const ContainerParameters& aContainerParameters) {
+                                   const ContainerLayerParameters& aContainerParameters) {
   nsRefPtr<Layer> layer =
     nsDisplayOwnLayer::BuildLayer(aBuilder, aManager, aContainerParameters);
 
@@ -3390,7 +3390,7 @@ nsDisplayStickyPosition::~nsDisplayStickyPosition() {
 already_AddRefed<Layer>
 nsDisplayStickyPosition::BuildLayer(nsDisplayListBuilder* aBuilder,
                                     LayerManager* aManager,
-                                    const ContainerParameters& aContainerParameters) {
+                                    const ContainerLayerParameters& aContainerParameters) {
   nsRefPtr<Layer> layer =
     nsDisplayOwnLayer::BuildLayer(aBuilder, aManager, aContainerParameters);
 
@@ -3505,7 +3505,7 @@ nsDisplayScrollLayer::~nsDisplayScrollLayer()
 already_AddRefed<Layer>
 nsDisplayScrollLayer::BuildLayer(nsDisplayListBuilder* aBuilder,
                                  LayerManager* aManager,
-                                 const ContainerParameters& aContainerParameters) {
+                                 const ContainerLayerParameters& aContainerParameters) {
   nsRefPtr<ContainerLayer> layer = aManager->GetLayerBuilder()->
     BuildContainerLayerFor(aBuilder, aManager, mFrame, this, mList,
                            aContainerParameters, nullptr);
@@ -3569,7 +3569,7 @@ nsDisplayScrollLayer::ComputeVisibility(nsDisplayListBuilder* aBuilder,
 LayerState
 nsDisplayScrollLayer::GetLayerState(nsDisplayListBuilder* aBuilder,
                                     LayerManager* aManager,
-                                    const ContainerParameters& aParameters)
+                                    const ContainerLayerParameters& aParameters)
 {
   // Force this as a layer so we can scroll asynchronously.
   // This causes incorrect rendering for rounded clips!
@@ -3656,7 +3656,7 @@ nsDisplayScrollInfoLayer::~nsDisplayScrollInfoLayer()
 LayerState
 nsDisplayScrollInfoLayer::GetLayerState(nsDisplayListBuilder* aBuilder,
                                         LayerManager* aManager,
-                                        const ContainerParameters& aParameters)
+                                        const ContainerLayerParameters& aParameters)
 {
   return LAYER_ACTIVE_EMPTY;
 }
@@ -4260,7 +4260,7 @@ nsDisplayTransform::ShouldBuildLayerEvenIfInvisible(nsDisplayListBuilder* aBuild
 
 already_AddRefed<Layer> nsDisplayTransform::BuildLayer(nsDisplayListBuilder *aBuilder,
                                                        LayerManager *aManager,
-                                                       const ContainerParameters& aContainerParameters)
+                                                       const ContainerLayerParameters& aContainerParameters)
 {
   const gfx3DMatrix& newTransformMatrix =
     GetTransform(mFrame->PresContext()->AppUnitsPerDevPixel());
@@ -4303,7 +4303,7 @@ already_AddRefed<Layer> nsDisplayTransform::BuildLayer(nsDisplayListBuilder *aBu
 nsDisplayItem::LayerState
 nsDisplayTransform::GetLayerState(nsDisplayListBuilder* aBuilder,
                                   LayerManager* aManager,
-                                  const ContainerParameters& aParameters) {
+                                  const ContainerLayerParameters& aParameters) {
   // If the transform is 3d, or the layer takes part in preserve-3d sorting
   // then we *always* want this to be an active layer.
   if (!GetTransform(mFrame->PresContext()->AppUnitsPerDevPixel()).Is2D() || 
@@ -4692,7 +4692,7 @@ nsDisplaySVGEffects::PaintAsLayer(nsDisplayListBuilder* aBuilder,
 LayerState
 nsDisplaySVGEffects::GetLayerState(nsDisplayListBuilder* aBuilder,
                                    LayerManager* aManager,
-                                   const ContainerParameters& aParameters)
+                                   const ContainerLayerParameters& aParameters)
 {
   return LAYER_SVG_EFFECTS;
 }
@@ -4700,7 +4700,7 @@ nsDisplaySVGEffects::GetLayerState(nsDisplayListBuilder* aBuilder,
 already_AddRefed<Layer>
 nsDisplaySVGEffects::BuildLayer(nsDisplayListBuilder* aBuilder,
                                 LayerManager* aManager,
-                                const ContainerParameters& aContainerParameters)
+                                const ContainerLayerParameters& aContainerParameters)
 {
   const nsIContent* content = mFrame->GetContent();
   bool hasSVGLayout = (mFrame->GetStateBits() & NS_FRAME_SVG_LAYOUT);

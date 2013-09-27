@@ -30,7 +30,7 @@ class nsHTMLCanvasFrame : public nsContainerFrame
 public:
   typedef mozilla::layers::Layer Layer;
   typedef mozilla::layers::LayerManager LayerManager;
-  typedef mozilla::FrameLayerBuilder::ContainerParameters ContainerParameters;
+  typedef mozilla::ContainerLayerParameters ContainerLayerParameters;
 
   NS_DECL_QUERYFRAME_TARGET(nsHTMLCanvasFrame)
   NS_DECL_QUERYFRAME
@@ -49,7 +49,7 @@ public:
   already_AddRefed<Layer> BuildLayer(nsDisplayListBuilder* aBuilder,
                                      LayerManager* aManager,
                                      nsDisplayItem* aItem,
-                                     const ContainerParameters& aContainerParameters);
+                                     const ContainerLayerParameters& aContainerParameters);
 
   /* get the size of the canvas's image */
   nsIntSize GetCanvasSize();
