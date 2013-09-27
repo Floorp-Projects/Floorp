@@ -37,92 +37,48 @@ public:
                        const nsACString& aType);
   ~SourceBufferResource();
 
-  nsresult Close();
-  void Suspend(bool aCloseImmediately) {}
-  void Resume() {}
+  virtual nsresult Close() MOZ_OVERRIDE;
+  virtual void Suspend(bool aCloseImmediately) MOZ_OVERRIDE {}
+  virtual void Resume() MOZ_OVERRIDE {}
 
-  already_AddRefed<nsIPrincipal> GetCurrentPrincipal()
+  virtual already_AddRefed<nsIPrincipal> GetCurrentPrincipal() MOZ_OVERRIDE
   {
     return nsCOMPtr<nsIPrincipal>(mPrincipal).forget();
   }
 
-  bool CanClone()
-  {
-    return false;
-  }
-
-  already_AddRefed<MediaResource> CloneData(MediaDecoder* aDecoder)
+  virtual already_AddRefed<MediaResource> CloneData(MediaDecoder* aDecoder) MOZ_OVERRIDE
   {
     return nullptr;
   }
 
-  void SetReadMode(MediaCacheStream::ReadMode aMode)
-  {
-  }
+  virtual void SetReadMode(MediaCacheStream::ReadMode aMode) MOZ_OVERRIDE {}
+  virtual void SetPlaybackRate(uint32_t aBytesPerSecond) MOZ_OVERRIDE {}
+  virtual nsresult Read(char* aBuffer, uint32_t aCount, uint32_t* aBytes) MOZ_OVERRIDE;
+  virtual nsresult ReadAt(int64_t aOffset, char* aBuffer, uint32_t aCount, uint32_t* aBytes) MOZ_OVERRIDE;
+  virtual nsresult Seek(int32_t aWhence, int64_t aOffset) MOZ_OVERRIDE;
+  virtual void StartSeekingForMetadata() MOZ_OVERRIDE { }
+  virtual void EndSeekingForMetadata() MOZ_OVERRIDE {}
+  virtual int64_t Tell() MOZ_OVERRIDE { return mOffset; }
+  virtual void Pin() MOZ_OVERRIDE {}
+  virtual void Unpin() MOZ_OVERRIDE {}
+  virtual double GetDownloadRate(bool* aIsReliable) MOZ_OVERRIDE { return 0; }
+  virtual int64_t GetLength() MOZ_OVERRIDE { return mInputBuffer.Length(); }
+  virtual int64_t GetNextCachedData(int64_t aOffset) MOZ_OVERRIDE { return aOffset; }
+  virtual int64_t GetCachedDataEnd(int64_t aOffset) MOZ_OVERRIDE { return GetLength(); }
+  virtual bool IsDataCachedToEndOfResource(int64_t aOffset) MOZ_OVERRIDE { return true; }
+  virtual bool IsSuspendedByCache() MOZ_OVERRIDE { return false; }
+  virtual bool IsSuspended() MOZ_OVERRIDE { return false; }
+  virtual nsresult ReadFromCache(char* aBuffer, int64_t aOffset, uint32_t aCount) MOZ_OVERRIDE;
+  virtual bool IsTransportSeekable() MOZ_OVERRIDE { return true; }
+  virtual nsresult Open(nsIStreamListener** aStreamListener) MOZ_OVERRIDE { return NS_ERROR_FAILURE; }
 
-  void SetPlaybackRate(uint32_t aBytesPerSecond)
-  {
-  }
-
-  nsresult Read(char* aBuffer, uint32_t aCount, uint32_t* aBytes);
-  nsresult ReadAt(int64_t aOffset, char* aBuffer, uint32_t aCount, uint32_t* aBytes);
-  nsresult Seek(int32_t aWhence, int64_t aOffset);
-
-  void StartSeekingForMetadata()
-  {
-  }
-
-  void EndSeekingForMetadata()
-  {
-  }
-
-  int64_t Tell()
-  {
-    return mOffset;
-  }
-
-  void Pin()
-  {
-  }
-
-  void Unpin()
-  {
-  }
-
-  double GetDownloadRate(bool* aIsReliable) { return 0; }
-  int64_t GetLength() { return mInputBuffer.Length(); }
-  int64_t GetNextCachedData(int64_t aOffset) { return aOffset; }
-  int64_t GetCachedDataEnd(int64_t aOffset) { return GetLength(); }
-  bool IsDataCachedToEndOfResource(int64_t aOffset) { return true; }
-  bool IsSuspendedByCache() { return false; }
-  bool IsSuspended() { return false; }
-  nsresult ReadFromCache(char* aBuffer, int64_t aOffset, uint32_t aCount);
-
-  nsresult Open(nsIStreamListener** aStreamListener)
-  {
-    return NS_ERROR_FAILURE;
-  }
-
-#ifdef MOZ_DASH
-  nsresult OpenByteRange(nsIStreamListener** aStreamListener,
-                         const MediaByteRange& aByteRange)
-  {
-    return NS_ERROR_FAILURE;
-  }
-#endif
-
-  nsresult GetCachedRanges(nsTArray<MediaByteRange>& aRanges)
+  virtual nsresult GetCachedRanges(nsTArray<MediaByteRange>& aRanges) MOZ_OVERRIDE
   {
     aRanges.AppendElement(MediaByteRange(0, GetLength()));
     return NS_OK;
   }
 
-  bool IsTransportSeekable() MOZ_OVERRIDE { return true; }
-
-  const nsCString& GetContentType() const MOZ_OVERRIDE
-  {
-    return mType;
-  }
+  virtual const nsCString& GetContentType() const MOZ_OVERRIDE { return mType; }
 
   // Used by SourceBuffer.
   void AppendData(const uint8_t* aData, uint32_t aLength);
@@ -133,6 +89,9 @@ private:
   const nsAutoCString mType;
 
   // Provides synchronization between SourceBuffers and InputAdapters.
+  // Protects all of the member variables below.  Read() will await a
+  // Notify() (from Seek, AppendData, Ended, or Close) when insufficient
+  // data is available in mData.
   ReentrantMonitor mMonitor;
   nsTArray<uint8_t> mInputBuffer;
 
