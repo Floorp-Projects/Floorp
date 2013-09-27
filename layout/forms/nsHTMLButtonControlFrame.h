@@ -97,8 +97,7 @@ protected:
   void ReflowButtonContents(nsPresContext* aPresContext,
                             nsHTMLReflowMetrics& aButtonDesiredSize,
                             const nsHTMLReflowState& aButtonReflowState,
-                            nsIFrame* aFirstKid,
-                            nsMargin aFocusPadding);
+                            nsIFrame* aFirstKid);
 
   nsButtonFrameRenderer mRenderer;
 };
