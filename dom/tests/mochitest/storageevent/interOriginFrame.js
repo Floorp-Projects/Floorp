@@ -1,6 +1,7 @@
 function postMsg(message)
 {
-  var l = SpecialPowers.wrap(parent.window.location);
+  netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
+  var l = parent.window.location;
   parent.postMessage(message, l.protocol + "//" + l.host);
 }
 

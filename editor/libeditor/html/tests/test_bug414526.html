@@ -20,6 +20,7 @@ SimpleTest.waitForFocus(runTests);
 
 function runTests()
 {
+  netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
 
   var container = document.getElementById("display");
 

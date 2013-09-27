@@ -22,12 +22,13 @@ badCertListener.prototype = {
   },
 
   QueryInterface: function(aIID) {
-    if (aIID.equals(SpecialPowers.Ci.nsIBadCertListener2) ||
-        aIID.equals(SpecialPowers.Ci.nsIInterfaceRequestor) ||
-        aIID.equals(SpecialPowers.Ci.nsISupports))
+    netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
+    if (aIID.equals(Components.interfaces.nsIBadCertListener2) ||
+        aIID.equals(Components.interfaces.nsIInterfaceRequestor) ||
+        aIID.equals(Components.interfaces.nsISupports))
       return this;
 
-    throw SpecialPowers.Cr.NS_ERROR_NO_INTERFACE;
+    throw Components.results.NS_ERROR_NO_INTERFACE;
   },  
 
   notifyCertProblem: function(socketInfo, sslStatus, targetHost) {
