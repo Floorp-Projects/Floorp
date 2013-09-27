@@ -1,12 +1,11 @@
-README for libpng version 1.5.17 - June 27, 2013 (shared library 15.0)
+README for libpng version 1.6.6 - September 16, 2013 (shared library 16.0)
 See the note about version numbers near the top of png.h
 
 See INSTALL for instructions on how to install libpng.
 
-Libpng comes in several distribution formats.  Get libpng-*.tar.gz,
-libpng-*.tar.xz or libpng-*.tar.bz2 if you want UNIX-style line endings
-in the text files, or lpng*.7z or lpng*.zip if you want DOS-style line
-endings.
+Libpng comes in several distribution formats.  Get libpng-*.tar.gz or
+libpng-*.tar.xz or if you want UNIX-style line endings in the text files,
+or lpng*.7z or lpng*.zip if you want DOS-style line endings.
 
 Version 0.89 was the first official release of libpng.  Don't let the
 fact that it's the first release fool you.  The libpng library has been in
@@ -168,15 +167,17 @@ Files in this distribution:
       pngwutil.c    =>  Write utility functions
       arm           =>  Contains optimized code for the ARM platform
       contrib       =>  Contributions
+       examples         =>  Example programs
        gregbook         =>  source code for PNG reading and writing, from
                             Greg Roelofs' "PNG: The Definitive Guide",
                             O'Reilly, 1999
-       libtests         =>  Contains the pngvalid.c test program
+       libtests         =>  Test programs
        pngminim         =>  Minimal decoder, encoder, and progressive decoder
                             programs demonstrating use of pngusr.dfa
        pngminus         =>  Simple pnm2png and png2pnm programs
        pngsuite         =>  Test images
-       visupng          =>  Contains a MSVC workspace for VisualPng
+       tools            =>  Various tools
+       visupng      =>  Contains a MSVC workspace for VisualPng
       projects      =>  Contains project files and workspaces for
                         building a DLL
        owatcom          =>  Contains a WATCOM project for building libpng

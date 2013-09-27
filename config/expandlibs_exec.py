@@ -318,7 +318,11 @@ def main():
 
         if options.verbose:
             print_command(sys.stderr, args)
-        proc = subprocess.Popen(args, stdout = subprocess.PIPE, stderr = subprocess.STDOUT)
+        try:
+            proc = subprocess.Popen(args, stdout = subprocess.PIPE, stderr = subprocess.STDOUT)
+        except Exception, e:
+            print >>sys.stderr, 'error: Launching', args, ':', e
+            raise e
         (stdout, stderr) = proc.communicate()
         if proc.returncode and not options.verbose:
             print_command(sys.stderr, args)

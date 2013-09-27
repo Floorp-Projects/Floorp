@@ -877,6 +877,8 @@ CacheFileIOManager::Shutdown()
   if (!gInstance)
     return NS_ERROR_NOT_INITIALIZED;
 
+  Telemetry::AutoTimer<Telemetry::NETWORK_DISK_CACHE_SHUTDOWN_V2> shutdownTimer;
+
   {
     mozilla::Mutex lock("CacheFileIOManager::Shutdown() lock");
     mozilla::CondVar condVar(lock, "CacheFileIOManager::Shutdown() condVar");

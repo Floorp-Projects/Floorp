@@ -737,12 +737,26 @@
     "extended_statistics_ok": true,
     "description": "HTTP page: Open -> cache read start (ms)"
   },
+  "HTTP_PAGE_OPEN_TO_FIRST_FROM_CACHE_V2": {
+    "kind": "exponential",
+    "high": "30000",
+    "n_buckets": 50,
+    "extended_statistics_ok": true,
+    "description": "HTTP page: Open -> cache read start (ms), [cache2]"
+  },
   "HTTP_PAGE_CACHE_READ_TIME": {
     "kind": "exponential",
     "high": "30000",
     "n_buckets": 50,
     "extended_statistics_ok": true,
     "description": "HTTP page: Cache read time (ms)"
+  },
+  "HTTP_PAGE_CACHE_READ_TIME_V2": {
+    "kind": "exponential",
+    "high": "30000",
+    "n_buckets": 50,
+    "extended_statistics_ok": true,
+    "description": "HTTP page: Cache read time (ms) [cache2]"
   },
   "HTTP_PAGE_REVALIDATION": {
     "kind": "exponential",
@@ -758,6 +772,13 @@
     "extended_statistics_ok": true,
     "description": "HTTP page: Overall load time - all (ms)"
   },
+  "HTTP_PAGE_COMPLETE_LOAD_V2": {
+    "kind": "exponential",
+    "high": "30000",
+    "n_buckets": 50,
+    "extended_statistics_ok": true,
+    "description": "HTTP page: Overall load time - all (ms) [cache2]"
+  },
   "HTTP_PAGE_COMPLETE_LOAD_CACHED": {
     "kind": "exponential",
     "high": "30000",
@@ -765,12 +786,26 @@
     "extended_statistics_ok": true,
     "description": "HTTP page: Overall load time - cache hits (ms)"
   },
+  "HTTP_PAGE_COMPLETE_LOAD_CACHED_V2": {
+    "kind": "exponential",
+    "high": "30000",
+    "n_buckets": 50,
+    "extended_statistics_ok": true,
+    "description": "HTTP page: Overall load time - cache hits (ms) [cache2]"
+  },
   "HTTP_PAGE_COMPLETE_LOAD_NET": {
     "kind": "exponential",
     "high": "30000",
     "n_buckets": 50,
     "extended_statistics_ok": true,
     "description": "HTTP page: Overall load time - network (ms)"
+  },
+  "HTTP_PAGE_COMPLETE_LOAD_NET_V2": {
+    "kind": "exponential",
+    "high": "30000",
+    "n_buckets": 50,
+    "extended_statistics_ok": true,
+    "description": "HTTP page: Overall load time - network (ms) [cache2]"
   },
   "HTTP_SUB_DNS_ISSUE_TIME": {
     "kind": "exponential",
@@ -821,12 +856,26 @@
     "extended_statistics_ok": true,
     "description": "HTTP subitem: Open -> cache read start (ms)"
   },
+  "HTTP_SUB_OPEN_TO_FIRST_FROM_CACHE_V2": {
+    "kind": "exponential",
+    "high": "30000",
+    "n_buckets": 50,
+    "extended_statistics_ok": true,
+    "description": "HTTP subitem: Open -> cache read start (ms) [cache2]"
+  },
   "HTTP_SUB_CACHE_READ_TIME": {
     "kind": "exponential",
     "high": "30000",
     "n_buckets": 50,
     "extended_statistics_ok": true,
     "description": "HTTP subitem: Cache read time (ms)"
+  },
+  "HTTP_SUB_CACHE_READ_TIME_V2": {
+    "kind": "exponential",
+    "high": "30000",
+    "n_buckets": 50,
+    "extended_statistics_ok": true,
+    "description": "HTTP subitem: Cache read time (ms) [cache2]"
   },
   "HTTP_SUB_REVALIDATION": {
     "kind": "exponential",
@@ -842,6 +891,13 @@
     "extended_statistics_ok": true,
     "description": "HTTP subitem: Overall load time - all (ms)"
   },
+  "HTTP_SUB_COMPLETE_LOAD_V2": {
+    "kind": "exponential",
+    "high": "30000",
+    "n_buckets": 50,
+    "extended_statistics_ok": true,
+    "description": "HTTP subitem: Overall load time - all (ms) [cache2]"
+  },
   "HTTP_SUB_COMPLETE_LOAD_CACHED": {
     "kind": "exponential",
     "high": "30000",
@@ -849,12 +905,26 @@
     "extended_statistics_ok": true,
     "description": "HTTP subitem: Overall load time - cache hits (ms)"
   },
+  "HTTP_SUB_COMPLETE_LOAD_CACHED_V2": {
+    "kind": "exponential",
+    "high": "30000",
+    "n_buckets": 50,
+    "extended_statistics_ok": true,
+    "description": "HTTP subitem: Overall load time - cache hits (ms) [cache2]"
+  },
   "HTTP_SUB_COMPLETE_LOAD_NET": {
     "kind": "exponential",
     "high": "30000",
     "n_buckets": 50,
     "extended_statistics_ok": true,
     "description": "HTTP subitem: Overall load time - network (ms)"
+  },
+  "HTTP_SUB_COMPLETE_LOAD_NET_V2": {
+    "kind": "exponential",
+    "high": "30000",
+    "n_buckets": 50,
+    "extended_statistics_ok": true,
+    "description": "HTTP subitem: Overall load time - network (ms) [cache2]"
   },
   "HTTP_PROXY_TYPE": {
     "kind": "enumerated",
@@ -1117,6 +1187,11 @@
     "kind": "enumerated",
     "n_values": 5,
     "description": "HTTP Cache Hit, Reval, Failed-Reval, Miss"
+  },
+  "HTTP_CACHE_DISPOSITION_2_V2": {
+    "kind": "enumerated",
+    "n_values": 5,
+    "description": "HTTP Cache v2 Hit, Reval, Failed-Reval, Miss"
   },
   "HTTP_DISK_CACHE_DISPOSITION_2": {
     "kind": "enumerated",
@@ -2024,6 +2099,13 @@
     "n_buckets": 10,
     "extended_statistics_ok": true,
     "description": "Total Time spent (ms) during disk cache showdown"
+  },
+  "NETWORK_DISK_CACHE_SHUTDOWN_V2": {
+    "kind": "exponential",
+    "high": "10000",
+    "n_buckets": 10,
+    "extended_statistics_ok": true,
+    "description": "Total Time spent (ms) during disk cache showdown [cache2]"
   },
   "NETWORK_DISK_CACHE_SHUTDOWN_CLEAR_PRIVATE": {
     "kind": "exponential",
@@ -4014,5 +4096,40 @@
     "n_buckets": 15,
     "extended_statistics_ok": true,
     "description": "BACKGROUND THUMBNAILS: Time it took to draw the capture's window to canvas (ms)"
+  },
+  "NETWORK_CACHE_V2_MISS_TIME_MS": {
+    "kind": "exponential",
+    "high": "10000",
+    "n_buckets": 50,
+    "extended_statistics_ok": true,
+    "description": "Time spent to find out a cache entry file is missing"
+  },
+  "NETWORK_CACHE_V2_HIT_TIME_MS": {
+    "kind": "exponential",
+    "high": "10000",
+    "n_buckets": 50,
+    "extended_statistics_ok": true,
+    "description": "Time spent to open an existing file"
+  },
+  "NETWORK_CACHE_V1_TRUNCATE_TIME_MS": {
+    "kind": "exponential",
+    "high": "10000",
+    "n_buckets": 50,
+    "extended_statistics_ok": true,
+    "description": "Time spent to reopen an entry with OPEN_TRUNCATE"
+  },
+  "NETWORK_CACHE_V1_MISS_TIME_MS": {
+    "kind": "exponential",
+    "high": "10000",
+    "n_buckets": 50,
+    "extended_statistics_ok": true,
+    "description": "Time spent to find out a cache entry is missing"
+  },
+  "NETWORK_CACHE_V1_HIT_TIME_MS": {
+    "kind": "exponential",
+    "high": "10000",
+    "n_buckets": 50,
+    "extended_statistics_ok": true,
+    "description": "Time spent to open an existing cache entry"
   }
 }

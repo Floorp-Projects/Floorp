@@ -60,7 +60,7 @@ globalgen_targets := \
 # would break |make FooBinding.o(bj)|.  Ah, well.
 ifneq (export TestExampleInterface-example TestExampleProxyInterface-example,$(MAKECMDGOALS))
 CPPSRCS = \
-  $(linked_binding_cpp_files) \
+  $(unified_binding_cpp_files) \
   $(linked_generated_events_cpp_files) \
   $(filter %.cpp, $(globalgen_targets)) \
   BindingUtils.cpp \
@@ -258,6 +258,7 @@ GARBAGE += \
   parser.out \
   $(wildcard *-example.h) \
   $(wildcard *-example.cpp) \
+  $(unified_binding_cpp_files) \
   .BindingGen \
   .all-webidl-file-list \
   .generated-events-webidl-files \
