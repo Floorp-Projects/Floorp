@@ -518,7 +518,7 @@ ScriptAnalysis::analyzeLifetimes(JSContext *cx)
             /* Restore all saved variables. :FIXME: maybe do this precisely. */
             for (unsigned i = 0; i < savedCount; i++) {
                 LifetimeVariable &var = *saved[i];
-                var.lifetime = alloc.new_<Lifetime>(offset, var.savedEnd, var.saved);
+                var.lifetime = alloc.new_<Lifetime>(offset, uint32_t(var.savedEnd), var.saved);
                 if (!var.lifetime) {
                     js_free(saved);
                     setOOM(cx);
@@ -610,7 +610,8 @@ ScriptAnalysis::analyzeLifetimes(JSContext *cx)
                          * Jumping to a place where this variable is live. Make a new
                          * lifetime segment for the variable.
                          */
-                        var.lifetime = alloc.new_<Lifetime>(offset, var.savedEnd, var.saved);
+                        var.lifetime =
+                            alloc.new_<Lifetime>(offset, uint32_t(var.savedEnd), var.saved);
                         if (!var.lifetime) {
                             js_free(saved);
                             setOOM(cx);
@@ -674,7 +675,8 @@ ScriptAnalysis::addVariable(JSContext *cx, LifetimeVariable &var, unsigned offse
                 }
             }
         }
-        var.lifetime = cx->typeLifoAlloc().new_<Lifetime>(offset, var.savedEnd, var.saved);
+        var.lifetime =
+            cx->typeLifoAlloc().new_<Lifetime>(offset, uint32_t(var.savedEnd), var.saved);
         if (!var.lifetime) {
             setOOM(cx);
             return;
@@ -689,7 +691,8 @@ ScriptAnalysis::killVariable(JSContext *cx, LifetimeVariable &var, unsigned offs
 {
     if (!var.lifetime) {
         /* Make a point lifetime indicating the write. */
-        Lifetime *lifetime = cx->typeLifoAlloc().new_<Lifetime>(offset, var.savedEnd, var.saved);
+        Lifetime *lifetime =
+            cx->typeLifoAlloc().new_<Lifetime>(offset, uint32_t(var.savedEnd), var.saved);
         if (!lifetime) {
             setOOM(cx);
             return;
