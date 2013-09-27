@@ -14,10 +14,8 @@
 #include "jsstr.h"
 
 #include "jit/BaselineInspector.h"
-#include "jit/EdgeCaseAnalysis.h"
 #include "jit/IonBuilder.h"
 #include "jit/IonSpewer.h"
-#include "jit/LICM.h" // For LinearSum
 #include "jit/MIRGraph.h"
 #include "jit/RangeAnalysis.h"
 

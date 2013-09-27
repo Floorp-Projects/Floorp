@@ -64,10 +64,16 @@ MOCHITEST_FILES = \
 		test_audio1.html \
 		test_audio2.html \
 		test_autoplay.html \
+		test_bug448534.html \
+		test_bug463162.xhtml \
 		test_bug495145.html \
 		test_bug495300.html \
 		test_bug654550.html \
 		test_bug686942.html \
+		test_bug883173.html \
+		test_bug895305.html \
+		test_bug895091.html \
+		test_bug919265.html \
 		test_can_play_type.html \
 		test_can_play_type_mpeg.html \
 		test_closing_connections.html \
@@ -118,12 +124,11 @@ MOCHITEST_FILES = \
 		test_mozHasAudio.html \
 		test_source_media.html \
 		test_autoplay_contentEditable.html \
-		test_bug448534.html \
-		test_bug463162.xhtml \
 		test_decoder_disable.html \
 		test_mediarecorder_record_no_timeslice.html \
 		test_mediarecorder_reload_crash.html \
 		test_mediarecorder_record_immediate_stop.html \
+		test_mediarecorder_record_session.html \
 		test_media_selection.html \
 		test_playback.html \
 		test_seekLies.html \
@@ -146,9 +151,6 @@ MOCHITEST_FILES = \
 		test_VideoPlaybackQuality.html \
 		test_VideoPlaybackQuality_disabled.html \
 		test_webvtt_disabled.html \
-		test_bug895305.html \
-		test_bug895091.html \
-		test_bug883173.html \
 		$(NULL)
 
 # Don't run in suite

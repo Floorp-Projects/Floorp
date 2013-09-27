@@ -13,6 +13,7 @@
 #include "nsIObserverService.h"
 #include "nsIScriptError.h"
 
+#include "jsapi.h"
 #include "mozilla/ClearOnShutdown.h"
 #include "mozilla/CondVar.h"
 #include "mozilla/ContentEvents.h"
@@ -22,6 +23,7 @@
 #include "mozilla/dom/TabContext.h"
 #include "mozilla/Services.h"
 #include "mozilla/storage.h"
+#include "mozilla/Util.h"
 #include "nsContentUtils.h"
 #include "nsEventDispatcher.h"
 #include "nsThreadUtils.h"
@@ -30,6 +32,17 @@
 #include "IDBFactory.h"
 #include "IDBKeyRange.h"
 #include "IDBRequest.h"
+
+// Bindings for ResolveConstructors
+#include "mozilla/dom/IDBCursorBinding.h"
+#include "mozilla/dom/IDBDatabaseBinding.h"
+#include "mozilla/dom/IDBFactoryBinding.h"
+#include "mozilla/dom/IDBIndexBinding.h"
+#include "mozilla/dom/IDBObjectStoreBinding.h"
+#include "mozilla/dom/IDBOpenDBRequestBinding.h"
+#include "mozilla/dom/IDBRequestBinding.h"
+#include "mozilla/dom/IDBTransactionBinding.h"
+#include "mozilla/dom/IDBVersionChangeEventBinding.h"
 
 // The two possible values for the data argument when receiving the disk space
 // observer notification.
@@ -93,6 +106,32 @@ mozilla::StaticRefPtr<IndexedDatabaseManager> gInstance;
 
 mozilla::Atomic<int32_t> gInitialized(0);
 mozilla::Atomic<int32_t> gClosed(0);
+
+// See ResolveConstructors below.
+struct ConstructorInfo {
+  const char* const name;
+  JS::Handle<JSObject*> (* const resolve)(JSContext*, JS::Handle<JSObject*>,
+                                          bool);
+  jsid id;
+};
+
+ConstructorInfo gConstructorInfo[] = {
+
+#define BINDING_ENTRY(_name) \
+  { #_name, _name##Binding::GetConstructorObject, JSID_VOID },
+
+  BINDING_ENTRY(IDBFactory)
+  BINDING_ENTRY(IDBDatabase)
+  BINDING_ENTRY(IDBTransaction)
+  BINDING_ENTRY(IDBObjectStore)
+  BINDING_ENTRY(IDBIndex)
+  BINDING_ENTRY(IDBCursor)
+  BINDING_ENTRY(IDBRequest)
+  BINDING_ENTRY(IDBOpenDBRequest)
+  BINDING_ENTRY(IDBVersionChangeEvent)
+
+#undef BINDING_ENTRY
+};
 
 class AsyncDeleteFileRunnable MOZ_FINAL : public nsIRunnable
 {
@@ -884,3 +923,48 @@ GetFileReferencesHelper::Run()
 
   return NS_OK;
 }
+
+BEGIN_INDEXEDDB_NAMESPACE
+
+bool
+ResolveConstructors(JSContext* aCx, JS::HandleObject aObj, JS::HandleId aId,
+                    JS::MutableHandleObject aObjp)
+{
+  MOZ_ASSERT(NS_IsMainThread());
+
+  // The first time this function is called we need to intern all the strings we
+  // care about.
+  if (JSID_IS_VOID(gConstructorInfo[0].id)) {
+    for (uint32_t i = 0; i < mozilla::ArrayLength(gConstructorInfo); i++) {
+      JS::RootedString str(aCx, JS_InternString(aCx, gConstructorInfo[i].name));
+      if (!str) {
+        NS_WARNING("Failed to intern string!");
+        while (i) {
+          gConstructorInfo[--i].id = JSID_VOID;
+        }
+        return false;
+      }
+      gConstructorInfo[i].id = INTERNED_STRING_TO_JSID(aCx, str);
+    }
+  }
+
+  // Now resolve.
+  for (uint32_t i = 0; i < mozilla::ArrayLength(gConstructorInfo); i++) {
+    if (gConstructorInfo[i].id == aId) {
+      JS::RootedObject constructor(aCx,
+        gConstructorInfo[i].resolve(aCx, aObj, true));
+      if (!constructor) {
+        return false;
+      }
+
+      aObjp.set(aObj);
+      return true;
+    }
+  }
+
+  // Not resolved.
+  aObjp.set(nullptr);
+  return true;
+}
+
+END_INDEXEDDB_NAMESPACE

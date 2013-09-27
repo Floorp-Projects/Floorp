@@ -544,11 +544,10 @@ JSDValue*
 jsd_GetException(JSDContext* jsdc, JSDThreadState* jsdthreadstate)
 {
     JSContext* cx;
-    JS::RootedValue val(cx);
-
     if(!(cx = _getContextForThreadState(jsdc, jsdthreadstate)))
         return nullptr;
 
+    JS::RootedValue val(cx);
     if(JS_GetPendingException(cx, &val))
         return jsd_NewValue(jsdc, val);
     return nullptr;

@@ -1355,12 +1355,39 @@ add_task(function test_blocked_parental_controls()
     do_throw("The download should have blocked.");
   } catch (ex if ex instanceof Downloads.Error && ex.becauseBlocked) {
     do_check_true(ex.becauseBlockedByParentalControls);
+    do_check_true(download.error.becauseBlockedByParentalControls);
   }
 
   // Now that the download stopped, the target file should not exist.
   do_check_false(yield OS.File.exists(download.target.path));
 
   cleanup();
+});
+
+/**
+ * Test a download that will be blocked by Windows parental controls by
+ * resulting in an HTTP status code of 450.
+ */
+add_task(function test_blocked_parental_controls_httpstatus450()
+{
+  let download;
+  try {
+    if (!gUseLegacySaver) {
+      download = yield promiseNewDownload(httpUrl("parentalblocked.zip"));
+      yield download.start();
+    }
+    else {
+      download = yield promiseStartLegacyDownload(httpUrl("parentalblocked.zip"));
+      yield promiseDownloadStopped(download);
+    }
+    do_throw("The download should have blocked.");
+  } catch (ex if ex instanceof Downloads.Error && ex.becauseBlocked) {
+    do_check_true(ex.becauseBlockedByParentalControls);
+    do_check_true(download.error.becauseBlockedByParentalControls);
+    do_check_true(download.stopped);
+  }
+
+  do_check_false(yield OS.File.exists(download.target.path));
 });
 
 /**

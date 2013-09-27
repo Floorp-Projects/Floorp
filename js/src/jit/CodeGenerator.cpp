@@ -9,7 +9,6 @@
 #include "mozilla/Assertions.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/DebugOnly.h"
-#include "mozilla/Util.h"
 
 #include "jslibmath.h"
 #include "jsmath.h"
@@ -17,16 +16,17 @@
 
 #include "builtin/Eval.h"
 #include "builtin/TypedObject.h"
-#include "gc/Nursery.h"
+#ifdef JSGC_GENERATIONAL
+# include "gc/Nursery.h"
+#endif
 #include "jit/ExecutionModeInlines.h"
+#include "jit/IonCaches.h"
 #include "jit/IonLinker.h"
 #include "jit/IonSpewer.h"
-#include "jit/Lowering.h"
 #include "jit/MIRGenerator.h"
 #include "jit/MoveEmitter.h"
 #include "jit/ParallelFunctions.h"
 #include "jit/ParallelSafetyAnalysis.h"
-#include "jit/PerfSpewer.h"
 #include "jit/RangeAnalysis.h"
 #include "vm/ForkJoin.h"
 
@@ -356,6 +356,18 @@ CodeGenerator::visitDoubleToInt32(LDoubleToInt32 *lir)
     FloatRegister input = ToFloatRegister(lir->input());
     Register output = ToRegister(lir->output());
     masm.convertDoubleToInt32(input, output, &fail, lir->mir()->canBeNegativeZero());
+    if (!bailoutFrom(&fail, lir->snapshot()))
+        return false;
+    return true;
+}
+
+bool
+CodeGenerator::visitFloat32ToInt32(LFloat32ToInt32 *lir)
+{
+    Label fail;
+    FloatRegister input = ToFloatRegister(lir->input());
+    Register output = ToRegister(lir->output());
+    masm.convertFloat32ToInt32(input, output, &fail, lir->mir()->canBeNegativeZero());
     if (!bailoutFrom(&fail, lir->snapshot()))
         return false;
     return true;

@@ -33,6 +33,7 @@
 #include "mozilla/Atomics.h"
 #include "mozilla/DebugOnly.h"
 #include "mozilla/Mutex.h"
+#include "mozilla/Preferences.h"
 #include "mozilla/TimeStamp.h"
 #include "mozilla/Telemetry.h"
 #include "prlog.h"
@@ -68,7 +69,10 @@ PRLogModuleInfo *gUrlClassifierDbServiceLog = nullptr;
 #define GETHASH_NOISE_PREF      "urlclassifier.gethashnoise"
 #define GETHASH_NOISE_DEFAULT   4
 
-#define GETHASH_TABLES_PREF     "urlclassifier.gethashtables"
+#define MALWARE_TABLE_PREF      "urlclassifier.malware_table"
+#define PHISH_TABLE_PREF        "urlclassifier.phish_table"
+#define DOWNLOAD_BLOCK_TABLE_PREF "urlclassifier.download_block_table"
+#define DOWNLOAD_ALLOW_TABLE_PREF "urlclassifier.download_allow_table"
 
 #define CONFIRM_AGE_PREF        "urlclassifier.max-complete-age"
 #define CONFIRM_AGE_DEFAULT_SEC (45 * 60)
@@ -1115,43 +1119,34 @@ nsUrlClassifierDBService::Init()
     gUrlClassifierDbServiceLog = PR_NewLogModule("UrlClassifierDbService");
 #endif
 
-  nsresult rv;
+  // Retrieve all the preferences.
+  mCheckMalware = Preferences::GetBool(CHECK_MALWARE_PREF,
+    CHECK_MALWARE_DEFAULT);
+  mCheckPhishing = Preferences::GetBool(CHECK_PHISHING_PREF,
+    CHECK_PHISHING_DEFAULT);
+  uint32_t gethashNoise = Preferences::GetUint(GETHASH_NOISE_PREF,
+    GETHASH_NOISE_DEFAULT);
+  gFreshnessGuarantee = Preferences::GetInt(CONFIRM_AGE_PREF,
+    CONFIRM_AGE_DEFAULT_SEC);
+  mGethashTables.AppendElement(Preferences::GetCString(PHISH_TABLE_PREF));
+  mGethashTables.AppendElement(Preferences::GetCString(MALWARE_TABLE_PREF));
+  mGethashTables.AppendElement(Preferences::GetCString(
+    DOWNLOAD_BLOCK_TABLE_PREF));
+  mGethashTables.AppendElement(Preferences::GetCString(
+    DOWNLOAD_ALLOW_TABLE_PREF));
 
-  // Should we check document loads for malware URIs?
-  nsCOMPtr<nsIPrefBranch> prefs = do_GetService(NS_PREFSERVICE_CONTRACTID);
-
-  uint32_t gethashNoise = 0;
-  if (prefs) {
-    bool tmpbool;
-    rv = prefs->GetBoolPref(CHECK_MALWARE_PREF, &tmpbool);
-    mCheckMalware = NS_SUCCEEDED(rv) ? tmpbool : CHECK_MALWARE_DEFAULT;
-
-    prefs->AddObserver(CHECK_MALWARE_PREF, this, false);
-
-    rv = prefs->GetBoolPref(CHECK_PHISHING_PREF, &tmpbool);
-    mCheckPhishing = NS_SUCCEEDED(rv) ? tmpbool : CHECK_PHISHING_DEFAULT;
-
-    prefs->AddObserver(CHECK_PHISHING_PREF, this, false);
-
-    int32_t tmpint;
-    rv = prefs->GetIntPref(GETHASH_NOISE_PREF, &tmpint);
-    gethashNoise = (NS_SUCCEEDED(rv) && tmpint >= 0) ?
-      static_cast<uint32_t>(tmpint) : GETHASH_NOISE_DEFAULT;
-
-    nsXPIDLCString tmpstr;
-    if (NS_SUCCEEDED(prefs->GetCharPref(GETHASH_TABLES_PREF, getter_Copies(tmpstr)))) {
-      SplitTables(tmpstr, mGethashWhitelist);
-    }
-
-    prefs->AddObserver(GETHASH_TABLES_PREF, this, false);
-
-    rv = prefs->GetIntPref(CONFIRM_AGE_PREF, &tmpint);
-    gFreshnessGuarantee = NS_SUCCEEDED(rv) ? tmpint : CONFIRM_AGE_DEFAULT_SEC;
-
-    prefs->AddObserver(CONFIRM_AGE_PREF, this, false);
-  }
+  // Do we *really* need to be able to change all of these at runtime?
+  Preferences::AddStrongObserver(this, CHECK_MALWARE_PREF);
+  Preferences::AddStrongObserver(this, CHECK_PHISHING_PREF);
+  Preferences::AddStrongObserver(this, GETHASH_NOISE_PREF);
+  Preferences::AddStrongObserver(this, CONFIRM_AGE_PREF);
+  Preferences::AddStrongObserver(this, PHISH_TABLE_PREF);
+  Preferences::AddStrongObserver(this, MALWARE_TABLE_PREF);
+  Preferences::AddStrongObserver(this, DOWNLOAD_BLOCK_TABLE_PREF);
+  Preferences::AddStrongObserver(this, DOWNLOAD_ALLOW_TABLE_PREF);
 
   // Force PSM loading on main thread
+  nsresult rv;
   nsCOMPtr<nsICryptoHash> acryptoHash = do_CreateInstance(NS_CRYPTO_HASH_CONTRACTID, &rv);
   NS_ENSURE_SUCCESS(rv, rv);
 
@@ -1429,7 +1424,7 @@ nsUrlClassifierDBService::GetCompleter(const nsACString &tableName,
     return true;
   }
 
-  if (!mGethashWhitelist.Contains(tableName)) {
+  if (!mGethashTables.Contains(tableName)) {
     return false;
   }
 
@@ -1446,23 +1441,26 @@ nsUrlClassifierDBService::Observe(nsISupports *aSubject, const char *aTopic,
     nsCOMPtr<nsIPrefBranch> prefs(do_QueryInterface(aSubject, &rv));
     NS_ENSURE_SUCCESS(rv, rv);
     if (NS_LITERAL_STRING(CHECK_MALWARE_PREF).Equals(aData)) {
-      bool tmpbool;
-      rv = prefs->GetBoolPref(CHECK_MALWARE_PREF, &tmpbool);
-      mCheckMalware = NS_SUCCEEDED(rv) ? tmpbool : CHECK_MALWARE_DEFAULT;
+      mCheckMalware = Preferences::GetBool(CHECK_MALWARE_PREF,
+        CHECK_MALWARE_DEFAULT);
     } else if (NS_LITERAL_STRING(CHECK_PHISHING_PREF).Equals(aData)) {
-      bool tmpbool;
-      rv = prefs->GetBoolPref(CHECK_PHISHING_PREF, &tmpbool);
-      mCheckPhishing = NS_SUCCEEDED(rv) ? tmpbool : CHECK_PHISHING_DEFAULT;
-    } else if (NS_LITERAL_STRING(GETHASH_TABLES_PREF).Equals(aData)) {
-      mGethashWhitelist.Clear();
-      nsXPIDLCString val;
-      if (NS_SUCCEEDED(prefs->GetCharPref(GETHASH_TABLES_PREF, getter_Copies(val)))) {
-        SplitTables(val, mGethashWhitelist);
-      }
+      mCheckPhishing = Preferences::GetBool(CHECK_PHISHING_PREF,
+        CHECK_PHISHING_DEFAULT);
+    } else if (NS_LITERAL_STRING(PHISH_TABLE_PREF).Equals(aData) ||
+               NS_LITERAL_STRING(MALWARE_TABLE_PREF).Equals(aData) ||
+               NS_LITERAL_STRING(DOWNLOAD_BLOCK_TABLE_PREF).Equals(aData) ||
+               NS_LITERAL_STRING(DOWNLOAD_ALLOW_TABLE_PREF).Equals(aData)) {
+      // Just read everything again.
+      mGethashTables.Clear();
+      mGethashTables.AppendElement(Preferences::GetCString(PHISH_TABLE_PREF));
+      mGethashTables.AppendElement(Preferences::GetCString(MALWARE_TABLE_PREF));
+      mGethashTables.AppendElement(Preferences::GetCString(
+        DOWNLOAD_BLOCK_TABLE_PREF));
+      mGethashTables.AppendElement(Preferences::GetCString(
+        DOWNLOAD_ALLOW_TABLE_PREF));
     } else if (NS_LITERAL_STRING(CONFIRM_AGE_PREF).Equals(aData)) {
-      int32_t tmpint;
-      rv = prefs->GetIntPref(CONFIRM_AGE_PREF, &tmpint);
-      gFreshnessGuarantee = NS_SUCCEEDED(rv) ? tmpint : CONFIRM_AGE_DEFAULT_SEC;
+      gFreshnessGuarantee = Preferences::GetInt(CONFIRM_AGE_PREF,
+        CONFIRM_AGE_DEFAULT_SEC);
     }
   } else if (!strcmp(aTopic, "profile-before-change") ||
              !strcmp(aTopic, "xpcom-shutdown-threads")) {
@@ -1489,7 +1487,10 @@ nsUrlClassifierDBService::Shutdown()
   if (prefs) {
     prefs->RemoveObserver(CHECK_MALWARE_PREF, this);
     prefs->RemoveObserver(CHECK_PHISHING_PREF, this);
-    prefs->RemoveObserver(GETHASH_TABLES_PREF, this);
+    prefs->RemoveObserver(PHISH_TABLE_PREF, this);
+    prefs->RemoveObserver(MALWARE_TABLE_PREF, this);
+    prefs->RemoveObserver(DOWNLOAD_BLOCK_TABLE_PREF, this);
+    prefs->RemoveObserver(DOWNLOAD_ALLOW_TABLE_PREF, this);
     prefs->RemoveObserver(CONFIRM_AGE_PREF, this);
   }
 

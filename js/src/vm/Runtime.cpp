@@ -25,6 +25,7 @@
 #include "jswatchpoint.h"
 #include "jswrapper.h"
 
+#include "assembler/assembler/MacroAssembler.h"
 #include "jit/AsmJSSignalHandlers.h"
 #include "jit/IonCompartment.h"
 #include "jit/PcScriptCache.h"

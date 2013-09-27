@@ -10,7 +10,6 @@
 #ifdef JS_CPU_ARM
 # include "jit/arm/Assembler-arm.h"
 #endif
-#include "jit/IonCode.h"
 #include "jit/Registers.h"
 #include "jit/shared/Assembler-shared.h"
 
