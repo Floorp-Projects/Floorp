@@ -21,6 +21,9 @@
 #include "nsWrapperCache.h"
 
 namespace mozilla {
+
+template <typename T> class AsyncEventRunner;
+
 namespace dom {
 
 class SourceBuffer MOZ_FINAL : public nsDOMEventTargetHelper
@@ -85,7 +88,7 @@ public:
   void Detach();
 
 private:
-  friend class AsyncEventRunnner<SourceBuffer>;
+  friend class AsyncEventRunner<SourceBuffer>;
   void DispatchSimpleEvent(const char* aName);
   void QueueAsyncSimpleEvent(const char* aName);
 

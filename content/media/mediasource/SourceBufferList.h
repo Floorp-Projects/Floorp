@@ -18,6 +18,10 @@
 #include "nscore.h"
 
 namespace mozilla {
+
+class ErrorResult;
+template <typename T> class AsyncEventRunner;
+
 namespace dom {
 
 class MediaSource;
@@ -66,7 +70,7 @@ public:
   void Remove(double aStart, double aEnd, ErrorResult& aRv);
 
 private:
-  friend class AsyncEventRunnner<SourceBufferList>;
+  friend class AsyncEventRunner<SourceBufferList>;
   void DispatchSimpleEvent(const char* aName);
   void QueueAsyncSimpleEvent(const char* aName);
 
