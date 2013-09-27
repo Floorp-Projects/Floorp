@@ -74,7 +74,7 @@ class RegExpObjectBuilder
     bool getOrCreateClone(RegExpObject *proto);
 
   public:
-    RegExpObjectBuilder(ExclusiveContext *cx, RegExpObject *reobj = NULL);
+    RegExpObjectBuilder(ExclusiveContext *cx, RegExpObject *reobj = nullptr);
 
     RegExpObject *reobj() { return reobj_; }
 
@@ -222,7 +222,7 @@ class RegExpShared
     bool hasCode() const                { return false; }
     bool hasMatchOnlyCode() const       { return false; }
 #endif
-    bool hasBytecode() const            { return bytecode != NULL; }
+    bool hasBytecode() const            { return bytecode != nullptr; }
     bool isCompiled() const             { return hasBytecode() || hasCode() || hasMatchOnlyCode(); }
 };
 
@@ -246,7 +246,7 @@ class RegExpGuard
 
   public:
     RegExpGuard(ExclusiveContext *cx)
-      : re_(NULL), source_(cx)
+      : re_(nullptr), source_(cx)
     {}
 
     RegExpGuard(ExclusiveContext *cx, RegExpShared &re)
@@ -270,8 +270,8 @@ class RegExpGuard
     void release() {
         if (re_) {
             re_->decRef();
-            re_ = NULL;
-            source_ = NULL;
+            re_ = nullptr;
+            source_ = nullptr;
         }
     }
 
@@ -417,7 +417,7 @@ class RegExpObject : public JSObject
     bool sticky() const     { return getSlot(STICKY_FLAG_SLOT).toBoolean(); }
 
     void shared(RegExpGuard *g) const {
-        JS_ASSERT(maybeShared() != NULL);
+        JS_ASSERT(maybeShared() != nullptr);
         g->init(*maybeShared());
     }
 

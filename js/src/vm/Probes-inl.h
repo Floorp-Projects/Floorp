@@ -78,7 +78,7 @@ Probes::exitScript(JSContext *cx, JSScript *script, JSFunction *maybeFun,
 
     JSRuntime *rt = cx->runtime();
     /*
-     * Coming from IonMonkey, the fp might not be known (fp == NULL), but
+     * Coming from IonMonkey, the fp might not be known (fp == nullptr), but
      * IonMonkey will only call exitScript() when absolutely necessary, so it is
      * guaranteed that fp->hasPushedSPSFrame() would have been true
      */
