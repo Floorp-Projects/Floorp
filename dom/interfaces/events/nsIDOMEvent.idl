@@ -247,7 +247,7 @@ nsresult
 NS_NewDOMFocusEvent(nsIDOMEvent** aInstancePtrResult,
                     mozilla::dom::EventTarget* aOwner,
                     nsPresContext* aPresContext,
-                    nsFocusEvent* aEvent);
+                    mozilla::InternalFocusEvent* aEvent);
 nsresult
 NS_NewDOMMouseScrollEvent(nsIDOMEvent** aInstancePtrResult,
                           mozilla::dom::EventTarget* aOwner,
