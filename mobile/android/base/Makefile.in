@@ -1310,11 +1310,13 @@ jni-stubs.inc: jars/gecko-browser.jar jars/gecko-mozglue.jar jars/gecko-util.jar
 ANNOTATION_PROCESSOR_JAVA_FILES = \
   build/annotationProcessors/AnnotationProcessor.java \
   build/annotationProcessors/CodeGenerator.java \
-  build/annotationProcessors/MethodWithAnnotationInfo.java \
+  build/annotationProcessors/AnnotationInfo.java \
+  build/annotationProcessors/classloader/AnnotatableEntity.java \
+  build/annotationProcessors/classloader/ClassWithOptions.java \
   build/annotationProcessors/classloader/IterableJarLoadingURLClassLoader.java \
   build/annotationProcessors/classloader/JarClassIterator.java \
-  build/annotationProcessors/utils/AlphabeticMethodComparator.java \
-  build/annotationProcessors/utils/GeneratableEntryPointIterator.java \
+  build/annotationProcessors/utils/AlphabeticAnnotatableEntityComparator.java \
+  build/annotationProcessors/utils/GeneratableElementIterator.java \
   build/annotationProcessors/utils/Utils.java \
   $(NULL)
 
