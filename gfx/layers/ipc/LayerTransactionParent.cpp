@@ -187,6 +187,7 @@ LayerTransactionParent::RecvUpdate(const InfallibleTArray<Edit>& cset,
                                    const bool& isFirstPaint,
                                    InfallibleTArray<EditReply>* reply)
 {
+  profiler_tracing("Paint", "Composite", TRACING_INTERVAL_START);
   PROFILER_LABEL("LayerTransactionParent", "RecvUpdate");
 #ifdef COMPOSITOR_PERFORMANCE_WARNING
   TimeStamp updateStart = TimeStamp::Now();

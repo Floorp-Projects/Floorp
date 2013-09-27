@@ -539,6 +539,7 @@ ShadowLayerForwarder::EndTransaction(InfallibleTArray<EditReply>* aReplies)
   MOZ_LAYERS_LOG(("[LayersForwarder] syncing before send..."));
   PlatformSyncBeforeUpdate();
 
+  profiler_tracing("Paint", "Rasterize", TRACING_INTERVAL_END);
   if (mTxn->mSwapRequired) {
     MOZ_LAYERS_LOG(("[LayersForwarder] sending transaction..."));
     RenderTraceScope rendertrace3("Forward Transaction", "000093");
