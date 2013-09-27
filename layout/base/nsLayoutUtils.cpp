@@ -1258,6 +1258,10 @@ nsLayoutUtils::GetAnimatedGeometryRootFor(nsIFrame* aFrame,
         stickyFrame = nullptr;
       }
     }
+    // Fixed-pos frames are parented by the viewport frame, which has no parent
+    if (IsFixedPosFrameInDisplayPort(f)) {
+      return f;
+    }
     f = parent;
   }
   return f;
@@ -1268,6 +1272,13 @@ nsLayoutUtils::GetAnimatedGeometryRootFor(nsDisplayItem* aItem,
                                           nsDisplayListBuilder* aBuilder)
 {
   nsIFrame* f = aItem->Frame();
+  if (aItem->GetType() == nsDisplayItem::TYPE_SCROLL_LAYER) {
+    nsDisplayScrollLayer* scrollLayerItem =
+      static_cast<nsDisplayScrollLayer*>(aItem);
+    nsIFrame* scrolledFrame = scrollLayerItem->GetScrolledFrame();
+    return nsLayoutUtils::GetAnimatedGeometryRootFor(scrolledFrame,
+        aBuilder->FindReferenceFrameFor(scrolledFrame));
+  }
   if (aItem->ShouldFixToViewport(aBuilder)) {
     // Make its active scrolled root be the active scrolled root of
     // the enclosing viewport, since it shouldn't be scrolled by scrolled
