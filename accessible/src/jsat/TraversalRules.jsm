@@ -38,6 +38,7 @@ const ROLE_DEFINITION_LIST = Ci.nsIAccessibleRole.ROLE_DEFINITION_LIST;
 const ROLE_LISTITEM = Ci.nsIAccessibleRole.ROLE_LISTITEM;
 const ROLE_BUTTONDROPDOWNGRID = Ci.nsIAccessibleRole.ROLE_BUTTONDROPDOWNGRID;
 const ROLE_LISTBOX = Ci.nsIAccessibleRole.ROLE_LISTBOX;
+const ROLE_OPTION = Ci.nsIAccessibleRole.ROLE_OPTION;
 const ROLE_SLIDER = Ci.nsIAccessibleRole.ROLE_SLIDER;
 const ROLE_HEADING = Ci.nsIAccessibleRole.ROLE_HEADING;
 const ROLE_HEADER = Ci.nsIAccessibleRole.ROLE_HEADER;
@@ -110,6 +111,7 @@ var gSimpleTraversalRoles =
    ROLE_HEADING,
    ROLE_SLIDER,
    ROLE_SPINBUTTON,
+   ROLE_OPTION,
    // Used for traversing in to child OOP frames.
    ROLE_INTERNAL_FRAME];
 
