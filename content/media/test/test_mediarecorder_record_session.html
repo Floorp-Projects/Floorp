@@ -1,0 +1,72 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=909670
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test for Media Recoder recording session</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <script type="text/javascript" src="manifest.js"></script>
+</head>
+<body>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+var manager = new MediaTestManager;
+
+function startTest(test, token) {
+  var element = document.createElement('audio');
+
+  element.token = token;
+  manager.started(token);
+
+  element.src = test.name;
+  element.test = test;
+  element.stream = element.mozCaptureStream();
+
+  var mStopCount = 0;
+  // Start and stop recording session three times continuously.
+  var mExpectStopCount = 3;
+  var mediaRecorder = new MediaRecorder(element.stream);
+
+  // Stop callback.
+  // Suppose to receive mExpectStopCount
+  mediaRecorder.onstop = function stopCallback() {
+    mStopCount++;
+
+    info("MediaRecorder.onstop callback: (" + mStopCount + ")");
+
+    if (mExpectStopCount === mStopCount)
+    {
+      manager.finished(token);
+    }
+  }
+
+  // data avaliable.
+  mediaRecorder.ondataavailable = function(evt) {}
+
+  mediaRecorder.onerror = function(err) {
+    ok(false, 'Unexpected error fired with:' + err);
+  }
+
+  mediaRecorder.onwarning = function() {
+    ok(false, 'Unexpected warning fired');
+  }
+
+  element.oncanplaythrough = function () {
+    for (var i = 0; i < mExpectStopCount; i++) {
+      mediaRecorder.start(1000);
+      mediaRecorder.stop();
+    }
+  }
+
+  element.play();
+}
+
+manager.runTests(gMediaRecorderTests, startTest);
+
+</script>
+</pre>
+</body>
+</html>
