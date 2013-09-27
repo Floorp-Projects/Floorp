@@ -85,6 +85,12 @@ button {
   display: none;
 }
 
+.app-buttons > button[disabled] {
+  background-color: transparent;
+  opacity: 0.4;
+  pointer-events: none;
+}
+
 .app[running="false"] > .app-buttons > .button-start,
 .app[running="true"] > .app-buttons > .button-stop,
 .app[running="true"] > .app-buttons > .button-debug {
@@ -100,6 +106,10 @@ button {
   color: #FFF;
 }
 
+.button-debug[disabled] {
+  color: #3498DB;
+}
+
 .button-start {
   color: #18BC9C
 }
@@ -109,6 +119,10 @@ button {
   color: #FFF;
 }
 
+.button-start[disabled] {
+  color: #18BC9C
+}
+
 .button-stop {
   color: #E74C3C;
 }
@@ -116,6 +130,10 @@ button {
 .button-stop:hover {
   background-color: #E74C3C;
   color: #FFF;
+}
+
+.button-stop[disabled] {
+  color: #E74C3C;
 }
 
 
