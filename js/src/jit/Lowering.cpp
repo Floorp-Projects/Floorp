@@ -1448,8 +1448,9 @@ LIRGenerator::visitConcat(MConcat *ins)
                                useFixed(rhs, CallTempReg1),
                                tempFixed(CallTempReg2),
                                tempFixed(CallTempReg3),
-                               tempFixed(CallTempReg4));
-    if (!defineFixed(lir, ins, LAllocation(AnyRegister(CallTempReg5))))
+                               tempFixed(CallTempReg4),
+                               tempFixed(CallTempReg5));
+    if (!defineFixed(lir, ins, LAllocation(AnyRegister(CallTempReg6))))
         return false;
     return assignSafepoint(lir, ins);
 }
@@ -1465,12 +1466,13 @@ LIRGenerator::visitConcatPar(MConcatPar *ins)
     JS_ASSERT(rhs->type() == MIRType_String);
     JS_ASSERT(ins->type() == MIRType_String);
 
-    LConcatPar *lir = new LConcatPar(useFixed(slice, CallTempReg4),
+    LConcatPar *lir = new LConcatPar(useFixed(slice, CallTempReg5),
                                      useFixed(lhs, CallTempReg0),
                                      useFixed(rhs, CallTempReg1),
                                      tempFixed(CallTempReg2),
-                                     tempFixed(CallTempReg3));
-    if (!defineFixed(lir, ins, LAllocation(AnyRegister(CallTempReg5))))
+                                     tempFixed(CallTempReg3),
+                                     tempFixed(CallTempReg4));
+    if (!defineFixed(lir, ins, LAllocation(AnyRegister(CallTempReg6))))
         return false;
     return assignSafepoint(lir, ins);
 }
