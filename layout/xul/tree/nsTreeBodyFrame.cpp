@@ -926,17 +926,18 @@ nsTreeBodyFrame::CheckOverflow(const ScrollParts& aParts)
   nsCOMPtr<nsIContent> content = mContent;
 
   if (verticalOverflowChanged) {
-    nsScrollPortEvent event(true, mVerticalOverflow ? NS_SCROLLPORT_OVERFLOW
-                            : NS_SCROLLPORT_UNDERFLOW, nullptr);
-    event.orient = nsScrollPortEvent::vertical;
+    InternalScrollPortEvent event(true,
+      mVerticalOverflow ? NS_SCROLLPORT_OVERFLOW : NS_SCROLLPORT_UNDERFLOW,
+      nullptr);
+    event.orient = InternalScrollPortEvent::vertical;
     nsEventDispatcher::Dispatch(content, presContext, &event);
   }
 
   if (horizontalOverflowChanged) {
-    nsScrollPortEvent event(true,
-                            mHorizontalOverflow ? NS_SCROLLPORT_OVERFLOW
-                            : NS_SCROLLPORT_UNDERFLOW, nullptr);
-    event.orient = nsScrollPortEvent::horizontal;
+    InternalScrollPortEvent event(true,
+      mHorizontalOverflow ? NS_SCROLLPORT_OVERFLOW : NS_SCROLLPORT_UNDERFLOW,
+      nullptr);
+    event.orient = InternalScrollPortEvent::horizontal;
     nsEventDispatcher::Dispatch(content, presContext, &event);
   }
 
