@@ -108,6 +108,19 @@ add_task(function test_indexExists_not_created()
   do_check_false(msc.indexExists("foo"));
 });
 
+add_task(function test_temp_tableExists_and_indexExists()
+{
+  var msc = getOpenedDatabase();
+  msc.executeSimpleSQL("CREATE TEMP TABLE test_temp(id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT)");
+  do_check_true(msc.tableExists("test_temp"));
+
+  msc.executeSimpleSQL("CREATE INDEX test_temp_ind ON test_temp (name)");
+  do_check_true(msc.indexExists("test_temp_ind"));
+
+  msc.executeSimpleSQL("DROP INDEX test_temp_ind");
+  msc.executeSimpleSQL("DROP TABLE test_temp");
+});
+
 add_task(function test_createTable_not_created()
 {
   var msc = getOpenedDatabase();
