@@ -9,12 +9,10 @@ include $(topsrcdir)/mobile/android/base/android-services-files.mk
 MOZGLUE_JAVA_FILES := \
   mozglue/ByteBufferInputStream.java \
   mozglue/DirectBufferAllocator.java \
-  mozglue/generatorannotations/GeneratorOptions.java \
-  mozglue/generatorannotations/OptionalGeneratedParameter.java \
-  mozglue/generatorannotations/WrapEntireClassForJNI.java \
-  mozglue/generatorannotations/WrapElementForJNI.java \
+  mozglue/GeneratableAndroidBridgeTarget.java \
   mozglue/NativeReference.java \
   mozglue/NativeZip.java \
+  mozglue/OptionalGeneratedParameter.java \
   $(NULL)
 
 MOZGLUE_PP_JAVA_FILES := \
@@ -1310,13 +1308,11 @@ jni-stubs.inc: jars/gecko-browser.jar jars/gecko-mozglue.jar jars/gecko-util.jar
 ANNOTATION_PROCESSOR_JAVA_FILES = \
   build/annotationProcessors/AnnotationProcessor.java \
   build/annotationProcessors/CodeGenerator.java \
-  build/annotationProcessors/AnnotationInfo.java \
-  build/annotationProcessors/classloader/AnnotatableEntity.java \
-  build/annotationProcessors/classloader/ClassWithOptions.java \
+  build/annotationProcessors/MethodWithAnnotationInfo.java \
   build/annotationProcessors/classloader/IterableJarLoadingURLClassLoader.java \
   build/annotationProcessors/classloader/JarClassIterator.java \
-  build/annotationProcessors/utils/AlphabeticAnnotatableEntityComparator.java \
-  build/annotationProcessors/utils/GeneratableElementIterator.java \
+  build/annotationProcessors/utils/AlphabeticMethodComparator.java \
+  build/annotationProcessors/utils/GeneratableEntryPointIterator.java \
   build/annotationProcessors/utils/Utils.java \
   $(NULL)
 
