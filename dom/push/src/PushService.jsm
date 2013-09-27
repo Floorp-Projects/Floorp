@@ -1479,12 +1479,12 @@ this.PushService = {
 
       let nm = Cc["@mozilla.org/network/manager;1"].getService(Ci.nsINetworkManager);
       if (nm.active && nm.active.type == Ci.nsINetworkInterface.NETWORK_TYPE_MOBILE) {
-        let mcp = Cc["@mozilla.org/ril/content-helper;1"].getService(Ci.nsIMobileConnectionProvider);
-        if (mcp.iccInfo) {
+        let icc = Cc["@mozilla.org/ril/content-helper;1"].getService(Ci.nsIIccProvider);
+        if (icc.iccInfo) {
           debug("Running on mobile data");
           return {
-            mcc: mcp.iccInfo.mcc,
-            mnc: mcp.iccInfo.mnc,
+            mcc: icc.iccInfo.mcc,
+            mnc: icc.iccInfo.mnc,
             ip:  nm.active.ip
           }
         }
