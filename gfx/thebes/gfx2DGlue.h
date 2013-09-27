@@ -199,6 +199,12 @@ inline gfxMatrix ThebesMatrix(const Matrix &aMatrix)
                    aMatrix._22, aMatrix._31, aMatrix._32);
 }
 
+inline Matrix MatrixForThebesMatrix(const gfxMatrix &aMatrix)
+{
+  return Matrix(aMatrix.xx, aMatrix.yx, aMatrix.xy,
+                aMatrix.yy, aMatrix.x0, aMatrix.y0);
+}
+
 inline gfxImageFormat SurfaceFormatToImageFormat(SurfaceFormat aFormat)
 {
   switch (aFormat) {
