@@ -189,7 +189,7 @@ nsHTMLButtonControlFrame::Reflow(nsPresContext* aPresContext,
   
   // Reflow the contents of the button.
   ReflowButtonContents(aPresContext, aDesiredSize, aReflowState, firstKid,
-                       focusPadding, aStatus);
+                       focusPadding);
 
   aDesiredSize.width = aReflowState.ComputedWidth();
 
@@ -201,9 +201,10 @@ nsHTMLButtonControlFrame::Reflow(nsPresContext* aPresContext,
 
   aDesiredSize.SetOverflowAreasToDesiredBounds();
   ConsiderChildOverflow(aDesiredSize.mOverflowAreas, firstKid);
-  FinishReflowWithAbsoluteFrames(aPresContext, aDesiredSize, aReflowState, aStatus);
 
   aStatus = NS_FRAME_COMPLETE;
+  FinishReflowWithAbsoluteFrames(aPresContext, aDesiredSize,
+                                 aReflowState, aStatus);
 
   NS_FRAME_SET_TRUNCATION(aStatus, aReflowState, aDesiredSize);
   return NS_OK;
@@ -214,8 +215,7 @@ nsHTMLButtonControlFrame::ReflowButtonContents(nsPresContext* aPresContext,
                                                nsHTMLReflowMetrics& aDesiredSize,
                                                const nsHTMLReflowState& aButtonReflowState,
                                                nsIFrame* aFirstKid,
-                                               nsMargin aFocusPadding,
-                                               nsReflowStatus& aStatus)
+                                               nsMargin aFocusPadding)
 {
   nsSize availSize(aButtonReflowState.ComputedWidth(), NS_INTRINSICSIZE);
 
@@ -247,10 +247,14 @@ nsHTMLButtonControlFrame::ReflowButtonContents(nsPresContext* aPresContext,
   nsHTMLReflowState contentsReflowState(aPresContext, aButtonReflowState,
                                         aFirstKid, availSize);
 
+  nsReflowStatus contentsReflowStatus;
   ReflowChild(aFirstKid, aPresContext, aDesiredSize, contentsReflowState,
               xoffset,
               aFocusPadding.top + aButtonReflowState.mComputedBorderPadding.top,
-              0, aStatus);
+              0, contentsReflowStatus);
+  MOZ_ASSERT(NS_FRAME_IS_COMPLETE(contentsReflowStatus),
+             "We gave button-contents frame unconstrained available height, "
+             "so it should be complete");
 
   // Compute our desired height before vertically centering our children
   nscoord actualDesiredHeight = 0;
