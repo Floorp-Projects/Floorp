@@ -201,9 +201,9 @@ struct ParamTraits<nsMouseEvent>
 };
 
 template<>
-struct ParamTraits<nsTouchEvent>
+struct ParamTraits<mozilla::WidgetTouchEvent>
 {
-  typedef nsTouchEvent paramType;
+  typedef mozilla::WidgetTouchEvent paramType;
 
   static void Write(Message* aMsg, const paramType& aParam)
   {

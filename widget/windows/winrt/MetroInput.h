@@ -223,7 +223,7 @@ private:
   // the updated touchpoint info and record the fact that the touchpoint
   // has changed.  If ever we try to update a touchpoint has already
   // changed, we dispatch a touch event containing all the changed touches.
-  void InitTouchEventTouchList(nsTouchEvent* aEvent);
+  void InitTouchEventTouchList(WidgetTouchEvent* aEvent);
   nsBaseHashtable<nsUint32HashKey,
                   nsRefPtr<mozilla::dom::Touch>,
                   nsRefPtr<mozilla::dom::Touch> > mTouches;
@@ -264,8 +264,9 @@ private:
 
   // Async event dispatching
   void DispatchAsyncEventIgnoreStatus(nsInputEvent* aEvent);
-  void DispatchAsyncTouchEventIgnoreStatus(nsTouchEvent* aEvent);
-  void DispatchAsyncTouchEventWithCallback(nsTouchEvent* aEvent, void (MetroInput::*Callback)());
+  void DispatchAsyncTouchEventIgnoreStatus(WidgetTouchEvent* aEvent);
+  void DispatchAsyncTouchEventWithCallback(WidgetTouchEvent* aEvent,
+                                           void (MetroInput::*Callback)());
 
   // Async event callbacks
   void DeliverNextQueuedEventIgnoreStatus();

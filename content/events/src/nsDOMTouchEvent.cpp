@@ -54,9 +54,9 @@ nsDOMTouchList::IdentifiedTouch(int32_t aIdentifier) const
 
 nsDOMTouchEvent::nsDOMTouchEvent(mozilla::dom::EventTarget* aOwner,
                                  nsPresContext* aPresContext,
-                                 nsTouchEvent* aEvent)
+                                 WidgetTouchEvent* aEvent)
   : nsDOMUIEvent(aOwner, aPresContext,
-                 aEvent ? aEvent : new nsTouchEvent(false, 0, nullptr))
+                 aEvent ? aEvent : new WidgetTouchEvent(false, 0, nullptr))
 {
   if (aEvent) {
     mEventIsInternal = false;
@@ -74,7 +74,7 @@ nsDOMTouchEvent::nsDOMTouchEvent(mozilla::dom::EventTarget* aOwner,
 nsDOMTouchEvent::~nsDOMTouchEvent()
 {
   if (mEventIsInternal && mEvent) {
-    delete static_cast<nsTouchEvent*>(mEvent);
+    delete static_cast<WidgetTouchEvent*>(mEvent);
     mEvent = nullptr;
   }
 }
@@ -126,7 +126,7 @@ nsDOMTouchList*
 nsDOMTouchEvent::Touches()
 {
   if (!mTouches) {
-    nsTouchEvent* touchEvent = static_cast<nsTouchEvent*>(mEvent);
+    WidgetTouchEvent* touchEvent = static_cast<WidgetTouchEvent*>(mEvent);
     if (mEvent->message == NS_TOUCH_END || mEvent->message == NS_TOUCH_CANCEL) {
       // for touchend events, remove any changed touches from the touches array
       nsTArray< nsRefPtr<Touch> > unchangedTouches;
@@ -149,7 +149,7 @@ nsDOMTouchEvent::TargetTouches()
 {
   if (!mTargetTouches) {
     nsTArray< nsRefPtr<Touch> > targetTouches;
-    nsTouchEvent* touchEvent = static_cast<nsTouchEvent*>(mEvent);
+    WidgetTouchEvent* touchEvent = static_cast<WidgetTouchEvent*>(mEvent);
     const nsTArray< nsRefPtr<Touch> >& touches = touchEvent->touches;
     for (uint32_t i = 0; i < touches.Length(); ++i) {
       // for touchend/cancel events, don't append to the target list if this is a
@@ -171,7 +171,7 @@ nsDOMTouchEvent::ChangedTouches()
 {
   if (!mChangedTouches) {
     nsTArray< nsRefPtr<Touch> > changedTouches;
-    nsTouchEvent* touchEvent = static_cast<nsTouchEvent*>(mEvent);
+    WidgetTouchEvent* touchEvent = static_cast<WidgetTouchEvent*>(mEvent);
     const nsTArray< nsRefPtr<Touch> >& touches = touchEvent->touches;
     for (uint32_t i = 0; i < touches.Length(); ++i) {
       if (touches[i]->mChanged) {
@@ -225,7 +225,7 @@ nsresult
 NS_NewDOMTouchEvent(nsIDOMEvent** aInstancePtrResult,
                     mozilla::dom::EventTarget* aOwner,
                     nsPresContext* aPresContext,
-                    nsTouchEvent *aEvent)
+                    WidgetTouchEvent* aEvent)
 {
   nsDOMTouchEvent* it = new nsDOMTouchEvent(aOwner, aPresContext, aEvent);
   return CallQueryInterface(it, aInstancePtrResult);
