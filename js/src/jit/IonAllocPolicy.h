@@ -28,7 +28,7 @@ class TempAllocator
   public:
     TempAllocator(LifoAlloc *lifoAlloc)
       : lifoScope_(lifoAlloc),
-        rootList_(NULL)
+        rootList_(nullptr)
     { }
 
     void *allocateInfallible(size_t bytes)
@@ -42,7 +42,7 @@ class TempAllocator
     {
         void *p = lifoScope_.alloc().alloc(bytes);
         if (!ensureBallast())
-            return NULL;
+            return nullptr;
         return p;
     }
 
