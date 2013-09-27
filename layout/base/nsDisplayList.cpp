@@ -728,8 +728,8 @@ static void RecordFrameMetrics(nsIFrame* aForFrame,
   // the page is zoomed in, the frame's size might be larger than the widget
   // bounds, but we don't want the composition bounds to be.
   bool useWidgetBounds = false;
-  bool isRootContentDocRootScrollFrame = aForFrame->GetParent() == nullptr
-                                      && presContext->IsRootContentDocument();
+  bool isRootContentDocRootScrollFrame = presContext->IsRootContentDocument()
+                                      && aScrollFrame == presShell->GetRootScrollFrame();
   if (isRootContentDocRootScrollFrame) {
     if (nsIWidget* widget = aForFrame->GetNearestWidget()) {
       nsIntRect bounds;
