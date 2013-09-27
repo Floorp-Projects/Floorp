@@ -250,6 +250,5 @@ public:
 // TODO: Remove following typedefs
 typedef mozilla::InternalScriptErrorEvent nsScriptErrorEvent;
 typedef mozilla::InternalScrollPortEvent  nsScrollPortEvent;
-typedef mozilla::InternalScrollAreaEvent  nsScrollAreaEvent;
 
 #endif // mozilla_ContentEvents_h__

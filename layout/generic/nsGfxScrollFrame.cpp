@@ -4204,7 +4204,7 @@ nsGfxScrollFrameInner::FireScrolledAreaEvent()
 {
   mScrolledAreaEvent.Forget();
 
-  nsScrollAreaEvent event(true, NS_SCROLLEDAREACHANGED, nullptr);
+  InternalScrollAreaEvent event(true, NS_SCROLLEDAREACHANGED, nullptr);
   nsPresContext *prescontext = mOuter->PresContext();
   nsIContent* content = mOuter->GetContent();
 

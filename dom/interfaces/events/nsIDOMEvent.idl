@@ -360,7 +360,7 @@ nsresult
 NS_NewDOMScrollAreaEvent(nsIDOMEvent** aInstancePtrResult,
                          mozilla::dom::EventTarget* aOwner,
                          nsPresContext* aPresContext,
-                         nsScrollAreaEvent* aEvent);
+                         mozilla::InternalScrollAreaEvent* aEvent);
 nsresult
 NS_NewDOMTransitionEvent(nsIDOMEvent** aInstancePtrResult,
                          mozilla::dom::EventTarget* aOwner,
