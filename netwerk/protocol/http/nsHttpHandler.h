@@ -95,7 +95,6 @@ public:
     bool           AllowExperiments() { return mTelemetryEnabled && mAllowExperiments; }
 
     bool           IsSpdyEnabled() { return mEnableSpdy; }
-    bool           IsSpdyV2Enabled() { return mSpdyV2; }
     bool           IsSpdyV3Enabled() { return mSpdyV3; }
     bool           IsSpdyV31Enabled() { return mSpdyV31; }
     bool           CoalesceSpdy() { return mCoalesceSpdy; }
@@ -416,7 +415,6 @@ private:
     // Try to use SPDY features instead of HTTP/1.1 over SSL
     mozilla::net::SpdyInformation mSpdyInfo;
     bool           mEnableSpdy;
-    bool           mSpdyV2;
     bool           mSpdyV3;
     bool           mSpdyV31;
     bool           mCoalesceSpdy;
