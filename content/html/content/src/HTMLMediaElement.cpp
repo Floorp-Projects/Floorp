@@ -68,6 +68,7 @@
 #include "nsHostObjectProtocolHandler.h"
 #include "mozilla/dom/MediaSource.h"
 #include "MediaMetadataManager.h"
+#include "MediaSourceDecoder.h"
 
 #include "AudioChannelService.h"
 
@@ -601,7 +602,7 @@ void HTMLMediaElement::AbortExistingLoads()
     EndSrcMediaStreamPlayback();
   }
   if (mMediaSource) {
-    mMediaSource->DetachElement();
+    mMediaSource->Detach();
     mMediaSource = nullptr;
   }
   if (mAudioStream) {
@@ -1135,16 +1136,15 @@ nsresult HTMLMediaElement::LoadResource()
       return rv;
     }
     mMediaSource = source.forget();
-    if (!mMediaSource->AttachElement(this)) {
-      // XXX(kinetik): Handle failure: run "If the media data cannot be
-      // fetched at all, due to network errors, causing the user agent to
-      // give up trying to fetch the resource" section of resource fetch
-      // algorithm.
+    nsRefPtr<MediaSourceDecoder> decoder = new MediaSourceDecoder(this);
+    if (!mMediaSource->Attach(decoder)) {
+      // TODO: Handle failure: run "If the media data cannot be fetched at
+      // all, due to network errors, causing the user agent to give up
+      // trying to fetch the resource" section of resource fetch algorithm.
       return NS_ERROR_FAILURE;
     }
-    // XXX(kinetik): Bug 881512. Wire this up properly; return from here (as
-    // MediaStreams setup does) rather than relying on mediasource->channel
-    // conversion.
+    nsRefPtr<MediaResource> resource = new MediaSourceResource();
+    return FinishDecoderSetup(decoder, resource, nullptr, nullptr);
   }
 
   nsCOMPtr<nsILoadGroup> loadGroup = GetDocumentLoadGroup();
@@ -1989,7 +1989,7 @@ HTMLMediaElement::~HTMLMediaElement()
     EndSrcMediaStreamPlayback();
   }
   if (mMediaSource) {
-    mMediaSource->DetachElement();
+    mMediaSource->Detach();
     mMediaSource = nullptr;
   }
 
