@@ -35,7 +35,7 @@ class TimeRanges;
 class MediaSourceReader : public MediaDecoderReader
 {
 public:
-  MediaSourceReader(AbstractMediaDecoder* aDecoder)
+  MediaSourceReader(MediaSourceDecoder* aDecoder)
     : MediaDecoderReader(aDecoder)
   {
   }
@@ -184,8 +184,6 @@ MediaSourceReader::ReadMetadata(VideoInfo* aInfo, MetadataTags** aTags)
 
   MediaSourceDecoder* decoder = static_cast<MediaSourceDecoder*>(mDecoder);
   const nsTArray<MediaDecoderReader*>& readers = decoder->GetReaders();
-  bool gotVideo = false;
-  bool gotAudio = false;
   for (uint32_t i = 0; i < readers.Length(); ++i) {
     MediaDecoderReader* reader = readers[i];
     VideoInfo vi;
@@ -194,17 +192,17 @@ MediaSourceReader::ReadMetadata(VideoInfo* aInfo, MetadataTags** aTags)
     if (NS_FAILED(rv)) {
       return rv;
     }
-    if (vi.mHasVideo && !gotVideo) {
-      mInfo = vi;
+    if (vi.mHasVideo && !mInfo.mHasVideo) {
+      mInfo.mDisplay = vi.mDisplay;
+      mInfo.mStereoMode = vi.mStereoMode;
+      mInfo.mHasVideo = true;
       decoder->SetVideoReader(reader);
-      gotVideo = true;
     }
-    if (vi.mHasAudio && !gotAudio) {
+    if (vi.mHasAudio && !mInfo.mHasAudio) {
       mInfo.mAudioRate = vi.mAudioRate;
       mInfo.mAudioChannels = vi.mAudioChannels;
       mInfo.mHasAudio = true;
       decoder->SetAudioReader(reader);
-      gotAudio = true;
     }
   }
   *aInfo = mInfo;

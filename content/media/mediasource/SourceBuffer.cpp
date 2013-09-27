@@ -60,6 +60,12 @@ SubBufferDecoder::OnDecodeThread() const
   return mParentDecoder->OnDecodeThread();
 }
 
+SourceBufferResource*
+SubBufferDecoder::GetResource() const
+{
+  return static_cast<SourceBufferResource*>(mResource.get());
+}
+
 void
 SubBufferDecoder::SetMediaDuration(int64_t aDuration)
 {
@@ -226,7 +232,7 @@ SourceBuffer::Detach()
 void
 SourceBuffer::Ended()
 {
-  static_cast<SourceBufferResource*>(mDecoder->GetResource())->Ended();
+  mDecoder->GetResource()->Ended();
 }
 
 SourceBuffer::SourceBuffer(MediaSource* aMediaSource, const nsACString& aType)
@@ -247,7 +253,7 @@ SourceBuffer::SourceBuffer(MediaSource* aMediaSource, const nsACString& aType)
 SourceBuffer::~SourceBuffer()
 {
   if (mDecoder) {
-    static_cast<SourceBufferResource*>(mDecoder->GetResource())->Ended();
+    mDecoder->GetResource()->Ended();
   }
 }
 
@@ -321,9 +327,9 @@ SourceBuffer::AppendData(const uint8_t* aData, uint32_t aLength, ErrorResult& aR
   // XXX: For future reference: NDA call must run on the main thread.
   mDecoder->NotifyDataArrived(reinterpret_cast<const char*>(aData),
                               aLength,
-                              static_cast<SourceBufferResource*>(mDecoder->GetResource())->GetLength());
+                              mDecoder->GetResource()->GetLength());
   // TODO: Run buffer append algorithm asynchronously (would call StopUpdating()).
-  static_cast<SourceBufferResource*>(mDecoder->GetResource())->AppendData(aData, aLength);
+  mDecoder->GetResource()->AppendData(aData, aLength);
   StopUpdating();
 }
 
