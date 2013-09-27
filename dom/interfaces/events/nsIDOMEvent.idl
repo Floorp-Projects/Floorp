@@ -370,7 +370,7 @@ nsresult
 NS_NewDOMAnimationEvent(nsIDOMEvent** aInstancePtrResult,
                         mozilla::dom::EventTarget* aOwner,
                         nsPresContext* aPresContext,
-                        nsAnimationEvent* aEvent);
+                        mozilla::InternalAnimationEvent* aEvent);
 nsresult
 NS_NewDOMTouchEvent(nsIDOMEvent** aInstancePtrResult,
                     mozilla::dom::EventTarget* aOwner,
