@@ -566,6 +566,22 @@ protected:
    */
   nscolor FindOpaqueBackgroundColorFor(int32_t aThebesLayerIndex);
   /**
+   * Find the fixed-pos frame, if any, containing (or equal to)
+   * aAnimatedGeometryRoot. Only return a fixed-pos frame if its viewport
+   * has a displayport. Updates *aVisibleRegion to be the intersection of
+   * aDrawRegion and the displayport, and updates *aIsSolidColorInVisibleRegion
+   * (if non-null) to false if the visible region grows.
+   */
+  const nsIFrame* FindFixedPosFrameForLayerData(const nsIFrame* aAnimatedGeometryRoot,
+                                                const nsIntRegion& aDrawRegion,
+                                                nsIntRegion* aVisibleRegion,
+                                                bool* aIsSolidColorInVisibleRegion = nullptr);
+  /**
+   * Set fixed-pos layer metadata on aLayer according to the data for aFixedPosFrame.
+   */
+  void SetFixedPositionLayerData(Layer* aLayer,
+                                 const nsIFrame* aFixedPosFrame);
+  /**
    * Indicate that we are done adding items to the ThebesLayer at the top of
    * mThebesLayerDataStack. Set the final visible region and opaque-content
    * flag, and pop it off the stack.
@@ -1595,6 +1611,68 @@ ContainerState::ThebesLayerData::CanOptimizeImageLayer(nsDisplayListBuilder* aBu
   return mImage->GetContainer(mLayer->Manager(), aBuilder);
 }
 
+const nsIFrame*
+ContainerState::FindFixedPosFrameForLayerData(const nsIFrame* aAnimatedGeometryRoot,
+                                              const nsIntRegion& aDrawRegion,
+                                              nsIntRegion* aVisibleRegion,
+                                              bool* aIsSolidColorInVisibleRegion)
+{
+  if (mContainerFrame->GetParent()) {
+    // Viewports with displayports always get a layer created for the viewport
+    // frame. (See nsSubdocumentFrame::BuildDisplayList's calculation of
+    // needsOwnLayer.) The children of that layer are the ones that might
+    // have fixed-pos frame data. So if we're creating layers for children
+    // of a frame other than a viewport, there's nothing to do here.
+    return nullptr;
+  }
+  // Viewports with no fixed-pos frames are not relevant.
+  if (!mContainerFrame->GetFirstChild(nsIFrame::kFixedList)) {
+    return nullptr;
+  }
+  nsRect displayPort;
+  for (const nsIFrame* f = aAnimatedGeometryRoot; f; f = f->GetParent()) {
+    if (nsLayoutUtils::IsFixedPosFrameInDisplayPort(f, &displayPort)) {
+      displayPort += mContainerFrame->GetOffsetToCrossDoc(mContainerReferenceFrame);
+      nsIntRegion newVisibleRegion;
+      newVisibleRegion.And(ScaleToOutsidePixels(displayPort, false),
+                           aDrawRegion);
+      if (!aVisibleRegion->Contains(newVisibleRegion)) {
+        if (aIsSolidColorInVisibleRegion) {
+          *aIsSolidColorInVisibleRegion = false;
+        }
+        *aVisibleRegion = newVisibleRegion;
+      }
+      return f;
+    }
+  }
+  return nullptr;
+}
+
+void
+ContainerState::SetFixedPositionLayerData(Layer* aLayer,
+                                          const nsIFrame* aFixedPosFrame)
+{
+  aLayer->SetIsFixedPosition(aFixedPosFrame != nullptr);
+  if (!aFixedPosFrame) {
+    return;
+  }
+
+  nsIFrame* viewportFrame = aFixedPosFrame->GetParent();
+  nsPresContext* presContext = aFixedPosFrame->PresContext();
+
+  // Fixed position frames are reflowed into the scroll-port size if one has
+  // been set.
+  nsSize viewportSize = viewportFrame->GetSize();
+  if (presContext->PresShell()->IsScrollPositionClampingScrollPortSizeSet()) {
+    viewportSize = presContext->PresShell()->
+      GetScrollPositionClampingScrollPortSize();
+  }
+
+  nsDisplayFixedPosition::SetFixedPositionLayerData(aLayer,
+      viewportFrame, viewportSize, aFixedPosFrame, mContainerReferenceFrame,
+      presContext, mParameters);
+}
+
 void
 ContainerState::PopThebesLayerData()
 {
@@ -1603,6 +1681,11 @@ ContainerState::PopThebesLayerData()
   int32_t lastIndex = mThebesLayerDataStack.Length() - 1;
   ThebesLayerData* data = mThebesLayerDataStack[lastIndex];
 
+  const nsIFrame* fixedPosFrameForLayerData =
+    FindFixedPosFrameForLayerData(data->mAnimatedGeometryRoot,
+                                  data->mDrawRegion,
+                                  &data->mVisibleRegion,
+                                  &data->mIsSolidColorInVisibleRegion);
   nsRefPtr<Layer> layer;
   nsRefPtr<ImageContainer> imageContainer = data->CanOptimizeImageLayer(mBuilder);
 
@@ -1628,7 +1711,6 @@ ContainerState::PopThebesLayerData()
                                                  imageLayer);
     } else {
       nsRefPtr<ColorLayer> colorLayer = CreateOrRecycleColorLayer(data->mLayer);
-      colorLayer->SetIsFixedPosition(data->mLayer->GetIsFixedPosition());
       colorLayer->SetColor(data->mSolidColor);
 
       // Copy transform
@@ -1721,6 +1803,8 @@ ContainerState::PopThebesLayerData()
     flags = 0;
   }
   layer->SetContentFlags(flags);
+
+  SetFixedPositionLayerData(layer, fixedPosFrameForLayerData);
 
   if (lastIndex > 0) {
     // Since we're going to pop off the last ThebesLayerData, the
@@ -2036,7 +2120,7 @@ PaintInactiveLayer(nsDisplayListBuilder* aBuilder,
  */
 bool
 ContainerState::ChooseAnimatedGeometryRoot(const nsDisplayList& aList,
-                                         const nsIFrame **aAnimatedGeometryRoot)
+                                           const nsIFrame **aAnimatedGeometryRoot)
 {
   for (nsDisplayItem* item = aList.GetBottom(); item; item = item->GetAbove()) {
     LayerState layerState = item->GetLayerState(mBuilder, mManager, mParameters);
@@ -2048,10 +2132,9 @@ ContainerState::ChooseAnimatedGeometryRoot(const nsDisplayList& aList,
 
     // Try using the actual active scrolled root of the backmost item, as that
     // should result in the least invalidation when scrolling.
-    mBuilder->IsFixedItem(item, aAnimatedGeometryRoot);
-    if (*aAnimatedGeometryRoot) {
-      return true;
-    }
+    *aAnimatedGeometryRoot =
+      nsLayoutUtils::GetAnimatedGeometryRootFor(item, mBuilder);
+    return true;
   }
   return false;
 }
@@ -2119,19 +2202,17 @@ ContainerState::ProcessDisplayItems(const nsDisplayList& aList,
       layerState = LAYER_ACTIVE;
     }
 
-    bool isFixed;
     bool forceInactive;
-    const nsIFrame* AnimatedGeometryRoot;
+    const nsIFrame* animatedGeometryRoot;
     if (aFlags & NO_COMPONENT_ALPHA) {
       forceInactive = true;
-      AnimatedGeometryRoot = lastAnimatedGeometryRoot;
-      isFixed = mBuilder->IsFixedItem(item, nullptr, AnimatedGeometryRoot);
+      animatedGeometryRoot = lastAnimatedGeometryRoot;
     } else {
       forceInactive = false;
-      isFixed = mBuilder->IsFixedItem(item, &AnimatedGeometryRoot);
-      if (AnimatedGeometryRoot != lastAnimatedGeometryRoot) {
-        lastAnimatedGeometryRoot = AnimatedGeometryRoot;
-        topLeft = AnimatedGeometryRoot->GetOffsetToCrossDoc(mContainerReferenceFrame);
+      animatedGeometryRoot = nsLayoutUtils::GetAnimatedGeometryRootFor(item, mBuilder);
+      if (animatedGeometryRoot != lastAnimatedGeometryRoot) {
+        lastAnimatedGeometryRoot = animatedGeometryRoot;
+        topLeft = animatedGeometryRoot->GetOffsetToCrossDoc(mContainerReferenceFrame);
       }
     }
 
@@ -2184,8 +2265,16 @@ ContainerState::ProcessDisplayItems(const nsDisplayList& aList,
         continue;
       }
 
-      NS_ASSERTION(!ownLayer->AsThebesLayer(), 
+      NS_ASSERTION(!ownLayer->AsThebesLayer(),
                    "Should never have created a dedicated Thebes layer!");
+
+      nsIntRegion visibleRegion(itemVisibleRect);
+      const nsIFrame* fixedPosFrame = FindFixedPosFrameForLayerData(animatedGeometryRoot,
+        nsIntRegion(itemDrawRect), &visibleRegion);
+      if (fixedPosFrame) {
+        itemVisibleRect = visibleRegion.GetBounds();
+      }
+      SetFixedPositionLayerData(ownLayer, fixedPosFrame);
 
       nsRect invalid;
       if (item->IsInvalid(invalid)) {
@@ -2198,8 +2287,6 @@ ContainerState::ProcessDisplayItems(const nsDisplayList& aList,
         ownLayer->SetPostScale(mParameters.mXScale,
                                mParameters.mYScale);
       }
-
-      ownLayer->SetIsFixedPosition(isFixed);
 
       // Update that layer's clip and visible rects.
       NS_ASSERTION(ownLayer->Manager() == mManager, "Wrong manager");
@@ -2267,9 +2354,7 @@ ContainerState::ProcessDisplayItems(const nsDisplayList& aList,
     } else {
       ThebesLayerData* data =
         FindThebesLayerFor(item, itemVisibleRect, itemDrawRect, itemClip,
-                           AnimatedGeometryRoot, topLeft);
-
-      data->mLayer->SetIsFixedPosition(isFixed);
+                           animatedGeometryRoot, topLeft);
 
       nsAutoPtr<nsDisplayItemGeometry> geometry(item->AllocateGeometry(mBuilder));
 
