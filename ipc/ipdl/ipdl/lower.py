@@ -2484,7 +2484,6 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
         self.ns = None
         self.cls = None
         self.includedActorTypedefs = [ ]
-        self.includedActorUsings = [ ]
         self.protocolCxxIncludes = [ ]
         self.actorForwardDecls = [ ]
         self.usingDecls = [ ]
@@ -2665,8 +2664,6 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
             self.includedActorTypedefs.append(Typedef(
                 Type(_actorName(ip.decl.fullname, self.prettyside)),
                 _actorName(ip.decl.shortname, self.prettyside)))
-            self.includedActorUsings.append(Using(
-                Type(_actorName(ip.decl.fullname, self.prettyside))))
 
 
     def visitProtocol(self, p):
