@@ -21,8 +21,10 @@
 #include "nsITimedChannel.h"
 #include "nsIInterfaceRequestor.h"
 #include "nsIRequestObserver.h"
+#include "CacheObserver.h"
 
 using namespace mozilla;
+using namespace mozilla::net;
 
 #if defined(PR_LOGGING)
 //
@@ -991,13 +993,25 @@ nsLoadGroup::TelemetryReportChannel(nsITimedChannel *aTimedChannel,
     }                                                                          \
                                                                                \
     if (!cacheReadStart.IsNull() && !cacheReadEnd.IsNull()) {                  \
-        Telemetry::AccumulateTimeDelta(                                        \
-            Telemetry::HTTP_##prefix##_OPEN_TO_FIRST_FROM_CACHE,               \
-            asyncOpen, cacheReadStart);                                        \
+        if (!CacheObserver::UseNewCache()) {                                   \
+            Telemetry::AccumulateTimeDelta(                                    \
+                Telemetry::HTTP_##prefix##_OPEN_TO_FIRST_FROM_CACHE,           \
+                asyncOpen, cacheReadStart);                                    \
+        } else {                                                               \
+            Telemetry::AccumulateTimeDelta(                                    \
+                Telemetry::HTTP_##prefix##_OPEN_TO_FIRST_FROM_CACHE_V2,        \
+                asyncOpen, cacheReadStart);                                    \
+        }                                                                      \
                                                                                \
-        Telemetry::AccumulateTimeDelta(                                        \
-            Telemetry::HTTP_##prefix##_CACHE_READ_TIME,                        \
-            cacheReadStart, cacheReadEnd);                                     \
+        if (!CacheObserver::UseNewCache()) {                                   \
+            Telemetry::AccumulateTimeDelta(                                    \
+                Telemetry::HTTP_##prefix##_CACHE_READ_TIME,                    \
+                cacheReadStart, cacheReadEnd);                                 \
+        } else {                                                               \
+            Telemetry::AccumulateTimeDelta(                                    \
+                Telemetry::HTTP_##prefix##_CACHE_READ_TIME_V2,                 \
+                cacheReadStart, cacheReadEnd);                                 \
+        }                                                                      \
                                                                                \
         if (!requestStart.IsNull() && !responseEnd.IsNull()) {                 \
             Telemetry::AccumulateTimeDelta(                                    \
@@ -1010,17 +1024,33 @@ nsLoadGroup::TelemetryReportChannel(nsITimedChannel *aTimedChannel,
         Telemetry::AccumulateTimeDelta(                                        \
             Telemetry::HTTP_##prefix##_COMPLETE_LOAD,                          \
             asyncOpen, cacheReadEnd);                                          \
-        Telemetry::AccumulateTimeDelta(                                        \
-            Telemetry::HTTP_##prefix##_COMPLETE_LOAD_CACHED,                   \
-            asyncOpen, cacheReadEnd);                                          \
+                                                                               \
+        if (!CacheObserver::UseNewCache()) {                                   \
+            Telemetry::AccumulateTimeDelta(                                    \
+                Telemetry::HTTP_##prefix##_COMPLETE_LOAD_CACHED,               \
+                asyncOpen, cacheReadEnd);                                      \
+        } else {                                                               \
+            Telemetry::AccumulateTimeDelta(                                    \
+                Telemetry::HTTP_##prefix##_COMPLETE_LOAD_CACHED_V2,            \
+                asyncOpen, cacheReadEnd);                                      \
+        }                                                                      \
     }                                                                          \
     else if (!responseEnd.IsNull()) {                                          \
-        Telemetry::AccumulateTimeDelta(                                        \
-            Telemetry::HTTP_##prefix##_COMPLETE_LOAD,                          \
-            asyncOpen, responseEnd);                                           \
-        Telemetry::AccumulateTimeDelta(                                        \
-            Telemetry::HTTP_##prefix##_COMPLETE_LOAD_NET,                      \
-            asyncOpen, responseEnd);                                           \
+        if (!CacheObserver::UseNewCache()) {                                   \
+            Telemetry::AccumulateTimeDelta(                                    \
+                Telemetry::HTTP_##prefix##_COMPLETE_LOAD,                      \
+                asyncOpen, responseEnd);                                       \
+            Telemetry::AccumulateTimeDelta(                                    \
+                Telemetry::HTTP_##prefix##_COMPLETE_LOAD_NET,                  \
+                asyncOpen, responseEnd);                                       \
+        } else {                                                               \
+            Telemetry::AccumulateTimeDelta(                                    \
+                Telemetry::HTTP_##prefix##_COMPLETE_LOAD_V2,                   \
+                asyncOpen, responseEnd);                                       \
+            Telemetry::AccumulateTimeDelta(                                    \
+                Telemetry::HTTP_##prefix##_COMPLETE_LOAD_NET_V2,               \
+                asyncOpen, responseEnd);                                       \
+        }                                                                      \
     }
 
     if (aDefaultRequest) {

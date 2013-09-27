@@ -6,14 +6,11 @@
 
 #include "jsscript.h"
 
-#include "jit/IonFrames.h"
-#include "jit/IonLinker.h"
 #include "jit/IonSpewer.h"
 #ifdef TRACK_SNAPSHOTS
 #include "jit/LIR.h"
 #include "jit/MIR.h"
 #endif
-#include "jit/MIRGenerator.h"
 #include "jit/SnapshotReader.h"
 #include "jit/SnapshotWriter.h"
 

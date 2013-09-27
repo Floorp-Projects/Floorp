@@ -11,12 +11,10 @@
 #include "jsproxy.h"
 
 #include "builtin/TypeRepresentation.h"
-#include "jit/CodeGenerator.h"
 #include "jit/Ion.h"
 #include "jit/IonLinker.h"
 #include "jit/IonSpewer.h"
 #include "jit/Lowering.h"
-#include "jit/PerfSpewer.h"
 #include "jit/VMFunctions.h"
 #include "vm/Shape.h"
 
@@ -3340,6 +3338,11 @@ SetElementIC::attachDenseElement(JSContext *cx, IonScript *ion, JSObject *obj, c
             if (cx->zone()->needsBarrier())
                 masm.callPreBarrier(target, MIRType_Value);
         }
+
+        // Call post barrier if necessary, and recalculate elements pointer if it got cobbered.
+        Register postBarrierScratch = elements;
+        if (masm.maybeCallPostBarrier(object(), value(), postBarrierScratch))
+            masm.loadPtr(Address(object(), JSObject::offsetOfElements()), elements);
 
         // Store the value.
         masm.bind(&storeElem);

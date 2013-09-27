@@ -99,6 +99,15 @@ endif
 CONFIG_TOOLS	= $(MOZ_BUILD_ROOT)/config
 AUTOCONF_TOOLS	= $(topsrcdir)/build/autoconf
 
+# Disable MOZ_PSEUDO_DERECURSE when it contains no-pymake and we're running
+# pymake. This can be removed when no-pymake is removed from the default in
+# build/autoconf/compiler-opts.m4.
+ifdef .PYMAKE
+comma = ,
+ifneq (,$(filter no-pymake,$(subst $(comma), ,$(MOZ_PSEUDO_DERECURSE))))
+MOZ_PSEUDO_DERECURSE :=
+endif
+endif
 #
 # Strip off the excessively long version numbers on these platforms,
 # but save the version to allow multiple versions of the same base
@@ -132,7 +141,7 @@ SLEEP ?= sleep
 TOUCH ?= touch
 
 ifdef .PYMAKE
-PYCOMMANDPATH += $(topsrcdir)/config
+PYCOMMANDPATH += $(PYTHON_SITE_PACKAGES)
 endif
 
 PYTHON_PATH = $(PYTHON) $(topsrcdir)/config/pythonpath.py

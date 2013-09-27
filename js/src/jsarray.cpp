@@ -2869,28 +2869,28 @@ static const JSFunctionSpec array_methods[] = {
     JS_FN("concat",             array_concat,       1,JSFUN_GENERIC_NATIVE),
     JS_FN("slice",              array_slice,        2,JSFUN_GENERIC_NATIVE),
 
-         {"lastIndexOf",        {NULL, NULL},       1,0, "ArrayLastIndexOf"},
-         {"indexOf",            {NULL, NULL},       1,0, "ArrayIndexOf"},
-         {"forEach",            {NULL, NULL},       1,0, "ArrayForEach"},
-         {"map",                {NULL, NULL},       1,0, "ArrayMap"},
-         {"reduce",             {NULL, NULL},       1,0, "ArrayReduce"},
-         {"reduceRight",        {NULL, NULL},       1,0, "ArrayReduceRight"},
+    JS_SELF_HOSTED_FN("lastIndexOf", "ArrayLastIndexOf", 1,0),
+    JS_SELF_HOSTED_FN("indexOf",     "ArrayIndexOf",     1,0),
+    JS_SELF_HOSTED_FN("forEach",     "ArrayForEach",     1,0),
+    JS_SELF_HOSTED_FN("map",         "ArrayMap",         1,0),
+    JS_SELF_HOSTED_FN("reduce",      "ArrayReduce",      1,0),
+    JS_SELF_HOSTED_FN("reduceRight", "ArrayReduceRight", 1,0),
     JS_FN("filter",             array_filter,       1,JSFUN_GENERIC_NATIVE),
-         {"some",               {NULL, NULL},       1,0, "ArraySome"},
-         {"every",              {NULL, NULL},       1,0, "ArrayEvery"},
+    JS_SELF_HOSTED_FN("some",        "ArraySome",        1,0),
+    JS_SELF_HOSTED_FN("every",       "ArrayEvery",       1,0),
 
 #ifdef ENABLE_PARALLEL_JS
     /* Parallelizable and pure methods. */
-         {"mapPar",             {NULL, NULL},       2,0, "ArrayMapPar"},
-         {"reducePar",          {NULL, NULL},       2,0, "ArrayReducePar"},
-         {"scanPar",            {NULL, NULL},       2,0, "ArrayScanPar"},
-         {"scatterPar",         {NULL, NULL},       5,0, "ArrayScatterPar"},
-         {"filterPar",          {NULL, NULL},       2,0, "ArrayFilterPar"},
+    JS_SELF_HOSTED_FN("mapPar",      "ArrayMapPar",      2,0),
+    JS_SELF_HOSTED_FN("reducePar",   "ArrayReducePar",   2,0),
+    JS_SELF_HOSTED_FN("scanPar",     "ArrayScanPar",     2,0),
+    JS_SELF_HOSTED_FN("scatterPar",  "ArrayScatterPar",  5,0),
+    JS_SELF_HOSTED_FN("filterPar",   "ArrayFilterPar",   2,0),
 #endif
 
     /* ES6 additions */
-         {"find",               {NULL, NULL},       1,0, "ArrayFind"},
-         {"findIndex",          {NULL, NULL},       1,0, "ArrayFindIndex"},
+    JS_SELF_HOSTED_FN("find",        "ArrayFind",        1,0),
+    JS_SELF_HOSTED_FN("findIndex",   "ArrayFindIndex",   1,0),
 
     JS_FN("iterator",           JS_ArrayIterator,   0,0),
     JS_FS_END
@@ -2898,20 +2898,20 @@ static const JSFunctionSpec array_methods[] = {
 
 static const JSFunctionSpec array_static_methods[] = {
     JS_FN("isArray",            array_isArray,      1,0),
-         {"lastIndexOf",        {NULL, NULL},       2,0, "ArrayStaticLastIndexOf"},
-         {"indexOf",            {NULL, NULL},       2,0, "ArrayStaticIndexOf"},
-         {"forEach",            {NULL, NULL},       2,0, "ArrayStaticForEach"},
-         {"map",                {NULL, NULL},       2,0, "ArrayStaticMap"},
-         {"every",              {NULL, NULL},       2,0, "ArrayStaticEvery"},
-         {"some",               {NULL, NULL},       2,0, "ArrayStaticSome"},
-         {"reduce",             {NULL, NULL},       2,0, "ArrayStaticReduce"},
-         {"reduceRight",        {NULL, NULL},       2,0, "ArrayStaticReduceRight"},
+    JS_SELF_HOSTED_FN("lastIndexOf", "ArrayStaticLastIndexOf", 2,0),
+    JS_SELF_HOSTED_FN("indexOf",     "ArrayStaticIndexOf", 2,0),
+    JS_SELF_HOSTED_FN("forEach",     "ArrayStaticForEach", 2,0),
+    JS_SELF_HOSTED_FN("map",         "ArrayStaticMap",   2,0),
+    JS_SELF_HOSTED_FN("every",       "ArrayStaticEvery", 2,0),
+    JS_SELF_HOSTED_FN("some",        "ArrayStaticSome",  2,0),
+    JS_SELF_HOSTED_FN("reduce",      "ArrayStaticReduce", 2,0),
+    JS_SELF_HOSTED_FN("reduceRight", "ArrayStaticReduceRight", 2,0),
     JS_FN("of",                 array_of,           0,0),
 
 #ifdef ENABLE_PARALLEL_JS
-         {"build",              {NULL, NULL},       2,0, "ArrayStaticBuild"},
+    JS_SELF_HOSTED_FN("build",       "ArrayStaticBuild", 2,0),
     /* Parallelizable and pure static methods. */
-         {"buildPar",           {NULL, NULL},       3,0, "ArrayStaticBuildPar"},
+    JS_SELF_HOSTED_FN("buildPar",    "ArrayStaticBuildPar", 3,0),
 #endif
 
     JS_FS_END

@@ -900,7 +900,9 @@ nsEventListenerManager::CompileEventHandlerInternal(nsListenerStruct *aListenerS
     JS::Rooted<JSObject*> boundHandler(cx);
     JS::Rooted<JSObject*> scope(cx, listener->GetEventScope());
     context->BindCompiledEventHandler(mTarget, scope, handler, &boundHandler);
-    if (listener->EventName() == nsGkAtoms::onerror && win) {
+    if (!boundHandler) {
+      listener->ForgetHandler();
+    } else if (listener->EventName() == nsGkAtoms::onerror && win) {
       nsRefPtr<OnErrorEventHandlerNonNull> handlerCallback =
         new OnErrorEventHandlerNonNull(boundHandler);
       listener->SetHandler(handlerCallback);
@@ -1034,7 +1036,7 @@ nsEventListenerManager::HandleEventInternal(nsPresContext* aPresContext,
 
   aEvent->currentTarget = nullptr;
 
-  if (!hasListener) {
+  if (mIsMainThreadELM && !hasListener) {
     mNoListenerForEvent = aEvent->message;
     mNoListenerForEventAtom = aEvent->userType;
   }

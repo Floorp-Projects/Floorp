@@ -7,7 +7,7 @@
 #include "jit/BytecodeAnalysis.h"
 
 #include "jsopcode.h"
-
+#include "jit/IonSpewer.h"
 #include "jsopcodeinlines.h"
 
 using namespace js;

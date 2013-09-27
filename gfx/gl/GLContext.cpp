@@ -2085,6 +2085,23 @@ GLContext::ReadScreenIntoImageSurface(gfxImageSurface* dest)
     ReadPixelsIntoImageSurface(dest);
 }
 
+TemporaryRef<SourceSurface>
+GLContext::ReadPixelsToSourceSurface(const gfx::IntSize &aSize)
+{
+    // XXX we should do this properly one day without using the gfxImageSurface
+    RefPtr<DataSourceSurface> dataSourceSurface =
+        Factory::CreateDataSourceSurface(aSize, gfx::FORMAT_B8G8R8A8);
+    nsRefPtr<gfxImageSurface> surf =
+        new gfxImageSurface(dataSourceSurface->GetData(),
+                            gfxIntSize(aSize.width, aSize.height),
+                            dataSourceSurface->Stride(),
+                            gfxImageFormatARGB32);
+    ReadPixelsIntoImageSurface(surf);
+    dataSourceSurface->MarkDirty();
+
+    return dataSourceSurface;
+}
+
 void
 GLContext::ReadPixelsIntoImageSurface(gfxImageSurface* dest)
 {

@@ -7,7 +7,6 @@
 #ifndef jit_UnreachableCodeElimination_h
 #define jit_UnreachableCodeElimination_h
 
-#include "jit/MIR.h"
 #include "jit/MIRGraph.h"
 
 namespace js {

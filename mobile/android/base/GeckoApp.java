@@ -2132,8 +2132,6 @@ abstract public class GeckoApp
             Intent intent = new Intent(action);
             intent.setClassName(AppConstants.ANDROID_PACKAGE_NAME, RESTARTER_CLASS);
             /* TODO: addEnvToIntent(intent); */
-            intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK |
-                            Intent.FLAG_ACTIVITY_MULTIPLE_TASK);
             if (args != null)
                 intent.putExtra("args", args);
             intent.putExtra("didRestart", true);

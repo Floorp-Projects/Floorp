@@ -15,11 +15,10 @@
 #include "nsCOMPtr.h"
 #include "nsString.h"
 
-class nsIApplicationReputationListener;
-class nsIChannel;
-class nsIObserverService;
 class nsIRequest;
-class PRLogModuleInfo;
+class nsIUrlClassifierDBService;
+class nsIScriptSecurityManager;
+class PendingLookup;
 
 class ApplicationReputationService MOZ_FINAL :
   public nsIApplicationReputationService {
@@ -35,10 +34,16 @@ private:
    * Global singleton object for holding this factory service.
    */
   static ApplicationReputationService* gApplicationReputationService;
-
+  /**
+   * Keeps track of services used to query the local database of URLs.
+   */
+  nsCOMPtr<nsIUrlClassifierDBService> mDBService;
+  nsCOMPtr<nsIScriptSecurityManager> mSecurityManager;
+  /**
+   * This is a singleton, so disallow construction.
+   */
   ApplicationReputationService();
   ~ApplicationReputationService();
-
   /**
    * Wrapper function for QueryReputation that makes it easier to ensure the
    * callback is called.
@@ -46,53 +51,4 @@ private:
   nsresult QueryReputationInternal(nsIApplicationReputationQuery* aQuery,
                                    nsIApplicationReputationCallback* aCallback);
 };
-
-/**
- * This class implements nsIApplicationReputation. See the
- * nsIApplicationReputation.idl for details. ApplicationReputation also
- * implements nsIStreamListener because it calls nsIChannel->AsyncOpen.
- */
-class ApplicationReputationQuery MOZ_FINAL :
-  public nsIApplicationReputationQuery,
-  public nsIStreamListener {
-public:
-  NS_DECL_ISUPPORTS
-  NS_DECL_NSIREQUESTOBSERVER
-  NS_DECL_NSISTREAMLISTENER
-  NS_DECL_NSIAPPLICATIONREPUTATIONQUERY
-
-  ApplicationReputationQuery();
-  ~ApplicationReputationQuery();
-
-private:
-  /**
-   * Corresponding member variables for the attributes in the IDL.
-   */
-  nsString mSuggestedFileName;
-  nsCOMPtr<nsIURI> mURI;
-  uint32_t mFileSize;
-  nsCString mSha256Hash;
-
-  /**
-   * The callback for the request.
-   */
-  nsCOMPtr<nsIApplicationReputationCallback> mCallback;
-
-  /**
-   * The response from the application reputation query. This is read in chunks
-   * as part of our nsIStreamListener implementation and may contain embedded
-   * NULLs.
-   */
-  nsCString mResponse;
-
-  /**
-   * Wrapper function for nsIStreamListener.onStopRequest to make it easy to
-   * guarantee calling the callback
-   */
-  nsresult OnStopRequestInternal(nsIRequest *aRequest,
-                                 nsISupports *aContext,
-                                 nsresult aResult,
-                                 bool* aShouldBlock);
-};
-
 #endif /* ApplicationReputation_h__ */

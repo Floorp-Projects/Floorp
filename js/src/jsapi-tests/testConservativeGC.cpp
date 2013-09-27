@@ -9,8 +9,6 @@
 #include "jsapi-tests/tests.h"
 #include "vm/String.h"
 
-#include "jsobjinlines.h"
-
 BEGIN_TEST(testConservativeGC)
 {
     JS::RootedValue v2(cx);

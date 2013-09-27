@@ -8,6 +8,7 @@
 
 #include "mozilla/DebugOnly.h"
 
+#include "jit/IonCaches.h"
 #include "jit/IonMacroAssembler.h"
 #include "jit/IonSpewer.h"
 #include "jit/MIR.h"

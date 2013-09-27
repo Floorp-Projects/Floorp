@@ -23,13 +23,13 @@ using namespace js;
 FixedHeapPtr<PropertyName> ParallelArrayObject::ctorNames[NumCtors];
 
 const JSFunctionSpec ParallelArrayObject::methods[] = {
-    { "map",       JSOP_NULLWRAPPER, 2, 0, "ParallelArrayMap"       },
-    { "reduce",    JSOP_NULLWRAPPER, 2, 0, "ParallelArrayReduce"    },
-    { "scan",      JSOP_NULLWRAPPER, 2, 0, "ParallelArrayScan"      },
-    { "scatter",   JSOP_NULLWRAPPER, 5, 0, "ParallelArrayScatter"   },
-    { "filter",    JSOP_NULLWRAPPER, 2, 0, "ParallelArrayFilter"    },
-    { "partition", JSOP_NULLWRAPPER, 1, 0, "ParallelArrayPartition" },
-    { "flatten",   JSOP_NULLWRAPPER, 0, 0, "ParallelArrayFlatten" },
+    JS_SELF_HOSTED_FN("map",       "ParallelArrayMap",       2, 0),
+    JS_SELF_HOSTED_FN("reduce",    "ParallelArrayReduce",    2, 0),
+    JS_SELF_HOSTED_FN("scan",      "ParallelArrayScan",      2, 0),
+    JS_SELF_HOSTED_FN("scatter",   "ParallelArrayScatter",   5, 0),
+    JS_SELF_HOSTED_FN("filter",    "ParallelArrayFilter",    2, 0),
+    JS_SELF_HOSTED_FN("partition", "ParallelArrayPartition", 1, 0),
+    JS_SELF_HOSTED_FN("flatten",   "ParallelArrayFlatten",   0, 0),
 
     // FIXME #838906. Note that `get()` is not currently defined on this table but
     // rather is assigned to each instance of ParallelArray as an own
@@ -38,9 +38,9 @@ const JSFunctionSpec ParallelArrayObject::methods[] = {
     // receiver.  In the future we can improve this by (1) extending
     // TI to track the dimensionality of the receiver and (2) using a
     // hint to aggressively inline calls to get().
-    // { "get",      JSOP_NULLWRAPPER, 1, 0, "ParallelArrayGet" },
+    // JS_SELF_HOSTED_FN("get", "ParallelArrayGet", 1, 0),
 
-    { "toString", JSOP_NULLWRAPPER, 0, 0, "ParallelArrayToString" },
+    JS_SELF_HOSTED_FN("toString",  "ParallelArrayToString",  0, 0),
     JS_FS_END
 };
 

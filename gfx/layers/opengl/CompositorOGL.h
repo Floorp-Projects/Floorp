@@ -10,11 +10,10 @@
 #include "GLDefs.h"                     // for GLuint, LOCAL_GL_TEXTURE_2D, etc
 #include "LayerManagerOGLProgram.h"     // for ShaderProgramOGL, etc
 #include "Units.h"                      // for ScreenPoint
-#include "gfxContext.h"                 // for gfxContext
-#include "gfxPoint.h"                   // for gfxIntSize
 #include "mozilla/Assertions.h"         // for MOZ_ASSERT, etc
 #include "mozilla/Attributes.h"         // for MOZ_OVERRIDE, MOZ_FINAL
 #include "mozilla/RefPtr.h"             // for TemporaryRef, RefPtr
+#include "mozilla/gfx/2D.h"             // for DrawTarget
 #include "mozilla/gfx/BaseSize.h"       // for BaseSize
 #include "mozilla/gfx/Point.h"          // for IntSize, Point
 #include "mozilla/gfx/Rect.h"           // for Rect, IntRect
@@ -25,7 +24,6 @@
 #include "nsAutoPtr.h"                  // for nsRefPtr, nsAutoPtr
 #include "nsCOMPtr.h"                   // for already_AddRefed
 #include "nsDebug.h"                    // for NS_ASSERTION, NS_WARNING
-#include "nsISupportsImpl.h"            // for gfxContext::AddRef, etc
 #include "nsSize.h"                     // for nsIntSize
 #include "nsTArray.h"                   // for nsAutoTArray, nsTArray, etc
 #include "nsThreadUtils.h"              // for nsRunnable
@@ -106,12 +104,12 @@ public:
 
   virtual bool SupportsPartialTextureUpdate() MOZ_OVERRIDE;
 
-  virtual bool CanUseCanvasLayerForSize(const gfxIntSize &aSize) MOZ_OVERRIDE
+  virtual bool CanUseCanvasLayerForSize(const gfx::IntSize &aSize) MOZ_OVERRIDE
   {
     if (!mGLContext)
       return false;
     int32_t maxSize = GetMaxTextureSize();
-    return aSize <= gfxIntSize(maxSize, maxSize);
+    return aSize <= gfx::IntSize(maxSize, maxSize);
   }
 
   virtual int32_t GetMaxTextureSize() const MOZ_OVERRIDE;
@@ -128,7 +126,7 @@ public:
 
   virtual void MakeCurrent(MakeCurrentFlags aFlags = 0) MOZ_OVERRIDE;
 
-  virtual void SetTargetContext(gfxContext* aTarget) MOZ_OVERRIDE
+  virtual void SetTargetContext(gfx::DrawTarget* aTarget) MOZ_OVERRIDE
   {
     mTarget = aTarget;
   }
@@ -171,7 +169,7 @@ private:
   /** 
    * Context target, nullptr when drawing directly to our swap chain.
    */
-  nsRefPtr<gfxContext> mTarget;
+  RefPtr<gfx::DrawTarget> mTarget;
 
   /** Widget associated with this compositor */
   nsIWidget *mWidget;
@@ -300,7 +298,7 @@ private:
    * Copies the content of our backbuffer to the set transaction target.
    * Does not restore the target FBO, so only call from EndFrame.
    */
-  void CopyToTarget(gfxContext *aTarget, const gfxMatrix& aWorldMatrix);
+  void CopyToTarget(gfx::DrawTarget* aTarget, const gfxMatrix& aWorldMatrix);
 
   /**
    * Records the passed frame timestamp and returns the current estimated FPS.

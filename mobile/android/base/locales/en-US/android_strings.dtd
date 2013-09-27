@@ -280,7 +280,6 @@ size. -->
 <!ENTITY home_last_tabs_empty "Your recent tabs show up here.">
 <!ENTITY home_most_recent_title "Most recent">
 <!ENTITY home_most_recent_empty "Websites you visited most recently show up here.">
-<!ENTITY home_most_visited_title "Most visited">
 <!ENTITY home_reading_list_empty "Articles you save for later show up here.">
 <!-- Localization note (home_reading_list_hint): The "TIP" string is synonymous to "hint", "clue", etc. This string is displayed
      as an advisory message on how to add content to the reading list when the reading list empty.
@@ -291,7 +290,6 @@ size. -->
      as alternate text for accessibility. It is not visible in the UI. -->
 <!ENTITY home_reading_list_hint_accessible "TIP: Save articles to your reading list by long pressing the reader mode button when it appears in the title bar.">
 
-<!ENTITY home_most_visited_empty "Websites you visit most frequently show up here.">
 <!ENTITY pin_site_dialog_hint "Enter a search keyword">
 
 <!ENTITY filepicker_title "Choose File">

@@ -7,9 +7,7 @@
 #ifndef jit_ValueNumbering_h
 #define jit_ValueNumbering_h
 
-#include "jit/CompileInfo.h"
 #include "jit/MIR.h"
-#include "jit/MIRGraph.h"
 
 namespace js {
 namespace jit {
