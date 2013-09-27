@@ -89,18 +89,6 @@ public:
 class TextureClientData {
 public:
   virtual void DeallocateSharedData(ISurfaceAllocator* allocator) = 0;
-
-  /**
-   * Called just before telling the host side to deallocate the data.
-   *
-   * The reference to the shared data must be dropped without doing the deallocation
-   * because it is the host side that will deallocate the data.
-   * If there is a memory reproting mechanism in place for this type of data,
-   * the memory should be reported as deallocated. After this call, nothing on
-   * the client process should still have a reference to the shared data.
-   */
-  virtual void ForgetSharedData() = 0;
-
   virtual ~TextureClientData() {}
 };
 
