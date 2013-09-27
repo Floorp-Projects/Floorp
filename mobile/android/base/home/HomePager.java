@@ -52,6 +52,7 @@ public class HomePager extends ViewPager {
     static final String LIST_TAG_TOP_SITES = "top_sites";
     static final String LIST_TAG_MOST_RECENT = "most_recent";
     static final String LIST_TAG_LAST_TABS = "last_tabs";
+    static final String LIST_TAG_BROWSER_SEARCH = "browser_search";
 
     private EnumMap<Page, Fragment> mPages = new EnumMap<Page, Fragment>(Page.class);
 

@@ -185,8 +185,18 @@ function BrowserTabList(aConnection)
 BrowserTabList.prototype.constructor = BrowserTabList;
 
 
+/**
+ * Get the selected browser for the given navigator:browser window.
+ * @private
+ * @param aWindow nsIChromeWindow
+ *        The navigator:browser window for which you want the selected browser.
+ * @return nsIDOMElement|null
+ *         The currently selected xul:browser element, if any. Note that the
+ *         browser window might not be loaded yet - the function will return
+ *         |null| in such cases.
+ */
 BrowserTabList.prototype._getSelectedBrowser = function(aWindow) {
-  return aWindow.gBrowser.selectedBrowser;
+  return aWindow.gBrowser ? aWindow.gBrowser.selectedBrowser : null;
 };
 
 BrowserTabList.prototype._getChildren = function(aWindow) {
@@ -209,6 +219,9 @@ BrowserTabList.prototype.getList = function() {
   // Iterate over all navigator:browser XUL windows.
   for (let win of allAppShellDOMWindows(DebuggerServer.chromeWindowType)) {
     let selectedBrowser = this._getSelectedBrowser(win);
+    if (!selectedBrowser) {
+      continue;
+    }
 
     // For each tab in this XUL window, ensure that we have an actor for
     // it, reusing existing actors where possible. We actually iterate

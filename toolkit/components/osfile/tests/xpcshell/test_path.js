@@ -88,6 +88,21 @@ function run_test()
   do_check_eq(Win.winGetDrive("c:\\abc"), "c:");
   do_check_eq(Win.winGetDrive("c:\\abc\\d\\e\\f\\g"), "c:");
 
+  do_print("Forwardslash-separated, no drive");
+  do_check_eq(Win.normalize("/a/b/c"), "\\a\\b\\c");
+  do_check_eq(Win.normalize("/a/b////c"), "\\a\\b\\c");
+  do_check_eq(Win.normalize("/a/b/c///"), "\\a\\b\\c");
+  do_check_eq(Win.normalize("/a/b/c/../../../d/e/f"), "\\d\\e\\f");
+  do_check_eq(Win.normalize("a/b/c/../../../d/e/f"), "d\\e\\f");
+
+  do_print("Forwardslash-separated, with a drive");
+  do_check_eq(Win.normalize("c:/a/b/c"), "c:\\a\\b\\c");
+  do_check_eq(Win.normalize("c:/a/b////c"), "c:\\a\\b\\c");
+  do_check_eq(Win.normalize("c:////a/b/c"), "c:\\a\\b\\c");
+  do_check_eq(Win.normalize("c:/a/b/c///"), "c:\\a\\b\\c");
+  do_check_eq(Win.normalize("c:/a/b/c/../../../d/e/f"), "c:\\d\\e\\f");
+  do_check_eq(Win.normalize("c:a/b/c/../../../d/e/f"), "c:d\\e\\f");
+
   do_print("Backslash-separated, UNC-style");
   do_check_eq(Win.basename("\\\\a\\b"), "b");
   do_check_eq(Win.basename("\\\\a\\b\\"), "");

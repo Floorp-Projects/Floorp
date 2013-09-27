@@ -35,7 +35,6 @@
 #include "nsXPIDLString.h"
 #include "nsReadableUtils.h"
 #include "nsGkAtoms.h"
-#include "nsGUIEvent.h"
 #include "nsIXPConnect.h"
 #include "nsIDOMScriptObjectFactory.h"
 #include "nsDOMCID.h"
@@ -45,6 +44,7 @@
 #include "nsXBLSerialize.h"
 #include "nsEventDispatcher.h"
 #include "nsJSUtils.h"
+#include "mozilla/BasicEvents.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/dom/EventHandlerBinding.h"
 
@@ -911,7 +911,7 @@ nsXBLPrototypeHandler::ModifiersMatchMask(nsIDOMUIEvent* aEvent,
                                           bool aIgnoreShiftKey)
 {
   nsEvent* event = aEvent->GetInternalNSEvent();
-  NS_ENSURE_TRUE(event && NS_IS_INPUT_EVENT(event), false);
+  NS_ENSURE_TRUE(event && event->IsInputDerivedEvent(), false);
   nsInputEvent* inputEvent = static_cast<nsInputEvent*>(event);
 
   if (mKeyMask & cMetaMask) {

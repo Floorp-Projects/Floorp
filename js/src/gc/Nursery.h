@@ -70,7 +70,7 @@ class Nursery
     }
 
     /*
-     * Allocate and return a pointer to a new GC thing. Returns NULL if the
+     * Allocate and return a pointer to a new GC thing. Returns nullptr if the
      * Nursery is full.
      */
     void *allocate(size_t size);

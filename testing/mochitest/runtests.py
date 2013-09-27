@@ -1,4 +1,3 @@
-#
 # This Source Code Form is subject to the terms of the Mozilla Public
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
@@ -887,8 +886,13 @@ class Mochitest(MochitestUtilsMixin):
     # create mozrunner instance and start the system under test process
     self.lastTestSeen = self.test_name
     startTime = datetime.now()
-    runner_cls = mozrunner.runners.get(mozinfo.info.get('appname', 'firefox'),
-                                       mozrunner.Runner)
+
+    # b2g desktop requires FirefoxRunner even though appname is b2g
+    if mozinfo.info.get('appname') == 'b2g' and mozinfo.info.get('toolkit') != 'gonk':
+        runner_cls = mozrunner.FirefoxRunner
+    else:
+        runner_cls = mozrunner.runners.get(mozinfo.info.get('appname', 'firefox'),
+                                           mozrunner.Runner)
     runner = runner_cls(profile=self.profile,
                         binary=cmd,
                         cmdargs=args,
@@ -1061,7 +1065,7 @@ class Mochitest(MochitestUtilsMixin):
       self.cleanup(manifest, options)
     return status
 
-  def handleTimeout(self, timeout, proc, utilityPath, debuggerInfo, browserProcesssId):
+  def handleTimeout(self, timeout, proc, utilityPath, debuggerInfo, browserProcessId):
     """handle process output timeout"""
     # TODO: bug 913975 : _processOutput should call self.processOutputLine one more time one timeout (I think)
     log.info("TEST-UNEXPECTED-FAIL | %s | application timed out after %d seconds with no output", self.lastTestSeen, int(timeout))

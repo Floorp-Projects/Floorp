@@ -44,7 +44,10 @@
 #include "nsGkAtoms.h"
 #include "wdgtos2rc.h"
 #include "nsIDOMWheelEvent.h"
+#include "mozilla/MiscEvents.h"
+#include "mozilla/MouseEvents.h"
 #include "mozilla/Preferences.h"
+#include "mozilla/TextEvents.h"
 #include <os2im.h>
 #include <algorithm>    // std::max
 using namespace mozilla;
@@ -1475,7 +1478,7 @@ HBITMAP nsWindow::CreateBitmapRGB(uint8_t* aImageData,
 //-----------------------------------------------------------------------------
 // Create a monochrome AND/XOR bitmap from 0, 1, or 8-bit alpha data.
 
-HBITMAP nsWindow::CreateTransparencyMask(gfxASurface::gfxImageFormat format,
+HBITMAP nsWindow::CreateTransparencyMask(gfxImageFormat format,
                                          uint8_t* aImageData,
                                          uint32_t aWidth,
                                          uint32_t aHeight)
@@ -1492,7 +1495,7 @@ HBITMAP nsWindow::CreateTransparencyMask(gfxASurface::gfxImageFormat format,
 
   // Non-alpha formats are already taken care of
   // by initializing the XOR and AND masks to zero
-  if (format == gfxASurface::ImageFormatARGB32) {
+  if (format == gfxImageFormatARGB32) {
 
     // make the AND mask the inverse of the 8-bit alpha data
     int32_t* pSrc = (int32_t*)aImageData;

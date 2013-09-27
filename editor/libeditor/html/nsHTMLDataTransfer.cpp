@@ -26,7 +26,6 @@
 #include "nsEditor.h"
 #include "nsEditorUtils.h"
 #include "nsError.h"
-#include "nsGUIEvent.h"
 #include "nsGkAtoms.h"
 #include "nsHTMLEditUtils.h"
 #include "nsHTMLEditor.h"

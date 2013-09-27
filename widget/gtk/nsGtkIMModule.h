@@ -14,8 +14,8 @@
 #include "nsString.h"
 #include "nsAutoPtr.h"
 #include "nsTArray.h"
-#include "nsGUIEvent.h"
 #include "nsIWidget.h"
+#include "mozilla/EventForwards.h"
 
 class nsWindow;
 

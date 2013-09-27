@@ -21,6 +21,7 @@
 #include "nsCOMArray.h"
 #include "nsThreadUtils.h"
 #include "mozilla/Mutex.h"
+#include "mozilla/TimeStamp.h"
 
 static inline uint32_t
 PRTimeToSeconds(PRTime t_usec)
@@ -293,6 +294,8 @@ private:
 
   int64_t mPredictedDataSize;
   uint32_t mDataSize; // ???
+
+  mozilla::TimeStamp mLoadStart;
 };
 
 } // net

@@ -14,10 +14,10 @@
 #include "nsPresContext.h"
 #include "nsIDocShellTreeItem.h"
 #include "nsPIDOMWindow.h"
-#include "nsGUIEvent.h"
 #include "nsEventDispatcher.h"
 #include "nsDisplayList.h"
 #include "nsContentUtils.h"
+#include "mozilla/MouseEvents.h"
 
 using namespace mozilla;
 
@@ -156,7 +156,7 @@ nsTitleBarFrame::HandleEvent(nsPresContext* aPresContext,
 
 
     case NS_MOUSE_CLICK:
-      if (NS_IS_MOUSE_LEFT_CLICK(aEvent))
+      if (aEvent->IsLeftClickEvent())
       {
         MouseClicked(aPresContext, aEvent);
       }

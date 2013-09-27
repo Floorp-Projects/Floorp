@@ -1,9 +1,5 @@
 /***********************************************************************
-Copyright (c) 2006-2012 IETF Trust and Skype Limited. All rights reserved.
-
-This file is extracted from RFC6716. Please see that RFC for additional
-information.
-
+Copyright (c) 2006-2011, Skype Limited. All rights reserved.
 Redistribution and use in source and binary forms, with or without
 modification, are permitted provided that the following conditions
 are met:
@@ -16,7 +12,7 @@ documentation and/or other materials provided with the distribution.
 names of specific contributors, may be used to endorse or promote
 products derived from this software without specific prior written
 permission.
-THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS “AS IS”
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
 AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
 IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
 ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE
@@ -34,6 +30,7 @@ POSSIBILITY OF SUCH DAMAGE.
 #endif
 #include "API.h"
 #include "main.h"
+#include "stack_alloc.h"
 
 /************************/
 /* Decoder Super Struct */
@@ -72,6 +69,9 @@ opus_int silk_InitDecoder(                              /* O    Returns error co
     for( n = 0; n < DECODER_NUM_CHANNELS; n++ ) {
         ret  = silk_init_decoder( &channel_state[ n ] );
     }
+    silk_memset(&((silk_decoder *)decState)->sStereo, 0, sizeof(((silk_decoder *)decState)->sStereo));
+    /* Not strictly needed, but it's cleaner that way */
+    ((silk_decoder *)decState)->prev_decode_only_middle = 0;
 
     return ret;
 }
@@ -89,14 +89,18 @@ opus_int silk_Decode(                                   /* O    Returns error co
 {
     opus_int   i, n, decode_only_middle = 0, ret = SILK_NO_ERROR;
     opus_int32 nSamplesOutDec, LBRR_symbol;
-    opus_int16 samplesOut1_tmp[ 2 ][ MAX_FS_KHZ * MAX_FRAME_LENGTH_MS + 2 ];
-    opus_int16 samplesOut2_tmp[ MAX_API_FS_KHZ * MAX_FRAME_LENGTH_MS ];
+    opus_int16 *samplesOut1_tmp[ 2 ];
+    VARDECL( opus_int16, samplesOut1_tmp_storage );
+    VARDECL( opus_int16, samplesOut2_tmp );
     opus_int32 MS_pred_Q13[ 2 ] = { 0 };
     opus_int16 *resample_out_ptr;
     silk_decoder *psDec = ( silk_decoder * )decState;
     silk_decoder_state *channel_state = psDec->channel_state;
     opus_int has_side;
     opus_int stereo_to_mono;
+    SAVE_STACK;
+
+    silk_assert( decControl->nChannelsInternal == 1 || decControl->nChannelsInternal == 2 );
 
     /**********************************/
     /* Test if first frame in payload */
@@ -136,11 +140,13 @@ opus_int silk_Decode(                                   /* O    Returns error co
                 channel_state[ n ].nb_subfr = 4;
             } else {
                 silk_assert( 0 );
+                RESTORE_STACK;
                 return SILK_DEC_INVALID_FRAME_SIZE;
             }
             fs_kHz_dec = ( decControl->internalSampleRate >> 10 ) + 1;
             if( fs_kHz_dec != 8 && fs_kHz_dec != 12 && fs_kHz_dec != 16 ) {
                 silk_assert( 0 );
+                RESTORE_STACK;
                 return SILK_DEC_INVALID_SAMPLING_FREQUENCY;
             }
             ret += silk_decoder_set_fs( &channel_state[ n ], fs_kHz_dec, decControl->API_sampleRate );
@@ -155,8 +161,9 @@ opus_int silk_Decode(                                   /* O    Returns error co
     psDec->nChannelsAPI      = decControl->nChannelsAPI;
     psDec->nChannelsInternal = decControl->nChannelsInternal;
 
-    if( decControl->API_sampleRate > MAX_API_FS_KHZ * 1000 || decControl->API_sampleRate < 8000 ) {
+    if( decControl->API_sampleRate > (opus_int32)MAX_API_FS_KHZ * 1000 || decControl->API_sampleRate < 8000 ) {
         ret = SILK_DEC_INVALID_SAMPLING_FREQUENCY;
+        RESTORE_STACK;
         return( ret );
     }
 
@@ -244,6 +251,14 @@ opus_int silk_Decode(                                   /* O    Returns error co
         psDec->channel_state[ 1 ].first_frame_after_reset = 1;
     }
 
+    ALLOC( samplesOut1_tmp_storage,
+           decControl->nChannelsInternal*(
+               channel_state[ 0 ].frame_length + 2 ),
+           opus_int16 );
+    samplesOut1_tmp[ 0 ] = samplesOut1_tmp_storage;
+    samplesOut1_tmp[ 1 ] = samplesOut1_tmp_storage
+                           + channel_state[ 0 ].frame_length + 2;
+
     if( lostFlag == FLAG_DECODE_NORMAL ) {
         has_side = !decode_only_middle;
     } else {
@@ -289,6 +304,8 @@ opus_int silk_Decode(                                   /* O    Returns error co
     *nSamplesOut = silk_DIV32( nSamplesOutDec * decControl->API_sampleRate, silk_SMULBB( channel_state[ 0 ].fs_kHz, 1000 ) );
 
     /* Set up pointers to temp buffers */
+    ALLOC( samplesOut2_tmp,
+           decControl->nChannelsAPI == 2 ? *nSamplesOut : 0, opus_int16 );
     if( decControl->nChannelsAPI == 2 ) {
         resample_out_ptr = samplesOut2_tmp;
     } else {
@@ -341,9 +358,11 @@ opus_int silk_Decode(                                   /* O    Returns error co
     } else {
        psDec->prev_decode_only_middle = decode_only_middle;
     }
+    RESTORE_STACK;
     return ret;
 }
 
+#if 0
 /* Getting table of contents for a packet */
 opus_int silk_get_TOC(
     const opus_uint8                *payload,           /* I    Payload data                                */
@@ -375,3 +394,4 @@ opus_int silk_get_TOC(
 
     return ret;
 }
+#endif

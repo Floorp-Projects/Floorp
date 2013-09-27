@@ -78,7 +78,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=830258
     };
     yield undefined;
 
-    var request = navigator.mozApps.mgmt.uninstall(app2);
+    request = navigator.mozApps.mgmt.uninstall(app2);
     request.onsuccess = function() {
       ok(true, "Succeed to uninstall the app2 as expected");
       continueTest();

@@ -9,13 +9,13 @@
 #include "nsCxPusher.h"
 #include "nsIXPConnect.h"
 #include "nsJSUtils.h"
-#include "nsGUIEvent.h"
 #include "nsEventDispatcher.h"
 #include "nsIJSEventListener.h"
 #ifdef MOZ_JSDEBUGGER
 #include "jsdIDebuggerService.h"
 #endif
 #include "nsDOMClassInfoID.h"
+#include "mozilla/BasicEvents.h"
 #include "mozilla/Maybe.h"
 #include "nsServiceManagerUtils.h"
 
@@ -192,7 +192,7 @@ nsEventListenerService::GetEventTargetChainFor(nsIDOMEventTarget* aEventTarget,
   *aCount = 0;
   *aOutArray = nullptr;
   NS_ENSURE_ARG(aEventTarget);
-  nsEvent event(true, NS_EVENT_TYPE_NULL);
+  nsEvent event(true, NS_EVENT_NULL);
   nsCOMArray<EventTarget> targets;
   nsresult rv = nsEventDispatcher::Dispatch(aEventTarget, nullptr, &event,
                                             nullptr, nullptr, nullptr, &targets);

@@ -19,7 +19,6 @@
 #include "nsEventStates.h"
 #include "nsFormSubmission.h"
 #include "nsGkAtoms.h"
-#include "nsGUIEvent.h"
 #include "nsIComboboxControlFrame.h"
 #include "nsIDocument.h"
 #include "nsIDOMHTMLOptGroupElement.h"

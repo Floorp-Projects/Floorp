@@ -3,6 +3,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include "mozilla/MouseEvents.h"
 #include "mozilla/Util.h"
 #include "nsAString.h"
 #include "nsCOMPtr.h"
@@ -13,7 +14,6 @@
 #include "nsEditor.h"
 #include "nsEditorUtils.h"
 #include "nsError.h"
-#include "nsGUIEvent.h"
 #include "nsIClipboard.h"
 #include "nsIContent.h"
 #include "nsIDOMDataTransfer.h"

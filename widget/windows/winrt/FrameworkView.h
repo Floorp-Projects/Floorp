@@ -5,7 +5,6 @@
 
 #pragma once
 
-#include "nsGUIEvent.h"
 #include "MetroWidget.h"
 #include "MetroInput.h"
 #include "gfxWindowsPlatform.h"
@@ -195,7 +194,6 @@ private:
   static Rect sKeyboardRect;
   bool mWinVisible;
   bool mWinActiveState;
-  ApplicationViewState mViewState;
 };
 
 } } }

@@ -22,6 +22,7 @@
 #include <android/log.h>
 #include "nsIObserverService.h"
 #include "mozilla/Services.h"
+#include "nsThreadUtils.h"
 
 #ifdef MOZ_CRASHREPORTER
 #include "nsICrashReporter.h"

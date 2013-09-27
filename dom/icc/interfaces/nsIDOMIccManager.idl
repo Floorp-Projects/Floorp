@@ -296,10 +296,11 @@ interface nsIDOMMozIccManager : nsIDOMEventTarget
   /**
    * Indicates the state of the device's ICC card.
    *
-   * Possible values: null, 'unknown', 'absent', 'pinRequired', 'pukRequired',
-   * 'personalizationInProgress', 'networkLocked', 'corporateLocked',
-   * 'serviceProviderLocked', 'networkPukRequired', 'corporatePukRequired',
-   * 'serviceProviderPukRequired', 'personalizationReady', 'ready'.
+   * Possible values: null, 'illegal', 'unknown', 'absent', 'pinRequired',
+   * 'pukRequired', 'personalizationInProgress', 'networkLocked',
+   * 'corporateLocked', 'serviceProviderLocked', 'networkPukRequired',
+   * 'corporatePukRequired', 'serviceProviderPukRequired',
+   * 'personalizationReady', 'ready'.
    */
   readonly attribute DOMString cardState;
 

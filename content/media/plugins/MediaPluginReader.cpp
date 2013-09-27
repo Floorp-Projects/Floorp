@@ -363,7 +363,7 @@ MediaPluginReader::ImageBufferCallback::operator()(size_t aWidth, size_t aHeight
     case MPAPI::RGB565:
       rgbImage = mozilla::layers::CreateSharedRGBImage(mImageContainer,
                                                        nsIntSize(aWidth, aHeight),
-                                                       gfxASurface::ImageFormatRGB16_565);
+                                                       gfxImageFormatRGB16_565);
       if (!rgbImage) {
         NS_WARNING("Could not create rgb image");
         return nullptr;

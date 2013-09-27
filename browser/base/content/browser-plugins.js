@@ -316,8 +316,21 @@ var gPluginHandler = {
     // Hide the in-content UI if it's too big. The crashed plugin handler already did this.
     if (eventType != "PluginCrashed" && eventType != "PluginRemoved") {
       let overlay = this.getPluginUI(plugin, "main");
-      if (overlay != null && this.isTooSmall(plugin, overlay))
-        overlay.style.visibility = "hidden";
+      if (overlay != null) {
+        if (!this.isTooSmall(plugin, overlay))
+          overlay.style.visibility = "visible";
+
+        plugin.addEventListener("overflow", function(event) {
+          overlay.style.visibility = "hidden";
+        });
+        plugin.addEventListener("underflow", function(event) {
+          // this is triggered if only one dimension underflows,
+          // the other dimension might still overflow
+          if (!gPluginHandler.isTooSmall(plugin, overlay)) {
+            overlay.style.visibility = "visible";
+          }
+        });
+      }
     }
 
     // Only show the notification after we've done the isTooSmall check, so
@@ -411,7 +424,7 @@ var gPluginHandler = {
   // Callback for user clicking on the link in a click-to-play plugin
   // (where the plugin has an update)
   openPluginUpdatePage: function (aEvent) {
-    openURL(Services.urlFormatter.formatURLPref("plugins.update.url"));
+    openUILinkIn(Services.urlFormatter.formatURLPref("plugins.update.url"), "tab");
   },
 
 #ifdef MOZ_CRASHREPORTER
@@ -791,7 +804,9 @@ var gPluginHandler = {
     let contentDoc = aBrowser.contentDocument;
     let cwu = contentWindow.QueryInterface(Ci.nsIInterfaceRequestor)
                            .getInterface(Ci.nsIDOMWindowUtils);
-    let plugins = cwu.plugins;
+    // cwu.plugins may contain non-plugin <object>s, filter them out
+    let plugins = cwu.plugins.filter((plugin) =>
+      plugin.getContentTypeForMIMEType(plugin.actualType) == Ci.nsIObjectLoadingContent.TYPE_PLUGIN);
     if (plugins.length == 0) {
       if (notification) {
         PopupNotifications.remove(notification);

@@ -695,7 +695,7 @@ class AssemblerX86Shared
     void j(Condition cond, RepatchLabel *label) { jSrc(cond, label); }
     void jmp(RepatchLabel *label) { jmpSrc(label); }
 
-    void jmp(const Operand &op){
+    void jmp(const Operand &op) {
         switch (op.kind()) {
           case Operand::MEM_REG_DISP:
             masm.jmp_m(op.disp(), op.base());
@@ -1165,6 +1165,9 @@ class AssemblerX86Shared
     }
     void push(const Register &src) {
         masm.push_r(src.code());
+    }
+    void push(const Address &src) {
+        masm.push_m(src.offset, src.base.code());
     }
 
     void pop(const Operand &src) {

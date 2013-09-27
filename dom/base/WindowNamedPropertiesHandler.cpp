@@ -14,6 +14,59 @@
 namespace mozilla {
 namespace dom {
 
+static bool
+ShouldExposeChildWindow(nsString& aNameBeingResolved, nsIDOMWindow *aChild)
+{
+  // If we're same-origin with the child, go ahead and expose it.
+  nsCOMPtr<nsIScriptObjectPrincipal> sop = do_QueryInterface(aChild);
+  NS_ENSURE_TRUE(sop, false);
+  if (nsContentUtils::GetSubjectPrincipal()->Equals(sop->GetPrincipal())) {
+    return true;
+  }
+
+  // If we're not same-origin, expose it _only_ if the name of the browsing
+  // context matches the 'name' attribute of the frame element in the parent.
+  // The motivations behind this heuristic are worth explaining here.
+  //
+  // Historically, all UAs supported global named access to any child browsing
+  // context (that is to say, window.dolske returns a child frame where either
+  // the "name" attribute on the frame element was set to "dolske", or where
+  // the child explicitly set window.name = "dolske").
+  //
+  // This is problematic because it allows possibly-malicious and unrelated
+  // cross-origin subframes to pollute the global namespace of their parent in
+  // unpredictable ways (see bug 860494). This is also problematic for browser
+  // engines like Servo that want to run cross-origin script on different
+  // threads.
+  //
+  // The naive solution here would be to filter out any cross-origin subframes
+  // obtained when doing named lookup in global scope. But that is unlikely to
+  // be web-compatible, since it will break named access for consumers that do
+  // <iframe name="dolske" src="http://cross-origin.com/sadtrombone.html"> and
+  // expect to be able to access the cross-origin subframe via named lookup on
+  // the global.
+  //
+  // The optimal behavior would be to do the following:
+  // (a) Look for any child browsing context with name="dolske".
+  // (b) If the result is cross-origin, null it out.
+  // (c) If we have null, look for a frame element whose 'name' attribute is
+  //     "dolske".
+  //
+  // Unfortunately, (c) would require some engineering effort to be performant
+  // in Gecko, and probably in other UAs as well. So we go with a simpler
+  // approximation of the above. This approximation will only break sites that
+  // rely on their cross-origin subframes setting window.name to a known value,
+  // which is unlikely to be very common. And while it does introduce a
+  // dependency on cross-origin state when doing global lookups, it doesn't
+  // allow the child to arbitrarily pollute the parent namespace, and requires
+  // cross-origin communication only in a limited set of cases that can be
+  // computed independently by the parent.
+  nsCOMPtr<nsPIDOMWindow> piWin = do_QueryInterface(aChild);
+  NS_ENSURE_TRUE(piWin, false);
+  return piWin->GetFrameElementInternal()->AttrValueIs(kNameSpaceID_None, nsGkAtoms::name,
+                                                       aNameBeingResolved, eCaseMatters);
+}
+
 bool
 WindowNamedPropertiesHandler::getOwnPropertyDescriptor(JSContext* aCx,
                                                        JS::Handle<JSObject*> aProxy,
@@ -40,7 +93,7 @@ WindowNamedPropertiesHandler::getOwnPropertyDescriptor(JSContext* aCx,
   nsGlobalWindow* win = static_cast<nsGlobalWindow*>(piWin.get());
   if (win->GetLength() > 0) {
     nsCOMPtr<nsIDOMWindow> childWin = win->GetChildWindow(str);
-    if (childWin) {
+    if (childWin && ShouldExposeChildWindow(str, childWin)) {
       // We found a subframe of the right name. Shadowing via |var foo| in
       // global scope is still allowed, since |var| only looks up |own|
       // properties. But unqualified shadowing will fail, per-spec.

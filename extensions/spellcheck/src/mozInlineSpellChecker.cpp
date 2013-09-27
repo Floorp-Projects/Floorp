@@ -59,7 +59,6 @@
 #include "nsUnicharUtils.h"
 #include "nsIContent.h"
 #include "nsEventListenerManager.h"
-#include "nsGUIEvent.h"
 #include "nsRange.h"
 #include "nsContentUtils.h"
 #include "nsEditor.h"

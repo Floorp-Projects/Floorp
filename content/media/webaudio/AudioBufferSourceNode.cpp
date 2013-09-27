@@ -513,8 +513,7 @@ AudioBufferSourceNode::Start(double aWhen, double aOffset,
     ns->SetStreamTimeParameter(START, Context()->DestinationStream(), aWhen);
   }
 
-  MOZ_ASSERT(!mPlayingRef, "We can only accept a successful start() call once");
-  mPlayingRef.Take(this);
+  MarkActive();
 }
 
 void
@@ -573,7 +572,7 @@ AudioBufferSourceNode::SendOffsetAndDurationParametersToStream(AudioNodeStream* 
 }
 
 void
-AudioBufferSourceNode::Stop(double aWhen, ErrorResult& aRv, bool aShuttingDown)
+AudioBufferSourceNode::Stop(double aWhen, ErrorResult& aRv)
 {
   if (!WebAudioUtils::IsTimeValid(aWhen)) {
     aRv.Throw(NS_ERROR_DOM_NOT_SUPPORTED_ERR);
@@ -585,11 +584,10 @@ AudioBufferSourceNode::Stop(double aWhen, ErrorResult& aRv, bool aShuttingDown)
     return;
   }
 
-  if (!mBuffer || aShuttingDown) {
+  if (!mBuffer) {
     // We don't have a buffer, so the stream is never marked as finished.
-    // This can also happen if the AudioContext is being shut down.
     // Therefore we need to drop our playing ref right now.
-    mPlayingRef.Drop(this);
+    MarkInactive();
   }
 
   AudioNodeStream* ns = static_cast<AudioNodeStream*>(mStream.get());
@@ -633,7 +631,7 @@ AudioBufferSourceNode::NotifyMainThreadStateChanged()
 
     // Drop the playing reference
     // Warning: The below line might delete this.
-    mPlayingRef.Drop(this);
+    MarkInactive();
   }
 }
 

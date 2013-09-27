@@ -1,9 +1,5 @@
 /***********************************************************************
-Copyright (c) 2006-2012 IETF Trust and Skype Limited. All rights reserved.
-
-This file is extracted from RFC6716. Please see that RFC for additional
-information.
-
+Copyright (c) 2006-2011, Skype Limited. All rights reserved.
 Redistribution and use in source and binary forms, with or without
 modification, are permitted provided that the following conditions
 are met:
@@ -16,7 +12,7 @@ documentation and/or other materials provided with the distribution.
 names of specific contributors, may be used to endorse or promote
 products derived from this software without specific prior written
 permission.
-THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS “AS IS”
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
 AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
 IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
 ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE
@@ -34,6 +30,7 @@ POSSIBILITY OF SUCH DAMAGE.
 #endif
 
 #include "main_FIX.h"
+#include "stack_alloc.h"
 #include "tuning_parameters.h"
 
 /* Low Bitrate Redundancy (LBRR) encoding. Reuse all parameters but encode with lower bitrate           */
@@ -88,9 +85,7 @@ opus_int silk_encode_frame_FIX(
 {
     silk_encoder_control_FIX sEncCtrl;
     opus_int     i, iter, maxIter, found_upper, found_lower, ret = 0;
-    opus_int16   *x_frame, *res_pitch_frame;
-    opus_int32   xfw_Q3[ MAX_FRAME_LENGTH ];
-    opus_int16   res_pitch[ 2 * MAX_FRAME_LENGTH + LA_PITCH_MAX ];
+    opus_int16   *x_frame;
     ec_enc       sRangeEnc_copy, sRangeEnc_copy2;
     silk_nsq_state sNSQ_copy, sNSQ_copy2;
     opus_int32   seed_copy, nBits, nBits_lower, nBits_upper, gainMult_lower, gainMult_upper;
@@ -99,7 +94,7 @@ opus_int silk_encode_frame_FIX(
     opus_int16   ec_prevLagIndex_copy;
     opus_int     ec_prevSignalType_copy;
     opus_int8    LastGainIndex_copy2;
-    opus_uint8   ec_buf_copy[ 1275 ];
+    SAVE_STACK;
 
     /* This is totally unnecessary but many compilers (including gcc) are too dumb to realise it */
     LastGainIndex_copy2 = nBits_lower = nBits_upper = gainMult_lower = gainMult_upper = 0;
@@ -109,9 +104,8 @@ opus_int silk_encode_frame_FIX(
     /**************************************************************/
     /* Set up Input Pointers, and insert frame in input buffer   */
     /*************************************************************/
-    /* pointers aligned with start of frame to encode */
-    x_frame         = psEnc->x_buf + psEnc->sCmn.ltp_mem_length;    /* start of frame to encode */
-    res_pitch_frame = res_pitch    + psEnc->sCmn.ltp_mem_length;    /* start of pitch LPC residual frame */
+    /* start of frame to encode */
+    x_frame = psEnc->x_buf + psEnc->sCmn.ltp_mem_length;
 
     /***************************************/
     /* Ensure smooth bandwidth transitions */
@@ -124,6 +118,17 @@ opus_int silk_encode_frame_FIX(
     silk_memcpy( x_frame + LA_SHAPE_MS * psEnc->sCmn.fs_kHz, psEnc->sCmn.inputBuf + 1, psEnc->sCmn.frame_length * sizeof( opus_int16 ) );
 
     if( !psEnc->sCmn.prefillFlag ) {
+        VARDECL( opus_int32, xfw_Q3 );
+        VARDECL( opus_int16, res_pitch );
+        VARDECL( opus_uint8, ec_buf_copy );
+        opus_int16 *res_pitch_frame;
+
+        ALLOC( res_pitch,
+               psEnc->sCmn.la_pitch + psEnc->sCmn.frame_length
+                   + psEnc->sCmn.ltp_mem_length, opus_int16 );
+        /* start of pitch LPC residual frame */
+        res_pitch_frame = res_pitch + psEnc->sCmn.ltp_mem_length;
+
         /*****************************************/
         /* Find pitch lags, initial LPC analysis */
         /*****************************************/
@@ -147,6 +152,7 @@ opus_int silk_encode_frame_FIX(
         /*****************************************/
         /* Prefiltering for noise shaper         */
         /*****************************************/
+        ALLOC( xfw_Q3, psEnc->sCmn.frame_length, opus_int32 );
         silk_prefilter_FIX( psEnc, &sEncCtrl, xfw_Q3, x_frame );
 
         /****************************************/
@@ -168,6 +174,7 @@ opus_int silk_encode_frame_FIX(
         seed_copy = psEnc->sCmn.indices.Seed;
         ec_prevLagIndex_copy = psEnc->sCmn.ec_prevLagIndex;
         ec_prevSignalType_copy = psEnc->sCmn.ec_prevSignalType;
+        ALLOC( ec_buf_copy, 1275, opus_uint8 );
         for( iter = 0; ; iter++ ) {
             if( gainsID == gainsID_lower ) {
                 nBits = nBits_lower;
@@ -280,7 +287,7 @@ opus_int silk_encode_frame_FIX(
             for( i = 0; i < psEnc->sCmn.nb_subfr; i++ ) {
                 sEncCtrl.Gains_Q16[ i ] = silk_LSHIFT_SAT32( silk_SMULWB( sEncCtrl.GainsUnq_Q16[ i ], gainMult_Q8 ), 8 );
             }
-
+ 
             /* Quantize gains */
             psEnc->sShape.LastGainIndex = sEncCtrl.lastGainIndexPrev;
             silk_gains_quant( psEnc->sCmn.indices.GainsIndices, sEncCtrl.Gains_Q16,
@@ -303,6 +310,7 @@ opus_int silk_encode_frame_FIX(
     if( psEnc->sCmn.prefillFlag ) {
         /* No payload */
         *pnBytesOut = 0;
+        RESTORE_STACK;
         return ret;
     }
 
@@ -313,6 +321,7 @@ opus_int silk_encode_frame_FIX(
     /* Payload size */
     *pnBytesOut = silk_RSHIFT( ec_tell( psRangeEnc ) + 7, 3 );
 
+    RESTORE_STACK;
     return ret;
 }
 

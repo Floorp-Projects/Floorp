@@ -13,17 +13,11 @@ const PC_CONTRACT = "@mozilla.org/dom/peerconnection;1";
 const PC_ICE_CONTRACT = "@mozilla.org/dom/rtcicecandidate;1";
 const PC_SESSION_CONTRACT = "@mozilla.org/dom/rtcsessiondescription;1";
 const PC_MANAGER_CONTRACT = "@mozilla.org/dom/peerconnectionmanager;1";
-const PC_ICEEVENT_CONTRACT = "@mozilla.org/dom/rtcpeerconnectioniceevent;1";
-const MSEVENT_CONTRACT = "@mozilla.org/dom/mediastreamevent;1";
-const DCEVENT_CONTRACT = "@mozilla.org/dom/datachannelevent;1";
 
 const PC_CID = Components.ID("{9878b414-afaa-4176-a887-1e02b3b047c2}");
 const PC_ICE_CID = Components.ID("{02b9970c-433d-4cc2-923d-f7028ac66073}");
 const PC_SESSION_CID = Components.ID("{1775081b-b62d-4954-8ffe-a067bbf508a7}");
 const PC_MANAGER_CID = Components.ID("{7293e901-2be3-4c02-b4bd-cbef6fc24f78}");
-const PC_ICEEVENT_CID = Components.ID("{b9cd25a7-9859-4f9e-8f84-ef5181ff36c0}");
-const MSEVENT_CID = Components.ID("{a722a8a9-2290-4e99-a5ed-07b504292d08}");
-const DCEVENT_CID = Components.ID("{d5ed7fbf-01a8-4b18-af6c-861cf2aac920}");
 
 // Global list of PeerConnection objects, so they can be cleaned up when
 // a page is torn down. (Maps inner window ID to an array of PC objects).
@@ -156,72 +150,6 @@ RTCSessionDescription.prototype = {
   }
 };
 
-function MediaStreamEvent() {
-  this.type = this._stream = null;
-}
-MediaStreamEvent.prototype = {
-  classDescription: "MediaStreamEvent",
-  classID: MSEVENT_CID,
-  contractID: MSEVENT_CONTRACT,
-  QueryInterface: XPCOMUtils.generateQI([Ci.nsISupports,
-                                         Ci.nsIDOMGlobalPropertyInitializer]),
-
-  init: function(win) { this._win = win; },
-
-  __init: function(type, dict) {
-    this.type = type;
-    this.__DOM_IMPL__.initEvent(type, dict.bubbles || false,
-                                dict.cancelable || false);
-    this._stream = dict.stream;
-  },
-
-  get stream() { return this._stream; }
-};
-
-function RTCDataChannelEvent() {
-  this.type = this._channel = null;
-}
-RTCDataChannelEvent.prototype = {
-  classDescription: "RTCDataChannelEvent",
-  classID: DCEVENT_CID,
-  contractID: DCEVENT_CONTRACT,
-  QueryInterface: XPCOMUtils.generateQI([Ci.nsISupports,
-                                         Ci.nsIDOMGlobalPropertyInitializer]),
-
-  init: function(win) { this._win = win; },
-
-  __init: function(type, dict) {
-    this.type = type;
-    this.__DOM_IMPL__.initEvent(type, dict.bubbles || false,
-                                dict.cancelable || false);
-    this._channel = dict.channel;
-  },
-
-  get channel() { return this._channel; }
-};
-
-function RTCPeerConnectionIceEvent() {
-  this.type = this._candidate = null;
-}
-RTCPeerConnectionIceEvent.prototype = {
-  classDescription: "RTCPeerConnectionIceEvent",
-  classID: PC_ICEEVENT_CID,
-  contractID: PC_ICEEVENT_CONTRACT,
-  QueryInterface: XPCOMUtils.generateQI([Ci.nsISupports,
-                                         Ci.nsIDOMGlobalPropertyInitializer]),
-
-  init: function(win) { this._win = win; },
-
-  __init: function(type, dict) {
-    this.type = type;
-    this.__DOM_IMPL__.initEvent(type, dict.bubbles || false,
-                                dict.cancelable || false);
-    this._candidate = dict.candidate;
-  },
-
-  get candidate() { return this._candidate; }
-};
-
 function RTCPeerConnection() {
   this._queue = [];
 
@@ -237,6 +165,7 @@ function RTCPeerConnection() {
   this._pendingType = null;
   this._localType = null;
   this._remoteType = null;
+  this._trickleIce = false;
 
   /**
    * Everytime we get a request from content, we put it in the queue. If
@@ -265,6 +194,7 @@ RTCPeerConnection.prototype = {
   init: function(win) { this._win = win; },
 
   __init: function(rtcConfig) {
+    this._trickleIce = Services.prefs.getBoolPref("media.peerconnection.trickle_ice");
     if (!rtcConfig.iceServers ||
         !Services.prefs.getBoolPref("media.peerconnection.use_document_iceservers")) {
       rtcConfig = {iceServers:
@@ -296,11 +226,11 @@ RTCPeerConnection.prototype = {
     // Add a reference to the PeerConnection to global list (before init).
     _globalPCList.addPC(this);
 
-    // Nothing starts until ICE gathering completes.
     this._queueOrRun({
       func: this._getPC().initialize,
       args: [this._observer, this._win, rtcConfig, Services.tm.currentThread],
-      wait: true
+      // If not trickling, suppress start.
+      wait: !this._trickleIce
     });
   },
 
@@ -966,13 +896,11 @@ PeerConnectionObserver.prototype = {
     this._dompc._pendingType = null;
     this.callCB(this._dompc._onSetLocalDescriptionSuccess);
 
-    // Until we support generating trickle ICE candidates,
-    // we go ahead and trigger a call of onicecandidate here.
-    // This is to provide some level of compatibility with
-    // scripts that expect this behavior (which is how Chrome
-    // signals that no further trickle candidates will be sent).
-    // TODO: This needs to be removed when Bug 842459 lands.
-    this.foundIceCandidate(null);
+    if (this._iceGatheringState == "complete") {
+        // If we are not trickling or we completed gathering prior
+        // to setLocal, then trigger a call of onicecandidate here.
+        this.foundIceCandidate(null);
+    }
 
     this._dompc._executeNext();
   },
@@ -1010,6 +938,16 @@ PeerConnectionObserver.prototype = {
     this._dompc._executeNext();
   },
 
+  onIceCandidate: function(level, mid, candidate) {
+    this.foundIceCandidate(new this._dompc._win.mozRTCIceCandidate(
+        {
+            candidate: candidate,
+            sdpMid: mid,
+            sdpMLineIndex: level
+        }
+    ));
+  },
+
   handleIceStateChanges: function(iceState) {
     var histogram = Services.telemetry.getHistogramById("WEBRTC_ICE_SUCCESS_RATE");
     switch (iceState) {
@@ -1017,8 +955,18 @@ PeerConnectionObserver.prototype = {
         this._dompc.changeIceConnectionState("new");
         this.callCB(this._dompc.ongatheringchange, "complete");
         this.callCB(this._onicechange, "starting");
-        // Now that the PC is ready to go, execute any pending operations.
-        this._dompc._executeNext();
+
+        if (!this._dompc._trickleIce) {
+          // If we are not trickling, then the queue is in a pending state
+          // waiting for ICE gathering and executeNext frees it
+          this._dompc._executeNext();
+        }
+        else if (this.localDescription) {
+          // If we are trickling but we have already done setLocal,
+          // then we need to send a final foundIceCandidate(null) to indicate
+          // that we are done gathering.
+          this.foundIceCandidate(null);
+        }
         break;
       case Ci.IPeerConnection.kIceChecking:
         this._dompc.changeIceConnectionState("checking");
@@ -1081,9 +1029,13 @@ PeerConnectionObserver.prototype = {
                                                              { stream: stream }));
   },
 
-  foundIceCandidate: function(c) {
+  foundIceCandidate: function(cand, mid, line) {
     this.dispatchEvent(new this._dompc._win.RTCPeerConnectionIceEvent("icecandidate",
-                                                                      { candidate: c }));
+                                                                      {
+                                                                          candidate: cand,
+                                                                          sdpMid: mid,
+                                                                          sdpMLineIndex: line
+                                                                      }));
   },
 
   notifyDataChannel: function(channel) {
@@ -1101,6 +1053,5 @@ PeerConnectionObserver.prototype = {
 };
 
 this.NSGetFactory = XPCOMUtils.generateNSGetFactory(
-  [GlobalPCList, RTCIceCandidate, RTCSessionDescription, RTCPeerConnection,
-   RTCPeerConnectionIceEvent, MediaStreamEvent, RTCDataChannelEvent]
+  [GlobalPCList, RTCIceCandidate, RTCSessionDescription, RTCPeerConnection]
 );

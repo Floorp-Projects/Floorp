@@ -149,6 +149,10 @@ cc_return_t cc_invokeFeatureSDPMode(cc_call_handle_t call_handle,
     	callFeature.featData.ccData.info = strlib_malloc(data, strlen(data));
         callFeature.featData.ccData.info1 = strlib_malloc(data1, strlen(data1));
     	break;
+    case CC_FEATURE_FOUNDICECANDIDATE:
+    	callFeature.featData.ccData.info = strlib_malloc(data, strlen(data));
+        callFeature.featData.ccData.info1 = NULL;
+    	break;
 
     default:
         callFeature.featData.ccData.info = NULL;
@@ -371,6 +375,19 @@ cc_return_t CC_CallFeature_AddICECandidate(cc_call_handle_t call_handle,
             GET_LINE_ID(call_handle), __FUNCTION__));
 
     return cc_invokeFeatureSDPMode(call_handle, CC_FEATURE_ADDICECANDIDATE, JSEP_NO_ACTION,
+                                   0, 0, NO_STREAM, (uint16_t)level, constraints, candidate, mid, tc);
+}
+
+cc_return_t CC_CallFeature_FoundICECandidate(cc_call_handle_t call_handle,
+					     const char* candidate,
+					     const char *mid,
+					     cc_level_t level,
+					     Timecard *tc) {
+    cc_media_constraints_t *constraints = NULL;
+    CCAPP_DEBUG(DEB_L_C_F_PREFIX, DEB_L_C_F_PREFIX_ARGS(SIP_CC_PROV, GET_CALL_ID(call_handle),
+            GET_LINE_ID(call_handle), __FUNCTION__));
+
+    return cc_invokeFeatureSDPMode(call_handle, CC_FEATURE_FOUNDICECANDIDATE, JSEP_NO_ACTION,
                                    0, 0, NO_STREAM, (uint16_t)level, constraints, candidate, mid, tc);
 }
 

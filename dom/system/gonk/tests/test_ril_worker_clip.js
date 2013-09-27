@@ -30,7 +30,7 @@ add_test(function test_queryCLIP_provisioned() {
   let workerHelper = _getWorker();
   let worker = workerHelper.worker;
 
-  worker.Buf.readUint32 = function fakeReadUint32() {
+  worker.Buf.readInt32 = function fakeReadUint32() {
     return worker.Buf.int32Array.pop();
   };
 
@@ -58,7 +58,7 @@ add_test(function test_getCLIP_error_generic_failure_invalid_length() {
   let workerHelper = _getWorker();
   let worker = workerHelper.worker;
 
-  worker.Buf.readUint32 = function fakeReadUint32() {
+  worker.Buf.readInt32 = function fakeReadUint32() {
     return worker.Buf.int32Array.pop();
   };
 

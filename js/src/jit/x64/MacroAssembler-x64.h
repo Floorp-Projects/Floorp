@@ -902,7 +902,7 @@ class MacroAssemblerX64 : public MacroAssemblerX86Shared
         unboxInt32(Operand(src), dest);
     }
     void unboxDouble(const Address &src, const FloatRegister &dest) {
-        movsd(Operand(src), dest);
+        loadDouble(Operand(src), dest);
     }
 
     void unboxArgObjMagic(const ValueOperand &src, const Register &dest) {
@@ -944,6 +944,9 @@ class MacroAssemblerX64 : public MacroAssemblerX86Shared
     // Unbox any non-double value into dest. Prefer unboxInt32 or unboxBoolean
     // instead if the source type is known.
     void unboxNonDouble(const ValueOperand &src, const Register &dest) {
+        // In a non-trivial coupling, we're not permitted to use ScratchReg when
+        // src and dest are different registers, because of how extractObject is
+        // implemented.
         if (src.valueReg() == dest) {
             movq(ImmWord(JSVAL_PAYLOAD_MASK), ScratchReg);
             andq(ScratchReg, dest);
@@ -972,6 +975,8 @@ class MacroAssemblerX64 : public MacroAssemblerX86Shared
     Register extractObject(const Address &address, Register scratch) {
         JS_ASSERT(scratch != ScratchReg);
         loadPtr(address, ScratchReg);
+        // We have a special coupling with unboxObject. As long as the registers
+        // aren't equal, it doesn't use ScratchReg.
         unboxObject(ValueOperand(ScratchReg), scratch);
         return scratch;
     }
@@ -1070,7 +1075,7 @@ class MacroAssemblerX64 : public MacroAssemblerX86Shared
         convertInt32ToDouble(operand, dest);
         jump(&end);
         bind(&notInt32);
-        movsd(operand, dest);
+        loadDouble(operand, dest);
         bind(&end);
     }
 
@@ -1085,7 +1090,7 @@ class MacroAssemblerX64 : public MacroAssemblerX86Shared
     }
 
     void loadInstructionPointerAfterCall(const Register &dest) {
-        movq(Operand(StackPointer, 0x0), dest);
+        loadPtr(Address(StackPointer, 0x0), dest);
     }
 
     void convertUInt32ToDouble(const Register &src, const FloatRegister &dest) {
@@ -1177,7 +1182,7 @@ class MacroAssemblerX64 : public MacroAssemblerX86Shared
     // Save an exit frame to the thread data of the current thread, given a
     // register that holds a PerThreadData *.
     void linkParallelExitFrame(const Register &pt) {
-        mov(StackPointer, Operand(pt, offsetof(PerThreadData, ionTop)));
+        storePtr(StackPointer, Address(pt, offsetof(PerThreadData, ionTop)));
     }
 
     void enterOsr(Register calleeToken, Register code) {

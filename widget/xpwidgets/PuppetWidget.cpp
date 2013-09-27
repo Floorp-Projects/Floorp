@@ -16,6 +16,7 @@
 #include "mozilla/Hal.h"
 #include "mozilla/layers/CompositorChild.h"
 #include "mozilla/layers/PLayerTransactionChild.h"
+#include "mozilla/TextEvents.h"
 #include "PuppetWidget.h"
 #include "nsIWidgetListener.h"
 
@@ -101,7 +102,7 @@ PuppetWidget::Create(nsIWidget        *aParent,
 
   mSurface = gfxPlatform::GetPlatform()
              ->CreateOffscreenSurface(gfxIntSize(1, 1),
-                                      gfxASurface::ContentFromFormat(gfxASurface::ImageFormatARGB32));
+                                      gfxASurface::ContentFromFormat(gfxImageFormatARGB32));
 
   mIMEComposing = false;
   mNeedIMEStateInit = MightNeedIMEFocus(aInitData);

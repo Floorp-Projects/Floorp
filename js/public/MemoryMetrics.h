@@ -7,8 +7,8 @@
 #ifndef js_MemoryMetrics_h
 #define js_MemoryMetrics_h
 
-// These declarations are not within jsapi.h because they are highly likely to
-// change in the future. Depend on them at your own risk.
+// These declarations are highly likely to change in the future. Depend on them
+// at your own risk.
 
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/NullPtr.h"
@@ -23,7 +23,7 @@
 #include "js/Utility.h"
 #include "js/Vector.h"
 
-class nsISupports;      // This is needed for ObjectPrivateVisitor.
+class nsISupports;      // Needed for ObjectPrivateVisitor.
 
 namespace js {
 
@@ -46,49 +46,65 @@ struct InefficientNonFlatteningStringHashPolicy
     static bool match(const JSString *const &k, const Lookup &l);
 };
 
+// This file features many classes with numerous size_t fields, and each such
+// class has one or more methods that need to operate on all of these fields.
+// Writing these individually is error-prone -- it's easy to add a new field
+// without updating all the required methods.  So we define a single macro list
+// in each class to name the fields (and notable characteristics of them), and
+// then use the following macros to transform those lists into the required
+// methods.
+//
+// In some classes, one or more of the macro arguments aren't used.  We use '_'
+// for those.
+//
+#define DECL_SIZE(gc, mSize)                      size_t mSize;
+#define ZERO_SIZE(gc, mSize)                      mSize(0),
+#define COPY_OTHER_SIZE(gc, mSize)                mSize(other.mSize),
+#define ADD_OTHER_SIZE(gc, mSize)                 mSize += other.mSize;
+#define ADD_SIZE_TO_N_IF_LIVE_GC_THING(gc, mSize) n += (gc == js::IsLiveGCThing) ? mSize : 0;
+
+// Used to annotate which size_t fields measure live GC things and which don't.
+enum {
+    IsLiveGCThing,
+    NotLiveGCThing
+};
+
 struct ZoneStatsPod
 {
-    ZoneStatsPod() {
-        mozilla::PodZero(this);
-    }
+#define FOR_EACH_SIZE(macro) \
+    macro(NotLiveGCThing, gcHeapArenaAdmin) \
+    macro(NotLiveGCThing, gcHeapUnusedGcThings) \
+    macro(IsLiveGCThing,  gcHeapStringsNormal) \
+    macro(IsLiveGCThing,  gcHeapStringsShort) \
+    macro(IsLiveGCThing,  gcHeapLazyScripts) \
+    macro(IsLiveGCThing,  gcHeapTypeObjects) \
+    macro(IsLiveGCThing,  gcHeapIonCodes) \
+    macro(NotLiveGCThing, stringCharsNonNotable) \
+    macro(NotLiveGCThing, lazyScripts) \
+    macro(NotLiveGCThing, typeObjects) \
+    macro(NotLiveGCThing, typePool)
+
+    ZoneStatsPod()
+      : FOR_EACH_SIZE(ZERO_SIZE)
+        extra()
+    {}
 
     void add(const ZoneStatsPod &other) {
-        #define ADD(x)  this->x += other.x
-
-        ADD(gcHeapArenaAdmin);
-        ADD(gcHeapUnusedGcThings);
-
-        ADD(gcHeapStringsNormal);
-        ADD(gcHeapStringsShort);
-        ADD(gcHeapLazyScripts);
-        ADD(gcHeapTypeObjects);
-        ADD(gcHeapIonCodes);
-
-        ADD(stringCharsNonNotable);
-        ADD(lazyScripts);
-        ADD(typeObjects);
-        ADD(typePool);
-
-        #undef ADD
+        FOR_EACH_SIZE(ADD_OTHER_SIZE)
+        // Do nothing with |extra|.
     }
 
-    // This field can be used by embedders.
-    void   *extra;
+    size_t sizeOfLiveGCThings() const {
+        size_t n = 0;
+        FOR_EACH_SIZE(ADD_SIZE_TO_N_IF_LIVE_GC_THING)
+        // Do nothing with |extra|.
+        return n;
+    }
 
-    size_t gcHeapArenaAdmin;
-    size_t gcHeapUnusedGcThings;
+    FOR_EACH_SIZE(DECL_SIZE)
+    void *extra;    // This field can be used by embedders.
 
-    size_t gcHeapStringsNormal;
-    size_t gcHeapStringsShort;
-
-    size_t gcHeapLazyScripts;
-    size_t gcHeapTypeObjects;
-    size_t gcHeapIonCodes;
-
-    size_t stringCharsNonNotable;
-    size_t lazyScripts;
-    size_t typeObjects;
-    size_t typePool;
+#undef FOR_EACH_SIZE
 };
 
 } // namespace js
@@ -98,70 +114,91 @@ namespace JS {
 // Data for tracking memory usage of things hanging off objects.
 struct ObjectsExtraSizes
 {
-    size_t slots;
-    size_t elementsNonAsmJS;
-    size_t elementsAsmJSHeap;
-    size_t elementsAsmJSNonHeap;
-    size_t asmJSModuleCode;
-    size_t asmJSModuleData;
-    size_t argumentsData;
-    size_t regExpStatics;
-    size_t propertyIteratorData;
-    size_t ctypesData;
-    size_t private_;    // The '_' suffix is required because |private| is a keyword.
-                        // Note that this field is measured separately from the others.
+#define FOR_EACH_SIZE(macro) \
+    macro(js::NotLiveGCThing, slots) \
+    macro(js::NotLiveGCThing, elementsNonAsmJS) \
+    macro(js::NotLiveGCThing, elementsAsmJSHeap) \
+    macro(js::NotLiveGCThing, elementsAsmJSNonHeap) \
+    macro(js::NotLiveGCThing, asmJSModuleCode) \
+    macro(js::NotLiveGCThing, asmJSModuleData) \
+    macro(js::NotLiveGCThing, argumentsData) \
+    macro(js::NotLiveGCThing, regExpStatics) \
+    macro(js::NotLiveGCThing, propertyIteratorData) \
+    macro(js::NotLiveGCThing, ctypesData)
 
-    ObjectsExtraSizes() { memset(this, 0, sizeof(ObjectsExtraSizes)); }
+    ObjectsExtraSizes()
+      : FOR_EACH_SIZE(ZERO_SIZE)
+        dummy()
+    {}
 
-    void add(ObjectsExtraSizes &sizes) {
-        this->slots                += sizes.slots;
-        this->elementsNonAsmJS     += sizes.elementsNonAsmJS;
-        this->elementsAsmJSHeap    += sizes.elementsAsmJSHeap;
-        this->elementsAsmJSNonHeap += sizes.elementsAsmJSNonHeap;
-        this->asmJSModuleCode      += sizes.asmJSModuleCode;
-        this->asmJSModuleData      += sizes.asmJSModuleData;
-        this->argumentsData        += sizes.argumentsData;
-        this->regExpStatics        += sizes.regExpStatics;
-        this->propertyIteratorData += sizes.propertyIteratorData;
-        this->ctypesData           += sizes.ctypesData;
-        this->private_             += sizes.private_;
+    void add(const ObjectsExtraSizes &other) {
+        FOR_EACH_SIZE(ADD_OTHER_SIZE)
     }
+
+    size_t sizeOfLiveGCThings() const {
+        size_t n = 0;
+        FOR_EACH_SIZE(ADD_SIZE_TO_N_IF_LIVE_GC_THING)
+        return n;
+    }
+
+    FOR_EACH_SIZE(DECL_SIZE)
+    int dummy;  // present just to absorb the trailing comma from FOR_EACH_SIZE(ZERO_SIZE)
+
+#undef FOR_EACH_SIZE
 };
 
 // Data for tracking analysis/inference memory usage.
 struct TypeInferenceSizes
 {
-    size_t typeScripts;
-    size_t typeResults;
-    size_t pendingArrays;
-    size_t allocationSiteTables;
-    size_t arrayTypeTables;
-    size_t objectTypeTables;
+#define FOR_EACH_SIZE(macro) \
+    macro(js::NotLiveGCThing, typeScripts) \
+    macro(js::NotLiveGCThing, typeResults) \
+    macro(js::NotLiveGCThing, pendingArrays) \
+    macro(js::NotLiveGCThing, allocationSiteTables) \
+    macro(js::NotLiveGCThing, arrayTypeTables) \
+    macro(js::NotLiveGCThing, objectTypeTables)
 
-    TypeInferenceSizes() { memset(this, 0, sizeof(TypeInferenceSizes)); }
+    TypeInferenceSizes()
+      : FOR_EACH_SIZE(ZERO_SIZE)
+        dummy()
+    {}
 
-    void add(TypeInferenceSizes &sizes) {
-        this->typeScripts          += sizes.typeScripts;
-        this->typeResults          += sizes.typeResults;
-        this->pendingArrays        += sizes.pendingArrays;
-        this->allocationSiteTables += sizes.allocationSiteTables;
-        this->arrayTypeTables      += sizes.arrayTypeTables;
-        this->objectTypeTables     += sizes.objectTypeTables;
+    void add(const TypeInferenceSizes &other) {
+        FOR_EACH_SIZE(ADD_OTHER_SIZE)
     }
+
+    size_t sizeOfLiveGCThings() const {
+        size_t n = 0;
+        FOR_EACH_SIZE(ADD_SIZE_TO_N_IF_LIVE_GC_THING)
+        return n;
+    }
+
+    FOR_EACH_SIZE(DECL_SIZE)
+    int dummy;  // present just to absorb the trailing comma from FOR_EACH_SIZE(ZERO_SIZE)
+
+#undef FOR_EACH_SIZE
 };
 
 // Data for tracking JIT-code memory usage.
 struct CodeSizes
 {
-    size_t ion;
-    size_t baseline;
-    size_t regexp;
-    size_t other;
-    size_t unused;
+#define FOR_EACH_SIZE(macro) \
+    macro(_, ion) \
+    macro(_, baseline) \
+    macro(_, regexp) \
+    macro(_, other) \
+    macro(_, unused)
 
-    CodeSizes() { memset(this, 0, sizeof(CodeSizes)); }
+    CodeSizes()
+      : FOR_EACH_SIZE(ZERO_SIZE)
+        dummy()
+    {}
+
+    FOR_EACH_SIZE(DECL_SIZE)
+    int dummy;  // present just to absorb the trailing comma from FOR_EACH_SIZE(ZERO_SIZE)
+
+#undef FOR_EACH_SIZE
 };
-
 
 // This class holds information about the memory taken up by identical copies of
 // a particular string.  Multiple JSStrings may have their sizes aggregated
@@ -247,25 +284,32 @@ struct NotableStringInfo : public StringInfo
     char *buffer;
 };
 
-// These measurements relate directly to the JSRuntime, and not to
+// These measurements relate directly to the JSRuntime, and not to zones and
 // compartments within it.
 struct RuntimeSizes
 {
-    RuntimeSizes() { memset(this, 0, sizeof(RuntimeSizes)); }
+#define FOR_EACH_SIZE(macro) \
+    macro(_, object) \
+    macro(_, atomsTable) \
+    macro(_, contexts) \
+    macro(_, dtoa) \
+    macro(_, temporary) \
+    macro(_, regexpData) \
+    macro(_, interpreterStack) \
+    macro(_, gcMarker) \
+    macro(_, mathCache) \
+    macro(_, scriptData) \
+    macro(_, scriptSources)
 
-    size_t object;
-    size_t atomsTable;
-    size_t contexts;
-    size_t dtoa;
-    size_t temporary;
-    size_t regexpData;
-    size_t interpreterStack;
-    size_t gcMarker;
-    size_t mathCache;
-    size_t scriptData;
-    size_t scriptSources;
+    RuntimeSizes()
+      : FOR_EACH_SIZE(ZERO_SIZE)
+        code()
+    {}
 
+    FOR_EACH_SIZE(DECL_SIZE)
     CodeSizes code;
+
+#undef FOR_EACH_SIZE
 };
 
 struct ZoneStats : js::ZoneStatsPod
@@ -310,156 +354,88 @@ struct ZoneStats : js::ZoneStatsPod
 
     StringsHashMap strings;
     js::Vector<NotableStringInfo, 0, js::SystemAllocPolicy> notableStrings;
-
-    // The size of all the live things in the GC heap that don't belong to any
-    // compartment.
-    size_t GCHeapThingsSize();
 };
 
 struct CompartmentStats
 {
+#define FOR_EACH_SIZE(macro) \
+    macro(js::IsLiveGCThing,  gcHeapObjectsOrdinary) \
+    macro(js::IsLiveGCThing,  gcHeapObjectsFunction) \
+    macro(js::IsLiveGCThing,  gcHeapObjectsDenseArray) \
+    macro(js::IsLiveGCThing,  gcHeapObjectsSlowArray) \
+    macro(js::IsLiveGCThing,  gcHeapObjectsCrossCompartmentWrapper) \
+    macro(js::IsLiveGCThing,  gcHeapShapesTreeGlobalParented) \
+    macro(js::IsLiveGCThing,  gcHeapShapesTreeNonGlobalParented) \
+    macro(js::IsLiveGCThing,  gcHeapShapesDict) \
+    macro(js::IsLiveGCThing,  gcHeapShapesBase) \
+    macro(js::IsLiveGCThing,  gcHeapScripts) \
+    macro(js::NotLiveGCThing, objectsPrivate) \
+    macro(js::NotLiveGCThing, shapesExtraTreeTables) \
+    macro(js::NotLiveGCThing, shapesExtraDictTables) \
+    macro(js::NotLiveGCThing, shapesExtraTreeShapeKids) \
+    macro(js::NotLiveGCThing, shapesCompartmentTables) \
+    macro(js::NotLiveGCThing, scriptData) \
+    macro(js::NotLiveGCThing, baselineData) \
+    macro(js::NotLiveGCThing, baselineStubsFallback) \
+    macro(js::NotLiveGCThing, baselineStubsOptimized) \
+    macro(js::NotLiveGCThing, ionData) \
+    macro(js::NotLiveGCThing, compartmentObject) \
+    macro(js::NotLiveGCThing, crossCompartmentWrappersTable) \
+    macro(js::NotLiveGCThing, regexpCompartment) \
+    macro(js::NotLiveGCThing, debuggeesSet) \
+
     CompartmentStats()
-      : extra(nullptr),
-        gcHeapObjectsOrdinary(0),
-        gcHeapObjectsFunction(0),
-        gcHeapObjectsDenseArray(0),
-        gcHeapObjectsSlowArray(0),
-        gcHeapObjectsCrossCompartmentWrapper(0),
-        gcHeapShapesTreeGlobalParented(0),
-        gcHeapShapesTreeNonGlobalParented(0),
-        gcHeapShapesDict(0),
-        gcHeapShapesBase(0),
-        gcHeapScripts(0),
+      : FOR_EACH_SIZE(ZERO_SIZE)
         objectsExtra(),
-        shapesExtraTreeTables(0),
-        shapesExtraDictTables(0),
-        shapesExtraTreeShapeKids(0),
-        shapesCompartmentTables(0),
-        scriptData(0),
-        baselineData(0),
-        baselineStubsFallback(0),
-        baselineStubsOptimized(0),
-        ionData(0),
-        compartmentObject(0),
-        crossCompartmentWrappersTable(0),
-        regexpCompartment(0),
-        debuggeesSet(0),
-        typeInference()
+        typeInference(),
+        extra()
     {}
 
     CompartmentStats(const CompartmentStats &other)
-      : extra(other.extra),
-        gcHeapObjectsOrdinary(other.gcHeapObjectsOrdinary),
-        gcHeapObjectsFunction(other.gcHeapObjectsFunction),
-        gcHeapObjectsDenseArray(other.gcHeapObjectsDenseArray),
-        gcHeapObjectsSlowArray(other.gcHeapObjectsSlowArray),
-        gcHeapObjectsCrossCompartmentWrapper(other.gcHeapObjectsCrossCompartmentWrapper),
-        gcHeapShapesTreeGlobalParented(other.gcHeapShapesTreeGlobalParented),
-        gcHeapShapesTreeNonGlobalParented(other.gcHeapShapesTreeNonGlobalParented),
-        gcHeapShapesDict(other.gcHeapShapesDict),
-        gcHeapShapesBase(other.gcHeapShapesBase),
-        gcHeapScripts(other.gcHeapScripts),
+      : FOR_EACH_SIZE(COPY_OTHER_SIZE)
         objectsExtra(other.objectsExtra),
-        shapesExtraTreeTables(other.shapesExtraTreeTables),
-        shapesExtraDictTables(other.shapesExtraDictTables),
-        shapesExtraTreeShapeKids(other.shapesExtraTreeShapeKids),
-        shapesCompartmentTables(other.shapesCompartmentTables),
-        scriptData(other.scriptData),
-        baselineData(other.baselineData),
-        baselineStubsFallback(other.baselineStubsFallback),
-        baselineStubsOptimized(other.baselineStubsOptimized),
-        ionData(other.ionData),
-        compartmentObject(other.compartmentObject),
-        crossCompartmentWrappersTable(other.crossCompartmentWrappersTable),
-        regexpCompartment(other.regexpCompartment),
-        debuggeesSet(other.debuggeesSet),
-        typeInference(other.typeInference)
-    {
+        typeInference(other.typeInference),
+        extra(other.extra)
+    {}
+
+    void add(const CompartmentStats &other) {
+        FOR_EACH_SIZE(ADD_OTHER_SIZE)
+        objectsExtra.add(other.objectsExtra);
+        typeInference.add(other.typeInference);
+        // Do nothing with |extra|.
     }
 
-    // This field can be used by embedders.
-    void   *extra;
+    size_t sizeOfLiveGCThings() const {
+        size_t n = 0;
+        FOR_EACH_SIZE(ADD_SIZE_TO_N_IF_LIVE_GC_THING)
+        n += objectsExtra.sizeOfLiveGCThings();
+        n += typeInference.sizeOfLiveGCThings();
+        // Do nothing with |extra|.
+        return n;
+    }
 
-    // If you add a new number, remember to update the constructors, add(), and
-    // maybe gcHeapThingsSize()!
-    size_t gcHeapObjectsOrdinary;
-    size_t gcHeapObjectsFunction;
-    size_t gcHeapObjectsDenseArray;
-    size_t gcHeapObjectsSlowArray;
-    size_t gcHeapObjectsCrossCompartmentWrapper;
-    size_t gcHeapShapesTreeGlobalParented;
-    size_t gcHeapShapesTreeNonGlobalParented;
-    size_t gcHeapShapesDict;
-    size_t gcHeapShapesBase;
-    size_t gcHeapScripts;
-    ObjectsExtraSizes objectsExtra;
-
-    size_t shapesExtraTreeTables;
-    size_t shapesExtraDictTables;
-    size_t shapesExtraTreeShapeKids;
-    size_t shapesCompartmentTables;
-    size_t scriptData;
-    size_t baselineData;
-    size_t baselineStubsFallback;
-    size_t baselineStubsOptimized;
-    size_t ionData;
-    size_t compartmentObject;
-    size_t crossCompartmentWrappersTable;
-    size_t regexpCompartment;
-    size_t debuggeesSet;
-
+    FOR_EACH_SIZE(DECL_SIZE)
+    ObjectsExtraSizes  objectsExtra;
     TypeInferenceSizes typeInference;
+    void               *extra;  // This field can be used by embedders.
 
-    // Add cStats's numbers to this object's numbers.
-    void add(CompartmentStats &cStats) {
-        #define ADD(x)  this->x += cStats.x
-
-        ADD(gcHeapObjectsOrdinary);
-        ADD(gcHeapObjectsFunction);
-        ADD(gcHeapObjectsDenseArray);
-        ADD(gcHeapObjectsSlowArray);
-        ADD(gcHeapObjectsCrossCompartmentWrapper);
-        ADD(gcHeapShapesTreeGlobalParented);
-        ADD(gcHeapShapesTreeNonGlobalParented);
-        ADD(gcHeapShapesDict);
-        ADD(gcHeapShapesBase);
-        ADD(gcHeapScripts);
-        objectsExtra.add(cStats.objectsExtra);
-
-        ADD(shapesExtraTreeTables);
-        ADD(shapesExtraDictTables);
-        ADD(shapesExtraTreeShapeKids);
-        ADD(shapesCompartmentTables);
-        ADD(scriptData);
-        ADD(baselineData);
-        ADD(baselineStubsFallback);
-        ADD(baselineStubsOptimized);
-        ADD(ionData);
-        ADD(compartmentObject);
-        ADD(crossCompartmentWrappersTable);
-        ADD(regexpCompartment);
-        ADD(debuggeesSet);
-
-        #undef ADD
-
-        typeInference.add(cStats.typeInference);
-    }
-
-    // The size of all the live things in the GC heap.
-    size_t GCHeapThingsSize();
+#undef FOR_EACH_SIZE
 };
 
 struct RuntimeStats
 {
+#define FOR_EACH_SIZE(macro) \
+    macro(_, gcHeapChunkTotal) \
+    macro(_, gcHeapDecommittedArenas) \
+    macro(_, gcHeapUnusedChunks) \
+    macro(_, gcHeapUnusedArenas) \
+    macro(_, gcHeapUnusedGcThings) \
+    macro(_, gcHeapChunkAdmin) \
+    macro(_, gcHeapGcThings) \
+
     RuntimeStats(mozilla::MallocSizeOf mallocSizeOf)
-      : runtime(),
-        gcHeapChunkTotal(0),
-        gcHeapDecommittedArenas(0),
-        gcHeapUnusedChunks(0),
-        gcHeapUnusedArenas(0),
-        gcHeapUnusedGcThings(0),
-        gcHeapChunkAdmin(0),
-        gcHeapGcThings(0),
+      : FOR_EACH_SIZE(ZERO_SIZE)
+        runtime(),
         cTotals(),
         zTotals(),
         compartmentStatsVector(),
@@ -467,10 +443,6 @@ struct RuntimeStats
         currZoneStats(nullptr),
         mallocSizeOf_(mallocSizeOf)
     {}
-
-    RuntimeSizes runtime;
-
-    // If you add a new number, remember to update the constructor!
 
     // Here's a useful breakdown of the GC heap.
     //
@@ -491,17 +463,12 @@ struct RuntimeStats
     // it's rare, and (b) this means that rtStats.gcHeapUnusedChunks is a
     // multiple of the chunk size, which is good.
 
-    size_t gcHeapChunkTotal;
-    size_t gcHeapDecommittedArenas;
-    size_t gcHeapUnusedChunks;
-    size_t gcHeapUnusedArenas;
-    size_t gcHeapUnusedGcThings;
-    size_t gcHeapChunkAdmin;
-    size_t gcHeapGcThings;
+    FOR_EACH_SIZE(DECL_SIZE)
 
-    // The sum of all compartment's measurements.
-    CompartmentStats cTotals;
-    ZoneStats zTotals;
+    RuntimeSizes runtime;
+
+    CompartmentStats cTotals;   // The sum of this runtime's compartments' measurements.
+    ZoneStats zTotals;          // The sum of this runtime's zones' measurements.
 
     js::Vector<CompartmentStats, 0, js::SystemAllocPolicy> compartmentStatsVector;
     js::Vector<ZoneStats, 0, js::SystemAllocPolicy> zoneStatsVector;
@@ -512,6 +479,8 @@ struct RuntimeStats
 
     virtual void initExtraCompartmentStats(JSCompartment *c, CompartmentStats *cstats) = 0;
     virtual void initExtraZoneStats(JS::Zone *zone, ZoneStats *zstats) = 0;
+
+#undef FOR_EACH_SIZE
 };
 
 class ObjectPrivateVisitor

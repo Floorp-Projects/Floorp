@@ -16,6 +16,11 @@
 #include "nsChildView.h"
 #include "nsCocoaWindow.h"
 
+#include "mozilla/MiscEvents.h"
+#include "mozilla/MouseEvents.h"
+#include "mozilla/TextEvents.h"
+#include "mozilla/TouchEvents.h"
+
 #include "nsObjCExceptions.h"
 #include "nsCOMPtr.h"
 #include "nsToolkit.h"
@@ -1589,10 +1594,10 @@ NS_IMETHODIMP nsChildView::DispatchEvent(nsGUIEvent* event, nsEventStatus& aStat
 #endif
 
   NS_ASSERTION(!(mTextInputHandler && mTextInputHandler->IsIMEComposing() &&
-                 NS_IS_KEY_EVENT(event)),
+                 event->HasKeyEventMessage()),
     "Any key events should not be fired during IME composing");
 
-  if (event->mFlags.mIsSynthesizedForTests && NS_IS_KEY_EVENT(event)) {
+  if (event->mFlags.mIsSynthesizedForTests && event->HasKeyEventMessage()) {
     nsKeyEvent* keyEvent = reinterpret_cast<nsKeyEvent*>(event);
     nsresult rv = mTextInputHandler->AttachNativeKeyEvent(*keyEvent);
     NS_ENSURE_SUCCESS(rv, rv);
@@ -1972,7 +1977,7 @@ gfxASurface*
 nsChildView::GetThebesSurface()
 {
   if (!mTempThebesSurface) {
-    mTempThebesSurface = new gfxQuartzSurface(gfxSize(1, 1), gfxASurface::ImageFormatARGB32);
+    mTempThebesSurface = new gfxQuartzSurface(gfxSize(1, 1), gfxImageFormatARGB32);
   }
 
   return mTempThebesSurface;
@@ -2036,6 +2041,17 @@ nsChildView::PreRender(LayerManager* aManager)
   }
   NSOpenGLContext *glContext = (NSOpenGLContext *)manager->gl()->GetNativeData(GLContext::NativeGLContext);
   [(ChildView*)mView preRender:glContext];
+}
+
+void
+nsChildView::PostRender(LayerManager* aManager)
+{
+  nsAutoPtr<GLManager> manager(GLManager::CreateGLManager(aManager));
+  if (!manager) {
+    return;
+  }
+  NSOpenGLContext *glContext = (NSOpenGLContext *)manager->gl()->GetNativeData(GLContext::NativeGLContext);
+  [(ChildView*)mView postRender:glContext];
 }
 
 void
@@ -2880,6 +2896,17 @@ NSEvent* gLastDragMouseDownEvent = nil;
   [aGLContext setView:self];
   [aGLContext update];
 
+  CGLLockContext((CGLContextObj)[aGLContext CGLContextObj]);
+
+  NS_OBJC_END_TRY_ABORT_BLOCK;
+}
+
+-(void)postRender:(NSOpenGLContext *)aGLContext
+{
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
+
+  CGLUnlockContext((CGLContextObj)[aGLContext CGLContextObj]);
+
   NS_OBJC_END_TRY_ABORT_BLOCK;
 }
 
@@ -3218,7 +3245,7 @@ NSEvent* gLastDragMouseDownEvent = nil;
 
   [super lockFocus];
 
-  if (mGLContext) {
+  if (mGLContext && !mUsingOMTCompositor) {
     if ([mGLContext view] != self) {
       [mGLContext setView:self];
     }

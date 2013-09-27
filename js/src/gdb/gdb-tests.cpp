@@ -54,7 +54,7 @@ void breakpoint() {
     fprintf(stderr, "Called " __FILE__ ":breakpoint\n");
 }
 
-GDBFragment *GDBFragment::allFragments = NULL;
+GDBFragment *GDBFragment::allFragments = nullptr;
 
 int
 main (int argc, const char **argv)
@@ -71,8 +71,8 @@ main (int argc, const char **argv)
     /* Create the global object. */
     JS::CompartmentOptions options;
     options.setVersion(JSVERSION_LATEST);
-    RootedObject global(cx, checkPtr(JS_NewGlobalObject(cx, &global_class, NULL,
-                        JS::FireOnNewGlobalHook, options)));
+    RootedObject global(cx, checkPtr(JS_NewGlobalObject(cx, &global_class,
+                        nullptr, JS::FireOnNewGlobalHook, options)));
     js::SetDefaultObjectForContext(cx, global);
 
     JSAutoCompartment ac(cx, global);

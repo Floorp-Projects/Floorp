@@ -932,8 +932,8 @@ class NameIC : public RepatchIonCache
         return typeOf_;
     }
 
-    bool attachReadSlot(JSContext *cx, IonScript *ion, HandleObject scopeChain, HandleObject obj,
-                        HandleShape shape);
+    bool attachReadSlot(JSContext *cx, IonScript *ion, HandleObject scopeChain,
+                        HandleObject holderBase, HandleObject holder, HandleShape shape);
     bool attachCallGetter(JSContext *cx, IonScript *ion, JSObject *obj, JSObject *holder,
                           HandleShape shape, void *returnAddr);
 

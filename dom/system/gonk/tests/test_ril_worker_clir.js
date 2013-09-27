@@ -85,7 +85,7 @@ add_test(function test_getCLIR_n0_m1() {
   let workerHelper = _getWorker();
   let worker = workerHelper.worker;
 
-  worker.Buf.readUint32 = function fakeReadUint32() {
+  worker.Buf.readInt32 = function fakeReadUint32() {
     return worker.Buf.int32Array.pop();
   };
 
@@ -117,7 +117,7 @@ add_test(function test_getCLIR_error_generic_failure_invalid_length() {
   let workerHelper = _getWorker();
   let worker = workerHelper.worker;
 
-  worker.Buf.readUint32 = function fakeReadUint32() {
+  worker.Buf.readInt32 = function fakeReadUint32() {
     return worker.Buf.int32Array.pop();
   };
 

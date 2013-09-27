@@ -48,7 +48,10 @@
 #include "nsDOMString.h"
 #include "nsIScriptSecurityManager.h"
 #include "nsIDOMMutationEvent.h"
-#include "nsMutationEvent.h"
+#include "mozilla/ContentEvents.h"
+#include "mozilla/MouseEvents.h"
+#include "mozilla/MutationEvent.h"
+#include "mozilla/TextEvents.h"
 #include "nsNodeUtils.h"
 #include "mozilla/dom/DirectionalityUtils.h"
 #include "nsDocument.h"
@@ -2213,7 +2216,7 @@ Element::PostHandleEventForLinks(nsEventChainPostVisitor& aVisitor)
     break;
 
   case NS_MOUSE_CLICK:
-    if (NS_IS_MOUSE_LEFT_CLICK(aVisitor.mEvent)) {
+    if (aVisitor.mEvent->IsLeftClickEvent()) {
       nsInputEvent* inputEvent = static_cast<nsInputEvent*>(aVisitor.mEvent);
       if (inputEvent->IsControl() || inputEvent->IsMeta() ||
           inputEvent->IsAlt() ||inputEvent->IsShift()) {
