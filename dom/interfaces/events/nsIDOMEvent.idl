@@ -267,7 +267,7 @@ nsresult
 NS_NewDOMClipboardEvent(nsIDOMEvent** aInstancePtrResult,
                         mozilla::dom::EventTarget* aOwner,
                         nsPresContext* aPresContext,
-                        nsClipboardEvent *aEvent);
+                        mozilla::InternalClipboardEvent* aEvent);
 
 nsresult
 NS_NewDOMKeyboardEvent(nsIDOMEvent** aInstancePtrResult,
