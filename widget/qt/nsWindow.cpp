@@ -1459,7 +1459,7 @@ is_latin_shortcut_key(quint32 aKeyval)
 nsEventStatus
 nsWindow::DispatchCommandEvent(nsIAtom* aCommand)
 {
-    nsCommandEvent event(true, nsGkAtoms::onAppCommand, aCommand, this);
+    WidgetCommandEvent event(true, nsGkAtoms::onAppCommand, aCommand, this);
 
     nsEventStatus status;
     DispatchEvent(&event, status);
