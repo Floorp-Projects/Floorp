@@ -2564,10 +2564,6 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
             [ Whitespace.NL ]
             + self.protocolCxxIncludes
             + [ Whitespace.NL ]
-            + self.standardTypedefs()
-            + tu.protocol.decl.cxxtypedefs
-            + self.includedActorUsings
-            + [ Whitespace.NL ]
             + cppheaders
             + [ Whitespace.NL ]))
 
