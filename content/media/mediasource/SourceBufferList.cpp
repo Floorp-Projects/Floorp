@@ -6,7 +6,19 @@
 
 #include "SourceBufferList.h"
 
+#include "AsyncEventRunner.h"
+#include "mozilla/ErrorResult.h"
 #include "mozilla/dom/SourceBufferListBinding.h"
+#include "mozilla/mozalloc.h"
+#include "nsCOMPtr.h"
+#include "nsIEventTarget.h"
+#include "nsIRunnable.h"
+#include "nsStringGlue.h"
+#include "nsThreadUtils.h"
+#include "prlog.h"
+
+struct JSContext;
+class JSObject;
 
 #ifdef PR_LOGGING
 extern PRLogModuleInfo* gMediaSourceLog;
@@ -16,6 +28,7 @@ extern PRLogModuleInfo* gMediaSourceLog;
 #endif
 
 namespace mozilla {
+
 namespace dom {
 
 SourceBuffer*
@@ -42,6 +55,7 @@ void
 SourceBufferList::Remove(SourceBuffer* aSourceBuffer)
 {
   MOZ_ALWAYS_TRUE(mSourceBuffers.RemoveElement(aSourceBuffer));
+  aSourceBuffer->Detach();
   QueueAsyncSimpleEvent("removesourcebuffer");
 }
 
@@ -54,6 +68,9 @@ SourceBufferList::Contains(SourceBuffer* aSourceBuffer)
 void
 SourceBufferList::Clear()
 {
+  for (uint32_t i = 0; i < mSourceBuffers.Length(); ++i) {
+    mSourceBuffers[i]->Detach();
+  }
   mSourceBuffers.Clear();
   QueueAsyncSimpleEvent("removesourcebuffer");
 }
@@ -62,15 +79,6 @@ bool
 SourceBufferList::IsEmpty()
 {
   return mSourceBuffers.IsEmpty();
-}
-
-void
-SourceBufferList::DetachAndClear()
-{
-  for (uint32_t i = 0; i < mSourceBuffers.Length(); ++i) {
-    mSourceBuffers[i]->Detach();
-  }
-  Clear();
 }
 
 bool
@@ -92,6 +100,14 @@ SourceBufferList::Remove(double aStart, double aEnd, ErrorResult& aRv)
     if (aRv.Failed()) {
       return;
     }
+  }
+}
+
+void
+SourceBufferList::Ended()
+{
+  for (uint32_t i = 0; i < mSourceBuffers.Length(); ++i) {
+    mSourceBuffers[i]->Ended();
   }
 }
 
@@ -139,4 +155,5 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION_INHERITED(SourceBufferList)
 NS_INTERFACE_MAP_END_INHERITING(nsDOMEventTargetHelper)
 
 } // namespace dom
+
 } // namespace mozilla
