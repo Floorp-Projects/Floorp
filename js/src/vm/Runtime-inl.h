@@ -57,7 +57,7 @@ NewObjectCache::newObjectFromHit(JSContext *cx, EntryIndex entry_, js::gc::Initi
         return obj;
     }
 
-    return NULL;
+    return nullptr;
 }
 
 }  /* namespace js */
