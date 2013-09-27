@@ -872,7 +872,7 @@ xpc::SandboxProxyHandler::iterate(JSContext *cx, JS::Handle<JSObject*> proxy,
 }
 
 bool
-xpc::SandboxOptions::GlobalProperties::Parse(JSContext* cx, JS::HandleObject obj)
+xpc::GlobalProperties::Parse(JSContext *cx, JS::HandleObject obj)
 {
     NS_ENSURE_TRUE(JS_IsArrayObject(cx, obj), false);
 
@@ -905,7 +905,7 @@ xpc::SandboxOptions::GlobalProperties::Parse(JSContext* cx, JS::HandleObject obj
 }
 
 bool
-xpc::SandboxOptions::GlobalProperties::Define(JSContext* cx, JS::HandleObject obj)
+xpc::GlobalProperties::Define(JSContext *cx, JS::HandleObject obj)
 {
     if (XMLHttpRequest &&
         !JS_DefineFunction(cx, obj, "XMLHttpRequest", CreateXMLHttpRequest, 0, JSFUN_CONSTRUCTOR))
@@ -1038,7 +1038,7 @@ xpc::CreateSandboxObject(JSContext *cx, jsval *vp, nsISupports *prinOrSop, Sandb
              !JS_DefineFunction(cx, sandbox, "evalInWindow", EvalInWindow, 2, 0)))
             return NS_ERROR_XPC_UNEXPECTED;
 
-        if (!options.GlobalProperties.Define(cx, sandbox))
+        if (!options.globalProperties.Define(cx, sandbox))
             return NS_ERROR_XPC_UNEXPECTED;
     }
 
@@ -1318,7 +1318,7 @@ GetGlobalPropertiesFromOptions(JSContext *cx, HandleObject from, SandboxOptions&
 
     NS_ENSURE_TRUE(value.isObject(), NS_ERROR_INVALID_ARG);
     RootedObject ctors(cx, &value.toObject());
-    bool ok = options.GlobalProperties.Parse(cx, ctors);
+    bool ok = options.globalProperties.Parse(cx, ctors);
     NS_ENSURE_TRUE(ok, NS_ERROR_INVALID_ARG);
     return NS_OK;
 }
