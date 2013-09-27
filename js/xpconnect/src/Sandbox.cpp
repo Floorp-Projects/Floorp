@@ -874,7 +874,7 @@ xpc::SandboxProxyHandler::iterate(JSContext *cx, JS::Handle<JSObject*> proxy,
 bool
 xpc::GlobalProperties::Parse(JSContext *cx, JS::HandleObject obj)
 {
-    NS_ENSURE_TRUE(JS_IsArrayObject(cx, obj), false);
+    MOZ_ASSERT(JS_IsArrayObject(cx, obj));
 
     uint32_t length;
     bool ok = JS_GetArrayLength(cx, obj, &length);
@@ -883,7 +883,10 @@ xpc::GlobalProperties::Parse(JSContext *cx, JS::HandleObject obj)
         RootedValue nameValue(cx);
         ok = JS_GetElement(cx, obj, i, &nameValue);
         NS_ENSURE_TRUE(ok, false);
-        NS_ENSURE_TRUE(nameValue.isString(), false);
+        if (!nameValue.isString()) {
+            JS_ReportError(cx, "Property names must be strings");
+            return false;
+        }
         JSAutoByteString name(cx, nameValue.toString());
         NS_ENSURE_TRUE(name, false);
         if (!strcmp(name.ptr(), "XMLHttpRequest")) {
@@ -897,7 +900,7 @@ xpc::GlobalProperties::Parse(JSContext *cx, JS::HandleObject obj)
         } else if (!strcmp(name.ptr(), "btoa")) {
             btoa = true;
         } else {
-            // Reporting error, if one of the global property names is unknown.
+            JS_ReportError(cx, "Unknown property name: %s", name.ptr());
             return false;
         }
     }
@@ -1318,6 +1321,7 @@ GetGlobalPropertiesFromOptions(JSContext *cx, HandleObject from, SandboxOptions&
 
     NS_ENSURE_TRUE(value.isObject(), NS_ERROR_INVALID_ARG);
     RootedObject ctors(cx, &value.toObject());
+    NS_ENSURE_TRUE(JS_IsArrayObject(cx, ctors), NS_ERROR_INVALID_ARG);
     bool ok = options.globalProperties.Parse(cx, ctors);
     NS_ENSURE_TRUE(ok, NS_ERROR_INVALID_ARG);
     return NS_OK;
