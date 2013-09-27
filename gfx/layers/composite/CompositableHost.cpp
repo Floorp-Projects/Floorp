@@ -234,7 +234,6 @@ void
 CompositableParent::ActorDestroy(ActorDestroyReason why)
 {
   if (mHost) {
-    mHost->OnActorDestroy();
     mHost->Detach();
   }
 }
