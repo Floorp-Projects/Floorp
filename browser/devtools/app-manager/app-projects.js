@@ -68,6 +68,23 @@ const IDB = {
     return deferred.promise;
   },
 
+  update: function(project) {
+    let deferred = promise.defer();
+
+    var transaction = IDB._db.transaction(["projects"], "readwrite");
+    var objectStore = transaction.objectStore("projects");
+    var request = objectStore.put(project);
+    request.onerror = function(event) {
+      deferred.reject("Unable to update project to the AppProjects indexedDB: " +
+                      this.error.name + " - " + this.error.message );
+    };
+    request.onsuccess = function() {
+      deferred.resolve();
+    };
+
+    return deferred.promise;
+  },
+
   remove: function(location) {
     let deferred = promise.defer();
 
@@ -110,6 +127,8 @@ const AppProjects = {
       // The packaged app local path is a valid id, but only on the client.
       // This origin will be used to generate the true id of an app:
       // its manifest URL.
+      // If the app ends up specifying an explicit origin in its manifest,
+      // we will override this random UUID on app install.
       packagedAppOrigin: generateUUID().toString().slice(1, -1)
     };
     return IDB.add(project).then(function () {
@@ -129,6 +148,14 @@ const AppProjects = {
       // return the added objects (proxified)
       return store.object.projects[store.object.projects.length - 1];
     });
+  },
+
+  update: function (project) {
+    return IDB.update({
+      type: project.type,
+      location: project.location,
+      packagedAppOrigin: project.packagedAppOrigin
+    }).then(() => project);
   },
 
   remove: function(location) {

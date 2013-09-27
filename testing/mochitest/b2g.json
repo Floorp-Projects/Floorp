@@ -189,7 +189,6 @@
 
     "content/html/content/test/test_iframe_sandbox_plugins.html":"plugins not supported",
     "content/html/content/test/test_object_plugin_nav.html":"plugins not supported",
-    "content/html/document/test/test_bug199692.html":"needs popup to be sized to 600*600",
     "content/html/document/test/test_bug741266.html":"needs control of popup window size",
     "docshell/test/navigation/test_popup-navigates-children.html":"Needs multiple window.open support, also uses docshelltreenode",
     "docshell/test/test_bug590573.html":"queryinterfaces into webnavigation, might suffer from something similar as bug 823022",
@@ -208,7 +207,6 @@
     "content/base/test/csp/test_CSP_bug916446.html":"observer not working",
 
     "content/base/test/test_CrossSiteXHR_origin.html":"https not working, bug 907770",
-    "content/base/test/test_bug326337.html":"popup windows don't have specialpowers installed, could be solved with sendmessage/receivemessage",
     "content/base/test/test_plugin_freezing.html":"",
     "content/base/test/test_bug466409.html":"",
     "content/base/test/test_bug482935.html":"",
