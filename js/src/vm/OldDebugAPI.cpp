@@ -201,7 +201,7 @@ CheckDebugMode(JSContext *cx)
      */
     if (!debugMode) {
         JS_ReportErrorFlagsAndNumber(cx, JSREPORT_ERROR, js_GetErrorMessage,
-                                     NULL, JSMSG_NEED_DEBUG_MODE);
+                                     nullptr, JSMSG_NEED_DEBUG_MODE);
     }
     return debugMode;
 }
@@ -243,7 +243,7 @@ JS_ClearTrap(JSContext *cx, JSScript *script, jsbytecode *pc,
         site->clearTrap(cx->runtime()->defaultFreeOp(), handlerp, closurep);
     } else {
         if (handlerp)
-            *handlerp = NULL;
+            *handlerp = nullptr;
         if (closurep)
             *closurep = JSVAL_VOID;
     }
@@ -309,7 +309,7 @@ JS_SetWatchPoint(JSContext *cx, JSObject *obj_, jsid id_,
     if (JSID_IS_INT(id)) {
         propid = id;
     } else if (JSID_IS_OBJECT(id)) {
-        JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_CANT_WATCH_PROP);
+        JS_ReportErrorNumber(cx, js_GetErrorMessage, nullptr, JSMSG_CANT_WATCH_PROP);
         return false;
     } else {
         RootedValue val(cx, IdToValue(id));
@@ -325,7 +325,7 @@ JS_SetWatchPoint(JSContext *cx, JSObject *obj_, jsid id_,
         return false;
 
     if (!obj->isNative()) {
-        JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_CANT_WATCH,
+        JS_ReportErrorNumber(cx, js_GetErrorMessage, nullptr, JSMSG_CANT_WATCH,
                              obj->getClass()->name);
         return false;
     }
@@ -461,7 +461,7 @@ JS_GetFunctionLocalNameArray(JSContext *cx, JSFunction *fun, void **memp)
     RootedScript script(cx, fun->nonLazyScript());
     BindingVector bindings(cx);
     if (!FillBindingVector(script, &bindings))
-        return NULL;
+        return nullptr;
 
     LifoAlloc &lifo = cx->tempLifoAlloc();
 
@@ -470,7 +470,7 @@ JS_GetFunctionLocalNameArray(JSContext *cx, JSFunction *fun, void **memp)
     void *mem = lifo.alloc(sizeof(LifoAlloc::Mark) + bindings.length() * sizeof(uintptr_t));
     if (!mem) {
         js_ReportOutOfMemory(cx);
-        return NULL;
+        return nullptr;
     }
     *memp = mem;
     *reinterpret_cast<LifoAlloc::Mark*>(mem) = mark;
@@ -505,7 +505,7 @@ JS_PUBLIC_API(JSScript *)
 JS_GetFunctionScript(JSContext *cx, JSFunction *fun)
 {
     if (fun->isNative())
-        return NULL;
+        return nullptr;
     if (fun->isInterpretedLazy()) {
         RootedFunction rootedFun(cx, fun);
         AutoCompartment funCompartment(cx, rootedFun);
@@ -570,7 +570,7 @@ JS_GetScriptSourceMap(JSContext *cx, JSScript *script)
 {
     ScriptSource *source = script->scriptSource();
     JS_ASSERT(source);
-    return source->hasSourceMapURL() ? source->sourceMapURL() : NULL;
+    return source->hasSourceMapURL() ? source->sourceMapURL() : nullptr;
 }
 
 JS_PUBLIC_API(unsigned)
@@ -666,7 +666,7 @@ JS_GetPropertyDescArray(JSContext *cx, JSObject *obj_, JSPropertyDescArray *pda)
 
     assertSameCompartment(cx, obj);
     uint32_t i = 0;
-    JSPropertyDesc *pd = NULL;
+    JSPropertyDesc *pd = nullptr;
 
     if (obj->is<DebugScopeObject>()) {
         AutoIdVector props(cx);
@@ -680,10 +680,10 @@ JS_GetPropertyDescArray(JSContext *cx, JSObject *obj_, JSPropertyDescArray *pda)
         for (i = 0; i < props.length(); ++i) {
             pd[i].id = JSVAL_NULL;
             pd[i].value = JSVAL_NULL;
-            if (!AddValueRoot(cx, &pd[i].id, NULL))
+            if (!AddValueRoot(cx, &pd[i].id, nullptr))
                 goto bad;
             pd[i].id = IdToValue(props[i]);
-            if (!AddValueRoot(cx, &pd[i].value, NULL))
+            if (!AddValueRoot(cx, &pd[i].value, nullptr))
                 goto bad;
             if (!Proxy::get(cx, obj, obj, props.handleAt(i), MutableHandleValue::fromMarkedLocation(&pd[i].value)))
                 goto bad;
@@ -697,7 +697,7 @@ JS_GetPropertyDescArray(JSContext *cx, JSObject *obj_, JSPropertyDescArray *pda)
     const Class *clasp;
     clasp = obj->getClass();
     if (!obj->isNative() || (clasp->flags & JSCLASS_NEW_ENUMERATE)) {
-        JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
+        JS_ReportErrorNumber(cx, js_GetErrorMessage, nullptr,
                              JSMSG_CANT_DESCRIBE_PROPS, clasp->name);
         return false;
     }
@@ -707,7 +707,7 @@ JS_GetPropertyDescArray(JSContext *cx, JSObject *obj_, JSPropertyDescArray *pda)
     /* Return an empty pda early if obj has no own properties. */
     if (obj->nativeEmpty()) {
         pda->length = 0;
-        pda->array = NULL;
+        pda->array = nullptr;
         return true;
     }
 
@@ -722,14 +722,14 @@ JS_GetPropertyDescArray(JSContext *cx, JSObject *obj_, JSPropertyDescArray *pda)
             pd[i].id = JSVAL_NULL;
             pd[i].value = JSVAL_NULL;
             pd[i].alias = JSVAL_NULL;
-            if (!AddValueRoot(cx, &pd[i].id, NULL))
+            if (!AddValueRoot(cx, &pd[i].id, nullptr))
                 goto bad;
-            if (!AddValueRoot(cx, &pd[i].value, NULL))
+            if (!AddValueRoot(cx, &pd[i].value, nullptr))
                 goto bad;
             shape = const_cast<Shape *>(&r.front());
             if (!GetPropertyDesc(cx, obj, shape, &pd[i]))
                 goto bad;
-            if ((pd[i].flags & JSPD_ALIAS) && !AddValueRoot(cx, &pd[i].alias, NULL))
+            if ((pd[i].flags & JSPD_ALIAS) && !AddValueRoot(cx, &pd[i].alias, nullptr))
                 goto bad;
             if (++i == obj->propertyCount())
                 break;
@@ -761,7 +761,7 @@ JS_PutPropertyDescArray(JSContext *cx, JSPropertyDescArray *pda)
             js_RemoveRoot(cx->runtime(), &pd[i].alias);
     }
     js_free(pd);
-    pda->array = NULL;
+    pda->array = nullptr;
     pda->length = 0;
 }
 
@@ -972,14 +972,14 @@ JS::DescribeStack(JSContext *cx, unsigned maxFrames)
         desc.lineno = PCToLineNumber(i.script(), i.pc());
         desc.fun = i.maybeCallee();
         if (!frames.append(desc))
-            return NULL;
+            return nullptr;
         if (frames.length() == maxFrames)
             break;
     }
 
     JS::StackDescription *desc = js_new<JS::StackDescription>();
     if (!desc)
-        return NULL;
+        return nullptr;
 
     desc->nframes = frames.length();
     desc->frames = frames.extractRawBuffer();
@@ -1015,7 +1015,7 @@ class AutoPropertyDescArray
     void fetch(JSObject *obj) {
         JS_ASSERT(!descArray_.array);
         if (!JS_GetPropertyDescArray(cx_, obj, &descArray_))
-            descArray_.array = NULL;
+            descArray_.array = nullptr;
     }
 
     JSPropertyDescArray * operator ->() {
@@ -1031,10 +1031,10 @@ FormatValue(JSContext *cx, const Value &vArg, JSAutoByteString &bytes)
     RootedValue v(cx, vArg);
     JSString *str = ToString<CanGC>(cx, v);
     if (!str)
-        return NULL;
+        return nullptr;
     const char *buf = bytes.encodeLatin1(cx, str);
     if (!buf)
-        return NULL;
+        return nullptr;
     const char *found = strstr(buf, "function ");
     if (found && (found - buf <= 2))
         return "[function]";
@@ -1095,7 +1095,7 @@ FormatFrame(JSContext *cx, const NonBuiltinScriptFrameIter &iter, char *buf, int
         for (uint32_t i = 0; i < callProps->length; i++) {
             JSPropertyDesc* desc = &callProps->array[i];
             JSAutoByteString nameBytes;
-            const char *name = NULL;
+            const char *name = nullptr;
             bool hasName = JSVAL_IS_STRING(desc->id);
             if (hasName)
                 name = FormatValue(cx, desc->id, nameBytes);
@@ -1134,7 +1134,7 @@ FormatFrame(JSContext *cx, const NonBuiltinScriptFrameIter &iter, char *buf, int
                     JS_snprintf(number, 8, "%d", (int) k);
 
                     JSAutoByteString valueBytes;
-                    const char *value = NULL;
+                    const char *value = nullptr;
                     if (JS_GetProperty(cx, argsObj, number, &val) &&
                         (value = FormatValue(cx, val, valueBytes)))
                     {
@@ -1197,7 +1197,7 @@ FormatFrame(JSContext *cx, const NonBuiltinScriptFrameIter &iter, char *buf, int
         if (!thisVal.isUndefined()) {
             JSAutoByteString thisValBytes;
             RootedString thisValStr(cx, ToString<CanGC>(cx, thisVal));
-            const char *str = NULL;
+            const char *str = nullptr;
             if (thisValStr &&
                 (str = thisValBytes.encodeLatin1(cx, thisValStr)))
             {
@@ -1274,7 +1274,7 @@ JSAbstractFramePtr::callObject(JSContext *cx)
 {
     AbstractFramePtr frame = Valueify(*this);
     if (!frame.isFunctionFrame())
-        return NULL;
+        return nullptr;
 
     JSObject *o = GetDebugScopeForFrame(cx, frame);
 
@@ -1292,7 +1292,7 @@ JSAbstractFramePtr::callObject(JSContext *cx)
             return o;
         o = o->enclosingScope();
     }
-    return NULL;
+    return nullptr;
 }
 
 JSFunction *

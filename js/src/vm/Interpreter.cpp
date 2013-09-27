@@ -140,7 +140,7 @@ js::BoxNonStrictThis(JSContext *cx, const CallReceiver &call)
     JS_ASSERT(!call.thisv().isMagic());
 
 #ifdef DEBUG
-    JSFunction *fun = call.callee().is<JSFunction>() ? &call.callee().as<JSFunction>() : NULL;
+    JSFunction *fun = call.callee().is<JSFunction>() ? &call.callee().as<JSFunction>() : nullptr;
     JS_ASSERT_IF(fun && fun->isInterpreted(), !fun->strict());
 #endif
 
@@ -190,7 +190,7 @@ js::OnUnknownMethod(JSContext *cx, HandleObject obj, Value idval_, MutableHandle
     TypeScript::MonitorUnknown(cx);
 
     if (value.isObject()) {
-        JSObject *obj = NewObjectWithClassProto(cx, &js_NoSuchMethodClass, NULL, NULL);
+        JSObject *obj = NewObjectWithClassProto(cx, &js_NoSuchMethodClass, nullptr, nullptr);
         if (!obj)
             return false;
 
@@ -297,8 +297,8 @@ NameOperation(JSContext *cx, StackFrame *fp, jsbytecode *pc, MutableHandleValue 
     if (IsGlobalOp(JSOp(*pc)))
         obj = &obj->global();
 
-    Shape *shape = NULL;
-    JSObject *scope = NULL, *pobj = NULL;
+    Shape *shape = nullptr;
+    JSObject *scope = nullptr, *pobj = nullptr;
     if (LookupNameNoGC(cx, name, obj, &scope, &pobj, &shape)) {
         if (FetchNameNoGC(pobj, shape, vp))
             return true;
@@ -349,7 +349,7 @@ js::ReportIsNotFunction(JSContext *cx, const Value &v, int numToSkip, MaybeConst
     int spIndex = numToSkip >= 0 ? -(numToSkip + 1) : JSDVG_SEARCH_STACK;
 
     RootedValue val(cx, v);
-    js_ReportValueError3(cx, error, spIndex, val, NullPtr(), NULL, NULL);
+    js_ReportValueError3(cx, error, spIndex, val, NullPtr(), nullptr, nullptr);
     return false;
 }
 
@@ -363,7 +363,7 @@ js::ValueToCallable(JSContext *cx, const Value &v, int numToSkip, MaybeConstruct
     }
 
     ReportIsNotFunction(cx, v, numToSkip, construct);
-    return NULL;
+    return nullptr;
 }
 
 static JS_NEVER_INLINE bool
@@ -883,7 +883,7 @@ TryNoteIter::TryNoteIter(JSContext *cx, const FrameRegs &regs)
         tn = script->trynotes()->vector;
         tnEnd = tn + script->trynotes()->length;
     } else {
-        tn = tnEnd = NULL;
+        tn = tnEnd = nullptr;
     }
     settle();
 }
@@ -1012,8 +1012,8 @@ js::IteratorNext(JSContext *cx, HandleObject iterobj, MutableHandleValue rval)
 FrameGuard::FrameGuard(RunState &state, FrameRegs &regs)
   : state_(state),
     regs_(regs),
-    stack_(NULL),
-    fp_(NULL)
+    stack_(nullptr),
+    fp_(nullptr)
 { }
 
 FrameGuard::~FrameGuard()
@@ -1204,7 +1204,7 @@ ModOperation(JSContext *cx, HandleScript script, jsbytecode *pc, HandleValue lhs
 
 static JS_ALWAYS_INLINE bool
 SetObjectElementOperation(JSContext *cx, Handle<JSObject*> obj, HandleId id, const Value &value,
-                          bool strict, JSScript *script = NULL, jsbytecode *pc = NULL)
+                          bool strict, JSScript *script = nullptr, jsbytecode *pc = nullptr)
 {
     types::TypeScript::MonitorAssign(cx, obj, id);
 
@@ -1758,8 +1758,8 @@ BEGIN_CASE(JSOP_IN)
     RootedShape &prop = rootShape0;
     if (!JSObject::lookupGeneric(cx, obj, id, &obj2, &prop))
         goto error;
-    bool cond = prop != NULL;
-    prop = NULL;
+    bool cond = prop != nullptr;
+    prop = nullptr;
     TRY_BRANCH_AFTER_COND(cond, 2);
     regs.sp--;
     regs.sp[-1].setBoolean(cond);
@@ -2399,7 +2399,7 @@ BEGIN_CASE(JSOP_SPREADEVAL)
     uint32_t length = aobj->as<ArrayObject>().length();
 
     if (length > ARGS_LENGTH_MAX) {
-        JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
+        JS_ReportErrorNumber(cx, js_GetErrorMessage, nullptr,
                              op == JSOP_SPREADNEW ? JSMSG_TOO_MANY_CON_SPREADARGS
                                                   : JSMSG_TOO_MANY_FUN_SPREADARGS);
         goto error;
@@ -2778,7 +2778,8 @@ BEGIN_CASE(JSOP_SETALIASEDVAR)
 
     // Avoid computing the name if no type updates are needed, as this may be
     // expensive on scopes with large numbers of variables.
-    PropertyName *name = obj.hasSingletonType() ? ScopeCoordinateName(cx, script, regs.pc) : NULL;
+    PropertyName *name = obj.hasSingletonType() ? ScopeCoordinateName(cx, script, regs.pc)
+                                                : nullptr;
 
     obj.setAliasedVar(cx, sc, name, regs.sp[-1]);
 }
@@ -2937,7 +2938,7 @@ BEGIN_CASE(JSOP_NEWINIT)
     NewObjectKind newKind;
     if (i == JSProto_Array) {
         newKind = UseNewTypeForInitializer(cx, script, regs.pc, &ArrayObject::class_);
-        obj = NewDenseEmptyArray(cx, NULL, newKind);
+        obj = NewDenseEmptyArray(cx, nullptr, newKind);
     } else {
         gc::AllocKind allocKind = GuessObjectGCKind(0);
         newKind = UseNewTypeForInitializer(cx, script, regs.pc, &JSObject::class_);
@@ -2956,7 +2957,7 @@ BEGIN_CASE(JSOP_NEWARRAY)
     unsigned count = GET_UINT24(regs.pc);
     RootedObject &obj = rootObject0;
     NewObjectKind newKind = UseNewTypeForInitializer(cx, script, regs.pc, &ArrayObject::class_);
-    obj = NewDenseAllocatedArray(cx, count, NULL, newKind);
+    obj = NewDenseAllocatedArray(cx, count, nullptr, newKind);
     if (!obj || !SetInitializerObjectType(cx, script, regs.pc, obj, newKind))
         goto error;
 
@@ -3008,7 +3009,7 @@ BEGIN_CASE(JSOP_INITPROP)
 
     if (JS_UNLIKELY(name == cx->names().proto)
         ? !baseops::SetPropertyHelper(cx, obj, obj, id, 0, &rval, script->strict)
-        : !DefineNativeProperty(cx, obj, id, rval, NULL, NULL,
+        : !DefineNativeProperty(cx, obj, id, rval, nullptr, nullptr,
                                 JSPROP_ENUMERATE, 0, 0, 0)) {
         goto error;
     }
@@ -3078,12 +3079,13 @@ BEGIN_CASE(JSOP_SPREAD)
     RootedValue &iterVal = rootValue0;
     while (iter.next()) {
         if (count == INT32_MAX) {
-            JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
+            JS_ReportErrorNumber(cx, js_GetErrorMessage, nullptr,
                                  JSMSG_SPREAD_TOO_LARGE);
             goto error;
         }
         iterVal = iter.value();
-        if (!JSObject::defineElement(cx, arr, count++, iterVal, NULL, NULL, JSPROP_ENUMERATE))
+        if (!JSObject::defineElement(cx, arr, count++, iterVal, nullptr, nullptr,
+                                     JSPROP_ENUMERATE))
             goto error;
     }
     if (!iter.close())
@@ -3295,7 +3297,7 @@ default:
 {
     char numBuf[12];
     JS_snprintf(numBuf, sizeof numBuf, "%d", op);
-    JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
+    JS_ReportErrorNumber(cx, js_GetErrorMessage, nullptr,
                          JSMSG_BAD_BYTECODE, numBuf);
     goto error;
 }
@@ -3503,7 +3505,7 @@ js::Lambda(JSContext *cx, HandleFunction fun, HandleObject parent)
 {
     RootedObject clone(cx, CloneFunctionObjectIfNotSingleton(cx, fun, parent, TenuredObject));
     if (!clone)
-        return NULL;
+        return nullptr;
 
     if (fun->isArrow()) {
         // Note that this will assert if called from Ion code. Ion can't yet
@@ -3519,12 +3521,12 @@ js::Lambda(JSContext *cx, HandleFunction fun, HandleObject parent)
         }
 
         if (!ComputeThis(cx, frame))
-            return NULL;
+            return nullptr;
 
         RootedValue thisval(cx, frame.thisValue());
-        clone = js_fun_bind(cx, clone, thisval, NULL, 0);
+        clone = js_fun_bind(cx, clone, thisval, nullptr, 0);
         if (!clone)
-            return NULL;
+            return nullptr;
         clone->as<JSFunction>().flags |= JSFunction::ARROW;
     }
 
@@ -3599,7 +3601,7 @@ js::DefFunOperation(JSContext *cx, HandleScript script, HandleObject scopeChain,
         if (shape->isAccessorDescriptor() || !shape->writable() || !shape->enumerable()) {
             JSAutoByteString bytes;
             if (AtomToPrintableString(cx, name, &bytes)) {
-                JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_CANT_REDEFINE_PROP,
+                JS_ReportErrorNumber(cx, js_GetErrorMessage, nullptr, JSMSG_CANT_REDEFINE_PROP,
                                      bytes.ptr());
             }
 
@@ -3621,7 +3623,7 @@ js::DefFunOperation(JSContext *cx, HandleScript script, HandleObject scopeChain,
 bool
 js::SetCallOperation(JSContext *cx)
 {
-    JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_BAD_LEFTSIDE_OF_ASS);
+    JS_ReportErrorNumber(cx, js_GetErrorMessage, nullptr, JSMSG_BAD_LEFTSIDE_OF_ASS);
     return false;
 }
 

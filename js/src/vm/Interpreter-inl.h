@@ -104,7 +104,7 @@ GuardFunApplyArgumentsOptimization(JSContext *cx, AbstractFramePtr frame, Handle
  *
  * For objects, return the object itself. For string, boolean, and number
  * primitive values, return the appropriate constructor's prototype. For
- * undefined and null, throw an error and return NULL, attributing the
+ * undefined and null, throw an error and return nullptr, attributing the
  * problem to the value at |spindex| on the stack.
  */
 JS_ALWAYS_INLINE JSObject *
@@ -124,7 +124,7 @@ ValuePropertyBearer(JSContext *cx, StackFrame *fp, HandleValue v, int spindex)
 
     JS_ASSERT(v.isNull() || v.isUndefined());
     js_ReportIsNullOrUndefined(cx, spindex, v, NullPtr());
-    return NULL;
+    return nullptr;
 }
 
 inline bool
@@ -289,7 +289,7 @@ DefVarOrConstOperation(JSContext *cx, HandleObject varobj, HandlePropertyName dn
         if (AtomToPrintableString(cx, dn, &bytes)) {
             JS_ALWAYS_FALSE(JS_ReportErrorFlagsAndNumber(cx, JSREPORT_ERROR,
                                                          js_GetErrorMessage,
-                                                         NULL, JSMSG_REDECLARED_VAR,
+                                                         nullptr, JSMSG_REDECLARED_VAR,
                                                          (oldAttrs & JSPROP_READONLY)
                                                          ? "const"
                                                          : "var",
@@ -493,7 +493,7 @@ InitElemOperation(JSContext *cx, HandleObject obj, HandleValue idval, HandleValu
     if (!ValueToId<CanGC>(cx, idval, &id))
         return false;
 
-    return JSObject::defineGeneric(cx, obj, id, val, NULL, NULL, JSPROP_ENUMERATE);
+    return JSObject::defineGeneric(cx, obj, id, val, nullptr, nullptr, JSPROP_ENUMERATE);
 }
 
 static JS_ALWAYS_INLINE bool
@@ -519,12 +519,12 @@ InitArrayElemOperation(JSContext *cx, jsbytecode *pc, HandleObject obj, uint32_t
                 return false;
         }
     } else {
-        if (!JSObject::defineElement(cx, obj, index, val, NULL, NULL, JSPROP_ENUMERATE))
+        if (!JSObject::defineElement(cx, obj, index, val, nullptr, nullptr, JSPROP_ENUMERATE))
             return false;
     }
 
     if (op == JSOP_INITELEM_INC && index == INT32_MAX) {
-        JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_SPREAD_TOO_LARGE);
+        JS_ReportErrorNumber(cx, js_GetErrorMessage, nullptr, JSMSG_SPREAD_TOO_LARGE);
         return false;
     }
 
@@ -660,7 +660,7 @@ ReportIfNotFunction(JSContext *cx, const Value &v, MaybeConstruct construct = NO
         return &v.toObject().as<JSFunction>();
 
     ReportIsNotFunction(cx, v, -1, construct);
-    return NULL;
+    return nullptr;
 }
 
 /*
@@ -715,7 +715,7 @@ class FastInvokeGuard
                     return false;
             }
             if (ictx_.empty())
-                ictx_.construct(cx, (js::jit::TempAllocator *)NULL);
+                ictx_.construct(cx, (js::jit::TempAllocator *)nullptr);
             JS_ASSERT(fun_->nonLazyScript() == script_);
 
             jit::MethodStatus status = jit::CanEnterUsingFastInvoke(cx, script_, args_.length());

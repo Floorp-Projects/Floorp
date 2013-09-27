@@ -35,8 +35,8 @@ class Monitor
 
   public:
     Monitor()
-      : lock_(NULL),
-        condVar_(NULL)
+      : lock_(nullptr),
+        condVar_(nullptr)
     { }
 
     ~Monitor() {
