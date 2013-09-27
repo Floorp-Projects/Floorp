@@ -236,11 +236,6 @@ nsAppShell::Observe(nsISupports* aSubject,
                        NS_LITERAL_STRING(PREFNAME_COALESCE_TOUCHES)) ||
                    nsDependentString(aData).Equals(
                        NS_LITERAL_STRING(PREFNAME_MATCH_OS)))) {
-        AndroidBridge* bridge = AndroidBridge::Bridge();
-        if (!bridge) {
-            return NS_OK;
-        }
-
         bool match;
         nsresult rv = Preferences::GetBool(PREFNAME_MATCH_OS, &match);
         NS_ENSURE_SUCCESS(rv, rv);
@@ -405,10 +400,6 @@ nsAppShell::ProcessNextNativeEvent(bool mayWait)
 
     case AndroidGeckoEvent::THUMBNAIL: {
         if (!mBrowserApp)
-            break;
-
-        AndroidBridge* bridge = AndroidBridge::Bridge();
-        if (!bridge)
             break;
 
         int32_t tabId = curEvent->MetaState();
