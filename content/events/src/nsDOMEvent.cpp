@@ -150,7 +150,8 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsDOMEvent)
         static_cast<nsMouseEvent_base*>(tmp->mEvent)->relatedTarget = nullptr;
         break;
       case NS_CLIPBOARD_EVENT:
-        static_cast<nsClipboardEvent*>(tmp->mEvent)->clipboardData = nullptr;
+        static_cast<InternalClipboardEvent*>(tmp->mEvent)->clipboardData =
+          nullptr;
         break;
       case NS_MUTATION_EVENT:
         static_cast<InternalMutationEvent*>(tmp->mEvent)->mRelatedNode =
@@ -194,7 +195,7 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(nsDOMEvent)
       case NS_CLIPBOARD_EVENT:
         NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(cb, "mEvent->clipboardData");
         cb.NoteXPCOMChild(
-          static_cast<nsClipboardEvent*>(tmp->mEvent)->clipboardData);
+          static_cast<InternalClipboardEvent*>(tmp->mEvent)->clipboardData);
         break;
       case NS_MUTATION_EVENT:
         NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(cb, "mEvent->mRelatedNode");
@@ -563,8 +564,10 @@ nsDOMEvent::DuplicatePrivateData()
     }
     case NS_CLIPBOARD_EVENT:
     {
-      nsClipboardEvent* oldClipboardEvent = static_cast<nsClipboardEvent*>(mEvent);
-      nsClipboardEvent* clipboardEvent = new nsClipboardEvent(false, msg);
+      InternalClipboardEvent* oldClipboardEvent =
+        static_cast<InternalClipboardEvent*>(mEvent);
+      InternalClipboardEvent* clipboardEvent =
+        new InternalClipboardEvent(false, msg);
       clipboardEvent->AssignClipboardEventData(*oldClipboardEvent, true);
       newEvent = clipboardEvent;
       break;

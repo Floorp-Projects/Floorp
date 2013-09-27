@@ -132,6 +132,5 @@ typedef mozilla::InternalScriptErrorEvent  nsScriptErrorEvent;
 typedef mozilla::InternalScrollPortEvent   nsScrollPortEvent;
 typedef mozilla::InternalScrollAreaEvent   nsScrollAreaEvent;
 typedef mozilla::InternalFormEvent         nsFormEvent;
-typedef mozilla::InternalClipboardEvent    nsClipboardEvent;
 
 #endif // mozilla_EventForwards_h__
