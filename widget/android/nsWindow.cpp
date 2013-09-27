@@ -52,6 +52,7 @@ using mozilla::unused;
 #include "nsTArray.h"
 
 #include "AndroidBridge.h"
+#include "AndroidBridgeUtilities.h"
 #include "android_npapi.h"
 
 #include "imgIEncoder.h"
@@ -354,7 +355,7 @@ nsWindow::GetDefaultScaleInternal()
     }
 
     if (AndroidBridge::Bridge()) {
-        density = AndroidBridge::Bridge()->GetDensity();
+        density = GeckoAppShell::GetDensity();
     }
 
     if (!density) {
@@ -519,7 +520,7 @@ nsWindow::SetSizeMode(int32_t aMode)
 {
     switch (aMode) {
         case nsSizeMode_Minimized:
-            AndroidBridge::Bridge()->MoveTaskToBack();
+            GeckoAppShell::MoveTaskToBack();
             break;
         case nsSizeMode_Fullscreen:
             MakeFullScreen(true);
@@ -700,7 +701,7 @@ nsWindow::DispatchEvent(nsGUIEvent *aEvent)
 NS_IMETHODIMP
 nsWindow::MakeFullScreen(bool aFullScreen)
 {
-    AndroidBridge::Bridge()->SetFullScreen(aFullScreen);
+    GeckoAppShell::SetFullScreen(aFullScreen);
     return NS_OK;
 }
 
@@ -1248,7 +1249,7 @@ bool nsWindow::OnMultitouchEvent(AndroidGeckoEvent *ae)
         // if this event is a down event, that means it's the start of a new block, and the
         // previous block should not be default-prevented
         bool defaultPrevented = isDownEvent ? false : preventDefaultActions;
-        AndroidBridge::Bridge()->NotifyDefaultPrevented(defaultPrevented);
+        GeckoAppShell::NotifyDefaultPrevented(defaultPrevented);
         sDefaultPreventedNotified = true;
     }
 
@@ -1257,7 +1258,7 @@ bool nsWindow::OnMultitouchEvent(AndroidGeckoEvent *ae)
     // for the next event.
     if (isDownEvent) {
         if (preventDefaultActions) {
-            AndroidBridge::Bridge()->NotifyDefaultPrevented(true);
+            GeckoAppShell::NotifyDefaultPrevented(true);
             sDefaultPreventedNotified = true;
         } else {
             sDefaultPreventedNotified = false;
@@ -1859,10 +1860,10 @@ nsWindow::OnIMEEvent(AndroidGeckoEvent *ae)
             NotifyIMEOfTextChange(0, INT32_MAX / 2, INT32_MAX / 2);
             FlushIMEChanges();
         }
-        AndroidBridge::NotifyIME(AndroidBridge::NOTIFY_IME_REPLY_EVENT);
+        GeckoAppShell::NotifyIME(AndroidBridge::NOTIFY_IME_REPLY_EVENT);
         return;
     } else if (ae->Action() == AndroidGeckoEvent::IME_UPDATE_CONTEXT) {
-        AndroidBridge::NotifyIMEContext(mInputContext.mIMEState.mEnabled,
+        GeckoAppShell::NotifyIMEContext(mInputContext.mIMEState.mEnabled,
                                         mInputContext.mHTMLInputType,
                                         mInputContext.mHTMLInputInputmode,
                                         mInputContext.mActionHint);
@@ -1873,7 +1874,7 @@ nsWindow::OnIMEEvent(AndroidGeckoEvent *ae)
         // Still reply to events, but don't do anything else
         if (ae->Action() == AndroidGeckoEvent::IME_SYNCHRONIZE ||
             ae->Action() == AndroidGeckoEvent::IME_REPLACE_TEXT) {
-            AndroidBridge::NotifyIME(AndroidBridge::NOTIFY_IME_REPLY_EVENT);
+            GeckoAppShell::NotifyIME(AndroidBridge::NOTIFY_IME_REPLY_EVENT);
         }
         return;
     }
@@ -1886,7 +1887,7 @@ nsWindow::OnIMEEvent(AndroidGeckoEvent *ae)
     case AndroidGeckoEvent::IME_SYNCHRONIZE:
         {
             FlushIMEChanges();
-            AndroidBridge::NotifyIME(AndroidBridge::NOTIFY_IME_REPLY_EVENT);
+            GeckoAppShell::NotifyIME(AndroidBridge::NOTIFY_IME_REPLY_EVENT);
         }
         break;
     case AndroidGeckoEvent::IME_REPLACE_TEXT:
@@ -1918,7 +1919,7 @@ nsWindow::OnIMEEvent(AndroidGeckoEvent *ae)
                 }
                 mIMEKeyEvents.Clear();
                 FlushIMEChanges();
-                AndroidBridge::NotifyIME(AndroidBridge::NOTIFY_IME_REPLY_EVENT);
+                GeckoAppShell::NotifyIME(AndroidBridge::NOTIFY_IME_REPLY_EVENT);
                 break;
             }
 
@@ -1940,7 +1941,7 @@ nsWindow::OnIMEEvent(AndroidGeckoEvent *ae)
                 DispatchEvent(&event);
             }
             FlushIMEChanges();
-            AndroidBridge::NotifyIME(AndroidBridge::NOTIFY_IME_REPLY_EVENT);
+            GeckoAppShell::NotifyIME(AndroidBridge::NOTIFY_IME_REPLY_EVENT);
         }
         break;
     case AndroidGeckoEvent::IME_SET_SELECTION:
@@ -2118,7 +2119,7 @@ nsWindow::NotifyIME(NotificationToIME aNotification)
         case REQUEST_TO_COMMIT_COMPOSITION:
             //ALOGIME("IME: REQUEST_TO_COMMIT_COMPOSITION: s=%d", aState);
             RemoveIMEComposition();
-            AndroidBridge::NotifyIME(REQUEST_TO_COMMIT_COMPOSITION);
+            GeckoAppShell::NotifyIME(REQUEST_TO_COMMIT_COMPOSITION);
             return NS_OK;
         case REQUEST_TO_CANCEL_COMPOSITION:
             ALOGIME("IME: REQUEST_TO_CANCEL_COMPOSITION");
@@ -2136,11 +2137,11 @@ nsWindow::NotifyIME(NotificationToIME aNotification)
                 DispatchEvent(&compEvent);
             }
 
-            AndroidBridge::NotifyIME(REQUEST_TO_CANCEL_COMPOSITION);
+            GeckoAppShell::NotifyIME(REQUEST_TO_CANCEL_COMPOSITION);
             return NS_OK;
         case NOTIFY_IME_OF_FOCUS:
             ALOGIME("IME: NOTIFY_IME_OF_FOCUS");
-            AndroidBridge::NotifyIME(NOTIFY_IME_OF_FOCUS);
+            GeckoAppShell::NotifyIME(NOTIFY_IME_OF_FOCUS);
             return NS_OK;
         case NOTIFY_IME_OF_BLUR:
             ALOGIME("IME: NOTIFY_IME_OF_BLUR");
@@ -2152,7 +2153,7 @@ nsWindow::NotifyIME(NotificationToIME aNotification)
             mIMEComposing = false;
             mIMEComposingText.Truncate();
 
-            AndroidBridge::NotifyIME(NOTIFY_IME_OF_BLUR);
+            GeckoAppShell::NotifyIME(NOTIFY_IME_OF_BLUR);
             return NS_OK;
         case NOTIFY_IME_OF_SELECTION_CHANGE:
             if (mIMEMaskSelectionUpdate) {
@@ -2212,7 +2213,7 @@ nsWindow::SetInputContext(const InputContext& aContext,
 
     if (enabled == IMEState::ENABLED && aAction.UserMightRequestOpenVKB()) {
         // Don't reset keyboard when we should simply open the vkb
-        AndroidBridge::NotifyIME(AndroidBridge::NOTIFY_IME_OPEN_VKB);
+        GeckoAppShell::NotifyIME(AndroidBridge::NOTIFY_IME_OPEN_VKB);
         return;
     }
 
@@ -2268,7 +2269,7 @@ nsWindow::FlushIMEChanges()
         if (!event.mSucceeded)
             return;
 
-        AndroidBridge::NotifyIMEChange(event.mReply.mString,
+        GeckoAppShell::NotifyIMEChange(event.mReply.mString,
                                        change.mStart,
                                        change.mOldEnd,
                                        change.mNewEnd);
@@ -2283,7 +2284,7 @@ nsWindow::FlushIMEChanges()
         if (!event.mSucceeded)
             return;
 
-        AndroidBridge::NotifyIMEChange(EmptyString(),
+        GeckoAppShell::NotifyIMEChange(EmptyString(),
                              (int32_t) event.GetSelectionStart(),
                              (int32_t) event.GetSelectionEnd(), -1);
         mIMESelectionChanged = false;
@@ -2378,44 +2379,47 @@ nsWindow::DrawWindowUnderlay(LayerManager* aManager, nsIntRect aRect)
 {
     JNIEnv *env = GetJNIForThread();
     NS_ABORT_IF_FALSE(env, "No JNI environment at DrawWindowUnderlay()!");
-    if (!env)
+    if (!env) {
         return;
+    }
 
     AutoLocalJNIFrame jniFrame(env);
 
-    AndroidGeckoLayerClient& client = AndroidBridge::Bridge()->GetLayerClient();
-    if (!client.CreateFrame(&jniFrame, mLayerRendererFrame)) return;
-    
-    if (!WidgetPaintsBackground())
+    GeckoLayerClient* client = AndroidBridge::Bridge()->GetLayerClient();
+    if (!client || client->isNull()) {
+        ALOG_BRIDGE("Exceptional Exit: %s", __PRETTY_FUNCTION__);
         return;
+    }
 
-    if (!client.ActivateProgram(&jniFrame)) return;
-    if (!mLayerRendererFrame.BeginDrawing(&jniFrame)) return;
-    if (!mLayerRendererFrame.DrawBackground(&jniFrame)) return;
-    if (!client.DeactivateProgram(&jniFrame)) return; // redundant, but in case somebody adds code after this...
+    jobject frameObj = client->CreateFrame();
+    NS_ABORT_IF_FALSE(frameObj, "No frame object!");
+
+    mLayerRendererFrame.Init(frameObj, env);
+    if (!WidgetPaintsBackground()) {
+        return;
+    }
+
+    client->ActivateProgram();
+    mLayerRendererFrame.BeginDrawing();
+    mLayerRendererFrame.DrawBackground();
+    client->DeactivateProgram(); // redundant, but in case somebody adds code after this...
 }
 
 void
 nsWindow::DrawWindowOverlay(LayerManager* aManager, nsIntRect aRect)
 {
     PROFILER_LABEL("nsWindow", "DrawWindowOverlay");
-    JNIEnv *env = GetJNIForThread();
-    NS_ABORT_IF_FALSE(env, "No JNI environment at DrawWindowOverlay()!");
-    if (!env)
-        return;
-
-    AutoLocalJNIFrame jniFrame(env);
 
     NS_ABORT_IF_FALSE(!mLayerRendererFrame.isNull(),
                       "Frame should have been created in DrawWindowUnderlay()!");
 
-    AndroidGeckoLayerClient& client = AndroidBridge::Bridge()->GetLayerClient();
+    GeckoLayerClient* client = AndroidBridge::Bridge()->GetLayerClient();
 
-    if (!client.ActivateProgram(&jniFrame)) return;
-    if (!mLayerRendererFrame.DrawForeground(&jniFrame)) return;
-    if (!mLayerRendererFrame.EndDrawing(&jniFrame)) return;
-    if (!client.DeactivateProgram(&jniFrame)) return;
-    mLayerRendererFrame.Dispose(env);
+    client->ActivateProgram();
+    mLayerRendererFrame.DrawForeground();
+    mLayerRendererFrame.EndDrawing();
+    client->DeactivateProgram();
+    mLayerRendererFrame.Dispose();
 }
 
 // off-main-thread compositor fields and functions
