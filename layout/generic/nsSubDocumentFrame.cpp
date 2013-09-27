@@ -350,11 +350,13 @@ nsSubDocumentFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
   int32_t subdocAPD = presContext->AppUnitsPerDevPixel();
 
   nsRect dirty;
+  bool haveDisplayPort = false;
   if (subdocRootFrame) {
     nsIDocument* doc = subdocRootFrame->PresContext()->Document();
     nsIContent* root = doc ? doc->GetRootElement() : nullptr;
     nsRect displayPort;
     if (root && nsLayoutUtils::GetDisplayPort(root, &displayPort)) {
+      haveDisplayPort = true;
       dirty = displayPort;
     } else {
       // get the dirty rect relative to the root frame of the subdoc
@@ -376,6 +378,7 @@ nsSubDocumentFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
     (presShell->GetXResolution() != 1.0 || presShell->GetYResolution() != 1.0);
   bool constructZoomItem = subdocRootFrame && parentAPD != subdocAPD;
   bool needsOwnLayer = constructResolutionItem || constructZoomItem ||
+    haveDisplayPort ||
     presContext->IsRootContentDocument() || (sf && sf->IsScrollingActive());
 
   nsDisplayList childItems;
