@@ -394,14 +394,6 @@ public:
 
 
   /**
-   * Returns true if aActiveScrolledRoot is in a content document,
-   * and its topmost content document ancestor has a root scroll frame with
-   * a displayport set, and aActiveScrolledRoot is scrolled by that scrollframe.
-   */
-  static bool IsScrolledByRootContentDocumentDisplayportScrolling(const nsIFrame* aAnimatedGeometryRoot,
-                                                                  nsDisplayListBuilder* aBuilder);
-
-  /**
     * GetScrollableFrameFor returns the scrollable frame for a scrolled frame
     */
   static nsIScrollableFrame* GetScrollableFrameFor(const nsIFrame *aScrolledFrame);

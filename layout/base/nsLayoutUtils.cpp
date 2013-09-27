@@ -1293,21 +1293,6 @@ nsLayoutUtils::GetAnimatedGeometryRootFor(nsDisplayItem* aItem,
   return nsLayoutUtils::GetAnimatedGeometryRootFor(f, aItem->ReferenceFrame());
 }
 
-bool
-nsLayoutUtils::IsScrolledByRootContentDocumentDisplayportScrolling(const nsIFrame* aAnimatedGeometryRoot,
-                                                                   nsDisplayListBuilder* aBuilder)
-{
-  nsPresContext* presContext = aAnimatedGeometryRoot->PresContext()->
-          GetToplevelContentDocumentPresContext();
-  if (!presContext)
-    return false;
-
-  nsIFrame* rootScrollFrame = presContext->GetPresShell()->GetRootScrollFrame();
-  if (!rootScrollFrame || !nsLayoutUtils::GetDisplayPort(rootScrollFrame->GetContent(), nullptr))
-    return false;
-  return nsLayoutUtils::IsAncestorFrameCrossDoc(rootScrollFrame, aAnimatedGeometryRoot);
-}
-
 // static
 nsIScrollableFrame*
 nsLayoutUtils::GetNearestScrollableFrameForDirection(nsIFrame* aFrame,
@@ -2105,9 +2090,6 @@ nsLayoutUtils::PaintFrame(nsRenderingContext* aRenderingContext, nsIFrame* aFram
 
   nsDisplayListBuilder builder(aFrame, nsDisplayListBuilder::PAINTING,
 		                       !(aFlags & PAINT_HIDE_CARET));
-  if (usingDisplayPort) {
-    builder.SetDisplayPort(displayport);
-  }
 
   nsDisplayList list;
   if (aFlags & PAINT_IN_TRANSFORM) {
