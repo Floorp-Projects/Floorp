@@ -362,6 +362,15 @@ public:
                                         const nsIFrame* aCommonAncestor = nullptr);
 
   /**
+   * Return true if aFrame is a fixed-pos frame and is a child of a viewport
+   * which has a displayport. These frames get special treatment from the compositor.
+   * aDisplayPort, if non-null, is set to the display port rectangle (relative to
+   * the viewport).
+   */
+  static bool IsFixedPosFrameInDisplayPort(const nsIFrame* aFrame,
+                                           nsRect* aDisplayPort = nullptr);
+
+  /**
    * Finds the nearest ancestor frame that is considered to have (or will have)
    * "animated geometry". For example the scrolled frames of scrollframes which
    * are actively being scrolled fall into this category. Frames with certain
