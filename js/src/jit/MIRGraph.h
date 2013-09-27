@@ -13,7 +13,6 @@
 #include "jit/FixedList.h"
 #include "jit/IonAllocPolicy.h"
 #include "jit/MIR.h"
-#include "jit/MIRGenerator.h"
 
 namespace js {
 namespace jit {

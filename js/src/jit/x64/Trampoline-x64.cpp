@@ -4,14 +4,10 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "assembler/assembler/MacroAssembler.h"
 #include "jit/Bailouts.h"
-#include "jit/ExecutionModeInlines.h"
 #include "jit/IonCompartment.h"
 #include "jit/IonFrames.h"
 #include "jit/IonLinker.h"
-#include "jit/IonSpewer.h"
-#include "jit/PerfSpewer.h"
 #include "jit/VMFunctions.h"
 #include "jit/x64/BaselineHelpers-x64.h"
 

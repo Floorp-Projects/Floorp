@@ -9,12 +9,7 @@
 
 #ifdef JS_ION
 
-#include "jit/BaselineIC.h"
-#include "jit/BaselineJIT.h"
-#include "jit/BytecodeAnalysis.h"
 #include "jit/FixedList.h"
-#include "jit/IonAllocPolicy.h"
-#include "jit/IonCode.h"
 #if defined(JS_CPU_X86)
 # include "jit/x86/BaselineCompiler-x86.h"
 #elif defined(JS_CPU_X64)

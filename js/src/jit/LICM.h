@@ -7,15 +7,13 @@
 #ifndef jit_LICM_h
 #define jit_LICM_h
 
-#include "jit/IonAllocPolicy.h"
-#include "jit/IonAnalysis.h"
-#include "jit/MIR.h"
-#include "jit/MIRGraph.h"
-
 // This file represents the Loop Invariant Code Motion optimization pass
 
 namespace js {
 namespace jit {
+
+class MIRGenerator;
+class MIRGraph;
 
 class LICM
 {

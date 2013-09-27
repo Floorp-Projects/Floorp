@@ -10,7 +10,6 @@
 #include "jspubtd.h"
 
 #include "jit/CompileInfo.h"
-#include "jit/Ion.h"
 #include "jit/IonFrames.h"
 
 namespace js {

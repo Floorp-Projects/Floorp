@@ -17,7 +17,9 @@
 #include "jscompartmentinlines.h"
 #include "jsinferinlines.h"
 
-#include "gc/Nursery-inl.h"
+#ifdef JSGC_GENERATIONAL
+# include "gc/Nursery-inl.h"
+#endif
 #include "vm/String-inl.h"
 
 using namespace js;

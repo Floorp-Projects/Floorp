@@ -12,7 +12,6 @@
 
 #include "ds/InlineMap.h"
 #include "gc/Barrier.h"
-#include "js/HashTable.h"
 #include "js/Vector.h"
 
 class JSAtom;

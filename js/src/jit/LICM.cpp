@@ -8,10 +8,9 @@
 
 #include <stdio.h>
 
-#include "jit/Ion.h"
-#include "jit/IonBuilder.h"
 #include "jit/IonSpewer.h"
 #include "jit/MIR.h"
+#include "jit/MIRGenerator.h"
 #include "jit/MIRGraph.h"
 
 using namespace js;

@@ -6,7 +6,6 @@
 
 #include "jit/ParallelFunctions.h"
 
-#include "jit/IonSpewer.h"
 #include "vm/ArrayObject.h"
 
 #include "jsgcinlines.h"
