@@ -51,7 +51,7 @@ class BaselineInspector
 
   public:
     BaselineInspector(JSContext *cx, JSScript *rawScript)
-      : script(cx, rawScript), prevLookedUpEntry(NULL)
+      : script(cx, rawScript), prevLookedUpEntry(nullptr)
     {
         JS_ASSERT(script);
     }
@@ -82,7 +82,7 @@ class BaselineInspector
 
     template <typename ICInspectorType>
     ICInspectorType makeICInspector(jsbytecode *pc, ICStub::Kind expectedFallbackKind) {
-        ICEntry *ent = NULL;
+        ICEntry *ent = nullptr;
         if (hasBaselineScript()) {
             ent = &icEntryFromPC(pc);
             JS_ASSERT(ent->fallbackStub()->kind() == expectedFallbackKind);

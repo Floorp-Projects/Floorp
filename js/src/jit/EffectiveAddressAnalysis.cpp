@@ -32,7 +32,7 @@ AnalyzeLsh(MBasicBlock *block, MLsh *lsh)
 
     int32_t displacement = 0;
     MInstruction *last = lsh;
-    MDefinition *base = NULL;
+    MDefinition *base = nullptr;
     while (true) {
         if (!last->hasOneUse())
             break;
