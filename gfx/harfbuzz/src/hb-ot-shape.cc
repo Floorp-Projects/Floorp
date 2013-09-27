@@ -58,17 +58,8 @@ static hb_tag_t horizontal_features[] = {
   HB_TAG('r','c','l','t'),
 };
 
-/* Note:
- * Technically speaking, vrt2 and vert are mutually exclusive.
- * According to the spec, valt and vpal are also mutually exclusive.
- * But we apply them all for now.
- */
 static hb_tag_t vertical_features[] = {
-  HB_TAG('v','a','l','t'),
   HB_TAG('v','e','r','t'),
-  HB_TAG('v','k','r','n'),
-  HB_TAG('v','p','a','l'),
-  HB_TAG('v','r','t','2'),
 };
 
 
@@ -427,8 +418,6 @@ zero_mark_widths_by_gdef (hb_buffer_t *buffer)
 static inline void
 hb_ot_position_default (hb_ot_shape_context_t *c)
 {
-  hb_ot_layout_position_start (c->font, c->buffer);
-
   unsigned int count = c->buffer->len;
   for (unsigned int i = 0; i < count; i++)
   {
@@ -442,6 +431,13 @@ hb_ot_position_default (hb_ot_shape_context_t *c)
 						  &c->buffer->pos[i].y_offset);
 
   }
+}
+
+static inline bool
+hb_ot_position_complex (hb_ot_shape_context_t *c)
+{
+  bool ret = false;
+  unsigned int count = c->buffer->len;
 
   switch (c->plan->shaper->zero_width_marks)
   {
@@ -461,13 +457,6 @@ hb_ot_position_default (hb_ot_shape_context_t *c)
     case HB_OT_SHAPE_ZERO_WIDTH_MARKS_BY_GDEF_LATE:
       break;
   }
-}
-
-static inline bool
-hb_ot_position_complex (hb_ot_shape_context_t *c)
-{
-  bool ret = false;
-  unsigned int count = c->buffer->len;
 
   if (hb_ot_layout_has_positioning (c->face))
   {
@@ -509,17 +498,19 @@ hb_ot_position_complex (hb_ot_shape_context_t *c)
       break;
   }
 
-  hb_ot_layout_position_finish (c->font, c->buffer);
-
   return ret;
 }
 
 static inline void
 hb_ot_position (hb_ot_shape_context_t *c)
 {
+  hb_ot_layout_position_start (c->font, c->buffer);
+
   hb_ot_position_default (c);
 
   hb_bool_t fallback = !hb_ot_position_complex (c);
+
+  hb_ot_layout_position_finish (c->font, c->buffer);
 
   if (fallback && c->plan->shaper->fallback_position)
     _hb_ot_shape_fallback_position (c->plan, c->font, c->buffer);
