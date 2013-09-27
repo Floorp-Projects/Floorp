@@ -7,24 +7,36 @@
 #ifndef mozilla_dom_SourceBuffer_h_
 #define mozilla_dom_SourceBuffer_h_
 
-#include "AsyncEventRunner.h"
+#include "MediaDecoderReader.h"
 #include "MediaSource.h"
+#include "js/RootingAPI.h"
+#include "mozilla/Assertions.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/dom/SourceBufferBinding.h"
-#include "mozilla/dom/TimeRanges.h"
 #include "mozilla/dom/TypedArray.h"
-#include "mozilla/ErrorResult.h"
+#include "mozilla/mozalloc.h"
+#include "nsAutoPtr.h"
 #include "nsCOMPtr.h"
-#include "nscore.h"
+#include "nsCycleCollectionNoteChild.h"
 #include "nsCycleCollectionParticipant.h"
 #include "nsDOMEventTargetHelper.h"
-#include "nsWrapperCache.h"
+#include "nsISupports.h"
+#include "nsStringGlue.h"
+#include "nscore.h"
+
+class JSObject;
+struct JSContext;
 
 namespace mozilla {
 
+class ErrorResult;
+class SourceBufferResource;
+class SubBufferDecoder;
 template <typename T> class AsyncEventRunner;
 
 namespace dom {
+
+class TimeRanges;
 
 class SourceBuffer MOZ_FINAL : public nsDOMEventTargetHelper
 {
@@ -76,16 +88,22 @@ public:
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(SourceBuffer, nsDOMEventTargetHelper)
 
-  explicit SourceBuffer(MediaSource* aMediaSource);
+  explicit SourceBuffer(MediaSource* aMediaSource, const nsACString& aType);
+  ~SourceBuffer();
 
   MediaSource* GetParentObject() const;
 
   JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aScope) MOZ_OVERRIDE;
 
-  // Notify the SourceBuffer that it has been attached to or detached from
-  // the MediaSource's sourceBuffer list.
-  void Attach();
+  // Notify the SourceBuffer that it has been detached from the
+  // MediaSource's sourceBuffer list.
   void Detach();
+  bool IsAttached() const
+  {
+    return mMediaSource != nullptr;
+  }
+
+  void Ended();
 
 private:
   friend class AsyncEventRunner<SourceBuffer>;
@@ -102,6 +120,8 @@ private:
 
   nsRefPtr<MediaSource> mMediaSource;
 
+  nsRefPtr<SubBufferDecoder> mDecoder;
+
   double mAppendWindowStart;
   double mAppendWindowEnd;
 
@@ -109,10 +129,9 @@ private:
 
   SourceBufferAppendMode mAppendMode;
   bool mUpdating;
-
-  bool mAttached;
 };
 
 } // namespace dom
+
 } // namespace mozilla
 #endif /* mozilla_dom_SourceBuffer_h_ */
