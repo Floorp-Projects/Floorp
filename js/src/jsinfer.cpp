@@ -1035,12 +1035,8 @@ TemporaryTypeSet::getKnownClass()
     unsigned count = getObjectCount();
 
     for (unsigned i = 0; i < count; i++) {
-        const Class *nclasp;
-        if (JSObject *object = getSingleObject(i))
-            nclasp = object->getClass();
-        else if (TypeObject *object = getTypeObject(i))
-            nclasp = object->clasp;
-        else
+        const Class *nclasp = getObjectClass(i);
+        if (!nclasp)
             continue;
 
         if (clasp && clasp != nclasp)
@@ -1069,15 +1065,8 @@ TemporaryTypeSet::isDOMClass()
 
     unsigned count = getObjectCount();
     for (unsigned i = 0; i < count; i++) {
-        const Class *clasp;
-        if (JSObject *object = getSingleObject(i))
-            clasp = object->getClass();
-        else if (TypeObject *object = getTypeObject(i))
-            clasp = object->clasp;
-        else
-            continue;
-
-        if (!(clasp->flags & JSCLASS_IS_DOMJSCLASS))
+        const Class *clasp = getObjectClass(i);
+        if (clasp && !(clasp->flags & JSCLASS_IS_DOMJSCLASS))
             return false;
     }
 
@@ -1095,15 +1084,30 @@ TemporaryTypeSet::maybeCallable()
 
     unsigned count = getObjectCount();
     for (unsigned i = 0; i < count; i++) {
-        const Class *clasp;
-        if (JSObject *object = getSingleObject(i))
-            clasp = object->getClass();
-        else if (TypeObject *object = getTypeObject(i))
-            clasp = object->clasp;
-        else
-            continue;
+        const Class *clasp = getObjectClass(i);
+        if (clasp && clasp->isCallable())
+            return true;
+    }
 
-        if (clasp->isCallable())
+    return false;
+}
+
+bool
+TemporaryTypeSet::maybeEmulatesUndefined()
+{
+    if (!maybeObject())
+        return false;
+
+    if (unknownObject())
+        return true;
+
+    unsigned count = getObjectCount();
+    for (unsigned i = 0; i < count; i++) {
+        // The object emulates undefined if clasp->emulatesUndefined() or if
+        // it's a WrapperObject, see EmulatesUndefined. Since all wrappers are
+        // proxies, we can just check for that.
+        const Class *clasp = getObjectClass(i);
+        if (clasp && (clasp->emulatesUndefined() || IsProxyClass(clasp)))
             return true;
     }
 
@@ -2715,8 +2719,6 @@ TypeObject::print()
             fprintf(stderr, " packed");
         if (!hasAnyFlags(OBJECT_FLAG_LENGTH_OVERFLOW))
             fprintf(stderr, " noLengthOverflow");
-        if (hasAnyFlags(OBJECT_FLAG_EMULATES_UNDEFINED))
-            fprintf(stderr, " emulatesUndefined");
         if (hasAnyFlags(OBJECT_FLAG_ITERATED))
             fprintf(stderr, " iterated");
         if (interpretedFunction)
@@ -3461,9 +3463,6 @@ JSObject::makeLazyType(JSContext *cx, HandleObject obj)
 
     if (obj->lastProperty()->hasObjectFlag(BaseShape::ITERATED_SINGLETON))
         type->flags |= OBJECT_FLAG_ITERATED;
-
-    if (obj->getClass()->emulatesUndefined())
-        type->flags |= OBJECT_FLAG_EMULATES_UNDEFINED;
 
     /*
      * Adjust flags for objects which will have the wrong flags set by just

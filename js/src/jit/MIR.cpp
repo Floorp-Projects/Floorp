@@ -206,9 +206,7 @@ MaybeEmulatesUndefined(JSContext *cx, MDefinition *op)
     if (!types)
         return true;
 
-    if (!types->maybeObject())
-        return false;
-    return types->hasObjectFlags(cx, types::OBJECT_FLAG_EMULATES_UNDEFINED);
+    return types->maybeEmulatesUndefined();
 }
 
 static bool

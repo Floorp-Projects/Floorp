@@ -397,8 +397,9 @@ enum {
     /* For a global object, whether flags were set on the RegExpStatics. */
     OBJECT_FLAG_REGEXP_FLAGS_SET      = 0x00200000,
 
-    /* Whether any objects emulate undefined; see EmulatesUndefined. */
-    OBJECT_FLAG_EMULATES_UNDEFINED    = 0x00400000,
+    /*
+     * UNUSED FLAG                    = 0x00400000,
+     */
 
     /*
      * For the function on a run-once script, whether the function has actually
@@ -502,6 +503,9 @@ class TypeSet
     inline JSObject *getSingleObject(unsigned i) const;
     inline TypeObject *getTypeObject(unsigned i) const;
     inline bool getTypeOrSingleObject(JSContext *cx, unsigned i, TypeObject **obj) const;
+
+    /* The Class of an object in this set. */
+    inline const Class *getObjectClass(unsigned i) const;
 
     void setOwnProperty(bool configurable) {
         flags |= TYPE_FLAG_OWN_PROPERTY;
@@ -676,6 +680,9 @@ class TemporaryTypeSet : public TypeSet
 
     /* Whether clasp->isCallable() is true for one or more objects in this set. */
     bool maybeCallable();
+
+    /* Whether clasp->emulatesUndefined() is true for one or more objects in this set. */
+    bool maybeEmulatesUndefined();
 
     /* Get the single value which can appear in this type set, otherwise NULL. */
     JSObject *getSingleton();
