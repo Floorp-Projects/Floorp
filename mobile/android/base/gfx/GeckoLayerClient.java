@@ -11,7 +11,6 @@ import org.mozilla.gecko.GeckoEvent;
 import org.mozilla.gecko.Tab;
 import org.mozilla.gecko.Tabs;
 import org.mozilla.gecko.ZoomConstraints;
-import org.mozilla.gecko.mozglue.generatorannotations.WrapElementForJNI;
 import org.mozilla.gecko.util.EventDispatcher;
 import org.mozilla.gecko.util.FloatUtils;
 import org.mozilla.gecko.util.ThreadUtils;
@@ -410,7 +409,7 @@ public class GeckoLayerClient implements LayerView.Listener, PanZoomTarget
         return mDisplayPort;
     }
 
-    @WrapElementForJNI
+    /* This is invoked by JNI on the gecko thread */
     DisplayPortMetrics getDisplayPort(boolean pageSizeUpdate, boolean isBrowserContentDisplayed, int tabId, ImmutableViewportMetrics metrics) {
         Tabs tabs = Tabs.getInstance();
         if (tabs.isSelectedTab(tabs.getTab(tabId)) && isBrowserContentDisplayed) {
@@ -427,12 +426,12 @@ public class GeckoLayerClient implements LayerView.Listener, PanZoomTarget
         }
     }
 
-    @WrapElementForJNI
+    /* This is invoked by JNI on the gecko thread */
     void contentDocumentChanged() {
         mContentDocumentIsDisplayed = false;
     }
 
-    @WrapElementForJNI
+    /* This is invoked by JNI on the gecko thread */
     boolean isContentDocumentDisplayed() {
         return mContentDocumentIsDisplayed;
     }
@@ -442,7 +441,6 @@ public class GeckoLayerClient implements LayerView.Listener, PanZoomTarget
     // to abort the current update and continue with any subsequent ones. This
     // is useful for slow-to-render pages when the display-port starts lagging
     // behind enough that continuing to draw it is wasted effort.
-    @WrapElementForJNI(allowMultithread = true)
     public ProgressiveUpdateData progressiveUpdateCallback(boolean aHasPendingNewThebesContent,
                                                            float x, float y, float width, float height,
                                                            float resolution, boolean lowPrecision) {
@@ -550,13 +548,13 @@ public class GeckoLayerClient implements LayerView.Listener, PanZoomTarget
         }
     }
 
-    /** The compositor invokes this function just before compositing a frame where the document
+    /** This function is invoked by Gecko via JNI; be careful when modifying signature.
+      * The compositor invokes this function just before compositing a frame where the document
       * is different from the document composited on the last frame. In these cases, the viewport
       * information we have in Java is no longer valid and needs to be replaced with the new
       * viewport information provided. setPageRect will never be invoked on the same frame that
       * this function is invoked on; and this function will always be called prior to syncViewportInfo.
       */
-    @WrapElementForJNI(allowMultithread = true)
     public void setFirstPaintViewport(float offsetX, float offsetY, float zoom,
             float cssPageLeft, float cssPageTop, float cssPageRight, float cssPageBottom) {
         synchronized (getLock()) {
@@ -609,12 +607,12 @@ public class GeckoLayerClient implements LayerView.Listener, PanZoomTarget
         mContentDocumentIsDisplayed = true;
     }
 
-    /** The compositor invokes this function whenever it determines that the page rect
+    /** This function is invoked by Gecko via JNI; be careful when modifying signature.
+      * The compositor invokes this function whenever it determines that the page rect
       * has changed (based on the information it gets from layout). If setFirstPaintViewport
       * is invoked on a frame, then this function will not be. For any given frame, this
       * function will be invoked before syncViewportInfo.
       */
-    @WrapElementForJNI(allowMultithread = true)
     public void setPageRect(float cssPageLeft, float cssPageTop, float cssPageRight, float cssPageBottom) {
         synchronized (getLock()) {
             RectF cssPageRect = new RectF(cssPageLeft, cssPageTop, cssPageRight, cssPageBottom);
@@ -627,7 +625,8 @@ public class GeckoLayerClient implements LayerView.Listener, PanZoomTarget
         }
     }
 
-    /** The compositor invokes this function on every frame to figure out what part of the
+    /** This function is invoked by Gecko via JNI; be careful when modifying signature.
+      * The compositor invokes this function on every frame to figure out what part of the
       * page to display, and to inform Java of the current display port. Since it is called
       * on every frame, it needs to be ultra-fast.
       * It avoids taking any locks or allocating any objects. We keep around a
@@ -635,7 +634,6 @@ public class GeckoLayerClient implements LayerView.Listener, PanZoomTarget
       * everytime we're called. NOTE: we might be able to return a ImmutableViewportMetrics
       * which would avoid the copy into mCurrentViewTransform.
       */
-    @WrapElementForJNI(allowMultithread = true)
     public ViewTransform syncViewportInfo(int x, int y, int width, int height, float resolution, boolean layersUpdated) {
         // getViewportMetrics is thread safe so we don't need to synchronize.
         // We save the viewport metrics here, so we later use it later in
@@ -689,7 +687,7 @@ public class GeckoLayerClient implements LayerView.Listener, PanZoomTarget
         return mCurrentViewTransform;
     }
 
-    @WrapElementForJNI(allowMultithread = true)
+    /* Invoked by JNI from the compositor thread */
     public ViewTransform syncFrameMetrics(float offsetX, float offsetY, float zoom,
                 float cssPageLeft, float cssPageTop, float cssPageRight, float cssPageBottom,
                 boolean layersUpdated, int x, int y, int width, int height, float resolution,
@@ -703,7 +701,7 @@ public class GeckoLayerClient implements LayerView.Listener, PanZoomTarget
         return syncViewportInfo(x, y, width, height, resolution, layersUpdated);
     }
 
-    @WrapElementForJNI(allowMultithread = true)
+    /** This function is invoked by Gecko via JNI; be careful when modifying signature. */
     public LayerRenderer.Frame createFrame() {
         // Create the shaders and textures if necessary.
         if (!mLayerRendererInitialized) {
@@ -715,12 +713,12 @@ public class GeckoLayerClient implements LayerView.Listener, PanZoomTarget
         return mLayerRenderer.createFrame(mFrameMetrics);
     }
 
-    @WrapElementForJNI(allowMultithread = true)
+    /** This function is invoked by Gecko via JNI; be careful when modifying signature. */
     public void activateProgram() {
         mLayerRenderer.activateDefaultProgram();
     }
 
-    @WrapElementForJNI(allowMultithread = true)
+    /** This function is invoked by Gecko via JNI; be careful when modifying signature. */
     public void deactivateProgram() {
         mLayerRenderer.deactivateDefaultProgram();
     }
