@@ -177,9 +177,13 @@ pref("content.sink.perf_deflect_count", 1000000);
 pref("content.sink.perf_parse_time", 50000000);
 
 // Maximum scripts runtime before showing an alert
-pref("dom.max_chrome_script_run_time", 0); // disable slow script dialog for chrome
 // Disable the watchdog thread for B2G. See bug 870043 comment 31.
 pref("dom.use_watchdog", false);
+
+// The slow script dialog can be triggered from inside the JS engine as well,
+// ensure that those calls don't accidentally trigger the dialog.
+pref("dom.max_script_run_time", 0);
+pref("dom.max_chrome_script_run_time", 0);
 
 // plugins
 pref("plugin.disable", true);
