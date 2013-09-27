@@ -120,7 +120,7 @@ interface ScheduledGCCallback : nsISupports
 /**
 * interface of Components.utils
 */
-[scriptable, uuid(c9ccec7a-726c-4479-9438-6f51f6ef4170)]
+[scriptable, uuid(08a49c33-0704-4b88-bebb-9a0cf1309f30)]
 interface nsIXPCComponents_Utils : nsISupports
 {
 
@@ -225,6 +225,17 @@ interface nsIXPCComponents_Utils : nsISupports
      * @param resourceURI A resource:// URI string to unload the module from.
      */
     void unload(in AUTF8String registryLocation);
+
+    /*
+     * Imports global properties (like DOM constructors) into the scope, defining
+     * them on the caller's global. aPropertyList should be an array of property
+     * names.
+     *
+     * See xpc::GlobalProperties::Parse for the current list of supported
+     * properties.
+     */
+    [implicit_jscontext]
+    void importGlobalProperties(in jsval aPropertyList);
 
     /*
      * To be called from JS only.
