@@ -147,7 +147,7 @@ InnermostAsmJSActivation()
 {
     PerThreadData *threadData = TlsPerThreadData.get();
     if (!threadData)
-        return NULL;
+        return nullptr;
 
     return threadData->asmJSActivationStackFromOwnerThread();
 }
@@ -157,7 +157,7 @@ RuntimeForCurrentThread()
 {
     PerThreadData *threadData = TlsPerThreadData.get();
     if (!threadData)
-        return NULL;
+        return nullptr;
 
     return threadData->runtimeFromMainThread();
 }
@@ -281,7 +281,7 @@ LookupHeapAccess(const AsmJSModule &module, uint8_t *pc)
     size_t targetOffset = pc - module.codeBase();
 
     if (module.numHeapAccesses() == 0)
-        return NULL;
+        return nullptr;
 
     size_t low = 0;
     size_t high = module.numHeapAccesses() - 1;
@@ -300,7 +300,7 @@ LookupHeapAccess(const AsmJSModule &module, uint8_t *pc)
     if (targetOffset == module.heapAccess(high).offset())
         return &module.heapAccess(high);
 
-    return NULL;
+    return nullptr;
 }
 #endif
 
@@ -375,10 +375,11 @@ enum { REG_EIP = 14 };
 
 #if defined(ANDROID) && defined(MOZ_LINKER)
 // Apparently, on some Android systems, the signal handler is always passed
-// NULL as the faulting address. This would cause the asm.js signal handler to
-// think that a safe out-of-bounds access was a NULL-deref. This brokenness is
-// already detected by ElfLoader (enabled by MOZ_LINKER), so reuse that check
-// to disable asm.js compilation on systems where the signal handler is broken.
+// nullptr as the faulting address. This would cause the asm.js signal handler
+// to think that a safe out-of-bounds access was a nullptr-deref. This
+// brokenness is already detected by ElfLoader (enabled by MOZ_LINKER), so
+// reuse that check to disable asm.js compilation on systems where the signal
+// handler is broken.
 extern "C" MFBT_API bool IsSignalHandlingBroken();
 #else
 static bool IsSignalHandlingBroken() { return false; }
@@ -798,12 +799,12 @@ AsmJSMachExceptionHandlerThread(void *threadArg)
                  MACH_MSG_TIMEOUT_NONE, MACH_PORT_NULL);
     }
 
-    return NULL;
+    return nullptr;
 }
 
 AsmJSMachExceptionHandler::AsmJSMachExceptionHandler()
   : installed_(false),
-    thread_(NULL),
+    thread_(nullptr),
     port_(MACH_PORT_NULL)
 {}
 
@@ -822,7 +823,7 @@ AsmJSMachExceptionHandler::uninstall()
             MOZ_CRASH();
         installed_ = false;
     }
-    if (thread_ != NULL) {
+    if (thread_ != nullptr) {
         // Break the handler thread out of the mach_msg loop.
         mach_msg_header_t msg;
         msg.msgh_bits = MACH_MSGH_BITS(MACH_MSG_TYPE_COPY_SEND, 0);
@@ -839,8 +840,8 @@ AsmJSMachExceptionHandler::uninstall()
         }
 
         // Wait for the handler thread to complete before deallocating the port.
-        pthread_join(thread_, NULL);
-        thread_ = NULL;
+        pthread_join(thread_, nullptr);
+        thread_ = nullptr;
     }
     if (port_ != MACH_PORT_NULL) {
         DebugOnly<kern_return_t> kret = mach_port_destroy(mach_task_self(), port_);
@@ -865,7 +866,7 @@ AsmJSMachExceptionHandler::install(JSRuntime *rt)
         goto error;
 
     // Create a thread to block on reading port_.
-    if (pthread_create(&thread_, NULL, AsmJSMachExceptionHandlerThread, rt))
+    if (pthread_create(&thread_, nullptr, AsmJSMachExceptionHandlerThread, rt))
         goto error;
 
     // Direct exceptions on this thread to port_ (and thus our handler thread).
@@ -986,7 +987,7 @@ AsmJSFaultHandler(int signum, siginfo_t *info, void *context)
     if (sPrevHandler.sa_flags & SA_SIGINFO)
         sPrevHandler.sa_sigaction(signum, info, context);
     else if (sPrevHandler.sa_handler == SIG_DFL || sPrevHandler.sa_handler == SIG_IGN)
-        sigaction(signum, &sPrevHandler, NULL);
+        sigaction(signum, &sPrevHandler, nullptr);
     else
         sPrevHandler.sa_handler(signum);
 }
