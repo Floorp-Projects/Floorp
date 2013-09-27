@@ -10,7 +10,6 @@
 #include "mozilla/FloatingPoint.h"
 #include "mozilla/MathAlgorithms.h"
 
-#include "jit/CompileInfo.h"
 #include "jit/IonAnalysis.h"
 #include "jit/MIR.h"
 

@@ -227,7 +227,7 @@ endif
 
 ifdef MOZ_PSEUDO_DERECURSE
 # Interdependencies for parallel export.
-js/xpconnect/src/export: config/makefiles/precompile/export
-accessible/src/xpcom/export: config/makefiles/precompile/export
+js/xpconnect/src/export: dom/bindings/export
+accessible/src/xpcom/export: xpcom/xpidl/export
 js/src/export: mfbt/export
 endif

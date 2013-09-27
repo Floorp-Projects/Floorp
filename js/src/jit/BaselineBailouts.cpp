@@ -4,14 +4,12 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "jit/BaselineCompiler.h"
 #include "jit/BaselineIC.h"
 #include "jit/BaselineJIT.h"
 #include "jit/CompileInfo.h"
 #include "jit/IonSpewer.h"
 #include "vm/ArgumentsObject.h"
 
-#include "jsfuninlines.h"
 #include "jsscriptinlines.h"
 
 #include "jit/IonFrames-inl.h"

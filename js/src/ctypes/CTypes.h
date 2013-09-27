@@ -7,10 +7,12 @@
 #define ctypes_CTypes_h
 
 #include "ffi.h"
-#include "jscntxt.h"
+#include "jsalloc.h"
 #include "prlink.h"
 
 #include "js/HashTable.h"
+#include "js/Vector.h"
+#include "vm/String.h"
 
 namespace js {
 namespace ctypes {
@@ -56,6 +58,8 @@ private:
 template<class T, size_t N = 0>
 class Array : public Vector<T, N, SystemAllocPolicy>
 {
+  static_assert(!mozilla::IsSame<T, JS::Value>::value,
+                "use JS::AutoValueVector instead");
 };
 
 // String and AutoString classes, based on Vector.

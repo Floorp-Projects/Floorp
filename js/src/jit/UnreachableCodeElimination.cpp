@@ -8,6 +8,7 @@
 
 #include "jit/AliasAnalysis.h"
 #include "jit/IonAnalysis.h"
+#include "jit/MIRGenerator.h"
 #include "jit/ValueNumbering.h"
 
 using namespace js;

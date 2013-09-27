@@ -10,9 +10,7 @@
 // This file declares the structures that are used for attaching LIR to a
 // MIRGraph.
 
-#include "jit/IonAllocPolicy.h"
 #include "jit/LIR.h"
-#include "jit/MOpcodes.h"
 #if defined(JS_CPU_X86)
 # include "jit/x86/Lowering-x86.h"
 #elif defined(JS_CPU_X64)

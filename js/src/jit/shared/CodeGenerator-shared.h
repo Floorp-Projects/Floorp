@@ -8,17 +8,16 @@
 #define jit_shared_CodeGenerator_shared_h
 
 #include "mozilla/Alignment.h"
-#include "mozilla/Util.h"
 
-#include "jit/IonCaches.h"
 #include "jit/IonFrames.h"
 #include "jit/IonMacroAssembler.h"
 #include "jit/LIR.h"
-#include "jit/MIR.h"
+#include "jit/MIRGenerator.h"
 #include "jit/MIRGraph.h"
 #include "jit/Safepoints.h"
 #include "jit/SnapshotWriter.h"
 #include "jit/VMFunctions.h"
+#include "vm/ForkJoin.h"
 
 namespace js {
 namespace jit {

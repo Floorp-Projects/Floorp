@@ -9,9 +9,8 @@
 
 #include "jit/BaselineFrameInfo.h"
 #include "jit/BaselineIC.h"
-#include "jit/IonInstrumentation.h"
+#include "jit/BytecodeAnalysis.h"
 #include "jit/IonMacroAssembler.h"
-#include "jit/IonSpewer.h"
 
 namespace js {
 namespace jit {

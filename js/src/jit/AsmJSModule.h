@@ -18,6 +18,7 @@
 #include "jit/IonMacroAssembler.h"
 #include "jit/PerfSpewer.h"
 #include "jit/RegisterSets.h"
+#include "vm/TypedArrayObject.h"
 
 namespace js {
 
@@ -405,7 +406,7 @@ class AsmJSModule
             perfProfiledBlocksFunctions_[i].trace(trc);
 #endif
         if (maybeHeap_)
-            MarkObject(trc, &maybeHeap_, "asm.js heap");
+            gc::MarkObject(trc, &maybeHeap_, "asm.js heap");
 
         if (globalArgumentName_)
             MarkStringUnbarriered(trc, &globalArgumentName_, "asm.js global argument name");
