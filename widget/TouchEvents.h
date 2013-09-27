@@ -141,7 +141,7 @@ public:
 
   nsTArray<nsRefPtr<mozilla::dom::Touch>> touches;
 
-  void AssignTouchEventData(const nsTouchEvent& aEvent, bool aCopyTargets)
+  void AssignTouchEventData(const WidgetTouchEvent& aEvent, bool aCopyTargets)
   {
     AssignInputEventData(aEvent, aCopyTargets);
 
@@ -154,6 +154,5 @@ public:
 // TODO: Remove following typedefs
 typedef mozilla::WidgetGestureNotifyEvent nsGestureNotifyEvent;
 typedef mozilla::WidgetSimpleGestureEvent nsSimpleGestureEvent;
-typedef mozilla::WidgetTouchEvent         nsTouchEvent;
 
 #endif // mozilla_TouchEvents_h__
