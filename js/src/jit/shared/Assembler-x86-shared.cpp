@@ -148,5 +148,5 @@ AutoFlushCache::~AutoFlushCache()
         return;
 
     if (runtime_->flusher() == this)
-        runtime_->setFlusher(NULL);
+        runtime_->setFlusher(nullptr);
 }

@@ -38,8 +38,8 @@ class LIRGeneratorShared : public MInstructionVisitorWithDefaults
       : gen(gen),
         graph(graph),
         lirGraph_(lirGraph),
-        lastResumePoint_(NULL),
-        osiPoint_(NULL)
+        lastResumePoint_(nullptr),
+        osiPoint_(nullptr)
     { }
 
     MIRGenerator *mir() {
@@ -143,14 +143,14 @@ class LIRGeneratorShared : public MInstructionVisitorWithDefaults
     }
 
     template <typename T> void annotate(T *ins);
-    template <typename T> bool add(T *ins, MInstruction *mir = NULL);
+    template <typename T> bool add(T *ins, MInstruction *mir = nullptr);
 
     void lowerTypedPhiInput(MPhi *phi, uint32_t inputPosition, LBlock *block, size_t lirIndex);
     bool defineTypedPhi(MPhi *phi, size_t lirIndex);
 
     LOsiPoint *popOsiPoint() {
         LOsiPoint *tmp = osiPoint_;
-        osiPoint_ = NULL;
+        osiPoint_ = nullptr;
         return tmp;
     }
 
