@@ -2450,6 +2450,13 @@ public:
         m_formatter.twoByteOp(OP2_MOVMSKPD_EdVd, dst, (RegisterID)src);
     }
 
+    void movmskps_rr(XMMRegisterID src, RegisterID dst)
+    {
+        spew("movmskps   %s, %s",
+             nameFPReg(src), nameIReg(dst));
+        m_formatter.twoByteOp(OP2_MOVMSKPD_EdVd, dst, (RegisterID)src);
+    }
+
     void ptest_rr(XMMRegisterID lhs, XMMRegisterID rhs) {
         spew("ptest      %s, %s",
              nameFPReg(lhs), nameFPReg(rhs));

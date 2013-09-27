@@ -126,6 +126,7 @@
     _(ValueToInt32)                 \
     _(ValueToFloat32)               \
     _(DoubleToInt32)                \
+    _(Float32ToInt32)               \
     _(TruncateDToInt32)             \
     _(IntToString)                  \
     _(DoubleToString)               \
