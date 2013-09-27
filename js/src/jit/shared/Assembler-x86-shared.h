@@ -1303,6 +1303,10 @@ class AssemblerX86Shared
         JS_ASSERT(HasSSE2());
         masm.movmskpd_rr(src.code(), dest.code());
     }
+    void movmskps(const FloatRegister &src, const Register &dest) {
+        JS_ASSERT(HasSSE2());
+        masm.movmskps_rr(src.code(), dest.code());
+    }
     void ptest(const FloatRegister &lhs, const FloatRegister &rhs) {
         JS_ASSERT(HasSSE41());
         masm.ptest_rr(rhs.code(), lhs.code());
