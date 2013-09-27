@@ -19,6 +19,10 @@ namespace jit {
 class IonCompartment;
 }
 
+namespace gc {
+template<class Node> class ComponentFinder;
+}
+
 struct NativeIterator;
 
 /*
