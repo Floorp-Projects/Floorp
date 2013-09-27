@@ -629,10 +629,10 @@ nsDOMEvent::DuplicatePrivateData()
     }
     case NS_SCROLLAREA_EVENT:
     {
-      nsScrollAreaEvent* oldScrollAreaEvent =
-        static_cast<nsScrollAreaEvent*>(mEvent);
-      nsScrollAreaEvent* scrollAreaEvent = 
-        new nsScrollAreaEvent(false, msg, nullptr);
+      InternalScrollAreaEvent* oldScrollAreaEvent =
+        static_cast<InternalScrollAreaEvent*>(mEvent);
+      InternalScrollAreaEvent* scrollAreaEvent = 
+        new InternalScrollAreaEvent(false, msg, nullptr);
       scrollAreaEvent->AssignScrollAreaEventData(*oldScrollAreaEvent, true);
       newEvent = scrollAreaEvent;
       break;
