@@ -4774,14 +4774,6 @@ nsWindow::ProcessMessage(UINT msg, WPARAM& wParam, LPARAM& lParam,
       }
       break;
 
-    case WM_MOVE: // Window moved
-    {
-      RECT rect;
-      ::GetWindowRect(mWnd, &rect);
-      result = OnMove(rect.left, rect.top);
-    }
-    break;
-
     case WM_CLOSE: // close request
       if (mWidgetListener)
         mWidgetListener->RequestWindowClose(this);
@@ -5168,8 +5160,9 @@ nsWindow::ProcessMessage(UINT msg, WPARAM& wParam, LPARAM& lParam,
 
     case WM_WINDOWPOSCHANGING:
     {
-      LPWINDOWPOS info = (LPWINDOWPOS) lParam;
+      LPWINDOWPOS info = (LPWINDOWPOS)lParam;
       OnWindowPosChanging(info);
+      result = true;
     }
     break;
 
@@ -5208,8 +5201,9 @@ nsWindow::ProcessMessage(UINT msg, WPARAM& wParam, LPARAM& lParam,
 
     case WM_WINDOWPOSCHANGED:
     {
-      WINDOWPOS *wp = (LPWINDOWPOS)lParam;
-      OnWindowPosChanged(wp, result);
+      WINDOWPOS* wp = (LPWINDOWPOS)lParam;
+      OnWindowPosChanged(wp);
+      result = true;
     }
     break;
 
@@ -5788,7 +5782,7 @@ nsWindow::SynthesizeNativeMouseScrollEvent(nsIntPoint aPoint,
  *
  **************************************************************/
 
-void nsWindow::OnWindowPosChanged(WINDOWPOS *wp, bool& result)
+void nsWindow::OnWindowPosChanged(WINDOWPOS* wp)
 {
   if (wp == nullptr)
     return;
@@ -5893,6 +5887,16 @@ void nsWindow::OnWindowPosChanged(WINDOWPOS *wp, bool& result)
       return;
   }
 
+  // Handle window position changes
+  if (!(wp->flags & SWP_NOMOVE)) {
+    mBounds.x = wp->x;
+    mBounds.y = wp->y;
+
+    if (mWidgetListener) {
+      mWidgetListener->WindowMoved(this, wp->x, wp->y);
+    }
+  }
+
   // Handle window size changes
   if (!(wp->flags & SWP_NOSIZE)) {
     RECT r;
@@ -5954,12 +5958,11 @@ void nsWindow::OnWindowPosChanged(WINDOWPOS *wp, bool& result)
            ("*** Resize window: %d x %d x %d x %d\n", wp->x, wp->y, 
             newWidth, newHeight));
 #endif
-    
+
     // If a maximized window is resized, recalculate the non-client margins.
     if (mSizeMode == nsSizeMode_Maximized) {
       if (UpdateNonClientMargins(nsSizeMode_Maximized, true)) {
         // gecko resize event already sent by UpdateNonClientMargins.
-        result = true;
         return;
       }
     }
@@ -5971,7 +5974,7 @@ void nsWindow::OnWindowPosChanged(WINDOWPOS *wp, bool& result)
     }
     
     // Send a gecko resize event
-    result = OnResize(rect);
+    OnResize(rect);
   }
 }
 
@@ -6514,15 +6517,6 @@ void nsWindow::OnDestroy()
 
   // Clear the main HWND.
   mWnd = NULL;
-}
-
-// OnMove
-bool nsWindow::OnMove(int32_t aX, int32_t aY)
-{
-  mBounds.x = aX;
-  mBounds.y = aY;
-
-  return mWidgetListener ? mWidgetListener->WindowMoved(this, aX, aY) : false;
 }
 
 // Send a resize message to the listener
