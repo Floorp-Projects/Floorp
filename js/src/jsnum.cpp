@@ -1009,7 +1009,7 @@ static const JSFunctionSpec number_methods[] = {
 #endif
     JS_FN(js_toString_str,       js_num_toString,       1, 0),
 #if EXPOSE_INTL_API
-         {js_toLocaleString_str, {NULL, NULL},           0,0, "Number_toLocaleString"},
+    JS_SELF_HOSTED_FN(js_toLocaleString_str, "Number_toLocaleString", 0,0),
 #else
     JS_FN(js_toLocaleString_str, num_toLocaleString,     0,0),
 #endif

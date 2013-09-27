@@ -10,12 +10,20 @@ def measure_vsize_threadfunc(proc, output_file):
     """
     Measure the virtual memory usage of |proc| at regular intervals
     until it exits, then print the maximum value and write it to
-    |output_file|.
+    |output_file|.  Also, print something to the console every
+    half an hour to prevent the build job from getting killed when
+    linking a large PGOed binary.
     """
     maxvsize = 0
+    idleTime = 0
     while proc.returncode is None:
         maxvsize, vsize = procmem.get_vmsize(proc._handle)
         time.sleep(0.5)
+        idleTime += 0.5
+        if idleTime > 30 * 60:
+          print "Still linking, 30 minutes passed..."
+          sys.stdout.flush()
+          idleTime = 0
     print "TinderboxPrint: linker max vsize: %d" % maxvsize
     with open(output_file, "w") as f:
         f.write("%d\n" % maxvsize)

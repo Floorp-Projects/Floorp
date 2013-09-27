@@ -2383,16 +2383,22 @@ struct JSFunctionSpec {
 #define JS_FS_END JS_FS(NULL,NULL,0,0)
 
 /*
- * Initializer macros for a JSFunctionSpec array element. JS_FN (whose name
- * pays homage to the old JSNative/JSFastNative split) simply adds the flag
- * JSFUN_STUB_GSOPS. JS_FNINFO allows the simple adding of JSJitInfos.
+ * Initializer macros for a JSFunctionSpec array element. JS_FN (whose name pays
+ * homage to the old JSNative/JSFastNative split) simply adds the flag
+ * JSFUN_STUB_GSOPS. JS_FNINFO allows the simple adding of
+ * JSJitInfos. JS_SELF_HOSTED_FN declares a self-hosted function. Finally
+ * JS_FNSPEC has slots for all the fields.
  */
 #define JS_FS(name,call,nargs,flags)                                          \
-    {name, JSOP_WRAPPER(call), nargs, flags}
+    JS_FNSPEC(name, call, nullptr, nargs, flags, nullptr)
 #define JS_FN(name,call,nargs,flags)                                          \
-    {name, JSOP_WRAPPER(call), nargs, (flags) | JSFUN_STUB_GSOPS}
+    JS_FNSPEC(name, call, nullptr, nargs, (flags) | JSFUN_STUB_GSOPS, nullptr)
 #define JS_FNINFO(name,call,info,nargs,flags)                                 \
-    {name,{call,info},nargs,flags}
+    JS_FNSPEC(name, call, info, nargs, flags, nullptr)
+#define JS_SELF_HOSTED_FN(name,selfHostedName,nargs,flags)                    \
+    JS_FNSPEC(name, nullptr, nullptr, nargs, flags, selfHostedName)
+#define JS_FNSPEC(name,call,info,nargs,flags,selfHostedName)                  \
+    {name, {call, info}, nargs, flags, selfHostedName}
 
 extern JS_PUBLIC_API(JSObject *)
 JS_InitClass(JSContext *cx, JSObject *obj, JSObject *parent_proto,
@@ -3100,6 +3106,13 @@ JS_NewFunction(JSContext *cx, JSNative call, unsigned nargs, unsigned flags,
 extern JS_PUBLIC_API(JSFunction *)
 JS_NewFunctionById(JSContext *cx, JSNative call, unsigned nargs, unsigned flags,
                    JSObject *parent, jsid id);
+
+namespace JS {
+
+extern JS_PUBLIC_API(JSFunction *)
+GetSelfHostedFunction(JSContext *cx, const char *selfHostedName, jsid id, unsigned nargs);
+
+} /* namespace JS */
 
 extern JS_PUBLIC_API(JSObject *)
 JS_GetFunctionObject(JSFunction *fun);

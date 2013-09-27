@@ -226,7 +226,7 @@ CodeGeneratorX86Shared::visitAsmJSPassStackArg(LAsmJSPassStackArg *ins)
     const MAsmJSPassStackArg *mir = ins->mir();
     Address dst(StackPointer, mir->spOffset());
     if (ins->arg()->isConstant()) {
-        masm.store32(Imm32(ToInt32(ins->arg())), dst);
+        masm.storePtr(ImmWord(ToInt32(ins->arg())), dst);
     } else {
         if (ins->arg()->isGeneralReg())
             masm.storePtr(ToRegister(ins->arg()), dst);
