@@ -283,7 +283,7 @@ nsresult
 NS_NewDOMMutationEvent(nsIDOMEvent** aResult,
                        mozilla::dom::EventTarget* aOwner,
                        nsPresContext* aPresContext,
-                       nsMutationEvent* aEvent);
+                       mozilla::InternalMutationEvent* aEvent);
 nsresult
 NS_NewDOMDeviceMotionEvent(nsIDOMEvent** aResult,
                            mozilla::dom::EventTarget* aOwner,

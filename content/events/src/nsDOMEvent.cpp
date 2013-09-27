@@ -153,7 +153,8 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsDOMEvent)
         static_cast<nsClipboardEvent*>(tmp->mEvent)->clipboardData = nullptr;
         break;
       case NS_MUTATION_EVENT:
-        static_cast<nsMutationEvent*>(tmp->mEvent)->mRelatedNode = nullptr;
+        static_cast<InternalMutationEvent*>(tmp->mEvent)->mRelatedNode =
+          nullptr;
         break;
       case NS_FOCUS_EVENT:
         static_cast<nsFocusEvent*>(tmp->mEvent)->relatedTarget = nullptr;
@@ -198,7 +199,7 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(nsDOMEvent)
       case NS_MUTATION_EVENT:
         NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(cb, "mEvent->mRelatedNode");
         cb.NoteXPCOMChild(
-          static_cast<nsMutationEvent*>(tmp->mEvent)->mRelatedNode);
+          static_cast<InternalMutationEvent*>(tmp->mEvent)->mRelatedNode);
         break;
       case NS_FOCUS_EVENT:
         NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(cb, "mEvent->relatedTarget");
@@ -635,9 +636,10 @@ nsDOMEvent::DuplicatePrivateData()
     }
     case NS_MUTATION_EVENT:
     {
-      nsMutationEvent* mutationEvent = new nsMutationEvent(false, msg);
-      nsMutationEvent* oldMutationEvent =
-        static_cast<nsMutationEvent*>(mEvent);
+      InternalMutationEvent* mutationEvent =
+        new InternalMutationEvent(false, msg);
+      InternalMutationEvent* oldMutationEvent =
+        static_cast<InternalMutationEvent*>(mEvent);
       mutationEvent->AssignMutationEventData(*oldMutationEvent, true);
       newEvent = mutationEvent;
       break;
