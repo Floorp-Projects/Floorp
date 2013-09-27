@@ -2026,8 +2026,9 @@ TextInputHandler::InsertText(NSAttributedString* aAttrString,
     }
     // Delete the selected range.
     nsRefPtr<TextInputHandler> kungFuDeathGrip(this);
-    nsContentCommandEvent deleteCommandEvent(true, NS_CONTENT_COMMAND_DELETE,
-                                             mWidget);
+    WidgetContentCommandEvent deleteCommandEvent(true,
+                                                 NS_CONTENT_COMMAND_DELETE,
+                                                 mWidget);
     DispatchEvent(deleteCommandEvent);
     NS_ENSURE_TRUE_VOID(deleteCommandEvent.mSucceeded);
     // Be aware! The widget might be destroyed here.
