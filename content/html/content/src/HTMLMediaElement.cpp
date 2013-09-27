@@ -1406,6 +1406,7 @@ HTMLMediaElement::Seekable() const
   } else if (mDecoder && mReadyState > nsIDOMHTMLMediaElement::HAVE_NOTHING) {
     mDecoder->GetSeekable(ranges);
   }
+  ranges->Normalize();
   return ranges.forget();
 }
 
@@ -3561,6 +3562,7 @@ HTMLMediaElement::Buffered() const
     // time ranges we found up till the error.
     mDecoder->GetBuffered(ranges);
   }
+  ranges->Normalize();
   return ranges.forget();
 }
 
