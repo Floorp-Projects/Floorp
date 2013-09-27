@@ -94,7 +94,7 @@ protected:
   virtual bool IsInput() { return false; }
   void ReflowButtonContents(nsPresContext* aPresContext,
                             nsHTMLReflowMetrics& aDesiredSize,
-                            const nsHTMLReflowState& aReflowState,
+                            const nsHTMLReflowState& aButtonReflowState,
                             nsIFrame* aFirstKid,
                             nsMargin aFocusPadding,
                             nsReflowStatus& aStatus);
