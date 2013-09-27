@@ -2892,7 +2892,7 @@ bool
 nsWindow::DispatchContentCommandEvent(int32_t aMsg)
 {
   nsEventStatus status;
-  nsContentCommandEvent event(true, aMsg, this);
+  WidgetContentCommandEvent event(true, aMsg, this);
   DispatchEvent(&event, status);
   return TRUE;
 }

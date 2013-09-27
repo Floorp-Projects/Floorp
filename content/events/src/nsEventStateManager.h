@@ -704,8 +704,9 @@ protected:
    */
   void FillInEventFromGestureDown(nsMouseEvent* aEvent);
 
-  nsresult DoContentCommandEvent(nsContentCommandEvent* aEvent);
-  nsresult DoContentCommandScrollEvent(nsContentCommandEvent* aEvent);
+  nsresult DoContentCommandEvent(mozilla::WidgetContentCommandEvent* aEvent);
+  nsresult DoContentCommandScrollEvent(
+             mozilla::WidgetContentCommandEvent* aEvent);
 
   void DoQuerySelectedText(nsQueryContentEvent* aEvent);
 
