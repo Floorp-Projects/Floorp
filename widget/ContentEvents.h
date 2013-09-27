@@ -247,7 +247,4 @@ public:
 
 } // namespace mozilla
 
-// TODO: Remove following typedefs
-typedef mozilla::InternalScriptErrorEvent nsScriptErrorEvent;
-
 #endif // mozilla_ContentEvents_h__

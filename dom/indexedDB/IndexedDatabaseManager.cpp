@@ -363,7 +363,7 @@ IndexedDatabaseManager::FireWindowOnError(nsPIDOMWindow* aOwner,
     error->GetName(errorName);
   }
 
-  nsScriptErrorEvent event(true, NS_LOAD_ERROR);
+  mozilla::InternalScriptErrorEvent event(true, NS_LOAD_ERROR);
   request->FillScriptErrorEvent(&event);
   NS_ABORT_IF_FALSE(event.fileName,
                     "FillScriptErrorEvent should give us a non-null string "
