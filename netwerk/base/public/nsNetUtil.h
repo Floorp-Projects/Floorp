@@ -1354,8 +1354,6 @@ NS_UsePrivateBrowsing(nsIChannel *channel)
 // know about script security manager.
 #define NECKO_NO_APP_ID 0
 #define NECKO_UNKNOWN_APP_ID UINT32_MAX
-// special app id reserved for separating the safebrowsing cookie
-#define NECKO_SAFEBROWSING_APP_ID UINT32_MAX - 1
 
 /**
  * Gets AppId and isInBrowserElement from channel's nsILoadContext.
