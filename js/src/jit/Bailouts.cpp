@@ -67,7 +67,7 @@ jit::Bailout(BailoutStack *sp, BaselineBailoutInfo **bailoutInfo)
     JS_ASSERT(bailoutInfo);
     JSContext *cx = GetIonContext()->cx;
     // We don't have an exit frame.
-    cx->mainThread().ionTop = NULL;
+    cx->mainThread().ionTop = nullptr;
     JitActivationIterator jitActivations(cx->runtime());
     IonBailoutIterator iter(jitActivations, sp);
     JitActivation *activation = jitActivations.activation()->asJit();
@@ -76,12 +76,12 @@ jit::Bailout(BailoutStack *sp, BaselineBailoutInfo **bailoutInfo)
 
     JS_ASSERT(IsBaselineEnabled(cx));
 
-    *bailoutInfo = NULL;
+    *bailoutInfo = nullptr;
     uint32_t retval = BailoutIonToBaseline(cx, activation, iter, false, bailoutInfo);
     JS_ASSERT(retval == BAILOUT_RETURN_OK ||
               retval == BAILOUT_RETURN_FATAL_ERROR ||
               retval == BAILOUT_RETURN_OVERRECURSED);
-    JS_ASSERT_IF(retval == BAILOUT_RETURN_OK, *bailoutInfo != NULL);
+    JS_ASSERT_IF(retval == BAILOUT_RETURN_OK, *bailoutInfo != nullptr);
 
     if (retval != BAILOUT_RETURN_OK)
         EnsureExitFrame(iter.jsFrame());
@@ -98,7 +98,7 @@ jit::InvalidationBailout(InvalidationBailoutStack *sp, size_t *frameSizeOut,
     JSContext *cx = GetIonContext()->cx;
 
     // We don't have an exit frame.
-    cx->mainThread().ionTop = NULL;
+    cx->mainThread().ionTop = nullptr;
     JitActivationIterator jitActivations(cx->runtime());
     IonBailoutIterator iter(jitActivations, sp);
     JitActivation *activation = jitActivations.activation()->asJit();
@@ -110,12 +110,12 @@ jit::InvalidationBailout(InvalidationBailoutStack *sp, size_t *frameSizeOut,
 
     JS_ASSERT(IsBaselineEnabled(cx));
 
-    *bailoutInfo = NULL;
+    *bailoutInfo = nullptr;
     uint32_t retval = BailoutIonToBaseline(cx, activation, iter, true, bailoutInfo);
     JS_ASSERT(retval == BAILOUT_RETURN_OK ||
               retval == BAILOUT_RETURN_FATAL_ERROR ||
               retval == BAILOUT_RETURN_OVERRECURSED);
-    JS_ASSERT_IF(retval == BAILOUT_RETURN_OK, *bailoutInfo != NULL);
+    JS_ASSERT_IF(retval == BAILOUT_RETURN_OK, *bailoutInfo != nullptr);
 
     if (retval != BAILOUT_RETURN_OK) {
         IonJSFrameLayout *frame = iter.jsFrame();
@@ -124,7 +124,7 @@ jit::InvalidationBailout(InvalidationBailoutStack *sp, size_t *frameSizeOut,
         IonSpew(IonSpew_Invalidate, "   orig frameSize %u", unsigned(frame->prevFrameLocalSize()));
         IonSpew(IonSpew_Invalidate, "   orig ra %p", (void *) frame->returnAddress());
 
-        frame->replaceCalleeToken(NULL);
+        frame->replaceCalleeToken(nullptr);
         EnsureExitFrame(frame);
 
         IonSpew(IonSpew_Invalidate, "   new  calleeToken %p", (void *) frame->calleeToken());
@@ -159,18 +159,18 @@ jit::ExceptionHandlerBailout(JSContext *cx, const InlineFrameIterator &frame,
 {
     JS_ASSERT(cx->isExceptionPending());
 
-    cx->mainThread().ionTop = NULL;
+    cx->mainThread().ionTop = nullptr;
     JitActivationIterator jitActivations(cx->runtime());
     IonBailoutIterator iter(jitActivations, frame.frame());
     JitActivation *activation = jitActivations.activation()->asJit();
 
-    *bailoutInfo = NULL;
+    *bailoutInfo = nullptr;
     uint32_t retval = BailoutIonToBaseline(cx, activation, iter, true, bailoutInfo, &excInfo);
     JS_ASSERT(retval == BAILOUT_RETURN_OK ||
               retval == BAILOUT_RETURN_FATAL_ERROR ||
               retval == BAILOUT_RETURN_OVERRECURSED);
 
-    JS_ASSERT((retval == BAILOUT_RETURN_OK) == (*bailoutInfo != NULL));
+    JS_ASSERT((retval == BAILOUT_RETURN_OK) == (*bailoutInfo != nullptr));
 
     return retval;
 }
