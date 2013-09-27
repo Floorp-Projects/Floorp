@@ -26,7 +26,7 @@ class IonInstrumentation : public BaseInstrumentation
       : BaseInstrumentation(profiler),
         trackedPc_(pc)
     {
-        JS_ASSERT(pc != NULL);
+        JS_ASSERT(pc != nullptr);
     }
 
     void leave(MacroAssembler &masm, Register reg) {

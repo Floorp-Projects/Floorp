@@ -271,7 +271,7 @@ IonBuilder::inlineArray(CallInfo &callInfo)
         // because the memory is supposed to be allocated by now. There is no
         // need for a post barrier on these writes, as as the MNewAray will use
         // the nursery if possible, triggering a minor collection if it can't.
-        MConstant *id = NULL;
+        MConstant *id = nullptr;
         for (uint32_t i = 0; i < initLength; i++) {
             id = MConstant::New(Int32Value(i));
             current->add(id);
@@ -336,7 +336,7 @@ IonBuilder::inlineArrayPopShift(CallInfo &callInfo, MArrayPopShift::Mode mode)
     bool maybeUndefined = returnTypes->hasType(types::Type::UndefinedType());
 
     bool barrier;
-    if (!PropertyReadNeedsTypeBarrier(cx, callInfo.thisArg(), NULL, returnTypes, &barrier))
+    if (!PropertyReadNeedsTypeBarrier(cx, callInfo.thisArg(), nullptr, returnTypes, &barrier))
         return InliningStatus_Error;
 
     if (barrier)
@@ -366,8 +366,8 @@ IonBuilder::inlineArrayPush(CallInfo &callInfo)
     MDefinition *obj = callInfo.thisArg();
     MDefinition *value = callInfo.getArg(0);
     bool writeNeedsBarrier;
-    if (!PropertyWriteNeedsTypeBarrier(cx, current, &obj, NULL, &value, /* canModify = */ false,
-                                       &writeNeedsBarrier))
+    if (!PropertyWriteNeedsTypeBarrier(cx, current, &obj, nullptr, &value,
+                                       /* canModify = */ false, &writeNeedsBarrier))
     {
         return InliningStatus_Error;
     }
@@ -713,7 +713,7 @@ IonBuilder::inlineMathPow(CallInfo &callInfo)
 
     MDefinition *base = callInfo.getArg(0);
     MDefinition *power = callInfo.getArg(1);
-    MDefinition *output = NULL;
+    MDefinition *output = nullptr;
 
     // Optimize some constant powers.
     if (callInfo.getArg(1)->isConstant()) {
@@ -1018,14 +1018,14 @@ IonBuilder::inlineRegExpTest(CallInfo &callInfo)
     if (callInfo.argc() != 1 || callInfo.constructing())
         return InliningStatus_NotInlined;
 
-    // TI can infer a NULL return type of regexp_test with eager compilation.
+    // TI can infer a nullptr return type of regexp_test with eager compilation.
     if (CallResultEscapes(pc) && getInlineReturnType() != MIRType_Boolean)
         return InliningStatus_NotInlined;
 
     if (callInfo.thisArg()->type() != MIRType_Object)
         return InliningStatus_NotInlined;
     types::TemporaryTypeSet *thisTypes = callInfo.thisArg()->resultTypeSet();
-    const Class *clasp = thisTypes ? thisTypes->getKnownClass() : NULL;
+    const Class *clasp = thisTypes ? thisTypes->getKnownClass() : nullptr;
     if (clasp != &RegExpObject::class_)
         return InliningStatus_NotInlined;
     if (callInfo.getArg(0)->type() != MIRType_String)
@@ -1070,7 +1070,7 @@ IonBuilder::inlineUnsafePutElements(CallInfo &callInfo)
 
         bool writeNeedsBarrier = false;
         if (isDenseNative) {
-            if (!PropertyWriteNeedsTypeBarrier(cx, current, &obj, NULL, &elem,
+            if (!PropertyWriteNeedsTypeBarrier(cx, current, &obj, nullptr, &elem,
                                                /* canModify = */ false,
                                                &writeNeedsBarrier))
             {
@@ -1210,7 +1210,7 @@ IonBuilder::inlineNewParallelArray(CallInfo &callInfo)
         return InliningStatus_NotInlined;
 
     types::TemporaryTypeSet *ctorTypes = callInfo.getArg(0)->resultTypeSet();
-    JSObject *targetObj = ctorTypes ? ctorTypes->getSingleton() : NULL;
+    JSObject *targetObj = ctorTypes ? ctorTypes->getSingleton() : nullptr;
     RootedFunction target(cx);
     if (targetObj && targetObj->is<JSFunction>())
         target = &targetObj->as<JSFunction>();
@@ -1226,7 +1226,7 @@ IonBuilder::inlineNewParallelArray(CallInfo &callInfo)
 
     // Discard the function.
     return inlineParallelArrayTail(callInfo, target, ctor,
-                                   target ? NULL : ctorTypes, 1);
+                                   target ? nullptr : ctorTypes, 1);
 }
 
 IonBuilder::InliningStatus
@@ -1249,7 +1249,7 @@ IonBuilder::inlineParallelArray(CallInfo &callInfo)
     MConstant *ctor = MConstant::New(ObjectValue(*target));
     current->add(ctor);
 
-    return inlineParallelArrayTail(callInfo, target, ctor, NULL, 0);
+    return inlineParallelArrayTail(callInfo, target, ctor, nullptr, 0);
 }
 
 IonBuilder::InliningStatus
@@ -1383,7 +1383,7 @@ IonBuilder::inlineNewDenseArrayForParallelExecution(CallInfo &callInfo)
         return InliningStatus_NotInlined;
     types::TypeObject *typeObject = returnTypes->getTypeObject(0);
 
-    JSObject *templateObject = NewDenseAllocatedArray(cx, 0, NULL, TenuredObject);
+    JSObject *templateObject = NewDenseAllocatedArray(cx, 0, nullptr, TenuredObject);
     if (!templateObject)
         return InliningStatus_Error;
     templateObject->setType(typeObject);
@@ -1494,8 +1494,8 @@ IonBuilder::inlineHaveSameClass(CallInfo &callInfo)
 
     types::TemporaryTypeSet *arg1Types = callInfo.getArg(0)->resultTypeSet();
     types::TemporaryTypeSet *arg2Types = callInfo.getArg(1)->resultTypeSet();
-    const Class *arg1Clasp = arg1Types ? arg1Types->getKnownClass() : NULL;
-    const Class *arg2Clasp = arg2Types ? arg2Types->getKnownClass() : NULL;
+    const Class *arg1Clasp = arg1Types ? arg1Types->getKnownClass() : nullptr;
+    const Class *arg2Clasp = arg2Types ? arg2Types->getKnownClass() : nullptr;
     if (arg1Clasp && arg2Clasp) {
         MConstant *constant = MConstant::New(BooleanValue(arg1Clasp == arg2Clasp));
         current->add(constant);
@@ -1532,7 +1532,7 @@ IonBuilder::inlineIsCallable(CallInfo &callInfo)
         isCallableConstant = false;
     } else {
         types::TemporaryTypeSet *types = callInfo.getArg(0)->resultTypeSet();
-        const Class *clasp = types ? types->getKnownClass() : NULL;
+        const Class *clasp = types ? types->getKnownClass() : nullptr;
         if (clasp) {
             isCallableKnown = true;
             isCallableConstant = clasp->isCallable();
