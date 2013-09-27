@@ -704,10 +704,10 @@ nsDOMEvent::DuplicatePrivateData()
     }
     case NS_SIMPLE_GESTURE_EVENT:
     {
-      nsSimpleGestureEvent* oldSimpleGestureEvent =
-        static_cast<nsSimpleGestureEvent*>(mEvent);
-      nsSimpleGestureEvent* simpleGestureEvent = 
-        new nsSimpleGestureEvent(false, msg, nullptr, 0, 0.0);
+      WidgetSimpleGestureEvent* oldSimpleGestureEvent =
+        static_cast<WidgetSimpleGestureEvent*>(mEvent);
+      WidgetSimpleGestureEvent* simpleGestureEvent = 
+        new WidgetSimpleGestureEvent(false, msg, nullptr, 0, 0.0);
       simpleGestureEvent->
         AssignSimpleGestureEventData(*oldSimpleGestureEvent, true);
       newEvent = simpleGestureEvent;
