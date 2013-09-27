@@ -907,8 +907,6 @@ CompositorD3D11::PaintToTarget()
 
   D3D11_MAPPED_SUBRESOURCE map;
   mContext->Map(readTexture, 0, D3D11_MAP_READ, 0, &map);
-
-  destSurf->LockRect(&rect, NULL, D3DLOCK_READONLY);
   RefPtr<DataSourceSurface> sourceSurface =
     Factory::CreateWrappingDataSourceSurface((uint8_t*)map.pData,
                                              map.RowPitch,
