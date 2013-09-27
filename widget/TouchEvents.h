@@ -76,7 +76,7 @@ public:
   {
   }
 
-  WidgetSimpleGestureEvent(const nsSimpleGestureEvent& aOther) :
+  WidgetSimpleGestureEvent(const WidgetSimpleGestureEvent& aOther) :
     WidgetMouseEventBase(aOther.mFlags.mIsTrusted,
                          aOther.message, aOther.widget,
                          NS_SIMPLE_GESTURE_EVENT),
@@ -153,6 +153,5 @@ public:
 
 // TODO: Remove following typedefs
 typedef mozilla::WidgetGestureNotifyEvent nsGestureNotifyEvent;
-typedef mozilla::WidgetSimpleGestureEvent nsSimpleGestureEvent;
 
 #endif // mozilla_TouchEvents_h__
