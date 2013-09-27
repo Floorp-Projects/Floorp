@@ -698,7 +698,7 @@ nsEventDispatcher::CreateEvent(mozilla::dom::EventTarget* aOwner,
                               static_cast<nsGUIEvent*>(aEvent));
     case NS_SCROLLAREA_EVENT:
       return NS_NewDOMScrollAreaEvent(aDOMEvent, aOwner, aPresContext,
-                                      static_cast<nsScrollAreaEvent *>(aEvent));
+               static_cast<InternalScrollAreaEvent*>(aEvent));
     case NS_KEY_EVENT:
       return NS_NewDOMKeyboardEvent(aDOMEvent, aOwner, aPresContext,
                                     static_cast<nsKeyEvent*>(aEvent));
