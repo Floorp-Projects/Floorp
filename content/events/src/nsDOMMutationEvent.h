@@ -17,7 +17,8 @@ class nsDOMMutationEvent : public nsDOMEvent,
 {
 public:
   nsDOMMutationEvent(mozilla::dom::EventTarget* aOwner,
-                     nsPresContext* aPresContext, nsMutationEvent* aEvent);
+                     nsPresContext* aPresContext,
+                     mozilla::InternalMutationEvent* aEvent);
 
   virtual ~nsDOMMutationEvent();
 
