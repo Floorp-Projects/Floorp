@@ -355,7 +355,7 @@ nsresult
 NS_NewDOMSimpleGestureEvent(nsIDOMEvent** aInstancePtrResult,
                             mozilla::dom::EventTarget* aOwner,
                             nsPresContext* aPresContext,
-                            nsSimpleGestureEvent* aEvent);
+                            mozilla::WidgetSimpleGestureEvent* aEvent);
 nsresult
 NS_NewDOMScrollAreaEvent(nsIDOMEvent** aInstancePtrResult,
                          mozilla::dom::EventTarget* aOwner,

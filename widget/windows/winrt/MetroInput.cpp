@@ -255,11 +255,11 @@ MetroInput::OnEdgeGestureStarted(UI::Input::IEdgeGesture* sender,
 #ifdef DEBUG_INPUT
   LogFunction();
 #endif
-  nsSimpleGestureEvent geckoEvent(true,
-                                  NS_SIMPLE_GESTURE_EDGE_STARTED,
-                                  mWidget.Get(),
-                                  0,
-                                  0.0);
+  WidgetSimpleGestureEvent geckoEvent(true,
+                                      NS_SIMPLE_GESTURE_EDGE_STARTED,
+                                      mWidget.Get(),
+                                      0,
+                                      0.0);
   mModifierKeyState.Update();
   mModifierKeyState.InitInputEvent(geckoEvent);
   geckoEvent.time = ::GetMessageTime();
@@ -287,11 +287,11 @@ MetroInput::OnEdgeGestureCanceled(UI::Input::IEdgeGesture* sender,
 #ifdef DEBUG_INPUT
   LogFunction();
 #endif
-  nsSimpleGestureEvent geckoEvent(true,
-                                  NS_SIMPLE_GESTURE_EDGE_CANCELED,
-                                  mWidget.Get(),
-                                  0,
-                                  0.0);
+  WidgetSimpleGestureEvent geckoEvent(true,
+                                      NS_SIMPLE_GESTURE_EDGE_CANCELED,
+                                      mWidget.Get(),
+                                      0,
+                                      0.0);
   mModifierKeyState.Update();
   mModifierKeyState.InitInputEvent(geckoEvent);
   geckoEvent.time = ::GetMessageTime();
@@ -318,11 +318,11 @@ MetroInput::OnEdgeGestureCompleted(UI::Input::IEdgeGesture* sender,
 #ifdef DEBUG_INPUT
   LogFunction();
 #endif
-  nsSimpleGestureEvent geckoEvent(true,
-                                  NS_SIMPLE_GESTURE_EDGE_COMPLETED,
-                                  mWidget.Get(),
-                                  0,
-                                  0.0);
+  WidgetSimpleGestureEvent geckoEvent(true,
+                                      NS_SIMPLE_GESTURE_EDGE_COMPLETED,
+                                      mWidget.Get(),
+                                      0,
+                                      0.0);
   mModifierKeyState.Update();
   mModifierKeyState.InitInputEvent(geckoEvent);
   geckoEvent.time = ::GetMessageTime();
@@ -821,8 +821,8 @@ MetroInput::ProcessManipulationDelta(
   }
 
   // Send a gecko event indicating the magnification since the last update.
-  nsSimpleGestureEvent* magEvent =
-    new nsSimpleGestureEvent(true, aMagEventType, mWidget.Get(), 0, 0.0);
+  WidgetSimpleGestureEvent* magEvent =
+    new WidgetSimpleGestureEvent(true, aMagEventType, mWidget.Get(), 0, 0.0);
 
   magEvent->delta = aDelta.Expansion;
   magEvent->inputSource = nsIDOMMouseEvent::MOZ_SOURCE_TOUCH;
@@ -830,8 +830,8 @@ MetroInput::ProcessManipulationDelta(
   DispatchAsyncEventIgnoreStatus(magEvent);
 
   // Send a gecko event indicating the rotation since the last update.
-  nsSimpleGestureEvent* rotEvent =
-    new nsSimpleGestureEvent(true, aRotEventType, mWidget.Get(), 0, 0.0);
+  WidgetSimpleGestureEvent* rotEvent =
+    new WidgetSimpleGestureEvent(true, aRotEventType, mWidget.Get(), 0, 0.0);
 
   rotEvent->delta = aDelta.Rotation;
   rotEvent->inputSource = nsIDOMMouseEvent::MOZ_SOURCE_TOUCH;
@@ -961,9 +961,9 @@ MetroInput::OnManipulationCompleted(
   }
 
   if (isHorizontalSwipe) {
-    nsSimpleGestureEvent* swipeEvent =
-      new nsSimpleGestureEvent(true, NS_SIMPLE_GESTURE_SWIPE,
-                               mWidget.Get(), 0, 0.0);
+    WidgetSimpleGestureEvent* swipeEvent =
+      new WidgetSimpleGestureEvent(true, NS_SIMPLE_GESTURE_SWIPE,
+                                   mWidget.Get(), 0, 0.0);
     swipeEvent->direction = delta.Translation.X > 0
                          ? nsIDOMSimpleGestureEvent::DIRECTION_RIGHT
                          : nsIDOMSimpleGestureEvent::DIRECTION_LEFT;
@@ -974,9 +974,9 @@ MetroInput::OnManipulationCompleted(
   }
 
   if (isVerticalSwipe) {
-    nsSimpleGestureEvent* swipeEvent =
-      new nsSimpleGestureEvent(true, NS_SIMPLE_GESTURE_SWIPE,
-                               mWidget.Get(), 0, 0.0);
+    WidgetSimpleGestureEvent* swipeEvent =
+      new WidgetSimpleGestureEvent(true, NS_SIMPLE_GESTURE_SWIPE,
+                                   mWidget.Get(), 0, 0.0);
     swipeEvent->direction = delta.Translation.Y > 0
                          ? nsIDOMSimpleGestureEvent::DIRECTION_DOWN
                          : nsIDOMSimpleGestureEvent::DIRECTION_UP;

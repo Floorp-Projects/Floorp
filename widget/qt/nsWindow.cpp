@@ -2077,7 +2077,7 @@ nsEventStatus
 nsWindow::DispatchGestureEvent(uint32_t aMsg, uint32_t aDirection,
                                double aDelta, const nsIntPoint& aRefPoint)
 {
-    nsSimpleGestureEvent mozGesture(true, aMsg, this, 0, 0.0);
+    WidgetSimpleGestureEvent mozGesture(true, aMsg, this, 0, 0.0);
     mozGesture.direction = aDirection;
     mozGesture.delta = aDelta;
     mozGesture.refPoint = LayoutDeviceIntPoint::FromUntyped(aRefPoint);
