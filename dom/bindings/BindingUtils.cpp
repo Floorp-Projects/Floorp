@@ -1019,13 +1019,21 @@ XrayResolveProperty(JSContext* cx, JS::Handle<JSObject*> wrapper,
         for ( ; methodIds[i] != JSID_VOID; ++i) {
           if (id == methodIds[i]) {
             const JSFunctionSpec& methodSpec = methodsSpecs[i];
-            JSFunction *fun = JS_NewFunctionById(cx, methodSpec.call.op,
-                                                 methodSpec.nargs, 0,
-                                                 wrapper, id);
-            if (!fun) {
-              return false;
+            JSFunction *fun;
+            if (methodSpec.selfHostedName) {
+              fun = JS::GetSelfHostedFunction(cx, methodSpec.selfHostedName, id, methodSpec.nargs);
+              if (!fun) {
+                return false;
+              }
+              MOZ_ASSERT(!methodSpec.call.op, "Bad FunctionSpec declaration: non-null native");
+              MOZ_ASSERT(!methodSpec.call.info, "Bad FunctionSpec declaration: non-null jitinfo");
+            } else {
+              fun = JS_NewFunctionById(cx, methodSpec.call.op, methodSpec.nargs, 0, wrapper, id);
+              if (!fun) {
+                return false;
+              }
+              SET_JITINFO(fun, methodSpec.call.info);
             }
-            SET_JITINFO(fun, methodSpec.call.info);
             JSObject *funobj = JS_GetFunctionObject(fun);
             desc.value().setObject(*funobj);
             desc.setAttributes(methodSpec.flags);

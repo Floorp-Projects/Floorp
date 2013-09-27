@@ -9,12 +9,19 @@ let tab, browser;
 function test () {
   waitForExplicitFinish();
 
-  tab = gBrowser.addTab("data:text/html,<iframe srcdoc='content'/>");
+  tab = gBrowser.addTab("data:text/html;base64," +
+                        btoa("<body><iframe srcdoc=\"content\"/></iframe>" +
+                             "<a href=\"http://test.com\">test link</a>"));
   browser = gBrowser.getBrowserForTab(tab);
   gBrowser.selectedTab = tab;
 
   browser.addEventListener("load", startTests, true);
 }
+
+var outlineTest = "sendAsyncMessage(\"OutlineTest\", " +
+                  "{ ok : !!content.document." +
+                  "getElementsByTagName(\"a\")[0].style.outline }" +
+                  ");";
 
 function startTests () {
   browser.removeEventListener("load", startTests, true);
@@ -33,7 +40,28 @@ function startTests () {
     listener.onFindResult = function (result) {
       ok(result == Ci.nsITypeAheadFind.FIND_NOTFOUND, "should not find string");
 
-      cleanup();
+      let first = true;
+      listener.onFindResult = function (result) {
+        ok(result == Ci.nsITypeAheadFind.FIND_FOUND, "should find link");
+
+        browser.messageManager.addMessageListener("OutlineTest", function f(aMessage) {
+          browser.messageManager.removeMessageListener("OutlineTest", f);
+
+
+          if (first) {
+            ok(aMessage.data.ok, "content script should send okay");
+            first = false;
+          } else {
+            ok(!aMessage.data.ok, "content script should not send okay");
+            cleanup();
+          }
+        })
+        browser.messageManager.loadFrameScript("data:," + outlineTest, false)
+      }
+      // Search only for links and draw outlines.
+      finder.fastFind("test link", true, true);
+      // Just a simple search for "test link".
+      finder.fastFind("test link", false, false);
     }
     finder.highlight(true, "Bla");
   }

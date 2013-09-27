@@ -8629,7 +8629,7 @@ class MAsmJSStoreHeap : public MBinaryInstruction, public MAsmJSHeapAccess
 class MAsmJSLoadGlobalVar : public MNullaryInstruction
 {
     MAsmJSLoadGlobalVar(MIRType type, unsigned globalDataOffset, bool isConstant)
-      : globalDataOffset_(globalDataOffset)
+      : globalDataOffset_(globalDataOffset), isConstant_(isConstant)
     {
         JS_ASSERT(type == MIRType_Int32 || type == MIRType_Double);
         setResultType(type);
@@ -8637,6 +8637,7 @@ class MAsmJSLoadGlobalVar : public MNullaryInstruction
     }
 
     unsigned globalDataOffset_;
+    bool isConstant_;
 
   public:
     INSTRUCTION_HEADER(AsmJSLoadGlobalVar);
@@ -8650,7 +8651,7 @@ class MAsmJSLoadGlobalVar : public MNullaryInstruction
     bool congruentTo(MDefinition *ins) const;
 
     AliasSet getAliasSet() const {
-        return AliasSet::Load(AliasSet::AsmJSGlobalVar);
+        return isConstant_ ? AliasSet::None() : AliasSet::Load(AliasSet::AsmJSGlobalVar);
     }
 
     bool mightAlias(MDefinition *def);

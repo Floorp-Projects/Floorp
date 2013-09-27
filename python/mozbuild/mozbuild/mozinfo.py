@@ -73,7 +73,7 @@ def build_dict(config, env=os.environ):
     # other CPUs will wind up with unknown bits
 
     d['debug'] = substs.get('MOZ_DEBUG') == '1'
-    d['crashreporter'] = substs.get('MOZ_CRASHREPORTER') == '1'
+    d['crashreporter'] = bool(substs.get('MOZ_CRASHREPORTER'))
     d['asan'] = substs.get('MOZ_ASAN') == '1'
     d['tests_enabled'] = substs.get('ENABLE_TESTS') == "1"
     d['bin_suffix'] = substs.get('BIN_SUFFIX', '')

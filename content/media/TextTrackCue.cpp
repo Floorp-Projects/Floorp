@@ -8,6 +8,7 @@
 #include "nsIFrame.h"
 #include "nsVideoFrame.h"
 #include "nsComponentManagerUtils.h"
+#include "mozilla/ClearOnShutdown.h"
 
 // Alternate value for the 'auto' keyword.
 #define WEBVTT_AUTO -1
@@ -162,6 +163,7 @@ TextTrackCue::GetCueAsHTML()
       return mDocument->CreateDocumentFragment();
     }
     sParserWrapper = parserWrapper;
+    ClearOnShutdown(&sParserWrapper);
   }
 
   nsPIDOMWindow* window = mDocument->GetWindow();
