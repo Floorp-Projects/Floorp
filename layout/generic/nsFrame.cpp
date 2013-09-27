@@ -2172,7 +2172,7 @@ nsIFrame::BuildDisplayListForChild(nsDisplayListBuilder*   aBuilder,
                "Stacking contexts must also be pseudo-stacking-contexts");
 
   nsDisplayListBuilder::AutoBuildingDisplayList
-    buildingForChild(aBuilder, child, pseudoStackingContext, false);
+    buildingForChild(aBuilder, child, pseudoStackingContext);
   DisplayListClipState::AutoClipMultiple clipState(aBuilder);
 
   if (savedOutOfFlowData) {
