@@ -26,8 +26,8 @@ StackBaseShape::StackBaseShape(ExclusiveContext *cx, const Class *clasp,
     clasp(clasp),
     parent(parent),
     metadata(metadata),
-    rawGetter(NULL),
-    rawSetter(NULL),
+    rawGetter(nullptr),
+    rawSetter(nullptr),
     compartment(cx->compartment_)
 {}
 

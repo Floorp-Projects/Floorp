@@ -309,8 +309,9 @@ class StackFrame
     ArgumentsObject     *argsObj_;      /* if HAS_ARGS_OBJ, the call's arguments object */
 
     /*
-     * Previous frame and its pc and sp. Always NULL for InterpreterActivation's
-     * entry frame, always non-NULL for inline frames.
+     * Previous frame and its pc and sp. Always nullptr for
+     * InterpreterActivation's entry frame, always non-nullptr for inline
+     * frames.
      */
     StackFrame          *prev_;
     jsbytecode          *prevpc_;
@@ -572,7 +573,7 @@ class StackFrame
     }
 
     StaticBlockObject *maybeBlockChain() {
-        return (flags_ & HAS_BLOCKCHAIN) ? blockChain_ : NULL;
+        return (flags_ & HAS_BLOCKCHAIN) ? blockChain_ : nullptr;
     }
 
     StaticBlockObject &blockChain() const {
@@ -642,7 +643,7 @@ class StackFrame
     }
 
     JSFunction* maybeFun() const {
-        return isFunctionFrame() ? fun() : NULL;
+        return isFunctionFrame() ? fun() : nullptr;
     }
 
     /*
@@ -735,7 +736,7 @@ class StackFrame
     }
 
     void* maybeHookData() const {
-        return hasHookData() ? hookData_ : NULL;
+        return hasHookData() ? hookData_ : nullptr;
     }
 
     void setHookData(void *v) {
@@ -949,7 +950,7 @@ class StackFrame
     }
 
     static ptrdiff_t offsetOfThis(JSFunction *fun) {
-        return fun == NULL
+        return fun == nullptr
                ? -1 * ptrdiff_t(sizeof(Value))
                : -(fun->nargs + 1) * ptrdiff_t(sizeof(Value));
     }
@@ -1310,7 +1311,7 @@ class ActivationIterator
         return jitTop_;
     }
     bool done() const {
-        return activation_ == NULL;
+        return activation_ == nullptr;
     }
 };
 
@@ -1402,9 +1403,9 @@ class InterpreterFrameIterator
   public:
     explicit InterpreterFrameIterator(InterpreterActivation *activation)
       : activation_(activation),
-        fp_(NULL),
-        pc_(NULL),
-        sp_(NULL)
+        fp_(nullptr),
+        pc_(nullptr),
+        sp_(nullptr)
     {
         if (activation) {
             fp_ = activation->current();
@@ -1429,7 +1430,7 @@ class InterpreterFrameIterator
     InterpreterFrameIterator &operator++();
 
     bool done() const {
-        return fp_ == NULL;
+        return fp_ == nullptr;
     }
 };
 
@@ -1523,7 +1524,7 @@ class ScriptFrameIter
             return ionInlineFrames_.script();
         return data_.ionFrames_.script();
 #else
-        return NULL;
+        return nullptr;
 #endif
     }
     bool isJit() const {
@@ -1593,7 +1594,7 @@ class ScriptFrameIter
     void        setReturnValue(const Value &v);
 
     JSFunction *maybeCallee() const {
-        return isFunctionFrame() ? callee() : NULL;
+        return isFunctionFrame() ? callee() : nullptr;
     }
 
     // These are only valid for the top frame.
