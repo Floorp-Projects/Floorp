@@ -325,7 +325,8 @@ protected:
   class ThebesLayerData {
   public:
     ThebesLayerData() :
-      mAnimatedGeometryRoot(nullptr), mLayer(nullptr),
+      mAnimatedGeometryRoot(nullptr), mReferenceFrame(nullptr),
+      mLayer(nullptr),
       mIsSolidColorInVisibleRegion(false),
       mNeedComponentAlpha(false),
       mForceTransparentSurface(false),
@@ -438,6 +439,7 @@ protected:
      * active scrolled root.
      */
     const nsIFrame* mAnimatedGeometryRoot;
+    const nsIFrame* mReferenceFrame;
     ThebesLayer* mLayer;
     /**
      * If mIsSolidColorInVisibleRegion is true, this is the color of the visible
@@ -1945,6 +1947,7 @@ ContainerState::FindThebesLayerFor(nsDisplayItem* aItem,
     mThebesLayerDataStack.AppendElement(thebesLayerData);
     thebesLayerData->mLayer = layer;
     thebesLayerData->mAnimatedGeometryRoot = aActiveScrolledRoot;
+    thebesLayerData->mReferenceFrame = aItem->ReferenceFrame();
   } else {
     thebesLayerData = mThebesLayerDataStack[lowestUsableLayerWithScrolledRoot];
     layer = thebesLayerData->mLayer;
