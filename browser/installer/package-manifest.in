@@ -223,6 +223,7 @@
 #ifdef MOZ_GAMEPAD
 @BINPATH@/components/dom_gamepad.xpt
 #endif
+@BINPATH@/components/dom_payment.xpt
 @BINPATH@/components/downloads.xpt
 @BINPATH@/components/editor.xpt
 @BINPATH@/components/embed_base.xpt
@@ -540,6 +541,11 @@
 @BINPATH@/components/AppProtocolHandler.js
 @BINPATH@/components/AppProtocolHandler.manifest
 
+@BINPATH@/components/Payment.js
+@BINPATH@/components/PaymentFlowInfo.js
+@BINPATH@/components/PaymentRequestInfo.js
+@BINPATH@/components/Payment.manifest
+
 #ifdef MOZ_WEBRTC
 @BINPATH@/components/PeerConnection.js
 @BINPATH@/components/PeerConnection.manifest
@@ -772,6 +778,7 @@ bin/libfreebl_32int64_3.so
 @BINPATH@/webapprt/components/CommandLineHandler.js
 @BINPATH@/webapprt/components/ContentPermission.js
 @BINPATH@/webapprt/components/DirectoryProvider.js
+@BINPATH@/webapprt/components/PaymentUIGlue.js
 @BINPATH@/webapprt/components/components.manifest
 @BINPATH@/webapprt/defaults/preferences/prefs.js
 @BINPATH@/webapprt/modules/Startup.jsm
