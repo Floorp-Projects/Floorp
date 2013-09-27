@@ -134,8 +134,7 @@ function MarionetteServerConnection(aPrefix, aTransport, aServer)
   this.command_id = null;
   this.mainFrame = null; //topmost chrome frame
   this.curFrame = null; // chrome iframe that currently has focus
-  this.importedScripts = FileUtils.getFile('TmpD', ['marionetteChromeScripts']);
-  this.importedScriptHashes = {"chrome" : [], "content": []};
+  this.importedScripts = FileUtils.getFile('TmpD', ['marionettescriptchrome']);
   this.currentFrameElement = null;
   this.testName = null;
   this.mozBrowserClose = null;
@@ -1992,8 +1991,7 @@ MarionetteServerConnection.prototype = {
       this.mainFrame.focus();
     }
     try {
-      FileUtils.getDir('TmpD', ['marionetteChromeScripts']).remove(true);
-      FileUtils.getDir('TmpD', ['marionetteContentScripts']).remove(true);
+      this.importedScripts.remove(false);
     }
     catch (e) {
     }
@@ -2056,23 +2054,6 @@ MarionetteServerConnection.prototype = {
   
   importScript: function MDA_importScript(aRequest) {
     let command_id = this.command_id = this.getCommandId();
-    let converter =
-      Components.classes["@mozilla.org/intl/scriptableunicodeconverter"].
-          createInstance(Components.interfaces.nsIScriptableUnicodeConverter);
-    converter.charset = "UTF-8";
-    let result = {};
-    let data = converter.convertToByteArray(aRequest.script, result);
-    let ch = Components.classes["@mozilla.org/security/hash;1"]
-                       .createInstance(Components.interfaces.nsICryptoHash);
-    ch.init(ch.MD5);
-    ch.update(data, data.length);
-    let hash = ch.finish(true);
-    if (this.importedScriptHashes[this.context].indexOf(hash) > -1) {
-        //we have already imported this script
-        this.sendOk(command_id);
-        return;
-    }
-    this.importedScriptHashes[this.context].push(hash);
     if (this.context == "chrome") {
       let file;
       if (this.importedScripts.exists()) {
@@ -2096,21 +2077,6 @@ MarionetteServerConnection.prototype = {
                      { script: aRequest.script },
                      command_id);
     }
-  },
-
-  clearImportedScripts: function MDA_clearImportedScripts(aRequest) {
-    let command_id = this.command_id = this.getCommandId();
-    let file;
-    if (this.context == "chrome") {
-      file = FileUtils.getFile('TmpD', ['marionetteChromeScripts']);
-    }
-    else {
-      file = FileUtils.getFile('TmpD', ['marionetteContentScripts']);
-    }
-    if (file.exists()) {
-      file.remove(true);
-    }
-    this.sendOk(command_id);
   },
 
   /**
@@ -2230,6 +2196,7 @@ MarionetteServerConnection.prototype = {
                                             listenerWindow);
         }
         this.curBrowser.elementManager.seenItems[reg.id] = Cu.getWeakReference(listenerWindow);
+        reg.importedScripts = this.importedScripts.path;
         if (nullPrevious && (this.curBrowser.curFrameId != null)) {
           if (!this.sendAsync("newSession",
                               { B2G: (appName == "B2G") },
@@ -2294,7 +2261,6 @@ MarionetteServerConnection.prototype.requestTypes = {
   "deleteSession": MarionetteServerConnection.prototype.deleteSession,
   "emulatorCmdResult": MarionetteServerConnection.prototype.emulatorCmdResult,
   "importScript": MarionetteServerConnection.prototype.importScript,
-  "clearImportedScripts": MarionetteServerConnection.prototype.clearImportedScripts,
   "getAppCacheStatus": MarionetteServerConnection.prototype.getAppCacheStatus,
   "closeWindow": MarionetteServerConnection.prototype.closeWindow,
   "setTestName": MarionetteServerConnection.prototype.setTestName,
