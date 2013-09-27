@@ -96,7 +96,7 @@ Assembler::writeRelocation(JmpSrc src, Relocation::Kind reloc)
 void
 Assembler::addPendingJump(JmpSrc src, ImmPtr target, Relocation::Kind reloc)
 {
-    JS_ASSERT(target.value != NULL);
+    JS_ASSERT(target.value != nullptr);
 
     // Emit reloc before modifying the jump table, since it computes a 0-based
     // index. This jump is not patchable at runtime.
@@ -113,7 +113,7 @@ Assembler::addPatchableJump(JmpSrc src, Relocation::Kind reloc)
     writeRelocation(src, reloc);
 
     size_t index = jumps_.length();
-    enoughMemory_ &= jumps_.append(RelativePatch(src.offset(), NULL, reloc));
+    enoughMemory_ &= jumps_.append(RelativePatch(src.offset(), nullptr, reloc));
     return index;
 }
 
@@ -176,9 +176,9 @@ Assembler::executableCopy(uint8_t *buffer)
         RelativePatch &rp = jumps_[i];
         uint8_t *src = buffer + rp.offset;
         if (!rp.target) {
-            // The patch target is NULL for jumps that have been linked to a
-            // label within the same code block, but may be repatched later to
-            // jump to a different code block.
+            // The patch target is nullptr for jumps that have been linked to
+            // a label within the same code block, but may be repatched later
+            // to jump to a different code block.
             continue;
         }
         if (JSC::X86Assembler::canRelinkJump(src, rp.target)) {

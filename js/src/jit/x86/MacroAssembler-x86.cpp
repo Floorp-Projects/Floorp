@@ -24,7 +24,7 @@ MacroAssemblerX86::getDouble(double d)
     if (!doubleMap_.initialized()) {
         enoughMemory_ &= doubleMap_.init();
         if (!enoughMemory_)
-            return NULL;
+            return nullptr;
     }
     size_t doubleIndex;
     DoubleMap::AddPtr p = doubleMap_.lookupForAdd(d);
@@ -35,7 +35,7 @@ MacroAssemblerX86::getDouble(double d)
         enoughMemory_ &= doubles_.append(Double(d));
         enoughMemory_ &= doubleMap_.add(p, d, doubleIndex);
         if (!enoughMemory_)
-            return NULL;
+            return nullptr;
     }
     Double &dbl = doubles_[doubleIndex];
     JS_ASSERT(!dbl.uses.bound());
@@ -70,7 +70,7 @@ MacroAssemblerX86::getFloat(float f)
     if (!floatMap_.initialized()) {
         enoughMemory_ &= floatMap_.init();
         if (!enoughMemory_)
-            return NULL;
+            return nullptr;
     }
     size_t floatIndex;
     FloatMap::AddPtr p = floatMap_.lookupForAdd(f);
@@ -81,7 +81,7 @@ MacroAssemblerX86::getFloat(float f)
         enoughMemory_ &= floats_.append(Float(f));
         enoughMemory_ &= floatMap_.add(p, f, floatIndex);
         if (!enoughMemory_)
-            return NULL;
+            return nullptr;
     }
     Float &flt = floats_[floatIndex];
     JS_ASSERT(!flt.uses.bound());

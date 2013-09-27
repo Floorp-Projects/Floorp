@@ -35,13 +35,13 @@ CodeGeneratorShared::ensureMasm(MacroAssembler *masmArg)
 }
 
 CodeGeneratorShared::CodeGeneratorShared(MIRGenerator *gen, LIRGraph *graph, MacroAssembler *masmArg)
-  : oolIns(NULL),
+  : oolIns(nullptr),
     maybeMasm_(),
     masm(ensureMasm(masmArg)),
     gen(gen),
     graph(*graph),
-    current(NULL),
-    deoptTable_(NULL),
+    current(nullptr),
+    deoptTable_(nullptr),
 #ifdef DEBUG
     pushedArgs_(0),
 #endif
@@ -99,7 +99,7 @@ CodeGeneratorShared::generateOutOfLineCode()
         if (!outOfLineCode_[i]->generate(this))
             return false;
     }
-    oolIns = NULL;
+    oolIns = nullptr;
 
     return true;
 }
@@ -114,7 +114,7 @@ CodeGeneratorShared::addOutOfLineCode(OutOfLineCode *code)
     if (oolIns)
         code->setSource(oolIns->script(), oolIns->pc());
     else
-        code->setSource(current ? current->mir()->info().script() : NULL, lastPC_);
+        code->setSource(current ? current->mir()->info().script() : nullptr, lastPC_);
     return outOfLineCode_.append(code);
 }
 
@@ -681,7 +681,7 @@ CodeGeneratorShared::oolTruncateDouble(const FloatRegister &src, const Register 
 {
     OutOfLineTruncateSlow *ool = new OutOfLineTruncateSlow(src, dest);
     if (!addOutOfLineCode(ool))
-        return NULL;
+        return nullptr;
     return ool;
 }
 
@@ -760,7 +760,7 @@ CodeGeneratorShared::oolAbortPar(ParallelBailoutCause cause, MBasicBlock *basicB
 {
     OutOfLineAbortPar *ool = new OutOfLineAbortPar(cause, basicBlock, bytecode);
     if (!ool || !addOutOfLineCode(ool))
-        return NULL;
+        return nullptr;
     return ool;
 }
 
@@ -784,21 +784,21 @@ CodeGeneratorShared::oolPropagateAbortPar(LInstruction *lir)
 {
     OutOfLinePropagateAbortPar *ool = new OutOfLinePropagateAbortPar(lir);
     if (!ool || !addOutOfLineCode(ool))
-        return NULL;
+        return nullptr;
     return ool;
 }
 
 bool
 OutOfLineAbortPar::generate(CodeGeneratorShared *codegen)
 {
-    codegen->callTraceLIR(0xDEADBEEF, NULL, "AbortPar");
+    codegen->callTraceLIR(0xDEADBEEF, nullptr, "AbortPar");
     return codegen->visitOutOfLineAbortPar(this);
 }
 
 bool
 OutOfLinePropagateAbortPar::generate(CodeGeneratorShared *codegen)
 {
-    codegen->callTraceLIR(0xDEADBEEF, NULL, "AbortPar");
+    codegen->callTraceLIR(0xDEADBEEF, nullptr, "AbortPar");
     return codegen->visitOutOfLinePropagateAbortPar(this);
 }
 
@@ -834,15 +834,15 @@ CodeGeneratorShared::callTraceLIR(uint32_t blockIndex, LInstruction *lir,
             script = mir->block()->info().script();
             pc = mir->trackedPc();
         } else {
-            mirOpName = NULL;
-            script = NULL;
-            pc = NULL;
+            mirOpName = nullptr;
+            script = nullptr;
+            pc = nullptr;
         }
     } else {
         blockIndex = lirIndex = 0xDEADBEEF;
         lirOpName = mirOpName = bailoutName;
-        script = NULL;
-        pc = NULL;
+        script = nullptr;
+        pc = nullptr;
     }
 
     masm.store32(Imm32(blockIndex),
@@ -892,12 +892,12 @@ CodeGeneratorShared::labelForBackedgeWithImplicitCheck(MBasicBlock *mir)
                 // The interrupt check should be the first instruction in the
                 // loop header other than the initial label and move groups.
                 JS_ASSERT(iter->isInterruptCheck() || iter->isCheckInterruptPar());
-                return NULL;
+                return nullptr;
             }
         }
     }
 
-    return NULL;
+    return nullptr;
 }
 
 void
