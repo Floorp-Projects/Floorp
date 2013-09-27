@@ -5,15 +5,12 @@
 
 package org.mozilla.gecko.gfx;
 
-import org.mozilla.gecko.mozglue.generatorannotations.WrapEntireClassForJNI;
-
 /**
  * This is the data structure that's returned by the progressive tile update
  * callback function. It encompasses the current viewport and a boolean value
  * representing whether the front-end is interested in the current progressive
  * update continuing.
  */
-@WrapEntireClassForJNI
 public class ProgressiveUpdateData {
     public float x;
     public float y;
