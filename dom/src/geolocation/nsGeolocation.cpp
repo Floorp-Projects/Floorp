@@ -454,11 +454,15 @@ nsGeolocationRequest::Allow()
   }
 
   // check to see if we can use a cached value
-  // if the user has specified a maximumAge, return a cached value.
+  //
+  // either:
+  // a) the user has specified a maximumAge which allows us to return a cached value,
+  // -or-
+  // b) the cached position time is some reasonable value to return to the user (<30s)
 
-  uint32_t maximumAge = 0;
+  uint32_t maximumAge = 30 * PR_MSEC_PER_SEC;
   if (mOptions) {
-    if (mOptions->mMaximumAge > 0) {
+    if (mOptions->mMaximumAge >= 0) {
       maximumAge = mOptions->mMaximumAge;
     }
   }
