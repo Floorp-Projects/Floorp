@@ -138,6 +138,5 @@ typedef mozilla::InternalTransitionEvent   nsTransitionEvent;
 typedef mozilla::InternalAnimationEvent    nsAnimationEvent;
 typedef mozilla::WidgetContentCommandEvent nsContentCommandEvent;
 typedef mozilla::WidgetCommandEvent        nsCommandEvent;
-typedef mozilla::WidgetPluginEvent         nsPluginEvent;
 
 #endif // mozilla_EventForwards_h__
