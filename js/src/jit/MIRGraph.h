@@ -65,7 +65,7 @@ class MBasicBlock : public TempObject, public InlineListNode<MBasicBlock>
     ////////// BEGIN GRAPH BUILDING INSTRUCTIONS //////////
     ///////////////////////////////////////////////////////
 
-    // Creates a new basic block for a MIR generator. If |pred| is not NULL,
+    // Creates a new basic block for a MIR generator. If |pred| is not nullptr,
     // its slots and stack depth are initialized from |pred|.
     static MBasicBlock *New(MIRGraph &graph, BytecodeAnalysis *analysis, CompileInfo &info,
                             MBasicBlock *pred, jsbytecode *entryPc, Kind kind);
@@ -149,8 +149,8 @@ class MBasicBlock : public TempObject, public InlineListNode<MBasicBlock>
     MDefinition *pop();
     void popn(uint32_t n);
 
-    // Adds an instruction to this block's instruction list. |ins| may be NULL
-    // to simplify OOM checking.
+    // Adds an instruction to this block's instruction list. |ins| may be
+    // nullptr to simplify OOM checking.
     void add(MInstruction *ins);
 
     // Marks the last instruction of the block; no further instructions
@@ -550,11 +550,11 @@ class MIRGraph
   public:
     MIRGraph(TempAllocator *alloc)
       : alloc_(alloc),
-        exitAccumulator_(NULL),
+        exitAccumulator_(nullptr),
         blockIdGen_(0),
         idGen_(0),
-        osrBlock_(NULL),
-        osrStart_(NULL),
+        osrBlock_(nullptr),
+        osrStart_(nullptr),
         numBlocks_(0),
         hasTryBlock_(false)
     { }

@@ -36,7 +36,7 @@ struct PcScriptCache
 
     void clear(uint64_t gcNumber) {
         for (uint32_t i = 0; i < Length; i++)
-            entries[i].returnAddress = NULL;
+            entries[i].returnAddress = nullptr;
         this->gcNumber = gcNumber;
     }
 

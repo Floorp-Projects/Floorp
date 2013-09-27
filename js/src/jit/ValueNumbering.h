@@ -96,7 +96,7 @@ class ValueNumberData : public TempObject {
     MDefinition *classPrev;
 
   public:
-    ValueNumberData() : number(0), classNext(NULL), classPrev(NULL) {}
+    ValueNumberData() : number(0), classNext(nullptr), classPrev(nullptr) {}
 
     void setValueNumber(uint32_t number_) {
         number = number_;
