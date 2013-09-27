@@ -1198,6 +1198,25 @@ nsLayoutUtils::GetScrollableFrameFor(const nsIFrame *aScrolledFrame)
   return sf;
 }
 
+bool
+nsLayoutUtils::IsFixedPosFrameInDisplayPort(const nsIFrame* aFrame, nsRect* aDisplayPort)
+{
+  // Fixed-pos frames are parented by the viewport frame or the page content frame.
+  // We'll assume that printing/print preview don't have displayports for their
+  // pages!
+  nsIFrame* parent = aFrame->GetParent();
+  if (!parent || parent->GetParent() ||
+      aFrame->StyleDisplay()->mPosition != NS_STYLE_POSITION_FIXED) {
+    return false;
+  }
+  nsIFrame* rootScrollFrame =
+    aFrame->PresContext()->PresShell()->GetRootScrollFrame();
+  // Treat a fixed-pos frame as an animated geometry root if it belongs to
+  // a viewport which has a scrollframe and a displayport.
+  return rootScrollFrame &&
+    nsLayoutUtils::GetDisplayPort(rootScrollFrame->GetContent(), aDisplayPort);
+}
+
 nsIFrame*
 nsLayoutUtils::GetAnimatedGeometryRootFor(nsIFrame* aFrame,
                                           const nsIFrame* aStopAtAncestor)
