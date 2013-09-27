@@ -492,9 +492,6 @@ nsDisplayListBuilder::nsDisplayListBuilder(nsIFrame* aReferenceFrame,
       mInTransform(false),
       mSyncDecodeImages(false),
       mIsPaintingToWindow(false),
-      mHasDisplayPort(false),
-      mHasFixedItems(false),
-      mIsInFixedPosition(false),
       mIsCompositingCheap(false),
       mContainsPluginItem(false),
       mContainsBlendMode(false)
@@ -513,13 +510,6 @@ nsDisplayListBuilder::nsDisplayListBuilder(nsIFrame* aReferenceFrame,
     }
   }
 
-  if(mReferenceFrame->GetType() == nsGkAtoms::viewportFrame) {
-    ViewportFrame* viewportFrame = static_cast<ViewportFrame*>(mReferenceFrame);
-    if (!viewportFrame->GetChildList(nsIFrame::kFixedList).IsEmpty()) {
-      mHasFixedItems = true;
-    }
-  }
-
   nsCSSRendering::BeginFrameTreesLocked();
   PR_STATIC_ASSERT(nsDisplayItem::TYPE_MAX < (1 << nsDisplayItem::TYPE_BITS));
 }
@@ -535,50 +525,6 @@ static void MarkFrameForDisplay(nsIFrame* aFrame, nsIFrame* aStopAtFrame) {
       break;
     }
   }
-}
-
-static bool IsFixedFrame(nsIFrame* aFrame)
-{
-  return aFrame && aFrame->GetParent() && !aFrame->GetParent()->GetParent();
-}
-
-bool
-nsDisplayListBuilder::IsFixedItem(nsDisplayItem *aItem,
-                                  const nsIFrame** aAnimatedGeometryRoot,
-                                  const nsIFrame* aOverrideAnimatedGeometryRoot)
-{
-  const nsIFrame* animatedGeometryRoot = aOverrideAnimatedGeometryRoot;
-  if (!animatedGeometryRoot) {
-    if (aItem->GetType() == nsDisplayItem::TYPE_SCROLL_LAYER) {
-      nsDisplayScrollLayer* scrollLayerItem =
-        static_cast<nsDisplayScrollLayer*>(aItem);
-      animatedGeometryRoot =
-        nsLayoutUtils::GetAnimatedGeometryRootFor(scrollLayerItem->GetScrolledFrame(),
-                                                  FindReferenceFrameFor(scrollLayerItem->GetScrolledFrame()));
-    } else {
-      animatedGeometryRoot = nsLayoutUtils::GetAnimatedGeometryRootFor(aItem, this);
-    }
-  }
-
-  if (aAnimatedGeometryRoot) {
-    *aAnimatedGeometryRoot = animatedGeometryRoot;
-  }
-
-  return animatedGeometryRoot &&
-    !nsLayoutUtils::IsScrolledByRootContentDocumentDisplayportScrolling(animatedGeometryRoot, this);
-}
-
-static bool ForceVisiblityForFixedItem(nsDisplayListBuilder* aBuilder,
-                                       nsDisplayItem* aItem)
-{
-  return aBuilder->GetDisplayPort() && aBuilder->GetHasFixedItems() &&
-         aBuilder->IsFixedItem(aItem);
-}
-
-void nsDisplayListBuilder::SetDisplayPort(const nsRect& aDisplayPort)
-{
-    mHasDisplayPort = true;
-    mDisplayPort = aDisplayPort;
 }
 
 void nsDisplayListBuilder::MarkOutOfFlowFrameForDisplay(nsIFrame* aDirtyFrame,
@@ -1027,28 +973,6 @@ TreatAsOpaque(nsDisplayItem* aItem, nsDisplayListBuilder* aBuilder)
   return opaqueClipped;
 }
 
-static nsRect
-GetDisplayPortBounds(nsDisplayListBuilder* aBuilder, nsDisplayItem* aItem)
-{
-  // GetDisplayPortBounds() rectangle is used in order to restrict fixed aItem's
-  // visible bounds. nsDisplayTransform bounds already take item's
-  // transform into account, so there is no need to apply it here one more time.
-  // Start TransformRectToBoundsInAncestor() calculations from aItem's frame
-  // parent in this case.
-  nsIFrame* frame = aItem->Frame();
-  if (aItem->GetType() == nsDisplayItem::TYPE_TRANSFORM) {
-    frame = nsLayoutUtils::GetCrossDocParentFrame(frame);
-  }
-
-  const nsRect* displayport = aBuilder->GetDisplayPort();
-  nsRect result = nsLayoutUtils::TransformAncestorRectToFrame(
-                    frame,
-                    nsRect(0, 0, displayport->width, displayport->height),
-                    aBuilder->FindReferenceFrameFor(frame));
-  result.MoveBy(aBuilder->ToReferenceFrame(frame));
-  return result;
-}
-
 bool
 nsDisplayList::ComputeVisibilityForSublist(nsDisplayListBuilder* aBuilder,
                                            nsRegion* aVisibleRegion,
@@ -1094,11 +1018,7 @@ nsDisplayList::ComputeVisibilityForSublist(nsDisplayListBuilder* aBuilder,
     nsRect bounds = item->GetClippedBounds(aBuilder);
 
     nsRegion itemVisible;
-    if (ForceVisiblityForFixedItem(aBuilder, item)) {
-      itemVisible.And(GetDisplayPortBounds(aBuilder, item), bounds);
-    } else {
-      itemVisible.And(*aVisibleRegion, bounds);
-    }
+    itemVisible.And(*aVisibleRegion, bounds);
     item->mVisibleRect = itemVisible.GetBounds();
 
     if (item->ComputeVisibility(aBuilder, aVisibleRegion,
@@ -1601,11 +1521,7 @@ nsDisplayItem::RecomputeVisibility(nsDisplayListBuilder* aBuilder,
   nsRect bounds = GetClippedBounds(aBuilder);
 
   nsRegion itemVisible;
-  if (ForceVisiblityForFixedItem(aBuilder, this)) {
-    itemVisible.And(GetDisplayPortBounds(aBuilder, this), bounds);
-  } else {
-    itemVisible.And(*aVisibleRegion, bounds);
-  }
+  itemVisible.And(*aVisibleRegion, bounds);
   mVisibleRect = itemVisible.GetBounds();
 
   // When we recompute visibility within layers we don't need to
@@ -1668,21 +1584,8 @@ nsDisplayBackgroundImage::nsDisplayBackgroundImage(nsDisplayListBuilder* aBuilde
   : nsDisplayImageContainer(aBuilder, aFrame)
   , mBackgroundStyle(aBackgroundStyle)
   , mLayer(aLayer)
-  , mIsBottommostLayer(true)
 {
   MOZ_COUNT_CTOR(nsDisplayBackgroundImage);
-
-  if (mBackgroundStyle) {
-    // Set HasFixedItems if we construct a background-attachment:fixed item
-    if (mLayer != mBackgroundStyle->mImageCount - 1) {
-      mIsBottommostLayer = false;
-    }
-
-    // Check if this background layer is attachment-fixed
-    if (mBackgroundStyle->mLayers[mLayer].mAttachment == NS_STYLE_BG_ATTACHMENT_FIXED) {
-      aBuilder->SetHasFixedItems();
-    }
-  }
 
   mBounds = GetBoundsInternal(aBuilder);
 }

@@ -291,12 +291,6 @@ public:
   bool AllowMergingAndFlattening() { return mAllowMergingAndFlattening; }
   void SetAllowMergingAndFlattening(bool aAllow) { mAllowMergingAndFlattening = aAllow; }
 
-  /**
-   * @return Returns if the builder is currently building an
-   * nsDisplayFixedPosition sub-tree.
-   */
-  bool IsInFixedPosition() const { return mIsInFixedPosition; }
-
   bool SetIsCompositingCheap(bool aCompositingCheap) { 
     bool temp = mIsCompositingCheap; 
     mIsCompositingCheap = aCompositingCheap;
@@ -353,20 +347,6 @@ public:
    * nsDisplayTransform or SVG foreignObject.
    */
   void SetInTransform(bool aInTransform) { mInTransform = aInTransform; }
-
-  /**
-   * Call this if using display port for scrolling.
-   */
-  void SetDisplayPort(const nsRect& aDisplayPort);
-  const nsRect* GetDisplayPort() { return mHasDisplayPort ? &mDisplayPort : nullptr; }
-
-  /**
-   * Call this if ReferenceFrame() is a viewport frame with fixed-position
-   * children, or when we construct an item which will return true from
-   * ShouldFixToViewport()
-   */
-  void SetHasFixedItems() { mHasFixedItems = true; }
-  bool GetHasFixedItems() { return mHasFixedItems; }
 
   /**
    * Determines if this item is scrolled by content-document display-port
@@ -491,7 +471,7 @@ public:
 
   /**
    * A helper class to temporarily set the value of
-   * mIsAtRootOfPseudoStackingContext and mIsInFixedPosition, and temporarily
+   * mIsAtRootOfPseudoStackingContext, and temporarily
    * update mCachedOffsetFrame/mCachedOffset from a frame to its child.
    * Also saves and restores mClipState.
    */
@@ -508,14 +488,13 @@ public:
       aBuilder->mIsAtRootOfPseudoStackingContext = aIsRoot;
     }
     AutoBuildingDisplayList(nsDisplayListBuilder* aBuilder,
-                            nsIFrame* aForChild, bool aIsRoot,
-                            bool aIsInFixedPosition)
+                            nsIFrame* aForChild, bool aIsRoot)
       : mBuilder(aBuilder),
         mPrevCachedOffsetFrame(aBuilder->mCachedOffsetFrame),
         mPrevCachedReferenceFrame(aBuilder->mCachedReferenceFrame),
         mPrevCachedOffset(aBuilder->mCachedOffset),
-        mPrevIsAtRootOfPseudoStackingContext(aBuilder->mIsAtRootOfPseudoStackingContext),
-        mPrevIsInFixedPosition(aBuilder->mIsInFixedPosition) {
+        mPrevIsAtRootOfPseudoStackingContext(aBuilder->mIsAtRootOfPseudoStackingContext)
+    {
       if (aForChild->IsTransformed()) {
         aBuilder->mCachedOffset = nsPoint();
         aBuilder->mCachedReferenceFrame = aForChild;
@@ -526,16 +505,12 @@ public:
       }
       aBuilder->mCachedOffsetFrame = aForChild;
       aBuilder->mIsAtRootOfPseudoStackingContext = aIsRoot;
-      if (aIsInFixedPosition) {
-        aBuilder->mIsInFixedPosition = aIsInFixedPosition;
-      }
     }
     ~AutoBuildingDisplayList() {
       mBuilder->mCachedOffsetFrame = mPrevCachedOffsetFrame;
       mBuilder->mCachedReferenceFrame = mPrevCachedReferenceFrame;
       mBuilder->mCachedOffset = mPrevCachedOffset;
       mBuilder->mIsAtRootOfPseudoStackingContext = mPrevIsAtRootOfPseudoStackingContext;
-      mBuilder->mIsInFixedPosition = mPrevIsInFixedPosition;
     }
   private:
     nsDisplayListBuilder* mBuilder;
@@ -543,7 +518,6 @@ public:
     const nsIFrame*       mPrevCachedReferenceFrame;
     nsPoint               mPrevCachedOffset;
     bool                  mPrevIsAtRootOfPseudoStackingContext;
-    bool                  mPrevIsInFixedPosition;
   };
 
   /**
@@ -663,7 +637,6 @@ private:
   const nsIFrame*                mCachedOffsetFrame;
   const nsIFrame*                mCachedReferenceFrame;
   nsPoint                        mCachedOffset;
-  nsRect                         mDisplayPort;
   nsRegion                       mExcludedGlassRegion;
   // The display item for the Windows window glass background, if any
   nsDisplayItem*                 mGlassDisplayItem;
@@ -683,9 +656,6 @@ private:
   bool                           mInTransform;
   bool                           mSyncDecodeImages;
   bool                           mIsPaintingToWindow;
-  bool                           mHasDisplayPort;
-  bool                           mHasFixedItems;
-  bool                           mIsInFixedPosition;
   bool                           mIsCompositingCheap;
   bool                           mContainsPluginItem;
   bool                           mContainsBlendMode;
@@ -2079,9 +2049,6 @@ protected:
   /* Bounds of this display item */
   nsRect mBounds;
   uint32_t mLayer;
-
-  /* true if this item represents the bottom-most background layer */
-  bool mIsBottommostLayer;
 };
 
 
