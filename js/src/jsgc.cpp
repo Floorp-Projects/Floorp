@@ -1959,6 +1959,10 @@ js::TriggerZoneGC(Zone *zone, JS::gcreason::Reason reason)
         return;
     }
 
+    /* Zones in use by a thread with an exclusive context can't be collected. */
+    if (zone->usedByExclusiveThread)
+        return;
+
     JSRuntime *rt = zone->runtimeFromMainThread();
 
     /* Don't trigger GCs when allocating under the operation callback lock. */
