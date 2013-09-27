@@ -5,12 +5,15 @@
 from __future__ import unicode_literals
 
 import errno
+import itertools
 import logging
 import os
+import re
 import types
 
 from collections import namedtuple
 
+import mozbuild.makeutil as mozmakeutil
 from mozpack.copier import FilePurger
 from mozpack.manifests import (
     InstallManifest,
@@ -508,6 +511,69 @@ class RecursiveMakeBackend(CommonBackend):
         self._update_from_avoid_write(root.close())
         self._update_from_avoid_write(root_deps.close())
 
+    def _add_unified_build_rules(self, makefile, files, output_directory,
+                                 unified_prefix='Unified',
+                                 extra_dependencies=[],
+                                 unified_files_makefile_variable='unified_files',
+                                 include_curdir_build_rules=True):
+        files_per_unified_file = 16
+
+        explanation = "\n" \
+            "# We build files in 'unified' mode by including several files\n" \
+            "# together into a single source file.  This cuts down on\n" \
+            "# compilation times and debug information size.  %d was chosen as\n" \
+            "# a reasonable compromise between clobber rebuild time, incremental\n" \
+            "# rebuild time, and compiler memory usage.\n" % files_per_unified_file
+        makefile.add_statement(explanation)
+
+        def unified_files():
+            "Return an iterator of (unified_filename, source_filenames) tuples."
+            # Our last returned list of source filenames may be short, and we
+            # don't want the fill value inserted by izip_longest to be an
+            # issue.  So we do a little dance to filter it out ourselves.
+            dummy_fill_value = ("dummy",)
+            def filter_out_dummy(iterable):
+                return itertools.ifilter(lambda x: x != dummy_fill_value,
+                                         iterable)
+
+            # From the itertools documentation, slightly modified:
+            def grouper(n, iterable):
+                "grouper(3, 'ABCDEFG', 'x') --> ABC DEF Gxx"
+                args = [iter(iterable)] * n
+                return itertools.izip_longest(fillvalue=dummy_fill_value, *args)
+
+            for i, unified_group in enumerate(grouper(files_per_unified_file,
+                                                      sorted(files))):
+                just_the_filenames = list(filter_out_dummy(unified_group))
+                yield '%s%d.cpp' % (unified_prefix, i), just_the_filenames
+
+        all_sources = ' '.join(source for source, _ in unified_files())
+        makefile.add_statement('%s := %s\n' % (unified_files_makefile_variable,
+                                               all_sources))
+
+        regen_cmds = ['for f in $(filter %.cpp,$^); do echo "#include \\"$$f\\""; done > $@']
+        for unified_file, source_filenames in unified_files():
+            rule = makefile.create_rule([unified_file])
+            rule.add_dependencies(extra_dependencies + source_filenames)
+            rule.add_commands(regen_cmds)
+
+            # The rule we just defined is only for cases where the cpp files get
+            # blown away and we need to regenerate them.  The rule doesn't correctly
+            # handle source files being added/removed/renamed.  Therefore, we
+            # generate them here also to make sure everything's up-to-date.
+            with FileAvoidWrite(os.path.join(output_directory, unified_file)) as f:
+                f.write('\n'.join(['#include "%s"' % s for s in source_filenames]))
+
+        if include_curdir_build_rules:
+            makefile.add_statement('\n'
+                '# Make sometimes gets confused between "foo" and "$(CURDIR)/foo".\n'
+                '# Help it out by explicitly specifiying dependencies.')
+            makefile.add_statement('all_absolute_unified_files := \\\n'
+                                   '  $(addprefix $(CURDIR)/,$(%s))'
+                                   % unified_files_makefile_variable)
+            rule = makefile.create_rule(['$(all_absolute_unified_files)'])
+            rule.add_dependencies(['$(CURDIR)/%: %'])
+
     def consume_finished(self):
         CommonBackend.consume_finished(self)
 
@@ -554,40 +620,65 @@ class RecursiveMakeBackend(CommonBackend):
         # Write out a master list of all IPDL source files.
         ipdls = FileAvoidWrite(os.path.join(self.environment.topobjdir,
             'ipc', 'ipdl', 'ipdlsrcs.mk'))
-        for p in sorted(self._ipdl_sources):
-            ipdls.write('ALL_IPDLSRCS += %s\n' % p)
-            base = os.path.basename(p)
+        mk = mozmakeutil.Makefile()
+
+        sorted_ipdl_sources = list(sorted(self._ipdl_sources))
+        mk.add_statement('ALL_IPDLSRCS := %s\n' % ' '.join(sorted_ipdl_sources))
+
+        def files_from(ipdl):
+            base = os.path.basename(ipdl)
             root, ext = os.path.splitext(base)
 
             # Both .ipdl and .ipdlh become .cpp files
-            ipdls.write('CPPSRCS += %s.cpp\n' % root)
+            files = ['%s.cpp' % root]
             if ext == '.ipdl':
                 # .ipdl also becomes Child/Parent.cpp files
-                ipdls.write('CPPSRCS += %sChild.cpp\n' % root)
-                ipdls.write('CPPSRCS += %sParent.cpp\n' % root)
+                files.extend(['%sChild.cpp' % root,
+                              '%sParent.cpp' % root])
+            return files
 
-        ipdls.write('IPDLDIRS := %s\n' % ' '.join(sorted(set(os.path.dirname(p)
+        ipdl_cppsrcs = itertools.chain(*[files_from(p) for p in sorted_ipdl_sources])
+        mk.add_statement('CPPSRCS := %s\n' % ' '.join(ipdl_cppsrcs))
+
+        mk.add_statement('IPDLDIRS := %s\n' % ' '.join(sorted(set(os.path.dirname(p)
             for p in self._ipdl_sources))))
+
+        mk.dump(ipdls)
 
         self._update_from_avoid_write(ipdls.close())
         self.summary.managed_count += 1
 
         # Write out master lists of WebIDL source files.
-        webidls = FileAvoidWrite(os.path.join(self.environment.topobjdir,
-              'dom', 'bindings', 'webidlsrcs.mk'))
+        bindings_dir = os.path.join(self.environment.topobjdir, 'dom', 'bindings')
+        webidls = FileAvoidWrite(os.path.join(bindings_dir, 'webidlsrcs.mk'))
 
-        for webidl in sorted(self._webidl_sources):
-            webidls.write('webidl_files += %s\n' % os.path.basename(webidl))
-        for webidl in sorted(self._generated_events_webidl_sources):
-            webidls.write('generated_events_webidl_files += %s\n' % os.path.basename(webidl))
-        for webidl in sorted(self._test_webidl_sources):
-            webidls.write('test_webidl_files += %s\n' % os.path.basename(webidl))
-        for webidl in sorted(self._preprocessed_test_webidl_sources):
-            webidls.write('preprocessed_test_webidl_files += %s\n' % os.path.basename(webidl))
-        for webidl in sorted(self._generated_webidl_sources):
-            webidls.write('generated_webidl_files += %s\n' % os.path.basename(webidl))
-        for webidl in sorted(self._preprocessed_webidl_sources):
-            webidls.write('preprocessed_webidl_files += %s\n' % os.path.basename(webidl))
+        mk = mozmakeutil.Makefile()
+
+        def write_var(variable, sources):
+            files = [os.path.basename(f) for f in sorted(sources)]
+            mk.add_statement('%s += %s\n' % (variable, ' '.join(files)))
+        write_var('webidl_files', self._webidl_sources)
+        write_var('generated_events_webidl_files', self._generated_events_webidl_sources)
+        write_var('test_webidl_files', self._test_webidl_sources)
+        write_var('preprocessed_test_webidl_files', self._preprocessed_test_webidl_sources)
+        write_var('generated_webidl_files', self._generated_webidl_sources)
+        write_var('preprocessed_webidl_files', self._preprocessed_webidl_sources)
+
+        all_webidl_files = itertools.chain(iter(self._webidl_sources),
+                                           iter(self._generated_events_webidl_sources),
+                                           iter(self._generated_webidl_sources),
+                                           iter(self._preprocessed_webidl_sources))
+        all_webidl_files = [os.path.basename(x) for x in all_webidl_files]
+        all_webidl_sources = [re.sub(r'\.webidl$', 'Binding.cpp', x) for x in all_webidl_files]
+
+        self._add_unified_build_rules(mk, all_webidl_sources,
+                                      bindings_dir,
+                                      unified_prefix='UnifiedBindings',
+                                      unified_files_makefile_variable='unified_binding_cpp_files')
+
+        # Assume that Somebody Else has responsibility for correctly
+        # specifying removal dependencies for |all_webidl_sources|.
+        mk.dump(webidls, removal_guard=False)
 
         self._update_from_avoid_write(webidls.close())
         self.summary.managed_count += 1

@@ -132,7 +132,7 @@ SLEEP ?= sleep
 TOUCH ?= touch
 
 ifdef .PYMAKE
-PYCOMMANDPATH += $(topsrcdir)/config
+PYCOMMANDPATH += $(PYTHON_SITE_PACKAGES)
 endif
 
 PYTHON_PATH = $(PYTHON) $(topsrcdir)/config/pythonpath.py

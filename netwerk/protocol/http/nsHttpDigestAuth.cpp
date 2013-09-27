@@ -537,6 +537,12 @@ nsHttpDigestAuth::ParseChallenge(const char * challenge,
                                  uint16_t * algorithm,
                                  uint16_t * qop)
 {
+  // put an absurd, but maximum, length cap on the challenge so
+  // that calculations are 32 bit safe
+  if (strlen(challenge) > 16000000) {
+    return NS_ERROR_INVALID_ARG;
+  }
+  
   const char *p = challenge + 7; // first 7 characters are "Digest "
 
   *stale = false;
@@ -550,12 +556,12 @@ nsHttpDigestAuth::ParseChallenge(const char * challenge,
       break;
 
     // name
-    int16_t nameStart = (p - challenge);
+    int32_t nameStart = (p - challenge);
     while (*p && !nsCRT::IsAsciiSpace(*p) && *p != '=')
       ++p;
     if (!*p)
       return NS_ERROR_INVALID_ARG;
-    int16_t nameLength = (p - challenge) - nameStart;
+    int32_t nameLength = (p - challenge) - nameStart;
 
     while (*p && (nsCRT::IsAsciiSpace(*p) || *p == '='))
       ++p;
@@ -569,8 +575,8 @@ nsHttpDigestAuth::ParseChallenge(const char * challenge,
     }
 
     // value
-    int16_t valueStart = (p - challenge);
-    int16_t valueLength = 0;
+    int32_t valueStart = (p - challenge);
+    int32_t valueLength = 0;
     if (quoted) {
       while (*p && *p != '"')
         ++p;
@@ -628,13 +634,13 @@ nsHttpDigestAuth::ParseChallenge(const char * challenge,
     else if (nameLength == 3 &&
         nsCRT::strncasecmp(challenge+nameStart, "qop", 3) == 0)
     {
-      int16_t ipos = valueStart;
+      int32_t ipos = valueStart;
       while (ipos < valueStart+valueLength) {
         while (ipos < valueStart+valueLength &&
                (nsCRT::IsAsciiSpace(challenge[ipos]) ||
                 challenge[ipos] == ','))
           ipos++;
-        int16_t algostart = ipos;
+        int32_t algostart = ipos;
         while (ipos < valueStart+valueLength &&
                !nsCRT::IsAsciiSpace(challenge[ipos]) &&
                challenge[ipos] != ',')
