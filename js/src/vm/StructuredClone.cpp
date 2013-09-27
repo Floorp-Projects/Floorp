@@ -353,7 +353,8 @@ PairToUInt64(uint32_t tag, uint32_t data)
 bool
 SCInput::eof()
 {
-    JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_SC_BAD_SERIALIZED_DATA, "truncated");
+    JS_ReportErrorNumber(cx, js_GetErrorMessage, nullptr,
+                         JSMSG_SC_BAD_SERIALIZED_DATA, "truncated");
     return false;
 }
 
@@ -623,7 +624,7 @@ bool
 SCOutput::extractBuffer(uint64_t **datap, size_t *sizep)
 {
     *sizep = buf.length() * sizeof(uint64_t);
-    return (*datap = buf.extractRawBuffer()) != NULL;
+    return (*datap = buf.extractRawBuffer()) != nullptr;
 }
 
 JS_STATIC_ASSERT(JSString::MAX_LENGTH < UINT32_MAX);
@@ -783,7 +784,7 @@ JSStructuredCloneWriter::startObject(HandleObject obj, bool *backref)
         return false;
 
     if (memory.count() == UINT32_MAX) {
-        JS_ReportErrorNumber(context(), js_GetErrorMessage, NULL,
+        JS_ReportErrorNumber(context(), js_GetErrorMessage, nullptr,
                              JSMSG_NEED_DIET, "object graph to serialize");
         return false;
     }
@@ -886,7 +887,7 @@ JSStructuredCloneWriter::startWrite(const Value &v)
         /* else fall through */
     }
 
-    JS_ReportErrorNumber(context(), js_GetErrorMessage, NULL, JSMSG_SC_UNSUPPORTED_TYPE);
+    JS_ReportErrorNumber(context(), js_GetErrorMessage, nullptr, JSMSG_SC_UNSUPPORTED_TYPE);
     return false;
 }
 
@@ -970,7 +971,7 @@ JSStructuredCloneReader::checkDouble(double d)
     jsval_layout l;
     l.asDouble = d;
     if (!JSVAL_IS_DOUBLE_IMPL(l)) {
-        JS_ReportErrorNumber(context(), js_GetErrorMessage, NULL,
+        JS_ReportErrorNumber(context(), js_GetErrorMessage, nullptr,
                              JSMSG_SC_BAD_SERIALIZED_DATA, "unrecognized NaN");
         return false;
     }
@@ -983,7 +984,7 @@ class Chars {
     JSContext *cx;
     jschar *p;
   public:
-    Chars(JSContext *cx) : cx(cx), p(NULL) {}
+    Chars(JSContext *cx) : cx(cx), p(nullptr) {}
     ~Chars() { js_free(p); }
 
     bool allocate(size_t len) {
@@ -997,7 +998,7 @@ class Chars {
         return false;
     }
     jschar *get() { return p; }
-    void forget() { p = NULL; }
+    void forget() { p = nullptr; }
 };
 
 } /* anonymous namespace */
@@ -1006,13 +1007,13 @@ JSString *
 JSStructuredCloneReader::readString(uint32_t nchars)
 {
     if (nchars > JSString::MAX_LENGTH) {
-        JS_ReportErrorNumber(context(), js_GetErrorMessage, NULL, JSMSG_SC_BAD_SERIALIZED_DATA,
-                             "string length");
-        return NULL;
+        JS_ReportErrorNumber(context(), js_GetErrorMessage, nullptr,
+                             JSMSG_SC_BAD_SERIALIZED_DATA, "string length");
+        return nullptr;
     }
     Chars chars(context());
     if (!chars.allocate(nchars) || !in.readChars(chars.get(), nchars))
-        return NULL;
+        return nullptr;
     JSString *str = js_NewString<CanGC>(context(), chars.get(), nchars);
     if (str)
         chars.forget();
@@ -1031,7 +1032,7 @@ JSStructuredCloneReader::readTypedArray(uint32_t arrayType, uint32_t nelems, Val
                                         bool v1Read)
 {
     if (arrayType > ScalarTypeRepresentation::TYPE_UINT8_CLAMPED) {
-        JS_ReportErrorNumber(context(), js_GetErrorMessage, NULL,
+        JS_ReportErrorNumber(context(), js_GetErrorMessage, nullptr,
                              JSMSG_SC_BAD_SERIALIZED_DATA, "unhandled typed array element type");
         return false;
     }
@@ -1058,7 +1059,7 @@ JSStructuredCloneReader::readTypedArray(uint32_t arrayType, uint32_t nelems, Val
         byteOffset = n;
     }
     RootedObject buffer(context(), &v.toObject());
-    RootedObject obj(context(), NULL);
+    RootedObject obj(context(), nullptr);
 
     switch (arrayType) {
       case ScalarTypeRepresentation::TYPE_INT8:
@@ -1220,8 +1221,8 @@ JSStructuredCloneReader::startRead(Value *vp)
         if (!in.readDouble(&d) || !checkDouble(d))
             return false;
         if (!IsNaN(d) && d != TimeClip(d)) {
-            JS_ReportErrorNumber(context(), js_GetErrorMessage, NULL, JSMSG_SC_BAD_SERIALIZED_DATA,
-                                 "date");
+            JS_ReportErrorNumber(context(), js_GetErrorMessage, nullptr,
+                                 JSMSG_SC_BAD_SERIALIZED_DATA, "date");
             return false;
         }
         JSObject *obj = js_NewDateObjectMsec(context(), d);
@@ -1237,8 +1238,8 @@ JSStructuredCloneReader::startRead(Value *vp)
         if (!in.readPair(&tag2, &nchars))
             return false;
         if (tag2 != SCTAG_STRING) {
-            JS_ReportErrorNumber(context(), js_GetErrorMessage, NULL, JSMSG_SC_BAD_SERIALIZED_DATA,
-                                 "regexp");
+            JS_ReportErrorNumber(context(), js_GetErrorMessage, nullptr,
+                                 JSMSG_SC_BAD_SERIALIZED_DATA, "regexp");
             return false;
         }
         JSString *str = readString(nchars);
@@ -1250,7 +1251,8 @@ JSStructuredCloneReader::startRead(Value *vp)
 
         size_t length = stable->length();
         const StableCharPtr chars = stable->chars();
-        RegExpObject *reobj = RegExpObject::createNoStatics(context(), chars.get(), length, flags, NULL);
+        RegExpObject *reobj = RegExpObject::createNoStatics(context(), chars.get(), length,
+                                                            flags, nullptr);
         if (!reobj)
             return false;
         vp->setObject(*reobj);
@@ -1270,7 +1272,7 @@ JSStructuredCloneReader::startRead(Value *vp)
 
       case SCTAG_BACK_REFERENCE_OBJECT: {
         if (data >= allObjs.length()) {
-            JS_ReportErrorNumber(context(), js_GetErrorMessage, NULL,
+            JS_ReportErrorNumber(context(), js_GetErrorMessage, nullptr,
                                  JSMSG_SC_BAD_SERIALIZED_DATA,
                                  "invalid back reference in input");
             return false;
@@ -1281,14 +1283,14 @@ JSStructuredCloneReader::startRead(Value *vp)
 
       case SCTAG_TRANSFER_MAP_HEADER:
         // A map header cannot be here but just at the beginning of the buffer.
-        JS_ReportErrorNumber(context(), js_GetErrorMessage, NULL,
+        JS_ReportErrorNumber(context(), js_GetErrorMessage, nullptr,
                              JSMSG_SC_BAD_SERIALIZED_DATA,
                              "invalid input");
         return false;
 
       case SCTAG_TRANSFER_MAP:
         // A map cannot be here but just at the beginning of the buffer.
-        JS_ReportErrorNumber(context(), js_GetErrorMessage, NULL,
+        JS_ReportErrorNumber(context(), js_GetErrorMessage, nullptr,
                              JSMSG_SC_BAD_SERIALIZED_DATA,
                              "invalid input");
         return false;
@@ -1322,8 +1324,8 @@ JSStructuredCloneReader::startRead(Value *vp)
         }
 
         if (!callbacks || !callbacks->read) {
-            JS_ReportErrorNumber(context(), js_GetErrorMessage, NULL, JSMSG_SC_BAD_SERIALIZED_DATA,
-                                 "unsupported type");
+            JS_ReportErrorNumber(context(), js_GetErrorMessage, nullptr,
+                                 JSMSG_SC_BAD_SERIALIZED_DATA, "unsupported type");
             return false;
         }
         JSObject *obj = callbacks->read(context(), this, tag, data, closure);
@@ -1364,7 +1366,8 @@ JSStructuredCloneReader::readId(jsid *idp)
         *idp = JSID_VOID;
         return true;
     }
-    JS_ReportErrorNumber(context(), js_GetErrorMessage, NULL, JSMSG_SC_BAD_SERIALIZED_DATA, "id");
+    JS_ReportErrorNumber(context(), js_GetErrorMessage, nullptr,
+                         JSMSG_SC_BAD_SERIALIZED_DATA, "id");
     return false;
 }
 
@@ -1446,7 +1449,7 @@ JS_ReadStructuredClone(JSContext *cx, uint64_t *buf, size_t nbytes,
     CHECK_REQUEST(cx);
 
     if (version > JS_STRUCTURED_CLONE_VERSION) {
-        JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_BAD_CLONE_VERSION);
+        JS_ReportErrorNumber(cx, js_GetErrorMessage, nullptr, JSMSG_BAD_CLONE_VERSION);
         return false;
     }
     const JSStructuredCloneCallbacks *callbacks =
@@ -1535,7 +1538,7 @@ JSAutoStructuredCloneBuffer::clear()
 {
     if (data_) {
         ClearStructuredClone(data_, nbytes_);
-        data_ = NULL;
+        data_ = nullptr;
         nbytes_ = 0;
         version_ = 0;
     }
@@ -1580,7 +1583,7 @@ JSAutoStructuredCloneBuffer::steal(uint64_t **datap, size_t *nbytesp, uint32_t *
     if (versionp)
         *versionp = version_;
 
-    data_ = NULL;
+    data_ = nullptr;
     nbytes_ = 0;
     version_ = 0;
 }
@@ -1617,7 +1620,7 @@ JSAutoStructuredCloneBuffer::write(JSContext *cx, JS::Value valueArg,
                                         optionalCallbacks, closure,
                                         transferable);
     if (!ok) {
-        data_ = NULL;
+        data_ = nullptr;
         nbytes_ = 0;
         version_ = JS_STRUCTURED_CLONE_VERSION;
     }
@@ -1672,7 +1675,7 @@ JS_ReadTypedArray(JSStructuredCloneReader *r, JS::Value *vp)
             return false;
         return r->readTypedArray(arrayType, nelems, vp);
     } else {
-        JS_ReportErrorNumber(r->context(), js_GetErrorMessage, NULL,
+        JS_ReportErrorNumber(r->context(), js_GetErrorMessage, nullptr,
                              JSMSG_SC_BAD_SERIALIZED_DATA, "expected type array");
         return false;
     }
