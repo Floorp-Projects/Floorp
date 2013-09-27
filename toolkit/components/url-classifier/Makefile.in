@@ -5,6 +5,5 @@
 
 LOCAL_INCLUDES = \
   -I$(srcdir)/../build \
-  -I$(topsrcdir)/ipc/chromium/src \
   $(SQLITE_CFLAGS) \
   $(NULL)
