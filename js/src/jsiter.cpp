@@ -974,17 +974,11 @@ js::ValueToIterator(JSContext *cx, unsigned flags, MutableHandleValue vp)
         obj = &vp.toObject();
     } else {
         /*
-         * Enumerating over null and undefined gives an empty enumerator.
-         * This is contrary to ECMA-262 9.9 ToObject, invoked from step 3 of
-         * the first production in 12.6.4 and step 4 of the second production,
-         * but it's "web JS" compatible. ES5 fixed for-in to match this de-facto
-         * standard.
+         * Enumerating over null and undefined gives an empty enumerator, so
+         * that |for (var p in <null or undefined>) <loop>;| never executes
+         * <loop>, per ES5 12.6.4.
          */
-        if (flags & JSITER_ENUMERATE) {
-            if (!js_ValueToObjectOrNull(cx, vp, &obj))
-                return false;
-            /* fall through */
-        } else {
+        if (!(flags & JSITER_ENUMERATE) || !vp.isNullOrUndefined()) {
             obj = ToObject(cx, vp);
             if (!obj)
                 return false;
