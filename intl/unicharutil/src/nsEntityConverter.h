@@ -7,7 +7,6 @@
 #define nsEntityConverter_h__
 
 #include "nsIEntityConverter.h"
-#include "nsIFactory.h"
 #include "nsIStringBundle.h"
 #include "nsCOMPtr.h"
 

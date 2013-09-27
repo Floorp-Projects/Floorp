@@ -20,7 +20,9 @@
 #ifndef nsCP855ToUnicode_h___
 #define nsCP855ToUnicode_h___
 
-#include "nsISupports.h"
+#include "nsID.h"
+
+class nsISupports;
 
 /**
  * A character set converter from CP855 to Unicode.
