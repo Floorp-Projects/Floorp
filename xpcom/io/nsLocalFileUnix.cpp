@@ -1809,7 +1809,8 @@ nsLocalFile::Launch()
 
     nsDependentCString fileUri = NS_LITERAL_CSTRING("file://");
     fileUri.Append(mPath);
-    return GeckoAppShell::OpenUriExternal(NS_ConvertUTF8toUTF16(fileUri), NS_ConvertUTF8toUTF16(type)) ? NS_OK : NS_ERROR_FAILURE;
+    mozilla::AndroidBridge* bridge = mozilla::AndroidBridge::Bridge();
+    return bridge->OpenUriExternal(NS_ConvertUTF8toUTF16(fileUri), NS_ConvertUTF8toUTF16(type)) ? NS_OK : NS_ERROR_FAILURE;
 #elif defined(MOZ_WIDGET_COCOA)
     CFURLRef url;
     if (NS_SUCCEEDED(GetCFURL(&url))) {

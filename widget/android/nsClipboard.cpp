@@ -44,7 +44,11 @@ nsClipboard::SetData(nsITransferable *aTransferable,
   supportsString->GetData(buffer);
 
   if (XRE_GetProcessType() == GeckoProcessType_Default) {
-   Clipboard::SetClipboardText(buffer);
+    if (AndroidBridge::Bridge())
+      AndroidBridge::Bridge()->SetClipboardText(buffer);
+    else
+      return NS_ERROR_NOT_IMPLEMENTED;
+
   } else {
     bool isPrivateData = false;
     aTransferable->GetIsPrivateData(&isPrivateData);
@@ -97,7 +101,8 @@ nsClipboard::EmptyClipboard(int32_t aWhichClipboard)
   if (aWhichClipboard != kGlobalClipboard)
     return NS_ERROR_NOT_IMPLEMENTED;
   if (XRE_GetProcessType() == GeckoProcessType_Default) {
-    Clipboard::ClearText();
+    if (AndroidBridge::Bridge())
+      AndroidBridge::Bridge()->EmptyClipboard();
   } else {
     ContentChild::GetSingleton()->SendEmptyClipboard();
   }
@@ -114,7 +119,8 @@ nsClipboard::HasDataMatchingFlavors(const char **aFlavorList,
   if (aWhichClipboard != kGlobalClipboard)
     return NS_ERROR_NOT_IMPLEMENTED;
   if (XRE_GetProcessType() == GeckoProcessType_Default) {
-    *aHasText = Clipboard::HasText();
+    if (AndroidBridge::Bridge())
+      *aHasText = AndroidBridge::Bridge()->ClipboardHasText();
   } else {
     ContentChild::GetSingleton()->SendClipboardHasText(aHasText);
   }
