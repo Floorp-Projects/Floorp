@@ -649,8 +649,8 @@ nsDOMEvent::DuplicatePrivateData()
     }
     case NS_FORM_EVENT:
     {
-      nsFormEvent* oldFormEvent = static_cast<nsFormEvent*>(mEvent);
-      nsFormEvent* formEvent = new nsFormEvent(false, msg);
+      InternalFormEvent* oldFormEvent = static_cast<InternalFormEvent*>(mEvent);
+      InternalFormEvent* formEvent = new InternalFormEvent(false, msg);
       formEvent->AssignFormEventData(*oldFormEvent, true);
       newEvent = formEvent;
       break;
