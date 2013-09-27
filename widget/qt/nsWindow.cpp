@@ -1973,7 +1973,8 @@ nsEventStatus nsWindow::OnTouchEvent(QTouchEvent *event, bool &handled)
         handled = true;
         for (int i = touchPoints.count() -1; i >= 0; i--) {
             QPointF fpos = touchPoints[i].pos();
-            nsGestureNotifyEvent gestureNotifyEvent(true, NS_GESTURENOTIFY_EVENT_START, this);
+            WidgetGestureNotifyEvent gestureNotifyEvent(true,
+                                         NS_GESTURENOTIFY_EVENT_START, this);
             gestureNotifyEvent.refPoint = LayoutDeviceIntPoint(fpos.x(), fpos.y());
             DispatchEvent(&gestureNotifyEvent);
         }

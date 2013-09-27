@@ -151,7 +151,4 @@ public:
 
 } // namespace mozilla
 
-// TODO: Remove following typedefs
-typedef mozilla::WidgetGestureNotifyEvent nsGestureNotifyEvent;
-
 #endif // mozilla_TouchEvents_h__
