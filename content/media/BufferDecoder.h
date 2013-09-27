@@ -38,7 +38,7 @@ public:
 
   bool OnDecodeThread() const MOZ_OVERRIDE;
 
-  MediaResource* GetResource() const MOZ_FINAL MOZ_OVERRIDE;
+  MediaResource* GetResource() const MOZ_OVERRIDE;
 
   void NotifyBytesConsumed(int64_t aBytes, int64_t aOffset) MOZ_FINAL MOZ_OVERRIDE;
 
@@ -74,7 +74,7 @@ public:
 
   MediaDecoderOwner* GetOwner() MOZ_FINAL MOZ_OVERRIDE;
 
-private:
+protected:
   // This monitor object is not really used to synchronize access to anything.
   // It's just there in order for us to be able to override
   // GetReentrantMonitor correctly.
