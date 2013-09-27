@@ -363,8 +363,6 @@ inline void
 JSObject::setType(js::types::TypeObject *newType)
 {
     JS_ASSERT(newType);
-    JS_ASSERT_IF(getClass()->emulatesUndefined(),
-                 newType->hasAnyFlags(js::types::OBJECT_FLAG_EMULATES_UNDEFINED));
     JS_ASSERT(!hasSingletonType());
     type_ = newType;
 }

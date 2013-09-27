@@ -1417,6 +1417,16 @@ TypeSet::getTypeOrSingleObject(JSContext *cx, unsigned i, TypeObject **result) c
     return true;
 }
 
+inline const Class *
+TypeSet::getObjectClass(unsigned i) const
+{
+    if (JSObject *object = getSingleObject(i))
+        return object->getClass();
+    if (TypeObject *object = getTypeObject(i))
+        return object->clasp;
+    return NULL;
+}
+
 /////////////////////////////////////////////////////////////////////
 // TypeObject
 /////////////////////////////////////////////////////////////////////
