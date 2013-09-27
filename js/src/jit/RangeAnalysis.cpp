@@ -148,7 +148,7 @@ RangeAnalysis::addBetaNodes()
         MDefinition *left = compare->getOperand(0);
         MDefinition *right = compare->getOperand(1);
         int32_t bound;
-        MDefinition *val = NULL;
+        MDefinition *val = nullptr;
 
         JSOp jsop = compare->jsop();
 
@@ -163,8 +163,8 @@ RangeAnalysis::addBetaNodes()
             bound = right->toConstant()->value().toInt32();
             val = left;
         } else if (left->type() == MIRType_Int32 && right->type() == MIRType_Int32) {
-            MDefinition *smaller = NULL;
-            MDefinition *greater = NULL;
+            MDefinition *smaller = nullptr;
+            MDefinition *greater = nullptr;
             if (jsop == JSOP_LT) {
                 smaller = left;
                 greater = right;
@@ -310,7 +310,7 @@ Range::intersect(const Range *lhs, const Range *rhs, bool *emptyRange)
     *emptyRange = false;
 
     if (!lhs && !rhs)
-        return NULL;
+        return nullptr;
 
     if (!lhs)
         return new Range(*rhs);
@@ -336,7 +336,7 @@ Range::intersect(const Range *lhs, const Range *rhs, bool *emptyRange)
     // (Bug 765127)
     if (newUpper < newLower) {
         *emptyRange = true;
-        return NULL;
+        return nullptr;
     }
 
     Range *r = new Range(
@@ -371,8 +371,8 @@ Range::unionWith(const Range *other)
 }
 
 Range::Range(const MDefinition *def)
-  : symbolicLower_(NULL),
-    symbolicUpper_(NULL)
+  : symbolicLower_(nullptr),
+    symbolicUpper_(nullptr)
 {
     const Range *other = def->range();
     if (!other) {
@@ -382,12 +382,12 @@ Range::Range(const MDefinition *def)
             set(0, 1);
         else
             set(NoInt32LowerBound, NoInt32UpperBound, true, MaxDoubleExponent);
-        symbolicLower_ = symbolicUpper_ = NULL;
+        symbolicLower_ = symbolicUpper_ = nullptr;
         return;
     }
 
     *this = *other;
-    symbolicLower_ = symbolicUpper_ = NULL;
+    symbolicLower_ = symbolicUpper_ = nullptr;
 
     if (def->type() == MIRType_Boolean)
         wrapAroundToBoolean();
@@ -766,7 +766,7 @@ MPhi::computeRange()
     if (type() != MIRType_Int32 && type() != MIRType_Double)
         return;
 
-    Range *range = NULL;
+    Range *range = nullptr;
     JS_ASSERT(getOperand(0)->op() != MDefinition::Op_OsrValue);
     for (size_t i = 0, e = numOperands(); i < e; i++) {
         if (getOperand(i)->block()->earlyAbort()) {
@@ -780,7 +780,7 @@ MPhi::computeRange()
         Range *input = getOperand(i)->range();
 
         if (!input) {
-            range = NULL;
+            range = nullptr;
             break;
         }
 
@@ -1146,7 +1146,7 @@ static Range *GetTypedArrayRange(int type)
         break;
     }
 
-  return NULL;
+  return nullptr;
 }
 
 void
@@ -1258,7 +1258,7 @@ RangeAnalysis::analyzeLoop(MBasicBlock *header)
     if (!markBlocksInLoopBody(header, backedge))
         return false;
 
-    LoopIterationBound *iterationBound = NULL;
+    LoopIterationBound *iterationBound = nullptr;
 
     MBasicBlock *block = backedge;
     do {
@@ -1344,21 +1344,21 @@ LoopIterationBound *
 RangeAnalysis::analyzeLoopIterationCount(MBasicBlock *header,
                                          MTest *test, BranchDirection direction)
 {
-    SimpleLinearSum lhs(NULL, 0);
+    SimpleLinearSum lhs(nullptr, 0);
     MDefinition *rhs;
     bool lessEqual;
     if (!ExtractLinearInequality(test, direction, &lhs, &rhs, &lessEqual))
-        return NULL;
+        return nullptr;
 
     // Ensure the rhs is a loop invariant term.
     if (rhs && rhs->block()->isMarked()) {
         if (lhs.term && lhs.term->block()->isMarked())
-            return NULL;
+            return nullptr;
         MDefinition *temp = lhs.term;
         lhs.term = rhs;
         rhs = temp;
         if (!SafeSub(0, lhs.constant, &lhs.constant))
-            return NULL;
+            return nullptr;
         lessEqual = !lessEqual;
     }
 
@@ -1366,7 +1366,7 @@ RangeAnalysis::analyzeLoopIterationCount(MBasicBlock *header,
 
     // Ensure the lhs is a phi node from the start of the loop body.
     if (!lhs.term || !lhs.term->isPhi() || lhs.term->block() != header)
-        return NULL;
+        return nullptr;
 
     // Check that the value of the lhs changes by a constant amount with each
     // loop iteration. This requires that the lhs be written in every loop
@@ -1374,14 +1374,14 @@ RangeAnalysis::analyzeLoopIterationCount(MBasicBlock *header,
     // the start of the iteration.
 
     if (lhs.term->toPhi()->numOperands() != 2)
-        return NULL;
+        return nullptr;
 
     // The first operand of the phi should be the lhs' value at the start of
     // the first executed iteration, and not a value written which could
     // replace the second operand below during the middle of execution.
     MDefinition *lhsInitial = lhs.term->toPhi()->getOperand(0);
     if (lhsInitial->block()->isMarked())
-        return NULL;
+        return nullptr;
 
     // The second operand of the phi should be a value written by an add/sub
     // in every loop iteration, i.e. in a block which dominates the backedge.
@@ -1389,13 +1389,13 @@ RangeAnalysis::analyzeLoopIterationCount(MBasicBlock *header,
     if (lhsWrite->isBeta())
         lhsWrite = lhsWrite->getOperand(0);
     if (!lhsWrite->isAdd() && !lhsWrite->isSub())
-        return NULL;
+        return nullptr;
     if (!lhsWrite->block()->isMarked())
-        return NULL;
+        return nullptr;
     MBasicBlock *bb = header->backedge();
     for (; bb != lhsWrite->block() && bb != header; bb = bb->immediateDominator()) {}
     if (bb != lhsWrite->block())
-        return NULL;
+        return nullptr;
 
     SimpleLinearSum lhsModified = ExtractLinearSum(lhsWrite);
 
@@ -1407,7 +1407,7 @@ RangeAnalysis::analyzeLoopIterationCount(MBasicBlock *header,
     // iteration, and if it were stored in another variable its use here would
     // be as an operand to a phi node for that variable.
     if (lhsModified.term != lhs.term)
-        return NULL;
+        return nullptr;
 
     LinearSum bound;
 
@@ -1421,16 +1421,16 @@ RangeAnalysis::analyzeLoopIterationCount(MBasicBlock *header,
 
         if (rhs) {
             if (!bound.add(rhs, 1))
-                return NULL;
+                return nullptr;
         }
         if (!bound.add(lhsInitial, -1))
-            return NULL;
+            return nullptr;
 
         int32_t lhsConstant;
         if (!SafeSub(0, lhs.constant, &lhsConstant))
-            return NULL;
+            return nullptr;
         if (!bound.add(lhsConstant))
-            return NULL;
+            return nullptr;
     } else if (lhsModified.constant == -1 && lessEqual) {
         // The value of lhs is 'initial(lhs) - iterCount'. Similar to the above
         // case, an upper bound on the number of backedges executed is:
@@ -1439,15 +1439,15 @@ RangeAnalysis::analyzeLoopIterationCount(MBasicBlock *header,
         // iterCount == initial(lhs) - rhs + lhsN
 
         if (!bound.add(lhsInitial, 1))
-            return NULL;
+            return nullptr;
         if (rhs) {
             if (!bound.add(rhs, -1))
-                return NULL;
+                return nullptr;
         }
         if (!bound.add(lhs.constant))
-            return NULL;
+            return nullptr;
     } else {
-        return NULL;
+        return nullptr;
     }
 
     return new LoopIterationBound(header, test, bound);
@@ -1515,12 +1515,12 @@ RangeAnalysis::analyzeLoopPhi(MBasicBlock *header, LoopIterationBound *loopBound
     if (modified.constant > 0) {
         if (initRange && initRange->hasInt32LowerBound())
             phi->range()->setLower(initRange->lower());
-        phi->range()->setSymbolicLower(new SymbolicBound(NULL, initialSum));
+        phi->range()->setSymbolicLower(new SymbolicBound(nullptr, initialSum));
         phi->range()->setSymbolicUpper(new SymbolicBound(loopBound, limitSum));
     } else {
         if (initRange && initRange->hasInt32UpperBound())
             phi->range()->setUpper(initRange->upper());
-        phi->range()->setSymbolicUpper(new SymbolicBound(NULL, initialSum));
+        phi->range()->setSymbolicUpper(new SymbolicBound(nullptr, initialSum));
         phi->range()->setSymbolicLower(new SymbolicBound(loopBound, limitSum));
     }
 
@@ -1548,7 +1548,7 @@ SymbolicBoundIsValid(MBasicBlock *header, MBoundsCheck *ins, const SymbolicBound
 static inline MDefinition *
 ConvertLinearSum(MBasicBlock *block, const LinearSum &sum)
 {
-    MDefinition *def = NULL;
+    MDefinition *def = nullptr;
 
     for (size_t i = 0; i < sum.numTerms(); i++) {
         LinearTerm term = sum.term(i);
