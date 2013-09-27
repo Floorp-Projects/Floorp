@@ -2573,6 +2573,25 @@ nsNativeThemeWin::ThemeNeedsComboboxDropmarker()
   return true;
 }
 
+bool
+nsNativeThemeWin::WidgetAppearanceDependsOnWindowFocus(uint8_t aWidgetType)
+{
+  switch (aWidgetType) {
+    case NS_THEME_WINDOW_TITLEBAR:
+    case NS_THEME_WINDOW_TITLEBAR_MAXIMIZED:
+    case NS_THEME_WINDOW_FRAME_LEFT:
+    case NS_THEME_WINDOW_FRAME_RIGHT:
+    case NS_THEME_WINDOW_FRAME_BOTTOM:
+    case NS_THEME_WINDOW_BUTTON_CLOSE:
+    case NS_THEME_WINDOW_BUTTON_MINIMIZE:
+    case NS_THEME_WINDOW_BUTTON_MAXIMIZE:
+    case NS_THEME_WINDOW_BUTTON_RESTORE:
+      return true;
+    default:
+      return false;
+  }
+}
+
 nsITheme::Transparency
 nsNativeThemeWin::GetWidgetTransparency(nsIFrame* aFrame, uint8_t aWidgetType)
 {
