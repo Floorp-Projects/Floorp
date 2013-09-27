@@ -10,6 +10,7 @@ const {classes: Cc, interfaces: Ci, utils: Cu} = Components;
 Cu.import("resource://gre/modules/Promise.jsm");
 Cu.import("resource://gre/modules/osfile.jsm")
 Cu.import("resource://services-common/utils.js");
+Cu.import("resource://gre/modules/Services.jsm");
 
 const defaultBaseDir = OS.Path.join(OS.Constants.Path.profileDir);
 const defaultStorageOptions = {
@@ -107,6 +108,15 @@ FxAccounts.prototype = Object.freeze({
     this._signedInUser = {};
     return this._signedInUserStorage.set(null);
   },
+
+  getAccountsURI: function () {
+    let url = Services.urlFormatter.formatURLPref("firefox.accounts.remoteUrl");
+    if (!/^https:/.test(url)) {
+      throw new Error("Firefox Accounts server must use HTTPS");
+    }
+    return url;
+  },
+
 });
 
 

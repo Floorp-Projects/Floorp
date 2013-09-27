@@ -7,9 +7,14 @@
 const {classes: Cc, interfaces: Ci, utils: Cu} = Components;
 
 Cu.import("resource://gre/modules/Services.jsm");
+Cu.import("resource://gre/modules/FxAccounts.jsm");
 
 function log(msg) {
   //dump("FXA: " + msg + "\n");
+};
+
+function error(msg) {
+  console.log("Firefox Account Error: " + msg + "\n");
 };
 
 let wrapper = {
@@ -19,7 +24,12 @@ let wrapper = {
     let iframe = document.getElementById("remote");
     this.iframe = iframe;
     iframe.addEventListener("load", this);
-    iframe.src = this._getAccountsURI();
+
+    try {
+      iframe.src = fxAccounts.getAccountsURI();
+    } catch (e) {
+      error("Couldn't init Firefox Account wrapper: " + e.message);
+    }
   },
 
   handleEvent: function (evt) {
@@ -49,10 +59,6 @@ let wrapper = {
     this.injectData("message", { status: "verified" });
   },
 
-  _getAccountsURI: function () {
-    return Services.urlFormatter.formatURLPref("firefox.accounts.remoteUrl");
-  },
-
   handleRemoteCommand: function (evt) {
     log('command: ' + evt.detail.command);
     let data = evt.detail.data;
@@ -74,13 +80,17 @@ let wrapper = {
   },
 
   injectData: function (type, content) {
-    let authUrl = this._getAccountsURI();
-
+    let authUrl;
+    try {
+      authUrl = fxAccounts.getAccountsURI();
+    } catch (e) {
+      error("Couldn't inject data: " + e.message);
+      return;
+    }
     let data = {
       type: type,
       content: content
     };
-
     this.iframe.contentWindow.postMessage(data, authUrl);
   },
 };
