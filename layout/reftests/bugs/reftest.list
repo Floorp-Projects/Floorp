@@ -1641,7 +1641,7 @@ fuzzy-if(Android&&AndroidVersion>=15,8,300) == 625409-1.html 625409-1-ref.html
 == 630835-1.html about:blank
 == 631352-1.html 631352-1-ref.html
 skip-if(B2G) fails-if(Android) == 632423-1.html 632423-1-ref.html
-skip-if(Android||B2G) random-if(winWidget) == 632781-verybig.html 632781-ref.html
+skip-if(Android||B2G) random-if(winWidget&&!d2d) == 632781-verybig.html 632781-ref.html
 == 632781-normalsize.html 632781-ref.html
 fails-if(Android) == 633344-1.html 633344-1-ref.html
 == 634232-1.html 634232-1-ref.html
