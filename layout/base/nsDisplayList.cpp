@@ -585,7 +585,14 @@ void nsDisplayListBuilder::MarkOutOfFlowFrameForDisplay(nsIFrame* aDirtyFrame,
                                                         nsIFrame* aFrame,
                                                         const nsRect& aDirtyRect)
 {
-  nsRect dirty = aDirtyRect - aFrame->GetOffsetTo(aDirtyFrame);
+  nsRect dirtyRectRelativeToDirtyFrame = aDirtyRect;
+  nsRect displayPort;
+  if (nsLayoutUtils::IsFixedPosFrameInDisplayPort(aFrame, &displayPort)) {
+    NS_ASSERTION(aDirtyFrame == aFrame->GetParent(), "Dirty frame should be viewport frame");
+    dirtyRectRelativeToDirtyFrame = displayPort;
+  }
+
+  nsRect dirty = dirtyRectRelativeToDirtyFrame - aFrame->GetOffsetTo(aDirtyFrame);
   nsRect overflowRect = aFrame->GetVisualOverflowRect();
 
   if (aFrame->IsTransformed() &&
@@ -597,10 +604,6 @@ void nsDisplayListBuilder::MarkOutOfFlowFrameForDisplay(nsIFrame* aDirtyFrame,
     * prerendered if necessary.
     */
     overflowRect.Inflate(nsPresContext::CSSPixelsToAppUnits(32));
-  }
-
-  if (mHasDisplayPort && IsFixedFrame(aFrame)) {
-    dirty = overflowRect;
   }
 
   if (!dirty.IntersectRect(dirty, overflowRect))
