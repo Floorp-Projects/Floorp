@@ -2747,14 +2747,6 @@ JS_NewObject(JSContext *cx, const JSClass *jsclasp, JSObject *protoArg, JSObject
     JS_ASSERT(!(clasp->flags & JSCLASS_IS_GLOBAL));
 
     JSObject *obj = NewObjectWithClassProto(cx, clasp, proto, parent);
-    if (obj) {
-        TypeObjectFlags flags = 0;
-        if (clasp->emulatesUndefined())
-            flags |= OBJECT_FLAG_EMULATES_UNDEFINED;
-        if (flags)
-            MarkTypeObjectFlags(cx, obj, flags);
-    }
-
     JS_ASSERT_IF(obj, obj->getParent());
     return obj;
 }
