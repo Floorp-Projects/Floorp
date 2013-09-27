@@ -2316,11 +2316,12 @@ function BrowserOnAboutPageLoad(doc) {
     if (getBoolPref("browser.aboutHome.apps", false))
       doc.getElementById("apps").removeAttribute("hidden");
 
-    let ss = Components.classes["@mozilla.org/browser/sessionstore;1"].
-             getService(Components.interfaces.nsISessionStore);
-    if (ss.canRestoreLastSession &&
-        !PrivateBrowsingUtils.isWindowPrivate(window))
-      doc.getElementById("launcher").setAttribute("session", "true");
+    let ss = Cu.import("resource:///modules/sessionstore/SessionStore.jsm", {}).SessionStore;
+    ss.promiseInitialized.then(() => {
+      if (ss.canRestoreLastSession &&
+          !PrivateBrowsingUtils.isWindowPrivate(window))
+        doc.getElementById("launcher").setAttribute("session", "true");
+    }).then(null, Cu.reportError);
 
     // Inject search engine and snippets URL.
     let docElt = doc.documentElement;
