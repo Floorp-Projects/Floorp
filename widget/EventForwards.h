@@ -125,6 +125,4 @@ namespace mozilla {
 typedef WidgetWheelEvent                   WheelEvent;
 }
 
-typedef mozilla::WidgetGestureNotifyEvent  nsGestureNotifyEvent;
-
 #endif // mozilla_EventForwards_h__
