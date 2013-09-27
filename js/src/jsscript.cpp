@@ -735,7 +735,7 @@ js::XDRScript(XDRState<mode> *xdr, HandleObject enclosingScope, HandleScript enc
             }
 
             Rooted<StaticBlockObject*> tmp(cx, static_cast<StaticBlockObject *>(objp->get()));
-            if (!XDRStaticBlockObject(xdr, blockEnclosingScope, script, tmp.address()))
+            if (!XDRStaticBlockObject(xdr, blockEnclosingScope, tmp.address()))
                 return false;
             *objp = tmp;
         }

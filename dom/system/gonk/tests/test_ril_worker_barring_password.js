@@ -42,10 +42,10 @@ add_test(function test_change_call_barring_password() {
   function do_test(facility, pin, newPin) {
     buf.sendParcel = function fakeSendParcel () {
       // Request Type.
-      do_check_eq(this.readUint32(), REQUEST_CHANGE_BARRING_PASSWORD);
+      do_check_eq(this.readInt32(), REQUEST_CHANGE_BARRING_PASSWORD);
 
       // Token : we don't care.
-      this.readUint32();
+      this.readInt32();
 
       let parcel = this.readStringList();
       do_check_eq(parcel.length, 3);

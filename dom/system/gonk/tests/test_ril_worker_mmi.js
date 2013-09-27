@@ -435,7 +435,7 @@ add_test(function test_sendMMI_call_forwarding_interrogation() {
   let workerhelper = getWorker();
   let worker = workerhelper.worker;
 
-  worker.Buf.readUint32 = function fakeReadUint32() {
+  worker.Buf.readInt32 = function fakeReadUint32() {
     return worker.Buf.int32Array.pop();
   };
 
@@ -477,7 +477,7 @@ add_test(function test_sendMMI_call_forwarding_interrogation_no_rules() {
   let workerhelper = getWorker();
   let worker = workerhelper.worker;
 
-  worker.Buf.readUint32 = function fakeReadUint32() {
+  worker.Buf.readInt32 = function fakeReadUint32() {
     return 0;
   };
 
@@ -771,7 +771,7 @@ add_test(function test_sendMMI_call_barring_BAIC_interrogation_voice() {
   let workerhelper = getWorker();
   let worker = workerhelper.worker;
 
-  worker.Buf.readUint32List = function fakeReadUint32List() {
+  worker.Buf.readInt32List = function fakeReadUint32List() {
     return [1];
   };
 
@@ -954,7 +954,7 @@ add_test(function test_sendMMI_call_waiting_interrogation() {
   let workerhelper = getWorker();
   let worker = workerhelper.worker;
 
-  worker.Buf.readUint32 = function fakeReadUint32() {
+  worker.Buf.readInt32 = function fakeReadUint32() {
     return worker.Buf.int32Array.pop();
   };
 

@@ -40,7 +40,8 @@ static bool SetupGlobalThread() {
       return false;
 
     gThread = thread;
-    sipcc::PeerConnectionCtx::InitializeGlobal(gThread);
+    sipcc::PeerConnectionCtx::InitializeGlobal(gThread,
+                                               test_utils->sts_target());
   }
   return true;
 }

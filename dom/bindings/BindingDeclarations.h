@@ -208,7 +208,7 @@ public:
 
 private:
   // We need to be able to act like a string as needed
-  Maybe<nsString> mString;
+  Maybe<nsAutoString> mString;
 
   // For callees that know we exist, we can be a stringbuffer/length/null-flag
   // triple.

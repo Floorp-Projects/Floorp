@@ -143,11 +143,6 @@ interface nsIMemoryReporterCallback : nsISupports
  *   description that is a sentence (i.e. starts with a capital letter and
  *   ends with a period, or similar).
  *
- * - The "redundant" tree is optional, and can be used for reports that are
- *   redundant w.r.t. other reports.  These are useful for telemetry, and are
- *   not shown in about:memory.  Reports in this tree are entirely
- *   unconstrained.
- *
  * - All other reports are unconstrained except that they must have a
  *   description that is a sentence.
  */
@@ -189,21 +184,21 @@ interface nsIMemoryReporterManager : nsISupports
   /*
    * Return an enumerator of nsIMemoryReporters that are currently registered.
    */
-  nsISimpleEnumerator enumerateReporters ();
+  nsISimpleEnumerator enumerateReporters();
 
   /*
    * Register the given nsIMemoryReporter.  After a reporter is registered,
    * it will be available via enumerateReporters().  The Manager service
    * will hold a strong reference to the given reporter.
    */
-  void registerReporter (in nsIMemoryReporter reporter);
+  void registerReporter(in nsIMemoryReporter reporter);
 
   /*
    * Unregister the given memory reporter.
    */
-  void unregisterReporter (in nsIMemoryReporter reporter);
+  void unregisterReporter(in nsIMemoryReporter reporter);
 
-  /**
+  /*
    * These functions should only be used for testing purposes.
    */
   void blockRegistration();
@@ -213,24 +208,94 @@ interface nsIMemoryReporterManager : nsISupports
   /*
    * Initialize.
    */
-  void init ();
+  void init();
 
   /*
-   * Get the resident size (aka. RSS, physical memory used).  This reporter
-   * is special-cased because it's interesting and is available on most
-   * platforms.  Accesses can fail.
-   */
-  readonly attribute int64_t resident;
-
-  /*
-   * Get the total size of explicit memory allocations, both at the OS-level
-   * (eg. via mmap, VirtualAlloc) and at the heap level (eg. via malloc,
-   * calloc, operator new).  (Nb: it covers all heap allocations, but will
-   * miss any OS-level ones not covered by memory reporters.)  This reporter
-   * is special-cased because it's interesting, and is difficult to compute
-   * from JavaScript code.  Accesses can fail.
+   * The memory reporter manager, for the most part, treats reporters
+   * registered with it as a black box.  However, there are some
+   * "distinguished" amounts (as could be reported by a memory reporter) that
+   * the manager provides as attributes, because they are sufficiently
+   * interesting that we want external code (e.g. telemetry) to be able to rely
+   * on them.
+   *
+   * Note that these are not reporters and so enumerateReporters() does not
+   * look at them.  However, they can be embedded in a reporter.
+   *
+   * Access to these attributes can fail.  In particular, some of them are not
+   * available on all platforms.
+   *
+   * If you add a new distinguished amount, please update
+   * toolkit/components/aboutmemory/tests/test_memoryReporters.xul.
+   *
+   * |explicit| (UNITS_BYTES)  The total size of explicit memory allocations,
+   * both at the OS-level (eg. via mmap, VirtualAlloc) and at the heap level
+   * (eg. via malloc, calloc, operator new).  It covers all heap allocations,
+   * but will miss any OS-level ones not covered by memory reporters.
+   *
+   * |vsize| (UNITS_BYTES)  The virtual size, i.e. the amount of address space
+   * taken up.
+   *
+   * |resident| (UNITS_BYTES)  The resident size (a.k.a. RSS or physical memory
+   * used).
+   *
+   * |residentFast| (UNITS_BYTES)  This is like |resident|, but on Mac OS
+   * |resident| can purge pages, which is slow.  It also affects the result of
+   * |residentFast|, and so |resident| and |residentFast| should not be used
+   * together.
+   *
+   * |heapAllocated| (UNITS_BYTES)  Memory mapped by the heap allocator.
+   *
+   * |heapOverheadRatio| (UNITS_PERCENTAGE)  In the heap allocator, this is the
+   * ratio of committed, unused bytes to allocated bytes.  Like all
+   * UNITS_PERCENTAGE measurements, its amount is multiplied by 100x so it can
+   * be represented by an int64_t.
+   *
+   * |JSMainRuntimeGCHeap| (UNITS_BYTES)  Size of the main JS runtime's GC
+   * heap.
+   *
+   * |JSMainRuntimeTemporaryPeak| (UNITS_BYTES)  Peak size of the transient
+   * storage in the main JSRuntime.
+   *
+   * |JSMainRuntimeCompartments{System,User}| (UNITS_COUNT)  The number of
+   * {system,user} compartments in the main JS runtime.
+   *
+   * |imagesContentUsedUncompressed| (UNITS_BYTES)  Memory used for decoded
+   * images in content.
+   *
+   * |storageSQLite| (UNITS_BYTES)  Memory used by SQLite.
+   *
+   * |lowMemoryEvents{Virtual,Physical}| (UNITS_COUNT_CUMULATIVE)  The number
+   * of low-{virtual,physical}-memory events that have occurred since the
+   * process started.
+   *
+   * |ghostWindows| (UNITS_COUNT)  The number of ghost windows.
+   *
+   * |pageFaultsHard| (UNITS_COUNT_CUMULATIVE)  The number of hard (a.k.a.
+   * major) page faults that have occurred since the process started.
    */
   readonly attribute int64_t explicit;
+  readonly attribute int64_t vsize;
+  readonly attribute int64_t resident;
+  readonly attribute int64_t residentFast;
+
+  readonly attribute int64_t heapAllocated;
+  readonly attribute int64_t heapOverheadRatio;
+
+  readonly attribute int64_t JSMainRuntimeGCHeap;
+  readonly attribute int64_t JSMainRuntimeTemporaryPeak;
+  readonly attribute int64_t JSMainRuntimeCompartmentsSystem;
+  readonly attribute int64_t JSMainRuntimeCompartmentsUser;
+
+  readonly attribute int64_t imagesContentUsedUncompressed;
+
+  readonly attribute int64_t storageSQLite;
+
+  readonly attribute int64_t lowMemoryEventsVirtual;
+  readonly attribute int64_t lowMemoryEventsPhysical;
+
+  readonly attribute int64_t ghostWindows;
+
+  readonly attribute int64_t pageFaultsHard;
 
   /*
    * This attribute indicates if moz_malloc_usable_size() works.
@@ -255,6 +320,42 @@ interface nsIMemoryReporterManager : nsISupports
 
 XPCOM_API(nsresult) NS_RegisterMemoryReporter(nsIMemoryReporter* aReporter);
 XPCOM_API(nsresult) NS_UnregisterMemoryReporter(nsIMemoryReporter* aReporter);
+
+namespace mozilla {
+
+// The memory reporter manager provides access to several distinguished
+// amounts via attributes.  Some of these amounts are provided by Gecko
+// components that cannot be accessed directly from XPCOM code.  So we provide
+// the following functions for those components to be registered with the
+// manager.
+
+typedef int64_t (*InfallibleAmountFn)();
+typedef nsresult (*FallibleAmountFn)(int64_t* aAmount);
+
+#define DECL_REGISTER_DISTINGUISHED_AMOUNT(kind, name) \
+    nsresult Register##name##DistinguishedAmount(kind##AmountFn aAmountFn);
+#define DECL_UNREGISTER_DISTINGUISHED_AMOUNT(name) \
+    nsresult Unregister##name##DistinguishedAmount();
+
+DECL_REGISTER_DISTINGUISHED_AMOUNT(Infallible, JSMainRuntimeGCHeap)
+DECL_REGISTER_DISTINGUISHED_AMOUNT(Infallible, JSMainRuntimeTemporaryPeak)
+DECL_REGISTER_DISTINGUISHED_AMOUNT(Infallible, JSMainRuntimeCompartmentsSystem)
+DECL_REGISTER_DISTINGUISHED_AMOUNT(Infallible, JSMainRuntimeCompartmentsUser)
+
+DECL_REGISTER_DISTINGUISHED_AMOUNT(Infallible, ImagesContentUsedUncompressed)
+
+DECL_REGISTER_DISTINGUISHED_AMOUNT(Infallible, StorageSQLite)
+DECL_UNREGISTER_DISTINGUISHED_AMOUNT(StorageSQLite)
+
+DECL_REGISTER_DISTINGUISHED_AMOUNT(Infallible, LowMemoryEventsVirtual)
+DECL_REGISTER_DISTINGUISHED_AMOUNT(Infallible, LowMemoryEventsPhysical)
+
+DECL_REGISTER_DISTINGUISHED_AMOUNT(Infallible, GhostWindows)
+
+#undef DECL_REGISTER_DISTINGUISHED_AMOUNT
+#undef DECL_UNREGISTER_DISTINGUISHED_AMOUNT
+
+}
 
 #if defined(MOZ_DMD)
 namespace mozilla {
@@ -392,6 +493,5 @@ protected:
 };
 
 } // namespace mozilla
-
 
 %}

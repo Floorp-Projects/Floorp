@@ -570,7 +570,7 @@ CompositorD3D9::PaintToTarget()
     new gfxImageSurface((unsigned char*)rect.pBits,
                         gfxIntSize(desc.Width, desc.Height),
                         rect.Pitch,
-                        gfxASurface::ImageFormatARGB32);
+                        gfxImageFormatARGB32);
   mTarget->SetSource(imageSurface);
   mTarget->Paint();
   destSurf->UnlockRect();

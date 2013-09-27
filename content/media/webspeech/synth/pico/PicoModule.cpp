@@ -34,7 +34,7 @@ static const mozilla::Module::ContractIDEntry kContracts[] = {
 };
 
 static const mozilla::Module::CategoryEntry kCategories[] = {
-  { "app-startup", "Pico Speech Synth", "service," PICOSERVICE_CONTRACTID },
+  { "profile-after-change", "Pico Speech Synth", PICOSERVICE_CONTRACTID },
   { NULL }
 };
 

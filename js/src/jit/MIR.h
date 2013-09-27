@@ -2849,7 +2849,9 @@ class MAsmJSUnsignedToDouble
 // Converts a primitive (either typed or untyped) to an int32. If the input is
 // not primitive at runtime, a bailout occurs. If the input cannot be converted
 // to an int32 without loss (i.e. "5.5" or undefined) then a bailout occurs.
-class MToInt32 : public MUnaryInstruction
+class MToInt32
+  : public MUnaryInstruction,
+    public NoFloatPolicy<0>
 {
     bool canBeNegativeZero_;
 
@@ -2888,6 +2890,10 @@ class MToInt32 : public MUnaryInstruction
         return AliasSet::None();
     }
     void computeRange();
+
+    TypePolicy *typePolicy() {
+        return this;
+    }
 };
 
 // Converts a value or typed input to a truncated int32, for use with bitwise
@@ -3595,7 +3601,9 @@ class MMathFunction
         ATanH,
         Sign,
         Trunc,
-        Cbrt
+        Cbrt,
+        Floor,
+        Round
     };
 
   private:
@@ -8573,7 +8581,8 @@ class MAsmJSLoadHeap : public MUnaryInstruction, public MAsmJSHeapAccess
     MAsmJSLoadHeap(ArrayBufferView::ViewType vt, MDefinition *ptr)
       : MUnaryInstruction(ptr), MAsmJSHeapAccess(vt, false)
     {
-        setMovable();
+        // Disabled due to errors, see bug 919958
+        // setMovable();
         if (vt == ArrayBufferView::TYPE_FLOAT32 || vt == ArrayBufferView::TYPE_FLOAT64)
             setResultType(MIRType_Double);
         else
@@ -8620,7 +8629,7 @@ class MAsmJSStoreHeap : public MBinaryInstruction, public MAsmJSHeapAccess
 class MAsmJSLoadGlobalVar : public MNullaryInstruction
 {
     MAsmJSLoadGlobalVar(MIRType type, unsigned globalDataOffset, bool isConstant)
-      : globalDataOffset_(globalDataOffset)
+      : globalDataOffset_(globalDataOffset), isConstant_(isConstant)
     {
         JS_ASSERT(type == MIRType_Int32 || type == MIRType_Double);
         setResultType(type);
@@ -8628,6 +8637,7 @@ class MAsmJSLoadGlobalVar : public MNullaryInstruction
     }
 
     unsigned globalDataOffset_;
+    bool isConstant_;
 
   public:
     INSTRUCTION_HEADER(AsmJSLoadGlobalVar);
@@ -8641,7 +8651,7 @@ class MAsmJSLoadGlobalVar : public MNullaryInstruction
     bool congruentTo(MDefinition *ins) const;
 
     AliasSet getAliasSet() const {
-        return AliasSet::Load(AliasSet::AsmJSGlobalVar);
+        return isConstant_ ? AliasSet::None() : AliasSet::Load(AliasSet::AsmJSGlobalVar);
     }
 
     bool mightAlias(MDefinition *def);

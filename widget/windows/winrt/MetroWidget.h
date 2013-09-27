@@ -11,7 +11,6 @@
 #include "nsAutoPtr.h"
 #include "nsBaseWidget.h"
 #include "nsWindowBase.h"
-#include "nsGUIEvent.h"
 #include "nsString.h"
 #include "nsTArray.h"
 #include "nsWindowDbg.h"
@@ -21,10 +20,10 @@
 #ifdef ACCESSIBILITY
 #include "mozilla/a11y/Accessible.h"
 #endif
+#include "mozilla/EventForwards.h"
 #include "mozilla/layers/CompositorParent.h"
 #include "mozilla/layers/APZCTreeManager.h"
 #include "mozilla/layers/LayerManagerComposite.h"
-#include "Units.h"
 #include "nsDeque.h"
 #include "APZController.h"
 
@@ -199,7 +198,9 @@ public:
   // APZ related apis
   void ApzContentConsumingTouch();
   void ApzContentIgnoringTouch();
-  nsEventStatus ApzReceiveInputEvent(nsTouchEvent* aEvent);
+  nsEventStatus ApzReceiveInputEvent(nsInputEvent* aEvent);
+  nsEventStatus ApzReceiveInputEvent(nsInputEvent* aInEvent, nsInputEvent* aOutEvent);
+  bool HitTestAPZC(mozilla::ScreenPoint& pt);
   nsresult RequestContentScroll();
   void RequestContentRepaintImplMainThread();
 

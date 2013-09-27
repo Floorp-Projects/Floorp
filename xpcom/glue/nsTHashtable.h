@@ -490,4 +490,56 @@ nsTHashtable<EntryType>::s_SizeOfStub(PLDHashEntryHdr *entry,
     reinterpret_cast<s_SizeOfArgs*>(arg)->userArg);
 }
 
+class nsCycleCollectionTraversalCallback;
+
+struct MOZ_STACK_CLASS nsTHashtableCCTraversalData
+{
+  nsTHashtableCCTraversalData(nsCycleCollectionTraversalCallback& aCallback,
+                              const char* aName,
+                              uint32_t aFlags)
+  : mCallback(aCallback),
+    mName(aName),
+    mFlags(aFlags)
+  {
+  }
+
+  nsCycleCollectionTraversalCallback& mCallback;
+  const char* mName;
+  uint32_t mFlags;
+};
+
+template <class EntryType>
+PLDHashOperator
+ImplCycleCollectionTraverse_EnumFunc(EntryType *aEntry,
+                                     void* aUserData)
+{
+  auto userData = static_cast<nsTHashtableCCTraversalData*>(aUserData);
+
+  ImplCycleCollectionTraverse(userData->mCallback,
+                              *aEntry,
+                              userData->mName,
+                              userData->mFlags);
+  return PL_DHASH_NEXT;
+}
+
+template <class EntryType>
+inline void
+ImplCycleCollectionUnlink(nsTHashtable<EntryType>& aField)
+{
+  aField.Clear();
+}
+
+template <class EntryType>
+inline void
+ImplCycleCollectionTraverse(nsCycleCollectionTraversalCallback& aCallback,
+                            nsTHashtable<EntryType>& aField,
+                            const char* aName,
+                            uint32_t aFlags = 0)
+{
+  nsTHashtableCCTraversalData userData(aCallback, aName, aFlags);
+
+  aField.EnumerateEntries(ImplCycleCollectionTraverse_EnumFunc<EntryType>,
+                          &userData);
+}
+
 #endif // nsTHashtable_h__

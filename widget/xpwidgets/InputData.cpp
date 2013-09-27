@@ -5,10 +5,11 @@
 
 #include "InputData.h"
 
-#include "nsGUIEvent.h"
 #include "mozilla/dom/Touch.h"
 #include "nsDebug.h"
 #include "nsThreadUtils.h"
+#include "mozilla/MouseEvents.h"
+#include "mozilla/TouchEvents.h"
 
 namespace mozilla {
 

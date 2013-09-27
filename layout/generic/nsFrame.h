@@ -9,6 +9,7 @@
 #define nsFrame_h___
 
 #include "mozilla/Attributes.h"
+#include "mozilla/EventForwards.h"
 #include "mozilla/Likely.h"
 #include "nsBox.h"
 #include "prlog.h"
@@ -190,13 +191,13 @@ public:
                                int32_t         aModType) MOZ_OVERRIDE;
   virtual nsSplittableType GetSplittableType() const MOZ_OVERRIDE;
   virtual nsIFrame* GetPrevContinuation() const MOZ_OVERRIDE;
-  NS_IMETHOD  SetPrevContinuation(nsIFrame*) MOZ_OVERRIDE;
+  virtual void SetPrevContinuation(nsIFrame*) MOZ_OVERRIDE;
   virtual nsIFrame* GetNextContinuation() const MOZ_OVERRIDE;
-  NS_IMETHOD  SetNextContinuation(nsIFrame*) MOZ_OVERRIDE;
+  virtual void SetNextContinuation(nsIFrame*) MOZ_OVERRIDE;
   virtual nsIFrame* GetPrevInFlowVirtual() const MOZ_OVERRIDE;
-  NS_IMETHOD  SetPrevInFlow(nsIFrame*) MOZ_OVERRIDE;
+  virtual void SetPrevInFlow(nsIFrame*) MOZ_OVERRIDE;
   virtual nsIFrame* GetNextInFlowVirtual() const MOZ_OVERRIDE;
-  NS_IMETHOD  SetNextInFlow(nsIFrame*) MOZ_OVERRIDE;
+  virtual void SetNextInFlow(nsIFrame*) MOZ_OVERRIDE;
   NS_IMETHOD  GetOffsetFromView(nsPoint& aOffset, nsView** aView) const MOZ_OVERRIDE;
   virtual nsIAtom* GetType() const MOZ_OVERRIDE;
 

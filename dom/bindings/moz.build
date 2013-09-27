@@ -27,6 +27,7 @@ EXPORTS.mozilla.dom += [
     'Nullable.h',
     'OwningNonNull.h',
     'PrimitiveConversions.h',
+    'RootedDictionary.h',
     'TypedArray.h',
     'UnionMember.h',
 ]

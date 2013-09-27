@@ -75,6 +75,7 @@
 #endif
 
 #include "mozilla/Assertions.h"
+#include "mozilla/MouseEvents.h"
 #include "mozilla/unused.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/dom/Element.h"
@@ -1460,9 +1461,9 @@ Accessible::GroupPosition()
 }
 
 NS_IMETHODIMP
-Accessible::GroupPosition(int32_t* aGroupLevel,
-                          int32_t* aSimilarItemsInGroup,
-                          int32_t* aPositionInGroup)
+Accessible::ScriptableGroupPosition(int32_t* aGroupLevel,
+                                    int32_t* aSimilarItemsInGroup,
+                                    int32_t* aPositionInGroup)
 {
   NS_ENSURE_ARG_POINTER(aGroupLevel);
   *aGroupLevel = 0;

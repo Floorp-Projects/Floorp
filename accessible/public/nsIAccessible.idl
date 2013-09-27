@@ -23,7 +23,7 @@ interface nsIAccessibleRelation;
  * Mozilla creates the implementations of nsIAccessible on demand.
  * See http://www.mozilla.org/projects/ui/accessibility for more information.
  */
-[scriptable, uuid(45600c50-b06a-11e1-afa6-0800200c9a66)]
+[scriptable, uuid(ee62158b-bb83-424b-a88d-d7d7f9cf460d)]
 interface nsIAccessible : nsISupports
 {
   /**
@@ -167,6 +167,7 @@ interface nsIAccessible : nsISupports
    *                              inclusive of the current item
    * @param positionInGroup - 1-based, similar to ARIA 'posinset' property
    */
+  [binaryname(ScriptableGroupPosition)]
   void groupPosition(out long aGroupLevel, out long aSimilarItemsInGroup,
                      out long aPositionInGroup);
 

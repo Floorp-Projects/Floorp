@@ -74,7 +74,7 @@ static void
 SetAntialiasingFlags(Layer* aLayer, gfxContext* aTarget)
 {
   nsRefPtr<gfxASurface> surface = aTarget->CurrentSurface();
-  if (surface->GetContentType() != gfxASurface::CONTENT_COLOR_ALPHA) {
+  if (surface->GetContentType() != GFX_CONTENT_COLOR_ALPHA) {
     // Destination doesn't have alpha channel; no need to set any special flags
     return;
   }
@@ -360,7 +360,7 @@ public:
                gfxASurface** aBlackSurface, gfxASurface** aWhiteSurface,
                RefPtr<gfx::DrawTarget>* aBlackDT, RefPtr<gfx::DrawTarget>* aWhiteDT) MOZ_OVERRIDE
   {
-    NS_ASSERTION(gfxASurface::CONTENT_ALPHA != aType,"ThebesBuffer has color");
+    NS_ASSERTION(GFX_CONTENT_ALPHA != aType,"ThebesBuffer has color");
 
     mTexImage = CreateClampOrRepeatTextureImage(gl(), aRect.Size(), aType, aFlags);
     nsRefPtr<gfxASurface> ret = mTexImage ? mTexImage->GetBackingSurface() : nullptr;
@@ -486,7 +486,7 @@ BasicBufferOGL::BeginPaint(ContentType aContentType,
           !mLayer->GetParent()->SupportsComponentAlphaChildren()) {
         mode = Layer::SURFACE_SINGLE_CHANNEL_ALPHA;
       } else {
-        contentType = gfxASurface::CONTENT_COLOR;
+        contentType = GFX_CONTENT_COLOR;
       }
     }
  
@@ -495,10 +495,10 @@ BasicBufferOGL::BeginPaint(ContentType aContentType,
          neededRegion.GetNumRects() > 1)) {
       // The area we add to neededRegion might not be painted opaquely
       if (mode == Layer::SURFACE_OPAQUE) {
-        contentType = gfxASurface::CONTENT_COLOR_ALPHA;
+        contentType = GFX_CONTENT_COLOR_ALPHA;
         mode = Layer::SURFACE_SINGLE_CHANNEL_ALPHA;
       }
-      // For component alpha layers, we leave contentType as CONTENT_COLOR.
+      // For component alpha layers, we leave contentType as GFX_CONTENT_COLOR.
 
       // We need to validate the entire buffer, to make sure that only valid
       // pixels are sampled
@@ -781,7 +781,7 @@ BasicBufferOGL::BeginPaint(ContentType aContentType,
     }
   } else {
     result.mContext = new gfxContext(mTexImage->BeginUpdate(result.mRegionToDraw));
-    if (mTexImage->GetContentType() == gfxASurface::CONTENT_COLOR_ALPHA) {
+    if (mTexImage->GetContentType() == GFX_CONTENT_COLOR_ALPHA) {
       gfxUtils::ClipToRegion(result.mContext, result.mRegionToDraw);
       result.mContext->SetOperator(gfxContext::OPERATOR_CLEAR);
       result.mContext->Paint();
@@ -878,8 +878,8 @@ ThebesLayerOGL::RenderLayer(int aPreviousFrameBuffer,
   gl()->fActiveTexture(LOCAL_GL_TEXTURE0);
 
   TextureImage::ContentType contentType =
-    CanUseOpaqueSurface() ? gfxASurface::CONTENT_COLOR :
-                            gfxASurface::CONTENT_COLOR_ALPHA;
+    CanUseOpaqueSurface() ? GFX_CONTENT_COLOR :
+                            GFX_CONTENT_COLOR_ALPHA;
 
   uint32_t flags = 0;
 #ifndef MOZ_GFX_OPTIMIZE_MOBILE

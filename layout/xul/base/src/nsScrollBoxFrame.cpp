@@ -6,10 +6,10 @@
 #include "nsCOMPtr.h"
 #include "nsPresContext.h"
 #include "nsGkAtoms.h"
-#include "nsGUIEvent.h"
 #include "nsButtonBoxFrame.h"
 #include "nsITimer.h"
 #include "nsRepeatService.h"
+#include "mozilla/BasicEvents.h"
 
 class nsAutoRepeatBoxFrame : public nsButtonBoxFrame
 {
@@ -102,7 +102,7 @@ nsAutoRepeatBoxFrame::HandleEvent(nsPresContext* aPresContext,
       break;
 
     case NS_MOUSE_CLICK:
-      if (NS_IS_MOUSE_LEFT_CLICK(aEvent)) {
+      if (aEvent->IsLeftClickEvent()) {
         // skip button frame handling to prevent click handling
          return nsBoxFrame::HandleEvent(aPresContext, aEvent, aEventStatus);
       }

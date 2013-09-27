@@ -222,6 +222,13 @@ private:
 
 };
 
+// For mingw __uuidof support
+#ifdef __CRT_UUID_DECL
+}
+__CRT_UUID_DECL(mozilla::OutputPin, 0x18e5cfb2,0x1015,0x440c,0xa6,0x5c,0xe6,0x38,0x53,0x23,0x58,0x94);
+namespace mozilla {
+#endif
+
 OutputPin::OutputPin(MediaResource* aResource,
                      SourceFilter* aParent,
                      CriticalSection& aFilterLock,
@@ -402,7 +409,7 @@ OutputPin::Request(IMediaSample* aSample, DWORD_PTR aDwUser)
   if (!aSample) return E_FAIL;
 
   CriticalSectionAutoEnter lock(*mLock);
-  NS_ASSERTION(!mFlushCount, __FUNCTION__"() while flushing");
+  NS_ASSERTION(!mFlushCount, "Request() while flushing");
 
   if (mFlushCount)
     return VFW_E_WRONG_STATE;
@@ -463,7 +470,7 @@ OutputPin::WaitForNext(DWORD aTimeout,
       mSignal.Wait();
     }
 
-    nsAutoPtr<ReadRequest> request = reinterpret_cast<ReadRequest*>(mPendingReads.PopFront());
+    nsAutoPtr<ReadRequest> request(reinterpret_cast<ReadRequest*>(mPendingReads.PopFront()));
     if (!request)
       return VFW_E_WRONG_STATE;
 

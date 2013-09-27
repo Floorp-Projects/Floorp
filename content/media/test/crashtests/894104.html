@@ -8,9 +8,9 @@ function boom()
 {
   var frame = document.getElementById("f");
   var frameWin = frame.contentWindow;
-  frameWin.TextTrackCue;
+  frameWin.VTTCue;
   document.body.removeChild(frame);
-  frameWin.TextTrackCue(0, 1, "Bug 894104").getCueAsHTML();
+  frameWin.VTTCue(0, 1, "Bug 894104").getCueAsHTML();
 }
 
 </script>

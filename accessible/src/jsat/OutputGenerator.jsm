@@ -285,7 +285,7 @@ this.OutputGenerator = {
     'calendar': INCLUDE_DESC | INCLUDE_NAME,
     'combobox list': INCLUDE_DESC,
     'combobox option': INCLUDE_DESC | NAME_FROM_SUBTREE_RULE,
-    'listbox option': NAME_FROM_SUBTREE_RULE,
+    'listbox option': INCLUDE_DESC | NAME_FROM_SUBTREE_RULE,
     'listbox rich option': NAME_FROM_SUBTREE_RULE,
     'gridcell': NAME_FROM_SUBTREE_RULE,
     'check rich option': NAME_FROM_SUBTREE_RULE,

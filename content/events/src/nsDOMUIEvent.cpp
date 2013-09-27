@@ -16,6 +16,8 @@
 #include "nsIFrame.h"
 #include "mozilla/Util.h"
 #include "mozilla/Assertions.h"
+#include "mozilla/ContentEvents.h"
+#include "mozilla/TextEvents.h"
 #include "prtime.h"
 
 using namespace mozilla;
@@ -460,7 +462,7 @@ nsDOMUIEvent::ComputeModifierState(const nsAString& aModifiersList)
 bool
 nsDOMUIEvent::GetModifierStateInternal(const nsAString& aKey)
 {
-  if (!NS_IS_INPUT_EVENT(mEvent)) {
+  if (!mEvent->IsInputDerivedEvent()) {
     MOZ_CRASH("mEvent must be nsInputEvent or derived class");
   }
   nsInputEvent* inputEvent = static_cast<nsInputEvent*>(mEvent);

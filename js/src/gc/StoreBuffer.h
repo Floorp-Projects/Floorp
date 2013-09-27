@@ -59,7 +59,7 @@ class HashKeyRef : public BufferableRef
             return;
         JS_SET_TRACING_LOCATION(trc, (void*)&*p);
         Mark(trc, &key, "HashKeyRef");
-        map->rekey(prior, key);
+        map->rekeyIfMoved(prior, key);
     }
 };
 
@@ -258,7 +258,7 @@ class StoreBuffer
         bool operator==(const ValueEdge &other) const { return edge == other.edge; }
         bool operator!=(const ValueEdge &other) const { return edge != other.edge; }
 
-        void *deref() const { return edge->isGCThing() ? edge->toGCThing() : NULL; }
+        void *deref() const { return edge->isGCThing() ? edge->toGCThing() : nullptr; }
         void *location() const { return (void *)untagged().edge; }
 
         bool inRememberedSet(const Nursery &nursery) const {

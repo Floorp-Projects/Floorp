@@ -6,9 +6,10 @@
 # itself and by the JS engine, which, when built standalone, must install
 # mfbt's exported headers itself.
 
-EXPORTS_NAMESPACES += mozilla
-
-EXPORTS_mozilla += \
+EXPORTS_mozilla_DEST := $(DIST)/include/mozilla
+EXPORTS_mozilla_TARGET := export
+INSTALL_TARGETS += EXPORTS_mozilla
+EXPORTS_mozilla_FILES += \
   Alignment.h \
   AllocPolicy.h \
   Array.h \

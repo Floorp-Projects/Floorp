@@ -884,7 +884,7 @@ JS_SetVersionForCompartment(JSCompartment *compartment, JSVersion version)
     compartment->options().setVersion(version);
 }
 
-static struct v2smap {
+static const struct v2smap {
     JSVersion   version;
     const char  *string;
 } v2smap[] = {
@@ -3992,7 +3992,7 @@ JS_GetSecurityCallbacks(JSRuntime *rt)
 }
 
 JS_PUBLIC_API(void)
-JS_SetTrustedPrincipals(JSRuntime *rt, JSPrincipals *prin)
+JS_SetTrustedPrincipals(JSRuntime *rt, const JSPrincipals *prin)
 {
     rt->setTrustedPrincipals(prin);
 }
@@ -4034,13 +4034,32 @@ JS_NewFunctionById(JSContext *cx, JSNative native, unsigned nargs, unsigned flag
     RootedObject parent(cx, parentArg);
     JS_ASSERT(JSID_IS_STRING(id));
     JS_ASSERT(!cx->runtime()->isAtomsCompartment(cx->compartment()));
+    JS_ASSERT(native);
     AssertHeapIsIdle(cx);
     CHECK_REQUEST(cx);
     assertSameCompartment(cx, parent);
 
-    RootedAtom atom(cx, JSID_TO_ATOM(id));
+    RootedAtom name(cx, JSID_TO_ATOM(id));
     JSFunction::Flags funFlags = JSAPIToJSFunctionFlags(flags);
-    return NewFunction(cx, NullPtr(), native, nargs, funFlags, parent, atom);
+    return NewFunction(cx, NullPtr(), native, nargs, funFlags, parent, name);
+}
+
+JS_PUBLIC_API(JSFunction *)
+JS::GetSelfHostedFunction(JSContext *cx, const char *selfHostedName, jsid id, unsigned nargs)
+{
+    JS_ASSERT(JSID_IS_STRING(id));
+    JS_ASSERT(!cx->runtime()->isAtomsCompartment(cx->compartment()));
+    AssertHeapIsIdle(cx);
+    CHECK_REQUEST(cx);
+
+    RootedAtom name(cx, JSID_TO_ATOM(id));
+    RootedAtom shName(cx, Atomize(cx, selfHostedName, strlen(selfHostedName)));
+    if (!shName)
+        return nullptr;
+    RootedValue funVal(cx);
+    if (!cx->global()->getSelfHostedFunction(cx, shName, name, nargs, &funVal))
+        return nullptr;
+    return &funVal.toObject().as<JSFunction>();
 }
 
 JS_PUBLIC_API(JSObject *)
@@ -4238,13 +4257,18 @@ JS_DefineFunctions(JSContext *cx, JSObject *objArg, const JSFunctionSpec *fs)
              * in. Self-hosted functions can access each other via their names,
              * but not via the builtin classes they get installed into.
              */
+            JS_ASSERT(!fs->call.op);
+            JS_ASSERT(!fs->call.info);
             if (cx->runtime()->isSelfHostingGlobal(cx->global()))
                 continue;
 
-            RootedValue funVal(cx);
-            if (!cx->global()->getSelfHostedFunction(cx, fs, atom, &funVal))
+            RootedAtom shName(cx, Atomize(cx, fs->selfHostedName, strlen(fs->selfHostedName)));
+            if (!shName)
                 return false;
-            if (!JSObject::defineGeneric(cx, obj, id, funVal, NULL, NULL, 0))
+            RootedValue funVal(cx);
+            if (!cx->global()->getSelfHostedFunction(cx, shName, atom, fs->nargs, &funVal))
+                return false;
+            if (!JSObject::defineGeneric(cx, obj, id, funVal, NULL, NULL, flags))
                 return false;
         } else {
             JSFunction *fun = DefineFunction(cx, obj, id, fs->call.op, fs->nargs, flags);
@@ -4661,7 +4685,7 @@ JS_GetGlobalFromScript(JSScript *script)
 
 JS_PUBLIC_API(JSFunction *)
 JS::CompileFunction(JSContext *cx, HandleObject obj, CompileOptions options,
-                    const char *name, unsigned nargs, const char **argnames,
+                    const char *name, unsigned nargs, const char *const *argnames,
                     const jschar *chars, size_t length)
 {
     JS_ASSERT(!cx->runtime()->isAtomsCompartment(cx->compartment()));
@@ -4705,7 +4729,7 @@ JS::CompileFunction(JSContext *cx, HandleObject obj, CompileOptions options,
 
 JS_PUBLIC_API(JSFunction *)
 JS::CompileFunction(JSContext *cx, HandleObject obj, CompileOptions options,
-                    const char *name, unsigned nargs, const char **argnames,
+                    const char *name, unsigned nargs, const char *const *argnames,
                     const char *bytes, size_t length)
 {
     jschar *chars;
@@ -4723,7 +4747,7 @@ JS::CompileFunction(JSContext *cx, HandleObject obj, CompileOptions options,
 
 JS_PUBLIC_API(JSFunction *)
 JS_CompileUCFunction(JSContext *cx, JSObject *objArg, const char *name,
-                     unsigned nargs, const char **argnames,
+                     unsigned nargs, const char *const *argnames,
                      const jschar *chars, size_t length,
                      const char *filename, unsigned lineno)
 {
@@ -4737,7 +4761,7 @@ JS_CompileUCFunction(JSContext *cx, JSObject *objArg, const char *name,
 JS_PUBLIC_API(JSFunction *)
 JS_CompileFunctionForPrincipals(JSContext *cx, JSObject *objArg,
                                 JSPrincipals *principals, const char *name,
-                                unsigned nargs, const char **argnames,
+                                unsigned nargs, const char *const *argnames,
                                 const char *ascii, size_t length,
                                 const char *filename, unsigned lineno)
 {
@@ -4751,7 +4775,7 @@ JS_CompileFunctionForPrincipals(JSContext *cx, JSObject *objArg,
 
 JS_PUBLIC_API(JSFunction *)
 JS_CompileFunction(JSContext *cx, JSObject *objArg, const char *name,
-                   unsigned nargs, const char **argnames,
+                   unsigned nargs, const char *const *argnames,
                    const char *ascii, size_t length,
                    const char *filename, unsigned lineno)
 {
@@ -5946,7 +5970,10 @@ JS_ReportPendingException(JSContext *cx)
     AssertHeapIsIdle(cx);
     CHECK_REQUEST(cx);
 
-    return js_ReportUncaughtException(cx);
+    // This can only fail due to oom.
+    bool ok = js_ReportUncaughtException(cx);
+    JS_ASSERT(!cx->isExceptionPending());
+    return ok;
 }
 
 struct JSExceptionState {

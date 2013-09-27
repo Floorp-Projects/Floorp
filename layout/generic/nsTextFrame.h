@@ -71,7 +71,7 @@ public:
   virtual nsIFrame* GetNextContinuation() const MOZ_OVERRIDE {
     return mNextContinuation;
   }
-  NS_IMETHOD SetNextContinuation(nsIFrame* aNextContinuation) MOZ_OVERRIDE {
+  virtual void SetNextContinuation(nsIFrame* aNextContinuation) MOZ_OVERRIDE {
     NS_ASSERTION (!aNextContinuation || GetType() == aNextContinuation->GetType(),
                   "setting a next continuation with incorrect type!");
     NS_ASSERTION (!nsSplittableFrame::IsInNextContinuationChain(aNextContinuation, this),
@@ -79,14 +79,13 @@ public:
     mNextContinuation = aNextContinuation;
     if (aNextContinuation)
       aNextContinuation->RemoveStateBits(NS_FRAME_IS_FLUID_CONTINUATION);
-    return NS_OK;
   }
   virtual nsIFrame* GetNextInFlowVirtual() const MOZ_OVERRIDE { return GetNextInFlow(); }
   nsIFrame* GetNextInFlow() const {
     return mNextContinuation && (mNextContinuation->GetStateBits() & NS_FRAME_IS_FLUID_CONTINUATION) ? 
       mNextContinuation : nullptr;
   }
-  NS_IMETHOD SetNextInFlow(nsIFrame* aNextInFlow) MOZ_OVERRIDE {
+  virtual void SetNextInFlow(nsIFrame* aNextInFlow) MOZ_OVERRIDE {
     NS_ASSERTION (!aNextInFlow || GetType() == aNextInFlow->GetType(),
                   "setting a next in flow with incorrect type!");
     NS_ASSERTION (!nsSplittableFrame::IsInNextContinuationChain(aNextInFlow, this),
@@ -94,10 +93,9 @@ public:
     mNextContinuation = aNextInFlow;
     if (aNextInFlow)
       aNextInFlow->AddStateBits(NS_FRAME_IS_FLUID_CONTINUATION);
-    return NS_OK;
   }
-  virtual nsIFrame* GetLastInFlow() const MOZ_OVERRIDE;
-  virtual nsIFrame* GetLastContinuation() const MOZ_OVERRIDE;
+  virtual nsIFrame* LastInFlow() const MOZ_OVERRIDE;
+  virtual nsIFrame* LastContinuation() const MOZ_OVERRIDE;
   
   virtual nsSplittableType GetSplittableType() const MOZ_OVERRIDE {
     return NS_FRAME_SPLITTABLE;

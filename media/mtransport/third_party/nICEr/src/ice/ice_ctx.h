@@ -89,6 +89,9 @@ typedef struct nr_ice_ctx_ nr_ice_ctx;
 typedef struct nr_ice_peer_ctx_ nr_ice_peer_ctx;
 typedef struct nr_ice_candidate_ nr_ice_candidate;
 typedef struct nr_ice_cand_pair_ nr_ice_cand_pair;
+typedef void (*nr_ice_trickle_candidate_cb) (void *cb_arg,
+  nr_ice_ctx *ctx, nr_ice_media_stream *stream, int component_id,
+  nr_ice_candidate *candidate);
 
 #include "ice_socket.h"
 #include "ice_component.h"
@@ -144,6 +147,9 @@ struct nr_ice_ctx_ {
 
   NR_async_cb done_cb;
   void *cb_arg;
+
+  nr_ice_trickle_candidate_cb trickle_cb;
+  void *trickle_cb_arg;
 };
 
 int nr_ice_ctx_create(char *label, UINT4 flags, nr_ice_ctx **ctxp);
@@ -166,6 +172,9 @@ int nr_ice_ctx_set_stun_servers(nr_ice_ctx *ctx,nr_ice_stun_server *servers, int
 int nr_ice_ctx_set_turn_servers(nr_ice_ctx *ctx,nr_ice_turn_server *servers, int ct);
 int nr_ice_ctx_set_resolver(nr_ice_ctx *ctx, nr_resolver *resolver);
 int nr_ice_ctx_set_interface_prioritizer(nr_ice_ctx *ctx, nr_interface_prioritizer *prioritizer);
+int nr_ice_ctx_set_trickle_cb(nr_ice_ctx *ctx, nr_ice_trickle_candidate_cb cb, void *cb_arg);
+
+#define NR_ICE_MAX_ATTRIBUTE_SIZE 256
 
 extern int LOG_ICE;
 

@@ -1,9 +1,5 @@
 /***********************************************************************
-Copyright (c) 2006-2012 IETF Trust and Skype Limited. All rights reserved.
-
-This file is extracted from RFC6716. Please see that RFC for additional
-information.
-
+Copyright (c) 2006-2011, Skype Limited. All rights reserved.
 Redistribution and use in source and binary forms, with or without
 modification, are permitted provided that the following conditions
 are met:
@@ -16,7 +12,7 @@ documentation and/or other materials provided with the distribution.
 names of specific contributors, may be used to endorse or promote
 products derived from this software without specific prior written
 permission.
-THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS “AS IS”
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
 AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
 IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
 ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE
@@ -35,6 +31,7 @@ POSSIBILITY OF SUCH DAMAGE.
 
 #include "SigProc_FIX.h"
 #include "resampler_private.h"
+#include "stack_alloc.h"
 
 #define ORDER_FIR                   4
 
@@ -47,8 +44,11 @@ void silk_resampler_down2_3(
 )
 {
     opus_int32 nSamplesIn, counter, res_Q6;
-    opus_int32 buf[ RESAMPLER_MAX_BATCH_SIZE_IN + ORDER_FIR ];
+    VARDECL( opus_int32, buf );
     opus_int32 *buf_ptr;
+    SAVE_STACK;
+
+    ALLOC( buf, RESAMPLER_MAX_BATCH_SIZE_IN + ORDER_FIR, opus_int32 );
 
     /* Copy buffered samples to start of buffer */
     silk_memcpy( buf, S, ORDER_FIR * sizeof( opus_int32 ) );
@@ -99,4 +99,5 @@ void silk_resampler_down2_3(
 
     /* Copy last part of filtered signal to the state for the next call */
     silk_memcpy( S, &buf[ nSamplesIn ], ORDER_FIR * sizeof( opus_int32 ) );
+    RESTORE_STACK;
 }

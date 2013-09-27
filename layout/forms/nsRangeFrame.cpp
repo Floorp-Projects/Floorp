@@ -5,6 +5,8 @@
 
 #include "nsRangeFrame.h"
 
+#include "mozilla/TouchEvents.h"
+
 #include "nsContentCreatorFunctions.h"
 #include "nsContentList.h"
 #include "nsContentUtils.h"
@@ -697,7 +699,8 @@ nsRangeFrame::AttributeChanged(int32_t  aNameSpaceID,
       MOZ_ASSERT(mContent->IsHTML(nsGkAtoms::input), "bad cast");
       bool typeIsRange = static_cast<dom::HTMLInputElement*>(mContent)->GetType() ==
                            NS_FORM_INPUT_RANGE;
-      MOZ_ASSERT(typeIsRange || aAttribute == nsGkAtoms::value, "why?");
+      // If script changed the <input>'s type before setting these attributes
+      // then we don't need to do anything since we are going to be reframed.
       if (typeIsRange) {
         UpdateForValueChange();
       }

@@ -44,7 +44,7 @@
             }
 
             this.findbar.onFindAgainCommand(aEvent.shiftKey);
-          } else if (this.findbar._findMode == this.findbar.FIND_LINKS) {
+          } else {
             this.findbar._finishFAYT(aEvent);
           }
         ]]></body>
@@ -870,7 +870,8 @@
 
             this._updateCaseSensitivity(val);
 
-            this.browser.finder.fastFind(val, this._findMode == this.FIND_LINKS);
+            this.browser.finder.fastFind(val, this._findMode == this.FIND_LINKS,
+                                         this._findMode != this.FIND_NORMAL);
           }
 
           if (this._findMode != this.FIND_NORMAL)
@@ -923,7 +924,8 @@
         <parameter name="aFindPrevious"/>
         <body><![CDATA[
           this.browser.finder.findAgain(aFindPrevious,
-                                        this._findMode == this.FIND_LINKS);
+                                        this._findMode == this.FIND_LINKS,
+                                        this._findMode != this.FIND_NORMAL);
         ]]></body>
       </method>
 

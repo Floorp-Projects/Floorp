@@ -259,7 +259,7 @@ panel[noactions] > richlistbox > richlistitem[type~="action"] > .ac-url-box > .a
 
 #wrapper-urlbar-container > #urlbar-container > #urlbar {
   -moz-user-input: disabled;
-  cursor: -moz-grab;
+  cursor: grab;
 }
 
 #PopupAutoComplete {

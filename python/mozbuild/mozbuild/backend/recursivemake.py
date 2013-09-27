@@ -5,12 +5,15 @@
 from __future__ import unicode_literals
 
 import errno
+import itertools
 import logging
 import os
+import re
 import types
 
 from collections import namedtuple
 
+import mozbuild.makeutil as mozmakeutil
 from mozpack.copier import FilePurger
 from mozpack.manifests import (
     InstallManifest,
@@ -27,16 +30,20 @@ from ..frontend.data import (
     GeneratedWebIDLFile,
     IPDLFile,
     LocalInclude,
+    PreprocessedTestWebIDLFile,
     PreprocessedWebIDLFile,
     Program,
     SandboxDerived,
     TestWebIDLFile,
     VariablePassthru,
     XPIDLFile,
-    XpcshellManifests,
+    TestManifest,
     WebIDLFile,
 )
-from ..util import FileAvoidWrite
+from ..util import (
+    ensureParentDir,
+    FileAvoidWrite,
+)
 from ..makeutil import Makefile
 
 
@@ -263,6 +270,7 @@ class RecursiveMakeBackend(CommonBackend):
         self._webidl_sources = set()
         self._generated_events_webidl_sources = set()
         self._test_webidl_sources = set()
+        self._preprocessed_test_webidl_sources = set()
         self._preprocessed_webidl_sources = set()
         self._generated_webidl_sources = set()
 
@@ -275,7 +283,7 @@ class RecursiveMakeBackend(CommonBackend):
         self.summary.backend_detailed_summary = types.MethodType(detailed,
             self.summary)
 
-        self.xpcshell_manifests = []
+        self._test_manifests = {}
 
         self.backend_input_files.add(os.path.join(self.environment.topobjdir,
             'config', 'autoconf.mk'))
@@ -368,6 +376,11 @@ class RecursiveMakeBackend(CommonBackend):
                                                        obj.basename))
             # Test WebIDL files are not exported.
 
+        elif isinstance(obj, PreprocessedTestWebIDLFile):
+            self._preprocessed_test_webidl_sources.add(mozpath.join(obj.srcdir,
+                                                                    obj.basename))
+            # Test WebIDL files are not exported.
+
         elif isinstance(obj, GeneratedWebIDLFile):
             self._generated_webidl_sources.add(mozpath.join(obj.srcdir,
                                                             obj.basename))
@@ -381,8 +394,8 @@ class RecursiveMakeBackend(CommonBackend):
         elif isinstance(obj, Program):
             self._process_program(obj.program, backend_file)
 
-        elif isinstance(obj, XpcshellManifests):
-            self._process_xpcshell_manifests(obj, backend_file)
+        elif isinstance(obj, TestManifest):
+            self._process_test_manifest(obj, backend_file)
 
         elif isinstance(obj, LocalInclude):
             self._process_local_include(obj.path, backend_file)
@@ -498,6 +511,68 @@ class RecursiveMakeBackend(CommonBackend):
         self._update_from_avoid_write(root.close())
         self._update_from_avoid_write(root_deps.close())
 
+    def _add_unified_build_rules(self, makefile, files, output_directory,
+                                 unified_prefix='Unified',
+                                 extra_dependencies=[],
+                                 unified_files_makefile_variable='unified_files',
+                                 include_curdir_build_rules=True):
+        files_per_unified_file = 16
+
+        explanation = "\n" \
+            "# We build files in 'unified' mode by including several files\n" \
+            "# together into a single source file.  This cuts down on\n" \
+            "# compilation times and debug information size.  %d was chosen as\n" \
+            "# a reasonable compromise between clobber rebuild time, incremental\n" \
+            "# rebuild time, and compiler memory usage.\n" % files_per_unified_file
+        makefile.add_statement(explanation)
+
+        def unified_files():
+            "Return an iterator of (unified_filename, source_filenames) tuples."
+            # Our last returned list of source filenames may be short, and we
+            # don't want the fill value inserted by izip_longest to be an
+            # issue.  So we do a little dance to filter it out ourselves.
+            dummy_fill_value = ("dummy",)
+            def filter_out_dummy(iterable):
+                return itertools.ifilter(lambda x: x != dummy_fill_value,
+                                         iterable)
+
+            # From the itertools documentation, slightly modified:
+            def grouper(n, iterable):
+                "grouper(3, 'ABCDEFG', 'x') --> ABC DEF Gxx"
+                args = [iter(iterable)] * n
+                return itertools.izip_longest(fillvalue=dummy_fill_value, *args)
+
+            for i, unified_group in enumerate(grouper(files_per_unified_file,
+                                                      sorted(files))):
+                just_the_filenames = list(filter_out_dummy(unified_group))
+                yield '%s%d.cpp' % (unified_prefix, i), just_the_filenames
+
+        all_sources = ' '.join(source for source, _ in unified_files())
+        makefile.add_statement('%s := %s\n' % (unified_files_makefile_variable,
+                                               all_sources))
+
+        regen_cmds = ['for f in $(filter %.cpp,$^); do echo "#include \\"$$f\\""; done > $@']
+        for unified_file, source_filenames in unified_files():
+            rule = makefile.create_rule([unified_file])
+            rule.add_dependencies(extra_dependencies + source_filenames)
+            rule.add_commands(regen_cmds)
+
+            # The rule we just defined is only for cases where the cpp files get
+            # blown away and we need to regenerate them.  The rule doesn't correctly
+            # handle source files being added/removed/renamed.  Therefore, we
+            # generate them here also to make sure everything's up-to-date.
+            with FileAvoidWrite(os.path.join(output_directory, unified_file)) as f:
+                f.write('\n'.join(['#include "%s"' % s for s in source_filenames]))
+
+        if include_curdir_build_rules:
+            makefile.add_statement('\n'
+                '# Make sometimes gets confused between "foo" and "$(CURDIR)/foo".\n'
+                '# Help it out by explicitly specifiying dependencies.')
+            makefile.add_statement('all_absolute_unified_files := \\\n'
+                                   '  $(addprefix $(CURDIR)/,$(%s))'
+                                   % unified_files_makefile_variable)
+            rule = makefile.create_rule(['$(all_absolute_unified_files)'])
+            rule.add_dependencies(['$(CURDIR)/%: %'])
 
     def consume_finished(self):
         CommonBackend.consume_finished(self)
@@ -545,38 +620,65 @@ class RecursiveMakeBackend(CommonBackend):
         # Write out a master list of all IPDL source files.
         ipdls = FileAvoidWrite(os.path.join(self.environment.topobjdir,
             'ipc', 'ipdl', 'ipdlsrcs.mk'))
-        for p in sorted(self._ipdl_sources):
-            ipdls.write('ALL_IPDLSRCS += %s\n' % p)
-            base = os.path.basename(p)
+        mk = mozmakeutil.Makefile()
+
+        sorted_ipdl_sources = list(sorted(self._ipdl_sources))
+        mk.add_statement('ALL_IPDLSRCS := %s\n' % ' '.join(sorted_ipdl_sources))
+
+        def files_from(ipdl):
+            base = os.path.basename(ipdl)
             root, ext = os.path.splitext(base)
 
             # Both .ipdl and .ipdlh become .cpp files
-            ipdls.write('CPPSRCS += %s.cpp\n' % root)
+            files = ['%s.cpp' % root]
             if ext == '.ipdl':
                 # .ipdl also becomes Child/Parent.cpp files
-                ipdls.write('CPPSRCS += %sChild.cpp\n' % root)
-                ipdls.write('CPPSRCS += %sParent.cpp\n' % root)
+                files.extend(['%sChild.cpp' % root,
+                              '%sParent.cpp' % root])
+            return files
 
-        ipdls.write('IPDLDIRS := %s\n' % ' '.join(sorted(set(os.path.dirname(p)
+        ipdl_cppsrcs = itertools.chain(*[files_from(p) for p in sorted_ipdl_sources])
+        mk.add_statement('CPPSRCS := %s\n' % ' '.join(ipdl_cppsrcs))
+
+        mk.add_statement('IPDLDIRS := %s\n' % ' '.join(sorted(set(os.path.dirname(p)
             for p in self._ipdl_sources))))
+
+        mk.dump(ipdls)
 
         self._update_from_avoid_write(ipdls.close())
         self.summary.managed_count += 1
 
         # Write out master lists of WebIDL source files.
-        webidls = FileAvoidWrite(os.path.join(self.environment.topobjdir,
-              'dom', 'bindings', 'webidlsrcs.mk'))
+        bindings_dir = os.path.join(self.environment.topobjdir, 'dom', 'bindings')
+        webidls = FileAvoidWrite(os.path.join(bindings_dir, 'webidlsrcs.mk'))
 
-        for webidl in sorted(self._webidl_sources):
-            webidls.write('webidl_files += %s\n' % os.path.basename(webidl))
-        for webidl in sorted(self._generated_events_webidl_sources):
-            webidls.write('generated_events_webidl_files += %s\n' % os.path.basename(webidl))
-        for webidl in sorted(self._test_webidl_sources):
-            webidls.write('test_webidl_files += %s\n' % os.path.basename(webidl))
-        for webidl in sorted(self._generated_webidl_sources):
-            webidls.write('generated_webidl_files += %s\n' % os.path.basename(webidl))
-        for webidl in sorted(self._preprocessed_webidl_sources):
-            webidls.write('preprocessed_webidl_files += %s\n' % os.path.basename(webidl))
+        mk = mozmakeutil.Makefile()
+
+        def write_var(variable, sources):
+            files = [os.path.basename(f) for f in sorted(sources)]
+            mk.add_statement('%s += %s\n' % (variable, ' '.join(files)))
+        write_var('webidl_files', self._webidl_sources)
+        write_var('generated_events_webidl_files', self._generated_events_webidl_sources)
+        write_var('test_webidl_files', self._test_webidl_sources)
+        write_var('preprocessed_test_webidl_files', self._preprocessed_test_webidl_sources)
+        write_var('generated_webidl_files', self._generated_webidl_sources)
+        write_var('preprocessed_webidl_files', self._preprocessed_webidl_sources)
+
+        all_webidl_files = itertools.chain(iter(self._webidl_sources),
+                                           iter(self._generated_events_webidl_sources),
+                                           iter(self._generated_webidl_sources),
+                                           iter(self._preprocessed_webidl_sources))
+        all_webidl_files = [os.path.basename(x) for x in all_webidl_files]
+        all_webidl_sources = [re.sub(r'\.webidl$', 'Binding.cpp', x) for x in all_webidl_files]
+
+        self._add_unified_build_rules(mk, all_webidl_sources,
+                                      bindings_dir,
+                                      unified_prefix='UnifiedBindings',
+                                      unified_files_makefile_variable='unified_binding_cpp_files')
+
+        # Assume that Somebody Else has responsibility for correctly
+        # specifying removal dependencies for |all_webidl_sources|.
+        mk.dump(webidls, removal_guard=False)
 
         self._update_from_avoid_write(webidls.close())
         self.summary.managed_count += 1
@@ -599,19 +701,23 @@ class RecursiveMakeBackend(CommonBackend):
         self._update_from_avoid_write(backend_deps.close())
         self.summary.managed_count += 1
 
-        # Make the master xpcshell.ini file
-        self.xpcshell_manifests.sort()
-        if len(self.xpcshell_manifests) > 0:
-            mastermanifest = FileAvoidWrite(os.path.join(
-                self.environment.topobjdir, 'testing', 'xpcshell', 'xpcshell.ini'))
-            mastermanifest.write(
-                '; THIS FILE WAS AUTOMATICALLY GENERATED. DO NOT MODIFY BY HAND.\n\n')
-            for manifest in self.xpcshell_manifests:
-                mastermanifest.write("[include:%s]\n" % manifest)
-            self._update_from_avoid_write(mastermanifest.close())
-            self.summary.managed_count += 1
+        # Make the master test manifest files.
+        for flavor, t in self._test_manifests.items():
+            install_prefix, manifests = t
+            manifest_stem = os.path.join(install_prefix, '%s.ini' % flavor)
+            self._write_master_test_manifest(os.path.join(
+                self.environment.topobjdir, '_tests', manifest_stem),
+                manifests)
+
+            # Catch duplicate inserts.
+            try:
+                self._install_manifests['tests'].add_optional_exists(manifest_stem)
+            except ValueError:
+                pass
 
         self._write_manifests('install', self._install_manifests)
+
+        ensureParentDir(os.path.join(self.environment.topobjdir, 'dist', 'foo'))
 
     def _process_directory_traversal(self, obj, backend_file):
         """Process a data.DirectoryTraversal instance."""
@@ -669,8 +775,9 @@ class RecursiveMakeBackend(CommonBackend):
 
         if obj.test_dirs:
             fh.write('TEST_DIRS := %s\n' % ' '.join(obj.test_dirs))
-            self._traversal.add(backend_file.relobjdir,
-                                tests=relativize(obj.test_dirs))
+            if self.environment.substs.get('ENABLE_TESTS', False):
+                self._traversal.add(backend_file.relobjdir,
+                                    tests=relativize(obj.test_dirs))
 
         if obj.test_tool_dirs and \
             self.environment.substs.get('ENABLE_TESTS', False):
@@ -789,12 +896,28 @@ class RecursiveMakeBackend(CommonBackend):
         header = 'mozilla/dom/%sBinding.h' % os.path.splitext(basename)[0]
         self._install_manifests['dist_include'].add_optional_exists(header)
 
-    def _process_xpcshell_manifests(self, obj, backend_file, namespace=""):
-        manifest = obj.xpcshell_manifests
-        backend_file.write('XPCSHELL_TESTS += %s\n' % os.path.dirname(manifest))
-        if obj.relativedir != '':
-            manifest = '%s/%s' % (obj.relativedir, manifest)
-        self.xpcshell_manifests.append(manifest)
+    def _process_test_manifest(self, obj, backend_file):
+        self.backend_input_files.add(os.path.join(obj.topsrcdir,
+            obj.manifest_relpath))
+
+        # Duplicate manifests may define the same file. That's OK.
+        for source, dest in obj.installs.items():
+            try:
+                self._install_manifests['tests'].add_symlink(source, dest)
+            except ValueError:
+                if not obj.dupe_manifest:
+                    raise
+
+        for dest in obj.external_installs:
+            try:
+                self._install_manifests['tests'].add_optional_exists(dest)
+            except ValueError:
+                if not obj.dupe_manifest:
+                    raise
+
+        m = self._test_manifests.setdefault(obj.flavor,
+            (obj.install_prefix, set()))
+        m[1].add(obj.manifest_relpath)
 
     def _process_local_include(self, local_include, backend_file):
         if local_include.startswith('/'):
@@ -819,3 +942,14 @@ class RecursiveMakeBackend(CommonBackend):
             self._update_from_avoid_write(fh.close())
 
         purger.purge(man_dir)
+
+    def _write_master_test_manifest(self, path, manifests):
+        master = FileAvoidWrite(path)
+        master.write(
+            '; THIS FILE WAS AUTOMATICALLY GENERATED. DO NOT MODIFY BY HAND.\n\n')
+
+        for manifest in sorted(manifests):
+            master.write('[include:%s]\n' % manifest)
+
+        self._update_from_avoid_write(master.close())
+        self.summary.managed_count += 1

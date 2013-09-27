@@ -33,14 +33,16 @@
 #ifdef MOZ_OMX_DECODER
 #include "MediaResourceManagerService.h"
 #endif
+#include "mozilla/TouchEvents.h"
 #include "mozilla/FileUtils.h"
 #include "mozilla/Hal.h"
+#include "mozilla/MouseEvents.h"
 #include "mozilla/Mutex.h"
 #include "mozilla/Services.h"
+#include "mozilla/TextEvents.h"
 #include "nsAppShell.h"
 #include "mozilla/dom/Touch.h"
 #include "nsGkAtoms.h"
-#include "nsGUIEvent.h"
 #include "nsIObserverService.h"
 #include "nsIScreen.h"
 #include "nsScreenManagerGonk.h"
@@ -467,9 +469,18 @@ GeckoInputReaderPolicy::setDisplayInfo()
                   "Orientation enums not matched!");
 
     DisplayViewport viewport;
-    viewport.setNonDisplayViewport(gScreenBounds.width, gScreenBounds.height);
     viewport.displayId = 0;
     viewport.orientation = nsScreenGonk::GetRotation();
+    viewport.physicalRight = viewport.deviceWidth = gScreenBounds.width;
+    viewport.physicalBottom = viewport.deviceHeight = gScreenBounds.height;
+    if (viewport.orientation == DISPLAY_ORIENTATION_90 ||
+        viewport.orientation == DISPLAY_ORIENTATION_270) {
+        viewport.logicalRight = gScreenBounds.height;
+        viewport.logicalBottom = gScreenBounds.width;
+    } else {
+        viewport.logicalRight = gScreenBounds.width;
+        viewport.logicalBottom = gScreenBounds.height;
+    }
     mConfig.setDisplayInfo(false, viewport);
 }
 
