@@ -773,6 +773,13 @@ add_task(function test_common_initialize()
                          TEST_DATA_SHORT_GZIP_ENCODED_SECOND.length);
     });
 
+  // This URL will emulate being blocked by Windows Parental controls
+  gHttpServer.registerPathHandler("/parentalblocked.zip",
+    function (aRequest, aResponse) {
+      aResponse.setStatusLine(aRequest.httpVersion, 450,
+                              "Blocked by Windows Parental Controls");
+    });
+
   // Disable integration with the host application requiring profile access.
   DownloadIntegration.dontLoadList = true;
   DownloadIntegration.dontLoadObservers = true;
