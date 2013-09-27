@@ -96,7 +96,7 @@ function registerSelf() {
 
   if (register[0]) {
     listenerId = register[0].id;
-    importedScripts = FileUtils.File(register[0].importedScripts);
+    importedScripts = FileUtils.getFile('TmpD', ['marionetteContentScripts']);
     startListeners();
   }
 }
