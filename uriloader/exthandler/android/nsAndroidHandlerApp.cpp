@@ -67,9 +67,6 @@ nsAndroidHandlerApp::Equals(nsIHandlerApp *aHandlerApp, bool *aRetval)
 NS_IMETHODIMP
 nsAndroidHandlerApp::LaunchWithURI(nsIURI *aURI, nsIInterfaceRequestor *aWindowContext)
 {
-  if (!mozilla::AndroidBridge::Bridge())
-    return NS_ERROR_FAILURE;
-
   nsCString uriSpec;
   aURI->GetSpec(uriSpec);
   return GeckoAppShell::OpenUriExternal(NS_ConvertUTF8toUTF16(uriSpec), NS_ConvertUTF8toUTF16(mMimeType), mPackageName, mClassName, mAction) ? 
@@ -79,9 +76,6 @@ nsAndroidHandlerApp::LaunchWithURI(nsIURI *aURI, nsIInterfaceRequestor *aWindowC
 NS_IMETHODIMP
 nsAndroidHandlerApp::Share(const nsAString & data, const nsAString & title)
 {
-  if (!mozilla::AndroidBridge::Bridge())
-    return NS_ERROR_FAILURE;
-
   return GeckoAppShell::OpenUriExternal(data, NS_ConvertUTF8toUTF16(mMimeType), mPackageName, 
                     mClassName, mAction) ? NS_OK : NS_ERROR_FAILURE;
 }
