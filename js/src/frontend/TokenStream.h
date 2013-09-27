@@ -235,7 +235,8 @@ struct TokenPos {
 
 enum DecimalPoint { NoDecimal = false, HasDecimal = true };
 
-struct Token {
+struct Token
+{
     TokenKind           type;           // char value or above enumerator
     TokenPos            pos;            // token position in file
     union {
@@ -250,6 +251,24 @@ struct Token {
         RegExpFlag      reflags;        // regexp flags; use tokenbuf to access
                                         //   regexp chars
     } u;
+
+    // This constructor is necessary only for MSVC 2013 and how it compiles the
+    // initialization of TokenStream::tokens.  That field is initialized as
+    // tokens() in the constructor init-list.  This *should* zero the entire
+    // array, then (because Token has a non-trivial constructor, because
+    // TokenPos has a user-provided constructor) call the implicit Token
+    // constructor on each element, which would call the TokenPos constructor
+    // for Token::pos and do nothing.  (All of which is equivalent to just
+    // zeroing TokenStream::tokens.)  But MSVC 2013 (2010/2012 don't have this
+    // bug) doesn't zero out each element, so we need this extra constructor to
+    // make it do the right thing.  (Token is used primarily by reference or
+    // pointer, and it's only initialized a very few places, so having a
+    // user-defined constructor won't hurt perf.)  See also bug 920318.
+    Token()
+      : type(TOK_ERROR),
+        pos(0, 0)
+    {
+    }
 
     // Mutators
 

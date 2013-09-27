@@ -12,7 +12,7 @@
 
 #include "jsapi-tests/tests.h"
 
-#include "jsobjinlines.h"
+#include "vm/ProxyObject.h"
 
 struct OuterWrapper : js::Wrapper
 {

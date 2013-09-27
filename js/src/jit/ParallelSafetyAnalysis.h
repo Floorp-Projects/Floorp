@@ -7,7 +7,6 @@
 #ifndef jit_ParallelSafetyAnalysis_h
 #define jit_ParallelSafetyAnalysis_h
 
-#include "jit/CompileInfo.h"
 #include "jit/MIR.h"
 
 namespace js {

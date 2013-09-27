@@ -22,7 +22,7 @@ var newFactory = function (window) {
   return {
     createInstance: function(aOuter, aIID) {
       if (aOuter)
-	throw Components.results.NS_ERROR_NO_AGGREGATION;
+        throw Components.results.NS_ERROR_NO_AGGREGATION;
       return new MockFilePickerInstance(window).QueryInterface(aIID);
     },
     lockFactory: function(aLock) {
@@ -58,7 +58,7 @@ this.MockFilePicker = {
       registrar.registerFactory(newClassID, "", CONTRACT_ID, this.factory);
     }
   },
-  
+
   reset: function() {
     this.appendFilterCallback = null;
     this.appendFiltersCallback = null;
@@ -71,7 +71,7 @@ this.MockFilePicker = {
     this.shown = false;
     this.showing = false;
   },
-  
+
   cleanup: function() {
     var previousFactory = this.factory;
     this.reset();

@@ -11,9 +11,6 @@
 #include "javascript-trace.h"
 #endif
 
-#include "jsobj.h"
-#include "jspubtd.h"
-
 #include "vm/Stack.h"
 
 namespace js {
