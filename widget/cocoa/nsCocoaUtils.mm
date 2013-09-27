@@ -420,7 +420,7 @@ nsCocoaUtils::InitNPCocoaEvent(NPCocoaEvent* aNPCocoaEvent)
 
 // static
 void
-nsCocoaUtils::InitPluginEvent(nsPluginEvent &aPluginEvent,
+nsCocoaUtils::InitPluginEvent(WidgetPluginEvent &aPluginEvent,
                               NPCocoaEvent &aCocoaEvent)
 {
   aPluginEvent.time = PR_IntervalNow();

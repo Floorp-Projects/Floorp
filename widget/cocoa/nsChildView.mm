@@ -2934,7 +2934,7 @@ NSEvent* gLastDragMouseDownEvent = nil;
   if (!mGeckoChild)
     return;
 
-  nsPluginEvent pluginEvent(true, NS_PLUGIN_FOCUS_EVENT, mGeckoChild);
+  WidgetPluginEvent pluginEvent(true, NS_PLUGIN_FOCUS_EVENT, mGeckoChild);
   NPCocoaEvent cocoaEvent;
   nsCocoaUtils::InitNPCocoaEvent(&cocoaEvent);
   cocoaEvent.type = NPCocoaEventWindowFocusChanged;
@@ -5326,7 +5326,7 @@ static int32_t RoundUp(double aDouble)
     return NO;
 
   if (mPluginEventModel == NPEventModelCocoa) {
-    nsPluginEvent pluginEvent(true, NS_PLUGIN_FOCUS_EVENT, mGeckoChild);
+    WidgetPluginEvent pluginEvent(true, NS_PLUGIN_FOCUS_EVENT, mGeckoChild);
     NPCocoaEvent cocoaEvent;
     nsCocoaUtils::InitNPCocoaEvent(&cocoaEvent);
     cocoaEvent.type = NPCocoaEventFocusChanged;
