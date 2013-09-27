@@ -117,6 +117,5 @@ public:
 
 // TODO: Remove following typedefs
 typedef mozilla::WidgetContentCommandEvent nsContentCommandEvent;
-typedef mozilla::WidgetCommandEvent        nsCommandEvent;
 
 #endif // mozilla_MiscEvents_h__

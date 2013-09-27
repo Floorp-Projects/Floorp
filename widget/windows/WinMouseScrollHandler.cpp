@@ -1231,7 +1231,7 @@ MouseScrollHandler::Device::Elantech::HandleKeyMessage(nsWindowBase* aWidget,
          "%s command event",
          aWParam == VK_NEXT ? "Forward" : "Back"));
 
-      nsCommandEvent commandEvent(true, nsGkAtoms::onAppCommand,
+      WidgetCommandEvent commandEvent(true, nsGkAtoms::onAppCommand,
         (aWParam == VK_NEXT) ? nsGkAtoms::Forward : nsGkAtoms::Back, aWidget);
       InitEvent(aWidget, commandEvent);
       MouseScrollHandler::DispatchEvent(aWidget, commandEvent);
