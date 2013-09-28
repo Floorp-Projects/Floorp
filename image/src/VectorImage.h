@@ -98,6 +98,9 @@ private:
   bool           mHasPendingInvalidation; // Invalidate observers next refresh
                                           // driver tick.
 
+  // Initializes imgStatusTracker and resets it on RasterImage destruction.
+  nsAutoPtr<imgStatusTrackerInit> mStatusTrackerInit;
+
   friend class ImageFactory;
 };
 

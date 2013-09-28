@@ -180,7 +180,8 @@ protected:
     return GetOwner()->mTimedChannel;
   }
 
-  mozilla::image::Image* GetImage() const;
+  already_AddRefed<mozilla::image::Image> GetImage() const;
+  bool HasImage() const;
   imgRequest* GetOwner() const;
 
   nsresult PerformClone(imgINotificationObserver* aObserver,

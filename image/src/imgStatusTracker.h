@@ -124,6 +124,10 @@ public:
   // without an image.
   void SetImage(mozilla::image::Image* aImage);
 
+  // Image resetter, for when mImage is about to go out of scope. mImage is a
+  // weak reference, and thus must be set to null when it's object is deleted.
+  void ResetImage();
+
   // Inform this status tracker that it is associated with a multipart image.
   void SetIsMultipart() { mIsMultipart = true; }
 
@@ -264,7 +268,11 @@ public:
   bool IsMultipart() const { return mIsMultipart; }
 
   // Weak pointer getters - no AddRefs.
-  inline mozilla::image::Image* GetImage() const { return mImage; }
+  inline already_AddRefed<mozilla::image::Image> GetImage() const {
+    nsRefPtr<mozilla::image::Image> image = mImage;
+    return image.forget();
+  }
+  inline bool HasImage() { return mImage; }
 
   inline imgDecoderObserver* GetDecoderObserver() { return mTrackerObserver.get(); }
 
@@ -292,6 +300,7 @@ private:
   friend class imgRequestNotifyRunnable;
   friend class imgStatusTrackerObserver;
   friend class imgStatusTrackerNotifyingObserver;
+  friend class imgStatusTrackerInit;
   imgStatusTracker(const imgStatusTracker& aOther);
 
   // Main thread only because it deals with the observer service.
@@ -309,7 +318,7 @@ private:
   // frames are assumed to be fully valid.)
   nsIntRect mInvalidRect;
 
-  // Weak pointer to the image. The image owns the status tracker.
+  // This weak ref should be set null when the image goes out of scope.
   mozilla::image::Image* mImage;
 
   // List of proxies attached to the image. Each proxy represents a consumer
@@ -324,6 +333,16 @@ private:
   bool mIsMultipart    : 1;
   bool mHadLastPart    : 1;
   bool mHasBeenDecoded : 1;
+};
+
+class imgStatusTrackerInit
+{
+public:
+  imgStatusTrackerInit(mozilla::image::Image* aImage,
+                       imgStatusTracker* aTracker);
+  ~imgStatusTrackerInit();
+private:
+  imgStatusTracker* mTracker;
 };
 
 #endif

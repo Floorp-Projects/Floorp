@@ -43,7 +43,7 @@ public:
     MOZ_ASSERT(NS_IsMainThread(),
                "Use imgStatusTracker::mConsumers on main thread only");
     LOG_SCOPE(GetImgLog(), "imgStatusTrackerNotifyingObserver::OnStartDecode");
-    NS_ABORT_IF_FALSE(mTracker->GetImage(),
+    NS_ABORT_IF_FALSE(mTracker->HasImage(),
                       "OnStartDecode callback before we've created our image");
 
     mTracker->RecordStartDecode();
@@ -74,9 +74,12 @@ public:
                "Use imgStatusTracker::mConsumers on main thread only");
     LOG_SCOPE(GetImgLog(), "imgStatusTrackerNotifyingObserver::OnStartContainer");
 
-    NS_ABORT_IF_FALSE(mTracker->GetImage(),
+    NS_ABORT_IF_FALSE(mTracker->HasImage(),
                       "OnStartContainer callback before we've created our image");
-    mTracker->RecordStartContainer(mTracker->GetImage());
+    {
+      nsRefPtr<Image> image = mTracker->GetImage();
+      mTracker->RecordStartContainer(image);
+    }
 
     nsTObserverArray<imgRequestProxy*>::ForwardIterator iter(mTracker->mConsumers);
     while (iter.HasMore()) {
@@ -87,7 +90,7 @@ public:
   virtual void OnStartFrame()
   {
     LOG_SCOPE(GetImgLog(), "imgStatusTrackerNotifyingObserver::OnStartFrame");
-    NS_ABORT_IF_FALSE(mTracker->GetImage(),
+    NS_ABORT_IF_FALSE(mTracker->HasImage(),
                       "OnStartFrame callback before we've created our image");
 
     mTracker->RecordStartFrame();
@@ -101,7 +104,7 @@ public:
     MOZ_ASSERT(NS_IsMainThread(),
                "Use imgStatusTracker::mConsumers on main thread only");
     LOG_SCOPE(GetImgLog(), "imgStatusTrackerNotifyingObserver::FrameChanged");
-    NS_ABORT_IF_FALSE(mTracker->GetImage(),
+    NS_ABORT_IF_FALSE(mTracker->HasImage(),
                       "FrameChanged callback before we've created our image");
 
     mTracker->RecordFrameChanged(dirtyRect);
@@ -117,7 +120,7 @@ public:
     MOZ_ASSERT(NS_IsMainThread(),
                "Use imgStatusTracker::mConsumers on main thread only");
     LOG_SCOPE(GetImgLog(), "imgStatusTrackerNotifyingObserver::OnStopFrame");
-    NS_ABORT_IF_FALSE(mTracker->GetImage(),
+    NS_ABORT_IF_FALSE(mTracker->HasImage(),
                       "OnStopFrame callback before we've created our image");
 
     mTracker->RecordStopFrame();
@@ -135,7 +138,7 @@ public:
     MOZ_ASSERT(NS_IsMainThread(),
                "Use imgStatusTracker::mConsumers on main thread only");
     LOG_SCOPE(GetImgLog(), "imgStatusTrackerNotifyingObserver::OnStopDecode");
-    NS_ABORT_IF_FALSE(mTracker->GetImage(),
+    NS_ABORT_IF_FALSE(mTracker->HasImage(),
                       "OnStopDecode callback before we've created our image");
 
     bool preexistingError = mTracker->GetImageStatus() == imgIRequest::STATUS_ERROR;
@@ -165,7 +168,7 @@ public:
   {
     MOZ_ASSERT(NS_IsMainThread(),
                "Use imgStatusTracker::mConsumers on main thread only");
-    NS_ABORT_IF_FALSE(mTracker->GetImage(),
+    NS_ABORT_IF_FALSE(mTracker->HasImage(),
                       "OnDiscard callback before we've created our image");
 
     mTracker->RecordDiscard();
@@ -180,7 +183,7 @@ public:
   {
     MOZ_ASSERT(NS_IsMainThread(),
                "Use imgStatusTracker::mConsumers on main thread only");
-    NS_ABORT_IF_FALSE(mTracker->GetImage(),
+    NS_ABORT_IF_FALSE(mTracker->HasImage(),
                       "OnUnlockedDraw callback before we've created our image");
     mTracker->RecordUnlockedDraw();
 
@@ -194,7 +197,7 @@ public:
   {
     MOZ_ASSERT(NS_IsMainThread(),
                "Use imgStatusTracker::mConsumers on main thread only");
-    NS_ABORT_IF_FALSE(mTracker->GetImage(),
+    NS_ABORT_IF_FALSE(mTracker->HasImage(),
                       "OnImageIsAnimated callback before we've created our image");
     mTracker->RecordImageIsAnimated();
 
@@ -315,7 +318,7 @@ public:
     LOG_SCOPE(GetImgLog(), "imgStatusTrackerObserver::OnUnlockedDraw");
     nsRefPtr<imgStatusTracker> tracker = mTracker.get();
     if (!tracker) { return; }
-    NS_ABORT_IF_FALSE(tracker->GetImage(),
+    NS_ABORT_IF_FALSE(tracker->HasImage(),
                       "OnUnlockedDraw callback before we've created our image");
     tracker->RecordUnlockedDraw();
   }
@@ -375,12 +378,39 @@ imgStatusTracker::imgStatusTracker(const imgStatusTracker& aOther)
 imgStatusTracker::~imgStatusTracker()
 {}
 
+imgStatusTrackerInit::imgStatusTrackerInit(mozilla::image::Image* aImage,
+                                           imgStatusTracker* aTracker)
+{
+  MOZ_ASSERT(aImage);
+
+  if (aTracker) {
+    mTracker = aTracker;
+    mTracker->SetImage(aImage);
+  } else {
+    mTracker = new imgStatusTracker(aImage);
+  }
+  aImage->SetStatusTracker(mTracker);
+  MOZ_ASSERT(mTracker);
+}
+
+imgStatusTrackerInit::~imgStatusTrackerInit()
+{
+  mTracker->ResetImage();
+}
+
 void
 imgStatusTracker::SetImage(Image* aImage)
 {
   NS_ABORT_IF_FALSE(aImage, "Setting null image");
   NS_ABORT_IF_FALSE(!mImage, "Setting image when we already have one");
   mImage = aImage;
+}
+
+void
+imgStatusTracker::ResetImage()
+{
+  NS_ABORT_IF_FALSE(mImage, "Resetting image when it's already null!");
+  mImage = nullptr;
 }
 
 bool
@@ -447,8 +477,8 @@ imgStatusTracker::Notify(imgRequestProxy* proxy)
 {
   MOZ_ASSERT(NS_IsMainThread(), "imgRequestProxy is not threadsafe");
 #ifdef PR_LOGGING
-  if (GetImage() && GetImage()->GetURI()) {
-    nsRefPtr<ImageURL> uri(GetImage()->GetURI());
+  if (mImage && mImage->GetURI()) {
+    nsRefPtr<ImageURL> uri(mImage->GetURI());
     nsAutoCString spec;
     uri->GetSpec(spec);
     LOG_FUNC_WITH_PARAM(GetImgLog(), "imgStatusTracker::Notify async", "uri", spec.get());
@@ -1206,11 +1236,11 @@ imgStatusTracker::FireFailureNotification()
 
   // Some kind of problem has happened with image decoding.
   // Report the URI to net:failed-to-process-uri-conent observers.
-  if (GetImage()) {
+  if (mImage) {
     // Should be on main thread, so ok to create a new nsIURI.
     nsCOMPtr<nsIURI> uri;
     {
-      nsRefPtr<ImageURL> threadsafeUriData = GetImage()->GetURI();
+      nsRefPtr<ImageURL> threadsafeUriData = mImage->GetURI();
       uri = threadsafeUriData ? threadsafeUriData->ToIURI() : nullptr;
     }
     if (uri) {

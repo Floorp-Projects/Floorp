@@ -800,7 +800,7 @@ imgRequest::OnDataAvailable(nsIRequest *aRequest, nsISupports *ctxt,
         return NS_BINDING_ABORTED;
       }
 
-      NS_ABORT_IF_FALSE(statusTracker->GetImage(), "Status tracker should have an image!");
+      NS_ABORT_IF_FALSE(statusTracker->HasImage(), "Status tracker should have an image!");
       NS_ABORT_IF_FALSE(mImage, "imgRequest should have an image!");
 
       if (mDecodeRequested)

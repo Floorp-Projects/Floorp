@@ -63,6 +63,7 @@ public:
                         uint32_t aFlags) = 0;
 
   virtual already_AddRefed<imgStatusTracker> GetStatusTracker() = 0;
+  virtual void SetStatusTracker(imgStatusTracker* aStatusTracker) {}
 
   /**
    * The rectangle defining the location and size of the given frame.
@@ -137,10 +138,15 @@ public:
 class ImageResource : public Image
 {
 public:
-  virtual already_AddRefed<imgStatusTracker> GetStatusTracker() MOZ_OVERRIDE {
+  already_AddRefed<imgStatusTracker> GetStatusTracker() MOZ_OVERRIDE {
     nsRefPtr<imgStatusTracker> statusTracker = mStatusTracker;
     MOZ_ASSERT(statusTracker);
     return statusTracker.forget();
+  }
+  void SetStatusTracker(imgStatusTracker* aStatusTracker) MOZ_OVERRIDE MOZ_FINAL {
+    MOZ_ASSERT(aStatusTracker);
+    MOZ_ASSERT(!mStatusTracker);
+    mStatusTracker = aStatusTracker;
   }
   virtual uint32_t SizeOfData() MOZ_OVERRIDE;
 
@@ -165,8 +171,7 @@ public:
   virtual ImageURL* GetURI() MOZ_OVERRIDE { return mURI.get(); }
 
 protected:
-  ImageResource(imgStatusTracker* aStatusTracker,
-                ImageURL* aURI);
+  ImageResource(ImageURL* aURI);
 
   // Shared functionality for implementors of imgIContainer. Every
   // implementation of attribute animationMode should forward here.
