@@ -341,8 +341,9 @@ typedef uint32_t TypeFlags;
 
 /* Flags and other state stored in TypeObject::flags */
 enum {
-    /* Objects with this type are functions. */
-    OBJECT_FLAG_FUNCTION              = 0x1,
+    /*
+     * UNUSED FLAG                    = 0x1,
+     */
 
     /* If set, addendum information should not be installed on this object. */
     OBJECT_FLAG_ADDENDUM_CLEARED      = 0x2,
@@ -964,9 +965,7 @@ struct TypeObject : gc::BarrieredCell<TypeObject>
     uint32_t padding;
 #endif
 
-    inline TypeObject(const Class *clasp, TaggedProto proto, bool isFunction, bool unknown);
-
-    bool isFunction() { return !!(flags & OBJECT_FLAG_FUNCTION); }
+    inline TypeObject(const Class *clasp, TaggedProto proto, bool unknown);
 
     bool hasAnyFlags(TypeObjectFlags flags) {
         JS_ASSERT((flags & OBJECT_FLAG_DYNAMIC_MASK) == flags);
