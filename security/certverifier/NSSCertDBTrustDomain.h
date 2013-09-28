@@ -7,6 +7,7 @@
 #ifndef mozilla_psm__NSSCertDBTrustDomain_h
 #define mozilla_psm__NSSCertDBTrustDomain_h
 
+#include "insanity/pkixtypes.h"
 #include "secmodt.h"
 #include "CertVerifier.h"
 
