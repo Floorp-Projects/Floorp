@@ -4336,6 +4336,14 @@ let TabState = {
       return Promise.resolve(TabStateCache.get(tab));
     }
 
+    // If the tab hasn't been restored yet, just return the data we
+    // have saved for it.
+    let browser = tab.linkedBrowser;
+    if (!browser.currentURI || (browser.__SS_data && browser.__SS_tabStillLoading)) {
+      let tabData = new TabData(this._collectBaseTabData(tab));
+      return Promise.resolve(tabData);
+    }
+
     let promise = Task.spawn(function task() {
       // Collected session history data asynchronously.
       let history = yield Messenger.send(tab, "SessionStore:collectSessionHistory");
@@ -4355,15 +4363,15 @@ let TabState = {
         tabData.storage = storage;
       }
 
-      // Put tabData into cache when reading scroll and text data succeeds.
-      if (this._updateTextAndScrollDataForTab(tab, tabData)) {
-        // If we're still the latest async collection for the given tab and
-        // the cache hasn't been filled by collect() in the meantime, let's
-        // fill the cache with the data we received.
-        if (this._pendingCollections.get(tab) == promise) {
-          TabStateCache.set(tab, tabData);
-          this._pendingCollections.delete(tab);
-        }
+      // Save text and scroll data.
+      this._updateTextAndScrollDataForTab(tab, tabData);
+
+      // If we're still the latest async collection for the given tab and
+      // the cache hasn't been filled by collect() in the meantime, let's
+      // fill the cache with the data we received.
+      if (this._pendingCollections.get(tab) == promise) {
+        TabStateCache.set(tab, tabData);
+        this._pendingCollections.delete(tab);
       }
 
       throw new Task.Result(tabData);
