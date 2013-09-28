@@ -1,0 +1,57 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+<title>WebGL test: Check that WebGL works (or not) if it should (or should not).</title>
+<script src="/MochiKit/MochiKit.js"></script>
+<script src="/tests/SimpleTest/SimpleTest.js"></script>
+<link rel="stylesheet" href="/tests/SimpleTest/test.css">
+<script src="webgl-util.js"></script>
+<script src="driver-info.js"></script>
+</head>
+<body>
+<canvas id="c"></canvas>
+<script>
+
+function test() {
+  ok(SpecialPowers.getBoolPref('webgl.force-enabled'), 'WebGL should be force-enabled.');
+
+  var shouldSucceed = true;
+  var shouldFail = false;
+
+  if (DriverInfo.getOS() == DriverInfo.OS.ANDROID &&
+      DriverInfo.getOSVersion() < 15)
+  {
+    // Consider 'random'. Actually, ARMv6 fails, and ARMv7 succeeds, but we have
+    // not been successful at determining this from JS. (see bug 917478)
+    shouldSucceed = false;
+    shouldFail = false;
+  }
+
+  if (DriverInfo.getOS() == DriverInfo.OS.B2G) {
+    // We don't run these mochitests on hardware with WebGL-capable hardware yet.
+    shouldSucceed = false;
+    shouldFail = true;
+  }
+
+  var gl = WebGLUtil.getWebGL('c');
+  if (shouldSucceed) {
+    ok(gl, 'Expected WebGL creation to succeed.');
+  }
+  if (shouldFail) {
+    ok(!gl, 'Expected WebGL creation to fail.');
+  }
+
+  SimpleTest.finish();
+}
+
+SimpleTest.waitForExplicitFinish();
+
+var prefArrArr = [
+  ['webgl.force-enabled', true]
+];
+var prefEnv = {'set': prefArrArr};
+SpecialPowers.pushPrefEnv(prefEnv, test);
+
+</script>
+</body>
+</html>
