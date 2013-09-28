@@ -41,6 +41,7 @@ HB_BEGIN_DECLS
 #define HB_OT_TAG_GDEF HB_TAG('G','D','E','F')
 #define HB_OT_TAG_GSUB HB_TAG('G','S','U','B')
 #define HB_OT_TAG_GPOS HB_TAG('G','P','O','S')
+#define HB_OT_TAG_JSTF HB_TAG('J','S','T','F')
 
 
 /*

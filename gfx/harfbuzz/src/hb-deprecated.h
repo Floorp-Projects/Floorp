@@ -1,6 +1,5 @@
 /*
- * Copyright (C) 2011  Martin Hosken
- * Copyright (C) 2011  SIL International
+ * Copyright © 2013  Google, Inc.
  *
  *  This is part of HarfBuzz, a text shaping library.
  *
@@ -21,28 +20,32 @@
  * FITNESS FOR A PARTICULAR PURPOSE.  THE SOFTWARE PROVIDED HEREUNDER IS
  * ON AN "AS IS" BASIS, AND THE COPYRIGHT HOLDER HAS NO OBLIGATION TO
  * PROVIDE MAINTENANCE, SUPPORT, UPDATES, ENHANCEMENTS, OR MODIFICATIONS.
+ *
+ * Google Author(s): Behdad Esfahbod
  */
 
-#ifndef HB_GRAPHITE2_H
-#define HB_GRAPHITE2_H
+#ifndef HB_H_IN
+#error "Include <hb.h> instead."
+#endif
 
-#include "hb.h"
+#ifndef HB_DEPRECATED_H
+#define HB_DEPRECATED_H
 
-#include <graphite2/Font.h>
+#include "hb-common.h"
+#include "hb-unicode.h"
+#include "hb-font.h"
 
 HB_BEGIN_DECLS
 
+#ifndef HB_DISABLE_DEPRECATED
 
-#define HB_GRAPHITE2_TAG_SILF HB_TAG('S','i','l','f')
+#define HB_SCRIPT_CANADIAN_ABORIGINAL		HB_SCRIPT_CANADIAN_SYLLABICS
 
+#define HB_BUFFER_FLAGS_DEFAULT			HB_BUFFER_FLAG_DEFAULT
+#define HB_BUFFER_SERIALIZE_FLAGS_DEFAULT	HB_BUFFER_SERIALIZE_FLAG_DEFAULT
 
-gr_face *
-hb_graphite2_face_get_gr_face (hb_face_t *face);
-
-gr_font *
-hb_graphite2_font_get_gr_font (hb_font_t *font);
-
+#endif
 
 HB_END_DECLS
 
-#endif /* HB_GRAPHITE2_H */
+#endif /* HB_DEPRECATED_H */

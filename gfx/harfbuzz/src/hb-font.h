@@ -32,85 +32,12 @@
 #define HB_FONT_H
 
 #include "hb-common.h"
-#include "hb-blob.h"
+#include "hb-face.h"
 
 HB_BEGIN_DECLS
 
 
-typedef struct hb_face_t hb_face_t;
 typedef struct hb_font_t hb_font_t;
-
-/*
- * hb_face_t
- */
-
-hb_face_t *
-hb_face_create (hb_blob_t    *blob,
-		unsigned int  index);
-
-typedef hb_blob_t * (*hb_reference_table_func_t)  (hb_face_t *face, hb_tag_t tag, void *user_data);
-
-/* calls destroy() when not needing user_data anymore */
-hb_face_t *
-hb_face_create_for_tables (hb_reference_table_func_t  reference_table_func,
-			   void                      *user_data,
-			   hb_destroy_func_t          destroy);
-
-hb_face_t *
-hb_face_get_empty (void);
-
-hb_face_t *
-hb_face_reference (hb_face_t *face);
-
-void
-hb_face_destroy (hb_face_t *face);
-
-hb_bool_t
-hb_face_set_user_data (hb_face_t          *face,
-		       hb_user_data_key_t *key,
-		       void *              data,
-		       hb_destroy_func_t   destroy,
-		       hb_bool_t           replace);
-
-
-void *
-hb_face_get_user_data (hb_face_t          *face,
-		       hb_user_data_key_t *key);
-
-void
-hb_face_make_immutable (hb_face_t *face);
-
-hb_bool_t
-hb_face_is_immutable (hb_face_t *face);
-
-
-hb_blob_t *
-hb_face_reference_table (hb_face_t *face,
-			 hb_tag_t   tag);
-
-hb_blob_t *
-hb_face_reference_blob (hb_face_t *face);
-
-void
-hb_face_set_index (hb_face_t    *face,
-		   unsigned int  index);
-
-unsigned int
-hb_face_get_index (hb_face_t    *face);
-
-void
-hb_face_set_upem (hb_face_t    *face,
-		  unsigned int  upem);
-
-unsigned int
-hb_face_get_upem (hb_face_t *face);
-
-void
-hb_face_set_glyph_count (hb_face_t    *face,
-			 unsigned int  glyph_count);
-
-unsigned int
-hb_face_get_glyph_count (hb_face_t *face);
 
 
 /*
@@ -212,54 +139,180 @@ typedef hb_bool_t (*hb_font_get_glyph_from_name_func_t) (hb_font_t *font, void *
 
 /* func setters */
 
+/**
+ * hb_font_funcs_set_glyph_func:
+ * @ffuncs: font functions.
+ * @func: (closure user_data) (destroy destroy) (scope notified):
+ * @user_data:
+ * @destroy:
+ *
+ * 
+ *
+ * Since: 1.0
+ **/
 void
 hb_font_funcs_set_glyph_func (hb_font_funcs_t *ffuncs,
-			      hb_font_get_glyph_func_t glyph_func,
+			      hb_font_get_glyph_func_t func,
 			      void *user_data, hb_destroy_func_t destroy);
 
+/**
+ * hb_font_funcs_set_glyph_h_advance_func:
+ * @ffuncs: font functions.
+ * @func: (closure user_data) (destroy destroy) (scope notified):
+ * @user_data:
+ * @destroy:
+ *
+ * 
+ *
+ * Since: 1.0
+ **/
 void
 hb_font_funcs_set_glyph_h_advance_func (hb_font_funcs_t *ffuncs,
 					hb_font_get_glyph_h_advance_func_t func,
 					void *user_data, hb_destroy_func_t destroy);
+
+/**
+ * hb_font_funcs_set_glyph_v_advance_func:
+ * @ffuncs: font functions.
+ * @func: (closure user_data) (destroy destroy) (scope notified):
+ * @user_data:
+ * @destroy:
+ *
+ * 
+ *
+ * Since: 1.0
+ **/
 void
 hb_font_funcs_set_glyph_v_advance_func (hb_font_funcs_t *ffuncs,
 					hb_font_get_glyph_v_advance_func_t func,
 					void *user_data, hb_destroy_func_t destroy);
 
+/**
+ * hb_font_funcs_set_glyph_h_origin_func:
+ * @ffuncs: font functions.
+ * @func: (closure user_data) (destroy destroy) (scope notified):
+ * @user_data:
+ * @destroy:
+ *
+ * 
+ *
+ * Since: 1.0
+ **/
 void
 hb_font_funcs_set_glyph_h_origin_func (hb_font_funcs_t *ffuncs,
 				       hb_font_get_glyph_h_origin_func_t func,
 				       void *user_data, hb_destroy_func_t destroy);
+
+/**
+ * hb_font_funcs_set_glyph_v_origin_func:
+ * @ffuncs: font functions.
+ * @func: (closure user_data) (destroy destroy) (scope notified):
+ * @user_data:
+ * @destroy:
+ *
+ * 
+ *
+ * Since: 1.0
+ **/
 void
 hb_font_funcs_set_glyph_v_origin_func (hb_font_funcs_t *ffuncs,
 				       hb_font_get_glyph_v_origin_func_t func,
 				       void *user_data, hb_destroy_func_t destroy);
 
+/**
+ * hb_font_funcs_set_glyph_h_kerning_func:
+ * @ffuncs: font functions.
+ * @func: (closure user_data) (destroy destroy) (scope notified):
+ * @user_data:
+ * @destroy:
+ *
+ * 
+ *
+ * Since: 1.0
+ **/
 void
 hb_font_funcs_set_glyph_h_kerning_func (hb_font_funcs_t *ffuncs,
 					hb_font_get_glyph_h_kerning_func_t func,
 					void *user_data, hb_destroy_func_t destroy);
+
+/**
+ * hb_font_funcs_set_glyph_v_kerning_func:
+ * @ffuncs: font functions.
+ * @func: (closure user_data) (destroy destroy) (scope notified):
+ * @user_data:
+ * @destroy:
+ *
+ * 
+ *
+ * Since: 1.0
+ **/
 void
 hb_font_funcs_set_glyph_v_kerning_func (hb_font_funcs_t *ffuncs,
 					hb_font_get_glyph_v_kerning_func_t func,
 					void *user_data, hb_destroy_func_t destroy);
 
+/**
+ * hb_font_funcs_set_glyph_extents_func:
+ * @ffuncs: font functions.
+ * @func: (closure user_data) (destroy destroy) (scope notified):
+ * @user_data:
+ * @destroy:
+ *
+ * 
+ *
+ * Since: 1.0
+ **/
 void
 hb_font_funcs_set_glyph_extents_func (hb_font_funcs_t *ffuncs,
 				      hb_font_get_glyph_extents_func_t func,
 				      void *user_data, hb_destroy_func_t destroy);
+
+/**
+ * hb_font_funcs_set_glyph_contour_point_func:
+ * @ffuncs: font functions.
+ * @func: (closure user_data) (destroy destroy) (scope notified):
+ * @user_data:
+ * @destroy:
+ *
+ * 
+ *
+ * Since: 1.0
+ **/
 void
 hb_font_funcs_set_glyph_contour_point_func (hb_font_funcs_t *ffuncs,
 					    hb_font_get_glyph_contour_point_func_t func,
 					    void *user_data, hb_destroy_func_t destroy);
 
+/**
+ * hb_font_funcs_set_glyph_name_func:
+ * @ffuncs: font functions.
+ * @func: (closure user_data) (destroy destroy) (scope notified):
+ * @user_data:
+ * @destroy:
+ *
+ * 
+ *
+ * Since: 1.0
+ **/
 void
 hb_font_funcs_set_glyph_name_func (hb_font_funcs_t *ffuncs,
-				   hb_font_get_glyph_name_func_t glyph_func,
+				   hb_font_get_glyph_name_func_t func,
 				   void *user_data, hb_destroy_func_t destroy);
+
+/**
+ * hb_font_funcs_set_glyph_from_name_func:
+ * @ffuncs: font functions.
+ * @func: (closure user_data) (destroy destroy) (scope notified):
+ * @user_data:
+ * @destroy:
+ *
+ * 
+ *
+ * Since: 1.0
+ **/
 void
 hb_font_funcs_set_glyph_from_name_func (hb_font_funcs_t *ffuncs,
-					hb_font_get_glyph_from_name_func_t glyph_func,
+					hb_font_get_glyph_from_name_func_t func,
 					void *user_data, hb_destroy_func_t destroy);
 
 
