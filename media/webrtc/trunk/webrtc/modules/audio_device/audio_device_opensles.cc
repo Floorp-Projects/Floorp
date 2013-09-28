@@ -1443,21 +1443,27 @@ void AudioDeviceAndroidOpenSLES::RecorderSimpleBufferQueueCallbackHandler(
     }
     audio = rec_queue_.front();
     rec_queue_.pop();
-    rec_voe_audio_queue_.push(audio);
-    rec_timer_.Set(); // wake up record thread to process it
+    // prevent rec_queue being overrun
+    if (rec_voe_audio_queue_.size() < N_REC_QUEUE_BUFFERS) {
+      rec_voe_audio_queue_.push(audio);
+      rec_timer_.Set(); // wake up record thread to process it
 
-    if (rec_voe_ready_queue_.size() <= 0) {
-      // Log Error.
-      rec_error_ = 1;
-      WEBRTC_OPENSL_TRACE(kTraceError, kTraceAudioDevice, id_,
-                          "  Audio Rec thread buffers underrun");
-      // This isn't good, but continuing (as it used to) is even worse.
-      // Worst case we end up with buffers building up at the other end or
-      // starved.  To be fixed in full rewrite from upstream.
-      return;
+      if (rec_voe_ready_queue_.size() <= 0) {
+        // Log Error.
+        rec_error_ = 1;
+        WEBRTC_OPENSL_TRACE(kTraceError, kTraceAudioDevice, id_,
+                            "  Audio Rec thread buffers underrun");
+        // This isn't good, but continuing (as it used to) is even worse.
+        // Worst case we end up with buffers building up at the other end or
+        // starved.  To be fixed in full rewrite from upstream.
+        return;
+      } else {
+        audio = rec_voe_ready_queue_.front();
+        rec_voe_ready_queue_.pop();
+      }
     } else {
-      audio = rec_voe_ready_queue_.front();
-      rec_voe_ready_queue_.pop();
+      // the audio frame will be recycled instead of sending to rec thread.
+      rec_timer_.Set(); // try wake up record thread
     }
   }
 
