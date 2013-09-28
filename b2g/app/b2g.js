@@ -184,9 +184,13 @@ pref("content.sink.perf_deflect_count", 1000000);
 pref("content.sink.perf_parse_time", 50000000);
 
 // Maximum scripts runtime before showing an alert
-pref("dom.max_chrome_script_run_time", 0); // disable slow script dialog for chrome
 // Disable the watchdog thread for B2G. See bug 870043 comment 31.
 pref("dom.use_watchdog", false);
+
+// The slow script dialog can be triggered from inside the JS engine as well,
+// ensure that those calls don't accidentally trigger the dialog.
+pref("dom.max_script_run_time", 0);
+pref("dom.max_chrome_script_run_time", 0);
 
 // plugins
 pref("plugin.disable", true);
@@ -433,7 +437,7 @@ pref("services.push.udp.wakeupEnabled", true);
 #ifdef MOZ_B2G_RIL
 pref("dom.mozNetworkStats.enabled", true);
 pref("ril.cellbroadcast.disabled", false);
-pref("dom.webapps.firstRunWithSIM", false);
+pref("dom.webapps.firstRunWithSIM", true);
 #endif
 
 // WebSettings
@@ -447,6 +451,9 @@ pref("media.realtime_decoder.enabled", true);
 
 // TCPSocket
 pref("dom.mozTCPSocket.enabled", true);
+
+// WebPayment
+pref("dom.mozPay.enabled", true);
 
 // "Preview" landing of bug 710563, which is bogged down in analysis
 // of talos regression.  This is a needed change for higher-framerate
@@ -793,6 +800,9 @@ pref("dom.inter-app-communication-api.enabled", true);
 // (only applies when marionette is disabled)
 // 0 disables the timer.
 pref("b2g.adb.timeout-hours", 12);
+
+// InputMethod so we can do soft keyboards
+pref("dom.mozInputMethod.enabled", true);
 
 // Absolute path to the devtool unix domain socket file used
 // to communicate with a usb cable via adb forward
