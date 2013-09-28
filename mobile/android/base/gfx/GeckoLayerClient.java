@@ -132,6 +132,10 @@ public class GeckoLayerClient implements LayerView.Listener, PanZoomTarget
         mContentDocumentIsDisplayed = true;
     }
 
+    public void setOverscrollHandler(final Overscroll listener) {
+        mPanZoomController.setOverscrollHandler(listener);
+    }
+
     /** Attaches to root layer so that Gecko appears. */
     public void notifyGeckoReady() {
         mGeckoIsReady = true;

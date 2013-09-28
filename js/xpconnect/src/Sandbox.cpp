@@ -872,9 +872,9 @@ xpc::SandboxProxyHandler::iterate(JSContext *cx, JS::Handle<JSObject*> proxy,
 }
 
 bool
-xpc::SandboxOptions::GlobalProperties::Parse(JSContext* cx, JS::HandleObject obj)
+xpc::GlobalProperties::Parse(JSContext *cx, JS::HandleObject obj)
 {
-    NS_ENSURE_TRUE(JS_IsArrayObject(cx, obj), false);
+    MOZ_ASSERT(JS_IsArrayObject(cx, obj));
 
     uint32_t length;
     bool ok = JS_GetArrayLength(cx, obj, &length);
@@ -883,21 +883,24 @@ xpc::SandboxOptions::GlobalProperties::Parse(JSContext* cx, JS::HandleObject obj
         RootedValue nameValue(cx);
         ok = JS_GetElement(cx, obj, i, &nameValue);
         NS_ENSURE_TRUE(ok, false);
-        NS_ENSURE_TRUE(nameValue.isString(), false);
-        char *name = JS_EncodeString(cx, nameValue.toString());
+        if (!nameValue.isString()) {
+            JS_ReportError(cx, "Property names must be strings");
+            return false;
+        }
+        JSAutoByteString name(cx, nameValue.toString());
         NS_ENSURE_TRUE(name, false);
-        if (!strcmp(name, "XMLHttpRequest")) {
+        if (!strcmp(name.ptr(), "XMLHttpRequest")) {
             XMLHttpRequest = true;
-        } else if (!strcmp(name, "TextEncoder")) {
+        } else if (!strcmp(name.ptr(), "TextEncoder")) {
             TextEncoder = true;
-        } else if (!strcmp(name, "TextDecoder")) {
+        } else if (!strcmp(name.ptr(), "TextDecoder")) {
             TextDecoder = true;
-        } else if (!strcmp(name, "atob")) {
+        } else if (!strcmp(name.ptr(), "atob")) {
             atob = true;
-        } else if (!strcmp(name, "btoa")) {
+        } else if (!strcmp(name.ptr(), "btoa")) {
             btoa = true;
         } else {
-            // Reporting error, if one of the global property names is unknown.
+            JS_ReportError(cx, "Unknown property name: %s", name.ptr());
             return false;
         }
     }
@@ -905,7 +908,7 @@ xpc::SandboxOptions::GlobalProperties::Parse(JSContext* cx, JS::HandleObject obj
 }
 
 bool
-xpc::SandboxOptions::GlobalProperties::Define(JSContext* cx, JS::HandleObject obj)
+xpc::GlobalProperties::Define(JSContext *cx, JS::HandleObject obj)
 {
     if (XMLHttpRequest &&
         !JS_DefineFunction(cx, obj, "XMLHttpRequest", CreateXMLHttpRequest, 0, JSFUN_CONSTRUCTOR))
@@ -1038,7 +1041,7 @@ xpc::CreateSandboxObject(JSContext *cx, jsval *vp, nsISupports *prinOrSop, Sandb
              !JS_DefineFunction(cx, sandbox, "evalInWindow", EvalInWindow, 2, 0)))
             return NS_ERROR_XPC_UNEXPECTED;
 
-        if (!options.GlobalProperties.Define(cx, sandbox))
+        if (!options.globalProperties.Define(cx, sandbox))
             return NS_ERROR_XPC_UNEXPECTED;
     }
 
@@ -1318,7 +1321,8 @@ GetGlobalPropertiesFromOptions(JSContext *cx, HandleObject from, SandboxOptions&
 
     NS_ENSURE_TRUE(value.isObject(), NS_ERROR_INVALID_ARG);
     RootedObject ctors(cx, &value.toObject());
-    bool ok = options.GlobalProperties.Parse(cx, ctors);
+    NS_ENSURE_TRUE(JS_IsArrayObject(cx, ctors), NS_ERROR_INVALID_ARG);
+    bool ok = options.globalProperties.Parse(cx, ctors);
     NS_ENSURE_TRUE(ok, NS_ERROR_INVALID_ARG);
     return NS_OK;
 }

@@ -193,8 +193,7 @@ nsHostObjectProtocolHandler::NewChannel(nsIURI* uri, nsIChannel* *result)
     return NS_ERROR_DOM_BAD_URI;
   }
   nsCOMPtr<nsIDOMBlob> blob = do_QueryInterface(info->mObject);
-  nsCOMPtr<mozilla::dom::MediaSource> mediasource = do_QueryInterface(info->mObject);
-  if (!blob && !mediasource) {
+  if (!blob) {
     return NS_ERROR_DOM_BAD_URI;
   }
 
@@ -208,12 +207,7 @@ nsHostObjectProtocolHandler::NewChannel(nsIURI* uri, nsIChannel* *result)
 #endif
 
   nsCOMPtr<nsIInputStream> stream;
-  nsresult rv = NS_OK;
-  if (blob) {
-    rv = blob->GetInternalStream(getter_AddRefs(stream));
-  } else {
-    stream = mediasource->CreateInternalStream();
-  }
+  nsresult rv = blob->GetInternalStream(getter_AddRefs(stream));
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsCOMPtr<nsIChannel> channel;
@@ -225,30 +219,25 @@ nsHostObjectProtocolHandler::NewChannel(nsIURI* uri, nsIChannel* *result)
   nsCOMPtr<nsISupports> owner = do_QueryInterface(info->mPrincipal);
 
   nsString type;
-  if (blob) {
-    rv = blob->GetType(type);
+  rv = blob->GetType(type);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsCOMPtr<nsIDOMFile> file = do_QueryInterface(info->mObject);
+  if (file) {
+    nsString filename;
+    rv = file->GetName(filename);
     NS_ENSURE_SUCCESS(rv, rv);
-
-    uint64_t size;
-    rv = blob->GetSize(&size);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    nsCOMPtr<nsIDOMFile> file = do_QueryInterface(info->mObject);
-    if (file) {
-      nsString filename;
-      rv = file->GetName(filename);
-      NS_ENSURE_SUCCESS(rv, rv);
-      channel->SetContentDispositionFilename(filename);
-    }
-
-    channel->SetContentLength(size);
-  } else {
-    type = mediasource->GetType();
+    channel->SetContentDispositionFilename(filename);
   }
+
+  uint64_t size;
+  rv = blob->GetSize(&size);
+  NS_ENSURE_SUCCESS(rv, rv);
 
   channel->SetOwner(owner);
   channel->SetOriginalURI(uri);
   channel->SetContentType(NS_ConvertUTF16toUTF8(type));
+  channel->SetContentLength(size);
 
   channel.forget(result);
 

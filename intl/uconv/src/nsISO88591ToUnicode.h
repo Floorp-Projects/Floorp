@@ -6,7 +6,9 @@
 #ifndef nsISO88591ToUnicode_h___
 #define nsISO88591ToUnicode_h___
 
-#include "nsISupports.h"
+#include "nsID.h"
+
+class nsISupports;
 
 // Class ID for our ISO88591ToUnicode charset converter
 // {A3254CB0-8E20-11d2-8A98-00600811A836}

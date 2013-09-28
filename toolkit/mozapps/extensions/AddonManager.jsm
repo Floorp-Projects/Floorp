@@ -26,6 +26,7 @@ const PREF_EM_CERT_CHECKATTRIBUTES    = "extensions.hotfix.cert.checkAttributes"
 const PREF_EM_HOTFIX_CERTS            = "extensions.hotfix.certs.";
 const PREF_MATCH_OS_LOCALE            = "intl.locale.matchOS";
 const PREF_SELECTED_LOCALE            = "general.useragent.locale";
+const UNKNOWN_XPCOM_ABI               = "unknownABI";
 
 const UPDATE_REQUEST_VERSION          = 2;
 const CATEGORY_UPDATE_PARAMS          = "extension-update-params";

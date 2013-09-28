@@ -92,12 +92,12 @@ public:
 
 protected:
   virtual bool IsInput() { return false; }
+  // Reflows the button's sole child frame, and computes the desired size
+  // of the button itself from the results.
   void ReflowButtonContents(nsPresContext* aPresContext,
-                            nsHTMLReflowMetrics& aDesiredSize,
-                            const nsHTMLReflowState& aReflowState,
-                            nsIFrame* aFirstKid,
-                            nsMargin aFocusPadding,
-                            nsReflowStatus& aStatus);
+                            nsHTMLReflowMetrics& aButtonDesiredSize,
+                            const nsHTMLReflowState& aButtonReflowState,
+                            nsIFrame* aFirstKid);
 
   nsButtonFrameRenderer mRenderer;
 };

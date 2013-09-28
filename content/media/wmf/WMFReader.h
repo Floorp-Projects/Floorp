@@ -40,7 +40,7 @@ public:
   bool HasAudio() MOZ_OVERRIDE;
   bool HasVideo() MOZ_OVERRIDE;
 
-  nsresult ReadMetadata(VideoInfo* aInfo,
+  nsresult ReadMetadata(MediaInfo* aInfo,
                         MetadataTags** aTags) MOZ_OVERRIDE;
 
   nsresult Seek(int64_t aTime,

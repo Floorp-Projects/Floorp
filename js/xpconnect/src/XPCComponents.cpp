@@ -2836,6 +2836,28 @@ nsXPCComponents_Utils::Unload(const nsACString & registryLocation)
     return moduleloader->Unload(registryLocation);
 }
 
+/*
+ * JSObject importGlobalProperties (in jsval aPropertyList);
+ */
+NS_IMETHODIMP
+nsXPCComponents_Utils::ImportGlobalProperties(const JS::Value& aPropertyList,
+                                              JSContext* cx)
+{
+    RootedObject global(cx, CurrentGlobalOrNull(cx));
+    MOZ_ASSERT(global);
+    GlobalProperties options;
+    NS_ENSURE_TRUE(aPropertyList.isObject(), NS_ERROR_INVALID_ARG);
+    RootedObject propertyList(cx, &aPropertyList.toObject());
+    NS_ENSURE_TRUE(JS_IsArrayObject(cx, propertyList), NS_ERROR_INVALID_ARG);
+    if (!options.Parse(cx, propertyList) ||
+        !options.Define(cx, global))
+    {
+        return NS_ERROR_FAILURE;
+    }
+
+    return NS_OK;
+}
+
 /* xpcIJSWeakReference getWeakReference (); */
 NS_IMETHODIMP
 nsXPCComponents_Utils::GetWeakReference(const JS::Value &object, JSContext *cx,

@@ -42,7 +42,7 @@ var PackagedTestHelper = (function PackagedTestHelper() {
   }
 
   function mozAppsError() {
-    ok(false, "mozApps error: " + self.error.name);
+    ok(false, "mozApps error: " + this.error.name);
     finish();
   }
 

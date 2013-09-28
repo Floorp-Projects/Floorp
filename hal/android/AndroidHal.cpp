@@ -10,6 +10,7 @@
 #include "mozilla/dom/network/Constants.h"
 #include "mozilla/dom/ScreenOrientation.h"
 #include "nsIScreenManager.h"
+#include "nsServiceManagerUtils.h"
 
 using namespace mozilla::dom;
 using namespace mozilla::hal;

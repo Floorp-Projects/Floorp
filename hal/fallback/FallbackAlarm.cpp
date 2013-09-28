@@ -6,10 +6,10 @@
 
 #include <algorithm>
 
-#include <nsITimer.h>
-
 #include "mozilla/ClearOnShutdown.h"
 #include "mozilla/StaticPtr.h"
+#include "nsComponentManagerUtils.h"
+#include "nsITimer.h"
 #include "nsThreadUtils.h"
 
 namespace mozilla {

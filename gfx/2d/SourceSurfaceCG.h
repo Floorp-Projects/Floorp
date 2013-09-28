@@ -53,7 +53,7 @@ public:
 
   virtual SurfaceType GetType() const { return SURFACE_DATA; }
   virtual IntSize GetSize() const;
-  virtual SurfaceFormat GetFormat() const { return FORMAT_B8G8R8A8; }
+  virtual SurfaceFormat GetFormat() const { return mFormat; }
 
   CGImageRef GetImage() { return mImage; }
 
@@ -70,6 +70,7 @@ public:
 private:
   CGContextRef mCg;
   CGImageRef mImage;
+  SurfaceFormat mFormat;
   //XXX: we don't need to store mData we can just get it from the CGContext
   void *mData;
   /* It might be better to just use the bitmap info from the CGImageRef to
@@ -92,7 +93,7 @@ public:
 
   virtual SurfaceType GetType() const { return SURFACE_COREGRAPHICS_CGCONTEXT; }
   virtual IntSize GetSize() const;
-  virtual SurfaceFormat GetFormat() const { return FORMAT_B8G8R8A8; }
+  virtual SurfaceFormat GetFormat() const { return mFormat; }
 
   CGImageRef GetImage() { EnsureImage(); return mImage; }
 
@@ -110,6 +111,7 @@ private:
   // The cycle is broken by DrawTargetWillChange
   DrawTargetCG *mDrawTarget;
   CGContextRef mCg;
+  SurfaceFormat mFormat;
 
   mutable CGImageRef mImage;
 
@@ -129,7 +131,7 @@ public:
 
   virtual SurfaceType GetType() const { return SURFACE_COREGRAPHICS_CGCONTEXT; }
   virtual IntSize GetSize() const;
-  virtual SurfaceFormat GetFormat() const { return FORMAT_B8G8R8A8; }
+  virtual SurfaceFormat GetFormat() const { return mFormat; }
 
   CGImageRef GetImage() { EnsureImage(); return mImage; }
 
@@ -143,6 +145,7 @@ private:
   virtual void DrawTargetWillChange();
   void EnsureImage() const;
 
+  SurfaceFormat mFormat;
   mutable CGImageRef mImage;
   MacIOSurface* mIOSurface;
 
