@@ -37,6 +37,8 @@
 namespace mozilla {
 namespace gfx {
 
+cairo_surface_t *DrawTargetCairo::mDummySurface;
+
 namespace {
 
 // An RAII class to prepare to draw a context and optional path. Saves and
@@ -378,15 +380,11 @@ NeedIntermediateSurface(const Pattern& aPattern, const DrawOptions& aOptions)
 
 DrawTargetCairo::DrawTargetCairo()
   : mContext(nullptr)
-  , mPathObserver(nullptr)
 {
 }
 
 DrawTargetCairo::~DrawTargetCairo()
 {
-  if (mPathObserver) {
-    mPathObserver->ForgetDrawTarget();
-  }
   cairo_destroy(mContext);
   if (mSurface) {
     cairo_surface_destroy(mSurface);
@@ -427,6 +425,18 @@ void
 DrawTargetCairo::PrepareForDrawing(cairo_t* aContext, const Path* aPath /* = nullptr */)
 {
   WillChange(aPath);
+}
+
+cairo_surface_t*
+DrawTargetCairo::GetDummySurface()
+{
+  if (mDummySurface) {
+    return mDummySurface;
+  }
+
+  mDummySurface = cairo_image_surface_create(CAIRO_FORMAT_ARGB32, 1, 1);
+
+  return mDummySurface;
 }
 
 void
@@ -708,7 +718,7 @@ DrawTargetCairo::Stroke(const Path *aPath,
     return;
 
   PathCairo* path = const_cast<PathCairo*>(static_cast<const PathCairo*>(aPath));
-  path->CopyPathTo(mContext, this);
+  path->SetPathOnContext(mContext);
 
   DrawPattern(aPattern, aStrokeOptions, aOptions, DRAW_STROKE);
 }
@@ -724,7 +734,7 @@ DrawTargetCairo::Fill(const Path *aPath,
     return;
 
   PathCairo* path = const_cast<PathCairo*>(static_cast<const PathCairo*>(aPath));
-  path->CopyPathTo(mContext, this);
+  path->SetPathOnContext(mContext);
 
   DrawPattern(aPattern, StrokeOptions(), aOptions, DRAW_FILL);
 }
@@ -836,7 +846,7 @@ DrawTargetCairo::PushClip(const Path *aPath)
   cairo_save(mContext);
 
   PathCairo* path = const_cast<PathCairo*>(static_cast<const PathCairo*>(aPath));
-  path->CopyPathTo(mContext, this);
+  path->SetPathOnContext(mContext);
   cairo_clip_preserve(mContext);
 }
 
@@ -861,9 +871,7 @@ DrawTargetCairo::PopClip()
 TemporaryRef<PathBuilder>
 DrawTargetCairo::CreatePathBuilder(FillRule aFillRule /* = FILL_WINDING */) const
 {
-  RefPtr<PathBuilderCairo> builder = new PathBuilderCairo(mContext,
-                                                          const_cast<DrawTargetCairo*>(this),
-                                                          aFillRule);
+  RefPtr<PathBuilderCairo> builder = new PathBuilderCairo(aFillRule);
 
   return builder;
 }
@@ -1071,21 +1079,6 @@ void
 DrawTargetCairo::WillChange(const Path* aPath /* = nullptr */)
 {
   MarkSnapshotIndependent();
-
-  if (mPathObserver &&
-      (!aPath || !mPathObserver->ContainsPath(aPath))) {
-    mPathObserver->PathWillChange();
-    mPathObserver = nullptr;
-  }
-}
-
-void
-DrawTargetCairo::SetPathObserver(CairoPathContext* aPathObserver)
-{
-  if (mPathObserver && mPathObserver != aPathObserver) {
-    mPathObserver->PathWillChange();
-  }
-  mPathObserver = aPathObserver;
 }
 
 void
