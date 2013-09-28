@@ -2218,9 +2218,8 @@ js::CurrentScriptFileLineOrigin(JSContext *cx, const char **file, unsigned *line
                                 JSPrincipals **origin, LineOption opt)
 {
     if (opt == CALLED_FROM_JSOP_EVAL) {
-        JSScript *script = NULL;
         jsbytecode *pc = NULL;
-        types::TypeScript::GetPcScript(cx, &script, &pc);
+        JSScript *script = cx->currentScript(&pc);
         JS_ASSERT(JSOp(*pc) == JSOP_EVAL || JSOp(*pc) == JSOP_SPREADEVAL);
         JS_ASSERT(*(pc + (JSOp(*pc) == JSOP_EVAL ? JSOP_EVAL_LENGTH
                                                  : JSOP_SPREADEVAL_LENGTH)) == JSOP_LINENO);

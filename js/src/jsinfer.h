@@ -718,23 +718,6 @@ void
 AddClearDefiniteFunctionUsesInScript(JSContext *cx, TypeObject *type,
                                      JSScript *script, JSScript *calleeScript);
 
-/*
- * Handler which persists information about dynamic types pushed within a
- * script which can affect its behavior and are not covered by JOF_TYPESET ops,
- * such as integer operations which overflow to a double. These persist across
- * GCs, and are used to re-seed script types when they are reanalyzed.
- */
-struct TypeResult
-{
-    uint32_t offset;
-    Type type;
-    TypeResult *next;
-
-    TypeResult(uint32_t offset, Type type)
-        : offset(offset), type(type), next(NULL)
-    {}
-};
-
 /* Is this a reasonable PC to be doing inlining on? */
 inline bool isInlinableCall(jsbytecode *pc);
 
@@ -1159,9 +1142,6 @@ class TypeScript
     uint32_t *bytecodeMap;
 
   public:
-    /* Dynamic types generated at points within this script. */
-    TypeResult *dynamicList;
-
     /*
      * Array of type sets storing the possible inputs to property reads.
      * Generated the first time the script is analyzed by inference and kept
@@ -1186,19 +1166,6 @@ class TypeScript
     /* Get a type object for an allocation site in this script. */
     static inline TypeObject *InitObject(JSContext *cx, JSScript *script, jsbytecode *pc,
                                          JSProtoKey kind);
-
-    /*
-     * Monitor a bytecode pushing a value which is not accounted for by the
-     * inference type constraints, such as integer overflow.
-     */
-    static inline void MonitorOverflow(JSContext *cx, JSScript *script, jsbytecode *pc);
-    static inline void MonitorString(JSContext *cx, JSScript *script, jsbytecode *pc);
-    static inline void MonitorUnknown(JSContext *cx, JSScript *script, jsbytecode *pc);
-
-    static inline void GetPcScript(JSContext *cx, JSScript **script, jsbytecode **pc);
-    static inline void MonitorOverflow(JSContext *cx);
-    static inline void MonitorString(JSContext *cx);
-    static inline void MonitorUnknown(JSContext *cx);
 
     /*
      * Monitor a bytecode pushing any value. This must be called for any opcode
