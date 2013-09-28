@@ -11,8 +11,7 @@ namespace mozilla {
 namespace image {
 
 // Constructor
-ImageResource::ImageResource(imgStatusTracker* aStatusTracker,
-                             ImageURL* aURI) :
+ImageResource::ImageResource(ImageURL* aURI) :
   mURI(aURI),
   mInnerWindowId(0),
   mAnimationConsumers(0),
@@ -21,12 +20,6 @@ ImageResource::ImageResource(imgStatusTracker* aStatusTracker,
   mAnimating(false),
   mError(false)
 {
-  if (aStatusTracker) {
-    mStatusTracker = aStatusTracker;
-    mStatusTracker->SetImage(this);
-  } else {
-    mStatusTracker = new imgStatusTracker(this);
-  }
 }
 
 uint32_t

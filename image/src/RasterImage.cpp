@@ -376,7 +376,7 @@ NS_IMPL_ISUPPORTS3(RasterImage, imgIContainer, nsIProperties,
 //******************************************************************************
 RasterImage::RasterImage(imgStatusTracker* aStatusTracker,
                          ImageURL* aURI /* = nullptr */) :
-  ImageResource(aStatusTracker, aURI), // invoke superclass's constructor
+  ImageResource(aURI), // invoke superclass's constructor
   mSize(0,0),
   mFrameDecodeFlags(DECODE_FLAGS_DEFAULT),
   mMultipartDecodedFrame(nullptr),
@@ -404,6 +404,8 @@ RasterImage::RasterImage(imgStatusTracker* aStatusTracker,
   mPendingError(false),
   mScaleRequest(nullptr)
 {
+  mStatusTrackerInit = new imgStatusTrackerInit(this, aStatusTracker);
+
   // Set up the discard tracker node.
   mDiscardTrackerNode.img = this;
   Telemetry::GetHistogramById(Telemetry::IMAGE_DECODE_COUNT)->Add(0);
@@ -449,6 +451,7 @@ RasterImage::~RasterImage()
   }
 
   delete mAnim;
+  mAnim = nullptr;
   delete mMultipartDecodedFrame;
 
   // Total statistics
