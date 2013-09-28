@@ -9,7 +9,11 @@ MOCHITEST_BROWSER_FILES = \
 		browser_observableobject.js \
 		browser_layoutHelpers.js \
 		browser_require_basic.js \
-		browser_telemetry_buttonsandsidebar.js \
+		browser_telemetry_sidebar.js \
+		browser_telemetry_button_responsive.js \
+		browser_telemetry_button_scratchpad.js \
+		browser_telemetry_button_tilt.js \
+		browser_telemetry_button_paintflashing.js \
 		browser_telemetry_toolboxtabs_inspector.js \
 		browser_telemetry_toolboxtabs_jsdebugger.js \
 		browser_telemetry_toolboxtabs_jsprofiler.js \

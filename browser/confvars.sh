@@ -58,3 +58,5 @@ if test "$OS_TARGET" = "WINNT" -o "$OS_TARGET" = "Darwin"; then
   MOZ_FOLD_LIBS=1
 fi
 MOZ_WEBGL_CONFORMANT=1
+# Enable navigator.mozPay
+MOZ_PAY=1

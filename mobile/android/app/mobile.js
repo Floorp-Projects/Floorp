@@ -750,6 +750,9 @@ pref("browser.contentHandlers.types.3.title", "chrome://browser/locale/region.pr
 pref("browser.contentHandlers.types.3.uri", "chrome://browser/locale/region.properties");
 pref("browser.contentHandlers.types.3.type", "application/vnd.mozilla.maybe.feed");
 
+// WebPayment
+pref("dom.mozPay.enabled", true);
+
 #ifndef RELEASE_BUILD
 pref("dom.payment.provider.0.name", "Firefox Marketplace");
 pref("dom.payment.provider.0.description", "marketplace.firefox.com");

@@ -13,6 +13,11 @@ const URI_GENERIC_ICON_DOWNLOAD = "drawable://alert_download";
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
 
+XPCOMUtils.defineLazyModuleGetter(this, "Downloads",
+                                  "resource://gre/modules/Downloads.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "Task",
+                                  "resource://gre/modules/Task.jsm");
+
 // -----------------------------------------------------------------------
 // HelperApp Launcher Dialog
 // -----------------------------------------------------------------------
@@ -30,15 +35,16 @@ HelperAppLauncherDialog.prototype = {
   },
 
   promptForSaveToFile: function hald_promptForSaveToFile(aLauncher, aContext, aDefaultFile, aSuggestedFileExt, aForcePrompt) {
-    // Retrieve the user's default download directory
-    let dnldMgr = Cc["@mozilla.org/download-manager;1"].getService(Ci.nsIDownloadManager);
-    let defaultFolder = dnldMgr.userDownloadsDirectory;
+    return Task.spawn(function() {
+      // Retrieve the user's default download directory
+      let defaultFolder = yield Downloads.getPreferredDownloadsDirectory();
 
-    try {
-      file = this.validateLeafName(defaultFolder, aDefaultFile, aSuggestedFileExt);
-    } catch (e) { }
+      try {
+        file = this.validateLeafName(defaultFolder, aDefaultFile, aSuggestedFileExt);
+      } catch (e) { }
 
-    return file;
+      throw new Task.Result(file);
+    }.bind(this));
   },
 
   validateLeafName: function hald_validateLeafName(aLocalFile, aLeafName, aFileExt) {

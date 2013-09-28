@@ -54,6 +54,7 @@ SpecialPowers.pushPrefEnv({"set": [["media.webvtt.enabled", true]]},
       is(region.viewportAnchorX, 10, "Region viewportAnchorX should be 10.");
       is(region.viewportAnchorY, 90, "Region viewportAnchorY should be 90.");
       is(region.scroll, "up", "Region scroll should be 'up'");
+      is(region.track, trackElement.track, "Tracks should be equal.");
 
       SimpleTest.finish();
     });

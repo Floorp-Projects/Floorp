@@ -704,7 +704,9 @@ Connection::databaseElementExists(enum DatabaseElementType aElementType,
 {
   if (!mDBConn) return NS_ERROR_NOT_INITIALIZED;
 
-  nsAutoCString query("SELECT name FROM sqlite_master WHERE type = '");
+  nsCString query("SELECT name FROM (SELECT * FROM sqlite_master UNION ALL "
+                                    "SELECT * FROM sqlite_temp_master) "
+                  "WHERE type = '");
   switch (aElementType) {
     case INDEX:
       query.Append("index");

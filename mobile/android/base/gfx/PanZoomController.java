@@ -42,4 +42,6 @@ public interface PanZoomController {
     public int getOverScrollMode();
 
     public void updateScrollOffset(float cssX, float cssY);
+
+    public void setOverscrollHandler(final Overscroll controller);
 }
