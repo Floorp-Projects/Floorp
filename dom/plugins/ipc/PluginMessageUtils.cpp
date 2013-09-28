@@ -15,7 +15,7 @@
 
 using std::string;
 
-using mozilla::ipc::RPCChannel;
+using mozilla::ipc::MessageChannel;
 
 namespace {
 
@@ -67,9 +67,9 @@ NPRemoteWindow::NPRemoteWindow() :
   clipRect.right = 0;
 }
 
-RPCChannel::RacyRPCPolicy
-MediateRace(const RPCChannel::Message& parent,
-            const RPCChannel::Message& child)
+ipc::RacyRPCPolicy
+MediateRace(const MessageChannel::Message& parent,
+            const MessageChannel::Message& child)
 {
   switch (parent.type()) {
   case PPluginInstance::Msg_Paint__ID:
@@ -78,10 +78,10 @@ MediateRace(const RPCChannel::Message& parent,
   case PPluginInstance::Msg_NPP_HandleEvent_IOSurface__ID:
     // our code relies on the frame list not changing during paints and
     // reflows
-    return RPCChannel::RRPParentWins;
+    return ipc::RRPParentWins;
 
   default:
-    return RPCChannel::RRPChildWins;
+    return ipc::RRPChildWins;
   }
 }
 

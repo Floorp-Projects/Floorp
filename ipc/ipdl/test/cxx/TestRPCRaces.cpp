@@ -2,7 +2,7 @@
 
 #include "IPDLUnitTests.h"      // fail etc.
 
-using mozilla::ipc::RPCChannel;
+using mozilla::ipc::MessageChannel;
 
 template<>
 struct RunnableMethodTraits<mozilla::_ipdltest::TestRPCRacesParent>
@@ -15,12 +15,12 @@ struct RunnableMethodTraits<mozilla::_ipdltest::TestRPCRacesParent>
 namespace mozilla {
 namespace _ipdltest {
 
-RPCChannel::RacyRPCPolicy
-MediateRace(const RPCChannel::Message& parent,
-            const RPCChannel::Message& child)
+ipc::RacyRPCPolicy
+MediateRace(const MessageChannel::Message& parent,
+            const MessageChannel::Message& child)
 {
     return (PTestRPCRaces::Msg_Child__ID == parent.type()) ?
-        RPCChannel::RRPParentWins : RPCChannel::RRPChildWins;
+        ipc::RRPParentWins : ipc::RRPChildWins;
 }
 
 //-----------------------------------------------------------------------------
