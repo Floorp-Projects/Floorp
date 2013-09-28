@@ -12,9 +12,11 @@
 #include "imgStatusTracker.h"
 #include "ImageFactory.h"
 #include "Image.h"
+#include "RasterImage.h"
 
 #include "nsIChannel.h"
 #include "nsICachingChannel.h"
+#include "nsIThreadRetargetableRequest.h"
 #include "nsIInputStream.h"
 #include "nsIMultiPartChannel.h"
 #include "nsIHttpChannel.h"
@@ -47,8 +49,9 @@ GetImgLog()
 }
 #endif
 
-NS_IMPL_ISUPPORTS5(imgRequest,
+NS_IMPL_ISUPPORTS6(imgRequest,
                    nsIStreamListener, nsIRequestObserver,
+                   nsIThreadRetargetableStreamListener,
                    nsIChannelEventSink,
                    nsIInterfaceRequestor,
                    nsIAsyncVerifyRedirectCallback)
@@ -85,6 +88,8 @@ nsresult imgRequest::Init(nsIURI *aURI,
                           nsIPrincipal* aLoadingPrincipal,
                           int32_t aCORSMode)
 {
+  MOZ_ASSERT(NS_IsMainThread(), "Cannot use nsIURI off main thread!");
+
   LOG_FUNC(GetImgLog(), "imgRequest::Init");
 
   NS_ABORT_IF_FALSE(!mImage, "Multiple calls to init");
@@ -95,7 +100,8 @@ nsresult imgRequest::Init(nsIURI *aURI,
 
   mProperties = do_CreateInstance("@mozilla.org/properties;1");
 
-  mURI = aURI;
+  // Use ImageURL to ensure access to URI data off main thread.
+  mURI = new ImageURL(aURI);
   mCurrentURI = aCurrentURI;
   mRequest = aRequest;
   mChannel = aChannel;
@@ -248,14 +254,21 @@ void imgRequest::Cancel(nsresult aStatus)
 
   statusTracker.RecordCancel();
 
-  RemoveFromCache();
+  if (NS_IsMainThread()) {
+    RemoveFromCache();
+  } else {
+    NS_DispatchToMainThread(
+      NS_NewRunnableMethod(this, &imgRequest::RemoveFromCache));
+  }
 
   if (mRequest && statusTracker.IsLoading())
     mRequest->Cancel(aStatus);
 }
 
-nsresult imgRequest::GetURI(nsIURI **aURI)
+nsresult imgRequest::GetURI(ImageURL **aURI)
 {
+  MOZ_ASSERT(aURI);
+
   LOG_FUNC(GetImgLog(), "imgRequest::GetURI");
 
   if (mURI) {
@@ -570,6 +583,26 @@ NS_IMETHODIMP imgRequest::OnStartRequest(nsIRequest *aRequest, nsISupports *ctxt
     this->Cancel(NS_IMAGELIB_ERROR_FAILURE);
   }
 
+  // Try to retarget OnDataAvailable to a decode thread.
+  nsCOMPtr<nsIHttpChannel> httpChannel = do_QueryInterface(aRequest);
+  nsCOMPtr<nsIThreadRetargetableRequest> retargetable =
+    do_QueryInterface(aRequest);
+  if (httpChannel && retargetable &&
+      !(mIsMultiPartChannel && mImage)) {
+    nsAutoCString mimeType;
+    nsresult rv = httpChannel->GetContentType(mimeType);
+    if (NS_SUCCEEDED(rv) && !mimeType.EqualsLiteral(IMAGE_SVG_XML)) {
+      // Image object not created until OnDataAvailable, so forward to static
+      // DecodePool directly.
+      nsCOMPtr<nsIEventTarget> target = RasterImage::GetEventTarget();
+      rv = retargetable->RetargetDeliveryTo(target);
+    }
+    PR_LOG(GetImgLog(), PR_LOG_WARNING,
+           ("[this=%p] imgRequest::OnStartRequest -- "
+            "RetargetDeliveryTo rv %d=%s\n",
+            this, NS_SUCCEEDED(rv) ? "succeeded" : "failed", rv));
+  }
+
   return NS_OK;
 }
 
@@ -643,6 +676,15 @@ struct mimetype_closure
 /* prototype for these defined below */
 static NS_METHOD sniff_mimetype_callback(nsIInputStream* in, void* closure, const char* fromRawSegment,
                                          uint32_t toOffset, uint32_t count, uint32_t *writeCount);
+
+/** nsThreadRetargetableStreamListener methods **/
+NS_IMETHODIMP
+imgRequest::CheckListenerChain()
+{
+  // TODO Might need more checking here.
+  NS_ASSERTION(NS_IsMainThread(), "Should be on the main thread!");
+  return NS_OK;
+}
 
 /** nsIStreamListener methods **/
 
@@ -720,27 +762,13 @@ imgRequest::OnDataAvailable(nsIRequest *aRequest, nsISupports *ctxt,
         mStatusTracker = freshTracker;
       }
 
-      /* set our mimetype as a property */
-      nsCOMPtr<nsISupportsCString> contentType(do_CreateInstance("@mozilla.org/supports-cstring;1"));
-      if (contentType) {
-        contentType->SetData(mContentType);
-        mProperties->Set("type", contentType);
-      }
-
-      /* set our content disposition as a property */
-      nsAutoCString disposition;
-      if (chan) {
-        chan->GetContentDispositionHeader(disposition);
-      }
-      if (!disposition.IsEmpty()) {
-        nsCOMPtr<nsISupportsCString> contentDisposition(do_CreateInstance("@mozilla.org/supports-cstring;1"));
-        if (contentDisposition) {
-          contentDisposition->SetData(disposition);
-          mProperties->Set("content-disposition", contentDisposition);
-        }
-      }
+      SetProperties(chan);
 
       LOG_MSG_WITH_PARAM(GetImgLog(), "imgRequest::OnDataAvailable", "content type", mContentType.get());
+
+      // XXX If server lied about mimetype and it's SVG, we may need to copy
+      // the data and dispatch back to the main thread, AND tell the channel to
+      // dispatch there in the future.
 
       // Now we can create a new image to hold the data. If we don't have a decoder
       // for this mimetype we'll find out about it here.
@@ -783,6 +811,58 @@ imgRequest::OnDataAvailable(nsIRequest *aRequest, nsISupports *ctxt,
   }
 
   return NS_OK;
+}
+
+class SetPropertiesEvent : public nsRunnable
+{
+public:
+  SetPropertiesEvent(imgRequest* aImgRequest, nsIChannel* aChan)
+    : mImgRequest(aImgRequest)
+    , mChan(aChan)
+  {
+    MOZ_ASSERT(!NS_IsMainThread(), "Should be created off the main thread");
+    MOZ_ASSERT(aImgRequest, "aImgRequest cannot be null");
+  }
+  NS_IMETHOD Run()
+  {
+    MOZ_ASSERT(NS_IsMainThread(), "Should run on the main thread only");
+    MOZ_ASSERT(mImgRequest, "mImgRequest cannot be null");
+    mImgRequest->SetProperties(mChan);
+    return NS_OK;
+  }
+private:
+  nsRefPtr<imgRequest> mImgRequest;
+  nsCOMPtr<nsIChannel> mChan;
+};
+
+void
+imgRequest::SetProperties(nsIChannel* aChan)
+{
+  // Force execution on main thread since some property objects are non
+  // threadsafe.
+  if (!NS_IsMainThread()) {
+    NS_DispatchToMainThread(new SetPropertiesEvent(this, aChan));
+    return;
+  }
+  /* set our mimetype as a property */
+  nsCOMPtr<nsISupportsCString> contentType(do_CreateInstance("@mozilla.org/supports-cstring;1"));
+  if (contentType) {
+    contentType->SetData(mContentType);
+    mProperties->Set("type", contentType);
+  }
+
+  /* set our content disposition as a property */
+  nsAutoCString disposition;
+  if (aChan) {
+    aChan->GetContentDispositionHeader(disposition);
+  }
+  if (!disposition.IsEmpty()) {
+    nsCOMPtr<nsISupportsCString> contentDisposition(do_CreateInstance("@mozilla.org/supports-cstring;1"));
+    if (contentDisposition) {
+      contentDisposition->SetData(disposition);
+      mProperties->Set("content-disposition", contentDisposition);
+    }
+  }
 }
 
 static NS_METHOD sniff_mimetype_callback(nsIInputStream* in,

@@ -134,7 +134,7 @@ ImageWrapper::SetHasError()
   mInnerImage->SetHasError();
 }
 
-nsIURI*
+ImageURL*
 ImageWrapper::GetURI()
 {
   return mInnerImage->GetURI();

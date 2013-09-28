@@ -58,7 +58,7 @@ public:
   virtual bool HasError() MOZ_OVERRIDE;
   virtual void SetHasError() MOZ_OVERRIDE;
 
-  virtual nsIURI* GetURI() MOZ_OVERRIDE;
+  virtual ImageURL* GetURI() MOZ_OVERRIDE;
 
 protected:
   ImageWrapper(Image* aInnerImage)

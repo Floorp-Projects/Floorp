@@ -9,8 +9,7 @@
 #include "mozilla/MemoryReporting.h"
 #include "imgIContainer.h"
 #include "imgStatusTracker.h"
-#include "nsIURI.h"
-#include "nsProxyRelease.h" // for nsMainThreadPtrHolder and nsMainThreadPtrHandle
+#include "ImageURL.h"
 
 class nsIRequest;
 class nsIInputStream;
@@ -132,7 +131,7 @@ public:
   virtual bool HasError() = 0;
   virtual void SetHasError() = 0;
 
-  virtual nsIURI* GetURI() = 0;
+  virtual ImageURL* GetURI() = 0;
 };
 
 class ImageResource : public Image
@@ -159,10 +158,11 @@ public:
    * Returns a non-AddRefed pointer to the URI associated with this image.
    * Illegal to use off-main-thread.
    */
-  virtual nsIURI* GetURI() MOZ_OVERRIDE { return mURI.get(); }
+  virtual ImageURL* GetURI() MOZ_OVERRIDE { return mURI.get(); }
 
 protected:
-  ImageResource(imgStatusTracker* aStatusTracker, nsIURI* aURI);
+  ImageResource(imgStatusTracker* aStatusTracker,
+                ImageURL* aURI);
 
   // Shared functionality for implementors of imgIContainer. Every
   // implementation of attribute animationMode should forward here.
@@ -188,7 +188,7 @@ protected:
 
   // Member data shared by all implementations of this abstract class
   nsRefPtr<imgStatusTracker>    mStatusTracker;
-  nsMainThreadPtrHandle<nsIURI> mURI;
+  nsRefPtr<ImageURL>            mURI;
   uint64_t                      mInnerWindowId;
   uint32_t                      mAnimationConsumers;
   uint16_t                      mAnimationMode; // Enum values in imgIContainer

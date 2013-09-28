@@ -13,6 +13,7 @@
 #include "ImageLogging.h"
 #include "nsCRTGlue.h"
 #include "imgINotificationObserver.h"
+#include "nsNetUtil.h"
 
 using namespace mozilla::image;
 
@@ -146,7 +147,7 @@ imgRequestProxy::~imgRequestProxy()
 
 nsresult imgRequestProxy::Init(imgRequest* aOwner,
                                nsILoadGroup* aLoadGroup,
-                               nsIURI* aURI,
+                               ImageURL* aURI,
                                imgINotificationObserver* aObserver)
 {
   NS_PRECONDITION(!GetOwner() && !mListener, "imgRequestProxy is already initialized");
@@ -503,6 +504,14 @@ NS_IMETHODIMP imgRequestProxy::GetImageStatus(uint32_t *aStatus)
 
 /* readonly attribute nsIURI URI; */
 NS_IMETHODIMP imgRequestProxy::GetURI(nsIURI **aURI)
+{
+  MOZ_ASSERT(NS_IsMainThread(), "Must be on main thread to convert URI");
+  nsCOMPtr<nsIURI> uri = mURI->ToIURI();
+  uri.forget(aURI);
+  return NS_OK;
+}
+
+nsresult imgRequestProxy::GetURI(ImageURL **aURI)
 {
   if (!mURI)
     return NS_ERROR_FAILURE;
