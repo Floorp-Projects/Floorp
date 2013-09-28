@@ -709,49 +709,45 @@ Navigator::RemoveIdleObserver(MozIdleObserver& aIdleObserver, ErrorResult& aRv)
   }
 }
 
-void
-Navigator::Vibrate(uint32_t aDuration, ErrorResult& aRv)
+bool
+Navigator::Vibrate(uint32_t aDuration)
 {
   nsAutoTArray<uint32_t, 1> pattern;
   pattern.AppendElement(aDuration);
-  Vibrate(pattern, aRv);
+  return Vibrate(pattern);
 }
 
-void
-Navigator::Vibrate(const nsTArray<uint32_t>& aPattern, ErrorResult& aRv)
+bool
+Navigator::Vibrate(const nsTArray<uint32_t>& aPattern)
 {
   if (!mWindow) {
-    aRv.Throw(NS_ERROR_UNEXPECTED);
-    return;
+    return false;
   }
+
   nsCOMPtr<nsIDocument> doc = mWindow->GetExtantDoc();
   if (!doc) {
-    aRv.Throw(NS_ERROR_FAILURE);
-    return;
+    return false;
   }
+
   if (doc->Hidden()) {
     // Hidden documents cannot start or stop a vibration.
-    return;
+    return false;
   }
 
   if (aPattern.Length() > sMaxVibrateListLen) {
-    // XXXbz this should be returning false instead
-    aRv.Throw(NS_ERROR_DOM_NOT_SUPPORTED_ERR);
-    return;
+    return false;
   }
 
   for (size_t i = 0; i < aPattern.Length(); ++i) {
     if (aPattern[i] > sMaxVibrateMS) {
-      // XXXbz this should be returning false instead
-      aRv.Throw(NS_ERROR_DOM_NOT_SUPPORTED_ERR);
-      return;
+      return false;
     }
   }
 
   // The spec says we check sVibratorEnabled after we've done the sanity
   // checking on the pattern.
-  if (!sVibratorEnabled) {
-    return;
+  if (aPattern.IsEmpty() || !sVibratorEnabled) {
+    return true;
   }
 
   // Add a listener to cancel the vibration if the document becomes hidden,
@@ -769,6 +765,7 @@ Navigator::Vibrate(const nsTArray<uint32_t>& aPattern, ErrorResult& aRv)
   gVibrateWindowListener = new VibrateWindowListener(mWindow, doc);
 
   hal::Vibrate(aPattern, mWindow);
+  return true;
 }
 
 //*****************************************************************************
