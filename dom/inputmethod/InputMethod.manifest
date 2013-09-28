@@ -1,0 +1,6 @@
+component {397a7fdf-2254-47be-b74e-76625a1a66d5} MozKeyboard.js
+contract @mozilla.org/b2g-keyboard;1 {397a7fdf-2254-47be-b74e-76625a1a66d5}
+category JavaScript-navigator-property mozKeyboard @mozilla.org/b2g-keyboard;1
+
+component {4607330d-e7d2-40a4-9eb8-43967eae0142} MozKeyboard.js
+contract @mozilla.org/b2g-inputmethod;1 {4607330d-e7d2-40a4-9eb8-43967eae0142}
