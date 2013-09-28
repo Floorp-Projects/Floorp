@@ -626,7 +626,7 @@ nsNSSCertificateDB::ImportEmailCertificate(uint8_t * data, uint32_t length,
 
     insanity::pkix::ScopedCERTCertList certChain;
 
-    SECStatus rv = certVerifier->VerifyCert(node->cert,
+    SECStatus rv = certVerifier->VerifyCert(node->cert, nullptr,
                                             certificateUsageEmailRecipient,
                                             now, ctx, 0, &certChain);
 
@@ -793,7 +793,8 @@ nsNSSCertificateDB::ImportValidCACertsInList(CERTCertList *certList, nsIInterfac
        !CERT_LIST_END(node,certList);
        node = CERT_LIST_NEXT(node)) {
     insanity::pkix::ScopedCERTCertList certChain;
-    SECStatus rv = certVerifier->VerifyCert(node->cert, certificateUsageVerifyCA,
+    SECStatus rv = certVerifier->VerifyCert(node->cert, nullptr,
+                                            certificateUsageVerifyCA,
                                             PR_Now(), ctx, 0, &certChain);
     if (rv != SECSuccess) {
       nsCOMPtr<nsIX509Cert> certToShow = nsNSSCertificate::Create(node->cert);
@@ -1365,7 +1366,7 @@ nsNSSCertificateDB::FindCertByEmailAddress(nsISupports *aToken, const char *aEma
        !CERT_LIST_END(node, certlist);
        node = CERT_LIST_NEXT(node)) {
 
-    SECStatus srv = certVerifier->VerifyCert(node->cert,
+    SECStatus srv = certVerifier->VerifyCert(node->cert, nullptr,
                                              certificateUsageEmailRecipient,
                                              PR_Now(), nullptr /*XXX pinarg*/);
     if (srv == SECSuccess) {
@@ -1714,7 +1715,7 @@ nsNSSCertificateDB::VerifyCertNow(nsIX509Cert* aCert,
   SECOidTag evOidPolicy;
   SECStatus srv;
 
-  srv = certVerifier->VerifyCert(nssCert,
+  srv = certVerifier->VerifyCert(nssCert, nullptr,
                                  aUsage, PR_Now(),
                                  nullptr, // Assume no context
                                  aFlags,

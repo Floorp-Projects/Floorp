@@ -12,6 +12,7 @@
 #include "ExtendedValidation.h"
 #include "NSSCertDBTrustDomain.h"
 #include "cert.h"
+#include "ocsp.h"
 #include "secerr.h"
 #include "prerror.h"
 #include "sslerr.h"
@@ -149,6 +150,7 @@ destroyCertListThatShouldNotExist(CERTCertList** certChain)
 
 SECStatus
 CertVerifier::VerifyCert(CERTCertificate* cert,
+            /*optional*/ const SECItem* stapledOCSPResponse,
                          const SECCertificateUsage usage,
                          const PRTime time,
                          void* pinArg,
@@ -467,6 +469,7 @@ pkix_done:
 
 SECStatus
 CertVerifier::VerifySSLServerCert(CERTCertificate* peerCert,
+                     /*optional*/ const SECItem* stapledOCSPResponse,
                                   PRTime time,
                      /*optional*/ void* pinarg,
                                   const char* hostname,
@@ -492,7 +495,8 @@ CertVerifier::VerifySSLServerCert(CERTCertificate* peerCert,
   }
 
   ScopedCERTCertList validationChain;
-  SECStatus rv = VerifyCert(peerCert, certificateUsageSSLServer, time,
+  SECStatus rv = VerifyCert(peerCert, stapledOCSPResponse,
+                            certificateUsageSSLServer, time,
                             pinarg, 0, &validationChain, evOidPolicy);
   if (rv != SECSuccess) {
     return rv;
