@@ -122,6 +122,7 @@ class DiscardTracker
     // Lock for safegarding the 64-bit sCurrentDecodedImageBytes
     static PRLock *sAllocationLock;
     static mozilla::Mutex* sNodeListMutex;
+    static Atomic<uint32_t> sShutdown;
 };
 
 } // namespace image
