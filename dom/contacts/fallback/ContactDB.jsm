@@ -1087,7 +1087,7 @@ ContactDB.prototype = {
           }
         }
         if (DEBUG) debug("lowerCase: " + lowerCase);
-        let range = this.dbGlobal.IDBKeyRange.bound(lowerCase, lowerCase + "\uFFFF");
+        let range = IDBKeyRange.bound(lowerCase, lowerCase + "\uFFFF");
         let index = store.index(key + "LowerCase");
         request = index.mozGetAll(range, limit);
       }
@@ -1134,7 +1134,7 @@ ContactDB.prototype = {
     delete this.substringMatching;
   },
 
-  init: function init(aGlobal) {
-    this.initDBHelper(DB_NAME, DB_VERSION, [STORE_NAME, SAVED_GETALL_STORE_NAME, REVISION_STORE], aGlobal);
+  init: function init() {
+    this.initDBHelper(DB_NAME, DB_VERSION, [STORE_NAME, SAVED_GETALL_STORE_NAME, REVISION_STORE]);
   }
 };

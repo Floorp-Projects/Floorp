@@ -3590,6 +3590,7 @@ struct GlobalProperties {
     GlobalProperties() { mozilla::PodZero(this); }
     bool Parse(JSContext *cx, JS::HandleObject obj);
     bool Define(JSContext *cx, JS::HandleObject obj);
+    bool indexedDB;
     bool XMLHttpRequest;
     bool TextDecoder;
     bool TextEncoder;

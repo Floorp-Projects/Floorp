@@ -139,6 +139,15 @@ public:
   TabContextMayAccessOrigin(const mozilla::dom::TabContext& aContext,
                             const nsACString& aOrigin);
 
+  static bool
+  DefineConstructors(JSContext* aCx, JS::HandleObject aGlobal);
+
+  static bool
+  DefineIndexedDBGetter(JSContext* aCx, JS::HandleObject aGlobal);
+
+  static bool
+  DefineIndexedDBLazyGetter(JSContext* aCx, JS::HandleObject aGlobal);
+
 private:
   IndexedDatabaseManager();
   ~IndexedDatabaseManager();

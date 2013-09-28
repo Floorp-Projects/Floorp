@@ -8,7 +8,6 @@ DIRS += ['ipc']
 TEST_DIRS += ['test']
 
 XPIDL_SOURCES += [
-    'nsIIDBKeyRange.idl',
     'nsIIndexedDatabaseManager.idl',
 ]
 
