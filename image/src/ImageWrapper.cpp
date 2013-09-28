@@ -67,12 +67,16 @@ ImageWrapper::OutOfProcessSizeOfDecoded() const
 void
 ImageWrapper::IncrementAnimationConsumers()
 {
+  MOZ_ASSERT(NS_IsMainThread(), "Main thread only to encourage serialization "
+                                "with DecrementAnimationConsumers");
   mInnerImage->IncrementAnimationConsumers();
 }
 
 void
 ImageWrapper::DecrementAnimationConsumers()
 {
+  MOZ_ASSERT(NS_IsMainThread(), "Main thread only to encourage serialization "
+                                "with IncrementAnimationConsumers");
   mInnerImage->DecrementAnimationConsumers();
 }
 
@@ -249,12 +253,16 @@ ImageWrapper::IsDecoded()
 NS_IMETHODIMP
 ImageWrapper::LockImage()
 {
+  MOZ_ASSERT(NS_IsMainThread(),
+             "Main thread to encourage serialization with UnlockImage");
   return mInnerImage->LockImage();
 }
 
 NS_IMETHODIMP
 ImageWrapper::UnlockImage()
 {
+  MOZ_ASSERT(NS_IsMainThread(),
+             "Main thread to encourage serialization with LockImage");
   return mInnerImage->UnlockImage();
 }
 
