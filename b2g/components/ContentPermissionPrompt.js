@@ -13,7 +13,11 @@ const Cr = Components.results;
 const Cu = Components.utils;
 const Cc = Components.classes;
 
-const PROMPT_FOR_UNKNOWN = ["geolocation", "desktop-notification", "audio-capture"];
+const PROMPT_FOR_UNKNOWN    = ["geolocation", "desktop-notification",
+                               "audio-capture"];
+// Due to privary issue, permission requests like GetUserMedia should prompt
+// every time instead of providing session persistence.
+const PERMISSION_NO_SESSION = ["audio-capture"];
 
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
@@ -43,7 +47,7 @@ function rememberPermission(aPermission, aPrincipal, aSession)
         permissionManager.addFromPrincipal(aPrincipal,
                                            aPerm,
                                            Ci.nsIPermissionManager.ALLOW_ACTION);
-      } else {
+      } else if (PERMISSION_NO_SESSION.indexOf(aPermission) < 0) {
         permissionManager.addFromPrincipal(aPrincipal,
                                            aPerm,
                                            Ci.nsIPermissionManager.ALLOW_ACTION,
