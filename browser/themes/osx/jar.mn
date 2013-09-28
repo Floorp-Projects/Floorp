@@ -121,7 +121,6 @@ browser.jar:
   skin/classic/browser/newtab/newTab.css                    (newtab/newTab.css)
   skin/classic/browser/newtab/controls.png                  (newtab/controls.png)
   skin/classic/browser/newtab/controls@2x.png               (newtab/controls@2x.png)
-  skin/classic/browser/newtab/noise.png                     (newtab/noise.png)
   skin/classic/browser/setDesktopBackground.css
   skin/classic/browser/monitor.png
   skin/classic/browser/monitor_16-10.png
@@ -274,6 +273,7 @@ browser.jar:
   skin/classic/browser/devtools/itemArrow-rtl.png           (devtools/itemArrow-rtl.png)
   skin/classic/browser/devtools/itemArrow-ltr.png           (devtools/itemArrow-ltr.png)
   skin/classic/browser/devtools/background-noise-toolbar.png (devtools/background-noise-toolbar.png)
+  skin/classic/browser/devtools/noise.png                   (devtools/noise.png)
   skin/classic/browser/devtools/inspect-button.png          (devtools/inspect-button.png)
   skin/classic/browser/devtools/dropmarker.png              (devtools/dropmarker.png)
   skin/classic/browser/devtools/layout-background-grid.png  (devtools/layout-background-grid.png)
