@@ -1363,7 +1363,7 @@ TypeSet::getObjectClass(unsigned i) const
 // TypeObject
 /////////////////////////////////////////////////////////////////////
 
-inline TypeObject::TypeObject(const Class *clasp, TaggedProto proto, bool function, bool unknown)
+inline TypeObject::TypeObject(const Class *clasp, TaggedProto proto, bool unknown)
 {
     mozilla::PodZero(this);
 
@@ -1373,8 +1373,6 @@ inline TypeObject::TypeObject(const Class *clasp, TaggedProto proto, bool functi
     this->clasp = clasp;
     this->proto = proto.raw();
 
-    if (function)
-        flags |= OBJECT_FLAG_FUNCTION;
     if (unknown)
         flags |= OBJECT_FLAG_UNKNOWN_MASK;
 

@@ -1218,7 +1218,7 @@ TypeCompartment::newTypeObject(ExclusiveContext *cx, const Class *clasp, Handle<
                                                            sizeof(TypeObject), gc::TenuredHeap);
     if (!object)
         return NULL;
-    new(object) TypeObject(clasp, proto, clasp == &JSFunction::class_, unknown);
+    new(object) TypeObject(clasp, proto, unknown);
 
     if (!cx->typeInferenceEnabled())
         object->flags |= OBJECT_FLAG_UNKNOWN_MASK;

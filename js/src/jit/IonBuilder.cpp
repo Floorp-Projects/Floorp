@@ -195,7 +195,7 @@ IonBuilder::getPolyCallTargets(types::TemporaryTypeSet *calleeTypes, bool constr
         } else {
             types::TypeObject *typeObj = calleeTypes->getTypeObject(i);
             JS_ASSERT(typeObj);
-            if (!typeObj->isFunction() || !typeObj->interpretedFunction) {
+            if (!typeObj->interpretedFunction) {
                 targets.clear();
                 return true;
             }
