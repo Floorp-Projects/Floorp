@@ -12,7 +12,6 @@ EXPORTS += [
 ]
 
 EXPORTS.mozilla.ipc += [
-    'AsyncChannel.h',
     'BrowserProcessSubThread.h',
     'CrossProcessMutex.h',
     'FileDescriptor.h',
@@ -20,15 +19,15 @@ EXPORTS.mozilla.ipc += [
     'GeckoChildProcessHost.h',
     'IOThreadChild.h',
     'InputStreamUtils.h',
+    'MessageChannel.h',
+    'MessageLink.h',
     'ProcessChild.h',
     'ProtocolUtils.h',
-    'RPCChannel.h',
     'ScopedXREEmbed.h',
     'SharedMemory.h',
     'SharedMemoryBasic.h',
     'SharedMemorySysV.h',
     'Shmem.h',
-    'SyncChannel.h',
     'Transport.h',
     'URIUtils.h',
 ]
@@ -78,21 +77,20 @@ EXPORTS.ipc += [
 ]
 
 CPP_SOURCES += [
-    'AsyncChannel.cpp',
     'BrowserProcessSubThread.cpp',
     'FileDescriptor.cpp',
     'FileDescriptorUtils.cpp',
     'GeckoChildProcessHost.cpp',
     'InputStreamUtils.cpp',
+    'MessageChannel.cpp',
+    'MessageLink.cpp',
     'MessagePump.cpp',
     'ProcessChild.cpp',
     'ProtocolUtils.cpp',
-    'RPCChannel.cpp',
     'ScopedXREEmbed.cpp',
     'SharedMemory.cpp',
     'Shmem.cpp',
     'StringUtil.cpp',
-    'SyncChannel.cpp',
     'URIUtils.cpp',
 ]
 

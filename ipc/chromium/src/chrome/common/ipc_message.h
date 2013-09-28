@@ -91,6 +91,11 @@ class Message : public Pickle {
     return (header()->flags & RPC_BIT) != 0;
   }
 
+  // True if this is an urgent message.
+  bool is_urgent() const {
+    return (header()->flags & URGENT_BIT) != 0;
+  }
+
   // True if compression is enabled for this message.
   bool compress() const {
     return (header()->flags & COMPRESS_BIT) != 0;
@@ -270,6 +275,10 @@ class Message : public Pickle {
     header()->flags |= RPC_BIT;
   }
 
+  void set_urgent() {
+    header()->flags |= URGENT_BIT;
+  }
+
 #if !defined(OS_MACOSX)
  protected:
 #endif
@@ -284,7 +293,8 @@ class Message : public Pickle {
     PUMPING_MSGS_BIT= 0x0040,
     HAS_SENT_TIME_BIT = 0x0080,
     RPC_BIT         = 0x0100,
-    COMPRESS_BIT    = 0x0200
+    COMPRESS_BIT    = 0x0200,
+    URGENT_BIT      = 0x0400
   };
 
   struct Header : Pickle::Header {
