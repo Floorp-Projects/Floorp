@@ -55,7 +55,4 @@ public:
 
 } // namespace mozilla
 
-// TODO: Remove following typedef
-typedef mozilla::InternalMutationEvent nsMutationEvent;
-
 #endif // mozilla_MutationEvent_h__

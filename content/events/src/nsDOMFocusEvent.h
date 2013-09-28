@@ -27,7 +27,8 @@ public:
   }
 
   nsDOMFocusEvent(mozilla::dom::EventTarget* aOwner,
-                  nsPresContext* aPresContext, nsFocusEvent* aEvent);
+                  nsPresContext* aPresContext,
+                  mozilla::InternalFocusEvent* aEvent);
 
   mozilla::dom::EventTarget* GetRelatedTarget();
 

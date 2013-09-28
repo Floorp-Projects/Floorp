@@ -380,7 +380,6 @@ function addCertOverride(host, port, bits) {
 
 var prefs;
 var spdypref;
-var spdy2pref;
 var spdy3pref;
 var spdypush;
 
@@ -388,7 +387,6 @@ var loadGroup;
 
 function resetPrefs() {
   prefs.setBoolPref("network.http.spdy.enabled", spdypref);
-  prefs.setBoolPref("network.http.spdy.enabled.v2", spdy2pref);
   prefs.setBoolPref("network.http.spdy.enabled.v3", spdy3pref);
   prefs.setBoolPref("network.http.spdy.allow-push", spdypush);
 }
@@ -409,11 +407,9 @@ function run_test() {
 
   // Enable all versions of spdy to see that we auto negotiate spdy/3
   spdypref = prefs.getBoolPref("network.http.spdy.enabled");
-  spdy2pref = prefs.getBoolPref("network.http.spdy.enabled.v2");
   spdy3pref = prefs.getBoolPref("network.http.spdy.enabled.v3");
   spdypush = prefs.getBoolPref("network.http.spdy.allow-push");
   prefs.setBoolPref("network.http.spdy.enabled", true);
-  prefs.setBoolPref("network.http.spdy.enabled.v2", true);
   prefs.setBoolPref("network.http.spdy.enabled.v3", true);
   prefs.setBoolPref("network.http.spdy.allow-push", true);
 

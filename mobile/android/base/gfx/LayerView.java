@@ -18,6 +18,7 @@ import org.mozilla.gecko.util.EventDispatcher;
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.PixelFormat;
 import android.graphics.PointF;
@@ -67,6 +68,7 @@ public class LayerView extends FrameLayout {
 
     /* This should only be modified on the Java UI thread. */
     private final ArrayList<TouchEventInterceptor> mTouchInterceptors;
+    private final Overscroll mOverscroll;
 
     /* Flags used to determine when to show the painted surface. */
     public static final int PAINT_START = 0;
@@ -104,10 +106,13 @@ public class LayerView extends FrameLayout {
         mBackgroundColor = Color.WHITE;
 
         mTouchInterceptors = new ArrayList<TouchEventInterceptor>();
+        mOverscroll = new Overscroll(this);
     }
 
     public void initializeView(EventDispatcher eventDispatcher) {
         mLayerClient = new GeckoLayerClient(getContext(), this, eventDispatcher);
+        mLayerClient.setOverscrollHandler(mOverscroll);
+
         mPanZoomController = mLayerClient.getPanZoomController();
         mMarginsAnimator = mLayerClient.getLayerMarginsAnimator();
 
@@ -216,6 +221,16 @@ public class LayerView extends FrameLayout {
         }
 
         return result;
+    }
+
+    @Override
+    public void dispatchDraw(final Canvas canvas) {
+        super.dispatchDraw(canvas);
+
+        // We must have a layer client to get valid viewport metrics
+        if (mLayerClient != null) {
+            mOverscroll.draw(canvas, getViewportMetrics());
+        }
     }
 
     @Override
@@ -487,6 +502,8 @@ public class LayerView extends FrameLayout {
         if (mListener != null) {
             mListener.sizeChanged(width, height);
         }
+
+        mOverscroll.setSize(width, height);
     }
 
     private void surfaceChanged(int width, int height) {
@@ -495,6 +512,8 @@ public class LayerView extends FrameLayout {
         if (mListener != null) {
             mListener.surfaceChanged(width, height);
         }
+
+        mOverscroll.setSize(width, height);
     }
 
     private void onDestroyed() {

@@ -96,22 +96,22 @@ interface nsILoadGroup : nsIRequest
 };
 
 %{C++
-// Forward-declare mozilla::net::SpdyPushCache3
+// Forward-declare mozilla::net::SpdyPushCache
 namespace mozilla {
 namespace net {
-class SpdyPushCache3;
+class SpdyPushCache;
 }
 }
 %}
 
-[ptr] native SpdyPushCache3Ptr(mozilla::net::SpdyPushCache3);
+[ptr] native SpdyPushCachePtr(mozilla::net::SpdyPushCache);
 
 /**
  * Used to maintain state about the connections of a load group and
  * how they interact with blocking items like HEAD css/js loads.
  */
 
-[uuid(5361f30e-f968-437c-8f41-69d2756a6022)]
+[uuid(fdc9659c-b597-4ac0-9c9e-14b04dbb682f)]
 interface nsILoadGroupConnectionInfo : nsISupports
 {
     /**
@@ -137,5 +137,5 @@ interface nsILoadGroupConnectionInfo : nsISupports
      * and will destroy it when overwritten or when the load group
     *  ends.
     */
-    [noscript]  attribute SpdyPushCache3Ptr spdyPushCache3;
+    [noscript]  attribute SpdyPushCachePtr spdyPushCache;
 };

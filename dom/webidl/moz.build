@@ -186,10 +186,10 @@ WEBIDL_FILES = [
     'IDBVersionChangeEvent.webidl',
     'ImageData.webidl',
     'ImageDocument.webidl',
+    'InputMethod.webidl',
     'InspectorUtils.webidl',
     'InterAppConnection.webidl',
     'InterAppConnectionRequest.webidl',
-    'InterAppMessageEvent.webidl',
     'InterAppMessagePort.webidl',
     'KeyboardEvent.webidl',
     'KeyEvent.webidl',
@@ -532,16 +532,12 @@ if CONFIG['ENABLE_TESTS']:
         'TestJSImplGen.webidl',
     ]
 
-if CONFIG['MOZ_B2G']:
-    WEBIDL_FILES += [
-        'InputMethod.webidl',
-    ]
-
 GENERATED_EVENTS_WEBIDL_FILES = [
     'BlobEvent.webidl',
     'DeviceLightEvent.webidl',
     'DeviceProximityEvent.webidl',
     'MediaStreamEvent.webidl',
+    'MozInterAppMessageEvent.webidl',
     'RTCDataChannelEvent.webidl',
     'RTCPeerConnectionIceEvent.webidl',
     'UserProximityEvent.webidl',

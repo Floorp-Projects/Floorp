@@ -72,6 +72,7 @@ nsDisplayThemedBackgroundGeometry::nsDisplayThemedBackgroundGeometry(nsDisplayTh
                                                                      nsDisplayListBuilder* aBuilder)
   : nsDisplayItemGeometry(aItem, aBuilder)
   , mPositioningArea(aItem->GetPositioningArea())
+  , mWindowIsActive(aItem->IsWindowActive())
 {}
 
 void

@@ -729,8 +729,8 @@ static void RecordFrameMetrics(nsIFrame* aForFrame,
   // the page is zoomed in, the frame's size might be larger than the widget
   // bounds, but we don't want the composition bounds to be.
   bool useWidgetBounds = false;
-  bool isRootContentDocRootScrollFrame = aForFrame->GetParent() == nullptr
-                                      && presContext->IsRootContentDocument();
+  bool isRootContentDocRootScrollFrame = presContext->IsRootContentDocument()
+                                      && aScrollFrame == presShell->GetRootScrollFrame();
   if (isRootContentDocRootScrollFrame) {
     if (nsIWidget* widget = aForFrame->GetNearestWidget()) {
       nsIntRect bounds;
@@ -2360,6 +2360,12 @@ nsDisplayThemedBackground::PaintInternal(nsDisplayListBuilder* aBuilder,
   theme->DrawWidgetBackground(aCtx, mFrame, mAppearance, borderArea, drawing);
 }
 
+bool nsDisplayThemedBackground::IsWindowActive()
+{
+  nsEventStates docState = mFrame->GetContent()->OwnerDoc()->GetDocumentState();
+  return !docState.HasState(NS_DOCUMENT_STATE_WINDOW_INACTIVE);
+}
+
 void nsDisplayThemedBackground::ComputeInvalidationRegion(nsDisplayListBuilder* aBuilder,
                                                           const nsDisplayItemGeometry* aGeometry,
                                                           nsRegion* aInvalidRegion)
@@ -2378,6 +2384,11 @@ void nsDisplayThemedBackground::ComputeInvalidationRegion(nsDisplayListBuilder* 
     // Positioning area is unchanged, so invalidate just the change in the
     // painting area.
     aInvalidRegion->Xor(bounds, geometry->mBounds);
+  }
+  nsITheme* theme = mFrame->PresContext()->GetTheme();
+  if (theme->WidgetAppearanceDependsOnWindowFocus(mAppearance) &&
+      IsWindowActive() != geometry->mWindowIsActive) {
+    aInvalidRegion->Or(*aInvalidRegion, bounds);
   }
 }
 

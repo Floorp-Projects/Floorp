@@ -46,7 +46,6 @@ static MOZ_CONSTEXPR_VAR Register ReturnReg = eax;
 static MOZ_CONSTEXPR_VAR FloatRegister ReturnFloatReg = xmm0;
 static MOZ_CONSTEXPR_VAR FloatRegister ScratchFloatReg = xmm7;
 
-// Avoid ebp, which is the FramePointer, which is unavailable in some modes.
 static MOZ_CONSTEXPR_VAR Register ArgumentsRectifierReg = esi;
 static MOZ_CONSTEXPR_VAR Register CallTempReg0 = edi;
 static MOZ_CONSTEXPR_VAR Register CallTempReg1 = eax;
@@ -54,6 +53,7 @@ static MOZ_CONSTEXPR_VAR Register CallTempReg2 = ebx;
 static MOZ_CONSTEXPR_VAR Register CallTempReg3 = ecx;
 static MOZ_CONSTEXPR_VAR Register CallTempReg4 = esi;
 static MOZ_CONSTEXPR_VAR Register CallTempReg5 = edx;
+static MOZ_CONSTEXPR_VAR Register CallTempReg6 = ebp;
 
 // We have no arg regs, so our NonArgRegs are just our CallTempReg*
 static MOZ_CONSTEXPR_VAR Register CallTempNonArgRegs[] = { edi, eax, ebx, ecx, esi, edx };

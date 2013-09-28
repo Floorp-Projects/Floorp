@@ -7,6 +7,7 @@
 #define nsUnicodeToUTF8_h___
 
 #include "mozilla/Attributes.h"
+#include "nsIUnicodeEncoder.h"
 
 // Class ID for our UnicodeToUTF8 charset converter
 // {7C657D18-EC5E-11d2-8AAC-00600811A836}

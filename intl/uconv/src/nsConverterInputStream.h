@@ -6,7 +6,6 @@
 #include "nsIInputStream.h"
 #include "nsIConverterInputStream.h"
 #include "nsIUnicharLineInputStream.h"
-#include "nsString.h"
 #include "nsTArray.h"
 #include "nsAutoPtr.h"
 #include "nsCOMPtr.h"

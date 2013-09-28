@@ -4,7 +4,6 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "unicpriv.h"
-#include "nsIUnicodeDecoder.h"
 #include "nsUnicodeDecodeHelper.h"
 #include "nsAutoPtr.h"
 

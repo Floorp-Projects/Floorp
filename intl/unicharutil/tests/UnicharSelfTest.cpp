@@ -4,22 +4,16 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include <stdio.h>
-#include "nsISupports.h"
 #include "nsXPCOM.h"
-#include "nsIServiceManager.h"
-#include "nsIComponentManager.h"
-#include "nsICaseConversion.h"
 #include "nsIEntityConverter.h"
 #include "nsISaveAsCharset.h"
-#include "nsIUnicodeEncoder.h"
-#include "nsUnicharUtilCIID.h"
-#include "nsIPersistentProperties2.h"
-#include "nsIURL.h"
-#include "nsNetUtil.h"
 #include "nsCOMPtr.h"
 #include "nsIUnicodeNormalizer.h"
 #include "nsStringAPI.h"
 #include "nsUnicharUtils.h"
+#include "nsMemory.h"
+#include "nsComponentManagerUtils.h"
+#include "nsServiceManagerUtils.h"
 
 NS_DEFINE_CID(kEntityConverterCID, NS_ENTITYCONVERTER_CID);
 NS_DEFINE_CID(kSaveAsCharsetCID, NS_SAVEASCHARSET_CID);

@@ -60,6 +60,11 @@ public:
     }
   }
 
+  virtual void NotifyRemoved(MediaStreamGraph* aGraph)
+  {
+    mSpeechTask = nullptr;
+  }
+
 private:
   // Raw pointer; if we exist, the stream exists,
   // and 'mSpeechTask' exclusively owns it and therefor exists as well.
@@ -283,10 +288,15 @@ nsSpeechTask::DispatchEndImpl(float aElapsedTime, uint32_t aCharIndex)
     mSpeechSynthesis->OnEnd(this);
   }
 
-  utterance->mState = SpeechSynthesisUtterance::STATE_ENDED;
-  utterance->DispatchSpeechSynthesisEvent(NS_LITERAL_STRING("end"),
-                                          aCharIndex, aElapsedTime,
-                                          NS_LITERAL_STRING(""));
+  if (utterance->mState == SpeechSynthesisUtterance::STATE_PENDING) {
+    utterance->mState = SpeechSynthesisUtterance::STATE_NONE;
+  } else {
+    utterance->mState = SpeechSynthesisUtterance::STATE_ENDED;
+    utterance->DispatchSpeechSynthesisEvent(NS_LITERAL_STRING("end"),
+                                            aCharIndex, aElapsedTime,
+                                            EmptyString());
+  }
+
   return NS_OK;
 }
 
