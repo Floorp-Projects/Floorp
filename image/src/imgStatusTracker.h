@@ -17,6 +17,7 @@ class imgStatusTrackerNotifyingObserver;
 class nsIRunnable;
 
 #include "mozilla/RefPtr.h"
+#include "mozilla/WeakPtr.h"
 #include "nsCOMPtr.h"
 #include "nsTObserverArray.h"
 #include "nsThreadUtils.h"
@@ -105,7 +106,8 @@ enum {
  * and the notifications will be replayed to the proxy asynchronously.
  */
 
-class imgStatusTracker
+
+class imgStatusTracker : public mozilla::SupportsWeakPtr<imgStatusTracker>
 {
 public:
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(imgStatusTracker)
@@ -114,7 +116,7 @@ public:
   // imgRequestProxys in SyncNotify() and EmulateRequestFinished(), and must be
   // alive as long as this instance is, because we hold a weak reference to it.
   imgStatusTracker(mozilla::image::Image* aImage);
-  ~imgStatusTracker();
+  virtual ~imgStatusTracker();
 
   // Image-setter, for imgStatusTrackers created by imgRequest::Init, which
   // are created before their Image is created.  This method should only
@@ -175,6 +177,7 @@ public:
 
   void AdoptConsumers(imgStatusTracker* aTracker) {
     MOZ_ASSERT(NS_IsMainThread(), "Use mConsumers on main thread only");
+    MOZ_ASSERT(aTracker);
     mConsumers = aTracker->mConsumers;
   }
 
@@ -265,7 +268,7 @@ public:
 
   inline imgDecoderObserver* GetDecoderObserver() { return mTrackerObserver.get(); }
 
-  imgStatusTracker* CloneForRecording();
+  already_AddRefed<imgStatusTracker> CloneForRecording();
 
   // Compute the difference between this status tracker and aOther.
   mozilla::image::ImageStatusDiff Difference(imgStatusTracker* aOther) const;

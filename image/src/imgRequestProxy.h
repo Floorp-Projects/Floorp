@@ -171,7 +171,7 @@ protected:
   // live either on mOwner or mImage, depending on whether
   //   (a) we have an mOwner at all
   //   (b) whether mOwner has instantiated its image yet
-  imgStatusTracker& GetStatusTracker() const;
+  already_AddRefed<imgStatusTracker> GetStatusTracker() const;
 
   nsITimedChannel* TimedChannel()
   {
