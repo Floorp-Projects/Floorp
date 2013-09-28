@@ -208,6 +208,34 @@ nsHTMLButtonControlFrame::Reflow(nsPresContext* aPresContext,
   return NS_OK;
 }
 
+// Helper-function that lets us clone the button's reflow state, but with its
+// ComputedWidth and ComputedHeight reduced by the amount of renderer-specific
+// focus border and padding that we're using. (This lets us provide a more
+// appropriate content-box size for descendents' percent sizes to resolve
+// against.)
+static nsHTMLReflowState
+CloneReflowStateWithReducedContentBox(
+  const nsHTMLReflowState& aButtonReflowState,
+  const nsMargin& aFocusPadding)
+{
+  nscoord adjustedWidth =
+    aButtonReflowState.ComputedWidth() - aFocusPadding.LeftRight();
+  adjustedWidth = std::max(0, adjustedWidth);
+
+  // (Only adjust height if it's an actual length.)
+  nscoord adjustedHeight = aButtonReflowState.ComputedHeight();
+  if (adjustedHeight != NS_INTRINSICSIZE) {
+    adjustedHeight -= aFocusPadding.TopBottom();
+    adjustedHeight = std::max(0, adjustedHeight);
+  }
+
+  nsHTMLReflowState clone(aButtonReflowState);
+  clone.SetComputedWidth(adjustedWidth);
+  clone.SetComputedHeight(adjustedHeight);
+
+  return clone;
+}
+
 void
 nsHTMLButtonControlFrame::ReflowButtonContents(nsPresContext* aPresContext,
                                                nsHTMLReflowMetrics& aButtonDesiredSize,
@@ -245,7 +273,13 @@ nsHTMLButtonControlFrame::ReflowButtonContents(nsPresContext* aPresContext,
   }
   availSize.width = std::max(availSize.width,0);
   
-  nsHTMLReflowState contentsReflowState(aPresContext, aButtonReflowState,
+  // Give child a clone of the button's reflow state, with height/width reduced
+  // by focusPadding, so that descendants with height:100% don't protrude.
+  nsHTMLReflowState adjustedButtonReflowState =
+    CloneReflowStateWithReducedContentBox(aButtonReflowState, focusPadding);
+
+  nsHTMLReflowState contentsReflowState(aPresContext,
+                                        adjustedButtonReflowState,
                                         aFirstKid, availSize);
 
   nsReflowStatus contentsReflowStatus;
