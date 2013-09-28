@@ -360,7 +360,7 @@ GetProperty(AudioFileStreamID aAudioFileStream,
 
 
 nsresult
-AppleMP3Reader::ReadMetadata(VideoInfo* aInfo,
+AppleMP3Reader::ReadMetadata(MediaInfo* aInfo,
                              MetadataTags** aTags)
 {
   MOZ_ASSERT(mDecoder->OnDecodeThread(), "Should be on decode thread");
@@ -398,9 +398,9 @@ AppleMP3Reader::ReadMetadata(VideoInfo* aInfo,
     return NS_ERROR_FAILURE;
   }
 
-  aInfo->mAudioRate = mAudioSampleRate;
-  aInfo->mAudioChannels = mAudioChannels;
-  aInfo->mHasAudio = mStreamReady;
+  aInfo->mAudio.mRate = mAudioSampleRate;
+  aInfo->mAudio.mChannels = mAudioChannels;
+  aInfo->mAudio.mHasAudio = mStreamReady;
 
   {
     ReentrantMonitorAutoEnter mon(mDecoder->GetReentrantMonitor());

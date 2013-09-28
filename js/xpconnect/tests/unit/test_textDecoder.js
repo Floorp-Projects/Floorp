@@ -6,4 +6,7 @@ function run_test() {
   Cu.evalInSandbox('do_check_eq(new TextDecoder().encoding, "utf-8");' +
                    'do_check_eq(new TextEncoder().encoding, "utf-8");',
                    sb);
+  Cu.importGlobalProperties(["TextDecoder", "TextEncoder"]);
+  do_check_eq(new TextDecoder().encoding, "utf-8");
+  do_check_eq(new TextEncoder().encoding, "utf-8");
 }

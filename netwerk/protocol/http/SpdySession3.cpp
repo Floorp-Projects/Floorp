@@ -16,7 +16,7 @@
 #include "SpdyPush3.h"
 #include "SpdySession3.h"
 #include "SpdyStream3.h"
-#include "PSpdyPush3.h"
+#include "PSpdyPush.h"
 
 #include <algorithm>
 
@@ -988,7 +988,7 @@ SpdySession3::HandleSynStream(SpdySession3 *self)
     self->mShouldGoAway = true;
 
   bool resetStream = true;
-  SpdyPushCache3 *cache = nullptr;
+  SpdyPushCache *cache = nullptr;
 
   if (!(flags & kFlag_Data_UNI)) {
     // pushed streams require UNIDIRECTIONAL flag
@@ -1017,10 +1017,10 @@ SpdySession3::HandleSynStream(SpdySession3 *self)
   } else {
     nsILoadGroupConnectionInfo *loadGroupCI = associatedStream->LoadGroupConnectionInfo();
     if (loadGroupCI) {
-      loadGroupCI->GetSpdyPushCache3(&cache);
+      loadGroupCI->GetSpdyPushCache(&cache);
       if (!cache) {
-        cache = new SpdyPushCache3();
-        if (!cache || NS_FAILED(loadGroupCI->SetSpdyPushCache3(cache))) {
+        cache = new SpdyPushCache();
+        if (!cache || NS_FAILED(loadGroupCI->SetSpdyPushCache(cache))) {
           delete cache;
           cache = nullptr;
         }
@@ -1101,7 +1101,7 @@ SpdySession3::HandleSynStream(SpdySession3 *self)
     return NS_OK;
   }
 
-  if (!cache->RegisterPushedStream(key, pushedStream)) {
+  if (!cache->RegisterPushedStreamSpdy3(key, pushedStream)) {
     LOG(("SpdySession3::HandleSynStream registerPushedStream Failed\n"));
     self->CleanupStream(pushedStream, NS_ERROR_FAILURE, RST_INVALID_STREAM);
     self->ResetDownstreamState();

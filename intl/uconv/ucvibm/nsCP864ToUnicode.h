@@ -20,8 +20,9 @@
 #ifndef nsCP864ToUnicode_h___
 #define nsCP864ToUnicode_h___
 
-#include "nsISupports.h"
+#include "nsID.h"
 
+class nsISupports;
 
 /**
  * A character set converter from CP864 to Unicode.

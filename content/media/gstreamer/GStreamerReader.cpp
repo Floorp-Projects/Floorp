@@ -243,7 +243,7 @@ void GStreamerReader::PlayBinSourceSetup(GstAppSrc* aSource)
   gst_caps_unref(caps);
 }
 
-nsresult GStreamerReader::ReadMetadata(VideoInfo* aInfo,
+nsresult GStreamerReader::ReadMetadata(MediaInfo* aInfo,
                                        MetadataTags** aTags)
 {
   NS_ASSERTION(mDecoder->OnDecodeThread(), "Should be on decode thread.");
@@ -354,8 +354,8 @@ nsresult GStreamerReader::ReadMetadata(VideoInfo* aInfo,
 
   int n_video = 0, n_audio = 0;
   g_object_get(mPlayBin, "n-video", &n_video, "n-audio", &n_audio, nullptr);
-  mInfo.mHasVideo = n_video != 0;
-  mInfo.mHasAudio = n_audio != 0;
+  mInfo.mVideo.mHasVideo = n_video != 0;
+  mInfo.mAudio.mHasAudio = n_audio != 0;
 
   *aInfo = mInfo;
 
@@ -490,12 +490,12 @@ bool GStreamerReader::DecodeAudioData()
 
   int64_t offset = GST_BUFFER_OFFSET(buffer);
   unsigned int size = GST_BUFFER_SIZE(buffer);
-  int32_t frames = (size / sizeof(AudioDataValue)) / mInfo.mAudioChannels;
+  int32_t frames = (size / sizeof(AudioDataValue)) / mInfo.mAudio.mChannels;
   ssize_t outSize = static_cast<size_t>(size / sizeof(AudioDataValue));
   nsAutoArrayPtr<AudioDataValue> data(new AudioDataValue[outSize]);
   memcpy(data, GST_BUFFER_DATA(buffer), GST_BUFFER_SIZE(buffer));
   AudioData* audio = new AudioData(offset, timestamp, duration,
-      frames, data.forget(), mInfo.mAudioChannels);
+      frames, data.forget(), mInfo.mAudio.mChannels);
 
   mAudioQueue.Push(audio);
   gst_buffer_unref(buffer);
@@ -623,7 +623,7 @@ bool GStreamerReader::DecodeVideoFrame(bool &aKeyFrameSkip,
   isKeyframe = !GST_BUFFER_FLAG_IS_SET(buffer, GST_BUFFER_FLAG_DELTA_UNIT);
   /* XXX ? */
   int64_t offset = 0;
-  VideoData* video = VideoData::Create(mInfo, image, offset,
+  VideoData* video = VideoData::Create(mInfo.mVideo, image, offset,
                                        timestamp, nextTimestamp, b,
                                        isKeyframe, -1, mPicture);
   mVideoQueue.Push(video);
@@ -656,7 +656,7 @@ nsresult GStreamerReader::Seek(int64_t aTarget,
 nsresult GStreamerReader::GetBuffered(TimeRanges* aBuffered,
                                       int64_t aStartTime)
 {
-  if (!mInfo.mHasVideo && !mInfo.mHasAudio) {
+  if (!mInfo.HasValidMedia()) {
     return NS_OK;
   }
 
@@ -933,14 +933,14 @@ void GStreamerReader::AudioPreroll()
   GstPad* sinkpad = gst_element_get_pad(GST_ELEMENT(mAudioAppSink), "sink");
   GstCaps* caps = gst_pad_get_negotiated_caps(sinkpad);
   GstStructure* s = gst_caps_get_structure(caps, 0);
-  mInfo.mAudioRate = mInfo.mAudioChannels = 0;
-  gst_structure_get_int(s, "rate", (gint*) &mInfo.mAudioRate);
-  gst_structure_get_int(s, "channels", (gint*) &mInfo.mAudioChannels);
-  NS_ASSERTION(mInfo.mAudioRate != 0, ("audio rate is zero"));
-  NS_ASSERTION(mInfo.mAudioChannels != 0, ("audio channels is zero"));
-  NS_ASSERTION(mInfo.mAudioChannels > 0 && mInfo.mAudioChannels <= MAX_CHANNELS,
+  mInfo.mAudio.mRate = mInfo.mAudio.mChannels = 0;
+  gst_structure_get_int(s, "rate", (gint*) &mInfo.mAudio.mRate);
+  gst_structure_get_int(s, "channels", (gint*) &mInfo.mAudio.mChannels);
+  NS_ASSERTION(mInfo.mAudio.mRate != 0, ("audio rate is zero"));
+  NS_ASSERTION(mInfo.mAudio.mChannels != 0, ("audio channels is zero"));
+  NS_ASSERTION(mInfo.mAudio.mChannels > 0 && mInfo.mAudio.mChannels <= MAX_CHANNELS,
       "invalid audio channels number");
-  mInfo.mHasAudio = true;
+  mInfo.mAudio.mHasAudio = true;
   gst_caps_unref(caps);
   gst_object_unref(sinkpad);
 }
@@ -955,8 +955,8 @@ void GStreamerReader::VideoPreroll()
   GstStructure* structure = gst_caps_get_structure(caps, 0);
   gst_structure_get_fraction(structure, "framerate", &fpsNum, &fpsDen);
   NS_ASSERTION(mPicture.width && mPicture.height, "invalid video resolution");
-  mInfo.mDisplay = nsIntSize(mPicture.width, mPicture.height);
-  mInfo.mHasVideo = true;
+  mInfo.mVideo.mDisplay = nsIntSize(mPicture.width, mPicture.height);
+  mInfo.mVideo.mHasVideo = true;
   gst_caps_unref(caps);
   gst_object_unref(sinkpad);
 }

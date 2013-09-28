@@ -34,7 +34,6 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=479711
          v._name + ":" + v.id + " is not ready before onload fired (" + v.readyState + ")");
     }
 
-    netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
     for (i=0; i<testWindows.length; ++i) {
       testWindows[i].close();
     }
@@ -93,9 +92,6 @@ document.body.appendChild(v);
 // Load outside of doc.
 v = createVideo(test.name, test.type, "3");
 v.load();
-
-// Load and move to another document.
-netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
 
 // Open a new window for the following test. We open it here instead of in
 // the event handler to ensure that our document load event doesn't fire while

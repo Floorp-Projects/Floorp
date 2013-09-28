@@ -7,7 +7,6 @@
 #include "nsUnicodePropertyData.cpp"
 
 #include "mozilla/Util.h"
-#include "nsMemory.h"
 #include "nsCharTraits.h"
 
 #define UNICODE_BMP_LIMIT 0x10000

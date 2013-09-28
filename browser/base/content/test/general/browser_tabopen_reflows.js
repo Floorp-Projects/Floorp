@@ -38,7 +38,7 @@ const EXPECTED_REFLOWS = [
     "TabItem__reconnect@chrome://browser/content/tabview.js|" +
     "TabItem@chrome://browser/content/tabview.js|" +
     "TabItems_link@chrome://browser/content/tabview.js|" +
-    "@chrome://browser/content/tabview.js|",
+    "TabItems_init/this._eventListeners.open@chrome://browser/content/tabview.js|",
 
   // SessionStore.getWindowDimensions()
   "ssi_getWindowDimension@resource:///modules/sessionstore/SessionStore.jsm|" +

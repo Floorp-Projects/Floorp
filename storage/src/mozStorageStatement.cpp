@@ -138,7 +138,7 @@ Statement::initialize(Connection *aDBConnection,
   NS_ASSERTION(aDBConnection, "No database connection given!");
   NS_ASSERTION(!mDBStatement, "Statement already initialized!");
 
-  sqlite3 *db = aDBConnection->GetNativeConnection();
+  DebugOnly<sqlite3 *> db = aDBConnection->GetNativeConnection();
   NS_ASSERTION(db, "We should never be called with a null sqlite3 database!");
 
   int srv = aDBConnection->prepareStatement(PromiseFlatCString(aSQLStatement),
