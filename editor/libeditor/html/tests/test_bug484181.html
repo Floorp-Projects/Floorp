@@ -26,9 +26,9 @@ addLoadEvent(runTest);
 var gMisspeltWords;
 
 function getEditor() {
-  var Ci = Components.interfaces;
+  var Ci = SpecialPowers.Ci;
   var win = window;
-  var editingSession = win.QueryInterface(Ci.nsIInterfaceRequestor)
+  var editingSession = SpecialPowers.wrap(win).QueryInterface(Ci.nsIInterfaceRequestor)
                           .getInterface(Ci.nsIWebNavigation)
                           .QueryInterface(Ci.nsIInterfaceRequestor)
                           .getInterface(Ci.nsIEditingSession);
@@ -42,7 +42,6 @@ function getSpellCheckSelection() {
 }
 
 function append(str) {
-  netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
 
   var edit = document.getElementById("edit");
   var editor = getEditor();
@@ -76,7 +75,6 @@ function runTest() {
 }
 
 function isSpellingCheckOk() {
-  netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
 
   var sel = getSpellCheckSelection();
   var numWords = sel.rangeCount;

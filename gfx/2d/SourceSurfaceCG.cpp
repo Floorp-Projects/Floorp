@@ -164,6 +164,7 @@ DataSourceSurfaceCG::InitFromData(unsigned char *aData,
   void *data = malloc(aStride * aSize.height);
   memcpy(data, aData, aStride * aSize.height);
 
+  mFormat = aFormat;
   mImage = CreateCGImage(data, data, aSize, aStride, aFormat);
 
   if (!mImage) {
@@ -210,6 +211,7 @@ CGContextRef CreateBitmapContextForImage(CGImageRef image)
 
 DataSourceSurfaceCG::DataSourceSurfaceCG(CGImageRef aImage)
 {
+  mFormat = FORMAT_B8G8R8A8;
   mImage = aImage;
   mCg = CreateBitmapContextForImage(aImage);
   if (mCg == nullptr) {
@@ -250,6 +252,7 @@ DataSourceSurfaceCG::GetData()
 SourceSurfaceCGBitmapContext::SourceSurfaceCGBitmapContext(DrawTargetCG *aDrawTarget)
 {
   mDrawTarget = aDrawTarget;
+  mFormat = aDrawTarget->GetFormat();
   mCg = (CGContextRef)aDrawTarget->GetNativeSurface(NATIVE_SURFACE_CGCONTEXT);
   if (!mCg)
     abort();
@@ -286,7 +289,7 @@ void SourceSurfaceCGBitmapContext::EnsureImage() const
 
     if (!mData) abort();
 
-    mImage = CreateCGImage(info, mData, mSize, mStride, FORMAT_B8G8R8A8);
+    mImage = CreateCGImage(info, mData, mSize, mStride, mFormat);
   }
 }
 
@@ -338,6 +341,7 @@ SourceSurfaceCGIOSurfaceContext::SourceSurfaceCGIOSurfaceContext(DrawTargetCG *a
 
   RefPtr<MacIOSurface> surf = MacIOSurface::IOSurfaceContextGetSurface(cg);
 
+  mFormat = aDrawTarget->GetFormat();
   mSize.width = surf->GetWidth();
   mSize.height = surf->GetHeight();
 

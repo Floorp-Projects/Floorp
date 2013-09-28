@@ -49,7 +49,7 @@ using nsQueryContentEvent;
 using nsRect;
 using nsSelectionEvent;
 using nsTextEvent;
-using nsTouchEvent;
+using mozilla::WidgetTouchEvent;
 using RemoteDOMEvent;
 using mozilla::dom::ScreenOrientation;
 using mozilla::layers::TextureFactoryIdentifier;
@@ -367,10 +367,10 @@ child:
     RealMouseEvent(nsMouseEvent event);
     RealKeyEvent(nsKeyEvent event);
     MouseWheelEvent(WheelEvent event);
-    RealTouchEvent(nsTouchEvent event);
+    RealTouchEvent(WidgetTouchEvent event);
     // We use a separate message for touchmove events only to apply
     // compression to them.
-    RealTouchMoveEvent(nsTouchEvent event) compress;
+    RealTouchMoveEvent(WidgetTouchEvent event) compress;
 
     /**
      * @see nsIDOMWindowUtils sendKeyEvent.

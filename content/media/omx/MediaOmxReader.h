@@ -62,7 +62,7 @@ public:
   virtual bool IsDormantNeeded();
   virtual void ReleaseMediaResources();
 
-  virtual nsresult ReadMetadata(VideoInfo* aInfo,
+  virtual nsresult ReadMetadata(MediaInfo* aInfo,
                                 MetadataTags** aTags);
   virtual nsresult Seek(int64_t aTime, int64_t aStartTime, int64_t aEndTime, int64_t aCurrentTime);
   virtual nsresult GetBuffered(mozilla::dom::TimeRanges* aBuffered, int64_t aStartTime);

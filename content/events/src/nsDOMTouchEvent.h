@@ -82,7 +82,8 @@ class nsDOMTouchEvent : public nsDOMUIEvent
 {
 public:
   nsDOMTouchEvent(mozilla::dom::EventTarget* aOwner,
-                  nsPresContext* aPresContext, nsTouchEvent* aEvent);
+                  nsPresContext* aPresContext,
+                  mozilla::WidgetTouchEvent* aEvent);
   virtual ~nsDOMTouchEvent();
 
   NS_DECL_ISUPPORTS_INHERITED

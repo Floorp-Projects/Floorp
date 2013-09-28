@@ -1459,7 +1459,7 @@ is_latin_shortcut_key(quint32 aKeyval)
 nsEventStatus
 nsWindow::DispatchCommandEvent(nsIAtom* aCommand)
 {
-    nsCommandEvent event(true, nsGkAtoms::onAppCommand, aCommand, this);
+    WidgetCommandEvent event(true, nsGkAtoms::onAppCommand, aCommand, this);
 
     nsEventStatus status;
     DispatchEvent(&event, status);
@@ -1470,7 +1470,7 @@ nsWindow::DispatchCommandEvent(nsIAtom* aCommand)
 nsEventStatus
 nsWindow::DispatchContentCommandEvent(int32_t aMsg)
 {
-    nsContentCommandEvent event(true, aMsg, this);
+    WidgetContentCommandEvent event(true, aMsg, this);
 
     nsEventStatus status;
     DispatchEvent(&event, status);
@@ -1973,7 +1973,8 @@ nsEventStatus nsWindow::OnTouchEvent(QTouchEvent *event, bool &handled)
         handled = true;
         for (int i = touchPoints.count() -1; i >= 0; i--) {
             QPointF fpos = touchPoints[i].pos();
-            nsGestureNotifyEvent gestureNotifyEvent(true, NS_GESTURENOTIFY_EVENT_START, this);
+            WidgetGestureNotifyEvent gestureNotifyEvent(true,
+                                         NS_GESTURENOTIFY_EVENT_START, this);
             gestureNotifyEvent.refPoint = LayoutDeviceIntPoint(fpos.x(), fpos.y());
             DispatchEvent(&gestureNotifyEvent);
         }
@@ -2077,7 +2078,7 @@ nsEventStatus
 nsWindow::DispatchGestureEvent(uint32_t aMsg, uint32_t aDirection,
                                double aDelta, const nsIntPoint& aRefPoint)
 {
-    nsSimpleGestureEvent mozGesture(true, aMsg, this, 0, 0.0);
+    WidgetSimpleGestureEvent mozGesture(true, aMsg, this, 0, 0.0);
     mozGesture.direction = aDirection;
     mozGesture.delta = aDelta;
     mozGesture.refPoint = LayoutDeviceIntPoint::FromUntyped(aRefPoint);
