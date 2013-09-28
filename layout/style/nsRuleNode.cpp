@@ -4889,7 +4889,7 @@ nsRuleNode::ComputeDisplayData(void* aStartStruct,
               SETDSC_ENUMERATED, parentDisplay->mDisplay,
               NS_STYLE_DISPLAY_INLINE, 0, 0, 0, 0);
 
-  // display: enum, inherit, initial
+  // mix-blend-mode: enum, inherit, initial
   SetDiscrete(*aRuleData->ValueForMixBlendMode(), display->mMixBlendMode,
               canStoreInRuleTree, SETDSC_ENUMERATED,
               parentDisplay->mMixBlendMode, NS_STYLE_BLEND_NORMAL,
