@@ -4336,8 +4336,13 @@ let TabState = {
       // Collected session storage data asynchronously.
       let storage = yield Messenger.send(tab, "SessionStore:collectSessionStorage");
 
+      // Collect docShell capabilities asynchronously.
+      let disallow = yield Messenger.send(tab, "SessionStore:collectDocShellCapabilities");
+
       // Collect basic tab data, without session history and storage.
-      let options = {omitSessionHistory: true, omitSessionStorage: true};
+      let options = {omitSessionHistory: true,
+                     omitSessionStorage: true,
+                     omitDocShellCapabilities: true};
       let tabData = new TabData(this._collectBaseTabData(tab, options));
 
       // Apply collected data.
@@ -4346,6 +4351,10 @@ let TabState = {
 
       if (Object.keys(storage).length) {
         tabData.storage = storage;
+      }
+
+      if (disallow.length > 0) {
+	tabData.disallow = disallow.join(",");
       }
 
       // Save text and scroll data.
@@ -4431,6 +4440,7 @@ let TabState = {
    *        storage data collection methods.
    *        {omitSessionHistory: true} to skip collecting session history data
    *        {omitSessionStorage: true} to skip collecting session storage data
+   *        {omitDocShellCapabilities: true} to skip collecting docShell allow* attributes
    *
    *        The omit* options have been introduced to enable us collecting
    *        those parts of the tab data asynchronously. We will request basic
@@ -4488,11 +4498,13 @@ let TabState = {
       delete tabData.pinned;
     tabData.hidden = tab.hidden;
 
-    let disallow = DocShellCapabilities.collect(browser.docShell);
-    if (disallow.length > 0)
-      tabData.disallow = disallow.join(",");
-    else if (tabData.disallow)
-      delete tabData.disallow;
+    if (!options || !options.omitDocShellCapabilities) {
+      let disallow = DocShellCapabilities.collect(browser.docShell);
+      if (disallow.length > 0)
+	tabData.disallow = disallow.join(",");
+      else if (tabData.disallow)
+	delete tabData.disallow;
+    }
 
     // Save tab attributes.
     tabData.attributes = TabAttributes.get(tab);
