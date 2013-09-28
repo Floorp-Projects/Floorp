@@ -24,6 +24,7 @@ static const char* sDiscardTimeoutPref = "image.mem.min_discard_timeout_ms";
 /* static */ uint32_t DiscardTracker::sMaxDecodedImageKB = 42 * 1024;
 /* static */ PRLock * DiscardTracker::sAllocationLock = nullptr;
 /* static */ mozilla::Mutex* DiscardTracker::sNodeListMutex = nullptr;
+/* static */ Atomic<uint32_t> DiscardTracker::sShutdown(0);
 
 /*
  * When we notice we're using too much memory for decoded images, we enqueue a
@@ -82,6 +83,10 @@ DiscardTracker::Reset(Node *node)
 void
 DiscardTracker::Remove(Node *node)
 {
+  if (sShutdown) {
+    // Already shutdown. List should be empty, so just return.
+    return;
+  }
   MutexAutoLock lock(*sNodeListMutex);
 
   if (node->isInList())
@@ -97,6 +102,8 @@ DiscardTracker::Remove(Node *node)
 void
 DiscardTracker::Shutdown()
 {
+  sShutdown = true;
+
   if (sTimer) {
     sTimer->Cancel();
     sTimer = nullptr;
