@@ -23,11 +23,16 @@ class imgStatusTrackerNotifyingObserver : public imgDecoderObserver
 {
 public:
   imgStatusTrackerNotifyingObserver(imgStatusTracker* aTracker)
-  : mTracker(aTracker) {}
+  : mTracker(aTracker)
+  {
+    MOZ_ASSERT(aTracker);
+  }
 
   virtual ~imgStatusTrackerNotifyingObserver() {}
 
-  void SetTracker(imgStatusTracker* aTracker) {
+  void SetTracker(imgStatusTracker* aTracker)
+  {
+    MOZ_ASSERT(aTracker);
     mTracker = aTracker;
   }
 
@@ -205,19 +210,24 @@ public:
   }
 
 private:
-  imgStatusTracker* mTracker;
+  nsRefPtr<imgStatusTracker> mTracker;
 };
 
 class imgStatusTrackerObserver : public imgDecoderObserver
 {
 public:
   imgStatusTrackerObserver(imgStatusTracker* aTracker)
-  : mTracker(aTracker) {}
+  : mTracker(aTracker->asWeakPtr())
+  {
+    MOZ_ASSERT(aTracker);
+  }
 
   virtual ~imgStatusTrackerObserver() {}
 
-  void SetTracker(imgStatusTracker* aTracker) {
-    mTracker = aTracker;
+  void SetTracker(imgStatusTracker* aTracker)
+  {
+    MOZ_ASSERT(aTracker);
+    mTracker = aTracker->asWeakPtr();
   }
 
   /** imgDecoderObserver methods **/
@@ -225,9 +235,11 @@ public:
   virtual void OnStartDecode() MOZ_OVERRIDE
   {
     LOG_SCOPE(GetImgLog(), "imgStatusTrackerObserver::OnStartDecode");
-    mTracker->RecordStartDecode();
-    if (!mTracker->IsMultipart()) {
-      mTracker->RecordBlockOnload();
+    nsRefPtr<imgStatusTracker> tracker = mTracker.get();
+    if (!tracker) { return; }
+    tracker->RecordStartDecode();
+    if (!tracker->IsMultipart()) {
+      tracker->RecordBlockOnload();
     }
   }
 
@@ -239,72 +251,93 @@ public:
   virtual void OnStartContainer() MOZ_OVERRIDE
   {
     LOG_SCOPE(GetImgLog(), "imgStatusTrackerObserver::OnStartContainer");
-    mTracker->RecordStartContainer(mTracker->GetImage());
+    nsRefPtr<imgStatusTracker> tracker = mTracker.get();
+    if (!tracker) { return; }
+    nsRefPtr<Image> image = tracker->GetImage();;
+    tracker->RecordStartContainer(image);
   }
 
   virtual void OnStartFrame() MOZ_OVERRIDE
   {
     LOG_SCOPE(GetImgLog(), "imgStatusTrackerObserver::OnStartFrame");
-    mTracker->RecordStartFrame();
+    nsRefPtr<imgStatusTracker> tracker = mTracker.get();
+    if (!tracker) { return; }
+    tracker->RecordStartFrame();
   }
 
   virtual void FrameChanged(const nsIntRect* dirtyRect) MOZ_OVERRIDE
   {
     LOG_SCOPE(GetImgLog(), "imgStatusTrackerObserver::FrameChanged");
-    mTracker->RecordFrameChanged(dirtyRect);
+    nsRefPtr<imgStatusTracker> tracker = mTracker.get();
+    if (!tracker) { return; }
+    tracker->RecordFrameChanged(dirtyRect);
   }
 
   virtual void OnStopFrame() MOZ_OVERRIDE
   {
     LOG_SCOPE(GetImgLog(), "imgStatusTrackerObserver::OnStopFrame");
-    mTracker->RecordStopFrame();
-    mTracker->RecordUnblockOnload();
+    nsRefPtr<imgStatusTracker> tracker = mTracker.get();
+    if (!tracker) { return; }
+    tracker->RecordStopFrame();
+    tracker->RecordUnblockOnload();
   }
 
   virtual void OnStopDecode(nsresult aStatus) MOZ_OVERRIDE
   {
     LOG_SCOPE(GetImgLog(), "imgStatusTrackerObserver::OnStopDecode");
-    mTracker->RecordStopDecode(aStatus);
+    nsRefPtr<imgStatusTracker> tracker = mTracker.get();
+    if (!tracker) { return; }
+    tracker->RecordStopDecode(aStatus);
 
     // This is really hacky. We need to handle the case where we start decoding,
     // block onload, but then hit an error before we get to our first frame.
-    mTracker->RecordUnblockOnload();
+    tracker->RecordUnblockOnload();
   }
 
   virtual void OnStopRequest(bool aLastPart, nsresult aStatus) MOZ_OVERRIDE
   {
     LOG_SCOPE(GetImgLog(), "imgStatusTrackerObserver::OnStopRequest");
-    mTracker->RecordStopRequest(aLastPart, aStatus);
+    nsRefPtr<imgStatusTracker> tracker = mTracker.get();
+    if (!tracker) { return; }
+    tracker->RecordStopRequest(aLastPart, aStatus);
   }
 
   virtual void OnDiscard() MOZ_OVERRIDE
   {
     LOG_SCOPE(GetImgLog(), "imgStatusTrackerObserver::OnDiscard");
-    mTracker->RecordDiscard();
+    nsRefPtr<imgStatusTracker> tracker = mTracker.get();
+    if (!tracker) { return; }
+    tracker->RecordDiscard();
   }
 
   virtual void OnUnlockedDraw() MOZ_OVERRIDE
   {
     LOG_SCOPE(GetImgLog(), "imgStatusTrackerObserver::OnUnlockedDraw");
-    NS_ABORT_IF_FALSE(mTracker->GetImage(),
+    nsRefPtr<imgStatusTracker> tracker = mTracker.get();
+    if (!tracker) { return; }
+    NS_ABORT_IF_FALSE(tracker->GetImage(),
                       "OnUnlockedDraw callback before we've created our image");
-    mTracker->RecordUnlockedDraw();
+    tracker->RecordUnlockedDraw();
   }
 
   virtual void OnImageIsAnimated() MOZ_OVERRIDE
   {
     LOG_SCOPE(GetImgLog(), "imgStatusTrackerObserver::OnImageIsAnimated");
-    mTracker->RecordImageIsAnimated();
+    nsRefPtr<imgStatusTracker> tracker = mTracker.get();
+    if (!tracker) { return; }
+    tracker->RecordImageIsAnimated();
   }
 
   virtual void OnError() MOZ_OVERRIDE
   {
     LOG_SCOPE(GetImgLog(), "imgStatusTrackerObserver::OnError");
-    mTracker->RecordError();
+    nsRefPtr<imgStatusTracker> tracker = mTracker.get();
+    if (!tracker) { return; }
+    tracker->RecordError();
   }
 
 private:
-  imgStatusTracker* mTracker;
+  mozilla::WeakPtr<imgStatusTracker> mTracker;
 };
 
 // imgStatusTracker methods
@@ -369,7 +402,8 @@ imgStatusTracker::GetImageStatus() const
 class imgRequestNotifyRunnable : public nsRunnable
 {
   public:
-    imgRequestNotifyRunnable(imgStatusTracker* aTracker, imgRequestProxy* aRequestProxy)
+    imgRequestNotifyRunnable(imgStatusTracker* aTracker,
+                             imgRequestProxy* aRequestProxy)
       : mTracker(aTracker)
     {
       MOZ_ASSERT(NS_IsMainThread(), "Should be created on the main thread");
@@ -442,26 +476,27 @@ imgStatusTracker::Notify(imgRequestProxy* proxy)
 class imgStatusNotifyRunnable : public nsRunnable
 {
   public:
-    imgStatusNotifyRunnable(imgStatusTracker& status,
+    imgStatusNotifyRunnable(imgStatusTracker* statusTracker,
                             imgRequestProxy* requestproxy)
-      : mStatus(status), mImage(status.mImage), mProxy(requestproxy)
+      : mStatusTracker(statusTracker), mProxy(requestproxy)
     {
       MOZ_ASSERT(NS_IsMainThread(), "Should be created on the main thread");
       MOZ_ASSERT(requestproxy, "requestproxy cannot be null");
+      MOZ_ASSERT(statusTracker, "status should not be null");
+      mImage = statusTracker->GetImage();
     }
 
     NS_IMETHOD Run()
     {
       MOZ_ASSERT(NS_IsMainThread(), "Should be running on the main thread");
-      MOZ_ASSERT(mProxy, "mProxy cannot be null");
       mProxy->SetNotificationsDeferred(false);
 
-      mStatus.SyncNotify(mProxy);
+      mStatusTracker->SyncNotify(mProxy);
       return NS_OK;
     }
 
   private:
-    imgStatusTracker mStatus;
+    nsRefPtr<imgStatusTracker> mStatusTracker;
     // We have to hold on to a reference to the tracker's image, just in case
     // it goes away while we're in the event queue.
     nsRefPtr<Image> mImage;
@@ -483,7 +518,7 @@ imgStatusTracker::NotifyCurrentState(imgRequestProxy* proxy)
   proxy->SetNotificationsDeferred(true);
 
   // We don't keep track of
-  nsCOMPtr<nsIRunnable> ev = new imgStatusNotifyRunnable(*this, proxy);
+  nsCOMPtr<nsIRunnable> ev = new imgStatusNotifyRunnable(this, proxy);
   NS_DispatchToCurrentThread(ev);
 }
 
@@ -549,6 +584,7 @@ imgStatusTracker::SyncNotifyState(nsTObserverArray<imgRequestProxy*>& proxies,
 ImageStatusDiff
 imgStatusTracker::Difference(imgStatusTracker* aOther) const
 {
+  MOZ_ASSERT(aOther, "aOther cannot be null");
   ImageStatusDiff diff;
   diff.diffState = ~mState & aOther->mState & ~stateRequestStarted;
   diff.diffImageStatus = ~mImageStatus & aOther->mImageStatus;
@@ -652,11 +688,13 @@ imgStatusTracker::SyncNotifyDifference(const ImageStatusDiff& diff)
   }
 }
 
-imgStatusTracker*
+already_AddRefed<imgStatusTracker>
 imgStatusTracker::CloneForRecording()
 {
-  imgStatusTracker* clone = new imgStatusTracker(*this);
-  return clone;
+  // Grab a ref to this to ensure it isn't deleted.
+  nsRefPtr<imgStatusTracker> thisStatusTracker = this;
+  nsRefPtr<imgStatusTracker> clone = new imgStatusTracker(*thisStatusTracker);
+  return clone.forget();
 }
 
 void

@@ -115,7 +115,7 @@ public:
   // Return the imgStatusTracker associated with this imgRequest. It may live
   // in |mStatusTracker| or in |mImage.mStatusTracker|, depending on whether
   // mImage has been instantiated yet.
-  imgStatusTracker& GetStatusTracker();
+  already_AddRefed<imgStatusTracker> GetStatusTracker();
 
   // Get the current principal of the image. No AddRefing.
   inline nsIPrincipal* GetPrincipal() const { return mPrincipal.get(); }
