@@ -3822,10 +3822,6 @@ Tab.prototype = {
 
     aMetadata.isRTL = this.browser.contentDocument.documentElement.dir == "rtl";
 
-    // if the metadata hasn't actually changed, no need to do anything
-    if (aMetadata.equals(this.metadata))
-      return;
-
     ViewportHandler.setMetadataForDocument(this.browser.contentDocument, aMetadata);
     this.updateViewportSize(gScreenWidth, aInitialLoad);
     this.sendViewportMetadata();
@@ -5812,18 +5808,6 @@ ViewportMetadata.prototype = {
   allowZoom: null,
   isSpecified: null,
   isRTL: null,
-
-  equals: function(aOther) {
-    return this.width === aOther.width
-        && this.height === aOther.height
-        && this.defaultZoom === aOther.defaultZoom
-        && (this.minZoom === aOther.minZoom || (isNaN(minZoom) && isNaN(aOther.minZoom)))
-        && (this.maxZoom === aOther.maxZoom || (isNaN(maxZoom) && isNaN(aOther.maxZoom)))
-        && this.autoSize === aOther.autoSize
-        && this.allowZoom === aOther.allowZoom
-        && this.isSpecified === aOther.isSpecified
-        && this.isRTL === aOther.isRTL;
-  }
 };
 
 
