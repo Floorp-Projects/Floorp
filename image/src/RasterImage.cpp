@@ -2673,6 +2673,8 @@ RasterImage::Draw(gfxContext *aContext,
 NS_IMETHODIMP
 RasterImage::LockImage()
 {
+  MOZ_ASSERT(NS_IsMainThread(),
+             "Main thread to encourage serialization with UnlockImage");
   if (mError)
     return NS_ERROR_FAILURE;
 
@@ -2690,6 +2692,8 @@ RasterImage::LockImage()
 NS_IMETHODIMP
 RasterImage::UnlockImage()
 {
+  MOZ_ASSERT(NS_IsMainThread(),
+             "Main thread to encourage serialization with LockImage");
   if (mError)
     return NS_ERROR_FAILURE;
 

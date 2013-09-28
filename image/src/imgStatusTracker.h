@@ -19,6 +19,7 @@ class nsIRunnable;
 #include "mozilla/RefPtr.h"
 #include "nsCOMPtr.h"
 #include "nsTObserverArray.h"
+#include "nsThreadUtils.h"
 #include "nsRect.h"
 
 namespace mozilla {
@@ -129,6 +130,8 @@ public:
   // We will also take note of any notifications that happen between the time
   // Notify() is called and when we call SyncNotify on |proxy|, and replay them
   // as well.
+  // Should be called on the main thread only, since imgRequestProxy and GetURI
+  // are not threadsafe.
   void Notify(imgRequestProxy* proxy);
 
   // Schedule an asynchronous "replaying" of all the notifications that would
@@ -136,12 +139,16 @@ public:
   // Unlike Notify(), does *not* take into account future notifications.
   // This is only useful if you do not have an imgRequest, e.g., if you are a
   // static request returned from imgIRequest::GetStaticRequest().
+  // Should be called on the main thread only, since imgRequestProxy and GetURI
+  // are not threadsafe.
   void NotifyCurrentState(imgRequestProxy* proxy);
 
   // "Replay" all of the notifications that would have to happen to put us in
   // the state we're currently in.
   // Only use this if you're already servicing an asynchronous call (e.g.
   // OnStartRequest).
+  // Should be called on the main thread only, since imgRequestProxy and GetURI
+  // are not threadsafe.
   void SyncNotify(imgRequestProxy* proxy);
 
   // Send some notifications that would be necessary to make |proxy| believe
@@ -153,16 +160,23 @@ public:
   // with its status. Weak pointers.
   void AddConsumer(imgRequestProxy* aConsumer);
   bool RemoveConsumer(imgRequestProxy* aConsumer, nsresult aStatus);
-  size_t ConsumerCount() const { return mConsumers.Length(); }
+  size_t ConsumerCount() const {
+    MOZ_ASSERT(NS_IsMainThread(), "Use mConsumers on main thread only");
+    return mConsumers.Length();
+  }
 
   // This is intentionally non-general because its sole purpose is to support an
   // some obscure network priority logic in imgRequest. That stuff could probably
   // be improved, but it's too scary to mess with at the moment.
   bool FirstConsumerIs(imgRequestProxy* aConsumer) {
+    MOZ_ASSERT(NS_IsMainThread(), "Use mConsumers on main thread only");
     return mConsumers.SafeElementAt(0, nullptr) == aConsumer;
   }
 
-  void AdoptConsumers(imgStatusTracker* aTracker) { mConsumers = aTracker->mConsumers; }
+  void AdoptConsumers(imgStatusTracker* aTracker) {
+    MOZ_ASSERT(NS_IsMainThread(), "Use mConsumers on main thread only");
+    mConsumers = aTracker->mConsumers;
+  }
 
   // Returns whether we are in the process of loading; that is, whether we have
   // not received OnStopRequest.
@@ -187,6 +201,8 @@ public:
   void RecordDecoded();
 
   /* non-virtual imgDecoderObserver methods */
+  // Functions with prefix Send- are main thread only, since they contain calls
+  // to imgRequestProxy functions, which are expected on the main thread.
   void RecordStartDecode();
   void SendStartDecode(imgRequestProxy* aProxy);
   void RecordStartContainer(imgIContainer* aContainer);
@@ -207,12 +223,18 @@ public:
   void SendImageIsAnimated(imgRequestProxy *aProxy);
 
   /* non-virtual sort-of-nsIRequestObserver methods */
+  // Functions with prefix Send- are main thread only, since they contain calls
+  // to imgRequestProxy functions, which are expected on the main thread.
   void RecordStartRequest();
   void SendStartRequest(imgRequestProxy* aProxy);
   void RecordStopRequest(bool aLastPart, nsresult aStatus);
   void SendStopRequest(imgRequestProxy* aProxy, bool aLastPart, nsresult aStatus);
 
+  // All main thread only because they call functions (like SendStartRequest)
+  // which are expected to be called on the main thread.
   void OnStartRequest();
+  // OnDataAvailable will dispatch a call to itself onto the main thread if not
+  // called there.
   void OnDataAvailable();
   void OnStopRequest(bool aLastPart, nsresult aStatus);
   void OnDiscard();
@@ -231,6 +253,7 @@ public:
   void RecordUnblockOnload();
   void SendUnblockOnload(imgRequestProxy* aProxy);
 
+  // Main thread only because mConsumers is not threadsafe.
   void MaybeUnblockOnload();
 
   void RecordError();
@@ -256,6 +279,7 @@ public:
 
   // Notify for the changes captured in an ImageStatusDiff. Because this may
   // result in recursive notifications, no decoding locks may be held.
+  // Called on the main thread only.
   void SyncNotifyDifference(const mozilla::image::ImageStatusDiff& aDiff);
 
   nsIntRect GetInvalidRect() const { return mInvalidRect; }
@@ -267,8 +291,11 @@ private:
   friend class imgStatusTrackerNotifyingObserver;
   imgStatusTracker(const imgStatusTracker& aOther);
 
+  // Main thread only because it deals with the observer service.
   void FireFailureNotification();
 
+  // Main thread only, since imgRequestProxy calls are expected on the main
+  // thread, and mConsumers is not threadsafe.
   static void SyncNotifyState(nsTObserverArray<imgRequestProxy*>& proxies,
                               bool hasImage, uint32_t state,
                               nsIntRect& dirtyRect, bool hadLastPart);
@@ -283,7 +310,8 @@ private:
   mozilla::image::Image* mImage;
 
   // List of proxies attached to the image. Each proxy represents a consumer
-  // using the image.
+  // using the image. Array and/or individual elements should only be accessed
+  // on the main thread.
   nsTObserverArray<imgRequestProxy*> mConsumers;
 
   mozilla::RefPtr<imgDecoderObserver> mTrackerObserver;
