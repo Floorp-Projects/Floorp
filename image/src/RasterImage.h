@@ -717,6 +717,9 @@ private: // data
   // will inform us when to let go of this pointer.
   ScaleRequest* mScaleRequest;
 
+  // Initializes imgStatusTracker and resets it on RasterImage destruction.
+  nsAutoPtr<imgStatusTrackerInit> mStatusTrackerInit;
+
   nsresult ShutdownDecoder(eShutdownIntent aIntent);
 
   // Error handling.
