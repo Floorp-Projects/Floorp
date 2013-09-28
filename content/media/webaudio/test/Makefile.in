@@ -78,6 +78,7 @@ MOCHITEST_FILES := \
   test_oscillatorNodeStart.html \
   test_pannerNode.html \
   test_pannerNodeAbove.html \
+  test_pannerNodeChannelCount.html \
   test_pannerNode_equalPower.html \
   test_periodicWave.html \
   test_scriptProcessorNode.html \
@@ -107,9 +108,3 @@ MOCHITEST_FILES := \
   audio-mono-expected-2.wav \
   audio-quad.wav \
   $(NULL)
-
-ifneq ($(OS_TARGET),Android) # bug 912474
-MOCHITEST_FILES += \
-  test_pannerNodeChannelCount.html \
-  $(NULL)
-endif
