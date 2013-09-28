@@ -704,7 +704,7 @@ AndroidGeckoEvent::Init(AndroidGeckoEvent *aResizeEvent)
     mPoints = aResizeEvent->mPoints; // x,y coordinates
 }
 
-nsTouchEvent
+WidgetTouchEvent
 AndroidGeckoEvent::MakeTouchEvent(nsIWidget* widget)
 {
     int type = NS_EVENT_NULL;
@@ -737,7 +737,7 @@ AndroidGeckoEvent::MakeTouchEvent(nsIWidget* widget)
         }
     }
 
-    nsTouchEvent event(true, type, widget);
+    WidgetTouchEvent event(true, type, widget);
     if (type == NS_EVENT_NULL) {
         // An event we don't know about
         return event;

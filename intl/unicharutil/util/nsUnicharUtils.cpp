@@ -4,16 +4,11 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "nsUnicharUtils.h"
-#include "nsUnicharUtilCIID.h"
-
-#include "nsCRT.h"
-#include "nsICaseConversion.h"
-#include "nsServiceManagerUtils.h"
 #include "nsXPCOMStrings.h"
 #include "nsUTF8Utils.h"
 #include "nsUnicodeProperties.h"
-#include "nsHashKeys.h"
 #include "mozilla/Likely.h"
+#include "mozilla/HashFunctions.h"
 
 // We map x -> x, except for upper-case letters,
 // which we map to their lower-case equivalents.

@@ -6,7 +6,6 @@
 #ifndef NSCONVERTEROUTPUTSTREAM_H_
 #define NSCONVERTEROUTPUTSTREAM_H_
 
-#include "nsIOutputStream.h"
 #include "nsIConverterOutputStream.h"
 #include "nsCOMPtr.h"
 #include "mozilla/Attributes.h"

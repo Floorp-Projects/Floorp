@@ -198,7 +198,7 @@ public:
   nsWinGesture();
 
 public:
-  bool SetWinGestureSupport(HWND hWnd, nsGestureNotifyEvent::ePanDirection aDirection);
+  bool SetWinGestureSupport(HWND hWnd, mozilla::WidgetGestureNotifyEvent::ePanDirection aDirection);
   bool ShutdownWinGestureSupport();
   bool RegisterTouchWindow(HWND hWnd);
   bool UnregisterTouchWindow(HWND hWnd);
@@ -207,7 +207,7 @@ public:
   bool IsAvailable();
   
   // Simple gesture process
-  bool ProcessGestureMessage(HWND hWnd, WPARAM wParam, LPARAM lParam, nsSimpleGestureEvent& evt);
+  bool ProcessGestureMessage(HWND hWnd, WPARAM wParam, LPARAM lParam, mozilla::WidgetSimpleGestureEvent& evt);
 
   // Pan processing
   bool IsPanEvent(LPARAM lParam);

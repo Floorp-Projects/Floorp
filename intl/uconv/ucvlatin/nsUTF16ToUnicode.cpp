@@ -3,10 +3,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "nsUCConstructors.h"
 #include "nsUTF16ToUnicode.h"
 #include "nsCharTraits.h"
-#include <string.h>
 
 enum {
   STATE_NORMAL = 0,

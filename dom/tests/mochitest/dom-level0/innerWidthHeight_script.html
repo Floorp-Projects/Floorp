@@ -6,13 +6,9 @@
   <script class="testbody" type="text/javascript">
   function runSubTest()
   {
-    // get ability to set innerWidth and height without setting a pref
-    netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
-
     // Firefox doesn't support the metaviewport tag on desktop, so we force
     // css viewport here using nsIDomWindowUtils
-    var cwu = window.QueryInterface(Components.interfaces.nsIInterfaceRequestor).
-                     getInterface(Components.interfaces.nsIDOMWindowUtils);
+    var cwu = SpecialPowers.getDOMWindowUtils(window);
     cwu.setCSSViewport(320, 320);
 
     var oldWidth = window.innerWidth;

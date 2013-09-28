@@ -232,6 +232,7 @@ class MinorCollectionTracer : public JSTracer
     /* Save and restore all of the runtime state we use during MinorGC. */
     bool savedRuntimeNeedBarrier;
     AutoDisableProxyCheck disableStrictProxyChecking;
+    AutoEnterOOMUnsafeRegion oomUnsafeRegion;
 
     /* Insert the given relocation entry into the list of things to visit. */
     JS_ALWAYS_INLINE void insertIntoFixupList(RelocationOverlay *entry) {
@@ -494,6 +495,8 @@ js::Nursery::moveSlotsToTenured(JSObject *dst, JSObject *src, AllocKind dstKind)
     Zone *zone = src->zone();
     size_t count = src->numDynamicSlots();
     dst->slots = zone->pod_malloc<HeapSlot>(count);
+    if (!dst->slots)
+        MOZ_CRASH();
     PodCopy(dst->slots, src->slots, count);
     setSlotsForwardingPointer(src->slots, dst->slots, count);
     return count * sizeof(HeapSlot);

@@ -1852,7 +1852,7 @@ public:
 
   NS_IMETHOD Run()
   {
-    nsFocusEvent event(true, mType);
+    InternalFocusEvent event(true, mType);
     event.mFlags.mBubbles = false;
     event.fromRaise = mWindowRaised;
     event.isRefocus = mIsRefocus;

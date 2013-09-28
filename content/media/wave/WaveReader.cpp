@@ -125,8 +125,8 @@ nsresult WaveReader::Init(MediaDecoderReader* aCloneDonor)
   return NS_OK;
 }
 
-nsresult WaveReader::ReadMetadata(VideoInfo* aInfo,
-                                    MetadataTags** aTags)
+nsresult WaveReader::ReadMetadata(MediaInfo* aInfo,
+                                  MetadataTags** aTags)
 {
   NS_ASSERTION(mDecoder->OnDecodeThread(), "Should be on decode thread.");
 
@@ -142,10 +142,9 @@ nsresult WaveReader::ReadMetadata(VideoInfo* aInfo,
     return NS_ERROR_FAILURE;
   }
 
-  mInfo.mHasAudio = true;
-  mInfo.mHasVideo = false;
-  mInfo.mAudioRate = mSampleRate;
-  mInfo.mAudioChannels = mChannels;
+  mInfo.mAudio.mHasAudio = true;
+  mInfo.mAudio.mRate = mSampleRate;
+  mInfo.mAudio.mChannels = mChannels;
 
   *aInfo = mInfo;
 
@@ -273,7 +272,7 @@ static double RoundToUsecs(double aSeconds) {
 
 nsresult WaveReader::GetBuffered(dom::TimeRanges* aBuffered, int64_t aStartTime)
 {
-  if (!mInfo.mHasAudio) {
+  if (!mInfo.HasAudio()) {
     return NS_OK;
   }
   int64_t startOffset = mDecoder->GetResource()->GetNextCachedData(mWavePCMOffset);

@@ -7,6 +7,7 @@ from __future__ import unicode_literals
 from collections import OrderedDict
 from itertools import groupby
 from operator import itemgetter
+from os.path import dirname
 
 WHITESPACE_CHARACTERS = ' \t'
 
@@ -48,8 +49,7 @@ def dependency_map(lines):
     return deps
 
 def all_dependencies(*targets, **kwargs):
-    """Return a list containing |targets| and all the dependencies of
-    those targets.
+    """Return a list containing all the dependencies of |targets|.
 
     The relative order of targets is maintained if possible.
 
@@ -61,7 +61,6 @@ def all_dependencies(*targets, **kwargs):
     all_targets = OrderedDict() # Used as an ordered set.
 
     for target in targets:
-        all_targets[target] = True
         if target in dm:
             for dependency in dm[target]:
                 # Move element back in the ordered set.
@@ -71,6 +70,18 @@ def all_dependencies(*targets, **kwargs):
 
     return all_targets.keys()
 
+def get_components(path):
+    """Take a path and return all the components of the path."""
+    paths = [path]
+    while True:
+        parent = dirname(paths[-1])
+        if parent == "":
+            break
+        paths.append(parent)
+
+    paths.reverse()
+    return paths
+
 def add_extra_dependencies(target_pairs, dependency_map):
     """Take a list [(make_dir, make_target)] and expand (make_dir, None)
     entries with extra make dependencies from |dependency_map|.
@@ -78,16 +89,34 @@ def add_extra_dependencies(target_pairs, dependency_map):
     Returns an iterator of pairs (make_dir, make_target).
 
     """
+    all_targets = OrderedDict() # Used as an ordered set.
+    make_dirs = OrderedDict() # Used as an ordered set.
+
     for make_target, group in groupby(target_pairs, itemgetter(1)):
         # Return non-simple directory targets untouched.
         if make_target is not None:
             for pair in group:
-                yield pair
+                # Generate dependencies for all components of a path.
+                # Given path a/b/c, examine a, a/b, and a/b/c in that order.
+                paths = get_components(pair[1])
+                # For each component of a path, find and add all dependencies
+                # to the final target list.
+                for target in paths:
+                    if target not in all_targets:
+                        yield pair[0], target
+                        all_targets[target] = True
             continue
 
         # Add extra dumbmake dependencies to simple directory targets.
-        make_dirs = [make_dir for make_dir, _ in group]
-        new_make_dirs = all_dependencies(*make_dirs, dependency_map=dependency_map)
+        for make_dir, _ in group:
+            if make_dir not in make_dirs:
+                yield make_dir, None
+                make_dirs[make_dir] = True
 
-        for make_dir in new_make_dirs:
-            yield make_dir, None
+    all_components = []
+    for make_dir in make_dirs.iterkeys():
+        all_components.extend(get_components(make_dir))
+
+    for i in all_dependencies(*all_components, dependency_map=dependency_map):
+        if i not in make_dirs:
+            yield i, None

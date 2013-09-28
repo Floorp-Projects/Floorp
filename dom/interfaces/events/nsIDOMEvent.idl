@@ -247,7 +247,7 @@ nsresult
 NS_NewDOMFocusEvent(nsIDOMEvent** aInstancePtrResult,
                     mozilla::dom::EventTarget* aOwner,
                     nsPresContext* aPresContext,
-                    nsFocusEvent* aEvent);
+                    mozilla::InternalFocusEvent* aEvent);
 nsresult
 NS_NewDOMMouseScrollEvent(nsIDOMEvent** aInstancePtrResult,
                           mozilla::dom::EventTarget* aOwner,
@@ -267,7 +267,7 @@ nsresult
 NS_NewDOMClipboardEvent(nsIDOMEvent** aInstancePtrResult,
                         mozilla::dom::EventTarget* aOwner,
                         nsPresContext* aPresContext,
-                        nsClipboardEvent *aEvent);
+                        mozilla::InternalClipboardEvent* aEvent);
 
 nsresult
 NS_NewDOMKeyboardEvent(nsIDOMEvent** aInstancePtrResult,
@@ -283,7 +283,7 @@ nsresult
 NS_NewDOMMutationEvent(nsIDOMEvent** aResult,
                        mozilla::dom::EventTarget* aOwner,
                        nsPresContext* aPresContext,
-                       nsMutationEvent* aEvent);
+                       mozilla::InternalMutationEvent* aEvent);
 nsresult
 NS_NewDOMDeviceMotionEvent(nsIDOMEvent** aResult,
                            mozilla::dom::EventTarget* aOwner,
@@ -323,7 +323,7 @@ nsresult
 NS_NewDOMCommandEvent(nsIDOMEvent** aInstancePtrResult,
                       mozilla::dom::EventTarget* aOwner,
                       nsPresContext* aPresContext,
-                      nsCommandEvent* aEvent);
+                      mozilla::WidgetCommandEvent* aEvent);
 nsresult
 NS_NewDOMMessageEvent(nsIDOMEvent** aInstancePtrResult,
                       mozilla::dom::EventTarget* aOwner,
@@ -355,27 +355,27 @@ nsresult
 NS_NewDOMSimpleGestureEvent(nsIDOMEvent** aInstancePtrResult,
                             mozilla::dom::EventTarget* aOwner,
                             nsPresContext* aPresContext,
-                            nsSimpleGestureEvent* aEvent);
+                            mozilla::WidgetSimpleGestureEvent* aEvent);
 nsresult
 NS_NewDOMScrollAreaEvent(nsIDOMEvent** aInstancePtrResult,
                          mozilla::dom::EventTarget* aOwner,
                          nsPresContext* aPresContext,
-                         nsScrollAreaEvent* aEvent);
+                         mozilla::InternalScrollAreaEvent* aEvent);
 nsresult
 NS_NewDOMTransitionEvent(nsIDOMEvent** aInstancePtrResult,
                          mozilla::dom::EventTarget* aOwner,
                          nsPresContext* aPresContext,
-                         nsTransitionEvent* aEvent);
+                         mozilla::InternalTransitionEvent* aEvent);
 nsresult
 NS_NewDOMAnimationEvent(nsIDOMEvent** aInstancePtrResult,
                         mozilla::dom::EventTarget* aOwner,
                         nsPresContext* aPresContext,
-                        nsAnimationEvent* aEvent);
+                        mozilla::InternalAnimationEvent* aEvent);
 nsresult
 NS_NewDOMTouchEvent(nsIDOMEvent** aInstancePtrResult,
                     mozilla::dom::EventTarget* aOwner,
                     nsPresContext* aPresContext,
-                    nsTouchEvent* aEvent);
+                    mozilla::WidgetTouchEvent* aEvent);
 nsresult
 NS_NewDOMMozSettingsEvent(nsIDOMEvent** aInstancePtrResult,
                           mozilla::dom::EventTarget* aOwner,

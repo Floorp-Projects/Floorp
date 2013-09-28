@@ -7,7 +7,6 @@
 #include "nsICharsetConverterManager.h"
 #include "nsILanguageAtomService.h"
 #include "nsIStringBundle.h"
-#include "nsCRT.h"
 #include "nsInterfaceHashtable.h"
 #include "nsIAtom.h"
 #include "mozilla/Attributes.h"

@@ -263,14 +263,6 @@ types::TypeHasProperty(JSContext *cx, TypeObject *obj, jsid id, const Value &val
         if (!types)
             return true;
 
-        /*
-         * If the types inherited from prototypes are not being propagated into
-         * this set (because we haven't analyzed code which accesses the
-         * property), skip.
-         */
-        if (!types->hasPropagatedProperty())
-            return true;
-
         if (!types->hasType(type)) {
             TypeFailure(cx, "Missing type in object %s %s: %s",
                         TypeObjectString(obj), TypeIdString(id), TypeString(type));
@@ -417,8 +409,6 @@ TypeSet::add(JSContext *cx, TypeConstraint *constraint, bool callExisting)
 void
 TypeSet::print()
 {
-    if (flags & TYPE_FLAG_OWN_PROPERTY)
-        fprintf(stderr, " [own]");
     if (flags & TYPE_FLAG_CONFIGURED_PROPERTY)
         fprintf(stderr, " [configured]");
 
@@ -529,47 +519,6 @@ TypeSet::unionSets(TypeSet *a, TypeSet *b, LifoAlloc *alloc)
     }
 
     return res;
-}
-
-/////////////////////////////////////////////////////////////////////
-// TypeSet constraints
-/////////////////////////////////////////////////////////////////////
-
-namespace {
-
-/* Standard subset constraint, propagate all types from one set to another. */
-class TypeConstraintSubset : public TypeConstraint
-{
-  public:
-    TypeSet *target;
-
-    TypeConstraintSubset(TypeSet *target)
-        : target(target)
-    {
-        JS_ASSERT(target);
-    }
-
-    const char *kind() { return "subset"; }
-
-    void newType(JSContext *cx, TypeSet *source, Type type)
-    {
-        /* Basic subset constraint, move all types to the target. */
-        target->addType(cx, type);
-    }
-};
-
-} /* anonymous namespace */
-
-void
-StackTypeSet::addSubset(JSContext *cx, StackTypeSet *target)
-{
-    add(cx, cx->typeLifoAlloc().new_<TypeConstraintSubset>(target));
-}
-
-void
-HeapTypeSet::addSubset(JSContext *cx, HeapTypeSet *target)
-{
-    add(cx, cx->typeLifoAlloc().new_<TypeConstraintSubset>(target));
 }
 
 /////////////////////////////////////////////////////////////////////
@@ -764,7 +713,7 @@ TemporaryTypeSet::hasObjectFlags(JSContext *cx, TypeObjectFlags flags)
          * Add a constraint on the the object to pick up changes in the
          * object's properties.
          */
-        HeapTypeSet *types = object->getProperty(cx, JSID_EMPTY, false);
+        HeapTypeSet *types = object->getProperty(cx, JSID_EMPTY);
         if (!types)
             return true;
         types->add(cx, cx->typeLifoAlloc().new_<TypeConstraintFreezeObjectFlags>(
@@ -780,7 +729,7 @@ HeapTypeSet::HasObjectFlags(JSContext *cx, TypeObject *object, TypeObjectFlags f
     if (object->hasAnyFlags(flags))
         return true;
 
-    HeapTypeSet *types = object->getProperty(cx, JSID_EMPTY, false);
+    HeapTypeSet *types = object->getProperty(cx, JSID_EMPTY);
     if (!types)
         return true;
     types->add(cx, cx->typeLifoAlloc().new_<TypeConstraintFreezeObjectFlags>(
@@ -818,7 +767,7 @@ void
 HeapTypeSet::WatchObjectStateChange(JSContext *cx, TypeObject *obj)
 {
     JS_ASSERT(!obj->unknownProperties());
-    HeapTypeSet *types = obj->getProperty(cx, JSID_EMPTY, false);
+    HeapTypeSet *types = obj->getProperty(cx, JSID_EMPTY);
     if (!types)
         return;
 
@@ -833,16 +782,13 @@ HeapTypeSet::WatchObjectStateChange(JSContext *cx, TypeObject *obj)
 
 namespace {
 
-class TypeConstraintFreezeOwnProperty : public TypeConstraint
+class TypeConstraintFreezeConfiguredProperty : public TypeConstraint
 {
   public:
     RecompileInfo info;
 
-    bool updated;
-    bool configurable;
-
-    TypeConstraintFreezeOwnProperty(RecompileInfo info, bool configurable)
-        : info(info), updated(false), configurable(configurable)
+    TypeConstraintFreezeConfiguredProperty(RecompileInfo info)
+      : info(info)
     {}
 
     const char *kind() { return "freezeOwnProperty"; }
@@ -851,12 +797,8 @@ class TypeConstraintFreezeOwnProperty : public TypeConstraint
 
     void newPropertyState(JSContext *cx, TypeSet *source)
     {
-        if (updated)
-            return;
-        if (source->ownProperty(configurable)) {
-            updated = true;
+        if (source->configuredProperty())
             cx->compartment()->types.addPendingRecompile(cx, info);
-        }
     }
 };
 
@@ -881,7 +823,7 @@ TypeObject::incrementTenureCount()
 }
 
 bool
-HeapTypeSet::isOwnProperty(JSContext *cx, TypeObject *object, bool configurable)
+HeapTypeSet::isConfiguredProperty(JSContext *cx, TypeObject *object)
 {
     /*
      * Everywhere compiled code depends on definite properties associated with
@@ -901,12 +843,11 @@ HeapTypeSet::isOwnProperty(JSContext *cx, TypeObject *object, bool configurable)
         }
     }
 
-    if (ownProperty(configurable))
+    if (configuredProperty())
         return true;
 
-    add(cx, cx->typeLifoAlloc().new_<TypeConstraintFreezeOwnProperty>(
-                                                      cx->compartment()->types.compiledInfo,
-                                                      configurable), false);
+    add(cx, cx->typeLifoAlloc().new_<TypeConstraintFreezeConfiguredProperty>(
+                cx->compartment()->types.compiledInfo), false);
     return false;
 }
 
@@ -975,7 +916,7 @@ TemporaryTypeSet::convertDoubleElements(JSContext *cx)
             continue;
         }
 
-        HeapTypeSet *types = type->getProperty(cx, JSID_VOID, false);
+        HeapTypeSet *types = type->getProperty(cx, JSID_VOID);
         if (!types)
             return AmbiguousDoubleConversion;
 
@@ -1035,12 +976,8 @@ TemporaryTypeSet::getKnownClass()
     unsigned count = getObjectCount();
 
     for (unsigned i = 0; i < count; i++) {
-        const Class *nclasp;
-        if (JSObject *object = getSingleObject(i))
-            nclasp = object->getClass();
-        else if (TypeObject *object = getTypeObject(i))
-            nclasp = object->clasp;
-        else
+        const Class *nclasp = getObjectClass(i);
+        if (!nclasp)
             continue;
 
         if (clasp && clasp != nclasp)
@@ -1069,15 +1006,8 @@ TemporaryTypeSet::isDOMClass()
 
     unsigned count = getObjectCount();
     for (unsigned i = 0; i < count; i++) {
-        const Class *clasp;
-        if (JSObject *object = getSingleObject(i))
-            clasp = object->getClass();
-        else if (TypeObject *object = getTypeObject(i))
-            clasp = object->clasp;
-        else
-            continue;
-
-        if (!(clasp->flags & JSCLASS_IS_DOMJSCLASS))
+        const Class *clasp = getObjectClass(i);
+        if (clasp && !(clasp->flags & JSCLASS_IS_DOMJSCLASS))
             return false;
     }
 
@@ -1095,15 +1025,30 @@ TemporaryTypeSet::maybeCallable()
 
     unsigned count = getObjectCount();
     for (unsigned i = 0; i < count; i++) {
-        const Class *clasp;
-        if (JSObject *object = getSingleObject(i))
-            clasp = object->getClass();
-        else if (TypeObject *object = getTypeObject(i))
-            clasp = object->clasp;
-        else
-            continue;
+        const Class *clasp = getObjectClass(i);
+        if (clasp && clasp->isCallable())
+            return true;
+    }
 
-        if (clasp->isCallable())
+    return false;
+}
+
+bool
+TemporaryTypeSet::maybeEmulatesUndefined()
+{
+    if (!maybeObject())
+        return false;
+
+    if (unknownObject())
+        return true;
+
+    unsigned count = getObjectCount();
+    for (unsigned i = 0; i < count; i++) {
+        // The object emulates undefined if clasp->emulatesUndefined() or if
+        // it's a WrapperObject, see EmulatesUndefined. Since all wrappers are
+        // proxies, we can just check for that.
+        const Class *clasp = getObjectClass(i);
+        if (clasp && (clasp->emulatesUndefined() || IsProxyClass(clasp)))
             return true;
     }
 
@@ -1536,8 +1481,8 @@ PrototypeHasIndexedProperty(JSContext *cx, JSObject *obj)
             return true;
         if (type->unknownProperties())
             return true;
-        HeapTypeSet *indexTypes = type->getProperty(cx, JSID_VOID, false);
-        if (!indexTypes || indexTypes->isOwnProperty(cx, type, true) || indexTypes->knownNonEmpty(cx))
+        HeapTypeSet *indexTypes = type->getProperty(cx, JSID_VOID);
+        if (!indexTypes || indexTypes->isConfiguredProperty(cx, type) || indexTypes->knownNonEmpty(cx))
             return true;
         obj = obj->getProto();
     } while (obj);
@@ -2242,47 +2187,15 @@ TypeCompartment::newTypedObject(JSContext *cx, IdValuePair *properties, size_t n
 // TypeObject
 /////////////////////////////////////////////////////////////////////
 
-void
-TypeObject::getFromPrototypes(JSContext *cx, jsid id, HeapTypeSet *types, bool force)
-{
-    if (!force && types->hasPropagatedProperty())
-        return;
-
-    types->setPropagatedProperty();
-
-    if (!proto)
-        return;
-
-    if (proto == Proxy::LazyProto) {
-        JS_ASSERT(unknownProperties());
-        return;
-    }
-
-    types::TypeObject *protoType = proto->getType(cx);
-    if (!protoType || protoType->unknownProperties()) {
-        types->addType(cx, Type::UnknownType());
-        return;
-    }
-
-    HeapTypeSet *protoTypes = protoType->getProperty(cx, id, false);
-    if (!protoTypes)
-        return;
-
-    protoTypes->addSubset(cx, types);
-
-    protoType->getFromPrototypes(cx, id, protoTypes);
-}
-
 static inline void
 UpdatePropertyType(ExclusiveContext *cx, TypeSet *types, JSObject *obj, Shape *shape,
                    bool force)
 {
-    types->setOwnProperty(cx, false);
     if (!shape->writable())
-        types->setOwnProperty(cx, true);
+        types->setConfiguredProperty(cx);
 
     if (shape->hasGetterValue() || shape->hasSetterValue()) {
-        types->setOwnProperty(cx, true);
+        types->setConfiguredProperty(cx);
         types->addType(cx, Type::UnknownType());
     } else if (shape->hasDefaultGetter() && shape->hasSlot()) {
         const Value &value = obj->nativeGetSlot(shape->slot());
@@ -2331,7 +2244,6 @@ TypeObject::addProperty(ExclusiveContext *cx, jsid id, Property **pprop)
                 const Value &value = singleton->getDenseElement(i);
                 if (!value.isMagic(JS_ELEMENTS_HOLE)) {
                     Type type = GetValueType(value);
-                    base->types.setOwnProperty(cx, false);
                     base->types.addType(cx, type);
                 }
             }
@@ -2347,7 +2259,7 @@ TypeObject::addProperty(ExclusiveContext *cx, jsid id, Property **pprop)
              * Mark the property as configured, to inhibit optimizations on it
              * and avoid bypassing the watchpoint handler.
              */
-            base->types.setOwnProperty(cx, true);
+            base->types.setConfiguredProperty(cx);
         }
     }
 
@@ -2373,8 +2285,9 @@ TypeObject::addDefiniteProperties(ExclusiveContext *cx, JSObject *obj)
     while (!shape->isEmptyShape()) {
         jsid id = IdToTypeId(shape->propid());
         if (!JSID_IS_VOID(id) && obj->isFixedSlot(shape->slot()) &&
-            shape->slot() <= (TYPE_FLAG_DEFINITE_MASK >> TYPE_FLAG_DEFINITE_SHIFT)) {
-            TypeSet *types = getProperty(cx, id, true);
+            shape->slot() <= (TYPE_FLAG_DEFINITE_MASK >> TYPE_FLAG_DEFINITE_SHIFT))
+        {
+            TypeSet *types = getProperty(cx, id);
             if (!types)
                 return false;
             types->setDefinite(shape->slot());
@@ -2420,7 +2333,7 @@ InlineAddTypeProperty(ExclusiveContext *cx, TypeObject *obj, jsid id, Type type)
 
     AutoEnterAnalysis enter(cx);
 
-    TypeSet *types = obj->getProperty(cx, id, true);
+    TypeSet *types = obj->getProperty(cx, id);
     if (!types || types->hasType(type))
         return;
 
@@ -2470,9 +2383,9 @@ TypeObject::markPropertyConfigured(ExclusiveContext *cx, jsid id)
 
     id = IdToTypeId(id);
 
-    TypeSet *types = getProperty(cx, id, true);
+    TypeSet *types = getProperty(cx, id);
     if (types)
-        types->setOwnProperty(cx, true);
+        types->setConfiguredProperty(cx);
 }
 
 void
@@ -2546,7 +2459,7 @@ TypeObject::markUnknown(ExclusiveContext *cx)
         Property *prop = getProperty(i);
         if (prop) {
             prop->types.addType(cx, Type::UnknownType());
-            prop->types.setOwnProperty(cx, true);
+            prop->types.setConfiguredProperty(cx);
         }
     }
 }
@@ -2607,7 +2520,7 @@ TypeObject::clearNewScriptAddendum(ExclusiveContext *cx)
         if (!prop)
             continue;
         if (prop->types.definiteProperty())
-            prop->types.setOwnProperty(cx, true);
+            prop->types.setConfiguredProperty(cx);
     }
 
     /*
@@ -2715,8 +2628,6 @@ TypeObject::print()
             fprintf(stderr, " packed");
         if (!hasAnyFlags(OBJECT_FLAG_LENGTH_OVERFLOW))
             fprintf(stderr, " noLengthOverflow");
-        if (hasAnyFlags(OBJECT_FLAG_EMULATES_UNDEFINED))
-            fprintf(stderr, " emulatesUndefined");
         if (hasAnyFlags(OBJECT_FLAG_ITERATED))
             fprintf(stderr, " iterated");
         if (interpretedFunction)
@@ -2772,7 +2683,7 @@ class TypeConstraintClearDefiniteGetterSetter : public TypeConstraint
          * non-writable, both of which are indicated by the source type set
          * being marked as configured.
          */
-        if (!(object->flags & OBJECT_FLAG_ADDENDUM_CLEARED) && source->ownProperty(true))
+        if (!(object->flags & OBJECT_FLAG_ADDENDUM_CLEARED) && source->configuredProperty())
             object->clearAddendum(cx);
     }
 
@@ -2792,8 +2703,8 @@ types::AddClearDefiniteGetterSetterForPrototypeChain(JSContext *cx, TypeObject *
         TypeObject *parentObject = parent->getType(cx);
         if (!parentObject || parentObject->unknownProperties())
             return false;
-        HeapTypeSet *parentTypes = parentObject->getProperty(cx, id, false);
-        if (!parentTypes || parentTypes->ownProperty(true))
+        HeapTypeSet *parentTypes = parentObject->getProperty(cx, id);
+        if (!parentTypes || parentTypes->configuredProperty())
             return false;
         parentTypes->add(cx, cx->typeLifoAlloc().new_<TypeConstraintClearDefiniteGetterSetter>(type));
         parent = parent->getProto();
@@ -3224,24 +3135,6 @@ JSScript::makeTypes(JSContext *cx)
     for (unsigned i = 0; i < count; i++)
         new (&typeArray[i]) StackTypeSet();
 
-    if (isCallsiteClone) {
-        /*
-         * For callsite clones, flow the types from the specific clone back to
-         * the original function.
-         */
-        JS_ASSERT(function());
-        JS_ASSERT(originalFunction());
-        JS_ASSERT(function()->nargs == originalFunction()->nargs);
-
-        JSScript *original = originalFunction()->nonLazyScript();
-        if (!original->ensureHasTypes(cx))
-            return false;
-
-        TypeScript::ThisTypes(this)->addSubset(cx, TypeScript::ThisTypes(original));
-        for (unsigned i = 0; i < function()->nargs; i++)
-            TypeScript::ArgTypes(this, i)->addSubset(cx, TypeScript::ArgTypes(original, i));
-    }
-
 #ifdef DEBUG
     for (unsigned i = 0; i < nTypeSets; i++)
         InferSpew(ISpewOps, "typeSet: %sT%p%s bytecode%u #%u",
@@ -3404,23 +3297,6 @@ JSObject::splicePrototype(JSContext *cx, const Class *clasp, Handle<TaggedProto>
     type->clasp = clasp;
     type->proto = proto.raw();
 
-    AutoEnterAnalysis enter(cx);
-
-    if (protoType && protoType->unknownProperties() && !type->unknownProperties()) {
-        type->markUnknown(cx);
-        return true;
-    }
-
-    if (!type->unknownProperties()) {
-        /* Update properties on this type with any shared with the prototype. */
-        unsigned count = type->getPropertyCount();
-        for (unsigned i = 0; i < count; i++) {
-            Property *prop = type->getProperty(i);
-            if (prop && prop->types.hasPropagatedProperty())
-                type->getFromPrototypes(cx, prop->id, &prop->types, true);
-        }
-    }
-
     return true;
 }
 
@@ -3461,9 +3337,6 @@ JSObject::makeLazyType(JSContext *cx, HandleObject obj)
 
     if (obj->lastProperty()->hasObjectFlag(BaseShape::ITERATED_SINGLETON))
         type->flags |= OBJECT_FLAG_ITERATED;
-
-    if (obj->getClass()->emulatesUndefined())
-        type->flags |= OBJECT_FLAG_EMULATES_UNDEFINED;
 
     /*
      * Adjust flags for objects which will have the wrong flags set by just
@@ -3750,12 +3623,8 @@ TypeSet::sweep(Zone *zone)
         }
     }
 
-    /*
-     * All constraints are wiped out on each GC, including those propagating
-     * into this type set from prototype properties.
-     */
+    /* All constraints are wiped out on each GC. */
     constraintList = NULL;
-    flags &= ~TYPE_FLAG_PROPAGATED_PROPERTY;
 }
 
 inline void
@@ -3797,9 +3666,7 @@ TypeObject::sweep(FreeOp *fop)
 
     /*
      * Properties were allocated from the old arena, and need to be copied over
-     * to the new one. Don't hang onto properties without the OWN_PROPERTY
-     * flag; these were never directly assigned, and get any possible values
-     * from the object's prototype.
+     * to the new one.
      */
     unsigned propertyCount = basePropertyCount();
     if (propertyCount >= 2) {
@@ -3810,7 +3677,7 @@ TypeObject::sweep(FreeOp *fop)
         propertyCount = 0;
         for (unsigned i = 0; i < oldCapacity; i++) {
             Property *prop = oldArray[i];
-            if (prop && prop->types.ownProperty(false)) {
+            if (prop) {
                 Property *newProp = typeLifoAlloc.new_<Property>(*prop);
                 if (newProp) {
                     Property **pentry =
@@ -3830,17 +3697,12 @@ TypeObject::sweep(FreeOp *fop)
         setBasePropertyCount(propertyCount);
     } else if (propertyCount == 1) {
         Property *prop = (Property *) propertySet;
-        if (prop->types.ownProperty(false)) {
-            Property *newProp = typeLifoAlloc.new_<Property>(*prop);
-            if (newProp) {
-                propertySet = (Property **) newProp;
-                newProp->types.sweep(zone());
-            } else {
-                zone()->types.setPendingNukeTypes();
-            }
+        Property *newProp = typeLifoAlloc.new_<Property>(*prop);
+        if (newProp) {
+            propertySet = (Property **) newProp;
+            newProp->types.sweep(zone());
         } else {
-            propertySet = NULL;
-            setBasePropertyCount(0);
+            zone()->types.setPendingNukeTypes();
         }
     }
 

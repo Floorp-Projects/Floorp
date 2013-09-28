@@ -7,7 +7,7 @@
 #define nsUnicodeToGB2312V2_h___
 
 #include "nsUCSupport.h"
-#include "gbku.h"
+#include "nsGBKConvUtil.h"
 
 //----------------------------------------------------------------------
 // Class nsUnicodeToGB2312V2 [declaration]

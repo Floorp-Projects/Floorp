@@ -361,8 +361,7 @@ class IonBuilder : public MIRGenerator
     bool getPropTryConstant(bool *emitted, jsid id, types::TemporaryTypeSet *types);
     bool getPropTryDefiniteSlot(bool *emitted, PropertyName *name,
                                 bool barrier, types::TemporaryTypeSet *types);
-    bool getPropTryCommonGetter(bool *emitted, jsid id,
-                                bool barrier, types::TemporaryTypeSet *types);
+    bool getPropTryCommonGetter(bool *emitted, jsid id, types::TemporaryTypeSet *types);
     bool getPropTryInlineAccess(bool *emitted, PropertyName *name, jsid id,
                                 bool barrier, types::TemporaryTypeSet *types);
     bool getPropTryTypedObject(bool *emitted, jsid id,
