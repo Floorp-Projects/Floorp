@@ -26,12 +26,12 @@ const VALUES_MAX_LENGTH = 6 * 30;
 // Constant defining the rate of the samples. Daily.
 const SAMPLE_RATE = 1000 * 60 * 60 * 24;
 
-this.NetworkStatsDB = function NetworkStatsDB(aGlobal, aConnectionTypes) {
+this.NetworkStatsDB = function NetworkStatsDB(aConnectionTypes) {
   if (DEBUG) {
     debug("Constructor");
   }
   this._connectionTypes = aConnectionTypes;
-  this.initDBHelper(DB_NAME, DB_VERSION, [STORE_NAME_V2], aGlobal);
+  this.initDBHelper(DB_NAME, DB_VERSION, [STORE_NAME_V2]);
 }
 
 NetworkStatsDB.prototype = {
@@ -308,7 +308,7 @@ NetworkStatsDB.prototype = {
     let filterDate = date - (SAMPLE_RATE * VALUES_MAX_LENGTH - 1);
     let lowerFilter = [appId, connType, 0];
     let upperFilter = [appId, connType, filterDate];
-    let range = this.dbGlobal.IDBKeyRange.bound(lowerFilter, upperFilter, false, false);
+    let range = IDBKeyRange.bound(lowerFilter, upperFilter, false, false);
     store.openCursor(range).onsuccess = function(event) {
       var cursor = event.target.result;
       if (cursor) {
@@ -342,7 +342,7 @@ NetworkStatsDB.prototype = {
     this.dbNewTxn("readonly", function(txn, store) {
       let lowerFilter = [aOptions.appId, aOptions.connectionType, start];
       let upperFilter = [aOptions.appId, aOptions.connectionType, end];
-      let range = this.dbGlobal.IDBKeyRange.bound(lowerFilter, upperFilter, false, false);
+      let range = IDBKeyRange.bound(lowerFilter, upperFilter, false, false);
 
       let data = [];
 
@@ -387,7 +387,7 @@ NetworkStatsDB.prototype = {
     this.dbNewTxn("readonly", function(txn, store) {
       let lowerFilter = start;
       let upperFilter = end;
-      let range = this.dbGlobal.IDBKeyRange.bound(lowerFilter, upperFilter, false, false);
+      let range = IDBKeyRange.bound(lowerFilter, upperFilter, false, false);
 
       let data = [];
 

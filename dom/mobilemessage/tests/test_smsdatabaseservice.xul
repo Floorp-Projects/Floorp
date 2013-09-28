@@ -37,9 +37,6 @@ const {classes: Cc, interfaces: Ci, utils: Cu, results: Cr} = Components;
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
 
-let gIDBManager = Cc["@mozilla.org/dom/indexeddb/manager;1"]
-                    .getService(Ci.nsIIndexedDatabaseManager);
-
 let gMobileMessageDatabaseService = Cc["@mozilla.org/mobilemessage/rilmobilemessagedatabaseservice;1"]
                                       .getService(Ci.nsIMobileMessageDatabaseService);
 
@@ -133,8 +130,6 @@ const DB_VERSION = 2;
 const STORE_NAME = "sms";
 const MAX_SMS = 3;
 const LONG_MAX = 2147483647;
-
-gIDBManager.initWindowless(this);
 
 let _db;
 function ensureDB(callback) {
