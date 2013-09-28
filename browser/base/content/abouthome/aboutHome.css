@@ -7,7 +7,7 @@
 html {
   font: message-box;
   font-size: 100%;
-  background-color: hsl(0,0%,90%);
+  background-color: hsl(0,0%,95%);
   color: #000;
   height: 100%;
 }
@@ -18,8 +18,6 @@ body {
   -moz-box-orient: vertical;
   width: 100%;
   height: 100%;
-  background-image: url(chrome://browser/content/abouthome/noise.png),
-                    linear-gradient(hsla(0,0%,100%,.7), hsla(0,0%,100%,.4));
 }
 
 input,
