@@ -177,6 +177,32 @@ bool IsIPAddrV4Mapped(const NetAddr *addr)
   return false;
 }
 
+bool IsIPAddrLocal(const NetAddr *addr)
+{
+  MOZ_ASSERT(addr);
+
+  // IPv4 RFC1918 and Link Local Addresses.
+  if (addr->raw.family == AF_INET) {
+    uint32_t addr32 = ntohl(addr->inet.ip);
+    if (addr32 >> 24 == 0x0A ||    // 10/8 prefix (RFC 1918).
+        addr32 >> 20 == 0xAC1 ||   // 172.16/12 prefix (RFC 1918).
+        addr32 >> 16 == 0xC0A8 ||  // 192.168/16 prefix (RFC 1918).
+        addr32 >> 16 == 0xA9FE) {  // 169.254/16 prefix (Link Local).
+      return true;
+    }
+  }
+  // IPv6 Unique and Link Local Addresses.
+  if (addr->raw.family == AF_INET6) {
+    uint16_t addr16 = ntohs(addr->inet6.ip.u16[0]);
+    if (addr16 >> 9 == 0xfc >> 1 ||   // fc00::/7 Unique Local Address.
+        addr16 >> 6 == 0xfe80 >> 6) { // fe80::/10 Link Local Address.
+      return true;
+    }
+  }
+  // Not an IPv4/6 local address.
+  return false;
+}
+
 NetAddrElement::NetAddrElement(const PRNetAddr *prNetAddr)
 {
   PRNetAddrToNetAddr(prNetAddr, &mAddress);
