@@ -19,12 +19,6 @@ namespace mozilla {
 
 /* BEGIN shameless copy and paste */
 
-// MPEG versions - use [version]
-const uint8_t mpeg_versions[4] = { 25, 0, 2, 1 };
-
-// Layers - use [layer]
-const uint8_t mpeg_layers[4] = { 0, 3, 2, 1 };
-
 // Bitrates - use [version][layer][bitrate]
 const uint16_t mpeg_bitrates[4][4][16] = {
   { // Version 2.5
