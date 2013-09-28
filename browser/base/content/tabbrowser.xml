@@ -1529,7 +1529,7 @@
             notificationbox.appendChild(browserSidebarContainer);
 
             var position = this.tabs.length - 1;
-            var uniqueId = "panel" + Date.now() + position;
+            var uniqueId = this._generateUniquePanelID();
             notificationbox.id = uniqueId;
             t.linkedPanel = uniqueId;
             t.linkedBrowser = b;
@@ -2955,7 +2955,7 @@
           document.addEventListener("keypress", this, false);
           window.addEventListener("sizemodechange", this, false);
 
-          var uniqueId = "panel" + Date.now();
+          var uniqueId = this._generateUniquePanelID();
           this.mPanelContainer.childNodes[0].id = uniqueId;
           this.mCurrentTab.linkedPanel = uniqueId;
           this.mCurrentTab._tPos = 0;
@@ -3001,6 +3001,23 @@
           }
         ]]>
       </constructor>
+
+      <method name="_generateUniquePanelID">
+        <body><![CDATA[
+          if (!this._uniquePanelIDCounter) {
+            this._uniquePanelIDCounter = 0;
+          }
+
+          let outerID = window.QueryInterface(Ci.nsIInterfaceRequestor)
+                              .getInterface(Ci.nsIDOMWindowUtils)
+                              .outerWindowID;
+
+          // We want panel IDs to be globally unique, that's why we include the
+          // window ID. We switched to a monotonic counter as Date.now() lead
+          // to random failures because of colliding IDs.
+          return "panel-" + outerID + "-" + (++this._uniquePanelIDCounter);
+        ]]></body>
+      </method>
 
       <method name="_addProgressListenerForInitialTab">
         <body><![CDATA[
