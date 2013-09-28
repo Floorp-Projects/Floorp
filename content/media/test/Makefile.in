@@ -121,6 +121,7 @@ MOCHITEST_FILES = \
 		test_mediarecorder_record_timeslice.html \
 		test_mediarecorder_record_audiocontext.html \
 		test_mediarecorder_record_stopms.html \
+		test_mediarecorder_record_nosrc.html \
 		test_mozHasAudio.html \
 		test_source_media.html \
 		test_autoplay_contentEditable.html \
