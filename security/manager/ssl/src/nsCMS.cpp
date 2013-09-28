@@ -264,7 +264,7 @@ nsresult nsCMSMessage::CommonVerifySignature(unsigned char* aDigestData, uint32_
   NS_ENSURE_TRUE(certVerifier, NS_ERROR_UNEXPECTED);
 
   {
-    SECStatus srv = certVerifier->VerifyCert(si->cert,
+    SECStatus srv = certVerifier->VerifyCert(si->cert, nullptr,
                                              certificateUsageEmailSigner,
                                              PR_Now(), nullptr /*XXX pinarg*/);
     if (srv != SECSuccess) {

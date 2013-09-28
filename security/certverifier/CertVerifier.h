@@ -24,6 +24,7 @@ public:
   // *evOidPolicy == SEC_OID_UNKNOWN means the cert is NOT EV
   // Only one usage per verification is supported.
   SECStatus VerifyCert(CERTCertificate* cert,
+          /*optional*/ const SECItem* stapledOCSPResponse,
                        const SECCertificateUsage usage,
                        const PRTime time,
                        void* pinArg,
@@ -34,6 +35,7 @@ public:
 
   SECStatus VerifySSLServerCert(
                     CERTCertificate* peerCert,
+       /*optional*/ const SECItem* stapledOCSPResponse,
                     PRTime time,
        /*optional*/ void* pinarg,
                     const char* hostname,
