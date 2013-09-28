@@ -328,7 +328,7 @@ public:
   // Note that the range array may not specify a caret position; in that
   // case there will be no range of type NS_TEXTRANGE_CARETPOSITION in the
   // array.
-  nsTextRangeArray rangeArray;
+  TextRangeArray rangeArray;
   // Indicates whether the event signifies printable text.
   // XXX This is not a standard, and most platforms don't set this properly.
   //     So, perhaps, we can get rid of this.
@@ -535,7 +535,6 @@ public:
 
 // TODO: Remove following typedefs
 typedef mozilla::TextRange               nsTextRange;
-typedef mozilla::TextRangeArray          nsTextRangeArray;
 typedef mozilla::WidgetTextEvent         nsTextEvent;
 typedef mozilla::WidgetCompositionEvent  nsCompositionEvent;
 typedef mozilla::WidgetQueryContentEvent nsQueryContentEvent;
