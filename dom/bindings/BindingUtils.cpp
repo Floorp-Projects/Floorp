@@ -2040,13 +2040,8 @@ ConstructJSImplementation(JSContext* aCx, const char* aContractId,
         aRv.Throw(rv);
         return nullptr;
       }
-      // With JS-implemented WebIDL, the return value of init() is not used to determine
-      // if init() failed, so init() should only return undefined. Any kind of permission
-      // or pref checking must happen by adding an attribute to the WebIDL interface.
-      if (!initReturn.isUndefined()) {
-        MOZ_ASSERT(false, "The init() method for JS-implemented WebIDL should not return anything");
-        MOZ_CRASH();
-      }
+      MOZ_ASSERT(initReturn.isUndefined(),
+                 "nsIDOMGlobalPropertyInitializer should return undefined");
     }
     // Extract the JS implementation from the XPCOM object.
     nsCOMPtr<nsIXPConnectWrappedJS> implWrapped =

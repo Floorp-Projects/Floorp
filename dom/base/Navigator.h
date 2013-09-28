@@ -300,10 +300,6 @@ public:
   static bool HasPushNotificationsSupport(JSContext* /* unused */,
                                           JSObject* aGlobal);
 
-#ifdef MOZ_B2G
-  static bool HasInputMethodSupport(JSContext* /* unused */, JSObject* aGlobal);
-#endif
-
   nsPIDOMWindow* GetParentObject() const
   {
     return GetWindow();
