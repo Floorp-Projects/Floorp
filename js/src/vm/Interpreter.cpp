@@ -187,8 +187,6 @@ js::OnUnknownMethod(JSContext *cx, HandleObject obj, Value idval_, MutableHandle
     if (!JSObject::getProperty(cx, obj, obj, cx->names().noSuchMethod, &value))
         return false;
 
-    TypeScript::MonitorUnknown(cx);
-
     if (value.isObject()) {
         JSObject *obj = NewObjectWithClassProto(cx, &js_NoSuchMethodClass, nullptr, nullptr);
         if (!obj)
@@ -1074,27 +1072,20 @@ ComputeImplicitThis(JSContext *cx, HandleObject obj, MutableHandleValue vp)
 }
 
 static JS_ALWAYS_INLINE bool
-AddOperation(JSContext *cx, HandleScript script, jsbytecode *pc,
-             MutableHandleValue lhs, MutableHandleValue rhs, Value *res)
+AddOperation(JSContext *cx, MutableHandleValue lhs, MutableHandleValue rhs, Value *res)
 {
     if (lhs.isInt32() && rhs.isInt32()) {
         int32_t l = lhs.toInt32(), r = rhs.toInt32();
         double d = double(l) + double(r);
-        if (!res->setNumber(d))
-            types::TypeScript::MonitorOverflow(cx, script, pc);
+        res->setNumber(d);
         return true;
     }
-
-    /*
-     * If either operand is an object, any non-integer result must be
-     * reported to inference.
-     */
-    bool lIsObject = lhs.isObject(), rIsObject = rhs.isObject();
 
     if (!ToPrimitive(cx, lhs))
         return false;
     if (!ToPrimitive(cx, rhs))
         return false;
+
     bool lIsString, rIsString;
     if ((lIsString = lhs.isString()) | (rIsString = rhs.isString())) {
         JSString *lstr, *rstr;
@@ -1122,68 +1113,49 @@ AddOperation(JSContext *cx, HandleScript script, jsbytecode *pc,
             if (!str)
                 return false;
         }
-        if (lIsObject || rIsObject)
-            types::TypeScript::MonitorString(cx, script, pc);
         res->setString(str);
     } else {
         double l, r;
         if (!ToNumber(cx, lhs, &l) || !ToNumber(cx, rhs, &r))
             return false;
-        l += r;
-        Value nres = NumberValue(l);
-        if (nres.isDouble() &&
-            (lIsObject || rIsObject || (!lhs.isDouble() && !rhs.isDouble()))) {
-            types::TypeScript::MonitorOverflow(cx, script, pc);
-        }
-        *res = nres;
+        res->setNumber(l + r);
     }
 
     return true;
 }
 
 static JS_ALWAYS_INLINE bool
-SubOperation(JSContext *cx, HandleScript script, jsbytecode *pc, HandleValue lhs, HandleValue rhs,
-             Value *res)
+SubOperation(JSContext *cx, HandleValue lhs, HandleValue rhs, Value *res)
 {
     double d1, d2;
     if (!ToNumber(cx, lhs, &d1) || !ToNumber(cx, rhs, &d2))
         return false;
-    double d = d1 - d2;
-    if (!res->setNumber(d) && !(lhs.isDouble() || rhs.isDouble()))
-        types::TypeScript::MonitorOverflow(cx, script, pc);
+    res->setNumber(d1 - d2);
     return true;
 }
 
 static JS_ALWAYS_INLINE bool
-MulOperation(JSContext *cx, HandleScript script, jsbytecode *pc, HandleValue lhs, HandleValue rhs,
-             Value *res)
+MulOperation(JSContext *cx, HandleValue lhs, HandleValue rhs, Value *res)
 {
     double d1, d2;
     if (!ToNumber(cx, lhs, &d1) || !ToNumber(cx, rhs, &d2))
         return false;
-    double d = d1 * d2;
-    if (!res->setNumber(d) && !(lhs.isDouble() || rhs.isDouble()))
-        types::TypeScript::MonitorOverflow(cx, script, pc);
+    res->setNumber(d1 * d2);
     return true;
 }
 
 static JS_ALWAYS_INLINE bool
-DivOperation(JSContext *cx, HandleScript script, jsbytecode *pc, HandleValue lhs, HandleValue rhs,
-             Value *res)
+DivOperation(JSContext *cx, HandleValue lhs, HandleValue rhs, Value *res)
 {
     double d1, d2;
     if (!ToNumber(cx, lhs, &d1) || !ToNumber(cx, rhs, &d2))
         return false;
     res->setNumber(NumberDiv(d1, d2));
-
-    if (d2 == 0 || (res->isDouble() && !(lhs.isDouble() || rhs.isDouble())))
-        types::TypeScript::MonitorOverflow(cx, script, pc);
     return true;
 }
 
 static JS_ALWAYS_INLINE bool
-ModOperation(JSContext *cx, HandleScript script, jsbytecode *pc, HandleValue lhs, HandleValue rhs,
-             Value *res)
+ModOperation(JSContext *cx, HandleValue lhs, HandleValue rhs, Value *res)
 {
     int32_t l, r;
     if (lhs.isInt32() && rhs.isInt32() &&
@@ -1198,7 +1170,6 @@ ModOperation(JSContext *cx, HandleScript script, jsbytecode *pc, HandleValue lhs
         return false;
 
     res->setNumber(NumberMod(d1, d2));
-    types::TypeScript::MonitorOverflow(cx, script, pc);
     return true;
 }
 
@@ -2066,7 +2037,7 @@ BEGIN_CASE(JSOP_URSH)
 {
     HandleValue lval = regs.stackHandleAt(-2);
     HandleValue rval = regs.stackHandleAt(-1);
-    if (!UrshOperation(cx, script, regs.pc, lval, rval, &regs.sp[-2]))
+    if (!UrshOperation(cx, lval, rval, &regs.sp[-2]))
         goto error;
     regs.sp--;
 }
@@ -2076,7 +2047,7 @@ BEGIN_CASE(JSOP_ADD)
 {
     MutableHandleValue lval = regs.stackHandleAt(-2);
     MutableHandleValue rval = regs.stackHandleAt(-1);
-    if (!AddOperation(cx, script, regs.pc, lval, rval, &regs.sp[-2]))
+    if (!AddOperation(cx, lval, rval, &regs.sp[-2]))
         goto error;
     regs.sp--;
 }
@@ -2087,7 +2058,7 @@ BEGIN_CASE(JSOP_SUB)
     RootedValue &lval = rootValue0, &rval = rootValue1;
     lval = regs.sp[-2];
     rval = regs.sp[-1];
-    if (!SubOperation(cx, script, regs.pc, lval, rval, &regs.sp[-2]))
+    if (!SubOperation(cx, lval, rval, &regs.sp[-2]))
         goto error;
     regs.sp--;
 }
@@ -2098,7 +2069,7 @@ BEGIN_CASE(JSOP_MUL)
     RootedValue &lval = rootValue0, &rval = rootValue1;
     lval = regs.sp[-2];
     rval = regs.sp[-1];
-    if (!MulOperation(cx, script, regs.pc, lval, rval, &regs.sp[-2]))
+    if (!MulOperation(cx, lval, rval, &regs.sp[-2]))
         goto error;
     regs.sp--;
 }
@@ -2109,7 +2080,7 @@ BEGIN_CASE(JSOP_DIV)
     RootedValue &lval = rootValue0, &rval = rootValue1;
     lval = regs.sp[-2];
     rval = regs.sp[-1];
-    if (!DivOperation(cx, script, regs.pc, lval, rval, &regs.sp[-2]))
+    if (!DivOperation(cx, lval, rval, &regs.sp[-2]))
         goto error;
     regs.sp--;
 }
@@ -2120,7 +2091,7 @@ BEGIN_CASE(JSOP_MOD)
     RootedValue &lval = rootValue0, &rval = rootValue1;
     lval = regs.sp[-2];
     rval = regs.sp[-1];
-    if (!ModOperation(cx, script, regs.pc, lval, rval, &regs.sp[-2]))
+    if (!ModOperation(cx, lval, rval, &regs.sp[-2]))
         goto error;
     regs.sp--;
 }
@@ -2157,8 +2128,6 @@ END_CASE(JSOP_NEG)
 BEGIN_CASE(JSOP_POS)
     if (!ToNumber(cx, regs.stackHandleAt(-1)))
         goto error;
-    if (!regs.sp[-1].isInt32())
-        TypeScript::MonitorOverflow(cx, script, regs.pc);
 END_CASE(JSOP_POS)
 
 BEGIN_CASE(JSOP_DELNAME)
@@ -3739,51 +3708,39 @@ js::InitElementArray(JSContext *cx, jsbytecode *pc, HandleObject obj, uint32_t i
 }
 
 bool
-js::AddValues(JSContext *cx, HandleScript script, jsbytecode *pc,
-              MutableHandleValue lhs, MutableHandleValue rhs,
-              Value *res)
+js::AddValues(JSContext *cx, MutableHandleValue lhs, MutableHandleValue rhs, Value *res)
 {
-    return AddOperation(cx, script, pc, lhs, rhs, res);
+    return AddOperation(cx, lhs, rhs, res);
 }
 
 bool
-js::SubValues(JSContext *cx, HandleScript script, jsbytecode *pc,
-              MutableHandleValue lhs, MutableHandleValue rhs,
-              Value *res)
+js::SubValues(JSContext *cx, MutableHandleValue lhs, MutableHandleValue rhs, Value *res)
 {
-    return SubOperation(cx, script, pc, lhs, rhs, res);
+    return SubOperation(cx, lhs, rhs, res);
 }
 
 bool
-js::MulValues(JSContext *cx, HandleScript script, jsbytecode *pc,
-              MutableHandleValue lhs, MutableHandleValue rhs,
-              Value *res)
+js::MulValues(JSContext *cx, MutableHandleValue lhs, MutableHandleValue rhs, Value *res)
 {
-    return MulOperation(cx, script, pc, lhs, rhs, res);
+    return MulOperation(cx, lhs, rhs, res);
 }
 
 bool
-js::DivValues(JSContext *cx, HandleScript script, jsbytecode *pc,
-              MutableHandleValue lhs, MutableHandleValue rhs,
-              Value *res)
+js::DivValues(JSContext *cx, MutableHandleValue lhs, MutableHandleValue rhs, Value *res)
 {
-    return DivOperation(cx, script, pc, lhs, rhs, res);
+    return DivOperation(cx, lhs, rhs, res);
 }
 
 bool
-js::ModValues(JSContext *cx, HandleScript script, jsbytecode *pc,
-              MutableHandleValue lhs, MutableHandleValue rhs,
-              Value *res)
+js::ModValues(JSContext *cx, MutableHandleValue lhs, MutableHandleValue rhs, Value *res)
 {
-    return ModOperation(cx, script, pc, lhs, rhs, res);
+    return ModOperation(cx, lhs, rhs, res);
 }
 
 bool
-js::UrshValues(JSContext *cx, HandleScript script, jsbytecode *pc,
-               MutableHandleValue lhs, MutableHandleValue rhs,
-               Value *res)
+js::UrshValues(JSContext *cx, MutableHandleValue lhs, MutableHandleValue rhs, Value *res)
 {
-    return UrshOperation(cx, script, pc, lhs, rhs, res);
+    return UrshOperation(cx, lhs, rhs, res);
 }
 
 bool

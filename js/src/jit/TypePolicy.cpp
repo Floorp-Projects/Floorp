@@ -278,8 +278,7 @@ TypeBarrierPolicy::adjustInputs(MInstruction *def)
             return true;
         }
 
-        MUnbox *unbox = MUnbox::New(ins->getOperand(0), outputType,
-                                    MUnbox::TypeBarrier, ins->bailoutKind());
+        MUnbox *unbox = MUnbox::New(ins->getOperand(0), outputType, MUnbox::TypeBarrier);
         ins->block()->insertBefore(ins, unbox);
         ins->replaceOperand(0, unbox);
         return true;

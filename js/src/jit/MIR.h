@@ -2270,10 +2270,7 @@ class MUnbox : public MUnaryInstruction, public BoxInputsPolicy
     INSTRUCTION_HEADER(Unbox)
     static MUnbox *New(MDefinition *ins, MIRType type, Mode mode)
     {
-        BailoutKind kind = Bailout_Normal;
-        if (mode == TypeBarrier && ins->isEffectful())
-            kind = Bailout_TypeBarrier;
-        return new MUnbox(ins, type, mode, kind);
+        return new MUnbox(ins, type, mode, Bailout_Normal);
     }
 
     static MUnbox *New(MDefinition *ins, MIRType type, Mode mode, BailoutKind kind)
@@ -7921,9 +7918,7 @@ class MTypeBarrier
   : public MUnaryInstruction,
     public TypeBarrierPolicy
 {
-    BailoutKind bailoutKind_;
-
-    MTypeBarrier(MDefinition *def, types::TemporaryTypeSet *types, BailoutKind bailoutKind)
+    MTypeBarrier(MDefinition *def, types::TemporaryTypeSet *types)
       : MUnaryInstruction(def)
     {
         JS_ASSERT(!types->unknown());
@@ -7934,19 +7929,13 @@ class MTypeBarrier
 
         setGuard();
         setMovable();
-        bailoutKind_ = bailoutKind;
     }
 
   public:
     INSTRUCTION_HEADER(TypeBarrier)
 
     static MTypeBarrier *New(MDefinition *def, types::TemporaryTypeSet *types) {
-        BailoutKind kind = def->isEffectful() ? Bailout_TypeBarrier : Bailout_Normal;
-        return new MTypeBarrier(def, types, kind);
-    }
-    static MTypeBarrier *New(MDefinition *def, types::TemporaryTypeSet *types,
-                             BailoutKind kind) {
-        return new MTypeBarrier(def, types, kind);
+        return new MTypeBarrier(def, types);
     }
 
     void printOpcode(FILE *fp) const;
@@ -7957,9 +7946,6 @@ class MTypeBarrier
 
     bool congruentTo(MDefinition *def) const {
         return false;
-    }
-    BailoutKind bailoutKind() const {
-        return bailoutKind_;
     }
     AliasSet getAliasSet() const {
         return AliasSet::None();

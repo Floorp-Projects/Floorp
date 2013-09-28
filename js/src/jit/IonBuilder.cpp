@@ -3774,7 +3774,7 @@ IonBuilder::inlineScriptedCall(CallInfo &callInfo, JSFunction *target)
     {
         types::StackTypeSet *types = types::TypeScript::ThisTypes(calleeScript);
         if (!types->unknown()) {
-            MTypeBarrier *barrier = MTypeBarrier::New(callInfo.thisArg(), cloneTypeSet(types), Bailout_Normal);
+            MTypeBarrier *barrier = MTypeBarrier::New(callInfo.thisArg(), cloneTypeSet(types));
             current->add(barrier);
             callInfo.setThis(barrier);
         }
@@ -8535,7 +8535,7 @@ IonBuilder::getPropTryInlineAccess(bool *emitted, PropertyName *name, jsid id,
         spew("Inlining monomorphic GETPROP");
 
         Shape *objShape = shapes[0];
-        obj = addShapeGuard(obj, objShape, Bailout_CachedShapeGuard);
+        obj = addShapeGuard(obj, objShape, Bailout_ShapeGuard);
 
         Shape *shape = objShape->search(cx, id);
         JS_ASSERT(shape);
@@ -8943,7 +8943,7 @@ IonBuilder::setPropTryInlineAccess(bool *emitted, MDefinition *obj,
         // that the shape is still a lastProperty, and calling Shape::search
         // on dictionary mode shapes that aren't lastProperty is invalid.
         Shape *objShape = shapes[0];
-        obj = addShapeGuard(obj, objShape, Bailout_CachedShapeGuard);
+        obj = addShapeGuard(obj, objShape, Bailout_ShapeGuard);
 
         Shape *shape = objShape->search(cx, NameToId(name));
         JS_ASSERT(shape);
@@ -9229,8 +9229,8 @@ IonBuilder::jsop_iternext()
     if (!resumeAfter(ins))
         return false;
 
-    if (!nonStringIteration_ && types::IterationValuesMustBeStrings(script())) {
-        ins = MUnbox::New(ins, MIRType_String, MUnbox::Infallible);
+    if (!nonStringIteration_ && !inspector->hasSeenNonStringIterNext(pc)) {
+        ins = MUnbox::New(ins, MIRType_String, MUnbox::Fallible, Bailout_BaselineInfo);
         current->add(ins);
         current->rewriteAtDepth(-1, ins);
     }

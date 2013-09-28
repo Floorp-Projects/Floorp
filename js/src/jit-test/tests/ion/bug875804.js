@@ -1,7 +1,7 @@
 
 eval('(function () {\
 function range(n) {\
-  for (var i = 0; i < 100000; i++)\
+  for (var i = 0; i < 5000; i++)\
     yield i;\
 }\
 var r = range(10);\
