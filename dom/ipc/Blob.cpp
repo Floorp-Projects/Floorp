@@ -468,7 +468,7 @@ inline
 already_AddRefed<nsIDOMBlob>
 GetBlobFromParams(const SlicedBlobConstructorParams& aParams)
 {
-  static_assert(ActorFlavor == mozilla::dom::ipc::Parent,
+  static_assert(ActorFlavor == Parent,
                 "No other flavor is supported here!");
 
   BlobParent* actor =

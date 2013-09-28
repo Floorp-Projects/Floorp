@@ -16,7 +16,7 @@
 /* This must occur *after* plugins/PluginModuleChild.h to avoid typedefs conflicts. */
 #include "mozilla/Util.h"
 
-#include "mozilla/ipc/SyncChannel.h"
+#include "mozilla/ipc/MessageChannel.h"
 
 #ifdef MOZ_WIDGET_GTK
 #include <gtk/gtk.h>

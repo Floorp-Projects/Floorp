@@ -10,7 +10,7 @@
 #include "ipc/IPCMessageUtils.h"
 #include "base/message_loop.h"
 
-#include "mozilla/ipc/RPCChannel.h"
+#include "mozilla/ipc/MessageChannel.h"
 #include "mozilla/ipc/CrossProcessMutex.h"
 #include "gfxipc/ShadowLayerUtils.h"
 
@@ -43,9 +43,9 @@ enum ScriptableObjectType
   Proxy
 };
 
-mozilla::ipc::RPCChannel::RacyRPCPolicy
-MediateRace(const mozilla::ipc::RPCChannel::Message& parent,
-            const mozilla::ipc::RPCChannel::Message& child);
+mozilla::ipc::RacyRPCPolicy
+MediateRace(const mozilla::ipc::MessageChannel::Message& parent,
+            const mozilla::ipc::MessageChannel::Message& child);
 
 std::string
 MungePluginDsoPath(const std::string& path);

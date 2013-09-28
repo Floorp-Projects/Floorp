@@ -59,9 +59,9 @@ static int32_t gNumWidgets;
 nsIRollupListener* nsBaseWidget::gRollupListener = nullptr;
 
 using namespace mozilla::layers;
+using namespace mozilla::ipc;
 using namespace mozilla;
 using base::Thread;
-using mozilla::ipc::AsyncChannel;
 
 nsIContent* nsBaseWidget::mLastRollup = nullptr;
 // Global user preference for disabling native theme. Used
@@ -950,12 +950,11 @@ void nsBaseWidget::CreateCompositor(int aWidth, int aHeight)
   }
 
   mCompositorParent = NewCompositorParent(aWidth, aHeight);
-  AsyncChannel *parentChannel = mCompositorParent->GetIPCChannel();
+  MessageChannel *parentChannel = mCompositorParent->GetIPCChannel();
   LayerManager* lm = new ClientLayerManager(this);
   MessageLoop *childMessageLoop = CompositorParent::CompositorLoop();
   mCompositorChild = new CompositorChild(lm);
-  AsyncChannel::Side childSide = mozilla::ipc::AsyncChannel::Child;
-  mCompositorChild->Open(parentChannel, childMessageLoop, childSide);
+  mCompositorChild->Open(parentChannel, childMessageLoop, ipc::ChildSide);
 
   TextureFactoryIdentifier textureFactoryIdentifier;
   PLayerTransactionChild* shadowManager;

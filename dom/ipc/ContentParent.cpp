@@ -262,7 +262,7 @@ ContentParentMemoryReporter::CollectReports(nsIMemoryReporterCallback* cb,
 
     for (uint32_t i = 0; i < cps.Length(); i++) {
         ContentParent* cp = cps[i];
-        AsyncChannel* channel = cp->GetIPCChannel();
+        MessageChannel* channel = cp->GetIPCChannel();
 
         nsString friendlyName;
         cp->FriendlyName(friendlyName);
@@ -879,7 +879,7 @@ ContentParent::ShutDownProcess(bool aCloseWithError)
     }
 
     if (aCloseWithError && !mCalledCloseWithError) {
-        AsyncChannel* channel = GetIPCChannel();
+        MessageChannel* channel = GetIPCChannel();
         if (channel) {
             mCalledCloseWithError = true;
             channel->CloseWithError();
