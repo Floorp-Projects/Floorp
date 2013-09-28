@@ -62,7 +62,7 @@ public:
   virtual nsresult Init(const char* aMimeType,
                         uint32_t aFlags) = 0;
 
-  virtual imgStatusTracker& GetStatusTracker() = 0;
+  virtual already_AddRefed<imgStatusTracker> GetStatusTracker() = 0;
 
   /**
    * The rectangle defining the location and size of the given frame.
@@ -137,7 +137,11 @@ public:
 class ImageResource : public Image
 {
 public:
-  virtual imgStatusTracker& GetStatusTracker() MOZ_OVERRIDE { return *mStatusTracker; }
+  virtual already_AddRefed<imgStatusTracker> GetStatusTracker() MOZ_OVERRIDE {
+    nsRefPtr<imgStatusTracker> statusTracker = mStatusTracker;
+    MOZ_ASSERT(statusTracker);
+    return statusTracker.forget();
+  }
   virtual uint32_t SizeOfData() MOZ_OVERRIDE;
 
   virtual void IncrementAnimationConsumers() MOZ_OVERRIDE;

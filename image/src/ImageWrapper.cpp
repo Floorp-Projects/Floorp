@@ -22,7 +22,7 @@ ImageWrapper::Init(const char* aMimeType, uint32_t aFlags)
   return mInnerImage->Init(aMimeType, aFlags);
 }
 
-imgStatusTracker&
+already_AddRefed<imgStatusTracker>
 ImageWrapper::GetStatusTracker()
 {
   return mInnerImage->GetStatusTracker();

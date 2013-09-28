@@ -309,13 +309,13 @@ public:
   };
 
 private:
-  imgStatusTracker& CurrentStatusTracker()
+  already_AddRefed<imgStatusTracker> CurrentStatusTracker()
   {
-    if (mDecodeRequest) {
-      return *mDecodeRequest->mStatusTracker;
-    } else {
-      return *mStatusTracker;
-    }
+    nsRefPtr<imgStatusTracker> statusTracker;
+    statusTracker = mDecodeRequest ? mDecodeRequest->mStatusTracker
+                                   : mStatusTracker;
+    MOZ_ASSERT(statusTracker);
+    return statusTracker.forget();
   }
 
   nsresult OnImageDataCompleteCore(nsIRequest* aRequest, nsISupports*, nsresult aStatus);
@@ -333,6 +333,9 @@ private:
       , mChunkCount(0)
       , mAllocatedNewFrame(false)
     {
+      MOZ_ASSERT(aImage, "aImage cannot be null");
+      MOZ_ASSERT(aImage->mStatusTracker,
+                 "aImage should have an imgStatusTracker");
       mStatusTracker = aImage->mStatusTracker->CloneForRecording();
     }
 
