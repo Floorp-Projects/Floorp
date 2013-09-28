@@ -10,10 +10,8 @@
 
 /* SCROLLBOX */
 #newtab-scrollbox:not([page-disabled]) {
-  background-color: rgb(229,229,229);
-  background-image: url(chrome://browser/skin/newtab/noise.png),
-                    linear-gradient(rgba(255,255,255,.5), rgba(255,255,255,.2));
-  background-attachment: fixed;
+  color: rgb(0,0,0);
+  background-color: hsl(0,0%,95%);
 }
 
 /* UNDO */
