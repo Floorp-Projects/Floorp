@@ -375,7 +375,7 @@ NS_IMPL_ISUPPORTS3(RasterImage, imgIContainer, nsIProperties,
 
 //******************************************************************************
 RasterImage::RasterImage(imgStatusTracker* aStatusTracker,
-                         nsIURI* aURI /* = nullptr */) :
+                         ImageURL* aURI /* = nullptr */) :
   ImageResource(aStatusTracker, aURI), // invoke superclass's constructor
   mSize(0,0),
   mFrameDecodeFlags(DECODE_FLAGS_DEFAULT),
@@ -2188,6 +2188,10 @@ RasterImage::RequestDecode()
 NS_IMETHODIMP
 RasterImage::StartDecoding()
 {
+  if (!NS_IsMainThread()) {
+    return NS_DispatchToMainThread(
+      NS_NewRunnableMethod(this, &RasterImage::StartDecoding));
+  }
   // Here we are explicitly trading off flashing for responsiveness in the case
   // that we're redecoding an image (see bug 845147).
   return RequestDecodeCore(mHasBeenDecoded ?
@@ -3038,6 +3042,13 @@ RasterImage::DecodePool::Singleton()
   }
 
   return sSingleton;
+}
+
+already_AddRefed<nsIEventTarget>
+RasterImage::DecodePool::GetEventTarget()
+{
+  nsCOMPtr<nsIEventTarget> target = do_QueryInterface(mThreadPool);
+  return target.forget();
 }
 
 RasterImage::DecodePool::DecodePool()

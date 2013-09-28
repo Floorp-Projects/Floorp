@@ -25,6 +25,12 @@ nsMediaFragmentURIParser::nsMediaFragmentURIParser(nsIURI* aURI)
   Parse(ref);
 }
 
+nsMediaFragmentURIParser::nsMediaFragmentURIParser(nsCString& aRef)
+  : mClipUnit(eClipUnit_Pixel)
+{
+  Parse(aRef);
+}
+
 bool nsMediaFragmentURIParser::ParseNPT(nsDependentSubstring aString)
 {
   nsDependentSubstring original(aString);
