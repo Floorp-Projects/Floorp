@@ -36,8 +36,6 @@ XPCOMUtils.defineLazyGetter(this, "powerManagerService", function() {
   return Cc["@mozilla.org/power/powermanagerservice;1"].getService(Ci.nsIPowerManagerService);
 });
 
-let myGlobal = this;
-
 /**
  * AlarmService provides an API to schedule alarms using the device's RTC.
  *
@@ -73,11 +71,8 @@ this.AlarmService = {
     }.bind(this));
 
     // Set the indexeddb database.
-    let idbManager = Cc["@mozilla.org/dom/indexeddb/manager;1"]
-                     .getService(Ci.nsIIndexedDatabaseManager);
-    idbManager.initWindowless(myGlobal);
-    this._db = new AlarmDB(myGlobal);
-    this._db.init(myGlobal);
+    this._db = new AlarmDB();
+    this._db.init();
 
     // Variable to save alarms waiting to be set.
     this._alarmQueue = [];

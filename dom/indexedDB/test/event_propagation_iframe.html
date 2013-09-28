@@ -21,7 +21,7 @@
     }
 
     function errorHandler(event) {
-      ok(false, "indexedDB error, code " + event.target.errorCode);
+      ok(false, "indexedDB error, code " + event.target.error.name);
       finishTest();
     }
 

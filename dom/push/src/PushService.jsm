@@ -45,15 +45,12 @@ const kCHILD_PROCESS_MESSAGES = ["Push:Register", "Push:Unregister",
                                  "Push:Registrations"];
 
 // This is a singleton
-this.PushDB = function PushDB(aGlobal) {
+this.PushDB = function PushDB() {
   debug("PushDB()");
 
   // set the indexeddb database
-  let idbManager = Cc["@mozilla.org/dom/indexeddb/manager;1"]
-                     .getService(Ci.nsIIndexedDatabaseManager);
-  idbManager.initWindowless(aGlobal);
   this.initDBHelper(kPUSHDB_DB_NAME, kPUSHDB_DB_VERSION,
-                    [kPUSHDB_STORE_NAME], aGlobal);
+                    [kPUSHDB_STORE_NAME]);
 };
 
 this.PushDB.prototype = {
@@ -177,7 +174,7 @@ this.PushDB.prototype = {
       kPUSHDB_STORE_NAME,
       function txnCb(aTxn, aStore) {
         let index = aStore.index("manifestURL");
-        let range = self.dbGlobal.IDBKeyRange.only(aManifestURL);
+        let range = IDBKeyRange.only(aManifestURL);
         aTxn.result = [];
         index.openCursor(range).onsuccess = function(event) {
           let cursor = event.target.result;
@@ -455,7 +452,7 @@ this.PushService = {
     if (!prefs.get("enabled"))
         return null;
 
-    this._db = new PushDB(this);
+    this._db = new PushDB();
 
     let ppmm = Cc["@mozilla.org/parentprocessmessagemanager;1"]
                  .getService(Ci.nsIMessageBroadcaster);
