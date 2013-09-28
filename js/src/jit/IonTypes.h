@@ -31,21 +31,14 @@ enum BailoutKind
     // a type mismatch in the arguments that necessitates a reflow.
     Bailout_ArgumentCheck,
 
-    // A bailout required to monitor a newly observed type in a type inference
-    // barrier.
-    Bailout_TypeBarrier,
-
-    // A bailout required to monitor the result of a VM call.
-    Bailout_Monitor,
-
     // A bailout triggered by a bounds-check failure.
     Bailout_BoundsCheck,
 
     // A shape guard based on TI information failed.
     Bailout_ShapeGuard,
 
-    // A shape guard based on JM ICs failed.
-    Bailout_CachedShapeGuard
+    // A bailout caused by invalid assumptions based on Baseline code.
+    Bailout_BaselineInfo
 };
 
 #ifdef DEBUG
@@ -57,16 +50,12 @@ BailoutKindString(BailoutKind kind)
         return "Bailout_Normal";
       case Bailout_ArgumentCheck:
         return "Bailout_ArgumentCheck";
-      case Bailout_TypeBarrier:
-        return "Bailout_TypeBarrier";
-      case Bailout_Monitor:
-        return "Bailout_Monitor";
       case Bailout_BoundsCheck:
         return "Bailout_BoundsCheck";
       case Bailout_ShapeGuard:
         return "Bailout_ShapeGuard";
-      case Bailout_CachedShapeGuard:
-        return "Bailout_CachedShapeGuard";
+      case Bailout_BaselineInfo:
+        return "Bailout_BaselineInfo";
       default:
         MOZ_ASSUME_UNREACHABLE("Invalid BailoutKind");
     }

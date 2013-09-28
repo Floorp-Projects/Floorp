@@ -5614,6 +5614,14 @@ class ICIteratorNext_Fallback : public ICFallbackStub
         return space->allocate<ICIteratorNext_Fallback>(code);
     }
 
+    void setHasNonStringResult() {
+        JS_ASSERT(extra_ == 0);
+        extra_ = 1;
+    }
+    bool hasNonStringResult() const {
+        return extra_;
+    }
+
     class Compiler : public ICStubCompiler {
       protected:
         bool generateStubCode(MacroAssembler &masm);

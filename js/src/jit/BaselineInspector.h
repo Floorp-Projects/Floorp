@@ -109,6 +109,7 @@ class BaselineInspector
     bool hasSeenNegativeIndexGetElement(jsbytecode *pc);
     bool hasSeenAccessedGetter(jsbytecode *pc);
     bool hasSeenDoubleResult(jsbytecode *pc);
+    bool hasSeenNonStringIterNext(jsbytecode *pc);
 };
 
 } // namespace jit

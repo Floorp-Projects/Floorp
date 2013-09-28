@@ -3865,10 +3865,8 @@ CodeGenerator::visitModD(LModD *ins)
     return true;
 }
 
-typedef bool (*BinaryFn)(JSContext *, HandleScript, jsbytecode *,
-                         MutableHandleValue, MutableHandleValue, Value *);
-typedef ParallelResult (*BinaryParFn)(ForkJoinSlice *, HandleValue, HandleValue,
-                                      Value *);
+typedef bool (*BinaryFn)(JSContext *, MutableHandleValue, MutableHandleValue, Value *);
+typedef ParallelResult (*BinaryParFn)(ForkJoinSlice *, HandleValue, HandleValue, Value *);
 
 static const VMFunction AddInfo = FunctionInfo<BinaryFn>(js::AddValues);
 static const VMFunction SubInfo = FunctionInfo<BinaryFn>(js::SubValues);
@@ -3884,10 +3882,6 @@ CodeGenerator::visitBinaryV(LBinaryV *lir)
 {
     pushArg(ToValue(lir, LBinaryV::RhsInput));
     pushArg(ToValue(lir, LBinaryV::LhsInput));
-    if (gen->info().executionMode() == SequentialExecution) {
-        pushArg(ImmPtr(lir->mirRaw()->toInstruction()->resumePoint()->pc()));
-        pushArg(ImmGCPtr(current->mir()->info().script()));
-    }
 
     switch (lir->jsop()) {
       case JSOP_ADD:

@@ -1375,22 +1375,15 @@ HandleShapeGuardFailure(JSContext *cx, HandleScript outerScript, HandleScript in
 }
 
 static bool
-HandleCachedShapeGuardFailure(JSContext *cx, HandleScript outerScript, HandleScript innerScript)
+HandleBaselineInfoBailout(JSContext *cx, JSScript *outerScript, JSScript *innerScript)
 {
-    IonSpew(IonSpew_Bailouts, "Cached shape guard failure %s:%d, inlined into %s:%d",
+    IonSpew(IonSpew_Bailouts, "Baseline info failure %s:%d, inlined into %s:%d",
             innerScript->filename(), innerScript->lineno,
             outerScript->filename(), outerScript->lineno);
 
     JS_ASSERT(!outerScript->ionScript()->invalidated());
 
-    outerScript->failedShapeGuard = true;
-
-    // No need to purge baseline ICs.  Baseline will do one of two things: add a new
-    // optimized stub (preventing monomorphic IC caching), or set a flag indicating that
-    // an unoptimizable access was made, also preventing mono IC caching.
-
-    IonSpew(IonSpew_BaselineBailouts, "Invalidating due to cached shape guard failure");
-
+    IonSpew(IonSpew_BaselineBailouts, "Invalidating due to invalid baseline info");
     return Invalidate(cx, outerScript);
 }
 
@@ -1487,11 +1480,7 @@ jit::FinishBailoutToBaseline(BaselineBailoutInfo *bailoutInfo)
         // Do nothing.
         break;
       case Bailout_ArgumentCheck:
-      case Bailout_TypeBarrier:
-      case Bailout_Monitor:
-        // Reflow types.  But in baseline, this will happen automatically because
-        // for any monitored op (or for argument checks), bailout will resume into
-        // the monitoring IC which will handle the type updates.
+        // Do nothing, bailout will resume before the argument monitor ICs.
         break;
       case Bailout_BoundsCheck:
         if (!HandleBoundsCheckFailure(cx, outerScript, innerScript))
@@ -1501,8 +1490,8 @@ jit::FinishBailoutToBaseline(BaselineBailoutInfo *bailoutInfo)
         if (!HandleShapeGuardFailure(cx, outerScript, innerScript))
             return false;
         break;
-      case Bailout_CachedShapeGuard:
-        if (!HandleCachedShapeGuardFailure(cx, outerScript, innerScript))
+      case Bailout_BaselineInfo:
+        if (!HandleBaselineInfoBailout(cx, outerScript, innerScript))
             return false;
         break;
       default:

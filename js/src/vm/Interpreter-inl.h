@@ -312,15 +312,12 @@ NegOperation(JSContext *cx, HandleScript script, jsbytecode *pc, HandleValue val
      */
     int32_t i;
     if (val.isInt32() && (i = val.toInt32()) != 0 && i != INT32_MIN) {
-        i = -i;
-        res.setInt32(i);
+        res.setInt32(-i);
     } else {
         double d;
         if (!ToNumber(cx, val, &d))
             return false;
-        d = -d;
-        if (!res.setNumber(d) && !val.isDouble())
-            types::TypeScript::MonitorOverflow(cx, script, pc);
+        res.setNumber(-d);
     }
 
     return true;
@@ -344,8 +341,6 @@ ToIdOperation(JSContext *cx, HandleScript script, jsbytecode *pc, HandleValue ob
         return false;
 
     res.set(IdToValue(id));
-    if (!res.isInt32())
-        types::TypeScript::MonitorUnknown(cx, script, pc);
     return true;
 }
 
@@ -638,16 +633,14 @@ BitRsh(JSContext *cx, HandleValue lhs, HandleValue rhs, int *out)
 }
 
 static JS_ALWAYS_INLINE bool
-UrshOperation(JSContext *cx, HandleScript script, jsbytecode *pc,
-              HandleValue lhs, HandleValue rhs, Value *out)
+UrshOperation(JSContext *cx, HandleValue lhs, HandleValue rhs, Value *out)
 {
     uint32_t left;
     int32_t  right;
     if (!ToUint32(cx, lhs, &left) || !ToInt32(cx, rhs, &right))
         return false;
     left >>= right & 31;
-    if (!out->setNumber(uint32_t(left)))
-        types::TypeScript::MonitorOverflow(cx, script, pc);
+    out->setNumber(uint32_t(left));
     return true;
 }
 

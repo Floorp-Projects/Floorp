@@ -152,7 +152,6 @@ struct TypeInferenceSizes
 {
 #define FOR_EACH_SIZE(macro) \
     macro(js::NotLiveGCThing, typeScripts) \
-    macro(js::NotLiveGCThing, typeResults) \
     macro(js::NotLiveGCThing, pendingArrays) \
     macro(js::NotLiveGCThing, allocationSiteTables) \
     macro(js::NotLiveGCThing, arrayTypeTables) \
