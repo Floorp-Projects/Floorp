@@ -1,44 +1,43 @@
 /* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
-
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef mozilla_net_SpdySession2_h
-#define mozilla_net_SpdySession2_h
+#ifndef mozilla_net_SpdySession31_h
+#define mozilla_net_SpdySession31_h
 
-// SPDY as defined by
-// http://www.chromium.org/spdy/spdy-protocol/spdy-protocol-draft2
+// spdy/3.1
 
 #include "ASpdySession.h"
+#include "mozilla/Attributes.h"
 #include "nsAHttpConnection.h"
 #include "nsClassHashtable.h"
 #include "nsDataHashtable.h"
 #include "nsDeque.h"
 #include "nsHashKeys.h"
 #include "zlib.h"
-#include "mozilla/Attributes.h"
 
 class nsISocketTransport;
 
 namespace mozilla { namespace net {
 
-class SpdyStream2;
+class SpdyPushedStream31;
+class SpdyStream31;
 
-class SpdySession2 MOZ_FINAL : public ASpdySession
-                             , public nsAHttpConnection
-                             , public nsAHttpSegmentReader
-                             , public nsAHttpSegmentWriter
+class SpdySession31 MOZ_FINAL : public ASpdySession
+  , public nsAHttpConnection
+  , public nsAHttpSegmentReader
+  , public nsAHttpSegmentWriter
 {
 public:
-  NS_DECL_THREADSAFE_ISUPPORTS
+  NS_DECL_ISUPPORTS
   NS_DECL_NSAHTTPTRANSACTION
   NS_DECL_NSAHTTPCONNECTION(mConnection)
   NS_DECL_NSAHTTPSEGMENTREADER
   NS_DECL_NSAHTTPSEGMENTWRITER
 
-  SpdySession2(nsAHttpTransaction *, nsISocketTransport *, int32_t);
-  ~SpdySession2();
+  SpdySession31(nsAHttpTransaction *, nsISocketTransport *, int32_t);
+  ~SpdySession31();
 
   bool AddStream(nsAHttpTransaction *, int32_t);
   bool CanReuse() { return !mShouldGoAway && !mClosed; }
@@ -50,27 +49,15 @@ public:
   // Idle time represents time since "goodput".. e.g. a data or header frame
   PRIntervalTime IdleTime();
 
-  uint32_t RegisterStreamID(SpdyStream2 *);
+  // Registering with a newID of 0 means pick the next available odd ID
+  uint32_t RegisterStreamID(SpdyStream31 *, uint32_t aNewID = 0);
+
+  const static uint8_t kVersion        = 3;
 
   const static uint8_t kFlag_Control   = 0x80;
 
   const static uint8_t kFlag_Data_FIN  = 0x01;
   const static uint8_t kFlag_Data_UNI  = 0x02;
-  const static uint8_t kFlag_Data_ZLIB = 0x02;
-
-  // The protocol document for v2 specifies that the
-  // highest value (3) is the highest priority, but in
-  // reality 0 is the highest priority.
-  //
-  // Draft 3 notes here https://sites.google.com/a/chromium.org/dev/spdy/spdy-protocol/
-  // are the best guide to the mistake. Also see
-  // GetLowestPriority() and GetHighestPriority() in spdy_framer.h of
-  // chromium source.
-
-  const static uint8_t kPri00   = 0 << 6; // highest
-  const static uint8_t kPri01   = 1 << 6;
-  const static uint8_t kPri02   = 2 << 6;
-  const static uint8_t kPri03   = 3 << 6; // lowest
 
   enum
   {
@@ -79,12 +66,13 @@ public:
     CONTROL_TYPE_SYN_REPLY = 2,
     CONTROL_TYPE_RST_STREAM = 3,
     CONTROL_TYPE_SETTINGS = 4,
-    CONTROL_TYPE_NOOP = 5,
+    CONTROL_TYPE_NOOP = 5,                        /* deprecated */
     CONTROL_TYPE_PING = 6,
     CONTROL_TYPE_GOAWAY = 7,
     CONTROL_TYPE_HEADERS = 8,
-    CONTROL_TYPE_WINDOW_UPDATE = 9,               /* no longer in v2 */
-    CONTROL_TYPE_LAST = 10
+    CONTROL_TYPE_WINDOW_UPDATE = 9,
+    CONTROL_TYPE_CREDENTIAL = 10,
+    CONTROL_TYPE_LAST = 11
   };
 
   enum rstReason
@@ -96,7 +84,24 @@ public:
     RST_CANCEL = 5,
     RST_INTERNAL_ERROR = 6,
     RST_FLOW_CONTROL_ERROR = 7,
-    RST_BAD_ASSOC_STREAM = 8
+    RST_STREAM_IN_USE = 8,
+    RST_STREAM_ALREADY_CLOSED = 9,
+    RST_INVALID_CREDENTIALS = 10,
+    RST_FRAME_TOO_LARGE = 11
+  };
+
+  enum goawayReason
+  {
+    OK = 0,
+    PROTOCOL_ERROR = 1,
+    INTERNAL_ERROR = 2,    // sometimes misdocumented as 11
+    NUM_STATUS_CODES = 3   // reserved by chromium but undocumented
+  };
+
+  enum settingsFlags
+  {
+    PERSIST_VALUE = 1,
+    PERSISTED_VALUE = 2
   };
 
   enum
@@ -107,7 +112,8 @@ public:
     SETTINGS_TYPE_MAX_CONCURRENT = 4, // streams
     SETTINGS_TYPE_CWND = 5, // packets
     SETTINGS_TYPE_DOWNLOAD_RETRANS_RATE = 6, // percentage
-    SETTINGS_TYPE_INITIAL_WINDOW = 7  // bytes. Not used in v2.
+    SETTINGS_TYPE_INITIAL_WINDOW = 7,  // bytes for flow control
+    SETTINGS_CLIENT_CERTIFICATE_VECTOR_SIZE = 8
   };
 
   // This should be big enough to hold all of your control packets,
@@ -129,33 +135,57 @@ public:
   // 31 bit stream ID.
   const static uint32_t kDeadStreamID = 0xffffdead;
 
-  static nsresult HandleSynStream(SpdySession2 *);
-  static nsresult HandleSynReply(SpdySession2 *);
-  static nsresult HandleRstStream(SpdySession2 *);
-  static nsresult HandleSettings(SpdySession2 *);
-  static nsresult HandleNoop(SpdySession2 *);
-  static nsresult HandlePing(SpdySession2 *);
-  static nsresult HandleGoAway(SpdySession2 *);
-  static nsresult HandleHeaders(SpdySession2 *);
-  static nsresult HandleWindowUpdate(SpdySession2 *);
+  // below the emergency threshold of local window we ack every received
+  // byte. Above that we coalesce bytes into the MinimumToAck size.
+  const static int32_t  kEmergencyWindowThreshold = 1024 * 1024;
+  const static uint32_t kMinimumToAck = 64 * 1024;
 
-  static void EnsureBuffer(nsAutoArrayPtr<char> &,
-                           uint32_t, uint32_t, uint32_t &);
+  // The default rwin is 64KB unless updated by a settings frame
+  const static uint32_t kDefaultRwin = 64 * 1024;
+
+  static nsresult HandleSynStream(SpdySession31 *);
+  static nsresult HandleSynReply(SpdySession31 *);
+  static nsresult HandleRstStream(SpdySession31 *);
+  static nsresult HandleSettings(SpdySession31 *);
+  static nsresult HandleNoop(SpdySession31 *);
+  static nsresult HandlePing(SpdySession31 *);
+  static nsresult HandleGoAway(SpdySession31 *);
+  static nsresult HandleHeaders(SpdySession31 *);
+  static nsresult HandleWindowUpdate(SpdySession31 *);
+  static nsresult HandleCredential(SpdySession31 *);
+
+  template<typename T>
+    static void EnsureBuffer(nsAutoArrayPtr<T> &,
+                             uint32_t, uint32_t, uint32_t &);
 
   // For writing the SPDY data stream to LOG4
-  static void LogIO(SpdySession2 *, SpdyStream2 *, const char *,
+  static void LogIO(SpdySession31 *, SpdyStream31 *, const char *,
                     const char *, uint32_t);
 
   // an overload of nsAHttpConnection
   void TransactionHasDataToWrite(nsAHttpTransaction *);
 
-  // a similar version for SpdyStream2
-  void TransactionHasDataToWrite(SpdyStream2 *);
+  // a similar version for SpdyStream31
+  void TransactionHasDataToWrite(SpdyStream31 *);
 
   // an overload of nsAHttpSegementReader
   virtual nsresult CommitToSegmentSize(uint32_t size, bool forceCommitment);
 
+  uint32_t GetServerInitialStreamWindow() { return mServerInitialStreamWindow; }
+
+  void ConnectPushedStream(SpdyStream31 *stream);
+
+  uint64_t Serial() { return mSerial; }
+
   void     PrintDiagnostics (nsCString &log);
+
+  // Streams need access to these
+  uint32_t SendingChunkSize() { return mSendingChunkSize; }
+  uint32_t PushAllowance() { return mPushAllowance; }
+  z_stream *UpstreamZlib() { return &mUpstreamZlib; }
+  nsISocketTransport *SocketTransport() { return mSocketTransport; }
+  int64_t RemoteSessionWindow() { return mRemoteSessionWindow; }
+  void DecrementRemoteSessionWindow (uint32_t bytes) { mRemoteSessionWindow -= bytes; }
 
 private:
 
@@ -164,49 +194,61 @@ private:
     BUFFERING_CONTROL_FRAME,
     PROCESSING_DATA_FRAME,
     DISCARDING_DATA_FRAME,
-    PROCESSING_CONTROL_SYN_REPLY,
+    PROCESSING_COMPLETE_HEADERS,
     PROCESSING_CONTROL_RST_STREAM
   };
 
-  nsresult    HandleSynReplyForValidStream();
+  nsresult    ResponseHeadersComplete();
   uint32_t    GetWriteQueueSize();
   void        ChangeDownstreamState(enum stateType);
   void        ResetDownstreamState();
-  nsresult    DownstreamUncompress(char *, uint32_t);
+  nsresult    UncompressAndDiscard(uint32_t, uint32_t);
+  void        DecrementConcurrent(SpdyStream31 *);
   void        zlibInit();
-  nsresult    FindHeader(nsCString, nsDependentCSubstring &);
-  nsresult    ConvertHeaders(nsDependentCSubstring &,
-                             nsDependentCSubstring &);
   void        GeneratePing(uint32_t);
   void        GenerateRstStream(uint32_t, uint32_t);
-  void        GenerateGoAway();
-  void        CleanupStream(SpdyStream2 *, nsresult, rstReason);
-  void        CloseStream(SpdyStream2 *, nsresult);
+  void        GenerateGoAway(uint32_t);
+  void        CleanupStream(SpdyStream31 *, nsresult, rstReason);
+  void        CloseStream(SpdyStream31 *, nsresult);
+  void        GenerateSettings();
+  void        RemoveStreamFromQueues(SpdyStream31 *);
 
   void        SetWriteCallbacks();
   void        FlushOutputQueue();
   void        RealignOutputQueue();
 
   bool        RoomForMoreConcurrent();
-  void        ActivateStream(SpdyStream2 *);
+  void        ActivateStream(SpdyStream31 *);
   void        ProcessPending();
   nsresult    SetInputFrameDataStream(uint32_t);
-  bool        VerifyStream(SpdyStream2 *, uint32_t);
+  bool        VerifyStream(SpdyStream31 *, uint32_t);
   void        SetNeedsCleanup();
+
+  void        UpdateLocalRwin(SpdyStream31 *stream, uint32_t bytes);
+  void        UpdateLocalStreamWindow(SpdyStream31 *stream, uint32_t bytes);
+  void        UpdateLocalSessionWindow(uint32_t bytes);
 
   // a wrapper for all calls to the nshttpconnection level segment writer. Used
   // to track network I/O for timeout purposes
   nsresult   NetworkRead(nsAHttpSegmentWriter *, char *, uint32_t, uint32_t *);
 
   static PLDHashOperator ShutdownEnumerator(nsAHttpTransaction *,
-                                            nsAutoPtr<SpdyStream2> &,
+                                            nsAutoPtr<SpdyStream31> &,
                                             void *);
 
   static PLDHashOperator GoAwayEnumerator(nsAHttpTransaction *,
-                                          nsAutoPtr<SpdyStream2> &,
+                                          nsAutoPtr<SpdyStream31> &,
                                           void *);
 
-  // This is intended to be nsHttpConnectionMgr:nsHttpConnectionHandle taken
+  static PLDHashOperator UpdateServerRwinEnumerator(nsAHttpTransaction *,
+                                                    nsAutoPtr<SpdyStream31> &,
+                                                    void *);
+
+  static PLDHashOperator RestartBlockedOnRwinEnumerator(nsAHttpTransaction *,
+                                                        nsAutoPtr<SpdyStream31> &,
+                                                        void *);
+
+  // This is intended to be nsHttpConnectionMgr:nsConnectionHandle taken
   // from the first transaction on this session. That object contains the
   // pointer to the real network-level nsHttpConnection object.
   nsRefPtr<nsAHttpConnection> mConnection;
@@ -223,31 +265,31 @@ private:
   uint32_t          mSendingChunkSize;        /* the transmission chunk size */
   uint32_t          mNextStreamID;            /* 24 bits */
   uint32_t          mConcurrentHighWater;     /* max parallelism on session */
+  uint32_t          mPushAllowance;           /* rwin for unmatched pushes */
 
   stateType         mDownstreamState; /* in frame, between frames, etc..  */
 
-  // Maintain 5 indexes - one by stream ID, one by transaction ptr,
-  // one list of streams ready to write, one list of streams that are queued
-  // due to max parallelism settings, and one list of streams
-  // that must be given priority to write for window updates. The objects
-  // are not ref counted - they get destroyed
+  // Maintain 2 indexes - one by stream ID, one by transaction pointer.
+  // There are also several lists of streams: ready to write, queued due to
+  // max parallelism, streams that need to force a read for push, and the full
+  // set of pushed streams.
+  // The objects are not ref counted - they get destroyed
   // by the nsClassHashtable implementation when they are removed from
-  // there.
-  nsDataHashtable<nsUint32HashKey, SpdyStream2 *>     mStreamIDHash;
+  // the transaction hash.
+  nsDataHashtable<nsUint32HashKey, SpdyStream31 *>     mStreamIDHash;
   nsClassHashtable<nsPtrHashKey<nsAHttpTransaction>,
-                   SpdyStream2>                       mStreamTransactionHash;
+    SpdyStream31>                                     mStreamTransactionHash;
+
   nsDeque                                             mReadyForWrite;
   nsDeque                                             mQueuedStreams;
-
-  // UrgentForWrite is meant to carry window updates. They were defined in
-  // the v2 spec but apparently never implemented so are now scheduled to
-  // be removed. But they will be reintroduced for v3, so we will leave
-  // this queue in place to ease that transition.
-  nsDeque           mUrgentForWrite;
+  nsDeque                                             mReadyForRead;
+  nsTArray<SpdyPushedStream31 *>                      mPushedStreams;
 
   // Compression contexts for header transport using deflate.
   // SPDY compresses only HTTP headers and does not reset zlib in between
-  // frames.
+  // frames. Even data that is not associated with a stream (e.g invalid
+  // stream ID) is passed through these contexts to keep the compression
+  // context correct.
   z_stream            mDownstreamZlib;
   z_stream            mUpstreamZlib;
 
@@ -267,14 +309,14 @@ private:
   // When a frame has been received that is addressed to a particular stream
   // (e.g. a data frame after the stream-id has been decoded), this points
   // to the stream.
-  SpdyStream2          *mInputFrameDataStream;
+  SpdyStream31          *mInputFrameDataStream;
 
   // mNeedsCleanup is a state variable to defer cleanup of a closed stream
   // If needed, It is set in session::OnWriteSegments() and acted on and
   // cleared when the stack returns to session::WriteSegments(). The stream
   // cannot be destroyed directly out of OnWriteSegments because
   // stream::writeSegments() is on the stack at that time.
-  SpdyStream2          *mNeedsCleanup;
+  SpdyStream31          *mNeedsCleanup;
 
   // The CONTROL_TYPE value for a control frame
   uint32_t             mFrameControlType;
@@ -282,15 +324,8 @@ private:
   // This reason code in the last processed RESET frame
   uint32_t             mDownstreamRstReason;
 
-  // These are used for decompressing downstream spdy response headers
-  // This is done at the session level because sometimes the stream
-  // has already been canceled but the decompression still must happen
-  // to keep the zlib state correct for the next state of headers.
-  uint32_t             mDecompressBufferSize;
-  uint32_t             mDecompressBufferUsed;
-  nsAutoArrayPtr<char> mDecompressBuffer;
-
   // for the conversion of downstream http headers into spdy formatted headers
+  // The data here does not persist between frames
   nsCString            mFlatHTTPResponseHeaders;
   uint32_t             mFlatHTTPResponseHeadersOut;
 
@@ -306,6 +341,11 @@ private:
 
   // the session received a GoAway frame with a valid GoAwayID
   bool                 mCleanShutdown;
+
+  // indicates PROCESSING_COMPLETE_HEADERS state was pushed onto the stack
+  // over an active PROCESSING_DATA_FRAME, which should be restored when
+  // the processed headers are written to the stream
+  bool                 mDataPending;
 
   // If a GoAway message was received this is the ID of the last valid
   // stream. 0 otherwise. (0 is never a valid stream id.)
@@ -323,6 +363,19 @@ private:
 
   // The number of server initiated SYN-STREAMS, tracked for telemetry
   uint32_t             mServerPushedResources;
+
+  // The server rwin for new streams as determined from a SETTINGS frame
+  uint32_t             mServerInitialStreamWindow;
+
+  // The Local Session window is how much data the server is allowed to send
+  // (across all streams) without getting a window update to stream 0. It is
+  // signed because asynchronous changes via SETTINGS can drive it negative.
+  int64_t              mLocalSessionWindow;
+
+  // The Remote Session Window is how much data the client is allowed to send
+  // (across all streams) without receiving a window update to stream 0. It is
+  // signed because asynchronous changes via SETTINGS can drive it negative.
+  int64_t              mRemoteSessionWindow;
 
   // This is a output queue of bytes ready to be written to the SSL stream.
   // When that streams returns WOULD_BLOCK on direct write the bytes get
@@ -342,8 +395,13 @@ private:
 
   // used as a temporary buffer while enumerating the stream hash during GoAway
   nsDeque  mGoAwayStreamsToRestart;
+
+  // Each session gets a unique serial number because the push cache is correlated
+  // by the load group and the serial number can be used as part of the cache key
+  // to make sure streams aren't shared across sessions.
+  uint64_t        mSerial;
 };
 
 }} // namespace mozilla::net
 
-#endif // mozilla_net_SpdySession2_h
+#endif // mozilla_net_SpdySession31_h

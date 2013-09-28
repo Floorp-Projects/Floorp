@@ -30,6 +30,7 @@
 #include "nsIOutputStream.h"
 #include "nsIVolumeService.h"
 #include "nsNetUtil.h"
+#include "nsServiceManagerUtils.h"
 
 #define TARGET_SUBDIR "Download/Bluetooth/"
 

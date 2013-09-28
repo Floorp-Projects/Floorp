@@ -125,20 +125,4 @@ namespace mozilla {
 typedef WidgetWheelEvent                   WheelEvent;
 }
 
-typedef mozilla::WidgetGestureNotifyEvent  nsGestureNotifyEvent;
-typedef mozilla::WidgetSimpleGestureEvent  nsSimpleGestureEvent;
-typedef mozilla::WidgetTouchEvent          nsTouchEvent;
-typedef mozilla::InternalScriptErrorEvent  nsScriptErrorEvent;
-typedef mozilla::InternalScrollPortEvent   nsScrollPortEvent;
-typedef mozilla::InternalScrollAreaEvent   nsScrollAreaEvent;
-typedef mozilla::InternalFormEvent         nsFormEvent;
-typedef mozilla::InternalClipboardEvent    nsClipboardEvent;
-typedef mozilla::InternalFocusEvent        nsFocusEvent;
-typedef mozilla::InternalTransitionEvent   nsTransitionEvent;
-typedef mozilla::InternalAnimationEvent    nsAnimationEvent;
-typedef mozilla::WidgetContentCommandEvent nsContentCommandEvent;
-typedef mozilla::WidgetCommandEvent        nsCommandEvent;
-typedef mozilla::WidgetPluginEvent         nsPluginEvent;
-typedef mozilla::InternalMutationEvent     nsMutationEvent;
-
 #endif // mozilla_EventForwards_h__

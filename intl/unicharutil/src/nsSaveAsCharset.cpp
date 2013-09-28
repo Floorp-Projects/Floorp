@@ -7,14 +7,10 @@
 
 #include "prmem.h"
 #include "prprf.h"
-#include "nsIServiceManager.h"
-#include "nsIComponentManager.h"
 #include "nsICharsetConverterManager.h"
 #include "nsSaveAsCharset.h"
-#include "nsCRT.h"
-#include "nsUnicharUtils.h"
-#include "nsReadableUtils.h"
 #include "nsWhitespaceTokenizer.h"
+#include "nsServiceManagerUtils.h"
 
 //
 // nsISupports methods

@@ -56,6 +56,7 @@ static MOZ_CONSTEXPR_VAR Register CallTempReg2 = r7;
 static MOZ_CONSTEXPR_VAR Register CallTempReg3 = r8;
 static MOZ_CONSTEXPR_VAR Register CallTempReg4 = r0;
 static MOZ_CONSTEXPR_VAR Register CallTempReg5 = r1;
+static MOZ_CONSTEXPR_VAR Register CallTempReg6 = r2;
 
 static MOZ_CONSTEXPR_VAR Register IntArgReg0 = r0;
 static MOZ_CONSTEXPR_VAR Register IntArgReg1 = r1;

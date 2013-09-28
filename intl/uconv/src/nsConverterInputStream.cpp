@@ -6,9 +6,9 @@
 #include "nsConverterInputStream.h"
 #include "nsIInputStream.h"
 #include "nsICharsetConverterManager.h"
-#include "nsIServiceManager.h"
 #include "nsReadLine.h"
 #include "nsStreamUtils.h"
+#include "nsServiceManagerUtils.h"
 #include <algorithm>
 
 #define CONVERTER_BUFFER_SIZE 8192

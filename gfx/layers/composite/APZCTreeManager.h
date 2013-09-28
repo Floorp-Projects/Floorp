@@ -148,7 +148,7 @@ public:
   /**
    * nsInputEvent handler. Sets |aOutEvent| (which is assumed to be an
    * already-existing instance of an nsInputEvent which may be an
-   * nsTouchEvent) to have its coordinates in DOM space. This is so that the
+   * WidgetTouchEvent) to have its coordinates in DOM space. This is so that the
    * event can be passed through the DOM and content can handle them.
    *
    * NOTE: Be careful of invoking the nsInputEvent variant. This can only be
@@ -300,8 +300,8 @@ private:
   AsyncPanZoomController* GetAPZCAtPoint(AsyncPanZoomController* aApzc, const gfxPoint& aHitTestPoint);
   AsyncPanZoomController* CommonAncestor(AsyncPanZoomController* aApzc1, AsyncPanZoomController* aApzc2);
   AsyncPanZoomController* RootAPZCForLayersId(AsyncPanZoomController* aApzc);
-  AsyncPanZoomController* GetTouchInputBlockAPZC(const nsTouchEvent& aEvent, ScreenPoint aPoint);
-  nsEventStatus ProcessTouchEvent(const nsTouchEvent& touchEvent, nsTouchEvent* aOutEvent);
+  AsyncPanZoomController* GetTouchInputBlockAPZC(const WidgetTouchEvent& aEvent, ScreenPoint aPoint);
+  nsEventStatus ProcessTouchEvent(const WidgetTouchEvent& touchEvent, WidgetTouchEvent* aOutEvent);
   nsEventStatus ProcessMouseEvent(const nsMouseEvent& mouseEvent, nsMouseEvent* aOutEvent);
   nsEventStatus ProcessEvent(const nsInputEvent& inputEvent, nsInputEvent* aOutEvent);
 

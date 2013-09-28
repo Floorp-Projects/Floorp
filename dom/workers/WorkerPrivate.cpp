@@ -71,6 +71,7 @@
 // GC will run five seconds after the last event is processed.
 #define IDLE_GC_TIMER_DELAY_MS 5000
 
+using mozilla::InternalScriptErrorEvent;
 using mozilla::MutexAutoLock;
 using mozilla::TimeDuration;
 using mozilla::TimeStamp;
@@ -1058,8 +1059,8 @@ public:
           }
         }
         else {
-          // Icky, we have to fire an nsScriptErrorEvent...
-          nsScriptErrorEvent event(true, NS_LOAD_ERROR);
+          // Icky, we have to fire an InternalScriptErrorEvent...
+          InternalScriptErrorEvent event(true, NS_LOAD_ERROR);
           event.lineNr = aLineNumber;
           event.errorMsg = aMessage.get();
           event.fileName = aFilename.get();

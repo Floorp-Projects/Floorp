@@ -247,14 +247,4 @@ public:
 
 } // namespace mozilla
 
-// TODO: Remove following typedefs
-typedef mozilla::InternalScriptErrorEvent nsScriptErrorEvent;
-typedef mozilla::InternalScrollPortEvent  nsScrollPortEvent;
-typedef mozilla::InternalScrollAreaEvent  nsScrollAreaEvent;
-typedef mozilla::InternalFormEvent        nsFormEvent;
-typedef mozilla::InternalClipboardEvent   nsClipboardEvent;
-typedef mozilla::InternalFocusEvent       nsFocusEvent;
-typedef mozilla::InternalTransitionEvent  nsTransitionEvent;
-typedef mozilla::InternalAnimationEvent   nsAnimationEvent;
-
 #endif // mozilla_ContentEvents_h__

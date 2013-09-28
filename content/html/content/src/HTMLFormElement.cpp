@@ -422,7 +422,7 @@ HTMLFormElement::Submit()
 NS_IMETHODIMP
 HTMLFormElement::Reset()
 {
-  nsFormEvent event(true, NS_FORM_RESET);
+  InternalFormEvent event(true, NS_FORM_RESET);
   nsEventDispatcher::Dispatch(static_cast<nsIContent*>(this), nullptr,
                               &event);
   return NS_OK;
@@ -822,13 +822,15 @@ HTMLFormElement::BuildSubmission(nsFormSubmission** aFormSubmission,
   nsGenericHTMLElement* originatingElement = nullptr;
   if (aEvent) {
     if (NS_FORM_EVENT == aEvent->eventStructType) {
-      nsIContent* originator = ((nsFormEvent *)aEvent)->originator;
+      nsIContent* originator =
+        static_cast<InternalFormEvent*>(aEvent)->originator;
       if (originator) {
         if (!originator->IsHTML()) {
           return NS_ERROR_UNEXPECTED;
         }
         originatingElement =
-          static_cast<nsGenericHTMLElement*>(((nsFormEvent *)aEvent)->originator);
+          static_cast<nsGenericHTMLElement*>(
+            static_cast<InternalFormEvent*>(aEvent)->originator);
       }
     }
   }

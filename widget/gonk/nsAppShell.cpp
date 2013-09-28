@@ -158,7 +158,7 @@ sendMouseEvent(uint32_t msg, uint64_t timeMs, int x, int y, bool forwardToChildr
 }
 
 static void
-addDOMTouch(UserInputData& data, nsTouchEvent& event, int i)
+addDOMTouch(UserInputData& data, WidgetTouchEvent& event, int i)
 {
     const ::Touch& touch = data.motion.touches[i];
     event.touches.AppendElement(
@@ -194,7 +194,7 @@ sendTouchEvent(UserInputData& data, bool* captured)
         break;
     }
 
-    nsTouchEvent event(true, msg, NULL);
+    WidgetTouchEvent event(true, msg, NULL);
 
     event.time = data.timeMs;
 

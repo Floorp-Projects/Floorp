@@ -9,7 +9,7 @@
     so instead We load it in a separate window.
   -->
 </head>
-<body onload="runTest()">
+<body onload="startTest()">
   <script class="testbody" type="text/javascript">
   SimpleTest.waitForExplicitFinish();
   var newWin = null;
@@ -20,6 +20,10 @@
   function finish() {
     newWin.close();
     SimpleTest.finish();
+  }
+
+  function startTest() {
+    SpecialPowers.pushPrefEnv({"set": [["dom.disable_window_move_resize", false]]}, runTest);
   }
   </script>
 </body>

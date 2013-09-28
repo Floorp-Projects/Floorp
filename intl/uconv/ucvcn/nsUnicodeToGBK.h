@@ -17,7 +17,7 @@
 #include "nsUCSupport.h"
 #include "nsCOMPtr.h"
 #include "nsIUnicodeEncoder.h"
-#include "gbku.h"
+#include "nsGBKConvUtil.h"
 //----------------------------------------------------------------------
 // Class nsUnicodeToGBK [declaration]
 

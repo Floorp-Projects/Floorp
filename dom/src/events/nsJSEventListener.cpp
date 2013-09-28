@@ -179,8 +179,8 @@ nsJSEventListener::HandleEvent(nsIDOMEvent* aEvent)
     nsEvent* event = aEvent->GetInternalNSEvent();
     if (event->message == NS_LOAD_ERROR &&
         event->eventStructType == NS_SCRIPT_ERROR_EVENT) {
-      nsScriptErrorEvent *scriptEvent =
-        static_cast<nsScriptErrorEvent*>(event);
+      InternalScriptErrorEvent *scriptEvent =
+        static_cast<InternalScriptErrorEvent*>(event);
       errorMsg = scriptEvent->errorMsg;
       msgOrEvent.SetAsString() = static_cast<nsAString*>(&errorMsg);
 
