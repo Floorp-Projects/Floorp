@@ -45,12 +45,6 @@ nsReadEndCondition::nsReadEndCondition(const PRUnichar* aTerminateChars) :
   }
 }
 
-#ifdef __INCREMENTAL
-const int   kBufsize=1;
-#else
-const int   kBufsize=64;
-#endif
-
 /**
  *  Use this constructor if you want i/o to be based on 
  *  a single string you hand in during construction.

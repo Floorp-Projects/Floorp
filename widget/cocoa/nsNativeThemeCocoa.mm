@@ -277,10 +277,6 @@ static void DrawFocusRing(NSRect rect, float radius)
   
 #endif
 
-// Copied from nsLookAndFeel.h
-// Apple hasn't defined a constant for scollbars with two arrows on each end, so we'll use this one.
-static const int kThemeScrollBarArrowsBoth = 2;
-
 #define HITHEME_ORIENTATION kHIThemeOrientationNormal
 #define MAX_FOCUS_RING_WIDTH 4
 

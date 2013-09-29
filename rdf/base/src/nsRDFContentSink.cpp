@@ -73,7 +73,6 @@ using namespace mozilla;
 
 static NS_DEFINE_IID(kIContentSinkIID,         NS_ICONTENT_SINK_IID); // XXX grr...
 static NS_DEFINE_IID(kIExpatSinkIID,           NS_IEXPATSINK_IID);
-static NS_DEFINE_IID(kIRDFServiceIID,          NS_IRDFSERVICE_IID);
 static NS_DEFINE_IID(kISupportsIID,            NS_ISUPPORTS_IID);
 static NS_DEFINE_IID(kIXMLContentSinkIID,      NS_IXMLCONTENT_SINK_IID);
 static NS_DEFINE_IID(kIRDFContentSinkIID,      NS_IRDFCONTENTSINK_IID);

@@ -78,9 +78,6 @@
 #include "nsIPrefService.h"
 #include "nsIPrefBranch.h"
 
-static NS_DEFINE_CID(kCharsetConverterManagerCID, NS_ICHARSETCONVERTERMANAGER_CID);
-static NS_DEFINE_CID(kUnicharUtilCID, NS_UNICHARUTIL_CID);
-
 NS_IMPL_CYCLE_COLLECTING_ADDREF(mozHunspell)
 NS_IMPL_CYCLE_COLLECTING_RELEASE(mozHunspell)
 

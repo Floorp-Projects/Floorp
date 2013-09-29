@@ -15,9 +15,6 @@
 #include "nsISupports.h"
 #include "nsCOMPtr.h"
 
-static NS_DEFINE_CID(kUniversalDetectorCID, NS_UNIVERSAL_DETECTOR_CID);
-static NS_DEFINE_CID(kUniversalStringDetectorCID, NS_UNIVERSAL_STRING_DETECTOR_CID);
-
 //---------------------------------------------------------------------
 nsXPCOMDetector:: nsXPCOMDetector(uint32_t aLanguageFilter)
  : nsUniversalDetector(aLanguageFilter)
