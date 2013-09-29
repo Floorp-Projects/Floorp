@@ -9,7 +9,6 @@ if CONFIG['LIBXUL_SDK']:
 if not CONFIG['MOZ_NATIVE_NSPR']:
     add_tier_dir('nspr', 'config/nspr')
 
-add_tier_dir('precompile', 'config/makefiles/precompile')
 add_tier_dir('external', 'config/external')
 
 if not CONFIG['MOZ_NATIVE_NSS']:
