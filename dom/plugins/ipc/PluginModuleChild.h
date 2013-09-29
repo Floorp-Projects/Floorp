@@ -74,7 +74,7 @@ class PluginModuleChild : public PPluginModuleChild
 {
     typedef mozilla::dom::PCrashReporterChild PCrashReporterChild;
 protected:
-    virtual mozilla::ipc::RPCChannel::RacyRPCPolicy
+    virtual mozilla::ipc::RacyRPCPolicy
     MediateRPCRace(const Message& parent, const Message& child) MOZ_OVERRIDE
     {
         return MediateRace(parent, child);

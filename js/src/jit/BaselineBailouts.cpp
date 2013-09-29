@@ -86,8 +86,8 @@ struct BaselineStackBuilder
         bufferTotal_(initialSize),
         bufferAvail_(0),
         bufferUsed_(0),
-        buffer_(NULL),
-        header_(NULL),
+        buffer_(nullptr),
+        header_(nullptr),
         framePushed_(0)
     {
         JS_ASSERT(bufferTotal_ >= HeaderSize());
@@ -114,15 +114,15 @@ struct BaselineStackBuilder
         header_->valueR0 = UndefinedValue();
         header_->setR1 = 0;
         header_->valueR1 = UndefinedValue();
-        header_->resumeFramePtr = NULL;
-        header_->resumeAddr = NULL;
-        header_->monitorStub = NULL;
+        header_->resumeFramePtr = nullptr;
+        header_->resumeAddr = nullptr;
+        header_->monitorStub = nullptr;
         header_->numFrames = 0;
         return true;
     }
 
     bool enlarge() {
-        JS_ASSERT(buffer_ != NULL);
+        JS_ASSERT(buffer_ != nullptr);
         if (bufferTotal_ & mozilla::tl::MulOverflowMask<2>::value)
             return false;
         size_t newSize = bufferTotal_ * 2;
@@ -149,7 +149,7 @@ struct BaselineStackBuilder
 
     BaselineBailoutInfo *takeBuffer() {
         JS_ASSERT(header_ == reinterpret_cast<BaselineBailoutInfo *>(buffer_));
-        buffer_ = NULL;
+        buffer_ = nullptr;
         return header_;
     }
 
@@ -161,7 +161,7 @@ struct BaselineStackBuilder
         return framePushed_;
     }
 
-    bool subtract(size_t size, const char *info=NULL) {
+    bool subtract(size_t size, const char *info = nullptr) {
         // enlarge the buffer if need be.
         while (size > bufferAvail_) {
             if (!enlarge())
@@ -319,7 +319,7 @@ struct BaselineStackBuilder
         // frame is meaningless, since Ion saves all registers before calling other ion
         // frames, and the entry frame saves all registers too.
         if (type == IonFrame_OptimizedJS || type == IonFrame_Entry)
-            return NULL;
+            return nullptr;
 
         // BaselineStub - Baseline calling into Ion.
         //  PrevFramePtr needs to point to the BaselineStubFrame's saved frame pointer.
@@ -353,7 +353,7 @@ struct BaselineStackBuilder
         // If the frame preceding the rectifier is an OptimizedJS frame, then once again
         // the frame pointer does not matter.
         if (priorType == IonFrame_OptimizedJS)
-            return NULL;
+            return nullptr;
 
         // Otherwise, the frame preceding the rectifier is a BaselineStub frame.
         //  let X = STACK_START_ADDR + IonJSFrameLayout::Size() + PREV_FRAME_SIZE
@@ -467,7 +467,7 @@ InitFromBailout(JSContext *cx, HandleScript caller, jsbytecode *callerPC,
                 AutoValueVector &startFrameFormals, MutableHandleFunction nextCallee,
                 jsbytecode **callPC, const ExceptionBailoutInfo *excInfo)
 {
-    // If excInfo is non-NULL, we are bailing out to a catch or finally block
+    // If excInfo is non-nullptr, we are bailing out to a catch or finally block
     // and this is the frame where we will resume. Usually the expression stack
     // should be empty in this case but there can be iterators on the stack.
     uint32_t exprStackSlots;
@@ -536,8 +536,8 @@ InitFromBailout(JSContext *cx, HandleScript caller, jsbytecode *callerPC,
     }
 
     // Initialize BaselineFrame's scopeChain and argsObj
-    JSObject *scopeChain = NULL;
-    ArgumentsObject *argsObj = NULL;
+    JSObject *scopeChain = nullptr;
+    ArgumentsObject *argsObj = nullptr;
     BailoutKind bailoutKind = iter.bailoutKind();
     if (bailoutKind == Bailout_ArgumentCheck) {
         // Temporary hack -- skip the (unused) scopeChain, because it could be
@@ -566,8 +566,8 @@ InitFromBailout(JSContext *cx, HandleScript caller, jsbytecode *callerPC,
             // Get scope chain from function or script.
             if (fun) {
                 // If pcOffset == 0, we may have to push a new call object, so
-                // we leave scopeChain NULL and enter baseline code before the
-                // prologue.
+                // we leave scopeChain nullptr and enter baseline code before
+                // the prologue.
                 if (iter.pcOffset() != 0 || iter.resumeAfter())
                     scopeChain = fun->environment();
             } else {
@@ -822,8 +822,8 @@ InitFromBailout(JSContext *cx, HandleScript caller, jsbytecode *callerPC,
     // If this was the last inline frame, or we are bailing out to a catch or
     // finally block in this frame, then unpacking is almost done.
     if (!iter.moreFrames() || excInfo) {
-        // Last frame, so PC for call to next frame is set to NULL.
-        *callPC = NULL;
+        // Last frame, so PC for call to next frame is set to nullptr.
+        *callPC = nullptr;
 
         // If the bailout was a resumeAfter, and the opcode is monitored,
         // then the bailed out state should be in a position to enter
@@ -917,10 +917,10 @@ InitFromBailout(JSContext *cx, HandleScript caller, jsbytecode *callerPC,
             IonSpew(IonSpew_BaselineBailouts, "      Adjusted framesize -= %d: %d",
                             int(sizeof(Value) * numUnsynced), int(frameSize));
 
-            // If scopeChain is NULL, then bailout is occurring during argument check.
+            // If scopeChain is nullptr, then bailout is occurring during argument check.
             // In this case, resume into the prologue.
             uint8_t *opReturnAddr;
-            if (scopeChain == NULL) {
+            if (scopeChain == nullptr) {
                 // Global and eval scripts expect the scope chain in R1, so only
                 // resume into the prologue for function scripts.
                 JS_ASSERT(fun);
@@ -942,7 +942,7 @@ InitFromBailout(JSContext *cx, HandleScript caller, jsbytecode *callerPC,
                 //     argument check, then:
                 //          Top SPS profiler entry would be for callee frame.
                 //          Ion would already have pushed an SPS entry for this frame.
-                //          The pc for this entry would be set to NULL.
+                //          The pc for this entry would be set to nullptr.
                 //          Make sure it's set to script->pc.
                 if (cx->runtime()->spsProfiler.enabled()) {
                     if (caller && bailoutKind == Bailout_ArgumentCheck) {
@@ -1182,8 +1182,8 @@ jit::BailoutIonToBaseline(JSContext *cx, JitActivation *activation, IonBailoutIt
                           bool invalidate, BaselineBailoutInfo **bailoutInfo,
                           const ExceptionBailoutInfo *excInfo)
 {
-    JS_ASSERT(bailoutInfo != NULL);
-    JS_ASSERT(*bailoutInfo == NULL);
+    JS_ASSERT(bailoutInfo != nullptr);
+    JS_ASSERT(*bailoutInfo == nullptr);
 
 #if JS_TRACE_LOGGING
     TraceLogging::defaultLogger()->log(TraceLogging::INFO_ENGINE_BASELINE);
@@ -1266,7 +1266,7 @@ jit::BailoutIonToBaseline(JSContext *cx, JitActivation *activation, IonBailoutIt
 
     // Reconstruct baseline frames using the builder.
     RootedScript caller(cx);
-    jsbytecode *callerPC = NULL;
+    jsbytecode *callerPC = nullptr;
     RootedFunction fun(cx, callee);
     RootedScript scr(cx, iter.script());
     AutoValueVector startFrameFormals(cx);
@@ -1284,11 +1284,11 @@ jit::BailoutIonToBaseline(JSContext *cx, JitActivation *activation, IonBailoutIt
         // pass excInfo to InitFromBailout and don't unpack any other frames.
         bool handleException = (excInfo && excInfo->frameNo == frameNo);
 
-        jsbytecode *callPC = NULL;
-        RootedFunction nextCallee(cx, NULL);
+        jsbytecode *callPC = nullptr;
+        RootedFunction nextCallee(cx, nullptr);
         if (!InitFromBailout(cx, caller, callerPC, fun, scr, iter.ionScript(),
                              snapIter, invalidate, builder, startFrameFormals,
-                             &nextCallee, &callPC, handleException ? excInfo : NULL))
+                             &nextCallee, &callPC, handleException ? excInfo : nullptr))
         {
             return BAILOUT_RETURN_FATAL_ERROR;
         }
@@ -1375,22 +1375,15 @@ HandleShapeGuardFailure(JSContext *cx, HandleScript outerScript, HandleScript in
 }
 
 static bool
-HandleCachedShapeGuardFailure(JSContext *cx, HandleScript outerScript, HandleScript innerScript)
+HandleBaselineInfoBailout(JSContext *cx, JSScript *outerScript, JSScript *innerScript)
 {
-    IonSpew(IonSpew_Bailouts, "Cached shape guard failure %s:%d, inlined into %s:%d",
+    IonSpew(IonSpew_Bailouts, "Baseline info failure %s:%d, inlined into %s:%d",
             innerScript->filename(), innerScript->lineno,
             outerScript->filename(), outerScript->lineno);
 
     JS_ASSERT(!outerScript->ionScript()->invalidated());
 
-    outerScript->failedShapeGuard = true;
-
-    // No need to purge baseline ICs.  Baseline will do one of two things: add a new
-    // optimized stub (preventing monomorphic IC caching), or set a flag indicating that
-    // an unoptimizable access was made, also preventing mono IC caching.
-
-    IonSpew(IonSpew_BaselineBailouts, "Invalidating due to cached shape guard failure");
-
+    IonSpew(IonSpew_BaselineBailouts, "Invalidating due to invalid baseline info");
     return Invalidate(cx, outerScript);
 }
 
@@ -1417,10 +1410,10 @@ jit::FinishBailoutToBaseline(BaselineBailoutInfo *bailoutInfo)
 
     // Free the bailout buffer.
     js_free(bailoutInfo);
-    bailoutInfo = NULL;
+    bailoutInfo = nullptr;
 
     // Ensure the frame has a call object if it needs one. If the scope chain
-    // is NULL, we will enter baseline code at the prologue so no need to do
+    // is nullptr, we will enter baseline code at the prologue so no need to do
     // anything in that case.
     BaselineFrame *topFrame = GetTopBaselineFrame(cx);
     if (topFrame->scopeChain() && !EnsureHasScopeObjects(cx, topFrame))
@@ -1428,8 +1421,8 @@ jit::FinishBailoutToBaseline(BaselineBailoutInfo *bailoutInfo)
 
     // Create arguments objects for bailed out frames, to maintain the invariant
     // that script->needsArgsObj() implies frame->hasArgsObj().
-    RootedScript innerScript(cx, NULL);
-    RootedScript outerScript(cx, NULL);
+    RootedScript innerScript(cx, nullptr);
+    RootedScript outerScript(cx, nullptr);
 
     JS_ASSERT(cx->currentlyRunningInJit());
     IonFrameIterator iter(cx->mainThread().ionTop);
@@ -1487,11 +1480,7 @@ jit::FinishBailoutToBaseline(BaselineBailoutInfo *bailoutInfo)
         // Do nothing.
         break;
       case Bailout_ArgumentCheck:
-      case Bailout_TypeBarrier:
-      case Bailout_Monitor:
-        // Reflow types.  But in baseline, this will happen automatically because
-        // for any monitored op (or for argument checks), bailout will resume into
-        // the monitoring IC which will handle the type updates.
+        // Do nothing, bailout will resume before the argument monitor ICs.
         break;
       case Bailout_BoundsCheck:
         if (!HandleBoundsCheckFailure(cx, outerScript, innerScript))
@@ -1501,8 +1490,8 @@ jit::FinishBailoutToBaseline(BaselineBailoutInfo *bailoutInfo)
         if (!HandleShapeGuardFailure(cx, outerScript, innerScript))
             return false;
         break;
-      case Bailout_CachedShapeGuard:
-        if (!HandleCachedShapeGuardFailure(cx, outerScript, innerScript))
+      case Bailout_BaselineInfo:
+        if (!HandleBaselineInfoBailout(cx, outerScript, innerScript))
             return false;
         break;
       default:

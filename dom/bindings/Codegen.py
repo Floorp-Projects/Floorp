@@ -10786,7 +10786,16 @@ class CGEventGetter(CGNativeMember):
             return ret;
         raise TypeError("Event code generator does not support this type!")
 
+    def declare(self, cgClass):
+        if getattr(self.member, "originatingInterface",
+                   cgClass.descriptor.interface) != cgClass.descriptor.interface:
+            return ""
+        return CGNativeMember.declare(self, cgClass)
+
     def define(self, cgClass):
+        if getattr(self.member, "originatingInterface",
+                   cgClass.descriptor.interface) != cgClass.descriptor.interface:
+            return ""
         ret = self.retval(self.member.type);
         methodName = self.descriptorProvider.name + '::' + self.name
         args = (', '.join([a.declare() for a in self.args]))
@@ -10845,6 +10854,11 @@ class CGEventMethod(CGNativeMember):
         while iface.identifier.name != "Event":
             for m in self.descriptorProvider.getDescriptor(iface.identifier.name).interface.members:
                 if m.isAttr():
+                    # We initialize all the other member variables in the
+                    # Constructor except those ones coming from the Event.
+                    if getattr(m, "originatingInterface",
+                               cgClass.descriptor.interface).identifier.name == "Event":
+                        continue
                     name = CGDictionary.makeMemberName(m.identifier.name)
                     members += "e->%s = %s.%s;\n" % (name, self.args[1].name, name)
                     if m.type.isAny() or m.type.isObject() or m.type.isSpiderMonkeyInterface():
@@ -10891,6 +10905,9 @@ class CGEventClass(CGBindingImplClass):
         members = []
         for m in descriptor.interface.members:
             if m.isAttr():
+                if getattr(m, "originatingInterface",
+                           descriptor.interface) != descriptor.interface:
+                    continue
                 if m.type.isPrimitive() and m.type.tag() in builtinNames:
                     nativeType = CGGeneric(builtinNames[m.type.tag()])
                     if m.type.nullable():

@@ -43,10 +43,11 @@ struct PopValues
 // Contains information about a virtual machine function that can be called
 // from JIT code. Functions described in this manner must conform to a simple
 // protocol: the return type must have a special "failure" value (for example,
-// false for bool, or NULL for Objects). If the function is designed to return
-// a value that does not meet this requirement - such as object-or-NULL, or an
-// integer, an optional, final outParam can be specified. In this case, the
-// return type must be boolean to indicate failure.
+// false for bool, or nullptr for Objects). If the function is designed to
+// return a value that does not meet this requirement - such as
+// object-or-nullptr, or an integer, an optional, final outParam can be
+// specified. In this case, the return type must be boolean to indicate
+// failure.
 //
 // All functions described by VMFunction take a JSContext * as a first
 // argument, and are treated as re-entrant into the VM and therefore fallible.
@@ -92,7 +93,7 @@ struct VMFunction
     // constructor. If the C function use an outparam (!= Type_Void), then
     // the only valid failure/return type is boolean -- object pointers are
     // pointless because the wrapper will only use it to compare it against
-    // NULL before discarding its value.
+    // nullptr before discarding its value.
     DataType returnType;
 
     // Note: a maximum of seven root types is supported.
@@ -188,7 +189,7 @@ struct VMFunction
     }
 
     VMFunction()
-      : wrapped(NULL),
+      : wrapped(nullptr),
         explicitArgs(0),
         argumentProperties(0),
         argumentPassedInFloatRegs(0),
@@ -555,7 +556,7 @@ class AutoDetectInvalidation
     bool disabled_;
 
   public:
-    AutoDetectInvalidation(JSContext *cx, Value *rval, IonScript *ionScript = NULL)
+    AutoDetectInvalidation(JSContext *cx, Value *rval, IonScript *ionScript = nullptr)
       : cx_(cx),
         ionScript_(ionScript ? ionScript : GetTopIonJSScript(cx)->ionScript()),
         rval_(rval),

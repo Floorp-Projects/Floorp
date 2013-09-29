@@ -1,12 +1,9 @@
 {
   "DOMException exception: existence and properties of exception interface prototype object": true,
   "DOMException exception: existence and properties of exception interface prototype object's \"name\" property": true,
-  "Event interface: document.createEvent(\"Event\") must have own property \"isTrusted\"": true,
   "Event interface: document.createEvent(\"Event\") must inherit property \"timeStamp\" with the proper type (15)": true,
-  "Event interface: new Event(\"foo\") must have own property \"isTrusted\"": true,
   "Event interface: new Event(\"foo\") must inherit property \"timeStamp\" with the proper type (15)": true,
   "CustomEvent interface: existence and properties of interface object": true,
-  "Event interface: new CustomEvent(\"foo\") must have own property \"isTrusted\"": true,
   "Event interface: new CustomEvent(\"foo\") must inherit property \"timeStamp\" with the proper type (15)": true,
   "EventListener interface: existence and properties of interface prototype object": true,
   "EventListener interface: existence and properties of interface prototype object's \"constructor\" property": true,

@@ -72,7 +72,7 @@ class NS_CYCLE_COLLECTION_INNERCLASS                                        \
  : public nsXPCOMCycleCollectionParticipant                                 \
 {                                                                           \
 public:                                                                     \
-  NS_IMETHOD Unlink(void *p);                                               \
+  NS_IMETHOD_(void) Unlink(void *p);                                        \
   NS_IMETHOD Traverse(void *p, nsCycleCollectionTraversalCallback &cb);     \
   NS_IMETHOD_(void) DeleteCycleCollectable(void* p)                         \
   {                                                                         \

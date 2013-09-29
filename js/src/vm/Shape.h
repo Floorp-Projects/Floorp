@@ -287,12 +287,12 @@ struct PropDesc {
     JSObject * getterObject() const {
         MOZ_ASSERT(!isUndefined());
         MOZ_ASSERT(hasGet());
-        return get_.isUndefined() ? NULL : &get_.toObject();
+        return get_.isUndefined() ? nullptr : &get_.toObject();
     }
     JSObject * setterObject() const {
         MOZ_ASSERT(!isUndefined());
         MOZ_ASSERT(hasSet());
-        return set_.isUndefined() ? NULL : &set_.toObject();
+        return set_.isUndefined() ? nullptr : &set_.toObject();
     }
 
     HandleValue getterValue() const {
@@ -311,10 +311,10 @@ struct PropDesc {
      * we can't assert anything here.  :-(
      */
     PropertyOp getter() const {
-        return CastAsPropertyOp(get_.isUndefined() ? NULL : &get_.toObject());
+        return CastAsPropertyOp(get_.isUndefined() ? nullptr : &get_.toObject());
     }
     StrictPropertyOp setter() const {
-        return CastAsStrictPropertyOp(set_.isUndefined() ? NULL : &set_.toObject());
+        return CastAsStrictPropertyOp(set_.isUndefined() ? nullptr : &set_.toObject());
     }
 
     /*
@@ -698,7 +698,7 @@ class BaseShape : public gc::BarrieredCell<BaseShape>
     bool hasSetterObject() const { return !!(flags & HAS_SETTER_OBJECT); }
     JSObject *setterObject() const { JS_ASSERT(hasSetterObject()); return setterObj; }
 
-    bool hasTable() const { JS_ASSERT_IF(table_, isOwned()); return table_ != NULL; }
+    bool hasTable() const { JS_ASSERT_IF(table_, isOwned()); return table_ != nullptr; }
     ShapeTable &table() const { JS_ASSERT(table_ && isOwned()); return *table_; }
     void setTable(ShapeTable *table) { JS_ASSERT(isOwned()); table_ = table; }
 
@@ -807,8 +807,8 @@ struct StackBaseShape
         clasp(base->clasp),
         parent(base->parent),
         metadata(base->metadata),
-        rawGetter(NULL),
-        rawSetter(NULL),
+        rawGetter(nullptr),
+        rawSetter(nullptr),
         compartment(base->compartment())
     {}
 
@@ -940,7 +940,7 @@ class Shape : public gc::BarrieredCell<Shape>
         new (this) Shape(child, nfixed);
         this->flags |= IN_DICTIONARY;
 
-        this->listp = NULL;
+        this->listp = nullptr;
         insertIntoDictionary(dictp);
     }
 
@@ -1001,7 +1001,7 @@ class Shape : public gc::BarrieredCell<Shape>
             JS_STATIC_ASSERT(allowGC == CanGC);
         }
 
-        Range(Shape *shape) : cursor((ExclusiveContext *) NULL, shape) {
+        Range(Shape *shape) : cursor((ExclusiveContext *) nullptr, shape) {
             JS_STATIC_ASSERT(allowGC == NoGC);
         }
 
@@ -1493,7 +1493,7 @@ struct StackShape
 inline bool
 SHAPE_IS_FREE(js::Shape *shape)
 {
-    return shape == NULL;
+    return shape == nullptr;
 }
 
 inline bool
@@ -1549,7 +1549,7 @@ Shape::Shape(const StackShape &other, uint32_t nfixed)
     attrs(other.attrs),
     flags(other.flags),
     shortid_(other.shortid),
-    parent(NULL)
+    parent(nullptr)
 {
     kids.setNull();
 }
@@ -1562,7 +1562,7 @@ Shape::Shape(UnownedBaseShape *base, uint32_t nfixed)
     attrs(JSPROP_SHARED),
     flags(0),
     shortid_(0),
-    parent(NULL)
+    parent(nullptr)
 {
     JS_ASSERT(base);
     kids.setNull();
@@ -1576,7 +1576,7 @@ Shape::search(ExclusiveContext *cx, Shape *start, jsid id, Shape ***pspp, bool a
         return SHAPE_FETCH(*pspp);
     }
 
-    *pspp = NULL;
+    *pspp = nullptr;
 
     if (start->hasTable()) {
         Shape **spp = start->table().search(id, adding);
@@ -1604,7 +1604,7 @@ Shape::search(ExclusiveContext *cx, Shape *start, jsid id, Shape ***pspp, bool a
             return shape;
     }
 
-    return NULL;
+    return nullptr;
 }
 
 /*
@@ -1628,7 +1628,7 @@ Shape::searchNoHashify(Shape *start, jsid id)
             return shape;
     }
 
-    return NULL;
+    return nullptr;
 }
 
 inline bool
@@ -1641,8 +1641,8 @@ Shape::matches(const StackShape &other) const
 template<> struct RootKind<Shape *> : SpecificRootKind<Shape *, THING_ROOT_SHAPE> {};
 template<> struct RootKind<BaseShape *> : SpecificRootKind<BaseShape *, THING_ROOT_BASE_SHAPE> {};
 
-// Property lookup hooks on objects are required to return a non-NULL shape to
-// signify that the property has been found. For cases where the property is
+// Property lookup hooks on objects are required to return a non-nullptr shape
+// to signify that the property has been found. For cases where the property is
 // not actually represented by a Shape, use a dummy value. This includes all
 // properties of non-native objects, and dense elements for native objects.
 // Use separate APIs for these two cases.

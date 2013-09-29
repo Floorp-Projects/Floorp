@@ -8,8 +8,6 @@
 
 #include "IDBIndex.h"
 
-#include "nsIIDBKeyRange.h"
-
 #include <algorithm>
 #include "mozilla/dom/ContentChild.h"
 #include "mozilla/dom/ContentParent.h"
@@ -1991,7 +1989,7 @@ OpenKeyCursorHelper::PackArgumentsForParentProcess(IndexRequestParams& aParams)
 
   PROFILER_MAIN_THREAD_LABEL("IndexedDB",
                              "OpenKeyCursorHelper::"
-                             "PackArgumentsForParentProcess");
+                             "PackArgumentsForParentProcess [IDBIndex.cpp]");
 
   OpenKeyCursorParams params;
 

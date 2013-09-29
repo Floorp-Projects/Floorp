@@ -11,6 +11,7 @@
 #include "AudioSegment.h"
 #include "AudioChannelFormat.h"
 #include "mozilla/PodOperations.h"
+#include "mozilla/CheckedInt.h"
 #include "AudioNodeEngine.h"
 
 namespace mozilla {
@@ -113,8 +114,10 @@ AudioBuffer::CopyFromChannel(const Float32Array& aDestination, uint32_t aChannel
                              uint32_t aStartInChannel, ErrorResult& aRv)
 {
   uint32_t length = aDestination.Length();
+  CheckedInt<uint32_t> end = aStartInChannel;
+  end += length;
   if (aChannelNumber >= NumberOfChannels() ||
-      aStartInChannel + length >= mLength) {
+      !end.isValid() || end.value() >= mLength) {
     aRv.Throw(NS_ERROR_DOM_INDEX_SIZE_ERR);
     return;
   }
@@ -137,8 +140,10 @@ AudioBuffer::CopyToChannel(JSContext* aJSContext, const Float32Array& aSource,
                            ErrorResult& aRv)
 {
   uint32_t length = aSource.Length();
+  CheckedInt<uint32_t> end = aStartInChannel;
+  end += length;
   if (aChannelNumber >= NumberOfChannels() ||
-      aStartInChannel + length >= mLength) {
+      !end.isValid() || end.value() >= mLength) {
     aRv.Throw(NS_ERROR_DOM_INDEX_SIZE_ERR);
     return;
   }

@@ -1065,7 +1065,7 @@ LIRGenerator::lowerShiftOp(JSOp op, MShiftInstruction *ins)
 
         LShiftI *lir = new LShiftI(op);
         if (op == JSOP_URSH) {
-            if (ins->toUrsh()->fallible() && !assignSnapshot(lir))
+            if (ins->toUrsh()->fallible() && !assignSnapshot(lir, Bailout_BaselineInfo))
                 return false;
         }
         return lowerForShift(lir, ins, lhs, rhs);
@@ -1267,7 +1267,7 @@ LIRGenerator::visitAdd(MAdd *ins)
         ReorderCommutative(&lhs, &rhs);
         LAddI *lir = new LAddI;
 
-        if (ins->fallible() && !assignSnapshot(lir))
+        if (ins->fallible() && !assignSnapshot(lir, Bailout_BaselineInfo))
             return false;
 
         if (!lowerForALU(lir, ins, lhs, rhs))
@@ -1992,7 +1992,7 @@ LIRGenerator::visitTypeBarrier(MTypeBarrier *ins)
     // (Emit LBail for visibility).
     if (ins->alwaysBails()) {
         LBail *bail = new LBail();
-        if (!assignSnapshot(bail, ins->bailoutKind()))
+        if (!assignSnapshot(bail))
             return false;
         return redefine(ins, ins->input()) && add(bail, ins);
     }
@@ -2003,7 +2003,7 @@ LIRGenerator::visitTypeBarrier(MTypeBarrier *ins)
         LTypeBarrierV *barrier = new LTypeBarrierV(tmp);
         if (!useBox(barrier, LTypeBarrierV::Input, ins->input()))
             return false;
-        if (!assignSnapshot(barrier, ins->bailoutKind()))
+        if (!assignSnapshot(barrier))
             return false;
         return redefine(ins, ins->input()) && add(barrier, ins);
     }
@@ -2013,7 +2013,7 @@ LIRGenerator::visitTypeBarrier(MTypeBarrier *ins)
     {
         LDefinition tmp = needTemp ? temp() : LDefinition::BogusTemp();
         LTypeBarrierO *barrier = new LTypeBarrierO(useRegister(ins->getOperand(0)), tmp);
-        if (!assignSnapshot(barrier, ins->bailoutKind()))
+        if (!assignSnapshot(barrier))
             return false;
         return redefine(ins, ins->getOperand(0)) && add(barrier, ins);
     }
@@ -2616,12 +2616,12 @@ LIRGenerator::visitGetPropertyPolymorphic(MGetPropertyPolymorphic *ins)
 
     if (ins->type() == MIRType_Value) {
         LGetPropertyPolymorphicV *lir = new LGetPropertyPolymorphicV(useRegister(ins->obj()));
-        return assignSnapshot(lir, Bailout_CachedShapeGuard) && defineBox(lir, ins);
+        return assignSnapshot(lir, Bailout_ShapeGuard) && defineBox(lir, ins);
     }
 
     LDefinition maybeTemp = (ins->type() == MIRType_Double) ? temp() : LDefinition::BogusTemp();
     LGetPropertyPolymorphicT *lir = new LGetPropertyPolymorphicT(useRegister(ins->obj()), maybeTemp);
-    return assignSnapshot(lir, Bailout_CachedShapeGuard) && define(lir, ins);
+    return assignSnapshot(lir, Bailout_ShapeGuard) && define(lir, ins);
 }
 
 bool
@@ -2633,13 +2633,13 @@ LIRGenerator::visitSetPropertyPolymorphic(MSetPropertyPolymorphic *ins)
         LSetPropertyPolymorphicV *lir = new LSetPropertyPolymorphicV(useRegister(ins->obj()), temp());
         if (!useBox(lir, LSetPropertyPolymorphicV::Value, ins->value()))
             return false;
-        return assignSnapshot(lir, Bailout_CachedShapeGuard) && add(lir, ins);
+        return assignSnapshot(lir, Bailout_ShapeGuard) && add(lir, ins);
     }
 
     LAllocation value = useRegisterOrConstant(ins->value());
     LSetPropertyPolymorphicT *lir =
         new LSetPropertyPolymorphicT(useRegister(ins->obj()), value, ins->value()->type(), temp());
-    return assignSnapshot(lir, Bailout_CachedShapeGuard) && add(lir, ins);
+    return assignSnapshot(lir, Bailout_ShapeGuard) && add(lir, ins);
 }
 
 bool
@@ -2700,7 +2700,7 @@ bool
 LIRGenerator::visitAssertRange(MAssertRange *ins)
 {
     MDefinition *input = ins->input();
-    LInstruction *lir = NULL;
+    LInstruction *lir = nullptr;
 
     switch (input->type()) {
       case MIRType_Int32:
@@ -3254,7 +3254,7 @@ LIRGenerator::updateResumeState(MInstruction *ins)
 {
     lastResumePoint_ = ins->resumePoint();
     if (IonSpewEnabled(IonSpew_Snapshots) && lastResumePoint_)
-        SpewResumePoint(NULL, ins, lastResumePoint_);
+        SpewResumePoint(nullptr, ins, lastResumePoint_);
 }
 
 void
@@ -3262,7 +3262,7 @@ LIRGenerator::updateResumeState(MBasicBlock *block)
 {
     lastResumePoint_ = block->entryResumePoint();
     if (IonSpewEnabled(IonSpew_Snapshots) && lastResumePoint_)
-        SpewResumePoint(block, NULL, lastResumePoint_);
+        SpewResumePoint(block, nullptr, lastResumePoint_);
 }
 
 void

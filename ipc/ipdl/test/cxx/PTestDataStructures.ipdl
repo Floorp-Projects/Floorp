@@ -3,6 +3,8 @@ include PTestDataStructuresCommon;
 
 include "mozilla/GfxMessageUtils.h";
 
+include "mozilla/GfxMessageUtils.h";
+
 namespace mozilla {
 namespace _ipdltest {
 

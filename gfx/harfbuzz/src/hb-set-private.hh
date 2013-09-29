@@ -45,12 +45,14 @@ struct hb_set_digest_lowest_bits_t
 {
   ASSERT_POD ();
 
+  static const unsigned int mask_bytes = sizeof (mask_t);
+  static const unsigned int mask_bits = sizeof (mask_t) * 8;
   static const unsigned int num_bits = 0
-				     + (sizeof (mask_t) >= 1 ? 3 : 0)
-				     + (sizeof (mask_t) >= 2 ? 1 : 0)
-				     + (sizeof (mask_t) >= 4 ? 1 : 0)
-				     + (sizeof (mask_t) >= 8 ? 1 : 0)
-				     + (sizeof (mask_t) >= 16? 1 : 0)
+				     + (mask_bytes >= 1 ? 3 : 0)
+				     + (mask_bytes >= 2 ? 1 : 0)
+				     + (mask_bytes >= 4 ? 1 : 0)
+				     + (mask_bytes >= 8 ? 1 : 0)
+				     + (mask_bytes >= 16? 1 : 0)
 				     + 0;
 
   ASSERT_STATIC (shift < sizeof (hb_codepoint_t) * 8);
@@ -65,7 +67,7 @@ struct hb_set_digest_lowest_bits_t
   }
 
   inline void add_range (hb_codepoint_t a, hb_codepoint_t b) {
-    if ((b >> shift) - (a >> shift) >= sizeof (mask_t) * 8 - 1)
+    if ((b >> shift) - (a >> shift) >= mask_bits - 1)
       mask = (mask_t) -1;
     else {
       mask_t ma = mask_for (a);
@@ -81,7 +83,7 @@ struct hb_set_digest_lowest_bits_t
   private:
 
   static inline mask_t mask_for (hb_codepoint_t g) {
-    return ((mask_t) 1) << ((g >> shift) & (sizeof (mask_t) * 8 - 1));
+    return ((mask_t) 1) << ((g >> shift) & (mask_bits - 1));
   }
   mask_t mask;
 };
@@ -169,7 +171,7 @@ struct hb_set_t
   inline void add (hb_codepoint_t g)
   {
     if (unlikely (in_error)) return;
-    if (unlikely (g == SENTINEL)) return;
+    if (unlikely (g == INVALID)) return;
     if (unlikely (g > MAX_G)) return;
     elt (g) |= mask (g);
   }
@@ -254,19 +256,22 @@ struct hb_set_t
   }
   inline bool next (hb_codepoint_t *codepoint) const
   {
-    if (unlikely (*codepoint == SENTINEL)) {
+    if (unlikely (*codepoint == INVALID)) {
       hb_codepoint_t i = get_min ();
-      if (i != SENTINEL) {
+      if (i != INVALID) {
         *codepoint = i;
 	return true;
-      } else
+      } else {
+	*codepoint = INVALID;
         return false;
+      }
     }
     for (hb_codepoint_t i = *codepoint + 1; i < MAX_G + 1; i++)
       if (has (i)) {
         *codepoint = i;
 	return true;
       }
+    *codepoint = INVALID;
     return false;
   }
   inline bool next_range (hb_codepoint_t *first, hb_codepoint_t *last) const
@@ -275,7 +280,10 @@ struct hb_set_t
 
     i = *last;
     if (!next (&i))
+    {
+      *last = *first = INVALID;
       return false;
+    }
 
     *last = *first = i;
     while (next (&i) && i == *last + 1)
@@ -298,7 +306,7 @@ struct hb_set_t
 	for (unsigned int j = 0; j < BITS; j++)
 	  if (elts[i] & (1 << j))
 	    return i * BITS + j;
-    return SENTINEL;
+    return INVALID;
   }
   inline hb_codepoint_t get_max (void) const
   {
@@ -307,7 +315,7 @@ struct hb_set_t
 	for (unsigned int j = BITS; j; j--)
 	  if (elts[i - 1] & (1 << (j - 1)))
 	    return (i - 1) * BITS + (j - 1);
-    return SENTINEL;
+    return INVALID;
   }
 
   typedef uint32_t elt_t;
@@ -316,7 +324,7 @@ struct hb_set_t
   static const unsigned int BITS = (1 << SHIFT);
   static const unsigned int MASK = BITS - 1;
   static const unsigned int ELTS = (MAX_G + 1 + (BITS - 1)) / BITS;
-  static  const hb_codepoint_t SENTINEL = (hb_codepoint_t) -1;
+  static  const hb_codepoint_t INVALID = HB_SET_VALUE_INVALID;
 
   elt_t &elt (hb_codepoint_t g) { return elts[g >> SHIFT]; }
   elt_t elt (hb_codepoint_t g) const { return elts[g >> SHIFT]; }

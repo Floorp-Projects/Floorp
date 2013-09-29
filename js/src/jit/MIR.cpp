@@ -70,13 +70,13 @@ EqualValues(bool useGVN, MDefinition *left, MDefinition *right)
 }
 
 static MConstant *
-EvaluateConstantOperands(MBinaryInstruction *ins, bool *ptypeChange = NULL)
+EvaluateConstantOperands(MBinaryInstruction *ins, bool *ptypeChange = nullptr)
 {
     MDefinition *left = ins->getOperand(0);
     MDefinition *right = ins->getOperand(1);
 
     if (!left->isConstant() || !right->isConstant())
-        return NULL;
+        return nullptr;
 
     Value lhs = left->toConstant()->value();
     Value rhs = right->toConstant()->value();
@@ -130,7 +130,7 @@ EvaluateConstantOperands(MBinaryInstruction *ins, bool *ptypeChange = NULL)
     if (ins->type() != MIRTypeFromValue(ret)) {
         if (ptypeChange)
             *ptypeChange = true;
-        return NULL;
+        return nullptr;
     }
 
     return MConstant::New(ret);
@@ -319,7 +319,7 @@ MDefinition::removeUse(MUseIterator use)
 MUseIterator
 MNode::replaceOperand(MUseIterator use, MDefinition *def)
 {
-    JS_ASSERT(def != NULL);
+    JS_ASSERT(def != nullptr);
     uint32_t index = use->index();
     MDefinition *prev = use->producer();
 
@@ -338,7 +338,7 @@ MNode::replaceOperand(MUseIterator use, MDefinition *def)
 void
 MNode::replaceOperand(size_t index, MDefinition *def)
 {
-    JS_ASSERT(def != NULL);
+    JS_ASSERT(def != nullptr);
     MUse *use = getUseFor(index);
     MDefinition *prev = use->producer();
 
@@ -367,14 +367,14 @@ MNode::discardOperand(size_t index)
 
 #ifdef DEBUG
     // Causes any producer/consumer lookups to trip asserts.
-    use->set(NULL, NULL, index);
+    use->set(nullptr, nullptr, index);
 #endif
 }
 
 void
 MDefinition::replaceAllUsesWith(MDefinition *dom)
 {
-    JS_ASSERT(dom != NULL);
+    JS_ASSERT(dom != nullptr);
     if (dom == this)
         return;
 
@@ -577,7 +577,7 @@ MCall::New(JSFunction *target, size_t maxArgc, size_t numActualArgs, bool constr
     JS_ASSERT(maxArgc >= numActualArgs);
     MCall *ins = new MCall(target, numActualArgs, construct);
     if (!ins->init(maxArgc + NumNonArgumentOperands))
-        return NULL;
+        return nullptr;
     return ins;
 }
 
@@ -643,11 +643,9 @@ PrintBailoutKind(FILE *fp, BailoutKind bailoutKind)
     switch(bailoutKind) {
       case Bailout_Normal: fprintf(fp, "(normal)"); break;
       case Bailout_ArgumentCheck: fprintf(fp, "(args)"); break;
-      case Bailout_TypeBarrier: fprintf(fp, "(typebarrier)"); break;
-      case Bailout_Monitor: fprintf(fp, "(monitor)"); break;
       case Bailout_BoundsCheck: fprintf(fp, "(boundscheck)"); break;
       case Bailout_ShapeGuard: fprintf(fp, "(shapeguard)"); break;
-      case Bailout_CachedShapeGuard: fprintf(fp, "(cached shapeguard)"); break;
+      case Bailout_BaselineInfo: fprintf(fp, "(baseline info)"); break;
       default: break;
     }
 }
@@ -675,12 +673,6 @@ MUnbox::printOpcode(FILE *fp) const
       case TypeBarrier: fprintf(fp, " (typebarrier)"); break;
       default: break;
     }
-
-    if (mode() == Infallible)
-        return;
-
-    fprintf(fp, " ");
-    PrintBailoutKind(fp, bailoutKind());
 }
 
 void
@@ -689,10 +681,7 @@ MTypeBarrier::printOpcode(FILE *fp) const
     PrintOpcodeName(fp, op());
     fprintf(fp, " ");
     getOperand(0)->printName(fp);
-    fprintf(fp, " ");
-
-    PrintBailoutKind(fp, bailoutKind());
- }
+}
  
 void
 MPhi::removeOperand(size_t index)
@@ -804,7 +793,7 @@ jit::MergeTypes(MIRType *ptype, types::TemporaryTypeSet **ptypeSet,
             if (!newTypeSet->isSubset(*ptypeSet))
                 *ptypeSet = types::TypeSet::unionSets(*ptypeSet, newTypeSet, alloc);
         } else {
-            *ptypeSet = NULL;
+            *ptypeSet = nullptr;
         }
     }
 }
@@ -1996,7 +1985,7 @@ MResumePoint::New(MBasicBlock *block, jsbytecode *pc, MResumePoint *parent, Mode
 {
     MResumePoint *resume = new MResumePoint(block, pc, parent, mode);
     if (!resume->init())
-        return NULL;
+        return nullptr;
     resume->inherit(block);
     return resume;
 }
@@ -2007,7 +1996,7 @@ MResumePoint::MResumePoint(MBasicBlock *block, jsbytecode *pc, MResumePoint *cal
     stackDepth_(block->stackDepth()),
     pc_(pc),
     caller_(caller),
-    instruction_(NULL),
+    instruction_(nullptr),
     mode_(mode)
 {
     block->addResumePoint(this);
@@ -2533,11 +2522,11 @@ InlinePropertyTable::buildTypeSetForFunction(JSFunction *func) const
     LifoAlloc *alloc = GetIonContext()->temp->lifoAlloc();
     types::TemporaryTypeSet *types = alloc->new_<types::TemporaryTypeSet>();
     if (!types)
-        return NULL;
+        return nullptr;
     for (size_t i = 0; i < numEntries(); i++) {
         if (entries_[i]->func == func) {
             if (!types->addObject(types::Type::ObjectType(entries_[i]->typeObj).objectKey(), alloc))
-                return NULL;
+                return nullptr;
         }
     }
     return types;
@@ -2641,14 +2630,14 @@ MAsmJSCall::New(Callee callee, const Args &args, MIRType resultType, size_t spIn
     call->numArgs_ = args.length();
     call->argRegs_ = (AnyRegister *)GetIonContext()->temp->allocate(call->numArgs_ * sizeof(AnyRegister));
     if (!call->argRegs_)
-        return NULL;
+        return nullptr;
     for (size_t i = 0; i < call->numArgs_; i++)
         call->argRegs_[i] = args[i].reg;
 
     call->numOperands_ = call->numArgs_ + (callee.which() == Callee::Dynamic ? 1 : 0);
     call->operands_ = (MUse *)GetIonContext()->temp->allocate(call->numOperands_ * sizeof(MUse));
     if (!call->operands_)
-        return NULL;
+        return nullptr;
     for (size_t i = 0; i < call->numArgs_; i++)
         call->setOperand(i, args[i].def);
     if (callee.which() == Callee::Dynamic)
@@ -2991,7 +2980,7 @@ TryAddTypeBarrierForWrite(JSContext *cx, MBasicBlock *current, types::TemporaryT
     // All objects in the set must have the same types for id. Otherwise, we
     // could bail out without subsequently triggering a type change that
     // invalidates the compiled code.
-    types::HeapTypeSet *aggregateProperty = NULL;
+    types::HeapTypeSet *aggregateProperty = nullptr;
 
     for (size_t i = 0; i < objTypes->getObjectCount(); i++) {
         types::TypeObject *object;
@@ -3145,7 +3134,7 @@ jit::PropertyWriteNeedsTypeBarrier(JSContext *cx, MBasicBlock *current, MDefinit
         return true;
     }
 
-    types::TypeObject *excluded = NULL;
+    types::TypeObject *excluded = nullptr;
     for (size_t i = 0; i < types->getObjectCount(); i++) {
         types::TypeObject *object;
         if (!types->getTypeOrSingleObject(cx, i, &object))

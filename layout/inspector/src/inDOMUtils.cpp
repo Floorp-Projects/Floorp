@@ -593,7 +593,7 @@ inDOMUtils::GetCSSValuesForProperty(const nsAString& aProperty,
     }
   }
   // All CSS properties take initial and inherit.
-  InsertNoDuplicates(array, NS_LITERAL_STRING("-moz-initial"));
+  InsertNoDuplicates(array, NS_LITERAL_STRING("initial"));
   InsertNoDuplicates(array, NS_LITERAL_STRING("inherit"));
 
   *aLength = array.Length();

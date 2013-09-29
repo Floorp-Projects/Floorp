@@ -32,7 +32,7 @@ class LDivI : public LBinaryMath<1>
         }
         if (mir()->canBeNegativeZero())
             return mir()->canBeNegativeOverflow() ? "NegativeZero_NegativeOverflow" : "NegativeZero";
-        return mir()->canBeNegativeOverflow() ? "NegativeOverflow" : NULL;
+        return mir()->canBeNegativeOverflow() ? "NegativeOverflow" : nullptr;
     }
 
     const LDefinition *remainder() {
@@ -103,7 +103,7 @@ class LModI : public LBinaryMath<1>
     }
 
     const char *extraName() const {
-        return mir()->isTruncated() ? "Truncated" : NULL;
+        return mir()->isTruncated() ? "Truncated" : nullptr;
     }
 
     const LDefinition *remainder() {
@@ -281,7 +281,7 @@ class LMulI : public LBinaryMath<0, 1>
     const char *extraName() const {
         return (mir()->mode() == MMul::Integer)
                ? "Integer"
-               : (mir()->canBeNegativeZero() ? "CanBeNegativeZero" : NULL);
+               : (mir()->canBeNegativeZero() ? "CanBeNegativeZero" : nullptr);
     }
 
     MMul *mir() const {
