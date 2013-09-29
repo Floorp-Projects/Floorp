@@ -195,27 +195,18 @@ static const int kTimeSinceLastCrashParameterLen =
                                      sizeof(kTimeSinceLastCrashParameter)-1;
 
 static const char kSysMemoryParameter[] = "SystemMemoryUsePercentage=";
-static const int kSysMemoryParameterLen = sizeof(kSysMemoryParameter)-1;
 
 static const char kTotalVirtualMemoryParameter[] = "TotalVirtualMemory=";
-static const int kTotalVirtualMemoryParameterLen =
-  sizeof(kTotalVirtualMemoryParameter)-1;
 
 static const char kAvailableVirtualMemoryParameter[] = "AvailableVirtualMemory=";
-static const int kAvailableVirtualMemoryParameterLen =
-  sizeof(kAvailableVirtualMemoryParameter)-1;
 
 static const char kOOMAllocationSizeParameter[] = "OOMAllocationSize=";
 static const int kOOMAllocationSizeParameterLen =
   sizeof(kOOMAllocationSizeParameter)-1;
 
 static const char kAvailablePageFileParameter[] = "AvailablePageFile=";
-static const int kAvailablePageFileParameterLen =
-  sizeof(kAvailablePageFileParameter)-1;
 
 static const char kAvailablePhysicalMemoryParameter[] = "AvailablePhysicalMemory=";
-static const int kAvailablePhysicalMemoryParameterLen =
-  sizeof(kAvailablePhysicalMemoryParameter)-1;
 
 static const char kIsGarbageCollectingParameter[] = "IsGarbageCollecting=";
 static const int kIsGarbageCollectingParameterLen =

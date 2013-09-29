@@ -17,12 +17,6 @@
 
 namespace base {
 
-namespace {
-// Paranoia. Semaphores and shared memory segments should live in different
-// namespaces, but who knows what's out there.
-const char kSemaphoreSuffix[] = "-sem";
-}
-
 SharedMemory::SharedMemory()
     : mapped_file_(-1),
       inode_(0),
