@@ -6,10 +6,11 @@
 #include "prprf.h"
 #include "nsMemory.h"
 
-#ifndef XPCOM_GLUE_AVOID_NSPR
-static const char gIDFormat[] =
+static const char gIDFormat[] = 
   "{%08x-%04x-%04x-%02x%02x-%02x%02x%02x%02x%02x%02x}";
-#endif
+
+static const char gIDFormat2[] = 
+  "%08x-%04x-%04x-%02x%02x-%02x%02x%02x%02x%02x%02x";
 
 
 /**

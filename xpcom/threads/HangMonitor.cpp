@@ -34,12 +34,10 @@ volatile bool gDebugDisableHangMonitor = false;
 
 const char kHangMonitorPrefName[] = "hangmonitor.timeout";
 
-#ifdef REPORT_CHROME_HANGS
 #ifdef MOZ_TELEMETRY_ON_BY_DEFAULT
 const char kTelemetryPrefName[] = "toolkit.telemetry.enabledPreRelease";
 #else
 const char kTelemetryPrefName[] = "toolkit.telemetry.enabled";
-#endif
 #endif
 
 // Monitor protects gShutdown and gTimeout, but not gTimestamp which rely on
