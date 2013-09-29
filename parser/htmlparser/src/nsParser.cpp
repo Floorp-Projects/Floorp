@@ -54,10 +54,6 @@ using mozilla::dom::EncodingUtils;
 #define NS_PARSER_FLAG_FLUSH_TOKENS           0x00000020
 #define NS_PARSER_FLAG_CAN_TOKENIZE           0x00000040
 
-static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
-static NS_DEFINE_CID(kCParserCID, NS_PARSER_CID);
-static NS_DEFINE_IID(kIParserIID, NS_IPARSER_IID);
-
 //-------------- Begin ParseContinue Event Definition ------------------------
 /*
 The parser can be explicitly interrupted by passing a return value of
