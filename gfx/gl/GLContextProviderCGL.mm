@@ -541,8 +541,8 @@ GLContextProviderCGL::GetSharedHandleAsSurface(SharedTextureShareType shareType,
   MacIOSurface* surf = reinterpret_cast<MacIOSurface*>(sharedHandle);
   surf->Lock();
   size_t bytesPerRow = surf->GetBytesPerRow();
-  size_t ioWidth = surf->GetWidth();
-  size_t ioHeight = surf->GetHeight();
+  size_t ioWidth = surf->GetDevicePixelWidth();
+  size_t ioHeight = surf->GetDevicePixelHeight();
 
   unsigned char* ioData = (unsigned char*)surf->GetBaseAddress();
 
