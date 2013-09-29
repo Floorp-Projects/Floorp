@@ -320,6 +320,10 @@ SYNC_JAVA_FILES := \
   sync/UnexpectedJSONException.java \
   sync/UnknownSynchronizerConfigurationVersionException.java \
   sync/Utils.java \
+  tokenserver/TokenServerClient.java \
+  tokenserver/TokenServerClientDelegate.java \
+  tokenserver/TokenServerException.java \
+  tokenserver/TokenServerToken.java \
   $(NULL)
 
 SYNC_RES_DRAWABLE := \
