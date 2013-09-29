@@ -172,10 +172,10 @@ static_assert((CSS_PROPERTY_PARSE_PROPERTY_MASK &
 // should enforce that the value of this property must be 1 or larger.
 #define CSS_PROPERTY_VALUE_AT_LEAST_ONE           (2<<13)
 
-// Does this property suppor the hashless hex color quirk in quirks mode?
+// Does this property support the hashless hex color quirk in quirks mode?
 #define CSS_PROPERTY_HASHLESS_COLOR_QUIRK         (1<<15)
 
-// Does this property suppor the unitless length quirk in quirks mode?
+// Does this property support the unitless length quirk in quirks mode?
 #define CSS_PROPERTY_UNITLESS_LENGTH_QUIRK        (1<<16)
 
 // Is this property (which must be a shorthand) really an alias?
