@@ -62,6 +62,8 @@ namespace {
 
 NSSCleanupAutoPtrClass(void, PR_FREEIF)
 
+static NS_DEFINE_CID(kNSSComponentCID, NS_NSSCOMPONENT_CID);
+
 /* SSM_UserCertChoice: enum for cert choice info */
 typedef enum {ASK, AUTO} SSM_UserCertChoice;
 
@@ -1715,11 +1717,11 @@ static const SEC_ASN1Template cert_CertificateScopeEntryTemplate[] = {
     { 0 }
 };
 
-#if 0
 static const SEC_ASN1Template cert_CertificateScopeOfUseTemplate[] = {
     { SEC_ASN1_SEQUENCE_OF, 0, cert_CertificateScopeEntryTemplate }
 };
 
+#if 0
 /* 
  * decodes the extension data and create CERTCertificateScopeEntry that can
  * be consumed by the code

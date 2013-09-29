@@ -45,6 +45,10 @@ NS_IMPL_ISUPPORTS2(nsParserUtils,
                    nsIScriptableUnescapeHTML,
                    nsIParserUtils)
 
+static NS_DEFINE_CID(kCParserCID, NS_PARSER_CID);
+
+
+
 NS_IMETHODIMP
 nsParserUtils::ConvertToPlainText(const nsAString& aFromStr,
                                   uint32_t aFlags,

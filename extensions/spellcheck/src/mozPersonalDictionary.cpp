@@ -20,6 +20,8 @@
 
 #define MOZ_PERSONAL_DICT_NAME "persdict.dat"
 
+const int kMaxWordLen=256;
+
 /**
  * This is the most braindead implementation of a personal dictionary possible.
  * There is not much complexity needed, though.  It could be made much faster,
