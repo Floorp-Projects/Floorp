@@ -27,5 +27,10 @@ text { font: 20px monospace; }
     <rect id="rect4" x="150" y="50" width="50" height="50" fill="yellow"/>
     <rect id="rect4a" x="150" y="50" width="50" height="50" fill="none" stroke-width="4" stroke="blue"/>
   </g>
+  <text id="text4" x="185" y="25"/>
+  <g id="g2">
+    <rect x="100" y="100" width="50" height="50" fill="pink"/>
+    <text x="200" y="200"/>
+  </g>
 </g>
 </svg>
