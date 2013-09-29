@@ -80,6 +80,8 @@ struct hb_buffer_t {
   inline hb_glyph_info_t &prev (void) { return out_info[out_len - 1]; }
   inline hb_glyph_info_t prev (void) const { return info[out_len - 1]; }
 
+  inline bool has_separate_output (void) const { return info != out_info; }
+
   unsigned int serial;
 
   /* These reflect current allocations of the bytes in glyph_info_t's var1 and var2. */

@@ -140,7 +140,7 @@ MNewStringObject::templateObj() const {
 
 CodeGenerator::CodeGenerator(MIRGenerator *gen, LIRGraph *graph, MacroAssembler *masm)
   : CodeGeneratorSpecific(gen, graph, masm),
-    unassociatedScriptCounts_(NULL)
+    unassociatedScriptCounts_(nullptr)
 {
 }
 
@@ -189,8 +189,8 @@ CodeGenerator::visitValueToInt32(LValueToInt32 *lir)
             stringRejoin = oolString->rejoin();
         } else {
             stringReg = InvalidReg;
-            stringEntry = NULL;
-            stringRejoin = NULL;
+            stringEntry = nullptr;
+            stringRejoin = nullptr;
         }
 
         masm.truncateValueToInt32(operand, input, stringEntry, stringRejoin, oolDouble->entry(),
@@ -404,13 +404,13 @@ class OutOfLineTestObject : public OutOfLineCodeBase<CodeGenerator>
     Label *ifFalsy_;
 
 #ifdef DEBUG
-    bool initialized() { return ifTruthy_ != NULL; }
+    bool initialized() { return ifTruthy_ != nullptr; }
 #endif
 
   public:
     OutOfLineTestObject()
 #ifdef DEBUG
-      : ifTruthy_(NULL), ifFalsy_(NULL)
+      : ifTruthy_(nullptr), ifFalsy_(nullptr)
 #endif
     { }
 
@@ -563,7 +563,7 @@ CodeGenerator::visitTestOAndBranch(LTestOAndBranch *lir)
 bool
 CodeGenerator::visitTestVAndBranch(LTestVAndBranch *lir)
 {
-    OutOfLineTestObject *ool = NULL;
+    OutOfLineTestObject *ool = nullptr;
     if (lir->mir()->operandMightEmulateUndefined()) {
         ool = new OutOfLineTestObject();
         if (!addOutOfLineCode(ool))
@@ -2604,20 +2604,20 @@ CodeGenerator::maybeCreateScriptCounts()
     // it to the script. This must be done on the main thread.
     JSContext *cx = GetIonContext()->cx;
     if (!cx || !cx->runtime()->profilingScripts)
-        return NULL;
+        return nullptr;
 
-    IonScriptCounts *counts = NULL;
+    IonScriptCounts *counts = nullptr;
 
     CompileInfo *outerInfo = &gen->info();
     JSScript *script = outerInfo->script();
 
     if (script && !script->hasScriptCounts && !script->initScriptCounts(cx))
-        return NULL;
+        return nullptr;
 
     counts = js_new<IonScriptCounts>();
     if (!counts || !counts->init(graph.numBlocks())) {
         js_delete(counts);
-        return NULL;
+        return nullptr;
     }
 
     if (script)
@@ -2639,7 +2639,7 @@ CodeGenerator::maybeCreateScriptCounts()
         }
 
         if (!counts->block(i).init(block->id(), offset, block->numSuccessors()))
-            return NULL;
+            return nullptr;
         for (size_t j = 0; j < block->numSuccessors(); j++)
             counts->block(i).setSuccessor(j, block->getSuccessor(j)->id());
     }
@@ -2664,8 +2664,8 @@ struct ScriptCountBlockState
     uint32_t instructionBytes;
     uint32_t spillBytes;
 
-    // Pointer to instructionBytes, spillBytes, or NULL, depending on the last
-    // instruction processed.
+    // Pointer to instructionBytes, spillBytes, or nullptr, depending on the
+    // last instruction processed.
     uint32_t *last;
     uint32_t lastLength;
 
@@ -2673,7 +2673,7 @@ struct ScriptCountBlockState
     ScriptCountBlockState(IonBlockCounts *block, MacroAssembler *masm)
       : block(*block), masm(*masm),
         printer(GetIonContext()->cx),
-        instructionBytes(0), spillBytes(0), last(NULL), lastLength(0)
+        instructionBytes(0), spillBytes(0), last(nullptr), lastLength(0)
     {
     }
 
@@ -2710,7 +2710,7 @@ struct ScriptCountBlockState
 
     ~ScriptCountBlockState()
     {
-        masm.setPrinter(NULL);
+        masm.setPrinter(nullptr);
 
         if (last)
             *last += masm.size() - lastLength;
@@ -2875,7 +2875,8 @@ CodeGenerator::visitNewArrayCallVM(LNewArray *lir)
     saveLive(lir);
 
     JSObject *templateObject = lir->mir()->templateObject();
-    types::TypeObject *type = templateObject->hasSingletonType() ? NULL : templateObject->type();
+    types::TypeObject *type =
+        templateObject->hasSingletonType() ? nullptr : templateObject->type();
 
     pushArg(ImmGCPtr(type));
     pushArg(Imm32(lir->mir()->count()));
@@ -3135,15 +3136,15 @@ CodeGenerator::visitNewCallObject(LNewCallObject *lir)
         ool = oolCallVM(NewCallObjectInfo, lir,
                         (ArgList(), ImmGCPtr(lir->mir()->block()->info().script()),
                                     ImmGCPtr(templateObj->lastProperty()),
-                                    ImmGCPtr(templateObj->hasLazyType() ? NULL : templateObj->type()),
+                                    ImmGCPtr(templateObj->hasLazyType() ? nullptr : templateObj->type()),
                                     ToRegister(lir->slots())),
                         StoreRegisterTo(obj));
     } else {
         ool = oolCallVM(NewCallObjectInfo, lir,
                         (ArgList(), ImmGCPtr(lir->mir()->block()->info().script()),
                                     ImmGCPtr(templateObj->lastProperty()),
-                                    ImmGCPtr(templateObj->hasLazyType() ? NULL : templateObj->type()),
-                                    ImmPtr(NULL)),
+                                    ImmGCPtr(templateObj->hasLazyType() ? nullptr : templateObj->type()),
+                                    ImmPtr(nullptr)),
                         StoreRegisterTo(obj));
     }
     if (!ool)
@@ -3203,7 +3204,7 @@ CodeGenerator::visitNewDenseArrayPar(LNewDenseArrayPar *lir)
     emitAllocateGCThingPar(lir, tempReg2, sliceReg, tempReg0, tempReg1, templateObj);
 
     // Invoke a C helper to allocate the elements.  For convenience,
-    // this helper also returns the array back to us, or NULL, which
+    // this helper also returns the array back to us, or nullptr, which
     // obviates the need to preserve the register across the call.  In
     // reality, we should probably just have the C helper also
     // *allocate* the array, but that would require that it initialize
@@ -3305,7 +3306,7 @@ CodeGenerator::visitOutOfLineNewGCThingPar(OutOfLineNewGCThingPar *ool)
 {
     // As a fallback for allocation in par. exec. mode, we invoke the
     // C helper NewGCThingPar(), which calls into the GC code.  If it
-    // returns NULL, we bail.  If returns non-NULL, we rejoin the
+    // returns nullptr, we bail.  If returns non-nullptr, we rejoin the
     // original instruction.
 
     // This saves all caller-save registers, regardless of whether
@@ -3763,7 +3764,7 @@ CodeGenerator::visitMathFunctionD(LMathFunctionD *ins)
 
 #   define MAYBE_CACHED(fcn) (mathCache ? (void*)fcn ## _impl : (void*)fcn ## _uncached)
 
-    void *funptr = NULL;
+    void *funptr = nullptr;
     switch (ins->mir()->function()) {
       case MMathFunction::Log:
         funptr = JS_FUNC_TO_DATA_PTR(void *, MAYBE_CACHED(js::math_log));
@@ -3864,10 +3865,8 @@ CodeGenerator::visitModD(LModD *ins)
     return true;
 }
 
-typedef bool (*BinaryFn)(JSContext *, HandleScript, jsbytecode *,
-                         MutableHandleValue, MutableHandleValue, Value *);
-typedef ParallelResult (*BinaryParFn)(ForkJoinSlice *, HandleValue, HandleValue,
-                                      Value *);
+typedef bool (*BinaryFn)(JSContext *, MutableHandleValue, MutableHandleValue, Value *);
+typedef ParallelResult (*BinaryParFn)(ForkJoinSlice *, HandleValue, HandleValue, Value *);
 
 static const VMFunction AddInfo = FunctionInfo<BinaryFn>(js::AddValues);
 static const VMFunction SubInfo = FunctionInfo<BinaryFn>(js::SubValues);
@@ -3883,10 +3882,6 @@ CodeGenerator::visitBinaryV(LBinaryV *lir)
 {
     pushArg(ToValue(lir, LBinaryV::RhsInput));
     pushArg(ToValue(lir, LBinaryV::LhsInput));
-    if (gen->info().executionMode() == SequentialExecution) {
-        pushArg(ImmPtr(lir->mirRaw()->toInstruction()->resumePoint()->pc()));
-        pushArg(ImmGCPtr(current->mir()->info().script()));
-    }
 
     switch (lir->jsop()) {
       case JSOP_ADD:
@@ -3927,7 +3922,7 @@ CodeGenerator::emitCompareS(LInstruction *lir, JSOp op, Register left, Register 
 {
     JS_ASSERT(lir->isCompareS() || lir->isCompareStrictS());
 
-    OutOfLineCode *ool = NULL;
+    OutOfLineCode *ool = nullptr;
 
     if (op == JSOP_EQ || op == JSOP_STRICTEQ) {
         ool = oolCallVM(StringsEqualInfo, lir, (ArgList(), left, right),  StoreRegisterTo(output));
@@ -4064,7 +4059,7 @@ CodeGenerator::visitIsNullOrLikeUndefined(LIsNullOrLikeUndefined *lir)
                    lir->mir()->operandMightEmulateUndefined(),
                    "Operands which can't emulate undefined should have been folded");
 
-        OutOfLineTestObjectWithLabels *ool = NULL;
+        OutOfLineTestObjectWithLabels *ool = nullptr;
         Maybe<Label> label1, label2;
         Label *nullOrLikeUndefined;
         Label *notNullOrLikeUndefined;
@@ -4152,7 +4147,7 @@ CodeGenerator::visitIsNullOrLikeUndefinedAndBranch(LIsNullOrLikeUndefinedAndBran
                    lir->mir()->operandMightEmulateUndefined(),
                    "Operands which can't emulate undefined should have been folded");
 
-        OutOfLineTestObject *ool = NULL;
+        OutOfLineTestObject *ool = nullptr;
         if (lir->mir()->operandMightEmulateUndefined()) {
             ool = new OutOfLineTestObject();
             if (!addOutOfLineCode(ool))
@@ -4484,7 +4479,7 @@ IonCompartment::generateStringConcatStub(JSContext *cx, ExecutionMode mode)
     masm.pop(temp1);
 
     masm.bind(&failure);
-    masm.movePtr(ImmPtr(NULL), output);
+    masm.movePtr(ImmPtr(nullptr), output);
     masm.ret();
 
     Linker linker(masm);
@@ -4607,7 +4602,7 @@ CodeGenerator::visitNotV(LNotV *lir)
     Label *ifTruthy;
     Label *ifFalsy;
 
-    OutOfLineTestObjectWithLabels *ool = NULL;
+    OutOfLineTestObjectWithLabels *ool = nullptr;
     if (lir->mir()->operandMightEmulateUndefined()) {
         ool = new OutOfLineTestObjectWithLabels();
         if (!addOutOfLineCode(ool))
@@ -4971,9 +4966,9 @@ CodeGenerator::visitOutOfLineStoreElementHole(OutOfLineStoreElementHole *ool)
         // the volatile registers but we don't save the register
         // `object`.  We will copy the ReturnReg into `object`.  The
         // function we are calling (`PushPar`) agrees to either return
-        // `object` unchanged or NULL.  This way after we restore the
-        // registers, we can examine `object` to know whether an error
-        // occurred.
+        // `object` unchanged or nullptr.  This way after we restore
+        // the registers, we can examine `object` to know whether an
+        // error occurred.
         RegisterSet saveSet(ins->safepoint()->liveRegs());
         saveSet.takeUnchecked(object);
 
@@ -5193,8 +5188,8 @@ CodeGenerator::visitArrayConcat(LArrayConcat *lir)
     Register temp2 = ToRegister(lir->temp2());
 
     // If 'length == initializedLength' for both arrays we try to allocate an object
-    // inline and pass it to the stub. Else, we just pass NULL and the stub falls back
-    // to a slow path.
+    // inline and pass it to the stub. Else, we just pass nullptr and the stub falls
+    // back to a slow path.
     Label fail, call;
     masm.loadPtr(Address(lhs, JSObject::offsetOfElements()), temp1);
     masm.load32(Address(temp1, ObjectElements::offsetOfInitializedLength()), temp2);
@@ -5211,7 +5206,7 @@ CodeGenerator::visitArrayConcat(LArrayConcat *lir)
     masm.jump(&call);
     {
         masm.bind(&fail);
-        masm.movePtr(ImmPtr(NULL), temp1);
+        masm.movePtr(ImmPtr(nullptr), temp1);
     }
     masm.bind(&call);
 
@@ -5252,7 +5247,7 @@ CodeGenerator::visitIteratorStart(LIteratorStart *lir)
     // Iterators other than for-in should use LCallIteratorStart.
     JS_ASSERT(flags == JSITER_ENUMERATE);
 
-    // Fetch the most recent iterator and ensure it's not NULL.
+    // Fetch the most recent iterator and ensure it's not nullptr.
     masm.loadPtr(AbsoluteAddress(&GetIonContext()->runtime->nativeIterCache.last), output);
     masm.branchTestPtr(Assembler::Zero, output, output, ool->entry());
 
@@ -5275,9 +5270,9 @@ CodeGenerator::visitIteratorStart(LIteratorStart *lir)
     masm.loadObjShape(temp1, temp1);
     masm.branchPtr(Assembler::NotEqual, Address(temp2, sizeof(Shape *)), temp1, ool->entry());
 
-    // Ensure the object's prototype's prototype is NULL. The last native iterator
-    // will always have a prototype chain length of one (i.e. it must be a plain
-    // object), so we do not need to generate a loop here.
+    // Ensure the object's prototype's prototype is nullptr. The last native
+    // iterator will always have a prototype chain length of one (i.e. it must
+    // be a plain ), so we do not need to generate a loop here.
     masm.loadObjProto(obj, temp1);
     masm.loadObjProto(temp1, temp1);
     masm.branchTestPtr(Assembler::NonZero, temp1, temp1, ool->entry());
@@ -5440,8 +5435,8 @@ CodeGenerator::visitIteratorEnd(LIteratorEnd *lir)
     masm.storePtr(prev, Address(next, NativeIterator::offsetOfPrev()));
     masm.storePtr(next, Address(prev, NativeIterator::offsetOfNext()));
 #ifdef DEBUG
-    masm.storePtr(ImmPtr(NULL), Address(temp1, NativeIterator::offsetOfNext()));
-    masm.storePtr(ImmPtr(NULL), Address(temp1, NativeIterator::offsetOfPrev()));
+    masm.storePtr(ImmPtr(nullptr), Address(temp1, NativeIterator::offsetOfNext()));
+    masm.storePtr(ImmPtr(nullptr), Address(temp1, NativeIterator::offsetOfPrev()));
 #endif
 
     masm.bind(ool->rejoin());
@@ -5545,7 +5540,7 @@ CodeGenerator::visitRest(LRest *lir)
     masm.jump(&joinAlloc);
     {
         masm.bind(&failAlloc);
-        masm.movePtr(ImmPtr(NULL), temp2);
+        masm.movePtr(ImmPtr(nullptr), temp2);
     }
     masm.bind(&joinAlloc);
 
@@ -6515,7 +6510,7 @@ CodeGenerator::visitTypeOfV(LTypeOfV *lir)
     JSRuntime *rt = GetIonContext()->runtime;
     Label done;
 
-    OutOfLineTypeOfV *ool = NULL;
+    OutOfLineTypeOfV *ool = nullptr;
     if (lir->mir()->inputMaybeCallableOrEmulatesUndefined()) {
         // The input may be a callable object (result is "function") or may
         // emulate undefined (result is "undefined"). Use an OOL path.
@@ -6870,8 +6865,8 @@ CodeGenerator::visitClampVToUint8(LClampVToUint8 *lir)
         stringEntry = oolString->entry();
         stringRejoin = oolString->rejoin();
     } else {
-        stringEntry = NULL;
-        stringRejoin = NULL;
+        stringEntry = nullptr;
+        stringRejoin = nullptr;
     }
 
     Label fails;
@@ -6911,7 +6906,7 @@ CodeGenerator::visitInArray(LInArray *lir)
     // When the array is not packed we need to do a hole check in addition to the bounds check.
     Label falseBranch, done, trueBranch;
 
-    OutOfLineCode *ool = NULL;
+    OutOfLineCode *ool = nullptr;
     Label* failedInitLength = &falseBranch;
 
     if (lir->index()->isConstant()) {
@@ -7036,7 +7031,7 @@ CodeGenerator::emitInstanceOf(LInstruction *ins, JSObject *prototypeObject)
 
         JS_ASSERT(uintptr_t(Proxy::LazyProto) == 1);
 
-        // Test for NULL or Proxy::LazyProto
+        // Test for nullptr or Proxy::LazyProto
         masm.branchPtr(Assembler::BelowOrEqual, output, ImmWord(1), &testLazy);
 
         // Load the current object's prototype.
@@ -7049,7 +7044,7 @@ CodeGenerator::emitInstanceOf(LInstruction *ins, JSObject *prototypeObject)
     // Make a VM call if an object with a lazy proto was found on the prototype
     // chain. This currently occurs only for cross compartment wrappers, which
     // we do not expect to be compared with non-wrapper functions from this
-    // compartment. Otherwise, we stopped on a NULL prototype and the output
+    // compartment. Otherwise, we stopped on a nullptr prototype and the output
     // register is already correct.
 
     OutOfLineCode *ool = oolCallVM(IsDelegateObjectInfo, ins,
@@ -7323,7 +7318,7 @@ CodeGenerator::visitIsCallable(LIsCallable *ins)
     masm.jump(&done);
 
     masm.bind(&notFunction);
-    masm.cmpPtr(Address(output, offsetof(js::Class, call)), ImmPtr(NULL));
+    masm.cmpPtr(Address(output, offsetof(js::Class, call)), ImmPtr(nullptr));
     masm.emitSet(Assembler::NonZero, output);
     masm.bind(&done);
 

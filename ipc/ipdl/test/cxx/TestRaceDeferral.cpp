@@ -3,8 +3,7 @@
 #include "IPDLUnitTests.h"      // fail etc.
 
 using namespace mozilla::ipc;
-typedef mozilla::ipc::RPCChannel::Message Message;
-typedef mozilla::ipc::RPCChannel::RacyRPCPolicy RacyRPCPolicy;
+typedef mozilla::ipc::MessageChannel::Message Message;
 
 namespace mozilla {
 namespace _ipdltest {
@@ -13,7 +12,7 @@ static RacyRPCPolicy
 MediateRace(const Message& parent, const Message& child)
 {
     return (PTestRaceDeferral::Msg_Win__ID == parent.type()) ?
-        RPCChannel::RRPParentWins : RPCChannel::RRPChildWins;
+        RRPParentWins : RRPChildWins;
 }
 
 //-----------------------------------------------------------------------------

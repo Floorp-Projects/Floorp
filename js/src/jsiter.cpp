@@ -604,7 +604,6 @@ js::GetIterator(JSContext *cx, HandleObject obj, unsigned flags, MutableHandleVa
             if (!iterobj)
                 return false;
             vp.setObject(*iterobj);
-            types::MarkIteratorUnknown(cx);
             return true;
         }
 
@@ -681,16 +680,13 @@ js::GetIterator(JSContext *cx, HandleObject obj, unsigned flags, MutableHandleVa
         }
 
       miss:
-        if (obj->is<ProxyObject>()) {
-            types::MarkIteratorUnknown(cx);
+        if (obj->is<ProxyObject>())
             return Proxy::iterate(cx, obj, flags, vp);
-        }
+
         if (!GetCustomIterator(cx, obj, flags, vp))
             return false;
-        if (!vp.isUndefined()) {
-            types::MarkIteratorUnknown(cx);
+        if (!vp.isUndefined())
             return true;
-        }
     }
 
     /* NB: for (var p in null) succeeds by iterating over no properties. */

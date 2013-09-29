@@ -128,6 +128,9 @@ HB_UNICODE_FUNCS_IMPLEMENT_CALLBACKS_SIMPLE
    * is NOT Default_Ignorable, but it really behaves in a way that it should
    * be.  That has been reported to the Unicode Technical Committee for
    * consideration.  As such, we include it here, since Uniscribe removes it.
+   * It *is* in Unicode 6.3 however.  U+061C ARABIC LETTER MARK from Unicode
+   * 6.3 is also added manually.  The new Unicode 6.3 bidi formatting
+   * characters are encoded in a block that was Default_Ignorable already.
    *
    * Note: While U+115F and U+1160 are Default_Ignorable, we do NOT want to
    * hide them, as the way Uniscribe has implemented them is with regular
@@ -173,6 +176,7 @@ HB_UNICODE_FUNCS_IMPLEMENT_CALLBACKS_SIMPLE
       switch (page) {
 	case 0x00: return unlikely (ch == 0x00AD);
 	case 0x03: return unlikely (ch == 0x034F);
+	case 0x06: return unlikely (ch == 0x061C);
 	case 0x17: return hb_in_range<hb_codepoint_t> (ch, 0x17B4, 0x17B5);
 	case 0x18: return hb_in_range<hb_codepoint_t> (ch, 0x180B, 0x180E);
 	case 0x20: return hb_in_ranges<hb_codepoint_t> (ch, 0x200B, 0x200F,

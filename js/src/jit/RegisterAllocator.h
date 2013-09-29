@@ -254,7 +254,7 @@ class InstructionDataMap
 
   public:
     InstructionDataMap()
-      : insData_(NULL),
+      : insData_(nullptr),
         numIns_(0)
     { }
 

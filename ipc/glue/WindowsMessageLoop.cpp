@@ -8,7 +8,7 @@
 #include "mozilla/DebugOnly.h"
 
 #include "WindowsMessageLoop.h"
-#include "RPCChannel.h"
+#include "MessageChannel.h"
 
 #include "nsAutoPtr.h"
 #include "nsServiceManagerUtils.h"
@@ -115,10 +115,10 @@ DeferredMessageHook(int nCode,
   // Only run deferred messages if all of these conditions are met:
   //   1. The |nCode| indicates that this hook should do something.
   //   2. We have deferred messages to run.
-  //   3. We're not being called from the PeekMessage within the WaitForNotify
-  //      function (indicated with SyncChannel::IsPumpingMessages). We really
+  //   3. We're not being called from the PeekMessage within the WaitFor*Notify
+  //      function (indicated with MessageChannel::IsPumpingMessages). We really
   //      only want to run after returning to the main event loop.
-  if (nCode >= 0 && gDeferredMessages && !SyncChannel::IsPumpingMessages()) {
+  if (nCode >= 0 && gDeferredMessages && !MessageChannel::IsPumpingMessages()) {
     NS_ASSERTION(gDeferredGetMsgHook && gDeferredCallWndProcHook,
                  "These hooks must be set if we're being called!");
     NS_ASSERTION(gDeferredMessages->Length(), "No deferred messages?!");
@@ -587,7 +587,7 @@ TimeoutHasExpired(const TimeoutData& aData)
 
 } // anonymous namespace
 
-RPCChannel::SyncStackFrame::SyncStackFrame(SyncChannel* channel, bool rpc)
+MessageChannel::SyncStackFrame::SyncStackFrame(MessageChannel* channel, bool rpc)
   : mRPC(rpc)
   , mSpinNestedEvents(false)
   , mListenerNotified(false)
@@ -605,7 +605,7 @@ RPCChannel::SyncStackFrame::SyncStackFrame(SyncChannel* channel, bool rpc)
   }
 }
 
-RPCChannel::SyncStackFrame::~SyncStackFrame()
+MessageChannel::SyncStackFrame::~SyncStackFrame()
 {
   NS_ASSERTION(this == mChannel->mTopFrame,
                "Mismatched RPC stack frames");
@@ -622,28 +622,28 @@ RPCChannel::SyncStackFrame::~SyncStackFrame()
   }
 }
 
-SyncChannel::SyncStackFrame* SyncChannel::sStaticTopFrame;
+MessageChannel::SyncStackFrame* MessageChannel::sStaticTopFrame;
 
 // nsAppShell's notification that gecko events are being processed.
 // If we are here and there is an RPC Incall active, we are spinning
 // a nested gecko event loop. In which case the remote process needs
 // to know about it.
 void /* static */
-RPCChannel::NotifyGeckoEventDispatch()
+MessageChannel::NotifyGeckoEventDispatch()
 {
   // sStaticTopFrame is only valid for RPC channels
   if (!sStaticTopFrame || sStaticTopFrame->mListenerNotified)
     return;
 
   sStaticTopFrame->mListenerNotified = true;
-  RPCChannel* channel = static_cast<RPCChannel*>(sStaticTopFrame->mChannel);
+  MessageChannel* channel = static_cast<MessageChannel*>(sStaticTopFrame->mChannel);
   channel->Listener()->ProcessRemoteNativeEventsInRPCCall();
 }
 
 // invoked by the module that receives the spin event loop
 // message.
 void
-RPCChannel::ProcessNativeEventsInRPCCall()
+MessageChannel::ProcessNativeEventsInRPCCall()
 {
   if (!mTopFrame) {
     NS_ERROR("Spin logic error: no RPC frame");
@@ -653,14 +653,14 @@ RPCChannel::ProcessNativeEventsInRPCCall()
   mTopFrame->mSpinNestedEvents = true;
 }
 
-// Spin loop is called in place of WaitForNotify when modal ui is being shown
+// Spin loop is called in place of WaitFor*Notify when modal ui is being shown
 // in a child. There are some intricacies in using it however. Spin loop is
 // enabled for a particular RPC frame by the client calling
-// RPCChannel::ProcessNativeEventsInRPCCall().
+// MessageChannel::ProcessNativeEventsInRPCCall().
 // This call can be nested for multiple RPC frames in a single plugin or 
 // multiple unrelated plugins.
 void
-RPCChannel::SpinInternalEventLoop()
+MessageChannel::SpinInternalEventLoop()
 {
   if (mozilla::PaintTracker::IsPainting()) {
     NS_RUNTIMEABORT("Don't spin an event loop while painting.");
@@ -694,7 +694,7 @@ RPCChannel::SpinInternalEventLoop()
           NS_ERROR("WM_QUIT received in SpinInternalEventLoop!");
       } else {
           TranslateMessage(&msg);
-          DispatchMessageW(&msg);
+          ::DispatchMessageW(&msg);
           return;
       }
     }
@@ -715,7 +715,7 @@ RPCChannel::SpinInternalEventLoop()
 }
 
 bool
-SyncChannel::WaitForNotify()
+MessageChannel::WaitForSyncNotify()
 {
   mMonitor->AssertCurrentThreadOwns();
 
@@ -742,10 +742,10 @@ SyncChannel::WaitForNotify()
   }
 
   // Setup deferred processing of native events while we wait for a response.
-  NS_ASSERTION(!SyncChannel::IsPumpingMessages(),
+  NS_ASSERTION(!MessageChannel::IsPumpingMessages(),
                "Shouldn't be pumping already!");
 
-  SyncChannel::SetIsPumpingMessages(true);
+  MessageChannel::SetIsPumpingMessages(true);
   HHOOK windowHook = SetWindowsHookEx(WH_CALLWNDPROC, CallWindowProcedureHook,
                                       nullptr, gUIThreadId);
   NS_ASSERTION(windowHook, "Failed to set hook!");
@@ -831,19 +831,19 @@ SyncChannel::WaitForNotify()
     KillTimer(nullptr, timerId);
   }
 
-  SyncChannel::SetIsPumpingMessages(false);
+  MessageChannel::SetIsPumpingMessages(false);
 
   return WaitResponse(timedout);
 }
 
 bool
-RPCChannel::WaitForNotify()
+MessageChannel::WaitForRPCNotify()
 {
   mMonitor->AssertCurrentThreadOwns();
 
-  if (!StackDepth()) {
+  if (!RPCStackDepth()) {
     // There is currently no way to recover from this condition.
-    NS_RUNTIMEABORT("StackDepth() is 0 in call to RPCChannel::WaitForNotify!");
+    NS_RUNTIMEABORT("StackDepth() is 0 in call to MessageChannel::WaitForNotify!");
   }
 
   // Initialize global objects used in deferred messaging.
@@ -862,11 +862,11 @@ RPCChannel::WaitForNotify()
   // windowHook is used as a flag variable for the loop below: if it is set
   // and we start to spin a nested event loop, we need to clear the hook and
   // process deferred/pending messages.
-  // If windowHook is nullptr, SyncChannel::IsPumpingMessages should be false.
+  // If windowHook is nullptr, MessageChannel::IsPumpingMessages should be false.
   HHOOK windowHook = nullptr;
 
   while (1) {
-    NS_ASSERTION((!!windowHook) == SyncChannel::IsPumpingMessages(),
+    NS_ASSERTION((!!windowHook) == MessageChannel::IsPumpingMessages(),
                  "windowHook out of sync with reality");
 
     if (mTopFrame->mSpinNestedEvents) {
@@ -880,7 +880,7 @@ RPCChannel::WaitForNotify()
         }
 
         // Used by widget to assert on incoming native events
-        SyncChannel::SetIsPumpingMessages(false);
+        MessageChannel::SetIsPumpingMessages(false);
 
         // Unhook any neutered windows procedures so messages can be delievered
         // normally.
@@ -897,7 +897,7 @@ RPCChannel::WaitForNotify()
     }
 
     if (!windowHook) {
-      SyncChannel::SetIsPumpingMessages(true);
+      MessageChannel::SetIsPumpingMessages(true);
       windowHook = SetWindowsHookEx(WH_CALLWNDPROC, CallWindowProcedureHook,
                                     nullptr, gUIThreadId);
       NS_ASSERTION(windowHook, "Failed to set hook!");
@@ -939,7 +939,7 @@ RPCChannel::WaitForNotify()
       break;
     }
 
-    // See SyncChannel's WaitForNotify for details.
+    // See MessageChannel's WaitFor*Notify for details.
     bool haveSentMessagesPending =
       (HIWORD(GetQueueStatus(QS_SENDMESSAGE)) & QS_SENDMESSAGE) != 0;
 
@@ -971,13 +971,13 @@ RPCChannel::WaitForNotify()
     }
   }
 
-  SyncChannel::SetIsPumpingMessages(false);
+  MessageChannel::SetIsPumpingMessages(false);
 
   return WaitResponse(timedout);
 }
 
 void
-SyncChannel::NotifyWorkerThread()
+MessageChannel::NotifyWorkerThread()
 {
   mMonitor->AssertCurrentThreadOwns();
   NS_ASSERTION(mEvent, "No signal event to set, this is really bad!");

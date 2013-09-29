@@ -246,6 +246,10 @@ public:
                                        bool aLastPart) MOZ_OVERRIDE;
   virtual nsresult OnNewSourceData() MOZ_OVERRIDE;
 
+  static already_AddRefed<nsIEventTarget> GetEventTarget() {
+    return DecodePool::Singleton()->GetEventTarget();
+  }
+
   /**
    * A hint of the number of bytes of source data that the image contains. If
    * called early on, this can help reduce copying and reallocations by
@@ -305,13 +309,13 @@ public:
   };
 
 private:
-  imgStatusTracker& CurrentStatusTracker()
+  already_AddRefed<imgStatusTracker> CurrentStatusTracker()
   {
-    if (mDecodeRequest) {
-      return *mDecodeRequest->mStatusTracker;
-    } else {
-      return *mStatusTracker;
-    }
+    nsRefPtr<imgStatusTracker> statusTracker;
+    statusTracker = mDecodeRequest ? mDecodeRequest->mStatusTracker
+                                   : mStatusTracker;
+    MOZ_ASSERT(statusTracker);
+    return statusTracker.forget();
   }
 
   nsresult OnImageDataCompleteCore(nsIRequest* aRequest, nsISupports*, nsresult aStatus);
@@ -329,6 +333,9 @@ private:
       , mChunkCount(0)
       , mAllocatedNewFrame(false)
     {
+      MOZ_ASSERT(aImage, "aImage cannot be null");
+      MOZ_ASSERT(aImage->mStatusTracker,
+                 "aImage should have an imgStatusTracker");
       mStatusTracker = aImage->mStatusTracker->CloneForRecording();
     }
 
@@ -413,6 +420,14 @@ private:
      *         that we return NS_OK even when the size was not found.)
      */
     nsresult DecodeUntilSizeAvailable(RasterImage* aImg);
+
+    /**
+     * Returns an event target interface to the thread pool; primarily for
+     * OnDataAvailable delivery off main thread.
+     *
+     * @return An nsIEventTarget interface to mThreadPool.
+     */
+    already_AddRefed<nsIEventTarget> GetEventTarget();
 
     virtual ~DecodePool();
 
@@ -702,6 +717,9 @@ private: // data
   // will inform us when to let go of this pointer.
   ScaleRequest* mScaleRequest;
 
+  // Initializes imgStatusTracker and resets it on RasterImage destruction.
+  nsAutoPtr<imgStatusTrackerInit> mStatusTrackerInit;
+
   nsresult ShutdownDecoder(eShutdownIntent aIntent);
 
   // Error handling.
@@ -732,7 +750,8 @@ private: // data
   bool StoringSourceData() const;
 
 protected:
-  RasterImage(imgStatusTracker* aStatusTracker = nullptr, nsIURI* aURI = nullptr);
+  RasterImage(imgStatusTracker* aStatusTracker = nullptr,
+              ImageURL* aURI = nullptr);
 
   bool ShouldAnimate();
 

@@ -204,14 +204,14 @@ class IPDLType(Type):
 
     def isAsync(self): return self.sendSemantics is ASYNC
     def isSync(self): return self.sendSemantics is SYNC
-    def isRpc(self): return self.sendSemantics is RPC or self.sendSemantics is URGENT
+    def isRpc(self): return self.sendSemantics is RPC
     def isUrgent(self): return self.sendSemantics is URGENT
 
     def talksAsync(self): return True
     def talksSync(self): return self.isSync() or self.isRpc()
     def talksRpc(self): return self.isRpc()
 
-    def hasReply(self):  return self.isSync() or self.isRpc()
+    def hasReply(self):  return self.isSync() or self.isRpc() or self.isUrgent()
 
     def needsMoreJuiceThan(self, o):
         return (o.isAsync() and not self.isAsync()
@@ -1457,6 +1457,12 @@ class CheckTypes(TcheckVisitor):
             self.error(
                 loc,
                 "sync parent-to-child messages are verboten (here, message `%s' in protocol `%s')",
+                mname, pname)
+
+        if mtype.isUrgent() and (mtype.isIn() or mtype.isInout()):
+            self.error(
+                loc,
+                "urgent child-to-parent messages are verboten (here, message `%s' in protocol `%s')",
                 mname, pname)
 
         if mtype.needsMoreJuiceThan(ptype):

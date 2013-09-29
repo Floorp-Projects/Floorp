@@ -6,7 +6,7 @@
 // spdy/3.1
 
 #ifndef mozilla_net_SpdyPush31_Internal_h
-#define mozilla_net_SpdyPush3_Internal_h
+#define mozilla_net_SpdyPush31_Internal_h
 
 #include "mozilla/Attributes.h"
 #include "mozilla/TimeStamp.h"

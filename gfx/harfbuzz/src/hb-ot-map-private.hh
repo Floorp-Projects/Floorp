@@ -1,6 +1,6 @@
 /*
  * Copyright © 2009,2010  Red Hat, Inc.
- * Copyright © 2010,2011,2012  Google, Inc.
+ * Copyright © 2010,2011,2012,2013  Google, Inc.
  *
  *  This is part of HarfBuzz, a text shaping library.
  *
@@ -31,8 +31,8 @@
 
 #include "hb-buffer-private.hh"
 
-#include "hb-ot-layout-private.hh"
 
+struct hb_ot_shape_plan_t;
 
 static const hb_tag_t table_tags[2] = {HB_OT_TAG_GSUB, HB_OT_TAG_GPOS};
 
@@ -67,9 +67,9 @@ struct hb_ot_map_t
 
   typedef void (*pause_func_t) (const struct hb_ot_shape_plan_t *plan, hb_font_t *font, hb_buffer_t *buffer);
 
-  struct pause_map_t {
-    unsigned int num_lookups; /* Cumulative */
-    pause_func_t callback;
+  struct stage_map_t {
+    unsigned int last_lookup; /* Cumulative */
+    pause_func_t pause_func;
   };
 
 
@@ -110,23 +110,27 @@ struct hb_ot_map_t
       *lookup_count = 0;
       return;
     }
-    assert (stage <= pauses[table_index].len);
-    unsigned int start = stage ? pauses[table_index][stage - 1].num_lookups : 0;
-    unsigned int end   = stage < pauses[table_index].len ? pauses[table_index][stage].num_lookups : lookups[table_index].len;
+    assert (stage <= stages[table_index].len);
+    unsigned int start = stage ? stages[table_index][stage - 1].last_lookup : 0;
+    unsigned int end   = stage < stages[table_index].len ? stages[table_index][stage].last_lookup : lookups[table_index].len;
     *plookups = &lookups[table_index][start];
     *lookup_count = end - start;
   }
 
   HB_INTERNAL void collect_lookups (unsigned int table_index, hb_set_t *lookups) const;
+  template <typename Proxy>
+  HB_INTERNAL inline void apply (const Proxy &proxy,
+				 const struct hb_ot_shape_plan_t *plan, hb_font_t *font, hb_buffer_t *buffer) const;
   HB_INTERNAL void substitute (const struct hb_ot_shape_plan_t *plan, hb_font_t *font, hb_buffer_t *buffer) const;
   HB_INTERNAL void position (const struct hb_ot_shape_plan_t *plan, hb_font_t *font, hb_buffer_t *buffer) const;
 
   inline void finish (void) {
     features.finish ();
-    lookups[0].finish ();
-    lookups[1].finish ();
-    pauses[0].finish ();
-    pauses[1].finish ();
+    for (unsigned int table_index = 0; table_index < 2; table_index++)
+    {
+      lookups[table_index].finish ();
+      stages[table_index].finish ();
+    }
   }
 
   public:
@@ -145,7 +149,7 @@ struct hb_ot_map_t
 
   hb_prealloced_array_t<feature_map_t, 8> features;
   hb_prealloced_array_t<lookup_map_t, 32> lookups[2]; /* GSUB/GPOS */
-  hb_prealloced_array_t<pause_map_t, 1> pauses[2]; /* GSUB/GPOS */
+  hb_prealloced_array_t<stage_map_t, 4> stages[2]; /* GSUB/GPOS */
 };
 
 enum hb_ot_map_feature_flags_t {
@@ -195,8 +199,10 @@ struct hb_ot_map_builder_t
 
   inline void finish (void) {
     feature_infos.finish ();
-    pauses[0].finish ();
-    pauses[1].finish ();
+    for (unsigned int table_index = 0; table_index < 2; table_index++)
+    {
+      stages[table_index].finish ();
+    }
   }
 
   private:
@@ -213,9 +219,9 @@ struct hb_ot_map_builder_t
     { return (a->tag != b->tag) ?  (a->tag < b->tag ? -1 : 1) : (a->seq < b->seq ? -1 : 1); }
   };
 
-  struct pause_info_t {
-    unsigned int stage;
-    hb_ot_map_t::pause_func_t callback;
+  struct stage_info_t {
+    unsigned int index;
+    hb_ot_map_t::pause_func_t pause_func;
   };
 
   HB_INTERNAL void add_pause (unsigned int table_index, hb_ot_map_t::pause_func_t pause_func);
@@ -232,8 +238,8 @@ struct hb_ot_map_builder_t
   private:
 
   unsigned int current_stage[2]; /* GSUB/GPOS */
-  hb_prealloced_array_t<feature_info_t,16> feature_infos;
-  hb_prealloced_array_t<pause_info_t, 1> pauses[2]; /* GSUB/GPOS */
+  hb_prealloced_array_t<feature_info_t, 32> feature_infos;
+  hb_prealloced_array_t<stage_info_t, 8> stages[2]; /* GSUB/GPOS */
 };
 
 

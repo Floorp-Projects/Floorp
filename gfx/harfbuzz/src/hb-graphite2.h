@@ -28,6 +28,8 @@
 
 #include "hb.h"
 
+#include <graphite2/Font.h>
+
 HB_BEGIN_DECLS
 
 

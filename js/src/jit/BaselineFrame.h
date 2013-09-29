@@ -125,7 +125,7 @@ class BaselineFrame
         return CalleeTokenToFunction(calleeToken());
     }
     JSFunction *maybeFun() const {
-        return isFunctionFrame() ? fun() : NULL;
+        return isFunctionFrame() ? fun() : nullptr;
     }
     JSFunction *callee() const {
         return CalleeTokenToFunction(calleeToken());
@@ -217,7 +217,7 @@ class BaselineFrame
         return *blockChain_;
     }
     StaticBlockObject *maybeBlockChain() const {
-        return hasBlockChain() ? blockChain_ : NULL;
+        return hasBlockChain() ? blockChain_ : nullptr;
     }
     void setBlockChain(StaticBlockObject &block) {
         flags_ |= HAS_BLOCKCHAIN;
@@ -225,7 +225,7 @@ class BaselineFrame
     }
     void setBlockChainNull() {
         JS_ASSERT(!hasBlockChain());
-        blockChain_ = NULL;
+        blockChain_ = nullptr;
     }
     StaticBlockObject **addressOfBlockChain() {
         return &blockChain_;
@@ -285,7 +285,7 @@ class BaselineFrame
     }
 
     void *maybeHookData() const {
-        return hasHookData() ? hookData_ : NULL;
+        return hasHookData() ? hookData_ : nullptr;
     }
 
     void setHookData(void *v) {

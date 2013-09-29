@@ -45,10 +45,10 @@ StringObject::create(JSContext *cx, HandleString str, NewObjectKind newKind)
 {
     JSObject *obj = NewBuiltinClassInstance(cx, &class_, newKind);
     if (!obj)
-        return NULL;
+        return nullptr;
     Rooted<StringObject*> strobj(cx, &obj->as<StringObject>());
     if (!strobj->init(cx, str))
-        return NULL;
+        return nullptr;
     return strobj;
 }
 

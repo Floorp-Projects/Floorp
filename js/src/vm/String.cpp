@@ -107,7 +107,7 @@ JSString::dumpChars(const jschar *s, size_t n)
 void
 JSString::dump()
 {
-    if (const jschar *chars = getChars(NULL)) {
+    if (const jschar *chars = getChars(nullptr)) {
         fprintf(stderr, "JSString* (%p) = jschar * (%p) = ",
                 (void *) this, (void *) chars);
         dumpChars(chars, length());
@@ -120,7 +120,7 @@ JSString::dump()
 bool
 JSString::equals(const char *s)
 {
-    const jschar *c = getChars(NULL);
+    const jschar *c = getChars(nullptr);
     if (!c) {
         fprintf(stderr, "OOM in JSString::equals!\n");
         return false;
@@ -159,7 +159,7 @@ AllocChars(ThreadSafeContext *maybecx, size_t length, jschar **chars, size_t *ca
     JS_STATIC_ASSERT(JSString::MAX_LENGTH * sizeof(jschar) < UINT32_MAX);
     size_t bytes = numChars * sizeof(jschar);
     *chars = (jschar *)(maybecx ? maybecx->malloc_(bytes) : js_malloc(bytes));
-    return *chars != NULL;
+    return *chars != nullptr;
 }
 
 bool
@@ -304,7 +304,7 @@ JSRope::flattenInternal(ExclusiveContext *maybecx)
     }
 
     if (!AllocChars(maybecx, wholeLength, &wholeChars, &wholeCapacity))
-        return NULL;
+        return nullptr;
 
     pos = wholeChars;
     first_visit_node: {
@@ -393,17 +393,17 @@ js::ConcatStrings(ThreadSafeContext *cx,
 
     size_t wholeLength = leftLen + rightLen;
     if (!JSString::validateLength(cx, wholeLength))
-        return NULL;
+        return nullptr;
 
     if (JSShortString::lengthFits(wholeLength) && cx->isJSContext()) {
         JSShortString *str = js_NewGCShortString<allowGC>(cx);
         if (!str)
-            return NULL;
+            return nullptr;
 
         ScopedThreadSafeStringInspector leftInspector(left);
         ScopedThreadSafeStringInspector rightInspector(right);
         if (!leftInspector.ensureChars(cx) || !rightInspector.ensureChars(cx))
-            return NULL;
+            return nullptr;
 
         jschar *buf = str->init(wholeLength);
         PodCopy(buf, leftInspector.chars(), leftLen);
@@ -455,7 +455,7 @@ JSDependentString::undepend(ExclusiveContext *cx)
     size_t size = (n + 1) * sizeof(jschar);
     jschar *s = (jschar *) cx->malloc_(size);
     if (!s)
-        return NULL;
+        return nullptr;
 
     PodCopy(s, chars(), n);
     s[n] = 0;
@@ -477,7 +477,7 @@ JSInlineString::uninline(ExclusiveContext *maybecx)
     size_t n = length();
     jschar *news = maybecx ? maybecx->pod_malloc<jschar>(n + 1) : js_pod_malloc<jschar>(n + 1);
     if (!news)
-        return NULL;
+        return nullptr;
     js_strncpy(news, d.inlineStorage, n);
     news[n] = 0;
     d.u1.chars = news;

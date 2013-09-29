@@ -28,19 +28,16 @@ namespace mozilla {
 class JSGCThingParticipant: public nsCycleCollectionParticipant
 {
 public:
-  NS_IMETHOD Root(void *n)
+  NS_IMETHOD_(void) Root(void *n)
   {
-    return NS_OK;
   }
 
-  NS_IMETHOD Unlink(void *n)
+  NS_IMETHOD_(void) Unlink(void *n)
   {
-    return NS_OK;
   }
 
-  NS_IMETHOD Unroot(void *n)
+  NS_IMETHOD_(void) Unroot(void *n)
   {
-    return NS_OK;
   }
 
   NS_IMETHOD_(void) DeleteCycleCollectable(void *n)
@@ -55,19 +52,16 @@ class JSZoneParticipant : public nsCycleCollectionParticipant
 public:
   MOZ_CONSTEXPR JSZoneParticipant(): nsCycleCollectionParticipant() {}
 
-  NS_IMETHOD Root(void *p)
+  NS_IMETHOD_(void) Root(void *p)
   {
-    return NS_OK;
   }
 
-  NS_IMETHOD Unlink(void *p)
+  NS_IMETHOD_(void) Unlink(void *p)
   {
-    return NS_OK;
   }
 
-  NS_IMETHOD Unroot(void *p)
+  NS_IMETHOD_(void) Unroot(void *p)
   {
-    return NS_OK;
   }
 
   NS_IMETHOD_(void) DeleteCycleCollectable(void *n)

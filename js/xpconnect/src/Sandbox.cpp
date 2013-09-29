@@ -30,6 +30,7 @@
 #include "XPCWrapper.h"
 #include "XrayWrapper.h"
 #include "mozilla/dom/BindingUtils.h"
+#include "mozilla/dom/indexedDB/IndexedDatabaseManager.h"
 #include "mozilla/dom/TextDecoderBinding.h"
 #include "mozilla/dom/TextEncoderBinding.h"
 
@@ -39,6 +40,7 @@ using namespace js;
 using namespace xpc;
 
 using mozilla::dom::DestroyProtoAndIfaceCache;
+using mozilla::dom::indexedDB::IndexedDatabaseManager;
 
 NS_IMPL_ISUPPORTS3(SandboxPrivate,
                    nsIScriptObjectPrincipal,
@@ -889,7 +891,9 @@ xpc::GlobalProperties::Parse(JSContext *cx, JS::HandleObject obj)
         }
         JSAutoByteString name(cx, nameValue.toString());
         NS_ENSURE_TRUE(name, false);
-        if (!strcmp(name.ptr(), "XMLHttpRequest")) {
+        if (!strcmp(name.ptr(), "indexedDB")) {
+            indexedDB = true;
+        } else if (!strcmp(name.ptr(), "XMLHttpRequest")) {
             XMLHttpRequest = true;
         } else if (!strcmp(name.ptr(), "TextEncoder")) {
             TextEncoder = true;
@@ -910,6 +914,11 @@ xpc::GlobalProperties::Parse(JSContext *cx, JS::HandleObject obj)
 bool
 xpc::GlobalProperties::Define(JSContext *cx, JS::HandleObject obj)
 {
+    if (indexedDB && AccessCheck::isChrome(obj) &&
+        (!IndexedDatabaseManager::DefineConstructors(cx, obj) ||
+         !IndexedDatabaseManager::DefineIndexedDBGetter(cx, obj)))
+        return false;
+
     if (XMLHttpRequest &&
         !JS_DefineFunction(cx, obj, "XMLHttpRequest", CreateXMLHttpRequest, 0, JSFUN_CONSTRUCTOR))
         return false;

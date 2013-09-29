@@ -188,6 +188,11 @@ IDBFactory::Create(JSContext* aCx,
                "Not a global object!");
   NS_ASSERTION(nsContentUtils::IsCallerChrome(), "Only for chrome!");
 
+  // Make sure that the manager is up before we do anything here since lots of
+  // decisions depend on which process we're running in.
+  IndexedDatabaseManager* mgr = IndexedDatabaseManager::GetOrCreate();
+  NS_ENSURE_TRUE(mgr, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
+
   nsCString group;
   nsCString origin;
   StoragePrivilege privilege;

@@ -102,7 +102,7 @@ class IonSpewer
 
   public:
     IonSpewer()
-      : graph(NULL), function(NullPtr()), inited_(false)
+      : graph(nullptr), function(NullPtr()), inited_(false)
     { }
 
     // File output is terminated safely upon destruction.
@@ -150,7 +150,7 @@ static inline void IonSpewEndFunction()
 
 static inline void CheckLogging()
 { }
-static FILE *const IonSpewFile = NULL;
+static FILE *const IonSpewFile = nullptr;
 static inline void IonSpew(IonSpewChannel, const char *fmt, ...)
 { }
 static inline void IonSpewStart(IonSpewChannel channel, const char *fmt, ...)

@@ -375,8 +375,8 @@ NS_IMPL_ISUPPORTS3(RasterImage, imgIContainer, nsIProperties,
 
 //******************************************************************************
 RasterImage::RasterImage(imgStatusTracker* aStatusTracker,
-                         nsIURI* aURI /* = nullptr */) :
-  ImageResource(aStatusTracker, aURI), // invoke superclass's constructor
+                         ImageURL* aURI /* = nullptr */) :
+  ImageResource(aURI), // invoke superclass's constructor
   mSize(0,0),
   mFrameDecodeFlags(DECODE_FLAGS_DEFAULT),
   mMultipartDecodedFrame(nullptr),
@@ -404,6 +404,8 @@ RasterImage::RasterImage(imgStatusTracker* aStatusTracker,
   mPendingError(false),
   mScaleRequest(nullptr)
 {
+  mStatusTrackerInit = new imgStatusTrackerInit(this, aStatusTracker);
+
   // Set up the discard tracker node.
   mDiscardTrackerNode.img = this;
   Telemetry::GetHistogramById(Telemetry::IMAGE_DECODE_COUNT)->Add(0);
@@ -449,6 +451,7 @@ RasterImage::~RasterImage()
   }
 
   delete mAnim;
+  mAnim = nullptr;
   delete mMultipartDecodedFrame;
 
   // Total statistics
@@ -1083,7 +1086,8 @@ RasterImage::EnsureAnimExists()
     LockImage();
 
     // Notify our observers that we are starting animation.
-    CurrentStatusTracker().RecordImageIsAnimated();
+    nsRefPtr<imgStatusTracker> statusTracker = CurrentStatusTracker();
+    statusTracker->RecordImageIsAnimated();
   }
 }
 
@@ -1725,11 +1729,8 @@ RasterImage::OnImageDataComplete(nsIRequest*, nsISupports*, nsresult aStatus, bo
   if (NS_FAILED(aStatus))
     finalStatus = aStatus;
 
-  if (mDecodeRequest) {
-    mDecodeRequest->mStatusTracker->GetDecoderObserver()->OnStopRequest(aLastPart, finalStatus);
-  } else {
-    mStatusTracker->GetDecoderObserver()->OnStopRequest(aLastPart, finalStatus);
-  }
+  nsRefPtr<imgStatusTracker> statusTracker = CurrentStatusTracker();
+  statusTracker->GetDecoderObserver()->OnStopRequest(aLastPart, finalStatus);
 
   // We just recorded OnStopRequest; we need to inform our listeners.
   {
@@ -2020,6 +2021,8 @@ RasterImage::InitDecoder(bool aDoSizeDecode, bool aIsSynchronous /* = false */)
   if (!mDecodeRequest) {
     mDecodeRequest = new DecodeRequest(this);
   }
+  MOZ_ASSERT(mDecodeRequest->mStatusTracker);
+  MOZ_ASSERT(mDecodeRequest->mStatusTracker->GetDecoderObserver());
   mDecoder->SetObserver(mDecodeRequest->mStatusTracker->GetDecoderObserver());
   mDecoder->SetSizeDecode(aDoSizeDecode);
   mDecoder->SetDecodeFlags(mFrameDecodeFlags);
@@ -2188,6 +2191,10 @@ RasterImage::RequestDecode()
 NS_IMETHODIMP
 RasterImage::StartDecoding()
 {
+  if (!NS_IsMainThread()) {
+    return NS_DispatchToMainThread(
+      NS_NewRunnableMethod(this, &RasterImage::StartDecoding));
+  }
   // Here we are explicitly trading off flashing for responsiveness in the case
   // that we're redecoding an image (see bug 845147).
   return RequestDecodeCore(mHasBeenDecoded ?
@@ -2669,6 +2676,8 @@ RasterImage::Draw(gfxContext *aContext,
 NS_IMETHODIMP
 RasterImage::LockImage()
 {
+  MOZ_ASSERT(NS_IsMainThread(),
+             "Main thread to encourage serialization with UnlockImage");
   if (mError)
     return NS_ERROR_FAILURE;
 
@@ -2686,6 +2695,8 @@ RasterImage::LockImage()
 NS_IMETHODIMP
 RasterImage::UnlockImage()
 {
+  MOZ_ASSERT(NS_IsMainThread(),
+             "Main thread to encourage serialization with LockImage");
   if (mError)
     return NS_ERROR_FAILURE;
 
@@ -2838,11 +2849,8 @@ RasterImage::DoError()
   // Put the container in an error state.
   mError = true;
 
-  if (mDecodeRequest) {
-    mDecodeRequest->mStatusTracker->GetDecoderObserver()->OnError();
-  } else {
-    mStatusTracker->GetDecoderObserver()->OnError();
-  }
+  nsRefPtr<imgStatusTracker> statusTracker = CurrentStatusTracker();
+  statusTracker->GetDecoderObserver()->OnError();
 
   // Log our error
   LOG_CONTAINER_ERROR;
@@ -3038,6 +3046,13 @@ RasterImage::DecodePool::Singleton()
   }
 
   return sSingleton;
+}
+
+already_AddRefed<nsIEventTarget>
+RasterImage::DecodePool::GetEventTarget()
+{
+  nsCOMPtr<nsIEventTarget> target = do_QueryInterface(mThreadPool);
+  return target.forget();
 }
 
 RasterImage::DecodePool::DecodePool()
