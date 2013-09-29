@@ -50,9 +50,9 @@ fuzzy-if(!contentSameGfxBackendAsCanvas,1,88500) fuzzy-if(azureSkiaGL,2,89700) f
 == linear-zero-length-1c.html linear-zero-length-1-ref.html
 == nostops.html about:blank
 == onestop.html about:blank
-fuzzy-if(!contentSameGfxBackendAsCanvas,1,5884) fuzzy-if(cocoaWidget,9,87755) fuzzy-if(azureSkiaGL,2,88024) random-if(d2d) == radial-1a.html radial-1-ref.html
-fuzzy-if(!contentSameGfxBackendAsCanvas,1,5884) fuzzy-if(cocoaWidget,9,87755) fuzzy-if(azureSkiaGL,2,88024) random-if(d2d) == radial-1b.html radial-1-ref.html
-fuzzy-if(!contentSameGfxBackendAsCanvas,1,5884) fuzzy-if(cocoaWidget,9,87755) fuzzy-if(azureSkiaGL,2,88024) random-if(d2d) == radial-1c.html radial-1-ref.html
+fuzzy-if(!contentSameGfxBackendAsCanvas,1,5884) fuzzy-if(cocoaWidget,9,87824) fuzzy-if(azureSkiaGL,2,88024) random-if(d2d) == radial-1a.html radial-1-ref.html
+fuzzy-if(!contentSameGfxBackendAsCanvas,1,5884) fuzzy-if(cocoaWidget,9,87824) fuzzy-if(azureSkiaGL,2,88024) random-if(d2d) == radial-1b.html radial-1-ref.html
+fuzzy-if(!contentSameGfxBackendAsCanvas,1,5884) fuzzy-if(cocoaWidget,9,87824) fuzzy-if(azureSkiaGL,2,88024) random-if(d2d) == radial-1c.html radial-1-ref.html
 fuzzy(3,7860) fuzzy-if(cocoaWidget,5,89041) fuzzy-if(azureSkiaGL,2,90000) == radial-2a.html radial-2-ref.html
 fuzzy(3,7860) fuzzy-if(cocoaWidget,5,89041) fuzzy-if(azureSkiaGL,2,90000) == radial-2b.html radial-2-ref.html
 fuzzy(3,7860) fuzzy-if(cocoaWidget,5,89041) fuzzy-if(azureSkiaGL,2,90000) == radial-2c.html radial-2-ref.html
@@ -68,7 +68,7 @@ fuzzy-if(/^Windows\x20NT\x206\.2/.test(http.oscpu),1,5) fuzzy-if(Android,17,3880
 fuzzy-if(/^Windows\x20NT\x206\.2/.test(http.oscpu),1,5) fuzzy-if(Android,17,3880) == radial-shape-closest-side-1b.html radial-shape-closest-side-1-ref.html
 fuzzy-if(/^Windows\x20NT\x206\.2/.test(http.oscpu),1,5) fuzzy-if(Android,17,3880) == radial-shape-closest-side-1c.html radial-shape-closest-side-1-ref.html
 == radial-shape-farthest-corner-1a.html radial-shape-farthest-corner-1-ref.html
-fails-if(cocoaWidget&&/x86-/.test(xulRuntime.XPCOMABI)||gtk2Widget&&/x86_64-/.test(xulRuntime.XPCOMABI)) fuzzy(1,1561) fuzzy-if(cocoaWidget,3,1082) fuzzy-if(azureQuartz,2,41171) fuzzy-if(azureQuartz&&OSX==10.6,3,1082) == radial-shape-farthest-corner-1b.html radial-shape-farthest-corner-1-ref.html
+fails-if(cocoaWidget&&/x86-/.test(xulRuntime.XPCOMABI)||gtk2Widget&&/x86_64-/.test(xulRuntime.XPCOMABI)) fuzzy(1,1561) fuzzy-if(cocoaWidget,3,1082) fuzzy-if(azureQuartz,2,41171) == radial-shape-farthest-corner-1b.html radial-shape-farthest-corner-1-ref.html
 == radial-shape-farthest-corner-1c.html radial-shape-farthest-corner-1-ref.html
 fuzzy-if(Android,17,13320) == radial-shape-farthest-side-1a.html radial-shape-farthest-side-1-ref.html
 fuzzy-if(Android,17,13320) == radial-shape-farthest-side-1b.html radial-shape-farthest-side-1-ref.html
