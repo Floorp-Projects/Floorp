@@ -7,6 +7,7 @@
 const Cc = Components.classes;
 const Ci = Components.interfaces;
 const Cr = Components.results;
+const Cu = Components.utils;
 
 this.EXPORTED_SYMBOLS = [];
 
@@ -3902,15 +3903,17 @@ var XPIProvider = {
                     createInstance(Ci.nsIPrincipal);
 
     if (!aFile.exists()) {
-      this.bootstrapScopes[aId] = new Components.utils.Sandbox(principal,
-                                                               {sandboxName: aFile.path});
+      this.bootstrapScopes[aId] =
+        new Cu.Sandbox(principal, {sandboxName: aFile.path,
+                                   wantGlobalProperties: ["indexedDB"]});
       ERROR("Attempted to load bootstrap scope from missing directory " + aFile.path);
       return;
     }
 
     let uri = getURIForResourceInFile(aFile, "bootstrap.js").spec;
-    this.bootstrapScopes[aId] = new Components.utils.Sandbox(principal,
-                                                             {sandboxName: uri});
+    this.bootstrapScopes[aId] =
+      new Cu.Sandbox(principal, {sandboxName: uri,
+                                 wantGlobalProperties: ["indexedDB"]});
 
     let loader = Cc["@mozilla.org/moz/jssubscript-loader;1"].
                  createInstance(Ci.mozIJSSubScriptLoader);

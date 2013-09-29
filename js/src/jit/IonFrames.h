@@ -292,7 +292,7 @@ GetTopIonJSScript(PerThreadData *pt, void **returnAddrOut)
     JS_ASSERT(iter.type() == IonFrame_Exit);
     ++iter;
 
-    JS_ASSERT(iter.returnAddressToFp() != NULL);
+    JS_ASSERT(iter.returnAddressToFp() != nullptr);
     if (returnAddrOut)
         *returnAddrOut = (void *) iter.returnAddressToFp();
 
@@ -306,7 +306,7 @@ GetTopIonJSScript(PerThreadData *pt, void **returnAddrOut)
 }
 
 inline JSScript *
-GetTopIonJSScript(ThreadSafeContext *cx, void **returnAddrOut = NULL)
+GetTopIonJSScript(ThreadSafeContext *cx, void **returnAddrOut = nullptr)
 {
     return GetTopIonJSScript(cx->perThreadData, returnAddrOut);
 }

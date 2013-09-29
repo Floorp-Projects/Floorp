@@ -364,13 +364,13 @@ class CodeGeneratorShared : public LInstructionVisitor
         masm.storeCallResultValue(t);
     }
 
-    bool callVM(const VMFunction &f, LInstruction *ins, const Register *dynStack = NULL);
+    bool callVM(const VMFunction &f, LInstruction *ins, const Register *dynStack = nullptr);
 
     template <class ArgSeq, class StoreOutputTo>
     inline OutOfLineCode *oolCallVM(const VMFunction &fun, LInstruction *ins, const ArgSeq &args,
                                     const StoreOutputTo &out);
 
-    bool callVM(const VMFunctionsModal &f, LInstruction *ins, const Register *dynStack = NULL) {
+    bool callVM(const VMFunctionsModal &f, LInstruction *ins, const Register *dynStack = nullptr) {
         return callVM(f[gen->info().executionMode()], ins, dynStack);
     }
 
@@ -411,7 +411,7 @@ class CodeGeneratorShared : public LInstructionVisitor
     bool visitOutOfLineTruncateSlow(OutOfLineTruncateSlow *ool);
 
   public:
-    bool callTraceLIR(uint32_t blockIndex, LInstruction *lir, const char *bailoutName = NULL);
+    bool callTraceLIR(uint32_t blockIndex, LInstruction *lir, const char *bailoutName = nullptr);
 
     // Parallel aborts:
     //
@@ -445,8 +445,8 @@ class OutOfLineCode : public TempObject
   public:
     OutOfLineCode()
       : framePushed_(0),
-        pc_(NULL),
-        script_(NULL)
+        pc_(nullptr),
+        script_(nullptr)
     { }
 
     virtual bool generate(CodeGeneratorShared *codegen) = 0;
@@ -672,7 +672,7 @@ CodeGeneratorShared::oolCallVM(const VMFunction &fun, LInstruction *lir, const A
 {
     OutOfLineCode *ool = new OutOfLineCallVM<ArgSeq, StoreOutputTo>(lir, fun, args, out);
     if (!addOutOfLineCode(ool))
-        return NULL;
+        return nullptr;
     return ool;
 }
 

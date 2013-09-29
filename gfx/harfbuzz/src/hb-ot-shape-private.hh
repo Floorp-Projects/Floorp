@@ -30,8 +30,7 @@
 #include "hb-private.hh"
 
 #include "hb-ot-map-private.hh"
-
-
+#include "hb-ot-layout-private.hh"
 
 
 

@@ -169,7 +169,7 @@ public:
   typedef typename BlobTraits<ActorFlavor>::BaseType BaseType;
   typedef RemoteBlob<ActorFlavor> RemoteBlobType;
   typedef mozilla::ipc::IProtocolManager<
-                      mozilla::ipc::RPCChannel::RPCListener>::ActorDestroyReason
+                      mozilla::ipc::MessageListener>::ActorDestroyReason
           ActorDestroyReason;
 
 protected:

@@ -1218,7 +1218,7 @@ TypeCompartment::newTypeObject(ExclusiveContext *cx, const Class *clasp, Handle<
                                                            sizeof(TypeObject), gc::TenuredHeap);
     if (!object)
         return NULL;
-    new(object) TypeObject(clasp, proto, clasp == &JSFunction::class_, unknown);
+    new(object) TypeObject(clasp, proto, unknown);
 
     if (!cx->typeInferenceEnabled())
         object->flags |= OBJECT_FLAG_UNKNOWN_MASK;
@@ -2880,56 +2880,6 @@ CheckNewScriptProperties(JSContext *cx, HandleTypeObject type, HandleFunction fu
 /////////////////////////////////////////////////////////////////////
 
 void
-types::MarkIteratorUnknownSlow(JSContext *cx)
-{
-    /* Check whether we are actually at an ITER opcode. */
-
-    jsbytecode *pc;
-    RootedScript script(cx, cx->currentScript(&pc));
-    if (!script || !pc)
-        return;
-
-    if (JSOp(*pc) != JSOP_ITER)
-        return;
-
-    AutoEnterAnalysis enter(cx);
-
-    if (!script->ensureHasTypes(cx))
-        return;
-
-    /*
-     * This script is iterating over an actual Iterator or Generator object, or
-     * an object with a custom __iterator__ hook. In such cases 'for in' loops
-     * can produce values other than strings, and the types of the ITER opcodes
-     * in the script need to be updated. During analysis this is done with the
-     * forTypes in the analysis state, but we don't keep a pointer to this type
-     * set and need to scan the script to fix affected opcodes.
-     */
-
-    TypeResult *result = script->types->dynamicList;
-    while (result) {
-        if (result->offset == UINT32_MAX) {
-            /* Already know about custom iterators used in this script. */
-            JS_ASSERT(result->type.isUnknown());
-            return;
-        }
-        result = result->next;
-    }
-
-    InferSpew(ISpewOps, "externalType: customIterator #%u", script->id());
-
-    result = cx->new_<TypeResult>(UINT32_MAX, Type::UnknownType());
-    if (!result) {
-        cx->compartment()->types.setPendingNukeTypes(cx);
-        return;
-    }
-    result->next = script->types->dynamicList;
-    script->types->dynamicList = result;
-
-    AddPendingRecompile(cx, script);
-}
-
-void
 types::TypeMonitorCallSlow(JSContext *cx, JSObject *callee, const CallArgs &args,
                            bool constructing)
 {
@@ -2961,61 +2911,6 @@ IsAboutToBeFinalized(TypeObjectKey *key)
     bool isAboutToBeFinalized = IsCellAboutToBeFinalized(&tmp);
     JS_ASSERT(tmp == reinterpret_cast<gc::Cell *>(uintptr_t(key) & ~1));
     return isAboutToBeFinalized;
-}
-
-void
-types::TypeDynamicResult(JSContext *cx, JSScript *script, jsbytecode *pc, Type type)
-{
-    JS_ASSERT(cx->typeInferenceEnabled());
-
-    if (!script->types)
-        return;
-
-    AutoEnterAnalysis enter(cx);
-
-    /* Directly update associated type sets for applicable bytecodes. */
-    if (js_CodeSpec[*pc].format & JOF_TYPESET) {
-        if (!script->ensureHasBytecodeTypeMap(cx)) {
-            cx->compartment()->types.setPendingNukeTypes(cx);
-            return;
-        }
-        TypeSet *types = TypeScript::BytecodeTypes(script, pc);
-        if (!types->hasType(type)) {
-            InferSpew(ISpewOps, "externalType: monitorResult #%u:%05u: %s",
-                      script->id(), pc - script->code, TypeString(type));
-            types->addType(cx, type);
-        }
-        return;
-    }
-
-    /* Scan all intermediate types on the script to check for a dupe. */
-    TypeResult *result, **pstart = &script->types->dynamicList, **presult = pstart;
-    while (*presult) {
-        result = *presult;
-        if (result->offset == unsigned(pc - script->code) && result->type == type) {
-            if (presult != pstart) {
-                /* Move to the head of the list, maintain LRU order. */
-                *presult = result->next;
-                result->next = *pstart;
-                *pstart = result;
-            }
-            return;
-        }
-        presult = &result->next;
-    }
-
-    InferSpew(ISpewOps, "externalType: monitorResult #%u:%05u: %s",
-              script->id(), pc - script->code, TypeString(type));
-
-    result = cx->new_<TypeResult>(pc - script->code, type);
-    if (!result) {
-        cx->compartment()->types.setPendingNukeTypes(cx);
-        return;
-    }
-    result->next = script->types->dynamicList;
-    script->types->dynamicList = result;
-
-    AddPendingRecompile(cx, script);
 }
 
 void
@@ -3912,21 +3807,6 @@ TypeScript::Sweep(FreeOp *fop, JSScript *script)
     for (unsigned i = 0; i < num; i++)
         typeArray[i].sweep(compartment->zone());
 
-    TypeResult **presult = &script->types->dynamicList;
-    while (*presult) {
-        TypeResult *result = *presult;
-        Type type = result->type;
-
-        if (!type.isUnknown() && !type.isAnyObject() && type.isObject() &&
-            IsAboutToBeFinalized(type.objectKey()))
-        {
-            *presult = result->next;
-            fop->delete_(result);
-        } else {
-            presult = &result->next;
-        }
-    }
-
     /*
      * Freeze constraints on stack type sets need to be regenerated the next
      * time the script is analyzed.
@@ -3937,12 +3817,6 @@ TypeScript::Sweep(FreeOp *fop, JSScript *script)
 void
 TypeScript::destroy()
 {
-    while (dynamicList) {
-        TypeResult *next = dynamicList->next;
-        js_delete(dynamicList);
-        dynamicList = next;
-    }
-
     js_free(this);
 }
 
@@ -3995,12 +3869,6 @@ SizeOfScriptTypeInferenceData(JSScript *script, JS::TypeInferenceSizes *sizes,
     }
 
     sizes->typeScripts += mallocSizeOf(typeScript);
-
-    TypeResult *result = typeScript->dynamicList;
-    while (result) {
-        sizes->typeResults += mallocSizeOf(result);
-        result = result->next;
-    }
 }
 
 void

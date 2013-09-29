@@ -455,7 +455,7 @@ CodeGeneratorX86::visitLoadTypedArrayElementStatic(LLoadTypedArrayElementStatic 
     Register ptr = ToRegister(ins->ptr());
     const LDefinition *out = ins->output();
 
-    OutOfLineLoadTypedArrayOutOfBounds *ool = NULL;
+    OutOfLineLoadTypedArrayOutOfBounds *ool = nullptr;
     if (!mir->fallible()) {
         ool = new OutOfLineLoadTypedArrayOutOfBounds(ToAnyRegister(out));
         if (!addOutOfLineCode(ool))

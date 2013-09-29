@@ -64,8 +64,7 @@ CompositorChild::Create(Transport* aTransport, ProcessId aOtherProcess)
     NS_RUNTIMEABORT("Couldn't OpenProcessHandle() to parent process.");
     return false;
   }
-  if (!child->Open(aTransport, handle, XRE_GetIOMessageLoop(),
-                AsyncChannel::Child)) {
+  if (!child->Open(aTransport, handle, XRE_GetIOMessageLoop(), ipc::ChildSide)) {
     NS_RUNTIMEABORT("Couldn't Open() Compositor channel.");
     return false;
   }

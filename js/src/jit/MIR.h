@@ -102,7 +102,7 @@ class MUse : public TempObject, public InlineListNode<MUse>
   public:
     // Default constructor for use in vectors.
     MUse()
-      : producer_(NULL), consumer_(NULL), index_(0)
+      : producer_(nullptr), consumer_(nullptr), index_(0)
     { }
 
     static inline MUse *New(MDefinition *producer, MNode *consumer, uint32_t index) {
@@ -117,14 +117,14 @@ class MUse : public TempObject, public InlineListNode<MUse>
     }
 
     MDefinition *producer() const {
-        JS_ASSERT(producer_ != NULL);
+        JS_ASSERT(producer_ != nullptr);
         return producer_;
     }
     bool hasProducer() const {
-        return producer_ != NULL;
+        return producer_ != nullptr;
     }
     MNode *consumer() const {
-        JS_ASSERT(consumer_ != NULL);
+        JS_ASSERT(consumer_ != nullptr);
         return consumer_;
     }
     uint32_t index() const {
@@ -155,7 +155,7 @@ class MNode : public TempObject
     };
 
     MNode()
-      : block_(NULL)
+      : block_(nullptr)
     { }
 
     MNode(MBasicBlock *block)
@@ -181,7 +181,7 @@ class MNode : public TempObject
     // Instructions needing to hook into type analysis should return a
     // TypePolicy.
     virtual TypePolicy *typePolicy() {
-        return NULL;
+        return nullptr;
     }
 
     // Replaces an already-set operand during iteration over a use chain.
@@ -325,13 +325,13 @@ class MDefinition : public MNode
   public:
     MDefinition()
       : id_(0),
-        valueNumber_(NULL),
-        range_(NULL),
+        valueNumber_(nullptr),
+        range_(nullptr),
         resultType_(MIRType_None),
-        resultTypeSet_(NULL),
+        resultTypeSet_(nullptr),
         flags_(0),
-        dependency_(NULL),
-        trackedPc_(NULL)
+        dependency_(nullptr),
+        trackedPc_(nullptr)
     { }
 
     virtual Opcode op() const = 0;
@@ -410,10 +410,10 @@ class MDefinition : public MNode
         return valueNumber_;
     }
     void clearValueNumberData() {
-        valueNumber_ = NULL;
+        valueNumber_ = nullptr;
     }
     void setValueNumberData(ValueNumberData *vn) {
-        JS_ASSERT(valueNumber_ == NULL);
+        JS_ASSERT(valueNumber_ == nullptr);
         valueNumber_ = vn;
     }
 #define FLAG_ACCESSOR(flag) \
@@ -638,7 +638,7 @@ class MInstruction
 
   public:
     MInstruction()
-      : resumePoint_(NULL)
+      : resumePoint_(nullptr)
     { }
 
     virtual bool accept(MInstructionVisitor *visitor) = 0;
@@ -1761,7 +1761,7 @@ class MCall
   protected:
     // True if the call is for JSOP_NEW.
     bool construct_;
-    // Monomorphic cache of single target from TI, or NULL.
+    // Monomorphic cache of single target from TI, or nullptr.
     CompilerRootFunction target_;
     // Original value of argc from the bytecode.
     uint32_t numActualArgs_;
@@ -1858,7 +1858,7 @@ class MApplyArgs
     public MixPolicy<ObjectPolicy<0>, MixPolicy<IntPolicy<1>, BoxPolicy<2> > >
 {
   protected:
-    // Monomorphic cache of single target from TI, or NULL.
+    // Monomorphic cache of single target from TI, or nullptr.
     CompilerRootFunction target_;
 
     MApplyArgs(JSFunction *target, MDefinition *fun, MDefinition *argc, MDefinition *self)
@@ -2270,10 +2270,7 @@ class MUnbox : public MUnaryInstruction, public BoxInputsPolicy
     INSTRUCTION_HEADER(Unbox)
     static MUnbox *New(MDefinition *ins, MIRType type, Mode mode)
     {
-        BailoutKind kind = Bailout_Normal;
-        if (mode == TypeBarrier && ins->isEffectful())
-            kind = Bailout_TypeBarrier;
-        return new MUnbox(ins, type, mode, kind);
+        return new MUnbox(ins, type, mode, Bailout_Normal);
     }
 
     static MUnbox *New(MDefinition *ins, MIRType type, Mode mode, BailoutKind kind)
@@ -3618,7 +3615,7 @@ class MMathFunction
   public:
     INSTRUCTION_HEADER(MathFunction)
 
-    // A NULL cache means this function will neither access nor update the cache.
+    // A nullptr cache means this function will neither access nor update the cache.
     static MMathFunction *New(MDefinition *input, Function function, MathCache *cache) {
         return new MMathFunction(input, function, cache);
     }
@@ -4161,7 +4158,7 @@ class MPhi MOZ_FINAL : public MDefinition, public InlineForwardListNode<MPhi>
 
     // Appends a new input to the input vector. May call realloc().
     // Prefer reserveLength() and addInput() instead, where possible.
-    bool addInputSlow(MDefinition *ins, bool *ptypeChange = NULL);
+    bool addInputSlow(MDefinition *ins, bool *ptypeChange = nullptr);
 
     MDefinition *foldsTo(bool useValueNumbers);
 
@@ -4186,7 +4183,7 @@ class MPhi MOZ_FINAL : public MDefinition, public InlineForwardListNode<MPhi>
         MDefinition *first = getOperand(0);
         for (size_t i = 1, e = numOperands(); i < e; i++) {
             if (getOperand(i) != first && getOperand(i) != this)
-                return NULL;
+                return nullptr;
         }
         return first;
     }
@@ -6013,11 +6010,11 @@ class InlinePropertyTable : public TempObject
 
   public:
     InlinePropertyTable(jsbytecode *pc)
-      : pc_(pc), priorResumePoint_(NULL), entries_()
+      : pc_(pc), priorResumePoint_(nullptr), entries_()
     { }
 
     void setPriorResumePoint(MResumePoint *resumePoint) {
-        JS_ASSERT(priorResumePoint_ == NULL);
+        JS_ASSERT(priorResumePoint_ == nullptr);
         priorResumePoint_ = resumePoint;
     }
 
@@ -6061,8 +6058,8 @@ class CacheLocationList : public InlineConcatList<CacheLocationList>
 {
   public:
     CacheLocationList()
-      : pc(NULL),
-        script(NULL)
+      : pc(nullptr),
+        script(nullptr)
     { }
 
     jsbytecode *pc;
@@ -6087,7 +6084,7 @@ class MGetPropertyCache
         idempotent_(false),
         allowGetters_(false),
         location_(),
-        inlinePropertyTable_(NULL)
+        inlinePropertyTable_(nullptr)
     {
         setResultType(MIRType_Value);
 
@@ -6105,13 +6102,13 @@ class MGetPropertyCache
     }
 
     InlinePropertyTable *initInlinePropertyTable(jsbytecode *pc) {
-        JS_ASSERT(inlinePropertyTable_ == NULL);
+        JS_ASSERT(inlinePropertyTable_ == nullptr);
         inlinePropertyTable_ = new InlinePropertyTable(pc);
         return inlinePropertyTable_;
     }
 
     void clearInlinePropertyTable() {
-        inlinePropertyTable_ = NULL;
+        inlinePropertyTable_ = nullptr;
     }
 
     InlinePropertyTable *propTable() const {
@@ -6323,7 +6320,7 @@ class MDispatchInstruction
 
   public:
     MDispatchInstruction(MDefinition *input)
-      : map_(), fallback_(NULL)
+      : map_(), fallback_(nullptr)
     {
         setOperand(0, input);
     }
@@ -7921,9 +7918,7 @@ class MTypeBarrier
   : public MUnaryInstruction,
     public TypeBarrierPolicy
 {
-    BailoutKind bailoutKind_;
-
-    MTypeBarrier(MDefinition *def, types::TemporaryTypeSet *types, BailoutKind bailoutKind)
+    MTypeBarrier(MDefinition *def, types::TemporaryTypeSet *types)
       : MUnaryInstruction(def)
     {
         JS_ASSERT(!types->unknown());
@@ -7934,19 +7929,13 @@ class MTypeBarrier
 
         setGuard();
         setMovable();
-        bailoutKind_ = bailoutKind;
     }
 
   public:
     INSTRUCTION_HEADER(TypeBarrier)
 
     static MTypeBarrier *New(MDefinition *def, types::TemporaryTypeSet *types) {
-        BailoutKind kind = def->isEffectful() ? Bailout_TypeBarrier : Bailout_Normal;
-        return new MTypeBarrier(def, types, kind);
-    }
-    static MTypeBarrier *New(MDefinition *def, types::TemporaryTypeSet *types,
-                             BailoutKind kind) {
-        return new MTypeBarrier(def, types, kind);
+        return new MTypeBarrier(def, types);
     }
 
     void printOpcode(FILE *fp) const;
@@ -7957,9 +7946,6 @@ class MTypeBarrier
 
     bool congruentTo(MDefinition *def) const {
         return false;
-    }
-    BailoutKind bailoutKind() const {
-        return bailoutKind_;
     }
     AliasSet getAliasSet() const {
         return AliasSet::None();
@@ -8029,7 +8015,7 @@ class MPostWriteBarrier
     }
 
     MPostWriteBarrier(MDefinition *obj)
-      : MBinaryInstruction(obj, NULL), hasValue_(false)
+      : MBinaryInstruction(obj, nullptr), hasValue_(false)
     {
         setGuard();
     }
@@ -8240,7 +8226,7 @@ class MFunctionBoundary : public MNullaryInstruction
     MFunctionBoundary(JSScript *script, Type type, unsigned inlineLevel)
       : script_(script), type_(type), inlineLevel_(inlineLevel)
     {
-        JS_ASSERT_IF(type != Inline_Exit, script != NULL);
+        JS_ASSERT_IF(type != Inline_Exit, script != nullptr);
         JS_ASSERT_IF(type == Inline_Enter, inlineLevel != 0);
         setGuard();
     }
@@ -8365,7 +8351,7 @@ class MResumePoint : public MNode, public InlineForwardListNode<MResumePoint>
 
     void clearOperand(size_t index) {
         JS_ASSERT(index < stackDepth_);
-        operands_[index].set(NULL, this, index);
+        operands_[index].set(nullptr, this, index);
     }
 
     MUse *getUseFor(size_t index) {

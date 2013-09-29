@@ -46,7 +46,7 @@ static uint32_t PerfMode = 0;
 
 static bool PerfChecked = false;
 
-static FILE *PerfFilePtr = NULL;
+static FILE *PerfFilePtr = nullptr;
 
 #ifdef JS_THREADSAFE
 # include "jslock.h"
@@ -75,7 +75,7 @@ void
 js::jit::CheckPerf() {
     if (!PerfChecked) {
         const char *env = getenv("IONPERF");
-        if (env == NULL) {
+        if (env == nullptr) {
             PerfMode = PERF_MODE_NONE;
             fprintf(stderr, "Warning: JIT perf reporting requires IONPERF set to \"block\" or \"func\". ");
             fprintf(stderr, "Perf mapping will be deactivated.\n");

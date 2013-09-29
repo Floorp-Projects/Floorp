@@ -56,7 +56,7 @@ class BytecodeAnalysis
     BytecodeInfo *maybeInfo(jsbytecode *pc) {
         if (infos_[pc - script_->code].initialized)
             return &infos_[pc - script_->code];
-        return NULL;
+        return nullptr;
     }
 
     bool usesScopeChain() {

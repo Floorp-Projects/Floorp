@@ -1235,12 +1235,17 @@ nsListControlFrame::SetOptionsSelectedFromFrame(int32_t aStartIndex,
 {
   nsRefPtr<dom::HTMLSelectElement> selectElement =
     dom::HTMLSelectElement::FromContent(mContent);
-  return selectElement->SetOptionsSelectedByIndex(aStartIndex,
-                                                  aEndIndex,
-                                                  aValue,
-                                                  aClearAll,
-                                                  false,
-                                                  true);
+
+  uint32_t mask = dom::HTMLSelectElement::NOTIFY;
+  if (aValue) {
+    mask |= dom::HTMLSelectElement::IS_SELECTED;
+  }
+
+  if (aClearAll) {
+    mask |= dom::HTMLSelectElement::CLEAR_ALL;
+  }
+
+  return selectElement->SetOptionsSelectedByIndex(aStartIndex, aEndIndex, mask);
 }
 
 bool
@@ -1253,12 +1258,12 @@ nsListControlFrame::ToggleOptionSelectedFromFrame(int32_t aIndex)
   nsRefPtr<dom::HTMLSelectElement> selectElement =
     dom::HTMLSelectElement::FromContent(mContent);
 
-  return selectElement->SetOptionsSelectedByIndex(aIndex,
-                                                  aIndex,
-                                                  !option->Selected(),
-                                                  false,
-                                                  false,
-                                                  true);
+  uint32_t mask = dom::HTMLSelectElement::NOTIFY;
+  if (!option->Selected()) {
+    mask |= dom::HTMLSelectElement::IS_SELECTED;
+  }
+
+  return selectElement->SetOptionsSelectedByIndex(aIndex, aIndex, mask);
 }
 
 
