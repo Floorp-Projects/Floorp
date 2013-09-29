@@ -255,7 +255,7 @@ inline Result
 Nested(Input& input, uint8_t outerTag, uint8_t innerTag, Decoder decoder)
 {
   // XXX: This doesn't work (in VS2010):
-  // return Nested(input, outerTag, std::bind(Nested, _1, innerTag, decoder));
+  // return Nested(input, outerTag, bind(Nested, _1, innerTag, decoder));
 
   uint16_t length;
   if (ExpectTagAndGetLength(input, outerTag, length) != Success) {
@@ -286,7 +286,7 @@ Nested(Input& input, uint8_t outerTag, uint8_t innerTag, Decoder decoder)
 //
 // using a call like this:
 //
-//    rv = NestedOf(input, SEQEUENCE, SEQUENCE, std::bind(_1, Foo));
+//    rv = NestedOf(input, SEQEUENCE, SEQUENCE, bind(_1, Foo));
 //
 //    Result Foo(Input& input) {
 //    }
