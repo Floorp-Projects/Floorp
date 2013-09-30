@@ -195,33 +195,8 @@ GetLocationProperty(JSContext *cx, HandleObject obj, HandleId id, MutableHandleV
 #endif
 }
 
-#ifdef EDITLINE
-extern "C" {
-extern JS_EXPORT_API(char *)   readline(const char *prompt);
-extern JS_EXPORT_API(void)     add_history(char *line);
-}
-#endif
-
 static bool
 GetLine(JSContext *cx, char *bufp, FILE *file, const char *prompt) {
-#ifdef EDITLINE
-    /*
-     * Use readline only if file is stdin, because there's no way to specify
-     * another handle.  Are other filehandles interactive?
-     */
-    if (file == stdin) {
-        char *linep = readline(prompt);
-        if (!linep)
-            return false;
-        if (*linep)
-            add_history(linep);
-        strcpy(bufp, linep);
-        JS_free(cx, linep);
-        bufp += strlen(bufp);
-        *bufp++ = '\n';
-        *bufp = '\0';
-    } else
-#endif
     {
         char line[256] = { '\0' };
         fputs(prompt, gOutFile);
