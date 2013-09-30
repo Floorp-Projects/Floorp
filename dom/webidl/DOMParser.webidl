@@ -23,19 +23,19 @@ enum SupportedType {
  Constructor(Principal? prin, optional URI? documentURI = null,
              optional URI? baseURI = null)]
 interface DOMParser {
-  [Creator, Throws]
+  [NewObject, Throws]
   Document parseFromString(DOMString str, SupportedType type);
 
   // Mozilla-specific stuff
   // Throws if the passed-in length is greater than the actual sequence length
-  [Creator, Throws, ChromeOnly]
+  [NewObject, Throws, ChromeOnly]
   Document parseFromBuffer(sequence<octet> buf, unsigned long bufLen,
                            SupportedType type);
   // Throws if the passed-in length is greater than the actual typed array length
-  [Creator, Throws, ChromeOnly]
+  [NewObject, Throws, ChromeOnly]
   Document parseFromBuffer(Uint8Array buf, unsigned long bufLen,
                            SupportedType type);
-  [Creator, Throws, ChromeOnly]
+  [NewObject, Throws, ChromeOnly]
   Document parseFromStream(InputStream stream, DOMString? charset,
                            long contentLength, SupportedType type);
   [Throws, ChromeOnly]
