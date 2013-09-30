@@ -62,6 +62,20 @@ ex = false;
 e = new Event("hello");
 ok(e.type, "hello", "Wrong event type!");
 ok(!e.isTrusted, "Event shouldn't be trusted!");
+e.isTrusted = true;
+ok(!e.isTrusted, "Event shouldn't be trusted!");
+
+try {
+  e.__defineGetter__("isTrusted", function() { return true });
+} catch (exp) {
+  ex = true;
+}
+ok(ex, "Shouldn't be able to re-define the getter for isTrusted.");
+ex = false;
+ok(!e.isTrusted, "Event shouldn't be trusted!");
+
+ok(!("isTrusted" in Object.getPrototypeOf(e)))
+
 ok(!e.bubbles, "Event shouldn't bubble!");
 ok(!e.cancelable, "Event shouldn't be cancelable!");
 is(e.eventPhase, Event.NONE, "Wrong event phase");
@@ -175,6 +189,15 @@ ex = false;
 e = new BlobEvent("hello");
 ok(e.type, "hello", "Wrong event type!");
 ok(!e.isTrusted, "Event shouldn't be trusted!");
+try {
+  e.__defineGetter__("isTrusted", function() { return true });
+} catch (exp) {
+  ex = true;
+}
+ok(ex, "Shouldn't be able to re-define the getter for isTrusted.");
+ex = false;
+ok(!e.isTrusted, "BlobEvent shouldn't be trusted!");
+
 ok(!e.bubbles, "Event shouldn't bubble!");
 ok(!e.cancelable, "Event shouldn't be cancelable!");
 document.dispatchEvent(e);

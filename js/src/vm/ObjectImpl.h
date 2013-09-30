@@ -892,7 +892,7 @@ IsObjectValueInCompartment(js::Value v, JSCompartment *comp);
  * allocated array (the slots member). For an object with N fixed slots, shapes
  * with slots [0..N-1] are stored in the fixed slots, and the remainder are
  * stored in the dynamic array. If all properties fit in the fixed slots, the
- * 'slots' member is NULL.
+ * 'slots' member is nullptr.
  *
  * Elements are indexed via the 'elements' member. This member can point to
  * either the shared emptyObjectElements singleton, into the inline value array
@@ -1033,7 +1033,7 @@ class ObjectImpl : public gc::BarrieredCell<ObjectImpl>
 
     Shape *
     replaceWithNewEquivalentShape(ExclusiveContext *cx,
-                                  Shape *existingShape, Shape *newShape = NULL);
+                                  Shape *existingShape, Shape *newShape = nullptr);
 
     enum GenerateShape {
         GENERATE_NONE,
@@ -1064,7 +1064,7 @@ class ObjectImpl : public gc::BarrieredCell<ObjectImpl>
             if (start + length < fixed) {
                 *fixedStart = &fixedSlots()[start];
                 *fixedEnd = &fixedSlots()[start + length];
-                *slotsStart = *slotsEnd = NULL;
+                *slotsStart = *slotsEnd = nullptr;
             } else {
                 uint32_t localCopy = fixed - start;
                 *fixedStart = &fixedSlots()[start];
@@ -1073,7 +1073,7 @@ class ObjectImpl : public gc::BarrieredCell<ObjectImpl>
                 *slotsEnd = &slots[length - localCopy];
             }
         } else {
-            *fixedStart = *fixedEnd = NULL;
+            *fixedStart = *fixedEnd = nullptr;
             *slotsStart = &slots[start - fixed];
             *slotsEnd = &slots[start - fixed + length];
         }
@@ -1167,7 +1167,7 @@ class ObjectImpl : public gc::BarrieredCell<ObjectImpl>
         return shape_;
     }
 
-    bool generateOwnShape(ExclusiveContext *cx, js::Shape *newShape = NULL) {
+    bool generateOwnShape(ExclusiveContext *cx, js::Shape *newShape = nullptr) {
         return replaceWithNewEquivalentShape(cx, lastProperty(), newShape);
     }
 
@@ -1220,10 +1220,10 @@ class ObjectImpl : public gc::BarrieredCell<ObjectImpl>
     }
 
     bool nativeContains(ExclusiveContext *cx, jsid id) {
-        return nativeLookup(cx, id) != NULL;
+        return nativeLookup(cx, id) != nullptr;
     }
     bool nativeContains(ExclusiveContext *cx, PropertyName* name) {
-        return nativeLookup(cx, name) != NULL;
+        return nativeLookup(cx, name) != nullptr;
     }
     bool nativeContains(ExclusiveContext *cx, Shape* shape) {
         return nativeLookup(cx, shape->propid()) == shape;
@@ -1242,7 +1242,7 @@ class ObjectImpl : public gc::BarrieredCell<ObjectImpl>
     }
 
     bool nativeContainsPure(jsid id) {
-        return nativeLookupPure(id) != NULL;
+        return nativeLookupPure(id) != nullptr;
     }
     bool nativeContainsPure(PropertyName* name) {
         return nativeContainsPure(NameToId(name));

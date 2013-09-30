@@ -500,17 +500,6 @@ GetTypeCallerInitObject(JSContext *cx, JSProtoKey key)
 
 void MarkIteratorUnknownSlow(JSContext *cx);
 
-/*
- * When using a custom iterator within the initialization of a 'for in' loop,
- * mark the iterator values as unknown.
- */
-inline void
-MarkIteratorUnknown(JSContext *cx)
-{
-    if (cx->typeInferenceEnabled())
-        MarkIteratorUnknownSlow(cx);
-}
-
 void TypeMonitorCallSlow(JSContext *cx, JSObject *callee, const CallArgs &args,
                          bool constructing);
 
@@ -839,65 +828,10 @@ TypeScript::Monitor(JSContext *cx, JSScript *script, jsbytecode *pc, const js::V
 }
 
 /* static */ inline void
-TypeScript::MonitorOverflow(JSContext *cx, JSScript *script, jsbytecode *pc)
-{
-    if (cx->typeInferenceEnabled())
-        TypeDynamicResult(cx, script, pc, Type::DoubleType());
-}
-
-/* static */ inline void
-TypeScript::MonitorString(JSContext *cx, JSScript *script, jsbytecode *pc)
-{
-    if (cx->typeInferenceEnabled())
-        TypeDynamicResult(cx, script, pc, Type::StringType());
-}
-
-/* static */ inline void
-TypeScript::MonitorUnknown(JSContext *cx, JSScript *script, jsbytecode *pc)
-{
-    if (cx->typeInferenceEnabled())
-        TypeDynamicResult(cx, script, pc, Type::UnknownType());
-}
-
-/* static */ inline void
-TypeScript::GetPcScript(JSContext *cx, JSScript **script, jsbytecode **pc)
-{
-    *script = cx->currentScript(pc);
-}
-
-/* static */ inline void
-TypeScript::MonitorOverflow(JSContext *cx)
-{
-    RootedScript script(cx);
-    jsbytecode *pc;
-    GetPcScript(cx, script.address(), &pc);
-    MonitorOverflow(cx, script, pc);
-}
-
-/* static */ inline void
-TypeScript::MonitorString(JSContext *cx)
-{
-    RootedScript script(cx);
-    jsbytecode *pc;
-    GetPcScript(cx, script.address(), &pc);
-    MonitorString(cx, script, pc);
-}
-
-/* static */ inline void
-TypeScript::MonitorUnknown(JSContext *cx)
-{
-    RootedScript script(cx);
-    jsbytecode *pc;
-    GetPcScript(cx, script.address(), &pc);
-    MonitorUnknown(cx, script, pc);
-}
-
-/* static */ inline void
 TypeScript::Monitor(JSContext *cx, const js::Value &rval)
 {
-    RootedScript script(cx);
     jsbytecode *pc;
-    GetPcScript(cx, script.address(), &pc);
+    RootedScript script(cx, cx->currentScript(&pc));
     Monitor(cx, script, pc, rval);
 }
 
@@ -1429,7 +1363,7 @@ TypeSet::getObjectClass(unsigned i) const
 // TypeObject
 /////////////////////////////////////////////////////////////////////
 
-inline TypeObject::TypeObject(const Class *clasp, TaggedProto proto, bool function, bool unknown)
+inline TypeObject::TypeObject(const Class *clasp, TaggedProto proto, bool unknown)
 {
     mozilla::PodZero(this);
 
@@ -1439,8 +1373,6 @@ inline TypeObject::TypeObject(const Class *clasp, TaggedProto proto, bool functi
     this->clasp = clasp;
     this->proto = proto.raw();
 
-    if (function)
-        flags |= OBJECT_FLAG_FUNCTION;
     if (unknown)
         flags |= OBJECT_FLAG_UNKNOWN_MASK;
 
@@ -1576,20 +1508,6 @@ TypeNewScript::writeBarrierPre(TypeNewScript *newScript)
         MarkShape(zone->barrierTracer(), &newScript->shape, "write barrier");
     }
 #endif
-}
-
-inline bool
-IterationValuesMustBeStrings(JSScript *script)
-{
-    // Return true if no custom non-string-producing iterators have been used
-    // in a 'for in' loop within the script.
-    types::TypeResult *result = script->types->dynamicList;
-    while (result) {
-        if (result->offset == UINT32_MAX)
-            return false;
-        result = result->next;
-    }
-    return true;
 }
 
 } } /* namespace js::types */

@@ -10,6 +10,8 @@ function debug(msg) {
 
 Cu.import("resource://gre/modules/XPCOMUtils.jsm", this);
 
+XPCOMUtils.defineLazyModuleGetter(this, "DocShellCapabilities",
+  "resource:///modules/sessionstore/DocShellCapabilities.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "SessionHistory",
   "resource:///modules/sessionstore/SessionHistory.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "SessionStorage",
@@ -70,7 +72,8 @@ let MessageListener = {
 
   MESSAGES: [
     "SessionStore:collectSessionHistory",
-    "SessionStore:collectSessionStorage"
+    "SessionStore:collectSessionStorage",
+    "SessionStore:collectDocShellCapabilities"
   ],
 
   init: function () {
@@ -86,6 +89,10 @@ let MessageListener = {
       case "SessionStore:collectSessionStorage":
         let storage = SessionStorage.serialize(docShell);
         sendAsyncMessage(name, {id: id, data: storage});
+        break;
+      case "SessionStore:collectDocShellCapabilities":
+        let disallow = DocShellCapabilities.collect(docShell);
+        sendAsyncMessage(name, {id: id, data: disallow});
         break;
       default:
         debug("received unknown message '" + name + "'");

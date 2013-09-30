@@ -795,7 +795,7 @@ CodeGeneratorX86Shared::visitDivI(LDivI *ins)
     JS_ASSERT(output == eax);
 
     Label done;
-    ReturnZero *ool = NULL;
+    ReturnZero *ool = nullptr;
 
     // Handle divide by zero.
     if (mir->canBeDivideByZero()) {
@@ -952,8 +952,8 @@ CodeGeneratorX86Shared::visitModI(LModI *ins)
     }
 
     Label done;
-    ReturnZero *ool = NULL;
-    ModOverflowCheck *overflow = NULL;
+    ReturnZero *ool = nullptr;
+    ModOverflowCheck *overflow = nullptr;
 
     // Prevent divide by zero.
     if (ins->mir()->canBeDivideByZero()) {

@@ -30,6 +30,7 @@
 
 #include "mozilla/dom/BindingUtils.h"
 #include "mozilla/dom/Exceptions.h"
+#include "mozilla/dom/indexedDB/IndexedDatabaseManager.h"
 #include "mozilla/dom/TextDecoderBinding.h"
 #include "mozilla/dom/TextEncoderBinding.h"
 #include "mozilla/dom/DOMErrorBinding.h"
@@ -45,6 +46,8 @@ using namespace mozilla;
 using namespace mozilla::dom;
 using namespace xpc;
 using namespace JS;
+
+using mozilla::dom::indexedDB::IndexedDatabaseManager;
 
 NS_IMPL_ISUPPORTS5(nsXPConnect,
                    nsIXPConnect,
@@ -531,6 +534,12 @@ nsXPConnect::InitClassesWithNewWrappedGlobal(JSContext * aJSContext,
     if (!TextDecoderBinding::GetConstructorObject(aJSContext, global) ||
         !TextEncoderBinding::GetConstructorObject(aJSContext, global) ||
         !DOMErrorBinding::GetConstructorObject(aJSContext, global)) {
+        return UnexpectedFailure(NS_ERROR_FAILURE);
+    }
+
+    if (nsContentUtils::IsSystemPrincipal(aPrincipal) &&
+        !IndexedDatabaseManager::DefineIndexedDBLazyGetter(aJSContext,
+                                                           global)) {
         return UnexpectedFailure(NS_ERROR_FAILURE);
     }
 

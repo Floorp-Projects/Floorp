@@ -277,13 +277,13 @@ def _putInNamespaces(cxxthing, namespaces):
 
 def _sendPrefix(msgtype):
     """Prefix of the name of the C++ method that sends |msgtype|."""
-    if msgtype.isRpc():
+    if msgtype.isRpc() or msgtype.isUrgent():
         return 'Call'
     return 'Send'
 
 def _recvPrefix(msgtype):
     """Prefix of the name of the C++ method that handles |msgtype|."""
-    if msgtype.isRpc():
+    if msgtype.isRpc() or msgtype.isUrgent():
         return 'Answer'
     return 'Recv'
 
@@ -981,15 +981,7 @@ class MessageDecl(ipdl.ast.MessageDecl):
 
 ##--------------------------------------------------
 def _semsToChannelParts(sems):
-    if ipdl.ast.ASYNC == sems:   channel = 'AsyncChannel'
-    elif ipdl.ast.SYNC == sems:  channel = 'SyncChannel'
-    elif ipdl.ast.RPC == sems:   channel = 'RPCChannel'
-    return [ 'mozilla', 'ipc', channel ]
-
-def _semsToListener(sems):
-    return { ipdl.ast.ASYNC: 'AsyncListener',
-             ipdl.ast.SYNC: 'SyncListener',
-             ipdl.ast.RPC: 'RPCListener' }[sems]
+    return [ 'mozilla', 'ipc', 'MessageChannel' ]
 
 def _usesShmem(p):
     for md in p.messageDecls:
@@ -1032,11 +1024,8 @@ class Protocol(ipdl.ast.Protocol):
     def channelHeaderFile(self):
         return '/'.join(_semsToChannelParts(self.sendSems())) +'.h'
 
-    def listenerName(self):
-        return _semsToListener(self.sendSems())
-
     def fqListenerName(self):
-        return self.channelName() +'::'+ _semsToListener(self.sendSems())
+      return 'mozilla::ipc::MessageListener'
 
     def managerInterfaceType(self, ptr=0):
         return Type('mozilla::ipc::IProtocolManager',
@@ -1565,14 +1554,14 @@ class _GenerateProtocolCode(ipdl.ast.Visitor):
         typedefs = self.protocol.decl.cxxtypedefs
         for md in p.messageDecls:
             ns.addstmts([
-                _generateMessageClass(md, md.msgClass(), md.msgId(),
+                _generateMessageClass(md.msgClass(), md.msgId(),
                                       typedefs, md.prettyMsgName(p.name+'::'),
                                       md.decl.type.compress),
                 Whitespace.NL ])
             if md.hasReply():
                 ns.addstmts([
                     _generateMessageClass(
-                        md, md.replyClass(), md.replyId(),
+                        md.replyClass(), md.replyId(),
                         typedefs, md.prettyReplyName(p.name+'::'),
                         md.decl.type.compress),
                     Whitespace.NL ])
@@ -1764,7 +1753,7 @@ class _GenerateProtocolCode(ipdl.ast.Visitor):
 
 ##--------------------------------------------------
 
-def _generateMessageClass(md, clsname, msgid, typedefs, prettyName, compress):
+def _generateMessageClass(clsname, msgid, typedefs, prettyName, compress):
     cls = Class(name=clsname, inherits=[ Inherit(Type('IPC::Message')) ])
     cls.addstmt(Label.PRIVATE)
     cls.addstmts(typedefs)
@@ -1781,16 +1770,12 @@ def _generateMessageClass(md, clsname, msgid, typedefs, prettyName, compress):
         compression = ExprVar('COMPRESSION_ENABLED')
     else:
         compression = ExprVar('COMPRESSION_NONE')
-    if md.decl.type.isUrgent():
-        priority = 'PRIORITY_HIGH'
-    else:
-        priority = 'PRIORITY_NORMAL'
     ctor = ConstructorDefn(
         ConstructorDecl(clsname),
         memberinits=[ ExprMemberInit(ExprVar('IPC::Message'),
                                      [ ExprVar('MSG_ROUTING_NONE'),
                                        ExprVar('ID'),
-                                       ExprVar(priority),
+                                       ExprVar('IPC::Message::PRIORITY_NORMAL'),
                                        compression,
                                        ExprLiteral.String(prettyName) ]) ])
     cls.addstmts([ ctor, Whitespace.NL ])
@@ -2471,7 +2456,7 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
             Typedef(Type(self.protocol.channelName()), 'Channel'),
             Typedef(Type(self.protocol.fqListenerName()), 'ChannelListener'),
             Typedef(Type('base::ProcessHandle'), 'ProcessHandle'),
-            Typedef(Type('mozilla::ipc::AsyncChannel'), 'AsyncChannel'),
+            Typedef(Type('mozilla::ipc::MessageChannel'), 'MessageChannel'),
             Typedef(Type('mozilla::ipc::SharedMemory'), 'SharedMemory'),
             Typedef(Type('mozilla::ipc::Trigger'), 'Trigger')
         ]
@@ -2827,9 +2812,9 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
                              Param(Type('MessageLoop', ptr=True),
                                    aThreadVar.name,
                                    default=ExprLiteral.NULL),
-                             Param(Type('AsyncChannel::Side'),
+                             Param(Type('mozilla::ipc::Side'),
                                    sidevar.name,
-                                   default=ExprVar('Channel::Unknown')) ],
+                                   default=ExprVar('mozilla::ipc::UnknownSide')) ],
                     ret=Type.BOOL))
 
             openmeth.addstmts([
@@ -2841,20 +2826,20 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
                 openmeth,
                 Whitespace.NL ])
 
-            # Open(AsyncChannel *, MessageLoop *, Side)
+            # Open(MessageChannel *, MessageLoop *, Side)
             aChannel = ExprVar('aChannel')
             aMessageLoop = ExprVar('aMessageLoop')
             sidevar = ExprVar('aSide')
             openmeth = MethodDefn(
                 MethodDecl(
                     'Open',
-                    params=[ Decl(Type('AsyncChannel', ptr=True),
+                    params=[ Decl(Type('MessageChannel', ptr=True),
                                       aChannel.name),
                              Param(Type('MessageLoop', ptr=True),
                                    aMessageLoop.name),
-                             Param(Type('AsyncChannel::Side'),
+                             Param(Type('mozilla::ipc::Side'),
                                    sidevar.name,
-                                   default=ExprVar('Channel::Unknown')) ],
+                                   default=ExprVar('mozilla::ipc::UnknownSide')) ],
                     ret=Type.BOOL))
 
             openmeth.addstmts([
@@ -2979,6 +2964,13 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
             
             method = MethodDefn(MethodDecl(name, virtual=True,
                                            params=params, ret=_Result.Type()))
+
+            if not switch:
+              crash = StmtExpr(ExprCall(ExprVar('MOZ_ASSUME_UNREACHABLE'),
+                               args=[ExprLiteral.String('message protocol not supported')]))
+              method.addstmts([crash, StmtReturn(_Result.NotKnown)])
+              return method
+
             if dispatches:
                 routevar = ExprVar('__route')
                 routedecl = StmtDecl(
@@ -3032,18 +3024,20 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
                               hasReply=0, dispatches=dispatches),
             Whitespace.NL
         ])
-        if toplevel.talksSync():
-            self.cls.addstmts([
-                makeHandlerMethod('OnMessageReceived', self.syncSwitch,
-                                  hasReply=1, dispatches=dispatches),
-                Whitespace.NL
-            ])
-            if toplevel.talksRpc():
-                self.cls.addstmts([
-                    makeHandlerMethod('OnCallReceived', self.rpcSwitch,
-                                      hasReply=1, dispatches=dispatches),
-                    Whitespace.NL
-                ])
+        if not toplevel.talksRpc():
+          self.rpcSwitch = None
+          if not toplevel.talksSync():
+            self.syncSwitch = None
+        self.cls.addstmts([
+            makeHandlerMethod('OnMessageReceived', self.syncSwitch,
+                              hasReply=1, dispatches=dispatches),
+            Whitespace.NL
+        ])
+        self.cls.addstmts([
+            makeHandlerMethod('OnCallReceived', self.rpcSwitch,
+                              hasReply=1, dispatches=dispatches),
+            Whitespace.NL
+        ])
 
         destroysubtreevar = ExprVar('DestroySubtree')
         deallocsubtreevar = ExprVar('DeallocSubtree')
@@ -3085,7 +3079,7 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
             self.cls.addstmts([ ontimeout, Whitespace.NL ])
 
         # C++-stack-related methods
-        if ptype.isToplevel() and toplevel.talksRpc():
+        if ptype.isToplevel():
             # OnEnteredCxxStack()
             onentered = MethodDefn(MethodDecl('OnEnteredCxxStack'))
             onentered.addstmt(StmtReturn(ExprCall(p.enteredCxxStackVar())))
@@ -3470,7 +3464,7 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
             virtual=1))
         getchannel = MethodDefn(MethodDecl(
             p.getChannelMethod().name,
-            ret=Type('AsyncChannel', ptr=1),
+            ret=Type('MessageChannel', ptr=1),
             virtual=1))
 
         if p.decl.type.isToplevel():
@@ -4909,6 +4903,9 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
         if md.decl.type.isSync():
             stmts.append(StmtExpr(ExprCall(
                 ExprSelect(var, '->', 'set_sync'))))
+        elif md.decl.type.isUrgent():
+            stmts.append(StmtExpr(ExprCall(
+                ExprSelect(var, '->', 'set_urgent'))))
         elif md.decl.type.isRpc():
             stmts.append(StmtExpr(ExprCall(
                 ExprSelect(var, '->', 'set_rpc'))))

@@ -133,7 +133,8 @@ DeflateStringToUTF8Buffer(js::ThreadSafeContext *cx, const jschar *src, size_t s
 bufferTooSmall:
     *dstlenp = (origDstlen - dstlen);
     if (cx->isJSContext())
-        JS_ReportErrorNumber(cx->asJSContext(), js_GetErrorMessage, NULL, JSMSG_BUFFER_TOO_SMALL);
+        JS_ReportErrorNumber(cx->asJSContext(), js_GetErrorMessage, nullptr,
+                             JSMSG_BUFFER_TOO_SMALL);
     return false;
 }
 
@@ -199,14 +200,14 @@ ReportInvalidCharacter(JSContext *cx, uint32_t offset)
 {
     char buffer[10];
     JS_snprintf(buffer, 10, "%d", offset);
-    JS_ReportErrorFlagsAndNumber(cx, JSREPORT_ERROR, js_GetErrorMessage, NULL,
+    JS_ReportErrorFlagsAndNumber(cx, JSREPORT_ERROR, js_GetErrorMessage, nullptr,
                                  JSMSG_MALFORMED_UTF8_CHAR, buffer);
 }
 
 static void
 ReportBufferTooSmall(JSContext *cx, uint32_t dummy)
 {
-    JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_BUFFER_TOO_SMALL);
+    JS_ReportErrorNumber(cx, js_GetErrorMessage, nullptr, JSMSG_BUFFER_TOO_SMALL);
 }
 
 static void
@@ -214,7 +215,7 @@ ReportTooBigCharacter(JSContext *cx, uint32_t v)
 {
     char buffer[10];
     JS_snprintf(buffer, 10, "0x%x", v + 0x10000);
-    JS_ReportErrorFlagsAndNumber(cx, JSREPORT_ERROR, js_GetErrorMessage, NULL,
+    JS_ReportErrorFlagsAndNumber(cx, JSREPORT_ERROR, js_GetErrorMessage, nullptr,
                                  JSMSG_UTF8_CHAR_TOO_LARGE, buffer);
 }
 
@@ -338,7 +339,7 @@ InflateUTF8StringHelper(JSContext *cx, const UTF8Chars src, CountAction countAct
     *outlen = 0;
 
     bool isAscii;
-    if (!countAction(cx, src, /* dst = */ NULL, outlen, &isAscii))
+    if (!countAction(cx, src, /* dst = */ nullptr, outlen, &isAscii))
         return TwoByteCharsZ();
 
     jschar *dst = cx->pod_malloc<jschar>(*outlen + 1);  // +1 for NUL

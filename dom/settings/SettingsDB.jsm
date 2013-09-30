@@ -198,8 +198,8 @@ SettingsDB.prototype = {
     return aObject;
   },
 
-  init: function init(aGlobal) {
+  init: function init() {
     this.initDBHelper(SETTINGSDB_NAME, SETTINGSDB_VERSION,
-                      [SETTINGSSTORE_NAME], aGlobal);
+                      [SETTINGSSTORE_NAME]);
   }
 }

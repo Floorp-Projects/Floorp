@@ -199,7 +199,7 @@ struct arabic_fallback_plan_t
 
   hb_mask_t mask_array[ARABIC_NUM_FALLBACK_FEATURES];
   OT::SubstLookup *lookup_array[ARABIC_NUM_FALLBACK_FEATURES];
-  hb_set_digest_t digest_array[ARABIC_NUM_FALLBACK_FEATURES];
+  hb_ot_layout_lookup_accelerator_t accel_array[ARABIC_NUM_FALLBACK_FEATURES];
 };
 
 static const arabic_fallback_plan_t arabic_fallback_plan_nil = {};
@@ -214,12 +214,11 @@ arabic_fallback_plan_create (const hb_ot_shape_plan_t *plan,
 
   for (unsigned int i = 0; i < ARABIC_NUM_FALLBACK_FEATURES; i++)
   {
-    fallback_plan->digest_array[i].init ();
     fallback_plan->mask_array[i] = plan->map.get_1_mask (arabic_fallback_features[i]);
     if (fallback_plan->mask_array[i]) {
       fallback_plan->lookup_array[i] = arabic_fallback_synthesize_lookup (plan, font, i);
       if (fallback_plan->lookup_array[i])
-	fallback_plan->lookup_array[i]->add_coverage (&fallback_plan->digest_array[i]);
+	fallback_plan->accel_array[i].init (*fallback_plan->lookup_array[i]);
     }
   }
 
@@ -234,7 +233,10 @@ arabic_fallback_plan_destroy (arabic_fallback_plan_t *fallback_plan)
 
   for (unsigned int i = 0; i < ARABIC_NUM_FALLBACK_FEATURES; i++)
     if (fallback_plan->lookup_array[i])
+    {
+      fallback_plan->accel_array[i].fini (fallback_plan->lookup_array[i]);
       free (fallback_plan->lookup_array[i]);
+    }
 
   free (fallback_plan);
 }
@@ -244,10 +246,13 @@ arabic_fallback_plan_shape (arabic_fallback_plan_t *fallback_plan,
 			    hb_font_t *font,
 			    hb_buffer_t *buffer)
 {
+  OT::hb_apply_context_t c (0, font, buffer);
   for (unsigned int i = 0; i < ARABIC_NUM_FALLBACK_FEATURES; i++)
     if (fallback_plan->lookup_array[i]) {
-      OT::hb_apply_context_t c (0, font, buffer, fallback_plan->mask_array[i], true/*auto_zwj*/);
-      fallback_plan->lookup_array[i]->apply_string (&c, &fallback_plan->digest_array[i]);
+      c.set_lookup_mask (fallback_plan->mask_array[i]);
+      hb_ot_layout_substitute_lookup (&c,
+				      *fallback_plan->lookup_array[i],
+				      fallback_plan->accel_array[i]);
     }
 }
 

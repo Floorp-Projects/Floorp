@@ -182,18 +182,12 @@ SettingsServiceLock.prototype = {
 
 const SETTINGSSERVICE_CID        = Components.ID("{f656f0c0-f776-11e1-a21f-0800200c9a66}");
 
-let myGlobal = this;
-
 function SettingsService()
 {
   debug("settingsService Constructor");
   this._locks = new Queue();
-  if (!("indexedDB" in myGlobal)) {
-    let idbManager = Components.classes["@mozilla.org/dom/indexeddb/manager;1"].getService(Ci.nsIIndexedDatabaseManager);
-    idbManager.initWindowless(myGlobal);
-  }
   this._settingsDB = new SettingsDB();
-  this._settingsDB.init(myGlobal);
+  this._settingsDB.init();
 }
 
 SettingsService.prototype = {
@@ -210,8 +204,8 @@ SettingsService.prototype = {
     this._locks.enqueue(lock);
     this._settingsDB.ensureDB(
       function() { lock.createTransactionAndProcess(); },
-      function() { dump("SettingsService failed to open DB!\n"); },
-      myGlobal );
+      function() { dump("SettingsService failed to open DB!\n"); }
+    );
     this.nextTick(function() { this._open = false; }, lock);
     return lock;
   },

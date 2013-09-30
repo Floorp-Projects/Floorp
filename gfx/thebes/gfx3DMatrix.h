@@ -11,7 +11,7 @@
 #include <gfxPointH3D.h>
 #include <gfxQuad.h>
 
-class gfxMatrix;
+struct gfxMatrix;
 
 /**
  * This class represents a 3D transformation. The matrix is laid

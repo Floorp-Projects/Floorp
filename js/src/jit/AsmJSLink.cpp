@@ -33,7 +33,7 @@ static bool
 LinkFail(JSContext *cx, const char *str)
 {
     JS_ReportErrorFlagsAndNumber(cx, JSREPORT_WARNING, js_GetErrorMessage,
-                                 NULL, JSMSG_USE_ASM_LINK_FAIL, str);
+                                 nullptr, JSMSG_USE_ASM_LINK_FAIL, str);
     return false;
 }
 
@@ -138,7 +138,7 @@ ValidateMathBuiltin(JSContext *cx, AsmJSModule::Global &global, HandleValue glob
     if (!GetDataProperty(cx, v, field, &v))
         return false;
 
-    Native native = NULL;
+    Native native = nullptr;
     switch (global.mathBuiltin()) {
       case AsmJSMathBuiltin_sin: native = math_sin; break;
       case AsmJSMathBuiltin_cos: native = math_cos; break;
@@ -274,9 +274,9 @@ DynamicallyLinkModule(JSContext *cx, CallArgs args, AsmJSModule &module)
 AsmJSActivation::AsmJSActivation(JSContext *cx, AsmJSModule &module)
   : cx_(cx),
     module_(module),
-    errorRejoinSP_(NULL),
-    profiler_(NULL),
-    resumePC_(NULL)
+    errorRejoinSP_(nullptr),
+    profiler_(nullptr),
+    resumePC_(nullptr)
 {
     if (cx->runtime()->spsProfiler.enabled()) {
         // Use a profiler string that matches jsMatch regex in
@@ -366,7 +366,7 @@ CallAsmJS(JSContext *cx, unsigned argc, Value *vp)
         // Eagerly push an IonContext+JitActivation so that the optimized
         // asm.js-to-Ion FFI call path (which we want to be very fast) can
         // avoid doing so.
-        jit::IonContext ictx(cx, NULL);
+        jit::IonContext ictx(cx, nullptr);
         JitActivation jitActivation(cx, /* firstFrameIsConstructing = */ false, /* active */ false);
 
         // Call the per-exported-function trampoline created by GenerateEntry.
@@ -398,7 +398,7 @@ NewExportedFunction(JSContext *cx, const AsmJSModule::ExportedFunction &func,
                                   JSFunction::NATIVE_FUN, cx->global(), name,
                                   JSFunction::ExtendedFinalizeKind);
     if (!fun)
-        return NULL;
+        return nullptr;
 
     fun->setExtendedSlot(ASM_MODULE_SLOT, ObjectValue(*moduleObj));
     fun->setExtendedSlot(ASM_EXPORT_INDEX_SLOT, Int32Value(exportIndex));
@@ -417,7 +417,7 @@ HandleDynamicLinkFailure(JSContext *cx, CallArgs args, AsmJSModule &module, Hand
     if (!src)
         return false;
 
-    RootedFunction fun(cx, NewFunction(cx, NullPtr(), NULL, 0, JSFunction::INTERPRETED,
+    RootedFunction fun(cx, NewFunction(cx, NullPtr(), nullptr, 0, JSFunction::INTERPRETED,
                                        cx->global(), name, JSFunction::FinalizeKind,
                                        TenuredObject));
     if (!fun)
@@ -490,10 +490,10 @@ SendFunctionsToVTune(JSContext *cx, AsmJSModule &module)
         method.method_load_address = (void *)start;
         method.method_size = unsigned(end - start);
         method.line_number_size = 0;
-        method.line_number_table = NULL;
+        method.line_number_table = nullptr;
         method.class_id = 0;
-        method.class_file_name = NULL;
-        method.source_file_name = NULL;
+        method.class_file_name = nullptr;
+        method.source_file_name = nullptr;
 
         iJIT_NotifyEvent(iJVM_EVENT_TYPE_METHOD_LOAD_FINISHED, (void *)&method);
     }
@@ -594,20 +594,20 @@ CreateExportObject(JSContext *cx, HandleObject moduleObj)
     gc::AllocKind allocKind = gc::GetGCObjectKind(module.numExportedFunctions());
     RootedObject obj(cx, NewBuiltinClassInstance(cx, &JSObject::class_, allocKind));
     if (!obj)
-        return NULL;
+        return nullptr;
 
     for (unsigned i = 0; i < module.numExportedFunctions(); i++) {
         const AsmJSModule::ExportedFunction &func = module.exportedFunction(i);
 
         RootedFunction fun(cx, NewExportedFunction(cx, func, moduleObj, i));
         if (!fun)
-            return NULL;
+            return nullptr;
 
-        JS_ASSERT(func.maybeFieldName() != NULL);
+        JS_ASSERT(func.maybeFieldName() != nullptr);
         RootedId id(cx, NameToId(func.maybeFieldName()));
         RootedValue val(cx, ObjectValue(*fun));
-        if (!DefineNativeProperty(cx, obj, id, val, NULL, NULL, JSPROP_ENUMERATE, 0, 0))
-            return NULL;
+        if (!DefineNativeProperty(cx, obj, id, val, nullptr, nullptr, JSPROP_ENUMERATE, 0, 0))
+            return nullptr;
     }
 
     return obj;
@@ -659,7 +659,7 @@ js::NewAsmJSModuleFunction(ExclusiveContext *cx, JSFunction *origFun, HandleObje
                                         JSFunction::NATIVE_FUN, NullPtr(), name,
                                         JSFunction::ExtendedFinalizeKind, TenuredObject);
     if (!moduleFun)
-        return NULL;
+        return nullptr;
 
     moduleFun->setExtendedSlot(MODULE_FUN_SLOT, ObjectValue(*moduleObj));
     return moduleFun;
