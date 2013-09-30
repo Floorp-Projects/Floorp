@@ -15,8 +15,6 @@
         <vbox id="PanelUI-contents"/>
       </vbox>
 
-      <vbox id="PanelUI-mainView-spring"/>
-
       <footer id="PanelUI-footer">
         <!-- The parentNode is used so that the footer is presented as the anchor
              instead of just the button being the anchor. -->

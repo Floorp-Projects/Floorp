@@ -27,17 +27,9 @@
   -moz-box-flex: 1;
 }
 
-#PanelUI-mainView-spring {
-  flex: auto;
-}
-
 #PanelUI-mainView {
   display: flex;
   flex-direction: column;
-}
-
-.panel-viewstack[viewtype="main"] > .panel-mainview > #PanelUI-mainView > #PanelUI-mainView-spring {
-  display: none;
 }
 
 #app-extension-point-end > #PanelUI-menu-button {
@@ -106,6 +98,7 @@ panelview:not([mainview]) .toolbarbutton-text,
   width: @menuPanelWidth@;
   padding-left: 5px;
   padding-right: 5px;
+  flex: auto;
 }
 
 #edit-controls@inAnyPanel@ > toolbarbutton > .toolbarbutton-icon,
