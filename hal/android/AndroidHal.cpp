@@ -193,6 +193,7 @@ LockScreenOrientation(const ScreenOrientation& aOrientation)
     case eScreenOrientation_LandscapePrimary:
     case eScreenOrientation_LandscapeSecondary:
     case eScreenOrientation_LandscapePrimary | eScreenOrientation_LandscapeSecondary:
+    case eScreenOrientation_Default:
       bridge->LockScreenOrientation(aOrientation);
       return true;
     default:
