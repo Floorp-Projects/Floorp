@@ -46,11 +46,44 @@
 const Cu = Components.utils;
 const Cc = Components.classes;
 const Ci = Components.interfaces;
+Cu.import("resource://gre/modules/XPCOMUtils.jsm", this);
 Cu.import("resource://gre/modules/Services.jsm", this);
-Cu.import("resource://gre/modules/Promise.jsm", this);
+
+XPCOMUtils.defineLazyModuleGetter(this, "Promise",
+  "resource://gre/modules/Promise.jsm");
+XPCOMUtils.defineLazyServiceGetter(this, "gDebug",
+  "@mozilla.org/xpcom/debug;1", "nsIDebug");
+Object.defineProperty(this, "gCrashReporter", {
+  get: function() {
+    delete this.gCrashReporter;
+    try {
+      let reporter = Cc["@mozilla.org/xre/app-info;1"].
+            getService(Ci.nsICrashReporter);
+      return this.gCrashReporter = reporter;
+    } catch (ex) {
+      return this.gCrashReporter = null;
+    }
+  },
+  configurable: true
+});
 
 // Display timeout warnings after 10 seconds
 const DELAY_WARNING_MS = 10 * 1000;
+
+
+// Crash the process if shutdown is really too long
+// (allowing for sleep).
+const PREF_DELAY_CRASH_MS = "toolkit.asyncshutdown.crash_timeout";
+let DELAY_CRASH_MS = 60 * 1000; // One minute
+try {
+  DELAY_CRASH_MS = Services.prefs.getIntPref(PREF_DELAY_CRASH_MS);
+} catch (ex) {
+  // Ignore errors
+}
+Services.prefs.addObserver(PREF_DELAY_CRASH_MS, function() {
+  DELAY_CRASH_MS = Services.prefs.getIntPref(PREF_DELAY_CRASH_MS);
+}, false);
+
 
 /**
  * Display a warning.
@@ -59,14 +92,46 @@ const DELAY_WARNING_MS = 10 * 1000;
  * that the UX will not be available to display warnings on the
  * console. We therefore use dump() rather than Cu.reportError().
  */
-function warn(msg, error = null) {
-  dump("WARNING: " + msg + "\n");
+function log(msg, prefix = "", error = null) {
+  dump(prefix + msg + "\n");
   if (error) {
-    dump("WARNING: " + error + "\n");
+    dump(prefix + error + "\n");
     if (typeof error == "object" && "stack" in error) {
-      dump("WARNING: " + error.stack + "\n");
+      dump(prefix + error.stack + "\n");
     }
   }
+}
+function warn(msg, error = null) {
+  return log(msg, "WARNING: ", error);
+}
+function err(msg, error = null) {
+  return log(msg, "ERROR: ", error);
+}
+
+/**
+ * Countdown for a given duration, skipping beats if the computer is too busy,
+ * sleeping or otherwise unavailable.
+ *
+ * @param {number} delay An approximate delay to wait in milliseconds (rounded
+ * up to the closest second).
+ *
+ * @return Deferred
+ */
+function looseTimer(delay) {
+  let DELAY_BEAT = 1000;
+  let timer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
+  let beats = Math.ceil(delay / DELAY_BEAT);
+  let deferred = Promise.defer();
+  timer.initWithCallback(function() {
+    if (beats <= 0) {
+      deferred.resolve();
+    }
+    --beats;
+  }, DELAY_BEAT, Ci.nsITimer.TYPE_REPEATING_PRECISE_CAN_SKIP);
+  // Ensure that the timer is both canceled once we are done with it
+  // and not garbage-collected until then.
+  deferred.promise.then(() => timer.cancel(), () => timer.cancel());
+  return deferred;
 }
 
 this.EXPORTED_SYMBOLS = ["AsyncShutdown"];
@@ -202,7 +267,12 @@ Spinner.prototype = {
       return;
     }
 
+    // The promises for which we are waiting.
     let allPromises = [];
+
+    // Information to determine and report to the user which conditions
+    // are not satisfied yet.
+    let allMonitors = [];
 
     for (let {condition, name} of conditions) {
       // Gather all completion conditions
@@ -226,20 +296,25 @@ Spinner.prototype = {
         // If the promise takes too long to be resolved/rejected,
         // we need to notify the user.
         //
-        // Future versions may decide to crash Firefox rather than
-        // let it loop and suck battery power forever.
+        // If it takes way too long, we need to crash.
 
         let timer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
         timer.initWithCallback(function() {
           let msg = "A phase completion condition is" +
             " taking too long to complete." +
-            " Condition: " + name +
+            " Condition: " + monitor.name +
             " Phase: " + topic;
           warn(msg);
         }, DELAY_WARNING_MS, Ci.nsITimer.TYPE_ONE_SHOT);
 
+        let monitor = {
+          isFrozen: true,
+          name: name
+        };
         condition = condition.then(function onSuccess() {
-            timer.cancel();
+            timer.cancel(); // As a side-effect, this prevents |timer| from
+                            // being garbage-collected too early.
+            monitor.isFrozen = false;
           }, function onError(error) {
             timer.cancel();
             let msg = "A completion condition encountered an error" +
@@ -247,8 +322,9 @@ Spinner.prototype = {
                 " Condition: " + name +
                 " Phase: " + topic;
             warn(msg, error);
+            monitor.isFrozen = false;
         });
-
+        allMonitors.push(monitor);
         allPromises.push(condition);
 
       } catch (error) {
@@ -275,8 +351,52 @@ Spinner.prototype = {
 
     let satisfied = false; // |true| once we have satisfied all conditions
 
+    // If after DELAY_CRASH_MS (approximately one minute, adjusted to take
+    // into account sleep and otherwise busy computer) we have not finished
+    // this shutdown phase, we assume that the shutdown is somehow frozen,
+    // presumably deadlocked. At this stage, the only thing we can do to
+    // avoid leaving the user's computer in an unstable (and battery-sucking)
+    // situation is report the issue and crash.
+    let timeToCrash = looseTimer(DELAY_CRASH_MS);
+    timeToCrash.promise.then(
+      function onTimeout() {
+        // Report the problem as best as we can, then crash.
+        let frozen = [];
+        for (let {name, isFrozen} of allMonitors) {
+          if (isFrozen) {
+            frozen.push(name);
+          }
+        }
+
+        let msg = "At least one completion condition failed to complete" +
+              " within a reasonable amount of time. Causing a crash to" +
+              " ensure that we do not leave the user with an unresponsive" +
+              " process draining resources." +
+              " Conditions: " + frozen.join(", ") +
+              " Phase: " + topic;
+        err(msg);
+        if (gCrashReporter) {
+          let data = {
+            phase: topic,
+            conditions: frozen
+          };
+          gCrashReporter.annotateCrashReport("AsyncShutdownTimeout",
+            JSON.stringify(data));
+        } else {
+          warn("No crash reporter available");
+        }
+
+        let error = new Error();
+        gDebug.abort(error.fileName, error.lineNumber + 1);
+      },
+      function onSatisfied() {
+        // The promise has been rejected, which means that we have satisfied
+        // all completion conditions.
+      });
+
     promise = promise.then(function() {
       satisfied = true;
+      timeToCrash.reject();
     }/* No error is possible here*/);
 
     // Now, spin the event loop
