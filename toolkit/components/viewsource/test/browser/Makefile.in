@@ -2,12 +2,3 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-MOCHITEST_BROWSER_FILES   = \
-                browser_bug699356.js \
-                browser_bug713810.js \
-                browser_contextmenu.js \
-                browser_gotoline.js \
-                browser_viewsourceprefs.js \
-                browser_viewsourceprefs_nonhtml.js \
-                head.js \
-                $(NULL)

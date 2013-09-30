@@ -2,24 +2,3 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this file,
 # You can obtain one at http://mozilla.org/MPL/2.0/.
 
-MOCHITEST_CHROME_FILES = \
-    install_and_redirect_helper.xul \
-    cross_origin.html \
-    head.js \
-    test_bug_765063.xul \
-    test_bug_771294.xul \
-    test_cross_origin.xul \
-    test_install_app.xul \
-    test_list_api.xul \
-    test_install_errors.xul \
-    test_install_utf8.xul \
-    test_install_receipts.xul \
-    test_getNotInstalled.xul \
-    test_launch_paths.xul \
-    $(NULL)
-
-MOCHITEST_FILES = \
-    test_bug_779982.html \
-    file_bug_779982.js \
-    file_bug_779982.html \
-    $(NULL)

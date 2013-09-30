@@ -827,32 +827,52 @@ FinalizeCount(JSContext *cx, unsigned argc, jsval *vp)
 static bool
 DumpHeapComplete(JSContext *cx, unsigned argc, jsval *vp)
 {
-    const char *fileName = nullptr;
-    JSAutoByteString fileNameBytes;
-    if (argc > 0) {
-        Value v = JS_ARGV(cx, vp)[0];
+    CallArgs args = CallArgsFromVp(argc, vp);
+
+    DumpHeapNurseryBehaviour nurseryBehaviour = js::IgnoreNurseryObjects;
+    FILE *dumpFile = NULL;
+
+    unsigned i = 0;
+    if (argc > i) {
+        Value v = args[i];
         if (v.isString()) {
             JSString *str = v.toString();
+            bool same = false;
+            if (!JS_StringEqualsAscii(cx, str, "collectNurseryBeforeDump", &same))
+                return false;
+            if (same) {
+                nurseryBehaviour = js::CollectNurseryBeforeDump;
+                ++i;
+            }
+        }
+    }
+
+    if (argc > i) {
+        Value v = args[i];
+        if (v.isString()) {
+            JSString *str = v.toString();
+            JSAutoByteString fileNameBytes;
             if (!fileNameBytes.encodeLatin1(cx, str))
                 return false;
-            fileName = fileNameBytes.ptr();
+            const char *fileName = fileNameBytes.ptr();
+            dumpFile = fopen(fileName, "w");
+            if (!dumpFile) {
+                JS_ReportError(cx, "can't open %s", fileName);
+                return false;
+            }
+            ++i;
         }
     }
 
-    FILE *dumpFile;
-    if (!fileName) {
-        dumpFile = stdout;
-    } else {
-        dumpFile = fopen(fileName, "w");
-        if (!dumpFile) {
-            JS_ReportError(cx, "can't open %s", fileName);
-            return false;
-        }
+    if (i != argc) {
+        JS_ReportError(cx, "bad arguments passed to dumpHeapComplete");
+        return false;
     }
 
-    js::DumpHeapComplete(JS_GetRuntime(cx), dumpFile);
+    js::DumpHeapComplete(JS_GetRuntime(cx), dumpFile ? dumpFile : stdout, nurseryBehaviour);
 
-    fclose(dumpFile);
+    if (dumpFile)
+        fclose(dumpFile);
 
     JS_SET_RVAL(cx, vp, JSVAL_VOID);
     return true;
@@ -1184,8 +1204,10 @@ static const JSFunctionSpecWithHelp TestingFunctions[] = {
 "  If true, obj is a proxy of some sort"),
 
     JS_FN_HELP("dumpHeapComplete", DumpHeapComplete, 1, 0,
-"dumpHeapComplete([filename])",
-"  Dump reachable and unreachable objects to a file."),
+"dumpHeapComplete(['collectNurseryBeforeDump'], [filename])",
+"  Dump reachable and unreachable objects to the named file, or to stdout.  If\n"
+"  'collectNurseryBeforeDump' is specified, a minor GC is performed first,\n"
+"  otherwise objects in the nursery are ignored."),
 
     JS_FN_HELP("terminate", Terminate, 0, 0,
 "terminate()",

@@ -3996,7 +3996,6 @@ TypeZone::sweep(FreeOp *fop, bool releaseTypes)
         for (CellIterUnderGC i(zone(), FINALIZE_SCRIPT); !i.done(); i.next()) {
             JSScript *script = i.get<JSScript>();
             script->clearAnalysis();
-            script->clearPropertyReadTypes();
         }
     }
 

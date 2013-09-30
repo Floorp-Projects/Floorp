@@ -9,5 +9,5 @@ Vagrant::Config.run do |config|
   config.vm.share_folder("gecko", "/gecko", "../..")
   # Doxygen needs more than the default memory or it will swap and be
   # extremely slow.
-  config.vm.customize ["modifyvm", :id, "--memory", 1024]
+  config.vm.customize ["modifyvm", :id, "--memory", 2048]
 end

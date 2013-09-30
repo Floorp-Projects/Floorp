@@ -322,7 +322,7 @@ tests.push(function test_perfBigImage() {
 
 // the rest of the tests are for coverage of "real" favicons
 // exact color isn't terribly important, just make sure it's reasonable
-const filePrefix = getRootDirectory(gTestPath);
+const filePrefix = getRootDirectory(gTestPath) + "colorAnalyzer/";
 
 tests.push(function test_categoryDiscover() {
   frcTest(filePrefix + "category-discover.png", 0xB28D3A,

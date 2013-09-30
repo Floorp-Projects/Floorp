@@ -7,3 +7,6 @@
 MODULE = 'test_browser_shell'
 
 XPCSHELL_TESTS_MANIFESTS += ['unit/xpcshell.ini']
+
+BROWSER_CHROME_MANIFESTS += ['browser.ini']
+
