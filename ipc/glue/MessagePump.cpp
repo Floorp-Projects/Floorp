@@ -18,6 +18,10 @@
 #include "AndroidBridge.h"
 #endif
 
+#ifdef MOZ_NUWA_PROCESS
+#include "ipc/Nuwa.h"
+#endif
+
 using mozilla::ipc::DoWorkRunnable;
 using mozilla::ipc::MessagePump;
 using mozilla::ipc::MessagePumpForChildProcess;
@@ -96,7 +100,11 @@ MessagePump::Run(MessagePump::Delegate* aDelegate)
 
     did_work |= aDelegate->DoDelayedWork(&delayed_work_time_);
 
-    if (did_work && delayed_work_time_.is_null())
+if (did_work && delayed_work_time_.is_null()
+#ifdef MOZ_NUWA_PROCESS
+    && (!IsNuwaReady() || !IsNuwaProcess())
+#endif
+   )
       mDelayedWorkTimer->Cancel();
 
     if (!keep_running_)
@@ -116,7 +124,10 @@ MessagePump::Run(MessagePump::Delegate* aDelegate)
     NS_ProcessNextEvent(mThread, true);
   }
 
-  mDelayedWorkTimer->Cancel();
+#ifdef MOZ_NUWA_PROCESS
+  if (!IsNuwaReady() || !IsNuwaProcess())
+#endif
+    mDelayedWorkTimer->Cancel();
 
   keep_running_ = true;
 }
@@ -148,6 +159,11 @@ MessagePump::ScheduleWorkForNestedLoop()
 void
 MessagePump::ScheduleDelayedWork(const base::TimeTicks& aDelayedTime)
 {
+#ifdef MOZ_NUWA_PROCESS
+  if (IsNuwaReady() && IsNuwaProcess())
+    return;
+#endif
+
   if (!mDelayedWorkTimer) {
     mDelayedWorkTimer = do_CreateInstance(NS_TIMER_CONTRACTID);
     if (!mDelayedWorkTimer) {

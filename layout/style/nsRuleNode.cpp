@@ -6994,10 +6994,12 @@ nsRuleNode::ComputeContentData(void* aStartStruct,
               type = eStyleContentType_NoCloseQuote;  break;
             default:
               NS_ERROR("bad content value");
+              type = eStyleContentType_Uninitialized;
             }
             break;
           default:
             NS_ERROR("bad content type");
+            type = eStyleContentType_Uninitialized;
           }
           data.mType = type;
           if (type == eStyleContentType_Image) {

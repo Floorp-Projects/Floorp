@@ -231,12 +231,6 @@ _VISITED_REFTEST_FILES = \
 		$(topsrcdir)/layout/reftests/svg/as-image/svg-image-visited-2-helper.svg \
 		$(NULL)
 
-MOCHITEST_BROWSER_FILES = \
-		browser_bug453896.js \
-		bug453896_iframe.html \
-		media_queries_iframe.html \
-		$(NULL)
-
 include $(topsrcdir)/config/rules.mk
 
 DEFINES += -DMOZILLA_INTERNAL_API

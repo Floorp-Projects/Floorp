@@ -106,6 +106,12 @@ class Thread : PlatformThread::Delegate {
   // The thread ID.
   PlatformThreadId thread_id() const { return thread_id_; }
 
+  // Reset thread ID as current thread.
+  PlatformThreadId reset_thread_id() {
+      thread_id_ = PlatformThread::CurrentId();
+      return thread_id_;
+  }
+
   // Returns true if the thread has been started, and not yet stopped.
   // When a thread is running, the thread_id_ is non-zero.
   bool IsRunning() const { return thread_id_ != 0; }

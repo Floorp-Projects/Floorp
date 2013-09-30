@@ -92,7 +92,8 @@ MacroAssemblerARM::branchTruncateDouble(const FloatRegister &src, const Register
 // integer is written to the output register. Otherwise, a bailout is taken to
 // the given snapshot. This function overwrites the scratch float register.
 void
-MacroAssemblerARM::convertDoubleToInt32(const FloatRegister &src, const Register &dest, Label *fail, bool negativeZeroCheck)
+MacroAssemblerARM::convertDoubleToInt32(const FloatRegister &src, const Register &dest,
+                                        Label *fail, bool negativeZeroCheck)
 {
     // convert the floating point value to an integer, if it did not fit,
     //     then when we convert it *back* to  a float, it will have a
@@ -120,7 +121,8 @@ MacroAssemblerARM::convertDoubleToInt32(const FloatRegister &src, const Register
 // integer is written to the output register. Otherwise, a bailout is taken to
 // the given snapshot. This function overwrites the scratch float register.
 void
-MacroAssemblerARM::convertFloat32ToInt32(const FloatRegister &src, const Register &dest, Label *fail, bool negativeZeroCheck)
+MacroAssemblerARM::convertFloat32ToInt32(const FloatRegister &src, const Register &dest,
+                                         Label *fail, bool negativeZeroCheck)
 {
     // convert the floating point value to an integer, if it did not fit,
     //     then when we convert it *back* to  a float, it will have a
@@ -136,9 +138,9 @@ MacroAssemblerARM::convertFloat32ToInt32(const FloatRegister &src, const Registe
     if (negativeZeroCheck) {
         ma_cmp(dest, Imm32(0));
         // Test and bail for -0.0, when integer result is 0
-        // Move the top word of the double into the output reg, if it is non-zero,
-        // then the original value was -0.0
-        as_vxfer(dest, InvalidReg, src, FloatToCore, Assembler::Equal, 0);
+        // Move the float into the output reg, and if it is non-zero then
+        // the original value was -0.0
+        as_vxfer(dest, InvalidReg, VFPRegister(src).singleOverlay(), FloatToCore, Assembler::Equal, 0);
         ma_cmp(dest, Imm32(0x80000000), Assembler::Equal);
         ma_b(fail, Assembler::Equal);
     }

@@ -9,3 +9,6 @@ TEST_DIRS += [
     'src',
     'test/unit',
 ]
+
+MOCHITEST_MANIFESTS += ['mochitest.ini']
+

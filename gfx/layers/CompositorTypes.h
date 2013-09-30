@@ -48,7 +48,6 @@ const TextureFlags TEXTURE_COMPONENT_ALPHA    = 1 << 5;
 // (for example, with GL), a BGRA shader should be used.
 const TextureFlags TEXTURE_RB_SWAPPED         = 1 << 6;
 
-// A texture host that supports tiling
 const TextureFlags TEXTURE_FRONT              = 1 << 12;
 // A texture host on white for component alpha
 const TextureFlags TEXTURE_ON_WHITE           = 1 << 13;

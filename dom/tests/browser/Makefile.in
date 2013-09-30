@@ -2,26 +2,6 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-MOCHITEST_BROWSER_FILES := \
-  browser_focus_steal_from_chrome.js \
-  browser_focus_steal_from_chrome_during_mousedown.js \
-  browser_autofocus_background.js \
-  browser_ConsoleAPITests.js \
-  test-console-api.html \
-  browser_ConsoleStorageAPITests.js \
-  browser_ConsoleStoragePBTest_perwindowpb.js \
-  browser_autofocus_preference.js \
-  browser_bug396843.js \
-  browser_xhr_sandbox.js \
-  browser_geolocation_privatebrowsing_page.html \
-  browser_geolocation_privatebrowsing_perwindowpb.js \
-  browser_localStorage_privatestorageevent.js \
-  network_geolocation.sjs \
-  page_privatestorageevent.html \
-  browser_frame_elements.js \
-  browser_frame_elements.html
-  $(NULL)
-
 ifdef MOZ_B2G
 MOCHITEST_BROWSER_FILES += \
   browser_webapps_permissions.js \

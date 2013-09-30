@@ -13,12 +13,9 @@ function test() {
   registerCleanupFunction(function() {
     clearAllPluginPermissions();
     Services.prefs.clearUserPref("plugins.click_to_play");
-    let plugin = getTestPlugin();
-    plugin.enabledState = Ci.nsIPluginTag.STATE_ENABLED;
   });
   Services.prefs.setBoolPref("plugins.click_to_play", true);
-  let plugin = getTestPlugin();
-  plugin.enabledState = Ci.nsIPluginTag.STATE_CLICKTOPLAY;
+  setTestPluginEnabledState(Ci.nsIPluginTag.STATE_CLICKTOPLAY);
 
   gBrowser.selectedTab = gBrowser.addTab();
   gBrowser.selectedBrowser.addEventListener("PluginBindingAttached", handleEvent, true, true);

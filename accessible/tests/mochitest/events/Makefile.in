@@ -3,56 +3,6 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-MOCHITEST_A11Y_FILES =\
-		docload_wnd.html \
-		focus.html \
-		scroll.html \
-		test_aria_alert.html \
-		test_aria_menu.html \
-		test_aria_objattr.html \
-		test_aria_statechange.html \
-		test_attrs.html \
-		test_caretmove.html \
-		test_caretmove.xul \
-		test_coalescence.html \
-		test_contextmenu.html \
-		test_docload_aria.html \
-		test_docload.html \
-		test_docload.xul \
-		test_dragndrop.html \
-		test_flush.html \
-		test_focus_aria_activedescendant.html \
-		test_focus_browserui.xul \
-		test_focus_canvas.html \
-		test_focus_contextmenu.xul \
-		test_focus_controls.html \
-		test_focus_dialog.html \
-		test_focus_doc.html \
-		test_focus_general.html \
-		test_focus_general.xul \
-		test_focus_listcontrols.xul \
-		test_focus_menu.xul \
-		test_focus_name.html \
-		test_focus_selects.html \
-		test_focus_tabbox.xul \
-		test_focus_tree.xul \
-		test_fromUserInput.html \
-		test_label.xul \
-		test_menu.xul \
-		test_mutation.html \
-		test_mutation.xhtml \
-		test_scroll.xul \
-		test_selection_aria.html \
-		test_selection.html \
-		test_selection.xul \
-		test_statechange.html \
-		test_text_alg.html \
-		test_text.html \
-		test_textattrchange.html \
-		test_tree.xul \
-		test_valuechange.html \
-		$(NULL)
-
 # Disabled on Linux and Windows due to frequent failures - bug 695019, bug 890795
 ifeq (,$(filter Linux WINNT,$(OS_ARCH)))
 MOCHITEST_A11Y_FILES += \

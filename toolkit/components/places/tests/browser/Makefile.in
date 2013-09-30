@@ -3,29 +3,6 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-MOCHITEST_BROWSER_FILES = \
-	head.js \
-	browser_bug248970.js \
-	browser_bug399606.js \
-	browser_bug646422.js \
-	browser_bug680727.js \
-	browser_colorAnalyzer.js \
-	browser_favicon_privatebrowsing_perwindowpb.js \
-	browser_favicon_setAndFetchFaviconForPage.js \
-	browser_favicon_setAndFetchFaviconForPage_failures.js \
-	browser_notfound.js \
-	browser_redirect.js \
-	browser_visited_notfound.js \
-	browser_visituri.js \
-	browser_visituri_nohistory.js \
-	browser_visituri_privatebrowsing_perwindowpb.js \
-	browser_settitle.js \
-	colorAnalyzer/category-discover.png \
-	colorAnalyzer/dictionaryGeneric-16.png \
-	colorAnalyzer/extensionGeneric-16.png \
-	colorAnalyzer/localeGeneric.png \
-	$(NULL)
-
 # These are files that need to be loaded via the HTTP proxy server
 # Access them through http://example.com/
 MOCHITEST_FILES = \

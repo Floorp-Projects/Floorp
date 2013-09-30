@@ -2,16 +2,3 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-MOCHITEST_FILES := \
-  head.js \
-  test_success_without_recognition_service.html \
-  test_timeout.html \
-  test_recognition_service_error.html \
-  test_audio_capture_error.html \
-  test_abort.html \
-  test_call_start_from_end_handler.html \
-  test_preference_enable.html \
-  test_nested_eventloop.html \
-  hello.ogg \
-  silence.ogg \
-  $(NULL)

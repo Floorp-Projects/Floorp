@@ -1,4 +1,0 @@
-MOCHITEST_CHROME_FILES = \
-	test_constants.xul \
-	worker_constants.js \
-        $(NULL)
