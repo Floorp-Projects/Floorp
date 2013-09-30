@@ -820,6 +820,7 @@ static JSBool
 XPC_WN_Helper_DelProperty(JSContext *cx, HandleObject obj, HandleId id,
                           JSBool *succeeded)
 {
+    *succeeded = true;
     PRE_HELPER_STUB
     DelProperty(wrapper, cx, obj, id, &retval);
     POST_HELPER_STUB
