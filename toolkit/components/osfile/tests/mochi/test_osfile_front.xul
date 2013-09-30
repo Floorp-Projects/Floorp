@@ -22,16 +22,6 @@ let main = this;
 function test() {
   info("test_osfile_front.xul: Starting test");
 
-  // Test OS.Constants.Path
-
-  Components.classes["@mozilla.org/net/osfileconstantsservice;1"].
-    getService(Components.interfaces.nsIOSFileConstantsService).
-    init();
-  Components.utils.import("resource://gre/modules/Services.jsm");
-
-  is(OS.Constants.Path.tmpDir, Services.dirsvc.get("TmpD", Components.interfaces.nsIFile).path, "OS.Constants.Path.tmpDir is correct");
-  is(OS.Constants.Path.profileDir, Services.dirsvc.get("ProfD", Components.interfaces.nsIFile).path, "OS.Constants.Path.profileDir is correct");
-
   // Test the OS.File worker
 
   worker = new ChromeWorker("worker_test_osfile_front.js");

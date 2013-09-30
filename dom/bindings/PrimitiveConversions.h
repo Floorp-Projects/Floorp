@@ -189,10 +189,10 @@ struct PrimitiveConversionTraits_Limits {
 template<>
 struct PrimitiveConversionTraits_Limits<int64_t> {
   static inline int64_t min() {
-    return -(1LL << 53) + 1;
+    return -(1LL << 53);
   }
   static inline int64_t max() {
-    return (1LL << 53) - 1;
+    return (1LL << 53);
   }
 };
 
@@ -202,7 +202,7 @@ struct PrimitiveConversionTraits_Limits<uint64_t> {
     return 0;
   }
   static inline uint64_t max() {
-    return (1LL << 53) - 1;
+    return (1LL << 53);
   }
 };
 

@@ -5,14 +5,3 @@
 # Test disabled for too many intermittent failures (bug 874429)
 #		test_form_autocomplete.html \
 
-MOCHITEST_FILES = \
-		test_bug_511615.html \
-		test_bug_787624.html \
-		test_form_autocomplete_with_list.html \
-		test_form_submission.html \
-		test_form_submission_cap.html \
-		test_form_submission_cap2.html \
-		satchel_common.js \
-		subtst_form_submission_1.html \
-		subtst_privbrowsing.html \
-		$(NULL)

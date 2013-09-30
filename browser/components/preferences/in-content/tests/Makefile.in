@@ -2,19 +2,6 @@
 #  - License, v. 2.0. If a copy of the MPL was not distributed with this file,
 #  - You can obtain one at http://mozilla.org/MPL/2.0/.
 
-MOCHITEST_BROWSER_FILES := \
-    head.js \
-    browser_advanced_update.js \
-    browser_bug410900.js \
-    browser_bug731866.js \
-    browser_connection.js \
-    browser_privacypane_1.js \
-    browser_privacypane_3.js \
-    browser_privacypane_5.js \
-    browser_privacypane_8.js \
-    privacypane_tests_perwindow.js \
-    $(NULL)
-
 ifdef ENABLE_TESTS
 pp_mochitest_browser_files := \
     browser_privacypane_4.js \

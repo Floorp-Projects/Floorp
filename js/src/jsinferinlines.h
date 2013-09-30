@@ -1559,13 +1559,6 @@ JSScript::clearAnalysis()
     }
 }
 
-inline void
-JSScript::clearPropertyReadTypes()
-{
-    if (types && types->propertyReadTypes)
-        types->propertyReadTypes = NULL;
-}
-
 namespace js {
 
 template <>

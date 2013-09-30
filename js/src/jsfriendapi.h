@@ -255,12 +255,17 @@ GetCompartmentZone(JSCompartment *comp);
 typedef bool
 (* PreserveWrapperCallback)(JSContext *cx, JSObject *obj);
 
+typedef enum  {
+    CollectNurseryBeforeDump,
+    IgnoreNurseryObjects
+} DumpHeapNurseryBehaviour;
+
  /*
   * Dump the complete object graph of heap-allocated things.
   * fp is the file for the dump output.
   */
 extern JS_FRIEND_API(void)
-DumpHeapComplete(JSRuntime *rt, FILE *fp);
+DumpHeapComplete(JSRuntime *rt, FILE *fp, DumpHeapNurseryBehaviour nurseryBehaviour);
 
 #ifdef JS_OLD_GETTER_SETTER_METHODS
 JS_FRIEND_API(bool) obj_defineGetter(JSContext *cx, unsigned argc, JS::Value *vp);

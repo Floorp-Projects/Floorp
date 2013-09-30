@@ -3,85 +3,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-MOCHITEST_FILES = \
-  utils.js \
-  test_defaultValue.html \
-  test_getauthenticationinfo.html \
-  test_npobject_getters.html \
-  test_npruntime_npnevaluate.html \
-  test_npruntime_npninvoke.html \
-  test_npruntime_npninvokedefault.html \
-  test_npruntime_identifiers.html \
-  npruntime_identifiers_subpage.html \
-  loremipsum.txt \
-  loremipsum_file.txt \
-  loremipsum_nocache.txt \
-  loremipsum_nocache.txt^headers^ \
-  post.sjs \
-  pluginstream.js \
-  plugin_window.html \
-  test_painting.html \
-  test_pluginstream_err.html \
-  test_pluginstream_src.html \
-  test_pluginstream_src_dynamic.html \
-  test_pluginstream_geturl.html \
-  test_pluginstream_geturlnotify.html \
-  test_pluginstream_asfile.html \
-  test_pluginstream_asfileonly.html \
-  test_pluginstream_post.html \
-  test_pluginstream_poststream.html \
-  test_pluginstream_seek.html \
-  test_pluginstream_newstream.html \
-  test_pluginstream_seek_close.html \
-  test_fullpage.html \
-  loremipsum.xtest \
-  loremipsum.xtest^headers^ \
-  test_multipleinstanceobjects.html \
-  test_streamNotify.html \
-  test_instantiation.html \
-  test_cookies.html \
-  test_npn_timers.html \
-  test_npn_asynccall.html \
-  test_bug532208.html \
-  large-pic.jpg \
-  test_twostreams.html \
-  test_streamatclose.html \
-  neverending.sjs \
-  test_newstreamondestroy.html \
-  crashing_subpage.html \
-  test_GCrace.html \
-  test_propertyAndMethod.html \
-  test_bug539565-1.html \
-  test_bug539565-2.html \
-  test_bug771202.html \
-  file_bug771202.html \
-  test_bug777098.html \
-  test_bug813906.html \
-  test_bug784131.html \
-  test_bug854082.html \
-  test_bug863792.html \
-  file_bug863792.html \
-  test_enumerate.html \
-  test_npruntime_construct.html \
-  307-xo-redirect.sjs \
-  test_redirect_handling.html \
-  test_zero_opacity.html \
-  test_NPPVpluginWantsAllNetworkStreams.html \
-  test_npruntime_npnsetexception.html \
-  test_NPNVdocumentOrigin.html \
-  test_instance_re-parent.html \
-  test_instance_unparent1.html \
-  test_instance_unparent2.html \
-  test_instance_unparent3.html \
-  test_pluginstream_referer.html \
-  test_pluginstream_src_referer.html \
-  plugin-stream-referer.sjs \
-  test_src_url_change.html \
-  test_secondPlugin.html \
-  $(NULL)
-
 #  test_plugin_scroll_painting.html \ bug 596491
-
 ifeq ($(OS_ARCH),WINNT)
 MOCHITEST_FILES += \
   test_windowed_invalidate.html \
@@ -90,19 +12,6 @@ MOCHITEST_FILES += \
 # test_positioning.html \ disabled due to oddness, perhaps scrolling of the
 # mochitest window?
 endif
-
-MOCHITEST_CHROME_FILES = \
-  utils.js \
-  test_clear_site_data.html \
-  test_npruntime.xul   \
-  test_wmode.xul \
-  test_bug479979.xul \
-  test_bug751809.html \
-  test_refresh_navigator_plugins.html \
-  test_plugin_tag_clicktoplay.html \
-  privatemode_perwindowpb.xul \
-  test_privatemode_perwindowpb.xul \
-  $(NULL)
 
 ifneq ($(MOZ_WIDGET_TOOLKIT),cocoa)
 MOCHITEST_FILES += \

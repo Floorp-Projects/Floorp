@@ -637,19 +637,6 @@ MGoto::New(MBasicBlock *target)
     return new MGoto(target);
 }
 
-static void
-PrintBailoutKind(FILE *fp, BailoutKind bailoutKind)
-{
-    switch(bailoutKind) {
-      case Bailout_Normal: fprintf(fp, "(normal)"); break;
-      case Bailout_ArgumentCheck: fprintf(fp, "(args)"); break;
-      case Bailout_BoundsCheck: fprintf(fp, "(boundscheck)"); break;
-      case Bailout_ShapeGuard: fprintf(fp, "(shapeguard)"); break;
-      case Bailout_BaselineInfo: fprintf(fp, "(baseline info)"); break;
-      default: break;
-    }
-}
-
 void
 MUnbox::printOpcode(FILE *fp) const
 {
