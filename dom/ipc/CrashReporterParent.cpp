@@ -5,6 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 #include "CrashReporterParent.h"
 #include "mozilla/dom/ContentParent.h"
+#include "nsExceptionHandler.h"
 #include "nsXULAppAPI.h"
 
 #include <time.h>
