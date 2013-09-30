@@ -137,7 +137,6 @@ public:
   virtual void            PrepareWindowEffects() {}
   virtual void            CleanupWindowEffects() {}
   virtual void            PreRender(LayerManager* aManager) {}
-  virtual void            PostRender(LayerManager* aManager) {}
   virtual void            DrawWindowUnderlay(LayerManager* aManager, nsIntRect aRect) {}
   virtual void            DrawWindowOverlay(LayerManager* aManager, nsIntRect aRect) {}
   virtual mozilla::TemporaryRef<mozilla::gfx::DrawTarget> StartRemoteDrawing();
