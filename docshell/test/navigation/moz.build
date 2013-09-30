@@ -6,5 +6,3 @@
 
 MODULE = 'test_docshell'
 
-MOCHITEST_MANIFESTS += ['mochitest.ini']
-

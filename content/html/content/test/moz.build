@@ -13,6 +13,3 @@
 TEST_DIRS += ['bug649134']
 
 TEST_DIRS += ['forms']
-
-MOCHITEST_MANIFESTS += ['mochitest.ini']
-
