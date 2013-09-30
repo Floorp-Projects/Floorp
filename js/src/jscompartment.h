@@ -219,14 +219,13 @@ struct JSCompartment
      */
     bool                         globalWriteBarriered;
 
-  private:
-    void addSizeOfTypeInferenceData(mozilla::MallocSizeOf mallocSizeOf,
-                                    JS::TypeInferenceSizes *stats);
-
   public:
     void addSizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf,
+                                size_t *tiPendingArrays,
+                                size_t *tiAllocationSiteTables,
+                                size_t *tiArrayTypeTables,
+                                size_t *tiObjectTypeTables,
                                 size_t *compartmentObject,
-                                JS::TypeInferenceSizes *tiSizes,
                                 size_t *shapesCompartmentTables,
                                 size_t *crossCompartmentWrappers,
                                 size_t *regexpCompartment,

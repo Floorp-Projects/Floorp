@@ -853,8 +853,11 @@ JSCompartment::clearTraps(FreeOp *fop)
 
 void
 JSCompartment::addSizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf,
+                                      size_t *tiPendingArrays,
+                                      size_t *tiAllocationSiteTables,
+                                      size_t *tiArrayTypeTables,
+                                      size_t *tiObjectTypeTables,
                                       size_t *compartmentObject,
-                                      JS::TypeInferenceSizes *tiSizes,
                                       size_t *shapesCompartmentTables,
                                       size_t *crossCompartmentWrappersArg,
                                       size_t *regexpCompartment,
@@ -862,7 +865,8 @@ JSCompartment::addSizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf,
                                       size_t *baselineStubsOptimized)
 {
     *compartmentObject += mallocSizeOf(this);
-    addSizeOfTypeInferenceData(mallocSizeOf, tiSizes);
+    types.addSizeOfExcludingThis(mallocSizeOf, tiPendingArrays, tiAllocationSiteTables,
+                                 tiArrayTypeTables, tiObjectTypeTables);
     *shapesCompartmentTables += baseShapes.sizeOfExcludingThis(mallocSizeOf)
                               + initialShapes.sizeOfExcludingThis(mallocSizeOf)
                               + newTypeObjects.sizeOfExcludingThis(mallocSizeOf)
