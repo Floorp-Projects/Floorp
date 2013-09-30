@@ -78,6 +78,8 @@ class gcstats::StatisticsSerializer
     }
 
     void appendDecimal(const char *name, const char *units, double d) {
+        if (d < 0)
+            d = 0;
         if (asJSON_)
             appendNumber(name, "%d.%d", units, (int)d, (int)(d * 10.) % 10);
         else
