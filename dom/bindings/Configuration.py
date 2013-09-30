@@ -346,7 +346,7 @@ class Descriptor(DescriptorProvider):
                     iface = iface.parent
         self.operations = operations
 
-        if self.workers and desc.get('nativeOwnership', None) == 'worker':
+        if self.workers and desc.get('nativeOwnership', 'worker') == 'worker':
             self.nativeOwnership = "worker"
         else:
             self.nativeOwnership = desc.get('nativeOwnership', 'refcounted')
@@ -356,8 +356,6 @@ class Descriptor(DescriptorProvider):
                                 (self.interface.identifier.name, self.nativeOwnership))
         self.customTrace = desc.get('customTrace', self.workers)
         self.customFinalize = desc.get('customFinalize', self.workers)
-        if desc.get('wantsQI', None) != None:
-            self._wantsQI = desc.get('wantsQI', None)
         self.wrapperCache = (not self.interface.isCallback() and
                              (self.nativeOwnership == 'worker' or
                               (self.nativeOwnership != 'owned' and

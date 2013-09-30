@@ -6,16 +6,22 @@
 #ifndef mozilla_dom_workers_dombindinginlines_h__
 #define mozilla_dom_workers_dombindinginlines_h__
 
+#include "mozilla/dom/FileReaderSyncBinding.h"
 #include "mozilla/dom/JSSlots.h"
 #include "mozilla/dom/XMLHttpRequestBinding.h"
 #include "mozilla/dom/XMLHttpRequestUploadBinding.h"
+#include "mozilla/dom/WorkerLocationBinding.h"
+#include "mozilla/dom/WorkerNavigatorBinding.h"
 #include "mozilla/dom/URLBinding.h"
 #include "jsfriendapi.h"
 
 BEGIN_WORKERS_NAMESPACE
 
+class FileReaderSync;
 class XMLHttpRequest;
 class XMLHttpRequestUpload;
+class WorkerLocation;
+class WorkerNavigator;
 class URL;
 
 namespace {
@@ -45,8 +51,11 @@ struct WrapPrototypeTraits
     }                                                                          \
   };
 
+SPECIALIZE_PROTO_TRAITS(FileReaderSync)
 SPECIALIZE_PROTO_TRAITS(XMLHttpRequest)
 SPECIALIZE_PROTO_TRAITS(XMLHttpRequestUpload)
+SPECIALIZE_PROTO_TRAITS(WorkerLocation)
+SPECIALIZE_PROTO_TRAITS(WorkerNavigator)
 SPECIALIZE_PROTO_TRAITS(URL)
 
 #undef SPECIALIZE_PROTO_TRAITS
