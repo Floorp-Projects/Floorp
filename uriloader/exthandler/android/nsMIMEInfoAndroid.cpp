@@ -10,8 +10,6 @@
 #include "nsStringEnumerator.h"
 #include "nsNetUtil.h"
 
-using namespace mozilla::widget::android;
-
 NS_IMPL_ISUPPORTS2(nsMIMEInfoAndroid, nsIMIMEInfo, nsIHandlerInfo)
 
 NS_IMETHODIMP
@@ -31,7 +29,8 @@ nsMIMEInfoAndroid::LoadUriInternal(nsIURI * aURI)
   aURI->GetScheme(uriScheme);
 
   if (mozilla::AndroidBridge::Bridge())
-    return GeckoAppShell::OpenUriExternal(NS_ConvertUTF8toUTF16(uriSpec), (mType.Equals(uriScheme) || mType.Equals(uriSpec)) ? EmptyString() : NS_ConvertUTF8toUTF16(mType)) ? NS_OK : NS_ERROR_FAILURE;
+    return mozilla::AndroidBridge::Bridge()->
+      OpenUriExternal(NS_ConvertUTF8toUTF16(uriSpec), (mType.Equals(uriScheme) || mType.Equals(uriSpec)) ? EmptyString() : NS_ConvertUTF8toUTF16(mType)) ? NS_OK : NS_ERROR_FAILURE;
 
   return NS_ERROR_FAILURE;
 }

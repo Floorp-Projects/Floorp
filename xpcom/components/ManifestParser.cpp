@@ -472,7 +472,7 @@ ParseManifest(NSLocationType type, FileLocation &file, char* buf, bool aChromeOn
   bool isTablet = false;
   if (mozilla::AndroidBridge::Bridge()) {
     mozilla::AndroidBridge::Bridge()->GetStaticStringField("android/os/Build$VERSION", "RELEASE", osVersion);
-    isTablet = mozilla::widget::android::GeckoAppShell::IsTablet();
+    isTablet = mozilla::AndroidBridge::Bridge()->IsTablet();
   }
 #endif
 
