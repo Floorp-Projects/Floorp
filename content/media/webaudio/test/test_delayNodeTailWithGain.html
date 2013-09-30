@@ -1,0 +1,72 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test tail time lifetime of DelayNode indirectly connected to source</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="webaudio.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+SimpleTest.waitForExplicitFinish();
+
+const signalLength = 130;
+const bufferSize = 1024;
+// Delay should be long enough to allow CC to run
+const delayBufferCount = 50;
+const delayLength = delayBufferCount * bufferSize + 700;
+
+var count = 0;
+
+function applySignal(buffer, offset) {
+  for (var i = 0; i < signalLength; ++i) {
+    buffer.getChannelData(0)[offset + i] = Math.cos(Math.PI * i / signalLength);
+  }
+}
+
+function onAudioProcess(e) {
+  switch(count) {
+  case 5:
+    SpecialPowers.forceGC();
+    SpecialPowers.forceCC();
+    break;
+  case delayBufferCount:
+    var offset = delayLength - count * bufferSize;
+    var ctx = e.target.context;
+    var expected = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
+    applySignal(expected, offset);
+    compareBuffers(e.inputBuffer.getChannelData(0), expected.getChannelData(0));
+    SimpleTest.finish();
+  }
+  count++;
+}
+
+function startTest() {
+  var ctx = new AudioContext();
+  var processor = ctx.createScriptProcessor(bufferSize, 1, 0);
+  processor.onaudioprocess = onAudioProcess;
+
+  var delayDuration = delayLength / ctx.sampleRate;
+  var delay = ctx.createDelay(delayDuration);
+  delay.delayTime.value = delayDuration;
+  delay.connect(processor);
+
+  var gain = ctx.createGain();
+  gain.connect(delay);
+
+  // Short signal that finishes before garbage collection
+  var buffer = ctx.createBuffer(1, signalLength, ctx.sampleRate);
+  applySignal(buffer, 0);
+  var source = ctx.createBufferSource();
+  source.buffer = buffer;
+  source.start();
+  source.connect(gain);
+};
+
+startTest();
+</script>
+</pre>
+</body>
+</html>
