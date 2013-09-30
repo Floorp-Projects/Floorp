@@ -4,6 +4,3 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 
-MOCHITEST_CHROME_FILES   = \
-                test_428653.xul \
-                $(NULL)
