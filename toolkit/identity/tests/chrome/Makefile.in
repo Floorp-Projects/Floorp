@@ -2,14 +2,3 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this file,
 # You can obtain one at http://mozilla.org/MPL/2.0/.
 
-MOCHITEST_CHROME_FILES = \
-		sandbox_content.html \
-		sandbox_content_alert.html \
-		sandbox_content_framed.html \
-		sandbox_content_perms.html \
-		sandbox_content_popup.html \
-		sandbox_content_redirect.html \
-		sandbox_content_redirect.html^headers^ \
-		sandbox_content.sjs \
-		test_sandbox.xul \
-		$(NULL)

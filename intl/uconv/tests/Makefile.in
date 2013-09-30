@@ -3,13 +3,3 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-MOCHITEST_FILES =	\
-		test_bug335816.html \
-		test_bug843434.html \
-		test_long_doc.html \
-		test_singlebyte_overconsumption.html \
-		test_unicode_noncharacterescapes.html \
-		test_unicode_noncharacters_gb18030.html \
-		test_unicode_noncharacters_utf8.html \
-		test_utf8_overconsumption.html \
-		$(NULL)

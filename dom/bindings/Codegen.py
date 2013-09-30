@@ -6151,18 +6151,24 @@ def getUnionTypeTemplateVars(unionType, type, descriptorProvider,
                              body=body)
 
     else:
+        # Important: we need to not have our declName involve
+        # maybe-GCing operations.
         jsConversion = string.Template(conversionInfo.template).substitute(
             {
                 "val": "value",
                 "mutableVal": "pvalue",
-                "declName": "SetAs" + name + "(%s)" % ctorArgs,
+                "declName": "memberSlot",
                 "holderName": "m" + name + "Holder",
                 }
             )
-        jsConversion = CGWrapper(CGGeneric(jsConversion),
-                                 pre="tryNext = false;\n",
-                                 post="\n"
-                                      "return true;")
+        jsConversion = CGWrapper(CGIndenter(CGGeneric(jsConversion)),
+                                 pre=("tryNext = false;\n"
+                                      "{ // scope for memberSlot\n"
+                                      "  %s& memberSlot = SetAs%s(%s);\n"
+                                      % (structType, name, ctorArgs)),
+                                 post=("\n"
+                                       "}\n"
+                                      "return true;"))
         setter = ClassMethod("TrySetTo" + name, "bool",
                               [Argument("JSContext*", "cx"),
                                Argument("JS::Handle<JS::Value>", "value"),
