@@ -236,18 +236,6 @@ AudioNodeStream::SetChannelMixingParametersImpl(uint32_t aNumberOfChannels,
   mChannelInterpretation = aChannelInterpretation;
 }
 
-bool
-AudioNodeStream::AllInputsFinished() const
-{
-  uint32_t inputCount = mInputs.Length();
-  for (uint32_t i = 0; i < inputCount; ++i) {
-    if (!mInputs[i]->GetSource()->IsFinishedOnGraphThread()) {
-      return false;
-    }
-  }
-  return !!inputCount;
-}
-
 uint32_t
 AudioNodeStream::ComputeFinalOuputChannelCount(uint32_t aInputChannelCount)
 {
