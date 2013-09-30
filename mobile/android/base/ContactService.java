@@ -513,7 +513,7 @@ public class ContactService implements GeckoEventListener {
         String anniversary = null;
         String sex = null;
         String genderIdentity = null;
-        String key = null;
+        JSONArray key = new JSONArray();
 
         // Get all the data columns
         final String[] columnsToGet = getAllColumns();
@@ -614,7 +614,7 @@ public class ContactService implements GeckoEventListener {
                     genderIdentity = cursor.getString(cursor.getColumnIndex(CUSTOM_DATA_COLUMN));
 
                 } else if (MIMETYPE_KEY.equals(mimeType)) {
-                    key = cursor.getString(cursor.getColumnIndex(CUSTOM_DATA_COLUMN));
+                    key.put(cursor.getString(cursor.getColumnIndex(CUSTOM_DATA_COLUMN)));
                 }
             } catch (JSONException e) {
                 throw new IllegalArgumentException(e);
@@ -640,12 +640,12 @@ public class ContactService implements GeckoEventListener {
             contactProperties.put("url", urls);
             contactProperties.put("impp", impps);
             contactProperties.put("category", categories);
+            contactProperties.put("key", key);
 
             putPossibleNullValueInJSONObject("bday", bday, contactProperties);
             putPossibleNullValueInJSONObject("anniversary", anniversary, contactProperties);
             putPossibleNullValueInJSONObject("sex", sex, contactProperties);
             putPossibleNullValueInJSONObject("genderIdentity", genderIdentity, contactProperties);
-            putPossibleNullValueInJSONObject("key", key, contactProperties);
 
             // Add the raw contact ID and the properties to the contact
             contact.put("id", String.valueOf(rawContactId));
