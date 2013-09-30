@@ -2,17 +2,6 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-MOCHITEST_CHROME_FILES = \
-    test_bug535806.xul \
-    bug535806-css.css \
-    bug535806-html.html \
-    bug535806-xul.xul \
-    test_hover.html \
-    test_moz_document_rules.html \
-    hover_helper.html \
-    test_additional_sheets.html \
-    $(NULL)
-
 MOCHITEST_FILES = \
     moz_document_helper.html \
     additional_sheets_helper.html \

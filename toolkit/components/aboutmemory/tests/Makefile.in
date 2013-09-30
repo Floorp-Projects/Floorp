@@ -3,18 +3,6 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-MOCHITEST_CHROME_FILES	= \
-		memory-reports-good.json \
-		memory-reports-bad.json \
-		memory-reports-diff1.json \
-		memory-reports-diff2.json \
-		test_aboutmemory.xul \
-		test_aboutmemory2.xul \
-		test_aboutmemory3.xul \
-		test_aboutmemory4.xul \
-		test_sqliteMultiReporter.xul \
-		$(NULL)
-
 ifndef MOZ_ASAN
 MOCHITEST_CHROME_FILES += \
   remote.xul \
