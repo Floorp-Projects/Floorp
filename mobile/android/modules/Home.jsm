@@ -101,6 +101,10 @@ let HomeBanner = {
     if (Object.keys(this._messages).length == 1) {
       Services.obs.addObserver(this, "HomeBanner:Get", false);
       Services.obs.addObserver(this, "HomeBanner:Click", false);
+
+      // Send a message to Java, in case there's an active HomeBanner
+      // waiting for a response.
+      this._handleGet();
     }
 
     return message.id;
