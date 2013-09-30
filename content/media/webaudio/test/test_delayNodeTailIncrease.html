@@ -1,0 +1,71 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test increasing delay of DelayNode after input finishes</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="webaudio.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+SimpleTest.waitForExplicitFinish();
+
+const signalLength = 100;
+const bufferSize = 1024;
+// Delay should be long enough to allow CC to run
+const delayBufferCount = 50;
+const delayLength = delayBufferCount * bufferSize + 700;
+
+var count = 0;
+
+function applySignal(buffer, offset) {
+  for (var i = 0; i < signalLength; ++i) {
+    buffer.getChannelData(0)[offset + i] = Math.cos(Math.PI * i / signalLength);
+  }
+}
+
+function onAudioProcess(e) {
+  switch(count) {
+  case 5:
+    SpecialPowers.forceGC();
+    SpecialPowers.forceCC();
+    break;
+  case delayBufferCount:
+    var offset = delayLength - count * bufferSize;
+    var ctx = e.target.context;
+    var expected = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
+    applySignal(expected, offset);
+    compareBuffers(e.inputBuffer.getChannelData(0), expected.getChannelData(0));
+    SimpleTest.finish();
+  }
+  count++;
+}
+
+function startTest() {
+  var ctx = new AudioContext();
+  var processor = ctx.createScriptProcessor(bufferSize, 1, 0);
+  processor.onaudioprocess = onAudioProcess;
+
+  // Switch on delay at a time in the future.
+  var delayDuration = delayLength / ctx.sampleRate;
+  var delayStartTime = (delayLength - bufferSize) / ctx.sampleRate;
+  var delay = ctx.createDelay(delayDuration);
+  delay.delayTime.setValueAtTime(delayDuration, delayStartTime);
+  delay.connect(processor);
+
+  // Short signal that finishes before switching to long delay
+  var buffer = ctx.createBuffer(1, signalLength, ctx.sampleRate);
+  applySignal(buffer, 0);
+  var source = ctx.createBufferSource();
+  source.buffer = buffer;
+  source.start();
+  source.connect(delay);
+};
+
+startTest();
+</script>
+</pre>
+</body>
+</html>
