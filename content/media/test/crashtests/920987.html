@@ -1,0 +1,6 @@
+<script>
+var ctx = new AudioContext();
+var buffer = ctx.createBuffer(1, 1000, ctx.sampleRate);
+var array = new Float32Array(900);
+buffer.copyToChannel(array, 0, 0xfffffff8);
+</script>
