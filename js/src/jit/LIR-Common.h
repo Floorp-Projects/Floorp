@@ -5497,14 +5497,16 @@ class LMonitorTypes : public LInstructionHelper<0, BOX_PIECES, 1>
 };
 
 // Generational write barrier used when writing an object to another object.
-class LPostWriteBarrierO : public LInstructionHelper<0, 2, 0>
+class LPostWriteBarrierO : public LInstructionHelper<0, 2, 1>
 {
   public:
     LIR_HEADER(PostWriteBarrierO)
 
-    LPostWriteBarrierO(const LAllocation &obj, const LAllocation &value) {
+    LPostWriteBarrierO(const LAllocation &obj, const LAllocation &value,
+                       const LDefinition &temp) {
         setOperand(0, obj);
         setOperand(1, value);
+        setTemp(0, temp);
     }
 
     const MPostWriteBarrier *mir() const {
@@ -5515,6 +5517,9 @@ class LPostWriteBarrierO : public LInstructionHelper<0, 2, 0>
     }
     const LAllocation *value() {
         return getOperand(1);
+    }
+    const LDefinition *temp() {
+        return getTemp(0);
     }
 };
 

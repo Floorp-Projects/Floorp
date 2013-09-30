@@ -673,6 +673,9 @@ class MacroAssemblerMIPSCompat : public MacroAssemblerMIPS
         movePtr(imm, ScratchRegister);
         branchPtr(cond, lhs, ScratchRegister, label);
     }
+    void branchPtr(Condition cond, Register lhs, Imm32 imm, Label *label) {
+        ma_b(lhs, imm, label, cond);
+    }
     void decBranchPtr(Condition cond, const Register &lhs, Imm32 imm, Label *label) {
         subPtr(imm, lhs);
         branch32(cond, lhs, Imm32(0), label);
