@@ -9,25 +9,3 @@
 # time it takes to be reflected by statfs().  Bug # 791287
 #                 test_diskSpace.html \
 
-MOCHITEST_FILES	= \
-		test_sanity.html \
-		test_addCorrectType.html \
-		test_basic.html \
-		test_enumerate.html \
-		test_enumerateMultipleContinue.html \
-		test_overwrite.html \
-		test_dotdot.html \
-		test_enumerateOptions.html \
-		test_lastModificationFilter.html \
-		test_freeSpace.html \
-		test_usedSpace.html \
-		test_available.html \
-		test_watch.html \
-		test_watchOther.html \
-		test_823965.html \
-		devicestorage_common.js \
-		$(NULL)
-
-MOCHITEST_CHROME_FILES =\
-		test_app_permissions.html \
-		$(NULL)
