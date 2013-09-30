@@ -1809,7 +1809,7 @@ CSS_PROP_FONT(
     kFontStyleKTable,
     offsetof(nsStyleFont, mFont.style),
     eStyleAnimType_EnumU8)
- CSS_PROP_FONT(
+CSS_PROP_FONT(
     font-synthesis,
     font_synthesis,
     FontSynthesis,
