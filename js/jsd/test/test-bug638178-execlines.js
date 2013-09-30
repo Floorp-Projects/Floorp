@@ -1,6 +1,5 @@
-netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
 
-var jsdIScript = Components.interfaces.jsdIScript;
+var jsdIScript = SpecialPowers.Ci.jsdIScript;
 
 function f1() {
     var x;
@@ -22,10 +21,9 @@ function f3() {
 
 }
 
-var jsdIFilter = Components.interfaces.jsdIFilter;
+var jsdIFilter = SpecialPowers.Ci.jsdIFilter;
 
 function testJSD(jsd) {
-    netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
     ok(jsd.isOn, "JSD needs to be running for this test.");
 
     jsd.functionHook = ({
@@ -47,7 +45,6 @@ function testJSD(jsd) {
     var startlines = {};
     jsd.enumerateScripts({
         enumerateScript: function(script) {
-            netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
             if (/execlines\.js$/.test(script.fileName)) {
                 console.log("script: " + script.fileName + " " + script.functionName);
                 var execLines = script.getExecutableLines(jsdIScript.PCMAP_SOURCETEXT, 0, 10000);

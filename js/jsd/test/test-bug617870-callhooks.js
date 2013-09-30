@@ -1,5 +1,4 @@
 g = { 'global noneval': 1 };
-netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
 
 eval("g['global eval'] = 1");
 
@@ -21,7 +20,6 @@ function f1() {
 var f2 = new Function("g['function noneval'] = 2; eval(\"g['function eval'] = 2\")");
 
 function testJSD(jsd) {
-    netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
     ok(jsd.isOn, "JSD needs to be running for this test.");
 
     var numBreakpoints = 0;

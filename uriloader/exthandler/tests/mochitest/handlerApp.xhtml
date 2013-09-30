@@ -20,8 +20,6 @@ function onLoad() {
     window.opener.SimpleTest.finish();
   } 
 
-  // ensure that we actually have the privs to close non-script-opened windows
-  netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect'); 
   window.close();
 }
 ]]>
