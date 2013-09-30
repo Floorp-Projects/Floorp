@@ -2,27 +2,3 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-MOCHITEST_BROWSER_FILES = \
-		head.js \
-		browser_devtools_api.js \
-		browser_dynamic_tool_enabling.js \
-		browser_new_activation_workflow.js \
-		browser_toolbox_dynamic_registration.js \
-		browser_toolbox_hosts.js \
-		browser_toolbox_ready.js \
-		browser_toolbox_select_event.js \
-		browser_target_events.js \
-		browser_toolbox_tool_ready.js \
-		browser_toolbox_sidebar.js \
-		browser_toolbox_window_shortcuts.js \
-		browser_toolbox_tabsswitch_shortcuts.js \
-		browser_toolbox_window_title_changes.js \
-		browser_toolbox_options.js \
-		browser_toolbox_options_disablejs.js \
-		browser_toolbox_options_disablejs.html \
-		browser_toolbox_options_disablejs_iframe.html \
-		browser_toolbox_highlight.js \
-		browser_toolbox_raise.js \
-		browser_toolbox_zoom.js \
-		browser_keybindings.js \
-		$(NULL)
