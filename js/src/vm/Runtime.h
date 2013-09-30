@@ -1586,7 +1586,7 @@ struct JSRuntime : public JS::shadow::Runtime,
         return jitHardening;
     }
 
-    void sizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf, JS::RuntimeSizes *runtime);
+    void addSizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf, JS::RuntimeSizes *runtime);
 
   private:
 

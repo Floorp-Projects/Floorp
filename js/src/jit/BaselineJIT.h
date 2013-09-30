@@ -162,13 +162,13 @@ struct BaselineScript
         return offsetof(BaselineScript, method_);
     }
 
-    void sizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf, size_t *data,
-                             size_t *fallbackStubs) const {
-        *data = mallocSizeOf(this);
+    void addSizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf, size_t *data,
+                                size_t *fallbackStubs) const {
+        *data += mallocSizeOf(this);
 
-        // data already includes the ICStubSpace itself, so use
+        // |data| already includes the ICStubSpace itself, so use
         // sizeOfExcludingThis.
-        *fallbackStubs = fallbackStubSpace_.sizeOfExcludingThis(mallocSizeOf);
+        *fallbackStubs += fallbackStubSpace_.sizeOfExcludingThis(mallocSizeOf);
     }
 
     bool active() const {
@@ -293,8 +293,8 @@ void
 FinishDiscardBaselineScript(FreeOp *fop, JSScript *script);
 
 void
-SizeOfBaselineData(JSScript *script, mozilla::MallocSizeOf mallocSizeOf, size_t *data,
-                   size_t *fallbackStubs);
+AddSizeOfBaselineData(JSScript *script, mozilla::MallocSizeOf mallocSizeOf, size_t *data,
+                      size_t *fallbackStubs);
 
 void
 ToggleBaselineSPS(JSRuntime *runtime, bool enable);
