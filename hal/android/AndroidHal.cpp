@@ -140,6 +140,10 @@ GetCurrentScreenConfiguration(ScreenConfiguration* aScreenConfiguration)
 bool
 LockScreenOrientation(const ScreenOrientation& aOrientation)
 {
+  if (!AndroidBridge::Bridge()) {
+    return false;
+  }
+
   switch (aOrientation) {
     // The Android backend only supports these orientations.
     case eScreenOrientation_PortraitPrimary:
