@@ -11,6 +11,7 @@ interfaces = [
     'html',
     'events',
     'devicestorage',
+    'contacts',
     'settings',
     'stylesheets',
     'sidebar',

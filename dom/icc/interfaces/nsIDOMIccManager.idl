@@ -5,6 +5,7 @@
 #include "nsIDOMEventTarget.idl"
 #include "SimToolKit.idl"
 
+interface nsIDOMContact;
 interface nsIDOMDOMRequest;
 interface nsIDOMEventListener;
 interface nsIDOMMozIccInfo;
@@ -506,7 +507,7 @@ interface nsIDOMMozIccManager : nsIDOMEventTarget
    *        PIN2 is only required for 'fdn'.
    */
   nsIDOMDOMRequest updateContact(in DOMString contactType,
-                                 in nsISupports contact,
+                                 in nsIDOMContact contact,
                                  [optional] in DOMString pin2);
 
   // End of UICC Phonebook Interfaces.
