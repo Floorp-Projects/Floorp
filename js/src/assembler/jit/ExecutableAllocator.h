@@ -257,7 +257,7 @@ public:
         m_pools.remove(m_pools.lookup(pool));   // this asserts if |pool| is not in m_pools
     }
 
-    void sizeOfCode(JS::CodeSizes *sizes) const;
+    void addSizeOfCode(JS::CodeSizes *sizes) const;
     void toggleAllCodeAsAccessible(bool accessible);
     bool codeContains(char* address);
 

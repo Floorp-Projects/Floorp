@@ -325,23 +325,23 @@ AsmJSModule::~AsmJSModule()
 }
 
 void
-AsmJSModule::sizeOfMisc(mozilla::MallocSizeOf mallocSizeOf, size_t *asmJSModuleCode,
-                        size_t *asmJSModuleData)
+AsmJSModule::addSizeOfMisc(mozilla::MallocSizeOf mallocSizeOf, size_t *asmJSModuleCode,
+                           size_t *asmJSModuleData)
 {
-    *asmJSModuleCode = pod.totalBytes_;
-    *asmJSModuleData = mallocSizeOf(this) +
-                       globals_.sizeOfExcludingThis(mallocSizeOf) +
-                       exits_.sizeOfExcludingThis(mallocSizeOf) +
-                       exports_.sizeOfExcludingThis(mallocSizeOf) +
-                       heapAccesses_.sizeOfExcludingThis(mallocSizeOf) +
+    *asmJSModuleCode += pod.totalBytes_;
+    *asmJSModuleData += mallocSizeOf(this) +
+                        globals_.sizeOfExcludingThis(mallocSizeOf) +
+                        exits_.sizeOfExcludingThis(mallocSizeOf) +
+                        exports_.sizeOfExcludingThis(mallocSizeOf) +
+                        heapAccesses_.sizeOfExcludingThis(mallocSizeOf) +
 #if defined(MOZ_VTUNE)
-                       profiledFunctions_.sizeOfExcludingThis(mallocSizeOf) +
+                        profiledFunctions_.sizeOfExcludingThis(mallocSizeOf) +
 #endif
 #if defined(JS_ION_PERF)
-                       profiledFunctions_.sizeOfExcludingThis(mallocSizeOf) +
-                       perfProfiledBlocksFunctions_.sizeOfExcludingThis(mallocSizeOf) +
+                        profiledFunctions_.sizeOfExcludingThis(mallocSizeOf) +
+                        perfProfiledBlocksFunctions_.sizeOfExcludingThis(mallocSizeOf) +
 #endif
-                       functionCounts_.sizeOfExcludingThis(mallocSizeOf);
+                        functionCounts_.sizeOfExcludingThis(mallocSizeOf);
 }
 
 static void
