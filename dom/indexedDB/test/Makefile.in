@@ -4,6 +4,11 @@
 
 #   test_bug847147.html disabled for timeouts
 #   test_writer_starvation.html  disabled for infinite loops, bug 595368
+MOCHITEST_CHROME_FILES = \
+  chromeHelpers.js \
+  test_globalObjects.xul \
+  $(NULL)
+
 ifeq (browser,$(MOZ_BUILD_APP))
 MOCHITEST_BROWSER_FILES = \
   browser_forgetThisSite.js \
