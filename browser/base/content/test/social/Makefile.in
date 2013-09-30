@@ -31,6 +31,7 @@ MOCHITEST_BROWSER_FILES = \
                  social_panel.html \
                  social_mark.html \
                  social_sidebar.html \
+                 social_sidebar_empty.html \
                  social_chat.html \
                  social_flyout.html \
                  social_window.html \
