@@ -1560,7 +1560,7 @@ ContentParent::RecvGetShowPasswordSetting(bool* showPassword)
 #ifdef MOZ_WIDGET_ANDROID
     NS_ASSERTION(AndroidBridge::Bridge() != nullptr, "AndroidBridge is not available");
     if (AndroidBridge::Bridge() != nullptr)
-        *showPassword = GeckoAppShell::GetShowPasswordSetting();
+        *showPassword = AndroidBridge::Bridge()->GetShowPasswordSetting();
 #endif
     return true;
 }

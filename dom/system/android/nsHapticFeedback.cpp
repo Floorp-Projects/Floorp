@@ -16,7 +16,7 @@ nsHapticFeedback::PerformSimpleAction(int32_t aType)
 {
     AndroidBridge* bridge = AndroidBridge::Bridge();
     if (bridge) {
-        GeckoAppShell::PerformHapticFeedback(aType == LongPress);
+        bridge->PerformHapticFeedback(aType == LongPress);
         return NS_OK;
     }
     return NS_ERROR_FAILURE;

@@ -91,7 +91,7 @@ MessagePump::Run(MessagePump::Delegate* aDelegate)
     // This processes messages in the Android Looper. Note that we only
     // get here if the normal Gecko event loop has been awoken above.
     // Bug 750713
-    did_work |= GeckoAppShell::PumpMessageLoop();
+    did_work |= AndroidBridge::Bridge()->PumpMessageLoop();
 #endif
 
     did_work |= aDelegate->DoDelayedWork(&delayed_work_time_);
