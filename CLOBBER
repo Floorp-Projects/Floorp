@@ -17,4 +17,5 @@
 #
 # Modifying this file will now automatically clobber the buildbot machines \o/
 #
-Bug 916267 needs a clobber on Windows.
+
+Bug 901789 needs a clobber.

@@ -1,0 +1,74 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this file,
+ * You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "domstubs.idl"
+
+[scriptable, uuid(9cbfa81c-bcab-4ca9-b0d2-f4318f295e33)]
+interface nsIContactAddress : nsISupports
+{
+  attribute DOMString type;
+  attribute boolean   pref; // false = no pref, true = preferred (vCard3 TYPE:PREF; vCard4 PREF:1)
+  attribute DOMString streetAddress;
+  attribute DOMString locality;
+  attribute DOMString region;
+  attribute DOMString postalCode;
+  attribute DOMString countryName;
+};
+
+[scriptable, uuid(ad19a543-69e4-44f0-adfa-37c011556bc1)]
+interface nsIContactField : nsISupports
+{
+  attribute jsval     type; // DOMString[], "home", "work", etc.
+  attribute DOMString value;
+  attribute boolean   pref; // false = no pref, true = preferred (vCard3 TYPE:PREF; vCard4 PREF:1)
+};
+
+[scriptable, uuid(4d42c5a9-ea5d-4102-80c3-40cc986367ca)]
+interface nsIContactTelField : nsIContactField
+{
+  attribute DOMString carrier;
+};
+
+[scriptable, uuid(0a5b1fab-70da-46dd-b902-619904d920c2)]
+interface nsIContactFindSortOptions : nsISupports
+{
+  attribute DOMString sortBy;       // "givenName" or "familyName"
+  attribute DOMString sortOrder;    // e.g. "descending"
+};
+
+[scriptable, uuid(28ce07d0-45d9-4b7a-8843-521df4edd8bc)]
+interface nsIContactFindOptions : nsIContactFindSortOptions
+{
+  attribute DOMString filterValue;  // e.g. "Tom"
+  attribute DOMString filterOp;     // e.g. "startsWith"
+  attribute jsval filterBy;         // DOMString[], e.g. ["givenName", "nickname"]
+  attribute unsigned long filterLimit;
+};
+
+[scriptable, uuid(35ad8a4e-9486-44b6-883d-550f14635e49)]
+interface nsIContactProperties : nsISupports
+{
+  attribute jsval         name;               // DOMString[]
+  attribute jsval         honorificPrefix;    // DOMString[]
+  attribute jsval         givenName;          // DOMString[]
+  attribute jsval         additionalName;     // DOMString[]
+  attribute jsval         familyName;         // DOMString[]
+  attribute jsval         honorificSuffix;    // DOMString[]
+  attribute jsval         nickname;           // DOMString[]
+  attribute jsval         email;              // ContactField[]
+  attribute jsval         photo;              // nsIDOMBlob[]
+  attribute jsval         url;                // ContactField[]
+  attribute jsval         category;           // DOMString[]
+  attribute jsval         adr;                // ContactAddress[]
+  attribute jsval         tel;                // ContactTelField[]
+  attribute jsval         org;                // DOMString[]
+  attribute jsval         jobTitle;           // DOMString[]
+  attribute jsval         bday;               // Date
+  attribute jsval         note;               // DOMString[]
+  attribute jsval         impp;               // ContactField[]
+  attribute jsval         anniversary;        // Date
+  attribute DOMString     sex;                // DOMString
+  attribute DOMString     genderIdentity;     // DOMString
+  attribute jsval         key;                // DOMString[]
+};
