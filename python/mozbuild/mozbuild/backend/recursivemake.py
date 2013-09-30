@@ -610,8 +610,8 @@ class RecursiveMakeBackend(CommonBackend):
 
 
         # Write out a master list of all IPDL source files.
-        ipdls = FileAvoidWrite(os.path.join(self.environment.topobjdir,
-            'ipc', 'ipdl', 'ipdlsrcs.mk'))
+        ipdl_dir = os.path.join(self.environment.topobjdir, 'ipc', 'ipdl')
+        ipdls = FileAvoidWrite(os.path.join(ipdl_dir, 'ipdlsrcs.mk'))
         mk = mozmakeutil.Makefile()
 
         sorted_ipdl_sources = list(sorted(self._ipdl_sources))
@@ -629,13 +629,15 @@ class RecursiveMakeBackend(CommonBackend):
                               '%sParent.cpp' % root])
             return files
 
-        ipdl_cppsrcs = itertools.chain(*[files_from(p) for p in sorted_ipdl_sources])
-        mk.add_statement('CPPSRCS := %s\n' % ' '.join(ipdl_cppsrcs))
+        ipdl_cppsrcs = list(itertools.chain(*[files_from(p) for p in sorted_ipdl_sources]))
+        self._add_unified_build_rules(mk, ipdl_cppsrcs, ipdl_dir,
+                                      unified_prefix='UnifiedProtocols',
+                                      unified_files_makefile_variable='CPPSRCS')
 
         mk.add_statement('IPDLDIRS := %s\n' % ' '.join(sorted(set(os.path.dirname(p)
             for p in self._ipdl_sources))))
 
-        mk.dump(ipdls)
+        mk.dump(ipdls, removal_guard=False)
 
         self._update_from_avoid_write(ipdls.close())
         self.summary.managed_count += 1

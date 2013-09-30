@@ -468,10 +468,7 @@ class TestRecursiveMakeBackend(BackendTester):
 
         expected = [
             "ALL_IPDLSRCS := %s/bar/bar.ipdl %s/bar/bar2.ipdlh %s/foo/foo.ipdl %s/foo/foo2.ipdlh" % tuple([topsrcdir] * 4),
-            "CPPSRCS := bar.cpp barChild.cpp barParent.cpp" +
-            " bar2.cpp" +
-            " foo.cpp fooChild.cpp fooParent.cpp" +
-            " foo2.cpp",
+            "CPPSRCS := UnifiedProtocols0.cpp",
             "IPDLDIRS := %s/bar %s/foo" % (topsrcdir, topsrcdir),
         ]
 
