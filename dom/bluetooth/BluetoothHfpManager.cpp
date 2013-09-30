@@ -665,7 +665,8 @@ BluetoothHfpManager::HandleIccInfoChanged()
   NS_ENSURE_TRUE_VOID(icc);
 
   nsCOMPtr<nsIDOMMozIccInfo> iccInfo;
-  icc->GetIccInfo(getter_AddRefs(iccInfo));
+  // TODO: Bug 921991 - B2G BT: support multiple sim cards
+  icc->GetIccInfo(0, getter_AddRefs(iccInfo));
   NS_ENSURE_TRUE_VOID(iccInfo);
 
   nsCOMPtr<nsIDOMMozGsmIccInfo> gsmIccInfo = do_QueryInterface(iccInfo);
