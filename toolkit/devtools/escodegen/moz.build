@@ -10,6 +10,7 @@ JS_MODULES_PATH = 'modules/devtools/escodegen'
 
 EXTRA_JS_MODULES += [
     'escodegen.js',
+    'escodegen.worker.js',
     'estraverse.js',
     'package.json.js',
 ]
