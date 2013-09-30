@@ -1259,23 +1259,62 @@ window.addEventListener('ContentStart', function update_onContentStart() {
 
 (function recordingStatusTracker() {
   let gRecordingActiveCount = 0;
+  let gRecordingActiveProcesses = {};
 
-  Services.obs.addObserver(function(aSubject, aTopic, aData) {
+  let recordingHandler = function(aSubject, aTopic, aData) {
     let oldCount = gRecordingActiveCount;
-    if (aData == "starting") {
-      gRecordingActiveCount += 1;
-    } else if (aData == "shutdown") {
-      gRecordingActiveCount -= 1;
+
+    let processId = (!aSubject) ? 'main'
+                                : aSubject.QueryInterface(Ci.nsIPropertyBag2).get('childID');
+    if (processId && !gRecordingActiveProcesses.hasOwnProperty(processId)) {
+      gRecordingActiveProcesses[processId] = 0;
     }
 
-    // We need to track changes from 1 <-> 0
-    if (gRecordingActiveCount + oldCount == 1) {
+    let currentActive = gRecordingActiveProcesses[processId];
+    switch (aData) {
+      case 'starting':
+        gRecordingActiveCount++;
+        currentActive++;
+        break;
+      case 'shutdown':
+        // Bug 928206 will make shutdown be sent even if no starting.
+        if (currentActive > 0) {
+          gRecordingActiveCount--;
+          currentActive--;
+        }
+        break;
+      case 'content-shutdown':
+        gRecordingActiveCount -= currentActive;
+        currentActive = 0;
+        break;
+    }
+
+    if (currentActive > 0) {
+      gRecordingActiveProcesses[processId] = currentActive;
+    } else {
+      delete gRecordingActiveProcesses[processId];
+    }
+
+    // We need to track changes from N <-> 0
+    if ((oldCount === 0 && gRecordingActiveCount > 0) ||
+        (gRecordingActiveCount === 0 && oldCount > 0)) {
       shell.sendChromeEvent({
         type: 'recording-status',
-        active: (gRecordingActiveCount == 1)
+        active: (gRecordingActiveCount > 0)
       });
     }
-}, "recording-device-events", false);
+  };
+  Services.obs.addObserver(recordingHandler, 'recording-device-events', false);
+  Services.obs.addObserver(recordingHandler, 'recording-device-ipc-events', false);
+
+  Services.obs.addObserver(function(aSubject, aTopic, aData) {
+    // send additional recording events if content process is being killed
+    let props = aSubject.QueryInterface(Ci.nsIPropertyBag2);
+    let childId = aSubject.get('childID');
+    if (gRecordingActiveProcesses.hasOwnProperty(childId) >= 0) {
+      Services.obs.notifyObservers(aSubject, 'recording-device-ipc-events', 'content-shutdown');
+    }
+  }, 'ipc:content-shutdown', false);
 })();
 
 (function volumeStateTracker() {
