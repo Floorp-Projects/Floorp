@@ -46,3 +46,6 @@ MOCHITEST_FILES	= \
 		postMessage_transfer_helper.html \
 		$(NULL)
 
+MOCHITEST_CHROME_FILES	= \
+		test_postMessage_chrome.html \
+		$(NULL)		
