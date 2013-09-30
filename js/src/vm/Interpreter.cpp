@@ -2906,11 +2906,11 @@ BEGIN_CASE(JSOP_NEWINIT)
     RootedObject &obj = rootObject0;
     NewObjectKind newKind;
     if (i == JSProto_Array) {
-        newKind = UseNewTypeForInitializer(cx, script, regs.pc, &ArrayObject::class_);
+        newKind = UseNewTypeForInitializer(script, regs.pc, &ArrayObject::class_);
         obj = NewDenseEmptyArray(cx, nullptr, newKind);
     } else {
         gc::AllocKind allocKind = GuessObjectGCKind(0);
-        newKind = UseNewTypeForInitializer(cx, script, regs.pc, &JSObject::class_);
+        newKind = UseNewTypeForInitializer(script, regs.pc, &JSObject::class_);
         obj = NewBuiltinClassInstance(cx, &JSObject::class_, allocKind, newKind);
     }
     if (!obj || !SetInitializerObjectType(cx, script, regs.pc, obj, newKind))
@@ -2925,7 +2925,7 @@ BEGIN_CASE(JSOP_NEWARRAY)
 {
     unsigned count = GET_UINT24(regs.pc);
     RootedObject &obj = rootObject0;
-    NewObjectKind newKind = UseNewTypeForInitializer(cx, script, regs.pc, &ArrayObject::class_);
+    NewObjectKind newKind = UseNewTypeForInitializer(script, regs.pc, &ArrayObject::class_);
     obj = NewDenseAllocatedArray(cx, count, nullptr, newKind);
     if (!obj || !SetInitializerObjectType(cx, script, regs.pc, obj, newKind))
         goto error;
@@ -2941,7 +2941,7 @@ BEGIN_CASE(JSOP_NEWOBJECT)
     baseobj = script->getObject(regs.pc);
 
     RootedObject &obj = rootObject1;
-    NewObjectKind newKind = UseNewTypeForInitializer(cx, script, regs.pc, baseobj->getClass());
+    NewObjectKind newKind = UseNewTypeForInitializer(script, regs.pc, baseobj->getClass());
     obj = CopyInitializerObject(cx, baseobj, newKind);
     if (!obj || !SetInitializerObjectType(cx, script, regs.pc, obj, newKind))
         goto error;

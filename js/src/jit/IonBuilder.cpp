@@ -5342,7 +5342,7 @@ IonBuilder::jsop_compare(JSOp op)
 JSObject *
 IonBuilder::getNewArrayTemplateObject(uint32_t count)
 {
-    NewObjectKind newKind = types::UseNewTypeForInitializer(cx, script(), pc, JSProto_Array);
+    NewObjectKind newKind = types::UseNewTypeForInitializer(script(), pc, JSProto_Array);
 
     // Do not allocate template objects in the nursery.
     if (newKind == GenericObject)
@@ -5396,7 +5396,7 @@ IonBuilder::jsop_newobject(JSObject *baseObj)
     // Don't bake in the TypeObject for non-CNG scripts.
     JS_ASSERT(script()->compileAndGo);
 
-    NewObjectKind newKind = types::UseNewTypeForInitializer(cx, script(), pc, JSProto_Object);
+    NewObjectKind newKind = types::UseNewTypeForInitializer(script(), pc, JSProto_Object);
 
     // Do not allocate template objects in the nursery.
     if (newKind == GenericObject)

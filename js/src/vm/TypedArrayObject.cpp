@@ -1645,7 +1645,7 @@ class TypedArrayObjectTemplate : public TypedArrayObject
         jsbytecode *pc;
         RootedScript script(cx, cx->currentScript(&pc));
         NewObjectKind newKind = script
-                                ? UseNewTypeForInitializer(cx, script, pc, fastClass())
+                                ? UseNewTypeForInitializer(script, pc, fastClass())
                                 : GenericObject;
         RootedObject obj(cx, NewBuiltinClassInstance(cx, fastClass(), newKind));
         if (!obj)
@@ -2664,7 +2664,7 @@ DataViewNewObjectKind(JSContext *cx, uint32_t byteLength, JSObject *proto)
     JSScript *script = cx->currentScript(&pc);
     if (!script)
         return GenericObject;
-    return types::UseNewTypeForInitializer(cx, script, pc, &DataViewObject::class_);
+    return types::UseNewTypeForInitializer(script, pc, &DataViewObject::class_);
 }
 
 inline DataViewObject *
