@@ -925,7 +925,7 @@ function getSelectionRange(element) {
     // Get the selection range of contenteditable elements
     let win = element.ownerDocument.defaultView;
     let sel = win.getSelection();
-    if (sel) {
+    if (sel && sel.rangeCount > 0) {
       start = getContentEditableSelectionStart(element, sel);
       end = start + getContentEditableSelectionLength(element, sel);
     } else {

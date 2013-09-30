@@ -2573,7 +2573,7 @@ nsStyleContentData::TrackImage(nsPresContext* aContext)
   // Sanity
   NS_ABORT_IF_FALSE(!mImageTracked, "Already tracking image!");
   NS_ABORT_IF_FALSE(mType == eStyleContentType_Image,
-                    "Tryingto do image tracking on non-image!");
+                    "Trying to do image tracking on non-image!");
   NS_ABORT_IF_FALSE(mContent.mImage,
                     "Can't track image when there isn't one!");
 

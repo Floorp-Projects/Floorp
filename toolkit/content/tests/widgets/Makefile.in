@@ -33,13 +33,6 @@ MOCHITEST_FILES =	\
 		test_bug898940.html \
 		$(NULL)
 
-MOCHITEST_CHROME_FILES = \
-		tree_shared.js \
-		test_tree_column_reorder.xul \
-		test_editor_currentURI.xul \
-		test_popupreflows.xul \
-		$(NULL)
-
 ifneq (cocoa,$(MOZ_WIDGET_TOOLKIT))
 MOCHITEST_FILES += test_menubar.xul \
                window_menubar.xul

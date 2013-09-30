@@ -31,6 +31,7 @@
 #include "nsIServiceManager.h"
 #include "nsTextFragment.h"
 #include "mozilla/Selection.h"
+#include "mozilla/MathAlgorithms.h"
 #include "gfxSkipChars.h"
 #include <algorithm>
 
@@ -195,7 +196,7 @@ HyperTextAccessible::GetBoundsForString(nsIFrame* aFrame, uint32_t aStartRendere
     NS_ENSURE_SUCCESS(rv, nsIntRect());
 
     frameScreenRect.x += std::min(frameTextStartPoint.x, frameTextEndPoint.x);
-    frameScreenRect.width = std::abs(frameTextStartPoint.x - frameTextEndPoint.x);
+    frameScreenRect.width = mozilla::Abs(frameTextStartPoint.x - frameTextEndPoint.x);
 
     screenRect.UnionRect(frameScreenRect, screenRect);
 

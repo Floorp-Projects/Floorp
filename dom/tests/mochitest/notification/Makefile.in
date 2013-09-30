@@ -2,16 +2,3 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-MOCHITEST_CHROME_FILES = \
-		test_system_principal.xul \
-		$(NULL)
-
-MOCHITEST_FILES	= \
-		test_basic_notification.html \
-		test_basic_notification_click.html \
-		test_web_notifications.html \
-		test_notification_tag.html \
-		test_leak_windowClose.html \
-		create_notification.html \
-		notification_common.js \
-		$(NULL)

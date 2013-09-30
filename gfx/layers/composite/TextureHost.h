@@ -39,7 +39,7 @@ namespace layers {
 
 class Compositor;
 class CompositableHost;
-class CompositableQuirks;
+class CompositableBackendSpecificData;
 class SurfaceDescriptor;
 class ISurfaceAllocator;
 class TextureSourceOGL;
@@ -118,10 +118,10 @@ public:
    */
   virtual TileIterator* AsTileIterator() { return nullptr; }
 
-  virtual void SetCompositableQuirks(CompositableQuirks* aQuirks);
+  virtual void SetCompositableBackendSpecificData(CompositableBackendSpecificData* aBackendData);
 
 protected:
-  RefPtr<CompositableQuirks> mQuirks;
+  RefPtr<CompositableBackendSpecificData> mCompositableBackendData;
 };
 
 
@@ -382,7 +382,7 @@ public:
     return LayerRenderState();
   }
 
-  virtual void SetCompositableQuirks(CompositableQuirks* aQuirks);
+  virtual void SetCompositableBackendSpecificData(CompositableBackendSpecificData* aBackendData);
 
 #ifdef MOZ_LAYERS_HAVE_LOG
   virtual const char *Name() { return "TextureHost"; }
@@ -393,7 +393,7 @@ protected:
   uint64_t mID;
   RefPtr<TextureHost> mNextTexture;
   TextureFlags mFlags;
-  RefPtr<CompositableQuirks> mQuirks;
+  RefPtr<CompositableBackendSpecificData> mCompositableBackendData;
 };
 
 /**

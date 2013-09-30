@@ -3,10 +3,3 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-MOCHITEST_A11Y_FILES =\
-		test_figure.html \
-		test_HTMLSpec.html \
-		test_listbox.xul \
-		test_nsApplicationAcc.html \
-		test_plugin.html \
-		$(NULL)

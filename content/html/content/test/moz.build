@@ -13,3 +13,10 @@
 TEST_DIRS += ['bug649134']
 
 TEST_DIRS += ['forms']
+
+MOCHITEST_MANIFESTS += ['mochitest.ini']
+
+MOCHITEST_CHROME_MANIFESTS += ['chrome.ini']
+
+BROWSER_CHROME_MANIFESTS += ['browser.ini']
+

@@ -227,7 +227,10 @@
     _(TypedObjectElements)          \
     _(StringLength)                 \
     _(ArgumentsLength)              \
-    _(GetArgument)                  \
+    _(GetFrameArgument)             \
+    _(SetFrameArgumentT)            \
+    _(SetFrameArgumentC)            \
+    _(SetFrameArgumentV)            \
     _(RunOncePrologue)              \
     _(Rest)                         \
     _(RestPar)                      \

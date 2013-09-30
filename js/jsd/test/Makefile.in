@@ -3,7 +3,3 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-MOCHITEST_FILES = 	test_bug507448.html bug507448.js \
-		test_bug617870-callhooks.html test-bug617870-callhooks.js jsd-test.js \
-		test_bug638178-execlines.html test-bug638178-execlines.js \
-		$(NULL)

@@ -2,35 +2,3 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-MOCHITEST_BROWSER_FILES = \
-		browser_sourceeditor_initialization.js \
-		browser_bug684862_paste_html.js \
-		browser_bug687573_vscroll.js \
-		browser_bug687568_pagescroll.js \
-		browser_bug687580_drag_and_drop.js \
-		browser_bug684546_reset_undo.js \
-		browser_bug695035_middle_click_paste.js \
-		browser_bug687160_line_api.js \
-		browser_bug650345_find.js \
-		browser_bug703692_focus_blur.js \
-		browser_bug725388_mouse_events.js \
-		browser_bug707987_debugger_breakpoints.js \
-		browser_bug712982_line_ruler_click.js \
-		browser_bug725618_moveLines_shortcut.js \
-		browser_bug700893_dirty_state.js \
-		browser_bug729480_line_vertical_align.js \
-		browser_bug725430_comment_uncomment.js \
-		browser_bug731721_debugger_stepping.js \
-		browser_bug729960_block_bracket_jump.js \
-		browser_bug744021_next_prev_bracket_jump.js \
-		browser_bug725392_mouse_coords_char_offset.js \
-		browser_codemirror.js \
-		head.js \
-		codemirror.html \
-		cm_comment_test.js \
-		cm_driver.js \
-		cm_mode_test.css \
-		cm_mode_test.js \
-		cm_test.js \
-		cm_mode_javascript_test.js \
-		$(NULL)

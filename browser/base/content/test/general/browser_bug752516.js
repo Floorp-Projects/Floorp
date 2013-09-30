@@ -10,15 +10,12 @@ function test() {
   waitForExplicitFinish();
   registerCleanupFunction(function() {
     Services.prefs.clearUserPref("plugins.click_to_play");
-    let plugin = getTestPlugin();
-    plugin.enabledState = Ci.nsIPluginTag.STATE_ENABLED;
     gBrowser.removeCurrentTab();
     window.focus();
   });
 
   Services.prefs.setBoolPref("plugins.click_to_play", true);
-  let plugin = getTestPlugin();
-  plugin.enabledState = Ci.nsIPluginTag.STATE_CLICKTOPLAY;
+  setTestPluginEnabledState(Ci.nsIPluginTag.STATE_CLICKTOPLAY);
 
   gBrowser.selectedTab = gBrowser.addTab();
   gTestBrowser = gBrowser.selectedBrowser;
