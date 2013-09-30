@@ -276,7 +276,8 @@ BluetoothRilListener::StartIccListening()
     do_GetService(NS_RILCONTENTHELPER_CONTRACTID);
   NS_ENSURE_TRUE(provider, false);
 
-  nsresult rv = provider->RegisterIccMsg(mIccListener);
+  // TODO: Bug 921991 - B2G BT: support multiple sim cards
+  nsresult rv = provider->RegisterIccMsg(0, mIccListener);
   return NS_SUCCEEDED(rv);
 }
 
@@ -287,7 +288,8 @@ BluetoothRilListener::StopIccListening()
     do_GetService(NS_RILCONTENTHELPER_CONTRACTID);
   NS_ENSURE_TRUE(provider, false);
 
-  nsresult rv = provider->UnregisterIccMsg(mIccListener);
+  // TODO: Bug 921991 - B2G BT: support multiple sim cards
+  nsresult rv = provider->UnregisterIccMsg(0, mIccListener);
   return NS_SUCCEEDED(rv);
 }
 
