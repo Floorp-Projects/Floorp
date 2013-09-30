@@ -3102,7 +3102,7 @@ IonBuilder::processCondSwitchCase(CFGState &state)
         MDefinition *caseOperand = current->pop();
         MDefinition *switchOperand = current->peek(-1);
         MCompare *cmpResult = MCompare::New(switchOperand, caseOperand, JSOP_STRICTEQ);
-        cmpResult->infer(cx, inspector, pc);
+        cmpResult->infer(inspector, pc);
         JS_ASSERT(!cmpResult->isEffectful());
         current->add(cmpResult);
         current->end(MTest::New(cmpResult, bodyBlock, caseBlock));
@@ -3215,7 +3215,7 @@ IonBuilder::jsop_andor(JSOp op)
     MTest *test = (op == JSOP_AND)
                   ? MTest::New(lhs, evalRhs, join)
                   : MTest::New(lhs, join, evalRhs);
-    test->infer(cx);
+    test->infer();
     current->end(test);
 
     if (!cfgStack_.append(CFGState::AndOr(joinStart, join)))
@@ -5332,7 +5332,7 @@ IonBuilder::jsop_compare(JSOp op)
     current->add(ins);
     current->push(ins);
 
-    ins->infer(cx, inspector, pc);
+    ins->infer(inspector, pc);
 
     if (ins->isEffectful() && !resumeAfter(ins))
         return false;
@@ -7676,7 +7676,7 @@ IonBuilder::jsop_not()
     MNot *ins = new MNot(value);
     current->add(ins);
     current->push(ins);
-    ins->infer(cx);
+    ins->infer();
     return true;
 }
 
@@ -9194,7 +9194,7 @@ IonBuilder::jsop_typeof()
     MDefinition *input = current->pop();
     MTypeOf *ins = MTypeOf::New(input, input->type());
 
-    ins->infer(cx);
+    ins->infer();
 
     current->add(ins);
     current->push(ins);
