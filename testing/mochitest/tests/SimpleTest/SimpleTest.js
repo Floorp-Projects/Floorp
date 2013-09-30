@@ -779,7 +779,11 @@ SimpleTest.finish = function () {
         /* We're running in an iframe, and the parent has a TestRunner */
         parentRunner.testFinished(SimpleTest._tests);
     } else {
-        SimpleTest.showReport();
+        SpecialPowers.flushPermissions(function () {
+          SpecialPowers.flushPrefEnv(function() {
+            SimpleTest.showReport();
+          });
+        });
     }
 };
 
