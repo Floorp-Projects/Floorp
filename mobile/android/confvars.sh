@@ -33,6 +33,7 @@ MOZ_RAW=1
 MOZ_PLACES=
 MOZ_SOCIAL=
 MOZ_ANDROID_HISTORY=1
+MOZ_DISABLE_EXPORT_JS=1
 
 # Needed for building our components as part of libxul
 MOZ_APP_COMPONENT_LIBS="browsercomps"
