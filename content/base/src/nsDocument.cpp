@@ -9167,7 +9167,7 @@ nsresult
 nsDocument::SetImageLockingState(bool aLocked)
 {
   if (XRE_GetProcessType() == GeckoProcessType_Content &&
-      !Preferences::GetBool("content.image.allow_locking", true)) {
+      !Preferences::GetBool("image.mem.allow_locking_in_content_processes", true)) {
     return NS_OK;
   }
 
