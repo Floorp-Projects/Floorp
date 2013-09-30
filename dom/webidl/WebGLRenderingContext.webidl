@@ -589,9 +589,9 @@ interface WebGLRenderingContext {
 
     void generateMipmap(GLenum target);
 
-    [Creator]
+    [NewObject]
     WebGLActiveInfo? getActiveAttrib(WebGLProgram? program, GLuint index);
-    [Creator]
+    [NewObject]
     WebGLActiveInfo? getActiveUniform(WebGLProgram? program, GLuint index);
 
     sequence<WebGLShader>? getAttachedShaders(WebGLProgram? program);
@@ -612,7 +612,7 @@ interface WebGLRenderingContext {
     any getRenderbufferParameter(GLenum target, GLenum pname);
     any getShaderParameter(WebGLShader? shader, GLenum pname);
 
-    [Creator]
+    [NewObject]
     WebGLShaderPrecisionFormat? getShaderPrecisionFormat(GLenum shadertype, GLenum precisiontype);
 
     DOMString? getShaderInfoLog(WebGLShader? shader);
@@ -624,7 +624,7 @@ interface WebGLRenderingContext {
     [Throws]
     any getUniform(WebGLProgram? program, WebGLUniformLocation? location);
 
-    [Creator]
+    [NewObject]
     WebGLUniformLocation? getUniformLocation(WebGLProgram? program, DOMString name);
 
     [Throws]
