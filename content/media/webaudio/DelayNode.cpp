@@ -88,7 +88,7 @@ public:
     if (mProcessor.BufferChannelCount() &&
         mLeftOverData == INT32_MIN &&
         aStream->AllInputsFinished()) {
-      mLeftOverData = mProcessor.CurrentDelayFrames() - WEBAUDIO_BLOCK_SIZE;
+      mLeftOverData = mProcessor.MaxDelayFrames() - WEBAUDIO_BLOCK_SIZE;
 
       if (mLeftOverData > 0) {
         nsRefPtr<PlayingRefChanged> refchanged =
