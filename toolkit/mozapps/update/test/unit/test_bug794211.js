@@ -12,8 +12,8 @@ const NETWORK_ERROR_OFFLINE = 111;
 
 function run_test() {
   do_test_pending();
-  do_register_cleanup(end_test);
 
+  // adjustGeneralPaths registers a cleanup function that calls end_test.
   adjustGeneralPaths();
 
   logTestInfo("test when an update check fails because the network is " +

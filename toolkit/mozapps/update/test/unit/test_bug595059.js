@@ -11,8 +11,8 @@ const TEST_ID = "bug595059";
 
 function run_test() {
   do_test_pending();
-  do_register_cleanup(end_test);
 
+  // adjustGeneralPaths registers a cleanup function that calls end_test.
   adjustGeneralPaths();
 
   logTestInfo("testing Bug 595059 - calling nsIUpdatePrompt::showUpdateError " +

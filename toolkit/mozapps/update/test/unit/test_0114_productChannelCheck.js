@@ -18,10 +18,10 @@ function run_test() {
     return;
   }
 
+  // adjustGeneralPaths registers a cleanup function that calls end_test.
   adjustGeneralPaths();
 
   // Setup a wrong channel MAR file
-  do_register_cleanup(cleanupUpdaterTest);
   setupUpdaterTest(MAR_WRONG_CHANNEL_FILE);
 
   // Apply the MAR
@@ -38,4 +38,8 @@ function run_test() {
   //Make sure we get a version downgrade error
   let updateStatus = readStatusFile(updatesDir);
   do_check_eq(updateStatus.split(": ")[1], MAR_CHANNEL_MISMATCH_ERROR);
+}
+
+function end_test() {
+  cleanupUpdaterTest();
 }

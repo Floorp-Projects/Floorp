@@ -1164,16 +1164,6 @@ function setupUpdaterTest(aMarFile) {
   let afterApplyBinDir = getApplyDirFile("a/b/", true);
   helperBin.copyTo(afterApplyBinDir, gCallbackBinFile);
 
-  if (!gBackgroundUpdate && !gSwitchApp) {
-    let updaterIniContents = "[Strings]\n" +
-                             "Title=Update XPCShell Test\n" +
-                             "Info=Application Update Test - " + TEST_ID + "\n";
-    let updaterIni = updatesDir.clone();
-    updaterIni.append(FILE_UPDATER_INI);
-    writeFile(updaterIni, updaterIniContents);
-    updaterIni.copyTo(afterApplyBinDir, FILE_UPDATER_INI);
-  }
-
   // Copy the mar that will be applied
   let mar = do_get_file(aMarFile);
   mar.copyTo(updatesDir, FILE_UPDATE_ARCHIVE);
@@ -2240,6 +2230,8 @@ function adjustGeneralPaths() {
   let ds = Services.dirsvc.QueryInterface(AUS_Ci.nsIDirectoryService);
   ds.registerProvider(dirProvider);
   do_register_cleanup(function() {
+    // Call end_test first before the directory provider is unregistered
+    end_test();
     ds.unregisterProvider(dirProvider);
     let testBin = do_get_file(getApplyDirPath() + "test" + APP_BIN_SUFFIX, true);
     // Try to remove the test.bin file if it exists (it shouldn't).
