@@ -9,10 +9,12 @@ include $(topsrcdir)/mobile/android/base/android-services-files.mk
 MOZGLUE_JAVA_FILES := \
   mozglue/ByteBufferInputStream.java \
   mozglue/DirectBufferAllocator.java \
-  mozglue/GeneratableAndroidBridgeTarget.java \
+  mozglue/generatorannotations/GeneratorOptions.java \
+  mozglue/generatorannotations/OptionalGeneratedParameter.java \
+  mozglue/generatorannotations/WrapEntireClassForJNI.java \
+  mozglue/generatorannotations/WrapElementForJNI.java \
   mozglue/NativeReference.java \
   mozglue/NativeZip.java \
-  mozglue/OptionalGeneratedParameter.java \
   $(NULL)
 
 MOZGLUE_PP_JAVA_FILES := \
