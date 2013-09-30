@@ -27,6 +27,16 @@ const CHUNK_SIZE = 20;
 const REVISION_STORE = "revision";
 const REVISION_KEY = "revision";
 
+function optionalDate(aValue) {
+  if (aValue) {
+    if (!(aValue instanceof Date)) {
+      return new Date(aValue);
+    }
+    return aValue;
+  }
+  return undefined;
+}
+
 function exportContact(aRecord) {
   if (aRecord) {
     delete aRecord.search;
@@ -697,8 +707,8 @@ ContactDB.prototype = {
       }
     }
 
-    contact.updated = aContact.updated;
-    contact.published = aContact.published;
+    contact.updated = optionalDate(aContact.updated);
+    contact.published = optionalDate(aContact.published);
     contact.id = aContact.id;
 
     return contact;
