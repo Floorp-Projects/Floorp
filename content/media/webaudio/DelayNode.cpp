@@ -84,16 +84,13 @@ public:
                                  aInput.mChannelData.Length();
 
     bool playedBackAllLeftOvers = false;
-    if (mProcessor.BufferChannelCount() &&
-        mLeftOverData == INT32_MIN &&
-        aStream->AllInputsFinished()) {
-      mLeftOverData = mProcessor.MaxDelayFrames() - WEBAUDIO_BLOCK_SIZE;
-
-      if (mLeftOverData > 0) {
+    if (!aInput.IsNull()) {
+      if (mLeftOverData <= 0) {
         nsRefPtr<PlayingRefChanged> refchanged =
           new PlayingRefChanged(aStream, PlayingRefChanged::ADDREF);
         NS_DispatchToMainThread(refchanged);
       }
+      mLeftOverData = mProcessor.MaxDelayFrames();
     } else if (mLeftOverData != INT32_MIN) {
       mLeftOverData -= WEBAUDIO_BLOCK_SIZE;
       if (mLeftOverData <= 0) {
