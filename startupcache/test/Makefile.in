@@ -4,3 +4,7 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 LIBS += $(MOZ_COMPONENT_LIBS)
+DIST_FILES += \
+  $(srcdir)/TestStartupCacheTelemetry.manifest \
+  $(srcdir)/TestStartupCacheTelemetry.js \
+  $(NULL)
