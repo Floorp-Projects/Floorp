@@ -7,8 +7,6 @@ let doc;
 function test() {
   waitForExplicitFinish();
   Task.spawn(function(){
-    netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
-
     info(chromeRoot + "browser_progress_indicator.xul");
     yield addTab(chromeRoot + "browser_progress_indicator.xul");
     doc = Browser.selectedTab.browser.contentWindow.document;

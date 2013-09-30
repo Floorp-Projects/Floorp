@@ -21,8 +21,6 @@ var columns_hiertree =
 // column 1 must not be editable.
 function testtag_tree(treeid, treerowinfoid, seltype, columnstype, testid)
 {
-  netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
-
   // Stop keystrokes that aren't handled by the tree from leaking out and
   // scrolling the main Mochitests window!
   function preventDefault(event) {

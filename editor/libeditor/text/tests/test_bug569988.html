@@ -5,9 +5,9 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=569988
 -->
 <head>
   <title>Test for Bug 569988</title>
-  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
-  <script type="application/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
-  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+ <script type="text/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"></script>
+ <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css">
 </head>
 <body>
 <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=569988">Mozilla Bug 569988</a>
@@ -27,8 +27,6 @@ var gPromptInput = null;
 
 function runTest()
 {
-  netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
-
   var os = SpecialPowers.Cc["@mozilla.org/observer-service;1"].
              getService(SpecialPowers.Ci.nsIObserverService);
 
