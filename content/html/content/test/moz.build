@@ -16,5 +16,3 @@ TEST_DIRS += ['forms']
 
 MOCHITEST_MANIFESTS += ['mochitest.ini']
 
-MOCHITEST_CHROME_MANIFESTS += ['chrome.ini']
-

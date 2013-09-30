@@ -13,3 +13,20 @@ MOCHITEST_FILES += \
 # THESE TESTS (ABOVE) DO NOT RUN ON B2G
 endif
 
+MOCHITEST_CHROME_FILES = \
+		test_bug336682_2.xul \
+		test_bug336682.js \
+		test_bug586961.xul \
+		test_bug415498.xul \
+		bug415498-doc1.html \
+		bug415498-doc2.html \
+		test_bug591249.xul \
+		bug591249_iframe.xul \
+		bug602962.xul \
+		test_bug602962.xul \
+		test_bug617528.xul \
+		window_bug617528.xul \
+		test_bug679494.xul \
+		file_bug679494.html \
+		test_eventctors.xul \
+		$(NULL)

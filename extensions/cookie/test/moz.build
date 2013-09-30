@@ -14,5 +14,3 @@ if CONFIG['OS_ARCH'] != 'Darwin':
 
 MOCHITEST_MANIFESTS += ['mochitest.ini']
 
-MOCHITEST_CHROME_MANIFESTS += ['chrome.ini']
-

@@ -13,6 +13,19 @@ MOCHITEST_FILES += \
 # mochitest window?
 endif
 
+MOCHITEST_CHROME_FILES = \
+  utils.js \
+  test_clear_site_data.html \
+  test_npruntime.xul   \
+  test_wmode.xul \
+  test_bug479979.xul \
+  test_bug751809.html \
+  test_refresh_navigator_plugins.html \
+  test_plugin_tag_clicktoplay.html \
+  privatemode_perwindowpb.xul \
+  test_privatemode_perwindowpb.xul \
+  $(NULL)
+
 ifneq ($(MOZ_WIDGET_TOOLKIT),cocoa)
 MOCHITEST_FILES += \
   test_visibility.html \
