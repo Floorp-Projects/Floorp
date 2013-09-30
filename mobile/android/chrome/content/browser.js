@@ -6539,6 +6539,13 @@ var SearchEngines = {
         prompted: Services.prefs.getBoolPref(this.PREF_SUGGEST_PROMPTED)
       }
     });
+
+    // Send a speculative connection to the default engine.
+    let connector = Services.io.QueryInterface(Ci.nsISpeculativeConnect);
+    let searchURI = Services.search.defaultEngine.getSubmission("dummy").uri;
+    let callbacks = window.QueryInterface(Ci.nsIInterfaceRequestor)
+                          .getInterface(Ci.nsIWebNavigation).QueryInterface(Ci.nsILoadContext);
+    connector.speculativeConnect(searchURI, callbacks);
   },
 
   _handleSearchEnginesGetAll: function _handleSearchEnginesGetAll(rv) {
