@@ -2,13 +2,6 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-MOCHITEST_FILES = \
-  test_network_basics.html \
-  test_tcpsocket_default_permissions.html \
-  test_tcpsocket_enabled_no_perm.html \
-  test_tcpsocket_enabled_with_perm.html \
-  $(NULL)
-
 ifdef MOZ_B2G_RIL
 MOCHITEST_FILES = \
   test_networkstats_basics.html \
