@@ -1294,7 +1294,19 @@ NewObject(ExclusiveContext *cx, const Class *clasp, types::TypeObject *type_, JS
     if (clasp->trace && !(clasp->flags & JSCLASS_IMPLEMENTS_BARRIERS)) {
         if (!cx->shouldBeJSContext())
             return NULL;
-        cx->asJSContext()->runtime()->gcIncrementalEnabled = false;
+        JSRuntime *rt = cx->asJSContext()->runtime();
+        rt->gcIncrementalEnabled = false;
+
+#ifdef DEBUG
+        if (rt->gcMode == JSGC_MODE_INCREMENTAL) {
+            fprintf(stderr,
+                    "The class %s has a trace hook but does not declare the\n"
+                    "JSCLASS_IMPLEMENTS_BARRIERS flag. Please ensure that it correctly\n"
+                    "implements write barriers and then set the flag.\n",
+                    clasp->name);
+            MOZ_CRASH();
+        }
+#endif
     }
 
     Probes::createObject(cx, obj);
