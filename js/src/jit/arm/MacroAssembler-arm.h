@@ -88,9 +88,9 @@ class MacroAssemblerARM : public Assembler
                 SetCond_ sc = NoSetCond, Condition c = Always);
     void ma_nop();
     void ma_movPatchable(Imm32 imm, Register dest, Assembler::Condition c,
-                         RelocStyle rs, Instruction *i = NULL);
+                         RelocStyle rs, Instruction *i = nullptr);
     void ma_movPatchable(ImmPtr imm, Register dest, Assembler::Condition c,
-                         RelocStyle rs, Instruction *i = NULL);
+                         RelocStyle rs, Instruction *i = nullptr);
     // These should likely be wrapped up as a set of macros
     // or something like that.  I cannot think of a good reason
     // to explicitly have all of this code.

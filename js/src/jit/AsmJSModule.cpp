@@ -63,16 +63,18 @@ AllocateExecutableMemory(ExclusiveContext *cx, size_t totalBytes)
     JS_ASSERT(totalBytes % AsmJSPageSize == 0);
 
 #ifdef XP_WIN
-    void *p = VirtualAlloc(NULL, totalBytes, MEM_COMMIT, PAGE_EXECUTE_READWRITE);
+    void *p = VirtualAlloc(nullptr, totalBytes, MEM_COMMIT, PAGE_EXECUTE_READWRITE);
     if (!p) {
         js_ReportOutOfMemory(cx);
-        return NULL;
+        return nullptr;
     }
 #else  // assume Unix
-    void *p = mmap(NULL, totalBytes, PROT_READ | PROT_WRITE | PROT_EXEC, MAP_PRIVATE | MAP_ANON, -1, 0);
+    void *p = mmap(nullptr, totalBytes,
+                   PROT_READ | PROT_WRITE | PROT_EXEC, MAP_PRIVATE | MAP_ANON,
+                   -1, 0);
     if (p == MAP_FAILED) {
         js_ReportOutOfMemory(cx);
-        return NULL;
+        return nullptr;
     }
 #endif
 
@@ -249,7 +251,7 @@ AddressOf(AsmJSImmKind kind, ExclusiveContext *cx)
     }
 
     MOZ_ASSUME_UNREACHABLE("Bad AsmJSImmKind");
-    return NULL;
+    return nullptr;
 }
 
 void
@@ -275,17 +277,17 @@ AsmJSModule::staticallyLink(const AsmJSStaticLinkData &linkData, ExclusiveContex
 
     for (size_t i = 0; i < exits_.length(); i++) {
         exitIndexToGlobalDatum(i).exit = interpExitTrampoline(exits_[i]);
-        exitIndexToGlobalDatum(i).fun = NULL;
+        exitIndexToGlobalDatum(i).fun = nullptr;
     }
 }
 
 AsmJSModule::AsmJSModule(ScriptSource *scriptSource, uint32_t charsBegin)
-  : globalArgumentName_(NULL),
-    importArgumentName_(NULL),
-    bufferArgumentName_(NULL),
+  : globalArgumentName_(nullptr),
+    importArgumentName_(nullptr),
+    bufferArgumentName_(nullptr),
     minHeapLength_(AsmJSAllocationGranularity),
-    code_(NULL),
-    operationCallbackExit_(NULL),
+    code_(nullptr),
+    operationCallbackExit_(nullptr),
     linked_(false),
     charsBegin_(charsBegin),
     scriptSource_(scriptSource)
@@ -364,21 +366,21 @@ const Class AsmJSModuleObject::class_ = {
     JS_StrictPropertyStub,   /* setProperty */
     JS_EnumerateStub,
     JS_ResolveStub,
-    NULL,                    /* convert     */
+    nullptr,                 /* convert     */
     AsmJSModuleObject_finalize,
-    NULL,                    /* checkAccess */
-    NULL,                    /* call        */
-    NULL,                    /* hasInstance */
-    NULL,                    /* construct   */
+    nullptr,                 /* checkAccess */
+    nullptr,                 /* call        */
+    nullptr,                 /* hasInstance */
+    nullptr,                 /* construct   */
     AsmJSModuleObject_trace
 };
 
 AsmJSModuleObject *
 AsmJSModuleObject::create(ExclusiveContext *cx, ScopedJSDeletePtr<AsmJSModule> *module)
 {
-    JSObject *obj = NewObjectWithGivenProto(cx, &AsmJSModuleObject::class_, NULL, NULL);
+    JSObject *obj = NewObjectWithGivenProto(cx, &AsmJSModuleObject::class_, nullptr, nullptr);
     if (!obj)
-        return NULL;
+        return nullptr;
 
     obj->setReservedSlot(MODULE_SLOT, PrivateValue(module->forget()));
     return &obj->as<AsmJSModuleObject>();

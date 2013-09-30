@@ -23,6 +23,8 @@ static const char* sDiscardTimeoutPref = "image.mem.min_discard_timeout_ms";
 /* static */ uint32_t DiscardTracker::sMinDiscardTimeoutMs = 10000;
 /* static */ uint32_t DiscardTracker::sMaxDecodedImageKB = 42 * 1024;
 /* static */ PRLock * DiscardTracker::sAllocationLock = nullptr;
+/* static */ mozilla::Mutex* DiscardTracker::sNodeListMutex = nullptr;
+/* static */ Atomic<uint32_t> DiscardTracker::sShutdown(0);
 
 /*
  * When we notice we're using too much memory for decoded images, we enqueue a
@@ -50,7 +52,7 @@ DiscardTracker::Reset(Node *node)
   // We shouldn't call Reset() with a null |img| pointer, on images which can't
   // be discarded, or on animated images (which should be marked as
   // non-discardable, anyway).
-  MOZ_ASSERT(NS_IsMainThread());
+  MutexAutoLock lock(*sNodeListMutex);
   MOZ_ASSERT(sInitialized);
   MOZ_ASSERT(node->img);
   MOZ_ASSERT(node->img->CanDiscard());
@@ -81,7 +83,11 @@ DiscardTracker::Reset(Node *node)
 void
 DiscardTracker::Remove(Node *node)
 {
-  MOZ_ASSERT(NS_IsMainThread());
+  if (sShutdown) {
+    // Already shutdown. List should be empty, so just return.
+    return;
+  }
+  MutexAutoLock lock(*sNodeListMutex);
 
   if (node->isInList())
     node->remove();
@@ -96,7 +102,7 @@ DiscardTracker::Remove(Node *node)
 void
 DiscardTracker::Shutdown()
 {
-  MOZ_ASSERT(NS_IsMainThread());
+  sShutdown = true;
 
   if (sTimer) {
     sTimer->Cancel();
@@ -106,6 +112,9 @@ DiscardTracker::Shutdown()
   // Clear the sDiscardableImages linked list so that its destructor
   // (LinkedList.h) finds an empty array, which is required after bug 803688.
   DiscardAll();
+
+  delete sNodeListMutex;
+  sNodeListMutex = nullptr;
 }
 
 /*
@@ -114,7 +123,7 @@ DiscardTracker::Shutdown()
 void
 DiscardTracker::DiscardAll()
 {
-  MOZ_ASSERT(NS_IsMainThread());
+  MutexAutoLock lock(*sNodeListMutex);
 
   if (!sInitialized)
     return;
@@ -153,8 +162,6 @@ DiscardTracker::InformAllocation(int64_t bytes)
 nsresult
 DiscardTracker::Initialize()
 {
-  MOZ_ASSERT(NS_IsMainThread());
-
   // Watch the timeout pref for changes.
   Preferences::RegisterCallback(DiscardTimeoutChangedCallback,
                                 sDiscardTimeoutPref);
@@ -168,6 +175,10 @@ DiscardTracker::Initialize()
 
   // Create a lock for safegarding the 64-bit sCurrentDecodedImageBytes
   sAllocationLock = PR_NewLock();
+
+  // Create a lock for the node list.
+  MOZ_ASSERT(!sNodeListMutex);
+  sNodeListMutex = new Mutex("image::DiscardTracker");
 
   // Mark us as initialized
   sInitialized = true;

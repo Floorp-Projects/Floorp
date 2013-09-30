@@ -171,7 +171,7 @@ FindReusingDefinition(LInstruction *ins, LAllocation *alloc)
             ins->getOperand(def->getReusedInput()) == alloc)
             return def;
     }
-    return NULL;
+    return nullptr;
 }
 
 /*
@@ -230,14 +230,14 @@ class LiveInterval
   public:
 
     LiveInterval(uint32_t vreg, uint32_t index)
-      : spillInterval_(NULL),
+      : spillInterval_(nullptr),
         vreg_(vreg),
         index_(index),
         lastProcessedRange_(size_t(-1))
     { }
 
     LiveInterval(uint32_t index)
-      : spillInterval_(NULL),
+      : spillInterval_(nullptr),
         vreg_(UINT32_MAX),
         index_(index),
         lastProcessedRange_(size_t(-1))
@@ -433,7 +433,7 @@ class VirtualRegister
         JS_ASSERT(interval->numRanges());
 
         // Preserve ascending order for faster lookups.
-        LiveInterval **found = NULL;
+        LiveInterval **found = nullptr;
         LiveInterval **i;
         for (i = intervals_.begin(); i != intervals_.end(); i++) {
             if (!found && interval->start() < (*i)->start())
@@ -468,7 +468,7 @@ class VirtualRegisterMap
 
   public:
     VirtualRegisterMap()
-      : vregs_(NULL),
+      : vregs_(nullptr),
         numVregs_(0)
     { }
 
@@ -555,8 +555,8 @@ class LiveRangeAllocator : public RegisterAllocator
 
     LiveRangeAllocator(MIRGenerator *mir, LIRGenerator *lir, LIRGraph &graph, bool forLSRA)
       : RegisterAllocator(mir, lir, graph),
-        liveIn(NULL),
-        fixedIntervalsUnion(NULL),
+        liveIn(nullptr),
+        fixedIntervalsUnion(nullptr),
         forLSRA(forLSRA)
     {
     }
@@ -577,7 +577,7 @@ class LiveRangeAllocator : public RegisterAllocator
         for (size_t i = 1; i < graph.numVirtualRegisters(); i++) {
             VirtualRegister *reg = &vregs[i];
 
-            LiveInterval *prev = NULL;
+            LiveInterval *prev = nullptr;
             for (size_t j = 0; j < reg->numIntervals(); j++) {
                 LiveInterval *interval = reg->getInterval(j);
                 JS_ASSERT(interval->vreg() == i);

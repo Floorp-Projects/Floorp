@@ -60,7 +60,7 @@
 #include "mozilla/TouchEvents.h"
 #include "mozilla/Util.h"
 
-#include "mozilla/ipc/RPCChannel.h"
+#include "mozilla/ipc/MessageChannel.h"
 #include <algorithm>
 
 #include "nsWindow.h"
@@ -4192,11 +4192,11 @@ nsWindow::IsAsyncResponseEvent(UINT aMsg, LRESULT& aResult)
 void
 nsWindow::IPCWindowProcHandler(UINT& msg, WPARAM& wParam, LPARAM& lParam)
 {
-  NS_ASSERTION(!mozilla::ipc::SyncChannel::IsPumpingMessages(),
+  NS_ASSERTION(!mozilla::ipc::MessageChannel::IsPumpingMessages(),
                "Failed to prevent a nonqueued message from running!");
 
   // Modal UI being displayed in windowless plugins.
-  if (mozilla::ipc::RPCChannel::IsSpinLoopActive() &&
+  if (mozilla::ipc::MessageChannel::IsSpinLoopActive() &&
       (InSendMessageEx(NULL)&(ISMEX_REPLIED|ISMEX_SEND)) == ISMEX_SEND) {
     LRESULT res;
     if (IsAsyncResponseEvent(msg, res)) {

@@ -1,0 +1,38 @@
+<!--
+  Any copyright is dedicated to the Public Domain.
+  http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<html>
+<head>
+  <title>Indexed Database Property Test</title>
+
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+
+  <script type="text/javascript;version=1.7">
+  function testSteps()
+  {
+    const name = window.location.pathname;
+
+    // Test for IDBKeyRange and indexedDB availability in content windows.
+    let keyRange = IDBKeyRange.only(42);
+    ok(keyRange, "Got keyRange");
+
+    let request = indexedDB.open(name, 1);
+    request.onerror = errorHandler;
+    request.onsuccess = grabEventAndContinueHandler;
+    let event = yield undefined;
+
+    let db = event.target.result;
+    ok(db, "Got database");
+
+    finishTest();
+    yield undefined;
+  }
+  </script>
+  <script type="text/javascript;version=1.7" src="helpers.js"></script>
+</head>
+
+<body onload="runTest();"></body>
+
+</html>

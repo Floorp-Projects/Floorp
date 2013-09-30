@@ -9,9 +9,9 @@
 namespace mozilla {
 namespace _ipdltest {
 
-mozilla::ipc::RPCChannel::RacyRPCPolicy
-MediateRace(const mozilla::ipc::RPCChannel::Message& parent,
-            const mozilla::ipc::RPCChannel::Message& child);
+mozilla::ipc::RacyRPCPolicy
+MediateRace(const mozilla::ipc::MessageChannel::Message& parent,
+            const mozilla::ipc::MessageChannel::Message& child);
 
 class TestRPCRacesParent :
     public PTestRPCRacesParent
@@ -47,7 +47,7 @@ protected:
     virtual bool
     RecvGetAnsweredParent(bool* answeredParent) MOZ_OVERRIDE;
 
-    virtual mozilla::ipc::RPCChannel::RacyRPCPolicy
+    virtual mozilla::ipc::RacyRPCPolicy
     MediateRPCRace(const Message& parent, const Message& child) MOZ_OVERRIDE
     {
         return MediateRace(parent, child);
@@ -104,7 +104,7 @@ protected:
     virtual bool
     AnswerChild() MOZ_OVERRIDE;
 
-    virtual mozilla::ipc::RPCChannel::RacyRPCPolicy
+    virtual mozilla::ipc::RacyRPCPolicy
     MediateRPCRace(const Message& parent, const Message& child) MOZ_OVERRIDE
     {
         return MediateRace(parent, child);

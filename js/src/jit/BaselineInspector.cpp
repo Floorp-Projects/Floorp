@@ -140,7 +140,7 @@ ICStub *
 BaselineInspector::monomorphicStub(jsbytecode *pc)
 {
     if (!hasBaselineScript())
-        return NULL;
+        return nullptr;
 
     const ICEntry &entry = icEntryFromPC(pc);
 
@@ -148,7 +148,7 @@ BaselineInspector::monomorphicStub(jsbytecode *pc)
     ICStub *next = stub->next();
 
     if (!next || !next->isFallback())
-        return NULL;
+        return nullptr;
 
     return stub;
 }
@@ -163,7 +163,7 @@ BaselineInspector::dimorphicStub(jsbytecode *pc, ICStub **pfirst, ICStub **pseco
 
     ICStub *stub = entry.firstStub();
     ICStub *next = stub->next();
-    ICStub *after = next ? next->next() : NULL;
+    ICStub *after = next ? next->next() : nullptr;
 
     if (!after || !after->isFallback())
         return false;
@@ -222,7 +222,7 @@ CanUseInt32Compare(ICStub::Kind kind)
 MCompare::CompareType
 BaselineInspector::expectedCompareType(jsbytecode *pc)
 {
-    ICStub *first = monomorphicStub(pc), *second = NULL;
+    ICStub *first = monomorphicStub(pc), *second = nullptr;
     if (!first && !dimorphicStub(pc, &first, &second))
         return MCompare::Compare_Unknown;
 
@@ -235,7 +235,7 @@ BaselineInspector::expectedCompareType(jsbytecode *pc)
             ? first->toCompare_NumberWithUndefined()
             : (second && second->isCompare_NumberWithUndefined())
               ? second->toCompare_NumberWithUndefined()
-              : NULL;
+              : nullptr;
         if (coerce) {
             return coerce->lhsIsUndefined()
                    ? MCompare::Compare_DoubleMaybeCoerceLHS
@@ -349,6 +349,20 @@ BaselineInspector::hasSeenAccessedGetter(jsbytecode *pc)
     if (stub->isGetProp_Fallback())
         return stub->toGetProp_Fallback()->hasAccessedGetter();
     return false;
+}
+
+bool
+BaselineInspector::hasSeenNonStringIterNext(jsbytecode *pc)
+{
+    JS_ASSERT(JSOp(*pc) == JSOP_ITERNEXT);
+
+    if (!hasBaselineScript())
+        return false;
+
+    const ICEntry &entry = icEntryFromPC(pc);
+    ICStub *stub = entry.fallbackStub();
+
+    return stub->toIteratorNext_Fallback()->hasNonStringResult();
 }
 
 bool

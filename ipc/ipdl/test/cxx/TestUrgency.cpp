@@ -2,6 +2,10 @@
 
 #include "IPDLUnitTests.h"      // fail etc.
 #include <unistd.h>
+#if defined(OS_POSIX)
+#else
+#include <windows.h>
+#endif
 
 template<>
 struct RunnableMethodTraits<mozilla::_ipdltest::TestUrgencyParent>
@@ -12,6 +16,13 @@ struct RunnableMethodTraits<mozilla::_ipdltest::TestUrgencyParent>
 
 namespace mozilla {
 namespace _ipdltest {
+
+#if defined(OS_POSIX)
+static void Sleep(int ms)
+{
+    sleep(ms / 1000);
+}
+#endif
 
 //-----------------------------------------------------------------------------
 // parent
@@ -164,7 +175,7 @@ TestUrgencyChild::AnswerReply2(uint32_t *reply)
     fail("wrong test # in AnswerReply2");
 
   // sleep for 5 seconds so the parent process tries to deliver more messages.
-  sleep(5);
+  Sleep(5000);
 
   *reply = 500;
   test_ = kSecondTestGotReply;

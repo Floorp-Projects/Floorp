@@ -6,6 +6,7 @@ include "mozilla/dom/indexedDB/SerializationHelpers.h";
 
 using mozilla::dom::indexedDB::Key;
 using mozilla::dom::indexedDB::IDBCursor::Direction;
+using mozilla::dom::indexedDB::SerializedStructuredCloneReadInfo;
 
 using mozilla::void_t;
 
@@ -55,6 +56,18 @@ struct OpenCursorParams
 {
   OptionalKeyRange optionalKeyRange;
   Direction direction;
+};
+
+struct OpenKeyCursorParams
+{
+  OptionalKeyRange optionalKeyRange;
+  Direction direction;
+};
+
+union OptionalStructuredCloneReadInfo
+{
+  SerializedStructuredCloneReadInfo;
+  void_t;
 };
 
 } // namespace ipc

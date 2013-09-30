@@ -22,8 +22,6 @@ XPCOMUtils.defineLazyServiceGetter(this, "ppmm",
                                    "@mozilla.org/parentprocessmessagemanager;1",
                                    "nsIMessageListenerManager");
 
-let myGlobal = this;
-
 let ContactService = {
   init: function() {
     if (DEBUG) debug("Init");
@@ -38,10 +36,8 @@ let ContactService = {
       ppmm.addMessageListener(msgName, this);
     }.bind(this));
 
-    var idbManager = Components.classes["@mozilla.org/dom/indexeddb/manager;1"].getService(Ci.nsIIndexedDatabaseManager);
-    idbManager.initWindowless(myGlobal);
     this._db = new ContactDB();
-    this._db.init(myGlobal);
+    this._db.init();
 
     this.configureSubstringMatching();
 
@@ -51,7 +47,6 @@ let ContactService = {
 
   observe: function(aSubject, aTopic, aData) {
     if (aTopic === 'profile-before-change') {
-      myGlobal = null;
       this._messages.forEach(function(msgName) {
         ppmm.removeMessageListener(msgName, this);
       }.bind(this));

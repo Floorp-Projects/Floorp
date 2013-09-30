@@ -53,6 +53,7 @@ MOCHITEST_FILES = \
   test_filehandle_store_snapshot.html \
   test_getAll.html \
   test_get_filehandle.html \
+  test_globalObjects.html \
   test_global_data.html \
   test_index_empty_keyPath.html \
   test_index_getAll.html \
@@ -72,6 +73,7 @@ MOCHITEST_FILES = \
   test_objectCursors.html \
   test_objectStore_getAllKeys.html \
   test_objectStore_inline_autoincrement_key_added_on_put.html \
+  test_objectStore_openKeyCursor.html \
   test_objectStore_remove_values.html \
   test_object_identity.html \
   test_odd_result_order.html \
@@ -114,6 +116,11 @@ MOCHITEST_FILES = \
 
 #   test_bug847147.html disabled for timeouts
 #   test_writer_starvation.html  disabled for infinite loops, bug 595368
+
+MOCHITEST_CHROME_FILES = \
+  chromeHelpers.js \
+  test_globalObjects.xul \
+  $(NULL)
 
 ifeq (browser,$(MOZ_BUILD_APP))
 MOCHITEST_BROWSER_FILES = \

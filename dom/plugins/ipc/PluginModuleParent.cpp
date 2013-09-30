@@ -16,7 +16,7 @@
 #include "base/process_util.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/dom/PCrashReporterParent.h"
-#include "mozilla/ipc/SyncChannel.h"
+#include "mozilla/ipc/MessageChannel.h"
 #include "mozilla/plugins/BrowserStreamParent.h"
 #include "mozilla/plugins/PluginInstanceParent.h"
 #include "mozilla/Preferences.h"
@@ -51,7 +51,7 @@
 using base::KillProcess;
 
 using mozilla::PluginLibrary;
-using mozilla::ipc::SyncChannel;
+using mozilla::ipc::MessageChannel;
 using mozilla::dom::PCrashReporterParent;
 using mozilla::dom::CrashReporterParent;
 
@@ -248,7 +248,7 @@ void
 PluginModuleParent::SetChildTimeout(const int32_t aChildTimeout)
 {
     int32_t timeoutMs = (aChildTimeout > 0) ? (1000 * aChildTimeout) :
-                      SyncChannel::kNoTimeout;
+                      MessageChannel::kNoTimeout;
     SetReplyTimeoutMs(timeoutMs);
 }
 

@@ -100,7 +100,7 @@ TypeRepresentationSetBuilder::insert(TypeRepresentation *typeRepr)
     if (min == entries_.length())
         return entries_.append(typeRepr);
     TypeRepresentation **insertLoc = &entries_[min];
-    return entries_.insert(insertLoc, typeRepr) != NULL;
+    return entries_.insert(insertLoc, typeRepr) != nullptr;
 }
 
 bool
@@ -156,7 +156,7 @@ TypeRepresentationSet::TypeRepresentationSet(size_t length,
 
 TypeRepresentationSet::TypeRepresentationSet()
   : length_(0),
-    entries_(NULL)
+    entries_(nullptr)
 {}
 
 bool

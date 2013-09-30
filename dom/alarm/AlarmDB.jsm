@@ -23,18 +23,17 @@ const ALARMDB_NAME    = "alarms";
 const ALARMDB_VERSION = 1;
 const ALARMSTORE_NAME = "alarms";
 
-this.AlarmDB = function AlarmDB(aGlobal) {
+this.AlarmDB = function AlarmDB() {
   debug("AlarmDB()");
-  this._global = aGlobal;
 }
 
 AlarmDB.prototype = {
   __proto__: IndexedDBHelper.prototype,
 
-  init: function init(aGlobal) {
+  init: function init() {
     debug("init()");
 
-    this.initDBHelper(ALARMDB_NAME, ALARMDB_VERSION, [ALARMSTORE_NAME], aGlobal);
+    this.initDBHelper(ALARMDB_NAME, ALARMDB_VERSION, [ALARMSTORE_NAME]);
   },
 
   upgradeSchema: function upgradeSchema(aTransaction, aDb, aOldVersion, aNewVersion) {

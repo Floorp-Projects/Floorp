@@ -2319,7 +2319,6 @@ nsCycleCollector::CollectWhite()
     //   - Unlink(whites), which drops outgoing links on each white.
     //   - Unroot(whites), which returns the whites to normal GC.
 
-    nsresult rv;
     TimeLog timeLog;
 
     MOZ_ASSERT(mWhiteNodes->IsEmpty(),
@@ -2334,11 +2333,8 @@ nsCycleCollector::CollectWhite()
         PtrInfo *pinfo = etor.GetNext();
         if (pinfo->mColor == white) {
             mWhiteNodes->AppendElement(pinfo);
-            rv = pinfo->mParticipant->Root(pinfo->mPointer);
-            if (NS_FAILED(rv)) {
-                Fault("Failed root call while unlinking", pinfo);
-                mWhiteNodes->RemoveElementAt(mWhiteNodes->Length() - 1);
-            } else if (pinfo->mRefCount == 0) {
+            pinfo->mParticipant->Root(pinfo->mPointer);
+            if (pinfo->mRefCount == 0) {
                 // only JS objects have a refcount of 0
                 ++numWhiteGCed;
             }
@@ -2367,24 +2363,19 @@ nsCycleCollector::CollectWhite()
             mJSRuntime->SetObjectToUnlink(pinfo->mPointer);
         }
 #endif
-        rv = pinfo->mParticipant->Unlink(pinfo->mPointer);
+        pinfo->mParticipant->Unlink(pinfo->mPointer);
 #ifdef DEBUG
         if (mJSRuntime) {
             mJSRuntime->SetObjectToUnlink(nullptr);
             mJSRuntime->AssertNoObjectsToTrace(pinfo->mPointer);
         }
 #endif
-        if (NS_FAILED(rv)) {
-            Fault("Failed unlink call while unlinking", pinfo);
-        }
     }
     timeLog.Checkpoint("CollectWhite::Unlink");
 
     for (uint32_t i = 0; i < count; ++i) {
         PtrInfo *pinfo = mWhiteNodes->ElementAt(i);
-        rv = pinfo->mParticipant->Unroot(pinfo->mPointer);
-        if (NS_FAILED(rv))
-            Fault("Failed unroot call while unlinking", pinfo);
+        pinfo->mParticipant->Unroot(pinfo->mPointer);
     }
     timeLog.Checkpoint("CollectWhite::Unroot");
 
