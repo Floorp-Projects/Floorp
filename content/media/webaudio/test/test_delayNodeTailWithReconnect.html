@@ -1,0 +1,138 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test tail time lifetime of DelayNode after input finishes and new input added</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="webaudio.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+SimpleTest.waitForExplicitFinish();
+
+// The buffer source will start on a block boundary, so keeping the signal
+// within one block ensures that it will not cross AudioProcessingEvent buffer
+// boundaries.
+const signalLength = 128;
+const bufferSize = 1024;
+// Delay should be long enough to allow CC to run
+var delayBufferCount = 50;
+var delayBufferOffset;
+const delayLength = delayBufferCount * bufferSize;
+
+var phase = "initial";
+var sourceCount = 0;
+var delayCount = 0;
+var oscillator;
+var delay;
+var source;
+
+function applySignal(buffer, offset) {
+  for (var i = 0; i < signalLength; ++i) {
+    buffer.getChannelData(0)[offset + i] = Math.cos(Math.PI * i / signalLength);
+  }
+}
+
+function bufferIsSilent(buffer, out) {
+  for (var i = 0; i < buffer.length; ++i) {
+    if (buffer.getChannelData(0)[i] != 0) {
+      if (out) {
+        out.soundOffset = i;
+      }
+      return false;
+    }
+  }
+  return true;
+}
+
+function onDelayOutput(e) {
+  switch(phase) {
+
+  case "initial":
+    // Wait for oscillator sound to exit delay
+    if (bufferIsSilent(e.inputBuffer))
+      break;
+
+    phase = "played oscillator";
+    break;
+
+  case "played oscillator":
+    // First tail time has expired.  Start second source and remove references
+    // to the delay and connected second source.
+    oscillator.disconnect();
+    source.connect(delay);
+    source.start();
+    source = null;
+    delay = null;
+    phase = "started second source";
+    break;
+
+  case "second tail time":
+    if (delayCount == delayBufferCount) {
+      var ctx = e.target.context;
+      var expected = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
+      applySignal(expected, delayBufferOffset);
+      compareBuffers(e.inputBuffer.getChannelData(0), expected.getChannelData(0));
+      e.target.onaudioprocess = null;
+      SimpleTest.finish();
+    }
+  }
+
+  delayCount++;
+}
+
+function onSourceOutput(e) {
+  switch(phase) {
+  case "started second source":
+    var out = {};
+    if (!bufferIsSilent(e.inputBuffer, out)) {
+      delayBufferCount += sourceCount;
+      delayBufferOffset = out.soundOffset;
+      phase = "played second source";
+    }
+    break;
+  case "played second source":
+    SpecialPowers.forceGC();
+    SpecialPowers.forceCC();
+    phase = "second tail time";
+    e.target.onaudioprocess = null;
+  }
+
+  sourceCount++;
+}
+
+function startTest() {
+  var ctx = new AudioContext();
+  var delayDuration = delayLength / ctx.sampleRate;
+  delay = ctx.createDelay(delayDuration);
+  delay.delayTime.value = delayDuration;
+  var processor1 = ctx.createScriptProcessor(bufferSize, 1, 0);
+  delay.connect(processor1);
+  processor1.onaudioprocess = onDelayOutput;
+  processor1.connect(ctx.destination); // work around bug 916387
+
+  // Signal to trigger initial tail time reference
+  oscillator = ctx.createOscillator();
+  oscillator.start(0);
+  oscillator.stop(100/ctx.sampleRate);
+  oscillator.connect(delay);
+
+  // Short signal, not started yet, with a ScriptProcessor to detect when it
+  // starts.  It should finish before garbage collection.
+  var buffer = ctx.createBuffer(1, signalLength, ctx.sampleRate);
+  applySignal(buffer, 0);
+  source = ctx.createBufferSource();
+  source.buffer = buffer;
+  var processor2 = ctx.createScriptProcessor(bufferSize, 1, 0);
+  source.connect(processor2);
+  processor2.onaudioprocess = onSourceOutput;
+  processor2.connect(ctx.destination); // guard against bug 916387
+};
+
+startTest();
+</script>
+</pre>
+</body>
+</html>
