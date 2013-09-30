@@ -112,7 +112,6 @@ namespace analyze {
 
 namespace types {
 
-class TypeCallsite;
 class TypeCompartment;
 class TypeSet;
 
@@ -1141,13 +1140,6 @@ class TypeScript
     uint32_t *bytecodeMap;
 
   public:
-    /*
-     * Array of type sets storing the possible inputs to property reads.
-     * Generated the first time the script is analyzed by inference and kept
-     * after analysis purges.
-     */
-    HeapTypeSet *propertyReadTypes;
-
     /* Array of type type sets for variables and JOF_TYPESET ops. */
     TypeSet *typeArray() const { return (TypeSet *) (uintptr_t(this) + sizeof(TypeScript)); }
 

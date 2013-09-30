@@ -3,23 +3,3 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-MOCHITEST_CHROME_FILES	= \
-		test_bug311681.xul \
-		test_bug199692.xul \
-		test_bug391002.xul \
-		test_bug403868.xul \
-		test_bug414907.xul \
-		test_bug418216.xul \
-		test_bug445177.xul \
-		test_bug449457.xul \
-		test_bug468176.xul \
-		test_bug583948.xul \
-		window_bug583948.xul \
-		test_bug497875.xul \
-		bug497875-iframe.xul \
-		test_bug335375.xul \
-		overlay1_bug335375.xul \
-		overlay2_bug335375.xul \
-		test_bug757137.xul \
-		window_bug757137.xul \
-		$(NULL)

@@ -130,7 +130,6 @@ MOCHITEST_FILES = \
 		test_mediarecorder_reload_crash.html \
 		test_mediarecorder_record_immediate_stop.html \
 		test_mediarecorder_record_session.html \
-		test_media_selection.html \
 		test_playback.html \
 		test_seekLies.html \
 		test_media_sniffer.html \
@@ -179,6 +178,8 @@ endif
 #		test_bug465498.html
 # Bug 707777:
 #		test_bug493187.html
+# Bug 897843:
+#		test_media_selection.html
 # Bug 832678, bug 795271, and bug 857424
 #		test_seek.html
 # Bug 832768, bug 814533, bug 840742
@@ -190,6 +191,7 @@ MOCHITEST_FILES += \
 		test_buffered.html \
 		test_bug465498.html \
 		test_bug493187.html \
+		test_media_selection.html \
 		test_seek.html \
 		test_playback_rate.html \
 		test_played.html \
