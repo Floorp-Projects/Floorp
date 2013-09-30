@@ -2,7 +2,6 @@
     <head>
         <script>
             function check_wrapper(ok, wrapper, expected, note) {
-                netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
 
                 var utils = SpecialPowers.DOMWindowUtils;
                 ok(utils.getClassName(wrapper) === expected, note);

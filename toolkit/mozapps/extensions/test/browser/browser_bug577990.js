@@ -16,7 +16,6 @@ var gInstallProperties = [{
 
 function test() {
   try {
-    netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
     if (Components.classes["@mozilla.org/gfx/info;1"].getService(Components.interfaces.nsIGfxInfo).D2DEnabled) {
       requestLongerTimeout(2);
     }

@@ -23,7 +23,6 @@ var gChecked = false;
 
 function runTests()
 {
-  netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
   var button = document.getElementById("button");
   var windowUtils = window.QueryInterface(Components.interfaces.nsIInterfaceRequestor)
                           .getInterface(Components.interfaces.nsIDOMWindowUtils);
