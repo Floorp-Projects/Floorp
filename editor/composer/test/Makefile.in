@@ -3,18 +3,3 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-MOCHITEST_FILES = \
-		test_bug348497.html \
-		test_bug384147.html \
-		test_bug389350.html \
-		test_bug519928.html \
-		bug678842_subframe.html \
-		test_bug738440.html \
-		$(NULL)
-
-MOCHITEST_CHROME_FILES = \
-		test_bug434998.xul \
-		test_bug338427.html \
-		test_bug678842.html \
-		test_async_UpdateCurrentDictionary.html \
-		$(NULL)

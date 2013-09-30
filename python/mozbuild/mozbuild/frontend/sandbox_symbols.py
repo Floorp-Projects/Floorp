@@ -419,7 +419,7 @@ VARIABLES = {
         These are .ipdl files that will be parsed and converted to .cpp files.
         """),
 
-    'WEBIDL_FILES': (list, list, [],
+    'WEBIDL_FILES': (StrictOrderingOnAppendList, list, [],
         """WebIDL source files.
 
         These will be parsed and converted to .cpp and .h files.
