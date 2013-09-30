@@ -14,6 +14,8 @@
 #include "nsPresContext.h"
 #include "nsDeviceContext.h"
 
+class nsINode;
+
 class nsDOMUIEvent : public nsDOMEvent,
                      public nsIDOMUIEvent
 {

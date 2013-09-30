@@ -11,8 +11,12 @@
 #include "nsMathMLOperators.h"
 #include "nsIMathMLFrame.h"
 #include "nsLayoutUtils.h"
+#include "nsBoundingMetrics.h"
+#include "nsIFrame.h"
 
 class nsMathMLChar;
+class nsCSSValue;
+class nsDisplayListSet;
 
 // Concrete base class with default methods that derived MathML frames can override
 class nsMathMLFrame : public nsIMathMLFrame {

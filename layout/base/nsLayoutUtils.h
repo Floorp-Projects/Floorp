@@ -24,25 +24,40 @@ class nsBlockFrame;
 class gfxDrawable;
 class nsView;
 class imgIContainer;
+class nsIFrame;
+class nsStyleCoord;
+class nsStyleCorners;
+class gfxContext;
+class nsPIDOMWindow;
+class imgIRequest;
+class nsIDocument;
+struct nsStyleFont;
+struct nsStyleImageOrientation;
+struct nsOverflowAreas;
 
 #include "mozilla/MemoryReporting.h"
 #include "nsChangeHint.h"
 #include "nsAutoPtr.h"
-#include "nsIFrame.h"
+#include "nsFrameList.h"
 #include "nsThreadUtils.h"
-#include "nsIPresShell.h"
 #include "nsIPrincipal.h"
 #include "gfxPattern.h"
 #include "nsCSSPseudoElements.h"
 #include "FrameMetrics.h"
 #include "gfx3DMatrix.h"
 #include "nsIWidget.h"
+#include "nsCSSProperty.h"
+#include "nsStyleCoord.h"
+#include "nsStyleConsts.h"
+#include "nsGkAtoms.h"
+#include "nsRuleNode.h"
 
 #include <limits>
 #include <algorithm>
 
 namespace mozilla {
 class SVGImageContext;
+struct IntrinsicSize;
 namespace dom {
 class Element;
 class HTMLImageElement;
@@ -101,7 +116,7 @@ public:
    * Use heuristics to figure out the child list that
    * aChildFrame is currently in.
    */
-  static nsIFrame::ChildListID GetChildListNameFor(nsIFrame* aChildFrame);
+  static mozilla::layout::FrameChildListID GetChildListNameFor(nsIFrame* aChildFrame);
 
   /**
    * GetBeforeFrame returns the outermost :before frame of the given frame, if
@@ -257,23 +272,6 @@ public:
                                        int32_t aIf1Ancestor,
                                        int32_t aIf2Ancestor,
                                        nsIFrame* aCommonAncestor = nullptr);
-
-  /**
-   * Sorts the given nsFrameList, so that for every two adjacent frames in the
-   * list, the former is less than or equal to the latter, according to the
-   * templated IsLessThanOrEqual method.
-   *
-   * Note: this method uses a stable merge-sort algorithm.
-   */
-  template<bool IsLessThanOrEqual(nsIFrame*, nsIFrame*)>
-  static void SortFrameList(nsFrameList& aFrameList);
-
-  /**
-   * Returns true if the given frame list is already sorted, according to the
-   * templated IsLessThanOrEqual function.
-   */
-  template<bool IsLessThanOrEqual(nsIFrame*, nsIFrame*)>
-  static bool IsFrameListSorted(nsFrameList& aFrameList);
 
   /**
    * LastContinuationWithChild gets the last continuation in aFrame's chain
@@ -915,9 +913,7 @@ public:
   /*
    * Whether the frame is an nsBlockFrame which is not a wrapper block.
    */
-  static bool IsNonWrapperBlock(nsIFrame* aFrame) {
-    return GetAsBlock(aFrame) && !aFrame->IsBlockWrapper();
-  }
+  static bool IsNonWrapperBlock(nsIFrame* aFrame);
 
   /**
    * If aFrame is an out of flow frame, return its placeholder, otherwise
@@ -1020,7 +1016,7 @@ public:
                                     nscoord aContentEdgeToBoxSizingBoxEdge,
                                     const nsStyleCoord& aCoord)
   {
-    MOZ_ASSERT(aContainingBlockHeight != NS_AUTOHEIGHT || !aCoord.HasPercent(),
+    MOZ_ASSERT(aContainingBlockHeight != nscoord_MAX || !aCoord.HasPercent(),
                "caller must deal with %% of unconstrained height");
     MOZ_ASSERT(aCoord.IsCoordPercentCalcUnit());
 
@@ -1035,7 +1031,7 @@ public:
     nsStyleUnit unit = aCoord.GetUnit();
     return unit == eStyleUnit_Auto ||  // only for 'height'
            unit == eStyleUnit_None ||  // only for 'max-height'
-           (aCBHeight == NS_AUTOHEIGHT && aCoord.HasPercent());
+           (aCBHeight == nscoord_MAX && aCoord.HasPercent());
   }
 
   static bool IsPaddingZero(const nsStyleCoord &aCoord)
@@ -1068,7 +1064,7 @@ public:
    */
   static nsSize ComputeSizeWithIntrinsicDimensions(
                     nsRenderingContext* aRenderingContext, nsIFrame* aFrame,
-                    const nsIFrame::IntrinsicSize& aIntrinsicSize,
+                    const mozilla::IntrinsicSize& aIntrinsicSize,
                     nsSize aIntrinsicRatio, nsSize aCBSize,
                     nsSize aMargin, nsSize aBorder, nsSize aPadding);
 
@@ -1469,26 +1465,6 @@ public:
   static bool IsReallyFixedPos(nsIFrame* aFrame);
 
   /**
-   * Return true if aFrame is in an {ib} split and is NOT one of the
-   * continuations of the first inline in it.
-   */
-  static bool FrameIsNonFirstInIBSplit(const nsIFrame* aFrame) {
-    return (aFrame->GetStateBits() & NS_FRAME_IS_SPECIAL) &&
-      aFrame->FirstContinuation()->
-        Properties().Get(nsIFrame::IBSplitSpecialPrevSibling());
-  }
-
-  /**
-   * Return true if aFrame is in an {ib} split and is NOT one of the
-   * continuations of the last inline in it.
-   */
-  static bool FrameIsNonLastInIBSplit(const nsIFrame* aFrame) {
-    return (aFrame->GetStateBits() & NS_FRAME_IS_SPECIAL) &&
-      aFrame->FirstContinuation()->
-        Properties().Get(nsIFrame::IBSplitSpecialSibling());
-  }
-
-  /**
    * Obtain a gfxASurface from the given DOM element, if possible.
    * This obtains the most natural surface from the element; that
    * is, the one that can be obtained with the fewest conversions.
@@ -1523,9 +1499,7 @@ public:
   };
 
   struct SurfaceFromElementResult {
-    SurfaceFromElementResult() :
-      // Use safe default values here
-      mIsWriteOnly(true), mIsStillLoading(false), mCORSUsed(false) {}
+    SurfaceFromElementResult();
 
     /* mSurface will contain the resulting surface, or will be NULL on error */
     nsRefPtr<gfxASurface> mSurface;
@@ -1586,11 +1560,7 @@ public:
    * Returns true if the passed in prescontext needs the dark grey background
    * that goes behind the page of a print preview presentation.
    */
-  static bool NeedsPrintPreviewBackground(nsPresContext* aPresContext) {
-    return aPresContext->IsRootPaginatedDocument() &&
-      (aPresContext->Type() == nsPresContext::eContext_PrintPreview ||
-       aPresContext->Type() == nsPresContext::eContext_PageLayout);
-  }
+  static bool NeedsPrintPreviewBackground(nsPresContext* aPresContext);
 
   /**
    * Adds all font faces used in the frame tree starting from aFrame
@@ -1678,15 +1648,6 @@ public:
    */
   static void UnionChildOverflow(nsIFrame* aFrame,
                                  nsOverflowAreas& aOverflowAreas);
-
-  /**
-   * Return whether this is a frame whose width is used when computing
-   * the font size inflation of its descendants.
-   */
-  static bool IsContainerForFontSizeInflation(const nsIFrame *aFrame)
-  {
-    return aFrame->GetStateBits() & NS_FRAME_FONT_INFLATION_CONTAINER;
-  }
 
   /**
    * Return the font size inflation *ratio* for a given frame.  This is
@@ -1900,13 +1861,6 @@ public:
   UpdateImageVisibilityForFrame(nsIFrame* aImageFrame);
 
 private:
-  // Helper-functions for SortFrameList():
-  template<bool IsLessThanOrEqual(nsIFrame*, nsIFrame*)>
-  static nsIFrame* SortedMerge(nsIFrame *aLeft, nsIFrame *aRight);
-
-  template<bool IsLessThanOrEqual(nsIFrame*, nsIFrame*)>
-  static nsIFrame* MergeSort(nsIFrame *aSource);
-
   static uint32_t sFontSizeInflationEmPerLine;
   static uint32_t sFontSizeInflationMinTwips;
   static uint32_t sFontSizeInflationLineThreshold;
@@ -1916,138 +1870,6 @@ private:
   static bool sFontSizeInflationDisabledInMasterProcess;
   static bool sInvalidationDebuggingIsEnabled;
 };
-
-// Helper-functions for nsLayoutUtils::SortFrameList()
-// ---------------------------------------------------
-
-template<bool IsLessThanOrEqual(nsIFrame*, nsIFrame*)>
-/* static */ nsIFrame*
-nsLayoutUtils::SortedMerge(nsIFrame *aLeft, nsIFrame *aRight)
-{
-  NS_PRECONDITION(aLeft && aRight, "SortedMerge must have non-empty lists");
-
-  nsIFrame *result;
-  // Unroll first iteration to avoid null-check 'result' inside the loop.
-  if (IsLessThanOrEqual(aLeft, aRight)) {
-    result = aLeft;
-    aLeft = aLeft->GetNextSibling();
-    if (!aLeft) {
-      result->SetNextSibling(aRight);
-      return result;
-    }
-  }
-  else {
-    result = aRight;
-    aRight = aRight->GetNextSibling();
-    if (!aRight) {
-      result->SetNextSibling(aLeft);
-      return result;
-    }
-  }
-
-  nsIFrame *last = result;
-  for (;;) {
-    if (IsLessThanOrEqual(aLeft, aRight)) {
-      last->SetNextSibling(aLeft);
-      last = aLeft;
-      aLeft = aLeft->GetNextSibling();
-      if (!aLeft) {
-        last->SetNextSibling(aRight);
-        return result;
-      }
-    }
-    else {
-      last->SetNextSibling(aRight);
-      last = aRight;
-      aRight = aRight->GetNextSibling();
-      if (!aRight) {
-        last->SetNextSibling(aLeft);
-        return result;
-      }
-    }
-  }
-}
-
-template<bool IsLessThanOrEqual(nsIFrame*, nsIFrame*)>
-/* static */ nsIFrame*
-nsLayoutUtils::MergeSort(nsIFrame *aSource)
-{
-  NS_PRECONDITION(aSource, "MergeSort null arg");
-
-  nsIFrame *sorted[32] = { nullptr };
-  nsIFrame **fill = &sorted[0];
-  nsIFrame **left;
-  nsIFrame *rest = aSource;
-
-  do {
-    nsIFrame *current = rest;
-    rest = rest->GetNextSibling();
-    current->SetNextSibling(nullptr);
-
-    // Merge it with sorted[0] if present; then merge the result with sorted[1] etc.
-    // sorted[0] is a list of length 1 (or nullptr).
-    // sorted[1] is a list of length 2 (or nullptr).
-    // sorted[2] is a list of length 4 (or nullptr). etc.
-    for (left = &sorted[0]; left != fill && *left; ++left) {
-      current = SortedMerge<IsLessThanOrEqual>(*left, current);
-      *left = nullptr;
-    }
-
-    // Fill the empty slot that we couldn't merge with the last result.
-    *left = current;
-
-    if (left == fill)
-      ++fill;
-  } while (rest);
-
-  // Collect and merge the results.
-  nsIFrame *result = nullptr;
-  for (left = &sorted[0]; left != fill; ++left) {
-    if (*left) {
-      result = result ? SortedMerge<IsLessThanOrEqual>(*left, result) : *left;
-    }
-  }
-  return result;
-}
-
-template<bool IsLessThanOrEqual(nsIFrame*, nsIFrame*)>
-/* static */ void
-nsLayoutUtils::SortFrameList(nsFrameList& aFrameList)
-{
-  nsIFrame* head = MergeSort<IsLessThanOrEqual>(aFrameList.FirstChild());
-  aFrameList = nsFrameList(head, GetLastSibling(head));
-  MOZ_ASSERT(IsFrameListSorted<IsLessThanOrEqual>(aFrameList),
-             "After we sort a frame list, it should be in sorted order...");
-}
-
-template<bool IsLessThanOrEqual(nsIFrame*, nsIFrame*)>
-/* static */ bool
-nsLayoutUtils::IsFrameListSorted(nsFrameList& aFrameList)
-{
-  if (aFrameList.IsEmpty()) {
-    // empty lists are trivially sorted.
-    return true;
-  }
-
-  // We'll walk through the list with two iterators, one trailing behind the
-  // other. The list is sorted IFF trailingIter <= iter, across the whole list.
-  nsFrameList::Enumerator trailingIter(aFrameList);
-  nsFrameList::Enumerator iter(aFrameList);
-  iter.Next(); // Skip |iter| past first frame. (List is nonempty, so we can.)
-
-  // Now, advance the iterators in parallel, comparing each adjacent pair.
-  while (!iter.AtEnd()) {
-    MOZ_ASSERT(!trailingIter.AtEnd(), "trailing iter shouldn't finish first");
-    if (!IsLessThanOrEqual(trailingIter.get(), iter.get())) {
-      return false;
-    }
-    trailingIter.Next();
-    iter.Next();
-  }
-
-  // We made it to the end without returning early, so the list is sorted.
-  return true;
-}
 
 template<typename PointType, typename RectType, typename CoordType>
 /* static */ bool
@@ -2101,28 +1923,9 @@ namespace mozilla {
      */
     class AutoMaybeDisableFontInflation {
     public:
-      AutoMaybeDisableFontInflation(nsIFrame *aFrame)
-      {
-        // FIXME: Now that inflation calculations are based on the flow
-        // root's NCA's (nearest common ancestor of its inflatable
-        // descendants) width, we could probably disable inflation in
-        // fewer cases than we currently do.
-        if (nsLayoutUtils::IsContainerForFontSizeInflation(aFrame)) {
-          mPresContext = aFrame->PresContext();
-          mOldValue = mPresContext->mInflationDisabledForShrinkWrap;
-          mPresContext->mInflationDisabledForShrinkWrap = true;
-        } else {
-          // indicate we have nothing to restore
-          mPresContext = nullptr;
-        }
-      }
+      AutoMaybeDisableFontInflation(nsIFrame *aFrame);
 
-      ~AutoMaybeDisableFontInflation()
-      {
-        if (mPresContext) {
-          mPresContext->mInflationDisabledForShrinkWrap = mOldValue;
-        }
-      }
+      ~AutoMaybeDisableFontInflation();
     private:
       nsPresContext *mPresContext;
       bool mOldValue;
@@ -2155,20 +1958,6 @@ public:
 
   nsCOMPtr<nsIContent> mContent;
   nsCOMPtr<nsIAtom> mAttrName;
-};
-
-class nsReflowFrameRunnable : public nsRunnable
-{
-public:
-  nsReflowFrameRunnable(nsIFrame* aFrame,
-                        nsIPresShell::IntrinsicDirty aIntrinsicDirty,
-                        nsFrameState aBitToAdd);
-
-  NS_DECL_NSIRUNNABLE
-
-  nsWeakFrame mWeakFrame;
-  nsIPresShell::IntrinsicDirty mIntrinsicDirty;
-  nsFrameState mBitToAdd;
 };
 
 #endif // nsLayoutUtils_h__
