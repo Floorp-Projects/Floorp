@@ -3,33 +3,3 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-MOCHITEST_FILES	= \
-		FakeJSAN.js \
-		cli.js \
-		index.html \
-		standalone.js \
-		test_Base.js \
-		test_Color.js \
-		test_DateTime.js \
-		test_DragAndDrop.js \
-		test_Format.js \
-		test_Iter.js \
-		test_Logging.js \
-		test_MochiKit-Async.json \
-		MochiKit-Async.html \
-		MochiKit-Base.html \
-		MochiKit-Color.html \
-		MochiKit-DOM.html \
-		MochiKit-DateTime.html \
-		MochiKit-DragAndDrop.html \
-		MochiKit-Format.html \
-		MochiKit-Iter.html \
-		MochiKit-JSAN.html \
-		MochiKit-Logging.html \
-		MochiKit-MochiKit.html \
-		MochiKit-Selector.html \
-		MochiKit-Signal.html \
-		MochiKit-Style.html \
-		MochiKit-Visual.html \
-		test_Signal.js \
-		$(NULL)

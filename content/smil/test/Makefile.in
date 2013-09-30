@@ -1,57 +1,5 @@
 # This Source Code Form is subject to the terms of the Mozilla Public
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
-MOCHITEST_FILES = \
-	  db_smilAnimateMotion.js \
-	  db_smilCSSFromBy.js \
-	  db_smilCSSFromTo.js \
-	  db_smilCSSPaced.js \
-	  db_smilCSSPropertyList.js \
-	  db_smilMappedAttrList.js \
-	  smilAnimateMotionValueLists.js \
-	  smilTestUtils.js \
-	  smilXHR_helper.svg \
-	  smilExtDoc_helper.svg \
-	  test_smilAccessKey.xhtml \
-	  test_smilAnimateMotion.xhtml \
-	  test_smilAnimateMotionInvalidValues.xhtml \
-	  test_smilAnimateMotionOverrideRules.xhtml \
-	  test_smilBackwardsSeeking.xhtml \
-	  test_smilChangeAfterFrozen.xhtml \
-	  test_smilContainerBinding.xhtml \
-	  test_smilCrossContainer.xhtml \
-	  test_smilCSSFontStretchRelative.xhtml \
-	  test_smilCSSFromBy.xhtml \
-	  test_smilCSSFromTo.xhtml \
-	  test_smilCSSInvalidValues.xhtml \
-	  test_smilCSSPaced.xhtml \
-	  test_smilDynamicDelayedBeginElement.xhtml \
-	  test_smilMappedAttrFromTo.xhtml \
-	  test_smilMappedAttrFromBy.xhtml \
-	  test_smilMappedAttrPaced.xhtml \
-	  test_smilReset.xhtml \
-	  test_smilRestart.xhtml \
-	  test_smilExtDoc.xhtml \
-	  test_smilFillMode.xhtml \
-	  test_smilGetStartTime.xhtml \
-	  test_smilGetSimpleDuration.xhtml \
-	  test_smilHyperlinking.xhtml \
-	  test_smilKeySplines.xhtml \
-	  test_smilKeyTimes.xhtml \
-	  test_smilKeyTimesPacedMode.xhtml \
-	  test_smilRepeatTiming.xhtml \
-	  test_smilSetCurrentTime.xhtml \
-	  test_smilSync.xhtml \
-	  test_smilSyncbaseTarget.xhtml \
-	  test_smilSyncTransform.xhtml \
-	  test_smilTextZoom.xhtml \
-	  test_smilTimeEvents.xhtml \
-	  test_smilTiming.xhtml \
-	  test_smilTimingZeroIntervals.xhtml \
-	  test_smilUpdatedInterval.xhtml \
-	  test_smilValues.xhtml \
-	  test_smilXHR.xhtml \
-	  $(NULL)
-
 # Tests disabled due to intermittent orange
 # test_smilCSSInherit.xhtml disabled until bug 501183 is fixed

@@ -4,14 +4,3 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 # Mochitest tests
-MOCHITEST_FILES = \
-    test_modal_select.html \
-    test_modal_prompts.html \
-    test_bug619644.html \
-    test_bug620145.html \
-    test_bug625187.html \
-    test_bug861605.html \
-    prompt_common.js \
-    bug619644_inner.html \
-    bug625187_iframe.html \
-    $(NULL)
