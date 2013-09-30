@@ -135,7 +135,10 @@ class B2GMochitest(MochitestUtilsMixin):
                             'test_script_args': self.test_script_args }
             self.runner = B2GRunner(**runner_args)
             self.runner.start(outputTimeout=timeout)
-            self.runner.wait()
+            status = self.runner.wait()
+            if status is None:
+                # the runner has timed out
+                status = 124
         except KeyboardInterrupt:
             log.info("runtests.py | Received keyboard interrupt.\n");
             status = -1
