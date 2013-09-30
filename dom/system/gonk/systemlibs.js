@@ -448,12 +448,15 @@ this.netHelpers = {
 
   /**
    * Convert string representation of an IP address to the integer
-   * representation.
+   * representation (network byte order).
    *
    * @param string
    *        String containing the IP address.
    */
   stringToIP: function stringToIP(string) {
+    if (!string) {
+      return null;
+    }
     let ip = 0;
     let start, end = -1;
     for (let i = 0; i < 4; i++) {

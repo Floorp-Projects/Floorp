@@ -12,6 +12,7 @@
 #include "chrome/common/child_process_info.h"
 
 #include "mozilla/ipc/Transport.h"
+#include "mozilla/ipc/FileDescriptor.h"
 
 using namespace base;
 using namespace std;
@@ -29,7 +30,7 @@ CreateTransport(ProcessHandle /*unused*/, ProcessHandle /*unused*/,
   wstring id = ChildProcessInfo::GenerateRandomChannelID(aOne);
   // Use MODE_SERVER to force creation of the socketpair
   Transport t(id, Transport::MODE_SERVER, nullptr);
-  int fd1 = t.GetServerFileDescriptor();
+  int fd1 = t.GetFileDescriptor();
   int fd2, dontcare;
   t.GetClientFileDescriptorMapping(&fd2, &dontcare);
   if (fd1 < 0 || fd2 < 0) {
@@ -44,8 +45,8 @@ CreateTransport(ProcessHandle /*unused*/, ProcessHandle /*unused*/,
     return false;
   }
 
-  aOne->mFd = FileDescriptor(fd1, true/*close after sending*/);
-  aTwo->mFd = FileDescriptor(fd2, true/*close after sending*/);
+  aOne->mFd = base::FileDescriptor(fd1, true/*close after sending*/);
+  aTwo->mFd = base::FileDescriptor(fd2, true/*close after sending*/);
   return true;
 }
 
@@ -53,6 +54,12 @@ Transport*
 OpenDescriptor(const TransportDescriptor& aTd, Transport::Mode aMode)
 {
   return new Transport(aTd.mFd.fd, aMode, nullptr);
+}
+
+Transport*
+OpenDescriptor(const FileDescriptor& aFd, Transport::Mode aMode)
+{
+  return new Transport(aFd.PlatformHandle(), aMode, nullptr);
 }
 
 void

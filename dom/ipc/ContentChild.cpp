@@ -90,6 +90,11 @@
 #include "nsIAccessibilityService.h"
 #endif
 
+#ifdef MOZ_NUWA_PROCESS
+#include <setjmp.h>
+#include "ipc/Nuwa.h"
+#endif
+
 #include "mozilla/dom/indexedDB/PIndexedDBChild.h"
 #include "mozilla/dom/mobilemessage/SmsChild.h"
 #include "mozilla/dom/devicestorage/DeviceStorageRequestChild.h"
@@ -129,6 +134,19 @@ using namespace mozilla::net;
 using namespace mozilla::jsipc;
 #if defined(MOZ_WIDGET_GONK)
 using namespace mozilla::system;
+#endif
+
+#ifdef MOZ_NUWA_PROCESS
+static bool sNuwaForking = false;
+
+// The size of the reserved stack (in unsigned ints). It's used to reserve space
+// to push sigsetjmp() in NuwaCheckpointCurrentThread() to higher in the stack
+// so that after it returns and do other work we don't garble the stack we want
+// to preserve in NuwaCheckpointCurrentThread().
+#define RESERVED_INT_STACK 128
+
+// A sentinel value for checking whether RESERVED_INT_STACK is large enough.
+#define STACK_SENTINEL_VALUE 0xdeadbeef
 #endif
 
 namespace mozilla {
@@ -310,6 +328,10 @@ ContentChild::Init(MessageLoop* aIOLoop,
     XRE_InstallX11ErrorHandler();
 #endif
 
+#ifdef MOZ_NUWA_PROCESS
+    SetTransport(aChannel);
+#endif
+
     NS_ASSERTION(!sSingleton, "only one ContentChild per child");
 
     Open(aChannel, aParentHandle, aIOLoop);
@@ -324,6 +346,12 @@ ContentChild::Init(MessageLoop* aIOLoop,
 
     GetCPOWManager();
 
+#ifdef MOZ_NUWA_PROCESS
+    if (IsNuwaProcess()) {
+        SetProcessName(NS_LITERAL_STRING("(Nuwa)"));
+        return true;
+    }
+#endif
     if (mIsForApp && !mIsForBrowser) {
         SetProcessName(NS_LITERAL_STRING("(Preallocated app)"));
     } else {
@@ -503,14 +531,14 @@ ContentChild::RecvDumpGCAndCCLogsToFile(const nsString& aIdentifier,
     return true;
 }
 
-bool
+PCompositorChild*
 ContentChild::AllocPCompositorChild(mozilla::ipc::Transport* aTransport,
                                     base::ProcessId aOtherProcess)
 {
     return CompositorChild::Create(aTransport, aOtherProcess);
 }
 
-bool
+PImageBridgeChild*
 ContentChild::AllocPImageBridgeChild(mozilla::ipc::Transport* aTransport,
                                      base::ProcessId aOtherProcess)
 {
@@ -1198,6 +1226,12 @@ ContentChild::RecvScreenSizeChanged(const gfxIntSize& size)
 bool
 ContentChild::RecvFlushMemory(const nsString& reason)
 {
+#ifdef MOZ_NUWA_PROCESS
+    if (IsNuwaProcess()) {
+        // Don't flush memory in the nuwa process: the GC thread could be frozen.
+        return true;
+    }
+#endif
     nsCOMPtr<nsIObserverService> os =
         mozilla::services::GetObserverService();
     if (os)
@@ -1332,6 +1366,13 @@ ContentChild::RecvNotifyProcessPriorityChanged(
 bool
 ContentChild::RecvMinimizeMemoryUsage()
 {
+#ifdef MOZ_NUWA_PROCESS
+    if (IsNuwaProcess()) {
+        // Don't minimize memory in the nuwa process: it will perform GC, but the
+        // GC thread could be frozen.
+        return true;
+    }
+#endif
     nsCOMPtr<nsIMemoryReporterManager> mgr =
         do_GetService("@mozilla.org/memory-reporter-manager;1");
     NS_ENSURE_TRUE(mgr, true);
@@ -1406,5 +1447,180 @@ ContentChild::RecvUnregisterSheet(const URIParams& aURI, const uint32_t& aType)
     return true;
 }
 
+#ifdef MOZ_NUWA_PROCESS
+class CallNuwaSpawn : public nsRunnable
+{
+public:
+    NS_IMETHOD Run()
+    {
+        NuwaSpawn();
+        if (IsNuwaProcess()) {
+            return NS_OK;
+        }
+
+        // In the new process.
+        ContentChild* child = ContentChild::GetSingleton();
+        child->SetProcessName(NS_LITERAL_STRING("(Preallocated app)"));
+        mozilla::ipc::Transport* transport = child->GetTransport();
+        int fd = transport->GetFileDescriptor();
+        transport->ResetFileDescriptor(fd);
+
+        IToplevelProtocol* toplevel = child->GetFirstOpenedActors();
+        while (toplevel != nullptr) {
+            transport = toplevel->GetTransport();
+            fd = transport->GetFileDescriptor();
+            transport->ResetFileDescriptor(fd);
+
+            toplevel = toplevel->getNext();
+        }
+        return NS_OK;
+    }
+};
+
+static void
+DoNuwaFork()
+{
+    NS_ASSERTION(NuwaSpawnPrepare != nullptr,
+                 "NuwaSpawnPrepare() is not available!");
+    NuwaSpawnPrepare();       // NuwaSpawn will be blocked.
+
+    {
+        nsCOMPtr<nsIRunnable> callSpawn(new CallNuwaSpawn());
+        NS_DispatchToMainThread(callSpawn);
+    }
+
+    // IOThread should be blocked here for waiting NuwaSpawn().
+    NS_ASSERTION(NuwaSpawnWait != nullptr,
+                 "NuwaSpawnWait() is not available!");
+    NuwaSpawnWait();        // Now! NuwaSpawn can go.
+    // Here, we can make sure the spawning was finished.
+}
+
+/**
+ * This function should keep IO thread in a stable state and freeze it
+ * until the spawning is finished.
+ */
+static void
+RunNuwaFork()
+{
+    if (NuwaCheckpointCurrentThread()) {
+      DoNuwaFork();
+    }
+}
+#endif
+
+bool
+ContentChild::RecvNuwaFork()
+{
+#ifdef MOZ_NUWA_PROCESS
+    if (sNuwaForking) {           // No reentry.
+        return true;
+    }
+    sNuwaForking = true;
+
+    MessageLoop* ioloop = XRE_GetIOMessageLoop();
+    ioloop->PostTask(FROM_HERE, NewRunnableFunction(RunNuwaFork));
+    return true;
+#else
+    return false; // Makes the underlying IPC channel abort.
+#endif
+}
+
 } // namespace dom
 } // namespace mozilla
+
+extern "C" {
+
+#if defined(MOZ_NUWA_PROCESS)
+NS_EXPORT void
+GetProtoFdInfos(NuwaProtoFdInfo* aInfoList,
+                size_t aInfoListSize,
+                size_t* aInfoSize)
+{
+    size_t i = 0;
+
+    mozilla::dom::ContentChild* content =
+        mozilla::dom::ContentChild::GetSingleton();
+    aInfoList[i].protoId = content->GetProtocolId();
+    aInfoList[i].originFd =
+        content->GetTransport()->GetFileDescriptor();
+    i++;
+
+    for (IToplevelProtocol* actor = content->GetFirstOpenedActors();
+         actor != nullptr;
+         actor = actor->getNext()) {
+        if (i >= aInfoListSize) {
+            NS_RUNTIMEABORT("Too many top level protocols!");
+        }
+
+        aInfoList[i].protoId = actor->GetProtocolId();
+        aInfoList[i].originFd =
+            actor->GetTransport()->GetFileDescriptor();
+        i++;
+    }
+
+    if (i > NUWA_TOPLEVEL_MAX) {
+        NS_RUNTIMEABORT("Too many top level protocols!");
+    }
+    *aInfoSize = i;
+}
+
+class RunAddNewIPCProcess : public nsRunnable
+{
+public:
+    RunAddNewIPCProcess(pid_t aPid,
+                        nsTArray<mozilla::ipc::ProtocolFdMapping>& aMaps)
+        : mPid(aPid)
+    {
+        mMaps.SwapElements(aMaps);
+    }
+
+    NS_IMETHOD Run()
+    {
+        mozilla::dom::ContentChild::GetSingleton()->
+            SendAddNewProcess(mPid, mMaps);
+
+        MOZ_ASSERT(sNuwaForking);
+        sNuwaForking = false;
+
+        return NS_OK;
+    }
+
+private:
+    pid_t mPid;
+    nsTArray<mozilla::ipc::ProtocolFdMapping> mMaps;
+};
+
+/**
+ * AddNewIPCProcess() is called by Nuwa process to tell the parent
+ * process that a new process is created.
+ *
+ * In the newly created process, ResetContentChildTransport() is called to
+ * reset fd for the IPC Channel and the session.
+ */
+NS_EXPORT void
+AddNewIPCProcess(pid_t aPid, NuwaProtoFdInfo* aInfoList, size_t aInfoListSize)
+{
+    nsTArray<mozilla::ipc::ProtocolFdMapping> maps;
+
+    for (size_t i = 0; i < aInfoListSize; i++) {
+        int _fd = aInfoList[i].newFds[NUWA_NEWFD_PARENT];
+        mozilla::ipc::FileDescriptor fd(_fd);
+        mozilla::ipc::ProtocolFdMapping map(aInfoList[i].protoId, fd);
+        maps.AppendElement(map);
+    }
+
+    nsRefPtr<RunAddNewIPCProcess> runner = new RunAddNewIPCProcess(aPid, maps);
+    NS_DispatchToMainThread(runner);
+}
+
+NS_EXPORT void
+OnNuwaProcessReady()
+{
+    mozilla::dom::ContentChild* content =
+        mozilla::dom::ContentChild::GetSingleton();
+    content->SendNuwaReady();
+}
+#endif // MOZ_NUWA_PROCESS
+
+}

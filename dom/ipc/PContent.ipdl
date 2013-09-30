@@ -28,6 +28,7 @@ include JavaScriptTypes;
 include InputStreamParams;
 include PTabContext;
 include URIParams;
+include ProtocolTypes;
 
 include "mozilla/chrome/RegistryMessageUtils.h";
 include "mozilla/dom/PermissionMessageUtils.h";
@@ -310,6 +311,9 @@ child:
                      int32_t mountGeneration, bool isMediaPresent,
                      bool isSharing);
 
+    // Ask the Nuwa process to create a new child process.
+    NuwaFork();
+
     NotifyProcessPriorityChanged(ProcessPriority priority);
     MinimizeMemoryUsage();
     CancelMinimizeMemoryUsage();
@@ -462,6 +466,10 @@ parent:
 
     // Notify the parent that the child has finished handling a system message.
     async SystemMessageHandled();
+
+    NuwaReady();
+
+    sync AddNewProcess(uint32_t pid, ProtocolFdMapping[] aFds);
 
     // called by the child (test code only) to propagate volume changes to the parent
     async CreateFakeVolume(nsString fsName, nsString mountPoint);
