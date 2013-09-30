@@ -33,6 +33,7 @@ callback interface TestCallbackInterface {
   sequence<TestCallbackInterface?>? getNullableSequenceOfNullableCallbackInterfaces();
   MozMap<long> getMozMapOfLong();
   Dict? getDictionary();
+  void passArrayBuffer(ArrayBuffer arg);
 };
 
 callback interface TestSingleOperationCallbackInterface {

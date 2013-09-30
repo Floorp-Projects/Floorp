@@ -12073,10 +12073,11 @@ class CGBindingRoot(CGThing):
 class CGNativeMember(ClassMethod):
     def __init__(self, descriptorProvider, member, name, signature, extendedAttrs,
                  breakAfter=True, passJSBitsAsNeeded=True, visibility="public",
-                 jsObjectsArePtr=False, variadicIsSequence=False):
+                 typedArraysAreStructs=True, variadicIsSequence=False):
         """
-        If jsObjectsArePtr is true, typed arrays and "object" will be
-        passed as JSObject*.
+        If typedArraysAreStructs is false, typed arrays will be passed as
+        JS::Handle<JSObject*>.  If it's true they will be passed as one of the
+        dom::TypedArray subclasses.
 
         If passJSBitsAsNeeded is false, we don't automatically pass in a
         JSContext* or a JSObject* based on the return and argument types.  We
@@ -12087,7 +12088,7 @@ class CGNativeMember(ClassMethod):
         self.extendedAttrs = extendedAttrs
         self.resultAlreadyAddRefed = isResultAlreadyAddRefed(self.extendedAttrs)
         self.passJSBitsAsNeeded = passJSBitsAsNeeded
-        self.jsObjectsArePtr = jsObjectsArePtr
+        self.typedArraysAreStructs = typedArraysAreStructs
         self.variadicIsSequence = variadicIsSequence
         breakAfterSelf = "\n" if breakAfter else ""
         ClassMethod.__init__(self, name,
@@ -12373,8 +12374,8 @@ class CGNativeMember(ClassMethod):
                     False, False)
 
         if type.isSpiderMonkeyInterface():
-            if self.jsObjectsArePtr:
-                return "JSObject*", False, False
+            if not self.typedArraysAreStructs:
+                return "JS::Handle<JSObject*>", False, False
 
             return type.name, True, True
 
@@ -12862,13 +12863,11 @@ class CGJSImplMember(CGNativeMember):
     """
     def __init__(self, descriptorProvider, member, name, signature,
                  extendedAttrs, breakAfter=True, passJSBitsAsNeeded=True,
-                 visibility="public", jsObjectsArePtr=False,
-                 variadicIsSequence=False):
+                 visibility="public", variadicIsSequence=False):
         CGNativeMember.__init__(self, descriptorProvider, member, name,
                                 signature, extendedAttrs, breakAfter=breakAfter,
                                 passJSBitsAsNeeded=passJSBitsAsNeeded,
                                 visibility=visibility,
-                                jsObjectsArePtr=jsObjectsArePtr,
                                 variadicIsSequence=variadicIsSequence)
         self.body = self.getImpl()
 
@@ -13452,7 +13451,7 @@ class CallbackMember(CGNativeMember):
                                 extendedAttrs={},
                                 passJSBitsAsNeeded=False,
                                 visibility=visibility,
-                                jsObjectsArePtr=True)
+                                typedArraysAreStructs=False)
         # We have to do all the generation of our body now, because
         # the caller relies on us throwing if we can't manage it.
         self.exceptionCode = ("aRv.Throw(NS_ERROR_UNEXPECTED);\n"
