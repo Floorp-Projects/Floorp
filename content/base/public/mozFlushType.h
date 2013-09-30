@@ -13,6 +13,7 @@
  * flushTypeNames array inside PresShell::FlushPendingNotifications.
  */
 enum mozFlushType {
+  Flush_None             = 0, /* Actually don't flush anything */
   Flush_Content          = 1, /* flush the content model construction */
   Flush_ContentAndNotify = 2, /* As above, plus flush the frame model
                                  construction and other nsIMutationObserver
