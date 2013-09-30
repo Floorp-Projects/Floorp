@@ -4,15 +4,12 @@
 
 package org.mozilla.gecko.annotationProcessors.classloader;
 
-import java.lang.annotation.Annotation;
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
 import java.util.Iterator;
 
 /**
  * Class for iterating over an IterableJarLoadingURLClassLoader's classes.
  */
-public class JarClassIterator implements Iterator<ClassWithOptions> {
+public class JarClassIterator implements Iterator<Class<?>> {
     private IterableJarLoadingURLClassLoader mTarget;
     private Iterator<String> mTargetClassListIterator;
 
@@ -27,46 +24,10 @@ public class JarClassIterator implements Iterator<ClassWithOptions> {
     }
 
     @Override
-    public ClassWithOptions next() {
+    public Class<?> next() {
         String className = mTargetClassListIterator.next();
         try {
-            Class<?> ret = mTarget.loadClass(className);
-            if (ret.getCanonicalName() == null || "null".equals(ret.getCanonicalName())) {
-                // Anonymous inner class - unsupported.
-                return next();
-            } else {
-                String generateName = null;
-                for (Annotation annotation : ret.getAnnotations()) {
-                    Class<?> annotationType = annotation.annotationType();
-                    if (annotationType.getCanonicalName().equals("org.mozilla.gecko.mozglue.generatorannotations.GeneratorOptions")) {
-                        try {
-                            // Determine the explicitly-given name of the stub to generate, if any.
-                            final Method generateNameMethod = annotationType.getDeclaredMethod("generatedClassName");
-                            generateNameMethod.setAccessible(true);
-                            generateName = (String) generateNameMethod.invoke(annotation);
-                            break;
-                        } catch (NoSuchMethodException e) {
-                            System.err.println("Unable to find expected field on GeneratorOptions annotation. Did the signature change?");
-                            e.printStackTrace(System.err);
-                            System.exit(3);
-                        } catch (IllegalAccessException e) {
-                            System.err.println("IllegalAccessException reading fields on GeneratorOptions annotation. Seems the semantics of Reflection have changed...");
-                            e.printStackTrace(System.err);
-                            System.exit(4);
-                        } catch (InvocationTargetException e) {
-                            System.err.println("InvocationTargetException reading fields on GeneratorOptions annotation. This really shouldn't happen.");
-                            e.printStackTrace(System.err);
-                            System.exit(5);
-                        }
-                    }
-                }
-
-                if (generateName == null) {
-                    generateName = ret.getSimpleName();
-                }
-
-                return new ClassWithOptions(ret, generateName);
-            }
+            return mTarget.loadClass(className);
         } catch (ClassNotFoundException e) {
             System.err.println("Unable to enumerate class: " + className + ". Corrupted jar file?");
             e.printStackTrace();
