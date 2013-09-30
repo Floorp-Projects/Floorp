@@ -194,8 +194,8 @@ ADDITIONAL_TEST_DIRS = [
 
 function run_test() {
   do_test_pending();
-  do_register_cleanup(cleanupUpdaterTest);
 
+  // adjustGeneralPaths registers a cleanup function that calls end_test.
   adjustGeneralPaths();
 
   gBackgroundUpdate = true;
@@ -249,4 +249,8 @@ function checkUpdate() {
   do_check_false(toBeDeletedDir.exists());
 
   checkCallbackAppLog();
+}
+
+function end_test() {
+  cleanupUpdaterTest();
 }

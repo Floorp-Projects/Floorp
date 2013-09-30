@@ -269,8 +269,8 @@ function checkSymlink() {
 
 function run_test() {
   do_test_pending();
-  do_register_cleanup(cleanupUpdaterTest);
 
+  // adjustGeneralPaths registers a cleanup function that calls end_test.
   adjustGeneralPaths();
 
   gBackgroundUpdate = true;
@@ -382,4 +382,8 @@ function run_test() {
   do_check_false(updatedDir.exists());
 
   checkCallbackAppLog();
+}
+
+function end_test() {
+  cleanupUpdaterTest();
 }
