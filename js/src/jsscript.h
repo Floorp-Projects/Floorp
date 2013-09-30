@@ -842,8 +842,6 @@ class JSScript : public js::gc::BarrieredCell<JSScript>
     inline void clearAnalysis();
     inline js::analyze::ScriptAnalysis *analysis();
 
-    inline void clearPropertyReadTypes();
-
     inline js::GlobalObject &global() const;
     js::GlobalObject &uninlinedGlobal() const;
 
