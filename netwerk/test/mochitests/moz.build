@@ -8,5 +8,3 @@ MODULE = 'test_necko'
 
 FAIL_ON_WARNINGS = True
 
-MOCHITEST_MANIFESTS += ['mochitest.ini']
-

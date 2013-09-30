@@ -9,5 +9,3 @@ if CONFIG['OS_ARCH'] == 'WINNT':
 
 MODULE = 'test_xulapp'
 
-MOCHITEST_MANIFESTS += ['mochitest.ini']
-

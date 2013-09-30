@@ -24,5 +24,3 @@ XPCSHELL_TESTS_MANIFESTS += ['unit/xpcshell.ini']
 #
 #SIMPLE_PROGRAMS += [source.replace('.cpp', CONFIG['BIN_SUFFIX']), CPP_SOURCES]
 
-MOCHITEST_MANIFESTS += ['mochitest.ini']
-
