@@ -75,6 +75,23 @@
         ok(threw, "proxy operation threw exception");
       }
 
+      let array = message.objects.array;
+      let i = 1;
+      for (let elt of array) {
+        ok(elt === i, "correct element found");
+        i++;
+      }
+      ok(i === 4, "array has correct length");
+
+      let j = message.objects.for_json;
+      let str = JSON.stringify(j);
+      let j2 = JSON.parse(str);
+      ok(j2.n === 3, "JSON integer property");
+      ok(j2.a[0] === 1, "JSON array index");
+      ok(j2.a[1] === 2, "JSON array index");
+      ok(j2.a[2] === 3, "JSON array index");
+      ok(j2.s === "hello", "JSON string property");
+      ok(j2.o.x === 10, "JSON object property");
     }
 
     function recvAsyncMessage(message) {

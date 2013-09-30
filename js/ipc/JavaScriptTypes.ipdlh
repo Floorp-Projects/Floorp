@@ -37,10 +37,24 @@ union JSVariant
     JSIID;      /* XPC nsIID */
 };
 
-struct ReturnStatus
+struct ReturnSuccess
 {
-    bool ok;        /* True for success, false for failure. */
-    JSVariant exn;  /* Exception, if |ok| is false. */
+};
+
+struct ReturnStopIteration
+{
+};
+
+struct ReturnException
+{
+    JSVariant exn;
+};
+
+union ReturnStatus
+{
+    ReturnSuccess;
+    ReturnStopIteration;
+    ReturnException;
 };
 
 union JSParam
