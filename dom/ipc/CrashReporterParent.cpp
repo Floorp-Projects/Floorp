@@ -5,10 +5,12 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 #include "CrashReporterParent.h"
 #include "mozilla/dom/ContentParent.h"
-#include "nsExceptionHandler.h"
 #include "nsXULAppAPI.h"
-
 #include <time.h>
+
+#ifdef MOZ_CRASHREPORTER
+#include "nsExceptionHandler.h"
+#endif
 
 using namespace base;
 
@@ -35,6 +37,7 @@ mozilla::ipc::IProtocol*
 CrashReporterParent::CloneProtocol(Channel* aChannel,
                                    mozilla::ipc::ProtocolCloneContext* aCtx)
 {
+#ifdef MOZ_CRASHREPORTER
     ContentParent* contentParent = aCtx->GetContentParent();
     CrashReporter::ThreadId childThreadId = contentParent->Pid();
     GeckoProcessType childProcessType =
@@ -52,6 +55,10 @@ CrashReporterParent::CloneProtocol(Channel* aChannel,
     }
 
     return actor.forget();
+#else
+    MOZ_CRASH("Not Implemented");
+    return nullptr;
+#endif
 }
 
 CrashReporterParent::CrashReporterParent()
