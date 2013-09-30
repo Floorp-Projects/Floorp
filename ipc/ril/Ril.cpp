@@ -204,20 +204,20 @@ void
 RilConsumer::OnConnectSuccess()
 {
     // Nothing to do here.
-    LOG("Socket open for RIL\n");
+    LOG("RIL[%u]: %s\n", mClientId, __FUNCTION__);
 }
 
 void
 RilConsumer::OnConnectError()
 {
-    LOG("%s\n", __FUNCTION__);
+    LOG("RIL[%u]: %s\n", mClientId, __FUNCTION__);
     CloseSocket();
 }
 
 void
 RilConsumer::OnDisconnect()
 {
-    LOG("%s\n", __FUNCTION__);
+    LOG("RIL[%u]: %s\n", mClientId, __FUNCTION__);
     if (!mShutdown) {
         ConnectSocket(new RilConnector(mClientId), mAddress.get(), 1000);
     }
