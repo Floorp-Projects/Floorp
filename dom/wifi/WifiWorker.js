@@ -11,6 +11,8 @@ const {classes: Cc, interfaces: Ci, utils: Cu, results: Cr} = Components;
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/systemlibs.js");
+Cu.import("resource://gre/modules/WifiCommand.jsm");
+Cu.import("resource://gre/modules/WifiNetUtil.jsm");
 
 var DEBUG = false; // set to true to show debug messages.
 
@@ -135,6 +137,9 @@ var WifiManager = (function() {
   manager.schedScanRecovery = schedScanRecovery;
   manager.driverDelay = driverDelay ? parseInt(driverDelay, 10) : DRIVER_READY_WAIT;
 
+  var wifiCommand = WifiCommand(controlMessage);
+  var netUtil = WifiNetUtil(controlMessage);
+
   // Callbacks to invoke when a reply arrives from the wifi service.
   var controlCallbacks = Object.create(null);
   var idgen = 0;
@@ -165,12 +170,6 @@ var WifiManager = (function() {
 
   // Commands to the control worker.
 
-  function voidControlMessage(cmd, callback) {
-    controlMessage({ cmd: cmd }, function (data) {
-      callback(data.status);
-    });
-  }
-
   var driverLoaded = false;
 
   function loadDriver(callback) {
@@ -179,7 +178,7 @@ var WifiManager = (function() {
       return;
     }
 
-    voidControlMessage("load_driver", function(status) {
+    wifiCommand.loadDriver(function (status) {
       driverLoaded = (status >= 0);
       callback(status)
     });
@@ -195,104 +194,10 @@ var WifiManager = (function() {
       return;
     }
 
-    voidControlMessage("unload_driver", function(status) {
+    wifiCommand.unloadDriver(function(status) {
       driverLoaded = (status < 0);
       callback(status);
     });
-  }
-
-  function startSupplicant(callback) {
-    voidControlMessage("start_supplicant", callback);
-  }
-
-  function terminateSupplicant(callback) {
-    doBooleanCommand("TERMINATE", "OK", callback);
-  }
-
-  function stopSupplicant(callback) {
-    voidControlMessage("stop_supplicant", callback);
-  }
-
-  function connectToSupplicant(callback) {
-    voidControlMessage("connect_to_supplicant", callback);
-  }
-
-  function closeSupplicantConnection(callback) {
-    voidControlMessage("close_supplicant_connection", callback);
-  }
-
-  function doCommand(request, callback) {
-    controlMessage({ cmd: "command", request: request }, callback);
-  }
-
-  function doIntCommand(request, callback) {
-    doCommand(request, function(data) {
-      callback(data.status ? -1 : (data.reply|0));
-    });
-  }
-
-  function doBooleanCommand(request, expected, callback) {
-    doCommand(request, function(data) {
-      callback(data.status ? false : (data.reply == expected));
-    });
-  }
-
-  function doStringCommand(request, callback) {
-    doCommand(request, function(data) {
-      callback(data.status ? null : data.reply);
-    });
-  }
-
-  function listNetworksCommand(callback) {
-    doStringCommand("LIST_NETWORKS", callback);
-  }
-
-  function addNetworkCommand(callback) {
-    doIntCommand("ADD_NETWORK", callback);
-  }
-
-  function setNetworkVariableCommand(netId, name, value, callback) {
-    doBooleanCommand("SET_NETWORK " + netId + " " + name + " " + value, "OK", callback);
-  }
-
-  function getNetworkVariableCommand(netId, name, callback) {
-    doStringCommand("GET_NETWORK " + netId + " " + name, callback);
-  }
-
-  function removeNetworkCommand(netId, callback) {
-    doBooleanCommand("REMOVE_NETWORK " + netId, "OK", callback);
-  }
-
-  function enableNetworkCommand(netId, disableOthers, callback) {
-    doBooleanCommand((disableOthers ? "SELECT_NETWORK " : "ENABLE_NETWORK ") + netId, "OK", callback);
-  }
-
-  function disableNetworkCommand(netId, callback) {
-    doBooleanCommand("DISABLE_NETWORK " + netId, "OK", callback);
-  }
-
-  function statusCommand(callback) {
-    doStringCommand("STATUS", callback);
-  }
-
-  function pingCommand(callback) {
-    doBooleanCommand("PING", "PONG", callback);
-  }
-
-  function scanResultsCommand(callback) {
-    doStringCommand("SCAN_RESULTS", callback);
-  }
-
-  function disconnectCommand(callback) {
-    doBooleanCommand("DISCONNECT", "OK", callback);
-  }
-
-  function reconnectCommand(callback) {
-    doBooleanCommand("RECONNECT", "OK", callback);
-  }
-
-  function reassociateCommand(callback) {
-    doBooleanCommand("REASSOCIATE", "OK", callback);
   }
 
   // A note about background scanning:
@@ -314,27 +219,19 @@ var WifiManager = (function() {
     }
 
     manager.backgroundScanEnabled = doEnable;
-    doBooleanCommand("SET pno " + (manager.backgroundScanEnabled ? "1" : "0"),
-                     "OK",
-                     function(ok) {
-                       callback(true, ok);
-                     });
+    wifiCommand.setBackgroundScan(manager.backgroundScanEnabled, callback);
   }
 
   var scanModeActive = false;
 
-  function doSetScanModeCommand(setActive, callback) {
-    doBooleanCommand(setActive ? "DRIVER SCAN-ACTIVE" : "DRIVER SCAN-PASSIVE", "OK", callback);
-  }
-
-  function scanCommand(forceActive, callback) {
+  function scan(forceActive, callback) {
     if (forceActive && !scanModeActive) {
       // Note: we ignore errors from doSetScanMode.
-      doSetScanModeCommand(true, function(ignore) {
+      wifiCommand.doSetScanMode(true, function(ignore) {
         setBackgroundScan("OFF", function(turned, ignore) {
           reEnableBackgroundScan = turned;
-          doBooleanCommand("SCAN", "OK", function(ok) {
-            doSetScanModeCommand(false, function(ignore) {
+          wifiCommand.scan(function(ok) {
+            wifiCommand.doSetScanMode(false, function(ignore) {
               // The result of scanCommand is the result of the actual SCAN
               // request.
               callback(ok);
@@ -344,30 +241,23 @@ var WifiManager = (function() {
       });
       return;
     }
-    doBooleanCommand("SCAN", "OK", callback);
+    wifiCommand.scan(callback);
   }
 
   var debugEnabled = false;
-  function setLogLevel(level, callback) {
-    doBooleanCommand("LOG_LEVEL " + level, "OK", callback);
-  }
 
   function syncDebug() {
     if (debugEnabled !== DEBUG) {
       let wanted = DEBUG;
-      setLogLevel(wanted ? "DEBUG" : "INFO", function(ok) {
+      wifiCommand.setLogLevel(wanted ? "DEBUG" : "INFO", function(ok) {
         if (ok)
           debugEnabled = wanted;
       });
     }
   }
 
-  function getLogLevel(callback) {
-    doStringCommand("LOG_LEVEL", callback);
-  }
-
   function getDebugEnabled(callback) {
-    getLogLevel(function(level) {
+    wifiCommand.getLogLevel(function(level) {
       if (level === null) {
         debug("Unable to get wpa_supplicant's log level");
         callback(false);
@@ -389,256 +279,9 @@ var WifiManager = (function() {
     });
   }
 
-  function setScanModeCommand(setActive, callback) {
+  function setScanMode(setActive, callback) {
     scanModeActive = setActive;
-    doSetScanModeCommand(setActive, callback);
-  }
-
-  function wpsPbcCommand(callback) {
-    doBooleanCommand("WPS_PBC", "OK", callback);
-  }
-
-  function wpsPinCommand(detail, callback) {
-    doStringCommand("WPS_PIN " +
-                    (detail.bssid === undefined ? "any" : detail.bssid) +
-                    (detail.pin === undefined ? "" : (" " + detail.pin)),
-                    callback);
-  }
-
-  function wpsCancelCommand(callback) {
-    doBooleanCommand("WPS_CANCEL", "OK", callback);
-  }
-
-  function startDriverCommand(callback) {
-    doBooleanCommand("DRIVER START", "OK");
-  }
-
-  function stopDriverCommand(callback) {
-    doBooleanCommand("DRIVER STOP", "OK");
-  }
-
-  function startPacketFiltering(callback) {
-    doBooleanCommand("DRIVER RXFILTER-ADD 0", "OK", function(ok) {
-      ok && doBooleanCommand("DRIVER RXFILTER-ADD 1", "OK", function(ok) {
-        ok && doBooleanCommand("DRIVER RXFILTER-ADD 3", "OK", function(ok) {
-          ok && doBooleanCommand("DRIVER RXFILTER-START", "OK", callback)
-        });
-      });
-    });
-  }
-
-  function stopPacketFiltering(callback) {
-    doBooleanCommand("DRIVER RXFILTER-STOP", "OK", function(ok) {
-      ok && doBooleanCommand("DRIVER RXFILTER-REMOVE 3", "OK", function(ok) {
-        ok && doBooleanCommand("DRIVER RXFILTER-REMOVE 1", "OK", function(ok) {
-          ok && doBooleanCommand("DRIVER RXFILTER-REMOVE 0", "OK", callback)
-        });
-      });
-    });
-  }
-
-  function doGetRssiCommand(cmd, callback) {
-    doCommand(cmd, function(data) {
-      var rssi = -200;
-
-      if (!data.status) {
-        // If we are associating, the reply is "OK".
-        var reply = data.reply;
-        if (reply != "OK") {
-          // Format is: <SSID> rssi XX". SSID can contain spaces.
-          var offset = reply.lastIndexOf("rssi ");
-          if (offset !== -1)
-            rssi = reply.substr(offset + 5) | 0;
-        }
-      }
-      callback(rssi);
-    });
-  }
-
-  function getRssiCommand(callback) {
-    doGetRssiCommand("DRIVER RSSI", callback);
-  }
-
-  function getRssiApproxCommand(callback) {
-    doGetRssiCommand("DRIVER RSSI-APPROX", callback);
-  }
-
-  function getLinkSpeedCommand(callback) {
-    doStringCommand("DRIVER LINKSPEED", function(reply) {
-      if (reply)
-        reply = reply.split(" ")[1] | 0; // Format: LinkSpeed XX
-      callback(reply);
-    });
-  }
-
-  function getConnectionInfoGB(callback) {
-    var rval = {};
-    getRssiApproxCommand(function(rssi) {
-      rval.rssi = rssi;
-      getLinkSpeedCommand(function(linkspeed) {
-        rval.linkspeed = linkspeed;
-        callback(rval);
-      });
-    });
-  }
-
-  function getConnectionInfoICS(callback) {
-    doStringCommand("SIGNAL_POLL", function(reply) {
-      if (!reply) {
-        callback(null);
-        return;
-      }
-
-      let rval = {};
-      var lines = reply.split("\n");
-      for (let i = 0; i < lines.length; ++i) {
-        let [key, value] = lines[i].split("=");
-        switch (key.toUpperCase()) {
-          case "RSSI":
-            rval.rssi = value | 0;
-            break;
-          case "LINKSPEED":
-            rval.linkspeed = value | 0;
-            break;
-          default:
-            // Ignore.
-        }
-      }
-
-      callback(rval);
-    });
-  }
-
-  function getMacAddressCommand(callback) {
-    doStringCommand("DRIVER MACADDR", function(reply) {
-      if (reply)
-        reply = reply.split(" ")[2]; // Format: Macaddr = XX.XX.XX.XX.XX.XX
-      callback(reply);
-    });
-  }
-
-  function setPowerModeCommandICS(mode, callback) {
-    doBooleanCommand("DRIVER POWERMODE " + (mode === "AUTO" ? 0 : 1), "OK", callback);
-  }
-
-  function setPowerModeCommandJB(mode, callback) {
-    doBooleanCommand("SET ps " + (mode === "AUTO" ? 1 : 0), "OK", callback);
-  }
-
-  function getPowerModeCommand(callback) {
-    doStringCommand("DRIVER GETPOWER", function(reply) {
-      if (reply)
-        reply = (reply.split()[2]|0); // Format: powermode = XX
-      callback(reply);
-    });
-  }
-
-  function setNumAllowedChannelsCommand(numChannels, callback) {
-    doBooleanCommand("DRIVER SCAN-CHANNELS " + numChannels, "OK", callback);
-  }
-
-  function getNumAllowedChannelsCommand(callback) {
-    doStringCommand("DRIVER SCAN-CHANNELS", function(reply) {
-      if (reply)
-        reply = (reply.split()[2]|0); // Format: Scan-Channels = X
-      callback(reply);
-    });
-  }
-
-  function setBluetoothCoexistenceModeCommand(mode, callback) {
-    doBooleanCommand("DRIVER BTCOEXMODE " + mode, "OK", callback);
-  }
-
-  function setBluetoothCoexistenceScanModeCommand(mode, callback) {
-    doBooleanCommand("DRIVER BTCOEXSCAN-" + (mode ? "START" : "STOP"), "OK", callback);
-  }
-
-  function saveConfigCommand(callback) {
-    // Make sure we never write out a value for AP_SCAN other than 1
-    doBooleanCommand("AP_SCAN 1", "OK", function(ok) {
-      doBooleanCommand("SAVE_CONFIG", "OK", callback);
-    });
-  }
-
-  function reloadConfigCommand(callback) {
-    doBooleanCommand("RECONFIGURE", "OK", callback);
-  }
-
-  function setScanResultHandlingCommand(mode, callback) {
-    doBooleanCommand("AP_SCAN " + mode, "OK", callback);
-  }
-
-  function addToBlacklistCommand(bssid, callback) {
-    doBooleanCommand("BLACKLIST " + bssid, "OK", callback);
-  }
-
-  function clearBlacklistCommand(callback) {
-    doBooleanCommand("BLACKLIST clear", "OK", callback);
-  }
-
-  function setSuspendOptimizationsCommand(enabled, callback) {
-    doBooleanCommand("DRIVER SETSUSPENDOPT " + (enabled ? 0 : 1), "OK", callback);
-  }
-
-  // Wrapper around libcutils.property_set that returns true if setting the
-  // value was successful.
-  // Note that the callback is not called asynchronously.
-  function setProperty(key, value, callback) {
-    let ok = true;
-    try {
-      libcutils.property_set(key, value);
-    } catch(e) {
-      ok = false;
-    }
-    callback(ok);
-  }
-
-  function enableInterface(ifname, callback) {
-    controlMessage({ cmd: "ifc_enable", ifname: ifname }, function(data) {
-      callback(!data.status);
-    });
-  }
-
-  function disableInterface(ifname, callback) {
-    controlMessage({ cmd: "ifc_disable", ifname: ifname }, function(data) {
-      callback(!data.status);
-    });
-  }
-
-  function addHostRoute(ifname, route, callback) {
-    controlMessage({ cmd: "ifc_add_host_route", ifname: ifname, route: route }, function(data) {
-      callback(!data.status);
-    });
-  }
-
-  function removeHostRoutes(ifname, callback) {
-    controlMessage({ cmd: "ifc_remove_host_routes", ifname: ifname }, function(data) {
-      callback(!data.status);
-    });
-  }
-
-  function setDefaultRoute(ifname, route, callback) {
-    controlMessage({ cmd: "ifc_set_default_route", ifname: ifname, route: route }, function(data) {
-      callback(!data.status);
-    });
-  }
-
-  function getDefaultRoute(ifname, callback) {
-    controlMessage({ cmd: "ifc_get_default_route", ifname: ifname }, function(data) {
-      callback(!data.route);
-    });
-  }
-
-  function removeDefaultRoute(ifname, callback) {
-    controlMessage({ cmd: "ifc_remove_default_route", ifname: ifname }, function(data) {
-      callback(!data.status);
-    });
-  }
-
-  function resetConnections(ifname, callback) {
-    controlMessage({ cmd: "ifc_reset_connections", ifname: ifname }, function(data) {
-      callback(!data.status);
-    });
+    wifiCommand.doSetScanMode(setActive, callback);
   }
 
   var httpProxyConfig = Object.create(null);
@@ -713,8 +356,8 @@ var WifiManager = (function() {
         // and routing table is changed but still cannot connect to network
         // so the workaround here is disable interface the enable again to
         // trigger network reconnect with static ip.
-        disableInterface(manager.ifname, function (ok) {
-          enableInterface(manager.ifname, function (ok) {
+        netUtil.disableInterface(manager.ifname, function (ok) {
+          netUtil.enableInterface(manager.ifname, function (ok) {
           });
         });
       }
@@ -722,13 +365,6 @@ var WifiManager = (function() {
   }
 
   var dhcpInfo = null;
-  function runDhcp(ifname) {
-    debug("Run Dhcp");
-    controlMessage({ cmd: "dhcp_do_request", ifname: ifname }, function(data) {
-      dhcpInfo = data.status ? null : data;
-      runIpConfig(ifname, dhcpInfo);
-    });
-  }
 
   function runStaticIp(ifname, key) {
     debug("Run static ip");
@@ -743,82 +379,20 @@ var WifiManager = (function() {
 
     // Stop dhcpd when use static IP
     if (dhcpInfo != null) {
-      stopDhcp(manager.ifname, function() {});
+      netUtil.stopDhcp(manager.ifname, function() {});
     }
 
     // Set ip, mask length, gateway, dns to network interface
-    configureInterface(ifname,
-                       staticIpInfo.ipaddr,
-                       staticIpInfo.maskLength,
-                       staticIpInfo.gateway,
-                       staticIpInfo.dns1,
-                       staticIpInfo.dns2, function (data) {
-      runIpConfig(ifname, staticIpInfo);
-    });
-  }
-
-  function stopProcess(service, process, callback) {
-    var count = 0;
-    var timer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
-    function tick() {
-      let result = libcutils.property_get(service);
-      if (result === null) {
-        callback();
-        return;
-      }
-      if (result === "stopped" || ++count >= 5) {
-        // Either we succeeded or ran out of time.
-        timer = null;
-        callback();
-        return;
-      }
-
-      // Else it's still running, continue waiting.
-      timer.initWithCallback(tick, 1000, Ci.nsITimer.TYPE_ONE_SHOT);
-    }
-
-    setProperty("ctl.stop", process, tick);
-  }
-
-  function stopDhcp(ifname, callback) {
-    // This function does exactly what dhcp_stop does. Unforunately, if we call
-    // this function twice before the previous callback is returned. We may block
-    // our self waiting for the callback. It slows down the wifi startup procedure.
-    // Therefore, we have to roll our own version here.
-    let dhcpService = DHCP_PROP + "_" + ifname;
-    let suffix = (ifname.substr(0, 3) === "p2p") ? "p2p" : ifname;
-    let processName = DHCP + "_" + suffix;
-    stopProcess(dhcpService, processName, callback);
-  }
-
-  function releaseDhcpLease(ifname, callback) {
-    controlMessage({ cmd: "dhcp_release_lease", ifname: ifname }, function(data) {
-      dhcpInfo = null;
-      notify("dhcplost");
-      callback(!data.status);
-    });
-  }
-
-  function getDhcpError(callback) {
-    controlMessage({ cmd: "dhcp_get_errmsg" }, function(data) {
-      callback(data.error);
-    });
-  }
-
-  function configureInterface(ifname, ipaddr, mask, gateway, dns1, dns2, callback) {
-    let message = { cmd: "ifc_configure", ifname: ifname,
-                     ipaddr: ipaddr, mask: mask, gateway: gateway,
-                     dns1: dns1, dns2: dns2};
-    controlMessage(message, function(data) {
-      callback(!data.status);
-    });
-  }
-
-  function runDhcpRenew(ifname, callback) {
-    controlMessage({ cmd: "dhcp_do_request", ifname: ifname }, function(data) {
-      if (!data.status)
-        dhcpInfo = data;
-      callback(data.status ? null : data);
+    netUtil.configureInterface( { ifname: ifname,
+                                  ipaddr: staticIpInfo.ipaddr,
+                                  mask: staticIpInfo.maskLength,
+                                  gateway: staticIpInfo.gateway,
+                                  dns1: staticIpInfo.dns1,
+                                  dns2: staticIpInfo.dns2 }, function (data) {
+      netUtil.runIpConfig(ifname, staticIpInfo, function(data) {
+        dhcpInfo = data.info;
+        notify("networkconnected", data);
+      });
     });
   }
 
@@ -933,7 +507,7 @@ var WifiManager = (function() {
         retryTimer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
 
       retryTimer.initWithCallback(function(timer) {
-        connectToSupplicant(connectCallback);
+        wifiCommand.connectToSupplicant(connectCallback);
       }, 5000, Ci.nsITimer.TYPE_ONE_SHOT);
       return;
     }
@@ -945,13 +519,18 @@ var WifiManager = (function() {
 
   manager.connectionDropped = function(callback) {
     // Reset network interface when connection drop
-    configureInterface(manager.ifname, 0, 0, 0, 0, 0, function (data) {
+    netUtil.configureInterface( { ifname: manager.ifname,
+                                  ipaddr: 0,
+                                  mask: 0,
+                                  gateway: 0,
+                                  dns1: 0,
+                                  dns2: 0 }, function (data) {
     });
 
     // If we got disconnected, kill the DHCP client in preparation for
     // reconnection.
-    resetConnections(manager.ifname, function() {
-      stopDhcp(manager.ifname, function() {
+    netUtil.resetConnections(manager.ifname, function() {
+      netUtil.stopDhcp(manager.ifname, function() {
         callback();
       });
     });
@@ -959,7 +538,7 @@ var WifiManager = (function() {
 
   manager.start = function() {
     debug("detected SDK version " + sdkVersion);
-    connectToSupplicant(connectCallback);
+    wifiCommand.connectToSupplicant(connectCallback);
   }
 
   function onconnected() {
@@ -977,37 +556,9 @@ var WifiManager = (function() {
           runStaticIp(manager.ifname, key);
           return;
       }
-      runDhcp(manager.ifname);
-    });
-  }
-
-  function runIpConfig(name, data) {
-    if (!data) {
-      debug("IP config failed to run");
-      notify("networkconnected", { info: data });
-      return;
-    }
-
-    setProperty("net." + name + ".dns1", ipToString(data.dns1),
-                function(ok) {
-      if (!ok) {
-        debug("Unable to set net.<ifname>.dns1");
-        return;
-      }
-      setProperty("net." + name + ".dns2", ipToString(data.dns2),
-                  function(ok) {
-        if (!ok) {
-          debug("Unable to set net.<ifname>.dns2");
-          return;
-        }
-        setProperty("net." + name + ".gw", ipToString(data.gateway),
-                    function(ok) {
-          if (!ok) {
-            debug("Unable to set net.<ifname>.gw");
-            return;
-          }
-          notify("networkconnected", { info: data });
-        });
+      netUtil.runDhcp(manager.ifname, function(data) {
+        dhcpInfo = data.info;
+        notify("networkconnected", data);
       });
     });
   }
@@ -1187,15 +738,6 @@ var WifiManager = (function() {
     return true;
   }
 
-  function killSupplicant(callback) {
-    // It is interesting to note that this function does exactly what
-    // wifi_stop_supplicant does. Unforunately, on the Galaxy S2, Samsung
-    // changed that function in a way that means that it doesn't recognize
-    // wpa_supplicant as already running. Therefore, we have to roll our own
-    // version here.
-    stopProcess(SUPP_PROP, WPA_SUPPLICANT, callback);
-  }
-
   function didConnectSupplicant(callback) {
     waitForEvent();
 
@@ -1203,7 +745,7 @@ var WifiManager = (function() {
     getDebugEnabled(function(ok) {
       syncDebug();
     });
-    statusCommand(function(status) {
+    wifiCommand.status(function(status) {
       parseStatus(status);
       notify("supplicantconnection");
       callback();
@@ -1230,8 +772,8 @@ var WifiManager = (function() {
         return;
       }
       suppressEvents = true;
-      killSupplicant(function() {
-        disableInterface(manager.ifname, function (ok) {
+      wifiCommand.killSupplicant(function() {
+        netUtil.disableInterface(manager.ifname, function (ok) {
           suppressEvents = false;
           callback();
         });
@@ -1305,7 +847,7 @@ var WifiManager = (function() {
 
             function doStartSupplicant() {
               cancelWaitForDriverReadyTimer();
-              startSupplicant(function (status) {
+              wifiCommand.startSupplicant(function (status) {
                 if (status < 0) {
                   unloadDriver(function() {
                     callback(status);
@@ -1315,7 +857,7 @@ var WifiManager = (function() {
                 }
 
                 manager.supplicantStarted = true;
-                enableInterface(manager.ifname, function (ok) {
+                netUtil.enableInterface(manager.ifname, function (ok) {
                   callback(ok ? 0 : -1);
                 });
               });
@@ -1335,12 +877,12 @@ var WifiManager = (function() {
       // Note these following calls ignore errors. If we fail to kill the
       // supplicant gracefully, then we need to continue telling it to die
       // until it does.
-      terminateSupplicant(function (ok) {
+      wifiCommand.terminateSupplicant(function (ok) {
         manager.connectionDropped(function () {
-          stopSupplicant(function (status) {
-            closeSupplicantConnection(function () {
+          wifiCommand.stopSupplicant(function (status) {
+            wifiCommand.closeSupplicantConnection(function () {
               manager.state = "UNINITIALIZED";
-              disableInterface(manager.ifname, function (ok) {
+              netUtil.disableInterface(manager.ifname, function (ok) {
                 unloadDriver(callback);
               });
             });
@@ -1400,9 +942,9 @@ var WifiManager = (function() {
     }
   }
 
-  manager.disconnect = disconnectCommand;
-  manager.reconnect = reconnectCommand;
-  manager.reassociate = reassociateCommand;
+  manager.disconnect = wifiCommand.disconnect;
+  manager.reconnect = wifiCommand.reconnect;
+  manager.reassociate = wifiCommand.reassociate;
 
   var networkConfigurationFields = [
     "ssid", "bssid", "psk", "wep_key0", "wep_key1", "wep_key2", "wep_key3",
@@ -1416,7 +958,7 @@ var WifiManager = (function() {
     var done = 0;
     for (var n = 0; n < networkConfigurationFields.length; ++n) {
       let fieldName = networkConfigurationFields[n];
-      getNetworkVariableCommand(netId, fieldName, function(value) {
+      wifiCommand.getNetworkVariable(netId, fieldName, function(value) {
         if (value !== null)
           config[fieldName] = value;
         if (++done == networkConfigurationFields.length)
@@ -1440,7 +982,7 @@ var WifiManager = (function() {
           config[fieldName] === '*') {
         ++done;
       } else {
-        setNetworkVariableCommand(netId, fieldName, config[fieldName], function(ok) {
+        wifiCommand.setNetworkVariable(netId, fieldName, config[fieldName], function(ok) {
           if (!ok)
             ++errors;
           if (++done == networkConfigurationFields.length)
@@ -1453,7 +995,7 @@ var WifiManager = (function() {
       callback(false);
   }
   manager.getConfiguredNetworks = function(callback) {
-    listNetworksCommand(function (reply) {
+    wifiCommand.listNetworks(function (reply) {
       var networks = Object.create(null);
       var lines = reply.split("\n");
       if (lines.length === 1) {
@@ -1486,7 +1028,7 @@ var WifiManager = (function() {
             if (++done == lines.length - 1) {
               if (errors) {
                 // If an error occured, delete the new netId.
-                removeNetworkCommand(netId, function() {
+                wifiCommand.removeNetwork(netId, function() {
                   callback(null);
                 });
               } else {
@@ -1498,11 +1040,11 @@ var WifiManager = (function() {
     });
   }
   manager.addNetwork = function(config, callback) {
-    addNetworkCommand(function (netId) {
+    wifiCommand.addNetwork(function (netId) {
       config.netId = netId;
       manager.setNetworkConfiguration(config, function (ok) {
         if (!ok) {
-          removeNetworkCommand(netId, function() { callback(false); });
+          wifiCommand.removeNetwork(netId, function() { callback(false); });
           return;
         }
 
@@ -1514,14 +1056,7 @@ var WifiManager = (function() {
     manager.setNetworkConfiguration(config, callback);
   }
   manager.removeNetwork = function(netId, callback) {
-    removeNetworkCommand(netId, callback);
-  }
-
-  function ipToString(n) {
-    return String((n >>  0) & 0xFF) + "." +
-                 ((n >>  8) & 0xFF) + "." +
-                 ((n >> 16) & 0xFF) + "." +
-                 ((n >> 24) & 0xFF);
+    wifiCommand.removeNetwork(netId, callback);
   }
 
   function stringToIp(string) {
@@ -1562,38 +1097,38 @@ var WifiManager = (function() {
   }
 
   manager.saveConfig = function(callback) {
-    saveConfigCommand(callback);
+    wifiCommand.saveConfig(callback);
   }
   manager.enableNetwork = function(netId, disableOthers, callback) {
-    enableNetworkCommand(netId, disableOthers, callback);
+    wifiCommand.enableNetwork(netId, disableOthers, callback);
   }
   manager.disableNetwork = function(netId, callback) {
-    disableNetworkCommand(netId, callback);
+    wifiCommand.disableNetwork(netId, callback);
   }
-  manager.getMacAddress = getMacAddressCommand;
-  manager.getScanResults = scanResultsCommand;
+  manager.getMacAddress = wifiCommand.getMacAddress;
+  manager.getScanResults = wifiCommand.scanResults;
   manager.setScanMode = function(mode, callback) {
-    setScanModeCommand(mode === "active", callback);
+    setScanMode(mode === "active", callback); // Use our own version.
   }
-  manager.setBackgroundScan = setBackgroundScan;
-  manager.scan = scanCommand;
-  manager.wpsPbc = wpsPbcCommand;
-  manager.wpsPin = wpsPinCommand;
-  manager.wpsCancel = wpsCancelCommand;
+  manager.setBackgroundScan = setBackgroundScan; // Use our own version.
+  manager.scan = scan; // Use our own version.
+  manager.wpsPbc = wifiCommand.wpsPbc;
+  manager.wpsPin = wifiCommand.wpsPin;
+  manager.wpsCancel = wifiCommand.wpsCancel;
   manager.setPowerMode = (sdkVersion >= 16)
-                         ? setPowerModeCommandJB
-                         : setPowerModeCommandICS;
+                         ? wifiCommand.setPowerModeJB
+                         : wifiCommand.setPowerModeICS;
   manager.getHttpProxyNetwork = getHttpProxyNetwork;
   manager.setHttpProxy = setHttpProxy;
   manager.configureHttpProxy = configureHttpProxy;
-  manager.setSuspendOptimizations = setSuspendOptimizationsCommand;
+  manager.setSuspendOptimizations = wifiCommand.setSuspendOptimizations;
   manager.setStaticIpMode = setStaticIpMode;
-  manager.getRssiApprox = getRssiApproxCommand;
-  manager.getLinkSpeed = getLinkSpeedCommand;
+  manager.getRssiApprox = wifiCommand.getRssiApprox;
+  manager.getLinkSpeed = wifiCommand.getLinkSpeed;
   manager.getDhcpInfo = function() { return dhcpInfo; }
   manager.getConnectionInfo = (sdkVersion >= 15)
-                              ? getConnectionInfoICS
-                              : getConnectionInfoGB;
+                              ? wifiCommand.getConnectionInfoICS
+                              : wifiCommand.getConnectionInfoGB;
 
   manager.isHandShakeState = function(state) {
     switch (state) {
