@@ -14,6 +14,7 @@
 #include "nsRect.h"
 #include "nsString.h"
 #include "nsTArray.h"
+#include "nsIAndroidBridge.h"
 #include "nsIObserver.h"
 #include "mozilla/gfx/Rect.h"
 #include "mozilla/dom/Touch.h"
