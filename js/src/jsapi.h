@@ -4196,6 +4196,9 @@ JS_ThrowReportedError(JSContext *cx, const char *message,
 extern JS_PUBLIC_API(bool)
 JS_ThrowStopIteration(JSContext *cx);
 
+extern JS_PUBLIC_API(bool)
+JS_IsStopIteration(jsval v);
+
 extern JS_PUBLIC_API(intptr_t)
 JS_GetCurrentThread();
 
