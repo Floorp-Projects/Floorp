@@ -60,16 +60,16 @@ struct EffectChain;
 /**
  * A base class for doing CompositableHost and platform dependent task on TextureHost.
  */
-class CompositableQuirks : public RefCounted<CompositableQuirks>
+class CompositableBackendSpecificData : public RefCounted<CompositableBackendSpecificData>
 {
 public:
-  CompositableQuirks()
+  CompositableBackendSpecificData()
   {
-    MOZ_COUNT_CTOR(CompositableQuirks);
+    MOZ_COUNT_CTOR(CompositableBackendSpecificData);
   }
-  virtual ~CompositableQuirks()
+  virtual ~CompositableBackendSpecificData()
   {
-    MOZ_COUNT_DTOR(CompositableQuirks);
+    MOZ_COUNT_DTOR(CompositableBackendSpecificData);
   }
   virtual void SetCompositor(Compositor* aCompositor) {}
 };
@@ -99,11 +99,14 @@ public:
 
   virtual CompositableType GetType() = 0;
 
-  virtual CompositableQuirks* GetCompositableQuirks() { return mQuirks; }
-
-  virtual void SetCompositableQuirks(CompositableQuirks* aQuirks)
+  virtual CompositableBackendSpecificData* GetCompositableBackendSpecificData()
   {
-    mQuirks = aQuirks;
+    return mBackendData;
+  }
+
+  virtual void SetCompositableBackendSpecificData(CompositableBackendSpecificData* aBackendData)
+  {
+    mBackendData = aBackendData;
   }
 
   // If base class overrides, it should still call the parent implementation
@@ -292,7 +295,7 @@ protected:
   TextureInfo mTextureInfo;
   Compositor* mCompositor;
   Layer* mLayer;
-  RefPtr<CompositableQuirks> mQuirks;
+  RefPtr<CompositableBackendSpecificData> mBackendData;
   RefPtr<TextureHost> mFirstTexture;
   bool mAttached;
   bool mKeepAttached;
