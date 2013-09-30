@@ -2,26 +2,3 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-MOCHITEST_FILES = \
-  file_utf16_be_bom.css \
-  file_utf16_be_bom.js \
-  file_utf16_be_bom.xhtml \
-  file_utf16_le_bom.css \
-  file_utf16_le_bom.js \
-  file_utf16_le_bom.xhtml \
-  file_utf16_le_nobom.xhtml \
-  test_BOMEncoding.js \
-  test_TextDecoder.html \
-  test_TextDecoder.js \
-  test_TextEncoder.html \
-  test_TextEncoder.js \
-  test_stringencoding.html \
-  test_submit_euckr.html \
-  test_utf16_files.html \
-  worker_helper.js \
-  $(NULL)
-
-MOCHITEST_CHROME_FILES = \
-  file_stringencoding.jsm \
-  test_stringencoding.xul \
-  $(NULL)

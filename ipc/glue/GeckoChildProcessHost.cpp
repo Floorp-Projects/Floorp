@@ -34,6 +34,10 @@
 #define NS_TASKBAR_CONTRACTID "@mozilla.org/windows-taskbar;1"
 #endif
 
+#include "nsTArray.h"
+#include "nsClassHashtable.h"
+#include "nsHashKeys.h"
+
 using mozilla::MonitorAutoLock;
 using mozilla::ipc::GeckoChildProcessHost;
 
@@ -89,11 +93,6 @@ GeckoChildProcessHost::GeckoChildProcessHost(GeckoProcessType aProcessType,
 #endif
 {
     MOZ_COUNT_CTOR(GeckoChildProcessHost);
-    
-    MessageLoop* ioLoop = XRE_GetIOMessageLoop();
-    ioLoop->PostTask(FROM_HERE,
-                     NewRunnableMethod(this,
-                                       &GeckoChildProcessHost::InitializeChannel));
 }
 
 GeckoChildProcessHost::~GeckoChildProcessHost()
@@ -287,7 +286,7 @@ GeckoChildProcessHost::SyncLaunch(std::vector<std::string> aExtraOpts, int aTime
 
   ioLoop->PostTask(FROM_HERE,
                    NewRunnableMethod(this,
-                                     &GeckoChildProcessHost::PerformAsyncLaunch,
+                                     &GeckoChildProcessHost::RunPerformAsyncLaunch,
                                      aExtraOpts, arch));
   // NB: this uses a different mechanism than the chromium parent
   // class.
@@ -322,7 +321,7 @@ GeckoChildProcessHost::AsyncLaunch(std::vector<std::string> aExtraOpts)
   MessageLoop* ioLoop = XRE_GetIOMessageLoop();
   ioLoop->PostTask(FROM_HERE,
                    NewRunnableMethod(this,
-                                     &GeckoChildProcessHost::PerformAsyncLaunch,
+                                     &GeckoChildProcessHost::RunPerformAsyncLaunch,
                                      aExtraOpts, base::GetCurrentProcessArchitecture()));
 
   // This may look like the sync launch wait, but we only delay as
@@ -343,7 +342,7 @@ GeckoChildProcessHost::LaunchAndWaitForProcessHandle(StringVector aExtraOpts)
   MessageLoop* ioLoop = XRE_GetIOMessageLoop();
   ioLoop->PostTask(FROM_HERE,
                    NewRunnableMethod(this,
-                                     &GeckoChildProcessHost::PerformAsyncLaunch,
+                                     &GeckoChildProcessHost::RunPerformAsyncLaunch,
                                      aExtraOpts, base::GetCurrentProcessArchitecture()));
 
   MonitorAutoLock lock(mMonitor);
@@ -423,6 +422,14 @@ GeckoChildProcessHost::PerformAsyncLaunch(std::vector<std::string> aExtraOpts, b
   PR_SetEnv(restoreOrigLogName);
 
   return retval;
+}
+
+bool
+GeckoChildProcessHost::RunPerformAsyncLaunch(std::vector<std::string> aExtraOpts,
+                                             base::ProcessArchitecture aArch)
+{
+  InitializeChannel();
+  return PerformAsyncLaunch(aExtraOpts, aArch);
 }
 
 void
@@ -833,3 +840,52 @@ GeckoChildProcessHost::OnWaitableEventSignaled(base::WaitableEvent *event)
   }
   ChildProcessHost::OnWaitableEventSignaled(event);
 }
+
+#ifdef MOZ_NUWA_PROCESS
+
+using mozilla::ipc::GeckoExistingProcessHost;
+using mozilla::ipc::FileDescriptor;
+
+GeckoExistingProcessHost::
+GeckoExistingProcessHost(GeckoProcessType aProcessType,
+                         base::ProcessHandle aProcess,
+                         const FileDescriptor& aFileDescriptor,
+                         ChildPrivileges aPrivileges)
+  : GeckoChildProcessHost(aProcessType, aPrivileges)
+  , mExistingProcessHandle(aProcess)
+  , mExistingFileDescriptor(aFileDescriptor)
+{
+  NS_ASSERTION(aFileDescriptor.IsValid(),
+               "Expected file descriptor to be valid");
+}
+
+GeckoExistingProcessHost::~GeckoExistingProcessHost()
+{
+}
+
+bool
+GeckoExistingProcessHost::PerformAsyncLaunch(StringVector aExtraOpts,
+                                             base::ProcessArchitecture aArch)
+{
+  SetHandle(mExistingProcessHandle);
+
+  OpenPrivilegedHandle(base::GetProcId(mExistingProcessHandle));
+
+  MonitorAutoLock lock(mMonitor);
+  mProcessState = PROCESS_CREATED;
+  lock.Notify();
+
+  return true;
+}
+
+void
+GeckoExistingProcessHost::InitializeChannel()
+{
+  CreateChannel(mExistingFileDescriptor);
+
+  MonitorAutoLock lock(mMonitor);
+  mProcessState = CHANNEL_INITIALIZED;
+  lock.Notify();
+}
+
+#endif /* MOZ_NUWA_PROCESS */

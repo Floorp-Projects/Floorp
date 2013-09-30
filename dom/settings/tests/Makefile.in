@@ -2,16 +2,3 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this file,
 # You can obtain one at http://mozilla.org/MPL/2.0/.
 
-MOCHITEST_FILES = \
-  test_settings_basics.html \
-  test_settings_events.html \
-  test_settings_onsettingchange.html \
-  test_settings_blobs.html \
-  test_settings_data_uris.html \
-  test_settings_navigator_object.html \
-  $(NULL)
-
-MOCHITEST_CHROME_FILES = \
-  test_settings_service.xul \
-  test_settings_service.js \
-  $(NULL)

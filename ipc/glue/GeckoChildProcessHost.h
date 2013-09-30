@@ -11,6 +11,7 @@
 #include "base/waitable_event.h"
 #include "chrome/common/child_process_host.h"
 
+#include "mozilla/ipc/FileDescriptor.h"
 #include "mozilla/Monitor.h"
 
 #include "nsXULAppAPI.h"        // for GeckoProcessType
@@ -66,15 +67,15 @@ public:
                   int32_t timeoutMs=0,
                   base::ProcessArchitecture arch=base::GetCurrentProcessArchitecture());
 
-  bool PerformAsyncLaunch(StringVector aExtraOpts=StringVector(),
-                          base::ProcessArchitecture arch=base::GetCurrentProcessArchitecture());
+  virtual bool PerformAsyncLaunch(StringVector aExtraOpts=StringVector(),
+                                  base::ProcessArchitecture aArch=base::GetCurrentProcessArchitecture());
 
   virtual void OnChannelConnected(int32_t peer_pid);
   virtual void OnMessageReceived(const IPC::Message& aMsg);
   virtual void OnChannelError();
   virtual void GetQueuedMessages(std::queue<IPC::Message>& queue);
 
-  void InitializeChannel();
+  virtual void InitializeChannel();
 
   virtual bool CanShutdown() { return true; }
 
@@ -90,6 +91,10 @@ public:
 
   ProcessHandle GetChildProcessHandle() {
     return mChildProcessHandle;
+  }
+
+  GeckoProcessType GetProcessType() {
+    return mProcessType;
   }
 
 #ifdef XP_MACOSX
@@ -146,6 +151,8 @@ protected:
   task_t mChildTask;
 #endif
 
+  void OpenPrivilegedHandle(base::ProcessId aPid);
+
 private:
   DISALLOW_EVIL_CONSTRUCTORS(GeckoChildProcessHost);
 
@@ -153,7 +160,8 @@ private:
   bool PerformAsyncLaunchInternal(std::vector<std::string>& aExtraOpts,
                                   base::ProcessArchitecture arch);
 
-  void OpenPrivilegedHandle(base::ProcessId aPid);
+  bool RunPerformAsyncLaunch(StringVector aExtraOpts=StringVector(),
+			     base::ProcessArchitecture aArch=base::GetCurrentProcessArchitecture());
 
   // In between launching the subprocess and handing off its IPC
   // channel, there's a small window of time in which *we* might still
@@ -164,6 +172,28 @@ private:
   // FIXME/cjones: this strongly indicates bad design.  Shame on us.
   std::queue<IPC::Message> mQueue;
 };
+
+#ifdef MOZ_NUWA_PROCESS
+class GeckoExistingProcessHost MOZ_FINAL : public GeckoChildProcessHost
+{
+public:
+  GeckoExistingProcessHost(GeckoProcessType aProcessType,
+                           base::ProcessHandle aProcess,
+                           const FileDescriptor& aFileDescriptor,
+                           ChildPrivileges aPrivileges=base::PRIVILEGES_DEFAULT);
+
+  ~GeckoExistingProcessHost();
+
+  virtual bool PerformAsyncLaunch(StringVector aExtraOpts=StringVector(),
+          base::ProcessArchitecture aArch=base::GetCurrentProcessArchitecture()) MOZ_OVERRIDE;
+
+  virtual void InitializeChannel() MOZ_OVERRIDE;
+
+private:
+  base::ProcessHandle mExistingProcessHandle;
+  mozilla::ipc::FileDescriptor mExistingFileDescriptor;
+};
+#endif /* MOZ_NUWA_PROCESS */
 
 } /* namespace ipc */
 } /* namespace mozilla */

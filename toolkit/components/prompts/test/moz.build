@@ -6,3 +6,5 @@
 
 MODULE = 'test_prompter'
 
+MOCHITEST_MANIFESTS += ['mochitest.ini']
+

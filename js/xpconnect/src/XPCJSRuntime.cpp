@@ -1022,6 +1022,10 @@ class Watchdog
     bool mShuttingDown;
 };
 
+#ifdef MOZ_NUWA_PROCESS
+#include "ipc/Nuwa.h"
+#endif
+
 class WatchdogManager : public nsIObserver
 {
   public:
@@ -1154,6 +1158,15 @@ static void
 WatchdogMain(void *arg)
 {
     PR_SetCurrentThreadName("JS Watchdog");
+
+#ifdef MOZ_NUWA_PROCESS
+    if (IsNuwaProcess()) {
+        NS_ASSERTION(NuwaMarkCurrentThread != nullptr,
+                     "NuwaMarkCurrentThread is undefined!");
+        NuwaMarkCurrentThread(nullptr, nullptr);
+        NuwaFreezeCurrentThread();
+    }
+#endif
 
     Watchdog* self = static_cast<Watchdog*>(arg);
     WatchdogManager* manager = self->Manager();

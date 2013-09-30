@@ -3,14 +3,3 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-MOCHITEST_CHROME_FILES =\
-		test_bug467669.xul \
-		test_bug467669.css \
-		test_bug695639.xul \
-		test_bug695639.css \
-		GentiumPlus-R.woff \
-		test_bug708874.xul \
-		test_bug708874.css \
-		test_bug727834.xul \
-		test_bug727834.css \
-		$(NULL)

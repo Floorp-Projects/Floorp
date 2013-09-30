@@ -16,7 +16,7 @@ const pluginHostIface = Ci.nsIPluginHost;
 var pluginHost = Cc["@mozilla.org/plugin/host;1"].getService(Ci.nsIPluginHost);
 pluginHost.QueryInterface(pluginHostIface);
 
-var pluginTag;
+var pluginTag = getTestPlugin();
 var s;
 
 function stored(needles) {
@@ -36,17 +36,7 @@ function stored(needles) {
 
 function test() {
   waitForExplicitFinish();
-
-  var tags = pluginHost.getPluginTags();
-
-  // Find the test plugin
-  for (var i = 0; i < tags.length; i++)
-  {
-    if (tags[i].name == "Test Plug-in")
-    {
-      pluginTag = tags[i];
-    }
-  }
+  setTestPluginEnabledState(Ci.nsIPluginTag.STATE_ENABLED);
 
   s = new Sanitizer();
   s.ignoreTimespan = false;

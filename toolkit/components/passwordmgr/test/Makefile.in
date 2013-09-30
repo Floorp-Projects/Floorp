@@ -6,81 +6,11 @@
 include $(topsrcdir)/config/config.mk
 
 # Mochitest tests
-MOCHITEST_FILES = \
-    test_basic_form.html \
-    test_basic_form_html5.html \
-    test_basic_form_2.html \
-    test_basic_form_0pw.html \
-    test_basic_form_1pw.html \
-    test_basic_form_1pw_2.html \
-    test_basic_form_2pw_1.html \
-    test_basic_form_2pw_2.html \
-    test_basic_form_3pw_1.html \
-    test_basic_form_autocomplete.html \
-    test_basic_form_observer_autofillForms.html \
-    test_basic_form_observer_autocomplete.html \
-    test_basic_form_observer_foundLogins.html \
-    test_basic_form_pwonly.html \
-    test_basic_form_pwevent.html \
-    test_bug_227640.html \
-    test_bug_242956.html \
-    test_bug_360493_1.html \
-    test_bug_360493_2.html \
-    test_bug_391514.html \
-    test_bug_427033.html \
-    test_bug_444968.html \
-    test_bug_627616.html \
-    test_bug_654348.html \
-    test_bug_776171.html \
-    test_master_password.html \
-    test_master_password_cleanup.html \
-    test_maxforms_1.html \
-    test_maxforms_2.html \
-    test_maxforms_3.html \
-    test_notifications.html \
-    test_notifications_popup.html \
-    privbrowsing_perwindowpb_iframe.html \
-    test_prompt_async.html \
-    test_xhr.html \
-    test_xml_load.html \
-    test_zzz_finish.html \
-    pwmgr_common.js \
-    prompt_common.js \
-    notification_common.js \
-    authenticate.sjs \
-    formsubmit.sjs \
-    subtst_privbrowsing_1.html \
-    subtst_privbrowsing_2.html \
-    subtst_privbrowsing_3.html \
-    subtst_privbrowsing_4.html \
-    subtst_master_pass.html \
-    subtst_notifications_1.html \
-    subtst_notifications_2.html \
-    subtst_notifications_3.html \
-    subtst_notifications_4.html \
-    subtst_notifications_5.html \
-    subtst_notifications_6.html \
-    subtst_notifications_7.html \
-    subtst_notifications_8.html \
-    subtst_notifications_9.html \
-    subtst_notifications_10.html \
-    subtst_notifications_11.html \
-    subtst_notifications_11_popup.html \
-    subtst_prompt_async.html \
-    $(NULL)
-
 ifneq ($(OS_TARGET),Linux)
 MOCHITEST_FILES += \
     test_prompt.html \
     $(NULL)
 endif
-
-MOCHITEST_CHROME_FILES += \
-    test_privbrowsing_perwindowpb.html \
-    notification_common.js \
-    pwmgr_common.js \
-    formsubmit.sjs \
-    $(NULL)
 
 # This test doesn't pass because we can't ensure a cross-platform
 # event that occurs between DOMContentLoaded and Pageload

@@ -4552,17 +4552,69 @@ class LArgumentsLength : public LInstructionHelper<1, 0, 0>
 };
 
 // Load a value from the actual arguments.
-class LGetArgument : public LInstructionHelper<BOX_PIECES, 1, 0>
+class LGetFrameArgument : public LInstructionHelper<BOX_PIECES, 1, 0>
 {
   public:
-    LIR_HEADER(GetArgument)
+    LIR_HEADER(GetFrameArgument)
     BOX_OUTPUT_ACCESSORS()
 
-    LGetArgument(const LAllocation &index) {
+    LGetFrameArgument(const LAllocation &index) {
         setOperand(0, index);
     }
     const LAllocation *index() {
         return getOperand(0);
+    }
+};
+
+// Load a value from the actual arguments.
+class LSetFrameArgumentT : public LInstructionHelper<0, 1, 0>
+{
+  public:
+    LIR_HEADER(SetFrameArgumentT)
+
+    LSetFrameArgumentT(const LAllocation &input) {
+        setOperand(0, input);
+    }
+    MSetFrameArgument *mir() const {
+        return mir_->toSetFrameArgument();
+    }
+    const LAllocation *input() {
+        return getOperand(0);
+    }
+};
+
+// Load a value from the actual arguments.
+class LSetFrameArgumentC : public LInstructionHelper<0, 0, 0>
+{
+    Value val_;
+
+  public:
+    LIR_HEADER(SetFrameArgumentC)
+
+    LSetFrameArgumentC(const Value &val) {
+        val_ = val;
+    }
+    MSetFrameArgument *mir() const {
+        return mir_->toSetFrameArgument();
+    }
+    const Value &val() const {
+        return val_;
+    }
+};
+
+// Load a value from the actual arguments.
+class LSetFrameArgumentV : public LInstructionHelper<0, BOX_PIECES, 0>
+{
+  public:
+    LIR_HEADER(SetFrameArgumentV)
+    BOX_OUTPUT_ACCESSORS()
+
+    LSetFrameArgumentV() {}
+
+    static const size_t Input = 0;
+
+    MSetFrameArgument *mir() const {
+        return mir_->toSetFrameArgument();
     }
 };
 

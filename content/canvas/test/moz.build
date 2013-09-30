@@ -6,3 +6,5 @@
 
 DIRS += ['webgl', 'crossorigin', 'chrome']
 
+MOCHITEST_MANIFESTS += ['mochitest.ini']
+

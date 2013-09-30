@@ -2,9 +2,3 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this file,
 # You can obtain one at http://mozilla.org/MPL/2.0/.
 
-MOCHITEST_BROWSER_FILES = \
-  browser_pdfjs_main.js \
-  browser_pdfjs_savedialog.js \
-  browser_pdfjs_views.js \
-  file_pdfjs_test.pdf \
-  $(NULL)

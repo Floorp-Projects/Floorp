@@ -5455,7 +5455,7 @@ CodeGenerator::visitArgumentsLength(LArgumentsLength *lir)
 }
 
 bool
-CodeGenerator::visitGetArgument(LGetArgument *lir)
+CodeGenerator::visitGetFrameArgument(LGetFrameArgument *lir)
 {
     ValueOperand result = GetValueOutput(lir);
     const LAllocation *index = lir->index();
@@ -5470,6 +5470,45 @@ CodeGenerator::visitGetArgument(LGetArgument *lir)
         BaseIndex argPtr(StackPointer, i, ScaleFromElemWidth(sizeof(Value)), argvOffset);
         masm.loadValue(argPtr, result);
     }
+    return true;
+}
+
+bool
+CodeGenerator::visitSetFrameArgumentT(LSetFrameArgumentT *lir)
+{
+    size_t argOffset = frameSize() + IonJSFrameLayout::offsetOfActualArgs() +
+                       (sizeof(Value) * lir->mir()->argno());
+
+    MIRType type = lir->mir()->value()->type();
+
+    if (type == MIRType_Double) {
+        // Store doubles directly.
+        FloatRegister input = ToFloatRegister(lir->input());
+        masm.storeDouble(input, Address(StackPointer, argOffset));
+
+    } else {
+        Register input = ToRegister(lir->input());
+        masm.storeValue(ValueTypeFromMIRType(type), input, Address(StackPointer, argOffset));
+    }
+    return true;
+}
+
+bool
+CodeGenerator:: visitSetFrameArgumentC(LSetFrameArgumentC *lir)
+{
+    size_t argOffset = frameSize() + IonJSFrameLayout::offsetOfActualArgs() +
+                       (sizeof(Value) * lir->mir()->argno());
+    masm.storeValue(lir->val(), Address(StackPointer, argOffset));
+    return true;
+}
+
+bool
+CodeGenerator:: visitSetFrameArgumentV(LSetFrameArgumentV *lir)
+{
+    const ValueOperand val = ToValue(lir, LSetFrameArgumentV::Input);
+    size_t argOffset = frameSize() + IonJSFrameLayout::offsetOfActualArgs() +
+                       (sizeof(Value) * lir->mir()->argno());
+    masm.storeValue(val, Address(StackPointer, argOffset));
     return true;
 }
 

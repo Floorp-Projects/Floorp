@@ -2,14 +2,3 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-MOCHITEST_BROWSER_FILES := \
-  browser_Application.js \
-  browser_ApplicationPrefs.js \
-  browser_ApplicationStorage.js \
-  browser_ApplicationQuitting.js \
-  browser_Bookmarks.js \
-  browser_Browser.js \
-  ContentA.html \
-  ContentB.html \
-  ContentWithFrames.html \
-  $(NULL)

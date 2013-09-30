@@ -447,6 +447,7 @@ class IonBuilder : public MIRGenerator
     bool jsop_binary(JSOp op, MDefinition *left, MDefinition *right);
     bool jsop_pos();
     bool jsop_neg();
+    bool jsop_setarg(uint32_t arg);
     bool jsop_defvar(uint32_t index);
     bool jsop_deffun(uint32_t index);
     bool jsop_notearg();
@@ -672,6 +673,10 @@ class IonBuilder : public MIRGenerator
     AbortReason abortReason() { return abortReason_; }
 
     TypeRepresentationSetHash *getOrCreateReprSetHash(); // fallible
+
+    bool isInlineBuilder() const {
+        return callerBuilder_ != NULL;
+    }
 
   private:
     bool init();
