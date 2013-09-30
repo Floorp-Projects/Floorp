@@ -10,7 +10,6 @@
 #include "jscntxt.h"
 
 #include "jit/Ion.h"
-#include "jit/MIR.h"
 
 ///////////////////////////////////////////////////////////////////////////
 // Read Me First
@@ -413,6 +412,10 @@ bool ParallelTestsShouldPass(JSContext *cx);
 
 ///////////////////////////////////////////////////////////////////////////
 // Debug Spew
+
+namespace jit {
+    class MDefinition;
+}
 
 namespace parallel {
 

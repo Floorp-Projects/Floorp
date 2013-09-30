@@ -5504,7 +5504,7 @@ main(int argc, char **argv, char **envp)
     if (op.getBoolOption('O'))
         OOM_printAllocationCount = true;
 
-#if defined(JS_CPU_X86)
+#if defined(JS_CPU_X86) && defined(JS_ION)
     if (op.getBoolOption("no-fpu"))
         JSC::MacroAssembler::SetFloatingPointDisabled();
 #endif
