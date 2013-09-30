@@ -2,18 +2,3 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-MOCHITEST_FILES = \
-  plain_bootstrap.html \
-  plain_bootstrap.html^headers^ \
-  subdom_bootstrap.html \
-  subdom_bootstrap.html^headers^ \
-  nosts_bootstrap.html \
-  nosts_bootstrap.html^headers^ \
-  verify.sjs \
-  test_stricttransportsecurity.html \
-  $(NULL)
-
-MOCHITEST_CHROME_FILES += \
-  test_sts_privatebrowsing_perwindowpb.html \
-  page_blank.html \
-  $(NULL)

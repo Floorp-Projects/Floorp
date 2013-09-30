@@ -2,23 +2,6 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this file,
 # You can obtain one at http://mozilla.org/MPL/2.0/.
 
-MOCHITEST_BROWSER_FILES := \
-	browser_thumbnails_capture.js \
-	browser_thumbnails_expiration.js \
-	browser_thumbnails_privacy.js \
-	browser_thumbnails_redirect.js \
-	browser_thumbnails_storage.js \
-	browser_thumbnails_storage_migrate3.js \
-	browser_thumbnails_bug726727.js \
-	browser_thumbnails_bug727765.js \
-	browser_thumbnails_bug818225.js \
-	head.js \
-	background_red.html \
-	background_red_scroll.html \
-	background_red_redirect.sjs \
-	privacy_cache_control.sjs \
-	$(NULL)
-
 ifndef RELEASE_BUILD
 MOCHITEST_BROWSER_FILES += \
 	browser_thumbnails_background.js \

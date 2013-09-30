@@ -16,7 +16,9 @@
 #include "gc/Marking.h"
 #include "jit/AsmJS.h"
 #include "jit/IonMacroAssembler.h"
-#include "jit/PerfSpewer.h"
+#ifdef JS_ION_PERF
+# include "jit/PerfSpewer.h"
+#endif
 #include "jit/RegisterSets.h"
 #include "vm/TypedArrayObject.h"
 

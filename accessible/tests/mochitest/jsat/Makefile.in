@@ -3,14 +3,3 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-MOCHITEST_A11Y_FILES =\
-jsatcommon.js \
-output.js \
-test_alive.html \
-test_braille.html \
-test_explicit_names.html \
-test_landmarks.html \
-test_live_regions.html \
-test_tables.html \
-test_utterance_order.html \
-$(NULL)
