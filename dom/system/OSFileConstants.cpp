@@ -75,6 +75,38 @@ struct Paths {
   nsString tmpDir;
   nsString profileDir;
   nsString localProfileDir;
+  /**
+   * The user's home directory
+   */
+  nsString homeDir;
+  /**
+   * The user's desktop directory, if there is one. Otherwise this is
+   * the same as homeDir.
+   */
+  nsString desktopDir;
+
+#if defined(XP_WIN)
+  /**
+   * The user's application data directory.
+   */
+  nsString winAppDataDir;
+  /**
+   * The programs subdirectory in the user's start menu directory.
+   */
+  nsString winStartMenuProgsDir;
+#endif // defined(XP_WIN)
+
+#if defined(XP_MACOSX)
+  /**
+   * The user's Library directory.
+   */
+  nsString macUserLibDir;
+  /**
+   * The Application directory, that stores applications installed in the
+   * system.
+   */
+  nsString macLocalApplicationsDir;
+#endif // defined(XP_MACOSX)
 
   Paths()
   {
@@ -82,6 +114,18 @@ struct Paths {
     tmpDir.SetIsVoid(true);
     profileDir.SetIsVoid(true);
     localProfileDir.SetIsVoid(true);
+    homeDir.SetIsVoid(true);
+    desktopDir.SetIsVoid(true);
+
+#if defined(XP_WIN)
+    winAppDataDir.SetIsVoid(true);
+    winStartMenuProgsDir.SetIsVoid(true);
+#endif // defined(XP_WIN)
+
+#if defined(XP_MACOSX)
+    macUserLibDir.SetIsVoid(true);
+    macLocalApplicationsDir.SetIsVoid(true);
+#endif // defined(XP_MACOSX)
   }
 };
 
@@ -209,6 +253,18 @@ nsresult InitOSFileConstants()
   // some platforms or in non-Firefox embeddings of Gecko).
 
   GetPathToSpecialDir(NS_OS_TEMP_DIR, paths->tmpDir);
+  GetPathToSpecialDir(NS_OS_HOME_DIR, paths->homeDir);
+  GetPathToSpecialDir(NS_OS_DESKTOP_DIR, paths->desktopDir);
+
+#if defined(XP_WIN)
+  GetPathToSpecialDir(NS_WIN_APPDATA_DIR, paths->winAppDataDir);
+  GetPathToSpecialDir(NS_WIN_PROGRAMS_DIR, paths->winStartMenuProgsDir);
+#endif // defined(XP_WIN)
+
+#if defined(XP_MACOSX)
+  GetPathToSpecialDir(NS_MAC_USER_LIB_DIR, paths->macUserLibDir);
+  GetPathToSpecialDir(NS_OSX_LOCAL_APPLICATIONS_DIR, paths->macLocalApplicationsDir);
+#endif // defined(XP_MACOSX)
 
   gPaths = paths.forget();
   return NS_OK;
@@ -768,6 +824,34 @@ bool DefineOSFileConstants(JSContext *cx, JS::Handle<JSObject*> global)
     && !SetStringProperty(cx, objPath, "localProfileDir", gPaths->localProfileDir)) {
     return false;
   }
+
+  if (!SetStringProperty(cx, objPath, "homeDir", gPaths->homeDir)) {
+    return false;
+  }
+
+  if (!SetStringProperty(cx, objPath, "desktopDir", gPaths->desktopDir)) {
+    return false;
+  }
+
+#if defined(XP_WIN)
+  if (!SetStringProperty(cx, objPath, "winAppDataDir", gPaths->winAppDataDir)) {
+    return false;
+  }
+
+  if (!SetStringProperty(cx, objPath, "winStartMenuProgsDir", gPaths->winStartMenuProgsDir)) {
+    return false;
+  }
+#endif // defined(XP_WIN)
+
+#if defined(XP_MACOSX)
+  if (!SetStringProperty(cx, objPath, "macUserLibDir", gPaths->macUserLibDir)) {
+    return false;
+  }
+
+  if (!SetStringProperty(cx, objPath, "macLocalApplicationsDir", gPaths->macLocalApplicationsDir)) {
+    return false;
+  }
+#endif // defined(XP_MACOSX)
 
   return true;
 }
