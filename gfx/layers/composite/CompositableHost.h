@@ -303,6 +303,14 @@ protected:
 
 class CompositableParentManager;
 
+/**
+ * IPDL actor used by CompositableHost to match with its corresponding
+ * CompositableClient on the content side.
+ *
+ * CompositableParent is owned by the IPDL system. It's deletion is triggered
+ * by either the CompositableChild's deletion, or by the IPDL communication
+ * goind down.
+ */
 class CompositableParent : public PCompositableParent
 {
 public:
