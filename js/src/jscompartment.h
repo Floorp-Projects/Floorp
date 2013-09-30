@@ -220,14 +220,18 @@ struct JSCompartment
     bool                         globalWriteBarriered;
 
   private:
-    void sizeOfTypeInferenceData(JS::TypeInferenceSizes *stats, mozilla::MallocSizeOf mallocSizeOf);
+    void addSizeOfTypeInferenceData(mozilla::MallocSizeOf mallocSizeOf,
+                                    JS::TypeInferenceSizes *stats);
 
   public:
-    void sizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf, size_t *compartmentObject,
-                             JS::TypeInferenceSizes *tiSizes,
-                             size_t *shapesCompartmentTables, size_t *crossCompartmentWrappers,
-                             size_t *regexpCompartment, size_t *debuggeesSet,
-                             size_t *baselineStubsOptimized);
+    void addSizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf,
+                                size_t *compartmentObject,
+                                JS::TypeInferenceSizes *tiSizes,
+                                size_t *shapesCompartmentTables,
+                                size_t *crossCompartmentWrappers,
+                                size_t *regexpCompartment,
+                                size_t *debuggeesSet,
+                                size_t *baselineStubsOptimized);
 
     /*
      * Shared scope property tree, and arena-pool for allocating its nodes.

@@ -42,7 +42,7 @@ ExecutablePool::~ExecutablePool()
 }
 
 void
-ExecutableAllocator::sizeOfCode(JS::CodeSizes *sizes) const
+ExecutableAllocator::addSizeOfCode(JS::CodeSizes *sizes) const
 {
     if (m_pools.initialized()) {
         for (ExecPoolHashSet::Range r = m_pools.all(); !r.empty(); r.popFront()) {

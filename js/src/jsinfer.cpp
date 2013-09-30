@@ -3855,8 +3855,8 @@ TypeScript::AddFreezeConstraints(JSContext *cx, JSScript *script)
 }
 
 static void
-SizeOfScriptTypeInferenceData(JSScript *script, JS::TypeInferenceSizes *sizes,
-                              mozilla::MallocSizeOf mallocSizeOf)
+AddSizeOfScriptTypeInferenceData(JSScript *script, JS::TypeInferenceSizes *sizes,
+                                 mozilla::MallocSizeOf mallocSizeOf)
 {
     TypeScript *typeScript = script->types;
     if (!typeScript)
@@ -3872,13 +3872,14 @@ SizeOfScriptTypeInferenceData(JSScript *script, JS::TypeInferenceSizes *sizes,
 }
 
 void
-Zone::sizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf, size_t *typePool)
+Zone::addSizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf, size_t *typePool)
 {
     *typePool += types.typeLifoAlloc.sizeOfExcludingThis(mallocSizeOf);
 }
 
 void
-JSCompartment::sizeOfTypeInferenceData(JS::TypeInferenceSizes *sizes, mozilla::MallocSizeOf mallocSizeOf)
+JSCompartment::addSizeOfTypeInferenceData(mozilla::MallocSizeOf mallocSizeOf,
+                                          JS::TypeInferenceSizes *sizes)
 {
     /* Pending arrays are cleared on GC along with the analysis pool. */
     sizes->pendingArrays += mallocSizeOf(types.pendingArray);
@@ -3889,7 +3890,7 @@ JSCompartment::sizeOfTypeInferenceData(JS::TypeInferenceSizes *sizes, mozilla::M
     for (gc::CellIter i(zone(), gc::FINALIZE_SCRIPT); !i.done(); i.next()) {
         JSScript *script = i.get<JSScript>();
         if (script->compartment() == this)
-            SizeOfScriptTypeInferenceData(script, sizes, mallocSizeOf);
+            AddSizeOfScriptTypeInferenceData(script, sizes, mallocSizeOf);
     }
 
     if (types.allocationSiteTable)
