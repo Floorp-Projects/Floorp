@@ -177,8 +177,8 @@ nsPresArena::FreeListEnumerator(FreeList* aEntry, void* aData)
 }
 
 void
-nsPresArena::SizeOfExcludingThis(mozilla::MallocSizeOf aMallocSizeOf,
-                                 nsArenaMemoryStats* aArenaStats)
+nsPresArena::AddSizeOfExcludingThis(mozilla::MallocSizeOf aMallocSizeOf,
+                                    nsArenaMemoryStats* aArenaStats)
 {
   // We do a complicated dance here because we want to measure the
   // space taken up by the different kinds of objects in the arena,
@@ -197,5 +197,5 @@ nsPresArena::SizeOfExcludingThis(mozilla::MallocSizeOf aMallocSizeOf,
 
   EnumerateData data = { aArenaStats, 0 };
   mFreeLists.EnumerateEntries(FreeListEnumerator, &data);
-  aArenaStats->mOther = mallocSize - data.total;
+  aArenaStats->mOther += mallocSize - data.total;
 }
