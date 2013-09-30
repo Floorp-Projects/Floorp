@@ -145,18 +145,18 @@ interface TestJSImplInterface {
   void passOptionalSelfWithDefault(optional TestJSImplInterface? arg = null);
 
   // Non-wrapper-cache interface types
-  [Creator]
+  [NewObject]
   TestNonWrapperCacheInterface receiveNonWrapperCacheInterface();
-  [Creator]
+  [NewObject]
   TestNonWrapperCacheInterface? receiveNullableNonWrapperCacheInterface();
 
-  [Creator]
+  [NewObject]
   sequence<TestNonWrapperCacheInterface> receiveNonWrapperCacheInterfaceSequence();
-  [Creator]
+  [NewObject]
   sequence<TestNonWrapperCacheInterface?> receiveNullableNonWrapperCacheInterfaceSequence();
-  [Creator]
+  [NewObject]
   sequence<TestNonWrapperCacheInterface>? receiveNonWrapperCacheInterfaceNullableSequence();
-  [Creator]
+  [NewObject]
   sequence<TestNonWrapperCacheInterface?>? receiveNullableNonWrapperCacheInterfaceNullableSequence();
 
   // Non-castable interface types

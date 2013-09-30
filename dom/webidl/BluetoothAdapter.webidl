@@ -65,29 +65,29 @@ interface BluetoothAdapter : EventTarget {
   // Fired when remote devices query current media play status
            attribute EventHandler   onrequestmediaplaystatus;
 
-  [Creator, Throws]
+  [NewObject, Throws]
   DOMRequest setName(DOMString name);
-  [Creator, Throws]
+  [NewObject, Throws]
   DOMRequest setDiscoverable(boolean discoverable);
-  [Creator, Throws]
+  [NewObject, Throws]
   DOMRequest setDiscoverableTimeout(unsigned long timeout);
-  [Creator, Throws]
+  [NewObject, Throws]
   DOMRequest startDiscovery();
-  [Creator, Throws]
+  [NewObject, Throws]
   DOMRequest stopDiscovery();
-  [Creator, Throws]
+  [NewObject, Throws]
   DOMRequest pair(BluetoothDevice device);
-  [Creator, Throws]
+  [NewObject, Throws]
   DOMRequest unpair(BluetoothDevice device);
-  [Creator, Throws]
+  [NewObject, Throws]
   DOMRequest getPairedDevices();
-  [Creator, Throws]
+  [NewObject, Throws]
   DOMRequest getConnectedDevices(unsigned short serviceUuid);
-  [Creator, Throws]
+  [NewObject, Throws]
   DOMRequest setPinCode(DOMString deviceAddress, DOMString pinCode);
-  [Creator, Throws]
+  [NewObject, Throws]
   DOMRequest setPasskey(DOMString deviceAddress, unsigned long passkey);
-  [Creator, Throws]
+  [NewObject, Throws]
   DOMRequest setPairingConfirmation(DOMString deviceAddress, boolean confirmation);
 
   /**
@@ -107,26 +107,26 @@ interface BluetoothAdapter : EventTarget {
    * @param device Remote device
    * @param profile 2-octets service UUID. This is optional.
    */
-  [Creator, Throws]
+  [NewObject, Throws]
   DOMRequest connect(BluetoothDevice device, optional unsigned short serviceUuid);
 
-  [Creator, Throws]
+  [NewObject, Throws]
   DOMRequest disconnect(BluetoothDevice device, optional unsigned short serviceUuid);
 
   // One device can only send one file at a time
-  [Creator, Throws]
+  [NewObject, Throws]
   DOMRequest sendFile(DOMString deviceAddress, Blob blob);
-  [Creator, Throws]
+  [NewObject, Throws]
   DOMRequest stopSendingFile(DOMString deviceAddress);
-  [Creator, Throws]
+  [NewObject, Throws]
   DOMRequest confirmReceivingFile(DOMString deviceAddress, boolean confirmation);
 
   // Connect/Disconnect SCO (audio) connection
-  [Creator, Throws]
+  [NewObject, Throws]
   DOMRequest connectSco();
-  [Creator, Throws]
+  [NewObject, Throws]
   DOMRequest disconnectSco();
-  [Creator, Throws]
+  [NewObject, Throws]
   DOMRequest isScoConnected();
 
   /**
@@ -147,8 +147,8 @@ interface BluetoothAdapter : EventTarget {
   DOMRequest toggleCalls();
 
   // AVRCP 1.3 methods
-  [Creator,Throws]
+  [NewObject,Throws]
   DOMRequest sendMediaMetaData(optional MediaMetaData mediaMetaData);
-  [Creator,Throws]
+  [NewObject,Throws]
   DOMRequest sendMediaPlayStatus(optional MediaPlayStatus mediaPlayStatus);
 };

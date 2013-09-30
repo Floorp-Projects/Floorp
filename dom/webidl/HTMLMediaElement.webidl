@@ -30,7 +30,7 @@ interface HTMLMediaElement : HTMLElement {
   readonly attribute unsigned short networkState;
   [SetterThrows]
            attribute DOMString preload;
-  [Creator]
+  [NewObject]
   readonly attribute TimeRanges buffered;
   void load();
   DOMString canPlayType(DOMString type);
@@ -55,9 +55,9 @@ interface HTMLMediaElement : HTMLElement {
            attribute double defaultPlaybackRate;
   [SetterThrows]
            attribute double playbackRate;
-  [Creator]
+  [NewObject]
   readonly attribute TimeRanges played;
-  [Creator]
+  [NewObject]
   readonly attribute TimeRanges seekable;
   readonly attribute boolean ended;
   [SetterThrows]
