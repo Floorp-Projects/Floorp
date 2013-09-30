@@ -483,6 +483,9 @@ pref("toolkit.telemetry.debugSlowSql", false);
 pref("toolkit.identity.enabled", false);
 pref("toolkit.identity.debug", false);
 
+// AsyncShutdown delay before crashing in case of shutdown freeze
+pref("toolkit.asyncshutdown.timeout.crash", 60000);
+
 // Enable deprecation warnings.
 pref("devtools.errorconsole.deprecation_warnings", true);
 
