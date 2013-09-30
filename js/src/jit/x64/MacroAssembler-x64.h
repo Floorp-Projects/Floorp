@@ -457,6 +457,9 @@ class MacroAssemblerX64 : public MacroAssemblerX86Shared
         movq(rhs, ScratchReg);
         cmpq(lhs, ScratchReg);
     }
+    void cmpPtr(const Register &lhs, const Imm32 rhs) {
+        cmpq(lhs, rhs);
+    }
     void cmpPtr(const Operand &lhs, const ImmGCPtr rhs) {
         movq(rhs, ScratchReg);
         cmpq(lhs, ScratchReg);
