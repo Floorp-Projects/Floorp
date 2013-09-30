@@ -1011,8 +1011,8 @@ public:
   // Posts an event to call UpdateVisibilityState
   virtual void PostVisibilityUpdateEvent() MOZ_OVERRIDE;
 
-  virtual void DocSizeOfExcludingThis(nsWindowSizes* aWindowSizes) const MOZ_OVERRIDE;
-  // DocSizeOfIncludingThis is inherited from nsIDocument.
+  virtual void DocAddSizeOfExcludingThis(nsWindowSizes* aWindowSizes) const MOZ_OVERRIDE;
+  // DocAddSizeOfIncludingThis is inherited from nsIDocument.
 
   virtual nsIDOMNode* AsDOMNode() MOZ_OVERRIDE { return this; }
 
