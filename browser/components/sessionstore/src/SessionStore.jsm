@@ -1445,6 +1445,10 @@ let SessionStoreInternal = {
       throw (Components.returnCode = Cr.NS_ERROR_INVALID_ARG);
     }
 
+    if (aTab.linkedBrowser.__SS_restoreState) {
+      this._resetTabRestoringState(aTab);
+    }
+
     TabStateCache.delete(aTab);
     this._setWindowStateBusy(window);
     this.restoreHistoryPrecursor(window, [aTab], [tabState], 0, 0, 0);
