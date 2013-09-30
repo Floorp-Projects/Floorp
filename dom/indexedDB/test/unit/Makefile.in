@@ -21,6 +21,8 @@ MOCHITEST_FILES = \
   test_deleteDatabase_interactions.js \
   test_event_source.js \
   test_getAll.js \
+  test_globalObjects.js \
+  test_globalObjects_ipc.js \
   test_global_data.js \
   test_index_empty_keyPath.js \
   test_index_getAll.js \
@@ -40,6 +42,7 @@ MOCHITEST_FILES = \
   test_objectCursors.js \
   test_objectStore_getAllKeys.js \
   test_objectStore_inline_autoincrement_key_added_on_put.js \
+  test_objectStore_openKeyCursor.js \
   test_objectStore_remove_values.js \
   test_odd_result_order.js \
   test_open_empty_db.js \

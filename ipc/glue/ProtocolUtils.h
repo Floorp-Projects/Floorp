@@ -42,7 +42,7 @@ enum {
 namespace mozilla {
 namespace ipc {
 
-class AsyncChannel;
+class MessageChannel;
 
 // Used to pass references to protocol actors across the wire.
 // Actors created on the parent-side have a positive ID, and actors
@@ -99,7 +99,7 @@ public:
 
     // XXX odd ducks, acknowledged
     virtual ProcessHandle OtherProcess() const = 0;
-    virtual AsyncChannel* GetIPCChannel() = 0;
+    virtual MessageChannel* GetIPCChannel() = 0;
 };
 
 
@@ -126,12 +126,12 @@ struct PrivateIPDLInterface {};
 
 bool
 Bridge(const PrivateIPDLInterface&,
-       AsyncChannel*, base::ProcessHandle, AsyncChannel*, base::ProcessHandle,
+       MessageChannel*, base::ProcessHandle, MessageChannel*, base::ProcessHandle,
        ProtocolId, ProtocolId);
 
 bool
 Open(const PrivateIPDLInterface&,
-     AsyncChannel*, base::ProcessHandle, Transport::Mode,
+     MessageChannel*, base::ProcessHandle, Transport::Mode,
      ProtocolId, ProtocolId);
 
 bool

@@ -2629,7 +2629,7 @@ TEST_F(SignalingAgentTest, CreateOfferSetLocalTrickleTestServer) {
   PR_Sleep(1000); // Give time for the message queues.
 
   // Verify that we got our candidates.
-  ASSERT_EQ(2U, agent(0)->MatchingCandidates(kBogusSrflxAddress));
+  ASSERT_LE(2U, agent(0)->MatchingCandidates(kBogusSrflxAddress));
 
   // Verify that the candidates appear in the offer.
   size_t match;

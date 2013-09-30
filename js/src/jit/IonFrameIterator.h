@@ -92,10 +92,10 @@ class IonFrameIterator
     IonFrameIterator(uint8_t *top)
       : current_(top),
         type_(IonFrame_Exit),
-        returnAddressToFp_(NULL),
+        returnAddressToFp_(nullptr),
         frameSize_(0),
-        cachedSafepointIndex_(NULL),
-        activation_(NULL)
+        cachedSafepointIndex_(nullptr),
+        activation_(nullptr)
     { }
 
     IonFrameIterator(const ActivationIterator &activations);
@@ -349,7 +349,7 @@ class InlineFrameIteratorMaybeGC
     InlineFrameIteratorMaybeGC(JSContext *cx, const IonBailoutIterator *iter);
 
     InlineFrameIteratorMaybeGC(JSContext *cx, const InlineFrameIteratorMaybeGC *iter)
-      : frame_(iter ? iter->frame_ : NULL),
+      : frame_(iter ? iter->frame_ : nullptr),
         framesRead_(0),
         callee_(cx),
         script_(cx)
@@ -407,7 +407,7 @@ class InlineFrameIteratorMaybeGC
             // Get the non overflown arguments
             unsigned formal_end = (end < nformal) ? end : nformal;
             SnapshotIterator s(si_);
-            s.readFrameArgs(op, NULL, NULL, NULL, start, nformal, formal_end, script());
+            s.readFrameArgs(op, nullptr, nullptr, nullptr, start, nformal, formal_end, script());
 
             // The overflown arguments are not available in current frame.
             // They are the last pushed arguments in the parent frame of this inlined frame.
@@ -424,11 +424,11 @@ class InlineFrameIteratorMaybeGC
                 parent_s.skip();
 
             // Get the overflown arguments
-            parent_s.readFrameArgs(op, NULL, NULL, NULL, nformal, nactual, end, it.script());
+            parent_s.readFrameArgs(op, nullptr, nullptr, nullptr, nformal, nactual, end, it.script());
         } else {
             SnapshotIterator s(si_);
             Value *argv = frame_->actualArgs();
-            s.readFrameArgs(op, argv, NULL, NULL, start, nformal, end, script());
+            s.readFrameArgs(op, argv, nullptr, nullptr, start, nformal, end, script());
         }
     }
 

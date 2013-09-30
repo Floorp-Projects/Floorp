@@ -496,10 +496,16 @@ stage-modules: make-stage-dir
 
 CPP_UNIT_TEST_BINS=$(wildcard $(DIST)/cppunittests/*)
 
+ifdef OBJCOPY
+ifndef PKG_SKIP_STRIP
+STRIP_CPP_TESTS := 1
+endif
+endif
+
 stage-cppunittests:
 	$(NSINSTALL) -D $(PKG_STAGE)/cppunittests
-ifdef OBJCOPY
-	$(foreach bin,$(CPP_UNIT_TEST_BINS),$(OBJCOPY) --strip-unneeded $(bin) $(bin:$(DIST)/%=$(PKG_STAGE)/%);)
+ifdef STRIP_CPP_TESTS
+	$(foreach bin,$(CPP_UNIT_TEST_BINS),$(OBJCOPY) $(STRIP_FLAGS) $(bin) $(bin:$(DIST)/%=$(PKG_STAGE)/%);)
 else
 	cp -RL $(DIST)/cppunittests $(PKG_STAGE)
 endif

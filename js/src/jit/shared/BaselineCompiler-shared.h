@@ -72,11 +72,11 @@ class BaselineCompilerShared
 
     ICEntry *allocateICEntry(ICStub *stub, bool isForOp) {
         if (!stub)
-            return NULL;
+            return nullptr;
 
         // Create the entry and add it to the vector.
         if (!icEntries_.append(ICEntry((uint32_t) (pc - script->code), isForOp)))
-            return NULL;
+            return nullptr;
         ICEntry &vecEntry = icEntries_[icEntries_.length() - 1];
 
         // Set the first stub for the IC entry to the fallback stub
