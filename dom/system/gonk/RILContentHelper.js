@@ -1671,7 +1671,6 @@ RILContentHelper.prototype = {
     delete this._windowsMap[message.requestId];
     let contacts = message.contacts;
     let result = contacts.map(function(c) {
-      let contact = Cc["@mozilla.org/contact;1"].createInstance(Ci.nsIDOMContact);
       let prop = {name: [c.alphaId], tel: [{value: c.number}]};
 
       if (c.email) {
@@ -1684,7 +1683,7 @@ RILContentHelper.prototype = {
         prop.tel.push({value: c.anr[i]});
       }
 
-      contact.init(prop);
+      let contact = new window.mozContact(prop);
       contact.id = message.iccid + c.recordId;
       return contact;
     });
