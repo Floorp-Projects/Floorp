@@ -331,6 +331,8 @@ nsScreen::MozLockOrientation(const Sequence<nsString>& aOrientations,
       orientation |= eScreenOrientation_LandscapePrimary;
     } else if (item.EqualsLiteral("landscape-secondary")) {
       orientation |= eScreenOrientation_LandscapeSecondary;
+    } else if (item.EqualsLiteral("default")) {
+      orientation |= eScreenOrientation_Default;
     } else {
       // If we don't recognize the token, we should just return 'false'
       // without throwing.
