@@ -29,9 +29,9 @@
 // Slots on x4s
 #define JS_TYPEOBJ_X4_SLOTS                1  // Maximum number
 
-// Slots on arrays
+// Slots on array type objects
 #define JS_TYPEOBJ_SLOT_ARRAY_ELEM_TYPE    1
-#define JS_TYPEOBJ_ARRAY_SLOTS             2  // Maximum number
+#define JS_TYPEOBJ_ARRAY_SLOTS             3  // Maximum number
 
 // Slots on structs
 #define JS_TYPEOBJ_SLOT_STRUCT_FIELD_TYPES 1
@@ -46,12 +46,12 @@
 // same number of slots, though not all of them will be initialized or
 // used in the same way.
 
-// Slots on *all* type objects:
+// Slots on *all* type representations:
 #define JS_TYPEREPR_SLOT_KIND      0 // One of the `kind` constants below
 #define JS_TYPEREPR_SLOT_SIZE      1 // Size in bytes.
 #define JS_TYPEREPR_SLOT_ALIGNMENT 2 // Alignment in bytes.
 
-// Slots on arrays:
+// Slots on sized arrays:
 #define JS_TYPEREPR_SLOT_LENGTH    3 // Length of the array
 
 // Slots on scalars, references, and X4s:
@@ -63,11 +63,13 @@
 // These constants are for use exclusively in JS code. In C++ code,
 // prefer TypeRepresentation::Scalar etc, which allows you to
 // write a switch which will receive a warning if you omit a case.
-#define JS_TYPEREPR_SCALAR_KIND    0
-#define JS_TYPEREPR_REFERENCE_KIND 1
-#define JS_TYPEREPR_X4_KIND        2
-#define JS_TYPEREPR_STRUCT_KIND    3
-#define JS_TYPEREPR_ARRAY_KIND     4
+#define JS_TYPEREPR_UNSIZED_ARRAY_KIND  0
+#define JS_TYPEREPR_MAX_UNSIZED_KIND    0    // Unsized kinds go above here
+#define JS_TYPEREPR_SCALAR_KIND         1
+#define JS_TYPEREPR_REFERENCE_KIND      2
+#define JS_TYPEREPR_STRUCT_KIND         3
+#define JS_TYPEREPR_SIZED_ARRAY_KIND    4
+#define JS_TYPEREPR_X4_KIND             5
 
 // These constants are for use exclusively in JS code. In C++ code,
 // prefer ScalarTypeRepresentation::TYPE_INT8 etc, which allows
@@ -103,6 +105,12 @@
 
 #define JS_DATUM_SLOT_TYPE_OBJ 0  // Type object for a given typed object
 #define JS_DATUM_SLOT_OWNER    1  // Owner of data (if null, this is owner)
-#define JS_DATUM_SLOTS         2  // Number of slots for typed objs
+#define JS_DATUM_SLOT_LENGTH   2  // Length of array (see (*) below)
+#define JS_DATUM_SLOTS         3  // Number of slots for typed objs
+
+// (*) The JS_DATUM_SLOT_LENGTH slot stores the length for datums of
+// sized and unsized array type. The slot contains 0 for non-arrays.
+// The slot also contains 0 for *unattached* datums, no matter what
+// type they have.
 
 #endif

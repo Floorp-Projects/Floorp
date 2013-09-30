@@ -66,10 +66,12 @@
 namespace js {
 
 class TypeRepresentation;
+class SizedTypeRepresentation;
 class ScalarTypeRepresentation;
 class ReferenceTypeRepresentation;
 class X4TypeRepresentation;
-class ArrayTypeRepresentation;
+class SizedArrayTypeRepresentation;
+class UnsizedArrayTypeRepresentation;
 class StructTypeRepresentation;
 
 struct Class;
@@ -86,7 +88,8 @@ struct TypeRepresentationHasher
     static HashNumber hashReference(ReferenceTypeRepresentation *key);
     static HashNumber hashX4(X4TypeRepresentation *key);
     static HashNumber hashStruct(StructTypeRepresentation *key);
-    static HashNumber hashArray(ArrayTypeRepresentation *key);
+    static HashNumber hashUnsizedArray(UnsizedArrayTypeRepresentation *key);
+    static HashNumber hashSizedArray(SizedArrayTypeRepresentation *key);
 
     static bool matchScalars(ScalarTypeRepresentation *key1,
                              ScalarTypeRepresentation *key2);
@@ -96,8 +99,10 @@ struct TypeRepresentationHasher
                          X4TypeRepresentation *key2);
     static bool matchStructs(StructTypeRepresentation *key1,
                              StructTypeRepresentation *key2);
-    static bool matchArrays(ArrayTypeRepresentation *key1,
-                            ArrayTypeRepresentation *key2);
+    static bool matchSizedArrays(SizedArrayTypeRepresentation *key1,
+                                 SizedArrayTypeRepresentation *key2);
+    static bool matchUnsizedArrays(UnsizedArrayTypeRepresentation *key1,
+                                   UnsizedArrayTypeRepresentation *key2);
 };
 
 typedef js::HashSet<TypeRepresentation *,
@@ -113,17 +118,16 @@ class TypeRepresentation {
         Reference = JS_TYPEREPR_REFERENCE_KIND,
         X4 = JS_TYPEREPR_X4_KIND,
         Struct = JS_TYPEREPR_STRUCT_KIND,
-        Array = JS_TYPEREPR_ARRAY_KIND
+        SizedArray = JS_TYPEREPR_SIZED_ARRAY_KIND,
+        UnsizedArray = JS_TYPEREPR_UNSIZED_ARRAY_KIND,
     };
 
   protected:
-    TypeRepresentation(Kind kind, size_t size, size_t align, bool opaque);
+    TypeRepresentation(Kind kind, bool opaque);
 
     // in order to call addToTableOrFree()
     friend class TypeRepresentationHelper;
 
-    size_t size_;
-    size_t alignment_;
     Kind kind_;
     bool opaque_;
 
@@ -138,8 +142,6 @@ class TypeRepresentation {
     void traceFields(JSTracer *tracer);
 
   public:
-    size_t size() const { return size_; }
-    size_t alignment() const { return alignment_; }
     Kind kind() const { return kind_; }
     bool opaque() const { return opaque_; }
     bool transparent() const { return !opaque_; }
@@ -149,65 +151,81 @@ class TypeRepresentation {
     // buffer, for use in error messages and the like.
     bool appendString(JSContext *cx, StringBuffer &buffer);
 
-    // Initializes memory that contains an instance of this type
-    // with appropriate default values (typically 0).
-    void initInstance(const JSRuntime *rt, uint8_t *mem);
-
-    // Traces memory that contains an instance of this type.
-    void traceInstance(JSTracer *trace, uint8_t *mem);
-
     static bool isOwnerObject(JSObject &obj);
     static TypeRepresentation *fromOwnerObject(JSObject &obj);
+
+    static bool isSized(Kind kind) {
+        return kind > JS_TYPEREPR_MAX_UNSIZED_KIND;
+    }
+
+    bool isSized() const {
+        return isSized(kind());
+    }
+
+    inline SizedTypeRepresentation *asSized();
 
     bool isScalar() const {
         return kind() == Scalar;
     }
 
-    ScalarTypeRepresentation *asScalar() {
-        JS_ASSERT(isScalar());
-        return (ScalarTypeRepresentation*) this;
-    }
+    inline ScalarTypeRepresentation *asScalar();
 
     bool isReference() const {
         return kind() == Reference;
     }
 
-    ReferenceTypeRepresentation *asReference() {
-        JS_ASSERT(isReference());
-        return (ReferenceTypeRepresentation*) this;
-    }
+    inline ReferenceTypeRepresentation *asReference();
 
     bool isX4() const {
         return kind() == X4;
     }
 
-    X4TypeRepresentation *asX4() {
-        JS_ASSERT(isX4());
-        return (X4TypeRepresentation*) this;
+    inline X4TypeRepresentation *asX4();
+
+    bool isSizedArray() const {
+        return kind() == SizedArray;
     }
 
-    bool isArray() const {
-        return kind() == Array;
+    inline SizedArrayTypeRepresentation *asSizedArray();
+
+    bool isUnsizedArray() const {
+        return kind() == UnsizedArray;
     }
 
-    ArrayTypeRepresentation *asArray() {
-        JS_ASSERT(isArray());
-        return (ArrayTypeRepresentation*) this;
+    inline UnsizedArrayTypeRepresentation *asUnsizedArray();
+
+    bool isAnyArray() const {
+        return isSizedArray() || isUnsizedArray();
     }
 
     bool isStruct() const {
         return kind() == Struct;
     }
 
-    StructTypeRepresentation *asStruct() {
-        JS_ASSERT(isStruct());
-        return (StructTypeRepresentation*) this;
-    }
+    inline StructTypeRepresentation *asStruct();
 
     void mark(JSTracer *tracer);
 };
 
-class ScalarTypeRepresentation : public TypeRepresentation {
+class SizedTypeRepresentation : public TypeRepresentation {
+  protected:
+    SizedTypeRepresentation(Kind kind, bool opaque, size_t size, size_t align);
+
+    size_t size_;
+    size_t alignment_;
+
+  public:
+    size_t size() const { return size_; }
+    size_t alignment() const { return alignment_; }
+
+    // Initializes memory that contains `count` instances of this type
+    void initInstance(const JSRuntime *rt, uint8_t *mem, size_t count);
+
+    // Traces memory that contains `count` instances of this type.
+    void traceInstance(JSTracer *trace, uint8_t *mem, size_t count);
+};
+
+class ScalarTypeRepresentation : public SizedTypeRepresentation {
   public:
     // Must match order of JS_FOR_EACH_SCALAR_TYPE_REPR below
     enum Type {
@@ -273,7 +291,7 @@ class ScalarTypeRepresentation : public TypeRepresentation {
     JS_FOR_EACH_UNIQUE_SCALAR_TYPE_REPR_CTYPE(macro_)                           \
     macro_(ScalarTypeRepresentation::TYPE_UINT8_CLAMPED, uint8_t, uint8Clamped)
 
-class ReferenceTypeRepresentation : public TypeRepresentation {
+class ReferenceTypeRepresentation : public SizedTypeRepresentation {
   public:
     // Must match order of JS_FOR_EACH_REFERENCE_TYPE_REPR below
     enum Type {
@@ -312,7 +330,7 @@ class ReferenceTypeRepresentation : public TypeRepresentation {
     macro_(ReferenceTypeRepresentation::TYPE_OBJECT, HeapPtrObject, Object) \
     macro_(ReferenceTypeRepresentation::TYPE_STRING, HeapPtrString, string)
 
-class X4TypeRepresentation : public TypeRepresentation {
+class X4TypeRepresentation : public SizedTypeRepresentation {
   public:
     enum Type {
         TYPE_INT32 = JS_X4TYPEREPR_INT32,
@@ -346,25 +364,49 @@ class X4TypeRepresentation : public TypeRepresentation {
     macro_(X4TypeRepresentation::TYPE_INT32, int32_t, int32)                  \
     macro_(X4TypeRepresentation::TYPE_FLOAT32, float, float32)
 
-class ArrayTypeRepresentation : public TypeRepresentation {
+class UnsizedArrayTypeRepresentation : public TypeRepresentation {
   private:
     // so TypeRepresentation can call appendStringArray() etc
     friend class TypeRepresentation;
 
-    TypeRepresentation *element_;
-    size_t length_;
+    SizedTypeRepresentation *element_;
 
-    ArrayTypeRepresentation(TypeRepresentation *element,
-                            size_t length);
+    UnsizedArrayTypeRepresentation(SizedTypeRepresentation *element);
 
     // See TypeRepresentation::traceFields()
-    void traceArrayFields(JSTracer *trace);
+    void traceUnsizedArrayFields(JSTracer *trace);
 
     // See TypeRepresentation::appendString()
-    bool appendStringArray(JSContext *cx, StringBuffer &buffer);
+    bool appendStringUnsizedArray(JSContext *cx, StringBuffer &buffer);
 
   public:
-    TypeRepresentation *element() {
+    SizedTypeRepresentation *element() {
+        return element_;
+    }
+
+    static JSObject *Create(JSContext *cx,
+                            SizedTypeRepresentation *elementTypeRepr);
+};
+
+class SizedArrayTypeRepresentation : public SizedTypeRepresentation {
+  private:
+    // so TypeRepresentation can call appendStringSizedArray() etc
+    friend class TypeRepresentation;
+
+    SizedTypeRepresentation *element_;
+    size_t length_;
+
+    SizedArrayTypeRepresentation(SizedTypeRepresentation *element,
+                                 size_t length);
+
+    // See TypeRepresentation::traceFields()
+    void traceSizedArrayFields(JSTracer *trace);
+
+    // See TypeRepresentation::appendString()
+    bool appendStringSizedArray(JSContext *cx, StringBuffer &buffer);
+
+  public:
+    SizedTypeRepresentation *element() {
         return element_;
     }
 
@@ -373,23 +415,23 @@ class ArrayTypeRepresentation : public TypeRepresentation {
     }
 
     static JSObject *Create(JSContext *cx,
-                            TypeRepresentation *elementTypeRepr,
+                            SizedTypeRepresentation *elementTypeRepr,
                             size_t length);
 };
 
 struct StructField {
     size_t index;
     HeapId id;
-    TypeRepresentation *typeRepr;
+    SizedTypeRepresentation *typeRepr;
     size_t offset;
 
     explicit StructField(size_t index,
                          jsid &id,
-                         TypeRepresentation *typeRepr,
+                         SizedTypeRepresentation *typeRepr,
                          size_t offset);
 };
 
-class StructTypeRepresentation : public TypeRepresentation {
+class StructTypeRepresentation : public SizedTypeRepresentation {
   private:
     // so TypeRepresentation can call appendStringStruct() etc
     friend class TypeRepresentation;
@@ -428,10 +470,59 @@ class StructTypeRepresentation : public TypeRepresentation {
 
     const StructField *fieldNamed(jsid id) const;
 
+    // Creates a struct type containing fields with names from `ids`
+    // and types from `typeReprOwners`. The latter should be the owner
+    // objects of a set of sized type representations.
     static JSObject *Create(JSContext *cx,
                             AutoIdVector &ids,
                             AutoObjectVector &typeReprOwners);
 };
+
+// Definitions of the casting methods. These are pulled out of the
+// main class definition because both the super- and subtypes must be
+// defined for C++ to permit the static_cast.
+
+SizedTypeRepresentation *
+TypeRepresentation::asSized() {
+    JS_ASSERT(isSized());
+    return static_cast<SizedTypeRepresentation*>(this);
+}
+
+ScalarTypeRepresentation *
+TypeRepresentation::asScalar() {
+    JS_ASSERT(isScalar());
+    return static_cast<ScalarTypeRepresentation*>(this);
+}
+
+ReferenceTypeRepresentation *
+TypeRepresentation::asReference() {
+    JS_ASSERT(isReference());
+    return static_cast<ReferenceTypeRepresentation*>(this);
+}
+
+X4TypeRepresentation *
+TypeRepresentation::asX4() {
+    JS_ASSERT(isX4());
+    return static_cast<X4TypeRepresentation*>(this);
+}
+
+SizedArrayTypeRepresentation *
+TypeRepresentation::asSizedArray() {
+    JS_ASSERT(isSizedArray());
+    return static_cast<SizedArrayTypeRepresentation*>(this);
+}
+
+UnsizedArrayTypeRepresentation *
+TypeRepresentation::asUnsizedArray() {
+    JS_ASSERT(isUnsizedArray());
+    return static_cast<UnsizedArrayTypeRepresentation*>(this);
+}
+
+StructTypeRepresentation *
+TypeRepresentation::asStruct() {
+    JS_ASSERT(isStruct());
+    return static_cast<StructTypeRepresentation*>(this);
+}
 
 } // namespace js
 

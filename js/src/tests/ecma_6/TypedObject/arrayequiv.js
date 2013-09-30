@@ -29,7 +29,7 @@ function runTests() {
 
   // Create a line:
   var PixelType1 = new StructType({x: uint8, y: uint8});
-  var PixelsType1 = new ArrayType(PixelType1, 22);
+  var PixelsType1 = PixelType1.array(22);
 
   // Sanity checks about type equivalence:
   assertEquivalent(PixelType1, PixelType1);
@@ -38,18 +38,18 @@ function runTests() {
 
   // Define the same two types again. Equivalent.
   var PixelType2 = new StructType({x: uint8, y: uint8});
-  var PixelsType2 = new ArrayType(PixelType2, 22);
+  var PixelsType2 = PixelType2.array(22);
   assertEquivalent(PixelType1, PixelType2);
   assertEquivalent(PixelsType1, PixelsType2);
 
   // Define the pixel type with field order reversed. Not equivalent.
   var PixelType3 = new StructType({y: uint8, x: uint8});
-  var PixelsType3 = new ArrayType(PixelType3, 22);
+  var PixelsType3 = PixelType3.array(22);
   assertNotEquivalent(PixelType1, PixelType3);
   assertNotEquivalent(PixelsType1, PixelsType3);
 
   // Define the pixels type with different number of elements. Not equivalent.
-  var PixelsType3 = new ArrayType(PixelType1, 23);
+  var PixelsType3 = PixelType1.array(23);
   assertNotEquivalent(PixelsType1, PixelsType3);
 
   reportCompare(true, true);

@@ -6,7 +6,7 @@
 if (!this.hasOwnProperty("TypedObject"))
   quit();
 
-var Vec3u16Type = new TypedObject.ArrayType(TypedObject.uint16, 3);
+var Vec3u16Type = TypedObject.uint16.array(3);
 
 function foo_u16() {
   for (var i = 0; i < 30000; i += 3) {
