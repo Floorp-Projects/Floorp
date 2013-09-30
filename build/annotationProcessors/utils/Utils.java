@@ -5,9 +5,6 @@
 package org.mozilla.gecko.annotationProcessors.utils;
 
 import java.lang.annotation.Annotation;
-import java.lang.reflect.Constructor;
-import java.lang.reflect.Field;
-import java.lang.reflect.Member;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.util.HashMap;
@@ -73,23 +70,9 @@ public class Utils {
         sInstanceCallTypes.put("short", "CallShortMethod");
     }
 
-    private static final HashMap<String, String> sFieldTypes = new HashMap<String, String>();
-
-    static {
-        sFieldTypes.put("int", "Int");
-        sFieldTypes.put("boolean", "Boolean");
-        sFieldTypes.put("long", "Long");
-        sFieldTypes.put("double", "Double");
-        sFieldTypes.put("float", "Float");
-        sFieldTypes.put("char", "Char");
-        sFieldTypes.put("byte", "Byte");
-        sFieldTypes.put("short", "Short");
-    }
-
     private static final HashMap<String, String> sFailureReturns = new HashMap<String, String>();
 
     static {
-        sFailureReturns.put("java.lang.Void", "");
         sFailureReturns.put("void", "");
         sFailureReturns.put("int", " 0");
         sFailureReturns.put("boolean", " false");
@@ -104,7 +87,6 @@ public class Utils {
     private static final HashMap<String, String> sCanonicalSignatureParts = new HashMap<String, String>();
 
     static {
-        sCanonicalSignatureParts.put("java/lang/Void", "V");
         sCanonicalSignatureParts.put("void", "V");
         sCanonicalSignatureParts.put("int", "I");
         sCanonicalSignatureParts.put("boolean", "Z");
@@ -182,30 +164,13 @@ public class Utils {
      * @return A string representation of the C++ return type.
      */
     public static String getCReturnType(Class<?> type) {
-        if (type.getCanonicalName().equals("java.lang.Void")) {
-            return "void";
-        }
+        // Since there's only one thing we want to do differently...
         String cParameterType = getCParameterType(type);
         if (cParameterType.equals("const nsAString&")) {
             return "jstring";
         } else {
             return cParameterType;
         }
-    }
-
-    /**
-     * Gets the type-specific part of the  JNI function to use to get or set a field of a given type.
-     *
-     * @param aFieldType The Java type of the field.
-     * @return A string representation of the JNI call function substring to use.
-     */
-    public static String getFieldType(Class<?> aFieldType) {
-        String name = aFieldType.getCanonicalName();
-
-        if (sFieldTypes.containsKey(name)) {
-            return sFieldTypes.get(name);
-        }
-        return "Object";
     }
 
     /**
@@ -247,15 +212,15 @@ public class Utils {
     }
 
     /**
-     * Helper method to get the type signature for methods, given argument and return type.
-     * Allows for the near-identical logic needed for constructors and methods to be shared.
-     * (Alas, constructor does not extend method)
+     * Get the canonical JNI type signature for a method.
      *
-     * @param arguments Argument types of the underlying method.
-     * @param returnType Return type of the underlying method.
-     * @return The canonical Java type string for the method. eg. (IIIIFZ)Lorg/mozilla/gecko/gfx/ViewTransform;
+     * @param aMethod The method to generate a signature for.
+     * @return The canonical JNI type signature for this method.
      */
-    private static String getTypeSignatureInternal(Class<?>[] arguments, Class<?> returnType) {
+    public static String getTypeSignatureString(Method aMethod) {
+        Class<?>[] arguments = aMethod.getParameterTypes();
+        Class<?> returnType = aMethod.getReturnType();
+
         StringBuilder sb = new StringBuilder();
         sb.append('(');
         // For each argument, write its signature component to the buffer..
@@ -269,69 +234,7 @@ public class Utils {
     }
 
     /**
-     * Get the canonical JNI type signature for a Field.
-     *
-     * @param aField The field to generate a signature for.
-     * @return The canonical JNI type signature for this method.
-     */
-    protected static String getTypeSignatureStringForField(Field aField) {
-        StringBuilder sb = new StringBuilder();
-        writeTypeSignature(sb, aField.getType());
-        return sb.toString();
-    }
-
-    /**
-     * Get the canonical JNI type signature for a method.
-     *
-     * @param aMethod The method to generate a signature for.
-     * @return The canonical JNI type signature for this method.
-     */
-    protected static String getTypeSignatureStringForMethod(Method aMethod) {
-        Class<?>[] arguments = aMethod.getParameterTypes();
-        Class<?> returnType = aMethod.getReturnType();
-
-        return getTypeSignatureInternal(arguments, returnType);
-    }
-
-    /**
-     * Get the canonical JNI type signature for a Constructor.
-     *
-     * @param aConstructor The Constructor to generate a signature for.
-     * @return The canonical JNI type signature for this method.
-     */
-    protected static String getTypeSignatureStringForConstructor(Constructor aConstructor) {
-        Class<?>[] arguments = aConstructor.getParameterTypes();
-
-        return getTypeSignatureInternal(arguments, Void.class);
-    }
-
-    public static String getTypeSignatureStringForMember(Member aMember) {
-        if (aMember instanceof Method) {
-            return getTypeSignatureStringForMethod((Method) aMember);
-        } else if (aMember instanceof Field) {
-            return getTypeSignatureStringForField((Field) aMember);
-        } else {
-            return getTypeSignatureStringForConstructor((Constructor) aMember);
-        }
-    }
-
-    public static String getTypeSignatureString(Constructor aConstructor) {
-        Class<?>[] arguments = aConstructor.getParameterTypes();
-
-        StringBuilder sb = new StringBuilder();
-        sb.append('(');
-        // For each argument, write its signature component to the buffer..
-        for (int i = 0; i < arguments.length; i++) {
-            writeTypeSignature(sb, arguments[i]);
-        }
-
-        // Constructors always return Void.
-        sb.append(")V");
-        return sb.toString();
-    }
-
-    /**
-     * Helper method used by getTypeSignatureStringForMethod to build the signature. Write the subsignature
+     * Helper method used by getTypeSignatureString to build the signature. Write the subsignature
      * of a given type into the buffer.
      *
      * @param sb The buffer to write into.
@@ -339,23 +242,11 @@ public class Utils {
      */
     private static void writeTypeSignature(StringBuilder sb, Class<?> c) {
         String name = c.getCanonicalName().replaceAll("\\.", "/");
-
         // Determine if this is an array type and, if so, peel away the array operators..
         int len = name.length();
         while (name.endsWith("[]")) {
             sb.append('[');
             name = name.substring(0, len - 2);
-        }
-
-        if (c.isArray()) {
-            c = c.getComponentType();
-        }
-
-        Class<?> containerClass = c.getDeclaringClass();
-        if (containerClass != null) {
-            // Is an inner class. Add the $ symbol.
-            final int lastSlash = name.lastIndexOf('/');
-            name = name.substring(0, lastSlash) + '$' + name.substring(lastSlash+1);
         }
 
         // Look in the hashmap for the remainder...
@@ -374,31 +265,38 @@ public class Utils {
      * Produces a C method signature, sans semicolon, for the given Java Method. Useful for both
      * generating header files and method bodies.
      *
-     * @param aArgumentTypes Argument types of the Java method being wrapped.
-     * @param aReturnType Return type of the Java method being wrapped.
-     * @param aCMethodName Name of the method to generate in the C++ class.
-     * @param aCClassName Name of the C++ class into which the method is declared.
-     * @return The C++ method implementation signature for the method described.
+     * @param aMethod      The Java method to generate the corresponding wrapper signature for.
+     * @param aCMethodName The name of the generated method this is to be the signatgure for.
+     * @return The generated method signature.
      */
-    public static String getCImplementationMethodSignature(Class<?>[] aArgumentTypes, Class<?> aReturnType, String aCMethodName, String aCClassName) {
-        StringBuilder retBuffer = new StringBuilder();
+    public static String getCImplementationMethodSignature(Method aMethod, String aCMethodName) {
+        Class<?>[] argumentTypes = aMethod.getParameterTypes();
+        Class<?> returnType = aMethod.getReturnType();
 
-        retBuffer.append(getCReturnType(aReturnType));
-        retBuffer.append(' ');
-        retBuffer.append(aCClassName);
-        retBuffer.append("::");
+        StringBuilder retBuffer = new StringBuilder();
+        // Write return type..
+        retBuffer.append(getCReturnType(returnType));
+        retBuffer.append(" AndroidBridge::");
         retBuffer.append(aCMethodName);
         retBuffer.append('(');
 
+        // For an instance method, the first argument is the target object.
+        if (!isMethodStatic(aMethod)) {
+            retBuffer.append("jobject aTarget");
+            if (argumentTypes.length > 0) {
+                retBuffer.append(", ");
+            }
+        }
+
         // Write argument types...
-        for (int aT = 0; aT < aArgumentTypes.length; aT++) {
-            retBuffer.append(getCParameterType(aArgumentTypes[aT]));
+        for (int aT = 0; aT < argumentTypes.length; aT++) {
+            retBuffer.append(getCParameterType(argumentTypes[aT]));
             retBuffer.append(" a");
             // We, imaginatively, call our arguments a1, a2, a3...
             // The only way to preserve the names from Java would be to parse the
             // Java source, which would be computationally hard.
             retBuffer.append(aT);
-            if (aT != aArgumentTypes.length - 1) {
+            if (aT != argumentTypes.length - 1) {
                 retBuffer.append(", ");
             }
         }
@@ -414,18 +312,14 @@ public class Utils {
      * @param aCMethodName The name of the generated method this is to be the signatgure for.
      * @return The generated method signature.
      */
-    /**
-     *
-     * @param aArgumentTypes Argument types of the Java method being wrapped.
-     * @param aArgumentAnnotations The annotations on the Java method arguments. Used to specify
-     *                             default values etc.
-     * @param aReturnType Return type of the Java method being wrapped.
-     * @param aCMethodName Name of the method to generate in the C++ class.
-     * @param aCClassName Name of the C++ class into which the method is declared.e
-     * @param aIsStaticStub true if the generated C++ method should be static, false otherwise.
-     * @return The generated C++ header method signature for the method described.
-     */
-    public static String getCHeaderMethodSignature(Class<?>[] aArgumentTypes, Annotation[][] aArgumentAnnotations, Class<?> aReturnType, String aCMethodName, String aCClassName, boolean aIsStaticStub) {
+    public static String getCHeaderMethodSignature(Method aMethod, String aCMethodName, boolean aIsStaticStub) {
+        Class<?>[] argumentTypes = aMethod.getParameterTypes();
+
+        // The annotations on the parameters of this method, in declaration order.
+        // Importantly - the same order as those in argumentTypes.
+        Annotation[][] argumentAnnotations = aMethod.getParameterAnnotations();
+        Class<?> returnType = aMethod.getReturnType();
+
         StringBuilder retBuffer = new StringBuilder();
 
         // Add the static keyword, if applicable.
@@ -434,14 +328,22 @@ public class Utils {
         }
 
         // Write return type..
-        retBuffer.append(getCReturnType(aReturnType));
+        retBuffer.append(getCReturnType(returnType));
         retBuffer.append(' ');
         retBuffer.append(aCMethodName);
         retBuffer.append('(');
 
+        // For an instance method, the first argument is the target object.
+        if (!isMethodStatic(aMethod)) {
+            retBuffer.append("jobject aTarget");
+            if (argumentTypes.length > 0) {
+                retBuffer.append(", ");
+            }
+        }
+
         // Write argument types...
-        for (int aT = 0; aT < aArgumentTypes.length; aT++) {
-            retBuffer.append(getCParameterType(aArgumentTypes[aT]));
+        for (int aT = 0; aT < argumentTypes.length; aT++) {
+            retBuffer.append(getCParameterType(argumentTypes[aT]));
             retBuffer.append(" a");
             // We, imaginatively, call our arguments a1, a2, a3...
             // The only way to preserve the names from Java would be to parse the
@@ -449,9 +351,9 @@ public class Utils {
             retBuffer.append(aT);
 
             // Append the default value, if there is one..
-            retBuffer.append(getDefaultValueString(aArgumentTypes[aT], aArgumentAnnotations[aT]));
+            retBuffer.append(getDefaultValueString(argumentTypes[aT], argumentAnnotations[aT]));
 
-            if (aT != aArgumentTypes.length - 1) {
+            if (aT != argumentTypes.length - 1) {
                 retBuffer.append(", ");
             }
         }
@@ -473,7 +375,7 @@ public class Utils {
         for (int i = 0; i < aArgumentAnnotations.length; i++) {
             Class<? extends Annotation> annotationType = aArgumentAnnotations[i].annotationType();
             final String annotationTypeName = annotationType.getName();
-            if (annotationTypeName.equals("org.mozilla.gecko.mozglue.generatorannotations.OptionalGeneratedParameter")) {
+            if (annotationTypeName.equals("org.mozilla.gecko.mozglue.OptionalGeneratedParameter")) {
                 return " = " + getDefaultParameterValueForType(aArgumentType);
             }
         }
@@ -503,13 +405,14 @@ public class Utils {
     /**
      * Helper method that returns the number of reference types in the arguments of m.
      *
-     * @param aArgs The method arguments to consider.
+     * @param m The method to consider.
      * @return How many of the arguments of m are nonprimitive.
      */
-    public static int enumerateReferenceArguments(Class<?>[] aArgs) {
+    public static int enumerateReferenceArguments(Method m) {
         int ret = 0;
-        for (int i = 0; i < aArgs.length; i++) {
-            String name = aArgs[i].getCanonicalName();
+        Class<?>[] args = m.getParameterTypes();
+        for (int i = 0; i < args.length; i++) {
+            String name = args[i].getCanonicalName();
             if (!sBasicCTypes.containsKey(name)) {
                 ret++;
             }
@@ -549,7 +452,7 @@ public class Utils {
             sb.append(" = ").append(argName).append(";\n");
         } else {
             if (isCharSequence(type)) {
-                sb.append("l = AndroidBridge::NewJavaString(env, ").append(argName).append(");\n");
+                sb.append("l = NewJavaString(env, ").append(argName).append(");\n");
             } else {
                 sb.append("l = ").append(argName).append(";\n");
             }
@@ -559,13 +462,15 @@ public class Utils {
     }
 
     /**
-     * Returns true if the type provided is an object type. Returns false otherwise
+     * Returns true if the method provided returns an object type. Returns false if it returns a
+     * primitive type.
      *
-     * @param aType The type to consider.
-     * @return true if the method provided is an object type, false otherwise.
+     * @param aMethod The method to consider.
+     * @return true if the method provided returns an object type, false otherwise.
      */
-    public static boolean isObjectType(Class<?> aType) {
-        return !sBasicCTypes.containsKey(aType.getCanonicalName());
+    public static boolean doesReturnObjectType(Method aMethod) {
+        Class<?> returnType = aMethod.getReturnType();
+        return !sBasicCTypes.containsKey(returnType.getCanonicalName());
     }
 
     /**
@@ -590,16 +495,7 @@ public class Utils {
         sb.append("    ");
         sb.append(getClassReferenceName(aClass));
         sb.append(" = getClassGlobalRef(\"");
-
-        String name = aClass.getCanonicalName().replaceAll("\\.", "/");
-        Class<?> containerClass = aClass.getDeclaringClass();
-        if (containerClass != null) {
-            // Is an inner class. Add the $ symbol.
-            final int lastSlash = name.lastIndexOf('/');
-            name = name.substring(0, lastSlash) + '$' + name.substring(lastSlash+1);
-        }
-
-        sb.append(name);
+        sb.append(aClass.getCanonicalName().replaceAll("\\.", "/"));
         sb.append("\");\n");
         return sb.toString();
     }
@@ -624,21 +520,11 @@ public class Utils {
 
     /**
      * Helper method to read the modifier bits of the given method to determine if it is static.
-     * @param aMember The Member to check.
+     * @param aMethod The Method to check.
      * @return true of the method is declared static, false otherwise.
      */
-    public static boolean isMemberStatic(Member aMember) {
-        int aMethodModifiers = aMember.getModifiers();
+    public static boolean isMethodStatic(Method aMethod) {
+        int aMethodModifiers = aMethod.getModifiers();
         return Modifier.isStatic(aMethodModifiers);
-    }
-
-    /**
-     * Helper method to read the modifier bits of the given method to determine if it is static.
-     * @param aMember The Member to check.
-     * @return true of the method is declared static, false otherwise.
-     */
-    public static boolean isMemberFinal(Member aMember) {
-        int aMethodModifiers = aMember.getModifiers();
-        return Modifier.isFinal(aMethodModifiers);
     }
 }
