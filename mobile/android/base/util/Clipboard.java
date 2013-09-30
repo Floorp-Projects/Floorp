@@ -79,6 +79,25 @@ public final class Clipboard {
         });
     }
 
+    /**
+     * Returns true if the clipboard is nonempty, false otherwise.
+     *
+     * @return true if the clipboard is nonempty, false otherwise.
+     */
+    @WrapElementForJNI
+    public static boolean hasText() {
+        String text = getText();
+        return text != null;
+    }
+
+    /**
+     * Deletes all text from the clipboard.
+     */
+    @WrapElementForJNI
+    public static void clearText() {
+        setText(null);
+    }
+
     private static android.content.ClipboardManager getClipboardManager11(Context context) {
         // In API Level 11 and above, CLIPBOARD_SERVICE returns android.content.ClipboardManager,
         // which is a subclass of android.text.ClipboardManager.
