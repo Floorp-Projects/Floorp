@@ -1,11 +1,17 @@
 <!DOCTYPE html>
+<meta charset=utf-8>
 <title>EventTarget.dispatchEvent</title>
 <link rel="author" title="Olli Pettay" href="mailto:Olli.Pettay@gmail.com">
 <link rel="author" title="Ms2ger" href="mailto:Ms2ger@gmail.com">
+<link rel="help" href="http://dom.spec.whatwg.org/#dom-eventtarget-dispatchevent">
 <script src="/resources/testharness.js"></script>
 <script src="/resources/testharnessreport.js"></script>
 <div id="log"></div>
 <script>
+setup({
+  "allow_uncaught_exception": true,
+})
+
 test(function() {
   var e = document.createEvent("Event")
   assert_equals(e.type, "", "Event type should be empty string before initialization")
