@@ -8,16 +8,21 @@
 #include "DOMBindingInlines.h"
 
 #include "nsTraceRefcnt.h"
+#include "mozilla/dom/WorkerLocationBinding.h"
 
 BEGIN_WORKERS_NAMESPACE
+
+NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE_0(WorkerLocation)
+
+NS_IMPL_CYCLE_COLLECTION_ROOT_NATIVE(WorkerLocation, AddRef)
+NS_IMPL_CYCLE_COLLECTION_UNROOT_NATIVE(WorkerLocation, Release)
 
 /* static */ already_AddRefed<WorkerLocation>
 WorkerLocation::Create(JSContext* aCx, JS::Handle<JSObject*> aGlobal,
                        WorkerPrivate::LocationInfo& aInfo)
 {
   nsRefPtr<WorkerLocation> location =
-    new WorkerLocation(aCx,
-                       NS_ConvertUTF8toUTF16(aInfo.mHref),
+    new WorkerLocation(NS_ConvertUTF8toUTF16(aInfo.mHref),
                        NS_ConvertUTF8toUTF16(aInfo.mProtocol),
                        NS_ConvertUTF8toUTF16(aInfo.mHost),
                        NS_ConvertUTF8toUTF16(aInfo.mHostname),
@@ -26,23 +31,13 @@ WorkerLocation::Create(JSContext* aCx, JS::Handle<JSObject*> aGlobal,
                        NS_ConvertUTF8toUTF16(aInfo.mSearch),
                        NS_ConvertUTF8toUTF16(aInfo.mHash));
 
-  if (!Wrap(aCx, aGlobal, location)) {
-    return nullptr;
-  }
-
   return location.forget();
 }
 
-void
-WorkerLocation::_trace(JSTracer* aTrc)
+JSObject*
+WorkerLocation::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aScope)
 {
-  DOMBindingBase::_trace(aTrc);
-}
-
-void
-WorkerLocation::_finalize(JSFreeOp* aFop)
-{
-  DOMBindingBase::_finalize(aFop);
+  return WorkerLocationBinding_workers::Wrap(aCx, aScope, this);
 }
 
 END_WORKERS_NAMESPACE

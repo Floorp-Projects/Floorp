@@ -7,8 +7,14 @@
 
 #include "DOMBindingInlines.h"
 #include "RuntimeService.h"
+#include "mozilla/dom/WorkerNavigatorBinding.h"
 
 BEGIN_WORKERS_NAMESPACE
+
+NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE_0(WorkerNavigator)
+
+NS_IMPL_CYCLE_COLLECTION_ROOT_NATIVE(WorkerNavigator, AddRef)
+NS_IMPL_CYCLE_COLLECTION_UNROOT_NATIVE(WorkerNavigator, Release)
 
 /* static */ already_AddRefed<WorkerNavigator>
 WorkerNavigator::Create(JSContext* aCx, JS::Handle<JSObject*> aGlobal)
@@ -20,26 +26,16 @@ WorkerNavigator::Create(JSContext* aCx, JS::Handle<JSObject*> aGlobal)
     rts->GetNavigatorStrings();
 
   nsRefPtr<WorkerNavigator> navigator =
-    new WorkerNavigator(aCx, strings.mAppName, strings.mAppVersion,
+    new WorkerNavigator(strings.mAppName, strings.mAppVersion,
                         strings.mPlatform, strings.mUserAgent);
-
-  if (!Wrap(aCx, aGlobal, navigator)) {
-    return nullptr;
-  }
 
   return navigator.forget();
 }
 
-void
-WorkerNavigator::_trace(JSTracer* aTrc)
+JSObject*
+WorkerNavigator::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aScope)
 {
-  DOMBindingBase::_trace(aTrc);
-}
-
-void
-WorkerNavigator::_finalize(JSFreeOp* aFop)
-{
-  DOMBindingBase::_finalize(aFop);
+  return WorkerNavigatorBinding_workers::Wrap(aCx, aScope, this);
 }
 
 END_WORKERS_NAMESPACE
