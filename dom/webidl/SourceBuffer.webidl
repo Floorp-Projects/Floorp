@@ -20,7 +20,7 @@ interface SourceBuffer : EventTarget {
   [SetterThrows]
   attribute SourceBufferAppendMode mode;
   readonly attribute boolean updating;
-  [Creator, Throws]
+  [NewObject, Throws]
   readonly attribute TimeRanges buffered;
   [SetterThrows]
   attribute double timestampOffset;

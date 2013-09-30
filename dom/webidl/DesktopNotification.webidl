@@ -9,7 +9,7 @@ interface MozObserver;
 [HeaderFile="mozilla/dom/DesktopNotification.h"]
 interface DesktopNotificationCenter
 {
-  [Creator]
+  [NewObject]
   DesktopNotification createNotification(DOMString title,
                                          DOMString description,
                                          optional DOMString iconURL = "");
