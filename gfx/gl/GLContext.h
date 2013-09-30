@@ -2418,7 +2418,7 @@ public:
 #endif
 
     virtual already_AddRefed<TextureImage>
-    CreateDirectTextureImage(android::GraphicBuffer* aBuffer, GLenum aWrapMode)
+    CreateDirectTextureImage(::android::GraphicBuffer* aBuffer, GLenum aWrapMode)
     { return nullptr; }
 
     // Before reads from offscreen texture
