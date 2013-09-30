@@ -1,0 +1,41 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this file,
+ * You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "domstubs.idl"
+#include "nsIContactProperties.idl"
+#include "nsIDOMEventTarget.idl"
+
+interface nsIArray;
+interface nsIDOMDOMRequest;
+interface nsIDOMDOMCursor;
+
+[scriptable, uuid(72a5ee28-81d8-4af8-90b3-ae935396cc66)]
+interface nsIDOMContact : nsIContactProperties
+{
+  attribute DOMString id;
+  readonly attribute jsval     published;
+  readonly attribute jsval     updated;
+
+  void init(in nsIContactProperties properties);  // Workaround BUG 723206
+};
+
+[scriptable, uuid(8beb3a66-d70a-4111-b216-b8e995ad3aff)]
+interface nsIDOMContactManager : nsISupports
+{
+  nsIDOMDOMRequest find(in nsIContactFindOptions options);
+
+  nsIDOMDOMCursor getAll(in nsIContactFindSortOptions options);
+
+  nsIDOMDOMRequest clear();
+
+  nsIDOMDOMRequest save(in nsIDOMContact contact);
+
+  nsIDOMDOMRequest remove(in nsIDOMContact contact);
+
+  attribute nsIDOMEventListener oncontactchange;
+
+  nsIDOMDOMRequest getRevision();
+
+  nsIDOMDOMRequest getCount();
+};

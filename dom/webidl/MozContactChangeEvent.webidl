@@ -4,7 +4,7 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-[Constructor(DOMString type, optional MozContactChangeEventInit eventInitDict)]
+[Constructor(DOMString type, optional MozContactChangeEventInit eventInitDict), HeaderFile="GeneratedEventClasses.h"]
 interface MozContactChangeEvent : Event
 {
   readonly attribute DOMString? contactID;
