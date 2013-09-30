@@ -3,12 +3,6 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-MOCHITEST_BROWSER_FILES := \
-  head.js \
-  browser_bug400731.js \
-  $(NULL)
-
-
 # browser_bug415846.js disabled for too many intermittent failures (bug 546169)
 #
 # # The browser chrome test for bug 415846 doesn't run on Mac because of its
