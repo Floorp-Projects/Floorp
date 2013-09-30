@@ -5,9 +5,7 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 XPIDL_SOURCES += [
-    'nsIContactProperties.idl',
-    'nsIDOMContactManager.idl',
-    'nsIDOMMozContactChangeEvent.idl',
+    'nsIDOMMozContactChangeEvent.idl'
 ]
 
 XPIDL_MODULE = 'dom_contacts'

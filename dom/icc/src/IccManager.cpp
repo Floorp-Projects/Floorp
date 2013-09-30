@@ -235,7 +235,7 @@ IccManager::ReadContacts(const nsAString& aContactType, nsIDOMDOMRequest** aRequ
 
 NS_IMETHODIMP
 IccManager::UpdateContact(const nsAString& aContactType,
-                          nsIDOMContact* aContact,
+                          nsISupports* aContact,
                           const nsAString& aPin2,
                           nsIDOMDOMRequest** aRequest)
 {
