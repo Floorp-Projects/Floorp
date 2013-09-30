@@ -138,9 +138,22 @@ MOZ_ARG_ENABLE_BOOL(shared-js,
     DISABLE_SHARED_JS=0,
     DISABLE_SHARED_JS=1)
 
+MOZ_ARG_DISABLE_BOOL(export-js,
+[  --disable-export-js
+                          Do not mark JS symbols as DLL exported/visible.],
+    DISABLE_EXPORT_JS=1,
+    DISABLE_SHARED_JS=)
+
 if test "$DISABLE_SHARED_JS" = "1" ; then
-  AC_DEFINE(STATIC_EXPORTABLE_JS_API)
+  if test "$DISABLE_EXPORT_JS" = "1"; then
+    AC_DEFINE(STATIC_JS_API)
+  else
+    AC_DEFINE(STATIC_EXPORTABLE_JS_API)
+  fi
 else
+  if test "$DISABLE_EXPORT_JS" = "1"; then
+    AC_MSG_ERROR([Must export JS symbols when building a shared library.])
+  fi
   JS_SHARED_LIBRARY=1
 fi
 AC_SUBST(JS_SHARED_LIBRARY)
