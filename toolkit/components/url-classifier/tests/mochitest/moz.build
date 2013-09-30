@@ -8,3 +8,5 @@ MODULE = 'test_url-classifier'
 
 MOCHITEST_MANIFESTS += ['mochitest.ini']
 
+MOCHITEST_CHROME_MANIFESTS += ['chrome.ini']
+

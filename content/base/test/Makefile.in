@@ -13,11 +13,6 @@ MOCHITEST_FILES += \
 		$(NULL)
 endif
 
-MOCHITEST_CHROME_FILES =	\
-		test_bug357450.js \
-		test_copypaste.xul \
-		$(NULL)
-
 # This test fails on the Mac for some reason
 ifneq (,$(filter gtk2 gtk3 windows,$(MOZ_WIDGET_TOOLKIT)))
 MOCHITEST_FILES += \

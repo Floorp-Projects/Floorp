@@ -11,9 +11,3 @@ MOCHITEST_FILES += \
 		$(NULL)
 endif
 
-MOCHITEST_CHROME_FILES = \
-		test_bug471319.html \
-		test_bug483651.html \
-		test_bug636465.xul \
-		test_bug830600.html \
-		$(NULL)
