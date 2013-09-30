@@ -60,7 +60,7 @@ public class UpdateServiceHelper {
         } else {
             pkgSpecial = "";
         }
-        UPDATE_URL = "https://aus2.mozilla.org/update/4/" + AppConstants.MOZ_APP_BASENAME + "/" +
+        UPDATE_URL = "https://aus4.mozilla.org/update/4/" + AppConstants.MOZ_APP_BASENAME + "/" +
                      AppConstants.MOZ_APP_VERSION         +
                      "/%BUILDID%/Android_"                + AppConstants.MOZ_APP_ABI + pkgSpecial +
                      "/%LOCALE%/"                         + AppConstants.MOZ_UPDATE_CHANNEL +
