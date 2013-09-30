@@ -1280,7 +1280,7 @@ class MTest
     AliasSet getAliasSet() const {
         return AliasSet::None();
     }
-    void infer(JSContext *cx);
+    void infer();
     MDefinition *foldsTo(bool useValueNumbers);
 
     void markOperandCantEmulateUndefined() {
@@ -2138,7 +2138,7 @@ class MCompare
     bool evaluateConstantOperands(bool *result);
     MDefinition *foldsTo(bool useValueNumbers);
 
-    void infer(JSContext *cx, BaselineInspector *inspector, jsbytecode *pc);
+    void infer(BaselineInspector *inspector, jsbytecode *pc);
     CompareType compareType() const {
         return compareType_;
     }
@@ -3018,7 +3018,7 @@ class MTypeOf
     }
 
     MDefinition *foldsTo(bool useValueNumbers);
-    void infer(JSContext *cx);
+    void infer();
 
     bool inputMaybeCallableOrEmulatesUndefined() const {
         return inputMaybeCallableOrEmulatesUndefined_;
@@ -5032,7 +5032,7 @@ class MNot
 
     INSTRUCTION_HEADER(Not);
 
-    void infer(JSContext *cx);
+    void infer();
     MDefinition *foldsTo(bool useValueNumbers);
 
     void markOperandCantEmulateUndefined() {
