@@ -3,6 +3,7 @@ function test()
   var embed = '<embed type="application/x-test" allowscriptaccess="always" allowfullscreen="true" wmode="window" width="640" height="480"></embed>'
 
   waitForExplicitFinish();
+  setTestPluginEnabledState(Ci.nsIPluginTag.STATE_ENABLED);
 
   // create a few tabs
   var tabs = [

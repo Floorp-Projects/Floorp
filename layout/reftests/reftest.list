@@ -52,7 +52,7 @@ include canvas/reftest.list
 include css-animations/reftest.list
 
 # blending/
-skip-if(B2G||(Android&&AndroidVersion<15)) include css-blending/reftest.list
+skip-if(B2G||Android) include css-blending/reftest.list
 
 # css calc() tests
 include css-calc/reftest.list

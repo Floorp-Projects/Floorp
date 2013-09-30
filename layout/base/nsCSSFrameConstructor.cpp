@@ -1643,6 +1643,10 @@ nsCSSFrameConstructor::CreateGeneratedContent(nsFrameConstructorState& aState,
 
       break;
     }
+
+  case eStyleContentType_Uninitialized:
+    NS_NOTREACHED("uninitialized content type");
+    return nullptr;
   } // switch
 
   return nullptr;

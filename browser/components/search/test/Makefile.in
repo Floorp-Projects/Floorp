@@ -2,24 +2,6 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-MOCHITEST_BROWSER_FILES = \
-  head.js \
-  browser_405664.js \
-  browser_addEngine.js \
-  browser_contextmenu.js \
-  browser_healthreport.js \
-  browser_private_search_perwindowpb.js \
-  testEngine.xml \
-  testEngine_mozsearch.xml \
-  testEngine.src \
-  browser_426329.js \
-  426329.xml \
-  browser_483086.js \
-  483086-1.xml \
-  483086-2.xml \
-  test.html \
-  $(NULL)
-
 ifdef ENABLE_TESTS
 pp_mochitest_browser_files := \
   browser_google.js \

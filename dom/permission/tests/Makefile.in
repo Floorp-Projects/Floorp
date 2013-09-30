@@ -2,26 +2,10 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this file,
 # You can obtain one at http://mozilla.org/MPL/2.0/.
 
-MOCHITEST_FILES = \
-  test_permission_basics.html \
-  test_alarms.html \
-  test_idle.html \
-  test_permissions.html \
-  test_power.html \
-  test_systemXHR.html \
-  test_tcp-socket.html \
-  test_webapps-manage.html \
-  test_browser.html \
-  test_embed-apps.html \
-  file_shim.html \
-  file_framework.js \
-  $(NULL)
-
 # disabled until bug 859593 is fixed
 #MOCHITEST_FILES += \
 #  test_camera.html \
 #  $(NULL)
-
 ifdef MOZ_B2G
 MOCHITEST_FILES += \
   test_keyboard.html \
