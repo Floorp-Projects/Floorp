@@ -21,6 +21,40 @@
 #include "nsIReflowCallback.h"
 #include "nsContentUtils.h"
 #include "mozilla/Attributes.h"
+
+class nsReflowFrameRunnable : public nsRunnable
+{
+public:
+  nsReflowFrameRunnable(nsIFrame* aFrame,
+                        nsIPresShell::IntrinsicDirty aIntrinsicDirty,
+                        nsFrameState aBitToAdd);
+
+  NS_DECL_NSIRUNNABLE
+
+  nsWeakFrame mWeakFrame;
+  nsIPresShell::IntrinsicDirty mIntrinsicDirty;
+  nsFrameState mBitToAdd;
+};
+
+nsReflowFrameRunnable::nsReflowFrameRunnable(nsIFrame* aFrame,
+                          nsIPresShell::IntrinsicDirty aIntrinsicDirty,
+                          nsFrameState aBitToAdd)
+  : mWeakFrame(aFrame),
+    mIntrinsicDirty(aIntrinsicDirty),
+    mBitToAdd(aBitToAdd)
+{
+}
+
+NS_IMETHODIMP
+nsReflowFrameRunnable::Run()
+{
+  if (mWeakFrame.IsAlive()) {
+    mWeakFrame->PresContext()->PresShell()->
+      FrameNeedsReflow(mWeakFrame, mIntrinsicDirty, mBitToAdd);
+  }
+  return NS_OK;
+}
+
 //
 // NS_NewToolbarFrame
 //
