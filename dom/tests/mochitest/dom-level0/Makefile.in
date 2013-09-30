@@ -3,20 +3,3 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-MOCHITEST_FILES	= \
-		test_crossdomainprops.html \
-		file_crossdomainprops_inner.html \
-		test_setting_document.domain_to_shortened_ipaddr.html \
-		child_ip_address.html \
-		test_setting_document.domain_idn.html \
-		idn_child.html \
-		file_location.html \
-		test_location.html \
-		test_innerWidthHeight_script.html \
-		innerWidthHeight_script.html \
-		test_location_setters.html \
-		test_location_getters.html \
-		test_location_framed.html \
-		test_location_sandboxed.html \
-		framed_location.html \
-		$(NULL)

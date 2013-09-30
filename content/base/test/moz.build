@@ -24,3 +24,5 @@ CPP_UNIT_TESTS += [
     'TestPlainTextSerializer.cpp',
 ]
 
+MOCHITEST_MANIFESTS += ['mochitest.ini']
+
