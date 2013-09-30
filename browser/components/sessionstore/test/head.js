@@ -240,12 +240,56 @@ function waitForSaveState(aCallback) {
     Services.prefs.getIntPref("browser.sessionstore.interval");
   return waitForTopic("sessionstore-state-write", timeout, aCallback);
 }
+function promiseSaveState() {
+  let deferred = Promise.defer();
+  waitForSaveState(isSuccessful => {
+    if (isSuccessful) {
+      deferred.resolve();
+    } else {
+      deferred.reject(new Error("timeout"));
+    }});
+  return deferred.promise;
+}
+function forceSaveState() {
+  let promise = promiseSaveState();
+  const PREF = "browser.sessionstore.interval";
+  // Set interval to an arbitrary non-0 duration
+  // to ensure that setting it to 0 will notify observers
+  Services.prefs.setIntPref(PREF, 1000);
+  Services.prefs.setIntPref(PREF, 0);
+  return promise.then(
+    function onSuccess(x) {
+      Services.prefs.clearUserPref(PREF);
+      return x;
+    },
+    function onError(x) {
+      Services.prefs.clearUserPref(PREF);
+      throw x;
+    }
+  );
+}
 
 function whenBrowserLoaded(aBrowser, aCallback = next) {
   aBrowser.addEventListener("load", function onLoad() {
     aBrowser.removeEventListener("load", onLoad, true);
     executeSoon(aCallback);
   }, true);
+}
+function promiseBrowserLoaded(aBrowser) {
+  let deferred = Promise.defer();
+  whenBrowserLoaded(aBrowser, deferred.resolve);
+  return deferred.promise;
+}
+function whenBrowserUnloaded(aBrowser, aContainer, aCallback = next) {
+  aBrowser.addEventListener("unload", function onUnload() {
+    aBrowser.removeEventListener("unload", onUnload, true);
+    executeSoon(aCallback);
+  }, true);
+}
+function promiseBrowserUnloaded(aBrowser, aContainer) {
+  let deferred = Promise.defer();
+  whenBrowserUnloaded(aBrowser, aContainer, deferred.resolve);
+  return deferred.promise;
 }
 
 function whenWindowLoaded(aWindow, aCallback = next) {

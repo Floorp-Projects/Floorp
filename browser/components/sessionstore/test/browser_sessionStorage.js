@@ -7,26 +7,6 @@ Cu.import("resource://gre/modules/Task.jsm", Scope);
 Cu.import("resource://gre/modules/Promise.jsm", Scope);
 let {Task, Promise} = Scope;
 
-function promiseBrowserLoaded(aBrowser) {
-  let deferred = Promise.defer();
-  whenBrowserLoaded(aBrowser, () => deferred.resolve());
-  return deferred.promise;
-}
-
-function forceWriteState() {
-  let deferred = Promise.defer();
-  const PREF = "browser.sessionstore.interval";
-  const TOPIC = "sessionstore-state-write";
-
-  Services.obs.addObserver(function observe() {
-    Services.obs.removeObserver(observe, TOPIC);
-    Services.prefs.clearUserPref(PREF);
-    deferred.resolve();
-  }, TOPIC, false);
-
-  Services.prefs.setIntPref(PREF, 0);
-  return deferred.promise;
-}
 
 function waitForStorageChange(aTab) {
   let deferred = Promise.defer();
@@ -57,7 +37,7 @@ function test() {
       // Flush loading and next save, call getBrowserState()
       // a few times to ensure that everything is cached.
       yield promiseBrowserLoaded(tab.linkedBrowser);
-      yield forceWriteState();
+      yield forceSaveState();
       info("Calling getBrowserState() to populate cache");
       ss.getBrowserState();
 
@@ -66,7 +46,7 @@ function test() {
       win.sessionStorage[SESSION_STORAGE_KEY] = SESSION_STORAGE_VALUE;
       let storageChanged = yield storageChangedPromise;
       ok(storageChanged, "Changing sessionStorage triggered the right message");
-      yield forceWriteState();
+      yield forceSaveState();
 
       let state = ss.getBrowserState();
       ok(state.indexOf(SESSION_STORAGE_KEY) != -1, "Key appears in state");
@@ -78,7 +58,7 @@ function test() {
       win.localStorage[LOCAL_STORAGE_KEY] = LOCAL_STORAGE_VALUE;
       storageChanged = yield storageChangedPromise;
       ok(!storageChanged, "Changing localStorage did not trigger a message");
-      yield forceWriteState();
+      yield forceSaveState();
 
       state = ss.getBrowserState();
       ok(state.indexOf(LOCAL_STORAGE_KEY) == -1, "Key does not appear in state");
