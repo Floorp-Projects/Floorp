@@ -181,6 +181,22 @@ DecommittedArenasChunkCallback(JSRuntime *rt, void *data, gc::Chunk *chunk)
 }
 
 static void
+StatsZoneCallback(JSRuntime *rt, void *data, Zone *zone)
+{
+    // Append a new CompartmentStats to the vector.
+    RuntimeStats *rtStats = static_cast<StatsClosure *>(data)->rtStats;
+
+    // CollectRuntimeStats reserves enough space.
+    MOZ_ALWAYS_TRUE(rtStats->zoneStatsVector.growBy(1));
+    ZoneStats &zStats = rtStats->zoneStatsVector.back();
+    rtStats->initExtraZoneStats(zone, &zStats);
+    rtStats->currZoneStats = &zStats;
+
+    zone->sizeOfIncludingThis(rtStats->mallocSizeOf_,
+                              &zStats.typePool);
+}
+
+static void
 StatsCompartmentCallback(JSRuntime *rt, void *data, JSCompartment *compartment)
 {
     // Append a new CompartmentStats to the vector.
@@ -202,22 +218,6 @@ StatsCompartmentCallback(JSRuntime *rt, void *data, JSCompartment *compartment)
                                      &cStats.regexpCompartment,
                                      &cStats.debuggeesSet,
                                      &cStats.baselineStubsOptimized);
-}
-
-static void
-StatsZoneCallback(JSRuntime *rt, void *data, Zone *zone)
-{
-    // Append a new CompartmentStats to the vector.
-    RuntimeStats *rtStats = static_cast<StatsClosure *>(data)->rtStats;
-
-    // CollectRuntimeStats reserves enough space.
-    MOZ_ALWAYS_TRUE(rtStats->zoneStatsVector.growBy(1));
-    ZoneStats &zStats = rtStats->zoneStatsVector.back();
-    rtStats->initExtraZoneStats(zone, &zStats);
-    rtStats->currZoneStats = &zStats;
-
-    zone->sizeOfIncludingThis(rtStats->mallocSizeOf_,
-                              &zStats.typePool);
 }
 
 static void
