@@ -43,6 +43,10 @@ protected:
                                    const IPC::SerializedLoadContext&
                                          loadContext) MOZ_OVERRIDE;
 
+  virtual mozilla::ipc::IProtocol*
+  CloneProtocol(Channel* aChannel,
+                mozilla::ipc::ProtocolCloneContext* aCtx) MOZ_OVERRIDE;
+
   nsRefPtr<nsCookieService> mCookieService;
 };
 
