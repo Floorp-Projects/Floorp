@@ -197,7 +197,7 @@ nsCSSProps::BuildShorthandsContainingTable()
     for (const nsCSSProperty* subprops = SubpropertyEntryFor(shorthand);
          *subprops != eCSSProperty_UNKNOWN;
          ++subprops) {
-      NS_ABORT_IF_FALSE(0 < *subprops &&
+      NS_ABORT_IF_FALSE(0 <= *subprops &&
                         *subprops < eCSSProperty_COUNT_no_shorthands,
                         "subproperty must be a longhand");
       ++occurrenceCounts[*subprops];
