@@ -101,7 +101,6 @@ public:
                                       dom::ChannelInterpretation aChannelInterpretation);
   virtual void ProduceOutput(GraphTime aFrom, GraphTime aTo);
   TrackTicks GetCurrentPosition();
-  bool AllInputsFinished() const;
   bool IsAudioParamStream() const
   {
     return mAudioParamStream;

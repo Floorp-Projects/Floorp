@@ -65,6 +65,8 @@ MOCHITEST_FILES := \
   test_delayNodeAtMax.html \
   test_delayNodeSmallMaxDelay.html \
   test_delayNodeTailIncrease.html \
+  test_delayNodeTailWithGain.html \
+  test_delayNodeTailWithReconnect.html \
   test_delayNodeWithGain.html \
   test_delayNodeCycles.html \
   test_dynamicsCompressorNode.html \
