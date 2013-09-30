@@ -22,6 +22,11 @@ EXTRA_COMPONENTS += [
     'WifiWorker.manifest',
 ]
 
+EXTRA_JS_MODULES += [
+    'WifiCommand.jsm',
+    'WifiNetUtil.jsm',
+]
+
 if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'gonk':
     CPP_SOURCES = [
         'NetUtils.cpp',
