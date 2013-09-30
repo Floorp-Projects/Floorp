@@ -93,11 +93,13 @@ nsAndroidHistory::VisitURI(nsIURI *aURI, nsIURI *aLastVisitedURI, uint32_t aFlag
   if (aFlags & VisitFlags::UNRECOVERABLE_ERROR)
     return NS_OK;
 
-  nsAutoCString uri;
-  nsresult rv = aURI->GetSpec(uri);
-  if (NS_FAILED(rv)) return rv;
-  NS_ConvertUTF8toUTF16 uriString(uri);
-  GeckoAppShell::MarkURIVisited(uriString);
+  if (AndroidBridge::Bridge()) {
+    nsAutoCString uri;
+    nsresult rv = aURI->GetSpec(uri);
+    if (NS_FAILED(rv)) return rv;
+    NS_ConvertUTF8toUTF16 uriString(uri);
+    GeckoAppShell::MarkURIVisited(uriString);
+  }
   return NS_OK;
 }
 
