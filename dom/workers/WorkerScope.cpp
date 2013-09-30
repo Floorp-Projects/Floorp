@@ -268,12 +268,7 @@ private:
         return false;
       }
 
-      JS::Rooted<JS::Value> val(aCx);
-      if (!WrapNewBindingObject(aCx, obj, location, &val)) {
-        return false;
-      }
-
-      scope->mSlots[SLOT_location] = val;
+      scope->mSlots[SLOT_location] = OBJECT_TO_JSVAL(location->GetJSObject());
     }
 
     aArgs.rval().set(scope->mSlots[SLOT_location]);
@@ -423,12 +418,7 @@ private:
         return false;
       }
 
-      JS::Rooted<JS::Value> val(aCx);
-      if (!WrapNewBindingObject(aCx, obj, navigator, &val)) {
-        return false;
-      }
-
-      scope->mSlots[SLOT_navigator] = val;
+      scope->mSlots[SLOT_navigator] = OBJECT_TO_JSVAL(navigator->GetJSObject());
     }
 
     aArgs.rval().set(scope->mSlots[SLOT_navigator]);
