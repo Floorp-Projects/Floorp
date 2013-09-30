@@ -11,7 +11,6 @@
 #include "nsIIdleServiceInternal.h"
 #include "nsTArray.h"
 #include "AndroidJavaWrappers.h"
-#include "GeneratedJNIWrappers.h"
 #include "mozilla/StaticPtr.h"
 #include "mozilla/TextEvents.h"
 
@@ -233,7 +232,7 @@ private:
     void CreateLayerManager(int aCompositorWidth, int aCompositorHeight);
     void RedrawAll();
 
-    mozilla::widget::android::LayerRendererFrame mLayerRendererFrame;
+    mozilla::AndroidLayerRendererFrame mLayerRendererFrame;
 
     static mozilla::StaticRefPtr<mozilla::layers::APZCTreeManager> sApzcTreeManager;
     static mozilla::StaticRefPtr<mozilla::layers::LayerManager> sLayerManager;

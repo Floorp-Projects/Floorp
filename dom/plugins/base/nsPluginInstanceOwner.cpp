@@ -1658,7 +1658,9 @@ void nsPluginInstanceOwner::RemovePluginView()
   if (!mInstance || !mJavaView)
     return;
 
-  GeckoAppShell::RemovePluginView((jobject)mJavaView, mFullScreen);
+  if (AndroidBridge::Bridge())
+    AndroidBridge::Bridge()->RemovePluginView((jobject)mJavaView, mFullScreen);
+
   AndroidBridge::GetJNIEnv()->DeleteGlobalRef((jobject)mJavaView);
   mJavaView = nullptr;
 

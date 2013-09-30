@@ -37,8 +37,13 @@
 #include "mozilla/ClearOnShutdown.h"
 #include "nsPrintfCString.h"
 
+#ifdef DEBUG
+#define ALOG_BRIDGE(args...) ALOG(args)
+#else
+#define ALOG_BRIDGE(args...) ((void)0)
+#endif
+
 using namespace mozilla;
-using namespace mozilla::widget::android;
 
 NS_IMPL_ISUPPORTS0(nsFilePickerCallback)
 
@@ -162,13 +167,14 @@ AndroidBridge::Init(JNIEnv *jEnv)
 
     mJNIEnv = nullptr;
     mThread = -1;
-    mGLControllerObj = NULL;
+    mGLControllerObj = nullptr;
     mOpenedGraphicsLibraries = false;
     mHasNativeBitmapAccess = false;
     mHasNativeWindowAccess = false;
     mHasNativeWindowFallback = false;
 
     initInit();
+    InitStubs(jEnv);
 
 #ifdef MOZ_WEBSMS_BACKEND
     mAndroidSmsMessageClass = getClassGlobalRef("android/telephony/SmsMessage");
@@ -266,52 +272,6 @@ jstring AndroidBridge::NewJavaString(AutoLocalJNIFrame* frame, const nsACString&
     return NewJavaString(frame, NS_ConvertUTF8toUTF16(string));
 }
 
-extern "C" {
-    __attribute__ ((visibility("default")))
-    JNIEnv * GetJNIForThread()
-    {
-        JNIEnv *jEnv = NULL;
-        JavaVM *jVm  = mozilla::AndroidBridge::GetVM();
-        if (!jVm) {
-            __android_log_print(ANDROID_LOG_INFO, "GetJNIForThread", "Returned a null VM");
-            return NULL;
-        }
-        jEnv = static_cast<JNIEnv*>(PR_GetThreadPrivate(sJavaEnvThreadIndex));
-
-        if (jEnv)
-            return jEnv;
-
-        int status = jVm->GetEnv((void**) &jEnv, JNI_VERSION_1_2);
-        if (status) {
-
-            status = jVm->AttachCurrentThread(&jEnv, NULL);
-            if (status) {
-                __android_log_print(ANDROID_LOG_INFO, "GetJNIForThread",  "Could not attach");
-                return NULL;
-            }
-
-            PR_SetThreadPrivate(sJavaEnvThreadIndex, jEnv);
-        }
-        if (!jEnv) {
-            __android_log_print(ANDROID_LOG_INFO, "GetJNIForThread", "returning NULL");
-        }
-        return jEnv;
-    }
-}
-
-void AutoGlobalWrappedJavaObject::Dispose() {
-    if (isNull()) {
-        return;
-    }
-
-    GetJNIForThread()->DeleteGlobalRef(wrapped_obj);
-    wrapped_obj = NULL;
-}
-
-AutoGlobalWrappedJavaObject::~AutoGlobalWrappedJavaObject() {
-    Dispose();
-}
-
 static void
 getHandlersFromStringArray(JNIEnv *aJNIEnv, jobjectArray jArr, jsize aLen,
                            nsIMutableArray *aHandlersArray,
@@ -351,7 +311,7 @@ AndroidBridge::GetHandlersForMimeType(const nsAString& aMimeType,
     if (!env)
         return false;
 
-    jobjectArray arr = GeckoAppShell::GetHandlersForMimeTypeWrapper(aMimeType, aAction);
+    jobjectArray arr = GetHandlersForMimeTypeWrapper(aMimeType, aAction);
     if (!arr)
         return false;
 
@@ -380,7 +340,7 @@ AndroidBridge::GetHandlersForURL(const nsAString& aURL,
     if (!env)
         return false;
 
-    jobjectArray arr = GeckoAppShell::GetHandlersForURLWrapper(aURL, aAction);
+    jobjectArray arr = GetHandlersForURLWrapper(aURL, aAction);
     if (!arr)
         return false;
 
@@ -405,7 +365,7 @@ AndroidBridge::GetMimeTypeFromExtensions(const nsACString& aFileExt, nsCString& 
     if (!env)
         return;
 
-    jstring jstrType = GeckoAppShell::GetMimeTypeFromExtensionsWrapper(NS_ConvertUTF8toUTF16(aFileExt));
+    jstring jstrType = GetMimeTypeFromExtensionsWrapper(NS_ConvertUTF8toUTF16(aFileExt));
     if (!jstrType) {
         return;
     }
@@ -424,7 +384,7 @@ AndroidBridge::GetExtensionFromMimeType(const nsACString& aMimeType, nsACString&
     if (!env)
         return;
 
-    jstring jstrExt = GeckoAppShell::GetExtensionFromMimeTypeWrapper(NS_ConvertUTF8toUTF16(aMimeType));
+    jstring jstrExt = GetExtensionFromMimeTypeWrapper(NS_ConvertUTF8toUTF16(aMimeType));
     if (!jstrExt) {
         return;
     }
@@ -443,7 +403,7 @@ AndroidBridge::GetClipboardText(nsAString& aText)
     if (!env)
         return false;
 
-    jstring result = Clipboard::GetClipboardTextWrapper();
+    jstring result = GetClipboardTextWrapper();
     if (!result)
         return false;
 
@@ -452,6 +412,36 @@ AndroidBridge::GetClipboardText(nsAString& aText)
 
     env->DeleteLocalRef(result);
     return true;
+}
+
+bool
+AndroidBridge::ClipboardHasText()
+{
+    ALOG_BRIDGE("AndroidBridge::ClipboardHasText");
+
+    JNIEnv *env = GetJNIEnv();
+    if (!env)
+        return false;
+
+    AutoLocalJNIFrame jniFrame(env);
+
+    jstring jStr = GetClipboardTextWrapper();
+    bool ret = jStr;
+
+    return ret;
+}
+
+void
+AndroidBridge::EmptyClipboard()
+{
+    ALOG_BRIDGE("AndroidBridge::EmptyClipboard");
+
+    JNIEnv *env = GetJNIEnv();
+    if (!env)
+        return;
+
+    AutoLocalJNIFrame jniFrame(env, 0);
+    env->CallStaticVoidMethod(mClipboardClass, jSetClipboardText, nullptr);
 }
 
 void
@@ -467,7 +457,7 @@ AndroidBridge::ShowAlertNotification(const nsAString& aImageUrl,
         nsAppShell::gAppShell->PostEvent(AndroidGeckoEvent::MakeAddObserver(aAlertName, aAlertListener));
     }
 
-    GeckoAppShell::ShowAlertNotificationWrapper(aImageUrl, aAlertTitle, aAlertText, aAlertCookie, aAlertName);
+    ShowAlertNotificationWrapper(aImageUrl, aAlertTitle, aAlertText, aAlertCookie, aAlertName);
 }
 
 int
@@ -479,7 +469,7 @@ AndroidBridge::GetDPI()
 
     const int DEFAULT_DPI = 160;
 
-    sDPI = GeckoAppShell::GetDpiWrapper();
+    sDPI = GetDpiWrapper();
     if (!sDPI) {
         return DEFAULT_DPI;
     }
@@ -498,7 +488,7 @@ AndroidBridge::GetScreenDepth()
 
     const int DEFAULT_DEPTH = 16;
 
-    sDepth = GeckoAppShell::GetScreenDepthWrapper();
+    sDepth = GetScreenDepthWrapper();
     if (!sDepth)
         return DEFAULT_DEPTH;
 
@@ -512,7 +502,7 @@ AndroidBridge::ShowFilePickerForExtensions(nsAString& aFilePath, const nsAString
     if (!env)
         return;
 
-    jstring jstr = GeckoAppShell::ShowFilePickerForExtensionsWrapper(aExtensions);
+    jstring jstr = ShowFilePickerForExtensionsWrapper(aExtensions);
     if (jstr == nullptr) {
         return;
     }
@@ -528,7 +518,7 @@ AndroidBridge::ShowFilePickerForMimeType(nsAString& aFilePath, const nsAString& 
     if (!env)
         return;
 
-    jstring jstr = GeckoAppShell::ShowFilePickerForMimeTypeWrapper(aMimeType);
+    jstring jstr = ShowFilePickerForMimeTypeWrapper(aMimeType);
     if (jstr == nullptr) {
         return;
     }
@@ -541,7 +531,19 @@ void
 AndroidBridge::ShowFilePickerAsync(const nsAString& aMimeType, nsFilePickerCallback* callback)
 {
     callback->AddRef();
-    GeckoAppShell::ShowFilePickerAsyncWrapper(aMimeType, (int64_t) callback);
+    ShowFilePickerAsyncWrapper(aMimeType, (int64_t) callback);
+}
+
+void
+AndroidBridge::HideProgressDialogOnce()
+{
+    static bool once = false;
+    if (once)
+        return;
+
+    HideProgressDialog();
+
+    once = true;
 }
 
 void
@@ -569,7 +571,7 @@ AndroidBridge::Vibrate(const nsTArray<uint32_t>& aPattern)
             ALOG_BRIDGE("  invalid vibration duration < 0");
             return;
         }
-        GeckoAppShell::Vibrate1(d);
+        Vibrate1(d);
         return;
     }
 
@@ -595,7 +597,7 @@ AndroidBridge::Vibrate(const nsTArray<uint32_t>& aPattern)
     }
     env->ReleaseLongArrayElements(array, elts, 0);
 
-    GeckoAppShell::VibrateA(array, -1/*don't repeat*/);
+    VibrateA(array, -1/*don't repeat*/);
 }
 
 void
@@ -612,7 +614,7 @@ AndroidBridge::GetSystemColors(AndroidSystemColors *aColors)
 
     AutoLocalJNIFrame jniFrame(env);
 
-    jintArray arr = GeckoAppShell::GetSystemColoursWrapper();
+    jintArray arr = GetSystemColoursWrapper();
     if (!arr)
         return;
 
@@ -650,7 +652,7 @@ AndroidBridge::GetIconForExtension(const nsACString& aFileExt, uint32_t aIconSiz
 
     AutoLocalJNIFrame jniFrame(env);
 
-    jbyteArray arr = GeckoAppShell::GetIconForExtensionWrapper(NS_ConvertUTF8toUTF16(aFileExt), aIconSize);
+    jbyteArray arr = GetIconForExtensionWrapper(NS_ConvertUTF8toUTF16(aFileExt), aIconSize);
 
     NS_ASSERTION(arr != nullptr, "AndroidBridge::GetIconForExtension: Returned pixels array is null!");
     if (!arr)
@@ -678,11 +680,14 @@ AndroidBridge::SetLayerClient(JNIEnv* env, jobject jobj)
 
     if (resetting) {
         // clear out the old layer client
+        env->DeleteGlobalRef(mLayerClient->wrappedObject());
         delete mLayerClient;
         mLayerClient = NULL;
     }
 
-    mLayerClient = GeckoLayerClient::Wrap(jobj);
+    AndroidGeckoLayerClient *client = new AndroidGeckoLayerClient();
+    client->Init(env->NewGlobalRef(jobj));
+    mLayerClient = client;
 
     if (resetting) {
         // since we are re-linking the new java objects to Gecko, we need to get
@@ -695,17 +700,26 @@ AndroidBridge::SetLayerClient(JNIEnv* env, jobject jobj)
 void
 AndroidBridge::RegisterCompositor(JNIEnv *env)
 {
-    if (mGLControllerObj != NULL && !mGLControllerObj->isNull()) {
+    ALOG_BRIDGE("AndroidBridge::RegisterCompositor");
+    if (mGLControllerObj) {
         // we already have this set up, no need to do it again
         return;
     }
 
-    jobject glController = LayerView::RegisterCompositorWrapper();
+    if (!env) {
+        env = GetJNIForThread();    // called on the compositor thread
+    }
+    if (!env) {
+        return;
+    }
+
+    jobject glController = RegisterCompositorWrapper();
     if (!glController) {
         return;
     }
 
-    mGLControllerObj = GLController::Wrap(glController);
+    mGLControllerObj = env->NewGlobalRef(glController);
+    env->DeleteLocalRef(glController);
 }
 
 EGLSurface
@@ -721,7 +735,7 @@ AndroidBridge::ProvideEGLSurface()
         return NULL;
     }
 
-    jobject eglSurface = mGLControllerObj->ProvideEGLSurfaceWrapper();
+    jobject eglSurface = ProvideEGLSurfaceWrapper(mGLControllerObj);
     if (!eglSurface)
         return NULL;
 
@@ -791,6 +805,11 @@ bool
 mozilla_AndroidBridge_SetMainThread(pthread_t thr)
 {
     return AndroidBridge::Bridge()->SetMainThread(thr);
+}
+
+jclass GetGeckoAppShellClass()
+{
+    return mozilla::AndroidBridge::GetGeckoAppShellClass();
 }
 
 void*
@@ -989,7 +1008,7 @@ AndroidBridge::InitCamera(const nsCString& contentType, uint32_t camera, uint32_
         return false;
 
     AutoLocalJNIFrame jniFrame(env);
-    jintArray arr = GeckoAppShell::InitCameraWrapper(NS_ConvertUTF8toUTF16(contentType), (int32_t) camera, (int32_t) width, (int32_t) height);
+    jintArray arr = InitCameraWrapper(NS_ConvertUTF8toUTF16(contentType), (int32_t) camera, (int32_t) width, (int32_t) height);
 
     if (!arr)
         return false;
@@ -1020,7 +1039,7 @@ AndroidBridge::GetCurrentBatteryInformation(hal::BatteryInformation* aBatteryInf
 
     // To prevent calling too many methods through JNI, the Java method returns
     // an array of double even if we actually want a double and a boolean.
-    jdoubleArray arr = GeckoAppShell::GetCurrentBatteryInformationWrapper();
+    jdoubleArray arr = GetCurrentBatteryInformationWrapper();
     if (!arr || env->GetArrayLength(arr) != 3) {
         return;
     }
@@ -1044,7 +1063,7 @@ AndroidBridge::HandleGeckoMessage(const nsAString &aMessage, nsAString &aRet)
         return;
 
     AutoLocalJNIFrame jniFrame(env);
-    jstring returnMessage = GeckoAppShell::HandleGeckoMessageWrapper(aMessage);
+    jstring returnMessage = HandleGeckoMessageWrapper(aMessage);
 
     if (!returnMessage)
         return;
@@ -1111,7 +1130,7 @@ AndroidBridge::SendMessage(const nsAString& aNumber,
     if (!QueueSmsRequest(aRequest, &requestId))
         return;
 
-    GeckoAppShell::SendMessageWrapper(aNumber, aMessage, requestId);
+    SendMessageWrapper(aNumber, aMessage, requestId);
 }
 
 void
@@ -1123,7 +1142,7 @@ AndroidBridge::GetMessage(int32_t aMessageId, nsIMobileMessageCallback* aRequest
     if (!QueueSmsRequest(aRequest, &requestId))
         return;
 
-    GeckoAppShell::GetMessageWrapper(aMessageId, requestId);
+    GetMessageWrapper(aMessageId, requestId);
 }
 
 void
@@ -1135,7 +1154,7 @@ AndroidBridge::DeleteMessage(int32_t aMessageId, nsIMobileMessageCallback* aRequ
     if (!QueueSmsRequest(aRequest, &requestId))
         return;
 
-    GeckoAppShell::DeleteMessageWrapper(aMessageId, requestId);
+    DeleteMessageWrapper(aMessageId, requestId);
 }
 
 void
@@ -1164,7 +1183,7 @@ AndroidBridge::CreateMessageList(const dom::mobilemessage::SmsFilterData& aFilte
                                    NewJavaString(&jniFrame, aFilter.numbers()[i]));
     }
 
-    GeckoAppShell::CreateMessageListWrapper(aFilter.startDate(), aFilter.endDate(),
+    CreateMessageListWrapper(aFilter.startDate(), aFilter.endDate(),
                              numbers, aFilter.numbers().Length(),
                              aFilter.delivery(), aReverse, requestId);
 }
@@ -1178,7 +1197,7 @@ AndroidBridge::GetNextMessageInList(int32_t aListId, nsIMobileMessageCallback* a
     if (!QueueSmsRequest(aRequest, &requestId))
         return;
 
-    GeckoAppShell::GetNextMessageInListWrapper(aListId, requestId);
+    GetNextMessageInListWrapper(aListId, requestId);
 }
 
 bool
@@ -1230,7 +1249,7 @@ AndroidBridge::GetCurrentNetworkInformation(hal::NetworkInformation* aNetworkInf
     // To prevent calling too many methods through JNI, the Java method returns
     // an array of double even if we actually want a double, two booleans, and an integer.
 
-    jdoubleArray arr = GeckoAppShell::GetCurrentNetworkInformationWrapper();
+    jdoubleArray arr = GetCurrentNetworkInformationWrapper();
     if (!arr || env->GetArrayLength(arr) != 4) {
         return;
     }
@@ -1423,7 +1442,7 @@ AndroidBridge::GetGlobalContextRef() {
 
         AutoLocalJNIFrame jniFrame(env, 4);
 
-        jobject context = GeckoAppShell::GetContext();
+        jobject context = GetContext();
         if (!context) {
             ALOG_BRIDGE("%s: Could not GetContext()", __FUNCTION__);
             return 0;
@@ -1474,22 +1493,21 @@ AndroidBridge::UnlockWindow(void* window)
 void
 AndroidBridge::SetFirstPaintViewport(const LayerIntPoint& aOffset, const CSSToLayerScale& aZoom, const CSSRect& aCssPageRect)
 {
-    GeckoLayerClient *client = mLayerClient;
+    AndroidGeckoLayerClient *client = mLayerClient;
     if (!client)
         return;
 
-    client->SetFirstPaintViewport((float)aOffset.x, (float)aOffset.y, aZoom.scale,
-                                  aCssPageRect.x, aCssPageRect.y, aCssPageRect.XMost(), aCssPageRect.YMost());
+    client->SetFirstPaintViewport(aOffset, aZoom, aCssPageRect);
 }
 
 void
 AndroidBridge::SetPageRect(const CSSRect& aCssPageRect)
 {
-    GeckoLayerClient *client = mLayerClient;
+    AndroidGeckoLayerClient *client = mLayerClient;
     if (!client)
         return;
 
-    client->SetPageRect(aCssPageRect.x, aCssPageRect.y, aCssPageRect.XMost(), aCssPageRect.YMost());
+    client->SetPageRect(aCssPageRect);
 }
 
 void
@@ -1497,76 +1515,26 @@ AndroidBridge::SyncViewportInfo(const LayerIntRect& aDisplayPort, const CSSToLay
                                 bool aLayersUpdated, ScreenPoint& aScrollOffset, CSSToScreenScale& aScale,
                                 LayerMargin& aFixedLayerMargins, ScreenPoint& aOffset)
 {
-    ALOG_BRIDGE("Enter: %s", __PRETTY_FUNCTION__);
-    GeckoLayerClient *client = mLayerClient;
-    if (!client) {
-        ALOG_BRIDGE("Exceptional Exit: %s", __PRETTY_FUNCTION__);
+    AndroidGeckoLayerClient *client = mLayerClient;
+    if (!client)
         return;
-    }
 
-    jobject viewTransformJObj = client->SyncViewportInfo(aDisplayPort.x, aDisplayPort.y,
-                                aDisplayPort.width, aDisplayPort.height,
-                                aDisplayResolution.scale, aLayersUpdated);
-
-    NS_ABORT_IF_FALSE(viewTransformJObj, "No view transform object!");
-    if (!viewTransformJObj) {
-        return;
-    }
-
-    ViewTransform* viewTransform = ViewTransform::Wrap(viewTransformJObj);
-
-    aScrollOffset = ScreenPoint(viewTransform->getx(), viewTransform->gety());
-    aScale.scale = viewTransform->getscale();
-
-    aFixedLayerMargins.top = viewTransform->getfixedLayerMarginTop();
-    aFixedLayerMargins.right = viewTransform->getfixedLayerMarginRight();
-    aFixedLayerMargins.bottom = viewTransform->getfixedLayerMarginBottom();
-    aFixedLayerMargins.left = viewTransform->getfixedLayerMarginLeft();
-
-    aOffset.x = viewTransform->getoffsetX();
-    aOffset.y = viewTransform->getoffsetY();
-
-    delete viewTransform;
-    ALOG_BRIDGE("Exit: %s", __PRETTY_FUNCTION__);
+    client->SyncViewportInfo(aDisplayPort, aDisplayResolution, aLayersUpdated,
+                             aScrollOffset, aScale, aFixedLayerMargins,
+                             aOffset);
 }
 
 void AndroidBridge::SyncFrameMetrics(const ScreenPoint& aScrollOffset, float aZoom, const CSSRect& aCssPageRect,
                                      bool aLayersUpdated, const CSSRect& aDisplayPort, const CSSToLayerScale& aDisplayResolution,
                                      bool aIsFirstPaint, LayerMargin& aFixedLayerMargins, ScreenPoint& aOffset)
 {
-    ALOG_BRIDGE("Enter: %s", __PRETTY_FUNCTION__);
-    GeckoLayerClient *client = mLayerClient;
-    if (!client) {
-        ALOG_BRIDGE("Exceptional Exit: %s", __PRETTY_FUNCTION__);
+    AndroidGeckoLayerClient *client = mLayerClient;
+    if (!client)
         return;
-    }
 
-    // convert the displayport rect from scroll-relative CSS pixels to document-relative device pixels
-    LayerRect dpUnrounded = aDisplayPort * aDisplayResolution;
-    dpUnrounded += LayerPoint::FromUnknownPoint(aScrollOffset.ToUnknownPoint());
-    LayerIntRect dp = gfx::RoundedToInt(dpUnrounded);
-
-    jobject viewTransformJObj = client->SyncFrameMetrics(aScrollOffset.x, aScrollOffset.y, aZoom,
-                                                         aCssPageRect.x, aCssPageRect.y, aCssPageRect.XMost(), aCssPageRect.YMost(),
-                                                         aLayersUpdated, dp.x, dp.y, dp.width, dp.height, aDisplayResolution.scale,
-                                                         aIsFirstPaint);
-
-    NS_ABORT_IF_FALSE(viewTransformJObj, "No view transform object!");
-    if (!viewTransformJObj) {
-        return;
-    }
-    ViewTransform* viewTransform = ViewTransform::Wrap(viewTransformJObj);
-
-    aFixedLayerMargins.top = viewTransform->getfixedLayerMarginTop();
-    aFixedLayerMargins.right = viewTransform->getfixedLayerMarginRight();
-    aFixedLayerMargins.bottom = viewTransform->getfixedLayerMarginBottom();
-    aFixedLayerMargins.left = viewTransform->getfixedLayerMarginLeft();
-
-    aOffset.x = viewTransform->getoffsetX();
-    aOffset.y = viewTransform->getoffsetY();
-
-    delete viewTransform;
-    ALOG_BRIDGE("Exit: %s", __PRETTY_FUNCTION__);
+    client->SyncFrameMetrics(aScrollOffset, aZoom, aCssPageRect,
+                             aLayersUpdated, aDisplayPort, aDisplayResolution,
+                             aIsFirstPaint, aFixedLayerMargins, aOffset);
 }
 
 AndroidBridge::AndroidBridge()
@@ -1631,12 +1599,45 @@ JavaThreadDetachFunc(void *arg)
     vm->DetachCurrentThread();
 }
 
+extern "C" {
+    __attribute__ ((visibility("default")))
+    JNIEnv * GetJNIForThread()
+    {
+        JNIEnv *jEnv = NULL;
+        JavaVM *jVm  = mozilla::AndroidBridge::GetVM();
+        if (!jVm) {
+            __android_log_print(ANDROID_LOG_INFO, "GetJNIForThread", "Returned a null VM");
+            return NULL;
+        }
+        jEnv = static_cast<JNIEnv*>(PR_GetThreadPrivate(sJavaEnvThreadIndex));
+
+        if (jEnv)
+            return jEnv;
+
+        int status = jVm->GetEnv((void**) &jEnv, JNI_VERSION_1_2);
+        if (status) {
+
+            status = jVm->AttachCurrentThread(&jEnv, NULL);
+            if (status) {
+                __android_log_print(ANDROID_LOG_INFO, "GetJNIForThread",  "Could not attach");
+                return NULL;
+            }
+            
+            PR_SetThreadPrivate(sJavaEnvThreadIndex, jEnv);
+        }
+        if (!jEnv) {
+            __android_log_print(ANDROID_LOG_INFO, "GetJNIForThread", "returning NULL");
+        }
+        return jEnv;
+    }
+}
+
 uint32_t
 AndroidBridge::GetScreenOrientation()
 {
     ALOG_BRIDGE("AndroidBridge::GetScreenOrientation");
 
-    int16_t orientation = GeckoAppShell::GetScreenOrientationWrapper();
+    int16_t orientation = GetScreenOrientationWrapper();
 
     if (!orientation)
         return dom::eScreenOrientation_None;
@@ -1660,7 +1661,7 @@ AndroidBridge::GetGfxInfoData(nsACString& aRet)
         return;
 
     AutoLocalJNIFrame jniFrame(env);
-    jstring jstrRet = GeckoAppShell::GetGfxInfoDataWrapper();
+    jstring jstrRet = GetGfxInfoDataWrapper();
 
     if (!jstrRet)
         return;
@@ -1681,7 +1682,7 @@ AndroidBridge::GetProxyForURI(const nsACString & aSpec,
         return NS_ERROR_FAILURE;
 
     AutoLocalJNIFrame jniFrame(env);
-    jstring jstrRet = GeckoAppShell::GetProxyForURIWrapper(NS_ConvertUTF8toUTF16(aSpec),
+    jstring jstrRet = GetProxyForURIWrapper(NS_ConvertUTF8toUTF16(aSpec),
                                             NS_ConvertUTF8toUTF16(aScheme),
                                             NS_ConvertUTF8toUTF16(aHost),
                                             aPort);
@@ -1717,7 +1718,7 @@ AndroidBridge::AddPluginView(jobject view, const LayoutDeviceRect& rect, bool is
         return;
 
     CSSRect cssRect = rect / win->GetDefaultScale();
-    GeckoAppShell::AddPluginViewWrapper(view, cssRect.x, cssRect.y, cssRect.width, cssRect.height, isFullScreen);
+    AddPluginViewWrapper(view, cssRect.x, cssRect.y, cssRect.width, cssRect.height, isFullScreen);
 }
 
 extern "C"
@@ -1734,7 +1735,7 @@ AndroidBridge::GetThreadNameJavaProfiling(uint32_t aThreadId, nsCString & aResul
 
     AutoLocalJNIFrame jniFrame(env);
 
-    jstring jstrThreadName = GeckoJavaSampler::GetThreadNameJavaProfilingWrapper(aThreadId);
+    jstring jstrThreadName = GetThreadNameJavaProfilingWrapper(aThreadId);
 
     if (!jstrThreadName)
         return false;
@@ -1754,7 +1755,7 @@ AndroidBridge::GetFrameNameJavaProfiling(uint32_t aThreadId, uint32_t aSampleId,
 
     AutoLocalJNIFrame jniFrame(env);
 
-    jstring jstrSampleName = GeckoJavaSampler::GetFrameNameJavaProfilingWrapper(aThreadId, aSampleId, aFrameId);
+    jstring jstrSampleName = GetFrameNameJavaProfilingWrapper(aThreadId, aSampleId, aFrameId);
 
     if (!jstrSampleName)
         return false;
@@ -1862,72 +1863,21 @@ nsresult AndroidBridge::CaptureThumbnail(nsIDOMWindow *window, int32_t bufW, int
 void
 AndroidBridge::GetDisplayPort(bool aPageSizeUpdate, bool aIsBrowserContentDisplayed, int32_t tabId, nsIAndroidViewport* metrics, nsIAndroidDisplayport** displayPort)
 {
-
-    ALOG_BRIDGE("Enter: %s", __PRETTY_FUNCTION__);
     JNIEnv* env = GetJNIEnv();
-    if (!env || !mLayerClient || mLayerClient->isNull()) {
-
-        ALOG_BRIDGE("Exceptional Exit: %s", __PRETTY_FUNCTION__);
+    if (!env || !mLayerClient)
         return;
-    }
     AutoLocalJNIFrame jniFrame(env, 0);
-
-    float x, y, width, height,
-        pageLeft, pageTop, pageRight, pageBottom,
-        cssPageLeft, cssPageTop, cssPageRight, cssPageBottom,
-        zoom;
-    metrics->GetX(&x);
-    metrics->GetY(&y);
-    metrics->GetWidth(&width);
-    metrics->GetHeight(&height);
-    metrics->GetPageLeft(&pageLeft);
-    metrics->GetPageTop(&pageTop);
-    metrics->GetPageRight(&pageRight);
-    metrics->GetPageBottom(&pageBottom);
-    metrics->GetCssPageLeft(&cssPageLeft);
-    metrics->GetCssPageTop(&cssPageTop);
-    metrics->GetCssPageRight(&cssPageRight);
-    metrics->GetCssPageBottom(&cssPageBottom);
-    metrics->GetZoom(&zoom);
-
-    ImmutableViewportMetrics jmetrics = ImmutableViewportMetrics(pageLeft, pageTop, pageRight, pageBottom,
-                                                                 cssPageLeft, cssPageTop, cssPageRight, cssPageBottom,
-                                                                 x, y, x + width, y + height,
-                                                                 zoom);
-
-    jobject jobj = mLayerClient->GetDisplayPort(aPageSizeUpdate, aIsBrowserContentDisplayed, tabId, jmetrics.wrappedObject());
-    if (!jobj) {
-        ALOG_BRIDGE("Exceptional Exit: %s", __PRETTY_FUNCTION__);
-        return;
-    }
-    DisplayPortMetrics* displayPortMetrics = DisplayPortMetrics::Wrap(jobj);
-
-    AndroidRectF rect(env, displayPortMetrics->getMPosition());
-    if (jniFrame.CheckForException()) {
-        ALOG_BRIDGE("Exceptional Exit: %s", __PRETTY_FUNCTION__);
-        return;
-    }
-
-    float resolution = displayPortMetrics->getResolution();
-    if (jniFrame.CheckForException()) {
-        ALOG_BRIDGE("Exceptional Exit: %s", __PRETTY_FUNCTION__);
-        return;
-    }
-
-    *displayPort = new nsAndroidDisplayport(rect, resolution);
-    (*displayPort)->AddRef();
-
-    delete displayPortMetrics;
-    ALOG_BRIDGE("Exit: %s", __PRETTY_FUNCTION__);
+    mLayerClient->GetDisplayPort(&jniFrame, aPageSizeUpdate, aIsBrowserContentDisplayed, tabId, metrics, displayPort);
 }
 
 void
 AndroidBridge::ContentDocumentChanged()
 {
-    if (!mLayerClient) {
+    JNIEnv* env = GetJNIEnv();
+    if (!env || !mLayerClient)
         return;
-    }
-    mLayerClient->ContentDocumentChanged();
+    AutoLocalJNIFrame jniFrame(env, 0);
+    mLayerClient->ContentDocumentChanged(&jniFrame);
 }
 
 bool
@@ -1936,48 +1886,25 @@ AndroidBridge::IsContentDocumentDisplayed()
     JNIEnv* env = GetJNIEnv();
     if (!env || !mLayerClient)
         return false;
-
-    return mLayerClient->IsContentDocumentDisplayed();
+    AutoLocalJNIFrame jniFrame(env, 0);
+    return mLayerClient->IsContentDocumentDisplayed(&jniFrame);
 }
 
 bool
 AndroidBridge::ProgressiveUpdateCallback(bool aHasPendingNewThebesContent, const LayerRect& aDisplayPort, float aDisplayResolution, bool aDrawingCritical, gfx::Rect& aViewport, float& aScaleX, float& aScaleY)
 {
-    GeckoLayerClient *client = mLayerClient;
-    if (!client) {
-        ALOG_BRIDGE("Exceptional Exit: %s", __PRETTY_FUNCTION__);
+    AndroidGeckoLayerClient *client = mLayerClient;
+    if (!client)
         return false;
-    }
 
-    jobject progressiveUpdateDataJObj = client->ProgressiveUpdateCallback(aHasPendingNewThebesContent,
-                                                                   (float)aDisplayPort.x,
-                                                                   (float)aDisplayPort.y,
-                                                                   (float)aDisplayPort.width,
-                                                                   (float)aDisplayPort.height,
-                                                                          aDisplayResolution,
-                                                                         !aDrawingCritical);
-
-    NS_ABORT_IF_FALSE(progressiveUpdateDataJObj, "No progressive update data!");
-
-    ProgressiveUpdateData* progressiveUpdateData = ProgressiveUpdateData::Wrap(progressiveUpdateDataJObj);
-
-    aViewport.x = progressiveUpdateData->getx();
-    aViewport.y = progressiveUpdateData->gety();
-    aViewport.width = progressiveUpdateData->getwidth();
-    aViewport.height = progressiveUpdateData->getheight();
-    aScaleX = aScaleY = progressiveUpdateData->getscale();
-
-    bool ret = progressiveUpdateData->getabort();
-    delete progressiveUpdateData;
-
-    return ret;
+    return client->ProgressiveUpdateCallback(aHasPendingNewThebesContent, aDisplayPort, aDisplayResolution, aDrawingCritical, aViewport, aScaleX, aScaleY);
 }
 
-NativePanZoomController*
+jobject
 AndroidBridge::SetNativePanZoomController(jobject obj)
 {
-    NativePanZoomController* old = mNativePanZoomController;
-    mNativePanZoomController = NativePanZoomController::Wrap(obj);
+    jobject old = mNativePanZoomController;
+    mNativePanZoomController = obj;
     return old;
 }
 
@@ -1989,7 +1916,8 @@ AndroidBridge::RequestContentRepaint(const mozilla::layers::FrameMetrics& aFrame
     CSSToScreenScale resolution = aFrameMetrics.mZoom;
     ScreenRect dp = (aFrameMetrics.mDisplayPort + aFrameMetrics.mScrollOffset) * resolution;
 
-    mNativePanZoomController->RequestContentRepaintWrapper(dp.x, dp.y, dp.width, dp.height, resolution.scale);
+    RequestContentRepaintWrapper(mNativePanZoomController,
+        dp.x, dp.y, dp.width, dp.height, resolution.scale);
 }
 
 void
@@ -2046,7 +1974,7 @@ AndroidBridge::PostDelayedTask(Task* aTask, int aDelayMs)
         // if we're inserting it at the head of the queue, notify Java because
         // we need to get a callback at an earlier time than the last scheduled
         // callback
-        mNativePanZoomController->PostDelayedCallbackWrapper((int64_t)aDelayMs);
+        PostDelayedCallbackWrapper(mNativePanZoomController, (int64_t)aDelayMs);
     }
 }
 

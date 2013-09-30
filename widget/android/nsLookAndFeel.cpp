@@ -465,7 +465,7 @@ nsLookAndFeel::GetEchoPasswordImpl()
     if (!mInitializedShowPassword) {
         if (XRE_GetProcessType() == GeckoProcessType_Default) {
             if (AndroidBridge::Bridge())
-                mShowPassword = GeckoAppShell::GetShowPasswordSetting();
+                mShowPassword = AndroidBridge::Bridge()->GetShowPasswordSetting();
             else
                 NS_ASSERTION(AndroidBridge::Bridge() != nullptr, "AndroidBridge is not available!");
         } else {
