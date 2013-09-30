@@ -2,11 +2,6 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-MOCHITEST_CHROME_FILES := \
-  ../widgets/popup_shared.js \
-  ../widgets/tree_shared.js \
-  $(SHULL)
-
 # test_panel_focus.xul won't work if the Full Keyboard Access preference is set to
 # textboxes and lists only, so skip this test on Mac
 ifneq (cocoa,$(MOZ_WIDGET_TOOLKIT))
