@@ -257,7 +257,7 @@ public:
                                   InlinePrefWidthData *aData) MOZ_OVERRIDE;
   virtual IntrinsicWidthOffsetData
     IntrinsicWidthOffsets(nsRenderingContext* aRenderingContext) MOZ_OVERRIDE;
-  virtual IntrinsicSize GetIntrinsicSize() MOZ_OVERRIDE;
+  virtual mozilla::IntrinsicSize GetIntrinsicSize() MOZ_OVERRIDE;
   virtual nsSize GetIntrinsicRatio() MOZ_OVERRIDE;
 
   virtual nsSize ComputeSize(nsRenderingContext *aRenderingContext,
