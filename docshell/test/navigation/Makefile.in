@@ -2,55 +2,9 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-MOCHITEST_FILES = \
-		test_bug13871.html \
-		test_bug344861.html \
-		test_bug278916.html \
-		test_bug279495.html \
-		test_bug386782.html \
-		test_bug430624.html \
-		test_bug430723.html \
-		test_child.html \
-		test_grandchild.html \
-		test_sibling-off-domain.html \
-		test_sibling-matching-parent.html \
-		test_opener.html \
-		test_not-opener.html \
-		test_popup-navigates-children.html \
-		test_reserved.html \
-		NavigationUtils.js \
-		navigate.html \
-		open.html \
-		iframe.html \
-		parent.html \
-		blank.html \
-		test_sessionhistory.html \
-		file_bug462076_1.html \
-		file_bug462076_2.html \
-		file_bug462076_3.html \
-		file_bug508537_1.html \
-		file_document_write_1.html \
-		file_static_and_dynamic_1.html \
-		frame0.html \
-		frame1.html \
-		frame2.html \
-		frame3.html \
-		goback.html \
-		file_bug534178.html \
-		$(NULL)
-
 ifneq (mobile/android,$(MOZ_BUILD_APP))
 MOCHITEST_FILES += \
 		test_bug270414.html \
 		$(NULL)
 endif
 
-MOCHITEST_BROWSER_FILES = \
-		browser_bug343515.js \
-		bug343515_pg1.html \
-		bug343515_pg2.html \
-		bug343515_pg3.html \
-		bug343515_pg3_1.html \
-		bug343515_pg3_2.html \
-		bug343515_pg3_1_1.html \
-		$(NULL)

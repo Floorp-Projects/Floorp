@@ -11,3 +11,6 @@ MODULE = 'layout'
 HOST_CPPSRCS += [
     'ListCSSProperties.cpp',
 ]
+
+BROWSER_CHROME_MANIFESTS += ['browser.ini']
+

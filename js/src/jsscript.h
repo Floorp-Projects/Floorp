@@ -663,6 +663,9 @@ class JSScript : public js::gc::BarrieredCell<JSScript>
     bool argumentsHasVarBinding() const { return argsHasVarBinding_; }
     jsbytecode *argumentsBytecode() const { JS_ASSERT(code[0] == JSOP_ARGUMENTS); return code; }
     void setArgumentsHasVarBinding();
+    bool argumentsAliasesFormals() const {
+        return argumentsHasVarBinding() && !strict;
+    }
 
     js::GeneratorKind generatorKind() const {
         return js::GeneratorKindFromBits(generatorKindBits_);
@@ -841,8 +844,6 @@ class JSScript : public js::gc::BarrieredCell<JSScript>
     inline bool hasAnalysis();
     inline void clearAnalysis();
     inline js::analyze::ScriptAnalysis *analysis();
-
-    inline void clearPropertyReadTypes();
 
     inline js::GlobalObject &global() const;
     js::GlobalObject &uninlinedGlobal() const;

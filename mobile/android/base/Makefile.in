@@ -157,7 +157,6 @@ FENNEC_JAVA_FILES = \
   TextSelectionHandle.java \
   ThumbnailHelper.java \
   TouchEventInterceptor.java \
-  UpdateServiceHelper.java \
   VideoPlayer.java \
   WebAppAllocator.java \
   WebAppImpl.java \
@@ -253,6 +252,8 @@ FENNEC_JAVA_FILES = \
   menu/MenuPopup.java \
   preferences/SearchPreferenceCategory.java \
   preferences/SearchEnginePreference.java \
+  updater/UpdateServiceHelper.java \
+  updater/UpdateService.java \
   widget/ActivityChooserModel.java \
   widget/ButtonToast.java \
   widget/ArrowPopup.java \
@@ -267,7 +268,6 @@ FENNEC_JAVA_FILES = \
   widget/TwoWayView.java \
   GeckoNetworkManager.java \
   GeckoScreenOrientationListener.java \
-  UpdateService.java \
   GeckoUpdateReceiver.java \
   ReferrerReceiver.java \
   $(NULL)
