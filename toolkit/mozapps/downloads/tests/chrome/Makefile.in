@@ -6,34 +6,6 @@
 # temporarily disabled test (bug 483200)
 #  test_retention_is_0_closes.xul \
 
-MOCHITEST_CHROME_FILES = \
-  test_basic_functionality.xul \
-  test_cleanup_search.xul \
-  test_clear_button_disabled.xul \
-  test_close_download_manager.xul \
-  test_delete_key_removes.xul \
-  test_destinationURI_annotation.xul \
-  test_esc_key_closes_clears.xul \
-  test_multi_select.xul \
-  test_multiword_search.xul \
-  test_pause_button_state.xul \
-  test_removeDownload_updates_ui.xul \
-  test_search_clearlist.xul \
-  test_search_keys.xul \
-  test_select_all.xul \
-  test_space_key_pauses_resumes.xul \
-  test_ui_stays_open_on_alert_clickback.xul \
-  test_unknownContentType_dialog_layout.xul \
-  test_bug_412360.xul \
-  test_bug_429247.xul \
-  test_bug_462172.xul \
-  test_close_on_last_window.xul \
-  unknownContentType_dialog_layout_data.txt \
-  unknownContentType_dialog_layout_data.txt^headers^ \
-  unknownContentType_dialog_layout_data.pif \
-  unknownContentType_dialog_layout_data.pif^headers^ \
-  utils.js \
-  $(NULL)
 ifneq (,$(filter cocoa, $(MOZ_WIDGET_TOOLKIT)))
 MOCHITEST_CHROME_FILES += \
   test_backspace_key_removes.xul \

@@ -10,3 +10,5 @@ XPCSHELL_TESTS_MANIFESTS += ['unit/xpcshell.ini']
 
 MOCHITEST_MANIFESTS += ['mochitest.ini']
 
+MOCHITEST_CHROME_MANIFESTS += ['chrome.ini']
+

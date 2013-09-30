@@ -2,52 +2,6 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-MOCHITEST_CHROME_FILES = \
-	test_bug370436.html \
-	test_bug396367-1.html \
-	test_bug396367-2.html \
-	test_bug420499.xul \
-	test_bug458898.html \
-	test_bug495648.xul \
-	bug495648.rdf \
-	test_bug504311.xul \
-	test_bug514660.xul \
-	test_bug533845.xul \
-	test_bug551434.html \
-	bug551434_childframe.html \
-	test_bug708062.html \
-	test_chrome_content_integration.xul \
-	     chrome_content_integration_window.xul \
-	test_chrome_over_plugin.xul \
-	     chrome_over_plugin_window.xul \
-	test_default_background.xul \
-	     default_background_window.xul \
-	test_no_clip_iframe.xul \
-	     no_clip_iframe_window.xul \
-	     no_clip_iframe_subdoc.html \
-	test_prerendered_transforms.html \
-	test_printpreview.xul \
-	     printpreview_helper.xul \
-	     animated.gif \
-	test_printpreview_bug396024.xul \
-	     printpreview_bug396024_helper.xul \
-	test_printpreview_bug482976.xul \
-	     printpreview_bug482976_helper.xul \
-	test_scrolling_repaints.html \
-	test_transformed_scrolling_repaints.html \
-	test_transformed_scrolling_repaints_2.html \
-	test_transformed_scrolling_repaints_3.html \
-	transformed_scrolling_repaints_3_window.html \
-	     test_fixed_bg_scrolling_repaints.html \
-	test_dialog_with_positioning.html \
-	     dialog_with_positioning_window.xul \
-	blue-32x32.png \
-	test_passpointerevents.html \
-	     passpointerevents_window.html \
-	test_bug812817.xul \
-	test_bug847890_paintFlashing.html \
-	$(NULL)
-
 ifdef MOZ_DEBUG
 # Disabled on Mac because of Bug 748219
 ifneq (cocoa,$(MOZ_WIDGET_TOOLKIT))
