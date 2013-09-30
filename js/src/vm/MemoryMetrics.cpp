@@ -210,8 +210,11 @@ StatsCompartmentCallback(JSRuntime *rt, void *data, JSCompartment *compartment)
 
     // Measure the compartment object itself, and things hanging off it.
     compartment->addSizeOfIncludingThis(rtStats->mallocSizeOf_,
+                                        &cStats.typeInferencePendingArrays,
+                                        &cStats.typeInferenceAllocationSiteTables,
+                                        &cStats.typeInferenceArrayTypeTables,
+                                        &cStats.typeInferenceObjectTypeTables,
                                         &cStats.compartmentObject,
-                                        &cStats.typeInference,
                                         &cStats.shapesMallocHeapCompartmentTables,
                                         &cStats.crossCompartmentWrappersTable,
                                         &cStats.regexpCompartment,
@@ -335,7 +338,9 @@ StatsCellCallback(JSRuntime *rt, void *data, void *thing, JSGCTraceKind traceKin
         JSScript *script = static_cast<JSScript *>(thing);
         CompartmentStats *cStats = GetCompartmentStats(script->compartment());
         cStats->scriptsGCHeap += thingSize;
+
         cStats->scriptsMallocHeapData += script->sizeOfData(rtStats->mallocSizeOf_);
+        cStats->typeInferenceTypeScripts += script->sizeOfTypeScript(rtStats->mallocSizeOf_);
 #ifdef JS_ION
         jit::AddSizeOfBaselineData(script, rtStats->mallocSizeOf_, &cStats->baselineData,
                                    &cStats->baselineStubsFallback);
