@@ -5074,6 +5074,29 @@ CheckFunctionsSequential(ModuleCompiler &m)
 
 #ifdef JS_WORKER_THREADS
 
+// Currently, only one asm.js parallel compilation is allowed at a time.
+// This RAII class attempts to claim this parallel compilation using atomic ops
+// on rt->workerThreadState->asmJSCompilationInProgress.
+class ParallelCompilationGuard
+{
+    WorkerThreadState *parallelState_;
+  public:
+    ParallelCompilationGuard() : parallelState_(NULL) {}
+    ~ParallelCompilationGuard() {
+        if (parallelState_) {
+            JS_ASSERT(parallelState_->asmJSCompilationInProgress == true);
+            parallelState_->asmJSCompilationInProgress = false;
+        }
+    }
+    bool claim(WorkerThreadState *state) {
+        JS_ASSERT(!parallelState_);
+        if (!state->asmJSCompilationInProgress.compareExchange(false, true))
+            return false;
+        parallelState_ = state;
+        return true;
+    }
+};
+
 static bool
 ParallelCompilationEnabled(ExclusiveContext *cx)
 {
@@ -5254,6 +5277,15 @@ static const size_t LIFO_ALLOC_PARALLEL_CHUNK_SIZE = 1 << 12;
 static bool
 CheckFunctionsParallel(ModuleCompiler &m)
 {
+    // If parallel compilation isn't enabled (not enough cores, disabled by
+    // pref, etc) or another thread is currently compiling asm.js in parallel,
+    // fall back to sequential compilation. (We could lift the latter
+    // constraint by hoisting asmJS* state out of WorkerThreadState so multiple
+    // concurrent asm.js parallel compilations don't race.)
+    ParallelCompilationGuard g;
+    if (!ParallelCompilationEnabled(m.cx()) || !g.claim(m.cx()->workerThreadState()))
+        return CheckFunctionsSequential(m);
+
     // Saturate all worker threads plus the main thread.
     WorkerThreadState &state = *m.cx()->workerThreadState();
     size_t numParallelJobs = state.numThreads + 1;
@@ -6393,13 +6425,8 @@ CheckModule(ExclusiveContext *cx, AsmJSParser &parser, ParseNode *stmtList,
         return false;
 
 #ifdef JS_WORKER_THREADS
-    if (ParallelCompilationEnabled(cx)) {
-        if (!CheckFunctionsParallel(m))
-            return false;
-    } else {
-        if (!CheckFunctionsSequential(m))
-            return false;
-    }
+    if (!CheckFunctionsParallel(m))
+        return false;
 #else
     if (!CheckFunctionsSequential(m))
         return false;
