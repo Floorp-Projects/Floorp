@@ -116,7 +116,6 @@
       printDebug("sending event: " + x + ", " + y + " (" + msg + ")\n");
       gCurrentMouseX = x;
       gCurrentMouseY = y;
-      netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
       var utils = win.QueryInterface(Components.interfaces.nsIInterfaceRequestor).
                                      getInterface(Components.interfaces.nsIDOMWindowUtils);
       var callbackFunc = function() {

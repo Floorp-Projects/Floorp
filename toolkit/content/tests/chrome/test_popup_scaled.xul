@@ -31,7 +31,6 @@ SimpleTest.waitForExplicitFinish();
 
 function runTests()
 {
-  netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
   setScale($("frame").contentWindow, 2);
 
   var anchor = $("frame").contentDocument.getElementById("two");
@@ -41,7 +40,6 @@ function runTests()
 
 function setScale(win, scale)
 {
-  netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
   var wn = win.QueryInterface(Components.interfaces.nsIInterfaceRequestor)
               .getInterface(Components.interfaces.nsIWebNavigation);
   var shell = wn.QueryInterface(Components.interfaces.nsIDocShell);
@@ -57,8 +55,6 @@ function shown()
     is(box.screenY, screeny, "screen top position");
   }
   else {
-    netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
-
     var anchor = $("frame").contentDocument.getElementById("two");
 
     is(Math.round(anchor.getBoundingClientRect().left * 2),

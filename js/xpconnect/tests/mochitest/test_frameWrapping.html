@@ -22,9 +22,7 @@ No bug.
 function go() {
     var win = frames[0];
     (function() {
-        netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
-        var utils = window.QueryInterface(Components.interfaces.nsIInterfaceRequestor)
-                          .getInterface(Components.interfaces.nsIDOMWindowUtils);
+        var utils = SpecialPowers.getDOMWindowUtils(window);
         is(utils.getClassName(win), "Proxy", "correctly wrap frame elements");
      })()
     SimpleTest.finish();

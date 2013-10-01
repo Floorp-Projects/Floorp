@@ -3780,6 +3780,42 @@
     "n_buckets": "1000",
     "description": "The time (in milliseconds) that it took an 'unblackbox' request to go round trip."
   },
+  "DEVTOOLS_DEBUGGER_RDP_LOCAL_SCOPE_MS": {
+    "kind": "exponential",
+    "high": "10000",
+    "n_buckets": "1000",
+    "description": "The time (in milliseconds) that it took a 'scope' request to go round trip."
+  },
+  "DEVTOOLS_DEBUGGER_RDP_REMOTE_SCOPE_MS": {
+    "kind": "exponential",
+    "high": "10000",
+    "n_buckets": "1000",
+    "description": "The time (in milliseconds) that it took a 'scope' request to go round trip."
+  },
+  "DEVTOOLS_DEBUGGER_RDP_LOCAL_BINDINGS_MS": {
+    "kind": "exponential",
+    "high": "10000",
+    "n_buckets": "1000",
+    "description": "The time (in milliseconds) that it took a 'bindings' request to go round trip."
+  },
+  "DEVTOOLS_DEBUGGER_RDP_REMOTE_BINDINGS_MS": {
+    "kind": "exponential",
+    "high": "10000",
+    "n_buckets": "1000",
+    "description": "The time (in milliseconds) that it took a 'bindings' request to go round trip."
+  },
+  "DEVTOOLS_DEBUGGER_RDP_LOCAL_ASSIGN_MS": {
+    "kind": "exponential",
+    "high": "10000",
+    "n_buckets": "1000",
+    "description": "The time (in milliseconds) that it took an 'assign' request to go round trip."
+  },
+  "DEVTOOLS_DEBUGGER_RDP_REMOTE_ASSIGN_MS": {
+    "kind": "exponential",
+    "high": "10000",
+    "n_buckets": "1000",
+    "description": "The time (in milliseconds) that it took an 'assign' request to go round trip."
+  },
   "DEVTOOLS_OPTIONS_OPENED_BOOLEAN": {
     "kind": "boolean",
     "description": "How many times has the devtool's Options panel been opened?"

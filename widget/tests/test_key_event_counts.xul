@@ -31,8 +31,6 @@
 
     function runTest()
     {
-      netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
-
       var domWindowUtils = window.QueryInterface(Components.interfaces.nsIInterfaceRequestor).
                              getInterface(Components.interfaces.nsIDOMWindowUtils);
 

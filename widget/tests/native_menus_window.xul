@@ -58,7 +58,6 @@
     // Force a menu to update itself. All of the menus parents will be updated
     // as well. An empty string will force a complete menu system reload.
     function forceUpdateNativeMenuAt(location) {
-      netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
       var utils = window.QueryInterface(Components.interfaces.nsIInterfaceRequestor).
                                           getInterface(Components.interfaces.nsIDOMWindowUtils);
       try {
@@ -72,7 +71,6 @@
     var executedCommandID = "";
 
     function testItem(location, targetID) {
-      netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
       var utils = window.QueryInterface(Components.interfaces.nsIInterfaceRequestor).
                                           getInterface(Components.interfaces.nsIDOMWindowUtils);
       var correctCommandHandler = false;

@@ -14,7 +14,6 @@ Specifically, this is a test page that actually submits a form.
 
 <script class="testbody" type="text/javascript">
 
-netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
 if (!window.location.href.match("posted=1")) {
   // Here we just submit the form
   var form = document.getElementById("testForm");
