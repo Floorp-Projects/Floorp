@@ -929,8 +929,8 @@ nsGtkIMModule::DispatchCompositionStart()
     }
 
     nsEventStatus status;
-    nsQueryContentEvent selection(true, NS_QUERY_SELECTED_TEXT,
-                                  mLastFocusedWindow);
+    WidgetQueryContentEvent selection(true, NS_QUERY_SELECTED_TEXT,
+                                      mLastFocusedWindow);
     InitEvent(selection);
     mLastFocusedWindow->DispatchEvent(&selection, status);
 
@@ -974,8 +974,8 @@ nsGtkIMModule::DispatchCompositionStart()
     PR_LOG(gGtkIMLog, PR_LOG_ALWAYS,
         ("    mCompositionStart=%u", mCompositionStart));
     mCompositionState = eCompositionState_CompositionStartDispatched;
-    nsCompositionEvent compEvent(true, NS_COMPOSITION_START,
-                                 mLastFocusedWindow);
+    WidgetCompositionEvent compEvent(true, NS_COMPOSITION_START,
+                                     mLastFocusedWindow);
     InitEvent(compEvent);
     nsCOMPtr<nsIWidget> kungFuDeathGrip = mLastFocusedWindow;
     mLastFocusedWindow->DispatchEvent(&compEvent, status);
@@ -1010,8 +1010,8 @@ nsGtkIMModule::DispatchCompositionEnd()
         return false;
     }
 
-    nsCompositionEvent compEvent(true, NS_COMPOSITION_END,
-                                 mLastFocusedWindow);
+    WidgetCompositionEvent compEvent(true, NS_COMPOSITION_END,
+                                     mLastFocusedWindow);
     InitEvent(compEvent);
     compEvent.data = mDispatchedCompositionString;
     nsEventStatus status;
@@ -1057,8 +1057,8 @@ nsGtkIMModule::DispatchTextEvent(const nsAString &aCompositionString,
     nsRefPtr<nsWindow> lastFocusedWindow = mLastFocusedWindow;
 
     if (aCompositionString != mDispatchedCompositionString) {
-      nsCompositionEvent compositionUpdate(true, NS_COMPOSITION_UPDATE,
-                                           mLastFocusedWindow);
+      WidgetCompositionEvent compositionUpdate(true, NS_COMPOSITION_UPDATE,
+                                               mLastFocusedWindow);
       InitEvent(compositionUpdate);
       compositionUpdate.data = aCompositionString;
       mDispatchedCompositionString = aCompositionString;
@@ -1075,9 +1075,9 @@ nsGtkIMModule::DispatchTextEvent(const nsAString &aCompositionString,
     if (mCompositionState == eCompositionState_CompositionStartDispatched) {
         // XXX We should assume, for now, any web applications don't change
         //     selection at handling this text event.
-        nsQueryContentEvent querySelectedTextEvent(true,
-                                                   NS_QUERY_SELECTED_TEXT,
-                                                   mLastFocusedWindow);
+        WidgetQueryContentEvent querySelectedTextEvent(true,
+                                                       NS_QUERY_SELECTED_TEXT,
+                                                       mLastFocusedWindow);
         mLastFocusedWindow->DispatchEvent(&querySelectedTextEvent, status);
         if (querySelectedTextEvent.mSucceeded) {
             mSelectedString = querySelectedTextEvent.mReply.mString;
@@ -1085,18 +1085,18 @@ nsGtkIMModule::DispatchTextEvent(const nsAString &aCompositionString,
         }
     }
 
-    nsTextEvent textEvent(true, NS_TEXT_TEXT, mLastFocusedWindow);
+    WidgetTextEvent textEvent(true, NS_TEXT_TEXT, mLastFocusedWindow);
     InitEvent(textEvent);
 
     uint32_t targetOffset = mCompositionStart;
 
-    nsAutoTArray<nsTextRange, 4> textRanges;
+    nsAutoTArray<TextRange, 4> textRanges;
     if (!aIsCommit) {
         // NOTE: SetTextRangeList() assumes that mDispatchedCompositionString
         //       has been updated already.
         SetTextRangeList(textRanges);
         for (uint32_t i = 0; i < textRanges.Length(); i++) {
-            nsTextRange& range = textRanges[i];
+            TextRange& range = textRanges[i];
             if (range.mRangeType == NS_TEXTRANGE_SELECTEDRAWTEXT ||
                 range.mRangeType == NS_TEXTRANGE_SELECTEDCONVERTEDTEXT) {
                 targetOffset += range.mStartOffset;
@@ -1127,7 +1127,7 @@ nsGtkIMModule::DispatchTextEvent(const nsAString &aCompositionString,
 }
 
 void
-nsGtkIMModule::SetTextRangeList(nsTArray<nsTextRange> &aTextRangeList)
+nsGtkIMModule::SetTextRangeList(nsTArray<TextRange> &aTextRangeList)
 {
     PR_LOG(gGtkIMLog, PR_LOG_ALWAYS,
         ("GtkIMModule(%p): SetTextRangeList", this));
@@ -1179,7 +1179,7 @@ nsGtkIMModule::SetTextRangeList(nsTArray<nsTextRange> &aTextRangeList)
         gint start, end;
         pango_attr_iterator_range(iter, &start, &end);
 
-        nsTextRange range;
+        TextRange range;
         // XIMReverse | XIMUnderline
         if (attrUnderline && attrForeground) {
             range.mRangeType = NS_TEXTRANGE_SELECTEDCONVERTEDTEXT;
@@ -1228,7 +1228,7 @@ nsGtkIMModule::SetTextRangeList(nsTArray<nsTextRange> &aTextRangeList)
              GetRangeTypeName(range.mRangeType)));
     } while (pango_attr_iterator_next(iter));
 
-    nsTextRange range;
+    TextRange range;
     if (cursor_pos < 0) {
         range.mStartOffset = 0;
     } else if (uint32_t(cursor_pos) > mDispatchedCompositionString.Length()) {
@@ -1276,8 +1276,8 @@ nsGtkIMModule::SetCursorPosition(uint32_t aTargetOffset)
         return;
     }
 
-    nsQueryContentEvent charRect(true, NS_QUERY_TEXT_RECT,
-                                 mLastFocusedWindow);
+    WidgetQueryContentEvent charRect(true, NS_QUERY_TEXT_RECT,
+                                     mLastFocusedWindow);
     charRect.InitForQueryTextRect(aTargetOffset, 1);
     InitEvent(charRect);
     nsEventStatus status;
@@ -1330,9 +1330,9 @@ nsGtkIMModule::GetCurrentParagraph(nsAString& aText, uint32_t& aCursorPos)
     // current selection.
     if (!EditorHasCompositionString()) {
         // Query cursor position & selection
-        nsQueryContentEvent querySelectedTextEvent(true,
-                                                   NS_QUERY_SELECTED_TEXT,
-                                                   mLastFocusedWindow);
+        WidgetQueryContentEvent querySelectedTextEvent(true,
+                                                       NS_QUERY_SELECTED_TEXT,
+                                                       mLastFocusedWindow);
         mLastFocusedWindow->DispatchEvent(&querySelectedTextEvent, status);
         NS_ENSURE_TRUE(querySelectedTextEvent.mSucceeded, NS_ERROR_FAILURE);
 
@@ -1355,9 +1355,9 @@ nsGtkIMModule::GetCurrentParagraph(nsAString& aText, uint32_t& aCursorPos)
     }
 
     // Get all text contents of the focused editor
-    nsQueryContentEvent queryTextContentEvent(true,
-                                              NS_QUERY_TEXT_CONTENT,
-                                              mLastFocusedWindow);
+    WidgetQueryContentEvent queryTextContentEvent(true,
+                                                  NS_QUERY_TEXT_CONTENT,
+                                                  mLastFocusedWindow);
     queryTextContentEvent.InitForQueryTextContent(0, UINT32_MAX);
     mLastFocusedWindow->DispatchEvent(&queryTextContentEvent, status);
     NS_ENSURE_TRUE(queryTextContentEvent.mSucceeded, NS_ERROR_FAILURE);
@@ -1440,9 +1440,9 @@ nsGtkIMModule::DeleteText(const int32_t aOffset, const uint32_t aNChars)
         }
     } else {
         // Query cursor position & selection
-        nsQueryContentEvent querySelectedTextEvent(true,
-                                                   NS_QUERY_SELECTED_TEXT,
-                                                   mLastFocusedWindow);
+        WidgetQueryContentEvent querySelectedTextEvent(true,
+                                                       NS_QUERY_SELECTED_TEXT,
+                                                       mLastFocusedWindow);
         lastFocusedWindow->DispatchEvent(&querySelectedTextEvent, status);
         NS_ENSURE_TRUE(querySelectedTextEvent.mSucceeded, NS_ERROR_FAILURE);
 
@@ -1450,9 +1450,9 @@ nsGtkIMModule::DeleteText(const int32_t aOffset, const uint32_t aNChars)
     }
 
     // Get all text contents of the focused editor
-    nsQueryContentEvent queryTextContentEvent(true,
-                                              NS_QUERY_TEXT_CONTENT,
-                                              mLastFocusedWindow);
+    WidgetQueryContentEvent queryTextContentEvent(true,
+                                                  NS_QUERY_TEXT_CONTENT,
+                                                  mLastFocusedWindow);
     queryTextContentEvent.InitForQueryTextContent(0, UINT32_MAX);
     mLastFocusedWindow->DispatchEvent(&queryTextContentEvent, status);
     NS_ENSURE_TRUE(queryTextContentEvent.mSucceeded, NS_ERROR_FAILURE);
@@ -1496,8 +1496,8 @@ nsGtkIMModule::DeleteText(const int32_t aOffset, const uint32_t aNChars)
         g_utf8_offset_to_pointer(utf8Str.get(), endInUTF8Characters);
 
     // Set selection to delete
-    nsSelectionEvent selectionEvent(true, NS_SELECTION_SET,
-                                    mLastFocusedWindow);
+    WidgetSelectionEvent selectionEvent(true, NS_SELECTION_SET,
+                                        mLastFocusedWindow);
 
     nsDependentCSubstring utf8StrBeforeOffset(utf8Str, 0,
                                               charAtOffset - utf8Str.get());

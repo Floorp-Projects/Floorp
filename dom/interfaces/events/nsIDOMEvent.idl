@@ -242,7 +242,7 @@ nsresult
 NS_NewDOMMouseEvent(nsIDOMEvent** aInstancePtrResult,
                     mozilla::dom::EventTarget* aOwner,
                     nsPresContext* aPresContext,
-                    nsInputEvent* aEvent);
+                    mozilla::WidgetInputEvent* aEvent);
 nsresult
 NS_NewDOMFocusEvent(nsIDOMEvent** aInstancePtrResult,
                     mozilla::dom::EventTarget* aOwner,
@@ -252,7 +252,7 @@ nsresult
 NS_NewDOMMouseScrollEvent(nsIDOMEvent** aInstancePtrResult,
                           mozilla::dom::EventTarget* aOwner,
                           nsPresContext* aPresContext,
-                          nsInputEvent* aEvent);
+                          mozilla::WidgetInputEvent* aEvent);
 nsresult
 NS_NewDOMWheelEvent(nsIDOMEvent** aInstancePtrResult,
                     mozilla::dom::EventTarget* aOwner,
@@ -262,7 +262,7 @@ nsresult
 NS_NewDOMDragEvent(nsIDOMEvent** aInstancePtrResult,
                    mozilla::dom::EventTarget* aOwner,
                    nsPresContext* aPresContext,
-                   nsDragEvent* aEvent);
+                   mozilla::WidgetDragEvent* aEvent);
 nsresult
 NS_NewDOMClipboardEvent(nsIDOMEvent** aInstancePtrResult,
                         mozilla::dom::EventTarget* aOwner,
@@ -273,12 +273,12 @@ nsresult
 NS_NewDOMKeyboardEvent(nsIDOMEvent** aInstancePtrResult,
                        mozilla::dom::EventTarget* aOwner,
                        nsPresContext* aPresContext,
-                       nsKeyEvent* aEvent);
+                       mozilla::WidgetKeyboardEvent* aEvent);
 nsresult
 NS_NewDOMCompositionEvent(nsIDOMEvent** aInstancePtrResult,
                           mozilla::dom::EventTarget* aOwner,
                           nsPresContext* aPresContext,
-                          nsCompositionEvent* aEvent);
+                          mozilla::WidgetCompositionEvent* aEvent);
 nsresult
 NS_NewDOMMutationEvent(nsIDOMEvent** aResult,
                        mozilla::dom::EventTarget* aOwner,
@@ -293,7 +293,7 @@ nsresult
 NS_NewDOMTextEvent(nsIDOMEvent** aResult,
                    mozilla::dom::EventTarget* aOwner,
                    nsPresContext* aPresContext,
-                   nsTextEvent* aEvent);
+                   mozilla::WidgetTextEvent* aEvent);
 nsresult
 NS_NewDOMBeforeUnloadEvent(nsIDOMEvent** aResult,
                            mozilla::dom::EventTarget* aOwner,
@@ -318,7 +318,7 @@ nsresult
 NS_NewDOMXULCommandEvent(nsIDOMEvent** aResult,
                          mozilla::dom::EventTarget* aOwner,
                          nsPresContext* aPresContext,
-                         nsInputEvent* aEvent);
+                         mozilla::WidgetInputEvent* aEvent);
 nsresult
 NS_NewDOMCommandEvent(nsIDOMEvent** aInstancePtrResult,
                       mozilla::dom::EventTarget* aOwner,

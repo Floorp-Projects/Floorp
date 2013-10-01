@@ -8,11 +8,13 @@
 #include "prtime.h"
 #include "mozilla/TextEvents.h"
 
+using namespace mozilla;
+
 nsDOMCompositionEvent::nsDOMCompositionEvent(mozilla::dom::EventTarget* aOwner,
                                              nsPresContext* aPresContext,
-                                             nsCompositionEvent* aEvent)
+                                             WidgetCompositionEvent* aEvent)
   : nsDOMUIEvent(aOwner, aPresContext, aEvent ? aEvent :
-                 new nsCompositionEvent(false, 0, nullptr))
+                 new WidgetCompositionEvent(false, 0, nullptr))
 {
   NS_ASSERTION(mEvent->eventStructType == NS_COMPOSITION_EVENT,
                "event type mismatch");
@@ -29,14 +31,14 @@ nsDOMCompositionEvent::nsDOMCompositionEvent(mozilla::dom::EventTarget* aOwner,
     mEvent->mFlags.mCancelable = false;
   }
 
-  mData = static_cast<nsCompositionEvent*>(mEvent)->data;
+  mData = static_cast<WidgetCompositionEvent*>(mEvent)->data;
   // TODO: Native event should have locale information.
 }
 
 nsDOMCompositionEvent::~nsDOMCompositionEvent()
 {
   if (mEventIsInternal) {
-    delete static_cast<nsCompositionEvent*>(mEvent);
+    delete static_cast<WidgetCompositionEvent*>(mEvent);
     mEvent = nullptr;
   }
 }
@@ -83,7 +85,7 @@ nsresult
 NS_NewDOMCompositionEvent(nsIDOMEvent** aInstancePtrResult,
                           mozilla::dom::EventTarget* aOwner,
                           nsPresContext* aPresContext,
-                          nsCompositionEvent *aEvent)
+                          WidgetCompositionEvent* aEvent)
 {
   nsDOMCompositionEvent* event =
     new nsDOMCompositionEvent(aOwner, aPresContext, aEvent);

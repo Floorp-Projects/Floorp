@@ -132,6 +132,34 @@ public:
                       float aViewboxWidth, float aViewboxHeight,
                       const SVGPreserveAspectRatio &aPreserveAspectRatio);
 
+  /**
+   * Parse a number of the form:
+   * number ::= integer ([Ee] integer)? | [+-]? [0-9]* "." [0-9]+ ([Ee] integer)?
+   * Parsing fails if the number cannot be represented by a floatType.
+   * Anything after the number is returned in aLeftOver.
+   */
+  template<class floatType>
+  static bool
+  ParseNumber(const nsAString& aString, floatType& aValue,
+              nsAString& aLeftOver);
+
+  /**
+   * Parse a number of the form:
+   * number ::= integer ([Ee] integer)? | [+-]? [0-9]* "." [0-9]+ ([Ee] integer)?
+   * Parsing fails if there is anything left over after the number,
+   * or the number cannot be represented by a floatType.
+   */
+  template<class floatType>
+  static bool
+  ParseNumber(const nsAString& aString, floatType& aValue);
+
+  /**
+   * Parse an integer of the form:
+   * integer ::= [+-]? [0-9]+
+   * Parsing fails if the number cannot be represented by an int32_t.
+   */
+  static bool
+  ParseInteger(const nsAString& aString, int32_t& aValue);
 };
 
 #endif

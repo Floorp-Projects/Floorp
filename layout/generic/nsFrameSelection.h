@@ -45,7 +45,7 @@ struct SelectionDetails
   int32_t mStart;
   int32_t mEnd;
   SelectionType mType;
-  nsTextRangeStyle mTextRangeStyle;
+  mozilla::TextRangeStyle mTextRangeStyle;
   SelectionDetails *mNext;
 };
 
