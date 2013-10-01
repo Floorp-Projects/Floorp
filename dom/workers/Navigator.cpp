@@ -5,9 +5,9 @@
 
 #include "Navigator.h"
 
-#include "mozilla/dom/WorkerNavigatorBinding.h"
-
+#include "DOMBindingInlines.h"
 #include "RuntimeService.h"
+#include "mozilla/dom/WorkerNavigatorBinding.h"
 
 BEGIN_WORKERS_NAMESPACE
 

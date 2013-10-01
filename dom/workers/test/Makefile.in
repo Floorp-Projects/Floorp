@@ -8,3 +8,4 @@ MOCHITEST_FILES += \
   test_xhr_timeout.html \
   $(NULL)
 endif
+
