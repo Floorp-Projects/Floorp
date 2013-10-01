@@ -115,7 +115,8 @@ TextComposition::CompositionEventDispatcher::Run()
   switch (mEventMessage) {
     case NS_COMPOSITION_START: {
       WidgetCompositionEvent compStart(true, NS_COMPOSITION_START, mWidget);
-      nsQueryContentEvent selectedText(true, NS_QUERY_SELECTED_TEXT, mWidget);
+      WidgetQueryContentEvent selectedText(true, NS_QUERY_SELECTED_TEXT,
+                                           mWidget);
       nsContentEventHandler handler(mPresContext);
       handler.OnQuerySelectedText(&selectedText);
       NS_ASSERTION(selectedText.mSucceeded, "Failed to get selected text");

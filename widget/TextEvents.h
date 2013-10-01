@@ -534,7 +534,6 @@ public:
 } // namespace mozilla
 
 // TODO: Remove following typedefs
-typedef mozilla::WidgetQueryContentEvent nsQueryContentEvent;
 typedef mozilla::WidgetSelectionEvent    nsSelectionEvent;
 
 #endif // mozilla_TextEvents_h__

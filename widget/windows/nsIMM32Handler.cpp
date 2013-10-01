@@ -921,7 +921,7 @@ nsIMM32Handler::HandleStartComposition(nsWindow* aWindow,
   NS_PRECONDITION(!aWindow->PluginHasFocus(),
     "HandleStartComposition should not be called when a plug-in has focus");
 
-  nsQueryContentEvent selection(true, NS_QUERY_SELECTED_TEXT, aWindow);
+  WidgetQueryContentEvent selection(true, NS_QUERY_SELECTED_TEXT, aWindow);
   nsIntPoint point(0, 0);
   aWindow->InitEvent(selection, &point);
   aWindow->DispatchWindowEvent(&selection);
@@ -1238,7 +1238,7 @@ nsIMM32Handler::HandleReconvert(nsWindow* aWindow,
   *oResult = 0;
   RECONVERTSTRING* pReconv = reinterpret_cast<RECONVERTSTRING*>(lParam);
 
-  nsQueryContentEvent selection(true, NS_QUERY_SELECTED_TEXT, aWindow);
+  WidgetQueryContentEvent selection(true, NS_QUERY_SELECTED_TEXT, aWindow);
   nsIntPoint point(0, 0);
   aWindow->InitEvent(selection, &point);
   aWindow->DispatchWindowEvent(&selection);
@@ -1366,7 +1366,7 @@ nsIMM32Handler::HandleDocumentFeed(nsWindow* aWindow,
 
   int32_t targetOffset, targetLength;
   if (!hasCompositionString) {
-    nsQueryContentEvent selection(true, NS_QUERY_SELECTED_TEXT, aWindow);
+    WidgetQueryContentEvent selection(true, NS_QUERY_SELECTED_TEXT, aWindow);
     aWindow->InitEvent(selection, &point);
     aWindow->DispatchWindowEvent(&selection);
     if (!selection.mSucceeded) {
@@ -1392,7 +1392,7 @@ nsIMM32Handler::HandleDocumentFeed(nsWindow* aWindow,
   }
 
   // Get all contents of the focused editor.
-  nsQueryContentEvent textContent(true, NS_QUERY_TEXT_CONTENT, aWindow);
+  WidgetQueryContentEvent textContent(true, NS_QUERY_TEXT_CONTENT, aWindow);
   textContent.InitForQueryTextContent(0, UINT32_MAX);
   aWindow->InitEvent(textContent, &point);
   aWindow->DispatchWindowEvent(&textContent);
@@ -1764,7 +1764,7 @@ nsIMM32Handler::GetCharacterRectOfSelectedTextAt(nsWindow* aWindow,
 {
   nsIntPoint point(0, 0);
 
-  nsQueryContentEvent selection(true, NS_QUERY_SELECTED_TEXT, aWindow);
+  WidgetQueryContentEvent selection(true, NS_QUERY_SELECTED_TEXT, aWindow);
   aWindow->InitEvent(selection, &point);
   aWindow->DispatchWindowEvent(&selection);
   if (!selection.mSucceeded) {
@@ -1791,7 +1791,7 @@ nsIMM32Handler::GetCharacterRectOfSelectedTextAt(nsWindow* aWindow,
 
   nsIntRect r;
   if (!useCaretRect) {
-    nsQueryContentEvent charRect(true, NS_QUERY_TEXT_RECT, aWindow);
+    WidgetQueryContentEvent charRect(true, NS_QUERY_TEXT_RECT, aWindow);
     charRect.InitForQueryTextRect(offset, 1);
     aWindow->InitEvent(charRect, &point);
     aWindow->DispatchWindowEvent(&charRect);
@@ -1815,7 +1815,7 @@ nsIMM32Handler::GetCaretRect(nsWindow* aWindow, nsIntRect &aCaretRect)
 {
   nsIntPoint point(0, 0);
 
-  nsQueryContentEvent selection(true, NS_QUERY_SELECTED_TEXT, aWindow);
+  WidgetQueryContentEvent selection(true, NS_QUERY_SELECTED_TEXT, aWindow);
   aWindow->InitEvent(selection, &point);
   aWindow->DispatchWindowEvent(&selection);
   if (!selection.mSucceeded) {
@@ -1826,7 +1826,7 @@ nsIMM32Handler::GetCaretRect(nsWindow* aWindow, nsIntRect &aCaretRect)
 
   uint32_t offset = selection.mReply.mOffset;
 
-  nsQueryContentEvent caretRect(true, NS_QUERY_CARET_RECT, aWindow);
+  WidgetQueryContentEvent caretRect(true, NS_QUERY_CARET_RECT, aWindow);
   caretRect.InitForQueryCaretRect(offset);
   aWindow->InitEvent(caretRect, &point);
   aWindow->DispatchWindowEvent(&caretRect);
@@ -1960,11 +1960,11 @@ nsIMM32Handler::OnMouseEvent(nsWindow* aWindow, LPARAM lParam, int aAction,
   }
 
   nsIntPoint cursor(LOWORD(lParam), HIWORD(lParam));
-  nsQueryContentEvent charAtPt(true, NS_QUERY_CHARACTER_AT_POINT, aWindow);
+  WidgetQueryContentEvent charAtPt(true, NS_QUERY_CHARACTER_AT_POINT, aWindow);
   aWindow->InitEvent(charAtPt, &cursor);
   aWindow->DispatchWindowEvent(&charAtPt);
   if (!charAtPt.mSucceeded ||
-      charAtPt.mReply.mOffset == nsQueryContentEvent::NOT_FOUND ||
+      charAtPt.mReply.mOffset == WidgetQueryContentEvent::NOT_FOUND ||
       charAtPt.mReply.mOffset < mCompositionStart ||
       charAtPt.mReply.mOffset >
         mCompositionStart + mCompositionString.Length()) {

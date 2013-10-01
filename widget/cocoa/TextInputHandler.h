@@ -1011,7 +1011,7 @@ private:
   // This flag is enabled by OnFocusChangeInGecko, and will be cleared by
   // ExecutePendingMethods.  When this is true, IsFocus() returns TRUE.  At
   // that time, the focus processing in Gecko might not be finished yet.  So,
-  // you cannot use nsQueryContentEvent or something.
+  // you cannot use WidgetQueryContentEvent or something.
   bool mIsInFocusProcessing;
   bool mIMEHasFocus;
 

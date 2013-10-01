@@ -932,7 +932,7 @@ TabParent::RecvRequestFocus(const bool& aCanRaise)
  *  the returned offset/length are different from the queried offset/length.
  */
 bool
-TabParent::HandleQueryContentEvent(nsQueryContentEvent& aEvent)
+TabParent::HandleQueryContentEvent(WidgetQueryContentEvent& aEvent)
 {
   aEvent.mSucceeded = false;
   aEvent.mWasAsync = false;

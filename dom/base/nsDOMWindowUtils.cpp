@@ -1901,7 +1901,7 @@ nsDOMWindowUtils::SendQueryContentEvent(uint32_t aType,
 
   if (aType == QUERY_CHARACTER_AT_POINT) {
     // Looking for the widget at the point.
-    nsQueryContentEvent dummyEvent(true, NS_QUERY_CONTENT_STATE, widget);
+    WidgetQueryContentEvent dummyEvent(true, NS_QUERY_CONTENT_STATE, widget);
     InitEvent(dummyEvent, &pt);
     nsIFrame* popupFrame =
       nsLayoutUtils::GetPopupFrameForEventCoordinates(presContext->GetRootPresContext(), &dummyEvent);
@@ -1926,7 +1926,7 @@ nsDOMWindowUtils::SendQueryContentEvent(uint32_t aType,
   pt += LayoutDeviceIntPoint::FromUntyped(
     widget->WidgetToScreenOffset() - targetWidget->WidgetToScreenOffset());
 
-  nsQueryContentEvent queryEvent(true, aType, targetWidget);
+  WidgetQueryContentEvent queryEvent(true, aType, targetWidget);
   InitEvent(queryEvent, &pt);
 
   switch (aType) {
