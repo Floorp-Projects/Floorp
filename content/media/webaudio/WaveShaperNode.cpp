@@ -106,9 +106,9 @@ public:
 
     MOZ_ASSERT(mBuffer.Length() == outSamples);
 
-    speex_resampler_process_float(mUpSampler, aChannel,
-                                  aInputData, &inSamples,
-                                  outputData, &outSamples);
+    WebAudioUtils::SpeexResamplerProcess(mUpSampler, aChannel,
+                                         aInputData, &inSamples,
+                                         outputData, &outSamples);
 
     MOZ_ASSERT(inSamples == WEBAUDIO_BLOCK_SIZE && outSamples == WEBAUDIO_BLOCK_SIZE*aBlocks);
 
@@ -123,9 +123,9 @@ public:
 
     MOZ_ASSERT(mBuffer.Length() == inSamples);
 
-    speex_resampler_process_float(mDownSampler, aChannel,
-                                  inputData, &inSamples,
-                                  aOutputData, &outSamples);
+    WebAudioUtils::SpeexResamplerProcess(mDownSampler, aChannel,
+                                         inputData, &inSamples,
+                                         aOutputData, &outSamples);
 
     MOZ_ASSERT(inSamples == WEBAUDIO_BLOCK_SIZE*aBlocks && outSamples == WEBAUDIO_BLOCK_SIZE);
   }

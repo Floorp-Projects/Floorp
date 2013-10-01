@@ -79,39 +79,6 @@ AudioNodeExternalInputStream::GetTrackMapEntry(const StreamBuffer::Track& aTrack
 
 static const uint32_t SPEEX_RESAMPLER_PROCESS_MAX_OUTPUT = 1000;
 
-template <typename T> static int
-SpeexResamplerProcess(SpeexResamplerState* aResampler,
-                      uint32_t aChannel,
-                      const T* aInput, uint32_t* aIn,
-                      float* aOutput, uint32_t* aOut);
-
-template <> int
-SpeexResamplerProcess<float>(SpeexResamplerState* aResampler,
-                             uint32_t aChannel,
-                             const float* aInput, uint32_t* aIn,
-                             float* aOutput, uint32_t* aOut)
-{
-  NS_ASSERTION(*aOut <= SPEEX_RESAMPLER_PROCESS_MAX_OUTPUT, "Bad aOut");
-  return speex_resampler_process_float(aResampler, aChannel, aInput, aIn, aOutput, aOut);
-}
-
-template <> int
-SpeexResamplerProcess<int16_t>(SpeexResamplerState* aResampler,
-                               uint32_t aChannel,
-                               const int16_t* aInput, uint32_t* aIn,
-                               float* aOutput, uint32_t* aOut)
-{
-  NS_ASSERTION(*aOut <= SPEEX_RESAMPLER_PROCESS_MAX_OUTPUT, "Bad aOut");
-  int16_t tmp[SPEEX_RESAMPLER_PROCESS_MAX_OUTPUT];
-  int result = speex_resampler_process_int(aResampler, aChannel, aInput, aIn, tmp, aOut);
-  if (result == RESAMPLER_ERR_SUCCESS) {
-    for (uint32_t i = 0; i < *aOut; ++i) {
-      aOutput[i] = AudioSampleToFloat(tmp[i]);
-    }
-  }
-  return result;
-}
-
 template <typename T> static void
 ResampleChannelBuffer(SpeexResamplerState* aResampler, uint32_t aChannel,
                       const T* aInput, uint32_t aInputDuration,
@@ -131,9 +98,9 @@ ResampleChannelBuffer(SpeexResamplerState* aResampler, uint32_t aChannel,
     float* output = aOutput->AppendElements(SPEEX_RESAMPLER_PROCESS_MAX_OUTPUT);
     uint32_t in = aInputDuration - processed;
     uint32_t out = aOutput->Length() - prevLength;
-    SpeexResamplerProcess(aResampler, aChannel,
-                          aInput + processed, &in,
-                          output, &out);
+    WebAudioUtils::SpeexResamplerProcess(aResampler, aChannel,
+                                         aInput + processed, &in,
+                                         output, &out);
     processed += in;
     aOutput->SetLength(prevLength + out);
   }
