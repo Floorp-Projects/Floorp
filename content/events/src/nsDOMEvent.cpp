@@ -538,8 +538,10 @@ nsDOMEvent::DuplicatePrivateData()
     }
     case NS_KEY_EVENT:
     {
-      nsKeyEvent* oldKeyEvent = static_cast<nsKeyEvent*>(mEvent);
-      nsKeyEvent* keyEvent = new nsKeyEvent(false, msg, nullptr);
+      WidgetKeyboardEvent* oldKeyEvent =
+        static_cast<WidgetKeyboardEvent*>(mEvent);
+      WidgetKeyboardEvent* keyEvent =
+        new WidgetKeyboardEvent(false, msg, nullptr);
       keyEvent->AssignKeyEventData(*oldKeyEvent, true);
       newEvent = keyEvent;
       break;
@@ -895,7 +897,7 @@ nsDOMEvent::GetEventPopupControlState(nsEvent *aEvent)
     break;
   case NS_KEY_EVENT :
     if (aEvent->mFlags.mIsTrusted) {
-      uint32_t key = static_cast<nsKeyEvent *>(aEvent)->keyCode;
+      uint32_t key = static_cast<WidgetKeyboardEvent*>(aEvent)->keyCode;
       switch(aEvent->message) {
       case NS_KEY_PRESS :
         // return key on focused button. see note at NS_MOUSE_CLICK.

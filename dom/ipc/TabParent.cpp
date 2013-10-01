@@ -660,12 +660,12 @@ bool TabParent::SendMouseWheelEvent(WheelEvent& event)
   return PBrowserParent::SendMouseWheelEvent(event);
 }
 
-bool TabParent::SendRealKeyEvent(nsKeyEvent& event)
+bool TabParent::SendRealKeyEvent(WidgetKeyboardEvent& event)
 {
   if (mIsDestroyed) {
     return false;
   }
-  nsKeyEvent e(event);
+  WidgetKeyboardEvent e(event);
   MaybeForwardEventToRenderFrame(event, &e);
   if (!MapEventCoordinatesForChildProcess(&e)) {
     return false;

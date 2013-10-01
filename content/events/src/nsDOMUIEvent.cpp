@@ -349,7 +349,7 @@ nsDOMUIEvent::IsChar() const
   switch (mEvent->eventStructType)
   {
     case NS_KEY_EVENT:
-      return static_cast<nsKeyEvent*>(mEvent)->isChar;
+      return static_cast<WidgetKeyboardEvent*>(mEvent)->isChar;
     case NS_TEXT_EVENT:
       return static_cast<nsTextEvent*>(mEvent)->isChar;
     default:

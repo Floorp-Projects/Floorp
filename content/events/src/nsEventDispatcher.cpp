@@ -703,7 +703,7 @@ nsEventDispatcher::CreateEvent(mozilla::dom::EventTarget* aOwner,
                static_cast<InternalScrollAreaEvent*>(aEvent));
     case NS_KEY_EVENT:
       return NS_NewDOMKeyboardEvent(aDOMEvent, aOwner, aPresContext,
-                                    static_cast<nsKeyEvent*>(aEvent));
+                                    static_cast<WidgetKeyboardEvent*>(aEvent));
     case NS_COMPOSITION_EVENT:
       return NS_NewDOMCompositionEvent(
         aDOMEvent, aOwner,

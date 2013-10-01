@@ -214,7 +214,7 @@ public:
    *                              compute the character to be input from
    *                              characters of aNativeKeyEvent.
    */
-  void InitKeyEvent(NSEvent *aNativeKeyEvent, nsKeyEvent& aKeyEvent,
+  void InitKeyEvent(NSEvent *aNativeKeyEvent, WidgetKeyboardEvent& aKeyEvent,
                     const nsAString *aInsertString = nullptr);
 
   /**
@@ -285,7 +285,7 @@ protected:
    */
   void InitKeyPressEvent(NSEvent *aNativeKeyEvent,
                          PRUnichar aInsertChar,
-                         nsKeyEvent& aKeyEvent,
+                         WidgetKeyboardEvent& aKeyEvent,
                          UInt32 aKbType);
 
   bool GetBoolProperty(const CFStringRef aKey);
@@ -363,7 +363,7 @@ public:
    *                              compute the character to be input from
    *                              characters of aNativeKeyEvent.
    */
-  void InitKeyEvent(NSEvent *aNativeKeyEvent, nsKeyEvent& aKeyEvent,
+  void InitKeyEvent(NSEvent *aNativeKeyEvent, WidgetKeyboardEvent& aKeyEvent,
                     const nsAString *aInsertString = nullptr);
 
   /**
@@ -384,7 +384,7 @@ public:
    * |mNativeKeyEvent| field of the Gecko event that is passed in.
    * @param aKeyEvent  Gecko key event to attach the native event to
    */
-  NS_IMETHOD AttachNativeKeyEvent(nsKeyEvent& aKeyEvent);
+  NS_IMETHOD AttachNativeKeyEvent(WidgetKeyboardEvent& aKeyEvent);
 
   /**
    * GetWindowLevel() returns the window level of current focused (in Gecko)
@@ -636,7 +636,7 @@ protected:
    * @return                      TRUE if the key event causes text input.
    *                              Otherwise, FALSE.
    */
-  static bool IsNormalCharInputtingEvent(const nsKeyEvent& aKeyEvent);
+  static bool IsNormalCharInputtingEvent(const WidgetKeyboardEvent& aKeyEvent);
 
   /**
    * IsModifierKey() checks whether the native keyCode is for a modifier key.

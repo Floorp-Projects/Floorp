@@ -751,7 +751,7 @@ KeymapWrapper::ComputeDOMKeyNameIndex(const GdkEventKey* aGdkKeyEvent)
 }
 
 /* static */ void
-KeymapWrapper::InitKeyEvent(nsKeyEvent& aKeyEvent,
+KeymapWrapper::InitKeyEvent(WidgetKeyboardEvent& aKeyEvent,
                             GdkEventKey* aGdkKeyEvent)
 {
     KeymapWrapper* keymapWrapper = GetInstance();
@@ -1165,7 +1165,7 @@ KeymapWrapper::GetDOMKeyCodeFromKeyPairs(guint aGdkKeyval)
 }
 
 void
-KeymapWrapper::InitKeypressEvent(nsKeyEvent& aKeyEvent,
+KeymapWrapper::InitKeypressEvent(WidgetKeyboardEvent& aKeyEvent,
                                  GdkEventKey* aGdkKeyEvent)
 {
     NS_ENSURE_TRUE_VOID(aKeyEvent.message == NS_KEY_PRESS);
