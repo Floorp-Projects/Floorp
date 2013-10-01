@@ -8,6 +8,7 @@
 #include "AudioNodeStream.h"
 #include "AudioParamTimeline.h"
 #include "blink/HRTFDatabaseLoader.h"
+#include "speex/speex_resampler.h"
 
 namespace mozilla {
 
@@ -67,6 +68,46 @@ void
 WebAudioUtils::Shutdown()
 {
   WebCore::HRTFDatabaseLoader::shutdown();
+}
+
+int
+WebAudioUtils::SpeexResamplerProcess(SpeexResamplerState* aResampler,
+                                     uint32_t aChannel,
+                                     const float* aIn, uint32_t* aInLen,
+                                     float* aOut, uint32_t* aOutLen)
+{
+#ifdef MOZ_SAMPLE_TYPE_S16
+  nsAutoTArray<AudioDataValue, WEBAUDIO_BLOCK_SIZE*4> tmp1;
+  nsAutoTArray<AudioDataValue, WEBAUDIO_BLOCK_SIZE*4> tmp2;
+  tmp1.SetLength(*aInLen);
+  tmp2.SetLength(*aOutLen);
+  ConvertAudioSamples(aIn, tmp1.Elements(), *aInLen);
+  int result = speex_resampler_process_int(aResampler, aChannel, tmp1.Elements(), aInLen, tmp2.Elements(), aOutLen);
+  ConvertAudioSamples(tmp2.Elements(), aOut, *aOutLen);
+  return result;
+#else
+  return speex_resampler_process_float(aResampler, aChannel, aIn, aInLen, aOut, aOutLen);
+#endif
+}
+
+int
+WebAudioUtils::SpeexResamplerProcess(SpeexResamplerState* aResampler,
+                                     uint32_t aChannel,
+                                     const int16_t* aIn, uint32_t* aInLen,
+                                     float* aOut, uint32_t* aOutLen)
+{
+  nsAutoTArray<AudioDataValue, WEBAUDIO_BLOCK_SIZE*4> tmp;
+#ifdef MOZ_SAMPLE_TYPE_S16
+  tmp.SetLength(*aOutLen);
+  int result = speex_resampler_process_int(aResampler, aChannel, aIn, aInLen, tmp.Elements(), aOutLen);
+  ConvertAudioSamples(tmp.Elements(), aOut, *aOutLen);
+  return result;
+#else
+  tmp.SetLength(*aInLen);
+  ConvertAudioSamples(aIn, tmp.Elements(), *aInLen);
+  int result = speex_resampler_process_float(aResampler, aChannel, tmp.Elements(), aInLen, aOut, aOutLen);
+  return result;
+#endif
 }
 
 }
