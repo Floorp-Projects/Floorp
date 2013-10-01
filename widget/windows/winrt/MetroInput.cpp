@@ -1127,7 +1127,7 @@ MetroInput::HandleLongTap(const Foundation::Point& aPoint)
 nsEventStatus MetroInput::sThrowawayStatus;
 
 void
-MetroInput::DispatchAsyncEventIgnoreStatus(nsInputEvent* aEvent)
+MetroInput::DispatchAsyncEventIgnoreStatus(WidgetInputEvent* aEvent)
 {
   aEvent->time = ::GetMessageTime();
   mModifierKeyState.Update();

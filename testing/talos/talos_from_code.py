@@ -10,10 +10,7 @@
 # Target:        Python 2.5
 #
 from optparse import OptionParser
-try:
-    import json
-except:
-    import simplejson as json
+import json
 import re
 import urllib2
 import urlparse
