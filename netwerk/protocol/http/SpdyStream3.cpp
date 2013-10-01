@@ -1326,6 +1326,17 @@ SpdyStream3::Close(nsresult reason)
   mTransaction->Close(reason);
 }
 
+void
+SpdyStream3::UpdateRemoteWindow(int32_t delta)
+{
+  int64_t oldRemoteWindow = mRemoteWindow;
+  mRemoteWindow += delta;
+  if (oldRemoteWindow <= 0 && mRemoteWindow > 0) {
+    // the window has been opened :)
+    mSession->TransactionHasDataToWrite(this);
+  }
+}
+
 //-----------------------------------------------------------------------------
 // nsAHttpSegmentReader
 //-----------------------------------------------------------------------------

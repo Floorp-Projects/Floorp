@@ -14,11 +14,14 @@ function generateContent(size) {
 
 var posts = [];
 posts.push(generateContent(10));
-posts.push(generateContent(128 * 1024));
+posts.push(generateContent(250000));
 
 // pre-calculated md5sums (in hex) of the above posts
 var md5s = ['f1b708bba17f1ce948dc979f4d7092bc',
-            '8f607cfdd2c87d6a7eedb657dafbd836'];
+            '2ef8d3b6c8f329318eb1a119b12622b6'];
+
+var bigListenerData = generateContent(128 * 1024);
+var bigListenerMD5 = '8f607cfdd2c87d6a7eedb657dafbd836';
 
 function checkIsSpdy(request) {
   try {
@@ -152,7 +155,7 @@ SpdyBigListener.prototype.onDataAvailable = function(request, ctx, stream, off, 
   this.buffer = this.buffer.concat(read_stream(stream, cnt));
   // We know the server should send us the same data as our big post will be,
   // so the md5 should be the same
-  do_check_eq(md5s[1], request.getResponseHeader("X-Expected-MD5"));
+  do_check_eq(bigListenerMD5, request.getResponseHeader("X-Expected-MD5"));
 };
 
 SpdyBigListener.prototype.onStopRequest = function(request, ctx, status) {
@@ -161,7 +164,7 @@ SpdyBigListener.prototype.onStopRequest = function(request, ctx, status) {
   do_check_true(this.isSpdyConnection);
 
   // Don't want to flood output, so don't use do_check_eq
-  do_check_true(this.buffer == posts[1]);
+  do_check_true(this.buffer == bigListenerData);
 
   run_next_test();
   do_test_finished();
@@ -302,8 +305,11 @@ function test_spdy_post_big() {
 
 // hack - the header test resets the multiplex object on the server,
 // so make sure header is always run before the multiplex test.
-
-var tests = [ test_spdy_basic
+//
+// make sure post_big runs first to test race condition in restarting
+// a stalled stream when a SETTINGS frame arrives
+var tests = [ test_spdy_post_big
+            , test_spdy_basic
             , test_spdy_push1
             , test_spdy_push2
             , test_spdy_push3
@@ -313,7 +319,6 @@ var tests = [ test_spdy_basic
             , test_spdy_multiplex
             , test_spdy_big
             , test_spdy_post
-            , test_spdy_post_big
             ];
 var current_test = 0;
 
