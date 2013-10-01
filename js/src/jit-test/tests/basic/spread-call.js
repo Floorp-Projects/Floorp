@@ -1,5 +1,6 @@
 load(libdir + "asserts.js");
 load(libdir + "eqArrayHelper.js");
+load(libdir + "iteration.js");
 
 let makeCall    = farg => Function("f", "arg", "return f(" + farg + ");");
 let makeFunCall = farg => Function("f", "arg", "return f.call(null, " + farg + ");");
@@ -18,27 +19,24 @@ function checkCommon(f, makeFn) {
   assertEqArray(makeFn("...arg")(f, [1, 2, 3].iterator()), [1, 2, 3]);
   assertEqArray(makeFn("...arg")(f, Set([1, 2, 3])), [1, 2, 3]);
   assertEqArray(makeFn("...arg")(f, Map([["a", "A"], ["b", "B"], ["c", "C"]])).map(([k, v]) => k + v), ["aA", "bB", "cC"]);
-  let itr = {
-    iterator: function() {
+  let itr = {};
+  itr[std_iterator] = function() {
       return {
-        i: 1,
-        next: function() {
-          if (this.i < 4)
-            return this.i++;
-          else
-            throw StopIteration;
-        }
+          i: 1,
+          next: function() {
+              if (this.i < 4)
+                  return { value: this.i++, done: false };
+              else
+                  return { value: undefined, done: true };
+          }
       };
-    }
   };
   assertEqArray(makeFn("...arg")(f, itr), [1, 2, 3]);
-  let gen = {
-    iterator: function() {
+  function gen() {
       for (let i = 1; i < 4; i ++)
-        yield i;
-    }
-  };
-  assertEqArray(makeFn("...arg")(f, gen), [1, 2, 3]);
+          yield i;
+  }
+  assertEqArray(makeFn("...arg")(f, gen()), [1, 2, 3]);
 
   assertEqArray(makeFn("...arg=[1, 2, 3]")(f), [1, 2, 3]);
 

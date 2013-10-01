@@ -1,8 +1,10 @@
 // All iterators of the same collection type share their immediate prototype.
 // Those prototype objects in turn inherit directly from Iterator.prototype.
 
+load(libdir + "iteration.js");
+
 function test(obj0, obj1) {
-    var iter0 = obj0.iterator(), iter1 = obj1.iterator();
+    var iter0 = obj0[std_iterator](), iter1 = obj1[std_iterator]();
     var proto = Object.getPrototypeOf(iter0);
     assertEq(Object.getPrototypeOf(iter1), proto);
     assertEq(Object.getPrototypeOf(proto), Iterator.prototype);
