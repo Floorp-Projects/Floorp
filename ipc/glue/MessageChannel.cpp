@@ -76,7 +76,8 @@ MessageChannel::~MessageChannel()
     MOZ_COUNT_DTOR(ipc::MessageChannel);
     IPC_ASSERT(mCxxStackFrames.empty(), "mismatched CxxStackFrame ctor/dtors");
 #ifdef OS_WIN
-    CloseHandle(mEvent);
+    DebugOnly<BOOL> ok = CloseHandle(mEvent);
+    MOZ_ASSERT(ok);
 #endif
 }
 
