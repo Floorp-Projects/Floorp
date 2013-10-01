@@ -1211,7 +1211,7 @@ KeymapWrapper::InitKeypressEvent(nsKeyEvent& aKeyEvent,
     // We shold send both shifted char and unshifted char, all keyboard layout
     // users can use all keys.  Don't change event.charCode. On some keyboard
     // layouts, Ctrl/Alt/Meta keys are used for inputting some characters.
-    nsAlternativeCharCode altCharCodes(0, 0);
+    AlternativeCharCode altCharCodes(0, 0);
     // unshifted charcode of current keyboard layout.
     altCharCodes.mUnshiftedCharCode =
         GetCharCodeFor(aGdkKeyEvent, baseState, aGdkKeyEvent->group);
@@ -1259,7 +1259,7 @@ KeymapWrapper::InitKeypressEvent(nsKeyEvent& aKeyEvent,
         return;
     }
 
-    nsAlternativeCharCode altLatinCharCodes(0, 0);
+    AlternativeCharCode altLatinCharCodes(0, 0);
     uint32_t unmodifiedCh =
         aKeyEvent.IsShift() ? altCharCodes.mShiftedCharCode :
                               altCharCodes.mUnshiftedCharCode;
