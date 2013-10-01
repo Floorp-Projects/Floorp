@@ -108,6 +108,9 @@ public class TopSitesPage extends HomeFragment {
     // Max number of entries shown in the grid from the cursor.
     private int mMaxGridEntries;
 
+    // Time in ms until the Gecko thread is reset to normal priority.
+    private static final long PRIORITY_RESET_TIMEOUT = 10000;
+
     /**
      *  Class to hold the bitmap of cached thumbnails/favicons.
      */
@@ -359,6 +362,14 @@ public class TopSitesPage extends HomeFragment {
     @Override
     protected void load() {
         getLoaderManager().initLoader(LOADER_ID_TOP_SITES, null, mCursorLoaderCallbacks);
+
+        // Since this is the primary fragment that loads whenever about:home is
+        // visited, we want to load it as quickly as possible. Heavy load on
+        // the Gecko thread can slow down the time it takes for thumbnails to
+        // appear, especially during startup (bug 897162). By minimizing the
+        // Gecko thread priority, we ensure that the UI appears quickly. The
+        // priority is reset to normal once thumbnails are loaded.
+        ThreadUtils.reduceGeckoPriority(PRIORITY_RESET_TIMEOUT);
     }
 
     /**
@@ -769,6 +780,10 @@ public class TopSitesPage extends HomeFragment {
             if (mGridAdapter != null) {
                 mGridAdapter.updateThumbnails(thumbnails);
             }
+
+            // Once thumbnails have finished loading, the UI is ready. Reset
+            // Gecko to normal priority.
+            ThreadUtils.resetGeckoPriority();
         }
 
         @Override
