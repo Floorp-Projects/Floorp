@@ -227,7 +227,7 @@ public:
     bool HandleQueryContentEvent(mozilla::WidgetQueryContentEvent& aEvent);
     bool SendCompositionEvent(mozilla::WidgetCompositionEvent& event);
     bool SendTextEvent(mozilla::WidgetTextEvent& event);
-    bool SendSelectionEvent(nsSelectionEvent& event);
+    bool SendSelectionEvent(mozilla::WidgetSelectionEvent& event);
 
     static TabParent* GetFrom(nsFrameLoader* aFrameLoader);
     static TabParent* GetFrom(nsIContent* aContent);

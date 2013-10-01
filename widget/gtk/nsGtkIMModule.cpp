@@ -1496,8 +1496,8 @@ nsGtkIMModule::DeleteText(const int32_t aOffset, const uint32_t aNChars)
         g_utf8_offset_to_pointer(utf8Str.get(), endInUTF8Characters);
 
     // Set selection to delete
-    nsSelectionEvent selectionEvent(true, NS_SELECTION_SET,
-                                    mLastFocusedWindow);
+    WidgetSelectionEvent selectionEvent(true, NS_SELECTION_SET,
+                                        mLastFocusedWindow);
 
     nsDependentCSubstring utf8StrBeforeOffset(utf8Str, 0,
                                               charAtOffset - utf8Str.get());

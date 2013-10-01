@@ -1030,7 +1030,7 @@ TabParent::SendTextEvent(WidgetTextEvent& event)
 }
 
 bool
-TabParent::SendSelectionEvent(nsSelectionEvent& event)
+TabParent::SendSelectionEvent(WidgetSelectionEvent& event)
 {
   if (mIsDestroyed) {
     return false;

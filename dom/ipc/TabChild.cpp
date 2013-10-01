@@ -1899,9 +1899,9 @@ TabChild::RecvTextEvent(const WidgetTextEvent& event)
 }
 
 bool
-TabChild::RecvSelectionEvent(const nsSelectionEvent& event)
+TabChild::RecvSelectionEvent(const WidgetSelectionEvent& event)
 {
-  nsSelectionEvent localEvent(event);
+  WidgetSelectionEvent localEvent(event);
   DispatchWidgetEvent(localEvent);
   return true;
 }

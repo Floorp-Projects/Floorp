@@ -851,7 +851,7 @@ nsTextStore::FlushPendingActions()
         MOZ_ASSERT(mComposition.mLastData.IsEmpty());
 
         // Select composition range so the new composition replaces the range
-        nsSelectionEvent selectionSet(true, NS_SELECTION_SET, mWidget);
+        WidgetSelectionEvent selectionSet(true, NS_SELECTION_SET, mWidget);
         mWidget->InitEvent(selectionSet);
         selectionSet.mOffset = static_cast<uint32_t>(action.mSelectionStart);
         selectionSet.mLength = static_cast<uint32_t>(action.mSelectionLength);
@@ -1017,7 +1017,7 @@ nsTextStore::FlushPendingActions()
                 this, action.mSelectionStart, action.mSelectionLength,
                 GetBoolName(action.mSelectionReversed)));
 
-        nsSelectionEvent selectionSet(true, NS_SELECTION_SET, mWidget);
+        WidgetSelectionEvent selectionSet(true, NS_SELECTION_SET, mWidget);
         selectionSet.mOffset = 
           static_cast<uint32_t>(action.mSelectionStart);
         selectionSet.mLength =
