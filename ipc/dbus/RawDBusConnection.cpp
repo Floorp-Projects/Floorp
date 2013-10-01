@@ -135,7 +135,7 @@ private:
   class NotifyData
   {
   public:
-    NotifyData(void (*aCallback)(DBusMessage*, void*), void* aData)
+    NotifyData(DBusReplyCallback aCallback, void* aData)
     : mCallback(aCallback),
       mData(aData)
     { }
@@ -148,8 +148,8 @@ private:
     }
 
   private:
-    void (*mCallback)(DBusMessage*, void*);
-    void*  mData;
+    DBusReplyCallback mCallback;
+    void*             mData;
   };
 
   // Callback function for DBus replies. Only run it in DBus thread.
@@ -177,7 +177,7 @@ public:
   DBusConnectionSendWithReplyRunnable(DBusConnection* aConnection,
                                       DBusMessage* aMessage,
                                       int aTimeout,
-                                      void (*aCallback)(DBusMessage*, void*),
+                                      DBusReplyCallback aCallback,
                                       void* aData)
   : DBusConnectionSendRunnableBase(aConnection, aMessage),
     mCallback(aCallback),
@@ -215,9 +215,9 @@ protected:
   { }
 
 private:
-  void (*mCallback)(DBusMessage*, void*);
-  void*  mData;
-  int    mTimeout;
+  DBusReplyCallback mCallback;
+  void*             mData;
+  int               mTimeout;
 };
 
 //
@@ -369,7 +369,7 @@ bool RawDBusConnection::Send(DBusMessage* aMessage)
   return true;
 }
 
-bool RawDBusConnection::SendWithReply(void (*aCallback)(DBusMessage*, void*),
+bool RawDBusConnection::SendWithReply(DBusReplyCallback aCallback,
                                       void* aData,
                                       int aTimeout,
                                       DBusMessage* aMessage)
@@ -391,7 +391,7 @@ bool RawDBusConnection::SendWithReply(void (*aCallback)(DBusMessage*, void*),
   return true;
 }
 
-bool RawDBusConnection::SendWithReply(void (*aCallback)(DBusMessage*, void*),
+bool RawDBusConnection::SendWithReply(DBusReplyCallback aCallback,
                                       void* aData,
                                       int aTimeout,
                                       const char* aPath,

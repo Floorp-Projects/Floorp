@@ -24,6 +24,8 @@ struct DBusMessage;
 namespace mozilla {
 namespace ipc {
 
+typedef void (*DBusReplyCallback)(DBusMessage*, void*);
+
 class RawDBusConnection : public AtomicRefCounted<RawDBusConnection>
 {
   struct ScopedDBusConnectionPtrTraits : ScopedFreePtrTraits<DBusConnection>
@@ -44,10 +46,10 @@ public:
 
   bool Send(DBusMessage* aMessage);
 
-  bool SendWithReply(void (*aCallback)(DBusMessage*, void*), void* aData,
+  bool SendWithReply(DBusReplyCallback aCallback, void* aData,
                      int aTimeout, DBusMessage* aMessage);
 
-  bool SendWithReply(void (*aCallback)(DBusMessage*, void*), void* aData,
+  bool SendWithReply(DBusReplyCallback aCallback, void* aData,
                      int aTimeout, const char* aPath, const char* aIntf,
                      const char *aFunc, int aFirstArgType, ...);
 
