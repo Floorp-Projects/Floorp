@@ -26,6 +26,7 @@ loader.lazyGetter(this, "ConsoleOutput",
                   () => require("devtools/webconsole/console-output").ConsoleOutput);
 loader.lazyGetter(this, "Messages",
                   () => require("devtools/webconsole/console-output").Messages);
+loader.lazyImporter(this, "EnvironmentClient", "resource://gre/modules/devtools/dbg-client.jsm");
 loader.lazyImporter(this, "ObjectClient", "resource://gre/modules/devtools/dbg-client.jsm");
 loader.lazyImporter(this, "VariablesView", "resource:///modules/devtools/VariablesView.jsm");
 loader.lazyImporter(this, "VariablesViewController", "resource:///modules/devtools/VariablesViewController.jsm");
@@ -3423,6 +3424,9 @@ JSTerm.prototype = {
     view.lazyAppend = this._lazyVariablesView;
 
     VariablesViewController.attach(view, {
+      getEnvironmentClient: aGrip => {
+        return new EnvironmentClient(this.hud.proxy.client, aGrip);
+      },
       getObjectClient: aGrip => {
         return new ObjectClient(this.hud.proxy.client, aGrip);
       },

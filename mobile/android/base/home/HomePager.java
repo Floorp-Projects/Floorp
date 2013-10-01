@@ -138,8 +138,13 @@ public class HomePager extends ViewPager {
                 getContext().getString(R.string.home_top_sites_title));
         adapter.addTab(Page.BOOKMARKS, BookmarksPage.class, new Bundle(),
                 getContext().getString(R.string.bookmarks_title));
-        adapter.addTab(Page.READING_LIST, ReadingListPage.class, new Bundle(),
-                getContext().getString(R.string.reading_list_title));
+
+        // We disable reader mode support on low memory devices. Hence the
+        // reading list page should not show up on such devices.
+        if (!HardwareUtils.isLowMemoryPlatform()) {
+            adapter.addTab(Page.READING_LIST, ReadingListPage.class, new Bundle(),
+                    getContext().getString(R.string.reading_list_title));
+        }
 
         // On phones, the history tab is the first tab. On tablets, the
         // history tab is the last tab.
