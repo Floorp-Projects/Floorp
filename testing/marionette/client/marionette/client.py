@@ -52,7 +52,7 @@ class MarionetteClient(object):
             response += self._recv_n_bytes(int(length) + 1 + len(length) - 10)
             return json.loads(response)
         else:
-            raise InvalidResponseException("Could not successfully complete " \
+            raise InvalidResponseException("Could not successfully complete "
                                            "transport of message to Gecko, "
                                            "socket closed?",
                                            status=ErrorCodes.INVALID_RESPONSE)
@@ -75,7 +75,7 @@ class MarionetteClient(object):
         self.applicationType = hello.get('applicationType')
 
         # get the marionette actor id
-        response = self.send({'to':'root', 'type': 'getMarionetteID'})
+        response = self.send({'to': 'root', 'name': 'getMarionetteID'})
         self.actor = response['id']
 
     def send(self, msg):
