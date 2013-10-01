@@ -58,6 +58,7 @@
 #include "ImageContainer.h"
 #include "nsStyleSet.h"
 #include "nsBlockFrame.h"
+#include "nsStyleStructInlines.h"
 
 #include "mozilla/Preferences.h"
 
