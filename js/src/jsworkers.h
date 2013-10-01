@@ -71,6 +71,12 @@ class WorkerThreadState
      */
     Vector<AsmJSParallelTask*, 0, SystemAllocPolicy> asmJSFinishedList;
 
+    /*
+     * For now, only allow a single parallel asm.js compilation to happen at a
+     * time. This avoids race conditions on asmJSWorklist/asmJSFinishedList/etc.
+     */
+    mozilla::Atomic<uint32_t> asmJSCompilationInProgress;
+
     /* Shared worklist for parsing/emitting scripts on worker threads. */
     Vector<ParseTask*, 0, SystemAllocPolicy> parseWorklist, parseFinishedList;
 
