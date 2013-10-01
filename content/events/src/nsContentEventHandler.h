@@ -50,7 +50,7 @@ public:
   nsresult OnQueryDOMWidgetHittest(mozilla::WidgetQueryContentEvent* aEvent);
 
   // NS_SELECTION_* event
-  nsresult OnSelectionEvent(nsSelectionEvent* aEvent);
+  nsresult OnSelectionEvent(mozilla::WidgetSelectionEvent* aEvent);
 
 protected:
   nsPresContext* mPresContext;
@@ -60,7 +60,7 @@ protected:
   nsCOMPtr<nsIContent> mRootContent;
 
   nsresult Init(mozilla::WidgetQueryContentEvent* aEvent);
-  nsresult Init(nsSelectionEvent* aEvent);
+  nsresult Init(mozilla::WidgetSelectionEvent* aEvent);
 
   // InitCommon() is called from each Init().
   nsresult InitCommon();

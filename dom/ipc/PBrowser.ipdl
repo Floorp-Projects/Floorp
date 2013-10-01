@@ -46,7 +46,7 @@ using nsMouseEvent;
 using nsMouseScrollEvent;
 using mozilla::WheelEvent;
 using nsRect;
-using nsSelectionEvent;
+using mozilla::WidgetSelectionEvent;
 using mozilla::WidgetTextEvent;
 using mozilla::WidgetTouchEvent;
 using RemoteDOMEvent;
@@ -384,7 +384,7 @@ child:
 
     TextEvent(WidgetTextEvent event);
 
-    SelectionEvent(nsSelectionEvent event);
+    SelectionEvent(WidgetSelectionEvent event);
 
     /**
      * Activate event forwarding from client to parent.

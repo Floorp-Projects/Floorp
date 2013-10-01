@@ -1904,7 +1904,7 @@ nsWindow::OnIMEEvent(AndroidGeckoEvent *ae)
             AutoIMEMask selMask(mIMEMaskSelectionUpdate);
             RemoveIMEComposition();
             {
-                nsSelectionEvent event(true, NS_SELECTION_SET, this);
+                WidgetSelectionEvent event(true, NS_SELECTION_SET, this);
                 InitEvent(event, nullptr);
                 event.mOffset = uint32_t(ae->Start());
                 event.mLength = uint32_t(ae->End() - ae->Start());
@@ -1953,7 +1953,7 @@ nsWindow::OnIMEEvent(AndroidGeckoEvent *ae)
             */
             AutoIMEMask selMask(mIMEMaskSelectionUpdate);
             RemoveIMEComposition();
-            nsSelectionEvent selEvent(true, NS_SELECTION_SET, this);
+            WidgetSelectionEvent selEvent(true, NS_SELECTION_SET, this);
             InitEvent(selEvent, nullptr);
 
             int32_t start = ae->Start(), end = ae->End();
@@ -2021,7 +2021,7 @@ nsWindow::OnIMEEvent(AndroidGeckoEvent *ae)
             event.rangeCount = mIMERanges.Length();
 
             {
-                nsSelectionEvent event(true, NS_SELECTION_SET, this);
+                WidgetSelectionEvent event(true, NS_SELECTION_SET, this);
                 InitEvent(event, nullptr);
                 event.mOffset = uint32_t(ae->Start());
                 event.mLength = uint32_t(ae->End() - ae->Start());
