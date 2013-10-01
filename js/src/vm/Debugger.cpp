@@ -5195,7 +5195,13 @@ DebuggerObject_unsafeDereference(JSContext *cx, unsigned argc, Value *vp)
 {
     THIS_DEBUGOBJECT_REFERENT(cx, argc, vp, "unsafeDereference", args, referent);
     args.rval().setObject(*referent);
-    return cx->compartment()->wrap(cx, args.rval());
+    if (!cx->compartment()->wrap(cx, args.rval()))
+        return false;
+
+    // Wrapping should outerize inner objects.
+    JS_ASSERT(!IsInnerObject(&args.rval().toObject()));
+
+    return true;
 }
 
 static const JSPropertySpec DebuggerObject_properties[] = {
