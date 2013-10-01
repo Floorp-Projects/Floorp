@@ -3097,7 +3097,7 @@ bool nsWindow::DispatchCommandEvent(uint32_t aEventCommand)
 
 bool nsWindow::DispatchDragDropEvent(uint32_t aMsg)
 {
-  nsDragEvent event(true, aMsg, this);
+  WidgetDragEvent event(true, aMsg, this);
   InitEvent(event);
 
   event.InitBasicModifiers(isKeyDown(VK_CTRL),

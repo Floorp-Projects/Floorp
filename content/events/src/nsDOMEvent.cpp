@@ -147,7 +147,7 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsDOMEvent)
           nullptr;
         break;
       case NS_DRAG_EVENT:
-        static_cast<nsDragEvent*>(tmp->mEvent)->dataTransfer = nullptr;
+        static_cast<WidgetDragEvent*>(tmp->mEvent)->dataTransfer = nullptr;
         static_cast<WidgetMouseEventBase*>(tmp->mEvent)->relatedTarget =
           nullptr;
         break;
@@ -189,7 +189,7 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(nsDOMEvent)
       case NS_DRAG_EVENT:
         NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(cb, "mEvent->dataTransfer");
         cb.NoteXPCOMChild(
-          static_cast<nsDragEvent*>(tmp->mEvent)->dataTransfer);
+          static_cast<WidgetDragEvent*>(tmp->mEvent)->dataTransfer);
         NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(cb, "mEvent->relatedTarget");
         cb.NoteXPCOMChild(
           static_cast<WidgetMouseEventBase*>(tmp->mEvent)->relatedTarget);
@@ -559,9 +559,8 @@ nsDOMEvent::DuplicatePrivateData()
     }
     case NS_DRAG_EVENT:
     {
-      nsDragEvent* oldDragEvent = static_cast<nsDragEvent*>(mEvent);
-      nsDragEvent* dragEvent =
-        new nsDragEvent(false, msg, nullptr);
+      WidgetDragEvent* oldDragEvent = static_cast<WidgetDragEvent*>(mEvent);
+      WidgetDragEvent* dragEvent = new WidgetDragEvent(false, msg, nullptr);
       dragEvent->AssignDragEventData(*oldDragEvent, true);
       newEvent = dragEvent;
       break;

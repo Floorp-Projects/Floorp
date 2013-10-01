@@ -106,7 +106,6 @@ class InternalMutationEvent;
 typedef mozilla::WidgetEvent               nsEvent;
 typedef mozilla::WidgetGUIEvent            nsGUIEvent;
 typedef mozilla::WidgetMouseEvent          nsMouseEvent;
-typedef mozilla::WidgetDragEvent           nsDragEvent;
 typedef mozilla::WidgetMouseScrollEvent    nsMouseScrollEvent;
 
 namespace mozilla {

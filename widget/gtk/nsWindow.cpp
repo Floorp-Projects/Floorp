@@ -3258,7 +3258,7 @@ void
 nsWindow::DispatchDragEvent(uint32_t aMsg, const nsIntPoint& aRefPoint,
                             guint aTime)
 {
-    nsDragEvent event(true, aMsg, this);
+    WidgetDragEvent event(true, aMsg, this);
 
     if (aMsg == NS_DRAGDROP_OVER) {
         InitDragEvent(event);
@@ -5561,7 +5561,7 @@ theme_changed_cb (GtkSettings *settings, GParamSpec *pspec, nsWindow *data)
 // These are all of our drag and drop operations
 
 void
-nsWindow::InitDragEvent(nsDragEvent &aEvent)
+nsWindow::InitDragEvent(WidgetDragEvent &aEvent)
 {
     // set the keyboard modifiers
     guint modifierState = KeymapWrapper::GetCurrentModifierState();
