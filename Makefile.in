@@ -33,9 +33,9 @@ DIST_GARBAGE = config.cache config.log config.status* config-defs.h \
 ifndef MOZ_PROFILE_USE
 # We need to explicitly put backend.RecursiveMakeBackend.built here
 # otherwise the rule in rules.mk doesn't run early enough.
-libs export tools:: CLOBBER $(topsrcdir)/configure config.status backend.RecursiveMakeBackend.built
+libs binaries export tools:: CLOBBER $(topsrcdir)/configure config.status backend.RecursiveMakeBackend.built
 ifndef LIBXUL_SDK
-libs export tools:: js-config-status
+libs binaries export tools:: js-config-status
 endif
 endif
 
@@ -103,10 +103,14 @@ ifdef MOZ_PROFILE_USE
 ifndef NO_PROFILE_GUIDED_OPTIMIZE
 ifneq ($(OS_ARCH)_$(GNU_CC), WINNT_)
 export:: install-manifests
+binaries::
+	@$(MAKE) install-manifests NO_REMOVE=1
 endif
 endif
 else # !MOZ_PROFILE_USE (normal build)
 export:: install-manifests
+binaries::
+	@$(MAKE) install-manifests NO_REMOVE=1
 endif
 
 # For historical reasons that are unknown, $(DIST)/sdk is always blown away
@@ -239,5 +243,10 @@ ifdef MOZ_PSEUDO_DERECURSE
 js/xpconnect/src/export: dom/bindings/export
 accessible/src/xpcom/export: xpcom/xpidl/export
 js/src/export: mfbt/export
+# Temporary interdependencies for binaries, until bug 921307 is fixed.
+# Avoid traversal of those directories when creating the aggregate dependency file
+ifneq (binaries-deps,$(MAKECMDGOALS))
+toolkit/library/binaries: js/src/binaries media/webrtc/trunk/binaries media/webrtc/signaling/binaries media/webrtc/trunk/testing/binaries media/webrtc/signalingtest/binaries media/mtransport/third_party/nrappkit/binaries media/mtransport/third_party/nICEr/binaries
+endif
 endif
 endif

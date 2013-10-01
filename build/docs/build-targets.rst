@@ -20,6 +20,7 @@ export
 
 compile
    Build the *compile* tier. The *compile* tier compiles all C/C++ files.
+   Only applies to builds with ``MOZ_PSEUDO_DERECURSE``.
 
 libs
    Build the *libs* tier. The *libs* tier performs linking and performs
@@ -29,6 +30,13 @@ tools
    Build the *tools* tier. The *tools* tier mostly deals with supplementary
    tools and compiled tests. It will link tools against libXUL, including
    compiled test binaries.
+
+binaries:
+   Recompiles and relinks C/C++ files. Only works after a complete normal
+   build, but allows for much faster rebuilds of C/C++ code. For performance
+   reasons, however, it skips nss, nspr, icu and ffi. This is targeted to
+   improve local developer workflow when touching C/C++ code.
+   Only applies to builds with ``MOZ_PSEUDO_DERECURSE``.
 
 install-manifests
    Process install manifests. Install manifests handle the installation of

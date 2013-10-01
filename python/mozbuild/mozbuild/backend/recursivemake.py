@@ -432,10 +432,11 @@ class RecursiveMakeBackend(CommonBackend):
             return current, subdirs.parallel, \
                 subdirs.static + subdirs.dirs + subdirs.tests
 
-        # compile and tools tiers use the same traversal as export
+        # compile, binaries and tools tiers use the same traversal as export
         filters = {
             'export': export_filter,
             'compile': parallel_filter,
+            'binaries': parallel_filter,
             'libs': libs_filter,
             'tools': parallel_filter,
         }
