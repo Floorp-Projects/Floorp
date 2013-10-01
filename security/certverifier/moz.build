@@ -11,6 +11,7 @@ UNIFIED_SOURCES += [
 
 if not CONFIG['NSS_NO_LIBPKIX']:
     UNIFIED_SOURCES += [
+        '../insanity/lib/pkixkey.cpp',
         'ExtendedValidation.cpp',
     ]
 
