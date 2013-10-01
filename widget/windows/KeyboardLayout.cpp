@@ -1311,15 +1311,15 @@ NativeKey::DispatchKeyPressEventsWithKeyboardLayout() const
       shiftedChar = shiftedChars.mChars[cnt - skipShiftedChars];
     if (skipUnshiftedChars <= cnt)
       unshiftedChar = unshiftedChars.mChars[cnt - skipUnshiftedChars];
-    nsAutoTArray<nsAlternativeCharCode, 5> altArray;
+    nsAutoTArray<AlternativeCharCode, 5> altArray;
 
     if (shiftedChar || unshiftedChar) {
-      nsAlternativeCharCode chars(unshiftedChar, shiftedChar);
+      AlternativeCharCode chars(unshiftedChar, shiftedChar);
       altArray.AppendElement(chars);
     }
     if (cnt == longestLength - 1) {
       if (unshiftedLatinChar || shiftedLatinChar) {
-        nsAlternativeCharCode chars(unshiftedLatinChar, shiftedLatinChar);
+        AlternativeCharCode chars(unshiftedLatinChar, shiftedLatinChar);
         altArray.AppendElement(chars);
       }
 
@@ -1341,7 +1341,7 @@ NativeKey::DispatchKeyPressEventsWithKeyboardLayout() const
           charForOEMKeyCode != shiftedChars.mChars[0] &&
           charForOEMKeyCode != unshiftedLatinChar &&
           charForOEMKeyCode != shiftedLatinChar) {
-        nsAlternativeCharCode OEMChars(charForOEMKeyCode, charForOEMKeyCode);
+        AlternativeCharCode OEMChars(charForOEMKeyCode, charForOEMKeyCode);
         altArray.AppendElement(OEMChars);
       }
     }

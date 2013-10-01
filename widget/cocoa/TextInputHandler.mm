@@ -1071,7 +1071,7 @@ TISInputSourceWrapper::InitKeyPressEvent(NSEvent *aNativeKeyEvent,
   // likely to associate with this key.
   if ((unshiftedChar || shiftedChar) &&
       (!aKeyEvent.IsMeta() || !isDvorakQWERTY)) {
-    nsAlternativeCharCode altCharCodes(unshiftedChar, shiftedChar);
+    AlternativeCharCode altCharCodes(unshiftedChar, shiftedChar);
     aKeyEvent.alternativeCharCodes.AppendElement(altCharCodes);
   }
   PR_LOG(gLog, PR_LOG_ALWAYS,
@@ -1133,7 +1133,7 @@ TISInputSourceWrapper::InitKeyPressEvent(NSEvent *aNativeKeyEvent,
   // chars have been appended already.
   if ((cmdedChar || cmdedShiftChar) && isCmdSwitchLayout &&
       (aKeyEvent.IsMeta() || !isDvorakQWERTY)) {
-    nsAlternativeCharCode altCharCodes(cmdedChar, cmdedShiftChar);
+    AlternativeCharCode altCharCodes(cmdedChar, cmdedShiftChar);
     aKeyEvent.alternativeCharCodes.AppendElement(altCharCodes);
   }
   PR_LOG(gLog, PR_LOG_ALWAYS,
@@ -1145,7 +1145,7 @@ TISInputSourceWrapper::InitKeyPressEvent(NSEvent *aNativeKeyEvent,
   // Special case for 'SS' key of German layout. See the comment of
   // hasCmdShiftOnlyChar definition for the detail.
   if (hasCmdShiftOnlyChar && originalCmdedShiftChar) {
-    nsAlternativeCharCode altCharCodes(0, originalCmdedShiftChar);
+    AlternativeCharCode altCharCodes(0, originalCmdedShiftChar);
     aKeyEvent.alternativeCharCodes.AppendElement(altCharCodes);
   }
   PR_LOG(gLog, PR_LOG_ALWAYS,
