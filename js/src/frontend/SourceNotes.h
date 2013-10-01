@@ -36,6 +36,9 @@ namespace js {
  *
  * Don't forget to update XDR_BYTECODE_VERSION in vm/Xdr.h for all such
  * incompatible source note or other bytecode changes.
+ *
+ * FIXME: Use higher-order macro to force this to be in sync with
+ * js_SrcNoteSpec.  Bug 922070.
  */
 enum SrcNoteType {
     SRC_NULL        = 0,        /* terminates a note vector */
@@ -51,36 +54,37 @@ enum SrcNoteType {
                                    do-while loop */
     SRC_FOR_IN      = 6,        /* JSOP_GOTO to for-in loop condition from
                                    before loop */
-    SRC_CONTINUE    = 7,        /* JSOP_GOTO is a continue */
-    SRC_BREAK       = 8,        /* JSOP_GOTO is a break */
-    SRC_BREAK2LABEL = 9,        /* JSOP_GOTO for 'break label' */
-    SRC_SWITCHBREAK = 10,       /* JSOP_GOTO is a break in a switch */
+    SRC_FOR_OF      = 7,        /* JSOP_GOTO to for-of loop condition from
+                                   before loop */
+    SRC_CONTINUE    = 8,        /* JSOP_GOTO is a continue */
+    SRC_BREAK       = 9,        /* JSOP_GOTO is a break */
+    SRC_BREAK2LABEL = 10,       /* JSOP_GOTO for 'break label' */
+    SRC_SWITCHBREAK = 11,       /* JSOP_GOTO is a break in a switch */
 
-    SRC_TABLESWITCH = 11,       /* JSOP_TABLESWITCH, offset points to end of
+    SRC_TABLESWITCH = 12,       /* JSOP_TABLESWITCH, offset points to end of
                                    switch */
-    SRC_CONDSWITCH  = 12,       /* JSOP_CONDSWITCH, 1st offset points to end of
+    SRC_CONDSWITCH  = 13,       /* JSOP_CONDSWITCH, 1st offset points to end of
                                    switch, 2nd points to first JSOP_CASE */
 
-    SRC_NEXTCASE    = 13,       /* distance forward from one CASE in a
+    SRC_NEXTCASE    = 14,       /* distance forward from one CASE in a
                                    CONDSWITCH to the next */
 
-    SRC_ASSIGNOP    = 14,       /* += or another assign-op follows */
+    SRC_ASSIGNOP    = 15,       /* += or another assign-op follows */
 
-    SRC_HIDDEN      = 15,       /* opcode shouldn't be decompiled */
+    SRC_HIDDEN      = 16,       /* opcode shouldn't be decompiled */
 
-    SRC_CATCH       = 16,       /* catch block has guard */
+    SRC_CATCH       = 17,       /* catch block has guard */
 
-    SRC_TRY         = 17,       /* JSOP_TRY, offset points to goto at the
+    SRC_TRY         = 18,       /* JSOP_TRY, offset points to goto at the
                                    end of the try block. */
 
     /* All notes below here are "gettable".  See SN_IS_GETTABLE below. */
     SRC_LAST_GETTABLE = SRC_TRY,
 
-    SRC_COLSPAN     = 18,       /* number of columns this opcode spans */
-    SRC_NEWLINE     = 19,       /* bytecode follows a source newline */
-    SRC_SETLINE     = 20,       /* a file-absolute source line number note */
+    SRC_COLSPAN     = 19,       /* number of columns this opcode spans */
+    SRC_NEWLINE     = 20,       /* bytecode follows a source newline */
+    SRC_SETLINE     = 21,       /* a file-absolute source line number note */
 
-    SRC_UNUSED21    = 21,
     SRC_UNUSED22    = 22,
     SRC_UNUSED23    = 23,
 
