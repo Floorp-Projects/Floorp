@@ -99,7 +99,11 @@ bool OpenPrivilegedProcessHandle(ProcessId pid, ProcessHandle* handle) {
 }
 
 void CloseProcessHandle(ProcessHandle process) {
-  CloseHandle(process);
+  // closing a handle twice on Windows can be catastrophic - after the first
+  // close the handle value may be reused, so the second close will kill that
+  // other new handle.
+  BOOL ok = CloseHandle(process);
+  DCHECK(ok);
 }
 
 // Helper for GetProcId()

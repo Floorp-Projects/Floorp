@@ -49,7 +49,8 @@ SyncChannel::~SyncChannel()
 {
     MOZ_COUNT_DTOR(SyncChannel);
 #ifdef OS_WIN
-    CloseHandle(mEvent);
+    DebugOnly<BOOL> ok = CloseHandle(mEvent);
+    MOZ_ASSERT(ok);
 #endif
 }
 
