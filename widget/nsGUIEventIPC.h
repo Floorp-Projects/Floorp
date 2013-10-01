@@ -406,9 +406,9 @@ struct ParamTraits<mozilla::WidgetCompositionEvent>
 };
 
 template<>
-struct ParamTraits<nsQueryContentEvent>
+struct ParamTraits<mozilla::WidgetQueryContentEvent>
 {
-  typedef nsQueryContentEvent paramType;
+  typedef mozilla::WidgetQueryContentEvent paramType;
 
   static void Write(Message* aMsg, const paramType& aParam)
   {

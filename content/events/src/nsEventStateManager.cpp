@@ -992,63 +992,66 @@ nsEventStateManager::PreHandleEvent(nsPresContext* aPresContext,
     }
     break;
   case NS_QUERY_SELECTED_TEXT:
-    DoQuerySelectedText(static_cast<nsQueryContentEvent*>(aEvent));
+    DoQuerySelectedText(static_cast<WidgetQueryContentEvent*>(aEvent));
     break;
   case NS_QUERY_TEXT_CONTENT:
     {
       if (RemoteQueryContentEvent(aEvent))
         break;
       nsContentEventHandler handler(mPresContext);
-      handler.OnQueryTextContent((nsQueryContentEvent*)aEvent);
+      handler.OnQueryTextContent(static_cast<WidgetQueryContentEvent*>(aEvent));
     }
     break;
   case NS_QUERY_CARET_RECT:
     {
       // XXX remote event
       nsContentEventHandler handler(mPresContext);
-      handler.OnQueryCaretRect((nsQueryContentEvent*)aEvent);
+      handler.OnQueryCaretRect(static_cast<WidgetQueryContentEvent*>(aEvent));
     }
     break;
   case NS_QUERY_TEXT_RECT:
     {
       // XXX remote event
       nsContentEventHandler handler(mPresContext);
-      handler.OnQueryTextRect((nsQueryContentEvent*)aEvent);
+      handler.OnQueryTextRect(static_cast<WidgetQueryContentEvent*>(aEvent));
     }
     break;
   case NS_QUERY_EDITOR_RECT:
     {
       // XXX remote event
       nsContentEventHandler handler(mPresContext);
-      handler.OnQueryEditorRect((nsQueryContentEvent*)aEvent);
+      handler.OnQueryEditorRect(static_cast<WidgetQueryContentEvent*>(aEvent));
     }
     break;
   case NS_QUERY_CONTENT_STATE:
     {
       // XXX remote event
       nsContentEventHandler handler(mPresContext);
-      handler.OnQueryContentState(static_cast<nsQueryContentEvent*>(aEvent));
+      handler.OnQueryContentState(static_cast<WidgetQueryContentEvent*>(aEvent));
     }
     break;
   case NS_QUERY_SELECTION_AS_TRANSFERABLE:
     {
       // XXX remote event
       nsContentEventHandler handler(mPresContext);
-      handler.OnQuerySelectionAsTransferable(static_cast<nsQueryContentEvent*>(aEvent));
+      handler.OnQuerySelectionAsTransferable(
+        static_cast<WidgetQueryContentEvent*>(aEvent));
     }
     break;
   case NS_QUERY_CHARACTER_AT_POINT:
     {
       // XXX remote event
       nsContentEventHandler handler(mPresContext);
-      handler.OnQueryCharacterAtPoint(static_cast<nsQueryContentEvent*>(aEvent));
+      handler.OnQueryCharacterAtPoint(
+        static_cast<WidgetQueryContentEvent*>(aEvent));
     }
     break;
   case NS_QUERY_DOM_WIDGET_HITTEST:
     {
       // XXX remote event
       nsContentEventHandler handler(mPresContext);
-      handler.OnQueryDOMWidgetHittest(static_cast<nsQueryContentEvent*>(aEvent));
+      handler.OnQueryDOMWidgetHittest(
+        static_cast<WidgetQueryContentEvent*>(aEvent));
     }
     break;
   case NS_SELECTION_SET:
@@ -1100,8 +1103,8 @@ nsEventStateManager::PreHandleEvent(nsPresContext* aPresContext,
       // composition event.
       WidgetCompositionEvent *compositionEvent =
         static_cast<WidgetCompositionEvent*>(aEvent);
-      nsQueryContentEvent selectedText(true, NS_QUERY_SELECTED_TEXT,
-                                       compositionEvent->widget);
+      WidgetQueryContentEvent selectedText(true, NS_QUERY_SELECTED_TEXT,
+                                           compositionEvent->widget);
       DoQuerySelectedText(&selectedText);
       NS_ASSERTION(selectedText.mSucceeded, "Failed to get selected text");
       compositionEvent->data = selectedText.mReply.mString;
@@ -3448,8 +3451,8 @@ nsEventStateManager::PostHandleEvent(nsPresContext* aPresContext,
 bool
 nsEventStateManager::RemoteQueryContentEvent(nsEvent *aEvent)
 {
-  nsQueryContentEvent *queryEvent =
-      static_cast<nsQueryContentEvent*>(aEvent);
+  WidgetQueryContentEvent *queryEvent =
+      static_cast<WidgetQueryContentEvent*>(aEvent);
   if (!IsTargetCrossProcess(queryEvent)) {
     return false;
   }
@@ -5048,7 +5051,7 @@ nsEventStateManager::DoContentCommandScrollEvent(
 }
 
 void
-nsEventStateManager::DoQuerySelectedText(nsQueryContentEvent* aEvent)
+nsEventStateManager::DoQuerySelectedText(WidgetQueryContentEvent* aEvent)
 {
   if (RemoteQueryContentEvent(aEvent)) {
     return;

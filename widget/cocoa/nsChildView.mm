@@ -1938,7 +1938,7 @@ NSView<mozView>* nsChildView::GetEditorView()
   // We need to get editor's view. E.g., when the focus is in the bookmark
   // dialog, the view is <panel> element of the dialog.  At this time, the key
   // events are processed the parent window's view that has native focus.
-  nsQueryContentEvent textContent(true, NS_QUERY_TEXT_CONTENT, this);
+  WidgetQueryContentEvent textContent(true, NS_QUERY_TEXT_CONTENT, this);
   textContent.InitForQueryTextContent(0, 0);
   DispatchWindowEvent(textContent);
   if (textContent.mSucceeded && textContent.mReply.mFocusedWidget) {
@@ -5275,7 +5275,8 @@ static int32_t RoundUp(double aDouble)
     mGeckoChild->CocoaPointsToDevPixels(eventLoc) -
     mGeckoChild->WidgetToScreenOffset());
 
-  nsQueryContentEvent hitTest(true, NS_QUERY_DOM_WIDGET_HITTEST, mGeckoChild);
+  WidgetQueryContentEvent hitTest(true, NS_QUERY_DOM_WIDGET_HITTEST,
+                                  mGeckoChild);
   hitTest.InitForQueryDOMWidgetHittest(widgetLoc);
   // This might destroy our widget (and null out mGeckoChild).
   mGeckoChild->DispatchWindowEvent(hitTest);
@@ -5757,7 +5758,8 @@ static int32_t RoundUp(double aDouble)
       
       // Determine if there is a selection (if sending to the service).
       if (sendType) {
-        nsQueryContentEvent event(true, NS_QUERY_CONTENT_STATE, mGeckoChild);
+        WidgetQueryContentEvent event(true, NS_QUERY_CONTENT_STATE,
+                                      mGeckoChild);
         // This might destroy our widget (and null out mGeckoChild).
         mGeckoChild->DispatchWindowEvent(event);
         if (!mGeckoChild || !event.mSucceeded || !event.mReply.mHasSelection)
@@ -5805,9 +5807,9 @@ static int32_t RoundUp(double aDouble)
     return NO;
 
   // Obtain the current selection.
-  nsQueryContentEvent event(true,
-                            NS_QUERY_SELECTION_AS_TRANSFERABLE,
-                            mGeckoChild);
+  WidgetQueryContentEvent event(true,
+                                NS_QUERY_SELECTION_AS_TRANSFERABLE,
+                                mGeckoChild);
   mGeckoChild->DispatchWindowEvent(event);
   if (!event.mSucceeded || !event.mReply.mTransferable)
     return NO;

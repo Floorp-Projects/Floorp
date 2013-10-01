@@ -709,7 +709,7 @@ protected:
   nsresult DoContentCommandScrollEvent(
              mozilla::WidgetContentCommandEvent* aEvent);
 
-  void DoQuerySelectedText(nsQueryContentEvent* aEvent);
+  void DoQuerySelectedText(mozilla::WidgetQueryContentEvent* aEvent);
 
   bool RemoteQueryContentEvent(nsEvent *aEvent);
   mozilla::dom::TabParent *GetCrossProcessTarget();

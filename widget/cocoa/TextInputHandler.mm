@@ -2892,7 +2892,7 @@ IMEInputHandler::ConversationIdentifier()
   nsRefPtr<IMEInputHandler> kungFuDeathGrip(this);
 
   // NOTE: The size of NSInteger is same as pointer size.
-  nsQueryContentEvent textContent(true, NS_QUERY_TEXT_CONTENT, mWidget);
+  WidgetQueryContentEvent textContent(true, NS_QUERY_TEXT_CONTENT, mWidget);
   textContent.InitForQueryTextContent(0, 0);
   DispatchEvent(textContent);
   if (!textContent.mSucceeded) {
@@ -2928,7 +2928,7 @@ IMEInputHandler::GetAttributedSubstringFromRange(NSRange& aRange,
   nsRefPtr<IMEInputHandler> kungFuDeathGrip(this);
 
   nsAutoString str;
-  nsQueryContentEvent textContent(true, NS_QUERY_TEXT_CONTENT, mWidget);
+  WidgetQueryContentEvent textContent(true, NS_QUERY_TEXT_CONTENT, mWidget);
   textContent.InitForQueryTextContent(aRange.location, aRange.length);
   DispatchEvent(textContent);
 
@@ -3003,7 +3003,7 @@ IMEInputHandler::SelectedRange()
 
   nsRefPtr<IMEInputHandler> kungFuDeathGrip(this);
 
-  nsQueryContentEvent selection(true, NS_QUERY_SELECTED_TEXT, mWidget);
+  WidgetQueryContentEvent selection(true, NS_QUERY_SELECTED_TEXT, mWidget);
   DispatchEvent(selection);
 
   PR_LOG(gLog, PR_LOG_ALWAYS,
@@ -3058,7 +3058,7 @@ IMEInputHandler::FirstRectForCharacterRange(NSRange& aRange,
   nsIntRect r;
   bool useCaretRect = (aRange.length == 0);
   if (!useCaretRect) {
-    nsQueryContentEvent charRect(true, NS_QUERY_TEXT_RECT, mWidget);
+    WidgetQueryContentEvent charRect(true, NS_QUERY_TEXT_RECT, mWidget);
     charRect.InitForQueryTextRect(aRange.location, 1);
     DispatchEvent(charRect);
     if (charRect.mSucceeded) {
@@ -3071,7 +3071,7 @@ IMEInputHandler::FirstRectForCharacterRange(NSRange& aRange,
   }
 
   if (useCaretRect) {
-    nsQueryContentEvent caretRect(true, NS_QUERY_CARET_RECT, mWidget);
+    WidgetQueryContentEvent caretRect(true, NS_QUERY_CARET_RECT, mWidget);
     caretRect.InitForQueryCaretRect(aRange.location);
     DispatchEvent(caretRect);
     if (!caretRect.mSucceeded) {

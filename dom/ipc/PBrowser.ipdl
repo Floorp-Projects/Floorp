@@ -45,7 +45,6 @@ using mozilla::WidgetKeyboardEvent;
 using nsMouseEvent;
 using nsMouseScrollEvent;
 using mozilla::WheelEvent;
-using nsQueryContentEvent;
 using nsRect;
 using nsSelectionEvent;
 using mozilla::WidgetTextEvent;

@@ -1186,7 +1186,7 @@ nsTextStore::CurrentContent()
   if (!mContent.IsInitialized()) {
     MOZ_ASSERT(mWidget && !mWidget->Destroyed());
 
-    nsQueryContentEvent queryText(true, NS_QUERY_TEXT_CONTENT, mWidget);
+    WidgetQueryContentEvent queryText(true, NS_QUERY_TEXT_CONTENT, mWidget);
     queryText.InitForQueryTextContent(0, UINT32_MAX);
     mWidget->InitEvent(queryText);
     mWidget->DispatchWindowEvent(&queryText);
@@ -1213,7 +1213,8 @@ nsTextStore::CurrentSelection()
       MOZ_CRASH();
     }
 
-    nsQueryContentEvent querySelection(true, NS_QUERY_SELECTED_TEXT, mWidget);
+    WidgetQueryContentEvent querySelection(true, NS_QUERY_SELECTED_TEXT,
+                                           mWidget);
     mWidget->InitEvent(querySelection);
     mWidget->DispatchWindowEvent(&querySelection);
     NS_ENSURE_TRUE(querySelection.mSucceeded, mSelection);
@@ -2260,7 +2261,7 @@ nsTextStore::GetTextExt(TsViewCookie vcView,
   }
 
   // use NS_QUERY_TEXT_RECT to get rect in system, screen coordinates
-  nsQueryContentEvent event(true, NS_QUERY_TEXT_RECT, mWidget);
+  WidgetQueryContentEvent event(true, NS_QUERY_TEXT_RECT, mWidget);
   mWidget->InitEvent(event);
   event.InitForQueryTextRect(acpStart, acpEnd - acpStart);
   mWidget->DispatchWindowEvent(&event);
@@ -2363,7 +2364,7 @@ nsTextStore::GetScreenExtInternal(RECT &aScreenExt)
          ("TSF: 0x%p   nsTextStore::GetScreenExtInternal()", this));
 
   // use NS_QUERY_EDITOR_RECT to get rect in system, screen coordinates
-  nsQueryContentEvent event(true, NS_QUERY_EDITOR_RECT, mWidget);
+  WidgetQueryContentEvent event(true, NS_QUERY_EDITOR_RECT, mWidget);
   mWidget->InitEvent(event);
   mWidget->DispatchWindowEvent(&event);
   if (!event.mSucceeded) {
