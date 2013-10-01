@@ -13,7 +13,7 @@ function run_test() {
   // adjustGeneralPaths registers a cleanup function that calls end_test.
   adjustGeneralPaths();
 
-  logTestInfo("testing removing an active update for a channel that is not" +
+  logTestInfo("testing removal of an active update for a channel that is not" +
               "valid due to switching channels (bug 486275)");
   removeUpdateDirsAndFiles();
 
