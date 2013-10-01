@@ -2478,7 +2478,7 @@ bool nsWindow::ImeResultString(HIMI himi)
   }
   if (!mIsComposing) {
     mLastDispatchedCompositionString.Truncate();
-    nsCompositionEvent start(true, NS_COMPOSITION_START, this);
+    WidgetCompositionEvent start(true, NS_COMPOSITION_START, this);
     InitEvent(start);
     DispatchWindowEvent(&start);
     mIsComposing = true;
@@ -2489,7 +2489,7 @@ bool nsWindow::ImeResultString(HIMI himi)
                       outBuf, outBufLen);
   nsAutoString compositionString(outBuf.Elements());
   if (mLastDispatchedCompositionString != compositionString) {
-    nsCompositionEvent update(true, NS_COMPOSITION_UPDATE, this);
+    WidgetCompositionEvent update(true, NS_COMPOSITION_UPDATE, this);
     InitEvent(update);
     update.data = compositionString;
     mLastDispatchedCompositionString = compositionString;
@@ -2501,7 +2501,7 @@ bool nsWindow::ImeResultString(HIMI himi)
   text.theText = compositionString;
   DispatchWindowEvent(&text);
 
-  nsCompositionEvent end(true, NS_COMPOSITION_END, this);
+  WidgetCompositionEvent end(true, NS_COMPOSITION_END, this);
   InitEvent(end);
   end.data = compositionString;
   DispatchWindowEvent(&end);
@@ -2549,7 +2549,7 @@ bool nsWindow::ImeConversionString(HIMI himi)
   }
   if (!mIsComposing) {
     mLastDispatchedCompositionString.Truncate();
-    nsCompositionEvent start(true, NS_COMPOSITION_START, this);
+    WidgetCompositionEvent start(true, NS_COMPOSITION_START, this);
     InitEvent(start);
     DispatchWindowEvent(&start);
     mIsComposing = true;
@@ -2561,7 +2561,7 @@ bool nsWindow::ImeConversionString(HIMI himi)
   nsAutoString compositionString(outBuf.Elements());
   // Is a conversion string changed ?
   if (mLastDispatchedCompositionString != compositionString) {
-    nsCompositionEvent update(true, NS_COMPOSITION_UPDATE, this);
+    WidgetCompositionEvent update(true, NS_COMPOSITION_UPDATE, this);
     InitEvent(update);
     update.data = compositionString;
     mLastDispatchedCompositionString = compositionString;
@@ -2672,7 +2672,7 @@ bool nsWindow::ImeConversionString(HIMI himi)
   DispatchWindowEvent(&text);
 
   if (compositionString.IsEmpty()) { // IME conversion was canceled ?
-    nsCompositionEvent end(true, NS_COMPOSITION_END, this);
+    WidgetCompositionEvent end(true, NS_COMPOSITION_END, this);
     InitEvent(end);
     end.data = compositionString;
     DispatchWindowEvent(&end);

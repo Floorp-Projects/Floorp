@@ -225,7 +225,7 @@ public:
                               const int32_t&  aCharCode,
                               const int32_t&  aModifiers,
                               const bool&     aPreventDefault);
-    virtual bool RecvCompositionEvent(const nsCompositionEvent& event);
+    virtual bool RecvCompositionEvent(const mozilla::WidgetCompositionEvent& event);
     virtual bool RecvTextEvent(const mozilla::WidgetTextEvent& event);
     virtual bool RecvSelectionEvent(const nsSelectionEvent& event);
     virtual bool RecvActivateFrameEvent(const nsString& aType, const bool& capture);

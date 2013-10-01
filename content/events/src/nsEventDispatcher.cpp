@@ -707,7 +707,7 @@ nsEventDispatcher::CreateEvent(mozilla::dom::EventTarget* aOwner,
     case NS_COMPOSITION_EVENT:
       return NS_NewDOMCompositionEvent(
         aDOMEvent, aOwner,
-        aPresContext, static_cast<nsCompositionEvent*>(aEvent));
+        aPresContext, static_cast<WidgetCompositionEvent*>(aEvent));
     case NS_MOUSE_EVENT:
       return NS_NewDOMMouseEvent(aDOMEvent, aOwner, aPresContext,
                                  static_cast<nsInputEvent*>(aEvent));

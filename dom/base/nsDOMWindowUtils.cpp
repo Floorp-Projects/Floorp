@@ -1824,7 +1824,7 @@ nsDOMWindowUtils::SendCompositionEvent(const nsAString& aType,
     return NS_ERROR_FAILURE;
   }
 
-  nsCompositionEvent compositionEvent(true, msg, widget);
+  WidgetCompositionEvent compositionEvent(true, msg, widget);
   InitEvent(compositionEvent);
   if (msg != NS_COMPOSITION_START) {
     compositionEvent.data = aData;

@@ -386,9 +386,9 @@ struct ParamTraits<mozilla::WidgetTextEvent>
 };
 
 template<>
-struct ParamTraits<nsCompositionEvent>
+struct ParamTraits<mozilla::WidgetCompositionEvent>
 {
-  typedef nsCompositionEvent paramType;
+  typedef mozilla::WidgetCompositionEvent paramType;
 
   static void Write(Message* aMsg, const paramType& aParam)
   {

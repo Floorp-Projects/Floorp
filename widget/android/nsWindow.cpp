@@ -1822,7 +1822,7 @@ nsWindow::RemoveIMEComposition()
     textEvent.theText = mIMEComposingText;
     DispatchEvent(&textEvent);
 
-    nsCompositionEvent event(true, NS_COMPOSITION_END, this);
+    WidgetCompositionEvent event(true, NS_COMPOSITION_END, this);
     InitEvent(event, nullptr);
     DispatchEvent(&event);
 }
@@ -1923,7 +1923,7 @@ nsWindow::OnIMEEvent(AndroidGeckoEvent *ae)
             }
 
             {
-                nsCompositionEvent event(true, NS_COMPOSITION_START, this);
+                WidgetCompositionEvent event(true, NS_COMPOSITION_START, this);
                 InitEvent(event, nullptr);
                 DispatchEvent(&event);
             }
@@ -1934,7 +1934,7 @@ nsWindow::OnIMEEvent(AndroidGeckoEvent *ae)
                 DispatchEvent(&event);
             }
             {
-                nsCompositionEvent event(true, NS_COMPOSITION_END, this);
+                WidgetCompositionEvent event(true, NS_COMPOSITION_END, this);
                 InitEvent(event, nullptr);
                 event.data = ae->Characters();
                 DispatchEvent(&event);
@@ -2036,16 +2036,16 @@ nsWindow::OnIMEEvent(AndroidGeckoEvent *ae)
                 event.theText = queryEvent.mReply.mString;
             }
             {
-                nsCompositionEvent event(true, NS_COMPOSITION_START, this);
+                WidgetCompositionEvent event(true, NS_COMPOSITION_START, this);
                 InitEvent(event, nullptr);
                 DispatchEvent(&event);
             }
 
             if (mIMEComposing &&
                 event.theText != mIMEComposingText) {
-                nsCompositionEvent compositionUpdate(true,
-                                                     NS_COMPOSITION_UPDATE,
-                                                     this);
+                WidgetCompositionEvent compositionUpdate(true,
+                                                         NS_COMPOSITION_UPDATE,
+                                                         this);
                 InitEvent(compositionUpdate, nullptr);
                 compositionUpdate.data = event.theText;
                 DispatchEvent(&compositionUpdate);
@@ -2131,7 +2131,8 @@ nsWindow::NotifyIME(NotificationToIME aNotification)
                 InitEvent(textEvent, nullptr);
                 DispatchEvent(&textEvent);
 
-                nsCompositionEvent compEvent(true, NS_COMPOSITION_END, this);
+                WidgetCompositionEvent compEvent(true, NS_COMPOSITION_END,
+                                                 this);
                 InitEvent(compEvent, nullptr);
                 DispatchEvent(&compEvent);
             }

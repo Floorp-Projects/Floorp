@@ -278,7 +278,7 @@ nsresult
 NS_NewDOMCompositionEvent(nsIDOMEvent** aInstancePtrResult,
                           mozilla::dom::EventTarget* aOwner,
                           nsPresContext* aPresContext,
-                          nsCompositionEvent* aEvent);
+                          mozilla::WidgetCompositionEvent* aEvent);
 nsresult
 NS_NewDOMMutationEvent(nsIDOMEvent** aResult,
                        mozilla::dom::EventTarget* aOwner,

@@ -2640,8 +2640,8 @@ IMEInputHandler::DispatchTextEvent(const nsString& aText,
   textEvent.rangeCount = textRanges.Length();
 
   if (textEvent.theText != mLastDispatchedCompositionString) {
-    nsCompositionEvent compositionUpdate(true, NS_COMPOSITION_UPDATE,
-                                         mWidget);
+    WidgetCompositionEvent compositionUpdate(true, NS_COMPOSITION_UPDATE,
+                                             mWidget);
     compositionUpdate.time = textEvent.time;
     compositionUpdate.data = textEvent.theText;
     mLastDispatchedCompositionString = textEvent.theText;
@@ -2661,7 +2661,7 @@ IMEInputHandler::DispatchTextEvent(const nsString& aText,
 }
 
 void
-IMEInputHandler::InitCompositionEvent(nsCompositionEvent& aCompositionEvent)
+IMEInputHandler::InitCompositionEvent(WidgetCompositionEvent& aCompositionEvent)
 {
   aCompositionEvent.time = PR_IntervalNow();
 }
@@ -2727,7 +2727,7 @@ IMEInputHandler::InsertTextAsCommittingComposition(
 
     // XXXmnakano Probably, we shouldn't emulate composition in this case.
     // I think that we should just fire DOM3 textInput event if we implement it.
-    nsCompositionEvent compStart(true, NS_COMPOSITION_START, mWidget);
+    WidgetCompositionEvent compStart(true, NS_COMPOSITION_START, mWidget);
     InitCompositionEvent(compStart);
 
     DispatchEvent(compStart);
@@ -2752,7 +2752,7 @@ IMEInputHandler::InsertTextAsCommittingComposition(
 
   OnUpdateIMEComposition([aAttrString string]);
 
-  nsCompositionEvent compEnd(true, NS_COMPOSITION_END, mWidget);
+  WidgetCompositionEvent compEnd(true, NS_COMPOSITION_END, mWidget);
   InitCompositionEvent(compEnd);
   compEnd.data = mLastDispatchedCompositionString;
   DispatchEvent(compEnd);
@@ -2834,7 +2834,7 @@ IMEInputHandler::SetMarkedText(NSAttributedString* aAttrString,
 
     mMarkedRange.location = SelectedRange().location;
 
-    nsCompositionEvent compStart(true, NS_COMPOSITION_START, mWidget);
+    WidgetCompositionEvent compStart(true, NS_COMPOSITION_START, mWidget);
     InitCompositionEvent(compStart);
 
     DispatchEvent(compStart);
@@ -2861,7 +2861,7 @@ IMEInputHandler::SetMarkedText(NSAttributedString* aAttrString,
     }
 
     if (doCommit) {
-      nsCompositionEvent compEnd(true, NS_COMPOSITION_END, mWidget);
+      WidgetCompositionEvent compEnd(true, NS_COMPOSITION_END, mWidget);
       InitCompositionEvent(compEnd);
       compEnd.data = mLastDispatchedCompositionString;
       DispatchEvent(compEnd);
