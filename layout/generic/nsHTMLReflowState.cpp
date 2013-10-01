@@ -2633,3 +2633,15 @@ nsHTMLReflowState::SetTruncated(const nsHTMLReflowMetrics& aMetrics,
     *aStatus &= ~NS_FRAME_TRUNCATED;
   }
 }
+
+bool
+nsHTMLReflowState::IsFloating() const
+{
+  return mStyleDisplay->IsFloating(frame);
+}
+
+uint8_t
+nsHTMLReflowState::GetDisplay() const
+{
+  return mStyleDisplay->GetDisplay(frame);
+}
