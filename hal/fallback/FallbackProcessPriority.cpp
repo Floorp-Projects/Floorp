@@ -12,10 +12,12 @@ namespace hal_impl {
 void
 SetProcessPriority(int aPid,
                    ProcessPriority aPriority,
-                   ProcessCPUPriority aCPUPriority)
+                   ProcessCPUPriority aCPUPriority,
+                   uint32_t aBackgroundLRU)
 {
-  HAL_LOG(("FallbackProcessPriority - SetProcessPriority(%d, %s)\n",
-           aPid, ProcessPriorityToString(aPriority, aCPUPriority)));
+  HAL_LOG(("FallbackProcessPriority - SetProcessPriority(%d, %s, %u)\n",
+           aPid, ProcessPriorityToString(aPriority, aCPUPriority),
+           aBackgroundLRU));
 }
 
 } // hal_impl

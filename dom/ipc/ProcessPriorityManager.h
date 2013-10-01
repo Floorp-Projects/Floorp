@@ -68,6 +68,18 @@ public:
    */
   static bool CurrentProcessIsForeground();
 
+  /**
+   * Used to remove a ContentParent from background LRU pool when
+   * it is destroyed or its priority changed from BACKGROUND to others.
+   */
+  static void RemoveFromBackgroundLRUPool(dom::ContentParent* aContentParent);
+
+  /**
+   * Used to add a ContentParent into background LRU pool when
+   * its priority changed to BACKGROUND from others.
+   */
+  static void AddIntoBackgroundLRUPool(dom::ContentParent* aContentParent);
+
 private:
   ProcessPriorityManager();
   DISALLOW_EVIL_CONSTRUCTORS(ProcessPriorityManager);
