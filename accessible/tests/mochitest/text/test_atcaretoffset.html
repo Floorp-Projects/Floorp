@@ -32,68 +32,251 @@
       var baseInvoker = new synthFocus(aID);
       var baseInvokerID = "move to last line end";
 
+      var wholeText = "";
+      for (var i = 0; i < aLines.length ; i++)
+        wholeText += aLines[i][0] + aLines[i][1];
+
       for (var i = aLines.length - 1; i >= 0 ; i--) {
-        var [ ppLineText, ppLineEndChar, ppLineStart, ppLineEnd ] =
-          (i - 2 >= 0) ? aLines[i - 2] : [ "", "", 0, 0 ];
-        var [ pLineText, pLineEndChar, pLineStart, pLineEnd ] =
-          (i - 1 >= 0) ? aLines[i - 1] : [ "", "", 0, 0 ];
-        var [ lineText, lineEndChar, lineStart, lineEnd ] = aLines[i];
+        var cLine = new line(wholeText, aLines, i);
+        var pLine = cLine.prevLine;
+        var ppLine = pLine.prevLine;
+        var nLine = cLine.nextLine;
+        var nnLine = nLine.nextLine;
 
-        var [ nLineText, nLineEndChar, nLineStart, nLineEnd ] =
-          (i + 1 < aLines.length) ?
-            aLines[i + 1] :
-            [ "", "", lineEnd  + lineEndChar.length, lineEnd + lineEndChar.length ];
-
-        var [ nnLineText, nnLineEndChar, nnLineStart, nnLineEnd ] =
-          (i + 2 < aLines.length) ?
-            aLines[i + 2] :
-            [ "", "", nLineEnd  + nLineEndChar.length, nLineEnd + nLineEndChar.length ];
-
-        var tests = [
-          [ testTextBeforeOffset, BOUNDARY_LINE_START,
-            pLineText + pLineEndChar, pLineStart, lineStart],
-
-          [ testTextBeforeOffset, BOUNDARY_LINE_END,
-            ppLineEndChar + pLineText, ppLineEnd, pLineEnd],
-
-          [ testTextAtOffset, BOUNDARY_LINE_START,
-            lineText + lineEndChar, lineStart, nLineStart],
-
-          [ testTextAtOffset, BOUNDARY_LINE_END,
-            pLineEndChar + lineText, pLineEnd, lineEnd],
-
-          [ testTextAfterOffset, BOUNDARY_LINE_START,
-            nLineText + nnLineEndChar, nLineStart, nnLineStart],
-
-          [ testTextAfterOffset, BOUNDARY_LINE_END,
-            lineEndChar + nLineText, lineEnd, nLineEnd],
+        // Shared line tests.
+        var lineTests = [
+          [ testTextBeforeOffset, BOUNDARY_LINE_START, pLine.start, cLine.start],
+          [ testTextBeforeOffset, BOUNDARY_LINE_END, ppLine.end, pLine.end],
+          [ testTextAtOffset, BOUNDARY_LINE_START, cLine.start, nLine.start],
+          [ testTextAtOffset, BOUNDARY_LINE_END, pLine.end, cLine.end],
+          [ testTextAfterOffset, BOUNDARY_LINE_START, nLine.start, nnLine.start],
+          [ testTextAfterOffset, BOUNDARY_LINE_END, cLine.end, nLine.end]
         ];
 
-        aQueue.push(new tmpl_moveTo(aID, baseInvoker, baseInvokerID, tests));
+        // Word tests for "caret at the end of the line".
+        var lastWord = cLine.lastWord;
+        var pLastWord = lastWord.prevWord;
+        var ppLastWord = pLastWord.prevWord;
+        var nLastWord = lastWord.nextWord;
+        var nnLastWord = nLastWord.nextWord;
+        var isAtEnd = (cLine.end == wholeText.length);
+        var isAtWordEnd = (cLine.end = lastWord.end);
 
-        baseInvoker = new moveToLineStart(aID, lineStart);
+        var lineEndWordTests = [
+          [ testTextBeforeOffset, BOUNDARY_WORD_START, pLastWord.start, lastWord.start ],
+          [ testTextBeforeOffset, BOUNDARY_WORD_END, ppLastWord.end, pLastWord.end ],
+          [ testTextAtOffset, BOUNDARY_WORD_START, lastWord.start, nLastWord.start ],
+          [ testTextAtOffset, BOUNDARY_WORD_END,
+            (isAtEnd ? pLastWord : lastWord).end,
+            (isAtEnd ? lastWord : nLastWord).end ],
+          [ testTextAfterOffset, BOUNDARY_WORD_START, nLastWord.start, nnLastWord.start ],
+          [ testTextAfterOffset, BOUNDARY_WORD_END,
+            (isAtWordEnd ? lastWord : nLastWord).end,
+            (isAtWordEnd ? nLastWord : nnLastWord).end ]
+        ];
+
+        // Add "caret at the end of the line" tests.
+        aQueue.push(new tmpl_moveTo(aID, baseInvoker, baseInvokerID, wholeText,
+                                    lineTests.concat(lineEndWordTests),
+                                    cLine.lineEndFailures));
+
+        // Word tests for "caret at the end of the line".
+        var firstWord = cLine.firstWord;
+        var pFirstWord = firstWord.prevWord;
+        var ppFirstWord = pFirstWord.prevWord;
+        var nFirstWord = firstWord.nextWord;
+        var nnFirstWord = nFirstWord.nextWord;
+        var isAtWordBegin = (cLine.start == firstWord.start);
+        var lineStartWordTests = [
+          [ testTextBeforeOffset, BOUNDARY_WORD_START,
+            (isAtWordBegin ? pFirstWord : ppFirstWord).start, 
+            (isAtWordBegin ? firstWord : pFirstWord).start ],
+          [ testTextBeforeOffset, BOUNDARY_WORD_END, ppFirstWord.end, pFirstWord.end ],
+          [ testTextAtOffset, BOUNDARY_WORD_START, 
+            (isAtWordBegin ? firstWord : pFirstWord).start,
+            (isAtWordBegin ?  nFirstWord : firstWord).start ],
+          [ testTextAtOffset, BOUNDARY_WORD_END, pFirstWord.end, firstWord.end ],
+          [ testTextAfterOffset, BOUNDARY_WORD_START,
+            (isAtWordBegin ? nFirstWord : firstWord).start,
+            (isAtWordBegin ? nnFirstWord : nFirstWord).start ],
+          [ testTextAfterOffset, BOUNDARY_WORD_END, firstWord.end, nFirstWord.end ],
+        ];
+
+        baseInvoker = new moveToLineStart(aID, cLine.start);
         baseInvokerID = "move to " + i + "th line start";
 
-        aQueue.push(new tmpl_moveTo(aID, baseInvoker, baseInvokerID, tests));
+        // Add "caret at the start of the line" tests.
+        aQueue.push(new tmpl_moveTo(aID, baseInvoker, baseInvokerID, wholeText,
+                                    lineTests.concat(lineStartWordTests),
+                                    cLine.lineStartFailures));
 
-        baseInvoker = new moveToPrevLineEnd(aID, pLineEnd);
+        // Next loop invoker to move caret at the end of prev line.
+        baseInvoker = new moveToPrevLineEnd(aID, pLine.end);
         baseInvokerID = "move to " + (i - 1) + "th line end";
       }
     }
 
     /**
+     * A line object. Allows to navigate by lines and by words.
+     */
+    function line(aWholeText, aLines, aIndex)
+    {
+      Object.defineProperty(this, "prevLine", { get: function()
+        {
+          return new line(aWholeText, aLines, aIndex - 1);
+        }
+      }); 
+      Object.defineProperty(this, "nextLine", { get: function()
+        {
+          return new line(aWholeText, aLines, aIndex + 1);
+        }
+      });
+
+      Object.defineProperty(this, "start", { get: function()
+        {
+          if (aIndex < 0)
+            return 0;
+
+          if (aIndex >= aLines.length)
+            return aWholeText.length;
+
+          return aLines[aIndex][2];
+        }
+      });
+      Object.defineProperty(this, "end", { get: function()
+        {
+          if (aIndex < 0)
+            return 0;
+
+          if (aIndex >= aLines.length)
+            return aWholeText.length;
+
+          return aLines[aIndex][3];
+        }
+      });
+
+      Object.defineProperty(this, "lastWord", { get: function()
+        {
+          if (aIndex < 0)
+            return new word(this, [], -1);
+          if (aIndex >= aLines.length)
+            return new word(this, [], 0);
+
+          var words = aLines[aIndex][4].words;
+          return new word(this, words, words.length - 2);
+        }
+      });
+      Object.defineProperty(this, "firstWord", { get: function()
+        {
+          if (aIndex < 0)
+            return new word(this, [], -1);
+          if (aIndex >= aLines.length)
+            return new word(this, [], 0);
+
+          var words = aLines[aIndex][4].words;
+          return new word(this, words, 0);
+        }
+      });
+
+      Object.defineProperty(this, "lineStartFailures", { get: function()
+        {
+          if (aIndex < 0 || aIndex >= aLines.length)
+            return [];
+
+          return aLines[aIndex][4].lsf || [];
+        }
+      });
+      Object.defineProperty(this, "lineEndFailures", { get: function()
+        {
+          if (aIndex < 0 || aIndex >= aLines.length)
+            return [];
+
+          return aLines[aIndex][4].lef || [];
+        }
+      });
+    }
+
+    /**
+     * A word object. Allows to navigate by words.
+     */
+    function word(aLine, aWords, aIndex)
+    {
+      Object.defineProperty(this, "prevWord", { get: function()
+        {
+          if (aIndex >= 2)
+            return new word(aLine, aWords, aIndex - 2);
+
+          var prevLineLastWord = aLine.prevLine.lastWord;
+          if (this.start == prevLineLastWord.start && !this.isFakeStartWord())
+            return prevLineLastWord.prevWord;
+          return prevLineLastWord;
+        }
+      });
+
+      Object.defineProperty(this, "nextWord", { get: function()
+        {
+          if (aIndex + 2 < aWords.length)
+            return new word(aLine, aWords, aIndex + 2);
+
+          var nextLineFirstWord = aLine.nextLine.firstWord;
+          if (this.end == nextLineFirstWord.end && !this.isFakeEndWord())
+            return nextLineFirstWord.nextWord;
+          return nextLineFirstWord;
+        }
+      });
+
+      Object.defineProperty(this, "start", { get: function()
+        {
+          if (this.isFakeStartWord())
+            return 0;
+
+          if (this.isFakeEndWord())
+            return aLine.end;
+           return aWords[aIndex];
+        }
+      });
+      Object.defineProperty(this, "end", { get: function()
+        {
+          if (this.isFakeStartWord())
+            return 0;
+
+          return this.isFakeEndWord() ? aLine.end : aWords[aIndex + 1];
+        }
+      });
+
+      this.isFakeStartWord = function() { return aIndex < 0; }
+      this.isFakeEndWord = function() { return aIndex >= aWords.length; }
+    }
+
+    /**
      * A template invoker to move through the text.
      */
-    function tmpl_moveTo(aID, aInvoker, aInvokerID, aTests)
+    function tmpl_moveTo(aID, aInvoker, aInvokerID, aWholeText, aTests,
+                         aFailures)
     {
       this.__proto__ = aInvoker;
 
       this.finalCheck = function genericMoveTo_finalCheck()
       {
         for (var i = 0; i < aTests.length; i++) {
-          aTests[i][0].call(null, kCaretOffset, aTests[i][1],
-                            aTests[i][2], aTests[i][3], aTests[i][4], aID,
-                            kOk, kOk, kOk);
+          var func = aTests[i][0];
+          var boundary = aTests[i][1];
+          var startOffset = aTests[i][2];
+          var endOffset = aTests[i][3];
+          var text = aWholeText.substring(startOffset, endOffset);
+
+          var isOk1 = kOk, isOk2 = kOk, isOk3 = kOk;
+          for (var fIdx = 0; fIdx < aFailures.length; fIdx++) {
+            var failure = aFailures[fIdx];
+            if (func.name.indexOf(failure[0]) != -1 && boundary == failure[1]) {
+              isOk1 = failure[2];
+              isOk2 = failure[3];
+              isOk3 = failure[4];
+            }
+          }
+
+          func.call(null, kCaretOffset, boundary, text, startOffset, endOffset,
+                    aID, isOk1, isOk2, isOk3);
         }
       }
 
@@ -116,18 +299,32 @@
       // 10 11 12 13 14 15
 
       traverseTextByLines(gQueue, "textarea",
-                          [ [ "aword", "\n", 0, 5 ],
-                            [ "two ", "", 6, 10 ],
-                            [ "words", "", 10, 15 ]] );
+                          [ [ "aword", "\n", 0, 5, { words: [ 0, 5 ] } ],
+                            [ "two ", "", 6, 10, { words: [ 6, 9 ] } ],
+                            [ "words", "", 10, 15, { words: [ 10, 15 ] } ]
+                          ] );
 
+      var line2 = [ // " my "
+        [ "TextBeforeOffset", BOUNDARY_WORD_END, kTodo, kTodo, kTodo ],
+        [ "TextAfterOffset", BOUNDARY_WORD_END, kTodo, kTodo, kTodo ]
+      ];
+      var line4 = [ // "riend"
+        [ "TextBeforeOffset", BOUNDARY_WORD_END, kTodo, kTodo, kTodo ],
+        [ "TextAfterOffset", BOUNDARY_WORD_END, kTodo, kTodo, kTodo ]
+      ];
+      var line5 = [ // " t "
+        [ "TextBeforeOffset", BOUNDARY_WORD_END, kTodo, kTodo, kTodo ],
+        [ "TextAfterOffset", BOUNDARY_WORD_END, kTodo, kTodo, kTodo ]
+      ];
       traverseTextByLines(gQueue, "ta_wrapped", 
-                          [ [ "hi ", "", 0, 3 ],
-                            [ "hello", "", 3, 8 ],
-                            [ " my ", "", 8, 12 ],
-                            [ "longf", "", 12, 17 ],
-                            [ "riend", "", 17, 22 ],
-                            [ " t ", "", 22, 25 ],
-                            [ "sq t", "", 25, 29 ]] );
+                          [ [ "hi ", "", 0, 3, { words: [ 0, 2 ] } ],
+                            [ "hello", "", 3, 8, { words: [ 3, 8 ] } ],
+                            [ " my ", "", 8, 12, { words: [ 9, 11 ], lsf: line2 } ],
+                            [ "longf", "", 12, 17, { words: [ 12, 17 ] } ],
+                            [ "riend", "", 17, 22, { words: [ 17, 22 ], lsf: line4 } ],
+                            [ " t ", "", 22, 25, { words: [ 23, 24 ], lsf: line5 } ],
+                            [ "sq t", "", 25, 29, { words: [ 25, 27, 28, 29 ] } ]
+                          ] );
 
       gQueue.invoke(); // will call SimpleTest.finish();
     }
