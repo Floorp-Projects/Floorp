@@ -95,11 +95,11 @@ public:
   }
   float MozPressure() const
   {
-    return static_cast<nsMouseEvent_base*>(mEvent)->pressure;
+    return static_cast<mozilla::WidgetMouseEventBase*>(mEvent)->pressure;
   }
   uint16_t MozInputSource() const
   {
-    return static_cast<nsMouseEvent_base*>(mEvent)->inputSource;
+    return static_cast<mozilla::WidgetMouseEventBase*>(mEvent)->inputSource;
   }
   void InitNSMouseEvent(const nsAString & aType, bool aCanBubble, bool aCancelable,
                         nsIDOMWindow *aView, int32_t aDetail, int32_t aScreenX,

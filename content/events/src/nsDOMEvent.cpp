@@ -143,11 +143,13 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsDOMEvent)
       case NS_MOUSE_SCROLL_EVENT:
       case NS_WHEEL_EVENT:
       case NS_SIMPLE_GESTURE_EVENT:
-        static_cast<nsMouseEvent_base*>(tmp->mEvent)->relatedTarget = nullptr;
+        static_cast<WidgetMouseEventBase*>(tmp->mEvent)->relatedTarget =
+          nullptr;
         break;
       case NS_DRAG_EVENT:
         static_cast<nsDragEvent*>(tmp->mEvent)->dataTransfer = nullptr;
-        static_cast<nsMouseEvent_base*>(tmp->mEvent)->relatedTarget = nullptr;
+        static_cast<WidgetMouseEventBase*>(tmp->mEvent)->relatedTarget =
+          nullptr;
         break;
       case NS_CLIPBOARD_EVENT:
         static_cast<InternalClipboardEvent*>(tmp->mEvent)->clipboardData =
@@ -182,7 +184,7 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(nsDOMEvent)
       case NS_SIMPLE_GESTURE_EVENT:
         NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(cb, "mEvent->relatedTarget");
         cb.NoteXPCOMChild(
-          static_cast<nsMouseEvent_base*>(tmp->mEvent)->relatedTarget);
+          static_cast<WidgetMouseEventBase*>(tmp->mEvent)->relatedTarget);
         break;
       case NS_DRAG_EVENT:
         NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(cb, "mEvent->dataTransfer");
@@ -190,7 +192,7 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(nsDOMEvent)
           static_cast<nsDragEvent*>(tmp->mEvent)->dataTransfer);
         NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(cb, "mEvent->relatedTarget");
         cb.NoteXPCOMChild(
-          static_cast<nsMouseEvent_base*>(tmp->mEvent)->relatedTarget);
+          static_cast<WidgetMouseEventBase*>(tmp->mEvent)->relatedTarget);
         break;
       case NS_CLIPBOARD_EVENT:
         NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(cb, "mEvent->clipboardData");

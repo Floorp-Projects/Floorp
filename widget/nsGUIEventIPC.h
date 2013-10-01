@@ -100,9 +100,9 @@ struct ParamTraits<mozilla::WidgetInputEvent>
 };
 
 template<>
-struct ParamTraits<nsMouseEvent_base>
+struct ParamTraits<mozilla::WidgetMouseEventBase>
 {
-  typedef nsMouseEvent_base paramType;
+  typedef mozilla::WidgetMouseEventBase paramType;
 
   static void Write(Message* aMsg, const paramType& aParam)
   {
@@ -131,7 +131,7 @@ struct ParamTraits<mozilla::WheelEvent>
 
   static void Write(Message* aMsg, const paramType& aParam)
   {
-    WriteParam(aMsg, static_cast<nsMouseEvent_base>(aParam));
+    WriteParam(aMsg, static_cast<mozilla::WidgetMouseEventBase>(aParam));
     WriteParam(aMsg, aParam.deltaX);
     WriteParam(aMsg, aParam.deltaY);
     WriteParam(aMsg, aParam.deltaZ);
@@ -150,7 +150,8 @@ struct ParamTraits<mozilla::WheelEvent>
   {
     int32_t scrollType = 0;
     bool rv =
-      ReadParam(aMsg, aIter, static_cast<nsMouseEvent_base*>(aResult)) &&
+      ReadParam(aMsg, aIter,
+                static_cast<mozilla::WidgetMouseEventBase*>(aResult)) &&
       ReadParam(aMsg, aIter, &aResult->deltaX) &&
       ReadParam(aMsg, aIter, &aResult->deltaY) &&
       ReadParam(aMsg, aIter, &aResult->deltaZ) &&
@@ -176,7 +177,7 @@ struct ParamTraits<nsMouseEvent>
 
   static void Write(Message* aMsg, const paramType& aParam)
   {
-    WriteParam(aMsg, static_cast<nsMouseEvent_base>(aParam));
+    WriteParam(aMsg, static_cast<mozilla::WidgetMouseEventBase>(aParam));
     WriteParam(aMsg, aParam.ignoreRootScrollFrame);
     WriteParam(aMsg, (uint8_t) aParam.reason);
     WriteParam(aMsg, (uint8_t) aParam.context);
@@ -188,7 +189,8 @@ struct ParamTraits<nsMouseEvent>
   {
     bool rv;
     uint8_t reason = 0, context = 0, exit = 0;
-    rv = ReadParam(aMsg, aIter, static_cast<nsMouseEvent_base*>(aResult)) &&
+    rv = ReadParam(aMsg, aIter,
+                   static_cast<mozilla::WidgetMouseEventBase*>(aResult)) &&
          ReadParam(aMsg, aIter, &aResult->ignoreRootScrollFrame) &&
          ReadParam(aMsg, aIter, &reason) &&
          ReadParam(aMsg, aIter, &context) &&
