@@ -85,24 +85,28 @@ select {
 }
 
 /* outer/inner center provides horizontal center */
+.outerCenter {
+  pointer-events: none;
+  position: relative;
+}
 html[dir='ltr'] .outerCenter {
   float: right;
-  position: relative;
   right: 50%;
 }
 html[dir='rtl'] .outerCenter {
   float: left;
-  position: relative;
   left: 50%;
+}
+.innerCenter {
+  pointer-events: auto;
+  position: relative;
 }
 html[dir='ltr'] .innerCenter {
   float: right;
-  position: relative;
   right: -50%;
 }
 html[dir='rtl'] .innerCenter {
   float: left;
-  position: relative;
   left: -50%;
 }
 
@@ -390,9 +394,8 @@ html[dir='ltr'] #toolbarViewerLeft {
   margin-left: -1px;
 }
 html[dir='rtl'] #toolbarViewerRight {
-  margin-left: -1px;
+  margin-right: -1px;
 }
-
 
 html[dir='ltr'] #toolbarViewerLeft,
 html[dir='rtl'] #toolbarViewerRight {
@@ -486,6 +489,7 @@ html[dir='rtl'] .splitToolbarButton > .toolbarButton {
 .splitToolbarButton > .toolbarButton:hover,
 .splitToolbarButton > .toolbarButton:focus,
 .dropdownToolbarButton:hover,
+.promptButton:hover,
 .toolbarButton.textButton:hover,
 .toolbarButton.textButton:focus {
   background-color: hsla(0,0%,0%,.2);
@@ -539,6 +543,7 @@ html[dir='rtl'] .splitToolbarButtonSeparator {
 
 .toolbarButton,
 .dropdownToolbarButton,
+.promptButton,
 .secondaryToolbarButton {
   min-width: 16px;
   padding: 2px 6px 0;
@@ -556,10 +561,12 @@ html[dir='rtl'] .splitToolbarButtonSeparator {
 }
 
 html[dir='ltr'] .toolbarButton,
+html[dir='ltr'] .promptButton,
 html[dir='ltr'] .dropdownToolbarButton {
   margin: 3px 2px 4px 0;
 }
 html[dir='rtl'] .toolbarButton,
+html[dir='rtl'] .promptButton,
 html[dir='rtl'] .dropdownToolbarButton {
   margin: 3px 0 4px 2px;
 }
@@ -567,6 +574,7 @@ html[dir='rtl'] .dropdownToolbarButton {
 .toolbarButton:hover,
 .toolbarButton:focus,
 .dropdownToolbarButton,
+.promptButton,
 .secondaryToolbarButton:hover,
 .secondaryToolbarButton:focus {
   background-color: hsla(0,0%,0%,.12);
@@ -580,6 +588,7 @@ html[dir='rtl'] .dropdownToolbarButton {
 }
 
 .toolbarButton:hover:active,
+.promptButton:hover:active,
 .dropdownToolbarButton:hover:active,
 .secondaryToolbarButton:hover:active {
   background-color: hsla(0,0%,0%,.2);
@@ -646,6 +655,12 @@ html[dir='rtl'] .dropdownToolbarButton {
   background: hsl(0,0%,24%);
 }
 
+.promptButton {
+  margin: 3px 2px 4px 5px !important;
+  line-height: 16px;
+  padding: 2px 6px 3px 6px;
+}
+
 #customScaleOption {
   display: none;
 }
@@ -702,6 +717,7 @@ html[dir='rtl'] #findNext {
   top: 4px;
   left: 7px;
 }
+
 html[dir="ltr"] .secondaryToolbarButton::before {
   left: 4px;
 }
@@ -709,18 +725,23 @@ html[dir="rtl"] .secondaryToolbarButton::before {
   right: 4px;
 }
 
-.toolbarButton#sidebarToggle::before {
+html[dir='ltr'] .toolbarButton#sidebarToggle::before {
   content: url(images/toolbarButton-sidebarToggle.png);
 }
+html[dir='rtl'] .toolbarButton#sidebarToggle::before {
+  content: url(images/toolbarButton-sidebarToggle-rtl.png);
+}
 
-.toolbarButton#secondaryToolbarToggle::before {
+html[dir='ltr'] .toolbarButton#secondaryToolbarToggle::before {
   content: url(images/toolbarButton-secondaryToolbarToggle.png);
+}
+html[dir='rtl'] .toolbarButton#secondaryToolbarToggle::before {
+  content: url(images/toolbarButton-secondaryToolbarToggle-rtl.png);
 }
 
 html[dir='ltr'] .toolbarButton.findPrevious::before {
   content: url(images/findbarButton-previous.png);
 }
-
 html[dir='rtl'] .toolbarButton.findPrevious::before {
   content: url(images/findbarButton-previous-rtl.png);
 }
@@ -728,7 +749,6 @@ html[dir='rtl'] .toolbarButton.findPrevious::before {
 html[dir='ltr'] .toolbarButton.findNext::before {
   content: url(images/findbarButton-next.png);
 }
-
 html[dir='rtl'] .toolbarButton.findNext::before {
   content: url(images/findbarButton-next-rtl.png);
 }
@@ -736,7 +756,6 @@ html[dir='rtl'] .toolbarButton.findNext::before {
 html[dir='ltr'] .toolbarButton.pageUp::before {
   content: url(images/toolbarButton-pageUp.png);
 }
-
 html[dir='rtl'] .toolbarButton.pageUp::before {
   content: url(images/toolbarButton-pageUp-rtl.png);
 }
@@ -744,7 +763,6 @@ html[dir='rtl'] .toolbarButton.pageUp::before {
 html[dir='ltr'] .toolbarButton.pageDown::before {
   content: url(images/toolbarButton-pageDown.png);
 }
-
 html[dir='rtl'] .toolbarButton.pageDown::before {
   content: url(images/toolbarButton-pageDown-rtl.png);
 }
@@ -767,6 +785,7 @@ html[dir='rtl'] .toolbarButton.pageDown::before {
   content: url(images/toolbarButton-print.png);
   left: 6px;
 }
+
 html[dir="ltr"] .secondaryToolbarButton.print::before {
   left: 3px;
 }
@@ -804,8 +823,11 @@ html[dir="rtl"] .secondaryToolbarButton.print::before {
   content: url(images/toolbarButton-viewThumbnail.png);
 }
 
-#viewOutline.toolbarButton::before {
+html[dir="ltr"] #viewOutline.toolbarButton::before {
   content: url(images/toolbarButton-viewOutline.png);
+}
+html[dir="rtl"] #viewOutline.toolbarButton::before {
+  content: url(images/toolbarButton-viewOutline-rtl.png);
 }
 
 #viewFind.toolbarButton::before {
@@ -1233,6 +1255,60 @@ canvas {
   width: 98%;
 }
 
+#overlayContainer {
+  display: table;
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  background-color: hsla(0,0%,0%,.2);
+  z-index: 10000;
+}
+
+#promptContainer {
+  display: table-cell;
+  vertical-align: middle;
+  text-align: center;
+}
+
+#promptContainer > * {
+  display: inline-block;
+}
+
+.prompt {
+  display: table;
+  padding: 15px;
+  border-spacing: 4px;
+  color: hsl(0,0%,85%);
+  line-height: 14px;
+  text-align: center;
+  background-color: #474747; /* fallback */
+  background-image: url(images/texture.png),
+                    linear-gradient(hsla(0,0%,32%,.99), hsla(0,0%,27%,.95));
+  box-shadow: inset 1px 0 0 hsla(0,0%,100%,.08),
+              inset 0 1px 1px hsla(0,0%,0%,.15),
+              inset 0 -1px 0 hsla(0,0%,100%,.05),
+              0 1px 0 hsla(0,0%,0%,.15),
+              0 1px 1px hsla(0,0%,0%,.1);
+}
+
+.prompt > .row {
+  display: table-row;
+}
+
+.prompt > .row > * {
+  display: table-cell;
+}
+
+.prompt .toolbarField {
+  margin: 5px 0;
+  width: 200px;
+}
+
+.prompt .toolbarField:hover,
+.prompt .toolbarField:focus {
+  border-color: hsla(0,0%,0%,.32) hsla(0,0%,0%,.38) hsla(0,0%,0%,.42);
+}
+
 .clearBoth {
   clear: both;
 }
@@ -1341,6 +1417,10 @@ canvas {
     display: block;
   }
 
+  .fileInput {
+    display: none;
+  }
+
   /* Rules for browsers that support mozPrintCallback */
   body[data-mozPrintCallback] #outerContainer {
     display: none;
@@ -1365,12 +1445,12 @@ canvas {
   html[dir='ltr'] #outerContainer.sidebarMoving .outerCenter,
   html[dir='ltr'] #outerContainer.sidebarOpen .outerCenter {
     float: left;
-    left: 185px;
+    left: 205px;
   }
   html[dir='rtl'] #outerContainer.sidebarMoving .outerCenter,
   html[dir='rtl'] #outerContainer.sidebarOpen .outerCenter {
     float: right;
-    right: 185px;
+    right: 205px;
   }
 }
 
@@ -1414,11 +1494,11 @@ canvas {
 
   html[dir='ltr'] .outerCenter {
     float: left;
-    left: 185px;
+    left: 205px;
   }
   html[dir='rtl'] .outerCenter {
     float: right;
-    right: 185px;
+    right: 205px;
   }
 
   #outerContainer .hiddenLargeView,

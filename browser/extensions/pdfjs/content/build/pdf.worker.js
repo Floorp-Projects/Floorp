@@ -20,8 +20,8 @@ if (typeof PDFJS === 'undefined') {
   (typeof window !== 'undefined' ? window : this).PDFJS = {};
 }
 
-PDFJS.version = '0.8.505';
-PDFJS.build = 'da1c944';
+PDFJS.version = '0.8.558';
+PDFJS.build = 'ea50c07';
 
 (function pdfjsWrapper() {
   // Use strict in our context only - users might not want it
@@ -3564,6 +3564,10 @@ var BasePdfManager = (function BasePdfManagerClosure() {
       if (this.passwordChangedPromise) {
         this.passwordChangedPromise.resolve();
       }
+    },
+
+    terminate: function BasePdfManager_terminate() {
+      return new NotImplementedException();
     }
   };
 
@@ -3614,6 +3618,11 @@ var LocalPdfManager = (function LocalPdfManagerClosure() {
   LocalPdfManager.prototype.onLoadedStream =
       function LocalPdfManager_getLoadedStream() {
     return this.loadedStream;
+  };
+
+  LocalPdfManager.prototype.terminate =
+      function LocalPdfManager_terminate() {
+    return;
   };
 
   return LocalPdfManager;
@@ -3691,6 +3700,11 @@ var NetworkPdfManager = (function NetworkPdfManagerClosure() {
   NetworkPdfManager.prototype.onLoadedStream =
       function NetworkPdfManager_getLoadedStream() {
     return this.streamManager.onLoadedStream();
+  };
+
+  NetworkPdfManager.prototype.terminate =
+      function NetworkPdfManager_terminate() {
+    this.streamManager.networkManager.abortAllRequests();
   };
 
   return NetworkPdfManager;
@@ -4576,6 +4590,12 @@ var Catalog = (function CatalogClosure() {
     },
 
     getPage: function Catalog_getPage(pageIndex) {
+      if (pageIndex < 0 || pageIndex >= this.numPages ||
+          (pageIndex|0) !== pageIndex) {
+        var pagePromise = new Promise();
+        pagePromise.reject(new Error('Invalid page index'));
+        return pagePromise;
+      }
       if (!(pageIndex in this.pagePromises)) {
         this.pagePromises[pageIndex] = new Promise();
       }
@@ -14546,14 +14566,18 @@ var PartialEvaluator = (function PartialEvaluatorClosure() {
       var bidiTexts;
       var SPACE_FACTOR = 0.35;
       var MULTI_SPACE_FACTOR = 1.5;
+      var textState;
 
       if (!state) {
+        textState = new TextState();
         bidiTexts = [];
         state = {
+          textState: textState,
           bidiTexts: bidiTexts
         };
       } else {
         bidiTexts = state.bidiTexts;
+        textState = state.textState;
       }
 
       var self = this;
@@ -14573,6 +14597,7 @@ var PartialEvaluator = (function PartialEvaluatorClosure() {
 
       var chunk = '';
       var font = null;
+      var charSpace = 0, wordSpace = 0;
       while (!isEOF(obj = parser.getObj())) {
         if (isCmd(obj)) {
           var cmd = obj.cmd;
@@ -14580,6 +14605,49 @@ var PartialEvaluator = (function PartialEvaluatorClosure() {
             // TODO: Add support for SAVE/RESTORE and XFORM here.
             case 'Tf':
               font = handleSetFont(args[0].name).translated;
+              textState.fontSize = args[1];
+              break;
+            case 'Ts':
+              textState.textRise = args[0];
+              break;
+            case 'Tz':
+              textState.textHScale = args[0] / 100;
+              break;
+            case 'TL':
+              textState.leading = args[0];
+              break;
+            case 'Td':
+              textState.translateTextMatrix(args[0], args[1]);
+              break;
+            case 'TD':
+              textState.leading = -args[1];
+              textState.translateTextMatrix(args[0], args[1]);
+              break;
+            case 'T*':
+              textState.translateTextMatrix(0, -textState.leading);
+              break;
+            case 'Tm':
+              textState.setTextMatrix(args[0], args[1],
+                                       args[2], args[3], args[4], args[5]);
+              break;
+            case 'Tc':
+              charSpace = args[0];
+              break;
+            case 'Tw':
+              wordSpace = args[0];
+              break;
+            case 'q':
+              textState.push();
+              break;
+            case 'Q':
+              textState.pop();
+              break;
+            case 'BT':
+              textState.initialiseTextObj();
+              break;
+            case 'cm':
+              textState.transformCTM(args[0], args[1], args[2],
+                                args[3], args[4], args[5]);
               break;
             case 'TJ':
               var items = args[0];
@@ -14665,6 +14733,15 @@ var PartialEvaluator = (function PartialEvaluatorClosure() {
 
           if (chunk !== '') {
             var bidiText = PDFJS.bidi(chunk, -1, font.vertical);
+            var renderParams = textState.calcRenderParams();
+            bidiText.x = renderParams.renderMatrix[4] - (textState.fontSize *
+                           renderParams.vScale * Math.sin(renderParams.angle));
+            bidiText.y = renderParams.renderMatrix[5] + (textState.fontSize *
+                           renderParams.vScale * Math.cos(renderParams.angle));
+            if (bidiText.dir == 'ttb') {
+              bidiText.x += renderParams.vScale / 2;
+              bidiText.y -= renderParams.vScale;
+            }
             bidiTexts.push(bidiText);
 
             chunk = '';
@@ -14774,119 +14851,24 @@ var PartialEvaluator = (function PartialEvaluatorClosure() {
         if (!isIdentityMap)
           error('ToUnicode file cmap translation not implemented');
       } else if (isStream(cmapObj)) {
-        var tokens = [];
-        var token = '';
-        var beginArrayToken = {};
-
-        var cmap = cmapObj.getBytes(cmapObj.length);
-        for (var i = 0, ii = cmap.length; i < ii; i++) {
-          var octet = cmap[i];
-          if (octet == 0x20 || octet == 0x0D || octet == 0x0A ||
-              octet == 0x3C || octet == 0x5B || octet == 0x5D) {
-            switch (token) {
-              case 'usecmap':
-                error('usecmap is not implemented');
-                break;
-
-              case 'beginbfchar':
-              case 'beginbfrange':
-              case 'begincidchar':
-              case 'begincidrange':
-                token = '';
-                tokens = [];
-                break;
-
-              case 'endcidrange':
-              case 'endbfrange':
-                for (var j = 0, jj = tokens.length; j < jj; j += 3) {
-                  var startRange = tokens[j];
-                  var endRange = tokens[j + 1];
-                  var code = tokens[j + 2];
-                  if (code == 0xFFFF) {
-                    // CMap is broken, assuming code == startRange
-                    code = startRange;
-                  }
-                  if (isArray(code)) {
-                    var codeindex = 0;
-                    while (startRange <= endRange) {
-                      charToUnicode[startRange] = code[codeindex++];
-                      ++startRange;
-                    }
-                  } else {
-                    while (startRange <= endRange) {
-                      charToUnicode[startRange] = code++;
-                      ++startRange;
-                    }
-                  }
-                }
-                break;
-
-              case 'endcidchar':
-              case 'endbfchar':
-                for (var j = 0, jj = tokens.length; j < jj; j += 2) {
-                  var index = tokens[j];
-                  var code = tokens[j + 1];
-                  charToUnicode[index] = code;
-                }
-                break;
-
-              case '':
-                break;
-
-              default:
-                if (token[0] >= '0' && token[0] <= '9')
-                  token = parseInt(token, 10); // a number
-                tokens.push(token);
-                token = '';
+        var cmap = CMapFactory.create(cmapObj).map;
+        // Convert UTF-16BE
+        for (var i in cmap) {
+          var token = cmap[i];
+          var str = [];
+          for (var k = 0; k < token.length; k += 2) {
+            var w1 = (token.charCodeAt(k) << 8) | token.charCodeAt(k + 1);
+            if ((w1 & 0xF800) !== 0xD800) { // w1 < 0xD800 || w1 > 0xDFFF
+              str.push(w1);
+              continue;
             }
-            switch (octet) {
-              case 0x5B:
-                // begin list parsing
-                tokens.push(beginArrayToken);
-                break;
-              case 0x5D:
-                // collect array items
-                var items = [], item;
-                while (tokens.length &&
-                       (item = tokens.pop()) != beginArrayToken)
-                  items.unshift(item);
-                tokens.push(items);
-                break;
-            }
-          } else if (octet == 0x3E) {
-            if (token.length) {
-              // Heuristic: guessing chars size by checking numbers sizes
-              // in the CMap entries.
-              if (token.length == 2 && properties.composite)
-                properties.wideChars = false;
-
-              if (token.length <= 4) {
-                // parsing hex number
-                tokens.push(parseInt(token, 16));
-                token = '';
-              } else {
-                // parsing hex UTF-16BE numbers
-                var str = [];
-                for (var k = 0, kk = token.length; k < kk; k += 4) {
-                  var b = parseInt(token.substr(k, 4), 16);
-                  if (b <= 0x10) {
-                    k += 4;
-                    b = (b << 16) | parseInt(token.substr(k, 4), 16);
-                    b -= 0x10000;
-                    str.push(0xD800 | (b >> 10));
-                    str.push(0xDC00 | (b & 0x3FF));
-                    break;
-                  }
-                  str.push(b);
-                }
-                tokens.push(String.fromCharCode.apply(String, str));
-                token = '';
-              }
-            }
-          } else {
-            token += String.fromCharCode(octet);
+            k += 2;
+            var w2 = (token.charCodeAt(k) << 8) | token.charCodeAt(k + 1);
+            str.push(((w1 & 0x3ff) << 10) + (w2 & 0x3ff) + 0x10000);
           }
+          cmap[i] = String.fromCharCode.apply(String, str);
         }
+        return cmap;
       }
       return charToUnicode;
     },
@@ -15173,6 +15155,7 @@ var PartialEvaluator = (function PartialEvaluatorClosure() {
           properties.cidEncoding = cidEncoding.name;
           properties.vertical = /-V$/.test(cidEncoding.name);
         }
+        properties.cmap = CMapFactory.create(cidEncoding);
       }
       this.extractWidths(dict, xref, descriptor, properties);
       this.extractDataStructures(dict, baseDict, xref, properties);
@@ -15372,6 +15355,78 @@ var OperatorList = (function OperatorListClosure() {
   };
 
   return OperatorList;
+})();
+var TextState = (function TextStateClosure() {
+  function TextState() {
+    this.fontSize = 0;
+    this.ctm = [1, 0, 0, 1, 0, 0];
+    this.textMatrix = [1, 0, 0, 1, 0, 0];
+    this.stateStack = [];
+    //textState variables
+    this.leading = 0;
+    this.textHScale = 1;
+    this.textRise = 0;
+  }
+  TextState.prototype = {
+    push: function TextState_push() {
+      this.stateStack.push(this.ctm.slice());
+    },
+    pop: function TextStae_pop() {
+      this.ctm = this.stateStack.pop();
+    },
+    initialiseTextObj: function TextState_initialiseTextObj() {
+      var m = this.textMatrix;
+      m[0] = 1, m[1] = 0, m[2] = 0, m[3] = 1, m[4] = 0, m[5] = 0;
+    },
+    setTextMatrix: function TextState_setTextMatrix(a, b, c, d, e, f) {
+      var m = this.textMatrix;
+      m[0] = a, m[1] = b, m[2] = c, m[3] = d, m[4] = e, m[5] = f;
+    },
+    transformCTM: function TextState_transformCTM(a, b, c, d, e, f) {
+      var m = this.ctm;
+      var m0 = m[0], m1 = m[1], m2 = m[2], m3 = m[3], m4 = m[4], m5 = m[5];
+      m[0] = m0 * a + m2 * b;
+      m[1] = m1 * a + m3 * b;
+      m[2] = m0 * c + m2 * d;
+      m[3] = m1 * c + m3 * d;
+      m[4] = m0 * e + m2 * f + m4;
+      m[5] = m1 * e + m3 * f + m5;
+    },
+    translateTextMatrix: function TextState_translateTextMatrix(x, y) {
+      var m = this.textMatrix;
+      m[4] = m[0] * x + m[2] * y + m[4];
+      m[5] = m[1] * x + m[3] * y + m[5];
+    },
+    calcRenderParams: function TextState_calcRenderingParams() {
+      var tm = this.textMatrix;
+      var cm = this.ctm;
+      var a = this.fontSize;
+      var b = a * this.textHScale;
+      var c = this.textRise;
+      var vScale = Math.sqrt((tm[2] * tm[2]) + (tm[3] * tm[3]));
+      var angle = Math.atan2(tm[1], tm[0]);
+      var m0 = tm[0] * cm[0] + tm[1] * cm[2];
+      var m1 = tm[0] * cm[1] + tm[1] * cm[3];
+      var m2 = tm[2] * cm[0] + tm[3] * cm[2];
+      var m3 = tm[2] * cm[1] + tm[3] * cm[3];
+      var m4 = tm[4] * cm[0] + tm[5] * cm[2] + cm[4];
+      var m5 = tm[4] * cm[1] + tm[5] * cm[3] + cm[5];
+      var renderMatrix = [
+        b * m0,
+        b * m1,
+        a * m2,
+        a * m3,
+        c * m2 + m4,
+        c * m3 + m5
+      ];
+      return {
+        renderMatrix: renderMatrix,
+        vScale: vScale,
+        angle: angle
+      };
+    },
+  };
+  return TextState;
 })();
 
 var EvalState = (function EvalStateClosure() {
@@ -17549,6 +17604,7 @@ var Font = (function FontClosure() {
     this.composite = properties.composite;
     this.wideChars = properties.wideChars;
     this.hasEncoding = properties.hasEncoding;
+    this.cmap = properties.cmap;
 
     this.fontMatrix = properties.fontMatrix;
     if (properties.type == 'Type3') {
@@ -19068,7 +19124,7 @@ var Font = (function FontClosure() {
 
       var dupFirstEntry = false;
       if (properties.type == 'CIDFontType2' && properties.toUnicode &&
-          properties.toUnicode[0] > 0) {
+          properties.toUnicode[0] > '\u0000') {
         // oracle's defect (see 3427), duplicating first entry
         dupFirstEntry = true;
         numGlyphs++;
@@ -19617,8 +19673,12 @@ var Font = (function FontClosure() {
         var unicode = toUnicode[i];
         var fontCharCode = typeof unicode === 'object' ? unusedUnicode++ :
           unicode;
-        if (typeof unicode !== 'undefined')
+        if (typeof unicode !== 'undefined') {
+          if (isString(fontCharCode) && fontCharCode.length === 1) {
+            fontCharCode = fontCharCode.charCodeAt(0);
+          }
           result[i] = fontCharCode;
+        }
       }
       return result;
     },
@@ -19631,7 +19691,7 @@ var Font = (function FontClosure() {
         var isIdentityMap = toUnicode.length === 0;
         for (var i = firstChar, ii = lastChar; i <= ii; i++) {
           // TODO missing map the character according font's CMap
-          map[i] = isIdentityMap ? i : toUnicode[i];
+          map[i] = isIdentityMap ? String.fromCharCode(i) : toUnicode[i];
         }
       } else {
         for (var i = firstChar, ii = lastChar; i <= ii; i++) {
@@ -19639,7 +19699,7 @@ var Font = (function FontClosure() {
           if (!glyph)
             glyph = properties.baseEncoding[i];
           if (!!glyph && (glyph in GlyphsUnicode))
-            map[i] = GlyphsUnicode[glyph];
+            map[i] = String.fromCharCode(GlyphsUnicode[glyph]);
         }
       }
       this.toUnicode = map;
@@ -19902,15 +19962,15 @@ var Font = (function FontClosure() {
           warn('Unsupported CMap: ' + cidEncoding);
         }
       }
-      if (!converter && this.wideChars) {
+      if (!converter && this.cmap) {
+        var i = 0;
         // composite fonts have multi-byte strings convert the string from
         // single-byte to multi-byte
-        // XXX assuming CIDFonts are two-byte - later need to extract the
-        // correct byte encoding according to the PDF spec
-        var length = chars.length - 1; // looping over two bytes at a time so
-                                       // loop should never end on the last byte
-        for (var i = 0; i < length; i++) {
-          var charcode = int16([chars.charCodeAt(i++), chars.charCodeAt(i)]);
+        while (i < chars.length) {
+          var c = this.cmap.readCharCode(chars, i);
+          var charcode = c[0];
+          var length = c[1];
+          i += length;
           var glyph = this.charToGlyph(charcode);
           glyphs.push(glyph);
           // placing null after each word break charcode (ASCII SPACE)
@@ -34079,7 +34139,7 @@ var WorkerMessageHandler = PDFJS.WorkerMessageHandler = {
     });
 
     handler.on('Terminate', function wphTerminate(data, promise) {
-      pdfManager.streamManager.networkManager.abortAllRequests();
+      pdfManager.terminate();
       promise.resolve();
     });
   }
@@ -37514,6 +37574,447 @@ var bidi = PDFJS.bidi = (function bidiClosure() {
   return bidi;
 })();
 
+
+
+var CMAP_CODESPACES = {
+  'Adobe-CNS1-0': [[], [0, 14335]],
+  'Adobe-CNS1-1': [[], [0, 17407]],
+  'Adobe-CNS1-2': [[], [0, 17663]],
+  'Adobe-CNS1-3': [[], [0, 18943]],
+  'Adobe-CNS1-4': [[], [0, 19199]],
+  'Adobe-CNS1-5': [[], [0, 19199]],
+  'Adobe-CNS1-6': [[], [0, 19199]],
+  'Adobe-CNS1-UCS2': [[], [0, 65535]],
+  'B5-H': [[0, 128], [41280, 65278]],
+  'B5-V': [[0, 128], [41280, 65278]],
+  'B5pc-H': [[0, 128, 253, 255], [41280, 64766]],
+  'B5pc-V': [[0, 128, 253, 255], [41280, 64766]],
+  'CNS-EUC-H': [[0, 128], [41377, 65278], [],
+    [2392957345, 2392981246, 2393022881, 2393046782, 2393088417, 2393112318]],
+  'CNS-EUC-V': [[0, 128], [41377, 65278], [],
+    [2392957345, 2392981246, 2393022881, 2393046782, 2393088417, 2393112318]],
+  'CNS1-H': [[], [8481, 32382]],
+  'CNS1-V': [[], [8481, 32382]],
+  'CNS2-H': [[], [8481, 32382]],
+  'CNS2-V': [[], [8481, 32382]],
+  'ETen-B5-H': [[0, 128], [41280, 65278]],
+  'ETen-B5-V': [[0, 128], [41280, 65278]],
+  'ETenms-B5-H': [[0, 128], [41280, 65278]],
+  'ETenms-B5-V': [[0, 128], [41280, 65278]],
+  'ETHK-B5-H': [[0, 128], [34624, 65278]],
+  'ETHK-B5-V': [[0, 128], [34624, 65278]],
+  'HKdla-B5-H': [[0, 128], [41280, 65278]],
+  'HKdla-B5-V': [[0, 128], [41280, 65278]],
+  'HKdlb-B5-H': [[0, 128], [36416, 65278]],
+  'HKdlb-B5-V': [[0, 128], [36416, 65278]],
+  'HKgccs-B5-H': [[0, 128], [35392, 65278]],
+  'HKgccs-B5-V': [[0, 128], [35392, 65278]],
+  'HKm314-B5-H': [[0, 128], [41280, 65278]],
+  'HKm314-B5-V': [[0, 128], [41280, 65278]],
+  'HKm471-B5-H': [[0, 128], [41280, 65278]],
+  'HKm471-B5-V': [[0, 128], [41280, 65278]],
+  'HKscs-B5-H': [[0, 128], [34624, 65278]],
+  'HKscs-B5-V': [[0, 128], [34624, 65278]],
+  'UniCNS-UCS2-H': [[], [0, 55295, 57344, 65535]],
+  'UniCNS-UCS2-V': [[], [0, 55295, 57344, 65535]],
+  'UniCNS-UTF16-H': [[], [0, 55295, 57344, 65535], [],
+    [3623934976, 3690979327]],
+  'UniCNS-UTF16-V': [[], [0, 55295, 57344, 65535], [],
+    [3623934976, 3690979327]],
+  'Adobe-GB1-0': [[], [0, 7935]],
+  'Adobe-GB1-1': [[], [0, 9983]],
+  'Adobe-GB1-2': [[], [0, 22271]],
+  'Adobe-GB1-3': [[], [0, 22527]],
+  'Adobe-GB1-4': [[], [0, 29183]],
+  'Adobe-GB1-5': [[], [0, 30463]],
+  'Adobe-GB1-UCS2': [[], [0, 65535]],
+  'GB-EUC-H': [[0, 128], [41377, 65278]],
+  'GB-EUC-V': [[0, 128], [41377, 65278]],
+  'GB-H': [[], [8481, 32382]],
+  'GB-V': [[], [8481, 32382]],
+  'GBK-EUC-H': [[0, 128], [33088, 65278]],
+  'GBK-EUC-V': [[0, 128], [33088, 65278]],
+  'GBK2K-H': [[0, 127], [33088, 65278], [], [2167439664, 4265213497]],
+  'GBK2K-V': [[0, 127], [33088, 65278], [], [2167439664, 4265213497]],
+  'GBKp-EUC-H': [[0, 128], [33088, 65278]],
+  'GBKp-EUC-V': [[0, 128], [33088, 65278]],
+  'GBpc-EUC-H': [[0, 128, 253, 255], [41377, 64766]],
+  'GBpc-EUC-V': [[0, 128, 253, 255], [41377, 64766]],
+  'GBT-EUC-H': [[0, 128], [41377, 65278]],
+  'GBT-EUC-V': [[0, 128], [41377, 65278]],
+  'GBT-H': [[], [8481, 32382]],
+  'GBT-V': [[], [8481, 32382]],
+  'GBTpc-EUC-H': [[0, 128, 253, 255], [41377, 64766]],
+  'GBTpc-EUC-V': [[0, 128, 253, 255], [41377, 64766]],
+  'UniGB-UCS2-H': [[], [0, 55295, 57344, 65535]],
+  'UniGB-UCS2-V': [[], [0, 55295, 57344, 65535]],
+  'UniGB-UTF16-H': [[], [0, 55295, 57344, 65535], [], [3623934976, 3690979327]],
+  'UniGB-UTF16-V': [[], [0, 55295, 57344, 65535], [], [3623934976, 3690979327]],
+  '78-EUC-H': [[0, 128], [36512, 36575, 41377, 65278]],
+  '78-EUC-V': [[0, 128], [36512, 36575, 41377, 65278]],
+  '78-H': [[], [8481, 32382]],
+  '78-RKSJ-H': [[0, 128, 160, 223], [33088, 40956, 57408, 64764]],
+  '78-RKSJ-V': [[0, 128, 160, 223], [33088, 40956, 57408, 64764]],
+  '78-V': [[], [8481, 32382]],
+  '78ms-RKSJ-H': [[0, 128, 160, 223], [33088, 40956, 57408, 64764]],
+  '78ms-RKSJ-V': [[0, 128, 160, 223], [33088, 40956, 57408, 64764]],
+  '83pv-RKSJ-H': [[0, 128, 160, 223, 253, 255], [33088, 40956, 57408, 64764]],
+  '90ms-RKSJ-H': [[0, 128, 160, 223], [33088, 40956, 57408, 64764]],
+  '90ms-RKSJ-V': [[0, 128, 160, 223], [33088, 40956, 57408, 64764]],
+  '90msp-RKSJ-H': [[0, 128, 160, 223], [33088, 40956, 57408, 64764]],
+  '90msp-RKSJ-V': [[0, 128, 160, 223], [33088, 40956, 57408, 64764]],
+  '90pv-RKSJ-H': [[0, 128, 160, 223, 253, 255], [33088, 40956, 57408, 64764]],
+  '90pv-RKSJ-V': [[0, 128, 160, 223, 253, 255], [33088, 40956, 57408, 64764]],
+  'Add-H': [[], [8481, 32382]],
+  'Add-RKSJ-H': [[0, 128, 160, 223], [33088, 40956, 57408, 64764]],
+  'Add-RKSJ-V': [[0, 128, 160, 223], [33088, 40956, 57408, 64764]],
+  'Add-V': [[], [8481, 32382]],
+  'Adobe-Japan1-0': [[], [0, 8447]],
+  'Adobe-Japan1-1': [[], [0, 8447]],
+  'Adobe-Japan1-2': [[], [0, 8959]],
+  'Adobe-Japan1-3': [[], [0, 9471]],
+  'Adobe-Japan1-4': [[], [0, 15615]],
+  'Adobe-Japan1-5': [[], [0, 20479]],
+  'Adobe-Japan1-6': [[], [0, 23295]],
+  'Adobe-Japan1-UCS2': [[], [0, 65535]],
+  'Adobe-Japan2-0': [[], [0, 6143]],
+  'EUC-H': [[0, 128], [36512, 36575, 41377, 65278]],
+  'EUC-V': [[0, 128], [36512, 36575, 41377, 65278]],
+  'Ext-H': [[], [8481, 32382]],
+  'Ext-RKSJ-H': [[0, 128, 160, 223], [33088, 40956, 57408, 64764]],
+  'Ext-RKSJ-V': [[0, 128, 160, 223], [33088, 40956, 57408, 64764]],
+  'Ext-V': [[], [8481, 32382]],
+  'H': [[], [8481, 32382]],
+  'Hankaku': [[0, 255], []],
+  'Hiragana': [[0, 255], []],
+  'Hojo-EUC-H': [[], [], [9413025, 9436926], []],
+  'Hojo-EUC-V': [[], [], [9413025, 9436926], []],
+  'Hojo-H': [[], [8481, 32382]],
+  'Hojo-V': [[], [8481, 32382]],
+  'Katakana': [[0, 255], []],
+  'NWP-H': [[], [8481, 32382]],
+  'NWP-V': [[], [8481, 32382]],
+  'RKSJ-H': [[0, 128, 160, 223], [33088, 40956, 57408, 64764]],
+  'RKSJ-V': [[0, 128, 160, 223], [33088, 40956, 57408, 64764]],
+  'Roman': [[0, 255], []],
+  'UniHojo-UCS2-H': [[], [0, 55295, 57344, 65535]],
+  'UniHojo-UCS2-V': [[], [0, 55295, 57344, 65535]],
+  'UniHojo-UTF16-H': [[], [0, 55295, 57344, 65535], [],
+    [3623934976, 3690979327]],
+  'UniHojo-UTF16-V': [[], [0, 55295, 57344, 65535], [],
+    [3623934976, 3690979327]],
+  'UniJIS-UCS2-H': [[], [0, 55295, 57344, 65535]],
+  'UniJIS-UCS2-HW-H': [[], [0, 55295, 57344, 65535]],
+  'UniJIS-UCS2-HW-V': [[], [0, 55295, 57344, 65535]],
+  'UniJIS-UCS2-V': [[], [0, 55295, 57344, 65535]],
+  'UniJIS-UTF16-H': [[], [0, 55295, 57344, 65535], [],
+    [3623934976, 3690979327]],
+  'UniJIS-UTF16-V': [[], [0, 55295, 57344, 65535], [],
+    [3623934976, 3690979327]],
+  'UniJISPro-UCS2-HW-V': [[], [0, 55295, 57344, 65535]],
+  'UniJISPro-UCS2-V': [[], [0, 55295, 57344, 65535]],
+  'V': [[], [8481, 32382]],
+  'WP-Symbol': [[0, 255], []],
+  'Adobe-Korea1-0': [[], [0, 9471]],
+  'Adobe-Korea1-1': [[], [0, 18175]],
+  'Adobe-Korea1-2': [[], [0, 18431]],
+  'Adobe-Korea1-UCS2': [[], [0, 65535]],
+  'KSC-EUC-H': [[0, 128], [41377, 65278]],
+  'KSC-EUC-V': [[0, 128], [41377, 65278]],
+  'KSC-H': [[], [8481, 32382]],
+  'KSC-Johab-H': [[0, 128], [33857, 54270, 55345, 57086, 57393, 63998]],
+  'KSC-Johab-V': [[0, 128], [33857, 54270, 55345, 57086, 57393, 63998]],
+  'KSC-V': [[], [8481, 32382]],
+  'KSCms-UHC-H': [[0, 128], [33089, 65278]],
+  'KSCms-UHC-HW-H': [[0, 128], [33089, 65278]],
+  'KSCms-UHC-HW-V': [[0, 128], [33089, 65278]],
+  'KSCms-UHC-V': [[0, 128], [33089, 65278]],
+  'KSCpc-EUC-H': [[0, 132, 254, 255], [41281, 65022]],
+  'KSCpc-EUC-V': [[0, 132, 254, 255], [41281, 65022]],
+  'UniKS-UCS2-H': [[], [0, 55295, 57344, 65535]],
+  'UniKS-UCS2-V': [[], [0, 55295, 57344, 65535]],
+  'UniKS-UTF16-H': [[], [0, 55295, 57344, 65535], [], [3623934976, 3690979327]],
+  'UniKS-UTF16-V': [[], [0, 55295, 57344, 65535], [], [3623934976, 3690979327]]
+};
+
+// CMap, not to be confused with TrueType's cmap.
+var CMap = (function CMapClosure() {
+  function CMap() {
+    // Codespace ranges are stored as follows:
+    // [[1BytePairs], [2BytePairs], [3BytePairs], [4BytePairs]]
+    // where nBytePairs are ranges e.g. [low1, high1, low2, high2, ...]
+    this.codespaceRanges = [[], [], [], []];
+    this.map = [];
+    this.vertical = false;
+  }
+  CMap.prototype = {
+    addCodespaceRange: function(n, low, high) {
+      this.codespaceRanges[n - 1].push(low, high);
+    },
+
+    mapRange: function(low, high, dstLow) {
+      var lastByte = dstLow.length - 1;
+      while (low <= high) {
+        this.map[low] = dstLow;
+        // Only the last byte has to be incremented.
+        dstLow = dstLow.substr(0, lastByte) +
+                 String.fromCharCode(dstLow.charCodeAt(lastByte) + 1);
+        ++low;
+      }
+    },
+
+    mapRangeToArray: function(low, high, array) {
+      var i = 0;
+      while (low <= high) {
+        this.map[low] = array[i++];
+        ++low;
+      }
+    },
+
+    mapOne: function(src, dst) {
+      this.map[src] = dst;
+    },
+
+    lookup: function(code) {
+      return this.map[code];
+    },
+
+    readCharCode: function(str, offset) {
+      var c = 0;
+      var codespaceRanges = this.codespaceRanges;
+      var codespaceRangesLen = this.codespaceRanges.length;
+      // 9.7.6.2 CMap Mapping
+      // The code length is at most 4.
+      for (var n = 0; n < codespaceRangesLen; n++) {
+        c = ((c << 8) | str.charCodeAt(offset + n)) >>> 0;
+        // Check each codespace range to see if it falls within.
+        var codespaceRange = codespaceRanges[n];
+        for (var k = 0, kk = codespaceRange.length; k < kk;) {
+          var low = codespaceRange[k++];
+          var high = codespaceRange[k++];
+          if (c >= low && c <= high) {
+            return [c, n + 1];
+          }
+        }
+      }
+
+      return [0, 1];
+    }
+
+  };
+  return CMap;
+})();
+
+var IdentityCMap = (function IdentityCMapClosure() {
+  function IdentityCMap(vertical, n) {
+    CMap.call(this);
+    this.vertical = vertical;
+    this.addCodespaceRange(n, 0, 0xffff);
+    this.mapRange(0, 0xffff, '\u0000');
+  }
+  Util.inherit(IdentityCMap, CMap, {});
+
+  return IdentityCMap;
+})();
+
+var CMapFactory = (function CMapFactoryClosure() {
+  function strToInt(str) {
+    var a = 0;
+    for (var i = 0; i < str.length; i++) {
+      a = (a << 8) | str.charCodeAt(i);
+    }
+    return a >>> 0;
+  }
+
+  function expectString(obj) {
+    if (!isString(obj)) {
+      error('Malformed CMap: expected string.');
+    }
+  }
+
+  function expectInt(obj) {
+    if (!isInt(obj)) {
+      error('Malformed CMap: expected int.');
+    }
+  }
+
+  function parseBfChar(cMap, lexer) {
+    while (true) {
+      var obj = lexer.getObj();
+      if (isEOF(obj)) {
+        break;
+      }
+      if (isCmd(obj, 'endbfchar')) {
+        return;
+      }
+      expectString(obj);
+      var src = strToInt(obj);
+      obj = lexer.getObj();
+      // TODO are /dstName used?
+      expectString(obj);
+      var dst = obj;
+      cMap.mapOne(src, dst);
+    }
+  }
+
+  function parseBfRange(cMap, lexer) {
+    while (true) {
+      var obj = lexer.getObj();
+      if (isEOF(obj)) {
+        break;
+      }
+      if (isCmd(obj, 'endbfrange')) {
+        return;
+      }
+      expectString(obj);
+      var low = strToInt(obj);
+      obj = lexer.getObj();
+      expectString(obj);
+      var high = strToInt(obj);
+      obj = lexer.getObj();
+      if (isInt(obj) || isString(obj)) {
+        var dstLow = isInt(obj) ? String.fromCharCode(obj) : obj;
+        cMap.mapRange(low, high, dstLow);
+      } else if (isCmd(obj, '[')) {
+        obj = lexer.getObj();
+        var array = [];
+        while (!isCmd(obj, ']') && !isEOF(obj)) {
+          array.push(obj);
+          obj = lexer.getObj();
+        }
+        cMap.mapRangeToArray(low, high, array);
+      } else {
+        break;
+      }
+    }
+    error('Invalid bf range.');
+  }
+
+  function parseCidChar(cMap, lexer) {
+    while (true) {
+      var obj = lexer.getObj();
+      if (isEOF(obj)) {
+        break;
+      }
+      if (isCmd(obj, 'endcidchar')) {
+        return;
+      }
+      expectString(obj);
+      var src = strToInt(obj);
+      obj = lexer.getObj();
+      expectInt(obj);
+      var dst = String.fromCharCode(obj);
+      cMap.mapOne(src, dst);
+    }
+  }
+
+  function parseCidRange(cMap, lexer) {
+    while (true) {
+      var obj = lexer.getObj();
+      if (isEOF(obj)) {
+        break;
+      }
+      if (isCmd(obj, 'endcidrange')) {
+        return;
+      }
+      expectString(obj);
+      var low = strToInt(obj);
+      obj = lexer.getObj();
+      expectString(obj);
+      var high = strToInt(obj);
+      obj = lexer.getObj();
+      expectInt(obj);
+      var dstLow = String.fromCharCode(obj);
+      cMap.mapRange(low, high, dstLow);
+    }
+  }
+
+  function parseCodespaceRange(cMap, lexer) {
+    while (true) {
+      var obj = lexer.getObj();
+      if (isEOF(obj)) {
+        break;
+      }
+      if (isCmd(obj, 'endcodespacerange')) {
+        return;
+      }
+      if (!isString(obj)) {
+        break;
+      }
+      var low = strToInt(obj);
+      obj = lexer.getObj();
+      if (!isString(obj)) {
+        break;
+      }
+      var high = strToInt(obj);
+      cMap.addCodespaceRange(obj.length, low, high);
+    }
+    error('Invalid codespace range.');
+  }
+
+  function parseCmap(cMap, lexer) {
+    objLoop: while (true) {
+      var obj = lexer.getObj();
+      if (isEOF(obj)) {
+        break;
+      } else if (isCmd(obj)) {
+        switch (obj.cmd) {
+          case 'endcMap':
+            break objLoop;
+          case 'usecMap':
+            // TODO
+            break;
+          case 'begincodespacerange':
+            parseCodespaceRange(cMap, lexer);
+            break;
+          case 'beginbfchar':
+            parseBfChar(cMap, lexer);
+            break;
+          case 'begincidchar':
+            parseCidChar(cMap, lexer);
+            break;
+          case 'beginbfrange':
+            parseBfRange(cMap, lexer);
+            break;
+          case 'begincidrange':
+            parseCidRange(cMap, lexer);
+            break;
+        }
+      }
+    }
+  }
+  return {
+    create: function (encoding) {
+      if (isName(encoding)) {
+        switch (encoding.name) {
+          case 'Identity-H':
+            return new IdentityCMap(false, 2);
+          case 'Identity-V':
+            return new IdentityCMap(true, 2);
+          default:
+            if (encoding.name in CMAP_CODESPACES) {
+              // XXX: Temporary hack so the correct amount of bytes are read in
+              // CMap.readCharCode.
+              var cMap = new CMap();
+              cMap.codespaceRanges = CMAP_CODESPACES[encoding.name];
+              return cMap;
+            }
+            return null;
+        }
+      } else if (isStream(encoding)) {
+        var cMap = new CMap();
+        var lexer = new Lexer(encoding);
+        try {
+          parseCmap(cMap, lexer);
+        } catch (e) {
+          warn('Invalid CMap data. ' + e);
+        }
+        return cMap;
+      }
+      error('Encoding required.');
+    }
+  };
+})();
 /* -*- Mode: Java; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- /
 /* vim: set shiftwidth=2 tabstop=2 autoindent cindent expandtab: */
 /*
