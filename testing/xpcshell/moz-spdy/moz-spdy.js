@@ -160,6 +160,7 @@ var options = {
   key: fs.readFileSync(__dirname + '/spdy-key.pem'),
   cert: fs.readFileSync(__dirname + '/spdy-cert.pem'),
   ca: fs.readFileSync(__dirname + '/spdy-ca.pem'),
+  windowSize: 16000000,
 };
 
 spdy.createServer(options, handleRequest).listen(4443);
