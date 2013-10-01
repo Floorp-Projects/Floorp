@@ -1,8 +1,10 @@
 // for-of can iterate arguments objects.
 
-// Arguments objects do not have a .iterator() method by default.
+load(libdir + "iteration.js");
+
+// Arguments objects do not have a .@@iterator() method by default.
 // Install one on Object.prototype.
-Object.prototype.iterator = Array.prototype.iterator;
+Object.prototype[std_iterator] = Array.prototype[std_iterator];
 
 var s;
 function test() {

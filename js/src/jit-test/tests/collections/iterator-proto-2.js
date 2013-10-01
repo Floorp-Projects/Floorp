@@ -1,8 +1,10 @@
 // Iterators of different collection types have different prototypes.
 
-var aproto = Object.getPrototypeOf(Array().iterator());
-var mproto = Object.getPrototypeOf(Map().iterator());
-var sproto = Object.getPrototypeOf(Set().iterator());
+load(libdir + "iteration.js");
+
+var aproto = Object.getPrototypeOf(Array()[std_iterator]());
+var mproto = Object.getPrototypeOf(Map()[std_iterator]());
+var sproto = Object.getPrototypeOf(Set()[std_iterator]());
 assertEq(aproto !== mproto, true);
 assertEq(aproto !== sproto, true);
 assertEq(mproto !== sproto, true);

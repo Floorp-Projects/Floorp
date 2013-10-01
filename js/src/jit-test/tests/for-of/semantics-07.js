@@ -2,7 +2,9 @@
 // causes a TypeError at the next iteration.
 
 load(libdir + "asserts.js");
-var iterProto = Object.getPrototypeOf([].iterator());
+load(libdir + "iteration.js");
+
+var iterProto = Object.getPrototypeOf([][std_iterator]());
 var s = '';
 assertThrowsInstanceOf(function () {
     for (var v of ['duck', 'duck', 'duck', 'goose', 'FAIL']) {

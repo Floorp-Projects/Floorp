@@ -1,10 +1,13 @@
 // mapiter.next() returns a fresh array each time.
 
+load(libdir + "iteration.js");
+
 var map = Map([['a', 1], ['b', 2]]);
-var iter = map.iterator();
+var iter = map[std_iterator]();
 var a = iter.next(), b = iter.next();
-assertEq(a !== b, true);
-assertEq(a[0], 'a');
-assertEq(b[0], 'b');
-var a1 = map.iterator().next();
-assertEq(a !== a1, true);
+assertIteratorResult(a, ['a', 1], false);
+assertIteratorResult(b, ['b', 2], false);
+assertEq(a.value !== b.value, true);
+var a1 = map[std_iterator]().next();
+assertIteratorResult(a1, ['a', 1], false);
+assertEq(a.value !== a1.value, true);

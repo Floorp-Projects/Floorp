@@ -236,23 +236,6 @@ js_ThrowStopIteration(JSContext *cx);
 namespace js {
 
 /*
- * Get the next value from an iterator object.
- *
- * On success, store the next value in *vp and return true; if there are no
- * more values, store the magic value JS_NO_ITER_VALUE in *vp and return true.
- */
-inline bool
-Next(JSContext *cx, HandleObject iter, MutableHandleValue vp)
-{
-    if (!js_IteratorMore(cx, iter, vp))
-        return false;
-    if (vp.toBoolean())
-        return js_IteratorNext(cx, iter, vp);
-    vp.setMagic(JS_NO_ITER_VALUE);
-    return true;
-}
-
-/*
  * Convenience class for imitating a JS level for-of loop. Typical usage:
  *
  *     ForOfIterator it(cx, iterable);
@@ -275,56 +258,30 @@ class ForOfIterator
   private:
     JSContext *cx;
     RootedObject iterator;
-    RootedValue currentValue;
-    bool ok;
-    bool closed;
 
     ForOfIterator(const ForOfIterator &) MOZ_DELETE;
     ForOfIterator &operator=(const ForOfIterator &) MOZ_DELETE;
 
   public:
-    ForOfIterator(JSContext *cx, const Value &iterable)
-        : cx(cx), iterator(cx, NULL), currentValue(cx), closed(false)
-    {
+    ForOfIterator(JSContext *cx) : cx(cx), iterator(cx) { }
+
+    bool init(HandleValue iterable) {
         RootedValue iterv(cx, iterable);
-        ok = ValueToIterator(cx, JSITER_FOR_OF, &iterv);
-        iterator = ok ? &iterv.get().toObject() : NULL;
-    }
-
-    ~ForOfIterator() {
-        if (!closed)
-            close();
-    }
-
-    bool next() {
-        JS_ASSERT(!closed);
-        ok = ok && Next(cx, iterator, &currentValue);
-        return ok && !currentValue.get().isMagic(JS_NO_ITER_VALUE);
-    }
-
-    MutableHandleValue value() {
-        JS_ASSERT(ok);
-        JS_ASSERT(!closed);
-        return &currentValue;
-    }
-
-    bool close() {
-        JS_ASSERT(!closed);
-        closed = true;
-        if (!iterator)
+        if (!ValueToIterator(cx, JSITER_FOR_OF, &iterv))
             return false;
-        bool throwing = cx->isExceptionPending();
-        RootedValue exc(cx);
-        if (throwing) {
-            exc = cx->getPendingException();
-            cx->clearPendingException();
-        }
-        bool closedOK = CloseIterator(cx, iterator);
-        if (throwing && closedOK)
-            cx->setPendingException(exc);
-        return ok && !throwing && closedOK;
+        iterator = &iterv.get().toObject();
+        return true;
     }
+
+    bool next(MutableHandleValue val, bool *done);
 };
+
+/*
+ * Create an object of the form { value: VALUE, done: DONE }.
+ * ES6 draft from 2013-09-05, section 25.4.3.4.
+ */
+extern JSObject *
+CreateItrResultObject(JSContext *cx, js::HandleValue value, bool done);
 
 } /* namespace js */
 

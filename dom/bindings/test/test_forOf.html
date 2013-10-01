@@ -50,19 +50,11 @@ function runTestsForDocument(document, msgSuffix) {
     }
     is(log, "egg0;egg1;egg2;egg3;", "'for (x of div.childNodes)' should see elements added during iteration");
 
-    var iter1 = basket.childNodes.iterator();
-    var iter2 = basket.childNodes.iterator();
-    isnot(iter1, iter2, "nodelist.iterator() returns a new iterator each time");
-
     log = '';
     basket.appendChild(document.createTextNode("some text"));
     for (var x of basket.children)
         log += x.id + ";";
     is(log, "egg0;egg1;egg2;egg3;", "'for (x of div.children)' should iterate over child elements");
-
-    var iter1 = basket.children.iterator();
-    var iter2 = basket.children.iterator();
-    isnot(iter1, iter2, ".iterator() returns a new iterator each time");
 
     var count = 0;
     for (var x of document.getElementsByClassName("hazardous-materials"))

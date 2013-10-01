@@ -3993,7 +3993,7 @@ Parser<FullParseHandler>::forStatement()
          * that receives the enumeration value each iteration, and pn3 is the
          * rhs of 'in'.
          */
-        forStmt.type = STMT_FOR_IN_LOOP;
+        forStmt.type = isForOf ? STMT_FOR_OF_LOOP : STMT_FOR_IN_LOOP;
 
         /* Set iflags and rule out invalid combinations. */
         if (isForOf && isForEach) {
@@ -4275,7 +4275,7 @@ Parser<SyntaxParseHandler>::forStatement()
     bool isForOf;
     if (lhsNode && matchInOrOf(&isForOf)) {
         /* Parse the rest of the for/in or for/of head. */
-        forStmt.type = STMT_FOR_IN_LOOP;
+        forStmt.type = isForOf ? STMT_FOR_OF_LOOP : STMT_FOR_IN_LOOP;
 
         /* Check that the left side of the 'in' or 'of' is valid. */
         if (!isForDecl &&
