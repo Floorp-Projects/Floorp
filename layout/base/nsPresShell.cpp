@@ -6093,7 +6093,7 @@ PresShell::HandleEvent(nsIFrame        *aFrame,
       mNoDelayedKeyEvents = true;
     } else if (!mNoDelayedKeyEvents) {
       nsDelayedEvent* event =
-        new nsDelayedKeyEvent(static_cast<nsKeyEvent*>(aEvent));
+        new nsDelayedKeyEvent(static_cast<WidgetKeyboardEvent*>(aEvent));
       if (!mDelayedEvents.AppendElement(event)) {
         delete event;
       }
@@ -6678,7 +6678,8 @@ PresShell::HandleEventInternal(nsEvent* aEvent, nsEventStatus* aStatus)
         nsIDocument* doc = GetCurrentEventContent() ?
                            mCurrentEventContent->OwnerDoc() : nullptr;
         nsIDocument* fullscreenAncestor = nullptr;
-        if (static_cast<const nsKeyEvent*>(aEvent)->keyCode == NS_VK_ESCAPE) {
+        if (static_cast<const WidgetKeyboardEvent*>(aEvent)->keyCode ==
+              NS_VK_ESCAPE) {
           if ((fullscreenAncestor = nsContentUtils::GetFullscreenAncestor(doc))) {
             // Prevent default action on ESC key press when exiting
             // DOM fullscreen mode. This prevents the browser ESC key

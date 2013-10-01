@@ -7,11 +7,13 @@
 #include "nsDOMXULCommandEvent.h"
 #include "prtime.h"
 
+using namespace mozilla;
+
 nsDOMXULCommandEvent::nsDOMXULCommandEvent(mozilla::dom::EventTarget* aOwner,
                                            nsPresContext* aPresContext,
-                                           nsInputEvent* aEvent)
+                                           WidgetInputEvent* aEvent)
   : nsDOMUIEvent(aOwner, aPresContext,
-                 aEvent ? aEvent : new nsInputEvent(false, 0, nullptr))
+                 aEvent ? aEvent : new WidgetInputEvent(false, 0, nullptr))
 {
   if (aEvent) {
     mEventIsInternal = false;
@@ -95,7 +97,7 @@ nsDOMXULCommandEvent::InitCommandEvent(const nsAString& aType,
 nsresult NS_NewDOMXULCommandEvent(nsIDOMEvent** aInstancePtrResult,
                                   mozilla::dom::EventTarget* aOwner,
                                   nsPresContext* aPresContext,
-                                  nsInputEvent *aEvent) 
+                                  WidgetInputEvent* aEvent) 
 {
   nsDOMXULCommandEvent* it =
     new nsDOMXULCommandEvent(aOwner, aPresContext, aEvent);

@@ -19,7 +19,8 @@ public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSIQUERYCONTENTEVENTRESULT
 
-  void SetEventResult(nsIWidget* aWidget, const nsQueryContentEvent &aEvent);
+  void SetEventResult(nsIWidget* aWidget,
+                      const mozilla::WidgetQueryContentEvent &aEvent);
 
 protected:
   uint32_t mEventID;
