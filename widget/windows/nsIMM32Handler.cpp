@@ -934,7 +934,7 @@ nsIMM32Handler::HandleStartComposition(nsWindow* aWindow,
   mCompositionStart = selection.mReply.mOffset;
   mLastDispatchedCompositionString.Truncate();
 
-  nsCompositionEvent event(true, NS_COMPOSITION_START, aWindow);
+  WidgetCompositionEvent event(true, NS_COMPOSITION_START, aWindow);
   aWindow->InitEvent(event, &point);
   aWindow->DispatchWindowEvent(&event);
 
@@ -1195,7 +1195,7 @@ nsIMM32Handler::HandleEndComposition(nsWindow* aWindow)
   PR_LOG(gIMM32Log, PR_LOG_ALWAYS,
     ("IMM32: HandleEndComposition\n"));
 
-  nsCompositionEvent event(true, NS_COMPOSITION_END, aWindow);
+  WidgetCompositionEvent event(true, NS_COMPOSITION_END, aWindow);
   nsIntPoint point(0, 0);
 
   if (mNativeCaretIsCreated) {
@@ -1569,8 +1569,8 @@ nsIMM32Handler::DispatchTextEvent(nsWindow* aWindow,
   nsIntPoint point(0, 0);
 
   if (mCompositionString != mLastDispatchedCompositionString) {
-    nsCompositionEvent compositionUpdate(true, NS_COMPOSITION_UPDATE,
-                                         aWindow);
+    WidgetCompositionEvent compositionUpdate(true, NS_COMPOSITION_UPDATE,
+                                             aWindow);
     aWindow->InitEvent(compositionUpdate, &point);
     compositionUpdate.data = mCompositionString;
     mLastDispatchedCompositionString = mCompositionString;

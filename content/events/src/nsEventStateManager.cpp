@@ -1098,8 +1098,8 @@ nsEventStateManager::PreHandleEvent(nsPresContext* aPresContext,
     if (aEvent->mFlags.mIsTrusted) {
       // If the event is trusted event, set the selected text to data of
       // composition event.
-      nsCompositionEvent *compositionEvent =
-        static_cast<nsCompositionEvent*>(aEvent);
+      WidgetCompositionEvent *compositionEvent =
+        static_cast<WidgetCompositionEvent*>(aEvent);
       nsQueryContentEvent selectedText(true, NS_QUERY_SELECTED_TEXT,
                                        compositionEvent->widget);
       DoQuerySelectedText(&selectedText);
@@ -1110,8 +1110,8 @@ nsEventStateManager::PreHandleEvent(nsPresContext* aPresContext,
   case NS_COMPOSITION_UPDATE:
   case NS_COMPOSITION_END:
     {
-      nsCompositionEvent *compositionEvent =
-          static_cast<nsCompositionEvent*>(aEvent);
+      WidgetCompositionEvent *compositionEvent =
+          static_cast<WidgetCompositionEvent*>(aEvent);
       if (IsTargetCrossProcess(compositionEvent)) {
         // Will not be handled locally, remote the event
         if (GetCrossProcessTarget()->SendCompositionEvent(*compositionEvent)) {

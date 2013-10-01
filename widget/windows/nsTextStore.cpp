@@ -866,8 +866,8 @@ nsTextStore::FlushPendingActions()
         PR_LOG(sTextStoreLog, PR_LOG_DEBUG,
                ("TSF: 0x%p   nsTextStore::FlushPendingActions() "
                 "dispatching compositionstart event...", this));
-        nsCompositionEvent compositionStart(true, NS_COMPOSITION_START,
-                                            mWidget);
+        WidgetCompositionEvent compositionStart(true, NS_COMPOSITION_START,
+                                                mWidget);
         mWidget->InitEvent(compositionStart);
         mWidget->DispatchWindowEvent(&compositionStart);
         if (!mWidget || mWidget->Destroyed()) {
@@ -925,8 +925,8 @@ nsTextStore::FlushPendingActions()
           PR_LOG(sTextStoreLog, PR_LOG_DEBUG,
                  ("TSF: 0x%p   nsTextStore::FlushPendingActions(), "
                   "dispatching compositionupdate event...", this));
-          nsCompositionEvent compositionUpdate(true, NS_COMPOSITION_UPDATE,
-                                               mWidget);
+          WidgetCompositionEvent compositionUpdate(true, NS_COMPOSITION_UPDATE,
+                                                   mWidget);
           mWidget->InitEvent(compositionUpdate);
           compositionUpdate.data = action.mData;
           mComposition.mLastData = compositionUpdate.data;
@@ -971,8 +971,8 @@ nsTextStore::FlushPendingActions()
           PR_LOG(sTextStoreLog, PR_LOG_DEBUG,
                  ("TSF: 0x%p   nsTextStore::FlushPendingActions(), "
                   "dispatching compositionupdate event...", this));
-          nsCompositionEvent compositionUpdate(true, NS_COMPOSITION_UPDATE,
-                                               mWidget);
+          WidgetCompositionEvent compositionUpdate(true, NS_COMPOSITION_UPDATE,
+                                                   mWidget);
           mWidget->InitEvent(compositionUpdate);
           compositionUpdate.data = action.mData;
           mComposition.mLastData = compositionUpdate.data;
@@ -998,7 +998,8 @@ nsTextStore::FlushPendingActions()
         PR_LOG(sTextStoreLog, PR_LOG_DEBUG,
                ("TSF: 0x%p   nsTextStore::FlushPendingActions(), "
                 "dispatching compositionend event...", this));
-        nsCompositionEvent compositionEnd(true, NS_COMPOSITION_END, mWidget);
+        WidgetCompositionEvent compositionEnd(true, NS_COMPOSITION_END,
+                                              mWidget);
         compositionEnd.data = mComposition.mLastData;
         mWidget->InitEvent(compositionEnd);
         mWidget->DispatchWindowEvent(&compositionEnd);

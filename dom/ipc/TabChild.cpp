@@ -1882,9 +1882,9 @@ TabChild::RecvKeyEvent(const nsString& aType,
 }
 
 bool
-TabChild::RecvCompositionEvent(const nsCompositionEvent& event)
+TabChild::RecvCompositionEvent(const WidgetCompositionEvent& event)
 {
-  nsCompositionEvent localEvent(event);
+  WidgetCompositionEvent localEvent(event);
   DispatchWidgetEvent(localEvent);
   return true;
 }

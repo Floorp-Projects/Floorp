@@ -2763,13 +2763,13 @@ nsWindow::imComposeEvent(QInputMethodEvent *event, bool &handled)
     // XXX Needs to check whether this widget has been destroyed or not after
     //     each DispatchEvent().
 
-    nsCompositionEvent start(true, NS_COMPOSITION_START, this);
+    WidgetCompositionEvent start(true, NS_COMPOSITION_START, this);
     DispatchEvent(&start);
 
     nsAutoString compositionStr(event->commitString().utf16());
 
     if (!compositionStr.IsEmpty()) {
-      nsCompositionEvent update(true, NS_COMPOSITION_UPDATE, this);
+      WidgetCompositionEvent update(true, NS_COMPOSITION_UPDATE, this);
       update.data = compositionStr;
       DispatchEvent(&update);
     }
@@ -2778,7 +2778,7 @@ nsWindow::imComposeEvent(QInputMethodEvent *event, bool &handled)
     text.theText = compositionStr;
     DispatchEvent(&text);
 
-    nsCompositionEvent end(true, NS_COMPOSITION_END, this);
+    WidgetCompositionEvent end(true, NS_COMPOSITION_END, this);
     end.data = compositionStr;
     DispatchEvent(&end);
 

@@ -974,8 +974,8 @@ nsGtkIMModule::DispatchCompositionStart()
     PR_LOG(gGtkIMLog, PR_LOG_ALWAYS,
         ("    mCompositionStart=%u", mCompositionStart));
     mCompositionState = eCompositionState_CompositionStartDispatched;
-    nsCompositionEvent compEvent(true, NS_COMPOSITION_START,
-                                 mLastFocusedWindow);
+    WidgetCompositionEvent compEvent(true, NS_COMPOSITION_START,
+                                     mLastFocusedWindow);
     InitEvent(compEvent);
     nsCOMPtr<nsIWidget> kungFuDeathGrip = mLastFocusedWindow;
     mLastFocusedWindow->DispatchEvent(&compEvent, status);
@@ -1010,8 +1010,8 @@ nsGtkIMModule::DispatchCompositionEnd()
         return false;
     }
 
-    nsCompositionEvent compEvent(true, NS_COMPOSITION_END,
-                                 mLastFocusedWindow);
+    WidgetCompositionEvent compEvent(true, NS_COMPOSITION_END,
+                                     mLastFocusedWindow);
     InitEvent(compEvent);
     compEvent.data = mDispatchedCompositionString;
     nsEventStatus status;
@@ -1057,8 +1057,8 @@ nsGtkIMModule::DispatchTextEvent(const nsAString &aCompositionString,
     nsRefPtr<nsWindow> lastFocusedWindow = mLastFocusedWindow;
 
     if (aCompositionString != mDispatchedCompositionString) {
-      nsCompositionEvent compositionUpdate(true, NS_COMPOSITION_UPDATE,
-                                           mLastFocusedWindow);
+      WidgetCompositionEvent compositionUpdate(true, NS_COMPOSITION_UPDATE,
+                                               mLastFocusedWindow);
       InitEvent(compositionUpdate);
       compositionUpdate.data = aCompositionString;
       mDispatchedCompositionString = aCompositionString;
