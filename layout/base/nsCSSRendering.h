@@ -20,6 +20,10 @@ class nsRenderingContext;
 
 namespace mozilla {
 
+namespace layers {
+class ImageContainer;
+}
+
 // A CSSSizeOrRatio represents a (possibly partially specified) size for use
 // in computing image sizes. Either or both of the width and height might be
 // given. A ratio of width to height may also be given. If we at least two

@@ -8,6 +8,7 @@
 
 #include "nsQuoteList.h"
 #include "nsReadableUtils.h"
+#include "nsIContent.h"
 
 bool
 nsQuoteNode::InitTextFrame(nsGenConList* aList, nsIFrame* aPseudoFrame,

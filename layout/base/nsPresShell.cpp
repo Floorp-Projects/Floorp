@@ -158,6 +158,7 @@
 #include "RestyleManager.h"
 #include "nsIDOMHTMLElement.h"
 #include "nsIDragSession.h"
+#include "nsIFrameInlines.h"
 
 #ifdef ANDROID
 #include "nsIDocShellTreeOwner.h"

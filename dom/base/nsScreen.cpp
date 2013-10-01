@@ -5,6 +5,7 @@
 
 #include "mozilla/Hal.h"
 #include "nsScreen.h"
+#include "nsIDocument.h"
 #include "nsIDocShell.h"
 #include "nsIDocument.h"
 #include "nsPresContext.h"

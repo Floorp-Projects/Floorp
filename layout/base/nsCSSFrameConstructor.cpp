@@ -18,7 +18,7 @@
 #include "mozilla/LinkedList.h"
 #include "nsAbsoluteContainingBlock.h"
 #include "nsIAtom.h"
-#include "nsIFrame.h"
+#include "nsIFrameInlines.h"
 #include "nsGkAtoms.h"
 #include "nsPresContext.h"
 #include "nsIDocument.h"
