@@ -466,7 +466,7 @@ protected:
     // For compositionupdate and compositionend
     nsString mData;
     // For compositionupdate
-    nsTArray<nsTextRange> mRanges;
+    nsTArray<mozilla::TextRange> mRanges;
     // For selectionset
     bool mSelectionReversed;
   };

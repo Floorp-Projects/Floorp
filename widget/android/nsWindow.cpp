@@ -1980,7 +1980,7 @@ nsWindow::OnIMEEvent(AndroidGeckoEvent *ae)
         break;
     case AndroidGeckoEvent::IME_ADD_COMPOSITION_RANGE:
         {
-            nsTextRange range;
+            TextRange range;
             range.mStartOffset = ae->Start();
             range.mEndOffset = ae->End();
             range.mRangeType = ae->RangeType();

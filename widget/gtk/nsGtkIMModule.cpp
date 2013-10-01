@@ -1090,13 +1090,13 @@ nsGtkIMModule::DispatchTextEvent(const nsAString &aCompositionString,
 
     uint32_t targetOffset = mCompositionStart;
 
-    nsAutoTArray<nsTextRange, 4> textRanges;
+    nsAutoTArray<TextRange, 4> textRanges;
     if (!aIsCommit) {
         // NOTE: SetTextRangeList() assumes that mDispatchedCompositionString
         //       has been updated already.
         SetTextRangeList(textRanges);
         for (uint32_t i = 0; i < textRanges.Length(); i++) {
-            nsTextRange& range = textRanges[i];
+            TextRange& range = textRanges[i];
             if (range.mRangeType == NS_TEXTRANGE_SELECTEDRAWTEXT ||
                 range.mRangeType == NS_TEXTRANGE_SELECTEDCONVERTEDTEXT) {
                 targetOffset += range.mStartOffset;
@@ -1127,7 +1127,7 @@ nsGtkIMModule::DispatchTextEvent(const nsAString &aCompositionString,
 }
 
 void
-nsGtkIMModule::SetTextRangeList(nsTArray<nsTextRange> &aTextRangeList)
+nsGtkIMModule::SetTextRangeList(nsTArray<TextRange> &aTextRangeList)
 {
     PR_LOG(gGtkIMLog, PR_LOG_ALWAYS,
         ("GtkIMModule(%p): SetTextRangeList", this));
@@ -1179,7 +1179,7 @@ nsGtkIMModule::SetTextRangeList(nsTArray<nsTextRange> &aTextRangeList)
         gint start, end;
         pango_attr_iterator_range(iter, &start, &end);
 
-        nsTextRange range;
+        TextRange range;
         // XIMReverse | XIMUnderline
         if (attrUnderline && attrForeground) {
             range.mRangeType = NS_TEXTRANGE_SELECTEDCONVERTEDTEXT;
@@ -1228,7 +1228,7 @@ nsGtkIMModule::SetTextRangeList(nsTArray<nsTextRange> &aTextRangeList)
              GetRangeTypeName(range.mRangeType)));
     } while (pango_attr_iterator_next(iter));
 
-    nsTextRange range;
+    TextRange range;
     if (cursor_pos < 0) {
         range.mStartOffset = 0;
     } else if (uint32_t(cursor_pos) > mDispatchedCompositionString.Length()) {

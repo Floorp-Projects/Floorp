@@ -885,7 +885,7 @@ nsTextStore::FlushPendingActions()
                 action.mRanges.Length()));
 
         if (action.mRanges.IsEmpty()) {
-          nsTextRange wholeRange;
+          TextRange wholeRange;
           wholeRange.mStartOffset = 0;
           wholeRange.mEndOffset = action.mData.Length();
           wholeRange.mRangeType = NS_TEXTRANGE_RAWINPUT;
@@ -894,10 +894,10 @@ nsTextStore::FlushPendingActions()
           // Adjust offsets in the ranges for XP linefeed character (only \n).
           // XXX Following code is the safest approach.  However, it wastes
           //     a little performance.  For ensuring the clauses do not
-          //     overlap each other, we should redesign nsTextRange later.
+          //     overlap each other, we should redesign TextRange later.
           for (uint32_t i = 0; i < action.mRanges.Length(); ++i) {
-            nsTextRange& range = action.mRanges[i];
-            nsTextRange nativeRange = range;
+            TextRange& range = action.mRanges[i];
+            TextRange nativeRange = range;
             if (nativeRange.mStartOffset > 0) {
               nsAutoString preText(
                 Substring(action.mData, 0, nativeRange.mStartOffset));
@@ -945,7 +945,7 @@ nsTextStore::FlushPendingActions()
         mWidget->InitEvent(textEvent);
         textEvent.theText = mComposition.mLastData;
         if (action.mRanges.IsEmpty()) {
-          nsTextRange wholeRange;
+          TextRange wholeRange;
           wholeRange.mStartOffset = 0;
           wholeRange.mEndOffset = textEvent.theText.Length();
           wholeRange.mRangeType = NS_TEXTRANGE_RAWINPUT;
@@ -1466,7 +1466,7 @@ nsTextStore::RecordCompositionUpdateAction()
   // attributes, but since a big range can have a variety of values for
   // the attribute, we have to find out all the ranges that have distinct
   // attribute values. Then we query for what the value represents through
-  // the display attribute manager and translate that to nsTextRange to be
+  // the display attribute manager and translate that to TextRange to be
   // sent in NS_TEXT_TEXT
 
   nsRefPtr<ITfProperty> attrPropetry;
@@ -1509,13 +1509,13 @@ nsTextStore::RecordCompositionUpdateAction()
 
   PendingAction* action = GetPendingCompositionUpdate();
   action->mData = mComposition.mString;
-  nsTArray<nsTextRange>& textRanges = action->mRanges;
+  nsTArray<TextRange>& textRanges = action->mRanges;
   // The ranges might already have been initialized already, however, if this
   // is called again, that means we need to overwrite the ranges with current
   // information.
   textRanges.Clear();
 
-  nsTextRange newRange;
+  TextRange newRange;
   // No matter if we have display attribute info or not,
   // we always pass in at least one range to NS_TEXT_TEXT
   newRange.mStartOffset = 0;
@@ -1530,7 +1530,7 @@ nsTextStore::RecordCompositionUpdateAction()
     if (FAILED(GetRangeExtent(range, &start, &length)))
       continue;
 
-    nsTextRange newRange;
+    TextRange newRange;
     newRange.mStartOffset = uint32_t(start - mComposition.mStart);
     // The end of the last range in the array is
     // always kept at the end of composition
@@ -1561,7 +1561,7 @@ nsTextStore::RecordCompositionUpdateAction()
       }
     }
 
-    nsTextRange& lastRange = textRanges[textRanges.Length() - 1];
+    TextRange& lastRange = textRanges[textRanges.Length() - 1];
     if (lastRange.mStartOffset == newRange.mStartOffset) {
       // Replace range if last range is the same as this one
       // So that ranges don't overlap and confuse the editor
@@ -1581,7 +1581,7 @@ nsTextStore::RecordCompositionUpdateAction()
   // doesn't support XOR drawing), unfortunately.  For now, we should change
   // the range style to undefined.
   if (!currentSel.IsCollapsed() && textRanges.Length() == 1) {
-    nsTextRange& range = textRanges[0];
+    TextRange& range = textRanges[0];
     LONG start = currentSel.MinOffset();
     LONG end = currentSel.MaxOffset();
     if ((LONG)range.mStartOffset == start - mComposition.mStart &&
@@ -1596,7 +1596,7 @@ nsTextStore::RecordCompositionUpdateAction()
   // The caret position has to be collapsed.
   LONG caretPosition = currentSel.MaxOffset();
   caretPosition -= mComposition.mStart;
-  nsTextRange caretRange;
+  TextRange caretRange;
   caretRange.mStartOffset = caretRange.mEndOffset = uint32_t(caretPosition);
   caretRange.mRangeType = NS_TEXTRANGE_CARETPOSITION;
   textRanges.AppendElement(caretRange);

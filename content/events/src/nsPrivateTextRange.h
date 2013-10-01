@@ -17,7 +17,7 @@ class nsPrivateTextRange MOZ_FINAL : public nsIPrivateTextRange
 	NS_DECL_ISUPPORTS
 public:
 
-	nsPrivateTextRange(const nsTextRange &aTextRange);
+	nsPrivateTextRange(const mozilla::TextRange &aTextRange);
 	virtual ~nsPrivateTextRange(void);
 
 	NS_IMETHOD GetRangeStart(uint16_t* aRangeStart) MOZ_OVERRIDE;
