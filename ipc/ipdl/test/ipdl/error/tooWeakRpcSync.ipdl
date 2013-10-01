@@ -1,0 +1,8 @@
+sync protocol tooWeakRpcSync {
+
+    // it's an error to declare a sync protocol with an rpc or urgent message
+parent:
+  rpc Msg();
+child:
+  urgent Msg2();
+};

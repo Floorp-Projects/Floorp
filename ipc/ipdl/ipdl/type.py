@@ -7,7 +7,7 @@ import os, sys
 
 from ipdl.ast import CxxInclude, Decl, Loc, QualifiedId, State, StructDecl, TransitionStmt
 from ipdl.ast import TypeSpec, UnionDecl, UsingStmt, Visitor, ASYNC, SYNC, INTR
-from ipdl.ast import IN, OUT, INOUT, ANSWER, CALL, RECV, SEND, URGENT
+from ipdl.ast import IN, OUT, INOUT, ANSWER, CALL, RECV, SEND, URGENT, RPC
 import ipdl.builtin as builtin
 
 _DELETE_MSG = '__delete__'
@@ -208,16 +208,22 @@ class IPDLType(Type):
     def isSync(self): return self.sendSemantics is SYNC
     def isInterrupt(self): return self.sendSemantics is INTR
     def isUrgent(self): return self.sendSemantics is URGENT
+    def isRpc(self): return self.sendSemantics is RPC
 
     def talksAsync(self): return True
-    def talksSync(self): return self.isSync() or self.isInterrupt()
+    def talksSync(self): return self.isSync() or self.isRpc() or self.isInterrupt()
+    def talksRpc(self): return self.isRpc() or self.isInterrupt()
     def talksInterrupt(self): return self.isInterrupt()
 
-    def hasReply(self):  return self.isSync() or self.isInterrupt() or self.isUrgent()
+    def hasReply(self):  return (self.isSync()
+                                 or self.isInterrupt()
+                                 or self.isUrgent()
+                                 or self.isRpc())
 
     def needsMoreJuiceThan(self, o):
         return (o.isAsync() and not self.isAsync()
-                or o.isSync() and self.isInterrupt())
+                or o.isSync() and (self.isUrgent() or self.isRpc())
+                or (o.isUrgent() or o.isRpc()) and self.isInterrupt())
 
 class StateType(IPDLType):
     def __init__(self, protocol, name, start=False):
@@ -1465,6 +1471,12 @@ class CheckTypes(TcheckVisitor):
             self.error(
                 loc,
                 "urgent child-to-parent messages are verboten (here, message `%s' in protocol `%s')",
+                mname, pname)
+
+        if mtype.isRpc() and (mtype.isOut() or mtype.isInout()):
+            self.error(
+                loc,
+                "rpc parent-to-child messages are verboten (here, message' `%s' in protocol `%s')",
                 mname, pname)
 
         if mtype.needsMoreJuiceThan(ptype):
