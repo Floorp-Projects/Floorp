@@ -82,9 +82,9 @@ struct ParamTraits<nsGUIEvent>
 };
 
 template<>
-struct ParamTraits<nsInputEvent>
+struct ParamTraits<mozilla::WidgetInputEvent>
 {
-  typedef nsInputEvent paramType;
+  typedef mozilla::WidgetInputEvent paramType;
 
   static void Write(Message* aMsg, const paramType& aParam)
   {
@@ -106,7 +106,7 @@ struct ParamTraits<nsMouseEvent_base>
 
   static void Write(Message* aMsg, const paramType& aParam)
   {
-    WriteParam(aMsg, static_cast<nsInputEvent>(aParam));
+    WriteParam(aMsg, static_cast<mozilla::WidgetInputEvent>(aParam));
     WriteParam(aMsg, aParam.button);
     WriteParam(aMsg, aParam.buttons);
     WriteParam(aMsg, aParam.pressure);
@@ -115,7 +115,8 @@ struct ParamTraits<nsMouseEvent_base>
 
   static bool Read(const Message* aMsg, void** aIter, paramType* aResult)
   {
-    return ReadParam(aMsg, aIter, static_cast<nsInputEvent*>(aResult)) &&
+    return ReadParam(aMsg, aIter,
+                     static_cast<mozilla::WidgetInputEvent*>(aResult)) &&
            ReadParam(aMsg, aIter, &aResult->button) &&
            ReadParam(aMsg, aIter, &aResult->buttons) &&
            ReadParam(aMsg, aIter, &aResult->pressure) &&
@@ -207,7 +208,7 @@ struct ParamTraits<mozilla::WidgetTouchEvent>
 
   static void Write(Message* aMsg, const paramType& aParam)
   {
-    WriteParam(aMsg, static_cast<const nsInputEvent&>(aParam));
+    WriteParam(aMsg, static_cast<const mozilla::WidgetInputEvent&>(aParam));
     // Sigh, Touch bites us again!  We want to be able to do
     //   WriteParam(aMsg, aParam.touches);
     const nsTArray< nsRefPtr<mozilla::dom::Touch> >& touches = aParam.touches;
@@ -225,7 +226,8 @@ struct ParamTraits<mozilla::WidgetTouchEvent>
   static bool Read(const Message* aMsg, void** aIter, paramType* aResult)
   {
     uint32_t numTouches;
-    if (!ReadParam(aMsg, aIter, static_cast<nsInputEvent*>(aResult)) ||
+    if (!ReadParam(aMsg, aIter,
+                   static_cast<mozilla::WidgetInputEvent*>(aResult)) ||
         !ReadParam(aMsg, aIter, &numTouches)) {
       return false;
     }
@@ -258,7 +260,7 @@ struct ParamTraits<mozilla::WidgetKeyboardEvent>
 
   static void Write(Message* aMsg, const paramType& aParam)
   {
-    WriteParam(aMsg, static_cast<nsInputEvent>(aParam));
+    WriteParam(aMsg, static_cast<mozilla::WidgetInputEvent>(aParam));
     WriteParam(aMsg, static_cast<uint32_t>(aParam.mKeyNameIndex));
     WriteParam(aMsg, aParam.keyCode);
     WriteParam(aMsg, aParam.charCode);
@@ -272,7 +274,8 @@ struct ParamTraits<mozilla::WidgetKeyboardEvent>
   static bool Read(const Message* aMsg, void** aIter, paramType* aResult)
   {
     uint32_t keyNameIndex = 0;
-    if (ReadParam(aMsg, aIter, static_cast<nsInputEvent*>(aResult)) &&
+    if (ReadParam(aMsg, aIter,
+                  static_cast<mozilla::WidgetInputEvent*>(aResult)) &&
         ReadParam(aMsg, aIter, &keyNameIndex) &&
         ReadParam(aMsg, aIter, &aResult->keyCode) &&
         ReadParam(aMsg, aIter, &aResult->charCode) &&

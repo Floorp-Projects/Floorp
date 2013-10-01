@@ -9,9 +9,11 @@
 #include "prtime.h"
 #include "mozilla/MouseEvents.h"
 
+using namespace mozilla;
+
 nsDOMDragEvent::nsDOMDragEvent(mozilla::dom::EventTarget* aOwner,
                                nsPresContext* aPresContext,
-                               nsInputEvent* aEvent)
+                               WidgetInputEvent* aEvent)
   : nsDOMMouseEvent(aOwner, aPresContext, aEvent ? aEvent :
                     new nsDragEvent(false, 0, nullptr))
 {

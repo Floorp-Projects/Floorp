@@ -710,13 +710,13 @@ nsEventDispatcher::CreateEvent(mozilla::dom::EventTarget* aOwner,
         aPresContext, static_cast<WidgetCompositionEvent*>(aEvent));
     case NS_MOUSE_EVENT:
       return NS_NewDOMMouseEvent(aDOMEvent, aOwner, aPresContext,
-                                 static_cast<nsInputEvent*>(aEvent));
+                                 static_cast<WidgetInputEvent*>(aEvent));
     case NS_FOCUS_EVENT:
       return NS_NewDOMFocusEvent(aDOMEvent, aOwner, aPresContext,
                                  static_cast<InternalFocusEvent*>(aEvent));
     case NS_MOUSE_SCROLL_EVENT:
       return NS_NewDOMMouseScrollEvent(aDOMEvent, aOwner, aPresContext,
-                                 static_cast<nsInputEvent*>(aEvent));
+                                       static_cast<WidgetInputEvent*>(aEvent));
     case NS_WHEEL_EVENT:
       return NS_NewDOMWheelEvent(aDOMEvent, aOwner, aPresContext,
                                  static_cast<WheelEvent*>(aEvent));

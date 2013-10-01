@@ -563,7 +563,7 @@ protected:
     nsDelayedInputEvent()
     : nsDelayedEvent(), mEvent(nullptr) {}
 
-    nsInputEvent* mEvent;
+    mozilla::WidgetInputEvent* mEvent;
   };
 
   class nsDelayedMouseEvent : public nsDelayedInputEvent

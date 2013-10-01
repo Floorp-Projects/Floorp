@@ -1314,7 +1314,7 @@ nsWindow::DispatchGestureEvent(uint32_t msg, uint32_t direction, double delta,
 
 
 void
-nsWindow::DispatchMotionEvent(nsInputEvent &event, AndroidGeckoEvent *ae,
+nsWindow::DispatchMotionEvent(WidgetInputEvent &event, AndroidGeckoEvent *ae,
                               const nsIntPoint &refPoint)
 {
     nsIntPoint offset = WidgetToScreenOffset();

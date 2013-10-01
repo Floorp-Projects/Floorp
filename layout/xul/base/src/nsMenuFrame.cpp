@@ -1248,10 +1248,10 @@ nsMenuFrame::CreateMenuCommandEvent(nsGUIEvent *aEvent, bool aFlipChecked)
   bool shift = false, control = false, alt = false, meta = false;
   if (aEvent && (aEvent->eventStructType == NS_MOUSE_EVENT ||
                  aEvent->eventStructType == NS_KEY_EVENT)) {
-    shift = static_cast<nsInputEvent *>(aEvent)->IsShift();
-    control = static_cast<nsInputEvent *>(aEvent)->IsControl();
-    alt = static_cast<nsInputEvent *>(aEvent)->IsAlt();
-    meta = static_cast<nsInputEvent *>(aEvent)->IsMeta();
+    shift = static_cast<WidgetInputEvent*>(aEvent)->IsShift();
+    control = static_cast<WidgetInputEvent*>(aEvent)->IsControl();
+    alt = static_cast<WidgetInputEvent*>(aEvent)->IsAlt();
+    meta = static_cast<WidgetInputEvent*>(aEvent)->IsMeta();
   }
 
   // Because the command event is firing asynchronously, a flag is needed to
