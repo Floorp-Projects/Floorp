@@ -431,10 +431,7 @@ public:
       mPrev = aOther.mPrev;
     }
 
-    void Next() {
-      mPrev = mFrame;
-      Enumerator::Next();
-    }
+    inline void Next();
 
     bool AtEnd() const { return Enumerator::AtEnd(); }
 

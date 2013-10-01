@@ -18,11 +18,10 @@ function run_test() {
     return;
   }
 
-  // Setup an old version MAR file
-  do_register_cleanup(cleanupUpdaterTest);
-
+  // adjustGeneralPaths registers a cleanup function that calls end_test.
   adjustGeneralPaths();
 
+  // Setup an old version MAR file
   setupUpdaterTest(MAR_OLD_VERSION_FILE);
 
   // Apply the MAR
@@ -39,4 +38,8 @@ function run_test() {
   //Make sure we get a version downgrade error
   let updateStatus = readStatusFile(updatesDir);
   do_check_eq(updateStatus.split(": ")[1], VERSION_DOWNGRADE_ERROR);
+}
+
+function end_test() {
+  cleanupUpdaterTest();
 }

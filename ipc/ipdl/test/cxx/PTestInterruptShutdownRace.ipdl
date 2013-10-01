@@ -1,14 +1,14 @@
 namespace mozilla {
 namespace _ipdltest {
 
-rpc protocol PTestRPCShutdownRace {
+intr protocol PTestInterruptShutdownRace {
 parent:
     sync StartDeath();
     async Orphan();
 
 child:
     async Start();
-    rpc Exit();
+    intr Exit();
     async __delete__();
 
 state START:

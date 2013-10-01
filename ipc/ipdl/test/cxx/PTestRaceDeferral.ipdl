@@ -1,14 +1,14 @@
 namespace mozilla {
 namespace _ipdltest {
 
-rpc protocol PTestRaceDeferral {
+intr protocol PTestRaceDeferral {
 parent:
-    rpc Lose();
+    intr Lose();
 
 child:
     async StartRace();
-    rpc Win();
-    rpc Rpc();
+    intr Win();
+    intr Rpc();
     async __delete__();
 
 // Test that messages deferred due to race resolution are

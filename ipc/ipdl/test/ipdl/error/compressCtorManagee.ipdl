@@ -1,6 +1,6 @@
 include protocol compressCtor;
 
-rpc protocol compressCtorManagee {
+intr protocol compressCtorManagee {
     manager compressCtor;
 
 child:

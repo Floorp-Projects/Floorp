@@ -1910,15 +1910,21 @@ JSScript::fullyInitFromEmitter(ExclusiveContext *cx, HandleScript script, Byteco
 }
 
 size_t
-JSScript::computedSizeOfData()
+JSScript::computedSizeOfData() const
 {
     return dataSize;
 }
 
 size_t
-JSScript::sizeOfData(mozilla::MallocSizeOf mallocSizeOf)
+JSScript::sizeOfData(mozilla::MallocSizeOf mallocSizeOf) const
 {
     return mallocSizeOf(data);
+}
+
+size_t
+JSScript::sizeOfTypeScript(mozilla::MallocSizeOf mallocSizeOf) const
+{
+    return types->sizeOfIncludingThis(mallocSizeOf);
 }
 
 /*

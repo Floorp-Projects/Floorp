@@ -284,7 +284,7 @@ pref("media.video-queue.default-size", 3);
 
 // optimize images' memory usage
 pref("image.mem.decodeondraw", true);
-pref("content.image.allow_locking", false); /* don't allow image locking */
+pref("image.mem.allow_locking_in_content_processes", false); /* don't allow image locking */
 pref("image.mem.min_discard_timeout_ms", 86400000); /* 24h, we rely on the out of memory hook */
 pref("image.mem.max_decoded_image_kb", 30000); /* 30MB seems reasonable */
 pref("image.onload.decode.limit", 24); /* don't decode more than 24 images eagerly */

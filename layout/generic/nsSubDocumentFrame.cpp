@@ -546,7 +546,7 @@ nsSubDocumentFrame::GetPrefWidth(nsRenderingContext *aRenderingContext)
   return result;
 }
 
-/* virtual */ nsIFrame::IntrinsicSize
+/* virtual */ IntrinsicSize
 nsSubDocumentFrame::GetIntrinsicSize()
 {
   nsIFrame* subDocRoot = ObtainIntrinsicSizeFrame();

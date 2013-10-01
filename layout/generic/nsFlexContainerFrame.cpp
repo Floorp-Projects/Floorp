@@ -999,7 +999,8 @@ public:
   MainAxisPositionTracker(nsFlexContainerFrame* aFlexContainerFrame,
                           const FlexboxAxisTracker& aAxisTracker,
                           const nsHTMLReflowState& aReflowState,
-                          const nsTArray<FlexItem>& aItems);
+                          const nsTArray<FlexItem>& aItems,
+                          nscoord aContentBoxMainSize);
 
   ~MainAxisPositionTracker() {
     MOZ_ASSERT(mNumPackingSpacesRemaining == 0,
@@ -1116,11 +1117,11 @@ template<bool IsLessThanOrEqual(nsIFrame*, nsIFrame*)>
 /* static */ bool
 nsFlexContainerFrame::SortChildrenIfNeeded()
 {
-  if (nsLayoutUtils::IsFrameListSorted<IsLessThanOrEqual>(mFrames)) {
+  if (nsIFrame::IsFrameListSorted<IsLessThanOrEqual>(mFrames)) {
     return false;
   }
 
-  nsLayoutUtils::SortFrameList<IsLessThanOrEqual>(mFrames);
+  nsIFrame::SortFrameList<IsLessThanOrEqual>(mFrames);
   return true;
 }
 
@@ -1163,7 +1164,7 @@ nsFlexContainerFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
                                        const nsDisplayListSet& aLists)
 {
   NS_ASSERTION(
-    nsLayoutUtils::IsFrameListSorted<IsOrderLEQWithDOMFallback>(mFrames),
+    nsIFrame::IsFrameListSorted<IsOrderLEQWithDOMFallback>(mFrames),
     "Child frames aren't sorted correctly");
 
   DisplayBorderBackgroundOutline(aBuilder, aLists);
@@ -1488,37 +1489,31 @@ MainAxisPositionTracker::
   MainAxisPositionTracker(nsFlexContainerFrame* aFlexContainerFrame,
                           const FlexboxAxisTracker& aAxisTracker,
                           const nsHTMLReflowState& aReflowState,
-                          const nsTArray<FlexItem>& aItems)
+                          const nsTArray<FlexItem>& aItems,
+                          nscoord aContentBoxMainSize)
   : PositionTracker(aAxisTracker.GetMainAxis()),
+    mPackingSpaceRemaining(aContentBoxMainSize), // we chip away at this below
     mNumAutoMarginsInMainAxis(0),
     mNumPackingSpacesRemaining(0)
 {
   MOZ_ASSERT(aReflowState.frame == aFlexContainerFrame,
              "Expecting the reflow state for the flex container frame");
 
-  // Set up our state for managing packing space & auto margins.
-  //   * If our main-size is unconstrained, then we just shrinkwrap our
-  // contents, and we don't have any packing space.
-  //   * Otherwise, we subtract our items' margin-box main-sizes from our
-  // computed main-size to get our available packing space.
-  mPackingSpaceRemaining = GET_MAIN_COMPONENT(aAxisTracker,
-                                              aReflowState.ComputedWidth(),
-                                              aReflowState.ComputedHeight());
-  if (mPackingSpaceRemaining == NS_UNCONSTRAINEDSIZE) {
-    mPackingSpaceRemaining = 0;
-  } else {
-    for (uint32_t i = 0; i < aItems.Length(); i++) {
-      nscoord itemMarginBoxMainSize =
-        aItems[i].GetMainSize() +
-        aItems[i].GetMarginBorderPaddingSizeInAxis(aAxisTracker.GetMainAxis());
-      mPackingSpaceRemaining -= itemMarginBoxMainSize;
-    }
+  // mPackingSpaceRemaining is initialized to the container's main size.  Now
+  // we'll subtract out the main sizes of our flex items, so that it ends up
+  // with the *actual* amount of packing space.
+  for (uint32_t i = 0; i < aItems.Length(); i++) {
+    const FlexItem& curItem = aItems[i];
+    nscoord itemMarginBoxMainSize =
+      curItem.GetMainSize() +
+      curItem.GetMarginBorderPaddingSizeInAxis(aAxisTracker.GetMainAxis());
+    mPackingSpaceRemaining -= itemMarginBoxMainSize;
+    mNumAutoMarginsInMainAxis += curItem.GetNumAutoMarginsInAxis(mAxis);
   }
 
-  if (mPackingSpaceRemaining > 0) {
-    for (uint32_t i = 0; i < aItems.Length(); i++) {
-      mNumAutoMarginsInMainAxis += aItems[i].GetNumAutoMarginsInAxis(mAxis);
-    }
+  if (mPackingSpaceRemaining <= 0) {
+    // No available packing space to use for resolving auto margins.
+    mNumAutoMarginsInMainAxis = 0;
   }
 
   mJustifyContent = aFlexContainerFrame->StylePosition()->mJustifyContent;
@@ -2291,7 +2286,8 @@ nsFlexContainerFrame::Reflow(nsPresContext*           aPresContext,
   // Main-Axis Alignment - Flexbox spec section 9.5
   // ==============================================
   MainAxisPositionTracker mainAxisPosnTracker(this, axisTracker,
-                                              aReflowState, items);
+                                              aReflowState, items,
+                                              contentBoxMainSize);
   for (uint32_t i = 0; i < items.Length(); ++i) {
     PositionItemInMainAxis(mainAxisPosnTracker, items[i]);
   }

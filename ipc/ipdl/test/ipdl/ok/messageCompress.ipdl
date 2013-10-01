@@ -1,4 +1,4 @@
-rpc protocol messageCompress {
+intr protocol messageCompress {
 child:
     async foo() compress;
 };

@@ -1294,7 +1294,19 @@ NewObject(ExclusiveContext *cx, const Class *clasp, types::TypeObject *type_, JS
     if (clasp->trace && !(clasp->flags & JSCLASS_IMPLEMENTS_BARRIERS)) {
         if (!cx->shouldBeJSContext())
             return NULL;
-        cx->asJSContext()->runtime()->gcIncrementalEnabled = false;
+        JSRuntime *rt = cx->asJSContext()->runtime();
+        rt->gcIncrementalEnabled = false;
+
+#ifdef DEBUG
+        if (rt->gcMode == JSGC_MODE_INCREMENTAL) {
+            fprintf(stderr,
+                    "The class %s has a trace hook but does not declare the\n"
+                    "JSCLASS_IMPLEMENTS_BARRIERS flag. Please ensure that it correctly\n"
+                    "implements write barriers and then set the flag.\n",
+                    clasp->name);
+            MOZ_CRASH();
+        }
+#endif
     }
 
     Probes::createObject(cx, obj);
@@ -1471,7 +1483,7 @@ js::NewObjectScriptedCall(JSContext *cx, MutableHandleObject pobj)
     RootedScript script(cx, cx->currentScript(&pc));
     gc::AllocKind allocKind = NewObjectGCKind(&JSObject::class_);
     NewObjectKind newKind = script
-                            ? UseNewTypeForInitializer(cx, script, pc, &JSObject::class_)
+                            ? UseNewTypeForInitializer(script, pc, &JSObject::class_)
                             : GenericObject;
     RootedObject obj(cx, NewBuiltinClassInstance(cx, &JSObject::class_, allocKind, newKind));
     if (!obj)
@@ -5559,10 +5571,10 @@ js_DumpBacktrace(JSContext *cx)
     fprintf(stdout, "%s", sprinter.string());
 }
 void
-JSObject::sizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf, JS::ObjectsExtraSizes *sizes)
+JSObject::addSizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf, JS::ObjectsExtraSizes *sizes)
 {
     if (hasDynamicSlots())
-        sizes->mallocHeapSlots = mallocSizeOf(slots);
+        sizes->mallocHeapSlots += mallocSizeOf(slots);
 
     if (hasDynamicElements()) {
         js::ObjectElements *elements = getElementsHeader();
@@ -5570,32 +5582,32 @@ JSObject::sizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf, JS::ObjectsExt
 #if defined (JS_CPU_X64)
             // On x64, ArrayBufferObject::prepareForAsmJS switches the
             // ArrayBufferObject to use mmap'd storage.
-            sizes->nonHeapElementsAsmJS = as<ArrayBufferObject>().byteLength();
+            sizes->nonHeapElementsAsmJS += as<ArrayBufferObject>().byteLength();
 #else
-            sizes->mallocHeapElementsAsmJS = mallocSizeOf(elements);
+            sizes->mallocHeapElementsAsmJS += mallocSizeOf(elements);
 #endif
         } else {
-            sizes->mallocHeapElementsNonAsmJS = mallocSizeOf(elements);
+            sizes->mallocHeapElementsNonAsmJS += mallocSizeOf(elements);
         }
     }
 
     // Other things may be measured in the future if DMD indicates it is worthwhile.
     // Note that sizes->private_ is measured elsewhere.
     if (is<ArgumentsObject>()) {
-        sizes->mallocHeapArgumentsData = as<ArgumentsObject>().sizeOfMisc(mallocSizeOf);
+        sizes->mallocHeapArgumentsData += as<ArgumentsObject>().sizeOfMisc(mallocSizeOf);
     } else if (is<RegExpStaticsObject>()) {
-        sizes->mallocHeapRegExpStatics = as<RegExpStaticsObject>().sizeOfData(mallocSizeOf);
+        sizes->mallocHeapRegExpStatics += as<RegExpStaticsObject>().sizeOfData(mallocSizeOf);
     } else if (is<PropertyIteratorObject>()) {
-        sizes->mallocHeapPropertyIteratorData = as<PropertyIteratorObject>().sizeOfMisc(mallocSizeOf);
+        sizes->mallocHeapPropertyIteratorData += as<PropertyIteratorObject>().sizeOfMisc(mallocSizeOf);
 #ifdef JS_ION
     } else if (is<AsmJSModuleObject>()) {
-        as<AsmJSModuleObject>().sizeOfMisc(mallocSizeOf, &sizes->nonHeapCodeAsmJS,
-                                           &sizes->mallocHeapAsmJSModuleData);
+        as<AsmJSModuleObject>().addSizeOfMisc(mallocSizeOf, &sizes->nonHeapCodeAsmJS,
+                                              &sizes->mallocHeapAsmJSModuleData);
 #endif
 #ifdef JS_HAS_CTYPES
     } else {
         // This must be the last case.
-        sizes->mallocHeapCtypesData =
+        sizes->mallocHeapCtypesData +=
             js::SizeOfDataIfCDataObject(mallocSizeOf, const_cast<JSObject *>(this));
 #endif
     }

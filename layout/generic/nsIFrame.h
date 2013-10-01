@@ -33,6 +33,7 @@
 #include <algorithm>
 #include "nsITheme.h"
 #include "gfx3DMatrix.h"
+#include "nsLayoutUtils.h"
 
 #ifdef ACCESSIBILITY
 #include "mozilla/a11y/AccTypes.h"
@@ -542,6 +543,35 @@ MOZ_END_ENUM_CLASS(nsDidReflowStatus)
 
 #define NS_FRAME_OVERFLOW_LARGE   0x000000ff // overflow is stored as a
                                              // separate rect property
+
+namespace mozilla {
+/*
+ * For replaced elements only. Gets the intrinsic dimensions of this element.
+ * The dimensions may only be one of the following two types:
+ *
+ *   eStyleUnit_Coord   - a length in app units
+ *   eStyleUnit_None    - the element has no intrinsic size in this dimension
+ */
+struct IntrinsicSize {
+  nsStyleCoord width, height;
+
+  IntrinsicSize()
+    : width(eStyleUnit_None), height(eStyleUnit_None)
+  {}
+  IntrinsicSize(const IntrinsicSize& rhs)
+    : width(rhs.width), height(rhs.height)
+  {}
+  IntrinsicSize& operator=(const IntrinsicSize& rhs) {
+    width = rhs.width; height = rhs.height; return *this;
+  }
+  bool operator==(const IntrinsicSize& rhs) {
+    return width == rhs.width && height == rhs.height;
+  }
+  bool operator!=(const IntrinsicSize& rhs) {
+    return !(*this == rhs);
+  }
+};
+}
 
 //----------------------------------------------------------------------
 
@@ -1709,33 +1739,7 @@ public:
   virtual IntrinsicWidthOffsetData
     IntrinsicWidthOffsets(nsRenderingContext* aRenderingContext) = 0;
 
-  /*
-   * For replaced elements only. Gets the intrinsic dimensions of this element.
-   * The dimensions may only be one of the following two types:
-   *
-   *   eStyleUnit_Coord   - a length in app units
-   *   eStyleUnit_None    - the element has no intrinsic size in this dimension
-   */
-  struct IntrinsicSize {
-    nsStyleCoord width, height;
-
-    IntrinsicSize()
-      : width(eStyleUnit_None), height(eStyleUnit_None)
-    {}
-    IntrinsicSize(const IntrinsicSize& rhs)
-      : width(rhs.width), height(rhs.height)
-    {}
-    IntrinsicSize& operator=(const IntrinsicSize& rhs) {
-      width = rhs.width; height = rhs.height; return *this;
-    }
-    bool operator==(const IntrinsicSize& rhs) {
-      return width == rhs.width && height == rhs.height;
-    }
-    bool operator!=(const IntrinsicSize& rhs) {
-      return !(*this == rhs);
-    }
-  };
-  virtual IntrinsicSize GetIntrinsicSize() = 0;
+  virtual mozilla::IntrinsicSize GetIntrinsicSize() = 0;
 
   /*
    * Get the intrinsic ratio of this element, or nsSize(0,0) if it has
@@ -2963,6 +2967,49 @@ NS_PTR_TO_INT32(frame->Properties().Get(nsIFrame::ParagraphDepthProperty()))
    */
   static void RemoveInPopupStateBitFromDescendants(nsIFrame* aFrame);
 
+  /**
+   * Sorts the given nsFrameList, so that for every two adjacent frames in the
+   * list, the former is less than or equal to the latter, according to the
+   * templated IsLessThanOrEqual method.
+   *
+   * Note: this method uses a stable merge-sort algorithm.
+   */
+  template<bool IsLessThanOrEqual(nsIFrame*, nsIFrame*)>
+  static void SortFrameList(nsFrameList& aFrameList);
+
+  /**
+   * Returns true if the given frame list is already sorted, according to the
+   * templated IsLessThanOrEqual function.
+   */
+  template<bool IsLessThanOrEqual(nsIFrame*, nsIFrame*)>
+  static bool IsFrameListSorted(nsFrameList& aFrameList);
+
+  /**
+   * Return true if aFrame is in an {ib} split and is NOT one of the
+   * continuations of the first inline in it.
+   */
+  bool FrameIsNonFirstInIBSplit() const {
+    return (GetStateBits() & NS_FRAME_IS_SPECIAL) &&
+      FirstContinuation()->Properties().Get(nsIFrame::IBSplitSpecialPrevSibling());
+  }
+
+  /**
+   * Return true if aFrame is in an {ib} split and is NOT one of the
+   * continuations of the last inline in it.
+   */
+  bool FrameIsNonLastInIBSplit() const {
+    return (GetStateBits() & NS_FRAME_IS_SPECIAL) &&
+      FirstContinuation()->Properties().Get(nsIFrame::IBSplitSpecialSibling());
+  }
+
+  /**
+   * Return whether this is a frame whose width is used when computing
+   * the font size inflation of its descendants.
+   */
+  bool IsContainerForFontSizeInflation() const {
+    return GetStateBits() & NS_FRAME_FONT_INFLATION_CONTAINER;
+  }
+
 protected:
   // Members
   nsRect           mRect;
@@ -3143,6 +3190,13 @@ private:
   bool SetOverflowAreas(const nsOverflowAreas& aOverflowAreas);
   nsPoint GetOffsetToCrossDoc(const nsIFrame* aOther, const int32_t aAPD) const;
 
+  // Helper-functions for SortFrameList():
+  template<bool IsLessThanOrEqual(nsIFrame*, nsIFrame*)>
+  static nsIFrame* SortedMerge(nsIFrame *aLeft, nsIFrame *aRight);
+
+  template<bool IsLessThanOrEqual(nsIFrame*, nsIFrame*)>
+  static nsIFrame* MergeSort(nsIFrame *aSource);
+
 #ifdef DEBUG
 public:
   static void IndentBy(FILE* out, int32_t aIndent) {
@@ -3305,6 +3359,145 @@ FrameLinkEnumerator(const nsFrameList& aList, nsIFrame* aPrevFrame)
 {
   mPrev = aPrevFrame;
   mFrame = aPrevFrame ? aPrevFrame->GetNextSibling() : aList.FirstChild();
+}
+
+inline void
+nsFrameList::FrameLinkEnumerator::Next()
+{
+  mPrev = mFrame;
+  Enumerator::Next();
+}
+
+// Helper-functions for nsIFrame::SortFrameList()
+// ---------------------------------------------------
+
+template<bool IsLessThanOrEqual(nsIFrame*, nsIFrame*)>
+/* static */ nsIFrame*
+nsIFrame::SortedMerge(nsIFrame *aLeft, nsIFrame *aRight)
+{
+  NS_PRECONDITION(aLeft && aRight, "SortedMerge must have non-empty lists");
+
+  nsIFrame *result;
+  // Unroll first iteration to avoid null-check 'result' inside the loop.
+  if (IsLessThanOrEqual(aLeft, aRight)) {
+    result = aLeft;
+    aLeft = aLeft->GetNextSibling();
+    if (!aLeft) {
+      result->SetNextSibling(aRight);
+      return result;
+    }
+  }
+  else {
+    result = aRight;
+    aRight = aRight->GetNextSibling();
+    if (!aRight) {
+      result->SetNextSibling(aLeft);
+      return result;
+    }
+  }
+
+  nsIFrame *last = result;
+  for (;;) {
+    if (IsLessThanOrEqual(aLeft, aRight)) {
+      last->SetNextSibling(aLeft);
+      last = aLeft;
+      aLeft = aLeft->GetNextSibling();
+      if (!aLeft) {
+        last->SetNextSibling(aRight);
+        return result;
+      }
+    }
+    else {
+      last->SetNextSibling(aRight);
+      last = aRight;
+      aRight = aRight->GetNextSibling();
+      if (!aRight) {
+        last->SetNextSibling(aLeft);
+        return result;
+      }
+    }
+  }
+}
+
+template<bool IsLessThanOrEqual(nsIFrame*, nsIFrame*)>
+/* static */ nsIFrame*
+nsIFrame::MergeSort(nsIFrame *aSource)
+{
+  NS_PRECONDITION(aSource, "MergeSort null arg");
+
+  nsIFrame *sorted[32] = { nullptr };
+  nsIFrame **fill = &sorted[0];
+  nsIFrame **left;
+  nsIFrame *rest = aSource;
+
+  do {
+    nsIFrame *current = rest;
+    rest = rest->GetNextSibling();
+    current->SetNextSibling(nullptr);
+
+    // Merge it with sorted[0] if present; then merge the result with sorted[1] etc.
+    // sorted[0] is a list of length 1 (or nullptr).
+    // sorted[1] is a list of length 2 (or nullptr).
+    // sorted[2] is a list of length 4 (or nullptr). etc.
+    for (left = &sorted[0]; left != fill && *left; ++left) {
+      current = SortedMerge<IsLessThanOrEqual>(*left, current);
+      *left = nullptr;
+    }
+
+    // Fill the empty slot that we couldn't merge with the last result.
+    *left = current;
+
+    if (left == fill)
+      ++fill;
+  } while (rest);
+
+  // Collect and merge the results.
+  nsIFrame *result = nullptr;
+  for (left = &sorted[0]; left != fill; ++left) {
+    if (*left) {
+      result = result ? SortedMerge<IsLessThanOrEqual>(*left, result) : *left;
+    }
+  }
+  return result;
+}
+
+template<bool IsLessThanOrEqual(nsIFrame*, nsIFrame*)>
+/* static */ void
+nsIFrame::SortFrameList(nsFrameList& aFrameList)
+{
+  nsIFrame* head = MergeSort<IsLessThanOrEqual>(aFrameList.FirstChild());
+  aFrameList = nsFrameList(head, nsLayoutUtils::GetLastSibling(head));
+  MOZ_ASSERT(IsFrameListSorted<IsLessThanOrEqual>(aFrameList),
+             "After we sort a frame list, it should be in sorted order...");
+}
+
+template<bool IsLessThanOrEqual(nsIFrame*, nsIFrame*)>
+/* static */ bool
+nsIFrame::IsFrameListSorted(nsFrameList& aFrameList)
+{
+  if (aFrameList.IsEmpty()) {
+    // empty lists are trivially sorted.
+    return true;
+  }
+
+  // We'll walk through the list with two iterators, one trailing behind the
+  // other. The list is sorted IFF trailingIter <= iter, across the whole list.
+  nsFrameList::Enumerator trailingIter(aFrameList);
+  nsFrameList::Enumerator iter(aFrameList);
+  iter.Next(); // Skip |iter| past first frame. (List is nonempty, so we can.)
+
+  // Now, advance the iterators in parallel, comparing each adjacent pair.
+  while (!iter.AtEnd()) {
+    MOZ_ASSERT(!trailingIter.AtEnd(), "trailing iter shouldn't finish first");
+    if (!IsLessThanOrEqual(trailingIter.get(), iter.get())) {
+      return false;
+    }
+    trailingIter.Next();
+    iter.Next();
+  }
+
+  // We made it to the end without returning early, so the list is sorted.
+  return true;
 }
 
 #include "nsStyleStructInlines.h"

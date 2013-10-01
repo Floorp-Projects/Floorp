@@ -7,6 +7,7 @@
 
 #include "mozilla/DebugOnly.h"
 #include "mozilla/GuardObjects.h"
+#include "mozilla/PodOperations.h"
 #include "mozilla/Util.h"
 
 #ifdef XP_WIN
@@ -79,6 +80,7 @@ using namespace js::cli;
 
 using mozilla::ArrayLength;
 using mozilla::Maybe;
+using mozilla::PodCopy;
 
 enum JSShellExitCode {
     EXITCODE_RUNTIME_ERROR      = 3,
@@ -912,6 +914,7 @@ Evaluate(JSContext *cx, unsigned argc, jsval *vp)
     bool catchTermination = false;
     bool saveFrameChain = false;
     RootedObject callerGlobal(cx, cx->global());
+    CompileOptions::SourcePolicy sourcePolicy = CompileOptions::SAVE_SOURCE;
 
     global = JS_GetGlobalForObject(cx, &args.callee());
     if (!global)
@@ -1024,6 +1027,28 @@ Evaluate(JSContext *cx, unsigned argc, jsval *vp)
                 return false;
             saveFrameChain = b;
         }
+
+        if (!JS_GetProperty(cx, opts, "sourcePolicy", &v))
+            return false;
+        if (!JSVAL_IS_VOID(v)) {
+            JSString *s = JS_ValueToString(cx, v);
+            if (!s)
+                return false;
+            char *policy = JS_EncodeStringToUTF8(cx, s);
+            if (!policy)
+                return false;
+            if (strcmp(policy, "NO_SOURCE") == 0) {
+                sourcePolicy = CompileOptions::NO_SOURCE;
+            } else if (strcmp(policy, "LAZY_SOURCE") == 0) {
+                sourcePolicy = CompileOptions::LAZY_SOURCE;
+            } else if (strcmp(policy, "SAVE_SOURCE") == 0) {
+                sourcePolicy = CompileOptions::SAVE_SOURCE;
+            } else {
+                JS_ReportError(cx, "bad 'sourcePolicy' option passed to 'evaluate': '%s'",
+                               policy);
+                return false;
+            }
+        }
     }
 
     RootedString code(cx, args[0].toString());
@@ -1057,6 +1082,7 @@ Evaluate(JSContext *cx, unsigned argc, jsval *vp)
         CompileOptions options(cx);
         options.setFileAndLine(fileName, lineNumber);
         options.setElement(element);
+        options.setSourcePolicy(sourcePolicy);
         RootedScript script(cx, JS::Compile(cx, global, options, codeChars, codeLength));
         JS_SetOptions(cx, oldopts);
         if (!script)
@@ -3804,6 +3830,92 @@ GetSelfHostedValue(JSContext *cx, unsigned argc, jsval *vp)
     return cx->runtime()->cloneSelfHostedValue(cx, srcName, args.rval());
 }
 
+class ShellSourceHook: public SourceHook {
+    // The runtime to which we attached a source hook.
+    JSRuntime *rt;
+
+    // The function we should call to lazily retrieve source code.
+    // The constructor and destructor take care of rooting this with the
+    // runtime.
+    JSObject *fun;
+
+  public:
+    ShellSourceHook() : rt(NULL), fun(NULL) { }
+    bool init(JSContext *cx, JSFunction &fun) {
+        JS_ASSERT(!this->rt);
+        JS_ASSERT(!this->fun);
+        this->rt = cx->runtime();
+        this->fun = &fun;
+        return JS_AddNamedObjectRoot(cx, &this->fun,
+                                     "lazy source callback, set with withSourceHook");
+    }
+
+    ~ShellSourceHook() {
+        if (fun)
+            JS_RemoveObjectRootRT(rt, &fun);
+    }
+
+    bool load(JSContext *cx, const char *filename, jschar **src, size_t *length) {
+        JS_ASSERT(fun);
+
+        RootedString str(cx, JS_NewStringCopyZ(cx, filename));
+        if (!str)
+            return false;
+        RootedValue filenameValue(cx, StringValue(str));
+
+        RootedValue result(cx);
+        if (!Call(cx, UndefinedValue(), &fun->as<JSFunction>(),
+                  1, filenameValue.address(), &result))
+            return false;
+
+        str = JS_ValueToString(cx, result);
+        if (!str)
+            return false;
+
+        *length = JS_GetStringLength(str);
+        *src = cx->pod_malloc<jschar>(*length);
+        if (!*src)
+            return false;
+
+        const jschar *chars = JS_GetStringCharsZ(cx, str);
+        if (!chars)
+            return false;
+
+        PodCopy(*src, chars, *length);
+        return true;
+    }
+};
+
+static bool
+WithSourceHook(JSContext *cx, unsigned argc, jsval *vp)
+{
+    CallArgs args = CallArgsFromVp(argc, vp);
+    RootedObject callee(cx, &args.callee());
+
+    if (args.length() != 2) {
+        ReportUsageError(cx, callee, "Wrong number of arguments.");
+        return false;
+    }
+
+    if (!args[0].isObject() || !args[0].toObject().is<JSFunction>()
+        || !args[1].isObject() || !args[1].toObject().is<JSFunction>()) {
+        ReportUsageError(cx, callee, "First and second arguments must be functions.");
+        return false;
+    }
+
+    ShellSourceHook *hook = new ShellSourceHook();
+    if (!hook->init(cx, args[0].toObject().as<JSFunction>())) {
+        delete hook;
+        return false;
+    }
+
+    SourceHook *savedHook = js::ForgetSourceHook(cx->runtime());
+    js::SetSourceHook(cx->runtime(), hook);
+    bool result = Call(cx, UndefinedValue(), &args[1].toObject(), 0, NULL, args.rval());
+    js::SetSourceHook(cx->runtime(), savedHook);
+    return result;
+}
+
 static const JSFunctionSpecWithHelp shell_functions[] = {
     JS_FN_HELP("version", Version, 0, 0,
 "version([number])",
@@ -3837,7 +3949,18 @@ static const JSFunctionSpecWithHelp shell_functions[] = {
 "         and restore it afterwards\n"
 "      catchTermination: if true, catch termination (failure without\n"
 "         an exception value, as for slow scripts or out-of-memory)\n"
-"          and return 'terminated'\n"),
+"         and return 'terminated'\n"
+"      element: if present with value |v|, convert |v| to an object |o| mark\n"
+"         the source as being attached to the DOM element |o|. If the\n"
+"         property is omitted or |v| is null, don't attribute the source to\n"
+"         any DOM element.\n"
+"      sourceMapURL: if present with value |v|, convert |v| to a string, and\n"
+"         provide that as the code's source map URL. If omitted, attach no\n"
+"         source map URL to the code (although the code may provide one itself,\n"
+"         via a //#sourceMappingURL comment).\n"
+"      sourcePolicy: if present, the value converted to a string must be either\n"
+"         'NO_SOURCE', 'LAZY_SOURCE', or 'SAVE_SOURCE'; use the given source\n"
+"         retention policy for this compilation.\n"),
 
     JS_FN_HELP("run", Run, 1, 0,
 "run('foo.js')",
@@ -4152,6 +4275,27 @@ static const JSFunctionSpecWithHelp fuzzing_unsafe_functions[] = {
     JS_FN_HELP("untrap", Untrap, 2, 0,
 "untrap(fun[, pc])",
 "  Remove a trap."),
+
+    JS_FN_HELP("withSourceHook", WithSourceHook, 1, 0,
+"withSourceHook(hook, fun)",
+"  Set this JS runtime's lazy source retrieval hook (that is, the hook\n"
+"  used to find sources compiled with |CompileOptions::LAZY_SOURCE|) to\n"
+"  |hook|; call |fun| with no arguments; and then restore the runtime's\n"
+"  original hook. Return or throw whatever |fun| did. |hook| gets\n"
+"  passed the requested code's URL, and should return a string.\n"
+"\n"
+"  Notes:\n"
+"\n"
+"  1) SpiderMonkey may assert if the returned code isn't close enough\n"
+"  to the script's real code, so this function is not fuzzer-safe.\n"
+"\n"
+"  2) The runtime can have only one source retrieval hook active at a\n"
+"  time. If |fun| is not careful, |hook| could be asked to retrieve the\n"
+"  source code for compilations that occurred long before it was set,\n"
+"  and that it knows nothing about. The reverse applies as well: the\n"
+"  original hook, that we reinstate after the call to |fun| completes,\n"
+"  might be asked for the source code of compilations that |fun|\n"
+"  performed, and which, presumably, only |hook| knows how to find.\n"),
 
     JS_FS_HELP_END
 };
@@ -5360,7 +5504,7 @@ main(int argc, char **argv, char **envp)
     if (op.getBoolOption('O'))
         OOM_printAllocationCount = true;
 
-#if defined(JS_CPU_X86)
+#if defined(JS_CPU_X86) && defined(JS_ION)
     if (op.getBoolOption("no-fpu"))
         JSC::MacroAssembler::SetFloatingPointDisabled();
 #endif

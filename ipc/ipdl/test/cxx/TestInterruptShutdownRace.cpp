@@ -1,13 +1,13 @@
-#include "TestRPCShutdownRace.h"
+#include "TestInterruptShutdownRace.h"
 
 #include "IPDLUnitTests.h"      // fail etc.
 #include "IPDLUnitTestSubprocess.h"
 
 template<>
-struct RunnableMethodTraits<mozilla::_ipdltest::TestRPCShutdownRaceParent>
+struct RunnableMethodTraits<mozilla::_ipdltest::TestInterruptShutdownRaceParent>
 {
-    static void RetainCallee(mozilla::_ipdltest::TestRPCShutdownRaceParent* obj) { }
-    static void ReleaseCallee(mozilla::_ipdltest::TestRPCShutdownRaceParent* obj) { }
+    static void RetainCallee(mozilla::_ipdltest::TestInterruptShutdownRaceParent* obj) { }
+    static void ReleaseCallee(mozilla::_ipdltest::TestInterruptShutdownRaceParent* obj) { }
 };
 
 
@@ -36,37 +36,37 @@ void Done()
 
 } // namespace <anon>
 
-TestRPCShutdownRaceParent::TestRPCShutdownRaceParent()
+TestInterruptShutdownRaceParent::TestInterruptShutdownRaceParent()
 {
-    MOZ_COUNT_CTOR(TestRPCShutdownRaceParent);
+    MOZ_COUNT_CTOR(TestInterruptShutdownRaceParent);
 }
 
-TestRPCShutdownRaceParent::~TestRPCShutdownRaceParent()
+TestInterruptShutdownRaceParent::~TestInterruptShutdownRaceParent()
 {
-    MOZ_COUNT_DTOR(TestRPCShutdownRaceParent);
+    MOZ_COUNT_DTOR(TestInterruptShutdownRaceParent);
 }
 
 void
-TestRPCShutdownRaceParent::Main()
+TestInterruptShutdownRaceParent::Main()
 {
     if (!SendStart())
         fail("sending Start");
 }
 
 bool
-TestRPCShutdownRaceParent::RecvStartDeath()
+TestInterruptShutdownRaceParent::RecvStartDeath()
 {
     // this will be ordered before the OnMaybeDequeueOne event of
     // Orphan in the queue
     MessageLoop::current()->PostTask(
         FROM_HERE,
         NewRunnableMethod(this,
-                          &TestRPCShutdownRaceParent::StartShuttingDown));
+                          &TestInterruptShutdownRaceParent::StartShuttingDown));
     return true;
 }
 
 void
-TestRPCShutdownRaceParent::StartShuttingDown()
+TestInterruptShutdownRaceParent::StartShuttingDown()
 {
     // NB: we sleep here to try and avoid receiving the Orphan message
     // while waiting for the CallExit() reply.  if we fail at that, it
@@ -79,7 +79,7 @@ TestRPCShutdownRaceParent::StartShuttingDown()
 
     Close();
 
-    delete static_cast<TestRPCShutdownRaceParent*>(gParentActor);
+    delete static_cast<TestInterruptShutdownRaceParent*>(gParentActor);
     gParentActor = nullptr;
 
     XRE_GetIOMessageLoop()->PostTask(FROM_HERE,
@@ -93,7 +93,7 @@ TestRPCShutdownRaceParent::StartShuttingDown()
 }
 
 bool
-TestRPCShutdownRaceParent::RecvOrphan()
+TestInterruptShutdownRaceParent::RecvOrphan()
 {
     // it would be nice to fail() here, but we'll process this message
     // while waiting for the reply CallExit().  The OnMaybeDequeueOne
@@ -105,18 +105,18 @@ TestRPCShutdownRaceParent::RecvOrphan()
 //-----------------------------------------------------------------------------
 // child
 
-TestRPCShutdownRaceChild::TestRPCShutdownRaceChild()
+TestInterruptShutdownRaceChild::TestInterruptShutdownRaceChild()
 {
-    MOZ_COUNT_CTOR(TestRPCShutdownRaceChild);
+    MOZ_COUNT_CTOR(TestInterruptShutdownRaceChild);
 }
 
-TestRPCShutdownRaceChild::~TestRPCShutdownRaceChild()
+TestInterruptShutdownRaceChild::~TestInterruptShutdownRaceChild()
 {
-    MOZ_COUNT_DTOR(TestRPCShutdownRaceChild);
+    MOZ_COUNT_DTOR(TestInterruptShutdownRaceChild);
 }
 
 bool
-TestRPCShutdownRaceChild::RecvStart()
+TestInterruptShutdownRaceChild::RecvStart()
 {
     if (!SendStartDeath())
         fail("sending StartDeath");
@@ -132,7 +132,7 @@ TestRPCShutdownRaceChild::RecvStart()
 }
 
 bool
-TestRPCShutdownRaceChild::AnswerExit()
+TestInterruptShutdownRaceChild::AnswerExit()
 {
     _exit(0);
     NS_RUNTIMEABORT("unreached");

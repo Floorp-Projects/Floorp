@@ -66,7 +66,7 @@ COMMessageFilter::MessagePending(HTASK htaskCallee,
 				 DWORD dwTickCount,
 				 DWORD dwPendingType)
 {
-  mPlugin->FlushPendingRPCQueue();
+  mPlugin->FlushPendingInterruptQueue();
   if (mPreviousFilter)
     return mPreviousFilter->MessagePending(htaskCallee, dwTickCount,
 					   dwPendingType);

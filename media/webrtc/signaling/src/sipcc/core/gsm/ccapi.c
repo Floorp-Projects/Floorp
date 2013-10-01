@@ -653,6 +653,7 @@ cc_free_msg_data (cc_msg_t *msg)
                 caller_id = &msg->msg.feature.data.call_info.caller_id;
             }
         }
+        cpr_free(msg->msg.feature.sdp);
         break;
     case CC_MSG_FEATURE_ACK:
         if (msg->msg.feature_ack.data_valid) {
@@ -1210,8 +1211,15 @@ static void send_message_helper(
         pmsg->action = action;
     }
 
-    if (msg_id == CC_MSG_CREATEANSWER || msg_id == CC_MSG_SETLOCALDESC || msg_id == CC_MSG_SETREMOTEDESC) {
-        sstrncpy(pmsg->sdp, sdp, sizeof(pmsg->sdp));
+    if (sdp &&
+        (msg_id == CC_MSG_CREATEANSWER ||
+         msg_id == CC_MSG_SETLOCALDESC ||
+         msg_id == CC_MSG_SETREMOTEDESC)) {
+        size_t sdp_size = strlen(sdp) + 1;
+        pmsg->sdp = cpr_malloc(sdp_size);
+        sstrncpy(pmsg->sdp, sdp, sdp_size);
+    } else {
+        pmsg->sdp = NULL;
     }
 
     if (pmsg->data_valid == TRUE) {

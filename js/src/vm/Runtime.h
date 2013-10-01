@@ -672,7 +672,7 @@ namespace gc {
 class MarkingValidator;
 } // namespace gc
 
-typedef Vector<JS::Zone *, 1, SystemAllocPolicy> ZoneVector;
+typedef Vector<JS::Zone *, 4, SystemAllocPolicy> ZoneVector;
 
 class AutoLockForExclusiveAccess;
 class AutoPauseWorkersForGC;
@@ -1586,7 +1586,7 @@ struct JSRuntime : public JS::shadow::Runtime,
         return jitHardening;
     }
 
-    void sizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf, JS::RuntimeSizes *runtime);
+    void addSizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf, JS::RuntimeSizes *runtime);
 
   private:
 

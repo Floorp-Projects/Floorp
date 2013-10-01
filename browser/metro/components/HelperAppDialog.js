@@ -18,10 +18,6 @@ XPCOMUtils.defineLazyGetter(this, "ContentUtil", function() {
   Cu.import("resource:///modules/ContentUtil.jsm");
   return ContentUtil;
 });
-XPCOMUtils.defineLazyModuleGetter(this, "Downloads",
-                                  "resource://gre/modules/Downloads.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "Task",
-                                  "resource://gre/modules/Task.jsm");
 
 // -----------------------------------------------------------------------
 // HelperApp Launcher Dialog
@@ -138,98 +134,98 @@ HelperAppLauncherDialog.prototype = {
   },
 
   promptForSaveToFile: function hald_promptForSaveToFile(aLauncher, aContext, aDefaultFile, aSuggestedFileExt, aForcePrompt) {
-    return Task.spawn(function() {
-      let file = null;
-      let prefs = Services.prefs;
+    let file = null;
+    let prefs = Services.prefs;
 
-      if (!aForcePrompt) {
-        // Check to see if the user wishes to auto save to the default download
-        // folder without prompting. Note that preference might not be set.
-        let autodownload = true;
-        try {
-          autodownload = prefs.getBoolPref(PREF_BD_USEDOWNLOADDIR);
-        } catch (e) { }
-
-        if (autodownload) {
-          // Retrieve the user's default download directory
-          let defaultFolder = yield Downloads.getPreferredDownloadsDirectory();
-
-          try {
-            file = this.validateLeafName(defaultFolder, aDefaultFile, aSuggestedFileExt);
-          }
-          catch (e) {
-          }
-
-          // Check to make sure we have a valid directory, otherwise, prompt
-          if (file)
-            throw new Task.Result(file);
-        }
-      }
-
-      // Use file picker to show dialog.
-      let picker = Cc["@mozilla.org/filepicker;1"].createInstance(Ci.nsIFilePicker);
-      let windowTitle = "";
-      let parent = aContext.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIDOMWindow);
-      picker.init(parent, windowTitle, Ci.nsIFilePicker.modeSave);
-      picker.defaultString = aDefaultFile;
-
-      if (aSuggestedFileExt) {
-        // aSuggestedFileExtension includes the period, so strip it
-        picker.defaultExtension = aSuggestedFileExt.substring(1);
-      }
-      else {
-        try {
-          picker.defaultExtension = aLauncher.MIMEInfo.primaryExtension;
-        }
-        catch (e) { }
-      }
-
-      var wildCardExtension = "*";
-      if (aSuggestedFileExt) {
-        wildCardExtension += aSuggestedFileExt;
-        picker.appendFilter(aLauncher.MIMEInfo.description, wildCardExtension);
-      }
-
-      picker.appendFilters(Ci.nsIFilePicker.filterAll);
-
-      // Default to lastDir if it is valid, otherwise use the user's default
-      // downloads directory.  userDownloadsDirectory should always return a
-      // valid directory, so we can safely default to it.
-      picker.displayDirectory = yield Downloads.getPreferredDownloadsDirectory();
-
-      // The last directory preference may not exist, which will throw.
+    if (!aForcePrompt) {
+      // Check to see if the user wishes to auto save to the default download
+      // folder without prompting. Note that preference might not be set.
+      let autodownload = true;
       try {
-        let lastDir = prefs.getComplexValue("browser.download.lastDir", Ci.nsILocalFile);
-        if (isUsableDirectory(lastDir))
-          picker.displayDirectory = lastDir;
+        autodownload = prefs.getBoolPref(PREF_BD_USEDOWNLOADDIR);
+      } catch (e) { }
+
+      if (autodownload) {
+        // Retrieve the user's default download directory
+        let dnldMgr = Cc["@mozilla.org/download-manager;1"].getService(Ci.nsIDownloadManager);
+        let defaultFolder = dnldMgr.userDownloadsDirectory;
+
+        try {
+          file = this.validateLeafName(defaultFolder, aDefaultFile, aSuggestedFileExt);
+        }
+        catch (e) {
+        }
+
+        // Check to make sure we have a valid directory, otherwise, prompt
+        if (file)
+          return file;
+      }
+    }
+
+    // Use file picker to show dialog.
+    let picker = Cc["@mozilla.org/filepicker;1"].createInstance(Ci.nsIFilePicker);
+    let windowTitle = "";
+    let parent = aContext.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIDOMWindow);
+    picker.init(parent, windowTitle, Ci.nsIFilePicker.modeSave);
+    picker.defaultString = aDefaultFile;
+
+    if (aSuggestedFileExt) {
+      // aSuggestedFileExtension includes the period, so strip it
+      picker.defaultExtension = aSuggestedFileExt.substring(1);
+    }
+    else {
+      try {
+        picker.defaultExtension = aLauncher.MIMEInfo.primaryExtension;
       }
       catch (e) { }
+    }
 
-      if (picker.show() == Ci.nsIFilePicker.returnCancel) {
-        // null result means user cancelled.
-        throw new Task.Result(null);
+    var wildCardExtension = "*";
+    if (aSuggestedFileExt) {
+      wildCardExtension += aSuggestedFileExt;
+      picker.appendFilter(aLauncher.MIMEInfo.description, wildCardExtension);
+    }
+
+    picker.appendFilters(Ci.nsIFilePicker.filterAll);
+
+    // Default to lastDir if it is valid, otherwise use the user's default
+    // downloads directory.  userDownloadsDirectory should always return a
+    // valid directory, so we can safely default to it.
+    var dnldMgr = Cc["@mozilla.org/download-manager;1"].getService(Ci.nsIDownloadManager);
+    picker.displayDirectory = dnldMgr.userDownloadsDirectory;
+
+    // The last directory preference may not exist, which will throw.
+    try {
+      let lastDir = prefs.getComplexValue("browser.download.lastDir", Ci.nsILocalFile);
+      if (isUsableDirectory(lastDir))
+        picker.displayDirectory = lastDir;
+    }
+    catch (e) { }
+
+    if (picker.show() == Ci.nsIFilePicker.returnCancel) {
+      // null result means user cancelled.
+      return null;
+    }
+
+    // Be sure to save the directory the user chose through the Save As...
+    // dialog  as the new browser.download.dir since the old one
+    // didn't exist.
+    file = picker.file;
+
+    if (file) {
+      try {
+        // Remove the file so that it's not there when we ensure non-existence later;
+        // this is safe because for the file to exist, the user would have had to
+        // confirm that he wanted the file overwritten.
+        if (file.exists())
+          file.remove(false);
       }
-
-      // Be sure to save the directory the user chose through the Save As...
-      // dialog  as the new browser.download.dir since the old one
-      // didn't exist.
-      file = picker.file;
-
-      if (file) {
-        try {
-          // Remove the file so that it's not there when we ensure non-existence later;
-          // this is safe because for the file to exist, the user would have had to
-          // confirm that he wanted the file overwritten.
-          if (file.exists())
-            file.remove(false);
-        }
-        catch (e) { }
-        var newDir = file.parent.QueryInterface(Ci.nsILocalFile);
-        prefs.setComplexValue("browser.download.lastDir", Ci.nsILocalFile, newDir);
-        file = this.validateLeafName(newDir, file.leafName, null);
-      }
-      throw new Task.Result(file);
-    }.bind(this));
+      catch (e) { }
+      var newDir = file.parent.QueryInterface(Ci.nsILocalFile);
+      prefs.setComplexValue("browser.download.lastDir", Ci.nsILocalFile, newDir);
+      file = this.validateLeafName(newDir, file.leafName, null);
+    }
+    return file;
   },
 
   validateLeafName: function hald_validateLeafName(aLocalFile, aLeafName, aFileExt) {
