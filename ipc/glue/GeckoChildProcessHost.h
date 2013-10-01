@@ -89,8 +89,22 @@ public:
     return GetProcessEvent();
   }
 
+  // Returns a "borrowed" handle to the child process - the handle returned
+  // by this function must not be closed by the caller.
   ProcessHandle GetChildProcessHandle() {
     return mChildProcessHandle;
+  }
+
+  // Returns an "owned" handle to the child process - the handle returned
+  // by this function must be closed by the caller.
+  ProcessHandle GetOwnedChildProcessHandle() {
+    ProcessHandle handle;
+    // We use OpenPrivilegedProcessHandle as that is where our
+    // mChildProcessHandle initially came from.
+    bool ok = base::OpenPrivilegedProcessHandle(base::GetProcId(mChildProcessHandle),
+                                                &handle);
+    NS_ASSERTION(ok, "Failed to get owned process handle");
+    return ok ? handle : 0;
   }
 
   GeckoProcessType GetProcessType() {
