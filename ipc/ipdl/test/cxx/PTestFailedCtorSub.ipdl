@@ -4,7 +4,7 @@ include protocol PTestFailedCtorSubsub;
 namespace mozilla {
 namespace _ipdltest {
 
-rpc protocol PTestFailedCtorSub {
+intr protocol PTestFailedCtorSub {
     manager PTestFailedCtor;
     manages PTestFailedCtorSubsub;
 

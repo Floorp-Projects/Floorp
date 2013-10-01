@@ -181,7 +181,7 @@ struct PrefSetting {
   MaybePrefValue userValue;
 };
 
-rpc protocol PContent
+intr protocol PContent
 {
     parent opens PCompositor;
     parent opens PImageBridge;

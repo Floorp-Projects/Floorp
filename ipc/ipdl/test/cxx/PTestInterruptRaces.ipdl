@@ -1,28 +1,28 @@
 namespace mozilla {
 namespace _ipdltest {
 
-rpc protocol PTestRPCRaces {
+intr protocol PTestInterruptRaces {
 both:
-    rpc Race() returns (bool hasReply);
-    rpc StackFrame() returns ();
-    rpc StackFrame3() returns ();
+    intr Race() returns (bool hasReply);
+    intr StackFrame() returns ();
+    intr StackFrame3() returns ();
 
 parent:
     sync StartRace();
-    rpc Parent();
+    intr Parent();
     sync GetAnsweredParent() returns (bool answeredParent);
 
 child:
     Start();
     Wakeup();
     Wakeup3();
-    rpc Child();
+    intr Child();
     __delete__();
 
 state START:
     send Start goto TEST1;
 
-// First test: race while no other messages are on the RPC stack
+// First test: race while no other messages are on the Interrupt stack
 state TEST1:
     recv StartRace goto RACE1;
 state RACE1:
@@ -33,7 +33,7 @@ state DUMMY1_1:
 state DUMMY1_2:
     call Race goto TEST2;
 
-// Second test: race while other messages are on the RPC stack
+// Second test: race while other messages are on the Interrupt stack
 state TEST2:
     call StackFrame goto MORESTACK;
 state MORESTACK:

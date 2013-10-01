@@ -6,7 +6,7 @@ namespace _ipdltest {
 // Test that a parent sending a reentrant __delete__ message
 // is not killed if a child's message races with the reply.
 
-rpc protocol PTestBadActor {
+intr protocol PTestBadActor {
   manages PTestBadActorSub;
 
 child:
