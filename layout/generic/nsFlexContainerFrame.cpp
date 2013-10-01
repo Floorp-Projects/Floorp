@@ -1503,16 +1503,17 @@ MainAxisPositionTracker::
   // we'll subtract out the main sizes of our flex items, so that it ends up
   // with the *actual* amount of packing space.
   for (uint32_t i = 0; i < aItems.Length(); i++) {
+    const FlexItem& curItem = aItems[i];
     nscoord itemMarginBoxMainSize =
-      aItems[i].GetMainSize() +
-      aItems[i].GetMarginBorderPaddingSizeInAxis(aAxisTracker.GetMainAxis());
+      curItem.GetMainSize() +
+      curItem.GetMarginBorderPaddingSizeInAxis(aAxisTracker.GetMainAxis());
     mPackingSpaceRemaining -= itemMarginBoxMainSize;
+    mNumAutoMarginsInMainAxis += curItem.GetNumAutoMarginsInAxis(mAxis);
   }
 
-  if (mPackingSpaceRemaining > 0) {
-    for (uint32_t i = 0; i < aItems.Length(); i++) {
-      mNumAutoMarginsInMainAxis += aItems[i].GetNumAutoMarginsInAxis(mAxis);
-    }
+  if (mPackingSpaceRemaining <= 0) {
+    // No available packing space to use for resolving auto margins.
+    mNumAutoMarginsInMainAxis = 0;
   }
 
   mJustifyContent = aFlexContainerFrame->StylePosition()->mJustifyContent;
