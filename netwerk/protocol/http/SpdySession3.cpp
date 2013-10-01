@@ -1622,20 +1622,7 @@ SpdySession3::HandleWindowUpdate(SpdySession3 *self)
     return NS_OK;
   }
 
-  int64_t oldRemoteWindow = self->mInputFrameDataStream->RemoteWindow();
   self->mInputFrameDataStream->UpdateRemoteWindow(delta);
-
-  LOG3(("SpdySession3::HandleWindowUpdate %p stream 0x%X window "
-        "%d increased by %d.\n", self, streamID, oldRemoteWindow, delta));
-
-  // If the stream had a <=0 window, that has now opened
-  // schedule it for writing again
-  if (oldRemoteWindow <= 0 &&
-      self->mInputFrameDataStream->RemoteWindow() > 0) {
-    self->mReadyForWrite.Push(self->mInputFrameDataStream);
-    self->SetWriteCallbacks();
-  }
-
   self->ResetDownstreamState();
   return NS_OK;
 }
