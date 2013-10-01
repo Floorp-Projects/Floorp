@@ -12,7 +12,7 @@
 #include "gfxPoint.h"                   // for gfxPoint
 #include "gfx3DMatrix.h"                // for gfx3DMatrix
 #include "mozilla/Assertions.h"         // for MOZ_ASSERT_HELPER2
-#include "mozilla/EventForwards.h"      // for nsInputEvent, nsEventStatus
+#include "mozilla/EventForwards.h"      // for WidgetInputEvent, nsEventStatus
 #include "mozilla/Monitor.h"            // for Monitor
 #include "nsAutoPtr.h"                  // for nsRefPtr
 #include "nsCOMPtr.h"                   // for already_AddRefed
@@ -146,30 +146,30 @@ public:
   nsEventStatus ReceiveInputEvent(const InputData& aEvent);
 
   /**
-   * nsInputEvent handler. Sets |aOutEvent| (which is assumed to be an
-   * already-existing instance of an nsInputEvent which may be an
+   * WidgetInputEvent handler. Sets |aOutEvent| (which is assumed to be an
+   * already-existing instance of an WidgetInputEvent which may be an
    * WidgetTouchEvent) to have its coordinates in DOM space. This is so that the
    * event can be passed through the DOM and content can handle them.
    *
-   * NOTE: Be careful of invoking the nsInputEvent variant. This can only be
+   * NOTE: Be careful of invoking the WidgetInputEvent variant. This can only be
    * called on the main thread. See widget/InputData.h for more information on
-   * why we have InputData and nsInputEvent separated.
+   * why we have InputData and WidgetInputEvent separated.
    * NOTE: On unix, mouse events are treated as touch and are forwarded
    * to the appropriate apz as such.
    *
    * @param aEvent input event object, will not be modified
    * @param aOutEvent event object transformed to DOM coordinate space.
    */
-  nsEventStatus ReceiveInputEvent(const nsInputEvent& aEvent,
-                                  nsInputEvent* aOutEvent);
+  nsEventStatus ReceiveInputEvent(const WidgetInputEvent& aEvent,
+                                  WidgetInputEvent* aOutEvent);
 
   /**
-   * nsInputEvent handler with inline dom transform of the passed in
-   * nsInputEvent. Must be called on the main thread.
+   * WidgetInputEvent handler with inline dom transform of the passed in
+   * WidgetInputEvent. Must be called on the main thread.
    *
    * @param aEvent input event object
    */
-  nsEventStatus ReceiveInputEvent(nsInputEvent& aEvent);
+  nsEventStatus ReceiveInputEvent(WidgetInputEvent& aEvent);
 
   /**
    * Updates the composition bounds, i.e. the dimensions of the final size of
@@ -303,7 +303,7 @@ private:
   AsyncPanZoomController* GetTouchInputBlockAPZC(const WidgetTouchEvent& aEvent, ScreenPoint aPoint);
   nsEventStatus ProcessTouchEvent(const WidgetTouchEvent& touchEvent, WidgetTouchEvent* aOutEvent);
   nsEventStatus ProcessMouseEvent(const nsMouseEvent& mouseEvent, nsMouseEvent* aOutEvent);
-  nsEventStatus ProcessEvent(const nsInputEvent& inputEvent, nsInputEvent* aOutEvent);
+  nsEventStatus ProcessEvent(const WidgetInputEvent& inputEvent, WidgetInputEvent* aOutEvent);
 
   /**
    * Recursive helper function to build the APZC tree. The tree of APZC instances has

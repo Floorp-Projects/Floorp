@@ -17,20 +17,20 @@ class nsPrivateTextRange MOZ_FINAL : public nsIPrivateTextRange
 	NS_DECL_ISUPPORTS
 public:
 
-	nsPrivateTextRange(const nsTextRange &aTextRange);
+	nsPrivateTextRange(const mozilla::TextRange &aTextRange);
 	virtual ~nsPrivateTextRange(void);
 
-	NS_IMETHOD    GetRangeStart(uint16_t* aRangeStart) MOZ_OVERRIDE;
-	NS_IMETHOD    GetRangeEnd(uint16_t* aRangeEnd) MOZ_OVERRIDE;
-	NS_IMETHOD    GetRangeType(uint16_t* aRangeType) MOZ_OVERRIDE;
-	NS_IMETHOD    GetRangeStyle(nsTextRangeStyle* aRangeStyle) MOZ_OVERRIDE;
+	NS_IMETHOD GetRangeStart(uint16_t* aRangeStart) MOZ_OVERRIDE;
+	NS_IMETHOD GetRangeEnd(uint16_t* aRangeEnd) MOZ_OVERRIDE;
+	NS_IMETHOD GetRangeType(uint16_t* aRangeType) MOZ_OVERRIDE;
+	NS_IMETHOD GetRangeStyle(mozilla::TextRangeStyle* aRangeStyle) MOZ_OVERRIDE;
 
 protected:
 
 	uint16_t	mRangeStart;
 	uint16_t	mRangeEnd;
 	uint16_t	mRangeType;
-	nsTextRangeStyle mRangeStyle;
+	mozilla::TextRangeStyle mRangeStyle;
 };
 
 class nsPrivateTextRangeList MOZ_FINAL : public nsIPrivateTextRangeList
