@@ -192,6 +192,11 @@ public:
         return CodeLocationLabel(code());
     }
 
+    // Useful as a proxy to detect OOM.
+    void* unsafeCode() {
+        return code();
+    }
+
 protected:
     // Keep this private! - the underlying code should only be obtained externally via 
     // finalizeCode() or finalizeCodeAddendum().
