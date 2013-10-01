@@ -1831,15 +1831,10 @@ ScratchpadSidebar.prototype = {
    */
   _update: function SS__update(aObject)
   {
+    let options = { objectActor: aObject };
     let view = this.variablesView;
     view.empty();
-
-    let scope = view.addScope();
-    scope.expanded = true;
-    scope.locked = true;
-
-    let container = scope.addItem();
-    return view.controller.expand(container, aObject);
+    return view.controller.setSingleVariable(options).expanded;
   }
 };
 
