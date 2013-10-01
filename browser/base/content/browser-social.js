@@ -159,10 +159,11 @@ SocialUI = {
           }
           break;
         case "social:profile-changed":
+          // make sure anything that happens here only affects the provider for
+          // which the profile is changing, and that anything we call actually
+          // needs to change based on profile data.
           if (this._matchesCurrentProvider(data)) {
             SocialToolbar.updateProvider();
-            SocialMarks.update();
-            SocialChatBar.update();
           }
           break;
         case "social:frameworker-error":
@@ -1446,7 +1447,17 @@ SocialStatus = {
   removeProvider: function(origin) {
     if (!Social.allowMultipleWorkers)
       return;
+    this._removeFrame(origin);
     this._toolbarHelper.removeProviderButton(origin);
+  },
+
+  _removeFrame: function(origin) {
+    let notificationFrameId = "social-status-" + origin;
+    let frame = document.getElementById(notificationFrameId);
+    if (frame) {
+      SharedFrame.forgetGroup(frame.id);
+      frame.parentNode.removeChild(frame);
+    }
   },
 
   get _toolbarHelper() {

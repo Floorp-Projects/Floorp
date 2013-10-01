@@ -854,20 +854,38 @@ public class LocalBrowserDB implements BrowserDB.BrowserDBIface {
         return b;
     }
 
+    /**
+     * Query for non-null thumbnails matching the provided <code>urls</code>.
+     * The returned cursor will have no more than, but possibly fewer than,
+     * the requested number of thumbnails.
+     *
+     * Returns null if the provided list of URLs is empty or null.
+     */
     @Override
     public Cursor getThumbnailsForUrls(ContentResolver cr, List<String> urls) {
-        StringBuilder selection = new StringBuilder();
-        String[] selectionArgs = new String[urls.size()];
-
-        for (int i = 0; i < urls.size(); i++) {
-          final String url = urls.get(i);
-
-          if (i > 0)
-            selection.append(" OR ");
-
-          selection.append(Thumbnails.URL + " = ?");
-          selectionArgs[i] = url;
+        if (urls == null) {
+            return null;
         }
+
+        int urlCount = urls.size();
+        if (urlCount == 0) {
+            return null;
+        }
+
+        // Don't match against null thumbnails.
+        StringBuilder selection = new StringBuilder(
+                Thumbnails.DATA + " IS NOT NULL AND " +
+                Thumbnails.URL + " IN ("
+        );
+
+        // Compute a (?, ?, ?) sequence to match the provided URLs.
+        int i = 1;
+        while (i++ < urlCount) {
+            selection.append("?, ");
+        }
+        selection.append("?)");
+
+        String[] selectionArgs = urls.toArray(new String[urlCount]);
 
         return cr.query(mThumbnailsUriWithProfile,
                         new String[] { Thumbnails.URL, Thumbnails.DATA },

@@ -27,9 +27,9 @@ FakeDirProvider.prototype = {
 
 function run_test() {
   do_test_pending();
-  do_register_cleanup(end_test);
   DEBUG_AUS_TEST = true;
 
+  // adjustGeneralPaths registers a cleanup function that calls end_test.
   adjustGeneralPaths();
 
   removeUpdateDirsAndFiles();

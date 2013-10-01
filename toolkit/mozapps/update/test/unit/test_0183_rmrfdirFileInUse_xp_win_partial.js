@@ -234,8 +234,8 @@ ADDITIONAL_TEST_DIRS = [
 
 function run_test() {
   do_test_pending();
-  do_register_cleanup(cleanupUpdaterTest);
 
+  // adjustGeneralPaths registers a cleanup function that calls end_test.
   adjustGeneralPaths();
 
   setupUpdaterTest(MAR_IN_USE_WIN_FILE);
@@ -283,4 +283,8 @@ function checkUpdate() {
   do_check_true(toBeDeletedDir.exists());
 
   checkCallbackAppLog();
+}
+
+function end_test() {
+  cleanupUpdaterTest();
 }
