@@ -14,9 +14,9 @@ if (typeof Components != "undefined") {
 }
 (function(exports) {
 
-let SharedAll = require("resource://gre/modules/osfile/osfile_shared_allthreads.jsm");
+exports.OS = require("resource://gre/modules/osfile/osfile_shared_allthreads.jsm").OS;
 
-let LOG = SharedAll.LOG.bind(SharedAll, "Shared front-end");
+let LOG = exports.OS.Shared.LOG.bind(OS.Shared, "Shared front-end");
 
 /**
  * Code shared by implementations of File.
@@ -88,7 +88,7 @@ AbstractFile.prototype = {
         break;
       }
       pos += chunkSize;
-      ptr = SharedAll.offsetBy(ptr, chunkSize);
+      ptr = exports.OS.Shared.offsetBy(ptr, chunkSize);
     }
 
     return pos;
@@ -120,7 +120,7 @@ AbstractFile.prototype = {
     while (pos < bytes) {
       let chunkSize = this._write(ptr, bytes - pos, options);
       pos += chunkSize;
-      ptr = SharedAll.offsetBy(ptr, chunkSize);
+      ptr = exports.OS.Shared.offsetBy(ptr, chunkSize);
     }
     return pos;
   }
@@ -149,13 +149,13 @@ AbstractFile.normalizeToPointer = function normalizeToPointer(candidate, bytes) 
     if (candidate.isNull()) {
       throw new TypeError("Expecting a non-null pointer");
     }
-    ptr = SharedAll.Type.uint8_t.out_ptr.cast(candidate);
+    ptr = exports.OS.Shared.Type.uint8_t.out_ptr.cast(candidate);
     if (bytes == null) {
       throw new TypeError("C pointer missing bytes indication.");
     }
-  } else if (SharedAll.isTypedArray(candidate)) {
+  } else if (exports.OS.Shared.isTypedArray(candidate)) {
     // Typed Array
-    ptr = SharedAll.Type.uint8_t.out_ptr.implementation(candidate.buffer);
+    ptr = exports.OS.Shared.Type.uint8_t.out_ptr.implementation(candidate.buffer);
     if (bytes == null) {
       bytes = candidate.byteLength;
     } else if (candidate.byteLength < bytes) {
@@ -394,8 +394,5 @@ AbstractFile.writeAtomic =
   return bytesWritten;
 };
 
-  if (!exports.OS.Shared) {
-    exports.OS.Shared = {};
-  }
-  exports.OS.Shared.AbstractFile = AbstractFile;
+   exports.OS.Shared.AbstractFile = AbstractFile;
 })(this);
