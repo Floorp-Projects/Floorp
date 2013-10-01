@@ -3647,17 +3647,21 @@ WebGLContext::TexImage2D_base(GLenum target, GLint level, GLenum internalformat,
     if (border != 0)
         return ErrorInvalidValue("texImage2D: border must be 0");
 
-    if (format == LOCAL_GL_DEPTH_COMPONENT || format == LOCAL_GL_DEPTH_STENCIL) {
+    const bool isDepthTexture = format == LOCAL_GL_DEPTH_COMPONENT ||
+                                format == LOCAL_GL_DEPTH_STENCIL;
+
+    if (isDepthTexture) {
         if (IsExtensionEnabled(WEBGL_depth_texture)) {
             if (target != LOCAL_GL_TEXTURE_2D || data != nullptr || level != 0)
                 return ErrorInvalidOperation("texImage2D: "
-                                             "with format of DEPTH_COMPONENT or DEPTH_STENCIL "
+                                             "with format of DEPTH_COMPONENT or DEPTH_STENCIL, "
                                              "target must be TEXTURE_2D, "
                                              "data must be nullptr, "
-                                             "level must be zero");
+                                             "level must be zero"); // Haiku by unknown Zen master
+        } else {
+            return ErrorInvalidEnum("texImage2D: attempt to create a depth texture "
+                                    "without having enabled the WEBGL_depth_texture extension.");
         }
-        else
-            return ErrorInvalidEnumInfo("texImage2D: internal format", internalformat);
     }
 
     uint32_t dstTexelSize = 0;
@@ -3727,17 +3731,75 @@ WebGLContext::TexImage2D_base(GLenum target, GLint level, GLenum internalformat,
                                       width, height, border, format, type, convertedData);
         }
     } else {
-        // We need some zero pages, because GL doesn't guarantee the
-        // contents of a texture allocated with nullptr data.
-        // Hopefully calloc will just mmap zero pages here.
-        void *tempZeroData = calloc(1, bytesNeeded);
-        if (!tempZeroData)
-            return ErrorOutOfMemory("texImage2D: could not allocate %d bytes (for zero fill)", bytesNeeded);
+        if (isDepthTexture && !gl->IsSupported(GLFeature::depth_texture)) {
+            // There's only one way that we can we supporting depth textures without
+            // supporting the regular depth_texture feature set: that's
+            // with ANGLE_depth_texture.
 
-        error = CheckedTexImage2D(target, level, internalformat,
-                                  width, height, border, format, type, tempZeroData);
+            // It should be impossible to get here without ANGLE_depth_texture support
+            MOZ_ASSERT(gl->IsExtensionSupported(GLContext::ANGLE_depth_texture));
+            // It should be impossible to get here with a target other than TEXTURE_2D,
+            // a nonzero level, or non-null data
+            MOZ_ASSERT(target == LOCAL_GL_TEXTURE_2D && level == 0 && data == nullptr);
 
-        free(tempZeroData);
+            // We start by calling texImage2D with null data, giving us an uninitialized texture,
+            // which is all it can give us in this case.
+            error = CheckedTexImage2D(LOCAL_GL_TEXTURE_2D, 0, internalformat, width, height,
+                                      border, format, type, nullptr);
+
+            // We then proceed to initializing the texture by assembling a FBO.
+            // We make it a color-less FBO, which isn't supported everywhere, but we should be
+            // fine because we only need this to be successful on ANGLE which is said to support
+            // that. Still, we want to gracefully handle failure in case the FBO is incomplete.
+
+            bool success = false;
+            GLuint fb = 0;
+
+            // dummy do {...} while to be able to break
+            do {
+                gl->fGenFramebuffers(1, &fb);
+                if (!fb)
+                    break;
+
+                ScopedBindFramebuffer autoBindFB(gl, fb);
+
+                gl->fFramebufferTexture2D(LOCAL_GL_FRAMEBUFFER,
+                                          LOCAL_GL_DEPTH_ATTACHMENT,
+                                          LOCAL_GL_TEXTURE_2D,
+                                          tex->GLName(),
+                                          0);
+                if (format == LOCAL_GL_DEPTH_STENCIL) {
+                    gl->fFramebufferTexture2D(LOCAL_GL_FRAMEBUFFER,
+                                              LOCAL_GL_STENCIL_ATTACHMENT,
+                                              LOCAL_GL_TEXTURE_2D,
+                                              tex->GLName(),
+                                              0);
+                }
+                if (gl->fCheckFramebufferStatus(LOCAL_GL_FRAMEBUFFER) != LOCAL_GL_FRAMEBUFFER_COMPLETE)
+                    break;
+
+                gl->ClearSafely();
+                success = true;
+            } while(false);
+
+            gl->fDeleteFramebuffers(1, &fb);
+
+            if (!success) {
+                return ErrorOutOfMemory("texImage2D: sorry, ran out of ways to initialize a depth texture.");
+            }
+        } else {
+            // We need some zero pages, because GL doesn't guarantee the
+            // contents of a texture allocated with nullptr data.
+            // Hopefully calloc will just mmap zero pages here.
+            void *tempZeroData = calloc(1, bytesNeeded);
+            if (!tempZeroData)
+                return ErrorOutOfMemory("texImage2D: could not allocate %d bytes (for zero fill)", bytesNeeded);
+
+            error = CheckedTexImage2D(target, level, internalformat,
+                                      width, height, border, format, type, tempZeroData);
+
+            free(tempZeroData);
+        }
     }
 
     if (error) {
