@@ -1313,6 +1313,7 @@ var Scratchpad = {
       this._triggerObservers("Ready");
       this.populateRecentFilesMenu();
       PreferenceObserver.init();
+      CloseObserver.init();
     }).then(null, (err) => console.log(err.message));
   },
 
@@ -1457,8 +1458,10 @@ var Scratchpad = {
    */
   close: function SP_close(aCallback)
   {
+    let shouldClose;
+
     this.promptSave((aShouldClose, aSaved, aStatus) => {
-      let shouldClose = aShouldClose;
+       shouldClose = aShouldClose;
       if (aSaved && !Components.isSuccessCode(aStatus)) {
         shouldClose = false;
       }
@@ -1469,9 +1472,11 @@ var Scratchpad = {
       }
 
       if (aCallback) {
-        aCallback();
+        aCallback(shouldClose);
       }
     });
+
+    return shouldClose;
   },
 
   _observers: [],
@@ -1890,6 +1895,35 @@ var PreferenceObserver = {
     this.branch.removeObserver("", this);
     this.branch = null;
   }
+};
+
+
+/**
+ * The CloseObserver listens for the last browser window closing and attempts to
+ * close the Scratchpad.
+ */
+var CloseObserver = {
+  init: function CO_init()
+  {
+    Services.obs.addObserver(this, "browser-lastwindow-close-requested", false);
+  },
+
+  observe: function CO_observe(aSubject)
+  {
+    if (Scratchpad.close()) {
+      this.uninit();
+    }
+    else {
+      aSubject.QueryInterface(Ci.nsISupportsPRBool);
+      aSubject.data = true;
+    }
+  },
+
+  uninit: function CO_uninit()
+  {
+    Services.obs.removeObserver(this, "browser-lastwindow-close-requested",
+                                false);
+  },
 };
 
 XPCOMUtils.defineLazyGetter(Scratchpad, "strings", function () {
