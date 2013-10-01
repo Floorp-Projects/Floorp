@@ -9207,7 +9207,7 @@ MOZ_ARG_WITH_STRING(intl-api,
     WITH_INTL="--with-intl-api=$withval"
 ])
 if test -z "$WITH_INTL"; then
-if test "$NIGHTLY_BUILD" = "1" -a "$MOZ_BUILD_APP" = "browser"; then
+if test "$NIGHTLY_BUILD" = "1" -a "$MOZ_BUILD_APP" = "browser" -a -z "$DEVELOPER_OPTIONS"; then
     # In desktop nightlies the Internationalization API is disabled, but all
     # code for it is still built.  Bug 853301 will remove this so that it's
     # built and the API is enabled.
