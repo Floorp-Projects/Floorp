@@ -105,8 +105,12 @@ bool WebGLContext::IsExtensionSupported(WebGLExtensionID ext) const
         case WEBGL_compressed_texture_pvrtc:
             return gl->IsExtensionSupported(GLContext::IMG_texture_compression_pvrtc);
         case WEBGL_depth_texture:
-            return gl->IsSupported(GLFeature::packed_depth_stencil) &&
-            gl->IsSupported(GLFeature::depth_texture);
+            // WEBGL_depth_texture supports DEPTH_STENCIL textures
+            if (!gl->IsSupported(GLFeature::packed_depth_stencil)) {
+                return false;
+            }
+            return gl->IsSupported(GLFeature::depth_texture) ||
+                   gl->IsExtensionSupported(GLContext::ANGLE_depth_texture);
         case ANGLE_instanced_arrays:
             return WebGLExtensionInstancedArrays::IsSupported(this);
         default:

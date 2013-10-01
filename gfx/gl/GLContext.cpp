@@ -113,6 +113,7 @@ static const char *sExtensionNames[] = {
     "GL_ARB_occlusion_query2",
     "GL_EXT_transform_feedback",
     "GL_NV_transform_feedback",
+    "GL_ANGLE_depth_texture",
     nullptr
 };
 
