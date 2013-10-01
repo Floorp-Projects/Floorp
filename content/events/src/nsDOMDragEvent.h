@@ -55,6 +55,6 @@ public:
 nsresult NS_NewDOMDragEvent(nsIDOMEvent** aInstancePtrResult,
                             mozilla::dom::EventTarget* aOwner,
                             nsPresContext* aPresContext,
-                            nsDragEvent* aEvent);
+                            mozilla::WidgetDragEvent* aEvent);
 
 #endif // nsDOMDragEvent_h__

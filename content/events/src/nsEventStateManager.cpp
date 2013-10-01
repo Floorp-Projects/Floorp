@@ -1928,12 +1928,12 @@ nsEventStateManager::GenerateDragGesture(nsPresContext* aPresContext,
       nsCOMPtr<nsIWidget> widget = mCurrentTarget->GetNearestWidget();
 
       // get the widget from the target frame
-      nsDragEvent startEvent(aEvent->mFlags.mIsTrusted,
-                             NS_DRAGDROP_START, widget);
+      WidgetDragEvent startEvent(aEvent->mFlags.mIsTrusted,
+                                 NS_DRAGDROP_START, widget);
       FillInEventFromGestureDown(&startEvent);
 
-      nsDragEvent gestureEvent(aEvent->mFlags.mIsTrusted,
-                               NS_DRAGDROP_GESTURE, widget);
+      WidgetDragEvent gestureEvent(aEvent->mFlags.mIsTrusted,
+                                   NS_DRAGDROP_GESTURE, widget);
       FillInEventFromGestureDown(&gestureEvent);
 
       startEvent.dataTransfer = gestureEvent.dataTransfer = dataTransfer;
@@ -1961,7 +1961,7 @@ nsEventStateManager::GenerateDragGesture(nsPresContext* aPresContext,
       nsEventDispatcher::Dispatch(targetContent, aPresContext, &startEvent, nullptr,
                                   &status);
 
-      nsDragEvent* event = &startEvent;
+      WidgetDragEvent* event = &startEvent;
       if (status != nsEventStatus_eConsumeNoDefault) {
         status = nsEventStatus_eIgnore;
         nsEventDispatcher::Dispatch(targetContent, aPresContext, &gestureEvent, nullptr,
@@ -2086,7 +2086,7 @@ nsEventStateManager::DetermineDragTarget(nsPresContext* aPresContext,
 
 bool
 nsEventStateManager::DoDefaultDragStart(nsPresContext* aPresContext,
-                                        nsDragEvent* aDragEvent,
+                                        WidgetDragEvent* aDragEvent,
                                         nsDOMDataTransfer* aDataTransfer,
                                         nsIContent* aDragTarget,
                                         nsISelection* aSelection)
@@ -3253,7 +3253,7 @@ nsEventStateManager::PostHandleEvent(nsPresContext* aPresContext,
       nsCOMPtr<nsIDOMDataTransfer> initialDataTransfer;
       dragSession->GetDataTransfer(getter_AddRefs(initialDataTransfer));
 
-      nsDragEvent *dragEvent = (nsDragEvent*)aEvent;
+      WidgetDragEvent *dragEvent = static_cast<WidgetDragEvent*>(aEvent);
 
       // collect any changes to moz cursor settings stored in the event's
       // data transfer.
@@ -3348,8 +3348,8 @@ nsEventStateManager::PostHandleEvent(nsPresContext* aPresContext,
                                            getter_AddRefs(targetContent));
 
         nsCOMPtr<nsIWidget> widget = mCurrentTarget->GetNearestWidget();
-        nsDragEvent event(aEvent->mFlags.mIsTrusted,
-                          NS_DRAGDROP_DRAGDROP, widget);
+        WidgetDragEvent event(aEvent->mFlags.mIsTrusted,
+                              NS_DRAGDROP_DRAGDROP, widget);
 
         nsMouseEvent* mouseEvent = static_cast<nsMouseEvent*>(aEvent);
         event.refPoint = mouseEvent->refPoint;
@@ -4275,7 +4275,7 @@ nsEventStateManager::FireDragEnterOrExit(nsPresContext* aPresContext,
                                          nsWeakFrame& aTargetFrame)
 {
   nsEventStatus status = nsEventStatus_eIgnore;
-  nsDragEvent event(aEvent->mFlags.mIsTrusted, aMsg, aEvent->widget);
+  WidgetDragEvent event(aEvent->mFlags.mIsTrusted, aMsg, aEvent->widget);
   event.refPoint = aEvent->refPoint;
   event.modifiers = ((nsMouseEvent*)aEvent)->modifiers;
   event.buttons = ((nsMouseEvent*)aEvent)->buttons;
@@ -4308,7 +4308,7 @@ nsEventStateManager::FireDragEnterOrExit(nsPresContext* aPresContext,
 }
 
 void
-nsEventStateManager::UpdateDragDataTransfer(nsDragEvent* dragEvent)
+nsEventStateManager::UpdateDragDataTransfer(WidgetDragEvent* dragEvent)
 {
   NS_ASSERTION(dragEvent, "drag event is null in UpdateDragDataTransfer!");
   if (!dragEvent->dataTransfer)

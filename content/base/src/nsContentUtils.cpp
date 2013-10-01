@@ -4979,7 +4979,7 @@ nsContentUtils::GetDragSession()
 
 /* static */
 nsresult
-nsContentUtils::SetDataTransferInEvent(nsDragEvent* aDragEvent)
+nsContentUtils::SetDataTransferInEvent(WidgetDragEvent* aDragEvent)
 {
   if (aDragEvent->dataTransfer || !aDragEvent->mFlags.mIsTrusted)
     return NS_OK;
@@ -5081,7 +5081,8 @@ nsContentUtils::FilterDropEffect(uint32_t aAction, uint32_t aEffectAllowed)
 
 /* static */
 bool
-nsContentUtils::CheckForSubFrameDrop(nsIDragSession* aDragSession, nsDragEvent* aDropEvent)
+nsContentUtils::CheckForSubFrameDrop(nsIDragSession* aDragSession,
+                                     WidgetDragEvent* aDropEvent)
 {
   nsCOMPtr<nsIContent> target = do_QueryInterface(aDropEvent->originalTarget);
   if (!target) {
