@@ -14,6 +14,7 @@
 #include "nsSVGGeometryFrame.h"
 #include "nsSVGUtils.h"
 #include "nsTextFragment.h"
+#include "nsIContent.h"
 
 class CharacterIterator;
 class gfxContext;

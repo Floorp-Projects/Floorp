@@ -10,6 +10,7 @@
 #include "nsITimer.h"
 #include "nsRepeatService.h"
 #include "mozilla/BasicEvents.h"
+#include "nsIContent.h"
 
 class nsAutoRepeatBoxFrame : public nsButtonBoxFrame
 {
