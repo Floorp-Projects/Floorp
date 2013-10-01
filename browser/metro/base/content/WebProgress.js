@@ -108,7 +108,6 @@ const WebProgress = {
     let locationHasChanged = (location != aTab.browser.lastLocation);
     if (locationHasChanged) {
       Browser.getNotificationBox(aTab.browser).removeTransientNotifications();
-      aTab.resetZoomLevel();
       aTab.browser.lastLocation = location;
       aTab.browser.userTypedValue = "";
       aTab.browser.appIcon = { href: null, size:-1 };
@@ -117,24 +116,11 @@ const WebProgress = {
       if (CrashReporter.enabled)
         CrashReporter.annotateCrashReport("URL", spec);
 #endif
-      this._waitForLoad(aTab);
     }
 
     let event = document.createEvent("UIEvents");
     event.initUIEvent("URLChanged", true, false, window, locationHasChanged);
     aTab.browser.dispatchEvent(event);
-  },
-
-  _waitForLoad: function _waitForLoad(aTab) {
-    let browser = aTab.browser;
-
-    aTab._firstPaint = false;
-
-    browser.messageManager.addMessageListener("Browser:FirstPaint", function firstPaintListener(aMessage) {
-      browser.messageManager.removeMessageListener(aMessage.name, arguments.callee);
-      aTab._firstPaint = true;
-      aTab.scrolledAreaChanged(true);
-    });
   },
 
   _networkStart: function _networkStart(aJson, aTab) {
