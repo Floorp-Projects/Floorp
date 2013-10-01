@@ -1479,6 +1479,7 @@ BEGIN_CASE(JSOP_UNUSED180)
 BEGIN_CASE(JSOP_UNUSED181)
 BEGIN_CASE(JSOP_UNUSED182)
 BEGIN_CASE(JSOP_UNUSED183)
+BEGIN_CASE(JSOP_UNUSED188)
 BEGIN_CASE(JSOP_UNUSED189)
 BEGIN_CASE(JSOP_UNUSED190)
 BEGIN_CASE(JSOP_UNUSED200)
@@ -3043,26 +3044,21 @@ BEGIN_CASE(JSOP_SPREAD)
     RootedObject &arr = rootObject0;
     arr = &regs.sp[-3].toObject();
     const Value iterable = regs.sp[-1];
-    ForOfIterator iter(cx);
+    ForOfIterator iter(cx, iterable);
     RootedValue &iterVal = rootValue0;
-    iterVal.set(iterable);
-    if (!iter.init(iterVal))
-        goto error;
-    while (true) {
-        bool done;
-        if (!iter.next(&iterVal, &done))
-            goto error;
-        if (done)
-            break;
+    while (iter.next()) {
         if (count == INT32_MAX) {
             JS_ReportErrorNumber(cx, js_GetErrorMessage, nullptr,
                                  JSMSG_SPREAD_TOO_LARGE);
             goto error;
         }
+        iterVal = iter.value();
         if (!JSObject::defineElement(cx, arr, count++, iterVal, nullptr, nullptr,
                                      JSPROP_ENUMERATE))
             goto error;
     }
+    if (!iter.close())
+        goto error;
     regs.sp[-2].setInt32(count);
     regs.sp--;
 }
@@ -3179,7 +3175,6 @@ END_CASE(JSOP_DEBUGGER)
 BEGIN_CASE(JSOP_ENTERBLOCK)
 BEGIN_CASE(JSOP_ENTERLET0)
 BEGIN_CASE(JSOP_ENTERLET1)
-BEGIN_CASE(JSOP_ENTERLET2)
 {
     StaticBlockObject &blockObj = script->getObject(regs.pc)->as<StaticBlockObject>();
 

@@ -17,8 +17,6 @@ function* g() { yield 1; }
 var GeneratorFunctionPrototype = Object.getPrototypeOf(g);
 var GeneratorFunction = GeneratorFunctionPrototype.constructor;
 var GeneratorObjectPrototype = GeneratorFunctionPrototype.prototype;
-// FIXME: This should be a symbol.
-var std_iterator = "@@iterator";
 
 
 // A generator function should have the same set of properties as any
@@ -66,7 +64,7 @@ function TestGeneratorObjectPrototype() {
     assertEq(Object.getPrototypeOf((function*(){yield 1}).prototype),
                GeneratorObjectPrototype);
 
-    var expected_property_names = ["next", "throw", "constructor", std_iterator];
+    var expected_property_names = ["iterator", "next", "throw", "constructor"];
     var found_property_names =
         Object.getOwnPropertyNames(GeneratorObjectPrototype);
 

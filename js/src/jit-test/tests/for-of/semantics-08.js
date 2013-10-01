@@ -1,9 +1,7 @@
-// Results from another compartment are correctly interpreted by for-of.
-
-load(libdir + "iteration.js");
+// A for-of loop exits if the iterator's .next method throws another compartment's StopIteration.
 
 var g = newGlobal();
-var it = g.eval("({ '" + std_iterator + "': function () { return this; }, " +
-                "next: function () { return { done: true } } });");
+var it = g.eval("({ iterator: function () { return this; }, " +
+                "next: function () { throw StopIteration; } });");
 for (x of it)
     throw 'FAIL';

@@ -148,7 +148,6 @@ namespace jit {
     _(JSOP_ENTERBLOCK)         \
     _(JSOP_ENTERLET0)          \
     _(JSOP_ENTERLET1)          \
-    _(JSOP_ENTERLET2)          \
     _(JSOP_LEAVEBLOCK)         \
     _(JSOP_LEAVEBLOCKEXPR)     \
     _(JSOP_LEAVEFORLETIN)      \
