@@ -289,9 +289,9 @@ struct ParamTraits<mozilla::WidgetKeyboardEvent>
 };
 
 template<>
-struct ParamTraits<nsTextRangeStyle>
+struct ParamTraits<mozilla::TextRangeStyle>
 {
-  typedef nsTextRangeStyle paramType;
+  typedef mozilla::TextRangeStyle paramType;
 
   static void Write(Message* aMsg, const paramType& aParam)
   {
