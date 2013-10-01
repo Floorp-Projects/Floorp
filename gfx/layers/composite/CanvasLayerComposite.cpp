@@ -7,7 +7,7 @@
 #include "composite/CompositableHost.h"  // for CompositableHost
 #include "gfx2DGlue.h"                  // for ToFilter, ToMatrix4x4
 #include "gfxImageSurface.h"            // for gfxImageSurface
-#include "gfxPattern.h"                 // for gfxPattern, etc
+#include "GraphicsFilter.h"             // for GraphicsFilter
 #include "gfxUtils.h"                   // for gfxUtils, etc
 #include "mozilla/gfx/Matrix.h"         // for Matrix4x4
 #include "mozilla/gfx/Point.h"          // for Point
@@ -77,7 +77,7 @@ CanvasLayerComposite::RenderLayer(const nsIntPoint& aOffset,
   }
 #endif
 
-  gfxPattern::GraphicsFilter filter = mFilter;
+  GraphicsFilter filter = mFilter;
 #ifdef ANDROID
   // Bug 691354
   // Using the LINEAR filter we get unexplained artifacts.
@@ -85,7 +85,7 @@ CanvasLayerComposite::RenderLayer(const nsIntPoint& aOffset,
   gfxMatrix matrix;
   bool is2D = GetEffectiveTransform().Is2D(&matrix);
   if (is2D && !matrix.HasNonTranslationOrFlip()) {
-    filter = gfxPattern::FILTER_NEAREST;
+    filter = GraphicsFilter::FILTER_NEAREST;
   }
 #endif
 

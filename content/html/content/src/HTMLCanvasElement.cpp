@@ -1054,7 +1054,7 @@ HTMLCanvasElement::GetSizeExternal()
 }
 
 NS_IMETHODIMP
-HTMLCanvasElement::RenderContextsExternal(gfxContext *aContext, gfxPattern::GraphicsFilter aFilter, uint32_t aFlags)
+HTMLCanvasElement::RenderContextsExternal(gfxContext *aContext, GraphicsFilter aFilter, uint32_t aFlags)
 {
   if (!mCurrentContext)
     return NS_OK;

@@ -260,7 +260,7 @@ CreateSamplingRestrictedDrawable(gfxDrawable* aDrawable,
       nsRefPtr<gfxContext> tmpCtx = new gfxContext(temp);
       tmpCtx->SetOperator(OptimalFillOperator());
       aDrawable->Draw(tmpCtx, needed - needed.TopLeft(), true,
-                      gfxPattern::FILTER_FAST, gfxMatrix().Translate(needed.TopLeft()));
+                      GraphicsFilter::FILTER_FAST, gfxMatrix().Translate(needed.TopLeft()));
     }
 
     nsRefPtr<gfxDrawable> drawable = 
@@ -348,9 +348,9 @@ DeviceToImageTransform(gfxContext* aContext,
 
 /* These heuristics are based on Source/WebCore/platform/graphics/skia/ImageSkia.cpp:computeResamplingMode() */
 #ifdef MOZ_GFX_OPTIMIZE_MOBILE
-static gfxPattern::GraphicsFilter ReduceResamplingFilter(gfxPattern::GraphicsFilter aFilter,
-                                                         int aImgWidth, int aImgHeight,
-                                                         float aSourceWidth, float aSourceHeight)
+static GraphicsFilter ReduceResamplingFilter(GraphicsFilter aFilter,
+                                             int aImgWidth, int aImgHeight,
+                                             float aSourceWidth, float aSourceHeight)
 {
     // Images smaller than this in either direction are considered "small" and
     // are not resampled ever (see below).
@@ -365,7 +365,7 @@ static gfxPattern::GraphicsFilter ReduceResamplingFilter(gfxPattern::GraphicsFil
         || aImgHeight <= kSmallImageSizeThreshold) {
         // Never resample small images. These are often used for borders and
         // rules (think 1x1 images used to make lines).
-        return gfxPattern::FILTER_NEAREST;
+        return GraphicsFilter::FILTER_NEAREST;
     }
 
     if (aImgHeight * kLargeStretch <= aSourceHeight || aImgWidth * kLargeStretch <= aSourceWidth) {
@@ -376,7 +376,7 @@ static gfxPattern::GraphicsFilter ReduceResamplingFilter(gfxPattern::GraphicsFil
         // (which might be large) and then is stretching it to fill some part
         // of the page.
         if (fabs(aSourceWidth - aImgWidth)/aImgWidth < 0.5 || fabs(aSourceHeight - aImgHeight)/aImgHeight < 0.5)
-            return gfxPattern::FILTER_NEAREST;
+            return GraphicsFilter::FILTER_NEAREST;
 
         // The image is growing a lot and in more than one direction. Resampling
         // is slow and doesn't give us very much when growing a lot.
@@ -404,9 +404,9 @@ static gfxPattern::GraphicsFilter ReduceResamplingFilter(gfxPattern::GraphicsFil
     return aFilter;
 }
 #else
-static gfxPattern::GraphicsFilter ReduceResamplingFilter(gfxPattern::GraphicsFilter aFilter,
-                                                          int aImgWidth, int aImgHeight,
-                                                          int aSourceWidth, int aSourceHeight)
+static GraphicsFilter ReduceResamplingFilter(GraphicsFilter aFilter,
+                                             int aImgWidth, int aImgHeight,
+                                             int aSourceWidth, int aSourceHeight)
 {
     // Just pass the filter through unchanged
     return aFilter;
@@ -422,7 +422,7 @@ gfxUtils::DrawPixelSnapped(gfxContext*      aContext,
                            const gfxRect&   aImageRect,
                            const gfxRect&   aFill,
                            const gfxImageFormat aFormat,
-                           gfxPattern::GraphicsFilter aFilter,
+                           GraphicsFilter aFilter,
                            uint32_t         aImageFlags)
 {
     PROFILER_LABEL("gfxUtils", "DrawPixelSnapped");

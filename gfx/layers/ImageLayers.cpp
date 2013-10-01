@@ -14,7 +14,7 @@ namespace mozilla {
 namespace layers {
 
 ImageLayer::ImageLayer(LayerManager* aManager, void* aImplData)
-: Layer(aManager, aImplData), mFilter(gfxPattern::FILTER_GOOD)
+: Layer(aManager, aImplData), mFilter(GraphicsFilter::FILTER_GOOD)
 , mScaleMode(SCALE_NONE), mDisallowBigImage(false)
 {}
 

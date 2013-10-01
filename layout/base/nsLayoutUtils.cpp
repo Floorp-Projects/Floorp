@@ -101,7 +101,6 @@ using mozilla::image::Orientation;
 bool nsLayoutUtils::gPreventAssertInCompareTreePosition = false;
 #endif // DEBUG
 
-typedef gfxPattern::GraphicsFilter GraphicsFilter;
 typedef FrameMetrics::ViewID ViewID;
 
 /* static */ uint32_t nsLayoutUtils::sFontSizeInflationEmPerLine;
@@ -3854,7 +3853,7 @@ nsLayoutUtils::GetClosestLayer(nsIFrame* aFrame)
 GraphicsFilter
 nsLayoutUtils::GetGraphicsFilterForFrame(nsIFrame* aForFrame)
 {
-  GraphicsFilter defaultFilter = gfxPattern::FILTER_GOOD;
+  GraphicsFilter defaultFilter = GraphicsFilter::FILTER_GOOD;
   nsStyleContext *sc;
   if (nsCSSRendering::IsCanvasFrame(aForFrame)) {
     nsCSSRendering::FindBackground(aForFrame, &sc);
@@ -3864,11 +3863,11 @@ nsLayoutUtils::GetGraphicsFilterForFrame(nsIFrame* aForFrame)
 
   switch (sc->StyleSVG()->mImageRendering) {
   case NS_STYLE_IMAGE_RENDERING_OPTIMIZESPEED:
-    return gfxPattern::FILTER_FAST;
+    return GraphicsFilter::FILTER_FAST;
   case NS_STYLE_IMAGE_RENDERING_OPTIMIZEQUALITY:
-    return gfxPattern::FILTER_BEST;
+    return GraphicsFilter::FILTER_BEST;
   case NS_STYLE_IMAGE_RENDERING_CRISPEDGES:
-    return gfxPattern::FILTER_NEAREST;
+    return GraphicsFilter::FILTER_NEAREST;
   default:
     return defaultFilter;
   }
@@ -4245,7 +4244,7 @@ nsLayoutUtils::DrawBackgroundImage(nsRenderingContext* aRenderingContext,
   PROFILER_LABEL("layout", "nsLayoutUtils::DrawBackgroundImage");
 
   if (UseBackgroundNearestFiltering()) {
-    aGraphicsFilter = gfxPattern::FILTER_NEAREST;
+    aGraphicsFilter = GraphicsFilter::FILTER_NEAREST;
   }
 
   return DrawImageInternal(aRenderingContext, aImage, aGraphicsFilter,
@@ -4730,7 +4729,7 @@ nsLayoutUtils::SurfaceFromElement(HTMLCanvasElement* aElement,
     nsRefPtr<gfxContext> ctx = new gfxContext(surf);
     // XXX shouldn't use the external interface, but maybe we can layerify this
     uint32_t flags = premultAlpha ? HTMLCanvasElement::RenderFlagPremultAlpha : 0;
-    rv = aElement->RenderContextsExternal(ctx, gfxPattern::FILTER_NEAREST, flags);
+    rv = aElement->RenderContextsExternal(ctx, GraphicsFilter::FILTER_NEAREST, flags);
     if (NS_FAILED(rv))
       return result;
   }

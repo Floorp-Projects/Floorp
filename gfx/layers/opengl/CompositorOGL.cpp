@@ -18,7 +18,7 @@
 #include "gfxCrashReporterUtils.h"      // for ScopedGfxFeatureReporter
 #include "gfxImageSurface.h"            // for gfxImageSurface
 #include "gfxMatrix.h"                  // for gfxMatrix
-#include "gfxPattern.h"                 // for gfxPattern, etc
+#include "GraphicsFilter.h"             // for GraphicsFilter
 #include "gfxPlatform.h"                // for gfxPlatform
 #include "gfxRect.h"                    // for gfxRect
 #include "gfxUtils.h"                   // for NextPowerOfTwo, gfxUtils, etc
@@ -1125,7 +1125,7 @@ CompositorOGL::DrawQuad(const Rect& aRect, const Rect& aClipRect,
         return;
       }
 
-      gfxPattern::GraphicsFilter filter = ThebesFilter(effectYCbCr->mFilter);
+      GraphicsFilter filter = ThebesFilter(effectYCbCr->mFilter);
 
       AutoBindTexture bindY(sourceY, LOCAL_GL_TEXTURE0);
       mGLContext->ApplyFilterToBoundTexture(filter);

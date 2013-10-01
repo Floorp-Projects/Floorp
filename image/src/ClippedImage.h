@@ -41,7 +41,7 @@ public:
   NS_IMETHOD GetImageContainer(mozilla::layers::LayerManager* aManager,
                                mozilla::layers::ImageContainer** _retval) MOZ_OVERRIDE;
   NS_IMETHOD Draw(gfxContext* aContext,
-                  gfxPattern::GraphicsFilter aFilter,
+                  GraphicsFilter aFilter,
                   const gfxMatrix& aUserSpaceToImageSpace,
                   const gfxRect& aFill,
                   const nsIntRect& aSubimage,
@@ -69,7 +69,7 @@ private:
                          const uint32_t aFlags) const;
   gfxFloat ClampFactor(const gfxFloat aToClamp, const int aReference) const;
   nsresult DrawSingleTile(gfxContext* aContext,
-                          gfxPattern::GraphicsFilter aFilter,
+                          GraphicsFilter aFilter,
                           const gfxMatrix& aUserSpaceToImageSpace,
                           const gfxRect& aFill,
                           const nsIntRect& aSubimage,
