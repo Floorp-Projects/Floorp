@@ -1,4 +1,4 @@
-rpc protocol plugin {
+intr protocol plugin {
 child:
     __delete__();
 

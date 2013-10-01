@@ -58,7 +58,7 @@ using mozilla::CSSToScreenScale;
 namespace mozilla {
 namespace dom {
 
-rpc protocol PBrowser
+intr protocol PBrowser
 {
     manager PContent;
 
@@ -81,7 +81,7 @@ parent:
 
     Event(RemoteDOMEvent aEvent);
 
-    rpc CreateWindow() returns (PBrowser window);
+    intr CreateWindow() returns (PBrowser window);
 
     sync SyncMessage(nsString aMessage, ClonedMessageData aData, CpowEntry[] aCpows)
       returns (nsString[] retval);

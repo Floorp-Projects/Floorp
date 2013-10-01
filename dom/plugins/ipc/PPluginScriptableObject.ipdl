@@ -26,7 +26,7 @@ union Variant {
   nullable PPluginScriptableObject;
 };
 
-rpc protocol PPluginScriptableObject
+intr protocol PPluginScriptableObject
 {
   manager PPluginInstance;
 
@@ -34,42 +34,42 @@ both:
   async __delete__();
 
 parent:
-  rpc NPN_Evaluate(nsCString aScript)
+  intr NPN_Evaluate(nsCString aScript)
     returns (Variant aResult,
              bool aSuccess);
 
 child:
-  rpc Invalidate();
+  intr Invalidate();
 
 both:
   // NPClass methods
-  rpc HasMethod(PPluginIdentifier aId)
+  intr HasMethod(PPluginIdentifier aId)
     returns (bool aHasMethod);
 
-  rpc Invoke(PPluginIdentifier aId,
+  intr Invoke(PPluginIdentifier aId,
              Variant[] aArgs)
     returns (Variant aResult,
              bool aSuccess);
 
-  rpc InvokeDefault(Variant[] aArgs)
+  intr InvokeDefault(Variant[] aArgs)
     returns (Variant aResult,
              bool aSuccess);
 
-  rpc HasProperty(PPluginIdentifier aId)
+  intr HasProperty(PPluginIdentifier aId)
     returns (bool aHasProperty);
 
-  rpc SetProperty(PPluginIdentifier aId,
+  intr SetProperty(PPluginIdentifier aId,
                   Variant aValue)
     returns (bool aSuccess);
 
-  rpc RemoveProperty(PPluginIdentifier aId)
+  intr RemoveProperty(PPluginIdentifier aId)
     returns (bool aSuccess);
 
-  rpc Enumerate()
+  intr Enumerate()
     returns (PPluginIdentifier[] aProperties,
              bool aSuccess);
 
-  rpc Construct(Variant[] aArgs)
+  intr Construct(Variant[] aArgs)
     returns (Variant aResult,
              bool aSuccess);
 
@@ -90,12 +90,12 @@ both:
    * several checks at once and return all the results simultaneously.
    */
 parent:
-  rpc GetParentProperty(PPluginIdentifier aId)
+  intr GetParentProperty(PPluginIdentifier aId)
     returns (Variant aResult,
              bool aSuccess);
 
 child:
-  rpc GetChildProperty(PPluginIdentifier aId)
+  intr GetChildProperty(PPluginIdentifier aId)
     returns (bool aHasProperty,
              bool aHasMethod,
              Variant aResult,

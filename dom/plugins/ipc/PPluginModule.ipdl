@@ -21,7 +21,7 @@ using nsID;
 namespace mozilla {
 namespace plugins {
 
-rpc protocol PPluginModule
+intr protocol PPluginModule
 {
   manages PPluginInstance;
   manages PPluginIdentifier;
@@ -37,41 +37,41 @@ both:
    * from leaking out to plugin code and only allow the child's to be used.
    *
    * When calling into the plugin, the parent may create a "temporary"
-   * identifier which is only valid for the lifetime of the current RPC frame.
+   * identifier which is only valid for the lifetime of the current inerrupt frame.
    */
   async PPluginIdentifier(nsCString aString,
                           int32_t aInt,
                           bool temporary);
 
-  // Window-specific message which instructs the RPC mechanism to enter
-  // a nested event loop for the current RPC call.
-  async ProcessNativeEventsInRPCCall();
+  // Window-specific message which instructs the interrupt mechanism to enter
+  // a nested event loop for the current interrupt call.
+  async ProcessNativeEventsInInterruptCall();
 
 child:
   // Forces the child process to update its plugin function table.
-  rpc NP_GetEntryPoints()
+  intr NP_GetEntryPoints()
     returns (NPError rv);
 
-  rpc NP_Initialize(uint32_t aFlags)
+  intr NP_Initialize(uint32_t aFlags)
     returns (NPError rv);
 
-  rpc PPluginInstance(nsCString aMimeType,
+  intr PPluginInstance(nsCString aMimeType,
                       uint16_t aMode,
                       nsCString[] aNames,
                       nsCString[] aValues)
     returns (NPError rv);
 
-  rpc NP_Shutdown()
+  intr NP_Shutdown()
     returns (NPError rv);
 
-  rpc OptionalFunctionsSupported()
+  intr OptionalFunctionsSupported()
     returns (bool aURLRedirectNotify, bool aClearSiteData,
              bool aGetSitesWithData);
 
-  rpc NPP_ClearSiteData(nsCString site, uint64_t flags, uint64_t maxAge)
+  intr NPP_ClearSiteData(nsCString site, uint64_t flags, uint64_t maxAge)
     returns (NPError rv);
 
-  rpc NPP_GetSitesWithData()
+  intr NPP_GetSitesWithData()
     returns (nsCString[] sites);
 
   // Windows specific message to set up an audio session in the plugin process
@@ -81,10 +81,10 @@ child:
 
   async SetParentHangTimeout(uint32_t seconds);
 
-  rpc PCrashReporter()
+  intr PCrashReporter()
     returns (NativeThreadId tid, uint32_t processType);
 
-  rpc GeckoGetProfile()
+  intr GeckoGetProfile()
     returns (nsCString aProfile);
 
 parent:
@@ -101,10 +101,10 @@ parent:
    */
   async BackUpXResources(FileDescriptor aXSocketFd);
 
-  rpc NPN_UserAgent()
+  intr NPN_UserAgent()
     returns (nsCString userAgent);
 
-  rpc NPN_GetValue_WithBoolReturn(NPNVariable aVariable)
+  intr NPN_GetValue_WithBoolReturn(NPNVariable aVariable)
     returns (NPError aError,
              bool aBoolVal);
 
@@ -112,7 +112,7 @@ parent:
   // Gtk-specific code upon detecting that the plugin process has
   // entered a nested event loop.  If the browser doesn't process
   // native events, then "livelock" and some other glitches can occur.
-  rpc ProcessSomeEvents();
+  intr ProcessSomeEvents();
 
   // OS X Specific calls to manage the plugin's window
   // when interposing system calls.

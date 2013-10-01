@@ -4,14 +4,14 @@ include protocol PTestDescSubsub;
 namespace mozilla {
 namespace _ipdltest {
 
-rpc protocol PTestDescSub {
+intr protocol PTestDescSub {
     manager PTestDesc;
     manages PTestDescSubsub;
 
 child:
     __delete__();
 
-    rpc PTestDescSubsub();
+    intr PTestDescSubsub();
 };
 
 }

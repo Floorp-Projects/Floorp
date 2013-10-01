@@ -1,0 +1,6 @@
+intr protocol intrMessageCompress {
+parent:
+    intr foo() compress;
+child:
+    intr bar() compress;
+};

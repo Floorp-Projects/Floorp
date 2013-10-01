@@ -23,7 +23,7 @@ namespace layers {
  * frames directly to the compositor thread/process without relying on the main thread
  * which might be too busy dealing with content script.
  */
-/*FIXME: sync*/ rpc protocol PImageBridge
+intr protocol PImageBridge
 {
   manages PCompositable;
   manages PGrallocBuffer;
