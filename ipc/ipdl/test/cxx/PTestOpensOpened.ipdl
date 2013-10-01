@@ -3,15 +3,15 @@ namespace _ipdltest2 {
 
 // (Opens protocols can have different semantics than the endpoints
 // that opened them)
-rpc protocol PTestOpensOpened {
+intr protocol PTestOpensOpened {
 child:
     Hi();
-    rpc HiRpc();
+    intr HiRpc();
 
 parent:
     Hello();
     sync HelloSync();
-    rpc HelloRpc();
+    intr HelloRpc();
     __delete__();
 
 state START:       recv Hello goto HI;

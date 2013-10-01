@@ -591,6 +591,23 @@ CodeGeneratorShared::shouldVerifyOsiPointRegs(LSafepoint *safepoint)
 
     return true;
 }
+
+void
+CodeGeneratorShared::resetOsiPointRegs(LSafepoint *safepoint)
+{
+    if (!shouldVerifyOsiPointRegs(safepoint))
+        return;
+
+    // Set checkRegs to 0. If we perform a VM call, the instruction
+    // will set it to 1.
+    GeneralRegisterSet allRegs(GeneralRegisterSet::All());
+    Register scratch = allRegs.takeAny();
+    masm.push(scratch);
+    masm.loadJitActivation(scratch);
+    Address checkRegs(scratch, JitActivation::offsetOfCheckRegs());
+    masm.store32(Imm32(0), checkRegs);
+    masm.pop(scratch);
+}
 #endif
 
 // Before doing any call to Cpp, you should ensure that volatile

@@ -74,8 +74,8 @@ class PluginModuleChild : public PPluginModuleChild
 {
     typedef mozilla::dom::PCrashReporterChild PCrashReporterChild;
 protected:
-    virtual mozilla::ipc::RacyRPCPolicy
-    MediateRPCRace(const Message& parent, const Message& child) MOZ_OVERRIDE
+    virtual mozilla::ipc::RacyInterruptPolicy
+    MediateInterruptRace(const Message& parent, const Message& child) MOZ_OVERRIDE
     {
         return MediateRace(parent, child);
     }
@@ -158,7 +158,7 @@ protected:
     MOZ_NORETURN void QuickExit();
 
     virtual bool
-    RecvProcessNativeEventsInRPCCall() MOZ_OVERRIDE;
+    RecvProcessNativeEventsInInterruptCall() MOZ_OVERRIDE;
 
     virtual bool
     AnswerGeckoGetProfile(nsCString* aProfile);
@@ -431,7 +431,7 @@ private:
     virtual void ExitedCall() MOZ_OVERRIDE;
 
     // Entered/ExitedCall notifications keep track of whether the plugin has
-    // entered a nested event loop within this RPC call.
+    // entered a nested event loop within this interrupt call.
     struct IncallFrame
     {
         IncallFrame()

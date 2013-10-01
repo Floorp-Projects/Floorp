@@ -96,6 +96,7 @@ CPP_SOURCES += [
 
 IPDL_SOURCES = [
     'InputStreamParams.ipdlh',
+    'ProtocolTypes.ipdlh',
     'URIParams.ipdlh',
 ]
 

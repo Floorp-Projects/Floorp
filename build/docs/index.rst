@@ -17,11 +17,14 @@ Important Concepts
 
    build-overview
    Mozconfig Files <mozconfigs>
+   mozbuild-files
    Profile Guided Optimization <pgo>
    slow
    environment-variables
    build-targets
+   python
    test_manifests
+   mozinfo
 
 mozbuild
 ========
@@ -33,7 +36,6 @@ Mozilla build system.
    :maxdepth: 1
 
    mozbuild/index
-   mozbuild/frontend
    mozbuild/dumbmake
 
 

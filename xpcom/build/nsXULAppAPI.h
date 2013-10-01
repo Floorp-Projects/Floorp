@@ -472,4 +472,7 @@ XRE_API(WindowsEnvironmentType,
         XRE_GetWindowsEnvironment, ())
 #endif // XP_WIN
 
+XRE_API(int,
+        XRE_XPCShellMain, (int argc, char** argv, char** envp))
+
 #endif // _nsXULAppAPI_h__

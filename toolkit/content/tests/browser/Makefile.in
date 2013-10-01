@@ -3,12 +3,3 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-MOCHITEST_BROWSER_FILES = \
-  browser_keyevents_during_autoscrolling.js \
-  browser_bug295977_autoscroll_overflow.js \
-  browser_bug594509.js \
-  browser_save_resend_postdata.js \
-  browser_browserDrop.js \
-  browser_default_image_filename.js \
-  browser_input_file_tooltips.js \
-  $(NULL)

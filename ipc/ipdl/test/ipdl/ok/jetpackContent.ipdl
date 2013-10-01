@@ -1,7 +1,7 @@
 include protocol content;
 include protocol jetpack;
 
-rpc protocol jetpackContent {
+intr protocol jetpackContent {
     bridges jetpack, content;
 
 child:

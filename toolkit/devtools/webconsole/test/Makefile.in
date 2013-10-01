@@ -2,23 +2,3 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-MOCHITEST_CHROME_FILES = \
-    test_basics.html \
-    test_cached_messages.html \
-    test_page_errors.html \
-    test_consoleapi.html \
-    test_jsterm.html \
-    test_object_actor.html \
-    test_network_get.html \
-    test_network_post.html \
-    test_network_longstring.html \
-    test_file_uri.html \
-    test_bug819670_getter_throws.html \
-    test_object_actor_native_getters.html \
-    test_object_actor_native_getters_lenient_this.html \
-    test_nsiconsolemessage.html \
-    network_requests_iframe.html \
-    data.json \
-    data.json^headers^ \
-    common.js \
-    $(NULL)

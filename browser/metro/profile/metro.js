@@ -387,11 +387,6 @@ pref("browser.ui.kinetic.polynomialC", 100);
 pref("browser.ui.kinetic.swipeLength", 160);
 pref("browser.ui.zoom.animationDuration", 200); // ms duration of double-tap zoom animation
 
-// pinch gesture
-pref("browser.ui.pinch.maxGrowth", 150);     // max pinch distance growth
-pref("browser.ui.pinch.maxShrink", 200);     // max pinch distance shrinkage
-pref("browser.ui.pinch.scalingFactor", 500); // scaling factor for above pinch limits
-
 pref("ui.mouse.radius.enabled", true);
 pref("ui.touch.radius.enabled", true);
 
@@ -447,7 +442,11 @@ pref("app.update.silent", true);
 pref("app.update.staging.enabled", true);
 
 // Update service URL:
+#ifdef NIGHTLY_BUILD
 pref("app.update.url", "https://aus4.mozilla.org/update/3/%PRODUCT%/%VERSION%/%BUILD_ID%/%BUILD_TARGET%/%LOCALE%/%CHANNEL%/%OS_VERSION%/%DISTRIBUTION%/%DISTRIBUTION_VERSION%/update.xml");
+#else
+pref("app.update.url", "https://aus3.mozilla.org/update/3/%PRODUCT%/%VERSION%/%BUILD_ID%/%BUILD_TARGET%/%LOCALE%/%CHANNEL%/%OS_VERSION%/%DISTRIBUTION%/%DISTRIBUTION_VERSION%/update.xml");
+#endif
 
 // Show the Update Checking/Ready UI when the user was idle for x seconds
 pref("app.update.idletime", 60);
@@ -515,10 +514,19 @@ pref("app.update.cert.maxErrors", 5);
 // when the |app.update.cert.checkAttributes| preference is set to false. Also,
 // the |app.update.url.override| preference should ONLY be used for testing.
 // IMPORTANT! firefox.js should also be updated for updates to certs.X.issuerName
+
+// Nightly builds have switched over to aus4.mozilla.org, but we don't want anything else to yet.
+#ifdef NIGHTLY_BUILD
 pref("app.update.certs.1.issuerName", "CN=DigiCert Secure Server CA,O=DigiCert Inc,C=US");
 pref("app.update.certs.1.commonName", "aus4.mozilla.org");
 pref("app.update.certs.2.issuerName", "CN=Thawte SSL CA,O=\"Thawte, Inc.\",C=US");
 pref("app.update.certs.2.commonName", "aus4.mozilla.org");
+#else
+pref("app.update.certs.1.issuerName", "OU=Equifax Secure Certificate Authority,O=Equifax,C=US");
+pref("app.update.certs.1.commonName", "aus3.mozilla.org");
+pref("app.update.certs.2.issuerName", "CN=Thawte SSL CA,O=\"Thawte, Inc.\",C=US");
+pref("app.update.certs.2.commonName", "aus3.mozilla.org");
+#endif
 
 // User-settable override to app.update.url for testing purposes.
 //pref("app.update.url.override", "");

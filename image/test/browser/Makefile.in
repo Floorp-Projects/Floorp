@@ -2,12 +2,3 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-MOCHITEST_BROWSER_FILES = head.js \
-  browser_image.js \
-  image.html \
-  imageX2.html \
-  animated.gif \
-  animated2.gif \
-  browser_bug666317.js \
-  big.png \
-  $(NULL)

@@ -64,7 +64,7 @@ OpenParent(TestOpensOpenedParent* aParent,
         fail("opening Parent");
 }
 
-bool
+PTestOpensOpenedParent*
 TestOpensParent::AllocPTestOpensOpenedParent(Transport* transport,
                                              ProcessId otherProcess)
 {
@@ -72,7 +72,7 @@ TestOpensParent::AllocPTestOpensOpenedParent(Transport* transport,
 
     ProcessHandle h;
     if (!base::OpenProcessHandle(otherProcess, &h)) {
-        return false;
+        return nullptr;
     }
 
     gParentThread = new Thread("ParentThread");
@@ -84,7 +84,7 @@ TestOpensParent::AllocPTestOpensOpenedParent(Transport* transport,
         FROM_HERE,
         NewRunnableFunction(OpenParent, a, transport, h));
 
-    return true;
+    return a;
 }
 
 void
@@ -177,7 +177,7 @@ OpenChild(TestOpensOpenedChild* aChild,
         fail("sending Hello");
 }
 
-bool
+PTestOpensOpenedChild*
 TestOpensChild::AllocPTestOpensOpenedChild(Transport* transport,
                                            ProcessId otherProcess)
 {
@@ -185,7 +185,7 @@ TestOpensChild::AllocPTestOpensOpenedChild(Transport* transport,
 
     ProcessHandle h;
     if (!base::OpenProcessHandle(otherProcess, &h)) {
-        return false;
+        return nullptr;
     }
 
     gChildThread = new Thread("ChildThread");
@@ -197,7 +197,7 @@ TestOpensChild::AllocPTestOpensOpenedChild(Transport* transport,
         FROM_HERE,
         NewRunnableFunction(OpenChild, a, transport, h));
 
-    return true;
+    return a;
 }
 
 void

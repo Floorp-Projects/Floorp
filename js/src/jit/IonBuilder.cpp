@@ -1388,49 +1388,7 @@ IonBuilder::inspectOpcode(JSOp op)
         return true;
 
       case JSOP_SETARG:
-        // To handle this case, we should spill the arguments to the space where
-        // actual arguments are stored. The tricky part is that if we add a MIR
-        // to wrap the spilling action, we don't want the spilling to be
-        // captured by the GETARG and by the resume point, only by
-        // MGetArgument.
-        if (info().argsObjAliasesFormals()) {
-            current->add(MSetArgumentsObjectArg::New(current->argumentsObject(), GET_SLOTNO(pc),
-                                                     current->peek(-1)));
-        } else {
-            // TODO: if hasArguments() is true, and the script has a JSOP_SETARG, then
-            // convert all arg accesses to go through the arguments object.
-            if (info().hasArguments())
-                return abort("NYI: arguments & setarg.");
-
-            int32_t arg = GET_SLOTNO(pc);
-
-            // If this assignment is at the start of the function and is coercing
-            // the original value for the argument which was passed in, loosen
-            // the type information for that original argument if it is currently
-            // empty due to originally executing in the interpreter.
-            MDefinition *value = current->peek(-1);
-            if (graph().numBlocks() == 1 &&
-                (value->isBitOr() || value->isBitAnd() || value->isMul() /* for JSOP_POS */))
-             {
-                 for (size_t i = 0; i < value->numOperands(); i++) {
-                    MDefinition *op = value->getOperand(i);
-                    if (op->isParameter() &&
-                        op->toParameter()->index() == arg &&
-                        op->resultTypeSet() &&
-                        op->resultTypeSet()->empty())
-                    {
-                        types::TypeSet *argTypes = types::TypeScript::ArgTypes(script(), arg);
-
-                        // Update both the original and cloned type set.
-                        argTypes->addType(cx, types::Type::UnknownType());
-                        op->resultTypeSet()->addType(cx, types::Type::UnknownType());
-                    }
-                }
-            }
-
-            current->setArg(arg);
-        }
-        return true;
+        return jsop_setarg(GET_SLOTNO(pc));
 
       case JSOP_GETLOCAL:
       case JSOP_CALLLOCAL:
@@ -3144,7 +3102,7 @@ IonBuilder::processCondSwitchCase(CFGState &state)
         MDefinition *caseOperand = current->pop();
         MDefinition *switchOperand = current->peek(-1);
         MCompare *cmpResult = MCompare::New(switchOperand, caseOperand, JSOP_STRICTEQ);
-        cmpResult->infer(cx, inspector, pc);
+        cmpResult->infer(inspector, pc);
         JS_ASSERT(!cmpResult->isEffectful());
         current->add(cmpResult);
         current->end(MTest::New(cmpResult, bodyBlock, caseBlock));
@@ -3257,7 +3215,7 @@ IonBuilder::jsop_andor(JSOp op)
     MTest *test = (op == JSOP_AND)
                   ? MTest::New(lhs, evalRhs, join)
                   : MTest::New(lhs, join, evalRhs);
-    test->infer(cx);
+    test->infer();
     current->end(test);
 
     if (!cfgStack_.append(CFGState::AndOr(joinStart, join)))
@@ -3379,7 +3337,7 @@ IonBuilder::jsop_try()
         return abort("Has try-finally");
 
     // Try-catch within inline frames is not yet supported.
-    if (callerBuilder_)
+    if (isInlineBuilder())
         return abort("try-catch within inline frame");
 
     graph().setHasTryBlock();
@@ -3486,7 +3444,7 @@ IonBuilder::ControlStatus
 IonBuilder::processThrow()
 {
     // JSOP_THROW can't be compiled within inlined frames.
-    if (callerBuilder_)
+    if (isInlineBuilder())
         return ControlStatus_Abort;
 
     MDefinition *def = current->pop();
@@ -5374,7 +5332,7 @@ IonBuilder::jsop_compare(JSOp op)
     current->add(ins);
     current->push(ins);
 
-    ins->infer(cx, inspector, pc);
+    ins->infer(inspector, pc);
 
     if (ins->isEffectful() && !resumeAfter(ins))
         return false;
@@ -5384,7 +5342,7 @@ IonBuilder::jsop_compare(JSOp op)
 JSObject *
 IonBuilder::getNewArrayTemplateObject(uint32_t count)
 {
-    NewObjectKind newKind = types::UseNewTypeForInitializer(cx, script(), pc, JSProto_Array);
+    NewObjectKind newKind = types::UseNewTypeForInitializer(script(), pc, JSProto_Array);
 
     // Do not allocate template objects in the nursery.
     if (newKind == GenericObject)
@@ -5438,7 +5396,7 @@ IonBuilder::jsop_newobject(JSObject *baseObj)
     // Don't bake in the TypeObject for non-CNG scripts.
     JS_ASSERT(script()->compileAndGo);
 
-    NewObjectKind newKind = types::UseNewTypeForInitializer(cx, script(), pc, JSProto_Object);
+    NewObjectKind newKind = types::UseNewTypeForInitializer(script(), pc, JSProto_Object);
 
     // Do not allocate template objects in the nursery.
     if (newKind == GenericObject)
@@ -6741,7 +6699,7 @@ IonBuilder::getElemTryArguments(bool *emitted, MDefinition *obj, MDefinition *in
     if (obj->type() != MIRType_Magic)
         return true;
 
-    // Emit GetArgument.
+    // Emit GetFrameArgument.
 
     JS_ASSERT(!info().argsObjAliasesFormals());
 
@@ -6761,7 +6719,7 @@ IonBuilder::getElemTryArguments(bool *emitted, MDefinition *obj, MDefinition *in
     index = addBoundsCheck(index, length);
 
     // Load the argument from the actual arguments.
-    MGetArgument *load = MGetArgument::New(index);
+    MGetFrameArgument *load = MGetFrameArgument::New(index, analysis_.hasSetArg());
     current->add(load);
     current->push(load);
 
@@ -7718,7 +7676,7 @@ IonBuilder::jsop_not()
     MNot *ins = new MNot(value);
     current->add(ins);
     current->push(ins);
-    ins->infer(cx);
+    ins->infer();
     return true;
 }
 
@@ -9083,6 +9041,67 @@ IonBuilder::jsop_lambda(JSFunction *fun)
 }
 
 bool
+IonBuilder::jsop_setarg(uint32_t arg)
+{
+    // To handle this case, we should spill the arguments to the space where
+    // actual arguments are stored. The tricky part is that if we add a MIR
+    // to wrap the spilling action, we don't want the spilling to be
+    // captured by the GETARG and by the resume point, only by
+    // MGetFrameArgument.
+    JS_ASSERT(analysis_.hasSetArg());
+    MDefinition *val = current->peek(-1);
+
+    // If an arguments object is in use, and it aliases formals, then all SETARGs
+    // must go through the arguments object.
+    if (info().argsObjAliasesFormals()) {
+        current->add(MSetArgumentsObjectArg::New(current->argumentsObject(), GET_SLOTNO(pc), val));
+        return true;
+    }
+
+    // Otherwise, if a magic arguments is in use, and it aliases formals, and there exist
+    // arguments[...] GETELEM expressions in the script, then SetFrameArgument must be used.
+    // If no arguments[...] GETELEM expressions are in the script, and an argsobj is not
+    // required, then it means that any aliased argument set can never be observed, and
+    // the frame does not actually need to be updated with the new arg value.
+    if (info().argumentsAliasesFormals()) {
+        // Try-catch within inline frames is not yet supported.
+        if (isInlineBuilder())
+            return abort("JSOP_SETARG with magic arguments in inlined function.");
+
+        MSetFrameArgument *store = MSetFrameArgument::New(arg, val);
+        current->add(store);
+        current->setArg(arg);
+        return true;
+    }
+
+    // If this assignment is at the start of the function and is coercing
+    // the original value for the argument which was passed in, loosen
+    // the type information for that original argument if it is currently
+    // empty due to originally executing in the interpreter.
+    if (graph().numBlocks() == 1 &&
+        (val->isBitOr() || val->isBitAnd() || val->isMul() /* for JSOP_POS */))
+     {
+         for (size_t i = 0; i < val->numOperands(); i++) {
+            MDefinition *op = val->getOperand(i);
+            if (op->isParameter() &&
+                op->toParameter()->index() == (int32_t)arg &&
+                op->resultTypeSet() &&
+                op->resultTypeSet()->empty())
+            {
+                types::TypeSet *argTypes = types::TypeScript::ArgTypes(script(), arg);
+
+                // Update both the original and cloned type set.
+                argTypes->addType(cx, types::Type::UnknownType());
+                op->resultTypeSet()->addType(cx, types::Type::UnknownType());
+            }
+        }
+    }
+
+    current->setArg(arg);
+    return true;
+}
+
+bool
 IonBuilder::jsop_defvar(uint32_t index)
 {
     JS_ASSERT(JSOp(*pc) == JSOP_DEFVAR || JSOp(*pc) == JSOP_DEFCONST);
@@ -9175,7 +9194,7 @@ IonBuilder::jsop_typeof()
     MDefinition *input = current->pop();
     MTypeOf *ins = MTypeOf::New(input, input->type());
 
-    ins->infer(cx);
+    ins->infer();
 
     current->add(ins);
     current->push(ins);

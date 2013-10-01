@@ -39,8 +39,6 @@ function test() {
     if (gPlayPreviewRegistration)
       gPlayPreviewRegistration.unregister();
     Services.prefs.clearUserPref("plugins.click_to_play");
-    var plugin = getTestPlugin();
-    plugin.enabledState = Ci.nsIPluginTag.STATE_ENABLED;
   });
 
   var newTab = gBrowser.addTab();
@@ -50,8 +48,7 @@ function test() {
   gTestBrowser.addEventListener("PluginBindingAttached", handleBindingAttached, true, true);
 
   Services.prefs.setBoolPref("plugins.click_to_play", true);
-  var plugin = getTestPlugin();
-  plugin.enabledState = Ci.nsIPluginTag.STATE_CLICKTOPLAY;
+  setTestPluginEnabledState(Ci.nsIPluginTag.STATE_CLICKTOPLAY);
 
   registerPlayPreview('application/x-test', 'about:');
   prepareTest(test1a, gTestRoot + "plugin_test.html", 1);
