@@ -4125,7 +4125,7 @@ Selection::FindRangeData(nsIDOMRange* aRange)
 
 NS_IMETHODIMP
 Selection::SetTextRangeStyle(nsIDOMRange* aRange,
-                             const nsTextRangeStyle& aTextRangeStyle)
+                             const TextRangeStyle& aTextRangeStyle)
 {
   NS_ENSURE_ARG_POINTER(aRange);
   RangeData *rd = FindRangeData(aRange);

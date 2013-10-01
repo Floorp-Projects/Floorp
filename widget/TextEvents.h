@@ -213,7 +213,7 @@ struct TextRangeStyle
            IsLineStyleDefined() && mLineStyle == LINESTYLE_NONE;
   }
 
-  bool Equals(const nsTextRangeStyle& aOther)
+  bool Equals(const TextRangeStyle& aOther)
   {
     if (mDefinedStyles != aOther.mDefinedStyles)
       return false;
@@ -534,7 +534,6 @@ public:
 } // namespace mozilla
 
 // TODO: Remove following typedefs
-typedef mozilla::TextRangeStyle          nsTextRangeStyle;
 typedef mozilla::TextRange               nsTextRange;
 typedef mozilla::TextRangeArray          nsTextRangeArray;
 typedef mozilla::WidgetTextEvent         nsTextEvent;
