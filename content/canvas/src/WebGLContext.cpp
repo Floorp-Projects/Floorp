@@ -348,6 +348,20 @@ WebGLContext::SetContextOptions(JSContext* aCx, JS::Handle<JS::Value> aOptions)
     return NS_OK;
 }
 
+#ifdef DEBUG
+int32_t
+WebGLContext::GetWidth() const
+{
+  return mWidth;
+}
+
+int32_t
+WebGLContext::GetHeight() const
+{
+  return mHeight;
+}
+#endif
+
 NS_IMETHODIMP
 WebGLContext::SetDimensions(int32_t width, int32_t height)
 {

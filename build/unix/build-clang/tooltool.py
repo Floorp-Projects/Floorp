@@ -22,16 +22,13 @@
 
 __version__ = '1'
 
+import json
 import os
 import optparse
 import logging
 import hashlib
 import urllib2
 import ConfigParser
-try:
-    import simplejson as json # I hear simplejson is faster
-except ImportError:
-    import json
 
 log = logging.getLogger(__name__)
 

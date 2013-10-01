@@ -143,11 +143,13 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsDOMEvent)
       case NS_MOUSE_SCROLL_EVENT:
       case NS_WHEEL_EVENT:
       case NS_SIMPLE_GESTURE_EVENT:
-        static_cast<nsMouseEvent_base*>(tmp->mEvent)->relatedTarget = nullptr;
+        static_cast<WidgetMouseEventBase*>(tmp->mEvent)->relatedTarget =
+          nullptr;
         break;
       case NS_DRAG_EVENT:
-        static_cast<nsDragEvent*>(tmp->mEvent)->dataTransfer = nullptr;
-        static_cast<nsMouseEvent_base*>(tmp->mEvent)->relatedTarget = nullptr;
+        static_cast<WidgetDragEvent*>(tmp->mEvent)->dataTransfer = nullptr;
+        static_cast<WidgetMouseEventBase*>(tmp->mEvent)->relatedTarget =
+          nullptr;
         break;
       case NS_CLIPBOARD_EVENT:
         static_cast<InternalClipboardEvent*>(tmp->mEvent)->clipboardData =
@@ -182,15 +184,15 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(nsDOMEvent)
       case NS_SIMPLE_GESTURE_EVENT:
         NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(cb, "mEvent->relatedTarget");
         cb.NoteXPCOMChild(
-          static_cast<nsMouseEvent_base*>(tmp->mEvent)->relatedTarget);
+          static_cast<WidgetMouseEventBase*>(tmp->mEvent)->relatedTarget);
         break;
       case NS_DRAG_EVENT:
         NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(cb, "mEvent->dataTransfer");
         cb.NoteXPCOMChild(
-          static_cast<nsDragEvent*>(tmp->mEvent)->dataTransfer);
+          static_cast<WidgetDragEvent*>(tmp->mEvent)->dataTransfer);
         NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(cb, "mEvent->relatedTarget");
         cb.NoteXPCOMChild(
-          static_cast<nsMouseEvent_base*>(tmp->mEvent)->relatedTarget);
+          static_cast<WidgetMouseEventBase*>(tmp->mEvent)->relatedTarget);
         break;
       case NS_CLIPBOARD_EVENT:
         NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(cb, "mEvent->clipboardData");
@@ -530,16 +532,18 @@ nsDOMEvent::DuplicatePrivateData()
     }
     case NS_INPUT_EVENT:
     {
-      nsInputEvent* oldInputEvent = static_cast<nsInputEvent*>(mEvent);
-      nsInputEvent* inputEvent = new nsInputEvent(false, msg, nullptr);
+      WidgetInputEvent* oldInputEvent = static_cast<WidgetInputEvent*>(mEvent);
+      WidgetInputEvent* inputEvent = new WidgetInputEvent(false, msg, nullptr);
       inputEvent->AssignInputEventData(*oldInputEvent, true);
       newEvent = inputEvent;
       break;
     }
     case NS_KEY_EVENT:
     {
-      nsKeyEvent* oldKeyEvent = static_cast<nsKeyEvent*>(mEvent);
-      nsKeyEvent* keyEvent = new nsKeyEvent(false, msg, nullptr);
+      WidgetKeyboardEvent* oldKeyEvent =
+        static_cast<WidgetKeyboardEvent*>(mEvent);
+      WidgetKeyboardEvent* keyEvent =
+        new WidgetKeyboardEvent(false, msg, nullptr);
       keyEvent->AssignKeyEventData(*oldKeyEvent, true);
       newEvent = keyEvent;
       break;
@@ -555,9 +559,8 @@ nsDOMEvent::DuplicatePrivateData()
     }
     case NS_DRAG_EVENT:
     {
-      nsDragEvent* oldDragEvent = static_cast<nsDragEvent*>(mEvent);
-      nsDragEvent* dragEvent =
-        new nsDragEvent(false, msg, nullptr);
+      WidgetDragEvent* oldDragEvent = static_cast<WidgetDragEvent*>(mEvent);
+      WidgetDragEvent* dragEvent = new WidgetDragEvent(false, msg, nullptr);
       dragEvent->AssignDragEventData(*oldDragEvent, true);
       newEvent = dragEvent;
       break;
@@ -584,28 +587,28 @@ nsDOMEvent::DuplicatePrivateData()
     }
     case NS_TEXT_EVENT:
     {
-      nsTextEvent* oldTextEvent = static_cast<nsTextEvent*>(mEvent);
-      nsTextEvent* textEvent = new nsTextEvent(false, msg, nullptr);
+      WidgetTextEvent* oldTextEvent = static_cast<WidgetTextEvent*>(mEvent);
+      WidgetTextEvent* textEvent = new WidgetTextEvent(false, msg, nullptr);
       textEvent->AssignTextEventData(*oldTextEvent, true);
       newEvent = textEvent;
       break;
     }
     case NS_COMPOSITION_EVENT:
     {
-      nsCompositionEvent* compositionEvent =
-        new nsCompositionEvent(false, msg, nullptr);
-      nsCompositionEvent* oldCompositionEvent =
-        static_cast<nsCompositionEvent*>(mEvent);
+      WidgetCompositionEvent* compositionEvent =
+        new WidgetCompositionEvent(false, msg, nullptr);
+      WidgetCompositionEvent* oldCompositionEvent =
+        static_cast<WidgetCompositionEvent*>(mEvent);
       compositionEvent->AssignCompositionEventData(*oldCompositionEvent, true);
       newEvent = compositionEvent;
       break;
     }
     case NS_MOUSE_SCROLL_EVENT:
     {
-      nsMouseScrollEvent* oldMouseScrollEvent =
-        static_cast<nsMouseScrollEvent*>(mEvent);
-      nsMouseScrollEvent* mouseScrollEvent =
-        new nsMouseScrollEvent(false, msg, nullptr);
+      WidgetMouseScrollEvent* oldMouseScrollEvent =
+        static_cast<WidgetMouseScrollEvent*>(mEvent);
+      WidgetMouseScrollEvent* mouseScrollEvent =
+        new WidgetMouseScrollEvent(false, msg, nullptr);
       mouseScrollEvent->AssignMouseScrollEventData(*oldMouseScrollEvent, true);
       newEvent = mouseScrollEvent;
       break;
@@ -678,8 +681,9 @@ nsDOMEvent::DuplicatePrivateData()
     }
     case NS_UI_EVENT:
     {
-      nsUIEvent* oldUIEvent = static_cast<nsUIEvent*>(mEvent);
-      nsUIEvent* uiEvent = new nsUIEvent(false, msg, oldUIEvent->detail);
+      InternalUIEvent* oldUIEvent = static_cast<InternalUIEvent*>(mEvent);
+      InternalUIEvent* uiEvent =
+        new InternalUIEvent(false, msg, oldUIEvent->detail);
       uiEvent->AssignUIEventData(*oldUIEvent, true);
       newEvent = uiEvent;
       break;
@@ -695,8 +699,8 @@ nsDOMEvent::DuplicatePrivateData()
     }
     case NS_SMIL_TIME_EVENT:
     {
-      nsUIEvent* oldUIEvent = static_cast<nsUIEvent*>(mEvent);
-      nsUIEvent* uiEvent = new nsUIEvent(false, msg, 0);
+      InternalUIEvent* oldUIEvent = static_cast<InternalUIEvent*>(mEvent);
+      InternalUIEvent* uiEvent = new InternalUIEvent(false, msg, 0);
       uiEvent->eventStructType = NS_SMIL_TIME_EVENT;
       uiEvent->AssignUIEventData(*oldUIEvent, true);
       newEvent = uiEvent;
@@ -895,7 +899,7 @@ nsDOMEvent::GetEventPopupControlState(nsEvent *aEvent)
     break;
   case NS_KEY_EVENT :
     if (aEvent->mFlags.mIsTrusted) {
-      uint32_t key = static_cast<nsKeyEvent *>(aEvent)->keyCode;
+      uint32_t key = static_cast<WidgetKeyboardEvent*>(aEvent)->keyCode;
       switch(aEvent->message) {
       case NS_KEY_PRESS :
         // return key on focused button. see note at NS_MOUSE_CLICK.

@@ -898,10 +898,12 @@ function defineProperty(o, p, v) {
 
 
 /**
- * Weak map holding objects with the properties specified as "internal" for
- * all Intl API objects. Presence of an object as a key within this map is
- * considered equivalent to having the [[initializedIntlObject]] internal
- * property set to true on this object.
+ * Weak map used to track the initialize-as-Intl status (and, if an object has
+ * been so initialized, the Intl-specific internal properties) of all objects.
+ * Presence of an object as a key within this map indicates that the object has
+ * its [[initializedIntlObject]] internal property set to true.  The associated
+ * value is an object whose structure is documented in |initializeIntlObject|
+ * below.
  *
  * Ideally we'd be using private symbols for internal properties, but
  * SpiderMonkey doesn't have those yet.
@@ -910,53 +912,165 @@ var internalsMap = new WeakMap();
 
 
 /**
- * Create an object holding the properties specified as "internal" for
- * an Intl API object. This call is equivalent to setting the
- * [[initializedIntlObject]] internal property of o to true.
+ * Set the [[initializedIntlObject]] internal property of |obj| to true.
  */
-function initializeIntlObject(o) {
-    assert(IsObject(o), "initializeIntlObject");
+function initializeIntlObject(obj) {
+    assert(IsObject(obj), "Non-object passed to initializeIntlObject");
+
+    // Intl-initialized objects are weird.  They have [[initializedIntlObject]]
+    // set on them, but they don't *necessarily* have any other properties.
+
     var internals = std_Object_create(null);
-    callFunction(std_WeakMap_set, internalsMap, o, internals);
+
+    // The meaning of an internals object for an object |obj| is as follows.
+    //
+    // If the .type is "partial", |obj| has [[initializedIntlObject]] set but
+    // nothing else.  No other property of |internals| can be used.  (This
+    // occurs when InitializeCollator or similar marks an object as
+    // [[initializedIntlObject]] but fails before marking it as the appropriate
+    // more-specific type ["Collator", "DateTimeFormat", "NumberFormat"].)
+    //
+    // Otherwise, the .type indicates the type of Intl object that |obj| is:
+    // "Collator", "DateTimeFormat", or "NumberFormat" (likely with more coming
+    // in future Intl specs).  In these cases |obj| *conceptually* also has
+    // [[initializedCollator]] or similar set, and all the other properties
+    // implied by that.
+    //
+    // If |internals| doesn't have a "partial" .type, two additional properties
+    // have meaning.  The .lazyData property stores information needed to
+    // compute -- without observable side effects -- the actual internal Intl
+    // properties of |obj|.  If it is non-null, then the actual internal
+    // properties haven't been computed, and .lazyData must be processed by
+    // |setInternalProperties| before internal Intl property values are
+    // available.  If it is null, then the .internalProps property contains an
+    // object whose properties are the internal Intl properties of |obj|.
+
+    internals.type = "partial";
+    internals.lazyData = null;
+    internals.internalProps = null;
+
+    callFunction(std_WeakMap_set, internalsMap, obj, internals);
     return internals;
 }
 
 
 /**
- * Return whether the object has been initialized as an Intl object, equivalent
- * to testing whether the [[initializedIntlObject]] internal property of o is
- * true.
+ * Mark |internals| as having the given type and lazy data.
  */
-function isInitializedIntlObject(o) {
-    return callFunction(std_WeakMap_has, internalsMap, o);
+function setLazyData(internals, type, lazyData)
+{
+    assert(internals.type === "partial", "can't set lazy data for anything but a newborn");
+    assert(type === "Collator" || type === "DateTimeFormat" || type == "NumberFormat", "bad type");
+    assert(IsObject(lazyData), "non-object lazy data");
+
+    // Set in reverse order so that the .type change is a barrier.
+    internals.lazyData = lazyData;
+    internals.type = type;
 }
 
 
 /**
- * Returns the object holding the internal properties of o.
+ * Set the internal properties object for an |internals| object previously
+ * associated with lazy data.
  */
-function getInternals(o) {
-    return callFunction(std_WeakMap_get, internalsMap, o);
+function setInternalProperties(internals, internalProps)
+{
+    assert(internals.type !== "partial", "newborn internals can't have computed internals");
+    assert(IsObject(internals.lazyData), "lazy data must exist already");
+    assert(IsObject(internalProps), "internalProps argument should be an object");
+
+    // Set in reverse order so that the .lazyData nulling is a barrier.
+    internals.internalProps = internalProps;
+    internals.lazyData = null;
 }
 
 
 /**
- * Check that the object on which certain functions are called
- * meet the requirements for "this Collator object", "this NumberFormat object",
- * "this DateTimeFormat object". If it meets the requirements, return the
- * object holding its internal properties.
+ * Get the existing internal properties out of a non-newborn |internals|, or
+ * null if none have been computed.
+ */
+function maybeInternalProperties(internals)
+{
+    assert(IsObject(internals), "non-object passed to maybeInternalProperties");
+    assert(internals.type !== "partial", "maybeInternalProperties must only be used on completely-initialized internals objects");
+    var lazyData = internals.lazyData;
+    if (lazyData)
+        return null;
+    assert(IsObject(internals.internalProps), "missing lazy data and computed internals");
+    return internals.internalProps;
+}
+
+
+/**
+ * Return whether |obj| has an[[initializedIntlObject]] property set to true.
+ */
+function isInitializedIntlObject(obj) {
+#ifdef DEBUG
+    var internals = callFunction(std_WeakMap_get, internalsMap, obj);
+    if (IsObject(internals)) {
+        assert(callFunction(std_Object_hasOwnProperty, internals, "type"), "missing type");
+        var type = internals.type;
+        assert(type === "partial" || type === "Collator" || type === "DateTimeFormat" || type === "NumberFormat", "unexpected type");
+        assert(callFunction(std_Object_hasOwnProperty, internals, "lazyData"), "missing lazyData");
+        assert(callFunction(std_Object_hasOwnProperty, internals, "internalProps"), "missing internalProps");
+    } else {
+        assert(internals === undefined, "bad mapping for |obj|");
+    }
+#endif
+    return callFunction(std_WeakMap_has, internalsMap, obj);
+}
+
+
+/**
+ * Check that |obj| meets the requirements for "this Collator object", "this
+ * NumberFormat object", or "this DateTimeFormat object" as used in the method
+ * with the given name.  Throw a TypeError if |obj| doesn't meet these
+ * requirements.  But if it does, return |obj|'s internals object (*not* the
+ * object holding its internal properties!), associated with it by
+ * |internalsMap|, with structure specified above.
  *
  * Spec: ECMAScript Internationalization API Specification, 10.3.
  * Spec: ECMAScript Internationalization API Specification, 11.3.
  * Spec: ECMAScript Internationalization API Specification, 12.3.
  */
-function checkIntlAPIObject(o, className, methodName) {
-    assert(typeof className === "string", "checkIntlAPIObject");
-    var internals = getInternals(o);
-    if (internals === undefined || internals["initialized" + className] !== true)
+function getIntlObjectInternals(obj, className, methodName) {
+    assert(typeof className === "string", "bad className for getIntlObjectInternals");
+
+    var internals = callFunction(std_WeakMap_get, internalsMap, obj);
+    assert(internals === undefined || isInitializedIntlObject(obj), "bad mapping in internalsMap");
+
+    if (internals === undefined || internals.type !== className)
         ThrowError(JSMSG_INTL_OBJECT_NOT_INITED, className, methodName, className);
-    assert(IsObject(o), "checkIntlAPIObject");
+
     return internals;
+}
+
+
+/**
+ * Get the internal properties of known-Intl object |obj|.  For use only by
+ * C++ code that knows what it's doing!
+ */
+function getInternals(obj)
+{
+    assert(isInitializedIntlObject(obj), "for use only on guaranteed Intl objects");
+
+    var internals = callFunction(std_WeakMap_get, internalsMap, obj);
+
+    assert(internals.type !== "partial", "must have been successfully initialized");
+    var lazyData = internals.lazyData;
+    if (!lazyData)
+        return internals.internalProps;
+
+    var internalProps;
+    var type = internals.type;
+    if (type === "Collator")
+        internalProps = resolveCollatorInternals(lazyData)
+    else if (type === "DateTimeFormat")
+        internalProps = resolveDateTimeFormatInternals(lazyData)
+    else
+        internalProps = resolveNumberFormatInternals(lazyData);
+    setInternalProperties(internals, internalProps);
+    return internalProps;
 }
 
 
@@ -976,65 +1090,25 @@ var collatorKeyMappings = {
 
 
 /**
- * Initializes an object as a Collator.
- *
- * Spec: ECMAScript Internationalization API Specification, 10.1.1.
+ * Compute an internal properties object from |lazyCollatorData|.
  */
-function InitializeCollator(collator, locales, options) {
-    assert(IsObject(collator), "InitializeCollator");
+function resolveCollatorInternals(lazyCollatorData)
+{
+    assert(IsObject(lazyCollatorData), "lazy data not an object?");
 
-    // Step 1.
-    if (isInitializedIntlObject(collator))
-        ThrowError(JSMSG_INTL_OBJECT_REINITED);
+    var internalProps = std_Object_create(null);
 
-    // Step 2.
-    var internals = initializeIntlObject(collator);
-
-    // Step 3.
-    var requestedLocales = CanonicalizeLocaleList(locales);
-
-    // Steps 4-5.
-    if (options === undefined)
-        options = {};
-    else
-        options = ToObject(options);
-
-    // Compute options that impact interpretation of locale.
-    // Steps 6-7.
-    var u = GetOption(options, "usage", "string", ["sort", "search"], "sort");
-    internals.usage = u;
+    // Step 7.
+    internalProps.usage = lazyCollatorData.usage;
 
     // Step 8.
     var Collator = collatorInternalProperties;
 
     // Step 9.
-    var localeData = u === "sort" ? Collator.sortLocaleData : Collator.searchLocaleData;
-
-    // Step 10.
-    var opt = new Record();
-
-    // Steps 11-12.
-    var matcher = GetOption(options, "localeMatcher", "string", ["lookup", "best fit"], "best fit");
-    opt.localeMatcher = matcher;
-
-    // Check all allowed options properties and convert them to extension keys.
-    // Steps 13-13.a.
-    var key, mapping, property, value;
-    for (key in collatorKeyMappings) {
-        if (callFunction(std_Object_hasOwnProperty, collatorKeyMappings, key)) {
-            mapping = collatorKeyMappings[key];
-
-            // Step 13.b.
-            value = GetOption(options, mapping.property, mapping.type, mapping.values, undefined);
-
-            // Step 13.c.
-            if (mapping.type === "boolean" && value !== undefined)
-                value = callFunction(std_Boolean_toString, value);
-
-            // Step 13.d.
-            opt[key] = value;
-        }
-    }
+    var collatorIsSorting = lazyCollatorData.usage === "sort";
+    var localeData = collatorIsSorting
+                     ? Collator.sortLocaleData
+                     : Collator.searchLocaleData;
 
     // Compute effective locale.
     // Step 14.
@@ -1042,13 +1116,16 @@ function InitializeCollator(collator, locales, options) {
 
     // Step 15.
     var r = ResolveLocale(Collator.availableLocales(),
-                          requestedLocales, opt,
+                          lazyCollatorData.requestedLocales,
+                          lazyCollatorData.opt,
                           relevantExtensionKeys,
                           localeData);
+
     // Step 16.
-    internals.locale = r.locale;
+    internalProps.locale = r.locale;
 
     // Steps 17-19.
+    var key, property, value, mapping;
     var i = 0, len = relevantExtensionKeys.length;
     while (i < len) {
         // Step 19.a.
@@ -1067,18 +1144,17 @@ function InitializeCollator(collator, locales, options) {
         }
 
         // Step 19.d.
-        internals[property] = value;
+        internalProps[property] = value;
 
         // Step 19.e.
         i++;
     }
 
     // Compute remaining collation options.
-    // Steps 20-21.
-    var s = GetOption(options, "sensitivity", "string",
-                      ["base", "accent", "case", "variant"], undefined);
+    // Steps 21-22.
+    var s = lazyCollatorData.rawSensitivity;
     if (s === undefined) {
-        if (u === "sort") {
+        if (collatorIsSorting) {
             // Step 21.a.
             s = "variant";
         } else {
@@ -1088,19 +1164,134 @@ function InitializeCollator(collator, locales, options) {
             s = dataLocaleData.sensitivity;
         }
     }
+    internalProps.sensitivity = s;
 
-    // Step 22.
-    internals.sensitivity = s;
-
-    // Steps 23-24.
-    var ip = GetOption(options, "ignorePunctuation", "boolean", undefined, false);
-    internals.ignorePunctuation = ip;
+    // Step 24.
+    internalProps.ignorePunctuation = lazyCollatorData.ignorePunctuation;
 
     // Step 25.
-    internals.boundFormat = undefined;
+    internalProps.boundFormat = undefined;
+
+    // The caller is responsible for associating |internalProps| with the right
+    // object using |setInternalProperties|.
+    return internalProps;
+}
+
+
+/**
+ * Returns an object containing the Collator internal properties of |obj|, or
+ * throws a TypeError if |obj| isn't Collator-initialized.
+ */
+function getCollatorInternals(obj, methodName) {
+    var internals = getIntlObjectInternals(obj, "Collator", methodName);
+    assert(internals.type === "Collator", "bad type escaped getIntlObjectInternals");
+
+    // If internal properties have already been computed, use them.
+    var internalProps = maybeInternalProperties(internals);
+    if (internalProps)
+        return internalProps;
+
+    // Otherwise it's time to fully create them.
+    internalProps = resolveCollatorInternals(internals.lazyData);
+    setInternalProperties(internals, internalProps);
+    return internalProps;
+}
+
+
+/**
+ * Initializes an object as a Collator.
+ *
+ * This method is complicated a moderate bit by its implementing initialization
+ * as a *lazy* concept.  Everything that must happen now, does -- but we defer
+ * all the work we can until the object is actually used as a Collator.  This
+ * later work occurs in |resolveCollatorInternals|; steps not noted here occur
+ * there.
+ *
+ * Spec: ECMAScript Internationalization API Specification, 10.1.1.
+ */
+function InitializeCollator(collator, locales, options) {
+    assert(IsObject(collator), "InitializeCollator");
+
+    // Step 1.
+    if (isInitializedIntlObject(collator))
+        ThrowError(JSMSG_INTL_OBJECT_REINITED);
+
+    // Step 2.
+    var internals = initializeIntlObject(collator);
+
+    // Lazy Collator data has the following structure:
+    //
+    //   {
+    //     requestedLocales: List of locales,
+    //     usage: "sort" / "search",
+    //     opt: // opt object computed in InitializeCollator
+    //       {
+    //         localeMatcher: "lookup" / "best fit",
+    //         kn: true / false / undefined,
+    //         kf: "upper" / "lower" / "false" / undefined
+    //       }
+    //     rawSensitivity: "base" / "accent" / "case" / "variant" / undefined,
+    //     ignorePunctuation: true / false
+    //   }
+    //
+    // Note that lazy data is only installed as a final step of initialization,
+    // so every Collator lazy data object has *all* these properties, never a
+    // subset of them.
+    var lazyCollatorData = std_Object_create(null);
+
+    // Step 3.
+    var requestedLocales = CanonicalizeLocaleList(locales);
+    lazyCollatorData.requestedLocales = requestedLocales;
+
+    // Steps 4-5.
+    //
+    // If we ever need more speed here at startup, we should try to detect the
+    // case where |options === undefined| and Object.prototype hasn't been
+    // mucked with.  (|options| is fully consumed in this method, so it's not a
+    // concern that Object.prototype might be touched between now and when
+    // |resolveCollatorInternals| is called.)  For now, just keep it simple.
+    if (options === undefined)
+        options = {};
+    else
+        options = ToObject(options);
+
+    // Compute options that impact interpretation of locale.
+    // Step 6.
+    var u = GetOption(options, "usage", "string", ["sort", "search"], "sort");
+    lazyCollatorData.usage = u;
+
+    // Step 10.
+    var opt = new Record();
+    lazyCollatorData.opt = opt;
+
+    // Steps 11-12.
+    var matcher = GetOption(options, "localeMatcher", "string", ["lookup", "best fit"], "best fit");
+    opt.localeMatcher = matcher;
+
+    // Step 13, unrolled.
+    var numericValue = GetOption(options, "numeric", "boolean", undefined, undefined);
+    if (numericValue !== undefined)
+        numericValue = callFunction(std_Boolean_toString, numericValue);
+    opt.kn = numericValue;
+
+    var caseFirstValue = GetOption(options, "caseFirst", "string", ["upper", "lower", "false"], undefined);
+    opt.kf = caseFirstValue;
+
+    // Compute remaining collation options.
+    // Step 20.
+    var s = GetOption(options, "sensitivity", "string",
+                      ["base", "accent", "case", "variant"], undefined);
+    lazyCollatorData.rawSensitivity = s;
+
+    // Step 23.
+    var ip = GetOption(options, "ignorePunctuation", "boolean", undefined, false);
+    lazyCollatorData.ignorePunctuation = ip;
 
     // Step 26.
-    internals.initializedCollator = true;
+    //
+    // We've done everything that must be done now: mark the lazy data as fully
+    // computed and install it.
+    setLazyData(internals, "Collator", lazyCollatorData);
 }
 
 
@@ -1189,7 +1380,7 @@ function collatorCompareToBind(x, y) {
  */
 function Intl_Collator_compare_get() {
     // Check "this Collator object" per introduction of section 10.3.
-    var internals = checkIntlAPIObject(this, "Collator", "compare");
+    var internals = getCollatorInternals(this, "compare");
 
     // Step 1.
     if (internals.boundCompare === undefined) {
@@ -1213,7 +1404,7 @@ function Intl_Collator_compare_get() {
  */
 function Intl_Collator_resolvedOptions() {
     // Check "this Collator object" per introduction of section 10.3.
-    var internals = checkIntlAPIObject(this, "Collator", "resolvedOptions");
+    var internals = getCollatorInternals(this, "resolvedOptions");
 
     var result = {
         locale: internals.locale,
@@ -1236,7 +1427,127 @@ function Intl_Collator_resolvedOptions() {
 
 
 /**
+ * NumberFormat internal properties.
+ *
+ * Spec: ECMAScript Internationalization API Specification, 9.1 and 11.2.3.
+ */
+var numberFormatInternalProperties = {
+    localeData: numberFormatLocaleData,
+    _availableLocales: null,
+    availableLocales: function()
+    {
+        var locales = this._availableLocales;
+        if (locales)
+            return locales;
+        return (this._availableLocales =
+          addOldStyleLanguageTags(intl_NumberFormat_availableLocales()));
+    },
+    relevantExtensionKeys: ["nu"]
+};
+
+
+/**
+ * Compute an internal properties object from |lazyNumberFormatData|.
+ */
+function resolveNumberFormatInternals(lazyNumberFormatData) {
+    assert(IsObject(lazyNumberFormatData), "lazy data not an object?");
+
+    var internalProps = std_Object_create(null);
+
+    // Step 3.
+    var requestedLocales = lazyNumberFormatData.requestedLocales;
+
+    // Compute options that impact interpretation of locale.
+    // Step 6.
+    var opt = lazyNumberFormatData.opt;
+
+    // Compute effective locale.
+    // Step 9.
+    var NumberFormat = numberFormatInternalProperties;
+
+    // Step 10.
+    var localeData = NumberFormat.localeData;
+
+    // Step 11.
+    var r = ResolveLocale(NumberFormat.availableLocales(),
+                          lazyNumberFormatData.requestedLocales,
+                          lazyNumberFormatData.opt,
+                          NumberFormat.relevantExtensionKeys,
+                          localeData);
+
+    // Steps 12-13.  (Step 14 is not relevant to our implementation.)
+    internalProps.locale = r.locale;
+    internalProps.numberingSystem = r.nu;
+
+    // Compute formatting options.
+    // Step 16.
+    var s = lazyNumberFormatData.style;
+    internalProps.style = s;
+
+    // Steps 20, 22.
+    if (s === "currency") {
+        internalProps.currency = lazyNumberFormatData.currency;
+        internalProps.currencyDisplay = lazyNumberFormatData.currencyDisplay;
+    }
+
+    // Step 24.
+    internalProps.minimumIntegerDigits = lazyNumberFormatData.minimumIntegerDigits;
+
+    // Steps 27.
+    internalProps.minimumFractionDigits = lazyNumberFormatData.minimumFractionDigits;
+
+    // Step 30.
+    internalProps.maximumFractionDigits = lazyNumberFormatData.maximumFractionDigits;
+
+    // Step 33.
+    if ("minimumSignificantDigits" in lazyNumberFormatData) {
+        // Note: Intl.NumberFormat.prototype.resolvedOptions() exposes the
+        // actual presence (versus undefined-ness) of these properties.
+        assert("maximumSignificantDigits" in lazyNumberFormatData, "min/max sig digits mismatch");
+        internalProps.minimumSignificantDigits = lazyNumberFormatData.minimumSignificantDigits;
+        internalProps.maximumSignificantDigits = lazyNumberFormatData.maximumSignificantDigits;
+    }
+
+    // Step 35.
+    internalProps.useGrouping = lazyNumberFormatData.useGrouping;
+
+    // Step 42.
+    internalProps.boundFormat = undefined;
+
+    // The caller is responsible for associating |internalProps| with the right
+    // object using |setInternalProperties|.
+    return internalProps;
+}
+
+
+/**
+ * Returns an object containing the NumberFormat internal properties of |obj|,
+ * or throws a TypeError if |obj| isn't NumberFormat-initialized.
+ */
+function getNumberFormatInternals(obj, methodName) {
+    var internals = getIntlObjectInternals(obj, "NumberFormat", methodName);
+    assert(internals.type === "NumberFormat", "bad type escaped getIntlObjectInternals");
+
+    // If internal properties have already been computed, use them.
+    var internalProps = maybeInternalProperties(internals);
+    if (internalProps)
+        return internalProps;
+
+    // Otherwise it's time to fully create them.
+    internalProps = resolveNumberFormatInternals(internals.lazyData);
+    setInternalProperties(internals, internalProps);
+    return internalProps;
+}
+
+
+/**
  * Initializes an object as a NumberFormat.
+ *
+ * This method is complicated a moderate bit by its implementing initialization
+ * as a *lazy* concept.  Everything that must happen now, does -- but we defer
+ * all the work we can until the object is actually used as a NumberFormat.
+ * This later work occurs in |resolveNumberFormatInternals|; steps not noted
+ * here occur there.
  *
  * Spec: ECMAScript Internationalization API Specification, 11.1.1.
  */
@@ -1250,10 +1561,48 @@ function InitializeNumberFormat(numberFormat, locales, options) {
     // Step 2.
     var internals = initializeIntlObject(numberFormat);
 
+    // Lazy NumberFormat data has the following structure:
+    //
+    //   {
+    //     requestedLocales: List of locales,
+    //     style: "decimal" / "percent" / "currency",
+    //
+    //     // fields present only if style === "currency":
+    //     currency: a well-formed currency code (IsWellFormedCurrencyCode),
+    //     currencyDisplay: "code" / "symbol" / "name",
+    //
+    //     opt: // opt object computed in InitializeNumberFormat
+    //       {
+    //         localeMatcher: "lookup" / "best fit",
+    //       }
+    //
+    //     minimumIntegerDigits: integer ∈ [1, 21],
+    //     minimumFractionDigits: integer ∈ [0, 20],
+    //     maximumFractionDigits: integer ∈ [0, 20],
+    //
+    //     // optional
+    //     minimumSignificantDigits: integer ∈ [1, 21],
+    //     maximumSignificantDigits: integer ∈ [1, 21],
+    //
+    //     useGrouping: true / false,
+    //   }
+    //
+    // Note that lazy data is only installed as a final step of initialization,
+    // so every Collator lazy data object has *all* these properties, never a
+    // subset of them.
+    var lazyNumberFormatData = std_Object_create(null);
+
     // Step 3.
     var requestedLocales = CanonicalizeLocaleList(locales);
+    lazyNumberFormatData.requestedLocales = requestedLocales;
 
     // Steps 4-5.
+    //
+    // If we ever need more speed here at startup, we should try to detect the
+    // case where |options === undefined| and Object.prototype hasn't been
+    // mucked with.  (|options| is fully consumed in this method, so it's not a
+    // concern that Object.prototype might be touched between now and when
+    // |resolveNumberFormatInternals| is called.)  For now just keep it simple.
     if (options === undefined)
         options = {};
     else
@@ -1262,33 +1611,16 @@ function InitializeNumberFormat(numberFormat, locales, options) {
     // Compute options that impact interpretation of locale.
     // Step 6.
     var opt = new Record();
+    lazyNumberFormatData.opt = opt;
 
     // Steps 7-8.
     var matcher = GetOption(options, "localeMatcher", "string", ["lookup", "best fit"], "best fit");
     opt.localeMatcher = matcher;
 
-    // Compute effective locale.
-    // Step 9.
-    var NumberFormat = numberFormatInternalProperties;
-
-    // Step 10.
-    var localeData = NumberFormat.localeData;
-
-    // Step 11.
-    var r = ResolveLocale(NumberFormat.availableLocales(),
-                          requestedLocales, opt,
-                          NumberFormat.relevantExtensionKeys,
-                          localeData);
-
-    // Steps 12-14.
-    internals.locale = r.locale;
-    internals.numberingSystem = r.nu;
-    var dataLocale = r.dataLocale;
-
     // Compute formatting options.
-    // Steps 15-16.
+    // Step 15.
     var s = GetOption(options, "style", "string", ["decimal", "percent", "currency"], "decimal");
-    internals.style = s;
+    lazyNumberFormatData.style = s;
 
     // Steps 17-20.
     var c = GetOption(options, "currency", "string", undefined, undefined);
@@ -1301,25 +1633,25 @@ function InitializeNumberFormat(numberFormat, locales, options) {
 
         // Steps 20.a-c.
         c = toASCIIUpperCase(c);
-        internals.currency = c;
+        lazyNumberFormatData.currency = c;
         cDigits = CurrencyDigits(c);
     }
 
-    // Steps 21-22.
+    // Step 21.
     var cd = GetOption(options, "currencyDisplay", "string", ["code", "symbol", "name"], "symbol");
     if (s === "currency")
-        internals.currencyDisplay = cd;
+        lazyNumberFormatData.currencyDisplay = cd;
 
-    // Steps 23-24.
+    // Step 23.
     var mnid = GetNumberOption(options, "minimumIntegerDigits", 1, 21, 1);
-    internals.minimumIntegerDigits = mnid;
+    lazyNumberFormatData.minimumIntegerDigits = mnid;
 
-    // Steps 25-27.
+    // Steps 25-26.
     var mnfdDefault = (s === "currency") ? cDigits : 0;
     var mnfd = GetNumberOption(options, "minimumFractionDigits", 0, 20, mnfdDefault);
-    internals.minimumFractionDigits = mnfd;
+    lazyNumberFormatData.minimumFractionDigits = mnfd;
 
-    // Steps 28-30.
+    // Steps 28-29.
     var mxfdDefault;
     if (s === "currency")
         mxfdDefault = std_Math_max(mnfd, cDigits);
@@ -1328,7 +1660,7 @@ function InitializeNumberFormat(numberFormat, locales, options) {
     else
         mxfdDefault = std_Math_max(mnfd, 3);
     var mxfd = GetNumberOption(options, "maximumFractionDigits", mnfd, 20, mxfdDefault);
-    internals.maximumFractionDigits = mxfd;
+    lazyNumberFormatData.maximumFractionDigits = mxfd;
 
     // Steps 31-32.
     var mnsd = options.minimumSignificantDigits;
@@ -1338,21 +1670,19 @@ function InitializeNumberFormat(numberFormat, locales, options) {
     if (mnsd !== undefined || mxsd !== undefined) {
         mnsd = GetNumberOption(options, "minimumSignificantDigits", 1, 21, 1);
         mxsd = GetNumberOption(options, "maximumSignificantDigits", mnsd, 21, 21);
-        internals.minimumSignificantDigits = mnsd;
-        internals.maximumSignificantDigits = mxsd;
+        lazyNumberFormatData.minimumSignificantDigits = mnsd;
+        lazyNumberFormatData.maximumSignificantDigits = mxsd;
     }
 
-    // Steps 34-35.
+    // Step 34.
     var g = GetOption(options, "useGrouping", "boolean", undefined, true);
-    internals.useGrouping = g;
-
-    // ??? Steps 36-41 to be provided by concrete implementation.
-
-    // Step 42.
-    internals.boundFormat = undefined;
+    lazyNumberFormatData.useGrouping = g;
 
     // Step 43.
-    internals.initializedNumberFormat = true;
+    //
+    // We've done everything that must be done now: mark the lazy data as fully
+    // computed and install it.
+    setLazyData(internals, "NumberFormat", lazyNumberFormatData);
 }
 
 
@@ -1424,26 +1754,6 @@ function Intl_NumberFormat_supportedLocalesOf(locales /*, options*/) {
 }
 
 
-/**
- * NumberFormat internal properties.
- *
- * Spec: ECMAScript Internationalization API Specification, 9.1 and 11.2.3.
- */
-var numberFormatInternalProperties = {
-    localeData: numberFormatLocaleData,
-    _availableLocales: null,
-    availableLocales: function()
-    {
-        var locales = this._availableLocales;
-        if (locales)
-            return locales;
-        return (this._availableLocales =
-          addOldStyleLanguageTags(intl_NumberFormat_availableLocales()));
-    },
-    relevantExtensionKeys: ["nu"]
-};
-
-
 function getNumberingSystems(locale) {
     // ICU doesn't have an API to determine the set of numbering systems
     // supported for a locale; it generally pretends that any numbering system
@@ -1502,7 +1812,7 @@ function numberFormatFormatToBind(value) {
  */
 function Intl_NumberFormat_format_get() {
     // Check "this NumberFormat object" per introduction of section 11.3.
-    var internals = checkIntlAPIObject(this, "NumberFormat", "format");
+    var internals = getNumberFormatInternals(this, "format");
 
     // Step 1.
     if (internals.boundFormat === undefined) {
@@ -1525,7 +1835,7 @@ function Intl_NumberFormat_format_get() {
  */
 function Intl_NumberFormat_resolvedOptions() {
     // Check "this NumberFormat object" per introduction of section 11.3.
-    var internals = checkIntlAPIObject(this, "NumberFormat", "resolvedOptions");
+    var internals = getNumberFormatInternals(this, "resolvedOptions");
 
     var result = {
         locale: internals.locale,
@@ -1555,6 +1865,104 @@ function Intl_NumberFormat_resolvedOptions() {
 
 
 /**
+ * Compute an internal properties object from |lazyDateTimeFormatData|.
+ */
+function resolveDateTimeFormatInternals(lazyDateTimeFormatData) {
+    assert(IsObject(lazyDateTimeFormatData), "lazy data not an object?");
+
+    // Lazy DateTimeFormat data has the following structure:
+    //
+    //   {
+    //     requestedLocales: List of locales,
+    //
+    //     localeOpt: // *first* opt computed in InitializeDateTimeFormat
+    //       {
+    //         localeMatcher: "lookup" / "best fit",
+    //
+    //         hour12: true / false,  // optional
+    //       }
+    //
+    //     timeZone: undefined / "UTC",
+    //
+    //     formatOpt: // *second* opt computed in InitializeDateTimeFormat
+    //       {
+    //         // all the properties/values listed in Table 3
+    //         // (weekday, era, year, month, day, &c.)
+    //       }
+    //
+    //     formatMatcher: "basic" / "best fit",
+    //   }
+    //
+    // Note that lazy data is only installed as a final step of initialization,
+    // so every DateTimeFormat lazy data object has *all* these properties,
+    // never a subset of them.
+
+    var internalProps = std_Object_create(null);
+
+    // Compute effective locale.
+    // Step 8.
+    var DateTimeFormat = dateTimeFormatInternalProperties;
+
+    // Step 9.
+    var localeData = DateTimeFormat.localeData;
+
+    // Step 10.
+    var r = ResolveLocale(DateTimeFormat.availableLocales(),
+                          lazyDateTimeFormatData.requestedLocales,
+                          lazyDateTimeFormatData.localeOpt,
+                          DateTimeFormat.relevantExtensionKeys,
+                          localeData);
+
+    // Steps 11-13.
+    internalProps.locale = r.locale;
+    internalProps.calendar = r.ca;
+    internalProps.numberingSystem = r.nu;
+
+    // Compute formatting options.
+    // Step 14.
+    var dataLocale = r.dataLocale;
+
+    // Steps 15-17.
+    internalProps.timeZone = lazyDateTimeFormatData.timeZone;
+
+    // Step 18.
+    var formatOpt = lazyDateTimeFormatData.formatOpt;
+
+    // Steps 27-28, more or less - see comment after this function.
+    var pattern = toBestICUPattern(dataLocale, formatOpt);
+
+    // Step 29.
+    internalProps.pattern = pattern;
+
+    // Step 30.
+    internalProps.boundFormat = undefined;
+
+    // The caller is responsible for associating |internalProps| with the right
+    // object using |setInternalProperties|.
+    return internalProps;
+}
+
+
+/**
+ * Returns an object containing the DateTimeFormat internal properties of |obj|,
+ * or throws a TypeError if |obj| isn't DateTimeFormat-initialized.
+ */
+function getDateTimeFormatInternals(obj, methodName) {
+    var internals = getIntlObjectInternals(obj, "DateTimeFormat", methodName);
+    assert(internals.type === "DateTimeFormat", "bad type escaped getIntlObjectInternals");
+
+    // If internal properties have already been computed, use them.
+    var internalProps = maybeInternalProperties(internals);
+    if (internalProps)
+        return internalProps;
+
+    // Otherwise it's time to fully create them.
+    internalProps = resolveDateTimeFormatInternals(internals.lazyData);
+    setInternalProperties(internals, internalProps);
+    return internalProps;
+}
+
+/**
  * Components of date and time formats and their values.
  *
  * Spec: ECMAScript Internationalization API Specification, 12.1.1.
@@ -1578,6 +1986,12 @@ var dateTimeComponents = std_Object_getOwnPropertyNames(dateTimeComponentValues)
 /**
  * Initializes an object as a DateTimeFormat.
  *
+ * This method is complicated a moderate bit by its implementing initialization
+ * as a *lazy* concept.  Everything that must happen now, does -- but we defer
+ * all the work we can until the object is actually used as a DateTimeFormat.
+ * This later work occurs in |resolveDateTimeFormatInternals|; steps not noted
+ * here occur there.
+ *
  * Spec: ECMAScript Internationalization API Specification, 12.1.1.
  */
 function InitializeDateTimeFormat(dateTimeFormat, locales, options) {
@@ -1590,41 +2004,51 @@ function InitializeDateTimeFormat(dateTimeFormat, locales, options) {
     // Step 2.
     var internals = initializeIntlObject(dateTimeFormat);
 
+    // Lazy DateTimeFormat data has the following structure:
+    //
+    //   {
+    //     requestedLocales: List of locales,
+    //
+    //     localeOpt: // *first* opt computed in InitializeDateTimeFormat
+    //       {
+    //         localeMatcher: "lookup" / "best fit",
+    //       }
+    //
+    //     timeZone: undefined / "UTC",
+    //
+    //     formatOpt: // *second* opt computed in InitializeDateTimeFormat
+    //       {
+    //         // all the properties/values listed in Table 3
+    //         // (weekday, era, year, month, day, &c.)
+    //
+    //         hour12: true / false  // optional
+    //       }
+    //
+    //     formatMatcher: "basic" / "best fit",
+    //   }
+    //
+    // Note that lazy data is only installed as a final step of initialization,
+    // so every DateTimeFormat lazy data object has *all* these properties,
+    // never a subset of them.
+    var lazyDateTimeFormatData = std_Object_create(null);
+
     // Step 3.
     var requestedLocales = CanonicalizeLocaleList(locales);
+    lazyDateTimeFormatData.requestedLocales = requestedLocales;
 
     // Step 4.
     options = ToDateTimeOptions(options, "any", "date");
 
     // Compute options that impact interpretation of locale.
     // Step 5.
-    var opt = new Record();
+    var localeOpt = new Record();
+    lazyDateTimeFormatData.localeOpt = localeOpt;
 
     // Steps 6-7.
-    var matcher = GetOption(options, "localeMatcher", "string", ["lookup", "best fit"], "best fit");
-    opt.localeMatcher = matcher;
-
-    // Compute effective locale.
-    // Step 8.
-    var DateTimeFormat = dateTimeFormatInternalProperties;
-
-    // Step 9.
-    var localeData = DateTimeFormat.localeData;
-
-    // Step 10.
-    var r = ResolveLocale(DateTimeFormat.availableLocales(),
-                          requestedLocales, opt,
-                          DateTimeFormat.relevantExtensionKeys,
-                          localeData);
-
-    // Steps 11-13.
-    internals.locale = r.locale;
-    internals.calendar = r.ca;
-    internals.numberingSystem = r.nu;
-
-    // Compute formatting options.
-    // Step 14.
-    var dataLocale = r.dataLocale;
+    var localeMatcher =
+        GetOption(options, "localeMatcher", "string", ["lookup", "best fit"],
+                  "best fit");
+    localeOpt.localeMatcher = localeMatcher;
 
     // Steps 15-17.
     var tz = options.timeZone;
@@ -1633,23 +2057,31 @@ function InitializeDateTimeFormat(dateTimeFormat, locales, options) {
         if (tz !== "UTC")
             ThrowError(JSMSG_INVALID_TIME_ZONE, tz);
     }
-    internals.timeZone = tz;
+    lazyDateTimeFormatData.timeZone = tz;
 
     // Step 18.
-    opt = new Record();
+    var formatOpt = new Record();
+    lazyDateTimeFormatData.formatOpt = formatOpt;
 
     // Step 19.
     var i, prop;
     for (i = 0; i < dateTimeComponents.length; i++) {
         prop = dateTimeComponents[i];
         var value = GetOption(options, prop, "string", dateTimeComponentValues[prop], undefined);
-        opt[prop] = value;
+        formatOpt[prop] = value;
     }
 
     // Steps 20-21 provided by ICU - see comment after this function.
 
     // Step 22.
-    matcher = GetOption(options, "formatMatcher", "string", ["basic", "best fit"], "best fit");
+    //
+    // For some reason (ICU not exposing enough interface?) we drop the
+    // requested format matcher on the floor after this.  In any case, even if
+    // doing so is justified, we have to do this work here in case it triggers
+    // getters or similar.
+    var formatMatcher =
+        GetOption(options, "formatMatcher", "string", ["basic", "best fit"],
+                  "best fit");
 
     // Steps 23-25 provided by ICU, more or less - see comment after this function.
 
@@ -1658,19 +2090,13 @@ function InitializeDateTimeFormat(dateTimeFormat, locales, options) {
 
     // Pass hr12 on to ICU.
     if (hr12 !== undefined)
-        opt.hour12 = hr12;
-
-    // Steps 27-28, more or less - see comment after this function.
-    var pattern = toBestICUPattern(dataLocale, opt);
-
-    // Step 29.
-    internals.pattern = pattern;
-
-    // Step 30.
-    internals.boundFormat = undefined;
+        formatOpt.hour12 = hr12;
 
     // Step 31.
-    internals.initializedDateTimeFormat = true;
+    //
+    // We've done everything that must be done now: mark the lazy data as fully
+    // computed and install it.
+    setLazyData(internals, "DateTimeFormat", lazyDateTimeFormatData);
 }
 
 
@@ -2080,7 +2506,7 @@ function dateTimeFormatFormatToBind() {
  */
 function Intl_DateTimeFormat_format_get() {
     // Check "this DateTimeFormat object" per introduction of section 12.3.
-    var internals = checkIntlAPIObject(this, "DateTimeFormat", "format");
+    var internals = getDateTimeFormatInternals(this, "format");
 
     // Step 1.
     if (internals.boundFormat === undefined) {
@@ -2104,7 +2530,7 @@ function Intl_DateTimeFormat_format_get() {
  */
 function Intl_DateTimeFormat_resolvedOptions() {
     // Check "this DateTimeFormat object" per introduction of section 12.3.
-    var internals = checkIntlAPIObject(this, "DateTimeFormat", "resolvedOptions");
+    var internals = getDateTimeFormatInternals(this, "resolvedOptions");
 
     var result = {
         locale: internals.locale,
