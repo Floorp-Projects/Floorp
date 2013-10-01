@@ -8,7 +8,7 @@ from copy import deepcopy
 import ipdl.ast
 import ipdl.builtin
 from ipdl.cxx.ast import *
-from ipdl.type import Actor, ActorType, ProcessGraph, TypeVisitor
+from ipdl.type import Actor, ActorType, ProcessGraph, TypeVisitor, builtinHeaderIncludes
 
 # FIXME/cjones: the chromium Message logging code doesn't work on
 # gcc/POSIX, because it wprintf()s across the chromium/mozilla
@@ -1418,6 +1418,8 @@ class _GenerateProtocolCode(ipdl.ast.Visitor):
         hf.addthings(_includeGuardStart(hf))
         hf.addthing(Whitespace.NL)
 
+        for inc in builtinHeaderIncludes:
+            self.visitCxxInclude(inc)
         ipdl.ast.Visitor.visitTranslationUnit(self, tu)
         if tu.filetype == 'header':
             self.cppIncludeHeaders.append(_ipdlhHeaderName(tu))
