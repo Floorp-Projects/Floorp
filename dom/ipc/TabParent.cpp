@@ -1007,7 +1007,7 @@ TabParent::SendCompositionEvent(nsCompositionEvent& event)
  * here and pass the text as the EndIMEComposition return value
  */
 bool
-TabParent::SendTextEvent(nsTextEvent& event)
+TabParent::SendTextEvent(WidgetTextEvent& event)
 {
   if (mIsDestroyed) {
     return false;

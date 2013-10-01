@@ -293,7 +293,7 @@ nsresult
 NS_NewDOMTextEvent(nsIDOMEvent** aResult,
                    mozilla::dom::EventTarget* aOwner,
                    nsPresContext* aPresContext,
-                   nsTextEvent* aEvent);
+                   mozilla::WidgetTextEvent* aEvent);
 nsresult
 NS_NewDOMBeforeUnloadEvent(nsIDOMEvent** aResult,
                            mozilla::dom::EventTarget* aOwner,

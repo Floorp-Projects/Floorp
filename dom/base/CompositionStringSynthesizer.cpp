@@ -134,7 +134,7 @@ CompositionStringSynthesizer::DispatchEvent(bool* aDefaultPrevented)
     mClauses.AppendElement(mCaret);
   }
 
-  nsTextEvent textEvent(true, NS_TEXT_TEXT, widget);
+  WidgetTextEvent textEvent(true, NS_TEXT_TEXT, widget);
   textEvent.time = PR_IntervalNow();
   textEvent.theText = mString;
   textEvent.rangeCount = mClauses.Length();

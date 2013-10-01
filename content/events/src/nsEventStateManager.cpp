@@ -1084,7 +1084,7 @@ nsEventStateManager::PreHandleEvent(nsPresContext* aPresContext,
     break;
   case NS_TEXT_TEXT:
     {
-      nsTextEvent *textEvent = static_cast<nsTextEvent*>(aEvent);
+      WidgetTextEvent *textEvent = static_cast<WidgetTextEvent*>(aEvent);
       if (IsTargetCrossProcess(textEvent)) {
         // Will not be handled locally, remote the event
         if (GetCrossProcessTarget()->SendTextEvent(*textEvent)) {

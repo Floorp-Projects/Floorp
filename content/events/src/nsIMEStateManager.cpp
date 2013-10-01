@@ -599,7 +599,7 @@ nsIMEStateManager::NotifyIME(NotificationToIME aNotification,
 
       nsEventStatus status = nsEventStatus_eIgnore;
       if (!backup.GetLastData().IsEmpty()) {
-        nsTextEvent textEvent(true, NS_TEXT_TEXT, widget);
+        WidgetTextEvent textEvent(true, NS_TEXT_TEXT, widget);
         textEvent.theText = backup.GetLastData();
         textEvent.mFlags.mIsSynthesizedForTests = true;
         widget->DispatchEvent(&textEvent, status);
@@ -631,7 +631,7 @@ nsIMEStateManager::NotifyIME(NotificationToIME aNotification,
         }
 
         status = nsEventStatus_eIgnore;
-        nsTextEvent textEvent(true, NS_TEXT_TEXT, widget);
+        WidgetTextEvent textEvent(true, NS_TEXT_TEXT, widget);
         textEvent.theText = backup.GetLastData();
         textEvent.mFlags.mIsSynthesizedForTests = true;
         widget->DispatchEvent(&textEvent, status);

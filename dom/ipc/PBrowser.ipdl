@@ -48,7 +48,7 @@ using mozilla::WheelEvent;
 using nsQueryContentEvent;
 using nsRect;
 using nsSelectionEvent;
-using nsTextEvent;
+using mozilla::WidgetTextEvent;
 using mozilla::WidgetTouchEvent;
 using RemoteDOMEvent;
 using mozilla::dom::ScreenOrientation;
@@ -383,7 +383,7 @@ child:
 
     CompositionEvent(nsCompositionEvent event);
 
-    TextEvent(nsTextEvent event);
+    TextEvent(WidgetTextEvent event);
 
     SelectionEvent(nsSelectionEvent event);
 

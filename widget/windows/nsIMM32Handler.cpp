@@ -1583,7 +1583,7 @@ nsIMM32Handler::DispatchTextEvent(nsWindow* aWindow,
     SetIMERelatedWindowsPos(aWindow, aIMEContext);
   }
 
-  nsTextEvent event(true, NS_TEXT_TEXT, aWindow);
+  WidgetTextEvent event(true, NS_TEXT_TEXT, aWindow);
 
   aWindow->InitEvent(event, &point);
 
