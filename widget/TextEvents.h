@@ -534,7 +534,6 @@ public:
 } // namespace mozilla
 
 // TODO: Remove following typedefs
-typedef mozilla::AlternativeCharCode     nsAlternativeCharCode;
 typedef mozilla::WidgetKeyboardEvent     nsKeyEvent;
 typedef mozilla::TextRangeStyle          nsTextRangeStyle;
 typedef mozilla::TextRange               nsTextRange;
