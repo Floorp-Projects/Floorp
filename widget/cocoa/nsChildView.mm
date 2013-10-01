@@ -4122,9 +4122,9 @@ NSEvent* gLastDragMouseDownEvent = nil;
 
   // Only initiate tracking if the user has tried to scroll past the edge of
   // the current page (as indicated by 'overflow' being non-zero).  Gecko only
-  // sets nsMouseScrollEvent.scrollOverflow when it's processing
+  // sets WidgetMouseScrollEvent.scrollOverflow when it's processing
   // NS_MOUSE_PIXEL_SCROLL events (not NS_MOUSE_SCROLL events).
-  // nsMouseScrollEvent.scrollOverflow only indicates left or right overflow
+  // WidgetMouseScrollEvent.scrollOverflow only indicates left or right overflow
   // for horizontal NS_MOUSE_PIXEL_SCROLL events.
   if (!overflow) {
     return;

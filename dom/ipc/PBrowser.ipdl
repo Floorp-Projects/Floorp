@@ -43,7 +43,6 @@ using nsIntRect;
 using nsIntSize;
 using mozilla::WidgetKeyboardEvent;
 using nsMouseEvent;
-using nsMouseScrollEvent;
 using mozilla::WheelEvent;
 using nsRect;
 using mozilla::WidgetSelectionEvent;
