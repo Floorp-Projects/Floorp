@@ -23,6 +23,7 @@ import optparse
 import re
 import shutil
 import signal
+import subprocess
 import tempfile
 import time
 import traceback
