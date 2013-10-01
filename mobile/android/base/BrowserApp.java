@@ -2175,9 +2175,6 @@ abstract public class BrowserApp extends GeckoApp
         // Dismiss editing mode if the user is loading a URL from an external app.
         if (Intent.ACTION_VIEW.equals(action)) {
             dismissEditingMode();
-
-            // Show the target URL immediately in the toolbar
-            mBrowserToolbar.setTitle(intent.getDataString());
             return;
         }
 
