@@ -929,8 +929,8 @@ nsGtkIMModule::DispatchCompositionStart()
     }
 
     nsEventStatus status;
-    nsQueryContentEvent selection(true, NS_QUERY_SELECTED_TEXT,
-                                  mLastFocusedWindow);
+    WidgetQueryContentEvent selection(true, NS_QUERY_SELECTED_TEXT,
+                                      mLastFocusedWindow);
     InitEvent(selection);
     mLastFocusedWindow->DispatchEvent(&selection, status);
 
@@ -1075,9 +1075,9 @@ nsGtkIMModule::DispatchTextEvent(const nsAString &aCompositionString,
     if (mCompositionState == eCompositionState_CompositionStartDispatched) {
         // XXX We should assume, for now, any web applications don't change
         //     selection at handling this text event.
-        nsQueryContentEvent querySelectedTextEvent(true,
-                                                   NS_QUERY_SELECTED_TEXT,
-                                                   mLastFocusedWindow);
+        WidgetQueryContentEvent querySelectedTextEvent(true,
+                                                       NS_QUERY_SELECTED_TEXT,
+                                                       mLastFocusedWindow);
         mLastFocusedWindow->DispatchEvent(&querySelectedTextEvent, status);
         if (querySelectedTextEvent.mSucceeded) {
             mSelectedString = querySelectedTextEvent.mReply.mString;
@@ -1276,8 +1276,8 @@ nsGtkIMModule::SetCursorPosition(uint32_t aTargetOffset)
         return;
     }
 
-    nsQueryContentEvent charRect(true, NS_QUERY_TEXT_RECT,
-                                 mLastFocusedWindow);
+    WidgetQueryContentEvent charRect(true, NS_QUERY_TEXT_RECT,
+                                     mLastFocusedWindow);
     charRect.InitForQueryTextRect(aTargetOffset, 1);
     InitEvent(charRect);
     nsEventStatus status;
@@ -1330,9 +1330,9 @@ nsGtkIMModule::GetCurrentParagraph(nsAString& aText, uint32_t& aCursorPos)
     // current selection.
     if (!EditorHasCompositionString()) {
         // Query cursor position & selection
-        nsQueryContentEvent querySelectedTextEvent(true,
-                                                   NS_QUERY_SELECTED_TEXT,
-                                                   mLastFocusedWindow);
+        WidgetQueryContentEvent querySelectedTextEvent(true,
+                                                       NS_QUERY_SELECTED_TEXT,
+                                                       mLastFocusedWindow);
         mLastFocusedWindow->DispatchEvent(&querySelectedTextEvent, status);
         NS_ENSURE_TRUE(querySelectedTextEvent.mSucceeded, NS_ERROR_FAILURE);
 
@@ -1355,9 +1355,9 @@ nsGtkIMModule::GetCurrentParagraph(nsAString& aText, uint32_t& aCursorPos)
     }
 
     // Get all text contents of the focused editor
-    nsQueryContentEvent queryTextContentEvent(true,
-                                              NS_QUERY_TEXT_CONTENT,
-                                              mLastFocusedWindow);
+    WidgetQueryContentEvent queryTextContentEvent(true,
+                                                  NS_QUERY_TEXT_CONTENT,
+                                                  mLastFocusedWindow);
     queryTextContentEvent.InitForQueryTextContent(0, UINT32_MAX);
     mLastFocusedWindow->DispatchEvent(&queryTextContentEvent, status);
     NS_ENSURE_TRUE(queryTextContentEvent.mSucceeded, NS_ERROR_FAILURE);
@@ -1440,9 +1440,9 @@ nsGtkIMModule::DeleteText(const int32_t aOffset, const uint32_t aNChars)
         }
     } else {
         // Query cursor position & selection
-        nsQueryContentEvent querySelectedTextEvent(true,
-                                                   NS_QUERY_SELECTED_TEXT,
-                                                   mLastFocusedWindow);
+        WidgetQueryContentEvent querySelectedTextEvent(true,
+                                                       NS_QUERY_SELECTED_TEXT,
+                                                       mLastFocusedWindow);
         lastFocusedWindow->DispatchEvent(&querySelectedTextEvent, status);
         NS_ENSURE_TRUE(querySelectedTextEvent.mSucceeded, NS_ERROR_FAILURE);
 
@@ -1450,9 +1450,9 @@ nsGtkIMModule::DeleteText(const int32_t aOffset, const uint32_t aNChars)
     }
 
     // Get all text contents of the focused editor
-    nsQueryContentEvent queryTextContentEvent(true,
-                                              NS_QUERY_TEXT_CONTENT,
-                                              mLastFocusedWindow);
+    WidgetQueryContentEvent queryTextContentEvent(true,
+                                                  NS_QUERY_TEXT_CONTENT,
+                                                  mLastFocusedWindow);
     queryTextContentEvent.InitForQueryTextContent(0, UINT32_MAX);
     mLastFocusedWindow->DispatchEvent(&queryTextContentEvent, status);
     NS_ENSURE_TRUE(queryTextContentEvent.mSucceeded, NS_ERROR_FAILURE);

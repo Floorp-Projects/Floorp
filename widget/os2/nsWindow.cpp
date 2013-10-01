@@ -2441,13 +2441,13 @@ bool nsWindow::OnQueryConvertPos(MPARAM mp1, MRESULT& mresult)
 
   nsIntPoint point(0, 0);
 
-  nsQueryContentEvent selection(true, NS_QUERY_SELECTED_TEXT, this);
+  WidgetQueryContentEvent selection(true, NS_QUERY_SELECTED_TEXT, this);
   InitEvent(selection, &point);
   DispatchWindowEvent(&selection);
   if (!selection.mSucceeded)
     return false;
 
-  nsQueryContentEvent caret(true, NS_QUERY_CARET_RECT, this);
+  WidgetQueryContentEvent caret(true, NS_QUERY_CARET_RECT, this);
   caret.InitForQueryCaretRect(selection.mReply.mOffset);
   InitEvent(caret, &point);
   DispatchWindowEvent(&caret);

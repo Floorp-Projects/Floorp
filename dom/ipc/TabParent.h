@@ -224,7 +224,7 @@ public:
     void HandleDelayedDialogs();
 
     static TabParent *GetIMETabParent() { return mIMETabParent; }
-    bool HandleQueryContentEvent(nsQueryContentEvent& aEvent);
+    bool HandleQueryContentEvent(mozilla::WidgetQueryContentEvent& aEvent);
     bool SendCompositionEvent(mozilla::WidgetCompositionEvent& event);
     bool SendTextEvent(mozilla::WidgetTextEvent& event);
     bool SendSelectionEvent(nsSelectionEvent& event);

@@ -8,6 +8,8 @@
 #include "nsPoint.h"
 #include "mozilla/TextEvents.h"
 
+using namespace mozilla;
+
 NS_INTERFACE_MAP_BEGIN(nsQueryContentEventResult)
   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIQueryContentEventResult)
   NS_INTERFACE_MAP_ENTRY(nsIQueryContentEventResult)
@@ -120,13 +122,13 @@ nsQueryContentEventResult::GetNotFound(bool *aNotFound)
   NS_ENSURE_TRUE(mEventID == NS_QUERY_SELECTED_TEXT ||
                  mEventID == NS_QUERY_CHARACTER_AT_POINT,
                  NS_ERROR_NOT_AVAILABLE);
-  *aNotFound = (mOffset == nsQueryContentEvent::NOT_FOUND);
+  *aNotFound = (mOffset == WidgetQueryContentEvent::NOT_FOUND);
   return NS_OK;
 }
 
 void
 nsQueryContentEventResult::SetEventResult(nsIWidget* aWidget,
-                                          const nsQueryContentEvent &aEvent)
+                                          const WidgetQueryContentEvent &aEvent)
 {
   mEventID = aEvent.message;
   mSucceeded = aEvent.mSucceeded;

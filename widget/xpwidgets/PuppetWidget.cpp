@@ -441,7 +441,7 @@ PuppetWidget::NotifyIMEOfFocusChange(bool aFocus)
 
   if (aFocus) {
     nsEventStatus status;
-    nsQueryContentEvent queryEvent(true, NS_QUERY_TEXT_CONTENT, this);
+    WidgetQueryContentEvent queryEvent(true, NS_QUERY_TEXT_CONTENT, this);
     InitEvent(queryEvent, nullptr);
     // Query entire content
     queryEvent.InitForQueryTextContent(0, UINT32_MAX);
@@ -493,7 +493,7 @@ PuppetWidget::NotifyIMEOfTextChange(uint32_t aStart,
 
   if (mIMEPreference.mWantHints) {
     nsEventStatus status;
-    nsQueryContentEvent queryEvent(true, NS_QUERY_TEXT_CONTENT, this);
+    WidgetQueryContentEvent queryEvent(true, NS_QUERY_TEXT_CONTENT, this);
     InitEvent(queryEvent, nullptr);
     queryEvent.InitForQueryTextContent(0, UINT32_MAX);
     DispatchEvent(&queryEvent, status);
@@ -521,7 +521,7 @@ PuppetWidget::NotifyIMEOfSelectionChange()
   if (mIMEPreference.mWantUpdates &
         nsIMEUpdatePreference::NOTIFY_SELECTION_CHANGE) {
     nsEventStatus status;
-    nsQueryContentEvent queryEvent(true, NS_QUERY_SELECTED_TEXT, this);
+    WidgetQueryContentEvent queryEvent(true, NS_QUERY_SELECTED_TEXT, this);
     InitEvent(queryEvent, nullptr);
     DispatchEvent(&queryEvent, status);
 
