@@ -8,7 +8,6 @@
 
 #include "Workers.h"
 
-
 BEGIN_WORKERS_NAMESPACE
 
 namespace worker {

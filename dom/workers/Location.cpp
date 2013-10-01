@@ -5,6 +5,9 @@
 
 #include "Location.h"
 
+#include "DOMBindingInlines.h"
+
+#include "nsTraceRefcnt.h"
 #include "mozilla/dom/WorkerLocationBinding.h"
 
 BEGIN_WORKERS_NAMESPACE

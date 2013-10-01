@@ -38,12 +38,10 @@
 
 #define MAX_CONCURRENT_SCRIPTS 1000
 
-USING_WORKERS_NAMESPACE
+BEGIN_WORKERS_NAMESPACE
 
-using mozilla::dom::workers::exceptions::ThrowDOMExceptionForNSResult;
-
-namespace {
-
+namespace scriptloader {
+static
 nsresult
 ChannelFromScriptURL(nsIPrincipal* principal,
                      nsIURI* baseURI,
@@ -51,85 +49,19 @@ ChannelFromScriptURL(nsIPrincipal* principal,
                      nsILoadGroup* loadGroup,
                      nsIIOService* ios,
                      nsIScriptSecurityManager* secMan,
-                     const nsAString& aScriptURL,
+                     const nsString& aScriptURL,
                      bool aIsWorkerScript,
-                     nsIChannel** aChannel)
-{
-  AssertIsOnMainThread();
+                     nsIChannel** aChannel);
 
-  nsresult rv;
-  nsCOMPtr<nsIURI> uri;
-  rv = nsContentUtils::NewURIWithDocumentCharset(getter_AddRefs(uri),
-                                                 aScriptURL, parentDoc,
-                                                 baseURI);
-  if (NS_FAILED(rv)) {
-    return NS_ERROR_DOM_SYNTAX_ERR;
-  }
+} // namespace scriptloader
 
-  // If we're part of a document then check the content load policy.
-  if (parentDoc) {
-    int16_t shouldLoad = nsIContentPolicy::ACCEPT;
-    rv = NS_CheckContentLoadPolicy(nsIContentPolicy::TYPE_SCRIPT, uri,
-                                   principal, parentDoc,
-                                   NS_LITERAL_CSTRING("text/javascript"),
-                                   nullptr, &shouldLoad,
-                                   nsContentUtils::GetContentPolicy(),
-                                   secMan);
-    if (NS_FAILED(rv) || NS_CP_REJECTED(shouldLoad)) {
-      if (NS_FAILED(rv) || shouldLoad != nsIContentPolicy::REJECT_TYPE) {
-        return rv = NS_ERROR_CONTENT_BLOCKED;
-      }
-      return rv = NS_ERROR_CONTENT_BLOCKED_SHOW_ALT;
-    }
-  }
+END_WORKERS_NAMESPACE
 
-  // If this script loader is being used to make a new worker then we need
-  // to do a same-origin check. Otherwise we need to clear the load with the
-  // security manager.
-  if (aIsWorkerScript) {
-    nsCString scheme;
-    rv = uri->GetScheme(scheme);
-    NS_ENSURE_SUCCESS(rv, rv);
+USING_WORKERS_NAMESPACE
 
-    // We pass true as the 3rd argument to checkMayLoad here.
-    // This allows workers in sandboxed documents to load data URLs
-    // (and other URLs that inherit their principal from their
-    // creator.)
-    rv = principal->CheckMayLoad(uri, false, true);
-    NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_SECURITY_ERR);
-  }
-  else {
-    rv = secMan->CheckLoadURIWithPrincipal(principal, uri, 0);
-    NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_SECURITY_ERR);
-  }
+using mozilla::dom::Throw;
 
-  // Get Content Security Policy from parent document to pass into channel.
-  nsCOMPtr<nsIContentSecurityPolicy> csp;
-  rv = principal->GetCsp(getter_AddRefs(csp));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  nsCOMPtr<nsIChannelPolicy> channelPolicy;
-  if (csp) {
-    channelPolicy = do_CreateInstance(NSCHANNELPOLICY_CONTRACTID, &rv);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    rv = channelPolicy->SetContentSecurityPolicy(csp);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    rv = channelPolicy->SetLoadType(nsIContentPolicy::TYPE_SCRIPT);
-    NS_ENSURE_SUCCESS(rv, rv);
-  }
-
-  uint32_t flags = nsIRequest::LOAD_NORMAL | nsIChannel::LOAD_CLASSIFY_URI;
-
-  nsCOMPtr<nsIChannel> channel;
-  rv = NS_NewChannel(getter_AddRefs(channel), uri, ios, loadGroup, nullptr,
-                     flags, channelPolicy);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  channel.forget(aChannel);
-  return rv;
-}
+namespace {
 
 class ScriptLoaderRunnable;
 
@@ -343,7 +275,7 @@ public:
     nsCOMPtr<nsIChannel> channel;
     if (mIsWorkerScript) {
       // May be null.
-      channel = mWorkerPrivate->ForgetWorkerChannel();
+      channel = mWorkerPrivate->GetChannel();
     }
 
     // All of these can potentially be null, but that should be ok. We'll either
@@ -363,8 +295,9 @@ public:
       nsresult& rv = loadInfo.mLoadResult;
 
       if (!channel) {
-        rv = ChannelFromScriptURL(principal, baseURI, parentDoc, loadGroup, ios,
-                                  secMan, loadInfo.mURL, mIsWorkerScript,
+        rv = scriptloader::ChannelFromScriptURL(principal, baseURI, parentDoc,
+                                                loadGroup, ios, secMan,
+                                                loadInfo.mURL, mIsWorkerScript,
                                                 getter_AddRefs(channel));
         if (NS_FAILED(rv)) {
           return rv;
@@ -548,12 +481,6 @@ public:
   void
   ExecuteFinishedScripts()
   {
-    AssertIsOnMainThread();
-
-    if (mIsWorkerScript) {
-      mWorkerPrivate->WorkerScriptLoaded();
-    }
-
     uint32_t firstIndex = UINT32_MAX;
     uint32_t lastIndex = UINT32_MAX;
 
@@ -617,14 +544,14 @@ class ChannelGetterRunnable MOZ_FINAL : public nsRunnable
 {
   WorkerPrivate* mParentWorker;
   uint32_t mSyncQueueKey;
-  const nsAString& mScriptURL;
+  const nsString& mScriptURL;
   nsIChannel** mChannel;
   nsresult mResult;
 
 public:
   ChannelGetterRunnable(WorkerPrivate* aParentWorker,
                         uint32_t aSyncQueueKey,
-                        const nsAString& aScriptURL,
+                        const nsString& aScriptURL,
                         nsIChannel** aChannel)
   : mParentWorker(aParentWorker), mSyncQueueKey(aSyncQueueKey),
     mScriptURL(aScriptURL), mChannel(aChannel), mResult(NS_ERROR_FAILURE)
@@ -796,11 +723,98 @@ BEGIN_WORKERS_NAMESPACE
 
 namespace scriptloader {
 
+// static
+nsresult
+ChannelFromScriptURL(nsIPrincipal* principal,
+                     nsIURI* baseURI,
+                     nsIDocument* parentDoc,
+                     nsILoadGroup* loadGroup,
+                     nsIIOService* ios,
+                     nsIScriptSecurityManager* secMan,
+                     const nsString& aScriptURL,
+                     bool aIsWorkerScript,
+                     nsIChannel** aChannel)
+{
+  nsresult rv;
+  nsCOMPtr<nsIURI> uri;
+  rv = nsContentUtils::NewURIWithDocumentCharset(getter_AddRefs(uri),
+                                                 aScriptURL, parentDoc,
+                                                 baseURI);
+  if (NS_FAILED(rv)) {
+    return NS_ERROR_DOM_SYNTAX_ERR;
+  }
+
+  // If we're part of a document then check the content load policy.
+  if (parentDoc) {
+    int16_t shouldLoad = nsIContentPolicy::ACCEPT;
+    rv = NS_CheckContentLoadPolicy(nsIContentPolicy::TYPE_SCRIPT, uri,
+                                   principal, parentDoc,
+                                   NS_LITERAL_CSTRING("text/javascript"),
+                                   nullptr, &shouldLoad,
+                                   nsContentUtils::GetContentPolicy(),
+                                   secMan);
+    if (NS_FAILED(rv) || NS_CP_REJECTED(shouldLoad)) {
+      if (NS_FAILED(rv) || shouldLoad != nsIContentPolicy::REJECT_TYPE) {
+        return rv = NS_ERROR_CONTENT_BLOCKED;
+      }
+      return rv = NS_ERROR_CONTENT_BLOCKED_SHOW_ALT;
+    }
+  }
+
+  // If this script loader is being used to make a new worker then we need
+  // to do a same-origin check. Otherwise we need to clear the load with the
+  // security manager.
+  if (aIsWorkerScript) {
+    nsCString scheme;
+    rv = uri->GetScheme(scheme);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    // We pass true as the 3rd argument to checkMayLoad here.
+    // This allows workers in sandboxed documents to load data URLs
+    // (and other URLs that inherit their principal from their
+    // creator.)
+    rv = principal->CheckMayLoad(uri, false, true);
+    NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_SECURITY_ERR);
+  }
+  else {
+    rv = secMan->CheckLoadURIWithPrincipal(principal, uri, 0);
+    NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_SECURITY_ERR);
+  }
+
+  // Get Content Security Policy from parent document to pass into channel.
+  nsCOMPtr<nsIContentSecurityPolicy> csp;
+  rv = principal->GetCsp(getter_AddRefs(csp));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsCOMPtr<nsIChannelPolicy> channelPolicy;
+  if (csp) {
+    channelPolicy = do_CreateInstance(NSCHANNELPOLICY_CONTRACTID, &rv);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    rv = channelPolicy->SetContentSecurityPolicy(csp);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    rv = channelPolicy->SetLoadType(nsIContentPolicy::TYPE_SCRIPT);
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
+
+  uint32_t flags = nsIRequest::LOAD_NORMAL | nsIChannel::LOAD_CLASSIFY_URI;
+
+  nsCOMPtr<nsIChannel> channel;
+  rv = NS_NewChannel(getter_AddRefs(channel), uri, ios, loadGroup, nullptr,
+                     flags, channelPolicy);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  channel.forget(aChannel);
+  return rv;
+}
+
+
 nsresult
 ChannelFromScriptURLMainThread(nsIPrincipal* aPrincipal,
                                nsIURI* aBaseURI,
                                nsIDocument* aParentDoc,
-                               const nsAString& aScriptURL,
+                               const nsString& aScriptURL,
                                nsIChannel** aChannel)
 {
   AssertIsOnMainThread();
@@ -822,7 +836,7 @@ ChannelFromScriptURLMainThread(nsIPrincipal* aPrincipal,
 nsresult
 ChannelFromScriptURLWorkerThread(JSContext* aCx,
                                  WorkerPrivate* aParent,
-                                 const nsAString& aScriptURL,
+                                 const nsString& aScriptURL,
                                  nsIChannel** aChannel)
 {
   aParent->AssertIsOnWorkerThread();
@@ -845,7 +859,7 @@ ChannelFromScriptURLWorkerThread(JSContext* aCx,
   return getter->GetResult();
 }
 
-void ReportLoadError(JSContext* aCx, const nsAString& aURL,
+void ReportLoadError(JSContext* aCx, const nsString& aURL,
                      nsresult aLoadResult, bool aIsMainThread)
 {
   NS_LossyConvertUTF16toASCII url(aURL);
