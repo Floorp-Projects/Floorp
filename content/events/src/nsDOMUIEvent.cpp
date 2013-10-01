@@ -24,9 +24,8 @@ using namespace mozilla;
 
 nsDOMUIEvent::nsDOMUIEvent(mozilla::dom::EventTarget* aOwner,
                            nsPresContext* aPresContext, nsGUIEvent* aEvent)
-  : nsDOMEvent(aOwner, aPresContext, aEvent ?
-               static_cast<nsEvent *>(aEvent) :
-               static_cast<nsEvent *>(new nsUIEvent(false, 0, 0)))
+  : nsDOMEvent(aOwner, aPresContext,
+               aEvent ? aEvent : new InternalUIEvent(false, 0, 0))
   , mClientPoint(0, 0), mLayerPoint(0, 0), mPagePoint(0, 0), mMovementPoint(0, 0)
   , mIsPointerLocked(nsEventStateManager::sIsPointerLocked)
   , mLastClientPoint(nsEventStateManager::sLastClientPoint)
@@ -45,7 +44,7 @@ nsDOMUIEvent::nsDOMUIEvent(mozilla::dom::EventTarget* aOwner,
   {
     case NS_UI_EVENT:
     {
-      nsUIEvent *event = static_cast<nsUIEvent*>(mEvent);
+      InternalUIEvent *event = static_cast<InternalUIEvent*>(mEvent);
       mDetail = event->detail;
       break;
     }

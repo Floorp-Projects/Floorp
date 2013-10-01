@@ -3298,7 +3298,8 @@ HTMLInputElement::PostHandleEvent(nsEventChainPostVisitor& aVisitor)
       !IsSingleLineTextControl(true) &&
       aVisitor.mEvent->IsLeftClickEvent() &&
       !ShouldPreventDOMActivateDispatch(aVisitor.mEvent->originalTarget)) {
-    nsUIEvent actEvent(aVisitor.mEvent->mFlags.mIsTrusted, NS_UI_ACTIVATE, 1);
+    InternalUIEvent actEvent(aVisitor.mEvent->mFlags.mIsTrusted,
+                             NS_UI_ACTIVATE, 1);
 
     nsCOMPtr<nsIPresShell> shell = aVisitor.mPresContext->GetPresShell();
     if (shell) {
