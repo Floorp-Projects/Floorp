@@ -321,7 +321,7 @@ gfxFontEntry::RenderSVGGlyph(gfxContext *aContext, uint32_t aGlyphId,
                              int aDrawMode, gfxTextContextPaint *aContextPaint)
 {
     NS_ASSERTION(mSVGInitialized, "SVG data has not yet been loaded. TryGetSVGData() first.");
-    return mSVGGlyphs->RenderGlyph(aContext, aGlyphId, gfxFont::DrawMode(aDrawMode),
+    return mSVGGlyphs->RenderGlyph(aContext, aGlyphId, DrawMode(aDrawMode),
                                    aContextPaint);
 }
 
@@ -2151,7 +2151,7 @@ struct GlyphBuffer {
         return &mGlyphBuffer[mNumGlyphs++];
     }
 
-    void Flush(cairo_t *aCR, gfxFont::DrawMode aDrawMode, bool aReverse,
+    void Flush(cairo_t *aCR, DrawMode aDrawMode, bool aReverse,
                gfxTextContextPaint *aContextPaint,
                const gfxMatrix& aGlobalMatrix, bool aFinish = false) {
         // Ensure there's enough room for a glyph to be added to the buffer
@@ -2168,14 +2168,14 @@ struct GlyphBuffer {
             }
         }
 
-        if (aDrawMode == gfxFont::GLYPH_PATH) {
+        if (aDrawMode == DrawMode::GLYPH_PATH) {
             cairo_glyph_path(aCR, mGlyphBuffer, mNumGlyphs);
         } else {
-            if ((aDrawMode & (gfxFont::GLYPH_STROKE | gfxFont::GLYPH_STROKE_UNDERNEATH)) ==
-                             (gfxFont::GLYPH_STROKE | gfxFont::GLYPH_STROKE_UNDERNEATH)) {
+            if ((int(aDrawMode) & (int(DrawMode::GLYPH_STROKE) | int(DrawMode::GLYPH_STROKE_UNDERNEATH))) ==
+                                  (int(DrawMode::GLYPH_STROKE) | int(DrawMode::GLYPH_STROKE_UNDERNEATH))) {
                 FlushStroke(aCR, aContextPaint, aGlobalMatrix);
             }
-            if (aDrawMode & gfxFont::GLYPH_FILL) {
+            if (int(aDrawMode) & int(DrawMode::GLYPH_FILL)) {
                 PROFILER_LABEL("GlyphBuffer", "cairo_show_glyphs");
                 nsRefPtr<gfxPattern> pattern;
                 if (aContextPaint &&
@@ -2190,8 +2190,8 @@ struct GlyphBuffer {
                     cairo_restore(aCR);
                 }
             }
-            if ((aDrawMode & (gfxFont::GLYPH_STROKE | gfxFont::GLYPH_STROKE_UNDERNEATH)) ==
-                              gfxFont::GLYPH_STROKE) {
+            if ((int(aDrawMode) & (int(DrawMode::GLYPH_STROKE) | int(DrawMode::GLYPH_STROKE_UNDERNEATH))) ==
+                                  int(DrawMode::GLYPH_STROKE)) {
                 FlushStroke(aCR, aContextPaint, aGlobalMatrix);
             }
         }
@@ -2247,7 +2247,7 @@ struct GlyphBufferAzure {
     }
 
     void Flush(DrawTarget *aDT, gfxTextContextPaint *aContextPaint, ScaledFont *aFont,
-               gfxFont::DrawMode aDrawMode, bool aReverse, const GlyphRenderingOptions *aOptions,
+               DrawMode aDrawMode, bool aReverse, const GlyphRenderingOptions *aOptions,
                gfxContext *aThebesContext, const Matrix *aInvFontMatrix, const DrawOptions &aDrawOptions,
                bool aFinish = false)
     {
@@ -2267,11 +2267,11 @@ struct GlyphBufferAzure {
         buf.mNumGlyphs = mNumGlyphs;
 
         gfxContext::AzureState state = aThebesContext->CurrentState();
-        if ((aDrawMode & (gfxFont::GLYPH_STROKE | gfxFont::GLYPH_STROKE_UNDERNEATH)) ==
-                         (gfxFont::GLYPH_STROKE | gfxFont::GLYPH_STROKE_UNDERNEATH)) {
+        if ((int(aDrawMode) & (int(DrawMode::GLYPH_STROKE) | int(DrawMode::GLYPH_STROKE_UNDERNEATH))) ==
+                              (int(DrawMode::GLYPH_STROKE) | int(DrawMode::GLYPH_STROKE_UNDERNEATH))) {
             FlushStroke(aDT, aContextPaint, aFont, aThebesContext, buf, state);
         }
-        if (aDrawMode & gfxFont::GLYPH_FILL) {
+        if (int(aDrawMode) & int(DrawMode::GLYPH_FILL)) {
             if (state.pattern || aContextPaint) {
                 Pattern *pat;
 
@@ -2328,13 +2328,13 @@ struct GlyphBufferAzure {
                                 aDrawOptions, aOptions);
             }
         }
-        if (aDrawMode & gfxFont::GLYPH_PATH) {
+        if (int(aDrawMode) & int(DrawMode::GLYPH_PATH)) {
             aThebesContext->EnsurePathBuilder();
 			Matrix mat = aDT->GetTransform();
             aFont->CopyGlyphsToBuilder(buf, aThebesContext->mPathBuilder, &mat);
         }
-        if ((aDrawMode & (gfxFont::GLYPH_STROKE | gfxFont::GLYPH_STROKE_UNDERNEATH)) ==
-                          gfxFont::GLYPH_STROKE) {
+        if ((int(aDrawMode) & (int(DrawMode::GLYPH_STROKE) | int(DrawMode::GLYPH_STROKE_UNDERNEATH))) ==
+                              int(DrawMode::GLYPH_STROKE)) {
             FlushStroke(aDT, aContextPaint, aFont, aThebesContext, buf, state);
         }
 
@@ -2386,11 +2386,11 @@ gfxFont::CalcXScale(gfxContext *aContext)
     return 1.0 / m;
 }
 
-static gfxFont::DrawMode
-ForcePaintingDrawMode(gfxFont::DrawMode aDrawMode)
+static DrawMode
+ForcePaintingDrawMode(DrawMode aDrawMode)
 {
-    return aDrawMode == gfxFont::GLYPH_PATH ?
-        gfxFont::DrawMode(gfxFont::GLYPH_FILL | gfxFont::GLYPH_STROKE) :
+    return aDrawMode == DrawMode::GLYPH_PATH ?
+        DrawMode(int(DrawMode::GLYPH_FILL) | int(DrawMode::GLYPH_STROKE)) :
         aDrawMode;
 }
 
@@ -2400,7 +2400,7 @@ gfxFont::Draw(gfxTextRun *aTextRun, uint32_t aStart, uint32_t aEnd,
               Spacing *aSpacing, gfxTextContextPaint *aContextPaint,
               gfxTextRunDrawCallbacks *aCallbacks)
 {
-    NS_ASSERTION(aDrawMode == gfxFont::GLYPH_PATH || !(aDrawMode & gfxFont::GLYPH_PATH),
+    NS_ASSERTION(aDrawMode == DrawMode::GLYPH_PATH || !(int(aDrawMode) & int(DrawMode::GLYPH_PATH)),
                  "GLYPH_PATH cannot be used with GLYPH_FILL, GLYPH_STROKE or GLYPH_STROKE_UNDERNEATH");
 
     if (aStart >= aEnd)
@@ -2417,7 +2417,7 @@ gfxFont::Draw(gfxTextRun *aTextRun, uint32_t aStart, uint32_t aEnd,
     nsAutoPtr<gfxTextContextPaint> contextPaint;
     if (haveSVGGlyphs && !aContextPaint) {
         // If no pattern is specified for fill, use the current pattern
-        NS_ASSERTION((aDrawMode & GLYPH_STROKE) == 0, "no pattern supplied for stroking text");
+        NS_ASSERTION((int(aDrawMode) & int(DrawMode::GLYPH_STROKE)) == 0, "no pattern supplied for stroking text");
         nsRefPtr<gfxPattern> fillPattern = aContext->GetPattern();
         contextPaint = new SimpleTextContextPaint(fillPattern, nullptr,
                                                  aContext->CurrentMatrix());
@@ -2478,7 +2478,7 @@ gfxFont::Draw(gfxTextRun *aTextRun, uint32_t aStart, uint32_t aEnd,
                   }
                   gfxPoint point(ToDeviceUnits(glyphX, devUnitsPerAppUnit),
                                  ToDeviceUnits(y, devUnitsPerAppUnit));
-                  gfxFont::DrawMode mode = ForcePaintingDrawMode(aDrawMode);
+                  DrawMode mode = ForcePaintingDrawMode(aDrawMode);
                   if (RenderSVGGlyph(aContext, point, mode,
                                      glyphData->GetSimpleGlyph(), aContextPaint,
                                      aCallbacks, emittedGlyphs)) {
@@ -2527,7 +2527,7 @@ gfxFont::Draw(gfxTextRun *aTextRun, uint32_t aStart, uint32_t aEnd,
                       if (glyphData->IsMissing()) {
                           // default ignorable characters will have zero advance width.
                           // we don't have to draw the hexbox for them
-                          if (aDrawMode != gfxFont::GLYPH_PATH && advance > 0) {
+                          if (aDrawMode != DrawMode::GLYPH_PATH && advance > 0) {
                               double glyphX = x;
                               if (isRTL) {
                                   glyphX -= advance;
@@ -2555,7 +2555,7 @@ gfxFont::Draw(gfxTextRun *aTextRun, uint32_t aStart, uint32_t aEnd,
                               if (!paintSVGGlyphs) {
                                   continue;
                               }
-                              gfxFont::DrawMode mode = ForcePaintingDrawMode(aDrawMode);
+                              DrawMode mode = ForcePaintingDrawMode(aDrawMode);
                               if (RenderSVGGlyph(aContext, point, mode,
                                                   details->mGlyphID,
                                                   aContextPaint, aCallbacks,
@@ -2693,7 +2693,7 @@ gfxFont::Draw(gfxTextRun *aTextRun, uint32_t aStart, uint32_t aEnd,
                   }
                   gfxPoint point(ToDeviceUnits(glyphX, devUnitsPerAppUnit),
                                  ToDeviceUnits(y, devUnitsPerAppUnit));
-                  gfxFont::DrawMode mode = ForcePaintingDrawMode(aDrawMode);
+                  DrawMode mode = ForcePaintingDrawMode(aDrawMode);
                   if (RenderSVGGlyph(aContext, point, mode,
                                      glyphData->GetSimpleGlyph(), aContextPaint,
                                      aCallbacks, emittedGlyphs)) {
@@ -2750,7 +2750,7 @@ gfxFont::Draw(gfxTextRun *aTextRun, uint32_t aStart, uint32_t aEnd,
                       if (glyphData->IsMissing()) {
                           // default ignorable characters will have zero advance width.
                           // we don't have to draw the hexbox for them
-                          if (aDrawMode != gfxFont::GLYPH_PATH && advance > 0) {
+                          if (aDrawMode != DrawMode::GLYPH_PATH && advance > 0) {
                               double glyphX = x;
                               if (isRTL) {
                                   glyphX -= advance;
@@ -2778,7 +2778,7 @@ gfxFont::Draw(gfxTextRun *aTextRun, uint32_t aStart, uint32_t aEnd,
                               if (!paintSVGGlyphs) {
                                   continue;
                               }
-                              gfxFont::DrawMode mode = ForcePaintingDrawMode(aDrawMode);
+                              DrawMode mode = ForcePaintingDrawMode(aDrawMode);
                               if (RenderSVGGlyph(aContext, point, mode,
                                                  details->mGlyphID,
                                                  aContextPaint, aCallbacks,
@@ -2862,7 +2862,7 @@ gfxFont::RenderSVGGlyph(gfxContext *aContext, gfxPoint aPoint, DrawMode aDrawMod
 
     aContextPaint->InitStrokeGeometry(aContext, devUnitsPerSVGUnit);
 
-    return GetFontEntry()->RenderSVGGlyph(aContext, aGlyphId, aDrawMode,
+    return GetFontEntry()->RenderSVGGlyph(aContext, aGlyphId, int(aDrawMode),
                                           aContextPaint);
 }
 
@@ -5762,7 +5762,7 @@ gfxTextRun::ShrinkToLigatureBoundaries(uint32_t *aStart, uint32_t *aEnd)
 
 void
 gfxTextRun::DrawGlyphs(gfxFont *aFont, gfxContext *aContext,
-                       gfxFont::DrawMode aDrawMode, gfxPoint *aPt,
+                       DrawMode aDrawMode, gfxPoint *aPt,
                        gfxTextContextPaint *aContextPaint,
                        uint32_t aStart, uint32_t aEnd,
                        PropertyProvider *aProvider,
@@ -5836,7 +5836,7 @@ gfxTextRun::DrawPartialLigature(gfxFont *aFont, gfxContext *aCtx,
     gfxFloat direction = GetDirection();
     gfxPoint pt(aPt->x - direction*data.mPartAdvance, aPt->y);
     DrawGlyphs(aFont, aCtx,
-               aCallbacks ? gfxFont::GLYPH_PATH : gfxFont::GLYPH_FILL, &pt,
+               aCallbacks ? DrawMode::GLYPH_PATH : DrawMode::GLYPH_FILL, &pt,
                nullptr, data.mLigatureStart, data.mLigatureEnd, aProvider,
                aStart, aEnd, aCallbacks);
     aCtx->Restore();
@@ -5911,19 +5911,19 @@ struct BufferAlphaColor {
 };
 
 void
-gfxTextRun::Draw(gfxContext *aContext, gfxPoint aPt, gfxFont::DrawMode aDrawMode,
+gfxTextRun::Draw(gfxContext *aContext, gfxPoint aPt, DrawMode aDrawMode,
                  uint32_t aStart, uint32_t aLength,
                  PropertyProvider *aProvider, gfxFloat *aAdvanceWidth,
                  gfxTextContextPaint *aContextPaint,
                  gfxTextRunDrawCallbacks *aCallbacks)
 {
     NS_ASSERTION(aStart + aLength <= GetLength(), "Substring out of range");
-    NS_ASSERTION(aDrawMode == gfxFont::GLYPH_PATH || !(aDrawMode & gfxFont::GLYPH_PATH),
+    NS_ASSERTION(aDrawMode == DrawMode::GLYPH_PATH || !(int(aDrawMode) & int(DrawMode::GLYPH_PATH)),
                  "GLYPH_PATH cannot be used with GLYPH_FILL, GLYPH_STROKE or GLYPH_STROKE_UNDERNEATH");
-    NS_ASSERTION(aDrawMode == gfxFont::GLYPH_PATH || !aCallbacks, "callback must not be specified unless using GLYPH_PATH");
+    NS_ASSERTION(aDrawMode == DrawMode::GLYPH_PATH || !aCallbacks, "callback must not be specified unless using GLYPH_PATH");
 
     bool skipDrawing = mSkipDrawing;
-    if (aDrawMode == gfxFont::GLYPH_FILL) {
+    if (aDrawMode == DrawMode::GLYPH_FILL) {
         gfxRGBA currentColor;
         if (aContext->GetDeviceColor(currentColor) && currentColor.a == 0) {
             skipDrawing = true;
@@ -5953,8 +5953,8 @@ gfxTextRun::Draw(gfxContext *aContext, gfxPoint aPt, gfxFont::DrawMode aDrawMode
     gfxRGBA currentColor;
     bool needToRestore = false;
 
-    if (aDrawMode == gfxFont::GLYPH_FILL && HasNonOpaqueColor(aContext, currentColor)
-                                         && HasSyntheticBold(this, aStart, aLength)) {
+    if (aDrawMode == DrawMode::GLYPH_FILL && HasNonOpaqueColor(aContext, currentColor)
+                                          && HasSyntheticBold(this, aStart, aLength)) {
         needToRestore = true;
         // measure text, use the bounding box
         gfxTextRun::Metrics metrics = MeasureText(aStart, aLength, gfxFont::LOOSE_INK_EXTENTS,
@@ -5972,8 +5972,8 @@ gfxTextRun::Draw(gfxContext *aContext, gfxPoint aPt, gfxFont::DrawMode aDrawMode
         uint32_t ligatureRunEnd = end;
         ShrinkToLigatureBoundaries(&ligatureRunStart, &ligatureRunEnd);
         
-        bool drawPartial = aDrawMode == gfxFont::GLYPH_FILL ||
-                           (aDrawMode == gfxFont::GLYPH_PATH && aCallbacks);
+        bool drawPartial = aDrawMode == DrawMode::GLYPH_FILL ||
+                           (aDrawMode == DrawMode::GLYPH_PATH && aCallbacks);
 
         if (drawPartial) {
             DrawPartialLigature(font, aContext, start, ligatureRunStart, &pt,

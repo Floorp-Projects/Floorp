@@ -7,6 +7,7 @@
 #include "nsSVGPaintServerFrame.h"
 
 // Keep others in (case-insensitive) order:
+#include "gfxContext.h"
 #include "nsSVGElement.h"
 #include "nsSVGGeometryFrame.h"
 

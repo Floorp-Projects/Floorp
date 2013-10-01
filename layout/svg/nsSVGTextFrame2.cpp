@@ -3539,7 +3539,7 @@ nsSVGTextFrame2::PaintSVG(nsRenderingContext* aContext,
       (gfxTextContextPaint*)aContext->GetUserData(&gfxTextContextPaint::sUserDataKey);
 
     nsAutoPtr<gfxTextContextPaint> contextPaint;
-    gfxFont::DrawMode drawMode =
+    DrawMode drawMode =
       SetupCairoState(gfx, frame, outerContextPaint,
                       getter_Transfers(contextPaint));
 
@@ -3550,7 +3550,7 @@ nsSVGTextFrame2::PaintSVG(nsRenderingContext* aContext,
     runTransform.Multiply(currentMatrix);
     gfx->SetMatrix(runTransform);
 
-    if (drawMode != gfxFont::DrawMode(0)) {
+    if (drawMode != DrawMode(0)) {
       nsRect frameRect = frame->GetVisualOverflowRect();
       bool paintSVGGlyphs;
       if (ShouldRenderAsPath(aContext, frame, paintSVGGlyphs)) {
@@ -5406,21 +5406,21 @@ nsSVGTextFrame2::TransformFrameRectFromTextChild(const nsRect& aRect,
   return result - framePosition;
 }
 
-gfxFont::DrawMode
+DrawMode
 nsSVGTextFrame2::SetupCairoState(gfxContext* aContext,
                                  nsIFrame* aFrame,
                                  gfxTextContextPaint* aOuterContextPaint,
                                  gfxTextContextPaint** aThisContextPaint)
 {
-  gfxFont::DrawMode toDraw = gfxFont::DrawMode(0);
+  DrawMode toDraw = DrawMode(0);
   SVGTextContextPaint *thisContextPaint = new SVGTextContextPaint();
 
   if (SetupCairoStroke(aContext, aFrame, aOuterContextPaint, thisContextPaint)) {
-    toDraw = gfxFont::DrawMode(toDraw | gfxFont::GLYPH_STROKE);
+    toDraw = DrawMode(int(toDraw) | int(DrawMode::GLYPH_STROKE));
   }
 
   if (SetupCairoFill(aContext, aFrame, aOuterContextPaint, thisContextPaint)) {
-    toDraw = gfxFont::DrawMode(toDraw | gfxFont::GLYPH_FILL);
+    toDraw = DrawMode(int(toDraw) | int(DrawMode::GLYPH_FILL));
   }
 
   *aThisContextPaint = thisContextPaint;
