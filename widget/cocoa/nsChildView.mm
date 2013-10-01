@@ -4852,8 +4852,8 @@ static int32_t RoundUp(double aDouble)
   outGeckoEvent->refPoint = LayoutDeviceIntPoint::FromUntyped(
     mGeckoChild->CocoaPointsToDevPixels(localPoint));
 
-  nsMouseEvent_base* mouseEvent =
-    static_cast<nsMouseEvent_base*>(outGeckoEvent);
+  WidgetMouseEventBase* mouseEvent =
+    static_cast<WidgetMouseEventBase*>(outGeckoEvent);
   mouseEvent->buttons = 0;
   NSUInteger mouseButtons = [NSEvent pressedMouseButtons];
 
@@ -6137,7 +6137,7 @@ ChildViewMouseTracker::ViewForEvent(NSEvent* aEvent)
 }
 
 void
-ChildViewMouseTracker::AttachPluginEvent(nsMouseEvent_base& aMouseEvent,
+ChildViewMouseTracker::AttachPluginEvent(WidgetMouseEventBase& aMouseEvent,
                                          ChildView* aView,
                                          NSEvent* aNativeMouseEvent,
                                          int aPluginEventType,
