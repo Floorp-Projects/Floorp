@@ -4329,7 +4329,15 @@ DebuggerGenericEval(JSContext *cx, const char *fullMethodName, const Value &code
         if (!env)
             return false;
     } else {
-        thisv = ObjectValue(*scope);
+        /*
+         * Use the global as 'this'. If the global is an inner object, it
+         * should have a thisObject hook that returns the appropriate outer
+         * object.
+         */
+        JSObject *thisObj = JSObject::thisObject(cx, scope);
+        if (!thisObj)
+            return false;
+        thisv = ObjectValue(*thisObj);
         env = scope;
     }
 
