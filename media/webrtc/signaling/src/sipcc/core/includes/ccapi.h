@@ -31,7 +31,6 @@ typedef int cc_causes_t;
 #define  CC_CALL_FORWARDED  CC_CALL_TYPE_FORWARDED
 #define  CC_CALL_NONE       CC_CALL_TYPE_NONE
 #define  CC_CALL_INCOMING   CC_CALL_TYPE_INCOMING
-#define  SDP_SIZE           4096   /* must increase this */
 #define  CANDIDATE_SIZE     150
 #define  MID_SIZE           150
 
@@ -964,7 +963,7 @@ typedef struct cc_feature_t_ {
     cc_feature_data_t    data;
     boolean              data_valid;
     cc_jsep_action_t     action;
-    char                 sdp[SDP_SIZE];
+    char                *sdp;
     Timecard            *timecard;
 } cc_feature_t;
 
