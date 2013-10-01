@@ -14,6 +14,7 @@
 #include "CustomElf.h"
 #include "Mappable.h"
 #include "Logging.h"
+#include <inttypes.h>
 
 #if defined(ANDROID)
 #include <sys/syscall.h>
@@ -908,8 +909,34 @@ Divert(T func, T new_func)
 }
 #endif
 
+namespace {
+
+/* Clock that only accounts for time spent in the current process. */
+static uint64_t ProcessTimeStamp_Now()
+{
+  struct timespec ts;
+  int rv = clock_gettime(CLOCK_PROCESS_CPUTIME_ID, &ts);
+
+  if (rv != 0) {
+    return 0;
+  }
+
+  uint64_t baseNs = (uint64_t)ts.tv_sec * 1000000000;
+  return baseNs + (uint64_t)ts.tv_nsec;
+}
+
+}
+
+/* Data structure used to pass data to the temporary signal handler,
+ * as well as triggering a test crash. */
+struct TmpData {
+  volatile int crash_int;
+  volatile uint64_t crash_timestamp;
+};
+
 SEGVHandler::SEGVHandler()
 : registeredHandler(false), signalHandlingBroken(false)
+, signalHandlingSlow(false)
 {
   /* Initialize oldStack.ss_flags to an invalid value when used to set
    * an alternative stack, meaning we haven't got information about the
@@ -925,7 +952,11 @@ SEGVHandler::SEGVHandler()
    * making it impossible for on-demand decompression to work. To check if
    * we're on such a device, setup a temporary handler and deliberately
    * trigger a segfault. The handler will set signalHandlingBroken if the
-   * provided information is bogus. */
+   * provided information is bogus.
+   * Some other devices have a kernel option enabled that makes SIGSEGV handler
+   * have an overhead so high that it affects how on-demand decompression
+   * performs. The handler will also set signalHandlingSlow if the triggered
+   * SIGSEGV took too much time. */
   struct sigaction action;
   action.sa_sigaction = &SEGVHandler::test_handler;
   sigemptyset(&action.sa_mask);
@@ -933,14 +964,17 @@ SEGVHandler::SEGVHandler()
   action.sa_restorer = NULL;
   if (sys_sigaction(SIGSEGV, &action, NULL))
     return;
-  stackPtr.Assign(MemoryRange::mmap(NULL, PageSize(), PROT_NONE,
+  stackPtr.Assign(MemoryRange::mmap(NULL, PageSize(), PROT_READ | PROT_WRITE,
                                     MAP_PRIVATE | MAP_ANONYMOUS, -1, 0));
   if (stackPtr.get() == MAP_FAILED)
     return;
 
-  *((volatile int*)stackPtr.get()) = 123;
+  TmpData *data = reinterpret_cast<TmpData*>(stackPtr.get());
+  data->crash_timestamp = ProcessTimeStamp_Now();
+  mprotect(stackPtr, stackPtr.GetLength(), PROT_NONE);
+  data->crash_int = 123;
   stackPtr.Assign(MAP_FAILED, 0);
-  if (signalHandlingBroken) {
+  if (signalHandlingBroken || signalHandlingSlow) {
     /* Restore the original segfault signal handler. */
     sys_sigaction(SIGSEGV, &this->action, NULL);
     return;
@@ -983,13 +1017,22 @@ SEGVHandler::~SEGVHandler()
 
 /* Test handler for a deliberately triggered SIGSEGV that determines whether
  * useful information is provided to signal handlers, particularly whether
- * si_addr is filled in properly. */
+ * si_addr is filled in properly, and whether the segfault handler is called
+ * quickly enough. */
 void SEGVHandler::test_handler(int signum, siginfo_t *info, void *context)
 {
   SEGVHandler &that = ElfLoader::Singleton;
   if (signum != SIGSEGV || info == NULL || info->si_addr != that.stackPtr.get())
     that.signalHandlingBroken = true;
   mprotect(that.stackPtr, that.stackPtr.GetLength(), PROT_READ | PROT_WRITE);
+  TmpData *data = reinterpret_cast<TmpData*>(that.stackPtr.get());
+  uint64_t latency = ProcessTimeStamp_Now() - data->crash_timestamp;
+  DEBUG_LOG("SEGVHandler latency: %" PRIu64, latency);
+  /* See bug 886736 for timings on different devices, 150 µs is reasonably above
+   * the latency on "working" devices and seems to be reasonably fast to incur
+   * a huge overhead to on-demand decompression. */
+  if (latency > 150000)
+    that.signalHandlingSlow = true;
 }
 
 /* TODO: "properly" handle signal masks and flags */
