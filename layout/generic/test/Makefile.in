@@ -109,17 +109,3 @@ MOCHITEST_FILES += \
   $(NULL)
 endif
 
-MOCHITEST_CHROME_FILES = \
-  frame_selection_underline.xhtml \
-  frame_selection_underline-ref.xhtml \
-  frame_selection_underline.css \
-  test_selection_underline.html \
-  test_bug632379.xul \
-  test_bug508115.xul \
-  test_bug469613.xul \
-  test_bug469774.xul \
-  test_backspace_delete.xul \
-  test_bug514732-2.xul \
-  file_bug514732_window.xul \
-  test_selection_preventDefault.html \
-  $(NULL)

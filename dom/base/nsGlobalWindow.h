@@ -654,7 +654,7 @@ public:
     return sWindowsById;
   }
 
-  void SizeOfIncludingThis(nsWindowSizes* aWindowSizes) const;
+  void AddSizeOfIncludingThis(nsWindowSizes* aWindowSizes) const;
 
   void UnmarkGrayTimers();
 

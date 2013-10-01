@@ -80,14 +80,17 @@ nsMathMLTokenFrame::GetMathMLFrameType()
 }
 
 void
-nsMathMLTokenFrame::ForceTrimChildTextFrames()
+nsMathMLTokenFrame::MarkTextFramesAsTokenMathML()
 {
   // Set flags on child text frames to force them to trim their leading and
   // trailing whitespaces.
   for (nsIFrame* childFrame = GetFirstPrincipalChild(); childFrame;
        childFrame = childFrame->GetNextSibling()) {
-    if (childFrame->GetType() == nsGkAtoms::textFrame) {
-      childFrame->AddStateBits(TEXT_FORCE_TRIM_WHITESPACE);
+    for (nsIFrame* childFrame2 = childFrame->GetFirstPrincipalChild();
+         childFrame2; childFrame2 = childFrame2->GetNextSibling()) {
+      if (childFrame2->GetType() == nsGkAtoms::textFrame) {
+        childFrame2->AddStateBits(TEXT_IS_IN_TOKEN_MATHML);
+      }
     }
   }
 }
@@ -101,7 +104,7 @@ nsMathMLTokenFrame::SetInitialChildList(ChildListID     aListID,
   if (NS_FAILED(rv))
     return rv;
 
-  ForceTrimChildTextFrames();
+  MarkTextFramesAsTokenMathML();
 
   ProcessTextData();
   return rv;
@@ -115,7 +118,7 @@ nsMathMLTokenFrame::AppendFrames(ChildListID aListID,
   if (NS_FAILED(rv))
     return rv;
 
-  ForceTrimChildTextFrames();
+  MarkTextFramesAsTokenMathML();
 
   return rv;
 }
@@ -130,7 +133,7 @@ nsMathMLTokenFrame::InsertFrames(ChildListID aListID,
   if (NS_FAILED(rv))
     return rv;
 
-  ForceTrimChildTextFrames();
+  MarkTextFramesAsTokenMathML();
 
   return rv;
 }

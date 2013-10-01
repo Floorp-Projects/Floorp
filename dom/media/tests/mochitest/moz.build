@@ -5,3 +5,6 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 WEBRTC_SIGNALLING_TEST_MANIFESTS += ['steeplechase.ini']
+
+MOCHITEST_MANIFESTS += ['mochitest.ini']
+

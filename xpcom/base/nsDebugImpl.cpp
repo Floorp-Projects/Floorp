@@ -355,9 +355,12 @@ NS_DebugBreak(uint32_t aSeverity, const char *aStr, const char *aExpr,
    __android_log_print(ANDROID_LOG_INFO, "Gecko", "%s", buf.buffer);
 #endif
 
-   // Write the message to stderr
-   fprintf(stderr, "%s\n", buf.buffer);
-   fflush(stderr);
+   // Write the message to stderr unless it's a warning and MOZ_IGNORE_WARNINGS
+   // is set.
+   if (!(PR_GetEnv("MOZ_IGNORE_WARNINGS") && aSeverity == NS_DEBUG_WARNING)) {
+     fprintf(stderr, "%s\n", buf.buffer);
+     fflush(stderr);
+   }
 
    switch (aSeverity) {
    case NS_DEBUG_WARNING:

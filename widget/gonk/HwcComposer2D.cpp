@@ -61,6 +61,8 @@ HwcComposer2D::HwcComposer2D()
     : mMaxLayerCount(0)
     , mList(nullptr)
     , mHwc(nullptr)
+    , mColorFill(false)
+    , mRBSwapSupport(false)
 {
 }
 
@@ -84,9 +86,20 @@ HwcComposer2D::Init(hwc_display_t dpy, hwc_surface_t sur)
     mozilla::Framebuffer::GetSize(&screenSize);
     mScreenRect  = nsIntRect(nsIntPoint(0, 0), screenSize);
 
+#if ANDROID_VERSION >= 18
+    int supported = 0;
+    if (mHwc->query(mHwc, HwcUtils::HWC_COLOR_FILL, &supported) == NO_ERROR) {
+        mColorFill = supported ? true : false;
+    }
+    if (mHwc->query(mHwc, HwcUtils::HWC_FORMAT_RB_SWAP, &supported) == NO_ERROR) {
+        mRBSwapSupport = supported ? true : false;
+    }
+#else
     char propValue[PROPERTY_VALUE_MAX];
     property_get("ro.display.colorfill", propValue, "0");
     mColorFill = (atoi(propValue) == 1) ? true : false;
+    mRBSwapSupport = true;
+#endif
 
     mDpy = dpy;
     mSur = sur;
@@ -270,6 +283,10 @@ HwcComposer2D::PrepareLayerList(Layer* aLayer,
 
     if (!fillColor) {
         if (state.FormatRBSwapped()) {
+            if (!mRBSwapSupport) {
+                LOGD("No R/B swap support in H/W Composer");
+                return false;
+            }
             hwcLayer.flags |= HwcUtils::HWC_FORMAT_RB_SWAP;
         }
 

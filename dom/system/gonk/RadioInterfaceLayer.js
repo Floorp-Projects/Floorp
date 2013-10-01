@@ -20,6 +20,7 @@ const {classes: Cc, interfaces: Ci, utils: Cu, results: Cr} = Components;
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/Sntp.jsm");
+Cu.import("resource://gre/modules/systemlibs.js");
 
 var RIL = {};
 Cu.import("resource://gre/modules/ril_consts.js", RIL);
@@ -511,11 +512,18 @@ RadioInterfaceLayer.prototype = {
 
 XPCOMUtils.defineLazyGetter(RadioInterfaceLayer.prototype,
                             "numRadioInterfaces", function () {
+  // When Gonk property "ro.moz.ril.numclients" is not set, return 1; if
+  // explicitly set to any number larger-equal than 0, return num; else, return
+  // 1 for compatibility.
   try {
-    return Services.prefs.getIntPref("ril.numRadioInterfaces");
-  } catch (e) {
-    return 1;
-  }
+    let numString = libcutils.property_get("ro.moz.ril.numclients", "1");
+    let num = parseInt(numString, 10);
+    if (num >= 0) {
+      return num;
+    }
+  } catch (e) {}
+
+  return 1;
 });
 
 function WorkerMessenger(radioInterface, options) {

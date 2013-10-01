@@ -7,6 +7,7 @@
 #include "DrawTargetCG.h"
 
 #include "QuartzSupport.h"
+#include "Tools.h"
 
 namespace mozilla {
 namespace gfx {
@@ -127,7 +128,9 @@ SourceSurfaceCG::InitFromData(unsigned char *aData,
   assert(aSize.width >= 0 && aSize.height >= 0);
 
   void *data = malloc(aStride * aSize.height);
-  memcpy(data, aData, aStride * aSize.height);
+  // Copy all the data except the stride padding on the very last
+  // row since we can't guarantee that is readable.
+  memcpy(data, aData, aStride * (aSize.height - 1) + (aSize.width * BytesPerPixel(aFormat)));
 
   mFormat = aFormat;
   mImage = CreateCGImage(data, data, aSize, aStride, aFormat);
@@ -162,7 +165,7 @@ DataSourceSurfaceCG::InitFromData(unsigned char *aData,
   }
 
   void *data = malloc(aStride * aSize.height);
-  memcpy(data, aData, aStride * aSize.height);
+  memcpy(data, aData, aStride * (aSize.height - 1) + (aSize.width * BytesPerPixel(aFormat)));
 
   mFormat = aFormat;
   mImage = CreateCGImage(data, data, aSize, aStride, aFormat);

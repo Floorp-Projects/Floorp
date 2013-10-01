@@ -3,10 +3,6 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-MOCHITEST_BROWSER_FILES = \
-  browser_nsIDownloadManagerUI.js \
-  browser_download_history.js \
-  $(NULL)
 # These are files that need to be loaded via the HTTP proxy server
 MOCHITEST_FILES = \
   download.html \

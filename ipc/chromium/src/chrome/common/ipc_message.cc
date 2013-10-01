@@ -38,8 +38,8 @@ Message::Message(int32_t routing_id, msgid_t type, PriorityValue priority,
 #if defined(OS_POSIX)
   header()->num_fds = 0;
 #endif
-  header()->rpc_remote_stack_depth_guess = static_cast<uint32_t>(-1);
-  header()->rpc_local_stack_depth = static_cast<uint32_t>(-1);
+  header()->interrupt_remote_stack_depth_guess = static_cast<uint32_t>(-1);
+  header()->interrupt_local_stack_depth = static_cast<uint32_t>(-1);
   header()->seqno = 0;
 #if defined(OS_MACOSX)
   header()->cookie = 0;

@@ -2,37 +2,5 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-MOCHITEST_BROWSER_FILES = \
-		browser_scratchpad_initialization.js \
-		browser_scratchpad_contexts.js \
-		browser_scratchpad_tab_switch.js \
-		browser_scratchpad_execute_print.js \
-		browser_scratchpad_inspect.js \
-		browser_scratchpad_files.js \
-		browser_scratchpad_ui.js \
-		browser_scratchpad_bug_646070_chrome_context_pref.js \
-		browser_scratchpad_bug_660560_tab.js \
-		browser_scratchpad_open.js \
-		browser_scratchpad_restore.js \
-		browser_scratchpad_bug_679467_falsy.js \
-		browser_scratchpad_bug_699130_edit_ui_updates.js \
-		browser_scratchpad_bug_669612_unsaved.js \
-		browser_scratchpad_bug684546_reset_undo.js \
-		browser_scratchpad_bug690552_display_outputs_errors.js \
-		browser_scratchpad_bug714942_goto_line_ui.js \
-		browser_scratchpad_bug_650760_help_key.js \
-		browser_scratchpad_bug_651942_recent_files.js \
-		browser_scratchpad_bug756681_display_non_error_exceptions.js \
-		browser_scratchpad_bug_751744_revert_to_saved.js \
-		browser_scratchpad_bug740948_reload_and_run.js \
-		browser_scratchpad_bug_661762_wrong_window_focus.js \
-		browser_scratchpad_bug_644413_modeline.js \
-		browser_scratchpad_bug807924_cannot_convert_to_string.js \
-		browser_scratchpad_long_string.js \
-		browser_scratchpad_open_error_console.js \
-		browser_scratchpad_pprint.js \
-		browser_scratchpad_pprint-02.js\
-		head.js \
-
 # Disable test due to bug 807234 becoming basically permanent
 #		browser_scratchpad_bug_653427_confirm_close.js \

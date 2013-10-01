@@ -46,6 +46,7 @@ const browserElementTestHelpers = {
   enableProcessPriorityManager: function() {
     this._setPref('dom.ipc.processPriorityManager.testMode', true);
     this._setPref('dom.ipc.processPriorityManager.enabled', true);
+    this._setPref('dom.ipc.processPriorityManager.backgroundLRUPoolLevels', 2);
   },
 
   setEnabledPref: function(value) {
@@ -183,6 +184,37 @@ function expectPriorityChange(childID, expectedPriority,
 
       if (priority == expectedPriority &&
           (!expectedCPUPriority || expectedCPUPriority == cpuPriority)) {
+        deferred.resolve();
+      } else {
+        deferred.reject();
+      }
+    }
+  );
+
+  return deferred.promise;
+}
+
+// Returns a promise which is resolved or rejected the next time the background
+// process childID changes its priority.  We resolve if the backgroundLRU
+// matches expectedBackgroundLRU and we reject otherwise.
+
+function expectPriorityWithBackgroundLRUSet(childID, expectedBackgroundLRU) {
+  var deferred = Promise.defer();
+
+  browserElementTestHelpers.addProcessPriorityObserver(
+    'process-priority-with-background-LRU-set',
+    function(subject, topic, data) {
+
+      [id, priority, cpuPriority, backgroundLRU] = data.split(":");
+      if (id != childID) {
+        return;
+      }
+
+      is(backgroundLRU, expectedBackgroundLRU,
+         'Expected backgroundLRU ' + backgroundLRU + ' of childID ' + childID +
+         ' to change to ' + expectedBackgroundLRU);
+
+      if (backgroundLRU == expectedBackgroundLRU) {
         deferred.resolve();
       } else {
         deferred.reject();

@@ -356,13 +356,18 @@ public class VideoCaptureAndroid implements PreviewCallback, Callback {
     public void onPreviewFrame(byte[] data, Camera camera) {
         previewBufferLock.lock();
 
+        String dataLengthStr = "does not exist";
+        if(data != null) {
+          dataLengthStr = Integer.toString(data.length);
+        }
+
         // The following line is for debug only
-        Log.v(TAG, "preview frame length " + data.length +
+        Log.v(TAG, "preview frame length " + dataLengthStr +
               " context" + context);
         if (isCaptureRunning) {
             // If StartCapture has been called but not StopCapture
             // Call the C++ layer with the captured frame
-            if (data.length == expectedFrameSize) {
+            if (data != null && data.length == expectedFrameSize) {
                 ProvideCameraFrame(data, expectedFrameSize, mCaptureRotation,
                                    context);
                 if (ownsBuffers) {

@@ -193,7 +193,7 @@ CollectWindowReports(nsGlobalWindow *aWindow,
   } while (0)
 
   nsWindowSizes windowSizes(WindowsMallocSizeOf);
-  aWindow->SizeOfIncludingThis(&windowSizes);
+  aWindow->AddSizeOfIncludingThis(&windowSizes);
 
   REPORT("/dom/element-nodes", windowSizes.mDOMElementNodes,
          "Memory used by the element nodes in a window's DOM.");

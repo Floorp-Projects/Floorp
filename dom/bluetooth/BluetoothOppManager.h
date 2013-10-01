@@ -56,7 +56,6 @@ public:
   void SendPutRequest(uint8_t* aFileBody, int aFileBodyLength);
   void SendPutFinalRequest();
   void SendDisconnectRequest();
-  void SendAbortRequest();
 
   void ExtractPacketHeaders(const ObexHeaderSet& aHeader);
   bool ExtractBlobHeaders();

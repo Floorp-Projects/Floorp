@@ -88,7 +88,7 @@ class MessageChannel : HasResultCodes
     // Synchronously send |msg| (i.e., wait for |reply|)
     bool Send(Message* aMsg, Message* aReply);
 
-    // Make an RPC to the other side of the channel
+    // Make an Interrupt call to the other side of the channel
     bool Call(Message* aMsg, Message* aReply);
 
     void SetReplyTimeoutMs(int32_t aTimeoutMs);
@@ -97,7 +97,7 @@ class MessageChannel : HasResultCodes
         return !mCxxStackFrames.empty();
     }
 
-    void FlushPendingRPCQueue();
+    void FlushPendingInterruptQueue();
 
     // Unsound_IsClosed and Unsound_NumQueuedMessages are safe to call from any
     // thread, but they make no guarantees about whether you'll get an
@@ -122,10 +122,10 @@ class MessageChannel : HasResultCodes
 #ifdef OS_WIN
     struct MOZ_STACK_CLASS SyncStackFrame
     {
-        SyncStackFrame(MessageChannel* channel, bool rpc);
+        SyncStackFrame(MessageChannel* channel, bool interrupt);
         ~SyncStackFrame();
 
-        bool mRPC;
+        bool mInterrupt;
         bool mSpinNestedEvents;
         bool mListenerNotified;
         MessageChannel* mChannel;
@@ -154,7 +154,7 @@ class MessageChannel : HasResultCodes
     static SyncStackFrame* sStaticTopFrame;
 
   public:
-    void ProcessNativeEventsInRPCCall();
+    void ProcessNativeEventsInInterruptCall();
     static void NotifyGeckoEventDispatch();
 
   private:
@@ -189,10 +189,10 @@ class MessageChannel : HasResultCodes
     // up to process urgent calls from the parent.
     bool SendAndWait(Message* aMsg, Message* aReply);
 
-    bool RPCCall(Message* aMsg, Message* aReply);
+    bool InterruptCall(Message* aMsg, Message* aReply);
     bool UrgentCall(Message* aMsg, Message* aReply);
 
-    bool RPCEventOccurred();
+    bool InterruptEventOccurred();
 
     void MaybeUndeferIncall();
     void EnqueuePendingMessages();
@@ -208,7 +208,7 @@ class MessageChannel : HasResultCodes
     void DispatchSyncMessage(const Message &aMsg);
     void DispatchUrgentMessage(const Message &aMsg);
     void DispatchAsyncMessage(const Message &aMsg);
-    void DispatchRPCMessage(const Message &aMsg, size_t aStackDepth);
+    void DispatchInterruptMessage(const Message &aMsg, size_t aStackDepth);
 
     // Return true if the wait ended because a notification was received.
     //
@@ -221,7 +221,7 @@ class MessageChannel : HasResultCodes
     // So in sum: true is a meaningful return value; false isn't,
     // necessarily.
     bool WaitForSyncNotify();
-    bool WaitForRPCNotify();
+    bool WaitForInterruptNotify();
 
     bool WaitResponse(bool aWaitTimedOut);
 
@@ -229,7 +229,7 @@ class MessageChannel : HasResultCodes
 
     // The "remote view of stack depth" can be different than the
     // actual stack depth when there are out-of-turn replies.  When we
-    // receive one, our actual RPC stack depth doesn't decrease, but
+    // receive one, our actual Interrupt stack depth doesn't decrease, but
     // the other side (that sent the reply) thinks it has.  So, the
     // "view" returned here is |stackDepth| minus the number of
     // out-of-turn replies.
@@ -247,8 +247,7 @@ class MessageChannel : HasResultCodes
 
     // This helper class manages mCxxStackDepth on behalf of MessageChannel.
     // When the stack depth is incremented from zero to non-zero, it invokes
-    // an RPCChannel callback, and similarly for when the depth goes from
-    // non-zero to zero.
+    // a callback, and similarly for when the depth goes from non-zero to zero.
     void EnteredCxxStack() {
        mListener->OnEnteredCxxStack();
     }
@@ -268,16 +267,16 @@ class MessageChannel : HasResultCodes
     }
 
     enum Direction { IN_MESSAGE, OUT_MESSAGE };
-    struct RPCFrame {
-        RPCFrame(Direction direction, const Message* msg)
+    struct InterruptFrame {
+        InterruptFrame(Direction direction, const Message* msg)
           : mDirection(direction), mMsg(msg)
         { }
 
-        bool IsRPCIncall() const {
-            return mMsg->is_rpc() && IN_MESSAGE == mDirection;
+        bool IsInterruptIncall() const {
+            return mMsg->is_interrupt() && IN_MESSAGE == mDirection;
         }
-        bool IsRPCOutcall() const {
-            return mMsg->is_rpc() && OUT_MESSAGE == mDirection;
+        bool IsInterruptOutcall() const {
+            return mMsg->is_interrupt() && OUT_MESSAGE == mDirection;
         }
 
         void Describe(int32_t* id, const char** dir, const char** sems,
@@ -285,7 +284,7 @@ class MessageChannel : HasResultCodes
         {
             *id = mMsg->routing_id();
             *dir = (IN_MESSAGE == mDirection) ? "in" : "out";
-            *sems = mMsg->is_rpc() ? "rpc" : mMsg->is_sync() ? "sync" : "async";
+            *sems = mMsg->is_interrupt() ? "intr" : mMsg->is_sync() ? "sync" : "async";
             *name = mMsg->name();
         }
 
@@ -304,17 +303,17 @@ class MessageChannel : HasResultCodes
             if (mThat.mCxxStackFrames.empty())
                 mThat.EnteredCxxStack();
 
-            mThat.mCxxStackFrames.push_back(RPCFrame(direction, msg));
-            const RPCFrame& frame = mThat.mCxxStackFrames.back();
+            mThat.mCxxStackFrames.push_back(InterruptFrame(direction, msg));
+            const InterruptFrame& frame = mThat.mCxxStackFrames.back();
 
-            if (frame.IsRPCIncall())
+            if (frame.IsInterruptIncall())
                 mThat.EnteredCall();
 
-            mThat.mSawRPCOutMsg |= frame.IsRPCOutcall();
+            mThat.mSawInterruptOutMsg |= frame.IsInterruptOutcall();
         }
 
         ~CxxStackFrame() {
-            bool exitingCall = mThat.mCxxStackFrames.back().IsRPCIncall();
+            bool exitingCall = mThat.mCxxStackFrames.back().IsInterruptIncall();
             mThat.mCxxStackFrames.pop_back();
             bool exitingStack = mThat.mCxxStackFrames.empty();
 
@@ -345,13 +344,13 @@ class MessageChannel : HasResultCodes
 
     // This method is only safe to call on the worker thread, or in a
     // debugger with all threads paused.
-    void DumpRPCStack(const char* const pfx="") const;
+    void DumpInterruptStack(const char* const pfx="") const;
 
   private:
     // Called from both threads
-    size_t RPCStackDepth() const {
+    size_t InterruptStackDepth() const {
         mMonitor->AssertCurrentThreadOwns();
-        return mRPCStack.size();
+        return mInterruptStack.size();
     }
 
     // Returns true if we're blocking waiting for a reply.
@@ -363,9 +362,9 @@ class MessageChannel : HasResultCodes
         mMonitor->AssertCurrentThreadOwns();
         return mPendingUrgentReplies > 0;
     }
-    bool AwaitingRPCReply() const {
+    bool AwaitingInterruptReply() const {
         mMonitor->AssertCurrentThreadOwns();
-        return !mRPCStack.empty();
+        return !mInterruptStack.empty();
     }
 
     // Returns true if we're dispatching a sync message's callback.
@@ -517,8 +516,8 @@ class MessageChannel : HasResultCodes
     //
     //   |A<| be an async in-message,
     //   |S<| be a sync in-message,
-    //   |C<| be an RPC in-call,
-    //   |R<| be an RPC reply.
+    //   |C<| be an Interrupt in-call,
+    //   |R<| be an Interrupt reply.
     //
     // The queue can only match this configuration
     //
@@ -531,7 +530,7 @@ class MessageChannel : HasResultCodes
     // and thus can't send us any more messages until we process the sync
     // in-msg.
     //
-    // The second case is |C<|, an RPC in-call; the other side must be blocked.
+    // The second case is |C<|, an Interrupt in-call; the other side must be blocked.
     // (There's a subtlety here: this in-call might have raced with an
     // out-call, but we detect that with the mechanism below,
     // |mRemoteStackDepth|, and races don't matter to the queue.)
@@ -541,7 +540,7 @@ class MessageChannel : HasResultCodes
     // then other side "finished with us," and went back to its own business.
     // That business might have included sending any number of async message
     // |A<*| until sending a blocking message |(S< | C<)|.  If we had more than
-    // one RPC call on our stack, the other side *better* not have sent us
+    // one Interrupt call on our stack, the other side *better* not have sent us
     // another blocking message, because it's blocked on a reply from us.
     //
     MessageQueue mPending;
@@ -551,12 +550,12 @@ class MessageChannel : HasResultCodes
     // Each stack refers to a different protocol and the stacks are mutually
     // exclusive: multiple outcalls of the same kind cannot be initiated while
     // another is active.
-    std::stack<Message> mRPCStack;
+    std::stack<Message> mInterruptStack;
 
-    // This is what we think the RPC stack depth is on the "other side" of this
-    // RPC channel.  We maintain this variable so that we can detect racy RPC
-    // calls.  With each RPC out-call sent, we send along what *we* think the
-    // stack depth of the remote side is *before* it will receive the RPC call.
+    // This is what we think the Interrupt stack depth is on the "other side" of this
+    // Interrupt channel.  We maintain this variable so that we can detect racy Interrupt
+    // calls.  With each Interrupt out-call sent, we send along what *we* think the
+    // stack depth of the remote side is *before* it will receive the Interrupt call.
     //
     // After sending the out-call, our stack depth is "incremented" by pushing
     // that pending message onto mPending.
@@ -567,7 +566,7 @@ class MessageChannel : HasResultCodes
     //
     // I.e., my depth is actually the same as what the other side thought it
     // was when it sent in-call |c|.  If this fails to hold, we have detected
-    // racy RPC calls.
+    // racy Interrupt calls.
     //
     // We then increment mRemoteStackDepth *just before* processing the
     // in-call, since we know the other side is waiting on it, and decrement
@@ -586,18 +585,18 @@ class MessageChannel : HasResultCodes
     // This member is only accessed on the worker thread, and so is not
     // protected by mMonitor.  It is managed exclusively by the helper
     // |class CxxStackFrame|.
-    std::vector<RPCFrame> mCxxStackFrames;
+    std::vector<InterruptFrame> mCxxStackFrames;
 
-    // Did we process an RPC out-call during this stack?  Only meaningful in
+    // Did we process an Interrupt out-call during this stack?  Only meaningful in
     // ExitedCxxStack(), from which this variable is reset.
-    bool mSawRPCOutMsg;
+    bool mSawInterruptOutMsg;
 
-    // Map of replies received "out of turn", because of RPC
+    // Map of replies received "out of turn", because of Interrupt
     // in-calls racing with replies to outstanding in-calls.  See
     // https://bugzilla.mozilla.org/show_bug.cgi?id=521929.
     MessageMap mOutOfTurnReplies;
 
-    // Stack of RPC in-calls that were deferred because of race
+    // Stack of Interrupt in-calls that were deferred because of race
     // conditions.
     std::stack<Message> mDeferred;
 

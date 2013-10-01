@@ -77,6 +77,9 @@ class JavaScriptParent
     static bool DOMInstanceOf(JSObject *obj, int prototypeID, int depth, bool *bp);
     bool domInstanceOf(JSObject *obj, int prototypeID, int depth, bool *bp);
 
+    mozilla::ipc::IProtocol*
+    CloneProtocol(Channel* aChannel, ProtocolCloneContext* aCtx) MOZ_OVERRIDE;
+
   protected:
     JSObject *unwrap(JSContext *cx, ObjectId objId);
 

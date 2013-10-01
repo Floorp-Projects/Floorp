@@ -231,7 +231,7 @@ nsSVGOuterSVGFrame::GetPrefWidth(nsRenderingContext *aRenderingContext)
   return result;
 }
 
-/* virtual */ nsIFrame::IntrinsicSize
+/* virtual */ IntrinsicSize
 nsSVGOuterSVGFrame::GetIntrinsicSize()
 {
   // XXXjwatt Note that here we want to return the CSS width/height if they're

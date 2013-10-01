@@ -1,7 +1,7 @@
-rpc protocol trans_WrongDirection4 {
+intr protocol trans_WrongDirection4 {
 
 child:
-    rpc Msg();
+    intr Msg();
     __delete__();
 
 state S1:

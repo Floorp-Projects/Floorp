@@ -23,6 +23,7 @@ MOCHITEST_FILES = \
 	test_HighPriorityDowngrade.html \
 	test_HighPriorityDowngrade2.html \
 	test_Background.html \
+	test_BackgroundLRU.html \
 	test_Audio.html \
 	file_Audio.html \
 	silence.ogg \

@@ -42,3 +42,7 @@ Glossary
       A build performed with the result of a previous build in an
       object directory. The build should not have to work as hard because
       it will be able to reuse the work from previous builds.
+
+   mozinfo
+      An API for accessing a common and limited subset of the build and
+      run-time configuration. See :ref:`mozinfo`.

@@ -3,7 +3,7 @@ namespace mozilla {
 namespace _ipdltest {
 
 
-rpc protocol PTestRacyUndefer {
+intr protocol PTestRacyUndefer {
 
 child:
     async Start();
@@ -11,14 +11,14 @@ child:
     async AwakenSpam();
     async AwakenRaceWinTwice();
 
-    rpc Race();
+    intr Race();
 
     async __delete__();
 
 parent:
 
-    rpc Spam();
-    rpc RaceWinTwice();
+    intr Spam();
+    intr RaceWinTwice();
 
     async Done();
 };

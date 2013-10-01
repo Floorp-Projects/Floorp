@@ -44,43 +44,6 @@ bindinggen_dependencies := \
   $(GLOBAL_DEPS) \
   $(NULL)
 
-MOCHITEST_FILES := \
-  test_bug773326.html \
-  test_enums.html \
-  test_integers.html \
-  test_interfaceToString.html \
-  test_lookupGetter.html \
-  test_InstanceOf.html \
-  file_InstanceOf.html \
-  test_traceProtos.html \
-  test_forOf.html \
-  forOf_iframe.html \
-  test_sequence_wrapping.html \
-  file_bug775543.html \
-  file_bug707564.html \
-  test_bug788369.html \
-  test_bug742191.html \
-  test_namedNoIndexed.html \
-  test_bug759621.html \
-  test_queryInterface.html \
-  test_exceptionThrowing.html \
-  test_bug852846.html \
-  test_bug862092.html \
-  test_bug560072.html \
-  test_lenientThis.html \
-  test_ByteString.html \
-  test_exception_messages.html \
-  test_bug707564.html \
-  test_defineProperty.html \
-  file_document_location_set_via_xray.html \
-  $(NULL)
-
-MOCHITEST_CHROME_FILES = \
-  test_bug775543.html \
-  test_bug707564-chrome.html \
-  test_document_location_set_via_xray.html \
-  $(NULL)
-
 ifdef GNU_CC
 CXXFLAGS += -Wno-uninitialized
 endif

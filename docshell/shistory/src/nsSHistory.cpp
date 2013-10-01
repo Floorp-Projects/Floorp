@@ -939,10 +939,7 @@ nsSHistory::EvictOutOfRangeWindowContentViewers(int32_t aIndex)
   if (aIndex < 0) {
     return;
   }
-  NS_ASSERTION(aIndex < mLength, "aIndex is out of range");
-  if (aIndex >= mLength) {
-    return;
-  }
+  NS_ENSURE_TRUE_VOID(aIndex < mLength);
 
   // Calculate the range that's safe from eviction.
   int32_t startSafeIndex = std::max(0, aIndex - gHistoryMaxViewers);
