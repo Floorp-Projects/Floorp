@@ -10,7 +10,7 @@
 #define _USE_MATH_DEFINES
 #include <math.h>
 
-#include "gfxFont.h"
+#include "DrawMode.h"
 #include "gfxMatrix.h"
 #include "gfxPoint.h"
 #include "gfxRect.h"
@@ -673,11 +673,11 @@ public:
    * Render a SVG glyph.
    * @param aElement the SVG glyph element to render
    * @param aContext the thebes aContext to draw to
-   * @param aDrawMode fill or stroke or both (see gfxFont::DrawMode)
+   * @param aDrawMode fill or stroke or both (see DrawMode)
    * @return true if rendering succeeded
    */
   static bool PaintSVGGlyph(Element* aElement, gfxContext* aContext,
-                            gfxFont::DrawMode aDrawMode,
+                            DrawMode aDrawMode,
                             gfxTextContextPaint* aContextPaint);
   /**
    * Get the extents of a SVG glyph.

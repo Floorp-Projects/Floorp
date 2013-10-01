@@ -7,6 +7,7 @@
 #include "nsSVGTextPathFrame.h"
 
 // Keep others in (case-insensitive) order:
+#include "gfxPath.h"
 #include "nsContentUtils.h"
 #include "nsSVGEffects.h"
 #include "nsSVGLength2.h"

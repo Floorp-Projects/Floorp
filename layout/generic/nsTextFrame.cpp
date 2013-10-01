@@ -5890,8 +5890,8 @@ DrawTextRun(gfxTextRun* aTextRun,
             gfxTextContextPaint* aContextPaint,
             nsTextFrame::DrawPathCallbacks* aCallbacks)
 {
-  gfxFont::DrawMode drawMode = aCallbacks ? gfxFont::GLYPH_PATH :
-                                            gfxFont::GLYPH_FILL;
+  DrawMode drawMode = aCallbacks ? DrawMode::GLYPH_PATH :
+                                   DrawMode::GLYPH_FILL;
   if (aCallbacks) {
     aCallbacks->NotifyBeforeText(aTextColor);
     aTextRun->Draw(aCtx, aTextBaselinePt, drawMode, aOffset, aLength,
