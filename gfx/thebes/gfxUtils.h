@@ -7,7 +7,7 @@
 #define GFX_UTILS_H
 
 #include "gfxTypes.h"
-#include "gfxPattern.h"
+#include "GraphicsFilter.h"
 #include "gfxImageSurface.h"
 #include "ImageContainer.h"
 #include "mozilla/gfx/2D.h"
@@ -58,7 +58,7 @@ public:
                                  const gfxRect&   aImageRect,
                                  const gfxRect&   aFill,
                                  const gfxImageFormat aFormat,
-                                 gfxPattern::GraphicsFilter aFilter,
+                                 GraphicsFilter aFilter,
                                  uint32_t         aImageFlags = imgIContainer::FLAG_NONE);
 
     /**

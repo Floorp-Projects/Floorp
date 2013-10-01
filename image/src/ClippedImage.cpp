@@ -83,7 +83,7 @@ public:
 
   virtual bool operator()(gfxContext* aContext,
                           const gfxRect& aFillRect,
-                          const gfxPattern::GraphicsFilter& aFilter,
+                          const GraphicsFilter& aFilter,
                           const gfxMatrix& aTransform)
   {
     // Draw the image. |gfxCallbackDrawable| always calls this function with
@@ -253,7 +253,7 @@ ClippedImage::GetFrameInternal(const nsIntSize& aViewportSize,
     gfxUtils::DrawPixelSnapped(ctx, drawable, gfxMatrix(),
                                imageRect, imageRect, imageRect, imageRect,
                                gfxImageFormatARGB32,
-                               gfxPattern::FILTER_FAST);
+                               GraphicsFilter::FILTER_FAST);
 
     // Cache the resulting surface.
     mCachedSurface = new ClippedImageCachedSurface(target,
@@ -305,7 +305,7 @@ ClippedImage::MustCreateSurface(gfxContext* aContext,
 
 NS_IMETHODIMP
 ClippedImage::Draw(gfxContext* aContext,
-                   gfxPattern::GraphicsFilter aFilter,
+                   GraphicsFilter aFilter,
                    const gfxMatrix& aUserSpaceToImageSpace,
                    const gfxRect& aFill,
                    const nsIntRect& aSubimage,
@@ -362,7 +362,7 @@ ClippedImage::ClampFactor(const gfxFloat aToClamp, const int aReference) const
 
 nsresult
 ClippedImage::DrawSingleTile(gfxContext* aContext,
-                             gfxPattern::GraphicsFilter aFilter,
+                             GraphicsFilter aFilter,
                              const gfxMatrix& aUserSpaceToImageSpace,
                              const gfxRect& aFill,
                              const nsIntRect& aSubimage,

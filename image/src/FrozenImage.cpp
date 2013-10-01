@@ -70,7 +70,7 @@ FrozenImage::GetImageContainer(layers::LayerManager* aManager,
 
 NS_IMETHODIMP
 FrozenImage::Draw(gfxContext* aContext,
-                  gfxPattern::GraphicsFilter aFilter,
+                  GraphicsFilter aFilter,
                   const gfxMatrix& aUserSpaceToImageSpace,
                   const gfxRect& aFill,
                   const nsIntRect& aSubimage,

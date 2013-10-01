@@ -1562,12 +1562,12 @@ nsObjectFrame::BuildLayer(nsDisplayListBuilder* aBuilder,
 
     imglayer->SetScaleToSize(size, SCALE_STRETCH);
     imglayer->SetContainer(container);
-    gfxPattern::GraphicsFilter filter =
+    GraphicsFilter filter =
       nsLayoutUtils::GetGraphicsFilterForFrame(this);
 #ifdef MOZ_GFX_OPTIMIZE_MOBILE
     if (!aManager->IsCompositingCheap()) {
       // Pixman just horrible with bilinear filter scaling
-      filter = gfxPattern::FILTER_NEAREST;
+      filter = GraphicsFilter::FILTER_NEAREST;
     }
 #endif
     imglayer->SetFilter(filter);

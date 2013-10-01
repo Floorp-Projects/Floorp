@@ -235,7 +235,7 @@ public:
   {}
   virtual bool operator()(gfxContext* aContext,
                             const gfxRect& aFillRect,
-                            const gfxPattern::GraphicsFilter& aFilter,
+                            const GraphicsFilter& aFilter,
                             const gfxMatrix& aTransform);
 private:
   nsRefPtr<SVGDocumentWrapper> mSVGDocumentWrapper;
@@ -248,7 +248,7 @@ private:
 bool
 SVGDrawingCallback::operator()(gfxContext* aContext,
                                const gfxRect& aFillRect,
-                               const gfxPattern::GraphicsFilter& aFilter,
+                               const GraphicsFilter& aFilter,
                                const gfxMatrix& aTransform)
 {
   MOZ_ASSERT(mSVGDocumentWrapper, "need an SVGDocumentWrapper");
@@ -655,7 +655,7 @@ VectorImage::GetFrame(uint32_t aWhichFrame,
 
   // Draw to our surface!
   // --------------------
-  nsresult rv = Draw(context, gfxPattern::FILTER_NEAREST, gfxMatrix(),
+  nsresult rv = Draw(context, GraphicsFilter::FILTER_NEAREST, gfxMatrix(),
                      gfxRect(gfxPoint(0,0), gfxIntSize(imageIntSize.width,
                                                        imageIntSize.height)),
                      nsIntRect(nsIntPoint(0,0), imageIntSize),
@@ -688,7 +688,7 @@ VectorImage::GetImageContainer(LayerManager* aManager,
  *                      in uint32_t aFlags); */
 NS_IMETHODIMP
 VectorImage::Draw(gfxContext* aContext,
-                  gfxPattern::GraphicsFilter aFilter,
+                  GraphicsFilter aFilter,
                   const gfxMatrix& aUserSpaceToImageSpace,
                   const gfxRect& aFill,
                   const nsIntRect& aSubimage,

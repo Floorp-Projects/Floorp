@@ -218,7 +218,7 @@ ImageWrapper::GetImageContainer(LayerManager* aManager, ImageContainer** _retval
 
 NS_IMETHODIMP
 ImageWrapper::Draw(gfxContext* aContext,
-                   gfxPattern::GraphicsFilter aFilter,
+                   GraphicsFilter aFilter,
                    const gfxMatrix& aUserSpaceToImageSpace,
                    const gfxRect& aFill,
                    const nsIntRect& aSubimage,
