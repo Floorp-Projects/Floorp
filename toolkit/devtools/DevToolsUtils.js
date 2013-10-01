@@ -6,6 +6,9 @@
 
 /* General utilities used throughout devtools. */
 
+let { Promise: promise } = Components.utils.import("resource://gre/modules/commonjs/sdk/core/promise.js", {});
+let { Services } = Components.utils.import("resource://gre/modules/Services.jsm", {});
+
 /**
  * Turn the error |aError| into a string, without fail.
  */
@@ -78,4 +81,56 @@ this.makeInfallible = function makeInfallible(aHandler, aName) {
       reportException(who, ex);
     }
   }
+}
+
+const executeSoon = aFn => {
+  Services.tm.mainThread.dispatch({
+    run: this.makeInfallible(aFn)
+  }, Components.interfaces.nsIThread.DISPATCH_NORMAL);
+}
+
+/**
+ * Like Array.prototype.forEach, but doesn't cause jankiness when iterating over
+ * very large arrays by yielding to the browser and continuing execution on the
+ * next tick.
+ *
+ * @param Array aArray
+ *        The array being iterated over.
+ * @param Function aFn
+ *        The function called on each item in the array.
+ * @returns Promise
+ *          A promise that is resolved once the whole array has been iterated
+ *          over.
+ */
+this.yieldingEach = function yieldingEach(aArray, aFn) {
+  const deferred = promise.defer();
+
+  let i = 0;
+  let len = aArray.length;
+
+  (function loop() {
+    const start = Date.now();
+
+    while (i < len) {
+      // Don't block the main thread for longer than 16 ms at a time. To
+      // maintain 60fps, you have to render every frame in at least 16ms; we
+      // aren't including time spent in non-JS here, but this is Good
+      // Enough(tm).
+      if (Date.now() - start > 16) {
+        executeSoon(loop);
+        return;
+      }
+
+      try {
+        aFn(aArray[i++]);
+      } catch (e) {
+        deferred.reject(e);
+        return;
+      }
+    }
+
+    deferred.resolve();
+  }());
+
+  return deferred.promise;
 }
