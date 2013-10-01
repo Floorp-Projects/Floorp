@@ -387,11 +387,6 @@ pref("browser.ui.kinetic.polynomialC", 100);
 pref("browser.ui.kinetic.swipeLength", 160);
 pref("browser.ui.zoom.animationDuration", 200); // ms duration of double-tap zoom animation
 
-// pinch gesture
-pref("browser.ui.pinch.maxGrowth", 150);     // max pinch distance growth
-pref("browser.ui.pinch.maxShrink", 200);     // max pinch distance shrinkage
-pref("browser.ui.pinch.scalingFactor", 500); // scaling factor for above pinch limits
-
 pref("ui.mouse.radius.enabled", true);
 pref("ui.touch.radius.enabled", true);
 
