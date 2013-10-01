@@ -214,6 +214,40 @@ self.onmessage = function onmessage(event) {
 };
 
 /**
+ * Start/Stop DHCP server.
+ */
+function setDhcpServer(config) {
+  function onSuccess() {
+    postMessage({ id: config.id, success: true });
+    return true;
+  }
+
+  function onError() {
+    postMessage({ id: config.id, success: false });
+  }
+
+  let startDhcpServerChain = [setInterfaceUp,
+                              startTethering,
+                              onSuccess];
+
+  let stopDhcpServerChain = [stopTethering,
+                             onSuccess];
+
+  if (config.enabled) {
+    let params = { wifiStartIp: config.startIp,
+                   wifiEndIp: config.endIp,
+                   ip: config.serverIp,
+                   prefix: config.maskLength,
+                   ifname: config.ifname,
+                   link: "up" };
+
+    chain(params, startDhcpServerChain, onError);
+  } else {
+    chain({}, stopDhcpServerChain, onError);
+  }
+}
+
+/**
  * Set DNS servers for given network interface.
  */
 function setDNS(options) {
@@ -455,8 +489,14 @@ function startTethering(params, callback) {
   if (params.resultReason.indexOf("started") !== -1) {
     command = DUMMY_COMMAND;
   } else {
-    command = "tether start " + params.wifiStartIp + " " + params.wifiEndIp +
-              " " + params.usbStartIp + " " + params.usbEndIp;
+    command = "tether start " + params.wifiStartIp + " " + params.wifiEndIp;
+
+    // If usbStartIp/usbEndIp is not valid, don't append them since
+    // the trailing white spaces will be parsed to extra empty args
+    // See: http://androidxref.com/4.3_r2.1/xref/system/core/libsysutils/src/FrameworkListener.cpp#78
+    if (params.usbStartIp && params.usbEndIp) {
+      command += " " + params.usbStartIp + " " + params.usbEndIp;
+    }
   }
   return doCommand(command, callback);
 }
