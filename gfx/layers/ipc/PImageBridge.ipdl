@@ -12,7 +12,7 @@ include ProtocolTypes;
 include "mozilla/layers/CompositorTypes.h";
 include "mozilla/GfxMessageUtils.h";
 
-using mozilla::layers::TextureInfo;
+using struct mozilla::layers::TextureInfo from "mozilla/layers/CompositorTypes.h";
 
 namespace mozilla {
 namespace layers {

@@ -1,7 +1,7 @@
 include "foo.h";
 
-using foo;
-using bar::baz;
+using foo from "foo.h";
+using bar::baz from "foo.h";
 
 struct Outer { };
 
