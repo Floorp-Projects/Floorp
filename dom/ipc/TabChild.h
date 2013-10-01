@@ -216,7 +216,7 @@ public:
                                 const int32_t&  aModifiers,
                                 const bool&     aIgnoreRootScrollFrame);
     virtual bool RecvRealMouseEvent(const nsMouseEvent& event);
-    virtual bool RecvRealKeyEvent(const nsKeyEvent& event);
+    virtual bool RecvRealKeyEvent(const mozilla::WidgetKeyboardEvent& event);
     virtual bool RecvMouseWheelEvent(const mozilla::WheelEvent& event);
     virtual bool RecvRealTouchEvent(const WidgetTouchEvent& event);
     virtual bool RecvRealTouchMoveEvent(const WidgetTouchEvent& event);
@@ -225,9 +225,9 @@ public:
                               const int32_t&  aCharCode,
                               const int32_t&  aModifiers,
                               const bool&     aPreventDefault);
-    virtual bool RecvCompositionEvent(const nsCompositionEvent& event);
-    virtual bool RecvTextEvent(const nsTextEvent& event);
-    virtual bool RecvSelectionEvent(const nsSelectionEvent& event);
+    virtual bool RecvCompositionEvent(const mozilla::WidgetCompositionEvent& event);
+    virtual bool RecvTextEvent(const mozilla::WidgetTextEvent& event);
+    virtual bool RecvSelectionEvent(const mozilla::WidgetSelectionEvent& event);
     virtual bool RecvActivateFrameEvent(const nsString& aType, const bool& capture);
     virtual bool RecvLoadRemoteScript(const nsString& aURL);
     virtual bool RecvAsyncMessage(const nsString& aMessage,

@@ -495,7 +495,7 @@ KeymapWrapper::AreModifiersActive(Modifiers aModifiers,
 }
 
 /* static */ void
-KeymapWrapper::InitInputEvent(nsInputEvent& aInputEvent,
+KeymapWrapper::InitInputEvent(WidgetInputEvent& aInputEvent,
                               guint aModifierState)
 {
     KeymapWrapper* keymapWrapper = GetInstance();
@@ -560,7 +560,8 @@ KeymapWrapper::InitInputEvent(nsInputEvent& aInputEvent,
             return;
     }
 
-    nsMouseEvent_base& mouseEvent = static_cast<nsMouseEvent_base&>(aInputEvent);
+    WidgetMouseEventBase& mouseEvent =
+      static_cast<WidgetMouseEventBase&>(aInputEvent);
     mouseEvent.buttons = 0;
     if (aModifierState & GDK_BUTTON1_MASK) {
         mouseEvent.buttons |= nsMouseEvent::eLeftButtonFlag;
@@ -751,7 +752,7 @@ KeymapWrapper::ComputeDOMKeyNameIndex(const GdkEventKey* aGdkKeyEvent)
 }
 
 /* static */ void
-KeymapWrapper::InitKeyEvent(nsKeyEvent& aKeyEvent,
+KeymapWrapper::InitKeyEvent(WidgetKeyboardEvent& aKeyEvent,
                             GdkEventKey* aGdkKeyEvent)
 {
     KeymapWrapper* keymapWrapper = GetInstance();
@@ -1165,7 +1166,7 @@ KeymapWrapper::GetDOMKeyCodeFromKeyPairs(guint aGdkKeyval)
 }
 
 void
-KeymapWrapper::InitKeypressEvent(nsKeyEvent& aKeyEvent,
+KeymapWrapper::InitKeypressEvent(WidgetKeyboardEvent& aKeyEvent,
                                  GdkEventKey* aGdkKeyEvent)
 {
     NS_ENSURE_TRUE_VOID(aKeyEvent.message == NS_KEY_PRESS);
@@ -1211,7 +1212,7 @@ KeymapWrapper::InitKeypressEvent(nsKeyEvent& aKeyEvent,
     // We shold send both shifted char and unshifted char, all keyboard layout
     // users can use all keys.  Don't change event.charCode. On some keyboard
     // layouts, Ctrl/Alt/Meta keys are used for inputting some characters.
-    nsAlternativeCharCode altCharCodes(0, 0);
+    AlternativeCharCode altCharCodes(0, 0);
     // unshifted charcode of current keyboard layout.
     altCharCodes.mUnshiftedCharCode =
         GetCharCodeFor(aGdkKeyEvent, baseState, aGdkKeyEvent->group);
@@ -1259,7 +1260,7 @@ KeymapWrapper::InitKeypressEvent(nsKeyEvent& aKeyEvent,
         return;
     }
 
-    nsAlternativeCharCode altLatinCharCodes(0, 0);
+    AlternativeCharCode altLatinCharCodes(0, 0);
     uint32_t unmodifiedCh =
         aKeyEvent.IsShift() ? altCharCodes.mShiftedCharCode :
                               altCharCodes.mUnshiftedCharCode;

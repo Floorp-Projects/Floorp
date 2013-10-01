@@ -31,15 +31,15 @@ class nsINativeKeyBindings : public nsISupports
 
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_INATIVEKEYBINDINGS_IID)
 
-  virtual NS_HIDDEN_(bool) KeyDown(const nsKeyEvent& aEvent,
+  virtual NS_HIDDEN_(bool) KeyDown(const mozilla::WidgetKeyboardEvent& aEvent,
                                    DoCommandCallback aCallback,
                                    void *aCallbackData) = 0;
 
-  virtual NS_HIDDEN_(bool) KeyPress(const nsKeyEvent& aEvent,
+  virtual NS_HIDDEN_(bool) KeyPress(const mozilla::WidgetKeyboardEvent& aEvent,
                                     DoCommandCallback aCallback,
                                     void *aCallbackData) = 0;
 
-  virtual NS_HIDDEN_(bool) KeyUp(const nsKeyEvent& aEvent,
+  virtual NS_HIDDEN_(bool) KeyUp(const mozilla::WidgetKeyboardEvent& aEvent,
                                  DoCommandCallback aCallback,
                                  void *aCallbackData) = 0;
 };
