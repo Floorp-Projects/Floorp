@@ -84,6 +84,9 @@ parent:
     sync SyncMessage(nsString aMessage, ClonedMessageData aData, CpowEntry[] aCpows)
       returns (nsString[] retval);
 
+    rpc RpcMessage(nsString aMessage, ClonedMessageData aData, CpowEntry[] aCpows)
+      returns (nsString[] retval);
+
     /**
      * The IME sequence number (seqno) parameter is used to make sure
      * that a notification is discarded if it arrives at the chrome process
