@@ -21,7 +21,9 @@
  */
 #define __STDC_LIMIT_MACROS
 #define __STDC_CONSTANT_MACROS
+#if !defined(__STDC_FORMAT_MACROS)
 #define __STDC_FORMAT_MACROS
+#endif
 
 /*
  * Force-include hunspell_alloc_hooks.h and hunspell_fopen_hooks.h for hunspell,
