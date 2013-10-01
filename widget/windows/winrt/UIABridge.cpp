@@ -169,6 +169,26 @@ HRESULT
 UIABridge::FocusChangeEvent()
 {
   LogFunction();
+  if (!Connected()) {
+    return UIA_E_ELEMENTNOTAVAILABLE;
+  }
+
+  nsCOMPtr<nsIAccessible> child;
+  mAccessible->GetFocusedChild(getter_AddRefs(child));
+  if (!child) {
+    return S_OK;
+  }
+
+  if (!ChildHasFocus(child)) {
+    ComPtr<IUIAElement> element;
+    gElement.As(&element);
+    if (!element) {
+      return S_OK;
+    }
+    element->ClearFocus();
+    UiaRaiseAutomationEvent(this, UIA_AutomationFocusChangedEventId);
+  }
+
   return S_OK;
 }
 

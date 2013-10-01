@@ -13,13 +13,9 @@ Cu.import("resource://gre/modules/PageThumbs.jsm");
 // Page for which the start UI is shown
 const kStartURI = "about:start";
 
-const kBrowserViewZoomLevelPrecision = 10000;
-
 // allow panning after this timeout on pages with registered touch listeners
 const kTouchTimeout = 300;
 const kSetInactiveStateTimeout = 100;
-
-const kDefaultMetadata = { autoSize: false, allowZoom: true, autoScale: true };
 
 const kTabThumbnailDelayCapture = 500;
 
@@ -68,10 +64,7 @@ var Browser = {
       messageManager.loadFrameScript("chrome://browser/content/contenthandlers/SelectionHandler.js", true);
       messageManager.loadFrameScript("chrome://browser/content/contenthandlers/ContextMenuHandler.js", true);
       messageManager.loadFrameScript("chrome://browser/content/contenthandlers/FindHandler.js", true);
-      // XXX Viewport resizing disabled because of bug 766142
-      //messageManager.loadFrameScript("chrome://browser/content/contenthandlers/ViewportHandler.js", true);
       messageManager.loadFrameScript("chrome://browser/content/contenthandlers/ConsoleAPIObserver.js", true);
-      //messageManager.loadFrameScript("chrome://browser/content/contenthandlers/PluginCTPHandler.js", true);
     } catch (e) {
       // XXX whatever is calling startup needs to dump errors!
       dump("###########" + e + "\n");
@@ -88,7 +81,6 @@ var Browser = {
     InputSourceHelper.init();
 
     TouchModule.init();
-    ScrollwheelModule.init(Elements.browsers);
     GestureModule.init();
     BrowserTouchHandler.init();
     PopupBlockerObserver.init();
@@ -156,17 +148,12 @@ var Browser = {
     }
 
     messageManager.addMessageListener("DOMLinkAdded", this);
-    messageManager.addMessageListener("MozScrolledAreaChanged", this);
-    messageManager.addMessageListener("Browser:ViewportMetadata", this);
     messageManager.addMessageListener("Browser:FormSubmit", this);
-    messageManager.addMessageListener("Browser:ZoomToPoint:Return", this);
     messageManager.addMessageListener("Browser:CanUnload:Return", this);
     messageManager.addMessageListener("scroll", this);
     messageManager.addMessageListener("Browser:CertException", this);
     messageManager.addMessageListener("Browser:BlockedSite", this);
-    messageManager.addMessageListener("Browser:ErrorPage", this);
     messageManager.addMessageListener("Browser:TapOnSelection", this);
-    messageManager.addMessageListener("Browser:PluginClickToPlayClicked", this);
 
     Task.spawn(function() {
       // Activation URIs come from protocol activations, secondary tiles, and file activations
@@ -229,15 +216,10 @@ var Browser = {
     ContentAreaObserver.shutdown();
     Appbar.shutdown();
 
-    messageManager.removeMessageListener("MozScrolledAreaChanged", this);
-    messageManager.removeMessageListener("Browser:ViewportMetadata", this);
     messageManager.removeMessageListener("Browser:FormSubmit", this);
-    messageManager.removeMessageListener("Browser:ZoomToPoint:Return", this);
     messageManager.removeMessageListener("scroll", this);
     messageManager.removeMessageListener("Browser:CertException", this);
     messageManager.removeMessageListener("Browser:BlockedSite", this);
-    messageManager.removeMessageListener("Browser:ErrorPage", this);
-    messageManager.removeMessageListener("Browser:PluginClickToPlayClicked", this);
     messageManager.removeMessageListener("Browser:TapOnSelection", this);
 
     Services.obs.removeObserver(SessionHistoryObserver, "browser:purge-session-history");
@@ -771,43 +753,10 @@ var Browser = {
     Bookmarks.isURIBookmarked(uri, callback);
   },
 
-  /** Zoom one step in (negative) or out (positive). */
-  zoom: function zoom(aDirection) {
-    let tab = this.selectedTab;
-    if (!tab.allowZoom)
-      return;
-
-    let browser = tab.browser;
-    let oldZoomLevel = browser.scale;
-    let zoomLevel = oldZoomLevel;
-
-    let zoomValues = ZoomManager.zoomValues;
-    let i = zoomValues.indexOf(ZoomManager.snap(zoomLevel)) + (aDirection < 0 ? 1 : -1);
-    if (i >= 0 && i < zoomValues.length)
-      zoomLevel = zoomValues[i];
-
-    zoomLevel = tab.clampZoomLevel(zoomLevel);
-
-    let browserRect = browser.getBoundingClientRect();
-    let center = browser.ptClientToBrowser(browserRect.width / 2,
-                                           browserRect.height / 2);
-    let rect = this._getZoomRectForPoint(center.xPos, center.yPos, zoomLevel);
-    AnimatedZoom.animateTo(rect);
-  },
-
   /** Rect should be in browser coordinates. */
   _getZoomLevelForRect: function _getZoomLevelForRect(rect) {
     const margin = 15;
     return this.selectedTab.clampZoomLevel(ContentAreaObserver.width / (rect.width + margin * 2));
-  },
-
-  /**
-   * Find an appropriate zoom rect for an element bounding rect, if it exists.
-   * @return Rect in viewport coordinates, or null
-   */
-  _getZoomRectForRect: function _getZoomRectForRect(rect, y) {
-    let zoomLevel = this._getZoomLevelForRect(rect);
-    return this._getZoomRectForPoint(rect.center().x, y, zoomLevel);
   },
 
   /**
@@ -829,52 +778,6 @@ var Browser = {
     // Make sure rectangle doesn't poke out of viewport
     return result.translateInside(new Rect(0, 0, browser.contentDocumentWidth * oldScale,
                                                  browser.contentDocumentHeight * oldScale));
-  },
-
-  zoomToPoint: function zoomToPoint(cX, cY, aRect) {
-    let tab = this.selectedTab;
-    if (!tab.allowZoom)
-      return null;
-
-    let zoomRect = null;
-    if (aRect)
-      zoomRect = this._getZoomRectForRect(aRect, cY);
-
-    if (!zoomRect && tab.isDefaultZoomLevel()) {
-      let scale = tab.clampZoomLevel(tab.browser.scale * 2);
-      zoomRect = this._getZoomRectForPoint(cX, cY, scale);
-    }
-
-    if (zoomRect)
-      AnimatedZoom.animateTo(zoomRect);
-
-    return zoomRect;
-  },
-
-  zoomFromPoint: function zoomFromPoint(cX, cY) {
-    let tab = this.selectedTab;
-    if (tab.allowZoom && !tab.isDefaultZoomLevel()) {
-      let zoomLevel = tab.getDefaultZoomLevel();
-      let zoomRect = this._getZoomRectForPoint(cX, cY, zoomLevel);
-      AnimatedZoom.animateTo(zoomRect);
-    }
-  },
-
-  // The device-pixel-to-CSS-px ratio used to adjust meta viewport values.
-  // This is higher on higher-dpi displays, so pages stay about the same physical size.
-  getScaleRatio: function getScaleRatio() {
-    let prefValue = Services.prefs.getIntPref("browser.viewport.scaleRatio");
-    if (prefValue > 0)
-      return prefValue / 100;
-
-    let dpi = Util.displayDPI;
-    if (dpi < 200) // Includes desktop displays, and LDPI and MDPI Android devices
-      return 1;
-    else if (dpi < 300) // Includes Nokia N900, and HDPI Android devices
-      return 1.5;
-
-    // For very high-density displays like the iPhone 4, calculate an integer ratio.
-    return Math.floor(dpi / 150);
   },
 
   /**
@@ -930,73 +833,23 @@ var Browser = {
         }
         break;
       }
-      case "MozScrolledAreaChanged": {
-        let tab = this.getTabForBrowser(browser);
-        if (tab)
-          tab.scrolledAreaChanged();
-        break;
-      }
-      case "Browser:ViewportMetadata": {
-        let tab = this.getTabForBrowser(browser);
-        // Some browser such as iframes loaded dynamically into the chrome UI
-        // does not have any assigned tab
-        if (tab)
-          tab.updateViewportMetadata(json);
-        break;
-      }
       case "Browser:FormSubmit":
         browser.lastLocation = null;
         break;
 
       case "Browser:CanUnload:Return": {
-	if (json.permit) {
-	  let tab = this.getTabForBrowser(browser);
-	  BrowserUI.animateClosingTab(tab);
-	}
-	break;
-      }
-      case "Browser:ZoomToPoint:Return":
-        if (json.zoomTo) {
-          let rect = Rect.fromRect(json.zoomTo);
-          this.zoomToPoint(json.x, json.y, rect);
-        } else {
-          this.zoomFromPoint(json.x, json.y);
+        if (json.permit) {
+          let tab = this.getTabForBrowser(browser);
+          BrowserUI.animateClosingTab(tab);
         }
         break;
+      }
       case "Browser:CertException":
         this._handleCertException(aMessage);
         break;
       case "Browser:BlockedSite":
         this._handleBlockedSite(aMessage);
         break;
-      case "Browser:ErrorPage":
-        break;
-      case "Browser:PluginClickToPlayClicked": {
-        // Save off session history
-        let parent = browser.parentNode;
-        let data = browser.__SS_data;
-        if (data.entries.length == 0)
-          return;
-
-        // Remove the browser from the DOM, effectively killing it's content
-        parent.removeChild(browser);
-
-        // Re-create the browser as non-remote, so plugins work
-        browser.setAttribute("remote", "false");
-        parent.appendChild(browser);
-
-        // Reload the content using session history
-        browser.__SS_data = data;
-        let json = {
-          uri: data.entries[data.index - 1].url,
-          flags: null,
-          entries: data.entries,
-          index: data.index
-        };
-        browser.messageManager.sendAsyncMessage("WebNavigation:LoadURI", json);
-        break;
-      }
-
       case "Browser:TapOnSelection":
         if (!InputSourceHelper.isPrecise) {
           if (SelectionHelperUI.isActive) {
@@ -1235,10 +1088,6 @@ nsBrowserAccess.prototype = {
     return browser ? browser.QueryInterface(Ci.nsIFrameLoaderOwner) : null;
   },
 
-  zoom: function browser_zoom(aAmount) {
-    Browser.zoom(aAmount);
-  },
-
   isTabContentWindow: function(aWindow) {
     return Browser.browsers.some(function (browser) browser.contentWindow == aWindow);
   },
@@ -1394,7 +1243,6 @@ function Tab(aURI, aParams, aOwner) {
   this._notification = null;
   this._loading = false;
   this._chromeTab = null;
-  this._metadata = null;
   this._eventDeferred = null;
   this._updateThumbnailTimeout = null;
 
@@ -1425,94 +1273,8 @@ Tab.prototype = {
     return this._chromeTab;
   },
 
-  get metadata() {
-    return this._metadata || kDefaultMetadata;
-  },
-
   get pageShowPromise() {
     return this._eventDeferred ? this._eventDeferred.promise : null;
-  },
-
-  /** Update browser styles when the viewport metadata changes. */
-  updateViewportMetadata: function updateViewportMetadata(aMetadata) {
-    if (aMetadata && aMetadata.autoScale) {
-      let scaleRatio = aMetadata.scaleRatio = Browser.getScaleRatio();
-
-      if ("defaultZoom" in aMetadata && aMetadata.defaultZoom > 0)
-        aMetadata.defaultZoom *= scaleRatio;
-      if ("minZoom" in aMetadata && aMetadata.minZoom > 0)
-        aMetadata.minZoom *= scaleRatio;
-      if ("maxZoom" in aMetadata && aMetadata.maxZoom > 0)
-        aMetadata.maxZoom *= scaleRatio;
-    }
-    this._metadata = aMetadata;
-    this.updateViewportSize();
-  },
-
-  /**
-   * Update browser size when the metadata or the window size changes.
-   */
-  updateViewportSize: function updateViewportSize(width, height) {
-    /* XXX Viewport resizing disabled because of bug 766142
-
-    let browser = this._browser;
-    if (!browser)
-      return;
-
-    let screenW = width || ContentAreaObserver.width;
-    let screenH = height || ContentAreaObserver.height;
-    let viewportW, viewportH;
-
-    let metadata = this.metadata;
-    if (metadata.autoSize) {
-      if ("scaleRatio" in metadata) {
-        viewportW = screenW / metadata.scaleRatio;
-        viewportH = screenH / metadata.scaleRatio;
-      } else {
-        viewportW = screenW;
-        viewportH = screenH;
-      }
-    } else {
-      viewportW = metadata.width;
-      viewportH = metadata.height;
-
-      // If (scale * width) < device-width, increase the width (bug 561413).
-      let maxInitialZoom = metadata.defaultZoom || metadata.maxZoom;
-      if (maxInitialZoom && viewportW)
-        viewportW = Math.max(viewportW, screenW / maxInitialZoom);
-
-      let validW = viewportW > 0;
-      let validH = viewportH > 0;
-
-      if (!validW)
-        viewportW = validH ? (viewportH * (screenW / screenH)) : Browser.defaultBrowserWidth;
-      if (!validH)
-        viewportH = viewportW * (screenH / screenW);
-    }
-
-    // Make sure the viewport height is not shorter than the window when
-    // the page is zoomed out to show its full width.
-    let pageZoomLevel = this.getPageZoomLevel(screenW);
-    let minScale = this.clampZoomLevel(pageZoomLevel, pageZoomLevel);
-    viewportH = Math.max(viewportH, screenH / minScale);
-
-    if (browser.contentWindowWidth != viewportW || browser.contentWindowHeight != viewportH)
-      browser.setWindowSize(viewportW, viewportH);
-    */
-  },
-
-  restoreViewportPosition: function restoreViewportPosition(aOldWidth, aNewWidth) {
-    let browser = this._browser;
-
-    // zoom to keep the same portion of the document visible
-    let oldScale = browser.scale;
-    let newScale = this.clampZoomLevel(oldScale * aNewWidth / aOldWidth);
-    let scaleRatio = newScale / oldScale;
-
-    let view = browser.getRootView();
-    let pos = view.getPosition();
-    browser.fuzzyZoom(newScale, pos.x * scaleRatio, pos.y * scaleRatio);
-    browser.finishFuzzyZoom();
   },
 
   startLoading: function startLoading() {
@@ -1697,108 +1459,9 @@ Tab.prototype = {
   /**
    * Takes a scale and restricts it based on this tab's zoom limits.
    * @param aScale The original scale.
-   * @param aPageZoomLevel (optional) The zoom-to-fit scale, if known.
-   *   This is a performance optimization to avoid extra calls.
    */
-  clampZoomLevel: function clampZoomLevel(aScale, aPageZoomLevel) {
-    let md = this.metadata;
-    if (!this.allowZoom) {
-      return (md && md.defaultZoom)
-        ? md.defaultZoom
-        : (aPageZoomLevel || this.getPageZoomLevel());
-    }
-
-    let browser = this._browser;
-    let bounded = Util.clamp(aScale, ZoomManager.MIN, ZoomManager.MAX);
-
-    if (md && md.minZoom)
-      bounded = Math.max(bounded, md.minZoom);
-    if (md && md.maxZoom)
-      bounded = Math.min(bounded, md.maxZoom);
-
-    bounded = Math.max(bounded, this.getPageZoomLevel());
-
-    let rounded = Math.round(bounded * kBrowserViewZoomLevelPrecision) / kBrowserViewZoomLevelPrecision;
-    return rounded || 1.0;
-  },
-
-  /** Record the initial zoom level when a page first loads. */
-  resetZoomLevel: function resetZoomLevel() {
-    this._defaultZoomLevel = this._browser.scale;
-  },
-
-  scrolledAreaChanged: function scrolledAreaChanged(firstPaint) {
-    if (!this._browser)
-      return;
-
-    if (firstPaint) {
-      // You only get one shot, do not miss your chance to reflow.
-      this.updateViewportSize();
-    }
-
-    this.updateDefaultZoomLevel();
-  },
-
-  /**
-   * Recalculate default zoom level when page size changes, and update zoom
-   * level if we are at default.
-   */
-  updateDefaultZoomLevel: function updateDefaultZoomLevel() {
-    let browser = this._browser;
-    if (!browser || !this._firstPaint)
-      return;
-
-    let isDefault = this.isDefaultZoomLevel();
-    this._defaultZoomLevel = this.getDefaultZoomLevel();
-    if (isDefault) {
-      if (browser.scale != this._defaultZoomLevel) {
-        browser.scale = this._defaultZoomLevel;
-      } else {
-        // If the scale level has not changed we want to be sure the content
-        // render correctly since the page refresh process could have been
-        // stalled during page load. In this case if the page has the exact
-        // same width (like the same page, so by doing 'refresh') and the
-        // page was scrolled the content is just checkerboard at this point
-        // and this call ensure we render it correctly.
-        browser.getRootView()._updateCacheViewport();
-      }
-    } else {
-      // if we are reloading, the page will retain its scale. if it is zoomed
-      // we need to refresh the viewport so that we do not show checkerboard
-      browser.getRootView()._updateCacheViewport();
-    }
-  },
-
-  isDefaultZoomLevel: function isDefaultZoomLevel() {
-    return this._browser.scale == this._defaultZoomLevel;
-  },
-
-  getDefaultZoomLevel: function getDefaultZoomLevel() {
-    let md = this.metadata;
-    if (md && md.defaultZoom)
-      return this.clampZoomLevel(md.defaultZoom);
-
-    let browserWidth = this._browser.getBoundingClientRect().width;
-    let defaultZoom = browserWidth / this._browser.contentWindowWidth;
-    return this.clampZoomLevel(defaultZoom);
-  },
-
-  /**
-   * @param aScreenWidth (optional) The width of the browser widget, if known.
-   *   This is a performance optimization to save extra calls to getBoundingClientRect.
-   * @return The scale at which the browser will be zoomed out to fit the document width.
-   */
-  getPageZoomLevel: function getPageZoomLevel(aScreenWidth) {
-    let browserW = this._browser.contentDocumentWidth;
-    if (browserW == 0)
-      return 1.0;
-
-    let screenW = aScreenWidth || this._browser.getBoundingClientRect().width;
-    return screenW / browserW;
-  },
-
-  get allowZoom() {
-    return this.metadata.allowZoom && !Util.isURLEmpty(this.browser.currentURI.spec);
+  clampZoomLevel: function clampZoomLevel(aScale) {
+    return Util.clamp(aScale, ZoomManager.MIN, ZoomManager.MAX);
   },
 
   updateThumbnail: function updateThumbnail() {
