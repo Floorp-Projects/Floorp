@@ -13,7 +13,7 @@ using namespace mozilla;
 
 nsDOMMouseEvent::nsDOMMouseEvent(mozilla::dom::EventTarget* aOwner,
                                  nsPresContext* aPresContext,
-                                 nsInputEvent* aEvent)
+                                 WidgetInputEvent* aEvent)
   : nsDOMUIEvent(aOwner, aPresContext, aEvent ? aEvent :
                  new nsMouseEvent(false, 0, nullptr,
                                   nsMouseEvent::eReal))
@@ -88,7 +88,7 @@ nsDOMMouseEvent::InitMouseEvent(const nsAString & aType, bool aCanBubble, bool a
     {
        static_cast<nsMouseEvent_base*>(mEvent)->relatedTarget = aRelatedTarget;
        static_cast<nsMouseEvent_base*>(mEvent)->button = aButton;
-       nsInputEvent* inputEvent = static_cast<nsInputEvent*>(mEvent);
+       WidgetInputEvent* inputEvent = static_cast<WidgetInputEvent*>(mEvent);
        inputEvent->InitBasicModifiers(aCtrlKey, aAltKey, aShiftKey, aMetaKey);
        mClientPoint.x = aClientX;
        mClientPoint.y = aClientY;
@@ -139,7 +139,7 @@ nsDOMMouseEvent::InitMouseEvent(const nsAString& aType,
     case NS_WHEEL_EVENT:
     case NS_DRAG_EVENT:
     case NS_SIMPLE_GESTURE_EVENT:
-      static_cast<nsInputEvent*>(mEvent)->modifiers = modifiers;
+      static_cast<WidgetInputEvent*>(mEvent)->modifiers = modifiers;
       return NS_OK;
     default:
       MOZ_CRASH("There is no space to store the modifiers");
@@ -430,7 +430,7 @@ nsDOMMouseEvent::GetMozInputSource(uint16_t* aInputSource)
 nsresult NS_NewDOMMouseEvent(nsIDOMEvent** aInstancePtrResult,
                              mozilla::dom::EventTarget* aOwner,
                              nsPresContext* aPresContext,
-                             nsInputEvent *aEvent)
+                             WidgetInputEvent* aEvent)
 {
   nsDOMMouseEvent* it = new nsDOMMouseEvent(aOwner, aPresContext, aEvent);
   return CallQueryInterface(it, aInstancePtrResult);

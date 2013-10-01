@@ -270,8 +270,8 @@ uint32_t
 nsMenuBarListener::GetModifiers(nsIDOMKeyEvent* aKeyEvent)
 {
   uint32_t modifiers = 0;
-  nsInputEvent* inputEvent =
-    static_cast<nsInputEvent*>(aKeyEvent->GetInternalNSEvent());
+  WidgetInputEvent* inputEvent =
+    static_cast<WidgetInputEvent*>(aKeyEvent->GetInternalNSEvent());
   MOZ_ASSERT(inputEvent);
 
   if (inputEvent->IsShift()) {

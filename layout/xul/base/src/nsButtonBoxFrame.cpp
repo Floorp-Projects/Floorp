@@ -129,10 +129,10 @@ nsButtonBoxFrame::DoMouseClick(nsGUIEvent* aEvent, bool aTrustEvent)
   bool isAlt = false;
   bool isMeta = false;
   if(aEvent) {
-    isShift = ((nsInputEvent*)(aEvent))->IsShift();
-    isControl = ((nsInputEvent*)(aEvent))->IsControl();
-    isAlt = ((nsInputEvent*)(aEvent))->IsAlt();
-    isMeta = ((nsInputEvent*)(aEvent))->IsMeta();
+    isShift = static_cast<WidgetInputEvent*>(aEvent)->IsShift();
+    isControl = static_cast<WidgetInputEvent*>(aEvent)->IsControl();
+    isAlt = static_cast<WidgetInputEvent*>(aEvent)->IsAlt();
+    isMeta = static_cast<WidgetInputEvent*>(aEvent)->IsMeta();
   }
 
   // Have the content handle the event, propagating it according to normal DOM rules.

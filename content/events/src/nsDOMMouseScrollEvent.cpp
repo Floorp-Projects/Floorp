@@ -7,9 +7,11 @@
 #include "prtime.h"
 #include "mozilla/MouseEvents.h"
 
+using namespace mozilla;
+
 nsDOMMouseScrollEvent::nsDOMMouseScrollEvent(mozilla::dom::EventTarget* aOwner,
                                              nsPresContext* aPresContext,
-                                             nsInputEvent* aEvent)
+                                             WidgetInputEvent* aEvent)
   : nsDOMMouseEvent(aOwner, aPresContext,
                     aEvent ? aEvent : new nsMouseScrollEvent(false, 0, nullptr))
 {
@@ -94,7 +96,7 @@ nsDOMMouseScrollEvent::Axis()
 nsresult NS_NewDOMMouseScrollEvent(nsIDOMEvent** aInstancePtrResult,
                                    mozilla::dom::EventTarget* aOwner,
                                    nsPresContext* aPresContext,
-                                   nsInputEvent *aEvent) 
+                                   WidgetInputEvent* aEvent) 
 {
   nsDOMMouseScrollEvent* it =
     new nsDOMMouseScrollEvent(aOwner, aPresContext, aEvent);

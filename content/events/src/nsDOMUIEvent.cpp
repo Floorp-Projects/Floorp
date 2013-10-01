@@ -463,9 +463,9 @@ bool
 nsDOMUIEvent::GetModifierStateInternal(const nsAString& aKey)
 {
   if (!mEvent->IsInputDerivedEvent()) {
-    MOZ_CRASH("mEvent must be nsInputEvent or derived class");
+    MOZ_CRASH("mEvent must be WidgetInputEvent or derived class");
   }
-  nsInputEvent* inputEvent = static_cast<nsInputEvent*>(mEvent);
+  WidgetInputEvent* inputEvent = static_cast<WidgetInputEvent*>(mEvent);
   if (aKey.EqualsLiteral(NS_DOM_KEYNAME_SHIFT)) {
     return inputEvent->IsShift();
   }

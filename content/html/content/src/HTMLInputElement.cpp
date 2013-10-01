@@ -3696,7 +3696,8 @@ HTMLInputElement::PostHandleEventForRangeThumb(nsEventChainPostVisitor& aVisitor
       if (nsIPresShell::GetCapturingContent()) {
         break; // don't start drag if someone else is already capturing
       }
-      nsInputEvent* inputEvent = static_cast<nsInputEvent*>(aVisitor.mEvent);
+      WidgetInputEvent* inputEvent =
+        static_cast<WidgetInputEvent*>(aVisitor.mEvent);
       if (inputEvent->IsShift() || inputEvent->IsControl() ||
           inputEvent->IsAlt() || inputEvent->IsMeta() ||
           inputEvent->IsAltGraph() || inputEvent->IsFn() ||
@@ -3732,8 +3733,9 @@ HTMLInputElement::PostHandleEventForRangeThumb(nsEventChainPostVisitor& aVisitor
         CancelRangeThumbDrag();
         break;
       }
-      SetValueOfRangeForUserEvent(rangeFrame->GetValueAtEventPoint(
-                                    static_cast<nsInputEvent*>(aVisitor.mEvent)));
+      SetValueOfRangeForUserEvent(
+        rangeFrame->GetValueAtEventPoint(
+          static_cast<WidgetInputEvent*>(aVisitor.mEvent)));
       aVisitor.mEvent->mFlags.mMultipleActionsPrevented = true;
       break;
 
@@ -3746,7 +3748,7 @@ HTMLInputElement::PostHandleEventForRangeThumb(nsEventChainPostVisitor& aVisitor
       // call CancelRangeThumbDrag() if that is the case. We just finish off
       // the drag and set our final value (unless someone has called
       // preventDefault() and prevents us getting here).
-      FinishRangeThumbDrag(static_cast<nsInputEvent*>(aVisitor.mEvent));
+      FinishRangeThumbDrag(static_cast<WidgetInputEvent*>(aVisitor.mEvent));
       aVisitor.mEvent->mFlags.mMultipleActionsPrevented = true;
       break;
 

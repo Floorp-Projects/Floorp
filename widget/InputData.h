@@ -44,8 +44,9 @@ public:
   InputType mInputType;
   // Time in milliseconds that this data is relevant to. This only really
   // matters when this data is used as an event. We use uint32_t instead of
-  // TimeStamp because it is easier to convert from nsInputEvent. The time is
-  // platform-specific but it in the case of B2G and Fennec it is since startup.
+  // TimeStamp because it is easier to convert from WidgetInputEvent. The time
+  // is platform-specific but it in the case of B2G and Fennec it is since
+  // startup.
   uint32_t mTime;
 
   INPUTDATA_AS_CHILD_TYPE(MultiTouchInput, MULTITOUCH_INPUT)

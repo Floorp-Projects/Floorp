@@ -102,7 +102,7 @@ public:
     EnsureAltGr();
   }
 
-  void InitInputEvent(nsInputEvent& aInputEvent) const;
+  void InitInputEvent(WidgetInputEvent& aInputEvent) const;
 
   bool IsShift() const { return (mModifiers & MODIFIER_SHIFT) != 0; }
   bool IsControl() const { return (mModifiers & MODIFIER_CONTROL) != 0; }
@@ -133,7 +133,7 @@ private:
     }
   }
 
-  void InitMouseEvent(nsInputEvent& aMouseEvent) const;
+  void InitMouseEvent(WidgetInputEvent& aMouseEvent) const;
 };
 
 struct UniCharsAndModifiers
