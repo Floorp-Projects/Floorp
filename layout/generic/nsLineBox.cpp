@@ -13,6 +13,7 @@
 #ifdef IBMBIDI
 #include "nsBidiPresUtils.h"
 #endif
+#include "nsIFrameInlines.h"
 #include "mozilla/Assertions.h"
 #include "mozilla/Likely.h"
 

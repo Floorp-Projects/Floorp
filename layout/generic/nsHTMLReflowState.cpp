@@ -26,6 +26,7 @@
 #include "mozilla/Preferences.h"
 #include "nsFontInflationData.h"
 #include "StickyScrollContainer.h"
+#include "nsIFrameInlines.h"
 #include <algorithm>
 
 #ifdef DEBUG

@@ -69,6 +69,7 @@
 #include "nsSVGTextFrame2.h"
 #include "nsStyleStructInlines.h"
 #include "nsStyleTransformMatrix.h"
+#include "nsIFrameInlines.h"
 
 #include "mozilla/Preferences.h"
 

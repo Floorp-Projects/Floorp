@@ -54,6 +54,7 @@
 #include "nsLineBreaker.h"
 #include "nsIWordBreaker.h"
 #include "nsGenericDOMDataNode.h"
+#include "nsIFrameInlines.h"
 
 #include <algorithm>
 #ifdef ACCESSIBILITY

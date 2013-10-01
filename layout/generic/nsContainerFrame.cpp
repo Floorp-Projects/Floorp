@@ -28,6 +28,7 @@
 #include "nsCSSFrameConstructor.h"
 #include "nsBlockFrame.h"
 #include "mozilla/AutoRestore.h"
+#include "nsIFrameInlines.h"
 #include <algorithm>
 
 #ifdef DEBUG

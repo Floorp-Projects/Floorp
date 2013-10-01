@@ -6,6 +6,7 @@
 #include "mozilla/dom/SVGFEMergeElement.h"
 #include "mozilla/dom/SVGFEMergeElementBinding.h"
 #include "mozilla/dom/SVGFEMergeNodeElement.h"
+#include "gfxContext.h"
 
 NS_IMPL_NS_NEW_NAMESPACED_SVG_ELEMENT(FEMerge)
 
