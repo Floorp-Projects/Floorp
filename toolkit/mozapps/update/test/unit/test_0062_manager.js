@@ -9,8 +9,8 @@ const TEST_ID = "0062";
 
 function run_test() {
   do_test_pending();
-  do_register_cleanup(end_test);
 
+  // adjustGeneralPaths registers a cleanup function that calls end_test.
   adjustGeneralPaths();
 
   logTestInfo("testing resuming an update download in progress for the same " +
