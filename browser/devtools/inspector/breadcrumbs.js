@@ -102,7 +102,6 @@ HTMLBreadcrumbs.prototype = {
     this.selection.on("new-node-front", this.update);
     this.selection.on("pseudoclass", this.updateSelectors);
     this.selection.on("attribute-changed", this.updateSelectors);
-    this.inspector.on("markupmutation", this.update);
     this.update();
   },
 
@@ -350,7 +349,6 @@ HTMLBreadcrumbs.prototype = {
     this.selection.off("new-node-front", this.update);
     this.selection.off("pseudoclass", this.updateSelectors);
     this.selection.off("attribute-changed", this.updateSelectors);
-    this.inspector.off("markupmutation", this.update);
 
     this.container.removeEventListener("underflow", this.onscrollboxreflow, false);
     this.container.removeEventListener("overflow", this.onscrollboxreflow, false);
@@ -613,7 +611,7 @@ HTMLBreadcrumbs.prototype = {
   /**
    * Update the breadcrumbs display when a new node is selected.
    */
-  update: function BC_update(reason)
+  update: function BC_update()
   {
     this.inspector.hideNodeMenu();
 
@@ -634,8 +632,7 @@ HTMLBreadcrumbs.prototype = {
     let idx = this.indexOf(this.selection.nodeFront);
 
     // Is the node already displayed in the breadcrumbs?
-    // (and there are no mutations that need re-display of the crumbs)
-    if (idx > -1 && reason !== "markupmutation") {
+    if (idx > -1) {
       // Yes. We select it.
       this.setCursor(idx);
     } else {
@@ -669,7 +666,7 @@ HTMLBreadcrumbs.prototype = {
       doneUpdating(this.selection.nodeFront);
       this.selectionGuardEnd(err);
     });
-  }
+  },
 }
 
 XPCOMUtils.defineLazyGetter(this, "DOMUtils", function () {

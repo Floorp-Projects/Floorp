@@ -4,8 +4,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-"use strict";
-
 const {Cu, Ci} = require("chrome");
 let EventEmitter = require("devtools/shared/event-emitter");
 
@@ -78,38 +76,32 @@ Selection.prototype = {
     let pseudoChange = false;
     let detached = false;
     let parentNode = null;
-
     for (let m of mutations) {
       if (!attributeChange && m.type == "attributes") {
         attributeChange = true;
       }
       if (m.type == "childList") {
-        if (!detached && !this.isConnected()) {
-          if (this.isNode()) {
-            parentNode = m.target;
-          }
+        if (!detached && this.isNode() && !this.isConnected()) {
+          parentNode = m.target;
           detached = true;
         }
       }
-      if (m.type == "pseudoClassLock") {
+      if (m.type == "pseudoClassLock"){
         pseudoChange = true;
       }
     }
 
-    // Fire our events depending on what changed in the mutations array
-    if (attributeChange) {
+    if (attributeChange)
       this.emit("attribute-changed");
-    }
-    if (pseudoChange) {
+    if (pseudoChange)
       this.emit("pseudoclass");
-    }
     if (detached) {
       this.emit("detached", parentNode ? parentNode.rawNode() : null);
       this.emit("detached-front", parentNode);
     }
   },
 
-  destroy: function() {
+  destroy: function SN_destroy() {
     this.setNode(null);
     this.setWalker(null);
   },
@@ -125,7 +117,7 @@ Selection.prototype = {
   },
 
   // Not remote-safe
-  setNode: function(value, reason="unknown") {
+  setNode: function SN_setNode(value, reason="unknown") {
     if (value) {
       value = this._walker.frontForRawNode(value);
     }
@@ -176,13 +168,13 @@ Selection.prototype = {
     return this._nodeFront;
   },
 
-  isRoot: function() {
+  isRoot: function SN_isRootNode() {
     return this.isNode() &&
            this.isConnected() &&
            this._nodeFront.isDocumentElement;
   },
 
-  isNode: function() {
+  isNode: function SN_isNode() {
     if (!this._nodeFront) {
       return false;
     }
@@ -196,11 +188,11 @@ Selection.prototype = {
     return true;
   },
 
-  isLocal: function() {
+  isLocal: function SN_nsLocal() {
     return !!this._node;
   },
 
-  isConnected: function() {
+  isConnected: function SN_isConnected() {
     let node = this._nodeFront;
     if (!node || !node.actorID) {
       return false;
@@ -228,58 +220,58 @@ Selection.prototype = {
     return false;
   },
 
-  isHTMLNode: function() {
+  isHTMLNode: function SN_isHTMLNode() {
     let xhtml_ns = "http://www.w3.org/1999/xhtml";
     return this.isNode() && this.node.namespaceURI == xhtml_ns;
   },
 
   // Node type
 
-  isElementNode: function() {
+  isElementNode: function SN_isElementNode() {
     return this.isNode() && this.nodeFront.nodeType == Ci.nsIDOMNode.ELEMENT_NODE;
   },
 
-  isAttributeNode: function() {
+  isAttributeNode: function SN_isAttributeNode() {
     return this.isNode() && this.nodeFront.nodeType == Ci.nsIDOMNode.ATTRIBUTE_NODE;
   },
 
-  isTextNode: function() {
+  isTextNode: function SN_isTextNode() {
     return this.isNode() && this.nodeFront.nodeType == Ci.nsIDOMNode.TEXT_NODE;
   },
 
-  isCDATANode: function() {
+  isCDATANode: function SN_isCDATANode() {
     return this.isNode() && this.nodeFront.nodeType == Ci.nsIDOMNode.CDATA_SECTION_NODE;
   },
 
-  isEntityRefNode: function() {
+  isEntityRefNode: function SN_isEntityRefNode() {
     return this.isNode() && this.nodeFront.nodeType == Ci.nsIDOMNode.ENTITY_REFERENCE_NODE;
   },
 
-  isEntityNode: function() {
+  isEntityNode: function SN_isEntityNode() {
     return this.isNode() && this.nodeFront.nodeType == Ci.nsIDOMNode.ENTITY_NODE;
   },
 
-  isProcessingInstructionNode: function() {
+  isProcessingInstructionNode: function SN_isProcessingInstructionNode() {
     return this.isNode() && this.nodeFront.nodeType == Ci.nsIDOMNode.PROCESSING_INSTRUCTION_NODE;
   },
 
-  isCommentNode: function() {
+  isCommentNode: function SN_isCommentNode() {
     return this.isNode() && this.nodeFront.nodeType == Ci.nsIDOMNode.PROCESSING_INSTRUCTION_NODE;
   },
 
-  isDocumentNode: function() {
+  isDocumentNode: function SN_isDocumentNode() {
     return this.isNode() && this.nodeFront.nodeType == Ci.nsIDOMNode.DOCUMENT_NODE;
   },
 
-  isDocumentTypeNode: function() {
+  isDocumentTypeNode: function SN_isDocumentTypeNode() {
     return this.isNode() && this.nodeFront.nodeType == Ci.nsIDOMNode.DOCUMENT_TYPE_NODE;
   },
 
-  isDocumentFragmentNode: function() {
+  isDocumentFragmentNode: function SN_isDocumentFragmentNode() {
     return this.isNode() && this.nodeFront.nodeType == Ci.nsIDOMNode.DOCUMENT_FRAGMENT_NODE;
   },
 
-  isNotationNode: function() {
+  isNotationNode: function SN_isNotationNode() {
     return this.isNode() && this.nodeFront.nodeType == Ci.nsIDOMNode.NOTATION_NODE;
   },
-};
+}
