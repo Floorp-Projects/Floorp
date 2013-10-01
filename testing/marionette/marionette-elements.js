@@ -105,7 +105,7 @@ ElementManager.prototype = {
   getKnownElement: function EM_getKnownElement(id, win) {
     let el = this.seenItems[id];
     if (!el) {
-      throw new ElementException("Element has not been seen before", 17, null);
+      throw new ElementException("Element has not been seen before. Id given was " + id, 17, null);
     }
     try {
       el = el.get();
