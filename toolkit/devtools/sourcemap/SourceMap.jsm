@@ -1258,12 +1258,7 @@ define('source-map/source-map-generator', ['require', 'exports', 'module' ,  'so
         return;
       }
       else {
-        throw new Error('Invalid mapping: ' + JSON.stringify({
-          generated: aGenerated,
-          source: aSource,
-          orginal: aOriginal,
-          name: aName
-        }));
+        throw new Error('Invalid mapping.');
       }
     };
 
@@ -1340,9 +1335,6 @@ define('source-map/source-map-generator', ['require', 'exports', 'module' ,  'so
   SourceMapGenerator.prototype._generateSourcesContent =
     function SourceMapGenerator_generateSourcesContent(aSources, aSourceRoot) {
       return aSources.map(function (source) {
-        if (!this._sourcesContents) {
-          return null;
-        }
         if (aSourceRoot) {
           source = util.relative(aSourceRoot, source);
         }
