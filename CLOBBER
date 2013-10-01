@@ -18,4 +18,4 @@
 # Modifying this file will now automatically clobber the buildbot machines \o/
 #
 
-Bug 901789 needs a clobber.
+Bug 921563 needs a clobber due to apparent ipdl regeneration bugs.
