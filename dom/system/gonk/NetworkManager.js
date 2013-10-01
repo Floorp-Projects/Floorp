@@ -912,6 +912,25 @@ NetworkManager.prototype = {
     }
   },
 
+  // Enable/Disable DHCP server.
+  setDhcpServer: function setDhcpServer(enabled, config, callback) {
+    if (null === config) {
+      config = {};
+    }
+
+    config.cmd = "setDhcpServer";
+    config.isAsync = true;
+    config.enabled = enabled;
+
+    this.controlMessage(config, function setDhcpServerResult(response) {
+      if (!response.success) {
+        callback.dhcpServerResult('Set DHCP server error');
+        return;
+      }
+      callback.dhcpServerResult(null);
+    });
+  },
+
   // Enable/disable WiFi tethering by sending commands to netd.
   setWifiTethering: function setWifiTethering(enable, network, config, callback) {
     if (!network) {
