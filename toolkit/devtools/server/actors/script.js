@@ -468,38 +468,6 @@ ThreadActor.prototype = {
     return this._sources;
   },
 
-  _prettyPrintWorker: null,
-  get prettyPrintWorker() {
-    if (!this._prettyPrintWorker) {
-      this._prettyPrintWorker = new ChromeWorker(
-        "resource://gre/modules/devtools/server/actors/pretty-print-worker.js");
-
-      this._prettyPrintWorker.addEventListener(
-        "error", this._onPrettyPrintError, false);
-
-      if (wantLogging) {
-        this._prettyPrintWorker.addEventListener("message", this._onPrettyPrintMsg, false);
-
-        const postMsg = this._prettyPrintWorker.postMessage;
-        this._prettyPrintWorker.postMessage = data => {
-          dumpn("Sending message to prettyPrintWorker: "
-                + JSON.stringify(data, null, 2) + "\n");
-          return postMsg.call(this._prettyPrintWorker, data);
-        };
-      }
-    }
-    return this._prettyPrintWorker;
-  },
-
-  _onPrettyPrintError: function (error) {
-    reportError(new Error(error));
-  },
-
-  _onPrettyPrintMsg: function ({ data }) {
-    dumpn("Received message from prettyPrintWorker: "
-          + JSON.stringify(data, null, 2) + "\n");
-  },
-
   /**
    * Keep track of all of the nested event loops we use to pause the debuggee
    * when we hit a breakpoint/debugger statement/etc in one place so we can
@@ -630,15 +598,6 @@ ThreadActor.prototype = {
     this._state = "exited";
 
     this.clearDebuggees();
-
-    if (this._prettyPrintWorker) {
-      this._prettyPrintWorker.removeEventListener(
-        "error", this._onPrettyPrintError, false);
-      this._prettyPrintWorker.removeEventListener(
-        "message", this._onPrettyPrintMsg, false);
-      this._prettyPrintWorker.terminate();
-      this._prettyPrintWorker = null;
-    }
 
     if (!this.dbg) {
       return;
@@ -2378,10 +2337,6 @@ SourceActor.prototype = {
   get threadActor() this._threadActor,
   get url() this._url,
 
-  get prettyPrintWorker() {
-    return this.threadActor.prettyPrintWorker;
-  },
-
   form: function SA_form() {
     return {
       actor: this.actorID,
@@ -2448,7 +2403,7 @@ SourceActor.prototype = {
   onPrettyPrint: function ({ indent }) {
     return this._getSourceText()
       .then(this._parseAST)
-      .then(this._sendToPrettyPrintWorker(indent))
+      .then(this._generatePrettyCodeAndMap(indent))
       .then(this._invertSourceMap)
       .then(this._saveMap)
       .then(this.onSource)
@@ -2467,45 +2422,23 @@ SourceActor.prototype = {
   },
 
   /**
-   * Return a function that sends a request to the pretty print worker, waits on
-   * the worker's response, and then returns the pretty printed code.
-   *
-   * @param Number aIndent
-   *        The number of spaces to indent by the code by, when we send the
-   *        request to the pretty print worker.
-   * @returns Function
-   *          Returns a function which takes an AST, and returns a promise that
-   *          is resolved with `{ code, mappings }` where `code` is the pretty
-   *          printed code, and `mappings` is an array of source mappings.
+   * Take the number of spaces to indent and return a function that takes an AST
+   * and generates code and a source map from the ugly code to the pretty code.
    */
-  _sendToPrettyPrintWorker: function SA__sendToPrettyPrintWorker(aIndent) {
-    return aAST => {
-      const deferred = promise.defer();
-      const id = Math.random();
-
-      const onReply = ({ data }) => {
-        if (data.id !== id) {
-          return;
+  _generatePrettyCodeAndMap: function SA__generatePrettyCodeAndMap(aNumSpaces) {
+    let indent = "";
+    for (let i = 0; i < aNumSpaces; i++) {
+      indent += " ";
+    }
+    return aAST => escodegen.generate(aAST, {
+      format: {
+        indent: {
+          style: indent
         }
-        this.prettyPrintWorker.removeEventListener("message", onReply, false);
-
-        if (data.error) {
-          deferred.reject(new Error(data.error));
-        } else {
-          deferred.resolve(data);
-        }
-      };
-
-      this.prettyPrintWorker.addEventListener("message", onReply, false);
-      this.prettyPrintWorker.postMessage({
-        id: id,
-        url: this._url,
-        indent: aIndent,
-        ast: aAST
-      });
-
-      return deferred.promise;
-    };
+      },
+      sourceMap: this._url,
+      sourceMapWithCode: true
+    });
   },
 
   /**
@@ -2516,55 +2449,35 @@ SourceActor.prototype = {
    *
    * Note that the source map is modified in place.
    */
-  _invertSourceMap: function SA__invertSourceMap({ code, mappings }) {
-    const generator = new SourceMapGenerator({ file: this._url });
-    return DevToolsUtils.yieldingEach(mappings, m => {
-      let mapping = {
-        generated: {
-          line: m.generatedLine,
-          column: m.generatedColumn
-        }
-      };
-      if (m.source) {
-        mapping.source = m.source;
-        mapping.original = {
-          line: m.originalLine,
-          column: m.originalColumn
-        };
-        mapping.name = m.name;
-      }
-      generator.addMapping(mapping);
-    }).then(() => {
-      generator.setSourceContent(this._url, code);
-      const consumer = SourceMapConsumer.fromSourceMap(generator);
+  _invertSourceMap: function SA__invertSourceMap({ code, map }) {
+    // XXX bug 918802: Monkey punch the source map consumer, because iterating
+    // over all mappings and inverting each of them, and then creating a new
+    // SourceMapConsumer is *way* too slow.
 
-      // XXX bug 918802: Monkey punch the source map consumer, because iterating
-      // over all mappings and inverting each of them, and then creating a new
-      // SourceMapConsumer is slow.
+    map.setSourceContent(this._url, code);
+    const consumer = new SourceMapConsumer.fromSourceMap(map);
+    const getOrigPos = consumer.originalPositionFor.bind(consumer);
+    const getGenPos = consumer.generatedPositionFor.bind(consumer);
 
-      const getOrigPos = consumer.originalPositionFor.bind(consumer);
-      const getGenPos = consumer.generatedPositionFor.bind(consumer);
-
-      consumer.originalPositionFor = ({ line, column }) => {
-        const location = getGenPos({
-          line: line,
-          column: column,
-          source: this._url
-        });
-        location.source = this._url;
-        return location;
-      };
-
-      consumer.generatedPositionFor = ({ line, column }) => getOrigPos({
+    consumer.originalPositionFor = ({ line, column }) => {
+      const location = getGenPos({
         line: line,
-        column: column
+        column: column,
+        source: this._url
       });
+      location.source = this._url;
+      return location;
+    };
 
-      return {
-        code: code,
-        map: consumer
-      };
+    consumer.generatedPositionFor = ({ line, column }) => getOrigPos({
+      line: line,
+      column: column
     });
+
+    return {
+      code: code,
+      map: consumer
+    };
   },
 
   /**
