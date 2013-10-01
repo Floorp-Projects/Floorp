@@ -239,8 +239,8 @@ def _shmemRevokeRights(shmemexpr):
 def _lookupShmem(idexpr):
     return ExprCall(ExprVar('LookupSharedMemory'), args=[ idexpr ])
 
-def _makeForwardDeclForQClass(clsname, quals):
-    fd = ForwardDecl(clsname, cls=1)
+def _makeForwardDeclForQClass(clsname, quals, cls=1, struct=0):
+    fd = ForwardDecl(clsname, cls=cls, struct=struct)
     if 0 == len(quals):
         return fd
 
