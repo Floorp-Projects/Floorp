@@ -767,6 +767,17 @@ TabParent::RecvSyncMessage(const nsString& aMessage,
 }
 
 bool
+TabParent::AnswerRpcMessage(const nsString& aMessage,
+                            const ClonedMessageData& aData,
+                            const InfallibleTArray<CpowEntry>& aCpows,
+                            InfallibleTArray<nsString>* aJSONRetVal)
+{
+  StructuredCloneData cloneData = ipc::UnpackClonedMessageDataForParent(aData);
+  CpowIdHolder cpows(static_cast<ContentParent*>(Manager())->GetCPOWManager(), aCpows);
+  return ReceiveMessage(aMessage, true, &cloneData, &cpows, aJSONRetVal);
+}
+
+bool
 TabParent::RecvAsyncMessage(const nsString& aMessage,
                             const ClonedMessageData& aData,
                             const InfallibleTArray<CpowEntry>& aCpows)

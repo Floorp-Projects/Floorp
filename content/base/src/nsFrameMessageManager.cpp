@@ -41,6 +41,9 @@
 #endif
 #ifdef XP_WIN
 #include <windows.h>
+# if defined(SendMessage)
+#  undef SendMessage
+# endif
 #endif
 
 using namespace mozilla;
@@ -439,6 +442,8 @@ GetParamsForMessage(JSContext* aCx,
 
 // nsISyncMessageSender
 
+static bool sSendingSyncMessage = false;
+
 NS_IMETHODIMP
 nsFrameMessageManager::SendSyncMessage(const nsAString& aMessageName,
                                        const JS::Value& aJSON,
@@ -447,12 +452,40 @@ nsFrameMessageManager::SendSyncMessage(const nsAString& aMessageName,
                                        uint8_t aArgc,
                                        JS::Value* aRetval)
 {
+  return SendMessage(aMessageName, aJSON, aObjects, aCx, aArgc, aRetval, true);
+}
+
+NS_IMETHODIMP
+nsFrameMessageManager::SendRpcMessage(const nsAString& aMessageName,
+                                      const JS::Value& aJSON,
+                                      const JS::Value& aObjects,
+                                      JSContext* aCx,
+                                      uint8_t aArgc,
+                                      JS::Value* aRetval)
+{
+  return SendMessage(aMessageName, aJSON, aObjects, aCx, aArgc, aRetval, false);
+}
+
+nsresult
+nsFrameMessageManager::SendMessage(const nsAString& aMessageName,
+                                   const JS::Value& aJSON,
+                                   const JS::Value& aObjects,
+                                   JSContext* aCx,
+                                   uint8_t aArgc,
+                                   JS::Value* aRetval,
+                                   bool aIsSync)
+{
   NS_ASSERTION(!IsGlobal(), "Should not call SendSyncMessage in chrome");
   NS_ASSERTION(!IsWindowLevel(), "Should not call SendSyncMessage in chrome");
   NS_ASSERTION(!mParentManager, "Should not have parent manager in content!");
 
   *aRetval = JSVAL_VOID;
   NS_ENSURE_TRUE(mCallback, NS_ERROR_NOT_INITIALIZED);
+
+  if (sSendingSyncMessage && aIsSync) {
+    // No kind of blocking send should be issued on top of a sync message.
+    return NS_ERROR_UNEXPECTED;
+  }
 
   StructuredCloneData data;
   JSAutoStructuredCloneBuffer buffer;
@@ -469,27 +502,36 @@ nsFrameMessageManager::SendSyncMessage(const nsAString& aMessageName,
   }
 
   InfallibleTArray<nsString> retval;
-  if (mCallback->DoSendSyncMessage(aCx, aMessageName, data, objects, &retval)) {
-    uint32_t len = retval.Length();
-    JS::Rooted<JSObject*> dataArray(aCx, JS_NewArrayObject(aCx, len, nullptr));
-    NS_ENSURE_TRUE(dataArray, NS_ERROR_OUT_OF_MEMORY);
 
-    for (uint32_t i = 0; i < len; ++i) {
-      if (retval[i].IsEmpty()) {
-        continue;
-      }
+  sSendingSyncMessage |= aIsSync;
+  bool rv = mCallback->DoSendBlockingMessage(aCx, aMessageName, data, objects, &retval, aIsSync);
+  if (aIsSync) {
+    sSendingSyncMessage = false;
+  }
 
-      JS::Rooted<JS::Value> ret(aCx);
-      if (!JS_ParseJSON(aCx, static_cast<const jschar*>(retval[i].get()),
-                        retval[i].Length(), &ret)) {
-        return NS_ERROR_UNEXPECTED;
-      }
-      NS_ENSURE_TRUE(JS_SetElement(aCx, dataArray, i, &ret),
-                     NS_ERROR_OUT_OF_MEMORY);
+  if (!rv) {
+    return NS_OK;
+  }
+
+  uint32_t len = retval.Length();
+  JS::Rooted<JSObject*> dataArray(aCx, JS_NewArrayObject(aCx, len, nullptr));
+  NS_ENSURE_TRUE(dataArray, NS_ERROR_OUT_OF_MEMORY);
+
+  for (uint32_t i = 0; i < len; ++i) {
+    if (retval[i].IsEmpty()) {
+      continue;
     }
 
-    *aRetval = OBJECT_TO_JSVAL(dataArray);
+    JS::Rooted<JS::Value> ret(aCx);
+    if (!JS_ParseJSON(aCx, static_cast<const jschar*>(retval[i].get()),
+                      retval[i].Length(), &ret)) {
+      return NS_ERROR_UNEXPECTED;
+    }
+    NS_ENSURE_TRUE(JS_SetElement(aCx, dataArray, i, &ret),
+                   NS_ERROR_OUT_OF_MEMORY);
   }
+
+  *aRetval = OBJECT_TO_JSVAL(dataArray);
   return NS_OK;
 }
 
@@ -744,7 +786,7 @@ public:
 nsresult
 nsFrameMessageManager::ReceiveMessage(nsISupports* aTarget,
                                       const nsAString& aMessage,
-                                      bool aSync,
+                                      bool aIsSync,
                                       const StructuredCloneData* aCloneData,
                                       CpowHolder* aCpows,
                                       InfallibleTArray<nsString>* aJSONRetVal)
@@ -824,7 +866,7 @@ nsFrameMessageManager::ReceiveMessage(nsISupports* aTarget,
         JS_DefineProperty(ctx, param, "name",
                           STRING_TO_JSVAL(jsMessage), nullptr, nullptr, JSPROP_ENUMERATE);
         JS_DefineProperty(ctx, param, "sync",
-                          BOOLEAN_TO_JSVAL(aSync), nullptr, nullptr, JSPROP_ENUMERATE);
+                          BOOLEAN_TO_JSVAL(aIsSync), nullptr, nullptr, JSPROP_ENUMERATE);
         JS_DefineProperty(ctx, param, "json", json, nullptr, nullptr, JSPROP_ENUMERATE); // deprecated
         JS_DefineProperty(ctx, param, "data", json, nullptr, nullptr, JSPROP_ENUMERATE);
         JS_DefineProperty(ctx, param, "objects", cpowsv, nullptr, nullptr, JSPROP_ENUMERATE);
@@ -865,8 +907,9 @@ nsFrameMessageManager::ReceiveMessage(nsISupports* aTarget,
           JS::Rooted<JSObject*> thisObject(ctx, thisValue.toObjectOrNull());
 
           JSAutoCompartment tac(ctx, thisObject);
-          if (!JS_WrapValue(ctx, argv.address()))
+          if (!JS_WrapValue(ctx, argv.address())) {
             return NS_ERROR_UNEXPECTED;
+          }
 
           JS_CallFunctionValue(ctx, thisObject,
                                funval, 1, argv.address(), rval.address());
@@ -883,7 +926,7 @@ nsFrameMessageManager::ReceiveMessage(nsISupports* aTarget,
   }
   nsRefPtr<nsFrameMessageManager> kungfuDeathGrip = mParentManager;
   return mParentManager ? mParentManager->ReceiveMessage(aTarget, aMessage,
-                                                         aSync, aCloneData,
+                                                         aIsSync, aCloneData,
                                                          aCpows,
                                                          aJSONRetVal) : NS_OK;
 }
@@ -1281,11 +1324,12 @@ public:
     MOZ_COUNT_DTOR(ChildProcessMessageManagerCallback);
   }
 
-  virtual bool DoSendSyncMessage(JSContext* aCx,
-                                 const nsAString& aMessage,
-                                 const mozilla::dom::StructuredCloneData& aData,
-                                 JS::Handle<JSObject *> aCpows,
-                                 InfallibleTArray<nsString>* aJSONRetVal)
+  virtual bool DoSendBlockingMessage(JSContext* aCx,
+                                     const nsAString& aMessage,
+                                     const mozilla::dom::StructuredCloneData& aData,
+                                     JS::Handle<JSObject *> aCpows,
+                                     InfallibleTArray<nsString>* aJSONRetVal,
+                                     bool aIsSync) MOZ_OVERRIDE
   {
     mozilla::dom::ContentChild* cc =
       mozilla::dom::ContentChild::GetSingleton();
@@ -1300,13 +1344,16 @@ public:
     if (!cc->GetCPOWManager()->Wrap(aCx, aCpows, &cpows)) {
       return false;
     }
-    return cc->SendSyncMessage(nsString(aMessage), data, cpows, aJSONRetVal);
+    if (aIsSync) {
+      return cc->SendSyncMessage(nsString(aMessage), data, cpows, aJSONRetVal);
+    }
+    return cc->CallRpcMessage(nsString(aMessage), data, cpows, aJSONRetVal);
   }
 
   virtual bool DoSendAsyncMessage(JSContext* aCx,
                                   const nsAString& aMessage,
                                   const mozilla::dom::StructuredCloneData& aData,
-                                  JS::Handle<JSObject *> aCpows)
+                                  JS::Handle<JSObject *> aCpows) MOZ_OVERRIDE
   {
     mozilla::dom::ContentChild* cc =
       mozilla::dom::ContentChild::GetSingleton();
@@ -1396,11 +1443,12 @@ public:
     MOZ_COUNT_DTOR(SameChildProcessMessageManagerCallback);
   }
 
-  virtual bool DoSendSyncMessage(JSContext* aCx,
-                                 const nsAString& aMessage,
-                                 const mozilla::dom::StructuredCloneData& aData,
-                                 JS::Handle<JSObject *> aCpows,
-                                 InfallibleTArray<nsString>* aJSONRetVal)
+  virtual bool DoSendBlockingMessage(JSContext* aCx,
+                                     const nsAString& aMessage,
+                                     const mozilla::dom::StructuredCloneData& aData,
+                                     JS::Handle<JSObject *> aCpows,
+                                     InfallibleTArray<nsString>* aJSONRetVal,
+                                     bool aIsSync) MOZ_OVERRIDE
   {
     nsTArray<nsCOMPtr<nsIRunnable> > asyncMessages;
     if (nsFrameMessageManager::sPendingSameProcessAsyncMessages) {
