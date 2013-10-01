@@ -5185,6 +5185,20 @@ js::ToObjectSlow(JSContext *cx, HandleValue val, bool reportScanStack)
     return PrimitiveToObject(cx, val);
 }
 
+JSObject *
+js_ValueToNonNullObject(JSContext *cx, const Value &v)
+{
+    RootedObject obj(cx);
+
+    if (!js_ValueToObjectOrNull(cx, v, &obj))
+        return NULL;
+    if (!obj) {
+        RootedValue val(cx, v);
+        js_ReportIsNullOrUndefined(cx, JSDVG_SEARCH_STACK, val, NullPtr());
+    }
+    return obj;
+}
+
 void
 js_GetObjectSlotName(JSTracer *trc, char *buf, size_t bufsize)
 {
