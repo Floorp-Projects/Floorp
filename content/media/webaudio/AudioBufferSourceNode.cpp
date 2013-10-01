@@ -223,9 +223,9 @@ public:
         static_cast<float*>(const_cast<void*>(aOutput->mChannelData[i])) +
         aBufferOffset;
 
-      speex_resampler_process_float(resampler, i,
-                                    inputData, &inSamples,
-                                    outputData, &outSamples);
+      WebAudioUtils::SpeexResamplerProcess(resampler, i,
+                                           inputData, &inSamples,
+                                           outputData, &outSamples);
 
       aFramesRead = inSamples;
       aFramesWritten = outSamples;
