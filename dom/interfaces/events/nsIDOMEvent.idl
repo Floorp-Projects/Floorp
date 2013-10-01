@@ -262,7 +262,7 @@ nsresult
 NS_NewDOMDragEvent(nsIDOMEvent** aInstancePtrResult,
                    mozilla::dom::EventTarget* aOwner,
                    nsPresContext* aPresContext,
-                   nsDragEvent* aEvent);
+                   mozilla::WidgetDragEvent* aEvent);
 nsresult
 NS_NewDOMClipboardEvent(nsIDOMEvent** aInstancePtrResult,
                         mozilla::dom::EventTarget* aOwner,
