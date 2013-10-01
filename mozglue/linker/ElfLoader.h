@@ -344,6 +344,7 @@ private:
 
   bool registeredHandler;
   bool signalHandlingBroken;
+  bool signalHandlingSlow;
 };
 
 /**
