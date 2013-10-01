@@ -14,8 +14,7 @@ if (this.Components) {
 
   importScripts("resource://gre/modules/osfile.jsm");
 
-  let SharedAll = require("resource://gre/modules/osfile/osfile_shared_allthreads.jsm");
-  let LOG = SharedAll.LOG.bind(SharedAll, "Agent");
+  let LOG = exports.OS.Shared.LOG.bind(exports.OS.Shared.LOG, "Agent");
 
  /**
   * Communications with the controller.
@@ -217,12 +216,12 @@ if (this.Components) {
   let Agent = {
    // Update worker's OS.Shared.DEBUG flag message from controller.
    SET_DEBUG: function SET_DEBUG (aDEBUG) {
-     SharedAll.Config.DEBUG = aDEBUG;
+     exports.OS.Shared.DEBUG = aDEBUG;
    },
    // Return worker's current OS.Shared.DEBUG value to controller.
    // Note: This is used for testing purposes.
    GET_DEBUG: function GET_DEBUG () {
-     return SharedAll.Config.DEBUG;
+     return exports.OS.Shared.DEBUG;
    },
    // Report file descriptors leaks.
    System_shutdown: function System_shutdown () {
