@@ -4,11 +4,17 @@
 
 /*** Status and progress indicator ***/
 
-#downloads-indicator-anchor {
-  /* Makes the outermost stack element positioned, so that its contents are
-     rendered over the main browser window in the Z order.  This is required by
-     the animated event notification. */
+#downloads-animation-container {
+  min-height: 1px;
+  min-width: 1px;
+  height: 1px;
+  margin-bottom: -1px;
+  /* Makes the outermost animation container element positioned, so that its
+     contents are rendered over the main browser window in the Z order.
+     This is required by the animated event notification. */
   position: relative;
+  /* The selected tab may overlap #downloads-indicator-notification */
+  z-index: 5;
 }
 
 /*** Main indicator icon ***/
@@ -49,6 +55,8 @@
   background-size: 16px;
   background-position: center;
   background-repeat: no-repeat;
+  width: 16px;
+  height: 16px;
 }
 
 @keyframes downloadsIndicatorNotificationStartRight {
@@ -63,13 +71,13 @@
   to   { opacity: 0; transform: translate(0) scale(1); }
 }
 
-#downloads-button[notification="start"] > #downloads-indicator-anchor > #downloads-indicator-notification {
+#downloads-notification-anchor[notification="start"] > #downloads-indicator-notification {
   background-image: url("chrome://browser/skin/downloads/download-notification-start.png");
   animation-name: downloadsIndicatorNotificationStartRight;
   animation-duration: 1s;
 }
 
-#downloads-button[notification="start"]:-moz-locale-dir(rtl) > #downloads-indicator-anchor > #downloads-indicator-notification {
+#downloads-notification-anchor[notification="start"]:-moz-locale-dir(rtl) > #downloads-indicator-notification {
   animation-name: downloadsIndicatorNotificationStartLeft;
 }
 
@@ -79,7 +87,7 @@
   to   { opacity: 0; transform: scale(8); }
 }
 
-#downloads-button[notification="finish"] > #downloads-indicator-anchor > #downloads-indicator-notification {
+#downloads-notification-anchor[notification="finish"] > #downloads-indicator-notification {
   background-image: url("chrome://browser/skin/downloads/download-notification-finish.png");
   animation-name: downloadsIndicatorNotificationFinish;
   animation-duration: 1s;
