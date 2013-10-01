@@ -7,7 +7,6 @@
 #define __NS_SVGGLYPHFRAME_H__
 
 #include "mozilla/Attributes.h"
-#include "gfxFont.h"
 #include "gfxSVGGlyphs.h"
 #include "nsISVGChildFrame.h"
 #include "nsISVGGlyphFragmentNode.h"
@@ -15,6 +14,7 @@
 #include "nsSVGUtils.h"
 #include "nsTextFragment.h"
 #include "nsIContent.h"
+#include "DrawMode.h"
 
 class CharacterIterator;
 class gfxContext;
@@ -101,8 +101,6 @@ struct SVGTextContextPaint : public gfxTextContextPaint {
 } // namespace mozilla
 
 using namespace mozilla;
-
-typedef gfxFont::DrawMode DrawMode;
 
 typedef nsSVGGeometryFrame nsSVGGlyphFrameBase;
 
