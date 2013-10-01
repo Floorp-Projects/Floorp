@@ -62,6 +62,7 @@ IPDL_SOURCES += [
     'PTestNestedLoops.ipdl',
     'PTestOpens.ipdl',
     'PTestOpensOpened.ipdl',
+    'PTestRPC.ipdl',
     'PTestRaceDeferral.ipdl',
     'PTestRacyInterruptReplies.ipdl',
     'PTestRacyReentry.ipdl',
