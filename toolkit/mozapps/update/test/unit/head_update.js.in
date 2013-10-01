@@ -64,7 +64,7 @@ const IS_MAR_CHECKS_ENABLED = true;
 const IS_MAR_CHECKS_ENABLED = false;
 #endif
 
-const URL_HOST = "http://localhost:4444/";
+const URL_HOST = "http://localhost";
 const URL_PATH = "data";
 
 const APPLY_TO_DIR_SUFFIX = "_applyToDir/";
@@ -1874,7 +1874,9 @@ function start_httpserver(aRelativeDirName) {
   Components.utils.import("resource://testing-common/httpd.js");
   gTestserver = new HttpServer();
   gTestserver.registerDirectory("/data/", dir);
-  gTestserver.start(4444);
+  gTestserver.start(-1);
+  gTestserverPort = gTestserver.identity.primaryPort;
+  logTestInfo("http server port = " + gTestserverPort);
 }
 
 /* Helper for stopping the http server used by the tests */
