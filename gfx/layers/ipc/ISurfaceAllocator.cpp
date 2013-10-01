@@ -27,8 +27,6 @@ using namespace mozilla::ipc;
 namespace mozilla {
 namespace layers {
 
-mozilla::Atomic<int32_t> GfxHeapTexturesReporter::sAmount;
-
 SharedMemory::SharedMemoryType OptimalShmemType()
 {
   return SharedMemory::TYPE_BASIC;
@@ -90,7 +88,6 @@ ISurfaceAllocator::AllocSurfaceDescriptorWithCaps(const gfxIntSize& aSize,
     if (!data) {
       return false;
     }
-    GfxHeapTexturesReporter::OnAlloc(data);
 #ifdef XP_MACOSX
     // Workaround a bug in Quartz where drawing an a8 surface to another a8
     // surface with OPERATOR_SOURCE still requires the destination to be clear.
@@ -138,8 +135,7 @@ ISurfaceAllocator::DestroySharedSurface(SurfaceDescriptor* aSurface)
     case SurfaceDescriptor::TSurfaceDescriptorD3D10:
       break;
     case SurfaceDescriptor::TMemoryImage:
-      GfxHeapTexturesReporter::OnFree((uint8_t*)aSurface->get_MemoryImage().data());
-      delete [] (uint8_t*)aSurface->get_MemoryImage().data();
+      delete [] (unsigned char *)aSurface->get_MemoryImage().data();
       break;
     case SurfaceDescriptor::Tnull_t:
     case SurfaceDescriptor::T__None:
