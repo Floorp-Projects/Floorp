@@ -432,9 +432,7 @@ InspectorPanel.prototype = {
   },
 
   /**
-   * When a node is deleted, select its parent node or the defaultNode if no
-   * parent is found (may happen when deleting an iframe inside which the
-   * node was selected).
+   * When a node is deleted, select its parent node.
    */
   onDetached: function InspectorPanel_onDetached(event, parentNode) {
     this.cancelLayoutChange();
