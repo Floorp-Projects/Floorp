@@ -819,7 +819,7 @@ EnterWith(JSContext *cx, AbstractFramePtr frame, HandleValue val, uint32_t stack
     if (val.isObject()) {
         obj = &val.toObject();
     } else {
-        obj = ToObject(cx, val);
+        obj = js_ValueToNonNullObject(cx, val);
         if (!obj)
             return false;
     }
