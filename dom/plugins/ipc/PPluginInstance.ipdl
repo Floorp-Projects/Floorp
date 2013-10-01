@@ -32,7 +32,6 @@ using mozilla::plugins::DXGISharedSurfaceHandle;
 using mozilla::CrossProcessMutexHandle;
 using SurfaceDescriptorX11;
 using nsIntRect;
-using nsTextEvent;
 
 namespace mozilla {
 namespace plugins {

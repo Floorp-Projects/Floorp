@@ -297,7 +297,7 @@ void MozQWidget::sendPressReleaseKeyEvent(int key,
         nsCompositionEvent start(true, NS_COMPOSITION_START, mReceiver);
         mReceiver->DispatchEvent(&start);
 
-        nsTextEvent text(true, NS_TEXT_TEXT, mReceiver);
+        mozilla::WidgetTextEvent text(true, NS_TEXT_TEXT, mReceiver);
         QString commitString = QString(*letter);
         text.theText.Assign(commitString.utf16());
         mReceiver->DispatchEvent(&text);

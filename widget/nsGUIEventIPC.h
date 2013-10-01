@@ -337,9 +337,9 @@ struct ParamTraits<mozilla::TextRange>
 };
 
 template<>
-struct ParamTraits<nsTextEvent>
+struct ParamTraits<mozilla::WidgetTextEvent>
 {
-  typedef nsTextEvent paramType;
+  typedef mozilla::WidgetTextEvent paramType;
 
   static void Write(Message* aMsg, const paramType& aParam)
   {

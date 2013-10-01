@@ -2774,7 +2774,7 @@ nsWindow::imComposeEvent(QInputMethodEvent *event, bool &handled)
       DispatchEvent(&update);
     }
 
-    nsTextEvent text(true, NS_TEXT_TEXT, this);
+    WidgetTextEvent text(true, NS_TEXT_TEXT, this);
     text.theText = compositionStr;
     DispatchEvent(&text);
 

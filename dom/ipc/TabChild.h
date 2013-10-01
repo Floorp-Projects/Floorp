@@ -226,7 +226,7 @@ public:
                               const int32_t&  aModifiers,
                               const bool&     aPreventDefault);
     virtual bool RecvCompositionEvent(const nsCompositionEvent& event);
-    virtual bool RecvTextEvent(const nsTextEvent& event);
+    virtual bool RecvTextEvent(const mozilla::WidgetTextEvent& event);
     virtual bool RecvSelectionEvent(const nsSelectionEvent& event);
     virtual bool RecvActivateFrameEvent(const nsString& aType, const bool& capture);
     virtual bool RecvLoadRemoteScript(const nsString& aURL);

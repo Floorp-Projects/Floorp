@@ -586,8 +586,8 @@ nsDOMEvent::DuplicatePrivateData()
     }
     case NS_TEXT_EVENT:
     {
-      nsTextEvent* oldTextEvent = static_cast<nsTextEvent*>(mEvent);
-      nsTextEvent* textEvent = new nsTextEvent(false, msg, nullptr);
+      WidgetTextEvent* oldTextEvent = static_cast<WidgetTextEvent*>(mEvent);
+      WidgetTextEvent* textEvent = new WidgetTextEvent(false, msg, nullptr);
       textEvent->AssignTextEventData(*oldTextEvent, true);
       newEvent = textEvent;
       break;

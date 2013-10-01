@@ -3039,7 +3039,7 @@ nsWindow::OnKeyPressEvent(GdkEventKey *aEvent)
             DispatchEvent(&event, status);
         }
         else {
-            nsTextEvent textEvent(true, NS_TEXT_TEXT, this);
+            WidgetTextEvent textEvent(true, NS_TEXT_TEXT, this);
             PRUnichar textString[3];
             textString[0] = H_SURROGATE(event.charCode);
             textString[1] = L_SURROGATE(event.charCode);
