@@ -1022,6 +1022,10 @@ class Watchdog
     bool mShuttingDown;
 };
 
+#ifdef MOZ_NUWA_PROCESS
+#include "ipc/Nuwa.h"
+#endif
+
 class WatchdogManager : public nsIObserver
 {
   public:
@@ -1154,6 +1158,15 @@ static void
 WatchdogMain(void *arg)
 {
     PR_SetCurrentThreadName("JS Watchdog");
+
+#ifdef MOZ_NUWA_PROCESS
+    if (IsNuwaProcess()) {
+        NS_ASSERTION(NuwaMarkCurrentThread != nullptr,
+                     "NuwaMarkCurrentThread is undefined!");
+        NuwaMarkCurrentThread(nullptr, nullptr);
+        NuwaFreezeCurrentThread();
+    }
+#endif
 
     Watchdog* self = static_cast<Watchdog*>(arg);
     WatchdogManager* manager = self->Manager();
@@ -2058,6 +2071,26 @@ ReportCompartmentStats(const JS::CompartmentStats &cStats,
                    "Memory used by the IonMonkey JIT for compilation data: "
                    "IonScripts.");
 
+    ZCREPORT_BYTES(cJSPathPrefix + NS_LITERAL_CSTRING("type-inference/type-scripts"),
+                   cStats.typeInferenceTypeScripts,
+                   "Memory used by type sets associated with scripts.");
+
+    ZCREPORT_BYTES(cJSPathPrefix + NS_LITERAL_CSTRING("type-inference/pending-arrays"),
+                   cStats.typeInferencePendingArrays,
+                   "Memory used for solving constraints during type inference.");
+
+    ZCREPORT_BYTES(cJSPathPrefix + NS_LITERAL_CSTRING("type-inference/allocation-site-tables"),
+                   cStats.typeInferenceAllocationSiteTables,
+                   "Memory indexing type objects associated with allocation sites.");
+
+    ZCREPORT_BYTES(cJSPathPrefix + NS_LITERAL_CSTRING("type-inference/array-type-tables"),
+                   cStats.typeInferenceArrayTypeTables,
+                   "Memory indexing type objects associated with array literals.");
+
+    ZCREPORT_BYTES(cJSPathPrefix + NS_LITERAL_CSTRING("type-inference/object-type-tables"),
+                   cStats.typeInferenceObjectTypeTables,
+                   "Memory indexing type objects associated with object literals.");
+
     ZCREPORT_BYTES(cJSPathPrefix + NS_LITERAL_CSTRING("compartment-object"),
                    cStats.compartmentObject,
                    "Memory used for the JSCompartment object itself.");
@@ -2131,26 +2164,6 @@ ReportCompartmentStats(const JS::CompartmentStats &cStats,
     ZCREPORT_BYTES(cJSPathPrefix + NS_LITERAL_CSTRING("objects/malloc-heap/ctypes-data"),
                    cStats.objectsExtra.mallocHeapCtypesData,
                    "Memory allocated on the malloc heap for data belonging to ctypes objects.");
-
-    ZCREPORT_BYTES(cJSPathPrefix + NS_LITERAL_CSTRING("type-inference/type-scripts"),
-                   cStats.typeInference.typeScripts,
-                   "Memory used by type sets associated with scripts.");
-
-    ZCREPORT_BYTES(cJSPathPrefix + NS_LITERAL_CSTRING("type-inference/pending-arrays"),
-                   cStats.typeInference.pendingArrays,
-                   "Memory used for solving constraints during type inference.");
-
-    ZCREPORT_BYTES(cJSPathPrefix + NS_LITERAL_CSTRING("type-inference/allocation-site-tables"),
-                   cStats.typeInference.allocationSiteTables,
-                   "Memory indexing type objects associated with allocation sites.");
-
-    ZCREPORT_BYTES(cJSPathPrefix + NS_LITERAL_CSTRING("type-inference/array-type-tables"),
-                   cStats.typeInference.arrayTypeTables,
-                   "Memory indexing type objects associated with array literals.");
-
-    ZCREPORT_BYTES(cJSPathPrefix + NS_LITERAL_CSTRING("type-inference/object-type-tables"),
-                   cStats.typeInference.objectTypeTables,
-                   "Memory indexing type objects associated with object literals.");
 
     if (sundriesGCHeap > 0) {
         // We deliberately don't use ZCREPORT_GC_BYTES here.

@@ -18,12 +18,12 @@ namespace plugins {
  * PPluginStream represents an NPStream sent from the plugin to the browser.
  */
 
-rpc protocol PPluginStream
+intr protocol PPluginStream
 {
   manager PPluginInstance;
 
 parent:
-  rpc NPN_Write(Buffer data) returns (int32_t written);
+  intr NPN_Write(Buffer data) returns (int32_t written);
 
 both:
   /**
@@ -31,7 +31,7 @@ both:
    * @param artificial True when the stream is closed as a by-product of
    *                        some other call (such as a failure in NPN_Write).
    */
-  rpc __delete__(NPReason reason, bool artificial);
+  intr __delete__(NPReason reason, bool artificial);
 };
 
 } // namespace plugins

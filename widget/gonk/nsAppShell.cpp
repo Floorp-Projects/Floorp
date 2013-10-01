@@ -57,6 +57,10 @@
 #include "libui/InputDispatcher.h"
 #include "cutils/properties.h"
 
+#ifdef MOZ_NUWA_PROCESS
+#include "ipc/Nuwa.h"
+#endif
+
 #include "GeckoProfiler.h"
 
 // Defines kKeyMapping and GetKeyNameIndex()
@@ -732,6 +736,11 @@ nsAppShell::Init()
     if (obsServ) {
         obsServ->AddObserver(this, "browser-ui-startup-complete", false);
     }
+
+#ifdef MOZ_NUWA_PROCESS
+    // Make sure main thread was woken up after Nuwa fork.
+    NuwaAddConstructor((void (*)(void *))&NotifyEvent, nullptr);
+#endif
 
     // Delay initializing input devices until the screen has been
     // initialized (and we know the resolution).

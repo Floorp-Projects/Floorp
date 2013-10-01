@@ -3,11 +3,11 @@ union Foo {
     Shmem;
 };
 
-rpc protocol shmem {
+intr protocol shmem {
 parent:
     Msg(Shmem s, Foo f);
     sync SyncMsg(Shmem s, Foo f)
         returns (Shmem t, Foo g);
-    rpc RPCMsg(Shmem s, Foo f)
+    intr InterruptMsg(Shmem s, Foo f)
         returns (Shmem t, Foo g);
 };

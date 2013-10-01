@@ -2818,6 +2818,8 @@ toolbarbutton.bookmark-item[dragover="true"][open="true"] {
 %include ../shared/devtools/commandline.inc.css
 %include ../shared/plugin-doorhanger.inc.css
 
+%include downloads/indicator.css
+
 /* Error counter */
 
 #developer-toolbar-toolbox-button[error-count]:before {

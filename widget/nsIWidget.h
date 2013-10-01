@@ -1216,7 +1216,6 @@ class nsIWidget : public nsISupports {
     virtual void CleanupWindowEffects() = 0;
 
     virtual void PreRender(LayerManager* aManager) = 0;
-    virtual void PostRender(LayerManager* aManager) = 0;
 
     /**
      * Called before the LayerManager draws the layer tree.

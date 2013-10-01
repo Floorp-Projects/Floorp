@@ -56,5 +56,6 @@ load 907986-2.html
 load 907986-3.html
 load 907986-4.html
 load 910171-1.html
+load 920987.html
 skip-if(B2G) load oscillator-ended-1.html # intermittent B2G timeouts, bug 920338
 skip-if(B2G) load oscillator-ended-2.html # intermittent B2G timeouts, bug 920338

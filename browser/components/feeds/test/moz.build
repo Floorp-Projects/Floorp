@@ -9,3 +9,6 @@ DIRS += ['chrome']
 MODULE = 'test_browser_feeds'
 
 XPCSHELL_TESTS_MANIFESTS += ['unit/xpcshell.ini']
+
+MOCHITEST_MANIFESTS += ['mochitest.ini']
+

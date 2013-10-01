@@ -147,7 +147,7 @@ def DOMClass(descriptor):
         # padding.
         protoList.extend(['prototypes::id::_ID_Count'] * (descriptor.config.maxProtoChainLength - len(protoList)))
         prototypeChainString = ', '.join(protoList)
-        if descriptor.workers:
+        if descriptor.nativeOwnership == 'worker':
             participant = "nullptr"
         else:
             participant = "GetCCParticipant<%s>::Get()" % descriptor.nativeType
@@ -209,7 +209,7 @@ static const DOMJSClass Class = {
 };
 """ % (self.descriptor.interface.identifier.name,
        classFlags,
-       ADDPROPERTY_HOOK_NAME if self.descriptor.concrete and not self.descriptor.workers and self.descriptor.wrapperCache else 'JS_PropertyStub',
+       ADDPROPERTY_HOOK_NAME if self.descriptor.concrete and not self.descriptor.nativeOwnership == 'worker' and self.descriptor.wrapperCache else 'JS_PropertyStub',
        enumerateHook, newResolveHook, FINALIZE_HOOK_NAME, callHook, traceHook,
        CGIndenter(CGGeneric(DOMClass(self.descriptor))).define())
 
@@ -1027,7 +1027,7 @@ class CGAddPropertyHook(CGAbstractClassHook):
                                      'bool', args)
 
     def generate_code(self):
-        assert not self.descriptor.workers and self.descriptor.wrapperCache
+        assert not self.descriptor.nativeOwnership == 'worker' and self.descriptor.wrapperCache
         return ("  // We don't want to preserve if we don't have a wrapper.\n"
                 "  if (self->GetWrapperPreserveColor()) {\n"
                 "    PreserveWrapper(self);\n"
@@ -1050,7 +1050,7 @@ def finalizeHook(descriptor, hookName, context):
             finalize += "ClearWrapper(self, self);\n"
         if descriptor.interface.getExtendedAttribute('OverrideBuiltins'):
             finalize += "self->mExpandoAndGeneration.expando = JS::UndefinedValue();\n"
-        if descriptor.workers:
+        if descriptor.nativeOwnership == 'worker':
             finalize += "self->Release();"
         else:
             finalize += ("AddForDeferredFinalization<%s, %s >(self);" %
@@ -4459,9 +4459,8 @@ def getRetvalDeclarationForType(returnType, descriptorProvider,
     raise TypeError("Don't know how to declare return value for %s" %
                     returnType)
 
-def isResultAlreadyAddRefed(descriptor, extendedAttributes):
-    # Default to already_AddRefed on the main thread, raw pointer in workers
-    return not descriptor.workers and not 'resultNotAddRefed' in extendedAttributes
+def isResultAlreadyAddRefed(extendedAttributes):
+    return not 'resultNotAddRefed' in extendedAttributes
 
 def needCx(returnType, arguments, extendedAttributes, considerTypes):
     return (considerTypes and
@@ -4492,8 +4491,7 @@ class CGCallGenerator(CGThing):
 
         isFallible = errorReport is not None
 
-        resultAlreadyAddRefed = isResultAlreadyAddRefed(descriptorProvider,
-                                                        extendedAttributes)
+        resultAlreadyAddRefed = isResultAlreadyAddRefed(extendedAttributes)
         (result, resultOutParam,
          resultRooter, resultArgs) = getRetvalDeclarationForType(
             returnType, descriptorProvider, resultAlreadyAddRefed)
@@ -4860,14 +4858,13 @@ if (!${obj}) {
         isCreator = memberIsCreator(self.idlNode)
         if isCreator:
             # We better be returning addrefed things!
-            assert(isResultAlreadyAddRefed(self.descriptor,
-                                           self.extendedAttributes) or
+            assert(isResultAlreadyAddRefed(self.extendedAttributes) or
                    # Creators can return raw pointers to owned objects
                    (self.returnType.isGeckoInterface() and
                     self.descriptor.getDescriptor(self.returnType.unroll().inner.identifier.name).nativeOwnership == 'owned') or
                    # Workers use raw pointers for new-object return
                    # values or something
-                   self.descriptor.workers)
+                   self.descriptor.getDescriptor(self.returnType.unroll().inner.identifier.name).nativeOwnership == 'worker')
 
         resultTemplateValues = { 'jsvalRef': 'args.rval()',
                                  'jsvalHandle': 'args.rval()',
@@ -6083,10 +6080,6 @@ def getUnionAccessorSignatureType(type, descriptorProvider):
         return CGGeneric(type.inner.identifier.name)
 
     if type.isCallback():
-        if descriptorProvider.workers:
-            if type.nullable():
-                return CGGeneric("JSObject*")
-            return CGGeneric("JSObject&")
         if type.nullable():
             typeName = "%s*"
         else:
@@ -6158,18 +6151,24 @@ def getUnionTypeTemplateVars(unionType, type, descriptorProvider,
                              body=body)
 
     else:
+        # Important: we need to not have our declName involve
+        # maybe-GCing operations.
         jsConversion = string.Template(conversionInfo.template).substitute(
             {
                 "val": "value",
                 "mutableVal": "pvalue",
-                "declName": "SetAs" + name + "(%s)" % ctorArgs,
+                "declName": "memberSlot",
                 "holderName": "m" + name + "Holder",
                 }
             )
-        jsConversion = CGWrapper(CGGeneric(jsConversion),
-                                 pre="tryNext = false;\n",
-                                 post="\n"
-                                      "return true;")
+        jsConversion = CGWrapper(CGIndenter(CGGeneric(jsConversion)),
+                                 pre=("tryNext = false;\n"
+                                      "{ // scope for memberSlot\n"
+                                      "  %s& memberSlot = SetAs%s(%s);\n"
+                                      % (structType, name, ctorArgs)),
+                                 post=("\n"
+                                       "}\n"
+                                      "return true;"))
         setter = ClassMethod("TrySetTo" + name, "bool",
                               [Argument("JSContext*", "cx"),
                                Argument("JS::Handle<JS::Value>", "value"),
@@ -7987,7 +7986,7 @@ class CGDescriptor(CGThing):
             cgThings.append(CGConstructNavigatorObject(descriptor))
 
         if descriptor.concrete and not descriptor.proxy:
-            if not descriptor.workers and descriptor.wrapperCache:
+            if not descriptor.nativeOwnership == 'worker' and descriptor.wrapperCache:
                 cgThings.append(CGAddPropertyHook(descriptor))
 
             # Always have a finalize hook, regardless of whether the class
@@ -9029,8 +9028,7 @@ class CGNativeMember(ClassMethod):
         self.descriptorProvider = descriptorProvider
         self.member = member
         self.extendedAttrs = extendedAttrs
-        self.resultAlreadyAddRefed = isResultAlreadyAddRefed(self.descriptorProvider,
-                                                             self.extendedAttrs)
+        self.resultAlreadyAddRefed = isResultAlreadyAddRefed(self.extendedAttrs)
         self.passJSBitsAsNeeded = passJSBitsAsNeeded
         self.jsObjectsArePtr = jsObjectsArePtr
         self.variadicIsSequence = variadicIsSequence

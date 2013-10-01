@@ -10,20 +10,6 @@ LOCAL_INCLUDES += \
   -I$(topsrcdir)/toolkit/xre \
   $(NULL)
 
-ifeq (windows,$(MOZ_WIDGET_TOOLKIT))
-  ifdef MOZ_APP_PROFILE
-    DEFINES += -DMOZ_APP_PROFILE='"$(MOZ_APP_PROFILE)"'
-  else
-    ifdef MOZ_APP_VENDOR
-      DEFINES += -DMOZ_APP_VENDOR='"$(MOZ_APP_VENDOR)"'
-    endif
-    ifdef MOZ_APP_BASENAME
-      DEFINES += -DMOZ_APP_BASENAME='"$(MOZ_APP_BASENAME)"'
-    endif
-    DEFINES += -DMOZ_APP_NAME='"$(MOZ_APP_NAME)"'
-  endif
-endif
-
 LIBS		= \
 		$(DIST)/lib/$(LIB_PREFIX)xpcomglue_s.$(LIB_SUFFIX) \
 		$(LIBXUL_LIBS) \
@@ -64,17 +50,4 @@ ifdef MOZ_VTUNE
 DEFINES += -DMOZ_VTUNE
 CXXFLAGS += -IC:/Program\ Files/Intel/VTune/Analyzer/Include
 LIBS += C:/Program\ Files/Intel/VTune/Analyzer/Lib/VtuneApi.lib
-endif
-#
-# Line editing support.  If your OS supplies the readline library, define
-# JS_READLINE to get line editing in the xpcshell.
-#
-# If you can't link against readline because of GPL licensing issues
-# (which may not apply, as xpcshell.c has the dual license) you might
-# look at mozilla/js/src/editline, which is license-free (but not part
-# of the mozilla build.)
-#
-ifdef JS_READLINE
-DEFINES += -DEDITLINE
-LIBS += -lreadline $(JS_READLINE_EXTRA_LIBS)
 endif

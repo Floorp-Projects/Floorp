@@ -3,7 +3,7 @@ namespace mozilla {
 namespace _ipdltest {
 
 
-rpc protocol PTestStackHooks {
+intr protocol PTestStackHooks {
 child:
     async Start();
 
@@ -12,10 +12,10 @@ child:
 parent:
     async Async();
     sync Sync();
-    rpc Rpc();
+    intr Rpc();
 
 both:
-    rpc StackFrame();
+    intr StackFrame();
 
 parent:
     __delete__();

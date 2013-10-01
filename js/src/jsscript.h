@@ -663,6 +663,9 @@ class JSScript : public js::gc::BarrieredCell<JSScript>
     bool argumentsHasVarBinding() const { return argsHasVarBinding_; }
     jsbytecode *argumentsBytecode() const { JS_ASSERT(code[0] == JSOP_ARGUMENTS); return code; }
     void setArgumentsHasVarBinding();
+    bool argumentsAliasesFormals() const {
+        return argumentsHasVarBinding() && !strict;
+    }
 
     js::GeneratorKind generatorKind() const {
         return js::GeneratorKindFromBits(generatorKindBits_);
@@ -842,8 +845,6 @@ class JSScript : public js::gc::BarrieredCell<JSScript>
     inline void clearAnalysis();
     inline js::analyze::ScriptAnalysis *analysis();
 
-    inline void clearPropertyReadTypes();
-
     inline js::GlobalObject &global() const;
     js::GlobalObject &uninlinedGlobal() const;
 
@@ -892,11 +893,12 @@ class JSScript : public js::gc::BarrieredCell<JSScript>
 
     /*
      * computedSizeOfData() is the in-use size of all the data sections.
-     * sizeOfData() is the size of the block allocated to hold all the data sections
-     * (which can be larger than the in-use size).
+     * sizeOfData() is the size of the block allocated to hold all the data
+     * sections (which can be larger than the in-use size).
      */
-    size_t computedSizeOfData();
-    size_t sizeOfData(mozilla::MallocSizeOf mallocSizeOf);
+    size_t computedSizeOfData() const;
+    size_t sizeOfData(mozilla::MallocSizeOf mallocSizeOf) const;
+    size_t sizeOfTypeScript(mozilla::MallocSizeOf mallocSizeOf) const;
 
     uint32_t numNotes();  /* Number of srcnote slots in the srcnotes section */
 

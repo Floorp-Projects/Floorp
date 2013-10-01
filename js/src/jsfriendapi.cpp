@@ -51,6 +51,12 @@ js::SetSourceHook(JSRuntime *rt, SourceHook *hook)
     rt->sourceHook = hook;
 }
 
+JS_FRIEND_API(SourceHook *)
+js::ForgetSourceHook(JSRuntime *rt)
+{
+    return rt->sourceHook.forget();
+}
+
 JS_FRIEND_API(void)
 JS_SetGrayGCRootsTracer(JSRuntime *rt, JSTraceDataOp traceOp, void *data)
 {
@@ -753,6 +759,9 @@ DumpHeapVisitCell(JSRuntime *rt, void *data, void *thing,
 static void
 DumpHeapVisitChild(JSTracer *trc, void **thingp, JSGCTraceKind kind)
 {
+    if (gc::IsInsideNursery(trc->runtime, *thingp))
+        return;
+
     JSDumpHeapTracer *dtrc = static_cast<JSDumpHeapTracer *>(trc);
     char buffer[1024];
     fprintf(dtrc->output, "> %p %c %s\n", *thingp, MarkDescriptor(*thingp),
@@ -762,6 +771,9 @@ DumpHeapVisitChild(JSTracer *trc, void **thingp, JSGCTraceKind kind)
 static void
 DumpHeapVisitRoot(JSTracer *trc, void **thingp, JSGCTraceKind kind)
 {
+    if (gc::IsInsideNursery(trc->runtime, *thingp))
+        return;
+
     JSDumpHeapTracer *dtrc = static_cast<JSDumpHeapTracer *>(trc);
     char buffer[1024];
     fprintf(dtrc->output, "%p %c %s\n", *thingp, MarkDescriptor(*thingp),
@@ -769,9 +781,14 @@ DumpHeapVisitRoot(JSTracer *trc, void **thingp, JSGCTraceKind kind)
 }
 
 void
-js::DumpHeapComplete(JSRuntime *rt, FILE *fp)
+js::DumpHeapComplete(JSRuntime *rt, FILE *fp, js::DumpHeapNurseryBehaviour nurseryBehaviour)
 {
     JSDumpHeapTracer dtrc(fp);
+
+#ifdef JSGC_GENERATIONAL
+    if (nurseryBehaviour == js::CollectNurseryBeforeDump)
+        MinorGC(rt, JS::gcreason::API);
+#endif
 
     JS_TracerInit(&dtrc, rt, DumpHeapVisitRoot);
     dtrc.eagerlyTraceWeakMaps = TraceWeakMapKeysValues;

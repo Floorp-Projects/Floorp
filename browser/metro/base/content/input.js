@@ -971,58 +971,6 @@ KineticController.prototype = {
 };
 
 
-/**
- * Input module for basic scrollwheel input.  Currently just zooms the browser
- * view accordingly.
- */
-var ScrollwheelModule = {
-  _pendingEvent : 0,
-  _container: null,
-  
-  init: function init(container) {
-    this._container = container;
-    window.addEventListener("MozPrecisePointer", this, true);
-    window.addEventListener("MozImprecisePointer", this, true);
-  },
-
-  handleEvent: function handleEvent(aEvent) {
-    switch(aEvent.type) {
-      case "DOMMouseScroll":
-      case "MozMousePixelScroll":
-        this._onScroll(aEvent);
-        break;
-      case "MozPrecisePointer":
-        this._container.removeEventListener("DOMMouseScroll", this, true);
-        this._container.removeEventListener("MozMousePixelScroll", this, true);
-        break;
-      case "MozImprecisePointer":
-        this._container.addEventListener("DOMMouseScroll", this, true);
-        this._container.addEventListener("MozMousePixelScroll", this, true);
-        break;
-    };
-  },
-
-  _onScroll: function _onScroll(aEvent) {
-    // If events come too fast we don't want their handling to lag the
-    // zoom in/zoom out execution. With the timeout the zoom is executed
-    // as we scroll.
-    if (this._pendingEvent)
-      clearTimeout(this._pendingEvent);
-
-    this._pendingEvent = setTimeout(function handleEventImpl(self) {
-      self._pendingEvent = 0;
-      Browser.zoom(aEvent.detail);
-    }, 0, this);
-
-    aEvent.stopPropagation();
-    aEvent.preventDefault();
-  },
-
-  /* We don't have much state to reset if we lose event focus */
-  cancelPending: function cancelPending() {}
-};
-
-
 /*
  * Simple gestures support
  */
@@ -1032,14 +980,6 @@ var GestureModule = {
 
   init: function init() {
     window.addEventListener("MozSwipeGesture", this, true);
-    window.addEventListener("CancelTouchSequence", this, true);
-  },
-
-  _initMouseEventFromGestureEvent: function _initMouseEventFromGestureEvent(aDestEvent, aSrcEvent, aType, aCanBubble, aCancellable) {
-    aDestEvent.initMouseEvent(aType, aCanBubble, aCancellable, window, null,
-                              aSrcEvent.screenX, aSrcEvent.screenY, aSrcEvent.clientX, aSrcEvent.clientY,
-                              aSrcEvent.ctrlKey, aSrcEvent.altKey, aSrcEvent.shiftKey, aSrcEvent.metaKey,
-                              aSrcEvent.button, aSrcEvent.relatedTarget);
   },
 
   /*
@@ -1065,25 +1005,12 @@ var GestureModule = {
             aEvent.target.dispatchEvent(event);
           }
           break;
-
-        case "CancelTouchSequence":
-          this.cancelPending();
-          break;
       }
     } catch (e) {
       Util.dumpLn("Error while handling gesture event", aEvent.type,
                   "\nPlease report error at:", e);
       Cu.reportError(e);
     }
-  },
-
-  /*
-   * Event handlers
-   */
-
-  cancelPending: function cancelPending() {
-    if (AnimatedZoom.isZooming())
-      AnimatedZoom.finish();
   },
 
   _onSwipe: function _onSwipe(aEvent) {
@@ -1102,92 +1029,6 @@ var GestureModule = {
      CommandUpdater.doCommand(aId);
      return true;
   },
-
-  _pinchStart: function _pinchStart(aEvent) {
-    if (AnimatedZoom.isZooming())
-      return;
-    // Cancel other touch sequence events, and be courteous by allowing them
-    // to say no.
-    let event = document.createEvent("Events");
-    event.initEvent("CancelTouchSequence", true, true);
-    let success = aEvent.target.dispatchEvent(event);
-
-    if (!success || !Browser.selectedTab.allowZoom)
-      return;
-
-    AnimatedZoom.start();
-    this._pinchDelta = 0;
-
-    //this._ignoreNextUpdate = true; // first update gives useless, huge delta
-
-    // cache gesture limit values
-    this._maxGrowth = Services.prefs.getIntPref("browser.ui.pinch.maxGrowth");
-    this._maxShrink = Services.prefs.getIntPref("browser.ui.pinch.maxShrink");
-    this._scalingFactor = Services.prefs.getIntPref("browser.ui.pinch.scalingFactor");
-
-    // Adjust the client coordinates to be relative to the browser element's top left corner.
-    this._browserBCR = getBrowser().getBoundingClientRect();
-    this._pinchStartX = aEvent.clientX - this._browserBCR.left;
-    this._pinchStartY = aEvent.clientY - this._browserBCR.top;
-  },
-
-  _pinchUpdate: function _pinchUpdate(aEvent) {
-    if (!AnimatedZoom.isZooming() || !aEvent.delta)
-      return;
-
-    let delta = 0;
-    let browser = AnimatedZoom.browser;
-    let oldScale = browser.scale;
-    let bcr = this._browserBCR;
-
-    // Accumulate pinch delta. Small changes are just jitter.
-    this._pinchDelta += aEvent.delta;
-    if (Math.abs(this._pinchDelta) >= oldScale) {
-      delta = this._pinchDelta;
-      this._pinchDelta = 0;
-    }
-
-    // decrease the pinchDelta min/max values to limit zooming out/in speed
-    delta = Util.clamp(delta, -this._maxShrink, this._maxGrowth);
-
-    let newScale = Browser.selectedTab.clampZoomLevel(oldScale * (1 + delta / this._scalingFactor));
-    let startScale = AnimatedZoom.startScale;
-    let scaleRatio = startScale / newScale;
-    let cX = aEvent.clientX - bcr.left;
-    let cY = aEvent.clientY - bcr.top;
-
-    // Calculate the new zoom rect.
-    let rect = AnimatedZoom.zoomFrom.clone();
-    rect.translate(this._pinchStartX - cX + (1-scaleRatio) * cX * rect.width / bcr.width,
-                   this._pinchStartY - cY + (1-scaleRatio) * cY * rect.height / bcr.height);
-
-    rect.width *= scaleRatio;
-    rect.height *= scaleRatio;
-
-    this.translateInside(rect, new Rect(0, 0, browser.contentDocumentWidth * startScale,
-                                              browser.contentDocumentHeight * startScale));
-
-    // redraw zoom canvas according to new zoom rect
-    AnimatedZoom.updateTo(rect);
-  },
-
-  _pinchEnd: function _pinchEnd(aEvent) {
-    if (AnimatedZoom.isZooming())
-      AnimatedZoom.finish();
-  },
-
-  /**
-   * Ensure r0 is inside r1, if possible. Preserves w, h.
-   * Same as Rect.prototype.translateInside except it aligns the top left
-   * instead of the bottom right if r0 is bigger than r1.
-   */
-  translateInside: function translateInside(r0, r1) {
-    let offsetX = (r0.left < r1.left ? r1.left - r0.left :
-        (r0.right > r1.right ? Math.max(r1.left - r0.left, r1.right - r0.right) : 0));
-    let offsetY = (r0.top < r1.top ? r1.top - r0.top :
-        (r0.bottom > r1.bottom ? Math.max(r1.top - r0.top, r1.bottom - r0.bottom) : 0));
-    return r0.translate(offsetX, offsetY);
-  }
 };
 
 /**

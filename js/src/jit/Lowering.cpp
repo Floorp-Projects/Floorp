@@ -2914,10 +2914,32 @@ LIRGenerator::visitArgumentsLength(MArgumentsLength *ins)
 }
 
 bool
-LIRGenerator::visitGetArgument(MGetArgument *ins)
+LIRGenerator::visitGetFrameArgument(MGetFrameArgument *ins)
 {
-    LGetArgument *lir = new LGetArgument(useRegisterOrConstant(ins->index()));
+    LGetFrameArgument *lir = new LGetFrameArgument(useRegisterOrConstant(ins->index()));
     return defineBox(lir, ins);
+}
+
+bool
+LIRGenerator::visitSetFrameArgument(MSetFrameArgument *ins)
+{
+    MDefinition *input = ins->input();
+
+    if (input->type() == MIRType_Value) {
+        LSetFrameArgumentV *lir = new LSetFrameArgumentV();
+        if (!useBox(lir, LSetFrameArgumentV::Input, input))
+            return false;
+        return add(lir, ins);
+    }
+
+    if (input->type() == MIRType_Undefined || input->type() == MIRType_Null) {
+        Value val = input->type() == MIRType_Undefined ? UndefinedValue() : NullValue();
+        LSetFrameArgumentC *lir = new LSetFrameArgumentC(val);
+        return add(lir, ins);
+    }
+
+    LSetFrameArgumentT *lir = new LSetFrameArgumentT(useRegister(input));
+    return add(lir, ins);
 }
 
 bool

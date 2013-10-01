@@ -181,6 +181,21 @@ DecommittedArenasChunkCallback(JSRuntime *rt, void *data, gc::Chunk *chunk)
 }
 
 static void
+StatsZoneCallback(JSRuntime *rt, void *data, Zone *zone)
+{
+    // Append a new CompartmentStats to the vector.
+    RuntimeStats *rtStats = static_cast<StatsClosure *>(data)->rtStats;
+
+    // CollectRuntimeStats reserves enough space.
+    MOZ_ALWAYS_TRUE(rtStats->zoneStatsVector.growBy(1));
+    ZoneStats &zStats = rtStats->zoneStatsVector.back();
+    rtStats->initExtraZoneStats(zone, &zStats);
+    rtStats->currZoneStats = &zStats;
+
+    zone->addSizeOfIncludingThis(rtStats->mallocSizeOf_, &zStats.typePool);
+}
+
+static void
 StatsCompartmentCallback(JSRuntime *rt, void *data, JSCompartment *compartment)
 {
     // Append a new CompartmentStats to the vector.
@@ -194,30 +209,17 @@ StatsCompartmentCallback(JSRuntime *rt, void *data, JSCompartment *compartment)
     compartment->compartmentStats = &cStats;
 
     // Measure the compartment object itself, and things hanging off it.
-    compartment->sizeOfIncludingThis(rtStats->mallocSizeOf_,
-                                     &cStats.compartmentObject,
-                                     &cStats.typeInference,
-                                     &cStats.shapesMallocHeapCompartmentTables,
-                                     &cStats.crossCompartmentWrappersTable,
-                                     &cStats.regexpCompartment,
-                                     &cStats.debuggeesSet,
-                                     &cStats.baselineStubsOptimized);
-}
-
-static void
-StatsZoneCallback(JSRuntime *rt, void *data, Zone *zone)
-{
-    // Append a new CompartmentStats to the vector.
-    RuntimeStats *rtStats = static_cast<StatsClosure *>(data)->rtStats;
-
-    // CollectRuntimeStats reserves enough space.
-    MOZ_ALWAYS_TRUE(rtStats->zoneStatsVector.growBy(1));
-    ZoneStats &zStats = rtStats->zoneStatsVector.back();
-    rtStats->initExtraZoneStats(zone, &zStats);
-    rtStats->currZoneStats = &zStats;
-
-    zone->sizeOfIncludingThis(rtStats->mallocSizeOf_,
-                              &zStats.typePool);
+    compartment->addSizeOfIncludingThis(rtStats->mallocSizeOf_,
+                                        &cStats.typeInferencePendingArrays,
+                                        &cStats.typeInferenceAllocationSiteTables,
+                                        &cStats.typeInferenceArrayTypeTables,
+                                        &cStats.typeInferenceObjectTypeTables,
+                                        &cStats.compartmentObject,
+                                        &cStats.shapesMallocHeapCompartmentTables,
+                                        &cStats.crossCompartmentWrappersTable,
+                                        &cStats.regexpCompartment,
+                                        &cStats.debuggeesSet,
+                                        &cStats.baselineStubsOptimized);
 }
 
 static void
@@ -264,9 +266,7 @@ StatsCellCallback(JSRuntime *rt, void *data, void *thing, JSGCTraceKind traceKin
         else
             cStats->objectsGCHeapOrdinary += thingSize;
 
-        JS::ObjectsExtraSizes objectsExtra;
-        obj->sizeOfExcludingThis(rtStats->mallocSizeOf_, &objectsExtra);
-        cStats->objectsExtra.add(objectsExtra);
+        obj->addSizeOfExcludingThis(rtStats->mallocSizeOf_, &cStats->objectsExtra);
 
         // JSObject::sizeOfExcludingThis() doesn't measure objectsPrivate,
         // so we do it here.
@@ -307,20 +307,22 @@ StatsCellCallback(JSRuntime *rt, void *data, void *thing, JSGCTraceKind traceKin
       case JSTRACE_SHAPE: {
         Shape *shape = static_cast<Shape *>(thing);
         CompartmentStats *cStats = GetCompartmentStats(shape->compartment());
-        size_t propTableSize, kidsSize;
-        shape->sizeOfExcludingThis(rtStats->mallocSizeOf_, &propTableSize, &kidsSize);
         if (shape->inDictionary()) {
             cStats->shapesGCHeapDict += thingSize;
-            cStats->shapesMallocHeapDictTables += propTableSize;
-            JS_ASSERT(kidsSize == 0);
+
+            // nullptr because kidsSize shouldn't be incremented in this case.
+            shape->addSizeOfExcludingThis(rtStats->mallocSizeOf_,
+                                          &cStats->shapesMallocHeapDictTables, nullptr);
         } else {
             JSObject *parent = shape->base()->getObjectParent();
             if (parent && parent->is<GlobalObject>())
                 cStats->shapesGCHeapTreeGlobalParented += thingSize;
             else
                 cStats->shapesGCHeapTreeNonGlobalParented += thingSize;
-            cStats->shapesMallocHeapTreeTables += propTableSize;
-            cStats->shapesMallocHeapTreeShapeKids += kidsSize;
+
+            shape->addSizeOfExcludingThis(rtStats->mallocSizeOf_,
+                                          &cStats->shapesMallocHeapTreeTables,
+                                          &cStats->shapesMallocHeapTreeShapeKids);
         }
         break;
       }
@@ -336,13 +338,12 @@ StatsCellCallback(JSRuntime *rt, void *data, void *thing, JSGCTraceKind traceKin
         JSScript *script = static_cast<JSScript *>(thing);
         CompartmentStats *cStats = GetCompartmentStats(script->compartment());
         cStats->scriptsGCHeap += thingSize;
+
         cStats->scriptsMallocHeapData += script->sizeOfData(rtStats->mallocSizeOf_);
+        cStats->typeInferenceTypeScripts += script->sizeOfTypeScript(rtStats->mallocSizeOf_);
 #ifdef JS_ION
-        size_t baselineData = 0, baselineStubsFallback = 0;
-        jit::SizeOfBaselineData(script, rtStats->mallocSizeOf_, &baselineData,
-                                &baselineStubsFallback);
-        cStats->baselineData += baselineData;
-        cStats->baselineStubsFallback += baselineStubsFallback;
+        jit::AddSizeOfBaselineData(script, rtStats->mallocSizeOf_, &cStats->baselineData,
+                                   &cStats->baselineStubsFallback);
         cStats->ionData += jit::SizeOfIonData(script, rtStats->mallocSizeOf_);
 #endif
 
@@ -377,6 +378,8 @@ StatsCellCallback(JSRuntime *rt, void *data, void *thing, JSGCTraceKind traceKin
         break;
       }
 
+      default:
+        MOZ_ASSUME_UNREACHABLE("invalid traceKind");
     }
 
     // Yes, this is a subtraction:  see StatsArenaCallback() for details.
@@ -448,7 +451,7 @@ JS::CollectRuntimeStats(JSRuntime *rt, RuntimeStats *rtStats, ObjectPrivateVisit
                                         StatsArenaCallback, StatsCellCallback);
 
     // Take the "explicit/js/runtime/" measurements.
-    rt->sizeOfIncludingThis(rtStats->mallocSizeOf_, &rtStats->runtime);
+    rt->addSizeOfIncludingThis(rtStats->mallocSizeOf_, &rtStats->runtime);
 
     rtStats->gcHeapGCThings = 0;
     for (size_t i = 0; i < rtStats->zoneStatsVector.length(); i++) {

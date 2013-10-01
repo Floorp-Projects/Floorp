@@ -455,10 +455,6 @@ public class TopSitesPage extends HomeFragment {
 
     private void updateUiFromCursor(Cursor c) {
         mList.setHeaderDividersEnabled(c != null && c.getCount() > mMaxGridEntries);
-
-        if (c != null && c.getCount() > 0) {
-            return;
-        }
     }
 
     private static class TopSitesLoader extends SimpleCursorLoader {
@@ -473,6 +469,7 @@ public class TopSitesPage extends HomeFragment {
 
         @Override
         public Cursor loadCursor() {
+            Log.d(LOGTAG, "TopSitesLoader.loadCursor()");
             return BrowserDB.getTopSites(getContext().getContentResolver(), mMaxGridEntries, SEARCH_LIMIT);
         }
     }
@@ -580,29 +577,52 @@ public class TopSitesPage extends HomeFragment {
     private class CursorLoaderCallbacks implements LoaderCallbacks<Cursor> {
         @Override
         public Loader<Cursor> onCreateLoader(int id, Bundle args) {
+            Log.d(LOGTAG, "Creating TopSitesLoader: " + id);
             return new TopSitesLoader(getActivity());
         }
 
+        /**
+         * This method is called *twice* in some circumstances.
+         *
+         * If you try to avoid that through some kind of boolean flag,
+         * sometimes (e.g., returning to the activity) you'll *not* be called
+         * twice, and thus you'll never draw thumbnails.
+         *
+         * The root cause is TopSitesLoader.loadCursor being called twice.
+         * Why that is... dunno.
+         */
         @Override
         public void onLoadFinished(Loader<Cursor> loader, Cursor c) {
+            Log.d(LOGTAG, "onLoadFinished: " + c.getCount() + " rows.");
+
             mListAdapter.swapCursor(c);
             mGridAdapter.swapCursor(c);
             updateUiFromCursor(c);
 
-            // Load the thumbnails.
-            if (c.getCount() > 0 && c.moveToFirst()) {
-                final ArrayList<String> urls = new ArrayList<String>();
-                do {
-                    final String url = c.getString(c.getColumnIndexOrThrow(URLColumns.URL));
-                    urls.add(url);
-                } while (c.moveToNext());
+            final int col = c.getColumnIndexOrThrow(URLColumns.URL);
 
-                if (urls.size() > 0) {
-                    Bundle bundle = new Bundle();
-                    bundle.putStringArrayList(THUMBNAILS_URLS_KEY, urls);
-                    getLoaderManager().restartLoader(LOADER_ID_THUMBNAILS, bundle, mThumbnailsLoaderCallbacks);
-                }
+            // Load the thumbnails.
+            // Even though the cursor we're given is supposed to be fresh,
+            // we get a bad first value unless we reset its position.
+            // Using move(-1) and moveToNext() doesn't work correctly under
+            // rotation, so we use moveToFirst.
+            if (!c.moveToFirst()) {
+                return;
             }
+            
+            final ArrayList<String> urls = new ArrayList<String>();
+            int i = 1;
+            do {
+                urls.add(c.getString(col));
+            } while (i++ < mMaxGridEntries && c.moveToNext());
+
+            if (urls.isEmpty()) {
+                return;
+            }
+
+            Bundle bundle = new Bundle();
+            bundle.putStringArrayList(THUMBNAILS_URLS_KEY, urls);
+            getLoaderManager().restartLoader(LOADER_ID_THUMBNAILS, bundle, mThumbnailsLoaderCallbacks);
         }
 
         @Override
@@ -635,29 +655,43 @@ public class TopSitesPage extends HomeFragment {
                 return null;
             }
 
-            final Map<String, Thumbnail> thumbnails = new HashMap<String, Thumbnail>();
-
             // Query the DB for thumbnails.
             final ContentResolver cr = getContext().getContentResolver();
             final Cursor cursor = BrowserDB.getThumbnailsForUrls(cr, mUrls);
 
-            try {
-                if (cursor != null && cursor.moveToFirst()) {
-                    do {
-                        // Try to get the thumbnail, if cursor is valid.
-                        String url = cursor.getString(cursor.getColumnIndexOrThrow(Thumbnails.URL));
-                        final byte[] b = cursor.getBlob(cursor.getColumnIndexOrThrow(Thumbnails.DATA));
-                        final Bitmap bitmap = (b == null ? null : BitmapUtils.decodeByteArray(b));
+            if (cursor == null) {
+                return null;
+            }
 
-                        if (bitmap != null) {
-                            thumbnails.put(url, new Thumbnail(bitmap, true));
-                        }
-                    } while (cursor.moveToNext());
+            final Map<String, Thumbnail> thumbnails = new HashMap<String, Thumbnail>();
+
+            try {
+                final int urlIndex = cursor.getColumnIndexOrThrow(Thumbnails.URL);
+                final int dataIndex = cursor.getColumnIndexOrThrow(Thumbnails.DATA);
+
+                while (cursor.moveToNext()) {
+                    String url = cursor.getString(urlIndex);
+
+                    // This should never be null, but if it is...
+                    final byte[] b = cursor.getBlob(dataIndex);
+                    if (b == null) {
+                        continue;
+                    }
+
+                    final Bitmap bitmap = BitmapUtils.decodeByteArray(b);
+
+                    // Our thumbnails are never null, so if we get a null decoded
+                    // bitmap, it's because we hit an OOM or some other disaster.
+                    // Give up immediately rather than hammering on.
+                    if (bitmap == null) {
+                        Log.w(LOGTAG, "Aborting thumbnail load; decode failed.");
+                        break;
+                    }
+
+                    thumbnails.put(url, new Thumbnail(bitmap, true));
                 }
             } finally {
-                if (cursor != null) {
-                    cursor.close();
-                }
+                cursor.close();
             }
 
             // Query the DB for favicons for the urls without thumbnails.

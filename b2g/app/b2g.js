@@ -284,7 +284,7 @@ pref("media.video-queue.default-size", 3);
 
 // optimize images' memory usage
 pref("image.mem.decodeondraw", true);
-pref("content.image.allow_locking", false); /* don't allow image locking */
+pref("image.mem.allow_locking_in_content_processes", false); /* don't allow image locking */
 pref("image.mem.min_discard_timeout_ms", 86400000); /* 24h, we rely on the out of memory hook */
 pref("image.mem.max_decoded_image_kb", 30000); /* 30MB seems reasonable */
 pref("image.onload.decode.limit", 24); /* don't decode more than 24 images eagerly */
@@ -602,6 +602,11 @@ pref("ui.showHideScrollbars", 1);
 pref("dom.ipc.processPriorityManager.enabled", true);
 pref("dom.ipc.processPriorityManager.backgroundGracePeriodMS", 1000);
 pref("dom.ipc.processPriorityManager.temporaryPriorityLockMS", 5000);
+
+// Number of different background levels for background processes.  We use
+// these different levels to force the low-memory killer to kill processes in
+// a LRU order.
+pref("dom.ipc.processPriorityManager.backgroundLRUPoolLevels", 5);
 
 // Kernel parameters for process priorities.  These affect how processes are
 // killed on low-memory and their relative CPU priorities.

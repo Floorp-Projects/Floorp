@@ -3,13 +3,3 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-MOCHITEST_A11Y_FILES =\
-		test_bindings.xhtml \
-		test_embeds.xul \
-		test_general.html \
-		test_general.xul \
-		test_tabbrowser.xul \
-		test_tree.xul \
-		test_ui_modalprompt.html \
-		test_update.html \
-		$(NULL)

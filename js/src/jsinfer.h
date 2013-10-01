@@ -112,7 +112,6 @@ namespace analyze {
 
 namespace types {
 
-class TypeCallsite;
 class TypeCompartment;
 class TypeSet;
 
@@ -901,7 +900,7 @@ struct TypeObject : gc::BarrieredCell<TypeObject>
      */
     HeapPtr<TypeObjectAddendum> addendum;
 
-    bool hasNewScript() {
+    bool hasNewScript() const {
         return addendum && addendum->isNewScript();
     }
 
@@ -1059,7 +1058,7 @@ struct TypeObject : gc::BarrieredCell<TypeObject>
     inline void clearProperties();
     inline void sweep(FreeOp *fop);
 
-    size_t sizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf);
+    size_t sizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf) const;
 
     /*
      * Type objects don't have explicit finalizers. Memory owned by a type
@@ -1141,13 +1140,6 @@ class TypeScript
     uint32_t *bytecodeMap;
 
   public:
-    /*
-     * Array of type sets storing the possible inputs to property reads.
-     * Generated the first time the script is analyzed by inference and kept
-     * after analysis purges.
-     */
-    HeapTypeSet *propertyReadTypes;
-
     /* Array of type type sets for variables and JOF_TYPESET ops. */
     TypeSet *typeArray() const { return (TypeSet *) (uintptr_t(this) + sizeof(TypeScript)); }
 
@@ -1192,6 +1184,10 @@ class TypeScript
 
     static void Sweep(FreeOp *fop, JSScript *script);
     void destroy();
+
+    size_t sizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf) const {
+        return mallocSizeOf(this);
+    }
 
 #ifdef DEBUG
     void printTypes(JSContext *cx, HandleScript script) const;
@@ -1366,6 +1362,12 @@ struct TypeCompartment
     void sweepCompilerOutputs(FreeOp *fop, bool discardConstraints);
 
     void finalizeObjects();
+
+    void addSizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf,
+                                size_t *pendingArrays,
+                                size_t *allocationSiteTables,
+                                size_t *arrayTypeTables,
+                                size_t *objectTypeTables);
 };
 
 void FixRestArgumentsType(ExclusiveContext *cxArg, JSObject *obj);

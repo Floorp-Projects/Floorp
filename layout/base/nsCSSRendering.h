@@ -11,6 +11,8 @@
 #include "gfxBlur.h"
 #include "gfxContext.h"
 #include "nsLayoutUtils.h"
+#include "nsStyleStruct.h"
+#include "nsIFrame.h"
 
 class nsStyleContext;
 class nsPresContext;

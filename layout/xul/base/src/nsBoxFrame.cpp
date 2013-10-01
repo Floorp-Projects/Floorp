@@ -62,6 +62,7 @@
 #include "nsDisplayList.h"
 #include "mozilla/Preferences.h"
 #include "nsThemeConstants.h"
+#include "nsLayoutUtils.h"
 #include <algorithm>
 
 // Needed for Print Preview
@@ -1910,8 +1911,8 @@ void
 nsBoxFrame::CheckBoxOrder()
 {
   if (SupportsOrdinalsInChildren() &&
-      !nsLayoutUtils::IsFrameListSorted<IsBoxOrdinalLEQ>(mFrames)) {
-    nsLayoutUtils::SortFrameList<IsBoxOrdinalLEQ>(mFrames);
+      !nsIFrame::IsFrameListSorted<IsBoxOrdinalLEQ>(mFrames)) {
+    nsIFrame::SortFrameList<IsBoxOrdinalLEQ>(mFrames);
   }
 }
 
