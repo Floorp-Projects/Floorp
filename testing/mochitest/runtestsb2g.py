@@ -8,6 +8,7 @@ import shutil
 import sys
 import tempfile
 import threading
+import time
 import traceback
 
 try:
@@ -145,6 +146,7 @@ class B2GMochitest(MochitestUtilsMixin):
             log.error("Automation Error: Received unexpected exception while running application\n")
             status = 1
 
+        time.sleep(5)
         self.stopWebServer(options)
         self.stopWebSocketServer(options)
 
