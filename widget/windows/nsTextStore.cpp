@@ -1426,19 +1426,19 @@ GetLineStyle(TF_DA_LINESTYLE aTSFLineStyle, uint8_t &aTextRangeLineStyle)
 {
   switch (aTSFLineStyle) {
     case TF_LS_NONE:
-      aTextRangeLineStyle = nsTextRangeStyle::LINESTYLE_NONE;
+      aTextRangeLineStyle = TextRangeStyle::LINESTYLE_NONE;
       return true;
     case TF_LS_SOLID:
-      aTextRangeLineStyle = nsTextRangeStyle::LINESTYLE_SOLID;
+      aTextRangeLineStyle = TextRangeStyle::LINESTYLE_SOLID;
       return true;
     case TF_LS_DOT:
-      aTextRangeLineStyle = nsTextRangeStyle::LINESTYLE_DOTTED;
+      aTextRangeLineStyle = TextRangeStyle::LINESTYLE_DOTTED;
       return true;
     case TF_LS_DASH:
-      aTextRangeLineStyle = nsTextRangeStyle::LINESTYLE_DASHED;
+      aTextRangeLineStyle = TextRangeStyle::LINESTYLE_DASHED;
       return true;
     case TF_LS_SQUIGGLE:
-      aTextRangeLineStyle = nsTextRangeStyle::LINESTYLE_WAVY;
+      aTextRangeLineStyle = TextRangeStyle::LINESTYLE_WAVY;
       return true;
     default:
       return false;
@@ -1544,19 +1544,19 @@ nsTextStore::RecordCompositionUpdateAction()
       newRange.mRangeType = GetGeckoSelectionValue(attr);
       if (GetColor(attr.crText, newRange.mRangeStyle.mForegroundColor)) {
         newRange.mRangeStyle.mDefinedStyles |=
-                               nsTextRangeStyle::DEFINED_FOREGROUND_COLOR;
+                               TextRangeStyle::DEFINED_FOREGROUND_COLOR;
       }
       if (GetColor(attr.crBk, newRange.mRangeStyle.mBackgroundColor)) {
         newRange.mRangeStyle.mDefinedStyles |=
-                               nsTextRangeStyle::DEFINED_BACKGROUND_COLOR;
+                               TextRangeStyle::DEFINED_BACKGROUND_COLOR;
       }
       if (GetColor(attr.crLine, newRange.mRangeStyle.mUnderlineColor)) {
         newRange.mRangeStyle.mDefinedStyles |=
-                               nsTextRangeStyle::DEFINED_UNDERLINE_COLOR;
+                               TextRangeStyle::DEFINED_UNDERLINE_COLOR;
       }
       if (GetLineStyle(attr.lsStyle, newRange.mRangeStyle.mLineStyle)) {
         newRange.mRangeStyle.mDefinedStyles |=
-                               nsTextRangeStyle::DEFINED_LINESTYLE;
+                               TextRangeStyle::DEFINED_LINESTYLE;
         newRange.mRangeStyle.mIsBoldLine = attr.fBoldLine != 0;
       }
     }
