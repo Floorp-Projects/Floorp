@@ -985,7 +985,7 @@ TabParent::HandleQueryContentEvent(nsQueryContentEvent& aEvent)
 }
 
 bool
-TabParent::SendCompositionEvent(nsCompositionEvent& event)
+TabParent::SendCompositionEvent(WidgetCompositionEvent& event)
 {
   if (mIsDestroyed) {
     return false;

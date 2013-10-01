@@ -107,7 +107,6 @@ typedef mozilla::WidgetEvent               nsEvent;
 typedef mozilla::WidgetGUIEvent            nsGUIEvent;
 typedef mozilla::WidgetInputEvent          nsInputEvent;
 typedef mozilla::InternalUIEvent           nsUIEvent;
-typedef mozilla::WidgetCompositionEvent    nsCompositionEvent;
 typedef mozilla::WidgetQueryContentEvent   nsQueryContentEvent;
 typedef mozilla::WidgetSelectionEvent      nsSelectionEvent;
 typedef mozilla::WidgetMouseEventBase      nsMouseEvent_base;

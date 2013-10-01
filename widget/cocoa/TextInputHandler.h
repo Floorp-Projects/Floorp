@@ -1081,7 +1081,7 @@ private:
    * @param aCompositionEvent     A composition event which you want to
    *                              initialize.
    */
-  void InitCompositionEvent(nsCompositionEvent& aCompositionEvent);
+  void InitCompositionEvent(WidgetCompositionEvent& aCompositionEvent);
 
   /**
    * When a composition starts, OnStartIMEComposition() is called.

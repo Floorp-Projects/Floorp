@@ -609,7 +609,7 @@ nsIMEStateManager::NotifyIME(NotificationToIME aNotification,
       }
 
       status = nsEventStatus_eIgnore;
-      nsCompositionEvent endEvent(true, NS_COMPOSITION_END, widget);
+      WidgetCompositionEvent endEvent(true, NS_COMPOSITION_END, widget);
       endEvent.data = backup.GetLastData();
       endEvent.mFlags.mIsSynthesizedForTests = true;
       widget->DispatchEvent(&endEvent, status);
@@ -622,7 +622,7 @@ nsIMEStateManager::NotifyIME(NotificationToIME aNotification,
 
       nsEventStatus status = nsEventStatus_eIgnore;
       if (!backup.GetLastData().IsEmpty()) {
-        nsCompositionEvent updateEvent(true, NS_COMPOSITION_UPDATE, widget);
+        WidgetCompositionEvent updateEvent(true, NS_COMPOSITION_UPDATE, widget);
         updateEvent.data = backup.GetLastData();
         updateEvent.mFlags.mIsSynthesizedForTests = true;
         widget->DispatchEvent(&updateEvent, status);
@@ -641,7 +641,7 @@ nsIMEStateManager::NotifyIME(NotificationToIME aNotification,
       }
 
       status = nsEventStatus_eIgnore;
-      nsCompositionEvent endEvent(true, NS_COMPOSITION_END, widget);
+      WidgetCompositionEvent endEvent(true, NS_COMPOSITION_END, widget);
       endEvent.data = backup.GetLastData();
       endEvent.mFlags.mIsSynthesizedForTests = true;
       widget->DispatchEvent(&endEvent, status);

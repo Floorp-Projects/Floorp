@@ -594,10 +594,10 @@ nsDOMEvent::DuplicatePrivateData()
     }
     case NS_COMPOSITION_EVENT:
     {
-      nsCompositionEvent* compositionEvent =
-        new nsCompositionEvent(false, msg, nullptr);
-      nsCompositionEvent* oldCompositionEvent =
-        static_cast<nsCompositionEvent*>(mEvent);
+      WidgetCompositionEvent* compositionEvent =
+        new WidgetCompositionEvent(false, msg, nullptr);
+      WidgetCompositionEvent* oldCompositionEvent =
+        static_cast<WidgetCompositionEvent*>(mEvent);
       compositionEvent->AssignCompositionEventData(*oldCompositionEvent, true);
       newEvent = compositionEvent;
       break;

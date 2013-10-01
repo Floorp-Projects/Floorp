@@ -225,7 +225,7 @@ public:
 
     static TabParent *GetIMETabParent() { return mIMETabParent; }
     bool HandleQueryContentEvent(nsQueryContentEvent& aEvent);
-    bool SendCompositionEvent(nsCompositionEvent& event);
+    bool SendCompositionEvent(mozilla::WidgetCompositionEvent& event);
     bool SendTextEvent(mozilla::WidgetTextEvent& event);
     bool SendSelectionEvent(nsSelectionEvent& event);
 
