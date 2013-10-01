@@ -2629,7 +2629,7 @@ IMEInputHandler::DispatchTextEvent(const nsString& aText,
 
   nsRefPtr<IMEInputHandler> kungFuDeathGrip(this);
 
-  nsTextEvent textEvent(true, NS_TEXT_TEXT, mWidget);
+  WidgetTextEvent textEvent(true, NS_TEXT_TEXT, mWidget);
   textEvent.time = PR_IntervalNow();
   textEvent.theText = aText;
   nsAutoTArray<TextRange, 4> textRanges;

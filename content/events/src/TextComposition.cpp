@@ -133,7 +133,7 @@ TextComposition::CompositionEventDispatcher::Run()
       break;
     }
     case NS_TEXT_TEXT: {
-      nsTextEvent textEvent(true, NS_TEXT_TEXT, mWidget);
+      WidgetTextEvent textEvent(true, NS_TEXT_TEXT, mWidget);
       textEvent.theText = mData;
       nsIMEStateManager::DispatchCompositionEvent(mEventTarget, mPresContext,
                                                   &textEvent, &status, nullptr);

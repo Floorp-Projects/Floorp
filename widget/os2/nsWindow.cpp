@@ -2496,7 +2496,7 @@ bool nsWindow::ImeResultString(HIMI himi)
     DispatchWindowEvent(&update);
   }
 
-  nsTextEvent text(true, NS_TEXT_TEXT, this);
+  WidgetTextEvent text(true, NS_TEXT_TEXT, this);
   InitEvent(text);
   text.theText = compositionString;
   DispatchWindowEvent(&text);
@@ -2664,7 +2664,7 @@ bool nsWindow::ImeConversionString(HIMI himi)
       textRanges.AppendElement(newRange);
     }
   }
-  nsTextEvent text(true, NS_TEXT_TEXT, this);
+  WidgetTextEvent text(true, NS_TEXT_TEXT, this);
   InitEvent(text);
   text.theText = compositionString;
   text.rangeArray = textRanges.Elements();

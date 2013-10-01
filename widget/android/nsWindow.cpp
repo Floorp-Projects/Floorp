@@ -689,7 +689,7 @@ nsWindow::DispatchEvent(nsGUIEvent *aEvent)
             break;
         case NS_TEXT_TEXT:
             MOZ_ASSERT(mIMEComposing);
-            mIMEComposingText = static_cast<nsTextEvent*>(aEvent)->theText;
+            mIMEComposingText = static_cast<WidgetTextEvent*>(aEvent)->theText;
             break;
         }
         return status;
@@ -1729,7 +1729,7 @@ nsWindow::OnKeyEvent(AndroidGeckoEvent *ae)
         break;
     case AKEY_EVENT_ACTION_MULTIPLE:
         {
-            nsTextEvent event(true, NS_TEXT_TEXT, this);
+            WidgetTextEvent event(true, NS_TEXT_TEXT, this);
             event.theText.Assign(ae->Characters());
             DispatchEvent(&event);
         }
@@ -1817,7 +1817,7 @@ nsWindow::RemoveIMEComposition()
     AutoIMEMask selMask(mIMEMaskSelectionUpdate);
     AutoIMEMask textMask(mIMEMaskTextUpdate);
 
-    nsTextEvent textEvent(true, NS_TEXT_TEXT, this);
+    WidgetTextEvent textEvent(true, NS_TEXT_TEXT, this);
     InitEvent(textEvent, nullptr);
     textEvent.theText = mIMEComposingText;
     DispatchEvent(&textEvent);
@@ -1928,7 +1928,7 @@ nsWindow::OnIMEEvent(AndroidGeckoEvent *ae)
                 DispatchEvent(&event);
             }
             {
-                nsTextEvent event(true, NS_TEXT_TEXT, this);
+                WidgetTextEvent event(true, NS_TEXT_TEXT, this);
                 InitEvent(event, nullptr);
                 event.theText = ae->Characters();
                 DispatchEvent(&event);
@@ -2013,7 +2013,7 @@ nsWindow::OnIMEEvent(AndroidGeckoEvent *ae)
             AutoIMEMask textMask(mIMEMaskTextUpdate);
             RemoveIMEComposition();
 
-            nsTextEvent event(true, NS_TEXT_TEXT, this);
+            WidgetTextEvent event(true, NS_TEXT_TEXT, this);
             InitEvent(event, nullptr);
 
             event.rangeArray = mIMERanges.Elements();
@@ -2127,7 +2127,7 @@ nsWindow::NotifyIME(NotificationToIME aNotification)
             if (mIMEComposing) {
                 nsRefPtr<nsWindow> kungFuDeathGrip(this);
 
-                nsTextEvent textEvent(true, NS_TEXT_TEXT, this);
+                WidgetTextEvent textEvent(true, NS_TEXT_TEXT, this);
                 InitEvent(textEvent, nullptr);
                 DispatchEvent(&textEvent);
 

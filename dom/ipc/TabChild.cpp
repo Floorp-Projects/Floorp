@@ -1890,11 +1890,11 @@ TabChild::RecvCompositionEvent(const nsCompositionEvent& event)
 }
 
 bool
-TabChild::RecvTextEvent(const nsTextEvent& event)
+TabChild::RecvTextEvent(const WidgetTextEvent& event)
 {
-  nsTextEvent localEvent(event);
+  WidgetTextEvent localEvent(event);
   DispatchWidgetEvent(localEvent);
-  IPC::ParamTraits<nsTextEvent>::Free(event);
+  IPC::ParamTraits<WidgetTextEvent>::Free(event);
   return true;
 }
 

@@ -941,7 +941,7 @@ nsTextStore::FlushPendingActions()
         PR_LOG(sTextStoreLog, PR_LOG_DEBUG,
                ("TSF: 0x%p   nsTextStore::FlushPendingActions(), "
                 "dispatching text event...", this));
-        nsTextEvent textEvent(true, NS_TEXT_TEXT, mWidget);
+        WidgetTextEvent textEvent(true, NS_TEXT_TEXT, mWidget);
         mWidget->InitEvent(textEvent);
         textEvent.theText = mComposition.mLastData;
         if (action.mRanges.IsEmpty()) {
@@ -987,7 +987,7 @@ nsTextStore::FlushPendingActions()
         PR_LOG(sTextStoreLog, PR_LOG_DEBUG,
                ("TSF: 0x%p   nsTextStore::FlushPendingActions(), "
                 "dispatching text event...", this));
-        nsTextEvent textEvent(true, NS_TEXT_TEXT, mWidget);
+        WidgetTextEvent textEvent(true, NS_TEXT_TEXT, mWidget);
         mWidget->InitEvent(textEvent);
         textEvent.theText = mComposition.mLastData;
         mWidget->DispatchWindowEvent(&textEvent);

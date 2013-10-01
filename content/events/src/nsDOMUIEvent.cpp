@@ -351,7 +351,7 @@ nsDOMUIEvent::IsChar() const
     case NS_KEY_EVENT:
       return static_cast<WidgetKeyboardEvent*>(mEvent)->isChar;
     case NS_TEXT_EVENT:
-      return static_cast<nsTextEvent*>(mEvent)->isChar;
+      return static_cast<WidgetTextEvent*>(mEvent)->isChar;
     default:
       return false;
   }
