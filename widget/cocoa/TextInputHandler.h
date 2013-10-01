@@ -214,7 +214,7 @@ public:
    *                              compute the character to be input from
    *                              characters of aNativeKeyEvent.
    */
-  void InitKeyEvent(NSEvent *aNativeKeyEvent, nsKeyEvent& aKeyEvent,
+  void InitKeyEvent(NSEvent *aNativeKeyEvent, WidgetKeyboardEvent& aKeyEvent,
                     const nsAString *aInsertString = nullptr);
 
   /**
@@ -285,7 +285,7 @@ protected:
    */
   void InitKeyPressEvent(NSEvent *aNativeKeyEvent,
                          PRUnichar aInsertChar,
-                         nsKeyEvent& aKeyEvent,
+                         WidgetKeyboardEvent& aKeyEvent,
                          UInt32 aKbType);
 
   bool GetBoolProperty(const CFStringRef aKey);
@@ -363,7 +363,7 @@ public:
    *                              compute the character to be input from
    *                              characters of aNativeKeyEvent.
    */
-  void InitKeyEvent(NSEvent *aNativeKeyEvent, nsKeyEvent& aKeyEvent,
+  void InitKeyEvent(NSEvent *aNativeKeyEvent, WidgetKeyboardEvent& aKeyEvent,
                     const nsAString *aInsertString = nullptr);
 
   /**
@@ -384,7 +384,7 @@ public:
    * |mNativeKeyEvent| field of the Gecko event that is passed in.
    * @param aKeyEvent  Gecko key event to attach the native event to
    */
-  NS_IMETHOD AttachNativeKeyEvent(nsKeyEvent& aKeyEvent);
+  NS_IMETHOD AttachNativeKeyEvent(WidgetKeyboardEvent& aKeyEvent);
 
   /**
    * GetWindowLevel() returns the window level of current focused (in Gecko)
@@ -636,7 +636,7 @@ protected:
    * @return                      TRUE if the key event causes text input.
    *                              Otherwise, FALSE.
    */
-  static bool IsNormalCharInputtingEvent(const nsKeyEvent& aKeyEvent);
+  static bool IsNormalCharInputtingEvent(const WidgetKeyboardEvent& aKeyEvent);
 
   /**
    * IsModifierKey() checks whether the native keyCode is for a modifier key.
@@ -1011,7 +1011,7 @@ private:
   // This flag is enabled by OnFocusChangeInGecko, and will be cleared by
   // ExecutePendingMethods.  When this is true, IsFocus() returns TRUE.  At
   // that time, the focus processing in Gecko might not be finished yet.  So,
-  // you cannot use nsQueryContentEvent or something.
+  // you cannot use WidgetQueryContentEvent or something.
   bool mIsInFocusProcessing;
   bool mIMEHasFocus;
 
@@ -1065,13 +1065,13 @@ private:
    *                              be set to the NSUnderlineStyleAttributeName
    *                              ranges in aAttrString.  Note that if you pass
    *                              in a large enough auto-range instance for most
-   *                              cases (e.g., nsAutoTArray<nsTextRange, 4>),
+   *                              cases (e.g., nsAutoTArray<TextRange, 4>),
    *                              it prevents memory fragmentation.
    * @param aAttrString           An NSAttributedString instance which indicates
    *                              current composition string.
    * @param aSelectedRange        Current selected range (or caret position).
    */
-  void SetTextRangeList(nsTArray<nsTextRange>& aTextRangeList,
+  void SetTextRangeList(nsTArray<TextRange>& aTextRangeList,
                         NSAttributedString *aAttrString,
                         NSRange& aSelectedRange);
 
@@ -1081,7 +1081,7 @@ private:
    * @param aCompositionEvent     A composition event which you want to
    *                              initialize.
    */
-  void InitCompositionEvent(nsCompositionEvent& aCompositionEvent);
+  void InitCompositionEvent(WidgetCompositionEvent& aCompositionEvent);
 
   /**
    * When a composition starts, OnStartIMEComposition() is called.

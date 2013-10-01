@@ -6,10 +6,10 @@
 #include "nsSVGAnimatedTransformList.h"
 #include "mozilla/dom/SVGAnimatedTransformList.h"
 #include "mozilla/dom/SVGAnimationElement.h"
-#include "nsSMILValue.h"
-#include "prdtoa.h"
-#include "SVGContentUtils.h"
+#include "nsCharSeparatedTokenizer.h"
 #include "nsSVGTransform.h"
+#include "nsSMILValue.h"
+#include "SVGContentUtils.h"
 #include "SVGTransformListSMILType.h"
 
 namespace mozilla {
@@ -235,54 +235,27 @@ nsSVGAnimatedTransformList::SMILAnimatedTransformList::ParseValue(
   aResult.Swap(val);
 }
 
-namespace
-{
-  inline void
-  SkipWsp(nsACString::const_iterator& aIter,
-          const nsACString::const_iterator& aIterEnd)
-  {
-    while (aIter != aIterEnd && IsSVGWhitespace(*aIter))
-      ++aIter;
-  }
-} // end anonymous namespace block
-
 int32_t
 nsSVGAnimatedTransformList::SMILAnimatedTransformList::ParseParameterList(
   const nsAString& aSpec,
   float* aVars,
   int32_t aNVars)
 {
-  NS_ConvertUTF16toUTF8 spec(aSpec);
-
-  nsACString::const_iterator start, end;
-  spec.BeginReading(start);
-  spec.EndReading(end);
-
-  SkipWsp(start, end);
+  nsCharSeparatedTokenizerTemplate<IsSVGWhitespace>
+    tokenizer(aSpec, ',', nsCharSeparatedTokenizer::SEPARATOR_OPTIONAL);
 
   int numArgsFound = 0;
 
-  while (start != end) {
-    char const *arg = start.get();
-    char *argend;
-    float f = float(PR_strtod(arg, &argend));
-    if (arg == argend || argend > end.get() || !NS_finite(f))
-      return -1;
-
+  while (tokenizer.hasMoreTokens()) {
+    float f;
+    if (!SVGContentUtils::ParseNumber(tokenizer.nextToken(), f)) {
+      return -1;    
+    }
     if (numArgsFound < aNVars) {
       aVars[numArgsFound] = f;
     }
-
-    start.advance(argend - arg);
     numArgsFound++;
-
-    SkipWsp(start, end);
-    if (*start == ',') {
-      ++start;
-      SkipWsp(start, end);
-    }
   }
-
   return numArgsFound;
 }
 

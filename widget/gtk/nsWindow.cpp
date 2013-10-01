@@ -151,7 +151,7 @@ static GdkWindow *get_inner_gdk_window (GdkWindow *aWindow,
                                         gint x, gint y,
                                         gint *retx, gint *rety);
 
-static inline bool is_context_menu_key(const nsKeyEvent& inKeyEvent);
+static inline bool is_context_menu_key(const WidgetKeyboardEvent& inKeyEvent);
 
 static int    is_parent_ungrab_enter(GdkEventCrossing *aEvent);
 static int    is_parent_grab_leave(GdkEventCrossing *aEvent);
@@ -2918,7 +2918,7 @@ nsWindow::DispatchKeyDownEvent(GdkEventKey *aEvent, bool *aCancelled)
 
     // send the key down event
     nsEventStatus status;
-    nsKeyEvent downEvent(true, NS_KEY_DOWN, this);
+    WidgetKeyboardEvent downEvent(true, NS_KEY_DOWN, this);
     KeymapWrapper::InitKeyEvent(downEvent, aEvent);
     DispatchEvent(&downEvent, status);
     *aCancelled = (status == nsEventStatus_eConsumeNoDefault);
@@ -3016,7 +3016,7 @@ nsWindow::OnKeyPressEvent(GdkEventKey *aEvent)
 #endif /* ! AIX */
 #endif /* MOZ_X11 */
 
-    nsKeyEvent event(true, NS_KEY_PRESS, this);
+    WidgetKeyboardEvent event(true, NS_KEY_PRESS, this);
     KeymapWrapper::InitKeyEvent(event, aEvent);
 
     // before we dispatch a key, check if it's the context menu key.
@@ -3039,7 +3039,7 @@ nsWindow::OnKeyPressEvent(GdkEventKey *aEvent)
             DispatchEvent(&event, status);
         }
         else {
-            nsTextEvent textEvent(true, NS_TEXT_TEXT, this);
+            WidgetTextEvent textEvent(true, NS_TEXT_TEXT, this);
             PRUnichar textString[3];
             textString[0] = H_SURROGATE(event.charCode);
             textString[1] = L_SURROGATE(event.charCode);
@@ -3068,7 +3068,7 @@ nsWindow::OnKeyReleaseEvent(GdkEventKey *aEvent)
     }
 
     // send the key event as a key up event
-    nsKeyEvent event(true, NS_KEY_UP, this);
+    WidgetKeyboardEvent event(true, NS_KEY_UP, this);
     KeymapWrapper::InitKeyEvent(event, aEvent);
 
     nsEventStatus status;
@@ -3258,7 +3258,7 @@ void
 nsWindow::DispatchDragEvent(uint32_t aMsg, const nsIntPoint& aRefPoint,
                             guint aTime)
 {
-    nsDragEvent event(true, aMsg, this);
+    WidgetDragEvent event(true, aMsg, this);
 
     if (aMsg == NS_DRAGDROP_OVER) {
         InitDragEvent(event);
@@ -5561,7 +5561,7 @@ theme_changed_cb (GtkSettings *settings, GParamSpec *pspec, nsWindow *data)
 // These are all of our drag and drop operations
 
 void
-nsWindow::InitDragEvent(nsDragEvent &aEvent)
+nsWindow::InitDragEvent(WidgetDragEvent &aEvent)
 {
     // set the keyboard modifiers
     guint modifierState = KeymapWrapper::GetCurrentModifierState();
@@ -5732,7 +5732,7 @@ get_inner_gdk_window (GdkWindow *aWindow,
 }
 
 static inline bool
-is_context_menu_key(const nsKeyEvent& aKeyEvent)
+is_context_menu_key(const WidgetKeyboardEvent& aKeyEvent)
 {
     return ((aKeyEvent.keyCode == NS_VK_F10 && aKeyEvent.IsShift() &&
              !aKeyEvent.IsControl() && !aKeyEvent.IsMeta() &&
