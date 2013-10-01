@@ -2567,7 +2567,7 @@ bool nsWindow::ImeConversionString(HIMI himi)
     mLastDispatchedCompositionString = compositionString;
     DispatchWindowEvent(&update);
   }
-  nsAutoTArray<nsTextRange, 4> textRanges;
+  nsAutoTArray<TextRange, 4> textRanges;
   if (!compositionString.IsEmpty()) {
     bool oneClause = false;
 
@@ -2649,7 +2649,7 @@ bool nsWindow::ImeConversionString(HIMI himi)
       clauseAttr[0] = NS_TEXTRANGE_SELECTEDRAWTEXT;
     }
 
-    nsTextRange newRange;
+    TextRange newRange;
 
     for (ULONG i = 0; i < ulClauseCount - 1; ++i) {
       newRange.mStartOffset = clauseOffsets[i];

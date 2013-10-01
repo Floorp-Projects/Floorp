@@ -19,6 +19,7 @@
 #include "mozilla/MiscEvents.h"
 #include "mozilla/TextEvents.h"
 
+using namespace mozilla;
 using namespace mozilla::widget;
 
 static nsIMM32Handler* gIMM32Handler = nullptr;
@@ -1586,7 +1587,7 @@ nsIMM32Handler::DispatchTextEvent(nsWindow* aWindow,
 
   aWindow->InitEvent(event, &point);
 
-  nsAutoTArray<nsTextRange, 4> textRanges;
+  nsAutoTArray<TextRange, 4> textRanges;
 
   if (aCheckAttr) {
     SetTextRangeList(textRanges);
@@ -1603,7 +1604,7 @@ nsIMM32Handler::DispatchTextEvent(nsWindow* aWindow,
 }
 
 void
-nsIMM32Handler::SetTextRangeList(nsTArray<nsTextRange> &aTextRangeList)
+nsIMM32Handler::SetTextRangeList(nsTArray<TextRange> &aTextRangeList)
 {
   // Sogou (Simplified Chinese IME) returns contradictory values: The cursor
   // position is actual cursor position. However, other values (composition
@@ -1612,7 +1613,7 @@ nsIMM32Handler::SetTextRangeList(nsTArray<nsTextRange> &aTextRangeList)
   NS_ASSERTION(ShouldDrawCompositionStringOurselves(),
     "SetTextRangeList is called when we don't need to fire text event");
 
-  nsTextRange range;
+  TextRange range;
   if (mClauseArray.Length() == 0) {
     // Some IMEs don't return clause array information, then, we assume that
     // all characters in the composition string are in one clause.

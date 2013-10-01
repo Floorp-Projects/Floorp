@@ -8,7 +8,7 @@
 
 using namespace mozilla;
 
-nsPrivateTextRange::nsPrivateTextRange(const nsTextRange &aTextRange)
+nsPrivateTextRange::nsPrivateTextRange(const TextRange &aTextRange)
   : mRangeStart(uint16_t(aTextRange.mStartOffset)),
     mRangeEnd(uint16_t(aTextRange.mEndOffset)),
     mRangeType(uint16_t(aTextRange.mRangeType)),
