@@ -4378,7 +4378,7 @@ TextInputHandlerBase::SetSelection(NSRange& aRange)
   MOZ_ASSERT(!Destroyed());
 
   nsRefPtr<TextInputHandlerBase> kungFuDeathGrip(this);
-  nsSelectionEvent selectionEvent(true, NS_SELECTION_SET, mWidget);
+  WidgetSelectionEvent selectionEvent(true, NS_SELECTION_SET, mWidget);
   selectionEvent.mOffset = aRange.location;
   selectionEvent.mLength = aRange.length;
   selectionEvent.mReversed = false;

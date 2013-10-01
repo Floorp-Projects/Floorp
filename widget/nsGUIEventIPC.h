@@ -441,9 +441,9 @@ struct ParamTraits<mozilla::WidgetQueryContentEvent>
 };
 
 template<>
-struct ParamTraits<nsSelectionEvent>
+struct ParamTraits<mozilla::WidgetSelectionEvent>
 {
-  typedef nsSelectionEvent paramType;
+  typedef mozilla::WidgetSelectionEvent paramType;
 
   static void Write(Message* aMsg, const paramType& aParam)
   {

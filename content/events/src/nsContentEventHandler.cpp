@@ -114,7 +114,7 @@ nsContentEventHandler::Init(WidgetQueryContentEvent* aEvent)
 }
 
 nsresult
-nsContentEventHandler::Init(nsSelectionEvent* aEvent)
+nsContentEventHandler::Init(WidgetSelectionEvent* aEvent)
 {
   NS_ASSERTION(aEvent, "aEvent must not be null");
 
@@ -1052,7 +1052,7 @@ static void AdjustRangeForSelection(nsIContent* aRoot,
 }
 
 nsresult
-nsContentEventHandler::OnSelectionEvent(nsSelectionEvent* aEvent)
+nsContentEventHandler::OnSelectionEvent(WidgetSelectionEvent* aEvent)
 {
   aEvent->mSucceeded = false;
 
