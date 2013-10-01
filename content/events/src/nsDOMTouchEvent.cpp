@@ -115,8 +115,8 @@ nsDOMTouchEvent::InitTouchEvent(const nsAString& aType,
     return;
   }
 
-  static_cast<nsInputEvent*>(mEvent)->InitBasicModifiers(aCtrlKey, aAltKey,
-                                                         aShiftKey, aMetaKey);
+  static_cast<WidgetInputEvent*>(mEvent)->
+    InitBasicModifiers(aCtrlKey, aAltKey, aShiftKey, aMetaKey);
   mTouches = aTouches;
   mTargetTouches = aTargetTouches;
   mChangedTouches = aChangedTouches;

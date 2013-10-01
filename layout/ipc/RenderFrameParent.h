@@ -93,8 +93,8 @@ public:
 
   void SetBackgroundColor(nscolor aColor) { mBackgroundColor = gfxRGBA(aColor); };
 
-  void NotifyInputEvent(const nsInputEvent& aEvent,
-                        nsInputEvent* aOutEvent);
+  void NotifyInputEvent(const WidgetInputEvent& aEvent,
+                        WidgetInputEvent* aOutEvent);
 
   void NotifyDimensionsChanged(ScreenIntSize size);
 

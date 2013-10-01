@@ -679,7 +679,7 @@ AudioChannelService::Observe(nsISupports* aSubject, const char* aTopic, const PR
     } else if (keyStr.EqualsLiteral("audio.volume.telephony")) {
       audioManager->SetAudioChannelVolume(AUDIO_CHANNEL_TELEPHONY, index);
     } else {
-      MOZ_ASSERT("unexpected audio channel for volume control");
+      MOZ_ASSUME_UNREACHABLE("unexpected audio channel for volume control");
     }
   }
 #endif

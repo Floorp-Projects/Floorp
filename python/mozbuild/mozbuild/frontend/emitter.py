@@ -256,7 +256,7 @@ class TreeMetadataEmitter(LoggingMixin):
             filtered = m.tests
 
             if filter_inactive:
-                filtered = m.active_tests(**self.mozinfo)
+                filtered = m.active_tests(disabled=False, **self.mozinfo)
 
             out_dir = mozpath.join(install_prefix, manifest_reldir)
 

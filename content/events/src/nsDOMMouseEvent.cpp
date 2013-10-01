@@ -13,12 +13,12 @@ using namespace mozilla;
 
 nsDOMMouseEvent::nsDOMMouseEvent(mozilla::dom::EventTarget* aOwner,
                                  nsPresContext* aPresContext,
-                                 nsInputEvent* aEvent)
+                                 WidgetInputEvent* aEvent)
   : nsDOMUIEvent(aOwner, aPresContext, aEvent ? aEvent :
                  new nsMouseEvent(false, 0, nullptr,
                                   nsMouseEvent::eReal))
 {
-  // There's no way to make this class' ctor allocate an nsMouseScrollEvent.
+  // There's no way to make this class' ctor allocate an WidgetMouseScrollEvent.
   // It's not that important, though, since a scroll event is not a real
   // DOM event.
   
@@ -86,9 +86,10 @@ nsDOMMouseEvent::InitMouseEvent(const nsAString & aType, bool aCanBubble, bool a
     case NS_DRAG_EVENT:
     case NS_SIMPLE_GESTURE_EVENT:
     {
-       static_cast<nsMouseEvent_base*>(mEvent)->relatedTarget = aRelatedTarget;
-       static_cast<nsMouseEvent_base*>(mEvent)->button = aButton;
-       nsInputEvent* inputEvent = static_cast<nsInputEvent*>(mEvent);
+       static_cast<WidgetMouseEventBase*>(mEvent)->relatedTarget =
+         aRelatedTarget;
+       static_cast<WidgetMouseEventBase*>(mEvent)->button = aButton;
+       WidgetInputEvent* inputEvent = static_cast<WidgetInputEvent*>(mEvent);
        inputEvent->InitBasicModifiers(aCtrlKey, aAltKey, aShiftKey, aMetaKey);
        mClientPoint.x = aClientX;
        mClientPoint.y = aClientY;
@@ -139,7 +140,7 @@ nsDOMMouseEvent::InitMouseEvent(const nsAString& aType,
     case NS_WHEEL_EVENT:
     case NS_DRAG_EVENT:
     case NS_SIMPLE_GESTURE_EVENT:
-      static_cast<nsInputEvent*>(mEvent)->modifiers = modifiers;
+      static_cast<WidgetInputEvent*>(mEvent)->modifiers = modifiers;
       return NS_OK;
     default:
       MOZ_CRASH("There is no space to store the modifiers");
@@ -169,7 +170,7 @@ nsDOMMouseEvent::Constructor(const mozilla::dom::GlobalObject& aGlobal,
     case NS_WHEEL_EVENT:
     case NS_DRAG_EVENT:
     case NS_SIMPLE_GESTURE_EVENT:
-      static_cast<nsMouseEvent_base*>(e->mEvent)->buttons = aParam.mButtons;
+      static_cast<WidgetMouseEventBase*>(e->mEvent)->buttons = aParam.mButtons;
       break;
     default:
       break;
@@ -192,8 +193,8 @@ nsDOMMouseEvent::InitNSMouseEvent(const nsAString & aType, bool aCanBubble, bool
                                                 aMetaKey, aButton, aRelatedTarget);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  static_cast<nsMouseEvent_base*>(mEvent)->pressure = aPressure;
-  static_cast<nsMouseEvent_base*>(mEvent)->inputSource = aInputSource;
+  static_cast<WidgetMouseEventBase*>(mEvent)->pressure = aPressure;
+  static_cast<WidgetMouseEventBase*>(mEvent)->inputSource = aInputSource;
   return NS_OK;
 }
 
@@ -215,7 +216,7 @@ nsDOMMouseEvent::Button()
     case NS_WHEEL_EVENT:
     case NS_DRAG_EVENT:
     case NS_SIMPLE_GESTURE_EVENT:
-      return static_cast<nsMouseEvent_base*>(mEvent)->button;
+      return static_cast<WidgetMouseEventBase*>(mEvent)->button;
     default:
       NS_WARNING("Tried to get mouse button for non-mouse event!");
       return nsMouseEvent::eLeftButton;
@@ -240,7 +241,7 @@ nsDOMMouseEvent::Buttons()
     case NS_WHEEL_EVENT:
     case NS_DRAG_EVENT:
     case NS_SIMPLE_GESTURE_EVENT:
-      return static_cast<nsMouseEvent_base*>(mEvent)->buttons;
+      return static_cast<WidgetMouseEventBase*>(mEvent)->buttons;
     default:
       MOZ_CRASH("Tried to get mouse buttons for non-mouse event!");
   }
@@ -265,7 +266,8 @@ nsDOMMouseEvent::GetRelatedTarget()
     case NS_WHEEL_EVENT:
     case NS_DRAG_EVENT:
     case NS_SIMPLE_GESTURE_EVENT:
-      relatedTarget = do_QueryInterface(static_cast<nsMouseEvent_base*>(mEvent)->relatedTarget);
+      relatedTarget = do_QueryInterface(
+        static_cast<WidgetMouseEventBase*>(mEvent)->relatedTarget);
       break;
     default:
       break;
@@ -430,7 +432,7 @@ nsDOMMouseEvent::GetMozInputSource(uint16_t* aInputSource)
 nsresult NS_NewDOMMouseEvent(nsIDOMEvent** aInstancePtrResult,
                              mozilla::dom::EventTarget* aOwner,
                              nsPresContext* aPresContext,
-                             nsInputEvent *aEvent)
+                             WidgetInputEvent* aEvent)
 {
   nsDOMMouseEvent* it = new nsDOMMouseEvent(aOwner, aPresContext, aEvent);
   return CallQueryInterface(it, aInstancePtrResult);

@@ -263,7 +263,7 @@ private:
   // that originates from another thread is safe to send sync.
 
   // Async event dispatching
-  void DispatchAsyncEventIgnoreStatus(nsInputEvent* aEvent);
+  void DispatchAsyncEventIgnoreStatus(WidgetInputEvent* aEvent);
   void DispatchAsyncTouchEventIgnoreStatus(WidgetTouchEvent* aEvent);
   void DispatchAsyncTouchEventWithCallback(WidgetTouchEvent* aEvent,
                                            void (MetroInput::*Callback)());
