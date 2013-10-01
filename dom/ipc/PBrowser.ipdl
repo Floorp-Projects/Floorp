@@ -41,7 +41,7 @@ using nsIMEUpdatePreference;
 using nsIntPoint;
 using nsIntRect;
 using nsIntSize;
-using nsKeyEvent;
+using mozilla::WidgetKeyboardEvent;
 using nsMouseEvent;
 using nsMouseScrollEvent;
 using mozilla::WheelEvent;
@@ -365,7 +365,7 @@ child:
                bool aIgnoreRootScrollFrame);
 
     RealMouseEvent(nsMouseEvent event);
-    RealKeyEvent(nsKeyEvent event);
+    RealKeyEvent(WidgetKeyboardEvent event);
     MouseWheelEvent(WheelEvent event);
     RealTouchEvent(WidgetTouchEvent event);
     // We use a separate message for touchmove events only to apply

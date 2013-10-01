@@ -221,7 +221,8 @@ protected:
     static void LogWindow(nsWindow *win, int index, int indent);
 
 private:
-    void InitKeyEvent(nsKeyEvent& event, mozilla::AndroidGeckoEvent& key,
+    void InitKeyEvent(mozilla::WidgetKeyboardEvent& event,
+                      mozilla::AndroidGeckoEvent& key,
                       ANPEvent* pluginEvent);
     void DispatchMotionEvent(nsInputEvent &event,
                              mozilla::AndroidGeckoEvent *ae,

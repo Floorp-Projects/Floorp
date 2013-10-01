@@ -2159,7 +2159,7 @@ bool nsWindow::OnMouseChord(MPARAM mp1, MPARAM mp2)
 
   // XXX Using keypress event here is wrong approach, this should be replaced
   //     with content command event.
-  nsKeyEvent event(true, NS_KEY_PRESS, this);
+  WidgetKeyboardEvent event(true, NS_KEY_PRESS, this);
   nsIntPoint point(0,0);
   InitEvent(event, &point);
 
@@ -2732,7 +2732,7 @@ NS_IMETHODIMP_(InputContext) nsWindow::GetInputContext()
 
 bool nsWindow::DispatchKeyEvent(MPARAM mp1, MPARAM mp2)
 {
-  nsKeyEvent pressEvent(true, 0, nullptr);
+  WidgetKeyboardEvent pressEvent(true, 0, nullptr);
   USHORT fsFlags = SHORT1FROMMP(mp1);
   USHORT usVKey = SHORT2FROMMP(mp2);
   USHORT usChar = SHORT1FROMMP(mp2);
@@ -2760,8 +2760,9 @@ bool nsWindow::DispatchKeyEvent(MPARAM mp1, MPARAM mp2)
   // Now dispatch a keyup/keydown event.  This one is *not* meant to
   // have the unicode charcode in.
   nsIntPoint point(0,0);
-  nsKeyEvent event(true, (fsFlags & KC_KEYUP) ? NS_KEY_UP : NS_KEY_DOWN,
-                   this);
+  WidgetKeyboardEvent event(true,
+                            (fsFlags & KC_KEYUP) ? NS_KEY_UP : NS_KEY_DOWN,
+                            this);
   InitEvent(event, &point);
   event.keyCode   = WMChar2KeyCode(mp1, mp2);
   event.InitBasicModifiers(fsFlags & KC_CTRL, fsFlags & KC_ALT,
