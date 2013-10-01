@@ -125,7 +125,7 @@ ModifierKeyState::Update()
 }
 
 void
-ModifierKeyState::InitInputEvent(nsInputEvent& aInputEvent) const
+ModifierKeyState::InitInputEvent(WidgetInputEvent& aInputEvent) const
 {
   aInputEvent.modifiers = mModifiers;
 
@@ -143,7 +143,7 @@ ModifierKeyState::InitInputEvent(nsInputEvent& aInputEvent) const
 }
 
 void
-ModifierKeyState::InitMouseEvent(nsInputEvent& aMouseEvent) const
+ModifierKeyState::InitMouseEvent(WidgetInputEvent& aMouseEvent) const
 {
   NS_ASSERTION(aMouseEvent.eventStructType == NS_MOUSE_EVENT ||
                aMouseEvent.eventStructType == NS_WHEEL_EVENT ||

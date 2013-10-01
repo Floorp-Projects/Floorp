@@ -3400,10 +3400,9 @@ nsEventStateManager::PostHandleEvent(nsPresContext* aPresContext,
             nsIFocusManager* fm = nsFocusManager::GetFocusManager();
             if (fm && mDocument) {
               // Shift focus forward or back depending on shift key
-              bool isDocMove = ((nsInputEvent*)aEvent)->IsControl() ||
-                                 (keyEvent->keyCode == NS_VK_F6);
-              uint32_t dir =
-                static_cast<nsInputEvent*>(aEvent)->IsShift() ?
+              bool isDocMove =
+                keyEvent->IsControl() || keyEvent->keyCode == NS_VK_F6;
+              uint32_t dir = keyEvent->IsShift() ?
                   (isDocMove ? static_cast<uint32_t>(nsIFocusManager::MOVEFOCUS_BACKWARDDOC) :
                                static_cast<uint32_t>(nsIFocusManager::MOVEFOCUS_BACKWARD)) :
                   (isDocMove ? static_cast<uint32_t>(nsIFocusManager::MOVEFOCUS_FORWARDDOC) :

@@ -1013,19 +1013,20 @@ MetroWidget::HitTestAPZC(ScreenPoint& pt)
 }
 
 nsEventStatus
-MetroWidget::ApzReceiveInputEvent(nsInputEvent* aEvent)
+MetroWidget::ApzReceiveInputEvent(WidgetInputEvent* aEvent)
 {
   MOZ_ASSERT(aEvent);
 
   if (!MetroWidget::sAPZC) {
     return nsEventStatus_eIgnore;
   }
-  nsInputEvent& event = static_cast<nsInputEvent&>(*aEvent);
+  WidgetInputEvent& event = static_cast<WidgetInputEvent&>(*aEvent);
   return MetroWidget::sAPZC->ReceiveInputEvent(event);
 }
 
 nsEventStatus
-MetroWidget::ApzReceiveInputEvent(nsInputEvent* aInEvent, nsInputEvent* aOutEvent)
+MetroWidget::ApzReceiveInputEvent(WidgetInputEvent* aInEvent,
+                                  WidgetInputEvent* aOutEvent)
 {
   MOZ_ASSERT(aInEvent);
   MOZ_ASSERT(aOutEvent);
@@ -1033,7 +1034,7 @@ MetroWidget::ApzReceiveInputEvent(nsInputEvent* aInEvent, nsInputEvent* aOutEven
   if (!MetroWidget::sAPZC) {
     return nsEventStatus_eIgnore;
   }
-  nsInputEvent& event = static_cast<nsInputEvent&>(*aInEvent);
+  WidgetInputEvent& event = static_cast<WidgetInputEvent&>(*aInEvent);
   return MetroWidget::sAPZC->ReceiveInputEvent(event, aOutEvent);
 }
 

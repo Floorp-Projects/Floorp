@@ -324,8 +324,8 @@ private:
     // to dispatch |aEvent| to our child.  If there's a relevant
     // transform in place, |aOutEvent| is the transformed |aEvent| to
     // dispatch to content.
-    void MaybeForwardEventToRenderFrame(const nsInputEvent& aEvent,
-                                        nsInputEvent* aOutEvent);
+    void MaybeForwardEventToRenderFrame(const WidgetInputEvent& aEvent,
+                                        WidgetInputEvent* aOutEvent);
     // The offset for the child process which is sampled at touch start. This
     // means that the touch events are relative to where the frame was at the
     // start of the touch. We need to look for a better solution to this

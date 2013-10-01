@@ -1405,7 +1405,7 @@ Element::DispatchEvent(nsPresContext* aPresContext,
 /* static */
 nsresult
 Element::DispatchClickEvent(nsPresContext* aPresContext,
-                            nsInputEvent* aSourceEvent,
+                            WidgetInputEvent* aSourceEvent,
                             nsIContent* aTarget,
                             bool aFullDispatch,
                             const EventFlags* aExtraEventFlags,
@@ -2217,7 +2217,8 @@ Element::PostHandleEventForLinks(nsEventChainPostVisitor& aVisitor)
 
   case NS_MOUSE_CLICK:
     if (aVisitor.mEvent->IsLeftClickEvent()) {
-      nsInputEvent* inputEvent = static_cast<nsInputEvent*>(aVisitor.mEvent);
+      WidgetInputEvent* inputEvent =
+        static_cast<WidgetInputEvent*>(aVisitor.mEvent);
       if (inputEvent->IsControl() || inputEvent->IsMeta() ||
           inputEvent->IsAlt() ||inputEvent->IsShift()) {
         break;

@@ -37,22 +37,22 @@ public:
 
   bool AltKey()
   {
-    return static_cast<nsInputEvent*>(mEvent)->IsAlt();
+    return static_cast<mozilla::WidgetInputEvent*>(mEvent)->IsAlt();
   }
 
   bool CtrlKey()
   {
-    return static_cast<nsInputEvent*>(mEvent)->IsControl();
+    return static_cast<mozilla::WidgetInputEvent*>(mEvent)->IsControl();
   }
 
   bool ShiftKey()
   {
-    return static_cast<nsInputEvent*>(mEvent)->IsShift();
+    return static_cast<mozilla::WidgetInputEvent*>(mEvent)->IsShift();
   }
 
   bool MetaKey()
   {
-    return static_cast<nsInputEvent*>(mEvent)->IsMeta();
+    return static_cast<mozilla::WidgetInputEvent*>(mEvent)->IsMeta();
   }
 
   bool GetModifierState(const nsAString& aKey)

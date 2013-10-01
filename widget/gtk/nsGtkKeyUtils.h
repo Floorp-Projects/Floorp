@@ -102,7 +102,7 @@ public:
     /**
      * InitInputEvent() initializes the aInputEvent with aModifierState.
      */
-    static void InitInputEvent(nsInputEvent& aInputEvent,
+    static void InitInputEvent(WidgetInputEvent& aInputEvent,
                                guint aModifierState);
 
     /**
