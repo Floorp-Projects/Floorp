@@ -18,7 +18,7 @@ nsDOMMouseEvent::nsDOMMouseEvent(mozilla::dom::EventTarget* aOwner,
                  new nsMouseEvent(false, 0, nullptr,
                                   nsMouseEvent::eReal))
 {
-  // There's no way to make this class' ctor allocate an nsMouseScrollEvent.
+  // There's no way to make this class' ctor allocate an WidgetMouseScrollEvent.
   // It's not that important, though, since a scroll event is not a real
   // DOM event.
   

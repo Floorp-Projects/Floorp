@@ -2478,8 +2478,8 @@ nsEventStateManager::SendLineScrollEvent(nsIFrame* aTargetFrame,
     targetContent = targetContent->GetParent();
   }
 
-  nsMouseScrollEvent event(aEvent->mFlags.mIsTrusted, NS_MOUSE_SCROLL,
-                           aEvent->widget);
+  WidgetMouseScrollEvent event(aEvent->mFlags.mIsTrusted, NS_MOUSE_SCROLL,
+                               aEvent->widget);
   if (*aStatus == nsEventStatus_eConsumeNoDefault) {
     event.mFlags.mDefaultPrevented = true;
   }
@@ -2514,8 +2514,8 @@ nsEventStateManager::SendPixelScrollEvent(nsIFrame* aTargetFrame,
     targetContent = targetContent->GetParent();
   }
 
-  nsMouseScrollEvent event(aEvent->mFlags.mIsTrusted, NS_MOUSE_PIXEL_SCROLL,
-                           aEvent->widget);
+  WidgetMouseScrollEvent event(aEvent->mFlags.mIsTrusted, NS_MOUSE_PIXEL_SCROLL,
+                               aEvent->widget);
   if (*aStatus == nsEventStatus_eConsumeNoDefault) {
     event.mFlags.mDefaultPrevented = true;
   }
