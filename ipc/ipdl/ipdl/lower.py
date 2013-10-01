@@ -1566,18 +1566,17 @@ class _GenerateProtocolCode(ipdl.ast.Visitor):
         ns.addstmts([ tfDecl, Whitespace.NL ])
         self.funcDefns.append(tfDefn)
 
-        typedefs = self.protocol.decl.cxxtypedefs
         for md in p.messageDecls:
             ns.addstmts([
                 _generateMessageClass(md.msgClass(), md.msgId(),
-                                      typedefs, md.prettyMsgName(p.name+'::'),
+                                      md.prettyMsgName(p.name+'::'),
                                       md.decl.type.compress),
                 Whitespace.NL ])
             if md.hasReply():
                 ns.addstmts([
                     _generateMessageClass(
                         md.replyClass(), md.replyId(),
-                        typedefs, md.prettyReplyName(p.name+'::'),
+                        md.prettyReplyName(p.name+'::'),
                         md.decl.type.compress),
                     Whitespace.NL ])
 
@@ -1768,12 +1767,8 @@ class _GenerateProtocolCode(ipdl.ast.Visitor):
 
 ##--------------------------------------------------
 
-def _generateMessageClass(clsname, msgid, typedefs, prettyName, compress):
+def _generateMessageClass(clsname, msgid, prettyName, compress):
     cls = Class(name=clsname, inherits=[ Inherit(Type('IPC::Message')) ])
-    cls.addstmt(Label.PRIVATE)
-    cls.addstmts(typedefs)
-    cls.addstmt(Whitespace.NL)
-
     cls.addstmt(Label.PUBLIC)
 
     idenum = TypeEnum()
