@@ -753,7 +753,7 @@ NativeKey::ComputeUnicharFromScanCode() const
 }
 
 void
-NativeKey::InitKeyEvent(nsKeyEvent& aKeyEvent,
+NativeKey::InitKeyEvent(WidgetKeyboardEvent& aKeyEvent,
                         const ModifierKeyState& aModKeyState) const
 {
   nsIntPoint point(0, 0);
@@ -789,7 +789,7 @@ NativeKey::InitKeyEvent(nsKeyEvent& aKeyEvent,
 }
 
 bool
-NativeKey::DispatchKeyEvent(nsKeyEvent& aKeyEvent,
+NativeKey::DispatchKeyEvent(WidgetKeyboardEvent& aKeyEvent,
                             const MSG* aMsgSentToPlugin) const
 {
   if (mWidget->Destroyed()) {
@@ -829,7 +829,7 @@ NativeKey::HandleKeyDownMessage(bool* aEventDispatched) const
     }
 
     bool isIMEEnabled = WinUtils::IsIMEEnabled(mWidget->GetInputContext());
-    nsKeyEvent keydownEvent(true, NS_KEY_DOWN, mWidget);
+    WidgetKeyboardEvent keydownEvent(true, NS_KEY_DOWN, mWidget);
     InitKeyEvent(keydownEvent, mModKeyState);
     if (aEventDispatched) {
       *aEventDispatched = true;
@@ -969,7 +969,7 @@ NativeKey::HandleCharMessage(const MSG& aCharMsg,
       mModKeyState.IsAltGr() ||
       (mOriginalVirtualKeyCode &&
        !KeyboardLayout::IsPrintableCharKey(mOriginalVirtualKeyCode))) {
-    nsKeyEvent keypressEvent(true, NS_KEY_PRESS, mWidget);
+    WidgetKeyboardEvent keypressEvent(true, NS_KEY_PRESS, mWidget);
     if (aCharMsg.wParam >= U_SPACE) {
       keypressEvent.charCode = static_cast<uint32_t>(aCharMsg.wParam);
     } else {
@@ -1034,7 +1034,7 @@ NativeKey::HandleCharMessage(const MSG& aCharMsg,
     uniChar = towlower(uniChar);
   }
 
-  nsKeyEvent keypressEvent(true, NS_KEY_PRESS, mWidget);
+  WidgetKeyboardEvent keypressEvent(true, NS_KEY_PRESS, mWidget);
   keypressEvent.charCode = uniChar;
   if (!keypressEvent.charCode) {
     keypressEvent.keyCode = mDOMKeyCode;
@@ -1061,7 +1061,7 @@ NativeKey::HandleKeyUpMessage(bool* aEventDispatched) const
     return false;
   }
 
-  nsKeyEvent keyupEvent(true, NS_KEY_UP, mWidget);
+  WidgetKeyboardEvent keyupEvent(true, NS_KEY_UP, mWidget);
   InitKeyEvent(keyupEvent, mModKeyState);
   if (aEventDispatched) {
     *aEventDispatched = true;
@@ -1275,7 +1275,7 @@ NativeKey::DispatchKeyPressEventsWithKeyboardLayout() const
 
   if (inputtingChars.IsEmpty() &&
       shiftedChars.IsEmpty() && unshiftedChars.IsEmpty()) {
-    nsKeyEvent keypressEvent(true, NS_KEY_PRESS, mWidget);
+    WidgetKeyboardEvent keypressEvent(true, NS_KEY_PRESS, mWidget);
     keypressEvent.keyCode = mDOMKeyCode;
     InitKeyEvent(keypressEvent, mModKeyState);
     return DispatchKeyEvent(keypressEvent);
@@ -1346,7 +1346,7 @@ NativeKey::DispatchKeyPressEventsWithKeyboardLayout() const
       }
     }
 
-    nsKeyEvent keypressEvent(true, NS_KEY_PRESS, mWidget);
+    WidgetKeyboardEvent keypressEvent(true, NS_KEY_PRESS, mWidget);
     keypressEvent.charCode = uniChar;
     keypressEvent.alternativeCharCodes.AppendElements(altArray);
     InitKeyEvent(keypressEvent, modKeyState);

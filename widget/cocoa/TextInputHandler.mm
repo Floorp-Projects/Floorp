@@ -767,7 +767,7 @@ TISInputSourceWrapper::Clear()
 
 void
 TISInputSourceWrapper::InitKeyEvent(NSEvent *aNativeKeyEvent,
-                                    nsKeyEvent& aKeyEvent,
+                                    WidgetKeyboardEvent& aKeyEvent,
                                     const nsAString *aInsertString)
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
@@ -978,7 +978,7 @@ TISInputSourceWrapper::InitKeyEvent(NSEvent *aNativeKeyEvent,
 void
 TISInputSourceWrapper::InitKeyPressEvent(NSEvent *aNativeKeyEvent,
                                          PRUnichar aInsertChar,
-                                         nsKeyEvent& aKeyEvent,
+                                         WidgetKeyboardEvent& aKeyEvent,
                                          UInt32 aKbType)
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
@@ -1441,7 +1441,7 @@ TextInputHandler::HandleKeyDownEvent(NSEvent* aNativeEvent)
   if (!IsIMEComposing()) {
     NSResponder* firstResponder = [[mView window] firstResponder];
 
-    nsKeyEvent keydownEvent(true, NS_KEY_DOWN, mWidget);
+    WidgetKeyboardEvent keydownEvent(true, NS_KEY_DOWN, mWidget);
     InitKeyEvent(aNativeEvent, keydownEvent);
 
     currentKeyEvent->mKeyDownHandled = DispatchEvent(keydownEvent);
@@ -1519,7 +1519,7 @@ TextInputHandler::HandleKeyDownEvent(NSEvent* aNativeEvent)
 
   if (currentKeyEvent->CanDispatchKeyPressEvent() &&
       !wasComposing && !IsIMEComposing()) {
-    nsKeyEvent keypressEvent(true, NS_KEY_PRESS, mWidget);
+    WidgetKeyboardEvent keypressEvent(true, NS_KEY_PRESS, mWidget);
     InitKeyEvent(aNativeEvent, keypressEvent);
 
     // If we called interpretKeyEvents and this isn't normal character input
@@ -1589,7 +1589,7 @@ TextInputHandler::HandleKeyUpEvent(NSEvent* aNativeEvent)
     return;
   }
 
-  nsKeyEvent keyupEvent(true, NS_KEY_UP, mWidget);
+  WidgetKeyboardEvent keyupEvent(true, NS_KEY_UP, mWidget);
   InitKeyEvent(aNativeEvent, keyupEvent);
 
   DispatchEvent(keyupEvent);
@@ -1938,7 +1938,7 @@ TextInputHandler::DispatchKeyEventForFlagsChanged(NSEvent* aNativeEvent,
   NPCocoaEvent cocoaEvent;
 
   // Fire a key event.
-  nsKeyEvent keyEvent(true, message, mWidget);
+  WidgetKeyboardEvent keyEvent(true, message, mWidget);
   InitKeyEvent(aNativeEvent, keyEvent);
 
   // create event for use by plugins
@@ -2057,7 +2057,7 @@ TextInputHandler::InsertText(NSAttributedString* aAttrString,
   }
 
   // Dispatch keypress event with char instead of textEvent
-  nsKeyEvent keypressEvent(true, NS_KEY_PRESS, mWidget);
+  WidgetKeyboardEvent keypressEvent(true, NS_KEY_PRESS, mWidget);
   keypressEvent.isChar = IsPrintableChar(str.CharAt(0));
 
   // Don't set other modifiers from the current event, because here in
@@ -2120,7 +2120,7 @@ TextInputHandler::DoCommandBySelector(const char* aSelector)
        TrueOrFalse(currentKeyEvent->mCausedOtherKeyEvents) : "N/A"));
 
   if (currentKeyEvent && currentKeyEvent->CanDispatchKeyPressEvent()) {
-    nsKeyEvent keypressEvent(true, NS_KEY_PRESS, mWidget);
+    WidgetKeyboardEvent keypressEvent(true, NS_KEY_PRESS, mWidget);
     InitKeyEvent(currentKeyEvent->mKeyEvent, keypressEvent);
     currentKeyEvent->mKeyPressHandled = DispatchEvent(keypressEvent);
     currentKeyEvent->mKeyPressDispatched = true;
@@ -3797,7 +3797,7 @@ PluginTextInputHandler::HandleCarbonPluginKeyEvent(EventRef aKeyEvent)
 
     EventRecord eventRec;
     if (::ConvertEventRefToEventRecord(cloneEvent, &eventRec)) {
-      nsKeyEvent keydownEvent(true, NS_KEY_DOWN, mWidget);
+      WidgetKeyboardEvent keydownEvent(true, NS_KEY_DOWN, mWidget);
       nsCocoaUtils::InitInputEvent(keydownEvent, cocoaModifiers);
 
       uint32_t keyCode =
@@ -3991,7 +3991,7 @@ PluginTextInputHandler::HandleKeyUpEventForPlugin(NSEvent* aNativeKeyEvent)
       return;
     }
 
-    nsKeyEvent keyupEvent(true, NS_KEY_UP, mWidget);
+    WidgetKeyboardEvent keyupEvent(true, NS_KEY_UP, mWidget);
     InitKeyEvent(aNativeKeyEvent, keyupEvent);
     NPCocoaEvent pluginEvent;
     ConvertCocoaKeyEventToNPCocoaEvent(aNativeKeyEvent, pluginEvent);
@@ -4190,7 +4190,7 @@ TextInputHandlerBase::DispatchEvent(nsGUIEvent& aEvent)
 
 void
 TextInputHandlerBase::InitKeyEvent(NSEvent *aNativeKeyEvent,
-                                   nsKeyEvent& aKeyEvent,
+                                   WidgetKeyboardEvent& aKeyEvent,
                                    const nsAString* aInsertString)
 {
   NS_ASSERTION(aNativeKeyEvent, "aNativeKeyEvent must not be NULL");
@@ -4303,7 +4303,7 @@ TextInputHandlerBase::GetWindowLevel()
 }
 
 NS_IMETHODIMP
-TextInputHandlerBase::AttachNativeKeyEvent(nsKeyEvent& aKeyEvent)
+TextInputHandlerBase::AttachNativeKeyEvent(WidgetKeyboardEvent& aKeyEvent)
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
 
@@ -4461,7 +4461,8 @@ TextInputHandlerBase::IsSpecialGeckoKey(UInt32 aNativeKeyCode)
 }
 
 /* static */ bool
-TextInputHandlerBase::IsNormalCharInputtingEvent(const nsKeyEvent& aKeyEvent)
+TextInputHandlerBase::IsNormalCharInputtingEvent(
+                        const WidgetKeyboardEvent& aKeyEvent)
 {
   // this is not character inputting event, simply.
   if (!aKeyEvent.isChar || !aKeyEvent.charCode || aKeyEvent.IsMeta()) {

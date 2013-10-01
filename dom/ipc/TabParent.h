@@ -195,7 +195,7 @@ public:
                       bool aPreventDefault);
     bool SendRealMouseEvent(nsMouseEvent& event);
     bool SendMouseWheelEvent(mozilla::WheelEvent& event);
-    bool SendRealKeyEvent(nsKeyEvent& event);
+    bool SendRealKeyEvent(mozilla::WidgetKeyboardEvent& event);
     bool SendRealTouchEvent(WidgetTouchEvent& event);
 
     virtual PDocumentRendererParent*

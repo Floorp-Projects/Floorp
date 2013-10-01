@@ -328,7 +328,7 @@ protected:
    * @param aModifierMask modifier mask for the key event
    */
   void HandleAccessKey(nsPresContext* aPresContext,
-                       nsKeyEvent* aEvent,
+                       mozilla::WidgetKeyboardEvent* aEvent,
                        nsEventStatus* aStatus,
                        nsIDocShellTreeItem* aBubbledFrom,
                        ProcessingAccessKeyState aAccessKeyState,

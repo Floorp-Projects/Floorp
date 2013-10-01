@@ -355,7 +355,7 @@ nsPlaintextEditor::HandleKeyPressEvent(nsIDOMKeyEvent* aKeyEvent)
     return nsEditor::HandleKeyPressEvent(aKeyEvent);
   }
 
-  nsKeyEvent* nativeKeyEvent = GetNativeKeyEvent(aKeyEvent);
+  WidgetKeyboardEvent* nativeKeyEvent = GetNativeKeyEvent(aKeyEvent);
   NS_ENSURE_TRUE(nativeKeyEvent, NS_ERROR_UNEXPECTED);
   NS_ASSERTION(nativeKeyEvent->message == NS_KEY_PRESS,
                "HandleKeyPressEvent gets non-keypress event");

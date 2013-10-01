@@ -935,7 +935,7 @@ nsEventStateManager::PreHandleEvent(nsPresContext* aPresContext,
   case NS_KEY_PRESS:
     {
 
-      nsKeyEvent* keyEvent = (nsKeyEvent*)aEvent;
+      WidgetKeyboardEvent* keyEvent = static_cast<WidgetKeyboardEvent*>(aEvent);
 
       int32_t modifierMask = 0;
       if (keyEvent->IsShift())
@@ -1278,7 +1278,7 @@ nsEventStateManager::GetAccessKeyLabelPrefix(nsAString& aPrefix)
 
 void
 nsEventStateManager::HandleAccessKey(nsPresContext* aPresContext,
-                                     nsKeyEvent *aEvent,
+                                     WidgetKeyboardEvent* aEvent,
                                      nsEventStatus* aStatus,
                                      nsIDocShellTreeItem* aBubbledFrom,
                                      ProcessingAccessKeyState aAccessKeyState,
@@ -1388,7 +1388,7 @@ nsEventStateManager::DispatchCrossProcessEvent(nsEvent* aEvent,
     return remote->SendRealMouseEvent(*mouseEvent);
   }
   case NS_KEY_EVENT: {
-    nsKeyEvent* keyEvent = static_cast<nsKeyEvent*>(aEvent);
+    WidgetKeyboardEvent* keyEvent = static_cast<WidgetKeyboardEvent*>(aEvent);
     return remote->SendRealKeyEvent(*keyEvent);
   }
   case NS_WHEEL_EVENT: {
@@ -3380,7 +3380,7 @@ nsEventStateManager::PostHandleEvent(nsPresContext* aPresContext,
 
   case NS_KEY_PRESS:
     if (nsEventStatus_eConsumeNoDefault != *aStatus) {
-      nsKeyEvent* keyEvent = (nsKeyEvent*)aEvent;
+      WidgetKeyboardEvent* keyEvent = static_cast<WidgetKeyboardEvent*>(aEvent);
       //This is to prevent keyboard scrolling while alt modifier in use.
       if (!keyEvent->IsAlt()) {
         switch(keyEvent->keyCode) {

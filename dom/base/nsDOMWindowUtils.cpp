@@ -931,7 +931,7 @@ nsDOMWindowUtils::SendKeyEvent(const nsAString& aType,
   else
     return NS_ERROR_FAILURE;
 
-  nsKeyEvent event(true, msg, widget);
+  WidgetKeyboardEvent event(true, msg, widget);
   event.modifiers = GetWidgetModifiers(aModifiers);
 
   if (msg == NS_KEY_PRESS) {

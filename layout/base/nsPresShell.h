@@ -588,17 +588,19 @@ protected:
   class nsDelayedKeyEvent : public nsDelayedInputEvent
   {
   public:
-    nsDelayedKeyEvent(nsKeyEvent* aEvent) : nsDelayedInputEvent()
+    nsDelayedKeyEvent(mozilla::WidgetKeyboardEvent* aEvent) :
+      nsDelayedInputEvent()
     {
-      mEvent = new nsKeyEvent(aEvent->mFlags.mIsTrusted,
-                              aEvent->message,
-                              aEvent->widget);
-      static_cast<nsKeyEvent*>(mEvent)->AssignKeyEventData(*aEvent, false);
+      mEvent = new mozilla::WidgetKeyboardEvent(aEvent->mFlags.mIsTrusted,
+                                                aEvent->message,
+                                                aEvent->widget);
+      static_cast<mozilla::WidgetKeyboardEvent*>(mEvent)->
+        AssignKeyEventData(*aEvent, false);
     }
 
     virtual ~nsDelayedKeyEvent()
     {
-      delete static_cast<nsKeyEvent*>(mEvent);
+      delete static_cast<mozilla::WidgetKeyboardEvent*>(mEvent);
     }
   };
 

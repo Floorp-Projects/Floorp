@@ -1391,8 +1391,9 @@ public:
    * @param aCandidates [out] the candidate access key list.
    *                          the first item is most preferred.
    */
-  static void GetAccessKeyCandidates(nsKeyEvent* aNativeKeyEvent,
-                                     nsTArray<uint32_t>& aCandidates);
+  static void GetAccessKeyCandidates(
+                mozilla::WidgetKeyboardEvent* aNativeKeyEvent,
+                nsTArray<uint32_t>& aCandidates);
 
   /**
    * Hide any XUL popups associated with aDocument, including any documents

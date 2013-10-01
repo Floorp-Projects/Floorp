@@ -107,7 +107,6 @@ typedef mozilla::WidgetEvent               nsEvent;
 typedef mozilla::WidgetGUIEvent            nsGUIEvent;
 typedef mozilla::WidgetInputEvent          nsInputEvent;
 typedef mozilla::InternalUIEvent           nsUIEvent;
-typedef mozilla::WidgetKeyboardEvent       nsKeyEvent;
 typedef mozilla::TextRangeStyle            nsTextRangeStyle;
 typedef mozilla::TextRange                 nsTextRange;
 typedef mozilla::TextRangeArray            nsTextRangeArray;

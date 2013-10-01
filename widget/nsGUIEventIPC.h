@@ -252,9 +252,9 @@ struct ParamTraits<mozilla::WidgetTouchEvent>
 };
 
 template<>
-struct ParamTraits<nsKeyEvent>
+struct ParamTraits<mozilla::WidgetKeyboardEvent>
 {
-  typedef nsKeyEvent paramType;
+  typedef mozilla::WidgetKeyboardEvent paramType;
 
   static void Write(Message* aMsg, const paramType& aParam)
   {
