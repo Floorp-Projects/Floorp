@@ -137,6 +137,18 @@ interface nsIMarkupDocumentViewer : nsISupports
    */
   void changeMaxLineBoxWidth(in int32_t maxLineBoxWidth);
 
+  /**
+   * Instruct the refresh driver to discontinue painting until further
+   * notice.
+   */
+  void pausePainting();
+
+  /**
+   * Instruct the refresh driver to resume painting after a previous call to
+   * pausePainting().
+   */
+  void resumePainting();
+
   /*
    * Render the document as if being viewed on a device with the specified
    * media type. This will cause a reflow.
