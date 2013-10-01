@@ -3,6 +3,7 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 import os
+import re
 from types import StringTypes
 from collections import Iterable
 
@@ -53,6 +54,38 @@ class Makefile(object):
             guard.dump(fh)
 
 
+class _SimpleOrderedSet(object):
+    '''
+    Simple ordered set, specialized for used in Rule below only.
+    It doesn't expose a complete API, and normalizes path separators
+    at insertion.
+    '''
+    def __init__(self):
+        self._list = []
+        self._set = set()
+
+    def __nonzero__(self):
+        return bool(self._set)
+
+    def __iter__(self):
+        return iter(self._list)
+
+    def __contains__(self, key):
+        return key in self._set
+
+    def update(self, iterable):
+        def _add(iterable):
+            emitted = set()
+            for i in iterable:
+                i = i.replace(os.sep, '/')
+                if i not in self._set and i not in emitted:
+                    yield i
+                    emitted.add(i)
+        added = list(_add(iterable))
+        self._set.update(added)
+        self._list.extend(added)
+
+
 class Rule(object):
     '''Class handling simple rules in the form:
            target1 target2 ... : dep1 dep2 ...
@@ -61,23 +94,21 @@ class Rule(object):
                    ...
     '''
     def __init__(self, targets=[]):
-        self._targets = []
-        self._dependencies = []
+        self._targets = _SimpleOrderedSet()
+        self._dependencies = _SimpleOrderedSet()
         self._commands = []
         self.add_targets(targets)
 
     def add_targets(self, targets):
         '''Add additional targets to the rule.'''
         assert isinstance(targets, Iterable) and not isinstance(targets, StringTypes)
-        self._targets.extend(t.replace(os.sep, '/') for t in targets
-                             if not t in self._targets)
+        self._targets.update(targets)
         return self
 
     def add_dependencies(self, deps):
         '''Add dependencies to the rule.'''
         assert isinstance(deps, Iterable) and not isinstance(deps, StringTypes)
-        self._dependencies.extend(d.replace(os.sep, '/') for d in deps
-                                  if not d in self._dependencies)
+        self._dependencies.update(deps)
         return self
 
     def add_commands(self, commands):
@@ -94,7 +125,7 @@ class Rule(object):
 
     def dependencies(self):
         '''Return an iterator on the rule dependencies.'''
-        return iter(self._dependencies)
+        return iter(d for d in self._dependencies if not d in self._targets)
 
     def commands(self):
         '''Return an iterator on the rule commands.'''
@@ -108,7 +139,36 @@ class Rule(object):
             return
         fh.write('%s:' % ' '.join(self._targets))
         if self._dependencies:
-            fh.write(' %s' % ' '.join(self._dependencies))
+            fh.write(' %s' % ' '.join(self.dependencies()))
         fh.write('\n')
         for cmd in self._commands:
             fh.write('\t%s\n' % cmd)
+
+
+# colon followed by anything except a slash (Windows path detection)
+_depfilesplitter = re.compile(r':(?![\\/])')
+
+
+def read_dep_makefile(fh):
+    """
+    Read the file handler containing a dep makefile (simple makefile only
+    containing dependencies) and returns an iterator of the corresponding Rules
+    it contains. Ignores removal guard rules.
+    """
+
+    rule = ''
+    for line in fh.readlines():
+        assert not line.startswith('\t')
+        line = line.strip()
+        if line.endswith('\\'):
+            rule += line[:-1]
+        else:
+            rule += line
+            split_rule = _depfilesplitter.split(rule, 1)
+            if len(split_rule) > 1 and split_rule[1].strip():
+                yield Rule(split_rule[0].strip().split()) \
+                      .add_dependencies(split_rule[1].strip().split())
+            rule = ''
+
+    if rule:
+        raise Exception('Makefile finishes with a backslash. Expected more input.')
