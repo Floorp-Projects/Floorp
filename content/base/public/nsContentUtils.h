@@ -1391,8 +1391,9 @@ public:
    * @param aCandidates [out] the candidate access key list.
    *                          the first item is most preferred.
    */
-  static void GetAccessKeyCandidates(nsKeyEvent* aNativeKeyEvent,
-                                     nsTArray<uint32_t>& aCandidates);
+  static void GetAccessKeyCandidates(
+                mozilla::WidgetKeyboardEvent* aNativeKeyEvent,
+                nsTArray<uint32_t>& aCandidates);
 
   /**
    * Hide any XUL popups associated with aDocument, including any documents
@@ -1406,9 +1407,9 @@ public:
   static already_AddRefed<nsIDragSession> GetDragSession();
 
   /*
-   * Initialize and set the dataTransfer field of an nsDragEvent.
+   * Initialize and set the dataTransfer field of an WidgetDragEvent.
    */
-  static nsresult SetDataTransferInEvent(nsDragEvent* aDragEvent);
+  static nsresult SetDataTransferInEvent(mozilla::WidgetDragEvent* aDragEvent);
 
   // filters the drag and drop action to fit within the effects allowed and
   // returns it.
@@ -1419,7 +1420,7 @@ public:
    * an ancestor of the document for the source of the drag.
    */
   static bool CheckForSubFrameDrop(nsIDragSession* aDragSession,
-                                   nsDragEvent* aDropEvent);
+                                   mozilla::WidgetDragEvent* aDropEvent);
 
   /**
    * Return true if aURI is a local file URI (i.e. file://).

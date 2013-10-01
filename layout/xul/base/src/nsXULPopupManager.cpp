@@ -482,7 +482,7 @@ nsXULPopupManager::InitTriggerEvent(nsIDOMEvent* aEvent, nsIContent* aPopup,
     if (event) {
       if (event->eventStructType == NS_MOUSE_EVENT ||
           event->eventStructType == NS_KEY_EVENT) {
-        mCachedModifiers = static_cast<nsInputEvent*>(event)->modifiers;
+        mCachedModifiers = static_cast<WidgetInputEvent*>(event)->modifiers;
       }
       nsIDocument* doc = aPopup->GetCurrentDoc();
       if (doc) {

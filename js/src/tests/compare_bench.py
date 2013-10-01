@@ -1,17 +1,11 @@
 #!/usr/bin/env python2.4
 """usage: %progname candidate_path baseline_path
-
-:warning: May raise ImportError on import if JSON support is missing.
 """
 
+import json
 import optparse
 from contextlib import nested
 from operator import itemgetter
-
-try:
-    import json
-except ImportError:
-    import simplejson as json
 
 
 def avg(seq):

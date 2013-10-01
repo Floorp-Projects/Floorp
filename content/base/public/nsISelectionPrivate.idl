@@ -23,7 +23,7 @@ template<class T> class nsTArray;
 
 [ptr] native nsIFrame(nsIFrame);
 [ptr] native RangeArray(nsTArray<nsRange*>);
-[ref] native constTextRangeStyleRef(const nsTextRangeStyle);
+[ref] native constTextRangeStyleRef(const mozilla::TextRangeStyle);
 [ref] native nsPointRef(nsPoint);
 native nsDirection(nsDirection);
 native ScrollAxis(nsIPresShell::ScrollAxis);
