@@ -141,8 +141,7 @@ protected:
   _trace(JSTracer* aTrc) MOZ_OVERRIDE
   {
     for (int32_t i = 0; i < SLOT_COUNT; i++) {
-      JS_CallHeapValueTracer(aTrc, &mSlots[i],
-                             "WorkerGlobalScope instance slot");
+      JS_CallHeapValueTracer(aTrc, &mSlots[i], "WorkerGlobalScope instance slot");
     }
     mWorker->TraceInternal(aTrc);
     EventTarget::_trace(aTrc);
@@ -297,10 +296,8 @@ private:
     JSObject* wrapper = &JS_CALLEE(aCx, aVp).toObject();
     JS_ASSERT(JS_ObjectIsFunction(aCx, wrapper));
 
-    JS::Rooted<JS::Value> scope(aCx,
-      js::GetFunctionNativeReserved(wrapper, SLOT_wrappedScope));
-    JS::Rooted<JS::Value> listener(aCx,
-      js::GetFunctionNativeReserved(wrapper, SLOT_wrappedFunction));
+    JS::Rooted<JS::Value> scope(aCx, js::GetFunctionNativeReserved(wrapper, SLOT_wrappedScope));
+    JS::Rooted<JS::Value> listener(aCx, js::GetFunctionNativeReserved(wrapper, SLOT_wrappedFunction));
 
     JS_ASSERT(scope.isObject());
 
@@ -322,8 +319,7 @@ private:
     }
 
     if (JSVAL_IS_BOOLEAN(rval) && JSVAL_TO_BOOLEAN(rval) &&
-        !JS_CallFunctionName(aCx, event, "preventDefault", 0, NULL,
-                             rval.address())) {
+        !JS_CallFunctionName(aCx, event, "preventDefault", 0, NULL, rval.address())) {
       return false;
     }
 
@@ -338,9 +334,9 @@ private:
     MOZ_ASSERT(scope);
 
     ErrorResult rv;
-
     nsRefPtr<EventHandlerNonNull> adaptor =
       scope->GetEventListener(NS_ConvertASCIItoUTF16(name + 2), rv);
+
     if (rv.Failed()) {
       JS_ReportError(aCx, "Failed to get event listener!");
       return false;
@@ -449,7 +445,7 @@ private:
   static bool
   Close(JSContext* aCx, unsigned aArgc, jsval* aVp)
   {
-    JS::Rooted<JSObject*> obj(aCx, JS_THIS_OBJECT(aCx, aVp));
+    JSObject* obj = JS_THIS_OBJECT(aCx, aVp);
     if (!obj) {
       return false;
     }
@@ -470,7 +466,7 @@ private:
   static bool
   ImportScripts(JSContext* aCx, unsigned aArgc, jsval* aVp)
   {
-    JS::Rooted<JSObject*> obj(aCx, JS_THIS_OBJECT(aCx, aVp));
+    JSObject* obj = JS_THIS_OBJECT(aCx, aVp);
     if (!obj) {
       return false;
     }
@@ -491,7 +487,7 @@ private:
   static bool
   SetTimeout(JSContext* aCx, unsigned aArgc, jsval* aVp)
   {
-    JS::Rooted<JSObject*> obj(aCx, JS_THIS_OBJECT(aCx, aVp));
+    JSObject* obj = JS_THIS_OBJECT(aCx, aVp);
     if (!obj) {
       return false;
     }
@@ -502,8 +498,7 @@ private:
     }
 
     JS::Rooted<JS::Value> dummy(aCx);
-    if (!JS_ConvertArguments(aCx, aArgc, JS_ARGV(aCx, aVp), "v",
-                             dummy.address())) {
+    if (!JS_ConvertArguments(aCx, aArgc, JS_ARGV(aCx, aVp), "v", dummy.address())) {
       return false;
     }
 
@@ -513,7 +508,7 @@ private:
   static bool
   ClearTimeout(JSContext* aCx, unsigned aArgc, jsval* aVp)
   {
-    JS::Rooted<JSObject*> obj(aCx, JS_THIS_OBJECT(aCx, aVp));
+    JSObject* obj = JS_THIS_OBJECT(aCx, aVp);
     if (!obj) {
       return false;
     }
@@ -539,7 +534,7 @@ private:
   static bool
   SetInterval(JSContext* aCx, unsigned aArgc, jsval* aVp)
   {
-    JS::Rooted<JSObject*> obj(aCx, JS_THIS_OBJECT(aCx, aVp));
+    JSObject* obj = JS_THIS_OBJECT(aCx, aVp);
     if (!obj) {
       return false;
     }
@@ -550,8 +545,7 @@ private:
     }
 
     JS::Rooted<JS::Value> dummy(aCx);
-    if (!JS_ConvertArguments(aCx, aArgc, JS_ARGV(aCx, aVp), "v",
-                             dummy.address())) {
+    if (!JS_ConvertArguments(aCx, aArgc, JS_ARGV(aCx, aVp), "v", dummy.address())) {
       return false;
     }
 
@@ -561,7 +555,7 @@ private:
   static bool
   ClearInterval(JSContext* aCx, unsigned aArgc, jsval* aVp)
   {
-    JS::Rooted<JSObject*> obj(aCx, JS_THIS_OBJECT(aCx, aVp));
+    JSObject* obj = JS_THIS_OBJECT(aCx, aVp);
     if (!obj) {
       return false;
     }
@@ -587,7 +581,7 @@ private:
   static bool
   Dump(JSContext* aCx, unsigned aArgc, jsval* aVp)
   {
-    JS::Rooted<JSObject*> obj(aCx, JS_THIS_OBJECT(aCx, aVp));
+    JSObject* obj = JS_THIS_OBJECT(aCx, aVp);
     if (!obj) {
       return false;
     }
@@ -621,7 +615,7 @@ private:
   static bool
   AtoB(JSContext* aCx, unsigned aArgc, jsval* aVp)
   {
-    JS::Rooted<JSObject*> obj(aCx, JS_THIS_OBJECT(aCx, aVp));
+    JSObject* obj = JS_THIS_OBJECT(aCx, aVp);
     if (!obj) {
       return false;
     }
@@ -631,8 +625,7 @@ private:
     }
 
     JS::Rooted<JS::Value> string(aCx);
-    if (!JS_ConvertArguments(aCx, aArgc, JS_ARGV(aCx, aVp), "v",
-                             string.address())) {
+    if (!JS_ConvertArguments(aCx, aArgc, JS_ARGV(aCx, aVp), "v", string.address())) {
       return false;
     }
 
@@ -648,7 +641,7 @@ private:
   static bool
   BtoA(JSContext* aCx, unsigned aArgc, jsval* aVp)
   {
-    JS::Rooted<JSObject*> obj(aCx, JS_THIS_OBJECT(aCx, aVp));
+    JSObject* obj = JS_THIS_OBJECT(aCx, aVp);
     if (!obj) {
       return false;
     }
@@ -658,8 +651,7 @@ private:
     }
 
     JS::Rooted<JS::Value> binary(aCx);
-    if (!JS_ConvertArguments(aCx, aArgc, JS_ARGV(aCx, aVp), "v",
-                             binary.address())) {
+    if (!JS_ConvertArguments(aCx, aArgc, JS_ARGV(aCx, aVp), "v", binary.address())) {
       return false;
     }
 
@@ -684,8 +676,8 @@ NS_INTERFACE_MAP_END
 const JSClass WorkerGlobalScope::sClass = {
   "WorkerGlobalScope",
   0,
-  JS_PropertyStub, JS_DeletePropertyStub, JS_PropertyStub,
-  JS_StrictPropertyStub, JS_EnumerateStub, JS_ResolveStub, JS_ConvertStub
+  JS_PropertyStub, JS_DeletePropertyStub, JS_PropertyStub, JS_StrictPropertyStub,
+  JS_EnumerateStub, JS_ResolveStub, JS_ConvertStub
 };
 
 const JSPropertySpec WorkerGlobalScope::sProperties[] = {
@@ -755,13 +747,12 @@ public:
   static JSObject*
   InitClass(JSContext* aCx, JSObject* aObj, JSObject* aParentProto)
   {
-    JS::Rooted<JSObject*> proto(aCx,
+    JSObject* proto =
       JS_InitClass(aCx, aObj, aParentProto, ProtoClass(), Construct, 0,
-                   sProperties, sFunctions, NULL, NULL));
+                   sProperties, sFunctions, NULL, NULL);
     if (proto) {
-      void* domClass = const_cast<DOMClass *>(DOMClassStruct());
       js::SetReservedSlot(proto, DOM_PROTO_INSTANCE_CLASS_SLOT,
-                          JS::PrivateValue(domClass));
+                          JS::PrivateValue(const_cast<DOMClass *>(DOMClassStruct())));
     }
     return proto;
   }
@@ -816,9 +807,9 @@ private:
     MOZ_ASSERT(scope);
 
     ErrorResult rv;
-
     nsRefPtr<EventHandlerNonNull> handler =
       scope->GetEventListener(NS_ConvertASCIItoUTF16(name + 2), rv);
+
     if (rv.Failed()) {
       JS_ReportError(aCx, "Failed to get event listener!");
       return false;
@@ -861,7 +852,8 @@ private:
     } else {
       handler = nullptr;
     }
-    scope->SetEventListener(NS_ConvertASCIItoUTF16(name + 2), handler, rv);
+    scope->SetEventListener(NS_ConvertASCIItoUTF16(name + 2),
+                            handler, rv);
 
     if (rv.Failed()) {
       JS_ReportError(aCx, "Failed to set event listener!");
@@ -902,8 +894,8 @@ private:
   }
 
   static bool
-  Resolve(JSContext* aCx, JS::Handle<JSObject*> aObj, JS::Handle<jsid> aId,
-          unsigned aFlags, JS::MutableHandle<JSObject*> aObjp)
+  Resolve(JSContext* aCx, JS::Handle<JSObject*> aObj, JS::Handle<jsid> aId, unsigned aFlags,
+          JS::MutableHandle<JSObject*> aObjp)
   {
     bool resolved;
     if (!JS_ResolveStandardClass(aCx, aObj, aId, &resolved)) {
@@ -941,7 +933,7 @@ private:
   static bool
   PostMessage(JSContext* aCx, unsigned aArgc, jsval* aVp)
   {
-    JS::Rooted<JSObject*> obj(aCx, JS_THIS_OBJECT(aCx, aVp));
+    JSObject* obj = JS_THIS_OBJECT(aCx, aVp);
     if (!obj) {
       return false;
     }
@@ -975,10 +967,9 @@ const DOMJSClass DedicatedWorkerGlobalScope::sClass = {
     "DedicatedWorkerGlobalScope",
     JSCLASS_DOM_GLOBAL | JSCLASS_IS_DOMJSCLASS | JSCLASS_IMPLEMENTS_BARRIERS |
     JSCLASS_GLOBAL_FLAGS_WITH_SLOTS(DOM_GLOBAL_SLOTS) | JSCLASS_NEW_RESOLVE,
-    JS_PropertyStub, JS_DeletePropertyStub, JS_PropertyStub,
-    JS_StrictPropertyStub, JS_EnumerateStub,
-    reinterpret_cast<JSResolveOp>(Resolve), JS_ConvertStub, Finalize, nullptr,
-    nullptr, nullptr, nullptr, Trace
+    JS_PropertyStub, JS_DeletePropertyStub, JS_PropertyStub, JS_StrictPropertyStub,
+    JS_EnumerateStub, reinterpret_cast<JSResolveOp>(Resolve), JS_ConvertStub,
+    Finalize, NULL, NULL, NULL, NULL, Trace
   },
   {
     INTERFACE_CHAIN_1(prototypes::id::EventTarget_workers),
@@ -1032,354 +1023,29 @@ const char* const DedicatedWorkerGlobalScope::sEventStrings[STRING_COUNT] = {
   "onmessage",
 };
 
-class SharedWorkerGlobalScope : public WorkerGlobalScope
-{
-  static DOMJSClass sClass;
-  static DOMIfaceAndProtoJSClass sProtoClass;
-  static const JSPropertySpec sProperties[];
-
-  enum
-  {
-    STRING_onconnect = 0,
-
-    STRING_COUNT
-  };
-
-  static const char* const sEventStrings[STRING_COUNT];
-
-public:
-  static const JSClass*
-  Class()
-  {
-    return sClass.ToJSClass();
-  }
-
-  static const JSClass*
-  ProtoClass()
-  {
-    return sProtoClass.ToJSClass();
-  }
-
-  static const DOMClass*
-  DOMClassStruct()
-  {
-    return &sClass.mClass;
-  }
-
-  static JSObject*
-  InitClass(JSContext* aCx, JSObject* aObj, JSObject* aParentProto)
-  {
-    JS::Rooted<JSObject*> proto(aCx,
-      JS_InitClass(aCx, aObj, aParentProto, ProtoClass(), Construct, 0,
-                   sProperties, nullptr, nullptr, nullptr));
-    if (proto) {
-      void* domClass = const_cast<DOMClass *>(DOMClassStruct());
-      js::SetReservedSlot(proto, DOM_PROTO_INSTANCE_CLASS_SLOT,
-                          JS::PrivateValue(domClass));
-    }
-    return proto;
-  }
-
-  static bool
-  InitPrivate(JSContext* aCx, JSObject* aObj, WorkerPrivate* aWorkerPrivate)
-  {
-    MOZ_ASSERT(JS_GetClass(aObj) == Class());
-
-    dom::AllocateProtoAndIfaceCache(aObj);
-
-    nsRefPtr<SharedWorkerGlobalScope> scope =
-      new SharedWorkerGlobalScope(aCx, aWorkerPrivate);
-
-    js::SetReservedSlot(aObj, DOM_OBJECT_SLOT, PRIVATE_TO_JSVAL(scope));
-
-    scope->SetIsDOMBinding();
-    scope->SetWrapper(aObj);
-
-    scope.forget();
-    return true;
-  }
-
-protected:
-  SharedWorkerGlobalScope(JSContext* aCx, WorkerPrivate* aWorker)
-  : WorkerGlobalScope(aCx, aWorker)
-  {
-    MOZ_COUNT_CTOR(mozilla::dom::workers::SharedWorkerGlobalScope);
-  }
-
-  ~SharedWorkerGlobalScope()
-  {
-    MOZ_COUNT_DTOR(mozilla::dom::workers::SharedWorkerGlobalScope);
-  }
-
-private:
-  using EventTarget::GetEventListener;
-  using EventTarget::SetEventListener;
-
-  static bool
-  IsSharedWorkerGlobalScope(JS::Handle<JS::Value> aVal)
-  {
-    return aVal.isObject() && JS_GetClass(&aVal.toObject()) == Class();
-  }
-
-  static bool
-  GetOnconnectImpl(JSContext* aCx, JS::CallArgs aArgs)
-  {
-    auto name = sEventStrings[STRING_onconnect];
-
-    auto scope = GetInstancePrivate(aCx, &aArgs.thisv().toObject(), name);
-    MOZ_ASSERT(scope);
-
-    ErrorResult rv;
-
-    nsRefPtr<EventHandlerNonNull> handler =
-      scope->GetEventListener(NS_ConvertASCIItoUTF16(name + 2), rv);
-    if (rv.Failed()) {
-      JS_ReportError(aCx, "Failed to get event listener!");
-      return false;
-    }
-
-    if (!handler) {
-      aArgs.rval().setNull();
-    } else {
-      aArgs.rval().setObject(*handler->Callable());
-    }
-
-    return true;
-  }
-
-  static bool
-  GetOnconnect(JSContext* aCx, unsigned aArgc, JS::Value* aVp)
-  {
-    auto args = JS::CallArgsFromVp(aArgc, aVp);
-    return JS::CallNonGenericMethod<IsSharedWorkerGlobalScope,
-                                    GetOnconnectImpl>(aCx, args);
-  }
-
-  static bool
-  SetOnconnectImpl(JSContext* aCx, JS::CallArgs aArgs)
-  {
-    auto name = sEventStrings[STRING_onconnect];
-
-    auto scope = GetInstancePrivate(aCx, &aArgs.thisv().toObject(), name);
-    MOZ_ASSERT(scope);
-
-    if (aArgs.length() == 0 || !aArgs[0].isObject()) {
-      JS_ReportError(aCx, "Not an event listener!");
-      return false;
-    }
-
-
-    ErrorResult rv;
-
-    JS::Rooted<JSObject*> listenerObj(aCx, aArgs[0].toObjectOrNull());
-    nsRefPtr<EventHandlerNonNull> handler;
-    if (listenerObj && JS_ObjectIsCallable(aCx, listenerObj)) {
-      handler = new EventHandlerNonNull(listenerObj);
-    } else {
-      handler = nullptr;
-    }
-    scope->SetEventListener(NS_ConvertASCIItoUTF16(name + 2), handler, rv);
-
-    if (rv.Failed()) {
-      JS_ReportError(aCx, "Failed to set event listener!");
-      return false;
-    }
-
-    aArgs.rval().setUndefined();
-    return true;
-  }
-
-  static bool
-  SetOnconnect(JSContext* aCx, unsigned aArgc, JS::Value* aVp)
-  {
-    auto args = JS::CallArgsFromVp(aArgc, aVp);
-    return JS::CallNonGenericMethod<IsSharedWorkerGlobalScope,
-                                    SetOnconnectImpl>(aCx, args);
-  }
-
-  static bool
-  GetNameImpl(JSContext* aCx, JS::CallArgs aArgs)
-  {
-    auto scope = GetInstancePrivate(aCx, &aArgs.thisv().toObject(), "name");
-    MOZ_ASSERT(scope);
-
-    auto name = scope->mWorker->SharedWorkerName();
-    MOZ_ASSERT(!name.IsVoid());
-
-    JS::Rooted<JSString*> nameStr(aCx,
-      JS_InternUCStringN(aCx, name.get(), name.Length()));
-    if (!nameStr) {
-      return false;
-    }
-
-    aArgs.rval().setString(nameStr);
-    return true;
-  }
-
-  static bool
-  GetName(JSContext* aCx, unsigned aArgc, JS::Value* aVp)
-  {
-    auto args = JS::CallArgsFromVp(aArgc, aVp);
-    return JS::CallNonGenericMethod<IsSharedWorkerGlobalScope,
-                                    GetNameImpl>(aCx, args);
-  }
-
-
-  static SharedWorkerGlobalScope*
-  GetInstancePrivate(JSContext* aCx, JSObject* aObj, const char* aFunctionName)
-  {
-    const JSClass* classPtr = JS_GetClass(aObj);
-    if (classPtr == Class()) {
-      return UnwrapDOMObject<SharedWorkerGlobalScope>(aObj);
-    }
-
-    JS_ReportErrorNumber(aCx, js_GetErrorMessage, nullptr,
-                         JSMSG_INCOMPATIBLE_PROTO, Class()->name, aFunctionName,
-                         classPtr->name);
-    return nullptr;
-  }
-
-  static bool
-  Construct(JSContext* aCx, unsigned aArgc, jsval* aVp)
-  {
-    JS_ReportErrorNumber(aCx, js_GetErrorMessage, nullptr,
-                         JSMSG_WRONG_CONSTRUCTOR, Class()->name);
-    return false;
-  }
-
-  static bool
-  Resolve(JSContext* aCx, JS::Handle<JSObject*> aObj, JS::Handle<jsid> aId,
-          unsigned aFlags, JS::MutableHandle<JSObject*> aObjp)
-  {
-    bool resolved;
-    if (!JS_ResolveStandardClass(aCx, aObj, aId, &resolved)) {
-      return false;
-    }
-
-    aObjp.set(resolved ? aObj.get() : nullptr);
-    return true;
-  }
-
-  static void
-  Finalize(JSFreeOp* aFop, JSObject* aObj)
-  {
-    MOZ_ASSERT(JS_GetClass(aObj) == Class());
-    SharedWorkerGlobalScope* scope =
-      UnwrapDOMObject<SharedWorkerGlobalScope>(aObj);
-    if (scope) {
-      DestroyProtoAndIfaceCache(aObj);
-      scope->_finalize(aFop);
-    }
-  }
-
-  static void
-  Trace(JSTracer* aTrc, JSObject* aObj)
-  {
-    MOZ_ASSERT(JS_GetClass(aObj) == Class());
-    SharedWorkerGlobalScope* scope =
-      UnwrapDOMObject<SharedWorkerGlobalScope>(aObj);
-    if (scope) {
-      TraceProtoAndIfaceCache(aTrc, aObj);
-      scope->_trace(aTrc);
-    }
-  }
-};
-
-DOMJSClass SharedWorkerGlobalScope::sClass = {
-  {
-    // We don't have to worry about Xray expando slots here because we'll never
-    // have an Xray wrapper to a worker global scope.
-    "SharedWorkerGlobalScope",
-    JSCLASS_DOM_GLOBAL | JSCLASS_IS_DOMJSCLASS | JSCLASS_IMPLEMENTS_BARRIERS |
-    JSCLASS_GLOBAL_FLAGS_WITH_SLOTS(DOM_GLOBAL_SLOTS) | JSCLASS_NEW_RESOLVE,
-    JS_PropertyStub, JS_DeletePropertyStub, JS_PropertyStub,
-    JS_StrictPropertyStub, JS_EnumerateStub,
-    reinterpret_cast<JSResolveOp>(Resolve), JS_ConvertStub, Finalize, nullptr,
-    nullptr, nullptr, nullptr, Trace
-  },
-  {
-    INTERFACE_CHAIN_1(prototypes::id::EventTarget_workers),
-    false,
-    &sWorkerNativePropertyHooks
-  }
-};
-
-DOMIfaceAndProtoJSClass SharedWorkerGlobalScope::sProtoClass = {
-  {
-    // XXXbz we use "SharedWorkerGlobalScope" here to match sClass
-    // so that we can JS_InitClass this JSClass and then
-    // call JS_NewObject with our sClass and have it find the right
-    // prototype.
-    "SharedWorkerGlobalScope",
-    JSCLASS_IS_DOMIFACEANDPROTOJSCLASS | JSCLASS_HAS_RESERVED_SLOTS(2),
-    JS_PropertyStub,       /* addProperty */
-    JS_DeletePropertyStub, /* delProperty */
-    JS_PropertyStub,       /* getProperty */
-    JS_StrictPropertyStub, /* setProperty */
-    JS_EnumerateStub,
-    JS_ResolveStub,
-    JS_ConvertStub,
-    nullptr,               /* finalize */
-    nullptr,               /* checkAccess */
-    nullptr,               /* call */
-    nullptr,               /* hasInstance */
-    nullptr,               /* construct */
-    nullptr,               /* trace */
-    JSCLASS_NO_INTERNAL_MEMBERS
-  },
-  eInterfacePrototype,
-  &sWorkerNativePropertyHooks,
-  "[object SharedWorkerGlobalScope]",
-  prototypes::id::_ID_Count,
-  0
-};
-
-const JSPropertySpec SharedWorkerGlobalScope::sProperties[] = {
-  JS_PSGS(sEventStrings[STRING_onconnect], GetOnconnect, SetOnconnect,
-          JSPROP_ENUMERATE),
-  JS_PSGS("name", GetName, GetterOnlyJSNative, JSPROP_ENUMERATE),
-  JS_PS_END
-};
-
-const char* const SharedWorkerGlobalScope::sEventStrings[STRING_COUNT] = {
-  "onconnect",
-};
-
 WorkerGlobalScope*
 WorkerGlobalScope::GetInstancePrivate(JSContext* aCx, JSObject* aObj,
                                       const char* aFunctionName)
 {
   const JSClass* classPtr = JS_GetClass(aObj);
 
-  // We can only make [Dedicated|Shared]WorkerGlobalScope, not
-  // WorkerGlobalScope, so this should never happen.
-  MOZ_ASSERT(classPtr != Class());
+  // We can only make DedicatedWorkerGlobalScope, not WorkerGlobalScope, so this
+  // should never happen.
+  JS_ASSERT(classPtr != Class());
 
   if (classPtr == DedicatedWorkerGlobalScope::Class()) {
     return UnwrapDOMObject<DedicatedWorkerGlobalScope>(aObj);
   }
 
-  if (classPtr == SharedWorkerGlobalScope::Class()) {
-    return UnwrapDOMObject<SharedWorkerGlobalScope>(aObj);
-  }
-
-  JS_ReportErrorNumber(aCx, js_GetErrorMessage, nullptr,
-                       JSMSG_INCOMPATIBLE_PROTO, sClass.name, aFunctionName,
-                       classPtr->name);
-  return nullptr;
+  JS_ReportErrorNumber(aCx, js_GetErrorMessage, NULL, JSMSG_INCOMPATIBLE_PROTO,
+                       sClass.name, aFunctionName, classPtr->name);
+  return NULL;
 }
 
 bool
-WorkerGlobalScope::IsWorkerGlobalScope(JS::Handle<JS::Value> aVal)
+WorkerGlobalScope::IsWorkerGlobalScope(JS::Handle<JS::Value> v)
 {
-  if (!aVal.isObject()) {
-    return false;
-  }
-
-  auto classPtr = JS_GetClass(&aVal.toObject());
-
-  return classPtr == DedicatedWorkerGlobalScope::Class() ||
-         classPtr == SharedWorkerGlobalScope::Class();
+  return v.isObject() && JS_GetClass(&v.toObject()) == DedicatedWorkerGlobalScope::Class();
 }
 
 } /* anonymous namespace */
@@ -1387,42 +1053,32 @@ WorkerGlobalScope::IsWorkerGlobalScope(JS::Handle<JS::Value> aVal)
 BEGIN_WORKERS_NAMESPACE
 
 JSObject*
-CreateGlobalScope(JSContext* aCx)
+CreateDedicatedWorkerGlobalScope(JSContext* aCx)
 {
   using namespace mozilla::dom;
 
   WorkerPrivate* worker = GetWorkerPrivateFromContext(aCx);
-  MOZ_ASSERT(worker);
-
-  const JSClass* classPtr = worker->IsSharedWorker() ?
-                            SharedWorkerGlobalScope::Class() :
-                            DedicatedWorkerGlobalScope::Class();
+  JS_ASSERT(worker);
 
   JS::CompartmentOptions options;
-  if (worker->IsChromeWorker()) {
+  if (worker->IsChromeWorker())
     options.setVersion(JSVERSION_LATEST);
-  }
-
   JS::Rooted<JSObject*> global(aCx,
-    JS_NewGlobalObject(aCx, classPtr, GetWorkerPrincipal(),
-                       JS::DontFireOnNewGlobalHook, options));
+    JS_NewGlobalObject(aCx, DedicatedWorkerGlobalScope::Class(),
+                       GetWorkerPrincipal(), JS::DontFireOnNewGlobalHook, options));
   if (!global) {
-    return nullptr;
+    return NULL;
   }
 
   JSAutoCompartment ac(aCx, global);
 
   // Make the private slots now so that all our instance checks succeed.
-  if (worker->IsSharedWorker()) {
-    if (!SharedWorkerGlobalScope::InitPrivate(aCx, global, worker)) {
-      return nullptr;
-  }
-  } else if (!DedicatedWorkerGlobalScope::InitPrivate(aCx, global, worker)) {
-    return nullptr;
+  if (!DedicatedWorkerGlobalScope::InitPrivate(aCx, global, worker)) {
+    return NULL;
   }
 
   // Proto chain should be:
-  //   global -> [Dedicated|Shared]WorkerGlobalScope
+  //   global -> DedicatedWorkerGlobalScope
   //          -> WorkerGlobalScope
   //          -> EventTarget
   //          -> Object
@@ -1430,45 +1086,43 @@ CreateGlobalScope(JSContext* aCx)
   JS::Rooted<JSObject*> eventTargetProto(aCx,
     EventTargetBinding_workers::GetProtoObject(aCx, global));
   if (!eventTargetProto) {
-    return nullptr;
+    return NULL;
   }
 
   JS::Rooted<JSObject*> scopeProto(aCx,
     WorkerGlobalScope::InitClass(aCx, global, eventTargetProto));
   if (!scopeProto) {
-    return nullptr;
+    return NULL;
   }
 
-  JS::Rooted<JSObject*> finalScopeProto(aCx,
-    worker->IsSharedWorker() ?
-    SharedWorkerGlobalScope::InitClass(aCx, global, scopeProto) :
+  JS::Rooted<JSObject*> dedicatedScopeProto(aCx,
     DedicatedWorkerGlobalScope::InitClass(aCx, global, scopeProto));
-  if (!finalScopeProto) {
-    return nullptr;
+  if (!dedicatedScopeProto) {
+    return NULL;
   }
 
-  if (!JS_SetPrototype(aCx, global, finalScopeProto)) {
-    return nullptr;
+  if (!JS_SetPrototype(aCx, global, dedicatedScopeProto)) {
+    return NULL;
   }
 
-  JS::Rooted<JSObject*> workerProto(aCx,
-    worker::InitClass(aCx, global, eventTargetProto, false));
+  JSObject* workerProto = worker::InitClass(aCx, global, eventTargetProto,
+                                            false);
   if (!workerProto) {
-    return nullptr;
+    return NULL;
   }
 
   if (worker->IsChromeWorker()) {
     if (!chromeworker::InitClass(aCx, global, workerProto, false) ||
         !DefineChromeWorkerFunctions(aCx, global) ||
         !DefineOSFileConstants(aCx, global)) {
-      return nullptr;
+      return NULL;
     }
   }
 
   // Init other classes we care about.
   if (!events::InitClasses(aCx, global, false) ||
       !file::InitClasses(aCx, global)) {
-    return nullptr;
+    return NULL;
   }
 
   // Init other paris-bindings.
@@ -1483,16 +1137,23 @@ CreateGlobalScope(JSContext* aCx)
       !URLBinding_workers::GetConstructorObject(aCx, global) ||
       !WorkerLocationBinding_workers::GetConstructorObject(aCx, global) ||
       !WorkerNavigatorBinding_workers::GetConstructorObject(aCx, global)) {
-    return nullptr;
+    return NULL;
   }
 
   if (!JS_DefineProfilingFunctions(aCx, global)) {
-    return nullptr;
+    return NULL;
   }
 
   JS_FireOnNewGlobalObject(aCx, global);
 
   return global;
+}
+
+bool
+ClassIsWorkerGlobalScope(const JSClass* aClass)
+{
+  return WorkerGlobalScope::Class() == aClass ||
+         DedicatedWorkerGlobalScope::Class() == aClass;
 }
 
 END_WORKERS_NAMESPACE

@@ -6,10 +6,6 @@
 
 #include "FileReaderSync.h"
 
-#include "jsfriendapi.h"
-#include "mozilla/Base64.h"
-#include "mozilla/dom/EncodingUtils.h"
-#include "mozilla/dom/FileReaderSyncBinding.h"
 #include "nsCExternalHandlerService.h"
 #include "nsComponentManagerUtils.h"
 #include "nsCOMPtr.h"
@@ -25,9 +21,12 @@
 #include "nsISupportsImpl.h"
 #include "nsNetUtil.h"
 #include "nsServiceManagerUtils.h"
-
 #include "File.h"
 #include "RuntimeService.h"
+#include "DOMBindingInlines.h"
+
+#include "mozilla/Base64.h"
+#include "mozilla/dom/EncodingUtils.h"
 
 USING_WORKERS_NAMESPACE
 using namespace mozilla;
@@ -36,7 +35,6 @@ using mozilla::dom::GlobalObject;
 
 NS_IMPL_ADDREF(FileReaderSync)
 NS_IMPL_RELEASE(FileReaderSync)
-
 NS_INTERFACE_MAP_BEGIN(FileReaderSync)
   NS_INTERFACE_MAP_ENTRY(nsICharsetDetectionObserver)
 NS_INTERFACE_MAP_END
@@ -48,12 +46,6 @@ FileReaderSync::Constructor(const GlobalObject& aGlobal, ErrorResult& aRv)
   nsRefPtr<FileReaderSync> frs = new FileReaderSync();
 
   return frs.forget();
-}
-
-JSObject*
-FileReaderSync::WrapObject(JSContext* aCx, JS::HandleObject aScope)
-{
-  return FileReaderSyncBinding_workers::Wrap(aCx, aScope, this);
 }
 
 JSObject*

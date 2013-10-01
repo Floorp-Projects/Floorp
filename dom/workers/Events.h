@@ -35,9 +35,6 @@ JSObject*
 CreateProgressEvent(JSContext* aCx, JS::Handle<JSString*> aType,
                     bool aLengthComputable, double aLoaded, double aTotal);
 
-JSObject*
-CreateConnectEvent(JSContext* aCx, JS::Handle<JSObject*> aMessagePort);
-
 bool
 IsSupportedEventClass(JSObject* aEvent);
 

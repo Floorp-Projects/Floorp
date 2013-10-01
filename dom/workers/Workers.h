@@ -168,13 +168,13 @@ ResolveWorkerClasses(JSContext* aCx, JS::Handle<JSObject*> aObj, JS::Handle<jsid
                      unsigned aFlags, JS::MutableHandle<JSObject*> aObjp);
 
 void
-CancelWorkersForWindow(nsPIDOMWindow* aWindow);
+CancelWorkersForWindow(JSContext* aCx, nsPIDOMWindow* aWindow);
 
 void
-SuspendWorkersForWindow(nsPIDOMWindow* aWindow);
+SuspendWorkersForWindow(JSContext* aCx, nsPIDOMWindow* aWindow);
 
 void
-ResumeWorkersForWindow(nsPIDOMWindow* aWindow);
+ResumeWorkersForWindow(nsIScriptContext* aCx, nsPIDOMWindow* aWindow);
 
 class WorkerTask {
 public:

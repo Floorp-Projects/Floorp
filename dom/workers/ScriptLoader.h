@@ -22,16 +22,16 @@ nsresult
 ChannelFromScriptURLMainThread(nsIPrincipal* aPrincipal,
                                nsIURI* aBaseURI,
                                nsIDocument* aParentDoc,
-                               const nsAString& aScriptURL,
+                               const nsString& aScriptURL,
                                nsIChannel** aChannel);
 
 nsresult
 ChannelFromScriptURLWorkerThread(JSContext* aCx,
                                  WorkerPrivate* aParent,
-                                 const nsAString& aScriptURL,
+                                 const nsString& aScriptURL,
                                  nsIChannel** aChannel);
 
-void ReportLoadError(JSContext* aCx, const nsAString& aURL,
+void ReportLoadError(JSContext* aCx, const nsString& aURL,
                      nsresult aLoadResult, bool aIsMainThread);
 
 bool LoadWorkerScript(JSContext* aCx);
