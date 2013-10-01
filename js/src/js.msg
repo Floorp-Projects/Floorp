@@ -375,7 +375,7 @@ MSG_DEF(JSMSG_MUST_REPORT_UNDEFINED,  321, 0, JSEXN_TYPEERR, "proxy must report 
 MSG_DEF(JSMSG_CANT_SET_NW_NC,         322, 0, JSEXN_TYPEERR, "proxy can't successfully set a non-writable, non-configurable property")
 MSG_DEF(JSMSG_CANT_SET_WO_SETTER,     323, 0, JSEXN_TYPEERR, "proxy can't succesfully set an accessor property without a setter")
 MSG_DEF(JSMSG_DEBUG_BAD_REFERENT,     324, 2, JSEXN_TYPEERR, "{0} does not refer to {1}")
-MSG_DEF(JSMSG_DEBUG_WRAPPER_IN_WAY,   325, 2, JSEXN_TYPEERR, "{0} is a wrapper around {1}, but a direct reference is required")
+MSG_DEF(JSMSG_DEBUG_WRAPPER_IN_WAY,   325, 3, JSEXN_TYPEERR, "{0} is {1}{2}a global object, but a direct reference is required")
 MSG_DEF(JSMSG_UNWRAP_DENIED,          326, 0, JSEXN_ERR, "permission denied to unwrap object")
 MSG_DEF(JSMSG_INTL_OBJECT_NOT_INITED, 327, 3, JSEXN_TYPEERR, "Intl.{0}.prototype.{1} called on value that's not an object initialized as a {2}")
 MSG_DEF(JSMSG_INVALID_LOCALES_ELEMENT,328, 0, JSEXN_TYPEERR, "invalid element in locales argument")
