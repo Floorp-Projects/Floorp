@@ -156,7 +156,7 @@ private:
   nsTArray<Call> mCurrentCallArray;
   nsAutoPtr<BluetoothRilListener> mListener;
   nsRefPtr<BluetoothReplyRunnable> mRunnable;
-  BluetoothProfileController* mController;
+  nsRefPtr<BluetoothProfileController> mController;
   nsRefPtr<BluetoothReplyRunnable> mScoRunnable;
 
   // If a connection has been established, mSocket will be the socket

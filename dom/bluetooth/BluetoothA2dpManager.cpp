@@ -9,7 +9,6 @@
 #include "BluetoothA2dpManager.h"
 
 #include "BluetoothCommon.h"
-#include "BluetoothProfileController.h"
 #include "BluetoothService.h"
 #include "BluetoothSocket.h"
 #include "BluetoothUtils.h"
