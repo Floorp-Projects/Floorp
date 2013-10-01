@@ -1659,8 +1659,6 @@ SpdySession31::HandleWindowUpdate(SpdySession31 *self)
   LOG3(("SpdySession31::HandleWindowUpdate %p len=%d for Stream 0x%X.\n",
         self, delta, streamID));
 
-  int64_t oldRemoteWindow;
-
   // ID of 0 is a session window update
   if (streamID) {
     nsresult rv = self->SetInputFrameDataStream(streamID);
@@ -1675,37 +1673,16 @@ SpdySession31::HandleWindowUpdate(SpdySession31 *self)
       self->ResetDownstreamState();
       return NS_OK;
     }
-    oldRemoteWindow = self->mInputFrameDataStream->RemoteWindow();
-    self->mInputFrameDataStream->UpdateRemoteWindow(delta);
 
-    // If the stream had a <=0 window, that has now opened
-    // schedule it for writing again
-    if (self->mInputFrameDataStream->BlockedOnRwin() &&
-        self->mRemoteSessionWindow > 0 &&
-        self->mInputFrameDataStream->RemoteWindow() > 0) {
-      self->mReadyForWrite.Push(self->mInputFrameDataStream);
-      self->SetWriteCallbacks();
-    }
-  }
-  else {
-    oldRemoteWindow = self->mRemoteSessionWindow;
+    self->mInputFrameDataStream->UpdateRemoteWindow(delta);
+  } else {
+    int64_t oldRemoteWindow = self->mRemoteSessionWindow;
     self->mRemoteSessionWindow += delta;
     if ((oldRemoteWindow <= 0) && (self->mRemoteSessionWindow > 0)) {
       LOG3(("SpdySession31::HandleWindowUpdate %p restart session window\n",
             self));
       self->mStreamTransactionHash.Enumerate(RestartBlockedOnRwinEnumerator, self);
     }
-  }
-
-  LOG3(("SpdySession31::HandleWindowUpdate %p stream 0x%X window "
-        "%d increased by %d.\n", self, streamID, oldRemoteWindow, delta));
-
-  // If the stream had a <=0 window, that has now opened
-  // schedule it for writing again
-  if (oldRemoteWindow <= 0 &&
-      self->mInputFrameDataStream->RemoteWindow() > 0) {
-    self->mReadyForWrite.Push(self->mInputFrameDataStream);
-    self->SetWriteCallbacks();
   }
 
   self->ResetDownstreamState();
