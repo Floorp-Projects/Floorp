@@ -766,7 +766,7 @@ public:
    *                    will be respected.
    */
   static nsresult DispatchClickEvent(nsPresContext* aPresContext,
-                                     nsInputEvent* aSourceEvent,
+                                     WidgetInputEvent* aSourceEvent,
                                      nsIContent* aTarget,
                                      bool aFullDispatch,
                                      const EventFlags* aFlags,

@@ -912,7 +912,7 @@ nsXBLPrototypeHandler::ModifiersMatchMask(nsIDOMUIEvent* aEvent,
 {
   nsEvent* event = aEvent->GetInternalNSEvent();
   NS_ENSURE_TRUE(event && event->IsInputDerivedEvent(), false);
-  nsInputEvent* inputEvent = static_cast<nsInputEvent*>(event);
+  WidgetInputEvent* inputEvent = static_cast<WidgetInputEvent*>(event);
 
   if (mKeyMask & cMetaMask) {
     if (inputEvent->IsMeta() != ((mKeyMask & cMeta) != 0)) {

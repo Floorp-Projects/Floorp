@@ -275,17 +275,17 @@ PuppetWidget::DispatchEvent(nsGUIEvent* event, nsEventStatus& aStatus)
   }
   switch (event->eventStructType) {
   case NS_COMPOSITION_EVENT:
-    mIMELastReceivedSeqno = static_cast<nsCompositionEvent*>(event)->seqno;
+    mIMELastReceivedSeqno = static_cast<WidgetCompositionEvent*>(event)->seqno;
     if (mIMELastReceivedSeqno < mIMELastBlurSeqno)
       return NS_OK;
     break;
   case NS_TEXT_EVENT:
-    mIMELastReceivedSeqno = static_cast<nsTextEvent*>(event)->seqno;
+    mIMELastReceivedSeqno = static_cast<WidgetTextEvent*>(event)->seqno;
     if (mIMELastReceivedSeqno < mIMELastBlurSeqno)
       return NS_OK;
     break;
   case NS_SELECTION_EVENT:
-    mIMELastReceivedSeqno = static_cast<nsSelectionEvent*>(event)->seqno;
+    mIMELastReceivedSeqno = static_cast<WidgetSelectionEvent*>(event)->seqno;
     if (mIMELastReceivedSeqno < mIMELastBlurSeqno)
       return NS_OK;
     break;
@@ -347,7 +347,7 @@ PuppetWidget::IMEEndComposition(bool aCancel)
 #endif
 
   nsEventStatus status;
-  nsTextEvent textEvent(true, NS_TEXT_TEXT, this);
+  WidgetTextEvent textEvent(true, NS_TEXT_TEXT, this);
   InitEvent(textEvent, nullptr);
   textEvent.seqno = mIMELastReceivedSeqno;
   // SendEndIMEComposition is always called since ResetInputState
@@ -362,7 +362,7 @@ PuppetWidget::IMEEndComposition(bool aCancel)
 
   DispatchEvent(&textEvent, status);
 
-  nsCompositionEvent compEvent(true, NS_COMPOSITION_END, this);
+  WidgetCompositionEvent compEvent(true, NS_COMPOSITION_END, this);
   InitEvent(compEvent, nullptr);
   compEvent.seqno = mIMELastReceivedSeqno;
   DispatchEvent(&compEvent, status);
@@ -441,7 +441,7 @@ PuppetWidget::NotifyIMEOfFocusChange(bool aFocus)
 
   if (aFocus) {
     nsEventStatus status;
-    nsQueryContentEvent queryEvent(true, NS_QUERY_TEXT_CONTENT, this);
+    WidgetQueryContentEvent queryEvent(true, NS_QUERY_TEXT_CONTENT, this);
     InitEvent(queryEvent, nullptr);
     // Query entire content
     queryEvent.InitForQueryTextContent(0, UINT32_MAX);
@@ -493,7 +493,7 @@ PuppetWidget::NotifyIMEOfTextChange(uint32_t aStart,
 
   if (mIMEPreference.mWantHints) {
     nsEventStatus status;
-    nsQueryContentEvent queryEvent(true, NS_QUERY_TEXT_CONTENT, this);
+    WidgetQueryContentEvent queryEvent(true, NS_QUERY_TEXT_CONTENT, this);
     InitEvent(queryEvent, nullptr);
     queryEvent.InitForQueryTextContent(0, UINT32_MAX);
     DispatchEvent(&queryEvent, status);
@@ -521,7 +521,7 @@ PuppetWidget::NotifyIMEOfSelectionChange()
   if (mIMEPreference.mWantUpdates &
         nsIMEUpdatePreference::NOTIFY_SELECTION_CHANGE) {
     nsEventStatus status;
-    nsQueryContentEvent queryEvent(true, NS_QUERY_SELECTED_TEXT, this);
+    WidgetQueryContentEvent queryEvent(true, NS_QUERY_SELECTED_TEXT, this);
     InitEvent(queryEvent, nullptr);
     DispatchEvent(&queryEvent, status);
 

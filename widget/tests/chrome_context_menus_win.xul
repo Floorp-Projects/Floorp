@@ -42,7 +42,6 @@ function onTestsFinished() {
 }
 
 function openContextMenuFor(element) {
-    netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
 
     var utils = window.QueryInterface(Components.interfaces.nsIInterfaceRequestor).
                        getInterface(Components.interfaces.nsIDOMWindowUtils);
