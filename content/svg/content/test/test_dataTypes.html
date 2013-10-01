@@ -97,10 +97,10 @@ function runTests()
   is(blur.getAttribute("stdDeviation"), "8.5", "number-optional-number attribute");
 
   blur.setStdDeviation(24.5, 0.5);
-  is(blur.stdDeviationX.baseVal, 24.5, "integer-optional-integer first baseVal");
-  is(blur.stdDeviationX.animVal, 24.5, "integer-optional-integer first animVal");
-  is(blur.stdDeviationY.baseVal, 0.5, "integer-optional-integer second baseVal");
-  is(blur.stdDeviationY.animVal, 0.5, "integer-optional-integer second animVal");
+  is(blur.stdDeviationX.baseVal, 24.5, "number-optional-number first baseVal");
+  is(blur.stdDeviationX.animVal, 24.5, "number-optional-number first animVal");
+  is(blur.stdDeviationY.baseVal, 0.5, "number-optional-number second baseVal");
+  is(blur.stdDeviationY.animVal, 0.5, "number-optional-number second animVal");
 
   blur.setAttribute("stdDeviation", "");
   ok(blur.getAttribute("stdDeviation") === "",
@@ -143,6 +143,27 @@ function runTests()
   is(filter.filterResX.animVal, 80, "integer-optional-integer first animVal");
   is(filter.filterResY.baseVal, 90, "integer-optional-integer second baseVal");
   is(filter.filterResY.animVal, 90, "integer-optional-integer second animVal");
+
+  // 32 bit integer range
+  filter.setFilterRes(-2147483648, 2147483647);
+  is(filter.filterResX.baseVal, -2147483648, "integer-optional-integer first baseVal");
+  is(filter.filterResX.animVal, -2147483648, "integer-optional-integer first animVal");
+  is(filter.filterResY.baseVal, 2147483647, "integer-optional-integer second baseVal");
+  is(filter.filterResY.animVal, 2147483647, "integer-optional-integer second animVal");
+
+  // too big, clamp
+  filter.setAttribute("filterRes", "-2147483649, 2147483648");
+  is(filter.filterResX.baseVal, -2147483648, "integer-optional-integer first baseVal");
+  is(filter.filterResX.animVal, -2147483648, "integer-optional-integer first animVal");
+  is(filter.filterResY.baseVal, 2147483647, "integer-optional-integer second baseVal");
+  is(filter.filterResY.animVal, 2147483647, "integer-optional-integer second animVal");
+
+  // invalid
+  filter.setAttribute("filterRes", "-00000000000invalid, 214748364720invalid");
+  is(filter.filterResX.baseVal, 0, "integer-optional-integer first baseVal");
+  is(filter.filterResX.animVal, 0, "integer-optional-integer first animVal");
+  is(filter.filterResY.baseVal, 0, "integer-optional-integer second baseVal");
+  is(filter.filterResY.animVal, 0, "integer-optional-integer second animVal");
 
   filter.setAttribute("filterRes", "");
   ok(filter.getAttribute("filterRes") === "",
