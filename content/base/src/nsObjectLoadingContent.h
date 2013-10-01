@@ -31,6 +31,12 @@ class nsFrameLoader;
 class nsXULElement;
 class nsPluginInstanceOwner;
 
+namespace mozilla {
+namespace dom {
+template<typename T> class Sequence;
+}
+}
+
 class nsObjectLoadingContent : public nsImageLoadingContent
                              , public nsIStreamListener
                              , public nsIFrameLoaderOwner

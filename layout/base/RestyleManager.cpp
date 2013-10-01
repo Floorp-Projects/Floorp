@@ -33,6 +33,7 @@
 #include "nsIRootBox.h"
 #include "nsIDOMMutationEvent.h"
 #include "nsContentUtils.h"
+#include "nsIFrameInlines.h"
 
 #ifdef ACCESSIBILITY
 #include "nsAccessibilityService.h"

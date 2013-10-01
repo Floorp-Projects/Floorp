@@ -21,6 +21,7 @@ class nsFontFaceList;
 class nsIImageLoadingContent;
 class nsStyleContext;
 class nsBlockFrame;
+class gfxASurface;
 class gfxDrawable;
 class nsView;
 class imgIContainer;
