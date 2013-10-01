@@ -414,3 +414,4 @@ MSG_DEF(JSMSG_TYPEDOBJECT_TOO_BIG, 360, 0, JSEXN_ERR, "Type is too large to allo
 MSG_DEF(JSMSG_TYPEDOBJECT_NOT_TYPE_OBJECT, 361, 0, JSEXN_ERR, "Expected a type object")
 MSG_DEF(JSMSG_TOO_MANY_CON_SPREADARGS, 362, 0, JSEXN_RANGEERR, "too many constructor arguments")
 MSG_DEF(JSMSG_TOO_MANY_FUN_SPREADARGS, 363, 0, JSEXN_RANGEERR, "too many function arguments")
+MSG_DEF(JSMSG_DEBUG_NOT_DEBUGGEE,     364, 2, JSEXN_ERR, "{0} is not a debuggee {1}")

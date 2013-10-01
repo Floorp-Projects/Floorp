@@ -4592,13 +4592,20 @@ DebuggerObject_getDisplayName(JSContext *cx, unsigned argc, Value *vp)
 static bool
 DebuggerObject_getParameterNames(JSContext *cx, unsigned argc, Value *vp)
 {
-    THIS_DEBUGOBJECT_REFERENT(cx, argc, vp, "get parameterNames", args, obj);
+    THIS_DEBUGOBJECT_OWNER_REFERENT(cx, argc, vp, "get parameterNames", args, dbg, obj);
     if (!obj->is<JSFunction>()) {
         args.rval().setUndefined();
         return true;
     }
 
     RootedFunction fun(cx, &obj->as<JSFunction>());
+
+    /* Only hand out parameter info for debuggee functions. */
+    if (!dbg->observesGlobal(&fun->global())) {
+        args.rval().setUndefined();
+        return true;
+    }
+
     RootedObject result(cx, NewDenseAllocatedArray(cx, fun->nargs));
     if (!result)
         return false;
@@ -4664,6 +4671,12 @@ DebuggerObject_getScript(JSContext *cx, unsigned argc, Value *vp)
             return false;
     }
 
+    /* Only hand out debuggee scripts. */
+    if (!dbg->observesScript(script)) {
+        args.rval().setNull();
+        return true;
+    }
+
     RootedObject scriptObject(cx, dbg->wrapScript(cx, script));
     if (!scriptObject)
         return false;
@@ -4680,6 +4693,12 @@ DebuggerObject_getEnvironment(JSContext *cx, unsigned argc, Value *vp)
     /* Don't bother switching compartments just to check obj's type and get its env. */
     if (!obj->is<JSFunction>() || !obj->as<JSFunction>().isInterpreted()) {
         args.rval().setUndefined();
+        return true;
+    }
+
+    /* Only hand out environments of debuggee functions. */
+    if (!dbg->observesGlobal(&obj->global())) {
+        args.rval().setNull();
         return true;
     }
 
@@ -5289,7 +5308,8 @@ const Class DebuggerEnv_class = {
 };
 
 static JSObject *
-DebuggerEnv_checkThis(JSContext *cx, const CallArgs &args, const char *fnname)
+DebuggerEnv_checkThis(JSContext *cx, const CallArgs &args, const char *fnname,
+                      bool requireDebuggee = true)
 {
     if (!args.thisv().isObject()) {
         ReportObjectRequired(cx);
@@ -5312,6 +5332,20 @@ DebuggerEnv_checkThis(JSContext *cx, const CallArgs &args, const char *fnname)
                              "Debugger.Environment", fnname, "prototype object");
         return nullptr;
     }
+
+    /*
+     * Forbid access to Debugger.Environment objects that are not debuggee
+     * environments.
+     */
+    if (requireDebuggee) {
+        Rooted<Env*> env(cx, static_cast<Env *>(thisobj->getPrivate()));
+        if (!Debugger::fromChildJSObject(thisobj)->observesGlobal(&env->global())) {
+            JS_ReportErrorNumber(cx, js_GetErrorMessage, nullptr, JSMSG_DEBUG_NOT_DEBUGGEE,
+                                 "Debugger.Environment", "environment");
+            return nullptr;
+        }
+    }
+
     return thisobj;
 }
 
@@ -5428,6 +5462,23 @@ DebuggerEnv_getCallee(JSContext *cx, unsigned argc, Value *vp)
     args.rval().setObject(callobj.callee());
     if (!dbg->wrapDebuggeeValue(cx, args.rval()))
         return false;
+    return true;
+}
+
+static bool
+DebuggerEnv_getInspectable(JSContext *cx, unsigned argc, Value *vp)
+{
+    CallArgs args = CallArgsFromVp(argc, vp);
+    JSObject *envobj = DebuggerEnv_checkThis(cx, args, "get inspectable", false);
+    if (!envobj)
+        return false;
+    Rooted<Env*> env(cx, static_cast<Env *>(envobj->getPrivate()));
+    JS_ASSERT(env);
+    JS_ASSERT(!env->is<ScopeObject>());
+
+    Debugger *dbg = Debugger::fromChildJSObject(envobj);
+
+    args.rval().setBoolean(dbg->observesGlobal(&env->global()));
     return true;
 }
 
@@ -5568,6 +5619,7 @@ static const JSPropertySpec DebuggerEnv_properties[] = {
     JS_PSG("object", DebuggerEnv_getObject, 0),
     JS_PSG("parent", DebuggerEnv_getParent, 0),
     JS_PSG("callee", DebuggerEnv_getCallee, 0),
+    JS_PSG("inspectable", DebuggerEnv_getInspectable, 0),
     JS_PS_END
 };
 
