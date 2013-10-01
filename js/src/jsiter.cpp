@@ -565,12 +565,12 @@ bool
 js::GetIterator(JSContext *cx, HandleObject obj, unsigned flags, MutableHandleValue vp)
 {
     if (flags == JSITER_FOR_OF) {
-        // for-of loop. The iterator is simply |obj[@@iterator]()|.
+        // for-of loop. The iterator is simply |obj.iterator()|.
         RootedValue method(cx);
-        if (!JSObject::getProperty(cx, obj, obj, cx->names().std_iterator, &method))
+        if (!JSObject::getProperty(cx, obj, obj, cx->names().iterator, &method))
             return false;
 
-        // Throw if obj[@@iterator] isn't callable. js::Invoke is about to check
+        // Throw if obj.iterator isn't callable. js::Invoke is about to check
         // for this kind of error anyway, but it would throw an inscrutable
         // error message about |method| rather than this nice one about |obj|.
         if (!method.isObject() || !method.toObject().isCallable()) {
@@ -592,8 +592,6 @@ js::GetIterator(JSContext *cx, HandleObject obj, unsigned flags, MutableHandleVa
         vp.setObject(*resultObj);
         return true;
     }
-
-    JS_ASSERT(!(flags & JSITER_FOR_OF));
 
     Vector<Shape *, 8> shapes(cx);
     uint32_t key = 0;
@@ -727,30 +725,6 @@ js::GetIteratorObject(JSContext *cx, HandleObject obj, uint32_t flags)
     return &value.toObject();
 }
 
-JSObject *
-js::CreateItrResultObject(JSContext *cx, HandleValue value, bool done)
-{
-    // FIXME: We can cache the iterator result object shape somewhere.
-    AssertHeapIsIdle(cx);
-
-    RootedObject proto(cx, cx->global()->getOrCreateObjectPrototype(cx));
-    if (!proto)
-        return nullptr;
-
-    RootedObject obj(cx, NewObjectWithGivenProto(cx, &JSObject::class_, proto, cx->global()));
-    if (!obj)
-        return nullptr;
-
-    if (!JSObject::defineProperty(cx, obj, cx->names().value, value))
-        return nullptr;
-
-    RootedValue doneBool(cx, BooleanValue(done));
-    if (!JSObject::defineProperty(cx, obj, cx->names().done, doneBool))
-        return nullptr;
-
-    return obj;
-}
-
 bool
 js_ThrowStopIteration(JSContext *cx)
 {
@@ -807,6 +781,14 @@ iterator_next_impl(JSContext *cx, CallArgs args)
     return js_IteratorNext(cx, thisObj, args.rval());
 }
 
+static bool
+iterator_iterator(JSContext *cx, unsigned argc, Value *vp)
+{
+    CallArgs args = CallArgsFromVp(argc, vp);
+    args.rval().set(args.thisv());
+    return true;
+}
+
 bool
 iterator_next(JSContext *cx, unsigned argc, Value *vp)
 {
@@ -815,7 +797,7 @@ iterator_next(JSContext *cx, unsigned argc, Value *vp)
 }
 
 static const JSFunctionSpec iterator_methods[] = {
-    JS_SELF_HOSTED_FN("@@iterator", "LegacyIteratorShim", 0, 0),
+    JS_FN("iterator",  iterator_iterator,   0, 0),
     JS_FN("next",      iterator_next,       0, 0),
     JS_FS_END
 };
@@ -966,7 +948,6 @@ const Class ElementIteratorObject::class_ = {
 };
 
 const JSFunctionSpec ElementIteratorObject::methods[] = {
-    JS_SELF_HOSTED_FN("@@iterator", "LegacyIteratorShim", 0, 0),
     JS_FN("next", next, 0, 0),
     JS_FS_END
 };
@@ -1326,38 +1307,6 @@ const Class StopIterationObject::class_ = {
     stopiter_hasInstance,
     NULL                     /* construct   */
 };
-
-bool
-ForOfIterator::next(MutableHandleValue vp, bool *done)
-{
-    JS_ASSERT(iterator);
-
-    RootedValue method(cx);
-    if (!JSObject::getProperty(cx, iterator, iterator, cx->names().next, &method))
-        return false;
-
-    InvokeArgs args(cx);
-    if (!args.init(1))
-        return false;
-    args.setCallee(method);
-    args.setThis(ObjectValue(*iterator));
-    args[0].setUndefined();
-    if (!Invoke(cx, args))
-        return false;
-
-    RootedObject resultObj(cx, ToObject(cx, args.rval()));
-    if (!resultObj)
-        return false;
-    RootedValue doneVal(cx);
-    if (!JSObject::getProperty(cx, resultObj, resultObj, cx->names().done, &doneVal))
-        return false;
-    *done = ToBoolean(doneVal);
-    if (*done) {
-        vp.setUndefined();
-        return true;
-    }
-    return JSObject::getProperty(cx, resultObj, resultObj, cx->names().value, vp);
-}
 
 /*** Generators **********************************************************************************/
 
@@ -1847,14 +1796,14 @@ NativeMethod(JSContext *cx, unsigned argc, Value *vp)
 #define JS_METHOD(name, T, impl, len, attrs) JS_FN(name, (NativeMethod<T,impl>), len, attrs)
 
 static const JSFunctionSpec star_generator_methods[] = {
-    JS_SELF_HOSTED_FN("@@iterator", "IteratorIdentity", 0, 0),
+    JS_FN("iterator", iterator_iterator, 0, 0),
     JS_METHOD("next", StarGeneratorObject, star_generator_next, 1, 0),
     JS_METHOD("throw", StarGeneratorObject, star_generator_throw, 1, 0),
     JS_FS_END
 };
 
 static const JSFunctionSpec legacy_generator_methods[] = {
-    JS_SELF_HOSTED_FN("@@iterator", "LegacyGeneratorIteratorShim", 0, 0),
+    JS_FN("iterator", iterator_iterator, 0, 0),
     // "send" is an alias for "next".
     JS_METHOD("next", LegacyGeneratorObject, legacy_generator_next, 1, JSPROP_ROPERM),
     JS_METHOD("send", LegacyGeneratorObject, legacy_generator_next, 1, JSPROP_ROPERM),

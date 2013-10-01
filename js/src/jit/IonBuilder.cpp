@@ -1242,7 +1242,6 @@ IonBuilder::snoopControlFlow(JSOp op)
 
           case SRC_WHILE:
           case SRC_FOR_IN:
-          case SRC_FOR_OF:
             // while (cond) { }
             return whileOrForInLoop(sn);
 
@@ -2028,7 +2027,7 @@ IonBuilder::processDoWhileCondEnd(CFGState &state)
 IonBuilder::ControlStatus
 IonBuilder::processWhileCondEnd(CFGState &state)
 {
-    JS_ASSERT(JSOp(*pc) == JSOP_IFNE || JSOp(*pc) == JSOP_IFEQ);
+    JS_ASSERT(JSOp(*pc) == JSOP_IFNE);
 
     // Balance the stack past the IFNE.
     MDefinition *ins = current->pop();
@@ -2039,11 +2038,7 @@ IonBuilder::processWhileCondEnd(CFGState &state)
     if (!body || !state.loop.successor)
         return ControlStatus_Error;
 
-    MTest *test;
-    if (JSOp(*pc) == JSOP_IFNE)
-        test = MTest::New(ins, body, state.loop.successor);
-    else
-        test = MTest::New(ins, state.loop.successor, body);
+    MTest *test = MTest::New(ins, body, state.loop.successor);
     current->end(test);
 
     state.state = CFGState::WHILE_LOOP_BODY;
@@ -2615,7 +2610,7 @@ IonBuilder::whileOrForInLoop(jssrcnote *sn)
     //    ...
     //    IFNE        ; goes to LOOPHEAD
     // for (x in y) { } loops are similar; the cond will be a MOREITER.
-    JS_ASSERT(SN_TYPE(sn) == SRC_FOR_OF || SN_TYPE(sn) == SRC_FOR_IN || SN_TYPE(sn) == SRC_WHILE);
+    JS_ASSERT(SN_TYPE(sn) == SRC_FOR_IN || SN_TYPE(sn) == SRC_WHILE);
     int ifneOffset = js_GetSrcNoteOffset(sn, 0);
     jsbytecode *ifne = pc + ifneOffset;
     JS_ASSERT(ifne > pc);

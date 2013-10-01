@@ -22,8 +22,7 @@ const { Ci, Cc } = require("chrome"),
     { getTabs, getTabContentWindow, getTabForContentWindow,
       getAllTabContentWindows } = require('./tabs/utils'),
     winUtils = require("./window/utils"),
-    events = require("./system/events"),
-    { iteratorSymbol, forInIterator } = require("./util/iteration");
+    events = require("./system/events");
 
 // The selection types
 const HTML = 0x01,
@@ -100,26 +99,25 @@ const selectionListener = {
  * is returned because the text field selection APIs doesn't support
  * multiple selections.
  */
-function* forOfIterator() {
-  let selection = getSelection(DOM);
-  let count = 0;
+function iterator() {
+    let selection = getSelection(DOM);
+    let count = 0;
 
-  if (selection)
-    count = selection.rangeCount || (getElementWithSelection() ? 1 : 0);
+    if (selection)
+      count = selection.rangeCount || (getElementWithSelection() ? 1 : 0);
 
-  for (let i = 0; i < count; i++) {
-    let sel = Selection(i);
+    for (let i = 0; i < count; i++) {
+      let sel = Selection(i);
 
-    if (sel.text)
-      yield Selection(i);
-  }
+      if (sel.text)
+        yield Selection(i);
+    }
 }
 
-const selectionIteratorOptions = {
-  __iterator__: forInIterator
-}
-selectionIteratorOptions[iteratorSymbol] = forOfIterator;
-const selectionIterator = obscure(selectionIteratorOptions);
+const selectionIterator = obscure({
+  __iterator__: iterator, // for...in; for each...in
+  iterator: iterator // for....of
+});
 
 /**
  * Returns the most recent focused window.

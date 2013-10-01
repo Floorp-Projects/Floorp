@@ -1804,7 +1804,6 @@ SrcNotes(JSContext *cx, HandleScript script, Sprinter *sp)
             break;
 
           case SRC_FOR_IN:
-          case SRC_FOR_OF:
             Sprint(sp, " closingjump %u", unsigned(js_GetSrcNoteOffset(sn, 0)));
             break;
 

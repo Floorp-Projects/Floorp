@@ -3658,7 +3658,6 @@ static const JSFunctionSpec string_methods[] = {
     JS_FN("sub",               str_sub,               0,0),
 #endif
 
-    JS_SELF_HOSTED_FN("@@iterator", "ArrayIterator",  0,0),
     JS_FN("iterator",          JS_ArrayIterator,      0,0),
     JS_FS_END
 };

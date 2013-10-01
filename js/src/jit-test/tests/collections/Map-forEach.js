@@ -1,7 +1,6 @@
 /* test Map.prototype.forEach */
 
 load(libdir + 'asserts.js');
-load(libdir + 'iteration.js');
 
 // testing success conditions of Map.prototype.forEach
 
@@ -17,12 +16,12 @@ var initialMap = new Map([['a', 1], ['b', 2.3], [false, undefined]]);
 initialMap.forEach(callback);
 
 // test that both the Maps are equal and are in same order
-var iterator = initialMap[std_iterator]();
+var iterator = initialMap.iterator();
 var count = 0;
 for (var [k, v] of testMap) {
     assertEq(initialMap.has(k), true);
     assertEq(initialMap.get(k), testMap.get(k));
-    assertIteratorResult(iterator.next(), [k, testMap.get(k)], false);
+    assertEq(iterator.next()[1], testMap.get(k));
     count++;
 }
 
@@ -53,7 +52,7 @@ assertThrowsInstanceOf(function() {
 // StopIteration exception is thrown
 
 var m = new Map([["one", 1]]);
-Object.getPrototypeOf(m[std_iterator]()).next = function () { throw "FAIL"; };
+Object.getPrototypeOf(m.iterator()).next = function () { throw "FAIL"; };
 assertThrowsInstanceOf(function () {
   m.forEach(function () { throw StopIteration; });
 }, StopIteration, "Map.prototype.forEach should use intrinsic next method.");

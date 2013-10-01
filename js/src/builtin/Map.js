@@ -24,10 +24,13 @@ function MapForEach(callbackfn, thisArg = undefined) {
     /* Step 6-8. */
     var entries = std_Map_iterator.call(M);
     while (true) {
-        var result = std_Map_iterator_next.call(entries);
-        if (result.done)
-            break;
-        var entry = result.value;
+        try {
+            var entry = std_Map_iterator_next.call(entries);
+        } catch (err) {
+            if (err instanceof StopIteration)
+                break;
+            throw err;
+        }
         callFunction(callbackfn, thisArg, entry[1], entry[0], M);
     }
 }

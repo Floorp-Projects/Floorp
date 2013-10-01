@@ -2892,7 +2892,6 @@ static const JSFunctionSpec array_methods[] = {
     JS_SELF_HOSTED_FN("find",        "ArrayFind",        1,0),
     JS_SELF_HOSTED_FN("findIndex",   "ArrayFindIndex",   1,0),
 
-    JS_SELF_HOSTED_FN("@@iterator",  "ArrayIterator",    0,0),
     JS_FN("iterator",           JS_ArrayIterator,   0,0),
     JS_FS_END
 };

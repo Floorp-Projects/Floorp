@@ -1,7 +1,5 @@
 // Set surfaces
 
-load(libdir + "iteration.js");
-
 var desc = Object.getOwnPropertyDescriptor(this, "Set");
 assertEq(desc.enumerable, false);
 assertEq(desc.configurable, true);
@@ -45,4 +43,4 @@ checkMethod("clear", 0);
 
 // Set.prototype.keys, .values, and .iterator are the same function object
 assertEq(Set.prototype.keys, Set.prototype.values);
-assertEq(Set.prototype[std_iterator], Set.prototype.values);
+assertEq(Set.prototype.iterator, Set.prototype.values);
