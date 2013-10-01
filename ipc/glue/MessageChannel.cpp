@@ -53,7 +53,7 @@ MessageChannel::MessageChannel(MessageListener *aListener)
     mPendingUrgentReplies(0),
     mDispatchingSyncMessage(false),
     mRemoteStackDepthGuess(false),
-    mSawRPCOutMsg(false)
+    mSawInterruptOutMsg(false)
 {
     MOZ_COUNT_CTOR(ipc::MessageChannel);
 
@@ -76,7 +76,8 @@ MessageChannel::~MessageChannel()
     MOZ_COUNT_DTOR(ipc::MessageChannel);
     IPC_ASSERT(mCxxStackFrames.empty(), "mismatched CxxStackFrame ctor/dtors");
 #ifdef OS_WIN
-    CloseHandle(mEvent);
+    DebugOnly<BOOL> ok = CloseHandle(mEvent);
+    MOZ_ASSERT(ok);
 #endif
 }
 
@@ -270,7 +271,7 @@ MessageChannel::OnMessageReceivedFromLink(const Message& aMsg)
     if (MaybeInterceptSpecialIOMessage(aMsg))
         return;
 
-    // Regardless of the RPC stack, if we're awaiting a sync or urgent reply,
+    // Regardless of the Interrupt stack, if we're awaiting a sync or urgent reply,
     // we know that it needs to be immediately handled to unblock us.
     if ((AwaitingSyncReply() && aMsg.is_sync()) ||
         (AwaitingUrgentReply() && aMsg.is_urgent()))
@@ -310,7 +311,7 @@ MessageChannel::OnMessageReceivedFromLink(const Message& aMsg)
     //     posting a task to the main event loop, where it will be processed
     //     once the synchronous reply has been received.
     //
-    // (2) We are waiting on an RPC reply - main thread is blocked on the IPC monitor.
+    // (2) We are waiting on an Interrupt reply - main thread is blocked on the IPC monitor.
     //   - Always notify and wake up the main thread.
     //
     // (3) We are not waiting on a reply.
@@ -320,13 +321,13 @@ MessageChannel::OnMessageReceivedFromLink(const Message& aMsg)
     // blocked. This is okay, since we always check for pending events before
     // blocking again.
     //
-    if (AwaitingRPCReply() || (AwaitingSyncReply() && aMsg.is_urgent())) {
-        // Always wake up our RPC waiter, and wake up sync waiters for urgent
+    if (AwaitingInterruptReply() || (AwaitingSyncReply() && aMsg.is_urgent())) {
+        // Always wake up our Interrupt waiter, and wake up sync waiters for urgent
         // messages.
         NotifyWorkerThread();
     } else {
         // Worker thread is either not blocked on a reply, or this is an
-        // incoming RPC that raced with outgoing sync, and needs to be
+        // incoming Interrupt that raced with outgoing sync, and needs to be
         // deferred to a later event-loop iteration.
         if (!compress) {
             // If we compressed away the previous message, we'll re-use
@@ -357,7 +358,7 @@ MessageChannel::Send(Message* aMsg, Message* aReply)
 
     if (AwaitingSyncReply()) {
         // This is a temporary hack in place, for e10s CPOWs, until bug 901789
-        // and the new followup RPC protocol land. Eventually this will become
+        // and the new followup Interrupt protocol land. Eventually this will become
         // an assert again. See bug 900062 for details.
         NS_ERROR("Nested sync messages are not supported");
         return false;
@@ -390,7 +391,7 @@ MessageChannel::UrgentCall(Message* aMsg, Message* aReply)
     // At the moment, we don't allow urgent outcalls to nest, though this will
     // change soon.
     IPC_ASSERT(!AwaitingUrgentReply(), "urgent calls cannot nest");
-    IPC_ASSERT(!AwaitingRPCReply(), "urgent calls cannot be issued within RPC calls");
+    IPC_ASSERT(!AwaitingInterruptReply(), "urgent calls cannot be issued within Interrupt calls");
     IPC_ASSERT(!AwaitingSyncReply(), "urgent calls cannot be issued within sync sends");
 
     AutoEnterPendingReply replies(mPendingUrgentReplies);
@@ -485,11 +486,11 @@ MessageChannel::Call(Message* aMsg, Message* aReply)
 {
     if (aMsg->is_urgent())
         return UrgentCall(aMsg, aReply);
-    return RPCCall(aMsg, aReply);
+    return InterruptCall(aMsg, aReply);
 }
 
 bool
-MessageChannel::RPCCall(Message* aMsg, Message* aReply)
+MessageChannel::InterruptCall(Message* aMsg, Message* aReply)
 {
     AssertWorkerThread();
     mMonitor->AssertNotCurrentThreadOwns();
@@ -511,18 +512,18 @@ MessageChannel::RPCCall(Message* aMsg, Message* aReply)
 
     // Sanity checks.
     IPC_ASSERT(!AwaitingSyncReply() && !AwaitingUrgentReply(),
-               "cannot issue RPC call whiel blocked on sync or urgent");
+               "cannot issue Interrupt call whiel blocked on sync or urgent");
     IPC_ASSERT(!DispatchingSyncMessage() || aMsg->priority() == IPC::Message::PRIORITY_HIGH,
                "violation of sync handler invariant");
-    IPC_ASSERT(aMsg->is_rpc(), "can only Call() RPC messages here");
+    IPC_ASSERT(aMsg->is_interrupt(), "can only Call() Interrupt messages here");
 
 
     nsAutoPtr<Message> msg(aMsg);
 
     msg->set_seqno(NextSeqno());
-    msg->set_rpc_remote_stack_depth_guess(mRemoteStackDepthGuess);
-    msg->set_rpc_local_stack_depth(1 + RPCStackDepth());
-    mRPCStack.push(*msg);
+    msg->set_interrupt_remote_stack_depth_guess(mRemoteStackDepthGuess);
+    msg->set_interrupt_local_stack_depth(1 + InterruptStackDepth());
+    mInterruptStack.push(*msg);
     mLink->SendMessage(msg.forget());
 
     while (true) {
@@ -532,7 +533,7 @@ MessageChannel::RPCCall(Message* aMsg, Message* aReply)
         // trying another loop iteration will be futile because
         // channel state will have been cleared
         if (!Connected()) {
-            ReportConnectionError("MessageChannel::RPCCall");
+            ReportConnectionError("MessageChannel::InterruptCall");
             return false;
         }
 
@@ -541,12 +542,12 @@ MessageChannel::RPCCall(Message* aMsg, Message* aReply)
         MaybeUndeferIncall();
 
         // Wait for an event to occur.
-        while (!RPCEventOccurred()) {
-            bool maybeTimedOut = !WaitForRPCNotify();
+        while (!InterruptEventOccurred()) {
+            bool maybeTimedOut = !WaitForInterruptNotify();
 
             // We might have received a "subtly deferred" message in a nested
             // loop that it's now time to process.
-            if (RPCEventOccurred() ||
+            if (InterruptEventOccurred() ||
                 (!maybeTimedOut && (!mDeferred.empty() || !mOutOfTurnReplies.empty())))
             {
                 break;
@@ -562,7 +563,7 @@ MessageChannel::RPCCall(Message* aMsg, Message* aReply)
         if (mPendingUrgentRequest) {
             recvd = *mPendingUrgentRequest;
             mPendingUrgentRequest = nullptr;
-        } else if ((it = mOutOfTurnReplies.find(mRPCStack.top().seqno()))
+        } else if ((it = mOutOfTurnReplies.find(mInterruptStack.top().seqno()))
                     != mOutOfTurnReplies.end())
         {
             recvd = it->second;
@@ -579,8 +580,8 @@ MessageChannel::RPCCall(Message* aMsg, Message* aReply)
             continue;
         }
 
-        // If the message is not RPC, we can dispatch it as normal.
-        if (!recvd.is_rpc()) {
+        // If the message is not Interrupt, we can dispatch it as normal.
+        if (!recvd.is_interrupt()) {
             // Other side should be blocked.
             IPC_ASSERT(!recvd.is_sync() || mPending.empty(), "other side should be blocked");
 
@@ -596,15 +597,15 @@ MessageChannel::RPCCall(Message* aMsg, Message* aReply)
             continue;
         }
 
-        // If the message is an RPC reply, either process it as a reply to our
+        // If the message is an Interrupt reply, either process it as a reply to our
         // call, or add it to the list of out-of-turn replies we've received.
         if (recvd.is_reply()) {
-            IPC_ASSERT(!mRPCStack.empty(), "invalid RPC stack");
+            IPC_ASSERT(!mInterruptStack.empty(), "invalid Interrupt stack");
 
             // If this is not a reply the call we've initiated, add it to our
             // out-of-turn replies and keep polling for events.
             {
-                const Message &outcall = mRPCStack.top();
+                const Message &outcall = mInterruptStack.top();
 
                 // Note, In the parent, sequence numbers increase from 0, and
                 // in the child, they decrease from 0.
@@ -623,7 +624,7 @@ MessageChannel::RPCCall(Message* aMsg, Message* aReply)
 
             // We received a reply to our most recent outstanding call. Pop
             // this frame and return the reply.
-            mRPCStack.pop();
+            mInterruptStack.pop();
 
             if (!recvd.is_reply_error()) {
                 *aReply = recvd;
@@ -631,24 +632,24 @@ MessageChannel::RPCCall(Message* aMsg, Message* aReply)
 
             // If we have no more pending out calls waiting on replies, then
             // the reply queue should be empty.
-            IPC_ASSERT(!mRPCStack.empty() || mOutOfTurnReplies.empty(),
+            IPC_ASSERT(!mInterruptStack.empty() || mOutOfTurnReplies.empty(),
                        "still have pending replies with no pending out-calls",
                        true);
 
             return !recvd.is_reply_error();
         }
 
-        // Dispatch an RPC in-call. Snapshot the current stack depth while we
+        // Dispatch an Interrupt in-call. Snapshot the current stack depth while we
         // own the monitor.
-        size_t stackDepth = RPCStackDepth();
+        size_t stackDepth = InterruptStackDepth();
         {
             MonitorAutoUnlock unlock(*mMonitor);
 
             CxxStackFrame frame(*this, IN_MESSAGE, &recvd);
-            DispatchRPCMessage(recvd, stackDepth);
+            DispatchInterruptMessage(recvd, stackDepth);
         }
         if (!Connected()) {
-            ReportConnectionError("MessageChannel::DispatchRPCMessage");
+            ReportConnectionError("MessageChannel::DispatchInterruptMessage");
             return false;
         }
     }
@@ -657,17 +658,17 @@ MessageChannel::RPCCall(Message* aMsg, Message* aReply)
 }
 
 bool
-MessageChannel::RPCEventOccurred()
+MessageChannel::InterruptEventOccurred()
 {
     AssertWorkerThread();
     mMonitor->AssertCurrentThreadOwns();
-    IPC_ASSERT(RPCStackDepth() > 0, "not in wait loop");
+    IPC_ASSERT(InterruptStackDepth() > 0, "not in wait loop");
 
     return (!Connected() ||
             !mPending.empty() ||
             mPendingUrgentRequest ||
             (!mOutOfTurnReplies.empty() &&
-             mOutOfTurnReplies.find(mRPCStack.top().seqno()) !=
+             mOutOfTurnReplies.find(mInterruptStack.top().seqno()) !=
              mOutOfTurnReplies.end()));
 }
 
@@ -702,9 +703,9 @@ MessageChannel::OnMaybeDequeueOne()
         mPending.pop_front();
     } while (0);
 
-    if (IsOnCxxStack() && recvd.is_rpc() && recvd.is_reply()) {
+    if (IsOnCxxStack() && recvd.is_interrupt() && recvd.is_reply()) {
         // We probably just received a reply in a nested loop for an
-        // RPC call sent before entering that loop.
+        // Interrupt call sent before entering that loop.
         mOutOfTurnReplies[recvd.seqno()] = recvd;
         return false;
     }
@@ -721,8 +722,8 @@ MessageChannel::DispatchMessage(const Message &aMsg)
         DispatchSyncMessage(aMsg);
     else if (aMsg.is_urgent())
         DispatchUrgentMessage(aMsg);
-    else if (aMsg.is_rpc())
-        DispatchRPCMessage(aMsg, 0);
+    else if (aMsg.is_interrupt())
+        DispatchInterruptMessage(aMsg, 0);
     else
         DispatchAsyncMessage(aMsg);
 }
@@ -778,7 +779,7 @@ void
 MessageChannel::DispatchAsyncMessage(const Message& aMsg)
 {
     AssertWorkerThread();
-    MOZ_ASSERT(!aMsg.is_rpc() && !aMsg.is_sync() && !aMsg.is_urgent());
+    MOZ_ASSERT(!aMsg.is_interrupt() && !aMsg.is_sync() && !aMsg.is_urgent());
 
     if (aMsg.routing_id() == MSG_ROUTING_NONE) {
         NS_RUNTIMEABORT("unhandled special message!");
@@ -788,34 +789,34 @@ MessageChannel::DispatchAsyncMessage(const Message& aMsg)
 }
 
 void
-MessageChannel::DispatchRPCMessage(const Message& aMsg, size_t stackDepth)
+MessageChannel::DispatchInterruptMessage(const Message& aMsg, size_t stackDepth)
 {
     AssertWorkerThread();
     mMonitor->AssertNotCurrentThreadOwns();
 
-    IPC_ASSERT(aMsg.is_rpc() && !aMsg.is_reply(), "wrong message type");
+    IPC_ASSERT(aMsg.is_interrupt() && !aMsg.is_reply(), "wrong message type");
 
     // Race detection: see the long comment near mRemoteStackDepthGuess in
-    // RPCChannel.h. "Remote" stack depth means our side, and "local" means
+    // MessageChannel.h. "Remote" stack depth means our side, and "local" means
     // the other side.
-    if (aMsg.rpc_remote_stack_depth_guess() != RemoteViewOfStackDepth(stackDepth)) {
-        // RPC in-calls have raced. The winner, if there is one, gets to defer
+    if (aMsg.interrupt_remote_stack_depth_guess() != RemoteViewOfStackDepth(stackDepth)) {
+        // Interrupt in-calls have raced. The winner, if there is one, gets to defer
         // processing of the other side's in-call.
         bool defer;
         const char* winner;
-        switch (mListener->MediateRPCRace((mSide == ChildSide) ? aMsg : mRPCStack.top(),
-                                          (mSide != ChildSide) ? mRPCStack.top() : aMsg))
+        switch (mListener->MediateInterruptRace((mSide == ChildSide) ? aMsg : mInterruptStack.top(),
+                                          (mSide != ChildSide) ? mInterruptStack.top() : aMsg))
         {
-          case RRPChildWins:
+          case RIPChildWins:
             winner = "child";
             defer = (mSide == ChildSide);
             break;
-          case RRPParentWins:
+          case RIPParentWins:
             winner = "parent";
             defer = (mSide != ChildSide);
             break;
-          case RRPError:
-            NS_RUNTIMEABORT("NYI: 'Error' RPC race policy");
+          case RIPError:
+            NS_RUNTIMEABORT("NYI: 'Error' Interrupt race policy");
             return;
           default:
             NS_RUNTIMEABORT("not reached");
@@ -852,10 +853,10 @@ MessageChannel::DispatchRPCMessage(const Message& aMsg, size_t stackDepth)
     Result rv = mListener->OnCallReceived(aMsg, reply);
     --mRemoteStackDepthGuess;
 
-    if (!MaybeHandleError(rv, "DispatchRPCMessage")) {
+    if (!MaybeHandleError(rv, "DispatchInterruptMessage")) {
         delete reply;
         reply = new Message();
-        reply->set_rpc();
+        reply->set_interrupt();
         reply->set_reply();
         reply->set_reply_error();
     }
@@ -875,13 +876,13 @@ MessageChannel::MaybeUndeferIncall()
     if (mDeferred.empty())
         return;
 
-    size_t stackDepth = RPCStackDepth();
+    size_t stackDepth = InterruptStackDepth();
 
     // the other side can only *under*-estimate our actual stack depth
-    IPC_ASSERT(mDeferred.top().rpc_remote_stack_depth_guess() <= stackDepth,
+    IPC_ASSERT(mDeferred.top().interrupt_remote_stack_depth_guess() <= stackDepth,
                "fatal logic error");
 
-    if (mDeferred.top().rpc_remote_stack_depth_guess() < RemoteViewOfStackDepth(stackDepth))
+    if (mDeferred.top().interrupt_remote_stack_depth_guess() < RemoteViewOfStackDepth(stackDepth))
         return;
 
     // maybe time to process this message
@@ -896,7 +897,7 @@ MessageChannel::MaybeUndeferIncall()
 }
 
 void
-MessageChannel::FlushPendingRPCQueue()
+MessageChannel::FlushPendingInterruptQueue()
 {
     AssertWorkerThread();
     mMonitor->AssertNotCurrentThreadOwns();
@@ -909,7 +910,7 @@ MessageChannel::FlushPendingRPCQueue()
                 return;
 
             const Message& last = mPending.back();
-            if (!last.is_rpc() || last.is_reply())
+            if (!last.is_interrupt() || last.is_reply())
                 return;
         }
     }
@@ -921,11 +922,11 @@ void
 MessageChannel::ExitedCxxStack()
 {
     mListener->OnExitedCxxStack();
-    if (mSawRPCOutMsg) {
+    if (mSawInterruptOutMsg) {
         MonitorAutoLock lock(*mMonitor);
         // see long comment in OnMaybeDequeueOne()
         EnqueuePendingMessages();
-        mSawRPCOutMsg = false;
+        mSawInterruptOutMsg = false;
     }
 }
 
@@ -990,7 +991,7 @@ MessageChannel::WaitForSyncNotify()
 }
 
 bool
-MessageChannel::WaitForRPCNotify()
+MessageChannel::WaitForInterruptNotify()
 {
     return WaitForSyncNotify();
 }
@@ -1030,8 +1031,8 @@ MessageChannel::ShouldContinueFromTimeout()
         // tasks arriving from the child, posted to the worker thread's event
         // loop.  This would complicate cleanup of the *Channel.  But since
         // IPDL forbids this (and since it doesn't support children timing out
-        // on parents), the parent can only block on RPC messages to the child,
-        // and in that case arriving async messages are enqueued to the RPC
+        // on parents), the parent can only block on interrupt messages to the child,
+        // and in that case arriving async messages are enqueued to the interrupt 
         // channel's special queue.  They're then ignored because the channel
         // state changes to ChannelTimeout (i.e. !Connected).
         SynchronouslyClose();
@@ -1154,7 +1155,7 @@ MessageChannel::OnChannelErrorFromLink()
     AssertLinkThread();
     mMonitor->AssertCurrentThreadOwns();
 
-    if (RPCStackDepth() > 0)
+    if (InterruptStackDepth() > 0)
         NotifyWorkerThread();
 
     if (AwaitingSyncReply())
@@ -1327,19 +1328,19 @@ MessageChannel::DebugAbort(const char* file, int line, const char* cond,
                            const char* why,
                            bool reply) const
 {
-    printf_stderr("###!!! [RPCChannel][%s][%s:%d] "
+    printf_stderr("###!!! [MessageChannel][%s][%s:%d] "
                   "Assertion (%s) failed.  %s %s\n",
                   mSide == ChildSide ? "Child" : "Parent",
                   file, line, cond,
                   why,
                   reply ? "(reply)" : "");
     // technically we need the mutex for this, but we're dying anyway
-    DumpRPCStack("  ");
-    printf_stderr("  remote RPC stack guess: %lu\n",
+    DumpInterruptStack("  ");
+    printf_stderr("  remote Interrupt stack guess: %lu\n",
                   mRemoteStackDepthGuess);
     printf_stderr("  deferred stack size: %lu\n",
                   mDeferred.size());
-    printf_stderr("  out-of-turn RPC replies stack size: %lu\n",
+    printf_stderr("  out-of-turn Interrupt replies stack size: %lu\n",
                   mOutOfTurnReplies.size());
     printf_stderr("  Pending queue size: %lu, front to back:\n",
                   mPending.size());
@@ -1347,7 +1348,7 @@ MessageChannel::DebugAbort(const char* file, int line, const char* cond,
     MessageQueue pending = mPending;
     while (!pending.empty()) {
         printf_stderr("    [ %s%s ]\n",
-                      pending.front().is_rpc() ? "rpc" :
+                      pending.front().is_interrupt() ? "intr" :
                       (pending.front().is_sync() ? "sync" : "async"),
                       pending.front().is_reply() ? "reply" : "");
         pending.pop_front();
@@ -1357,12 +1358,12 @@ MessageChannel::DebugAbort(const char* file, int line, const char* cond,
 }
 
 void
-MessageChannel::DumpRPCStack(const char* const pfx) const
+MessageChannel::DumpInterruptStack(const char* const pfx) const
 {
     NS_WARN_IF_FALSE(MessageLoop::current() != mWorkerLoop,
                      "The worker thread had better be paused in a debugger!");
 
-    printf_stderr("%sRPCChannel 'backtrace':\n", pfx);
+    printf_stderr("%sMessageChannel 'backtrace':\n", pfx);
 
     // print a python-style backtrace, first frame to last
     for (uint32_t i = 0; i < mCxxStackFrames.size(); ++i) {

@@ -8,7 +8,7 @@
 #define js_GCAPI_h
 
 #include "mozilla/NullPtr.h"
- 
+
 #include "js/HeapAPI.h"
 #include "js/RootingAPI.h"
 #include "js/Value.h"

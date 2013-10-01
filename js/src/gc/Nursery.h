@@ -137,11 +137,6 @@ class Nursery
     typedef HashSet<HeapSlot *, PointerHasher<HeapSlot *, 3>, SystemAllocPolicy> HugeSlotsSet;
     HugeSlotsSet hugeSlots;
 
-    /* The marking bitmap for the fallback marker. */
-    static const size_t ThingAlignment = sizeof(JS::Value);
-    static const size_t FallbackBitmapBits = NurserySize / ThingAlignment;
-    BitArray<FallbackBitmapBits> fallbackBitmap;
-
 #ifdef DEBUG
     /*
      * In DEBUG builds, these bytes indicate the state of an unused segment of

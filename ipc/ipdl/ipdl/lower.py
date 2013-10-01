@@ -277,13 +277,13 @@ def _putInNamespaces(cxxthing, namespaces):
 
 def _sendPrefix(msgtype):
     """Prefix of the name of the C++ method that sends |msgtype|."""
-    if msgtype.isRpc() or msgtype.isUrgent():
+    if msgtype.isInterrupt() or msgtype.isUrgent():
         return 'Call'
     return 'Send'
 
 def _recvPrefix(msgtype):
     """Prefix of the name of the C++ method that handles |msgtype|."""
-    if msgtype.isRpc() or msgtype.isUrgent():
+    if msgtype.isInterrupt() or msgtype.isUrgent():
         return 'Answer'
     return 'Recv'
 
@@ -2884,7 +2884,7 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
                 ExprCall(ExprSelect(p.channelVar(), '.', 'Close'))))
             self.cls.addstmts([ closemeth, Whitespace.NL ])
 
-            if ptype.talksSync() or ptype.talksRpc():
+            if ptype.talksSync() or ptype.talksInterrupt():
                 # SetReplyTimeoutMs()
                 timeoutvar = ExprVar('aTimeoutMs')
                 settimeout = MethodDefn(MethodDecl(
@@ -2955,8 +2955,8 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
         self.asyncSwitch = StmtSwitch(msgtype)
         if toplevel.talksSync():
             self.syncSwitch = StmtSwitch(msgtype)
-            if toplevel.talksRpc():
-                self.rpcSwitch = StmtSwitch(msgtype)
+            if toplevel.talksInterrupt():
+                self.interruptSwitch = StmtSwitch(msgtype)
 
         # implement Send*() methods and add dispatcher cases to
         # message switch()es
@@ -2974,8 +2974,8 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
         self.asyncSwitch.addcase(DefaultLabel(), default)
         if toplevel.talksSync():
             self.syncSwitch.addcase(DefaultLabel(), default)
-            if toplevel.talksRpc():
-                self.rpcSwitch.addcase(DefaultLabel(), default)
+            if toplevel.talksInterrupt():
+                self.interruptSwitch.addcase(DefaultLabel(), default)
 
         # FIXME/bug 535053: only manager protocols and non-manager
         # protocols with union types need Lookup().  we'll give it to
@@ -3021,7 +3021,7 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
 
                 method.addstmts([ routedecl, routeif, Whitespace.NL ])
 
-            # in the event of an RPC delete message, we want to loudly complain about
+            # in the event of an Interrupt delete message, we want to loudly complain about
             # messages that are received that are not a reply to the original message
             if ptype.hasReentrantDelete:
                 msgVar = ExprVar(params[0].name)
@@ -3031,7 +3031,7 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
                     ExprBinary(
                         ExprBinary(ExprCall(ExprSelect(msgVar, '.', 'is_reply')), '!=', ExprLiteral.TRUE),
                         '||',
-                        ExprBinary(ExprCall(ExprSelect(msgVar, '.', 'is_rpc')), '!=', ExprLiteral.TRUE))))
+                        ExprBinary(ExprCall(ExprSelect(msgVar, '.', 'is_interrupt')), '!=', ExprLiteral.TRUE))))
                 ifdying.addifstmts([_fatalError('incoming message racing with actor deletion'),
                                     StmtReturn(_Result.Processed)])
                 method.addstmt(ifdying)
@@ -3051,8 +3051,8 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
                               hasReply=0, dispatches=dispatches),
             Whitespace.NL
         ])
-        if not toplevel.talksRpc():
-          self.rpcSwitch = None
+        if not toplevel.talksInterrupt():
+          self.interruptSwitch = None
           if not toplevel.talksSync():
             self.syncSwitch = None
         self.cls.addstmts([
@@ -3061,7 +3061,7 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
             Whitespace.NL
         ])
         self.cls.addstmts([
-            makeHandlerMethod('OnCallReceived', self.rpcSwitch,
+            makeHandlerMethod('OnCallReceived', self.interruptSwitch,
                               hasReply=1, dispatches=dispatches),
             Whitespace.NL
         ])
@@ -3090,7 +3090,7 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
         self.cls.addstmts([ gettypetag, Whitespace.NL ])
 
         # OnReplyTimeout()
-        if toplevel.talksSync() or toplevel.talksRpc():
+        if toplevel.talksSync() or toplevel.talksInterrupt():
             ontimeout = MethodDefn(
                 MethodDecl('OnReplyTimeout', ret=Type.BOOL))
 
@@ -3129,10 +3129,10 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
             onstack.addstmt(StmtReturn(ExprCall(
                 ExprSelect(p.channelVar(), '.', p.onCxxStackVar().name))))
 
-            # void ProcessIncomingRacingRPCCall
+            # void ProcessIncomingRacingInterruptCall
             processincoming = MethodDefn(
-                MethodDecl('FlushPendingRPCQueue', ret=Type.VOID))
-            processincoming.addstmt(StmtExpr(ExprCall(ExprSelect(_actorChannel(ExprVar.THIS), '.', 'FlushPendingRPCQueue'))))
+                MethodDecl('FlushPendingInterruptQueue', ret=Type.VOID))
+            processincoming.addstmt(StmtExpr(ExprCall(ExprSelect(_actorChannel(ExprVar.THIS), '.', 'FlushPendingInterruptQueue'))))
 
             self.cls.addstmts([ onentered, onexited,
                                 onenteredcall, onexitedcall,
@@ -3178,16 +3178,16 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
         # User-facing shmem methods
         self.cls.addstmts(self.makeShmemIface())
 
-        if (ptype.isToplevel() and ptype.talksRpc()):
+        if (ptype.isToplevel() and ptype.talksInterrupt()):
 
             processnative = MethodDefn(
-                MethodDecl('ProcessNativeEventsInRPCCall', ret=Type.VOID))
+                MethodDecl('ProcessNativeEventsInInterruptCall', ret=Type.VOID))
 
             processnative.addstmts([
                     CppDirective('ifdef', 'OS_WIN'),
                     StmtExpr(ExprCall(
                             ExprSelect(p.channelVar(), '.',
-                                       'ProcessNativeEventsInRPCCall'))),
+                                       'ProcessNativeEventsInInterruptCall'))),
                     CppDirective('else'),
                     _runtimeAbort('This method is Windows-only'),
                     CppDirective('endif'),
@@ -4640,8 +4640,8 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
                 self.asyncSwitch.addcase(lbl, case)
             elif sems is ipdl.ast.SYNC:
                 self.syncSwitch.addcase(lbl, case)
-            elif sems is ipdl.ast.RPC or sems is ipdl.ast.URGENT:
-                self.rpcSwitch.addcase(lbl, case)
+            elif sems is ipdl.ast.INTR or sems is ipdl.ast.URGENT:
+                self.interruptSwitch.addcase(lbl, case)
             else: assert 0
 
         if self.sendsMessage(md):
@@ -5038,9 +5038,9 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
         elif md.decl.type.isUrgent():
             stmts.append(StmtExpr(ExprCall(
                 ExprSelect(var, '->', 'set_urgent'))))
-        elif md.decl.type.isRpc():
+        elif md.decl.type.isInterrupt():
             stmts.append(StmtExpr(ExprCall(
-                ExprSelect(var, '->', 'set_rpc'))))
+                ExprSelect(var, '->', 'set_interrupt'))))
 
         if reply:
             stmts.append(StmtExpr(ExprCall(

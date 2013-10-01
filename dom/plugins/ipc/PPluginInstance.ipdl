@@ -76,7 +76,7 @@ struct NPRemoteAsyncSurface
   uintptr_t hostPtr;
 };
 
-rpc protocol PPluginInstance
+intr protocol PPluginInstance
 {
   manager PPluginModule;
 
@@ -88,34 +88,34 @@ rpc protocol PPluginInstance
   manages PPluginSurface;
 
 child:
-  rpc __delete__();
+  intr __delete__();
 
-  rpc NPP_SetWindow(NPRemoteWindow window);
+  intr NPP_SetWindow(NPRemoteWindow window);
 
-  rpc NPP_GetValue_NPPVpluginWantsAllNetworkStreams()
+  intr NPP_GetValue_NPPVpluginWantsAllNetworkStreams()
     returns (bool value, NPError result);
 
   // this message is not used on non-X platforms
-  rpc NPP_GetValue_NPPVpluginNeedsXEmbed()
+  intr NPP_GetValue_NPPVpluginNeedsXEmbed()
     returns (bool value, NPError result);
 
-  rpc NPP_GetValue_NPPVpluginScriptableNPObject()
+  intr NPP_GetValue_NPPVpluginScriptableNPObject()
     returns (nullable PPluginScriptableObject value, NPError result);
 
-  rpc NPP_SetValue_NPNVprivateModeBool(bool value) returns (NPError result);
-  rpc NPP_GetValue_NPPVpluginNativeAccessibleAtkPlugId()
+  intr NPP_SetValue_NPNVprivateModeBool(bool value) returns (NPError result);
+  intr NPP_GetValue_NPPVpluginNativeAccessibleAtkPlugId()
     returns (nsCString plug_id, NPError result);
 
-  rpc NPP_HandleEvent(NPRemoteEvent event)
+  intr NPP_HandleEvent(NPRemoteEvent event)
     returns (int16_t handled);
   // special cases where we need to a shared memory buffer
-  rpc NPP_HandleEvent_Shmem(NPRemoteEvent event, Shmem buffer)
+  intr NPP_HandleEvent_Shmem(NPRemoteEvent event, Shmem buffer)
     returns (int16_t handled, Shmem rtnbuffer);
   // special cases where we need an iosurface
-  rpc NPP_HandleEvent_IOSurface(NPRemoteEvent event, uint32_t surfaceid)
+  intr NPP_HandleEvent_IOSurface(NPRemoteEvent event, uint32_t surfaceid)
     returns (int16_t handled);
   // special cases of HandleEvent to make mediating races simpler
-  rpc Paint(NPRemoteEvent event)
+  intr Paint(NPRemoteEvent event)
     returns (int16_t handled);
   // this is only used on windows to forward WM_WINDOWPOSCHANGE
   async WindowPosChanged(NPRemoteEvent event);
@@ -142,37 +142,37 @@ child:
 
   async NPP_DidComposite();
 
-  rpc NPP_Destroy()
+  intr NPP_Destroy()
     returns (NPError rv);
 
 parent:
-  rpc NPN_GetValue_NPNVWindowNPObject()
+  intr NPN_GetValue_NPNVWindowNPObject()
     returns (nullable PPluginScriptableObject value, NPError result);
-  rpc NPN_GetValue_NPNVPluginElementNPObject()
+  intr NPN_GetValue_NPNVPluginElementNPObject()
     returns (nullable PPluginScriptableObject value, NPError result);
-  rpc NPN_GetValue_NPNVprivateModeBool()
+  intr NPN_GetValue_NPNVprivateModeBool()
     returns (bool value, NPError result);
-  rpc NPN_GetValue_NPNVnetscapeWindow()
+  intr NPN_GetValue_NPNVnetscapeWindow()
     returns (NativeWindowHandle value, NPError result);
-  rpc NPN_GetValue_NPNVdocumentOrigin()
+  intr NPN_GetValue_NPNVdocumentOrigin()
     returns (nsCString value, NPError result);
-  rpc NPN_GetValue_DrawingModelSupport(NPNVariable model)
+  intr NPN_GetValue_DrawingModelSupport(NPNVariable model)
     returns (bool value);
 
-  rpc NPN_SetValue_NPPVpluginWindow(bool windowed)
+  intr NPN_SetValue_NPPVpluginWindow(bool windowed)
     returns (NPError result);
-  rpc NPN_SetValue_NPPVpluginTransparent(bool transparent)
+  intr NPN_SetValue_NPPVpluginTransparent(bool transparent)
     returns (NPError result);
-  rpc NPN_SetValue_NPPVpluginUsesDOMForCursor(bool useDOMForCursor)
+  intr NPN_SetValue_NPPVpluginUsesDOMForCursor(bool useDOMForCursor)
     returns (NPError result);
-  rpc NPN_SetValue_NPPVpluginDrawingModel(int drawingModel)
+  intr NPN_SetValue_NPPVpluginDrawingModel(int drawingModel)
     returns (OptionalShmem remoteImageData, CrossProcessMutexHandle mutex, NPError result);
-  rpc NPN_SetValue_NPPVpluginEventModel(int eventModel)
+  intr NPN_SetValue_NPPVpluginEventModel(int eventModel)
     returns (NPError result);
 
-  rpc NPN_GetURL(nsCString url, nsCString target)
+  intr NPN_GetURL(nsCString url, nsCString target)
     returns (NPError result);
-  rpc NPN_PostURL(nsCString url, nsCString target, nsCString buffer, bool file)
+  intr NPN_PostURL(nsCString url, nsCString target, nsCString buffer, bool file)
     returns (NPError result);
 
   /**
@@ -180,7 +180,7 @@ parent:
    * @TODO This would be more readable as an overloaded method,
    *       but IPDL doesn't allow that for constructors.
    */
-  rpc PStreamNotify(nsCString url, nsCString target, bool post,
+  intr PStreamNotify(nsCString url, nsCString target, bool post,
                     nsCString buffer, bool file)
     returns (NPError result);
 
@@ -202,29 +202,29 @@ parent:
                        gfxIntSize size,
                        bool transparent);
 
-  rpc NPN_PushPopupsEnabledState(bool aState);
+  intr NPN_PushPopupsEnabledState(bool aState);
 
-  rpc NPN_PopPopupsEnabledState();
+  intr NPN_PopPopupsEnabledState();
 
-  rpc NPN_GetValueForURL(NPNURLVariable variable, nsCString url)
+  intr NPN_GetValueForURL(NPNURLVariable variable, nsCString url)
     returns (nsCString value, NPError result);
 
-  rpc NPN_SetValueForURL(NPNURLVariable variable, nsCString url,
+  intr NPN_SetValueForURL(NPNURLVariable variable, nsCString url,
                          nsCString value)
     returns (NPError result);
 
-  rpc NPN_GetAuthenticationInfo(nsCString protocol_, nsCString host,
+  intr NPN_GetAuthenticationInfo(nsCString protocol_, nsCString host,
                                 int32_t port, nsCString scheme,
                                 nsCString realm)
     returns (nsCString username, nsCString password, NPError result);
 
-  rpc NPN_ConvertPoint(double sourceX, bool ignoreDestX, double sourceY, bool ignoreDestY, NPCoordinateSpace sourceSpace,
+  intr NPN_ConvertPoint(double sourceX, bool ignoreDestX, double sourceY, bool ignoreDestY, NPCoordinateSpace sourceSpace,
                        NPCoordinateSpace destSpace)
     returns (double destX, double destY, bool result);
 
   async RedrawPlugin();
 
-  rpc NPN_InitAsyncSurface(gfxIntSize size, NPImageFormat format)
+  intr NPN_InitAsyncSurface(gfxIntSize size, NPImageFormat format)
     returns (NPRemoteAsyncSurface surfData, bool result);
 
   // Send notification that a plugin tried to negotiate Carbon NPAPI so that
@@ -240,7 +240,7 @@ both:
 
 child:
   /* NPP_NewStream */
-  rpc PBrowserStream(nsCString url,
+  intr PBrowserStream(nsCString url,
                      uint32_t length,
                      uint32_t lastmodified,
                      nullable PStreamNotify notifyData,
@@ -252,16 +252,16 @@ child:
 
 parent:
   /* NPN_NewStream */
-  rpc PPluginStream(nsCString mimeType,
+  intr PPluginStream(nsCString mimeType,
                     nsCString target)
     returns (NPError result);
 
 parent:
-  rpc PluginFocusChange(bool gotFocus);
+  intr PluginFocusChange(bool gotFocus);
 
 child:
-  rpc SetPluginFocus();
-  rpc UpdateWindow();
+  intr SetPluginFocus();
+  intr UpdateWindow();
 
   async PPluginBackgroundDestroyer();
 };

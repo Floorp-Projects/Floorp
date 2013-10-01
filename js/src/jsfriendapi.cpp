@@ -51,6 +51,12 @@ js::SetSourceHook(JSRuntime *rt, SourceHook *hook)
     rt->sourceHook = hook;
 }
 
+JS_FRIEND_API(SourceHook *)
+js::ForgetSourceHook(JSRuntime *rt)
+{
+    return rt->sourceHook.forget();
+}
+
 JS_FRIEND_API(void)
 JS_SetGrayGCRootsTracer(JSRuntime *rt, JSTraceDataOp traceOp, void *data)
 {

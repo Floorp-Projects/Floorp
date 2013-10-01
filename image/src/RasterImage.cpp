@@ -2635,7 +2635,7 @@ RasterImage::Draw(gfxContext *aContext,
   //
   // (We don't normally draw unlocked images, so this conditition will usually
   // be false.  But we will draw unlocked images if image locking is globally
-  // disabled via the content.image.allow_locking pref.)
+  // disabled via the image.mem.allow_locking_in_content_processes pref.)
   if (DiscardingActive()) {
     DiscardTracker::Reset(&mDiscardTrackerNode);
   }

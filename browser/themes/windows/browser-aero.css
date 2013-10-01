@@ -10,6 +10,8 @@
 %define glassActiveBorderColor rgb(37, 44, 51)
 %define glassInactiveBorderColor rgb(102, 102, 102)
 
+%include downloads/indicator-aero.css
+
 @media not all and (-moz-windows-classic) {
   #main-window[sizemode="normal"] > #titlebar > #titlebar-content > #appmenu-button-container {
     margin-top: 1px;

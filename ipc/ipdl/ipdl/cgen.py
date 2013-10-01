@@ -5,7 +5,7 @@
 import os, sys
 
 from ipdl.ast import Visitor
-from ipdl.ast import IN, OUT, INOUT, ASYNC, SYNC, RPC, URGENT
+from ipdl.ast import IN, OUT, INOUT, ASYNC, SYNC, INTR, URGENT
 
 class CodePrinter:
     def __init__(self, outf=sys.stdout, indentCols=4):

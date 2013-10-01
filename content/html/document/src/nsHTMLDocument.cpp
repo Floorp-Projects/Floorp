@@ -3750,9 +3750,9 @@ nsHTMLDocument::RemovedFromDocShell()
 }
 
 /* virtual */ void
-nsHTMLDocument::DocSizeOfExcludingThis(nsWindowSizes* aWindowSizes) const
+nsHTMLDocument::DocAddSizeOfExcludingThis(nsWindowSizes* aWindowSizes) const
 {
-  nsDocument::DocSizeOfExcludingThis(aWindowSizes);
+  nsDocument::DocAddSizeOfExcludingThis(aWindowSizes);
 
   // Measurement of the following members may be added later if DMD finds it is
   // worthwhile:

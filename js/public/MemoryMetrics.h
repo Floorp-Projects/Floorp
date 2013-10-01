@@ -147,37 +147,6 @@ struct ObjectsExtraSizes
 #undef FOR_EACH_SIZE
 };
 
-// Data for tracking analysis/inference memory usage.
-struct TypeInferenceSizes
-{
-#define FOR_EACH_SIZE(macro) \
-    macro(js::NotLiveGCThing, typeScripts) \
-    macro(js::NotLiveGCThing, pendingArrays) \
-    macro(js::NotLiveGCThing, allocationSiteTables) \
-    macro(js::NotLiveGCThing, arrayTypeTables) \
-    macro(js::NotLiveGCThing, objectTypeTables)
-
-    TypeInferenceSizes()
-      : FOR_EACH_SIZE(ZERO_SIZE)
-        dummy()
-    {}
-
-    void add(const TypeInferenceSizes &other) {
-        FOR_EACH_SIZE(ADD_OTHER_SIZE)
-    }
-
-    size_t sizeOfLiveGCThings() const {
-        size_t n = 0;
-        FOR_EACH_SIZE(ADD_SIZE_TO_N_IF_LIVE_GC_THING)
-        return n;
-    }
-
-    FOR_EACH_SIZE(DECL_SIZE)
-    int dummy;  // present just to absorb the trailing comma from FOR_EACH_SIZE(ZERO_SIZE)
-
-#undef FOR_EACH_SIZE
-};
-
 // Data for tracking JIT-code memory usage.
 struct CodeSizes
 {
@@ -386,29 +355,31 @@ struct CompartmentStats
     macro(js::NotLiveGCThing, baselineStubsFallback) \
     macro(js::NotLiveGCThing, baselineStubsOptimized) \
     macro(js::NotLiveGCThing, ionData) \
+    macro(js::NotLiveGCThing, typeInferenceTypeScripts) \
+    macro(js::NotLiveGCThing, typeInferencePendingArrays) \
+    macro(js::NotLiveGCThing, typeInferenceAllocationSiteTables) \
+    macro(js::NotLiveGCThing, typeInferenceArrayTypeTables) \
+    macro(js::NotLiveGCThing, typeInferenceObjectTypeTables) \
     macro(js::NotLiveGCThing, compartmentObject) \
     macro(js::NotLiveGCThing, crossCompartmentWrappersTable) \
     macro(js::NotLiveGCThing, regexpCompartment) \
-    macro(js::NotLiveGCThing, debuggeesSet) \
+    macro(js::NotLiveGCThing, debuggeesSet)
 
     CompartmentStats()
       : FOR_EACH_SIZE(ZERO_SIZE)
         objectsExtra(),
-        typeInference(),
         extra()
     {}
 
     CompartmentStats(const CompartmentStats &other)
       : FOR_EACH_SIZE(COPY_OTHER_SIZE)
         objectsExtra(other.objectsExtra),
-        typeInference(other.typeInference),
         extra(other.extra)
     {}
 
     void add(const CompartmentStats &other) {
         FOR_EACH_SIZE(ADD_OTHER_SIZE)
         objectsExtra.add(other.objectsExtra);
-        typeInference.add(other.typeInference);
         // Do nothing with |extra|.
     }
 
@@ -416,14 +387,12 @@ struct CompartmentStats
         size_t n = 0;
         FOR_EACH_SIZE(ADD_SIZE_TO_N_IF_LIVE_GC_THING)
         n += objectsExtra.sizeOfLiveGCThings();
-        n += typeInference.sizeOfLiveGCThings();
         // Do nothing with |extra|.
         return n;
     }
 
     FOR_EACH_SIZE(DECL_SIZE)
     ObjectsExtraSizes  objectsExtra;
-    TypeInferenceSizes typeInference;
     void               *extra;  // This field can be used by embedders.
 
 #undef FOR_EACH_SIZE

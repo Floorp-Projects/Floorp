@@ -37,9 +37,15 @@ function make_object()
       get: function (trap) { throw trap; }
     }));
 
+  let array = [1, 2, 3];
+
+  let for_json = { "n": 3, "a": array, "s": "hello", o: { "x": 10 } };
+
   return { "data": o,
            "throwing": throwing,
-           "document": content.document
+           "document": content.document,
+           "array": array,
+           "for_json": for_json
          };
 }
 
