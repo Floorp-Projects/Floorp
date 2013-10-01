@@ -1065,13 +1065,13 @@ private:
    *                              be set to the NSUnderlineStyleAttributeName
    *                              ranges in aAttrString.  Note that if you pass
    *                              in a large enough auto-range instance for most
-   *                              cases (e.g., nsAutoTArray<nsTextRange, 4>),
+   *                              cases (e.g., nsAutoTArray<TextRange, 4>),
    *                              it prevents memory fragmentation.
    * @param aAttrString           An NSAttributedString instance which indicates
    *                              current composition string.
    * @param aSelectedRange        Current selected range (or caret position).
    */
-  void SetTextRangeList(nsTArray<nsTextRange>& aTextRangeList,
+  void SetTextRangeList(nsTArray<TextRange>& aTextRangeList,
                         NSAttributedString *aAttrString,
                         NSRange& aSelectedRange);
 

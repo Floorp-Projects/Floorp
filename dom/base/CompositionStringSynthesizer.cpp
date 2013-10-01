@@ -82,7 +82,7 @@ CompositionStringSynthesizer::AppendClause(uint32_t aLength,
     case ATTR_SELECTEDRAWTEXT:
     case ATTR_CONVERTEDTEXT:
     case ATTR_SELECTEDCONVERTEDTEXT: {
-      nsTextRange textRange;
+      TextRange textRange;
       textRange.mStartOffset =
         mClauses.IsEmpty() ? 0 : mClauses[mClauses.Length() - 1].mEndOffset;
       textRange.mEndOffset = textRange.mStartOffset + aLength;

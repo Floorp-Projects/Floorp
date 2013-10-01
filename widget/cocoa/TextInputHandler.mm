@@ -2556,13 +2556,13 @@ IMEInputHandler::GetRangeCount(NSAttributedString *aAttrString)
 }
 
 void
-IMEInputHandler::SetTextRangeList(nsTArray<nsTextRange>& aTextRangeList,
+IMEInputHandler::SetTextRangeList(nsTArray<TextRange>& aTextRangeList,
                                   NSAttributedString *aAttrString,
                                   NSRange& aSelectedRange)
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
 
-  // Convert the Cocoa range into the nsTextRange Array used in Gecko.
+  // Convert the Cocoa range into the TextRange Array used in Gecko.
   // Iterate through the attributed string and map the underline attribute to
   // Gecko IME textrange attributes.  We may need to change the code here if
   // we change the implementation of validAttributesForMarkedText.
@@ -2575,7 +2575,7 @@ IMEInputHandler::SetTextRangeList(nsTArray<nsTextRange>& aTextRangeList,
                          longestEffectiveRange:&effectiveRange
                                        inRange:limitRange];
 
-    nsTextRange range;
+    TextRange range;
     range.mStartOffset = effectiveRange.location;
     range.mEndOffset = NSMaxRange(effectiveRange);
     range.mRangeType =
@@ -2594,7 +2594,7 @@ IMEInputHandler::SetTextRangeList(nsTArray<nsTextRange>& aTextRangeList,
   }
 
   // Get current caret position.
-  nsTextRange range;
+  TextRange range;
   range.mStartOffset = aSelectedRange.location + aSelectedRange.length;
   range.mEndOffset = range.mStartOffset;
   range.mRangeType = NS_TEXTRANGE_CARETPOSITION;
@@ -2632,7 +2632,7 @@ IMEInputHandler::DispatchTextEvent(const nsString& aText,
   nsTextEvent textEvent(true, NS_TEXT_TEXT, mWidget);
   textEvent.time = PR_IntervalNow();
   textEvent.theText = aText;
-  nsAutoTArray<nsTextRange, 4> textRanges;
+  nsAutoTArray<TextRange, 4> textRanges;
   if (!aDoCommit) {
     SetTextRangeList(textRanges, aAttrString, aSelectedRange);
   }

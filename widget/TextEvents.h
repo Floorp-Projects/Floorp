@@ -534,7 +534,6 @@ public:
 } // namespace mozilla
 
 // TODO: Remove following typedefs
-typedef mozilla::TextRange               nsTextRange;
 typedef mozilla::WidgetTextEvent         nsTextEvent;
 typedef mozilla::WidgetCompositionEvent  nsCompositionEvent;
 typedef mozilla::WidgetQueryContentEvent nsQueryContentEvent;

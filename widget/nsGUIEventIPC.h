@@ -315,9 +315,9 @@ struct ParamTraits<mozilla::TextRangeStyle>
 };
 
 template<>
-struct ParamTraits<nsTextRange>
+struct ParamTraits<mozilla::TextRange>
 {
-  typedef nsTextRange paramType;
+  typedef mozilla::TextRange paramType;
 
   static void Write(Message* aMsg, const paramType& aParam)
   {
@@ -366,7 +366,7 @@ struct ParamTraits<nsTextEvent>
       return true;
     }
 
-    aResult->rangeArray = new nsTextRange[aResult->rangeCount];
+    aResult->rangeArray = new mozilla::TextRange[aResult->rangeCount];
     if (!aResult->rangeArray)
       return false;
 
