@@ -357,6 +357,12 @@ public:
     }
 #endif
 
+    if (NS_FAILED(aTopDir->GetParent(getter_AddRefs(mTopDirsParent))) {
+      // This just means that the name of the picked directory won't be
+      // included in the File.path string.
+      mTopDirsParent = aTopDir;
+    }
+
     nsCOMPtr<nsISimpleEnumerator> entries;
     if (NS_SUCCEEDED(mTopDir->GetDirectoryEntries(getter_AddRefs(entries))) &&
         entries) {
@@ -377,7 +383,8 @@ public:
     }
     nsRefPtr<nsDOMFileFile> domFile = new nsDOMFileFile(mNextFile);
     nsCString relDescriptor;
-    nsresult rv = mNextFile->GetRelativeDescriptor(mTopDir, relDescriptor);
+    nsresult rv =
+      mNextFile->GetRelativeDescriptor(mTopDirsParent, relDescriptor);
     NS_ENSURE_SUCCESS(rv, rv);
     NS_ConvertUTF8toUTF16 path(relDescriptor);
     nsAutoString leafName;
@@ -463,6 +470,7 @@ private:
 
 private:
   nsCOMPtr<nsIFile> mTopDir;
+  nsCOMPtr<nsIFile> mTopDirsParent; // May be mTopDir if no parent
   nsCOMPtr<nsIFile> mNextFile;
   nsTArray<nsCOMPtr<nsISimpleEnumerator> > mDirEnumeratorStack;
 };
