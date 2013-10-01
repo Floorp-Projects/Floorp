@@ -4,7 +4,7 @@
 function worker_handler(worker) {
   worker.onerror = function(error) {
     error.preventDefault();
-    ok(false, "error "+error);
+    ok(false, "Worker error " + error.message);
   }
   worker.onmessage = function(msg) {
     ok(true, "MAIN: onmessage " + JSON.stringify(msg.data));
