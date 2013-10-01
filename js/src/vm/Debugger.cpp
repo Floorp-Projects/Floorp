@@ -5125,23 +5125,35 @@ DebuggerObject_makeDebuggeeValue(JSContext *cx, unsigned argc, Value *vp)
 }
 
 static bool
-RequireGlobalObject(JSContext *cx, HandleValue dbgobj, HandleObject obj)
+RequireGlobalObject(JSContext *cx, HandleValue dbgobj, HandleObject referent)
 {
+    RootedObject obj(cx, referent);
+
     if (!obj->is<GlobalObject>()) {
-        /* Help the poor programmer by pointing out wrappers around globals. */
+        const char *isWrapper = "";
+        const char *isWindowProxy = "";
+
+        /* Help the poor programmer by pointing out wrappers around globals... */
         if (obj->is<WrapperObject>()) {
-            JSObject *unwrapped = js::UncheckedUnwrap(obj);
-            if (unwrapped->is<GlobalObject>()) {
-                js_ReportValueErrorFlags(cx, JSREPORT_ERROR, JSMSG_DEBUG_WRAPPER_IN_WAY,
-                                         JSDVG_SEARCH_STACK, dbgobj, NullPtr(),
-                                         "a global object", nullptr);
-                return false;
-            }
+            obj = js::UncheckedUnwrap(obj);
+            isWrapper = "a wrapper around ";
         }
 
-        js_ReportValueErrorFlags(cx, JSREPORT_ERROR, JSMSG_DEBUG_BAD_REFERENT,
-                                 JSDVG_SEARCH_STACK, dbgobj, NullPtr(),
-                                 "a global object", nullptr);
+        /* ... and WindowProxies around Windows. */
+        if (IsOuterObject(obj)) {
+            obj = JS_ObjectToInnerObject(cx, obj);
+            isWindowProxy = "a WindowProxy referring to ";
+        }
+
+        if (obj->is<GlobalObject>()) {
+            js_ReportValueErrorFlags(cx, JSREPORT_ERROR, JSMSG_DEBUG_WRAPPER_IN_WAY,
+                                     JSDVG_SEARCH_STACK, dbgobj, NullPtr(),
+                                     isWrapper, isWindowProxy);
+        } else {
+            js_ReportValueErrorFlags(cx, JSREPORT_ERROR, JSMSG_DEBUG_BAD_REFERENT,
+                                     JSDVG_SEARCH_STACK, dbgobj, NullPtr(),
+                                     "a global object", nullptr);
+        }
         return false;
     }
 
