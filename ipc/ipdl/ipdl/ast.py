@@ -197,8 +197,8 @@ class ASYNC:
     def __hash__(cls): return hash(cls.pretty)
     @classmethod
     def __str__(cls):  return cls.pretty
-class RPC:
-    pretty = 'rpc'
+class INTR:
+    pretty = 'intr'
     @classmethod
     def __hash__(cls): return hash(cls.pretty)
     @classmethod
@@ -242,11 +242,11 @@ class OUT:
 _prettyTable = {
     IN  : { 'async': 'AsyncRecv',
             'sync': 'SyncRecv',
-            'rpc': 'RpcAnswer',
+            'intr': 'IntrAnswer',
             'urgent': 'UrgentAnswer' },
     OUT : { 'async': 'AsyncSend',
             'sync': 'SyncSend',
-            'rpc': 'RpcCall',
+            'intr': 'IntrCall',
             'urgent': 'UrgentCall' }
     # inout doesn't make sense here
 }
@@ -332,7 +332,7 @@ class MessageDecl(Node):
         self.outParams += outParamsList
 
     def hasReply(self):
-        return self.sendSemantics is SYNC or self.sendSemantics is RPC
+        return self.sendSemantics is SYNC or self.sendSemantics is INTR
 
 class Transition(Node):
     def __init__(self, loc, trigger, msg, toStates):

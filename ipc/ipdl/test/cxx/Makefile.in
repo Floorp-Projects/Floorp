@@ -18,12 +18,12 @@ IPDLTESTS = \
   TestMultiMgrs  \
   TestNestedLoops \
   TestOpens \
-  TestRPCErrorCleanup \
-  TestRPCRaces \
-  TestRPCShutdownRace \
+  TestInterruptErrorCleanup \
+  TestInterruptRaces \
+  TestInterruptShutdownRace \
   TestRaceDeferral \
   TestRacyReentry  \
-  TestRacyRPCReplies  \
+  TestRacyInterruptReplies  \
   TestRacyUndefer \
   TestSanity  \
   TestSelfManageRoot \

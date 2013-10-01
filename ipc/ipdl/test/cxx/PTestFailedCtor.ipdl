@@ -3,10 +3,10 @@ include protocol PTestFailedCtorSub;
 namespace mozilla {
 namespace _ipdltest {
 
-rpc protocol PTestFailedCtor {
+intr protocol PTestFailedCtor {
     manages PTestFailedCtorSub; 
 child:
-    rpc PTestFailedCtorSub();
+    intr PTestFailedCtorSub();
     __delete__();
 
 state CONSTRUCT:

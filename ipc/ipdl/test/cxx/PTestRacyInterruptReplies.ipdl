@@ -1,15 +1,15 @@
 namespace mozilla {
 namespace _ipdltest {
 
-rpc protocol PTestRacyRPCReplies {
+intr protocol PTestRacyInterruptReplies {
 child:
-    rpc R_() returns (int replyNum);
+    intr R_() returns (int replyNum);
     async _A();
     async ChildTest();
     async __delete__();
 
 parent:
-    rpc _R() returns (int replyNum);
+    intr _R() returns (int replyNum);
     async A_();
 
 state PARENT_START:

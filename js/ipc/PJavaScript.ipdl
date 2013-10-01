@@ -14,7 +14,7 @@ using mozilla::void_t;
 namespace mozilla {
 namespace jsipc {
 
-rpc protocol PJavaScript
+intr protocol PJavaScript
 {
     manager PContent;
 
