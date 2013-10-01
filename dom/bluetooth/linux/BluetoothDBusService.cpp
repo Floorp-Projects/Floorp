@@ -1945,7 +1945,7 @@ nsresult
 BluetoothDBusService::SendInputMessage(const nsAString& aDeviceAddress,
                                        const nsAString& aMessage)
 {
-  void (*callback)(DBusMessage*, void*);
+  DBusReplyCallback callback;
   if (aMessage.EqualsLiteral("Connect")) {
     callback = InputConnectCallback;
   } else if (aMessage.EqualsLiteral("Disconnect")) {
@@ -1963,7 +1963,7 @@ nsresult
 BluetoothDBusService::SendAsyncDBusMessage(const nsAString& aObjectPath,
                                            const char* aInterface,
                                            const nsAString& aMessage,
-                                           void (*aCallback)(DBusMessage*, void*))
+                                           DBusReplyCallback aCallback)
 {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(mConnection);
@@ -1997,7 +1997,7 @@ nsresult
 BluetoothDBusService::SendSinkMessage(const nsAString& aDeviceAddress,
                                       const nsAString& aMessage)
 {
-  void (*callback)(DBusMessage*, void*);
+  DBusReplyCallback callback;
   if (aMessage.EqualsLiteral("Connect")) {
     callback = SinkConnectCallback;
   } else if (aMessage.EqualsLiteral("Disconnect")) {
