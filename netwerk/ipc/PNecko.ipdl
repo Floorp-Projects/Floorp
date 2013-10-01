@@ -24,7 +24,7 @@ include NeckoChannelParams;
 
 include "SerializedLoadContext.h";
 
-using IPC::SerializedLoadContext;
+using class IPC::SerializedLoadContext from "SerializedLoadContext.h";
 
 namespace mozilla {
 namespace net {

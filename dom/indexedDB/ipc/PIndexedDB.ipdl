@@ -9,7 +9,7 @@ include protocol PIndexedDBDeleteDatabaseRequest;
 
 include "mozilla/dom/indexedDB/SerializationHelpers.h";
 
-using mozilla::dom::quota::PersistenceType;
+using mozilla::dom::quota::PersistenceType from "mozilla/dom/quota/PersistenceType.h";
 
 namespace mozilla {
 namespace dom {

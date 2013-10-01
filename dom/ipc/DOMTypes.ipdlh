@@ -7,7 +7,7 @@
 include protocol PBlob;
 include InputStreamParams;
 
-using mozilla::SerializedStructuredCloneBuffer;
+using struct mozilla::SerializedStructuredCloneBuffer from "ipc/IPCMessageUtils.h";
 
 namespace mozilla {
 namespace dom {
