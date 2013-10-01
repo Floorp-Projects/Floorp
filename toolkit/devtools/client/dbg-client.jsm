@@ -15,6 +15,7 @@ this.EXPORTED_SYMBOLS = ["DebuggerTransport",
                          "RootClient",
                          "debuggerSocketConnect",
                          "LongStringClient",
+                         "EnvironmentClient",
                          "ObjectClient"];
 
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
@@ -1642,6 +1643,13 @@ ThreadClient.prototype = {
   },
 
   /**
+   * Return an EnvironmentClient instance for the given environment actor form.
+   */
+  environment: function(aForm) {
+    return new EnvironmentClient(this._client, aForm);
+  },
+
+  /**
    * Return an instance of SourceClient for the given source actor form.
    */
   source: function TC_source(aForm) {
@@ -1893,6 +1901,23 @@ ObjectClient.prototype = {
   }, {
     telemetry: "DISPLAYSTRING"
   }),
+
+  /**
+   * Request the scope of the object.
+   *
+   * @param aOnResponse function Called with the request's response.
+   */
+  getScope: DebuggerClient.requester({
+    type: "scope"
+  }, {
+    before: function (aPacket) {
+      if (this._grip.class !== "Function") {
+        throw new Error("scope is only valid for function grips.");
+      }
+      return aPacket;
+    },
+    telemetry: "SCOPE"
+  })
 };
 
 /**
@@ -2091,6 +2116,49 @@ BreakpointClient.prototype = {
 };
 
 eventSource(BreakpointClient.prototype);
+
+/**
+ * Environment clients are used to manipulate the lexical environment actors.
+ *
+ * @param aClient DebuggerClient
+ *        The debugger client parent.
+ * @param aForm Object
+ *        The form sent across the remote debugging protocol.
+ */
+function EnvironmentClient(aClient, aForm) {
+  this._client = aClient;
+  this._form = aForm;
+  this.request = this._client.request;
+}
+
+EnvironmentClient.prototype = {
+
+  get actor() this._form.actor,
+  get _transport() { return this._client._transport; },
+
+  /**
+   * Fetches the bindings introduced by this lexical environment.
+   */
+  getBindings: DebuggerClient.requester({
+    type: "bindings"
+  }, {
+    telemetry: "BINDINGS"
+  }),
+
+  /**
+   * Changes the value of the identifier whose name is name (a string) to that
+   * represented by value (a grip).
+   */
+  assign: DebuggerClient.requester({
+    type: "assign",
+    name: args(0),
+    value: args(1)
+  }, {
+    telemetry: "ASSIGN"
+  })
+};
+
+eventSource(EnvironmentClient.prototype);
 
 /**
  * Connects to a debugger server socket and returns a DebuggerTransport.

@@ -1136,7 +1136,8 @@ Scope.prototype = {
    * @param object aDescriptor
    *        Specifies the value and/or type & class of the child,
    *        or 'get' & 'set' accessor properties. If the type is implicit,
-   *        it will be inferred from the value.
+   *        it will be inferred from the value. If this parameter is omitted,
+   *        a property without a value will be added (useful for branch nodes).
    *        e.g. - { value: 42 }
    *             - { value: true }
    *             - { value: "nasu" }
@@ -2304,6 +2305,11 @@ Variable.prototype = Heritage.extend(Scope.prototype, {
       this.hideArrow();
     }
 
+    // If no value will be displayed, we don't need the separator.
+    if (!descriptor.get && !descriptor.set && !descriptor.value) {
+      separatorLabel.hidden = true;
+    }
+
     if (descriptor.get || descriptor.set) {
       separatorLabel.hidden = true;
       valueLabel.hidden = true;
@@ -2441,7 +2447,8 @@ Variable.prototype = Heritage.extend(Scope.prototype, {
 
   /**
    * Sets a variable's configurable, enumerable and writable attributes,
-   * and specifies if it's a 'this', '<exception>' or '__proto__' reference.
+   * and specifies if it's a 'this', '<exception>', '<return>' or '__proto__'
+   * reference.
    */
   _setAttributes: function() {
     let ownerView = this.ownerView;
@@ -2485,7 +2492,6 @@ Variable.prototype = Heritage.extend(Scope.prototype, {
     if (name == "this") {
       target.setAttribute("self", "");
     }
-
     else if (name == "<exception>") {
       target.setAttribute("exception", "");
     }

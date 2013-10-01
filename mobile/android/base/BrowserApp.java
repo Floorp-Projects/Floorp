@@ -1412,7 +1412,7 @@ abstract public class BrowserApp extends GeckoApp
         }
 
         final String url = mBrowserToolbar.commitEdit();
-        animateHideHomePager();
+        hideHomePager();
         hideBrowserSearch();
 
         // Don't do anything if the user entered an empty URL.
@@ -1492,7 +1492,7 @@ abstract public class BrowserApp extends GeckoApp
         // Resetting the visibility of HomePager, which might have been hidden
         // by the filterEditingMode().
         mHomePager.setVisibility(View.VISIBLE);
-        animateHideHomePager();
+        hideHomePager();
         hideBrowserSearch();
 
         return true;
@@ -1555,15 +1555,7 @@ abstract public class BrowserApp extends GeckoApp
         mHomePager.show(getSupportFragmentManager(), page, animator);
     }
 
-    private void animateHideHomePager() {
-        hideHomePagerWithAnimation(true);
-    }
-
     private void hideHomePager() {
-        hideHomePagerWithAnimation(false);
-    }
-
-    private void hideHomePagerWithAnimation(boolean animate) {
         if (!isHomePagerVisible()) {
             return;
         }
@@ -1573,7 +1565,6 @@ abstract public class BrowserApp extends GeckoApp
             return;
         }
 
-        // FIXME: do animation if animate is true
         if (mHomePager != null) {
             mHomePager.hide();
         }
@@ -2184,9 +2175,6 @@ abstract public class BrowserApp extends GeckoApp
         // Dismiss editing mode if the user is loading a URL from an external app.
         if (Intent.ACTION_VIEW.equals(action)) {
             dismissEditingMode();
-
-            // Show the target URL immediately in the toolbar
-            mBrowserToolbar.setTitle(intent.getDataString());
             return;
         }
 

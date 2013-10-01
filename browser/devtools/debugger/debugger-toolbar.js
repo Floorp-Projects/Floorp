@@ -664,62 +664,6 @@ StackFramesView.prototype = Heritage.extend(WidgetMethods, {
 });
 
 /**
- * Utility functions for handling stackframes.
- */
-let StackFrameUtils = {
-  /**
-   * Create a textual representation for the specified stack frame
-   * to display in the stackframes container.
-   *
-   * @param object aFrame
-   *        The stack frame to label.
-   */
-  getFrameTitle: function(aFrame) {
-    if (aFrame.type == "call") {
-      let c = aFrame.callee;
-      return (c.userDisplayName || c.displayName || c.name || "(anonymous)");
-    }
-    return "(" + aFrame.type + ")";
-  },
-
-  /**
-   * Constructs a scope label based on its environment.
-   *
-   * @param object aEnv
-   *        The scope's environment.
-   * @return string
-   *         The scope's label.
-   */
-  getScopeLabel: function(aEnv) {
-    let name = "";
-
-    // Name the outermost scope Global.
-    if (!aEnv.parent) {
-      name = L10N.getStr("globalScopeLabel");
-    }
-    // Otherwise construct the scope name.
-    else {
-      name = aEnv.type.charAt(0).toUpperCase() + aEnv.type.slice(1);
-    }
-
-    let label = L10N.getFormatStr("scopeLabel", name);
-    switch (aEnv.type) {
-      case "with":
-      case "object":
-        label += " [" + aEnv.object.class + "]";
-        break;
-      case "function":
-        let f = aEnv.function;
-        label += " [" +
-          (f.userDisplayName || f.displayName || f.name || "(anonymous)") +
-        "]";
-        break;
-    }
-    return label;
-  }
-};
-
-/**
  * Functions handling the filtering UI.
  */
 function FilterView() {

@@ -93,7 +93,6 @@ var scrollbarTester = {
     // It would be better to test with different middlePref settings,
     // but the setting is only queried once, at browser startup, so
     // changing it here wouldn't have any effect
-    netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
     var prefService = Components.classes["@mozilla.org/preferences-service;1"]
                                 .getService(Components.interfaces.nsIPrefService);
     var mouseBranch = prefService.getBranch("middlemouse.");

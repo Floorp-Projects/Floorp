@@ -55,6 +55,7 @@ this.WebappOSUtils = {
     let uniqueName = this.getUniqueName(aApp);
 
 #ifdef XP_WIN
+    let isOldNamingScheme = false;
     let appRegKey;
     try {
       let open = CC("@mozilla.org/windows-registry-key;1",
@@ -63,10 +64,12 @@ this.WebappOSUtils = {
                        "SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\" +
                        uniqueName, Ci.nsIWindowsRegKey.ACCESS_READ);
     } catch (ex) {
+      // Fall back to the old installation naming scheme
       try {
         appRegKey = open(Ci.nsIWindowsRegKey.ROOT_KEY_CURRENT_USER,
                          "SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\" +
                          aApp.origin, Ci.nsIWindowsRegKey.ACCESS_READ);
+        isOldNamingScheme = true;
       } catch (ex) {
         return null;
       }
@@ -83,6 +86,12 @@ this.WebappOSUtils = {
     }
 
     installLocation = installLocation.substring(1, installLocation.length - 1);
+
+    if (isOldNamingScheme &&
+        !this.isOldInstallPathValid(aApp, installLocation)) {
+      return null;
+    }
+
     let initWithPath = CC("@mozilla.org/file/local;1",
                           "nsILocalFile", "initWithPath");
     let launchTarget = initWithPath(installLocation);
@@ -100,9 +109,11 @@ this.WebappOSUtils = {
       }
     } catch(ex) {}
 
+    // Fall back to the old installation naming scheme
     try {
       let path;
-      if (path = mwaUtils.pathForAppWithIdentifier(aApp.origin)) {
+      if ((path = mwaUtils.pathForAppWithIdentifier(aApp.origin)) &&
+           this.isOldInstallPathValid(aApp, path)) {
         return [ aApp.origin, path ];
       }
     } catch(ex) {}
@@ -113,6 +124,7 @@ this.WebappOSUtils = {
     exeFile.append("." + uniqueName);
     exeFile.append("webapprt-stub");
 
+    // Fall back to the old installation naming scheme
     if (!exeFile.exists()) {
       exeFile = Services.dirsvc.get("Home", Ci.nsIFile);
 
@@ -124,7 +136,8 @@ this.WebappOSUtils = {
       exeFile.append(installDir);
       exeFile.append("webapprt-stub");
 
-      if (!exeFile.exists()) {
+      if (!exeFile.exists() ||
+          !this.isOldInstallPathValid(aApp, exeFile.parent.path)) {
         return null;
       }
     }
@@ -273,6 +286,24 @@ this.WebappOSUtils = {
   },
 
   /**
+   * Returns true if the given install path (in the old naming scheme) actually
+   * belongs to the given application.
+   */
+  isOldInstallPathValid: function(aApp, aInstallPath) {
+    // Applications with an origin that starts with "app" are packaged apps and
+    // packaged apps have never been installed using the old naming scheme.
+    // After bug 910465, we'll have a better way to check if an app is
+    // packaged.
+    if (aApp.origin.startsWith("app")) {
+      return false;
+    }
+
+    // Bug 915480: We could check the app name from the manifest to
+    // better verify the installation path.
+    return true;
+  },
+
+  /**
    * Checks if the given app is locally installed.
    */
   isLaunchable: function(aApp) {
@@ -308,6 +339,7 @@ this.WebappOSUtils = {
     desktopINI.append("applications");
     desktopINI.append("owa-" + uniqueName + ".desktop");
 
+    // Fall back to the old installation naming scheme
     if (!desktopINI.exists()) {
       if (xdg_data_home_env) {
         desktopINI = new FileUtils.File(xdg_data_home_env);
@@ -322,7 +354,15 @@ this.WebappOSUtils = {
 
       desktopINI.append("owa-" + oldUniqueName + ".desktop");
 
-      return desktopINI.exists();
+      if (!desktopINI.exists()) {
+        return false;
+      }
+
+      let installDir = Services.dirsvc.get("Home", Ci.nsIFile);
+      installDir.append("." + origin.scheme + ";" + origin.host +
+                        (origin.port != -1 ? ";" + origin.port : ""));
+
+      return isOldInstallPathValid(aApp, installDir.path);
     }
 
     return true;

@@ -69,17 +69,16 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=377611
   <body>
     <script type="text/javascript">
       window.onload = function() {
-        netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
 
         var tests = new Array();
 
         var currentWindow =
-        window.QueryInterface(Components.interfaces.nsIInterfaceRequestor)
-                              .getInterface(Components.interfaces.nsIWebNavigation)
-                              .QueryInterface(Components.interfaces.nsIDocShellTreeItem)
+        SpecialPowers.wrap(window).QueryInterface(SpecialPowers.Ci.nsIInterfaceRequestor)
+                              .getInterface(SpecialPowers.Ci.nsIWebNavigation)
+                              .QueryInterface(SpecialPowers.Ci.nsIDocShellTreeItem)
                               .rootTreeItem
-                              .QueryInterface(Components.interfaces.nsIInterfaceRequestor)
-                              .getInterface(Components.interfaces.nsIDOMWindow);
+                              .QueryInterface(SpecialPowers.Ci.nsIInterfaceRequestor)
+                              .getInterface(SpecialPowers.Ci.nsIDOMWindow);
         var browser = currentWindow.gBrowser.selectedBrowser;
 
         var discovered = browser.feeds;
