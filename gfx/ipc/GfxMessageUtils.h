@@ -12,7 +12,6 @@
 #include "ipc/IPCMessageUtils.h"
 
 #include "mozilla/Util.h"
-#include "mozilla/gfx/2D.h"
 #include <stdint.h>
 
 #include "gfx3DMatrix.h"
