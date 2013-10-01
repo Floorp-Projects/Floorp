@@ -122,13 +122,13 @@ nsHttpTransaction::nsHttpTransaction()
     , mPassedRatePacing(false)
     , mSynchronousRatePaceRequest(false)
 {
-    LOG(("Creating nsHttpTransaction @%x\n", this));
+    LOG(("Creating nsHttpTransaction @%p\n", this));
     gHttpHandler->GetMaxPipelineObjectSize(&mMaxPipelineObjectSize);
 }
 
 nsHttpTransaction::~nsHttpTransaction()
 {
-    LOG(("Destroying nsHttpTransaction @%x\n", this));
+    LOG(("Destroying nsHttpTransaction @%p\n", this));
 
     if (mTokenBucketCancel) {
         mTokenBucketCancel->Cancel(NS_ERROR_ABORT);
@@ -946,11 +946,11 @@ nsHttpTransaction::Restart()
 
     // limit the number of restart attempts - bug 92224
     if (++mRestartCount >= gHttpHandler->MaxRequestAttempts()) {
-        LOG(("reached max request attempts, failing transaction @%x\n", this));
+        LOG(("reached max request attempts, failing transaction @%p\n", this));
         return NS_ERROR_NET_RESET;
     }
 
-    LOG(("restarting transaction @%x\n", this));
+    LOG(("restarting transaction @%p\n", this));
 
     // rewind streams in case we already wrote out the request
     nsCOMPtr<nsISeekableStream> seekable = do_QueryInterface(mRequestStream);
