@@ -1,5 +1,4 @@
 load(libdir + "asserts.js");
-load(libdir + "iteration.js");
 load(libdir + "eqArrayHelper.js");
 
 assertEqArray([...[1, 2, 3]], [1, 2, 3]);
@@ -20,24 +19,27 @@ assertEqArray([..."abc"], ["a", "b", "c"]);
 assertEqArray([...[1, 2, 3].iterator()], [1, 2, 3]);
 assertEqArray([...Set([1, 2, 3])], [1, 2, 3]);
 assertEqArray([...Map([["a", "A"], ["b", "B"], ["c", "C"]])].map(([k, v]) => k + v), ["aA", "bB", "cC"]);
-let itr = {};
-itr[std_iterator] = function () {
+let itr = {
+  iterator: function() {
     return {
-        i: 1,
-        next: function() {
-            if (this.i < 4)
-                return { value: this.i++, done: false };
-            else
-                return { value: undefined, done: true };
-        }
+      i: 1,
+      next: function() {
+        if (this.i < 4)
+          return this.i++;
+        else
+          throw StopIteration;
+      }
     };
-}
+  }
+};
 assertEqArray([...itr], [1, 2, 3]);
-function* gen() {
+let gen = {
+  iterator: function() {
     for (let i = 1; i < 4; i ++)
-        yield i;
-}
-assertEqArray([...gen()], [1, 2, 3]);
+      yield i;
+  }
+};
+assertEqArray([...gen], [1, 2, 3]);
 
 let a, b = [1, 2, 3];
 assertEqArray([...a=b], [1, 2, 3]);

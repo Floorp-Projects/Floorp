@@ -1,10 +1,10 @@
 // A closed Map iterator does not visit new entries added after a clear().
 
-load(libdir + "iteration.js");
+load(libdir + "asserts.js");
 
 var m = Map();
-var it = m[std_iterator]();
-assertIteratorResult(it.next(), undefined, true);  // close the iterator
+var it = m.iterator();
+assertThrowsValue(it.next.bind(it), StopIteration);  // close the iterator
 m.clear();
 m.set("a", 1);
-assertIteratorResult(it.next(), undefined, true);  // iterator still closed
+assertThrowsValue(it.next.bind(it), StopIteration);

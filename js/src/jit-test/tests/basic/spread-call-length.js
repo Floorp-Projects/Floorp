@@ -1,5 +1,3 @@
-load(libdir + 'iteration.js');
-
 let makeCall    = farg => Function("f", "arg", "return f(" + farg + ");");
 let makeFunCall = farg => Function("f", "arg", "return f.call(null, " + farg + ");");
 let makeNew     = farg => Function("f", "arg", "return new f(" + farg + ").length;");
@@ -24,24 +22,27 @@ function checkLength(f, makeFn) {
   assertEq(makeFn("...arg")(f, [1, 2, 3].iterator()), 3);
   assertEq(makeFn("...arg")(f, Set([1, 2, 3])), 3);
   assertEq(makeFn("...arg")(f, Map([["a", "A"], ["b", "B"], ["c", "C"]])), 3);
-  let itr = {};
-  itr[std_iterator] = function() {
+  let itr = {
+    iterator: function() {
       return {
-          i: 1,
-          next: function() {
-              if (this.i < 4)
-                  return { value: this.i++, done: false };
-              else
-                  return { value: undefined, done: true };
-          }
+        i: 1,
+        next: function() {
+          if (this.i < 4)
+            return this.i++;
+          else
+            throw StopIteration;
+        }
       };
-  }
+    }
+  };
   assertEq(makeFn("...arg")(f, itr), 3);
-  function* gen() {
+  let gen = {
+    iterator: function() {
       for (let i = 1; i < 4; i ++)
-          yield i;
-  }
-  assertEq(makeFn("...arg")(f, gen()), 3);
+        yield i;
+    }
+  };
+  assertEq(makeFn("...arg")(f, gen), 3);
 }
 
 checkLength(function(x) arguments.length, makeCall);

@@ -1,8 +1,6 @@
 // Replacing Array.prototype.iterator with a generator affects for-of behavior.
 
-load(libdir + "iteration.js");
-
-Array.prototype[std_iterator] = function* () {
+Array.prototype.iterator = function () {
     for (var i = this.length; --i >= 0; )
         yield this[i];
 };

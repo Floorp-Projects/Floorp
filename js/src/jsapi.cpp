@@ -4202,15 +4202,7 @@ JS_DefineFunctions(JSContext *cx, JSObject *objArg, const JSFunctionSpec *fs)
     RootedObject ctor(cx);
 
     for (; fs->name; fs++) {
-        RootedAtom atom(cx);
-        // If the name starts with "@@", it must be a well-known symbol.
-        if (fs->name[0] != '@' || fs->name[1] != '@')
-            atom = Atomize(cx, fs->name, strlen(fs->name));
-        else if (strcmp(fs->name, "@@iterator") == 0)
-            // FIXME: This atom should be a symbol: bug 918828.
-            atom = cx->names().std_iterator;
-        else
-            JS_ReportErrorNumber(cx, js_GetErrorMessage, nullptr, JSMSG_BAD_SYMBOL, fs->name);
+        RootedAtom atom(cx, Atomize(cx, fs->name, strlen(fs->name)));
         if (!atom)
             return false;
 

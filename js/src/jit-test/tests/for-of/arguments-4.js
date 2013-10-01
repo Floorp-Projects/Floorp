@@ -1,8 +1,6 @@
 // for-of can iterate arguments objects for other active frames.
 
-load(libdir + "iteration.js");
-
-Object.prototype[std_iterator] = Array.prototype[std_iterator];
+Object.prototype.iterator = Array.prototype.iterator;
 
 var s;
 function g(obj) {
