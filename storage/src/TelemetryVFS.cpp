@@ -81,11 +81,27 @@ public:
   {
   }
 
-  ~IOThreadAutoTimer() {
+  /**
+   * This constructor is for when we want to report an operation to
+   * IOInterposer but do not require a telemetry probe.
+   *
+   * @param aOp IO Operation to report through the IOInterposer.
+   */
+  IOThreadAutoTimer(IOInterposeObserver::Operation aOp)
+    : start(TimeStamp::Now()),
+      id(Telemetry::HistogramCount),
+      op(aOp)
+  {
+  }
+
+  ~IOThreadAutoTimer()
+  {
     TimeStamp end(TimeStamp::Now());
     uint32_t mainThread = NS_IsMainThread() ? 1 : 0;
-    Telemetry::AccumulateTimeDelta(static_cast<Telemetry::ID>(id + mainThread),
-                                   start, end);
+    if (id != Telemetry::HistogramCount) {
+      Telemetry::AccumulateTimeDelta(static_cast<Telemetry::ID>(id + mainThread),
+                                     start, end);
+    }
 #ifdef MOZ_ENABLE_PROFILER_SPS
     if (IOInterposer::IsObservedOperation(op)) {
       const char* main_ref  = "sqlite-mainthread";
@@ -128,7 +144,10 @@ xClose(sqlite3_file *pFile)
 {
   telemetry_file *p = (telemetry_file *)pFile;
   int rc;
-  rc = p->pReal->pMethods->xClose(p->pReal);
+  { // Scope for IOThreadAutoTimer
+    IOThreadAutoTimer ioTimer(IOInterposeObserver::OpClose);
+    rc = p->pReal->pMethods->xClose(p->pReal);
+  }
   if( rc==SQLITE_OK ){
     delete p->base.pMethods;
     p->base.pMethods = nullptr;
@@ -204,6 +223,7 @@ xSync(sqlite3_file *pFile, int flags)
 int
 xFileSize(sqlite3_file *pFile, sqlite_int64 *pSize)
 {
+  IOThreadAutoTimer ioTimer(IOInterposeObserver::OpStat);
   telemetry_file *p = (telemetry_file *)pFile;
   int rc;
   rc = p->pReal->pMethods->xFileSize(p->pReal, pSize);
@@ -333,7 +353,8 @@ int
 xOpen(sqlite3_vfs* vfs, const char *zName, sqlite3_file* pFile,
           int flags, int *pOutFlags)
 {
-  IOThreadAutoTimer ioTimer(Telemetry::MOZ_SQLITE_OPEN_MS);
+  IOThreadAutoTimer ioTimer(Telemetry::MOZ_SQLITE_OPEN_MS,
+                            IOInterposeObserver::OpCreateOrOpen);
   Telemetry::AutoTimer<Telemetry::MOZ_SQLITE_OPEN_MS> timer;
   sqlite3_vfs *orig_vfs = static_cast<sqlite3_vfs*>(vfs->pAppData);
   int rc;

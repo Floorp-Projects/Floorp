@@ -13,9 +13,12 @@ namespace {
 using namespace mozilla;
 
 /* Original IO methods */
+PRCloseFN sCloseFn = nullptr;
 PRReadFN  sReadFn  = nullptr;
 PRWriteFN sWriteFn = nullptr;
 PRFsyncFN sFSyncFn = nullptr;
+PRFileInfoFN sFileInfoFn = nullptr;
+PRFileInfo64FN sFileInfo64Fn = nullptr;
 
 /**
  * RAII class for timing the duration of an NSPR I/O call and reporting the
@@ -49,6 +52,15 @@ private:
   bool mShouldObserve;
 };
 
+PRStatus PR_CALLBACK interposedClose(PRFileDesc* aFd)
+{
+  // If we don't have a valid original function pointer something is very wrong.
+  NS_ASSERTION(sCloseFn, "NSPR IO Interposing: sCloseFn is NULL");
+
+  NSPRIOAutoObservation timer(IOInterposeObserver::OpClose);
+  return sCloseFn(aFd);
+}
+
 int32_t PR_CALLBACK interposedRead(PRFileDesc* aFd, void* aBuf, int32_t aAmt)
 {
   // If we don't have a valid original function pointer something is very wrong.
@@ -77,6 +89,24 @@ PRStatus PR_CALLBACK interposedFSync(PRFileDesc* aFd)
   return sFSyncFn(aFd);
 }
 
+PRStatus PR_CALLBACK interposedFileInfo(PRFileDesc *aFd, PRFileInfo *aInfo)
+{
+  // If we don't have a valid original function pointer something is very wrong.
+  NS_ASSERTION(sFileInfoFn, "NSPR IO Interposing: sFileInfoFn is NULL");
+
+  NSPRIOAutoObservation timer(IOInterposeObserver::OpStat);
+  return sFileInfoFn(aFd, aInfo);
+}
+
+PRStatus PR_CALLBACK interposedFileInfo64(PRFileDesc *aFd, PRFileInfo64 *aInfo)
+{
+  // If we don't have a valid original function pointer something is very wrong.
+  NS_ASSERTION(sFileInfo64Fn, "NSPR IO Interposing: sFileInfo64Fn is NULL");
+
+  NSPRIOAutoObservation timer(IOInterposeObserver::OpStat);
+  return sFileInfo64Fn(aFd, aInfo);
+}
+
 } // anonymous namespace
 
 namespace mozilla {
@@ -84,7 +114,8 @@ namespace mozilla {
 void InitNSPRIOInterposing()
 {
   // Check that we have not interposed any of the IO methods before
-  MOZ_ASSERT(!sReadFn && !sWriteFn && !sFSyncFn);
+  MOZ_ASSERT(!sCloseFn && !sReadFn && !sWriteFn && !sFSyncFn && !sFileInfoFn &&
+             !sFileInfo64Fn);
 
   // We can't actually use this assertion because we initialize this code
   // before XPCOM is initialized, so NS_IsMainThread() always returns false.
@@ -101,22 +132,29 @@ void InitNSPRIOInterposing()
     return;
   }
 
-  // Store original read, write, sync functions
-  sReadFn   = methods->read;
-  sWriteFn  = methods->write;
-  sFSyncFn  = methods->fsync;
+  // Store original functions
+  sCloseFn      = methods->close;
+  sReadFn       = methods->read;
+  sWriteFn      = methods->write;
+  sFSyncFn      = methods->fsync;
+  sFileInfoFn   = methods->fileInfo;
+  sFileInfo64Fn = methods->fileInfo64;
 
-  // Overwrite with our interposed read, write, sync functions
-  methods->read   = &interposedRead;
-  methods->write  = &interposedWrite;
-  methods->fsync  = &interposedFSync;
+  // Overwrite with our interposed functions
+  methods->close      = &interposedClose;
+  methods->read       = &interposedRead;
+  methods->write      = &interposedWrite;
+  methods->fsync      = &interposedFSync;
+  methods->fileInfo   = &interposedFileInfo;
+  methods->fileInfo64 = &interposedFileInfo64;
 }
 
 void ClearNSPRIOInterposing()
 {
   // If we have already cleared IO interposing, or not initialized it this is
   // actually bad.
-  MOZ_ASSERT(sReadFn && sWriteFn && sFSyncFn);
+  MOZ_ASSERT(sCloseFn && sReadFn && sWriteFn && sFSyncFn && sFileInfoFn &&
+             sFileInfo64Fn);
 
   // Get IO methods from NSPR and const cast the structure so we can modify it.
   PRIOMethods* methods = const_cast<PRIOMethods*>(PR_GetFileMethods());
@@ -129,15 +167,22 @@ void ClearNSPRIOInterposing()
     return;
   }
 
-  // Restore original read, write, sync functions
-  methods->read   = sReadFn;
-  methods->write  = sWriteFn;
-  methods->fsync  = sFSyncFn;
+  // Restore original functions
+  methods->close      = sCloseFn;
+  methods->read       = sReadFn;
+  methods->write      = sWriteFn;
+  methods->fsync      = sFSyncFn;
+  methods->fileInfo   = sFileInfoFn;
+  methods->fileInfo64 = sFileInfo64Fn;
 
   // Forget about original functions
-  sReadFn   = nullptr;
-  sWriteFn  = nullptr;
-  sFSyncFn  = nullptr;
+  sCloseFn      = nullptr;
+  sReadFn       = nullptr;
+  sWriteFn      = nullptr;
+  sFSyncFn      = nullptr;
+  sFileInfoFn   = nullptr;
+  sFileInfo64Fn = nullptr;
 }
 
 } // namespace mozilla
+
