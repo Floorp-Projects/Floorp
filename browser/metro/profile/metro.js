@@ -40,6 +40,7 @@ pref("gfx.azpc.touch_start_tolerance", "0.1"); // dpi * tolerance = pixel thresh
 pref("gfx.azpc.pan_repaint_interval", "50");   // prefer 20 fps
 pref("gfx.azpc.fling_repaint_interval", "50"); // prefer 20 fps
 pref("gfx.axis.fling_friction", "0.002");
+pref("gfx.axis.fling_stopped_threshold", "0.2");
 
 // Enable Microsoft TSF support by default for imes.
 pref("intl.enable_tsf_support", true);
