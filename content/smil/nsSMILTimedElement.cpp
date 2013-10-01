@@ -92,7 +92,7 @@ namespace
 
     NS_IMETHOD Run()
     {
-      nsUIEvent event(true, mMsg, mDetail);
+      InternalUIEvent event(true, mMsg, mDetail);
       event.eventStructType = NS_SMIL_TIME_EVENT;
 
       nsPresContext* context = nullptr;

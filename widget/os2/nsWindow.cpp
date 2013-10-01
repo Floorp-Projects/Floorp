@@ -2159,7 +2159,7 @@ bool nsWindow::OnMouseChord(MPARAM mp1, MPARAM mp2)
 
   // XXX Using keypress event here is wrong approach, this should be replaced
   //     with content command event.
-  nsKeyEvent event(true, NS_KEY_PRESS, this);
+  WidgetKeyboardEvent event(true, NS_KEY_PRESS, this);
   nsIntPoint point(0,0);
   InitEvent(event, &point);
 
@@ -2441,13 +2441,13 @@ bool nsWindow::OnQueryConvertPos(MPARAM mp1, MRESULT& mresult)
 
   nsIntPoint point(0, 0);
 
-  nsQueryContentEvent selection(true, NS_QUERY_SELECTED_TEXT, this);
+  WidgetQueryContentEvent selection(true, NS_QUERY_SELECTED_TEXT, this);
   InitEvent(selection, &point);
   DispatchWindowEvent(&selection);
   if (!selection.mSucceeded)
     return false;
 
-  nsQueryContentEvent caret(true, NS_QUERY_CARET_RECT, this);
+  WidgetQueryContentEvent caret(true, NS_QUERY_CARET_RECT, this);
   caret.InitForQueryCaretRect(selection.mReply.mOffset);
   InitEvent(caret, &point);
   DispatchWindowEvent(&caret);
@@ -2478,7 +2478,7 @@ bool nsWindow::ImeResultString(HIMI himi)
   }
   if (!mIsComposing) {
     mLastDispatchedCompositionString.Truncate();
-    nsCompositionEvent start(true, NS_COMPOSITION_START, this);
+    WidgetCompositionEvent start(true, NS_COMPOSITION_START, this);
     InitEvent(start);
     DispatchWindowEvent(&start);
     mIsComposing = true;
@@ -2489,19 +2489,19 @@ bool nsWindow::ImeResultString(HIMI himi)
                       outBuf, outBufLen);
   nsAutoString compositionString(outBuf.Elements());
   if (mLastDispatchedCompositionString != compositionString) {
-    nsCompositionEvent update(true, NS_COMPOSITION_UPDATE, this);
+    WidgetCompositionEvent update(true, NS_COMPOSITION_UPDATE, this);
     InitEvent(update);
     update.data = compositionString;
     mLastDispatchedCompositionString = compositionString;
     DispatchWindowEvent(&update);
   }
 
-  nsTextEvent text(true, NS_TEXT_TEXT, this);
+  WidgetTextEvent text(true, NS_TEXT_TEXT, this);
   InitEvent(text);
   text.theText = compositionString;
   DispatchWindowEvent(&text);
 
-  nsCompositionEvent end(true, NS_COMPOSITION_END, this);
+  WidgetCompositionEvent end(true, NS_COMPOSITION_END, this);
   InitEvent(end);
   end.data = compositionString;
   DispatchWindowEvent(&end);
@@ -2549,7 +2549,7 @@ bool nsWindow::ImeConversionString(HIMI himi)
   }
   if (!mIsComposing) {
     mLastDispatchedCompositionString.Truncate();
-    nsCompositionEvent start(true, NS_COMPOSITION_START, this);
+    WidgetCompositionEvent start(true, NS_COMPOSITION_START, this);
     InitEvent(start);
     DispatchWindowEvent(&start);
     mIsComposing = true;
@@ -2561,13 +2561,13 @@ bool nsWindow::ImeConversionString(HIMI himi)
   nsAutoString compositionString(outBuf.Elements());
   // Is a conversion string changed ?
   if (mLastDispatchedCompositionString != compositionString) {
-    nsCompositionEvent update(true, NS_COMPOSITION_UPDATE, this);
+    WidgetCompositionEvent update(true, NS_COMPOSITION_UPDATE, this);
     InitEvent(update);
     update.data = compositionString;
     mLastDispatchedCompositionString = compositionString;
     DispatchWindowEvent(&update);
   }
-  nsAutoTArray<nsTextRange, 4> textRanges;
+  nsAutoTArray<TextRange, 4> textRanges;
   if (!compositionString.IsEmpty()) {
     bool oneClause = false;
 
@@ -2649,7 +2649,7 @@ bool nsWindow::ImeConversionString(HIMI himi)
       clauseAttr[0] = NS_TEXTRANGE_SELECTEDRAWTEXT;
     }
 
-    nsTextRange newRange;
+    TextRange newRange;
 
     for (ULONG i = 0; i < ulClauseCount - 1; ++i) {
       newRange.mStartOffset = clauseOffsets[i];
@@ -2664,7 +2664,7 @@ bool nsWindow::ImeConversionString(HIMI himi)
       textRanges.AppendElement(newRange);
     }
   }
-  nsTextEvent text(true, NS_TEXT_TEXT, this);
+  WidgetTextEvent text(true, NS_TEXT_TEXT, this);
   InitEvent(text);
   text.theText = compositionString;
   text.rangeArray = textRanges.Elements();
@@ -2672,7 +2672,7 @@ bool nsWindow::ImeConversionString(HIMI himi)
   DispatchWindowEvent(&text);
 
   if (compositionString.IsEmpty()) { // IME conversion was canceled ?
-    nsCompositionEvent end(true, NS_COMPOSITION_END, this);
+    WidgetCompositionEvent end(true, NS_COMPOSITION_END, this);
     InitEvent(end);
     end.data = compositionString;
     DispatchWindowEvent(&end);
@@ -2732,7 +2732,7 @@ NS_IMETHODIMP_(InputContext) nsWindow::GetInputContext()
 
 bool nsWindow::DispatchKeyEvent(MPARAM mp1, MPARAM mp2)
 {
-  nsKeyEvent pressEvent(true, 0, nullptr);
+  WidgetKeyboardEvent pressEvent(true, 0, nullptr);
   USHORT fsFlags = SHORT1FROMMP(mp1);
   USHORT usVKey = SHORT2FROMMP(mp2);
   USHORT usChar = SHORT1FROMMP(mp2);
@@ -2760,8 +2760,9 @@ bool nsWindow::DispatchKeyEvent(MPARAM mp1, MPARAM mp2)
   // Now dispatch a keyup/keydown event.  This one is *not* meant to
   // have the unicode charcode in.
   nsIntPoint point(0,0);
-  nsKeyEvent event(true, (fsFlags & KC_KEYUP) ? NS_KEY_UP : NS_KEY_DOWN,
-                   this);
+  WidgetKeyboardEvent event(true,
+                            (fsFlags & KC_KEYUP) ? NS_KEY_UP : NS_KEY_DOWN,
+                            this);
   InitEvent(event, &point);
   event.keyCode   = WMChar2KeyCode(mp1, mp2);
   event.InitBasicModifiers(fsFlags & KC_CTRL, fsFlags & KC_ALT,
@@ -3096,7 +3097,7 @@ bool nsWindow::DispatchCommandEvent(uint32_t aEventCommand)
 
 bool nsWindow::DispatchDragDropEvent(uint32_t aMsg)
 {
-  nsDragEvent event(true, aMsg, this);
+  WidgetDragEvent event(true, aMsg, this);
   InitEvent(event);
 
   event.InitBasicModifiers(isKeyDown(VK_CTRL),

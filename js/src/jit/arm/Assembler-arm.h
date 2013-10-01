@@ -1702,7 +1702,7 @@ class Assembler
         JS_ASSERT(rn.code() > dtmLastReg);
         dtmRegBitField |= 1 << rn.code();
         if (dtmLoadStore == IsLoad && rn.code() == 13 && dtmBase.code() == 13) {
-            JS_ASSERT("ARM Spec says this is invalid");
+            MOZ_ASSUME_UNREACHABLE("ARM Spec says this is invalid");
         }
     }
     void finishDataTransfer() {

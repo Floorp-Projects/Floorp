@@ -703,29 +703,29 @@ nsEventDispatcher::CreateEvent(mozilla::dom::EventTarget* aOwner,
                static_cast<InternalScrollAreaEvent*>(aEvent));
     case NS_KEY_EVENT:
       return NS_NewDOMKeyboardEvent(aDOMEvent, aOwner, aPresContext,
-                                    static_cast<nsKeyEvent*>(aEvent));
+                                    static_cast<WidgetKeyboardEvent*>(aEvent));
     case NS_COMPOSITION_EVENT:
       return NS_NewDOMCompositionEvent(
         aDOMEvent, aOwner,
-        aPresContext, static_cast<nsCompositionEvent*>(aEvent));
+        aPresContext, static_cast<WidgetCompositionEvent*>(aEvent));
     case NS_MOUSE_EVENT:
       return NS_NewDOMMouseEvent(aDOMEvent, aOwner, aPresContext,
-                                 static_cast<nsInputEvent*>(aEvent));
+                                 static_cast<WidgetInputEvent*>(aEvent));
     case NS_FOCUS_EVENT:
       return NS_NewDOMFocusEvent(aDOMEvent, aOwner, aPresContext,
                                  static_cast<InternalFocusEvent*>(aEvent));
     case NS_MOUSE_SCROLL_EVENT:
       return NS_NewDOMMouseScrollEvent(aDOMEvent, aOwner, aPresContext,
-                                 static_cast<nsInputEvent*>(aEvent));
+                                       static_cast<WidgetInputEvent*>(aEvent));
     case NS_WHEEL_EVENT:
       return NS_NewDOMWheelEvent(aDOMEvent, aOwner, aPresContext,
                                  static_cast<WheelEvent*>(aEvent));
     case NS_DRAG_EVENT:
       return NS_NewDOMDragEvent(aDOMEvent, aOwner, aPresContext,
-                                 static_cast<nsDragEvent*>(aEvent));
+                                static_cast<WidgetDragEvent*>(aEvent));
     case NS_TEXT_EVENT:
       return NS_NewDOMTextEvent(aDOMEvent, aOwner, aPresContext,
-                                static_cast<nsTextEvent*>(aEvent));
+                                static_cast<WidgetTextEvent*>(aEvent));
     case NS_CLIPBOARD_EVENT:
       return NS_NewDOMClipboardEvent(aDOMEvent, aOwner, aPresContext,
                static_cast<InternalClipboardEvent*>(aEvent));
