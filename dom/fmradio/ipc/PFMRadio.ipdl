@@ -7,7 +7,7 @@ include "mozilla/HalTypes.h";
 include protocol PContent;
 include protocol PFMRadioRequest;
 
-using mozilla::hal::FMRadioSeekDirection;
+using mozilla::hal::FMRadioSeekDirection from "mozilla/HalTypes.h";
 
 namespace mozilla {
 namespace dom {

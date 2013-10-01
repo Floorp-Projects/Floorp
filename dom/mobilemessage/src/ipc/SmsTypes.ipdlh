@@ -7,11 +7,11 @@
 include "mozilla/dom/mobilemessage/Types.h";
 include protocol PBlob;
 
-using DeliveryState;
-using DeliveryStatus;
-using MessageClass;
-using ReadState;
-using MessageType;
+using DeliveryState from "mozilla/dom/mobilemessage/Types.h";
+using DeliveryStatus from "mozilla/dom/mobilemessage/Types.h";
+using MessageClass from "mozilla/dom/mobilemessage/Types.h";
+using ReadState from "mozilla/dom/mobilemessage/Types.h";
+using MessageType from "mozilla/dom/mobilemessage/Types.h";
 
 namespace mozilla {
 namespace dom {

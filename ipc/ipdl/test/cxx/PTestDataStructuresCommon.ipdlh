@@ -1,7 +1,7 @@
 include protocol PTestDataStructuresSub;
 
-using mozilla::null_t;
-using nsIntRegion;
+using struct mozilla::null_t from "ipc/IPCMessageUtils.h";
+using nsIntRegion from "nsRegion.h";
 
 namespace mozilla {
 namespace _foo {

@@ -19,7 +19,7 @@ include "nsCSSProperty.h";
 include "gfxipc/ShadowLayerUtils.h";
 include "mozilla/GfxMessageUtils.h";
 
-using mozilla::layers::TextureInfo;
+using struct mozilla::layers::TextureInfo from "mozilla/layers/CompositorTypes.h";
 
 /**
  * The layers protocol is spoken between thread contexts that manage

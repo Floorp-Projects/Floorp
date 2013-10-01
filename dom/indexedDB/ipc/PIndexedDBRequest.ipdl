@@ -9,10 +9,10 @@ include protocol PIndexedDBObjectStore;
 
 include "mozilla/dom/indexedDB/SerializationHelpers.h";
 
-using mozilla::dom::indexedDB::Key;
-using mozilla::dom::indexedDB::SerializedStructuredCloneReadInfo;
+using class mozilla::dom::indexedDB::Key from "mozilla/dom/indexedDB/Key.h";
+using struct mozilla::dom::indexedDB::SerializedStructuredCloneReadInfo from "mozilla/dom/indexedDB/IndexedDatabase.h";
 
-using mozilla::void_t;
+using struct mozilla::void_t from "ipc/IPCMessageUtils.h";
 
 namespace mozilla {
 namespace dom {

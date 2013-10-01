@@ -8,7 +8,7 @@ include protocol PPluginInstance;
 
 include "npapi.h";
 
-using NPReason;
+using NPReason from "npapi.h";
 
 namespace mozilla {
 namespace plugins {
