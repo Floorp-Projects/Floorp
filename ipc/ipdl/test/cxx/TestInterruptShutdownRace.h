@@ -1,21 +1,21 @@
-#ifndef mozilla__ipdltest_TestRPCShutdownRace_h
-#define mozilla__ipdltest_TestRPCShutdownRace_h 1
+#ifndef mozilla__ipdltest_TestInterruptShutdownRace_h
+#define mozilla__ipdltest_TestInterruptShutdownRace_h 1
 
 #include "mozilla/_ipdltest/IPDLUnitTests.h"
 
-#include "mozilla/_ipdltest/PTestRPCShutdownRaceParent.h"
-#include "mozilla/_ipdltest/PTestRPCShutdownRaceChild.h"
+#include "mozilla/_ipdltest/PTestInterruptShutdownRaceParent.h"
+#include "mozilla/_ipdltest/PTestInterruptShutdownRaceChild.h"
 
 namespace mozilla {
 namespace _ipdltest {
 
 
-class TestRPCShutdownRaceParent :
-    public PTestRPCShutdownRaceParent
+class TestInterruptShutdownRaceParent :
+    public PTestInterruptShutdownRaceParent
 {
 public:
-    TestRPCShutdownRaceParent();
-    virtual ~TestRPCShutdownRaceParent();
+    TestInterruptShutdownRaceParent();
+    virtual ~TestInterruptShutdownRaceParent();
 
     static bool RunTestInProcesses() { return true; }
     // FIXME/bug 703323 Could work if modified
@@ -38,12 +38,12 @@ protected:
 };
 
 
-class TestRPCShutdownRaceChild :
-    public PTestRPCShutdownRaceChild
+class TestInterruptShutdownRaceChild :
+    public PTestInterruptShutdownRaceChild
 {
 public:
-    TestRPCShutdownRaceChild();
-    virtual ~TestRPCShutdownRaceChild();
+    TestInterruptShutdownRaceChild();
+    virtual ~TestInterruptShutdownRaceChild();
 
 protected:
     virtual bool RecvStart() MOZ_OVERRIDE;
@@ -61,4 +61,4 @@ protected:
 } // namespace mozilla
 
 
-#endif // ifndef mozilla__ipdltest_TestRPCShutdownRace_h
+#endif // ifndef mozilla__ipdltest_TestInterruptShutdownRace_h

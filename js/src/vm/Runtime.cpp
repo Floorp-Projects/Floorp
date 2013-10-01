@@ -539,46 +539,44 @@ NewObjectCache::clearNurseryObjects(JSRuntime *rt)
 }
 
 void
-JSRuntime::sizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf, JS::RuntimeSizes *rtSizes)
+JSRuntime::addSizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf, JS::RuntimeSizes *rtSizes)
 {
     // Several tables in the runtime enumerated below can be used off thread.
     AutoLockForExclusiveAccess lock(this);
 
-    rtSizes->object = mallocSizeOf(this);
+    rtSizes->object += mallocSizeOf(this);
 
-    rtSizes->atomsTable = atoms().sizeOfExcludingThis(mallocSizeOf);
+    rtSizes->atomsTable += atoms().sizeOfExcludingThis(mallocSizeOf);
 
-    rtSizes->contexts = 0;
     for (ContextIter acx(this); !acx.done(); acx.next())
         rtSizes->contexts += acx->sizeOfIncludingThis(mallocSizeOf);
 
-    rtSizes->dtoa = mallocSizeOf(mainThread.dtoaState);
+    rtSizes->dtoa += mallocSizeOf(mainThread.dtoaState);
 
-    rtSizes->temporary = tempLifoAlloc.sizeOfExcludingThis(mallocSizeOf);
+    rtSizes->temporary += tempLifoAlloc.sizeOfExcludingThis(mallocSizeOf);
 
-    rtSizes->code = JS::CodeSizes();
     if (execAlloc_)
-        execAlloc_->sizeOfCode(&rtSizes->code);
+        execAlloc_->addSizeOfCode(&rtSizes->code);
 
 #ifdef JS_ION
     {
         AutoLockForOperationCallback lock(this);
         if (ionRuntime()) {
             if (JSC::ExecutableAllocator *ionAlloc = ionRuntime()->ionAlloc(this))
-                ionAlloc->sizeOfCode(&rtSizes->code);
+                ionAlloc->addSizeOfCode(&rtSizes->code);
         }
     }
 #endif
 
-    rtSizes->regexpData = bumpAlloc_ ? bumpAlloc_->sizeOfNonHeapData() : 0;
+    rtSizes->regexpData += bumpAlloc_ ? bumpAlloc_->sizeOfNonHeapData() : 0;
 
-    rtSizes->interpreterStack = interpreterStack_.sizeOfExcludingThis(mallocSizeOf);
+    rtSizes->interpreterStack += interpreterStack_.sizeOfExcludingThis(mallocSizeOf);
 
-    rtSizes->gcMarker = gcMarker.sizeOfExcludingThis(mallocSizeOf);
+    rtSizes->gcMarker += gcMarker.sizeOfExcludingThis(mallocSizeOf);
 
-    rtSizes->mathCache = mathCache_ ? mathCache_->sizeOfIncludingThis(mallocSizeOf) : 0;
+    rtSizes->mathCache += mathCache_ ? mathCache_->sizeOfIncludingThis(mallocSizeOf) : 0;
 
-    rtSizes->scriptData = scriptDataTable().sizeOfExcludingThis(mallocSizeOf);
+    rtSizes->scriptData += scriptDataTable().sizeOfExcludingThis(mallocSizeOf);
     for (ScriptDataTable::Range r = scriptDataTable().all(); !r.empty(); r.popFront())
         rtSizes->scriptData += mallocSizeOf(r.front());
 }

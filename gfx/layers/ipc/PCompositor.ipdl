@@ -26,7 +26,7 @@ namespace layers {
  */
 // This should really be 'sync', but we're using 'rpc' as a workaround
 // for Bug 716631.
-rpc protocol PCompositor
+intr protocol PCompositor
 {
   // A Compositor manages a single Layer Manager (PLayerTransaction)
   manages PLayerTransaction;

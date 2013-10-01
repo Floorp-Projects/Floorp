@@ -13,6 +13,7 @@
 #include "mozilla/dom/Element.h"
 #include "nsRegion.h"
 #include "nsDeviceContext.h"
+#include "nsIFrame.h"
 #include <algorithm>
 
 namespace mozilla {

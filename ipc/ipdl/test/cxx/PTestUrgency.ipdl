@@ -1,7 +1,7 @@
 namespace mozilla {
 namespace _ipdltest {
 
-rpc protocol PTestUrgency
+intr protocol PTestUrgency
 {
 parent:
     sync Test1() returns (uint32_t result);

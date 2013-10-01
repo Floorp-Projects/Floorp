@@ -900,7 +900,7 @@ struct TypeObject : gc::BarrieredCell<TypeObject>
      */
     HeapPtr<TypeObjectAddendum> addendum;
 
-    bool hasNewScript() {
+    bool hasNewScript() const {
         return addendum && addendum->isNewScript();
     }
 
@@ -1058,7 +1058,7 @@ struct TypeObject : gc::BarrieredCell<TypeObject>
     inline void clearProperties();
     inline void sweep(FreeOp *fop);
 
-    size_t sizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf);
+    size_t sizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf) const;
 
     /*
      * Type objects don't have explicit finalizers. Memory owned by a type
@@ -1184,6 +1184,10 @@ class TypeScript
 
     static void Sweep(FreeOp *fop, JSScript *script);
     void destroy();
+
+    size_t sizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf) const {
+        return mallocSizeOf(this);
+    }
 
 #ifdef DEBUG
     void printTypes(JSContext *cx, HandleScript script) const;
@@ -1358,6 +1362,12 @@ struct TypeCompartment
     void sweepCompilerOutputs(FreeOp *fop, bool discardConstraints);
 
     void finalizeObjects();
+
+    void addSizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf,
+                                size_t *pendingArrays,
+                                size_t *allocationSiteTables,
+                                size_t *arrayTypeTables,
+                                size_t *objectTypeTables);
 };
 
 void FixRestArgumentsType(ExclusiveContext *cxArg, JSObject *obj);

@@ -1,7 +1,7 @@
-rpc protocol trans_WrongName5 {
+intr protocol trans_WrongName5 {
 
 parent:
-    rpc Msg();
+    intr Msg();
     __delete__();
 
 state S1:

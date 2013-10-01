@@ -61,8 +61,8 @@ using namespace mozilla::ipc::windows;
  * in a special window procedure where we can either ignore the message or
  * process it in some fashion.
  *
- * Queued and "non-queued" messages will be processed during RPC calls if
- * modal UI related api calls block an RPC in-call in the child. To prevent
+ * Queued and "non-queued" messages will be processed during Interrupt calls if
+ * modal UI related api calls block an Interrupt in-call in the child. To prevent
  * windows from freezing, and to allow concurrent processing of critical
  * events (such as painting), we spin a native event dispatch loop while
  * these in-calls are blocked.
@@ -587,8 +587,8 @@ TimeoutHasExpired(const TimeoutData& aData)
 
 } // anonymous namespace
 
-MessageChannel::SyncStackFrame::SyncStackFrame(MessageChannel* channel, bool rpc)
-  : mRPC(rpc)
+MessageChannel::SyncStackFrame::SyncStackFrame(MessageChannel* channel, bool interrupt)
+  : mInterrupt(interrupt)
   , mSpinNestedEvents(false)
   , mListenerNotified(false)
   , mChannel(channel)
@@ -608,9 +608,9 @@ MessageChannel::SyncStackFrame::SyncStackFrame(MessageChannel* channel, bool rpc
 MessageChannel::SyncStackFrame::~SyncStackFrame()
 {
   NS_ASSERTION(this == mChannel->mTopFrame,
-               "Mismatched RPC stack frames");
+               "Mismatched interrupt stack frames");
   NS_ASSERTION(this == sStaticTopFrame,
-               "Mismatched static RPC stack frames");
+               "Mismatched static Interrupt stack frames");
 
   mChannel->mTopFrame = mPrev;
   sStaticTopFrame = mStaticPrev;
@@ -625,28 +625,28 @@ MessageChannel::SyncStackFrame::~SyncStackFrame()
 MessageChannel::SyncStackFrame* MessageChannel::sStaticTopFrame;
 
 // nsAppShell's notification that gecko events are being processed.
-// If we are here and there is an RPC Incall active, we are spinning
+// If we are here and there is an Interrupt Incall active, we are spinning
 // a nested gecko event loop. In which case the remote process needs
 // to know about it.
 void /* static */
 MessageChannel::NotifyGeckoEventDispatch()
 {
-  // sStaticTopFrame is only valid for RPC channels
+  // sStaticTopFrame is only valid for Interrupt channels
   if (!sStaticTopFrame || sStaticTopFrame->mListenerNotified)
     return;
 
   sStaticTopFrame->mListenerNotified = true;
   MessageChannel* channel = static_cast<MessageChannel*>(sStaticTopFrame->mChannel);
-  channel->Listener()->ProcessRemoteNativeEventsInRPCCall();
+  channel->Listener()->ProcessRemoteNativeEventsInInterruptCall();
 }
 
 // invoked by the module that receives the spin event loop
 // message.
 void
-MessageChannel::ProcessNativeEventsInRPCCall()
+MessageChannel::ProcessNativeEventsInInterruptCall()
 {
   if (!mTopFrame) {
-    NS_ERROR("Spin logic error: no RPC frame");
+    NS_ERROR("Spin logic error: no Interrupt frame");
     return;
   }
 
@@ -655,9 +655,9 @@ MessageChannel::ProcessNativeEventsInRPCCall()
 
 // Spin loop is called in place of WaitFor*Notify when modal ui is being shown
 // in a child. There are some intricacies in using it however. Spin loop is
-// enabled for a particular RPC frame by the client calling
-// MessageChannel::ProcessNativeEventsInRPCCall().
-// This call can be nested for multiple RPC frames in a single plugin or 
+// enabled for a particular Interrupt frame by the client calling
+// MessageChannel::ProcessNativeEventsInInterrupt().
+// This call can be nested for multiple Interrupt frames in a single plugin or 
 // multiple unrelated plugins.
 void
 MessageChannel::SpinInternalEventLoop()
@@ -722,7 +722,7 @@ MessageChannel::WaitForSyncNotify()
   // Initialize global objects used in deferred messaging.
   Init();
 
-  NS_ASSERTION(mTopFrame && !mTopFrame->mRPC,
+  NS_ASSERTION(mTopFrame && !mTopFrame->mInterrupt,
                "Top frame is not a sync frame!");
 
   MonitorAutoUnlock unlock(*mMonitor);
@@ -837,11 +837,11 @@ MessageChannel::WaitForSyncNotify()
 }
 
 bool
-MessageChannel::WaitForRPCNotify()
+MessageChannel::WaitForInterruptNotify()
 {
   mMonitor->AssertCurrentThreadOwns();
 
-  if (!RPCStackDepth()) {
+  if (!InterruptStackDepth()) {
     // There is currently no way to recover from this condition.
     NS_RUNTIMEABORT("StackDepth() is 0 in call to MessageChannel::WaitForNotify!");
   }
@@ -849,7 +849,7 @@ MessageChannel::WaitForRPCNotify()
   // Initialize global objects used in deferred messaging.
   Init();
 
-  NS_ASSERTION(mTopFrame && mTopFrame->mRPC,
+  NS_ASSERTION(mTopFrame && mTopFrame->mInterrupt,
                "Top frame is not a sync frame!");
 
   MonitorAutoUnlock unlock(*mMonitor);

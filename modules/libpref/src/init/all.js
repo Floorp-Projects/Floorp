@@ -4047,6 +4047,9 @@ pref("image.mem.discardable", true);
 // them to be decoded on demand when they are drawn.
 pref("image.mem.decodeondraw", true);
 
+// Allows image locking of decoded image data in content processes.
+pref("image.mem.allow_locking_in_content_processes", true);
+
 // Minimum timeout for image discarding (in milliseconds). The actual time in
 // which an image must inactive for it to be discarded will vary between this
 // value and twice this value.

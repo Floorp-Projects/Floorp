@@ -1,27 +1,27 @@
-#ifndef mozilla__ipdltest_TestRPCRaces_h
-#define mozilla__ipdltest_TestRPCRaces_h
+#ifndef mozilla__ipdltest_TestInterruptRaces_h
+#define mozilla__ipdltest_TestInterruptRaces_h
 
 #include "mozilla/_ipdltest/IPDLUnitTests.h"
 
-#include "mozilla/_ipdltest/PTestRPCRacesParent.h"
-#include "mozilla/_ipdltest/PTestRPCRacesChild.h"
+#include "mozilla/_ipdltest/PTestInterruptRacesParent.h"
+#include "mozilla/_ipdltest/PTestInterruptRacesChild.h"
 
 namespace mozilla {
 namespace _ipdltest {
 
-mozilla::ipc::RacyRPCPolicy
+mozilla::ipc::RacyInterruptPolicy
 MediateRace(const mozilla::ipc::MessageChannel::Message& parent,
             const mozilla::ipc::MessageChannel::Message& child);
 
-class TestRPCRacesParent :
-    public PTestRPCRacesParent
+class TestInterruptRacesParent :
+    public PTestInterruptRacesParent
 {
 public:
-    TestRPCRacesParent() : mHasReply(false),
+    TestInterruptRacesParent() : mHasReply(false),
                            mChildHasReply(false),
                            mAnsweredParent(false)
     { }
-    virtual ~TestRPCRacesParent() { }
+    virtual ~TestInterruptRacesParent() { }
 
     static bool RunTestInProcesses() { return true; }
     static bool RunTestInThreads() { return true; }
@@ -47,8 +47,8 @@ protected:
     virtual bool
     RecvGetAnsweredParent(bool* answeredParent) MOZ_OVERRIDE;
 
-    virtual mozilla::ipc::RacyRPCPolicy
-    MediateRPCRace(const Message& parent, const Message& child) MOZ_OVERRIDE
+    virtual mozilla::ipc::RacyInterruptPolicy
+    MediateInterruptRace(const Message& parent, const Message& child) MOZ_OVERRIDE
     {
         return MediateRace(parent, child);
     }
@@ -75,12 +75,12 @@ private:
 };
 
 
-class TestRPCRacesChild :
-    public PTestRPCRacesChild
+class TestInterruptRacesChild :
+    public PTestInterruptRacesChild
 {
 public:
-    TestRPCRacesChild() : mHasReply(false) { }
-    virtual ~TestRPCRacesChild() { }
+    TestInterruptRacesChild() : mHasReply(false) { }
+    virtual ~TestInterruptRacesChild() { }
 
 protected:
     virtual bool
@@ -104,8 +104,8 @@ protected:
     virtual bool
     AnswerChild() MOZ_OVERRIDE;
 
-    virtual mozilla::ipc::RacyRPCPolicy
-    MediateRPCRace(const Message& parent, const Message& child) MOZ_OVERRIDE
+    virtual mozilla::ipc::RacyInterruptPolicy
+    MediateInterruptRace(const Message& parent, const Message& child) MOZ_OVERRIDE
     {
         return MediateRace(parent, child);
     }
@@ -126,4 +126,4 @@ private:
 } // namespace mozilla
 
 
-#endif // ifndef mozilla__ipdltest_TestRPCRaces_h
+#endif // ifndef mozilla__ipdltest_TestInterruptRaces_h

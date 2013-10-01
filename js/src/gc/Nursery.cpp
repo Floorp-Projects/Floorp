@@ -34,8 +34,6 @@ js::Nursery::init()
     if (!hugeSlots.init())
         return false;
 
-    fallbackBitmap.clear(false);
-
     void *heap = MapAlignedPages(runtime(), NurserySize, Alignment);
 #ifdef JSGC_ROOT_ANALYSIS
     // Our poison pointers are not guaranteed to be invalid on 64-bit
@@ -97,8 +95,6 @@ js::Nursery::disable()
 void *
 js::Nursery::allocate(size_t size)
 {
-    JS_ASSERT(size % ThingAlignment == 0);
-    JS_ASSERT(position() % ThingAlignment == 0);
     JS_ASSERT(!runtime()->isHeapBusy());
 
     if (position() + size > currentEnd()) {

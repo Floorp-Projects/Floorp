@@ -6,7 +6,8 @@
 #include "AudioNodeEngineNEON.h"
 #include <arm_neon.h>
 
-#ifdef DEBUG
+//#ifdef DEBUG
+#if 0 // see bug 921099
   #define ASSERT_ALIGNED(ptr)                                                  \
             MOZ_ASSERT((((uintptr_t)ptr + 15) & ~0x0F) == (uintptr_t)ptr,      \
                        #ptr " has to be aligned 16-bytes aligned.");
