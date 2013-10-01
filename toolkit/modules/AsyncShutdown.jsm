@@ -375,7 +375,7 @@ Spinner.prototype = {
               " Conditions: " + frozen.join(", ") +
               " Phase: " + topic;
         err(msg);
-        if (gCrashReporter) {
+        if (gCrashReporter && gCrashReporter.enabled) {
           let data = {
             phase: topic,
             conditions: frozen

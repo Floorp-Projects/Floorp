@@ -15,6 +15,11 @@
 
 #ifdef ANDROID
 #include <stdio.h>
+
+// Minimum memory threshold for a device to be considered
+// a low memory platform. This value has be in sync with
+// Java's equivalent threshold, defined in
+// mobile/android/base/util/HardwareUtils.java
 #define LOW_MEMORY_THRESHOLD_KB (384 * 1024)
 #endif
 

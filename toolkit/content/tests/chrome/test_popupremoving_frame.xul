@@ -23,8 +23,6 @@ var gMenus = [];
 
 function popupsOpened()
 {
-  netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
-
   var framedoc = $("frame").contentDocument;
   framedoc.addEventListener("DOMAttrModified", modified, false);
 
@@ -47,8 +45,6 @@ function modified(event)
 {
   if (event.attrName != "open")
     return;
-
-  netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
 
   var framedoc = $("frame").contentDocument;
 

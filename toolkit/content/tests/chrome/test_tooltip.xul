@@ -112,7 +112,6 @@ var popupTests = [
     is(document.popupNode, null, testname + " document.popupNode");
     is(document.tooltipNode, gButton, testname + " document.tooltipNode");
 
-    netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
     var child = $("childframe").contentDocument; 
     var evt = child.createEvent("Event");
     evt.initEvent("click", true, true);
