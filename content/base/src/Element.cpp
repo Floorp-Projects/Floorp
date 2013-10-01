@@ -2228,8 +2228,8 @@ Element::PostHandleEventForLinks(nsEventChainPostVisitor& aVisitor)
       if (shell) {
         // single-click
         nsEventStatus status = nsEventStatus_eIgnore;
-        nsUIEvent actEvent(aVisitor.mEvent->mFlags.mIsTrusted,
-                           NS_UI_ACTIVATE, 1);
+        InternalUIEvent actEvent(aVisitor.mEvent->mFlags.mIsTrusted,
+                                 NS_UI_ACTIVATE, 1);
 
         rv = shell->HandleDOMEventWithTarget(this, &actEvent, &status);
         if (NS_SUCCEEDED(rv)) {

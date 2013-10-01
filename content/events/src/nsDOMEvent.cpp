@@ -680,8 +680,9 @@ nsDOMEvent::DuplicatePrivateData()
     }
     case NS_UI_EVENT:
     {
-      nsUIEvent* oldUIEvent = static_cast<nsUIEvent*>(mEvent);
-      nsUIEvent* uiEvent = new nsUIEvent(false, msg, oldUIEvent->detail);
+      InternalUIEvent* oldUIEvent = static_cast<InternalUIEvent*>(mEvent);
+      InternalUIEvent* uiEvent =
+        new InternalUIEvent(false, msg, oldUIEvent->detail);
       uiEvent->AssignUIEventData(*oldUIEvent, true);
       newEvent = uiEvent;
       break;
@@ -697,8 +698,8 @@ nsDOMEvent::DuplicatePrivateData()
     }
     case NS_SMIL_TIME_EVENT:
     {
-      nsUIEvent* oldUIEvent = static_cast<nsUIEvent*>(mEvent);
-      nsUIEvent* uiEvent = new nsUIEvent(false, msg, 0);
+      InternalUIEvent* oldUIEvent = static_cast<InternalUIEvent*>(mEvent);
+      InternalUIEvent* uiEvent = new InternalUIEvent(false, msg, 0);
       uiEvent->eventStructType = NS_SMIL_TIME_EVENT;
       uiEvent->AssignUIEventData(*oldUIEvent, true);
       newEvent = uiEvent;
