@@ -1560,44 +1560,55 @@ add_test(function test_update_icc_contact() {
     contactHelper.updateICCContact(aSimType, aContactType, aContact, aPin2, onsuccess, onerror);
   }
 
-  let contact = {
-    pbrIndex: 0,
-    recordId: ADN_RECORD_ID,
-    alphaId:  "test",
-    number:   "123456",
-    email:    "test@mail.com",
-    anr:      ["+654321"]
-  };
+  let contacts = [
+    {
+      pbrIndex: 0,
+      recordId: ADN_RECORD_ID,
+      alphaId:  "test",
+      number:   "123456",
+      email:    "test@mail.com",
+      anr:      ["+654321"]
+    },
+    // a contact without email and anr.
+    {
+      pbrIndex: 0,
+      recordId: ADN_RECORD_ID,
+      alphaId:  "test2",
+      number:   "123456",
+    }];
 
-  // SIM
-  do_print("Test update SIM adn contacts");
-  do_test(CARD_APPTYPE_SIM, "adn", contact);
+  for (let i = 0; i < contacts.length; i++) {
+    let contact = contacts[i];
+    // SIM
+    do_print("Test update SIM adn contacts");
+    do_test(CARD_APPTYPE_SIM, "adn", contact);
 
-  do_print("Test update SIM fdn contacts");
-  do_test(CARD_APPTYPE_SIM, "fdn", contact, "1234");
+    do_print("Test update SIM fdn contacts");
+    do_test(CARD_APPTYPE_SIM, "fdn", contact, "1234");
 
-  // USIM
-  do_print("Test update USIM adn contacts");
-  do_test(CARD_APPTYPE_USIM, "adn", contact, null, ICC_USIM_TYPE1_TAG);
-  do_test(CARD_APPTYPE_USIM, "adn", contact, null, ICC_USIM_TYPE2_TAG);
+    // USIM
+    do_print("Test update USIM adn contacts");
+    do_test(CARD_APPTYPE_USIM, "adn", contact, null, ICC_USIM_TYPE1_TAG);
+    do_test(CARD_APPTYPE_USIM, "adn", contact, null, ICC_USIM_TYPE2_TAG);
 
-  do_print("Test update USIM fdn contacts");
-  do_test(CARD_APPTYPE_USIM, "fdn", contact, "1234");
+    do_print("Test update USIM fdn contacts");
+    do_test(CARD_APPTYPE_USIM, "fdn", contact, "1234");
 
-  // RUIM
-  do_print("Test update RUIM adn contacts");
-  do_test(CARD_APPTYPE_RUIM, "adn", contact);
+    // RUIM
+    do_print("Test update RUIM adn contacts");
+    do_test(CARD_APPTYPE_RUIM, "adn", contact);
 
-  do_print("Test update RUIM fdn contacts");
-  do_test(CARD_APPTYPE_RUIM, "fdn", contact, "1234");
+    do_print("Test update RUIM fdn contacts");
+    do_test(CARD_APPTYPE_RUIM, "fdn", contact, "1234");
 
-  // RUIM with enhanced phone book
-  do_print("Test update RUIM adn contacts with enhanced phone book");
-  do_test(CARD_APPTYPE_RUIM, "adn", contact, null, ICC_USIM_TYPE1_TAG, true);
-  do_test(CARD_APPTYPE_RUIM, "adn", contact, null, ICC_USIM_TYPE2_TAG, true);
+    // RUIM with enhanced phone book
+    do_print("Test update RUIM adn contacts with enhanced phone book");
+    do_test(CARD_APPTYPE_RUIM, "adn", contact, null, ICC_USIM_TYPE1_TAG, true);
+    do_test(CARD_APPTYPE_RUIM, "adn", contact, null, ICC_USIM_TYPE2_TAG, true);
 
-  do_print("Test update RUIM fdn contacts with enhanced phone book");
-  do_test(CARD_APPTYPE_RUIM, "fdn", contact, "1234", null, true);
+    do_print("Test update RUIM fdn contacts with enhanced phone book");
+    do_test(CARD_APPTYPE_RUIM, "fdn", contact, "1234", null, true);
+  }
 
   run_next_test();
 });
