@@ -227,7 +227,8 @@ HTMLButtonElement::PostHandleEvent(nsEventChainPostVisitor& aVisitor)
 
   if (aVisitor.mEventStatus != nsEventStatus_eConsumeNoDefault &&
       aVisitor.mEvent->IsLeftClickEvent()) {
-    nsUIEvent actEvent(aVisitor.mEvent->mFlags.mIsTrusted, NS_UI_ACTIVATE, 1);
+    InternalUIEvent actEvent(aVisitor.mEvent->mFlags.mIsTrusted,
+                             NS_UI_ACTIVATE, 1);
 
     nsCOMPtr<nsIPresShell> shell = aVisitor.mPresContext->GetPresShell();
     if (shell) {
