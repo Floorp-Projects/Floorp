@@ -818,4 +818,8 @@ DEFINES += -DNO_NSPR_10_SUPPORT
 #
 #   libs::
 #       $(call py_action,purge_manifests,_build_manifests/purge/foo.manifest)
+ifdef .PYMAKE
+py_action = %mozbuild.action.$(1) main $(2)
+else
 py_action = $(PYTHON) -m mozbuild.action.$(1) $(2)
+endif

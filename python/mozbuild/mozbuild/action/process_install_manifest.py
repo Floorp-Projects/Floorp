@@ -5,6 +5,7 @@
 from __future__ import print_function, unicode_literals
 
 import argparse
+import sys
 from mozpack.copier import FileCopier
 from mozpack.manifests import InstallManifest
 
@@ -23,7 +24,7 @@ def process_manifest(destdir, paths, remove_unaccounted=True):
     return copier.copy(destdir, remove_unaccounted=remove_unaccounted)
 
 
-if __name__ == '__main__':
+def main(argv):
     parser = argparse.ArgumentParser(
         description='Process install manifest files.')
 
@@ -32,7 +33,7 @@ if __name__ == '__main__':
     parser.add_argument('--no-remove', action='store_true',
         help='Do not remove unaccounted files from destination.')
 
-    args = parser.parse_args()
+    args = parser.parse_args(argv)
 
     result = process_manifest(args.destdir, args.manifests,
         remove_unaccounted=not args.no_remove)
@@ -42,3 +43,6 @@ if __name__ == '__main__':
         updated=result.updated_files_count,
         rm_files=result.removed_files_count,
         rm_dirs=result.removed_directories_count))
+
+if __name__ == '__main__':
+    main(sys.argv[1:])
