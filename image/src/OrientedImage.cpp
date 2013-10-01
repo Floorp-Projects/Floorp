@@ -127,7 +127,7 @@ OrientedImage::GetFrame(uint32_t aWhichFrame,
   gfxRect imageRect(0, 0, width, height);
   gfxUtils::DrawPixelSnapped(ctx, drawable, OrientationMatrix(nsIntSize(width, height)),
                              imageRect, imageRect, imageRect, imageRect,
-                             imageFormat, gfxPattern::FILTER_FAST);
+                             imageFormat, GraphicsFilter::FILTER_FAST);
 
   surface.forget(_retval);
   return NS_OK;
@@ -215,7 +215,7 @@ OrientedImage::OrientationMatrix(const nsIntSize& aViewportSize)
 
 NS_IMETHODIMP
 OrientedImage::Draw(gfxContext* aContext,
-                    gfxPattern::GraphicsFilter aFilter,
+                    GraphicsFilter aFilter,
                     const gfxMatrix& aUserSpaceToImageSpace,
                     const gfxRect& aFill,
                     const nsIntRect& aSubimage,

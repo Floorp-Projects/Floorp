@@ -32,7 +32,7 @@ public:
   nsresult Init(int32_t aX, int32_t aY, int32_t aWidth, int32_t aHeight, gfxImageFormat aFormat, uint8_t aPaletteDepth = 0);
   nsresult Optimize();
 
-  void Draw(gfxContext *aContext, gfxPattern::GraphicsFilter aFilter,
+  void Draw(gfxContext *aContext, GraphicsFilter aFilter,
             const gfxMatrix &aUserSpaceToImageSpace, const gfxRect& aFill,
             const nsIntMargin &aPadding, const nsIntRect &aSubimage,
             uint32_t aImageFlags = imgIContainer::FLAG_NONE);

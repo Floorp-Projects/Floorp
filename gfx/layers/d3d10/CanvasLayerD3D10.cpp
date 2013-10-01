@@ -240,7 +240,7 @@ CanvasLayerD3D10::RenderLayer()
   shaderFlags |= mDataIsPremultiplied
                 ? SHADER_PREMUL : SHADER_NON_PREMUL | SHADER_RGBA;
   shaderFlags |= mHasAlpha ? SHADER_RGBA : SHADER_RGB;
-  shaderFlags |= mFilter == gfxPattern::FILTER_NEAREST
+  shaderFlags |= mFilter == GraphicsFilter::FILTER_NEAREST
                 ? SHADER_POINT : SHADER_LINEAR;
   ID3D10EffectTechnique* technique = SelectShader(shaderFlags);
 

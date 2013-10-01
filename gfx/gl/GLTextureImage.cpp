@@ -242,7 +242,7 @@ TextureImage::TextureImage(const gfx::IntSize& aSize,
     : mSize(ThebesIntSize(aSize))
     , mWrapMode(aWrapMode)
     , mContentType(aContentType)
-    , mFilter(gfxPattern::FILTER_GOOD)
+    , mFilter(GraphicsFilter::FILTER_GOOD)
     , mFlags(aFlags)
 {}
 

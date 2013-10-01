@@ -228,7 +228,7 @@ ImageLayerD3D10::RenderLayer()
     shaderFlags |= LoadMaskTexture();
     shaderFlags |= hasAlpha
                   ? SHADER_RGBA : SHADER_RGB;
-    shaderFlags |= mFilter == gfxPattern::FILTER_NEAREST
+    shaderFlags |= mFilter == GraphicsFilter::FILTER_NEAREST
                   ? SHADER_POINT : SHADER_LINEAR;
     technique = SelectShader(shaderFlags);
 
