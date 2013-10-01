@@ -4599,8 +4599,8 @@ nsContentUtils::GetAccelKeyCandidates(nsIDOMKeyEvent* aDOMKeyEvent,
   if (!eventType.EqualsLiteral("keypress"))
     return;
 
-  nsKeyEvent* nativeKeyEvent =
-    static_cast<nsKeyEvent*>(GetNativeEvent(aDOMKeyEvent));
+  WidgetKeyboardEvent* nativeKeyEvent =
+    static_cast<WidgetKeyboardEvent*>(GetNativeEvent(aDOMKeyEvent));
   if (nativeKeyEvent) {
     NS_ASSERTION(nativeKeyEvent->eventStructType == NS_KEY_EVENT,
                  "wrong type of native event");
@@ -4691,7 +4691,7 @@ nsContentUtils::GetAccelKeyCandidates(nsIDOMKeyEvent* aDOMKeyEvent,
 
 /* static */
 void
-nsContentUtils::GetAccessKeyCandidates(nsKeyEvent* aNativeKeyEvent,
+nsContentUtils::GetAccessKeyCandidates(WidgetKeyboardEvent* aNativeKeyEvent,
                                        nsTArray<uint32_t>& aCandidates)
 {
   NS_PRECONDITION(aCandidates.IsEmpty(), "aCandidates must be empty");
@@ -4979,7 +4979,7 @@ nsContentUtils::GetDragSession()
 
 /* static */
 nsresult
-nsContentUtils::SetDataTransferInEvent(nsDragEvent* aDragEvent)
+nsContentUtils::SetDataTransferInEvent(WidgetDragEvent* aDragEvent)
 {
   if (aDragEvent->dataTransfer || !aDragEvent->mFlags.mIsTrusted)
     return NS_OK;
@@ -5081,7 +5081,8 @@ nsContentUtils::FilterDropEffect(uint32_t aAction, uint32_t aEffectAllowed)
 
 /* static */
 bool
-nsContentUtils::CheckForSubFrameDrop(nsIDragSession* aDragSession, nsDragEvent* aDropEvent)
+nsContentUtils::CheckForSubFrameDrop(nsIDragSession* aDragSession,
+                                     WidgetDragEvent* aDropEvent)
 {
   nsCOMPtr<nsIContent> target = do_QueryInterface(aDropEvent->originalTarget);
   if (!target) {

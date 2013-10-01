@@ -105,21 +105,7 @@ class InternalMutationEvent;
 // TODO: Remove following typedefs
 typedef mozilla::WidgetEvent               nsEvent;
 typedef mozilla::WidgetGUIEvent            nsGUIEvent;
-typedef mozilla::WidgetInputEvent          nsInputEvent;
-typedef mozilla::InternalUIEvent           nsUIEvent;
-typedef mozilla::AlternativeCharCode       nsAlternativeCharCode;
-typedef mozilla::WidgetKeyboardEvent       nsKeyEvent;
-typedef mozilla::TextRangeStyle            nsTextRangeStyle;
-typedef mozilla::TextRange                 nsTextRange;
-typedef mozilla::TextRangeArray            nsTextRangeArray;
-typedef mozilla::WidgetTextEvent           nsTextEvent;
-typedef mozilla::WidgetCompositionEvent    nsCompositionEvent;
-typedef mozilla::WidgetQueryContentEvent   nsQueryContentEvent;
-typedef mozilla::WidgetSelectionEvent      nsSelectionEvent;
-typedef mozilla::WidgetMouseEventBase      nsMouseEvent_base;
 typedef mozilla::WidgetMouseEvent          nsMouseEvent;
-typedef mozilla::WidgetDragEvent           nsDragEvent;
-typedef mozilla::WidgetMouseScrollEvent    nsMouseScrollEvent;
 
 namespace mozilla {
 typedef WidgetWheelEvent                   WheelEvent;

@@ -138,7 +138,7 @@ public:
       static_cast<AudioManager *>(audioManager.get())->SetStreamVolumeIndex(
         AUDIO_STREAM_BLUETOOTH_SCO, volIndex);
     } else {
-      MOZ_ASSERT("unexpected audio channel for volume control");
+      MOZ_ASSUME_UNREACHABLE("unexpected audio channel for volume control");
     }
 
     return NS_OK;
