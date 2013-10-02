@@ -32,10 +32,310 @@ XPCOMUtils.defineLazyServiceGetter(this, "cpmm",
                                    "@mozilla.org/childprocessmessagemanager;1",
                                    "nsIMessageSender");
 
-/* Helper function */
+/* Helper functions */
 function createDOMError(aWindow, aEvent) {
   return new aWindow.DOMError(aEvent.target.error.name);
 }
+
+function throwInvalidArg(aWindow) {
+  return aWindow.Promise.reject(
+    new aWindow.DOMError("SyntaxError", "Non-numeric or invalid id"));
+}
+
+function throwReadOnly(aWindow) {
+  return aWindow.Promise.reject(
+    new aWindow.DOMError("ReadOnlyError", "DataStore in readonly mode"));
+}
+
+function parseIds(aId) {
+  function parseId(aId) {
+    aId = parseInt(aId);
+    return (isNaN(aId) || aId <= 0) ? null : aId;
+  }
+
+  if (!Array.isArray(aId)) {
+    return parseId(aId);
+  }
+
+  for (let i = 0; i < aId.length; ++i) {
+    aId[i] = parseId(aId[i]);
+    if (aId[i] === null) {
+      return null;
+    }
+  }
+
+  return aId;
+}
+
+/* Exposed DataStore object */
+function ExposedDataStore(aWindow, aDataStore, aReadOnly) {
+  debug("ExposedDataStore created");
+  this.init(aWindow, aDataStore, aReadOnly);
+}
+
+ExposedDataStore.prototype = {
+  classDescription: "DataStore XPCOM Component",
+  classID: Components.ID("{db5c9602-030f-4bff-a3de-881a8de370f2}"),
+  contractID: "@mozilla.org/dom/datastore;1",
+  QueryInterface: XPCOMUtils.generateQI([Components.interfaces.nsISupports]),
+
+  callbacks: [],
+
+  init: function(aWindow, aDataStore, aReadOnly) {
+    debug("ExposedDataStore init");
+
+    this.window = aWindow;
+    this.dataStore = aDataStore;
+    this.isReadOnly = aReadOnly;
+  },
+
+  receiveMessage: function(aMessage) {
+    debug("receiveMessage");
+
+    if (aMessage.name != "DataStore:Changed:Return:OK") {
+      debug("Wrong message: " + aMessage.name);
+      return;
+    }
+
+    let self = this;
+
+    this.dataStore.retrieveRevisionId(
+      function() {
+        let event = new self.window.DataStoreChangeEvent('change', aMessage.data);
+        self.__DOM_IMPL__.dispatchEvent(event);
+      },
+      // Forcing the reading of the revisionId
+      true
+    );
+  },
+
+  // Public interface :
+
+  get name() {
+    return this.dataStore.name;
+  },
+
+  get owner() {
+    return this.dataStore.owner;
+  },
+
+  get readOnly() {
+    return this.isReadOnly;
+  },
+
+  get: function(aId) {
+    aId = parseIds(aId);
+    if (aId === null) {
+      return throwInvalidArg(this.window);
+    }
+
+    let self = this;
+
+    // Promise<Object>
+    return this.dataStore.newDBPromise(this.window, "readonly",
+      function(aResolve, aReject, aTxn, aStore, aRevisionStore) {
+               self.dataStore.getInternal(aStore,
+                                          Array.isArray(aId) ?  aId : [ aId ],
+                                          function(aResults) {
+          aResolve(Array.isArray(aId) ? aResults : aResults[0]);
+        });
+      }
+    );
+  },
+
+  update: function(aId, aObj) {
+    aId = parseInt(aId);
+    if (isNaN(aId) || aId <= 0) {
+      return throwInvalidArg(this.window);
+    }
+
+    if (this.isReadOnly) {
+      return throwReadOnly(this.window);
+    }
+
+    let self = this;
+
+    // Promise<void>
+    return this.dataStore.newDBPromise(this.window, "readwrite",
+      function(aResolve, aReject, aTxn, aStore, aRevisionStore) {
+        self.dataStore.updateInternal(aResolve, aStore, aRevisionStore, aId, aObj);
+      }
+    );
+  },
+
+  add: function(aObj) {
+    if (this.isReadOnly) {
+      return throwReadOnly(this.window);
+    }
+
+    let self = this;
+
+    // Promise<int>
+    return this.dataStore.newDBPromise(this.window, "readwrite",
+      function(aResolve, aReject, aTxn, aStore, aRevisionStore) {
+        self.dataStore.addInternal(aResolve, aStore, aRevisionStore, aObj);
+      }
+    );
+  },
+
+  remove: function(aId) {
+    aId = parseInt(aId);
+    if (isNaN(aId) || aId <= 0) {
+      return throwInvalidArg(this.window);
+    }
+
+    if (this.isReadOnly) {
+      return throwReadOnly(this.window);
+    }
+
+    let self = this;
+
+    // Promise<void>
+    return this.dataStore.newDBPromise(this.window, "readwrite",
+      function(aResolve, aReject, aTxn, aStore, aRevisionStore) {
+        self.dataStore.removeInternal(aResolve, aStore, aRevisionStore, aId);
+      }
+    );
+  },
+
+  clear: function() {
+    if (this.isReadOnly) {
+      return throwReadOnly(this.window);
+    }
+
+    let self = this;
+
+    // Promise<void>
+    return this.dataStore.newDBPromise(this.window, "readwrite",
+      function(aResolve, aReject, aTxn, aStore, aRevisionStore) {
+        self.dataStore.clearInternal(aResolve, aStore, aRevisionStore);
+      }
+    );
+  },
+
+  get revisionId() {
+    return this.dataStore.revisionId;
+  },
+
+  getChanges: function(aRevisionId) {
+    debug("GetChanges: " + aRevisionId);
+
+    if (aRevisionId === null || aRevisionId === undefined) {
+      return this.window.Promise.reject(
+        new this.window.DOMError("SyntaxError", "Invalid revisionId"));
+    }
+
+    let self = this;
+
+    // Promise<DataStoreChanges>
+    return new this.window.Promise(function(aResolve, aReject) {
+      debug("GetChanges promise started");
+      self.dataStore.db.revisionTxn(
+        'readonly',
+        function(aTxn, aStore) {
+          debug("GetChanges transaction success");
+
+          let request = self.dataStore.db.getInternalRevisionId(
+            aRevisionId,
+            aStore,
+            function(aInternalRevisionId) {
+              if (aInternalRevisionId == undefined) {
+                aResolve(undefined);
+                return;
+              }
+
+              // This object is the return value of this promise.
+              // Initially we use maps, and then we convert them in array.
+              let changes = {
+                revisionId: '',
+                addedIds: {},
+                updatedIds: {},
+                removedIds: {}
+              };
+
+              let request = aStore.mozGetAll(self.window.IDBKeyRange.lowerBound(aInternalRevisionId, true));
+              request.onsuccess = function(aEvent) {
+                for (let i = 0; i < aEvent.target.result.length; ++i) {
+                  let data = aEvent.target.result[i];
+
+                  switch (data.operation) {
+                    case REVISION_ADDED:
+                      changes.addedIds[data.objectId] = true;
+                      break;
+
+                    case REVISION_UPDATED:
+                      // We don't consider an update if this object has been added
+                      // or if it has been already modified by a previous
+                      // operation.
+                      if (!(data.objectId in changes.addedIds) &&
+                          !(data.objectId in changes.updatedIds)) {
+                        changes.updatedIds[data.objectId] = true;
+                      }
+                      break;
+
+                    case REVISION_REMOVED:
+                      let id = data.objectId;
+
+                      // If the object has been added in this range of revisions
+                      // we can ignore it and remove it from the list.
+                      if (id in changes.addedIds) {
+                        delete changes.addedIds[id];
+                      } else {
+                        changes.removedIds[id] = true;
+                      }
+
+                      if (id in changes.updatedIds) {
+                        delete changes.updatedIds[id];
+                      }
+                      break;
+                  }
+                }
+
+                // The last revisionId.
+                if (aEvent.target.result.length) {
+                  changes.revisionId = aEvent.target.result[aEvent.target.result.length - 1].revisionId;
+                }
+
+                // From maps to arrays.
+                changes.addedIds = Object.keys(changes.addedIds).map(function(aKey) { return parseInt(aKey, 10); });
+                changes.updatedIds = Object.keys(changes.updatedIds).map(function(aKey) { return parseInt(aKey, 10); });
+                changes.removedIds = Object.keys(changes.removedIds).map(function(aKey) { return parseInt(aKey, 10); });
+
+                let wrappedObject = ObjectWrapper.wrap(changes, self.window);
+                aResolve(wrappedObject);
+              };
+            }
+          );
+        },
+        function(aEvent) {
+          debug("GetChanges transaction failed");
+          aReject(createDOMError(self.window, aEvent));
+        }
+      );
+    });
+  },
+
+  getLength: function() {
+    let self = this;
+
+    // Promise<int>
+    return this.dataStore.newDBPromise(this.window, "readonly",
+      function(aResolve, aReject, aTxn, aStore, aRevisionStore) {
+        self.dataStore.getLengthInternal(aResolve, aStore);
+      }
+    );
+  },
+
+  set onchange(aCallback) {
+    debug("Set OnChange");
+    this.__DOM_IMPL__.setEventHandler("onchange", aCallback);
+  },
+
+  get onchange() {
+    debug("Get OnChange");
+    return this.__DOM_IMPL__.getEventHandler("onchange");
+  }
+};
 
 /* DataStore object */
 
@@ -249,336 +549,23 @@ DataStore.prototype = {
   },
 
   exposeObject: function(aWindow, aReadOnly) {
-    let self = this;
-    let object = {
-      callbacks: [],
+    debug("Exposing Object");
 
-      // Public interface :
-
-      get name() {
-        return self.name;
-      },
-
-      get owner() {
-        return self.owner;
-      },
-
-      get readOnly() {
-        return aReadOnly;
-      },
-
-      get: function DS_get(aId) {
-        aId = this.parseIds(aId);
-        if (aId === null) {
-          return this.throwInvalidArg(aWindow);
-        }
-
-        // Promise<Object>
-        return self.newDBPromise(aWindow, "readonly",
-          function(aResolve, aReject, aTxn, aStore, aRevisionStore) {
-            self.getInternal(aStore, Array.isArray(aId) ?  aId : [ aId ],
-                             function(aResults) {
-              aResolve(Array.isArray(aId) ? aResults : aResults[0]);
-            });
-          }
-        );
-      },
-
-      update: function DS_update(aId, aObj) {
-        aId = parseInt(aId);
-        if (isNaN(aId) || aId <= 0) {
-          return this.throwInvalidArg(aWindow);
-        }
-
-        if (aReadOnly) {
-          return this.throwReadOnly(aWindow);
-        }
-
-        // Promise<void>
-        return self.newDBPromise(aWindow, "readwrite",
-          function(aResolve, aReject, aTxn, aStore, aRevisionStore) {
-            self.updateInternal(aResolve, aStore, aRevisionStore, aId, aObj);
-          }
-        );
-      },
-
-      add: function DS_add(aObj) {
-        if (aReadOnly) {
-          return this.throwReadOnly(aWindow);
-        }
-
-        // Promise<int>
-        return self.newDBPromise(aWindow, "readwrite",
-          function(aResolve, aReject, aTxn, aStore, aRevisionStore) {
-            self.addInternal(aResolve, aStore, aRevisionStore, aObj);
-          }
-        );
-      },
-
-      remove: function DS_remove(aId) {
-        aId = parseInt(aId);
-        if (isNaN(aId) || aId <= 0) {
-          return this.throwInvalidArg(aWindow);
-        }
-
-        if (aReadOnly) {
-          return this.throwReadOnly(aWindow);
-        }
-
-        // Promise<void>
-        return self.newDBPromise(aWindow, "readwrite",
-          function(aResolve, aReject, aTxn, aStore, aRevisionStore) {
-            self.removeInternal(aResolve, aStore, aRevisionStore, aId);
-          }
-        );
-      },
-
-      clear: function DS_clear() {
-        if (aReadOnly) {
-          return this.throwReadOnly(aWindow);
-        }
-
-        // Promise<void>
-        return self.newDBPromise(aWindow, "readwrite",
-          function(aResolve, aReject, aTxn, aStore, aRevisionStore) {
-            self.clearInternal(aResolve, aStore, aRevisionStore);
-          }
-        );
-      },
-
-      get revisionId() {
-        return self.revisionId;
-      },
-
-      getChanges: function(aRevisionId) {
-        debug("GetChanges: " + aRevisionId);
-
-        if (aRevisionId === null || aRevisionId === undefined) {
-          return aWindow.Promise.reject(
-            new aWindow.DOMError("SyntaxError", "Invalid revisionId"));
-        }
-
-        // Promise<DataStoreChanges>
-        return new aWindow.Promise(function(aResolve, aReject) {
-          debug("GetChanges promise started");
-          self.db.revisionTxn(
-            'readonly',
-            function(aTxn, aStore) {
-              debug("GetChanges transaction success");
-
-              let request = self.db.getInternalRevisionId(
-                aRevisionId,
-                aStore,
-                function(aInternalRevisionId) {
-                  if (aInternalRevisionId == undefined) {
-                    aResolve(undefined);
-                    return;
-                  }
-
-                  // This object is the return value of this promise.
-                  // Initially we use maps, and then we convert them in array.
-                  let changes = {
-                    revisionId: '',
-                    addedIds: {},
-                    updatedIds: {},
-                    removedIds: {}
-                  };
-
-                  let request = aStore.mozGetAll(aWindow.IDBKeyRange.lowerBound(aInternalRevisionId, true));
-                  request.onsuccess = function(aEvent) {
-                    for (let i = 0; i < aEvent.target.result.length; ++i) {
-                      let data = aEvent.target.result[i];
-
-                      switch (data.operation) {
-                        case REVISION_ADDED:
-                          changes.addedIds[data.objectId] = true;
-                          break;
-
-                        case REVISION_UPDATED:
-                          // We don't consider an update if this object has been added
-                          // or if it has been already modified by a previous
-                          // operation.
-                          if (!(data.objectId in changes.addedIds) &&
-                              !(data.objectId in changes.updatedIds)) {
-                            changes.updatedIds[data.objectId] = true;
-                          }
-                          break;
-
-                        case REVISION_REMOVED:
-                          let id = data.objectId;
-
-                          // If the object has been added in this range of revisions
-                          // we can ignore it and remove it from the list.
-                          if (id in changes.addedIds) {
-                            delete changes.addedIds[id];
-                          } else {
-                            changes.removedIds[id] = true;
-                          }
-
-                          if (id in changes.updatedIds) {
-                            delete changes.updatedIds[id];
-                          }
-                          break;
-                      }
-                    }
-
-                    // The last revisionId.
-                    if (aEvent.target.result.length) {
-                      changes.revisionId = aEvent.target.result[aEvent.target.result.length - 1].revisionId;
-                    }
-
-                    // From maps to arrays.
-                    changes.addedIds = Object.keys(changes.addedIds).map(function(aKey) { return parseInt(aKey, 10); });
-                    changes.updatedIds = Object.keys(changes.updatedIds).map(function(aKey) { return parseInt(aKey, 10); });
-                    changes.removedIds = Object.keys(changes.removedIds).map(function(aKey) { return parseInt(aKey, 10); });
-
-                    let wrappedObject = ObjectWrapper.wrap(changes, aWindow);
-                    aResolve(wrappedObject);
-                  };
-                }
-              );
-            },
-            function(aEvent) {
-              debug("GetChanges transaction failed");
-              aReject(createDOMError(aWindow, aEvent));
-            }
-          );
-        });
-      },
-
-      getLength: function DS_getLength() {
-        // Promise<int>
-        return self.newDBPromise(aWindow, "readonly",
-          function(aResolve, aReject, aTxn, aStore, aRevisionStore) {
-            self.getLengthInternal(aResolve, aStore);
-          }
-        );
-      },
-
-      set onchange(aCallback) {
-        debug("Set OnChange");
-        this.onchangeCb = aCallback;
-      },
-
-      get onchange() {
-        debug("Get OnChange");
-        return this.onchangeCb;
-      },
-
-      addEventListener: function(aName, aCallback) {
-        debug("addEventListener:" + aName);
-        if (aName != 'change') {
-          return;
-        }
-
-        this.callbacks.push(aCallback);
-      },
-
-      removeEventListener: function(aName, aCallback) {
-        debug('removeEventListener');
-        let pos = this.callbacks.indexOf(aCallback);
-        if (pos != -1) {
-          this.callbacks.splice(pos, 1);
-        }
-      },
-
-      __exposedProps__: {
-        name: 'r',
-        owner: 'r',
-        readOnly: 'r',
-        get: 'r',
-        update: 'r',
-        add: 'r',
-        remove: 'r',
-        clear: 'r',
-        revisionId: 'r',
-        getChanges: 'r',
-        getLength: 'r',
-        onchange: 'rw',
-        addEventListener: 'r',
-        removeEventListener: 'r'
-      },
-
-      throwInvalidArg: function(aWindow) {
-        return aWindow.Promise.reject(
-          new aWindow.DOMError("SyntaxError", "Non-numeric or invalid id"));
-      },
-
-      throwReadOnly: function(aWindow) {
-        return aWindow.Promise.reject(
-          new aWindow.DOMError("ReadOnlyError", "DataStore in readonly mode"));
-      },
-
-      parseIds: function(aId) {
-        function parseId(aId) {
-          aId = parseInt(aId);
-          return (isNaN(aId) || aId <= 0) ? null : aId;
-        }
-
-        if (!Array.isArray(aId)) {
-          return parseId(aId);
-        }
-
-        for (let i = 0; i < aId.length; ++i) {
-          aId[i] = parseId(aId[i]);
-          if (aId[i] === null) {
-            return null;
-          }
-        }
-
-        return aId;
-      },
-
-
-      receiveMessage: function(aMessage) {
-        debug("receiveMessage");
-
-        if (aMessage.name != "DataStore:Changed:Return:OK") {
-          debug("Wrong message: " + aMessage.name);
-          return;
-        }
-
-        self.retrieveRevisionId(
-          function() {
-            if (object.onchangeCb || object.callbacks.length) {
-              let wrappedData = ObjectWrapper.wrap(aMessage.data, aWindow);
-
-              // This array is used to avoid that a callback adds/removes
-              // another eventListener.
-              var cbs = [];
-              if (object.onchangeCb) {
-                cbs.push(object.onchangeCb);
-              }
-
-              for (let i = 0; i < object.callbacks.length; ++i) {
-                cbs.push(object.callbacks[i]);
-              }
-
-              for (let i = 0; i < cbs.length; ++i) {
-                try {
-                  cbs[i](wrappedData);
-                } catch(e) {}
-              }
-            }
-          },
-          // Forcing the reading of the revisionId
-          true
-        );
-      }
-    };
+    let exposedObject = new ExposedDataStore(aWindow, this, aReadOnly);
+    let object = aWindow.DataStore._create(aWindow, exposedObject);
 
     Services.obs.addObserver(function(aSubject, aTopic, aData) {
       let wId = aSubject.QueryInterface(Ci.nsISupportsPRUint64).data;
-      if (wId == object.innerWindowID) {
-        cpmm.removeMessageListener("DataStore:Changed:Return:OK", object);
+      if (wId == exposedObject.innerWindowID) {
+        cpmm.removeMessageListener("DataStore:Changed:Return:OK", exposedObject);
       }
     }, "inner-window-destroyed", false);
 
     let util = aWindow.QueryInterface(Ci.nsIInterfaceRequestor)
                       .getInterface(Ci.nsIDOMWindowUtils);
-    object.innerWindowID = util.currentInnerWindowID;
+    exposedObject.innerWindowID = util.currentInnerWindowID;
 
-    cpmm.addMessageListener("DataStore:Changed:Return:OK", object);
+    cpmm.addMessageListener("DataStore:Changed:Return:OK", exposedObject);
     cpmm.sendAsyncMessage("DataStore:RegisterForMessages",
                           { store: this.name, owner: this.owner });
 
@@ -610,4 +597,3 @@ function DataStoreAccess(aAppId, aName, aOrigin, aReadOnly) {
 }
 
 DataStoreAccess.prototype = {};
-
