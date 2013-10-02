@@ -148,7 +148,8 @@ public:
     NS_IMETHOD         SetTitle(const nsAString& aTitle);
     NS_IMETHOD         SetIcon(const nsAString& aIconSpec);
     virtual nsIntPoint WidgetToScreenOffset();
-    NS_IMETHOD         DispatchEvent(nsGUIEvent *aEvent, nsEventStatus &aStatus);
+    NS_IMETHOD         DispatchEvent(mozilla::WidgetGUIEvent* aEvent,
+                                     nsEventStatus& aStatus);
 
     NS_IMETHOD         EnableDragDrop(bool aEnable);
     NS_IMETHOD         CaptureMouse(bool aCapture);
@@ -158,7 +159,9 @@ public:
     NS_IMETHOD         SetWindowClass(const nsAString& xulWinType);
 
     NS_IMETHOD         GetAttention(int32_t aCycleCount);
-    NS_IMETHOD         BeginResizeDrag   (nsGUIEvent* aEvent, int32_t aHorizontal, int32_t aVertical);
+    NS_IMETHOD         BeginResizeDrag(mozilla::WidgetGUIEvent* aEvent,
+                                       int32_t aHorizontal,
+                                       int32_t aVertical);
 
     NS_IMETHOD_(void) SetInputContext(const InputContext& aContext,
                                       const InputContextAction& aAction);
@@ -180,7 +183,8 @@ public:
     void DispatchDeactivateEventOnTopLevelWindow(void);
     void DispatchResizeEvent(nsIntRect &aRect, nsEventStatus &aStatus);
 
-    nsEventStatus DispatchEvent(nsGUIEvent *aEvent) {
+    nsEventStatus DispatchEvent(mozilla::WidgetGUIEvent* aEvent)
+    {
         nsEventStatus status;
         DispatchEvent(aEvent, status);
         return status;
@@ -309,7 +313,9 @@ private:
     void*              SetupPluginPort(void);
     nsresult           SetWindowIconList(const nsTArray<nsCString> &aIconList);
     void               SetDefaultIcon(void);
-    void               InitButtonEvent(nsMouseEvent &event, QGraphicsSceneMouseEvent *aEvent, int aClickCount = 1);
+    void               InitButtonEvent(mozilla::WidgetMouseEvent& event,
+                                       QGraphicsSceneMouseEvent* aEvent,
+                                       int aClickCount = 1);
     nsEventStatus      DispatchCommandEvent(nsIAtom* aCommand);
     nsEventStatus      DispatchContentCommandEvent(int32_t aMsg);
     MozQWidget*        createQWidget(MozQWidget* parent,
@@ -332,7 +338,7 @@ private:
 
     // all of our DND stuff
     // this is the last window that had a drag event happen on it.
-    void   InitDragEvent         (nsMouseEvent &aEvent);
+    void   InitDragEvent(mozilla::WidgetMouseEvent& aEvent);
 
     // this is everything we need to be able to fire motion events
     // repeatedly
@@ -383,7 +389,8 @@ private:
             mPinchEvent.prevDistance = distance;
         }
         if (mMoveEvent.needDispatch) {
-            nsMouseEvent event(true, NS_MOUSE_MOVE, this, nsMouseEvent::eReal);
+            WidgetMouseEvent event(true, NS_MOUSE_MOVE, this,
+                                   WidgetMouseEvent::eReal);
 
             event.refPoint.x = nscoord(mMoveEvent.pos.x());
             event.refPoint.y = nscoord(mMoveEvent.pos.y());

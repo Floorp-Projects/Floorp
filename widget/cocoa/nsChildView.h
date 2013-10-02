@@ -320,7 +320,7 @@ typedef NSInteger NSEventGestureAxis;
 
 - (void)sendMouseEnterOrExitEvent:(NSEvent*)aEvent
                             enter:(BOOL)aEnter
-                             type:(nsMouseEvent::exitType)aType;
+                             type:(mozilla::WidgetMouseEvent::exitType)aType;
 
 - (void)update;
 - (void)lockFocus;
@@ -466,7 +466,8 @@ public:
 
   static  bool            ConvertStatus(nsEventStatus aStatus)
                           { return aStatus == nsEventStatus_eConsumeNoDefault; }
-  NS_IMETHOD              DispatchEvent(nsGUIEvent* event, nsEventStatus & aStatus);
+  NS_IMETHOD              DispatchEvent(mozilla::WidgetGUIEvent* aEvent,
+                                        nsEventStatus& aStatus);
 
   virtual bool            ComputeShouldAccelerate(bool aDefault);
   virtual bool            ShouldUseOffMainThreadCompositing() MOZ_OVERRIDE;
@@ -523,7 +524,7 @@ public:
 
   // Mac specific methods
   
-  virtual bool      DispatchWindowEvent(nsGUIEvent& event);
+  virtual bool      DispatchWindowEvent(mozilla::WidgetGUIEvent& event);
 
   void WillPaintWindow();
   bool PaintWindow(nsIntRegion aRegion);

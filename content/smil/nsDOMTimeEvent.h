@@ -15,7 +15,8 @@ class nsDOMTimeEvent MOZ_FINAL : public nsDOMEvent,
 {
 public:
   nsDOMTimeEvent(mozilla::dom::EventTarget* aOwner,
-                 nsPresContext* aPresContext, nsEvent* aEvent);
+                 nsPresContext* aPresContext,
+                 mozilla::WidgetEvent* aEvent);
 
   // nsISupports interface:
   NS_DECL_ISUPPORTS_INHERITED

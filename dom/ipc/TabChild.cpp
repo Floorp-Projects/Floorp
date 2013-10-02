@@ -1666,9 +1666,9 @@ TabChild::RecvMouseEvent(const nsString& aType,
 }
 
 bool
-TabChild::RecvRealMouseEvent(const nsMouseEvent& event)
+TabChild::RecvRealMouseEvent(const WidgetMouseEvent& event)
 {
-  nsMouseEvent localEvent(event);
+  WidgetMouseEvent localEvent(event);
   DispatchWidgetEvent(localEvent);
   return true;
 }
@@ -1688,11 +1688,11 @@ TabChild::DispatchSynthesizedMouseEvent(uint32_t aMsg, uint64_t aTime,
   MOZ_ASSERT(aMsg == NS_MOUSE_MOVE || aMsg == NS_MOUSE_BUTTON_DOWN ||
              aMsg == NS_MOUSE_BUTTON_UP);
 
-  nsMouseEvent event(true, aMsg, NULL,
-      nsMouseEvent::eReal, nsMouseEvent::eNormal);
+  WidgetMouseEvent event(true, aMsg, NULL,
+                         WidgetMouseEvent::eReal, WidgetMouseEvent::eNormal);
   event.refPoint = LayoutDeviceIntPoint(aRefPoint.x, aRefPoint.y);
   event.time = aTime;
-  event.button = nsMouseEvent::eLeftButton;
+  event.button = WidgetMouseEvent::eLeftButton;
   event.inputSource = nsIDOMMouseEvent::MOZ_SOURCE_TOUCH;
   if (aMsg != NS_MOUSE_MOVE) {
     event.clickCount = 1;
@@ -1907,7 +1907,7 @@ TabChild::RecvSelectionEvent(const WidgetSelectionEvent& event)
 }
 
 nsEventStatus
-TabChild::DispatchWidgetEvent(nsGUIEvent& event)
+TabChild::DispatchWidgetEvent(WidgetGUIEvent& event)
 {
   if (!mWidget)
     return nsEventStatus_eConsumeNoDefault;

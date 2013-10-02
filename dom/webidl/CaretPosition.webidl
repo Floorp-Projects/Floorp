@@ -16,5 +16,5 @@ interface CaretPosition {
  * Gecko specific methods and properties for CaretPosition.
  */
 partial interface CaretPosition {
-  ClientRect? getClientRect();
+  DOMRect? getClientRect();
 };

@@ -1404,13 +1404,15 @@ nsBaseWidget::ResolveIconName(const nsAString &aIconName,
 }
 
 NS_IMETHODIMP
-nsBaseWidget::BeginResizeDrag(nsGUIEvent* aEvent, int32_t aHorizontal, int32_t aVertical)
+nsBaseWidget::BeginResizeDrag(WidgetGUIEvent* aEvent,
+                              int32_t aHorizontal,
+                              int32_t aVertical)
 {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
-nsBaseWidget::BeginMoveDrag(nsMouseEvent* aEvent)
+nsBaseWidget::BeginMoveDrag(WidgetMouseEvent* aEvent)
 {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
@@ -1560,7 +1562,7 @@ nsBaseWidget::GetRootAccessible()
 //
 //////////////////////////////////////////////////////////////
 /* static */ nsAutoString
-nsBaseWidget::debug_GuiEventToString(nsGUIEvent * aGuiEvent)
+nsBaseWidget::debug_GuiEventToString(WidgetGUIEvent* aGuiEvent)
 {
   NS_ASSERTION(nullptr != aGuiEvent,"cmon, null gui event.");
 
@@ -1737,7 +1739,7 @@ nsBaseWidget::debug_WantPaintFlashing()
 /* static */ void
 nsBaseWidget::debug_DumpEvent(FILE *                aFileOut,
                               nsIWidget *           aWidget,
-                              nsGUIEvent *          aGuiEvent,
+                              WidgetGUIEvent*       aGuiEvent,
                               const nsAutoCString & aWidgetName,
                               int32_t               aWindowID)
 {

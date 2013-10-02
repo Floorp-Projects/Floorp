@@ -7,7 +7,7 @@
 
 interface nsIDOMEventTarget;
 
-[ptr] native nsEventPtr(nsEvent);
+[ptr] native WidgetEventPtr(mozilla::WidgetEvent);
 [ptr] native nsDOMEventPtr(nsDOMEvent);
 [ptr] native IPCMessagePtr(IPC::Message);
 [ptr] native ConstIPCMessagePtr(const IPC::Message);
@@ -206,7 +206,7 @@ interface nsIDOMEvent : nsISupports
   [noscript] void duplicatePrivateData();
   [noscript] void setTarget(in nsIDOMEventTarget aTarget);
   [notxpcom] boolean IsDispatchStopped();
-  [notxpcom] nsEventPtr GetInternalNSEvent();
+  [notxpcom] WidgetEventPtr GetInternalNSEvent();
   [noscript,notxpcom] void SetTrusted(in boolean aTrusted);
   [notxpcom] void Serialize(in IPCMessagePtr aMsg,
                             in boolean aSerializeInterfaceType);
@@ -227,17 +227,17 @@ nsresult
 NS_NewDOMEvent(nsIDOMEvent** aInstancePtrResult,
                mozilla::dom::EventTarget* aOwner,
                nsPresContext* aPresContext,
-               nsEvent *aEvent);
+               mozilla::WidgetEvent* aEvent);
 nsresult
 NS_NewDOMDataContainerEvent(nsIDOMEvent** aInstancePtrResult,
                             mozilla::dom::EventTarget* aOwner,
                             nsPresContext* aPresContext,
-                            nsEvent* aEvent);
+                            mozilla::WidgetEvent* aEvent);
 nsresult
 NS_NewDOMUIEvent(nsIDOMEvent** aInstancePtrResult,
                  mozilla::dom::EventTarget* aOwner,
                  nsPresContext* aPresContext,
-                 nsGUIEvent* aEvent);
+                 mozilla::WidgetGUIEvent* aEvent);
 nsresult
 NS_NewDOMMouseEvent(nsIDOMEvent** aInstancePtrResult,
                     mozilla::dom::EventTarget* aOwner,
@@ -288,7 +288,7 @@ nsresult
 NS_NewDOMDeviceMotionEvent(nsIDOMEvent** aResult,
                            mozilla::dom::EventTarget* aOwner,
                            nsPresContext* aPresContext,
-                           nsEvent* aEvent);
+                           mozilla::WidgetEvent* aEvent);
 nsresult
 NS_NewDOMTextEvent(nsIDOMEvent** aResult,
                    mozilla::dom::EventTarget* aOwner,
@@ -298,22 +298,22 @@ nsresult
 NS_NewDOMBeforeUnloadEvent(nsIDOMEvent** aResult,
                            mozilla::dom::EventTarget* aOwner,
                            nsPresContext* aPresContext,
-                           nsEvent* aEvent);
+                           mozilla::WidgetEvent* aEvent);
 nsresult
 NS_NewDOMSVGEvent(nsIDOMEvent** aResult,
                   mozilla::dom::EventTarget* aOwner,
                   nsPresContext* aPresContext,
-                  nsEvent* aEvent);
+                  mozilla::WidgetEvent* aEvent);
 nsresult
 NS_NewDOMSVGZoomEvent(nsIDOMEvent** aResult,
                       mozilla::dom::EventTarget* aOwner,
                       nsPresContext* aPresContext,
-                      nsGUIEvent* aEvent);
+                      mozilla::WidgetGUIEvent* aEvent);
 nsresult
 NS_NewDOMTimeEvent(nsIDOMEvent** aResult,
                    mozilla::dom::EventTarget* aOwner,
                    nsPresContext* aPresContext,
-                   nsEvent* aEvent);
+                   mozilla::WidgetEvent* aEvent);
 nsresult
 NS_NewDOMXULCommandEvent(nsIDOMEvent** aResult,
                          mozilla::dom::EventTarget* aOwner,
@@ -328,25 +328,25 @@ nsresult
 NS_NewDOMMessageEvent(nsIDOMEvent** aInstancePtrResult,
                       mozilla::dom::EventTarget* aOwner,
                       nsPresContext* aPresContext,
-                      nsEvent* aEvent);
+                      mozilla::WidgetEvent* aEvent);
 nsresult
 NS_NewDOMProgressEvent(nsIDOMEvent** aInstancePtrResult,
                        mozilla::dom::EventTarget* aOwner,
                        nsPresContext* aPresContext,
-                       nsEvent* aEvent);
+                       mozilla::WidgetEvent* aEvent);
 // This empties aInvalidateRequests.
 nsresult
 NS_NewDOMNotifyPaintEvent(nsIDOMEvent** aResult,
                           mozilla::dom::EventTarget* aOwner,
                           nsPresContext* aPresContext,
-                          nsEvent* aEvent,
+                          mozilla::WidgetEvent* aEvent,
                           uint32_t aEventType = 0,
                           nsInvalidateRequestList* aInvalidateRequests = nullptr);
 nsresult
 NS_NewDOMAudioAvailableEvent(nsIDOMEvent** aResult,
                              mozilla::dom::EventTarget* aOwner,
                              nsPresContext* aPresContext,
-                             nsEvent* aEvent,
+                             mozilla::WidgetEvent* aEvent,
                              uint32_t aEventType = 0,
                              float* aFrameBuffer = nullptr,
                              uint32_t aFrameBufferLength = 0,
@@ -380,10 +380,10 @@ nsresult
 NS_NewDOMMozSettingsEvent(nsIDOMEvent** aInstancePtrResult,
                           mozilla::dom::EventTarget* aOwner,
                           nsPresContext* aPresContext,
-                          nsEvent* aEvent);
+                          mozilla::WidgetEvent* aEvent);
 nsresult
 NS_NewDOMMozApplicationEvent(nsIDOMEvent** aInstancePtrResult,
                              mozilla::dom::EventTarget* aOwner,
                              nsPresContext* aPresContext,
-                             nsEvent* aEvent);
+                             mozilla::WidgetEvent* aEvent);
 %}

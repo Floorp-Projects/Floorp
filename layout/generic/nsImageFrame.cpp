@@ -1598,7 +1598,7 @@ nsImageFrame::GetAnchorHREFTargetAndNode(nsIURI** aHref, nsString& aTarget,
 }
 
 NS_IMETHODIMP  
-nsImageFrame::GetContentForEvent(nsEvent* aEvent,
+nsImageFrame::GetContentForEvent(WidgetEvent* aEvent,
                                  nsIContent** aContent)
 {
   NS_ENSURE_ARG_POINTER(aContent);
@@ -1640,14 +1640,15 @@ nsImageFrame::GetContentForEvent(nsEvent* aEvent,
 // XXX what should clicks on transparent pixels do?
 NS_IMETHODIMP
 nsImageFrame::HandleEvent(nsPresContext* aPresContext,
-                          nsGUIEvent* aEvent,
+                          WidgetGUIEvent* aEvent,
                           nsEventStatus* aEventStatus)
 {
   NS_ENSURE_ARG_POINTER(aEventStatus);
 
   if ((aEvent->eventStructType == NS_MOUSE_EVENT &&
        aEvent->message == NS_MOUSE_BUTTON_UP && 
-       static_cast<nsMouseEvent*>(aEvent)->button == nsMouseEvent::eLeftButton) ||
+       static_cast<WidgetMouseEvent*>(aEvent)->button ==
+         WidgetMouseEvent::eLeftButton) ||
       aEvent->message == NS_MOUSE_MOVE) {
     nsImageMap* map = GetImageMap();
     bool isServerMap = IsServerImageMap();

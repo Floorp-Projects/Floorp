@@ -216,7 +216,7 @@ NS_DEFINE_STATIC_IID_ACCESSOR(nsDOMEventTargetHelper,
   virtual nsresult PostHandleEvent(nsEventChainPostVisitor & aVisitor) { \
     return _to PostHandleEvent(aVisitor); \
   } \
-  virtual nsresult DispatchDOMEvent(nsEvent *aEvent, nsIDOMEvent *aDOMEvent, nsPresContext *aPresContext, nsEventStatus *aEventStatus) { \
+  virtual nsresult DispatchDOMEvent(mozilla::WidgetEvent* aEvent, nsIDOMEvent* aDOMEvent, nsPresContext* aPresContext, nsEventStatus* aEventStatus) { \
     return _to DispatchDOMEvent(aEvent, aDOMEvent, aPresContext, aEventStatus); \
   } \
   virtual nsEventListenerManager * GetListenerManager(bool aMayCreate) { \

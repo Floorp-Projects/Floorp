@@ -181,7 +181,7 @@ WifiGeoPositionProvider.prototype = {
 
     xhr.onload = function() {  
         LOG("gls returned status: " + xhr.status + " --> " +  JSON.stringify(xhr.response));
-        if (xhr.status != 200) {
+        if (xhr.channel instanceof Ci.nsIHttpChannel && xhr.status != 200) {
             return;
         }
 

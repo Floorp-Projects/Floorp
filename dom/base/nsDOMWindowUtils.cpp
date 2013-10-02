@@ -52,7 +52,7 @@
 #include "nsIDocShell.h"
 #include "nsIContentViewer.h"
 #include "nsIMarkupDocumentViewer.h"
-#include "nsClientRect.h"
+#include "mozilla/dom/DOMRect.h"
 #include <algorithm>
 
 #if defined(MOZ_X11) && defined(MOZ_WIDGET_GTK)
@@ -640,16 +640,16 @@ static inline int16_t
 GetButtonsFlagForButton(int32_t aButton)
 {
   switch (aButton) {
-    case nsMouseEvent::eLeftButton:
-      return nsMouseEvent::eLeftButtonFlag;
-    case nsMouseEvent::eMiddleButton:
-      return nsMouseEvent::eMiddleButtonFlag;
-    case nsMouseEvent::eRightButton:
-      return nsMouseEvent::eRightButtonFlag;
+    case WidgetMouseEvent::eLeftButton:
+      return WidgetMouseEvent::eLeftButtonFlag;
+    case WidgetMouseEvent::eMiddleButton:
+      return WidgetMouseEvent::eMiddleButtonFlag;
+    case WidgetMouseEvent::eRightButton:
+      return WidgetMouseEvent::eRightButtonFlag;
     case 4:
-      return nsMouseEvent::e4thButtonFlag;
+      return WidgetMouseEvent::e4thButtonFlag;
     case 5:
-      return nsMouseEvent::e5thButtonFlag;
+      return WidgetMouseEvent::e5thButtonFlag;
     default:
       NS_ERROR("Button not known.");
       return 0;
@@ -703,9 +703,9 @@ nsDOMWindowUtils::SendMouseEventCommon(const nsAString& aType,
     aInputSourceArg = nsIDOMMouseEvent::MOZ_SOURCE_MOUSE;
   }
 
-  nsMouseEvent event(true, msg, widget, nsMouseEvent::eReal,
-                     contextMenuKey ?
-                       nsMouseEvent::eContextMenuKey : nsMouseEvent::eNormal);
+  WidgetMouseEvent event(true, msg, widget, WidgetMouseEvent::eReal,
+                         contextMenuKey ? WidgetMouseEvent::eContextMenuKey :
+                                          WidgetMouseEvent::eNormal);
   event.modifiers = GetWidgetModifiers(aModifiers);
   event.button = aButton;
   event.buttons = GetButtonsFlagForButton(aButton);
@@ -1579,7 +1579,7 @@ nsDOMWindowUtils::GetBoundsWithoutFlushing(nsIDOMElement *aElement,
   nsCOMPtr<nsIContent> content = do_QueryInterface(aElement, &rv);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  nsRefPtr<nsClientRect> rect = new nsClientRect(window);
+  nsRefPtr<DOMRect> rect = new DOMRect(window);
   nsIFrame* frame = content->GetPrimaryFrame();
 
   if (frame) {
@@ -1619,7 +1619,7 @@ nsDOMWindowUtils::GetRootBounds(nsIDOMClientRect** aResult)
     }
   }
 
-  nsRefPtr<nsClientRect> rect = new nsClientRect(window);
+  nsRefPtr<DOMRect> rect = new DOMRect(window);
   rect->SetRect(nsPresContext::AppUnitsToFloatCSSPixels(bounds.x),
                 nsPresContext::AppUnitsToFloatCSSPixels(bounds.y),
                 nsPresContext::AppUnitsToFloatCSSPixels(bounds.width),
@@ -1768,7 +1768,7 @@ nsDOMWindowUtils::DispatchDOMEventViaPresShell(nsIDOMNode* aTarget,
 
   NS_ENSURE_STATE(aEvent);
   aEvent->SetTrusted(aTrusted);
-  nsEvent* internalEvent = aEvent->GetInternalNSEvent();
+  WidgetEvent* internalEvent = aEvent->GetInternalNSEvent();
   NS_ENSURE_STATE(internalEvent);
   nsCOMPtr<nsIContent> content = do_QueryInterface(aTarget);
   NS_ENSURE_STATE(content);
@@ -1790,7 +1790,7 @@ nsDOMWindowUtils::DispatchDOMEventViaPresShell(nsIDOMNode* aTarget,
 }
 
 static void
-InitEvent(nsGUIEvent& aEvent, LayoutDeviceIntPoint* aPt = nullptr)
+InitEvent(WidgetGUIEvent& aEvent, LayoutDeviceIntPoint* aPt = nullptr)
 {
   if (aPt) {
     aEvent.refPoint = *aPt;

@@ -21,11 +21,12 @@ public:
                                            const nsRect&           aDirtyRect,
                                            const nsDisplayListSet& aLists) MOZ_OVERRIDE;
 
-  NS_IMETHOD HandleEvent(nsPresContext* aPresContext, 
-                                      nsGUIEvent* aEvent,
-                                      nsEventStatus* aEventStatus) MOZ_OVERRIDE;
+  NS_IMETHOD HandleEvent(nsPresContext* aPresContext,
+                         mozilla::WidgetGUIEvent* aEvent,
+                         nsEventStatus* aEventStatus) MOZ_OVERRIDE;
 
-  virtual void MouseClicked(nsPresContext* aPresContext, nsGUIEvent* aEvent);
+  virtual void MouseClicked(nsPresContext* aPresContext,
+                            mozilla::WidgetGUIEvent* aEvent);
 
   void UpdateMouseThrough() MOZ_OVERRIDE { AddStateBits(NS_FRAME_MOUSE_THROUGH_NEVER); }
 
