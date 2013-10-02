@@ -60,7 +60,11 @@ var HelperApps =  {
       packageName: "",
       className: ""
     };
-    let apps = this._parseApps(JSON.parse(sendMessageToJava(msg)));
+    let data = sendMessageToJava(msg);
+    if (!data)
+      return found;
+
+    let apps = this._parseApps(JSON.parse(data));
     for (let i = 0; i < apps.length; i++) {
       let appName = apps[i].name;
       if (appName.length > 0 && !this.defaultHttpHandlers[appName])
