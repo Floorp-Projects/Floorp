@@ -27,6 +27,9 @@ public final class ThreadUtils {
     public static MessageQueue sGeckoQueue;
     public static Thread sGeckoThread;
 
+    // Delayed Runnable that resets the Gecko thread priority.
+    private static volatile Runnable sPriorityResetRunnable;
+
     @SuppressWarnings("serial")
     public static class UiThreadBlockedException extends RuntimeException {
         public UiThreadBlockedException() {
@@ -126,5 +129,38 @@ public final class ThreadUtils {
 
     public static boolean isOnThread(Thread thread) {
         return (Thread.currentThread().getId() == thread.getId());
+    }
+
+    /**
+     * Reduces the priority of the Gecko thread, allowing other operations
+     * (such as those related to the UI and database) to take precedence.
+     *
+     * Note that there are no guards in place to prevent multiple calls
+     * to this method from conflicting with each other.
+     *
+     * @param timeout Timeout in ms after which the priority will be reset
+     */
+    public static void reduceGeckoPriority(long timeout) {
+        sGeckoThread.setPriority(Thread.MIN_PRIORITY);
+        sPriorityResetRunnable = new Runnable() {
+            @Override
+            public void run() {
+                resetGeckoPriority();
+            }
+        };
+        getUiHandler().postDelayed(sPriorityResetRunnable, timeout);
+    }
+
+    /**
+     * Resets the priority of a thread whose priority has been reduced
+     * by reduceGeckoPriority.
+     */
+    public static void resetGeckoPriority() {
+        if (sPriorityResetRunnable != null) {
+            sGeckoThread.setPriority(Thread.NORM_PRIORITY);
+
+            getUiHandler().removeCallbacks(sPriorityResetRunnable);
+            sPriorityResetRunnable = null;
+        }
     }
 }

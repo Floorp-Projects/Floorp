@@ -37,6 +37,7 @@ var systemPrincipal = Cc["@mozilla.org/systemprincipal;1"]
                       .createInstance(Ci.nsIPrincipal);
 
 var gGlobal = Cu.Sandbox(systemPrincipal);
+gGlobal.ChromeWorker = ChromeWorker;
 Cu.evalInSandbox(loadSubScript, gGlobal, "1.8");
 gGlobal.loadSubScript("resource://gre/modules/devtools/server/main.js");
 

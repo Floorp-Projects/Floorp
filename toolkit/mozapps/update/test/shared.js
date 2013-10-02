@@ -181,11 +181,11 @@ var observer = {
  * Sets the app.update.url.override preference.
  *
  * @param  aURL
- *         The update url. If not specified 'URL_HOST + "update.xml"' will be
+ *         The update url. If not specified 'URL_HOST + "/update.xml"' will be
  *         used.
  */
 function setUpdateURLOverride(aURL) {
-  let url = aURL ? aURL : URL_HOST + "update.xml";
+  let url = aURL ? aURL : URL_HOST + "/update.xml";
   debugDump("setting " + PREF_APP_UPDATE_URL_OVERRIDE + " to " + url);
   Services.prefs.setCharPref(PREF_APP_UPDATE_URL_OVERRIDE, url);
 }

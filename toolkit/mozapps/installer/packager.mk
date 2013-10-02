@@ -328,20 +328,34 @@ GECKO_APP_AP_PATH = $(call core_abspath,$(DEPTH)/mobile/android/base)
 
 ifdef ENABLE_TESTS
 INNER_ROBOCOP_PACKAGE=echo
+INNER_BACKGROUND_TESTS_PACKAGE=echo
 ifeq ($(MOZ_BUILD_APP),mobile/android)
 UPLOAD_EXTRA_FILES += robocop.apk
 UPLOAD_EXTRA_FILES += fennec_ids.txt
+
+# Robocop/Robotium tests, Android Background tests, and Fennec need to
+# be signed with the same key, which means release signing them all.
+
+# $(1) is the full path to input:  foo-debug-unsigned-unaligned.apk.
+# $(2) is the full path to output: foo.apk.
+RELEASE_SIGN_ANDROID_APK = \
+  cp $(1) $(2)-unaligned.apk && \
+  $(RELEASE_JARSIGNER) $(2)-unaligned.apk && \
+  $(ZIPALIGN) -f -v 4 $(2)-unaligned.apk $(2) && \
+  $(RM) $(2)-unaligned.apk
+
 ROBOCOP_PATH = $(call core_abspath,$(_ABS_DIST)/../build/mobile/robocop)
-# Robocop and Fennec need to be signed with the same key, which means
-# release signing them both.
 INNER_ROBOCOP_PACKAGE= \
   $(NSINSTALL) $(GECKO_APP_AP_PATH)/fennec_ids.txt $(_ABS_DIST) && \
-  cp $(ROBOCOP_PATH)/robocop-debug-unsigned-unaligned.apk $(_ABS_DIST)/robocop-unaligned.apk && \
-  $(RELEASE_JARSIGNER) $(_ABS_DIST)/robocop-unaligned.apk && \
-  $(ZIPALIGN) -f -v 4 $(_ABS_DIST)/robocop-unaligned.apk $(_ABS_DIST)/robocop.apk
+  $(call RELEASE_SIGN_ANDROID_APK,$(ROBOCOP_PATH)/robocop-debug-unsigned-unaligned.apk,$(_ABS_DIST)/robocop.apk)
+
+BACKGROUND_TESTS_PATH = $(call core_abspath,$(_ABS_DIST)/../mobile/android/tests/background/junit3)
+INNER_BACKGROUND_TESTS_PACKAGE= \
+  $(call RELEASE_SIGN_ANDROID_APK,$(BACKGROUND_TESTS_PATH)/background-debug-unsigned-unaligned.apk,$(_ABS_DIST)/background.apk)
 endif
 else
-INNER_ROBOCOP_PACKAGE=echo 'Testing is disabled - No Robocop for you'
+INNER_ROBOCOP_PACKAGE=echo 'Testing is disabled - No Android Robocop for you'
+INNER_BACKGROUND_TESTS_PACKAGE=echo 'Testing is disabled - No Android Background tests for you'
 endif
 
 # Create geckoview_library/geckoview_{assets,library}.zip for third-party GeckoView consumers.
@@ -403,6 +417,7 @@ INNER_MAKE_PACKAGE	= \
   $(RELEASE_JARSIGNER) $(_ABS_DIST)/gecko.apk && \
   $(ZIPALIGN) -f -v 4 $(_ABS_DIST)/gecko.apk $(PACKAGE) && \
   $(INNER_ROBOCOP_PACKAGE) && \
+  $(INNER_BACKGROUND_TESTS_PACKAGE) && \
   $(INNER_MAKE_GECKOVIEW_LIBRARY)
 
 # Language repacks root the resources contained in assets/omni.ja

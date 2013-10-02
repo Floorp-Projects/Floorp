@@ -139,9 +139,9 @@ const PAGEID_INSTALLED        = "installed";             // Done
 
 const UPDATE_WINDOW_NAME = "Update:Wizard";
 
-const URL_HOST   = "http://example.com/";
+const URL_HOST   = "http://example.com";
 const URL_PATH   = "chrome/toolkit/mozapps/update/test/chrome";
-const URL_UPDATE = URL_HOST + URL_PATH + "/update.sjs";
+const URL_UPDATE = URL_HOST + "/" + URL_PATH + "/update.sjs";
 
 const URI_UPDATE_PROMPT_DIALOG  = "chrome://mozapps/content/update/updates.xul";
 
@@ -157,7 +157,6 @@ const TEST_ADDONS = [ "appdisabled_1", "appdisabled_2",
                       "updatecompatibility_1", "updatecompatibility_2",
                       "updateversion_1", "updateversion_2",
                       "userdisabled_1", "userdisabled_2", "hotfix" ];
-
 
 var gTestTimeout = 45000; // 45 seconds
 var gTimeoutTimer;
