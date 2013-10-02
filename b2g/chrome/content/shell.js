@@ -6,7 +6,6 @@
 
 Cu.import('resource://gre/modules/ContactService.jsm');
 Cu.import('resource://gre/modules/SettingsChangeNotifier.jsm');
-Cu.import('resource://gre/modules/DataStoreChangeNotifier.jsm');
 Cu.import('resource://gre/modules/AlarmService.jsm');
 Cu.import('resource://gre/modules/ActivitiesService.jsm');
 Cu.import('resource://gre/modules/PermissionPromptHelper.jsm');
