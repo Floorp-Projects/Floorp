@@ -8,9 +8,12 @@
 
 /* static functions */
 
-function debug(s) {
-  // dump('DEBUG DataStoreService: ' + s + '\n');
-}
+let DEBUG = 0;
+let debug;
+if (DEBUG)
+  debug = function (s) { dump('DEBUG DataStore: ' + s + '\n'); }
+else
+  debug = function (s) {}
 
 const {classes: Cc, interfaces: Ci, utils: Cu, results: Cr} = Components;
 
@@ -39,9 +42,8 @@ DataStoreService.prototype = {
   stores: {},
 
   installDataStore: function(aAppId, aName, aOwner, aReadOnly) {
-    debug('installDataStore - appId: ' + aAppId + ', aName: ' +
-          aName + ', aOwner:' + aOwner + ', aReadOnly: ' +
-          aReadOnly);
+    debug('installDataStore - appId: ' + aAppId + ', aName: ' + aName +
+          ', aOwner:' + aOwner + ', aReadOnly: ' + aReadOnly);
 
     if (aName in this.stores && aAppId in this.stores[aName]) {
       debug('This should not happen');
@@ -90,7 +92,6 @@ DataStoreService.prototype = {
 
     for (let key in this.stores) {
       if (params.appId in this.stores[key]) {
-        this.stores[key][params.appId].delete();
         delete this.stores[key][params.appId];
       }
 
