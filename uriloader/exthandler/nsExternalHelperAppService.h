@@ -282,9 +282,12 @@ protected:
   bool mShouldCloseWindow;
 
   /**
-   * True if a stop request has been issued.
+   * have we received information from the user about how they want to
+   * dispose of this content
    */
+  bool mReceivedDispositionInfo;
   bool mStopRequestIssued; 
+  bool mProgressListenerInitialized;
 
   bool mIsFileChannel;
 
@@ -321,11 +324,6 @@ protected:
   nsCOMPtr<nsIBackgroundFileSaver> mSaver;
 
   /**
-   * Stores the SHA-256 hash associated with the file that we downloaded.
-   */
-  nsAutoCString mHash;
-
-  /**
    * Creates the temporary file for the download and an output stream for it.
    * Upon successful return, both mTempFile and mSaver will be valid.
    */
@@ -336,15 +334,17 @@ protected:
    * using the window which initiated the load....RetargetLoadNotifications
    * contains that information...
    */
-  void RetargetLoadNotifications(nsIRequest *request);
+  void RetargetLoadNotifications(nsIRequest *request); 
   /**
-   * Once the user tells us how they want to dispose of the content
-   * create an nsITransfer so they know what's going on. If this fails, the
-   * caller MUST call Cancel.
+   * If the user tells us how they want to dispose of the content and
+   * we still haven't finished downloading while they were deciding,
+   * then create a progress listener of some kind so they know
+   * what's going on...
    */
-  nsresult CreateTransfer();
+  nsresult CreateProgressListener();
 
-  /*
+
+  /* 
    * The following two functions are part of the split of SaveToDisk
    * to make it async, and works as following:
    *
@@ -380,16 +380,33 @@ protected:
    */
   void ProcessAnyRefreshTags();
 
-  /**
-   * Notify our nsITransfer object that we are done with the download.
+  /** 
+   * An internal method used to actually move the temp file to the final
+   * destination once we done receiving data AND have showed the progress dialog
    */
-  nsresult NotifyTransfer();
-
+  nsresult MoveFile(nsIFile * aNewFileLocation);
+  /**
+   * An internal method used to actually launch a helper app given the temp file
+   * once we are done receiving data AND have showed the progress dialog.
+   * Uses the application specified in the mime info.
+   */
+  nsresult OpenWithApplication();
+  
+  /**
+   * Helper routine which peaks at the mime action specified by mMimeInfo
+   * and calls either MoveFile or OpenWithApplication
+   */
+  nsresult ExecuteDesiredAction();
   /**
    * Helper routine that searches a pref string for a given mime type
    */
   bool GetNeverAskFlagFromPref(const char * prefName, const char * aContentType);
 
+  /**
+   * Initialize an nsITransfer object for use as a progress object
+   */
+  nsresult InitializeDownload(nsITransfer*);
+  
   /**
    * Helper routine to ensure mSuggestedFileName is "correct";
    * this ensures that mTempFileExtension only contains an extension when it
@@ -410,17 +427,7 @@ protected:
    */
   nsresult MaybeCloseWindow();
 
-  /**
-   * Set in nsHelperDlgApp.js. This is always null after the user has chosen an
-   * action.
-   */
-  nsCOMPtr<nsIWebProgressListener2> mDialogProgressListener;
-  /**
-   * Set once the user has chosen an action. This is null after the download
-   * has been canceled or completes.
-   */
-  nsCOMPtr<nsITransfer> mTransfer;
-
+  nsCOMPtr<nsIWebProgressListener2> mWebProgressListener;
   nsCOMPtr<nsIChannel> mOriginalChannel; /**< in the case of a redirect, this will be the pre-redirect channel. */
   nsCOMPtr<nsIHelperAppLauncherDialog> mDialog;
 
