@@ -591,7 +591,7 @@ public:
   {}
   virtual bool operator()(gfxContext* aContext,
                             const gfxRect& aFillRect,
-                            const gfxPattern::GraphicsFilter& aFilter,
+                            const GraphicsFilter& aFilter,
                             const gfxMatrix& aTransform);
 private:
   nsIFrame* mFrame;
@@ -603,7 +603,7 @@ private:
 bool
 PaintFrameCallback::operator()(gfxContext* aContext,
                                const gfxRect& aFillRect,
-                               const gfxPattern::GraphicsFilter& aFilter,
+                               const GraphicsFilter& aFilter,
                                const gfxMatrix& aTransform)
 {
   if (mFrame->GetStateBits() & NS_FRAME_DRAWING_AS_PAINTSERVER)
@@ -718,7 +718,7 @@ DrawableFromPaintServer(nsIFrame*         aFrame,
 nsSVGIntegrationUtils::DrawPaintServer(nsRenderingContext* aRenderingContext,
                                        nsIFrame*            aTarget,
                                        nsIFrame*            aPaintServer,
-                                       gfxPattern::GraphicsFilter aFilter,
+                                       GraphicsFilter aFilter,
                                        const nsRect&        aDest,
                                        const nsRect&        aFill,
                                        const nsPoint&       aAnchor,

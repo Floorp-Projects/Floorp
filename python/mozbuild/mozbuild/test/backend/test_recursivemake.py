@@ -468,16 +468,14 @@ class TestRecursiveMakeBackend(BackendTester):
 
         expected = [
             "ALL_IPDLSRCS := %s/bar/bar.ipdl %s/bar/bar2.ipdlh %s/foo/foo.ipdl %s/foo/foo2.ipdlh" % tuple([topsrcdir] * 4),
-            "",
-            "CPPSRCS := bar.cpp barChild.cpp barParent.cpp" +
-            " bar2.cpp" +
-            " foo.cpp fooChild.cpp fooParent.cpp" +
-            " foo2.cpp",
-            "",
+            "CPPSRCS := UnifiedProtocols0.cpp",
             "IPDLDIRS := %s/bar %s/foo" % (topsrcdir, topsrcdir),
-            "",
         ]
-        self.assertEqual(lines, expected)
+
+        found = [str for str in lines if str.startswith(('ALL_IPDLSRCS',
+                                                         'CPPSRCS',
+                                                         'IPDLDIRS'))]
+        self.assertEqual(found, expected)
 
     def test_defines(self):
         """Test that DEFINES are written to backend.mk correctly."""
