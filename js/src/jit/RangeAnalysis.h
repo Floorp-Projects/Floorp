@@ -10,7 +10,6 @@
 #include "mozilla/FloatingPoint.h"
 #include "mozilla/MathAlgorithms.h"
 
-#include "jit/CompileInfo.h"
 #include "jit/IonAnalysis.h"
 #include "jit/MIR.h"
 
@@ -49,10 +48,10 @@ struct SymbolicBound : public TempObject
 {
     // Any loop iteration bound from which this was derived.
     //
-    // If non-NULL, then 'sum' is only valid within the loop body, at points
-    // dominated by the loop bound's test (see LoopIterationBound).
+    // If non-nullptr, then 'sum' is only valid within the loop body, at
+    // points dominated by the loop bound's test (see LoopIterationBound).
     //
-    // If NULL, then 'sum' is always valid.
+    // If nullptr, then 'sum' is always valid.
     LoopIterationBound *loop;
 
     // Computed symbolic bound, see above.
@@ -197,8 +196,8 @@ class Range : public TempObject {
           hasInt32UpperBound_(false),
           canHaveFractionalPart_(true),
           max_exponent_(MaxDoubleExponent),
-          symbolicLower_(NULL),
-          symbolicUpper_(NULL)
+          symbolicLower_(nullptr),
+          symbolicUpper_(nullptr)
     {
         JS_ASSERT_IF(!hasInt32LowerBound_, lower_ == JSVAL_INT_MIN);
         JS_ASSERT_IF(!hasInt32UpperBound_, upper_ == JSVAL_INT_MAX);
@@ -209,8 +208,8 @@ class Range : public TempObject {
           hasInt32UpperBound_(false),
           canHaveFractionalPart_(f),
           max_exponent_(e),
-          symbolicLower_(NULL),
-          symbolicUpper_(NULL)
+          symbolicLower_(nullptr),
+          symbolicUpper_(nullptr)
     {
         JS_ASSERT(e >= (h == INT64_MIN ? MaxDoubleExponent : mozilla::FloorLog2(mozilla::Abs(h))));
         JS_ASSERT(e >= (l == INT64_MIN ? MaxDoubleExponent : mozilla::FloorLog2(mozilla::Abs(l))));
@@ -229,8 +228,8 @@ class Range : public TempObject {
           hasInt32UpperBound_(other.hasInt32UpperBound_),
           canHaveFractionalPart_(other.canHaveFractionalPart_),
           max_exponent_(other.max_exponent_),
-          symbolicLower_(NULL),
-          symbolicUpper_(NULL)
+          symbolicLower_(nullptr),
+          symbolicUpper_(nullptr)
     {
         JS_ASSERT_IF(!hasInt32LowerBound_, lower_ == JSVAL_INT_MIN);
         JS_ASSERT_IF(!hasInt32UpperBound_, upper_ == JSVAL_INT_MAX);

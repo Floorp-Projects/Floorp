@@ -102,7 +102,7 @@ ScaledFontMac::GetPathForGlyphs(const GlyphBuffer &aBuffer, const DrawTarget *aT
 }
 
 void
-ScaledFontMac::CopyGlyphsToBuilder(const GlyphBuffer &aBuffer, PathBuilder *aBuilder)
+ScaledFontMac::CopyGlyphsToBuilder(const GlyphBuffer &aBuffer, PathBuilder *aBuilder, const Matrix *)
 {
   PathBuilderCG *pathBuilderCG =
     static_cast<PathBuilderCG*>(aBuilder);

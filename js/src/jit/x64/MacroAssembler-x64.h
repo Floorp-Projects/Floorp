@@ -649,7 +649,7 @@ class MacroAssemblerX64 : public MacroAssemblerX86Shared
     }
     void storePtr(ImmWord imm, const Address &address) {
         if ((intptr_t)imm.value <= INT32_MAX && (intptr_t)imm.value >= INT32_MIN) {
-            mov(Imm32((int32_t)imm.value), Operand(address));
+            movq(Imm32((int32_t)imm.value), Operand(address));
         } else {
             mov(imm, ScratchReg);
             movq(ScratchReg, Operand(address));
@@ -909,7 +909,7 @@ class MacroAssemblerX64 : public MacroAssemblerX86Shared
         unboxArgObjMagic(Operand(src.valueReg()), dest);
     }
     void unboxArgObjMagic(const Operand &src, const Register &dest) {
-        xorq(dest, dest);
+        mov(ImmWord(0), dest);
     }
     void unboxArgObjMagic(const Address &src, const Register &dest) {
         unboxArgObjMagic(Operand(src), dest);
@@ -948,17 +948,17 @@ class MacroAssemblerX64 : public MacroAssemblerX86Shared
         // src and dest are different registers, because of how extractObject is
         // implemented.
         if (src.valueReg() == dest) {
-            movq(ImmWord(JSVAL_PAYLOAD_MASK), ScratchReg);
+            mov(ImmWord(JSVAL_PAYLOAD_MASK), ScratchReg);
             andq(ScratchReg, dest);
         } else {
-            movq(ImmWord(JSVAL_PAYLOAD_MASK), dest);
+            mov(ImmWord(JSVAL_PAYLOAD_MASK), dest);
             andq(src.valueReg(), dest);
         }
     }
     void unboxNonDouble(const Operand &src, const Register &dest) {
         // Explicitly permits |dest| to be used in |src|.
         JS_ASSERT(dest != ScratchReg);
-        movq(ImmWord(JSVAL_PAYLOAD_MASK), ScratchReg);
+        mov(ImmWord(JSVAL_PAYLOAD_MASK), ScratchReg);
         movq(src, dest);
         andq(ScratchReg, dest);
     }

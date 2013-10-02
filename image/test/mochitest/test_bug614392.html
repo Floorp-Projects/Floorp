@@ -21,18 +21,17 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=614392
 SimpleTest.waitForExplicitFinish();
 
 window.onload = function() {
-  netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
   var img = SpecialPowers.wrap(document.getElementsByTagName("img")[0]);
   var container = img
-      .QueryInterface(Components.interfaces.nsIImageLoadingContent)
-      .getRequest(Components.interfaces.nsIImageLoadingContent.CURRENT_REQUEST)
+      .QueryInterface(SpecialPowers.Ci.nsIImageLoadingContent)
+      .getRequest(SpecialPowers.Ci.nsIImageLoadingContent.CURRENT_REQUEST)
       .image;
 
   container.animationMode =
-      Components.interfaces.imgIContainer.kDontAnimMode;
+      SpecialPowers.Ci.imgIContainer.kDontAnimMode;
 
   is(container.animationMode,
-     Components.interfaces.imgIContainer.kDontAnimMode,
+     SpecialPowers.Ci.imgIContainer.kDontAnimMode,
      "yay, our animationMode tweak took effect (and we didn't crash!)");
 
   SimpleTest.finish();

@@ -2,11 +2,3 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this file,
 # You can obtain one at http://mozilla.org/MPL/2.0/.
 
-MOCHITEST_FILES = \
-  test_alarm_add_data.html \
-  test_alarm_add_date.html \
-  test_alarm_add_respectTimezone.html \
-  test_alarm_non_permitted_app.html \
-  test_alarm_permitted_app.html \
-  test_alarm_remove.html \
-  $(NULL)

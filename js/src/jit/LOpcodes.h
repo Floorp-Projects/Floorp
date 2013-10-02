@@ -127,6 +127,7 @@
     _(ValueToInt32)                 \
     _(ValueToFloat32)               \
     _(DoubleToInt32)                \
+    _(Float32ToInt32)               \
     _(TruncateDToInt32)             \
     _(IntToString)                  \
     _(DoubleToString)               \
@@ -226,7 +227,10 @@
     _(TypedObjectElements)          \
     _(StringLength)                 \
     _(ArgumentsLength)              \
-    _(GetArgument)                  \
+    _(GetFrameArgument)             \
+    _(SetFrameArgumentT)            \
+    _(SetFrameArgumentC)            \
+    _(SetFrameArgumentV)            \
     _(RunOncePrologue)              \
     _(Rest)                         \
     _(RestPar)                      \

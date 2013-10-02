@@ -4,9 +4,6 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "mozilla/ModuleUtils.h"
-#include "nsCOMPtr.h"
-#include "nsICategoryManager.h"
-#include "nsIServiceManager.h"
 
 #include "nsCharDetConstructors.h"
 

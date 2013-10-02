@@ -51,7 +51,6 @@ function runTest()
   }
 
   var expectedFocus = expected[step - 1];
-  netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
   var win = window.openDialog("dialog_dialogfocus.xul", "_new", "chrome,dialog", step);
 
   function checkDialogFocus(event)

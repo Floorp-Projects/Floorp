@@ -41,6 +41,13 @@ MOCHITEST_FILES = \
   test_bug424627.html \
   test_bug438840.html \
   test_bug448860.html \
+  test_bug448987.html \
+    file_bug448987.html \
+    file_bug448987_ref.html \
+    file_bug448987_notref.html \
+  test_bug449653.html \
+    file_bug449653_1.html \
+    file_bug449653_1_ref.html \
   test_bug460532.html \
   test_bug468167.html \
   test_bug470212.html \
@@ -109,17 +116,3 @@ MOCHITEST_FILES += \
   $(NULL)
 endif
 
-MOCHITEST_CHROME_FILES = \
-  frame_selection_underline.xhtml \
-  frame_selection_underline-ref.xhtml \
-  frame_selection_underline.css \
-  test_selection_underline.html \
-  test_bug632379.xul \
-  test_bug508115.xul \
-  test_bug469613.xul \
-  test_bug469774.xul \
-  test_backspace_delete.xul \
-  test_bug514732-2.xul \
-  file_bug514732_window.xul \
-  test_selection_preventDefault.html \
-  $(NULL)

@@ -58,6 +58,7 @@ public:
   bool WidgetIsContainer(uint8_t aWidgetType);
   bool ThemeDrawsFocusForWidget(uint8_t aWidgetType) MOZ_OVERRIDE;
   bool ThemeNeedsComboboxDropmarker();
+  virtual bool WidgetAppearanceDependsOnWindowFocus(uint8_t aWidgetType) MOZ_OVERRIDE;
   virtual Transparency GetWidgetTransparency(nsIFrame* aFrame, uint8_t aWidgetType);
 
   void DrawProgress(CGContextRef context, const HIRect& inBoxRect,

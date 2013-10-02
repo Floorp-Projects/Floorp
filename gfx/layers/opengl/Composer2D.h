@@ -26,7 +26,7 @@
  * layer manager fall back on full GPU composition.
  */
 
-class gfxMatrix;
+struct gfxMatrix;
 
 namespace mozilla {
 namespace layers {

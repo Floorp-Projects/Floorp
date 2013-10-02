@@ -10,7 +10,6 @@
 #include <stdint.h>                     // for uint32_t, uint8_t, uint64_t
 #include "GLContextTypes.h"             // for GLContext (ptr only), etc
 #include "GLTextureImage.h"             // for TextureImage
-#include "ImageContainer.h"             // for PlanarYCbCrImage, etc
 #include "ImageTypes.h"                 // for StereoMode
 #include "mozilla/Assertions.h"         // for MOZ_ASSERT, etc
 #include "mozilla/Attributes.h"         // for MOZ_OVERRIDE
@@ -37,6 +36,9 @@ class ContentClient;
 class CompositableForwarder;
 class ISurfaceAllocator;
 class CompositableClient;
+class PlanarYCbCrImage;
+class PlanarYCbCrData;
+class Image;
 
 /**
  * TextureClient is the abstraction that allows us to share data between the
@@ -63,7 +65,7 @@ public:
 class TextureClientYCbCr
 {
 public:
-  virtual bool UpdateYCbCr(const PlanarYCbCrImage::Data& aData) = 0;
+  virtual bool UpdateYCbCr(const PlanarYCbCrData& aData) = 0;
   virtual bool AllocateForYCbCr(gfx::IntSize aYSize,
                                 gfx::IntSize aCbCrSize,
                                 StereoMode aStereoMode) = 0;
@@ -124,12 +126,13 @@ public:
   virtual TextureClientSurface* AsTextureClientSurface() { return nullptr; }
   virtual TextureClientYCbCr* AsTextureClientYCbCr() { return nullptr; }
 
-  virtual void MarkUnused() {}
-
-  virtual bool Lock(OpenMode aMode)
-  {
-    return IsValid();
-  }
+  /**
+   * Locks the shared data, allowing the caller to get access to it.
+   *
+   * Please always lock/unlock when accessing the shared data.
+   * If Lock() returns false, you should not attempt to access the shared data.
+   */
+  virtual bool Lock(OpenMode aMode) { return IsValid(); }
 
   virtual void Unlock() {}
 
@@ -138,11 +141,18 @@ public:
    * Textures that do not implement locking should be immutable or should
    * use immediate uploads (see TextureFlags in CompositorTypes.h)
    */
-  virtual bool ImplementsLocking() const
-  {
-    return false;
-  }
+  virtual bool ImplementsLocking() const { return false; }
 
+  /**
+   * Sets this texture's ID.
+   *
+   * This ID is used to match a texture client with his corresponding TextureHost.
+   * Only the CompositableClient should be allowed to set or clear the ID.
+   * Zero is always an invalid ID.
+   * For a given compositableClient, there can never be more than one texture
+   * client with the same non-zero ID.
+   * Texture clients from different compositables may have the same ID.
+   */
   void SetID(uint64_t aID)
   {
     MOZ_ASSERT(mID == 0 && aID != 0);
@@ -155,10 +165,7 @@ public:
     mID = 0;
   }
 
-  uint64_t GetID() const
-  {
-    return mID;
-  }
+  uint64_t GetID() const { return mID; }
 
   virtual bool IsAllocated() const = 0;
 
@@ -166,8 +173,22 @@ public:
 
   virtual gfx::IntSize GetSize() const = 0;
 
+  /**
+   * Drop the shared data into a TextureClientData object and mark this
+   * TextureClient as invalid.
+   *
+   * The TextureClient must not hold any reference to the shared data
+   * after this method has been called.
+   * The TextureClientData is owned by the caller.
+   */
   virtual TextureClientData* DropTextureData() = 0;
 
+  /**
+   * TextureFlags contain important information about various aspects
+   * of the texture, like how its liferime is managed, and how it
+   * should be displayed.
+   * See TextureFlags in CompositorTypes.h.
+   */
   TextureFlags GetFlags() const { return mFlags; }
 
   /**
@@ -189,6 +210,10 @@ public:
    */
   bool IsValid() const { return mValid; }
 
+  /**
+   * An invalid TextureClient cannot provide access to its shared data
+   * anymore. This usually means it will soon be destroyed.
+   */
   void MarkInvalid() { mValid = false; }
 
 protected:
@@ -248,7 +273,7 @@ public:
 
   virtual TextureClientYCbCr* AsTextureClientYCbCr() MOZ_OVERRIDE { return this; }
 
-  virtual bool UpdateYCbCr(const PlanarYCbCrImage::Data& aData) MOZ_OVERRIDE;
+  virtual bool UpdateYCbCr(const PlanarYCbCrData& aData) MOZ_OVERRIDE;
 
   virtual bool AllocateForYCbCr(gfx::IntSize aYSize,
                                 gfx::IntSize aCbCrSize,

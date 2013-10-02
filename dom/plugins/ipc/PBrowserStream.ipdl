@@ -20,7 +20,7 @@ namespace plugins {
  * NPBrowserStream represents a NPStream sent from the browser to the plugin.
  */
 
-rpc protocol PBrowserStream
+intr protocol PBrowserStream
 {
   manager PPluginInstance;
 
@@ -37,7 +37,7 @@ child:
   async __delete__();
 
 parent:
-  rpc NPN_RequestRead(IPCByteRanges ranges)
+  intr NPN_RequestRead(IPCByteRanges ranges)
     returns (NPError result);
   async NPN_DestroyStream(NPReason reason);
   async StreamDestroyed();

@@ -65,9 +65,10 @@ public class BrowserHealthRecorder implements GeckoEventListener {
     private static final String EVENT_ADDONS_CHANGE = "Addons:Change";
     private static final String EVENT_ADDONS_UNINSTALLING = "Addons:Uninstalling";
     private static final String EVENT_PREF_CHANGE = "Pref:Change";
- 
-    // This is raised from Gecko. It avoids browser.js having to know about the
-    // location that invoked it (the URL bar).
+
+    // This is raised from Gecko and signifies a search via the URL bar (not a bookmarks keyword
+    // search). Using this event (rather than passing the invocation location as an arg) avoids
+    // browser.js having to know about the invocation location.
     public static final String EVENT_KEYWORD_SEARCH = "Search:Keyword";
 
     // This is raised from Java. We include the location in the message.
@@ -681,6 +682,9 @@ public class BrowserHealthRecorder implements GeckoEventListener {
 
             // Searches.
             if (EVENT_KEYWORD_SEARCH.equals(event)) {
+                // A search via the URL bar. Since we eliminate all other search possibilities
+                // (e.g. bookmarks keyword, search suggestion) when we initially process the
+                // search URL, this is considered a default search.
                 recordSearch(message.getString("identifier"), "bartext");
                 return;
             }

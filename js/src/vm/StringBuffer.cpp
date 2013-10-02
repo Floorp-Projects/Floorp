@@ -20,7 +20,7 @@ StringBuffer::extractWellSized()
 
     jschar *buf = cb.extractRawBuffer();
     if (!buf)
-        return NULL;
+        return nullptr;
 
     /* For medium/big buffers, avoid wasting more than 1/4 of the memory. */
     JS_ASSERT(capacity >= length);
@@ -30,7 +30,7 @@ StringBuffer::extractWellSized()
         jschar *tmp = (jschar *)cx->realloc_(buf, bytes);
         if (!tmp) {
             js_free(buf);
-            return NULL;
+            return nullptr;
         }
         buf = tmp;
     }
@@ -47,18 +47,18 @@ StringBuffer::finishString()
 
     size_t length = cb.length();
     if (!JSString::validateLength(cx, length))
-        return NULL;
+        return nullptr;
 
     JS_STATIC_ASSERT(JSShortString::MAX_SHORT_LENGTH < CharBuffer::InlineLength);
     if (JSShortString::lengthFits(length))
         return NewShortString<CanGC>(cx, TwoByteChars(cb.begin(), length));
 
     if (!cb.append('\0'))
-        return NULL;
+        return nullptr;
 
     jschar *buf = extractWellSized();
     if (!buf)
-        return NULL;
+        return nullptr;
 
     JSFlatString *str = js_NewString<CanGC>(cx, buf, length);
     if (!str)

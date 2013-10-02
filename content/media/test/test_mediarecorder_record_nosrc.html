@@ -1,0 +1,33 @@
+<html>
+<head>
+  <title>Bug 919051 - Media Recording - memory leak when record a media stream without any tracks</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+  <script type="text/javascript" src="manifest.js"></script>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=919051">Mozill
+a Bug 919051</a>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+function startTest() {
+  var mediastream = document.createElement('video').mozCaptureStream();
+
+  var mr = new MediaRecorder(mediastream);
+  info('create MediaRecorder');
+  try {
+    mr.start();
+    ok(false, 'should get exception');
+  } catch(e) {
+    is(e.name, 'InvalidStateError', "get correct exception");
+  }
+  SimpleTest.finish();
+}
+
+SimpleTest.waitForExplicitFinish();
+startTest();
+</script>
+</head>
+</html>
+

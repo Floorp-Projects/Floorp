@@ -19,6 +19,7 @@ using namespace js;
 using namespace JS;
 using namespace mozilla;
 using namespace mozilla::jsipc;
+using namespace mozilla::dom;
 
 JavaScriptParent::JavaScriptParent()
   : refcount_(1),
@@ -601,11 +602,14 @@ JavaScriptParent::ipcfail(JSContext *cx)
 bool
 JavaScriptParent::ok(JSContext *cx, const ReturnStatus &status)
 {
-    if (status.ok())
+    if (status.type() == ReturnStatus::TReturnSuccess)
         return true;
 
+    if (status.type() == ReturnStatus::TReturnStopIteration)
+        return JS_ThrowStopIteration(cx);
+
     RootedValue exn(cx);
-    if (!toValue(cx, status.exn(), &exn))
+    if (!toValue(cx, status.get_ReturnException().exn(), &exn))
         return false;
 
     JS_SetPendingException(cx, exn);
@@ -657,7 +661,7 @@ JavaScriptParent::instanceOf(JSObject *obj, const nsID *id, bool *bp)
     if (!CallInstanceOf(objId, iid, &status, bp))
         return NS_ERROR_UNEXPECTED;
 
-    if (!status.ok())
+    if (status.type() != ReturnStatus::TReturnSuccess)
         return NS_ERROR_UNEXPECTED;
 
     return NS_OK;
@@ -678,8 +682,19 @@ JavaScriptParent::domInstanceOf(JSObject *obj, int prototypeID, int depth, bool 
     if (!CallDOMInstanceOf(objId, prototypeID, depth, &status, bp))
         return false;
 
-    if (!status.ok())
+    if (status.type() != ReturnStatus::TReturnSuccess)
         return false;
 
     return true;
+}
+
+mozilla::ipc::IProtocol*
+JavaScriptParent::CloneProtocol(Channel* aChannel, ProtocolCloneContext* aCtx)
+{
+    ContentParent *contentParent = aCtx->GetContentParent();
+    nsAutoPtr<PJavaScriptParent> actor(contentParent->AllocPJavaScriptParent());
+    if (!actor || !contentParent->RecvPJavaScriptConstructor(actor)) {
+        return nullptr;
+    }
+    return actor.forget();
 }

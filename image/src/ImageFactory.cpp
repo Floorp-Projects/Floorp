@@ -13,7 +13,6 @@
 #include "nsIFileChannel.h"
 #include "nsIFile.h"
 #include "nsMimeTypes.h"
-#include "nsIURI.h"
 #include "nsIRequest.h"
 
 #include "RasterImage.h"
@@ -31,16 +30,19 @@ static bool gInitializedPrefCaches = false;
 static bool gDecodeOnDraw = false;
 static bool gDiscardable = false;
 
-static void
-InitPrefCaches()
+/*static*/ void
+ImageFactory::Initialize()
 {
-  Preferences::AddBoolVarCache(&gDiscardable, "image.mem.discardable");
-  Preferences::AddBoolVarCache(&gDecodeOnDraw, "image.mem.decodeondraw");
-  gInitializedPrefCaches = true;
+  MOZ_ASSERT(NS_IsMainThread());
+  if (!gInitializedPrefCaches) {
+    Preferences::AddBoolVarCache(&gDiscardable, "image.mem.discardable");
+    Preferences::AddBoolVarCache(&gDecodeOnDraw, "image.mem.decodeondraw");
+    gInitializedPrefCaches = true;
+  }
 }
 
 static uint32_t
-ComputeImageFlags(nsIURI* uri, bool isMultiPart)
+ComputeImageFlags(ImageURL* uri, bool isMultiPart)
 {
   nsresult rv;
 
@@ -83,13 +85,12 @@ ComputeImageFlags(nsIURI* uri, bool isMultiPart)
 ImageFactory::CreateImage(nsIRequest* aRequest,
                           imgStatusTracker* aStatusTracker,
                           const nsCString& aMimeType,
-                          nsIURI* aURI,
+                          ImageURL* aURI,
                           bool aIsMultiPart,
                           uint32_t aInnerWindowId)
 {
-  // Register our pref observers if we haven't yet.
-  if (MOZ_UNLIKELY(!gInitializedPrefCaches))
-    InitPrefCaches();
+  MOZ_ASSERT(gInitializedPrefCaches,
+             "Pref observers should have been initialized already");
 
   // Compute the image's initialization flags.
   uint32_t imageFlags = ComputeImageFlags(aURI, aIsMultiPart);
@@ -175,7 +176,7 @@ GetContentSize(nsIRequest* aRequest)
 ImageFactory::CreateRasterImage(nsIRequest* aRequest,
                                 imgStatusTracker* aStatusTracker,
                                 const nsCString& aMimeType,
-                                nsIURI* aURI,
+                                ImageURL* aURI,
                                 uint32_t aImageFlags,
                                 uint32_t aInnerWindowId)
 {
@@ -206,7 +207,9 @@ ImageFactory::CreateRasterImage(nsIRequest* aRequest,
     }
   }
 
-  mozilla::net::nsMediaFragmentURIParser parser(aURI);
+  nsAutoCString ref;
+  aURI->GetRef(ref);
+  mozilla::net::nsMediaFragmentURIParser parser(ref);
   if (parser.HasResolution()) {
     newImage->SetRequestedResolution(parser.GetResolution());
   }
@@ -218,7 +221,7 @@ ImageFactory::CreateRasterImage(nsIRequest* aRequest,
 ImageFactory::CreateVectorImage(nsIRequest* aRequest,
                                 imgStatusTracker* aStatusTracker,
                                 const nsCString& aMimeType,
-                                nsIURI* aURI,
+                                ImageURL* aURI,
                                 uint32_t aImageFlags,
                                 uint32_t aInnerWindowId)
 {

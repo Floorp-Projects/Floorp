@@ -7,45 +7,49 @@
 #define mozilla_dom_workers_navigator_h__
 
 #include "Workers.h"
-#include "mozilla/dom/workers/bindings/DOMBindingBase.h"
 #include "nsString.h"
+#include "nsWrapperCache.h"
 
 BEGIN_WORKERS_NAMESPACE
 
-class WorkerNavigator MOZ_FINAL : public DOMBindingBase
+class WorkerNavigator MOZ_FINAL : public nsWrapperCache
 {
   nsString mAppName;
   nsString mAppVersion;
   nsString mPlatform;
   nsString mUserAgent;
 
-  WorkerNavigator(JSContext* aCx,
-                  const nsAString& aAppName,
+  WorkerNavigator(const nsAString& aAppName,
                   const nsAString& aAppVersion,
                   const nsAString& aPlatform,
                   const nsAString& aUserAgent)
-    : DOMBindingBase(aCx)
-    , mAppName(aAppName)
+    : mAppName(aAppName)
     , mAppVersion(aAppVersion)
     , mPlatform(aPlatform)
     , mUserAgent(aUserAgent)
   {
-    MOZ_COUNT_CTOR(mozilla::dom::workers::WorkerNavigator);
+    MOZ_COUNT_CTOR(WorkerNavigator);
+    SetIsDOMBinding();
   }
 
 public:
+
+  NS_INLINE_DECL_CYCLE_COLLECTING_NATIVE_REFCOUNTING(WorkerNavigator)
+  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_NATIVE_CLASS(WorkerNavigator)
+
   static already_AddRefed<WorkerNavigator>
   Create(JSContext* aCx, JS::Handle<JSObject*> aGlobal);
 
-  virtual void
-  _trace(JSTracer* aTrc) MOZ_OVERRIDE;
+  virtual JSObject*
+  WrapObject(JSContext* aCx, JS::Handle<JSObject*> aScope) MOZ_OVERRIDE;
 
-  virtual void
-  _finalize(JSFreeOp* aFop) MOZ_OVERRIDE;
+  nsISupports* GetParentObject() const {
+    return nullptr;
+  }
 
   ~WorkerNavigator()
   {
-    MOZ_COUNT_DTOR(mozilla::dom::workers::WorkerNavigator);
+    MOZ_COUNT_DTOR(WorkerNavigator);
   }
 
   void GetAppName(nsString& aAppName) const
@@ -64,8 +68,8 @@ public:
   {
     aUserAgent = mUserAgent;
   }
-
 };
+
 END_WORKERS_NAMESPACE
 
 #endif // mozilla_dom_workers_navigator_h__

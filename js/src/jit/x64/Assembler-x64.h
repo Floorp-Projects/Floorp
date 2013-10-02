@@ -9,7 +9,6 @@
 
 #include "mozilla/Util.h"
 
-#include "jit/CompactBuffer.h"
 #include "jit/IonCode.h"
 #include "jit/shared/Assembler-shared.h"
 
@@ -76,7 +75,6 @@ static MOZ_CONSTEXPR_VAR Register HeapReg = r15;
 static MOZ_CONSTEXPR_VAR FloatRegister ReturnFloatReg = xmm0;
 static MOZ_CONSTEXPR_VAR FloatRegister ScratchFloatReg = xmm15;
 
-// Avoid rbp, which is the FramePointer, which is unavailable in some modes.
 static MOZ_CONSTEXPR_VAR Register ArgumentsRectifierReg = r8;
 static MOZ_CONSTEXPR_VAR Register CallTempReg0 = rax;
 static MOZ_CONSTEXPR_VAR Register CallTempReg1 = rdi;
@@ -84,6 +82,7 @@ static MOZ_CONSTEXPR_VAR Register CallTempReg2 = rbx;
 static MOZ_CONSTEXPR_VAR Register CallTempReg3 = rcx;
 static MOZ_CONSTEXPR_VAR Register CallTempReg4 = rsi;
 static MOZ_CONSTEXPR_VAR Register CallTempReg5 = rdx;
+static MOZ_CONSTEXPR_VAR Register CallTempReg6 = rbp;
 
 // Different argument registers for WIN64
 #if defined(_WIN64)
@@ -263,7 +262,7 @@ class Assembler : public AssemblerX86Shared
     }
     void push(const FloatRegister &src) {
         subq(Imm32(sizeof(double)), StackPointer);
-        movsd(src, Operand(StackPointer, 0));
+        movsd(src, Address(StackPointer, 0));
     }
     CodeOffsetLabel pushWithPatch(const ImmWord &word) {
         CodeOffsetLabel label = movWithPatch(word, ScratchReg);
@@ -272,7 +271,7 @@ class Assembler : public AssemblerX86Shared
     }
 
     void pop(const FloatRegister &src) {
-        movsd(Operand(StackPointer, 0), src);
+        movsd(Address(StackPointer, 0), src);
         addq(Imm32(sizeof(double)), StackPointer);
     }
 
@@ -480,7 +479,15 @@ class Assembler : public AssemblerX86Shared
     }
 
     void mov(ImmWord word, const Register &dest) {
-        movq(word, dest);
+        // Use xor for setting registers to zero, as it is specially optimized
+        // for this purpose on modern hardware. Note that it does clobber FLAGS
+        // though. Use xorl instead of xorq since they are functionally
+        // equivalent (32-bit instructions zero-extend their results to 64 bits)
+        // and xorl has a smaller encoding.
+        if (word.value == 0)
+            xorl(dest, dest);
+        else
+            movq(word, dest);
     }
     void mov(ImmPtr imm, const Register &dest) {
         movq(imm, dest);
@@ -489,9 +496,6 @@ class Assembler : public AssemblerX86Shared
         masm.movq_i64r(-1, dest.code());
         AsmJSAbsoluteLink link(masm.currentOffset(), imm.kind());
         enoughMemory_ &= asmJSAbsoluteLinks_.append(link);
-    }
-    void mov(const Imm32 &imm32, const Register &dest) {
-        movl(imm32, dest);
     }
     void mov(const Operand &src, const Register &dest) {
         movq(src, dest);

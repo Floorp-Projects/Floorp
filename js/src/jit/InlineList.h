@@ -20,7 +20,7 @@ template <typename T>
 class InlineForwardListNode
 {
   public:
-    InlineForwardListNode() : next(NULL)
+    InlineForwardListNode() : next(nullptr)
     { }
     InlineForwardListNode(InlineForwardListNode<T> *n) : next(n)
     { }
@@ -61,7 +61,7 @@ class InlineForwardList : protected InlineForwardListNode<T>
         return iterator(this);
     }
     iterator end() const {
-        return iterator(NULL);
+        return iterator(nullptr);
     }
     iterator removeAt(iterator &where) {
         iterator iter(where);
@@ -71,10 +71,10 @@ class InlineForwardList : protected InlineForwardListNode<T>
 
         // Once the element 'where' points at has been removed, it is no longer
         // safe to do any operations that would touch 'iter', as the element
-        // may be added to another list, etc. This NULL ensures that any
+        // may be added to another list, etc. This nullptr ensures that any
         // improper uses of this function will fail quickly and loudly.
         removeAfter(where.prev, where.iter);
-        where.prev = where.iter = NULL;
+        where.prev = where.iter = nullptr;
 
         return iter;
     }
@@ -84,7 +84,7 @@ class InlineForwardList : protected InlineForwardListNode<T>
     void pushBack(Node *t) {
         modifyCount_++;
         tail_->next = t;
-        t->next = NULL;
+        t->next = nullptr;
         tail_ = t;
     }
     T *popFront() {
@@ -121,13 +121,13 @@ class InlineForwardList : protected InlineForwardListNode<T>
         to->next = at->next;
         to->tail_ = tail_;
         tail_ = at;
-        at->next = NULL;
+        at->next = nullptr;
     }
     bool empty() const {
         return tail_ == this;
     }
     void clear() {
-        this->next = NULL;
+        this->next = nullptr;
         tail_ = this;
         modifyCount_ = 0;
     }
@@ -143,7 +143,7 @@ private:
 
     InlineForwardListIterator<T>(const InlineForwardList<T> *owner)
       : prev(const_cast<Node *>(static_cast<const Node *>(owner))),
-        iter(owner ? owner->next : NULL)
+        iter(owner ? owner->next : nullptr)
 #ifdef DEBUG
       , owner_(owner),
         modifyCount_(owner ? owner->modifyCount_.value : 0)
@@ -197,7 +197,7 @@ template <typename T>
 class InlineListNode : public InlineForwardListNode<T>
 {
   public:
-    InlineListNode() : InlineForwardListNode<T>(NULL), prev(NULL)
+    InlineListNode() : InlineForwardListNode<T>(nullptr), prev(nullptr)
     { }
     InlineListNode(InlineListNode<T> *n, InlineListNode<T> *p)
       : InlineForwardListNode<T>(n),
@@ -256,10 +256,10 @@ class InlineList : protected InlineListNode<T>
 
         // Once the element 'where' points at has been removed, it is no longer
         // safe to do any operations that would touch 'iter', as the element
-        // may be added to another list, etc. This NULL ensures that any
+        // may be added to another list, etc. This nullptr ensures that any
         // improper uses of this function will fail quickly and loudly.
         remove(where.iter);
-        where.iter = NULL;
+        where.iter = nullptr;
 
         return iter;
     }
@@ -301,7 +301,7 @@ class InlineList : protected InlineListNode<T>
     void remove(Node *t) {
         t->prev->next = t->next;
         static_cast<Node *>(t->next)->prev = t->prev;
-        t->next = t->prev = NULL;
+        t->next = t->prev = nullptr;
     }
     void clear() {
         this->next = this->prev = this;
@@ -410,7 +410,7 @@ class InlineConcatList
     }
 
   public:
-    InlineConcatList() : next(NULL), tail(thisFromConstructor())
+    InlineConcatList() : next(nullptr), tail(thisFromConstructor())
     { }
 
     typedef InlineConcatListIterator<T> iterator;
@@ -420,7 +420,7 @@ class InlineConcatList
     }
 
     iterator end() const {
-        return iterator(NULL);
+        return iterator(nullptr);
     }
 
     void append(InlineConcatList<T> *adding)
@@ -432,7 +432,7 @@ class InlineConcatList
 
         tail->next = adding;
         tail = adding->tail;
-        adding->tail = NULL;
+        adding->tail = nullptr;
     }
 
   protected:

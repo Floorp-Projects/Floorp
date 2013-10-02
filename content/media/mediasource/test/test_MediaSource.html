@@ -13,11 +13,6 @@ SimpleTest.waitForExplicitFinish();
 
 addLoadEvent(function() {
   ok(!window.MediaSource, "MediaSource should be hidden behind a pref");
-  if (navigator.appVersion.indexOf("Android") != -1) {
-    todo(false, "Fix this test on Android: bug 889712.");
-    SimpleTest.finish();
-    return;
-  }
   var accessThrows = false;
   try {
     new MediaSource();
@@ -25,44 +20,47 @@ addLoadEvent(function() {
     accessThrows = true;
   }
   ok(accessThrows, "MediaSource should be hidden behind a pref");
-  SpecialPowers.setBoolPref("media.mediasource.enabled", true);
-  var ms = new MediaSource();
-  ok(ms, "Create a MediaSource object");
-  ok(ms instanceof EventTarget, "MediaSource must be an EventTarget");
-  is(ms.readyState, "closed", "New MediaSource must be in closed state");
-  // Force wrapper creation, tests for leaks.
-  ms.foo = null;
-  var o = URL.createObjectURL(ms);
-  ok(o, "Create an objectURL from the MediaSource");
-  var v = document.createElement("video");
-  document.body.appendChild(v);
-  v.src = o;
-  ms.addEventListener("sourceopen", function () {
-    ok(true, "Receive a sourceopen event");
-    is(ms.readyState, "open", "MediaSource must be in open state after sourceopen");
-    var sb = ms.addSourceBuffer("video/webm");
-    ok(sb, "Create a SourceBuffer");
-    is(ms.sourceBuffers.length, 1, "MediaSource.sourceBuffers is expected length");
-    is(ms.sourceBuffers[0], sb, "SourceBuffer in list matches our SourceBuffer");
-    fetch("seek.webm", function (blob) {
-      var r = new FileReader();
-      r.addEventListener("load", function (e) {
-        sb.appendBuffer(new Uint8Array(e.target.result));
-        ms.endOfStream();
-        v.play();
+  SpecialPowers.pushPrefEnv({"set": [[ "media.mediasource.enabled", true ]]},
+                            function () {
+    SpecialPowers.setBoolPref("media.mediasource.enabled", true);
+    var ms = new MediaSource();
+    ok(ms, "Create a MediaSource object");
+    ok(ms instanceof EventTarget, "MediaSource must be an EventTarget");
+    is(ms.readyState, "closed", "New MediaSource must be in closed state");
+    // Force wrapper creation, tests for leaks.
+    ms.foo = null;
+    var o = URL.createObjectURL(ms);
+    ok(o, "Create an objectURL from the MediaSource");
+    var v = document.createElement("video");
+    v.preload = "auto";
+    document.body.appendChild(v);
+    v.src = o;
+    ms.addEventListener("sourceopen", function () {
+      ok(true, "Receive a sourceopen event");
+      is(ms.readyState, "open", "MediaSource must be in open state after sourceopen");
+      var sb = ms.addSourceBuffer("video/webm");
+      ok(sb, "Create a SourceBuffer");
+      is(ms.sourceBuffers.length, 1, "MediaSource.sourceBuffers is expected length");
+      is(ms.sourceBuffers[0], sb, "SourceBuffer in list matches our SourceBuffer");
+      fetch("seek.webm", function (blob) {
+        var r = new FileReader();
+        r.addEventListener("load", function (e) {
+          sb.appendBuffer(new Uint8Array(e.target.result));
+          ms.endOfStream();
+          v.play();
+        });
+        r.readAsArrayBuffer(blob);
       });
-      r.readAsArrayBuffer(blob);
     });
-  });
-  ms.addEventListener("sourceended", function () {
-    ok(true, "Receive a sourceended event");
-    is(ms.readyState, "ended", "MediaSource must be in ended state after sourceended");
-  });
-  v.addEventListener("playing", function () {
-    is(v.duration, 4, "Video has correct duration");
-    v.parentNode.removeChild(v);
-    SpecialPowers.clearUserPref("media.mediasource.enabled");
-    SimpleTest.finish();
+    ms.addEventListener("sourceended", function () {
+      ok(true, "Receive a sourceended event");
+      is(ms.readyState, "ended", "MediaSource must be in ended state after sourceended");
+    });
+    v.addEventListener("ended", function () {
+      is(v.duration, 4, "Video has correct duration");
+      v.parentNode.removeChild(v);
+      SimpleTest.finish();
+    });
   });
 });
 

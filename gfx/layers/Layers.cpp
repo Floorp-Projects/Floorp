@@ -1171,9 +1171,10 @@ void WriteSnapshotToDumpFile(LayerManager* aManager, gfxASurface* aSurf)
   WriteSnapshotToDumpFile_internal(aManager, aSurf);
 }
 
-void WriteSnapshotToDumpFile(Compositor* aCompositor, gfxASurface* aSurf)
+void WriteSnapshotToDumpFile(Compositor* aCompositor, DrawTarget* aTarget)
 {
-  WriteSnapshotToDumpFile_internal(aCompositor, aSurf);
+  nsRefPtr<gfxASurface> surf = gfxPlatform::GetPlatform()->GetThebesSurfaceForDrawTarget(aTarget);
+  WriteSnapshotToDumpFile_internal(aCompositor, surf);
 }
 #endif
 
@@ -1351,7 +1352,7 @@ nsACString&
 CanvasLayer::PrintInfo(nsACString& aTo, const char* aPrefix)
 {
   Layer::PrintInfo(aTo, aPrefix);
-  if (mFilter != gfxPattern::FILTER_GOOD) {
+  if (mFilter != GraphicsFilter::FILTER_GOOD) {
     AppendToString(aTo, mFilter, " [filter=", "]");
   }
   return aTo;
@@ -1361,7 +1362,7 @@ nsACString&
 ImageLayer::PrintInfo(nsACString& aTo, const char* aPrefix)
 {
   Layer::PrintInfo(aTo, aPrefix);
-  if (mFilter != gfxPattern::FILTER_GOOD) {
+  if (mFilter != GraphicsFilter::FILTER_GOOD) {
     AppendToString(aTo, mFilter, " [filter=", "]");
   }
   return aTo;

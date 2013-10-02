@@ -4,14 +4,13 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "assembler/assembler/MacroAssembler.h"
 #include "jit/Bailouts.h"
-#include "jit/ExecutionModeInlines.h"
 #include "jit/IonCompartment.h"
 #include "jit/IonFrames.h"
 #include "jit/IonLinker.h"
-#include "jit/IonSpewer.h"
-#include "jit/PerfSpewer.h"
+#ifdef JS_ION_PERF
+# include "jit/PerfSpewer.h"
+#endif
 #include "jit/VMFunctions.h"
 #include "jit/x64/BaselineHelpers-x64.h"
 
@@ -250,7 +249,7 @@ IonRuntime::generateEnterJIT(JSContext *cx, EnterJitType type)
         // Baseline OSR will return here.
         masm.bind(returnLabel.src());
         if (!masm.addCodeLabel(returnLabel))
-            return NULL;
+            return nullptr;
     }
 
     // Pop arguments and padding from stack.
@@ -413,7 +412,7 @@ IonRuntime::generateArgumentsRectifier(JSContext *cx, ExecutionMode mode, void *
     // Call the target function.
     // Note that this code assumes the function is JITted.
     masm.loadPtr(Address(rax, JSFunction::offsetOfNativeOrScript()), rax);
-    masm.loadBaselineOrIonRaw(rax, rax, mode, NULL);
+    masm.loadBaselineOrIonRaw(rax, rax, mode, nullptr);
     masm.call(rax);
     uint32_t returnOffset = masm.currentOffset();
 
@@ -679,7 +678,7 @@ IonRuntime::generateVMWrapper(JSContext *cx, const VMFunction &f)
     Linker linker(masm);
     IonCode *wrapper = linker.newCode(cx, JSC::OTHER_CODE);
     if (!wrapper)
-        return NULL;
+        return nullptr;
 
 #ifdef JS_ION_PERF
     writePerfSpewerIonCodeProfile(wrapper, "VMWrapper");
@@ -688,7 +687,7 @@ IonRuntime::generateVMWrapper(JSContext *cx, const VMFunction &f)
     // linker.newCode may trigger a GC and sweep functionWrappers_ so we have to
     // use relookupOrAdd instead of add.
     if (!functionWrappers_->relookupOrAdd(p, &f, wrapper))
-        return NULL;
+        return nullptr;
 
     return wrapper;
 }
@@ -748,14 +747,14 @@ IonRuntime::generateDebugTrapHandler(JSContext *cx)
     masm.subPtr(Imm32(BaselineFrame::Size()), scratch2);
 
     // Enter a stub frame and call the HandleDebugTrap VM function. Ensure
-    // the stub frame has a NULL ICStub pointer, since this pointer is marked
+    // the stub frame has a nullptr ICStub pointer, since this pointer is marked
     // during GC.
-    masm.movePtr(ImmPtr(NULL), BaselineStubReg);
+    masm.movePtr(ImmPtr(nullptr), BaselineStubReg);
     EmitEnterStubFrame(masm, scratch3);
 
     IonCode *code = cx->runtime()->ionRuntime()->getVMWrapper(HandleDebugTrapInfo);
     if (!code)
-        return NULL;
+        return nullptr;
 
     masm.push(scratch1);
     masm.push(scratch2);

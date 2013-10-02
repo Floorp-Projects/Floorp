@@ -12,6 +12,7 @@
 #include "nsIIndexedDatabaseManager.h"
 #include "nsIObserver.h"
 
+#include "js/TypeDecls.h"
 #include "mozilla/Atomics.h"
 #include "mozilla/dom/quota/PersistenceType.h"
 #include "mozilla/Mutex.h"
@@ -138,6 +139,15 @@ public:
   TabContextMayAccessOrigin(const mozilla::dom::TabContext& aContext,
                             const nsACString& aOrigin);
 
+  static bool
+  DefineConstructors(JSContext* aCx, JS::HandleObject aGlobal);
+
+  static bool
+  DefineIndexedDBGetter(JSContext* aCx, JS::HandleObject aGlobal);
+
+  static bool
+  DefineIndexedDBLazyGetter(JSContext* aCx, JS::HandleObject aGlobal);
+
 private:
   IndexedDatabaseManager();
   ~IndexedDatabaseManager();
@@ -165,6 +175,10 @@ private:
   static bool sIsMainProcess;
   static mozilla::Atomic<int32_t> sLowDiskSpaceMode;
 };
+
+bool
+ResolveConstructors(JSContext* aCx, JS::HandleObject aObj, JS::HandleId aId,
+                    JS::MutableHandleObject aObjp);
 
 END_INDEXEDDB_NAMESPACE
 

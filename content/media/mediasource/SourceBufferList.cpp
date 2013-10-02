@@ -6,7 +6,19 @@
 
 #include "SourceBufferList.h"
 
+#include "AsyncEventRunner.h"
+#include "mozilla/ErrorResult.h"
 #include "mozilla/dom/SourceBufferListBinding.h"
+#include "mozilla/mozalloc.h"
+#include "nsCOMPtr.h"
+#include "nsIEventTarget.h"
+#include "nsIRunnable.h"
+#include "nsStringGlue.h"
+#include "nsThreadUtils.h"
+#include "prlog.h"
+
+struct JSContext;
+class JSObject;
 
 #ifdef PR_LOGGING
 extern PRLogModuleInfo* gMediaSourceLog;
@@ -16,6 +28,7 @@ extern PRLogModuleInfo* gMediaSourceLog;
 #endif
 
 namespace mozilla {
+
 namespace dom {
 
 SourceBuffer*
@@ -42,6 +55,7 @@ void
 SourceBufferList::Remove(SourceBuffer* aSourceBuffer)
 {
   MOZ_ALWAYS_TRUE(mSourceBuffers.RemoveElement(aSourceBuffer));
+  aSourceBuffer->Detach();
   QueueAsyncSimpleEvent("removesourcebuffer");
 }
 
@@ -54,6 +68,9 @@ SourceBufferList::Contains(SourceBuffer* aSourceBuffer)
 void
 SourceBufferList::Clear()
 {
+  for (uint32_t i = 0; i < mSourceBuffers.Length(); ++i) {
+    mSourceBuffers[i]->Detach();
+  }
   mSourceBuffers.Clear();
   QueueAsyncSimpleEvent("removesourcebuffer");
 }
@@ -62,15 +79,6 @@ bool
 SourceBufferList::IsEmpty()
 {
   return mSourceBuffers.IsEmpty();
-}
-
-void
-SourceBufferList::DetachAndClear()
-{
-  for (uint32_t i = 0; i < mSourceBuffers.Length(); ++i) {
-    mSourceBuffers[i]->Detach();
-  }
-  Clear();
 }
 
 bool
@@ -96,6 +104,14 @@ SourceBufferList::Remove(double aStart, double aEnd, ErrorResult& aRv)
 }
 
 void
+SourceBufferList::Ended()
+{
+  for (uint32_t i = 0; i < mSourceBuffers.Length(); ++i) {
+    mSourceBuffers[i]->Ended();
+  }
+}
+
+void
 SourceBufferList::DispatchSimpleEvent(const char* aName)
 {
   LOG(PR_LOG_DEBUG, ("%p Dispatching event %s to SourceBufferList", this, aName));
@@ -106,7 +122,7 @@ void
 SourceBufferList::QueueAsyncSimpleEvent(const char* aName)
 {
   LOG(PR_LOG_DEBUG, ("%p Queuing event %s to SourceBufferList", this, aName));
-  nsCOMPtr<nsIRunnable> event = new AsyncEventRunnner<SourceBufferList>(this, aName);
+  nsCOMPtr<nsIRunnable> event = new AsyncEventRunner<SourceBufferList>(this, aName);
   NS_DispatchToMainThread(event, NS_DISPATCH_NORMAL);
 }
 
@@ -139,4 +155,5 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION_INHERITED(SourceBufferList)
 NS_INTERFACE_MAP_END_INHERITING(nsDOMEventTargetHelper)
 
 } // namespace dom
+
 } // namespace mozilla

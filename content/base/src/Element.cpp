@@ -70,7 +70,7 @@
 #include "nsXBLBinding.h"
 #include "nsPIDOMWindow.h"
 #include "nsPIBoxObject.h"
-#include "nsClientRect.h"
+#include "mozilla/dom/DOMRect.h"
 #include "nsSVGUtils.h"
 #include "nsLayoutUtils.h"
 #include "nsGkAtoms.h"
@@ -475,7 +475,7 @@ Element::GetStyledFrame()
 }
 
 nsIScrollableFrame*
-Element::GetScrollFrame(nsIFrame **aStyledFrame)
+Element::GetScrollFrame(nsIFrame **aStyledFrame, bool aFlushLayout)
 {
   // it isn't clear what to return for SVG nodes, so just return nothing
   if (IsSVG()) {
@@ -485,7 +485,11 @@ Element::GetScrollFrame(nsIFrame **aStyledFrame)
     return nullptr;
   }
 
-  nsIFrame* frame = GetStyledFrame();
+  // Inline version of GetStyledFrame to use Flush_None if needed.
+  nsIFrame* frame = GetPrimaryFrame(aFlushLayout ? Flush_Layout : Flush_None);
+  if (frame) {
+    frame = nsLayoutUtils::GetStyleFrame(frame);
+  }
 
   if (aStyledFrame) {
     *aStyledFrame = frame;
@@ -541,6 +545,28 @@ Element::ScrollIntoView(bool aTop)
                                      nsIPresShell::SCROLL_ALWAYS),
                                    nsIPresShell::ScrollAxis(),
                                    nsIPresShell::SCROLL_OVERFLOW_HIDDEN);
+}
+
+bool
+Element::ScrollByNoFlush(int32_t aDx, int32_t aDy)
+{
+  nsIScrollableFrame* sf = GetScrollFrame(nullptr, false);
+  if (!sf) {
+    return false;
+  }
+
+  nsWeakFrame weakRef(sf->GetScrolledFrame());
+
+  CSSIntPoint before = sf->GetScrollPositionCSSPixels();
+  sf->ScrollToCSSPixelsApproximate(CSSIntPoint(before.x + aDx, before.y + aDy));
+
+  // The frame was destroyed, can't keep on scrolling.
+  if (!weakRef.IsAlive()) {
+    return false;
+  }
+
+  CSSIntPoint after = sf->GetScrollPositionCSSPixels();
+  return (before != after);
 }
 
 static nsSize GetScrollRectSizeForOverflowVisibleFrame(nsIFrame* aFrame)
@@ -621,10 +647,10 @@ Element::GetClientAreaRect()
   return nsRect(0, 0, 0, 0);
 }
 
-already_AddRefed<nsClientRect>
+already_AddRefed<DOMRect>
 Element::GetBoundingClientRect()
 {
-  nsRefPtr<nsClientRect> rect = new nsClientRect(this);
+  nsRefPtr<DOMRect> rect = new DOMRect(this);
   
   nsIFrame* frame = GetPrimaryFrame(Flush_Layout);
   if (!frame) {
@@ -639,10 +665,10 @@ Element::GetBoundingClientRect()
   return rect.forget();
 }
 
-already_AddRefed<nsClientRectList>
+already_AddRefed<DOMRectList>
 Element::GetClientRects()
 {
-  nsRefPtr<nsClientRectList> rectList = new nsClientRectList(this);
+  nsRefPtr<DOMRectList> rectList = new DOMRectList(this);
 
   nsIFrame* frame = GetPrimaryFrame(Flush_Layout);
   if (!frame) {
@@ -1377,7 +1403,7 @@ Element::IsNodeOfType(uint32_t aFlags) const
 /* static */
 nsresult
 Element::DispatchEvent(nsPresContext* aPresContext,
-                       nsEvent* aEvent,
+                       WidgetEvent* aEvent,
                        nsIContent* aTarget,
                        bool aFullDispatch,
                        nsEventStatus* aStatus)
@@ -1405,7 +1431,7 @@ Element::DispatchEvent(nsPresContext* aPresContext,
 /* static */
 nsresult
 Element::DispatchClickEvent(nsPresContext* aPresContext,
-                            nsInputEvent* aSourceEvent,
+                            WidgetInputEvent* aSourceEvent,
                             nsIContent* aTarget,
                             bool aFullDispatch,
                             const EventFlags* aExtraEventFlags,
@@ -1415,16 +1441,16 @@ Element::DispatchClickEvent(nsPresContext* aPresContext,
   NS_PRECONDITION(aSourceEvent, "Must have source event");
   NS_PRECONDITION(aStatus, "Null out param?");
 
-  nsMouseEvent event(aSourceEvent->mFlags.mIsTrusted, NS_MOUSE_CLICK,
-                     aSourceEvent->widget, nsMouseEvent::eReal);
+  WidgetMouseEvent event(aSourceEvent->mFlags.mIsTrusted, NS_MOUSE_CLICK,
+                         aSourceEvent->widget, WidgetMouseEvent::eReal);
   event.refPoint = aSourceEvent->refPoint;
   uint32_t clickCount = 1;
   float pressure = 0;
   uint16_t inputSource = 0;
   if (aSourceEvent->eventStructType == NS_MOUSE_EVENT) {
-    clickCount = static_cast<nsMouseEvent*>(aSourceEvent)->clickCount;
-    pressure = static_cast<nsMouseEvent*>(aSourceEvent)->pressure;
-    inputSource = static_cast<nsMouseEvent*>(aSourceEvent)->inputSource;
+    clickCount = static_cast<WidgetMouseEvent*>(aSourceEvent)->clickCount;
+    pressure = static_cast<WidgetMouseEvent*>(aSourceEvent)->pressure;
+    inputSource = static_cast<WidgetMouseEvent*>(aSourceEvent)->inputSource;
   } else if (aSourceEvent->eventStructType == NS_KEY_EVENT) {
     inputSource = nsIDOMMouseEvent::MOZ_SOURCE_KEYBOARD;
   }
@@ -1450,7 +1476,9 @@ Element::GetPrimaryFrame(mozFlushType aType)
 
   // Cause a flush, so we get up-to-date frame
   // information
-  doc->FlushPendingNotifications(aType);
+  if (aType != Flush_None) {
+    doc->FlushPendingNotifications(aType);
+  }
 
   return GetPrimaryFrame();
 }
@@ -1730,7 +1758,7 @@ Element::SetAttrAndNotify(int32_t aNamespaceID,
   }
 
   if (aFireMutation) {
-    nsMutationEvent mutation(true, NS_MUTATION_ATTRMODIFIED);
+    InternalMutationEvent mutation(true, NS_MUTATION_ATTRMODIFIED);
 
     nsAutoString ns;
     nsContentUtils::NameSpaceManager()->GetNameSpaceURI(aNamespaceID, ns);
@@ -1911,7 +1939,7 @@ Element::UnsetAttr(int32_t aNameSpaceID, nsIAtom* aName,
   }
 
   if (hasMutationListeners) {
-    nsMutationEvent mutation(true, NS_MUTATION_ATTRMODIFIED);
+    InternalMutationEvent mutation(true, NS_MUTATION_ATTRMODIFIED);
 
     mutation.mRelatedNode = attrNode;
     mutation.mAttrName = aName;
@@ -2138,7 +2166,7 @@ Element::PreHandleEventForLinks(nsEventChainPreVisitor& aVisitor)
     // FALL THROUGH
   case NS_FOCUS_CONTENT:
     if (aVisitor.mEvent->eventStructType != NS_FOCUS_EVENT ||
-        !static_cast<nsFocusEvent*>(aVisitor.mEvent)->isRefocus) {
+        !static_cast<InternalFocusEvent*>(aVisitor.mEvent)->isRefocus) {
       nsAutoString target;
       GetLinkTarget(target);
       nsContentUtils::TriggerLink(this, aVisitor.mPresContext, absURI, target,
@@ -2194,8 +2222,8 @@ Element::PostHandleEventForLinks(nsEventChainPostVisitor& aVisitor)
   case NS_MOUSE_BUTTON_DOWN:
     {
       if (aVisitor.mEvent->eventStructType == NS_MOUSE_EVENT &&
-          static_cast<nsMouseEvent*>(aVisitor.mEvent)->button ==
-          nsMouseEvent::eLeftButton) {
+          static_cast<WidgetMouseEvent*>(aVisitor.mEvent)->button ==
+            WidgetMouseEvent::eLeftButton) {
         // don't make the link grab the focus if there is no link handler
         nsILinkHandler *handler = aVisitor.mPresContext->GetLinkHandler();
         nsIDocument *document = GetCurrentDoc();
@@ -2217,7 +2245,8 @@ Element::PostHandleEventForLinks(nsEventChainPostVisitor& aVisitor)
 
   case NS_MOUSE_CLICK:
     if (aVisitor.mEvent->IsLeftClickEvent()) {
-      nsInputEvent* inputEvent = static_cast<nsInputEvent*>(aVisitor.mEvent);
+      WidgetInputEvent* inputEvent =
+        static_cast<WidgetInputEvent*>(aVisitor.mEvent);
       if (inputEvent->IsControl() || inputEvent->IsMeta() ||
           inputEvent->IsAlt() ||inputEvent->IsShift()) {
         break;
@@ -2228,8 +2257,8 @@ Element::PostHandleEventForLinks(nsEventChainPostVisitor& aVisitor)
       if (shell) {
         // single-click
         nsEventStatus status = nsEventStatus_eIgnore;
-        nsUIEvent actEvent(aVisitor.mEvent->mFlags.mIsTrusted,
-                           NS_UI_ACTIVATE, 1);
+        InternalUIEvent actEvent(aVisitor.mEvent->mFlags.mIsTrusted,
+                                 NS_UI_ACTIVATE, 1);
 
         rv = shell->HandleDOMEventWithTarget(this, &actEvent, &status);
         if (NS_SUCCEEDED(rv)) {
@@ -2255,7 +2284,8 @@ Element::PostHandleEventForLinks(nsEventChainPostVisitor& aVisitor)
   case NS_KEY_PRESS:
     {
       if (aVisitor.mEvent->eventStructType == NS_KEY_EVENT) {
-        nsKeyEvent* keyEvent = static_cast<nsKeyEvent*>(aVisitor.mEvent);
+        WidgetKeyboardEvent* keyEvent =
+          static_cast<WidgetKeyboardEvent*>(aVisitor.mEvent);
         if (keyEvent->keyCode == NS_VK_RETURN) {
           nsEventStatus status = nsEventStatus_eIgnore;
           rv = DispatchClickEvent(aVisitor.mPresContext, keyEvent, this,

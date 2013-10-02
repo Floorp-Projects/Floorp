@@ -59,9 +59,9 @@ static int32_t gNumWidgets;
 nsIRollupListener* nsBaseWidget::gRollupListener = nullptr;
 
 using namespace mozilla::layers;
+using namespace mozilla::ipc;
 using namespace mozilla;
 using base::Thread;
-using mozilla::ipc::AsyncChannel;
 
 nsIContent* nsBaseWidget::mLastRollup = nullptr;
 // Global user preference for disabling native theme. Used
@@ -950,12 +950,11 @@ void nsBaseWidget::CreateCompositor(int aWidth, int aHeight)
   }
 
   mCompositorParent = NewCompositorParent(aWidth, aHeight);
-  AsyncChannel *parentChannel = mCompositorParent->GetIPCChannel();
+  MessageChannel *parentChannel = mCompositorParent->GetIPCChannel();
   LayerManager* lm = new ClientLayerManager(this);
   MessageLoop *childMessageLoop = CompositorParent::CompositorLoop();
   mCompositorChild = new CompositorChild(lm);
-  AsyncChannel::Side childSide = mozilla::ipc::AsyncChannel::Child;
-  mCompositorChild->Open(parentChannel, childMessageLoop, childSide);
+  mCompositorChild->Open(parentChannel, childMessageLoop, ipc::ChildSide);
 
   TextureFactoryIdentifier textureFactoryIdentifier;
   PLayerTransactionChild* shadowManager;
@@ -1405,13 +1404,15 @@ nsBaseWidget::ResolveIconName(const nsAString &aIconName,
 }
 
 NS_IMETHODIMP
-nsBaseWidget::BeginResizeDrag(nsGUIEvent* aEvent, int32_t aHorizontal, int32_t aVertical)
+nsBaseWidget::BeginResizeDrag(WidgetGUIEvent* aEvent,
+                              int32_t aHorizontal,
+                              int32_t aVertical)
 {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
-nsBaseWidget::BeginMoveDrag(nsMouseEvent* aEvent)
+nsBaseWidget::BeginMoveDrag(WidgetMouseEvent* aEvent)
 {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
@@ -1561,7 +1562,7 @@ nsBaseWidget::GetRootAccessible()
 //
 //////////////////////////////////////////////////////////////
 /* static */ nsAutoString
-nsBaseWidget::debug_GuiEventToString(nsGUIEvent * aGuiEvent)
+nsBaseWidget::debug_GuiEventToString(WidgetGUIEvent* aGuiEvent)
 {
   NS_ASSERTION(nullptr != aGuiEvent,"cmon, null gui event.");
 
@@ -1738,7 +1739,7 @@ nsBaseWidget::debug_WantPaintFlashing()
 /* static */ void
 nsBaseWidget::debug_DumpEvent(FILE *                aFileOut,
                               nsIWidget *           aWidget,
-                              nsGUIEvent *          aGuiEvent,
+                              WidgetGUIEvent*       aGuiEvent,
                               const nsAutoCString & aWidgetName,
                               int32_t               aWindowID)
 {

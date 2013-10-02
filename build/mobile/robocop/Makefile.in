@@ -8,17 +8,17 @@ dir-tests    := $(DEPTH)/$(mobile-tests)
 
 ANDROID_APK_NAME := robocop-debug
 
-ROBOTIUM_PATH = $(srcdir)/robotium-solo-4.2.jar
-
-JAVAFILES = \
-  R.java \
+ANDROID_EXTRA_JARS += \
+  $(srcdir)/robotium-solo-4.2.jar \
   $(NULL)
 
 ANDROID_RESFILES = \
   res/values/strings.xml \
   $(NULL)
 
-_JAVA_HARNESS = \
+ANDROID_ASSETS_DIR := $(TESTPATH)/assets
+
+_JAVA_HARNESS := \
   Actions.java \
   Assert.java \
   Driver.java \
@@ -51,7 +51,6 @@ PP_TARGETS        += manifest
 manifest          := $(srcdir)/AndroidManifest.xml.in
 manifest_TARGET   := AndroidManifest.xml
 
-
 # Install robocop configs and helper
 INSTALL_TARGETS += robocop
 robocop_TARGET  := libs
@@ -75,50 +74,25 @@ MOCHITEST_ROBOCOP_FILES := \
 GARBAGE += \
   AndroidManifest.xml \
   $(java-tests-dep) \
-  $(_JAVA_HARNESS) \
-  classes.dex \
-  $(ANDROID_APK_NAME).ap_ \
-  $(ANDROID_APK_NAME)-unsigned-unaligned.apk \
-  $(ANDROID_APK_NAME)-unaligned.apk \
-  $(ANDROID_APK_NAME).apk \
+  $(java-harness-dep) \
   $(robocop-deps) \
+  $(NULL)
+
+JAVAFILES += \
+  $(robocop-deps) \
+  $(java-harness-dep) \
+  $(java-tests-dep) \
   $(NULL)
 
 DEFINES += \
   -DANDROID_PACKAGE_NAME=$(ANDROID_PACKAGE_NAME) \
   $(NULL)
 
-JAVA_CLASSPATH = $(ANDROID_SDK)/android.jar:$(ROBOTIUM_PATH)
-
 include $(topsrcdir)/config/rules.mk
-
-# Override rules.mk java flags with the android specific ones
-include $(topsrcdir)/config/android-common.mk
-
-GENERATED_DIRS_tools = classes $(dir-tests)
 
 tools:: $(ANDROID_APK_NAME).apk
 
-classes.dex: $(ANDROID_APK_NAME).ap_
-classes.dex: $(robocop-deps)
-classes.dex: $(java-harness-dep)
-classes.dex: $(java-tests-dep)
-	$(JAVAC) $(JAVAC_FLAGS) -d classes $(JAVAFILES) $(_JAVA_HARNESS) $(java-tests-dep)
-	$(DX) --dex --output=$@ classes $(ROBOTIUM_PATH) $(ANDROID_COMPT_LIB)
-
-$(ANDROID_APK_NAME).ap_: AndroidManifest.xml $(TESTPATH)/assets/*
-	$(AAPT) package -f -M $< -I $(ANDROID_SDK)/android.jar -I . -S res -A $(TESTPATH)/assets -F $@ -J ./
-
-$(ANDROID_APK_NAME)-unsigned-unaligned.apk: $(ANDROID_APK_NAME).ap_ classes.dex
-	cp $< $@
-	$(ZIP) -0 $@ classes.dex
-
-$(ANDROID_APK_NAME)-unaligned.apk: $(ANDROID_APK_NAME)-unsigned-unaligned.apk
-	cp $< $@
-	$(DEBUG_JARSIGNER) $@
-
-$(ANDROID_APK_NAME).apk: $(ANDROID_APK_NAME)-unaligned.apk
-	$(ZIPALIGN) -f -v 4 $< $@
+GENERATED_DIRS += $(dir-tests)
 
 # PP_java-tests not fully usable here
 # Intermediate step toward a library rule.

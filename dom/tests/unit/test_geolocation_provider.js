@@ -65,6 +65,11 @@ function geoHandler(metadata, response)
 
 function run_test()
 {
+    // XPCShell does not get a profile by default. The geolocation service
+    // depends on the settings service which uses IndexedDB and IndexedDB
+    // needs a place where it can store databases.
+    do_get_profile();
+
     // only kill this test when shutdown is called on the provider.
     do_test_pending();
 

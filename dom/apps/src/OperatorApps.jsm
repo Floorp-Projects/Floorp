@@ -22,10 +22,6 @@ Cu.import("resource://gre/modules/Task.jsm");
 XPCOMUtils.defineLazyServiceGetter(this, "iccProvider",
                                    "@mozilla.org/ril/content-helper;1",
                                    "nsIIccProvider");
-
-XPCOMUtils.defineLazyServiceGetter(this, "mobileConnection",
-                                   "@mozilla.org/ril/content-helper;1",
-                                   "nsIMobileConnectionProvider");
 #endif
 
 function debug(aMsg) {
@@ -65,7 +61,7 @@ let iccListener = {
 
   notifyIccCardLockError: function() {},
 
-  notifyCardStateChange: function() {},
+  notifyCardStateChanged: function() {},
 
   notifyIccInfoChanged: function() {
     let iccInfo = iccProvider.iccInfo;
@@ -90,11 +86,11 @@ this.OperatorAppsRegistry = {
       debug("First Run with SIM");
       let mcc = 0;
       let mnc = 0;
-      if (mobileConnection.iccInfo && mobileConnection.iccInfo.mcc) {
-        mcc = mobileConnection.iccInfo.mcc;
+      if (iccProvider.iccInfo && iccProvider.iccInfo.mcc) {
+        mcc = iccProvider.iccInfo.mcc;
       }
-      if (mobileConnection.iccInfo && mobileConnection.iccInfo.mnc) {
-        mnc = mobileConnection.iccInfo.mnc;
+      if (iccProvider.iccInfo && iccProvider.iccInfo.mnc) {
+        mnc = iccProvider.iccInfo.mnc;
       }
       if (mcc && mnc) {
         this._installOperatorApps(mcc, mnc);
@@ -232,6 +228,7 @@ this.OperatorAppsRegistry = {
       }
       this.eraseVariantAppsNotInList(aIdsApp);
       Services.prefs.setBoolPref(PREF_FIRST_RUN_WITH_SIM, false);
+      Services.prefs.savePrefFile(null);
     }.bind(this)).then(null, function(aError) {
         debug("Error: " + aError);
     });

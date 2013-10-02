@@ -12,14 +12,14 @@
 #include "mozilla/Alignment.h"
 
 #include "jit/BaselineFrame.h"
-#include "jit/BaselineJIT.h"
 #include "jit/BaselineRegisters.h"
-#include "jit/BytecodeAnalysis.h"
 #include "jit/FixedList.h"
 #include "jit/IonMacroAssembler.h"
 
 namespace js {
 namespace jit {
+
+struct BytecodeInfo;
 
 // FrameInfo overview.
 //
@@ -159,8 +159,6 @@ class StackValue
 };
 
 enum StackAdjustment { AdjustStack, DontAdjustStack };
-
-class BaselineCompilerShared;
 
 class FrameInfo
 {

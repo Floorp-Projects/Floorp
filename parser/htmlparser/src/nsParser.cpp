@@ -1635,20 +1635,6 @@ nsParser::OnStartRequest(nsIRequest *request, nsISupports* aContext)
   return rv;
 }
 
-
-static inline bool IsSecondMarker(unsigned char aChar)
-{
-  switch (aChar) {
-    case '!':
-    case '?':
-    case 'h':
-    case 'H':
-      return true;
-    default:
-      return false;
-  }
-}
-
 static bool
 ExtractCharsetFromXmlDeclaration(const unsigned char* aBytes, int32_t aLen,
                                  nsCString& oCharset)

@@ -8,86 +8,18 @@
 
 #include "2D.h"
 #include "cairo.h"
+#include <vector>
 
 namespace mozilla {
 namespace gfx {
 
 class DrawTargetCairo;
-
-// A reference to a cairo context that can maintain and set a path.
-//
-// This class exists to make it possible for us to not construct paths manually
-// using cairo_path_t, which in the common case is a speed and memory
-// optimization (as the cairo_t maintains the path for us, and we don't have to
-// use cairo_append_path). Instead, we can share a cairo_t with a DrawTarget,
-// and have it inform us when we need to make a copy of the path.
-//
-// Exactly one Path* object represents the current path on a given DrawTarget's
-// context. That Path* object registers its CairoPathContext with the
-// DrawTarget it's associated with. If that DrawTarget is going to change its
-// path, it has to tell the CairoPathContext beforehand so the path can be
-// saved off.
-// The path ownership is transferred to every new instance of CairoPathContext
-// in the constructor. We inform the draw target of the new context object,
-// which causes us to save off a copy of the path, as we're not going to be
-// informed upon changes any more.
-// Any transformation on aCtx is not applied to this path, though a path can be
-// transformed separately from its context by passing a matrix to the
-// constructor.
-class CairoPathContext : public RefCounted<CairoPathContext>
-{
-public:
-  // Construct a new empty CairoPathContext that uses the given draw target and
-  // its cairo context. Using the existing context may save having to copy the
-  // path later.
-  CairoPathContext(cairo_t* aCtx, DrawTargetCairo* aDrawTarget);
-
-  // Copy the path.
-  CairoPathContext(CairoPathContext& aPathContext);
-
-  ~CairoPathContext();
-
-  // Copy the path on mContext to be the path on aToContext, if they aren't the
-  // same. At this point we set the fill rule for the destination context as
-  // there is little point in doing this earlier.
-  void CopyPathTo(cairo_t* aToContext, Matrix& aTransform);
-
-  // This method must be called by the draw target before it changes the path
-  // currently on the cairo context.
-  void PathWillChange();
-
-  // This method must be called as the draw target is dying. In this case, we
-  // forget our reference to the draw target, and become the only reference to
-  // our context.
-  void ForgetDrawTarget();
-
-  // Create a duplicate context, and copy this path to that context.
-  void DuplicateContextAndPath();
-
-  // Returns true if this CairoPathContext represents path.
-  bool ContainsPath(const Path* path);
-
-  cairo_t* GetContext() const { return mContext; }
-  DrawTargetCairo* GetDrawTarget() const { return mDrawTarget; }
-  operator cairo_t* () const { return mContext; }
-
-private: // data
-  cairo_t* mContext;
-  // Not a RefPtr to avoid cycles.
-  DrawTargetCairo* mDrawTarget;
-};
+class PathCairo;
 
 class PathBuilderCairo : public PathBuilder
 {
 public:
-  // Creates a new empty path. It also implicitly takes ownership of aCtx by
-  // calling aDrawTarget->SetPathObserver(). Therefore, if the draw target has a
-  // path observer, this constructor will cause it to copy out its path.
-  PathBuilderCairo(cairo_t* aCtx, DrawTargetCairo* aDrawTarget, FillRule aFillRule);
-
-  // Creates a path builder out of an existing CairoPathContext with a new fill
-  // rule and transform.
-  PathBuilderCairo(CairoPathContext* aContext, FillRule aFillRule, const Matrix& aTransform = Matrix());
+  PathBuilderCairo(FillRule aFillRule);
 
   virtual void MoveTo(const Point &aPoint);
   virtual void LineTo(const Point &aPoint);
@@ -102,20 +34,23 @@ public:
   virtual Point CurrentPoint() const;
   virtual TemporaryRef<Path> Finish();
 
-  TemporaryRef<CairoPathContext> GetPathContext();
-
 private: // data
-  void PrepareForWrite();
+  friend class PathCairo;
 
-  RefPtr<CairoPathContext> mPathContext;
-  Matrix mTransform;
   FillRule mFillRule;
+  std::vector<cairo_path_data_t> mPathData;
+  // It's easiest to track this here, parsing the path data to find the current
+  // point is a little tricky.
+  Point mCurrentPoint;
+  Point mBeginPoint;
 };
 
 class PathCairo : public Path
 {
 public:
-  PathCairo(CairoPathContext* aPathContex, Matrix& aTransform, FillRule aFillRule);
+  PathCairo(FillRule aFillRule, std::vector<cairo_path_data_t> &aPathData, const Point &aCurrentPoint);
+  PathCairo(cairo_t *aContext);
+  ~PathCairo();
 
   virtual BackendType GetBackendType() const { return BACKEND_CAIRO; }
 
@@ -136,17 +71,16 @@ public:
 
   virtual FillRule GetFillRule() const { return mFillRule; }
 
-  TemporaryRef<CairoPathContext> GetPathContext();
+  void SetPathOnContext(cairo_t *aContext) const;
 
-  // Set this path to be the current path for aContext (if it's not already
-  // aContext's path). You must pass the draw target associated with the
-  // context as aDrawTarget.
-  void CopyPathTo(cairo_t* aContext, DrawTargetCairo* aDrawTarget);
-
+  void AppendPathToBuilder(PathBuilderCairo *aBuilder, const Matrix *aTransform = nullptr) const;
 private:
-  RefPtr<CairoPathContext> mPathContext;
-  Matrix mTransform;
+  void EnsureContainingContext() const;
+
   FillRule mFillRule;
+  std::vector<cairo_path_data_t> mPathData;
+  mutable cairo_t *mContainingContext;
+  Point mCurrentPoint;
 };
 
 }

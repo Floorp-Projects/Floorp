@@ -420,7 +420,7 @@ nsCocoaUtils::InitNPCocoaEvent(NPCocoaEvent* aNPCocoaEvent)
 
 // static
 void
-nsCocoaUtils::InitPluginEvent(nsPluginEvent &aPluginEvent,
+nsCocoaUtils::InitPluginEvent(WidgetPluginEvent &aPluginEvent,
                               NPCocoaEvent &aCocoaEvent)
 {
   aPluginEvent.time = PR_IntervalNow();
@@ -430,7 +430,7 @@ nsCocoaUtils::InitPluginEvent(nsPluginEvent &aPluginEvent,
 
 // static
 void
-nsCocoaUtils::InitInputEvent(nsInputEvent &aInputEvent,
+nsCocoaUtils::InitInputEvent(WidgetInputEvent& aInputEvent,
                              NSEvent* aNativeEvent)
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
@@ -446,7 +446,7 @@ nsCocoaUtils::InitInputEvent(nsInputEvent &aInputEvent,
 
 // static
 void
-nsCocoaUtils::InitInputEvent(nsInputEvent &aInputEvent,
+nsCocoaUtils::InitInputEvent(WidgetInputEvent& aInputEvent,
                              NSUInteger aModifiers)
 {
   aInputEvent.modifiers = 0;

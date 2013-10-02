@@ -10,6 +10,27 @@ Many test suites have their test metadata defined in files called
 Test manifests are divided into two flavors: :ref:`manifest_destiny_manifests`
 and :ref:`reftest_manifests`.
 
+Naming Convention
+=================
+
+The build system does not enforce file naming for test manifest files.
+However, the following convention is used.
+
+mochitest.ini
+   For the *plain* flavor of mochitests.
+
+chrome.ini
+   For the *chrome* flavor of mochitests.
+
+browser.ini
+   For the *browser chrome* flavor of mochitests.
+
+a11y.ini
+   For the *a11y* flavor of mochitests.
+
+xpcshell.ini
+   For *xpcshell* tests.
+
 .. _manifest_destiny_manifests:
 
 Manifest Destiny Manifests
@@ -126,8 +147,14 @@ Some manifest keys accept a special filter syntax as their values. These
 values are essentially boolean expressions that are evaluated at test
 execution time.
 
+The expressions can reference a well-defined set of variables, such as
+``os`` and ``debug``. These variables are populated from the
+``mozinfo.json`` file. For the full list of available variables, see
+the :ref:`mozinfo documentation <mozinfo_attributes>`.
+
 See
-`the source <https://hg.mozilla.org/mozilla-central/file/default/testing/mozbase/manifestdestiny/manifestparser/manifestparser.py>`_.
+`the source <https://hg.mozilla.org/mozilla-central/file/default/testing/mozbase/manifestdestiny/manifestparser/manifestparser.py>`_ for the full documentation of the
+expression syntax until it is documented here.
 
 .. todo::
 

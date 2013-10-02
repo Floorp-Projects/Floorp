@@ -148,13 +148,8 @@ function makeFailure(reason) {
 const {Cc, Ci, Cu} = SpecialPowers;
 Cu.import("resource://gre/modules/ContactDB.jsm", window);
 
-let idb = {};
-Cc["@mozilla.org/dom/indexeddb/manager;1"]
-  .getService(Ci.nsIIndexedDatabaseManager)
-  .initWindowless(idb);
-
 let cdb = new ContactDB();
-cdb.init(idb);
+cdb.init();
 
 let CONTACT_PROPS = {
   id: "ab74671e36be41b680f8f030e7e24ea2",
@@ -197,7 +192,7 @@ let CONTACT_PROPS = {
 
 function deleteDatabase(then) {
   cdb.close();
-  let req = idb.indexedDB.deleteDatabase(DB_NAME);
+  let req = indexedDB.deleteDatabase(DB_NAME);
   req.onsuccess = then;
   req.onblocked = makeFailure("blocked");
   req.onupgradeneeded = makeFailure("onupgradeneeded");
@@ -216,7 +211,7 @@ function saveContact() {
 
 function getContact(callback) {
   return function() {
-    let req = idb.indexedDB.open(STORE_NAME, DB_VERSION);
+    let req = indexedDB.open(STORE_NAME, DB_VERSION);
     req.onsuccess = function(event) {
       let db = event.target.result;
       let txn = db.transaction([STORE_NAME], "readonly");
@@ -245,7 +240,7 @@ let Tests = [
     deleteDatabase(function() {
       info("slow upgrade");
       cdb.useFastUpgrade = false;
-      cdb.init(idb);
+      cdb.init();
       next();
     });
   },

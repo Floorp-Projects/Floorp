@@ -7,7 +7,10 @@
 #ifndef jit_CodeGenerator_h
 #define jit_CodeGenerator_h
 
-#include "jit/PerfSpewer.h"
+#include "jit/IonCaches.h"
+#if defined(JS_ION_PERF)
+# include "jit/PerfSpewer.h"
+#endif
 
 #if defined(JS_CPU_X86)
 # include "jit/x86/CodeGenerator-x86.h"
@@ -44,7 +47,7 @@ class CodeGenerator : public CodeGeneratorSpecific
     bool generateBody();
 
   public:
-    CodeGenerator(MIRGenerator *gen, LIRGraph *graph, MacroAssembler *masm = NULL);
+    CodeGenerator(MIRGenerator *gen, LIRGraph *graph, MacroAssembler *masm = nullptr);
     ~CodeGenerator();
 
   public:
@@ -117,6 +120,7 @@ class CodeGenerator : public CodeGeneratorSpecific
     bool visitFilterArguments(LFilterArguments *lir);
     bool visitCallDirectEval(LCallDirectEval *lir);
     bool visitDoubleToInt32(LDoubleToInt32 *lir);
+    bool visitFloat32ToInt32(LFloat32ToInt32 *lir);
     bool visitNewSlots(LNewSlots *lir);
     bool visitNewParallelArrayVMCall(LNewParallelArray *lir);
     bool visitNewParallelArray(LNewParallelArray *lir);
@@ -233,7 +237,10 @@ class CodeGenerator : public CodeGeneratorSpecific
     bool visitIteratorMore(LIteratorMore *lir);
     bool visitIteratorEnd(LIteratorEnd *lir);
     bool visitArgumentsLength(LArgumentsLength *lir);
-    bool visitGetArgument(LGetArgument *lir);
+    bool visitGetFrameArgument(LGetFrameArgument *lir);
+    bool visitSetFrameArgumentT(LSetFrameArgumentT *lir);
+    bool visitSetFrameArgumentC(LSetFrameArgumentC *lir);
+    bool visitSetFrameArgumentV(LSetFrameArgumentV *lir);
     bool visitRunOncePrologue(LRunOncePrologue *lir);
     bool emitRest(LInstruction *lir, Register array, Register numActuals,
                   Register temp0, Register temp1, unsigned numFormals,
@@ -319,7 +326,7 @@ class CodeGenerator : public CodeGeneratorSpecific
 
     IonScriptCounts *extractUnassociatedScriptCounts() {
         IonScriptCounts *counts = unassociatedScriptCounts_;
-        unassociatedScriptCounts_ = NULL;  // prevent delete in dtor
+        unassociatedScriptCounts_ = nullptr;  // prevent delete in dtor
         return counts;
     }
 

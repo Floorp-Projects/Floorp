@@ -156,7 +156,7 @@ static void AllocateTexturesYCbCr(PlanarYCbCrImage *aImage,
   nsAutoPtr<PlanarYCbCrD3D9BackendData> backendData(
     new PlanarYCbCrD3D9BackendData);
 
-  const PlanarYCbCrImage::Data *data = aImage->GetData();
+  const PlanarYCbCrData *data = aImage->GetData();
 
   D3DLOCKED_RECT lockrectY;
   D3DLOCKED_RECT lockrectCb;
@@ -430,7 +430,7 @@ ImageLayerD3D9::RenderLayer()
       mD3DManager->SetShaderMode(DeviceManagerD3D9::RGBLAYER, GetMaskLayer());
     }
 
-    if (mFilter == gfxPattern::FILTER_NEAREST) {
+    if (mFilter == GraphicsFilter::FILTER_NEAREST) {
       device()->SetSamplerState(0, D3DSAMP_MAGFILTER, D3DTEXF_POINT);
       device()->SetSamplerState(0, D3DSAMP_MINFILTER, D3DTEXF_POINT);
     }
@@ -440,7 +440,7 @@ ImageLayerD3D9::RenderLayer()
     autoLock.Unlock();
 
     device()->DrawPrimitive(D3DPT_TRIANGLESTRIP, 0, 2);
-    if (mFilter == gfxPattern::FILTER_NEAREST) {
+    if (mFilter == GraphicsFilter::FILTER_NEAREST) {
       device()->SetSamplerState(0, D3DSAMP_MAGFILTER, D3DTEXF_LINEAR);
       device()->SetSamplerState(0, D3DSAMP_MINFILTER, D3DTEXF_LINEAR);
     }

@@ -14,10 +14,8 @@
 #include "jsapi.h"
 #include "jscntxt.h"
 #include "jscompartment.h"
-#include "jsfun.h"
 #include "jsobj.h"
 #include "jsprf.h"
-#include "jsutil.h"
 
 #include "jsobjinlines.h"
 

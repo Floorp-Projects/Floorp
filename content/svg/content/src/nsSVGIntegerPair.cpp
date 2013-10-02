@@ -35,16 +35,8 @@ ParseIntegerOptionalInteger(const nsAString& aValue,
 
   uint32_t i;
   for (i = 0; i < 2 && tokenizer.hasMoreTokens(); ++i) {
-    NS_ConvertUTF16toUTF8 utf8Token(tokenizer.nextToken());
-    const char *token = utf8Token.get();
-    if (*token == '\0') {
-      return NS_ERROR_DOM_SYNTAX_ERR; // empty string (e.g. two commas in a row)
-    }
-
-    char *end;
-    aValues[i] = strtol(token, &end, 10);
-    if (*end != '\0' || !NS_finite(aValues[i])) {
-      return NS_ERROR_DOM_SYNTAX_ERR; // parse error
+    if (!SVGContentUtils::ParseInteger(tokenizer.nextToken(), aValues[i])) {
+      return NS_ERROR_DOM_SYNTAX_ERR;
     }
   }
   if (i == 1) {

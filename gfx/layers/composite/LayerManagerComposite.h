@@ -102,8 +102,12 @@ public:
 
   void UpdateRenderBounds(const nsIntRect& aRect);
 
-  void BeginTransaction() MOZ_OVERRIDE;
-  void BeginTransactionWithTarget(gfxContext* aTarget) MOZ_OVERRIDE;
+  virtual void BeginTransaction() MOZ_OVERRIDE;
+  virtual void BeginTransactionWithTarget(gfxContext* aTarget) MOZ_OVERRIDE
+  {
+    MOZ_CRASH("Use BeginTransactionWithDrawTarget");
+  }
+  void BeginTransactionWithDrawTarget(gfx::DrawTarget* aTarget);
 
   void NotifyShadowTreeTransaction();
 

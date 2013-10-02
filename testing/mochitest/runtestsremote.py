@@ -464,15 +464,26 @@ class MochiRemote(Mochitest):
             return 1
         return 0
 
-    def printScreenshot(self):
-        try:
-            image = self._dm.pullFile("/mnt/sdcard/Robotium-Screenshots/robocop-screenshot.jpg")
-            encoded = base64.b64encode(image)
-            log.info("SCREENSHOT: data:image/jpg;base64,%s", encoded)
-        except:
-            # If the test passes, no screenshot will be generated and
-            # pullFile will fail -- continue silently.
-            pass
+    def printScreenshots(self, screenShotDir):
+        # TODO: This can be re-written after completion of bug 749421
+        if not self._dm.dirExists(screenShotDir):
+            log.info("SCREENSHOT: No ScreenShots directory available: " + screenShotDir)
+            return
+
+        printed = 0
+        for name in self._dm.listFiles(screenShotDir):
+            fullName = screenShotDir + "/" + name
+            log.info("SCREENSHOT: FOUND: [%s]", fullName)
+            try:
+                image = self._dm.pullFile(fullName)
+                encoded = base64.b64encode(image)
+                log.info("SCREENSHOT: data:image/jpg;base64,%s", encoded)
+                printed += 1
+            except:
+                log.info("SCREENSHOT: Could not be parsed")
+                pass
+
+        log.info("SCREENSHOT: TOTAL PRINTED: [%s]", printed)
 
     def printDeviceInfo(self, printLogcat=False):
         try:
@@ -654,7 +665,8 @@ def main():
                    if (options.dm_trans == "sut"):
                        dm._runCmds([{"cmd": " ".join(cmd)}])
             try:
-                dm.removeDir("/mnt/sdcard/Robotium-Screenshots")
+                screenShotDir = "/mnt/sdcard/Robotium-Screenshots"
+                dm.removeDir(screenShotDir)
                 dm.recordLogcat()
                 result = mochitest.runTests(options)
                 if result != 0:
@@ -662,7 +674,7 @@ def main():
                 log_result = mochitest.addLogData()
                 if result != 0 or log_result != 0:
                     mochitest.printDeviceInfo(printLogcat=True)
-                    mochitest.printScreenshot()
+                    mochitest.printScreenshots(screenShotDir)
                 # Ensure earlier failures aren't overwritten by success on this run
                 if retVal is None or retVal == 0:
                     retVal = result

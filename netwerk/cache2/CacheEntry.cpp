@@ -76,11 +76,10 @@ CacheEntry::CacheEntry(const nsACString& aStorageID,
 , mIsDoomed(false)
 , mSecurityInfoLoaded(false)
 , mPreventCallbacks(false)
-, mIsRegistered(false)
-, mIsRegistrationAllowed(true)
 , mHasMainThreadOnlyCallback(false)
 , mHasData(false)
 , mState(NOTLOADED)
+, mRegistration(NEVERREGISTERED)
 , mWriter(nullptr)
 , mPredictedDataSize(0)
 , mDataSize(0)
@@ -1169,24 +1168,27 @@ uint32_t CacheEntry::GetExpirationTime() const
 bool CacheEntry::IsRegistered() const
 {
   MOZ_ASSERT(CacheStorageService::IsOnManagementThread());
-  return mIsRegistered;
+  return mRegistration == REGISTERED;
 }
 
 bool CacheEntry::CanRegister() const
 {
   MOZ_ASSERT(CacheStorageService::IsOnManagementThread());
-  return !mIsRegistered && mIsRegistrationAllowed;
+  return mRegistration == NEVERREGISTERED;
 }
 
 void CacheEntry::SetRegistered(bool aRegistered)
 {
   MOZ_ASSERT(CacheStorageService::IsOnManagementThread());
-  MOZ_ASSERT(mIsRegistrationAllowed);
 
-  mIsRegistered = aRegistered;
-
-  if (!aRegistered) // Never allow registration again
-    mIsRegistrationAllowed = false;
+  if (aRegistered) {
+    MOZ_ASSERT(mRegistration == NEVERREGISTERED);
+    mRegistration = REGISTERED;
+  }
+  else {
+    MOZ_ASSERT(mRegistration == REGISTERED);
+    mRegistration = DEREGISTERED;
+  }
 }
 
 bool CacheEntry::Purge(uint32_t aWhat)

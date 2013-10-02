@@ -4,13 +4,12 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "nsCOMPtr.h"
-#include "nsAutoPtr.h"
 
-#include "nsIServiceManager.h"
 #include "nsIOutputStream.h"
 #include "nsICharsetConverterManager.h"
 
 #include "nsConverterOutputStream.h"
+#include "nsServiceManagerUtils.h"
 
 NS_IMPL_ISUPPORTS2(nsConverterOutputStream,
                    nsIUnicharOutputStream,

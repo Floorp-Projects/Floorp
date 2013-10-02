@@ -5,6 +5,8 @@ content.document.title = "Hello, Kitty";
 (function start() {
     sync_test();
     async_test();
+    rpc_test();
+    nested_sync_test();
     // The sync-ness of this call is important, because otherwise
     // we tear down the child's document while we are
     // still in the async test in the parent.
@@ -37,9 +39,15 @@ function make_object()
       get: function (trap) { throw trap; }
     }));
 
+  let array = [1, 2, 3];
+
+  let for_json = { "n": 3, "a": array, "s": "hello", o: { "x": 10 } };
+
   return { "data": o,
            "throwing": throwing,
-           "document": content.document
+           "document": content.document,
+           "array": array,
+           "for_json": for_json
          };
 }
 
@@ -66,3 +74,35 @@ function async_test()
     async_obj);
 }
 
+function rpc_test()
+{
+  dump('beginning cpow rpc test\n');
+  rpc_obj = make_object();
+  rpc_obj.data.reenter = function  () {
+    sendRpcMessage("cpows:reenter", { }, { data: { valid: true } });
+    return "ok";
+  }
+  sendRpcMessage("cpows:rpc",
+    make_json(),
+    rpc_obj);
+}
+
+function nested_sync_test()
+{
+  dump('beginning cpow nested sync test\n');
+  sync_obj = make_object();
+  sync_obj.data.reenter = function () {
+    let caught = false;
+    try {
+       sendSyncMessage("cpows:reenter_sync", { }, { });
+    } catch (e) {
+      caught = true;
+    }
+    if (!ok(caught, "should not allow nested sync"))
+      return "fail";
+    return "ok";
+  }
+  sendSyncMessage("cpows:nested_sync",
+    make_json(),
+    rpc_obj);
+}

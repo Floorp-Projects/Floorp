@@ -185,22 +185,27 @@ public:
     /* The Gecko crash reporter is confused by adjacent memory mappings of
      * the same file and chances are we're going to map from the same file
      * descriptor right away. To avoid problems with the crash reporter,
-     * create an empty anonymous page before and after the ashmem mapping.
-     * We create two anonymous pages because on some platforms, subsequent
-     * mappings are placed at adjacent, increasing memory addresses (ARM)
-     * and on others, such mappings are placed at adjacent, decreasing
-     * memory addresses (x86). It is more convenient to just do two pages
-     * everywhere than to twiddle with platform-specific #defines.
+     * create an empty anonymous page before or after the ashmem mapping,
+     * depending on how mappings grow in the address space.
      */
-    size_t anon_mapping_length = length + 2 * PAGE_SIZE;
+#if defined(__arm__)
+    void *buf = ::mmap(NULL, length + PAGE_SIZE, PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0);
+    if (buf != MAP_FAILED) {
+      ::mmap(AlignedEndPtr(reinterpret_cast<char *>(buf) + length, PAGE_SIZE),
+             PAGE_SIZE, PROT_NONE, MAP_FIXED | MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
+      DEBUG_LOG("Decompression buffer of size 0x%x in ashmem \"%s\", mapped @%p",
+                length, str, buf);
+      return new _MappableBuffer(fd.forget(), buf, length);
+    }
+#elif defined(__i386__)
+    size_t anon_mapping_length = length + PAGE_SIZE;
     void *buf = ::mmap(NULL, anon_mapping_length, PROT_NONE,
                        MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
     if (buf != MAP_FAILED) {
       char *first_page = reinterpret_cast<char *>(buf);
       char *map_page = first_page + PAGE_SIZE;
-      char *last_page = map_page + ((length + PAGE_SIZE - 1) & PAGE_MASK);
 
-      void *actual_buf = ::mmap(map_page, last_page - map_page, PROT_READ | PROT_WRITE,
+      void *actual_buf = ::mmap(map_page, length, PROT_READ | PROT_WRITE,
                                 MAP_FIXED | MAP_SHARED, fd, 0);
       if (actual_buf == MAP_FAILED) {
         ::munmap(buf, anon_mapping_length);
@@ -212,6 +217,9 @@ public:
                 length, str, actual_buf);
       return new _MappableBuffer(fd.forget(), actual_buf, length);
     }
+#else
+#error need to add a case for your CPU
+#endif
 #else
     /* On Linux, use /dev/shm as base directory for temporary files, assuming
      * it's on tmpfs */
@@ -250,8 +258,14 @@ public:
 
 #ifdef ANDROID
   ~_MappableBuffer() {
-    /* Free the additional pages we allocated. See _MappableBuffer::Create */
-    ::munmap(*this - PAGE_SIZE, GetLength() + 2 * PAGE_SIZE);
+    /* Free the additional page we allocated. See _MappableBuffer::Create */
+#if defined(__arm__)
+    ::munmap(AlignedEndPtr(*this + GetLength(), PAGE_SIZE), PAGE_SIZE);
+#elif defined(__i386__)
+    ::munmap(*this - PAGE_SIZE, GetLength() + PAGE_SIZE);
+#else
+#error need to add a case for your CPU
+#endif
   }
 #endif
 

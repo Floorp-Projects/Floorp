@@ -26,7 +26,7 @@ class CompilerRoot : public CompilerRootNode
 {
   public:
     CompilerRoot(T ptr)
-      : CompilerRootNode(NULL)
+      : CompilerRootNode(nullptr)
     {
         if (ptr) {
             JS_ASSERT(!UninlinedIsInsideNursery(GetIonContext()->runtime, ptr));

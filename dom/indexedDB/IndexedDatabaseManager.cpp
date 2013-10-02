@@ -13,6 +13,7 @@
 #include "nsIObserverService.h"
 #include "nsIScriptError.h"
 
+#include "jsapi.h"
 #include "mozilla/ClearOnShutdown.h"
 #include "mozilla/CondVar.h"
 #include "mozilla/ContentEvents.h"
@@ -22,6 +23,7 @@
 #include "mozilla/dom/TabContext.h"
 #include "mozilla/Services.h"
 #include "mozilla/storage.h"
+#include "mozilla/Util.h"
 #include "nsContentUtils.h"
 #include "nsEventDispatcher.h"
 #include "nsThreadUtils.h"
@@ -30,6 +32,21 @@
 #include "IDBFactory.h"
 #include "IDBKeyRange.h"
 #include "IDBRequest.h"
+
+// Bindings for ResolveConstructors
+#include "mozilla/dom/IDBCursorBinding.h"
+#include "mozilla/dom/IDBDatabaseBinding.h"
+#include "mozilla/dom/IDBFactoryBinding.h"
+#include "mozilla/dom/IDBFileHandleBinding.h"
+#include "mozilla/dom/IDBKeyRangeBinding.h"
+#include "mozilla/dom/IDBIndexBinding.h"
+#include "mozilla/dom/IDBObjectStoreBinding.h"
+#include "mozilla/dom/IDBOpenDBRequestBinding.h"
+#include "mozilla/dom/IDBRequestBinding.h"
+#include "mozilla/dom/IDBTransactionBinding.h"
+#include "mozilla/dom/IDBVersionChangeEventBinding.h"
+
+#define IDB_STR "indexedDB"
 
 // The two possible values for the data argument when receiving the disk space
 // observer notification.
@@ -93,6 +110,35 @@ mozilla::StaticRefPtr<IndexedDatabaseManager> gInstance;
 
 mozilla::Atomic<int32_t> gInitialized(0);
 mozilla::Atomic<int32_t> gClosed(0);
+
+// See ResolveConstructors below.
+struct ConstructorInfo {
+  const char* const name;
+  JS::Handle<JSObject*> (* const resolve)(JSContext*, JS::Handle<JSObject*>,
+                                          bool);
+  jsid id;
+};
+
+ConstructorInfo gConstructorInfo[] = {
+
+#define BINDING_ENTRY(_name) \
+  { #_name, _name##Binding::GetConstructorObject, JSID_VOID },
+
+  BINDING_ENTRY(IDBCursor)
+  BINDING_ENTRY(IDBCursorWithValue)
+  BINDING_ENTRY(IDBDatabase)
+  BINDING_ENTRY(IDBFactory)
+  BINDING_ENTRY(IDBFileHandle)
+  BINDING_ENTRY(IDBIndex)
+  BINDING_ENTRY(IDBKeyRange)
+  BINDING_ENTRY(IDBObjectStore)
+  BINDING_ENTRY(IDBOpenDBRequest)
+  BINDING_ENTRY(IDBRequest)
+  BINDING_ENTRY(IDBTransaction)
+  BINDING_ENTRY(IDBVersionChangeEvent)
+
+#undef BINDING_ENTRY
+};
 
 class AsyncDeleteFileRunnable MOZ_FINAL : public nsIRunnable
 {
@@ -160,6 +206,50 @@ struct MOZ_STACK_CLASS InvalidateInfo
   PersistenceType persistenceType;
   const nsACString& pattern;
 };
+
+bool
+GetIndexedDB(JSContext* aCx, JS::HandleObject aGlobal,
+             JS::MutableHandleValue aResult)
+{
+  MOZ_ASSERT(nsContentUtils::IsCallerChrome(), "Only for chrome!");
+  MOZ_ASSERT(js::GetObjectClass(aGlobal)->flags & JSCLASS_DOM_GLOBAL,
+             "Not a global object!");
+
+  nsRefPtr<IDBFactory> factory;
+  if (NS_FAILED(IDBFactory::Create(aCx, aGlobal, nullptr,
+                                   getter_AddRefs(factory)))) {
+    return false;
+  }
+
+  MOZ_ASSERT(factory, "This should never fail for chrome!");
+
+  return !!WrapNewBindingObject(aCx, aGlobal, factory, aResult);
+}
+
+bool
+IndexedDBLazyGetter(JSContext* aCx, JS::HandleObject aGlobal,
+                    JS::HandleId aId, JS::MutableHandleValue aVp)
+{
+  MOZ_ASSERT(nsContentUtils::IsCallerChrome(), "Only for chrome!");
+  MOZ_ASSERT(js::GetObjectClass(aGlobal)->flags & JSCLASS_DOM_GLOBAL,
+             "Not a global object!");
+  MOZ_ASSERT(JSID_IS_STRING(aId), "Bad id!");
+  MOZ_ASSERT(JS_FlatStringEqualsAscii(JSID_TO_FLAT_STRING(aId), IDB_STR),
+             "Bad id!");
+
+  JS::RootedValue indexedDB(aCx);
+  if (!GetIndexedDB(aCx, aGlobal, &indexedDB)) {
+    return false;
+  }
+
+  if (!JS_DefinePropertyById(aCx, aGlobal, aId, indexedDB, nullptr, nullptr,
+                             JSPROP_ENUMERATE)) {
+    return false;
+  }
+
+  aVp.set(indexedDB);
+  return true;
+}
 
 } // anonymous namespace
 
@@ -324,7 +414,7 @@ IndexedDatabaseManager::FireWindowOnError(nsPIDOMWindow* aOwner,
     error->GetName(errorName);
   }
 
-  nsScriptErrorEvent event(true, NS_LOAD_ERROR);
+  mozilla::InternalScriptErrorEvent event(true, NS_LOAD_ERROR);
   request->FillScriptErrorEvent(&event);
   NS_ABORT_IF_FALSE(event.fileName,
                     "FillScriptErrorEvent should give us a non-null string "
@@ -385,6 +475,55 @@ IndexedDatabaseManager::TabContextMayAccessOrigin(const TabContext& aContext,
                                                 pattern);
 
   return PatternMatchesOrigin(pattern, aOrigin);
+}
+
+// static
+bool
+IndexedDatabaseManager::DefineConstructors(JSContext* aCx,
+                                           JS::HandleObject aGlobal)
+{
+  MOZ_ASSERT(NS_IsMainThread());
+
+  for (uint32_t i = 0; i < mozilla::ArrayLength(gConstructorInfo); i++) {
+    if (!gConstructorInfo[i].resolve(aCx, aGlobal, true)) {
+      return false;
+    }
+  }
+
+  return true;
+}
+
+// static
+bool
+IndexedDatabaseManager::DefineIndexedDBGetter(JSContext* aCx,
+                                              JS::HandleObject aGlobal)
+{
+  MOZ_ASSERT(NS_IsMainThread());
+  MOZ_ASSERT(nsContentUtils::IsCallerChrome(), "Only for chrome!");
+  MOZ_ASSERT(js::GetObjectClass(aGlobal)->flags & JSCLASS_DOM_GLOBAL,
+             "Passed object is not a global object!");
+
+  JS::RootedValue indexedDB(aCx);
+  if (!GetIndexedDB(aCx, aGlobal, &indexedDB)) {
+    return false;
+  }
+
+  return JS_DefineProperty(aCx, aGlobal, IDB_STR, indexedDB, nullptr, nullptr,
+                           JSPROP_ENUMERATE);
+}
+
+// static
+bool
+IndexedDatabaseManager::DefineIndexedDBLazyGetter(JSContext* aCx,
+                                                  JS::HandleObject aGlobal)
+{
+  MOZ_ASSERT(NS_IsMainThread());
+  MOZ_ASSERT(nsContentUtils::IsCallerChrome(), "Only for chrome!");
+  MOZ_ASSERT(js::GetObjectClass(aGlobal)->flags & JSCLASS_DOM_GLOBAL,
+             "Passed object is not a global object!");
+
+  return JS_DefineProperty(aCx, aGlobal, IDB_STR, JSVAL_VOID,
+                           IndexedDBLazyGetter, nullptr, 0);
 }
 
 // static
@@ -587,15 +726,18 @@ NS_IMPL_QUERY_INTERFACE2(IndexedDatabaseManager, nsIIndexedDatabaseManager,
                                                  nsIObserver)
 
 NS_IMETHODIMP
-IndexedDatabaseManager::InitWindowless(const jsval& aObj, JSContext* aCx)
+IndexedDatabaseManager::InitWindowless(const jsval& aGlobal, JSContext* aCx)
 {
   NS_ENSURE_TRUE(nsContentUtils::IsCallerChrome(), NS_ERROR_NOT_AVAILABLE);
-  NS_ENSURE_ARG(!JSVAL_IS_PRIMITIVE(aObj));
 
-  JS::Rooted<JSObject*> obj(aCx, JSVAL_TO_OBJECT(aObj));
+  JS::RootedObject global(aCx, JSVAL_TO_OBJECT(aGlobal));
+  if (!(js::GetObjectClass(global)->flags & JSCLASS_DOM_GLOBAL)) {
+    NS_WARNING("Passed object is not a global object!");
+    return NS_ERROR_FAILURE;
+  }
 
   bool hasIndexedDB;
-  if (!JS_HasProperty(aCx, obj, "indexedDB", &hasIndexedDB)) {
+  if (!JS_HasProperty(aCx, global, IDB_STR, &hasIndexedDB)) {
     return NS_ERROR_FAILURE;
   }
 
@@ -604,35 +746,7 @@ IndexedDatabaseManager::InitWindowless(const jsval& aObj, JSContext* aCx)
     return NS_ERROR_FAILURE;
   }
 
-  JS::Rooted<JSObject*> global(aCx, JS_GetGlobalForObject(aCx, obj));
-  NS_ASSERTION(global, "What?! No global!");
-
-  nsRefPtr<IDBFactory> factory;
-  nsresult rv =
-    IDBFactory::Create(aCx, global, nullptr, getter_AddRefs(factory));
-  NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
-
-  NS_ASSERTION(factory, "This should never fail for chrome!");
-
-  JS::Rooted<JS::Value> indexedDBVal(aCx);
-  rv = nsContentUtils::WrapNative(aCx, obj, factory, indexedDBVal.address());
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  if (!JS_DefineProperty(aCx, obj, "indexedDB", indexedDBVal, nullptr,
-                         nullptr, JSPROP_ENUMERATE)) {
-    return NS_ERROR_FAILURE;
-  }
-
-  JS::Rooted<JSObject*> keyrangeObj(aCx,
-    JS_NewObject(aCx, nullptr, nullptr, nullptr));
-  NS_ENSURE_TRUE(keyrangeObj, NS_ERROR_OUT_OF_MEMORY);
-
-  if (!IDBKeyRange::DefineConstructors(aCx, keyrangeObj)) {
-    return NS_ERROR_FAILURE;
-  }
-
-  if (!JS_DefineProperty(aCx, obj, "IDBKeyRange", OBJECT_TO_JSVAL(keyrangeObj),
-                         nullptr, nullptr, JSPROP_ENUMERATE)) {
+  if (!DefineConstructors(aCx, global) || !DefineIndexedDBGetter(aCx, global)) {
     return NS_ERROR_FAILURE;
   }
 
@@ -884,3 +998,48 @@ GetFileReferencesHelper::Run()
 
   return NS_OK;
 }
+
+BEGIN_INDEXEDDB_NAMESPACE
+
+bool
+ResolveConstructors(JSContext* aCx, JS::HandleObject aObj, JS::HandleId aId,
+                    JS::MutableHandleObject aObjp)
+{
+  MOZ_ASSERT(NS_IsMainThread());
+
+  // The first time this function is called we need to intern all the strings we
+  // care about.
+  if (JSID_IS_VOID(gConstructorInfo[0].id)) {
+    for (uint32_t i = 0; i < mozilla::ArrayLength(gConstructorInfo); i++) {
+      JS::RootedString str(aCx, JS_InternString(aCx, gConstructorInfo[i].name));
+      if (!str) {
+        NS_WARNING("Failed to intern string!");
+        while (i) {
+          gConstructorInfo[--i].id = JSID_VOID;
+        }
+        return false;
+      }
+      gConstructorInfo[i].id = INTERNED_STRING_TO_JSID(aCx, str);
+    }
+  }
+
+  // Now resolve.
+  for (uint32_t i = 0; i < mozilla::ArrayLength(gConstructorInfo); i++) {
+    if (gConstructorInfo[i].id == aId) {
+      JS::RootedObject constructor(aCx,
+        gConstructorInfo[i].resolve(aCx, aObj, true));
+      if (!constructor) {
+        return false;
+      }
+
+      aObjp.set(aObj);
+      return true;
+    }
+  }
+
+  // Not resolved.
+  aObjp.set(nullptr);
+  return true;
+}
+
+END_INDEXEDDB_NAMESPACE

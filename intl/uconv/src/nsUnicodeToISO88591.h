@@ -6,7 +6,9 @@
 #ifndef nsUnicodeToISO88591_h___
 #define nsUnicodeToISO88591_h___
 
-#include "nsISupports.h"
+#include "nsID.h"
+
+class nsISupports;
 
 // {920307B0-C6E8-11d2-8AA8-00600811A836}
 #define NS_UNICODETOISO88591_CID \

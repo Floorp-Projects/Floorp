@@ -18,7 +18,9 @@
 #include "jit/CompileInfo.h"
 #include "jit/IonAllocPolicy.h"
 #include "jit/IonCompartment.h"
-#include "jit/PerfSpewer.h"
+#ifdef JS_ION_PERF
+# include "jit/PerfSpewer.h"
+#endif
 #include "jit/RegisterSets.h"
 
 namespace js {
@@ -79,7 +81,7 @@ class MIRGenerator
     }
 
     bool compilingAsmJS() const {
-        return info_->script() == NULL;
+        return info_->script() == nullptr;
     }
 
     uint32_t maxAsmJSStackArgBytes() const {

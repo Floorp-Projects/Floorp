@@ -33,13 +33,11 @@
 #include "vm/Debugger.h"
 
 #include "jsatominlines.h"
-#include "jsfuninlines.h"
 #include "jsobjinlines.h"
 #include "jsscriptinlines.h"
 
 #include "frontend/ParseMaps-inl.h"
 #include "frontend/ParseNode-inl.h"
-#include "vm/ScopeObject-inl.h"
 
 using namespace js;
 using namespace js::gc;
@@ -1801,8 +1799,29 @@ BytecodeEmitter::reportStrictModeError(ParseNode *pn, unsigned errorNumber, ...)
 }
 
 static bool
+EmitNewInit(ExclusiveContext *cx, BytecodeEmitter *bce, JSProtoKey key)
+{
+    const size_t len = 1 + UINT32_INDEX_LEN;
+    ptrdiff_t offset = EmitCheck(cx, bce, len);
+    if (offset < 0)
+        return false;
+
+    jsbytecode *code = bce->code(offset);
+    code[0] = JSOP_NEWINIT;
+    code[1] = jsbytecode(key);
+    code[2] = 0;
+    code[3] = 0;
+    code[4] = 0;
+    UpdateDepth(cx, bce, offset);
+    CheckTypeSet(cx, bce, JSOP_NEWINIT);
+    return true;
+}
+
+static bool
 IteratorResultShape(ExclusiveContext *cx, BytecodeEmitter *bce, unsigned *shape)
 {
+    JS_ASSERT(bce->script->compileAndGo);
+
     RootedObject obj(cx);
     gc::AllocKind kind = GuessObjectGCKind(2);
     obj = NewBuiltinClassInstance(cx, &JSObject::class_, kind);
@@ -1831,10 +1850,14 @@ IteratorResultShape(ExclusiveContext *cx, BytecodeEmitter *bce, unsigned *shape)
 static bool
 EmitPrepareIteratorResult(ExclusiveContext *cx, BytecodeEmitter *bce)
 {
-    unsigned shape;
-    if (!IteratorResultShape(cx, bce, &shape))
-        return false;
-    return EmitIndex32(cx, JSOP_NEWOBJECT, shape, bce);
+    if (bce->script->compileAndGo) {
+        unsigned shape;
+        if (!IteratorResultShape(cx, bce, &shape))
+            return false;
+        return EmitIndex32(cx, JSOP_NEWOBJECT, shape, bce);
+    }
+
+    return EmitNewInit(cx, bce, JSProto_Object);
 }
 
 static bool
@@ -3559,25 +3582,6 @@ EmitAssignment(ExclusiveContext *cx, BytecodeEmitter *bce, ParseNode *lhs, JSOp 
       default:
         JS_ASSERT(0);
     }
-    return true;
-}
-
-static bool
-EmitNewInit(ExclusiveContext *cx, BytecodeEmitter *bce, JSProtoKey key, ParseNode *pn)
-{
-    const size_t len = 1 + UINT32_INDEX_LEN;
-    ptrdiff_t offset = EmitCheck(cx, bce, len);
-    if (offset < 0)
-        return false;
-
-    jsbytecode *code = bce->code(offset);
-    code[0] = JSOP_NEWINIT;
-    code[1] = jsbytecode(key);
-    code[2] = 0;
-    code[3] = 0;
-    code[4] = 0;
-    UpdateDepth(cx, bce, offset);
-    CheckTypeSet(cx, bce, JSOP_NEWINIT);
     return true;
 }
 
@@ -5637,7 +5641,7 @@ EmitObject(ExclusiveContext *cx, BytecodeEmitter *bce, ParseNode *pn)
      * property is added, as JSOP_SETELEM/JSOP_SETPROP would do.
      */
     ptrdiff_t offset = bce->offset();
-    if (!EmitNewInit(cx, bce, JSProto_Object, pn))
+    if (!EmitNewInit(cx, bce, JSProto_Object))
         return false;
 
     /*
@@ -5736,7 +5740,7 @@ EmitObject(ExclusiveContext *cx, BytecodeEmitter *bce, ParseNode *pn)
 static bool
 EmitArrayComp(ExclusiveContext *cx, BytecodeEmitter *bce, ParseNode *pn)
 {
-    if (!EmitNewInit(cx, bce, JSProto_Array, pn))
+    if (!EmitNewInit(cx, bce, JSProto_Array))
         return false;
 
     /*

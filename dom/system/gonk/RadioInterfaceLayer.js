@@ -20,6 +20,7 @@ const {classes: Cc, interfaces: Ci, utils: Cu, results: Cr} = Components;
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/Sntp.jsm");
+Cu.import("resource://gre/modules/systemlibs.js");
 
 var RIL = {};
 Cu.import("resource://gre/modules/ril_consts.js", RIL);
@@ -511,11 +512,18 @@ RadioInterfaceLayer.prototype = {
 
 XPCOMUtils.defineLazyGetter(RadioInterfaceLayer.prototype,
                             "numRadioInterfaces", function () {
+  // When Gonk property "ro.moz.ril.numclients" is not set, return 1; if
+  // explicitly set to any number larger-equal than 0, return num; else, return
+  // 1 for compatibility.
   try {
-    return Services.prefs.getIntPref("ril.numRadioInterfaces");
-  } catch (e) {
-    return 1;
-  }
+    let numString = libcutils.property_get("ro.moz.ril.numclients", "1");
+    let num = parseInt(numString, 10);
+    if (num >= 0) {
+      return num;
+    }
+  } catch (e) {}
+
+  return 1;
 });
 
 function WorkerMessenger(radioInterface, options) {
@@ -636,11 +644,14 @@ WorkerMessenger.prototype = {
    * @TODO: Bug 815526 - deprecate RILContentHelper.
    */
   sendWithIPCMessage: function sendWithIPCMessage(msg, rilMessageType, ipcType) {
-    this.send(rilMessageType, msg.json.data, function(reply) {
+    this.send(rilMessageType, msg.json.data, (function(reply) {
       ipcType = ipcType || msg.name;
-      msg.target.sendAsyncMessage(ipcType, reply);
+      msg.target.sendAsyncMessage(ipcType, {
+        clientId: this.radioInterface.clientId,
+        data: reply
+      });
       return false;
-    });
+    }).bind(this));
   }
 };
 
@@ -2299,7 +2310,10 @@ RadioInterface.prototype = {
         this._updateCallingLineIdRestrictionPref(response.clirMode);
       }
 
-      target.sendAsyncMessage("RIL:SendMMI", response);
+      target.sendAsyncMessage("RIL:SendMMI", {
+        clientId: this.clientId,
+        data: response
+      });
       return false;
     }).bind(this));
   },
@@ -2309,7 +2323,10 @@ RadioInterface.prototype = {
     message.serviceClass = RIL.ICC_SERVICE_CLASS_VOICE;
     this.workerMessenger.send("setCallForward", message, (function(response) {
       this._sendCfStateChanged(response);
-      target.sendAsyncMessage("RIL:SetCallForwardingOption", response);
+      target.sendAsyncMessage("RIL:SetCallForwardingOption", {
+        clientId: this.clientId,
+        data: response
+      });
       return false;
     }).bind(this));
   },
@@ -2323,7 +2340,10 @@ RadioInterface.prototype = {
       if (response.success) {
         this._updateCallingLineIdRestrictionPref(response.clirMode);
       }
-      target.sendAsyncMessage("RIL:SetCallingLineIdRestriction", response);
+      target.sendAsyncMessage("RIL:SetCallingLineIdRestriction", {
+        clientId: this.clientId,
+        data: response
+      });
       return false;
     }).bind(this));
   },

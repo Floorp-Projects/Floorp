@@ -10,10 +10,12 @@
 #include "nsIChannelEventSink.h"
 #include "nsIInterfaceRequestor.h"
 #include "nsIStreamListener.h"
+#include "nsIThreadRetargetableStreamListener.h"
 #include "nsIPrincipal.h"
 
 #include "nsAutoPtr.h"
 #include "nsCOMPtr.h"
+#include "nsProxyRelease.h"
 #include "nsStringGlue.h"
 #include "nsError.h"
 #include "nsIAsyncVerifyRedirectCallback.h"
@@ -34,19 +36,22 @@ class nsIURI;
 namespace mozilla {
 namespace image {
 class Image;
+class ImageURL;
 } // namespace image
 } // namespace mozilla
 
 class imgRequest : public nsIStreamListener,
+                   public nsIThreadRetargetableStreamListener,
                    public nsIChannelEventSink,
                    public nsIInterfaceRequestor,
                    public nsIAsyncVerifyRedirectCallback
 {
 public:
+  typedef mozilla::image::ImageURL ImageURL;
   imgRequest(imgLoader* aLoader);
   virtual ~imgRequest();
 
-  NS_DECL_ISUPPORTS
+  NS_DECL_THREADSAFE_ISUPPORTS
 
   nsresult Init(nsIURI *aURI,
                 nsIURI *aCurrentURI,
@@ -110,7 +115,7 @@ public:
   // Return the imgStatusTracker associated with this imgRequest. It may live
   // in |mStatusTracker| or in |mImage.mStatusTracker|, depending on whether
   // mImage has been instantiated yet.
-  imgStatusTracker& GetStatusTracker();
+  already_AddRefed<imgStatusTracker> GetStatusTracker();
 
   // Get the current principal of the image. No AddRefing.
   inline nsIPrincipal* GetPrincipal() const { return mPrincipal.get(); }
@@ -121,7 +126,8 @@ public:
   // Update the cache entry size based on the image container
   void UpdateCacheEntrySize();
 
-  nsresult GetURI(nsIURI **aURI);
+  // OK to use on any thread.
+  nsresult GetURI(ImageURL **aURI);
 
 private:
   friend class imgCacheEntry;
@@ -176,10 +182,14 @@ private:
 
 public:
   NS_DECL_NSISTREAMLISTENER
+  NS_DECL_NSITHREADRETARGETABLESTREAMLISTENER
   NS_DECL_NSIREQUESTOBSERVER
   NS_DECL_NSICHANNELEVENTSINK
   NS_DECL_NSIINTERFACEREQUESTOR
   NS_DECL_NSIASYNCVERIFYREDIRECTCALLBACK
+
+  // Sets properties for this image; will dispatch to main thread if needed.
+  void SetProperties(nsIChannel* aChan);
 
 private:
   friend class imgMemoryReporter;
@@ -188,8 +198,9 @@ private:
   imgLoader* mLoader;
   nsCOMPtr<nsIRequest> mRequest;
   // The original URI we were loaded with. This is the same as the URI we are
-  // keyed on in the cache.
-  nsCOMPtr<nsIURI> mURI;
+  // keyed on in the cache. We store a string here to avoid off main thread
+  // refcounting issues with nsStandardURL.
+  nsRefPtr<ImageURL> mURI;
   // The URI of the resource we ended up loading after all redirects, etc.
   nsCOMPtr<nsIURI> mCurrentURI;
   // The principal of the document which loaded this image. Used when validating for CORS.

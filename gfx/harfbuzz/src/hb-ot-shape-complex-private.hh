@@ -161,6 +161,8 @@ hb_ot_shape_complex_categorize (const hb_ot_shape_planner_t *planner)
 
     /* Unicode-1.1 additions */
     case HB_SCRIPT_ARABIC:
+
+    /* Unicode-3.0 additions */
     case HB_SCRIPT_MONGOLIAN:
     case HB_SCRIPT_SYRIAC:
 

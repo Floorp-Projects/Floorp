@@ -5,7 +5,7 @@
 # Works with python2.6
 
 import datetime, os, re, sys, traceback
-import math, string, copy
+import math, string, copy, json
 import subprocess
 from subprocess import *
 from operator import itemgetter
@@ -117,17 +117,6 @@ def compare(current, baseline):
     if percent_speedups:
         print 'Average speedup: %.2f%%' % avg(percent_speedups)
 
-def try_import_json():
-    try:
-        import json
-        return json
-    except ImportError:
-        try:
-            import simplejson as json
-            return json
-        except ImportError:
-            pass
-
 if __name__ == '__main__':
     script_path = os.path.abspath(__file__)
     script_dir = os.path.dirname(script_path)
@@ -157,11 +146,6 @@ if __name__ == '__main__':
 
     test_list = [ Test.from_file(tst, name, OPTIONS) for tst, name in test_list ]
 
-    if OPTIONS.baseline_path:
-        json = try_import_json()
-        if not json:
-            print('You need a json lib for baseline comparison')
-            sys.exit(1)
     try:
         print("{")
         bench_map = run_tests(test_list, test_dir)

@@ -109,7 +109,6 @@ function runCurrentTest()
 
 function SetPrefs(aSet)
 {
-  netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
   var prefSvc = Components.classes["@mozilla.org/preferences-service;1"].
                            getService(Components.interfaces.nsIPrefBranch);
   const kPrefName = "ui.cursor_snapping.always_enabled";

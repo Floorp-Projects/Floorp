@@ -8,11 +8,13 @@
 #define vm_RegExpStatics_h
 
 #include "gc/Marking.h"
-#include "vm/GlobalObject.h"
 #include "vm/MatchPairs.h"
+#include "vm/RegExpObject.h"
 #include "vm/Runtime.h"
 
 namespace js {
+
+class GlobalObject;
 
 class RegExpStatics
 {
@@ -44,7 +46,7 @@ class RegExpStatics
     bool                    copied;
 
   public:
-    RegExpStatics() : bufferLink(NULL), copied(false) { clear(); }
+    RegExpStatics() : bufferLink(nullptr), copied(false) { clear(); }
     static JSObject *create(JSContext *cx, GlobalObject *parent);
 
   private:
@@ -78,7 +80,7 @@ class RegExpStatics
     void markFlagsSet(JSContext *cx);
 
     struct InitBuffer {};
-    explicit RegExpStatics(InitBuffer) : bufferLink(NULL), copied(false) {}
+    explicit RegExpStatics(InitBuffer) : bufferLink(nullptr), copied(false) {}
 
     friend class PreserveRegExpStatics;
     friend class AutoRegExpStaticsBuffer;
@@ -465,7 +467,7 @@ RegExpStatics::updateFromMatchPairs(JSContext *cx, JSLinearString *input, MatchP
 
     /* Unset all lazy state. */
     pendingLazyEvaluation = false;
-    this->lazySource = NULL;
+    this->lazySource = nullptr;
     this->lazyIndex = size_t(-1);
 
     BarrieredSetPair<JSString, JSLinearString>(cx->zone(),
@@ -486,11 +488,11 @@ RegExpStatics::clear()
     aboutToWrite();
 
     matches.forgetArray();
-    matchesInput = NULL;
-    lazySource = NULL;
+    matchesInput = nullptr;
+    lazySource = nullptr;
     lazyFlags = RegExpFlag(0);
     lazyIndex = size_t(-1);
-    pendingInput = NULL;
+    pendingInput = nullptr;
     flags = RegExpFlag(0);
     pendingLazyEvaluation = false;
 }

@@ -12,6 +12,7 @@
   <script type="application/javascript"><![CDATA[
     var test_state = "remote";
     var test_node = null;
+    var reentered = false;
 
     function ok(condition, message) {
       return opener.wrappedJSObject.ok(condition, message);
@@ -75,6 +76,23 @@
         ok(threw, "proxy operation threw exception");
       }
 
+      let array = message.objects.array;
+      let i = 1;
+      for (let elt of array) {
+        ok(elt === i, "correct element found");
+        i++;
+      }
+      ok(i === 4, "array has correct length");
+
+      let j = message.objects.for_json;
+      let str = JSON.stringify(j);
+      let j2 = JSON.parse(str);
+      ok(j2.n === 3, "JSON integer property");
+      ok(j2.a[0] === 1, "JSON array index");
+      ok(j2.a[1] === 2, "JSON array index");
+      ok(j2.a[2] === 3, "JSON array index");
+      ok(j2.s === "hello", "JSON string property");
+      ok(j2.o.x === 10, "JSON object property");
     }
 
     function recvAsyncMessage(message) {
@@ -83,6 +101,34 @@
 
     function recvSyncMessage(message) {
       testCpowMessage(message);
+    }
+
+    function recvRpcMessage(message) {
+      ok(message.json.check == "ok", "correct json");
+
+      let data = message.objects.data;
+
+      // Sanity check.
+      ok(data.i === 5, "integer property");
+
+      // Check that we re-enter.
+      reentered = false;
+      let result = data.reenter();
+      ok(reentered, "re-entered rpc");
+      ok(result == "ok", "got correct result");
+    }
+
+    function recvReenterMessage(message) {
+      ok(message.objects.data.valid === true, "cpows work");
+      reentered = true;
+    }
+
+    function recvNestedSyncMessage(message) {
+      message.objects.data.reenter();
+    }
+
+    function recvReenterSyncMessage(message) {
+      ok(false, "should not have received re-entered sync message");
     }
 
     function recvFailMessage(message) {
@@ -108,6 +154,11 @@
       var mm = node.messageManager;
       mm.addMessageListener("cpows:async", recvAsyncMessage);
       mm.addMessageListener("cpows:sync", recvSyncMessage);
+      mm.addMessageListener("cpows:rpc", recvRpcMessage);
+      mm.addMessageListener("cpows:reenter", recvReenterMessage);
+      mm.addMessageListener("cpows:reenter", recvReenterMessage);
+      mm.addMessageListener("cpows:nested_sync", recvNestedSyncMessage);
+      mm.addMessageListener("cpows:reenter_sync", recvReenterSyncMessage);
       mm.addMessageListener("cpows:done", recvDoneMessage);
       mm.addMessageListener("cpows:fail", recvFailMessage);
       mm.loadFrameScript("chrome://mochitests/content/chrome/content/base/test/chrome/cpows_child.js", true);

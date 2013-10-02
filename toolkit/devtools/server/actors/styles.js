@@ -715,8 +715,15 @@ var StyleRuleActor = protocol.ActorClass({
 
     // Use a fresh element for each call to this function to prevent side effects
     // that pop up based on property values that were already set on the element.
-    let tempElement = Services.appShell.hiddenDOMWindow.
-      document.createElement("div");
+
+    let document;
+    if (this.rawNode) {
+      document = this.rawNode.ownerDocument;
+    } else {
+      document = this.rawRule.parentStyleSheet.ownerNode.ownerDocument;
+    }
+
+    let tempElement = document.createElement("div");
 
     for (let mod of modifications) {
       if (mod.type === "set") {

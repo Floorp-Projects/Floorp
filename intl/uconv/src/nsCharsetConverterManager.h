@@ -7,9 +7,6 @@
 
 #include "nsISupports.h"
 #include "nsICharsetConverterManager.h"
-#include "nsIStringBundle.h"
-#include "nsInterfaceHashtable.h"
-#include "mozilla/Mutex.h"
 
 class nsCharsetAlias;
 

@@ -58,6 +58,13 @@ OpenDescriptor(const TransportDescriptor& aTd, Transport::Mode aMode)
   return new Transport(aTd.mPipeName, aTd.mServerPipe, aMode, nullptr);
 }
 
+Transport*
+OpenDescriptor(const FileDescriptor& aFd, Transport::Mode aMode)
+{
+  NS_NOTREACHED("Not implemented!");
+  return nullptr;
+}
+
 void
 CloseDescriptor(const TransportDescriptor& aTd)
 {

@@ -3,15 +3,3 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-MOCHITEST_FILES = 	test_bug232004.xhtml \
-		test_bug343870.xhtml \
-		test_bug355213.xhtml \
-		test_bug392338.html \
-		test_bug399502.xhtml \
-		test_bug445330.html \
-		test_viewport.xhtml \
-		test_bug293347.html \
-		file_bug293347.xml \
-		file_bug293347xslt.xml \
-		test_bug691215.html \
-		$(NULL)

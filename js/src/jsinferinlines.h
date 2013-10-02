@@ -500,17 +500,6 @@ GetTypeCallerInitObject(JSContext *cx, JSProtoKey key)
 
 void MarkIteratorUnknownSlow(JSContext *cx);
 
-/*
- * When using a custom iterator within the initialization of a 'for in' loop,
- * mark the iterator values as unknown.
- */
-inline void
-MarkIteratorUnknown(JSContext *cx)
-{
-    if (cx->typeInferenceEnabled())
-        MarkIteratorUnknownSlow(cx);
-}
-
 void TypeMonitorCallSlow(JSContext *cx, JSObject *callee, const CallArgs &args,
                          bool constructing);
 
@@ -552,7 +541,7 @@ EnsureTrackPropertyTypes(JSContext *cx, JSObject *obj, jsid id)
 
     if (obj->hasSingletonType()) {
         AutoEnterAnalysis enter(cx);
-        obj->type()->getProperty(cx, id, true);
+        obj->type()->getProperty(cx, id);
     }
 
     JS_ASSERT(obj->type()->unknownProperties() || TrackPropertyTypes(cx, obj, id));
@@ -770,15 +759,15 @@ struct AllocationSiteKey : public DefaultHasher<AllocationSiteKey> {
 
 /* Whether to use a new type object for an initializer opcode at script/pc. */
 js::NewObjectKind
-UseNewTypeForInitializer(JSContext *cx, JSScript *script, jsbytecode *pc, JSProtoKey key);
+UseNewTypeForInitializer(JSScript *script, jsbytecode *pc, JSProtoKey key);
 
 js::NewObjectKind
-UseNewTypeForInitializer(JSContext *cx, JSScript *script, jsbytecode *pc, const Class *clasp);
+UseNewTypeForInitializer(JSScript *script, jsbytecode *pc, const Class *clasp);
 
 /* static */ inline TypeObject *
 TypeScript::InitObject(JSContext *cx, JSScript *script, jsbytecode *pc, JSProtoKey kind)
 {
-    JS_ASSERT(!UseNewTypeForInitializer(cx, script, pc, kind));
+    JS_ASSERT(!UseNewTypeForInitializer(script, pc, kind));
 
     /* :XXX: Limit script->length so we don't need to check the offset up front? */
     uint32_t offset = pc - script->code;
@@ -810,7 +799,7 @@ SetInitializerObjectType(JSContext *cx, HandleScript script, jsbytecode *pc, Han
 
     JSProtoKey key = JSCLASS_CACHED_PROTO_KEY(obj->getClass());
     JS_ASSERT(key != JSProto_Null);
-    JS_ASSERT(kind == UseNewTypeForInitializer(cx, script, pc, key));
+    JS_ASSERT(kind == UseNewTypeForInitializer(script, pc, key));
 
     if (kind == SingletonObject) {
         JS_ASSERT(obj->hasSingletonType());
@@ -839,65 +828,10 @@ TypeScript::Monitor(JSContext *cx, JSScript *script, jsbytecode *pc, const js::V
 }
 
 /* static */ inline void
-TypeScript::MonitorOverflow(JSContext *cx, JSScript *script, jsbytecode *pc)
-{
-    if (cx->typeInferenceEnabled())
-        TypeDynamicResult(cx, script, pc, Type::DoubleType());
-}
-
-/* static */ inline void
-TypeScript::MonitorString(JSContext *cx, JSScript *script, jsbytecode *pc)
-{
-    if (cx->typeInferenceEnabled())
-        TypeDynamicResult(cx, script, pc, Type::StringType());
-}
-
-/* static */ inline void
-TypeScript::MonitorUnknown(JSContext *cx, JSScript *script, jsbytecode *pc)
-{
-    if (cx->typeInferenceEnabled())
-        TypeDynamicResult(cx, script, pc, Type::UnknownType());
-}
-
-/* static */ inline void
-TypeScript::GetPcScript(JSContext *cx, JSScript **script, jsbytecode **pc)
-{
-    *script = cx->currentScript(pc);
-}
-
-/* static */ inline void
-TypeScript::MonitorOverflow(JSContext *cx)
-{
-    RootedScript script(cx);
-    jsbytecode *pc;
-    GetPcScript(cx, script.address(), &pc);
-    MonitorOverflow(cx, script, pc);
-}
-
-/* static */ inline void
-TypeScript::MonitorString(JSContext *cx)
-{
-    RootedScript script(cx);
-    jsbytecode *pc;
-    GetPcScript(cx, script.address(), &pc);
-    MonitorString(cx, script, pc);
-}
-
-/* static */ inline void
-TypeScript::MonitorUnknown(JSContext *cx)
-{
-    RootedScript script(cx);
-    jsbytecode *pc;
-    GetPcScript(cx, script.address(), &pc);
-    MonitorUnknown(cx, script, pc);
-}
-
-/* static */ inline void
 TypeScript::Monitor(JSContext *cx, const js::Value &rval)
 {
-    RootedScript script(cx);
     jsbytecode *pc;
-    GetPcScript(cx, script.address(), &pc);
+    RootedScript script(cx, cx->currentScript(&pc));
     Monitor(cx, script, pc, rval);
 }
 
@@ -1337,14 +1271,12 @@ TypeSet::addType(ExclusiveContext *cxArg, Type type)
 }
 
 inline void
-TypeSet::setOwnProperty(ExclusiveContext *cxArg, bool configured)
+TypeSet::setConfiguredProperty(ExclusiveContext *cxArg)
 {
-    TypeFlags nflags = TYPE_FLAG_OWN_PROPERTY | (configured ? TYPE_FLAG_CONFIGURED_PROPERTY : 0);
-
-    if ((flags & nflags) == nflags)
+    if (flags & TYPE_FLAG_CONFIGURED_PROPERTY)
         return;
 
-    flags |= nflags;
+    flags |= TYPE_FLAG_CONFIGURED_PROPERTY;
 
     /* Propagate the change to all constraints. */
     if (JSContext *cx = cxArg->maybeJSContext()) {
@@ -1417,11 +1349,21 @@ TypeSet::getTypeOrSingleObject(JSContext *cx, unsigned i, TypeObject **result) c
     return true;
 }
 
+inline const Class *
+TypeSet::getObjectClass(unsigned i) const
+{
+    if (JSObject *object = getSingleObject(i))
+        return object->getClass();
+    if (TypeObject *object = getTypeObject(i))
+        return object->clasp;
+    return NULL;
+}
+
 /////////////////////////////////////////////////////////////////////
 // TypeObject
 /////////////////////////////////////////////////////////////////////
 
-inline TypeObject::TypeObject(const Class *clasp, TaggedProto proto, bool function, bool unknown)
+inline TypeObject::TypeObject(const Class *clasp, TaggedProto proto, bool unknown)
 {
     mozilla::PodZero(this);
 
@@ -1431,8 +1373,6 @@ inline TypeObject::TypeObject(const Class *clasp, TaggedProto proto, bool functi
     this->clasp = clasp;
     this->proto = proto.raw();
 
-    if (function)
-        flags |= OBJECT_FLAG_FUNCTION;
     if (unknown)
         flags |= OBJECT_FLAG_UNKNOWN_MASK;
 
@@ -1454,7 +1394,7 @@ TypeObject::setBasePropertyCount(uint32_t count)
 }
 
 inline HeapTypeSet *
-TypeObject::getProperty(ExclusiveContext *cx, jsid id, bool own)
+TypeObject::getProperty(ExclusiveContext *cx, jsid id)
 {
     JS_ASSERT(cx->compartment()->activeAnalysis);
 
@@ -1494,11 +1434,7 @@ TypeObject::getProperty(ExclusiveContext *cx, jsid id, bool own)
         }
     }
 
-    HeapTypeSet *types = &(*pprop)->types;
-    if (own)
-        types->setOwnProperty(cx, false);
-
-    return types;
+    return &(*pprop)->types;
 }
 
 inline HeapTypeSet *
@@ -1574,20 +1510,6 @@ TypeNewScript::writeBarrierPre(TypeNewScript *newScript)
 #endif
 }
 
-inline bool
-IterationValuesMustBeStrings(JSScript *script)
-{
-    // Return true if no custom non-string-producing iterators have been used
-    // in a 'for in' loop within the script.
-    types::TypeResult *result = script->types->dynamicList;
-    while (result) {
-        if (result->offset == UINT32_MAX)
-            return false;
-        result = result->next;
-    }
-    return true;
-}
-
 } } /* namespace js::types */
 
 inline bool
@@ -1635,13 +1557,6 @@ JSScript::clearAnalysis()
         types->analysis = NULL;
         types->bytecodeMap = NULL;
     }
-}
-
-inline void
-JSScript::clearPropertyReadTypes()
-{
-    if (types && types->propertyReadTypes)
-        types->propertyReadTypes = NULL;
 }
 
 namespace js {

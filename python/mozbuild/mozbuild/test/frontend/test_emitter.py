@@ -320,6 +320,23 @@ class TestEmitterBasic(unittest.TestCase):
             'entry in generated-files not present elsewhere'):
             self.read_topsrcdir(reader),
 
+    # This test is only needed until all harnesses support filtering from
+    # manifests.
+    def test_test_manifest_inactive_ignored(self):
+        """Inactive tests should not be installed."""
+        reader = self.reader('test-manifest-inactive-ignored')
+
+        objs = [o for o in self.read_topsrcdir(reader)
+               if isinstance(o, TestManifest)]
+
+        self.assertEqual(len(objs), 1)
+
+        o = objs[0]
+
+        self.assertEqual(o.flavor, 'mochitest')
+        basenames = set(os.path.basename(k) for k in o.installs.keys())
+        self.assertEqual(basenames, {'mochitest.ini', 'test_active.html'})
+
     def test_ipdl_sources(self):
         reader = self.reader('ipdl_sources')
         objs = self.read_topsrcdir(reader)

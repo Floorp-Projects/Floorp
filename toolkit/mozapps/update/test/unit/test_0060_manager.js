@@ -9,8 +9,8 @@ const TEST_ID = "0060";
 
 function run_test() {
   do_test_pending();
-  do_register_cleanup(end_test);
 
+  // adjustGeneralPaths registers a cleanup function that calls end_test.
   adjustGeneralPaths();
 
   logTestInfo("testing addition of a successful update to " + FILE_UPDATES_DB +
@@ -178,7 +178,7 @@ function run_test() {
 
   patch = update.selectedPatch;
   do_check_eq(patch.type, "complete");
-  do_check_eq(patch.URL, URL_HOST + URL_PATH + "/" + FILE_SIMPLE_MAR);
+  do_check_eq(patch.URL, URL_HOST + "/" + URL_PATH + "/" + FILE_SIMPLE_MAR);
   do_check_eq(patch.hashFunction, "MD5");
   do_check_eq(patch.hashValue, MD5_HASH_SIMPLE_MAR);
   do_check_eq(patch.size, SIZE_SIMPLE_MAR);
@@ -208,7 +208,7 @@ function run_test() {
 
   patch = update.selectedPatch;
   do_check_eq(patch.type, "complete");
-  do_check_eq(patch.URL, URL_HOST + URL_PATH + "/" + FILE_SIMPLE_MAR);
+  do_check_eq(patch.URL, URL_HOST + "/" + URL_PATH + "/" + FILE_SIMPLE_MAR);
   do_check_eq(patch.hashFunction, "MD5");
   do_check_eq(patch.hashValue, MD5_HASH_SIMPLE_MAR);
   do_check_eq(patch.size, SIZE_SIMPLE_MAR);

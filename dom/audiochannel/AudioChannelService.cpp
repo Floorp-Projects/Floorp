@@ -18,6 +18,8 @@
 
 #include "nsThreadUtils.h"
 #include "nsHashPropertyBag.h"
+#include "nsComponentManagerUtils.h"
+#include "nsServiceManagerUtils.h"
 
 #ifdef MOZ_WIDGET_GONK
 #include "nsJSUtils.h"
@@ -677,7 +679,7 @@ AudioChannelService::Observe(nsISupports* aSubject, const char* aTopic, const PR
     } else if (keyStr.EqualsLiteral("audio.volume.telephony")) {
       audioManager->SetAudioChannelVolume(AUDIO_CHANNEL_TELEPHONY, index);
     } else {
-      MOZ_ASSERT("unexpected audio channel for volume control");
+      MOZ_ASSUME_UNREACHABLE("unexpected audio channel for volume control");
     }
   }
 #endif

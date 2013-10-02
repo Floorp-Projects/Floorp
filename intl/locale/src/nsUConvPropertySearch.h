@@ -5,7 +5,7 @@
 #ifndef nsUConvPropertySearch_h_
 #define nsUConvPropertySearch_h_
 
-#include "nsString.h"
+#include "nsStringFwd.h"
 
 class nsUConvPropertySearch
 {

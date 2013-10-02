@@ -25,7 +25,7 @@ TestBridgeMainParent::Main()
         fail("sending Start");
 }
 
-bool
+PTestBridgeMainSubParent*
 TestBridgeMainParent::AllocPTestBridgeMainSubParent(Transport* transport,
                                                     ProcessId otherProcess)
 {
@@ -35,11 +35,10 @@ TestBridgeMainParent::AllocPTestBridgeMainSubParent(Transport* transport,
     }
 
     nsAutoPtr<TestBridgeMainSubParent> a(new TestBridgeMainSubParent(transport));
-    if (!a->Open(transport, h, XRE_GetIOMessageLoop(), AsyncChannel::Parent)) {
+    if (!a->Open(transport, h, XRE_GetIOMessageLoop(), ipc::ParentSide)) {
         return nullptr;
     }
-    a.forget();
-    return true;
+    return a.forget();
 }
 
 void
@@ -177,25 +176,24 @@ TestBridgeSubChild::RecvPing()
     return true;
 }
 
-bool
+PTestBridgeMainSubChild*
 TestBridgeSubChild::AllocPTestBridgeMainSubChild(Transport* transport,
                                                  ProcessId otherProcess)
 {
     ProcessHandle h;
     if (!base::OpenProcessHandle(otherProcess, &h)) {
-        return false;
+        return nullptr;
     }
 
     nsAutoPtr<TestBridgeMainSubChild> a(new TestBridgeMainSubChild(transport));
-    if (!a->Open(transport, h, XRE_GetIOMessageLoop(), AsyncChannel::Child)) {
-        return false;
+    if (!a->Open(transport, h, XRE_GetIOMessageLoop(), ipc::ChildSide)) {
+        return nullptr;
     }
 
     if (!a->SendHello())
         fail("sending Hello");
 
-    a.forget();
-    return true;
+    return a.forget();
 }
 
 void

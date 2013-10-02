@@ -33,7 +33,10 @@ DIST_GARBAGE = config.cache config.log config.status* config-defs.h \
 ifndef MOZ_PROFILE_USE
 # We need to explicitly put backend.RecursiveMakeBackend.built here
 # otherwise the rule in rules.mk doesn't run early enough.
-libs export tools:: CLOBBER $(topsrcdir)/configure config.status backend.RecursiveMakeBackend.built js-config-status
+libs binaries export tools:: CLOBBER $(topsrcdir)/configure config.status backend.RecursiveMakeBackend.built
+ifndef LIBXUL_SDK
+libs binaries export tools:: js-config-status
+endif
 endif
 
 CLOBBER: $(topsrcdir)/CLOBBER
@@ -56,9 +59,11 @@ config.status: $(topsrcdir)/configure
 	@echo "but your build might not succeed."
 	@exit 1
 
+ifndef LIBXUL_SDK
 .PHONY: js-config-status
 js-config-status:
 	$(call SUBMAKE,backend.RecursiveMakeBackend.built,js/src,1)
+endif
 
 install_manifests := bin idl include public private sdk
 install_manifest_depends = \
@@ -66,15 +71,18 @@ install_manifest_depends = \
   $(topsrcdir)/configure \
   config.status \
   backend.RecursiveMakeBackend.built \
-  js-config-status \
   $(NULL)
+
+ifndef LIBXUL_SDK
+install_manifest_depends += js-config-status
+endif
 
 .PHONY: install-manifests
 install-manifests: $(addprefix install-dist-,$(install_manifests))
 
 .PHONY: $(addprefix install-dist-,$(install_manifests))
 $(addprefix install-dist-,$(install_manifests)): install-dist-%: $(install_manifest_depends)
-	$(call py_action,process_install_manifest,$(if $(NO_REMOVE),--no-remove )$(DIST)/$* _build_manifests/install/dist_$* js/src/_build_manifests/install/dist_$*)
+	$(call py_action,process_install_manifest,$(if $(NO_REMOVE),--no-remove )$(DIST)/$* _build_manifests/install/dist_$* $(if $(LIBXUL_SDK),,js/src/_build_manifests/install/dist_$*))
 
 .PHONY: install-tests
 install-manifests: install-tests
@@ -95,10 +103,14 @@ ifdef MOZ_PROFILE_USE
 ifndef NO_PROFILE_GUIDED_OPTIMIZE
 ifneq ($(OS_ARCH)_$(GNU_CC), WINNT_)
 export:: install-manifests
+binaries::
+	@$(MAKE) install-manifests NO_REMOVE=1
 endif
 endif
 else # !MOZ_PROFILE_USE (normal build)
 export:: install-manifests
+binaries::
+	@$(MAKE) install-manifests NO_REMOVE=1
 endif
 
 # For historical reasons that are unknown, $(DIST)/sdk is always blown away
@@ -216,6 +228,7 @@ scheck::
 	@relcount=`find $(DIST)/bin -name "*.so" | xargs objdump -R | grep R_386_PC32 | wc -l` && if test $$relcount -gt 0; then echo "FAILED: R_386_PC32 relocations detected in a shared library.  Did you use a system header without adding it to config/system-headers?"; exit 1; else echo "PASSED"; fi
 endif
 
+ifndef LIBXUL_SDK
 js/src/Makefile: subsrcdir := js/src
 
 ifdef ENABLE_TESTS
@@ -227,7 +240,13 @@ endif
 
 ifdef MOZ_PSEUDO_DERECURSE
 # Interdependencies for parallel export.
-js/xpconnect/src/export: config/makefiles/precompile/export
-accessible/src/xpcom/export: config/makefiles/precompile/export
+js/xpconnect/src/export: dom/bindings/export
+accessible/src/xpcom/export: xpcom/xpidl/export
 js/src/export: mfbt/export
+# Temporary interdependencies for binaries, until bug 921307 is fixed.
+# Avoid traversal of those directories when creating the aggregate dependency file
+ifneq (binaries-deps,$(MAKECMDGOALS))
+toolkit/library/binaries: js/src/binaries media/webrtc/trunk/binaries media/webrtc/signaling/binaries media/webrtc/trunk/testing/binaries media/webrtc/signalingtest/binaries media/mtransport/third_party/nrappkit/binaries media/mtransport/third_party/nICEr/binaries
+endif
+endif
 endif

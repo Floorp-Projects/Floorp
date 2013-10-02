@@ -4,11 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "jit/BaselineCompiler.h"
 #include "jit/BaselineHelpers.h"
 #include "jit/BaselineIC.h"
-#include "jit/BaselineJIT.h"
-#include "jit/IonLinker.h"
 
 using namespace js;
 using namespace js::jit;
@@ -28,7 +25,7 @@ ICCompare_Int32::Compiler::generateStubCode(MacroAssembler &masm)
 
     // Directly compare the int32 payload of R0 and R1.
     Assembler::Condition cond = JSOpToCondition(op, /* signed = */true);
-    masm.xorl(ScratchReg, ScratchReg);
+    masm.mov(ImmWord(0), ScratchReg);
     masm.cmpl(R0.valueReg(), R1.valueReg());
     masm.setCC(cond, ScratchReg);
 

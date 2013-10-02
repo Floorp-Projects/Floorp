@@ -28,8 +28,9 @@ using mozilla::gfx::SharedDIBSurface;
 #include "gfxAlphaRecovery.h"
 
 #include "mozilla/Util.h"
-#include "mozilla/ipc/SyncChannel.h"
+#include "mozilla/ipc/MessageChannel.h"
 #include "mozilla/AutoRestore.h"
+#include "ImageContainer.h"
 
 using namespace mozilla;
 using mozilla::ipc::ProcessChild;
@@ -1405,7 +1406,7 @@ PluginInstanceChild::PluginWindowProcInternal(HWND hWnd,
                                               WPARAM wParam,
                                               LPARAM lParam)
 {
-    NS_ASSERTION(!mozilla::ipc::SyncChannel::IsPumpingMessages(),
+    NS_ASSERTION(!mozilla::ipc::MessageChannel::IsPumpingMessages(),
                  "Failed to prevent a nonqueued message from running!");
     PluginInstanceChild* self = reinterpret_cast<PluginInstanceChild*>(
         GetProp(hWnd, kPluginInstanceChildProperty));

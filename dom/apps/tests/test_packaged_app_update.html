@@ -30,20 +30,22 @@ var miniManifestURL;
 
 SimpleTest.waitForExplicitFinish();
 
-function checkForUpdate(aExpected, aOnSuccess, aOnApplied, aLaunchDownload, aOnError) {
+function checkForUpdate(aExpected, aOnSuccess, aOnApplied, aOnDownloadError,
+                        aLaunchDownload, aOnRequestError) {
   var lApp = PackagedTestHelper.gApp;
 
   lApp.ondownloadsuccess = aOnSuccess || null;
   lApp.ondownloadapplied = aOnApplied || null;
+  lApp.ondownloaderror = aOnDownloadError || null;
 
   var request = lApp.checkForUpdate();
-  request.onerror = aOnError ? aOnError.bind(undefined, request) :
-                               PackagedTestHelper.mozAppsError;
+  request.onerror = aOnRequestError ? aOnRequestError.bind(undefined, request) :
+                                      PackagedTestHelper.mozAppsError;
   request.onsuccess = function(event) {
     var expectingDownload = aExpected ? "": "not ";
     ok(lApp.downloadAvailable === aExpected,
        "Download should " + expectingDownload + "be available");
-    if (aLaunchDownload && lApp.downloadAvailable) {
+    if (aLaunchDownload) {
       lApp.download();
     } else {
       PackagedTestHelper.next();
@@ -84,7 +86,7 @@ function updateApp(aExpectedReady, aPreviousVersion, aNextVersion) {
         navigator.mozApps.mgmt.applyDownload(lApp);
     });
 
-    checkForUpdate(true, ondownloadsuccesshandler, ondownloadappliedhandler,
+    checkForUpdate(true, ondownloadsuccesshandler, ondownloadappliedhandler, null,
                    true);
 
 }
@@ -127,6 +129,21 @@ var steps = [
     };
   },
   function() {
+    ok(true, "== TEST == Check for Update and try to download it without update available");
+
+    function onerror() {
+      is(PackagedTestHelper.gApp.downloadError.name, "NO_DOWNLOAD_AVAILABLE", "Download not available");
+      ok(!PackagedTestHelper.gApp.readyToApplyDownload, "Not ready to apply download");
+      PackagedTestHelper.next();
+    }
+    function onsuccess() {
+      ok(false, "ondownloadsuccess fired");
+      PackagedTestHelper.next();
+    }
+
+    checkForUpdate(false, onsuccess, null, onerror, true);
+  },
+  function() {
     PackagedTestHelper.setAppVersion(3, PackagedTestHelper.next);
   },
   function() {
@@ -161,7 +178,7 @@ var steps = [
                                             "MANIFEST_MISMATCH", 2, false, true,
                                              "arandomname",
                                              function () {
-      checkForUpdate(false, null, null, false,
+      checkForUpdate(false, null, null, null, false,
                      function (request) {
         if (request.error.name === "PENDING_APP_NOT_UPDATABLE") {
           ok(true, "Got expected PENDING_APP_NOT_UPDATEABLE");

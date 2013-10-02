@@ -5,11 +5,3 @@
 
 #### MODULE = content
 
-MOCHITEST_FILES = \
-    test_send-arraybuffer.html \
-    test_send-blob.html \
-    file_check-binary-messages_wsh.py \
-    test_receive-arraybuffer.html \
-    test_receive-blob.html \
-    file_binary-frames_wsh.py \
-    $(NULL)

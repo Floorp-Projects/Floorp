@@ -1,0 +1,11 @@
+namespace mozilla {
+namespace _ipdltest {
+
+intr protocol PTestInterruptErrorCleanup {
+child:
+    intr Error();
+    intr __delete__();
+};
+
+} // namespace _ipdltest
+} // namespace mozilla

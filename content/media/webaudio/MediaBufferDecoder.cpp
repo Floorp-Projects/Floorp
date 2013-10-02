@@ -268,9 +268,9 @@ MediaDecodeTask::Decode()
 
   mDecoderReader->OnDecodeThreadStart();
 
-  VideoInfo videoInfo;
+  MediaInfo mediaInfo;
   nsAutoPtr<MetadataTags> tags;
-  nsresult rv = mDecoderReader->ReadMetadata(&videoInfo, getter_Transfers(tags));
+  nsresult rv = mDecoderReader->ReadMetadata(&mediaInfo, getter_Transfers(tags));
   if (NS_FAILED(rv)) {
     ReportFailureOnMainThread(WebAudioDecodeJob::InvalidContent);
     return;
@@ -290,8 +290,8 @@ MediaDecodeTask::Decode()
 
   MediaQueue<AudioData>& audioQueue = mDecoderReader->AudioQueue();
   uint32_t frameCount = audioQueue.FrameCount();
-  uint32_t channelCount = videoInfo.mAudioChannels;
-  uint32_t sampleRate = videoInfo.mAudioRate;
+  uint32_t channelCount = mediaInfo.mAudio.mChannels;
+  uint32_t sampleRate = mediaInfo.mAudio.mRate;
 
   if (!frameCount || !channelCount || !sampleRate) {
     ReportFailureOnMainThread(WebAudioDecodeJob::InvalidContent);

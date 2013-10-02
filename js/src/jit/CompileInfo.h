@@ -72,7 +72,7 @@ class CompileInfo
     }
 
     CompileInfo(unsigned nlocals, ExecutionMode executionMode)
-      : script_(NULL), fun_(NULL), osrPc_(NULL), constructing_(false),
+      : script_(nullptr), fun_(nullptr), osrPc_(nullptr), constructing_(false),
         executionMode_(executionMode)
     {
         nimplicit_ = 0;
@@ -237,6 +237,9 @@ class CompileInfo
 
     bool hasArguments() const {
         return script()->argumentsHasVarBinding();
+    }
+    bool argumentsAliasesFormals() const {
+        return script()->argumentsAliasesFormals();
     }
     bool needsArgsObj() const {
         return script()->needsArgsObj();

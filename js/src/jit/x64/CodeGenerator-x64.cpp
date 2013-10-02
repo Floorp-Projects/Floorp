@@ -6,8 +6,8 @@
 
 #include "jit/x64/CodeGenerator-x64.h"
 
+#include "jit/IonCaches.h"
 #include "jit/MIR.h"
-#include "jit/MIRGraph.h"
 
 #include "jsscriptinlines.h"
 
