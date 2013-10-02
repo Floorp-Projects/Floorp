@@ -174,7 +174,7 @@ AC_DEFUN([MOZ_COMPILER_OPTS],
   if test -n "$DEVELOPER_OPTIONS" -a "${MOZ_PSEUDO_DERECURSE-unset}" = unset; then
     dnl Don't enable on pymake, because of bug 918652. Bug 912979 is an annoyance
     dnl with pymake, too.
-    MOZ_PSEUDO_DERECURSE=no-parallel-export,no-pymake
+    MOZ_PSEUDO_DERECURSE=no-parallel-export,no-pymake,no-skip
   fi
 
   MOZ_DEBUGGING_OPTS
