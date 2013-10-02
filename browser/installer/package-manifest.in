@@ -816,11 +816,6 @@ bin/libfreebl_32int64_3.so
 @BINPATH@/metro/modules
 #endif
 
-@BINPATH@/components/DataStore.manifest
-@BINPATH@/components/DataStoreService.js
-@BINPATH@/components/dom_datastore.xpt
-
-
 #ifdef MOZ_ASAN
 @BINPATH@/llvm-symbolizer
 #endif

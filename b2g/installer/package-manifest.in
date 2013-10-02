@@ -766,10 +766,6 @@ bin/components/@DLL_PREFIX@nkgnomevfs@DLL_SUFFIX@
 @BINPATH@/components/B2GAboutRedirector.js
 @BINPATH@/components/FilePicker.js
 
-@BINPATH@/components/DataStore.manifest
-@BINPATH@/components/DataStoreService.js
-@BINPATH@/components/dom_datastore.xpt
-
 #ifdef MOZ_WEBSPEECH
 @BINPATH@/components/dom_webspeechsynth.xpt
 #endif
