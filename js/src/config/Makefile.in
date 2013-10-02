@@ -23,9 +23,6 @@ endif
 
 include $(topsrcdir)/config/config.mk
 
-# Do not install util programs
-NO_INSTALL=1
-
 # Force wrap zlib system header if building js as a shared library.
 ifneq (,$(JS_SHARED_LIBRARY)$(MOZ_NATIVE_ZLIB))
 DEFINES += -DMOZ_NATIVE_ZLIB=1
