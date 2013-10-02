@@ -103,7 +103,7 @@ this.DataStore.prototype = {
       let wId = aSubject.QueryInterface(Ci.nsISupportsPRUint64).data;
       if (wId == self._innerWindowID) {
         cpmm.removeMessageListener("DataStore:Changed:Return:OK", self);
-        self._db.close();
+        self._db.delete();
       }
     }, "inner-window-destroyed", false);
 
@@ -278,18 +278,26 @@ this.DataStore.prototype = {
   retrieveRevisionId: function(aSuccessCb) {
     let self = this;
     this._db.revisionTxn(
-      'readonly',
+      'readwrite',
       function(aTxn, aRevisionStore) {
         debug("RetrieveRevisionId transaction success");
 
         let request = aRevisionStore.openCursor(null, 'prev');
         request.onsuccess = function(aEvent) {
           let cursor = aEvent.target.result;
-          if (cursor) {
-            self._revisionId = cursor.value.revisionId;
+          if (!cursor) {
+            // If the revision doesn't exist, let's create the first one.
+            self.addRevision(aRevisionStore, 0, REVISION_VOID,
+              function(aRevisionId) {
+                self._revisionId = aRevisionId;
+                aSuccessCb();
+              }
+            );
+            return;
           }
 
-          aSuccessCb(self._revisionId);
+          self._revisionId = cursor.value.revisionId;
+          aSuccessCb();
         };
       }
     );
@@ -467,7 +475,7 @@ this.DataStore.prototype = {
                 removedIds: {}
               };
 
-              let request = aStore.mozGetAll(IDBKeyRange.lowerBound(aInternalRevisionId, true));
+              let request = aStore.mozGetAll(self._window.IDBKeyRange.lowerBound(aInternalRevisionId, true));
               request.onsuccess = function(aEvent) {
                 for (let i = 0; i < aEvent.target.result.length; ++i) {
                   let data = aEvent.target.result[i];
