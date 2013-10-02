@@ -20,10 +20,12 @@ MOCHITEST_FILES = \
   file_basic.html \
   test_revision.html \
   file_revision.html \
+  test_changes.html \
+  file_changes.html \
+  file_changes2.html \
   file_app.sjs \
   file_app.template.webapp \
   file_app2.template.webapp \
-  file_app2.template.webapp^headers^ \
   $(NULL)
 
 include $(topsrcdir)/config/rules.mk
