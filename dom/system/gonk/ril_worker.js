@@ -1042,25 +1042,6 @@ let RIL = {
   },
 
   /**
-   * Returns when to hide or show the caller id in the call.
-   *
-   * @param mmi
-   *        The MMI code.
-   * @return One of the CLIR_* constants.
-   */
-  _getCLIRMode: function _getCLIRMode(mmi) {
-    if (!mmi ||
-        (mmi.serviceCode != MMI_SC_CLIR) ||
-        (mmi.procedure != MMI_PROCEDURE_ACTIVATION &&
-         mmi.procedure != MMI_PROCEDURE_DEACTIVATION)) {
-      return CLIR_DEFAULT;
-    }
-
-    return mmi.procedure == MMI_PROCEDURE_ACTIVATION ? CLIR_INVOCATION :
-                                                       CLIR_SUPPRESSION;
-  },
-
-  /**
    * Enables or disables the presentation of the calling line identity (CLI) to
    * the called party when originating a call.
    *
@@ -1375,7 +1356,10 @@ let RIL = {
         let mmi = this._parseMMI(options.number);
         if (mmi && this._isTemporaryModeCLIR(mmi)) {
           options.number = mmi.dialNumber;
-          options.clirMode = this._getCLIRMode(mmi);
+          // In temporary mode, MMI_PROCEDURE_ACTIVATION means allowing CLI
+          // presentation, i.e. CLIR_SUPPRESSION. See TS 22.030, Annex B.
+          options.clirMode = mmi.procedure == MMI_PROCEDURE_ACTIVATION ?
+                             CLIR_SUPPRESSION : CLIR_INVOCATION;
         }
       }
       this.dialNonEmergencyNumber(options, onerror);
