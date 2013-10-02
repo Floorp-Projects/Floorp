@@ -17,15 +17,6 @@ const {classes: Cc, interfaces: Ci, utils: Cu, results: Cr} = Components;
 Cu.import('resource://gre/modules/XPCOMUtils.jsm');
 Cu.import('resource://gre/modules/Services.jsm');
 Cu.import('resource://gre/modules/DataStore.jsm');
-Cu.import("resource://gre/modules/DOMRequestHelper.jsm");
-
-XPCOMUtils.defineLazyServiceGetter(this, "cpmm",
-                                   "@mozilla.org/childprocessmessagemanager;1",
-                                   "nsIMessageSender");
-
-XPCOMUtils.defineLazyServiceGetter(this, "ppmm",
-                                   "@mozilla.org/parentprocessmessagemanager;1",
-                                   "nsIMessageBroadcaster");
 
 /* DataStoreService */
 
@@ -41,12 +32,6 @@ function DataStoreService() {
   }
 
   obs.addObserver(this, 'webapps-clear-data', false);
-
-  let inParent = Cc["@mozilla.org/xre/app-info;1"].getService(Ci.nsIXULRuntime)
-                   .processType == Ci.nsIXULRuntime.PROCESS_TYPE_DEFAULT;
-  if (inParent) {
-    ppmm.addMessageListener("DataStore:Get", this);
-  }
 }
 
 DataStoreService.prototype = {
@@ -64,11 +49,13 @@ DataStoreService.prototype = {
       return;
     }
 
+    let store = new DataStore(aAppId, aName, aOwner, aReadOnly);
+
     if (!(aName in this.stores)) {
       this.stores[aName] = {};
     }
 
-    this.stores[aName][aAppId] = { owner: aOwner, readOnly: aReadOnly };
+    this.stores[aName][aAppId] = store;
   },
 
   installAccessDataStore: function(aAppId, aName, aOwner, aReadOnly) {
@@ -81,69 +68,80 @@ DataStoreService.prototype = {
       return;
     }
 
+    let accessStore = new DataStoreAccess(aAppId, aName, aOwner, aReadOnly);
+
     if (!(aName in this.accessStores)) {
       this.accessStores[aName] = {};
     }
 
-    this.accessStores[aName][aAppId] = { owner: aOwner, readOnly: aReadOnly };
+    this.accessStores[aName][aAppId] = accessStore;
   },
 
   getDataStores: function(aWindow, aName) {
     debug('getDataStores - aName: ' + aName);
+    let appId = aWindow.document.nodePrincipal.appId;
 
-    // This method can be called in the child so we need to send a request to
-    // the parent and create DataStore object here.
-
+    let self = this;
     return new aWindow.Promise(function(resolve, reject) {
-      new DataStoreServiceChild(aWindow, aName, resolve);
+      let matchingStores = [];
+
+      if (aName in self.stores) {
+        if (appId in self.stores[aName]) {
+          matchingStores.push({ store: self.stores[aName][appId],
+                                readonly: false });
+        }
+
+        for (var i in self.stores[aName]) {
+          if (i == appId) {
+            continue;
+          }
+
+          let access = self.getDataStoreAccess(self.stores[aName][i], appId);
+          if (!access) {
+            continue;
+          }
+
+          let readOnly = self.stores[aName][i].readOnly || access.readOnly;
+          matchingStores.push({ store: self.stores[aName][i],
+                                readonly: readOnly });
+        }
+      }
+
+      let callbackPending = matchingStores.length;
+      let results = [];
+
+      if (!callbackPending) {
+        resolve(results);
+        return;
+      }
+
+      for (let i = 0; i < matchingStores.length; ++i) {
+        let obj = matchingStores[i].store.exposeObject(aWindow,
+                                    matchingStores[i].readonly);
+        results.push(obj);
+
+        matchingStores[i].store.retrieveRevisionId(
+          function() {
+            --callbackPending;
+            if (!callbackPending) {
+              resolve(results);
+            }
+          },
+          // if the revision is already known, we don't need to retrieve it
+          // again.
+          false
+        );
+      }
     });
   },
 
-  receiveMessage: function(aMessage) {
-    if (aMessage.name != 'DataStore:Get') {
-      return;
-    }
-
-    let msg = aMessage.data;
-
-    // This is a security issue and it will be fixed by Bug 916091
-    let appId = msg.appId;
-
-    let results = [];
-
-    if (msg.name in this.stores) {
-      if (appId in this.stores[msg.name]) {
-        results.push({ store: this.stores[msg.name][appId],
-                       readOnly: false });
-      }
-
-      for (var i in this.stores[msg.name]) {
-        if (i == appId) {
-          continue;
-        }
-
-        let access = this.getDataStoreAccess(msg.name, appId);
-        if (!access) {
-          continue;
-        }
-
-        let readOnly = this.stores[msg.name][i].readOnly || access.readOnly;
-        results.push({ store: this.stores[msg.name][i],
-                       readOnly: readOnly });
-      }
-    }
-
-    msg.stores = results;
-    aMessage.target.sendAsyncMessage("DataStore:Get:Return", msg);
-  },
-
-  getDataStoreAccess: function(aName, aAppId) {
-    if (!(aName in this.accessStores) ||
-        !(aAppId in this.accessStores[aName])) {
+  getDataStoreAccess: function(aStore, aAppId) {
+    if (!(aStore.name in this.accessStores) ||
+        !(aAppId in this.accessStores[aStore.name])) {
       return null;
     }
 
-    return this.accessStores[aName][aAppId];
+    return this.accessStores[aStore.name][aAppId];
   },
 
   observe: function observe(aSubject, aTopic, aData) {
@@ -162,6 +160,7 @@ DataStoreService.prototype = {
 
     for (let key in this.stores) {
       if (params.appId in this.stores[key]) {
+        this.stores[key][params.appId].delete();
         delete this.stores[key][params.appId];
       }
 
@@ -181,60 +180,5 @@ DataStoreService.prototype = {
     flags: Ci.nsIClassInfo.SINGLETON
   })
 };
-
-/* DataStoreServiceChild */
-
-function DataStoreServiceChild(aWindow, aName, aResolve) {
-  debug("DataStoreServiceChild created");
-  this.init(aWindow, aName, aResolve);
-}
-
-DataStoreServiceChild.prototype = {
-  __proto__: DOMRequestIpcHelper.prototype,
-
-  init: function(aWindow, aName, aResolve) {
-    this._window = aWindow;
-    this._name = aName;
-    this._resolve = aResolve;
-
-    this.initDOMRequestHelper(aWindow, [ "DataStore:Get:Return" ]);
-
-    // This is a security issue and it will be fixed by Bug 916091
-    cpmm.sendAsyncMessage("DataStore:Get",
-                          { name: aName, appId: aWindow.document.nodePrincipal.appId });
-  },
-
-  receiveMessage: function(aMessage) {
-    if (aMessage.name != 'DataStore:Get:Return') {
-      return;
-    }
-    let msg = aMessage.data;
-    let self = this;
-
-    let callbackPending = msg.stores.length;
-    let results = [];
-
-    if (!callbackPending) {
-      this._resolve(results);
-      return;
-    }
-
-    for (let i = 0; i < msg.stores.length; ++i) {
-      let obj = new DataStore(this._window, this._name,
-                              msg.stores[i].owner, msg.stores[i].readOnly);
-      let exposedObj = this._window.DataStore._create(this._window, obj);
-      results.push(exposedObj);
-
-      obj.retrieveRevisionId(
-        function() {
-          --callbackPending;
-          if (!callbackPending) {
-            self._resolve(results);
-          }
-        }
-      );
-    }
-  }
-}
 
 this.NSGetFactory = XPCOMUtils.generateNSGetFactory([DataStoreService]);
