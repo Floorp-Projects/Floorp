@@ -595,6 +595,10 @@ class MacroAssemblerX86Shared : public Assembler
 
             if (ifNaN == Assembler::NaN_IsFalse)
                 j(Assembler::Parity, &ifFalse);
+            // Note a subtlety here: FLAGS is live at this point, and the
+            // mov interface doesn't guarantee to preserve FLAGS. Use
+            // movl instead of mov, because the movl instruction
+            // preserves FLAGS.
             movl(Imm32(1), dest);
             j(cond, &end);
             if (ifNaN == Assembler::NaN_IsTrue)
