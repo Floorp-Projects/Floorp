@@ -381,6 +381,20 @@ void ImageBridgeChild::DispatchReleaseImageClient(ImageClient* aClient)
     NewRunnableFunction(&ReleaseImageClientNow, aClient));
 }
 
+static void ReleaseTextureClientNow(TextureClient* aClient)
+{
+  MOZ_ASSERT(InImageBridgeChildThread());
+  aClient->Release();
+}
+
+// static
+void ImageBridgeChild::DispatchReleaseTextureClient(TextureClient* aClient)
+{
+  sImageBridgeChildSingleton->GetMessageLoop()->PostTask(
+    FROM_HERE,
+    NewRunnableFunction(&ReleaseTextureClientNow, aClient));
+}
+
 static void UpdateImageClientNow(ImageClient* aClient, ImageContainer* aContainer)
 {
   MOZ_ASSERT(aClient);
