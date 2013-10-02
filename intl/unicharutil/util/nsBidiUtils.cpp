@@ -82,17 +82,6 @@ nsresult HandleNumbers(PRUnichar* aBuffer, uint32_t aSize, uint32_t aNumFlag)
   return NS_OK;
 }
 
-#define LRM_CHAR 0x200e
-#define LRE_CHAR 0x202a
-#define RLO_CHAR 0x202e
-bool IsBidiControl(uint32_t aChar)
-{
-  // This method is used when stripping Bidi control characters for
-  // display, so it will return TRUE for LRM, RLM, LRE, RLE, PDF, LRO and RLO
-  return ((LRE_CHAR <= aChar && aChar <= RLO_CHAR) ||
-          ((aChar)&0xfffffe)==LRM_CHAR);
-}
-
 bool HasRTLChars(const nsAString& aString)
 {
 // This is used to determine whether to enable bidi if a string has 

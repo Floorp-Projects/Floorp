@@ -17,11 +17,6 @@ struct nsStyleText;
 #define CH_SHY    173
 #define CH_CJKSP  12288 // U+3000 IDEOGRAPHIC SPACE (CJK Full-Width Space)
 
-#define CH_LRM  8206  //<!ENTITY lrm     CDATA "&#8206;" -- left-to-right mark, U+200E NEW RFC 2070 -->
-#define CH_RLM  8207  //<!ENTITY rlm     CDATA "&#8207;" -- right-to-left mark, U+200F NEW RFC 2070 -->
-#define CH_LRE  8234  //<!CDATA "&#8234;" -- left-to-right embedding, U+202A -->
-#define CH_RLO  8238  //<!CDATA "&#8238;" -- right-to-left override, U+202E -->
-
 class nsTextFrameUtils {
 public:
   // These constants are used as textrun flags for textframe textruns.
