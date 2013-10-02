@@ -95,6 +95,8 @@ class DependencyLinker(Makefile):
             '$(topsrcdir)': '$(topsrcdir)',
             '$(DEPTH)': '$(DEPTH)',
             '$(DIST)': '$(DIST)',
+            '$(depth)': '$(DEPTH)', # normcase may lowercase variable refs when
+            '$(dist)': '$(DIST)',   # they are in the original dependency file
             mozpath.relpath(topsrcdir, os.curdir): '$(topsrcdir)',
             mozpath.relpath(topobjdir, os.curdir): '$(DEPTH)',
             mozpath.relpath(dist, os.curdir): '$(DIST)',
