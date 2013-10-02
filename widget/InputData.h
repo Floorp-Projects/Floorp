@@ -162,13 +162,13 @@ public:
 
   MultiTouchInput(const WidgetTouchEvent& aTouchEvent);
 
-  // This conversion from nsMouseEvent to MultiTouchInput is needed because on
-  // the B2G emulator we can only receive mouse events, but we need to be able
-  // to pan correctly. To do this, we convert the events into a format that the
-  // panning code can handle. This code is very limited and only supports
+  // This conversion from WidgetMouseEvent to MultiTouchInput is needed because
+  // on the B2G emulator we can only receive mouse events, but we need to be
+  // able to pan correctly. To do this, we convert the events into a format that
+  // the panning code can handle. This code is very limited and only supports
   // SingleTouchData. It also sends garbage for the identifier, radius, force
   // and rotation angle.
-  MultiTouchInput(const nsMouseEvent& aMouseEvent);
+  MultiTouchInput(const WidgetMouseEvent& aMouseEvent);
 
   MultiTouchType mType;
   nsTArray<SingleTouchData> mTouches;

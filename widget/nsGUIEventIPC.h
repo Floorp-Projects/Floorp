@@ -172,9 +172,9 @@ struct ParamTraits<mozilla::WheelEvent>
 };
 
 template<>
-struct ParamTraits<nsMouseEvent>
+struct ParamTraits<mozilla::WidgetMouseEvent>
 {
-  typedef nsMouseEvent paramType;
+  typedef mozilla::WidgetMouseEvent paramType;
 
   static void Write(Message* aMsg, const paramType& aParam)
   {
@@ -197,9 +197,11 @@ struct ParamTraits<nsMouseEvent>
          ReadParam(aMsg, aIter, &context) &&
          ReadParam(aMsg, aIter, &exit) &&
          ReadParam(aMsg, aIter, &aResult->clickCount);
-    aResult->reason = static_cast<nsMouseEvent::reasonType>(reason);
-    aResult->context = static_cast<nsMouseEvent::contextType>(context);
-    aResult->exit = static_cast<nsMouseEvent::exitType>(exit);
+    aResult->reason =
+      static_cast<mozilla::WidgetMouseEvent::reasonType>(reason);
+    aResult->context =
+      static_cast<mozilla::WidgetMouseEvent::contextType>(context);
+    aResult->exit = static_cast<mozilla::WidgetMouseEvent::exitType>(exit);
     return rv;
   }
 };

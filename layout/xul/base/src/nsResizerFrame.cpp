@@ -67,7 +67,8 @@ nsResizerFrame::HandleEvent(nsPresContext* aPresContext,
     case NS_MOUSE_BUTTON_DOWN: {
       if (aEvent->eventStructType == NS_TOUCH_EVENT ||
           (aEvent->eventStructType == NS_MOUSE_EVENT &&
-        static_cast<nsMouseEvent*>(aEvent)->button == nsMouseEvent::eLeftButton))
+        static_cast<WidgetMouseEvent*>(aEvent)->button ==
+          WidgetMouseEvent::eLeftButton))
       {
         nsCOMPtr<nsIBaseWindow> window;
         nsIPresShell* presShell = aPresContext->GetPresShell();
@@ -134,7 +135,8 @@ nsResizerFrame::HandleEvent(nsPresContext* aPresContext,
 
       if (aEvent->eventStructType == NS_TOUCH_EVENT ||
           (aEvent->eventStructType == NS_MOUSE_EVENT &&
-        static_cast<nsMouseEvent*>(aEvent)->button == nsMouseEvent::eLeftButton))
+           static_cast<WidgetMouseEvent*>(aEvent)->button ==
+             WidgetMouseEvent::eLeftButton))
     {
       // we're done tracking.
       mTrackingMouseMove = false;
@@ -295,7 +297,8 @@ nsResizerFrame::HandleEvent(nsPresContext* aPresContext,
 
   case NS_MOUSE_DOUBLECLICK:
     if (aEvent->eventStructType == NS_MOUSE_EVENT &&
-        static_cast<nsMouseEvent*>(aEvent)->button == nsMouseEvent::eLeftButton)
+        static_cast<WidgetMouseEvent*>(aEvent)->button ==
+          WidgetMouseEvent::eLeftButton)
     {
       nsCOMPtr<nsIBaseWindow> window;
       nsIPresShell* presShell = aPresContext->GetPresShell();

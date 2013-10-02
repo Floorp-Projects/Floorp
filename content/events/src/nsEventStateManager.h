@@ -301,8 +301,12 @@ protected:
    */
   void UpdateDragDataTransfer(mozilla::WidgetDragEvent* dragEvent);
 
-  nsresult SetClickCount(nsPresContext* aPresContext, nsMouseEvent *aEvent, nsEventStatus* aStatus);
-  nsresult CheckForAndDispatchClick(nsPresContext* aPresContext, nsMouseEvent *aEvent, nsEventStatus* aStatus);
+  nsresult SetClickCount(nsPresContext* aPresContext,
+                         mozilla::WidgetMouseEvent* aEvent,
+                         nsEventStatus* aStatus);
+  nsresult CheckForAndDispatchClick(nsPresContext* aPresContext,
+                                    mozilla::WidgetMouseEvent* aEvent,
+                                    nsEventStatus* aStatus);
   void EnsureDocument(nsPresContext* aPresContext);
   void FlushPendingEvents(nsPresContext* aPresContext);
 
@@ -666,10 +670,12 @@ protected:
                           nsIFrame* targetFrame);
 
   // routines for the d&d gesture tracking state machine
-  void BeginTrackingDragGesture ( nsPresContext* aPresContext, nsMouseEvent* inDownEvent,
-                                  nsIFrame* inDownFrame ) ;
-  void StopTrackingDragGesture ( ) ;
-  void GenerateDragGesture ( nsPresContext* aPresContext, nsMouseEvent *aEvent ) ;
+  void BeginTrackingDragGesture(nsPresContext* aPresContext,
+                                mozilla::WidgetMouseEvent* aDownEvent,
+                                nsIFrame* aDownFrame);
+  void StopTrackingDragGesture();
+  void GenerateDragGesture(nsPresContext* aPresContext,
+                           mozilla::WidgetMouseEvent* aEvent);
 
   /**
    * Determine which node the drag should be targeted at.
@@ -710,7 +716,7 @@ protected:
    * BeginTrackingDragGesture). aEvent->widget must be
    * mCurrentTarget->GetNearestWidget().
    */
-  void FillInEventFromGestureDown(nsMouseEvent* aEvent);
+  void FillInEventFromGestureDown(mozilla::WidgetMouseEvent* aEvent);
 
   nsresult DoContentCommandEvent(mozilla::WidgetContentCommandEvent* aEvent);
   nsresult DoContentCommandScrollEvent(

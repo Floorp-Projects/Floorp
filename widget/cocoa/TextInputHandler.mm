@@ -1467,9 +1467,9 @@ TextInputHandler::HandleKeyDownEvent(NSEvent* aNativeEvent)
       [aNativeEvent modifierFlags] & NSDeviceIndependentModifierFlagsMask;
     if (modifierFlags == NSControlKeyMask &&
         [[aNativeEvent charactersIgnoringModifiers] isEqualToString:@" "]) {
-      nsMouseEvent contextMenuEvent(true, NS_CONTEXTMENU,
-                                    [mView widget], nsMouseEvent::eReal,
-                                    nsMouseEvent::eContextMenuKey);
+      WidgetMouseEvent contextMenuEvent(true, NS_CONTEXTMENU, [mView widget],
+                                        WidgetMouseEvent::eReal,
+                                        WidgetMouseEvent::eContextMenuKey);
       contextMenuEvent.modifiers = 0;
 
       bool cmEventHandled = DispatchEvent(contextMenuEvent);

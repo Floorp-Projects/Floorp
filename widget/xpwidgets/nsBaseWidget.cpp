@@ -1412,7 +1412,7 @@ nsBaseWidget::BeginResizeDrag(WidgetGUIEvent* aEvent,
 }
 
 NS_IMETHODIMP
-nsBaseWidget::BeginMoveDrag(nsMouseEvent* aEvent)
+nsBaseWidget::BeginMoveDrag(WidgetMouseEvent* aEvent)
 {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
