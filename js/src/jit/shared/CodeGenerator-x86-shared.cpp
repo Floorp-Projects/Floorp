@@ -774,7 +774,7 @@ CodeGeneratorX86Shared::visitDivSelfI(LDivSelfI *ins)
     } else {
        if (!bailoutIf(Assembler::Zero, ins->snapshot()))
            return false;
-        masm.mov(Imm32(1), output);
+        masm.mov(ImmWord(1), output);
     }
 
     return true;

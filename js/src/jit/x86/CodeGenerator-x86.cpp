@@ -115,7 +115,7 @@ CodeGeneratorX86::visitBox(LBox *box)
     // On x86, the input operand and the output payload have the same
     // virtual register. All that needs to be written is the type tag for
     // the type definition.
-    masm.movl(Imm32(MIRTypeToTag(box->type())), ToRegister(type));
+    masm.mov(ImmWord(MIRTypeToTag(box->type())), ToRegister(type));
     return true;
 }
 
