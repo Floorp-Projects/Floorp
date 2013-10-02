@@ -14,6 +14,7 @@
 #include "GLContext.h"
 
 using namespace mozilla;
+using namespace mozilla::gl;
 
 JSObject*
 WebGLFramebuffer::WrapObject(JSContext *cx, JS::Handle<JSObject*> scope) {
@@ -58,9 +59,10 @@ WebGLFramebuffer::Attachment::HasAlpha() const {
 }
 
 void
-WebGLFramebuffer::Attachment::SetTexture(WebGLTexture *tex, GLint level, GLenum face) {
+WebGLFramebuffer::Attachment::SetTexture(WebGLTexture *tex, GLenum target, GLint level, GLenum face) {
     mTexturePtr = tex;
     mRenderbufferPtr = nullptr;
+    mTextureTarget = target;
     mTextureLevel = level;
     mTextureCubeMapFace = face;
 }
@@ -147,6 +149,26 @@ WebGLFramebuffer::Attachment::IsComplete() const {
 }
 
 void
+WebGLFramebuffer::Attachment::FinalizeAttachment(GLenum attachmentLoc) const {
+    if (Texture()) {
+        GLContext* gl = Texture()->Context()->gl;
+        gl->fFramebufferTexture2D(LOCAL_GL_FRAMEBUFFER, attachmentLoc,
+                                  TextureTarget(), Texture()->GLName(), TextureLevel());
+        return;
+    }
+
+    if (Renderbuffer()) {
+        GLContext* gl = Renderbuffer()->Context()->gl;
+        gl->fFramebufferRenderbuffer(LOCAL_GL_FRAMEBUFFER, attachmentLoc,
+                                     LOCAL_GL_RENDERBUFFER, Renderbuffer()->GLName());
+        return;
+    }
+
+    // Neither?
+    MOZ_ASSERT(false, "FB attachment without a tex or RB.");
+}
+
+void
 WebGLFramebuffer::Delete() {
     mColorAttachments.Clear();
     mDepthAttachment.Reset();
@@ -196,25 +218,6 @@ WebGLFramebuffer::FramebufferRenderbuffer(GLenum target,
         mColorAttachments[colorAttachmentId].SetRenderbuffer(wrb);
         break;
     }
-
-    mContext->MakeContextCurrent();
-    GLuint parambuffername = wrb ? wrb->GLName() : 0;
-    if (attachment == LOCAL_GL_DEPTH_STENCIL_ATTACHMENT) {
-        GLuint depthbuffername = parambuffername;
-        GLuint stencilbuffername = parambuffername;
-        if (!parambuffername){
-            depthbuffername   = mDepthAttachment.Renderbuffer()   ? mDepthAttachment.Renderbuffer()->GLName()   : 0;
-            stencilbuffername = mStencilAttachment.Renderbuffer() ? mStencilAttachment.Renderbuffer()->GLName() : 0;
-        }
-        mContext->gl->fFramebufferRenderbuffer(target, LOCAL_GL_DEPTH_ATTACHMENT, rbtarget, depthbuffername);
-        mContext->gl->fFramebufferRenderbuffer(target, LOCAL_GL_STENCIL_ATTACHMENT, rbtarget, stencilbuffername);
-    } else {
-        GLuint renderbuffername = parambuffername;
-        if(!parambuffername && (attachment == LOCAL_GL_DEPTH_ATTACHMENT || attachment == LOCAL_GL_STENCIL_ATTACHMENT)){
-            renderbuffername = mDepthStencilAttachment.Renderbuffer() ? mDepthStencilAttachment.Renderbuffer()->GLName() : 0;
-        }
-        mContext->gl->fFramebufferRenderbuffer(target, attachment, rbtarget, renderbuffername);
-    }
 }
 
 void
@@ -245,13 +248,13 @@ WebGLFramebuffer::FramebufferTexture2D(GLenum target,
     size_t face = WebGLTexture::FaceForTarget(textarget);
     switch (attachment) {
     case LOCAL_GL_DEPTH_ATTACHMENT:
-        mDepthAttachment.SetTexture(wtex, level, face);
+        mDepthAttachment.SetTexture(wtex, textarget, level, face);
         break;
     case LOCAL_GL_STENCIL_ATTACHMENT:
-        mStencilAttachment.SetTexture(wtex, level, face);
+        mStencilAttachment.SetTexture(wtex, textarget, level, face);
         break;
     case LOCAL_GL_DEPTH_STENCIL_ATTACHMENT:
-        mDepthStencilAttachment.SetTexture(wtex, level, face);
+        mDepthStencilAttachment.SetTexture(wtex, textarget, level, face);
         break;
     default:
         if (!CheckColorAttachementNumber(attachment, "framebufferTexture2D")){
@@ -260,30 +263,9 @@ WebGLFramebuffer::FramebufferTexture2D(GLenum target,
 
         size_t colorAttachmentId = size_t(attachment - LOCAL_GL_COLOR_ATTACHMENT0);
         EnsureColorAttachments(colorAttachmentId);
-        mColorAttachments[colorAttachmentId].SetTexture(wtex, level, face);
+        mColorAttachments[colorAttachmentId].SetTexture(wtex, textarget, level, face);
         break;
     }
-
-    mContext->MakeContextCurrent();
-    GLuint paramtexturename = wtex ? wtex->GLName() : 0;
-    if (attachment == LOCAL_GL_DEPTH_STENCIL_ATTACHMENT) {
-        GLuint depthtexturename = paramtexturename;
-        GLuint stenciltexturename = paramtexturename;
-        if(!paramtexturename){
-            depthtexturename   = mDepthAttachment.Texture()   ? mDepthAttachment.Texture()->GLName()   : 0;
-            stenciltexturename = mStencilAttachment.Texture() ? mStencilAttachment.Texture()->GLName() : 0;
-        }
-        mContext->gl->fFramebufferTexture2D(target, LOCAL_GL_DEPTH_ATTACHMENT, textarget, depthtexturename, level);
-        mContext->gl->fFramebufferTexture2D(target, LOCAL_GL_STENCIL_ATTACHMENT, textarget, stenciltexturename, level);
-    } else {
-        GLuint texturename = paramtexturename;
-        if(!paramtexturename && (attachment == LOCAL_GL_DEPTH_ATTACHMENT || attachment == LOCAL_GL_STENCIL_ATTACHMENT)){
-            texturename = mDepthStencilAttachment.Texture() ? mDepthStencilAttachment.Texture()->GLName() : 0;
-        }
-        mContext->gl->fFramebufferTexture2D(target, attachment, textarget, texturename, level);
-    }
-
-    return;
 }
 
 bool
@@ -421,6 +403,9 @@ WebGLFramebuffer::CheckAndInitializeRenderbuffers()
 
     mContext->MakeContextCurrent();
 
+    // Ok, attach our chosen flavor of {DEPTH, STENCIL, DEPTH_STENCIL}.
+    FinalizeAttachments();
+
     GLenum status = mContext->CheckFramebufferStatus(LOCAL_GL_FRAMEBUFFER);
     if (status != LOCAL_GL_FRAMEBUFFER_COMPLETE)
         return false;
@@ -517,6 +502,25 @@ void WebGLFramebuffer::EnsureColorAttachments(size_t colorAttachmentId) {
 
     for (size_t i = colorAttachmentId; i >= currentAttachmentCount; i--) {
         mColorAttachments[i].mAttachmentPoint = LOCAL_GL_COLOR_ATTACHMENT0 + i;
+    }
+}
+
+void
+WebGLFramebuffer::FinalizeAttachments() const {
+    for (size_t i = 0; i < ColorAttachmentCount(); i++) {
+        if (ColorAttachment(i).IsDefined())
+            ColorAttachment(i).FinalizeAttachment(LOCAL_GL_COLOR_ATTACHMENT0 + i);
+    }
+
+    if (DepthAttachment().IsDefined())
+        DepthAttachment().FinalizeAttachment(LOCAL_GL_DEPTH_ATTACHMENT);
+
+    if (StencilAttachment().IsDefined())
+        StencilAttachment().FinalizeAttachment(LOCAL_GL_STENCIL_ATTACHMENT);
+
+    if (DepthStencilAttachment().IsDefined()) {
+        DepthStencilAttachment().FinalizeAttachment(LOCAL_GL_DEPTH_ATTACHMENT);
+        DepthStencilAttachment().FinalizeAttachment(LOCAL_GL_STENCIL_ATTACHMENT);
     }
 }
 
