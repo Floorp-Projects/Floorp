@@ -21,11 +21,14 @@ public:
   enum Operation
   {
     OpNone = 0,
-    OpRead = (1 << 0),
-    OpWrite = (1 << 1),
-    OpFSync = (1 << 2),
+    OpCreateOrOpen = (1 << 0),
+    OpRead = (1 << 1),
+    OpWrite = (1 << 2),
+    OpFSync = (1 << 3),
+    OpStat = (1 << 4),
+    OpClose = (1 << 5),
     OpWriteFSync = (OpWrite | OpFSync),
-    OpAll = (OpRead | OpWrite | OpFSync)
+    OpAll = (OpCreateOrOpen | OpRead | OpWrite | OpFSync | OpStat | OpClose)
   };
 
   /** A representation of an I/O observation  */

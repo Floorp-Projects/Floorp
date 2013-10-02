@@ -448,7 +448,7 @@ imgFrame::SurfaceForDrawing(bool               aDoPadding,
                            mFormat);
 }
 
-void imgFrame::Draw(gfxContext *aContext, gfxPattern::GraphicsFilter aFilter,
+void imgFrame::Draw(gfxContext *aContext, GraphicsFilter aFilter,
                     const gfxMatrix &aUserSpaceToImageSpace, const gfxRect& aFill,
                     const nsIntMargin &aPadding, const nsIntRect &aSubimage,
                     uint32_t aImageFlags)

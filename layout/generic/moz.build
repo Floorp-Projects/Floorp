@@ -21,6 +21,7 @@ EXPORTS += [
     'nsHTMLReflowState.h',
     'nsIAnonymousContentCreator.h',
     'nsIFrame.h',
+    'nsIFrameInlines.h',
     'nsIFrameUtil.h',
     'nsILineIterator.h',
     'nsIObjectFrame.h',

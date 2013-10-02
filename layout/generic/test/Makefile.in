@@ -41,6 +41,13 @@ MOCHITEST_FILES = \
   test_bug424627.html \
   test_bug438840.html \
   test_bug448860.html \
+  test_bug448987.html \
+    file_bug448987.html \
+    file_bug448987_ref.html \
+    file_bug448987_notref.html \
+  test_bug449653.html \
+    file_bug449653_1.html \
+    file_bug449653_1_ref.html \
   test_bug460532.html \
   test_bug468167.html \
   test_bug470212.html \

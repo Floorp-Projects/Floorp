@@ -587,6 +587,12 @@ js::ExecuteKernel(JSContext *cx, HandleScript script, JSObject &scopeChainArg, c
 {
     JS_ASSERT_IF(evalInFrame, type == EXECUTE_DEBUG);
     JS_ASSERT_IF(type == EXECUTE_GLOBAL, !scopeChainArg.is<ScopeObject>());
+#ifdef DEBUG
+    if (thisv.isObject()) {
+        RootedObject thisObj(cx, &thisv.toObject());
+        JS_ASSERT(GetOuterObject(cx, thisObj) == thisObj);
+    }
+#endif
 
     if (script->isEmpty()) {
         if (result)

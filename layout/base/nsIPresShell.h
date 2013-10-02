@@ -821,6 +821,18 @@ public:
   bool IsPaintingSuppressed() const { return mPaintingSuppressed; }
 
   /**
+   * Resume painting by thawing the refresh driver of this and all parent
+   * presentations.
+   */
+  virtual void FreezePainting() = 0;
+
+  /**
+   * Resume painting by thawing the refresh driver of this and all parent
+   * presentations.
+   */
+  virtual void ThawPainting() = 0;
+
+  /**
    * Unsuppress painting.
    */
   virtual NS_HIDDEN_(void) UnsuppressPainting() = 0;

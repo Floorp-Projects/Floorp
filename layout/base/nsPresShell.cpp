@@ -158,6 +158,7 @@
 #include "RestyleManager.h"
 #include "nsIDOMHTMLElement.h"
 #include "nsIDragSession.h"
+#include "nsIFrameInlines.h"
 
 #ifdef ANDROID
 #include "nsIDocShellTreeOwner.h"
@@ -9708,4 +9709,28 @@ nsIPresShell::SetMaxLineBoxWidth(nscoord aMaxLineBoxWidth)
     mReflowOnZoomPending = true;
     FrameNeedsReflow(GetRootFrame(), eResize, NS_FRAME_HAS_DIRTY_CHILDREN);
   }
+}
+
+void
+PresShell::FreezePainting()
+{
+  // We want to freeze painting all the way up the presentation hierarchy.
+  nsCOMPtr<nsIPresShell> parent = GetParentPresShell();
+  if (parent) {
+    parent->FreezePainting();
+  }
+
+  GetPresContext()->RefreshDriver()->Freeze();
+}
+
+void
+PresShell::ThawPainting()
+{
+  // We want to thaw painting all the way up the presentation hierarchy.
+  nsCOMPtr<nsIPresShell> parent = GetParentPresShell();
+  if (parent) {
+    parent->ThawPainting();
+  }
+
+  GetPresContext()->RefreshDriver()->Thaw();
 }

@@ -46,6 +46,7 @@
 #include "mozilla/dom/WindowBinding.h"
 #include "RestyleManager.h"
 #include "Layers.h"
+#include "imgIContainer.h"
 
 using namespace mozilla;
 using namespace mozilla::widget;
