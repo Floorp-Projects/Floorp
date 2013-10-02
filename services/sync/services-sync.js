@@ -71,3 +71,5 @@ pref("services.sync.log.logger.engine.addons", "Debug");
 pref("services.sync.log.logger.engine.apps", "Debug");
 pref("services.sync.log.logger.userapi", "Debug");
 pref("services.sync.log.cryptoDebug", false);
+
+pref("services.sync.tokenServerURI", "http://auth.oldsync.dev.lcip.org/1.0/sync/1.1");
