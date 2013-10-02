@@ -74,30 +74,6 @@ private:
   ProfilerBacktrace*  mStack;
 };
 
-class ProfilerMarkerTracing : public ProfilerMarkerPayload
-{
-public:
-  ProfilerMarkerTracing(const char* aCategory, TracingMetadata aMetaData);
-
-  const char *GetCategory() const { return mCategory; }
-  TracingMetadata GetMetaData() const { return mMetaData; }
-
-protected:
-  virtual JSCustomObjectBuilder::Object
-  preparePayload(JSCustomObjectBuilder& b) { return preparePayloadImp(b); }
-  virtual JSObjectBuilder::Object
-  preparePayload(JSObjectBuilder& b) { return preparePayloadImp(b); }
-
-private:
-  template<typename Builder>
-  typename Builder::Object preparePayloadImp(Builder& b);
-
-private:
-  const char *mCategory;
-  TracingMetadata mMetaData;
-};
-
-
 class gfxASurface;
 class ProfilerMarkerImagePayload : public ProfilerMarkerPayload
 {
@@ -113,7 +89,7 @@ protected:
 private:
   template<typename Builder>
   typename Builder::Object preparePayloadImp(Builder& b);
-
+  
   nsRefPtr<gfxASurface> mImg;
 };
 
@@ -133,7 +109,7 @@ protected:
 private:
   template<typename Builder>
   typename Builder::Object preparePayloadImp(Builder& b);
-
+  
   const char* mSource;
 };
 
