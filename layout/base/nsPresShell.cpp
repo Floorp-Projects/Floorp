@@ -4371,10 +4371,7 @@ PresShell::RenderDocument(const nsRect& aRect, uint32_t aFlags,
   // either already the case, or overrides the operator in a group.
   // the original operator will be present when we PopGroup.
   // we can avoid using a temporary surface if we're using OPERATOR_OVER
-  // and our background color has no alpha (so we'll be compositing on top
-  // of a fully opaque solid color region)
-  bool needsGroup = NS_GET_A(aBackgroundColor) < 0xff ||
-    oldOperator != gfxContext::OPERATOR_OVER;
+  bool needsGroup = oldOperator != gfxContext::OPERATOR_OVER;
 
   if (needsGroup) {
     aThebesContext->PushGroup(NS_GET_A(aBackgroundColor) == 0xff ?
