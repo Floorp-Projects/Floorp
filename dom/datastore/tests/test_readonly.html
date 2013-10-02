@@ -10,8 +10,7 @@
   <div id="container"></div>
   <script type="application/javascript;version=1.7">
   var gBaseURL = 'http://test/tests/dom/datastore/tests/';
-  var gHostedManifestURL = gBaseURL + 'file_app.sjs?testToken=file_readonly.html';
-  var gHostedManifestURL2 = 'http://example.com/tests/dom/datastore/tests/file_app2.template.webapp';
+  var gHostedManifestURL = gBaseURL + 'file_app.sjs';
   var gGenerator = runTest();
 
   SpecialPowers.pushPermissions(
@@ -31,8 +30,6 @@
   }
 
   function runTest() {
-    SpecialPowers.setBoolPref("dom.mozBrowserFramesEnabled", true);
-
     SpecialPowers.autoConfirmAppInstall(continueTest);
     yield undefined;
 
@@ -43,55 +40,52 @@
 
     var app = request.result;
 
-    request = navigator.mozApps.install(gHostedManifestURL2);
-    request.onerror = cbError;
-    request.onsuccess = continueTest;
-    yield undefined;
+    navigator.getDataStores('bar').then(function(stores) {
+      is(stores.length, 1, "getDataStores('bar') returns 1 element");
+      is(stores[0].name, 'bar', 'The dataStore.name is bar');
+      is(stores[0].readOnly, true, 'The dataStore bar is readonly');
 
-    var app2 = request.result;
+      var store = stores[0];
+      ok("get" in store, "store.get exists");
+      ok("update" in store, "store.update exists");
+      ok("add" in store, "store.add exists");
+      ok("remove" in store, "store.remove exists");
+      ok("clear" in store, "store.clear exists");
 
-    var ifr = document.createElement('iframe');
-    ifr.setAttribute('mozbrowser', 'true');
-    ifr.setAttribute('mozapp', app2.manifestURL);
-    ifr.setAttribute('src', 'http://example.com/tests/dom/datastore/tests/file_readonly.html');
-    var domParent = document.getElementById('container');
+      var f = store.clear();
+      f = f.then(cbError, function() {
+        ok(true, "store.clear() fails because the db is readonly");
+        return store.remove(123);
+      });
 
-    // Set us up to listen for messages from the app.
-    var listener = function(e) {
-      var message = e.detail.message;
-      if (/^OK/.exec(message)) {
-        ok(true, "Message from app: " + message);
-      } else if (/KO/.exec(message)) {
-        ok(false, "Message from app: " + message);
-      } else if (/DONE/.exec(message)) {
-        ok(true, "Messaging from app complete");
-        ifr.removeEventListener('mozbrowsershowmodalprompt', listener);
-        domParent.removeChild(ifr);
+      f = f.then(cbError, function() {
+        ok(true, "store.remove() fails because the db is readonly");
+        return store.add(123, true);
+      });
 
+      f = f.then(cbError, function() {
+        ok(true, "store.add() fails because the db is readonly");
+        return store.update(123, {});
+      })
+
+      f = f.then(cbError, function() {
+        ok(true, "store.update() fails because the db is readonly");
+      })
+
+      f.then(function() {
         // Uninstall the app.
         request = navigator.mozApps.mgmt.uninstall(app);
         request.onerror = cbError;
         request.onsuccess = function() {
-          // Uninstall app2
-          request = navigator.mozApps.mgmt.uninstall(app2);
-          request.onerror = cbError;
-          request.onsuccess = function() {
-            // All done.
-            info("All done");
-            finish();
-          }
+          // All done.
+          info("All done");
+          finish();
         }
-      }
-    }
-
-    // This event is triggered when the app calls "alert".
-    ifr.addEventListener('mozbrowsershowmodalprompt', listener, false);
-
-    domParent.appendChild(ifr);
+      });
+    }, cbError);
   }
 
   function finish() {
-    SpecialPowers.clearUserPref("dom.mozBrowserFramesEnabled");
     SimpleTest.finish();
   }
 
