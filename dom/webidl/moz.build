@@ -541,6 +541,7 @@ GENERATED_EVENTS_WEBIDL_FILES = [
     'MozInterAppMessageEvent.webidl',
     'RTCDataChannelEvent.webidl',
     'RTCPeerConnectionIceEvent.webidl',
+    'TrackEvent.webidl',
     'UserProximityEvent.webidl',
 ]
 
