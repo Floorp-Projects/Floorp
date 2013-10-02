@@ -53,6 +53,21 @@ recommend building with an SSD.** Power users with enough memory may opt
 to build from a RAM disk. Mechanical disks should be avoided if at all
 possible.
 
+Some may dispute the importance of an SSD on build times. It is true
+that the beneficial impact of an SSD can be mitigated if your system has
+lots of memory and the build files stay in the page cache. However,
+operating system memory management is complicated. You don't really have
+control over what or when something is evicted from the page cache.
+Therefore, unless your machine is a dedicated build machine or you have
+more memory than is needed by everything running on your machine,
+chances are you'll run into page cache eviction and you I/O layer will
+impact build performance. That being said, an SSD certainly doesn't
+hurt build times. And, anyone who has used a machine with an SSD will
+tell you how great of an investment it is for performance all around the
+operating system. On top of that, some automated tests are I/O bound
+(like those touching SQLite databases), so an SSD will make tests
+faster.
+
 This cause impacts both clobber and incremental builds.
 
 You don't have enough memory
@@ -154,3 +169,24 @@ changed headers on build performance. Bug 785103 tracks improving the
 situation.
 
 This issue mostly impacts the times of an :term:`incremental build`.
+
+A search/indexing service on your machine is running
+====================================================
+
+Many operating systems have a background service that automatically
+indexes filesystem content to make searching faster. On Windows, you
+have the Windows Search Service. On OS X, you have Finder.
+
+These background services sometimes take a keen interest in the files
+being produced as part of the build. Since the build system produces
+hundreds of megabytes or even a few gigabytes of file data, you can
+imagine how much work this is to index! If this work is being performed
+while the build is running, your build will be slower.
+
+OS X's Finder is notorious for indexing when the build is running. And,
+it has a tendency to suck up a whole CPU core. This can make builds
+several minutes slower. If you build with ``mach`` and have the optional
+``psutil`` package built (it requires Python development headers - see
+:ref:`python` for more) and Finder is running during a build, mach will
+print a warning at the end of the build, complete with instructions on
+how to fix it.
