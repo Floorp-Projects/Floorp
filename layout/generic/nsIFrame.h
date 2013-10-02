@@ -943,6 +943,7 @@ public:
   }
 
   static void DestroySurface(void* aPropertyValue);
+  static void DestroyDT(void* aPropertyValue);
 
 #ifdef _MSC_VER
 // XXX Workaround MSVC issue by making the static FramePropertyDescriptor
@@ -989,6 +990,7 @@ public:
   NS_DECLARE_FRAME_PROPERTY(LineBaselineOffset, nullptr)
 
   NS_DECLARE_FRAME_PROPERTY(CachedBackgroundImage, DestroySurface)
+  NS_DECLARE_FRAME_PROPERTY(CachedBackgroundImageDT, DestroyDT)
 
   NS_DECLARE_FRAME_PROPERTY(InvalidationRect, DestroyRect)
 
