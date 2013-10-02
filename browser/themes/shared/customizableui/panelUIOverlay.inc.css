@@ -188,15 +188,6 @@ toolbarpaletteitem[place="panel"] > toolbaritem > toolbarbutton > .toolbarbutton
   margin: calc(5em / 12);
 }
 
-toolbarbutton[customizableui-areatype="menu-panel"] > .toolbarbutton-icon[label]:not([label=""]),
-toolbaritem[customizableui-areatype="menu-panel"] > toolbarbutton > .toolbarbutton-icon[label]:not([label=""]),
-toolbarpaletteitem[place="palette"] > toolbarbutton > .toolbarbutton-icon[label]:not([label=""]),
-toolbarpaletteitem[place="palette"] > toolbaritem > toolbarbutton > .toolbarbutton-icon[label]:not([label=""]),
-toolbarpaletteitem[place="panel"] > toolbarbutton > .toolbarbutton-icon[label]:not([label=""]),
-toolbarpaletteitem[place="panel"] > toolbaritem > toolbarbutton > .toolbarbutton-icon[label]:not([label=""]) {
-  -moz-margin-end: 0;
-}
-
 toolbarpaletteitem[place="palette"] > toolbaritem > toolbarbutton {
   -moz-box-flex: 1;
 }
