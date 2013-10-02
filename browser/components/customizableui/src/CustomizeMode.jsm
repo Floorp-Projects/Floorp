@@ -911,6 +911,24 @@ CustomizeMode.prototype = {
       return;
     }
 
+    // Skipintoolbarset items won't really be moved:
+    if (draggedItem.getAttribute("skipintoolbarset") == "true") {
+      // These items should never leave their area:
+      if (aTargetArea != aOriginArea) {
+        return;
+      }
+      this.unwrapToolbarItem(draggedItem.parentNode);
+      if (aTargetNode == aTargetArea.customizationTarget) {
+        aTargetArea.customizationTarget.appendChild(draggedItem);
+      } else {
+        this.unwrapToolbarItem(aTargetNode.parentNode);
+        aTargetArea.customizationTarget.insertBefore(draggedItem, aTargetNode);
+        this.wrapToolbarItem(aTargetNode);
+      }
+      this.wrapToolbarItem(draggedItem);
+      return;
+    }
+
     // Is the target the customization area itself? If so, we just add the
     // widget to the end of the area.
     if (aTargetNode == aTargetArea.customizationTarget) {
@@ -921,14 +939,24 @@ CustomizeMode.prototype = {
     // We need to determine the place that the widget is being dropped in
     // the target.
     let placement;
-    if (!aTargetNode.classList.contains(kPlaceholderClass)) {
-      let targetNodeId = (aTargetNode.nodeName == "toolbarpaletteitem") ?
-                            aTargetNode.firstChild && aTargetNode.firstChild.id :
-                            aTargetNode.id;
+    let itemForPlacement = aTargetNode;
+    // Skip the skipintoolbarset items when determining the place of the item:
+    while (itemForPlacement && itemForPlacement.getAttribute("skipintoolbarset") == "true" &&
+           itemForPlacement.parentNode &&
+           itemForPlacement.parentNode.nodeName == "toolbarpaletteitem") {
+      itemForPlacement = itemForPlacement.parentNode.nextSibling;
+      if (itemForPlacement && itemForPlacement.nodeName == "toolbarpaletteitem") {
+        itemForPlacement = itemForPlacement.firstChild;
+      }
+    }
+    if (itemForPlacement && !itemForPlacement.classList.contains(kPlaceholderClass)) {
+      let targetNodeId = (itemForPlacement.nodeName == "toolbarpaletteitem") ?
+                            itemForPlacement.firstChild && itemForPlacement.firstChild.id :
+                            itemForPlacement.id;
       placement = CustomizableUI.getPlacementOfWidget(targetNodeId);
     }
     if (!placement) {
-      LOG("Could not get a position for " + aTargetNode + "#" + aTargetNode.id + "." + aTargetNode.className);
+      LOG("Could not get a position for " + aTargetNode.nodeName + "#" + aTargetNode.id + "." + aTargetNode.className);
     }
     let position = placement ? placement.position : null;
 
@@ -938,10 +966,15 @@ CustomizeMode.prototype = {
     // that the widget is moving within a customizable area.
     if (aTargetArea == aOriginArea) {
       CustomizableUI.moveWidgetWithinArea(aDraggedItemId, position);
-      return;
+    } else {
+      CustomizableUI.addWidgetToArea(aDraggedItemId, aTargetArea.id, position);
     }
-
-    CustomizableUI.addWidgetToArea(aDraggedItemId, aTargetArea.id, position);
+    // If we dropped onto a skipintoolbarset item, manually correct the drop location:
+    if (aTargetNode != itemForPlacement) {
+      let draggedWrapper = draggedItem.parentNode;
+      let container = draggedWrapper.parentNode;
+      container.insertBefore(draggedWrapper, aTargetNode.parentNode);
+    }
   },
 
   _onDragExit: function(aEvent) {
