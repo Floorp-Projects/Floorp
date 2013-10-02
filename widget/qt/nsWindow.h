@@ -148,7 +148,8 @@ public:
     NS_IMETHOD         SetTitle(const nsAString& aTitle);
     NS_IMETHOD         SetIcon(const nsAString& aIconSpec);
     virtual nsIntPoint WidgetToScreenOffset();
-    NS_IMETHOD         DispatchEvent(nsGUIEvent *aEvent, nsEventStatus &aStatus);
+    NS_IMETHOD         DispatchEvent(mozilla::WidgetGUIEvent* aEvent,
+                                     nsEventStatus& aStatus);
 
     NS_IMETHOD         EnableDragDrop(bool aEnable);
     NS_IMETHOD         CaptureMouse(bool aCapture);
@@ -158,7 +159,9 @@ public:
     NS_IMETHOD         SetWindowClass(const nsAString& xulWinType);
 
     NS_IMETHOD         GetAttention(int32_t aCycleCount);
-    NS_IMETHOD         BeginResizeDrag   (nsGUIEvent* aEvent, int32_t aHorizontal, int32_t aVertical);
+    NS_IMETHOD         BeginResizeDrag(mozilla::WidgetGUIEvent* aEvent,
+                                       int32_t aHorizontal,
+                                       int32_t aVertical);
 
     NS_IMETHOD_(void) SetInputContext(const InputContext& aContext,
                                       const InputContextAction& aAction);
@@ -180,7 +183,8 @@ public:
     void DispatchDeactivateEventOnTopLevelWindow(void);
     void DispatchResizeEvent(nsIntRect &aRect, nsEventStatus &aStatus);
 
-    nsEventStatus DispatchEvent(nsGUIEvent *aEvent) {
+    nsEventStatus DispatchEvent(mozilla::WidgetGUIEvent* aEvent)
+    {
         nsEventStatus status;
         DispatchEvent(aEvent, status);
         return status;

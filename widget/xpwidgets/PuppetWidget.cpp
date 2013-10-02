@@ -243,7 +243,7 @@ PuppetWidget::Invalidate(const nsIntRect& aRect)
 }
 
 void
-PuppetWidget::InitEvent(nsGUIEvent& event, nsIntPoint* aPoint)
+PuppetWidget::InitEvent(WidgetGUIEvent& event, nsIntPoint* aPoint)
 {
   if (nullptr == aPoint) {
     event.refPoint.x = 0;
@@ -258,7 +258,7 @@ PuppetWidget::InitEvent(nsGUIEvent& event, nsIntPoint* aPoint)
 }
 
 NS_IMETHODIMP
-PuppetWidget::DispatchEvent(nsGUIEvent* event, nsEventStatus& aStatus)
+PuppetWidget::DispatchEvent(WidgetGUIEvent* event, nsEventStatus& aStatus)
 {
 #ifdef DEBUG
   debug_DumpEvent(stdout, event->widget, event,

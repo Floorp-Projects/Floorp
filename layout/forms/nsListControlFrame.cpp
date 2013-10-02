@@ -848,8 +848,8 @@ nsListControlFrame::CaptureMouseEvents(bool aGrabMouseEvents)
 
 //---------------------------------------------------------
 NS_IMETHODIMP 
-nsListControlFrame::HandleEvent(nsPresContext* aPresContext, 
-                                nsGUIEvent*    aEvent,
+nsListControlFrame::HandleEvent(nsPresContext* aPresContext,
+                                WidgetGUIEvent* aEvent,
                                 nsEventStatus* aEventStatus)
 {
   NS_ENSURE_ARG_POINTER(aEventStatus);

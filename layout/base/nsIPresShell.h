@@ -1274,10 +1274,10 @@ public:
   };
   virtual void Paint(nsView* aViewToPaint, const nsRegion& aDirtyRegion,
                      uint32_t aFlags) = 0;
-  virtual nsresult HandleEvent(nsIFrame*       aFrame,
-                               nsGUIEvent*     aEvent,
-                               bool            aDontRetargetEvents,
-                               nsEventStatus*  aEventStatus) = 0;
+  virtual nsresult HandleEvent(nsIFrame* aFrame,
+                               mozilla::WidgetGUIEvent* aEvent,
+                               bool aDontRetargetEvents,
+                               nsEventStatus* aEventStatus) = 0;
   virtual bool ShouldIgnoreInvalidation() = 0;
   /**
    * Notify that we're going to call Paint with PAINT_LAYERS
@@ -1307,7 +1307,8 @@ public:
   virtual void ScheduleViewManagerFlush() = 0;
   virtual void ClearMouseCaptureOnView(nsView* aView) = 0;
   virtual bool IsVisible() = 0;
-  virtual void DispatchSynthMouseMove(nsGUIEvent *aEvent, bool aFlushOnHoverChange) = 0;
+  virtual void DispatchSynthMouseMove(mozilla::WidgetGUIEvent* aEvent,
+                                      bool aFlushOnHoverChange) = 0;
 
   virtual void AddSizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf,
                                       nsArenaMemoryStats *aArenaObjectsSize,

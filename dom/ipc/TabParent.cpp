@@ -727,7 +727,7 @@ TabParent::GetEventCapturer()
 }
 
 bool
-TabParent::TryCapture(const nsGUIEvent& aEvent)
+TabParent::TryCapture(const WidgetGUIEvent& aEvent)
 {
   MOZ_ASSERT(sEventCapturer == this && mEventCaptureDepth > 0);
 

@@ -163,8 +163,8 @@ public:
   virtual void GetChildLists(nsTArray<ChildList>* aLists) const MOZ_OVERRIDE;
 
   NS_IMETHOD  HandleEvent(nsPresContext* aPresContext, 
-                          nsGUIEvent*     aEvent,
-                          nsEventStatus*  aEventStatus) MOZ_OVERRIDE;
+                          mozilla::WidgetGUIEvent* aEvent,
+                          nsEventStatus* aEventStatus) MOZ_OVERRIDE;
   NS_IMETHOD  GetContentForEvent(nsEvent* aEvent,
                                  nsIContent** aContent) MOZ_OVERRIDE;
   NS_IMETHOD  GetCursor(const nsPoint&    aPoint,
@@ -349,21 +349,21 @@ public:
   // Selection Methods
 
   NS_IMETHOD HandlePress(nsPresContext* aPresContext,
-                         nsGUIEvent *    aEvent,
-                         nsEventStatus*  aEventStatus);
+                         mozilla::WidgetGUIEvent* aEvent,
+                         nsEventStatus* aEventStatus);
 
   NS_IMETHOD HandleMultiplePress(nsPresContext* aPresContext,
-                         nsGUIEvent *    aEvent,
-                         nsEventStatus*  aEventStatus,
-                         bool            aControlHeld);
+                                 mozilla::WidgetGUIEvent* aEvent,
+                                 nsEventStatus* aEventStatus,
+                                 bool aControlHeld);
 
   NS_IMETHOD HandleDrag(nsPresContext* aPresContext,
-                        nsGUIEvent *    aEvent,
-                        nsEventStatus*  aEventStatus);
+                        mozilla::WidgetGUIEvent* aEvent,
+                        nsEventStatus* aEventStatus);
 
   NS_IMETHOD HandleRelease(nsPresContext* aPresContext,
-                           nsGUIEvent *    aEvent,
-                           nsEventStatus*  aEventStatus);
+                           mozilla::WidgetGUIEvent* aEvent,
+                           nsEventStatus* aEventStatus);
 
   enum { SELECT_ACCUMULATE = 0x01 };
 

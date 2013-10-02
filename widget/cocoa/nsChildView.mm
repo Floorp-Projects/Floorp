@@ -966,7 +966,7 @@ nsChildView::BackingScaleFactorChanged()
 
   if (IsPluginView()) {
     nsEventStatus status = nsEventStatus_eIgnore;
-    nsGUIEvent guiEvent(true, NS_PLUGIN_RESOLUTION_CHANGED, this);
+    WidgetGUIEvent guiEvent(true, NS_PLUGIN_RESOLUTION_CHANGED, this);
     guiEvent.time = PR_IntervalNow();
     DispatchEvent(&guiEvent, status);
   }
@@ -1588,7 +1588,8 @@ nsresult nsChildView::ConfigureChildren(const nsTArray<Configuration>& aConfigur
 }
 
 // Invokes callback and ProcessEvent methods on Event Listener object
-NS_IMETHODIMP nsChildView::DispatchEvent(nsGUIEvent* event, nsEventStatus& aStatus)
+NS_IMETHODIMP nsChildView::DispatchEvent(WidgetGUIEvent* event,
+                                         nsEventStatus& aStatus)
 {
 #ifdef DEBUG
   debug_DumpEvent(stdout, event->widget, event, nsAutoCString("something"), 0);
@@ -1632,7 +1633,7 @@ NS_IMETHODIMP nsChildView::DispatchEvent(nsGUIEvent* event, nsEventStatus& aStat
   return NS_OK;
 }
 
-bool nsChildView::DispatchWindowEvent(nsGUIEvent &event)
+bool nsChildView::DispatchWindowEvent(WidgetGUIEvent& event)
 {
   nsEventStatus status;
   DispatchEvent(&event, status);
@@ -3146,7 +3147,7 @@ NSEvent* gLastDragMouseDownEvent = nil;
     return;
 
   nsEventStatus status = nsEventStatus_eIgnore;
-  nsGUIEvent focusGuiEvent(true, eventType, mGeckoChild);
+  WidgetGUIEvent focusGuiEvent(true, eventType, mGeckoChild);
   focusGuiEvent.time = PR_IntervalNow();
   mGeckoChild->DispatchEvent(&focusGuiEvent, status);
 }

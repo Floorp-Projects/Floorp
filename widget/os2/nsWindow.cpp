@@ -403,7 +403,7 @@ NS_METHOD nsWindow::Create(nsIWidget* aParent,
   SetNSWindowPtr(mWnd, this);
 
   // Finalize the widget creation process.
-  nsGUIEvent event(true, NS_CREATE, this);
+  WidgetGUIEvent event(true, NS_CREATE, this);
   InitEvent(event);
   DispatchWindowEvent(&event);
 
@@ -1701,7 +1701,7 @@ MRESULT nsWindow::ProcessMessage(ULONG msg, MPARAM mp1, MPARAM mp2)
     case WM_CLOSE:
     case WM_QUIT: {
       mWindowState |= nsWindowState_eClosing;
-      nsGUIEvent event(true, NS_XUL_CLOSE, this);
+      WidgetGUIEvent event(true, NS_XUL_CLOSE, this);
       InitEvent(event);
       DispatchWindowEvent(&event);
       // abort window closure
@@ -2998,7 +2998,7 @@ uint32_t WMChar2KeyCode(MPARAM mp1, MPARAM mp2)
 
 // Initialize an event to dispatch.
 
-void nsWindow::InitEvent(nsGUIEvent& event, nsIntPoint* aPoint)
+void nsWindow::InitEvent(WidgetGUIEvent& event, nsIntPoint* aPoint)
 {
   // if no point was supplied, calculate it
   if (!aPoint) {
@@ -3028,7 +3028,8 @@ void nsWindow::InitEvent(nsGUIEvent& event, nsIntPoint* aPoint)
 //-----------------------------------------------------------------------------
 // Invoke the Event Listener object's callback.
 
-NS_IMETHODIMP nsWindow::DispatchEvent(nsGUIEvent* event, nsEventStatus& aStatus)
+NS_IMETHODIMP nsWindow::DispatchEvent(WidgetGUIEvent* event,
+                                      nsEventStatus& aStatus)
 {
   aStatus = nsEventStatus_eIgnore;
 
@@ -3053,14 +3054,16 @@ NS_IMETHODIMP nsWindow::ReparentNativeWidget(nsIWidget* aNewParent)
 
 //-----------------------------------------------------------------------------
 
-bool nsWindow::DispatchWindowEvent(nsGUIEvent* event)
+bool nsWindow::DispatchWindowEvent(WidgetGUIEvent* event)
 {
   nsEventStatus status;
   DispatchEvent(event, status);
   return (status == nsEventStatus_eConsumeNoDefault);
 }
 
-bool nsWindow::DispatchWindowEvent(nsGUIEvent*event, nsEventStatus &aStatus) {
+bool nsWindow::DispatchWindowEvent(WidgetGUIEvent*event,
+                                   nsEventStatus &aStatus)
+{
   DispatchEvent(event, aStatus);
   return (aStatus == nsEventStatus_eConsumeNoDefault);
 }
@@ -3112,7 +3115,7 @@ bool nsWindow::DispatchDragDropEvent(uint32_t aMsg)
 bool nsWindow::DispatchMoveEvent(int32_t aX, int32_t aY)
 {
   // Params here are in XP-space for the desktop
-  nsGUIEvent event(true, NS_MOVE, this);
+  WidgetGUIEvent event(true, NS_MOVE, this);
   nsIntPoint point(aX, aY);
   InitEvent(event, &point);
   return DispatchWindowEvent(&event);
@@ -3285,7 +3288,7 @@ bool nsWindow::DispatchMouseEvent(uint32_t aEventType, MPARAM mp1, MPARAM mp2,
 
 bool nsWindow::DispatchActivationEvent(uint32_t aEventType)
 {
-  nsGUIEvent event(true, aEventType, this);
+  WidgetGUIEvent event(true, aEventType, this);
 
   // These events should go to their base widget location,
   // not current mouse position.

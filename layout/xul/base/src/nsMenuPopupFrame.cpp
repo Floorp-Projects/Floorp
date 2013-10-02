@@ -1606,7 +1606,7 @@ nsMenuPopupFrame::ChangeMenuItem(nsMenuFrame* aMenuItem,
 }
 
 nsMenuFrame*
-nsMenuPopupFrame::Enter(nsGUIEvent* aEvent)
+nsMenuPopupFrame::Enter(WidgetGUIEvent* aEvent)
 {
   mIncrementalString.Truncate();
 

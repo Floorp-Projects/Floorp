@@ -382,7 +382,7 @@ protected:
     virtual bool RecvDestroy() MOZ_OVERRIDE;
     virtual bool RecvSetUpdateHitRegion(const bool& aEnabled) MOZ_OVERRIDE;
 
-    nsEventStatus DispatchWidgetEvent(nsGUIEvent& event);
+    nsEventStatus DispatchWidgetEvent(WidgetGUIEvent& event);
 
     virtual PIndexedDBChild* AllocPIndexedDBChild(const nsCString& aGroup,
                                                   const nsCString& aASCIIOrigin,

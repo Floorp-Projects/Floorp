@@ -1907,7 +1907,7 @@ TabChild::RecvSelectionEvent(const WidgetSelectionEvent& event)
 }
 
 nsEventStatus
-TabChild::DispatchWidgetEvent(nsGUIEvent& event)
+TabChild::DispatchWidgetEvent(WidgetGUIEvent& event)
 {
   if (!mWidget)
     return nsEventStatus_eConsumeNoDefault;

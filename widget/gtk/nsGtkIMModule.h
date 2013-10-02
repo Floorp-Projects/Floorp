@@ -274,7 +274,7 @@ protected:
     nsresult DeleteText(const int32_t aOffset, const uint32_t aNChars);
 
     // Initializes the GUI event.
-    void InitEvent(nsGUIEvent& aEvent);
+    void InitEvent(mozilla::WidgetGUIEvent& aEvent);
 
     // Called before destroying the context to work around some platform bugs.
     void PrepareToDestroyContext(GtkIMContext *aContext);

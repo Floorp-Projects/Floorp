@@ -1790,7 +1790,7 @@ nsDOMWindowUtils::DispatchDOMEventViaPresShell(nsIDOMNode* aTarget,
 }
 
 static void
-InitEvent(nsGUIEvent& aEvent, LayoutDeviceIntPoint* aPt = nullptr)
+InitEvent(WidgetGUIEvent& aEvent, LayoutDeviceIntPoint* aPt = nullptr)
 {
   if (aPt) {
     aEvent.refPoint = *aPt;

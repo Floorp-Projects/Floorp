@@ -534,7 +534,7 @@ nsIMEStateManager::DispatchCompositionEvent(nsINode* aEventTargetNode,
 
   EnsureTextCompositionArray();
 
-  nsGUIEvent* GUIEvent = static_cast<nsGUIEvent*>(aEvent);
+  WidgetGUIEvent* GUIEvent = static_cast<WidgetGUIEvent*>(aEvent);
 
   TextComposition* composition =
     sTextCompositions->GetCompositionFor(GUIEvent->widget);

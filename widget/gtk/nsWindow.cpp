@@ -453,7 +453,7 @@ nsWindow::DispatchResized(int32_t aWidth, int32_t aHeight)
 }
 
 nsresult
-nsWindow::DispatchEvent(nsGUIEvent *aEvent, nsEventStatus &aStatus)
+nsWindow::DispatchEvent(WidgetGUIEvent* aEvent, nsEventStatus& aStatus)
 {
 #ifdef DEBUG
     debug_DumpEvent(stdout, aEvent->widget, aEvent,
@@ -6111,7 +6111,9 @@ nsWindow::BeginMoveDrag(nsMouseEvent* aEvent)
 }
 
 NS_IMETHODIMP
-nsWindow::BeginResizeDrag(nsGUIEvent* aEvent, int32_t aHorizontal, int32_t aVertical)
+nsWindow::BeginResizeDrag(WidgetGUIEvent* aEvent,
+                          int32_t aHorizontal,
+                          int32_t aVertical)
 {
     NS_ENSURE_ARG_POINTER(aEvent);
 

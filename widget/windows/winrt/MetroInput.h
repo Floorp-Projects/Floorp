@@ -277,7 +277,7 @@ private:
   void OnFirstPointerMoveCallback();
 
   // Sync event dispatching
-  void DispatchEventIgnoreStatus(nsGUIEvent *aEvent);
+  void DispatchEventIgnoreStatus(WidgetGUIEvent* aEvent);
   void DispatchTouchCancel();
 
   nsDeque mInputEventQueue;
