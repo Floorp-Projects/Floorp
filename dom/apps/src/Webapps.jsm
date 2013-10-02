@@ -284,7 +284,6 @@ this.DOMApplicationRegistry = {
     // Create or Update the DataStore for this app
     this._readManifests([{ id: aId }], (function(aResult) {
       this.updateDataStore(this.webapps[aId].localId,
-                           this.webapps[aId].origin,
                            this.webapps[aId].manifestURL,
                            aResult[0].manifest);
     }).bind(this));
@@ -531,17 +530,12 @@ this.DOMApplicationRegistry = {
           }
           this.updateOfflineCacheForApp(id);
           this.updatePermissionsForApp(id);
+          this.updateDataStoreForApp(id);
         }
         // Need to update the persisted list of apps since
         // installPreinstalledApp() removes the ones failing to install.
         this._saveApps();
       }
-
-      // DataStores must be initialized at startup.
-      for (let id in this.webapps) {
-        this.updateDataStoreForApp(id);
-      }
-
       this.registerAppsHandlers(runUpdate);
     }).bind(this);
 
@@ -558,15 +552,14 @@ this.DOMApplicationRegistry = {
     }).bind(this));
   },
 
-  updateDataStore: function(aId, aOrigin, aManifestURL, aManifest) {
+  updateDataStore: function(aId, aManifestURL, aManifest) {
     if ('datastores-owned' in aManifest) {
       for (let name in aManifest['datastores-owned']) {
         let readonly = "access" in aManifest['datastores-owned'][name]
                          ? aManifest['datastores-owned'][name].access == 'readonly'
                          : false;
 
-        dataStoreService.installDataStore(aId, name, aOrigin, aManifestURL,
-                                          readonly);
+        dataStoreService.installDataStore(aId, name, aManifestURL, readonly);
       }
     }
 
@@ -576,8 +569,9 @@ this.DOMApplicationRegistry = {
                        !aManifest['datastores-access'][name].readonly
                          ? false : true;
 
-        dataStoreService.installAccessDataStore(aId, name, aOrigin,
-                                                aManifestURL, readonly);
+        // The first release is always in readonly mode.
+        dataStoreService.installAccessDataStore(aId, name, aManifestURL,
+                                                /* readonly */ true);
       }
     }
   },
@@ -1440,8 +1434,7 @@ this.DOMApplicationRegistry = {
                 manifestURL: app.manifestURL },
               true);
           }
-          this.updateDataStore(this.webapps[id].localId, app.origin,
-                               app.manifestURL, aData);
+          this.updateDataStore(this.webapps[id].localId, app.manifestURL, aData);
           this.broadcastMessage("Webapps:PackageEvent",
                                 { type: "applied",
                                   manifestURL: app.manifestURL,
@@ -1647,8 +1640,7 @@ this.DOMApplicationRegistry = {
           }, true);
         }
 
-        this.updateDataStore(this.webapps[id].localId, app.origin,
-                             app.manifestURL, app.manifest);
+        this.updateDataStore(this.webapps[id].localId, app.manifestURL, app.manifest);
 
         app.name = manifest.name;
         app.csp = manifest.csp || "";
@@ -2150,8 +2142,8 @@ this.DOMApplicationRegistry = {
                                                     true);
           }
 
-          this.updateDataStore(this.webapps[aId].localId, appObject.origin,
-                               appObject.manifestURL, aManifest);
+          this.updateDataStore(this.webapps[aId].localId, appObject.manifestURL,
+                               aManifest);
 
           debug("About to fire Webapps:PackageEvent 'installed'");
           this.broadcastMessage("Webapps:PackageEvent",
@@ -2256,8 +2248,8 @@ this.DOMApplicationRegistry = {
         }).bind(this));
       }
 
-      this.updateDataStore(this.webapps[id].localId,  this.webapps[id].origin,
-                           this.webapps[id].manifestURL, jsonManifest);
+      this.updateDataStore(this.webapps[id].localId, this.webapps[id].manifestURL,
+                           jsonManifest);
     }
 
     ["installState", "downloadAvailable",
