@@ -30,6 +30,7 @@ class nsXBLBinding;
 template<class E> class nsRefPtr;
 typedef nsTArray<nsRefPtr<nsXBLBinding> > nsBindingList;
 class nsIPrincipal;
+class nsCSSStyleSheet;
 
 class nsBindingManager MOZ_FINAL : public nsStubMutationObserver
 {

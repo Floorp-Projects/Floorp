@@ -16,6 +16,7 @@
 #include "mozilla/dom/Attr.h"
 #include "nsDOMAttributeMap.h"
 #include "nsIAtom.h"
+#include "nsIContentInlines.h"
 #include "nsINodeInfo.h"
 #include "nsIDocumentInlines.h"
 #include "nsIDOMNodeList.h"

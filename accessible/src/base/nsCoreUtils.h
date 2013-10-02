@@ -7,6 +7,7 @@
 #define nsCoreUtils_h_
 
 #include "nsIContent.h"
+#include "nsIDocument.h"
 #include "nsIPresShell.h"
 
 #include "nsIDOMDOMStringList.h"

@@ -51,6 +51,7 @@ class nsMenuBarFrame;
 class nsMenuParent;
 class nsIDOMKeyEvent;
 class nsIDocShellTreeItem;
+class nsPIDOMWindow;
 
 // when a menu command is executed, the closemenu attribute may be used
 // to define how the menu should be closed up

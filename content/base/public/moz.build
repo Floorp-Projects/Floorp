@@ -49,6 +49,7 @@ EXPORTS += [
     'nsHostObjectProtocolHandler.h',
     'nsIAttribute.h',
     'nsIContent.h',
+    'nsIContentInlines.h',
     'nsIContentIterator.h',
     'nsIContentSerializer.h',
     'nsIDocument.h',
