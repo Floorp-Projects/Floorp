@@ -13,7 +13,7 @@
   SimpleTest.waitForExplicitFinish();
 
   var gBaseURL = 'http://test/tests/dom/datastore/tests/';
-  var gHostedManifestURL = gBaseURL + 'file_app.sjs';
+  var gHostedManifestURL = gBaseURL + 'file_app.sjs?testToken=file_app_install.html';
   var gGenerator = runTest();
 
   SpecialPowers.pushPermissions(
@@ -23,7 +23,8 @@
     function() { gGenerator.next() });
 
   function continueTest() {
-    gGenerator.next();
+    try { gGenerator.next(); }
+    catch(e) { dump("Got exception: " + e + "\n"); }
   }
 
   function cbError() {
@@ -40,6 +41,8 @@
     }, cbError);
     yield undefined;
 
+    SpecialPowers.setBoolPref("dom.mozBrowserFramesEnabled", true);
+
     SpecialPowers.autoConfirmAppInstall(continueTest);
     yield undefined;
 
@@ -53,42 +56,43 @@
     is(app.manifest.description, "Updated even faster than Firefox, just to annoy slashdotters.",
        "Manifest is HTML-sanitized");
 
-    navigator.getDataStores('foo').then(function(stores) {
-      is(stores.length, 1, "getDataStores('foo') returns 1 element");
-      is(stores[0].name, 'foo', 'The dataStore.name is foo');
-      is(stores[0].owner, 'http://test/tests/dom/datastore/tests/file_app.sjs', 'The dataStore.owner exists');
-      is(stores[0].readOnly, false, 'The dataStore foo is not in readonly');
-      continueTest();
-    }, cbError);
-    yield undefined;
+    var ifr = document.createElement('iframe');
+    ifr.setAttribute('mozbrowser', 'true');
+    ifr.setAttribute('mozapp', app.manifestURL);
+    ifr.setAttribute('src', app.manifest.launch_path);
+    var domParent = document.getElementById('container');
 
-    navigator.getDataStores('bar').then(function(stores) {
-      is(stores.length, 1, "getDataStores('bar') returns 1 element");
-      is(stores[0].name, 'bar', 'The dataStore.name is bar');
-      is(stores[0].owner, 'http://test/tests/dom/datastore/tests/file_app.sjs', 'The dataStore.owner exists');
-      is(stores[0].readOnly, true, 'The dataStore bar is in readonly');
-      continueTest();
-    }, cbError);
-    yield undefined;
+    // Set us up to listen for messages from the app.
+    var listener = function(e) {
+      var message = e.detail.message;
+      if (/^OK/.exec(message)) {
+        ok(true, "Message from app: " + message);
+      } else if (/KO/.exec(message)) {
+        ok(false, "Message from app: " + message);
+      } else if (/DONE/.exec(message)) {
+        ok(true, "Messaging from app complete");
+        ifr.removeEventListener('mozbrowsershowmodalprompt', listener);
+        domParent.removeChild(ifr);
 
-    // Uninstall the app.
-    request = navigator.mozApps.mgmt.uninstall(app);
-    request.onerror = cbError;
-    request.onsuccess = continueTest;
-    yield undefined;
+        // Uninstall the app.
+        request = navigator.mozApps.mgmt.uninstall(app);
+        request.onerror = cbError;
+        request.onsuccess = function() {
+          // All done.
+          ok(true, "All done");
+          finish();
+        }
+      }
+    }
 
-    navigator.getDataStores('foo').then(function(stores) {
-      is(stores.length, 0, "getDataStores('foo') returns 0 elements");
-      continueTest();
-    }, cbError);
-    yield undefined;
+    // This event is triggered when the app calls "alert".
+    ifr.addEventListener('mozbrowsershowmodalprompt', listener, false);
 
-    // All done.
-    info("All done");
-    finish();
+    domParent.appendChild(ifr);
   }
 
   function finish() {
+    SpecialPowers.clearUserPref("dom.mozBrowserFramesEnabled");
     SimpleTest.finish();
   }
 

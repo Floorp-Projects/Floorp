@@ -37,6 +37,7 @@ function DataStoreService() {
 DataStoreService.prototype = {
   // Hash of DataStores
   stores: {},
+  accessStores: {},
 
   installDataStore: function(aAppId, aName, aOwner, aReadOnly) {
     debug('installDataStore - appId: ' + aAppId + ', aName: ' +
@@ -57,15 +58,52 @@ DataStoreService.prototype = {
     this.stores[aName][aAppId] = store;
   },
 
+  installAccessDataStore: function(aAppId, aName, aOwner, aReadOnly) {
+    debug('installDataStore - appId: ' + aAppId + ', aName: ' +
+          aName + ', aOwner:' + aOwner + ', aReadOnly: ' +
+          aReadOnly);
+
+    if (aName in this.accessStores && aAppId in this.accessStores[aName]) {
+      debug('This should not happen');
+      return;
+    }
+
+    let accessStore = new DataStoreAccess(aAppId, aName, aOwner, aReadOnly);
+
+    if (!(aName in this.accessStores)) {
+      this.accessStores[aName] = {};
+    }
+
+    this.accessStores[aName][aAppId] = accessStore;
+  },
+
   getDataStores: function(aWindow, aName) {
     debug('getDataStores - aName: ' + aName);
+    let appId = aWindow.document.nodePrincipal.appId;
+
     let self = this;
     return new aWindow.Promise(function(resolve, reject) {
       let matchingStores = [];
 
       if (aName in self.stores) {
-        for (let appId in self.stores[aName]) {
-          matchingStores.push(self.stores[aName][appId]);
+        if (appId in self.stores[aName]) {
+          matchingStores.push({ store: self.stores[aName][appId],
+                                readonly: false });
+        }
+
+        for (var i in self.stores[aName]) {
+          if (i == appId) {
+            continue;
+          }
+
+          let access = self.getDataStoreAccess(self.stores[aName][i], appId);
+          if (!access) {
+            continue;
+          }
+
+          let readOnly = self.stores[aName][i].readOnly || access.readOnly;
+          matchingStores.push({ store: self.stores[aName][i],
+                                readonly: readOnly });
         }
       }
 
@@ -78,10 +116,11 @@ DataStoreService.prototype = {
       }
 
       for (let i = 0; i < matchingStores.length; ++i) {
-        let obj = matchingStores[i].exposeObject(aWindow);
+        let obj = matchingStores[i].store.exposeObject(aWindow,
+                                    matchingStores[i].readonly);
         results.push(obj);
 
-        matchingStores[i].retrieveRevisionId(
+        matchingStores[i].store.retrieveRevisionId(
           function() {
             --callbackPending;
             if (!callbackPending) {
@@ -94,6 +133,15 @@ DataStoreService.prototype = {
         );
       }
     });
+  },
+
+  getDataStoreAccess: function(aStore, aAppId) {
+    if (!(aStore.name in this.accessStores) ||
+        !(aAppId in this.accessStores[aStore.name])) {
+      return null;
+    }
+
+    return this.accessStores[aStore.name][aAppId];
   },
 
   observe: function observe(aSubject, aTopic, aData) {
