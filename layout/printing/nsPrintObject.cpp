@@ -13,7 +13,8 @@
 #include "nsComponentManagerUtils.h"
 #include "nsIDocShellTreeItem.h"
 #include "nsIBaseWindow.h"
-                                                   
+#include "nsIDocument.h"
+
 //---------------------------------------------------
 //-- nsPrintObject Class Impl
 //---------------------------------------------------

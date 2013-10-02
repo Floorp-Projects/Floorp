@@ -10,7 +10,7 @@
  * utility methods for subclasses, and so forth.
  */
 
-#include "mozilla/dom/Element.h"
+#include "mozilla/dom/ElementInlines.h"
 
 #include "mozilla/DebugOnly.h"
 #include "mozilla/dom/Attr.h"
