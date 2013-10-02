@@ -39,6 +39,7 @@
 #include "nsIDOMDocument.h"
 #include "nsIScriptObjectPrincipal.h"
 #include "nsIURI.h"
+#include "nsIDocument.h"
 #if defined(XP_MACOSX)
 #include "nsThreadUtils.h"
 #endif

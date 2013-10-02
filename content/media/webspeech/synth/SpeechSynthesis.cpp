@@ -13,6 +13,7 @@
 #include "mozilla/dom/SpeechSynthesisBinding.h"
 #include "SpeechSynthesis.h"
 #include "nsSynthVoiceRegistry.h"
+#include "nsIDocument.h"
 
 #undef LOG
 #ifdef PR_LOGGING

@@ -22,6 +22,7 @@
 #include "nsNullPrincipal.h"
 #include "nsContentUtils.h"
 #include "nsIParserUtils.h"
+#include "nsIDocument.h"
 
 using namespace mozilla;
 
