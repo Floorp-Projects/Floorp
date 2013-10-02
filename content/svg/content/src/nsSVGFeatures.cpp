@@ -14,6 +14,7 @@
 
 #include "nsSVGFeatures.h"
 #include "nsIContent.h"
+#include "nsIDocument.h"
 #include "mozilla/Preferences.h"
 
 using namespace mozilla;

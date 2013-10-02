@@ -25,6 +25,8 @@
 #include "nsXULSortService.h"
 
 #include "mozIStorageService.h"
+#include "nsIChannel.h"
+#include "nsIDocument.h"
 
 //----------------------------------------------------------------------
 //
