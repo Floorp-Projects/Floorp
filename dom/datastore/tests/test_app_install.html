@@ -22,7 +22,10 @@
     [{ "type": "browser", "allow": 1, "context": document },
      { "type": "embed-apps", "allow": 1, "context": document },
      { "type": "webapps-manage", "allow": 1, "context": document }],
-    function() { gGenerator.next() });
+    function() {
+      SpecialPowers.pushPrefEnv({"set": [["dom.datastore.enabled", true]]}, function() {
+        gGenerator.next(); });
+    });
 
   function continueTest() {
     try { gGenerator.next(); }
