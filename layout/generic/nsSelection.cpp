@@ -67,6 +67,7 @@ static NS_DEFINE_CID(kFrameTraversalCID, NS_FRAMETRAVERSAL_CID);
 #include "nsAutoCopyListener.h"
 #include "nsCopySupport.h"
 #include "nsIClipboard.h"
+#include "nsIFrameInlines.h"
 
 #ifdef IBMBIDI
 #include "nsIBidiKeyboard.h"

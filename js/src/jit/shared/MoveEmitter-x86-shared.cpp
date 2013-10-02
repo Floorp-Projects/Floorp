@@ -292,7 +292,10 @@ void
 MoveEmitterX86::emitDoubleMove(const MoveOperand &from, const MoveOperand &to)
 {
     if (from.isFloatReg()) {
-        masm.movsd(from.floatReg(), toOperand(to));
+        if (to.isFloatReg())
+            masm.moveDouble(from.floatReg(), to.floatReg());
+        else
+            masm.storeDouble(from.floatReg(), toAddress(to));
     } else if (to.isFloatReg()) {
         masm.loadDouble(toAddress(from), to.floatReg());
     } else {

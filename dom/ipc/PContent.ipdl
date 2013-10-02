@@ -389,6 +389,9 @@ parent:
     sync SyncMessage(nsString aMessage, ClonedMessageData aData, CpowEntry[] aCpows)
       returns (nsString[] retval);
 
+    rpc RpcMessage(nsString aMessage, ClonedMessageData aData, CpowEntry[] aCpows)
+      returns (nsString[] retval);
+
     ShowAlertNotification(nsString imageUrl,
                           nsString title,
                           nsString text,

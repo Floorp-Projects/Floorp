@@ -191,51 +191,31 @@ class UsingStmt(Node):
         self.type = cxxTypeSpec
 
 # "singletons"
-class ASYNC:
+class PrettyPrinted:
+    @classmethod
+    def __hash__(cls): return hash(cls.pretty)
+    @classmethod
+    def __str__(cls):  return cls.pretty
+    
+class ASYNC(PrettyPrinted):
     pretty = 'async'
-    @classmethod
-    def __hash__(cls): return hash(cls.pretty)
-    @classmethod
-    def __str__(cls):  return cls.pretty
-class INTR:
+class INTR(PrettyPrinted):
     pretty = 'intr'
-    @classmethod
-    def __hash__(cls): return hash(cls.pretty)
-    @classmethod
-    def __str__(cls):  return cls.pretty
-class SYNC:
+class SYNC(PrettyPrinted):
     pretty = 'sync'
-    @classmethod
-    def __hash__(cls): return hash(cls.pretty)
-    @classmethod
-    def __str__(cls):  return cls.pretty
-class URGENT:
+class URGENT(PrettyPrinted):
     pretty = 'urgent'
-    @classmethod
-    def __hash__(cls): return hash(cls.pretty)
-    @classmethod
-    def __str__(cls):  return cls.pretty
+class RPC(PrettyPrinted):
+    pretty = 'rpc'
 
-class INOUT:
+class INOUT(PrettyPrinted):
     pretty = 'inout'
-    @classmethod
-    def __hash__(cls): return hash(cls.pretty)
-    @classmethod
-    def __str__(cls):  return cls.pretty
-class IN:
+class IN(PrettyPrinted):
     pretty = 'in'
-    @classmethod
-    def __hash__(cls): return hash(cls.pretty)
-    @classmethod
-    def __str__(cls):  return cls.pretty
     @staticmethod
     def prettySS(cls, ss): return _prettyTable['in'][ss.pretty]
-class OUT:
+class OUT(PrettyPrinted):
     pretty = 'out'
-    @classmethod
-    def __hash__(cls): return hash(cls.pretty)
-    @classmethod
-    def __str__(cls):  return cls.pretty
     @staticmethod
     def prettySS(ss): return _prettyTable['out'][ss.pretty]
 
@@ -243,10 +223,12 @@ _prettyTable = {
     IN  : { 'async': 'AsyncRecv',
             'sync': 'SyncRecv',
             'intr': 'IntrAnswer',
+            'rpc': 'RPCAnswer',
             'urgent': 'UrgentAnswer' },
     OUT : { 'async': 'AsyncSend',
             'sync': 'SyncSend',
             'intr': 'IntrCall',
+            'rpc': 'RPCCall',
             'urgent': 'UrgentCall' }
     # inout doesn't make sense here
 }

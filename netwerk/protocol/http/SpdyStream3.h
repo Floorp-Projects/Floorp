@@ -75,7 +75,7 @@ public:
   nsresult Uncompress(z_stream *, char *, uint32_t);
   nsresult ConvertHeaders(nsACString &);
 
-  void UpdateRemoteWindow(int32_t delta) { mRemoteWindow += delta; }
+  void UpdateRemoteWindow(int32_t delta);
   int64_t RemoteWindow() { return mRemoteWindow; }
 
   void DecrementLocalWindow(uint32_t delta) {
