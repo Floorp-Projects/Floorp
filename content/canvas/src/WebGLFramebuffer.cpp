@@ -47,8 +47,8 @@ WebGLFramebuffer::Attachment::IsDeleteRequested() const {
 bool
 WebGLFramebuffer::Attachment::HasAlpha() const {
     GLenum format = 0;
-    if (Texture() && Texture()->HasImageInfoAt(mTextureLevel, mTextureCubeMapFace))
-        format = Texture()->ImageInfoAt(mTextureLevel, mTextureCubeMapFace).Format();
+    if (Texture() && Texture()->HasImageInfoAt(mTexImageTarget, mTexImageLevel))
+        format = Texture()->ImageInfoAt(mTexImageTarget, mTexImageLevel).Format();
     else if (Renderbuffer())
         format = Renderbuffer()->InternalFormat();
     return format == LOCAL_GL_RGBA ||
@@ -59,12 +59,11 @@ WebGLFramebuffer::Attachment::HasAlpha() const {
 }
 
 void
-WebGLFramebuffer::Attachment::SetTexture(WebGLTexture *tex, GLenum target, GLint level, GLenum face) {
+WebGLFramebuffer::Attachment::SetTexImage(WebGLTexture *tex, GLenum target, GLint level) {
     mTexturePtr = tex;
     mRenderbufferPtr = nullptr;
-    mTextureTarget = target;
-    mTextureLevel = level;
-    mTextureCubeMapFace = face;
+    mTexImageTarget = target;
+    mTexImageLevel = level;
 }
 
 bool
@@ -74,8 +73,8 @@ WebGLFramebuffer::Attachment::HasUninitializedRenderbuffer() const {
 
 const WebGLRectangleObject*
 WebGLFramebuffer::Attachment::RectangleObject() const {
-    if (Texture() && Texture()->HasImageInfoAt(mTextureLevel, mTextureCubeMapFace))
-        return &Texture()->ImageInfoAt(mTextureLevel, mTextureCubeMapFace);
+    if (Texture() && Texture()->HasImageInfoAt(mTexImageTarget, mTexImageLevel))
+        return &Texture()->ImageInfoAt(mTexImageTarget, mTexImageLevel);
     else if (Renderbuffer())
         return Renderbuffer();
     else
@@ -101,10 +100,10 @@ WebGLFramebuffer::Attachment::IsComplete() const {
         return false;
 
     if (mTexturePtr) {
-        if (!mTexturePtr->HasImageInfoAt(0, 0))
+        if (!mTexturePtr->HasImageInfoAt(mTexImageTarget, mTexImageLevel))
             return false;
 
-        GLenum format = mTexturePtr->ImageInfoAt(0).Format();
+        GLenum format = mTexturePtr->ImageInfoAt(mTexImageTarget, mTexImageLevel).Format();
 
         if (mAttachmentPoint == LOCAL_GL_DEPTH_ATTACHMENT) {
             return format == LOCAL_GL_DEPTH_COMPONENT;
@@ -153,7 +152,7 @@ WebGLFramebuffer::Attachment::FinalizeAttachment(GLenum attachmentLoc) const {
     if (Texture()) {
         GLContext* gl = Texture()->Context()->gl;
         gl->fFramebufferTexture2D(LOCAL_GL_FRAMEBUFFER, attachmentLoc,
-                                  TextureTarget(), Texture()->GLName(), TextureLevel());
+                                  TexImageTarget(), Texture()->GLName(), TexImageLevel());
         return;
     }
 
@@ -245,16 +244,15 @@ WebGLFramebuffer::FramebufferTexture2D(GLenum target,
     if (level != 0)
         return mContext->ErrorInvalidValue("framebufferTexture2D: level must be 0");
 
-    size_t face = WebGLTexture::FaceForTarget(textarget);
     switch (attachment) {
     case LOCAL_GL_DEPTH_ATTACHMENT:
-        mDepthAttachment.SetTexture(wtex, textarget, level, face);
+        mDepthAttachment.SetTexImage(wtex, textarget, level);
         break;
     case LOCAL_GL_STENCIL_ATTACHMENT:
-        mStencilAttachment.SetTexture(wtex, textarget, level, face);
+        mStencilAttachment.SetTexImage(wtex, textarget, level);
         break;
     case LOCAL_GL_DEPTH_STENCIL_ATTACHMENT:
-        mDepthStencilAttachment.SetTexture(wtex, textarget, level, face);
+        mDepthStencilAttachment.SetTexImage(wtex, textarget, level);
         break;
     default:
         if (!CheckColorAttachementNumber(attachment, "framebufferTexture2D")){
@@ -263,7 +261,7 @@ WebGLFramebuffer::FramebufferTexture2D(GLenum target,
 
         size_t colorAttachmentId = size_t(attachment - LOCAL_GL_COLOR_ATTACHMENT0);
         EnsureColorAttachments(colorAttachmentId);
-        mColorAttachments[colorAttachmentId].SetTexture(wtex, textarget, level, face);
+        mColorAttachments[colorAttachmentId].SetTexImage(wtex, textarget, level);
         break;
     }
 }
