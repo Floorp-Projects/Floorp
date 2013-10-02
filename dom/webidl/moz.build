@@ -73,6 +73,7 @@ WEBIDL_FILES = [
     'DOMTokenList.webidl',
     'DOMTransaction.webidl',
     'DataContainerEvent.webidl',
+    'DataStore.webidl',
     'DelayNode.webidl',
     'DesktopNotification.webidl',
     'DeviceMotionEvent.webidl',
@@ -535,6 +536,7 @@ if CONFIG['ENABLE_TESTS']:
 
 GENERATED_EVENTS_WEBIDL_FILES = [
     'BlobEvent.webidl',
+    'DataStoreChangeEvent.webidl',
     'DeviceLightEvent.webidl',
     'DeviceProximityEvent.webidl',
     'MediaStreamEvent.webidl',
