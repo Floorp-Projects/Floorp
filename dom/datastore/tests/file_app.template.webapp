@@ -6,5 +6,9 @@
   "datastores-owned" : {
     "foo" : { "access": "readwrite", "description" : "This store is called foo" },
     "bar" : { "access": "readonly", "description" : "This store is called bar" }
+  },
+  "datastores-access" : {
+    "foo" : { "readonly": false, "description" : "This store is called foo" },
+    "bar" : { "readonly": true, "description" : "This store is called bar" }
   }
 }
