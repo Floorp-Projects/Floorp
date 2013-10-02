@@ -11,13 +11,13 @@
  */
 
 /*
- * Created on Sun Nov  4 13:48:45 2012 from UCD data files with version info:
+ * Created on Mon Oct 21 16:33:35 2013 from UCD data files with version info:
  *
 
-# Date: 2012-09-24, 22:40:00 GMT [KW]
+# Date: 2013-09-27, 23:05:00 GMT [KW]
 #
 # Unicode Character Database
-# Copyright (c) 1991-2012 Unicode, Inc.
+# Copyright (c) 1991-2013 Unicode, Inc.
 # For terms of use, see http://www.unicode.org/terms_of_use.html
 #
 # For documentation, see NamesList.html,
@@ -25,22 +25,22 @@
 # UAX #44, "Unicode Character Database."
 #
 
-This directory contains final data files
-for the Unicode Character Database (UCD) for Unicode 6.2.0.
+This directory contains the final data files
+for the Unicode Character Database (UCD) for Unicode 6.3.0.
 
 
 
-# Scripts-6.2.0.txt
-# Date: 2012-06-04, 17:21:29 GMT [MD]
+# Scripts-6.3.0.txt
+# Date: 2013-07-05, 14:09:02 GMT [MD]
 
-# EastAsianWidth-6.2.0.txt
-# Date: 2012-05-15, 18:30:00 GMT [KW]
+# EastAsianWidth-6.3.0.txt
+# Date: 2013-02-05, 20:09:00 GMT [KW, LI]
 
-# BidiMirroring-6.2.0.txt
-# Date: 2012-05-15, 24:19:00 GMT [KW, LI]
+# BidiMirroring-6.3.0.txt
+# Date: 2013-02-12, 08:20:00 GMT [KW, LI]
 
-# HangulSyllableType-6.2.0.txt
-# Date: 2012-05-23, 20:34:56 GMT [MD]
+# HangulSyllableType-6.3.0.txt
+# Date: 2012-12-20, 22:18:29 GMT [MD]
 
 # File: xidmodifications.txt
 # Version: 3.0-draft
@@ -48,7 +48,7 @@ for the Unicode Character Database (UCD) for Unicode 6.2.0.
 
 #
 # Unihan_Variants.txt
-# Date: 2012-08-17 17:13:30 GMT [JHJ]
+# Date: 2013-02-25 22:46:17 GMT [JHJ]
 
  *
  * * * * * This file contains MACHINE-GENERATED DATA, do not edit! * * * * *
