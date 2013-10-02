@@ -1147,7 +1147,7 @@ nsINode::PostHandleEvent(nsEventChainPostVisitor& /*aVisitor*/)
 }
 
 nsresult
-nsINode::DispatchDOMEvent(nsEvent* aEvent,
+nsINode::DispatchDOMEvent(WidgetEvent* aEvent,
                           nsIDOMEvent* aDOMEvent,
                           nsPresContext* aPresContext,
                           nsEventStatus* aEventStatus)

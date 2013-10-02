@@ -478,7 +478,7 @@ nsXULPopupManager::InitTriggerEvent(nsIDOMEvent* aEvent, nsIContent* aPopup,
     // get the event coordinates relative to the root frame of the document
     // containing the popup.
     NS_ASSERTION(aPopup, "Expected a popup node");
-    nsEvent* event = aEvent->GetInternalNSEvent();
+    WidgetEvent* event = aEvent->GetInternalNSEvent();
     if (event) {
       if (event->eventStructType == NS_MOUSE_EVENT ||
           event->eventStructType == NS_KEY_EVENT) {
@@ -1768,7 +1768,7 @@ nsXULPopupManager::CancelMenuTimer(nsMenuParent* aMenuParent)
 static WidgetGUIEvent*
 DOMKeyEventToGUIEvent(nsIDOMEvent* aEvent)
 {
-  nsEvent* evt = aEvent ? aEvent->GetInternalNSEvent() : nullptr;
+  WidgetEvent* evt = aEvent ? aEvent->GetInternalNSEvent() : nullptr;
   return evt && evt->eventStructType == NS_KEY_EVENT ?
          static_cast<WidgetGUIEvent*>(evt) : nullptr;
 }

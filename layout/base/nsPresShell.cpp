@@ -1901,7 +1901,7 @@ PresShell::FireBeforeResizeEvent()
     return;
 
   // Send beforeresize event from here.
-  nsEvent event(true, NS_BEFORERESIZE_EVENT);
+  WidgetEvent event(true, NS_BEFORERESIZE_EVENT);
 
   nsPIDOMWindow *window = mDocument->GetWindow();
   if (window) {
@@ -1923,7 +1923,7 @@ PresShell::FireResizeEvent()
     return;
 
   //Send resize event from here.
-  nsEvent event(true, NS_RESIZE_EVENT);
+  WidgetEvent event(true, NS_RESIZE_EVENT);
   nsEventStatus status = nsEventStatus_eIgnore;
 
   nsPIDOMWindow *window = mDocument->GetWindow();
@@ -5739,7 +5739,7 @@ PresShell::GetEventTargetFrame()
 }
 
 already_AddRefed<nsIContent>
-PresShell::GetEventTargetContent(nsEvent* aEvent)
+PresShell::GetEventTargetContent(WidgetEvent* aEvent)
 {
   nsCOMPtr<nsIContent> content = GetCurrentEventContent();
   if (!content) {
@@ -6607,7 +6607,7 @@ PresShell::HandlePositionedEvent(nsIFrame* aTargetFrame,
 }
 
 nsresult
-PresShell::HandleEventWithTarget(nsEvent* aEvent, nsIFrame* aFrame,
+PresShell::HandleEventWithTarget(WidgetEvent* aEvent, nsIFrame* aFrame,
                                  nsIContent* aContent, nsEventStatus* aStatus)
 {
 #if DEBUG
@@ -6658,7 +6658,7 @@ static bool CanHandleContextMenuEvent(nsMouseEvent* aMouseEvent,
 }
 
 nsresult
-PresShell::HandleEventInternal(nsEvent* aEvent, nsEventStatus* aStatus)
+PresShell::HandleEventInternal(WidgetEvent* aEvent, nsEventStatus* aStatus)
 {
   nsRefPtr<nsEventStateManager> manager = mPresContext->EventStateManager();
   nsresult rv = NS_OK;
@@ -6927,7 +6927,7 @@ PresShell::HandleEventInternal(nsEvent* aEvent, nsEventStatus* aStatus)
 }
 
 void
-PresShell::DispatchTouchEvent(nsEvent *aEvent,
+PresShell::DispatchTouchEvent(WidgetEvent* aEvent,
                               nsEventStatus* aStatus,
                               nsPresShellEventCB* aEventCB,
                               bool aTouchIsNew)
@@ -7018,7 +7018,8 @@ PresShell::DispatchTouchEvent(nsEvent *aEvent,
 // Dispatch event to content only (NOT full processing)
 // See also HandleEventWithTarget which does full event processing.
 nsresult
-PresShell::HandleDOMEventWithTarget(nsIContent* aTargetContent, nsEvent* aEvent,
+PresShell::HandleDOMEventWithTarget(nsIContent* aTargetContent,
+                                    WidgetEvent* aEvent,
                                     nsEventStatus* aStatus)
 {
   nsresult rv = NS_OK;

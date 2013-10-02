@@ -438,7 +438,7 @@ protected:
     nsRefPtr<HTMLFormElement> mForm;
   };
 
-  nsresult DoSubmitOrReset(nsEvent* aEvent,
+  nsresult DoSubmitOrReset(WidgetEvent* aEvent,
                            int32_t aMessage);
   nsresult DoReset();
 
@@ -456,7 +456,7 @@ protected:
    * @param aPresContext the presentation context
    * @param aEvent the DOM event that was passed to us for the submit
    */
-  nsresult DoSubmit(nsEvent* aEvent);
+  nsresult DoSubmit(WidgetEvent* aEvent);
 
   /**
    * Prepare the submission object (called by DoSubmit)
@@ -465,7 +465,7 @@ protected:
    * @param aEvent the DOM event that was passed to us for the submit
    */
   nsresult BuildSubmission(nsFormSubmission** aFormSubmission,
-                           nsEvent* aEvent);
+                           WidgetEvent* aEvent);
   /**
    * Perform the submission (called by DoSubmit and FlushPendingSubmission)
    *

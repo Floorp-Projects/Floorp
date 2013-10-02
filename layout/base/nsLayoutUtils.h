@@ -460,8 +460,9 @@ public:
    * for some reason the coordinates for the mouse are not known (e.g.,
    * the event is not a GUI event).
    */
-  static nsPoint GetEventCoordinatesRelativeTo(const nsEvent* aEvent,
-                                               nsIFrame* aFrame);
+  static nsPoint GetEventCoordinatesRelativeTo(
+                   const mozilla::WidgetEvent* aEvent,
+                   nsIFrame* aFrame);
 
   /**
    * Get the coordinates of a given point relative to an event and a
@@ -473,9 +474,10 @@ public:
    * for some reason the coordinates for the mouse are not known (e.g.,
    * the event is not a GUI event).
    */
-  static nsPoint GetEventCoordinatesRelativeTo(const nsEvent* aEvent,
-                                               const nsIntPoint aPoint,
-                                               nsIFrame* aFrame);
+  static nsPoint GetEventCoordinatesRelativeTo(
+                   const mozilla::WidgetEvent* aEvent,
+                   const nsIntPoint aPoint,
+                   nsIFrame* aFrame);
 
   /**
    * Get the coordinates of a given point relative to a widget and a
@@ -498,8 +500,9 @@ public:
    * @return        Null, if there is no popup frame at the point, otherwise,
    *                returns top-most popup frame at the point.
    */
-  static nsIFrame* GetPopupFrameForEventCoordinates(nsPresContext* aPresContext,
-                                                    const nsEvent* aEvent);
+  static nsIFrame* GetPopupFrameForEventCoordinates(
+                     nsPresContext* aPresContext,
+                     const mozilla::WidgetEvent* aEvent);
 
   /**
    * Translate from widget coordinates to the view's coordinates

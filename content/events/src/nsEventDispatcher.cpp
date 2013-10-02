@@ -389,14 +389,14 @@ EventTargetChainItemForChromeTarget(nsTArray<nsEventTargetChainItem>& aChain,
 /* static */ nsresult
 nsEventDispatcher::Dispatch(nsISupports* aTarget,
                             nsPresContext* aPresContext,
-                            nsEvent* aEvent,
+                            WidgetEvent* aEvent,
                             nsIDOMEvent* aDOMEvent,
                             nsEventStatus* aEventStatus,
                             nsDispatchingCallback* aCallback,
                             nsCOMArray<EventTarget>* aTargets)
 {
   PROFILER_LABEL("nsEventDispatcher", "Dispatch");
-  NS_ASSERTION(aEvent, "Trying to dispatch without nsEvent!");
+  NS_ASSERTION(aEvent, "Trying to dispatch without WidgetEvent!");
   NS_ENSURE_TRUE(!aEvent->mFlags.mIsBeingDispatched,
                  NS_ERROR_DOM_INVALID_STATE_ERR);
   NS_ASSERTION(!aTargets || !aEvent->message, "Wrong parameters!");
@@ -463,7 +463,7 @@ nsEventDispatcher::Dispatch(nsISupports* aTarget,
   }
 
   if (aDOMEvent) {
-    nsEvent* innerEvent = aDOMEvent->GetInternalNSEvent();
+    WidgetEvent* innerEvent = aDOMEvent->GetInternalNSEvent();
     NS_ASSERTION(innerEvent == aEvent,
                   "The inner event of aDOMEvent is not the same as aEvent!");
   }
@@ -648,13 +648,13 @@ nsEventDispatcher::Dispatch(nsISupports* aTarget,
 
 /* static */ nsresult
 nsEventDispatcher::DispatchDOMEvent(nsISupports* aTarget,
-                                    nsEvent* aEvent,
+                                    WidgetEvent* aEvent,
                                     nsIDOMEvent* aDOMEvent,
                                     nsPresContext* aPresContext,
                                     nsEventStatus* aEventStatus)
 {
   if (aDOMEvent) {
-    nsEvent* innerEvent = aDOMEvent->GetInternalNSEvent();
+    WidgetEvent* innerEvent = aDOMEvent->GetInternalNSEvent();
     NS_ENSURE_TRUE(innerEvent, NS_ERROR_ILLEGAL_VALUE);
 
     bool dontResetTrusted = false;
@@ -682,7 +682,7 @@ nsEventDispatcher::DispatchDOMEvent(nsISupports* aTarget,
 /* static */ nsresult
 nsEventDispatcher::CreateEvent(mozilla::dom::EventTarget* aOwner,
                                nsPresContext* aPresContext,
-                               nsEvent* aEvent,
+                               WidgetEvent* aEvent,
                                const nsAString& aEventType,
                                nsIDOMEvent** aDOMEvent)
 {

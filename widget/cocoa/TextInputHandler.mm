@@ -257,7 +257,7 @@ GetNativeKeyEventType(NSEvent* aNativeEvent)
 }
 
 static const char*
-GetGeckoKeyEventType(const nsEvent &aEvent)
+GetGeckoKeyEventType(const WidgetEvent& aEvent)
 {
   switch (aEvent.message) {
     case NS_KEY_DOWN:    return "NS_KEY_DOWN";

@@ -52,6 +52,7 @@
 
 #define ONLOAD_CALLED_TOO_EARLY 1
 
+using namespace mozilla;
 using namespace mozilla::layers;
 
 class nsImageBoxFrameEvent : public nsRunnable
@@ -81,7 +82,7 @@ nsImageBoxFrameEvent::Run()
   }
 
   nsEventStatus status = nsEventStatus_eIgnore;
-  nsEvent event(true, mMessage);
+  WidgetEvent event(true, mMessage);
 
   event.mFlags.mBubbles = false;
   nsEventDispatcher::Dispatch(mContent, pres_context, &event, nullptr, &status);

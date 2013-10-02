@@ -781,7 +781,7 @@ public:
    */
   using nsIContent::DispatchEvent;
   static nsresult DispatchEvent(nsPresContext* aPresContext,
-                                nsEvent* aEvent,
+                                WidgetEvent* aEvent,
                                 nsIContent* aTarget,
                                 bool aFullDispatch,
                                 nsEventStatus* aStatus);

@@ -187,9 +187,9 @@ public:
     void Activate();
     void Deactivate();
 
-    bool MapEventCoordinatesForChildProcess(nsEvent* aEvent);
+    bool MapEventCoordinatesForChildProcess(mozilla::WidgetEvent* aEvent);
     void MapEventCoordinatesForChildProcess(const LayoutDeviceIntPoint& aOffset,
-                                                   nsEvent* aEvent);
+                                            mozilla::WidgetEvent* aEvent);
 
     void SendMouseEvent(const nsAString& aType, float aX, float aY,
                         int32_t aButton, int32_t aClickCount,

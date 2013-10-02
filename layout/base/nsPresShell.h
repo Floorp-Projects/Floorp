@@ -144,11 +144,14 @@ public:
   virtual nsresult AddOverrideStyleSheet(nsIStyleSheet *aSheet) MOZ_OVERRIDE;
   virtual nsresult RemoveOverrideStyleSheet(nsIStyleSheet *aSheet) MOZ_OVERRIDE;
 
-  virtual NS_HIDDEN_(nsresult) HandleEventWithTarget(nsEvent* aEvent, nsIFrame* aFrame,
-                                                     nsIContent* aContent,
-                                                     nsEventStatus* aStatus) MOZ_OVERRIDE;
+  virtual NS_HIDDEN_(nsresult) HandleEventWithTarget(
+                                 mozilla::WidgetEvent* aEvent,
+                                 nsIFrame* aFrame,
+                                 nsIContent* aContent,
+                                 nsEventStatus* aStatus) MOZ_OVERRIDE;
   virtual NS_HIDDEN_(nsIFrame*) GetEventTargetFrame() MOZ_OVERRIDE;
-  virtual NS_HIDDEN_(already_AddRefed<nsIContent>) GetEventTargetContent(nsEvent* aEvent) MOZ_OVERRIDE;
+  virtual NS_HIDDEN_(already_AddRefed<nsIContent>) GetEventTargetContent(
+                                                     mozilla::WidgetEvent* aEvent) MOZ_OVERRIDE;
 
 
   virtual nsresult ReconstructFrames(void) MOZ_OVERRIDE;
@@ -187,9 +190,10 @@ public:
                                mozilla::WidgetGUIEvent* aEvent,
                                bool aDontRetargetEvents,
                                nsEventStatus* aEventStatus) MOZ_OVERRIDE;
-  virtual NS_HIDDEN_(nsresult) HandleDOMEventWithTarget(nsIContent* aTargetContent,
-                                                        nsEvent* aEvent,
-                                                        nsEventStatus* aStatus) MOZ_OVERRIDE;
+  virtual NS_HIDDEN_(nsresult) HandleDOMEventWithTarget(
+                                 nsIContent* aTargetContent,
+                                 mozilla::WidgetEvent* aEvent,
+                                 nsEventStatus* aStatus) MOZ_OVERRIDE;
   virtual NS_HIDDEN_(nsresult) HandleDOMEventWithTarget(nsIContent* aTargetContent,
                                                         nsIDOMEvent* aEvent,
                                                         nsEventStatus* aStatus) MOZ_OVERRIDE;
@@ -358,7 +362,7 @@ protected:
   nsresult DidCauseReflow();
   friend class nsAutoCauseReflowNotifier;
 
-  void DispatchTouchEvent(nsEvent *aEvent,
+  void DispatchTouchEvent(mozilla::WidgetEvent* aEvent,
                           nsEventStatus* aStatus,
                           nsPresShellEventCB* aEventCB,
                           bool aTouchIsNew);
@@ -529,7 +533,9 @@ protected:
     }
   }
 
-  nsresult HandleRetargetedEvent(nsEvent* aEvent, nsEventStatus* aStatus, nsIContent* aTarget)
+  nsresult HandleRetargetedEvent(mozilla::WidgetEvent* aEvent,
+                                 nsEventStatus* aStatus,
+                                 nsIContent* aTarget)
   {
     PushCurrentEventInfo(nullptr, nullptr);
     mCurrentEventContent = aTarget;
@@ -651,7 +657,8 @@ protected:
                                  nsEventStatus* aEventStatus);
   void PushCurrentEventInfo(nsIFrame* aFrame, nsIContent* aContent);
   void PopCurrentEventInfo();
-  nsresult HandleEventInternal(nsEvent* aEvent, nsEventStatus *aStatus);
+  nsresult HandleEventInternal(mozilla::WidgetEvent* aEvent,
+                               nsEventStatus* aStatus);
   nsresult HandlePositionedEvent(nsIFrame* aTargetFrame,
                                  mozilla::WidgetGUIEvent* aEvent,
                                  nsEventStatus* aEventStatus);

@@ -46,7 +46,7 @@ class EventTarget;
 class nsEventChainVisitor {
 public:
   nsEventChainVisitor(nsPresContext* aPresContext,
-                      nsEvent* aEvent,
+                      mozilla::WidgetEvent* aEvent,
                       nsIDOMEvent* aDOMEvent,
                       nsEventStatus aEventStatus = nsEventStatus_eIgnore)
   : mPresContext(aPresContext), mEvent(aEvent), mDOMEvent(aDOMEvent),
@@ -59,9 +59,9 @@ public:
   nsPresContext* const  mPresContext;
 
   /**
-   * The nsEvent which is being dispatched. Never nullptr.
+   * The WidgetEvent which is being dispatched. Never nullptr.
    */
-  nsEvent* const        mEvent;
+  mozilla::WidgetEvent* const mEvent;
 
   /**
    * The DOM Event assiciated with the mEvent. Possibly nullptr if a DOM Event
@@ -101,7 +101,7 @@ public:
 class nsEventChainPreVisitor : public nsEventChainVisitor {
 public:
   nsEventChainPreVisitor(nsPresContext* aPresContext,
-                         nsEvent* aEvent,
+                         mozilla::WidgetEvent* aEvent,
                          nsIDOMEvent* aDOMEvent,
                          nsEventStatus aEventStatus,
                          bool aIsInAnon)
@@ -221,11 +221,11 @@ public:
    * If aTargets is non-null, event target chain will be created, but
    * event won't be handled. In this case aEvent->message should be
    * NS_EVENT_NULL.
-   * @note Use this method when dispatching an nsEvent.
+   * @note Use this method when dispatching a WidgetEvent.
    */
   static nsresult Dispatch(nsISupports* aTarget,
                            nsPresContext* aPresContext,
-                           nsEvent* aEvent,
+                           mozilla::WidgetEvent* aEvent,
                            nsIDOMEvent* aDOMEvent = nullptr,
                            nsEventStatus* aEventStatus = nullptr,
                            nsDispatchingCallback* aCallback = nullptr,
@@ -240,7 +240,8 @@ public:
    * @note Use this method when dispatching nsIDOMEvent.
    */
   static nsresult DispatchDOMEvent(nsISupports* aTarget,
-                                   nsEvent* aEvent, nsIDOMEvent* aDOMEvent,
+                                   mozilla::WidgetEvent* aEvent,
+                                   nsIDOMEvent* aDOMEvent,
                                    nsPresContext* aPresContext,
                                    nsEventStatus* aEventStatus);
 
@@ -249,7 +250,7 @@ public:
    */
   static nsresult CreateEvent(mozilla::dom::EventTarget* aOwner,
                               nsPresContext* aPresContext,
-                              nsEvent* aEvent,
+                              mozilla::WidgetEvent* aEvent,
                               const nsAString& aEventType,
                               nsIDOMEvent** aDOMEvent);
 

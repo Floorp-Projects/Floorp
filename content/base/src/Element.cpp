@@ -1403,7 +1403,7 @@ Element::IsNodeOfType(uint32_t aFlags) const
 /* static */
 nsresult
 Element::DispatchEvent(nsPresContext* aPresContext,
-                       nsEvent* aEvent,
+                       WidgetEvent* aEvent,
                        nsIContent* aTarget,
                        bool aFullDispatch,
                        nsEventStatus* aStatus)

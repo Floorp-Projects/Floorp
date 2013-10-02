@@ -69,7 +69,7 @@ public:
    * DOM or frame event handling should occur here as well.
    */
   nsresult PreHandleEvent(nsPresContext* aPresContext,
-                          nsEvent *aEvent,
+                          mozilla::WidgetEvent* aEvent,
                           nsIFrame* aTargetFrame,
                           nsEventStatus* aStatus);
 
@@ -79,7 +79,7 @@ public:
    * DOM and frame processing.
    */
   nsresult PostHandleEvent(nsPresContext* aPresContext,
-                           nsEvent *aEvent,
+                           mozilla::WidgetEvent* aEvent,
                            nsIFrame* aTargetFrame,
                            nsEventStatus* aStatus);
 
@@ -96,7 +96,8 @@ public:
   void ClearFrameRefs(nsIFrame* aFrame);
 
   nsIFrame* GetEventTarget();
-  already_AddRefed<nsIContent> GetEventTargetContent(nsEvent* aEvent);
+  already_AddRefed<nsIContent> GetEventTargetContent(
+                                 mozilla::WidgetEvent* aEvent);
 
   /**
    * Notify that the given NS_EVENT_STATE_* bit has changed for this content.
@@ -190,8 +191,9 @@ public:
   static void SetFullScreenState(mozilla::dom::Element* aElement, bool aIsFullScreen);
 
   static bool IsRemoteTarget(nsIContent* aTarget);
-  static LayoutDeviceIntPoint GetChildProcessOffset(nsFrameLoader* aFrameLoader,
-                                                    const nsEvent& aEvent);
+  static LayoutDeviceIntPoint GetChildProcessOffset(
+                                nsFrameLoader* aFrameLoader,
+                                const mozilla::WidgetEvent& aEvent);
 
   // Holds the point in screen coords that a mouse event was dispatched to,
   // before we went into pointer lock mode. This is constantly updated while
@@ -244,7 +246,10 @@ protected:
    */
   static int32_t GetAccessModifierMaskFor(nsISupports* aDocShell);
 
-  void UpdateCursor(nsPresContext* aPresContext, nsEvent* aEvent, nsIFrame* aTargetFrame, nsEventStatus* aStatus);
+  void UpdateCursor(nsPresContext* aPresContext,
+                    mozilla::WidgetEvent* aEvent,
+                    nsIFrame* aTargetFrame,
+                    nsEventStatus* aStatus);
   /**
    * Turn a GUI mouse event into a mouse event targeted at the specified
    * content.  This returns the primary frame for the content (or null
@@ -713,15 +718,16 @@ protected:
 
   void DoQuerySelectedText(mozilla::WidgetQueryContentEvent* aEvent);
 
-  bool RemoteQueryContentEvent(nsEvent *aEvent);
+  bool RemoteQueryContentEvent(mozilla::WidgetEvent* aEvent);
   mozilla::dom::TabParent *GetCrossProcessTarget();
   bool IsTargetCrossProcess(mozilla::WidgetGUIEvent* aEvent);
 
-  bool DispatchCrossProcessEvent(nsEvent* aEvent, nsFrameLoader* remote,
+  bool DispatchCrossProcessEvent(mozilla::WidgetEvent* aEvent,
+                                 nsFrameLoader* aRemote,
                                  nsEventStatus *aStatus);
-  bool HandleCrossProcessEvent(nsEvent *aEvent,
-                                 nsIFrame* aTargetFrame,
-                                 nsEventStatus *aStatus);
+  bool HandleCrossProcessEvent(mozilla::WidgetEvent* aEvent,
+                               nsIFrame* aTargetFrame,
+                               nsEventStatus* aStatus);
 
 private:
   static inline void DoStateChange(mozilla::dom::Element* aElement,
@@ -834,7 +840,7 @@ class nsAutoHandlingUserInputStatePusher
 {
 public:
   nsAutoHandlingUserInputStatePusher(bool aIsHandlingUserInput,
-                                     nsEvent* aEvent,
+                                     mozilla::WidgetEvent* aEvent,
                                      nsIDocument* aDocument)
     : mIsHandlingUserInput(aIsHandlingUserInput),
       mIsMouseDown(aEvent && aEvent->message == NS_MOUSE_BUTTON_DOWN),
