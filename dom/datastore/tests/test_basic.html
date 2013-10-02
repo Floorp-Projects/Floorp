@@ -10,7 +10,8 @@
 <div id="container"></div>
   <script type="application/javascript;version=1.7">
 
-  var gHostedManifestURL = 'http://test/tests/dom/datastore/tests/file_app.sjs?testToken=file_basic.html';
+  var gBaseURL = 'http://test/tests/dom/datastore/tests/';
+  var gHostedManifestURL = gBaseURL + 'file_app.sjs?testToken=file_basic.html';
   var gApp;
 
   function cbError() {
@@ -113,7 +114,6 @@
     SimpleTest.finish();
   }
 
-  SpecialPowers.Cu.import("resource://gre/modules/DataStoreChangeNotifier.jsm");
   SimpleTest.waitForExplicitFinish();
   runTest();
   </script>
