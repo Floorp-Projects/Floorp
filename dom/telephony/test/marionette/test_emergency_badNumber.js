@@ -2,6 +2,7 @@
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 
 MARIONETTE_TIMEOUT = 60000;
+MARIONETTE_HEAD_JS = 'head.js';
 
 SpecialPowers.addPermission("telephony", true, document);
 
@@ -18,7 +19,7 @@ function verifyInitialState() {
   is(telephony.calls.length, 0);
   calls = telephony.calls;
 
-  runEmulatorCmd("gsm list", function(result) {
+  emulator.run("gsm list", function(result) {
     log("Initial call list: " + result);
     is(result[0], "OK");
     if (result[0] == "OK") {
@@ -48,11 +49,11 @@ function dial() {
     is(event.call, outgoing);
     ok(event.call.error);
     is(event.call.error.name, "BadNumberError");
-    
+
     is(telephony.calls.length, 0);
     is(telephony.active, null);
-    
-    runEmulatorCmd("gsm list", function(result) {
+
+    emulator.run("gsm list", function(result) {
       log("Initial call list: " + result);
       is(result[0], "OK");
       cleanUp();
@@ -65,4 +66,6 @@ function cleanUp() {
   finish();
 }
 
-verifyInitialState();
+startTest(function() {
+  verifyInitialState();
+});
