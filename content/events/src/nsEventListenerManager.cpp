@@ -510,7 +510,8 @@ nsEventListenerManager::RemoveEventListenerInternal(
 }
 
 bool
-nsEventListenerManager::ListenerCanHandle(nsListenerStruct* aLs, nsEvent* aEvent)
+nsEventListenerManager::ListenerCanHandle(nsListenerStruct* aLs,
+                                          WidgetEvent* aEvent)
 {
   // This is slightly different from EVENT_TYPE_EQUALS in that it returns
   // true even when aEvent->message == NS_USER_DEFINED_EVENT and
@@ -968,7 +969,7 @@ nsEventListenerManager::HandleEventSubType(nsListenerStruct* aListenerStruct,
 
 void
 nsEventListenerManager::HandleEventInternal(nsPresContext* aPresContext,
-                                            nsEvent* aEvent,
+                                            WidgetEvent* aEvent,
                                             nsIDOMEvent** aDOMEvent,
                                             EventTarget* aCurrentTarget,
                                             nsEventStatus* aEventStatus,

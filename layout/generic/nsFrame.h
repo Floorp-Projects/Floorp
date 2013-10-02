@@ -165,7 +165,7 @@ public:
   NS_IMETHOD  HandleEvent(nsPresContext* aPresContext, 
                           mozilla::WidgetGUIEvent* aEvent,
                           nsEventStatus* aEventStatus) MOZ_OVERRIDE;
-  NS_IMETHOD  GetContentForEvent(nsEvent* aEvent,
+  NS_IMETHOD  GetContentForEvent(mozilla::WidgetEvent* aEvent,
                                  nsIContent** aContent) MOZ_OVERRIDE;
   NS_IMETHOD  GetCursor(const nsPoint&    aPoint,
                         nsIFrame::Cursor& aCursor) MOZ_OVERRIDE;

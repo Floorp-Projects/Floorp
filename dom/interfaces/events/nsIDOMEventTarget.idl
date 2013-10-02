@@ -34,7 +34,7 @@ class nsEventListenerManager;
 
 [ref] native nsEventChainPreVisitorRef(nsEventChainPreVisitor);
 [ref] native nsEventChainPostVisitorRef(nsEventChainPostVisitor);
-[ptr] native nsEventPtr(nsEvent);
+[ptr] native WidgetEventPtr(mozilla::WidgetEvent);
 [ptr] native nsPresContextPtr(nsPresContext);
 [ptr] native nsEventStatusPtr(nsEventStatus);
 [ptr] native JSContextPtr(JSContext);
@@ -248,7 +248,7 @@ interface nsIDOMEventTarget : nsISupports
    * Dispatch an event.
    * @param aEvent the event that is being dispatched.
    * @param aDOMEvent the event that is being dispatched, use if you want to
-   *                  dispatch nsIDOMEvent, not only nsEvent.
+   *                  dispatch nsIDOMEvent, not only WidgetEvent.
    * @param aPresContext the current presentation context, can be nullptr.
    * @param aEventStatus the status returned from the function, can be nullptr.
    *
@@ -262,7 +262,7 @@ interface nsIDOMEventTarget : nsISupports
    *             have been converted to use nsIDOMEventTarget::dispatchEvent.
    */
   [noscript, nostdcall]
-  void DispatchDOMEvent(in nsEventPtr aEvent,
+  void DispatchDOMEvent(in WidgetEventPtr aEvent,
                         in nsIDOMEvent aDOMEvent,
                         in nsPresContextPtr aPresContext,
                         in nsEventStatusPtr aEventStatus);

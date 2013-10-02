@@ -2917,7 +2917,7 @@ HTMLInputElement::DispatchSelectEvent(nsPresContext* aPresContext)
 
   // If already handling select event, don't dispatch a second.
   if (!mHandlingSelectEvent) {
-    nsEvent event(nsContentUtils::IsCallerChrome(), NS_FORM_SELECTED);
+    WidgetEvent event(nsContentUtils::IsCallerChrome(), NS_FORM_SELECTED);
 
     mHandlingSelectEvent = true;
     nsEventDispatcher::Dispatch(static_cast<nsIContent*>(this),

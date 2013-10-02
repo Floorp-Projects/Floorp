@@ -3055,7 +3055,7 @@ nsGlobalWindow::PostHandleEvent(nsEventChainPostVisitor& aVisitor)
       // onload event for the frame element.
 
       nsEventStatus status = nsEventStatus_eIgnore;
-      nsEvent event(aVisitor.mEvent->mFlags.mIsTrusted, NS_LOAD);
+      WidgetEvent event(aVisitor.mEvent->mFlags.mIsTrusted, NS_LOAD);
       event.mFlags.mBubbles = false;
 
       // Most of the time we could get a pres context to pass in here,
@@ -3071,7 +3071,7 @@ nsGlobalWindow::PostHandleEvent(nsEventChainPostVisitor& aVisitor)
 }
 
 nsresult
-nsGlobalWindow::DispatchDOMEvent(nsEvent* aEvent,
+nsGlobalWindow::DispatchDOMEvent(WidgetEvent* aEvent,
                                  nsIDOMEvent* aDOMEvent,
                                  nsPresContext* aPresContext,
                                  nsEventStatus* aEventStatus)
@@ -7000,7 +7000,7 @@ PostMessageEvent::Run()
     presContext = shell->GetPresContext();
 
   message->SetTrusted(mTrustedCaller);
-  nsEvent *internalEvent = message->GetInternalNSEvent();
+  WidgetEvent* internalEvent = message->GetInternalNSEvent();
 
   nsEventStatus status = nsEventStatus_eIgnore;
   nsEventDispatcher::Dispatch(static_cast<nsPIDOMWindow*>(mTargetWindow),
@@ -9890,7 +9890,7 @@ nsGlobalWindow::Observe(nsISupports* aSubject, const char* aTopic,
     event->SetTrusted(true);
 
     if (fireMozStorageChanged) {
-      nsEvent *internalEvent = event->GetInternalNSEvent();
+      WidgetEvent* internalEvent = event->GetInternalNSEvent();
       internalEvent->mFlags.mOnlyChromeDispatch = true;
     }
 
@@ -11787,7 +11787,7 @@ nsGlobalChromeWindow::BeginWindowMove(nsIDOMEvent *aMouseDownEvent, nsIDOMElemen
   }
 
   NS_ENSURE_TRUE(aMouseDownEvent, NS_ERROR_FAILURE);
-  nsEvent *internalEvent = aMouseDownEvent->GetInternalNSEvent();
+  WidgetEvent* internalEvent = aMouseDownEvent->GetInternalNSEvent();
   NS_ENSURE_TRUE(internalEvent &&
                  internalEvent->eventStructType == NS_MOUSE_EVENT,
                  NS_ERROR_FAILURE);

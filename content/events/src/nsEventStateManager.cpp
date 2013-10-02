@@ -132,7 +132,7 @@ RoundDown(double aDouble)
 }
 
 static inline bool
-IsMouseEventReal(nsEvent* aEvent)
+IsMouseEventReal(WidgetEvent* aEvent)
 {
   NS_ABORT_IF_FALSE(aEvent->IsMouseDerivedEvent(), "Not a mouse event");
   // Return true if not synthesized.
@@ -277,7 +277,7 @@ public:
   // frame might be destroyed in the event handler.
   static bool UpdateTransaction(WheelEvent* aEvent);
   static void EndTransaction();
-  static void OnEvent(nsEvent* aEvent);
+  static void OnEvent(WidgetEvent* aEvent);
   static void Shutdown();
   static uint32_t GetTimeoutTime();
 
@@ -375,7 +375,7 @@ nsMouseWheelTransaction::UpdateTransaction(WheelEvent* aEvent)
     sScrollSeriesCounter = 0;
   sScrollSeriesCounter++;
 
-  // We should use current time instead of nsEvent.time.
+  // We should use current time instead of WidgetEvent.time.
   // 1. Some events doesn't have the correct creation time.
   // 2. If the computer runs slowly by other processes eating the CPU resource,
   //    the event creation time doesn't keep real time.
@@ -394,7 +394,7 @@ nsMouseWheelTransaction::EndTransaction()
 }
 
 void
-nsMouseWheelTransaction::OnEvent(nsEvent* aEvent)
+nsMouseWheelTransaction::OnEvent(WidgetEvent* aEvent)
 {
   if (!sTargetFrame)
     return;
@@ -780,7 +780,7 @@ NS_IMPL_CYCLE_COLLECTION_17(nsEventStateManager,
 
 nsresult
 nsEventStateManager::PreHandleEvent(nsPresContext* aPresContext,
-                                    nsEvent *aEvent,
+                                    WidgetEvent* aEvent,
                                     nsIFrame* aTargetFrame,
                                     nsEventStatus* aStatus)
 {
@@ -1377,7 +1377,7 @@ nsEventStateManager::HandleAccessKey(nsPresContext* aPresContext,
 }// end of HandleAccessKey
 
 bool
-nsEventStateManager::DispatchCrossProcessEvent(nsEvent* aEvent,
+nsEventStateManager::DispatchCrossProcessEvent(WidgetEvent* aEvent,
                                                nsFrameLoader* aFrameLoader,
                                                nsEventStatus *aStatus) {
   PBrowserParent* remoteBrowser = aFrameLoader->GetRemoteBrowser();
@@ -1438,7 +1438,7 @@ nsEventStateManager::IsRemoteTarget(nsIContent* target) {
 
 /*static*/ LayoutDeviceIntPoint
 nsEventStateManager::GetChildProcessOffset(nsFrameLoader* aFrameLoader,
-                                           const nsEvent& aEvent)
+                                           const WidgetEvent& aEvent)
 {
   // The "toplevel widget" in child processes is always at position
   // 0,0.  Map the event coordinates to match that.
@@ -1455,7 +1455,7 @@ nsEventStateManager::GetChildProcessOffset(nsFrameLoader* aFrameLoader,
 }
 
 bool
-CrossProcessSafeEvent(const nsEvent& aEvent)
+CrossProcessSafeEvent(const WidgetEvent& aEvent)
 {
   switch (aEvent.eventStructType) {
   case NS_KEY_EVENT:
@@ -1487,7 +1487,7 @@ CrossProcessSafeEvent(const nsEvent& aEvent)
 }
 
 bool
-nsEventStateManager::HandleCrossProcessEvent(nsEvent *aEvent,
+nsEventStateManager::HandleCrossProcessEvent(WidgetEvent* aEvent,
                                              nsIFrame* aTargetFrame,
                                              nsEventStatus *aStatus) {
   if (*aStatus == nsEventStatus_eConsumeNoDefault ||
@@ -2933,7 +2933,7 @@ NodeAllowsClickThrough(nsINode* aNode)
 
 nsresult
 nsEventStateManager::PostHandleEvent(nsPresContext* aPresContext,
-                                     nsEvent *aEvent,
+                                     WidgetEvent* aEvent,
                                      nsIFrame* aTargetFrame,
                                      nsEventStatus* aStatus)
 {
@@ -3450,7 +3450,7 @@ nsEventStateManager::PostHandleEvent(nsPresContext* aPresContext,
 }
 
 bool
-nsEventStateManager::RemoteQueryContentEvent(nsEvent *aEvent)
+nsEventStateManager::RemoteQueryContentEvent(WidgetEvent* aEvent)
 {
   WidgetQueryContentEvent *queryEvent =
       static_cast<WidgetQueryContentEvent*>(aEvent);
@@ -3508,7 +3508,8 @@ nsEventStateManager::ClearFrameRefs(nsIFrame* aFrame)
 
 void
 nsEventStateManager::UpdateCursor(nsPresContext* aPresContext,
-                                  nsEvent* aEvent, nsIFrame* aTargetFrame,
+                                  WidgetEvent* aEvent,
+                                  nsIFrame* aTargetFrame,
                                   nsEventStatus* aStatus)
 {
   if (aTargetFrame && IsRemoteTarget(aTargetFrame->GetContent())) {
@@ -4495,7 +4496,7 @@ nsEventStateManager::GetEventTarget()
 }
 
 already_AddRefed<nsIContent>
-nsEventStateManager::GetEventTargetContent(nsEvent* aEvent)
+nsEventStateManager::GetEventTargetContent(WidgetEvent* aEvent)
 {
   if (aEvent &&
       (aEvent->message == NS_FOCUS_CONTENT ||

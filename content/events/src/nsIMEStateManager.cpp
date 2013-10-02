@@ -522,7 +522,7 @@ nsIMEStateManager::EnsureTextCompositionArray()
 void
 nsIMEStateManager::DispatchCompositionEvent(nsINode* aEventTargetNode,
                                             nsPresContext* aPresContext,
-                                            nsEvent* aEvent,
+                                            WidgetEvent* aEvent,
                                             nsEventStatus* aStatus,
                                             nsDispatchingCallback* aCallBack)
 {

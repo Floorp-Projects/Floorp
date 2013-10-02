@@ -26,6 +26,7 @@
 
 //#define DEBUG_CANVAS_FOCUS
 
+using namespace mozilla;
 using namespace mozilla::layout;
 
 nsIFrame*
@@ -582,7 +583,7 @@ nsCanvasFrame::GetType() const
 }
 
 NS_IMETHODIMP 
-nsCanvasFrame::GetContentForEvent(nsEvent* aEvent,
+nsCanvasFrame::GetContentForEvent(WidgetEvent* aEvent,
                                   nsIContent** aContent)
 {
   NS_ENSURE_ARG_POINTER(aContent);

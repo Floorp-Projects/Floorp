@@ -51,7 +51,7 @@ class DrawTarget;
 /**
  * Callback function that processes events.
  *
- * The argument is actually a subtype (subclass) of nsEvent which carries
+ * The argument is actually a subtype (subclass) of WidgetEvent which carries
  * platform specific information about the event. Platform specific code
  * knows how to deal with it.
  *

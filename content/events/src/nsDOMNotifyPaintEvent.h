@@ -30,7 +30,7 @@ class nsDOMNotifyPaintEvent : public nsDOMEvent,
 public:
   nsDOMNotifyPaintEvent(mozilla::dom::EventTarget* aOwner,
                         nsPresContext*           aPresContext,
-                        nsEvent*                 aEvent,
+                        mozilla::WidgetEvent*    aEvent,
                         uint32_t                 aEventType,
                         nsInvalidateRequestList* aInvalidateRequests);
 

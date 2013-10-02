@@ -83,7 +83,7 @@ HTMLLabelElement::Focus(ErrorResult& aError)
 }
 
 static bool
-EventTargetIn(nsEvent *aEvent, nsIContent *aChild, nsIContent *aStop)
+EventTargetIn(WidgetEvent* aEvent, nsIContent* aChild, nsIContent* aStop)
 {
   nsCOMPtr<nsIContent> c = do_QueryInterface(aEvent->target);
   nsIContent *content = c;

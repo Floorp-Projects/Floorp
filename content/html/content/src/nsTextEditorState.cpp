@@ -775,7 +775,7 @@ nsTextInputListener::NotifySelectionChanged(nsIDOMDocument* aDoc, nsISelection* 
         if (presShell) 
         {
           nsEventStatus status = nsEventStatus_eIgnore;
-          nsEvent event(true, NS_FORM_SELECTED);
+          WidgetEvent event(true, NS_FORM_SELECTED);
 
           presShell->HandleEventWithTarget(&event, mFrame, content, &status);
         }

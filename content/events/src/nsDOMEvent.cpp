@@ -37,7 +37,7 @@ static char *sPopupAllowedEvents;
 
 
 nsDOMEvent::nsDOMEvent(mozilla::dom::EventTarget* aOwner,
-                       nsPresContext* aPresContext, nsEvent* aEvent)
+                       nsPresContext* aPresContext, WidgetEvent* aEvent)
 {
   ConstructorInit(aOwner, aPresContext, aEvent);
 }
@@ -49,7 +49,7 @@ nsDOMEvent::nsDOMEvent(nsPIDOMWindow* aParent)
 
 void
 nsDOMEvent::ConstructorInit(mozilla::dom::EventTarget* aOwner,
-                            nsPresContext* aPresContext, nsEvent* aEvent)
+                            nsPresContext* aPresContext, WidgetEvent* aEvent)
 {
   SetIsDOMBinding();
   SetOwner(aOwner);
@@ -65,16 +65,16 @@ nsDOMEvent::ConstructorInit(mozilla::dom::EventTarget* aOwner,
     mEventIsInternal = true;
     /*
       A derived class might want to allocate its own type of aEvent
-      (derived from nsEvent). To do this, it should take care to pass
+      (derived from WidgetEvent). To do this, it should take care to pass
       a non-nullptr aEvent to this ctor, e.g.:
       
-        nsDOMFooEvent::nsDOMFooEvent(..., nsEvent* aEvent)
+        nsDOMFooEvent::nsDOMFooEvent(..., WidgetEvent* aEvent)
         : nsDOMEvent(..., aEvent ? aEvent : new nsFooEvent())
       
       Then, to override the mEventIsInternal assignments done by the
       base ctor, it should do this in its own ctor:
 
-        nsDOMFooEvent::nsDOMFooEvent(..., nsEvent* aEvent)
+        nsDOMFooEvent::nsDOMFooEvent(..., WidgetEvent* aEvent)
         ...
         {
           ...
@@ -87,7 +87,7 @@ nsDOMEvent::ConstructorInit(mozilla::dom::EventTarget* aOwner,
           ...
         }
      */
-    mEvent = new nsEvent(false, 0);
+    mEvent = new WidgetEvent(false, 0);
     mEvent->time = PR_Now();
   }
 
@@ -506,18 +506,18 @@ nsDOMEvent::DuplicatePrivateData()
   // FIXME! Simplify this method and make it somehow easily extendable,
   //        Bug 329127
   
-  NS_ASSERTION(mEvent, "No nsEvent for nsDOMEvent duplication!");
+  NS_ASSERTION(mEvent, "No WidgetEvent for nsDOMEvent duplication!");
   if (mEventIsInternal) {
     return NS_OK;
   }
 
-  nsEvent* newEvent = nullptr;
+  WidgetEvent* newEvent = nullptr;
   uint32_t msg = mEvent->message;
 
   switch (mEvent->eventStructType) {
     case NS_EVENT:
     {
-      newEvent = new nsEvent(false, msg);
+      newEvent = new WidgetEvent(false, msg);
       newEvent->AssignEventData(*mEvent, true);
       break;
     }
@@ -790,7 +790,7 @@ nsDOMEvent::IsDispatchStopped()
   return mEvent->mFlags.mPropagationStopped;
 }
 
-NS_IMETHODIMP_(nsEvent*)
+NS_IMETHODIMP_(WidgetEvent*)
 nsDOMEvent::GetInternalNSEvent()
 {
   return mEvent;
@@ -844,7 +844,7 @@ PopupAllowedForEvent(const char *eventName)
 
 // static
 PopupControlState
-nsDOMEvent::GetEventPopupControlState(nsEvent *aEvent)
+nsDOMEvent::GetEventPopupControlState(WidgetEvent* aEvent)
 {
   // generally if an event handler is running, new windows are disallowed.
   // check for exceptions:
@@ -1024,7 +1024,7 @@ nsDOMEvent::Shutdown()
 
 nsIntPoint
 nsDOMEvent::GetScreenCoords(nsPresContext* aPresContext,
-                            nsEvent* aEvent,
+                            WidgetEvent* aEvent,
                             LayoutDeviceIntPoint aPoint)
 {
   if (nsEventStateManager::sIsPointerLocked) {
@@ -1056,7 +1056,7 @@ nsDOMEvent::GetScreenCoords(nsPresContext* aPresContext,
 //static
 CSSIntPoint
 nsDOMEvent::GetPageCoords(nsPresContext* aPresContext,
-                          nsEvent* aEvent,
+                          WidgetEvent* aEvent,
                           LayoutDeviceIntPoint aPoint,
                           CSSIntPoint aDefaultPoint)
 {
@@ -1080,7 +1080,7 @@ nsDOMEvent::GetPageCoords(nsPresContext* aPresContext,
 // static
 CSSIntPoint
 nsDOMEvent::GetClientCoords(nsPresContext* aPresContext,
-                            nsEvent* aEvent,
+                            WidgetEvent* aEvent,
                             LayoutDeviceIntPoint aPoint,
                             CSSIntPoint aDefaultPoint)
 {
@@ -1129,7 +1129,7 @@ const char* nsDOMEvent::GetEventName(uint32_t aEventType)
   default:
     break;
   }
-  // XXXldb We can hit this case for nsEvent objects that we didn't
+  // XXXldb We can hit this case for WidgetEvent objects that we didn't
   // create and that are not user defined events since this function and
   // SetEventType are incomplete.  (But fixing that requires fixing the
   // arrays in nsEventListenerManager too, since the events for which
@@ -1244,7 +1244,7 @@ nsDOMEvent::SetOwner(mozilla::dom::EventTarget* aOwner)
 nsresult NS_NewDOMEvent(nsIDOMEvent** aInstancePtrResult,
                         mozilla::dom::EventTarget* aOwner,
                         nsPresContext* aPresContext,
-                        nsEvent *aEvent) 
+                        WidgetEvent* aEvent) 
 {
   nsRefPtr<nsDOMEvent> it =
     new nsDOMEvent(aOwner, aPresContext, aEvent);

@@ -1598,7 +1598,7 @@ nsImageFrame::GetAnchorHREFTargetAndNode(nsIURI** aHref, nsString& aTarget,
 }
 
 NS_IMETHODIMP  
-nsImageFrame::GetContentForEvent(nsEvent* aEvent,
+nsImageFrame::GetContentForEvent(WidgetEvent* aEvent,
                                  nsIContent** aContent)
 {
   NS_ENSURE_ARG_POINTER(aContent);

@@ -2322,7 +2322,7 @@ nsIFrame::MarkAbsoluteFramesForDisplayList(nsDisplayListBuilder* aBuilder,
 }
 
 NS_IMETHODIMP  
-nsFrame::GetContentForEvent(nsEvent* aEvent,
+nsFrame::GetContentForEvent(WidgetEvent* aEvent,
                             nsIContent** aContent)
 {
   nsIFrame* f = nsLayoutUtils::GetNonGeneratedAncestor(this);
