@@ -638,12 +638,12 @@ nsBaseDragService::DrawDragForImage(nsPresContext* aPresContext,
     gfxMatrix scale =
       gfxMatrix().Scale(srcSize.width/outRect.Width(), srcSize.height/outRect.Height());
     nsIntRect imgSize(0, 0, srcSize.width, srcSize.height);
-    imgContainer->Draw(ctx, gfxPattern::FILTER_GOOD, scale, outRect, imgSize,
+    imgContainer->Draw(ctx, GraphicsFilter::FILTER_GOOD, scale, outRect, imgSize,
                        destSize, nullptr, imgIContainer::FRAME_CURRENT,
                        imgIContainer::FLAG_SYNC_DECODE);
     return NS_OK;
   } else {
-    return aCanvas->RenderContextsExternal(ctx, gfxPattern::FILTER_GOOD);
+    return aCanvas->RenderContextsExternal(ctx, GraphicsFilter::FILTER_GOOD);
   }
 }
 

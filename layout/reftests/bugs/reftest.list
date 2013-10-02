@@ -1167,7 +1167,6 @@ skip-if(B2G) fails-if(Android) == 446100-1g.html about:blank
 == 446100-1h.html about:blank
 skip-if(B2G) == 447749-1.html 447749-1-ref.html
 fuzzy(127,2) == 448193.html 448193-ref.html
-# == 448987.html 448987-ref.html  # Disabled for now - it needs privileges
 != 449149-1a.html about:blank
 != 449149-1b.html about:blank
 # Retry the above with XBL scopes
@@ -1177,7 +1176,6 @@ test-pref(dom.use_xbl_scopes_for_remote_xul,true) != 449149-1b.html about:blank
 == 449171-1.html 449171-ref.html
 == 449362-1.html 449362-1-ref.html
 == 449519-1.html 449519-1-ref.html
-# == 449653-1.html 449653-1-ref.html # Disabled for now - it needs privileges
 == 450670-1.html 450670-1-ref.html
 == 451168-1.html 451168-1-ref.html
 == 451876-1.html 451876-1-ref.html

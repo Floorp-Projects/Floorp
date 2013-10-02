@@ -397,9 +397,9 @@ nsSVGGlyphFrame::PaintSVG(nsRenderingContext *aContext,
 
     if (renderMode == SVGAutoRenderState::CLIP_MASK) {
       gfx->SetColor(gfxRGBA(1.0f, 1.0f, 1.0f, 1.0f));
-      DrawCharacters(&iter, gfx, gfxFont::GLYPH_FILL);
+      DrawCharacters(&iter, gfx, DrawMode::GLYPH_FILL);
     } else {
-      DrawCharacters(&iter, gfx, gfxFont::GLYPH_PATH);
+      DrawCharacters(&iter, gfx, DrawMode::GLYPH_PATH);
     }
 
     return NS_OK;
@@ -422,7 +422,7 @@ nsSVGGlyphFrame::PaintSVG(nsRenderingContext *aContext,
   nsAutoPtr<gfxTextContextPaint> objectPaint;
   DrawMode drawMode = SetupCairoState(gfx, outerContextPaint, getter_Transfers(objectPaint));
 
-  if (drawMode) {
+  if (int(drawMode)) {
     DrawCharacters(&iter, gfx, drawMode, objectPaint);
   }
   
@@ -589,7 +589,7 @@ nsSVGGlyphFrame::DrawCharacters(CharacterIterator *aIter,
                                 DrawMode aDrawMode,
                                 gfxTextContextPaint *aContextPaint)
 {
-  if (aDrawMode & gfxFont::GLYPH_STROKE) {
+  if (int(aDrawMode) & int(DrawMode::GLYPH_STROKE)) {
     aIter->SetLineWidthAndDashesForDrawing(aContext);
   }
 
@@ -936,11 +936,11 @@ nsSVGGlyphFrame::SetupCairoState(gfxContext *aContext,
   SVGTextContextPaint *thisContextPaint = new SVGTextContextPaint();
 
   if (SetupCairoStroke(aContext, aOuterContextPaint, thisContextPaint)) {
-    toDraw = DrawMode(toDraw | gfxFont::GLYPH_STROKE);
+    toDraw = DrawMode(int(toDraw) | int(DrawMode::GLYPH_STROKE));
   }
 
   if (SetupCairoFill(aContext, aOuterContextPaint, thisContextPaint)) {
-    toDraw = DrawMode(toDraw | gfxFont::GLYPH_FILL);
+    toDraw = DrawMode(int(toDraw) | int(DrawMode::GLYPH_FILL));
   }
 
   uint32_t paintOrder = StyleSVG()->mPaintOrder;
@@ -951,7 +951,7 @@ nsSVGGlyphFrame::SetupCairoState(gfxContext *aContext,
       break;
     }
     if (component == NS_STYLE_PAINT_ORDER_STROKE) {
-      toDraw = DrawMode(toDraw | gfxFont::GLYPH_STROKE_UNDERNEATH);
+      toDraw = DrawMode(int(toDraw) | int(DrawMode::GLYPH_STROKE_UNDERNEATH));
       break;
     }
     paintOrder >>= NS_STYLE_PAINT_ORDER_BITWIDTH;
