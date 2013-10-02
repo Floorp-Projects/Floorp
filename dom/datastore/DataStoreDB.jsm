@@ -39,8 +39,8 @@ DataStoreDB.prototype = {
     store.createIndex(DATASTOREDB_REVISION_INDEX, 'revisionId', { unique: true });
   },
 
-  init: function(aOrigin, aName) {
-    let dbName = aOrigin + '_' + aName;
+  init: function(aOwner, aName) {
+    let dbName = aName + '|' + aOwner;
     this.initDBHelper(dbName, DATASTOREDB_VERSION,
                       [DATASTOREDB_OBJECTSTORE_NAME, DATASTOREDB_REVISION]);
   },
