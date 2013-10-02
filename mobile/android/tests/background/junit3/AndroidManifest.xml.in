@@ -15,7 +15,7 @@
 
     <application
         android:icon="@drawable/icon"
-        android:label="@string/app_name" >
+        android:label="@ANDROID_BACKGROUND_APP_DISPLAYNAME@">
         <uses-library android:name="android.test.runner" />
     </application>
 
