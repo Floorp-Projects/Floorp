@@ -69,9 +69,11 @@
       <li><a href="about:license#bspatch">bspatch License</a></li>
       <li><a href="about:license#cairo">Cairo Component Licenses</a></li>
       <li><a href="about:license#chromium">Chromium License</a></li>
+      <li><a href="about:license#codemirror">CodeMirror License</a></li>
       <li><a href="about:license#dtoa">dtoa License</a></li>
       <li><a href="about:license#hunspell-nl">Dutch Spellchecking Dictionary License</a></li>
       <li><a href="about:license#edl">Eclipse Distribution License</a></li>
+      <li><a href="about:license#escodegen">Escodegen License</a></li>
       <li><a href="about:license#hunspell-ee">Estonian Spellchecking Dictionary License</a></li>
       <li><a href="about:license#expat">Expat License</a></li>
       <li><a href="about:license#firebug">Firebug License</a></li>
@@ -125,8 +127,6 @@
       <li><a href="about:license#vtune">VTune License</a></li>
       <li><a href="about:license#webrtc">WebRTC License</a></li>
       <li><a href="about:license#xiph">Xiph.org Foundation License</a></li>
-      <li><a href="about:license#codemirror">CodeMirror License</a></li>
-      <li><a href="about:license#escodegen">Escodegen License</a></li>
     </ul>
 
 <br>
@@ -1676,6 +1676,49 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
     <hr>
 
+    <h1><a id="codemirror"></a>CodeMirror License</h1>
+
+    <p>This license applies to all files in
+      <span class="path">browser/devtools/sourceeditor/codemirror</span> and
+      to specified files in the <span class="path">browser/devtools/sourceeditor/test/</span>:
+    </p>
+    <ul>
+      <li><span class="path">cm_comment_test.js</span></li>
+      <li><span class="path">cm_driver.js</span></li>
+      <li><span class="path">cm_mode_javascript_test.js</span></li>
+      <li><span class="path">cm_mode_test.css</span></li>
+      <li><span class="path">cm_mode_test.js</span></li>
+      <li><span class="path">cm_test.js</span></li>
+    </ul>
+<pre>
+Copyright (C) 2013 by Marijn Haverbeke <marijnh@gmail.com>
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in
+all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+THE SOFTWARE.
+
+Please note that some subdirectories of the CodeMirror distribution
+include their own LICENSE files, and are released under different
+licences.
+</pre>
+
+
+    <hr>
+
     <h1><a id="dtoa"></a>dtoa License</h1>
 
     <p>This license applies to the file
@@ -1779,6 +1822,38 @@ ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 </pre>
 
+
+    <hr>
+
+    <h1><a id="escodegen"></a>Escodegen License</h1>
+
+    <p>This license applies to all files in
+      <span class="path">toolkit/devtools/escodegen</span>.
+    </p>
+<pre>
+Copyright (C) 2012 Yusuke Suzuki (twitter: @Constellation) and other contributors.
+
+Redistribution and use in source and binary forms, with or without modification,
+are permitted provided that the following conditions are met:
+
+  * Redistributions of source code must retain the above copyright notice, this
+    list of conditions and the following disclaimer.
+
+  * Redistributions in binary form must reproduce the above copyright notice,
+    this list of conditions and the following disclaimer in the documentation
+    and/or other materials provided with the distribution.
+
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
+ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+DISCLAIMED. IN NO EVENT SHALL BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
+PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR
+BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING
+IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY
+OF SUCH DAMAGE.
+</pre>
 
 
     <hr>
@@ -4056,81 +4131,6 @@ DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
 THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-</pre>
-
-    <hr>
-
-    <h1><a id="codemirror"></a>CodeMirror License</h1>
-
-    <p>This license applies to all files in
-      <span class="path">browser/devtools/sourceeditor/codemirror</span> and
-      to specified files in the <span class="path">browser/devtools/sourceeditor/test/</span>:
-    </p>
-    <ul>
-      <li><span class="path">cm_comment_test.js</span></li>
-      <li><span class="path">cm_driver.js</span></li>
-      <li><span class="path">cm_mode_javascript_test.js</span></li>
-      <li><span class="path">cm_mode_test.css</span></li>
-      <li><span class="path">cm_mode_test.js</span></li>
-      <li><span class="path">cm_test.js</span></li>
-    </ul>
-<pre>
-Copyright (C) 2013 by Marijn Haverbeke <marijnh@gmail.com>
-
-Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files (the "Software"), to deal
-in the Software without restriction, including without limitation the rights
-to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom the Software is
-furnished to do so, subject to the following conditions:
-
-The above copyright notice and this permission notice shall be included in
-all copies or substantial portions of the Software.
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
-THE SOFTWARE.
-
-Please note that some subdirectories of the CodeMirror distribution
-include their own LICENSE files, and are released under different
-licences.
-</pre>
-
-
-    <hr>
-
-    <h1><a id="escodegen"></a>Escodegen License</h1>
-
-    <p>This license applies to all files in
-      <span class="path">toolkit/devtools/escodegen</span>.
-    </p>
-<pre>
-Copyright (C) 2012 Yusuke Suzuki (twitter: @Constellation) and other contributors.
-
-Redistribution and use in source and binary forms, with or without modification,
-are permitted provided that the following conditions are met:
-
-  * Redistributions of source code must retain the above copyright notice, this
-    list of conditions and the following disclaimer.
-
-  * Redistributions in binary form must reproduce the above copyright notice,
-    this list of conditions and the following disclaimer in the documentation
-    and/or other materials provided with the distribution.
-
-THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
-ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
-WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
-DISCLAIMED. IN NO EVENT SHALL BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
-SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
-PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR
-BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
-CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING
-IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY
-OF SUCH DAMAGE.
 </pre>
 
 
