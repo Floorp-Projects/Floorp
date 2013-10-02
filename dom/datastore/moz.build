@@ -21,5 +21,6 @@ EXTRA_COMPONENTS += [
 
 EXTRA_JS_MODULES += [
     'DataStore.jsm',
+    'DataStoreChangeNotifier.jsm',
     'DataStoreDB.jsm',
 ]

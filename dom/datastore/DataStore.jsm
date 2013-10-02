@@ -6,7 +6,7 @@
 
 'use strict'
 
-var EXPORTED_SYMBOLS = ["DataStore", "DataStoreAccess"];
+this.EXPORTED_SYMBOLS = ["DataStore", "DataStoreAccess"];
 
 function debug(s) {
   // dump('DEBUG DataStore: ' + s + '\n');
@@ -22,6 +22,11 @@ const REVISION_VOID = "void";
 Cu.import("resource://gre/modules/DataStoreDB.jsm");
 Cu.import("resource://gre/modules/ObjectWrapper.jsm");
 Cu.import('resource://gre/modules/Services.jsm');
+Cu.import('resource://gre/modules/XPCOMUtils.jsm');
+
+XPCOMUtils.defineLazyServiceGetter(this, "cpmm",
+                                   "@mozilla.org/childprocessmessagemanager;1",
+                                   "nsIMessageSender");
 
 /* Helper function */
 function createDOMError(aWindow, aEvent) {
@@ -161,13 +166,14 @@ DataStore.prototype = {
     this.db.addRevision(aRevisionStore, aId, aType,
       function(aRevisionId) {
         self.revisionId = aRevisionId;
+        self.sendNotification(aId, aType, aRevisionId);
         aSuccessCb();
       }
     );
   },
 
-  retrieveRevisionId: function(aSuccessCb) {
-    if (this.revisionId != null) {
+  retrieveRevisionId: function(aSuccessCb, aForced) {
+    if (this.revisionId != null && !aForced) {
       aSuccessCb();
       return;
     }
@@ -183,7 +189,12 @@ DataStore.prototype = {
           let cursor = aEvent.target.result;
           if (!cursor) {
             // If the revision doesn't exist, let's create the first one.
-            self.addRevision(aRevisionStore, 0, REVISION_VOID, aSuccessCb);
+            self.addRevision(aRevisionStore, 0, REVISION_VOID,
+              function(aRevisionId) {
+                self.revisionId = aRevisionId;
+                aSuccessCb();
+              }
+            );
             return;
           }
 
@@ -207,6 +218,7 @@ DataStore.prototype = {
   exposeObject: function(aWindow, aReadOnly) {
     let self = this;
     let object = {
+      callbacks: [],
 
       // Public interface :
 
@@ -398,8 +410,34 @@ DataStore.prototype = {
         });
       },
 
+      set onchange(aCallback) {
+        debug("Set OnChange");
+        this.onchangeCb = aCallback;
+      },
+
+      get onchange() {
+        debug("Get OnChange");
+        return this.onchangeCb;
+      },
+
+      addEventListener: function(aName, aCallback) {
+        debug("addEventListener:" + aName);
+        if (aName != 'change') {
+          return;
+        }
+
+        this.callbacks.push(aCallback);
+      },
+
+      removeEventListener: function(aName, aCallback) {
+        debug('removeEventListener');
+        let pos = this.callbacks.indexOf(aCallback);
+        if (pos != -1) {
+          this.callbacks.splice(pos, 1);
+        }
+      },
+
       /* TODO:
-         attribute EventHandler onchange;
          getAll(), getLength()
        */
 
@@ -413,15 +451,79 @@ DataStore.prototype = {
         remove: 'r',
         clear: 'r',
         revisionId: 'r',
-        getChanges: 'r'
+        getChanges: 'r',
+        onchange: 'rw',
+        addEventListener: 'r',
+        removeEventListener: 'r'
+      },
+
+      receiveMessage: function(aMessage) {
+        debug("receiveMessage");
+
+        if (aMessage.name != "DataStore:Changed:Return:OK") {
+          debug("Wrong message: " + aMessage.name);
+          return;
+        }
+
+        self.retrieveRevisionId(
+          function() {
+            if (object.onchangeCb || object.callbacks.length) {
+              let wrappedData = ObjectWrapper.wrap(aMessage.data, aWindow);
+
+              // This array is used to avoid that a callback adds/removes
+              // another eventListener.
+              var cbs = [];
+              if (object.onchangeCb) {
+                cbs.push(object.onchangeCb);
+              }
+
+              for (let i = 0; i < object.callbacks.length; ++i) {
+                cbs.push(object.callbacks[i]);
+              }
+
+              for (let i = 0; i < cbs.length; ++i) {
+                try {
+                  cbs[i](wrappedData);
+                } catch(e) {}
+              }
+            }
+          },
+          // Forcing the reading of the revisionId
+          true
+        );
       }
     };
+
+    Services.obs.addObserver(function(aSubject, aTopic, aData) {
+      let wId = aSubject.QueryInterface(Ci.nsISupportsPRUint64).data;
+      if (wId == object.innerWindowID) {
+        cpmm.removeMessageListener("DataStore:Changed:Return:OK", object);
+      }
+    }, "inner-window-destroyed", false);
+
+    let util = aWindow.QueryInterface(Ci.nsIInterfaceRequestor)
+                      .getInterface(Ci.nsIDOMWindowUtils);
+    object.innerWindowID = util.currentInnerWindowID;
+
+    cpmm.addMessageListener("DataStore:Changed:Return:OK", object);
+    cpmm.sendAsyncMessage("DataStore:RegisterForMessages",
+                          { store: this.name, owner: this.owner });
 
     return object;
   },
 
   delete: function() {
     this.db.delete();
+  },
+
+  sendNotification: function(aId, aOperation, aRevisionId) {
+    debug("SendNotification");
+    if (aOperation != REVISION_VOID) {
+      cpmm.sendAsyncMessage("DataStore:Changed",
+                            { store: this.name, owner: this.owner,
+                              message: { revisionId: aRevisionId, id: aId,
+                                         operation: aOperation } } );
+    }
   }
 };
 
