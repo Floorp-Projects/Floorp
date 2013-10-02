@@ -198,6 +198,7 @@ ImageBridgeChild::UpdatePictureRect(CompositableClient* aCompositable,
 
 // Singleton
 static ImageBridgeChild *sImageBridgeChildSingleton = nullptr;
+static nsRefPtr<ImageBridgeParent> sImageBridgeParentSingleton;
 static Thread *sImageBridgeChildThread = nullptr;
 
 // dispatched function
@@ -224,6 +225,7 @@ static void DeleteImageBridgeSync(ReentrantMonitor *aBarrier, bool *aDone)
                     "Should be in ImageBridgeChild thread.");
   delete sImageBridgeChildSingleton;
   sImageBridgeChildSingleton = nullptr;
+  sImageBridgeParentSingleton = nullptr;
   *aDone = true;
   aBarrier->NotifyAll();
 }
@@ -579,9 +581,9 @@ bool ImageBridgeChild::StartUpOnThread(Thread* aThread)
       aThread->Start();
     }
     sImageBridgeChildSingleton = new ImageBridgeChild();
-    ImageBridgeParent* imageBridgeParent = new ImageBridgeParent(
+    sImageBridgeParentSingleton = new ImageBridgeParent(
       CompositorParent::CompositorLoop(), nullptr);
-    sImageBridgeChildSingleton->ConnectAsync(imageBridgeParent);
+    sImageBridgeChildSingleton->ConnectAsync(sImageBridgeParentSingleton);
     return true;
   } else {
     return false;
