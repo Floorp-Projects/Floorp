@@ -38,9 +38,9 @@ public:
 
     void Delete();
 
-    bool HasEverBeenBound() { return mHasEverBeenBound; }
+    bool HasEverBeenBound() const { return mHasEverBeenBound; }
     void SetHasEverBeenBound(bool x) { mHasEverBeenBound = x; }
-    GLuint GLName() { return mGLName; }
+    GLuint GLName() const { return mGLName; }
     GLenum Target() const { return mTarget; }
 
     WebGLContext *GetParentObject() const {
