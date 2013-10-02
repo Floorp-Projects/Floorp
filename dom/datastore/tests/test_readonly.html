@@ -1,0 +1,96 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Test for DataStore - basic operation on a readonly db</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+  <div id="container"></div>
+  <script type="application/javascript;version=1.7">
+  var gBaseURL = 'http://test/tests/dom/datastore/tests/';
+  var gHostedManifestURL = gBaseURL + 'file_app.sjs';
+  var gGenerator = runTest();
+
+  SpecialPowers.pushPermissions(
+    [{ "type": "browser", "allow": 1, "context": document },
+     { "type": "embed-apps", "allow": 1, "context": document },
+     { "type": "webapps-manage", "allow": 1, "context": document }],
+    function() { gGenerator.next() });
+
+  function continueTest() {
+    try { gGenerator.next(); }
+    catch(e) {}
+  }
+
+  function cbError() {
+    ok(false, "Error callback invoked");
+    finish();
+  }
+
+  function runTest() {
+    SpecialPowers.autoConfirmAppInstall(continueTest);
+    yield undefined;
+
+    var request = navigator.mozApps.install(gHostedManifestURL);
+    request.onerror = cbError;
+    request.onsuccess = continueTest;
+    yield undefined;
+
+    var app = request.result;
+
+    navigator.getDataStores('bar').then(function(stores) {
+      is(stores.length, 1, "getDataStores('bar') returns 1 element");
+      is(stores[0].name, 'bar', 'The dataStore.name is bar');
+      is(stores[0].readOnly, true, 'The dataStore bar is readonly');
+
+      var store = stores[0];
+      ok("get" in store, "store.get exists");
+      ok("update" in store, "store.update exists");
+      ok("add" in store, "store.add exists");
+      ok("remove" in store, "store.remove exists");
+      ok("clear" in store, "store.clear exists");
+
+      var f = store.clear();
+      f = f.then(cbError, function() {
+        ok(true, "store.clear() fails because the db is readonly");
+        return store.remove(123);
+      });
+
+      f = f.then(cbError, function() {
+        ok(true, "store.remove() fails because the db is readonly");
+        return store.add(123, true);
+      });
+
+      f = f.then(cbError, function() {
+        ok(true, "store.add() fails because the db is readonly");
+        return store.update(123, {});
+      })
+
+      f = f.then(cbError, function() {
+        ok(true, "store.update() fails because the db is readonly");
+      })
+
+      f.then(function() {
+        // Uninstall the app.
+        request = navigator.mozApps.mgmt.uninstall(app);
+        request.onerror = cbError;
+        request.onsuccess = function() {
+          // All done.
+          info("All done");
+          finish();
+        }
+      });
+    }, cbError);
+  }
+
+  function finish() {
+    SimpleTest.finish();
+  }
+
+  SimpleTest.waitForExplicitFinish();
+  SpecialPowers.pushPrefEnv({"set": [["dom.promise.enabled", true]]}, runTest);
+  </script>
+</body>
+</html>
