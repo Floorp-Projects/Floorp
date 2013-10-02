@@ -896,7 +896,7 @@ PeerConnectionObserver.prototype = {
     this._dompc._pendingType = null;
     this.callCB(this._dompc._onSetLocalDescriptionSuccess);
 
-    if (this._iceGatheringState == "complete") {
+    if (this._dompc._iceGatheringState == "complete") {
         // If we are not trickling or we completed gathering prior
         // to setLocal, then trigger a call of onicecandidate here.
         this.foundIceCandidate(null);
@@ -948,49 +948,106 @@ PeerConnectionObserver.prototype = {
     ));
   },
 
+
+  // This method is primarily responsible for updating two attributes:
+  // iceGatheringState and iceConnectionState. These states are defined
+  // in the WebRTC specification as follows:
+  //
+  // iceGatheringState:
+  // ------------------
+  //   new        The object was just created, and no networking has occurred
+  //              yet.
+  //
+  //   gathering  The ICE engine is in the process of gathering candidates for
+  //              this RTCPeerConnection.
+  //
+  //   complete   The ICE engine has completed gathering. Events such as adding
+  //              a new interface or a new TURN server will cause the state to
+  //              go back to gathering.
+  //
+  // iceConnectionState:
+  // -------------------
+  //   new           The ICE Agent is gathering addresses and/or waiting for
+  //                 remote candidates to be supplied.
+  //
+  //   checking      The ICE Agent has received remote candidates on at least
+  //                 one component, and is checking candidate pairs but has not
+  //                 yet found a connection. In addition to checking, it may
+  //                 also still be gathering.
+  //
+  //   connected     The ICE Agent has found a usable connection for all
+  //                 components but is still checking other candidate pairs to
+  //                 see if there is a better connection. It may also still be
+  //                 gathering.
+  //
+  //   completed     The ICE Agent has finished gathering and checking and found
+  //                 a connection for all components. Open issue: it is not
+  //                 clear how the non controlling ICE side knows it is in the
+  //                 state.
+  //
+  //   failed        The ICE Agent is finished checking all candidate pairs and
+  //                 failed to find a connection for at least one component.
+  //                 Connections may have been found for some components.
+  //
+  //   disconnected  Liveness checks have failed for one or more components.
+  //                 This is more aggressive than failed, and may trigger
+  //                 intermittently (and resolve itself without action) on a
+  //                 flaky network.
+  //
+  //   closed        The ICE Agent has shut down and is no longer responding to
+  //                 STUN requests.
+
   handleIceStateChanges: function(iceState) {
     var histogram = Services.telemetry.getHistogramById("WEBRTC_ICE_SUCCESS_RATE");
-    switch (iceState) {
-      case Ci.IPeerConnection.kIceWaiting:
-        this._dompc.changeIceConnectionState("new");
-        this.callCB(this._dompc.ongatheringchange, "complete");
-        this.callCB(this._onicechange, "starting");
 
-        if (!this._dompc._trickleIce) {
-          // If we are not trickling, then the queue is in a pending state
-          // waiting for ICE gathering and executeNext frees it
-          this._dompc._executeNext();
-        }
-        else if (this.localDescription) {
-          // If we are trickling but we have already done setLocal,
-          // then we need to send a final foundIceCandidate(null) to indicate
-          // that we are done gathering.
-          this.foundIceCandidate(null);
-        }
-        break;
-      case Ci.IPeerConnection.kIceChecking:
-        this._dompc.changeIceConnectionState("checking");
-        this.callCB(this._onicechange, "checking");
-        break;
-      case Ci.IPeerConnection.kIceGathering:
-        this._dompc.changeIceGatheringState("gathering");
-        this.callCB(this._ongatheringchange, "gathering");
-        break;
-      case Ci.IPeerConnection.kIceConnected:
-        // ICE gathering complete.
-        histogram.add(true);
-        this._dompc.changeIceConnectionState("connected");
-        this.callCB(this._onicechange, "connected");
-        break;
-      case Ci.IPeerConnection.kIceFailed:
-        histogram.add(false);
-        this._dompc.changeIceConnectionState("failed");
-        this.callCB(this._onicechange, "failed");
-        break;
-      default:
-        // Unknown ICE state!
-        this._dompc.reportWarning("Unhandled ice state: " + iceState, null, 0);
-        break;
+    const STATE_MAP = [
+      // Ci.IPeerConnection.kIceGathering:
+        { gathering: "gathering" },
+      // Ci.IPeerConnection.kIceWaiting:
+        { connection: "new",  gathering: "complete", legacy: "starting" },
+      // Ci.IPeerConnection.kIceChecking:
+        { connection: "checking", legacy: "checking" },
+      // Ci.IPeerConnection.kIceConnected:
+        { connection: "connected", legacy: "connected", success: true },
+      // Ci.IPeerConnection.kIceFailed:
+        { connection: "failed", legacy: "failed", success: false }
+    ];
+
+    if (iceState < 0 || iceState > STATE_MAP.length) {
+      this._dompc.reportWarning("Unhandled ice state: " + iceState, null, 0);
+      return;
+    }
+
+    let transitions = STATE_MAP[iceState];
+
+    if ("connection" in transitions) {
+        this._dompc.changeIceConnectionState(transitions.connection);
+    }
+    if ("gathering" in transitions) {
+      this._dompc.changeIceGatheringState(transitions.gathering);
+      // Handle (old, deprecated) "ongatheringchange" callback
+      this.callCB(this._dompc.ongatheringchange, transitions.gathering);
+    }
+    // Handle deprecated "onicechange" callback
+    if ("legacy" in transitions) {
+      this.callCB(this._onicechange, transitions.legacy);
+    }
+    if ("success" in transitions) {
+      histogram.add(transitions.success);
+    }
+
+    if (iceState == Ci.IPeerConnection.kIceWaiting) {
+      if (!this._dompc._trickleIce) {
+        // If we are not trickling, then the queue is in a pending state
+        // waiting for ICE gathering and executeNext frees it
+        this._dompc._executeNext();
+      }
+      else if (this.localDescription) {
+        // If we are trickling but we have already done setLocal,
+        // then we need to send a final foundIceCandidate(null) to indicate
+        // that we are done gathering.
+        this.foundIceCandidate(null);
+      }
     }
   },
 
@@ -1006,6 +1063,10 @@ PeerConnectionObserver.prototype = {
         break;
 
       case Ci.IPeerConnectionObserver.kSdpState:
+        // No-op
+        break;
+
+      case Ci.IPeerConnectionObserver.kReadyState:
         // No-op
         break;
 
@@ -1029,13 +1090,9 @@ PeerConnectionObserver.prototype = {
                                                              { stream: stream }));
   },
 
-  foundIceCandidate: function(cand, mid, line) {
+  foundIceCandidate: function(cand) {
     this.dispatchEvent(new this._dompc._win.RTCPeerConnectionIceEvent("icecandidate",
-                                                                      {
-                                                                          candidate: cand,
-                                                                          sdpMid: mid,
-                                                                          sdpMLineIndex: line
-                                                                      }));
+                                                                      { candidate: cand } ));
   },
 
   notifyDataChannel: function(channel) {
