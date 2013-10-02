@@ -3,11 +3,14 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-package org.mozilla.gecko;
+package org.mozilla.gecko.prompts;
 
 import org.mozilla.gecko.util.GeckoEventResponder;
+import org.mozilla.gecko.GeckoEvent;
 import org.mozilla.gecko.util.ThreadUtils;
 import org.mozilla.gecko.widget.DateTimePicker;
+import org.mozilla.gecko.R;
+import org.mozilla.gecko.GeckoAppShell;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
