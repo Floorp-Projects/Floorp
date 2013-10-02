@@ -9,7 +9,6 @@ LOCAL_INCLUDES = \
   $(NULL)
 
 include $(topsrcdir)/config/rules.mk
-include $(topsrcdir)/ipc/chromium/chromium-config.mk
 
 ifeq ($(OS_ARCH),WINNT)
 ifndef MOZ_DEBUG

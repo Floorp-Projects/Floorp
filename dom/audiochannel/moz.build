@@ -35,3 +35,5 @@ LIBRARY_NAME = 'domaudiochannel_s'
 
 EXPORT_LIBRARY = True
 
+include('/ipc/chromium/chromium-config.mozbuild')
+

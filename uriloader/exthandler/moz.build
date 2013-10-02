@@ -134,3 +134,5 @@ LIBXUL_LIBRARY = True
 
 LIBRARY_NAME = 'exthandler_s'
 
+include('/ipc/chromium/chromium-config.mozbuild')
+

@@ -20,6 +20,5 @@ LOCAL_INCLUDES = \
   $(NULL)
 
 include $(topsrcdir)/config/rules.mk
-include $(topsrcdir)/ipc/chromium/chromium-config.mk
 
 DEFINES += -DIMPL_NS_NET -Wno-multichar -DFORCE_PR_LOG

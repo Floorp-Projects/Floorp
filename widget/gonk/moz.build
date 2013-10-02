@@ -65,3 +65,5 @@ LIBRARY_NAME = 'widget_gonk'
 
 EXPORT_LIBRARY = True
 
+include('/ipc/chromium/chromium-config.mozbuild')
+

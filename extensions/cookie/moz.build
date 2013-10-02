@@ -30,3 +30,5 @@ LIBRARY_NAME = 'cookie'
 
 EXPORT_LIBRARY = True
 
+include('/ipc/chromium/chromium-config.mozbuild')
+

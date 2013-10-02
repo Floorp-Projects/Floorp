@@ -22,3 +22,5 @@ LIBXUL_LIBRARY = True
 
 LIBRARY_NAME = 'domgamepad_s'
 
+include('/ipc/chromium/chromium-config.mozbuild')
+

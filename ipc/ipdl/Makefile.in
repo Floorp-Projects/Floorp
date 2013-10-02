@@ -14,7 +14,6 @@ LOCAL_INCLUDES += -I$(DEPTH)/ipc/ipdl/_ipdlheaders
 
 
 include $(topsrcdir)/config/rules.mk
-include $(topsrcdir)/ipc/chromium/chromium-config.mk
 
 
 # NB: the IPDL compiler manages .ipdl-->.h/.cpp dependencies itself,

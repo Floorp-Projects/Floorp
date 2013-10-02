@@ -32,3 +32,5 @@ LIBXUL_LIBRARY = True
 
 LIBRARY_NAME = 'gkconomx_s'
 
+include('/ipc/chromium/chromium-config.mozbuild')
+

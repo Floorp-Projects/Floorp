@@ -51,7 +51,12 @@ ifndef COMMON_MK_INCLUDED
 COMMON_MK_INCLUDED := 1
 
 include $(topsrcdir)/config/rules.mk
-include $(topsrcdir)/ipc/chromium/chromium-config.mk
+
+LOCAL_INCLUDES += \\
+  -I$(topsrcdir)/ipc/chromium/src \\
+  -I$(topsrcdir)/ipc/glue \\
+  -I$(DEPTH)/ipc/ipdl/_ipdlheaders \\
+  $(NULL)
 
 ifdef MOZ_DEBUG
 CFLAGS += $(CPPFLAGS_Debug) $(CFLAGS_Debug)

@@ -57,3 +57,5 @@ LIBRARY_NAME = 'domsystem_s'
 
 EXPORT_LIBRARY = True
 
+include('/ipc/chromium/chromium-config.mozbuild')
+

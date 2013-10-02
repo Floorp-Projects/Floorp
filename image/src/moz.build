@@ -47,3 +47,5 @@ LIBXUL_LIBRARY = True
 
 LIBRARY_NAME = 'imglib2_s'
 
+include('/ipc/chromium/chromium-config.mozbuild')
+

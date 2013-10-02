@@ -40,3 +40,5 @@ else:
 
 LIBRARY_NAME = 'display'
 
+include('/ipc/chromium/chromium-config.mozbuild')
+
