@@ -98,12 +98,12 @@ ClientCanvasLayer::RenderLayer()
     }
 
     if (!mGLContext) {
-      // GLContext's SurfaceStream handles ownership itself,
-      // and doesn't require layers to do any deallocation.
-      flags |= TEXTURE_DEALLOCATE_HOST;
-
       // We don't support locking for buffer surfaces currently
       flags |= TEXTURE_IMMEDIATE_UPLOAD;
+    } else {
+      // GLContext's SurfaceStream handles ownership itself,
+      // and doesn't require layers to do any deallocation.
+      flags |= TEXTURE_DEALLOCATE_CLIENT;
     }
     mCanvasClient = CanvasClient::CreateCanvasClient(GetCanvasClientType(),
                                                      ClientManager(), flags);

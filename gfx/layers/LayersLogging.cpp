@@ -225,7 +225,6 @@ AppendToString(nsACString& s, TextureFlags flags,
     AppendFlag(TEXTURE_DISALLOW_BIGIMAGE);
     AppendFlag(TEXTURE_ALLOW_REPEAT);
     AppendFlag(TEXTURE_NEW_TILE);
-    AppendFlag(TEXTURE_DEALLOCATE_HOST);
 
 #undef AppendFlag
   }
