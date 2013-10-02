@@ -69,7 +69,7 @@ let ContentPolicyChild = {
 
     let cpmm = Cc["@mozilla.org/childprocessmessagemanager;1"]
                .getService(Ci.nsISyncMessageSender);
-    var rval = cpmm.sendSyncMessage("Addons:ContentPolicy:Run", {
+    var rval = cpmm.sendRpcMessage("Addons:ContentPolicy:Run", {
       contentType: contentType,
       mimeTypeGuess: mimeTypeGuess
     }, {

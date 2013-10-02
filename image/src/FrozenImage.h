@@ -41,7 +41,7 @@ public:
   NS_IMETHOD GetImageContainer(layers::LayerManager* aManager,
                                layers::ImageContainer** _retval) MOZ_OVERRIDE;
   NS_IMETHOD Draw(gfxContext* aContext,
-                  gfxPattern::GraphicsFilter aFilter,
+                  GraphicsFilter aFilter,
                   const gfxMatrix& aUserSpaceToImageSpace,
                   const gfxRect& aFill,
                   const nsIntRect& aSubimage,

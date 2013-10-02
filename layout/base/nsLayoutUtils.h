@@ -21,6 +21,7 @@ class nsFontFaceList;
 class nsIImageLoadingContent;
 class nsStyleContext;
 class nsBlockFrame;
+class gfxASurface;
 class gfxDrawable;
 class nsView;
 class imgIContainer;
@@ -41,7 +42,7 @@ struct nsOverflowAreas;
 #include "nsFrameList.h"
 #include "nsThreadUtils.h"
 #include "nsIPrincipal.h"
-#include "gfxPattern.h"
+#include "GraphicsFilter.h"
 #include "nsCSSPseudoElements.h"
 #include "FrameMetrics.h"
 #include "gfx3DMatrix.h"
@@ -73,7 +74,7 @@ class HTMLVideoElement;
  */
 class nsLayoutUtils
 {
-  typedef gfxPattern::GraphicsFilter GraphicsFilter;
+  typedef ::GraphicsFilter GraphicsFilter;
 
 public:
   typedef mozilla::layers::FrameMetrics FrameMetrics;

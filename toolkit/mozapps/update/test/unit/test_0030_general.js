@@ -29,12 +29,12 @@ function run_test() {
 
   Services.prefs.setBoolPref(PREF_APP_UPDATE_STAGING_ENABLED, false);
   removeUpdateDirsAndFiles();
-  setUpdateURLOverride();
+  // The HTTP server is only used for the mar file downloads since it is slow
+  start_httpserver(URL_PATH);
+  setUpdateURLOverride(URL_HOST + ":" + gTestserverPort + "/update.xml");
   // The mock XMLHttpRequest is MUCH faster
   overrideXHR(callHandleEvent);
   standardInit();
-  // The HTTP server is only used for the mar file downloads which is slow
-  start_httpserver(URL_PATH);
   do_execute_soon(run_test_pt1);
 }
 
@@ -206,7 +206,8 @@ function run_test_pt10() {
 
 // mar download with the mar not found
 function run_test_pt11() {
-  var patches = getRemotePatchString(null, URL_HOST + URL_PATH + "/missing.mar");
+  var patches = getRemotePatchString(null, URL_HOST + ":" + gTestserverPort +
+                                     "/" + URL_PATH + "/missing.mar");
   var updates = getRemoteUpdateString(patches);
   gResponseBody = getRemoteUpdatesXMLString(updates);
   run_test_helper_pt1("mar download with the mar not found",
@@ -216,7 +217,7 @@ function run_test_pt11() {
 // mar download with a valid MD5 hash but invalid file size
 function run_test_pt12() {
   const arbitraryFileSize = 1024000;
-  setResponseBody("MD5", MD5_HASH_SIMPLE_MAR ,arbitraryFileSize);
+  setResponseBody("MD5", MD5_HASH_SIMPLE_MAR, arbitraryFileSize);
   if (IS_TOOLKIT_GONK) {
     // There seems to be a race on the web server side when the patchFile is
     // stored on the SDCard. Sometimes, the webserver will serve up an error
