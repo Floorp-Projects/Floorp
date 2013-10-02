@@ -2658,6 +2658,17 @@ struct LineBoxInfo
 };
 
 static void
+ChangeChildPaintingEnabled(nsIMarkupDocumentViewer* aChild, void* aClosure)
+{
+  bool* enablePainting = (bool*) aClosure;
+  if (*enablePainting) {
+    aChild->ResumePainting();
+  } else {
+    aChild->PausePainting();
+  }
+}
+
+static void
 ChangeChildMaxLineBoxWidth(nsIMarkupDocumentViewer* aChild, void* aClosure)
 {
   struct LineBoxInfo* lbi = (struct LineBoxInfo*) aClosure;
@@ -3264,7 +3275,36 @@ NS_IMETHODIMP nsDocumentViewer::AppendSubtree(nsTArray<nsCOMPtr<nsIMarkupDocumen
   return NS_OK;
 }
 
-NS_IMETHODIMP nsDocumentViewer::ChangeMaxLineBoxWidth(int32_t aMaxLineBoxWidth)
+nsresult
+nsDocumentViewer::PausePainting()
+{
+  bool enablePaint = false;
+  CallChildren(ChangeChildPaintingEnabled, &enablePaint);
+
+  nsIPresShell* presShell = GetPresShell();
+  if (presShell) {
+    presShell->FreezePainting();
+  }
+
+  return NS_OK;
+}
+
+nsresult
+nsDocumentViewer::ResumePainting()
+{
+  bool enablePaint = true;
+  CallChildren(ChangeChildPaintingEnabled, &enablePaint);
+
+  nsIPresShell* presShell = GetPresShell();
+  if (presShell) {
+    presShell->ThawPainting();
+  }
+
+  return NS_OK;
+}
+
+nsresult
+nsDocumentViewer::ChangeMaxLineBoxWidth(int32_t aMaxLineBoxWidth)
 {
   // Change the max line box width for all children.
   struct LineBoxInfo lbi = { aMaxLineBoxWidth };

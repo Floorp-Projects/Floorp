@@ -7,7 +7,7 @@
 #define NSSVGINTEGRATIONUTILS_H_
 
 #include "gfxMatrix.h"
-#include "gfxPattern.h"
+#include "GraphicsFilter.h"
 #include "gfxRect.h"
 
 class nsDisplayList;
@@ -188,7 +188,7 @@ public:
   DrawPaintServer(nsRenderingContext* aRenderingContext,
                   nsIFrame*            aTarget,
                   nsIFrame*            aPaintServer,
-                  gfxPattern::GraphicsFilter aFilter,
+                  GraphicsFilter aFilter,
                   const nsRect&        aDest,
                   const nsRect&        aFill,
                   const nsPoint&       aAnchor,

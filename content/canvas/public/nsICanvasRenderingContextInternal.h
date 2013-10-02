@@ -10,7 +10,7 @@
 #include "nsIInputStream.h"
 #include "nsIDocShell.h"
 #include "mozilla/dom/HTMLCanvasElement.h"
-#include "gfxPattern.h"
+#include "GraphicsFilter.h"
 #include "mozilla/RefPtr.h"
 
 #define NS_ICANVASRENDERINGCONTEXTINTERNAL_IID \
@@ -68,7 +68,7 @@ public:
 
   // Render the canvas at the origin of the given gfxContext
   NS_IMETHOD Render(gfxContext *ctx,
-                    gfxPattern::GraphicsFilter aFilter,
+                    GraphicsFilter aFilter,
                     uint32_t aFlags = RenderFlagPremultAlpha) = 0;
 
   // Gives you a stream containing the image represented by this context.

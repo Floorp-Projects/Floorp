@@ -53,6 +53,9 @@ XPCOMUtils.defineLazyModuleGetter(this, "BrowserNewTabPreloader",
 XPCOMUtils.defineLazyModuleGetter(this, "PdfJs",
                                   "resource://pdf.js/PdfJs.jsm");
 
+XPCOMUtils.defineLazyModuleGetter(this, "ShumwayUtils",
+                                  "resource://shumway/ShumwayUtils.jsm");
+
 XPCOMUtils.defineLazyModuleGetter(this, "webrtcUI",
                                   "resource:///modules/webrtcUI.jsm");
 
@@ -467,6 +470,7 @@ BrowserGlue.prototype = {
     BrowserNewTabPreloader.init();
     SignInToWebsiteUX.init();
     PdfJs.init();
+    ShumwayUtils.init();
     webrtcUI.init();
     AboutHome.init();
 

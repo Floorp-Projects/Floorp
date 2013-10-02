@@ -120,6 +120,10 @@ public:
                                  const ClonedMessageData& aData,
                                  const InfallibleTArray<CpowEntry>& aCpows,
                                  InfallibleTArray<nsString>* aJSONRetVal);
+    virtual bool AnswerRpcMessage(const nsString& aMessage,
+                                  const ClonedMessageData& aData,
+                                  const InfallibleTArray<CpowEntry>& aCpows,
+                                  InfallibleTArray<nsString>* aJSONRetVal);
     virtual bool RecvAsyncMessage(const nsString& aMessage,
                                   const ClonedMessageData& aData,
                                   const InfallibleTArray<CpowEntry>& aCpows);

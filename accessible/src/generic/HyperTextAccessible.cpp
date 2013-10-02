@@ -874,26 +874,34 @@ HyperTextAccessible::GetTextBeforeOffset(int32_t aOffset,
   if (IsDefunct())
     return NS_ERROR_FAILURE;
 
-  int32_t offset = ConvertMagicOffset(aOffset);
-  if (offset < 0)
+  if (aBoundaryType == BOUNDARY_CHAR) {
+    GetCharAt(aOffset, eGetBefore, aText, aStartOffset, aEndOffset);
+    return NS_OK;
+  }
+
+  int32_t adjustedOffset = ConvertMagicOffset(aOffset);
+  if (adjustedOffset < 0)
     return NS_ERROR_INVALID_ARG;
+
+  if (aOffset == nsIAccessibleText::TEXT_OFFSET_CARET)
+    adjustedOffset = AdjustCaretOffset(adjustedOffset);
 
   switch (aBoundaryType) {
     case BOUNDARY_CHAR:
-      GetCharAt(offset, eGetBefore, aText, aStartOffset, aEndOffset);
-      return NS_OK;
+      MOZ_ASSUME_UNREACHABLE("Already handled!");
+      return NS_ERROR_FAILURE;
 
     case BOUNDARY_WORD_START: {
       // If the offset is a word start (except text length offset) then move
       // backward to find a start offset (end offset is the given offset).
       // Otherwise move backward twice to find both start and end offsets.
-      if (offset == CharacterCount()) {
-        *aEndOffset = FindWordBoundary(offset, eDirPrevious, eStartWord);
+      if (adjustedOffset == CharacterCount()) {
+        *aEndOffset = FindWordBoundary(adjustedOffset, eDirPrevious, eStartWord);
         *aStartOffset = FindWordBoundary(*aEndOffset, eDirPrevious, eStartWord);
       } else {
-        *aStartOffset = FindWordBoundary(offset, eDirPrevious, eStartWord);
+        *aStartOffset = FindWordBoundary(adjustedOffset, eDirPrevious, eStartWord);
         *aEndOffset = FindWordBoundary(*aStartOffset, eDirNext, eStartWord);
-        if (*aEndOffset != offset) {
+        if (*aEndOffset != adjustedOffset) {
           *aEndOffset = *aStartOffset;
           *aStartOffset = FindWordBoundary(*aEndOffset, eDirPrevious, eStartWord);
         }
@@ -903,24 +911,18 @@ HyperTextAccessible::GetTextBeforeOffset(int32_t aOffset,
 
     case BOUNDARY_WORD_END: {
       // Move word backward twice to find start and end offsets.
-      *aEndOffset = FindWordBoundary(offset, eDirPrevious, eEndWord);
+      *aEndOffset = FindWordBoundary(adjustedOffset, eDirPrevious, eEndWord);
       *aStartOffset = FindWordBoundary(*aEndOffset, eDirPrevious, eEndWord);
       return GetText(*aStartOffset, *aEndOffset, aText);
     }
 
     case BOUNDARY_LINE_START:
-      if (aOffset == nsIAccessibleText::TEXT_OFFSET_CARET)
-        offset = AdjustCaretOffset(offset);
-
-      *aStartOffset = FindLineBoundary(offset, ePrevLineBegin);
-      *aEndOffset = FindLineBoundary(offset, eThisLineBegin);
+      *aStartOffset = FindLineBoundary(adjustedOffset, ePrevLineBegin);
+      *aEndOffset = FindLineBoundary(adjustedOffset, eThisLineBegin);
       return GetText(*aStartOffset, *aEndOffset, aText);
 
     case BOUNDARY_LINE_END: {
-      if (aOffset == nsIAccessibleText::TEXT_OFFSET_CARET)
-        offset = AdjustCaretOffset(offset);
-
-      *aEndOffset = FindLineBoundary(offset, ePrevLineEnd);
+      *aEndOffset = FindLineBoundary(adjustedOffset, ePrevLineEnd);
       int32_t tmpOffset = *aEndOffset;
       // Adjust offset if line is wrapped.
       if (*aEndOffset != 0 && !IsLineEndCharAt(*aEndOffset))
@@ -944,8 +946,8 @@ HyperTextAccessible::GetTextAtOffset(int32_t aOffset,
   if (IsDefunct())
     return NS_ERROR_FAILURE;
 
-  int32_t offset = ConvertMagicOffset(aOffset);
-  if (offset < 0)
+  int32_t adjustedOffset = ConvertMagicOffset(aOffset);
+  if (adjustedOffset < 0)
     return NS_ERROR_INVALID_ARG;
 
   switch (aBoundaryType) {
@@ -954,7 +956,10 @@ HyperTextAccessible::GetTextAtOffset(int32_t aOffset,
         NS_OK : NS_ERROR_INVALID_ARG;
 
     case BOUNDARY_WORD_START:
-      *aEndOffset = FindWordBoundary(offset, eDirNext, eStartWord);
+      if (aOffset == nsIAccessibleText::TEXT_OFFSET_CARET)
+        adjustedOffset = AdjustCaretOffset(adjustedOffset);
+
+      *aEndOffset = FindWordBoundary(adjustedOffset, eDirNext, eStartWord);
       *aStartOffset = FindWordBoundary(*aEndOffset, eDirPrevious, eStartWord);
       return GetText(*aStartOffset, *aEndOffset, aText);
 
@@ -962,25 +967,25 @@ HyperTextAccessible::GetTextAtOffset(int32_t aOffset,
       // Ignore the spec and follow what WebKitGtk does because Orca expects it,
       // i.e. return a next word at word end offset of the current word
       // (WebKitGtk behavior) instead the current word (AKT spec).
-      *aEndOffset = FindWordBoundary(offset, eDirNext, eEndWord);
+      *aEndOffset = FindWordBoundary(adjustedOffset, eDirNext, eEndWord);
       *aStartOffset = FindWordBoundary(*aEndOffset, eDirPrevious, eEndWord);
       return GetText(*aStartOffset, *aEndOffset, aText);
 
     case BOUNDARY_LINE_START:
       if (aOffset == nsIAccessibleText::TEXT_OFFSET_CARET)
-        offset = AdjustCaretOffset(offset);
+        adjustedOffset = AdjustCaretOffset(adjustedOffset);
 
-      *aStartOffset = FindLineBoundary(offset, eThisLineBegin);
-      *aEndOffset = FindLineBoundary(offset, eNextLineBegin);
+      *aStartOffset = FindLineBoundary(adjustedOffset, eThisLineBegin);
+      *aEndOffset = FindLineBoundary(adjustedOffset, eNextLineBegin);
       return GetText(*aStartOffset, *aEndOffset, aText);
 
     case BOUNDARY_LINE_END:
       if (aOffset == nsIAccessibleText::TEXT_OFFSET_CARET)
-        offset = AdjustCaretOffset(offset);
+        adjustedOffset = AdjustCaretOffset(adjustedOffset);
 
       // In contrast to word end boundary we follow the spec here.
-      *aStartOffset = FindLineBoundary(offset, ePrevLineEnd);
-      *aEndOffset = FindLineBoundary(offset, eThisLineEnd);
+      *aStartOffset = FindLineBoundary(adjustedOffset, ePrevLineEnd);
+      *aEndOffset = FindLineBoundary(adjustedOffset, eThisLineEnd);
       return GetText(*aStartOffset, *aEndOffset, aText);
 
     default:
@@ -997,18 +1002,26 @@ HyperTextAccessible::GetTextAfterOffset(int32_t aOffset,
   if (IsDefunct())
     return NS_ERROR_FAILURE;
 
-  int32_t offset = ConvertMagicOffset(aOffset);
-  if (offset < 0)
+  if (aBoundaryType == BOUNDARY_CHAR) {
+    GetCharAt(aOffset, eGetAfter, aText, aStartOffset, aEndOffset);
+    return NS_OK;
+  }
+
+  int32_t adjustedOffset = ConvertMagicOffset(aOffset);
+  if (adjustedOffset < 0)
     return NS_ERROR_INVALID_ARG;
+
+  if (aOffset == nsIAccessibleText::TEXT_OFFSET_CARET)
+    adjustedOffset = AdjustCaretOffset(adjustedOffset);
 
   switch (aBoundaryType) {
     case BOUNDARY_CHAR:
-      GetCharAt(aOffset, eGetAfter, aText, aStartOffset, aEndOffset);
-      return NS_OK;
+      MOZ_ASSUME_UNREACHABLE("Already handled!");
+      return NS_ERROR_FAILURE;
 
     case BOUNDARY_WORD_START:
       // Move word forward twice to find start and end offsets.
-      *aStartOffset = FindWordBoundary(offset, eDirNext, eStartWord);
+      *aStartOffset = FindWordBoundary(adjustedOffset, eDirNext, eStartWord);
       *aEndOffset = FindWordBoundary(*aStartOffset, eDirNext, eStartWord);
       return GetText(*aStartOffset, *aEndOffset, aText);
 
@@ -1016,13 +1029,13 @@ HyperTextAccessible::GetTextAfterOffset(int32_t aOffset,
       // If the offset is a word end (except 0 offset) then move forward to find
       // end offset (start offset is the given offset). Otherwise move forward
       // twice to find both start and end offsets.
-      if (offset == 0) {
-        *aStartOffset = FindWordBoundary(offset, eDirNext, eEndWord);
+      if (adjustedOffset == 0) {
+        *aStartOffset = FindWordBoundary(adjustedOffset, eDirNext, eEndWord);
         *aEndOffset = FindWordBoundary(*aStartOffset, eDirNext, eEndWord);
       } else {
-        *aEndOffset = FindWordBoundary(offset, eDirNext, eEndWord);
+        *aEndOffset = FindWordBoundary(adjustedOffset, eDirNext, eEndWord);
         *aStartOffset = FindWordBoundary(*aEndOffset, eDirPrevious, eEndWord);
-        if (*aStartOffset != offset) {
+        if (*aStartOffset != adjustedOffset) {
           *aStartOffset = *aEndOffset;
           *aEndOffset = FindWordBoundary(*aStartOffset, eDirNext, eEndWord);
         }
@@ -1030,19 +1043,13 @@ HyperTextAccessible::GetTextAfterOffset(int32_t aOffset,
       return GetText(*aStartOffset, *aEndOffset, aText);
 
     case BOUNDARY_LINE_START:
-      if (aOffset == nsIAccessibleText::TEXT_OFFSET_CARET)
-        offset = AdjustCaretOffset(offset);
-
-      *aStartOffset = FindLineBoundary(offset, eNextLineBegin);
+      *aStartOffset = FindLineBoundary(adjustedOffset, eNextLineBegin);
       *aEndOffset = FindLineBoundary(*aStartOffset, eNextLineBegin);
       return GetText(*aStartOffset, *aEndOffset, aText);
 
     case BOUNDARY_LINE_END:
-      if (aOffset == nsIAccessibleText::TEXT_OFFSET_CARET)
-        offset = AdjustCaretOffset(offset);
-
-      *aStartOffset = FindLineBoundary(offset, eThisLineEnd);
-      *aEndOffset = FindLineBoundary(offset, eNextLineEnd);
+      *aStartOffset = FindLineBoundary(adjustedOffset, eThisLineEnd);
+      *aEndOffset = FindLineBoundary(adjustedOffset, eNextLineEnd);
       return GetText(*aStartOffset, *aEndOffset, aText);
 
     default:
