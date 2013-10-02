@@ -4,7 +4,11 @@ sdkdir = $(libdir)/$(MOZ_APP_NAME)-devel-$(MOZ_APP_VERSION)
 ifneq (,$(filter /%,$(TOP_DIST)))
 DIST = $(TOP_DIST)
 else
+ifeq (.,$(DEPTH))
+DIST = $(TOP_DIST)
+else
 DIST = $(DEPTH)/$(TOP_DIST)
+endif
 endif
 
 # We do magic with OBJ_SUFFIX in config.mk, the following ensures we don't
