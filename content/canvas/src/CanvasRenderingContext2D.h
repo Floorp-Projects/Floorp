@@ -20,6 +20,7 @@
 #include "mozilla/dom/CanvasRenderingContext2DBinding.h"
 #include "mozilla/dom/CanvasPattern.h"
 #include "mozilla/gfx/Rect.h"
+#include "imgIEncoder.h"
 
 class nsXULElement;
 
@@ -451,6 +452,8 @@ public:
   }
 
   friend class CanvasRenderingContext2DUserData;
+
+  virtual void GetImageBuffer(uint8_t** aImageBuffer, int32_t* aFormat);
 
 protected:
   nsresult GetImageDataArray(JSContext* aCx, int32_t aX, int32_t aY,

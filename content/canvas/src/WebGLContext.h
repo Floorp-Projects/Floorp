@@ -169,6 +169,7 @@ public:
     NS_IMETHOD Render(gfxContext *ctx,
                       GraphicsFilter f,
                       uint32_t aFlags = RenderFlagPremultAlpha) MOZ_OVERRIDE;
+    virtual void GetImageBuffer(uint8_t** aImageBuffer, int32_t* aFormat);
     NS_IMETHOD GetInputStream(const char* aMimeType,
                               const PRUnichar* aEncoderOptions,
                               nsIInputStream **aStream) MOZ_OVERRIDE;
