@@ -151,15 +151,20 @@ void
 WebGLFramebuffer::Attachment::FinalizeAttachment(GLenum attachmentLoc) const {
     if (Texture()) {
         GLContext* gl = Texture()->Context()->gl;
-        gl->fFramebufferTexture2D(LOCAL_GL_FRAMEBUFFER, attachmentLoc,
-                                  TexImageTarget(), Texture()->GLName(), TexImageLevel());
+        if (attachmentLoc == LOCAL_GL_DEPTH_STENCIL_ATTACHMENT) {
+            gl->fFramebufferTexture2D(LOCAL_GL_FRAMEBUFFER, LOCAL_GL_DEPTH_ATTACHMENT,
+                                      TexImageTarget(), Texture()->GLName(), TexImageLevel());
+            gl->fFramebufferTexture2D(LOCAL_GL_FRAMEBUFFER, LOCAL_GL_STENCIL_ATTACHMENT,
+                                      TexImageTarget(), Texture()->GLName(), TexImageLevel());
+        } else {
+            gl->fFramebufferTexture2D(LOCAL_GL_FRAMEBUFFER, attachmentLoc,
+                                      TexImageTarget(), Texture()->GLName(), TexImageLevel());
+        }
         return;
     }
 
     if (Renderbuffer()) {
-        GLContext* gl = Renderbuffer()->Context()->gl;
-        gl->fFramebufferRenderbuffer(LOCAL_GL_FRAMEBUFFER, attachmentLoc,
-                                     LOCAL_GL_RENDERBUFFER, Renderbuffer()->GLName());
+        Renderbuffer()->FramebufferRenderbuffer(attachmentLoc);
         return;
     }
 
@@ -516,10 +521,8 @@ WebGLFramebuffer::FinalizeAttachments() const {
     if (StencilAttachment().IsDefined())
         StencilAttachment().FinalizeAttachment(LOCAL_GL_STENCIL_ATTACHMENT);
 
-    if (DepthStencilAttachment().IsDefined()) {
-        DepthStencilAttachment().FinalizeAttachment(LOCAL_GL_DEPTH_ATTACHMENT);
-        DepthStencilAttachment().FinalizeAttachment(LOCAL_GL_STENCIL_ATTACHMENT);
-    }
+    if (DepthStencilAttachment().IsDefined())
+        DepthStencilAttachment().FinalizeAttachment(LOCAL_GL_DEPTH_STENCIL_ATTACHMENT);
 }
 
 inline void
