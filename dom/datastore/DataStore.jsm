@@ -14,19 +14,9 @@ function debug(s) {
 
 const {classes: Cc, interfaces: Ci, utils: Cu, results: Cr} = Components;
 
-const REVISION_ADDED = "added";
-const REVISION_UPDATED = "updated";
-const REVISION_REMOVED = "removed";
-const REVISION_VOID = "void";
-
 Cu.import("resource://gre/modules/DataStoreDB.jsm");
 Cu.import("resource://gre/modules/ObjectWrapper.jsm");
 Cu.import('resource://gre/modules/Services.jsm');
-
-/* Helper function */
-function createDOMError(aWindow, aEvent) {
-  return new aWindow.DOMError(aEvent.target.error.name);
-}
 
 /* DataStore object */
 
@@ -45,7 +35,6 @@ DataStore.prototype = {
   name: null,
   owner: null,
   readOnly: null,
-  revisionId: null,
 
   newDBPromise: function(aWindow, aTxnType, aFunction) {
     let db = this.db;
@@ -53,19 +42,19 @@ DataStore.prototype = {
       debug("DBPromise started");
       db.txn(
         aTxnType,
-        function(aTxn, aStore, aRevisionStore) {
+        function(aTxn, aStore) {
           debug("DBPromise success");
-          aFunction(aResolve, aReject, aTxn, aStore, aRevisionStore);
+          aFunction(aResolve, aReject, aTxn, aStore);
         },
-        function(aEvent) {
+        function() {
           debug("DBPromise error");
-          aReject(createDOMError(aWindow, aEvent));
+          aReject(new aWindow.DOMError("InvalidStateError"));
         }
       );
     });
   },
 
-  getInternal: function(aWindow, aResolve, aStore, aId) {
+  getInternal: function(aWindow, aResolve, aReject, aStore, aId) {
     debug("GetInternal " + aId);
 
     let request = aStore.get(aId);
@@ -73,125 +62,69 @@ DataStore.prototype = {
       debug("GetInternal success. Record: " + aEvent.target.result);
       aResolve(ObjectWrapper.wrap(aEvent.target.result, aWindow));
     };
+
+    request.onerror = function(aEvent) {
+      debug("GetInternal error");
+      aReject(new aWindow.DOMError(aEvent.target.error.name));
+    };
   },
 
-  updateInternal: function(aResolve, aStore, aRevisionStore, aId, aObj) {
+  updateInternal: function(aWindow, aResolve, aReject, aStore, aId, aObj) {
     debug("UpdateInternal " + aId);
 
-    let self = this;
     let request = aStore.put(aObj, aId);
     request.onsuccess = function(aEvent) {
       debug("UpdateInternal success");
-
-      self.addRevision(aRevisionStore, aId, REVISION_UPDATED,
-        function() {
-          debug("UpdateInternal - revisionId increased");
-          // No wrap here because the result is always a int.
-          aResolve(aEvent.target.result);
-        }
-      );
+      // No wrap here because the result is always a int.
+      aResolve(aEvent.target.result);
+    };
+    request.onerror = function(aEvent) {
+      debug("UpdateInternal error");
+      aReject(new aWindow.DOMError(aEvent.target.error.name));
     };
   },
 
-  addInternal: function(aResolve, aStore, aRevisionStore, aObj) {
+  addInternal: function(aWindow, aResolve, aReject, aStore, aObj) {
     debug("AddInternal");
 
-    let self = this;
     let request = aStore.put(aObj);
     request.onsuccess = function(aEvent) {
       debug("Request successful. Id: " + aEvent.target.result);
-      self.addRevision(aRevisionStore, aEvent.target.result, REVISION_ADDED,
-        function() {
-          debug("AddInternal - revisionId increased");
-          // No wrap here because the result is always a int.
-          aResolve(aEvent.target.result);
-        }
-      );
+      // No wrap here because the result is always a int.
+      aResolve(aEvent.target.result);
+    };
+    request.onerror = function(aEvent) {
+      debug("AddInternal error");
+      aReject(new aWindow.DOMError(aEvent.target.error.name));
     };
   },
 
-  removeInternal: function(aResolve, aStore, aRevisionStore, aId) {
+  removeInternal: function(aResolve, aReject, aStore, aId) {
     debug("RemoveInternal");
 
-    let self = this;
-    let request = aStore.get(aId);
-    request.onsuccess = function(aEvent) {
-      debug("RemoveInternal success. Record: " + aEvent.target.result);
-      if (aEvent.target.result === undefined) {
-        aResolve(false);
-        return;
-      }
-
-      let deleteRequest = aStore.delete(aId);
-      deleteRequest.onsuccess = function() {
-        debug("RemoveInternal success");
-        self.addRevision(aRevisionStore, aId, REVISION_REMOVED,
-          function() {
-            aResolve(true);
-          }
-        );
-      };
+    let request = aStore.delete(aId);
+    request.onsuccess = function() {
+      debug("RemoveInternal success");
+      aResolve();
+    };
+    request.onerror = function(aEvent) {
+      debug("RemoveInternal error");
+      aReject(new aWindow.DOMError(aEvent.target.error.name));
     };
   },
 
-  clearInternal: function(aResolve, aStore, aRevisionStore) {
+  clearInternal: function(aResolve, aReject, aStore) {
     debug("ClearInternal");
 
-    let self = this;
     let request = aStore.clear();
     request.onsuccess = function() {
       debug("ClearInternal success");
-      self.db.clearRevisions(aRevisionStore,
-        function() {
-          debug("Revisions cleared");
-
-          self.addRevision(aRevisionStore, 0, REVISION_VOID,
-            function() {
-              debug("ClearInternal - revisionId increased");
-              aResolve();
-            }
-          );
-        }
-      );
+      aResolve();
     };
-  },
-
-  addRevision: function(aRevisionStore, aId, aType, aSuccessCb) {
-    let self = this;
-    this.db.addRevision(aRevisionStore, aId, aType,
-      function(aRevisionId) {
-        self.revisionId = aRevisionId;
-        aSuccessCb();
-      }
-    );
-  },
-
-  retrieveRevisionId: function(aSuccessCb) {
-    if (this.revisionId != null) {
-      aSuccessCb();
-      return;
-    }
-
-    let self = this;
-    this.db.revisionTxn(
-      'readwrite',
-      function(aTxn, aRevisionStore) {
-        debug("RetrieveRevisionId transaction success");
-
-        let request = aRevisionStore.openCursor(null, 'prev');
-        request.onsuccess = function(aEvent) {
-          let cursor = aEvent.target.result;
-          if (!cursor) {
-            // If the revision doesn't exist, let's create the first one.
-            self.addRevision(aRevisionStore, 0, REVISION_VOID, aSuccessCb);
-            return;
-          }
-
-          self.revisionId = cursor.value.revisionId;
-          aSuccessCb();
-        };
-      }
-    );
+    request.onerror = function(aEvent) {
+      debug("ClearInternal error");
+      aReject(new aWindow.DOMError(aEvent.target.error.name));
+    };
   },
 
   throwInvalidArg: function(aWindow) {
@@ -230,8 +163,8 @@ DataStore.prototype = {
 
         // Promise<Object>
         return self.newDBPromise(aWindow, "readonly",
-          function(aResolve, aReject, aTxn, aStore, aRevisionStore) {
-            self.getInternal(aWindow, aResolve, aStore, aId);
+          function(aResolve, aReject, aTxn, aStore) {
+            self.getInternal(aWindow, aResolve, aReject, aStore, aId);
           }
         );
       },
@@ -248,8 +181,8 @@ DataStore.prototype = {
 
         // Promise<void>
         return self.newDBPromise(aWindow, "readwrite",
-          function(aResolve, aReject, aTxn, aStore, aRevisionStore) {
-            self.updateInternal(aResolve, aStore, aRevisionStore, aId, aObj);
+          function(aResolve, aReject, aTxn, aStore) {
+            self.updateInternal(aWindow, aResolve, aReject, aStore, aId, aObj);
           }
         );
       },
@@ -261,8 +194,8 @@ DataStore.prototype = {
 
         // Promise<int>
         return self.newDBPromise(aWindow, "readwrite",
-          function(aResolve, aReject, aTxn, aStore, aRevisionStore) {
-            self.addInternal(aResolve, aStore, aRevisionStore, aObj);
+          function(aResolve, aReject, aTxn, aStore) {
+            self.addInternal(aWindow, aResolve, aReject, aStore, aObj);
           }
         );
       },
@@ -279,8 +212,8 @@ DataStore.prototype = {
 
         // Promise<void>
         return self.newDBPromise(aWindow, "readwrite",
-          function(aResolve, aReject, aTxn, aStore, aRevisionStore) {
-            self.removeInternal(aResolve, aStore, aRevisionStore, aId);
+          function(aResolve, aReject, aTxn, aStore) {
+            self.removeInternal(aResolve, aReject, aStore, aId);
           }
         );
       },
@@ -292,114 +225,16 @@ DataStore.prototype = {
 
         // Promise<void>
         return self.newDBPromise(aWindow, "readwrite",
-          function(aResolve, aReject, aTxn, aStore, aRevisionStore) {
-            self.clearInternal(aResolve, aStore, aRevisionStore);
+          function(aResolve, aReject, aTxn, aStore) {
+            self.clearInternal(aResolve, aReject, aStore);
           }
         );
       },
 
-      get revisionId() {
-        return self.revisionId;
-      },
-
-      getChanges: function(aRevisionId) {
-        debug("GetChanges: " + aRevisionId);
-
-        if (aRevisionId === null || aRevisionId === undefined) {
-          return aWindow.Promise.reject(
-            new aWindow.DOMError("SyntaxError", "Invalid revisionId"));
-        }
-
-        // Promise<DataStoreChanges>
-        return new aWindow.Promise(function(aResolve, aReject) {
-          debug("GetChanges promise started");
-          self.db.revisionTxn(
-            'readonly',
-            function(aTxn, aStore) {
-              debug("GetChanges transaction success");
-
-              let request = self.db.getInternalRevisionId(
-                aRevisionId,
-                aStore,
-                function(aInternalRevisionId) {
-                  if (aInternalRevisionId == undefined) {
-                    aResolve(undefined);
-                    return;
-                  }
-
-                  // This object is the return value of this promise.
-                  // Initially we use maps, and then we convert them in array.
-                  let changes = {
-                    revisionId: '',
-                    addedIds: {},
-                    updatedIds: {},
-                    removedIds: {}
-                  };
-
-                  let request = aStore.mozGetAll(aWindow.IDBKeyRange.lowerBound(aInternalRevisionId, true));
-                  request.onsuccess = function(aEvent) {
-                    for (let i = 0; i < aEvent.target.result.length; ++i) {
-                      let data = aEvent.target.result[i];
-
-                      switch (data.operation) {
-                        case REVISION_ADDED:
-                          changes.addedIds[data.objectId] = true;
-                          break;
-
-                        case REVISION_UPDATED:
-                          // We don't consider an update if this object has been added
-                          // or if it has been already modified by a previous
-                          // operation.
-                          if (!(data.objectId in changes.addedIds) &&
-                              !(data.objectId in changes.updatedIds)) {
-                            changes.updatedIds[data.objectId] = true;
-                          }
-                          break;
-
-                        case REVISION_REMOVED:
-                          let id = data.objectId;
-
-                          // If the object has been added in this range of revisions
-                          // we can ignore it and remove it from the list.
-                          if (id in changes.addedIds) {
-                            delete changes.addedIds[id];
-                          } else {
-                            changes.removedIds[id] = true;
-                          }
-
-                          if (id in changes.updatedIds) {
-                            delete changes.updatedIds[id];
-                          }
-                          break;
-                      }
-                    }
-
-                    // The last revisionId.
-                    if (aEvent.target.result.length) {
-                      changes.revisionId = aEvent.target.result[aEvent.target.result.length - 1].revisionId;
-                    }
-
-                    // From maps to arrays.
-                    changes.addedIds = Object.keys(changes.addedIds).map(function(aKey) { return parseInt(aKey, 10); });
-                    changes.updatedIds = Object.keys(changes.updatedIds).map(function(aKey) { return parseInt(aKey, 10); });
-                    changes.removedIds = Object.keys(changes.removedIds).map(function(aKey) { return parseInt(aKey, 10); });
-
-                    let wrappedObject = ObjectWrapper.wrap(changes, aWindow);
-                    aResolve(wrappedObject);
-                  };
-                }
-              );
-            },
-            function(aEvent) {
-              debug("GetChanges transaction failed");
-              aReject(createDOMError(aWindow, aEvent));
-            }
-          );
-        });
-      },
-
       /* TODO:
+         readonly attribute DOMString revisionId
          attribute EventHandler onchange;
+         Promise<DataStoreChanges> getChanges(DOMString revisionId)
          getAll(), getLength()
        */
 
@@ -411,9 +246,7 @@ DataStore.prototype = {
         update: 'r',
         add: 'r',
         remove: 'r',
-        clear: 'r',
-        revisionId: 'r',
-        getChanges: 'r'
+        clear: 'r'
       }
     };
 

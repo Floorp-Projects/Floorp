@@ -15,7 +15,6 @@ MOCHITEST_FILES = \
   test_app_install.html \
   test_readonly.html \
   test_basic.html \
-  test_revision.html \
   file_app.sjs \
   file_app.template.webapp \
   $(NULL)
