@@ -11,3 +11,5 @@ PROGRAM = 'ipdlunittest'
 CPP_SOURCES += [
     'TestIPDL.cpp',
 ]
+include('/ipc/chromium/chromium-config.mozbuild')
+

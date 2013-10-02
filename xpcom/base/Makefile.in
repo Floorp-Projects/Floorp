@@ -21,7 +21,6 @@ errorlist_DEST = $(DIST)/include
 errorlist_TARGET := export
 
 include $(topsrcdir)/config/rules.mk
-include $(topsrcdir)/ipc/chromium/chromium-config.mk
 
 ifdef MOZ_WIDGET_GTK
 CXXFLAGS        += $(TK_CFLAGS)

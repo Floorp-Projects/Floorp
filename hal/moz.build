@@ -165,3 +165,5 @@ LIBRARY_NAME = 'hal_s'
 
 EXPORT_LIBRARY = True
 
+include('/ipc/chromium/chromium-config.mozbuild')
+

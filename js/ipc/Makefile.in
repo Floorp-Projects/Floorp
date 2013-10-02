@@ -10,6 +10,5 @@ LOCAL_INCLUDES += \
   $(NULL)
 
 include $(topsrcdir)/config/rules.mk
-include $(topsrcdir)/ipc/chromium/chromium-config.mk
 
 DEFINES += -DBIN_SUFFIX='"$(BIN_SUFFIX)"'

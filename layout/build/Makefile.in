@@ -274,7 +274,6 @@ SHARED_LIBRARY_LIBS += \
 endif
 
 include $(topsrcdir)/config/rules.mk
-include $(topsrcdir)/ipc/chromium/chromium-config.mk
 
 LOCAL_INCLUDES	+= -I$(srcdir)/../base \
 		   -I$(srcdir)/../generic \

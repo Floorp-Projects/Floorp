@@ -30,3 +30,5 @@ LIBXUL_LIBRARY = True
 
 LIBRARY_NAME = 'gkconwebaudio_blink_s'
 
+include('/ipc/chromium/chromium-config.mozbuild')
+

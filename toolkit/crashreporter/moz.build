@@ -83,3 +83,5 @@ MSVC_ENABLE_PGO = True
 
 LIBRARY_NAME = 'exception_handler_s'
 
+include('/ipc/chromium/chromium-config.mozbuild')
+
