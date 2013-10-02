@@ -179,8 +179,13 @@ WebGLContext::BindRenderbuffer(GLenum target, WebGLRenderbuffer *wrb)
 
     MakeContextCurrent();
 
-    GLuint renderbuffername = wrb ? wrb->GLName() : 0;
-    gl->fBindRenderbuffer(target, renderbuffername);
+    // Sometimes we emulate renderbuffers (depth-stencil emu), so there's not
+    // always a 1-1 mapping from `wrb` to GL name. Just have `wrb` handle it.
+    if (wrb) {
+        wrb->BindRenderbuffer();
+    } else {
+        gl->fBindRenderbuffer(target, 0);
+    }
 
     mBoundRenderbuffer = wrb;
 }
@@ -1411,8 +1416,8 @@ WebGLContext::GetRenderbufferParameter(GLenum target, GLenum pname)
         case LOCAL_GL_RENDERBUFFER_DEPTH_SIZE:
         case LOCAL_GL_RENDERBUFFER_STENCIL_SIZE:
         {
-            GLint i = 0;
-            gl->fGetRenderbufferParameteriv(target, pname, &i);
+            // RB emulation means we have to ask the RB itself.
+            GLint i = mBoundRenderbuffer->GetRenderbufferParameter(target, pname);
             return JS::Int32Value(i);
         }
         case LOCAL_GL_RENDERBUFFER_INTERNAL_FORMAT:
@@ -2373,7 +2378,7 @@ WebGLContext::RenderbufferStorage(GLenum target, GLenum internalformat, GLsizei 
     if (IsContextLost())
         return;
 
-    if (!mBoundRenderbuffer || !mBoundRenderbuffer->GLName())
+    if (!mBoundRenderbuffer)
         return ErrorInvalidOperation("renderbufferStorage called on renderbuffer 0");
 
     if (target != LOCAL_GL_RENDERBUFFER)
@@ -2407,13 +2412,7 @@ WebGLContext::RenderbufferStorage(GLenum target, GLenum internalformat, GLsizei 
     case LOCAL_GL_STENCIL_INDEX8:
         break;
     case LOCAL_GL_DEPTH_STENCIL:
-        // this one is available in newer OpenGL (at least since 3.1); will probably become available
-        // in OpenGL ES 3 (at least it will have some DEPTH_STENCIL) and is the same value that
-        // is otherwise provided by EXT_packed_depth_stencil and OES_packed_depth_stencil extensions
-        // which means it's supported on most GL and GL ES systems already.
-        //
-        // So we just use it hoping that it's available (perhaps as an extension) and if it's not available,
-        // we just let the GL generate an error and don't do anything about it ourselves.
+        // We emulate this in WebGLRenderbuffer if we don't have the requisite extension.
         internalformatForGL = LOCAL_GL_DEPTH24_STENCIL8;
         break;
     default:
@@ -2427,7 +2426,7 @@ WebGLContext::RenderbufferStorage(GLenum target, GLenum internalformat, GLsizei 
                        internalformat != mBoundRenderbuffer->InternalFormat();
     if (sizeChanges) {
         UpdateWebGLErrorAndClearGLError();
-        gl->fRenderbufferStorage(target, internalformatForGL, width, height);
+        mBoundRenderbuffer->RenderbufferStorage(internalformatForGL, width, height);
         GLenum error = LOCAL_GL_NO_ERROR;
         UpdateWebGLErrorAndClearGLError(&error);
         if (error) {
@@ -2435,7 +2434,7 @@ WebGLContext::RenderbufferStorage(GLenum target, GLenum internalformat, GLsizei 
             return;
         }
     } else {
-        gl->fRenderbufferStorage(target, internalformatForGL, width, height);
+        mBoundRenderbuffer->RenderbufferStorage(internalformatForGL, width, height);
     }
 
     mBoundRenderbuffer->SetInternalFormat(internalformat);
