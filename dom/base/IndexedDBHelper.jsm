@@ -112,17 +112,9 @@ IndexedDBHelper.prototype = {
   newTxn: function newTxn(txn_type, store_name, callback, successCb, failureCb) {
     this.ensureDB(function () {
       if (DEBUG) debug("Starting new transaction" + txn_type);
-      let txn = this._db.transaction(Array.isArray(store_name) ? store_name : this.dbStoreNames, txn_type);
+      let txn = this._db.transaction(this.dbStoreNames, txn_type);
       if (DEBUG) debug("Retrieving object store", this.dbName);
-      let stores;
-      if (Array.isArray(store_name)) {
-        stores = [];
-        for (let i = 0; i < store_name.length; ++i) {
-          stores.push(txn.objectStore(store_name[i]));
-        }
-      } else {
-        stores = txn.objectStore(store_name);
-      }
+      let store = txn.objectStore(store_name);
 
       txn.oncomplete = function (event) {
         if (DEBUG) debug("Transaction complete. Returning to callback.");
@@ -145,7 +137,7 @@ IndexedDBHelper.prototype = {
           }
         }
       };
-      callback(txn, stores);
+      callback(txn, store);
     }.bind(this), failureCb);
   },
 
