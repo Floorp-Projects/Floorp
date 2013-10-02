@@ -19,6 +19,10 @@ const REVISION_UPDATED = "updated";
 const REVISION_REMOVED = "removed";
 const REVISION_VOID = "void";
 
+// This value has to be tuned a bit. Currently it's just a guess
+// and yet we don't know if it's too low or too high.
+const MAX_REQUESTS = 25;
+
 Cu.import("resource://gre/modules/DataStoreDB.jsm");
 Cu.import("resource://gre/modules/ObjectWrapper.jsm");
 Cu.import('resource://gre/modules/Services.jsm');
@@ -70,14 +74,42 @@ DataStore.prototype = {
     });
   },
 
-  getInternal: function(aWindow, aResolve, aStore, aId) {
-    debug("GetInternal " + aId);
+  getInternal: function(aStore, aIds, aCallback) {
+    debug("GetInternal: " + aIds.toSource());
 
-    let request = aStore.get(aId);
-    request.onsuccess = function(aEvent) {
+    // Creation of the results array.
+    let results = new Array(aIds.length);
+
+    // We're going to create this amount of requests.
+    let pendingIds = aIds.length;
+    let indexPos = 0;
+
+    function getInternalSuccess(aEvent, aPos) {
       debug("GetInternal success. Record: " + aEvent.target.result);
-      aResolve(ObjectWrapper.wrap(aEvent.target.result, aWindow));
-    };
+      results[aPos] = aEvent.target.result;
+      if (!--pendingIds) {
+        aCallback(results);
+        return;
+      }
+
+      if (indexPos < aIds.length) {
+        // Just MAX_REQUESTS requests at the same time.
+        let count = 0;
+        while (indexPos < aIds.length && ++count < MAX_REQUESTS) {
+          getInternalRequest();
+        }
+      }
+    }
+
+    function getInternalRequest() {
+      let currentPos = indexPos++;
+      let request = aStore.get(aIds[currentPos]);
+      request.onsuccess = function(aEvent) {
+        getInternalSuccess(aEvent, currentPos);
+      }
+    }
+
+    getInternalRequest();
   },
 
   updateInternal: function(aResolve, aStore, aRevisionStore, aId, aObj) {
@@ -161,6 +193,17 @@ DataStore.prototype = {
     };
   },
 
+  getLengthInternal: function(aResolve, aStore) {
+    debug("GetLengthInternal");
+
+    let request = aStore.count();
+    request.onsuccess = function(aEvent) {
+      debug("GetLengthInternal success: " + aEvent.target.result);
+      // No wrap here because the result is always a int.
+      aResolve(aEvent.target.result);
+    };
+  },
+
   addRevision: function(aRevisionStore, aId, aType, aSuccessCb) {
     let self = this;
     this.db.addRevision(aRevisionStore, aId, aType,
@@ -205,16 +248,6 @@ DataStore.prototype = {
     );
   },
 
-  throwInvalidArg: function(aWindow) {
-    return aWindow.Promise.reject(
-      new aWindow.DOMError("SyntaxError", "Non-numeric or invalid id"));
-  },
-
-  throwReadOnly: function(aWindow) {
-    return aWindow.Promise.reject(
-      new aWindow.DOMError("ReadOnlyError", "DataStore in readonly mode"));
-  },
-
   exposeObject: function(aWindow, aReadOnly) {
     let self = this;
     let object = {
@@ -235,15 +268,18 @@ DataStore.prototype = {
       },
 
       get: function DS_get(aId) {
-        aId = parseInt(aId);
-        if (isNaN(aId) || aId <= 0) {
-          return self.throwInvalidArg(aWindow);
+        aId = this.parseIds(aId);
+        if (aId === null) {
+          return this.throwInvalidArg(aWindow);
         }
 
         // Promise<Object>
         return self.newDBPromise(aWindow, "readonly",
           function(aResolve, aReject, aTxn, aStore, aRevisionStore) {
-            self.getInternal(aWindow, aResolve, aStore, aId);
+            self.getInternal(aStore, Array.isArray(aId) ?  aId : [ aId ],
+                             function(aResults) {
+              aResolve(Array.isArray(aId) ? aResults : aResults[0]);
+            });
           }
         );
       },
@@ -251,11 +287,11 @@ DataStore.prototype = {
       update: function DS_update(aId, aObj) {
         aId = parseInt(aId);
         if (isNaN(aId) || aId <= 0) {
-          return self.throwInvalidArg(aWindow);
+          return this.throwInvalidArg(aWindow);
         }
 
         if (aReadOnly) {
-          return self.throwReadOnly(aWindow);
+          return this.throwReadOnly(aWindow);
         }
 
         // Promise<void>
@@ -268,7 +304,7 @@ DataStore.prototype = {
 
       add: function DS_add(aObj) {
         if (aReadOnly) {
-          return self.throwReadOnly(aWindow);
+          return this.throwReadOnly(aWindow);
         }
 
         // Promise<int>
@@ -282,11 +318,11 @@ DataStore.prototype = {
       remove: function DS_remove(aId) {
         aId = parseInt(aId);
         if (isNaN(aId) || aId <= 0) {
-          return self.throwInvalidArg(aWindow);
+          return this.throwInvalidArg(aWindow);
         }
 
         if (aReadOnly) {
-          return self.throwReadOnly(aWindow);
+          return this.throwReadOnly(aWindow);
         }
 
         // Promise<void>
@@ -299,7 +335,7 @@ DataStore.prototype = {
 
       clear: function DS_clear() {
         if (aReadOnly) {
-          return self.throwReadOnly(aWindow);
+          return this.throwReadOnly(aWindow);
         }
 
         // Promise<void>
@@ -410,6 +446,15 @@ DataStore.prototype = {
         });
       },
 
+      getLength: function DS_getLength() {
+        // Promise<int>
+        return self.newDBPromise(aWindow, "readonly",
+          function(aResolve, aReject, aTxn, aStore, aRevisionStore) {
+            self.getLengthInternal(aResolve, aStore);
+          }
+        );
+      },
+
       set onchange(aCallback) {
         debug("Set OnChange");
         this.onchangeCb = aCallback;
@@ -437,10 +482,6 @@ DataStore.prototype = {
         }
       },
 
-      /* TODO:
-         getAll(), getLength()
-       */
-
       __exposedProps__: {
         name: 'r',
         owner: 'r',
@@ -452,10 +493,42 @@ DataStore.prototype = {
         clear: 'r',
         revisionId: 'r',
         getChanges: 'r',
+        getLength: 'r',
         onchange: 'rw',
         addEventListener: 'r',
         removeEventListener: 'r'
       },
+
+      throwInvalidArg: function(aWindow) {
+        return aWindow.Promise.reject(
+          new aWindow.DOMError("SyntaxError", "Non-numeric or invalid id"));
+      },
+
+      throwReadOnly: function(aWindow) {
+        return aWindow.Promise.reject(
+          new aWindow.DOMError("ReadOnlyError", "DataStore in readonly mode"));
+      },
+
+      parseIds: function(aId) {
+        function parseId(aId) {
+          aId = parseInt(aId);
+          return (isNaN(aId) || aId <= 0) ? null : aId;
+        }
+
+        if (!Array.isArray(aId)) {
+          return parseId(aId);
+        }
+
+        for (let i = 0; i < aId.length; ++i) {
+          aId[i] = parseId(aId[i]);
+          if (aId[i] === null) {
+            return null;
+          }
+        }
+
+        return aId;
+      },
+
 
       receiveMessage: function(aMessage) {
         debug("receiveMessage");
