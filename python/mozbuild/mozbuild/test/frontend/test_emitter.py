@@ -16,6 +16,7 @@ from mozbuild.frontend.data import (
     VariablePassthru,
     Defines,
     Exports,
+    GeneratedInclude,
     Program,
     IPDLFile,
     LocalInclude,
@@ -374,6 +375,19 @@ class TestEmitterBasic(unittest.TestCase):
         ]
 
         self.assertEqual(local_includes, expected)
+
+    def test_generated_includes(self):
+        """Test that GENERATED_INCLUDES is emitted correctly."""
+        reader = self.reader('generated_includes')
+        objs = self.read_topsrcdir(reader)
+
+        generated_includes = [o.path for o in objs if isinstance(o, GeneratedInclude)]
+        expected = [
+            '/bar/baz',
+            'foo',
+        ]
+
+        self.assertEqual(generated_includes, expected)
 
     def test_defines(self):
         reader = self.reader('defines')
