@@ -649,7 +649,7 @@ class MacroAssemblerX64 : public MacroAssemblerX86Shared
     }
     void storePtr(ImmWord imm, const Address &address) {
         if ((intptr_t)imm.value <= INT32_MAX && (intptr_t)imm.value >= INT32_MIN) {
-            mov(Imm32((int32_t)imm.value), Operand(address));
+            movq(Imm32((int32_t)imm.value), Operand(address));
         } else {
             mov(imm, ScratchReg);
             movq(ScratchReg, Operand(address));
