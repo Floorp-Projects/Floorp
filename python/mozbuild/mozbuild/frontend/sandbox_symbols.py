@@ -414,7 +414,7 @@ VARIABLES = {
         This is a list of files that define XPCOM interface definitions.
         Entries must be files that exist. Entries are almost certainly .idl
         files.
-        """, None),
+        """, 'libs'),
 
     'XPIDL_MODULE': (unicode, unicode, "",
         """XPCOM Interface Definition Module Name.
