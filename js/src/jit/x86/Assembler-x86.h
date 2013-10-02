@@ -226,18 +226,21 @@ class Assembler : public AssemblerX86Shared
         movl(ImmWord(uintptr_t(imm.value)), dest);
     }
     void mov(ImmWord imm, Register dest) {
-        movl(imm, dest);
+        // Use xor for setting registers to zero, as it is specially optimized
+        // for this purpose on modern hardware. Note that it does clobber FLAGS
+        // though.
+        if (imm.value == 0)
+            xorl(dest, dest);
+        else
+            movl(imm, dest);
     }
     void mov(ImmPtr imm, Register dest) {
-        movl(imm, dest);
+        mov(ImmWord(uintptr_t(imm.value)), dest);
     }
     void mov(AsmJSImmPtr imm, Register dest) {
         masm.movl_i32r(-1, dest.code());
         AsmJSAbsoluteLink link(masm.currentOffset(), imm.kind());
         enoughMemory_ &= asmJSAbsoluteLinks_.append(link);
-    }
-    void mov(Imm32 imm, Register dest) {
-        movl(imm, dest);
     }
     void mov(const Operand &src, const Register &dest) {
         movl(src, dest);
