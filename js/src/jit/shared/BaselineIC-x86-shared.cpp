@@ -28,7 +28,7 @@ ICCompare_Double::Compiler::generateStubCode(MacroAssembler &masm)
     Assembler::NaNCond nanCond = Assembler::NaNCondFromDoubleCondition(cond);
     if (nanCond != Assembler::NaN_HandledByCond) {
       masm.j(Assembler::NoParity, &notNaN);
-      masm.mov(Imm32(nanCond == Assembler::NaN_IsTrue), dest);
+      masm.mov(ImmWord(nanCond == Assembler::NaN_IsTrue), dest);
       masm.bind(&notNaN);
     }
 

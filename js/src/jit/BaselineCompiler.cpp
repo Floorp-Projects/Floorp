@@ -2257,7 +2257,7 @@ BaselineCompiler::emitCall()
     uint32_t argc = GET_ARGC(pc);
 
     frame.syncStack(0);
-    masm.mov(Imm32(argc), R0.scratchReg());
+    masm.mov(ImmWord(argc), R0.scratchReg());
 
     // Call IC
     ICCall_Fallback::Compiler stubCompiler(cx, /* isConstructing = */ JSOp(*pc) == JSOP_NEW);
