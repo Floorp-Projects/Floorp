@@ -359,6 +359,18 @@ class LocalInclude(SandboxDerived):
 
         self.path = path
 
+class GeneratedInclude(SandboxDerived):
+    """Describes an individual generated include path."""
+
+    __slots__ = (
+        'path',
+    )
+
+    def __init__(self, sandbox, path):
+        SandboxDerived.__init__(self, sandbox)
+
+        self.path = path
+
 class InstallationTarget(SandboxDerived):
     """Describes the rules that affect where files get installed to."""
 
