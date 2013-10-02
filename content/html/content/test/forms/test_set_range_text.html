@@ -62,6 +62,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=850364
       ok(opThrows, msg + " should throw NotSupportedError");
     }
 
+    var numOfSelectCalls = 0, expectedNumOfSelectCalls = 0;
     //Supported types should not throw
     for (i = 0; i < SupportedTypes.length; ++i) {
       opThrows = false;
@@ -76,11 +77,14 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=850364
       is(opThrows, false, msg + " should not throw NotSupportedError");
 
       elem.addEventListener("select", function (aEvent) {
-        ok(true, "select event should be fired for "+ msg);
+        ok(true, "select event should be fired for " + aEvent.target.id);
+        if (++numOfSelectCalls == expectedNumOfSelectCalls) {
+          SimpleTest.finish();
+        }
       }, false);
 
       elem.addEventListener("input", function (aEvent) {
-        ok(false, "input event should NOT be fired for " + msg);
+        ok(false, "input event should NOT be fired for " + aEvent.target.id);
       }, false);
 
       //test setRange(replacement)
@@ -92,6 +96,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=850364
       is(elem.selectionEnd, 4, msg + ".selectionEnd == 4");
       elem.setRangeText("mnk");
       is(elem.value, "0mnk6789ABCDEF", msg + ".value == \"0mnk6789ABCDEF\"");
+      expectedNumOfSelectCalls += 3;
 
       //test SetRange(replacement, start, end, mode) with start > end
       try {
@@ -100,6 +105,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=850364
         opThrows = (ex.name == "IndexSizeError" && ex.code == DOMException.INDEX_SIZE_ERR);
       }
       is(opThrows, true, msg + " should throw IndexSizeError");
+      expectedNumOfSelectCalls += 1;
 
       //test SelectionMode 'select'
       elem.value = "0123456789ABCDEF";
@@ -107,11 +113,13 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=850364
       is(elem.value, "0123xyz9ABCDEF", msg + ".value == \"0123xyz9ABCDEF\"");
       is(elem.selectionStart, 4, msg + ".selectionStart == 4, with \"select\"");
       is(elem.selectionEnd, 7, msg + ".selectionEnd == 7, with \"select\"");
+      expectedNumOfSelectCalls += 1;
 
       elem.setRangeText("pqm", 6, 25, "select");
       is(elem.value, "0123xypqm", msg + ".value == \"0123xypqm\"");
       is(elem.selectionStart, 6, msg + ".selectionStart == 6, with \"select\"");
       is(elem.selectionEnd, 9, msg + ".selectionEnd == 9, with \"select\"");
+      expectedNumOfSelectCalls += 1;
 
       //test SelectionMode 'start'
       elem.value = "0123456789ABCDEF";
@@ -119,11 +127,13 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=850364
       is(elem.value, "0123xyz9ABCDEF", msg + ".value == \"0123xyz9ABCDEF\"");
       is(elem.selectionStart, 4, msg + ".selectionStart == 4, with \"start\"");
       is(elem.selectionEnd, 4, msg + ".selectionEnd == 4, with \"start\"");
+      expectedNumOfSelectCalls += 1;
 
       elem.setRangeText("pqm", 6, 25, "start");
       is(elem.value, "0123xypqm", msg + ".value == \"0123xypqm\"");
       is(elem.selectionStart, 6, msg + ".selectionStart == 6, with \"start\"");
       is(elem.selectionEnd, 6, msg + ".selectionEnd == 6, with \"start\"");
+      expectedNumOfSelectCalls += 1;
 
       //test SelectionMode 'end'
       elem.value = "0123456789ABCDEF";
@@ -131,11 +141,13 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=850364
       is(elem.value, "0123xyz9ABCDEF", msg + ".value == \"0123xyz9ABCDEF\"");
       is(elem.selectionStart, 7, msg + ".selectionStart == 7, with \"end\"");
       is(elem.selectionEnd, 7, msg + ".selectionEnd == 7, with \"end\"");
+      expectedNumOfSelectCalls += 1;
 
       elem.setRangeText("pqm", 6, 25, "end");
       is(elem.value, "0123xypqm", msg + ".value == \"0123xypqm\"");
       is(elem.selectionStart, 9, msg + ".selectionStart == 9, with \"end\"");
       is(elem.selectionEnd, 9, msg + ".selectionEnd == 9, with \"end\"");
+      expectedNumOfSelectCalls += 1;
 
       //test SelectionMode 'preserve' (default)
 
@@ -146,6 +158,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=850364
       is(elem.value, "0Z23456789", msg + ".value == \"0Z23456789\"");
       is(elem.selectionStart, 6, msg + ".selectionStart == 6, with \"preserve\"");
       is(elem.selectionEnd, 9, msg + ".selectionEnd == 9, with \"preserve\"");
+      expectedNumOfSelectCalls += 2;
 
       //subcase: selection{Start|End} < end
       elem.value = "0123456789";
@@ -154,6 +167,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=850364
       is(elem.value, "01QRST9", msg + ".value == \"01QRST9\"");
       is(elem.selectionStart, 2, msg + ".selectionStart == 2, with \"preserve\"");
       is(elem.selectionEnd, 6, msg + ".selectionEnd == 6, with \"preserve\"");
+      expectedNumOfSelectCalls += 2;
 
       //subcase: selectionStart > end, selectionEnd < end
       elem.value = "0123456789";
@@ -162,6 +176,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=850364
       is(elem.value, "0QRST56789", msg + ".value == \"0QRST56789\"");
       is(elem.selectionStart, 1, msg + ".selectionStart == 1, with \"default\"");
       is(elem.selectionEnd, 5, msg + ".selectionEnd == 5, with \"default\"");
+      expectedNumOfSelectCalls += 2;
 
       //subcase: selectionStart < end, selectionEnd > end
       elem.value = "0123456789";
@@ -170,9 +185,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=850364
       is(elem.value, "01QRST6789", msg + ".value == \"01QRST6789\"");
       is(elem.selectionStart, 2, msg + ".selectionStart == 2, with \"default\"");
       is(elem.selectionEnd, 9, msg + ".selectionEnd == 9, with \"default\"");
+      expectedNumOfSelectCalls += 2;
     }
-
-    SimpleTest.finish();
   }
 
   addLoadEvent(TestInputs);

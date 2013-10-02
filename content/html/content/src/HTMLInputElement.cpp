@@ -4523,12 +4523,10 @@ HTMLInputElement::SetSelectionRange(int32_t aSelectionStart,
       aRv = textControlFrame->SetSelectionRange(aSelectionStart, aSelectionEnd, dir);
       if (!aRv.Failed()) {
         aRv = textControlFrame->ScrollSelectionIntoView();
+        nsRefPtr<nsAsyncDOMEvent> event =
+          new nsAsyncDOMEvent(this, NS_LITERAL_STRING("select"), true, false);
+        event->PostDOMEvent();
       }
-
-      nsContentUtils::DispatchTrustedEvent(OwnerDoc(),
-                                           static_cast<nsIDOMHTMLInputElement*>(this),
-                                           NS_LITERAL_STRING("select"), true,
-                                           false);
     }
   }
 }
