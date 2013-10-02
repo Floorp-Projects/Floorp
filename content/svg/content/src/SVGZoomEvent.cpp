@@ -19,9 +19,9 @@ namespace dom {
 
 SVGZoomEvent::SVGZoomEvent(EventTarget* aOwner,
                            nsPresContext* aPresContext,
-                           nsGUIEvent* aEvent)
+                           WidgetGUIEvent* aEvent)
   : nsDOMUIEvent(aOwner, aPresContext,
-                 aEvent ? aEvent : new nsGUIEvent(false, NS_SVG_ZOOM, 0))
+                 aEvent ? aEvent : new WidgetGUIEvent(false, NS_SVG_ZOOM, 0))
   , mPreviousScale(0)
   , mNewScale(0)
 {
@@ -84,7 +84,7 @@ nsresult
 NS_NewDOMSVGZoomEvent(nsIDOMEvent** aInstancePtrResult,
                       mozilla::dom::EventTarget* aOwner,
                       nsPresContext* aPresContext,
-                      nsGUIEvent *aEvent)
+                      mozilla::WidgetGUIEvent* aEvent)
 {
   mozilla::dom::SVGZoomEvent* it =
     new mozilla::dom::SVGZoomEvent(aOwner, aPresContext, aEvent);

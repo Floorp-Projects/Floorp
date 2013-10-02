@@ -135,7 +135,7 @@ HTMLTextAreaElement::Select()
   }
 
   nsEventStatus status = nsEventStatus_eIgnore;
-  nsGUIEvent event(true, NS_FORM_SELECTED, nullptr);
+  WidgetGUIEvent event(true, NS_FORM_SELECTED, nullptr);
   // XXXbz HTMLInputElement guards against this reentering; shouldn't we?
   nsEventDispatcher::Dispatch(static_cast<nsIContent*>(this), presContext,
                               &event, nullptr, &status);
@@ -478,8 +478,8 @@ HTMLTextAreaElement::PreHandleEvent(nsEventChainPreVisitor& aVisitor)
   }
   if (aVisitor.mEvent->message == NS_MOUSE_CLICK &&
       aVisitor.mEvent->eventStructType == NS_MOUSE_EVENT &&
-      static_cast<nsMouseEvent*>(aVisitor.mEvent)->button ==
-        nsMouseEvent::eMiddleButton) {
+      static_cast<WidgetMouseEvent*>(aVisitor.mEvent)->button ==
+        WidgetMouseEvent::eMiddleButton) {
     aVisitor.mEvent->mFlags.mNoContentDispatch = false;
   }
 

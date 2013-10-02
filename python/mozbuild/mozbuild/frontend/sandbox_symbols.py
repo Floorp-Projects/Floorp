@@ -56,27 +56,38 @@ def doc_to_paragraphs(doc):
 #
 # Each variable is a tuple of:
 #
-#   (storage_type, input_types, default_value, docs)
+#   (storage_type, input_types, default_value, docs, tier)
 #
+# Tier says for which specific tier the variable has an effect.
+# Valid tiers are:
+# - 'export'
+# - 'compile': everything in relation with compiling objects.
+# - 'binaries': everything in relation with linking objects, producing
+#      programs and libraries.
+# - 'libs': everything that is not compile or binaries and that has
+#      traditionally been in the libs tier.
+# - 'tools'
+# A value of None means the variable has no direct effect on any tier.
+
 VARIABLES = {
     # Variables controlling reading of other frontend files.
     'ASFILES': (StrictOrderingOnAppendList, list, [],
         """Assembly file sources.
 
         This variable contains a list of files to invoke the assembler on.
-        """),
+        """, 'compile'),
 
     'CMMSRCS': (StrictOrderingOnAppendList, list, [],
         """Sources to compile with the Objective C/C++ compiler.
 
         This variable contains a list of objective-C++ sources to compile.
-        """),
+        """, 'compile'),
 
     'CSRCS': (StrictOrderingOnAppendList, list, [],
         """C code source files.
 
         This variable contains a list of C source files to compile.
-        """),
+        """, 'compile'),
 
     'DEFINES': (OrderedDict, dict, OrderedDict(),
         """Dictionary of compiler defines to declare.
@@ -102,7 +113,7 @@ VARIABLES = {
             'MOZ_EXTENSIONS_DB_SCHEMA': 15,
             'DLL_SUFFIX': '".so"',
         })
-        """),
+        """, None),
 
     'DIRS': (list, list, [],
         """Child directories to descend into looking for build frontend files.
@@ -116,17 +127,17 @@ VARIABLES = {
         Values are relative paths. They can be multiple directory levels
         above or below. Use ".." for parent directories and "/" for path
         delimiters.
-        """),
+        """, None),
 
     'EXPORT_LIBRARY': (bool, bool, False,
         """Install the library to the static libraries folder.
-        """),
+        """, None),
 
     'EXTRA_COMPONENTS': (StrictOrderingOnAppendList, list, [],
         """Additional component files to distribute.
 
        This variable contains a list of files to copy into $(FINAL_TARGET)/components/.
-        """),
+        """, 'libs'),
 
     'EXTRA_JS_MODULES': (StrictOrderingOnAppendList, list, [],
         """Additional JavaScript files to distribute.
@@ -134,7 +145,7 @@ VARIABLES = {
         This variable contains a list of files to copy into
         $(FINAL_TARGET)/$(JS_MODULES_PATH). JS_MODULES_PATH defaults to
         "modules" if left undefined.
-        """),
+        """, 'libs'),
 
     'EXTRA_PP_JS_MODULES': (StrictOrderingOnAppendList, list, [],
         """Additional JavaScript files to distribute.
@@ -142,70 +153,70 @@ VARIABLES = {
         This variable contains a list of files to copy into
         $(FINAL_TARGET)/$(JS_MODULES_PATH), after preprocessing.
         JS_MODULES_PATH defaults to "modules" if left undefined.
-        """),
+        """, 'libs'),
 
     'EXTRA_PP_COMPONENTS': (StrictOrderingOnAppendList, list, [],
         """Javascript XPCOM files.
 
        This variable contains a list of files to preprocess.  Generated
        files will be installed in the /components directory of the distribution.
-        """),
+        """, 'libs'),
 
     'CPP_UNIT_TESTS': (StrictOrderingOnAppendList, list, [],
         """C++ source files for unit tests.
 
         This is a list of C++ unit test sources. Entries must be files that
         exist. These generally have .cpp extensions.
-        """),
+        """, 'binaries'),
 
     'FAIL_ON_WARNINGS': (bool, bool, False,
         """Whether to treat warnings as errors.
-        """),
+        """, None),
 
     'FORCE_SHARED_LIB': (bool, bool, False,
         """Whether the library in this directory is a shared library.
-        """),
+        """, None),
 
     'FORCE_STATIC_LIB': (bool, bool, False,
         """Whether the library in this directory is a static library.
-        """),
+        """, None),
 
     'GTEST_C_SOURCES': (StrictOrderingOnAppendList, list, [],
         """C code source files for GTest unit tests.
 
         This variable contains a list of C GTEST unit test source files to
         compile.
-        """),
+        """, 'compile'),
 
     'GTEST_CMM_SOURCES': (StrictOrderingOnAppendList, list, [],
         """Sources for GTest unit tests to compile with the Objective C/C++ compiler.
 
         This variable contains a list of objective-C++ GTest unit test sources
         to compile.
-        """),
+        """, 'compile'),
 
     'GTEST_CPP_SOURCES': (list, list, [],
         """C++ source files for GTest unit tests.
 
         This is a list of C++ GTest unit test sources. Entries must be files
         that exist. These generally have .cpp, .cc, or .cxx extensions.
-        """),
+        """, 'compile'),
 
     'HOST_CPPSRCS': (StrictOrderingOnAppendList, list, [],
         """C++ source files to compile with the host compiler.
 
         This variable contains a list of C++ source files to compile.
-        """),
+        """, 'compile'),
 
     'HOST_CSRCS': (StrictOrderingOnAppendList, list, [],
         """C source files to compile with the host compiler.
 
         This variable contains a list of C source files to compile.
-        """),
+        """, 'compile'),
 
     'IS_COMPONENT': (bool, bool, False,
         """Whether the library contains a binary XPCOM component manifest.
-        """),
+        """, None),
 
     'PARALLEL_DIRS': (list, list, [],
         """A parallel version of DIRS.
@@ -214,11 +225,11 @@ VARIABLES = {
         from recursive makefiles can be made. Once the build system has been
         converted to not use Makefile's for the build frontend, this will
         likely go away.
-        """),
+        """, None),
 
     'HOST_LIBRARY_NAME': (unicode, unicode, "",
         """Name of target library generated when cross compiling.
-        """),
+        """, 'binaries'),
 
     'JS_MODULES_PATH': (unicode, unicode, "",
         """Sub-directory of $(FINAL_TARGET) to install EXTRA_JS_MODULES.
@@ -227,7 +238,7 @@ VARIABLES = {
         $(FINAL_TARGET)/$(JS_MODULES_PATH). This variable does not
         need to be defined if the desired destination directory is
         $(FINAL_TARGET)/modules.
-        """),
+        """, None),
 
     'LIBRARY_NAME': (unicode, unicode, "",
         """The name of the library generated for a directory.
@@ -237,57 +248,57 @@ VARIABLES = {
         LIBRARY_NAME = 'xpcomsample'
         would generate example/components/libxpcomsample.so on Linux, or
         example/components/xpcomsample.lib on Windows.
-        """),
+        """, 'binaries'),
 
     'LIBS': (StrictOrderingOnAppendList, list, [],
         """Linker libraries and flags.
 
         A list of libraries and flags to include when linking.
-        """),
+        """, None),
 
     'LIBXUL_LIBRARY': (bool, bool, False,
         """Whether the library in this directory is linked into libxul.
 
         Implies MOZILLA_INTERNAL_API and FORCE_STATIC_LIB.
-        """),
+        """, None),
 
     'LOCAL_INCLUDES': (StrictOrderingOnAppendList, list, [],
         """Additional directories to be searched for include files by the compiler.
-        """),
+        """, None),
 
     'MSVC_ENABLE_PGO': (bool, bool, False,
         """Whether profile-guided optimization is enabled in this directory.
-        """),
+        """, None),
 
     'OS_LIBS': (list, list, [],
         """System link libraries.
 
         This variable contains a list of system libaries to link against.
-        """),
+        """, None),
 
     'SDK_LIBRARY': (StrictOrderingOnAppendList, list, [],
         """Elements of the distributed SDK.
 
         Files on this list will be copied into SDK_LIB_DIR ($DIST/sdk/lib).
-        """),
+        """, None),
 
     'SHARED_LIBRARY_LIBS': (StrictOrderingOnAppendList, list, [],
         """Libraries linked into a shared library.
 
         A list of static library paths which should be linked into the current shared library.
-        """),
+        """, None),
 
     'SIMPLE_PROGRAMS': (StrictOrderingOnAppendList, list, [],
         """Generate a list of binaries from source.
 
         A list of sources, one per program, to compile & link with libs into standalone programs.
-        """),
+        """, 'binaries'),
 
     'SSRCS': (StrictOrderingOnAppendList, list, [],
         """Assembly source files.
 
         This variable contains a list of files to invoke the assembler on.
-        """),
+        """, 'compile'),
 
     'TOOL_DIRS': (list, list, [],
         """Like DIRS but for tools.
@@ -295,7 +306,7 @@ VARIABLES = {
         Tools are for pieces of the build system that aren't required to
         produce a working binary (in theory). They provide things like test
         code and utilities.
-        """),
+        """, None),
 
     'TEST_DIRS': (list, list, [],
         """Like DIRS but only for directories that contain test-only code.
@@ -304,11 +315,11 @@ VARIABLES = {
 
         This variable may go away once the transition away from Makefiles is
         complete.
-        """),
+        """, None),
 
     'TEST_TOOL_DIRS': (list, list, [],
         """TOOL_DIRS that is only executed if tests are enabled.
-        """),
+        """, None),
 
 
     'TIERS': (OrderedDict, dict, OrderedDict(),
@@ -327,7 +338,7 @@ VARIABLES = {
 
         This variable is typically not populated directly. Instead, it is
         populated by calling add_tier_dir().
-        """),
+        """, None),
 
     'EXTERNAL_MAKE_DIRS': (list, list, [],
         """Directories that build with make but don't use moz.build files.
@@ -335,11 +346,11 @@ VARIABLES = {
         This is like DIRS except it implies that |make| is used to build the
         directory and that the directory does not define itself with moz.build
         files.
-        """),
+        """, None),
 
     'PARALLEL_EXTERNAL_MAKE_DIRS': (list, list, [],
         """Parallel version of EXTERNAL_MAKE_DIRS.
-        """),
+        """, None),
 
     'CONFIGURE_SUBST_FILES': (StrictOrderingOnAppendList, list, [],
         """Output files that will be generated using configure-like substitution.
@@ -349,7 +360,7 @@ VARIABLES = {
         {path}.in. The contents of this file will be read and variable patterns
         like @foo@ will be substituted with the values of the AC_SUBST
         variables declared during configure.
-        """),
+        """, None),
 
     'MODULE': (unicode, unicode, "",
         """Module name.
@@ -357,7 +368,7 @@ VARIABLES = {
         Historically, this variable was used to describe where to install header
         files, but that feature is now handled by EXPORTS_NAMESPACES. MODULE
         will likely be removed in the future.
-        """),
+        """, None),
 
     'EXPORTS': (HierarchicalStringList, list, HierarchicalStringList(),
         """List of files to be exported, and in which subdirectories.
@@ -372,7 +383,7 @@ VARIABLES = {
 
         EXPORTS += ['foo.h']
         EXPORTS.mozilla.dom += ['bar.h']
-        """),
+        """, None),
 
     'PROGRAM' : (unicode, unicode, "",
         """Compiled executable name.
@@ -380,21 +391,21 @@ VARIABLES = {
         If the configuration token 'BIN_SUFFIX' is set, its value will be
         automatically appended to PROGRAM. If PROGRAM already ends with
         BIN_SUFFIX, PROGRAM will remain unchanged.
-        """),
+        """, 'binaries'),
 
     'CPP_SOURCES': (list, list, [],
         """C++ source file list.
 
         This is a list of C++ files to be compiled. Entries must be files that
         exist. These generally have .cpp, .cc, or .cxx extensions.
-        """),
+        """, 'compile'),
 
     'NO_DIST_INSTALL': (bool, bool, False,
         """Disable installing certain files into the distribution directory.
 
         If present, some files defined by other variables won't be
         distributed/shipped with the produced build.
-        """),
+        """, None),
 
     # IDL Generation.
     'XPIDL_SOURCES': (StrictOrderingOnAppendList, list, [],
@@ -403,7 +414,7 @@ VARIABLES = {
         This is a list of files that define XPCOM interface definitions.
         Entries must be files that exist. Entries are almost certainly .idl
         files.
-        """),
+        """, None),
 
     'XPIDL_MODULE': (unicode, unicode, "",
         """XPCOM Interface Definition Module Name.
@@ -411,76 +422,76 @@ VARIABLES = {
         This is the name of the .xpt file that is created by linking
         XPIDL_SOURCES together. If unspecified, it defaults to be the same as
         MODULE.
-        """),
+        """, None),
 
     'IPDL_SOURCES': (StrictOrderingOnAppendList, list, [],
         """IPDL source files.
 
         These are .ipdl files that will be parsed and converted to .cpp files.
-        """),
+        """, 'export'),
 
     'WEBIDL_FILES': (StrictOrderingOnAppendList, list, [],
         """WebIDL source files.
 
         These will be parsed and converted to .cpp and .h files.
-        """),
+        """, 'export'),
 
     'GENERATED_EVENTS_WEBIDL_FILES': (StrictOrderingOnAppendList, list, [],
         """WebIDL source files for generated events.
 
         These will be parsed and converted to .cpp and .h files.
-        """),
+        """, 'export'),
 
     'TEST_WEBIDL_FILES': (StrictOrderingOnAppendList, list, [],
          """Test WebIDL source files.
 
          These will be parsed and converted to .cpp and .h files if tests are
          enabled.
-         """),
+         """, 'export'),
 
     'GENERATED_WEBIDL_FILES': (StrictOrderingOnAppendList, list, [],
          """Generated WebIDL source files.
 
          These will be generated from some other files.
-         """),
+         """, 'export'),
 
     'PREPROCESSED_TEST_WEBIDL_FILES': (StrictOrderingOnAppendList, list, [],
          """Preprocessed test WebIDL source files.
 
          These will be preprocessed, then parsed and converted to .cpp
          and .h files if tests are enabled.
-         """),
+         """, 'export'),
 
     'PREPROCESSED_WEBIDL_FILES': (StrictOrderingOnAppendList, list, [],
          """Preprocessed WebIDL source files.
 
          These will be preprocessed before being parsed and converted.
-         """),
+         """, 'export'),
 
     # Test declaration.
     'A11Y_MANIFESTS': (StrictOrderingOnAppendList, list, [],
         """List of manifest files defining a11y tests.
-        """),
+        """, None),
 
     'BROWSER_CHROME_MANIFESTS': (StrictOrderingOnAppendList, list, [],
         """List of manifest files defining browser chrome tests.
-        """),
+        """, None),
 
     'MOCHITEST_MANIFESTS': (StrictOrderingOnAppendList, list, [],
         """List of manifest files defining mochitest tests.
-        """),
+        """, None),
 
     'MOCHITEST_CHROME_MANIFESTS': (StrictOrderingOnAppendList, list, [],
         """List of manifest files defining mochitest chrome tests.
-        """),
+        """, None),
 
     'WEBRTC_SIGNALLING_TEST_MANIFESTS': (StrictOrderingOnAppendList, list, [],
         """List of manifest files defining WebRTC signalling tests.
-        """),
+        """, None),
 
     'XPCSHELL_TESTS_MANIFESTS': (StrictOrderingOnAppendList, list, [],
         """List of manifest files defining xpcshell tests.
-        """),
+        """, None),
 }
 
 # The set of functions exposed to the sandbox.

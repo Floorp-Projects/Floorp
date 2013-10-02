@@ -18,6 +18,7 @@
 #include "nsCOMPtr.h"
 #include "nsCycleCollectionParticipant.h"
 #include "nsError.h"
+#include "mozilla/dom/DOMRect.h"
 #include "mozilla/dom/Element.h"
 #include "nsISupportsImpl.h"
 #include "nsStyledElement.h"

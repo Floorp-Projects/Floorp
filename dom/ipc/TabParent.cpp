@@ -602,7 +602,7 @@ TabParent::SendKeyEvent(const nsAString& aType,
 }
 
 bool
-TabParent::MapEventCoordinatesForChildProcess(nsEvent* aEvent)
+TabParent::MapEventCoordinatesForChildProcess(WidgetEvent* aEvent)
 {
   nsRefPtr<nsFrameLoader> frameLoader = GetFrameLoader();
   if (!frameLoader) {
@@ -615,7 +615,7 @@ TabParent::MapEventCoordinatesForChildProcess(nsEvent* aEvent)
 
 void
 TabParent::MapEventCoordinatesForChildProcess(
-  const LayoutDeviceIntPoint& aOffset, nsEvent* aEvent)
+  const LayoutDeviceIntPoint& aOffset, WidgetEvent* aEvent)
 {
   if (aEvent->eventStructType != NS_TOUCH_EVENT) {
     aEvent->refPoint = aOffset;
@@ -634,12 +634,12 @@ TabParent::MapEventCoordinatesForChildProcess(
   }
 }
 
-bool TabParent::SendRealMouseEvent(nsMouseEvent& event)
+bool TabParent::SendRealMouseEvent(WidgetMouseEvent& event)
 {
   if (mIsDestroyed) {
     return false;
   }
-  nsMouseEvent e(event);
+  WidgetMouseEvent e(event);
   MaybeForwardEventToRenderFrame(event, &e);
   if (!MapEventCoordinatesForChildProcess(&e)) {
     return false;
@@ -727,7 +727,7 @@ TabParent::GetEventCapturer()
 }
 
 bool
-TabParent::TryCapture(const nsGUIEvent& aEvent)
+TabParent::TryCapture(const WidgetGUIEvent& aEvent)
 {
   MOZ_ASSERT(sEventCapturer == this && mEventCaptureDepth > 0);
 

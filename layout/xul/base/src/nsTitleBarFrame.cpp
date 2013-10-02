@@ -57,8 +57,8 @@ nsTitleBarFrame::BuildDisplayListForChildren(nsDisplayListBuilder*   aBuilder,
 
 NS_IMETHODIMP
 nsTitleBarFrame::HandleEvent(nsPresContext* aPresContext,
-                                      nsGUIEvent* aEvent,
-                                      nsEventStatus* aEventStatus)
+                             WidgetGUIEvent* aEvent,
+                             nsEventStatus* aEventStatus)
 {
   NS_ENSURE_ARG_POINTER(aEventStatus);
   if (nsEventStatus_eConsumeNoDefault == *aEventStatus) {
@@ -71,9 +71,8 @@ nsTitleBarFrame::HandleEvent(nsPresContext* aPresContext,
 
    case NS_MOUSE_BUTTON_DOWN:  {
        if (aEvent->eventStructType == NS_MOUSE_EVENT &&
-           static_cast<nsMouseEvent*>(aEvent)->button ==
-             nsMouseEvent::eLeftButton)
-       {
+           static_cast<WidgetMouseEvent*>(aEvent)->button ==
+             WidgetMouseEvent::eLeftButton) {
          // titlebar has no effect in non-chrome shells
          nsCOMPtr<nsISupports> cont = aPresContext->GetContainer();
          nsCOMPtr<nsIDocShellTreeItem> dsti = do_QueryInterface(cont);
@@ -101,9 +100,8 @@ nsTitleBarFrame::HandleEvent(nsPresContext* aPresContext,
 
    case NS_MOUSE_BUTTON_UP: {
        if(mTrackingMouseMove && aEvent->eventStructType == NS_MOUSE_EVENT &&
-          static_cast<nsMouseEvent*>(aEvent)->button ==
-            nsMouseEvent::eLeftButton)
-       {
+          static_cast<WidgetMouseEvent*>(aEvent)->button ==
+            WidgetMouseEvent::eLeftButton) {
          // we're done tracking.
          mTrackingMouseMove = false;
 
@@ -170,7 +168,8 @@ nsTitleBarFrame::HandleEvent(nsPresContext* aPresContext,
 }
 
 void
-nsTitleBarFrame::MouseClicked(nsPresContext* aPresContext, nsGUIEvent* aEvent)
+nsTitleBarFrame::MouseClicked(nsPresContext* aPresContext,
+                              WidgetGUIEvent* aEvent)
 {
   // Execute the oncommand event handler.
   nsContentUtils::DispatchXULCommand(mContent,

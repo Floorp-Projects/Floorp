@@ -112,7 +112,7 @@ class MozbuildFileCommands(object):
         return 0
 
     def variable_reference(self, v):
-        st_typ, in_type, default, doc = VARIABLES[v]
+        st_typ, in_type, default, doc, tier = VARIABLES[v]
 
         print(v)
         print('=' * len(v))

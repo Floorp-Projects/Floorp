@@ -848,8 +848,8 @@ nsListControlFrame::CaptureMouseEvents(bool aGrabMouseEvents)
 
 //---------------------------------------------------------
 NS_IMETHODIMP 
-nsListControlFrame::HandleEvent(nsPresContext* aPresContext, 
-                                nsGUIEvent*    aEvent,
+nsListControlFrame::HandleEvent(nsPresContext* aPresContext,
+                                WidgetGUIEvent* aEvent,
                                 nsEventStatus* aEventStatus)
 {
   NS_ENSURE_ARG_POINTER(aEventStatus);
@@ -1607,8 +1607,8 @@ nsListControlFrame::MouseUp(nsIDOMEvent* aMouseEvent)
     // depeneding on whether the clickCount is non-zero.
     // So we cheat here by either setting or unsetting the clcikCount in the native event
     // so the right thing happens for the onclick event
-    nsMouseEvent * mouseEvent;
-    mouseEvent = (nsMouseEvent *) aMouseEvent->GetInternalNSEvent();
+    WidgetMouseEvent* mouseEvent =
+      static_cast<WidgetMouseEvent*>(aMouseEvent->GetInternalNSEvent());
 
     int32_t selectedIndex;
     if (NS_SUCCEEDED(GetIndexFromDOMEvent(aMouseEvent, selectedIndex))) {
@@ -2331,7 +2331,7 @@ nsListControlFrame::KeyPress(nsIDOMEvent* aKeyEvent)
     uint32_t index = (i + startIndex) % numOptions;
     nsRefPtr<dom::HTMLOptionElement> optionElement =
       options->ItemAsOption(index);
-    if (!optionElement) {
+    if (!optionElement || !optionElement->GetPrimaryFrame()) {
       continue;
     }
 

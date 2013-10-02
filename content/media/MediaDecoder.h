@@ -533,6 +533,7 @@ public:
 
   // Invalidate the frame.
   void Invalidate();
+  void InvalidateWithFlags(uint32_t aFlags);
 
   // Suspend any media downloads that are in progress. Called by the
   // media element when it is sent to the bfcache, or when we need
