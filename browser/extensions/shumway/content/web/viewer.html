@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<!--
+Copyright 2013 Mozilla Foundation
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+-->
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+    <base href=""/>
+    <title>Shumway viewer</title>
+
+    <style>
+      body {
+        margin: 0;
+        overflow: hidden;
+        background-color: rgba(0, 0, 0, 0.78);
+      }
+
+      body.started {
+        background-color: transparent;
+      }
+
+      #viewer {
+        position:fixed !important;
+        left:0;top:0;bottom:0;right:0;
+        overflow: hidden;
+      }
+
+      #fallback {
+        display: none;
+      }
+
+      #fallback.enabled {
+        display: block;
+        position:fixed;
+        color: white;
+        right: 0px; bottom: 0px; width: 70px; height: 16px;
+        padding: 4px;
+        padding-top: 8px;
+        background-color: rgba(0, 0, 0, 0.62);
+        font: bold 10px sans-serif;
+        text-align: center;
+        text-decoration: none;
+      }
+
+      #fallback .icon {
+        display: none;
+        color: white;
+      }
+
+      #fallback.enabled:hover .icon {
+        display: inline-block;
+      }
+
+      #fallback:hover {
+        background-color: rgb(0, 0, 0);
+      }
+
+      @media screen and (max-width: 100px), screen and (max-height: 40px) {
+        body.started #fallback {
+          display: none;
+        }
+      }
+    </style>
+  </head>
+
+  <body contextmenu="shumwayMenu">
+    <div id="viewer"></div>
+    <section>
+      <a id="fallback" href="#">Shumway <span class="icon">&times;</span></a>
+      <menu type="context" id="shumwayMenu">
+        <menuitem label="Show URL" id="showURLMenu"></menuitem>
+        <menuitem label="Copy Profile" id="copyProfileMenu"></menuitem>
+        <menuitem label="Fallback to Flash" id="fallbackMenu" hidden></menuitem>
+      </menu>
+    </section>
+  </body>
+</html>

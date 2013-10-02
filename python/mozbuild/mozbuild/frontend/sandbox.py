@@ -124,8 +124,8 @@ class GlobalNamespace(dict):
 
         # We don't need to check for name.isupper() here because LocalNamespace
         # only sends variables our way if isupper() is True.
-        stored_type, input_type, default, docs = \
-            self._allowed_variables.get(name, (None, None, None, None))
+        stored_type, input_type, default, docs, tier = \
+            self._allowed_variables.get(name, (None, None, None, None, None))
 
         # Variable is unknown.
         if stored_type is None:
@@ -267,6 +267,7 @@ class Sandbox(object):
         """
         self._globals = GlobalNamespace(allowed_variables=allowed_variables,
             builtins=builtins)
+        self._allowed_variables = allowed_variables
         self._locals = LocalNamespace(self._globals)
         self._execution_stack = []
         self.main_path = None
@@ -363,3 +364,8 @@ class Sandbox(object):
 
     def get(self, key, default=None):
         return self._globals.get(key, default)
+
+    def get_affected_tiers(self):
+        tiers = (self._allowed_variables[key][4] for key in self
+                 if key in self._allowed_variables)
+        return set(tier for tier in tiers if tier)

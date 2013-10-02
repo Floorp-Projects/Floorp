@@ -30,6 +30,7 @@ using mozilla::gfx::SharedDIBSurface;
 #include "mozilla/Util.h"
 #include "mozilla/ipc/MessageChannel.h"
 #include "mozilla/AutoRestore.h"
+#include "ImageContainer.h"
 
 using namespace mozilla;
 using mozilla::ipc::ProcessChild;

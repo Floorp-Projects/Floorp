@@ -102,7 +102,7 @@ nsresult
 NS_NewDOMDeviceMotionEvent(nsIDOMEvent** aInstancePtrResult,
                            mozilla::dom::EventTarget* aOwner,
                            nsPresContext* aPresContext,
-                           nsEvent *aEvent) 
+                           WidgetEvent* aEvent) 
 {
   NS_ENSURE_ARG_POINTER(aInstancePtrResult);
 

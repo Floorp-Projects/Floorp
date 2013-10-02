@@ -943,6 +943,7 @@ public:
   }
 
   static void DestroySurface(void* aPropertyValue);
+  static void DestroyDT(void* aPropertyValue);
 
 #ifdef _MSC_VER
 // XXX Workaround MSVC issue by making the static FramePropertyDescriptor
@@ -989,6 +990,7 @@ public:
   NS_DECLARE_FRAME_PROPERTY(LineBaselineOffset, nullptr)
 
   NS_DECLARE_FRAME_PROPERTY(CachedBackgroundImage, DestroySurface)
+  NS_DECLARE_FRAME_PROPERTY(CachedBackgroundImageDT, DestroyDT)
 
   NS_DECLARE_FRAME_PROPERTY(InvalidationRect, DestroyRect)
 
@@ -1359,14 +1361,14 @@ public:
    * is. Does it cause the event to continue propagating through the frame hierarchy
    * or is it just returned to the widgets?
    *
-   * @see     nsGUIEvent
+   * @see     WidgetGUIEvent
    * @see     nsEventStatus
    */
   NS_IMETHOD  HandleEvent(nsPresContext* aPresContext,
-                          nsGUIEvent*     aEvent,
-                          nsEventStatus*  aEventStatus) = 0;
+                          mozilla::WidgetGUIEvent* aEvent,
+                          nsEventStatus* aEventStatus) = 0;
 
-  NS_IMETHOD  GetContentForEvent(nsEvent* aEvent,
+  NS_IMETHOD  GetContentForEvent(mozilla::WidgetEvent* aEvent,
                                  nsIContent** aContent) = 0;
 
   // This structure keeps track of the content node and offsets associated with
@@ -1379,6 +1381,9 @@ public:
   // that need the beginning and end of the object, the StartOffset and 
   // EndOffset helpers can be used.
   struct MOZ_STACK_CLASS ContentOffsets {
+    ContentOffsets();
+    ContentOffsets(const ContentOffsets&);
+    ~ContentOffsets();
     nsCOMPtr<nsIContent> content;
     bool IsNull() { return !content; }
     int32_t offset;
@@ -2313,9 +2318,15 @@ public:
    *
    * @param aDamageRect Area of the layer to invalidate.
    * @param aDisplayItemKey Display item type.
+   * @param aFlags UPDATE_IS_ASYNC : Will skip the invalidation
+   * if the found layer is being composited by a remote
+   * compositor.
    * @return Layer, if found, nullptr otherwise.
    */
-  Layer* InvalidateLayer(uint32_t aDisplayItemKey, const nsIntRect* aDamageRect = nullptr);
+  enum {
+    UPDATE_IS_ASYNC = 1 << 0
+  };
+  Layer* InvalidateLayer(uint32_t aDisplayItemKey, const nsIntRect* aDamageRect = nullptr, uint32_t aFlags = 0);
 
   /**
    * Returns a rect that encompasses everything that might be painted by
@@ -2575,13 +2586,8 @@ public:
    * element and not an SVG element.
    * XXX maybe check IsTransformed()?
    */
-  bool IsPseudoStackingContextFromStyle() {
-    const nsStyleDisplay* disp = StyleDisplay();
-    return disp->mOpacity != 1.0f ||
-           disp->IsPositioned(this) ||
-           disp->IsFloating(this);
-  }
-  
+  bool IsPseudoStackingContextFromStyle();
+
   virtual bool HonorPrintBackgroundSettings() { return true; }
 
   /**
@@ -2809,9 +2815,8 @@ NS_PTR_TO_INT32(frame->Properties().Get(nsIFrame::ParagraphDepthProperty()))
   // being refactored. DO NOT USE OUTSIDE OF XUL.
 
   struct CaretPosition {
-    CaretPosition() :
-      mContentOffset(0)
-    {}
+    CaretPosition();
+    ~CaretPosition();
 
     nsCOMPtr<nsIContent> mResultContent;
     int32_t              mContentOffset;
@@ -3498,56 +3503,6 @@ nsIFrame::IsFrameListSorted(nsFrameList& aFrameList)
 
   // We made it to the end without returning early, so the list is sorted.
   return true;
-}
-
-#include "nsStyleStructInlines.h"
-
-bool
-nsIFrame::IsFloating() const
-{
-  return StyleDisplay()->IsFloating(this);
-}
-
-bool
-nsIFrame::IsPositioned() const
-{
-  return StyleDisplay()->IsPositioned(this);
-}
-
-bool
-nsIFrame::IsRelativelyPositioned() const
-{
-  return StyleDisplay()->IsRelativelyPositioned(this);
-}
-
-bool
-nsIFrame::IsAbsolutelyPositioned() const
-{
-  return StyleDisplay()->IsAbsolutelyPositioned(this);
-}
-
-bool
-nsIFrame::IsBlockInside() const
-{
-  return StyleDisplay()->IsBlockInside(this);
-}
-
-bool
-nsIFrame::IsBlockOutside() const
-{
-  return StyleDisplay()->IsBlockOutside(this);
-}
-
-bool
-nsIFrame::IsInlineOutside() const
-{
-  return StyleDisplay()->IsInlineOutside(this);
-}
-
-uint8_t
-nsIFrame::GetDisplay() const
-{
-  return StyleDisplay()->GetDisplay(this);
 }
 
 #endif /* nsIFrame_h___ */

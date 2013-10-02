@@ -88,8 +88,8 @@ public:
                         nsIntPoint& aCellIndex);
 
   NS_IMETHOD HandleEvent(nsPresContext* aPresContext, 
-                         nsGUIEvent*     aEvent,
-                         nsEventStatus*  aEventStatus) MOZ_OVERRIDE;
+                         mozilla::WidgetGUIEvent* aEvent,
+                         nsEventStatus* aEventStatus) MOZ_OVERRIDE;
 
   NS_IMETHOD GetCursor(const nsPoint&    aPoint,
                        nsIFrame::Cursor& aCursor) MOZ_OVERRIDE;
@@ -110,12 +110,12 @@ public:
 
   virtual bool IsLeaf() const MOZ_OVERRIDE;
   
-  void StartMouseDrag(nsPresContext*            aPresContext, 
-                      nsHTMLFramesetBorderFrame* aBorder, 
-                      nsGUIEvent*                aEvent);
+  void StartMouseDrag(nsPresContext* aPresContext,
+                      nsHTMLFramesetBorderFrame* aBorder,
+                      mozilla::WidgetGUIEvent* aEvent);
 
   void MouseDrag(nsPresContext* aPresContext, 
-                 nsGUIEvent*     aEvent);
+                 mozilla::WidgetGUIEvent* aEvent);
 
   void EndMouseDrag(nsPresContext* aPresContext);
 

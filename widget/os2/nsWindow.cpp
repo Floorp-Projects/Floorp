@@ -403,7 +403,7 @@ NS_METHOD nsWindow::Create(nsIWidget* aParent,
   SetNSWindowPtr(mWnd, this);
 
   // Finalize the widget creation process.
-  nsGUIEvent event(true, NS_CREATE, this);
+  WidgetGUIEvent event(true, NS_CREATE, this);
   InitEvent(event);
   DispatchWindowEvent(&event);
 
@@ -1701,7 +1701,7 @@ MRESULT nsWindow::ProcessMessage(ULONG msg, MPARAM mp1, MPARAM mp2)
     case WM_CLOSE:
     case WM_QUIT: {
       mWindowState |= nsWindowState_eClosing;
-      nsGUIEvent event(true, NS_XUL_CLOSE, this);
+      WidgetGUIEvent event(true, NS_XUL_CLOSE, this);
       InitEvent(event);
       DispatchWindowEvent(&event);
       // abort window closure
@@ -1755,35 +1755,35 @@ MRESULT nsWindow::ProcessMessage(ULONG msg, MPARAM mp1, MPARAM mp2)
     case WM_BUTTON2DOWN:
       WinSetCapture(HWND_DESKTOP, mWnd);
       isDone = DispatchMouseEvent(NS_MOUSE_BUTTON_DOWN, mp1, mp2, false,
-                                  nsMouseEvent::eRightButton);
+                                  WidgetMouseEvent::eRightButton);
       break;
 
     case WM_BUTTON2UP:
       WinSetCapture(HWND_DESKTOP, 0);
       isDone = DispatchMouseEvent(NS_MOUSE_BUTTON_UP, mp1, mp2, false,
-                                  nsMouseEvent::eRightButton);
+                                  WidgetMouseEvent::eRightButton);
       break;
 
     case WM_BUTTON2DBLCLK:
       isDone = DispatchMouseEvent(NS_MOUSE_DOUBLECLICK, mp1, mp2,
-                                  false, nsMouseEvent::eRightButton);
+                                  false, WidgetMouseEvent::eRightButton);
       break;
 
     case WM_BUTTON3DOWN:
       WinSetCapture(HWND_DESKTOP, mWnd);
       isDone = DispatchMouseEvent(NS_MOUSE_BUTTON_DOWN, mp1, mp2, false,
-                                  nsMouseEvent::eMiddleButton);
+                                  WidgetMouseEvent::eMiddleButton);
       break;
 
     case WM_BUTTON3UP:
       WinSetCapture(HWND_DESKTOP, 0);
       isDone = DispatchMouseEvent(NS_MOUSE_BUTTON_UP, mp1, mp2, false,
-                                  nsMouseEvent::eMiddleButton);
+                                  WidgetMouseEvent::eMiddleButton);
       break;
 
     case WM_BUTTON3DBLCLK:
       isDone = DispatchMouseEvent(NS_MOUSE_DOUBLECLICK, mp1, mp2, false,
-                                  nsMouseEvent::eMiddleButton);
+                                  WidgetMouseEvent::eMiddleButton);
       break;
 
     case WM_CONTEXTMENU:
@@ -1793,11 +1793,11 @@ MRESULT nsWindow::ProcessMessage(ULONG msg, MPARAM mp1, MPARAM mp2)
           WinSendMsg(hFocus, msg, mp1, mp2);
         } else {
           isDone = DispatchMouseEvent(NS_CONTEXTMENU, mp1, mp2, true,
-                                      nsMouseEvent::eLeftButton);
+                                      WidgetMouseEvent::eLeftButton);
         }
       } else {
         isDone = DispatchMouseEvent(NS_CONTEXTMENU, mp1, mp2, false,
-                                    nsMouseEvent::eRightButton);
+                                    WidgetMouseEvent::eRightButton);
       }
       break;
 
@@ -2159,7 +2159,7 @@ bool nsWindow::OnMouseChord(MPARAM mp1, MPARAM mp2)
 
   // XXX Using keypress event here is wrong approach, this should be replaced
   //     with content command event.
-  nsKeyEvent event(true, NS_KEY_PRESS, this);
+  WidgetKeyboardEvent event(true, NS_KEY_PRESS, this);
   nsIntPoint point(0,0);
   InitEvent(event, &point);
 
@@ -2441,13 +2441,13 @@ bool nsWindow::OnQueryConvertPos(MPARAM mp1, MRESULT& mresult)
 
   nsIntPoint point(0, 0);
 
-  nsQueryContentEvent selection(true, NS_QUERY_SELECTED_TEXT, this);
+  WidgetQueryContentEvent selection(true, NS_QUERY_SELECTED_TEXT, this);
   InitEvent(selection, &point);
   DispatchWindowEvent(&selection);
   if (!selection.mSucceeded)
     return false;
 
-  nsQueryContentEvent caret(true, NS_QUERY_CARET_RECT, this);
+  WidgetQueryContentEvent caret(true, NS_QUERY_CARET_RECT, this);
   caret.InitForQueryCaretRect(selection.mReply.mOffset);
   InitEvent(caret, &point);
   DispatchWindowEvent(&caret);
@@ -2478,7 +2478,7 @@ bool nsWindow::ImeResultString(HIMI himi)
   }
   if (!mIsComposing) {
     mLastDispatchedCompositionString.Truncate();
-    nsCompositionEvent start(true, NS_COMPOSITION_START, this);
+    WidgetCompositionEvent start(true, NS_COMPOSITION_START, this);
     InitEvent(start);
     DispatchWindowEvent(&start);
     mIsComposing = true;
@@ -2489,19 +2489,19 @@ bool nsWindow::ImeResultString(HIMI himi)
                       outBuf, outBufLen);
   nsAutoString compositionString(outBuf.Elements());
   if (mLastDispatchedCompositionString != compositionString) {
-    nsCompositionEvent update(true, NS_COMPOSITION_UPDATE, this);
+    WidgetCompositionEvent update(true, NS_COMPOSITION_UPDATE, this);
     InitEvent(update);
     update.data = compositionString;
     mLastDispatchedCompositionString = compositionString;
     DispatchWindowEvent(&update);
   }
 
-  nsTextEvent text(true, NS_TEXT_TEXT, this);
+  WidgetTextEvent text(true, NS_TEXT_TEXT, this);
   InitEvent(text);
   text.theText = compositionString;
   DispatchWindowEvent(&text);
 
-  nsCompositionEvent end(true, NS_COMPOSITION_END, this);
+  WidgetCompositionEvent end(true, NS_COMPOSITION_END, this);
   InitEvent(end);
   end.data = compositionString;
   DispatchWindowEvent(&end);
@@ -2549,7 +2549,7 @@ bool nsWindow::ImeConversionString(HIMI himi)
   }
   if (!mIsComposing) {
     mLastDispatchedCompositionString.Truncate();
-    nsCompositionEvent start(true, NS_COMPOSITION_START, this);
+    WidgetCompositionEvent start(true, NS_COMPOSITION_START, this);
     InitEvent(start);
     DispatchWindowEvent(&start);
     mIsComposing = true;
@@ -2561,13 +2561,13 @@ bool nsWindow::ImeConversionString(HIMI himi)
   nsAutoString compositionString(outBuf.Elements());
   // Is a conversion string changed ?
   if (mLastDispatchedCompositionString != compositionString) {
-    nsCompositionEvent update(true, NS_COMPOSITION_UPDATE, this);
+    WidgetCompositionEvent update(true, NS_COMPOSITION_UPDATE, this);
     InitEvent(update);
     update.data = compositionString;
     mLastDispatchedCompositionString = compositionString;
     DispatchWindowEvent(&update);
   }
-  nsAutoTArray<nsTextRange, 4> textRanges;
+  nsAutoTArray<TextRange, 4> textRanges;
   if (!compositionString.IsEmpty()) {
     bool oneClause = false;
 
@@ -2649,7 +2649,7 @@ bool nsWindow::ImeConversionString(HIMI himi)
       clauseAttr[0] = NS_TEXTRANGE_SELECTEDRAWTEXT;
     }
 
-    nsTextRange newRange;
+    TextRange newRange;
 
     for (ULONG i = 0; i < ulClauseCount - 1; ++i) {
       newRange.mStartOffset = clauseOffsets[i];
@@ -2664,7 +2664,7 @@ bool nsWindow::ImeConversionString(HIMI himi)
       textRanges.AppendElement(newRange);
     }
   }
-  nsTextEvent text(true, NS_TEXT_TEXT, this);
+  WidgetTextEvent text(true, NS_TEXT_TEXT, this);
   InitEvent(text);
   text.theText = compositionString;
   text.rangeArray = textRanges.Elements();
@@ -2672,7 +2672,7 @@ bool nsWindow::ImeConversionString(HIMI himi)
   DispatchWindowEvent(&text);
 
   if (compositionString.IsEmpty()) { // IME conversion was canceled ?
-    nsCompositionEvent end(true, NS_COMPOSITION_END, this);
+    WidgetCompositionEvent end(true, NS_COMPOSITION_END, this);
     InitEvent(end);
     end.data = compositionString;
     DispatchWindowEvent(&end);
@@ -2732,7 +2732,7 @@ NS_IMETHODIMP_(InputContext) nsWindow::GetInputContext()
 
 bool nsWindow::DispatchKeyEvent(MPARAM mp1, MPARAM mp2)
 {
-  nsKeyEvent pressEvent(true, 0, nullptr);
+  WidgetKeyboardEvent pressEvent(true, 0, nullptr);
   USHORT fsFlags = SHORT1FROMMP(mp1);
   USHORT usVKey = SHORT2FROMMP(mp2);
   USHORT usChar = SHORT1FROMMP(mp2);
@@ -2760,8 +2760,9 @@ bool nsWindow::DispatchKeyEvent(MPARAM mp1, MPARAM mp2)
   // Now dispatch a keyup/keydown event.  This one is *not* meant to
   // have the unicode charcode in.
   nsIntPoint point(0,0);
-  nsKeyEvent event(true, (fsFlags & KC_KEYUP) ? NS_KEY_UP : NS_KEY_DOWN,
-                   this);
+  WidgetKeyboardEvent event(true,
+                            (fsFlags & KC_KEYUP) ? NS_KEY_UP : NS_KEY_DOWN,
+                            this);
   InitEvent(event, &point);
   event.keyCode   = WMChar2KeyCode(mp1, mp2);
   event.InitBasicModifiers(fsFlags & KC_CTRL, fsFlags & KC_ALT,
@@ -2997,7 +2998,7 @@ uint32_t WMChar2KeyCode(MPARAM mp1, MPARAM mp2)
 
 // Initialize an event to dispatch.
 
-void nsWindow::InitEvent(nsGUIEvent& event, nsIntPoint* aPoint)
+void nsWindow::InitEvent(WidgetGUIEvent& event, nsIntPoint* aPoint)
 {
   // if no point was supplied, calculate it
   if (!aPoint) {
@@ -3027,7 +3028,8 @@ void nsWindow::InitEvent(nsGUIEvent& event, nsIntPoint* aPoint)
 //-----------------------------------------------------------------------------
 // Invoke the Event Listener object's callback.
 
-NS_IMETHODIMP nsWindow::DispatchEvent(nsGUIEvent* event, nsEventStatus& aStatus)
+NS_IMETHODIMP nsWindow::DispatchEvent(WidgetGUIEvent* event,
+                                      nsEventStatus& aStatus)
 {
   aStatus = nsEventStatus_eIgnore;
 
@@ -3052,14 +3054,16 @@ NS_IMETHODIMP nsWindow::ReparentNativeWidget(nsIWidget* aNewParent)
 
 //-----------------------------------------------------------------------------
 
-bool nsWindow::DispatchWindowEvent(nsGUIEvent* event)
+bool nsWindow::DispatchWindowEvent(WidgetGUIEvent* event)
 {
   nsEventStatus status;
   DispatchEvent(event, status);
   return (status == nsEventStatus_eConsumeNoDefault);
 }
 
-bool nsWindow::DispatchWindowEvent(nsGUIEvent*event, nsEventStatus &aStatus) {
+bool nsWindow::DispatchWindowEvent(WidgetGUIEvent*event,
+                                   nsEventStatus &aStatus)
+{
   DispatchEvent(event, aStatus);
   return (aStatus == nsEventStatus_eConsumeNoDefault);
 }
@@ -3096,7 +3100,7 @@ bool nsWindow::DispatchCommandEvent(uint32_t aEventCommand)
 
 bool nsWindow::DispatchDragDropEvent(uint32_t aMsg)
 {
-  nsDragEvent event(true, aMsg, this);
+  WidgetDragEvent event(true, aMsg, this);
   InitEvent(event);
 
   event.InitBasicModifiers(isKeyDown(VK_CTRL),
@@ -3111,7 +3115,7 @@ bool nsWindow::DispatchDragDropEvent(uint32_t aMsg)
 bool nsWindow::DispatchMoveEvent(int32_t aX, int32_t aY)
 {
   // Params here are in XP-space for the desktop
-  nsGUIEvent event(true, NS_MOVE, this);
+  WidgetGUIEvent event(true, NS_MOVE, this);
   nsIntPoint point(aX, aY);
   InitEvent(event, &point);
   return DispatchWindowEvent(&event);
@@ -3140,10 +3144,10 @@ bool nsWindow::DispatchMouseEvent(uint32_t aEventType, MPARAM mp1, MPARAM mp2,
 {
   NS_ENSURE_TRUE(aEventType, false);
 
-  nsMouseEvent event(true, aEventType, this, nsMouseEvent::eReal,
-                     aIsContextMenuKey
-                     ? nsMouseEvent::eContextMenuKey
-                     : nsMouseEvent::eNormal);
+  WidgetMouseEvent event(true, aEventType, this, WidgetMouseEvent::eReal,
+                         aIsContextMenuKey ?
+                           WidgetMouseEvent::eContextMenuKey :
+                           WidgetMouseEvent::eNormal);
   event.button = aButton;
   if (aEventType == NS_MOUSE_BUTTON_DOWN && mIsComposing) {
     // If IME is composing, let it complete.
@@ -3177,7 +3181,7 @@ bool nsWindow::DispatchMouseEvent(uint32_t aEventType, MPARAM mp1, MPARAM mp2,
       // event.exit was init'ed to eChild, so we don't need an 'else'
       hTop = WinWindowFromID(hTop, FID_CLIENT);
       if (!hTop || !WinIsChild(HWNDFROMMP(mp2), hTop)) {
-        event.exit = nsMouseEvent::eTopLevel;
+        event.exit = WidgetMouseEvent::eTopLevel;
       }
     }
 
@@ -3205,11 +3209,12 @@ bool nsWindow::DispatchMouseEvent(uint32_t aEventType, MPARAM mp1, MPARAM mp2,
 
   // Dblclicks are used to set the click count, then changed to mousedowns
   if (aEventType == NS_MOUSE_DOUBLECLICK &&
-      (aButton == nsMouseEvent::eLeftButton ||
-       aButton == nsMouseEvent::eRightButton)) {
+      (aButton == WidgetMouseEvent::eLeftButton ||
+       aButton == WidgetMouseEvent::eRightButton)) {
     event.message = NS_MOUSE_BUTTON_DOWN;
-    event.button = (aButton == nsMouseEvent::eLeftButton) ?
-                   nsMouseEvent::eLeftButton : nsMouseEvent::eRightButton;
+    event.button =
+      (aButton == WidgetMouseEvent::eLeftButton) ?
+        WidgetMouseEvent::eLeftButton : WidgetMouseEvent::eRightButton;
     event.clickCount = 2;
   } else {
     event.clickCount = 1;
@@ -3220,13 +3225,13 @@ bool nsWindow::DispatchMouseEvent(uint32_t aEventType, MPARAM mp1, MPARAM mp2,
 
     case NS_MOUSE_BUTTON_DOWN:
       switch (aButton) {
-        case nsMouseEvent::eLeftButton:
+        case WidgetMouseEvent::eLeftButton:
           pluginEvent.event = WM_BUTTON1DOWN;
           break;
-        case nsMouseEvent::eMiddleButton:
+        case WidgetMouseEvent::eMiddleButton:
           pluginEvent.event = WM_BUTTON3DOWN;
           break;
-        case nsMouseEvent::eRightButton:
+        case WidgetMouseEvent::eRightButton:
           pluginEvent.event = WM_BUTTON2DOWN;
           break;
         default:
@@ -3236,13 +3241,13 @@ bool nsWindow::DispatchMouseEvent(uint32_t aEventType, MPARAM mp1, MPARAM mp2,
 
     case NS_MOUSE_BUTTON_UP:
       switch (aButton) {
-        case nsMouseEvent::eLeftButton:
+        case WidgetMouseEvent::eLeftButton:
           pluginEvent.event = WM_BUTTON1UP;
           break;
-        case nsMouseEvent::eMiddleButton:
+        case WidgetMouseEvent::eMiddleButton:
           pluginEvent.event = WM_BUTTON3UP;
           break;
-        case nsMouseEvent::eRightButton:
+        case WidgetMouseEvent::eRightButton:
           pluginEvent.event = WM_BUTTON2UP;
           break;
         default:
@@ -3252,13 +3257,13 @@ bool nsWindow::DispatchMouseEvent(uint32_t aEventType, MPARAM mp1, MPARAM mp2,
 
     case NS_MOUSE_DOUBLECLICK:
       switch (aButton) {
-        case nsMouseEvent::eLeftButton:
+        case WidgetMouseEvent::eLeftButton:
           pluginEvent.event = WM_BUTTON1DBLCLK;
           break;
-        case nsMouseEvent::eMiddleButton:
+        case WidgetMouseEvent::eMiddleButton:
           pluginEvent.event = WM_BUTTON3DBLCLK;
           break;
-        case nsMouseEvent::eRightButton:
+        case WidgetMouseEvent::eRightButton:
           pluginEvent.event = WM_BUTTON2DBLCLK;
           break;
         default:
@@ -3284,7 +3289,7 @@ bool nsWindow::DispatchMouseEvent(uint32_t aEventType, MPARAM mp1, MPARAM mp2,
 
 bool nsWindow::DispatchActivationEvent(uint32_t aEventType)
 {
-  nsGUIEvent event(true, aEventType, this);
+  WidgetGUIEvent event(true, aEventType, this);
 
   // These events should go to their base widget location,
   // not current mouse position.

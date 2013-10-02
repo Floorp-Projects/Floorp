@@ -11,6 +11,7 @@
 #include "yuv_convert.h"
 #include "ycbcr_to_rgb565.h"
 #include "GeckoProfiler.h"
+#include "ImageContainer.h"
 
 #ifdef XP_WIN
 #include "gfxWindowsPlatform.h"
@@ -189,6 +190,7 @@ IsSafeImageTransformComponent(gfxFloat aValue)
   return aValue >= -32768 && aValue <= 32767;
 }
 
+#ifndef MOZ_GFX_OPTIMIZE_MOBILE
 /**
  * This returns the fastest operator to use for solid surfaces which have no
  * alpha channel or their alpha channel is uniformly opaque.
@@ -210,7 +212,6 @@ OptimalFillOperator()
 #endif
 }
 
-#ifndef MOZ_GFX_OPTIMIZE_MOBILE
 // EXTEND_PAD won't help us here; we have to create a temporary surface to hold
 // the subimage of pixels we're allowed to sample.
 static already_AddRefed<gfxDrawable>
@@ -260,7 +261,7 @@ CreateSamplingRestrictedDrawable(gfxDrawable* aDrawable,
       nsRefPtr<gfxContext> tmpCtx = new gfxContext(temp);
       tmpCtx->SetOperator(OptimalFillOperator());
       aDrawable->Draw(tmpCtx, needed - needed.TopLeft(), true,
-                      gfxPattern::FILTER_FAST, gfxMatrix().Translate(needed.TopLeft()));
+                      GraphicsFilter::FILTER_FAST, gfxMatrix().Translate(needed.TopLeft()));
     }
 
     nsRefPtr<gfxDrawable> drawable = 
@@ -348,9 +349,9 @@ DeviceToImageTransform(gfxContext* aContext,
 
 /* These heuristics are based on Source/WebCore/platform/graphics/skia/ImageSkia.cpp:computeResamplingMode() */
 #ifdef MOZ_GFX_OPTIMIZE_MOBILE
-static gfxPattern::GraphicsFilter ReduceResamplingFilter(gfxPattern::GraphicsFilter aFilter,
-                                                         int aImgWidth, int aImgHeight,
-                                                         float aSourceWidth, float aSourceHeight)
+static GraphicsFilter ReduceResamplingFilter(GraphicsFilter aFilter,
+                                             int aImgWidth, int aImgHeight,
+                                             float aSourceWidth, float aSourceHeight)
 {
     // Images smaller than this in either direction are considered "small" and
     // are not resampled ever (see below).
@@ -365,7 +366,7 @@ static gfxPattern::GraphicsFilter ReduceResamplingFilter(gfxPattern::GraphicsFil
         || aImgHeight <= kSmallImageSizeThreshold) {
         // Never resample small images. These are often used for borders and
         // rules (think 1x1 images used to make lines).
-        return gfxPattern::FILTER_NEAREST;
+        return GraphicsFilter::FILTER_NEAREST;
     }
 
     if (aImgHeight * kLargeStretch <= aSourceHeight || aImgWidth * kLargeStretch <= aSourceWidth) {
@@ -376,7 +377,7 @@ static gfxPattern::GraphicsFilter ReduceResamplingFilter(gfxPattern::GraphicsFil
         // (which might be large) and then is stretching it to fill some part
         // of the page.
         if (fabs(aSourceWidth - aImgWidth)/aImgWidth < 0.5 || fabs(aSourceHeight - aImgHeight)/aImgHeight < 0.5)
-            return gfxPattern::FILTER_NEAREST;
+            return GraphicsFilter::FILTER_NEAREST;
 
         // The image is growing a lot and in more than one direction. Resampling
         // is slow and doesn't give us very much when growing a lot.
@@ -404,9 +405,9 @@ static gfxPattern::GraphicsFilter ReduceResamplingFilter(gfxPattern::GraphicsFil
     return aFilter;
 }
 #else
-static gfxPattern::GraphicsFilter ReduceResamplingFilter(gfxPattern::GraphicsFilter aFilter,
-                                                          int aImgWidth, int aImgHeight,
-                                                          int aSourceWidth, int aSourceHeight)
+static GraphicsFilter ReduceResamplingFilter(GraphicsFilter aFilter,
+                                             int aImgWidth, int aImgHeight,
+                                             int aSourceWidth, int aSourceHeight)
 {
     // Just pass the filter through unchanged
     return aFilter;
@@ -422,7 +423,7 @@ gfxUtils::DrawPixelSnapped(gfxContext*      aContext,
                            const gfxRect&   aImageRect,
                            const gfxRect&   aFill,
                            const gfxImageFormat aFormat,
-                           gfxPattern::GraphicsFilter aFilter,
+                           GraphicsFilter aFilter,
                            uint32_t         aImageFlags)
 {
     PROFILER_LABEL("gfxUtils", "DrawPixelSnapped");
@@ -481,15 +482,7 @@ gfxUtils::DrawPixelSnapped(gfxContext*      aContext,
     }
 #endif
 
-    gfxContext::GraphicsOperator op = aContext->CurrentOperator();
-    if ((op == gfxContext::OPERATOR_OVER || workaround.PushedGroup()) &&
-        aFormat == gfxImageFormatRGB24) {
-        aContext->SetOperator(OptimalFillOperator());
-    }
-
     drawable->Draw(aContext, aFill, doTile, aFilter, userSpaceToImageSpace);
-
-    aContext->SetOperator(op);
 }
 
 /* static */ int
@@ -690,7 +683,7 @@ gfxUtils::GfxRectToIntRect(const gfxRect& aIn, nsIntRect* aOut)
 }
 
 void
-gfxUtils::GetYCbCrToRGBDestFormatAndSize(const PlanarYCbCrImage::Data& aData,
+gfxUtils::GetYCbCrToRGBDestFormatAndSize(const PlanarYCbCrData& aData,
                                          gfxImageFormat& aSuggestedFormat,
                                          gfxIntSize& aSuggestedSize)
 {
@@ -744,7 +737,7 @@ gfxUtils::GetYCbCrToRGBDestFormatAndSize(const PlanarYCbCrImage::Data& aData,
 }
 
 void
-gfxUtils::ConvertYCbCrToRGB(const PlanarYCbCrImage::Data& aData,
+gfxUtils::ConvertYCbCrToRGB(const PlanarYCbCrData& aData,
                             const gfxImageFormat& aDestFormat,
                             const gfxIntSize& aDestSize,
                             unsigned char* aDestBuffer,

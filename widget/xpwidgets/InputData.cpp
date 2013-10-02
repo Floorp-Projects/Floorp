@@ -67,17 +67,17 @@ MultiTouchInput::MultiTouchInput(const WidgetTouchEvent& aTouchEvent)
   }
 }
 
-// This conversion from nsMouseEvent to MultiTouchInput is needed because on
+// This conversion from WidgetMouseEvent to MultiTouchInput is needed because on
 // the B2G emulator we can only receive mouse events, but we need to be able
 // to pan correctly. To do this, we convert the events into a format that the
 // panning code can handle. This code is very limited and only supports
 // SingleTouchData. It also sends garbage for the identifier, radius, force
 // and rotation angle.
-MultiTouchInput::MultiTouchInput(const nsMouseEvent& aMouseEvent)
+MultiTouchInput::MultiTouchInput(const WidgetMouseEvent& aMouseEvent)
   : InputData(MULTITOUCH_INPUT, aMouseEvent.time)
 {
   NS_ABORT_IF_FALSE(NS_IsMainThread(),
-                    "Can only copy from nsMouseEvent on main thread");
+                    "Can only copy from WidgetMouseEvent on main thread");
   switch (aMouseEvent.message) {
   case NS_MOUSE_BUTTON_DOWN:
     mType = MULTITOUCH_START;

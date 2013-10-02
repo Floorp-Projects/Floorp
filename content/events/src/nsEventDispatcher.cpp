@@ -389,14 +389,14 @@ EventTargetChainItemForChromeTarget(nsTArray<nsEventTargetChainItem>& aChain,
 /* static */ nsresult
 nsEventDispatcher::Dispatch(nsISupports* aTarget,
                             nsPresContext* aPresContext,
-                            nsEvent* aEvent,
+                            WidgetEvent* aEvent,
                             nsIDOMEvent* aDOMEvent,
                             nsEventStatus* aEventStatus,
                             nsDispatchingCallback* aCallback,
                             nsCOMArray<EventTarget>* aTargets)
 {
   PROFILER_LABEL("nsEventDispatcher", "Dispatch");
-  NS_ASSERTION(aEvent, "Trying to dispatch without nsEvent!");
+  NS_ASSERTION(aEvent, "Trying to dispatch without WidgetEvent!");
   NS_ENSURE_TRUE(!aEvent->mFlags.mIsBeingDispatched,
                  NS_ERROR_DOM_INVALID_STATE_ERR);
   NS_ASSERTION(!aTargets || !aEvent->message, "Wrong parameters!");
@@ -463,7 +463,7 @@ nsEventDispatcher::Dispatch(nsISupports* aTarget,
   }
 
   if (aDOMEvent) {
-    nsEvent* innerEvent = aDOMEvent->GetInternalNSEvent();
+    WidgetEvent* innerEvent = aDOMEvent->GetInternalNSEvent();
     NS_ASSERTION(innerEvent == aEvent,
                   "The inner event of aDOMEvent is not the same as aEvent!");
   }
@@ -648,13 +648,13 @@ nsEventDispatcher::Dispatch(nsISupports* aTarget,
 
 /* static */ nsresult
 nsEventDispatcher::DispatchDOMEvent(nsISupports* aTarget,
-                                    nsEvent* aEvent,
+                                    WidgetEvent* aEvent,
                                     nsIDOMEvent* aDOMEvent,
                                     nsPresContext* aPresContext,
                                     nsEventStatus* aEventStatus)
 {
   if (aDOMEvent) {
-    nsEvent* innerEvent = aDOMEvent->GetInternalNSEvent();
+    WidgetEvent* innerEvent = aDOMEvent->GetInternalNSEvent();
     NS_ENSURE_TRUE(innerEvent, NS_ERROR_ILLEGAL_VALUE);
 
     bool dontResetTrusted = false;
@@ -682,7 +682,7 @@ nsEventDispatcher::DispatchDOMEvent(nsISupports* aTarget,
 /* static */ nsresult
 nsEventDispatcher::CreateEvent(mozilla::dom::EventTarget* aOwner,
                                nsPresContext* aPresContext,
-                               nsEvent* aEvent,
+                               WidgetEvent* aEvent,
                                const nsAString& aEventType,
                                nsIDOMEvent** aDOMEvent)
 {
@@ -697,41 +697,41 @@ nsEventDispatcher::CreateEvent(mozilla::dom::EventTarget* aOwner,
     case NS_SCROLLPORT_EVENT:
     case NS_UI_EVENT:
       return NS_NewDOMUIEvent(aDOMEvent, aOwner, aPresContext,
-                              static_cast<nsGUIEvent*>(aEvent));
+                              static_cast<WidgetGUIEvent*>(aEvent));
     case NS_SCROLLAREA_EVENT:
       return NS_NewDOMScrollAreaEvent(aDOMEvent, aOwner, aPresContext,
                static_cast<InternalScrollAreaEvent*>(aEvent));
     case NS_KEY_EVENT:
       return NS_NewDOMKeyboardEvent(aDOMEvent, aOwner, aPresContext,
-                                    static_cast<nsKeyEvent*>(aEvent));
+                                    static_cast<WidgetKeyboardEvent*>(aEvent));
     case NS_COMPOSITION_EVENT:
       return NS_NewDOMCompositionEvent(
         aDOMEvent, aOwner,
-        aPresContext, static_cast<nsCompositionEvent*>(aEvent));
+        aPresContext, static_cast<WidgetCompositionEvent*>(aEvent));
     case NS_MOUSE_EVENT:
       return NS_NewDOMMouseEvent(aDOMEvent, aOwner, aPresContext,
-                                 static_cast<nsInputEvent*>(aEvent));
+                                 static_cast<WidgetInputEvent*>(aEvent));
     case NS_FOCUS_EVENT:
       return NS_NewDOMFocusEvent(aDOMEvent, aOwner, aPresContext,
                                  static_cast<InternalFocusEvent*>(aEvent));
     case NS_MOUSE_SCROLL_EVENT:
       return NS_NewDOMMouseScrollEvent(aDOMEvent, aOwner, aPresContext,
-                                 static_cast<nsInputEvent*>(aEvent));
+                                       static_cast<WidgetInputEvent*>(aEvent));
     case NS_WHEEL_EVENT:
       return NS_NewDOMWheelEvent(aDOMEvent, aOwner, aPresContext,
                                  static_cast<WheelEvent*>(aEvent));
     case NS_DRAG_EVENT:
       return NS_NewDOMDragEvent(aDOMEvent, aOwner, aPresContext,
-                                 static_cast<nsDragEvent*>(aEvent));
+                                static_cast<WidgetDragEvent*>(aEvent));
     case NS_TEXT_EVENT:
       return NS_NewDOMTextEvent(aDOMEvent, aOwner, aPresContext,
-                                static_cast<nsTextEvent*>(aEvent));
+                                static_cast<WidgetTextEvent*>(aEvent));
     case NS_CLIPBOARD_EVENT:
       return NS_NewDOMClipboardEvent(aDOMEvent, aOwner, aPresContext,
                static_cast<InternalClipboardEvent*>(aEvent));
     case NS_SVGZOOM_EVENT:
       return NS_NewDOMSVGZoomEvent(aDOMEvent, aOwner, aPresContext,
-                                   static_cast<nsGUIEvent*>(aEvent));
+                                   static_cast<WidgetGUIEvent*>(aEvent));
     case NS_SMIL_TIME_EVENT:
       return NS_NewDOMTimeEvent(aDOMEvent, aOwner, aPresContext, aEvent);
 

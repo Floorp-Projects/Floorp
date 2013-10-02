@@ -2069,7 +2069,7 @@ nsBoxFrame::WrapListsInRedirector(nsDisplayListBuilder*   aBuilder,
 }
 
 bool
-nsBoxFrame::GetEventPoint(nsGUIEvent* aEvent, nsPoint &aPoint) {
+nsBoxFrame::GetEventPoint(WidgetGUIEvent* aEvent, nsPoint &aPoint) {
   nsIntPoint refPoint;
   bool res = GetEventPoint(aEvent, refPoint);
   aPoint = nsLayoutUtils::GetEventCoordinatesRelativeTo(aEvent, refPoint, this);
@@ -2077,7 +2077,7 @@ nsBoxFrame::GetEventPoint(nsGUIEvent* aEvent, nsPoint &aPoint) {
 }
 
 bool
-nsBoxFrame::GetEventPoint(nsGUIEvent* aEvent, nsIntPoint &aPoint) {
+nsBoxFrame::GetEventPoint(WidgetGUIEvent* aEvent, nsIntPoint &aPoint) {
   NS_ENSURE_TRUE(aEvent, false);
 
   if (aEvent->eventStructType == NS_TOUCH_EVENT) {

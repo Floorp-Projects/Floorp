@@ -348,6 +348,20 @@ WebGLContext::SetContextOptions(JSContext* aCx, JS::Handle<JS::Value> aOptions)
     return NS_OK;
 }
 
+#ifdef DEBUG
+int32_t
+WebGLContext::GetWidth() const
+{
+  return mWidth;
+}
+
+int32_t
+WebGLContext::GetHeight() const
+{
+  return mHeight;
+}
+#endif
+
 NS_IMETHODIMP
 WebGLContext::SetDimensions(int32_t width, int32_t height)
 {
@@ -595,7 +609,7 @@ WebGLContext::SetDimensions(int32_t width, int32_t height)
 }
 
 NS_IMETHODIMP
-WebGLContext::Render(gfxContext *ctx, gfxPattern::GraphicsFilter f, uint32_t aFlags)
+WebGLContext::Render(gfxContext *ctx, GraphicsFilter f, uint32_t aFlags)
 {
     if (!gl)
         return NS_OK;
@@ -738,7 +752,7 @@ WebGLContext::GetInputStream(const char* aMimeType,
     nsRefPtr<gfxContext> tmpcx = new gfxContext(surf);
     // Use Render() to make sure that appropriate y-flip gets applied
     uint32_t flags = mOptions.premultipliedAlpha ? RenderFlagPremultAlpha : 0;
-    nsresult rv = Render(tmpcx, gfxPattern::FILTER_NEAREST, flags);
+    nsresult rv = Render(tmpcx, GraphicsFilter::FILTER_NEAREST, flags);
     if (NS_FAILED(rv))
         return rv;
 
@@ -1314,6 +1328,12 @@ WebGLContext::ForceRestoreContext()
 
 void
 WebGLContext::MakeContextCurrent() const { gl->MakeCurrent(); }
+
+mozilla::TemporaryRef<mozilla::gfx::SourceSurface>
+WebGLContext::GetSurfaceSnapshot()
+{
+  return nullptr;
+}
 
 //
 // XPCOM goop

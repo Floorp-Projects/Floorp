@@ -91,10 +91,10 @@ class MacroAssemblerX86Shared : public Assembler
     }
 
     void move32(const Imm32 &imm, const Register &dest) {
-        if (imm.value == 0)
-            xorl(dest, dest);
-        else
-            movl(imm, dest);
+        // Use the ImmWord version of mov to register, which has special
+        // optimizations. Casting to uint32_t here ensures that the value
+        // is zero-extended.
+        mov(ImmWord(uint32_t(imm.value)), dest);
     }
     void move32(const Imm32 &imm, const Operand &dest) {
         movl(imm, dest);
@@ -324,25 +324,44 @@ class MacroAssemblerX86Shared : public Assembler
         movl(src, Operand(dest));
     }
     void loadDouble(const Address &src, FloatRegister dest) {
-        movsd(Operand(src), dest);
+        movsd(src, dest);
     }
     void loadDouble(const BaseIndex &src, FloatRegister dest) {
-        movsd(Operand(src), dest);
+        movsd(src, dest);
     }
     void loadDouble(const Operand &src, FloatRegister dest) {
-        movsd(src, dest);
+        switch (src.kind()) {
+          case Operand::MEM_REG_DISP:
+            loadDouble(src.toAddress(), dest);
+            break;
+          case Operand::MEM_SCALE:
+            loadDouble(src.toBaseIndex(), dest);
+            break;
+          default:
+            MOZ_ASSUME_UNREACHABLE("unexpected operand kind");
+        }
     }
     void storeDouble(FloatRegister src, const Address &dest) {
-        movsd(src, Operand(dest));
+        movsd(src, dest);
     }
     void storeDouble(FloatRegister src, const BaseIndex &dest) {
-        movsd(src, Operand(dest));
+        movsd(src, dest);
     }
     void storeDouble(FloatRegister src, const Operand &dest) {
-        movsd(src, dest);
+        switch (dest.kind()) {
+          case Operand::MEM_REG_DISP:
+            storeDouble(src, dest.toAddress());
+            break;
+          case Operand::MEM_SCALE:
+            storeDouble(src, dest.toBaseIndex());
+            break;
+          default:
+            MOZ_ASSUME_UNREACHABLE("unexpected operand kind");
+        }
     }
     void moveDouble(FloatRegister src, FloatRegister dest) {
-        movsd(src, dest);
+        // Use movapd instead of movsd to avoid dependencies.
+        movapd(src, dest);
     }
     void zeroDouble(FloatRegister reg) {
         xorpd(reg, reg);
@@ -383,45 +402,61 @@ class MacroAssemblerX86Shared : public Assembler
     void convertDoubleToFloat(const FloatRegister &src, const FloatRegister &dest) {
         cvtsd2ss(src, dest);
     }
-    void loadFloatAsDouble(const Register &src, FloatRegister dest) {
+    void moveFloatAsDouble(const Register &src, FloatRegister dest) {
         movd(src, dest);
         cvtss2sd(dest, dest);
     }
     void loadFloatAsDouble(const Address &src, FloatRegister dest) {
-        movss(Operand(src), dest);
+        movss(src, dest);
         cvtss2sd(dest, dest);
     }
     void loadFloatAsDouble(const BaseIndex &src, FloatRegister dest) {
-        movss(Operand(src), dest);
+        movss(src, dest);
         cvtss2sd(dest, dest);
     }
     void loadFloatAsDouble(const Operand &src, FloatRegister dest) {
-        movss(src, dest);
+        loadFloat(src, dest);
         cvtss2sd(dest, dest);
     }
-    void loadFloat(const Register &src, FloatRegister dest) {
-        movss(Operand(src), dest);
-    }
     void loadFloat(const Address &src, FloatRegister dest) {
-        movss(Operand(src), dest);
+        movss(src, dest);
     }
     void loadFloat(const BaseIndex &src, FloatRegister dest) {
-        movss(Operand(src), dest);
+        movss(src, dest);
     }
     void loadFloat(const Operand &src, FloatRegister dest) {
-        movss(src, dest);
+        switch (src.kind()) {
+          case Operand::MEM_REG_DISP:
+            loadFloat(src.toAddress(), dest);
+            break;
+          case Operand::MEM_SCALE:
+            loadFloat(src.toBaseIndex(), dest);
+            break;
+          default:
+            MOZ_ASSUME_UNREACHABLE("unexpected operand kind");
+        }
     }
     void storeFloat(FloatRegister src, const Address &dest) {
-        movss(src, Operand(dest));
+        movss(src, dest);
     }
     void storeFloat(FloatRegister src, const BaseIndex &dest) {
-        movss(src, Operand(dest));
+        movss(src, dest);
     }
     void storeFloat(FloatRegister src, const Operand &dest) {
-        movss(src, dest);
+        switch (dest.kind()) {
+          case Operand::MEM_REG_DISP:
+            storeFloat(src, dest.toAddress());
+            break;
+          case Operand::MEM_SCALE:
+            storeFloat(src, dest.toBaseIndex());
+            break;
+          default:
+            MOZ_ASSUME_UNREACHABLE("unexpected operand kind");
+        }
     }
     void moveFloat(FloatRegister src, FloatRegister dest) {
-        movss(src, dest);
+        // Use movaps instead of movss to avoid dependencies.
+        movaps(src, dest);
     }
 
     // Checks whether a double is representable as a 32-bit integer. If so, the
@@ -548,10 +583,7 @@ class MacroAssemblerX86Shared : public Assembler
             if (ifNaN != Assembler::NaN_HandledByCond) {
                 Label noNaN;
                 j(Assembler::NoParity, &noNaN);
-                if (ifNaN == Assembler::NaN_IsTrue)
-                    movl(Imm32(1), dest);
-                else
-                    xorl(dest, dest);
+                mov(ImmWord(ifNaN == Assembler::NaN_IsTrue), dest);
                 bind(&noNaN);
             }
         } else {
@@ -560,12 +592,16 @@ class MacroAssemblerX86Shared : public Assembler
 
             if (ifNaN == Assembler::NaN_IsFalse)
                 j(Assembler::Parity, &ifFalse);
+            // Note a subtlety here: FLAGS is live at this point, and the
+            // mov interface doesn't guarantee to preserve FLAGS. Use
+            // movl instead of mov, because the movl instruction
+            // preserves FLAGS.
             movl(Imm32(1), dest);
             j(cond, &end);
             if (ifNaN == Assembler::NaN_IsTrue)
                 j(Assembler::Parity, &end);
             bind(&ifFalse);
-            xorl(dest, dest);
+            mov(ImmWord(0), dest);
 
             bind(&end);
         }

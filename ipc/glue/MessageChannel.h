@@ -42,6 +42,7 @@ class MessageChannel : HasResultCodes
 {
     friend class ProcessLink;
     friend class ThreadLink;
+    friend class AutoEnterRPCTransaction;
 
     typedef mozilla::Monitor Monitor;
 
@@ -189,16 +190,21 @@ class MessageChannel : HasResultCodes
     // up to process urgent calls from the parent.
     bool SendAndWait(Message* aMsg, Message* aReply);
 
+    bool RPCCall(Message* aMsg, Message* aReply);
     bool InterruptCall(Message* aMsg, Message* aReply);
     bool UrgentCall(Message* aMsg, Message* aReply);
 
     bool InterruptEventOccurred();
+
+    bool ProcessPendingUrgentRequest();
+    bool ProcessPendingRPCCall();
 
     void MaybeUndeferIncall();
     void EnqueuePendingMessages();
 
     // Executed on the worker thread. Dequeues one pending message.
     bool OnMaybeDequeueOne();
+    bool DequeueOne(Message *recvd);
 
     // Dispatches an incoming message to its appropriate handler.
     void DispatchMessage(const Message &aMsg);
@@ -208,6 +214,7 @@ class MessageChannel : HasResultCodes
     void DispatchSyncMessage(const Message &aMsg);
     void DispatchUrgentMessage(const Message &aMsg);
     void DispatchAsyncMessage(const Message &aMsg);
+    void DispatchRPCMessage(const Message &aMsg);
     void DispatchInterruptMessage(const Message &aMsg, size_t aStackDepth);
 
     // Return true if the wait ended because a notification was received.
@@ -362,6 +369,10 @@ class MessageChannel : HasResultCodes
         mMonitor->AssertCurrentThreadOwns();
         return mPendingUrgentReplies > 0;
     }
+    bool AwaitingRPCReply() const {
+        mMonitor->AssertCurrentThreadOwns();
+        return mPendingRPCReplies > 0;
+    }
     bool AwaitingInterruptReply() const {
         mMonitor->AssertCurrentThreadOwns();
         return !mInterruptStack.empty();
@@ -496,9 +507,66 @@ class MessageChannel : HasResultCodes
     // out-message. This will never be greater than 1.
     size_t mPendingSyncReplies;
 
-    // Worker-thread only; type we're expecting for the reply to an
-    // urgent out-message. This will never be greater than 1.
+    // Worker-thread only; Number of urgent and rpc replies we're waiting on.
+    // These are mutually exclusive since one channel cannot have outcalls of
+    // both kinds.
     size_t mPendingUrgentReplies;
+    size_t mPendingRPCReplies;
+
+    // When we send an urgent request from the parent process, we could race
+    // with an RPC message that was issued by the child beforehand. In this
+    // case, if the parent were to wake up while waiting for the urgent reply,
+    // and process the RPC, it could send an additional urgent message. The
+    // child would wake up to process the urgent message (as it always will),
+    // then send a reply, which could be received by the parent out-of-order
+    // with respect to the first urgent reply.
+    //
+    // To address this problem, urgent or RPC requests are associated with a
+    // "transaction". Whenever one side of the channel wishes to start a
+    // chain of RPC/urgent messages, it allocates a new transaction ID. Any
+    // messages the parent receives, not apart of this transaction, are
+    // deferred. When issuing RPC/urgent requests on top of a started
+    // transaction, the initiating transaction ID is used.
+    // 
+    // To ensure IDs are unique, we use sequence numbers for transaction IDs,
+    // which grow in opposite directions from child to parent.
+
+    // The current transaction ID.
+    int32_t mCurrentRPCTransaction;
+
+    class AutoEnterRPCTransaction
+    {
+      public:
+       AutoEnterRPCTransaction(MessageChannel *aChan)
+        : mChan(aChan),
+          mOldTransaction(mChan->mCurrentRPCTransaction)
+       {
+           mChan->mMonitor->AssertCurrentThreadOwns();
+           if (mChan->mCurrentRPCTransaction == 0)
+               mChan->mCurrentRPCTransaction = mChan->NextSeqno();
+       }
+       AutoEnterRPCTransaction(MessageChannel *aChan, Message *message)
+        : mChan(aChan),
+          mOldTransaction(mChan->mCurrentRPCTransaction)
+       {
+           mChan->mMonitor->AssertCurrentThreadOwns();
+
+           if (!message->is_rpc() && !message->is_urgent())
+               return;
+
+           MOZ_ASSERT_IF(mChan->mSide == ParentSide,
+                         !mOldTransaction || mOldTransaction == message->transaction_id());
+           mChan->mCurrentRPCTransaction = message->transaction_id();
+       }
+       ~AutoEnterRPCTransaction() {
+           mChan->mMonitor->AssertCurrentThreadOwns();
+           mChan->mCurrentRPCTransaction = mOldTransaction;
+       }
+
+      private:
+       MessageChannel *mChan;
+       int32_t mOldTransaction;
+    };
 
     // If waiting for the reply to a sync out-message, it will be saved here
     // on the I/O thread and then read and cleared by the worker thread.
@@ -544,7 +612,18 @@ class MessageChannel : HasResultCodes
     // another blocking message, because it's blocked on a reply from us.
     //
     MessageQueue mPending;
+
+    // Note that these two pointers are mutually exclusive. One channel cannot
+    // send both urgent requests (parent -> child) and RPC calls (child->parent).
+    // Also note that since initiating either requires blocking, they cannot
+    // queue up on the other side. One message slot is enough.
+    //
+    // Normally, all other message types are deferred into into mPending, and
+    // only these two types have special treatment (since they wake up blocked
+    // requests). However, when an RPC in-call races with an urgent out-call,
+    // the RPC message will be put into mPending instead of its slot below.
     nsAutoPtr<Message> mPendingUrgentRequest;
+    nsAutoPtr<Message> mPendingRPCCall;
 
     // Stack of all the out-calls on which this channel is awaiting responses.
     // Each stack refers to a different protocol and the stacks are mutually

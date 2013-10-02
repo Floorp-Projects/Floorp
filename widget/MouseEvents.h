@@ -423,10 +423,4 @@ typedef WidgetWheelEvent                WheelEvent;
 
 } // namespace mozilla
 
-// TODO: Remove following typedefs
-typedef mozilla::WidgetMouseEventBase   nsMouseEvent_base;
-typedef mozilla::WidgetMouseEvent       nsMouseEvent;
-typedef mozilla::WidgetDragEvent        nsDragEvent;
-typedef mozilla::WidgetMouseScrollEvent nsMouseScrollEvent;
-
 #endif // mozilla_MouseEvents_h__
