@@ -14,8 +14,15 @@ function debug(s) {
 
 const DATASTOREDB_VERSION = 1;
 const DATASTOREDB_OBJECTSTORE_NAME = 'DataStoreDB';
+const DATASTOREDB_REVISION = 'revision';
+const DATASTOREDB_REVISION_INDEX = 'revisionIndex';
 
 Cu.import('resource://gre/modules/IndexedDBHelper.jsm');
+Cu.import("resource://gre/modules/XPCOMUtils.jsm");
+
+XPCOMUtils.defineLazyServiceGetter(this, "uuidgen",
+                                   "@mozilla.org/uuid-generator;1",
+                                   "nsIUUIDGenerator");
 
 this.DataStoreDB = function DataStoreDB() {}
 
@@ -26,23 +33,66 @@ DataStoreDB.prototype = {
   upgradeSchema: function(aTransaction, aDb, aOldVersion, aNewVersion) {
     debug('updateSchema');
     aDb.createObjectStore(DATASTOREDB_OBJECTSTORE_NAME, { autoIncrement: true });
+    let store = aDb.createObjectStore(DATASTOREDB_REVISION,
+                                      { autoIncrement: true,
+                                        keyPath: 'internalRevisionId' });
+    store.createIndex(DATASTOREDB_REVISION_INDEX, 'revisionId', { unique: true });
   },
 
   init: function(aOrigin, aName) {
     let dbName = aOrigin + '_' + aName;
     this.initDBHelper(dbName, DATASTOREDB_VERSION,
-                      [DATASTOREDB_OBJECTSTORE_NAME]);
+                      [DATASTOREDB_OBJECTSTORE_NAME, DATASTOREDB_REVISION]);
   },
 
   txn: function(aType, aCallback, aErrorCb) {
     debug('Transaction request');
     this.newTxn(
       aType,
-      DATASTOREDB_OBJECTSTORE_NAME,
+      aType == 'readonly'
+        ? [ DATASTOREDB_OBJECTSTORE_NAME ] : [ DATASTOREDB_OBJECTSTORE_NAME, DATASTOREDB_REVISION ],
+      function(aTxn, aStores) {
+        aType == 'readonly' ? aCallback(aTxn, aStores[0], null) : aCallback(aTxn, aStores[0], aStores[1]);
+      },
+      function() {},
+      aErrorCb
+    );
+  },
+
+  revisionTxn: function(aType, aCallback, aErrorCb) {
+    debug("Transaction request");
+    this.newTxn(
+      aType,
+      DATASTOREDB_REVISION,
       aCallback,
       function() {},
       aErrorCb
     );
+  },
+
+  addRevision: function(aStore, aId, aType, aSuccessCb) {
+    debug("AddRevision: " + aId + " - " + aType);
+    let revisionId =  uuidgen.generateUUID().toString();
+    let request = aStore.put({ revisionId: revisionId, objectId: aId, operation: aType });
+    request.onsuccess = function() {
+      aSuccessCb(revisionId);
+    }
+  },
+
+  getInternalRevisionId: function(aRevisionId, aStore, aSuccessCb) {
+    debug('GetInternalRevisionId');
+    let request = aStore.index(DATASTOREDB_REVISION_INDEX).getKey(aRevisionId);
+    request.onsuccess = function(aEvent) {
+      aSuccessCb(aEvent.target.result);
+    }
+  },
+
+  clearRevisions: function(aStore, aSuccessCb) {
+    debug("ClearRevisions");
+    let request = aStore.clear();
+    request.onsuccess = function() {
+      aSuccessCb();
+    }
   },
 
   delete: function() {
