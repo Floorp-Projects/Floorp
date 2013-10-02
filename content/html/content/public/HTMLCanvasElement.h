@@ -169,7 +169,7 @@ public:
    */
   NS_IMETHOD_(nsIntSize) GetSizeExternal() MOZ_OVERRIDE;
   NS_IMETHOD RenderContextsExternal(gfxContext *aContext,
-                                    gfxPattern::GraphicsFilter aFilter,
+                                    GraphicsFilter aFilter,
                                     uint32_t aFlags = RenderFlagPremultAlpha) MOZ_OVERRIDE;
 
   virtual bool ParseAttribute(int32_t aNamespaceID,
@@ -188,6 +188,10 @@ public:
   virtual nsresult SetAttr(int32_t aNameSpaceID, nsIAtom* aName,
                            nsIAtom* aPrefix, const nsAString& aValue,
                            bool aNotify) MOZ_OVERRIDE;
+
+  virtual nsresult UnsetAttr(int32_t aNameSpaceID, nsIAtom* aName,
+                             bool aNotify) MOZ_OVERRIDE;
+
   virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const MOZ_OVERRIDE;
   nsresult CopyInnerTo(mozilla::dom::Element* aDest);
 

@@ -10,6 +10,7 @@
 
 #include "nsSplittableFrame.h"
 #include "nsContainerFrame.h"
+#include "nsIFrameInlines.h"
 
 NS_IMPL_FRAMEARENA_HELPERS(nsSplittableFrame)
 

@@ -26,6 +26,7 @@ loader.lazyGetter(this, "ConsoleOutput",
                   () => require("devtools/webconsole/console-output").ConsoleOutput);
 loader.lazyGetter(this, "Messages",
                   () => require("devtools/webconsole/console-output").Messages);
+loader.lazyImporter(this, "EnvironmentClient", "resource://gre/modules/devtools/dbg-client.jsm");
 loader.lazyImporter(this, "ObjectClient", "resource://gre/modules/devtools/dbg-client.jsm");
 loader.lazyImporter(this, "VariablesView", "resource:///modules/devtools/VariablesView.jsm");
 loader.lazyImporter(this, "VariablesViewController", "resource:///modules/devtools/VariablesViewController.jsm");
@@ -3423,6 +3424,9 @@ JSTerm.prototype = {
     view.lazyAppend = this._lazyVariablesView;
 
     VariablesViewController.attach(view, {
+      getEnvironmentClient: aGrip => {
+        return new EnvironmentClient(this.hud.proxy.client, aGrip);
+      },
       getObjectClient: aGrip => {
         return new ObjectClient(this.hud.proxy.client, aGrip);
       },
@@ -3481,20 +3485,13 @@ JSTerm.prototype = {
       view.delete = null;
     }
 
-    let scope = view.addScope(aOptions.label);
-    scope.expanded = true;
-    scope.locked = true;
-
-    let container = scope.addItem();
-    container.evaluationMacro = simpleValueEvalMacro;
+    let { variable, expanded } = view.controller.setSingleVariable(aOptions);
+    variable.evaluationMacro = simpleValueEvalMacro;
 
     if (aOptions.objectActor) {
-      view.controller.expand(container, aOptions.objectActor);
       view._consoleLastObjectActor = aOptions.objectActor.actor;
     }
     else if (aOptions.rawObject) {
-      container.populate(aOptions.rawObject);
-      view.commitHierarchy();
       view._consoleLastObjectActor = null;
     }
     else {
@@ -3502,7 +3499,9 @@ JSTerm.prototype = {
                       "display.");
     }
 
-    this.emit("variablesview-updated", view, aOptions);
+    expanded.then(() => {
+      this.emit("variablesview-updated", view, aOptions);
+    });
   },
 
   /**

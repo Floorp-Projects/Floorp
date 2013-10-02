@@ -2688,10 +2688,16 @@ public:
         backtrack();
 
         // Link & finalize the code.
-        // XXX yarr-oom
         ExecutablePool *pool;
         bool ok;
         LinkBuffer linkBuffer(this, globalData->regexAllocator, &pool, &ok, REGEXP_CODE);
+
+        // Attempt to detect OOM during linkBuffer creation.
+        if (linkBuffer.unsafeCode() == nullptr) {
+            jitObject.setFallBack(true);
+            return;
+        }
+
         m_backtrackingState.linkDataLabels(linkBuffer);
 
         if (compileMode == MatchOnly) {

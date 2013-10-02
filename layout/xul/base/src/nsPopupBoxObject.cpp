@@ -13,9 +13,11 @@
 #include "nsINameSpaceManager.h"
 #include "nsGkAtoms.h"
 #include "nsMenuPopupFrame.h"
-#include "nsClientRect.h"
 #include "nsView.h"
 #include "mozilla/AppUnits.h"
+#include "mozilla/dom/DOMRect.h"
+
+using namespace mozilla::dom;
 
 class nsPopupBoxObject : public nsBoxObject,
                          public nsIPopupBoxObject
@@ -279,7 +281,7 @@ nsPopupBoxObject::GetAnchorNode(nsIDOMElement** aAnchor)
 NS_IMETHODIMP
 nsPopupBoxObject::GetOuterScreenRect(nsIDOMClientRect** aRect)
 {
-  nsClientRect* rect = new nsClientRect(mContent);
+  DOMRect* rect = new DOMRect(mContent);
 
   NS_ADDREF(*aRect = rect);
 

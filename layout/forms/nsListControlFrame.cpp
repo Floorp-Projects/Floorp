@@ -848,8 +848,8 @@ nsListControlFrame::CaptureMouseEvents(bool aGrabMouseEvents)
 
 //---------------------------------------------------------
 NS_IMETHODIMP 
-nsListControlFrame::HandleEvent(nsPresContext* aPresContext, 
-                                nsGUIEvent*    aEvent,
+nsListControlFrame::HandleEvent(nsPresContext* aPresContext,
+                                WidgetGUIEvent* aEvent,
                                 nsEventStatus* aEventStatus)
 {
   NS_ENSURE_ARG_POINTER(aEventStatus);
@@ -1607,8 +1607,8 @@ nsListControlFrame::MouseUp(nsIDOMEvent* aMouseEvent)
     // depeneding on whether the clickCount is non-zero.
     // So we cheat here by either setting or unsetting the clcikCount in the native event
     // so the right thing happens for the onclick event
-    nsMouseEvent * mouseEvent;
-    mouseEvent = (nsMouseEvent *) aMouseEvent->GetInternalNSEvent();
+    WidgetMouseEvent* mouseEvent =
+      static_cast<WidgetMouseEvent*>(aMouseEvent->GetInternalNSEvent());
 
     int32_t selectedIndex;
     if (NS_SUCCEEDED(GetIndexFromDOMEvent(aMouseEvent, selectedIndex))) {
@@ -2078,11 +2078,11 @@ nsListControlFrame::KeyDown(nsIDOMEvent* aKeyEvent)
   // Don't check defaultPrevented value because other browsers don't prevent
   // the key navigation of list control even if preventDefault() is called.
 
-  const nsKeyEvent* keyEvent =
-    static_cast<nsKeyEvent*>(aKeyEvent->GetInternalNSEvent());
+  const WidgetKeyboardEvent* keyEvent =
+    static_cast<WidgetKeyboardEvent*>(aKeyEvent->GetInternalNSEvent());
   MOZ_ASSERT(keyEvent, "DOM event must have internal event");
   MOZ_ASSERT(keyEvent->eventStructType == NS_KEY_EVENT,
-             "The keydown event's internal event struct must be nsKeyEvent");
+    "The keydown event's internal event struct must be WidgetKeyboardEvent");
 
   if (keyEvent->IsAlt()) {
     if (keyEvent->keyCode == NS_VK_UP || keyEvent->keyCode == NS_VK_DOWN) {
@@ -2219,11 +2219,11 @@ nsListControlFrame::KeyPress(nsIDOMEvent* aKeyEvent)
     return NS_OK;
   }
 
-  const nsKeyEvent* keyEvent =
-    static_cast<nsKeyEvent*>(aKeyEvent->GetInternalNSEvent());
+  const WidgetKeyboardEvent* keyEvent =
+    static_cast<WidgetKeyboardEvent*>(aKeyEvent->GetInternalNSEvent());
   MOZ_ASSERT(keyEvent, "DOM event must have internal event");
   MOZ_ASSERT(keyEvent->eventStructType == NS_KEY_EVENT,
-             "The keydown event's internal event struct must be nsKeyEvent");
+    "The keydown event's internal event struct must be WidgetKeyboardEvent");
 
   // Select option with this as the first character
   // XXX Not I18N compliant
@@ -2331,7 +2331,7 @@ nsListControlFrame::KeyPress(nsIDOMEvent* aKeyEvent)
     uint32_t index = (i + startIndex) % numOptions;
     nsRefPtr<dom::HTMLOptionElement> optionElement =
       options->ItemAsOption(index);
-    if (!optionElement) {
+    if (!optionElement || !optionElement->GetPrimaryFrame()) {
       continue;
     }
 

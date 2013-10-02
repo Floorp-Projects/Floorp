@@ -1,0 +1,6 @@
+intr protocol urgentChildToParent {
+
+    // can't declare urgent child-to-parent messages
+parent: ugrent Msg();
+
+};

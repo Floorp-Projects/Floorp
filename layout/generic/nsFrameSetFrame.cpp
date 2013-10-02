@@ -87,7 +87,7 @@ public:
 #endif
 
   NS_IMETHOD HandleEvent(nsPresContext* aPresContext,
-                         nsGUIEvent* aEvent,
+                         WidgetGUIEvent* aEvent,
                          nsEventStatus* aEventStatus);
 
   NS_IMETHOD GetCursor(const nsPoint&    aPoint,
@@ -681,7 +681,7 @@ void nsHTMLFramesetFrame::GetSizeOfChild(nsIFrame* aChild,
 
 
 NS_METHOD nsHTMLFramesetFrame::HandleEvent(nsPresContext* aPresContext,
-                                           nsGUIEvent*    aEvent,
+                                           WidgetGUIEvent* aEvent,
                                            nsEventStatus* aEventStatus)
 {
   NS_ENSURE_ARG_POINTER(aEventStatus);
@@ -693,8 +693,8 @@ NS_METHOD nsHTMLFramesetFrame::HandleEvent(nsPresContext* aPresContext,
 	      break;
       case NS_MOUSE_BUTTON_UP:
         if (aEvent->eventStructType == NS_MOUSE_EVENT &&
-            static_cast<nsMouseEvent*>(aEvent)->button ==
-              nsMouseEvent::eLeftButton) {
+            static_cast<WidgetMouseEvent*>(aEvent)->button ==
+              WidgetMouseEvent::eLeftButton) {
           EndMouseDrag(aPresContext);
         }
 	      break;
@@ -1278,7 +1278,7 @@ nsHTMLFramesetFrame::SetBorderResize(nsHTMLFramesetBorderFrame* aBorderFrame)
 void
 nsHTMLFramesetFrame::StartMouseDrag(nsPresContext*             aPresContext,
                                     nsHTMLFramesetBorderFrame* aBorder,
-                                    nsGUIEvent*                aEvent)
+                                    WidgetGUIEvent*            aEvent)
 {
 #if 0
   int32_t index;
@@ -1307,7 +1307,7 @@ nsHTMLFramesetFrame::StartMouseDrag(nsPresContext*             aPresContext,
 
 void
 nsHTMLFramesetFrame::MouseDrag(nsPresContext* aPresContext,
-                               nsGUIEvent*    aEvent)
+                               WidgetGUIEvent* aEvent)
 {
   // if the capture ended, reset the drag state
   if (nsIPresShell::GetCapturingContent() != GetContent()) {
@@ -1579,7 +1579,7 @@ void nsHTMLFramesetBorderFrame::PaintBorder(nsRenderingContext& aRenderingContex
 
 NS_IMETHODIMP
 nsHTMLFramesetBorderFrame::HandleEvent(nsPresContext* aPresContext,
-                                       nsGUIEvent*    aEvent,
+                                       WidgetGUIEvent* aEvent,
                                        nsEventStatus* aEventStatus)
 {
   NS_ENSURE_ARG_POINTER(aEventStatus);
@@ -1592,7 +1592,8 @@ nsHTMLFramesetBorderFrame::HandleEvent(nsPresContext* aPresContext,
 
   if (aEvent->eventStructType == NS_MOUSE_EVENT &&
       aEvent->message == NS_MOUSE_BUTTON_DOWN &&
-      static_cast<nsMouseEvent*>(aEvent)->button == nsMouseEvent::eLeftButton) {
+      static_cast<WidgetMouseEvent*>(aEvent)->button ==
+        WidgetMouseEvent::eLeftButton) {
     nsHTMLFramesetFrame* parentFrame = do_QueryFrame(GetParent());
     if (parentFrame) {
       parentFrame->StartMouseDrag(aPresContext, this, aEvent);

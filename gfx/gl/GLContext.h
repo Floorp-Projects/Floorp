@@ -2401,13 +2401,13 @@ public:
     /**
      * Applies aFilter to the texture currently bound to GL_TEXTURE_2D.
      */
-    void ApplyFilterToBoundTexture(gfxPattern::GraphicsFilter aFilter);
+    void ApplyFilterToBoundTexture(GraphicsFilter aFilter);
 
     /**
      * Applies aFilter to the texture currently bound to aTarget.
      */
     void ApplyFilterToBoundTexture(GLuint aTarget,
-                                   gfxPattern::GraphicsFilter aFilter);
+                                   GraphicsFilter aFilter);
 
     virtual bool BindExternalBuffer(GLuint texture, void* buffer) { return false; }
     virtual bool UnbindExternalBuffer(GLuint texture) { return false; }

@@ -61,13 +61,13 @@ def verifyIniFile(initests, directory):
       print >>sys.stderr, "TEST-UNEXPECTED-FAIL | xpccheck | found %s in xpcshell.ini and not in directory '%s'" % (name, directory)
       sys.exit(1)
 
-if __name__ == '__main__':
-  if len(sys.argv) < 3:
+def main(argv):
+  if len(argv) < 2:
     print >>sys.stderr, "Usage: xpccheck.py <topsrcdir> <directory> [<directory> ...]"
     sys.exit(1)
 
-  topsrcdir = sys.argv[1]
-  for d in sys.argv[2:]:
+  topsrcdir = argv[0]
+  for d in argv[1:]:
     # xpcshell-unpack is a copy of xpcshell sibling directory and in the Makefile
     # we copy all files (including xpcshell.ini from the sibling directory.
     if d.endswith('toolkit/mozapps/extensions/test/xpcshell-unpack'):
@@ -76,3 +76,6 @@ if __name__ == '__main__':
     initests = getIniTests(d)
     verifyDirectory(initests, d)
     verifyIniFile(initests, d)
+
+if __name__ == '__main__':
+    main(sys.argv[1:])

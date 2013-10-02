@@ -102,18 +102,19 @@ public:
     /**
      * InitInputEvent() initializes the aInputEvent with aModifierState.
      */
-    static void InitInputEvent(nsInputEvent& aInputEvent,
+    static void InitInputEvent(WidgetInputEvent& aInputEvent,
                                guint aModifierState);
 
     /**
      * InitKeyEvent() intializes aKeyEvent's modifier key related members
      * and keycode related values.
      *
-     * @param aKeyEvent         It's an nsKeyEvent which needs to be
+     * @param aKeyEvent         It's an WidgetKeyboardEvent which needs to be
      *                          initialized.
      * @param aGdkKeyEvent      A native GDK key event.
      */
-    static void InitKeyEvent(nsKeyEvent& aKeyEvent, GdkEventKey* aGdkKeyEvent);
+    static void InitKeyEvent(WidgetKeyboardEvent& aKeyEvent,
+                             GdkEventKey* aGdkKeyEvent);
 
     /**
      * IsKeyPressEventNecessary() returns TRUE when aGdkKeyEvent should cause
@@ -292,7 +293,8 @@ protected:
      * @param aGdkKeyEvent      A native key event which causes dispatching
      *                          aKeyEvent.
      */
-    void InitKeypressEvent(nsKeyEvent& aKeyEvent, GdkEventKey* aGdkKeyEvent);
+    void InitKeypressEvent(WidgetKeyboardEvent& aKeyEvent,
+                           GdkEventKey* aGdkKeyEvent);
 };
 
 } // namespace widget

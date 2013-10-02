@@ -144,11 +144,14 @@ public:
   virtual nsresult AddOverrideStyleSheet(nsIStyleSheet *aSheet) MOZ_OVERRIDE;
   virtual nsresult RemoveOverrideStyleSheet(nsIStyleSheet *aSheet) MOZ_OVERRIDE;
 
-  virtual NS_HIDDEN_(nsresult) HandleEventWithTarget(nsEvent* aEvent, nsIFrame* aFrame,
-                                                     nsIContent* aContent,
-                                                     nsEventStatus* aStatus) MOZ_OVERRIDE;
+  virtual NS_HIDDEN_(nsresult) HandleEventWithTarget(
+                                 mozilla::WidgetEvent* aEvent,
+                                 nsIFrame* aFrame,
+                                 nsIContent* aContent,
+                                 nsEventStatus* aStatus) MOZ_OVERRIDE;
   virtual NS_HIDDEN_(nsIFrame*) GetEventTargetFrame() MOZ_OVERRIDE;
-  virtual NS_HIDDEN_(already_AddRefed<nsIContent>) GetEventTargetContent(nsEvent* aEvent) MOZ_OVERRIDE;
+  virtual NS_HIDDEN_(already_AddRefed<nsIContent>) GetEventTargetContent(
+                                                     mozilla::WidgetEvent* aEvent) MOZ_OVERRIDE;
 
 
   virtual nsresult ReconstructFrames(void) MOZ_OVERRIDE;
@@ -183,13 +186,14 @@ public:
 
   virtual void Paint(nsView* aViewToPaint, const nsRegion& aDirtyRegion,
                      uint32_t aFlags) MOZ_OVERRIDE;
-  virtual nsresult HandleEvent(nsIFrame*       aFrame,
-                               nsGUIEvent*     aEvent,
-                               bool            aDontRetargetEvents,
-                               nsEventStatus*  aEventStatus) MOZ_OVERRIDE;
-  virtual NS_HIDDEN_(nsresult) HandleDOMEventWithTarget(nsIContent* aTargetContent,
-                                                        nsEvent* aEvent,
-                                                        nsEventStatus* aStatus) MOZ_OVERRIDE;
+  virtual nsresult HandleEvent(nsIFrame* aFrame,
+                               mozilla::WidgetGUIEvent* aEvent,
+                               bool aDontRetargetEvents,
+                               nsEventStatus* aEventStatus) MOZ_OVERRIDE;
+  virtual NS_HIDDEN_(nsresult) HandleDOMEventWithTarget(
+                                 nsIContent* aTargetContent,
+                                 mozilla::WidgetEvent* aEvent,
+                                 nsEventStatus* aStatus) MOZ_OVERRIDE;
   virtual NS_HIDDEN_(nsresult) HandleDOMEventWithTarget(nsIContent* aTargetContent,
                                                         nsIDOMEvent* aEvent,
                                                         nsEventStatus* aStatus) MOZ_OVERRIDE;
@@ -198,7 +202,8 @@ public:
   virtual void WillPaintWindow() MOZ_OVERRIDE;
   virtual void DidPaintWindow() MOZ_OVERRIDE;
   virtual void ScheduleViewManagerFlush() MOZ_OVERRIDE;
-  virtual void DispatchSynthMouseMove(nsGUIEvent *aEvent, bool aFlushOnHoverChange) MOZ_OVERRIDE;
+  virtual void DispatchSynthMouseMove(mozilla::WidgetGUIEvent* aEvent,
+                                      bool aFlushOnHoverChange) MOZ_OVERRIDE;
   virtual void ClearMouseCaptureOnView(nsView* aView) MOZ_OVERRIDE;
   virtual bool IsVisible() MOZ_OVERRIDE;
 
@@ -357,7 +362,7 @@ protected:
   nsresult DidCauseReflow();
   friend class nsAutoCauseReflowNotifier;
 
-  void DispatchTouchEvent(nsEvent *aEvent,
+  void DispatchTouchEvent(mozilla::WidgetEvent* aEvent,
                           nsEventStatus* aStatus,
                           nsPresShellEventCB* aEventCB,
                           bool aTouchIsNew);
@@ -528,7 +533,9 @@ protected:
     }
   }
 
-  nsresult HandleRetargetedEvent(nsEvent* aEvent, nsEventStatus* aStatus, nsIContent* aTarget)
+  nsresult HandleRetargetedEvent(mozilla::WidgetEvent* aEvent,
+                                 nsEventStatus* aStatus,
+                                 nsIContent* aTarget)
   {
     PushCurrentEventInfo(nullptr, nullptr);
     mCurrentEventContent = aTarget;
@@ -563,48 +570,52 @@ protected:
     nsDelayedInputEvent()
     : nsDelayedEvent(), mEvent(nullptr) {}
 
-    nsInputEvent* mEvent;
+    mozilla::WidgetInputEvent* mEvent;
   };
 
   class nsDelayedMouseEvent : public nsDelayedInputEvent
   {
   public:
-    nsDelayedMouseEvent(nsMouseEvent* aEvent) : nsDelayedInputEvent()
+    nsDelayedMouseEvent(mozilla::WidgetMouseEvent* aEvent) :
+      nsDelayedInputEvent()
     {
-      mEvent = new nsMouseEvent(aEvent->mFlags.mIsTrusted,
-                                aEvent->message,
-                                aEvent->widget,
-                                aEvent->reason,
-                                aEvent->context);
-      static_cast<nsMouseEvent*>(mEvent)->AssignMouseEventData(*aEvent, false);
+      mEvent = new mozilla::WidgetMouseEvent(aEvent->mFlags.mIsTrusted,
+                                             aEvent->message,
+                                             aEvent->widget,
+                                             aEvent->reason,
+                                             aEvent->context);
+      static_cast<mozilla::WidgetMouseEvent*>(mEvent)->
+        AssignMouseEventData(*aEvent, false);
     }
 
     virtual ~nsDelayedMouseEvent()
     {
-      delete static_cast<nsMouseEvent*>(mEvent);
+      delete static_cast<mozilla::WidgetMouseEvent*>(mEvent);
     }
   };
 
   class nsDelayedKeyEvent : public nsDelayedInputEvent
   {
   public:
-    nsDelayedKeyEvent(nsKeyEvent* aEvent) : nsDelayedInputEvent()
+    nsDelayedKeyEvent(mozilla::WidgetKeyboardEvent* aEvent) :
+      nsDelayedInputEvent()
     {
-      mEvent = new nsKeyEvent(aEvent->mFlags.mIsTrusted,
-                              aEvent->message,
-                              aEvent->widget);
-      static_cast<nsKeyEvent*>(mEvent)->AssignKeyEventData(*aEvent, false);
+      mEvent = new mozilla::WidgetKeyboardEvent(aEvent->mFlags.mIsTrusted,
+                                                aEvent->message,
+                                                aEvent->widget);
+      static_cast<mozilla::WidgetKeyboardEvent*>(mEvent)->
+        AssignKeyEventData(*aEvent, false);
     }
 
     virtual ~nsDelayedKeyEvent()
     {
-      delete static_cast<nsKeyEvent*>(mEvent);
+      delete static_cast<mozilla::WidgetKeyboardEvent*>(mEvent);
     }
   };
 
   // Check if aEvent is a mouse event and record the mouse location for later
   // synth mouse moves.
-  void RecordMouseLocation(nsGUIEvent* aEvent);
+  void RecordMouseLocation(mozilla::WidgetGUIEvent* aEvent);
   class nsSynthMouseMoveEvent MOZ_FINAL : public nsARefreshObserver {
   public:
     nsSynthMouseMoveEvent(PresShell* aPresShell, bool aFromScroll)
@@ -644,13 +655,14 @@ protected:
   already_AddRefed<nsIPresShell> GetParentPresShell();
   nsIContent* GetCurrentEventContent();
   nsIFrame* GetCurrentEventFrame();
-  nsresult RetargetEventToParent(nsGUIEvent* aEvent,
-                                 nsEventStatus*  aEventStatus);
+  nsresult RetargetEventToParent(mozilla::WidgetGUIEvent* aEvent,
+                                 nsEventStatus* aEventStatus);
   void PushCurrentEventInfo(nsIFrame* aFrame, nsIContent* aContent);
   void PopCurrentEventInfo();
-  nsresult HandleEventInternal(nsEvent* aEvent, nsEventStatus *aStatus);
-  nsresult HandlePositionedEvent(nsIFrame*      aTargetFrame,
-                                 nsGUIEvent*    aEvent,
+  nsresult HandleEventInternal(mozilla::WidgetEvent* aEvent,
+                               nsEventStatus* aStatus);
+  nsresult HandlePositionedEvent(nsIFrame* aTargetFrame,
+                                 mozilla::WidgetGUIEvent* aEvent,
                                  nsEventStatus* aEventStatus);
   // This returns the focused DOM window under our top level window.
   //  I.e., when we are deactive, this returns the *last* focused DOM window.
@@ -671,7 +683,7 @@ protected:
    * Returns true if the context menu event should fire and false if it should
    * not.
    */
-  bool AdjustContextMenuKeyEvent(nsMouseEvent* aEvent);
+  bool AdjustContextMenuKeyEvent(mozilla::WidgetMouseEvent* aEvent);
 
   // 
   bool PrepareToUseCaretPosition(nsIWidget* aEventWidget, nsIntPoint& aTargetPt);
@@ -707,6 +719,9 @@ protected:
   virtual void SysColorChanged() MOZ_OVERRIDE { mPresContext->SysColorChanged(); }
   virtual void ThemeChanged() MOZ_OVERRIDE { mPresContext->ThemeChanged(); }
   virtual void BackingScaleFactorChanged() MOZ_OVERRIDE { mPresContext->UIResolutionChanged(); }
+
+  virtual void FreezePainting() MOZ_OVERRIDE;
+  virtual void ThawPainting() MOZ_OVERRIDE;
 
   void UpdateImageVisibility();
 

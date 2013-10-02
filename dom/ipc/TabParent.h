@@ -100,7 +100,7 @@ public:
      * It's an error to call TryCapture() if this isn't the event
      * capturer.
      */
-    bool TryCapture(const nsGUIEvent& aEvent);
+    bool TryCapture(const WidgetGUIEvent& aEvent);
 
     void Destroy();
 
@@ -120,6 +120,10 @@ public:
                                  const ClonedMessageData& aData,
                                  const InfallibleTArray<CpowEntry>& aCpows,
                                  InfallibleTArray<nsString>* aJSONRetVal);
+    virtual bool AnswerRpcMessage(const nsString& aMessage,
+                                  const ClonedMessageData& aData,
+                                  const InfallibleTArray<CpowEntry>& aCpows,
+                                  InfallibleTArray<nsString>* aJSONRetVal);
     virtual bool RecvAsyncMessage(const nsString& aMessage,
                                   const ClonedMessageData& aData,
                                   const InfallibleTArray<CpowEntry>& aCpows);
@@ -183,9 +187,9 @@ public:
     void Activate();
     void Deactivate();
 
-    bool MapEventCoordinatesForChildProcess(nsEvent* aEvent);
+    bool MapEventCoordinatesForChildProcess(mozilla::WidgetEvent* aEvent);
     void MapEventCoordinatesForChildProcess(const LayoutDeviceIntPoint& aOffset,
-                                                   nsEvent* aEvent);
+                                            mozilla::WidgetEvent* aEvent);
 
     void SendMouseEvent(const nsAString& aType, float aX, float aY,
                         int32_t aButton, int32_t aClickCount,
@@ -193,9 +197,9 @@ public:
     void SendKeyEvent(const nsAString& aType, int32_t aKeyCode,
                       int32_t aCharCode, int32_t aModifiers,
                       bool aPreventDefault);
-    bool SendRealMouseEvent(nsMouseEvent& event);
+    bool SendRealMouseEvent(mozilla::WidgetMouseEvent& event);
     bool SendMouseWheelEvent(mozilla::WheelEvent& event);
-    bool SendRealKeyEvent(nsKeyEvent& event);
+    bool SendRealKeyEvent(mozilla::WidgetKeyboardEvent& event);
     bool SendRealTouchEvent(WidgetTouchEvent& event);
 
     virtual PDocumentRendererParent*
@@ -224,10 +228,10 @@ public:
     void HandleDelayedDialogs();
 
     static TabParent *GetIMETabParent() { return mIMETabParent; }
-    bool HandleQueryContentEvent(nsQueryContentEvent& aEvent);
-    bool SendCompositionEvent(nsCompositionEvent& event);
-    bool SendTextEvent(nsTextEvent& event);
-    bool SendSelectionEvent(nsSelectionEvent& event);
+    bool HandleQueryContentEvent(mozilla::WidgetQueryContentEvent& aEvent);
+    bool SendCompositionEvent(mozilla::WidgetCompositionEvent& event);
+    bool SendTextEvent(mozilla::WidgetTextEvent& event);
+    bool SendSelectionEvent(mozilla::WidgetSelectionEvent& event);
 
     static TabParent* GetFrom(nsFrameLoader* aFrameLoader);
     static TabParent* GetFrom(nsIContent* aContent);
@@ -324,8 +328,8 @@ private:
     // to dispatch |aEvent| to our child.  If there's a relevant
     // transform in place, |aOutEvent| is the transformed |aEvent| to
     // dispatch to content.
-    void MaybeForwardEventToRenderFrame(const nsInputEvent& aEvent,
-                                        nsInputEvent* aOutEvent);
+    void MaybeForwardEventToRenderFrame(const WidgetInputEvent& aEvent,
+                                        WidgetInputEvent* aOutEvent);
     // The offset for the child process which is sampled at touch start. This
     // means that the touch events are relative to where the frame was at the
     // start of the touch. We need to look for a better solution to this
