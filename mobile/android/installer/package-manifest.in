@@ -591,7 +591,3 @@ bin/components/@DLL_PREFIX@nkgnomevfs@DLL_SUFFIX@
 @BINPATH@/components/MarionetteComponents.manifest
 @BINPATH@/components/marionettecomponent.js
 #endif
-
-@BINPATH@/components/DataStore.manifest
-@BINPATH@/components/DataStoreService.js
-@BINPATH@/components/dom_datastore.xpt
