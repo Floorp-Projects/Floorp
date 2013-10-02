@@ -10,7 +10,7 @@ interface nsICancelable;
 interface nsIMIMEInfo;
 interface nsIFile;
 
-[scriptable, uuid(b1c81100-9d66-11e2-9e96-0800200c9a66)]
+[scriptable, uuid(08b0b78c-6d7d-4d97-86c9-be5a695813c9)]
 interface nsITransfer : nsIWebProgressListener2 {
 
     /**
@@ -57,14 +57,6 @@ interface nsITransfer : nsIWebProgressListener2 {
               in nsIFile aTempFile,
               in nsICancelable aCancelable,
               in boolean aIsPrivate);
-
-    /*
-     * Used to notify the transfer object of the hash of the downloaded file.
-     * Must be called on the main thread, only after the download has finished
-     * successfully.
-     * @param aHash The SHA-256 hash in raw bytes of the downloaded file.
-     */
-    void setSha256Hash(in ACString aHash);
 };
 
 %{C++
