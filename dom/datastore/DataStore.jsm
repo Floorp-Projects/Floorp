@@ -23,7 +23,6 @@ const REVISION_VOID = "void";
 // and yet we don't know if it's too low or too high.
 const MAX_REQUESTS = 25;
 
-Cu.import("resource://gre/modules/DataStoreCursor.jsm");
 Cu.import("resource://gre/modules/DataStoreDB.jsm");
 Cu.import("resource://gre/modules/ObjectWrapper.jsm");
 Cu.import('resource://gre/modules/Services.jsm');
@@ -87,8 +86,6 @@ this.DataStore.prototype = {
   _owner: null,
   _readOnly: null,
   _revisionId: null,
-  _exposedObject: null,
-  _cursor: null,
 
   init: function(aWindow, aName, aOwner, aReadOnly) {
     debug("DataStore init");
@@ -320,32 +317,10 @@ this.DataStore.prototype = {
 
     this.retrieveRevisionId(
       function() {
-        // If we have an active cursor we don't emit events.
-        if (self._cursor) {
-          return;
-        }
-
         let event = new self._window.DataStoreChangeEvent('change', aMessage.data);
         self.__DOM_IMPL__.dispatchEvent(event);
       }
     );
-  },
-
-  get exposedObject() {
-    debug("get exposedObject");
-    return this._exposedObject;
-  },
-
-  set exposedObject(aObject) {
-    debug("set exposedObject");
-    this._exposedObject = aObject;
-  },
-
-  syncTerminated: function(aCursor) {
-    // This checks is to avoid that an invalid cursor stops a sync.
-    if (this._cursor == aCursor) {
-      this._cursor = null;
-    }
   },
 
   // Public interface :
@@ -573,11 +548,5 @@ this.DataStore.prototype = {
   get onchange() {
     debug("Get OnChange");
     return this.__DOM_IMPL__.getEventHandler("onchange");
-  },
-
-  sync: function(aRevisionId) {
-    debug("Sync");
-    this._cursor = new DataStoreCursor(this._window, this, aRevisionId);
-    return this._window.DataStoreCursor._create(this._window, this._cursor);
   }
 };
