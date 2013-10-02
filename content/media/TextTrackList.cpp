@@ -5,6 +5,8 @@
 
 #include "mozilla/dom/TextTrackList.h"
 #include "mozilla/dom/TextTrackListBinding.h"
+#include "mozilla/dom/TrackEvent.h"
+#include "nsThreadUtils.h"
 
 namespace mozilla {
 namespace dom {
@@ -54,8 +56,10 @@ TextTrackList::AddTextTrack(HTMLMediaElement* aMediaElement,
 {
   nsRefPtr<TextTrack> track = new TextTrack(mGlobal, aMediaElement, aKind,
                                             aLabel, aLanguage);
-  mTextTracks.AppendElement(track);
-  // TODO: dispatch addtrack event
+  if (mTextTracks.AppendElement(track)) {
+    CreateAndDispatchTrackEventRunner(track, NS_LITERAL_STRING("addtrack"));
+  }
+
   return track.forget();
 }
 
@@ -73,9 +77,11 @@ TextTrackList::GetTrackById(const nsAString& aId)
 }
 
 void
-TextTrackList::RemoveTextTrack(const TextTrack& aTrack)
+TextTrackList::RemoveTextTrack(TextTrack& aTrack)
 {
-  mTextTracks.RemoveElement(&aTrack);
+  if (mTextTracks.RemoveElement(&aTrack)) {
+    CreateAndDispatchTrackEventRunner(&aTrack, NS_LITERAL_STRING("removetrack"));
+  }
 }
 
 void
@@ -84,6 +90,46 @@ TextTrackList::DidSeek()
   for (uint32_t i = 0; i < mTextTracks.Length(); i++) {
     mTextTracks[i]->SetDirty();
   }
+}
+
+class TrackEventRunner MOZ_FINAL: public nsRunnable
+{
+public:
+  TrackEventRunner(TextTrackList* aList, TrackEvent* aEvent)
+    : mList(aList)
+    , mEvent(aEvent)
+  {}
+
+  NS_IMETHOD Run()
+  {
+    return mList->DispatchTrackEvent(mEvent);
+  }
+
+private:
+  nsRefPtr<TrackEvent> mEvent;
+  nsRefPtr<TextTrackList> mList;
+};
+
+nsresult
+TextTrackList::DispatchTrackEvent(TrackEvent* aEvent)
+{
+  return DispatchTrustedEvent(aEvent);
+}
+
+void
+TextTrackList::CreateAndDispatchTrackEventRunner(TextTrack* aTrack,
+                                                 const nsAString& aEventName)
+{
+  TrackEventInitInitializer eventInit;
+  eventInit.mBubbles = false;
+  eventInit.mCancelable = false;
+  eventInit.mTrack = aTrack;
+  nsRefPtr<TrackEvent> trackEvent =
+    TrackEvent::Constructor(this, aEventName, eventInit);
+
+  // Dispatch the TrackEvent asynchronously.
+  nsCOMPtr<nsIRunnable> event = new TrackEventRunner(this, trackEvent);
+  NS_DispatchToMainThread(event, NS_DISPATCH_NORMAL);
 }
 
 } // namespace dom
