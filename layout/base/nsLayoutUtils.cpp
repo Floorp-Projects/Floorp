@@ -69,6 +69,7 @@
 #include "nsStyleStructInlines.h"
 #include "nsStyleTransformMatrix.h"
 #include "nsIFrameInlines.h"
+#include "ImageContainer.h"
 
 #include "mozilla/Preferences.h"
 

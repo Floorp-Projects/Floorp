@@ -11,6 +11,7 @@
 #include "yuv_convert.h"
 #include "ycbcr_to_rgb565.h"
 #include "GeckoProfiler.h"
+#include "ImageContainer.h"
 
 #ifdef XP_WIN
 #include "gfxWindowsPlatform.h"
@@ -690,7 +691,7 @@ gfxUtils::GfxRectToIntRect(const gfxRect& aIn, nsIntRect* aOut)
 }
 
 void
-gfxUtils::GetYCbCrToRGBDestFormatAndSize(const PlanarYCbCrImage::Data& aData,
+gfxUtils::GetYCbCrToRGBDestFormatAndSize(const PlanarYCbCrData& aData,
                                          gfxImageFormat& aSuggestedFormat,
                                          gfxIntSize& aSuggestedSize)
 {
@@ -744,7 +745,7 @@ gfxUtils::GetYCbCrToRGBDestFormatAndSize(const PlanarYCbCrImage::Data& aData,
 }
 
 void
-gfxUtils::ConvertYCbCrToRGB(const PlanarYCbCrImage::Data& aData,
+gfxUtils::ConvertYCbCrToRGB(const PlanarYCbCrData& aData,
                             const gfxImageFormat& aDestFormat,
                             const gfxIntSize& aDestSize,
                             unsigned char* aDestBuffer,
