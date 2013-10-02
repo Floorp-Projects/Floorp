@@ -4137,11 +4137,24 @@ nsGlobalWindow::GetInnerSize(CSSIntSize& aSize)
     return NS_OK;
   }
 
-  nsRefPtr<nsViewManager> viewManager = presShell->GetViewManager();
-  if (viewManager) {
-    viewManager->FlushDelayedResize(false);
+  /*
+   * On platforms with resolution-based zooming, the CSS viewport
+   * and visual viewport may not be the same. The inner size should
+   * be the visual viewport, but we fall back to the CSS viewport
+   * if it is not set.
+   */
+  if (presShell->IsScrollPositionClampingScrollPortSizeSet()) {
+    aSize = CSSIntRect::FromAppUnitsRounded(
+      presShell->GetScrollPositionClampingScrollPortSize());
+  } else {
+    nsRefPtr<nsViewManager> viewManager = presShell->GetViewManager();
+    if (viewManager) {
+      viewManager->FlushDelayedResize(false);
+    }
+
+    aSize = CSSIntRect::FromAppUnitsRounded(
+      presContext->GetVisibleArea().Size());
   }
-  aSize = CSSIntRect::FromAppUnitsRounded(presContext->GetVisibleArea().Size());
   return NS_OK;
 }
 
