@@ -61,10 +61,11 @@
     }, cbError);
   }
 
-  function eventListener(obj) {
-    ok(obj, "OnChangeListener is called with data");
-    is(obj.id, gChangeId, "OnChangeListener is called with the right ID: " + obj.id);
-    is(obj.operation, gChangeOperation, "OnChangeListener is called with the right operation:" + obj.operation + " " + gChangeOperation);
+  function eventListener(evt) {
+    ok(evt, "OnChangeListener is called with data");
+    is(/[0-9a-zA-Z]{8}-[0-9a-zA-Z]{4}-[0-9a-zA-Z]{4}-[0-9a-zA-Z]{4}-[0-9a-zA-Z]{12}/.test(evt.revisionId), true, "event.revisionId returns something");
+    is(evt.id, gChangeId, "OnChangeListener is called with the right ID: " + evt.id);
+    is(evt.operation, gChangeOperation, "OnChangeListener is called with the right operation:" + evt.operation + " " + gChangeOperation);
     runTest();
   }
 
@@ -75,6 +76,7 @@
     // Add onchange = function
     function() {
       gStore.onchange = eventListener;
+      is(gStore.onchange, eventListener, "onChange is set");
       runTest();
     },
 
