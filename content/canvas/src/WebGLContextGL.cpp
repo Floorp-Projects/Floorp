@@ -325,6 +325,10 @@ WebGLContext::CheckFramebufferStatus(GLenum target)
         return LOCAL_GL_FRAMEBUFFER_INCOMPLETE_ATTACHMENT;
     if(mBoundFramebuffer->HasAttachmentsOfMismatchedDimensions())
         return LOCAL_GL_FRAMEBUFFER_INCOMPLETE_DIMENSIONS;
+
+    // Ok, attach our chosen flavor of {DEPTH, STENCIL, DEPTH_STENCIL}.
+    mBoundFramebuffer->FinalizeAttachments();
+
     return gl->fCheckFramebufferStatus(target);
 }
 
@@ -2288,7 +2292,7 @@ WebGLContext::ReadPixels(GLint x, GLint y, GLsizei width,
         // now, same computation as above to find the size of the intermediate buffer to allocate for the subrect
         // no need to check again for integer overflow here, since we already know the sizes aren't greater than before
         uint32_t subrect_plainRowSize = subrect_width * bytesPerPixel;
-	// There are checks above to ensure that this doesn't overflow.
+    // There are checks above to ensure that this doesn't overflow.
         uint32_t subrect_alignedRowSize = 
             RoundedToNextMultipleOf(subrect_plainRowSize, mPixelStorePackAlignment).value();
         uint32_t subrect_byteLength = (subrect_height-1)*subrect_alignedRowSize + subrect_plainRowSize;

@@ -16,6 +16,9 @@ namespace mozilla {
 
 class WebGLTexture;
 class WebGLRenderbuffer;
+namespace gl {
+    class GLContext;
+}
 
 class WebGLFramebuffer MOZ_FINAL
     : public nsWrapperCache
@@ -37,6 +40,7 @@ public:
         WebGLRefPtr<WebGLRenderbuffer> mRenderbufferPtr;
         GLenum mAttachmentPoint;
         GLint mTextureLevel;
+        GLenum mTextureTarget;
         GLenum mTextureCubeMapFace;
 
         Attachment(GLenum aAttachmentPoint = LOCAL_GL_COLOR_ATTACHMENT0)
@@ -51,7 +55,7 @@ public:
 
         bool HasAlpha() const;
 
-        void SetTexture(WebGLTexture *tex, GLint level, GLenum face);
+        void SetTexture(WebGLTexture *tex, GLenum target, GLint level, GLenum face);
         void SetRenderbuffer(WebGLRenderbuffer *rb) {
             mTexturePtr = nullptr;
             mRenderbufferPtr = rb;
@@ -67,6 +71,9 @@ public:
         }
         WebGLRenderbuffer *Renderbuffer() {
             return mRenderbufferPtr;
+        }
+        GLenum TextureTarget() const {
+            return mTextureTarget;
         }
         GLint TextureLevel() const {
             return mTextureLevel;
@@ -86,6 +93,8 @@ public:
         bool HasSameDimensionsAs(const Attachment& other) const;
 
         bool IsComplete() const;
+
+        void FinalizeAttachment(GLenum attachmentLoc) const;
     };
 
     void Delete();
@@ -115,6 +124,9 @@ public:
 
     bool HasAttachmentsOfMismatchedDimensions() const;
 
+    const size_t ColorAttachmentCount() const {
+        return mColorAttachments.Length();
+    }
     const Attachment& ColorAttachment(uint32_t colorAttachmentId) const {
         return mColorAttachments[colorAttachmentId];
     }
@@ -144,6 +156,8 @@ public:
     WebGLContext *GetParentObject() const {
         return Context();
     }
+
+    void FinalizeAttachments() const;
 
     virtual JSObject* WrapObject(JSContext *cx,
                                  JS::Handle<JSObject*> scope) MOZ_OVERRIDE;
