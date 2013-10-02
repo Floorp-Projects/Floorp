@@ -40,21 +40,21 @@ public:
   NS_DECL_FRAMEARENA_HELPERS
 
   NS_IMETHOD HandlePress(nsPresContext* aPresContext,
-                         nsGUIEvent *    aEvent,
-                         nsEventStatus*  aEventStatus) MOZ_OVERRIDE;
+                         mozilla::WidgetGUIEvent* aEvent,
+                         nsEventStatus* aEventStatus) MOZ_OVERRIDE;
 
   NS_IMETHOD HandleMultiplePress(nsPresContext* aPresContext,
-                                 nsGUIEvent *    aEvent,
-                                 nsEventStatus*  aEventStatus,
+                                 mozilla::WidgetGUIEvent* aEvent,
+                                 nsEventStatus* aEventStatus,
                                  bool aControlHeld) MOZ_OVERRIDE;
 
   NS_IMETHOD HandleDrag(nsPresContext* aPresContext,
-                        nsGUIEvent *    aEvent,
-                        nsEventStatus*  aEventStatus) MOZ_OVERRIDE;
+                        mozilla::WidgetGUIEvent* aEvent,
+                        nsEventStatus* aEventStatus) MOZ_OVERRIDE;
 
   NS_IMETHOD HandleRelease(nsPresContext* aPresContext,
-                           nsGUIEvent *    aEvent,
-                           nsEventStatus*  aEventStatus) MOZ_OVERRIDE;
+                           mozilla::WidgetGUIEvent* aEvent,
+                           nsEventStatus* aEventStatus) MOZ_OVERRIDE;
 
   virtual void Init(nsIContent*      aContent,
                     nsIFrame*        aParent,

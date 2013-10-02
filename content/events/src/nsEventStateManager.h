@@ -69,7 +69,7 @@ public:
    * DOM or frame event handling should occur here as well.
    */
   nsresult PreHandleEvent(nsPresContext* aPresContext,
-                          nsEvent *aEvent,
+                          mozilla::WidgetEvent* aEvent,
                           nsIFrame* aTargetFrame,
                           nsEventStatus* aStatus);
 
@@ -79,7 +79,7 @@ public:
    * DOM and frame processing.
    */
   nsresult PostHandleEvent(nsPresContext* aPresContext,
-                           nsEvent *aEvent,
+                           mozilla::WidgetEvent* aEvent,
                            nsIFrame* aTargetFrame,
                            nsEventStatus* aStatus);
 
@@ -96,7 +96,8 @@ public:
   void ClearFrameRefs(nsIFrame* aFrame);
 
   nsIFrame* GetEventTarget();
-  already_AddRefed<nsIContent> GetEventTargetContent(nsEvent* aEvent);
+  already_AddRefed<nsIContent> GetEventTargetContent(
+                                 mozilla::WidgetEvent* aEvent);
 
   /**
    * Notify that the given NS_EVENT_STATE_* bit has changed for this content.
@@ -111,7 +112,7 @@ public:
    */
   bool SetContentState(nsIContent *aContent, nsEventStates aState);
   void ContentRemoved(nsIDocument* aDocument, nsIContent* aContent);
-  bool EventStatusOK(nsGUIEvent* aEvent);
+  bool EventStatusOK(mozilla::WidgetGUIEvent* aEvent);
 
   /**
    * Register accesskey on the given element. When accesskey is activated then
@@ -190,8 +191,9 @@ public:
   static void SetFullScreenState(mozilla::dom::Element* aElement, bool aIsFullScreen);
 
   static bool IsRemoteTarget(nsIContent* aTarget);
-  static LayoutDeviceIntPoint GetChildProcessOffset(nsFrameLoader* aFrameLoader,
-                                                    const nsEvent& aEvent);
+  static LayoutDeviceIntPoint GetChildProcessOffset(
+                                nsFrameLoader* aFrameLoader,
+                                const mozilla::WidgetEvent& aEvent);
 
   // Holds the point in screen coords that a mouse event was dispatched to,
   // before we went into pointer lock mode. This is constantly updated while
@@ -244,25 +246,29 @@ protected:
    */
   static int32_t GetAccessModifierMaskFor(nsISupports* aDocShell);
 
-  void UpdateCursor(nsPresContext* aPresContext, nsEvent* aEvent, nsIFrame* aTargetFrame, nsEventStatus* aStatus);
+  void UpdateCursor(nsPresContext* aPresContext,
+                    mozilla::WidgetEvent* aEvent,
+                    nsIFrame* aTargetFrame,
+                    nsEventStatus* aStatus);
   /**
    * Turn a GUI mouse event into a mouse event targeted at the specified
    * content.  This returns the primary frame for the content (or null
    * if it goes away during the event).
    */
-  nsIFrame* DispatchMouseEvent(nsGUIEvent* aEvent, uint32_t aMessage,
+  nsIFrame* DispatchMouseEvent(mozilla::WidgetGUIEvent* aEvent,
+                               uint32_t aMessage,
                                nsIContent* aTargetContent,
                                nsIContent* aRelatedContent);
   /**
    * Synthesize DOM and frame mouseover and mouseout events from this
    * MOUSE_MOVE or MOUSE_EXIT event.
    */
-  void GenerateMouseEnterExit(nsGUIEvent* aEvent);
+  void GenerateMouseEnterExit(mozilla::WidgetGUIEvent* aEvent);
   /**
    * Tell this ESM and ESMs in parent documents that the mouse is
    * over some content in this document.
    */
-  void NotifyMouseOver(nsGUIEvent* aEvent, nsIContent* aContent);
+  void NotifyMouseOver(mozilla::WidgetGUIEvent* aEvent, nsIContent* aContent);
   /**
    * Tell this ESM and ESMs in affected child documents that the mouse
    * has exited this document's currently hovered content.
@@ -272,8 +278,9 @@ protected:
    *        NotifyMouseOut will NOT change the current hover content to null;
    *        in that case the caller is responsible for updating hover state.
    */
-  void NotifyMouseOut(nsGUIEvent* aEvent, nsIContent* aMovingInto);
-  void GenerateDragDropEnterExit(nsPresContext* aPresContext, nsGUIEvent* aEvent);
+  void NotifyMouseOut(mozilla::WidgetGUIEvent* aEvent, nsIContent* aMovingInto);
+  void GenerateDragDropEnterExit(nsPresContext* aPresContext,
+                                 mozilla::WidgetGUIEvent* aEvent);
   /**
    * Fire the dragenter and dragexit/dragleave events when the mouse moves to a
    * new target.
@@ -283,7 +290,7 @@ protected:
    * @param aTargetFrame target frame for the event
    */
   void FireDragEnterOrExit(nsPresContext* aPresContext,
-                           nsGUIEvent* aEvent,
+                           mozilla::WidgetGUIEvent* aEvent,
                            uint32_t aMsg,
                            nsIContent* aRelatedTarget,
                            nsIContent* aTargetContent,
@@ -294,8 +301,12 @@ protected:
    */
   void UpdateDragDataTransfer(mozilla::WidgetDragEvent* dragEvent);
 
-  nsresult SetClickCount(nsPresContext* aPresContext, nsMouseEvent *aEvent, nsEventStatus* aStatus);
-  nsresult CheckForAndDispatchClick(nsPresContext* aPresContext, nsMouseEvent *aEvent, nsEventStatus* aStatus);
+  nsresult SetClickCount(nsPresContext* aPresContext,
+                         mozilla::WidgetMouseEvent* aEvent,
+                         nsEventStatus* aStatus);
+  nsresult CheckForAndDispatchClick(nsPresContext* aPresContext,
+                                    mozilla::WidgetMouseEvent* aEvent,
+                                    nsEventStatus* aStatus);
   void EnsureDocument(nsPresContext* aPresContext);
   void FlushPendingEvents(nsPresContext* aPresContext);
 
@@ -659,10 +670,12 @@ protected:
                           nsIFrame* targetFrame);
 
   // routines for the d&d gesture tracking state machine
-  void BeginTrackingDragGesture ( nsPresContext* aPresContext, nsMouseEvent* inDownEvent,
-                                  nsIFrame* inDownFrame ) ;
-  void StopTrackingDragGesture ( ) ;
-  void GenerateDragGesture ( nsPresContext* aPresContext, nsMouseEvent *aEvent ) ;
+  void BeginTrackingDragGesture(nsPresContext* aPresContext,
+                                mozilla::WidgetMouseEvent* aDownEvent,
+                                nsIFrame* aDownFrame);
+  void StopTrackingDragGesture();
+  void GenerateDragGesture(nsPresContext* aPresContext,
+                           mozilla::WidgetMouseEvent* aEvent);
 
   /**
    * Determine which node the drag should be targeted at.
@@ -703,7 +716,7 @@ protected:
    * BeginTrackingDragGesture). aEvent->widget must be
    * mCurrentTarget->GetNearestWidget().
    */
-  void FillInEventFromGestureDown(nsMouseEvent* aEvent);
+  void FillInEventFromGestureDown(mozilla::WidgetMouseEvent* aEvent);
 
   nsresult DoContentCommandEvent(mozilla::WidgetContentCommandEvent* aEvent);
   nsresult DoContentCommandScrollEvent(
@@ -711,15 +724,16 @@ protected:
 
   void DoQuerySelectedText(mozilla::WidgetQueryContentEvent* aEvent);
 
-  bool RemoteQueryContentEvent(nsEvent *aEvent);
+  bool RemoteQueryContentEvent(mozilla::WidgetEvent* aEvent);
   mozilla::dom::TabParent *GetCrossProcessTarget();
-  bool IsTargetCrossProcess(nsGUIEvent *aEvent);
+  bool IsTargetCrossProcess(mozilla::WidgetGUIEvent* aEvent);
 
-  bool DispatchCrossProcessEvent(nsEvent* aEvent, nsFrameLoader* remote,
+  bool DispatchCrossProcessEvent(mozilla::WidgetEvent* aEvent,
+                                 nsFrameLoader* aRemote,
                                  nsEventStatus *aStatus);
-  bool HandleCrossProcessEvent(nsEvent *aEvent,
-                                 nsIFrame* aTargetFrame,
-                                 nsEventStatus *aStatus);
+  bool HandleCrossProcessEvent(mozilla::WidgetEvent* aEvent,
+                               nsIFrame* aTargetFrame,
+                               nsEventStatus* aStatus);
 
 private:
   static inline void DoStateChange(mozilla::dom::Element* aElement,
@@ -814,10 +828,11 @@ public:
 
   // Functions used for click hold context menus
   nsCOMPtr<nsITimer> mClickHoldTimer;
-  void CreateClickHoldTimer ( nsPresContext* aPresContext, nsIFrame* inDownFrame,
-                              nsGUIEvent* inMouseDownEvent ) ;
-  void KillClickHoldTimer ( ) ;
-  void FireContextClick ( ) ;
+  void CreateClickHoldTimer(nsPresContext* aPresContext,
+                            nsIFrame* aDownFrame,
+                            mozilla::WidgetGUIEvent* aMouseDownEvent);
+  void KillClickHoldTimer();
+  void FireContextClick();
 
   void SetPointerLock(nsIWidget* aWidget, nsIContent* aElement) ;
   static void sClickHoldCallback ( nsITimer* aTimer, void* aESM ) ;
@@ -831,7 +846,7 @@ class nsAutoHandlingUserInputStatePusher
 {
 public:
   nsAutoHandlingUserInputStatePusher(bool aIsHandlingUserInput,
-                                     nsEvent* aEvent,
+                                     mozilla::WidgetEvent* aEvent,
                                      nsIDocument* aDocument)
     : mIsHandlingUserInput(aIsHandlingUserInput),
       mIsMouseDown(aEvent && aEvent->message == NS_MOUSE_BUTTON_DOWN),

@@ -163,9 +163,9 @@ public:
   virtual void GetChildLists(nsTArray<ChildList>* aLists) const MOZ_OVERRIDE;
 
   NS_IMETHOD  HandleEvent(nsPresContext* aPresContext, 
-                          nsGUIEvent*     aEvent,
-                          nsEventStatus*  aEventStatus) MOZ_OVERRIDE;
-  NS_IMETHOD  GetContentForEvent(nsEvent* aEvent,
+                          mozilla::WidgetGUIEvent* aEvent,
+                          nsEventStatus* aEventStatus) MOZ_OVERRIDE;
+  NS_IMETHOD  GetContentForEvent(mozilla::WidgetEvent* aEvent,
                                  nsIContent** aContent) MOZ_OVERRIDE;
   NS_IMETHOD  GetCursor(const nsPoint&    aPoint,
                         nsIFrame::Cursor& aCursor) MOZ_OVERRIDE;
@@ -349,21 +349,21 @@ public:
   // Selection Methods
 
   NS_IMETHOD HandlePress(nsPresContext* aPresContext,
-                         nsGUIEvent *    aEvent,
-                         nsEventStatus*  aEventStatus);
+                         mozilla::WidgetGUIEvent* aEvent,
+                         nsEventStatus* aEventStatus);
 
   NS_IMETHOD HandleMultiplePress(nsPresContext* aPresContext,
-                         nsGUIEvent *    aEvent,
-                         nsEventStatus*  aEventStatus,
-                         bool            aControlHeld);
+                                 mozilla::WidgetGUIEvent* aEvent,
+                                 nsEventStatus* aEventStatus,
+                                 bool aControlHeld);
 
   NS_IMETHOD HandleDrag(nsPresContext* aPresContext,
-                        nsGUIEvent *    aEvent,
-                        nsEventStatus*  aEventStatus);
+                        mozilla::WidgetGUIEvent* aEvent,
+                        nsEventStatus* aEventStatus);
 
   NS_IMETHOD HandleRelease(nsPresContext* aPresContext,
-                           nsGUIEvent *    aEvent,
-                           nsEventStatus*  aEventStatus);
+                           mozilla::WidgetGUIEvent* aEvent,
+                           nsEventStatus* aEventStatus);
 
   enum { SELECT_ACCUMULATE = 0x01 };
 
@@ -618,10 +618,12 @@ protected:
   //   of the enclosing cell or table (if not inside a cell)
   //  aTarget tells us what table element to select (currently only cell and table supported)
   //  (enums for this are defined in nsIFrame.h)
-  NS_IMETHOD GetDataForTableSelection(const nsFrameSelection *aFrameSelection,
-                                      nsIPresShell *aPresShell, nsMouseEvent *aMouseEvent, 
-                                      nsIContent **aParentContent, int32_t *aContentOffset, 
-                                      int32_t *aTarget);
+  NS_IMETHOD GetDataForTableSelection(const nsFrameSelection* aFrameSelection,
+                                      nsIPresShell* aPresShell,
+                                      mozilla::WidgetMouseEvent* aMouseEvent,
+                                      nsIContent** aParentContent,
+                                      int32_t* aContentOffset,
+                                      int32_t* aTarget);
 
   // Fills aCursor with the appropriate information from ui
   static void FillCursorInformationFromStyle(const nsStyleUserInterface* ui,
