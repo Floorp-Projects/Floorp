@@ -9,8 +9,8 @@
 
 #include "nsHttpConnectionMgr.h"
 #include "nsHttpConnection.h"
-#include "SpdySession2.h"
 #include "SpdySession3.h"
+#include "SpdySession31.h"
 #include "nsHttpHandler.h"
 #include "nsIConsoleService.h"
 #include "nsHttpRequestHead.h"
@@ -159,6 +159,7 @@ nsHttpConnection::PrintDiagnostics(nsCString &log)
     mSpdySession->PrintDiagnostics(log);
 }
 
+
 void
 SpdySession3::PrintDiagnostics(nsCString &log)
 {
@@ -197,9 +198,9 @@ SpdySession3::PrintDiagnostics(nsCString &log)
 }
 
 void
-SpdySession2::PrintDiagnostics(nsCString &log)
+SpdySession31::PrintDiagnostics(nsCString &log)
 {
-  log.AppendPrintf("     ::: SPDY VERSION 2\n");
+  log.AppendPrintf("     ::: SPDY VERSION 3.1\n");
   log.AppendPrintf("     shouldgoaway = %d mClosed = %d CanReuse = %d nextID=0x%X\n",
                    mShouldGoAway, mClosed, CanReuse(), mNextStreamID);
 

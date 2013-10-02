@@ -7,7 +7,7 @@
 #include "jit/BytecodeAnalysis.h"
 
 #include "jsopcode.h"
-
+#include "jit/IonSpewer.h"
 #include "jsopcodeinlines.h"
 
 using namespace js;
@@ -164,6 +164,10 @@ BytecodeAnalysis::init(JSContext *cx)
 
           case JSOP_FINALLY:
             hasTryFinally_ = true;
+            break;
+
+          case JSOP_SETARG:
+            hasSetArg_ = true;
             break;
 
           default:

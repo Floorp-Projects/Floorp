@@ -14,5 +14,3 @@ category profile-after-change InterAppCommService @mozilla.org/inter-app-communi
 component {d7c7a466-f91d-11e2-812a-6fab12ece58e} InterAppConnection.js
 contract @mozilla.org/dom/system-messages/wrapper/connection;1 {d7c7a466-f91d-11e2-812a-6fab12ece58e}
 
-component {33b4dff4-edf8-11e2-ae9c-77f99f99c3ad} InterAppMessagePort.js
-contract @mozilla.org/dom/inter-app-message-event;1 {33b4dff4-edf8-11e2-ae9c-77f99f99c3ad}

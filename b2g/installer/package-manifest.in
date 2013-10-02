@@ -190,6 +190,7 @@
 @BINPATH@/components/dom_notification.xpt
 @BINPATH@/components/dom_html.xpt
 @BINPATH@/components/dom_indexeddb.xpt
+@BINPATH@/components/dom_inputmethod.xpt
 @BINPATH@/components/dom_offline.xpt
 @BINPATH@/components/dom_payment.xpt
 @BINPATH@/components/dom_json.xpt
@@ -547,6 +548,10 @@
 @BINPATH@/components/PaymentRequestInfo.js
 @BINPATH@/components/Payment.manifest
 
+; InputMethod API
+@BINPATH@/components/MozKeyboard.js
+@BINPATH@/components/InputMethod.manifest
+
 ; Modules
 @BINPATH@/modules/*
 
@@ -748,7 +753,6 @@ bin/components/@DLL_PREFIX@nkgnomevfs@DLL_SUFFIX@
 @BINPATH@/components/UpdatePrompt.js
 #endif
 @BINPATH@/components/WebappsUpdateTimer.js
-@BINPATH@/components/MozKeyboard.js
 @BINPATH@/components/DirectoryProvider.js
 @BINPATH@/components/ActivitiesGlue.js
 @BINPATH@/components/ProcessGlobal.js

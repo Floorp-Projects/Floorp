@@ -297,7 +297,8 @@ APZCTreeManager::ReceiveInputEvent(const InputData& aEvent)
 }
 
 AsyncPanZoomController*
-APZCTreeManager::GetTouchInputBlockAPZC(const nsTouchEvent& aEvent, ScreenPoint aPoint)
+APZCTreeManager::GetTouchInputBlockAPZC(const WidgetTouchEvent& aEvent,
+                                        ScreenPoint aPoint)
 {
   nsRefPtr<AsyncPanZoomController> apzc = GetTargetAPZC(aPoint);
   gfx3DMatrix transformToApzc, transformToScreen;
@@ -325,8 +326,8 @@ APZCTreeManager::GetTouchInputBlockAPZC(const nsTouchEvent& aEvent, ScreenPoint 
 }
 
 nsEventStatus
-APZCTreeManager::ProcessTouchEvent(const nsTouchEvent& aEvent,
-                                   nsTouchEvent* aOutEvent)
+APZCTreeManager::ProcessTouchEvent(const WidgetTouchEvent& aEvent,
+                                   WidgetTouchEvent* aOutEvent)
 {
   // For computing the input for the APZC, used the cached transform.
   // This ensures that the sequence of touch points an APZC sees in an
@@ -344,7 +345,7 @@ APZCTreeManager::ProcessTouchEvent(const nsTouchEvent& aEvent,
   gfx3DMatrix transformToScreen;
   GetInputTransforms(mApzcForInputBlock, transformToApzc, transformToScreen);
   gfx3DMatrix outTransform = transformToApzc * transformToScreen;
-  nsTouchEvent* outEvent = static_cast<nsTouchEvent*>(aOutEvent);
+  WidgetTouchEvent* outEvent = static_cast<WidgetTouchEvent*>(aOutEvent);
   for (size_t i = 0; i < outEvent->touches.Length(); i++) {
     ApplyTransform(&(outEvent->touches[i]->mRefPoint), outTransform);
   }
@@ -359,8 +360,8 @@ APZCTreeManager::ProcessTouchEvent(const nsTouchEvent& aEvent,
 }
 
 nsEventStatus
-APZCTreeManager::ProcessMouseEvent(const nsMouseEvent& aEvent,
-                                   nsMouseEvent* aOutEvent)
+APZCTreeManager::ProcessMouseEvent(const WidgetMouseEvent& aEvent,
+                                   WidgetMouseEvent* aOutEvent)
 {
   nsRefPtr<AsyncPanZoomController> apzc = GetTargetAPZC(ScreenPoint(aEvent.refPoint.x, aEvent.refPoint.y));
   if (!apzc) {
@@ -372,13 +373,14 @@ APZCTreeManager::ProcessMouseEvent(const nsMouseEvent& aEvent,
   MultiTouchInput inputForApzc(aEvent);
   ApplyTransform(&(inputForApzc.mTouches[0].mScreenPoint), transformToApzc);
   gfx3DMatrix outTransform = transformToApzc * transformToScreen;
-  ApplyTransform(&(static_cast<nsMouseEvent*>(aOutEvent)->refPoint), outTransform);
+  ApplyTransform(&(static_cast<WidgetMouseEvent*>(aOutEvent)->refPoint),
+                 outTransform);
   return apzc->ReceiveInputEvent(inputForApzc);
 }
 
 nsEventStatus
-APZCTreeManager::ProcessEvent(const nsInputEvent& aEvent,
-                              nsInputEvent* aOutEvent)
+APZCTreeManager::ProcessEvent(const WidgetInputEvent& aEvent,
+                              WidgetInputEvent* aOutEvent)
 {
   // Transform the refPoint
   nsRefPtr<AsyncPanZoomController> apzc = GetTargetAPZC(ScreenPoint(aEvent.refPoint.x, aEvent.refPoint.y));
@@ -395,14 +397,15 @@ APZCTreeManager::ProcessEvent(const nsInputEvent& aEvent,
 }
 
 nsEventStatus
-APZCTreeManager::ReceiveInputEvent(const nsInputEvent& aEvent,
-                                   nsInputEvent* aOutEvent)
+APZCTreeManager::ReceiveInputEvent(const WidgetInputEvent& aEvent,
+                                   WidgetInputEvent* aOutEvent)
 {
   MOZ_ASSERT(NS_IsMainThread());
 
   switch (aEvent.eventStructType) {
     case NS_TOUCH_EVENT: {
-      const nsTouchEvent& touchEvent = static_cast<const nsTouchEvent&>(aEvent);
+      const WidgetTouchEvent& touchEvent =
+        static_cast<const WidgetTouchEvent&>(aEvent);
       if (!touchEvent.touches.Length()) {
         return nsEventStatus_eIgnore;
       }
@@ -413,13 +416,14 @@ APZCTreeManager::ReceiveInputEvent(const nsInputEvent& aEvent,
       if (!mApzcForInputBlock) {
         return nsEventStatus_eIgnore;
       }
-      nsTouchEvent* outEvent = static_cast<nsTouchEvent*>(aOutEvent);
+      WidgetTouchEvent* outEvent = static_cast<WidgetTouchEvent*>(aOutEvent);
       return ProcessTouchEvent(touchEvent, outEvent);
     }
     case NS_MOUSE_EVENT: {
       // For b2g emulation
-      const nsMouseEvent& mouseEvent = static_cast<const nsMouseEvent&>(aEvent);
-      nsMouseEvent* outEvent = static_cast<nsMouseEvent*>(aOutEvent);
+      const WidgetMouseEvent& mouseEvent =
+        static_cast<const WidgetMouseEvent&>(aEvent);
+      WidgetMouseEvent* outEvent = static_cast<WidgetMouseEvent*>(aOutEvent);
       return ProcessMouseEvent(mouseEvent, outEvent);
     }
     default: {
@@ -429,13 +433,13 @@ APZCTreeManager::ReceiveInputEvent(const nsInputEvent& aEvent,
 }
 
 nsEventStatus
-APZCTreeManager::ReceiveInputEvent(nsInputEvent& aEvent)
+APZCTreeManager::ReceiveInputEvent(WidgetInputEvent& aEvent)
 {
   MOZ_ASSERT(NS_IsMainThread());
 
   switch (aEvent.eventStructType) {
     case NS_TOUCH_EVENT: {
-      nsTouchEvent& touchEvent = static_cast<nsTouchEvent&>(aEvent);
+      WidgetTouchEvent& touchEvent = static_cast<WidgetTouchEvent&>(aEvent);
       if (!touchEvent.touches.Length()) {
         return nsEventStatus_eIgnore;
       }

@@ -11,6 +11,7 @@
 #include "nsContentUtils.h"
 #include "nsTArray.h"
 #include "mozilla/Likely.h"
+#include "nsIContent.h"
 
 bool
 nsCounterUseNode::InitTextFrame(nsGenConList* aList,

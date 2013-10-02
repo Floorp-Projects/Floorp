@@ -11,3 +11,7 @@ contract @mozilla.org/content-permission/prompt;1 {07ef5b2e-88fb-47bd-8cec-d3b0b
 component {e1799fda-4b2f-4457-b671-e0641d95698d} DirectoryProvider.js
 contract @mozilla.org/webapprt/directory-provider;1 {e1799fda-4b2f-4457-b671-e0641d95698d}
 category xpcom-directory-providers webapprt-directory-provider @mozilla.org/webapprt/directory-provider;1
+
+# PaymentUIGlue.js
+component {ede1124f-72e8-4a31-9567-3270d46f21fb} PaymentUIGlue.js
+contract @mozilla.org/payment/ui-glue;1 {ede1124f-72e8-4a31-9567-3270d46f21fb}

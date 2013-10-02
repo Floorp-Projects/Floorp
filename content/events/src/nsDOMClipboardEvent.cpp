@@ -8,11 +8,13 @@
 #include "nsIClipboard.h"
 #include "mozilla/ContentEvents.h"
 
+using namespace mozilla;
+
 nsDOMClipboardEvent::nsDOMClipboardEvent(mozilla::dom::EventTarget* aOwner,
                                          nsPresContext* aPresContext,
-                                         nsClipboardEvent* aEvent)
+                                         InternalClipboardEvent* aEvent)
   : nsDOMEvent(aOwner, aPresContext, aEvent ? aEvent :
-               new nsClipboardEvent(false, 0))
+               new InternalClipboardEvent(false, 0))
 {
   if (aEvent) {
     mEventIsInternal = false;
@@ -25,7 +27,7 @@ nsDOMClipboardEvent::nsDOMClipboardEvent(mozilla::dom::EventTarget* aOwner,
 nsDOMClipboardEvent::~nsDOMClipboardEvent()
 {
   if (mEventIsInternal && mEvent->eventStructType == NS_CLIPBOARD_EVENT) {
-    delete static_cast<nsClipboardEvent*>(mEvent);
+    delete static_cast<InternalClipboardEvent*>(mEvent);
     mEvent = nullptr;
   }
 }
@@ -44,7 +46,7 @@ nsDOMClipboardEvent::InitClipboardEvent(const nsAString & aType, bool aCanBubble
   nsresult rv = nsDOMEvent::InitEvent(aType, aCanBubble, aCancelable);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  nsClipboardEvent* event = static_cast<nsClipboardEvent*>(mEvent);
+  InternalClipboardEvent* event = static_cast<InternalClipboardEvent*>(mEvent);
   event->clipboardData = clipboardData;
 
   return NS_OK;
@@ -63,7 +65,8 @@ nsDOMClipboardEvent::Constructor(const mozilla::dom::GlobalObject& aGlobal,
 
   nsRefPtr<nsDOMDataTransfer> clipboardData;
   if (e->mEventIsInternal) {
-    nsClipboardEvent* event = static_cast<nsClipboardEvent*>(e->mEvent);
+    InternalClipboardEvent* event =
+      static_cast<InternalClipboardEvent*>(e->mEvent);
     if (event) {
       // Always create a clipboardData for the copy event. If this is changed to
       // support other types of events, make sure that read/write privileges are
@@ -89,7 +92,7 @@ nsDOMClipboardEvent::GetClipboardData(nsIDOMDataTransfer** aClipboardData)
 nsIDOMDataTransfer*
 nsDOMClipboardEvent::GetClipboardData()
 {
-  nsClipboardEvent* event = static_cast<nsClipboardEvent*>(mEvent);
+  InternalClipboardEvent* event = static_cast<InternalClipboardEvent*>(mEvent);
 
   if (!event->clipboardData) {
     if (mEventIsInternal) {
@@ -106,7 +109,7 @@ nsDOMClipboardEvent::GetClipboardData()
 nsresult NS_NewDOMClipboardEvent(nsIDOMEvent** aInstancePtrResult,
                                  mozilla::dom::EventTarget* aOwner,
                                  nsPresContext* aPresContext,
-                                 nsClipboardEvent *aEvent)
+                                 InternalClipboardEvent* aEvent)
 {
   nsDOMClipboardEvent* it =
     new nsDOMClipboardEvent(aOwner, aPresContext, aEvent);

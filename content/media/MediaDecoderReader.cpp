@@ -20,6 +20,7 @@ namespace mozilla {
 
 using layers::ImageContainer;
 using layers::PlanarYCbCrImage;
+using layers::PlanarYCbCrData;
 
 // Verify these values are sane. Once we've checked the frame sizes, we then
 // can do less integer overflow checking.
@@ -227,7 +228,7 @@ VideoData* VideoData::Create(VideoInfo& aInfo,
                "Wrong format?");
   PlanarYCbCrImage* videoImage = static_cast<PlanarYCbCrImage*>(v->mImage.get());
 
-  PlanarYCbCrImage::Data data;
+  PlanarYCbCrData data;
   data.mYChannel = Y.mData + Y.mOffset;
   data.mYSize = gfxIntSize(Y.mWidth, Y.mHeight);
   data.mYStride = Y.mStride;
@@ -535,8 +536,8 @@ nsresult MediaDecoderReader::DecodeToTarget(int64_t aTarget)
       const AudioData* audio = AudioQueue().PeekFront();
       if (!audio)
         break;
-      CheckedInt64 startFrame = UsecsToFrames(audio->mTime, mInfo.mAudioRate);
-      CheckedInt64 targetFrame = UsecsToFrames(aTarget, mInfo.mAudioRate);
+      CheckedInt64 startFrame = UsecsToFrames(audio->mTime, mInfo.mAudio.mRate);
+      CheckedInt64 targetFrame = UsecsToFrames(aTarget, mInfo.mAudio.mRate);
       if (!startFrame.isValid() || !targetFrame.isValid()) {
         return NS_ERROR_FAILURE;
       }
@@ -580,7 +581,7 @@ nsresult MediaDecoderReader::DecodeToTarget(int64_t aTarget)
       memcpy(audioData.get(),
              audio->mAudioData.get() + (framesToPrune * channels),
              frames * channels * sizeof(AudioDataValue));
-      CheckedInt64 duration = FramesToUsecs(frames, mInfo.mAudioRate);
+      CheckedInt64 duration = FramesToUsecs(frames, mInfo.mAudio.mRate);
       if (!duration.isValid()) {
         return NS_ERROR_FAILURE;
       }

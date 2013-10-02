@@ -76,7 +76,7 @@ MediaEngineDefaultVideoSource::Deallocate()
   return NS_OK;
 }
 
-static void AllocateSolidColorFrame(layers::PlanarYCbCrImage::Data& aData,
+static void AllocateSolidColorFrame(layers::PlanarYCbCrData& aData,
                                     int aWidth, int aHeight,
                                     int aY, int aCb, int aCr)
 {
@@ -104,7 +104,7 @@ static void AllocateSolidColorFrame(layers::PlanarYCbCrImage::Data& aData,
   aData.mStereoMode = STEREO_MODE_MONO;
 }
 
-static void ReleaseFrame(layers::PlanarYCbCrImage::Data& aData)
+static void ReleaseFrame(layers::PlanarYCbCrData& aData)
 {
   PR_Free(aData.mYChannel);
 }
@@ -209,7 +209,7 @@ MediaEngineDefaultVideoSource::Notify(nsITimer* aTimer)
   nsRefPtr<layers::Image> image = mImageContainer->CreateImage(&format, 1);
   nsRefPtr<layers::PlanarYCbCrImage> ycbcr_image =
       static_cast<layers::PlanarYCbCrImage*>(image.get());
-  layers::PlanarYCbCrImage::Data data;
+  layers::PlanarYCbCrData data;
   AllocateSolidColorFrame(data, mOpts.mWidth, mOpts.mHeight, 0x80, mCb, mCr);
   ycbcr_image->SetData(data);
   // SetData copies data, so we can free the frame

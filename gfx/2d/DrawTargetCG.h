@@ -10,6 +10,7 @@
 #include "PathCG.h"
 #include "SourceSurfaceCG.h"
 #include "GLDefs.h"
+#include "Tools.h"
 
 namespace mozilla {
 namespace gfx {
@@ -157,14 +158,12 @@ private:
   CGContextRef mCg;
 
   /**
-   * A pointer to the image buffer if the buffer is owned by this class (set to
-   * nullptr otherwise).
-   * The data is not considered owned by DrawTargetCG if the DrawTarget was 
-   * created for a pre-existing buffer or if the buffer's lifetime is managed
-   * by CoreGraphics.
-   * Data owned by DrawTargetCG will be deallocated in the destructor. 
+   * The image buffer, if the buffer is owned by this class.
+   * If the DrawTarget was created for a pre-existing buffer or if the buffer's
+   * lifetime is managed by CoreGraphics, mData will be null.
+   * Data owned by DrawTargetCG will be deallocated in the destructor.
    */
-  void *mData;
+  AlignedArray<uint8_t> mData;
 
   RefPtr<SourceSurfaceCGContext> mSnapshot;
 };

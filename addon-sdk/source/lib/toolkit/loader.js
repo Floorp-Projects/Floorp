@@ -181,6 +181,8 @@ const Sandbox = iced(function Sandbox(options) {
     sandboxName: options.name,
     principal: 'principal' in options ? options.principal : systemPrincipal,
     wantXrays: 'wantXrays' in options ? options.wantXrays : true,
+    wantGlobalProperties: 'wantGlobalProperties' in options ?
+                          options.wantGlobalProperties : [],
     sandboxPrototype: 'prototype' in options ? options.prototype : {},
     sameGroupAs: 'sandbox' in options ? options.sandbox : null
   };
@@ -250,7 +252,8 @@ const load = iced(function load(loader, module) {
     // when creating the new one to reduce memory consumption.
     sandbox: sandboxes[keys(sandboxes).shift()],
     prototype: create(globals, descriptors),
-    wantXrays: false
+    wantXrays: false,
+    wantGlobalProperties: module.id == "sdk/indexed-db" ? ["indexedDB"] : []
   });
 
   try {

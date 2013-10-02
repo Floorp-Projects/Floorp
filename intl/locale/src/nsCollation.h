@@ -9,10 +9,10 @@
 
 
 #include "nsICollation.h"
-#include "nsICharsetConverterManager.h"
 #include "nsCOMPtr.h"
 #include "mozilla/Attributes.h"
 
+class nsIUnicodeEncoder;
 
 // Create a collation interface for an input locale.
 // 

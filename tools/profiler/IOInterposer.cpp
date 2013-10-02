@@ -42,9 +42,12 @@ struct ObserverLists {
   // These are implemented as vectors since they are allowed to survive gecko,
   // without reporting leaks. This is necessary for the IOInterposer to be used
   // for late-write checks.
+  std::vector<IOInterposeObserver*>  mCreateObservers;
   std::vector<IOInterposeObserver*>  mReadObservers;
   std::vector<IOInterposeObserver*>  mWriteObservers;
   std::vector<IOInterposeObserver*>  mFSyncObservers;
+  std::vector<IOInterposeObserver*>  mStatObservers;
+  std::vector<IOInterposeObserver*>  mCloseObservers;
 };
 
 /**
@@ -139,6 +142,11 @@ IOInterposeObserver::Operation IOInterposer::sObservedOperations =
   // Decide which list of observers to inform
   std::vector<IOInterposeObserver*>* observers = nullptr;
   switch (aObservation.ObservedOperation()) {
+    case IOInterposeObserver::OpCreateOrOpen:
+      {
+        observers = &sObserverLists->mCreateObservers;
+      }
+      break;
     case IOInterposeObserver::OpRead:
       {
         observers = &sObserverLists->mReadObservers;
@@ -152,6 +160,16 @@ IOInterposeObserver::Operation IOInterposer::sObservedOperations =
     case IOInterposeObserver::OpFSync:
       {
         observers = &sObserverLists->mFSyncObservers;
+      }
+      break;
+    case IOInterposeObserver::OpStat:
+      {
+        observers = &sObserverLists->mStatObservers;
+      }
+      break;
+    case IOInterposeObserver::OpClose:
+      {
+        observers = &sObserverLists->mCloseObservers;
       }
       break;
     default:
@@ -186,6 +204,10 @@ IOInterposeObserver::Operation IOInterposer::sObservedOperations =
 
   // You can register to observe multiple types of observations
   // but you'll never be registered twice for the same observations.
+  if (aOp & IOInterposeObserver::OpCreateOrOpen &&
+      !VectorContains(sObserverLists->mCreateObservers, aObserver)) {
+    sObserverLists->mCreateObservers.push_back(aObserver);
+  }
   if (aOp & IOInterposeObserver::OpRead &&
       !VectorContains(sObserverLists->mReadObservers, aObserver)) {
     sObserverLists->mReadObservers.push_back(aObserver);
@@ -197,6 +219,14 @@ IOInterposeObserver::Operation IOInterposer::sObservedOperations =
   if (aOp & IOInterposeObserver::OpFSync &&
       !VectorContains(sObserverLists->mFSyncObservers, aObserver)) {
     sObserverLists->mFSyncObservers.push_back(aObserver);
+  }
+  if (aOp & IOInterposeObserver::OpStat &&
+      !VectorContains(sObserverLists->mStatObservers, aObserver)) {
+    sObserverLists->mStatObservers.push_back(aObserver);
+  }
+  if (aOp & IOInterposeObserver::OpClose &&
+      !VectorContains(sObserverLists->mCloseObservers, aObserver)) {
+    sObserverLists->mCloseObservers.push_back(aObserver);
   }
 
   // Update field of observed operation with the operations that the new

@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<!--
+Copyright 2013 Mozilla Foundation
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+-->
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+    <base href=""/>
+
+    <script src="../lib/DataView.js/DataView.js"></script>
+
+    <!-- Load SWF Dependencies -->
+    <script src="../swf/util.js"></script>
+    <script src="../swf/inflate.js"></script>
+    <script src="../swf/stream.js"></script>
+
+    <style>
+      body {
+        margin: 0;
+        overflow: hidden;
+        background-color: rgba(128, 128, 128, 0.5);
+        font-family: sans-serif;
+      }
+      #screen {
+        position: fixed;
+        top: 0; left: 0; right: 0; bottom: 0;
+      }
+      #container {
+        position: fixed;
+        top: 50%; left: 0; right: 0; bottom: 50%;
+      }
+      #content {
+        margin-top: -64px;
+        text-align: center;
+      }
+      #playbutton {
+        background-color: transparent;
+        background-image: url(chrome://global/skin/media/videoClickToPlayButton.svg);
+        border: none 0px;
+        width: 64px;
+        height: 64px;
+        display: block;
+        margin-left: auto;
+        margin-right: auto;
+        cursor: pointer;
+        margin-bottom: 10px;
+      }
+      #playbutton > span {
+        overflow: hidden;
+        width: 0px; height: 0px;
+        display: inline-block;
+      }
+
+      @media screen and (max-width: 160px) , screen and (max-height: 160px) {
+        #playbutton {
+          display: none;
+        }
+        #content {
+          margin-top: -6px;
+        }
+      }
+
+      #screen {
+        transition: opacity 0.5s linear;
+        -webkit-transition: opacity 0.5s linear;
+        opacity: 0.1;
+      }
+
+      #screen:hover {
+        opacity: 1.0;
+      }
+
+      .shumwayButton {
+        background:-webkit-gradient( linear, left top, left bottom, color-stop(0.05, #f9f9f9), color-stop(1, #e9e9e9) );
+        background:-moz-linear-gradient( center top, #f9f9f9 5%, #e9e9e9 100% );
+        background-color:#f9f9f9;
+        -moz-border-radius:4px;
+        -webkit-border-radius:4px;
+        border-radius:4px;
+        border:1px solid #a0a0a0;
+        display:inline-block;
+        color:#666666;
+        font-family:arial;
+        font-size:11px;
+        font-weight:bold;
+        padding:6px 11px;
+        text-decoration:none;
+        text-shadow:1px 1px 0px #ffffff;
+        width: 70px;
+        cursor: pointer;
+      }
+      .shumwayButton:hover {
+         background:-webkit-gradient( linear, left top, left bottom, color-stop(0.05, #e9e9e9), color-stop(1, #f9f9f9) );
+         background:-moz-linear-gradient( center top, #e9e9e9 5%, #f9f9f9 100% );
+         background-color:#e9e9e9;
+       }
+      .shumwayButton:active {
+          position:relative;
+          top:1px;
+      }
+    </style>
+  </head>
+
+  <body>
+    <div id='screen'>
+      <div id='container'>
+        <div id='content'>
+          <button id='playbutton'><span>Play</span></button>
+          <div id='toolbar'>
+            <a class="shumwayButton" id="fullmode">Shumway</a>
+            <a class="shumwayButton" id="fallback">Flash</a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </body>
+</html>

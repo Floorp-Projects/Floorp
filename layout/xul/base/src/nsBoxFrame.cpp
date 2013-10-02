@@ -62,6 +62,7 @@
 #include "nsDisplayList.h"
 #include "mozilla/Preferences.h"
 #include "nsThemeConstants.h"
+#include "nsLayoutUtils.h"
 #include <algorithm>
 
 // Needed for Print Preview
@@ -1910,8 +1911,8 @@ void
 nsBoxFrame::CheckBoxOrder()
 {
   if (SupportsOrdinalsInChildren() &&
-      !nsLayoutUtils::IsFrameListSorted<IsBoxOrdinalLEQ>(mFrames)) {
-    nsLayoutUtils::SortFrameList<IsBoxOrdinalLEQ>(mFrames);
+      !nsIFrame::IsFrameListSorted<IsBoxOrdinalLEQ>(mFrames)) {
+    nsIFrame::SortFrameList<IsBoxOrdinalLEQ>(mFrames);
   }
 }
 
@@ -2068,7 +2069,7 @@ nsBoxFrame::WrapListsInRedirector(nsDisplayListBuilder*   aBuilder,
 }
 
 bool
-nsBoxFrame::GetEventPoint(nsGUIEvent* aEvent, nsPoint &aPoint) {
+nsBoxFrame::GetEventPoint(WidgetGUIEvent* aEvent, nsPoint &aPoint) {
   nsIntPoint refPoint;
   bool res = GetEventPoint(aEvent, refPoint);
   aPoint = nsLayoutUtils::GetEventCoordinatesRelativeTo(aEvent, refPoint, this);
@@ -2076,11 +2077,11 @@ nsBoxFrame::GetEventPoint(nsGUIEvent* aEvent, nsPoint &aPoint) {
 }
 
 bool
-nsBoxFrame::GetEventPoint(nsGUIEvent* aEvent, nsIntPoint &aPoint) {
+nsBoxFrame::GetEventPoint(WidgetGUIEvent* aEvent, nsIntPoint &aPoint) {
   NS_ENSURE_TRUE(aEvent, false);
 
   if (aEvent->eventStructType == NS_TOUCH_EVENT) {
-    nsTouchEvent* touchEvent = static_cast<nsTouchEvent*>(aEvent);
+    WidgetTouchEvent* touchEvent = static_cast<WidgetTouchEvent*>(aEvent);
     // return false if there is more than one touch on the page, or if
     // we can't find a touch point
     if (touchEvent->touches.Length() != 1) {

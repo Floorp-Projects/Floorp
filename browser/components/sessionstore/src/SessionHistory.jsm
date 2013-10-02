@@ -74,8 +74,14 @@ let SessionHistoryInternal = {
         debug("SessionStore failed gathering complete history " +
               "for the focused window/tab. See bug 669196.");
       }
-      data.index = history.index + 1;
-    } else {
+
+      // Ensure the index isn't out of bounds if an exception was thrown above.
+      data.index = Math.min(history.index + 1, data.entries.length);
+    }
+
+    // If either the session history isn't available yet or doesn't have any
+    // valid entries, make sure we at least include the current page.
+    if (data.entries.length == 0) {
       let uri = webNavigation.currentURI.spec;
       // We landed here because the history is inaccessible or there are no
       // history entries. In that case we should at least record the docShell's

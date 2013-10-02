@@ -37,6 +37,7 @@ function testExceptionHook(ex) {
   } catch(ex) {
     return {throw: ex}
   }
+  return undefined;
 }
 
 // Convert an nsIScriptError 'aFlags' value into an appropriate string.

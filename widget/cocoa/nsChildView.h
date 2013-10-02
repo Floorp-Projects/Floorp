@@ -320,7 +320,7 @@ typedef NSInteger NSEventGestureAxis;
 
 - (void)sendMouseEnterOrExitEvent:(NSEvent*)aEvent
                             enter:(BOOL)aEnter
-                             type:(nsMouseEvent::exitType)aType;
+                             type:(mozilla::WidgetMouseEvent::exitType)aType;
 
 - (void)update;
 - (void)lockFocus;
@@ -334,7 +334,6 @@ typedef NSInteger NSEventGestureAxis;
 
 - (void)setGLContext:(NSOpenGLContext *)aGLContext;
 - (void)preRender:(NSOpenGLContext *)aGLContext;
-- (void)postRender:(NSOpenGLContext *)aGLContext;
 
 - (BOOL)isCoveringTitlebar;
 
@@ -382,7 +381,7 @@ public:
   static void ReEvaluateMouseEnterState(NSEvent* aEvent = nil, ChildView* aOldView = nil);
   static void ResendLastMouseMoveEvent();
   static ChildView* ViewForEvent(NSEvent* aEvent);
-  static void AttachPluginEvent(nsMouseEvent_base& aMouseEvent,
+  static void AttachPluginEvent(mozilla::WidgetMouseEventBase& aMouseEvent,
                                 ChildView* aView,
                                 NSEvent* aNativeMouseEvent,
                                 int aPluginEventType,
@@ -467,7 +466,8 @@ public:
 
   static  bool            ConvertStatus(nsEventStatus aStatus)
                           { return aStatus == nsEventStatus_eConsumeNoDefault; }
-  NS_IMETHOD              DispatchEvent(nsGUIEvent* event, nsEventStatus & aStatus);
+  NS_IMETHOD              DispatchEvent(mozilla::WidgetGUIEvent* aEvent,
+                                        nsEventStatus& aStatus);
 
   virtual bool            ComputeShouldAccelerate(bool aDefault);
   virtual bool            ShouldUseOffMainThreadCompositing() MOZ_OVERRIDE;
@@ -524,7 +524,7 @@ public:
 
   // Mac specific methods
   
-  virtual bool      DispatchWindowEvent(nsGUIEvent& event);
+  virtual bool      DispatchWindowEvent(mozilla::WidgetGUIEvent& event);
 
   void WillPaintWindow();
   bool PaintWindow(nsIntRegion aRegion);
@@ -538,7 +538,6 @@ public:
   virtual void PrepareWindowEffects() MOZ_OVERRIDE;
   virtual void CleanupWindowEffects() MOZ_OVERRIDE;
   virtual void PreRender(LayerManager* aManager) MOZ_OVERRIDE;
-  virtual void PostRender(LayerManager* aManager) MOZ_OVERRIDE;
   virtual void DrawWindowOverlay(LayerManager* aManager, nsIntRect aRect) MOZ_OVERRIDE;
 
   virtual void UpdateThemeGeometries(const nsTArray<ThemeGeometry>& aThemeGeometries);

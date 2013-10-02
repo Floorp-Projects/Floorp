@@ -10,7 +10,7 @@
 #include <algorithm>
 
 #include "SpdyPush3.h"
-#include "PSpdyPush3.h"
+#include "PSpdyPush.h"
 #include "SpdySession3.h"
 #include "nsHttpRequestHead.h"
 
@@ -137,7 +137,7 @@ SpdyPushedStream3::IsOrphaned(TimeStamp now)
 
   bool rv = ((now - mLastRead).ToSeconds() > 30.0);
   if (rv) {
-    LOG3(("SpdyPushCache3::IsOrphaned 0x%X IsOrphaned %3.2f\n",
+    LOG3(("SpdyPushCache::IsOrphaned 0x%X IsOrphaned %3.2f\n",
           mStreamID, (now - mLastRead).ToSeconds()));
   }
   return rv;
@@ -158,47 +158,6 @@ SpdyPushedStream3::GetBufferedData(char *buf,
   if (!*countWritten)
     rv = GetPushComplete() ? NS_BASE_STREAM_CLOSED : NS_BASE_STREAM_WOULD_BLOCK;
 
-  return rv;
-}
-
-//////////////////////////////////////////
-// SpdyPushCache3
-//////////////////////////////////////////
-
-SpdyPushCache3::SpdyPushCache3()
-{
-}
-
-SpdyPushCache3::~SpdyPushCache3()
-{
-}
-
-SpdyPushedStream3 *
-SpdyPushCache3::GetPushedStream(nsCString key)
-{
-  return mHash.Get(key);
-}
-
-bool
-SpdyPushCache3::RegisterPushedStream(nsCString key,
-                                     SpdyPushedStream3 *stream)
-{
-  LOG3(("SpdyPushCache3::RegisterPushedStream %s 0x%X\n",
-        key.get(), stream->StreamID()));
-  if(mHash.Get(key))
-    return false;
-  mHash.Put(key, stream);
-  return true;
-}
-
-SpdyPushedStream3 *
-SpdyPushCache3::RemovePushedStream(nsCString key)
-{
-  SpdyPushedStream3 *rv = mHash.Get(key);
-  LOG3(("SpdyPushCache3::RemovePushedStream %s 0x%X\n",
-        key.get(), rv ? rv->StreamID() : 0));
-  if (rv)
-    mHash.Remove(key);
   return rv;
 }
 

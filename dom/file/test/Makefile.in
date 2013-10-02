@@ -2,26 +2,3 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this file,
 # You can obtain one at http://mozilla.org/MPL/2.0/.
 
-MOCHITEST_FILES = \
-  dummy_worker.js \
-  helpers.js \
-  test_append_read_data.html \
-  test_getFileId.html \
-  test_location.html \
-  test_lockedfile_lifetimes.html \
-  test_lockedfile_lifetimes_nested.html \
-  test_lockedfile_ordering.html \
-  test_overlapping_lockedfiles.html \
-  test_progress_events.html \
-  test_readonly_lockedfiles.html \
-  test_request_readyState.html \
-  test_stream_tracking.html \
-  test_success_events_after_abort.html \
-  test_truncate.html \
-  test_write_read_data.html \
-  test_workers.html \
-  test_archivereader.html \
-  test_archivereader_zip_in_zip.html \
-  test_archivereader_nonUnicode.html \
-  test_bug_793311.html \
-  $(NULL)

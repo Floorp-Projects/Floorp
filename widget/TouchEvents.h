@@ -76,7 +76,7 @@ public:
   {
   }
 
-  WidgetSimpleGestureEvent(const nsSimpleGestureEvent& aOther) :
+  WidgetSimpleGestureEvent(const WidgetSimpleGestureEvent& aOther) :
     WidgetMouseEventBase(aOther.mFlags.mIsTrusted,
                          aOther.message, aOther.widget,
                          NS_SIMPLE_GESTURE_EVENT),
@@ -141,7 +141,7 @@ public:
 
   nsTArray<nsRefPtr<mozilla::dom::Touch>> touches;
 
-  void AssignTouchEventData(const nsTouchEvent& aEvent, bool aCopyTargets)
+  void AssignTouchEventData(const WidgetTouchEvent& aEvent, bool aCopyTargets)
   {
     AssignInputEventData(aEvent, aCopyTargets);
 
@@ -150,10 +150,5 @@ public:
 };
 
 } // namespace mozilla
-
-// TODO: Remove following typedefs
-typedef mozilla::WidgetGestureNotifyEvent nsGestureNotifyEvent;
-typedef mozilla::WidgetSimpleGestureEvent nsSimpleGestureEvent;
-typedef mozilla::WidgetTouchEvent         nsTouchEvent;
 
 #endif // mozilla_TouchEvents_h__

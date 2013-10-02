@@ -22,6 +22,7 @@
 #include "nsIContent.h"
 #include "nsLayoutUtils.h"
 #include "nsTextFrame.h"
+#include "nsStyleStructInlines.h"
 #include <algorithm>
 
 #ifdef DEBUG
@@ -685,7 +686,7 @@ IsPercentageAware(const nsIFrame* aFrame)
     if (f->GetIntrinsicRatio() != nsSize(0, 0) &&
         // Some percents are treated like 'auto', so check != coord
         pos->mHeight.GetUnit() != eStyleUnit_Coord) {
-      const nsIFrame::IntrinsicSize &intrinsicSize = f->GetIntrinsicSize();
+      const IntrinsicSize &intrinsicSize = f->GetIntrinsicSize();
       if (intrinsicSize.width.GetUnit() == eStyleUnit_None &&
           intrinsicSize.height.GetUnit() == eStyleUnit_None) {
         return true;
@@ -1066,7 +1067,7 @@ nsLineLayout::ApplyStartMargin(PerFrameData* pfd,
   // only live on the first continuation, but we don't want to apply
   // the start margin for later continuations anyway.
   if (pfd->mFrame->GetPrevContinuation() ||
-      nsLayoutUtils::FrameIsNonFirstInIBSplit(pfd->mFrame)) {
+      pfd->mFrame->FrameIsNonFirstInIBSplit()) {
     // Zero this out so that when we compute the max-element-width of
     // the frame we will properly avoid adding in the starting margin.
     if (ltr)
@@ -1146,7 +1147,7 @@ nsLineLayout::CanPlaceFrame(PerFrameData* pfd,
      */
     if ((NS_FRAME_IS_NOT_COMPLETE(aStatus) ||
          pfd->mFrame->LastInFlow()->GetNextContinuation() ||
-         nsLayoutUtils::FrameIsNonLastInIBSplit(pfd->mFrame))
+         pfd->mFrame->FrameIsNonLastInIBSplit())
         && !pfd->GetFlag(PFD_ISLETTERFRAME)) {
       if (ltr)
         pfd->mMargin.right = 0;

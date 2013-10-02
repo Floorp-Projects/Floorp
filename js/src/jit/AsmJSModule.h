@@ -16,8 +16,11 @@
 #include "gc/Marking.h"
 #include "jit/AsmJS.h"
 #include "jit/IonMacroAssembler.h"
-#include "jit/PerfSpewer.h"
+#ifdef JS_ION_PERF
+# include "jit/PerfSpewer.h"
+#endif
 #include "jit/RegisterSets.h"
+#include "vm/TypedArrayObject.h"
 
 namespace js {
 
@@ -405,7 +408,7 @@ class AsmJSModule
             perfProfiledBlocksFunctions_[i].trace(trc);
 #endif
         if (maybeHeap_)
-            MarkObject(trc, &maybeHeap_, "asm.js heap");
+            gc::MarkObject(trc, &maybeHeap_, "asm.js heap");
 
         if (globalArgumentName_)
             MarkStringUnbarriered(trc, &globalArgumentName_, "asm.js global argument name");
@@ -416,7 +419,7 @@ class AsmJSModule
     }
 
     ScriptSource *scriptSource() const {
-        JS_ASSERT(scriptSource_ != NULL);
+        JS_ASSERT(scriptSource_ != nullptr);
         return scriptSource_;
     }
     uint32_t charsBegin() const {
@@ -434,7 +437,7 @@ class AsmJSModule
         JS_ASSERT(pod.funcPtrTableAndExitBytes_ == 0);
         if (pod.numGlobalVars_ == UINT32_MAX)
             return false;
-        Global g(Global::Variable, NULL);
+        Global g(Global::Variable, nullptr);
         g.pod.u.var.initKind_ = Global::InitConstant;
         g.pod.u.var.init.constant_ = v;
         g.pod.u.var.index_ = *globalIndex = pod.numGlobalVars_++;
@@ -737,9 +740,8 @@ class AsmJSModule
         exitIndexToGlobalDatum(exitIndex).exit = interpExitTrampoline(exit(exitIndex));
     }
 
-    // Part of about:memory reporting:
-    void sizeOfMisc(mozilla::MallocSizeOf mallocSizeOf, size_t *asmJSModuleCode,
-                    size_t *asmJSModuleData);
+    void addSizeOfMisc(mozilla::MallocSizeOf mallocSizeOf, size_t *asmJSModuleCode,
+                       size_t *asmJSModuleData);
 };
 
 // An AsmJSModuleObject is an internal implementation object (i.e., not exposed
@@ -759,9 +761,9 @@ class AsmJSModuleObject : public JSObject
 
     AsmJSModule &module() const;
 
-    void sizeOfMisc(mozilla::MallocSizeOf mallocSizeOf, size_t *asmJSModuleCode,
-                    size_t *asmJSModuleData) {
-        module().sizeOfMisc(mallocSizeOf, asmJSModuleCode, asmJSModuleData);
+    void addSizeOfMisc(mozilla::MallocSizeOf mallocSizeOf, size_t *asmJSModuleCode,
+                       size_t *asmJSModuleData) {
+        module().addSizeOfMisc(mallocSizeOf, asmJSModuleCode, asmJSModuleData);
     }
 
     static const Class class_;

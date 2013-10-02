@@ -16,6 +16,7 @@
 #include "jsworkers.h"
 #include "prmjtime.h"
 
+#include "assembler/assembler/MacroAssembler.h"
 #include "frontend/Parser.h"
 #include "jit/AsmJSLink.h"
 #include "jit/AsmJSModule.h"
@@ -23,7 +24,9 @@
 #include "jit/CodeGenerator.h"
 #include "jit/MIR.h"
 #include "jit/MIRGraph.h"
-#include "jit/PerfSpewer.h"
+#ifdef JS_ION_PERF
+# include "jit/PerfSpewer.h"
+#endif
 #include "vm/Interpreter.h"
 
 #include "jsinferinlines.h"
@@ -255,7 +258,7 @@ FunctionName(ParseNode *fn)
 {
     if (JSAtom *atom = FunctionObject(fn)->atom())
         return atom->asPropertyName();
-    return NULL;
+    return nullptr;
 }
 
 static inline ParseNode *
@@ -355,7 +358,7 @@ ParseVarOrConstStatement(AsmJSParser &parser, ParseNode **var)
 {
     TokenKind tk = PeekToken(parser);
     if (tk != TOK_VAR && tk != TOK_CONST) {
-        *var = NULL;
+        *var = nullptr;
         return true;
     }
 
@@ -1262,14 +1265,14 @@ class MOZ_STACK_CLASS ModuleCompiler
         masm_(MacroAssembler::AsmJSToken()),
         moduleLifo_(LIFO_ALLOC_PRIMARY_CHUNK_SIZE),
         moduleFunctionNode_(parser.pc->maybeFunction),
-        moduleFunctionName_(NULL),
+        moduleFunctionName_(nullptr),
         globals_(cx),
         functions_(cx),
         funcPtrTables_(cx),
         exits_(cx),
         standardLibraryMathNames_(cx),
         globalAccesses_(cx),
-        errorString_(NULL),
+        errorString_(nullptr),
         errorOffset_(UINT32_MAX),
         usecBefore_(PRMJ_Now()),
         slowFunctions_(cx),
@@ -1388,7 +1391,7 @@ class MOZ_STACK_CLASS ModuleCompiler
     MacroAssembler &masm() { return masm_; }
     Label &stackOverflowLabel() { return stackOverflowLabel_; }
     Label &operationCallbackLabel() { return operationCallbackLabel_; }
-    bool hasError() const { return errorString_ != NULL; }
+    bool hasError() const { return errorString_ != nullptr; }
     const AsmJSModule &module() const { return *module_.get(); }
 
     ParseNode *moduleFunctionNode() const { return moduleFunctionNode_; }
@@ -1397,14 +1400,14 @@ class MOZ_STACK_CLASS ModuleCompiler
     const Global *lookupGlobal(PropertyName *name) const {
         if (GlobalMap::Ptr p = globals_.lookup(name))
             return p->value;
-        return NULL;
+        return nullptr;
     }
     Func *lookupFunction(PropertyName *name) {
         if (GlobalMap::Ptr p = globals_.lookup(name)) {
             if (p->value->which() == Global::Function)
                 return functions_[p->value->funcIndex()];
         }
-        return NULL;
+        return nullptr;
     }
     unsigned numFunctions() const {
         return functions_.length();
@@ -1842,11 +1845,11 @@ class FunctionCompiler
         fn_(fn),
         locals_(m.cx()),
         varInitializers_(m.cx()),
-        alloc_(NULL),
-        graph_(NULL),
-        info_(NULL),
-        mirGen_(NULL),
-        curBlock_(NULL),
+        alloc_(nullptr),
+        graph_(nullptr),
+        info_(nullptr),
+        mirGen_(nullptr),
+        curBlock_(nullptr),
         loopStack_(m.cx()),
         breakableStack_(m.cx()),
         unlabeledBreaks_(m.cx()),
@@ -1898,7 +1901,7 @@ class FunctionCompiler
             JS_ASSERT(unlabeledContinues_.empty());
             JS_ASSERT(labeledBreaks_.empty());
             JS_ASSERT(labeledContinues_.empty());
-            JS_ASSERT(curBlock_ == NULL);
+            JS_ASSERT(curBlock_ == nullptr);
         }
 #endif
     }
@@ -1934,7 +1937,7 @@ class FunctionCompiler
         info_   = lifo_.new_<CompileInfo>(locals_.count(), SequentialExecution);
         mirGen_ = lifo_.new_<MIRGenerator>(cx()->compartment(), alloc_, graph_, info_);
 
-        if (!newBlock(/* pred = */ NULL, &curBlock_, fn_))
+        if (!newBlock(/* pred = */ nullptr, &curBlock_, fn_))
             return false;
 
         curBlock_->add(MAsmJSCheckOverRecursed::New(&m_.stackOverflowLabel()));
@@ -1977,20 +1980,20 @@ class FunctionCompiler
     {
         if (LocalMap::Ptr p = locals_.lookup(name))
             return &p->value;
-        return NULL;
+        return nullptr;
     }
 
     MDefinition *getLocalDef(const Local &local)
     {
         if (!curBlock_)
-            return NULL;
+            return nullptr;
         return curBlock_->getSlot(info().localSlot(local.slot));
     }
 
     const ModuleCompiler::Global *lookupGlobal(PropertyName *name) const
     {
         if (locals_.has(name))
-            return NULL;
+            return nullptr;
         return m_.lookupGlobal(name);
     }
 
@@ -1999,7 +2002,7 @@ class FunctionCompiler
     MDefinition *constant(const Value &v)
     {
         if (!curBlock_)
-            return NULL;
+            return nullptr;
         JS_ASSERT(v.isNumber());
         MConstant *constant = MConstant::New(v);
         curBlock_->add(constant);
@@ -2010,7 +2013,7 @@ class FunctionCompiler
     MDefinition *unary(MDefinition *op)
     {
         if (!curBlock_)
-            return NULL;
+            return nullptr;
         T *ins = T::NewAsmJS(op);
         curBlock_->add(ins);
         return ins;
@@ -2020,7 +2023,7 @@ class FunctionCompiler
     MDefinition *unary(MDefinition *op, MIRType type)
     {
         if (!curBlock_)
-            return NULL;
+            return nullptr;
         T *ins = T::NewAsmJS(op, type);
         curBlock_->add(ins);
         return ins;
@@ -2030,7 +2033,7 @@ class FunctionCompiler
     MDefinition *binary(MDefinition *lhs, MDefinition *rhs)
     {
         if (!curBlock_)
-            return NULL;
+            return nullptr;
         T *ins = T::New(lhs, rhs);
         curBlock_->add(ins);
         return ins;
@@ -2040,7 +2043,7 @@ class FunctionCompiler
     MDefinition *binary(MDefinition *lhs, MDefinition *rhs, MIRType type)
     {
         if (!curBlock_)
-            return NULL;
+            return nullptr;
         T *ins = T::NewAsmJS(lhs, rhs, type);
         curBlock_->add(ins);
         return ins;
@@ -2049,7 +2052,7 @@ class FunctionCompiler
     MDefinition *mul(MDefinition *lhs, MDefinition *rhs, MIRType type, MMul::Mode mode)
     {
         if (!curBlock_)
-            return NULL;
+            return nullptr;
         MMul *ins = MMul::New(lhs, rhs, type, mode);
         curBlock_->add(ins);
         return ins;
@@ -2059,7 +2062,7 @@ class FunctionCompiler
     MDefinition *bitwise(MDefinition *lhs, MDefinition *rhs)
     {
         if (!curBlock_)
-            return NULL;
+            return nullptr;
         T *ins = T::NewAsmJS(lhs, rhs);
         curBlock_->add(ins);
         return ins;
@@ -2069,7 +2072,7 @@ class FunctionCompiler
     MDefinition *bitwise(MDefinition *op)
     {
         if (!curBlock_)
-            return NULL;
+            return nullptr;
         T *ins = T::NewAsmJS(op);
         curBlock_->add(ins);
         return ins;
@@ -2078,7 +2081,7 @@ class FunctionCompiler
     MDefinition *compare(MDefinition *lhs, MDefinition *rhs, JSOp op, MCompare::CompareType type)
     {
         if (!curBlock_)
-            return NULL;
+            return nullptr;
         MCompare *ins = MCompare::NewAsmJS(lhs, rhs, op, type);
         curBlock_->add(ins);
         return ins;
@@ -2094,7 +2097,7 @@ class FunctionCompiler
     MDefinition *loadHeap(ArrayBufferView::ViewType vt, MDefinition *ptr, NeedsBoundsCheck chk)
     {
         if (!curBlock_)
-            return NULL;
+            return nullptr;
         MAsmJSLoadHeap *load = MAsmJSLoadHeap::New(vt, ptr);
         curBlock_->add(load);
         if (chk == NO_BOUNDS_CHECK)
@@ -2115,7 +2118,7 @@ class FunctionCompiler
     MDefinition *loadGlobalVar(const ModuleCompiler::Global &global)
     {
         if (!curBlock_)
-            return NULL;
+            return nullptr;
         if (global.varIsLitConstant()) {
             JS_ASSERT(global.litConstValue().isNumber());
             MConstant *constant = MConstant::New(global.litConstValue());
@@ -2241,7 +2244,7 @@ class FunctionCompiler
     bool callPrivate(MAsmJSCall::Callee callee, const Call &call, MIRType returnType, MDefinition **def)
     {
         if (!curBlock_) {
-            *def = NULL;
+            *def = nullptr;
             return true;
         }
         MAsmJSCall *ins = MAsmJSCall::New(callee, call.regArgs_, returnType, call.spIncrement_);
@@ -2263,7 +2266,7 @@ class FunctionCompiler
                      const Call &call, MDefinition **def)
     {
         if (!curBlock_) {
-            *def = NULL;
+            *def = nullptr;
             return true;
         }
 
@@ -2281,7 +2284,7 @@ class FunctionCompiler
     bool ffiCall(unsigned exitIndex, const Call &call, MIRType returnType, MDefinition **def)
     {
         if (!curBlock_) {
-            *def = NULL;
+            *def = nullptr;
             return true;
         }
 
@@ -2307,7 +2310,7 @@ class FunctionCompiler
             return;
         MAsmJSReturn *ins = MAsmJSReturn::New(expr);
         curBlock_->end(ins);
-        curBlock_ = NULL;
+        curBlock_ = nullptr;
     }
 
     void returnVoid()
@@ -2316,14 +2319,14 @@ class FunctionCompiler
             return;
         MAsmJSVoidReturn *ins = MAsmJSVoidReturn::New();
         curBlock_->end(ins);
-        curBlock_ = NULL;
+        curBlock_ = nullptr;
     }
 
     bool branchAndStartThen(MDefinition *cond, MBasicBlock **thenBlock, MBasicBlock **elseBlock, ParseNode *thenPn, ParseNode* elsePn)
     {
         if (!curBlock_) {
-            *thenBlock = NULL;
-            *elseBlock = NULL;
+            *thenBlock = nullptr;
+            *elseBlock = nullptr;
             return true;
         }
         if (!newBlock(curBlock_, thenBlock, thenPn) || !newBlock(curBlock_, elseBlock, elsePn))
@@ -2390,7 +2393,7 @@ class FunctionCompiler
     MDefinition *popPhiOutput()
     {
         if (!curBlock_)
-            return NULL;
+            return nullptr;
         JS_ASSERT(curBlock_->stackDepth() == info().firstStackSlot() + 1);
         return curBlock_->pop();
     }
@@ -2401,7 +2404,7 @@ class FunctionCompiler
             return false;
         JS_ASSERT_IF(curBlock_, curBlock_->loopDepth() == loopStack_.length() - 1);
         if (!curBlock_) {
-            *loopEntry = NULL;
+            *loopEntry = nullptr;
             return true;
         }
         *loopEntry = MBasicBlock::NewAsmJS(mirGraph(), info(), curBlock_,
@@ -2419,7 +2422,7 @@ class FunctionCompiler
     bool branchAndStartLoopBody(MDefinition *cond, MBasicBlock **afterLoop, ParseNode *bodyPn, ParseNode *afterPn)
     {
         if (!curBlock_) {
-            *afterLoop = NULL;
+            *afterLoop = nullptr;
             return true;
         }
         JS_ASSERT(curBlock_->loopDepth() > 0);
@@ -2427,7 +2430,7 @@ class FunctionCompiler
         if (!newBlock(curBlock_, &body, bodyPn))
             return false;
         if (cond->isConstant() && ToBoolean(cond->toConstant()->value())) {
-            *afterLoop = NULL;
+            *afterLoop = nullptr;
             curBlock_->end(MGoto::New(body));
         } else {
             if (!newBlockWithDepth(curBlock_, curBlock_->loopDepth() - 1, afterLoop, afterPn))
@@ -2488,7 +2491,7 @@ class FunctionCompiler
                     curBlock_->end(MGoto::New(loopEntry));
                     if (!loopEntry->setBackedgeAsmJS(curBlock_))
                         return false;
-                    curBlock_ = NULL;
+                    curBlock_ = nullptr;
                 } else {
                     MBasicBlock *afterLoop;
                     if (!newBlock(curBlock_, &afterLoop, afterLoopStmt))
@@ -2544,19 +2547,19 @@ class FunctionCompiler
         if (!breakableStack_.append(pn))
             return false;
         if (!curBlock_) {
-            *switchBlock = NULL;
+            *switchBlock = nullptr;
             return true;
         }
         curBlock_->end(MTableSwitch::New(expr, low, high));
         *switchBlock = curBlock_;
-        curBlock_ = NULL;
+        curBlock_ = nullptr;
         return true;
     }
 
     bool startSwitchCase(MBasicBlock *switchBlock, MBasicBlock **next, ParseNode *pn)
     {
         if (!switchBlock) {
-            *next = NULL;
+            *next = nullptr;
             return true;
         }
         if (!newBlock(switchBlock, next, pn))
@@ -2606,9 +2609,9 @@ class FunctionCompiler
 
     MIRGenerator *extractMIR()
     {
-        JS_ASSERT(mirGen_ != NULL);
+        JS_ASSERT(mirGen_ != nullptr);
         MIRGenerator *mirGen = mirGen_;
-        mirGen_ = NULL;
+        mirGen_ = nullptr;
         return mirGen;
     }
 
@@ -2696,7 +2699,7 @@ class FunctionCompiler
         }
         if (!p->value.append(curBlock_))
             return false;
-        curBlock_ = NULL;
+        curBlock_ = nullptr;
         return true;
     }
 
@@ -2789,23 +2792,23 @@ CheckModuleArguments(ModuleCompiler &m, ParseNode *fn)
 {
     unsigned numFormals;
     ParseNode *arg1 = FunctionArgsList(fn, &numFormals);
-    ParseNode *arg2 = arg1 ? NextNode(arg1) : NULL;
-    ParseNode *arg3 = arg2 ? NextNode(arg2) : NULL;
+    ParseNode *arg2 = arg1 ? NextNode(arg1) : nullptr;
+    ParseNode *arg3 = arg2 ? NextNode(arg2) : nullptr;
 
     if (numFormals > 3)
         return m.fail(fn, "asm.js modules takes at most 3 argument");
 
-    PropertyName *arg1Name = NULL;
+    PropertyName *arg1Name = nullptr;
     if (numFormals >= 1 && !CheckModuleArgument(m, arg1, &arg1Name))
         return false;
     m.initGlobalArgumentName(arg1Name);
 
-    PropertyName *arg2Name = NULL;
+    PropertyName *arg2Name = nullptr;
     if (numFormals >= 2 && !CheckModuleArgument(m, arg2, &arg2Name))
         return false;
     m.initImportArgumentName(arg2Name);
 
-    PropertyName *arg3Name = NULL;
+    PropertyName *arg3Name = nullptr;
     if (numFormals >= 3 && !CheckModuleArgument(m, arg3, &arg3Name))
         return false;
     m.initBufferArgumentName(arg3Name);
@@ -2847,7 +2850,7 @@ CheckGlobalVariableInitConstant(ModuleCompiler &m, PropertyName *varName, ParseN
 
 static bool
 CheckTypeAnnotation(ModuleCompiler &m, ParseNode *coercionNode, AsmJSCoercion *coercion,
-                    ParseNode **coercedExpr = NULL)
+                    ParseNode **coercedExpr = nullptr)
 {
     switch (coercionNode->getKind()) {
       case PNK_BITOR: {
@@ -2918,7 +2921,7 @@ CheckNewArrayView(ModuleCompiler &m, PropertyName *varName, ParseNode *newExpr)
         return m.failName(base, "expecting '%s.*Array", globalName);
 
     ParseNode *bufArg = NextNode(ctorExpr);
-    if (!bufArg || NextNode(bufArg) != NULL)
+    if (!bufArg || NextNode(bufArg) != nullptr)
         return m.fail(ctorExpr, "array view constructor takes exactly one argument");
 
     PropertyName *bufferName = m.module().bufferArgumentName();
@@ -4118,7 +4121,7 @@ CheckMultiply(FunctionCompiler &f, ParseNode *star, MDefinition **def, Type *typ
 
 static bool
 CheckAddOrSub(FunctionCompiler &f, ParseNode *expr, MDefinition **def, Type *type,
-              unsigned *numAddOrSubOut = NULL)
+              unsigned *numAddOrSubOut = nullptr)
 {
     JS_CHECK_RECURSION(f.cx(), return false);
 
@@ -4382,7 +4385,7 @@ CheckExpr(FunctionCompiler &f, ParseNode *expr, MDefinition **def, Type *type)
 }
 
 static bool
-CheckStatement(FunctionCompiler &f, ParseNode *stmt, LabelVector *maybeLabels = NULL);
+CheckStatement(FunctionCompiler &f, ParseNode *stmt, LabelVector *maybeLabels = nullptr);
 
 static bool
 CheckExprStatement(FunctionCompiler &f, ParseNode *exprStmt)
@@ -4630,7 +4633,7 @@ CheckDefaultAtEnd(FunctionCompiler &f, ParseNode *stmt)
 {
     for (; stmt; stmt = NextNode(stmt)) {
         JS_ASSERT(stmt->isKind(PNK_CASE) || stmt->isKind(PNK_DEFAULT));
-        if (stmt->isKind(PNK_DEFAULT) && NextNode(stmt) != NULL)
+        if (stmt->isKind(PNK_DEFAULT) && NextNode(stmt) != nullptr)
             return f.fail(stmt, "default label must be at the end");
     }
 
@@ -4855,7 +4858,7 @@ ParseFunction(ModuleCompiler &m, ParseNode **fnOut)
         return false;
 
     // This flows into FunctionBox, so must be tenured.
-    RootedFunction fun(m.cx(), NewFunction(m.cx(), NullPtr(), NULL, 0, JSFunction::INTERPRETED,
+    RootedFunction fun(m.cx(), NewFunction(m.cx(), NullPtr(), nullptr, 0, JSFunction::INTERPRETED,
                                            m.cx()->global(), name, JSFunction::FinalizeKind,
                                            TenuredObject));
     if (!fun)
@@ -4919,7 +4922,7 @@ CheckFunction(ModuleCompiler &m, LifoAlloc &lifo, MIRGenerator **mir, ModuleComp
     if (!f.prepareToEmitMIR(argTypes))
         return false;
 
-    ParseNode *lastNonEmptyStmt = NULL;
+    ParseNode *lastNonEmptyStmt = nullptr;
     for (; stmtIter; stmtIter = NextNode(stmtIter)) {
         if (!CheckStatement(f, stmtIter))
             return false;
@@ -4968,7 +4971,7 @@ GenerateCode(ModuleCompiler &m, ModuleCompiler::Func &func, MIRGenerator &mir, L
 
     ScopedJSDeletePtr<CodeGenerator> codegen(jit::GenerateCode(&mir, &lir, &m.masm()));
     if (!codegen)
-        return m.fail(NULL, "internal codegen failure (probably out of memory)");
+        return m.fail(nullptr, "internal codegen failure (probably out of memory)");
 
     if (!m.collectAccesses(mir))
         return false;
@@ -5020,7 +5023,7 @@ CheckAllFunctionsDefined(ModuleCompiler &m)
 {
     for (unsigned i = 0; i < m.numFunctions(); i++) {
         if (!m.function(i).code()->bound())
-            return m.failName(NULL, "missing definition of function %s", m.function(i).name());
+            return m.failName(nullptr, "missing definition of function %s", m.function(i).name());
     }
 
     return true;
@@ -5071,6 +5074,29 @@ CheckFunctionsSequential(ModuleCompiler &m)
 
 #ifdef JS_WORKER_THREADS
 
+// Currently, only one asm.js parallel compilation is allowed at a time.
+// This RAII class attempts to claim this parallel compilation using atomic ops
+// on rt->workerThreadState->asmJSCompilationInProgress.
+class ParallelCompilationGuard
+{
+    WorkerThreadState *parallelState_;
+  public:
+    ParallelCompilationGuard() : parallelState_(NULL) {}
+    ~ParallelCompilationGuard() {
+        if (parallelState_) {
+            JS_ASSERT(parallelState_->asmJSCompilationInProgress == true);
+            parallelState_->asmJSCompilationInProgress = false;
+        }
+    }
+    bool claim(WorkerThreadState *state) {
+        JS_ASSERT(!parallelState_);
+        if (!state->asmJSCompilationInProgress.compareExchange(false, true))
+            return false;
+        parallelState_ = state;
+        return true;
+    }
+};
+
 static bool
 ParallelCompilationEnabled(ExclusiveContext *cx)
 {
@@ -5114,7 +5140,7 @@ GetFinishedCompilation(ModuleCompiler &m, ParallelGroupState &group)
         group.state.wait(WorkerThreadState::CONSUMER);
     }
 
-    return NULL;
+    return nullptr;
 }
 
 static bool
@@ -5167,7 +5193,7 @@ CheckFunctionsParallelImpl(ModuleCompiler &m, ParallelGroupState &group)
 
     for (unsigned i = 0; PeekToken(m.parser()) == TOK_FUNCTION; i++) {
         // Get exclusive access to an empty LifoAlloc from the thread group's pool.
-        AsmJSParallelTask *task = NULL;
+        AsmJSParallelTask *task = nullptr;
         if (!GetUnusedTask(group, i, &task) && !GenerateCodeForFinishedJob(m, group, &task))
             return false;
 
@@ -5187,7 +5213,7 @@ CheckFunctionsParallelImpl(ModuleCompiler &m, ParallelGroupState &group)
 
     // Block for all outstanding workers to complete.
     while (group.outstandingJobs > 0) {
-        AsmJSParallelTask *ignored = NULL;
+        AsmJSParallelTask *ignored = nullptr;
         if (!GenerateCodeForFinishedJob(m, group, &ignored))
             return false;
     }
@@ -5251,6 +5277,15 @@ static const size_t LIFO_ALLOC_PARALLEL_CHUNK_SIZE = 1 << 12;
 static bool
 CheckFunctionsParallel(ModuleCompiler &m)
 {
+    // If parallel compilation isn't enabled (not enough cores, disabled by
+    // pref, etc) or another thread is currently compiling asm.js in parallel,
+    // fall back to sequential compilation. (We could lift the latter
+    // constraint by hoisting asmJS* state out of WorkerThreadState so multiple
+    // concurrent asm.js parallel compilations don't race.)
+    ParallelCompilationGuard g;
+    if (!ParallelCompilationEnabled(m.cx()) || !g.claim(m.cx()->workerThreadState()))
+        return CheckFunctionsSequential(m);
+
     // Saturate all worker threads plus the main thread.
     WorkerThreadState &state = *m.cx()->workerThreadState();
     size_t numParallelJobs = state.numThreads + 1;
@@ -5300,7 +5335,7 @@ CheckFuncPtrTable(ModuleCompiler &m, ParseNode *var)
     unsigned mask = length - 1;
 
     ModuleCompiler::FuncPtrVector elems(m.cx());
-    const Signature *firstSig = NULL;
+    const Signature *firstSig = nullptr;
 
     for (ParseNode *elem = ListHead(arrayLiteral); elem; elem = NextNode(elem)) {
         if (!elem->isKind(PNK_NAME))
@@ -5364,7 +5399,7 @@ CheckModuleExportFunction(ModuleCompiler &m, ParseNode *returnExpr)
     if (!func)
         return m.failName(returnExpr, "exported function name '%s' not found", funcName);
 
-    return m.addExportedFunction(func, /* maybeFieldName = */ NULL);
+    return m.addExportedFunction(func, /* maybeFieldName = */ nullptr);
 }
 
 static bool
@@ -5401,8 +5436,8 @@ CheckModuleReturn(ModuleCompiler &m)
     if (PeekToken(m.parser()) != TOK_RETURN) {
         TokenKind tk = PeekToken(m.parser());
         if (tk == TOK_RC || tk == TOK_EOF)
-            return m.fail(NULL, "expecting return statement");
-        return m.fail(NULL, "invalid asm.js statement");
+            return m.fail(nullptr, "expecting return statement");
+        return m.fail(nullptr, "invalid asm.js statement");
     }
 
     ParseNode *returnStmt = m.parser().statement();
@@ -5799,7 +5834,7 @@ GenerateFFIInterpreterExit(ModuleCompiler &m, const ModuleCompiler::ExitDescript
 
     // argument 1: exitIndex
     if (i->kind() == ABIArg::GPR)
-        masm.mov(Imm32(exitIndex), i->gpr());
+        masm.mov(ImmWord(exitIndex), i->gpr());
     else
         masm.store32(Imm32(exitIndex), Address(StackPointer, i->offsetFromArgBase()));
     i++;
@@ -5807,7 +5842,7 @@ GenerateFFIInterpreterExit(ModuleCompiler &m, const ModuleCompiler::ExitDescript
     // argument 2: argc
     unsigned argc = exit.sig().args().length();
     if (i->kind() == ABIArg::GPR)
-        masm.mov(Imm32(argc), i->gpr());
+        masm.mov(ImmWord(argc), i->gpr());
     else
         masm.store32(Imm32(argc), Address(StackPointer, i->offsetFromArgBase()));
     i++;
@@ -5866,10 +5901,10 @@ GenerateFFIInterpreterExit(ModuleCompiler &m, const ModuleCompiler::ExitDescript
     LoadJSContextFromActivation(masm, activation, IntArgReg0);
 
     // argument 1: exitIndex
-    masm.mov(Imm32(exitIndex), IntArgReg1);
+    masm.mov(ImmWord(exitIndex), IntArgReg1);
 
     // argument 2: argc
-    masm.mov(Imm32(exit.sig().args().length()), IntArgReg2);
+    masm.mov(ImmWord(exit.sig().args().length()), IntArgReg2);
 
     // argument 3: argv
     Address argv(StackPointer, ShadowStackSpace);
@@ -6046,7 +6081,7 @@ GenerateFFIIonExit(ModuleCompiler &m, const ModuleCompiler::ExitDescriptor &exit
 
     // Get the pointer to the ion code
     Label done, oolConvert;
-    Label *maybeDebugBreakpoint = NULL;
+    Label *maybeDebugBreakpoint = nullptr;
 
 #ifdef DEBUG
     Label ionFailed;
@@ -6308,7 +6343,7 @@ GenerateThrowExit(ModuleCompiler &m, Label *throwLabel)
     masm.PopRegsInMask(NonVolatileRegs);
     JS_ASSERT(masm.framePushed() == 0);
 
-    masm.mov(Imm32(0), ReturnReg);
+    masm.mov(ImmWord(0), ReturnReg);
     masm.abiret();
 
     return !masm.oom();
@@ -6390,13 +6425,8 @@ CheckModule(ExclusiveContext *cx, AsmJSParser &parser, ParseNode *stmtList,
         return false;
 
 #ifdef JS_WORKER_THREADS
-    if (ParallelCompilationEnabled(cx)) {
-        if (!CheckFunctionsParallel(m))
-            return false;
-    } else {
-        if (!CheckFunctionsSequential(m))
-            return false;
-    }
+    if (!CheckFunctionsParallel(m))
+        return false;
 #else
     if (!CheckFunctionsSequential(m))
         return false;
@@ -6412,7 +6442,7 @@ CheckModule(ExclusiveContext *cx, AsmJSParser &parser, ParseNode *stmtList,
 
     TokenKind tk = PeekToken(m.parser());
     if (tk != TOK_EOF && tk != TOK_RC)
-        return m.fail(NULL, "top-level export (return) must be the last statement");
+        return m.fail(nullptr, "top-level export (return) must be the last statement");
 
     AsmJSStaticLinkData linkData(cx);
     if (!FinishModule(m, module, &linkData))

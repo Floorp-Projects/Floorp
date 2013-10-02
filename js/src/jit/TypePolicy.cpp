@@ -95,7 +95,7 @@ BinaryStringPolicy::adjustInputs(MInstruction *ins)
         if (in->type() == MIRType_String)
             continue;
 
-        MInstruction *replace = NULL;
+        MInstruction *replace = nullptr;
         if (in->type() == MIRType_Int32 || in->type() == MIRType_Double) {
             replace = MToString::New(in);
         } else {
@@ -278,8 +278,7 @@ TypeBarrierPolicy::adjustInputs(MInstruction *def)
             return true;
         }
 
-        MUnbox *unbox = MUnbox::New(ins->getOperand(0), outputType,
-                                    MUnbox::TypeBarrier, ins->bailoutKind());
+        MUnbox *unbox = MUnbox::New(ins->getOperand(0), outputType, MUnbox::TypeBarrier);
         ins->block()->insertBefore(ins, unbox);
         ins->replaceOperand(0, unbox);
         return true;

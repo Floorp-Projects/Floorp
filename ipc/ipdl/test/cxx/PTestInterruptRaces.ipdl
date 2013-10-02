@@ -1,0 +1,82 @@
+namespace mozilla {
+namespace _ipdltest {
+
+intr protocol PTestInterruptRaces {
+both:
+    intr Race() returns (bool hasReply);
+    intr StackFrame() returns ();
+    intr StackFrame3() returns ();
+
+parent:
+    sync StartRace();
+    intr Parent();
+    sync GetAnsweredParent() returns (bool answeredParent);
+
+child:
+    Start();
+    Wakeup();
+    Wakeup3();
+    intr Child();
+    __delete__();
+
+state START:
+    send Start goto TEST1;
+
+// First test: race while no other messages are on the Interrupt stack
+state TEST1:
+    recv StartRace goto RACE1;
+state RACE1:
+    call Race goto DUMMY1_1;
+    answer Race goto DUMMY1_2;
+state DUMMY1_1:
+    answer Race goto TEST2;
+state DUMMY1_2:
+    call Race goto TEST2;
+
+// Second test: race while other messages are on the Interrupt stack
+state TEST2:
+    call StackFrame goto MORESTACK;
+state MORESTACK:
+    answer StackFrame goto STARTRACE;
+state STARTRACE:
+    send Wakeup goto RACE2;
+state RACE2:
+    call Race goto DUMMY2_1;
+    answer Race goto DUMMY2_2;
+state DUMMY2_1:
+    answer Race goto TEST3;
+state DUMMY2_2:
+    call Race goto TEST3;
+
+// Third test: resolve race using custom policy
+state TEST3:
+    call StackFrame3 goto MORESTACK3;
+state MORESTACK3:
+    answer StackFrame3 goto STARTRACE3;
+state STARTRACE3:
+    send Wakeup3 goto RACE3;
+state RACE3:
+    call Child goto DUMMY3_1;
+    answer Parent goto DUMMY3_2;
+state DUMMY3_1:
+    // the parent receives this from the child in this state
+    recv GetAnsweredParent goto CHECK;
+    // this transition is never taken (if the custom race resolution
+    // works correctly)
+    answer Parent goto CHECK;
+state DUMMY3_2:
+    call Child goto CHECK;
+state CHECK:
+    // the child sends this from this state
+    recv GetAnsweredParent goto DYING;
+    // because of deferred processing, the parent receives the child's
+    // message here
+    answer Parent goto DYING;
+
+
+state DYING:
+    send __delete__;
+};
+
+} // namespace _ipdltest
+} // namespace mozilla

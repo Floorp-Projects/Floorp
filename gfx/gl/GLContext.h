@@ -52,6 +52,7 @@ namespace android {
 namespace mozilla {
     namespace gfx {
         class SharedSurface;
+        class SourceSurface;
         class DataSourceSurface;
         struct SurfaceCaps;
     }
@@ -393,6 +394,7 @@ public:
         ARB_occlusion_query2,
         EXT_transform_feedback,
         NV_transform_feedback,
+        ANGLE_depth_texture,
         Extensions_Max,
         Extensions_End
     };
@@ -2399,13 +2401,13 @@ public:
     /**
      * Applies aFilter to the texture currently bound to GL_TEXTURE_2D.
      */
-    void ApplyFilterToBoundTexture(gfxPattern::GraphicsFilter aFilter);
+    void ApplyFilterToBoundTexture(GraphicsFilter aFilter);
 
     /**
      * Applies aFilter to the texture currently bound to aTarget.
      */
     void ApplyFilterToBoundTexture(GLuint aTarget,
-                                   gfxPattern::GraphicsFilter aFilter);
+                                   GraphicsFilter aFilter);
 
     virtual bool BindExternalBuffer(GLuint texture, void* buffer) { return false; }
     virtual bool UnbindExternalBuffer(GLuint texture) { return false; }
@@ -2700,6 +2702,8 @@ public:
     // Similar to ReadPixelsIntoImageSurface, but pulls from the screen
     // instead of the currently bound framebuffer.
     void ReadScreenIntoImageSurface(gfxImageSurface* dest);
+
+    TemporaryRef<gfx::SourceSurface> ReadPixelsToSourceSurface(const gfx::IntSize &aSize);
 
     /**
      * Copy a rectangle from one TextureImage into another.  The

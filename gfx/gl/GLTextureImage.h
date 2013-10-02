@@ -11,7 +11,7 @@
 #include "nsTArray.h"
 #include "gfxTypes.h"
 #include "GLContextTypes.h"
-#include "gfxPattern.h"
+#include "GraphicsFilter.h"
 #include "mozilla/gfx/Rect.h"
 
 class gfxASurface;
@@ -245,7 +245,7 @@ public:
     virtual bool InUpdate() const = 0;
     GLenum GetWrapMode() const { return mWrapMode; }
 
-    void SetFilter(gfxPattern::GraphicsFilter aFilter) { mFilter = aFilter; }
+    void SetFilter(GraphicsFilter aFilter) { mFilter = aFilter; }
 
     /**
      * Applies this TextureImage's filter, assuming that its texture is
@@ -270,7 +270,7 @@ protected:
         , mWrapMode(aWrapMode)
         , mContentType(aContentType)
         , mImageFormat(aImageFormat)
-        , mFilter(gfxPattern::FILTER_GOOD)
+        , mFilter(GraphicsFilter::FILTER_GOOD)
         , mFlags(aFlags)
     {}
 
@@ -286,7 +286,7 @@ protected:
     ContentType mContentType;
     ImageFormat mImageFormat;
     gfx::SurfaceFormat mTextureFormat;
-    gfxPattern::GraphicsFilter mFilter;
+    GraphicsFilter mFilter;
     Flags mFlags;
 };
 

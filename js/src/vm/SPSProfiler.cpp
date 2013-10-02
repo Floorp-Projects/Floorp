@@ -20,13 +20,13 @@ using mozilla::DebugOnly;
 
 SPSProfiler::SPSProfiler(JSRuntime *rt)
   : rt(rt),
-    stack_(NULL),
-    size_(NULL),
+    stack_(nullptr),
+    size_(nullptr),
     max_(0),
     slowAssertions(false),
     enabled_(false)
 {
-    JS_ASSERT(rt != NULL);
+    JS_ASSERT(rt != nullptr);
 }
 
 SPSProfiler::~SPSProfiler()
@@ -78,11 +78,11 @@ SPSProfiler::profileString(JSContext *cx, JSScript *script, JSFunction *maybeFun
     if (s)
         return s->value;
     const char *str = allocProfileString(cx, script, maybeFun);
-    if (str == NULL)
-        return NULL;
+    if (str == nullptr)
+        return nullptr;
     if (!strings.add(s, script, str)) {
         js_free(const_cast<char *>(str));
-        return NULL;
+        return nullptr;
     }
     return str;
 }
@@ -110,12 +110,12 @@ bool
 SPSProfiler::enter(JSContext *cx, JSScript *script, JSFunction *maybeFun)
 {
     const char *str = profileString(cx, script, maybeFun);
-    if (str == NULL)
+    if (str == nullptr)
         return false;
 
     JS_ASSERT_IF(*size_ > 0 && *size_ - 1 < max_ && stack_[*size_ - 1].js(),
-                 stack_[*size_ - 1].pc() != NULL);
-    push(str, NULL, script, script->code);
+                 stack_[*size_ - 1].pc() != nullptr);
+    push(str, nullptr, script, script->code);
     return true;
 }
 
@@ -129,7 +129,7 @@ SPSProfiler::exit(JSContext *cx, JSScript *script, JSFunction *maybeFun)
     if (*size_ < max_) {
         const char *str = profileString(cx, script, maybeFun);
         /* Can't fail lookup because we should already be in the set */
-        JS_ASSERT(str != NULL);
+        JS_ASSERT(str != nullptr);
 
         // Bug 822041
         if (!stack_[*size_].js()) {
@@ -146,8 +146,8 @@ SPSProfiler::exit(JSContext *cx, JSScript *script, JSFunction *maybeFun)
         JS_ASSERT(stack_[*size_].js());
         JS_ASSERT(stack_[*size_].script() == script);
         JS_ASSERT(strcmp((const char*) stack_[*size_].label(), str) == 0);
-        stack_[*size_].setLabel(NULL);
-        stack_[*size_].setPC(NULL);
+        stack_[*size_].setLabel(nullptr);
+        stack_[*size_].setPC(nullptr);
     }
 #endif
 }
@@ -164,7 +164,7 @@ SPSProfiler::enterNative(const char *string, void *sp)
     if (current < max_) {
         stack[current].setLabel(string);
         stack[current].setStackAddress(sp);
-        stack[current].setScript(NULL);
+        stack[current].setScript(nullptr);
         stack[current].setLine(0);
     }
     *size = current + 1;
@@ -209,30 +209,30 @@ SPSProfiler::allocProfileString(JSContext *cx, JSScript *script, JSFunction *may
     // browser/devtools/profiler/cleopatra/js/parserWorker.js.
     DebugOnly<uint64_t> gcBefore = cx->runtime()->gcNumber;
     StringBuffer buf(cx);
-    bool hasAtom = maybeFun != NULL && maybeFun->displayAtom() != NULL;
+    bool hasAtom = maybeFun != nullptr && maybeFun->displayAtom() != nullptr;
     if (hasAtom) {
         if (!buf.append(maybeFun->displayAtom()))
-            return NULL;
+            return nullptr;
         if (!buf.append(" ("))
-            return NULL;
+            return nullptr;
     }
     if (script->filename()) {
         if (!buf.appendInflated(script->filename(), strlen(script->filename())))
-            return NULL;
+            return nullptr;
     } else if (!buf.append("<unknown>")) {
-        return NULL;
+        return nullptr;
     }
     if (!buf.append(":"))
-        return NULL;
+        return nullptr;
     if (!NumberValueToStringBuffer(cx, NumberValue(script->lineno), buf))
-        return NULL;
+        return nullptr;
     if (hasAtom && !buf.append(")"))
-        return NULL;
+        return nullptr;
 
     size_t len = buf.length();
     char *cstr = js_pod_malloc<char>(len + 1);
-    if (cstr == NULL)
-        return NULL;
+    if (cstr == nullptr)
+        return nullptr;
 
     const jschar *ptr = buf.begin();
     for (size_t i = 0; i < len; i++)
@@ -249,16 +249,16 @@ SPSEntryMarker::SPSEntryMarker(JSRuntime *rt
 {
     MOZ_GUARD_OBJECT_NOTIFIER_INIT;
     if (!profiler->enabled()) {
-        profiler = NULL;
+        profiler = nullptr;
         return;
     }
     size_before = *profiler->size_;
-    profiler->push("js::RunScript", this, NULL, NULL);
+    profiler->push("js::RunScript", this, nullptr, nullptr);
 }
 
 SPSEntryMarker::~SPSEntryMarker()
 {
-    if (profiler != NULL) {
+    if (profiler != nullptr) {
         profiler->pop();
         JS_ASSERT(size_before == *profiler->size_);
     }
@@ -268,14 +268,14 @@ JS_FRIEND_API(jsbytecode*)
 ProfileEntry::pc() volatile
 {
     JS_ASSERT_IF(idx != NullPCIndex, idx >= 0 && uint32_t(idx) < script()->length);
-    return idx == NullPCIndex ? NULL : script()->code + idx;
+    return idx == NullPCIndex ? nullptr : script()->code + idx;
 }
 
 JS_FRIEND_API(void)
 ProfileEntry::setPC(jsbytecode *pc) volatile
 {
-    JS_ASSERT_IF(pc != NULL, script()->code <= pc && pc < script()->code + script()->length);
-    idx = pc == NULL ? NullPCIndex : pc - script()->code;
+    JS_ASSERT_IF(pc != nullptr, script()->code <= pc && pc < script()->code + script()->length);
+    idx = pc == nullptr ? NullPCIndex : pc - script()->code;
 }
 
 JS_FRIEND_API(void)

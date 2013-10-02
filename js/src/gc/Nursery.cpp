@@ -34,8 +34,6 @@ js::Nursery::init()
     if (!hugeSlots.init())
         return false;
 
-    fallbackBitmap.clear(false);
-
     void *heap = MapAlignedPages(runtime(), NurserySize, Alignment);
 #ifdef JSGC_ROOT_ANALYSIS
     // Our poison pointers are not guaranteed to be invalid on 64-bit
@@ -97,8 +95,6 @@ js::Nursery::disable()
 void *
 js::Nursery::allocate(size_t size)
 {
-    JS_ASSERT(size % ThingAlignment == 0);
-    JS_ASSERT(position() % ThingAlignment == 0);
     JS_ASSERT(!runtime()->isHeapBusy());
 
     if (position() + size > currentEnd()) {
@@ -232,6 +228,7 @@ class MinorCollectionTracer : public JSTracer
     /* Save and restore all of the runtime state we use during MinorGC. */
     bool savedRuntimeNeedBarrier;
     AutoDisableProxyCheck disableStrictProxyChecking;
+    AutoEnterOOMUnsafeRegion oomUnsafeRegion;
 
     /* Insert the given relocation entry into the list of things to visit. */
     JS_ALWAYS_INLINE void insertIntoFixupList(RelocationOverlay *entry) {
@@ -494,6 +491,8 @@ js::Nursery::moveSlotsToTenured(JSObject *dst, JSObject *src, AllocKind dstKind)
     Zone *zone = src->zone();
     size_t count = src->numDynamicSlots();
     dst->slots = zone->pod_malloc<HeapSlot>(count);
+    if (!dst->slots)
+        MOZ_CRASH();
     PodCopy(dst->slots, src->slots, count);
     setSlotsForwardingPointer(src->slots, dst->slots, count);
     return count * sizeof(HeapSlot);

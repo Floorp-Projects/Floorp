@@ -17,7 +17,8 @@ class nsDOMKeyboardEvent : public nsDOMUIEvent,
 {
 public:
   nsDOMKeyboardEvent(mozilla::dom::EventTarget* aOwner,
-                     nsPresContext* aPresContext, nsKeyEvent* aEvent);
+                     nsPresContext* aPresContext,
+                     mozilla::WidgetKeyboardEvent* aEvent);
   virtual ~nsDOMKeyboardEvent();
 
   NS_DECL_ISUPPORTS_INHERITED
@@ -36,22 +37,22 @@ public:
 
   bool AltKey()
   {
-    return static_cast<nsInputEvent*>(mEvent)->IsAlt();
+    return static_cast<mozilla::WidgetInputEvent*>(mEvent)->IsAlt();
   }
 
   bool CtrlKey()
   {
-    return static_cast<nsInputEvent*>(mEvent)->IsControl();
+    return static_cast<mozilla::WidgetInputEvent*>(mEvent)->IsControl();
   }
 
   bool ShiftKey()
   {
-    return static_cast<nsInputEvent*>(mEvent)->IsShift();
+    return static_cast<mozilla::WidgetInputEvent*>(mEvent)->IsShift();
   }
 
   bool MetaKey()
   {
-    return static_cast<nsInputEvent*>(mEvent)->IsMeta();
+    return static_cast<mozilla::WidgetInputEvent*>(mEvent)->IsMeta();
   }
 
   bool GetModifierState(const nsAString& aKey)
@@ -65,7 +66,7 @@ public:
 
   uint32_t Location()
   {
-    return static_cast<nsKeyEvent*>(mEvent)->location;
+    return static_cast<mozilla::WidgetKeyboardEvent*>(mEvent)->location;
   }
 
   void InitKeyEvent(const nsAString& aType, bool aCanBubble, bool aCancelable,

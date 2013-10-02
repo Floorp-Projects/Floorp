@@ -7,14 +7,15 @@
 #include "prtime.h"
 #include "mozilla/ContentEvents.h"
 
+using namespace mozilla;
+
 nsDOMAnimationEvent::nsDOMAnimationEvent(mozilla::dom::EventTarget* aOwner,
                                          nsPresContext *aPresContext,
-                                         nsAnimationEvent *aEvent)
+                                         InternalAnimationEvent* aEvent)
   : nsDOMEvent(aOwner, aPresContext,
-               aEvent ? aEvent : new nsAnimationEvent(false, 0,
-                                                      EmptyString(),
-                                                      0.0,
-                                                      EmptyString()))
+               aEvent ? aEvent :
+                        new InternalAnimationEvent(false, 0, EmptyString(),
+                                                   0.0, EmptyString()))
 {
   if (aEvent) {
     mEventIsInternal = false;
@@ -86,7 +87,7 @@ nsresult
 NS_NewDOMAnimationEvent(nsIDOMEvent **aInstancePtrResult,
                         mozilla::dom::EventTarget* aOwner,
                         nsPresContext *aPresContext,
-                        nsAnimationEvent *aEvent)
+                        InternalAnimationEvent *aEvent)
 {
   nsDOMAnimationEvent* it =
     new nsDOMAnimationEvent(aOwner, aPresContext, aEvent);

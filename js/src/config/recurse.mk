@@ -33,9 +33,9 @@ ifndef TIERS
 BUILDSTATUS =
 endif
 
-# Main rules (export, compile, libs and tools) call recurse_* rules.
+# Main rules (export, compile, binaries, libs and tools) call recurse_* rules.
 # This wrapping is only really useful for build status.
-compile libs export tools::
+compile binaries libs export tools::
 	$(call BUILDSTATUS,TIER_START $@ $($@_subtiers))
 	+$(MAKE) recurse_$@
 	$(call BUILDSTATUS,TIER_FINISH $@)
@@ -43,11 +43,11 @@ compile libs export tools::
 # Carefully avoid $(eval) type of rule generation, which makes pymake slower
 # than necessary.
 # Get current tier and corresponding subtiers from the data in root.mk.
-CURRENT_TIER := $(filter $(foreach tier,compile libs export tools,recurse_$(tier)),$(MAKECMDGOALS))
+CURRENT_TIER := $(filter $(foreach tier,compile binaries libs export tools,recurse_$(tier) $(tier)-deps),$(MAKECMDGOALS))
 ifneq (,$(filter-out 0 1,$(words $(CURRENT_TIER))))
 $(error $(CURRENT_TIER) not supported on the same make command line)
 endif
-CURRENT_TIER := $(subst recurse_,,$(CURRENT_TIER))
+CURRENT_TIER := $(subst recurse_,,$(CURRENT_TIER:-deps=))
 CURRENT_SUBTIERS := $($(CURRENT_TIER)_subtiers)
 
 # The rules here are doing directory traversal, so we don't want further
@@ -69,25 +69,42 @@ endif
 # TIERS (like for js/src).
 CURRENT_DIRS := $(or $($(CURRENT_TIER)_dirs),$(foreach subtier,$(CURRENT_SUBTIERS),$($(CURRENT_TIER)_subtier_$(subtier))))
 
-# Subtier delimiter rules
-$(addprefix subtiers/,$(addsuffix _start/$(CURRENT_TIER),$(CURRENT_SUBTIERS))): subtiers/%_start/$(CURRENT_TIER):
-	$(call BUILDSTATUS,SUBTIER_START $(CURRENT_TIER) $* $(if $(BUG_915535_FIXED),$($(CURRENT_TIER)_subtier_$*)))
+ifneq (,$(filter binaries libs,$(CURRENT_TIER)))
+WANT_STAMPS = 1
+STAMP_TOUCH = $(TOUCH) $(@D)/binaries
+endif
 
-$(addprefix subtiers/,$(addsuffix _finish/$(CURRENT_TIER),$(CURRENT_SUBTIERS))): subtiers/%_finish/$(CURRENT_TIER):
+# Subtier delimiter rules
+$(addprefix subtiers/,$(addsuffix _start/$(CURRENT_TIER),$(CURRENT_SUBTIERS))): subtiers/%_start/$(CURRENT_TIER): $(if $(WANT_STAMPS),$(call mkdir_deps,subtiers/%_start))
+	$(call BUILDSTATUS,SUBTIER_START $(CURRENT_TIER) $* $(if $(BUG_915535_FIXED),$($(CURRENT_TIER)_subtier_$*)))
+	@$(STAMP_TOUCH)
+
+$(addprefix subtiers/,$(addsuffix _finish/$(CURRENT_TIER),$(CURRENT_SUBTIERS))): subtiers/%_finish/$(CURRENT_TIER): $(if $(WANT_STAMPS),$(call mkdir_deps,subtiers/%_finish))
 	$(call BUILDSTATUS,SUBTIER_FINISH $(CURRENT_TIER) $*)
+	@$(STAMP_TOUCH)
+
+$(addprefix subtiers/,$(addsuffix /$(CURRENT_TIER),$(CURRENT_SUBTIERS))): %/$(CURRENT_TIER): $(if $(WANT_STAMPS),$(call mkdir_deps,%))
+	@$(STAMP_TOUCH)
+
+GARBAGE_DIRS += subtiers
 
 # Recursion rule for all directories traversed for all subtiers in the
 # current tier.
 # root.mk defines subtier_of_* variables, that map a normalized subdir path to
 # a subtier name (e.g. subtier_of_memory_jemalloc = base)
-$(addsuffix /$(CURRENT_TIER),$(CURRENT_DIRS)): %/$(CURRENT_TIER):
+$(addsuffix /$(CURRENT_TIER),$(CURRENT_DIRS)): %/$(CURRENT_TIER): $(if $(WANT_STAMPS),%/Makefile %/backend.mk)
 ifdef BUG_915535_FIXED
 	$(call BUILDSTATUS,TIERDIR_START $(CURRENT_TIER) $(subtier_of_$(subst /,_,$*)) $*)
 endif
 	+@$(MAKE) -C $* $(if $(filter $*,$(tier_$(subtier_of_$(subst /,_,$*))_staticdirs)),,$(CURRENT_TIER))
+# Ensure existing stamps are up-to-date, but don't create one if submake didn't create one.
+	$(if $(wildcard $@),@$(STAMP_TOUCH))
 ifdef BUG_915535_FIXED
 	$(call BUILDSTATUS,TIERDIR_FINISH $(CURRENT_TIER) $(subtier_of_$(subst /,_,$*)) $*)
 endif
+
+# Dummy rules for possibly inexisting dependencies for the above tier targets
+$(addsuffix /Makefile,$(CURRENT_DIRS)) $(addsuffix /backend.mk,$(CURRENT_DIRS)):
 
 # The export tier requires nsinstall, which is built from config. So every
 # subdirectory traversal needs to happen after traversing config.
@@ -95,13 +112,40 @@ ifeq ($(CURRENT_TIER),export)
 $(addsuffix /$(CURRENT_TIER),$(filter-out config,$(CURRENT_DIRS))): config/$(CURRENT_TIER)
 endif
 
+ifneq (,$(filter libs binaries,$(CURRENT_TIER)))
+# When doing a "libs" build, target_libs.mk ensures the interesting dependency data
+# is available in the "binaries" stamp. Once recursion is done, aggregate all that
+# dependency info so that stamps depend on relevant files and relevant other stamps.
+# When doing a "binaries" build, the aggregate dependency file and those stamps are
+# used and allow to skip recursing directories where changes are not going to require
+# rebuild. A few directories, however, are still traversed all the time, mostly, the
+# gyp managed ones and js/src.
+# A few things that are not traversed by a "binaries" build, but should, in an ideal
+# world, are nspr, nss, icu and ffi.
+recurse_$(CURRENT_TIER):
+	@$(MAKE) binaries-deps
+
+# Creating binaries-deps.mk directly would make us build it twice: once when beginning
+# the build because of the include, and once at the end because of the stamps.
+binaries-deps: $(wildcard $(addsuffix /binaries,$(CURRENT_DIRS)))
+	@$(call py_action,link_deps,-o $@.mk --group-by-depfile --topsrcdir $(topsrcdir) --topobjdir $(DEPTH) --dist $(DIST) --guard $(addprefix ",$(addsuffix ",$^)))
+	@$(TOUCH) $@
+
+ifeq (recurse_binaries,$(MAKECMDGOALS))
+$(call include_deps,binaries-deps.mk)
+endif
+
+endif
+
+DIST_GARBAGE += binaries-deps.mk binaries-deps
+
 else
 
 # Don't recurse if MAKELEVEL is NO_RECURSE_MAKELEVEL as defined above, but
 # still recurse for externally managed make files (gyp-generated ones).
 ifeq ($(EXTERNALLY_MANAGED_MAKE_FILE)_$(NO_RECURSE_MAKELEVEL),_$(MAKELEVEL))
 
-compile libs export tools::
+compile binaries libs export tools::
 
 else
 #########################
@@ -139,7 +183,7 @@ endif
 
 endef
 
-$(foreach subtier,export libs tools,$(eval $(call CREATE_SUBTIER_TRAVERSAL_RULE,$(subtier))))
+$(foreach subtier,export compile binaries libs tools,$(eval $(call CREATE_SUBTIER_TRAVERSAL_RULE,$(subtier))))
 
 tools export:: $(SUBMAKEFILES)
 	$(LOOP_OVER_TOOL_DIRS)

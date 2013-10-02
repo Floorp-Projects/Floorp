@@ -422,7 +422,7 @@ HTMLFormElement::Submit()
 NS_IMETHODIMP
 HTMLFormElement::Reset()
 {
-  nsFormEvent event(true, NS_FORM_RESET);
+  InternalFormEvent event(true, NS_FORM_RESET);
   nsEventDispatcher::Dispatch(static_cast<nsIContent*>(this), nullptr,
                               &event);
   return NS_OK;
@@ -707,7 +707,7 @@ HTMLFormElement::PostHandleEvent(nsEventChainPostVisitor& aVisitor)
 }
 
 nsresult
-HTMLFormElement::DoSubmitOrReset(nsEvent* aEvent,
+HTMLFormElement::DoSubmitOrReset(WidgetEvent* aEvent,
                                  int32_t aMessage)
 {
   // Make sure the presentation is up-to-date
@@ -759,7 +759,7 @@ HTMLFormElement::DoReset()
   }
 
 nsresult
-HTMLFormElement::DoSubmit(nsEvent* aEvent)
+HTMLFormElement::DoSubmit(WidgetEvent* aEvent)
 {
   NS_ASSERTION(GetCurrentDoc(), "Should never get here without a current doc");
 
@@ -814,7 +814,7 @@ HTMLFormElement::DoSubmit(nsEvent* aEvent)
 
 nsresult
 HTMLFormElement::BuildSubmission(nsFormSubmission** aFormSubmission, 
-                                 nsEvent* aEvent)
+                                 WidgetEvent* aEvent)
 {
   NS_ASSERTION(!mPendingSubmission, "tried to build two submissions!");
 
@@ -822,13 +822,15 @@ HTMLFormElement::BuildSubmission(nsFormSubmission** aFormSubmission,
   nsGenericHTMLElement* originatingElement = nullptr;
   if (aEvent) {
     if (NS_FORM_EVENT == aEvent->eventStructType) {
-      nsIContent* originator = ((nsFormEvent *)aEvent)->originator;
+      nsIContent* originator =
+        static_cast<InternalFormEvent*>(aEvent)->originator;
       if (originator) {
         if (!originator->IsHTML()) {
           return NS_ERROR_UNEXPECTED;
         }
         originatingElement =
-          static_cast<nsGenericHTMLElement*>(((nsFormEvent *)aEvent)->originator);
+          static_cast<nsGenericHTMLElement*>(
+            static_cast<InternalFormEvent*>(aEvent)->originator);
       }
     }
   }

@@ -35,6 +35,9 @@ public:
   // Create a parser with the provided URI.
   nsMediaFragmentURIParser(nsIURI* aURI);
 
+  // Create a parser with the provided URI reference portion.
+  nsMediaFragmentURIParser(nsCString& aRef);
+
   // True if a valid temporal media fragment indicated a start time.
   bool HasStartTime() const { return !mStart.empty(); }
 

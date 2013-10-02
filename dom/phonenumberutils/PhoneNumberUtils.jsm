@@ -21,6 +21,9 @@ Cu.import("resource://gre/modules/mcc_iso3166_table.jsm");
 XPCOMUtils.defineLazyServiceGetter(this, "mobileConnection",
                                    "@mozilla.org/ril/content-helper;1",
                                    "nsIMobileConnectionProvider");
+XPCOMUtils.defineLazyServiceGetter(this, "icc",
+                                   "@mozilla.org/ril/content-helper;1",
+                                   "nsIIccProvider");
 #endif
 
 this.PhoneNumberUtils = {
@@ -47,7 +50,7 @@ this.PhoneNumberUtils = {
     }
 
     // Get SIM mcc
-    let iccInfo = mobileConnection.iccInfo;
+    let iccInfo = icc.iccInfo;
     if (!mcc && iccInfo && iccInfo.mcc) {
       mcc = iccInfo.mcc;
     }

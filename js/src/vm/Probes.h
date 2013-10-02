@@ -11,9 +11,6 @@
 #include "javascript-trace.h"
 #endif
 
-#include "jsobj.h"
-#include "jspubtd.h"
-
 #include "vm/Stack.h"
 
 namespace js {
@@ -161,8 +158,8 @@ Probes::finalizeObject(JSObject *obj)
     if (JAVASCRIPT_OBJECT_FINALIZE_ENABLED()) {
         const Class *clasp = obj->getClass();
 
-        /* the first arg is NULL - reserved for future use (filename?) */
-        JAVASCRIPT_OBJECT_FINALIZE(NULL, (char *)clasp->name, (uintptr_t)obj);
+        /* the first arg is nullptr - reserved for future use (filename?) */
+        JAVASCRIPT_OBJECT_FINALIZE(nullptr, (char *)clasp->name, (uintptr_t)obj);
     }
 #endif
 

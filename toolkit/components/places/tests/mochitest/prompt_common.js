@@ -1,9 +1,6 @@
-netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
 
-const Ci = Components.interfaces;
-ok(Ci != null, "Access Ci");
-const Cc = Components.classes;
-ok(Cc != null, "Access Cc");
+const Ci = SpecialPowers.Ci;
+const Cc = SpecialPowers.Cc;
 
 var didDialog;
 
@@ -30,7 +27,6 @@ var observer = {
   },
 
   observe : function (subject, topic, data) {
-    netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
 
     var doc = getDialogDoc();
     if (doc)

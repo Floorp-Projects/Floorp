@@ -14,7 +14,6 @@
 #include "jit/LIR.h"
 #include "jit/MIR.h"
 #include "jit/MIRGraph.h"
-#include "jit/RangeAnalysis.h"
 
 #include "jsinferinlines.h"
 
@@ -1066,7 +1065,7 @@ LIRGenerator::lowerShiftOp(JSOp op, MShiftInstruction *ins)
 
         LShiftI *lir = new LShiftI(op);
         if (op == JSOP_URSH) {
-            if (ins->toUrsh()->fallible() && !assignSnapshot(lir))
+            if (ins->toUrsh()->fallible() && !assignSnapshot(lir, Bailout_BaselineInfo))
                 return false;
         }
         return lowerForShift(lir, ins, lhs, rhs);
@@ -1268,7 +1267,7 @@ LIRGenerator::visitAdd(MAdd *ins)
         ReorderCommutative(&lhs, &rhs);
         LAddI *lir = new LAddI;
 
-        if (ins->fallible() && !assignSnapshot(lir))
+        if (ins->fallible() && !assignSnapshot(lir, Bailout_BaselineInfo))
             return false;
 
         if (!lowerForALU(lir, ins, lhs, rhs))
@@ -1449,8 +1448,9 @@ LIRGenerator::visitConcat(MConcat *ins)
                                useFixed(rhs, CallTempReg1),
                                tempFixed(CallTempReg2),
                                tempFixed(CallTempReg3),
-                               tempFixed(CallTempReg4));
-    if (!defineFixed(lir, ins, LAllocation(AnyRegister(CallTempReg5))))
+                               tempFixed(CallTempReg4),
+                               tempFixed(CallTempReg5));
+    if (!defineFixed(lir, ins, LAllocation(AnyRegister(CallTempReg6))))
         return false;
     return assignSafepoint(lir, ins);
 }
@@ -1466,12 +1466,13 @@ LIRGenerator::visitConcatPar(MConcatPar *ins)
     JS_ASSERT(rhs->type() == MIRType_String);
     JS_ASSERT(ins->type() == MIRType_String);
 
-    LConcatPar *lir = new LConcatPar(useFixed(slice, CallTempReg4),
+    LConcatPar *lir = new LConcatPar(useFixed(slice, CallTempReg5),
                                      useFixed(lhs, CallTempReg0),
                                      useFixed(rhs, CallTempReg1),
                                      tempFixed(CallTempReg2),
-                                     tempFixed(CallTempReg3));
-    if (!defineFixed(lir, ins, LAllocation(AnyRegister(CallTempReg5))))
+                                     tempFixed(CallTempReg3),
+                                     tempFixed(CallTempReg4));
+    if (!defineFixed(lir, ins, LAllocation(AnyRegister(CallTempReg6))))
         return false;
     return assignSafepoint(lir, ins);
 }
@@ -1670,6 +1671,12 @@ LIRGenerator::visitToInt32(MToInt32 *convert)
       case MIRType_Int32:
       case MIRType_Boolean:
         return redefine(convert, opd);
+
+      case MIRType_Float32:
+      {
+        LFloat32ToInt32 *lir = new LFloat32ToInt32(useRegister(opd));
+        return assignSnapshot(lir) && define(lir, convert);
+      }
 
       case MIRType_Double:
       {
@@ -1985,7 +1992,7 @@ LIRGenerator::visitTypeBarrier(MTypeBarrier *ins)
     // (Emit LBail for visibility).
     if (ins->alwaysBails()) {
         LBail *bail = new LBail();
-        if (!assignSnapshot(bail, ins->bailoutKind()))
+        if (!assignSnapshot(bail))
             return false;
         return redefine(ins, ins->input()) && add(bail, ins);
     }
@@ -1996,7 +2003,7 @@ LIRGenerator::visitTypeBarrier(MTypeBarrier *ins)
         LTypeBarrierV *barrier = new LTypeBarrierV(tmp);
         if (!useBox(barrier, LTypeBarrierV::Input, ins->input()))
             return false;
-        if (!assignSnapshot(barrier, ins->bailoutKind()))
+        if (!assignSnapshot(barrier))
             return false;
         return redefine(ins, ins->input()) && add(barrier, ins);
     }
@@ -2006,7 +2013,7 @@ LIRGenerator::visitTypeBarrier(MTypeBarrier *ins)
     {
         LDefinition tmp = needTemp ? temp() : LDefinition::BogusTemp();
         LTypeBarrierO *barrier = new LTypeBarrierO(useRegister(ins->getOperand(0)), tmp);
-        if (!assignSnapshot(barrier, ins->bailoutKind()))
+        if (!assignSnapshot(barrier))
             return false;
         return redefine(ins, ins->getOperand(0)) && add(barrier, ins);
     }
@@ -2609,12 +2616,12 @@ LIRGenerator::visitGetPropertyPolymorphic(MGetPropertyPolymorphic *ins)
 
     if (ins->type() == MIRType_Value) {
         LGetPropertyPolymorphicV *lir = new LGetPropertyPolymorphicV(useRegister(ins->obj()));
-        return assignSnapshot(lir, Bailout_CachedShapeGuard) && defineBox(lir, ins);
+        return assignSnapshot(lir, Bailout_ShapeGuard) && defineBox(lir, ins);
     }
 
     LDefinition maybeTemp = (ins->type() == MIRType_Double) ? temp() : LDefinition::BogusTemp();
     LGetPropertyPolymorphicT *lir = new LGetPropertyPolymorphicT(useRegister(ins->obj()), maybeTemp);
-    return assignSnapshot(lir, Bailout_CachedShapeGuard) && define(lir, ins);
+    return assignSnapshot(lir, Bailout_ShapeGuard) && define(lir, ins);
 }
 
 bool
@@ -2626,13 +2633,13 @@ LIRGenerator::visitSetPropertyPolymorphic(MSetPropertyPolymorphic *ins)
         LSetPropertyPolymorphicV *lir = new LSetPropertyPolymorphicV(useRegister(ins->obj()), temp());
         if (!useBox(lir, LSetPropertyPolymorphicV::Value, ins->value()))
             return false;
-        return assignSnapshot(lir, Bailout_CachedShapeGuard) && add(lir, ins);
+        return assignSnapshot(lir, Bailout_ShapeGuard) && add(lir, ins);
     }
 
     LAllocation value = useRegisterOrConstant(ins->value());
     LSetPropertyPolymorphicT *lir =
         new LSetPropertyPolymorphicT(useRegister(ins->obj()), value, ins->value()->type(), temp());
-    return assignSnapshot(lir, Bailout_CachedShapeGuard) && add(lir, ins);
+    return assignSnapshot(lir, Bailout_ShapeGuard) && add(lir, ins);
 }
 
 bool
@@ -2693,7 +2700,7 @@ bool
 LIRGenerator::visitAssertRange(MAssertRange *ins)
 {
     MDefinition *input = ins->input();
-    LInstruction *lir = NULL;
+    LInstruction *lir = nullptr;
 
     switch (input->type()) {
       case MIRType_Int32:
@@ -2907,10 +2914,32 @@ LIRGenerator::visitArgumentsLength(MArgumentsLength *ins)
 }
 
 bool
-LIRGenerator::visitGetArgument(MGetArgument *ins)
+LIRGenerator::visitGetFrameArgument(MGetFrameArgument *ins)
 {
-    LGetArgument *lir = new LGetArgument(useRegisterOrConstant(ins->index()));
+    LGetFrameArgument *lir = new LGetFrameArgument(useRegisterOrConstant(ins->index()));
     return defineBox(lir, ins);
+}
+
+bool
+LIRGenerator::visitSetFrameArgument(MSetFrameArgument *ins)
+{
+    MDefinition *input = ins->input();
+
+    if (input->type() == MIRType_Value) {
+        LSetFrameArgumentV *lir = new LSetFrameArgumentV();
+        if (!useBox(lir, LSetFrameArgumentV::Input, input))
+            return false;
+        return add(lir, ins);
+    }
+
+    if (input->type() == MIRType_Undefined || input->type() == MIRType_Null) {
+        Value val = input->type() == MIRType_Undefined ? UndefinedValue() : NullValue();
+        LSetFrameArgumentC *lir = new LSetFrameArgumentC(val);
+        return add(lir, ins);
+    }
+
+    LSetFrameArgumentT *lir = new LSetFrameArgumentT(useRegister(input));
+    return add(lir, ins);
 }
 
 bool
@@ -3247,7 +3276,7 @@ LIRGenerator::updateResumeState(MInstruction *ins)
 {
     lastResumePoint_ = ins->resumePoint();
     if (IonSpewEnabled(IonSpew_Snapshots) && lastResumePoint_)
-        SpewResumePoint(NULL, ins, lastResumePoint_);
+        SpewResumePoint(nullptr, ins, lastResumePoint_);
 }
 
 void
@@ -3255,7 +3284,7 @@ LIRGenerator::updateResumeState(MBasicBlock *block)
 {
     lastResumePoint_ = block->entryResumePoint();
     if (IonSpewEnabled(IonSpew_Snapshots) && lastResumePoint_)
-        SpewResumePoint(block, NULL, lastResumePoint_);
+        SpewResumePoint(block, nullptr, lastResumePoint_);
 }
 
 void

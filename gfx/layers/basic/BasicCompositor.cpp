@@ -12,6 +12,7 @@
 #include "mozilla/gfx/2D.h"
 #include "gfxUtils.h"
 #include <algorithm>
+#include "ImageContainer.h"
 
 namespace mozilla {
 using namespace mozilla::gfx;
@@ -139,7 +140,7 @@ protected:
 };
 
 void
-DeserializerToPlanarYCbCrImageData(YCbCrImageDataDeserializer& aDeserializer, PlanarYCbCrImage::Data& aData)
+DeserializerToPlanarYCbCrImageData(YCbCrImageDataDeserializer& aDeserializer, PlanarYCbCrData& aData)
 {
   aData.mYChannel = aDeserializer.GetYData();
   aData.mYStride = aDeserializer.GetYStride();
@@ -181,7 +182,7 @@ public:
   void ConvertImageToRGB(const SurfaceDescriptor& aImage)
   {
     YCbCrImageDataDeserializer deserializer(aImage.get_YCbCrImage().data().get<uint8_t>());
-    PlanarYCbCrImage::Data data;
+    PlanarYCbCrData data;
     DeserializerToPlanarYCbCrImageData(deserializer, data);
 
     gfxImageFormat format = gfxImageFormatRGB24;
@@ -469,20 +470,17 @@ BasicCompositor::EndFrame()
 {
   mRenderTarget->mDrawTarget->PopClip();
 
+  RefPtr<SourceSurface> source = mRenderTarget->mDrawTarget->Snapshot();
   if (mCopyTarget) {
-    nsRefPtr<gfxASurface> thebes = gfxPlatform::GetPlatform()->GetThebesSurfaceForDrawTarget(mRenderTarget->mDrawTarget);
-    gfxContextAutoSaveRestore restore(mCopyTarget);
-    mCopyTarget->SetOperator(gfxContext::OPERATOR_SOURCE);
-    mCopyTarget->SetSource(thebes);
-    mCopyTarget->Paint();
-    mCopyTarget = nullptr;
+    mCopyTarget->CopySurface(source,
+                             IntRect(0, 0, mWidgetSize.width, mWidgetSize.height),
+                             IntPoint(0, 0));
   } else {
     // Most platforms require us to buffer drawing to the widget surface.
     // That's why we don't draw to mDrawTarget directly.
-    RefPtr<SourceSurface> source = mRenderTarget->mDrawTarget->Snapshot();
     mDrawTarget->CopySurface(source,
-	                     IntRect(0, 0, mWidgetSize.width, mWidgetSize.height),
-			     IntPoint(0, 0));
+	                           IntRect(0, 0, mWidgetSize.width, mWidgetSize.height),
+			                       IntPoint(0, 0));
     mWidget->EndRemoteDrawing();
   }
   mDrawTarget = nullptr;

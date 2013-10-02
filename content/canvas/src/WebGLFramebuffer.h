@@ -16,6 +16,9 @@ namespace mozilla {
 
 class WebGLTexture;
 class WebGLRenderbuffer;
+namespace gl {
+    class GLContext;
+}
 
 class WebGLFramebuffer MOZ_FINAL
     : public nsWrapperCache
@@ -36,8 +39,8 @@ public:
         WebGLRefPtr<WebGLTexture> mTexturePtr;
         WebGLRefPtr<WebGLRenderbuffer> mRenderbufferPtr;
         GLenum mAttachmentPoint;
-        GLint mTextureLevel;
-        GLenum mTextureCubeMapFace;
+        GLenum mTexImageTarget;
+        GLint mTexImageLevel;
 
         Attachment(GLenum aAttachmentPoint = LOCAL_GL_COLOR_ATTACHMENT0)
             : mAttachmentPoint(aAttachmentPoint)
@@ -51,7 +54,7 @@ public:
 
         bool HasAlpha() const;
 
-        void SetTexture(WebGLTexture *tex, GLint level, GLenum face);
+        void SetTexImage(WebGLTexture *tex, GLenum target, GLint level);
         void SetRenderbuffer(WebGLRenderbuffer *rb) {
             mTexturePtr = nullptr;
             mRenderbufferPtr = rb;
@@ -68,11 +71,11 @@ public:
         WebGLRenderbuffer *Renderbuffer() {
             return mRenderbufferPtr;
         }
-        GLint TextureLevel() const {
-            return mTextureLevel;
+        GLenum TexImageTarget() const {
+            return mTexImageTarget;
         }
-        GLenum TextureCubeMapFace() const {
-            return mTextureCubeMapFace;
+        GLint TexImageLevel() const {
+            return mTexImageLevel;
         }
 
         bool HasUninitializedRenderbuffer() const;
@@ -86,6 +89,8 @@ public:
         bool HasSameDimensionsAs(const Attachment& other) const;
 
         bool IsComplete() const;
+
+        void FinalizeAttachment(GLenum attachmentLoc) const;
     };
 
     void Delete();
@@ -115,6 +120,9 @@ public:
 
     bool HasAttachmentsOfMismatchedDimensions() const;
 
+    const size_t ColorAttachmentCount() const {
+        return mColorAttachments.Length();
+    }
     const Attachment& ColorAttachment(uint32_t colorAttachmentId) const {
         return mColorAttachments[colorAttachmentId];
     }
@@ -144,6 +152,8 @@ public:
     WebGLContext *GetParentObject() const {
         return Context();
     }
+
+    void FinalizeAttachments() const;
 
     virtual JSObject* WrapObject(JSContext *cx,
                                  JS::Handle<JSObject*> scope) MOZ_OVERRIDE;

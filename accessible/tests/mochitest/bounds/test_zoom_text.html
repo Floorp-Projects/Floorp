@@ -21,21 +21,25 @@
           src="../browser.js"></script>
 
   <script type="application/javascript">
-    function doTest()
+    function testTextNode(aDoc, aContainerID)
     {
-      var tabDocument = currentTabDocument();
-      var hyperTextNode = tabDocument.getElementById("paragraph");
+      var hyperTextNode = aDoc.getElementById(aContainerID);
       var textNode = hyperTextNode.firstChild;
 
       var [x, y, width, height] = getBounds(textNode);
       testTextBounds(hyperTextNode, 0, -1, [x, y, width, height],
                      COORDTYPE_SCREEN_RELATIVE);
+    }
+
+    function doTest()
+    {
+      var tabDocument = currentTabDocument();
+      testTextNode(tabDocument, "p1");
+      testTextNode(tabDocument, "p2");
 
       zoomDocument(tabDocument, 2.0);
 
-      var [x, y, width, height] = getBounds(textNode);
-      testTextBounds(hyperTextNode, 0, -1, [x, y, width, height],
-                     COORDTYPE_SCREEN_RELATIVE);
+      testTextNode(tabDocument, "p1");
 
       zoomDocument(tabDocument, 1.0);
 
@@ -46,7 +50,8 @@
     var url = "data:text/html,<html>" +
       "<meta http-equiv='Content-Type' content='text/html;charset=utf-8'>" +
       "</meta><body>" +
-      "<p id='paragraph' style='font-family: monospace;'>Tilimilitryamdiya</p>" +
+      "<p id='p1' style='font-family: monospace;'>Tilimilitryamdiya</p>" +
+      "<p id='p2'>ل</p>"
       "</body></html>";
 
     SimpleTest.waitForExplicitFinish();

@@ -496,16 +496,24 @@ stage-modules: make-stage-dir
 
 CPP_UNIT_TEST_BINS=$(wildcard $(DIST)/cppunittests/*)
 
+ifdef OBJCOPY
+ifndef PKG_SKIP_STRIP
+STRIP_CPP_TESTS := 1
+endif
+endif
+
 stage-cppunittests:
 	$(NSINSTALL) -D $(PKG_STAGE)/cppunittests
-ifdef OBJCOPY
-	$(foreach bin,$(CPP_UNIT_TEST_BINS),$(OBJCOPY) --strip-unneeded $(bin) $(bin:$(DIST)/%=$(PKG_STAGE)/%);)
+ifdef STRIP_CPP_TESTS
+	$(foreach bin,$(CPP_UNIT_TEST_BINS),$(OBJCOPY) $(STRIP_FLAGS) $(bin) $(bin:$(DIST)/%=$(PKG_STAGE)/%);)
 else
 	cp -RL $(DIST)/cppunittests $(PKG_STAGE)
 endif
 	$(NSINSTALL) $(topsrcdir)/testing/runcppunittests.py $(PKG_STAGE)/cppunittests
 	$(NSINSTALL) $(topsrcdir)/testing/remotecppunittests.py $(PKG_STAGE)/cppunittests
+ifeq ($(MOZ_WIDGET_TOOLKIT),android)
 	$(NSINSTALL) $(topsrcdir)/testing/android_cppunittest_manifest.txt $(PKG_STAGE)/cppunittests
+endif
 
 stage-jittest:
 	$(NSINSTALL) -D $(PKG_STAGE)/jit-test/tests

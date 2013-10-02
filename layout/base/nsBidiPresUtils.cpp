@@ -18,6 +18,7 @@
 #include "nsUnicodeProperties.h"
 #include "nsTextFrame.h"
 #include "nsBlockFrame.h"
+#include "nsIFrameInlines.h"
 #include <algorithm>
 
 #undef NOISY_BIDI
@@ -1310,7 +1311,7 @@ nsBidiPresUtils::IsLeftOrRightMost(nsIFrame*              aFrame,
     // endmost or anything except the first part as startmost.
     // As an optimization, only get the first continuation once.
     nsIFrame* firstContinuation = aFrame->FirstContinuation();
-    if (nsLayoutUtils::FrameIsNonLastInIBSplit(firstContinuation)) {
+    if (firstContinuation->FrameIsNonLastInIBSplit()) {
       // We are not endmost
       if (isLTR) {
         aIsRightMost = false;
@@ -1318,7 +1319,7 @@ nsBidiPresUtils::IsLeftOrRightMost(nsIFrame*              aFrame,
         aIsLeftMost = false;
       }
     }
-    if (nsLayoutUtils::FrameIsNonFirstInIBSplit(firstContinuation)) {
+    if (firstContinuation->FrameIsNonFirstInIBSplit()) {
       // We are not startmost
       if (isLTR) {
         aIsLeftMost = false;
@@ -1452,7 +1453,7 @@ nsBidiPresUtils::RepositionInlineFrames(BidiLineData *aBld,
   // have been reflowed, which is required for GetUsedMargin/Border/Padding
   nsMargin margin = aFirstChild->GetUsedMargin();
   if (!aFirstChild->GetPrevContinuation() &&
-      !nsLayoutUtils::FrameIsNonFirstInIBSplit(aFirstChild))
+      !aFirstChild->FrameIsNonFirstInIBSplit())
     leftSpace = isLTR ? margin.left : margin.right;
 
   nscoord left = aFirstChild->GetPosition().x - leftSpace;

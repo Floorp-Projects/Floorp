@@ -551,7 +551,7 @@ class AutoHashSetRooter : protected AutoGCRooter
     MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER
 };
 
-class AutoValueVector : public AutoVectorRooter<Value>
+class MOZ_STACK_CLASS AutoValueVector : public AutoVectorRooter<Value>
 {
   public:
     explicit AutoValueVector(JSContext *cx
@@ -4195,6 +4195,9 @@ JS_ThrowReportedError(JSContext *cx, const char *message,
  */
 extern JS_PUBLIC_API(bool)
 JS_ThrowStopIteration(JSContext *cx);
+
+extern JS_PUBLIC_API(bool)
+JS_IsStopIteration(jsval v);
 
 extern JS_PUBLIC_API(intptr_t)
 JS_GetCurrentThread();

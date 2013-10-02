@@ -160,7 +160,7 @@ class Preprocessor:
         except OSError as error:
           if error.errno != errno.EEXIST:
             raise
-      self.out = open(options.output, 'w')
+      self.out = open(options.output, 'wb')
     if defaultToStdin and len(args) == 0:
       args = [sys.stdin]
     includes.extend(args)

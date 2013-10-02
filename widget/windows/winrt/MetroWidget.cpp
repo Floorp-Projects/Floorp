@@ -630,12 +630,13 @@ MetroWidget::DeliverNextScrollEvent()
 
 // defined in nsWiondowBase, called from shared module KeyboardLayout.
 bool
-MetroWidget::DispatchKeyboardEvent(nsGUIEvent* aEvent)
+MetroWidget::DispatchKeyboardEvent(WidgetGUIEvent* aEvent)
 {
   MOZ_ASSERT(aEvent);
-  nsKeyEvent* oldKeyEvent = static_cast<nsKeyEvent*>(aEvent);
-  nsKeyEvent* keyEvent =
-    new nsKeyEvent(oldKeyEvent->mFlags.mIsTrusted, oldKeyEvent->message, oldKeyEvent->widget);
+  WidgetKeyboardEvent* oldKeyEvent = static_cast<WidgetKeyboardEvent*>(aEvent);
+  WidgetKeyboardEvent* keyEvent =
+    new WidgetKeyboardEvent(oldKeyEvent->mFlags.mIsTrusted,
+                            oldKeyEvent->message, oldKeyEvent->widget);
   // XXX note this leaves pluginEvent null, which is fine for now.
   keyEvent->AssignKeyEventData(*oldKeyEvent, true);
   mKeyEventQueue.Push(keyEvent);
@@ -654,7 +655,7 @@ public:
     mId(aIdToCancel) {
   }
   virtual void* operator() (void* aObject) {
-    nsKeyEvent* event = static_cast<nsKeyEvent*>(aObject);
+    WidgetKeyboardEvent* event = static_cast<WidgetKeyboardEvent*>(aObject);
     if (event->mUniqueId == mId) {
       event->mFlags.mPropagationStopped = true;
     }
@@ -667,7 +668,8 @@ protected:
 void
 MetroWidget::DeliverNextKeyboardEvent()
 {
-  nsKeyEvent* event = static_cast<nsKeyEvent*>(mKeyEventQueue.PopFront());
+  WidgetKeyboardEvent* event =
+    static_cast<WidgetKeyboardEvent*>(mKeyEventQueue.PopFront());
   if (event->mFlags.mPropagationStopped) {
     // This can happen if a keypress was previously cancelled.
     delete event;
@@ -1011,19 +1013,20 @@ MetroWidget::HitTestAPZC(ScreenPoint& pt)
 }
 
 nsEventStatus
-MetroWidget::ApzReceiveInputEvent(nsInputEvent* aEvent)
+MetroWidget::ApzReceiveInputEvent(WidgetInputEvent* aEvent)
 {
   MOZ_ASSERT(aEvent);
 
   if (!MetroWidget::sAPZC) {
     return nsEventStatus_eIgnore;
   }
-  nsInputEvent& event = static_cast<nsInputEvent&>(*aEvent);
+  WidgetInputEvent& event = static_cast<WidgetInputEvent&>(*aEvent);
   return MetroWidget::sAPZC->ReceiveInputEvent(event);
 }
 
 nsEventStatus
-MetroWidget::ApzReceiveInputEvent(nsInputEvent* aInEvent, nsInputEvent* aOutEvent)
+MetroWidget::ApzReceiveInputEvent(WidgetInputEvent* aInEvent,
+                                  WidgetInputEvent* aOutEvent)
 {
   MOZ_ASSERT(aInEvent);
   MOZ_ASSERT(aOutEvent);
@@ -1031,7 +1034,7 @@ MetroWidget::ApzReceiveInputEvent(nsInputEvent* aInEvent, nsInputEvent* aOutEven
   if (!MetroWidget::sAPZC) {
     return nsEventStatus_eIgnore;
   }
-  nsInputEvent& event = static_cast<nsInputEvent&>(*aInEvent);
+  WidgetInputEvent& event = static_cast<WidgetInputEvent&>(*aInEvent);
   return MetroWidget::sAPZC->ReceiveInputEvent(event, aOutEvent);
 }
 
@@ -1204,7 +1207,7 @@ void MetroWidget::UserActivity()
 // InitEvent assumes physical coordinates and is used by shared win32 code. Do
 // not hand winrt event coordinates to this routine.
 void
-MetroWidget::InitEvent(nsGUIEvent& event, nsIntPoint* aPoint)
+MetroWidget::InitEvent(WidgetGUIEvent& event, nsIntPoint* aPoint)
 {
   if (!aPoint) {
     event.refPoint.x = event.refPoint.y = 0;
@@ -1216,7 +1219,7 @@ MetroWidget::InitEvent(nsGUIEvent& event, nsIntPoint* aPoint)
 }
 
 bool
-MetroWidget::DispatchWindowEvent(nsGUIEvent* aEvent)
+MetroWidget::DispatchWindowEvent(WidgetGUIEvent* aEvent)
 {
   MOZ_ASSERT(aEvent);
   nsEventStatus status = nsEventStatus_eIgnore;
@@ -1225,7 +1228,7 @@ MetroWidget::DispatchWindowEvent(nsGUIEvent* aEvent)
 }
 
 NS_IMETHODIMP
-MetroWidget::DispatchEvent(nsGUIEvent* event, nsEventStatus & aStatus)
+MetroWidget::DispatchEvent(WidgetGUIEvent* event, nsEventStatus & aStatus)
 {
   if (event->IsInputDerivedEvent()) {
     UserActivity();

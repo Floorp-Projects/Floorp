@@ -53,6 +53,8 @@ class MacroAssemblerARM : public Assembler
     void branchTruncateDouble(const FloatRegister &src, const Register &dest, Label *fail);
     void convertDoubleToInt32(const FloatRegister &src, const Register &dest, Label *fail,
                               bool negativeZeroCheck = true);
+    void convertFloat32ToInt32(const FloatRegister &src, const Register &dest, Label *fail,
+                               bool negativeZeroCheck = true);
 
     void convertFloatToDouble(const FloatRegister &src, const FloatRegister &dest);
     void branchTruncateFloat32(const FloatRegister &src, const Register &dest, Label *fail);
@@ -86,9 +88,9 @@ class MacroAssemblerARM : public Assembler
                 SetCond_ sc = NoSetCond, Condition c = Always);
     void ma_nop();
     void ma_movPatchable(Imm32 imm, Register dest, Assembler::Condition c,
-                         RelocStyle rs, Instruction *i = NULL);
+                         RelocStyle rs, Instruction *i = nullptr);
     void ma_movPatchable(ImmPtr imm, Register dest, Assembler::Condition c,
-                         RelocStyle rs, Instruction *i = NULL);
+                         RelocStyle rs, Instruction *i = nullptr);
     // These should likely be wrapped up as a set of macros
     // or something like that.  I cannot think of a good reason
     // to explicitly have all of this code.
@@ -322,6 +324,7 @@ class MacroAssemblerARM : public Assembler
     void ma_vimm_f32(float value, FloatRegister dest, Condition cc = Always);
 
     void ma_vcmp(FloatRegister src1, FloatRegister src2, Condition cc = Always);
+    void ma_vcmp_f32(FloatRegister src1, FloatRegister src2, Condition cc = Always);
     void ma_vcmpz(FloatRegister src1, Condition cc = Always);
 
     void ma_vadd_f32(FloatRegister src1, FloatRegister src2, FloatRegister dst);
@@ -511,9 +514,6 @@ class MacroAssemblerARMCompat : public MacroAssemblerARM
 
     void mov(Register src, Register dest) {
         ma_mov(src, dest);
-    }
-    void mov(Imm32 imm, Register dest) {
-        ma_mov(imm, dest);
     }
     void mov(ImmWord imm, Register dest) {
         ma_mov(Imm32(imm.value), dest);

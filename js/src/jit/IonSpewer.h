@@ -13,6 +13,7 @@
 
 #include "jit/C1Spewer.h"
 #include "jit/JSONSpewer.h"
+#include "js/RootingAPI.h"
 
 namespace js {
 namespace jit {
@@ -94,28 +95,28 @@ class IonSpewer
 {
   private:
     MIRGraph *graph;
-    HandleScript function;
+    JS::HandleScript function;
     C1Spewer c1Spewer;
     JSONSpewer jsonSpewer;
     bool inited_;
 
   public:
     IonSpewer()
-      : graph(NULL), function(NullPtr()), inited_(false)
+      : graph(nullptr), function(NullPtr()), inited_(false)
     { }
 
     // File output is terminated safely upon destruction.
     ~IonSpewer();
 
     bool init();
-    void beginFunction(MIRGraph *graph, HandleScript);
+    void beginFunction(MIRGraph *graph, JS::HandleScript);
     bool isSpewingFunction() const;
     void spewPass(const char *pass);
     void spewPass(const char *pass, LinearScanAllocator *ra);
     void endFunction();
 };
 
-void IonSpewNewFunction(MIRGraph *graph, HandleScript function);
+void IonSpewNewFunction(MIRGraph *graph, JS::HandleScript function);
 void IonSpewPass(const char *pass);
 void IonSpewPass(const char *pass, LinearScanAllocator *ra);
 void IonSpewEndFunction();
@@ -138,7 +139,7 @@ void EnableIonDebugLogging();
 
 #else
 
-static inline void IonSpewNewFunction(MIRGraph *graph, HandleScript function)
+static inline void IonSpewNewFunction(MIRGraph *graph, JS::HandleScript function)
 { }
 static inline void IonSpewPass(const char *pass)
 { }
@@ -149,7 +150,7 @@ static inline void IonSpewEndFunction()
 
 static inline void CheckLogging()
 { }
-static FILE *const IonSpewFile = NULL;
+static FILE *const IonSpewFile = nullptr;
 static inline void IonSpew(IonSpewChannel, const char *fmt, ...)
 { }
 static inline void IonSpewStart(IonSpewChannel channel, const char *fmt, ...)

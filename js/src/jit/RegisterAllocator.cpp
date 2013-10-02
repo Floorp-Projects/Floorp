@@ -19,7 +19,7 @@ AllocationIntegrityState::record()
     if (!instructions.appendN(InstructionInfo(), graph.numInstructions()))
         return false;
 
-    if (!virtualRegisters.appendN((LDefinition *)NULL, graph.numVirtualRegisters()))
+    if (!virtualRegisters.appendN((LDefinition *)nullptr, graph.numVirtualRegisters()))
         return false;
 
     if (!blocks.reserve(graph.numBlocks()))

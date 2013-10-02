@@ -319,6 +319,7 @@ static const indic_config_t indic_configs[] =
   {HB_SCRIPT_MALAYALAM,	true, 0x0D4D,BASE_POS_LAST, REPH_POS_AFTER_MAIN, REPH_MODE_LOG_REPHA},
   {HB_SCRIPT_SINHALA,	false,0x0DCA,BASE_POS_FIRST,REPH_POS_AFTER_MAIN, REPH_MODE_EXPLICIT},
   {HB_SCRIPT_KHMER,	false,0x17D2,BASE_POS_FIRST,REPH_POS_DEFAULT,    REPH_MODE_VIS_REPHA},
+  {HB_SCRIPT_JAVANESE,	false,0xA9C0,BASE_POS_LAST, REPH_POS_DEFAULT,    REPH_MODE_IMPLICIT},
 };
 
 
@@ -443,6 +444,10 @@ override_features_indic (hb_ot_shape_planner_t *plan)
   /* Uniscribe does not apply 'kern'. */
   if (hb_options ().uniscribe_bug_compatible)
     plan->map.add_feature (HB_TAG('k','e','r','n'), 0, F_GLOBAL);
+
+  /* 'calt' is enabled by default in hb-ot-shape.cc, but is a discretionary,
+     non-default feature for Indic scripts. */
+  plan->map.add_feature (HB_TAG('c','a','l','t'), 0, F_GLOBAL);
 
   plan->map.add_feature (HB_TAG('l','i','g','a'), 0, F_GLOBAL);
 }

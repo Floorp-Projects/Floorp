@@ -10,9 +10,7 @@
 #include "vm/Runtime.h"
 
 #include "jscompartment.h"
-#include "jsworkers.h"
 
-#include "jit/IonFrames.h"
 #include "vm/Probes.h"
 
 #include "jsgcinlines.h"
@@ -59,7 +57,7 @@ NewObjectCache::newObjectFromHit(JSContext *cx, EntryIndex entry_, js::gc::Initi
         return obj;
     }
 
-    return NULL;
+    return nullptr;
 }
 
 }  /* namespace js */

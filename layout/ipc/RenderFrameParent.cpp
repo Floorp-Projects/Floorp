@@ -826,8 +826,8 @@ RenderFrameParent::OwnerContentChanged(nsIContent* aContent)
 }
 
 void
-RenderFrameParent::NotifyInputEvent(const nsInputEvent& aEvent,
-                                    nsInputEvent* aOutEvent)
+RenderFrameParent::NotifyInputEvent(const WidgetInputEvent& aEvent,
+                                    WidgetInputEvent* aOutEvent)
 {
   if (GetApzcTreeManager()) {
     GetApzcTreeManager()->ReceiveInputEvent(aEvent, aOutEvent);

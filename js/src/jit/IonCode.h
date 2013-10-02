@@ -57,8 +57,8 @@ class IonCode : public gc::BarrieredCell<IonCode>
 #endif
 
     IonCode()
-      : code_(NULL),
-        pool_(NULL)
+      : code_(nullptr),
+        pool_(nullptr)
     { }
     IonCode(uint8_t *code, uint32_t bufferSize, JSC::ExecutablePool *pool)
       : code_(code),
@@ -128,7 +128,7 @@ class IonCode : public gc::BarrieredCell<IonCode>
     }
 
     // Allocates a new IonCode object which will be managed by the GC. If no
-    // object can be allocated, NULL is returned. On failure, |pool| is
+    // object can be allocated, nullptr is returned. On failure, |pool| is
     // automatically released, so the code may be freed.
     static IonCode *New(JSContext *cx, uint8_t *code, uint32_t bufferSize, JSC::ExecutablePool *pool);
 
@@ -167,7 +167,7 @@ struct IonScript
     // Deoptimization table used by this method.
     EncapsulatedPtr<IonCode> deoptTable_;
 
-    // Entrypoint for OSR, or NULL.
+    // Entrypoint for OSR, or nullptr.
     jsbytecode *osrPc_;
 
     // Offset to OSR entrypoint from method_->raw(), or 0.
@@ -246,7 +246,7 @@ struct IonScript
 
     // List of scripts that we call.
     //
-    // Currently this is only non-NULL for parallel IonScripts.
+    // Currently this is only non-nullptr for parallel IonScripts.
     uint32_t callTargetList_;
     uint32_t callTargetEntries_;
 
@@ -671,7 +671,7 @@ struct IonScriptCounts
     bool init(size_t numBlocks) {
         numBlocks_ = numBlocks;
         blocks_ = js_pod_calloc<IonBlockCounts>(numBlocks);
-        return blocks_ != NULL;
+        return blocks_ != nullptr;
     }
 
     size_t numBlocks() const {

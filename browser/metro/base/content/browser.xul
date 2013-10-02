@@ -680,17 +680,17 @@
         <setting pref="toolkit.telemetry.enabled" type="bool" title="&optionsHeader.telemetry.label;"/>
       </settings>
       <settings id="prefs-dnt" label="&doNotTrack.title;">
-        <description>&doNotTrack.desc;</description>
         <setting id="prefs-dnt-value" pref="privacy.donottrackheader.value" type="radio" >
           <radiogroup id="prefs-dnt-options">
             <radio id="prefs-dnt-notrack" class="flyoutpanel-hack"
-                   label="&doNotTrack.options.trackingNotOkay;" value="1"/>
-            <radio id="prefs-dnt-nopref" class="flyoutpanel-hack"
-                   label="&doNotTrack.options.noPreference;" value="-1"/>
+                   label="&doNotTrack.options.doNotTrack;" value="1"/>
             <radio id="prefs-dnt-oktrack" class="flyoutpanel-hack"
-                   label="&doNotTrack.options.trackingOkay;" value="0"/>
+                   label="&doNotTrack.options.doTrack;" value="0"/>
+            <radio id="prefs-dnt-nopref" class="flyoutpanel-hack"
+                   label="&doNotTrack.options.default;" value="-1"/>
           </radiogroup>
         </setting>
+        <label class="text-link" href="https://www.mozilla.org/dnt">&doNotTrack.learnMoreLink;</label>
       </settings>
     </flyoutpanel>
 

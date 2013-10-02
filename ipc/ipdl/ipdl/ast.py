@@ -191,62 +191,44 @@ class UsingStmt(Node):
         self.type = cxxTypeSpec
 
 # "singletons"
-class ASYNC:
+class PrettyPrinted:
+    @classmethod
+    def __hash__(cls): return hash(cls.pretty)
+    @classmethod
+    def __str__(cls):  return cls.pretty
+    
+class ASYNC(PrettyPrinted):
     pretty = 'async'
-    @classmethod
-    def __hash__(cls): return hash(cls.pretty)
-    @classmethod
-    def __str__(cls):  return cls.pretty
-class RPC:
-    pretty = 'rpc'
-    @classmethod
-    def __hash__(cls): return hash(cls.pretty)
-    @classmethod
-    def __str__(cls):  return cls.pretty
-class SYNC:
+class INTR(PrettyPrinted):
+    pretty = 'intr'
+class SYNC(PrettyPrinted):
     pretty = 'sync'
-    @classmethod
-    def __hash__(cls): return hash(cls.pretty)
-    @classmethod
-    def __str__(cls):  return cls.pretty
-class URGENT:
+class URGENT(PrettyPrinted):
     pretty = 'urgent'
-    @classmethod
-    def __hash__(cls): return hash(cls.pretty)
-    @classmethod
-    def __str__(cls):  return cls.pretty
+class RPC(PrettyPrinted):
+    pretty = 'rpc'
 
-class INOUT:
+class INOUT(PrettyPrinted):
     pretty = 'inout'
-    @classmethod
-    def __hash__(cls): return hash(cls.pretty)
-    @classmethod
-    def __str__(cls):  return cls.pretty
-class IN:
+class IN(PrettyPrinted):
     pretty = 'in'
-    @classmethod
-    def __hash__(cls): return hash(cls.pretty)
-    @classmethod
-    def __str__(cls):  return cls.pretty
     @staticmethod
     def prettySS(cls, ss): return _prettyTable['in'][ss.pretty]
-class OUT:
+class OUT(PrettyPrinted):
     pretty = 'out'
-    @classmethod
-    def __hash__(cls): return hash(cls.pretty)
-    @classmethod
-    def __str__(cls):  return cls.pretty
     @staticmethod
     def prettySS(ss): return _prettyTable['out'][ss.pretty]
 
 _prettyTable = {
     IN  : { 'async': 'AsyncRecv',
             'sync': 'SyncRecv',
-            'rpc': 'RpcAnswer',
+            'intr': 'IntrAnswer',
+            'rpc': 'RPCAnswer',
             'urgent': 'UrgentAnswer' },
     OUT : { 'async': 'AsyncSend',
             'sync': 'SyncSend',
-            'rpc': 'RpcCall',
+            'intr': 'IntrCall',
+            'rpc': 'RPCCall',
             'urgent': 'UrgentCall' }
     # inout doesn't make sense here
 }
@@ -332,7 +314,7 @@ class MessageDecl(Node):
         self.outParams += outParamsList
 
     def hasReply(self):
-        return self.sendSemantics is SYNC or self.sendSemantics is RPC
+        return self.sendSemantics is SYNC or self.sendSemantics is INTR
 
 class Transition(Node):
     def __init__(self, loc, trigger, msg, toStates):

@@ -567,7 +567,6 @@ pref("media.preload.auto", 2);    // preload metadata if preload=auto
 
 // optimize images memory usage
 pref("image.mem.decodeondraw", true);
-pref("content.image.allow_locking", false);
 pref("image.mem.min_discard_timeout_ms", 10000);
 
 // enable touch events interfaces
@@ -749,6 +748,9 @@ pref("browser.contentHandlers.types.2.type", "application/vnd.mozilla.maybe.feed
 pref("browser.contentHandlers.types.3.title", "chrome://browser/locale/region.properties");
 pref("browser.contentHandlers.types.3.uri", "chrome://browser/locale/region.properties");
 pref("browser.contentHandlers.types.3.type", "application/vnd.mozilla.maybe.feed");
+
+// WebPayment
+pref("dom.mozPay.enabled", true);
 
 #ifndef RELEASE_BUILD
 pref("dom.payment.provider.0.name", "Firefox Marketplace");

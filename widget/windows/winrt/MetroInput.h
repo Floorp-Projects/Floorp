@@ -168,7 +168,7 @@ private:
                          LayoutDeviceIntPoint& aRefPointOut);
   void OnPointerNonTouch(IPointerPoint* aPoint);
   void AddPointerMoveDataToRecognizer(IPointerEventArgs* aArgs);
-  void InitGeckoMouseEventFromPointerPoint(nsMouseEvent* aEvent,
+  void InitGeckoMouseEventFromPointerPoint(WidgetMouseEvent* aEvent,
                                            IPointerPoint* aPoint);
   void ProcessManipulationDelta(ManipulationDelta const& aDelta,
                                 Point const& aPosition,
@@ -223,7 +223,7 @@ private:
   // the updated touchpoint info and record the fact that the touchpoint
   // has changed.  If ever we try to update a touchpoint has already
   // changed, we dispatch a touch event containing all the changed touches.
-  void InitTouchEventTouchList(nsTouchEvent* aEvent);
+  void InitTouchEventTouchList(WidgetTouchEvent* aEvent);
   nsBaseHashtable<nsUint32HashKey,
                   nsRefPtr<mozilla::dom::Touch>,
                   nsRefPtr<mozilla::dom::Touch> > mTouches;
@@ -263,9 +263,10 @@ private:
   // that originates from another thread is safe to send sync.
 
   // Async event dispatching
-  void DispatchAsyncEventIgnoreStatus(nsInputEvent* aEvent);
-  void DispatchAsyncTouchEventIgnoreStatus(nsTouchEvent* aEvent);
-  void DispatchAsyncTouchEventWithCallback(nsTouchEvent* aEvent, void (MetroInput::*Callback)());
+  void DispatchAsyncEventIgnoreStatus(WidgetInputEvent* aEvent);
+  void DispatchAsyncTouchEventIgnoreStatus(WidgetTouchEvent* aEvent);
+  void DispatchAsyncTouchEventWithCallback(WidgetTouchEvent* aEvent,
+                                           void (MetroInput::*Callback)());
 
   // Async event callbacks
   void DeliverNextQueuedEventIgnoreStatus();
@@ -276,7 +277,7 @@ private:
   void OnFirstPointerMoveCallback();
 
   // Sync event dispatching
-  void DispatchEventIgnoreStatus(nsGUIEvent *aEvent);
+  void DispatchEventIgnoreStatus(WidgetGUIEvent* aEvent);
   void DispatchTouchCancel();
 
   nsDeque mInputEventQueue;

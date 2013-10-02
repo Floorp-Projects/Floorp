@@ -30,26 +30,27 @@ public:
   nsContentEventHandler(nsPresContext *aPresContext);
 
   // NS_QUERY_SELECTED_TEXT event handler
-  nsresult OnQuerySelectedText(nsQueryContentEvent* aEvent);
+  nsresult OnQuerySelectedText(mozilla::WidgetQueryContentEvent* aEvent);
   // NS_QUERY_TEXT_CONTENT event handler
-  nsresult OnQueryTextContent(nsQueryContentEvent* aEvent);
+  nsresult OnQueryTextContent(mozilla::WidgetQueryContentEvent* aEvent);
   // NS_QUERY_CARET_RECT event handler
-  nsresult OnQueryCaretRect(nsQueryContentEvent* aEvent);
+  nsresult OnQueryCaretRect(mozilla::WidgetQueryContentEvent* aEvent);
   // NS_QUERY_TEXT_RECT event handler
-  nsresult OnQueryTextRect(nsQueryContentEvent* aEvent);
+  nsresult OnQueryTextRect(mozilla::WidgetQueryContentEvent* aEvent);
   // NS_QUERY_EDITOR_RECT event handler
-  nsresult OnQueryEditorRect(nsQueryContentEvent* aEvent);
+  nsresult OnQueryEditorRect(mozilla::WidgetQueryContentEvent* aEvent);
   // NS_QUERY_CONTENT_STATE event handler
-  nsresult OnQueryContentState(nsQueryContentEvent* aEvent);
+  nsresult OnQueryContentState(mozilla::WidgetQueryContentEvent* aEvent);
   // NS_QUERY_SELECTION_AS_TRANSFERABLE event handler
-  nsresult OnQuerySelectionAsTransferable(nsQueryContentEvent* aEvent);
+  nsresult OnQuerySelectionAsTransferable(
+             mozilla::WidgetQueryContentEvent* aEvent);
   // NS_QUERY_CHARACTER_AT_POINT event handler
-  nsresult OnQueryCharacterAtPoint(nsQueryContentEvent* aEvent);
+  nsresult OnQueryCharacterAtPoint(mozilla::WidgetQueryContentEvent* aEvent);
   // NS_QUERY_DOM_WIDGET_HITTEST event handler
-  nsresult OnQueryDOMWidgetHittest(nsQueryContentEvent* aEvent);
+  nsresult OnQueryDOMWidgetHittest(mozilla::WidgetQueryContentEvent* aEvent);
 
   // NS_SELECTION_* event
-  nsresult OnSelectionEvent(nsSelectionEvent* aEvent);
+  nsresult OnSelectionEvent(mozilla::WidgetSelectionEvent* aEvent);
 
 protected:
   nsPresContext* mPresContext;
@@ -58,8 +59,8 @@ protected:
   nsRefPtr<nsRange> mFirstSelectedRange;
   nsCOMPtr<nsIContent> mRootContent;
 
-  nsresult Init(nsQueryContentEvent* aEvent);
-  nsresult Init(nsSelectionEvent* aEvent);
+  nsresult Init(mozilla::WidgetQueryContentEvent* aEvent);
+  nsresult Init(mozilla::WidgetSelectionEvent* aEvent);
 
   // InitCommon() is called from each Init().
   nsresult InitCommon();

@@ -60,7 +60,7 @@
 #include "mozilla/TouchEvents.h"
 #include "mozilla/Util.h"
 
-#include "mozilla/ipc/RPCChannel.h"
+#include "mozilla/ipc/MessageChannel.h"
 #include <algorithm>
 
 #include "nsWindow.h"
@@ -1501,7 +1501,9 @@ NS_METHOD nsWindow::Resize(double aX, double aY, double aWidth, double aHeight, 
 }
 
 NS_IMETHODIMP
-nsWindow::BeginResizeDrag(nsGUIEvent* aEvent, int32_t aHorizontal, int32_t aVertical)
+nsWindow::BeginResizeDrag(WidgetGUIEvent* aEvent,
+                          int32_t aHorizontal,
+                          int32_t aVertical)
 {
   NS_ENSURE_ARG_POINTER(aEvent);
 
@@ -1510,8 +1512,8 @@ nsWindow::BeginResizeDrag(nsGUIEvent* aEvent, int32_t aHorizontal, int32_t aVert
     return NS_ERROR_INVALID_ARG;
   }
 
-  nsMouseEvent* mouseEvent = static_cast<nsMouseEvent*>(aEvent);
-  if (mouseEvent->button != nsMouseEvent::eLeftButton) {
+  WidgetMouseEvent* mouseEvent = static_cast<WidgetMouseEvent*>(aEvent);
+  if (mouseEvent->button != WidgetMouseEvent::eLeftButton) {
     // you can only begin a resize drag with the left mouse button
     return NS_ERROR_INVALID_ARG;
   }
@@ -3588,7 +3590,7 @@ nsWindow::EndRemoteDrawing()
  **************************************************************/
 
 // Event intialization
-void nsWindow::InitEvent(nsGUIEvent& event, nsIntPoint* aPoint)
+void nsWindow::InitEvent(WidgetGUIEvent& event, nsIntPoint* aPoint)
 {
   if (nullptr == aPoint) {     // use the point from the event
     // get the message position in client coordinates
@@ -3627,7 +3629,8 @@ void nsWindow::InitEvent(nsGUIEvent& event, nsIntPoint* aPoint)
 
 // Main event dispatch. Invokes callback and ProcessEvent method on
 // Event Listener object. Part of nsIWidget.
-NS_IMETHODIMP nsWindow::DispatchEvent(nsGUIEvent* event, nsEventStatus & aStatus)
+NS_IMETHODIMP nsWindow::DispatchEvent(WidgetGUIEvent* event,
+                                      nsEventStatus& aStatus)
 {
 #ifdef WIDGET_DEBUG_OUTPUT
   debug_DumpEvent(stdout,
@@ -3660,28 +3663,30 @@ NS_IMETHODIMP nsWindow::DispatchEvent(nsGUIEvent* event, nsEventStatus & aStatus
 
 bool nsWindow::DispatchStandardEvent(uint32_t aMsg)
 {
-  nsGUIEvent event(true, aMsg, this);
+  WidgetGUIEvent event(true, aMsg, this);
   InitEvent(event);
 
   bool result = DispatchWindowEvent(&event);
   return result;
 }
 
-bool nsWindow::DispatchKeyboardEvent(nsGUIEvent* event)
+bool nsWindow::DispatchKeyboardEvent(WidgetGUIEvent* event)
 {
   nsEventStatus status;
   DispatchEvent(event, status);
   return ConvertStatus(status);
 }
 
-bool nsWindow::DispatchWindowEvent(nsGUIEvent* event)
+bool nsWindow::DispatchWindowEvent(WidgetGUIEvent* event)
 {
   nsEventStatus status;
   DispatchEvent(event, status);
   return ConvertStatus(status);
 }
 
-bool nsWindow::DispatchWindowEvent(nsGUIEvent* event, nsEventStatus &aStatus) {
+bool nsWindow::DispatchWindowEvent(WidgetGUIEvent* event,
+                                   nsEventStatus& aStatus)
+{
   DispatchEvent(event, aStatus);
   return ConvertStatus(aStatus);
 }
@@ -3744,7 +3749,7 @@ bool nsWindow::DispatchCommandEvent(uint32_t aEventCommand)
     default:
       return false;
   }
-  nsCommandEvent event(true, nsGkAtoms::onAppCommand, command, this);
+  WidgetCommandEvent event(true, nsGkAtoms::onAppCommand, command, this);
 
   InitEvent(event);
   return DispatchWindowEvent(&event);
@@ -3853,10 +3858,9 @@ bool nsWindow::DispatchMouseEvent(uint32_t aEventType, WPARAM wParam,
   eventPoint.x = GET_X_LPARAM(lParam);
   eventPoint.y = GET_Y_LPARAM(lParam);
 
-  nsMouseEvent event(true, aEventType, this, nsMouseEvent::eReal,
-                     aIsContextMenuKey
-                     ? nsMouseEvent::eContextMenuKey
-                     : nsMouseEvent::eNormal);
+  WidgetMouseEvent event(true, aEventType, this, WidgetMouseEvent::eReal,
+                         aIsContextMenuKey ? WidgetMouseEvent::eContextMenuKey :
+                                             WidgetMouseEvent::eNormal);
   if (aEventType == NS_CONTEXTMENU && aIsContextMenuKey) {
     nsIntPoint zero(0, 0);
     InitEvent(event, &zero);
@@ -3885,13 +3889,13 @@ bool nsWindow::DispatchMouseEvent(uint32_t aEventType, WPARAM wParam,
 
   BYTE eventButton;
   switch (aButton) {
-    case nsMouseEvent::eLeftButton:
+    case WidgetMouseEvent::eLeftButton:
       eventButton = VK_LBUTTON;
       break;
-    case nsMouseEvent::eMiddleButton:
+    case WidgetMouseEvent::eMiddleButton:
       eventButton = VK_MBUTTON;
       break;
-    case nsMouseEvent::eRightButton:
+    case WidgetMouseEvent::eRightButton:
       eventButton = VK_RBUTTON;
       break;
     default:
@@ -3930,7 +3934,8 @@ bool nsWindow::DispatchMouseEvent(uint32_t aEventType, WPARAM wParam,
     sLastClickCount = 0;
   }
   else if (aEventType == NS_MOUSE_EXIT) {
-    event.exit = IsTopLevelMouseExit(mWnd) ? nsMouseEvent::eTopLevel : nsMouseEvent::eChild;
+    event.exit = IsTopLevelMouseExit(mWnd) ?
+                   WidgetMouseEvent::eTopLevel : WidgetMouseEvent::eChild;
   }
   event.clickCount = sLastClickCount;
 
@@ -3945,13 +3950,13 @@ bool nsWindow::DispatchMouseEvent(uint32_t aEventType, WPARAM wParam,
   {
     case NS_MOUSE_BUTTON_DOWN:
       switch (aButton) {
-        case nsMouseEvent::eLeftButton:
+        case WidgetMouseEvent::eLeftButton:
           pluginEvent.event = WM_LBUTTONDOWN;
           break;
-        case nsMouseEvent::eMiddleButton:
+        case WidgetMouseEvent::eMiddleButton:
           pluginEvent.event = WM_MBUTTONDOWN;
           break;
-        case nsMouseEvent::eRightButton:
+        case WidgetMouseEvent::eRightButton:
           pluginEvent.event = WM_RBUTTONDOWN;
           break;
         default:
@@ -3960,13 +3965,13 @@ bool nsWindow::DispatchMouseEvent(uint32_t aEventType, WPARAM wParam,
       break;
     case NS_MOUSE_BUTTON_UP:
       switch (aButton) {
-        case nsMouseEvent::eLeftButton:
+        case WidgetMouseEvent::eLeftButton:
           pluginEvent.event = WM_LBUTTONUP;
           break;
-        case nsMouseEvent::eMiddleButton:
+        case WidgetMouseEvent::eMiddleButton:
           pluginEvent.event = WM_MBUTTONUP;
           break;
-        case nsMouseEvent::eRightButton:
+        case WidgetMouseEvent::eRightButton:
           pluginEvent.event = WM_RBUTTONUP;
           break;
         default:
@@ -3975,13 +3980,13 @@ bool nsWindow::DispatchMouseEvent(uint32_t aEventType, WPARAM wParam,
       break;
     case NS_MOUSE_DOUBLECLICK:
       switch (aButton) {
-        case nsMouseEvent::eLeftButton:
+        case WidgetMouseEvent::eLeftButton:
           pluginEvent.event = WM_LBUTTONDBLCLK;
           break;
-        case nsMouseEvent::eMiddleButton:
+        case WidgetMouseEvent::eMiddleButton:
           pluginEvent.event = WM_MBUTTONDBLCLK;
           break;
-        case nsMouseEvent::eRightButton:
+        case WidgetMouseEvent::eRightButton:
           pluginEvent.event = WM_RBUTTONDBLCLK;
           break;
         default:
@@ -4022,13 +4027,15 @@ bool nsWindow::DispatchMouseEvent(uint32_t aEventType, WPARAM wParam,
           if ((nullptr != sCurrentWindow) && (!sCurrentWindow->mInDtor)) {
             LPARAM pos = sCurrentWindow->lParamToClient(lParamToScreen(lParam));
             sCurrentWindow->DispatchMouseEvent(NS_MOUSE_EXIT, wParam, pos, false, 
-                                               nsMouseEvent::eLeftButton, aInputSource);
+                                               WidgetMouseEvent::eLeftButton,
+                                               aInputSource);
           }
           sCurrentWindow = this;
           if (!mInDtor) {
             LPARAM pos = sCurrentWindow->lParamToClient(lParamToScreen(lParam));
             sCurrentWindow->DispatchMouseEvent(NS_MOUSE_ENTER, wParam, pos, false,
-                                               nsMouseEvent::eLeftButton, aInputSource);
+                                               WidgetMouseEvent::eLeftButton,
+                                               aInputSource);
           }
         }
       }
@@ -4192,11 +4199,11 @@ nsWindow::IsAsyncResponseEvent(UINT aMsg, LRESULT& aResult)
 void
 nsWindow::IPCWindowProcHandler(UINT& msg, WPARAM& wParam, LPARAM& lParam)
 {
-  NS_ASSERTION(!mozilla::ipc::SyncChannel::IsPumpingMessages(),
+  NS_ASSERTION(!mozilla::ipc::MessageChannel::IsPumpingMessages(),
                "Failed to prevent a nonqueued message from running!");
 
   // Modal UI being displayed in windowless plugins.
-  if (mozilla::ipc::RPCChannel::IsSpinLoopActive() &&
+  if (mozilla::ipc::MessageChannel::IsSpinLoopActive() &&
       (InSendMessageEx(NULL)&(ISMEX_REPLIED|ISMEX_SEND)) == ISMEX_SEND) {
     LRESULT res;
     if (IsAsyncResponseEvent(msg, res)) {
@@ -4774,14 +4781,6 @@ nsWindow::ProcessMessage(UINT msg, WPARAM& wParam, LPARAM& lParam,
       }
       break;
 
-    case WM_MOVE: // Window moved
-    {
-      RECT rect;
-      ::GetWindowRect(mWnd, &rect);
-      result = OnMove(rect.left, rect.top);
-    }
-    break;
-
     case WM_CLOSE: // close request
       if (mWidgetListener)
         mWidgetListener->RequestWindowClose(this);
@@ -4868,7 +4867,8 @@ nsWindow::ProcessMessage(UINT msg, WPARAM& wParam, LPARAM& lParam,
       }
 
       result = DispatchMouseEvent(NS_MOUSE_MOVE, wParam, lParam,
-                                  false, nsMouseEvent::eLeftButton, MOUSE_INPUT_SOURCE());
+                                  false, WidgetMouseEvent::eLeftButton,
+                                  MOUSE_INPUT_SOURCE());
       if (userMovedMouse) {
         DispatchPendingEvents();
       }
@@ -4885,7 +4885,8 @@ nsWindow::ProcessMessage(UINT msg, WPARAM& wParam, LPARAM& lParam,
     case WM_LBUTTONDOWN:
     {
       result = DispatchMouseEvent(NS_MOUSE_BUTTON_DOWN, wParam, lParam,
-                                  false, nsMouseEvent::eLeftButton, MOUSE_INPUT_SOURCE());
+                                  false, WidgetMouseEvent::eLeftButton,
+                                  MOUSE_INPUT_SOURCE());
       DispatchPendingEvents();
     }
     break;
@@ -4893,7 +4894,8 @@ nsWindow::ProcessMessage(UINT msg, WPARAM& wParam, LPARAM& lParam,
     case WM_LBUTTONUP:
     {
       result = DispatchMouseEvent(NS_MOUSE_BUTTON_UP, wParam, lParam,
-                                  false, nsMouseEvent::eLeftButton, MOUSE_INPUT_SOURCE());
+                                  false, WidgetMouseEvent::eLeftButton,
+                                  MOUSE_INPUT_SOURCE());
       DispatchPendingEvents();
     }
     break;
@@ -4913,7 +4915,7 @@ nsWindow::ProcessMessage(UINT msg, WPARAM& wParam, LPARAM& lParam,
       // WM_MOUSELEAVE.
       LPARAM pos = lParamToClient(::GetMessagePos());
       DispatchMouseEvent(NS_MOUSE_EXIT, mouseState, pos, false,
-                         nsMouseEvent::eLeftButton, MOUSE_INPUT_SOURCE());
+                         WidgetMouseEvent::eLeftButton, MOUSE_INPUT_SOURCE());
     }
     break;
 
@@ -4935,11 +4937,13 @@ nsWindow::ProcessMessage(UINT msg, WPARAM& wParam, LPARAM& lParam,
 
       result = DispatchMouseEvent(NS_CONTEXTMENU, wParam, pos, contextMenukey,
                                   contextMenukey ?
-                                    nsMouseEvent::eLeftButton :
-                                    nsMouseEvent::eRightButton, MOUSE_INPUT_SOURCE());
+                                    WidgetMouseEvent::eLeftButton :
+                                    WidgetMouseEvent::eRightButton,
+                                  MOUSE_INPUT_SOURCE());
       if (lParam != -1 && !result && mCustomNonClient) {
-        nsMouseEvent event(true, NS_MOUSE_MOZHITTEST, this, nsMouseEvent::eReal,
-                           nsMouseEvent::eNormal);
+        WidgetMouseEvent event(true, NS_MOUSE_MOZHITTEST, this,
+                               WidgetMouseEvent::eReal,
+                               WidgetMouseEvent::eNormal);
         event.refPoint = LayoutDeviceIntPoint(GET_X_LPARAM(pos), GET_Y_LPARAM(pos));
         event.inputSource = MOUSE_INPUT_SOURCE();
         event.mFlags.mOnlyChromeDispatch = true;
@@ -4953,82 +4957,105 @@ nsWindow::ProcessMessage(UINT msg, WPARAM& wParam, LPARAM& lParam,
     break;
 
     case WM_LBUTTONDBLCLK:
-      result = DispatchMouseEvent(NS_MOUSE_DOUBLECLICK, wParam, lParam, false,
-                                  nsMouseEvent::eLeftButton, MOUSE_INPUT_SOURCE());
+      result = DispatchMouseEvent(NS_MOUSE_DOUBLECLICK, wParam,
+                                  lParam, false,
+                                  WidgetMouseEvent::eLeftButton,
+                                  MOUSE_INPUT_SOURCE());
       DispatchPendingEvents();
       break;
 
     case WM_MBUTTONDOWN:
-      result = DispatchMouseEvent(NS_MOUSE_BUTTON_DOWN, wParam, lParam, false,
-                                  nsMouseEvent::eMiddleButton, MOUSE_INPUT_SOURCE());
+      result = DispatchMouseEvent(NS_MOUSE_BUTTON_DOWN, wParam,
+                                  lParam, false,
+                                  WidgetMouseEvent::eMiddleButton,
+                                  MOUSE_INPUT_SOURCE());
       DispatchPendingEvents();
       break;
 
     case WM_MBUTTONUP:
-      result = DispatchMouseEvent(NS_MOUSE_BUTTON_UP, wParam, lParam, false,
-                                  nsMouseEvent::eMiddleButton, MOUSE_INPUT_SOURCE());
+      result = DispatchMouseEvent(NS_MOUSE_BUTTON_UP, wParam,
+                                  lParam, false,
+                                  WidgetMouseEvent::eMiddleButton,
+                                  MOUSE_INPUT_SOURCE());
       DispatchPendingEvents();
       break;
 
     case WM_MBUTTONDBLCLK:
-      result = DispatchMouseEvent(NS_MOUSE_DOUBLECLICK, wParam, lParam, false,
-                                  nsMouseEvent::eMiddleButton, MOUSE_INPUT_SOURCE());
+      result = DispatchMouseEvent(NS_MOUSE_DOUBLECLICK, wParam,
+                                  lParam, false,
+                                  WidgetMouseEvent::eMiddleButton,
+                                  MOUSE_INPUT_SOURCE());
       DispatchPendingEvents();
       break;
 
     case WM_NCMBUTTONDOWN:
-      result = DispatchMouseEvent(NS_MOUSE_BUTTON_DOWN, 0, lParamToClient(lParam), false,
-                                  nsMouseEvent::eMiddleButton, MOUSE_INPUT_SOURCE());
+      result = DispatchMouseEvent(NS_MOUSE_BUTTON_DOWN, 0,
+                                  lParamToClient(lParam), false,
+                                  WidgetMouseEvent::eMiddleButton,
+                                  MOUSE_INPUT_SOURCE());
       DispatchPendingEvents();
       break;
 
     case WM_NCMBUTTONUP:
-      result = DispatchMouseEvent(NS_MOUSE_BUTTON_UP, 0, lParamToClient(lParam), false,
-                                  nsMouseEvent::eMiddleButton, MOUSE_INPUT_SOURCE());
+      result = DispatchMouseEvent(NS_MOUSE_BUTTON_UP, 0,
+                                  lParamToClient(lParam), false,
+                                  WidgetMouseEvent::eMiddleButton,
+                                  MOUSE_INPUT_SOURCE());
       DispatchPendingEvents();
       break;
 
     case WM_NCMBUTTONDBLCLK:
-      result = DispatchMouseEvent(NS_MOUSE_DOUBLECLICK, 0, lParamToClient(lParam), false,
-                                  nsMouseEvent::eMiddleButton, MOUSE_INPUT_SOURCE());
+      result = DispatchMouseEvent(NS_MOUSE_DOUBLECLICK, 0,
+                                  lParamToClient(lParam), false,
+                                  WidgetMouseEvent::eMiddleButton,
+                                  MOUSE_INPUT_SOURCE());
       DispatchPendingEvents();
       break;
 
     case WM_RBUTTONDOWN:
-      result = DispatchMouseEvent(NS_MOUSE_BUTTON_DOWN, wParam, lParam, false,
-                                  nsMouseEvent::eRightButton, MOUSE_INPUT_SOURCE());
+      result = DispatchMouseEvent(NS_MOUSE_BUTTON_DOWN, wParam,
+                                  lParam, false,
+                                  WidgetMouseEvent::eRightButton,
+                                  MOUSE_INPUT_SOURCE());
       DispatchPendingEvents();
       break;
 
     case WM_RBUTTONUP:
-      result = DispatchMouseEvent(NS_MOUSE_BUTTON_UP, wParam, lParam, false,
-                                  nsMouseEvent::eRightButton, MOUSE_INPUT_SOURCE());
+      result = DispatchMouseEvent(NS_MOUSE_BUTTON_UP, wParam,
+                                  lParam, false,
+                                  WidgetMouseEvent::eRightButton,
+                                  MOUSE_INPUT_SOURCE());
       DispatchPendingEvents();
       break;
 
     case WM_RBUTTONDBLCLK:
-      result = DispatchMouseEvent(NS_MOUSE_DOUBLECLICK, wParam, lParam, false,
-                                  nsMouseEvent::eRightButton, MOUSE_INPUT_SOURCE());
+      result = DispatchMouseEvent(NS_MOUSE_DOUBLECLICK, wParam,
+                                  lParam, false,
+                                  WidgetMouseEvent::eRightButton,
+                                  MOUSE_INPUT_SOURCE());
       DispatchPendingEvents();
       break;
 
     case WM_NCRBUTTONDOWN:
-      result = DispatchMouseEvent(NS_MOUSE_BUTTON_DOWN, 0, lParamToClient(lParam), 
-                                  false, nsMouseEvent::eRightButton,
+      result = DispatchMouseEvent(NS_MOUSE_BUTTON_DOWN, 0,
+                                  lParamToClient(lParam), false,
+                                  WidgetMouseEvent::eRightButton,
                                   MOUSE_INPUT_SOURCE());
       DispatchPendingEvents();
       break;
 
     case WM_NCRBUTTONUP:
-      result = DispatchMouseEvent(NS_MOUSE_BUTTON_UP, 0, lParamToClient(lParam),
-                                  false, nsMouseEvent::eRightButton,
+      result = DispatchMouseEvent(NS_MOUSE_BUTTON_UP, 0,
+                                  lParamToClient(lParam), false,
+                                  WidgetMouseEvent::eRightButton,
                                   MOUSE_INPUT_SOURCE());
       DispatchPendingEvents();
       break;
 
     case WM_NCRBUTTONDBLCLK:
-      result = DispatchMouseEvent(NS_MOUSE_DOUBLECLICK, 0, lParamToClient(lParam),
-                                  false, nsMouseEvent::eRightButton,
+      result = DispatchMouseEvent(NS_MOUSE_DOUBLECLICK, 0,
+                                  lParamToClient(lParam), false,
+                                  WidgetMouseEvent::eRightButton,
                                   MOUSE_INPUT_SOURCE());
       DispatchPendingEvents();
       break;
@@ -5041,11 +5068,11 @@ nsWindow::ProcessMessage(UINT msg, WPARAM& wParam, LPARAM& lParam,
 
     case WM_NCLBUTTONDBLCLK:
       DispatchMouseEvent(NS_MOUSE_DOUBLECLICK, 0, lParamToClient(lParam),
-                         false, nsMouseEvent::eLeftButton,
+                         false, WidgetMouseEvent::eLeftButton,
                          MOUSE_INPUT_SOURCE());
       result = 
         DispatchMouseEvent(NS_MOUSE_BUTTON_UP, 0, lParamToClient(lParam),
-                           false, nsMouseEvent::eLeftButton,
+                           false, WidgetMouseEvent::eLeftButton,
                            MOUSE_INPUT_SOURCE());
       DispatchPendingEvents();
       break;
@@ -5104,7 +5131,8 @@ nsWindow::ProcessMessage(UINT msg, WPARAM& wParam, LPARAM& lParam,
       }
 
       if (contentCommandMessage) {
-        nsContentCommandEvent contentCommand(true, contentCommandMessage, this);
+        WidgetContentCommandEvent contentCommand(true, contentCommandMessage,
+                                                 this);
         DispatchWindowEvent(&contentCommand);
         // tell the driver that we handled the event
         *aRetValue = 1;
@@ -5139,8 +5167,8 @@ nsWindow::ProcessMessage(UINT msg, WPARAM& wParam, LPARAM& lParam,
           StopFlashing();
 
           sJustGotActivate = true;
-          nsMouseEvent event(true, NS_MOUSE_ACTIVATE, this,
-                             nsMouseEvent::eReal);
+          WidgetMouseEvent event(true, NS_MOUSE_ACTIVATE, this,
+                                 WidgetMouseEvent::eReal);
           InitEvent(event);
           ModifierKeyState modifierKeyState;
           modifierKeyState.InitInputEvent(event);
@@ -5167,8 +5195,9 @@ nsWindow::ProcessMessage(UINT msg, WPARAM& wParam, LPARAM& lParam,
 
     case WM_WINDOWPOSCHANGING:
     {
-      LPWINDOWPOS info = (LPWINDOWPOS) lParam;
+      LPWINDOWPOS info = (LPWINDOWPOS)lParam;
       OnWindowPosChanging(info);
+      result = true;
     }
     break;
 
@@ -5207,8 +5236,9 @@ nsWindow::ProcessMessage(UINT msg, WPARAM& wParam, LPARAM& lParam,
 
     case WM_WINDOWPOSCHANGED:
     {
-      WINDOWPOS *wp = (LPWINDOWPOS)lParam;
-      OnWindowPosChanged(wp, result);
+      WINDOWPOS* wp = (LPWINDOWPOS)lParam;
+      OnWindowPosChanged(wp);
+      result = true;
     }
     break;
 
@@ -5342,7 +5372,8 @@ nsWindow::ProcessMessage(UINT msg, WPARAM& wParam, LPARAM& lParam,
         nsPointWin touchPoint;
         touchPoint = gestureinfo->ptsLocation;
         touchPoint.ScreenToClient(mWnd);
-        nsGestureNotifyEvent gestureNotifyEvent(true, NS_GESTURENOTIFY_EVENT_START, this);
+        WidgetGestureNotifyEvent gestureNotifyEvent(true,
+                                   NS_GESTURENOTIFY_EVENT_START, this);
         gestureNotifyEvent.refPoint = LayoutDeviceIntPoint::FromUntyped(touchPoint);
         nsEventStatus status;
         DispatchEvent(&gestureNotifyEvent, status);
@@ -5356,7 +5387,7 @@ nsWindow::ProcessMessage(UINT msg, WPARAM& wParam, LPARAM& lParam,
 
     case WM_CLEAR:
     {
-      nsContentCommandEvent command(true, NS_CONTENT_COMMAND_DELETE, this);
+      WidgetContentCommandEvent command(true, NS_CONTENT_COMMAND_DELETE, this);
       DispatchWindowEvent(&command);
       result = true;
     }
@@ -5364,7 +5395,7 @@ nsWindow::ProcessMessage(UINT msg, WPARAM& wParam, LPARAM& lParam,
 
     case WM_CUT:
     {
-      nsContentCommandEvent command(true, NS_CONTENT_COMMAND_CUT, this);
+      WidgetContentCommandEvent command(true, NS_CONTENT_COMMAND_CUT, this);
       DispatchWindowEvent(&command);
       result = true;
     }
@@ -5372,7 +5403,7 @@ nsWindow::ProcessMessage(UINT msg, WPARAM& wParam, LPARAM& lParam,
 
     case WM_COPY:
     {
-      nsContentCommandEvent command(true, NS_CONTENT_COMMAND_COPY, this);
+      WidgetContentCommandEvent command(true, NS_CONTENT_COMMAND_COPY, this);
       DispatchWindowEvent(&command);
       result = true;
     }
@@ -5380,7 +5411,7 @@ nsWindow::ProcessMessage(UINT msg, WPARAM& wParam, LPARAM& lParam,
 
     case WM_PASTE:
     {
-      nsContentCommandEvent command(true, NS_CONTENT_COMMAND_PASTE, this);
+      WidgetContentCommandEvent command(true, NS_CONTENT_COMMAND_PASTE, this);
       DispatchWindowEvent(&command);
       result = true;
     }
@@ -5388,7 +5419,7 @@ nsWindow::ProcessMessage(UINT msg, WPARAM& wParam, LPARAM& lParam,
 
     case EM_UNDO:
     {
-      nsContentCommandEvent command(true, NS_CONTENT_COMMAND_UNDO, this);
+      WidgetContentCommandEvent command(true, NS_CONTENT_COMMAND_UNDO, this);
       DispatchWindowEvent(&command);
       *aRetValue = (LRESULT)(command.mSucceeded && command.mIsEnabled);
       result = true;
@@ -5397,7 +5428,7 @@ nsWindow::ProcessMessage(UINT msg, WPARAM& wParam, LPARAM& lParam,
 
     case EM_REDO:
     {
-      nsContentCommandEvent command(true, NS_CONTENT_COMMAND_REDO, this);
+      WidgetContentCommandEvent command(true, NS_CONTENT_COMMAND_REDO, this);
       DispatchWindowEvent(&command);
       *aRetValue = (LRESULT)(command.mSucceeded && command.mIsEnabled);
       result = true;
@@ -5409,8 +5440,8 @@ nsWindow::ProcessMessage(UINT msg, WPARAM& wParam, LPARAM& lParam,
       // Support EM_CANPASTE message only when wParam isn't specified or
       // is plain text format.
       if (wParam == 0 || wParam == CF_TEXT || wParam == CF_UNICODETEXT) {
-        nsContentCommandEvent command(true, NS_CONTENT_COMMAND_PASTE,
-                                      this, true);
+        WidgetContentCommandEvent command(true, NS_CONTENT_COMMAND_PASTE,
+                                          this, true);
         DispatchWindowEvent(&command);
         *aRetValue = (LRESULT)(command.mSucceeded && command.mIsEnabled);
         result = true;
@@ -5420,8 +5451,8 @@ nsWindow::ProcessMessage(UINT msg, WPARAM& wParam, LPARAM& lParam,
 
     case EM_CANUNDO:
     {
-      nsContentCommandEvent command(true, NS_CONTENT_COMMAND_UNDO,
-                                    this, true);
+      WidgetContentCommandEvent command(true, NS_CONTENT_COMMAND_UNDO,
+                                        this, true);
       DispatchWindowEvent(&command);
       *aRetValue = (LRESULT)(command.mSucceeded && command.mIsEnabled);
       result = true;
@@ -5430,8 +5461,8 @@ nsWindow::ProcessMessage(UINT msg, WPARAM& wParam, LPARAM& lParam,
 
     case EM_CANREDO:
     {
-      nsContentCommandEvent command(true, NS_CONTENT_COMMAND_REDO,
-                                    this, true);
+      WidgetContentCommandEvent command(true, NS_CONTENT_COMMAND_REDO,
+                                        this, true);
       DispatchWindowEvent(&command);
       *aRetValue = (LRESULT)(command.mSucceeded && command.mIsEnabled);
       result = true;
@@ -5623,8 +5654,9 @@ nsWindow::ClientMarginHitTestPoint(int32_t mx, int32_t my)
         TimeStamp::Now() - mCachedHitTestTime < TimeDuration::FromMilliseconds(HITTEST_CACHE_LIFETIME_MS)) {
       testResult = mCachedHitTestResult;
     } else {
-      nsMouseEvent event(true, NS_MOUSE_MOZHITTEST, this, nsMouseEvent::eReal,
-                         nsMouseEvent::eNormal);
+      WidgetMouseEvent event(true, NS_MOUSE_MOZHITTEST, this,
+                             WidgetMouseEvent::eReal,
+                             WidgetMouseEvent::eNormal);
       event.refPoint = LayoutDeviceIntPoint(pt.x, pt.y);
       event.inputSource = MOUSE_INPUT_SOURCE();
       event.mFlags.mOnlyChromeDispatch = true;
@@ -5786,7 +5818,7 @@ nsWindow::SynthesizeNativeMouseScrollEvent(nsIntPoint aPoint,
  *
  **************************************************************/
 
-void nsWindow::OnWindowPosChanged(WINDOWPOS *wp, bool& result)
+void nsWindow::OnWindowPosChanged(WINDOWPOS* wp)
 {
   if (wp == nullptr)
     return;
@@ -5891,6 +5923,16 @@ void nsWindow::OnWindowPosChanged(WINDOWPOS *wp, bool& result)
       return;
   }
 
+  // Handle window position changes
+  if (!(wp->flags & SWP_NOMOVE)) {
+    mBounds.x = wp->x;
+    mBounds.y = wp->y;
+
+    if (mWidgetListener) {
+      mWidgetListener->WindowMoved(this, wp->x, wp->y);
+    }
+  }
+
   // Handle window size changes
   if (!(wp->flags & SWP_NOSIZE)) {
     RECT r;
@@ -5952,12 +5994,11 @@ void nsWindow::OnWindowPosChanged(WINDOWPOS *wp, bool& result)
            ("*** Resize window: %d x %d x %d x %d\n", wp->x, wp->y, 
             newWidth, newHeight));
 #endif
-    
+
     // If a maximized window is resized, recalculate the non-client margins.
     if (mSizeMode == nsSizeMode_Maximized) {
       if (UpdateNonClientMargins(nsSizeMode_Maximized, true)) {
         // gecko resize event already sent by UpdateNonClientMargins.
-        result = true;
         return;
       }
     }
@@ -5969,7 +6010,7 @@ void nsWindow::OnWindowPosChanged(WINDOWPOS *wp, bool& result)
     }
     
     // Send a gecko resize event
-    result = OnResize(rect);
+    OnResize(rect);
   }
 }
 
@@ -6079,8 +6120,8 @@ bool nsWindow::OnTouch(WPARAM wParam, LPARAM lParam)
   PTOUCHINPUT pInputs = new TOUCHINPUT[cInputs];
 
   if (mGesture.GetTouchInputInfo((HTOUCHINPUT)lParam, cInputs, pInputs)) {
-    nsTouchEvent* touchEventToSend = nullptr;
-    nsTouchEvent* touchEndEventToSend = nullptr;
+    WidgetTouchEvent* touchEventToSend = nullptr;
+    WidgetTouchEvent* touchEndEventToSend = nullptr;
     nsEventStatus status;
 
     // Walk across the touch point array processing each contact point
@@ -6090,7 +6131,7 @@ bool nsWindow::OnTouch(WPARAM wParam, LPARAM lParam)
       if (pInputs[i].dwFlags & (TOUCHEVENTF_DOWN | TOUCHEVENTF_MOVE)) {
         // Create a standard touch event to send
         if (!touchEventToSend) {
-          touchEventToSend = new nsTouchEvent(true, NS_TOUCH_MOVE, this);
+          touchEventToSend = new WidgetTouchEvent(true, NS_TOUCH_MOVE, this);
           touchEventToSend->time = ::GetMessageTime();
           ModifierKeyState modifierKeyState;
           modifierKeyState.InitInputEvent(*touchEventToSend);
@@ -6108,7 +6149,7 @@ bool nsWindow::OnTouch(WPARAM wParam, LPARAM lParam)
         // separate NS_TOUCH_END event containing only the contact points
         // that were removed.
         if (!touchEndEventToSend) {
-          touchEndEventToSend = new nsTouchEvent(true, NS_TOUCH_END, this);
+          touchEndEventToSend = new WidgetTouchEvent(true, NS_TOUCH_END, this);
           touchEndEventToSend->time = ::GetMessageTime();
           ModifierKeyState modifierKeyState;
           modifierKeyState.InitInputEvent(*touchEndEventToSend);
@@ -6210,7 +6251,7 @@ bool nsWindow::OnGesture(WPARAM wParam, LPARAM lParam)
   }
 
   // Other gestures translate into simple gesture events:
-  nsSimpleGestureEvent event(true, 0, this, 0, 0.0);
+  WidgetSimpleGestureEvent event(true, 0, this, 0, 0.0);
   if ( !mGesture.ProcessGestureMessage(mWnd, wParam, lParam, event) ) {
     return false; // fall through to DefWndProc
   }
@@ -6512,15 +6553,6 @@ void nsWindow::OnDestroy()
 
   // Clear the main HWND.
   mWnd = NULL;
-}
-
-// OnMove
-bool nsWindow::OnMove(int32_t aX, int32_t aY)
-{
-  mBounds.x = aX;
-  mBounds.y = aY;
-
-  return mWidgetListener ? mWidgetListener->WindowMoved(this, aX, aY) : false;
 }
 
 // Send a resize message to the listener

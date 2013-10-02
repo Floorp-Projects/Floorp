@@ -12,6 +12,7 @@
 #include "base/waitable_event.h"
 #include "mozilla/ipc/ProcessChild.h"
 #include "mozilla/ipc/BrowserProcessSubThread.h"
+#include "mozilla/ipc/Transport.h"
 typedef mozilla::ipc::BrowserProcessSubThread ChromeThread;
 #include "chrome/common/ipc_logging.h"
 #include "chrome/common/notification_service.h"
@@ -19,6 +20,7 @@ typedef mozilla::ipc::BrowserProcessSubThread ChromeThread;
 #include "chrome/common/process_watcher.h"
 #include "chrome/common/result_codes.h"
 
+using mozilla::ipc::FileDescriptor;
 
 namespace {
 typedef std::list<ChildProcessHost*> ChildProcessList;
@@ -78,6 +80,22 @@ bool ChildProcessHost::CreateChannel() {
       channel_id_, IPC::Channel::MODE_SERVER, &listener_));
   if (!channel_->Connect())
     return false;
+
+  opening_channel_ = true;
+
+  return true;
+}
+
+bool ChildProcessHost::CreateChannel(FileDescriptor& aFileDescriptor) {
+  if (channel_.get()) {
+    channel_->Close();
+  }
+  channel_.reset(mozilla::ipc::OpenDescriptor(
+      aFileDescriptor, IPC::Channel::MODE_SERVER));
+  channel_->set_listener(&listener_);
+  if (!channel_->Connect()) {
+    return false;
+  }
 
   opening_channel_ = true;
 

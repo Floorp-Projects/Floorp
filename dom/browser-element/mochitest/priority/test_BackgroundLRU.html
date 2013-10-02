@@ -1,0 +1,67 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+Test that calling setVisible('false') on two iframes causes the former one's priority with background LRU to
+change.
+-->
+<head>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="application/javascript" src="../browserElementTestHelpers.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+
+<script type="application/javascript;version=1.7">
+"use strict";
+
+SimpleTest.waitForExplicitFinish();
+browserElementTestHelpers.setEnabledPref(true);
+browserElementTestHelpers.addPermission();
+browserElementTestHelpers.enableProcessPriorityManager();
+SpecialPowers.addPermission("embed-apps", true, document);
+
+function runTest() {
+  var iframe1 = document.createElement('iframe');
+  iframe1.setAttribute('mozbrowser', true);
+  iframe1.src = 'file_MultipleFrames.html';
+
+  var iframe2 = null;
+  var childID = null;
+
+  expectProcessCreated().then(function(chid) {
+    childID = chid;
+    return expectPriorityChange(childID, 'FOREGROUND');
+  }).then(function() {
+    return expectMozbrowserEvent(iframe1, 'openwindow');
+  }).then(function() {
+    var p = expectPriorityChange(childID, 'BACKGROUND');
+    iframe1.setVisible(false);
+    return p;
+  }).then(function() {
+    iframe2 = document.createElement('iframe');
+    iframe2.setAttribute('mozbrowser', true);
+    iframe2.setAttribute('mozapp', 'http://example.org/manifest.webapp');
+    iframe2.src = browserElementTestHelpers.emptyPage1;
+
+    document.body.appendChild(iframe2);
+
+    // At this point, we should have iframe1 in background already.
+    // We wait until another one is set to background, too.
+    // Once there are two in background, the first one (LRU order)
+    // should have 'backgroundLRU' equals 1
+    var p = expectPriorityWithBackgroundLRUSet(childID, '1');
+    iframe2.setVisible(false);
+    document.body.removeChild(iframe2);
+
+    return p;
+
+  }).then(SimpleTest.finish);
+
+  document.body.appendChild(iframe1);
+}
+
+addEventListener('testready', runTest);
+
+</script>
+</body>
+</html>

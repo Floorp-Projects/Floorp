@@ -228,7 +228,7 @@ ImageLayerD3D10::RenderLayer()
     shaderFlags |= LoadMaskTexture();
     shaderFlags |= hasAlpha
                   ? SHADER_RGBA : SHADER_RGB;
-    shaderFlags |= mFilter == gfxPattern::FILTER_NEAREST
+    shaderFlags |= mFilter == GraphicsFilter::FILTER_NEAREST
                   ? SHADER_POINT : SHADER_LINEAR;
     technique = SelectShader(shaderFlags);
 
@@ -352,7 +352,7 @@ void ImageLayerD3D10::AllocateTexturesYCbCr(PlanarYCbCrImage *aImage)
   nsAutoPtr<PlanarYCbCrD3D10BackendData> backendData(
     new PlanarYCbCrD3D10BackendData);
 
-  const PlanarYCbCrImage::Data *data = aImage->GetData();
+  const PlanarYCbCrData *data = aImage->GetData();
 
   D3D10_SUBRESOURCE_DATA dataY;
   D3D10_SUBRESOURCE_DATA dataCb;

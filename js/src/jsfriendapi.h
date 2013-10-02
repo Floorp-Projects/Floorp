@@ -220,16 +220,26 @@ class SourceHook {
   public:
     virtual ~SourceHook() { }
 
-    /* Set |*src| and |*length| to refer to the source code for |filename|. */
+    /*
+     * Set |*src| and |*length| to refer to the source code for |filename|.
+     * On success, the caller owns the buffer to which |*src| points, and
+     * should use JS_free to free it.
+     */
     virtual bool load(JSContext *cx, const char *filename, jschar **src, size_t *length) = 0;
 };
 
 /*
- * Have |rt| use |hook| to retrieve LAZY_SOURCE source code.
- * See the comments for SourceHook.
+ * Have |rt| use |hook| to retrieve LAZY_SOURCE source code. See the
+ * comments for SourceHook. The runtime takes ownership of the hook, and
+ * will delete it when the runtime itself is deleted, or when a new hook is
+ * set.
  */
 extern JS_FRIEND_API(void)
 SetSourceHook(JSRuntime *rt, SourceHook *hook);
+
+/* Remove |rt|'s source hook, and return it. The caller now owns the hook. */
+extern JS_FRIEND_API(SourceHook *)
+ForgetSourceHook(JSRuntime *rt);
 
 inline JSRuntime *
 GetRuntime(const JSContext *cx)
@@ -255,12 +265,17 @@ GetCompartmentZone(JSCompartment *comp);
 typedef bool
 (* PreserveWrapperCallback)(JSContext *cx, JSObject *obj);
 
+typedef enum  {
+    CollectNurseryBeforeDump,
+    IgnoreNurseryObjects
+} DumpHeapNurseryBehaviour;
+
  /*
   * Dump the complete object graph of heap-allocated things.
   * fp is the file for the dump output.
   */
 extern JS_FRIEND_API(void)
-DumpHeapComplete(JSRuntime *rt, FILE *fp);
+DumpHeapComplete(JSRuntime *rt, FILE *fp, DumpHeapNurseryBehaviour nurseryBehaviour);
 
 #ifdef JS_OLD_GETTER_SETTER_METHODS
 JS_FRIEND_API(bool) obj_defineGetter(JSContext *cx, unsigned argc, JS::Value *vp);

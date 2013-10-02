@@ -46,7 +46,6 @@ static MOZ_CONSTEXPR_VAR Register ReturnReg = eax;
 static MOZ_CONSTEXPR_VAR FloatRegister ReturnFloatReg = xmm0;
 static MOZ_CONSTEXPR_VAR FloatRegister ScratchFloatReg = xmm7;
 
-// Avoid ebp, which is the FramePointer, which is unavailable in some modes.
 static MOZ_CONSTEXPR_VAR Register ArgumentsRectifierReg = esi;
 static MOZ_CONSTEXPR_VAR Register CallTempReg0 = edi;
 static MOZ_CONSTEXPR_VAR Register CallTempReg1 = eax;
@@ -54,6 +53,7 @@ static MOZ_CONSTEXPR_VAR Register CallTempReg2 = ebx;
 static MOZ_CONSTEXPR_VAR Register CallTempReg3 = ecx;
 static MOZ_CONSTEXPR_VAR Register CallTempReg4 = esi;
 static MOZ_CONSTEXPR_VAR Register CallTempReg5 = edx;
+static MOZ_CONSTEXPR_VAR Register CallTempReg6 = ebp;
 
 // We have no arg regs, so our NonArgRegs are just our CallTempReg*
 static MOZ_CONSTEXPR_VAR Register CallTempNonArgRegs[] = { edi, eax, ebx, ecx, esi, edx };
@@ -176,7 +176,7 @@ class Assembler : public AssemblerX86Shared
     }
     void push(const FloatRegister &src) {
         subl(Imm32(sizeof(double)), StackPointer);
-        movsd(src, Operand(StackPointer, 0));
+        movsd(src, Address(StackPointer, 0));
     }
 
     CodeOffsetLabel pushWithPatch(const ImmWord &word) {
@@ -185,7 +185,7 @@ class Assembler : public AssemblerX86Shared
     }
 
     void pop(const FloatRegister &src) {
-        movsd(Operand(StackPointer, 0), src);
+        movsd(Address(StackPointer, 0), src);
         addl(Imm32(sizeof(double)), StackPointer);
     }
 
@@ -226,18 +226,21 @@ class Assembler : public AssemblerX86Shared
         movl(ImmWord(uintptr_t(imm.value)), dest);
     }
     void mov(ImmWord imm, Register dest) {
-        movl(imm, dest);
+        // Use xor for setting registers to zero, as it is specially optimized
+        // for this purpose on modern hardware. Note that it does clobber FLAGS
+        // though.
+        if (imm.value == 0)
+            xorl(dest, dest);
+        else
+            movl(imm, dest);
     }
     void mov(ImmPtr imm, Register dest) {
-        movl(imm, dest);
+        mov(ImmWord(uintptr_t(imm.value)), dest);
     }
     void mov(AsmJSImmPtr imm, Register dest) {
         masm.movl_i32r(-1, dest.code());
         AsmJSAbsoluteLink link(masm.currentOffset(), imm.kind());
         enoughMemory_ &= asmJSAbsoluteLinks_.append(link);
-    }
-    void mov(Imm32 imm, Register dest) {
-        movl(imm, dest);
     }
     void mov(const Operand &src, const Register &dest) {
         movl(src, dest);
