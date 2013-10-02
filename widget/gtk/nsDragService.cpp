@@ -29,6 +29,7 @@
 #include "gfxContext.h"
 #include "nsImageToPixbuf.h"
 #include "nsPresContext.h"
+#include "nsIContent.h"
 #include "nsIDocument.h"
 #include "nsISelection.h"
 #include "nsViewManager.h"
