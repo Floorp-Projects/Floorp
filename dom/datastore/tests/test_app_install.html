@@ -5,9 +5,6 @@
   <title>Test for DataStore - install/uninstall apps</title>
   <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
-</head>
-<body>
-<div id="container"></div>
   <script type="application/javascript;version=1.7">
 
   SimpleTest.waitForExplicitFinish();
@@ -16,11 +13,13 @@
   var gHostedManifestURL = gBaseURL + 'file_app.sjs';
   var gGenerator = runTest();
 
-  SpecialPowers.pushPermissions(
-    [{ "type": "browser", "allow": 1, "context": document },
-     { "type": "embed-apps", "allow": 1, "context": document },
-     { "type": "webapps-manage", "allow": 1, "context": document }],
-    function() { gGenerator.next() });
+  function go() {
+    SpecialPowers.pushPermissions(
+      [{ "type": "browser", "allow": 1, "context": document },
+       { "type": "embed-apps", "allow": 1, "context": document },
+       { "type": "webapps-manage", "allow": 1, "context": document }],
+      function() { gGenerator.next() });
+  }
 
   function continueTest() {
     gGenerator.next();
@@ -93,5 +92,14 @@
   }
 
   </script>
+</head>
+<body onload="go()">
+<p id="display"></p>
+<div id="content" style="display: none">
+
+</div>
+<pre id="test">
+</pre>
+<div id="container"></div>
 </body>
 </html>
