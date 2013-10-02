@@ -13,3 +13,5 @@ LIBXUL_LIBRARY = True
 GTEST_CPP_SOURCES += [
 	'TLSIntoleranceTest.cpp',
 ]
+
+include('/ipc/chromium/chromium-config.mozbuild')

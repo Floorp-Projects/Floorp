@@ -186,4 +186,3 @@ endif
 include $(topsrcdir)/config/config.mk
 include $(topsrcdir)/media/webrtc/webrtc-config.mk
 include $(topsrcdir)/config/rules.mk
-include $(topsrcdir)/ipc/chromium/chromium-config.mk

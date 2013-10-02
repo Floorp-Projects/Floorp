@@ -27,7 +27,6 @@ LOCAL_INCLUDES += -I$(srcdir)/google-breakpad/src
 DEFINES += -DUNICODE -D_UNICODE
 
 include $(topsrcdir)/config/rules.mk
-include $(topsrcdir)/ipc/chromium/chromium-config.mk
 
 check::
 	$(PYTHON) $(srcdir)/tools/unit-symbolstore.py

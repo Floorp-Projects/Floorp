@@ -24,7 +24,6 @@ DEFINES	+= -DMOZ_ENABLE_D3D10_LAYER
 endif
 
 include $(topsrcdir)/config/rules.mk
-include $(topsrcdir)/ipc/chromium/chromium-config.mk
 
 LOCAL_INCLUDES += \
         -I$(topsrcdir)/content/events/src \

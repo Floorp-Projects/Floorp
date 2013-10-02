@@ -104,3 +104,5 @@ MSVC_ENABLE_PGO = True
 
 LIBRARY_NAME = 'gkgeneric_s'
 
+include('/ipc/chromium/chromium-config.mozbuild')
+

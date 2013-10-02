@@ -10,3 +10,5 @@ CPP_SOURCES += [
 
 LIBRARY_NAME = 'breakpadinjector'
 
+include('/ipc/chromium/chromium-config.mozbuild')
+

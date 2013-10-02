@@ -7,7 +7,6 @@ OS_CXXFLAGS += -DNOMINMAX
 endif
 
 include $(topsrcdir)/config/rules.mk
-include $(topsrcdir)/ipc/chromium/chromium-config.mk
 
 ifdef MOZ_WEBRTC
 LOCAL_INCLUDES += \

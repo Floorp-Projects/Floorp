@@ -280,3 +280,5 @@ MSVC_ENABLE_PGO = True
 
 LIBRARY_NAME = 'layers'
 
+include('/ipc/chromium/chromium-config.mozbuild')
+

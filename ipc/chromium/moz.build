@@ -240,3 +240,5 @@ LIBRARY_NAME = 'chromium_s'
 
 EXPORT_LIBRARY = True
 
+include('/ipc/chromium/chromium-config.mozbuild')
+

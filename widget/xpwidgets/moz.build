@@ -65,3 +65,5 @@ MSVC_ENABLE_PGO = True
 
 LIBRARY_NAME = 'xpwidgets_s'
 
+include('/ipc/chromium/chromium-config.mozbuild')
+
