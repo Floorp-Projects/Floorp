@@ -427,7 +427,8 @@ nsMenuFrame::HandleEvent(nsPresContext* aPresContext,
   }
   else if (aEvent->eventStructType == NS_MOUSE_EVENT &&
            aEvent->message == NS_MOUSE_BUTTON_DOWN &&
-           static_cast<nsMouseEvent*>(aEvent)->button == nsMouseEvent::eLeftButton &&
+           static_cast<WidgetMouseEvent*>(aEvent)->button ==
+             WidgetMouseEvent::eLeftButton &&
            !IsDisabled() && IsMenu()) {
     // The menu item was selected. Bring up the menu.
     // We have children.
@@ -446,8 +447,8 @@ nsMenuFrame::HandleEvent(nsPresContext* aPresContext,
 #ifndef NSCONTEXTMENUISMOUSEUP
            (aEvent->eventStructType == NS_MOUSE_EVENT &&
             aEvent->message == NS_MOUSE_BUTTON_UP &&
-            static_cast<nsMouseEvent*>(aEvent)->button ==
-              nsMouseEvent::eRightButton) &&
+            static_cast<WidgetMouseEvent*>(aEvent)->button ==
+              WidgetMouseEvent::eRightButton) &&
 #else
             aEvent->message == NS_CONTEXTMENU &&
 #endif
@@ -469,7 +470,8 @@ nsMenuFrame::HandleEvent(nsPresContext* aPresContext,
   }
   else if (aEvent->eventStructType == NS_MOUSE_EVENT &&
            aEvent->message == NS_MOUSE_BUTTON_UP &&
-           static_cast<nsMouseEvent*>(aEvent)->button == nsMouseEvent::eLeftButton &&
+           static_cast<WidgetMouseEvent*>(aEvent)->button ==
+             WidgetMouseEvent::eLeftButton &&
            !IsMenu() && !IsDisabled()) {
     // Execute the execute event handler.
     *aEventStatus = nsEventStatus_eConsumeNoDefault;

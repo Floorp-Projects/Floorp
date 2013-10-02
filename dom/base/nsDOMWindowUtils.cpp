@@ -640,16 +640,16 @@ static inline int16_t
 GetButtonsFlagForButton(int32_t aButton)
 {
   switch (aButton) {
-    case nsMouseEvent::eLeftButton:
-      return nsMouseEvent::eLeftButtonFlag;
-    case nsMouseEvent::eMiddleButton:
-      return nsMouseEvent::eMiddleButtonFlag;
-    case nsMouseEvent::eRightButton:
-      return nsMouseEvent::eRightButtonFlag;
+    case WidgetMouseEvent::eLeftButton:
+      return WidgetMouseEvent::eLeftButtonFlag;
+    case WidgetMouseEvent::eMiddleButton:
+      return WidgetMouseEvent::eMiddleButtonFlag;
+    case WidgetMouseEvent::eRightButton:
+      return WidgetMouseEvent::eRightButtonFlag;
     case 4:
-      return nsMouseEvent::e4thButtonFlag;
+      return WidgetMouseEvent::e4thButtonFlag;
     case 5:
-      return nsMouseEvent::e5thButtonFlag;
+      return WidgetMouseEvent::e5thButtonFlag;
     default:
       NS_ERROR("Button not known.");
       return 0;
@@ -703,9 +703,9 @@ nsDOMWindowUtils::SendMouseEventCommon(const nsAString& aType,
     aInputSourceArg = nsIDOMMouseEvent::MOZ_SOURCE_MOUSE;
   }
 
-  nsMouseEvent event(true, msg, widget, nsMouseEvent::eReal,
-                     contextMenuKey ?
-                       nsMouseEvent::eContextMenuKey : nsMouseEvent::eNormal);
+  WidgetMouseEvent event(true, msg, widget, WidgetMouseEvent::eReal,
+                         contextMenuKey ? WidgetMouseEvent::eContextMenuKey :
+                                          WidgetMouseEvent::eNormal);
   event.modifiers = GetWidgetModifiers(aModifiers);
   event.button = aButton;
   event.buttons = GetButtonsFlagForButton(aButton);

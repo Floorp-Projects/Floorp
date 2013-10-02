@@ -478,8 +478,8 @@ HTMLTextAreaElement::PreHandleEvent(nsEventChainPreVisitor& aVisitor)
   }
   if (aVisitor.mEvent->message == NS_MOUSE_CLICK &&
       aVisitor.mEvent->eventStructType == NS_MOUSE_EVENT &&
-      static_cast<nsMouseEvent*>(aVisitor.mEvent)->button ==
-        nsMouseEvent::eMiddleButton) {
+      static_cast<WidgetMouseEvent*>(aVisitor.mEvent)->button ==
+        WidgetMouseEvent::eMiddleButton) {
     aVisitor.mEvent->mFlags.mNoContentDispatch = false;
   }
 

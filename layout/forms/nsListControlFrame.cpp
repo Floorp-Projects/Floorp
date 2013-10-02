@@ -1607,8 +1607,8 @@ nsListControlFrame::MouseUp(nsIDOMEvent* aMouseEvent)
     // depeneding on whether the clickCount is non-zero.
     // So we cheat here by either setting or unsetting the clcikCount in the native event
     // so the right thing happens for the onclick event
-    nsMouseEvent * mouseEvent;
-    mouseEvent = (nsMouseEvent *) aMouseEvent->GetInternalNSEvent();
+    WidgetMouseEvent* mouseEvent =
+      static_cast<WidgetMouseEvent*>(aMouseEvent->GetInternalNSEvent());
 
     int32_t selectedIndex;
     if (NS_SUCCEEDED(GetIndexFromDOMEvent(aMouseEvent, selectedIndex))) {

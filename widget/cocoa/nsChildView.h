@@ -320,7 +320,7 @@ typedef NSInteger NSEventGestureAxis;
 
 - (void)sendMouseEnterOrExitEvent:(NSEvent*)aEvent
                             enter:(BOOL)aEnter
-                             type:(nsMouseEvent::exitType)aType;
+                             type:(mozilla::WidgetMouseEvent::exitType)aType;
 
 - (void)update;
 - (void)lockFocus;
