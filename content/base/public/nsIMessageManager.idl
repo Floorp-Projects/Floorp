@@ -289,7 +289,7 @@ interface nsIMessageBroadcaster : nsIMessageListenerManager
   nsIMessageListenerManager getChildAt(in unsigned long aIndex);
 };
 
-[scriptable, builtinclass, uuid(83be5862-2996-4685-ae7d-ae25bd795d50)]
+[scriptable, builtinclass, uuid(79eeb70f-58e3-4d32-b46f-106f42ada12b)]
 interface nsISyncMessageSender : nsIMessageSender
 {
   /**
@@ -301,6 +301,20 @@ interface nsISyncMessageSender : nsIMessageSender
   jsval sendSyncMessage([optional] in AString messageName,
                         [optional] in jsval obj,
                         [optional] in jsval objects);
+
+  /**
+   * Like |sendSyncMessage()|, except re-entrant. New RPC messages may be
+   * issued even if, earlier on the call stack, we are waiting for a reply
+   * to an earlier sendRpcMessage() call.
+   *
+   * Both sendSyncMessage and sendRpcMessage will block until a reply is
+   * received, but they may be temporarily interrupted to process an urgent
+   * incoming message (such as a CPOW request).
+   */
+  [implicit_jscontext, optional_argc]
+  jsval sendRpcMessage([optional] in AString messageName,
+                       [optional] in jsval obj,
+                       [optional] in jsval objects);
 };
 
 [scriptable, builtinclass, uuid(894ff2d4-39a3-4df8-9d76-8ee329975488)]

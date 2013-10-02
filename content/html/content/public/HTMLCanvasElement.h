@@ -169,7 +169,7 @@ public:
    */
   NS_IMETHOD_(nsIntSize) GetSizeExternal() MOZ_OVERRIDE;
   NS_IMETHOD RenderContextsExternal(gfxContext *aContext,
-                                    gfxPattern::GraphicsFilter aFilter,
+                                    GraphicsFilter aFilter,
                                     uint32_t aFlags = RenderFlagPremultAlpha) MOZ_OVERRIDE;
 
   virtual bool ParseAttribute(int32_t aNamespaceID,

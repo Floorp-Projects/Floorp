@@ -268,6 +268,43 @@ let Util = {
   },
 
   /*
+   * aViewHeight - the height of the viewable area in the browser
+   * aRect - a bounding rectangle of a selection or element.
+   *
+   * return - number of pixels for the browser to be shifted up by such
+   * that aRect is centered vertically within aViewHeight.
+   */
+  centerElementInView: function centerElementInView(aViewHeight, aRect) {
+    // If the bottom of the target bounds is higher than the new height,
+    // there's no need to adjust. It will be above the keyboard.
+    if (aRect.bottom <= aViewHeight) {
+      return 0;
+    }
+
+    // height of the target element
+    let targetHeight = aRect.bottom - aRect.top;
+    // height of the browser view.
+    let viewBottom = content.innerHeight;
+
+    // If the target is shorter than the new content height, we can go ahead
+    // and center it.
+    if (targetHeight <= aViewHeight) {
+      // Try to center the element vertically in the new content area, but
+      // don't position such that the bottom of the browser view moves above
+      // the top of the chrome. We purposely do not resize the browser window
+      // by making it taller when trying to center elements that are near the
+      // lower bounds. This would trigger reflow which can cause content to
+      // shift around.
+      let splitMargin = Math.round((aViewHeight - targetHeight) * .5);
+      let distanceToPageBounds = viewBottom - aRect.bottom;
+      let distanceFromChromeTop = aRect.bottom - aViewHeight;
+      let distanceToCenter =
+        distanceFromChromeTop + Math.min(distanceToPageBounds, splitMargin);
+      return distanceToCenter;
+    }
+  },
+
+  /*
    * Local system utilities
    */
 

@@ -88,6 +88,7 @@ function ContentSecurityPolicy() {
   csp._MAPPINGS[cp.TYPE_SUBDOCUMENT]       = cspr_sd_new.FRAME_SRC;
   csp._MAPPINGS[cp.TYPE_MEDIA]             = cspr_sd_new.MEDIA_SRC;
   csp._MAPPINGS[cp.TYPE_FONT]              = cspr_sd_new.FONT_SRC;
+  csp._MAPPINGS[cp.TYPE_XSLT]              = cspr_sd_new.SCRIPT_SRC;
 
   /* Our original CSP implementation's mappings for XHR and websocket
    * These should be changed to be = cspr_sd.CONNECT_SRC when we remove
@@ -620,8 +621,6 @@ ContentSecurityPolicy.prototype = {
     CSPdebug("shouldLoad location = " + aContentLocation.asciiSpec);
     CSPdebug("shouldLoad content type = " + aContentType);
 #endif
-    // interpret the context, and then pass off to the decision structure
-    var cspContext = ContentSecurityPolicy._MAPPINGS[aContentType];
 
     // The mapping for XHR and websockets is different between our original
     // implementation and the 1.0 spec, we handle this here.

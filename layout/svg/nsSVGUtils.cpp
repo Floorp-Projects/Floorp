@@ -1832,7 +1832,7 @@ nsSVGUtils::SetupCairoStroke(nsIFrame* aFrame, gfxContext* aContext,
 
 bool
 nsSVGUtils::PaintSVGGlyph(Element* aElement, gfxContext* aContext,
-                          gfxFont::DrawMode aDrawMode,
+                          DrawMode aDrawMode,
                           gfxTextContextPaint* aContextPaint)
 {
   nsIFrame* frame = aElement->GetPrimaryFrame();

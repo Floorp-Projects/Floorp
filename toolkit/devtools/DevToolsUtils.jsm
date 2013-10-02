@@ -21,5 +21,6 @@ Components.classes["@mozilla.org/moz/jssubscript-loader;1"]
 this.DevToolsUtils = {
   safeErrorString: safeErrorString,
   reportException: reportException,
-  makeInfallible: makeInfallible
+  makeInfallible: makeInfallible,
+  yieldingEach: yieldingEach
 };
