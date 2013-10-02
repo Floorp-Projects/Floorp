@@ -1127,11 +1127,18 @@ nsExternalAppHandler::nsExternalAppHandler(nsIMIMEInfo * aMIMEInfo,
 
   // Remove unsafe bidi characters which might have spoofing implications (bug 511521).
   const PRUnichar unsafeBidiCharacters[] = {
+    PRUnichar(0x061c), // Arabic Letter Mark
+    PRUnichar(0x200e), // Left-to-Right Mark
+    PRUnichar(0x200f), // Right-to-Left Mark
     PRUnichar(0x202a), // Left-to-Right Embedding
     PRUnichar(0x202b), // Right-to-Left Embedding
     PRUnichar(0x202c), // Pop Directional Formatting
     PRUnichar(0x202d), // Left-to-Right Override
-    PRUnichar(0x202e)  // Right-to-Left Override
+    PRUnichar(0x202e), // Right-to-Left Override
+    PRUnichar(0x2066), // Left-to-Right Isolate
+    PRUnichar(0x2067), // Right-to-Left Isolate
+    PRUnichar(0x2068), // First Strong Isolate
+    PRUnichar(0x2069)  // Pop Directional Isolate
   };
   for (uint32_t i = 0; i < ArrayLength(unsafeBidiCharacters); ++i) {
     mSuggestedFileName.ReplaceChar(unsafeBidiCharacters[i], '_');

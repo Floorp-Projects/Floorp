@@ -4177,9 +4177,9 @@ gfxFontGroup::IsInvalidChar(PRUnichar ch)
     if (ch <= 0x9f) {
         return true;
     }
-    return ((ch & 0xFF00) == 0x2000 /* Unicode control character */ &&
-         (ch == 0x200B/*ZWSP*/ || ch == 0x2028/*LSEP*/ || ch == 0x2029/*PSEP*/ ||
-          IS_BIDI_CONTROL_CHAR(ch)));
+    return (((ch & 0xFF00) == 0x2000 /* Unicode control character */ &&
+             (ch == 0x200B/*ZWSP*/ || ch == 0x2028/*LSEP*/ || ch == 0x2029/*PSEP*/)) ||
+            IsBidiControl(ch));
 }
 
 bool
@@ -5343,11 +5343,14 @@ gfxShapedText::SetGlyphs(uint32_t aIndex, CompressedGlyph aGlyph,
 
 #define ZWNJ 0x200C
 #define ZWJ  0x200D
+// U+061C ARABIC LETTER MARK is expected to be added to XIDMOD_DEFAULT_IGNORABLE
+// in a future Unicode update. Add it manually for now
+#define ALM  0x061C
 static inline bool
 IsDefaultIgnorable(uint32_t aChar)
 {
     return GetIdentifierModification(aChar) == XIDMOD_DEFAULT_IGNORABLE ||
-           aChar == ZWNJ || aChar == ZWJ;
+           aChar == ZWNJ || aChar == ZWJ || aChar == ALM;
 }
 
 void
