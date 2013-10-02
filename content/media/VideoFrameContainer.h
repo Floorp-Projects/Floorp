@@ -96,8 +96,6 @@ protected:
   // frame is fully invalidated instead of just invalidating for the image change
   // in the ImageLayer.
   bool mImageSizeChanged;
-
-  bool mNeedInvalidation;
 };
 
 }

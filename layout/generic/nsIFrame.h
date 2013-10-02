@@ -2316,9 +2316,15 @@ public:
    *
    * @param aDamageRect Area of the layer to invalidate.
    * @param aDisplayItemKey Display item type.
+   * @param aFlags UPDATE_IS_ASYNC : Will skip the invalidation
+   * if the found layer is being composited by a remote
+   * compositor.
    * @return Layer, if found, nullptr otherwise.
    */
-  Layer* InvalidateLayer(uint32_t aDisplayItemKey, const nsIntRect* aDamageRect = nullptr);
+  enum {
+    UPDATE_IS_ASYNC = 1 << 0
+  };
+  Layer* InvalidateLayer(uint32_t aDisplayItemKey, const nsIntRect* aDamageRect = nullptr, uint32_t aFlags = 0);
 
   /**
    * Returns a rect that encompasses everything that might be painted by
