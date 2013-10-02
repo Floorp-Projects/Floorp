@@ -98,9 +98,11 @@ gTests.push({
                                       "context-copy-link"]);
 
     promise = waitForEvent(document, "popuphidden");
-    ContextMenuUI.hide();
-    yield promise;
+    win.scrollBy(0, 1);
+    let hidden = yield promise;
+    ok(hidden && !(hidden instanceof Error), "scrolling hides the context menu");
     win.getSelection().removeAllRanges();
+    win.scrollBy(0, -1);
 
     ////////////////////////////////////////////////////////////
     // Context menu in content on a link
