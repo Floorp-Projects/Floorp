@@ -22,6 +22,7 @@ CPP_SOURCES += [
     'DocumentRendererChild.cpp',
     'DocumentRendererParent.cpp',
     'ImageData.cpp',
+    'ImageEncoder.cpp',
 ]
 
 if CONFIG['MOZ_WEBGL']:
