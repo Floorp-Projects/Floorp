@@ -215,6 +215,9 @@ pref("extensions.blocklist.detailsURL", "https://www.mozilla.org/%LOCALE%/blockl
 pref("dom.disable_open_during_load", true);
 pref("privacy.popups.showBrowserMessage", true);
 
+// Metro Firefox keeps this set to -1 when donottrackheader.enabled is false.
+pref("privacy.donottrackheader.value", -1);
+
 /* disable opening windows with the dialog feature */
 pref("dom.disable_window_open_dialog_feature", true);
 
