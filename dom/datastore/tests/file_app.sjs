@@ -2,9 +2,16 @@ var gBasePath = "tests/dom/datastore/tests/";
 var gAppTemplatePath = "tests/dom/datastore/tests/file_app.template.webapp";
 
 function handleRequest(request, response) {
+  var query = getQuery(request);
+
+  var testToken = '';
+  if ('testToken' in query) {
+    testToken = query.testToken;
+  }
+
   var template = gBasePath + 'file_app.template.webapp';
   response.setHeader("Content-Type", "application/x-web-app-manifest+json", false);
-  response.write(readTemplate(template));
+  response.write(readTemplate(template).replace(/TESTTOKEN/g, testToken));
 }
 
 // Copy-pasted incantations. There ought to be a better way to synchronously read
@@ -34,4 +41,13 @@ function readTemplate(path) {
   }
   cis.close();
   return data;
+}
+
+function getQuery(request) {
+  var query = {};
+  request.queryString.split('&').forEach(function (val) {
+    var [name, value] = val.split('=');
+    query[name] = unescape(value);
+  });
+  return query;
 }
