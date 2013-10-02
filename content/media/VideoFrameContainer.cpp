@@ -106,11 +106,11 @@ double VideoFrameContainer::GetFrameDelay()
   return mPaintDelay.ToSeconds();
 }
 
-void VideoFrameContainer::Invalidate()
+void VideoFrameContainer::InvalidateWithFlags(uint32_t aFlags)
 {
   NS_ASSERTION(NS_IsMainThread(), "Must call on main thread");
 
-  if (!mNeedInvalidation) {
+  if (!mNeedInvalidation && !(aFlags & INVALIDATE_FORCE)) {
     return;
   }
 
