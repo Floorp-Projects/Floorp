@@ -352,7 +352,7 @@ void ImageLayerD3D10::AllocateTexturesYCbCr(PlanarYCbCrImage *aImage)
   nsAutoPtr<PlanarYCbCrD3D10BackendData> backendData(
     new PlanarYCbCrD3D10BackendData);
 
-  const PlanarYCbCrImage::Data *data = aImage->GetData();
+  const PlanarYCbCrData *data = aImage->GetData();
 
   D3D10_SUBRESOURCE_DATA dataY;
   D3D10_SUBRESOURCE_DATA dataCb;

@@ -895,7 +895,7 @@ void MediaPipelineTransmit::PipelineListener::ProcessVideoChunk(
           static_cast<const layers::PlanarYCbCrImage *>(img));
     // Big-time assumption here that this is all contiguous data coming
     // from getUserMedia or other sources.
-    const layers::PlanarYCbCrImage::Data *data = yuv->GetData();
+    const layers::PlanarYCbCrData *data = yuv->GetData();
 
     uint8_t *y = data->mYChannel;
 #ifdef DEBUG
@@ -1145,7 +1145,7 @@ void MediaPipelineReceiveVideo::PipelineListener::RenderVideoFrame(
   const uint8_t lumaBpp = 8;
   const uint8_t chromaBpp = 4;
 
-  layers::PlanarYCbCrImage::Data data;
+  layers::PlanarYCbCrData data;
   data.mYChannel = frame;
   data.mYSize = gfxIntSize(width_, height_);
   data.mYStride = width_ * lumaBpp/ 8;
