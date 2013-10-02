@@ -63,11 +63,8 @@ interface HTMLTextAreaElement : HTMLElement {
            attribute unsigned long selectionEnd;
   [Throws]
            attribute DOMString selectionDirection;
-  [Throws]
-  void setRangeText(DOMString replacement);
-  [Throws]
-  void setRangeText(DOMString replacement, unsigned long start,
-    unsigned long end, optional SelectionMode selectionMode = "preserve");
+  // void setRangeText(DOMString replacement);
+  // void setRangeText(DOMString replacement, unsigned long start, unsigned long end, optional SelectionMode selectionMode);
   [Throws]
   void setSelectionRange(unsigned long start, unsigned long end, optional DOMString direction);
 };
