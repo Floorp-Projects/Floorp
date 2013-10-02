@@ -22,7 +22,7 @@ NS_IMPL_RELEASE_INHERITED(AudioProcessingEvent, nsDOMEvent)
 
 AudioProcessingEvent::AudioProcessingEvent(ScriptProcessorNode* aOwner,
                                            nsPresContext* aPresContext,
-                                           nsEvent* aEvent)
+                                           WidgetEvent* aEvent)
   : nsDOMEvent(aOwner, aPresContext, aEvent)
   , mPlaybackTime(0.0)
   , mNode(aOwner)

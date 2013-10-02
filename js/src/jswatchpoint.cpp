@@ -211,17 +211,17 @@ WatchpointMap::markAll(JSTracer *trc)
 {
     for (Map::Enum e(map); !e.empty(); e.popFront()) {
         Map::Entry &entry = e.front();
-        JSObject *priorKeyObj = entry.key.object;
-        jsid priorKeyId = entry.key.id;
-        JS_ASSERT(JSID_IS_STRING(priorKeyId) || JSID_IS_INT(priorKeyId));
+        WatchKey key = entry.key;
+        WatchKey prior = key;
+        JS_ASSERT(JSID_IS_STRING(prior.id) || JSID_IS_INT(prior.id));
 
-        MarkObject(trc, const_cast<EncapsulatedPtrObject *>(&entry.key.object),
+        MarkObject(trc, const_cast<EncapsulatedPtrObject *>(&key.object),
                    "held Watchpoint object");
-        MarkId(trc, const_cast<EncapsulatedId *>(&entry.key.id), "WatchKey::id");
+        MarkId(trc, const_cast<EncapsulatedId *>(&key.id), "WatchKey::id");
         MarkObject(trc, &entry.value.closure, "Watchpoint::closure");
 
-        if (priorKeyObj != entry.key.object || priorKeyId != entry.key.id)
-            e.rekeyFront(entry.key);
+        if (prior.object != key.object || prior.id != key.id)
+            e.rekeyFront(prior, key);
     }
 }
 

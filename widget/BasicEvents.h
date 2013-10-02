@@ -1022,8 +1022,4 @@ public:
 
 } // namespace mozilla
 
-// TODO: Remove following typedefs
-typedef mozilla::WidgetEvent      nsEvent;
-typedef mozilla::WidgetGUIEvent   nsGUIEvent;
-
 #endif // mozilla_BasicEvents_h__

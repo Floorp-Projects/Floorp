@@ -46,7 +46,7 @@ nsButtonBoxFrame::BuildDisplayListForChildren(nsDisplayListBuilder*   aBuilder,
 
 NS_IMETHODIMP
 nsButtonBoxFrame::HandleEvent(nsPresContext* aPresContext, 
-                              nsGUIEvent* aEvent,
+                              WidgetGUIEvent* aEvent,
                               nsEventStatus* aEventStatus)
 {
   NS_ENSURE_ARG_POINTER(aEventStatus);
@@ -116,7 +116,7 @@ nsButtonBoxFrame::HandleEvent(nsPresContext* aPresContext,
 }
 
 void 
-nsButtonBoxFrame::DoMouseClick(nsGUIEvent* aEvent, bool aTrustEvent) 
+nsButtonBoxFrame::DoMouseClick(WidgetGUIEvent* aEvent, bool aTrustEvent)
 {
   // Don't execute if we're disabled.
   if (mContent->AttrValueIs(kNameSpaceID_None, nsGkAtoms::disabled,

@@ -8,7 +8,10 @@
 namespace mozilla {
 namespace dom {
 
-SpeechRecognitionError::SpeechRecognitionError(mozilla::dom::EventTarget* aOwner, nsPresContext* aPresContext, nsEvent* aEvent)
+SpeechRecognitionError::SpeechRecognitionError(
+                          mozilla::dom::EventTarget* aOwner,
+                          nsPresContext* aPresContext,
+                          WidgetEvent* aEvent)
 : nsDOMEvent(aOwner, aPresContext, aEvent),
   mError()
 {}

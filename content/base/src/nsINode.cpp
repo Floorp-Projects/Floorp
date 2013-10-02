@@ -23,7 +23,6 @@
 #include "nsAttrValueOrString.h"
 #include "nsBindingManager.h"
 #include "nsCCUncollectableMarker.h"
-#include "nsClientRect.h"
 #include "nsContentCreatorFunctions.h"
 #include "nsContentList.h"
 #include "nsContentUtils.h"
@@ -1148,7 +1147,7 @@ nsINode::PostHandleEvent(nsEventChainPostVisitor& /*aVisitor*/)
 }
 
 nsresult
-nsINode::DispatchDOMEvent(nsEvent* aEvent,
+nsINode::DispatchDOMEvent(WidgetEvent* aEvent,
                           nsIDOMEvent* aDOMEvent,
                           nsPresContext* aPresContext,
                           nsEventStatus* aEventStatus)

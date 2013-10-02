@@ -1536,7 +1536,7 @@ ICTypeUpdate_PrimitiveSet::Compiler::generateStubCode(MacroAssembler &masm)
 
     // Type matches, load true into R1.scratchReg() and return.
     masm.bind(&success);
-    masm.mov(Imm32(1), R1.scratchReg());
+    masm.mov(ImmWord(1), R1.scratchReg());
     EmitReturnFromIC(masm);
 
     return true;
@@ -1554,7 +1554,7 @@ ICTypeUpdate_SingleObject::Compiler::generateStubCode(MacroAssembler &masm)
     masm.branchPtr(Assembler::NotEqual, expectedObject, obj, &failure);
 
     // Identity matches, load true into R1.scratchReg() and return.
-    masm.mov(Imm32(1), R1.scratchReg());
+    masm.mov(ImmWord(1), R1.scratchReg());
     EmitReturnFromIC(masm);
 
     masm.bind(&failure);
@@ -1576,7 +1576,7 @@ ICTypeUpdate_TypeObject::Compiler::generateStubCode(MacroAssembler &masm)
     masm.branchPtr(Assembler::NotEqual, expectedType, R1.scratchReg(), &failure);
 
     // Type matches, load true into R1.scratchReg() and return.
-    masm.mov(Imm32(1), R1.scratchReg());
+    masm.mov(ImmWord(1), R1.scratchReg());
     EmitReturnFromIC(masm);
 
     masm.bind(&failure);
@@ -4064,7 +4064,7 @@ ICGetElemNativeCompiler::emitCallScripted(MacroAssembler &masm, Register objReg)
 
         masm.movePtr(ImmGCPtr(argumentsRectifier), code);
         masm.loadPtr(Address(code, IonCode::offsetOfCode()), code);
-        masm.mov(Imm32(0), ArgumentsRectifierReg);
+        masm.mov(ImmWord(0), ArgumentsRectifierReg);
     }
 
     masm.bind(&noUnderflow);
@@ -6292,7 +6292,7 @@ ICGetProp_CallScripted::Compiler::generateStubCode(MacroAssembler &masm)
 
         masm.movePtr(ImmGCPtr(argumentsRectifier), code);
         masm.loadPtr(Address(code, IonCode::offsetOfCode()), code);
-        masm.mov(Imm32(0), ArgumentsRectifierReg);
+        masm.mov(ImmWord(0), ArgumentsRectifierReg);
     }
 
     masm.bind(&noUnderflow);
@@ -7199,7 +7199,7 @@ ICSetProp_CallScripted::Compiler::generateStubCode(MacroAssembler &masm)
 
         masm.movePtr(ImmGCPtr(argumentsRectifier), code);
         masm.loadPtr(Address(code, IonCode::offsetOfCode()), code);
-        masm.mov(Imm32(1), ArgumentsRectifierReg);
+        masm.mov(ImmWord(1), ArgumentsRectifierReg);
     }
 
     masm.bind(&noUnderflow);

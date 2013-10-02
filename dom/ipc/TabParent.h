@@ -100,7 +100,7 @@ public:
      * It's an error to call TryCapture() if this isn't the event
      * capturer.
      */
-    bool TryCapture(const nsGUIEvent& aEvent);
+    bool TryCapture(const WidgetGUIEvent& aEvent);
 
     void Destroy();
 
@@ -187,9 +187,9 @@ public:
     void Activate();
     void Deactivate();
 
-    bool MapEventCoordinatesForChildProcess(nsEvent* aEvent);
+    bool MapEventCoordinatesForChildProcess(mozilla::WidgetEvent* aEvent);
     void MapEventCoordinatesForChildProcess(const LayoutDeviceIntPoint& aOffset,
-                                                   nsEvent* aEvent);
+                                            mozilla::WidgetEvent* aEvent);
 
     void SendMouseEvent(const nsAString& aType, float aX, float aY,
                         int32_t aButton, int32_t aClickCount,
@@ -197,7 +197,7 @@ public:
     void SendKeyEvent(const nsAString& aType, int32_t aKeyCode,
                       int32_t aCharCode, int32_t aModifiers,
                       bool aPreventDefault);
-    bool SendRealMouseEvent(nsMouseEvent& event);
+    bool SendRealMouseEvent(mozilla::WidgetMouseEvent& event);
     bool SendMouseWheelEvent(mozilla::WheelEvent& event);
     bool SendRealKeyEvent(mozilla::WidgetKeyboardEvent& event);
     bool SendRealTouchEvent(WidgetTouchEvent& event);
