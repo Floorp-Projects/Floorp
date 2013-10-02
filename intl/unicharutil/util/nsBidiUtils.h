@@ -82,16 +82,28 @@ typedef enum nsCharType nsCharType;
 
   /**
    * Give a UTF-32 codepoint
-   * return true if the codepoint is a Bidi control character (LRE, RLE, PDF, LRO, RLO, LRM, RLM)
-   * return false, otherwise
+   * return true if the codepoint is a Bidi control character (LRM, RLM, ALM;
+   * LRE, RLE, PDF, LRO, RLO; LRI, RLI, FSI, PDI).
+   * Return false, otherwise
    */
-  bool IsBidiControl(uint32_t aChar);
+#define LRM_CHAR 0x200e
+#define LRE_CHAR 0x202a
+#define RLO_CHAR 0x202e
+#define LRI_CHAR 0x2066
+#define PDI_CHAR 0x2069
+#define ALM_CHAR 0x061C
+   inline bool IsBidiControl(uint32_t aChar) {
+     return ((LRE_CHAR <= aChar && aChar <= RLO_CHAR) ||
+             (LRI_CHAR <= aChar && aChar <= PDI_CHAR) ||
+             (aChar == ALM_CHAR) ||
+             (aChar & 0xfffffe) == LRM_CHAR);
+   }
 
   /**
    * Give an nsString.
    * @return true if the string contains right-to-left characters
    */
-  bool HasRTLChars(const nsAString& aString);
+   bool HasRTLChars(const nsAString& aString);
 
 // --------------------------------------------------
 // IBMBIDI 
@@ -202,8 +214,6 @@ typedef enum nsCharType nsCharType;
                               (c) >= 0x08a0 ) )
 #define IS_ARABIC_ALPHABETIC(c) (IS_ARABIC_CHAR(c) && \
                                 !(IS_HINDI_DIGIT(c) || IS_FARSI_DIGIT(c) || IS_ARABIC_SEPARATOR(c)))
-#define IS_BIDI_CONTROL_CHAR(c) (((0x202a <= (c)) && ((c) <= 0x202e)) \
-                                || ((c) == 0x200e) || ((c) == 0x200f))
 
 /**
  * The codepoint ranges in the following macros are based on the blocks
