@@ -2331,7 +2331,7 @@ nsListControlFrame::KeyPress(nsIDOMEvent* aKeyEvent)
     uint32_t index = (i + startIndex) % numOptions;
     nsRefPtr<dom::HTMLOptionElement> optionElement =
       options->ItemAsOption(index);
-    if (!optionElement) {
+    if (!optionElement || !optionElement->GetPrimaryFrame()) {
       continue;
     }
 
