@@ -515,9 +515,8 @@ WebGLContext::CopyTexImage2D(GLenum target,
 
     // check if the memory size of this texture may change with this call
     bool sizeMayChange = true;
-    size_t face = WebGLTexture::FaceForTarget(target);
-    if (tex->HasImageInfoAt(level, face)) {
-        const WebGLTexture::ImageInfo& imageInfo = tex->ImageInfoAt(level, face);
+    if (tex->HasImageInfoAt(target, level)) {
+        const WebGLTexture::ImageInfo& imageInfo = tex->ImageInfoAt(target, level);
 
         sizeMayChange = width != imageInfo.Width() ||
                         height != imageInfo.Height() ||
@@ -584,11 +583,10 @@ WebGLContext::CopyTexSubImage2D(GLenum target,
     if (!tex)
         return ErrorInvalidOperation("copyTexSubImage2D: no texture bound to this target");
 
-    GLint face = WebGLTexture::FaceForTarget(target);
-    if (!tex->HasImageInfoAt(level, face))
+    if (!tex->HasImageInfoAt(target, level))
         return ErrorInvalidOperation("copyTexSubImage2D: no texture image previously defined for this level and face");
 
-    const WebGLTexture::ImageInfo &imageInfo = tex->ImageInfoAt(level, face);
+    const WebGLTexture::ImageInfo &imageInfo = tex->ImageInfoAt(target, level);
     GLsizei texWidth = imageInfo.Width();
     GLsizei texHeight = imageInfo.Height();
 
@@ -1113,14 +1111,18 @@ WebGLContext::GenerateMipmap(GLenum target)
 
     if (!tex)
         return ErrorInvalidOperation("generateMipmap: No texture is bound to this target.");
-
-    if (!tex->HasImageInfoAt(0, 0))
+    
+    GLenum imageTarget = (target == LOCAL_GL_TEXTURE_2D) ? LOCAL_GL_TEXTURE_2D
+                                                         : LOCAL_GL_TEXTURE_CUBE_MAP_POSITIVE_X;
+    if (!tex->HasImageInfoAt(imageTarget, 0))
+    {
         return ErrorInvalidOperation("generateMipmap: Level zero of texture is not defined.");
-
+    }
+    
     if (!tex->IsFirstImagePowerOfTwo())
         return ErrorInvalidOperation("generateMipmap: Level zero of texture does not have power-of-two width and height.");
 
-    GLenum format = tex->ImageInfoAt(0, 0).Format();
+    GLenum format = tex->ImageInfoAt(imageTarget, 0).Format();
     if (IsTextureFormatCompressed(format))
         return ErrorInvalidOperation("generateMipmap: Texture data at level zero is compressed.");
 
@@ -1353,10 +1355,15 @@ WebGLContext::GetFramebufferAttachmentParameter(JSContext* cx,
             }
 
             case LOCAL_GL_FRAMEBUFFER_ATTACHMENT_TEXTURE_LEVEL:
-                return JS::Int32Value(fba.TextureLevel());
+                return JS::Int32Value(fba.TexImageLevel());
 
             case LOCAL_GL_FRAMEBUFFER_ATTACHMENT_TEXTURE_CUBE_MAP_FACE:
-                return JS::Int32Value(fba.TextureCubeMapFace());
+            {
+                GLenum face = fba.TexImageTarget();
+                if (face == LOCAL_GL_TEXTURE_2D)
+                    face = 0;
+                return JS::Int32Value(face);
+            }
 
             default:
                 ErrorInvalidEnumInfo("getFramebufferAttachmentParameter: pname", pname);
@@ -3344,14 +3351,12 @@ WebGLContext::CompressedTexSubImage2D(GLenum target, GLint level, GLint xoffset,
         return;
     }
 
-    size_t face = WebGLTexture::FaceForTarget(target);
-
-    if (!tex->HasImageInfoAt(level, face)) {
+    if (!tex->HasImageInfoAt(target, level)) {
         ErrorInvalidOperation("compressedTexSubImage2D: no texture image previously defined for this level and face");
         return;
     }
 
-    const WebGLTexture::ImageInfo &imageInfo = tex->ImageInfoAt(level, face);
+    const WebGLTexture::ImageInfo &imageInfo = tex->ImageInfoAt(target, level);
 
     if (!CanvasUtils::CheckSaneSubrectSize(xoffset, yoffset, width, height, imageInfo.Width(), imageInfo.Height())) {
         ErrorInvalidValue("compressedTexSubImage2D: subtexture rectangle out of bounds");
@@ -3587,10 +3592,9 @@ GLenum WebGLContext::CheckedTexImage2D(GLenum target,
     NS_ABORT_IF_FALSE(tex != nullptr, "no texture bound");
 
     bool sizeMayChange = true;
-    size_t face = WebGLTexture::FaceForTarget(target);
     
-    if (tex->HasImageInfoAt(level, face)) {
-        const WebGLTexture::ImageInfo& imageInfo = tex->ImageInfoAt(level, face);
+    if (tex->HasImageInfoAt(target, level)) {
+        const WebGLTexture::ImageInfo& imageInfo = tex->ImageInfoAt(target, level);
         sizeMayChange = width != imageInfo.Width() ||
                         height != imageInfo.Height() ||
                         format != imageInfo.Format() ||
@@ -3923,12 +3927,10 @@ WebGLContext::TexSubImage2D_base(GLenum target, GLint level,
     if (!tex)
         return ErrorInvalidOperation("texSubImage2D: no texture is bound to this target");
 
-    size_t face = WebGLTexture::FaceForTarget(target);
-    
-    if (!tex->HasImageInfoAt(level, face))
+    if (!tex->HasImageInfoAt(target, level))
         return ErrorInvalidOperation("texSubImage2D: no texture image previously defined for this level and face");
     
-    const WebGLTexture::ImageInfo &imageInfo = tex->ImageInfoAt(level, face);
+    const WebGLTexture::ImageInfo &imageInfo = tex->ImageInfoAt(target, level);
     if (!CanvasUtils::CheckSaneSubrectSize(xoffset, yoffset, width, height, imageInfo.Width(), imageInfo.Height()))
         return ErrorInvalidValue("texSubImage2D: subtexture rectangle out of bounds");
     
