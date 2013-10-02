@@ -98,12 +98,6 @@
     }, cbError);
   }
 
-  function testStoreGetLength(number) {
-    return gStore.getLength().then(function(n) {
-      is(number, n, "store.getLength() returns the right number");
-    }, cbError);
-  }
-
   function testStoreRemove(id) {
     return gStore.remove(id).then(function() {
       ok(true, "store.remove() is called");
@@ -154,9 +148,6 @@
     function() { testStoreUpdate(gId, "hello world 2").then(function() {
                    runTest(); }, cbError); },
     function() { testStoreGet(gId, "hello world 2"); },
-
-    // getLength
-    function() { testStoreGetLength(3).then(function() { runTest(); }, cbError); },
 
     // Broken remove
     function() { testStoreErrorRemove('hello world'); },
