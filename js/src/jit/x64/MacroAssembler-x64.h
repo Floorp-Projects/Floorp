@@ -909,7 +909,7 @@ class MacroAssemblerX64 : public MacroAssemblerX86Shared
         unboxArgObjMagic(Operand(src.valueReg()), dest);
     }
     void unboxArgObjMagic(const Operand &src, const Register &dest) {
-        xorq(dest, dest);
+        mov(ImmWord(0), dest);
     }
     void unboxArgObjMagic(const Address &src, const Register &dest) {
         unboxArgObjMagic(Operand(src), dest);

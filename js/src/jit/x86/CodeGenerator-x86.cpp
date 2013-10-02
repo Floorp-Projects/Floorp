@@ -539,7 +539,7 @@ CodeGeneratorX86::visitOutOfLineLoadTypedArrayOutOfBounds(OutOfLineLoadTypedArra
         masm.loadConstantDouble(GenericNaN(), ool->dest().fpu());
     } else {
         Register destReg = ool->dest().gpr();
-        masm.xorl(destReg, destReg);
+        masm.mov(ImmWord(0), destReg);
     }
     masm.jmp(ool->rejoin());
     return true;
