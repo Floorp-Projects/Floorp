@@ -14,9 +14,6 @@
 namespace mozilla {
 namespace dom {
 
-class TrackEvent;
-class TrackEventRunner;
-
 class TextTrackList MOZ_FINAL : public nsDOMEventTargetHelper
 {
 public:
@@ -53,10 +50,8 @@ public:
     mTextTracks.AppendElement(aTextTrack);
   }
 
-  void RemoveTextTrack(TextTrack& aTrack);
+  void RemoveTextTrack(const TextTrack& aTrack);
   void DidSeek();
-
-  nsresult DispatchTrackEvent(TrackEvent* aEvent);
 
   IMPL_EVENT_HANDLER(addtrack)
   IMPL_EVENT_HANDLER(removetrack)
@@ -64,9 +59,6 @@ public:
 private:
   nsCOMPtr<nsISupports> mGlobal;
   nsTArray< nsRefPtr<TextTrack> > mTextTracks;
-
-  void CreateAndDispatchTrackEventRunner(TextTrack* aTrack,
-                                         const nsAString& aEventName);
 };
 
 } // namespace dom
