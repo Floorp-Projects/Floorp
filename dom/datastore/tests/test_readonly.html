@@ -96,7 +96,9 @@
 
   SpecialPowers.Cu.import("resource://gre/modules/DataStoreChangeNotifier.jsm");
   SimpleTest.waitForExplicitFinish();
-  SpecialPowers.pushPrefEnv({"set": [["dom.promise.enabled", true]]}, runTest);
+  SpecialPowers.pushPrefEnv({"set": [["dom.promise.enabled", true]]}, function() {
+    SpecialPowers.pushPrefEnv({"set": [["dom.datastore.enabled", true]]}, runTest);
+  });
   </script>
 </body>
 </html>

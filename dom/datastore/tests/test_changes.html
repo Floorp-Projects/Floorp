@@ -123,6 +123,10 @@
       SpecialPowers.pushPrefEnv({"set": [["dom.promise.enabled", true]]}, runTest);
     },
 
+    function() {
+      SpecialPowers.pushPrefEnv({"set": [["dom.datastore.enabled", true]]}, runTest);
+    },
+
     // Enabling mozBrowser
     function() {
       SpecialPowers.pushPrefEnv({"set": [["dom.mozBrowserFramesEnabled", true]]}, runTest);
