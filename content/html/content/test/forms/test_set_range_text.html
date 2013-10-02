@@ -4,13 +4,14 @@
 https://bugzilla.mozilla.org/show_bug.cgi?id=850364
 -->
 <head>
-<title>Test for Bug 850364</title>
+<title>Test for Bug 850364 && Bug 918940</title>
 <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
 <script type="application/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
 <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
 </head>
 <body>
 <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=850364">Mozilla Bug 850364</a>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=850364">Mozilla Bug 918940</a>
 <p id="display"></p>
 <div id="content">
 
@@ -20,6 +21,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=850364
 <input type="url" id="input_url"></input>
 <input type="tel" id="input_tel"></input>
 <input type="password" id="input_password"></input>
+<textarea id="input_textarea"></textarea>
 
 <!-- "SetRangeText() non-supported types" -->
 <input type="button" id="input_button"></input>
@@ -31,14 +33,14 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=850364
 <input type="range" id="input_range"></input>
 <input type="file" id="input_file"></input>
 <input type="email" id="input_email"></input>
- 
+
 </div>
 <pre id="test">
 <script class="testbody" type="text/javascript">
 
-  /** Test for Bug 850364 **/
+  /** Tests for Bug 850364 && Bug 918940 **/
 
-  var SupportedTypes = ["text", "search", "url", "tel", "password"];
+  var SupportedTypes = ["text", "search", "url", "tel", "password", "textarea"];
   var NonSupportedTypes = ["button", "submit", "image", "reset", "radio",
                            "checkbox", "range", "file", "email"];
 
