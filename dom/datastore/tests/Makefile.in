@@ -29,6 +29,8 @@ MOCHITEST_FILES = \
   test_arrays.html \
   file_arrays.html \
   test_oop.html \
+  test_sync.html \
+  file_sync.html \
   $(NULL)
 
 include $(topsrcdir)/config/rules.mk
