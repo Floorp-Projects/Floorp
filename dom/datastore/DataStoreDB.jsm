@@ -59,6 +59,19 @@ DataStoreDB.prototype = {
     );
   },
 
+  cursorTxn: function(aCallback, aErrorCb) {
+    debug('Cursor transaction request');
+    this.newTxn(
+      'readonly',
+       [ DATASTOREDB_OBJECTSTORE_NAME, DATASTOREDB_REVISION ],
+      function(aTxn, aStores) {
+        aCallback(aTxn, aStores[0], aStores[1]);
+      },
+      function() {},
+      aErrorCb
+    );
+  },
+
   revisionTxn: function(aType, aCallback, aErrorCb) {
     debug("Transaction request");
     this.newTxn(

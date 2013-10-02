@@ -325,6 +325,8 @@ DataStoreService.prototype = {
       let obj = new DataStore(aWindow, aStores[i].name,
                               aStores[i].owner, aStores[i].readOnly);
       let exposedObj = aWindow.DataStore._create(aWindow, obj);
+      obj.exposedObject = exposedObj;
+
       results.push(exposedObj);
 
       obj.retrieveRevisionId(
