@@ -1,0 +1,46 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Test for DataStore - basic operation on a readonly db</title>
+</head>
+<body>
+<p id="display"></p>
+<div id="content" style="display: none">
+
+</div>
+<pre id="test">
+  <script type="application/javascript;version=1.7">
+
+  function is(a, b, msg) {
+    alert((a === b ? 'OK' : 'KO') + ' ' + msg)
+  }
+
+  function ok(a, msg) {
+    alert((a ? 'OK' : 'KO')+ ' ' + msg)
+  }
+
+  function cbError() {
+    alert('KO error');
+  }
+
+  function finish() {
+    alert('DONE');
+  }
+
+  function eventListener(obj) {
+    ok(obj, "OnChangeListener is called with data");
+    finish();
+  }
+
+  navigator.getDataStores('foo').then(function(stores) {
+    is(stores.length, 1, "getDataStores('foo') returns 1 element");
+    is(stores[0].name, 'foo', 'The dataStore.name is foo');
+
+    stores[0].onchange = eventListener;
+    alert('READY');
+  });
+  </script>
+</pre>
+</body>
+</html>
