@@ -2,6 +2,7 @@
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 
 MARIONETTE_TIMEOUT = 60000;
+MARIONETTE_HEAD_JS = 'head.js';
 
 SpecialPowers.addPermission("telephony", true, document);
 
@@ -10,13 +11,13 @@ let inNumber = "5555551111";
 let incomingCall;
 
 function getExistingCalls() {
-  runEmulatorCmd("gsm list", function(result) {
+  emulator.run("gsm list", function(result) {
     log("Initial call list: " + result);
     if (result[0] == "OK") {
       verifyInitialState(false);
     } else {
       cancelExistingCalls(result);
-    };
+    }
   });
 }
 
@@ -25,20 +26,20 @@ function cancelExistingCalls(callList) {
     // Existing calls remain; get rid of the next one in the list
     nextCall = callList.shift().split(/\s+/)[2].trim();
     log("Cancelling existing call '" + nextCall +"'");
-    runEmulatorCmd("gsm cancel " + nextCall, function(result) {
+    emulator.run("gsm cancel " + nextCall, function(result) {
       if (result[0] == "OK") {
         cancelExistingCalls(callList);
       } else {
         log("Failed to cancel existing call");
         cleanUp();
-      };
+      }
     });
   } else {
     // No more calls in the list; give time for emulator to catch up
     waitFor(verifyInitialState, function() {
-      return (telephony.calls.length == 0);
+      return (telephony.calls.length === 0);
     });
-  };
+  }
 }
 
 function verifyInitialState(confirmNoCalls = true) {
@@ -48,7 +49,7 @@ function verifyInitialState(confirmNoCalls = true) {
   ok(telephony.calls);
   is(telephony.calls.length, 0);
   if (confirmNoCalls) {
-    runEmulatorCmd("gsm list", function(result) {
+    emulator.run("gsm list", function(result) {
     log("Initial call list: " + result);
       is(result[0], "OK");
       if (result[0] == "OK") {
@@ -56,7 +57,7 @@ function verifyInitialState(confirmNoCalls = true) {
       } else {
         log("Call exists from a previous test, failing out.");
         cleanUp();
-      };
+      }
     });
   } else {
     simulateIncoming();
@@ -76,20 +77,20 @@ function simulateIncoming() {
     is(telephony.calls.length, 1);
     is(telephony.calls[0], incomingCall);
 
-    runEmulatorCmd("gsm list", function(result) {
+    emulator.run("gsm list", function(result) {
       log("Call list is now: " + result);
       is(result[0], "inbound from " + inNumber + " : incoming");
       is(result[1], "OK");
       answerIncoming();
     });
   };
-  runEmulatorCmd("gsm call " + inNumber);
+  emulator.run("gsm call " + inNumber);
 }
 
 function answerIncoming() {
   log("Answering the incoming call.");
 
-  incomingCall.onconnecting = function onconnecting(event) { 
+  incomingCall.onconnecting = function onconnecting(event) {
     log("Received 'connecting' call event.");
     is(incomingCall, event.call);
     is(incomingCall.state, "connecting");
@@ -112,7 +113,7 @@ function answerIncoming() {
     log("Received 'connected' call event.");
   };
   incomingCall.answer();
-};
+}
 
 function hangUp() {
   log("Hanging up the incoming call before fully connected.");
@@ -134,7 +135,7 @@ function hangUp() {
     is(telephony.active, null);
     is(telephony.calls.length, 0);
 
-    runEmulatorCmd("gsm list", function(result) {
+    emulator.run("gsm list", function(result) {
       log("Call list is now: " + result);
       is(result[0], "OK");
       cleanUp();
@@ -150,4 +151,6 @@ function cleanUp() {
 }
 
 // Start the test
-getExistingCalls();
+startTest(function() {
+  getExistingCalls();
+});

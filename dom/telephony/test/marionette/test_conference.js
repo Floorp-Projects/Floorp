@@ -2,6 +2,7 @@
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 
 MARIONETTE_TIMEOUT = 60000;
+MARIONETTE_HEAD_JS = 'head.js';
 
 SpecialPowers.addPermission("telephony", true, document);
 
@@ -15,24 +16,13 @@ let incomingCall;
 let incomingCall2;
 let gotOriginalConnected = false;
 
-let pendingEmulatorCmdCount = 0;
-function sendCmdToEmulator(cmd, callback) {
-  ++pendingEmulatorCmdCount;
-  runEmulatorCmd(cmd, function(result) {
-    --pendingEmulatorCmdCount;
-    if (callback) {
-      callback(result);
-    }
-  });
-}
-
 // Make sure there's no pending event before we jump to the next case.
 function receivedPending(received, pending, nextTest) {
   let index = pending.indexOf(received);
   if (index != -1) {
     pending.splice(index, 1);
   }
-  if (pending.length == 0) {
+  if (pending.length === 0) {
     nextTest();
   }
 }
@@ -58,7 +48,7 @@ function verifyInitialState() {
   ok(telephony);
   ok(conference);
 
-  sendCmdToEmulator("gsm clear", function(result) {
+  emulator.run("gsm clear", function(result) {
     log("Clear up calls from a previous test if any.");
     is(result[0], "OK");
 
@@ -67,7 +57,7 @@ function verifyInitialState() {
       checkState(null, [], '', []);
       dial();
     }, function isDone() {
-      return (telephony.calls.length == 0);
+      return (telephony.calls.length === 0);
     });
   });
 }
@@ -89,7 +79,7 @@ function dial() {
     is(outgoingCall, event.call);
     is(outgoingCall.state, "alerting");
 
-    sendCmdToEmulator("gsm list", function(result) {
+    emulator.run("gsm list", function(result) {
       log("Call list is now: " + result);
       is(result[0], "outbound to  " + outNumber + " : ringing");
       is(result[1], "OK");
@@ -112,7 +102,7 @@ function answer() {
     is(outgoingCall.state, "connected");
     is(outgoingCall, telephony.active);
 
-    sendCmdToEmulator("gsm list", function(result) {
+    emulator.run("gsm list", function(result) {
       log("Call list is now: " + result);
       is(result[0], "outbound to  " + outNumber + " : active");
       is(result[1], "OK");
@@ -127,7 +117,7 @@ function answer() {
       }
     });
   };
-  sendCmdToEmulator("gsm accept " + outNumber);
+  emulator.run("gsm accept " + outNumber);
 }
 
 // With one connected call already, simulate an incoming call.
@@ -147,7 +137,7 @@ function simulateIncoming() {
     // Should be two calls now.
     checkState(outgoingCall, [outgoingCall, incomingCall], '', []);
 
-    sendCmdToEmulator("gsm list", function(result) {
+    emulator.run("gsm list", function(result) {
       log("Call list is now: " + result);
       is(result[0], "outbound to  " + outNumber + " : active");
       is(result[1], "inbound from " + inNumber + " : incoming");
@@ -156,7 +146,7 @@ function simulateIncoming() {
       answerIncoming();
     });
   };
-  sendCmdToEmulator("gsm call " + inNumber);
+  emulator.run("gsm call " + inNumber);
 }
 
 // Answer incoming call; original outgoing call should be held.
@@ -186,7 +176,7 @@ function answerIncoming() {
     is(outgoingCall.state, "held");
     checkState(incomingCall, [outgoingCall, incomingCall], '', []);
 
-    sendCmdToEmulator("gsm list", function(result) {
+    emulator.run("gsm list", function(result) {
       log("Call list is now: " + result);
       is(result[0], "outbound to  " + outNumber + " : held");
       is(result[1], "inbound from " + inNumber + " : active");
@@ -218,7 +208,7 @@ function conferenceAddTwoCalls() {
     expected.splice(index, 1);
     is(conference.calls[conference.calls.length - 1].number, event.call.number);
 
-    if (expected.length == 0) {
+    if (expected.length === 0) {
       conference.oncallschanged = null;
       receivedPending("conference.oncallschanged", pending, nextTest);
     }
@@ -232,7 +222,7 @@ function conferenceAddTwoCalls() {
 
     checkState(conference, [], 'connected', [outgoingCall, incomingCall]);
 
-    sendCmdToEmulator("gsm list", function(result) {
+    emulator.run("gsm list", function(result) {
       log("Call list is now: " + result);
       is(result[0], "outbound to  " + outNumber + " : active");
       is(result[1], "inbound from " + inNumber + " : active");
@@ -309,7 +299,7 @@ function conferenceHold() {
     ok(!conference.onholding);
     checkState(null, [], 'held', [outgoingCall, incomingCall]);
 
-    sendCmdToEmulator("gsm list", function(result) {
+    emulator.run("gsm list", function(result) {
       log("Call list is now: " + result);
       is(result[0], "outbound to  " + outNumber + " : held");
       is(result[1], "inbound from " + inNumber + " : held");
@@ -384,7 +374,7 @@ function conferenceResume() {
     ok(!conference.onresuming);
     checkState(conference, [], 'connected', [outgoingCall, incomingCall]);
 
-    sendCmdToEmulator("gsm list", function(result) {
+    emulator.run("gsm list", function(result) {
       log("Call list is now: " + result);
       is(result[0], "outbound to  " + outNumber + " : active");
       is(result[1], "inbound from " + inNumber + " : active");
@@ -450,7 +440,7 @@ function simulate2ndIncoming() {
 
     checkState(conference, [incomingCall2], 'connected', [outgoingCall, incomingCall]);
 
-    sendCmdToEmulator("gsm list", function(result) {
+    emulator.run("gsm list", function(result) {
       log("Call list is now: " + result);
       is(result[0], "outbound to  " + outNumber + " : active");
       is(result[1], "inbound from " + inNumber + " : active");
@@ -460,7 +450,7 @@ function simulate2ndIncoming() {
       answer2ndIncoming();
     });
   };
-  sendCmdToEmulator("gsm call " + inNumber2);
+  emulator.run("gsm call " + inNumber2);
 }
 
 function answer2ndIncoming() {
@@ -485,7 +475,7 @@ function answer2ndIncoming() {
 
     is(incomingCall2, telephony.active);
 
-    sendCmdToEmulator("gsm list", function(result) {
+    emulator.run("gsm list", function(result) {
       log("Call list is now: " + result);
       is(result[0], "outbound to  " + outNumber + " : held");
       is(result[1], "inbound from " + inNumber + " : held");
@@ -528,7 +518,7 @@ function conferenceAddOneCall() {
     checkState(conference, [], 'connected',
                [outgoingCall, incomingCall, incomingCall2]);
 
-    sendCmdToEmulator("gsm list", function(result) {
+    emulator.run("gsm list", function(result) {
       log("Call list is now: " + result);
       is(result[0], "outbound to  " + outNumber + " : active");
       is(result[1], "inbound from " + inNumber + " : active");
@@ -615,7 +605,7 @@ function conferenceRemove() {
     checkState(callToRemove, [callToRemove], 'held',
                [incomingCall, incomingCall2]);
 
-    sendCmdToEmulator("gsm list", function(result) {
+    emulator.run("gsm list", function(result) {
       log("Call list is now: " + result);
       is(result[0], "outbound to  " + outNumber + " : active");
       is(result[1], "inbound from " + inNumber + " : held");
@@ -644,7 +634,7 @@ function emptyConference() {
 
     // We are going to release incomingCall. Once released, incomingCall2
     // is going to be moved out of the conference call automatically.
-    sendCmdToEmulator("gsm cancel " + inNumber);
+    emulator.run("gsm cancel " + inNumber);
   };
 
   let pending = ["conference.oncallschanged", "conference.onstatechange",
@@ -671,7 +661,7 @@ function emptyConference() {
     ok(index != -1);
     expected.splice(index, 1);
 
-    if (expected.length == 0) {
+    if (expected.length === 0) {
       conference.oncallschanged = null;
       is(conference.calls.length, 0);
       receivedPending("conference.oncallschanged", pending, nextTest);
@@ -688,7 +678,7 @@ function emptyConference() {
     receivedPending("conference.onstatechange", pending, nextTest);
   };
 
-  sendCmdToEmulator("gsm cancel " + outNumber);
+  emulator.run("gsm cancel " + outNumber);
 }
 
 function hangUpLastCall() {
@@ -699,7 +689,7 @@ function hangUpLastCall() {
 
     checkState(null, [], '', []);
 
-    sendCmdToEmulator("gsm list", function(result) {
+    emulator.run("gsm list", function(result) {
       log("Call list is now: " + result);
       is(result[0], "OK");
 
@@ -707,17 +697,15 @@ function hangUpLastCall() {
     });
   };
 
-  sendCmdToEmulator("gsm cancel " + inNumber2);
+  emulator.run("gsm cancel " + inNumber2);
 }
 
 function cleanUp() {
-  if (pendingEmulatorCmdCount) {
-    window.setTimeout(cleanUp, 100);
-    return;
-  }
   SpecialPowers.removePermission("telephony", document);
   finish();
 }
 
 // Start the test
-verifyInitialState();
+startTest(function() {
+  verifyInitialState();
+});
