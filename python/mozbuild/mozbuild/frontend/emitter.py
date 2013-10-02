@@ -335,6 +335,7 @@ class TreeMetadataEmitter(LoggingMixin):
         o.external_make_dirs = sandbox.get('EXTERNAL_MAKE_DIRS', [])
         o.parallel_external_make_dirs = sandbox.get('PARALLEL_EXTERNAL_MAKE_DIRS', [])
         o.is_tool_dir = sandbox.get('IS_TOOL_DIR', False)
+        o.affected_tiers = sandbox.get_affected_tiers()
 
         if 'TIERS' in sandbox:
             for tier in sandbox['TIERS']:
