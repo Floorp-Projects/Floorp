@@ -80,10 +80,6 @@
     },
 
     function() {
-      SpecialPowers.pushPrefEnv({"set": [["dom.datastore.enabled", true]]}, runTest);
-    },
-
-    function() {
       SpecialPowers.setBoolPref("dom.mozBrowserFramesEnabled", true);
       runTest();
     },
