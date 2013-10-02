@@ -21,5 +21,4 @@ EXTRA_COMPONENTS += [
 
 EXTRA_JS_MODULES += [
     'DataStore.jsm',
-    'DataStoreDB.jsm',
 ]
