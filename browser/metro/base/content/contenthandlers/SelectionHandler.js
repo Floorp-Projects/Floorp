@@ -427,32 +427,9 @@ var SelectionHandler = {
       return 0;
     }
 
-    // If the bottom of the target bounds is higher than the new height,
-    // there's no need to adjust. It will be above the keyboard.
-    if (this._cache.element.bottom <= aNewViewHeight) {
-      return 0;
-    }
-    
-    // height of the target element
-    let targetHeight = this._cache.element.bottom - this._cache.element.top;
-    // height of the browser view.
-    let viewBottom = content.innerHeight;
-
-    // If the target is shorter than the new content height, we can go ahead
-    // and center it.
-    if (targetHeight <= aNewViewHeight) {
-      // Try to center the element vertically in the new content area, but
-      // don't position such that the bottom of the browser view moves above
-      // the top of the chrome. We purposely do not resize the browser window
-      // by making it taller when trying to center elements that are near the
-      // lower bounds. This would trigger reflow which can cause content to
-      // shift around. 
-      let splitMargin = Math.round((aNewViewHeight - targetHeight) * .5);
-      let distanceToPageBounds = viewBottom - this._cache.element.bottom;
-      let distanceFromChromeTop = this._cache.element.bottom - aNewViewHeight;
-      let distanceToCenter =
-        distanceFromChromeTop + Math.min(distanceToPageBounds, splitMargin);
-      return distanceToCenter;
+    let position = Util.centerElementInView(aNewViewHeight, this._cache.element);
+    if (position !== undefined) {
+      return position;
     }
 
     // Special case: we are dealing with an input that is taller than the
