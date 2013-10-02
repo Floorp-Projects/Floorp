@@ -92,7 +92,7 @@ GARBAGE_DIRS += subtiers
 # current tier.
 # root.mk defines subtier_of_* variables, that map a normalized subdir path to
 # a subtier name (e.g. subtier_of_memory_jemalloc = base)
-$(addsuffix /$(CURRENT_TIER),$(CURRENT_DIRS)): %/$(CURRENT_TIER): $(if $(WANT_STAMPS),%/Makefile %/backend.mk)
+$(addsuffix /$(CURRENT_TIER),$(CURRENT_DIRS)): %/$(CURRENT_TIER):
 ifdef BUG_915535_FIXED
 	$(call BUILDSTATUS,TIERDIR_START $(CURRENT_TIER) $(subtier_of_$(subst /,_,$*)) $*)
 endif
@@ -127,7 +127,7 @@ recurse_$(CURRENT_TIER):
 
 # Creating binaries-deps.mk directly would make us build it twice: once when beginning
 # the build because of the include, and once at the end because of the stamps.
-binaries-deps: $(wildcard $(addsuffix /binaries,$(CURRENT_DIRS)))
+binaries-deps: $(addsuffix /binaries,$(CURRENT_DIRS))
 	@$(call py_action,link_deps,-o $@.mk --group-by-depfile --topsrcdir $(topsrcdir) --topobjdir $(DEPTH) --dist $(DIST) --guard $(addprefix ",$(addsuffix ",$^)))
 	@$(TOUCH) $@
 
@@ -193,3 +193,27 @@ endif # ifdef TIERS
 endif # ifeq ($(EXTERNALLY_MANAGED_MAKE_FILE)_$(NO_RECURSE_MAKELEVEL),_$(MAKELEVEL))
 
 endif # ifeq (1_.,$(MOZ_PSEUDO_DERECURSE)_$(DEPTH))
+
+ifdef MOZ_PSEUDO_DERECURSE
+ifdef EXTERNALLY_MANAGED_MAKE_FILE
+# gyp-managed directories
+recurse_targets := $(addsuffix /binaries,$(DIRS) $(PARALLEL_DIRS))
+else
+ifeq (.,$(DEPTH))
+# top-level directories
+recurse_targets := $(addsuffix /binaries,$(binaries_dirs))
+ifdef recurse_targets
+# only js/src has binaries_dirs, and we want to adjust paths for it.
+want_abspaths = 1
+endif
+endif
+endif
+
+binaries libs:: $(TARGETS) $(BINARIES_PP)
+# Aggregate all dependency files relevant to a binaries build except in
+# the mozilla top-level directory.
+ifneq (_.,$(recurse_targets)_$(DEPTH))
+	@$(if $(or $(recurse_targets),$^),$(call py_action,link_deps,-o binaries --group-all $(if $(want_abspaths),--abspaths )--topsrcdir $(topsrcdir) --topobjdir $(DEPTH) --dist $(DIST) $(BINARIES_PP) $(wildcard $(addsuffix .pp,$(addprefix $(MDDEPDIR)/,$(notdir $(sort $(filter-out $(BINARIES_PP),$^) $(OBJ_TARGETS)))))) $(recurse_targets)))
+endif
+
+endif # ifdef MOZ_PSEUDO_DERECURSE
