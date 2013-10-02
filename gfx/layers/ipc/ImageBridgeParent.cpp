@@ -22,6 +22,7 @@
 #include "mozilla/layers/LayersSurfaces.h"  // for PGrallocBufferParent
 #include "mozilla/layers/PCompositableParent.h"
 #include "mozilla/layers/PImageBridgeParent.h"
+#include "mozilla/layers/Compositor.h"
 #include "mozilla/mozalloc.h"           // for operator new, etc
 #include "nsAutoPtr.h"                  // for nsRefPtr
 #include "nsDebug.h"                    // for NS_RUNTIMEABORT, etc
@@ -66,6 +67,12 @@ ImageBridgeParent::ActorDestroy(ActorDestroyReason aWhy)
 bool
 ImageBridgeParent::RecvUpdate(const EditArray& aEdits, EditReplyArray* aReply)
 {
+  // If we don't actually have a compositor, then don't bother
+  // creating any textures.
+  if (Compositor::GetBackend() == LAYERS_NONE) {
+    return true;
+  }
+
   EditReplyVector replyv;
   for (EditArray::index_type i = 0; i < aEdits.Length(); ++i) {
     ReceiveCompositableUpdate(aEdits[i], replyv);
