@@ -42,11 +42,11 @@ CanvasClient::CreateCanvasClient(CanvasClientType aType,
 {
   if (aType == CanvasClientGLContext &&
       aForwarder->GetCompositorBackendType() == LAYERS_OPENGL) {
-    aFlags &= ~TEXTURE_DEALLOCATE_HOST;
+    aFlags |= TEXTURE_DEALLOCATE_CLIENT;
     return new DeprecatedCanvasClientSurfaceStream(aForwarder, aFlags);
   }
   if (gfxPlatform::GetPlatform()->UseDeprecatedTextures()) {
-    aFlags &= ~TEXTURE_DEALLOCATE_HOST;
+    aFlags |= TEXTURE_DEALLOCATE_CLIENT;
     return new DeprecatedCanvasClient2D(aForwarder, aFlags);
   }
   return new CanvasClient2D(aForwarder, aFlags);
