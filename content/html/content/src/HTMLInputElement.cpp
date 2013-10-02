@@ -3116,7 +3116,7 @@ HTMLInputElement::PreHandleEvent(nsEventChainPreVisitor& aVisitor)
 }
 
 void
-HTMLInputElement::StartRangeThumbDrag(nsGUIEvent* aEvent)
+HTMLInputElement::StartRangeThumbDrag(WidgetGUIEvent* aEvent)
 {
   mIsDraggingRange = true;
   mRangeThumbDragStartValue = GetValueAsDecimal();
@@ -3127,7 +3127,7 @@ HTMLInputElement::StartRangeThumbDrag(nsGUIEvent* aEvent)
 }
 
 void
-HTMLInputElement::FinishRangeThumbDrag(nsGUIEvent* aEvent)
+HTMLInputElement::FinishRangeThumbDrag(WidgetGUIEvent* aEvent)
 {
   MOZ_ASSERT(mIsDraggingRange);
 

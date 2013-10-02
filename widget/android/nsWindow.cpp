@@ -664,7 +664,7 @@ nsWindow::WidgetToScreenOffset()
 }
 
 NS_IMETHODIMP
-nsWindow::DispatchEvent(nsGUIEvent *aEvent,
+nsWindow::DispatchEvent(WidgetGUIEvent* aEvent,
                         nsEventStatus &aStatus)
 {
     aStatus = DispatchEvent(aEvent);
@@ -672,7 +672,7 @@ nsWindow::DispatchEvent(nsGUIEvent *aEvent,
 }
 
 nsEventStatus
-nsWindow::DispatchEvent(nsGUIEvent *aEvent)
+nsWindow::DispatchEvent(WidgetGUIEvent* aEvent)
 {
     if (mWidgetListener) {
         nsEventStatus status = mWidgetListener->HandleEvent(aEvent, mUseAttachedEvents);
@@ -1128,7 +1128,7 @@ nsWindow::OnSizeChanged(const gfxIntSize& aSize)
 }
 
 void
-nsWindow::InitEvent(nsGUIEvent& event, nsIntPoint* aPoint)
+nsWindow::InitEvent(WidgetGUIEvent& event, nsIntPoint* aPoint)
 {
     if (aPoint) {
         event.refPoint.x = aPoint->x;

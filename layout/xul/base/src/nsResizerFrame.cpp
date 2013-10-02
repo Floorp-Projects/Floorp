@@ -51,7 +51,7 @@ nsResizerFrame::nsResizerFrame(nsIPresShell* aPresShell, nsStyleContext* aContex
 
 NS_IMETHODIMP
 nsResizerFrame::HandleEvent(nsPresContext* aPresContext,
-                            nsGUIEvent* aEvent,
+                            WidgetGUIEvent* aEvent,
                             nsEventStatus* aEventStatus)
 {
   NS_ENSURE_ARG_POINTER(aEventStatus);
@@ -540,7 +540,8 @@ nsResizerFrame::GetDirection()
 }
 
 void
-nsResizerFrame::MouseClicked(nsPresContext* aPresContext, nsGUIEvent *aEvent)
+nsResizerFrame::MouseClicked(nsPresContext* aPresContext,
+                             WidgetGUIEvent *aEvent)
 {
   // Execute the oncommand event handler.
   nsContentUtils::DispatchXULCommand(mContent,

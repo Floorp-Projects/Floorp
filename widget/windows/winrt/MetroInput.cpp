@@ -187,14 +187,14 @@ namespace {
   class AutoDeleteEvent
   {
   public:
-    AutoDeleteEvent(nsGUIEvent* aPtr) :
+    AutoDeleteEvent(WidgetGUIEvent* aPtr) :
       mPtr(aPtr) {}
     ~AutoDeleteEvent() {
       if (mPtr) {
         delete mPtr;
       }
     }
-    nsGUIEvent* mPtr;
+    WidgetGUIEvent* mPtr;
   };
 }
 
@@ -1141,7 +1141,8 @@ MetroInput::DispatchAsyncEventIgnoreStatus(WidgetInputEvent* aEvent)
 void
 MetroInput::DeliverNextQueuedEventIgnoreStatus()
 {
-  nsGUIEvent* event = static_cast<nsGUIEvent*>(mInputEventQueue.PopFront());
+  WidgetGUIEvent* event =
+    static_cast<WidgetGUIEvent*>(mInputEventQueue.PopFront());
   MOZ_ASSERT(event);
   DispatchEventIgnoreStatus(event);
   delete event;
@@ -1257,7 +1258,8 @@ MetroInput::DispatchAsyncTouchEventWithCallback(WidgetTouchEvent* aEvent,
 }
 
 void
-MetroInput::DispatchEventIgnoreStatus(nsGUIEvent *aEvent) {
+MetroInput::DispatchEventIgnoreStatus(WidgetGUIEvent *aEvent)
+{
   mWidget->DispatchEvent(aEvent, sThrowawayStatus);
 }
 

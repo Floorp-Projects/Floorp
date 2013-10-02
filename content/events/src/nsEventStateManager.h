@@ -111,7 +111,7 @@ public:
    */
   bool SetContentState(nsIContent *aContent, nsEventStates aState);
   void ContentRemoved(nsIDocument* aDocument, nsIContent* aContent);
-  bool EventStatusOK(nsGUIEvent* aEvent);
+  bool EventStatusOK(mozilla::WidgetGUIEvent* aEvent);
 
   /**
    * Register accesskey on the given element. When accesskey is activated then
@@ -250,19 +250,20 @@ protected:
    * content.  This returns the primary frame for the content (or null
    * if it goes away during the event).
    */
-  nsIFrame* DispatchMouseEvent(nsGUIEvent* aEvent, uint32_t aMessage,
+  nsIFrame* DispatchMouseEvent(mozilla::WidgetGUIEvent* aEvent,
+                               uint32_t aMessage,
                                nsIContent* aTargetContent,
                                nsIContent* aRelatedContent);
   /**
    * Synthesize DOM and frame mouseover and mouseout events from this
    * MOUSE_MOVE or MOUSE_EXIT event.
    */
-  void GenerateMouseEnterExit(nsGUIEvent* aEvent);
+  void GenerateMouseEnterExit(mozilla::WidgetGUIEvent* aEvent);
   /**
    * Tell this ESM and ESMs in parent documents that the mouse is
    * over some content in this document.
    */
-  void NotifyMouseOver(nsGUIEvent* aEvent, nsIContent* aContent);
+  void NotifyMouseOver(mozilla::WidgetGUIEvent* aEvent, nsIContent* aContent);
   /**
    * Tell this ESM and ESMs in affected child documents that the mouse
    * has exited this document's currently hovered content.
@@ -272,8 +273,9 @@ protected:
    *        NotifyMouseOut will NOT change the current hover content to null;
    *        in that case the caller is responsible for updating hover state.
    */
-  void NotifyMouseOut(nsGUIEvent* aEvent, nsIContent* aMovingInto);
-  void GenerateDragDropEnterExit(nsPresContext* aPresContext, nsGUIEvent* aEvent);
+  void NotifyMouseOut(mozilla::WidgetGUIEvent* aEvent, nsIContent* aMovingInto);
+  void GenerateDragDropEnterExit(nsPresContext* aPresContext,
+                                 mozilla::WidgetGUIEvent* aEvent);
   /**
    * Fire the dragenter and dragexit/dragleave events when the mouse moves to a
    * new target.
@@ -283,7 +285,7 @@ protected:
    * @param aTargetFrame target frame for the event
    */
   void FireDragEnterOrExit(nsPresContext* aPresContext,
-                           nsGUIEvent* aEvent,
+                           mozilla::WidgetGUIEvent* aEvent,
                            uint32_t aMsg,
                            nsIContent* aRelatedTarget,
                            nsIContent* aTargetContent,
@@ -713,7 +715,7 @@ protected:
 
   bool RemoteQueryContentEvent(nsEvent *aEvent);
   mozilla::dom::TabParent *GetCrossProcessTarget();
-  bool IsTargetCrossProcess(nsGUIEvent *aEvent);
+  bool IsTargetCrossProcess(mozilla::WidgetGUIEvent* aEvent);
 
   bool DispatchCrossProcessEvent(nsEvent* aEvent, nsFrameLoader* remote,
                                  nsEventStatus *aStatus);
@@ -814,10 +816,11 @@ public:
 
   // Functions used for click hold context menus
   nsCOMPtr<nsITimer> mClickHoldTimer;
-  void CreateClickHoldTimer ( nsPresContext* aPresContext, nsIFrame* inDownFrame,
-                              nsGUIEvent* inMouseDownEvent ) ;
-  void KillClickHoldTimer ( ) ;
-  void FireContextClick ( ) ;
+  void CreateClickHoldTimer(nsPresContext* aPresContext,
+                            nsIFrame* aDownFrame,
+                            mozilla::WidgetGUIEvent* aMouseDownEvent);
+  void KillClickHoldTimer();
+  void FireContextClick();
 
   void SetPointerLock(nsIWidget* aWidget, nsIContent* aElement) ;
   static void sClickHoldCallback ( nsITimer* aTimer, void* aESM ) ;

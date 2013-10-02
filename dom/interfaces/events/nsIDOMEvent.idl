@@ -237,7 +237,7 @@ nsresult
 NS_NewDOMUIEvent(nsIDOMEvent** aInstancePtrResult,
                  mozilla::dom::EventTarget* aOwner,
                  nsPresContext* aPresContext,
-                 nsGUIEvent* aEvent);
+                 mozilla::WidgetGUIEvent* aEvent);
 nsresult
 NS_NewDOMMouseEvent(nsIDOMEvent** aInstancePtrResult,
                     mozilla::dom::EventTarget* aOwner,
@@ -308,7 +308,7 @@ nsresult
 NS_NewDOMSVGZoomEvent(nsIDOMEvent** aResult,
                       mozilla::dom::EventTarget* aOwner,
                       nsPresContext* aPresContext,
-                      nsGUIEvent* aEvent);
+                      mozilla::WidgetGUIEvent* aEvent);
 nsresult
 NS_NewDOMTimeEvent(nsIDOMEvent** aResult,
                    mozilla::dom::EventTarget* aOwner,

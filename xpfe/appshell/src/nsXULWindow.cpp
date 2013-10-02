@@ -1845,7 +1845,7 @@ bool nsXULWindow::ConstrainToZLevel(bool        aImmediate,
   altered = false;
   mediator->GetZLevel(this, &zLevel);
 
-  // translate from nsGUIEvent to nsIWindowMediator constants
+  // translate from WidgetGUIEvent to nsIWindowMediator constants
   position = nsIWindowMediator::zLevelTop;
   if (*aPlacement == nsWindowZBottom || zLevel == nsIXULWindow::lowestZ)
     position = nsIWindowMediator::zLevelBottom;

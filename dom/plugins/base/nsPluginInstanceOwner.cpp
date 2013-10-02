@@ -114,7 +114,7 @@ public:
 
   void Destroy(nsIContent* aContent);
 
-  nsEventStatus ProcessEvent(const nsGUIEvent& anEvent)
+  nsEventStatus ProcessEvent(const WidgetGUIEvent& anEvent)
   {
     return nsEventStatus_eConsumeNoDefault;
   }
@@ -1790,8 +1790,8 @@ nsresult nsPluginInstanceOwner::DispatchFocusToPlugin(nsIDOMEvent* aFocusEvent)
   nsEvent* theEvent = aFocusEvent->GetInternalNSEvent();
   if (theEvent) {
     // we only care about the message in ProcessEvent
-    nsGUIEvent focusEvent(theEvent->mFlags.mIsTrusted, theEvent->message,
-                          nullptr);
+    WidgetGUIEvent focusEvent(theEvent->mFlags.mIsTrusted, theEvent->message,
+                              nullptr);
     nsEventStatus rv = ProcessEvent(focusEvent);
     if (nsEventStatus_eConsumeNoDefault == rv) {
       aFocusEvent->PreventDefault();
@@ -1831,7 +1831,7 @@ nsresult nsPluginInstanceOwner::DispatchKeyToPlugin(nsIDOMEvent* aKeyEvent)
   if (mInstance) {
     nsEvent *event = aKeyEvent->GetInternalNSEvent();
     if (event && event->eventStructType == NS_KEY_EVENT) {
-      nsEventStatus rv = ProcessEvent(*static_cast<nsGUIEvent*>(event));
+      nsEventStatus rv = ProcessEvent(*static_cast<WidgetGUIEvent*>(event));
       if (nsEventStatus_eConsumeNoDefault == rv) {
         aKeyEvent->PreventDefault();
         aKeyEvent->StopPropagation();
@@ -1866,7 +1866,7 @@ nsPluginInstanceOwner::ProcessMouseDown(nsIDOMEvent* aMouseEvent)
   nsEvent* event = aMouseEvent->GetInternalNSEvent();
   if (event && event->eventStructType == NS_MOUSE_EVENT) {
     mLastMouseDownButtonType = static_cast<nsMouseEvent*>(event)->button;
-    nsEventStatus rv = ProcessEvent(*static_cast<nsGUIEvent*>(event));
+    nsEventStatus rv = ProcessEvent(*static_cast<WidgetGUIEvent*>(event));
     if (nsEventStatus_eConsumeNoDefault == rv) {
       return aMouseEvent->PreventDefault(); // consume event
     }
@@ -1888,7 +1888,7 @@ nsresult nsPluginInstanceOwner::DispatchMouseToPlugin(nsIDOMEvent* aMouseEvent)
 
   nsEvent* event = aMouseEvent->GetInternalNSEvent();
   if (event && event->eventStructType == NS_MOUSE_EVENT) {
-    nsEventStatus rv = ProcessEvent(*static_cast<nsGUIEvent*>(event));
+    nsEventStatus rv = ProcessEvent(*static_cast<WidgetGUIEvent*>(event));
     if (nsEventStatus_eConsumeNoDefault == rv) {
       aMouseEvent->PreventDefault();
       aMouseEvent->StopPropagation();
@@ -1974,7 +1974,7 @@ static unsigned int XInputEventState(const WidgetInputEvent& anEvent)
 }
 #endif
 
-nsEventStatus nsPluginInstanceOwner::ProcessEvent(const nsGUIEvent& anEvent)
+nsEventStatus nsPluginInstanceOwner::ProcessEvent(const WidgetGUIEvent& anEvent)
 {
   nsEventStatus rv = nsEventStatus_eIgnore;
 

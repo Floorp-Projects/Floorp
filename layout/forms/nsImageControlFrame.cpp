@@ -43,8 +43,8 @@ public:
                     const nsHTMLReflowState& aReflowState,
                     nsReflowStatus&          aStatus);
 
-  NS_IMETHOD HandleEvent(nsPresContext* aPresContext, 
-                         nsGUIEvent* aEvent,
+  NS_IMETHOD HandleEvent(nsPresContext* aPresContext,
+                         WidgetGUIEvent* aEvent,
                          nsEventStatus* aEventStatus);
 
   virtual nsIAtom* GetType() const;
@@ -147,8 +147,8 @@ nsImageControlFrame::Reflow(nsPresContext*         aPresContext,
 }
 
 NS_METHOD 
-nsImageControlFrame::HandleEvent(nsPresContext* aPresContext, 
-                                 nsGUIEvent* aEvent,
+nsImageControlFrame::HandleEvent(nsPresContext* aPresContext,
+                                 WidgetGUIEvent* aEvent,
                                  nsEventStatus* aEventStatus)
 {
   NS_ENSURE_ARG_POINTER(aEventStatus);

@@ -4175,7 +4175,7 @@ TextInputHandlerBase::OnDestroyWidget(nsChildView* aDestroyingWidget)
 }
 
 bool
-TextInputHandlerBase::DispatchEvent(nsGUIEvent& aEvent)
+TextInputHandlerBase::DispatchEvent(WidgetGUIEvent& aEvent)
 {
   if (aEvent.message == NS_KEY_PRESS) {
     WidgetInputEvent& inputEvent = static_cast<WidgetInputEvent&>(aEvent);

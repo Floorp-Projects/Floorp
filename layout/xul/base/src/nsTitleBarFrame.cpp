@@ -57,8 +57,8 @@ nsTitleBarFrame::BuildDisplayListForChildren(nsDisplayListBuilder*   aBuilder,
 
 NS_IMETHODIMP
 nsTitleBarFrame::HandleEvent(nsPresContext* aPresContext,
-                                      nsGUIEvent* aEvent,
-                                      nsEventStatus* aEventStatus)
+                             WidgetGUIEvent* aEvent,
+                             nsEventStatus* aEventStatus)
 {
   NS_ENSURE_ARG_POINTER(aEventStatus);
   if (nsEventStatus_eConsumeNoDefault == *aEventStatus) {
@@ -170,7 +170,8 @@ nsTitleBarFrame::HandleEvent(nsPresContext* aPresContext,
 }
 
 void
-nsTitleBarFrame::MouseClicked(nsPresContext* aPresContext, nsGUIEvent* aEvent)
+nsTitleBarFrame::MouseClicked(nsPresContext* aPresContext,
+                              WidgetGUIEvent* aEvent)
 {
   // Execute the oncommand event handler.
   nsContentUtils::DispatchXULCommand(mContent,
