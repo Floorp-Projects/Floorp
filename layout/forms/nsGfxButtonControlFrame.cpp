@@ -165,10 +165,10 @@ nsGfxButtonControlFrame::GetLabel(nsXPIDLString& aLabel)
     // fixed width for the button we run into trouble because our focus-rect
     // border/padding and outer border take up 10px of the horizontal button
     // space or so; the result is that the text is misaligned, even with the
-    // recentering we do in nsHTMLButtonFrame::Reflow.  So to solve this, even
-    // if the whitespace is significant, single leading and trailing _spaces_
-    // (and not other whitespace) are removed.  The proper solution, of
-    // course, is to not have the focus rect painting taking up 6px of
+    // recentering we do in nsHTMLButtonControlFrame::Reflow.  So to solve
+    // this, even if the whitespace is significant, single leading and trailing
+    // _spaces_ (and not other whitespace) are removed.  The proper solution,
+    // of course, is to not have the focus rect painting taking up 6px of
     // horizontal space. We should do that instead (via XBL form controls or
     // changing the renderer) and remove this.
     aLabel.Cut(0, 1);
