@@ -3392,7 +3392,7 @@ nsTreeBodyFrame::PaintTwisty(int32_t              aRowIndex,
           
         // Paint the image.
         nsLayoutUtils::DrawSingleUnscaledImage(&aRenderingContext, image,
-            gfxPattern::FILTER_NEAREST, pt, &aDirtyRect,
+            GraphicsFilter::FILTER_NEAREST, pt, &aDirtyRect,
             imgIContainer::FLAG_NONE, &imageSize);
       }
     }
@@ -3715,7 +3715,7 @@ nsTreeBodyFrame::PaintCheckbox(int32_t              aRowIndex,
 
     // Paint the image.
     nsLayoutUtils::DrawSingleUnscaledImage(&aRenderingContext, image,
-        gfxPattern::FILTER_NEAREST, pt, &aDirtyRect,
+        GraphicsFilter::FILTER_NEAREST, pt, &aDirtyRect,
         imgIContainer::FLAG_NONE, &imageSize);
   }
 }

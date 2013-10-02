@@ -710,6 +710,9 @@ protected:
   virtual void ThemeChanged() MOZ_OVERRIDE { mPresContext->ThemeChanged(); }
   virtual void BackingScaleFactorChanged() MOZ_OVERRIDE { mPresContext->UIResolutionChanged(); }
 
+  virtual void FreezePainting() MOZ_OVERRIDE;
+  virtual void ThawPainting() MOZ_OVERRIDE;
+
   void UpdateImageVisibility();
 
   nsRevocableEventPtr<nsRunnableMethod<PresShell> > mUpdateImageVisibilityEvent;

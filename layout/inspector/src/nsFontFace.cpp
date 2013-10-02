@@ -5,6 +5,7 @@
 #include "nsFontFace.h"
 #include "nsIDOMCSSFontFaceRule.h"
 #include "nsCSSRules.h"
+#include "gfxFont.h"
 #include "gfxUserFontSet.h"
 #include "nsFontFaceLoader.h"
 #include "zlib.h"

@@ -140,8 +140,13 @@ interface nsIContentPolicy : nsISupports
    */
   const nsContentPolicyType TYPE_CSP_REPORT = 17;
 
+  /**
+   * Indicates a style sheet transformation.
+   */
+  const nsContentPolicyType TYPE_XSLT = 18;
+
   /* When adding new content types, please update nsContentBlocker,
-   * NS_CP_ContentTypeName, contentScurityPolicy.js, all nsIContentPolicy
+   * NS_CP_ContentTypeName, contentSecurityPolicy.js, all nsIContentPolicy
    * implementations, and other things that are not listed here that are
    * related to nsIContentPolicy. */
 

@@ -318,7 +318,7 @@ ThebesLayerBufferOGL::RenderTo(const nsIntPoint& aOffset,
               gfxMatrix matrix;
               bool is2D = mLayer->GetEffectiveTransform().Is2D(&matrix);
               if (is2D && !matrix.HasNonTranslationOrFlip()) {
-                gl()->ApplyFilterToBoundTexture(gfxPattern::FILTER_NEAREST);
+                gl()->ApplyFilterToBoundTexture(GraphicsFilter::FILTER_NEAREST);
               } else {
                 mTexImage->ApplyFilter();
               }
