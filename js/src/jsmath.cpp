@@ -1273,74 +1273,41 @@ js::math_atanh(JSContext *cx, unsigned argc, Value *vp)
     return math_function<math_atanh_impl>(cx, argc, vp);
 }
 
-// Math.hypot is disabled pending the resolution of spec issues (bug 896264).
-#if 0
-#if !HAVE_HYPOT
-double hypot(double x, double y)
-{
-    if (mozilla::IsInfinite(x) || mozilla::IsInfinite(y))
-        return PositiveInfinity();
-
-    if (mozilla::IsNaN(x) || mozilla::IsNaN(y))
-        return GenericNaN();
-
-    double xabs = mozilla::Abs(x);
-    double yabs = mozilla::Abs(y);
-
-    double min = std::min(xabs, yabs);
-    double max = std::max(xabs, yabs);
-
-    if (min == 0) {
-        return max;
-    } else {
-        double u = min / max;
-        return max * sqrt(1 + u * u);
-    }
-}
-#endif
-
-double
-js::math_hypot_impl(double x, double y)
-{
-#ifdef XP_WIN
-    // On Windows, hypot(NaN, Infinity) is NaN. ES6 requires Infinity.
-    if (mozilla::IsInfinite(x) || mozilla::IsInfinite(y))
-        return PositiveInfinity();
-#endif
-    return hypot(x, y);
-}
-
 bool
 js::math_hypot(JSContext *cx, unsigned argc, Value *vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
-    if (args.length() < 2) {
-        args.rval().setNumber(GenericNaN());
-        return true;
+
+    bool isInfinite = false;
+    bool isNaN = false;
+
+    double scale = 0;
+    double sumsq = 1;
+
+    for (unsigned i = 0; i < args.length(); i++) {
+        double x;
+        if (!ToNumber(cx, args[i], &x))
+            return false;
+
+        isInfinite |= mozilla::IsInfinite(x);
+        isNaN |= mozilla::IsNaN(x);
+
+        double xabs = mozilla::Abs(x);
+
+        if (scale < xabs) {
+            sumsq = 1 + sumsq * (scale / xabs) * (scale / xabs);
+            scale = xabs;
+        } else if (scale != 0) {
+            sumsq += (xabs / scale) * (xabs / scale);
+        }
     }
 
-    double x, y;
-    if (!ToNumber(cx, args[0], &x))
-        return false;
-
-    if (!ToNumber(cx, args[1], &y))
-        return false;
-
-    if (args.length() == 2) {
-        args.rval().setNumber(math_hypot_impl(x, y));
-        return true;
-    }
-
-    /* args.length() > 2 */
-    double z;
-    if (!ToNumber(cx, args[2], &z)) {
-        return false;
-    }
-
-    args.rval().setNumber(math_hypot_impl(math_hypot_impl(x, y), z));
+    double result = isInfinite ? PositiveInfinity() :
+                    isNaN ? GenericNaN() :
+                    scale * sqrt(sumsq);
+    args.rval().setNumber(result);
     return true;
 }
-#endif
 
 #if !HAVE_TRUNC
 double trunc(double x)
@@ -1468,10 +1435,7 @@ static const JSFunctionSpec math_static_methods[] = {
     JS_FN("acosh",          math_acosh,           1, 0),
     JS_FN("asinh",          math_asinh,           1, 0),
     JS_FN("atanh",          math_atanh,           1, 0),
-// Math.hypot is disabled pending the resolution of spec issues (bug 896264).
-#if 0
     JS_FN("hypot",          math_hypot,           2, 0),
-#endif
     JS_FN("trunc",          math_trunc,           1, 0),
     JS_FN("sign",           math_sign,            1, 0),
     JS_FN("cbrt",           math_cbrt,            1, 0),
