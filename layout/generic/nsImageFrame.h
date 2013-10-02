@@ -17,6 +17,7 @@
 #include "nsDisplayList.h"
 #include "imgIContainer.h"
 #include "mozilla/Attributes.h"
+#include "mozilla/DebugOnly.h"
 #include "nsIReflowCallback.h"
 
 class nsImageMap;
@@ -327,11 +328,8 @@ private:
     }
 
     void RemoveIconObserver(nsImageFrame *frame) {
-#ifdef DEBUG
-        bool rv =
-#endif
-            mIconObservers.RemoveElement(frame);
-        NS_ABORT_IF_FALSE(rv, "Observer not in array");
+      mozilla::DebugOnly<bool> didRemove = mIconObservers.RemoveElement(frame);
+      NS_ABORT_IF_FALSE(didRemove, "Observer not in array");
     }
 
   private:

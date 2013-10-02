@@ -3181,10 +3181,7 @@ void
 nsXULScrollFrame::RemoveHorizontalScrollbar(nsBoxLayoutState& aState, bool aOnBottom)
 {
   // removing a scrollbar should always fit
-#ifdef DEBUG
-  bool result =
-#endif
-  AddRemoveScrollbar(aState, aOnBottom, true, false);
+  DebugOnly<bool> result = AddRemoveScrollbar(aState, aOnBottom, true, false);
   NS_ASSERTION(result, "Removing horizontal scrollbar failed to fit??");
 }
 
@@ -3192,10 +3189,7 @@ void
 nsXULScrollFrame::RemoveVerticalScrollbar(nsBoxLayoutState& aState, bool aOnRight)
 {
   // removing a scrollbar should always fit
-#ifdef DEBUG
-  bool result =
-#endif
-  AddRemoveScrollbar(aState, aOnRight, false, false);
+  DebugOnly<bool> result = AddRemoveScrollbar(aState, aOnRight, false, false);
   NS_ASSERTION(result, "Removing vertical scrollbar failed to fit??");
 }
 
