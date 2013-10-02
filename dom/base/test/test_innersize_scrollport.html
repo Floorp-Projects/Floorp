@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Test for Bug 919437</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=919437">Mozilla Bug 919437</a>
+<div id="content" style="display: none"></div>
+<pre id="test">
+<script type="application/javascript">
+/** Test for Bug 919437 **/
+
+SimpleTest.waitForExplicitFinish();
+
+function run()
+{
+  var oldWidth = window.innerWidth;
+  var oldHeight = window.innerHeight;
+  var newWidth = oldWidth / 2;
+  var newHeight = oldHeight / 2;
+
+  var utils = SpecialPowers.getDOMWindowUtils(window);
+  utils.setScrollPositionClampingScrollPortSize(newWidth, newHeight);
+  is(window.innerWidth, newWidth, "innerWidth not updated to scroll port width");
+  is(window.innerHeight, newHeight, "innerHeight not updated to scroll port height");
+
+  window.innerWidth = oldWidth;
+  window.innerHeight = oldHeight;
+  is(window.innerWidth, newWidth, "innerWidth clobbered by direct set");
+  is(window.innerHeight, newHeight, "innerHeight clobbered by direct set");
+
+  SimpleTest.finish();
+}
+
+window.addEventListener("load", run, false);
+
+</script>
+</pre>
+</body>
+</html>
