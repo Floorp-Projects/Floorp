@@ -878,10 +878,7 @@ nsIFrame::GetUsedMargin() const
   if (m) {
     margin = *m;
   } else {
-#ifdef DEBUG
-    bool hasMargin = 
-#endif
-    StyleMargin()->GetMargin(margin);
+    DebugOnly<bool> hasMargin = StyleMargin()->GetMargin(margin);
     NS_ASSERTION(hasMargin, "We should have a margin here! (out of memory?)");
   }
   return margin;
@@ -956,10 +953,7 @@ nsIFrame::GetUsedPadding() const
   if (p) {
     padding = *p;
   } else {
-#ifdef DEBUG
-    bool hasPadding = 
-#endif
-    StylePadding()->GetPadding(padding);
+    DebugOnly<bool> hasPadding = StylePadding()->GetPadding(padding);
     NS_ASSERTION(hasPadding, "We should have padding here! (out of memory?)");
   }
   return padding;
@@ -5069,10 +5063,7 @@ ComputeOutlineAndEffectsRect(nsIFrame* aFrame,
   uint8_t outlineStyle = outline->GetOutlineStyle();
   if (outlineStyle != NS_STYLE_BORDER_STYLE_NONE) {
     nscoord width;
-#ifdef DEBUG
-    bool result = 
-#endif
-      outline->GetOutlineWidth(width);
+    DebugOnly<bool> result = outline->GetOutlineWidth(width);
     NS_ASSERTION(result, "GetOutlineWidth had no cached outline width");
     if (width > 0) {
       if (aStoreRectProperties) {
