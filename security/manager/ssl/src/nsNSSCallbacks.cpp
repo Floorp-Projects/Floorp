@@ -249,6 +249,30 @@ SECStatus nsNSSHttpRequestSession::trySendAndReceiveFcn(PRPollDesc **pPollDesc,
   PR_LOG(gPIPNSSLog, PR_LOG_DEBUG,
          ("nsNSSHttpRequestSession::trySendAndReceiveFcn to %s\n", mURL.get()));
 
+  bool onSTSThread;
+  nsresult nrv;
+  nsCOMPtr<nsIEventTarget> sts
+    = do_GetService(NS_SOCKETTRANSPORTSERVICE_CONTRACTID, &nrv);
+  if (NS_FAILED(nrv)) {
+    NS_ERROR("Could not get STS service");
+    PR_SetError(PR_INVALID_STATE_ERROR, 0);
+    return SECFailure;
+  }
+
+  nrv = sts->IsOnCurrentThread(&onSTSThread);
+  if (NS_FAILED(nrv)) {
+    NS_ERROR("IsOnCurrentThread failed");
+    PR_SetError(PR_INVALID_STATE_ERROR, 0);
+    return SECFailure;
+  }
+
+  if (onSTSThread) {
+    NS_ERROR("nsNSSHttpRequestSession::trySendAndReceiveFcn called on socket "
+             "thread; this will not work.");
+    PR_SetError(PR_INVALID_STATE_ERROR, 0);
+    return SECFailure;
+  }
+
   const int max_retries = 2;
   int retry_count = 0;
   bool retryable_error = false;
