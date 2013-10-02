@@ -553,16 +553,26 @@ this.DOMApplicationRegistry = {
   },
 
   updateDataStore: function(aId, aManifestURL, aManifest) {
-    if (!("datastores" in aManifest)) {
-      return;
+    if ('datastores-owned' in aManifest) {
+      for (let name in aManifest['datastores-owned']) {
+        let readonly = "access" in aManifest['datastores-owned'][name]
+                         ? aManifest['datastores-owned'][name].access == 'readonly'
+                         : false;
+
+        dataStoreService.installDataStore(aId, name, aManifestURL, readonly);
+      }
     }
 
-    for (let name in aManifest.datastores) {
-      let readonly = ("readonly" in aManifest.datastores[name]) &&
-                     !aManifest.datastores[name].readonly
-                       ? false : true;
+    if ('datastores-access' in aManifest) {
+      for (let name in aManifest['datastores-access']) {
+        let readonly = ("readonly" in aManifest['datastores-access'][name]) &&
+                       !aManifest['datastores-access'][name].readonly
+                         ? false : true;
 
-      dataStoreService.installDataStore(aId, name, aManifestURL, readonly);
+        // The first release is always in readonly mode.
+        dataStoreService.installAccessDataStore(aId, name, aManifestURL,
+                                                /* readonly */ true);
+      }
     }
   },
 

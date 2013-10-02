@@ -15,6 +15,11 @@ interface nsIDataStoreService : nsISupports
                         in DOMString manifestURL,
                         in boolean readOnly);
 
+  void installAccessDataStore(in unsigned long appId,
+                              in DOMString name,
+                              in DOMString manifestURL,
+                              in boolean readOnly);
+
   nsISupports getDataStores(in nsIDOMWindow window,
                             in DOMString name);
 };
