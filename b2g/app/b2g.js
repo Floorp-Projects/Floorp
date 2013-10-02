@@ -795,7 +795,8 @@ pref("network.sntp.timeout", 30); // In seconds.
 // Enable promise
 pref("dom.promise.enabled", false);
 
-pref("dom.datastore.enabled", true);
+// Enable dataStore
+pref("dom.datastore.enabled", false);
 
 // DOM Inter-App Communication API.
 #ifdef MOZ_WIDGET_GONK
