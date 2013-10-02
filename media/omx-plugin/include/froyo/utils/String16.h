@@ -27,7 +27,9 @@
 
 extern "C" {
 
+#if !defined(__cplusplus) || __cplusplus == 199711L // C or C++98
 typedef uint16_t char16_t;
+#endif
 
 // Standard string functions on char16 strings.
 int strcmp16(const char16_t *, const char16_t *);

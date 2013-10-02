@@ -27,9 +27,8 @@ NO_INSTALL = 1
 include $(topsrcdir)/config/rules.mk
 
 ifdef GNU_CXX
-# Turn off C++ 11 features due to conflicts with Android OS headers and char16_t definition
 # Stagefright header files define many multichar constants.
-CXXFLAGS += -std=gnu++98 -Wno-multichar
+CXXFLAGS += -Wno-multichar
 endif
 
 INCLUDES        += \
