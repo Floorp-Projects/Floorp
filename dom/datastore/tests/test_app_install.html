@@ -10,7 +10,9 @@
 <div id="container"></div>
   <script type="application/javascript;version=1.7">
 
- SpecialPowers.Cu.import("resource://gre/modules/DataStoreChangeNotifier.jsm");
+  if (SpecialPowers.isMainProcess()) {
+    SpecialPowers.Cu.import("resource://gre/modules/DataStoreChangeNotifier.jsm");
+  }
 
   SimpleTest.waitForExplicitFinish();
 
@@ -23,7 +25,8 @@
      { "type": "embed-apps", "allow": 1, "context": document },
      { "type": "webapps-manage", "allow": 1, "context": document }],
     function() {
-      SpecialPowers.pushPrefEnv({"set": [["dom.datastore.enabled", true]]}, function() {
+      SpecialPowers.pushPrefEnv({"set": [["dom.datastore.enabled", true],
+                                         ["dom.promise.enabled", true]]}, function() {
         gGenerator.next(); });
     });
 
@@ -46,6 +49,7 @@
     }, cbError);
     yield undefined;
 
+    SpecialPowers.setAllAppsLaunchable(true);
     SpecialPowers.setBoolPref("dom.mozBrowserFramesEnabled", true);
 
     SpecialPowers.autoConfirmAppInstall(continueTest);
