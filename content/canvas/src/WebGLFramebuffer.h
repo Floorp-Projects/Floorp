@@ -39,9 +39,8 @@ public:
         WebGLRefPtr<WebGLTexture> mTexturePtr;
         WebGLRefPtr<WebGLRenderbuffer> mRenderbufferPtr;
         GLenum mAttachmentPoint;
-        GLint mTextureLevel;
-        GLenum mTextureTarget;
-        GLenum mTextureCubeMapFace;
+        GLenum mTexImageTarget;
+        GLint mTexImageLevel;
 
         Attachment(GLenum aAttachmentPoint = LOCAL_GL_COLOR_ATTACHMENT0)
             : mAttachmentPoint(aAttachmentPoint)
@@ -55,7 +54,7 @@ public:
 
         bool HasAlpha() const;
 
-        void SetTexture(WebGLTexture *tex, GLenum target, GLint level, GLenum face);
+        void SetTexImage(WebGLTexture *tex, GLenum target, GLint level);
         void SetRenderbuffer(WebGLRenderbuffer *rb) {
             mTexturePtr = nullptr;
             mRenderbufferPtr = rb;
@@ -72,14 +71,11 @@ public:
         WebGLRenderbuffer *Renderbuffer() {
             return mRenderbufferPtr;
         }
-        GLenum TextureTarget() const {
-            return mTextureTarget;
+        GLenum TexImageTarget() const {
+            return mTexImageTarget;
         }
-        GLint TextureLevel() const {
-            return mTextureLevel;
-        }
-        GLenum TextureCubeMapFace() const {
-            return mTextureCubeMapFace;
+        GLint TexImageLevel() const {
+            return mTexImageLevel;
         }
 
         bool HasUninitializedRenderbuffer() const;
