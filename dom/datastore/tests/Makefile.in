@@ -28,6 +28,7 @@ MOCHITEST_FILES = \
   file_app2.template.webapp \
   test_arrays.html \
   file_arrays.html \
+  test_oop.html \
   $(NULL)
 
 include $(topsrcdir)/config/rules.mk
