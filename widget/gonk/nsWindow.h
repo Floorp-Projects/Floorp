@@ -47,7 +47,7 @@ public:
     virtual ~nsWindow();
 
     static void DoDraw(void);
-    static nsEventStatus DispatchInputEvent(nsGUIEvent &aEvent,
+    static nsEventStatus DispatchInputEvent(mozilla::WidgetGUIEvent& aEvent,
                                             bool* aWasCaptured = nullptr);
 
     NS_IMETHOD Create(nsIWidget *aParent,
@@ -83,7 +83,8 @@ public:
         return NS_OK;
     }
     virtual nsIntPoint WidgetToScreenOffset();
-    NS_IMETHOD DispatchEvent(nsGUIEvent *aEvent, nsEventStatus &aStatus);
+    NS_IMETHOD DispatchEvent(mozilla::WidgetGUIEvent* aEvent,
+                             nsEventStatus& aStatus);
     NS_IMETHOD CaptureRollupEvents(nsIRollupListener *aListener,
                                    bool aDoCapture)
     {

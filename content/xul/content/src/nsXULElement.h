@@ -35,6 +35,7 @@
 #include "nsStyledElement.h"
 #include "nsIFrameLoader.h"
 #include "nsFrameLoader.h"
+#include "mozilla/dom/DOMRect.h"
 
 class nsIDocument;
 class nsString;
@@ -613,7 +614,7 @@ protected:
     nsresult ExecuteOnBroadcastHandler(nsIDOMElement* anElement, const nsAString& attrName);
 
     static nsresult
-    ExecuteJSCode(nsIDOMElement* anElement, nsEvent* aEvent);
+    ExecuteJSCode(nsIDOMElement* anElement, mozilla::WidgetEvent* aEvent);
 
     // Helper routine that crawls a parent chain looking for a tree element.
     NS_IMETHOD GetParentTree(nsIDOMXULMultiSelectControlElement** aTreeElement);

@@ -10,6 +10,7 @@
 #include "nsMappedAttributeElement.h"
 #include "nsIDOMElement.h"
 #include "Link.h"
+#include "mozilla/dom/DOMRect.h"
 
 class nsCSSValue;
 

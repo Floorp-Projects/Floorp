@@ -943,6 +943,7 @@ public:
   }
 
   static void DestroySurface(void* aPropertyValue);
+  static void DestroyDT(void* aPropertyValue);
 
 #ifdef _MSC_VER
 // XXX Workaround MSVC issue by making the static FramePropertyDescriptor
@@ -989,6 +990,7 @@ public:
   NS_DECLARE_FRAME_PROPERTY(LineBaselineOffset, nullptr)
 
   NS_DECLARE_FRAME_PROPERTY(CachedBackgroundImage, DestroySurface)
+  NS_DECLARE_FRAME_PROPERTY(CachedBackgroundImageDT, DestroyDT)
 
   NS_DECLARE_FRAME_PROPERTY(InvalidationRect, DestroyRect)
 
@@ -1359,14 +1361,14 @@ public:
    * is. Does it cause the event to continue propagating through the frame hierarchy
    * or is it just returned to the widgets?
    *
-   * @see     nsGUIEvent
+   * @see     WidgetGUIEvent
    * @see     nsEventStatus
    */
   NS_IMETHOD  HandleEvent(nsPresContext* aPresContext,
-                          nsGUIEvent*     aEvent,
-                          nsEventStatus*  aEventStatus) = 0;
+                          mozilla::WidgetGUIEvent* aEvent,
+                          nsEventStatus* aEventStatus) = 0;
 
-  NS_IMETHOD  GetContentForEvent(nsEvent* aEvent,
+  NS_IMETHOD  GetContentForEvent(mozilla::WidgetEvent* aEvent,
                                  nsIContent** aContent) = 0;
 
   // This structure keeps track of the content node and offsets associated with
@@ -2316,9 +2318,15 @@ public:
    *
    * @param aDamageRect Area of the layer to invalidate.
    * @param aDisplayItemKey Display item type.
+   * @param aFlags UPDATE_IS_ASYNC : Will skip the invalidation
+   * if the found layer is being composited by a remote
+   * compositor.
    * @return Layer, if found, nullptr otherwise.
    */
-  Layer* InvalidateLayer(uint32_t aDisplayItemKey, const nsIntRect* aDamageRect = nullptr);
+  enum {
+    UPDATE_IS_ASYNC = 1 << 0
+  };
+  Layer* InvalidateLayer(uint32_t aDisplayItemKey, const nsIntRect* aDamageRect = nullptr, uint32_t aFlags = 0);
 
   /**
    * Returns a rect that encompasses everything that might be painted by

@@ -5074,6 +5074,29 @@ CheckFunctionsSequential(ModuleCompiler &m)
 
 #ifdef JS_WORKER_THREADS
 
+// Currently, only one asm.js parallel compilation is allowed at a time.
+// This RAII class attempts to claim this parallel compilation using atomic ops
+// on rt->workerThreadState->asmJSCompilationInProgress.
+class ParallelCompilationGuard
+{
+    WorkerThreadState *parallelState_;
+  public:
+    ParallelCompilationGuard() : parallelState_(NULL) {}
+    ~ParallelCompilationGuard() {
+        if (parallelState_) {
+            JS_ASSERT(parallelState_->asmJSCompilationInProgress == true);
+            parallelState_->asmJSCompilationInProgress = false;
+        }
+    }
+    bool claim(WorkerThreadState *state) {
+        JS_ASSERT(!parallelState_);
+        if (!state->asmJSCompilationInProgress.compareExchange(false, true))
+            return false;
+        parallelState_ = state;
+        return true;
+    }
+};
+
 static bool
 ParallelCompilationEnabled(ExclusiveContext *cx)
 {
@@ -5254,6 +5277,15 @@ static const size_t LIFO_ALLOC_PARALLEL_CHUNK_SIZE = 1 << 12;
 static bool
 CheckFunctionsParallel(ModuleCompiler &m)
 {
+    // If parallel compilation isn't enabled (not enough cores, disabled by
+    // pref, etc) or another thread is currently compiling asm.js in parallel,
+    // fall back to sequential compilation. (We could lift the latter
+    // constraint by hoisting asmJS* state out of WorkerThreadState so multiple
+    // concurrent asm.js parallel compilations don't race.)
+    ParallelCompilationGuard g;
+    if (!ParallelCompilationEnabled(m.cx()) || !g.claim(m.cx()->workerThreadState()))
+        return CheckFunctionsSequential(m);
+
     // Saturate all worker threads plus the main thread.
     WorkerThreadState &state = *m.cx()->workerThreadState();
     size_t numParallelJobs = state.numThreads + 1;
@@ -5802,7 +5834,7 @@ GenerateFFIInterpreterExit(ModuleCompiler &m, const ModuleCompiler::ExitDescript
 
     // argument 1: exitIndex
     if (i->kind() == ABIArg::GPR)
-        masm.mov(Imm32(exitIndex), i->gpr());
+        masm.mov(ImmWord(exitIndex), i->gpr());
     else
         masm.store32(Imm32(exitIndex), Address(StackPointer, i->offsetFromArgBase()));
     i++;
@@ -5810,7 +5842,7 @@ GenerateFFIInterpreterExit(ModuleCompiler &m, const ModuleCompiler::ExitDescript
     // argument 2: argc
     unsigned argc = exit.sig().args().length();
     if (i->kind() == ABIArg::GPR)
-        masm.mov(Imm32(argc), i->gpr());
+        masm.mov(ImmWord(argc), i->gpr());
     else
         masm.store32(Imm32(argc), Address(StackPointer, i->offsetFromArgBase()));
     i++;
@@ -5869,10 +5901,10 @@ GenerateFFIInterpreterExit(ModuleCompiler &m, const ModuleCompiler::ExitDescript
     LoadJSContextFromActivation(masm, activation, IntArgReg0);
 
     // argument 1: exitIndex
-    masm.mov(Imm32(exitIndex), IntArgReg1);
+    masm.mov(ImmWord(exitIndex), IntArgReg1);
 
     // argument 2: argc
-    masm.mov(Imm32(exit.sig().args().length()), IntArgReg2);
+    masm.mov(ImmWord(exit.sig().args().length()), IntArgReg2);
 
     // argument 3: argv
     Address argv(StackPointer, ShadowStackSpace);
@@ -6311,7 +6343,7 @@ GenerateThrowExit(ModuleCompiler &m, Label *throwLabel)
     masm.PopRegsInMask(NonVolatileRegs);
     JS_ASSERT(masm.framePushed() == 0);
 
-    masm.mov(Imm32(0), ReturnReg);
+    masm.mov(ImmWord(0), ReturnReg);
     masm.abiret();
 
     return !masm.oom();
@@ -6393,13 +6425,8 @@ CheckModule(ExclusiveContext *cx, AsmJSParser &parser, ParseNode *stmtList,
         return false;
 
 #ifdef JS_WORKER_THREADS
-    if (ParallelCompilationEnabled(cx)) {
-        if (!CheckFunctionsParallel(m))
-            return false;
-    } else {
-        if (!CheckFunctionsSequential(m))
-            return false;
-    }
+    if (!CheckFunctionsParallel(m))
+        return false;
 #else
     if (!CheckFunctionsSequential(m))
         return false;

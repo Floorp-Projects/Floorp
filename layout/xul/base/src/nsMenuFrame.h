@@ -108,9 +108,9 @@ public:
                                            const nsDisplayListSet& aLists) MOZ_OVERRIDE;
                                          
   // this method can destroy the frame
-  NS_IMETHOD HandleEvent(nsPresContext* aPresContext, 
-                         nsGUIEvent*     aEvent,
-                         nsEventStatus*  aEventStatus) MOZ_OVERRIDE;
+  NS_IMETHOD HandleEvent(nsPresContext* aPresContext,
+                         mozilla::WidgetGUIEvent* aEvent,
+                         nsEventStatus* aEventStatus) MOZ_OVERRIDE;
 
   NS_IMETHOD  AppendFrames(ChildListID     aListID,
                            nsFrameList&    aFrameList) MOZ_OVERRIDE;
@@ -144,7 +144,7 @@ public:
   // one in its parent popup. This will carry out the command attached to
   // the menuitem. If the menu should be opened, this frame will be returned,
   // otherwise null will be returned.
-  nsMenuFrame* Enter(nsGUIEvent* aEvent);
+  nsMenuFrame* Enter(mozilla::WidgetGUIEvent* aEvent);
 
   virtual void SetParent(nsIFrame* aParent) MOZ_OVERRIDE;
 
@@ -234,7 +234,7 @@ protected:
   void BuildAcceleratorText(bool aNotify);
 
   // Called to execute our command handler. This method can destroy the frame.
-  void Execute(nsGUIEvent *aEvent);
+  void Execute(mozilla::WidgetGUIEvent *aEvent);
 
   // This method can destroy the frame
   NS_IMETHOD AttributeChanged(int32_t aNameSpaceID,
@@ -245,9 +245,10 @@ protected:
   bool SizeToPopup(nsBoxLayoutState& aState, nsSize& aSize);
 
   bool ShouldBlink();
-  void StartBlinking(nsGUIEvent *aEvent, bool aFlipChecked);
+  void StartBlinking(mozilla::WidgetGUIEvent* aEvent, bool aFlipChecked);
   void StopBlinking();
-  void CreateMenuCommandEvent(nsGUIEvent *aEvent, bool aFlipChecked);
+  void CreateMenuCommandEvent(mozilla::WidgetGUIEvent* aEvent,
+                              bool aFlipChecked);
   void PassMenuCommandEventToPopupManager();
 
 protected:

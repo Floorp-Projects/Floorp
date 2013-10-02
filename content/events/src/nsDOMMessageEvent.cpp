@@ -43,7 +43,7 @@ NS_IMPL_RELEASE_INHERITED(nsDOMMessageEvent, nsDOMEvent)
 
 nsDOMMessageEvent::nsDOMMessageEvent(mozilla::dom::EventTarget* aOwner,
                                      nsPresContext* aPresContext,
-                                     nsEvent* aEvent)
+                                     WidgetEvent* aEvent)
   : nsDOMEvent(aOwner, aPresContext, aEvent),
     mData(JSVAL_VOID)
 {
@@ -197,7 +197,7 @@ nsresult
 NS_NewDOMMessageEvent(nsIDOMEvent** aInstancePtrResult,
                       mozilla::dom::EventTarget* aOwner,
                       nsPresContext* aPresContext,
-                      nsEvent* aEvent) 
+                      WidgetEvent* aEvent) 
 {
   nsDOMMessageEvent* it = new nsDOMMessageEvent(aOwner, aPresContext, aEvent);
 

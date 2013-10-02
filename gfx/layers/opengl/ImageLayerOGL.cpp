@@ -391,7 +391,7 @@ SetClamping(GLContext* aGL, GLuint aTexture)
 }
 
 static void
-UploadYUVToTexture(GLContext* gl, const PlanarYCbCrImage::Data& aData, 
+UploadYUVToTexture(GLContext* gl, const PlanarYCbCrData& aData, 
                    GLTexture* aYTexture,
                    GLTexture* aUTexture,
                    GLTexture* aVTexture)
@@ -437,7 +437,7 @@ ImageLayerOGL::AllocateTexturesYCbCr(PlanarYCbCrImage *aImage)
   nsAutoPtr<PlanarYCbCrOGLBackendData> backendData(
     new PlanarYCbCrOGLBackendData);
 
-  const PlanarYCbCrImage::Data *data = aImage->GetData();
+  const PlanarYCbCrData *data = aImage->GetData();
 
   gl()->MakeCurrent();
 
