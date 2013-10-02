@@ -78,7 +78,7 @@ SharedStub ENDP
 
 
 STUBENTRY MACRO functionname, paramcount
-functionname PROC EXPORT
+functionname PROC
     mov     r11, paramcount
     jmp     SharedStub
 functionname ENDP

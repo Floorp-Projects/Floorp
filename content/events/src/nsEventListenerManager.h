@@ -187,7 +187,7 @@ struct nsListenerStruct
     }
   }
 
-  MOZ_ALWAYS_INLINE bool IsListening(const nsEvent* aEvent) const
+  MOZ_ALWAYS_INLINE bool IsListening(const mozilla::WidgetEvent* aEvent) const
   {
     if (mFlags.mInSystemGroup != aEvent->mFlags.mInSystemGroup) {
       return false;
@@ -298,7 +298,7 @@ public:
   void RemoveEventHandler(nsIAtom *aName, const nsAString& aTypeString);
 
   void HandleEvent(nsPresContext* aPresContext,
-                   nsEvent* aEvent, 
+                   mozilla::WidgetEvent* aEvent, 
                    nsIDOMEvent** aDOMEvent,
                    mozilla::dom::EventTarget* aCurrentTarget,
                    nsEventStatus* aEventStatus,
@@ -405,7 +405,7 @@ public:
   mozilla::dom::EventTarget* GetTarget() { return mTarget; }
 protected:
   void HandleEventInternal(nsPresContext* aPresContext,
-                           nsEvent* aEvent,
+                           mozilla::WidgetEvent* aEvent,
                            nsIDOMEvent** aDOMEvent,
                            mozilla::dom::EventTarget* aCurrentTarget,
                            nsEventStatus* aEventStatus,
@@ -528,7 +528,7 @@ protected:
   nsPIDOMWindow* GetInnerWindowForTarget();
   already_AddRefed<nsPIDOMWindow> GetTargetAsInnerWindow() const;
 
-  bool ListenerCanHandle(nsListenerStruct* aLs, nsEvent* aEvent);
+  bool ListenerCanHandle(nsListenerStruct* aLs, mozilla::WidgetEvent* aEvent);
 
   uint32_t mMayHavePaintEventListener : 1;
   uint32_t mMayHaveMutationListeners : 1;

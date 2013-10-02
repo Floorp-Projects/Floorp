@@ -91,10 +91,10 @@ class MacroAssemblerX86Shared : public Assembler
     }
 
     void move32(const Imm32 &imm, const Register &dest) {
-        if (imm.value == 0)
-            xorl(dest, dest);
-        else
-            movl(imm, dest);
+        // Use the ImmWord version of mov to register, which has special
+        // optimizations. Casting to uint32_t here ensures that the value
+        // is zero-extended.
+        mov(ImmWord(uint32_t(imm.value)), dest);
     }
     void move32(const Imm32 &imm, const Operand &dest) {
         movl(imm, dest);
@@ -583,10 +583,7 @@ class MacroAssemblerX86Shared : public Assembler
             if (ifNaN != Assembler::NaN_HandledByCond) {
                 Label noNaN;
                 j(Assembler::NoParity, &noNaN);
-                if (ifNaN == Assembler::NaN_IsTrue)
-                    movl(Imm32(1), dest);
-                else
-                    xorl(dest, dest);
+                mov(ImmWord(ifNaN == Assembler::NaN_IsTrue), dest);
                 bind(&noNaN);
             }
         } else {
@@ -595,12 +592,16 @@ class MacroAssemblerX86Shared : public Assembler
 
             if (ifNaN == Assembler::NaN_IsFalse)
                 j(Assembler::Parity, &ifFalse);
+            // Note a subtlety here: FLAGS is live at this point, and the
+            // mov interface doesn't guarantee to preserve FLAGS. Use
+            // movl instead of mov, because the movl instruction
+            // preserves FLAGS.
             movl(Imm32(1), dest);
             j(cond, &end);
             if (ifNaN == Assembler::NaN_IsTrue)
                 j(Assembler::Parity, &end);
             bind(&ifFalse);
-            xorl(dest, dest);
+            mov(ImmWord(0), dest);
 
             bind(&end);
         }

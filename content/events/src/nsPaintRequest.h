@@ -12,11 +12,17 @@
 #include "mozilla/Attributes.h"
 #include "nsWrapperCache.h"
 
-class nsClientRect;
+namespace mozilla {
+namespace dom {
+class DOMRect;
+}
+}
 
 class nsPaintRequest MOZ_FINAL : public nsIDOMPaintRequest
                                , public nsWrapperCache
 {
+  typedef mozilla::dom::DOMRect DOMRect;
+
 public:
   nsPaintRequest(nsIDOMEvent* aParent)
     : mParent(aParent)
@@ -37,7 +43,7 @@ public:
     return mParent;
   }
 
-  already_AddRefed<nsClientRect> ClientRect();
+  already_AddRefed<DOMRect> ClientRect();
   void GetReason(nsAString& aResult) const
   {
     aResult.AssignLiteral("repaint");

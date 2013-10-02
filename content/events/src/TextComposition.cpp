@@ -23,7 +23,7 @@ namespace mozilla {
 
 TextComposition::TextComposition(nsPresContext* aPresContext,
                                  nsINode* aNode,
-                                 nsGUIEvent* aEvent) :
+                                 WidgetGUIEvent* aEvent) :
   mPresContext(aPresContext), mNode(aNode),
   mNativeContext(aEvent->widget->GetInputContext().mNativeIMEContext),
   mIsSynthesizedForTests(aEvent->mFlags.mIsSynthesizedForTests)
@@ -46,7 +46,7 @@ TextComposition::MatchesNativeContext(nsIWidget* aWidget) const
 }
 
 void
-TextComposition::DispatchEvent(nsGUIEvent* aEvent,
+TextComposition::DispatchEvent(WidgetGUIEvent* aEvent,
                                nsEventStatus* aStatus,
                                nsDispatchingCallback* aCallBack)
 {

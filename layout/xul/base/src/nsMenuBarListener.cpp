@@ -197,7 +197,7 @@ nsMenuBarListener::KeyPress(nsIDOMEvent* aKeyEvent)
 
       bool hasAccessKeyCandidates = charCode != 0;
       if (!hasAccessKeyCandidates) {
-        nsEvent* nativeEvent = nsContentUtils::GetNativeEvent(aKeyEvent);
+        WidgetEvent* nativeEvent = nsContentUtils::GetNativeEvent(aKeyEvent);
         WidgetKeyboardEvent* nativeKeyEvent =
           static_cast<WidgetKeyboardEvent*>(nativeEvent);
         if (nativeKeyEvent) {
