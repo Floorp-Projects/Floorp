@@ -20,7 +20,7 @@ ICCompare_Double::Compiler::generateStubCode(MacroAssembler &masm)
     Register dest = R0.scratchReg();
 
     Assembler::DoubleCondition cond = JSOpToDoubleCondition(op);
-    masm.xorl(dest, dest);
+    masm.mov(ImmWord(0), dest);
     masm.compareDouble(cond, FloatReg0, FloatReg1);
     masm.setCC(Assembler::ConditionFromDoubleCondition(cond), dest);
 
