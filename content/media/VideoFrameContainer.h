@@ -55,7 +55,12 @@ public:
   // but was actually painted at t+n, this returns n in seconds. Threadsafe.
   double GetFrameDelay();
   // Call on main thread
-  void Invalidate();
+  enum {
+    INVALIDATE_DEFAULT,
+    INVALIDATE_FORCE
+  };
+  void Invalidate() { InvalidateWithFlags(INVALIDATE_DEFAULT); }
+  void InvalidateWithFlags(uint32_t aFlags);
   ImageContainer* GetImageContainer();
   void ForgetElement() { mElement = nullptr; }
 
