@@ -4,6 +4,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include <ostream>
+#include "GeckoProfilerImpl.h"
 #include "platform.h"
 #include "nsThreadUtils.h"
 #include "nsXULAppAPI.h"
