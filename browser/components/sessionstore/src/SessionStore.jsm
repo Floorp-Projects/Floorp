@@ -94,23 +94,6 @@ XPCOMUtils.defineLazyServiceGetter(this, "gSessionStartup",
 XPCOMUtils.defineLazyServiceGetter(this, "gScreenManager",
   "@mozilla.org/gfx/screenmanager;1", "nsIScreenManager");
 
-// List of docShell capabilities to (re)store. These are automatically
-// retrieved from a given docShell if not already collected before.
-// This is made so they're automatically in sync with all nsIDocShell.allow*
-// properties.
-let gDocShellCapabilities = (function () {
-  let caps;
-
-  return docShell => {
-    if (!caps) {
-      let keys = Object.keys(docShell);
-      caps = keys.filter(k => k.startsWith("allow")).map(k => k.slice(5));
-    }
-
-    return caps;
-  };
-})();
-
 /**
  * Get nsIURI from string
  * @param string
@@ -122,6 +105,8 @@ function makeURI(aString) {
 
 XPCOMUtils.defineLazyModuleGetter(this, "ScratchpadManager",
   "resource:///modules/devtools/scratchpad-manager.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "DocShellCapabilities",
+  "resource:///modules/sessionstore/DocShellCapabilities.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "DocumentUtils",
   "resource:///modules/sessionstore/DocumentUtils.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "Messenger",
@@ -138,6 +123,8 @@ XPCOMUtils.defineLazyModuleGetter(this, "SessionHistory",
   "resource:///modules/sessionstore/SessionHistory.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "_SessionFile",
   "resource:///modules/sessionstore/_SessionFile.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "TabStateCache",
+  "resource:///modules/sessionstore/TabStateCache.jsm");
 
 #ifdef MOZ_CRASHREPORTER
 XPCOMUtils.defineLazyServiceGetter(this, "CrashReporter",
@@ -1460,6 +1447,10 @@ let SessionStoreInternal = {
       throw (Components.returnCode = Cr.NS_ERROR_INVALID_ARG);
     }
 
+    if (aTab.linkedBrowser.__SS_restoreState) {
+      this._resetTabRestoringState(aTab);
+    }
+
     TabStateCache.delete(aTab);
     this._setWindowStateBusy(window);
     this.restoreHistoryPrecursor(window, [aTab], [tabState], 0, 0, 0);
@@ -2584,7 +2575,8 @@ let SessionStoreInternal = {
    */
   restoreHistory:
     function ssi_restoreHistory(aWindow, aTabs, aTabData, aIdMap, aDocIdentMap,
-                                aRestoreImmediately) {
+                                aRestoreImmediately)
+  {
     // if the tab got removed before being completely restored, then skip it
     while (aTabs.length > 0 && !(this._canRestoreTabHistory(aTabs[0]))) {
       aTabs.shift();
@@ -2631,8 +2623,7 @@ let SessionStoreInternal = {
 
     // make sure to reset the capabilities and attributes, in case this tab gets reused
     let disallow = new Set(tabData.disallow && tabData.disallow.split(","));
-    for (let cap of gDocShellCapabilities(browser.docShell))
-      browser.docShell["allow" + cap] = !disallow.has(cap);
+    DocShellCapabilities.restore(browser.docShell, disallow);
 
     // Restore tab attributes.
     if ("attributes" in tabData) {
@@ -4191,126 +4182,6 @@ function TabData(obj = null) {
 }
 
 /**
- * A cache for tabs data.
- *
- * This cache implements a weak map from tabs (as XUL elements)
- * to tab data (as instances of TabData).
- *
- * Note that we should never cache private data, as:
- * - that data is used very seldom by SessionStore;
- * - caching private data in addition to public data is memory consuming.
- */
-let TabStateCache = {
-  _data: new WeakMap(),
-
-  /**
-   * Tells whether an entry is in the cache.
-   *
-   * @param {XULElement} aKey The tab or the associated browser.
-   * @return {bool} Whether there's a cached entry for the given tab.
-   */
-  has: function (aTab) {
-    let key = this._normalizeToBrowser(aTab);
-    return this._data.has(key);
-  },
-
-  /**
-   * Add or replace an entry in the cache.
-   *
-   * @param {XULElement} aTab The key, which may be either a tab
-   * or the corresponding browser. The binding will disappear
-   * if the tab/browser is destroyed.
-   * @param {TabData} aValue The data associated to |aTab|.
-   */
-  set: function(aTab, aValue) {
-    let key = this._normalizeToBrowser(aTab);
-    if (!(aValue instanceof TabData)) {
-      throw new TypeError("Attempting to cache a non TabData");
-    }
-    this._data.set(key, aValue);
-  },
-
-  /**
-   * Return the tab data associated with a tab.
-   *
-   * @param {XULElement} aKey The tab or the associated browser.
-   *
-   * @return {TabData|undefined} The data if available, |undefined|
-   * otherwise.
-   */
-  get: function(aKey) {
-    let key = this._normalizeToBrowser(aKey);
-    let result = this._data.get(key);
-    TabStateCacheTelemetry.recordAccess(!!result);
-    return result;
-  },
-
-  /**
-   * Delete the tab data associated with a tab.
-   *
-   * @param {XULElement} aKey The tab or the associated browser.
-   *
-   * Noop of there is no tab data associated with the tab.
-   */
-  delete: function(aKey) {
-    let key = this._normalizeToBrowser(aKey);
-    this._data.delete(key);
-  },
-
-  /**
-   * Delete all tab data.
-   */
-  clear: function() {
-    TabStateCacheTelemetry.recordClear();
-    this._data.clear();
-  },
-
-  /**
-   * Update in place a piece of data.
-   *
-   * @param {XULElement} aKey The tab or the associated browser.
-   * If the tab/browser is not present, do nothing.
-   * @param {string} aField The field to update.
-   * @param {*} aValue The new value to place in the field.
-   */
-  updateField: function(aKey, aField, aValue) {
-    let key = this._normalizeToBrowser(aKey);
-    let data = this._data.get(key);
-    if (data) {
-      data[aField] = aValue;
-    }
-    TabStateCacheTelemetry.recordAccess(!!data);
-  },
-
-  /**
-   * Remove a given field from a cached tab state.
-   *
-   * @param {XULElement} aKey The tab or the associated browser.
-   * If the tab/browser is not present, do nothing.
-   * @param {string} aField The field to remove.
-   */
-  removeField: function(aKey, aField) {
-    let key = this._normalizeToBrowser(aKey);
-    let data = this._data.get(key);
-    if (data && aField in data) {
-      delete data[aField];
-    }
-    TabStateCacheTelemetry.recordAccess(!!data);
-  },
-
-  _normalizeToBrowser: function(aKey) {
-    let nodeName = aKey.localName;
-    if (nodeName == "tab") {
-      return aKey.linkedBrowser;
-    }
-    if (nodeName == "browser") {
-      return aKey;
-    }
-    throw new TypeError("Key is neither a tab nor a browser: " + nodeName);
-  }
-};
-
-/**
  * Module that contains tab state collection methods.
  */
 let TabState = {
@@ -4336,6 +4207,14 @@ let TabState = {
       return Promise.resolve(TabStateCache.get(tab));
     }
 
+    // If the tab hasn't been restored yet, just return the data we
+    // have saved for it.
+    let browser = tab.linkedBrowser;
+    if (!browser.currentURI || (browser.__SS_data && browser.__SS_tabStillLoading)) {
+      let tabData = new TabData(this._collectBaseTabData(tab));
+      return Promise.resolve(tabData);
+    }
+
     let promise = Task.spawn(function task() {
       // Collected session history data asynchronously.
       let history = yield Messenger.send(tab, "SessionStore:collectSessionHistory");
@@ -4343,9 +4222,14 @@ let TabState = {
       // Collected session storage data asynchronously.
       let storage = yield Messenger.send(tab, "SessionStore:collectSessionStorage");
 
+      // Collect docShell capabilities asynchronously.
+      let disallow = yield Messenger.send(tab, "SessionStore:collectDocShellCapabilities");
+
       // Collect basic tab data, without session history and storage.
-      let options = {omitSessionHistory: true, omitSessionStorage: true};
-      let tabData = new TabData(this._collectBaseTabData(tab, options));
+      let options = {omitSessionHistory: true,
+                     omitSessionStorage: true,
+                     omitDocShellCapabilities: true};
+      let tabData = this._collectBaseTabData(tab, options);
 
       // Apply collected data.
       tabData.entries = history.entries;
@@ -4355,15 +4239,19 @@ let TabState = {
         tabData.storage = storage;
       }
 
-      // Put tabData into cache when reading scroll and text data succeeds.
-      if (this._updateTextAndScrollDataForTab(tab, tabData)) {
-        // If we're still the latest async collection for the given tab and
-        // the cache hasn't been filled by collect() in the meantime, let's
-        // fill the cache with the data we received.
-        if (this._pendingCollections.get(tab) == promise) {
-          TabStateCache.set(tab, tabData);
-          this._pendingCollections.delete(tab);
-        }
+      if (disallow.length > 0) {
+	tabData.disallow = disallow.join(",");
+      }
+
+      // Save text and scroll data.
+      this._updateTextAndScrollDataForTab(tab, tabData);
+
+      // If we're still the latest async collection for the given tab and
+      // the cache hasn't been filled by collect() in the meantime, let's
+      // fill the cache with the data we received.
+      if (this._pendingCollections.get(tab) == promise) {
+        TabStateCache.set(tab, tabData);
+        this._pendingCollections.delete(tab);
       }
 
       throw new Task.Result(tabData);
@@ -4395,7 +4283,7 @@ let TabState = {
       return TabStateCache.get(tab);
     }
 
-    let tabData = new TabData(this._collectBaseTabData(tab));
+    let tabData = this._collectBaseTabData(tab);
     if (this._updateTextAndScrollDataForTab(tab, tabData)) {
       TabStateCache.set(tab, tabData);
     }
@@ -4438,6 +4326,7 @@ let TabState = {
    *        storage data collection methods.
    *        {omitSessionHistory: true} to skip collecting session history data
    *        {omitSessionStorage: true} to skip collecting session storage data
+   *        {omitDocShellCapabilities: true} to skip collecting docShell allow* attributes
    *
    *        The omit* options have been introduced to enable us collecting
    *        those parts of the tab data asynchronously. We will request basic
@@ -4495,14 +4384,13 @@ let TabState = {
       delete tabData.pinned;
     tabData.hidden = tab.hidden;
 
-    let disallow = [];
-    for (let cap of gDocShellCapabilities(browser.docShell))
-      if (!browser.docShell["allow" + cap])
-        disallow.push(cap);
-    if (disallow.length > 0)
-      tabData.disallow = disallow.join(",");
-    else if (tabData.disallow)
-      delete tabData.disallow;
+    if (!options || !options.omitDocShellCapabilities) {
+      let disallow = DocShellCapabilities.collect(browser.docShell);
+      if (disallow.length > 0)
+	tabData.disallow = disallow.join(",");
+      else if (tabData.disallow)
+	delete tabData.disallow;
+    }
 
     // Save tab attributes.
     tabData.attributes = TabAttributes.get(tab);
@@ -4709,68 +4597,4 @@ let TabState = {
   }
 };
 
-let TabStateCacheTelemetry = {
-  // Total number of hits during the session
-  _hits: 0,
-  // Total number of misses during the session
-  _misses: 0,
-  // Total number of clears during the session
-  _clears: 0,
-  // |true| once we have been initialized
-  _initialized: false,
 
-  /**
-   * Record a cache access.
-   *
-   * @param {boolean} isHit If |true|, the access was a hit, otherwise
-   * a miss.
-   */
-  recordAccess: function(isHit) {
-    this._init();
-    if (isHit) {
-      ++this._hits;
-    } else {
-      ++this._misses;
-    }
-  },
-
-  /**
-   * Record a cache clear
-   */
-  recordClear: function() {
-    this._init();
-    ++this._clears;
-  },
-
-  /**
-   * Initialize the telemetry.
-   */
-  _init: function() {
-    if (this._initialized) {
-      // Avoid double initialization
-      return;
-    }
-    this._initialized = true;
-    Services.obs.addObserver(this, "profile-before-change", false);
-  },
-
-  observe: function() {
-    Services.obs.removeObserver(this, "profile-before-change");
-
-    // Record hit/miss rate
-    let accesses = this._hits + this._misses;
-    if (accesses == 0) {
-      return;
-    }
-
-    this._fillHistogram("HIT_RATE", this._hits, accesses);
-    this._fillHistogram("CLEAR_RATIO", this._clears, accesses);
-  },
-
-  _fillHistogram: function(suffix, positive, total) {
-    let PREFIX = "FX_SESSION_RESTORE_TABSTATECACHE_";
-    let histo = Services.telemetry.getHistogramById(PREFIX + suffix);
-    let rate = Math.floor( ( positive * 100 ) / total );
-    histo.add(rate);
-  }
-};

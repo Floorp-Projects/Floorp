@@ -3,7 +3,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "mozilla/ipc/RPCChannel.h"
+#include "mozilla/ipc/MessageChannel.h"
 #include "nsAppShell.h"
 #include "nsToolkit.h"
 #include "nsThreadUtils.h"
@@ -175,7 +175,7 @@ bool
 nsAppShell::ProcessNextNativeEvent(bool mayWait)
 {
   // Notify ipc we are spinning a (possibly nested) gecko event loop.
-  mozilla::ipc::RPCChannel::NotifyGeckoEventDispatch();
+  mozilla::ipc::MessageChannel::NotifyGeckoEventDispatch();
 
   bool gotMessage = false;
 

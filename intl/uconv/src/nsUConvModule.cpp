@@ -2,17 +2,11 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
-#include "nsCOMPtr.h"
-#include "nsCRT.h"
 #include "mozilla/ModuleUtils.h"
-#include "nsIComponentManager.h"
-#include "nsICategoryManager.h"
 #include "nsICharsetConverterManager.h"
 #include "nsEncoderDecoderUtils.h"
 #include "nsIUnicodeDecoder.h"
 #include "nsIUnicodeEncoder.h"
-#include "nsIServiceManager.h"
-
 
 #include "nsUConvCID.h"
 #include "nsCharsetConverterManager.h"
@@ -21,14 +15,9 @@
 #include "nsConverterInputStream.h"
 #include "nsConverterOutputStream.h"
 #include "nsScriptableUConv.h"
-
+#include "nsIOutputStream.h"
 #include "nsITextToSubURI.h"
 
-#include "nsIFile.h"
-
-#include "nsCRT.h"
-
-#include "nsUCSupport.h"
 #include "nsISO88591ToUnicode.h"
 #include "nsCP1252ToUnicode.h"
 #include "nsMacRomanToUnicode.h"
@@ -223,7 +212,6 @@
 #include "nsGB2312ToUnicodeV2.h"
 #include "nsUnicodeToGB2312V2.h"
 #include "nsISO2022CNToUnicode.h"
-#include "nsUnicodeToISO2022CN.h"
 #include "gbku.h"
 
 NS_CONVERTER_REGISTRY_START

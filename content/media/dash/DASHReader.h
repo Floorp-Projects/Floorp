@@ -38,7 +38,7 @@ public:
 
   // Waits for metadata bytes to be downloaded, then reads and parses them.
   // Called on the decode thread only.
-  nsresult ReadMetadata(VideoInfo* aInfo,
+  nsresult ReadMetadata(MediaInfo* aInfo,
                         MetadataTags** aTags) MOZ_OVERRIDE;
 
   // Waits for |ReadyToReadMetadata| or |NotifyDecoderShuttingDown|

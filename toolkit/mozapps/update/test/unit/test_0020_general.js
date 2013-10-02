@@ -12,8 +12,8 @@ var gExpectedCount;
 
 function run_test() {
   do_test_pending();
-  do_register_cleanup(end_test);
 
+  // adjustGeneralPaths registers a cleanup function that calls end_test.
   adjustGeneralPaths();
 
   removeUpdateDirsAndFiles();
@@ -124,7 +124,7 @@ function check_test_pt02() {
   do_check_true(bestUpdate.showPrompt);
   do_check_true(bestUpdate.showNeverForVersion);
   do_check_eq(bestUpdate.promptWaitTime, "345600");
-  do_check_eq(bestUpdate.serviceURL, URL_HOST + "update.xml?force=1");
+  do_check_eq(bestUpdate.serviceURL, URL_HOST + "/update.xml?force=1");
   do_check_eq(bestUpdate.channel, "test_channel");
   do_check_false(bestUpdate.isCompleteUpdate);
   do_check_false(bestUpdate.isSecurityUpdate);
@@ -204,7 +204,7 @@ function check_test_pt03() {
   do_check_true(bestUpdate.showPrompt);
   do_check_true(bestUpdate.showNeverForVersion);
   do_check_eq(bestUpdate.promptWaitTime, "691200");
-  do_check_eq(bestUpdate.serviceURL, URL_HOST + "update.xml?force=1");
+  do_check_eq(bestUpdate.serviceURL, URL_HOST + "/update.xml?force=1");
   do_check_eq(bestUpdate.channel, "test_channel");
   do_check_false(bestUpdate.isCompleteUpdate);
   do_check_false(bestUpdate.isSecurityUpdate);

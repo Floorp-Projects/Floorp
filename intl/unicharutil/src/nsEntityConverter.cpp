@@ -4,16 +4,11 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "nsEntityConverter.h"
-#include "nsIProperties.h"
-#include "nsIServiceManager.h"
-#include "nsIComponentManager.h"
-#include "nsReadableUtils.h"
-#include "nsCRT.h"
 #include "nsLiteralString.h"
-#include "nsXPIDLString.h"
 #include "nsString.h"
-#include "nsUnicharUtils.h"
 #include "mozilla/Services.h"
+#include "nsServiceManagerUtils.h"
+#include "nsCRT.h"
 
 //
 // implementation methods

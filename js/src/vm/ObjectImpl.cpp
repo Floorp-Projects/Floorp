@@ -37,7 +37,7 @@ PropDesc::checkGetter(JSContext *cx)
 {
     if (hasGet_) {
         if (!js_IsCallable(get_) && !get_.isUndefined()) {
-            JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_BAD_GET_SET_FIELD,
+            JS_ReportErrorNumber(cx, js_GetErrorMessage, nullptr, JSMSG_BAD_GET_SET_FIELD,
                                  js_getter_str);
             return false;
         }
@@ -50,7 +50,7 @@ PropDesc::checkSetter(JSContext *cx)
 {
     if (hasSet_) {
         if (!js_IsCallable(set_) && !set_.isUndefined()) {
-            JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_BAD_GET_SET_FIELD,
+            JS_ReportErrorNumber(cx, js_GetErrorMessage, nullptr, JSMSG_BAD_GET_SET_FIELD,
                                  js_setter_str);
             return false;
         }
@@ -63,7 +63,7 @@ CheckArgCompartment(JSContext *cx, JSObject *obj, HandleValue v,
                     const char *methodname, const char *propname)
 {
     if (v.isObject() && v.toObject().compartment() != obj->compartment()) {
-        JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_DEBUG_COMPARTMENT_MISMATCH,
+        JS_ReportErrorNumber(cx, js_GetErrorMessage, nullptr, JSMSG_DEBUG_COMPARTMENT_MISMATCH,
                              methodname, propname);
         return false;
     }
@@ -193,7 +193,7 @@ js::ObjectImpl::checkShapeConsistency()
     MOZ_ASSERT(isNative());
 
     Shape *shape = lastProperty();
-    Shape *prev = NULL;
+    Shape *prev = nullptr;
 
     if (inDictionaryMode()) {
         MOZ_ASSERT(shape->hasTable());
@@ -485,7 +485,7 @@ DenseElementsHeader::defineElement(JSContext *cx, Handle<ObjectImpl*> obj, uint3
         MOZ_ALWAYS_FALSE(js_ReportValueErrorFlags(cx, JSREPORT_ERROR, JSMSG_OBJECT_NOT_EXTENSIBLE,
                                                   JSDVG_IGNORE_STACK,
                                                   val, NullPtr(),
-                                                  NULL, NULL));
+                                                  nullptr, nullptr));
         return false;
     }
 
@@ -517,7 +517,8 @@ js::ArrayBufferDelegate(JSContext *cx, Handle<ObjectImpl*> obj)
     MOZ_ASSERT(obj->hasClass(&ArrayBufferObject::class_));
     if (obj->getPrivate())
         return static_cast<JSObject *>(obj->getPrivate());
-    JSObject *delegate = NewObjectWithGivenProto(cx, &JSObject::class_, obj->getProto(), NULL);
+    JSObject *delegate = NewObjectWithGivenProto(cx, &JSObject::class_,
+                                                 obj->getProto(), nullptr);
     obj->setPrivateGCThing(delegate);
     return delegate;
 }
@@ -534,7 +535,7 @@ TypedElementsHeader<T>::defineElement(JSContext *cx, Handle<ObjectImpl*> obj,
     RootedValue val(cx, ObjectValue(*obj));
     js_ReportValueErrorFlags(cx, JSREPORT_ERROR, JSMSG_OBJECT_NOT_EXTENSIBLE,
                              JSDVG_IGNORE_STACK,
-                             val, NullPtr(), NULL, NULL);
+                             val, NullPtr(), nullptr, nullptr);
     return false;
 }
 
@@ -573,7 +574,7 @@ js::GetOwnProperty(JSContext *cx, Handle<ObjectImpl*> obj, PropertyId pid_, unsi
             Rooted<jsid> id(cx, pid.get().asId());
             Rooted<JSObject*> robj(cx, static_cast<JSObject*>(obj.get()));
             if (clasp->flags & JSCLASS_NEW_RESOLVE) {
-                Rooted<JSObject*> obj2(cx, NULL);
+                Rooted<JSObject*> obj2(cx, nullptr);
                 JSNewResolveOp op = reinterpret_cast<JSNewResolveOp>(resolve);
                 if (!op(cx, robj, id, resolveFlags, &obj2))
                     return false;

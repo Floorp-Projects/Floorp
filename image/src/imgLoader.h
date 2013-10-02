@@ -19,6 +19,7 @@
 #include "imgRequest.h"
 #include "nsIProgressEventSink.h"
 #include "nsIChannel.h"
+#include "nsIThreadRetargetableStreamListener.h"
 #include "imgIRequest.h"
 
 class imgLoader;
@@ -28,6 +29,12 @@ class nsILoadGroup;
 class imgCacheExpirationTracker;
 class imgMemoryReporter;
 class nsIChannelPolicy;
+
+namespace mozilla {
+namespace image {
+class ImageURL;
+}
+}
 
 class imgCacheEntry
 {
@@ -205,6 +212,9 @@ class imgLoader : public imgILoader,
                   public nsIObserver
 {
 public:
+  typedef mozilla::image::ImageURL ImageURL;
+  typedef nsRefPtrHashtable<nsCStringHashKey, imgCacheEntry> imgCacheTable;
+
   NS_DECL_ISUPPORTS
   NS_DECL_IMGILOADER
   NS_DECL_NSICONTENTSNIFFER
@@ -263,6 +273,10 @@ public:
   nsresult InitCache();
 
   bool RemoveFromCache(nsIURI *aKey);
+  bool RemoveFromCache(ImageURL *aKey);
+  bool RemoveFromCache(nsCString &spec,
+                       imgCacheTable &cache,
+                       imgCacheQueue &queue);
   bool RemoveFromCache(imgCacheEntry *entry);
 
   bool PutIntoCache(nsIURI *key, imgCacheEntry *entry);
@@ -304,8 +318,8 @@ public:
   // HasObservers(). The request's cache entry will be re-set before this
   // happens, by calling imgRequest::SetCacheEntry() when an entry with no
   // observers is re-requested.
-  bool SetHasNoProxies(nsIURI *key, imgCacheEntry *entry);
-  bool SetHasProxies(nsIURI *key);
+  bool SetHasNoProxies(ImageURL *key, imgCacheEntry *entry);
+  bool SetHasProxies(ImageURL *key);
 
 private: // methods
 
@@ -336,15 +350,14 @@ private: // methods
 
   void ReadAcceptHeaderPref();
 
-
-  typedef nsRefPtrHashtable<nsCStringHashKey, imgCacheEntry> imgCacheTable;
-
   nsresult EvictEntries(imgCacheTable &aCacheToClear);
   nsresult EvictEntries(imgCacheQueue &aQueueToClear);
 
   imgCacheTable &GetCache(nsIURI *aURI);
   imgCacheQueue &GetCacheQueue(nsIURI *aURI);
-  void CacheEntriesChanged(nsIURI *aURI, int32_t sizediff = 0);
+  imgCacheTable &GetCache(ImageURL *aURI);
+  imgCacheQueue &GetCacheQueue(ImageURL *aURI);
+  void CacheEntriesChanged(ImageURL *aURI, int32_t sizediff = 0);
   void CheckCacheLimits(imgCacheTable &cache, imgCacheQueue &queue);
 
 private: // data
@@ -375,8 +388,10 @@ private: // data
 
 #include "nsCOMPtr.h"
 #include "nsIStreamListener.h"
+#include "nsIThreadRetargetableStreamListener.h"
 
 class ProxyListener : public nsIStreamListener
+                    , public nsIThreadRetargetableStreamListener
 {
 public:
   ProxyListener(nsIStreamListener *dest);
@@ -385,6 +400,7 @@ public:
   /* additional members */
   NS_DECL_ISUPPORTS
   NS_DECL_NSISTREAMLISTENER
+  NS_DECL_NSITHREADRETARGETABLESTREAMLISTENER
   NS_DECL_NSIREQUESTOBSERVER
 
 private:
@@ -427,6 +443,7 @@ class nsProgressNotificationProxy MOZ_FINAL
 #include "nsCOMArray.h"
 
 class imgCacheValidator : public nsIStreamListener,
+                          public nsIThreadRetargetableStreamListener,
                           public nsIChannelEventSink,
                           public nsIInterfaceRequestor,
                           public nsIAsyncVerifyRedirectCallback
@@ -439,6 +456,7 @@ public:
   void AddProxy(imgRequestProxy *aProxy);
 
   NS_DECL_ISUPPORTS
+  NS_DECL_NSITHREADRETARGETABLESTREAMLISTENER
   NS_DECL_NSISTREAMLISTENER
   NS_DECL_NSIREQUESTOBSERVER
   NS_DECL_NSICHANNELEVENTSINK

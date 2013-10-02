@@ -7,10 +7,12 @@
 #include "nsContentUtils.h"
 #include "nsIXPConnect.h"
 
+using namespace mozilla;
+
 nsDOMDataContainerEvent::nsDOMDataContainerEvent(
                                              mozilla::dom::EventTarget* aOwner,
                                              nsPresContext* aPresContext,
-                                             nsEvent* aEvent)
+                                             WidgetEvent* aEvent)
   : nsDOMEvent(aOwner, aPresContext, aEvent)
 {
 }
@@ -77,7 +79,7 @@ nsresult
 NS_NewDOMDataContainerEvent(nsIDOMEvent** aInstancePtrResult,
                             mozilla::dom::EventTarget* aOwner,
                             nsPresContext* aPresContext,
-                            nsEvent* aEvent)
+                            WidgetEvent* aEvent)
 {
   nsDOMDataContainerEvent* it =
     new nsDOMDataContainerEvent(aOwner, aPresContext, aEvent);

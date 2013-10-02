@@ -166,8 +166,8 @@ public:
     return nsDocument::GetElementById(aElementId);
   }
 
-  virtual void DocSizeOfExcludingThis(nsWindowSizes* aWindowSizes) const MOZ_OVERRIDE;
-  // DocSizeOfIncludingThis is inherited from nsIDocument.
+  virtual void DocAddSizeOfExcludingThis(nsWindowSizes* aWindowSizes) const MOZ_OVERRIDE;
+  // DocAddSizeOfIncludingThis is inherited from nsIDocument.
 
   virtual bool WillIgnoreCharsetOverride() MOZ_OVERRIDE;
 

@@ -20,7 +20,7 @@
 #include "mozilla/Assertions.h"         // for MOZ_ASSERT, etc
 #include "mozilla/Monitor.h"            // for Monitor, MonitorAutoLock
 #include "mozilla/ReentrantMonitor.h"   // for ReentrantMonitor, etc
-#include "mozilla/ipc/AsyncChannel.h"   // for AsyncChannel, etc
+#include "mozilla/ipc/MessageChannel.h" // for MessageChannel, etc
 #include "mozilla/ipc/Transport.h"      // for Transport
 #include "mozilla/layers/CompositableClient.h"  // for CompositableChild, etc
 #include "mozilla/layers/ISurfaceAllocator.h"  // for ISurfaceAllocator
@@ -198,6 +198,7 @@ ImageBridgeChild::UpdatePictureRect(CompositableClient* aCompositable,
 
 // Singleton
 static ImageBridgeChild *sImageBridgeChildSingleton = nullptr;
+static nsRefPtr<ImageBridgeParent> sImageBridgeParentSingleton;
 static Thread *sImageBridgeChildThread = nullptr;
 
 // dispatched function
@@ -224,6 +225,7 @@ static void DeleteImageBridgeSync(ReentrantMonitor *aBarrier, bool *aDone)
                     "Should be in ImageBridgeChild thread.");
   delete sImageBridgeChildSingleton;
   sImageBridgeChildSingleton = nullptr;
+  sImageBridgeParentSingleton = nullptr;
   *aDone = true;
   aBarrier->NotifyAll();
 }
@@ -289,8 +291,8 @@ static void DeallocSurfaceDescriptorGrallocSync(const SurfaceDescriptor& aBuffer
 static void ConnectImageBridge(ImageBridgeChild * child, ImageBridgeParent * parent)
 {
   MessageLoop *parentMsgLoop = parent->GetMessageLoop();
-  ipc::AsyncChannel *parentChannel = parent->GetIPCChannel();
-  child->Open(parentChannel, parentMsgLoop, mozilla::ipc::AsyncChannel::Child);
+  ipc::MessageChannel *parentChannel = parent->GetIPCChannel();
+  child->Open(parentChannel, parentMsgLoop, mozilla::ipc::ChildSide);
 }
 
 ImageBridgeChild::ImageBridgeChild()
@@ -358,8 +360,12 @@ ConnectImageBridgeInChildProcess(Transport* aTransport,
   // Bind the IPC channel to the image bridge thread.
   sImageBridgeChildSingleton->Open(aTransport, aOtherProcess,
                                    XRE_GetIOMessageLoop(),
-                                   AsyncChannel::Child);
+                                   ipc::ChildSide);
 }
+
+#ifdef MOZ_NUWA_PROCESS
+#include "ipc/Nuwa.h"
+#endif
 
 static void ReleaseImageClientNow(ImageClient* aClient)
 {
@@ -373,6 +379,20 @@ void ImageBridgeChild::DispatchReleaseImageClient(ImageClient* aClient)
   sImageBridgeChildSingleton->GetMessageLoop()->PostTask(
     FROM_HERE,
     NewRunnableFunction(&ReleaseImageClientNow, aClient));
+}
+
+static void ReleaseTextureClientNow(TextureClient* aClient)
+{
+  MOZ_ASSERT(InImageBridgeChildThread());
+  aClient->Release();
+}
+
+// static
+void ImageBridgeChild::DispatchReleaseTextureClient(TextureClient* aClient)
+{
+  sImageBridgeChildSingleton->GetMessageLoop()->PostTask(
+    FROM_HERE,
+    NewRunnableFunction(&ReleaseTextureClientNow, aClient));
 }
 
 static void UpdateImageClientNow(ImageClient* aClient, ImageContainer* aContainer)
@@ -521,7 +541,7 @@ ImageBridgeChild::EndTransaction()
 }
 
 
-bool
+PImageBridgeChild*
 ImageBridgeChild::StartUpInChildProcess(Transport* aTransport,
                                         ProcessId aOtherProcess)
 {
@@ -529,13 +549,23 @@ ImageBridgeChild::StartUpInChildProcess(Transport* aTransport,
 
   ProcessHandle processHandle;
   if (!base::OpenProcessHandle(aOtherProcess, &processHandle)) {
-    return false;
+    return nullptr;
   }
 
   sImageBridgeChildThread = new Thread("ImageBridgeChild");
   if (!sImageBridgeChildThread->Start()) {
-    return false;
+    return nullptr;
   }
+
+#ifdef MOZ_NUWA_PROCESS
+  if (IsNuwaProcess()) {
+    sImageBridgeChildThread
+      ->message_loop()->PostTask(FROM_HERE,
+                                 NewRunnableFunction(NuwaMarkCurrentThread,
+                                                     (void (*)(void *))nullptr,
+                                                     (void *)nullptr));
+  }
+#endif
 
   sImageBridgeChildSingleton = new ImageBridgeChild();
   sImageBridgeChildSingleton->GetMessageLoop()->PostTask(
@@ -543,7 +573,7 @@ ImageBridgeChild::StartUpInChildProcess(Transport* aTransport,
     NewRunnableFunction(ConnectImageBridgeInChildProcess,
                         aTransport, processHandle));
 
-  return true;
+  return sImageBridgeChildSingleton;
 }
 
 void ImageBridgeChild::ShutDown()
@@ -565,9 +595,9 @@ bool ImageBridgeChild::StartUpOnThread(Thread* aThread)
       aThread->Start();
     }
     sImageBridgeChildSingleton = new ImageBridgeChild();
-    ImageBridgeParent* imageBridgeParent = new ImageBridgeParent(
+    sImageBridgeParentSingleton = new ImageBridgeParent(
       CompositorParent::CompositorLoop(), nullptr);
-    sImageBridgeChildSingleton->ConnectAsync(imageBridgeParent);
+    sImageBridgeChildSingleton->ConnectAsync(sImageBridgeParentSingleton);
     return true;
   } else {
     return false;

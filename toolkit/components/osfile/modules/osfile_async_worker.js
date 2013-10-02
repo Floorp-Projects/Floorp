@@ -51,7 +51,7 @@ if (this.Components) {
      LOG("Method", method, "succeeded");
    } catch (ex) {
      exn = ex;
-     LOG("Error while calling agent method", exn, exn.stack);
+     LOG("Error while calling agent method", exn, exn.stack || "");
    }
 
    if (start) {

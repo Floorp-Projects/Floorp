@@ -110,6 +110,24 @@ class HTMLSelectElement MOZ_FINAL : public nsGenericHTMLFormElementWithState,
                                     public nsIConstraintValidation
 {
 public:
+  /**
+   *  IS_SELECTED   whether to set the option(s) to true or false
+   *
+   *  CLEAR_ALL     whether to clear all other options (for example, if you
+   *                are normal-clicking on the current option)
+   *
+   *  SET_DISABLED  whether it is permissible to set disabled options
+   *                (for JavaScript)
+   *
+   *  NOTIFY        whether to notify frames and such
+   */
+  enum OptionType {
+    IS_SELECTED   = 1 << 0,
+    CLEAR_ALL     = 1 << 1,
+    SET_DISABLED  = 1 << 2,
+    NOTIFY        = 1 << 3
+  };
+
   using nsIConstraintValidation::GetValidationMessage;
 
   HTMLSelectElement(already_AddRefed<nsINodeInfo> aNodeInfo,
@@ -307,20 +325,13 @@ public:
    * @param aStartIndex the first index to set
    * @param aEndIndex the last index to set (set same as first index for one
    *        option)
-   * @param aIsSelected whether to set the option(s) to true or false
-   * @param aClearAll whether to clear all other options (for example, if you
-   *        are normal-clicking on the current option)
-   * @param aSetDisabled whether it is permissible to set disabled options
-   *        (for JavaScript)
-   * @param aNotify whether to notify frames and such
+   * @param aOptionsMask determines whether to set, clear all or disable
+   *        options and whether frames are to be notified of such.
    * @return whether any options were actually changed
    */
   bool SetOptionsSelectedByIndex(int32_t aStartIndex,
                                  int32_t aEndIndex,
-                                 bool aIsSelected,
-                                 bool aClearAll,
-                                 bool aSetDisabled,
-                                 bool aNotify);
+                                 uint32_t aOptionsMask);
 
   /**
    * Finds the index of a given option element

@@ -1,0 +1,71 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this file,
+ * You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "domstubs.idl"
+
+[scriptable, uuid(40ad96b2-9efa-41fb-84c7-fbcec9b153f0)]
+interface nsIB2GKeyboard : nsISupports
+{
+  void sendKey(in long keyCode, in long charCode);
+
+  // Select the <select> option specified by index.
+  // If this method is called on a <select> that support multiple
+  // selection, then the option specified by index will be added to
+  // the selection.
+  // If this method is called for a select that does not support multiple
+  // selection the previous element will be unselected.
+  void setSelectedOption(in jsval index);
+
+  // Select the <select> options specified by indexes. All other options
+  // will be deselected.
+  // If this method is called for a <select> that does not support multiple
+  // selection, then the last index specified in indexes will be selected.
+  void setSelectedOptions(in jsval indexes);
+
+  // Set the value on the currently focused element. This has to be used
+  // for special situations where the value had to be chosen amongst a
+  // list (type=month) or a widget (type=date, time, etc.).
+  // If the value passed in parameter isn't valid (in the term of HTML5
+  // Forms Validation), the value will simply be ignored by the element.
+  void setValue(in jsval value);
+
+  void removeFocus();
+
+  attribute nsIDOMEventListener onfocuschange;
+
+  // Fires when user moves the cursor, changes the selection, or alters the
+  // composing text length
+  attribute nsIDOMEventListener onselectionchange;
+
+  // The start position of the selection.
+  readonly attribute long selectionStart;
+
+  // The stop position of the selection.
+  readonly attribute long selectionEnd;
+
+  /*
+   * Set the selection range of the the editable text.
+   *
+   * @param start The beginning of the selected text.
+   * @param end The end of the selected text.
+   *
+   * Note that the start position should be less or equal to the end position.
+   * To move the cursor, set the start and end position to the same value.
+   */
+  void setSelectionRange(in long start, in long end);
+
+  /*
+   * Replace text around the beginning of the current selection range of the
+   * editable text.
+   *
+   * @param text The string to be replaced with.
+   * @param beforeLength The number of characters to be deleted before the
+   * beginning of the current selection range. Defaults to 0.
+   * @param afterLength The number of characters to be deleted after the
+   * beginning of the current selection range. Defaults to 0.
+   */
+  void replaceSurroundingText(in DOMString text,
+                              [optional] in long beforeLength,
+                              [optional] in long afterLength);
+};

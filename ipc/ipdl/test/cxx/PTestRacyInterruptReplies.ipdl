@@ -1,0 +1,41 @@
+namespace mozilla {
+namespace _ipdltest {
+
+intr protocol PTestRacyInterruptReplies {
+child:
+    intr R_() returns (int replyNum);
+    async _A();
+    async ChildTest();
+    async __delete__();
+
+parent:
+    intr _R() returns (int replyNum);
+    async A_();
+
+state PARENT_START:
+    call R_ goto PARENT_S1;
+
+state PARENT_S1:
+    recv A_ goto PARENT_S2;
+
+state PARENT_S2:
+    call R_ goto CHILD_TEST;
+
+state CHILD_TEST:
+    send ChildTest goto CHILD_START;
+
+state CHILD_START:
+    answer _R goto CHILD_S1;
+
+state CHILD_S1:
+    send _A goto CHILD_S2;
+
+state CHILD_S2:
+    answer _R goto DYING;
+
+state DYING:
+    send __delete__;
+};
+
+} // namespace _ipdltest
+} // namespace mozilla

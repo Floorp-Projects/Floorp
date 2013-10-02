@@ -36,9 +36,11 @@ class Channel::ChannelImpl : public MessageLoopForIO::Watcher {
   }
   bool Send(Message* message);
   void GetClientFileDescriptorMapping(int *src_fd, int *dest_fd) const;
-  int GetServerFileDescriptor() const {
-    DCHECK(mode_ == MODE_SERVER);
-    return pipe_;
+
+  void ResetFileDescriptor(int fd);
+
+  int GetFileDescriptor() const {
+      return pipe_;
   }
   void CloseClientFileDescriptor();
 

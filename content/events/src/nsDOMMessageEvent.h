@@ -30,7 +30,8 @@ class nsDOMMessageEvent : public nsDOMEvent,
 {
 public:
   nsDOMMessageEvent(mozilla::dom::EventTarget* aOwner,
-                    nsPresContext* aPresContext, nsEvent* aEvent);
+                    nsPresContext* aPresContext,
+                    mozilla::WidgetEvent* aEvent);
   ~nsDOMMessageEvent();
 
   NS_DECL_ISUPPORTS_INHERITED

@@ -15,7 +15,7 @@
 #define nsUnicodeToHZ_h___
 
 #include "nsUCSupport.h"
-#include "gbku.h"
+#include "nsGBKConvUtil.h"
 //----------------------------------------------------------------------
 // Class nsUnicodeToHZ [declaration]
 

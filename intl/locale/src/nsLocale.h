@@ -20,8 +20,7 @@
 #ifndef nsLocale_h__
 #define nsLocale_h__
 
-#include "nsString.h"
-#include "nsTArray.h"
+#include "nsStringFwd.h"
 #include "nsILocale.h"
 #include "plhash.h"
 

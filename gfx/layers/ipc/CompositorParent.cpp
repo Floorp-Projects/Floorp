@@ -23,6 +23,7 @@
 #include "ipc/ShadowLayersManager.h"    // for ShadowLayersManager
 #include "mozilla/AutoRestore.h"        // for AutoRestore
 #include "mozilla/DebugOnly.h"          // for DebugOnly
+#include "mozilla/gfx/2D.h"          // for DrawTarget
 #include "mozilla/gfx/Point.h"          // for IntSize
 #include "mozilla/ipc/Transport.h"      // for Transport
 #include "mozilla/layers/APZCTreeManager.h"  // for APZCTreeManager
@@ -48,10 +49,12 @@
 #include "mozilla/layers/CompositorD3D9.h"
 #endif
 #include "GeckoProfiler.h"
+#include "mozilla/ipc/ProtocolTypes.h"
 
 using namespace base;
 using namespace mozilla;
 using namespace mozilla::ipc;
+using namespace mozilla::gfx;
 using namespace std;
 
 namespace mozilla {
@@ -295,7 +298,13 @@ CompositorParent::RecvMakeSnapshot(const SurfaceDescriptor& aInSnapshot,
                                    SurfaceDescriptor* aOutSnapshot)
 {
   AutoOpenSurface opener(OPEN_READ_WRITE, aInSnapshot);
-  nsRefPtr<gfxContext> target = new gfxContext(opener.Get());
+  gfxIntSize size = opener.Size();
+  // XXX CreateDrawTargetForSurface will always give us a Cairo surface, we can
+  // do better if AutoOpenSurface uses Moz2D directly.
+  RefPtr<DrawTarget> target =
+    gfxPlatform::GetPlatform()->CreateDrawTargetForSurface(opener.Get(),
+                                                           IntSize(size.width,
+                                                                   size.height));
   ComposeToTarget(target);
   *aOutSnapshot = aInSnapshot;
   return true;
@@ -541,7 +550,7 @@ CompositorParent::Composite()
 }
 
 void
-CompositorParent::ComposeToTarget(gfxContext* aTarget)
+CompositorParent::ComposeToTarget(DrawTarget* aTarget)
 {
   PROFILER_LABEL("CompositorParent", "ComposeToTarget");
   AutoRestore<bool> override(mOverrideComposeReadiness);
@@ -550,7 +559,7 @@ CompositorParent::ComposeToTarget(gfxContext* aTarget)
   if (!CanComposite()) {
     return;
   }
-  mLayerManager->BeginTransactionWithTarget(aTarget);
+  mLayerManager->BeginTransactionWithDrawTarget(aTarget);
   // Since CanComposite() is true, Composite() must end the layers txn
   // we opened above.
   Composite();
@@ -861,6 +870,12 @@ public:
   {}
   virtual ~CrossProcessCompositorParent();
 
+  // IToplevelProtocol::CloneToplevel()
+  virtual IToplevelProtocol*
+  CloneToplevel(const InfallibleTArray<mozilla::ipc::ProtocolFdMapping>& aFds,
+                base::ProcessHandle aPeerProcess,
+                mozilla::ipc::ProtocolCloneContext* aCtx) MOZ_OVERRIDE;
+
   virtual void ActorDestroy(ActorDestroyReason aWhy) MOZ_OVERRIDE;
 
   // FIXME/bug 774388: work out what shutdown protocol we need.
@@ -905,7 +920,7 @@ OpenCompositor(CrossProcessCompositorParent* aCompositor,
   MOZ_ASSERT(ok);
 }
 
-/*static*/ bool
+/*static*/ PCompositorParent*
 CompositorParent::Create(Transport* aTransport, ProcessId aOtherProcess)
 {
   nsRefPtr<CrossProcessCompositorParent> cpcp =
@@ -913,14 +928,34 @@ CompositorParent::Create(Transport* aTransport, ProcessId aOtherProcess)
   ProcessHandle handle;
   if (!base::OpenProcessHandle(aOtherProcess, &handle)) {
     // XXX need to kill |aOtherProcess|, it's boned
-    return false;
+    return nullptr;
   }
   cpcp->mSelfRef = cpcp;
   CompositorLoop()->PostTask(
     FROM_HERE,
     NewRunnableFunction(OpenCompositor, cpcp.get(),
                         aTransport, handle, XRE_GetIOMessageLoop()));
-  return true;
+  // The return value is just compared to null for success checking,
+  // we're not sharing a ref.
+  return cpcp.get();
+}
+
+IToplevelProtocol*
+CompositorParent::CloneToplevel(const InfallibleTArray<mozilla::ipc::ProtocolFdMapping>& aFds,
+                                base::ProcessHandle aPeerProcess,
+                                mozilla::ipc::ProtocolCloneContext* aCtx)
+{
+  for (unsigned int i = 0; i < aFds.Length(); i++) {
+    if (aFds[i].protocolId() == (unsigned)GetProtocolId()) {
+      Transport* transport = OpenDescriptor(aFds[i].fd(),
+                                            Transport::MODE_SERVER);
+      PCompositorParent* compositor = Create(transport, base::GetProcId(aPeerProcess));
+      compositor->CloneManagees(this, aCtx);
+      compositor->IToplevelProtocol::SetTransport(transport);
+      return compositor;
+    }
+  }
+  return nullptr;
 }
 
 static void
@@ -1020,6 +1055,25 @@ CrossProcessCompositorParent::~CrossProcessCompositorParent()
 {
   XRE_GetIOMessageLoop()->PostTask(FROM_HERE,
                                    new DeleteTask<Transport>(mTransport));
+}
+
+IToplevelProtocol*
+CrossProcessCompositorParent::CloneToplevel(const InfallibleTArray<mozilla::ipc::ProtocolFdMapping>& aFds,
+                                            base::ProcessHandle aPeerProcess,
+                                            mozilla::ipc::ProtocolCloneContext* aCtx)
+{
+  for (unsigned int i = 0; i < aFds.Length(); i++) {
+    if (aFds[i].protocolId() == (unsigned)GetProtocolId()) {
+      Transport* transport = OpenDescriptor(aFds[i].fd(),
+                                            Transport::MODE_SERVER);
+      PCompositorParent* compositor =
+        CompositorParent::Create(transport, base::GetProcId(aPeerProcess));
+      compositor->CloneManagees(this, aCtx);
+      compositor->IToplevelProtocol::SetTransport(transport);
+      return compositor;
+    }
+  }
+  return nullptr;
 }
 
 } // namespace layers

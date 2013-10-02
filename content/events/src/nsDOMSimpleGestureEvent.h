@@ -17,7 +17,7 @@ class nsDOMSimpleGestureEvent : public nsDOMMouseEvent,
 {
 public:
   nsDOMSimpleGestureEvent(mozilla::dom::EventTarget* aOwner,
-                          nsPresContext*, nsSimpleGestureEvent*);
+                          nsPresContext*, mozilla::WidgetSimpleGestureEvent*);
   virtual ~nsDOMSimpleGestureEvent();
 
   NS_DECL_ISUPPORTS_INHERITED
@@ -35,22 +35,23 @@ public:
 
   uint32_t AllowedDirections()
   {
-    return static_cast<nsSimpleGestureEvent*>(mEvent)->allowedDirections;
+    return static_cast<mozilla::WidgetSimpleGestureEvent*>(mEvent)->
+             allowedDirections;
   }
 
   uint32_t Direction()
   {
-    return static_cast<nsSimpleGestureEvent*>(mEvent)->direction;
+    return static_cast<mozilla::WidgetSimpleGestureEvent*>(mEvent)->direction;
   }
 
   double Delta()
   {
-    return static_cast<nsSimpleGestureEvent*>(mEvent)->delta;
+    return static_cast<mozilla::WidgetSimpleGestureEvent*>(mEvent)->delta;
   }
 
   uint32_t ClickCount()
   {
-    return static_cast<nsSimpleGestureEvent*>(mEvent)->clickCount;
+    return static_cast<mozilla::WidgetSimpleGestureEvent*>(mEvent)->clickCount;
   }
 
   void InitSimpleGestureEvent(const nsAString& aType,

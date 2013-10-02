@@ -10,6 +10,7 @@
 #include "mozilla/dom/network/Constants.h"
 #include "mozilla/dom/ScreenOrientation.h"
 #include "nsIScreenManager.h"
+#include "nsServiceManagerUtils.h"
 
 using namespace mozilla::dom;
 using namespace mozilla::hal;
@@ -193,6 +194,7 @@ LockScreenOrientation(const ScreenOrientation& aOrientation)
     case eScreenOrientation_LandscapePrimary:
     case eScreenOrientation_LandscapeSecondary:
     case eScreenOrientation_LandscapePrimary | eScreenOrientation_LandscapeSecondary:
+    case eScreenOrientation_Default:
       bridge->LockScreenOrientation(aOrientation);
       return true;
     default:

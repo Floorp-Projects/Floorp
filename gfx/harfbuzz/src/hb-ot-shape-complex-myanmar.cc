@@ -104,17 +104,6 @@ static void
 override_features_myanmar (hb_ot_shape_planner_t *plan)
 {
   plan->map.add_feature (HB_TAG('l','i','g','a'), 0, F_GLOBAL);
-
-  /*
-   * Note:
-   *
-   * Spec says 'mark' is used, and the mmrtext.ttf font from
-   * Windows 8 has lookups for it.  But testing suggests that
-   * Windows 8 Uniscribe is NOT applying it.  It *is* applying
-   * 'mkmk' however.
-   */
-  if (hb_options ().uniscribe_bug_compatible)
-    plan->map.add_feature (HB_TAG('m','a','r','k'), 0, F_GLOBAL);
 }
 
 

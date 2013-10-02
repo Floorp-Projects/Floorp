@@ -1844,7 +1844,7 @@ public:
 
     // Even if the change is caused by untrusted event, we need to dispatch
     // trusted input event since it's a fact.
-    nsEvent inputEvent(true, NS_FORM_INPUT);
+    WidgetEvent inputEvent(true, NS_FORM_INPUT);
     inputEvent.mFlags.mCancelable = false;
     inputEvent.time = static_cast<uint64_t>(PR_Now() / 1000);
     nsEventStatus status = nsEventStatus_eIgnore;
@@ -4809,7 +4809,7 @@ nsEditor::HandleKeyPressEvent(nsIDOMKeyEvent* aKeyEvent)
   // And also when you add new key handling, you need to change the subclass's
   // HandleKeyPressEvent()'s switch statement.
 
-  nsKeyEvent* nativeKeyEvent = GetNativeKeyEvent(aKeyEvent);
+  WidgetKeyboardEvent* nativeKeyEvent = GetNativeKeyEvent(aKeyEvent);
   NS_ENSURE_TRUE(nativeKeyEvent, NS_ERROR_UNEXPECTED);
   NS_ASSERTION(nativeKeyEvent->message == NS_KEY_PRESS,
                "HandleKeyPressEvent gets non-keypress event");
@@ -5162,14 +5162,14 @@ nsEditor::IsModifiableNode(nsINode *aNode)
   return true;
 }
 
-nsKeyEvent*
+WidgetKeyboardEvent*
 nsEditor::GetNativeKeyEvent(nsIDOMKeyEvent* aDOMKeyEvent)
 {
   NS_ENSURE_TRUE(aDOMKeyEvent, nullptr);
-  nsEvent* nativeEvent = aDOMKeyEvent->GetInternalNSEvent();
+  WidgetEvent* nativeEvent = aDOMKeyEvent->GetInternalNSEvent();
   NS_ENSURE_TRUE(nativeEvent, nullptr);
   NS_ENSURE_TRUE(nativeEvent->eventStructType == NS_KEY_EVENT, nullptr);
-  return static_cast<nsKeyEvent*>(nativeEvent);
+  return static_cast<WidgetKeyboardEvent*>(nativeEvent);
 }
 
 already_AddRefed<nsIContent>

@@ -80,11 +80,11 @@ class IonJSFrameLayout : public IonEntryFrameLayout
         return offsetof(IonJSFrameLayout, numActualArgs_);
     }
     static size_t offsetOfThis() {
-        IonJSFrameLayout *base = NULL;
+        IonJSFrameLayout *base = nullptr;
         return reinterpret_cast<size_t>(&base->argv()[0]);
     }
     static size_t offsetOfActualArgs() {
-        IonJSFrameLayout *base = NULL;
+        IonJSFrameLayout *base = nullptr;
         // +1 to skip |this|.
         return reinterpret_cast<size_t>(&base->argv()[1]);
     }
@@ -219,15 +219,15 @@ class IonExitFrameLayout : public IonCommonFrameLayout
     // each wrapper are pushed before the exit frame.  This correspond exactly
     // to the value of the argBase register of the generateVMWrapper function.
     inline uint8_t *argBase() {
-        JS_ASSERT(footer()->ionCode() != NULL);
+        JS_ASSERT(footer()->ionCode() != nullptr);
         return top();
     }
 
     inline bool isWrapperExit() {
-        return footer()->function() != NULL;
+        return footer()->function() != nullptr;
     }
     inline bool isNativeExit() {
-        return footer()->ionCode() == NULL;
+        return footer()->ionCode() == nullptr;
     }
     inline bool isOOLNativeExit() {
         return footer()->ionCode() == ION_FRAME_OOL_NATIVE;

@@ -162,13 +162,13 @@ struct BaselineScript
         return offsetof(BaselineScript, method_);
     }
 
-    void sizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf, size_t *data,
-                             size_t *fallbackStubs) const {
-        *data = mallocSizeOf(this);
+    void addSizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf, size_t *data,
+                                size_t *fallbackStubs) const {
+        *data += mallocSizeOf(this);
 
-        // data already includes the ICStubSpace itself, so use
+        // |data| already includes the ICStubSpace itself, so use
         // sizeOfExcludingThis.
-        *fallbackStubs = fallbackStubSpace_.sizeOfExcludingThis(mallocSizeOf);
+        *fallbackStubs += fallbackStubSpace_.sizeOfExcludingThis(mallocSizeOf);
     }
 
     bool active() const {
@@ -250,12 +250,12 @@ struct BaselineScript
     void copyPCMappingIndexEntries(const PCMappingIndexEntry *entries);
 
     void copyPCMappingEntries(const CompactBufferWriter &entries);
-    uint8_t *nativeCodeForPC(JSScript *script, jsbytecode *pc, PCMappingSlotInfo *slotInfo = NULL);
+    uint8_t *nativeCodeForPC(JSScript *script, jsbytecode *pc, PCMappingSlotInfo *slotInfo = nullptr);
     jsbytecode *pcForReturnOffset(JSScript *script, uint32_t nativeOffset);
     jsbytecode *pcForReturnAddress(JSScript *script, uint8_t *nativeAddress);
 
     // Toggle debug traps (used for breakpoints and step mode) in the script.
-    // If |pc| is NULL, toggle traps for all ops in the script. Else, only
+    // If |pc| is nullptr, toggle traps for all ops in the script. Else, only
     // toggle traps at |pc|.
     void toggleDebugTraps(JSScript *script, jsbytecode *pc);
 
@@ -293,8 +293,8 @@ void
 FinishDiscardBaselineScript(FreeOp *fop, JSScript *script);
 
 void
-SizeOfBaselineData(JSScript *script, mozilla::MallocSizeOf mallocSizeOf, size_t *data,
-                   size_t *fallbackStubs);
+AddSizeOfBaselineData(JSScript *script, mozilla::MallocSizeOf mallocSizeOf, size_t *data,
+                      size_t *fallbackStubs);
 
 void
 ToggleBaselineSPS(JSRuntime *runtime, bool enable);
@@ -341,7 +341,7 @@ struct BaselineBailoutInfo
 uint32_t
 BailoutIonToBaseline(JSContext *cx, JitActivation *activation, IonBailoutIterator &iter,
                      bool invalidate, BaselineBailoutInfo **bailoutInfo,
-                     const ExceptionBailoutInfo *exceptionInfo = NULL);
+                     const ExceptionBailoutInfo *exceptionInfo = nullptr);
 
 // Mark baseline scripts on the stack as active, so that they are not discarded
 // during GC.

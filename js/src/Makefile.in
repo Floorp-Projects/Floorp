@@ -204,11 +204,11 @@ jsconfig_FILES = $(export_files)
 jsconfig_DEST = $(DIST)/include
 jsconfig_TARGET := export
 
+include $(topsrcdir)/config/rules.mk
+
 .PHONY: buildffi buildicu
 buildffi buildicu:
 $(if $(MOZ_PSEUDO_DERECURSE),compile,export):: buildffi buildicu
-
-include $(topsrcdir)/config/rules.mk
 
 ifdef JS_HAS_CTYPES
 ifndef MOZ_NATIVE_FFI
@@ -562,11 +562,8 @@ install:: $(LIBRARY_NAME).pc
 #          mfbt headers
 #
 
-install:: $(EXPORTS)
-	$(SYSINSTALL) $^ $(DESTDIR)$(includedir)/$(LIBRARY_NAME)
-
-install:: $(EXPORTS_js)
-	$(SYSINSTALL) $^ $(DESTDIR)$(includedir)/$(LIBRARY_NAME)/js
+install::
+	$(call py_action,process_install_manifest,--no-remove $(DESTDIR)$(includedir)/$(LIBRARY_NAME) _build_manifests/install/dist_include)
 
 install:: $(EXPORTS_mozilla)
 	$(SYSINSTALL) $^ $(DESTDIR)$(includedir)/$(LIBRARY_NAME)/mozilla

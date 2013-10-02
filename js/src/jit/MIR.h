@@ -16,7 +16,6 @@
 
 #include "jsinfer.h"
 
-#include "jit/Bailouts.h"
 #include "jit/CompilerRoot.h"
 #include "jit/FixedList.h"
 #include "jit/InlineList.h"
@@ -26,6 +25,7 @@
 #include "jit/TypePolicy.h"
 #include "jit/TypeRepresentationSet.h"
 #include "vm/ScopeObject.h"
+#include "vm/TypedArrayObject.h"
 
 namespace js {
 
@@ -102,7 +102,7 @@ class MUse : public TempObject, public InlineListNode<MUse>
   public:
     // Default constructor for use in vectors.
     MUse()
-      : producer_(NULL), consumer_(NULL), index_(0)
+      : producer_(nullptr), consumer_(nullptr), index_(0)
     { }
 
     static inline MUse *New(MDefinition *producer, MNode *consumer, uint32_t index) {
@@ -117,14 +117,14 @@ class MUse : public TempObject, public InlineListNode<MUse>
     }
 
     MDefinition *producer() const {
-        JS_ASSERT(producer_ != NULL);
+        JS_ASSERT(producer_ != nullptr);
         return producer_;
     }
     bool hasProducer() const {
-        return producer_ != NULL;
+        return producer_ != nullptr;
     }
     MNode *consumer() const {
-        JS_ASSERT(consumer_ != NULL);
+        JS_ASSERT(consumer_ != nullptr);
         return consumer_;
     }
     uint32_t index() const {
@@ -155,7 +155,7 @@ class MNode : public TempObject
     };
 
     MNode()
-      : block_(NULL)
+      : block_(nullptr)
     { }
 
     MNode(MBasicBlock *block)
@@ -181,7 +181,7 @@ class MNode : public TempObject
     // Instructions needing to hook into type analysis should return a
     // TypePolicy.
     virtual TypePolicy *typePolicy() {
-        return NULL;
+        return nullptr;
     }
 
     // Replaces an already-set operand during iteration over a use chain.
@@ -218,12 +218,13 @@ class AliasSet {
         FixedSlot         = 1 << 3, // A member of obj->fixedSlots().
         TypedArrayElement = 1 << 4, // A typed array element.
         DOMProperty       = 1 << 5, // A DOM property
-        AsmJSGlobalVar    = 1 << 6, // An asm.js global var
-        AsmJSHeap         = 1 << 7, // An asm.js heap load
+        FrameArgument     = 1 << 6, // An argument kept on the stack frame
+        AsmJSGlobalVar    = 1 << 7, // An asm.js global var
+        AsmJSHeap         = 1 << 8, // An asm.js heap load
         Last              = AsmJSHeap,
         Any               = Last | (Last - 1),
 
-        NumCategories     = 8,
+        NumCategories     = 9,
 
         // Indicates load or store.
         Store_            = 1 << 31
@@ -325,13 +326,13 @@ class MDefinition : public MNode
   public:
     MDefinition()
       : id_(0),
-        valueNumber_(NULL),
-        range_(NULL),
+        valueNumber_(nullptr),
+        range_(nullptr),
         resultType_(MIRType_None),
-        resultTypeSet_(NULL),
+        resultTypeSet_(nullptr),
         flags_(0),
-        dependency_(NULL),
-        trackedPc_(NULL)
+        dependency_(nullptr),
+        trackedPc_(nullptr)
     { }
 
     virtual Opcode op() const = 0;
@@ -410,10 +411,10 @@ class MDefinition : public MNode
         return valueNumber_;
     }
     void clearValueNumberData() {
-        valueNumber_ = NULL;
+        valueNumber_ = nullptr;
     }
     void setValueNumberData(ValueNumberData *vn) {
-        JS_ASSERT(valueNumber_ == NULL);
+        JS_ASSERT(valueNumber_ == nullptr);
         valueNumber_ = vn;
     }
 #define FLAG_ACCESSOR(flag) \
@@ -638,7 +639,7 @@ class MInstruction
 
   public:
     MInstruction()
-      : resumePoint_(NULL)
+      : resumePoint_(nullptr)
     { }
 
     virtual bool accept(MInstructionVisitor *visitor) = 0;
@@ -1279,7 +1280,7 @@ class MTest
     AliasSet getAliasSet() const {
         return AliasSet::None();
     }
-    void infer(JSContext *cx);
+    void infer();
     MDefinition *foldsTo(bool useValueNumbers);
 
     void markOperandCantEmulateUndefined() {
@@ -1761,7 +1762,7 @@ class MCall
   protected:
     // True if the call is for JSOP_NEW.
     bool construct_;
-    // Monomorphic cache of single target from TI, or NULL.
+    // Monomorphic cache of single target from TI, or nullptr.
     CompilerRootFunction target_;
     // Original value of argc from the bytecode.
     uint32_t numActualArgs_;
@@ -1858,7 +1859,7 @@ class MApplyArgs
     public MixPolicy<ObjectPolicy<0>, MixPolicy<IntPolicy<1>, BoxPolicy<2> > >
 {
   protected:
-    // Monomorphic cache of single target from TI, or NULL.
+    // Monomorphic cache of single target from TI, or nullptr.
     CompilerRootFunction target_;
 
     MApplyArgs(JSFunction *target, MDefinition *fun, MDefinition *argc, MDefinition *self)
@@ -2137,7 +2138,7 @@ class MCompare
     bool evaluateConstantOperands(bool *result);
     MDefinition *foldsTo(bool useValueNumbers);
 
-    void infer(JSContext *cx, BaselineInspector *inspector, jsbytecode *pc);
+    void infer(BaselineInspector *inspector, jsbytecode *pc);
     CompareType compareType() const {
         return compareType_;
     }
@@ -2270,10 +2271,7 @@ class MUnbox : public MUnaryInstruction, public BoxInputsPolicy
     INSTRUCTION_HEADER(Unbox)
     static MUnbox *New(MDefinition *ins, MIRType type, Mode mode)
     {
-        BailoutKind kind = Bailout_Normal;
-        if (mode == TypeBarrier && ins->isEffectful())
-            kind = Bailout_TypeBarrier;
-        return new MUnbox(ins, type, mode, kind);
+        return new MUnbox(ins, type, mode, Bailout_Normal);
     }
 
     static MUnbox *New(MDefinition *ins, MIRType type, Mode mode, BailoutKind kind)
@@ -2849,9 +2847,7 @@ class MAsmJSUnsignedToDouble
 // Converts a primitive (either typed or untyped) to an int32. If the input is
 // not primitive at runtime, a bailout occurs. If the input cannot be converted
 // to an int32 without loss (i.e. "5.5" or undefined) then a bailout occurs.
-class MToInt32
-  : public MUnaryInstruction,
-    public NoFloatPolicy<0>
+class MToInt32 : public MUnaryInstruction
 {
     bool canBeNegativeZero_;
 
@@ -2891,9 +2887,9 @@ class MToInt32
     }
     void computeRange();
 
-    TypePolicy *typePolicy() {
-        return this;
-    }
+#ifdef DEBUG
+    bool isConsistentFloat32Use() const { return true; }
+#endif
 };
 
 // Converts a value or typed input to a truncated int32, for use with bitwise
@@ -3022,7 +3018,7 @@ class MTypeOf
     }
 
     MDefinition *foldsTo(bool useValueNumbers);
-    void infer(JSContext *cx);
+    void infer();
 
     bool inputMaybeCallableOrEmulatesUndefined() const {
         return inputMaybeCallableOrEmulatesUndefined_;
@@ -3620,7 +3616,7 @@ class MMathFunction
   public:
     INSTRUCTION_HEADER(MathFunction)
 
-    // A NULL cache means this function will neither access nor update the cache.
+    // A nullptr cache means this function will neither access nor update the cache.
     static MMathFunction *New(MDefinition *input, Function function, MathCache *cache) {
         return new MMathFunction(input, function, cache);
     }
@@ -4163,7 +4159,7 @@ class MPhi MOZ_FINAL : public MDefinition, public InlineForwardListNode<MPhi>
 
     // Appends a new input to the input vector. May call realloc().
     // Prefer reserveLength() and addInput() instead, where possible.
-    bool addInputSlow(MDefinition *ins, bool *ptypeChange = NULL);
+    bool addInputSlow(MDefinition *ins, bool *ptypeChange = nullptr);
 
     MDefinition *foldsTo(bool useValueNumbers);
 
@@ -4188,7 +4184,7 @@ class MPhi MOZ_FINAL : public MDefinition, public InlineForwardListNode<MPhi>
         MDefinition *first = getOperand(0);
         for (size_t i = 1, e = numOperands(); i < e; i++) {
             if (getOperand(i) != first && getOperand(i) != this)
-                return NULL;
+                return nullptr;
         }
         return first;
     }
@@ -5036,7 +5032,7 @@ class MNot
 
     INSTRUCTION_HEADER(Not);
 
-    void infer(JSContext *cx);
+    void infer();
     MDefinition *foldsTo(bool useValueNumbers);
 
     void markOperandCantEmulateUndefined() {
@@ -6015,11 +6011,11 @@ class InlinePropertyTable : public TempObject
 
   public:
     InlinePropertyTable(jsbytecode *pc)
-      : pc_(pc), priorResumePoint_(NULL), entries_()
+      : pc_(pc), priorResumePoint_(nullptr), entries_()
     { }
 
     void setPriorResumePoint(MResumePoint *resumePoint) {
-        JS_ASSERT(priorResumePoint_ == NULL);
+        JS_ASSERT(priorResumePoint_ == nullptr);
         priorResumePoint_ = resumePoint;
     }
 
@@ -6063,8 +6059,8 @@ class CacheLocationList : public InlineConcatList<CacheLocationList>
 {
   public:
     CacheLocationList()
-      : pc(NULL),
-        script(NULL)
+      : pc(nullptr),
+        script(nullptr)
     { }
 
     jsbytecode *pc;
@@ -6089,7 +6085,7 @@ class MGetPropertyCache
         idempotent_(false),
         allowGetters_(false),
         location_(),
-        inlinePropertyTable_(NULL)
+        inlinePropertyTable_(nullptr)
     {
         setResultType(MIRType_Value);
 
@@ -6107,13 +6103,13 @@ class MGetPropertyCache
     }
 
     InlinePropertyTable *initInlinePropertyTable(jsbytecode *pc) {
-        JS_ASSERT(inlinePropertyTable_ == NULL);
+        JS_ASSERT(inlinePropertyTable_ == nullptr);
         inlinePropertyTable_ = new InlinePropertyTable(pc);
         return inlinePropertyTable_;
     }
 
     void clearInlinePropertyTable() {
-        inlinePropertyTable_ = NULL;
+        inlinePropertyTable_ = nullptr;
     }
 
     InlinePropertyTable *propTable() const {
@@ -6325,7 +6321,7 @@ class MDispatchInstruction
 
   public:
     MDispatchInstruction(MDefinition *input)
-      : map_(), fallback_(NULL)
+      : map_(), fallback_(nullptr)
     {
         setOperand(0, input);
     }
@@ -7748,22 +7744,25 @@ class MArgumentsLength : public MNullaryInstruction
 };
 
 // This MIR instruction is used to get an argument from the actual arguments.
-class MGetArgument
+class MGetFrameArgument
   : public MUnaryInstruction,
     public IntPolicy<0>
 {
-    MGetArgument(MDefinition *idx)
-      : MUnaryInstruction(idx)
+    bool scriptHasSetArg_;
+
+    MGetFrameArgument(MDefinition *idx, bool scriptHasSetArg)
+      : MUnaryInstruction(idx),
+        scriptHasSetArg_(scriptHasSetArg)
     {
         setResultType(MIRType_Value);
         setMovable();
     }
 
   public:
-    INSTRUCTION_HEADER(GetArgument)
+    INSTRUCTION_HEADER(GetFrameArgument)
 
-    static MGetArgument *New(MDefinition *idx) {
-        return new MGetArgument(idx);
+    static MGetFrameArgument *New(MDefinition *idx, bool scriptHasSetArg) {
+        return new MGetFrameArgument(idx, scriptHasSetArg);
     }
 
     MDefinition *index() const {
@@ -7777,7 +7776,47 @@ class MGetArgument
         return congruentIfOperandsEqual(ins);
     }
     AliasSet getAliasSet() const {
+        // If the script doesn't have any JSOP_SETARG ops, then this instruction is never
+        // aliased.
+        if (scriptHasSetArg_)
+            return AliasSet::Load(AliasSet::FrameArgument);
         return AliasSet::None();
+    }
+};
+
+// This MIR instruction is used to set an argument value in the frame.
+class MSetFrameArgument
+  : public MUnaryInstruction
+{
+    uint32_t argno_;
+
+    MSetFrameArgument(uint32_t argno, MDefinition *value)
+      : MUnaryInstruction(value),
+        argno_(argno)
+    {
+        setMovable();
+    }
+
+  public:
+    INSTRUCTION_HEADER(SetFrameArgument)
+
+    static MSetFrameArgument *New(uint32_t argno, MDefinition *value) {
+        return new MSetFrameArgument(argno, value);
+    }
+
+    uint32_t argno() const {
+        return argno_;
+    }
+
+    MDefinition *value() const {
+        return getOperand(0);
+    }
+
+    bool congruentTo(MDefinition *ins) const {
+        return false;
+    }
+    AliasSet getAliasSet() const {
+        return AliasSet::Store(AliasSet::FrameArgument);
     }
 };
 
@@ -7923,9 +7962,7 @@ class MTypeBarrier
   : public MUnaryInstruction,
     public TypeBarrierPolicy
 {
-    BailoutKind bailoutKind_;
-
-    MTypeBarrier(MDefinition *def, types::TemporaryTypeSet *types, BailoutKind bailoutKind)
+    MTypeBarrier(MDefinition *def, types::TemporaryTypeSet *types)
       : MUnaryInstruction(def)
     {
         JS_ASSERT(!types->unknown());
@@ -7936,19 +7973,13 @@ class MTypeBarrier
 
         setGuard();
         setMovable();
-        bailoutKind_ = bailoutKind;
     }
 
   public:
     INSTRUCTION_HEADER(TypeBarrier)
 
     static MTypeBarrier *New(MDefinition *def, types::TemporaryTypeSet *types) {
-        BailoutKind kind = def->isEffectful() ? Bailout_TypeBarrier : Bailout_Normal;
-        return new MTypeBarrier(def, types, kind);
-    }
-    static MTypeBarrier *New(MDefinition *def, types::TemporaryTypeSet *types,
-                             BailoutKind kind) {
-        return new MTypeBarrier(def, types, kind);
+        return new MTypeBarrier(def, types);
     }
 
     void printOpcode(FILE *fp) const;
@@ -7959,9 +7990,6 @@ class MTypeBarrier
 
     bool congruentTo(MDefinition *def) const {
         return false;
-    }
-    BailoutKind bailoutKind() const {
-        return bailoutKind_;
     }
     AliasSet getAliasSet() const {
         return AliasSet::None();
@@ -8031,7 +8059,7 @@ class MPostWriteBarrier
     }
 
     MPostWriteBarrier(MDefinition *obj)
-      : MBinaryInstruction(obj, NULL), hasValue_(false)
+      : MBinaryInstruction(obj, nullptr), hasValue_(false)
     {
         setGuard();
     }
@@ -8242,7 +8270,7 @@ class MFunctionBoundary : public MNullaryInstruction
     MFunctionBoundary(JSScript *script, Type type, unsigned inlineLevel)
       : script_(script), type_(type), inlineLevel_(inlineLevel)
     {
-        JS_ASSERT_IF(type != Inline_Exit, script != NULL);
+        JS_ASSERT_IF(type != Inline_Exit, script != nullptr);
         JS_ASSERT_IF(type == Inline_Enter, inlineLevel != 0);
         setGuard();
     }
@@ -8367,7 +8395,7 @@ class MResumePoint : public MNode, public InlineForwardListNode<MResumePoint>
 
     void clearOperand(size_t index) {
         JS_ASSERT(index < stackDepth_);
-        operands_[index].set(NULL, this, index);
+        operands_[index].set(nullptr, this, index);
     }
 
     MUse *getUseFor(size_t index) {
@@ -8944,6 +8972,8 @@ bool PropertyReadNeedsTypeBarrier(JSContext *cx, types::TypeObject *object, Prop
                                   types::StackTypeSet *observed, bool updateObserved, bool *result);
 bool PropertyReadNeedsTypeBarrier(JSContext *cx, MDefinition *obj, PropertyName *name,
                                   types::StackTypeSet *observed, bool *result);
+bool PropertyReadOnPrototypeNeedsTypeBarrier(JSContext *cx, MDefinition *obj, PropertyName *name,
+                                             types::TemporaryTypeSet *observed, bool *result);
 bool PropertyReadIsIdempotent(JSContext *cx, MDefinition *obj, PropertyName *name, bool *result);
 bool AddObjectsForPropertyRead(JSContext *cx, MDefinition *obj, PropertyName *name,
                                types::StackTypeSet *observed);

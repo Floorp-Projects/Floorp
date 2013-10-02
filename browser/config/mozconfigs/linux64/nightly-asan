@@ -1,6 +1,6 @@
 # We still need to build with debug symbols
 ac_add_options --disable-debug
-ac_add_options --enable-optimize="-O2 -g"
+ac_add_options --enable-optimize="-O2 -gline-tables-only"
 
 # ASan specific options on Linux
 ac_add_options --enable-valgrind

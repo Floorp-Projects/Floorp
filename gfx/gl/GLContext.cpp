@@ -113,6 +113,7 @@ static const char *sExtensionNames[] = {
     "GL_ARB_occlusion_query2",
     "GL_EXT_transform_feedback",
     "GL_NV_transform_feedback",
+    "GL_ANGLE_depth_texture",
     nullptr
 };
 
@@ -1267,15 +1268,15 @@ GLContext::CreateTextureImage(const nsIntSize& aSize,
                                    aFlags, aImageFormat);
 }
 
-void GLContext::ApplyFilterToBoundTexture(gfxPattern::GraphicsFilter aFilter)
+void GLContext::ApplyFilterToBoundTexture(GraphicsFilter aFilter)
 {
     ApplyFilterToBoundTexture(LOCAL_GL_TEXTURE_2D, aFilter);
 }
 
 void GLContext::ApplyFilterToBoundTexture(GLuint aTarget,
-                                          gfxPattern::GraphicsFilter aFilter)
+                                          GraphicsFilter aFilter)
 {
-    if (aFilter == gfxPattern::FILTER_NEAREST) {
+    if (aFilter == GraphicsFilter::FILTER_NEAREST) {
         fTexParameteri(aTarget, LOCAL_GL_TEXTURE_MIN_FILTER, LOCAL_GL_NEAREST);
         fTexParameteri(aTarget, LOCAL_GL_TEXTURE_MAG_FILTER, LOCAL_GL_NEAREST);
     } else {
@@ -2083,6 +2084,23 @@ GLContext::ReadScreenIntoImageSurface(gfxImageSurface* dest)
     ScopedBindFramebuffer autoFB(this, 0);
 
     ReadPixelsIntoImageSurface(dest);
+}
+
+TemporaryRef<SourceSurface>
+GLContext::ReadPixelsToSourceSurface(const gfx::IntSize &aSize)
+{
+    // XXX we should do this properly one day without using the gfxImageSurface
+    RefPtr<DataSourceSurface> dataSourceSurface =
+        Factory::CreateDataSourceSurface(aSize, gfx::FORMAT_B8G8R8A8);
+    nsRefPtr<gfxImageSurface> surf =
+        new gfxImageSurface(dataSourceSurface->GetData(),
+                            gfxIntSize(aSize.width, aSize.height),
+                            dataSourceSurface->Stride(),
+                            gfxImageFormatARGB32);
+    ReadPixelsIntoImageSurface(surf);
+    dataSourceSurface->MarkDirty();
+
+    return dataSourceSurface;
 }
 
 void

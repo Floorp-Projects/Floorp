@@ -154,7 +154,7 @@ void DynamicsCompressor::process(const AudioChunk* sourceChunk, AudioChunk* dest
         break;
     default:
         // FIXME : support other number of channels.
-        NS_NOTREACHED("Support other number of channels");
+        NS_WARNING("Support other number of channels");
         destinationChunk->SetNull(WEBAUDIO_BLOCK_SIZE);
         return;
     }

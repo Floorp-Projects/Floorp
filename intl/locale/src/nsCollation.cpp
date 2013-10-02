@@ -3,14 +3,13 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "nsIPlatformCharset.h"
-#include "nsIServiceManager.h"
-#include "nsIComponentManager.h"
 #include "nsCollation.h"
 #include "nsCollationCID.h"
 #include "nsUnicharUtils.h"
 #include "prmem.h"
-#include "nsReadableUtils.h"
+#include "nsIUnicodeEncoder.h"
+#include "nsICharsetConverterManager.h"
+#include "nsServiceManagerUtils.h"
 
 ////////////////////////////////////////////////////////////////////////////////
 

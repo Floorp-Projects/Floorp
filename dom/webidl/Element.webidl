@@ -130,12 +130,19 @@ interface Element : Node {
   Attr? getAttributeNodeNS(DOMString? namespaceURI, DOMString localName);
   [Throws]
   Attr? setAttributeNodeNS(Attr newAttr);
+
+  [ChromeOnly]
+  /**
+   * Scrolls the element by (dx, dy) CSS pixels without doing any
+   * layout flushing.
+   */
+  boolean scrollByNoFlush(long dx, long dy);
 };
 
 // http://dev.w3.org/csswg/cssom-view/#extensions-to-the-element-interface
 partial interface Element {
-  ClientRectList getClientRects();
-  ClientRect getBoundingClientRect();
+  DOMRectList getClientRects();
+  DOMRect getBoundingClientRect();
 
   // scrolling
   void scrollIntoView(optional boolean top = true);

@@ -970,6 +970,7 @@ intl_CompareStrings(JSContext *cx, UCollator *coll, HandleString str1, HandleStr
         case UCOL_LESS: res = -1; break;
         case UCOL_EQUAL: res = 0; break;
         case UCOL_GREATER: res = 1; break;
+        default: MOZ_ASSUME_UNREACHABLE("ucol_strcoll returned bad UCollationResult");
     }
     result.setInt32(res);
     return true;

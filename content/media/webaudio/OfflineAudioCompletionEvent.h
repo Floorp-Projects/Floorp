@@ -20,8 +20,8 @@ class OfflineAudioCompletionEvent : public nsDOMEvent,
 {
 public:
   OfflineAudioCompletionEvent(AudioContext* aOwner,
-                              nsPresContext *aPresContext,
-                              nsEvent *aEvent);
+                              nsPresContext* aPresContext,
+                              WidgetEvent* aEvent);
 
   NS_DECL_ISUPPORTS_INHERITED
   NS_FORWARD_TO_NSDOMEVENT

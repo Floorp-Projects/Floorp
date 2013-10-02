@@ -58,17 +58,8 @@ static hb_tag_t horizontal_features[] = {
   HB_TAG('r','c','l','t'),
 };
 
-/* Note:
- * Technically speaking, vrt2 and vert are mutually exclusive.
- * According to the spec, valt and vpal are also mutually exclusive.
- * But we apply them all for now.
- */
 static hb_tag_t vertical_features[] = {
-  HB_TAG('v','a','l','t'),
   HB_TAG('v','e','r','t'),
-  HB_TAG('v','k','r','n'),
-  HB_TAG('v','p','a','l'),
-  HB_TAG('v','r','t','2'),
 };
 
 
@@ -427,8 +418,6 @@ zero_mark_widths_by_gdef (hb_buffer_t *buffer)
 static inline void
 hb_ot_position_default (hb_ot_shape_context_t *c)
 {
-  hb_ot_layout_position_start (c->font, c->buffer);
-
   unsigned int count = c->buffer->len;
   for (unsigned int i = 0; i < count; i++)
   {
@@ -442,6 +431,13 @@ hb_ot_position_default (hb_ot_shape_context_t *c)
 						  &c->buffer->pos[i].y_offset);
 
   }
+}
+
+static inline bool
+hb_ot_position_complex (hb_ot_shape_context_t *c)
+{
+  bool ret = false;
+  unsigned int count = c->buffer->len;
 
   switch (c->plan->shaper->zero_width_marks)
   {
@@ -461,13 +457,6 @@ hb_ot_position_default (hb_ot_shape_context_t *c)
     case HB_OT_SHAPE_ZERO_WIDTH_MARKS_BY_GDEF_LATE:
       break;
   }
-}
-
-static inline bool
-hb_ot_position_complex (hb_ot_shape_context_t *c)
-{
-  bool ret = false;
-  unsigned int count = c->buffer->len;
 
   if (hb_ot_layout_has_positioning (c->face))
   {
@@ -509,17 +498,19 @@ hb_ot_position_complex (hb_ot_shape_context_t *c)
       break;
   }
 
-  hb_ot_layout_position_finish (c->font, c->buffer);
-
   return ret;
 }
 
 static inline void
 hb_ot_position (hb_ot_shape_context_t *c)
 {
+  hb_ot_layout_position_start (c->font, c->buffer);
+
   hb_ot_position_default (c);
 
   hb_bool_t fallback = !hb_ot_position_complex (c);
+
+  hb_ot_layout_position_finish (c->font, c->buffer);
 
   if (fallback && c->plan->shaper->fallback_position)
     _hb_ot_shape_fallback_position (c->plan, c->font, c->buffer);
@@ -542,22 +533,42 @@ hb_ot_hide_default_ignorables (hb_ot_shape_context_t *c)
   if (c->buffer->flags & HB_BUFFER_FLAG_PRESERVE_DEFAULT_IGNORABLES)
     return;
 
-  hb_codepoint_t space = 0;
+  hb_codepoint_t space;
+  enum {
+    SPACE_DONT_KNOW,
+    SPACE_AVAILABLE,
+    SPACE_UNAVAILABLE
+  } space_status = SPACE_DONT_KNOW;
 
   unsigned int count = c->buffer->len;
+  hb_glyph_info_t *info = c->buffer->info;
+  hb_glyph_position_t *pos = c->buffer->pos;
+  unsigned int j = 0;
   for (unsigned int i = 0; i < count; i++)
-    if (unlikely (!is_a_ligature (c->buffer->info[i]) &&
-		  _hb_glyph_info_is_default_ignorable (&c->buffer->info[i])))
+  {
+    if (unlikely (!is_a_ligature (info[i]) &&
+		  _hb_glyph_info_is_default_ignorable (&info[i])))
     {
-      if (!space) {
-        /* We assume that the space glyph is not gid0. */
-        if (unlikely (!c->font->get_glyph (' ', 0, &space)) || !space)
-	return; /* No point! */
+      if (space_status == SPACE_DONT_KNOW)
+	space_status = c->font->get_glyph (' ', 0, &space) ? SPACE_AVAILABLE : SPACE_UNAVAILABLE;
+
+      if (space_status == SPACE_AVAILABLE)
+      {
+	info[i].codepoint = space;
+	pos[i].x_advance = 0;
+	pos[i].y_advance = 0;
       }
-      c->buffer->info[i].codepoint = space;
-      c->buffer->pos[i].x_advance = 0;
-      c->buffer->pos[i].y_advance = 0;
+      else
+	continue; /* Delete it. */
     }
+    if (j != i)
+    {
+      info[j] = info[i];
+      pos[j] = pos[i];
+    }
+    j++;
+  }
+  c->buffer->len = j;
 }
 
 

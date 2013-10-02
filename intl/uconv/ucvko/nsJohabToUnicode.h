@@ -6,7 +6,9 @@
 #ifndef nsJohabToUnicode_h___
 #define nsJohabToUnicode_h___
 
-#include "nsISupports.h"
+#include "nsID.h"
+
+class nsISupports;
 
 /**
  * A character set converter from Johab to Unicode.

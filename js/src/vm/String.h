@@ -294,7 +294,7 @@ class JSString : public js::gc::BarrieredCell<JSString>
     inline JSStableString *ensureStable(js::ExclusiveContext *cx);
 
     static bool ensureLinear(js::ExclusiveContext *cx, JSString *str) {
-        return str->ensureLinear(cx) != NULL;
+        return str->ensureLinear(cx) != nullptr;
     }
 
     /* Type query and debug-checked casts */
@@ -628,7 +628,7 @@ template <>
 class Rooted<JSStableString *>
 {
   public:
-    Rooted(JSContext *cx, JSStableString *initial = NULL
+    Rooted(JSContext *cx, JSStableString *initial = nullptr
            MOZ_GUARD_OBJECT_NOTIFIER_PARAM)
       : rooter(cx, initial)
     {
@@ -816,7 +816,7 @@ class ScopedThreadSafeStringInspector
   public:
     ScopedThreadSafeStringInspector(JSString *str)
       : str_(str),
-        chars_(NULL)
+        chars_(nullptr)
     { }
 
     bool ensureChars(ThreadSafeContext *cx);
@@ -899,11 +899,11 @@ class StaticStrings
           case 1:
             if (chars[0] < UNIT_STATIC_LIMIT)
                 return getUnit(chars[0]);
-            return NULL;
+            return nullptr;
           case 2:
             if (fitsInSmallChar(chars[0]) && fitsInSmallChar(chars[1]))
                 return getLength2(chars[0], chars[1]);
-            return NULL;
+            return nullptr;
           case 3:
             /*
              * Here we know that JSString::intStringTable covers only 256 (or at least
@@ -922,10 +922,10 @@ class StaticStrings
                 if (unsigned(i) < INT_STATIC_LIMIT)
                     return getInt(i);
             }
-            return NULL;
+            return nullptr;
         }
 
-        return NULL;
+        return nullptr;
     }
 
   private:
@@ -1000,7 +1000,7 @@ JSString::getChars(js::ExclusiveContext *cx)
 {
     if (JSLinearString *str = ensureLinear(cx))
         return str->chars();
-    return NULL;
+    return nullptr;
 }
 
 JS_ALWAYS_INLINE bool
@@ -1042,7 +1042,7 @@ JSString::getCharsZ(js::ExclusiveContext *cx)
 {
     if (JSFlatString *str = ensureFlat(cx))
         return str->chars();
-    return NULL;
+    return nullptr;
 }
 
 JS_ALWAYS_INLINE const jschar *
@@ -1099,7 +1099,7 @@ JSString::ensureStable(js::ExclusiveContext *maybecx)
     if (isRope()) {
         JSFlatString *flat = asRope().flatten(maybecx);
         if (!flat)
-            return NULL;
+            return nullptr;
         JS_ASSERT(!flat->isInline());
         return &flat->asStable();
     }
@@ -1107,7 +1107,7 @@ JSString::ensureStable(js::ExclusiveContext *maybecx)
     if (isDependent()) {
         JSFlatString *flat = asDependent().undepend(maybecx);
         if (!flat)
-            return NULL;
+            return nullptr;
         return &flat->asStable();
     }
 

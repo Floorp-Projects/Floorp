@@ -36,6 +36,7 @@
 #include "nsObjectFrame.h"
 #include "nsContentUtils.h"
 #include "nsIPermissionManager.h"
+#include "nsServiceManagerUtils.h"
 
 using namespace mozilla;
 using mozilla::layout::RenderFrameParent;
@@ -545,7 +546,7 @@ nsSubDocumentFrame::GetPrefWidth(nsRenderingContext *aRenderingContext)
   return result;
 }
 
-/* virtual */ nsIFrame::IntrinsicSize
+/* virtual */ IntrinsicSize
 nsSubDocumentFrame::GetIntrinsicSize()
 {
   nsIFrame* subDocRoot = ObtainIntrinsicSizeFrame();

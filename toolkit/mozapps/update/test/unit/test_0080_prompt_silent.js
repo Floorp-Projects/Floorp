@@ -12,8 +12,8 @@ const TEST_ID = "0080";
 
 function run_test() {
   do_test_pending();
-  do_register_cleanup(end_test);
 
+  // adjustGeneralPaths registers a cleanup function that calls end_test.
   adjustGeneralPaths();
 
   logTestInfo("testing nsIUpdatePrompt notifications should not be seen " +

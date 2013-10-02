@@ -17,7 +17,7 @@ struct RemoteVoice {
   bool localService;
 };
 
-rpc protocol PSpeechSynthesis
+intr protocol PSpeechSynthesis
 {
   manager PContent;
   manages PSpeechSynthesisRequest;

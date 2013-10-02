@@ -44,7 +44,7 @@ public:
 
   virtual void ActorDestroy(ActorDestroyReason aWhy) MOZ_OVERRIDE;
 
-  static bool
+  static PImageBridgeParent*
   Create(Transport* aTransport, ProcessId aOtherProcess);
 
   virtual PGrallocBufferParent*
@@ -87,6 +87,12 @@ public:
   {
     PImageBridgeParent::DeallocShmem(aShmem);
   }
+
+  // Overriden from IToplevelProtocol
+  IToplevelProtocol*
+  CloneToplevel(const InfallibleTArray<ProtocolFdMapping>& aFds,
+                base::ProcessHandle aPeerProcess,
+                mozilla::ipc::ProtocolCloneContext* aCtx) MOZ_OVERRIDE;
 
 private:
   void DeferredDestroy();

@@ -114,7 +114,7 @@ public:
    */
   static void StartUp();
 
-  static bool
+  static PImageBridgeChild*
   StartUpInChildProcess(Transport* aTransport, ProcessId aOtherProcess);
 
   /**
@@ -237,6 +237,7 @@ public:
   TemporaryRef<ImageClient> CreateImageClientNow(CompositableType aType);
 
   static void DispatchReleaseImageClient(ImageClient* aClient);
+  static void DispatchReleaseTextureClient(TextureClient* aClient);
   static void DispatchImageClientUpdate(ImageClient* aClient, ImageContainer* aContainer);
 
   /**

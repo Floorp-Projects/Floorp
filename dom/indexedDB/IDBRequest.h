@@ -105,7 +105,7 @@ public:
 
   void CaptureCaller();
 
-  void FillScriptErrorEvent(nsScriptErrorEvent* aEvent) const;
+  void FillScriptErrorEvent(mozilla::InternalScriptErrorEvent* aEvent) const;
 
   bool
   IsPending() const

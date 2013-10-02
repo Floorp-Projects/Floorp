@@ -2912,7 +2912,7 @@ const DOMLinkHandler = {
             if (!rels.feed && rels.alternate && rels.stylesheet)
               break;
 
-            if (isValidFeed(link, link.ownerDocument.nodePrincipal, rels.feed)) {
+            if (isValidFeed(link, link.ownerDocument.nodePrincipal, "feed" in rels)) {
               FeedHandler.addFeed(link, link.ownerDocument);
               feedAdded = true;
             }

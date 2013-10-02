@@ -34,8 +34,8 @@ class APZCTreeManager;
  * Controller for all panning and zooming logic. Any time a user input is
  * detected and it must be processed in some way to affect what the user sees,
  * it goes through here. Listens for any input event from InputData and can
- * optionally handle nsGUIEvent-derived touch events, but this must be done on
- * the main thread. Note that this class completely cross-platform.
+ * optionally handle WidgetGUIEvent-derived touch events, but this must be done
+ * on the main thread. Note that this class completely cross-platform.
  *
  * Input events originate on the UI thread of the platform that this runs on,
  * and are then sent to this class. This class processes the event in some way;

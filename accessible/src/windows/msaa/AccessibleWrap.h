@@ -10,6 +10,7 @@
 #include "nsCOMPtr.h"
 #include "Accessible.h"
 #include "Accessible2.h"
+#include "ia2Accessible.h"
 #include "ia2AccessibleComponent.h"
 #include "ia2AccessibleHyperlink.h"
 #include "ia2AccessibleValue.h"
@@ -25,10 +26,10 @@ namespace mozilla {
 namespace a11y {
 
 class AccessibleWrap : public Accessible,
+                       public ia2Accessible,
                        public ia2AccessibleComponent,
                        public ia2AccessibleHyperlink,
-                       public ia2AccessibleValue,
-                       public IAccessible2
+                       public ia2AccessibleValue
 {
 public: // construction, destruction
   AccessibleWrap(nsIContent* aContent, DocAccessible* aDoc) :
@@ -130,72 +131,6 @@ public: // construction, destruction
         /* [optional][in] */ VARIANT varChild,
         /* [in] */ BSTR szValue);
 
-  public: // IAccessible2
-    virtual /* [propget] */ HRESULT STDMETHODCALLTYPE get_nRelations(
-        /* [retval][out] */ long *nRelations);
-
-    virtual /* [propget] */ HRESULT STDMETHODCALLTYPE get_relation(
-        /* [in] */ long relationIndex,
-        /* [retval][out] */ IAccessibleRelation **relation);
-
-    virtual /* [propget] */ HRESULT STDMETHODCALLTYPE get_relations(
-        /* [in] */ long maxRelations,
-        /* [length_is][size_is][out] */ IAccessibleRelation **relation,
-        /* [retval][out] */ long *nRelations);
-
-    virtual HRESULT STDMETHODCALLTYPE role(
-            /* [retval][out] */ long *role);
-
-    virtual HRESULT STDMETHODCALLTYPE scrollTo(
-        /* [in] */ enum IA2ScrollType scrollType);
-
-    virtual HRESULT STDMETHODCALLTYPE scrollToPoint(
-        /* [in] */ enum IA2CoordinateType coordinateType,
-	      /* [in] */ long x,
-	      /* [in] */ long y);
-
-    virtual /* [propget] */ HRESULT STDMETHODCALLTYPE get_groupPosition(
-        /* [out] */ long *groupLevel,
-        /* [out] */ long *similarItemsInGroup,
-        /* [retval][out] */ long *positionInGroup);
-
-    virtual /* [propget] */ HRESULT STDMETHODCALLTYPE get_states(
-        /* [retval][out] */ AccessibleStates *states);
-
-    virtual /* [propget] */ HRESULT STDMETHODCALLTYPE get_extendedRole(
-        /* [retval][out] */ BSTR *extendedRole);
-
-    virtual /* [propget] */ HRESULT STDMETHODCALLTYPE get_localizedExtendedRole(
-        /* [retval][out] */ BSTR *localizedExtendedRole);
-
-    virtual /* [propget] */ HRESULT STDMETHODCALLTYPE get_nExtendedStates(
-        /* [retval][out] */ long *nExtendedStates);
-
-    virtual /* [propget] */ HRESULT STDMETHODCALLTYPE get_extendedStates(
-        /* [in] */ long maxExtendedStates,
-        /* [length_is][length_is][size_is][size_is][out] */ BSTR **extendedStates,
-        /* [retval][out] */ long *nExtendedStates);
-
-    virtual /* [propget] */ HRESULT STDMETHODCALLTYPE get_localizedExtendedStates(
-        /* [in] */ long maxLocalizedExtendedStates,
-        /* [length_is][length_is][size_is][size_is][out] */ BSTR **localizedExtendedStates,
-        /* [retval][out] */ long *nLocalizedExtendedStates);
-
-    virtual /* [propget] */ HRESULT STDMETHODCALLTYPE get_uniqueID(
-        /* [retval][out] */ long *uniqueID);
-
-    virtual /* [propget] */ HRESULT STDMETHODCALLTYPE get_windowHandle(
-        /* [retval][out] */ HWND *windowHandle);
-
-    virtual /* [propget] */ HRESULT STDMETHODCALLTYPE get_indexInParent(
-        /* [retval][out] */ long *indexInParent);
-
-    virtual /* [propget] */ HRESULT STDMETHODCALLTYPE get_locale(
-        /* [retval][out] */ IA2Locale *locale);
-
-    virtual /* [propget] */ HRESULT STDMETHODCALLTYPE get_attributes(
-        /* [retval][out] */ BSTR *attributes);
-
   // IDispatch (support of scripting languages like VB)
   virtual HRESULT STDMETHODCALLTYPE GetTypeInfoCount(UINT *pctinfo);
 
@@ -221,8 +156,6 @@ public: // construction, destruction
   // Helper methods
   static int32_t GetChildIDFor(Accessible* aAccessible);
   static HWND GetHWNDFor(Accessible* aAccessible);
-  static HRESULT ConvertToIA2Attributes(nsIPersistentProperties *aAttributes,
-                                        BSTR *aIA2Attributes);
 
   /**
    * System caret support: update the Windows caret position. 

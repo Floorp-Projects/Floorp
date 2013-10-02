@@ -1959,6 +1959,10 @@ js::TriggerZoneGC(Zone *zone, JS::gcreason::Reason reason)
         return;
     }
 
+    /* Zones in use by a thread with an exclusive context can't be collected. */
+    if (zone->usedByExclusiveThread)
+        return;
+
     JSRuntime *rt = zone->runtimeFromMainThread();
 
     /* Don't trigger GCs when allocating under the operation callback lock. */
@@ -2275,11 +2279,26 @@ GCHelperThread::finish()
 }
 
 #ifdef JS_THREADSAFE
+#ifdef MOZ_NUWA_PROCESS
+extern "C" {
+MFBT_API bool IsNuwaProcess();
+MFBT_API void NuwaMarkCurrentThread(void (*recreate)(void *), void *arg);
+}
+#endif
+
 /* static */
 void
 GCHelperThread::threadMain(void *arg)
 {
     PR_SetCurrentThreadName("JS GC Helper");
+
+#ifdef MOZ_NUWA_PROCESS
+    if (IsNuwaProcess && IsNuwaProcess()) {
+        JS_ASSERT(NuwaMarkCurrentThread != nullptr);
+        NuwaMarkCurrentThread(nullptr, nullptr);
+    }
+#endif
+
     static_cast<GCHelperThread *>(arg)->threadLoop();
 }
 

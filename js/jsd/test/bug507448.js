@@ -1,4 +1,3 @@
-netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
 
 function f() {}
 function g(a,b) {}

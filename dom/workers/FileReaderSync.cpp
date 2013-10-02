@@ -33,45 +33,25 @@ using namespace mozilla;
 using mozilla::dom::Optional;
 using mozilla::dom::GlobalObject;
 
-NS_IMPL_ADDREF_INHERITED(FileReaderSync, DOMBindingBase)
-NS_IMPL_RELEASE_INHERITED(FileReaderSync, DOMBindingBase)
+NS_IMPL_ADDREF(FileReaderSync)
+NS_IMPL_RELEASE(FileReaderSync)
 NS_INTERFACE_MAP_BEGIN(FileReaderSync)
   NS_INTERFACE_MAP_ENTRY(nsICharsetDetectionObserver)
-NS_INTERFACE_MAP_END_INHERITING(DOMBindingBase)
-
-FileReaderSync::FileReaderSync(JSContext* aCx)
-  : DOMBindingBase(aCx)
-{
-}
-
-void
-FileReaderSync::_trace(JSTracer* aTrc)
-{
-  DOMBindingBase::_trace(aTrc);
-}
-
-void
-FileReaderSync::_finalize(JSFreeOp* aFop)
-{
-  DOMBindingBase::_finalize(aFop);
-}
+NS_INTERFACE_MAP_END
 
 // static
-FileReaderSync*
+already_AddRefed<FileReaderSync>
 FileReaderSync::Constructor(const GlobalObject& aGlobal, ErrorResult& aRv)
 {
-  nsRefPtr<FileReaderSync> frs = new FileReaderSync(aGlobal.GetContext());
+  nsRefPtr<FileReaderSync> frs = new FileReaderSync();
 
-  if (!Wrap(aGlobal.GetContext(), aGlobal.Get(), frs)) {
-    aRv.Throw(NS_ERROR_FAILURE);
-    return nullptr;
-  }
-
-  return frs;
+  return frs.forget();
 }
 
 JSObject*
-FileReaderSync::ReadAsArrayBuffer(JSContext* aCx, JS::Handle<JSObject*> aBlob,
+FileReaderSync::ReadAsArrayBuffer(JSContext* aCx,
+                                  JS::Handle<JSObject*> aScopeObj,
+                                  JS::Handle<JSObject*> aBlob,
                                   ErrorResult& aRv)
 {
   nsIDOMBlob* blob = file::GetDOMBlobFromJSObject(aBlob);

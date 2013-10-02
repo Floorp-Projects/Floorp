@@ -32,7 +32,7 @@
 #include "nsIScrollableFrame.h"
 #include "mozilla/dom/Attr.h"
 #include "nsISMILAttr.h"
-#include "nsClientRect.h"
+#include "mozilla/dom/DOMRect.h"
 #include "nsAttrValue.h"
 #include "mozilla/EventForwards.h"
 #include "mozilla/dom/BindingDeclarations.h"
@@ -50,8 +50,6 @@ class nsEventListenerManager;
 class nsIScrollableFrame;
 class nsAttrValueOrString;
 class ContentUnbinder;
-class nsClientRect;
-class nsClientRectList;
 class nsContentList;
 class nsDOMTokenList;
 struct nsRect;
@@ -110,6 +108,8 @@ namespace dom {
 
 class Link;
 class UndoManager;
+class DOMRect;
+class DOMRectList;
 
 // IID for the dom::Element interface
 #define NS_ELEMENT_IID \
@@ -647,8 +647,8 @@ public:
   already_AddRefed<Attr> SetAttributeNodeNS(Attr& aNewAttr,
                                             ErrorResult& aError);
 
-  already_AddRefed<nsClientRectList> GetClientRects();
-  already_AddRefed<nsClientRect> GetBoundingClientRect();
+  already_AddRefed<DOMRectList> GetClientRects();
+  already_AddRefed<DOMRect> GetBoundingClientRect();
   void ScrollIntoView(bool aTop);
   int32_t ScrollTop()
   {
@@ -676,6 +676,11 @@ public:
                                         sf->GetScrollPositionCSSPixels().y));
     }
   }
+  /* Scrolls without flushing the layout.
+   * aDx is the x offset, aDy the y offset in CSS pixels.
+   * Returns true if we actually scrolled.
+   */
+  bool ScrollByNoFlush(int32_t aDx, int32_t aDy);
   int32_t ScrollWidth();
   int32_t ScrollHeight();
   int32_t ClientTop()
@@ -761,7 +766,7 @@ public:
    *                    will be respected.
    */
   static nsresult DispatchClickEvent(nsPresContext* aPresContext,
-                                     nsInputEvent* aSourceEvent,
+                                     WidgetInputEvent* aSourceEvent,
                                      nsIContent* aTarget,
                                      bool aFullDispatch,
                                      const EventFlags* aFlags,
@@ -776,7 +781,7 @@ public:
    */
   using nsIContent::DispatchEvent;
   static nsresult DispatchEvent(nsPresContext* aPresContext,
-                                nsEvent* aEvent,
+                                WidgetEvent* aEvent,
                                 nsIContent* aTarget,
                                 bool aFullDispatch,
                                 nsEventStatus* aStatus);
@@ -1142,7 +1147,8 @@ private:
    */
   nsRect GetClientAreaRect();
 
-  nsIScrollableFrame* GetScrollFrame(nsIFrame **aStyledFrame = nullptr);
+  nsIScrollableFrame* GetScrollFrame(nsIFrame **aStyledFrame = nullptr,
+                                     bool aFlushLayout = true);
 
   nsresult GetMarkup(bool aIncludeSelf, nsAString& aMarkup);
 

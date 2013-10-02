@@ -33,7 +33,7 @@ XDRBuffer::grow(size_t n)
     size_t offset = cursor - base;
     size_t newCapacity = JS_ROUNDUP(offset + n, MEM_BLOCK);
     if (isUint32Overflow(newCapacity)) {
-        JS_ReportErrorNumber(cx(), js_GetErrorMessage, NULL, JSMSG_TOO_BIG_TO_ENCODE);
+        JS_ReportErrorNumber(cx(), js_GetErrorMessage, nullptr, JSMSG_TOO_BIG_TO_ENCODE);
         return false;
     }
 
@@ -78,7 +78,7 @@ VersionCheck(XDRState<mode> *xdr)
 
     if (mode == XDR_DECODE && bytecodeVer != XDR_BYTECODE_VERSION) {
         /* We do not provide binary compatibility with older scripts. */
-        JS_ReportErrorNumber(xdr->cx(), js_GetErrorMessage, NULL, JSMSG_BAD_SCRIPT_MAGIC);
+        JS_ReportErrorNumber(xdr->cx(), js_GetErrorMessage, nullptr, JSMSG_BAD_SCRIPT_MAGIC);
         return false;
     }
 
@@ -90,7 +90,7 @@ bool
 XDRState<mode>::codeFunction(MutableHandleObject objp)
 {
     if (mode == XDR_DECODE)
-        objp.set(NULL);
+        objp.set(nullptr);
 
     if (!VersionCheck(this))
         return false;
@@ -104,8 +104,8 @@ XDRState<mode>::codeScript(MutableHandleScript scriptp)
 {
     RootedScript script(cx());
     if (mode == XDR_DECODE) {
-        script = NULL;
-        scriptp.set(NULL);
+        script = nullptr;
+        scriptp.set(nullptr);
     } else {
         script = scriptp.get();
     }
@@ -119,7 +119,7 @@ XDRState<mode>::codeScript(MutableHandleScript scriptp)
     if (mode == XDR_DECODE) {
         JS_ASSERT(!script->compileAndGo);
         CallNewScriptHook(cx(), script, NullPtr());
-        Debugger::onNewScript(cx(), script, NULL);
+        Debugger::onNewScript(cx(), script, nullptr);
         scriptp.set(script);
     }
 

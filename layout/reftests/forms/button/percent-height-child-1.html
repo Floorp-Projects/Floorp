@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<!--
+     Any copyright is dedicated to the Public Domain.
+     http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<!-- This test verifies that we honor percent heights on content inside of
+     a <button> element (resolving the percent against the <button>).
+     (In this testcase, the button has no focus-border/padding.) -->
+<html>
+<head>
+<style>
+button {
+    width: 80px;
+    border: 0;
+    padding: 0;
+
+    font: 10px sans-serif;
+    vertical-align: top;
+
+    color: black;
+    background: gray;
+    -moz-appearance: none;
+}
+button::-moz-focus-inner {
+    padding: 0;
+    border: 0;
+}
+
+div.p80 {
+    height: 80%;
+    background: pink;
+}
+
+div.p100 {
+    height: 100%;
+    background: yellow;
+}
+</style>
+</head>
+<body>
+<!--Button has explicit height for us to resolve against: -->
+<button style="height: 100px">
+  <div class="p80">abc</div>
+</button>
+
+<button style="height: 100px">
+  <div class="p100">abc</div>
+</button>
+
+<!--Button is using intrinsic height: -->
+<button>
+  <div class="p80">abc</div>
+</button>
+
+<button>
+  <div class="p100">abc</div>
+</button>
+
+</body>
+</html>

@@ -9,8 +9,6 @@
 
 #include "NamespaceImports.h"
 
-#include "js/RootingAPI.h"
-
 /*
  * The Intl module specified by standard ECMA-402,
  * ECMAScript Internationalization API Specification.

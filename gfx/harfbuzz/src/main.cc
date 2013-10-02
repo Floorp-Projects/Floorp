@@ -170,7 +170,7 @@ main (int argc, char **argv)
 	}
 	break;
 
-      case GDEF::Tag:
+      case GDEF::tableTag:
 	{
 
 	const GDEF &gdef = *CastP<GDEF> (font_data + table.offset);

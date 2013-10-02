@@ -15,13 +15,6 @@ class nsISocketTransport;
 
 namespace mozilla { namespace net {
 
-// This is designed to handle up to 2 concrete protocol levels
-// simultaneously
-//
-// Currently supported are v3 (preferred), and v2
-// network.protocol.http.spdy.enabled.v2 (and v3) prefs can enable/disable
-// them.
-
 class ASpdySession : public nsAHttpTransaction
 {
 public:
@@ -58,16 +51,17 @@ public:
   SpdyInformation();
   ~SpdyInformation() {}
 
-  // determine if a version of the protocol is enabled. The primary
-  // version is index 0, the secondary version is index 1.
+  static const uint32_t kCount = 2;
+
+  // determine if a version of the protocol is enabled for index <= kCount
   bool ProtocolEnabled(uint32_t index);
 
   // lookup a version enum based on an npn string. returns NS_OK if
   // string was known.
   nsresult GetNPNVersionIndex(const nsACString &npnString, uint8_t *result);
 
-  uint8_t   Version[2];
-  nsCString VersionString[2];
+  uint8_t   Version[kCount];
+  nsCString VersionString[kCount];
 };
 
 }} // namespace mozilla::net

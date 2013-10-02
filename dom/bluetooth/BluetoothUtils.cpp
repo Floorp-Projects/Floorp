@@ -18,6 +18,7 @@
 #include "nsISystemMessagesInternal.h"
 #include "nsString.h"
 #include "nsTArray.h"
+#include "nsServiceManagerUtils.h"
 
 BEGIN_BLUETOOTH_NAMESPACE
 

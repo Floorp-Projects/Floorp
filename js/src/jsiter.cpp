@@ -604,7 +604,6 @@ js::GetIterator(JSContext *cx, HandleObject obj, unsigned flags, MutableHandleVa
             if (!iterobj)
                 return false;
             vp.setObject(*iterobj);
-            types::MarkIteratorUnknown(cx);
             return true;
         }
 
@@ -681,16 +680,13 @@ js::GetIterator(JSContext *cx, HandleObject obj, unsigned flags, MutableHandleVa
         }
 
       miss:
-        if (obj->is<ProxyObject>()) {
-            types::MarkIteratorUnknown(cx);
+        if (obj->is<ProxyObject>())
             return Proxy::iterate(cx, obj, flags, vp);
-        }
+
         if (!GetCustomIterator(cx, obj, flags, vp))
             return false;
-        if (!vp.isUndefined()) {
-            types::MarkIteratorUnknown(cx);
+        if (!vp.isUndefined())
             return true;
-        }
     }
 
     /* NB: for (var p in null) succeeds by iterating over no properties. */
@@ -1202,12 +1198,6 @@ js_SuppressDeletedElements(JSContext *cx, HandleObject obj, uint32_t begin, uint
     return SuppressDeletedPropertyHelper(cx, obj, IndexRangePredicate(begin, end));
 }
 
-static inline bool
-IsStopIteration(const js::Value &v)
-{
-    return v.isObject() && v.toObject().is<StopIterationObject>();
-}
-
 bool
 js_IteratorMore(JSContext *cx, HandleObject iterobj, MutableHandleValue rval)
 {
@@ -1251,7 +1241,7 @@ js_IteratorMore(JSContext *cx, HandleObject iterobj, MutableHandleValue rval)
             return false;
         if (!Invoke(cx, ObjectValue(*iterobj), rval, 0, NULL, rval)) {
             /* Check for StopIteration. */
-            if (!cx->isExceptionPending() || !IsStopIteration(cx->getPendingException()))
+            if (!cx->isExceptionPending() || !JS_IsStopIteration(cx->getPendingException()))
                 return false;
 
             cx->clearPendingException();
@@ -1296,7 +1286,7 @@ js_IteratorNext(JSContext *cx, HandleObject iterobj, MutableHandleValue rval)
 static bool
 stopiter_hasInstance(JSContext *cx, HandleObject obj, MutableHandleValue v, bool *bp)
 {
-    *bp = IsStopIteration(v);
+    *bp = JS_IsStopIteration(v);
     return true;
 }
 

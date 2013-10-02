@@ -33,6 +33,7 @@
 #include "nsIRootBox.h"
 #include "nsIDOMMutationEvent.h"
 #include "nsContentUtils.h"
+#include "nsIFrameInlines.h"
 
 #ifdef ACCESSIBILITY
 #include "nsAccessibilityService.h"
@@ -2638,7 +2639,7 @@ ElementRestyler::InitializeAccessibilityNotifications()
   // it is not inside a {ib} split or is the first frame of {ib} split.
   if (nsIPresShell::IsAccessibilityActive() &&
       !mFrame->GetPrevContinuation() &&
-      !nsLayoutUtils::FrameIsNonFirstInIBSplit(mFrame)) {
+      !mFrame->FrameIsNonFirstInIBSplit()) {
     if (mDesiredA11yNotifications == eSendAllNotifications) {
       bool isFrameVisible = mFrame->StyleVisibility()->IsVisible();
       if (isFrameVisible != mWasFrameVisible) {

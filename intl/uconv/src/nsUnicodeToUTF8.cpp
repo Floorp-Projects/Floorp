@@ -5,9 +5,7 @@
 
 //----------------------------------------------------------------------
 // Global functions and data [declaration]
-#include "nsUCSupport.h"
 #include "nsUnicodeToUTF8.h"
-#include <string.h>
 
 NS_IMPL_ISUPPORTS1(nsUnicodeToUTF8, nsIUnicodeEncoder)
 

@@ -22,3 +22,6 @@ DIRS += [
 if not CONFIG['LIBXUL_SDK']:
     PARALLEL_DIRS += ['../../xulrunner/tools/redit']
 
+TEST_DIRS += [
+    'tests',
+]

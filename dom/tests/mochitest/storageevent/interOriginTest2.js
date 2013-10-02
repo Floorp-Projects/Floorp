@@ -15,7 +15,6 @@ window.addEventListener("message", onMessageReceived, false);
 
 function onMessageReceived(event)
 {
-  netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
 
   switch (event.data)
   {
@@ -32,8 +31,8 @@ function onMessageReceived(event)
         masterFrame.postMessage("step", masterFrameOrigin);
       else if (slaveFrame)
         slaveFrame.postMessage("step", slaveFrameOrigin);
-      else if (masterFrame.slaveFrame)
-        masterFrame.slaveFrame.postMessage("step", slaveFrameOrigin);
+      else if (SpecialPowers.wrap(masterFrame).slaveFrame)
+        SpecialPowers.wrap(masterFrame).slaveFrame.postMessage("step", slaveFrameOrigin);
       callMasterFrame = !callMasterFrame;
       break;
 

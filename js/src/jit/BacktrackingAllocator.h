@@ -79,7 +79,7 @@ class BacktrackingVirtualRegister : public VirtualRegister
         canonicalSpill_ = alloc;
     }
     const LAllocation *canonicalSpill() const {
-        return canonicalSpill_.isUse() ? NULL : &canonicalSpill_;
+        return canonicalSpill_.isUse() ? nullptr : &canonicalSpill_;
     }
 
     void setCanonicalSpillExclude(CodePosition pos) {
@@ -111,11 +111,11 @@ class BacktrackingAllocator : public LiveRangeAllocator<BacktrackingVirtualRegis
         VirtualRegisterGroup *group;
 
         QueueItem(LiveInterval *interval, size_t priority)
-          : interval(interval), group(NULL), priority_(priority)
+          : interval(interval), group(nullptr), priority_(priority)
         {}
 
         QueueItem(VirtualRegisterGroup *group, size_t priority)
-          : interval(NULL), group(group), priority_(priority)
+          : interval(nullptr), group(group), priority_(priority)
         {}
 
         static size_t priority(const QueueItem &v) {
@@ -134,7 +134,7 @@ class BacktrackingAllocator : public LiveRangeAllocator<BacktrackingVirtualRegis
         const LiveInterval::Range *range;
 
         AllocatedRange()
-          : interval(NULL), range(NULL)
+          : interval(nullptr), range(nullptr)
         {}
 
         AllocatedRange(LiveInterval *interval, const LiveInterval::Range *range)
@@ -216,7 +216,7 @@ class BacktrackingAllocator : public LiveRangeAllocator<BacktrackingVirtualRegis
 
     bool minimalDef(const LiveInterval *interval, LInstruction *ins);
     bool minimalUse(const LiveInterval *interval, LInstruction *ins);
-    bool minimalInterval(const LiveInterval *interval, bool *pfixed = NULL);
+    bool minimalInterval(const LiveInterval *interval, bool *pfixed = nullptr);
 
     // Heuristic methods.
 

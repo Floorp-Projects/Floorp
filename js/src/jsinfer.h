@@ -112,7 +112,6 @@ namespace analyze {
 
 namespace types {
 
-class TypeCallsite;
 class TypeCompartment;
 class TypeSet;
 
@@ -308,8 +307,8 @@ enum {
      *   and do not have constraints attached to them.
      *
      * - HeapTypeSet are associated with the properties of TypeObjects. These
-     *   may have constraints added to them to propagate types around or to
-     *   trigger invalidation of compiled code.
+     *   may have constraints added to them to trigger invalidation of compiled
+     *   code.
      *
      * - TemporaryTypeSet are created during compilation and do not outlive
      *   that compilation.
@@ -318,15 +317,6 @@ enum {
     TYPE_FLAG_HEAP_SET            = 0x00040000,
 
     /* Additional flags for HeapTypeSet sets. */
-
-    /*
-     * Whether there are subset constraints propagating the possible types
-     * for this property inherited from the object's prototypes. Reset on GC.
-     */
-    TYPE_FLAG_PROPAGATED_PROPERTY = 0x00080000,
-
-    /* Whether this property has ever been directly written. */
-    TYPE_FLAG_OWN_PROPERTY        = 0x00100000,
 
     /*
      * Whether the property has ever been deleted or reconfigured to behave
@@ -350,8 +340,9 @@ typedef uint32_t TypeFlags;
 
 /* Flags and other state stored in TypeObject::flags */
 enum {
-    /* Objects with this type are functions. */
-    OBJECT_FLAG_FUNCTION              = 0x1,
+    /*
+     * UNUSED FLAG                    = 0x1,
+     */
 
     /* If set, addendum information should not be installed on this object. */
     OBJECT_FLAG_ADDENDUM_CLEARED      = 0x2,
@@ -397,8 +388,9 @@ enum {
     /* For a global object, whether flags were set on the RegExpStatics. */
     OBJECT_FLAG_REGEXP_FLAGS_SET      = 0x00200000,
 
-    /* Whether any objects emulate undefined; see EmulatesUndefined. */
-    OBJECT_FLAG_EMULATES_UNDEFINED    = 0x00400000,
+    /*
+     * UNUSED FLAG                    = 0x00400000,
+     */
 
     /*
      * For the function on a run-once script, whether the function has actually
@@ -471,8 +463,8 @@ class TypeSet
         return !!(baseFlags() & flags);
     }
 
-    bool ownProperty(bool configurable) const {
-        return flags & (configurable ? TYPE_FLAG_CONFIGURED_PROPERTY : TYPE_FLAG_OWN_PROPERTY);
+    bool configuredProperty() const {
+        return flags & TYPE_FLAG_CONFIGURED_PROPERTY;
     }
     bool definiteProperty() const { return flags & TYPE_FLAG_DEFINITE_PROPERTY; }
     unsigned definiteSlot() const {
@@ -489,8 +481,8 @@ class TypeSet
      */
     inline void addType(ExclusiveContext *cx, Type type);
 
-    /* Mark this type set as representing an own property or configured property. */
-    inline void setOwnProperty(ExclusiveContext *cx, bool configured);
+    /* Mark this type set as representing a configured property. */
+    inline void setConfiguredProperty(ExclusiveContext *cx);
 
     /*
      * Iterate through the objects in this set. getObjectCount overapproximates
@@ -503,18 +495,16 @@ class TypeSet
     inline TypeObject *getTypeObject(unsigned i) const;
     inline bool getTypeOrSingleObject(JSContext *cx, unsigned i, TypeObject **obj) const;
 
-    void setOwnProperty(bool configurable) {
-        flags |= TYPE_FLAG_OWN_PROPERTY;
-        if (configurable)
-            flags |= TYPE_FLAG_CONFIGURED_PROPERTY;
+    /* The Class of an object in this set. */
+    inline const Class *getObjectClass(unsigned i) const;
+
+    void setConfiguredProperty() {
+        flags |= TYPE_FLAG_CONFIGURED_PROPERTY;
     }
     void setDefinite(unsigned slot) {
         JS_ASSERT(slot <= (TYPE_FLAG_DEFINITE_MASK >> TYPE_FLAG_DEFINITE_SHIFT));
         flags |= TYPE_FLAG_DEFINITE_PROPERTY | (slot << TYPE_FLAG_DEFINITE_SHIFT);
     }
-
-    bool hasPropagatedProperty() { return !!(flags & TYPE_FLAG_PROPAGATED_PROPERTY); }
-    void setPropagatedProperty() { flags |= TYPE_FLAG_PROPAGATED_PROPERTY; }
 
     bool isStackSet() {
         return flags & TYPE_FLAG_STACK_SET;
@@ -557,18 +547,12 @@ class StackTypeSet : public TypeSet
 {
   public:
     StackTypeSet() { flags |= TYPE_FLAG_STACK_SET; }
-
-    /* Propagate any types from this set into target. */
-    void addSubset(JSContext *cx, StackTypeSet *target);
 };
 
 class HeapTypeSet : public TypeSet
 {
   public:
     HeapTypeSet() { flags |= TYPE_FLAG_HEAP_SET; }
-
-    /* Propagate any types from this set into target. */
-    void addSubset(JSContext *cx, HeapTypeSet *target);
 
     /* Completely freeze the contents of this type set. */
     void addFreeze(JSContext *cx);
@@ -590,7 +574,7 @@ class HeapTypeSet : public TypeSet
      * or non-writable (this only applies to properties that have changed after
      * having been created, not to e.g. properties non-writable on creation).
      */
-    bool isOwnProperty(JSContext *cx, TypeObject *object, bool configurable);
+    bool isConfiguredProperty(JSContext *cx, TypeObject *object);
 
     /* Get whether this type set is non-empty. */
     bool knownNonEmpty(JSContext *cx);
@@ -677,6 +661,9 @@ class TemporaryTypeSet : public TypeSet
     /* Whether clasp->isCallable() is true for one or more objects in this set. */
     bool maybeCallable();
 
+    /* Whether clasp->emulatesUndefined() is true for one or more objects in this set. */
+    bool maybeEmulatesUndefined();
+
     /* Get the single value which can appear in this type set, otherwise NULL. */
     JSObject *getSingleton();
 
@@ -731,110 +718,8 @@ void
 AddClearDefiniteFunctionUsesInScript(JSContext *cx, TypeObject *type,
                                      JSScript *script, JSScript *calleeScript);
 
-/*
- * Handler which persists information about dynamic types pushed within a
- * script which can affect its behavior and are not covered by JOF_TYPESET ops,
- * such as integer operations which overflow to a double. These persist across
- * GCs, and are used to re-seed script types when they are reanalyzed.
- */
-struct TypeResult
-{
-    uint32_t offset;
-    Type type;
-    TypeResult *next;
-
-    TypeResult(uint32_t offset, Type type)
-        : offset(offset), type(type), next(NULL)
-    {}
-};
-
 /* Is this a reasonable PC to be doing inlining on? */
 inline bool isInlinableCall(jsbytecode *pc);
-
-/*
- * Type barriers overview.
- *
- * Type barriers are a technique for using dynamic type information to improve
- * the inferred types within scripts. At certain opcodes --- those with the
- * JOF_TYPESET format --- we will construct a type set storing the set of types
- * which we have observed to be pushed at that opcode, and will only use those
- * observed types when doing propagation downstream from the bytecode. For
- * example, in the following script:
- *
- * function foo(x) {
- *   return x.f + 10;
- * }
- *
- * Suppose we know the type of 'x' and that the type of its 'f' property is
- * either an int or float. To account for all possible behaviors statically,
- * we would mark the result of the 'x.f' access as an int or float, as well
- * as the result of the addition and the return value of foo (and everywhere
- * the result of 'foo' is used). When dealing with polymorphic code, this is
- * undesirable behavior --- the type imprecision surrounding the polymorphism
- * will tend to leak to many places in the program.
- *
- * Instead, we will keep track of the types that have been dynamically observed
- * to have been produced by the 'x.f', and only use those observed types
- * downstream from the access. If the 'x.f' has only ever produced integers,
- * we will treat its result as an integer and mark the result of foo as an
- * integer.
- *
- * The set of observed types will be a subset of the set of possible types,
- * and if the two sets are different, a type barriers will be added at the
- * bytecode which checks the dynamic result every time the bytecode executes
- * and makes sure it is in the set of observed types. If it is not, that
- * observed set is updated, and the new type information is automatically
- * propagated along the already-generated type constraints to the places
- * where the result of the bytecode is used.
- *
- * Observing new types at a bytecode removes type barriers at the bytecode
- * (this removal happens lazily, see ScriptAnalysis::pruneTypeBarriers), and if
- * all type barriers at a bytecode are removed --- the set of observed types
- * grows to match the set of possible types --- then the result of the bytecode
- * no longer needs to be dynamically checked (unless the set of possible types
- * grows, triggering the generation of new type barriers).
- *
- * Barriers are only relevant for accesses on properties whose types inference
- * actually tracks (see propertySet comment under TypeObject). Accesses on
- * other properties may be able to produce additional unobserved types even
- * without a barrier present, and can only be compiled to jitcode with special
- * knowledge of the property in question (e.g. for lengths of arrays, or
- * elements of typed arrays).
- */
-
-/*
- * Barrier introduced at some bytecode. These are added when, during inference,
- * we block a type from being propagated as would normally be done for a subset
- * constraint. The propagation is technically possible, but we suspect it will
- * not happen dynamically and this type needs to be watched for. These are only
- * added at reads of properties and at scripted call sites.
- */
-struct TypeBarrier
-{
-    /* Next barrier on the same bytecode. */
-    TypeBarrier *next;
-
-    /* Target type set into which propagation was blocked. */
-    TypeSet *target;
-
-    /*
-     * Type which was not added to the target. If target ends up containing the
-     * type somehow, this barrier can be removed.
-     */
-    Type type;
-
-    /*
-     * If specified, this barrier can be removed if object has a non-undefined
-     * value in property id.
-     */
-    JSObject *singleton;
-    jsid singletonId;
-
-    TypeBarrier(TypeSet *target, Type type, JSObject *singleton, jsid singletonId)
-        : next(NULL), target(target), type(type),
-          singleton(singleton), singletonId(singletonId)
-    {}
-};
 
 /* Type information about a property. */
 struct Property
@@ -1015,7 +900,7 @@ struct TypeObject : gc::BarrieredCell<TypeObject>
      */
     HeapPtr<TypeObjectAddendum> addendum;
 
-    bool hasNewScript() {
+    bool hasNewScript() const {
         return addendum && addendum->isNewScript();
     }
 
@@ -1079,9 +964,7 @@ struct TypeObject : gc::BarrieredCell<TypeObject>
     uint32_t padding;
 #endif
 
-    inline TypeObject(const Class *clasp, TaggedProto proto, bool isFunction, bool unknown);
-
-    bool isFunction() { return !!(flags & OBJECT_FLAG_FUNCTION); }
+    inline TypeObject(const Class *clasp, TaggedProto proto, bool unknown);
 
     bool hasAnyFlags(TypeObjectFlags flags) {
         JS_ASSERT((flags & OBJECT_FLAG_DYNAMIC_MASK) == flags);
@@ -1100,11 +983,9 @@ struct TypeObject : gc::BarrieredCell<TypeObject>
 
     /*
      * Get or create a property of this object. Only call this for properties which
-     * a script accesses explicitly. 'assign' indicates whether this is for an
-     * assignment, and the own types of the property will be used instead of
-     * aggregate types.
+     * a script accesses explicitly.
      */
-    inline HeapTypeSet *getProperty(ExclusiveContext *cx, jsid id, bool own);
+    inline HeapTypeSet *getProperty(ExclusiveContext *cx, jsid id);
 
     /* Get a property only if it already exists. */
     inline HeapTypeSet *maybeGetProperty(ExclusiveContext *cx, jsid id);
@@ -1171,14 +1052,13 @@ struct TypeObject : gc::BarrieredCell<TypeObject>
     void clearAddendum(ExclusiveContext *cx);
     void clearNewScriptAddendum(ExclusiveContext *cx);
     void clearTypedObjectAddendum(ExclusiveContext *cx);
-    void getFromPrototypes(JSContext *cx, jsid id, HeapTypeSet *types, bool force = false);
 
     void print();
 
     inline void clearProperties();
     inline void sweep(FreeOp *fop);
 
-    size_t sizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf);
+    size_t sizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf) const;
 
     /*
      * Type objects don't have explicit finalizers. Memory owned by a type
@@ -1260,16 +1140,6 @@ class TypeScript
     uint32_t *bytecodeMap;
 
   public:
-    /* Dynamic types generated at points within this script. */
-    TypeResult *dynamicList;
-
-    /*
-     * Array of type sets storing the possible inputs to property reads.
-     * Generated the first time the script is analyzed by inference and kept
-     * after analysis purges.
-     */
-    HeapTypeSet *propertyReadTypes;
-
     /* Array of type type sets for variables and JOF_TYPESET ops. */
     TypeSet *typeArray() const { return (TypeSet *) (uintptr_t(this) + sizeof(TypeScript)); }
 
@@ -1287,19 +1157,6 @@ class TypeScript
     /* Get a type object for an allocation site in this script. */
     static inline TypeObject *InitObject(JSContext *cx, JSScript *script, jsbytecode *pc,
                                          JSProtoKey kind);
-
-    /*
-     * Monitor a bytecode pushing a value which is not accounted for by the
-     * inference type constraints, such as integer overflow.
-     */
-    static inline void MonitorOverflow(JSContext *cx, JSScript *script, jsbytecode *pc);
-    static inline void MonitorString(JSContext *cx, JSScript *script, jsbytecode *pc);
-    static inline void MonitorUnknown(JSContext *cx, JSScript *script, jsbytecode *pc);
-
-    static inline void GetPcScript(JSContext *cx, JSScript **script, jsbytecode **pc);
-    static inline void MonitorOverflow(JSContext *cx);
-    static inline void MonitorString(JSContext *cx);
-    static inline void MonitorUnknown(JSContext *cx);
 
     /*
      * Monitor a bytecode pushing any value. This must be called for any opcode
@@ -1327,6 +1184,10 @@ class TypeScript
 
     static void Sweep(FreeOp *fop, JSScript *script);
     void destroy();
+
+    size_t sizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf) const {
+        return mallocSizeOf(this);
+    }
 
 #ifdef DEBUG
     void printTypes(JSContext *cx, HandleScript script) const;
@@ -1501,6 +1362,12 @@ struct TypeCompartment
     void sweepCompilerOutputs(FreeOp *fop, bool discardConstraints);
 
     void finalizeObjects();
+
+    void addSizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf,
+                                size_t *pendingArrays,
+                                size_t *allocationSiteTables,
+                                size_t *arrayTypeTables,
+                                size_t *objectTypeTables);
 };
 
 void FixRestArgumentsType(ExclusiveContext *cxArg, JSObject *obj);

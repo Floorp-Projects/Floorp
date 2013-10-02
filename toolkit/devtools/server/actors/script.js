@@ -414,7 +414,6 @@ function ThreadActor(aHooks, aGlobal)
 {
   this._state = "detached";
   this._frameActors = [];
-  this._environmentActors = [];
   this._hooks = aHooks;
   this.global = aGlobal;
   this._nestedEventLoops = new EventLoopStack({
@@ -466,6 +465,38 @@ ThreadActor.prototype = {
                                         this._allowSource, this.onNewSource);
     }
     return this._sources;
+  },
+
+  _prettyPrintWorker: null,
+  get prettyPrintWorker() {
+    if (!this._prettyPrintWorker) {
+      this._prettyPrintWorker = new ChromeWorker(
+        "resource://gre/modules/devtools/server/actors/pretty-print-worker.js");
+
+      this._prettyPrintWorker.addEventListener(
+        "error", this._onPrettyPrintError, false);
+
+      if (wantLogging) {
+        this._prettyPrintWorker.addEventListener("message", this._onPrettyPrintMsg, false);
+
+        const postMsg = this._prettyPrintWorker.postMessage;
+        this._prettyPrintWorker.postMessage = data => {
+          dumpn("Sending message to prettyPrintWorker: "
+                + JSON.stringify(data, null, 2) + "\n");
+          return postMsg.call(this._prettyPrintWorker, data);
+        };
+      }
+    }
+    return this._prettyPrintWorker;
+  },
+
+  _onPrettyPrintError: function (error) {
+    reportError(new Error(error));
+  },
+
+  _onPrettyPrintMsg: function ({ data }) {
+    dumpn("Received message from prettyPrintWorker: "
+          + JSON.stringify(data, null, 2) + "\n");
   },
 
   /**
@@ -598,6 +629,15 @@ ThreadActor.prototype = {
     this._state = "exited";
 
     this.clearDebuggees();
+
+    if (this._prettyPrintWorker) {
+      this._prettyPrintWorker.removeEventListener(
+        "error", this._onPrettyPrintError, false);
+      this._prettyPrintWorker.removeEventListener(
+        "message", this._onPrettyPrintMsg, false);
+      this._prettyPrintWorker.terminate();
+      this._prettyPrintWorker = null;
+    }
 
     if (!this.dbg) {
       return;
@@ -1816,7 +1856,6 @@ ThreadActor.prototype = {
     }
 
     let actor = new EnvironmentActor(aEnvironment, this);
-    this._environmentActors.push(actor);
     aPool.addActor(actor);
     aEnvironment.actor = actor;
 
@@ -2337,6 +2376,10 @@ SourceActor.prototype = {
   get threadActor() this._threadActor,
   get url() this._url,
 
+  get prettyPrintWorker() {
+    return this.threadActor.prettyPrintWorker;
+  },
+
   form: function SA_form() {
     return {
       actor: this.actorID,
@@ -2403,7 +2446,7 @@ SourceActor.prototype = {
   onPrettyPrint: function ({ indent }) {
     return this._getSourceText()
       .then(this._parseAST)
-      .then(this._generatePrettyCodeAndMap(indent))
+      .then(this._sendToPrettyPrintWorker(indent))
       .then(this._invertSourceMap)
       .then(this._saveMap)
       .then(this.onSource)
@@ -2422,23 +2465,45 @@ SourceActor.prototype = {
   },
 
   /**
-   * Take the number of spaces to indent and return a function that takes an AST
-   * and generates code and a source map from the ugly code to the pretty code.
+   * Return a function that sends a request to the pretty print worker, waits on
+   * the worker's response, and then returns the pretty printed code.
+   *
+   * @param Number aIndent
+   *        The number of spaces to indent by the code by, when we send the
+   *        request to the pretty print worker.
+   * @returns Function
+   *          Returns a function which takes an AST, and returns a promise that
+   *          is resolved with `{ code, mappings }` where `code` is the pretty
+   *          printed code, and `mappings` is an array of source mappings.
    */
-  _generatePrettyCodeAndMap: function SA__generatePrettyCodeAndMap(aNumSpaces) {
-    let indent = "";
-    for (let i = 0; i < aNumSpaces; i++) {
-      indent += " ";
-    }
-    return aAST => escodegen.generate(aAST, {
-      format: {
-        indent: {
-          style: indent
+  _sendToPrettyPrintWorker: function SA__sendToPrettyPrintWorker(aIndent) {
+    return aAST => {
+      const deferred = promise.defer();
+      const id = Math.random();
+
+      const onReply = ({ data }) => {
+        if (data.id !== id) {
+          return;
         }
-      },
-      sourceMap: this._url,
-      sourceMapWithCode: true
-    });
+        this.prettyPrintWorker.removeEventListener("message", onReply, false);
+
+        if (data.error) {
+          deferred.reject(new Error(data.error));
+        } else {
+          deferred.resolve(data);
+        }
+      };
+
+      this.prettyPrintWorker.addEventListener("message", onReply, false);
+      this.prettyPrintWorker.postMessage({
+        id: id,
+        url: this._url,
+        indent: aIndent,
+        ast: aAST
+      });
+
+      return deferred.promise;
+    };
   },
 
   /**
@@ -2449,35 +2514,55 @@ SourceActor.prototype = {
    *
    * Note that the source map is modified in place.
    */
-  _invertSourceMap: function SA__invertSourceMap({ code, map }) {
-    // XXX bug 918802: Monkey punch the source map consumer, because iterating
-    // over all mappings and inverting each of them, and then creating a new
-    // SourceMapConsumer is *way* too slow.
+  _invertSourceMap: function SA__invertSourceMap({ code, mappings }) {
+    const generator = new SourceMapGenerator({ file: this._url });
+    return DevToolsUtils.yieldingEach(mappings, m => {
+      let mapping = {
+        generated: {
+          line: m.generatedLine,
+          column: m.generatedColumn
+        }
+      };
+      if (m.source) {
+        mapping.source = m.source;
+        mapping.original = {
+          line: m.originalLine,
+          column: m.originalColumn
+        };
+        mapping.name = m.name;
+      }
+      generator.addMapping(mapping);
+    }).then(() => {
+      generator.setSourceContent(this._url, code);
+      const consumer = SourceMapConsumer.fromSourceMap(generator);
 
-    map.setSourceContent(this._url, code);
-    const consumer = new SourceMapConsumer.fromSourceMap(map);
-    const getOrigPos = consumer.originalPositionFor.bind(consumer);
-    const getGenPos = consumer.generatedPositionFor.bind(consumer);
+      // XXX bug 918802: Monkey punch the source map consumer, because iterating
+      // over all mappings and inverting each of them, and then creating a new
+      // SourceMapConsumer is slow.
 
-    consumer.originalPositionFor = ({ line, column }) => {
-      const location = getGenPos({
+      const getOrigPos = consumer.originalPositionFor.bind(consumer);
+      const getGenPos = consumer.generatedPositionFor.bind(consumer);
+
+      consumer.originalPositionFor = ({ line, column }) => {
+        const location = getGenPos({
+          line: line,
+          column: column,
+          source: this._url
+        });
+        location.source = this._url;
+        return location;
+      };
+
+      consumer.generatedPositionFor = ({ line, column }) => getOrigPos({
         line: line,
-        column: column,
-        source: this._url
+        column: column
       });
-      location.source = this._url;
-      return location;
-    };
 
-    consumer.generatedPositionFor = ({ line, column }) => getOrigPos({
-      line: line,
-      column: column
+      return {
+        code: code,
+        map: consumer
+      };
     });
-
-    return {
-      code: code,
-      map: consumer
-    };
   },
 
   /**
@@ -2905,6 +2990,29 @@ ObjectActor.prototype = {
     this.release();
     return {};
   },
+
+  /**
+   * Handle a protocol request to provide the lexical scope of a function.
+   *
+   * @param aRequest object
+   *        The protocol request object.
+   */
+  onScope: function OA_onScope(aRequest) {
+    if (this.obj.class !== "Function") {
+      return { error: "objectNotFunction",
+               message: "scope request is only valid for object grips with a" +
+                        " 'Function' class." };
+    }
+
+    let envActor = this.threadActor.createEnvironmentActor(this.obj.environment,
+                                                           this.registeredPool);
+    if (!envActor) {
+      return { error: "notDebuggee",
+               message: "cannot access the environment of this function." };
+    }
+
+    return { from: this.actorID, scope: envActor.form() };
+  }
 };
 
 ObjectActor.prototype.requestTypes = {
@@ -2916,6 +3024,7 @@ ObjectActor.prototype.requestTypes = {
   "ownPropertyNames": ObjectActor.prototype.onOwnPropertyNames,
   "decompile": ObjectActor.prototype.onDecompile,
   "release": ObjectActor.prototype.onRelease,
+  "scope": ObjectActor.prototype.onScope,
 };
 
 
@@ -2934,6 +3043,7 @@ update(PauseScopedObjectActor.prototype, ObjectActor.prototype);
 
 update(PauseScopedObjectActor.prototype, {
   constructor: PauseScopedObjectActor,
+  actorPrefix: "pausedobj",
 
   onOwnPropertyNames:
     PauseScopedActor.withPaused(ObjectActor.prototype.onOwnPropertyNames),
@@ -2950,29 +3060,6 @@ update(PauseScopedObjectActor.prototype, {
 
   onParameterNames:
     PauseScopedActor.withPaused(ObjectActor.prototype.onParameterNames),
-
-  /**
-   * Handle a protocol request to provide the lexical scope of a function.
-   *
-   * @param aRequest object
-   *        The protocol request object.
-   */
-  onScope: PauseScopedActor.withPaused(function OA_onScope(aRequest) {
-    if (this.obj.class !== "Function") {
-      return { error: "objectNotFunction",
-               message: "scope request is only valid for object grips with a" +
-                        " 'Function' class." };
-    }
-
-    let envActor = this.threadActor.createEnvironmentActor(this.obj.environment,
-                                                           this.registeredPool);
-    if (!envActor) {
-      return { error: "notDebuggee",
-               message: "cannot access the environment of this function." };
-    }
-
-    return { from: this.actorID, scope: envActor.form() };
-  }),
 
   /**
    * Handle a protocol request to promote a pause-lifetime grip to a
@@ -3004,7 +3091,6 @@ update(PauseScopedObjectActor.prototype, {
 });
 
 update(PauseScopedObjectActor.prototype.requestTypes, {
-  "scope": PauseScopedObjectActor.prototype.onScope,
   "threadGrip": PauseScopedObjectActor.prototype.onThreadGrip,
 });
 
@@ -3447,14 +3533,10 @@ EnvironmentActor.prototype = {
 
     try {
       this.obj.setVariable(aRequest.name, aRequest.value);
-    } catch (e) {
-      if (e instanceof Debugger.DebuggeeWouldRun) {
+    } catch (e if e instanceof Debugger.DebuggeeWouldRun) {
         return { error: "threadWouldRun",
                  cause: e.cause ? e.cause : "setter",
                  message: "Assigning a value would cause the debuggee to run" };
-      }
-      // This should never happen, so let it complain loudly if it does.
-      throw e;
     }
     return { from: this.actorID };
   },

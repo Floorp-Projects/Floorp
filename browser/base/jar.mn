@@ -22,7 +22,6 @@ browser.jar:
         content/browser/abouthome/aboutHome.xhtml     (content/abouthome/aboutHome.xhtml)
         content/browser/abouthome/aboutHome.js        (content/abouthome/aboutHome.js)
 *       content/browser/abouthome/aboutHome.css       (content/abouthome/aboutHome.css)
-        content/browser/abouthome/noise.png           (content/abouthome/noise.png)
         content/browser/abouthome/snippet1.png        (content/abouthome/snippet1.png)
         content/browser/abouthome/snippet2.png        (content/abouthome/snippet2.png)
         content/browser/abouthome/downloads.png       (content/abouthome/downloads.png)

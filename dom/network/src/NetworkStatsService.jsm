@@ -27,10 +27,6 @@ const NET_TYPE_UNKNOWN = Ci.nsINetworkInterface.NETWORK_TYPE_UNKNOWN;
 // The maximum traffic amount can be saved in the |cachedAppStats|.
 const MAX_CACHED_TRAFFIC = 500 * 1000 * 1000; // 500 MB
 
-XPCOMUtils.defineLazyServiceGetter(this, "gIDBManager",
-                                   "@mozilla.org/dom/indexeddb/manager;1",
-                                   "nsIIndexedDatabaseManager");
-
 XPCOMUtils.defineLazyServiceGetter(this, "ppmm",
                                    "@mozilla.org/parentprocessmessagemanager;1",
                                    "nsIMessageListenerManager");
@@ -42,8 +38,6 @@ XPCOMUtils.defineLazyServiceGetter(this, "networkManager",
 XPCOMUtils.defineLazyServiceGetter(this, "appsService",
                                    "@mozilla.org/AppsService;1",
                                    "nsIAppsService");
-
-let myGlobal = this;
 
 this.NetworkStatsService = {
   init: function() {
@@ -75,8 +69,7 @@ this.NetworkStatsService = {
       ppmm.addMessageListener(msgName, this);
     }, this);
 
-    gIDBManager.initWindowless(myGlobal);
-    this._db = new NetworkStatsDB(myGlobal, this._connectionTypes);
+    this._db = new NetworkStatsDB(this._connectionTypes);
 
     // Stats for all interfaces are updated periodically
     this.timer.initWithCallback(this, this._db.sampleRate,

@@ -209,6 +209,33 @@ WebConsoleActor.prototype =
   },
 
   /**
+   * Create and return an environment actor that corresponds to the provided
+   * Debugger.Environment. This is a straightforward clone of the ThreadActor's
+   * method except that it stores the environment actor in the web console
+   * actor's pool.
+   *
+   * @param Debugger.Environment aEnvironment
+   *        The lexical environment we want to extract.
+   * @return The EnvironmentActor for aEnvironment or undefined for host
+   *         functions or functions scoped to a non-debuggee global.
+   */
+  createEnvironmentActor: function WCA_createEnvironmentActor(aEnvironment) {
+    if (!aEnvironment) {
+      return undefined;
+    }
+
+    if (aEnvironment.actor) {
+      return aEnvironment.actor;
+    }
+
+    let actor = new EnvironmentActor(aEnvironment, this);
+    this._actorPool.addActor(actor);
+    aEnvironment.actor = actor;
+
+    return actor;
+  },
+
+  /**
    * Create a grip for the given value.
    *
    * @param mixed aValue

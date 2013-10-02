@@ -483,7 +483,8 @@ bool SetAlarm(int32_t aSeconds, int32_t aNanoseconds);
  */
 void SetProcessPriority(int aPid,
                         hal::ProcessPriority aPriority,
-                        hal::ProcessCPUPriority aCPUPriority);
+                        hal::ProcessCPUPriority aCPUPriority,
+                        uint32_t aLRU = 0);
 
 /**
  * Register an observer for the FM radio.

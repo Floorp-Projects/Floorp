@@ -7,7 +7,7 @@
 
 #include "base/process_util.h"
 
-#include "mozilla/ipc/AsyncChannel.h"
+#include "mozilla/ipc/MessageChannel.h"
 #include "mozilla/ipc/ProtocolUtils.h"
 #include "mozilla/ipc/Transport.h"
 
@@ -16,6 +16,48 @@ using namespace IPC;
 
 namespace mozilla {
 namespace ipc {
+
+IToplevelProtocol::~IToplevelProtocol()
+{
+  mOpenActors.clear();
+}
+
+void IToplevelProtocol::AddOpenedActor(IToplevelProtocol* aActor)
+{
+#ifdef DEBUG
+  for (const IToplevelProtocol* actor = mOpenActors.getFirst();
+       actor;
+       actor = actor->getNext()) {
+    NS_ASSERTION(actor != aActor,
+                 "Open the same protocol for more than one time");
+  }
+#endif
+
+  mOpenActors.insertBack(aActor);
+}
+
+IToplevelProtocol*
+IToplevelProtocol::CloneToplevel(const InfallibleTArray<ProtocolFdMapping>& aFds,
+                                 base::ProcessHandle aPeerProcess,
+                                 ProtocolCloneContext* aCtx)
+{
+  NS_NOTREACHED("Clone() for this protocol actor is not implemented");
+  return nullptr;
+}
+
+void
+IToplevelProtocol::CloneOpenedToplevels(IToplevelProtocol* aTemplate,
+                                        const InfallibleTArray<ProtocolFdMapping>& aFds,
+                                        base::ProcessHandle aPeerProcess,
+                                        ProtocolCloneContext* aCtx)
+{
+  for (IToplevelProtocol* actor = aTemplate->GetFirstOpenedActors();
+       actor;
+       actor = actor->getNext()) {
+    IToplevelProtocol* newactor = actor->CloneToplevel(aFds, aPeerProcess, aCtx);
+    AddOpenedActor(newactor);
+  }
+}
 
 class ChannelOpened : public IPC::Message
 {
@@ -50,8 +92,8 @@ public:
 
 bool
 Bridge(const PrivateIPDLInterface&,
-       AsyncChannel* aParentChannel, ProcessHandle aParentProcess,
-       AsyncChannel* aChildChannel, ProcessHandle aChildProcess,
+       MessageChannel* aParentChannel, ProcessHandle aParentProcess,
+       MessageChannel* aChildChannel, ProcessHandle aChildProcess,
        ProtocolId aProtocol, ProtocolId aChildProtocol)
 {
   ProcessId parentId = GetProcId(aParentProcess);
@@ -81,7 +123,7 @@ Bridge(const PrivateIPDLInterface&,
 
 bool
 Open(const PrivateIPDLInterface&,
-     AsyncChannel* aOpenerChannel, ProcessHandle aOtherProcess,
+     MessageChannel* aOpenerChannel, ProcessHandle aOtherProcess,
      Transport::Mode aOpenerMode,
      ProtocolId aProtocol, ProtocolId aChildProtocol)
 {

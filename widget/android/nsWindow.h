@@ -56,7 +56,7 @@ public:
 
     void OnSizeChanged(const gfxIntSize& aSize);
 
-    void InitEvent(nsGUIEvent& event, nsIntPoint* aPoint = 0);
+    void InitEvent(mozilla::WidgetGUIEvent& event, nsIntPoint* aPoint = 0);
 
     //
     // nsIWidget
@@ -100,8 +100,9 @@ public:
     NS_IMETHOD SetFocus(bool aRaise = false);
     NS_IMETHOD GetScreenBounds(nsIntRect &aRect);
     virtual nsIntPoint WidgetToScreenOffset();
-    NS_IMETHOD DispatchEvent(nsGUIEvent *aEvent, nsEventStatus &aStatus);
-    nsEventStatus DispatchEvent(nsGUIEvent *aEvent);
+    NS_IMETHOD DispatchEvent(mozilla::WidgetGUIEvent* aEvent,
+                             nsEventStatus& aStatus);
+    nsEventStatus DispatchEvent(mozilla::WidgetGUIEvent* aEvent);
     NS_IMETHOD MakeFullScreen(bool aFullScreen);
     NS_IMETHOD SetWindowClass(const nsAString& xulWinType);
 
@@ -125,7 +126,12 @@ public:
                                    bool aDoCapture) { return NS_ERROR_NOT_IMPLEMENTED; }
 
     NS_IMETHOD GetAttention(int32_t aCycleCount) { return NS_ERROR_NOT_IMPLEMENTED; }
-    NS_IMETHOD BeginResizeDrag(nsGUIEvent* aEvent, int32_t aHorizontal, int32_t aVertical) { return NS_ERROR_NOT_IMPLEMENTED; }
+    NS_IMETHOD BeginResizeDrag(mozilla::WidgetGUIEvent* aEvent,
+                               int32_t aHorizontal,
+                               int32_t aVertical)
+    {
+        return NS_ERROR_NOT_IMPLEMENTED;
+    }
 
     NS_IMETHOD NotifyIME(NotificationToIME aNotification) MOZ_OVERRIDE;
     NS_IMETHOD_(void) SetInputContext(const InputContext& aContext,
@@ -191,7 +197,7 @@ protected:
     bool mIMEMaskSelectionUpdate, mIMEMaskTextUpdate;
     int32_t mIMEMaskEventsCount; // Mask events when > 0
     nsString mIMEComposingText;
-    nsAutoTArray<nsTextRange, 4> mIMERanges;
+    nsAutoTArray<mozilla::TextRange, 4> mIMERanges;
     bool mIMEUpdatingContext;
     nsAutoTArray<mozilla::AndroidGeckoEvent, 8> mIMEKeyEvents;
 
@@ -221,9 +227,10 @@ protected:
     static void LogWindow(nsWindow *win, int index, int indent);
 
 private:
-    void InitKeyEvent(nsKeyEvent& event, mozilla::AndroidGeckoEvent& key,
+    void InitKeyEvent(mozilla::WidgetKeyboardEvent& event,
+                      mozilla::AndroidGeckoEvent& key,
                       ANPEvent* pluginEvent);
-    void DispatchMotionEvent(nsInputEvent &event,
+    void DispatchMotionEvent(mozilla::WidgetInputEvent &event,
                              mozilla::AndroidGeckoEvent *ae,
                              const nsIntPoint &refPoint);
     void DispatchGestureEvent(uint32_t msg, uint32_t direction, double delta,

@@ -1666,9 +1666,9 @@ TabChild::RecvMouseEvent(const nsString& aType,
 }
 
 bool
-TabChild::RecvRealMouseEvent(const nsMouseEvent& event)
+TabChild::RecvRealMouseEvent(const WidgetMouseEvent& event)
 {
-  nsMouseEvent localEvent(event);
+  WidgetMouseEvent localEvent(event);
   DispatchWidgetEvent(localEvent);
   return true;
 }
@@ -1688,11 +1688,11 @@ TabChild::DispatchSynthesizedMouseEvent(uint32_t aMsg, uint64_t aTime,
   MOZ_ASSERT(aMsg == NS_MOUSE_MOVE || aMsg == NS_MOUSE_BUTTON_DOWN ||
              aMsg == NS_MOUSE_BUTTON_UP);
 
-  nsMouseEvent event(true, aMsg, NULL,
-      nsMouseEvent::eReal, nsMouseEvent::eNormal);
+  WidgetMouseEvent event(true, aMsg, NULL,
+                         WidgetMouseEvent::eReal, WidgetMouseEvent::eNormal);
   event.refPoint = LayoutDeviceIntPoint(aRefPoint.x, aRefPoint.y);
   event.time = aTime;
-  event.button = nsMouseEvent::eLeftButton;
+  event.button = WidgetMouseEvent::eLeftButton;
   event.inputSource = nsIDOMMouseEvent::MOZ_SOURCE_TOUCH;
   if (aMsg != NS_MOUSE_MOVE) {
     event.clickCount = 1;
@@ -1702,7 +1702,7 @@ TabChild::DispatchSynthesizedMouseEvent(uint32_t aMsg, uint64_t aTime,
 }
 
 static Touch*
-GetTouchForIdentifier(const nsTouchEvent& aEvent, int32_t aId)
+GetTouchForIdentifier(const WidgetTouchEvent& aEvent, int32_t aId)
 {
   for (uint32_t i = 0; i < aEvent.touches.Length(); ++i) {
     Touch* touch = static_cast<Touch*>(aEvent.touches[i].get());
@@ -1714,7 +1714,7 @@ GetTouchForIdentifier(const nsTouchEvent& aEvent, int32_t aId)
 }
 
 void
-TabChild::UpdateTapState(const nsTouchEvent& aEvent, nsEventStatus aStatus)
+TabChild::UpdateTapState(const WidgetTouchEvent& aEvent, nsEventStatus aStatus)
 {
   static bool sHavePrefs;
   static bool sClickHoldContextMenusEnabled;
@@ -1833,9 +1833,9 @@ TabChild::CancelTapTracking()
 }
 
 bool
-TabChild::RecvRealTouchEvent(const nsTouchEvent& aEvent)
+TabChild::RecvRealTouchEvent(const WidgetTouchEvent& aEvent)
 {
-  nsTouchEvent localEvent(aEvent);
+  WidgetTouchEvent localEvent(aEvent);
   nsEventStatus status = DispatchWidgetEvent(localEvent);
 
   if (IsAsyncPanZoomEnabled()) {
@@ -1853,15 +1853,15 @@ TabChild::RecvRealTouchEvent(const nsTouchEvent& aEvent)
 }
 
 bool
-TabChild::RecvRealTouchMoveEvent(const nsTouchEvent& aEvent)
+TabChild::RecvRealTouchMoveEvent(const WidgetTouchEvent& aEvent)
 {
   return RecvRealTouchEvent(aEvent);
 }
 
 bool
-TabChild::RecvRealKeyEvent(const nsKeyEvent& event)
+TabChild::RecvRealKeyEvent(const WidgetKeyboardEvent& event)
 {
-  nsKeyEvent localEvent(event);
+  WidgetKeyboardEvent localEvent(event);
   DispatchWidgetEvent(localEvent);
   return true;
 }
@@ -1882,32 +1882,32 @@ TabChild::RecvKeyEvent(const nsString& aType,
 }
 
 bool
-TabChild::RecvCompositionEvent(const nsCompositionEvent& event)
+TabChild::RecvCompositionEvent(const WidgetCompositionEvent& event)
 {
-  nsCompositionEvent localEvent(event);
+  WidgetCompositionEvent localEvent(event);
   DispatchWidgetEvent(localEvent);
   return true;
 }
 
 bool
-TabChild::RecvTextEvent(const nsTextEvent& event)
+TabChild::RecvTextEvent(const WidgetTextEvent& event)
 {
-  nsTextEvent localEvent(event);
+  WidgetTextEvent localEvent(event);
   DispatchWidgetEvent(localEvent);
-  IPC::ParamTraits<nsTextEvent>::Free(event);
+  IPC::ParamTraits<WidgetTextEvent>::Free(event);
   return true;
 }
 
 bool
-TabChild::RecvSelectionEvent(const nsSelectionEvent& event)
+TabChild::RecvSelectionEvent(const WidgetSelectionEvent& event)
 {
-  nsSelectionEvent localEvent(event);
+  WidgetSelectionEvent localEvent(event);
   DispatchWidgetEvent(localEvent);
   return true;
 }
 
 nsEventStatus
-TabChild::DispatchWidgetEvent(nsGUIEvent& event)
+TabChild::DispatchWidgetEvent(WidgetGUIEvent& event)
 {
   if (!mWidget)
     return nsEventStatus_eConsumeNoDefault;
@@ -2382,11 +2382,12 @@ TabChild::DeallocPIndexedDBChild(PIndexedDBChild* aActor)
 }
 
 bool
-TabChild::DoSendSyncMessage(JSContext* aCx,
-                            const nsAString& aMessage,
-                            const StructuredCloneData& aData,
-                            JS::Handle<JSObject *> aCpows,
-                            InfallibleTArray<nsString>* aJSONRetVal)
+TabChild::DoSendBlockingMessage(JSContext* aCx,
+                                const nsAString& aMessage,
+                                const StructuredCloneData& aData,
+                                JS::Handle<JSObject *> aCpows,
+                                InfallibleTArray<nsString>* aJSONRetVal,
+                                bool aIsSync)
 {
   ContentChild* cc = Manager();
   ClonedMessageData data;
@@ -2399,7 +2400,9 @@ TabChild::DoSendSyncMessage(JSContext* aCx,
       return false;
     }
   }
-  return SendSyncMessage(nsString(aMessage), data, cpows, aJSONRetVal);
+  if (aIsSync)
+    return SendSyncMessage(nsString(aMessage), data, cpows, aJSONRetVal);
+  return CallRpcMessage(nsString(aMessage), data, cpows, aJSONRetVal);
 }
 
 bool

@@ -7,8 +7,6 @@
 #ifndef vm_GlobalObject_h
 #define vm_GlobalObject_h
 
-#include "mozilla/DebugOnly.h"
-
 #include "jsarray.h"
 #include "jsbool.h"
 #include "jsexn.h"
@@ -267,7 +265,7 @@ class GlobalObject : public JSObject
             return &getPrototype(JSProto_Object).toObject();
         Rooted<GlobalObject*> self(cx, this);
         if (!initFunctionAndObjectClasses(cx))
-            return NULL;
+            return nullptr;
         return &self->getPrototype(JSProto_Object).toObject();
     }
 
@@ -276,7 +274,7 @@ class GlobalObject : public JSObject
             return &getPrototype(JSProto_Function).toObject();
         Rooted<GlobalObject*> self(cx, this);
         if (!initFunctionAndObjectClasses(cx))
-            return NULL;
+            return nullptr;
         return &self->getPrototype(JSProto_Function).toObject();
     }
 
@@ -285,7 +283,7 @@ class GlobalObject : public JSObject
             return &getPrototype(JSProto_Array).toObject();
         Rooted<GlobalObject*> self(cx, this);
         if (!js_InitArrayClass(cx, self))
-            return NULL;
+            return nullptr;
         return &self->getPrototype(JSProto_Array).toObject();
     }
 
@@ -294,7 +292,7 @@ class GlobalObject : public JSObject
             return &getPrototype(JSProto_Boolean).toObject();
         Rooted<GlobalObject*> self(cx, this);
         if (!js_InitBooleanClass(cx, self))
-            return NULL;
+            return nullptr;
         return &self->getPrototype(JSProto_Boolean).toObject();
     }
 
@@ -303,7 +301,7 @@ class GlobalObject : public JSObject
             return &getPrototype(JSProto_Number).toObject();
         Rooted<GlobalObject*> self(cx, this);
         if (!js_InitNumberClass(cx, self))
-            return NULL;
+            return nullptr;
         return &self->getPrototype(JSProto_Number).toObject();
     }
 
@@ -312,7 +310,7 @@ class GlobalObject : public JSObject
             return &getPrototype(JSProto_String).toObject();
         Rooted<GlobalObject*> self(cx, this);
         if (!js_InitStringClass(cx, self))
-            return NULL;
+            return nullptr;
         return &self->getPrototype(JSProto_String).toObject();
     }
 
@@ -321,7 +319,7 @@ class GlobalObject : public JSObject
             return &getPrototype(JSProto_RegExp).toObject();
         Rooted<GlobalObject*> self(cx, this);
         if (!js_InitRegExpClass(cx, self))
-            return NULL;
+            return nullptr;
         return &self->getPrototype(JSProto_RegExp).toObject();
     }
 
@@ -330,7 +328,7 @@ class GlobalObject : public JSObject
             return &getPrototype(JSProto_ArrayBuffer).toObject();
         Rooted<GlobalObject*> self(cx, this);
         if (!js_InitTypedArrayClasses(cx, self))
-            return NULL;
+            return nullptr;
         return &self->getPrototype(JSProto_ArrayBuffer).toObject();
     }
 
@@ -340,7 +338,7 @@ class GlobalObject : public JSObject
             return &getPrototype(key).toObject();
         Rooted<GlobalObject*> self(cx, this);
         if (!js_InitExceptionClasses(cx, self))
-            return NULL;
+            return nullptr;
         return &self->getPrototype(key).toObject();
     }
 
@@ -385,7 +383,7 @@ class GlobalObject : public JSObject
             return &v.toObject();
         Rooted<GlobalObject*> self(cx, this);
         if (!init(cx, self))
-            return NULL;
+            return nullptr;
         return &self->getSlot(slot).toObject();
     }
 
@@ -428,7 +426,7 @@ class GlobalObject : public JSObject
             return &getPrototype(JSProto_DataView).toObject();
         Rooted<GlobalObject*> self(cx, this);
         if (!js_InitTypedArrayClasses(cx, self))
-            return NULL;
+            return nullptr;
         return &self->getPrototype(JSProto_DataView).toObject();
     }
 
@@ -444,7 +442,7 @@ class GlobalObject : public JSObject
             return true;
         if (!cx->runtime()->cloneSelfHostedValue(cx, name, value))
             return false;
-        return JS_DefinePropertyById(cx, holder, id, value, NULL, NULL, 0);
+        return JS_DefinePropertyById(cx, holder, id, value, nullptr, nullptr, 0);
     }
 
     bool setIntrinsicValue(JSContext *cx, PropertyName *name, HandleValue value) {
@@ -514,13 +512,13 @@ class GlobalObject : public JSObject
 
     /*
      * The collection of Debugger objects debugging this global. If this global
-     * is not a debuggee, this returns either NULL or an empty vector.
+     * is not a debuggee, this returns either nullptr or an empty vector.
      */
     DebuggerVector *getDebuggers();
 
     /*
      * The same, but create the empty vector if one does not already
-     * exist. Returns NULL only on OOM.
+     * exist. Returns nullptr only on OOM.
      */
     static DebuggerVector *getOrCreateDebuggers(JSContext *cx, Handle<GlobalObject*> global);
 

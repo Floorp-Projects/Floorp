@@ -7,6 +7,8 @@
 #ifndef jit_JSONSpewer_h
 #define jit_JSONSpewer_h
 
+#include "mozilla/NullPtr.h"
+
 #include <stdio.h>
 
 #include "js/TypeDecls.h"
@@ -51,7 +53,7 @@ class JSONSpewer
       : inFunction_(false),
         indentLevel_(0),
         first_(true),
-        fp_(NULL)
+        fp_(nullptr)
     { }
     ~JSONSpewer();
 
