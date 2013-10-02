@@ -88,7 +88,6 @@
     },
 
     function() {
-      SpecialPowers.setAllAppsLaunchable(true);
       SpecialPowers.setBoolPref("dom.mozBrowserFramesEnabled", true);
       runTest();
     },
@@ -122,10 +121,7 @@
     SimpleTest.finish();
   }
 
-  if (SpecialPowers.isMainProcess()) {
-    SpecialPowers.Cu.import("resource://gre/modules/DataStoreChangeNotifier.jsm");
-  }
-
+  SpecialPowers.Cu.import("resource://gre/modules/DataStoreChangeNotifier.jsm");
   SimpleTest.waitForExplicitFinish();
   runTest();
   </script>
