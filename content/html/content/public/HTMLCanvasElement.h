@@ -227,9 +227,10 @@ protected:
                        const JS::Value& aEncoderOptions,
                        nsAString& aParams,
                        bool* usingCustomParseOptions);
-  nsresult ExtractData(nsAString& aType,
+  nsresult ExtractData(const nsAString& aType,
                        const nsAString& aOptions,
-                       nsIInputStream** aStream);
+                       nsIInputStream** aStream,
+                       bool& aFellBackToPNG);
   nsresult ToDataURLImpl(JSContext* aCx,
                          const nsAString& aMimeType,
                          const JS::Value& aEncoderOptions,
