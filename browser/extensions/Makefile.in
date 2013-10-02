@@ -19,13 +19,20 @@ exclude_files = \
 $(FINAL_TARGET)/chrome/pdfjs.manifest: $(GLOBAL_DEPS)
 	printf "manifest pdfjs/chrome.manifest" > $@
 
-libs:: $(FINAL_TARGET)/chrome/pdfjs.manifest
+$(FINAL_TARGET)/chrome/shumway.manifest: $(GLOBAL_DEPS)
+	printf "manifest shumway/chrome.manifest" > $@
+
+libs:: $(FINAL_TARGET)/chrome/pdfjs.manifest $(FINAL_TARGET)/chrome/shumway.manifest
 	$(PYTHON) $(topsrcdir)/config/nsinstall.py \
 	  $(srcdir)/pdfjs \
           $(foreach exclude,$(exclude_files), -X $(srcdir)/pdfjs/$(exclude)) \
+	  $(srcdir)/shumway \
+          $(foreach exclude,$(exclude_files), -X $(srcdir)/shumway/$(exclude)) \
           $(FINAL_TARGET)/chrome
 	$(PYTHON) $(MOZILLA_DIR)/config/buildlist.py \
 	  $(FINAL_TARGET)/chrome.manifest "manifest chrome/pdfjs.manifest"
+	$(PYTHON) $(MOZILLA_DIR)/config/buildlist.py \
+	  $(FINAL_TARGET)/chrome.manifest "manifest chrome/shumway.manifest"
 
 ifdef MOZ_METRO
 $(DIST)/bin/metro/chrome/pdfjs.manifest: $(GLOBAL_DEPS)

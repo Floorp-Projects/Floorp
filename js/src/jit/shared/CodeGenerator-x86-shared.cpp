@@ -672,7 +672,7 @@ class ReturnZero : public OutOfLineCodeBase<CodeGeneratorX86Shared>
 bool
 CodeGeneratorX86Shared::visitReturnZero(ReturnZero *ool)
 {
-    masm.xorl(ool->reg(), ool->reg());
+    masm.mov(ImmWord(0), ool->reg());
     masm.jmp(ool->rejoin());
     return true;
 }
@@ -693,7 +693,7 @@ CodeGeneratorX86Shared::visitUDivOrMod(LUDivOrMod *ins)
     if (!addOutOfLineCode(ool))
         return false;
 
-    masm.xorl(edx, edx);
+    masm.mov(ImmWord(0), edx);
     masm.udiv(rhs);
 
     masm.bind(ool->rejoin());
@@ -716,7 +716,7 @@ CodeGeneratorX86Shared::visitMulNegativeZeroCheck(MulNegativeZeroCheck *ool)
     if (!bailoutIf(Assembler::Signed, ins->snapshot()))
         return false;
 
-    masm.xorl(result, result);
+    masm.mov(ImmWord(0), result);
     masm.jmp(ool->rejoin());
     return true;
 }
@@ -774,7 +774,7 @@ CodeGeneratorX86Shared::visitDivSelfI(LDivSelfI *ins)
     } else {
        if (!bailoutIf(Assembler::Zero, ins->snapshot()))
            return false;
-        masm.mov(Imm32(1), output);
+        masm.mov(ImmWord(1), output);
     }
 
     return true;
@@ -924,7 +924,7 @@ CodeGeneratorX86Shared::visitModOverflowCheck(ModOverflowCheck *ool)
     masm.cmpl(ool->rhs(), Imm32(-1));
     if (ool->ins()->mir()->isTruncated()) {
         masm.j(Assembler::NotEqual, ool->rejoin());
-        masm.xorl(edx, edx);
+        masm.mov(ImmWord(0), edx);
         masm.jmp(ool->done());
     } else {
         if (!bailoutIf(Assembler::Equal, ool->ins()->snapshot()))
@@ -998,7 +998,7 @@ CodeGeneratorX86Shared::visitModI(LModI *ins)
         }
 
         // Since lhs >= 0, the sign-extension will be 0
-        masm.xorl(edx, edx);
+        masm.mov(ImmWord(0), edx);
         masm.idiv(rhs);
     }
 

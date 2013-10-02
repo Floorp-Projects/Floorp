@@ -33,7 +33,7 @@ function runTest() {
   let url = URL_UPDATE + "?showDetails=1" + getVersionParams();
   setUpdateURLOverride(url);
 
-  setupTimer(90000); // 90 seconds
+  setupTimer(180000); // 180 seconds
 
   gAUS.notify(null);
 }

@@ -332,8 +332,8 @@ HTMLImageElement::PreHandleEvent(nsEventChainPreVisitor& aVisitor)
   // element. (bug 39723)
   if (aVisitor.mEvent->eventStructType == NS_MOUSE_EVENT &&
       aVisitor.mEvent->message == NS_MOUSE_CLICK &&
-      static_cast<nsMouseEvent*>(aVisitor.mEvent)->button ==
-        nsMouseEvent::eLeftButton) {
+      static_cast<WidgetMouseEvent*>(aVisitor.mEvent)->button ==
+        WidgetMouseEvent::eLeftButton) {
     bool isMap = false;
     GetIsMap(&isMap);
     if (isMap) {

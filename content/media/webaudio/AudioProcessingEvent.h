@@ -19,8 +19,8 @@ class AudioProcessingEvent : public nsDOMEvent,
 {
 public:
   AudioProcessingEvent(ScriptProcessorNode* aOwner,
-                       nsPresContext *aPresContext,
-                       nsEvent *aEvent);
+                       nsPresContext* aPresContext,
+                       WidgetEvent* aEvent);
 
   NS_DECL_ISUPPORTS_INHERITED
   NS_FORWARD_TO_NSDOMEVENT

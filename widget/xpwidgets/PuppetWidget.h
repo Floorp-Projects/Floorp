@@ -121,9 +121,9 @@ public:
   virtual nsIntPoint WidgetToScreenOffset()
   { return nsIntPoint(0, 0); }
 
-  void InitEvent(nsGUIEvent& event, nsIntPoint* aPoint = nullptr);
+  void InitEvent(WidgetGUIEvent& aEvent, nsIntPoint* aPoint = nullptr);
 
-  NS_IMETHOD DispatchEvent(nsGUIEvent* event, nsEventStatus& aStatus);
+  NS_IMETHOD DispatchEvent(WidgetGUIEvent* aEvent, nsEventStatus& aStatus);
 
   NS_IMETHOD CaptureRollupEvents(nsIRollupListener* aListener,
                                  bool aDoCapture)

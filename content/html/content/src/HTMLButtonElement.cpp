@@ -227,7 +227,8 @@ HTMLButtonElement::PostHandleEvent(nsEventChainPostVisitor& aVisitor)
 
   if (aVisitor.mEventStatus != nsEventStatus_eConsumeNoDefault &&
       aVisitor.mEvent->IsLeftClickEvent()) {
-    nsUIEvent actEvent(aVisitor.mEvent->mFlags.mIsTrusted, NS_UI_ACTIVATE, 1);
+    InternalUIEvent actEvent(aVisitor.mEvent->mFlags.mIsTrusted,
+                             NS_UI_ACTIVATE, 1);
 
     nsCOMPtr<nsIPresShell> shell = aVisitor.mPresContext->GetPresShell();
     if (shell) {
@@ -259,16 +260,17 @@ HTMLButtonElement::PostHandleEvent(nsEventChainPostVisitor& aVisitor)
         {
           // For backwards compat, trigger buttons with space or enter
           // (bug 25300)
-          nsKeyEvent * keyEvent = (nsKeyEvent *)aVisitor.mEvent;
+          WidgetKeyboardEvent* keyEvent =
+            static_cast<WidgetKeyboardEvent*>(aVisitor.mEvent);
           if ((keyEvent->keyCode == NS_VK_RETURN &&
                NS_KEY_PRESS == aVisitor.mEvent->message) ||
               (keyEvent->keyCode == NS_VK_SPACE &&
                NS_KEY_UP == aVisitor.mEvent->message)) {
             nsEventStatus status = nsEventStatus_eIgnore;
 
-            nsMouseEvent event(aVisitor.mEvent->mFlags.mIsTrusted,
-                               NS_MOUSE_CLICK, nullptr,
-                               nsMouseEvent::eReal);
+            WidgetMouseEvent event(aVisitor.mEvent->mFlags.mIsTrusted,
+                                   NS_MOUSE_CLICK, nullptr,
+                                   WidgetMouseEvent::eReal);
             event.inputSource = nsIDOMMouseEvent::MOZ_SOURCE_KEYBOARD;
             nsEventDispatcher::Dispatch(static_cast<nsIContent*>(this),
                                         aVisitor.mPresContext, &event, nullptr,
@@ -281,8 +283,8 @@ HTMLButtonElement::PostHandleEvent(nsEventChainPostVisitor& aVisitor)
       case NS_MOUSE_BUTTON_DOWN:
         {
           if (aVisitor.mEvent->eventStructType == NS_MOUSE_EVENT) {
-            if (static_cast<nsMouseEvent*>(aVisitor.mEvent)->button ==
-                  nsMouseEvent::eLeftButton) {
+            if (static_cast<WidgetMouseEvent*>(aVisitor.mEvent)->button ==
+                  WidgetMouseEvent::eLeftButton) {
               if (aVisitor.mEvent->mFlags.mIsTrusted) {
                 nsEventStateManager* esm =
                   aVisitor.mPresContext->EventStateManager();
@@ -294,10 +296,11 @@ HTMLButtonElement::PostHandleEvent(nsEventChainPostVisitor& aVisitor)
                 fm->SetFocus(this, nsIFocusManager::FLAG_BYMOUSE |
                                    nsIFocusManager::FLAG_NOSCROLL);
               aVisitor.mEvent->mFlags.mMultipleActionsPrevented = true;
-            } else if (static_cast<nsMouseEvent*>(aVisitor.mEvent)->button ==
-                         nsMouseEvent::eMiddleButton ||
-                       static_cast<nsMouseEvent*>(aVisitor.mEvent)->button ==
-                         nsMouseEvent::eRightButton) {
+            } else if (
+              static_cast<WidgetMouseEvent*>(aVisitor.mEvent)->button ==
+                WidgetMouseEvent::eMiddleButton ||
+              static_cast<WidgetMouseEvent*>(aVisitor.mEvent)->button ==
+                WidgetMouseEvent::eRightButton) {
               // cancel all of these events for buttons
               //XXXsmaug What to do with these events? Why these should be cancelled?
               if (aVisitor.mDOMEvent) {
@@ -315,10 +318,10 @@ HTMLButtonElement::PostHandleEvent(nsEventChainPostVisitor& aVisitor)
         {
           if (aVisitor.mEvent->eventStructType == NS_MOUSE_EVENT &&
               aVisitor.mDOMEvent &&
-              (static_cast<nsMouseEvent*>(aVisitor.mEvent)->button ==
-                 nsMouseEvent::eMiddleButton ||
-               static_cast<nsMouseEvent*>(aVisitor.mEvent)->button ==
-                 nsMouseEvent::eRightButton)) {
+              (static_cast<WidgetMouseEvent*>(aVisitor.mEvent)->button ==
+                 WidgetMouseEvent::eMiddleButton ||
+               static_cast<WidgetMouseEvent*>(aVisitor.mEvent)->button ==
+                 WidgetMouseEvent::eRightButton)) {
             aVisitor.mDOMEvent->StopPropagation();
           }
         }

@@ -232,11 +232,6 @@ private:
   bool mSecurityInfoLoaded : 1;
   // Prevents any callback invocation
   bool mPreventCallbacks : 1;
-  // Accessed only on the management thread.
-  // Whether this entry is registered in the storage service helper arrays
-  bool mIsRegistered : 1;
-  // After deregistration entry is no allowed to register again
-  bool mIsRegistrationAllowed : 1;
   // Way around when having a callback that cannot be invoked on non-main thread
   bool mHasMainThreadOnlyCallback : 1;
   // true: after load and an existing file, or after output stream has been opened.
@@ -262,6 +257,16 @@ private:
 
   // State of this entry.
   EState mState;
+
+  enum ERegistration {
+    NEVERREGISTERED = 0, // The entry has never been registered
+    REGISTERED = 1,      // The entry is stored in the memory pool index
+    DEREGISTERED = 2     // The entry has been removed from the pool
+  };
+
+  // Accessed only on the management thread.  Records the state of registration
+  // this entry in the memory pool intermediate cache.
+  ERegistration mRegistration;
 
   // If a new (empty) entry is requested to open an input stream before
   // output stream has been opened, we must open output stream internally

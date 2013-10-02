@@ -14,6 +14,7 @@
 #include "nsAutoPtr.h"
 #include "mozilla/Alignment.h"
 #include "mozilla/gfx/2D.h"
+#include "GraphicsFilter.h"
 
 class gfxContext;
 class gfxASurface;
@@ -83,16 +84,6 @@ public:
     GraphicsPatternType GetType() const;
 
     int CairoStatus();
-
-    enum GraphicsFilter {
-        FILTER_FAST,
-        FILTER_GOOD,
-        FILTER_BEST,
-        FILTER_NEAREST,
-        FILTER_BILINEAR,
-        FILTER_GAUSSIAN,
-        FILTER_SENTINEL
-    };
 
     void SetFilter(GraphicsFilter filter);
     GraphicsFilter Filter() const;

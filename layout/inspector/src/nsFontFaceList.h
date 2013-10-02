@@ -10,8 +10,8 @@
 #include "nsCOMPtr.h"
 #include "nsInterfaceHashtable.h"
 #include "nsHashKeys.h"
-#include "gfxFont.h"
 
+class gfxFontEntry;
 class gfxTextRun;
 class nsIFrame;
 

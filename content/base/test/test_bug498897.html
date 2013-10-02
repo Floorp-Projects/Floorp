@@ -21,8 +21,6 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=498897
 
 var checkedLoad = false;
 
-netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
-
 const Cc = SpecialPowers.Cc;
 const Ci = SpecialPowers.Ci;
 
@@ -48,10 +46,9 @@ var policy = {
   // nsIContentPolicy implementation
   shouldLoad: function(contentType, contentLocation, requestOrigin, context,
                        mimeTypeGuess, extra) {
-    if (contentLocation instanceof Ci.nsIURL &&
-        contentLocation.fileName == "file_bug498897.css" &&
-        requestOrigin instanceof Ci.nsIURL &&
-        requestOrigin.fileName == "file_bug498897.html") {
+    var url = window.location.href.substr(0, window.location.href.indexOf('test_bug498897'));
+    if (contentLocation.spec == url + "file_bug498897.css" &&
+        requestOrigin.spec == url + "file_bug498897.html") {
       checkedLoad = true;
     }
 
@@ -63,6 +60,7 @@ var policy = {
     return Ci.nsIContentPolicy.ACCEPT;
   }
 }
+policy = SpecialPowers.wrapCallbackObject(policy);
 
 var componentManager = SpecialPowers.wrap(SpecialPowers.Components).manager
                                  .QueryInterface(Ci.nsIComponentRegistrar);

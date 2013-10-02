@@ -36,19 +36,17 @@ using mozilla::layout::ScrollingBehavior;
 using mozilla::void_t;
 using mozilla::WindowsHandle;
 using nscolor;
-using nsCompositionEvent;
+using mozilla::WidgetCompositionEvent;
 using nsIMEUpdatePreference;
 using nsIntPoint;
 using nsIntRect;
 using nsIntSize;
-using nsKeyEvent;
-using nsMouseEvent;
-using nsMouseScrollEvent;
+using mozilla::WidgetKeyboardEvent;
+using mozilla::WidgetMouseEvent;
 using mozilla::WheelEvent;
-using nsQueryContentEvent;
 using nsRect;
-using nsSelectionEvent;
-using nsTextEvent;
+using mozilla::WidgetSelectionEvent;
+using mozilla::WidgetTextEvent;
 using mozilla::WidgetTouchEvent;
 using RemoteDOMEvent;
 using mozilla::dom::ScreenOrientation;
@@ -84,6 +82,9 @@ parent:
     intr CreateWindow() returns (PBrowser window);
 
     sync SyncMessage(nsString aMessage, ClonedMessageData aData, CpowEntry[] aCpows)
+      returns (nsString[] retval);
+
+    rpc RpcMessage(nsString aMessage, ClonedMessageData aData, CpowEntry[] aCpows)
       returns (nsString[] retval);
 
     /**
@@ -364,8 +365,8 @@ child:
                int32_t aModifiers,
                bool aIgnoreRootScrollFrame);
 
-    RealMouseEvent(nsMouseEvent event);
-    RealKeyEvent(nsKeyEvent event);
+    RealMouseEvent(WidgetMouseEvent event);
+    RealKeyEvent(WidgetKeyboardEvent event);
     MouseWheelEvent(WheelEvent event);
     RealTouchEvent(WidgetTouchEvent event);
     // We use a separate message for touchmove events only to apply
@@ -381,11 +382,11 @@ child:
              int32_t aModifiers,
              bool aPreventDefault);
 
-    CompositionEvent(nsCompositionEvent event);
+    CompositionEvent(WidgetCompositionEvent event);
 
-    TextEvent(nsTextEvent event);
+    TextEvent(WidgetTextEvent event);
 
-    SelectionEvent(nsSelectionEvent event);
+    SelectionEvent(WidgetSelectionEvent event);
 
     /**
      * Activate event forwarding from client to parent.

@@ -44,6 +44,7 @@
    we ask for a specific z-order, we don't assume that widget z-ordering actually works.
 */
 
+using namespace mozilla;
 using namespace mozilla::layers;
 
 #define NSCOORD_NONE      INT32_MIN
@@ -686,13 +687,16 @@ void nsViewManager::DidPaintWindow()
 }
 
 void
-nsViewManager::DispatchEvent(nsGUIEvent *aEvent, nsView* aView, nsEventStatus* aStatus)
+nsViewManager::DispatchEvent(WidgetGUIEvent *aEvent,
+                             nsView* aView,
+                             nsEventStatus* aStatus)
 {
   PROFILER_LABEL("event", "nsViewManager::DispatchEvent");
 
   if ((aEvent->HasMouseEventMessage() &&
        // Ignore mouse events that we synthesize.
-       static_cast<nsMouseEvent*>(aEvent)->reason == nsMouseEvent::eReal &&
+       static_cast<WidgetMouseEvent*>(aEvent)->reason ==
+         WidgetMouseEvent::eReal &&
        // Ignore mouse exit and enter (we'll get moves if the user
        // is really moving the mouse) since we get them when we
        // create and destroy widgets.

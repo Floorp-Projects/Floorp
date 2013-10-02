@@ -80,6 +80,10 @@ struct WebGLContextAttributesInitializer;
 template<typename> struct Nullable;
 }
 
+namespace gfx {
+class SourceSurface;
+}
+
 using WebGLTexelConversions::WebGLTexelFormat;
 
 WebGLTexelFormat GetWebGLTexelFormat(GLenum format, GLenum type);
@@ -153,20 +157,23 @@ public:
     NS_DECL_NSIDOMWEBGLRENDERINGCONTEXT
 
     // nsICanvasRenderingContextInternal
+#ifdef DEBUG
+    virtual int32_t GetWidth() const MOZ_OVERRIDE;
+    virtual int32_t GetHeight() const MOZ_OVERRIDE;
+#endif
     NS_IMETHOD SetDimensions(int32_t width, int32_t height) MOZ_OVERRIDE;
     NS_IMETHOD InitializeWithSurface(nsIDocShell *docShell, gfxASurface *surface, int32_t width, int32_t height) MOZ_OVERRIDE
         { return NS_ERROR_NOT_IMPLEMENTED; }
     NS_IMETHOD Reset() MOZ_OVERRIDE
         { /* (InitializeWithSurface) */ return NS_ERROR_NOT_IMPLEMENTED; }
     NS_IMETHOD Render(gfxContext *ctx,
-                      gfxPattern::GraphicsFilter f,
+                      GraphicsFilter f,
                       uint32_t aFlags = RenderFlagPremultAlpha) MOZ_OVERRIDE;
     NS_IMETHOD GetInputStream(const char* aMimeType,
                               const PRUnichar* aEncoderOptions,
                               nsIInputStream **aStream) MOZ_OVERRIDE;
     NS_IMETHOD GetThebesSurface(gfxASurface **surface) MOZ_OVERRIDE;
-    mozilla::TemporaryRef<mozilla::gfx::SourceSurface> GetSurfaceSnapshot() MOZ_OVERRIDE
-        { return nullptr; }
+    mozilla::TemporaryRef<mozilla::gfx::SourceSurface> GetSurfaceSnapshot() MOZ_OVERRIDE;
 
     NS_IMETHOD SetIsOpaque(bool b) MOZ_OVERRIDE { return NS_OK; };
     NS_IMETHOD SetContextOptions(JSContext* aCx,

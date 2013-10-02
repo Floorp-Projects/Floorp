@@ -59,7 +59,7 @@ this.DebuggerTransport = function DebuggerTransport(aInput, aOutput)
 DebuggerTransport.prototype = {
   /**
    * Transmit a packet.
-   * 
+   *
    * This method returns immediately, without waiting for the entire
    * packet to be transmitted, registering event handlers as needed to
    * transmit the entire packet. Packets are transmitted in the order

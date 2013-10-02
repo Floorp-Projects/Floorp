@@ -335,7 +335,7 @@ enum nsEventStructType
 #define NS_PLUGIN_INPUT_EVENT            (NS_PLUGIN_EVENT_START)
 #define NS_PLUGIN_FOCUS_EVENT            (NS_PLUGIN_EVENT_START+1)
 
-// Events to manipulate selection (nsSelectionEvent)
+// Events to manipulate selection (WidgetSelectionEvent)
 #define NS_SELECTION_EVENT_START        3700
 // Clear any previous selection and set the given range as the selection
 #define NS_SELECTION_SET                (NS_SELECTION_EVENT_START)
@@ -1021,11 +1021,5 @@ public:
 };
 
 } // namespace mozilla
-
-// TODO: Remove following typedefs
-typedef mozilla::WidgetEvent      nsEvent;
-typedef mozilla::WidgetGUIEvent   nsGUIEvent;
-typedef mozilla::WidgetInputEvent nsInputEvent;
-typedef mozilla::InternalUIEvent  nsUIEvent;
 
 #endif // mozilla_BasicEvents_h__

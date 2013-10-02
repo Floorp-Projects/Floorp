@@ -2947,6 +2947,22 @@ ContentParent::RecvSyncMessage(const nsString& aMsg,
 }
 
 bool
+ContentParent::AnswerRpcMessage(const nsString& aMsg,
+                                const ClonedMessageData& aData,
+                                const InfallibleTArray<CpowEntry>& aCpows,
+                                InfallibleTArray<nsString>* aRetvals)
+{
+  nsRefPtr<nsFrameMessageManager> ppm = mMessageManager;
+  if (ppm) {
+    StructuredCloneData cloneData = ipc::UnpackClonedMessageDataForParent(aData);
+    CpowIdHolder cpows(GetCPOWManager(), aCpows);
+    ppm->ReceiveMessage(static_cast<nsIContentFrameMessageManager*>(ppm.get()),
+                        aMsg, true, &cloneData, &cpows, aRetvals);
+  }
+  return true;
+}
+
+bool
 ContentParent::RecvAsyncMessage(const nsString& aMsg,
                                 const ClonedMessageData& aData,
                                 const InfallibleTArray<CpowEntry>& aCpows)

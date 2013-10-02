@@ -176,7 +176,7 @@ nsJSEventListener::HandleEvent(nsIDOMEvent* aEvent)
     Optional<uint32_t> columnNumber;
 
     NS_ENSURE_TRUE(aEvent, NS_ERROR_UNEXPECTED);
-    nsEvent* event = aEvent->GetInternalNSEvent();
+    WidgetEvent* event = aEvent->GetInternalNSEvent();
     if (event->message == NS_LOAD_ERROR &&
         event->eventStructType == NS_SCRIPT_ERROR_EVENT) {
       InternalScriptErrorEvent *scriptEvent =

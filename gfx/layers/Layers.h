@@ -16,7 +16,7 @@
 #include "gfxTypes.h"
 #include "gfxColor.h"                   // for gfxRGBA
 #include "gfxMatrix.h"                  // for gfxMatrix
-#include "gfxPattern.h"                 // for gfxPattern, etc
+#include "GraphicsFilter.h"             // for GraphicsFilter
 #include "gfxPoint.h"                   // for gfxPoint, gfxIntSize
 #include "gfxRect.h"                    // for gfxRect
 #include "mozilla/Assertions.h"         // for MOZ_ASSERT_HELPER2, etc
@@ -1797,7 +1797,7 @@ public:
    * CONSTRUCTION PHASE ONLY
    * Set the filter used to resample this image (if necessary).
    */
-  void SetFilter(gfxPattern::GraphicsFilter aFilter)
+  void SetFilter(GraphicsFilter aFilter)
   {
     if (mFilter != aFilter) {
       MOZ_LAYERS_LOG_IF_SHADOWABLE(this, ("Layer::Mutated(%p) Filter", this));
@@ -1805,7 +1805,7 @@ public:
       Mutated();
     }
   }
-  gfxPattern::GraphicsFilter GetFilter() const { return mFilter; }
+  GraphicsFilter GetFilter() const { return mFilter; }
 
   MOZ_LAYER_DECL_NAME("CanvasLayer", TYPE_CANVAS)
 
@@ -1829,7 +1829,7 @@ protected:
     , mPreTransCallbackData(nullptr)
     , mPostTransCallback(nullptr)
     , mPostTransCallbackData(nullptr)
-    , mFilter(gfxPattern::FILTER_GOOD)
+    , mFilter(GraphicsFilter::FILTER_GOOD)
     , mDirty(false)
   {}
 
@@ -1850,7 +1850,7 @@ protected:
   void* mPreTransCallbackData;
   DidTransactionCallback mPostTransCallback;
   void* mPostTransCallbackData;
-  gfxPattern::GraphicsFilter mFilter;
+  GraphicsFilter mFilter;
 
 private:
   /**

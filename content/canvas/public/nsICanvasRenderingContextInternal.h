@@ -10,7 +10,7 @@
 #include "nsIInputStream.h"
 #include "nsIDocShell.h"
 #include "mozilla/dom/HTMLCanvasElement.h"
-#include "gfxPattern.h"
+#include "GraphicsFilter.h"
 #include "mozilla/RefPtr.h"
 
 #define NS_ICANVASRENDERINGCONTEXTINTERNAL_IID \
@@ -54,6 +54,12 @@ public:
     return mCanvasElement;
   }
 
+#ifdef DEBUG
+    // Useful for testing
+    virtual int32_t GetWidth() const = 0;
+    virtual int32_t GetHeight() const = 0;
+#endif
+
   // Sets the dimensions of the canvas, in pixels.  Called
   // whenever the size of the element changes.
   NS_IMETHOD SetDimensions(int32_t width, int32_t height) = 0;
@@ -62,7 +68,7 @@ public:
 
   // Render the canvas at the origin of the given gfxContext
   NS_IMETHOD Render(gfxContext *ctx,
-                    gfxPattern::GraphicsFilter aFilter,
+                    GraphicsFilter aFilter,
                     uint32_t aFlags = RenderFlagPremultAlpha) = 0;
 
   // Gives you a stream containing the image represented by this context.

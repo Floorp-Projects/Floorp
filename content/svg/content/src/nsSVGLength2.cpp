@@ -15,7 +15,6 @@
 #include "nsSVGAttrTearoffTable.h"
 #include "nsSVGIntegrationUtils.h"
 #include "nsTextFormatter.h"
-#include "prdtoa.h"
 
 using namespace mozilla;
 using namespace mozilla::dom;
@@ -122,28 +121,17 @@ GetValueString(nsAString &aValueAsString, float aValue, uint16_t aUnitType)
   aValueAsString.Append(unitString);
 }
 
-static nsresult
-GetValueFromString(const nsAString &aValueAsString,
-                   float *aValue,
-                   uint16_t *aUnitType)
+static bool
+GetValueFromString(const nsAString& aValueAsString,
+                   float& aValue,
+                   uint16_t* aUnitType)
 {
-  NS_ConvertUTF16toUTF8 value(aValueAsString);
-  const char *str = value.get();
-
-  if (IsSVGWhitespace(*str))
-    return NS_ERROR_DOM_SYNTAX_ERR;
-  
-  char *rest;
-  *aValue = float(PR_strtod(str, &rest));
-  if (rest != str && NS_finite(*aValue)) {
-    *aUnitType = GetUnitTypeForString(
-      Substring(aValueAsString, rest - str));
-    if (IsValidUnitType(*aUnitType)) {
-      return NS_OK;
-    }
+  nsAutoString units;
+  if (!SVGContentUtils::ParseNumber(aValueAsString, aValue, units)) {
+    return false;
   }
-  
-  return NS_ERROR_DOM_SYNTAX_ERR;
+  *aUnitType = GetUnitTypeForString(units);
+  return IsValidUnitType(*aUnitType);
 }
 
 static float
@@ -399,12 +387,11 @@ nsSVGLength2::SetBaseValueString(const nsAString &aValueAsString,
   float value;
   uint16_t unitType;
 
-  nsresult rv = GetValueFromString(aValueAsString, &value, &unitType);
-  if (NS_FAILED(rv)) {
-    return rv;
+  if (!GetValueFromString(aValueAsString, value, &unitType)) {
+    return NS_ERROR_DOM_SYNTAX_ERR;
   }
 
-  if (mIsBaseSet && mBaseVal == value &&
+  if (mIsBaseSet && mBaseVal == float(value) &&
       mSpecifiedUnitType == uint8_t(unitType)) {
     return NS_OK;
   }
@@ -503,9 +490,8 @@ nsSVGLength2::SMILLength::ValueFromString(const nsAString& aStr,
   float value;
   uint16_t unitType;
   
-  nsresult rv = GetValueFromString(aStr, &value, &unitType);
-  if (NS_FAILED(rv)) {
-    return rv;
+  if (!GetValueFromString(aStr, value, &unitType)) {
+    return NS_ERROR_DOM_SYNTAX_ERR;
   }
 
   nsSMILValue val(nsSMILFloatType::Singleton());

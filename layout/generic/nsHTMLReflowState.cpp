@@ -26,6 +26,7 @@
 #include "mozilla/Preferences.h"
 #include "nsFontInflationData.h"
 #include "StickyScrollContainer.h"
+#include "nsIFrameInlines.h"
 #include <algorithm>
 
 #ifdef DEBUG
@@ -2631,4 +2632,16 @@ nsHTMLReflowState::SetTruncated(const nsHTMLReflowMetrics& aMetrics,
   } else {
     *aStatus &= ~NS_FRAME_TRUNCATED;
   }
+}
+
+bool
+nsHTMLReflowState::IsFloating() const
+{
+  return mStyleDisplay->IsFloating(frame);
+}
+
+uint8_t
+nsHTMLReflowState::GetDisplay() const
+{
+  return mStyleDisplay->GetDisplay(frame);
 }

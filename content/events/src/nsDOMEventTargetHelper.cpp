@@ -308,7 +308,7 @@ nsDOMEventTargetHelper::PostHandleEvent(nsEventChainPostVisitor& aVisitor)
 }
 
 nsresult
-nsDOMEventTargetHelper::DispatchDOMEvent(nsEvent* aEvent,
+nsDOMEventTargetHelper::DispatchDOMEvent(WidgetEvent* aEvent,
                                          nsIDOMEvent* aDOMEvent,
                                          nsPresContext* aPresContext,
                                          nsEventStatus* aEventStatus)

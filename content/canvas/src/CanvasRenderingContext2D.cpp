@@ -909,6 +909,20 @@ CanvasRenderingContext2D::EnsureTarget()
   }
 }
 
+#ifdef DEBUG
+int32_t
+CanvasRenderingContext2D::GetWidth() const
+{
+  return mWidth;
+}
+
+int32_t
+CanvasRenderingContext2D::GetHeight() const
+{
+  return mHeight;
+}
+#endif
+
 NS_IMETHODIMP
 CanvasRenderingContext2D::SetDimensions(int32_t width, int32_t height)
 {
@@ -992,7 +1006,7 @@ CanvasRenderingContext2D::SetIsIPC(bool isIPC)
 }
 
 NS_IMETHODIMP
-CanvasRenderingContext2D::Render(gfxContext *ctx, gfxPattern::GraphicsFilter aFilter, uint32_t aFlags)
+CanvasRenderingContext2D::Render(gfxContext *ctx, GraphicsFilter aFilter, uint32_t aFlags)
 {
   nsresult rv = NS_OK;
 

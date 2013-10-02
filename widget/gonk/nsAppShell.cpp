@@ -145,13 +145,13 @@ struct UserInputData {
 static void
 sendMouseEvent(uint32_t msg, uint64_t timeMs, int x, int y, bool forwardToChildren)
 {
-    nsMouseEvent event(true, msg, NULL,
-                       nsMouseEvent::eReal, nsMouseEvent::eNormal);
+    WidgetMouseEvent event(true, msg, NULL,
+                           WidgetMouseEvent::eReal, WidgetMouseEvent::eNormal);
 
     event.refPoint.x = x;
     event.refPoint.y = y;
     event.time = timeMs;
-    event.button = nsMouseEvent::eLeftButton;
+    event.button = WidgetMouseEvent::eLeftButton;
     event.inputSource = nsIDOMMouseEvent::MOZ_SOURCE_TOUCH;
     if (msg != NS_MOUSE_MOVE)
         event.clickCount = 1;
@@ -221,7 +221,7 @@ sendKeyEventWithMsg(uint32_t keyCode,
                     uint32_t msg,
                     uint64_t timeMs)
 {
-    nsKeyEvent event(true, msg, NULL);
+    WidgetKeyboardEvent event(true, msg, NULL);
     event.keyCode = keyCode;
     event.mKeyNameIndex = keyNameIndex;
     event.location = nsIDOMKeyEvent::DOM_KEY_LOCATION_MOBILE;
