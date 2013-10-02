@@ -36,7 +36,7 @@ class TestSymbols(unittest.TestCase):
         self.assertEqual(lines[-1].strip(), '')
 
     def test_documentation_formatting(self):
-        for typ, inp, default, doc in VARIABLES.values():
+        for typ, inp, default, doc, tier in VARIABLES.values():
             self._verify_doc(doc)
 
         for attr, args, doc in FUNCTIONS.values():
