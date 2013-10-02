@@ -8224,7 +8224,7 @@ nsIFrame::DestroyDT(void* aPropertyValue)
   static_cast<mozilla::gfx::DrawTarget*>(aPropertyValue)->Release();
 }
 
-+void
+void
 nsIFrame::DestroyRegion(void* aPropertyValue)
 {
   delete static_cast<nsRegion*>(aPropertyValue);
