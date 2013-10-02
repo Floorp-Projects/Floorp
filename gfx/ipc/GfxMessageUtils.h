@@ -12,13 +12,12 @@
 #include "ipc/IPCMessageUtils.h"
 
 #include "mozilla/Util.h"
-#include "mozilla/gfx/2D.h"
 #include <stdint.h>
 
 #include "gfx3DMatrix.h"
 #include "gfxColor.h"
 #include "gfxMatrix.h"
-#include "gfxPattern.h"
+#include "GraphicsFilter.h"
 #include "gfxPoint.h"
 #include "gfxRect.h"
 #include "nsRect.h"
@@ -35,7 +34,13 @@
 namespace mozilla {
 
 typedef gfxImageFormat PixelFormat;
-typedef gfxPattern::GraphicsFilter GraphicsFilterType;
+#if defined(MOZ_HAVE_CXX11_STRONG_ENUMS)
+typedef ::GraphicsFilter GraphicsFilterType;
+#else
+// If we don't have support for enum classes, then we need to use the actual
+// enum type here instead of the simulated enum class.
+typedef GraphicsFilter::Enum GraphicsFilterType;
+#endif
 
 } // namespace mozilla
 
@@ -200,8 +205,8 @@ struct ParamTraits<gfxSurfaceType>
 template <>
 struct ParamTraits<mozilla::GraphicsFilterType>
   : public EnumSerializer<mozilla::GraphicsFilterType,
-                          gfxPattern::FILTER_FAST,
-                          gfxPattern::FILTER_SENTINEL>
+                          GraphicsFilter::FILTER_FAST,
+                          GraphicsFilter::FILTER_SENTINEL>
 {};
 
 template <>

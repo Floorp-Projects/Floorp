@@ -36,8 +36,9 @@ static const char *kTypeString[] = {"other",
                                     "dtd",
                                     "font",
                                     "media",
-                                    "websocket"
-                                    "csp_report"};
+                                    "websocket",
+                                    "csp_report",
+                                    "xslt"};
 
 #define NUMBER_OF_TYPES NS_ARRAY_LENGTH(kTypeString)
 uint8_t nsContentBlocker::mBehaviorPref[NUMBER_OF_TYPES];
