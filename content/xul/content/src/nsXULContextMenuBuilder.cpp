@@ -9,6 +9,7 @@
 #include "nsIDOMHTMLElement.h"
 #include "nsIDOMHTMLMenuItemElement.h"
 #include "nsXULContextMenuBuilder.h"
+#include "nsIDocument.h"
 
 using namespace mozilla;
 using namespace mozilla::dom;
