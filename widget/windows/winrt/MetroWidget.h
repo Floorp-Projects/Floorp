@@ -72,14 +72,15 @@ public:
   static HWND GetICoreWindowHWND() { return sICoreHwnd; }
 
   // nsWindowBase
-  virtual bool DispatchWindowEvent(nsGUIEvent* aEvent) MOZ_OVERRIDE;
-  virtual bool DispatchKeyboardEvent(nsGUIEvent* aEvent) MOZ_OVERRIDE;
+  virtual bool DispatchWindowEvent(mozilla::WidgetGUIEvent* aEvent) MOZ_OVERRIDE;
+  virtual bool DispatchKeyboardEvent(mozilla::WidgetGUIEvent* aEvent) MOZ_OVERRIDE;
   virtual bool DispatchPluginEvent(const MSG &aMsg) MOZ_OVERRIDE { return false; }
   virtual bool IsTopLevelWidget() MOZ_OVERRIDE { return true; }
   virtual nsWindowBase* GetParentWindowBase(bool aIncludeOwner) MOZ_OVERRIDE { return nullptr; }
   // InitEvent assumes physical coordinates and is used by shared win32 code. Do
   // not hand winrt event coordinates to this routine.
-  virtual void InitEvent(nsGUIEvent& aEvent, nsIntPoint* aPoint = nullptr) MOZ_OVERRIDE;
+  virtual void InitEvent(mozilla::WidgetGUIEvent& aEvent,
+                         nsIntPoint* aPoint = nullptr) MOZ_OVERRIDE;
 
   // nsBaseWidget
   virtual CompositorParent* NewCompositorParent(int aSurfaceWidth, int aSurfaceHeight);
@@ -102,7 +103,8 @@ public:
                 bool aUpdateNCArea = false,
                 bool aIncludeChildren = false);
   NS_IMETHOD    Invalidate(const nsIntRect & aRect);
-  NS_IMETHOD    DispatchEvent(nsGUIEvent* event, nsEventStatus & aStatus);
+  NS_IMETHOD    DispatchEvent(mozilla::WidgetGUIEvent* aEvent,
+                              nsEventStatus& aStatus);
   NS_IMETHOD    ConstrainPosition(bool aAllowSlop, int32_t *aX, int32_t *aY);
   NS_IMETHOD    Move(double aX, double aY);
   NS_IMETHOD    Resize(double aWidth, double aHeight, bool aRepaint);

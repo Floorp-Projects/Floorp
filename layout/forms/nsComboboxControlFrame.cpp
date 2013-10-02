@@ -1093,8 +1093,8 @@ nsComboboxControlFrame::OnSetSelectedIndex(int32_t aOldIndex, int32_t aNewIndex)
 
 NS_IMETHODIMP
 nsComboboxControlFrame::HandleEvent(nsPresContext* aPresContext,
-                                       nsGUIEvent*     aEvent,
-                                       nsEventStatus*  aEventStatus)
+                                    WidgetGUIEvent* aEvent,
+                                    nsEventStatus* aEventStatus)
 {
   NS_ENSURE_ARG_POINTER(aEventStatus);
 

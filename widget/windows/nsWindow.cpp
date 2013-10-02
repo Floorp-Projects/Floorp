@@ -1501,7 +1501,9 @@ NS_METHOD nsWindow::Resize(double aX, double aY, double aWidth, double aHeight, 
 }
 
 NS_IMETHODIMP
-nsWindow::BeginResizeDrag(nsGUIEvent* aEvent, int32_t aHorizontal, int32_t aVertical)
+nsWindow::BeginResizeDrag(WidgetGUIEvent* aEvent,
+                          int32_t aHorizontal,
+                          int32_t aVertical)
 {
   NS_ENSURE_ARG_POINTER(aEvent);
 
@@ -3588,7 +3590,7 @@ nsWindow::EndRemoteDrawing()
  **************************************************************/
 
 // Event intialization
-void nsWindow::InitEvent(nsGUIEvent& event, nsIntPoint* aPoint)
+void nsWindow::InitEvent(WidgetGUIEvent& event, nsIntPoint* aPoint)
 {
   if (nullptr == aPoint) {     // use the point from the event
     // get the message position in client coordinates
@@ -3627,7 +3629,8 @@ void nsWindow::InitEvent(nsGUIEvent& event, nsIntPoint* aPoint)
 
 // Main event dispatch. Invokes callback and ProcessEvent method on
 // Event Listener object. Part of nsIWidget.
-NS_IMETHODIMP nsWindow::DispatchEvent(nsGUIEvent* event, nsEventStatus & aStatus)
+NS_IMETHODIMP nsWindow::DispatchEvent(WidgetGUIEvent* event,
+                                      nsEventStatus& aStatus)
 {
 #ifdef WIDGET_DEBUG_OUTPUT
   debug_DumpEvent(stdout,
@@ -3660,28 +3663,30 @@ NS_IMETHODIMP nsWindow::DispatchEvent(nsGUIEvent* event, nsEventStatus & aStatus
 
 bool nsWindow::DispatchStandardEvent(uint32_t aMsg)
 {
-  nsGUIEvent event(true, aMsg, this);
+  WidgetGUIEvent event(true, aMsg, this);
   InitEvent(event);
 
   bool result = DispatchWindowEvent(&event);
   return result;
 }
 
-bool nsWindow::DispatchKeyboardEvent(nsGUIEvent* event)
+bool nsWindow::DispatchKeyboardEvent(WidgetGUIEvent* event)
 {
   nsEventStatus status;
   DispatchEvent(event, status);
   return ConvertStatus(status);
 }
 
-bool nsWindow::DispatchWindowEvent(nsGUIEvent* event)
+bool nsWindow::DispatchWindowEvent(WidgetGUIEvent* event)
 {
   nsEventStatus status;
   DispatchEvent(event, status);
   return ConvertStatus(status);
 }
 
-bool nsWindow::DispatchWindowEvent(nsGUIEvent* event, nsEventStatus &aStatus) {
+bool nsWindow::DispatchWindowEvent(WidgetGUIEvent* event,
+                                   nsEventStatus& aStatus)
+{
   DispatchEvent(event, aStatus);
   return ConvertStatus(aStatus);
 }

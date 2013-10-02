@@ -475,7 +475,7 @@ public:
       }
       if (frame) {
         frame->HandleEvent(aVisitor.mPresContext,
-                           (nsGUIEvent*) aVisitor.mEvent,
+                           static_cast<WidgetGUIEvent*>(aVisitor.mEvent),
                            &aVisitor.mEventStatus);
       }
     }
@@ -3401,7 +3401,7 @@ PresShell::ScheduleViewManagerFlush()
 }
 
 void
-PresShell::DispatchSynthMouseMove(nsGUIEvent *aEvent,
+PresShell::DispatchSynthMouseMove(WidgetGUIEvent* aEvent,
                                   bool aFlushOnHoverChange)
 {
   RestyleManager* restyleManager = mPresContext->RestyleManager();
@@ -5839,8 +5839,8 @@ PresShell::GetParentPresShell()
 }
 
 nsresult
-PresShell::RetargetEventToParent(nsGUIEvent*     aEvent,
-                                 nsEventStatus*  aEventStatus)
+PresShell::RetargetEventToParent(WidgetGUIEvent* aEvent,
+                                 nsEventStatus* aEventStatus)
 {
   // Send this events straight up to the parent pres shell.
   // We do this for keystroke events in zombie documents or if either a frame
@@ -5873,7 +5873,7 @@ PresShell::GetFocusedDOMWindowInOurWindow()
 }
 
 void
-PresShell::RecordMouseLocation(nsGUIEvent* aEvent)
+PresShell::RecordMouseLocation(WidgetGUIEvent* aEvent)
 {
   if (!mPresContext)
     return;
@@ -6005,10 +6005,10 @@ nsIFrame* GetNearestFrameContainingPresShell(nsIPresShell* aPresShell)
 }
 
 nsresult
-PresShell::HandleEvent(nsIFrame        *aFrame,
-                       nsGUIEvent*     aEvent,
-                       bool            aDontRetargetEvents,
-                       nsEventStatus*  aEventStatus)
+PresShell::HandleEvent(nsIFrame* aFrame,
+                       WidgetGUIEvent* aEvent,
+                       bool aDontRetargetEvents,
+                       nsEventStatus* aEventStatus)
 {
   NS_ASSERTION(aFrame, "null frame");
 
@@ -6554,8 +6554,8 @@ PresShell::ShowEventTargetDebug()
 #endif
 
 nsresult
-PresShell::HandlePositionedEvent(nsIFrame*      aTargetFrame,
-                                 nsGUIEvent*    aEvent,
+PresShell::HandlePositionedEvent(nsIFrame* aTargetFrame,
+                                 WidgetGUIEvent* aEvent,
                                  nsEventStatus* aEventStatus)
 {
   nsresult rv = NS_OK;

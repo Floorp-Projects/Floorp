@@ -87,7 +87,7 @@ public:
 #endif
 
   NS_IMETHOD HandleEvent(nsPresContext* aPresContext,
-                         nsGUIEvent* aEvent,
+                         WidgetGUIEvent* aEvent,
                          nsEventStatus* aEventStatus);
 
   NS_IMETHOD GetCursor(const nsPoint&    aPoint,
@@ -681,7 +681,7 @@ void nsHTMLFramesetFrame::GetSizeOfChild(nsIFrame* aChild,
 
 
 NS_METHOD nsHTMLFramesetFrame::HandleEvent(nsPresContext* aPresContext,
-                                           nsGUIEvent*    aEvent,
+                                           WidgetGUIEvent* aEvent,
                                            nsEventStatus* aEventStatus)
 {
   NS_ENSURE_ARG_POINTER(aEventStatus);
@@ -1278,7 +1278,7 @@ nsHTMLFramesetFrame::SetBorderResize(nsHTMLFramesetBorderFrame* aBorderFrame)
 void
 nsHTMLFramesetFrame::StartMouseDrag(nsPresContext*             aPresContext,
                                     nsHTMLFramesetBorderFrame* aBorder,
-                                    nsGUIEvent*                aEvent)
+                                    WidgetGUIEvent*            aEvent)
 {
 #if 0
   int32_t index;
@@ -1307,7 +1307,7 @@ nsHTMLFramesetFrame::StartMouseDrag(nsPresContext*             aPresContext,
 
 void
 nsHTMLFramesetFrame::MouseDrag(nsPresContext* aPresContext,
-                               nsGUIEvent*    aEvent)
+                               WidgetGUIEvent* aEvent)
 {
   // if the capture ended, reset the drag state
   if (nsIPresShell::GetCapturingContent() != GetContent()) {
@@ -1579,7 +1579,7 @@ void nsHTMLFramesetBorderFrame::PaintBorder(nsRenderingContext& aRenderingContex
 
 NS_IMETHODIMP
 nsHTMLFramesetBorderFrame::HandleEvent(nsPresContext* aPresContext,
-                                       nsGUIEvent*    aEvent,
+                                       WidgetGUIEvent* aEvent,
                                        nsEventStatus* aEventStatus)
 {
   NS_ENSURE_ARG_POINTER(aEventStatus);

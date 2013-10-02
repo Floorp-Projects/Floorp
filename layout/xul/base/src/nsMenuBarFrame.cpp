@@ -379,7 +379,7 @@ nsMenuBarFrame::ChangeMenuItem(nsMenuFrame* aMenuItem,
 }
 
 nsMenuFrame*
-nsMenuBarFrame::Enter(nsGUIEvent* aEvent)
+nsMenuBarFrame::Enter(WidgetGUIEvent* aEvent)
 {
   if (!mCurrentMenu)
     return nullptr;

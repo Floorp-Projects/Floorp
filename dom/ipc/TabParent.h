@@ -100,7 +100,7 @@ public:
      * It's an error to call TryCapture() if this isn't the event
      * capturer.
      */
-    bool TryCapture(const nsGUIEvent& aEvent);
+    bool TryCapture(const WidgetGUIEvent& aEvent);
 
     void Destroy();
 

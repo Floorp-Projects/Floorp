@@ -289,7 +289,7 @@ public:
     kScrollSeriesTimeout = 80
   };
 protected:
-  static nsIntPoint GetScreenPoint(nsGUIEvent* aEvent);
+  static nsIntPoint GetScreenPoint(WidgetGUIEvent* aEvent);
   static void OnFailToScrollTarget();
   static void OnTimeout(nsITimer *aTimer, void *aClosure);
   static void SetTimeout();
@@ -422,7 +422,7 @@ nsMouseWheelTransaction::OnEvent(nsEvent* aEvent)
       if (IsMouseEventReal(aEvent)) {
         // If the cursor is moving to be outside the frame,
         // terminate the scrollwheel transaction.
-        nsIntPoint pt = GetScreenPoint((nsGUIEvent*)aEvent);
+        nsIntPoint pt = GetScreenPoint(static_cast<WidgetGUIEvent*>(aEvent));
         nsIntRect r = sTargetFrame->GetScreenRectExternal();
         if (!r.Contains(pt)) {
           EndTransaction();
@@ -521,7 +521,7 @@ nsMouseWheelTransaction::SetTimeout()
 }
 
 nsIntPoint
-nsMouseWheelTransaction::GetScreenPoint(nsGUIEvent* aEvent)
+nsMouseWheelTransaction::GetScreenPoint(WidgetGUIEvent* aEvent)
 {
   NS_ASSERTION(aEvent, "aEvent is null");
   NS_ASSERTION(aEvent->widget, "aEvent-widget is null");
@@ -899,7 +899,7 @@ nsEventStateManager::PreHandleEvent(nsPresContext* aPresContext,
         mouseEvent->reason = nsMouseEvent::eSynthesized;
         // then fall through...
       } else {
-        GenerateMouseEnterExit((nsGUIEvent*)aEvent);
+        GenerateMouseEnterExit(static_cast<WidgetGUIEvent*>(aEvent));
         //This is a window level mouse exit event and should stop here
         aEvent->message = 0;
         break;
@@ -914,7 +914,7 @@ nsEventStateManager::PreHandleEvent(nsPresContext* aPresContext,
     // into UpdateCursor().
     GenerateDragGesture(aPresContext, (nsMouseEvent*)aEvent);
     UpdateCursor(aPresContext, aEvent, mCurrentTarget, aStatus);
-    GenerateMouseEnterExit((nsGUIEvent*)aEvent);
+    GenerateMouseEnterExit(static_cast<WidgetGUIEvent*>(aEvent));
     // Flush pending layout changes, so that later mouse move events
     // will go to the right nodes.
     FlushPendingEvents(aPresContext);
@@ -929,7 +929,8 @@ nsEventStateManager::PreHandleEvent(nsPresContext* aPresContext,
   case NS_DRAGDROP_OVER:
     // NS_DRAGDROP_DROP is fired before NS_DRAGDROP_DRAGDROP so send
     // the enter/exit events before NS_DRAGDROP_DROP.
-    GenerateDragDropEnterExit(aPresContext, (nsGUIEvent*)aEvent);
+    GenerateDragDropEnterExit(aPresContext,
+                              static_cast<WidgetGUIEvent*>(aEvent));
     break;
 
   case NS_KEY_PRESS:
@@ -1581,7 +1582,7 @@ nsEventStateManager::HandleCrossProcessEvent(nsEvent *aEvent,
 void
 nsEventStateManager::CreateClickHoldTimer(nsPresContext* inPresContext,
                                           nsIFrame* inDownFrame,
-                                          nsGUIEvent* inMouseDownEvent)
+                                          WidgetGUIEvent* inMouseDownEvent)
 {
   if (!inMouseDownEvent->mFlags.mIsTrusted)
     return;
@@ -3375,7 +3376,8 @@ nsEventStateManager::PostHandleEvent(nsPresContext* aPresContext,
   case NS_DRAGDROP_EXIT:
      // make sure to fire the enter and exit_synth events after the
      // NS_DRAGDROP_EXIT event, otherwise we'll clean up too early
-    GenerateDragDropEnterExit(presContext, (nsGUIEvent*)aEvent);
+    GenerateDragDropEnterExit(presContext,
+                              static_cast<WidgetGUIEvent*>(aEvent));
     break;
 
   case NS_KEY_UP:
@@ -3467,7 +3469,7 @@ nsEventStateManager::GetCrossProcessTarget()
 }
 
 bool
-nsEventStateManager::IsTargetCrossProcess(nsGUIEvent *aEvent)
+nsEventStateManager::IsTargetCrossProcess(WidgetGUIEvent* aEvent)
 {
   // Check to see if there is a focused, editable content in chrome,
   // in that case, do not forward IME events to content
@@ -3755,7 +3757,7 @@ public:
       nsIFrame* frame = aVisitor.mPresContext->GetPrimaryFrameFor(mTarget);
       if (frame) {
         frame->HandleEvent(aVisitor.mPresContext,
-                           (nsGUIEvent*) aVisitor.mEvent,
+                           static_cast<WidgetGUIEvent*>(aVisitor.mEvent),
                            &aVisitor.mEventStatus);
       }
     }
@@ -3777,7 +3779,8 @@ nsEventStateManager::IsHandlingUserInput()
 }
 
 nsIFrame*
-nsEventStateManager::DispatchMouseEvent(nsGUIEvent* aEvent, uint32_t aMessage,
+nsEventStateManager::DispatchMouseEvent(WidgetGUIEvent* aEvent,
+                                        uint32_t aMessage,
                                         nsIContent* aTargetContent,
                                         nsIContent* aRelatedContent)
 {
@@ -3840,7 +3843,7 @@ class MouseEnterLeaveDispatcher
 public:
   MouseEnterLeaveDispatcher(nsEventStateManager* aESM,
                             nsIContent* aTarget, nsIContent* aRelatedTarget,
-                            nsGUIEvent* aEvent, uint32_t aType)
+                            WidgetGUIEvent* aEvent, uint32_t aType)
   : mESM(aESM), mEvent(aEvent), mType(aType)
   {
     nsPIDOMWindow* win =
@@ -3881,12 +3884,13 @@ public:
   nsEventStateManager*   mESM;
   nsCOMArray<nsIContent> mTargets;
   nsCOMPtr<nsIContent>   mRelatedTarget;
-  nsGUIEvent*            mEvent;
+  WidgetGUIEvent*        mEvent;
   uint32_t               mType;
 };
 
 void
-nsEventStateManager::NotifyMouseOut(nsGUIEvent* aEvent, nsIContent* aMovingInto)
+nsEventStateManager::NotifyMouseOut(WidgetGUIEvent* aEvent,
+                                    nsIContent* aMovingInto)
 {
   if (!mLastMouseOverElement)
     return;
@@ -3946,7 +3950,8 @@ nsEventStateManager::NotifyMouseOut(nsGUIEvent* aEvent, nsIContent* aMovingInto)
 }
 
 void
-nsEventStateManager::NotifyMouseOver(nsGUIEvent* aEvent, nsIContent* aContent)
+nsEventStateManager::NotifyMouseOver(WidgetGUIEvent* aEvent,
+                                     nsIContent* aContent)
 {
   NS_ASSERTION(aContent, "Mouse must be over something");
 
@@ -4045,7 +4050,7 @@ GetWindowInnerRectCenter(nsPIDOMWindow* aWindow,
 }
 
 void
-nsEventStateManager::GenerateMouseEnterExit(nsGUIEvent* aEvent)
+nsEventStateManager::GenerateMouseEnterExit(WidgetGUIEvent* aEvent)
 {
   EnsureDocument(mPresContext);
   if (!mDocument)
@@ -4199,7 +4204,7 @@ nsEventStateManager::SetPointerLock(nsIWidget* aWidget,
 
 void
 nsEventStateManager::GenerateDragDropEnterExit(nsPresContext* aPresContext,
-                                               nsGUIEvent* aEvent)
+                                               WidgetGUIEvent* aEvent)
 {
   //Hold onto old target content through the event and reset after.
   nsCOMPtr<nsIContent> targetBeforeEvent = mCurrentTargetContent;
@@ -4268,7 +4273,7 @@ nsEventStateManager::GenerateDragDropEnterExit(nsPresContext* aPresContext,
 
 void
 nsEventStateManager::FireDragEnterOrExit(nsPresContext* aPresContext,
-                                         nsGUIEvent* aEvent,
+                                         WidgetGUIEvent* aEvent,
                                          uint32_t aMsg,
                                          nsIContent* aRelatedTarget,
                                          nsIContent* aTargetContent,
@@ -4838,7 +4843,7 @@ nsEventStateManager::ContentRemoved(nsIDocument* aDocument, nsIContent* aContent
 }
 
 bool
-nsEventStateManager::EventStatusOK(nsGUIEvent* aEvent)
+nsEventStateManager::EventStatusOK(WidgetGUIEvent* aEvent)
 {
   return !(aEvent->message == NS_MOUSE_BUTTON_DOWN &&
       static_cast<nsMouseEvent*>(aEvent)->button == nsMouseEvent::eLeftButton  && 

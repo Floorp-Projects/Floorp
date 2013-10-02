@@ -83,7 +83,8 @@ public:
     
     void CommonCreate(nsIWidget *aParent, bool aListenForResizes);
     
-    virtual nsresult DispatchEvent(nsGUIEvent *aEvent, nsEventStatus &aStatus);
+    virtual nsresult DispatchEvent(mozilla::WidgetGUIEvent* aEvent,
+                                   nsEventStatus& aStatus);
     
     // called when we are destroyed
     void OnDestroy(void);
@@ -242,7 +243,9 @@ public:
 
     static guint32     sLastButtonPressTime;
 
-    NS_IMETHOD         BeginResizeDrag(nsGUIEvent* aEvent, int32_t aHorizontal, int32_t aVertical);
+    NS_IMETHOD         BeginResizeDrag(mozilla::WidgetGUIEvent* aEvent,
+                                       int32_t aHorizontal,
+                                       int32_t aVertical);
     NS_IMETHOD         BeginMoveDrag(nsMouseEvent* aEvent);
 
     MozContainer*      GetMozContainer() { return mContainer; }

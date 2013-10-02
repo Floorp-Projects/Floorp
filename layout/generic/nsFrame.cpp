@@ -2346,8 +2346,8 @@ nsFrame::FireDOMEvent(const nsAString& aDOMEventName, nsIContent *aContent)
 
 NS_IMETHODIMP
 nsFrame::HandleEvent(nsPresContext* aPresContext, 
-                     nsGUIEvent*     aEvent,
-                     nsEventStatus*  aEventStatus)
+                     WidgetGUIEvent* aEvent,
+                     nsEventStatus* aEventStatus)
 {
 
   if (aEvent->message == NS_MOUSE_MOVE) {
@@ -2556,8 +2556,8 @@ nsFrame::IsSelectable(bool* aSelectable, uint8_t* aSelectStyle) const
  */
 NS_IMETHODIMP
 nsFrame::HandlePress(nsPresContext* aPresContext, 
-                     nsGUIEvent*     aEvent,
-                     nsEventStatus*  aEventStatus)
+                     WidgetGUIEvent* aEvent,
+                     nsEventStatus* aEventStatus)
 {
   NS_ENSURE_ARG_POINTER(aEventStatus);
   if (nsEventStatus_eConsumeNoDefault == *aEventStatus) {
@@ -2824,9 +2824,9 @@ nsFrame::SelectByTypeAtPoint(nsPresContext* aPresContext,
  */
 NS_IMETHODIMP
 nsFrame::HandleMultiplePress(nsPresContext* aPresContext,
-                             nsGUIEvent*    aEvent,
+                             WidgetGUIEvent* aEvent,
                              nsEventStatus* aEventStatus,
-                             bool           aControlHeld)
+                             bool aControlHeld)
 {
   NS_ENSURE_ARG_POINTER(aEvent);
   NS_ENSURE_ARG_POINTER(aEventStatus);
@@ -2942,8 +2942,8 @@ nsFrame::PeekBackwardAndForward(nsSelectionAmount aAmountBack,
 }
 
 NS_IMETHODIMP nsFrame::HandleDrag(nsPresContext* aPresContext, 
-                                  nsGUIEvent*     aEvent,
-                                  nsEventStatus*  aEventStatus)
+                                  WidgetGUIEvent* aEvent,
+                                  nsEventStatus* aEventStatus)
 {
   MOZ_ASSERT(aEvent->eventStructType == NS_MOUSE_EVENT, "HandleDrag can only handle mouse event");
 
@@ -3020,7 +3020,7 @@ HandleFrameSelection(nsFrameSelection*         aFrameSelection,
                      int32_t                   aContentOffsetForTableSel,
                      int32_t                   aTargetForTableSel,
                      nsIContent*               aParentContentForTableSel,
-                     nsGUIEvent*               aEvent,
+                     WidgetGUIEvent*           aEvent,
                      nsEventStatus*            aEventStatus)
 {
   if (!aFrameSelection) {
@@ -3075,7 +3075,7 @@ HandleFrameSelection(nsFrameSelection*         aFrameSelection,
 }
 
 NS_IMETHODIMP nsFrame::HandleRelease(nsPresContext* aPresContext,
-                                     nsGUIEvent*    aEvent,
+                                     WidgetGUIEvent* aEvent,
                                      nsEventStatus* aEventStatus)
 {
   if (aEvent->eventStructType != NS_MOUSE_EVENT) {

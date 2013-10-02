@@ -44,6 +44,7 @@
    we ask for a specific z-order, we don't assume that widget z-ordering actually works.
 */
 
+using namespace mozilla;
 using namespace mozilla::layers;
 
 #define NSCOORD_NONE      INT32_MIN
@@ -686,7 +687,9 @@ void nsViewManager::DidPaintWindow()
 }
 
 void
-nsViewManager::DispatchEvent(nsGUIEvent *aEvent, nsView* aView, nsEventStatus* aStatus)
+nsViewManager::DispatchEvent(WidgetGUIEvent *aEvent,
+                             nsView* aView,
+                             nsEventStatus* aStatus)
 {
   PROFILER_LABEL("event", "nsViewManager::DispatchEvent");
 

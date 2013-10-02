@@ -1359,12 +1359,12 @@ public:
    * is. Does it cause the event to continue propagating through the frame hierarchy
    * or is it just returned to the widgets?
    *
-   * @see     nsGUIEvent
+   * @see     WidgetGUIEvent
    * @see     nsEventStatus
    */
   NS_IMETHOD  HandleEvent(nsPresContext* aPresContext,
-                          nsGUIEvent*     aEvent,
-                          nsEventStatus*  aEventStatus) = 0;
+                          mozilla::WidgetGUIEvent* aEvent,
+                          nsEventStatus* aEventStatus) = 0;
 
   NS_IMETHOD  GetContentForEvent(nsEvent* aEvent,
                                  nsIContent** aContent) = 0;

@@ -91,8 +91,8 @@ public:
   NS_IMETHOD  GetContentForEvent(nsEvent* aEvent,
                                  nsIContent** aContent);
   NS_IMETHOD HandleEvent(nsPresContext* aPresContext,
-                        nsGUIEvent* aEvent,
-                        nsEventStatus* aEventStatus);
+                         mozilla::WidgetGUIEvent* aEvent,
+                         nsEventStatus* aEventStatus);
   NS_IMETHOD GetCursor(const nsPoint& aPoint,
                        nsIFrame::Cursor& aCursor);
   NS_IMETHOD AttributeChanged(int32_t aNameSpaceID,

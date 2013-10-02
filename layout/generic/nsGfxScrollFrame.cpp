@@ -3117,7 +3117,7 @@ nsGfxScrollFrameInner::FireScrollEvent()
 {
   mScrollEvent.Forget();
 
-  nsGUIEvent event(true, NS_SCROLL_EVENT, nullptr);
+  WidgetGUIEvent event(true, NS_SCROLL_EVENT, nullptr);
   nsEventStatus status = nsEventStatus_eIgnore;
   nsIContent* content = mOuter->GetContent();
   nsPresContext* prescontext = mOuter->PresContext();

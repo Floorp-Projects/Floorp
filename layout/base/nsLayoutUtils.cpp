@@ -1295,7 +1295,7 @@ nsLayoutUtils::GetEventCoordinatesRelativeTo(const nsEvent* aEvent, nsIFrame* aF
                   aEvent->eventStructType != NS_QUERY_CONTENT_EVENT))
     return nsPoint(NS_UNCONSTRAINEDSIZE, NS_UNCONSTRAINEDSIZE);
 
-  const nsGUIEvent* GUIEvent = static_cast<const nsGUIEvent*>(aEvent);
+  const WidgetGUIEvent* GUIEvent = static_cast<const WidgetGUIEvent*>(aEvent);
   return GetEventCoordinatesRelativeTo(aEvent,
                                        LayoutDeviceIntPoint::ToUntyped(GUIEvent->refPoint),
                                        aFrame);
@@ -1310,7 +1310,7 @@ nsLayoutUtils::GetEventCoordinatesRelativeTo(const nsEvent* aEvent,
     return nsPoint(NS_UNCONSTRAINEDSIZE, NS_UNCONSTRAINEDSIZE);
   }
 
-  const nsGUIEvent* GUIEvent = static_cast<const nsGUIEvent*>(aEvent);
+  const WidgetGUIEvent* GUIEvent = static_cast<const WidgetGUIEvent*>(aEvent);
   nsIWidget* widget = GUIEvent->widget;
   if (!widget) {
     return nsPoint(NS_UNCONSTRAINEDSIZE, NS_UNCONSTRAINEDSIZE);

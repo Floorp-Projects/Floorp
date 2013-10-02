@@ -523,9 +523,9 @@ nsDOMEvent::DuplicatePrivateData()
     }
     case NS_GUI_EVENT:
     {
-      nsGUIEvent* oldGUIEvent = static_cast<nsGUIEvent*>(mEvent);
+      WidgetGUIEvent* oldGUIEvent = static_cast<WidgetGUIEvent*>(mEvent);
       // Not copying widget, it is a weak reference.
-      nsGUIEvent* guiEvent = new nsGUIEvent(false, msg, nullptr);
+      WidgetGUIEvent* guiEvent = new WidgetGUIEvent(false, msg, nullptr);
       guiEvent->AssignGUIEventData(*oldGUIEvent, true);
       newEvent = guiEvent;
       break;
@@ -690,8 +690,8 @@ nsDOMEvent::DuplicatePrivateData()
     }
     case NS_SVGZOOM_EVENT:
     {
-      nsGUIEvent* oldGUIEvent = static_cast<nsGUIEvent*>(mEvent);
-      nsGUIEvent* guiEvent = new nsGUIEvent(false, msg, nullptr);
+      WidgetGUIEvent* oldGUIEvent = static_cast<WidgetGUIEvent*>(mEvent);
+      WidgetGUIEvent* guiEvent = new WidgetGUIEvent(false, msg, nullptr);
       guiEvent->eventStructType = NS_SVGZOOM_EVENT;
       guiEvent->AssignGUIEventData(*oldGUIEvent, true);
       newEvent = guiEvent;
@@ -1041,7 +1041,7 @@ nsDOMEvent::GetScreenCoords(nsPresContext* aPresContext,
     return nsIntPoint(0, 0);
   }
 
-  nsGUIEvent* guiEvent = static_cast<nsGUIEvent*>(aEvent);
+  WidgetGUIEvent* guiEvent = static_cast<WidgetGUIEvent*>(aEvent);
   if (!guiEvent->widget) {
     return LayoutDeviceIntPoint::ToUntyped(aPoint);
   }
@@ -1096,7 +1096,7 @@ nsDOMEvent::GetClientCoords(nsPresContext* aPresContext,
        aEvent->eventStructType != NS_DRAG_EVENT &&
        aEvent->eventStructType != NS_SIMPLE_GESTURE_EVENT) ||
       !aPresContext ||
-      !static_cast<nsGUIEvent*>(aEvent)->widget) {
+      !static_cast<WidgetGUIEvent*>(aEvent)->widget) {
     return aDefaultPoint;
   }
 
