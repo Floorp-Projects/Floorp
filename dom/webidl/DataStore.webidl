@@ -44,8 +44,6 @@ interface DataStore : EventTarget {
 
   // Promise<unsigned long>
   Promise getLength();
-
-  DataStoreCursor sync(optional DOMString revisionId = "");
 };
 
 dictionary DataStoreChanges {
@@ -53,33 +51,4 @@ dictionary DataStoreChanges {
   sequence<unsigned long> addedIds;
   sequence<unsigned long> updatedIds;
   sequence<unsigned long> removedIds;
-};
-
-[Pref="dom.datastore.enabled",
- JSImplementation="@mozilla.org/dom/datastore-cursor;1"]
-interface DataStoreCursor {
-
-  // the DataStore
-  readonly attribute DataStore store;
-
-  // Promise<DataStoreTask>
-  Promise next();
-
-  void close();
-};
-
-enum DataStoreOperation {
-  "add",
-  "update",
-  "remove",
-  "clear",
-  "done"
-};
-
-dictionary DataStoreTask {
-  DOMString revisionId;
-
-  DataStoreOperation operation;
-  unsigned long id;
-  any data;
 };
