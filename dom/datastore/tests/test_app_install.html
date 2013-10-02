@@ -10,6 +10,8 @@
 <div id="container"></div>
   <script type="application/javascript;version=1.7">
 
+ SpecialPowers.Cu.import("resource://gre/modules/DataStoreChangeNotifier.jsm");
+
   SimpleTest.waitForExplicitFinish();
 
   var gBaseURL = 'http://test/tests/dom/datastore/tests/';
