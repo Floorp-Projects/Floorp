@@ -248,7 +248,7 @@ protected:
   bool                  DispatchMouseEvent(uint32_t aEventType,
                                            MPARAM mp1, MPARAM mp2, 
                                            bool aIsContextMenuKey = false,
-                                           int16_t aButton = nsMouseEvent::eLeftButton);
+                                           int16_t aButton = mozilla::WidgetMouseEvent::eLeftButton);
   bool                  DispatchActivationEvent(uint32_t aEventType);
   bool                  DispatchScrollEvent(ULONG msg, MPARAM mp1, MPARAM mp2);
 

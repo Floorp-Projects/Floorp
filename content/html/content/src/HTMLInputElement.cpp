@@ -2799,7 +2799,8 @@ HTMLInputElement::MaybeSubmitForm(nsPresContext* aPresContext)
     NS_ASSERTION(submitContent, "Form control not implementing nsIContent?!");
     // Fire the button's onclick handler and let the button handle
     // submitting the form.
-    nsMouseEvent event(true, NS_MOUSE_CLICK, nullptr, nsMouseEvent::eReal);
+    WidgetMouseEvent event(true, NS_MOUSE_CLICK, nullptr,
+                           WidgetMouseEvent::eReal);
     nsEventStatus status = nsEventStatus_eIgnore;
     shell->HandleDOMEventWithTarget(submitContent, &event, &status);
   } else if (mForm->HasSingleTextControl() &&
@@ -3080,8 +3081,8 @@ HTMLInputElement::PreHandleEvent(nsEventChainPreVisitor& aVisitor)
   if (IsSingleLineTextControl(false) &&
       aVisitor.mEvent->message == NS_MOUSE_CLICK &&
       aVisitor.mEvent->eventStructType == NS_MOUSE_EVENT &&
-      static_cast<nsMouseEvent*>(aVisitor.mEvent)->button ==
-        nsMouseEvent::eMiddleButton) {
+      static_cast<WidgetMouseEvent*>(aVisitor.mEvent)->button ==
+        WidgetMouseEvent::eMiddleButton) {
     aVisitor.mEvent->mFlags.mNoContentDispatch = false;
   }
 
@@ -3441,8 +3442,9 @@ HTMLInputElement::PostHandleEvent(nsEventChainPostVisitor& aVisitor)
               case NS_FORM_INPUT_SUBMIT:
               case NS_FORM_INPUT_IMAGE: // Bug 34418
               {
-                nsMouseEvent event(aVisitor.mEvent->mFlags.mIsTrusted,
-                                   NS_MOUSE_CLICK, nullptr, nsMouseEvent::eReal);
+                WidgetMouseEvent event(aVisitor.mEvent->mFlags.mIsTrusted,
+                                       NS_MOUSE_CLICK, nullptr,
+                                       WidgetMouseEvent::eReal);
                 event.inputSource = nsIDOMMouseEvent::MOZ_SOURCE_KEYBOARD;
                 nsEventStatus status = nsEventStatus_eIgnore;
 
@@ -3476,9 +3478,9 @@ HTMLInputElement::PostHandleEvent(nsEventChainPostVisitor& aVisitor)
                   rv = selectedRadioButton->Focus();
                   if (NS_SUCCEEDED(rv)) {
                     nsEventStatus status = nsEventStatus_eIgnore;
-                    nsMouseEvent event(aVisitor.mEvent->mFlags.mIsTrusted,
-                                       NS_MOUSE_CLICK, nullptr,
-                                       nsMouseEvent::eReal);
+                    WidgetMouseEvent event(aVisitor.mEvent->mFlags.mIsTrusted,
+                                           NS_MOUSE_CLICK, nullptr,
+                                           WidgetMouseEvent::eReal);
                     event.inputSource = nsIDOMMouseEvent::MOZ_SOURCE_KEYBOARD;
                     rv = nsEventDispatcher::Dispatch(ToSupports(selectedRadioButton),
                                                      aVisitor.mPresContext,
@@ -3582,10 +3584,10 @@ HTMLInputElement::PostHandleEvent(nsEventChainPostVisitor& aVisitor)
           // cancel all of these events for buttons
           //XXXsmaug Why?
           if (aVisitor.mEvent->eventStructType == NS_MOUSE_EVENT &&
-              (static_cast<nsMouseEvent*>(aVisitor.mEvent)->button ==
-                 nsMouseEvent::eMiddleButton ||
-               static_cast<nsMouseEvent*>(aVisitor.mEvent)->button ==
-                 nsMouseEvent::eRightButton)) {
+              (static_cast<WidgetMouseEvent*>(aVisitor.mEvent)->button ==
+                 WidgetMouseEvent::eMiddleButton ||
+               static_cast<WidgetMouseEvent*>(aVisitor.mEvent)->button ==
+                 WidgetMouseEvent::eRightButton)) {
             if (mType == NS_FORM_INPUT_BUTTON ||
                 mType == NS_FORM_INPUT_RESET ||
                 mType == NS_FORM_INPUT_SUBMIT) {
@@ -3705,8 +3707,9 @@ HTMLInputElement::PostHandleEventForRangeThumb(nsEventChainPostVisitor& aVisitor
         break; // ignore
       }
       if (aVisitor.mEvent->message == NS_MOUSE_BUTTON_DOWN) {
-        nsMouseEvent* mouseEvent = static_cast<nsMouseEvent*>(aVisitor.mEvent);
-        if (mouseEvent->buttons == nsMouseEvent::eLeftButtonFlag) {
+        WidgetMouseEvent* mouseEvent =
+          static_cast<WidgetMouseEvent*>(aVisitor.mEvent);
+        if (mouseEvent->buttons == WidgetMouseEvent::eLeftButtonFlag) {
           StartRangeThumbDrag(inputEvent);
         } else if (mIsDraggingRange) {
           CancelRangeThumbDrag();

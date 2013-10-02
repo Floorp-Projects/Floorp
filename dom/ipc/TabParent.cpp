@@ -634,12 +634,12 @@ TabParent::MapEventCoordinatesForChildProcess(
   }
 }
 
-bool TabParent::SendRealMouseEvent(nsMouseEvent& event)
+bool TabParent::SendRealMouseEvent(WidgetMouseEvent& event)
 {
   if (mIsDestroyed) {
     return false;
   }
-  nsMouseEvent e(event);
+  WidgetMouseEvent e(event);
   MaybeForwardEventToRenderFrame(event, &e);
   if (!MapEventCoordinatesForChildProcess(&e)) {
     return false;

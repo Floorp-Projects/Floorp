@@ -2349,7 +2349,8 @@ nsFrame::HandleEvent(nsPresContext* aPresContext,
   }
 
   if ((aEvent->eventStructType == NS_MOUSE_EVENT &&
-      static_cast<nsMouseEvent*>(aEvent)->button == nsMouseEvent::eLeftButton) ||
+      static_cast<WidgetMouseEvent*>(aEvent)->button ==
+        WidgetMouseEvent::eLeftButton) ||
       aEvent->eventStructType == NS_TOUCH_EVENT) {
     if (aEvent->message == NS_MOUSE_BUTTON_DOWN || aEvent->message == NS_TOUCH_START) {
       HandlePress(aPresContext, aEvent, aEventStatus);
@@ -2361,9 +2362,12 @@ nsFrame::HandleEvent(nsPresContext* aPresContext,
 }
 
 NS_IMETHODIMP
-nsFrame::GetDataForTableSelection(const nsFrameSelection *aFrameSelection,
-                                  nsIPresShell *aPresShell, nsMouseEvent *aMouseEvent, 
-                                  nsIContent **aParentContent, int32_t *aContentOffset, int32_t *aTarget)
+nsFrame::GetDataForTableSelection(const nsFrameSelection* aFrameSelection,
+                                  nsIPresShell* aPresShell,
+                                  WidgetMouseEvent* aMouseEvent, 
+                                  nsIContent** aParentContent,
+                                  int32_t* aContentOffset,
+                                  int32_t* aTarget)
 {
   if (!aFrameSelection || !aPresShell || !aMouseEvent || !aParentContent || !aContentOffset || !aTarget)
     return NS_ERROR_NULL_POINTER;
@@ -2385,7 +2389,7 @@ nsFrame::GetDataForTableSelection(const nsFrameSelection *aFrameSelection,
      displaySelection == nsISelectionDisplay::DISPLAY_ALL && selectingTableCells &&
      (aMouseEvent->message == NS_MOUSE_MOVE ||
       (aMouseEvent->message == NS_MOUSE_BUTTON_UP &&
-       aMouseEvent->button == nsMouseEvent::eLeftButton) ||
+       aMouseEvent->button == WidgetMouseEvent::eLeftButton) ||
       aMouseEvent->IsShift());
 
   if (!doTableSelection)
@@ -2638,7 +2642,7 @@ nsFrame::HandlePress(nsPresContext* aPresContext,
   if (!frameselection || frameselection->GetDisplaySelection() == nsISelectionController::SELECTION_OFF)
     return NS_OK;//nothing to do we cannot affect selection from here
 
-  nsMouseEvent *me = (nsMouseEvent *)aEvent;
+  WidgetMouseEvent* me = static_cast<WidgetMouseEvent*>(aEvent);
 
 #ifdef XP_MACOSX
   if (me->IsControl())
@@ -2835,7 +2839,7 @@ nsFrame::HandleMultiplePress(nsPresContext* aPresContext,
   // Otherwise, triple-click selects line, and quadruple-click selects paragraph
   // (on platforms that support quadruple-click).
   nsSelectionAmount beginAmount, endAmount;
-  nsMouseEvent *me = (nsMouseEvent *)aEvent;
+  WidgetMouseEvent* me = static_cast<WidgetMouseEvent*>(aEvent);
   if (!me) return NS_OK;
 
   if (me->clickCount == 4) {
@@ -2965,7 +2969,7 @@ NS_IMETHODIMP nsFrame::HandleDrag(nsPresContext* aPresContext,
   nsCOMPtr<nsIContent> parentContent;
   int32_t contentOffset;
   int32_t target;
-  nsMouseEvent *me = (nsMouseEvent *)aEvent;
+  WidgetMouseEvent* me = static_cast<WidgetMouseEvent*>(aEvent);
   nsresult result;
   result = GetDataForTableSelection(frameselection, presShell, me,
                                     getter_AddRefs(parentContent),
@@ -3051,10 +3055,11 @@ HandleFrameSelection(nsFrameSelection*         aFrameSelection,
       }
     } else if (aParentContentForTableSel) {
       aFrameSelection->SetMouseDownState(false);
-      rv = aFrameSelection->HandleTableSelection(aParentContentForTableSel,
-                                                 aContentOffsetForTableSel,
-                                                 aTargetForTableSel,
-                                                 (nsMouseEvent *)aEvent);
+      rv = aFrameSelection->HandleTableSelection(
+                              aParentContentForTableSel,
+                              aContentOffsetForTableSel,
+                              aTargetForTableSel,
+                              static_cast<WidgetMouseEvent*>(aEvent));
       if (NS_FAILED(rv)) {
         return rv;
       }
@@ -3110,7 +3115,7 @@ NS_IMETHODIMP nsFrame::HandleRelease(nsPresContext* aPresContext,
         handleTableSelection = false;
       } else {
         GetDataForTableSelection(frameselection, PresContext()->PresShell(),
-                                 (nsMouseEvent *)aEvent,
+                                 static_cast<WidgetMouseEvent*>(aEvent),
                                  getter_AddRefs(parentContent),
                                  &contentOffsetForTableSel,
                                  &targetForTableSel);

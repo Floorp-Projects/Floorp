@@ -693,8 +693,8 @@ NS_METHOD nsHTMLFramesetFrame::HandleEvent(nsPresContext* aPresContext,
 	      break;
       case NS_MOUSE_BUTTON_UP:
         if (aEvent->eventStructType == NS_MOUSE_EVENT &&
-            static_cast<nsMouseEvent*>(aEvent)->button ==
-              nsMouseEvent::eLeftButton) {
+            static_cast<WidgetMouseEvent*>(aEvent)->button ==
+              WidgetMouseEvent::eLeftButton) {
           EndMouseDrag(aPresContext);
         }
 	      break;
@@ -1592,7 +1592,8 @@ nsHTMLFramesetBorderFrame::HandleEvent(nsPresContext* aPresContext,
 
   if (aEvent->eventStructType == NS_MOUSE_EVENT &&
       aEvent->message == NS_MOUSE_BUTTON_DOWN &&
-      static_cast<nsMouseEvent*>(aEvent)->button == nsMouseEvent::eLeftButton) {
+      static_cast<WidgetMouseEvent*>(aEvent)->button ==
+        WidgetMouseEvent::eLeftButton) {
     nsHTMLFramesetFrame* parentFrame = do_QueryFrame(GetParent());
     if (parentFrame) {
       parentFrame->StartMouseDrag(aPresContext, this, aEvent);

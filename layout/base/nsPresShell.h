@@ -576,19 +576,21 @@ protected:
   class nsDelayedMouseEvent : public nsDelayedInputEvent
   {
   public:
-    nsDelayedMouseEvent(nsMouseEvent* aEvent) : nsDelayedInputEvent()
+    nsDelayedMouseEvent(mozilla::WidgetMouseEvent* aEvent) :
+      nsDelayedInputEvent()
     {
-      mEvent = new nsMouseEvent(aEvent->mFlags.mIsTrusted,
-                                aEvent->message,
-                                aEvent->widget,
-                                aEvent->reason,
-                                aEvent->context);
-      static_cast<nsMouseEvent*>(mEvent)->AssignMouseEventData(*aEvent, false);
+      mEvent = new mozilla::WidgetMouseEvent(aEvent->mFlags.mIsTrusted,
+                                             aEvent->message,
+                                             aEvent->widget,
+                                             aEvent->reason,
+                                             aEvent->context);
+      static_cast<mozilla::WidgetMouseEvent*>(mEvent)->
+        AssignMouseEventData(*aEvent, false);
     }
 
     virtual ~nsDelayedMouseEvent()
     {
-      delete static_cast<nsMouseEvent*>(mEvent);
+      delete static_cast<mozilla::WidgetMouseEvent*>(mEvent);
     }
   };
 
@@ -681,7 +683,7 @@ protected:
    * Returns true if the context menu event should fire and false if it should
    * not.
    */
-  bool AdjustContextMenuKeyEvent(nsMouseEvent* aEvent);
+  bool AdjustContextMenuKeyEvent(mozilla::WidgetMouseEvent* aEvent);
 
   // 
   bool PrepareToUseCaretPosition(nsIWidget* aEventWidget, nsIntPoint& aTargetPt);

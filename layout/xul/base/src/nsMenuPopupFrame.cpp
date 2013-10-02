@@ -338,7 +338,8 @@ public:
 
   NS_IMETHOD Run()
   {
-    nsMouseEvent event(true, NS_XUL_POPUP_SHOWN, nullptr, nsMouseEvent::eReal);
+    WidgetMouseEvent event(true, NS_XUL_POPUP_SHOWN, nullptr,
+                           WidgetMouseEvent::eReal);
     return nsEventDispatcher::Dispatch(mPopup, mPresContext, &event);                 
   }
 

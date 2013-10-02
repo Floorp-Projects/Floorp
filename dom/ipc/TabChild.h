@@ -227,7 +227,7 @@ public:
                                 const int32_t&  aClickCount,
                                 const int32_t&  aModifiers,
                                 const bool&     aIgnoreRootScrollFrame);
-    virtual bool RecvRealMouseEvent(const nsMouseEvent& event);
+    virtual bool RecvRealMouseEvent(const mozilla::WidgetMouseEvent& event);
     virtual bool RecvRealKeyEvent(const mozilla::WidgetKeyboardEvent& event);
     virtual bool RecvMouseWheelEvent(const mozilla::WheelEvent& event);
     virtual bool RecvRealTouchEvent(const WidgetTouchEvent& event);

@@ -1190,11 +1190,10 @@ nsWindow::OnMouseEvent(AndroidGeckoEvent *ae)
 
 send_again:
 
-    nsMouseEvent event(true,
-                       msg, this,
-                       nsMouseEvent::eReal, nsMouseEvent::eNormal);
+    WidgetMouseEvent event(true, msg, this,
+                           WidgetMouseEvent::eReal, WidgetMouseEvent::eNormal);
     // XXX can we synthesize different buttons?
-    event.button = nsMouseEvent::eLeftButton;
+    event.button = WidgetMouseEvent::eLeftButton;
 
     if (msg != NS_MOUSE_MOVE)
         event.clickCount = 1;

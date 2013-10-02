@@ -550,9 +550,9 @@ nsDOMEvent::DuplicatePrivateData()
     }
     case NS_MOUSE_EVENT:
     {
-      nsMouseEvent* oldMouseEvent = static_cast<nsMouseEvent*>(mEvent);
-      nsMouseEvent* mouseEvent =
-        new nsMouseEvent(false, msg, nullptr, oldMouseEvent->reason);
+      WidgetMouseEvent* oldMouseEvent = static_cast<WidgetMouseEvent*>(mEvent);
+      WidgetMouseEvent* mouseEvent =
+        new WidgetMouseEvent(false, msg, nullptr, oldMouseEvent->reason);
       mouseEvent->AssignMouseEventData(*oldMouseEvent, true);
       newEvent = mouseEvent;
       break;
@@ -940,7 +940,8 @@ nsDOMEvent::GetEventPopupControlState(WidgetEvent* aEvent)
     break;
   case NS_MOUSE_EVENT :
     if (aEvent->mFlags.mIsTrusted &&
-        static_cast<nsMouseEvent*>(aEvent)->button == nsMouseEvent::eLeftButton) {
+        static_cast<WidgetMouseEvent*>(aEvent)->button ==
+          WidgetMouseEvent::eLeftButton) {
       switch(aEvent->message) {
       case NS_MOUSE_BUTTON_UP :
         if (::PopupAllowedForEvent("mouseup"))
