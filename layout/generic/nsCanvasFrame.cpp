@@ -28,6 +28,7 @@
 
 using namespace mozilla;
 using namespace mozilla::layout;
+using namespace mozilla::gfx;
 
 nsIFrame*
 NS_NewCanvasFrame(nsIPresShell* aPresShell, nsStyleContext* aContext)
@@ -198,6 +199,14 @@ static void BlitSurface(gfxContext* aDest, const gfxRect& aRect, gfxASurface* aS
   aDest->Translate(-gfxPoint(aRect.x, aRect.y));
 }
 
+static void BlitSurface(DrawTarget* aDest, const gfxRect& aRect, DrawTarget* aSource)
+{
+  RefPtr<SourceSurface> source = aSource->Snapshot();
+  aDest->DrawSurface(source,
+                     Rect(aRect.x, aRect.y, aRect.width, aRect.height),
+                     Rect(0, 0, aRect.width, aRect.height));
+}
+
 void
 nsDisplayCanvasBackgroundImage::Paint(nsDisplayListBuilder* aBuilder,
                                       nsRenderingContext* aCtx)
@@ -209,6 +218,7 @@ nsDisplayCanvasBackgroundImage::Paint(nsDisplayListBuilder* aBuilder,
   nsRenderingContext context;
   nsRefPtr<gfxContext> dest = aCtx->ThebesContext();
   nsRefPtr<gfxASurface> surf;
+  RefPtr<DrawTarget> dt;
   nsRefPtr<gfxContext> ctx;
   gfxRect destRect;
 #ifndef MOZ_GFX_OPTIMIZE_MOBILE
@@ -218,8 +228,8 @@ nsDisplayCanvasBackgroundImage::Paint(nsDisplayListBuilder* aBuilder,
     // Snap image rectangle to nearest pixel boundaries. This is the right way
     // to snap for this context, because we checked HasNonIntegerTranslation above.
     destRect.Round();
-    surf = static_cast<gfxASurface*>(Frame()->Properties().Get(nsIFrame::CachedBackgroundImage()));
     if (dest->IsCairo()) {
+      surf = static_cast<gfxASurface*>(Frame()->Properties().Get(nsIFrame::CachedBackgroundImage()));
       nsRefPtr<gfxASurface> destSurf = dest->CurrentSurface();
       if (surf && surf->GetType() == destSurf->GetType()) {
         BlitSurface(dest, destRect, surf);
@@ -229,24 +239,20 @@ nsDisplayCanvasBackgroundImage::Paint(nsDisplayListBuilder* aBuilder,
           GFX_CONTENT_COLOR_ALPHA,
           gfxIntSize(ceil(destRect.width), ceil(destRect.height)));
     } else {
-      if (surf) {
-        mozilla::gfx::DrawTarget* dt = dest->GetDrawTarget();
-        mozilla::RefPtr<mozilla::gfx::SourceSurface> source =
-            gfxPlatform::GetPlatform()->GetSourceSurfaceForSurface(dt, surf);
-        if (source) {
-          // Could be non-integer pixel alignment
-          dt->DrawSurface(source,
-                          mozilla::gfx::Rect(destRect.x, destRect.y, destRect.width, destRect.height),
-                          mozilla::gfx::Rect(0, 0, destRect.width, destRect.height));
-          return;
-        }
+      dt = static_cast<DrawTarget*>(Frame()->Properties().Get(nsIFrame::CachedBackgroundImageDT()));
+      DrawTarget* destDT = dest->GetDrawTarget();
+      if (dt) {
+        BlitSurface(destDT, destRect, dt);
+        return;
       }
-      surf = gfxPlatform::GetPlatform()->CreateOffscreenImageSurface(
-          gfxIntSize(ceil(destRect.width), ceil(destRect.height)),
-          GFX_CONTENT_COLOR_ALPHA);
+      dt = destDT->CreateSimilarDrawTarget(IntSize(ceil(destRect.width), ceil(destRect.height)), FORMAT_B8G8R8A8);
     }
-    if (surf) {
-      ctx = new gfxContext(surf);
+    if (surf || dt) {
+      if (surf) {
+        ctx = new gfxContext(surf);
+      } else {
+        ctx = new gfxContext(dt);
+      }
       ctx->Translate(-gfxPoint(destRect.x, destRect.y));
       context.Init(aCtx->DeviceContext(), ctx);
     }
@@ -254,13 +260,17 @@ nsDisplayCanvasBackgroundImage::Paint(nsDisplayListBuilder* aBuilder,
 #endif
 
   PaintInternal(aBuilder,
-                surf ? &context : aCtx,
-                surf ? bgClipRect: mVisibleRect,
+                (surf || dt) ? &context : aCtx,
+                (surf || dt) ? bgClipRect: mVisibleRect,
                 &bgClipRect);
 
   if (surf) {
     BlitSurface(dest, destRect, surf);
     frame->Properties().Set(nsIFrame::CachedBackgroundImage(), surf.forget().get());
+  }
+  if (dt) {
+    BlitSurface(dest->GetDrawTarget(), destRect, dt);
+    frame->Properties().Set(nsIFrame::CachedBackgroundImageDT(), dt.forget().drop());
   }
 }
 

@@ -175,6 +175,7 @@ public:
   virtual void NotifyRenderingChanged() MOZ_OVERRIDE
   {
     mFrame->Properties().Delete(nsIFrame::CachedBackgroundImage());
+    mFrame->Properties().Delete(nsIFrame::CachedBackgroundImageDT());
   }
 
   virtual void Paint(nsDisplayListBuilder* aBuilder,
