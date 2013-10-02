@@ -1,13 +1,9 @@
 {
   "name": "Really Rapid Release (hosted)",
   "description": "Updated even faster than <a href='http://mozilla.org'>Firefox</a>, just to annoy slashdotters.",
-  "launch_path": "/tests/dom/datastore/tests/TESTTOKEN",
+  "launch_path": "/tests/dom/datastore/tests/file_app.sjs",
   "icons": { "128": "default_icon" },
-  "datastores-owned" : {
-    "foo" : { "access": "readwrite", "description" : "This store is called foo" },
-    "bar" : { "access": "readonly", "description" : "This store is called bar" }
-  },
-  "datastores-access" : {
+  "datastores" : {
     "foo" : { "readonly": false, "description" : "This store is called foo" },
     "bar" : { "readonly": true, "description" : "This store is called bar" }
   }
