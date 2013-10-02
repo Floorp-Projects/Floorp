@@ -103,7 +103,6 @@ class InternalMutationEvent;
 } // namespace mozilla
 
 // TODO: Remove following typedefs
-typedef mozilla::WidgetEvent               nsEvent;
 typedef mozilla::WidgetMouseEvent          nsMouseEvent;
 
 namespace mozilla {

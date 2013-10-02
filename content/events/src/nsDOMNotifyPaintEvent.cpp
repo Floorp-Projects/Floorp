@@ -11,11 +11,12 @@
 #include "nsPaintRequest.h"
 #include "mozilla/dom/DOMRect.h"
 
+using namespace mozilla;
 using namespace mozilla::dom;
 
 nsDOMNotifyPaintEvent::nsDOMNotifyPaintEvent(mozilla::dom::EventTarget* aOwner,
                                              nsPresContext* aPresContext,
-                                             nsEvent* aEvent,
+                                             WidgetEvent* aEvent,
                                              uint32_t aEventType,
                                              nsInvalidateRequestList* aInvalidateRequests)
 : nsDOMEvent(aOwner, aPresContext, aEvent)
@@ -157,7 +158,7 @@ nsDOMNotifyPaintEvent::Deserialize(const IPC::Message* aMsg, void** aIter)
 nsresult NS_NewDOMNotifyPaintEvent(nsIDOMEvent** aInstancePtrResult,
                                    mozilla::dom::EventTarget* aOwner,
                                    nsPresContext* aPresContext,
-                                   nsEvent *aEvent,
+                                   WidgetEvent* aEvent,
                                    uint32_t aEventType,
                                    nsInvalidateRequestList* aInvalidateRequests) 
 {

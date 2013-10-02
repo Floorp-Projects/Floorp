@@ -1787,7 +1787,7 @@ nsresult nsPluginInstanceOwner::DispatchFocusToPlugin(nsIDOMEvent* aFocusEvent)
   }
 #endif
 
-  nsEvent* theEvent = aFocusEvent->GetInternalNSEvent();
+  WidgetEvent* theEvent = aFocusEvent->GetInternalNSEvent();
   if (theEvent) {
     // we only care about the message in ProcessEvent
     WidgetGUIEvent focusEvent(theEvent->mFlags.mIsTrusted, theEvent->message,
@@ -1829,7 +1829,7 @@ nsresult nsPluginInstanceOwner::DispatchKeyToPlugin(nsIDOMEvent* aKeyEvent)
 #endif
 
   if (mInstance) {
-    nsEvent *event = aKeyEvent->GetInternalNSEvent();
+    WidgetEvent* event = aKeyEvent->GetInternalNSEvent();
     if (event && event->eventStructType == NS_KEY_EVENT) {
       nsEventStatus rv = ProcessEvent(*static_cast<WidgetGUIEvent*>(event));
       if (nsEventStatus_eConsumeNoDefault == rv) {
@@ -1863,7 +1863,7 @@ nsPluginInstanceOwner::ProcessMouseDown(nsIDOMEvent* aMouseEvent)
     }
   }
 
-  nsEvent* event = aMouseEvent->GetInternalNSEvent();
+  WidgetEvent* event = aMouseEvent->GetInternalNSEvent();
   if (event && event->eventStructType == NS_MOUSE_EVENT) {
     mLastMouseDownButtonType = static_cast<nsMouseEvent*>(event)->button;
     nsEventStatus rv = ProcessEvent(*static_cast<WidgetGUIEvent*>(event));
@@ -1886,7 +1886,7 @@ nsresult nsPluginInstanceOwner::DispatchMouseToPlugin(nsIDOMEvent* aMouseEvent)
   if (!mWidgetVisible)
     return NS_OK;
 
-  nsEvent* event = aMouseEvent->GetInternalNSEvent();
+  WidgetEvent* event = aMouseEvent->GetInternalNSEvent();
   if (event && event->eventStructType == NS_MOUSE_EVENT) {
     nsEventStatus rv = ProcessEvent(*static_cast<WidgetGUIEvent*>(event));
     if (nsEventStatus_eConsumeNoDefault == rv) {
@@ -1950,7 +1950,7 @@ nsPluginInstanceOwner::HandleEvent(nsIDOMEvent* aEvent)
 
   nsCOMPtr<nsIDOMDragEvent> dragEvent(do_QueryInterface(aEvent));
   if (dragEvent && mInstance) {
-    nsEvent* ievent = aEvent->GetInternalNSEvent();
+    WidgetEvent* ievent = aEvent->GetInternalNSEvent();
     if ((ievent && ievent->mFlags.mIsTrusted) &&
          ievent->message != NS_DRAGDROP_ENTER && ievent->message != NS_DRAGDROP_OVER) {
       aEvent->PreventDefault();

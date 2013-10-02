@@ -39,9 +39,9 @@ struct ParamTraits<mozilla::BaseEventFlags>
 };
 
 template<>
-struct ParamTraits<nsEvent>
+struct ParamTraits<mozilla::WidgetEvent>
 {
-  typedef nsEvent paramType;
+  typedef mozilla::WidgetEvent paramType;
 
   static void Write(Message* aMsg, const paramType& aParam)
   {
@@ -72,12 +72,12 @@ struct ParamTraits<mozilla::WidgetGUIEvent>
 
   static void Write(Message* aMsg, const paramType& aParam)
   {
-    WriteParam(aMsg, static_cast<nsEvent>(aParam));
+    WriteParam(aMsg, static_cast<mozilla::WidgetEvent>(aParam));
   }
 
   static bool Read(const Message* aMsg, void** aIter, paramType* aResult)
   {
-    return ReadParam(aMsg, aIter, static_cast<nsEvent*>(aResult));
+    return ReadParam(aMsg, aIter, static_cast<mozilla::WidgetEvent*>(aResult));
   }
 };
 

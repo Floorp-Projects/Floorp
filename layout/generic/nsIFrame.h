@@ -1366,7 +1366,7 @@ public:
                           mozilla::WidgetGUIEvent* aEvent,
                           nsEventStatus* aEventStatus) = 0;
 
-  NS_IMETHOD  GetContentForEvent(nsEvent* aEvent,
+  NS_IMETHOD  GetContentForEvent(mozilla::WidgetEvent* aEvent,
                                  nsIContent** aContent) = 0;
 
   // This structure keeps track of the content node and offsets associated with

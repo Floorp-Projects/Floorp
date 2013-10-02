@@ -38,7 +38,8 @@ public:
   NS_IMETHOD_(bool) Deserialize(const IPC::Message* aMsg, void** aIter) MOZ_OVERRIDE;
 
   static nsIntPoint
-  CalculateScreenPoint(nsPresContext* aPresContext, nsEvent* aEvent)
+  CalculateScreenPoint(nsPresContext* aPresContext,
+                       mozilla::WidgetEvent* aEvent)
   {
     if (!aEvent ||
         (aEvent->eventStructType != NS_MOUSE_EVENT &&
@@ -63,7 +64,7 @@ public:
   }
 
   static CSSIntPoint CalculateClientPoint(nsPresContext* aPresContext,
-                                          nsEvent* aEvent,
+                                          mozilla::WidgetEvent* aEvent,
                                           CSSIntPoint* aDefaultClientPoint)
   {
     if (!aEvent ||
