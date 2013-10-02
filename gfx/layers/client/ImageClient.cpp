@@ -153,7 +153,7 @@ ImageClientSingle::UpdateImage(ImageContainer* aContainer,
     GetForwarder()->UseTexture(this, texture);
   } else if (image->GetFormat() == PLANAR_YCBCR) {
     PlanarYCbCrImage* ycbcr = static_cast<PlanarYCbCrImage*>(image);
-    const PlanarYCbCrImage::Data* data = ycbcr->GetData();
+    const PlanarYCbCrData* data = ycbcr->GetData();
     if (!data) {
       return false;
     }

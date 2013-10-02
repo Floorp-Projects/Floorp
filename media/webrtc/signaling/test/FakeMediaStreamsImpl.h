@@ -140,7 +140,7 @@ Fake_VideoStreamSource::Notify(nsITimer* aTimer)
   uint8_t* frame = (uint8_t*) PR_Malloc(len);
   memset(frame, 0x80, len); // Gray
 
-  mozilla::layers::PlanarYCbCrImage::Data data;
+  mozilla::layers::PlanarYCbCrData data;
   data.mYChannel = frame;
   data.mYSize = gfxIntSize(WIDTH, HEIGHT);
   data.mYStride = WIDTH * lumaBpp / 8.0;

@@ -857,7 +857,7 @@ SetImageToBlackPixel(PlanarYCbCrImage* aImage)
 {
   uint8_t blackPixel[] = { 0x10, 0x80, 0x80 };
 
-  PlanarYCbCrImage::Data data;
+  PlanarYCbCrData data;
   data.mYChannel = blackPixel;
   data.mCbChannel = blackPixel + 1;
   data.mCrChannel = blackPixel + 2;
