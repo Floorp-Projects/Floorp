@@ -33,16 +33,16 @@ EXPORTS.protobuf.google.protobuf.io += [
 ]
 
 CPP_SOURCES += [
-    'coded_stream.cc',
-    'common.cc',
-    'extension_set.cc',
-    'generated_message_util.cc',
-    'message_lite.cc',
-    'once.cc',
-    'repeated_field.cc',
-    'wire_format_lite.cc',
-    'zero_copy_stream.cc',
-    'zero_copy_stream_impl_lite.cc',
+    'google/protobuf/io/coded_stream.cc',
+    'google/protobuf/stubs/common.cc',
+    'google/protobuf/extension_set.cc',
+    'google/protobuf/generated_message_util.cc',
+    'google/protobuf/message_lite.cc',
+    'google/protobuf/stubs/once.cc',
+    'google/protobuf/repeated_field.cc',
+    'google/protobuf/wire_format_lite.cc',
+    'google/protobuf/io/zero_copy_stream.cc',
+    'google/protobuf/io/zero_copy_stream_impl_lite.cc',
 ]
 
 LIBRARY_NAME = 'protobuf_s'
