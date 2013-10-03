@@ -70,6 +70,7 @@
 #include "nsStyleTransformMatrix.h"
 #include "nsIFrameInlines.h"
 #include "ImageContainer.h"
+#include "nsComputedDOMStyle.h"
 
 #include "mozilla/Preferences.h"
 
@@ -5058,6 +5059,8 @@ nsLayoutUtils::Initialize()
   Preferences::RegisterCallback(StickyEnabledPrefChangeCallback,
                                 STICKY_ENABLED_PREF_NAME);
   StickyEnabledPrefChangeCallback(STICKY_ENABLED_PREF_NAME, nullptr);
+
+  nsComputedDOMStyle::RegisterPrefChangeCallbacks();
 }
 
 /* static */
@@ -5073,6 +5076,8 @@ nsLayoutUtils::Shutdown()
                                   FLEXBOX_ENABLED_PREF_NAME);
   Preferences::UnregisterCallback(StickyEnabledPrefChangeCallback,
                                   STICKY_ENABLED_PREF_NAME);
+
+  nsComputedDOMStyle::UnregisterPrefChangeCallbacks();
 }
 
 /* static */
