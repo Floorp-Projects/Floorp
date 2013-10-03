@@ -536,6 +536,7 @@ protected:
   bool ParseDasharray();
   bool ParseMarker();
   bool ParsePaintOrder();
+  bool ParseAll();
 
   // Reused utility parsing routines
   void AppendValue(nsCSSProperty aPropID, const nsCSSValue& aValue);
@@ -6610,6 +6611,8 @@ CSSParserImpl::ParsePropertyByFunction(nsCSSProperty aPropID)
     return ParseMarker();
   case eCSSProperty_paint_order:
     return ParsePaintOrder();
+  case eCSSProperty_all:
+    return ParseAll();
   default:
     NS_ABORT_IF_FALSE(false, "should not be called");
     return false;
@@ -11051,6 +11054,20 @@ CSSParserImpl::ParsePaintOrder()
   }
 
   AppendValue(eCSSProperty_paint_order, value);
+  return true;
+}
+
+bool
+CSSParserImpl::ParseAll()
+{
+  nsCSSValue value;
+  if (!ParseVariant(value, VARIANT_INHERIT, nullptr)) {
+    return false;
+  }
+
+  CSSPROPS_FOR_SHORTHAND_SUBPROPERTIES(p, eCSSProperty_all) {
+    AppendValue(*p, value);
+  }
   return true;
 }
 
