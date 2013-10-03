@@ -490,7 +490,6 @@ WebConsoleFrame.prototype = {
 
     this._setFilterTextBoxEvents();
     this._initFilterButtons();
-    this._changeClearModifier();
 
     let fontSize = this.owner._browserConsole ?
                    Services.prefs.getIntPref("devtools.webconsole.fontSize") : 0;
@@ -595,21 +594,6 @@ WebConsoleFrame.prototype = {
   },
 
   /**
-   * Changes modifier for the clear output shorcut on Macs.
-   *
-   * @private
-   */
-  _changeClearModifier: function WCF__changeClearModifier()
-  {
-    if (Services.appinfo.OS != "Darwin") {
-      return;
-    }
-
-    let clear = this.document.querySelector("#key_clearOutput");
-    clear.setAttribute("modifiers", "access");
-  },
-
-  /**
    * Creates one of the filter buttons on the toolbar.
    *
    * @private
@@ -653,6 +637,9 @@ WebConsoleFrame.prototype = {
       let net = this.document.querySelector("toolbarbutton[category=net]");
       let accesskey = net.getAttribute("accesskeyMacOSX");
       net.setAttribute("accesskey", accesskey);
+
+      let logging = this.document.querySelector("toolbarbutton[category=logging]");
+      logging.removeAttribute("accesskey");
     }
   },
 
