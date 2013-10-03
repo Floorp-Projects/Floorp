@@ -414,8 +414,10 @@ public:
   }
 
   static JSObject*
-  Create(JSContext* aCx, JS::Handle<JSObject*> aParent, JSAutoStructuredCloneBuffer& aData,
-         nsTArray<nsCOMPtr<nsISupports> >& aClonedObjects, bool aMainRuntime)
+  Create(JSContext* aCx, JS::Handle<JSObject*> aParent,
+         JSAutoStructuredCloneBuffer& aData,
+         nsTArray<nsCOMPtr<nsISupports> >& aClonedObjects,
+         bool aMainRuntime)
   {
     JS::Rooted<JSString*> type(aCx, JS_InternString(aCx, "message"));
     if (!type) {
@@ -429,12 +431,53 @@ public:
       return NULL;
     }
 
+    JS::Rooted<JSObject*> ports(aCx, JS_NewArrayObject(aCx, 0, nullptr));
+    if (!ports) {
+      return NULL;
+    }
+
     MessageEvent* priv = new MessageEvent(aMainRuntime);
     SetJSPrivateSafeish(obj, priv);
+
     InitMessageEventCommon(aCx, obj, priv, type, false, false, NULL, NULL, NULL,
-                           true);
+                           ports, true);
+
     priv->mBuffer.swap(aData);
     priv->mClonedObjects.SwapElements(aClonedObjects);
+
+    return obj;
+  }
+
+  static JSObject*
+  Create(JSContext* aCx, JS::Handle<JSObject*> aParent,
+         JS::Handle<JSString*> aType, bool aBubbles, bool aCancelable,
+         JS::Handle<JSString*> aData, JS::Handle<JSString*> aOrigin,
+         JS::Handle<JSObject*> aSource, JS::Handle<JSObject*> aMessagePort,
+         bool aIsTrusted)
+  {
+    JS::Rooted<JSObject*> obj(aCx,
+                              JS_NewObject(aCx, &sClass, nullptr, aParent));
+    if (!obj) {
+      return nullptr;
+    }
+
+    JS::Rooted<JSObject*> ports(aCx);
+    if (aMessagePort) {
+      JS::Value port = OBJECT_TO_JSVAL(aMessagePort);
+      ports = JS_NewArrayObject(aCx, 1, &port);
+    } else {
+      ports = JS_NewArrayObject(aCx, 0, nullptr);
+    }
+
+    if (!ports) {
+      return NULL;
+    }
+
+    MessageEvent* priv = new MessageEvent(false);
+    SetJSPrivateSafeish(obj, priv);
+
+    InitMessageEventCommon(aCx, obj, priv, aType, aBubbles, aCancelable, aData,
+                           aOrigin, aSource, ports, aIsTrusted);
 
     return obj;
   }
@@ -455,6 +498,7 @@ protected:
     SLOT_data = Event::SLOT_COUNT,
     SLOT_origin,
     SLOT_source,
+    SLOT_ports,
 
     SLOT_COUNT,
     SLOT_FIRST = SLOT_data
@@ -479,7 +523,7 @@ private:
   InitMessageEventCommon(JSContext* aCx, JSObject* aObj, Event* aEvent,
                          JSString* aType, bool aBubbles, bool aCancelable,
                          JSString* aData, JSString* aOrigin, JSObject* aSource,
-                         bool aIsTrusted)
+                         JS::Handle<JSObject*> aMessagePorts, bool aIsTrusted)
   {
     jsval emptyString = JS_GetEmptyStringValue(aCx);
 
@@ -490,6 +534,7 @@ private:
     JS_SetReservedSlot(aObj, SLOT_origin,
                        aOrigin ? STRING_TO_JSVAL(aOrigin) : emptyString);
     JS_SetReservedSlot(aObj, SLOT_source, OBJECT_TO_JSVAL(aSource));
+    JS_SetReservedSlot(aObj, SLOT_ports, OBJECT_TO_JSVAL(aMessagePorts));
   }
 
   static bool
@@ -591,7 +636,7 @@ private:
     }
 
     InitMessageEventCommon(aCx, obj, event, type, bubbles, cancelable,
-                           data, origin, source, false);
+                           data, origin, source, JS::NullPtr(), false);
     return true;
   }
 };
@@ -615,6 +660,8 @@ const JSPropertySpec MessageEvent::sProperties[] = {
   JS_PSGS("origin", Property<SLOT_origin>::Get, GetterOnlyJSNative,
           JSPROP_ENUMERATE),
   JS_PSGS("source", Property<SLOT_source>::Get, GetterOnlyJSNative,
+          JSPROP_ENUMERATE),
+  JS_PSGS("ports", Property<SLOT_ports>::Get, GetterOnlyJSNative,
           JSPROP_ENUMERATE),
   JS_PS_END
 };
@@ -1047,6 +1094,25 @@ CreateProgressEvent(JSContext* aCx, JS::Handle<JSString*> aType, bool aLengthCom
   JS::Rooted<JSObject*> global(aCx, JS::CurrentGlobalOrNull(aCx));
   return ProgressEvent::Create(aCx, global, aType, aLengthComputable, aLoaded,
                                aTotal);
+}
+
+JSObject*
+CreateConnectEvent(JSContext* aCx, JS::Handle<JSObject*> aMessagePort)
+{
+  JS::Rooted<JSObject*> global(aCx, JS::CurrentGlobalOrNull(aCx));
+
+  JS::Rooted<JSString*> type(aCx, JS_InternString(aCx, "connect"));
+  if (!type) {
+    return nullptr;
+  }
+
+  JS::Rooted<JSString*> emptyStr(aCx, JS_GetEmptyString(JS_GetRuntime(aCx)));
+  if (!emptyStr) {
+    return nullptr;
+  }
+
+  return MessageEvent::Create(aCx, global, type, false, false, emptyStr,
+                              emptyStr, JS::NullPtr(), aMessagePort, true);
 }
 
 bool

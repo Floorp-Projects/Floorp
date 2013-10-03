@@ -165,7 +165,7 @@ ImageClientSingle::UpdateImage(ImageContainer* aContainer,
 
     bool bufferCreated = false;
     if (!mFrontBuffer) {
-      mFrontBuffer = CreateBufferTextureClient(gfx::FORMAT_YUV, TEXTURE_DEALLOCATE_HOST);
+      mFrontBuffer = CreateBufferTextureClient(gfx::FORMAT_YUV, TEXTURE_FLAGS_DEFAULT);
       gfx::IntSize ySize(data->mYSize.width, data->mYSize.height);
       gfx::IntSize cbCrSize(data->mCbCrSize.width, data->mCbCrSize.height);
       if (!mFrontBuffer->AsTextureClientYCbCr()->AllocateForYCbCr(ySize, cbCrSize, data->mStereoMode)) {
@@ -226,7 +226,7 @@ ImageClientSingle::UpdateImage(ImageContainer* aContainer,
       gfxImageFormat format
         = gfxPlatform::GetPlatform()->OptimalFormatForContent(surface->GetContentType());
       mFrontBuffer = CreateBufferTextureClient(gfx::ImageFormatToSurfaceFormat(format),
-                                               TEXTURE_DEALLOCATE_HOST);
+                                               TEXTURE_FLAGS_DEFAULT);
       MOZ_ASSERT(mFrontBuffer->AsTextureClientSurface());
       mFrontBuffer->AsTextureClientSurface()->AllocateForSurface(size);
 

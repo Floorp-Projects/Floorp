@@ -16,6 +16,7 @@
 #include "nsAttrName.h"
 #include "nsContentUtils.h"
 #include "nsError.h"
+#include "nsIContentInlines.h"
 #include "nsIDocument.h"
 #include "nsIDOMDocument.h"
 #include "nsINameSpaceManager.h"
