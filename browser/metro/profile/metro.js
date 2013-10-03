@@ -43,7 +43,8 @@ pref("gfx.axis.fling_friction", "0.002");
 pref("gfx.axis.fling_stopped_threshold", "0.2");
 
 // 0 = free, 1 = standard, 2 = sticky
-pref("apzc.axis_lock_mode", 1);
+pref("apzc.axis_lock_mode", 2);
+pref("apzc.cross_slide.enabled", true);
 
 // Enable Microsoft TSF support by default for imes.
 pref("intl.enable_tsf_support", true);
