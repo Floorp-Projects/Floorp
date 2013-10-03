@@ -432,9 +432,10 @@ MenuPopup.prototype = {
     let deferred = Promise.defer();
 
     window.addEventListener("keypress", this, true);
-    window.addEventListener("click", this, true);
+    window.addEventListener("mousedown", this, true);
+    window.addEventListener("touchstart", this, true);
+    window.addEventListener("scroll", this, true);
     Elements.stack.addEventListener("PopupChanged", this, false);
-    Elements.browsers.addEventListener("PanBegin", this, false);
 
     this._panel.hidden = false;
     let popupFrom = !aPositionOptions.bottomAligned ? "above" : "below";
@@ -461,9 +462,10 @@ MenuPopup.prototype = {
     let deferred = Promise.defer();
 
     window.removeEventListener("keypress", this, true);
-    window.removeEventListener("click", this, true);
+    window.removeEventListener("mousedown", this, true);
+    window.removeEventListener("touchstart", this, true);
+    window.removeEventListener("scroll", this, true);
     Elements.stack.removeEventListener("PopupChanged", this, false);
-    Elements.browsers.removeEventListener("PanBegin", this, false);
 
     let self = this;
     this._panel.addEventListener("transitionend", function popuphidden() {
@@ -499,7 +501,9 @@ MenuPopup.prototype = {
             this.hide();
         }
         break;
-      case "click":
+      case "mousedown":
+      case "touchstart":
+      case "scroll":
         if (!this._popup.contains(aEvent.target)) {
           aEvent.stopPropagation();
           this.hide();
@@ -516,9 +520,6 @@ MenuPopup.prototype = {
         } else {
           this.hide();
         }
-        break;
-      case "PanBegin":
-        this.hide();
         break;
     }
   }
