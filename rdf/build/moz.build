@@ -18,3 +18,5 @@ LIBRARY_NAME = 'rdf'
 
 LIBXUL_LIBRARY = True
 
+EXPORT_LIBRARY = True
+

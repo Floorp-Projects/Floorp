@@ -581,7 +581,7 @@ XMLDocument::EndLoad()
     // Generate a document load event for the case when an XML
     // document was loaded as pure data without any presentation
     // attached to it.
-    nsEvent event(true, NS_LOAD);
+    WidgetEvent event(true, NS_LOAD);
     nsEventDispatcher::Dispatch(static_cast<nsIDocument*>(this), nullptr,
                                 &event);
   }

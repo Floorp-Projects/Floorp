@@ -261,7 +261,7 @@ nsWindow::DoDraw(void)
 }
 
 nsEventStatus
-nsWindow::DispatchInputEvent(nsGUIEvent &aEvent, bool* aWasCaptured)
+nsWindow::DispatchInputEvent(WidgetGUIEvent& aEvent, bool* aWasCaptured)
 {
     if (aWasCaptured) {
         *aWasCaptured = false;
@@ -478,7 +478,7 @@ nsWindow::GetNativeData(uint32_t aDataType)
 }
 
 NS_IMETHODIMP
-nsWindow::DispatchEvent(nsGUIEvent *aEvent, nsEventStatus &aStatus)
+nsWindow::DispatchEvent(WidgetGUIEvent* aEvent, nsEventStatus& aStatus)
 {
     if (mWidgetListener)
       aStatus = mWidgetListener->HandleEvent(aEvent, mUseAttachedEvents);

@@ -22,3 +22,5 @@ LIBXUL_LIBRARY = True
 
 LIBRARY_NAME = 'mozdbus_s'
 
+EXPORT_LIBRARY = True
+

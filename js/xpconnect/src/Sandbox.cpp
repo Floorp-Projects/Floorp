@@ -1369,6 +1369,7 @@ ParseOptionsObject(JSContext *cx, jsval from, SandboxOptions &options)
     NS_ENSURE_SUCCESS(rv, rv);
 
     rv = GetGlobalPropertiesFromOptions(cx, optionsObject, options);
+    NS_ENSURE_SUCCESS(rv, rv);
 
     bool found;
     rv = GetPropFromOptions(cx, optionsObject,

@@ -103,34 +103,34 @@ nsScrollbarFrame::AttributeChanged(int32_t aNameSpaceID,
 }
 
 NS_IMETHODIMP
-nsScrollbarFrame::HandlePress(nsPresContext* aPresContext, 
-                     nsGUIEvent*     aEvent,
-                     nsEventStatus*  aEventStatus)
+nsScrollbarFrame::HandlePress(nsPresContext* aPresContext,
+                              WidgetGUIEvent* aEvent,
+                              nsEventStatus* aEventStatus)
 {
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsScrollbarFrame::HandleMultiplePress(nsPresContext* aPresContext, 
-                                      nsGUIEvent*     aEvent,
-                                      nsEventStatus*  aEventStatus,
+nsScrollbarFrame::HandleMultiplePress(nsPresContext* aPresContext,
+                                      WidgetGUIEvent* aEvent,
+                                      nsEventStatus* aEventStatus,
                                       bool aControlHeld)
 {
   return NS_OK;
 }
 
 NS_IMETHODIMP 
-nsScrollbarFrame::HandleDrag(nsPresContext* aPresContext, 
-                              nsGUIEvent*     aEvent,
-                              nsEventStatus*  aEventStatus)
+nsScrollbarFrame::HandleDrag(nsPresContext* aPresContext,
+                             WidgetGUIEvent* aEvent,
+                             nsEventStatus* aEventStatus)
 {
   return NS_OK;
 }
 
 NS_IMETHODIMP 
-nsScrollbarFrame::HandleRelease(nsPresContext* aPresContext, 
-                                 nsGUIEvent*     aEvent,
-                                 nsEventStatus*  aEventStatus)
+nsScrollbarFrame::HandleRelease(nsPresContext* aPresContext,
+                                WidgetGUIEvent* aEvent,
+                                nsEventStatus* aEventStatus)
 {
   return NS_OK;
 }

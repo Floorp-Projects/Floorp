@@ -1,0 +1,260 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=897221
+-->
+<head>
+  <title>Test for User Agent Updates</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=897221">Mozilla Bug 897221</a>
+<p id="display"></p>
+<div id="content" style="display: none"></div>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+const PREF_APP_UPDATE_TIMERMINIMUMDELAY = "app.update.timerMinimumDelay";
+const PREF_UPDATES = "general.useragent.updates.";
+const PREF_UPDATES_ENABLED = PREF_UPDATES + "enabled";
+const PREF_UPDATES_URL = PREF_UPDATES + "url";
+const PREF_UPDATES_INTERVAL = PREF_UPDATES + "interval";
+const PREF_UPDATES_TIMEOUT = PREF_UPDATES + "timeout";
+
+const KEY_PREFDIR = "PrefD";
+const KEY_APPDIR = "XCurProcD";
+const FILE_UPDATES = "ua-update.json";
+
+const DEFAULT_UA = navigator.userAgent;
+const UA_OVERRIDE = "DummyUserAgent";
+const UA_ALT_OVERRIDE = "AltUserAgent";
+
+function getUA(host) {
+  var url = location.pathname;
+  url = host + url.slice(0, url.lastIndexOf('/')) + '/user_agent.sjs';
+
+  var xhr = new XMLHttpRequest();
+  xhr.open('GET', url, false); // sync request
+  xhr.send();
+  is(xhr.status, 200, 'request failed');
+  is(typeof xhr.response, 'string', 'invalid response');
+  return xhr.response;
+}
+
+const OVERRIDES = [
+  {
+    domain: 'example.org',
+    override: '%DATE%',
+    host: 'http://example.org'
+  },
+  {
+    domain: 'test1.example.org',
+    override: '%PRODUCT%',
+    expected: SpecialPowers.Services.appinfo.name,
+    host: 'http://test1.example.org'
+  },
+  {
+    domain: 'test2.example.org',
+    override: '%APP_ID%',
+    expected: SpecialPowers.Services.appinfo.ID,
+    host: 'http://test2.example.org'
+  },
+  {
+    domain: 'sub1.test1.example.org',
+    override: '%APP_VERSION%',
+    expected: SpecialPowers.Services.appinfo.version,
+    host: 'http://sub1.test1.example.org'
+  },
+  {
+    domain: 'sub2.test1.example.org',
+    override: '%BUILD_ID%',
+    expected: SpecialPowers.Services.appinfo.appBuildID,
+    host: 'http://sub2.test1.example.org'
+  },
+  {
+    domain: 'sub1.test2.example.org',
+    override: '%OS%',
+    expected: SpecialPowers.Services.appinfo.OS,
+    host: 'http://sub1.test2.example.org'
+  },
+];
+
+function getServerURL() {
+  var url = location.pathname;
+  return location.origin + url.slice(0, url.lastIndexOf('/')) + '/user_agent_update.sjs?';
+}
+
+function getUpdateURL() {
+  var url = getServerURL();
+  var overrides = {};
+  overrides[location.hostname] = UA_OVERRIDE;
+  OVERRIDES.forEach(function (val) {
+    overrides[val.domain] = val.override;
+  });
+  url = url + encodeURIComponent(JSON.stringify(overrides)).replace(/%25/g, '%');
+  return url;
+}
+
+function testDownload(callback) {
+  var startTime = Date.now();
+  var url = getUpdateURL();
+  isnot(navigator.userAgent, UA_OVERRIDE, 'UA already overridden');
+  info('Waiting for UA update: ' + url);
+  SpecialPowers.pushPrefEnv({
+    set: [
+      [PREF_UPDATES_ENABLED, true],
+      [PREF_UPDATES_URL, url],
+      [PREF_UPDATES_TIMEOUT, 10000],
+      [PREF_UPDATES_INTERVAL, 1] // 1 second interval
+    ]
+  }, function waitForUpdate() setTimeout(function () {
+    if (navigator.userAgent !== UA_OVERRIDE) {
+      waitForUpdate();
+      return;
+    }
+    info('Overrode navigator UA');
+    is(getUA(location.origin), UA_OVERRIDE, 'Header UA not overridden');
+
+    var updateTime = parseInt(getUA('http://example.org'));
+    ok(startTime <= updateTime, 'Update was before start time');
+    ok(updateTime <= Date.now(), 'Update was after present time');
+
+    OVERRIDES.forEach(function (val) {
+      val.expected && is(getUA(val.host), val.expected,
+        'Incorrect URL parameter: ' + val.override);
+    });
+    callback();
+  }, 100));
+}
+
+function testBadUpdate(callback) {
+  var url = getServerURL() + 'invalid-json';
+  var prevOverride = navigator.userAgent;
+  SpecialPowers.pushPrefEnv({
+    set: [
+      [PREF_UPDATES_URL, url],
+      [PREF_UPDATES_INTERVAL, 1] // 1 second interval
+    ]
+  }, function () setTimeout(function () {
+    // We want to make sure a bad update doesn't cancel out previous overrides.
+    // We do this by waiting for 5 seconds (assuming the update occurs within 5
+    // seconds), and check that the previous override hasn't changed.
+    is(navigator.userAgent, prevOverride,
+      'Invalid update deleted previous override');
+    callback();
+  }, 5000));
+}
+
+function testProfileLoad(callback) {
+  var file = FU.getFile(KEY_APPDIR, [FILE_UPDATES]).path;
+  var encoder = SpecialPowers.wrap(new TextEncoder());
+  var overrides = {};
+  overrides[location.hostname] = UA_ALT_OVERRIDE;
+  var bytes = encoder.encode(JSON.stringify(overrides));
+
+  var badfile = FU.getFile(KEY_PREFDIR, [FILE_UPDATES]).path;
+  var badbytes = encoder.encode("null");
+
+  OSF.writeAtomic(file, bytes, {tmpPath: file + ".tmp"}).then(
+    () => OSF.writeAtomic(badfile, badbytes, {tmpPath: badfile + ".tmp"})
+  ).then(
+    () => {
+      SpecialPowers.pushPrefEnv({
+        set: [[PREF_UPDATES_ENABLED, true]]
+      }, function () {
+        // initialize UserAgentOverrides.jsm and
+        // UserAgentUpdates.jsm and load saved file
+        UAO.init();
+        (function waitForLoad() {
+          if (navigator.userAgent !== UA_ALT_OVERRIDE) {
+            setTimeout(waitForLoad, 100);
+            return;
+          }
+          is(getUA(location.origin), UA_ALT_OVERRIDE, 'Did not apply saved override');
+          saveFilePreviousSize = file.fileSize;
+          callback();
+        })();
+      });
+    },
+    (reason) => {
+      throw reason
+    }
+  );
+}
+
+function testProfileSave(callback) {
+  info('Waiting for saving to profile');
+  var file = FU.getFile(KEY_PREFDIR, [FILE_UPDATES]).path;
+  (function waitForSave() {
+    OSF.exists(file).then(
+      (exists) => {
+        if (!exists) {
+          setTimeout(waitForSave, 100);
+          return;
+        }
+        return OSF.read(file).then(
+          (bytes) => {
+            info('Saved new overrides');
+            var decoder = SpecialPowers.wrap(new TextDecoder());
+            var overrides = JSON.parse(decoder.decode(bytes));
+            is(overrides[location.hostname], UA_OVERRIDE, 'Incorrect saved override');
+            OVERRIDES.forEach(function (val) {
+              val.expected && is(overrides[val.domain], val.expected,
+                'Incorrect saved override: ' + val.override);
+            });
+            callback();
+          }
+        );
+      }
+    ).then(null,
+      (reason) => {
+        throw reason
+      }
+    );
+  })();
+}
+
+SimpleTest.waitForExplicitFinish();
+
+SpecialPowers.Cu.import("resource://gre/modules/FileUtils.jsm", window);
+var FU = SpecialPowers.wrap(FileUtils);
+
+SpecialPowers.Cu.import("resource://gre/modules/osfile.jsm", window);
+var OSF = SpecialPowers.wrap(OS).File;
+
+// Load UserAgentOverrides.jsm after we load update timer manager
+var UAO = null;
+
+var saveFilePreviousSize = 0;
+
+SpecialPowers.pushPrefEnv({
+  set: [
+    [PREF_APP_UPDATE_TIMERMINIMUMDELAY, 0]
+  ]
+}, function () {
+  // Enter update timer manager test mode
+  (SpecialPowers.Cc["@mozilla.org/updates/timer-manager;1"].getService(
+    SpecialPowers.Ci.nsIObserver)).observe(null, "utm-test-init", "");
+
+  SpecialPowers.Cu.import('resource://gre/modules/UserAgentOverrides.jsm', window);
+  UAO = SpecialPowers.wrap(UserAgentOverrides);
+  UAO.uninit();
+
+  // testProfileLoad, testDownload, and testProfileSave must run in this order
+  //  because testDownload depends on testProfileLoad to call UAO.init()
+  //  and testProfileSave depends on testDownload to save overrides to the profile
+  testProfileLoad(function()
+    testDownload(function()
+      testBadUpdate(function()
+        testProfileSave(SimpleTest.finish)
+      )
+    )
+  );
+});
+
+</script>
+</pre>
+</body>
+</html>
+

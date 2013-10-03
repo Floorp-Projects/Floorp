@@ -23,6 +23,7 @@
 #include "nsIDOMMutationEvent.h"
 #include "nsWrapperCache.h"
 #include "mozilla/dom/MutationObserverBinding.h"
+#include "nsIDocument.h"
 
 class nsDOMMutationObserver;
 using mozilla::dom::MutationObservingInfoInitializer;

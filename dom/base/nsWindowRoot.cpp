@@ -84,7 +84,7 @@ nsWindowRoot::DispatchEvent(nsIDOMEvent* aEvt, bool *aRetVal)
 }
 
 nsresult
-nsWindowRoot::DispatchDOMEvent(nsEvent* aEvent,
+nsWindowRoot::DispatchDOMEvent(WidgetEvent* aEvent,
                                nsIDOMEvent* aDOMEvent,
                                nsPresContext* aPresContext,
                                nsEventStatus* aEventStatus)

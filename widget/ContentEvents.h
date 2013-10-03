@@ -195,7 +195,7 @@ public:
   InternalTransitionEvent(bool aIsTrusted, uint32_t aMessage,
                           const nsAString& aPropertyName, float aElapsedTime,
                           const nsAString& aPseudoElement) :
-    nsEvent(aIsTrusted, aMessage, NS_TRANSITION_EVENT),
+    WidgetEvent(aIsTrusted, aMessage, NS_TRANSITION_EVENT),
     propertyName(aPropertyName), elapsedTime(aElapsedTime),
     pseudoElement(aPseudoElement)
   {

@@ -23,7 +23,7 @@
 using namespace mozilla;
 
 nsDOMUIEvent::nsDOMUIEvent(mozilla::dom::EventTarget* aOwner,
-                           nsPresContext* aPresContext, nsGUIEvent* aEvent)
+                           nsPresContext* aPresContext, WidgetGUIEvent* aEvent)
   : nsDOMEvent(aOwner, aPresContext,
                aEvent ? aEvent : new InternalUIEvent(false, 0, 0))
   , mClientPoint(0, 0), mLayerPoint(0, 0), mPagePoint(0, 0), mMovementPoint(0, 0)
@@ -122,7 +122,7 @@ nsDOMUIEvent::GetMovementPoint()
        mEvent->eventStructType != NS_WHEEL_EVENT &&
        mEvent->eventStructType != NS_DRAG_EVENT &&
        mEvent->eventStructType != NS_SIMPLE_GESTURE_EVENT) ||
-       !(static_cast<nsGUIEvent*>(mEvent)->widget)) {
+       !(static_cast<WidgetGUIEvent*>(mEvent)->widget)) {
     return nsIntPoint(0, 0);
   }
 
@@ -509,7 +509,7 @@ nsDOMUIEvent::GetModifierStateInternal(const nsAString& aKey)
 nsresult NS_NewDOMUIEvent(nsIDOMEvent** aInstancePtrResult,
                           mozilla::dom::EventTarget* aOwner,
                           nsPresContext* aPresContext,
-                          nsGUIEvent *aEvent) 
+                          WidgetGUIEvent* aEvent) 
 {
   nsDOMUIEvent* it = new nsDOMUIEvent(aOwner, aPresContext, aEvent);
   return CallQueryInterface(it, aInstancePtrResult);

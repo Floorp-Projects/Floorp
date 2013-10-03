@@ -42,7 +42,7 @@ using nsIntPoint;
 using nsIntRect;
 using nsIntSize;
 using mozilla::WidgetKeyboardEvent;
-using nsMouseEvent;
+using mozilla::WidgetMouseEvent;
 using mozilla::WheelEvent;
 using nsRect;
 using mozilla::WidgetSelectionEvent;
@@ -365,7 +365,7 @@ child:
                int32_t aModifiers,
                bool aIgnoreRootScrollFrame);
 
-    RealMouseEvent(nsMouseEvent event);
+    RealMouseEvent(WidgetMouseEvent event);
     RealKeyEvent(WidgetKeyboardEvent event);
     MouseWheelEvent(WheelEvent event);
     RealTouchEvent(WidgetTouchEvent event);

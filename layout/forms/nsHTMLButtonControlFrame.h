@@ -40,7 +40,7 @@ public:
                     nsReflowStatus&          aStatus) MOZ_OVERRIDE;
 
   NS_IMETHOD HandleEvent(nsPresContext* aPresContext, 
-                         nsGUIEvent* aEvent,
+                         mozilla::WidgetGUIEvent* aEvent,
                          nsEventStatus* aEventStatus) MOZ_OVERRIDE;
 
   virtual void Init(nsIContent*      aContent,

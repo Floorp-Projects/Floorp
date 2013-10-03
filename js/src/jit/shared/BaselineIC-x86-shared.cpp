@@ -20,7 +20,7 @@ ICCompare_Double::Compiler::generateStubCode(MacroAssembler &masm)
     Register dest = R0.scratchReg();
 
     Assembler::DoubleCondition cond = JSOpToDoubleCondition(op);
-    masm.xorl(dest, dest);
+    masm.mov(ImmWord(0), dest);
     masm.compareDouble(cond, FloatReg0, FloatReg1);
     masm.setCC(Assembler::ConditionFromDoubleCondition(cond), dest);
 
@@ -28,7 +28,7 @@ ICCompare_Double::Compiler::generateStubCode(MacroAssembler &masm)
     Assembler::NaNCond nanCond = Assembler::NaNCondFromDoubleCondition(cond);
     if (nanCond != Assembler::NaN_HandledByCond) {
       masm.j(Assembler::NoParity, &notNaN);
-      masm.mov(Imm32(nanCond == Assembler::NaN_IsTrue), dest);
+      masm.mov(ImmWord(nanCond == Assembler::NaN_IsTrue), dest);
       masm.bind(&notNaN);
     }
 

@@ -300,9 +300,9 @@ nsComboboxControlFrame::ShowPopup(bool aShowPopup)
 
   // fire a popup dom event
   nsEventStatus status = nsEventStatus_eIgnore;
-  nsMouseEvent event(true, aShowPopup ?
-                     NS_XUL_POPUP_SHOWING : NS_XUL_POPUP_HIDING, nullptr,
-                     nsMouseEvent::eReal);
+  WidgetMouseEvent event(true, aShowPopup ?
+                         NS_XUL_POPUP_SHOWING : NS_XUL_POPUP_HIDING, nullptr,
+                         WidgetMouseEvent::eReal);
 
   nsCOMPtr<nsIPresShell> shell = PresContext()->GetPresShell();
   if (shell)
@@ -1093,8 +1093,8 @@ nsComboboxControlFrame::OnSetSelectedIndex(int32_t aOldIndex, int32_t aNewIndex)
 
 NS_IMETHODIMP
 nsComboboxControlFrame::HandleEvent(nsPresContext* aPresContext,
-                                       nsGUIEvent*     aEvent,
-                                       nsEventStatus*  aEventStatus)
+                                    WidgetGUIEvent* aEvent,
+                                    nsEventStatus* aEventStatus)
 {
   NS_ENSURE_ARG_POINTER(aEventStatus);
 
