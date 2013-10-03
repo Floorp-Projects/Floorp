@@ -5,19 +5,27 @@ skip-if(B2G) == image-filter-01.svg        image-filter-01-ref.svg # bug 773482
 == image-load-01.svg          ../pass.svg
 fuzzy-if(Android&&!browserIsRemote,4,32) == image-opacity-01.svg image-opacity-01-ref.svg # Bug 779514 for Android
 fuzzy-if(Android,4,34) == image-opacity-02.svg image-opacity-02-ref.svg # Bug 776039 for Android
-== image-rotate-01.svg        image-rotate-01-ref.svg
-== image-rotate-02a.svg       image-rotate-02-ref.svg
-== image-rotate-02b.svg       image-rotate-02-ref.svg
-== image-scaling-01.svg       ../pass.svg
-== image-scaling-02.svg       ../pass.svg
-== image-svg-inline-01.html   ../pass.svg
-== image-translate-01.svg     image-translate-01-ref.svg
-== image-x-01.svg             image-x-01-ref.svg
-== image-xy-01.svg            image-xy-01-ref.svg
-== image-y-01.svg             image-y-01-ref.svg
-== image-zoom-02.svg          image-zoom-02-ref.svg
-== imported-image-01.svg      imported-image-ref.svg
-== imported-image-02.svg      imported-image-ref.svg
+== image-rotate-01.svg                        image-rotate-01-ref.svg
+== image-rotate-02a.svg                       image-rotate-02-ref.svg
+== image-rotate-02b.svg                       image-rotate-02-ref.svg
+== image-scaling-01.svg                       ../pass.svg
+== image-scaling-02.svg                       ../pass.svg
+== image-svg-inline-01.html                   ../pass.svg
+== image-svg-inline-zoom-in-01a.html          ../pass.svg
+== image-svg-inline-zoom-in-01b.html          ../pass.svg
+== image-svg-inline-zoom-out-01a.html         ../pass.svg
+== image-svg-inline-zoom-out-01b.html         ../pass.svg
+== image-svg-inline-sprite-zoom-in-01a.html   image-svg-inline-sprite-zoom-in-01-ref.html
+== image-svg-inline-sprite-zoom-in-01b.html   image-svg-inline-sprite-zoom-in-01-ref.html
+== image-svg-inline-sprite-zoom-out-01a.html  image-svg-inline-sprite-zoom-out-01-ref.html
+== image-svg-inline-sprite-zoom-out-01b.html  image-svg-inline-sprite-zoom-out-01-ref.html
+== image-translate-01.svg                     image-translate-01-ref.svg
+== image-x-01.svg                             image-x-01-ref.svg
+== image-xy-01.svg                            image-xy-01-ref.svg
+== image-y-01.svg                             image-y-01-ref.svg
+== image-zoom-02.svg                          image-zoom-02-ref.svg
+== imported-image-01.svg                      imported-image-ref.svg
+== imported-image-02.svg                      imported-image-ref.svg
 
 # Tests for <image> with preserveAspectRatio
 skip-if(B2G) == image-preserveAspectRatio-01-raster.svg image-preserveAspectRatio-01-ref.svg # bug 773482
