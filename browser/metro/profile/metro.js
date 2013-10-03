@@ -42,6 +42,9 @@ pref("gfx.azpc.fling_repaint_interval", "50"); // prefer 20 fps
 pref("gfx.axis.fling_friction", "0.002");
 pref("gfx.axis.fling_stopped_threshold", "0.2");
 
+// 0 = free, 1 = standard, 2 = sticky
+pref("apzc.axis_lock_mode", 1);
+
 // Enable Microsoft TSF support by default for imes.
 pref("intl.enable_tsf_support", true);
 
