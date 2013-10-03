@@ -24,14 +24,9 @@ ok("elements" in fieldset,
 ok(fieldset.elements instanceof HTMLCollection,
    "fieldset.elements should be an instance of HTMLCollection");
 
-var catched = false;
-try {
-  ok(fieldset.elements instanceof HTMLFormControlsCollection,
+// https://www.w3.org/Bugs/Public/show_bug.cgi?id=23356
+todo(fieldset.elements instanceof HTMLFormControlsCollection,
      "fieldset.elements should be an instance of HTMLFormControlsCollection");
-} catch(e) {
-  catched = true;
-}
-todo(!catched, "HTMLFormControlsCollection should be defined");
 
 is(fieldset.elements.length, 0, "Nothing should be in fieldset.elements");
 
