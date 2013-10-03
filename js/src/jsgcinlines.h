@@ -394,7 +394,9 @@ NewGCThing(ThreadSafeContext *cx, AllocKind kind, size_t thingSize, InitialHeap 
 
     if (cx->isJSContext()) {
         JSContext *ncx = cx->asJSContext();
+#ifdef JS_GC_ZEAL
         JSRuntime *rt = ncx->runtime();
+#endif
         JS_ASSERT_IF(rt->isAtomsCompartment(ncx->compartment()),
                      kind == FINALIZE_STRING ||
                      kind == FINALIZE_SHORT_STRING ||
