@@ -84,22 +84,32 @@ Grouping = enum(NO=0, BY_DEPFILE=1, ALL_TARGETS=2)
 
 
 class DependencyLinker(Makefile):
-    def __init__(self, topsrcdir, topobjdir, dist, group=Grouping.NO):
+    def __init__(self, topsrcdir, topobjdir, dist, group=Grouping.NO,
+                 abspaths=False):
         topsrcdir = mozpath.normsep(os.path.normcase(os.path.abspath(topsrcdir)))
         topobjdir = mozpath.normsep(os.path.normcase(os.path.abspath(topobjdir)))
         dist = mozpath.normsep(os.path.normcase(os.path.abspath(dist)))
+        if abspaths:
+            topsrcdir_value = topsrcdir
+            topobjdir_value = topobjdir
+            dist_value = dist
+        else:
+            topsrcdir_value = '$(topsrcdir)'
+            topobjdir_value = '$(DEPTH)'
+            dist_value = '$(DIST)'
+
         self._normpaths = {
-            topsrcdir: '$(topsrcdir)',
-            topobjdir: '$(DEPTH)',
-            dist: '$(DIST)',
-            '$(topsrcdir)': '$(topsrcdir)',
-            '$(DEPTH)': '$(DEPTH)',
-            '$(DIST)': '$(DIST)',
-            '$(depth)': '$(DEPTH)', # normcase may lowercase variable refs when
-            '$(dist)': '$(DIST)',   # they are in the original dependency file
-            mozpath.relpath(topsrcdir, os.curdir): '$(topsrcdir)',
-            mozpath.relpath(topobjdir, os.curdir): '$(DEPTH)',
-            mozpath.relpath(dist, os.curdir): '$(DIST)',
+            topsrcdir: topsrcdir_value,
+            topobjdir: topobjdir_value,
+            dist: dist_value,
+            '$(topsrcdir)': topsrcdir_value,
+            '$(DEPTH)': topobjdir_value,
+            '$(DIST)': dist_value,
+            '$(depth)': topobjdir_value, # normcase may lowercase variable refs when
+            '$(dist)': dist_value,       # they are in the original dependency file
+            mozpath.relpath(topsrcdir, os.curdir): topsrcdir_value,
+            mozpath.relpath(topobjdir, os.curdir): topobjdir_value,
+            mozpath.relpath(dist, os.curdir): dist_value,
         }
 
         Makefile.__init__(self)
@@ -184,6 +194,8 @@ def main(args):
         help='Group dependencies by depfile.')
     group.add_argument('--group-all', action='store_true',
         help='Group all dependencies under one target.')
+    parser.add_argument('--abspaths', action='store_true',
+        help='Use absolute paths instead of using make variable references.')
     opts = parser.parse_args(args)
 
     if opts.group_by_depfile:
@@ -195,7 +207,8 @@ def main(args):
     linker = DependencyLinker(topsrcdir=opts.topsrcdir,
                               topobjdir=opts.topobjdir,
                               dist=opts.dist,
-                              group=group)
+                              group=group,
+                              abspaths=opts.abspaths)
     for f in opts.dependency_files:
         linker.add_dependencies(open(f))
 

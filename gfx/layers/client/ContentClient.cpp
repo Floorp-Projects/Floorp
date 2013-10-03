@@ -201,7 +201,7 @@ ContentClientRemoteBuffer::BuildDeprecatedTextureClients(ContentType aType,
 
   mContentType = aType;
   mSize = gfx::IntSize(aRect.width, aRect.height);
-  mTextureInfo.mTextureFlags = aFlags | TEXTURE_DEALLOCATE_HOST;
+  mTextureInfo.mTextureFlags = aFlags & ~TEXTURE_DEALLOCATE_CLIENT;
 
   if (!CreateAndAllocateDeprecatedTextureClient(mDeprecatedTextureClient)) {
     return;

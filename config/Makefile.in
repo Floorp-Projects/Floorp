@@ -34,9 +34,6 @@ endif
 
 include $(topsrcdir)/config/config.mk
 
-# Do not install util programs
-NO_INSTALL=1
-
 ifneq (WINNT,$(HOST_OS_ARCH))
 # Ensure nsinstall is atomically created
 nsinstall$(HOST_BIN_SUFFIX): $(HOST_PROGRAM)

@@ -49,6 +49,7 @@ EXPORTS += [
     'nsHostObjectProtocolHandler.h',
     'nsIAttribute.h',
     'nsIContent.h',
+    'nsIContentInlines.h',
     'nsIContentIterator.h',
     'nsIContentSerializer.h',
     'nsIDocument.h',
@@ -71,6 +72,7 @@ EXPORTS += [
 EXPORTS.mozilla.dom += [
     'DirectionalityUtils.h',
     'Element.h',
+    'ElementInlines.h',
     'FragmentOrElement.h',
     'FromParser.h',
 ]

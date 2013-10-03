@@ -8,6 +8,7 @@
 #include "mozilla/Util.h"
 
 #include "mozilla/dom/HTMLObjectElementBinding.h"
+#include "mozilla/dom/ElementInlines.h"
 #include "nsAutoPtr.h"
 #include "nsAttrValueInlines.h"
 #include "nsGkAtoms.h"
