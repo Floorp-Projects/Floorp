@@ -28,3 +28,5 @@ LIBRARY_NAME = 'browsercomps'
 
 LIBXUL_LIBRARY = True
 
+EXPORT_LIBRARY = True
+

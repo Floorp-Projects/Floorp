@@ -31,3 +31,5 @@ LIBXUL_LIBRARY = True
 
 LIBRARY_NAME = 'widget_winrt'
 
+EXPORT_LIBRARY = True
+

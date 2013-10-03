@@ -156,3 +156,5 @@ LIBXUL_LIBRARY = True
 
 LIBRARY_NAME = 'hal_s'
 
+EXPORT_LIBRARY = True
+

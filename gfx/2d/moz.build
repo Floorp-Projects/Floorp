@@ -109,3 +109,5 @@ MSVC_ENABLE_PGO = True
 
 LIBRARY_NAME = 'gfx2d'
 
+EXPORT_LIBRARY = True
+

@@ -4,8 +4,6 @@
 
 OS_CXXFLAGS := $(filter-out -fshort-wchar,$(OS_CXXFLAGS))
 
-EXPORT_LIBRARY = 1
-
 ACDEFINES =
 
 ifndef MOZ_NATIVE_LIBEVENT # {

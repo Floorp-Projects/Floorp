@@ -14,3 +14,5 @@ LIBXUL_LIBRARY = True
 
 LIBRARY_NAME = 'appcomps'
 
+EXPORT_LIBRARY = True
+
