@@ -4,7 +4,7 @@
 https://bugzilla.mozilla.org/show_bug.cgi?id=375363
 -->
 <head>
-  <title>Test for parsing, storage, and serialization of CSS 'inherit'</title>
+  <title>Test for parsing, storage, and serialization of CSS 'inherit' on all properties and 'unset' on inherited properties</title>
   <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
   <script type="text/javascript" src="property_database.js"></script>
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
@@ -20,82 +20,91 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=375363
 <pre id="test">
 <script class="testbody" type="text/javascript">
 
-/** Test for parsing, storage, and serialization of CSS 'inherit' **/
+/** Test for parsing, storage, and serialization of CSS 'inherit' on all
+    properties and 'unset' on inherited properties **/
 
 var gDeclaration = document.getElementById("testnode").style;
+
+var gTestUnset = SpecialPowers.getBoolPref("layout.css.unset-value.enabled");
 
 function test_property(property)
 {
   var info = gCSSProperties[property];
 
-  function check_initial(sproperty) {
-    var sinfo = gCSSProperties[sproperty];
-    var val = gDeclaration.getPropertyValue(sproperty);
-    is(val, "", "value of '" + sproperty + "' before we do anything");
-    is(val, gDeclaration[sinfo.domProp],
-       "consistency between decl.getPropertyValue('" + sproperty + "') and decl." + sinfo.domProp);
-  }
-  check_initial(property);
-  if ("subproperties" in info)
-    for (var idx in info.subproperties)
-      check_initial(info.subproperties[idx]);
+  var keywords = ["inherit"];
+  if (info.inherited && gTestUnset)
+    keywords.push("unset");
 
-  gDeclaration.setProperty(property, "inherit", "");
+  keywords.forEach(function(keyword) {
+    function check_initial(sproperty) {
+      var sinfo = gCSSProperties[sproperty];
+      var val = gDeclaration.getPropertyValue(sproperty);
+      is(val, "", "value of '" + sproperty + "' before we do anything");
+      is(val, gDeclaration[sinfo.domProp],
+         "consistency between decl.getPropertyValue('" + sproperty + "') and decl." + sinfo.domProp);
+    }
+    check_initial(property);
+    if ("subproperties" in info)
+      for (var idx in info.subproperties)
+        check_initial(info.subproperties[idx]);
 
-  function check_set(sproperty) {
-    var sinfo = gCSSProperties[sproperty];
-    val = gDeclaration.getPropertyValue(sproperty);
-    is(val, "inherit",
-       "inherit reported back for property '" + sproperty + "'");
-    is(val, gDeclaration[sinfo.domProp],
-       "consistency between decl.getPropertyValue('" + sproperty +
-       "') and decl." + sinfo.domProp);
-  }
-  check_set(property);
-  if ("subproperties" in info)
-    for (var idx in info.subproperties)
-      check_set(info.subproperties[idx]);
+    gDeclaration.setProperty(property, keyword, "");
 
-  // We don't care particularly about the whitespace or the placement of
-  // semicolons, but for simplicity we'll test the current behavior.
-  if ("alias_for" in info) {
-    is(gDeclaration.cssText, info.alias_for + ": inherit;",
-      "declaration should serialize to exactly what went in (for inherit)");
-  } else {
-    is(gDeclaration.cssText, property + ": inherit;",
-      "declaration should serialize to exactly what went in (for inherit)");
-  }
+    function check_set(sproperty) {
+      var sinfo = gCSSProperties[sproperty];
+      val = gDeclaration.getPropertyValue(sproperty);
+      is(val, keyword,
+         keyword + " reported back for property '" + sproperty + "'");
+      is(val, gDeclaration[sinfo.domProp],
+         "consistency between decl.getPropertyValue('" + sproperty +
+         "') and decl." + sinfo.domProp);
+    }
+    check_set(property);
+    if ("subproperties" in info)
+      for (var idx in info.subproperties)
+        check_set(info.subproperties[idx]);
 
-  gDeclaration.removeProperty(property);
+    // We don't care particularly about the whitespace or the placement of
+    // semicolons, but for simplicity we'll test the current behavior.
+    if ("alias_for" in info) {
+      is(gDeclaration.cssText, info.alias_for + ": " + keyword + ";",
+        "declaration should serialize to exactly what went in (for " + keyword + ")");
+    } else {
+      is(gDeclaration.cssText, property + ": " + keyword + ";",
+        "declaration should serialize to exactly what went in (for " + keyword + ")");
+    }
 
-  function check_final(sproperty) {
-    var sinfo = gCSSProperties[sproperty];
-    var val = gDeclaration.getPropertyValue(sproperty);
-    is(val, "", "value of '" + sproperty + "' after removal of value");
-    is(val, gDeclaration[sinfo.domProp],
-       "consistency between decl.getPropertyValue('" + sproperty + "') and decl." + sinfo.domProp);
-  }
-  check_final(property);
-  if ("subproperties" in info)
-    for (var idx in info.subproperties)
-      check_final(info.subproperties[idx]);
-
-  // can all properties be removed from the style?
-  function test_remove_all_properties(property, value) {
-    var i, p = [];
-    for (i = 0; i < gDeclaration.length; i++) p.push(gDeclaration[i]);
-    for (i = 0; i < p.length; i++) gDeclaration.removeProperty(p[i]);
-    var errstr = "when setting property " + property + " to " + value;
-    is(gDeclaration.length, 0, "unremovable properties " + errstr);
-    is(gDeclaration.cssText, "", "non-empty serialization after removing all properties " + errstr);
-  }
-
-  // sanity check shorthands to make sure disabled props aren't exposed
-  if (info.type != CSS_TYPE_LONGHAND) {
-    gDeclaration.setProperty(property, "inherit", "");
-    test_remove_all_properties(property, "inherit");
     gDeclaration.removeProperty(property);
-  }
+
+    function check_final(sproperty) {
+      var sinfo = gCSSProperties[sproperty];
+      var val = gDeclaration.getPropertyValue(sproperty);
+      is(val, "", "value of '" + sproperty + "' after removal of value");
+      is(val, gDeclaration[sinfo.domProp],
+         "consistency between decl.getPropertyValue('" + sproperty + "') and decl." + sinfo.domProp);
+    }
+    check_final(property);
+    if ("subproperties" in info)
+      for (var idx in info.subproperties)
+        check_final(info.subproperties[idx]);
+
+    // can all properties be removed from the style?
+    function test_remove_all_properties(property, value) {
+      var i, p = [];
+      for (i = 0; i < gDeclaration.length; i++) p.push(gDeclaration[i]);
+      for (i = 0; i < p.length; i++) gDeclaration.removeProperty(p[i]);
+      var errstr = "when setting property " + property + " to " + value;
+      is(gDeclaration.length, 0, "unremovable properties " + errstr);
+      is(gDeclaration.cssText, "", "non-empty serialization after removing all properties " + errstr);
+    }
+
+    // sanity check shorthands to make sure disabled props aren't exposed
+    if (info.type != CSS_TYPE_LONGHAND) {
+      gDeclaration.setProperty(property, keyword, "");
+      test_remove_all_properties(property, keyword);
+      gDeclaration.removeProperty(property);
+    }
+  });
 }
 
 for (var prop in gCSSProperties)
