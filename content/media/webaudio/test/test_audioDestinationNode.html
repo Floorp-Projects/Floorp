@@ -1,0 +1,26 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test AudioDestinationNode as EventTarget</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="webaudio.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+SimpleTest.waitForExplicitFinish();
+
+var ac = new AudioContext()
+ac.destination.addEventListener("foo", function() {
+  ok(true, "Event received!");
+  SimpleTest.finish();
+}, false);
+ac.destination.dispatchEvent(new CustomEvent("foo"));
+
+</script>
+</pre>
+</body>
+</html>
+
