@@ -231,18 +231,21 @@ IndexedDBLazyGetter(JSContext* aCx, JS::HandleObject aGlobal,
                     JS::HandleId aId, JS::MutableHandleValue aVp)
 {
   MOZ_ASSERT(nsContentUtils::IsCallerChrome(), "Only for chrome!");
-  MOZ_ASSERT(js::GetObjectClass(aGlobal)->flags & JSCLASS_DOM_GLOBAL,
-             "Not a global object!");
   MOZ_ASSERT(JSID_IS_STRING(aId), "Bad id!");
   MOZ_ASSERT(JS_FlatStringEqualsAscii(JSID_TO_FLAT_STRING(aId), IDB_STR),
              "Bad id!");
 
+  JS::RootedObject global(aCx, CheckedUnwrap(aGlobal,
+                                             /* stopAtOuter = */ false));
+  NS_ENSURE_TRUE(global, false);
+  NS_ENSURE_TRUE(js::GetObjectClass(global)->flags & JSCLASS_DOM_GLOBAL, false);
+
   JS::RootedValue indexedDB(aCx);
-  if (!GetIndexedDB(aCx, aGlobal, &indexedDB)) {
+  if (!GetIndexedDB(aCx, global, &indexedDB)) {
     return false;
   }
 
-  if (!JS_DefinePropertyById(aCx, aGlobal, aId, indexedDB, nullptr, nullptr,
+  if (!JS_DefinePropertyById(aCx, global, aId, indexedDB, nullptr, nullptr,
                              JSPROP_ENUMERATE)) {
     return false;
   }

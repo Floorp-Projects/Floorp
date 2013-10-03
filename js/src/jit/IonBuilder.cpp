@@ -8403,6 +8403,11 @@ IonBuilder::getPropTryCommonGetter(bool *emitted, jsid id, types::TemporaryTypeS
     if (!commonGetter)
         return true;
 
+#ifdef JSGC_GENERATIONAL
+    if (GetIonContext()->runtime->gcNursery.isInside(commonGetter))
+        return true;
+#endif
+
     MDefinition *obj = current->pop();
 
     if (isDOM && TestShouldDOMCall(cx, objTypes, commonGetter, JSJitInfo::Getter)) {

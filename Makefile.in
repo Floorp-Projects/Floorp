@@ -243,10 +243,5 @@ ifdef MOZ_PSEUDO_DERECURSE
 js/xpconnect/src/export: dom/bindings/export
 accessible/src/xpcom/export: xpcom/xpidl/export
 js/src/export: mfbt/export
-# Temporary interdependencies for binaries, until bug 921307 is fixed.
-# Avoid traversal of those directories when creating the aggregate dependency file
-ifneq (binaries-deps,$(MAKECMDGOALS))
-toolkit/library/binaries: js/src/binaries media/webrtc/trunk/binaries media/webrtc/signaling/binaries media/webrtc/trunk/testing/binaries media/webrtc/signalingtest/binaries media/mtransport/third_party/nrappkit/binaries media/mtransport/third_party/nICEr/binaries
-endif
 endif
 endif
