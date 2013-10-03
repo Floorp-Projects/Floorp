@@ -324,16 +324,9 @@ def run_test_remote(test, device, prefix, options):
 
 def check_output(out, err, rc, test):
     if test.expect_error:
-        # The shell exits with code 3 on uncaught exceptions.
-        # Sometimes 0 is returned on Windows for unknown reasons.
-        # See bug 899697.
-        if sys.platform in ['win32', 'cygwin']:
-            if rc != 3 and rc != 0:
-                return False
-        else:
-            if rc != 3:
-                return False
-
+        # We'd like to check the return code here, but doing so seems
+        # to return incorrect values occasionally. See bug 899697 and
+        # bug 922943.
         return test.expect_error in err
 
     for line in out.split('\n'):
