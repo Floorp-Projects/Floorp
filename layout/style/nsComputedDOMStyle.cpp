@@ -6,9 +6,10 @@
 
 /* DOM object returned from element.getComputedStyle() */
 
-#include "mozilla/Util.h"
-
 #include "nsComputedDOMStyle.h"
+
+#include "mozilla/Preferences.h"
+#include "mozilla/Util.h"
 
 #include "nsError.h"
 #include "nsDOMString.h"
@@ -82,6 +83,149 @@ NS_NewComputedDOMStyle(dom::Element* aElement, const nsAString& aPseudoElt,
   }
 
   return computedStyle.forget();
+}
+
+/**
+ * An object that represents the ordered set of properties that are exposed on
+ * an nsComputedDOMStyle object and how their computed values can be obtained.
+ */
+struct nsComputedStyleMap
+{
+  friend class nsComputedDOMStyle;
+
+  struct Entry
+  {
+    // Create a pointer-to-member-function type.
+    typedef mozilla::dom::CSSValue* (nsComputedDOMStyle::*ComputeMethod)();
+
+    nsCSSProperty mProperty;
+    ComputeMethod mGetter;
+
+    bool IsLayoutFlushNeeded() const
+    {
+      return nsCSSProps::PropHasFlags(mProperty,
+                                      CSS_PROPERTY_GETCS_NEEDS_LAYOUT_FLUSH);
+    }
+
+    bool IsEnabled() const
+    {
+      return nsCSSProps::IsEnabled(mProperty);
+    }
+  };
+
+  // We define this enum just to count the total number of properties that can
+  // be exposed on an nsComputedDOMStyle, including properties that may be
+  // disabled.
+  enum {
+#define COMPUTED_STYLE_PROP(prop_, method_) \
+    eComputedStyleProperty_##prop_,
+#include "nsComputedDOMStylePropertyList.h"
+#undef COMPUTED_STYLE_PROP
+    eComputedStyleProperty_COUNT
+  };
+
+  /**
+   * Returns the number of properties that should be exposed on an
+   * nsComputedDOMStyle, ecxluding any disabled properties.
+   */
+  uint32_t Length()
+  {
+    Update();
+    return mExposedPropertyCount;
+  }
+
+  /**
+   * Returns the property at the given index in the list of properties
+   * that should be exposed on an nsComputedDOMStyle, excluding any
+   * disabled properties.
+   */
+  nsCSSProperty PropertyAt(uint32_t aIndex)
+  {
+    Update();
+    return kEntries[EntryIndex(aIndex)].mProperty;
+  }
+
+  /**
+   * Searches for and returns the computed style map entry for the given
+   * property, or nullptr if the property is not exposed on nsComputedDOMStyle
+   * or is currently disabled.
+   */
+  const Entry* FindEntryForProperty(nsCSSProperty aPropID)
+  {
+    Update();
+    for (uint32_t i = 0; i < mExposedPropertyCount; i++) {
+      const Entry* entry = &kEntries[EntryIndex(i)];
+      if (entry->mProperty == aPropID) {
+        return entry;
+      }
+    }
+    return nullptr;
+  }
+
+  /**
+   * Records that mIndexMap needs updating, due to prefs changing that could
+   * affect the set of properties exposed on an nsComputedDOMStyle.
+   */
+  void MarkDirty() { mExposedPropertyCount = 0; }
+
+  // The member variables are public so that we can use an initializer in
+  // nsComputedDOMStyle::GetComputedStyleMap.  Use the member functions
+  // above to get information from this object.
+
+  /**
+   * An entry for each property that can be exposed on an nsComputedDOMStyle.
+   */
+  const Entry kEntries[eComputedStyleProperty_COUNT];
+
+  /**
+   * The number of properties that should be exposed on an nsComputedDOMStyle.
+   * This will be less than eComputedStyleProperty_COUNT if some property
+   * prefs are disabled.  A value of 0 indicates that it and mIndexMap are out
+   * of date.
+   */
+  uint32_t mExposedPropertyCount;
+
+  /**
+   * A map of indexes on the nsComputedDOMStyle object to indexes into kEntries.
+   */
+  uint32_t mIndexMap[eComputedStyleProperty_COUNT];
+
+private:
+  /**
+   * Returns whether mExposedPropertyCount and mIndexMap are out of date.
+   */
+  bool IsDirty() { return mExposedPropertyCount == 0; }
+
+  /**
+   * Updates mExposedPropertyCount and mIndexMap to take into account properties
+   * whose prefs are currently disabled.
+   */
+  void Update();
+
+  /**
+   * Maps an nsComputedDOMStyle indexed getter index to an index into kEntries.
+   */
+  uint32_t EntryIndex(uint32_t aIndex) const
+  {
+    MOZ_ASSERT(aIndex < mExposedPropertyCount);
+    return mIndexMap[aIndex];
+  }
+};
+
+void
+nsComputedStyleMap::Update()
+{
+  if (!IsDirty()) {
+    return;
+  }
+
+  uint32_t index = 0;
+  for (uint32_t i = 0; i < eComputedStyleProperty_COUNT; i++) {
+    if (kEntries[i].IsEnabled()) {
+      mIndexMap[index++] = i;
+    }
+  }
+  mExposedPropertyCount = index;
 }
 
 nsComputedDOMStyle::nsComputedDOMStyle(dom::Element* aElement,
@@ -225,7 +369,7 @@ nsComputedDOMStyle::GetLength(uint32_t* aLength)
 {
   NS_PRECONDITION(aLength, "Null aLength!  Prepare to die!");
 
-  (void)GetQueryablePropertyMap(aLength);
+  *aLength = GetComputedStyleMap()->Length();
 
   return NS_OK;
 }
@@ -459,7 +603,7 @@ nsComputedDOMStyle::GetPropertyCSSValue(const nsAString& aPropertyName, ErrorRes
   // for all aliases, including those in nsCSSPropAliasList) want
   // aliases to be enumerable (via GetLength and IndexedGetter), so
   // handle them here rather than adding entries to
-  // GetQueryablePropertyMap.
+  // the nsComputedStyleMap.
   if (prop != eCSSProperty_UNKNOWN &&
       nsCSSProps::PropHasFlags(prop, CSS_PROPERTY_IS_ALIAS)) {
     const nsCSSProperty* subprops = nsCSSProps::SubpropertyEntryFor(prop);
@@ -468,17 +612,9 @@ nsComputedDOMStyle::GetPropertyCSSValue(const nsAString& aPropertyName, ErrorRes
     prop = subprops[0];
   }
 
-  const ComputedStyleMapEntry* propEntry = nullptr;
-  {
-    uint32_t length = 0;
-    const ComputedStyleMapEntry* propMap = GetQueryablePropertyMap(&length);
-    for (uint32_t i = 0; i < length; ++i) {
-      if (prop == propMap[i].mProperty) {
-        propEntry = &propMap[i];
-        break;
-      }
-    }
-  }
+  const nsComputedStyleMap::Entry* propEntry =
+    GetComputedStyleMap()->FindEntryForProperty(prop);
+
   if (!propEntry) {
 #ifdef DEBUG_ComputedDOMStyle
     NS_WARNING(PromiseFlatCString(NS_ConvertUTF16toUTF8(aPropertyName) +
@@ -621,11 +757,10 @@ void
 nsComputedDOMStyle::IndexedGetter(uint32_t aIndex, bool& aFound,
                                   nsAString& aPropName)
 {
-  uint32_t length = 0;
-  const ComputedStyleMapEntry* propMap = GetQueryablePropertyMap(&length);
-  aFound = aIndex < length;
+  nsComputedStyleMap* map = GetComputedStyleMap();
+  aFound = aIndex < map->Length();
   if (aFound) {
-    CopyASCIItoUTF16(nsCSSProps::GetStringValue(propMap[aIndex].mProperty),
+    CopyASCIItoUTF16(nsCSSProps::GetStringValue(map->PropertyAt(aIndex)),
                      aPropName);
   }
 }
@@ -5019,17 +5154,59 @@ nsComputedDOMStyle::DoGetAnimationPlayState()
   return valueList;
 }
 
-const nsComputedDOMStyle::ComputedStyleMapEntry*
-nsComputedDOMStyle::GetQueryablePropertyMap(uint32_t* aLength)
+static int
+MarkComputedStyleMapDirty(const char* aPref, void* aData)
 {
-  static const ComputedStyleMapEntry map[] = {
+  static_cast<nsComputedStyleMap*>(aData)->MarkDirty();
+  return 0;
+}
+
+/* static */ nsComputedStyleMap*
+nsComputedDOMStyle::GetComputedStyleMap()
+{
+  static nsComputedStyleMap map = {
+    {
 #define COMPUTED_STYLE_PROP(prop_, method_) \
   { eCSSProperty_##prop_, &nsComputedDOMStyle::DoGet##method_ },
 #include "nsComputedDOMStylePropertyList.h"
 #undef COMPUTED_STYLE_PROP
+    }
   };
+  return &map;
+}
 
-  *aLength = ArrayLength(map);
+/* static */ void
+nsComputedDOMStyle::RegisterPrefChangeCallbacks()
+{
+  // Note that this will register callbacks for all properties with prefs, not
+  // just those that are implemented on computed style objects, as it's not
+  // easy to grab specific property data from nsCSSPropList.h based on the
+  // entries iterated in nsComputedDOMStylePropertyList.h.
+  nsComputedStyleMap* data = GetComputedStyleMap();
+#define REGISTER_CALLBACK(pref_)                                             \
+  if (pref_[0]) {                                                            \
+    Preferences::RegisterCallback(MarkComputedStyleMapDirty, pref_, data);   \
+  }
+#define CSS_PROP(prop_, id_, method_, flags_, pref_, parsevariant_,          \
+                 kwtable_, stylestruct_, stylestructoffset_, animtype_)      \
+  REGISTER_CALLBACK(pref_)
+#include "nsCSSPropList.h"
+#undef CSS_PROP
+#undef REGISTER_CALLBACK
+}
 
-  return map;
+/* static */ void
+nsComputedDOMStyle::UnregisterPrefChangeCallbacks()
+{
+  nsComputedStyleMap* data = GetComputedStyleMap();
+#define UNREGISTER_CALLBACK(pref_)                                             \
+  if (pref_[0]) {                                                              \
+    Preferences::UnregisterCallback(MarkComputedStyleMapDirty, pref_, data);   \
+  }
+#define CSS_PROP(prop_, id_, method_, flags_, pref_, parsevariant_,            \
+                 kwtable_, stylestruct_, stylestructoffset_, animtype_)        \
+  UNREGISTER_CALLBACK(pref_)
+#include "nsCSSPropList.h"
+#undef CSS_PROP
+#undef UNREGISTER_CALLBACK
 }
