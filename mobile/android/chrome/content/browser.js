@@ -172,11 +172,6 @@ function doChangeMaxLineBoxWidth(aWidth) {
 
   if (range) {
     BrowserEventHandler._zoomInAndSnapToRange(range);
-  } else {
-    // In this case, we actually didn't zoom into a specific range. It probably
-    // happened from a page load reflow-on-zoom event, so we need to make sure
-    // painting is re-enabled.
-    BrowserApp.selectedTab.clearReflowOnZoomPendingActions();
   }
 }
 
@@ -2702,7 +2697,6 @@ Tab.prototype = {
     this.browser.addEventListener("MozApplicationManifest", this, true);
 
     Services.obs.addObserver(this, "before-first-paint", false);
-    Services.obs.addObserver(this, "after-viewport-change", false);
     Services.prefs.addObserver("browser.ui.zoom.force-user-scalable", this, false);
 
     if (aParams.delayLoad) {
@@ -2765,58 +2759,21 @@ Tab.prototype = {
     return minFontSize / this.getInflatedFontSizeFor(aElement);
   },
 
-  clearReflowOnZoomPendingActions: function() {
-    // Reflow was completed, so now re-enable painting.
-    let webNav = BrowserApp.selectedTab.window.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIWebNavigation);
-    let docShell = webNav.QueryInterface(Ci.nsIDocShell);
-    let docViewer = docShell.contentViewer.QueryInterface(Ci.nsIMarkupDocumentViewer);
-    docViewer.resumePainting();
-
-    BrowserApp.selectedTab._mReflozPositioned = false;
-  },
-
-  /**
-   * Reflow on zoom consists of a few different sub-operations:
-   *
-   * 1. When a double-tap event is seen, we verify that the correct preferences
-   *    are enabled and perform the pre-position handling calculation. We also
-   *    signal that reflow-on-zoom should be performed at this time, and pause
-   *    painting.
-   * 2. During the next call to setViewport(), which is in the Tab prototype,
-   *    we detect that a call to changeMaxLineBoxWidth should be performed. If
-   *    we're zooming out, then the max line box width should be reset at this
-   *    time. Otherwise, we call performReflowOnZoom.
-   *   2a. PerformReflowOnZoom() and resetMaxLineBoxWidth() schedule a call to
-   *       doChangeMaxLineBoxWidth, based on a timeout specified in preferences.
-   * 3. doChangeMaxLineBoxWidth changes the line box width (which also
-   *    schedules a reflow event), and then calls _zoomInAndSnapToRange.
-   * 4. _zoomInAndSnapToRange performs the positioning of reflow-on-zoom and
-   *    then re-enables painting.
-   *
-   * Some of the events happen synchronously, while others happen asynchronously.
-   * The following is a rough sketch of the progression of events:
-   *
-   * double tap event seen -> onDoubleTap() -> ... asynchronous ...
-   *   -> setViewport() -> performReflowOnZoom() -> ... asynchronous ...
-   *   -> doChangeMaxLineBoxWidth() -> _zoomInAndSnapToRange()
-   *   -> ... asynchronous ... -> setViewport() -> Observe('after-viewport-change')
-   *   -> resumePainting()
-   */
   performReflowOnZoom: function(aViewport) {
-    let zoom = this._drawZoom ? this._drawZoom : aViewport.zoom;
+      let zoom = this._drawZoom ? this._drawZoom : aViewport.zoom;
 
-    let viewportWidth = gScreenWidth / zoom;
-    let reflozTimeout = Services.prefs.getIntPref("browser.zoom.reflowZoom.reflowTimeout");
+      let viewportWidth = gScreenWidth / zoom;
+      let reflozTimeout = Services.prefs.getIntPref("browser.zoom.reflowZoom.reflowTimeout");
 
-    if (gReflowPending) {
-      clearTimeout(gReflowPending);
-    }
+      if (gReflowPending) {
+        clearTimeout(gReflowPending);
+      }
 
-    // We add in a bit of fudge just so that the end characters
-    // don't accidentally get clipped. 15px is an arbitrary choice.
-    gReflowPending = setTimeout(doChangeMaxLineBoxWidth,
-                                reflozTimeout,
-                                viewportWidth - 15);
+      // We add in a bit of fudge just so that the end characters
+      // don't accidentally get clipped. 15px is an arbitrary choice.
+      gReflowPending = setTimeout(doChangeMaxLineBoxWidth,
+                                  reflozTimeout,
+                                  viewportWidth - 15);
   },
 
   /** 
@@ -2888,7 +2845,6 @@ Tab.prototype = {
     this.browser.removeEventListener("MozApplicationManifest", this, true);
 
     Services.obs.removeObserver(this, "before-first-paint");
-    Services.obs.removeObserver(this, "after-viewport-change");
     Services.prefs.removeObserver("browser.ui.zoom.force-user-scalable", this);
 
     // Make sure the previously selected panel remains selected. The selected panel of a deck is
@@ -3186,7 +3142,6 @@ Tab.prototype = {
       // In this case, the user pinch-zoomed in, so we don't want to
       // preserve position as we would with reflow-on-zoom.
       BrowserApp.selectedTab.probablyNeedRefloz = false;
-      BrowserApp.selectedTab.clearReflowOnZoomPendingActions();
       BrowserApp.selectedTab._mReflozPoint = null;
     }
 
@@ -4097,11 +4052,6 @@ Tab.prototype = {
           BrowserApp.selectedTab.performReflowOnZoom(vp);
         }
         break;
-      case "after-viewport-change":
-        if (BrowserApp.selectedTab._mReflozPositioned) {
-          BrowserApp.selectedTab.clearReflowOnZoomPendingActions();
-        }
-        break;
       case "nsPref:changed":
         if (aData == "browser.ui.zoom.force-user-scalable")
           ViewportHandler.updateMetadata(this, false);
@@ -4412,23 +4362,13 @@ var BrowserEventHandler = {
     if (BrowserEventHandler.mReflozPref &&
        !BrowserApp.selectedTab._mReflozPoint &&
        !this._shouldSuppressReflowOnZoom(element)) {
+     let data = JSON.parse(aData);
+     let zoomPointX = data.x;
+     let zoomPointY = data.y;
 
-      // See comment above performReflowOnZoom() for a detailed description of
-      // the events happening in the reflow-on-zoom operation.
-      let data = JSON.parse(aData);
-      let zoomPointX = data.x;
-      let zoomPointY = data.y;
-
-      BrowserApp.selectedTab._mReflozPoint = { x: zoomPointX, y: zoomPointY,
-        range: BrowserApp.selectedBrowser.contentDocument.caretPositionFromPoint(zoomPointX, zoomPointY) };
-
-      // Before we perform a reflow on zoom, let's disable painting.
-      let webNav = BrowserApp.selectedTab.window.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIWebNavigation);
-      let docShell = webNav.QueryInterface(Ci.nsIDocShell);
-      let docViewer = docShell.contentViewer.QueryInterface(Ci.nsIMarkupDocumentViewer);
-      docViewer.pausePainting();
-
-      BrowserApp.selectedTab.probablyNeedRefloz = true;
+     BrowserApp.selectedTab._mReflozPoint = { x: zoomPointX, y: zoomPointY,
+       range: BrowserApp.selectedBrowser.contentDocument.caretPositionFromPoint(zoomPointX, zoomPointY) };
+       BrowserApp.selectedTab.probablyNeedRefloz = true;
     }
 
     if (!element) {
@@ -4528,7 +4468,11 @@ var BrowserEventHandler = {
   },
 
   _zoomInAndSnapToRange: function(aRange) {
-    // aRange is always non-null here, since a check happened previously.
+    if (!aRange) {
+      Cu.reportError("aRange is null in zoomInAndSnapToRange. Unable to maintain position.");
+      return;
+    }
+
     let viewport = BrowserApp.selectedTab.getViewport();
     let fudge = 15; // Add a bit of fudge.
     let boundingElement = aRange.offsetNode;
@@ -4551,8 +4495,6 @@ var BrowserEventHandler = {
     let leftAdjustment = parseInt(boundingStyle.paddingLeft) +
                          parseInt(boundingStyle.borderLeftWidth);
 
-    BrowserApp.selectedTab._mReflozPositioned = true;
-
     rect.type = "Browser:ZoomToRect";
     rect.x = Math.max(viewport.cssPageLeft, rect.x  - fudge + leftAdjustment);
     rect.y = Math.max(topPos, viewport.cssPageTop);
@@ -4561,22 +4503,22 @@ var BrowserEventHandler = {
 
     sendMessageToJava(rect);
     BrowserApp.selectedTab._mReflozPoint = null;
-  },
+   },
 
-  onPinchFinish: function(aData) {
-    let data = {};
-    try {
-      data = JSON.parse(aData);
-    } catch(ex) {
-      console.log(ex);
-      return;
-    }
+   onPinchFinish: function(aData) {
+     let data = {};
+     try {
+       data = JSON.parse(aData);
+     } catch(ex) {
+       console.log(ex);
+       return;
+     }
 
-    if (BrowserEventHandler.mReflozPref &&
-        data.zoomDelta < 0.0) {
-      BrowserEventHandler.resetMaxLineBoxWidth();
-    }
-  },
+     if (BrowserEventHandler.mReflozPref &&
+         data.zoomDelta < 0.0) {
+       BrowserEventHandler.resetMaxLineBoxWidth();
+     }
+   },
 
   _shouldZoomToElement: function(aElement) {
     let win = aElement.ownerDocument.defaultView;

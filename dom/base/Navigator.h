@@ -56,6 +56,8 @@ class BatteryManager;
 class FMRadio;
 #endif
 
+class Promise;
+
 class DesktopNotificationCenter;
 class MobileMessageManager;
 class MozIdleObserver;
@@ -175,6 +177,8 @@ public:
   // The XPCOM GetDoNotTrack is ok
   Geolocation* GetGeolocation(ErrorResult& aRv);
   battery::BatteryManager* GetBattery(ErrorResult& aRv);
+  already_AddRefed<Promise> GetDataStores(const nsAString &aName,
+                                          ErrorResult& aRv);
   bool Vibrate(uint32_t aDuration);
   bool Vibrate(const nsTArray<uint32_t>& aDuration);
   void GetAppCodeName(nsString& aAppCodeName, ErrorResult& aRv)
