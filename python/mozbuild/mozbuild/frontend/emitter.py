@@ -126,7 +126,7 @@ class TreeMetadataEmitter(LoggingMixin):
             yield XPIDLFile(sandbox, mozpath.join(sandbox['SRCDIR'], idl),
                 xpidl_module)
 
-        exclusions = ('gfx', 'toolkit/crashreporter')
+        exclusions = ('gfx/layers', 'gfx/skia', 'toolkit/crashreporter')
 
         if sandbox['CPP_SOURCES'] and not sandbox['RELATIVEDIR'].startswith(exclusions) and os.path.join('js', 'src') not in sandbox.main_path:
             for src in sandbox['CPP_SOURCES']:
