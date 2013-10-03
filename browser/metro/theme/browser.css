@@ -601,6 +601,14 @@ documenttab[selected] .documenttab-selection {
   list-style-image: url("chrome://browser/skin/images/identity-icons-https-ev.png");
 }
 
+#toolbar[startpage] > #urlbar:not([autocomplete]) > #identity-box > #identity-icon {
+  list-style-image: url("chrome://browser/skin/images/icons-identity-firefox.png");
+}
+
+#urlbar[autocomplete] > #identity-box > #identity-icon {
+  list-style-image: url("chrome://browser/skin/images/icon-autocomplete-search.png");
+}
+
 /* Main URL textbox */
 #urlbar-edit {
   margin: 0 !important;
@@ -679,6 +687,14 @@ documenttab[selected] .documenttab-selection {
   #stop-button {
     list-style-image: url(chrome://browser/skin/images/urlbar-stop@1.4x.png);
   }
+
+  #toolbar[startpage] > #urlbar:not([autocomplete]) > #identity-box > #identity-icon {
+    list-style-image: url("chrome://browser/skin/images/icons-identity-firefox@1.4x.png");
+  }
+
+  #urlbar[autocomplete] > #identity-box > #identity-icon {
+    list-style-image: url("chrome://browser/skin/images/icon-autocomplete-search@1.4x.png");
+  }
 }
 
 @media (min-resolution: @min_res_180pc@) {
@@ -704,6 +720,14 @@ documenttab[selected] .documenttab-selection {
 
   #stop-button {
     list-style-image: url(chrome://browser/skin/images/urlbar-stop@1.8x.png);
+  }
+
+  #toolbar[startpage] > #urlbar:not([autocomplete]) > #identity-box > #identity-icon {
+    list-style-image: url("chrome://browser/skin/images/icons-identity-firefox@1.8x.png");
+  }
+
+  #urlbar[autocomplete] > #identity-box > #identity-icon {
+    list-style-image: url("chrome://browser/skin/images/icon-autocomplete-search@1.8x.png");
   }
 }
 

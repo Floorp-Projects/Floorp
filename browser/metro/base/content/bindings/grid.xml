@@ -524,9 +524,6 @@
             this._xslideHandler = new CrossSlide.Handler(this, {
                   REARRANGESTART: this.crossSlideBoundary
             });
-            this.addEventListener("touchstart", this._xslideHandler, false);
-            this.addEventListener("touchmove", this._xslideHandler, false);
-            this.addEventListener("touchend", this._xslideHandler, false);
           }
 
           // XXX This event was never actually implemented (bug 223411).
