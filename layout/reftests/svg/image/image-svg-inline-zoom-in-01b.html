@@ -1,0 +1,16 @@
+<html reftest-zoom="1.5">
+  <!-- Test to make sure svg:image is painted correctly when its containing SVG
+       is included inline in a zoomed webpage. -->
+  <body style="background: lime">
+    <!-- 100x100 red div -->
+    <div style="background: red;
+                margin-left: 30px; margin-top: 30px;
+                width: 100px; height: 100px;">
+      <svg xmlns="http://www.w3.org/2000/svg"
+           xmlns:xlink="http://www.w3.org/1999/xlink">
+        <!-- 1x1 lime PNG, scaled to 100x100 -->
+        <image xlink:href="data:image/png,%89PNG%0D%0A%1A%0A%00%00%00%0DIHDR%00%00%00%01%00%00%00%01%08%02%00%00%00%90wS%DE%00%00%00%01sRGB%00%AE%CE%1C%E9%00%00%00%0CIDAT%08%D7c%60%F8%CF%00%00%02%02%01%00%AA*%9E'%00%00%00%00IEND%AEB%60%82" width="100" height="100"/>
+      </svg>
+    </div>
+  </body>
+</html>
