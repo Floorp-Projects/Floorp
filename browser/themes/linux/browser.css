@@ -489,6 +489,7 @@ menuitem:not([type]):not(.menuitem-tooltip):not(.menuitem-iconic-tooltip) {
   -moz-box-orient: vertical;
   min-width: 0;
   list-style-image: url("chrome://browser/skin/Toolbar.png");
+  -moz-image-region: rect(0, 18px, 18px, 0);
 }
 
 .toolbarbutton-1 > .toolbarbutton-icon {
