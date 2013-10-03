@@ -462,7 +462,7 @@ int64_t MP3FrameParser::GetDuration()
 {
   MutexAutoLock mon(mLock);
 
-  if (!mNumFrames) {
+  if (!mNumFrames || !mSampleRate) {
     return -1; // Not a single frame decoded yet
   }
 
