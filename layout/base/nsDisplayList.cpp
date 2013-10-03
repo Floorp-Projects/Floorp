@@ -3829,9 +3829,8 @@ nsDisplayTransform::GetFrameBoundsForTransform(const nsIFrame* aFrame)
   NS_PRECONDITION(aFrame, "Can't get the bounds of a nonexistent frame!");
 
   if (aFrame->GetStateBits() & NS_FRAME_SVG_LAYOUT) {
-    gfxRect bbox = nsSVGUtils::GetBBox(const_cast<nsIFrame*>(aFrame));
-    return nsLayoutUtils::RoundGfxRectToAppRect(bbox,
-      aFrame->PresContext()->AppUnitsPerCSSPixel()) - aFrame->GetPosition();
+    // TODO: SVG needs to define what percentage translations resolve against.
+    return nsRect();
   }
 
   return nsRect(nsPoint(0, 0), aFrame->GetSize());
@@ -3847,9 +3846,8 @@ nsDisplayTransform::GetFrameBoundsForTransform(const nsIFrame* aFrame)
   nsRect result;
 
   if (aFrame->GetStateBits() & NS_FRAME_SVG_LAYOUT) {
-    gfxRect bbox = nsSVGUtils::GetBBox(const_cast<nsIFrame*>(aFrame));
-    return nsLayoutUtils::RoundGfxRectToAppRect(bbox,
-      aFrame->PresContext()->AppUnitsPerCSSPixel()) - aFrame->GetPosition();
+    // TODO: SVG needs to define what percentage translations resolve against.
+    return result;
   }
 
   /* Iterate through the continuation list, unioning together all the
