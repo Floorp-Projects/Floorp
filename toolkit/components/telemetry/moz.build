@@ -44,3 +44,5 @@ MSVC_ENABLE_PGO = True
 
 LIBRARY_NAME = 'telemetry'
 
+EXPORT_LIBRARY = True
+

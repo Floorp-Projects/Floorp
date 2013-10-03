@@ -18,3 +18,5 @@ LIBRARY_NAME = 'peerconnection'
 
 LIBXUL_LIBRARY = True
 
+EXPORT_LIBRARY = True
+

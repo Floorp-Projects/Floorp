@@ -63,3 +63,5 @@ LIBXUL_LIBRARY = True
 
 LIBRARY_NAME = 'widget_gonk'
 
+EXPORT_LIBRARY = True
+

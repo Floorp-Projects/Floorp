@@ -88,3 +88,5 @@ MSVC_ENABLE_PGO = True
 
 LIBRARY_NAME = 'widget_windows'
 
+EXPORT_LIBRARY = True
+

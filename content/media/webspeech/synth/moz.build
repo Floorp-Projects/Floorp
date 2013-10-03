@@ -52,3 +52,5 @@ LIBXUL_LIBRARY = True
 
 LIBRARY_NAME = 'gkconwebspeechsynth_s'
 
+EXPORT_LIBRARY = True
+

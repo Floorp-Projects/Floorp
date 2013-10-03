@@ -17,7 +17,6 @@ VPATH           = \
   $(srcdir)/libui \
   $(NULL)
 
-EXPORT_LIBRARY  = 1
 SHARED_LIBRARY_LIBS = ../xpwidgets/libxpwidgets_s.a
 
 include $(topsrcdir)/config/rules.mk
