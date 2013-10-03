@@ -122,6 +122,7 @@ WEBIDL_FILES = [
     'HTMLEmbedElement.webidl',
     'HTMLFieldSetElement.webidl',
     'HTMLFontElement.webidl',
+    'HTMLFormControlsCollection.webidl',
     'HTMLFormElement.webidl',
     'HTMLFrameElement.webidl',
     'HTMLFrameSetElement.webidl',

@@ -7,10 +7,11 @@
 #ifndef mozilla_dom_HTMLFormControlsCollection_h
 #define mozilla_dom_HTMLFormControlsCollection_h
 
+#include "mozilla/dom/Element.h" // DOMProxyHandler::getOwnPropertyDescriptor
 #include "nsIHTMLCollection.h"
-#include "nsWrapperCache.h"
-#include "nsTArray.h"
 #include "nsInterfaceHashtable.h"
+#include "nsTArray.h"
+#include "nsWrapperCache.h"
 
 class nsGenericHTMLFormElement;
 class nsIFormControl;
@@ -19,6 +20,8 @@ namespace mozilla {
 namespace dom {
 class HTMLFormElement;
 class HTMLImageElement;
+class OwningNodeListOrElement;
+template<typename> class Nullable;
 
 class HTMLFormControlsCollection : public nsIHTMLCollection
                                  , public nsWrapperCache
@@ -40,6 +43,17 @@ public:
   virtual JSObject* NamedItem(JSContext* aCx, const nsAString& aName,
                               ErrorResult& aError);
   virtual void GetSupportedNames(nsTArray<nsString>& aNames);
+  void
+  NamedGetter(const nsAString& aName,
+              bool& aFound,
+              Nullable<OwningNodeListOrElement>& aResult);
+  void
+  NamedItem(const nsAString& aName,
+            Nullable<OwningNodeListOrElement>& aResult)
+  {
+    bool dummy;
+    NamedGetter(aName, dummy, aResult);
+  }
 
   nsresult AddElementToTable(nsGenericHTMLFormElement* aChild,
                              const nsAString& aName);
