@@ -11,16 +11,11 @@
   position: relative;
 }
 
-#downloads-button[customizableui-areatype="toolbar"] > #downloads-indicator-anchor {
-  min-width: 24px;
-  min-height: 24px;
-}
-
 /*** Main indicator icon ***/
 
 #downloads-button[customizableui-areatype="toolbar"] > #downloads-indicator-anchor > #downloads-indicator-icon {
   background: -moz-image-rect(url("chrome://browser/skin/Toolbar.png"),
-                              0, 24, 24, 0) center no-repeat;
+                              0, 198, 18, 180) center no-repeat;
 }
 
 #downloads-button[customizableui-areatype="toolbar"][attention] > #downloads-indicator-anchor > #downloads-indicator-icon {

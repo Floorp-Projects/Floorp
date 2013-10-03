@@ -505,50 +505,14 @@ menuitem:not([type]):not(.menuitem-tooltip):not(.menuitem-iconic-tooltip) {
 }
 
 /* 24px primary toolbar buttons */
-#PanelUI-menu-button {
-  list-style-image: url("chrome://browser/skin/appmenu.png");
-}
-
-#back-button {
-  list-style-image: url("moz-icon://stock/gtk-go-back-ltr?size=toolbar");
-}
-#back-button[disabled="true"] {
-  list-style-image: url("moz-icon://stock/gtk-go-back-ltr?size=toolbar&state=disabled");
-}
-
-#back-button:-moz-locale-dir(rtl) {
-  list-style-image: url("moz-icon://stock/gtk-go-back-rtl?size=toolbar");
-}
-#back-button[disabled="true"]:-moz-locale-dir(rtl) {
-  list-style-image: url("moz-icon://stock/gtk-go-back-rtl?size=toolbar&state=disabled");
-}
-
-#forward-button {
-  list-style-image: url("moz-icon://stock/gtk-go-forward-ltr?size=toolbar");
-}
-#forward-button:-moz-locale-dir(rtl) {
-  list-style-image: url("moz-icon://stock/gtk-go-forward-rtl?size=toolbar");
-}
-
 #forward-button[disabled] {
-  list-style-image: url("moz-icon://stock/gtk-go-forward-ltr?size=toolbar&state=disabled");
   transform: scale(0);
   opacity: 0;
   pointer-events: none;
 }
-#forward-button[disabled]:-moz-locale-dir(rtl) {
-  list-style-image: url("moz-icon://stock/gtk-go-forward-rtl?size=toolbar&state=disabled");
-}
 
 @conditionalForwardWithUrlbar@:not([switchingtabs]) > #forward-button {
   transition: @forwardTransitionLength@ ease-out;
-}
-
-#home-button[customizableui-areatype="toolbar"] {
-  list-style-image: url("moz-icon://stock/gtk-home?size=toolbar");
-}
-#home-button[disabled="true"][customizableui-areatype="toolbar"] {
-  list-style-image: url("moz-icon://stock/gtk-home?size=toolbar&state=disabled");
 }
 
 /* tabview button */
@@ -579,24 +543,8 @@ menuitem:not([type]):not(.menuitem-tooltip):not(.menuitem-iconic-tooltip) {
   -moz-image-region: rect(0, 64px, 16px, 48px);
 }
 
-#downloads-button {
-  -moz-image-region: rect(0px 24px 24px 0px);
-}
-
-toolbar > .customization-target > #history-panelmenu,
-toolbar > .customization-target > toolbarpaletteitem > #history-panelmenu {
-  -moz-image-region: rect(0px 48px 24px 24px);
-}
-
 #bookmarks-button {
   -moz-image-region: rect(0px 72px 24px 48px);
-}
-
-#print-button[customizableui-areatype="toolbar"] {
-  list-style-image: url("moz-icon://stock/gtk-print?size=toolbar");
-}
-#print-button[disabled="true"][customizableui-areatype="toolbar"] {
-  list-style-image: url("moz-icon://stock/gtk-print?size=toolbar&state=disabled");
 }
 
 #new-tab-button {
@@ -605,63 +553,6 @@ toolbar > .customization-target > toolbarpaletteitem > #history-panelmenu {
 
 #new-window-button {
   -moz-image-region: rect(0px 120px 24px 96px);
-}
-
-#edit-controls:not(@inAnyPanel@) > #cut-button {
-  list-style-image: url("moz-icon://stock/gtk-cut?size=toolbar") !important;
-}
-#edit-controls:not(@inAnyPanel@) > #cut-button[disabled="true"] {
-  list-style-image: url("moz-icon://stock/gtk-cut?size=toolbar&state=disabled") !important;
-}
-
-#edit-controls:not(@inAnyPanel@) > #copy-button {
-  list-style-image: url("moz-icon://stock/gtk-copy?size=toolbar") !important;
-}
-#edit-controls:not(@inAnyPanel@) > #copy-button[disabled="true"] {
-  list-style-image: url("moz-icon://stock/gtk-copy?size=toolbar&state=disabled") !important;
-}
-
-#edit-controls:not(@inAnyPanel@) > #paste-button {
-  list-style-image: url("moz-icon://stock/gtk-paste?size=toolbar") !important;
-}
-#edit-controls:not(@inAnyPanel@) > #paste-button[disabled="true"] {
-  list-style-image: url("moz-icon://stock/gtk-paste?size=toolbar&state=disabled") !important;
-}
-
-#zoom-controls:not(@inAnyPanel@) > #zoom-out-button {
-  list-style-image: url("moz-icon://stock/gtk-zoom-out?size=toolbar") !important;
-}
-
-#zoom-controls:not(@inAnyPanel@) > #zoom-in-button {
-  list-style-image: url("moz-icon://stock/gtk-zoom-in?size=toolbar") !important;
-}
-
-#fullscreen-button[customizableui-areatype="toolbar"] {
-  list-style-image: url("moz-icon://stock/gtk-fullscreen?size=toolbar");
-}
-
-#open-file-button[customizableui-areatype="toolbar"] {
-  list-style-image: url("moz-icon://stock/gtk-open?size=toolbar");
-}
-
-#privatebrowsing-button[customizableui-areatype="toolbar"] {
-  list-style-image: url("chrome://browser/skin/Privacy-16.png");
-}
-
-#save-page-button[customizableui-areatype="toolbar"] {
-  list-style-image: url("moz-icon://stock/gtk-save-as?size=toolbar");
-}
-
-#preferences-button[customizableui-areatype="toolbar"] {
-  list-style-image: url("moz-icon://stock/gtk-preferences?size=toolbar");
-}
-
-#find-button[customizableui-areatype="toolbar"] {
-  list-style-image: url("moz-icon://stock/gtk-find?size=toolbar");
-}
-
-#add-ons-button[customizableui-areatype="toolbar"] {
-  list-style-image: url("chrome://mozapps/skin/extensions/extensionGeneric-16.png");
 }
 
 #sync-button {
@@ -703,27 +594,18 @@ toolbar > .customization-target > toolbarpaletteitem > #history-panelmenu {
   list-style-image: url("moz-icon://stock/gtk-home?size=menu&state=disabled");
 }
 
-#characterencoding-button[customizableui-areatype="toolbar"],
-#developer-button[customizableui-areatype="toolbar"] {
-  list-style-image: url(chrome://browser/skin/menuPanel.png);
-}
-
-#characterencoding-button[customizableui-areatype="toolbar"] > .toolbarbutton-icon,
-#developer-button[customizableui-areatype="toolbar"] > .toolbarbutton-icon {
-  height: 24px;
-}
-
-#characterencoding-button[customizableui-areatype="toolbar"] {
-  -moz-image-region: rect(0px, 480px, 32px, 448px);
-}
-
-#developer-button[customizableui-areatype="toolbar"] {
-  -moz-image-region: rect(0px, 736px, 32px, 704px);
-}
-
 /* Menu panel buttons */
 
+%include ../shared/toolbarbuttons.inc.css
 %include ../shared/menupanel.inc.css
+
+#main-window:not([customizing]) .toolbarbutton-1[disabled=true] > .toolbarbutton-icon,
+#main-window:not([customizing]) .toolbarbutton-1[disabled=true] > .toolbarbutton-menu-dropmarker,
+#main-window:not([customizing]) .toolbarbutton-1[disabled=true] > .toolbarbutton-menubutton-dropmarker,
+#main-window:not([customizing]) .toolbarbutton-1[disabled=true] > .toolbarbutton-menubutton-button > .toolbarbutton-icon,
+#main-window:not([customizing]) .toolbarbutton-1 > .toolbarbutton-menubutton-button[disabled] > .toolbarbutton-icon {
+  opacity: 0.4;
+}
 
 /* Fullscreen window controls */
 #window-controls {
@@ -1353,26 +1235,12 @@ richlistitem[type~="action"][actiontype="switchtab"] > .ac-url-box > .ac-action-
 
 /* bookmarks menu-button */
 
-#bookmarks-menu-button[customizableui-areatype="toolbar"],
-#bookmarks-menu-button[customizableui-areatype="toolbar"] > .toolbarbutton-menubutton-dropmarker > .dropmarker-icon {
-  list-style-image: url("chrome://browser/skin/Toolbar.png");
-}
-
-#bookmarks-menu-button[customizableui-areatype="toolbar"] {
-  -moz-image-region: rect(0px 216px 24px 192px);
-}
-
-#bookmarks-menu-button[starred][customizableui-areatype="toolbar"] {
-  -moz-image-region: rect(24px 216px 48px 192px);
-}
-
 #bookmarks-menu-button[customizableui-areatype="toolbar"] > .toolbarbutton-menubutton-dropmarker {
   -moz-appearance: none !important;
 }
 
 #bookmarks-menu-button[customizableui-areatype="toolbar"] > .toolbarbutton-menubutton-dropmarker > .dropmarker-icon {
   padding: 9px 3px;
-  -moz-image-region: rect(0px 240px 24px 216px);
 }
 
 #bookmarks-menu-button[customizableui-areatype="toolbar"].bookmark-item > .toolbarbutton-menubutton-dropmarker > .dropmarker-icon,
