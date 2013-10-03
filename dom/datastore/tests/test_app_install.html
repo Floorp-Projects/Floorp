@@ -1,0 +1,110 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Test for DataStore - install/uninstall apps</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<div id="container"></div>
+  <script type="application/javascript;version=1.7">
+
+  if (SpecialPowers.isMainProcess()) {
+    SpecialPowers.Cu.import("resource://gre/modules/DataStoreChangeNotifier.jsm");
+  }
+
+  SimpleTest.waitForExplicitFinish();
+
+  var gBaseURL = 'http://test/tests/dom/datastore/tests/';
+  var gHostedManifestURL = gBaseURL + 'file_app.sjs?testToken=file_app_install.html';
+  var gGenerator = runTest();
+
+  SpecialPowers.pushPermissions(
+    [{ "type": "browser", "allow": 1, "context": document },
+     { "type": "embed-apps", "allow": 1, "context": document },
+     { "type": "webapps-manage", "allow": 1, "context": document }],
+    function() {
+      SpecialPowers.pushPrefEnv({"set": [["dom.datastore.enabled", true],
+                                         ["dom.promise.enabled", true]]}, function() {
+        gGenerator.next(); });
+    });
+
+  function continueTest() {
+    try { gGenerator.next(); }
+    catch(e) { dump("Got exception: " + e + "\n"); }
+  }
+
+  function cbError() {
+    ok(false, "Error callback invoked");
+    finish();
+  }
+
+  function runTest() {
+    ok("getDataStores" in navigator, "getDataStores exists");
+    is(typeof navigator.getDataStores, "function", "getDataStores exists and it's a function");
+    navigator.getDataStores('foo').then(function(stores) {
+      is(stores.length, 0, "getDataStores('foo') returns 0 elements");
+      continueTest();
+    }, cbError);
+    yield undefined;
+
+    SpecialPowers.setAllAppsLaunchable(true);
+    SpecialPowers.setBoolPref("dom.mozBrowserFramesEnabled", true);
+
+    SpecialPowers.autoConfirmAppInstall(continueTest);
+    yield undefined;
+
+    var request = navigator.mozApps.install(gHostedManifestURL);
+    request.onerror = cbError;
+    request.onsuccess = continueTest;
+    yield undefined;
+
+    var app = request.result;
+    isnot(app, null, "App is non-null");
+    is(app.manifest.description, "Updated even faster than Firefox, just to annoy slashdotters.",
+       "Manifest is HTML-sanitized");
+
+    var ifr = document.createElement('iframe');
+    ifr.setAttribute('mozbrowser', 'true');
+    ifr.setAttribute('mozapp', app.manifestURL);
+    ifr.setAttribute('src', app.manifest.launch_path);
+    var domParent = document.getElementById('container');
+
+    // Set us up to listen for messages from the app.
+    var listener = function(e) {
+      var message = e.detail.message;
+      if (/^OK/.exec(message)) {
+        ok(true, "Message from app: " + message);
+      } else if (/KO/.exec(message)) {
+        ok(false, "Message from app: " + message);
+      } else if (/DONE/.exec(message)) {
+        ok(true, "Messaging from app complete");
+        ifr.removeEventListener('mozbrowsershowmodalprompt', listener);
+        domParent.removeChild(ifr);
+
+        // Uninstall the app.
+        request = navigator.mozApps.mgmt.uninstall(app);
+        request.onerror = cbError;
+        request.onsuccess = function() {
+          // All done.
+          ok(true, "All done");
+          finish();
+        }
+      }
+    }
+
+    // This event is triggered when the app calls "alert".
+    ifr.addEventListener('mozbrowsershowmodalprompt', listener, false);
+
+    domParent.appendChild(ifr);
+  }
+
+  function finish() {
+    SpecialPowers.clearUserPref("dom.mozBrowserFramesEnabled");
+    SimpleTest.finish();
+  }
+
+  </script>
+</body>
+</html>

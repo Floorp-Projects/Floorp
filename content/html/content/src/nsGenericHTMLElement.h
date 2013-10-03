@@ -15,7 +15,9 @@
 #include "nsContentCreatorFunctions.h"
 #include "mozilla/ErrorResult.h"
 #include "nsIDOMHTMLMenuElement.h"
+#include "mozilla/dom/DOMRect.h"
 #include "mozilla/dom/ValidityState.h"
+#include "mozilla/dom/ElementInlines.h"
 
 class nsIDOMAttr;
 class nsIDOMEventListener;
@@ -38,7 +40,7 @@ class nsIDOMHTMLCollection;
 class nsDOMSettableTokenList;
 
 namespace mozilla {
-namespace dom{
+namespace dom {
 class HTMLFormElement;
 class HTMLPropertiesCollection;
 class HTMLMenuElement;

@@ -895,6 +895,12 @@
 #endif
     </toolbar>
 
+    <hbox id="downloads-animation-container" mousethrough="always">
+      <vbox id="downloads-notification-anchor">
+        <vbox id="downloads-indicator-notification"/>
+      </vbox>
+    </hbox>
+
     <toolbarpalette id="BrowserToolbarPalette">
 
 # Update primaryToolbarButtons in browser/themes/shared/browser.inc when adding
@@ -912,16 +918,8 @@
                      ondrop="DownloadsIndicatorView.onDrop(event);"
                      ondragover="DownloadsIndicatorView.onDragOver(event);"
                      ondragenter="DownloadsIndicatorView.onDragOver(event);"
-                     xmlns:xbl="http://www.mozilla.org/xbl"
                      label="&downloads.label;"
-                     tooltiptext="&downloads.tooltip;">
-        <!-- We need a different binding for the notification and progress bar, which means
-             we don't get these for free. Adding them in our binding loses them when dragging
-             to the customize window, so we add them in here as 'real' children -->
-        <image class="toolbarbutton-icon" xbl:inherits="validate,src=image,label"/>
-        <label class="toolbarbutton-text" crop="right" flex="1"
-               xbl:inherits="value=label,accesskey,crop"/>
-      </toolbarbutton>
+                     tooltiptext="&downloads.tooltip;"/>
 
       <toolbarbutton id="history-button" class="toolbarbutton-1 chromeclass-toolbar-additional"
                      observes="viewHistorySidebar" label="&historyButton.label;"

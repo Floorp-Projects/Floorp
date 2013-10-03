@@ -243,10 +243,10 @@ public:
    *  @param aMouseEvent         passed in so we can get where event occurred and what keys are pressed
    */
   /*unsafe*/
-  nsresult HandleTableSelection(nsINode *aParentContent,
+  nsresult HandleTableSelection(nsINode* aParentContent,
                                 int32_t aContentOffset,
                                 int32_t aTarget,
-                                nsMouseEvent *aMouseEvent);
+                                mozilla::WidgetMouseEvent* aMouseEvent);
 
   /**
    * Add cell to the selection.
@@ -496,7 +496,7 @@ public:
    *  handling method. A NULL value can be use to tell this method
    *  that any data is storing is no longer valid.
    */
-  void SetDelayedCaretData(nsMouseEvent *aMouseEvent);
+  void SetDelayedCaretData(mozilla::WidgetMouseEvent* aMouseEvent);
 
   /** Get the delayed MouseDown event data necessary to place the
    *  caret during MouseUp processing.

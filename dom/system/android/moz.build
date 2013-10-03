@@ -17,3 +17,5 @@ LIBXUL_LIBRARY = True
 
 LIBRARY_NAME = 'domsystemandroid_s'
 
+EXPORT_LIBRARY = True
+

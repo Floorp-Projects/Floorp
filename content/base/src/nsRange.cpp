@@ -23,13 +23,13 @@
 #include "nsGkAtoms.h"
 #include "nsContentUtils.h"
 #include "nsGenericDOMDataNode.h"
-#include "nsClientRect.h"
 #include "nsLayoutUtils.h"
 #include "nsTextFrame.h"
 #include "nsFontFaceList.h"
 #include "mozilla/dom/DocumentFragment.h"
 #include "mozilla/dom/DocumentType.h"
 #include "mozilla/dom/RangeBinding.h"
+#include "mozilla/dom/DOMRect.h"
 #include "mozilla/Telemetry.h"
 #include "mozilla/Likely.h"
 #include "nsCSSFrameConstructor.h"
@@ -2874,10 +2874,10 @@ nsRange::GetBoundingClientRect(nsIDOMClientRect** aResult)
   return NS_OK;
 }
 
-already_AddRefed<nsClientRect>
+already_AddRefed<DOMRect>
 nsRange::GetBoundingClientRect()
 {
-  nsRefPtr<nsClientRect> rect = new nsClientRect(ToSupports(this));
+  nsRefPtr<DOMRect> rect = new DOMRect(ToSupports(this));
   if (!mStartParent) {
     return rect.forget();
   }
@@ -2899,15 +2899,15 @@ nsRange::GetClientRects(nsIDOMClientRectList** aResult)
   return NS_OK;
 }
 
-already_AddRefed<nsClientRectList>
+already_AddRefed<DOMRectList>
 nsRange::GetClientRects()
 {
   if (!mStartParent) {
     return nullptr;
   }
 
-  nsRefPtr<nsClientRectList> rectList =
-    new nsClientRectList(static_cast<nsIDOMRange*>(this));
+  nsRefPtr<DOMRectList> rectList =
+    new DOMRectList(static_cast<nsIDOMRange*>(this));
 
   nsLayoutUtils::RectListBuilder builder(rectList);
 

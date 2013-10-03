@@ -17,6 +17,7 @@
 #include "nsStringStream.h"
 #include "mozilla/ipc/URIUtils.h"
 #include "nsNetUtil.h"
+#include "nsIDocument.h"
 
 #include "mozilla/unused.h"
 

@@ -8,11 +8,11 @@ PROGRAM = 'gdb-tests'
 
 CPP_SOURCES += [
     'gdb-tests.cpp',
-    'test-JSObject.cpp',
-    'test-JSString.cpp',
-    'test-Root.cpp',
-    'test-jsid.cpp',
-    'test-jsval.cpp',
-    'test-prettyprinters.cpp',
-    'typedef-printers.cpp',
+    'tests/test-JSObject.cpp',
+    'tests/test-JSString.cpp',
+    'tests/test-Root.cpp',
+    'tests/test-jsid.cpp',
+    'tests/test-jsval.cpp',
+    'tests/test-prettyprinters.cpp',
+    'tests/typedef-printers.cpp',
 ]

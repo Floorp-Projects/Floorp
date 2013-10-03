@@ -13,3 +13,5 @@ LIBXUL_LIBRARY = True
 
 LIBRARY_NAME = 'mozipdlgen_s'
 
+EXPORT_LIBRARY = True
+

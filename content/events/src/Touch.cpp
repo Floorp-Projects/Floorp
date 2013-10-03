@@ -100,7 +100,7 @@ Touch::Target() const
 }
 
 void
-Touch::InitializePoints(nsPresContext* aPresContext, nsEvent* aEvent)
+Touch::InitializePoints(nsPresContext* aPresContext, WidgetEvent* aEvent)
 {
   if (mPointsInitialized) {
     return;

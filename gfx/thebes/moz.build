@@ -278,3 +278,5 @@ MSVC_ENABLE_PGO = True
 
 LIBRARY_NAME = 'thebes'
 
+EXPORT_LIBRARY = True
+

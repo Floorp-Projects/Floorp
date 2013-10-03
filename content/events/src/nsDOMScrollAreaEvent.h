@@ -11,12 +11,14 @@
 #include "nsIDOMScrollAreaEvent.h"
 #include "nsDOMUIEvent.h"
 
-#include "nsClientRect.h"
+#include "mozilla/dom/DOMRect.h"
 #include "mozilla/dom/ScrollAreaEventBinding.h"
 
 class nsDOMScrollAreaEvent : public nsDOMUIEvent,
                              public nsIDOMScrollAreaEvent
 {
+  typedef mozilla::dom::DOMRect DOMRect;
+
 public:
   nsDOMScrollAreaEvent(mozilla::dom::EventTarget* aOwner,
                        nsPresContext *aPresContext,
@@ -77,7 +79,7 @@ public:
   }
 
 protected:
-  nsClientRect mClientArea;
+  DOMRect mClientArea;
 };
 
 #endif // nsDOMScrollAreaEvent_h__

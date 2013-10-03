@@ -83,7 +83,8 @@ public:
     
     void CommonCreate(nsIWidget *aParent, bool aListenForResizes);
     
-    virtual nsresult DispatchEvent(nsGUIEvent *aEvent, nsEventStatus &aStatus);
+    virtual nsresult DispatchEvent(mozilla::WidgetGUIEvent* aEvent,
+                                   nsEventStatus& aStatus);
     
     // called when we are destroyed
     void OnDestroy(void);
@@ -242,8 +243,10 @@ public:
 
     static guint32     sLastButtonPressTime;
 
-    NS_IMETHOD         BeginResizeDrag(nsGUIEvent* aEvent, int32_t aHorizontal, int32_t aVertical);
-    NS_IMETHOD         BeginMoveDrag(nsMouseEvent* aEvent);
+    NS_IMETHOD         BeginResizeDrag(mozilla::WidgetGUIEvent* aEvent,
+                                       int32_t aHorizontal,
+                                       int32_t aVertical);
+    NS_IMETHOD         BeginMoveDrag(mozilla::WidgetMouseEvent* aEvent);
 
     MozContainer*      GetMozContainer() { return mContainer; }
     // GetMozContainerWidget returns the MozContainer even for undestroyed
@@ -336,14 +339,15 @@ private:
     void               SetUrgencyHint(GtkWidget *top_window, bool state);
     void              *SetupPluginPort(void);
     void               SetDefaultIcon(void);
-    void               InitButtonEvent(nsMouseEvent &aEvent, GdkEventButton *aGdkEvent);
+    void               InitButtonEvent(mozilla::WidgetMouseEvent& aEvent,
+                                       GdkEventButton* aGdkEvent);
     bool               DispatchCommandEvent(nsIAtom* aCommand);
     bool               DispatchContentCommandEvent(int32_t aMsg);
     void               SetWindowClipRegion(const nsTArray<nsIntRect>& aRects,
                                            bool aIntersectWithExisting);
     bool               CheckForRollup(gdouble aMouseX, gdouble aMouseY,
                                       bool aIsWheel, bool aAlwaysRollup);
-    bool               GetDragInfo(nsMouseEvent* aMouseEvent,
+    bool               GetDragInfo(mozilla::WidgetMouseEvent* aMouseEvent,
                                    GdkWindow** aWindow, gint* aButton,
                                    gint* aRootX, gint* aRootY);
     void               ClearCachedResources();

@@ -8,7 +8,6 @@ MODULE = 'content'
 
 EXPORTS += [
     'HTMLPropertiesCollection.h',
-    'nsClientRect.h',
     'nsGenericHTMLElement.h',
     'nsHTMLDNSPrefetch.h',
 ]
@@ -24,6 +23,7 @@ EXPORTS.mozilla.dom += [
     'HTMLDivElement.h',
     'HTMLFieldSetElement.h',
     'HTMLFontElement.h',
+    'HTMLFormControlsCollection.h',
     'HTMLFormElement.h',
     'HTMLFrameElement.h',
     'HTMLFrameSetElement.h',
@@ -90,6 +90,8 @@ CPP_SOURCES += [
     'HTMLElement.cpp',
     'HTMLFieldSetElement.cpp',
     'HTMLFontElement.cpp',
+    'HTMLFormControlsCollection.cpp',
+    'HTMLFormElement.cpp',
     'HTMLFrameElement.cpp',
     'HTMLFrameSetElement.cpp',
     'HTMLHRElement.cpp',
@@ -142,13 +144,11 @@ CPP_SOURCES += [
     'TimeRanges.cpp',
     'UndoManager.cpp',
     'ValidityState.cpp',
-    'nsClientRect.cpp',
     'nsDOMStringMap.cpp',
     'nsFormSubmission.cpp',
     'nsGenericHTMLElement.cpp',
     'nsGenericHTMLFrameElement.cpp',
     'nsHTMLDNSPrefetch.cpp',
-    'HTMLFormElement.cpp',
     'nsIConstraintValidation.cpp',
     'nsRadioVisitor.cpp',
     'nsTextEditorState.cpp',

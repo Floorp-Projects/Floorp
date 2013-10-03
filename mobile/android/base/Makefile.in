@@ -126,9 +126,9 @@ FENNEC_JAVA_FILES = \
   PrefsHelper.java \
   PrivateDataPreference.java \
   PrivateTab.java \
-  Prompt.java \
-  PromptInput.java \
-  PromptService.java \
+  prompts/Prompt.java \
+  prompts/PromptInput.java \
+  prompts/PromptService.java \
   Restarter.java \
   sqlite/ByteBufferInputStream.java \
   sqlite/MatrixBlobCursor.java \

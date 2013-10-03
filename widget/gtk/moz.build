@@ -80,3 +80,6 @@ else:
     CSRCS += [
         'gtk3drawing.c',
     ]
+
+EXPORT_LIBRARY = True
+

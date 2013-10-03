@@ -43,3 +43,5 @@ LIBXUL_LIBRARY = True
 
 LIBRARY_NAME = 'neckoipc_s'
 
+EXPORT_LIBRARY = True
+

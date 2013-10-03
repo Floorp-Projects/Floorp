@@ -85,6 +85,8 @@ var BrowserUI = {
     Services.prefs.addObserver(debugServerStateChanged, this, false);
     Services.prefs.addObserver(debugServerPortChanged, this, false);
 
+    Services.obs.addObserver(this, "handle-xul-text-link", false);
+
     // listen content messages
     messageManager.addMessageListener("DOMTitleChanged", this);
     messageManager.addMessageListener("DOMWillOpenModalDialog", this);
@@ -146,7 +148,6 @@ var BrowserUI = {
         DialogUI.init();
         FormHelperUI.init();
         FindHelperUI.init();
-        PdfJs.init();
       } catch(ex) {
         Util.dumpLn("Exception in delay load module:", ex.message);
       }
@@ -172,6 +173,7 @@ var BrowserUI = {
 
   uninit: function() {
     messageManager.removeMessageListener("Browser:MozApplicationManifest", OfflineApps);
+    Services.obs.removeObserver(this, "handle-xul-text-link");
 
     PanelUI.uninit();
     FlyoutPanelsUI.uninit();
@@ -573,6 +575,13 @@ var BrowserUI = {
 
   observe: function BrowserUI_observe(aSubject, aTopic, aData) {
     switch (aTopic) {
+      case "handle-xul-text-link":
+        let handled = aSubject.QueryInterface(Ci.nsISupportsPRBool);
+        if (!handled.data) {
+          this.addAndShowTab(aData, Browser.selectedTab);
+          handled.data = true;
+        }
+        break;
       case "nsPref:changed":
         switch (aData) {
           case "browser.cache.disk_cache_ssl":

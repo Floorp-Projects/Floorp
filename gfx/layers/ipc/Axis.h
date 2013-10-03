@@ -1,5 +1,5 @@
 /* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
-/* vim: set sw=4 ts=8 et tw=80 : */
+/* vim: set sw=2 ts=8 et tw=80 : */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -69,10 +69,11 @@ public:
 
   /**
    * Takes a requested displacement to the position of this axis, and adjusts
-   * it to account for acceleration  (which might increase the displacement)
-   * and overscroll (which might decrease the displacement; this is to prevent
-   * the viewport from overscrolling the page rect). If overscroll ocurred,
-   * its amount is written to |aOverscrollAmountOut|.
+   * it to account for acceleration (which might increase the displacement),
+   * overscroll (which might decrease the displacement; this is to prevent the
+   * viewport from overscrolling the page rect), and axis locking (which might
+   * prevent any displacement from happening). If overscroll ocurred, its amount
+   * is written to |aOverscrollAmountOut|.
    * The adjusted displacement is returned.
    */
   float AdjustDisplacement(float aDisplacement, float& aOverscrollAmountOut);
@@ -85,12 +86,26 @@ public:
   float PanDistance();
 
   /**
+   * Gets the distance between the starting position of the touch supplied in
+   * startTouch() and the supplied position.
+   */
+  float PanDistance(float aPos);
+
+  /**
    * Applies friction during a fling, or cancels the fling if the velocity is
    * too low. Returns true if the fling should continue to another frame, or
    * false if it should end. |aDelta| is the amount of time that has passed
    * since the last time friction was applied.
    */
   bool FlingApplyFrictionOrCancel(const TimeDuration& aDelta);
+
+  /*
+   * Returns true if the page is zoomed in to some degree along this axis such that scrolling is
+   * possible and this axis has not been scroll locked while panning. Otherwise, returns false.
+   */
+  bool Scrollable();
+
+  void SetScrollingDisabled(bool aDisabled) { mScrollingDisabled = aDisabled; }
 
   /**
    * Gets the overscroll state of the axis in its current position.
@@ -184,6 +199,7 @@ protected:
   // they are flinging multiple times in a row very quickly, probably trying to
   // reach one of the extremes of the page.
   int32_t mAcceleration;
+  bool mScrollingDisabled;     // Whether movement on this axis is locked.
   AsyncPanZoomController* mAsyncPanZoomController;
   nsTArray<float> mVelocityQueue;
 };

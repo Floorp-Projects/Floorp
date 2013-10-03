@@ -29,3 +29,5 @@ LIBRARY_NAME = 'remoteservice'
 
 LIBXUL_LIBRARY = True
 
+EXPORT_LIBRARY = True
+

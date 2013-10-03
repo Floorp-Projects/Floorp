@@ -1433,12 +1433,7 @@ nsGlobalWindow::FreeInnerObjects()
   NotifyDOMWindowDestroyed(this);
 
   // Kill all of the workers for this window.
-  // We push a cx so that exceptions get reported in the right DOM Window.
-  {
-    nsIScriptContext *scx = GetContextInternal();
-    AutoPushJSContext cx(scx ? scx->GetNativeContext() : nsContentUtils::GetSafeJSContext());
-    mozilla::dom::workers::CancelWorkersForWindow(cx, this);
-  }
+  mozilla::dom::workers::CancelWorkersForWindow(this);
 
   // Close all offline storages for this window.
   quota::QuotaManager* quotaManager = quota::QuotaManager::Get();
@@ -3055,7 +3050,7 @@ nsGlobalWindow::PostHandleEvent(nsEventChainPostVisitor& aVisitor)
       // onload event for the frame element.
 
       nsEventStatus status = nsEventStatus_eIgnore;
-      nsEvent event(aVisitor.mEvent->mFlags.mIsTrusted, NS_LOAD);
+      WidgetEvent event(aVisitor.mEvent->mFlags.mIsTrusted, NS_LOAD);
       event.mFlags.mBubbles = false;
 
       // Most of the time we could get a pres context to pass in here,
@@ -3071,7 +3066,7 @@ nsGlobalWindow::PostHandleEvent(nsEventChainPostVisitor& aVisitor)
 }
 
 nsresult
-nsGlobalWindow::DispatchDOMEvent(nsEvent* aEvent,
+nsGlobalWindow::DispatchDOMEvent(WidgetEvent* aEvent,
                                  nsIDOMEvent* aDOMEvent,
                                  nsPresContext* aPresContext,
                                  nsEventStatus* aEventStatus)
@@ -4137,11 +4132,24 @@ nsGlobalWindow::GetInnerSize(CSSIntSize& aSize)
     return NS_OK;
   }
 
-  nsRefPtr<nsViewManager> viewManager = presShell->GetViewManager();
-  if (viewManager) {
-    viewManager->FlushDelayedResize(false);
+  /*
+   * On platforms with resolution-based zooming, the CSS viewport
+   * and visual viewport may not be the same. The inner size should
+   * be the visual viewport, but we fall back to the CSS viewport
+   * if it is not set.
+   */
+  if (presShell->IsScrollPositionClampingScrollPortSizeSet()) {
+    aSize = CSSIntRect::FromAppUnitsRounded(
+      presShell->GetScrollPositionClampingScrollPortSize());
+  } else {
+    nsRefPtr<nsViewManager> viewManager = presShell->GetViewManager();
+    if (viewManager) {
+      viewManager->FlushDelayedResize(false);
+    }
+
+    aSize = CSSIntRect::FromAppUnitsRounded(
+      presContext->GetVisibleArea().Size());
   }
-  aSize = CSSIntRect::FromAppUnitsRounded(presContext->GetVisibleArea().Size());
   return NS_OK;
 }
 
@@ -6987,7 +6995,7 @@ PostMessageEvent::Run()
     presContext = shell->GetPresContext();
 
   message->SetTrusted(mTrustedCaller);
-  nsEvent *internalEvent = message->GetInternalNSEvent();
+  WidgetEvent* internalEvent = message->GetInternalNSEvent();
 
   nsEventStatus status = nsEventStatus_eIgnore;
   nsEventDispatcher::Dispatch(static_cast<nsPIDOMWindow*>(mTargetWindow),
@@ -9877,7 +9885,7 @@ nsGlobalWindow::Observe(nsISupports* aSubject, const char* aTopic,
     event->SetTrusted(true);
 
     if (fireMozStorageChanged) {
-      nsEvent *internalEvent = event->GetInternalNSEvent();
+      WidgetEvent* internalEvent = event->GetInternalNSEvent();
       internalEvent->mFlags.mOnlyChromeDispatch = true;
     }
 
@@ -11240,12 +11248,7 @@ nsGlobalWindow::SuspendTimeouts(uint32_t aIncrease,
     DisableGamepadUpdates();
 
     // Suspend all of the workers for this window.
-    // We push a cx so that exceptions get reported in the right DOM Window.
-    {
-      nsIScriptContext *scx = GetContextInternal();
-      AutoPushJSContext cx(scx ? scx->GetNativeContext() : nsContentUtils::GetSafeJSContext());
-      mozilla::dom::workers::SuspendWorkersForWindow(cx, this);
-    }
+    mozilla::dom::workers::SuspendWorkersForWindow(this);
 
     TimeStamp now = TimeStamp::Now();
     for (nsTimeout *t = mTimeouts.getFirst(); t; t = t->getNext()) {
@@ -11334,10 +11337,7 @@ nsGlobalWindow::ResumeTimeouts(bool aThawChildren)
     }
 
     // Resume all of the workers for this window.
-    // We push a cx so that exceptions get reported in the right DOM Window.
-    nsIScriptContext *scx = GetContextInternal();
-    AutoPushJSContext cx(scx ? scx->GetNativeContext() : nsContentUtils::GetSafeJSContext());
-    mozilla::dom::workers::ResumeWorkersForWindow(scx, this);
+    mozilla::dom::workers::ResumeWorkersForWindow(this);
 
     // Restore all of the timeouts, using the stored time remaining
     // (stored in timeout->mTimeRemaining).
@@ -11774,11 +11774,11 @@ nsGlobalChromeWindow::BeginWindowMove(nsIDOMEvent *aMouseDownEvent, nsIDOMElemen
   }
 
   NS_ENSURE_TRUE(aMouseDownEvent, NS_ERROR_FAILURE);
-  nsEvent *internalEvent = aMouseDownEvent->GetInternalNSEvent();
+  WidgetEvent* internalEvent = aMouseDownEvent->GetInternalNSEvent();
   NS_ENSURE_TRUE(internalEvent &&
                  internalEvent->eventStructType == NS_MOUSE_EVENT,
                  NS_ERROR_FAILURE);
-  nsMouseEvent *mouseEvent = static_cast<nsMouseEvent*>(internalEvent);
+  WidgetMouseEvent* mouseEvent = static_cast<WidgetMouseEvent*>(internalEvent);
 
   return widget->BeginMoveDrag(mouseEvent);
 }
@@ -12130,4 +12130,3 @@ nsGlobalWindow::DisableNetworkEvent(uint32_t aType)
 #undef BEFOREUNLOAD_EVENT
 #undef ERROR_EVENT
 #undef EVENT
-

@@ -48,7 +48,7 @@ public:
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(Touch)
 
-  void InitializePoints(nsPresContext* aPresContext, nsEvent* aEvent);
+  void InitializePoints(nsPresContext* aPresContext, WidgetEvent* aEvent);
 
   void SetTarget(mozilla::dom::EventTarget* aTarget);
 

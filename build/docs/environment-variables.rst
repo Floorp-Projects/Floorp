@@ -42,3 +42,8 @@ MOZ_PSEUDO_DERECURSE
    A value of ``no-parallel-export`` activates the mode without
    optimizations to the *export* tier, which are known to be slightly
    buggy.
+
+   A value of ``no-skip`` activates the mode without optimizations to skip
+   some directories during traversal.
+
+   Values may be combined with a comma.

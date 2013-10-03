@@ -103,6 +103,9 @@ pref("dom.workers.enabled", true);
 // The number of workers per domain allowed to run concurrently.
 pref("dom.workers.maxPerDomain", 20);
 
+// Whether or not Shared Web Workers are enabled.
+pref("dom.workers.sharedWorkers.enabled", false);
+
 // Whether nonzero values can be returned from performance.timing.*
 pref("dom.enable_performance", true);
 
@@ -273,6 +276,12 @@ pref("media.video_stats.enabled", true);
 // Whether to enable the audio writing APIs on the audio element
 pref("media.audio_data.enabled", true);
 
+// Whether to lock touch scrolling to one axis at a time
+// 0 = FREE (No locking at all)
+// 1 = STANDARD (Once locked, remain locked until scrolling ends)
+// 2 = STICKY (Allow lock to be broken, with hysteresis)
+pref("apzc.axis_lock_mode", 0);
+
 #ifdef XP_MACOSX
 // Whether to run in native HiDPI mode on machines with "Retina"/HiDPI display;
 //   <= 0 : hidpi mode disabled, display will just use pixel-based upscaling
@@ -368,6 +377,10 @@ pref("gfx.content.azure.backends", "cairo");
 #endif
 #endif
 
+#ifdef MOZ_WIDGET_GTK2
+pref("gfx.content.azure.enabled", true);
+pref("gfx.content.azure.backends", "cairo");
+#endif
 #ifdef ANDROID
 pref("gfx.textures.poweroftwo.force-enabled", false);
 pref("gfx.content.azure.backends", "cairo");
@@ -4114,10 +4127,6 @@ pref("stagefright.disabled", false);
 pref("network.tcp.sendbuffer", 131072);
 #endif
 
-// Asynchonous video compositing using the ImageBridge IPDL protocol.
-// requires off-main-thread compositing.
-pref("layers.async-video.enabled",false);
-
 // Whether to disable acceleration for all widgets.
 pref("layers.acceleration.disabled", false);
 
@@ -4139,17 +4148,25 @@ pref("layers.frame-counter", false);
 // Max number of layers per container. See Overwrite in mobile prefs.
 pref("layers.max-active", -1);
 
+// Set the default values, and then override per-platform as needed
+pref("layers.offmainthreadcomposition.enabled", false);
 // Whether to use the deprecated texture architecture rather than the new one.
+pref("layers.use-deprecated-textures", true);
+// Asynchonous video compositing using the ImageBridge IPDL protocol.
+// requires off-main-thread compositing.
+pref("layers.async-video.enabled",false);
+
 #ifdef XP_MACOSX
 pref("layers.offmainthreadcomposition.enabled", true);
 pref("layers.use-deprecated-textures", false);
-#else
-#ifdef MOZ_WIDGET_GONK
-pref("layers.use-deprecated-textures", false);
-#else
-pref("layers.offmainthreadcomposition.enabled", false);
-pref("layers.use-deprecated-textures", true);
+pref("layers.async-video.enabled",true);
 #endif
+
+// ANDROID covers android and b2g
+#ifdef ANDROID
+pref("layers.offmainthreadcomposition.enabled", true);
+pref("layers.use-deprecated-textures", false);
+pref("layers.async-video.enabled",true);
 #endif
 
 // same effect as layers.offmainthreadcomposition.enabled, but specifically for
@@ -4429,6 +4446,9 @@ pref("dom.forms.inputmode", true);
 
 // InputMethods for soft keyboards in B2G
 pref("dom.mozInputMethod.enabled", false);
+
+// DataStore is disabled by default
+pref("dom.datastore.enabled", false);
 
 // Telephony API
 pref("dom.telephony.enabled", false);
