@@ -101,6 +101,11 @@ function CrossSlideHandler(aNode, aThresholds) {
     for(let key in aThresholds)
       this.thresholds[key] = aThresholds[key];
   }
+  aNode.addEventListener("touchstart", this, false);
+  aNode.addEventListener("touchmove", this, false);
+  aNode.addEventListener("touchend", this, false);
+  aNode.addEventListener("touchcancel", this, false);
+  aNode.ownerDocument.defaultView.addEventListener("scroll", this, false);
 }
 
 CrossSlideHandler.prototype = {
@@ -134,6 +139,10 @@ CrossSlideHandler.prototype = {
         break;
       case "touchmove":
         this._onTouchMove(aEvent);
+        break;
+      case "scroll":
+      case "touchcancel":
+        this.cancel(aEvent);
         break;
       case "touchend":
         this._onTouchEnd(aEvent);
