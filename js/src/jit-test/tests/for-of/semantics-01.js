@@ -7,5 +7,7 @@
 // Deleting Array.prototype.iterator makes for-of stop working on arrays.
 
 load(libdir + "asserts.js");
-delete Array.prototype.iterator;
+load(libdir + "iteration.js");
+
+delete Array.prototype[std_iterator];
 assertThrowsInstanceOf(function () { for (var x of []) ; }, TypeError);

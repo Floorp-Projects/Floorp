@@ -1,11 +1,10 @@
 // A Map iterator does not iterate over new entries added after it throws StopIteration.
 
-load(libdir + "asserts.js");
-load(libdir + "eqArrayHelper.js");
+load(libdir + "iteration.js");
 
 var map = Map();
-var iter0 = map.iterator(), iter1 = map.iterator();
-assertThrowsValue(function () { iter0.next(); }, StopIteration);  // closes iter0
+var iter0 = map[std_iterator](), iter1 = map[std_iterator]();
+assertIteratorResult(iter0.next(), undefined, true);  // closes iter0
 map.set(1, 2);
-assertThrowsValue(function () { iter0.next(); }, StopIteration);  // already closed
-assertEqArray(iter1.next(), [1, 2]);  // was not yet closed
+assertIteratorResult(iter0.next(), undefined, true);  // already closed
+assertIteratorResult(iter1.next(), [1, 2], false);  // was not yet closed
