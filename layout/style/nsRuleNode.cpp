@@ -1130,6 +1130,8 @@ static void SetStyleImage(nsStyleContext* aStyleContext,
 #define SETDSC_ENUMERATED             0x80   // E
 #define SETDSC_NONE                   0x100  // O
 #define SETDSC_SYSTEM_FONT            0x2000
+#define SETDSC_UNSET_INHERIT          0x00400000
+#define SETDSC_UNSET_INITIAL          0x00800000
 
 // no caller cares whether aField was changed or not
 template <typename FieldT,
@@ -1200,6 +1202,18 @@ SetDiscrete(const nsCSSValue& aValue, FieldT & aField,
   case eCSSUnit_System_Font:
     if (aMask & SETDSC_SYSTEM_FONT) {
       aField = aSystemFontValue;
+      return;
+    }
+    break;
+
+  case eCSSUnit_Unset:
+    if (aMask & SETDSC_UNSET_INHERIT) {
+      aCanStoreInRuleTree = false;
+      aField = aParentValue;
+      return;
+    }
+    if (aMask & SETDSC_UNSET_INITIAL) {
+      aField = aInitialValue;
       return;
     }
     break;
