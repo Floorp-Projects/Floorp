@@ -7,4 +7,3 @@ VPATH = \
   $(topsrcdir)/other-licenses/snappy/src
   $(NULL)
 
-EXPORT_LIBRARY = 1

@@ -28,3 +28,5 @@ MSVC_ENABLE_PGO = True
 
 LIBRARY_NAME = 'cookie'
 
+EXPORT_LIBRARY = True
+

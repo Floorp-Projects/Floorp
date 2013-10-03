@@ -17,3 +17,5 @@ LIBXUL_LIBRARY = True
 
 LIBRARY_NAME = 'autoconfig'
 
+EXPORT_LIBRARY = True
+

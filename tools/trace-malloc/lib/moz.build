@@ -28,3 +28,5 @@ LIBRARY_NAME = 'tracemalloc'
 
 LIBXUL_LIBRARY = True
 
+EXPORT_LIBRARY = True
+
