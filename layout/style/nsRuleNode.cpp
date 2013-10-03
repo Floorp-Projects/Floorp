@@ -8151,6 +8151,8 @@ nsRuleNode::HasAuthorSpecifiedRules(nsStyleContext* aStyleContext,
   size_t nprops = 0,
          backgroundOffset, borderOffset, paddingOffset, textShadowOffset;
 
+  // We put the reset properties the start of the nsCSSValue array....
+
   if (ruleTypeMask & NS_AUTHOR_SPECIFIED_BACKGROUND) {
     backgroundOffset = nprops;
     nprops += nsCSSProps::PropertyCountInStruct(eStyleStruct_Background);
@@ -8165,6 +8167,9 @@ nsRuleNode::HasAuthorSpecifiedRules(nsStyleContext* aStyleContext,
     paddingOffset = nprops;
     nprops += nsCSSProps::PropertyCountInStruct(eStyleStruct_Padding);
   }
+
+  // ...and the inherited properties at the end of the array.
+  size_t inheritedOffset = nprops;
 
   if (ruleTypeMask & NS_AUTHOR_SPECIFIED_TEXT_SHADOW) {
     textShadowOffset = nprops;
@@ -8312,7 +8317,8 @@ nsRuleNode::HasAuthorSpecifiedRules(nsStyleContext* aStyleContext,
             if (unit != eCSSUnit_Null &&
                 unit != eCSSUnit_Dummy &&
                 unit != eCSSUnit_DummyInherit) {
-              if (unit == eCSSUnit_Inherit) {
+              if (unit == eCSSUnit_Inherit ||
+                  (i >= inheritedOffset && unit == eCSSUnit_Unset)) {
                 haveExplicitUAInherit = true;
                 values[i]->SetDummyInheritValue();
               } else {
