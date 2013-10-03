@@ -112,6 +112,7 @@ class OmxDecoder : public OMXCodecProxy::EventListener {
   VideoFrame mVideoFrame;
   AudioFrame mAudioFrame;
   MP3FrameParser mMP3FrameParser;
+  bool mIsMp3;
 
   // Lifetime of these should be handled by OMXCodec, as long as we release
   //   them after use: see ReleaseVideoBuffer(), ReleaseAudioBuffer()
