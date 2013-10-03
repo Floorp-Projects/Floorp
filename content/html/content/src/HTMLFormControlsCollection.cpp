@@ -9,8 +9,9 @@
 #include "mozFlushType.h"
 #include "mozilla/dom/BindingUtils.h"
 #include "mozilla/dom/Element.h"
-#include "mozilla/dom/HTMLCollectionBinding.h"
+#include "mozilla/dom/HTMLFormControlsCollectionBinding.h"
 #include "mozilla/dom/HTMLFormElement.h"
+#include "mozilla/dom/UnionTypes.h"
 #include "nsGenericHTMLElement.h" // nsGenericHTMLFormElement
 #include "nsIDocument.h"
 #include "nsIDOMNode.h"
@@ -360,6 +361,28 @@ HTMLFormControlsCollection::NamedItem(JSContext* aCx, const nsAString& aName,
   return &v.toObject();
 }
 
+void
+HTMLFormControlsCollection::NamedGetter(const nsAString& aName,
+                                        bool& aFound,
+                                        Nullable<OwningNodeListOrElement>& aResult)
+{
+  nsISupports* item = NamedItemInternal(aName, true);
+  if (!item) {
+    aFound = false;
+    return;
+  }
+  aFound = true;
+  if (nsCOMPtr<Element> element = do_QueryInterface(item)) {
+    aResult.SetValue().SetAsElement() = element;
+    return;
+  }
+  if (nsCOMPtr<nsINodeList> nodelist = do_QueryInterface(item)) {
+    aResult.SetValue().SetAsNodeList() = nodelist;
+    return;
+  }
+  MOZ_ASSERT(false, "Should only have Elements and NodeLists here.");
+}
+
 static PLDHashOperator
 CollectNames(const nsAString& aName,
              nsISupports* /* unused */,
@@ -383,7 +406,7 @@ HTMLFormControlsCollection::GetSupportedNames(nsTArray<nsString>& aNames)
 HTMLFormControlsCollection::WrapObject(JSContext* aCx,
                                        JS::Handle<JSObject*> aScope)
 {
-  return HTMLCollectionBinding::Wrap(aCx, aScope, this);
+  return HTMLFormControlsCollectionBinding::Wrap(aCx, aScope, this);
 }
 
 } // namespace dom
