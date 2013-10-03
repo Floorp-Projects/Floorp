@@ -3899,56 +3899,55 @@ IonBuilder::makeInliningDecision(JSFunction *target, CallInfo &callInfo)
     JSScript *targetScript = target->nonLazyScript();
 
     // Skip heuristics if we have an explicit hint to inline.
-    if (targetScript->shouldInline)
-        return true;
+    if (!targetScript->shouldInline) {
+        // Cap the inlining depth.
+        if (IsSmallFunction(targetScript)) {
+            if (inliningDepth_ >= js_IonOptions.smallFunctionMaxInlineDepth) {
+                IonSpew(IonSpew_Inlining, "%s:%d - Vetoed: exceeding allowed inline depth",
+                        targetScript->filename(), targetScript->lineno);
+                return false;
+            }
+        } else {
+            if (inliningDepth_ >= js_IonOptions.maxInlineDepth) {
+                IonSpew(IonSpew_Inlining, "%s:%d - Vetoed: exceeding allowed inline depth",
+                        targetScript->filename(), targetScript->lineno);
+                return false;
+            }
 
-    // Cap the inlining depth.
-    if (IsSmallFunction(targetScript)) {
-        if (inliningDepth_ >= js_IonOptions.smallFunctionMaxInlineDepth) {
-            IonSpew(IonSpew_Inlining, "%s:%d - Vetoed: exceeding allowed inline depth",
-                                      targetScript->filename(), targetScript->lineno);
+            if (targetScript->hasLoops()) {
+                IonSpew(IonSpew_Inlining, "%s:%d - Vetoed: big function that contains a loop",
+                        targetScript->filename(), targetScript->lineno);
+                return false;
+            }
+        }
+
+        // Callee must not be excessively large.
+        // This heuristic also applies to the callsite as a whole.
+        if (targetScript->length > js_IonOptions.inlineMaxTotalBytecodeLength) {
+            IonSpew(IonSpew_Inlining, "%s:%d - Vetoed: callee excessively large.",
+                    targetScript->filename(), targetScript->lineno);
             return false;
         }
-    } else {
-        if (inliningDepth_ >= js_IonOptions.maxInlineDepth) {
-            IonSpew(IonSpew_Inlining, "%s:%d - Vetoed: exceeding allowed inline depth",
-                                      targetScript->filename(), targetScript->lineno);
+
+        // Caller must be... somewhat hot. Ignore use counts when inlining for
+        // the definite properties analysis, as the caller has not run yet.
+        uint32_t callerUses = script()->getUseCount();
+        if (callerUses < js_IonOptions.usesBeforeInlining() &&
+            info().executionMode() != DefinitePropertiesAnalysis)
+        {
+            IonSpew(IonSpew_Inlining, "%s:%d - Vetoed: caller is insufficiently hot.",
+                    targetScript->filename(), targetScript->lineno);
             return false;
         }
 
-        if (targetScript->hasLoops()) {
-            IonSpew(IonSpew_Inlining, "%s:%d - Vetoed: big function that contains a loop",
-                                      targetScript->filename(), targetScript->lineno);
+        // Callee must be hot relative to the caller.
+        if (targetScript->getUseCount() * js_IonOptions.inlineUseCountRatio < callerUses &&
+            info().executionMode() != DefinitePropertiesAnalysis)
+        {
+            IonSpew(IonSpew_Inlining, "%s:%d - Vetoed: callee is not hot.",
+                    targetScript->filename(), targetScript->lineno);
             return false;
         }
-     }
-
-    // Callee must not be excessively large.
-    // This heuristic also applies to the callsite as a whole.
-    if (targetScript->length > js_IonOptions.inlineMaxTotalBytecodeLength) {
-        IonSpew(IonSpew_Inlining, "%s:%d - Vetoed: callee excessively large.",
-                                  targetScript->filename(), targetScript->lineno);
-        return false;
-    }
-
-    // Caller must be... somewhat hot. Ignore use counts when inlining for
-    // the definite properties analysis, as the caller has not run yet.
-    uint32_t callerUses = script()->getUseCount();
-    if (callerUses < js_IonOptions.usesBeforeInlining() &&
-        info().executionMode() != DefinitePropertiesAnalysis)
-    {
-        IonSpew(IonSpew_Inlining, "%s:%d - Vetoed: caller is insufficiently hot.",
-                                  targetScript->filename(), targetScript->lineno);
-        return false;
-    }
-
-    // Callee must be hot relative to the caller.
-    if (targetScript->getUseCount() * js_IonOptions.inlineUseCountRatio < callerUses &&
-        info().executionMode() != DefinitePropertiesAnalysis)
-    {
-        IonSpew(IonSpew_Inlining, "%s:%d - Vetoed: callee is not hot.",
-                                  targetScript->filename(), targetScript->lineno);
-        return false;
     }
 
     JS_ASSERT(!target->hasLazyType());
