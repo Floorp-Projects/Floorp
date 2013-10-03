@@ -401,7 +401,7 @@ protected:
    * Sets up anything needed for panning. This takes us out of the "TOUCHING"
    * state and starts actually panning us.
    */
-  void StartPanning(const MultiTouchInput& aStartPoint);
+  nsEventStatus StartPanning(const MultiTouchInput& aStartPoint);
 
   /**
    * Wrapper for Axis::UpdateWithTouchAtDevicePoint(). Calls this function for
@@ -488,6 +488,11 @@ private:
     PANNING,           /* panning the frame */
     PANNING_LOCKED_X,  /* touch-start followed by move (i.e. panning with axis lock) X axis */
     PANNING_LOCKED_Y,  /* as above for Y axis */
+
+    CROSS_SLIDING_X,   /* Panning disabled while user does a horizontal gesture
+                          on a vertically-scrollable view. This used for the
+                          Windows Metro "cross-slide" gesture. */
+    CROSS_SLIDING_Y,   /* as above for Y axis */
 
     PINCHING,       /* nth touch-start, where n > 1. this mode allows pan and zoom */
     ANIMATING_ZOOM, /* animated zoom to a new rect */
