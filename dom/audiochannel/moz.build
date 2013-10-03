@@ -33,3 +33,5 @@ LIBXUL_LIBRARY = True
 
 LIBRARY_NAME = 'domaudiochannel_s'
 
+EXPORT_LIBRARY = True
+

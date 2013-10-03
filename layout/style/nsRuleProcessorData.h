@@ -18,6 +18,7 @@
 #include "nsRuleWalker.h"
 #include "nsNthIndexCache.h"
 #include "nsILoadContext.h"
+#include "nsIDocument.h"
 #include "mozilla/AutoRestore.h"
 #include "mozilla/BloomFilter.h"
 #include "mozilla/GuardObjects.h"

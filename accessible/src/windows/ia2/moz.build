@@ -45,3 +45,5 @@ LOCAL_INCLUDES += [
 
 LIBRARY_NAME = 'accessibility_toolkit_ia2_s'
 
+EXPORT_LIBRARY = True
+

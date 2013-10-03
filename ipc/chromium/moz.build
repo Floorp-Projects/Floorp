@@ -36,134 +36,134 @@ else:
         os_linux = 1
 
 CPP_SOURCES += [
-    'at_exit.cc',
-    'base_paths.cc',
-    'base_switches.cc',
-    'child_process.cc',
-    'child_process_host.cc',
-    'child_process_info.cc',
-    'child_thread.cc',
-    'chrome_counters.cc',
-    'chrome_paths.cc',
-    'chrome_switches.cc',
-    'command_line.cc',
-    'debug_flags.cc',
-    'debug_util.cc',
-    'env_vars.cc',
-    'file_path.cc',
-    'file_util.cc',
-    'histogram.cc',
-    'ipc_channel_proxy.cc',
-    'ipc_logging.cc',
-    'ipc_message.cc',
-    'ipc_sync_channel.cc',
-    'ipc_sync_message.cc',
-    'lazy_instance.cc',
-    'lock.cc',
-    'logging.cc',
-    'memory_debug.cc',
-    'message_loop.cc',
-    'message_pump_default.cc',
-    'message_router.cc',
-    'non_thread_safe.cc',
-    'notification_service.cc',
-    'path_service.cc',
-    'pickle.cc',
-    'rand_util.cc',
-    'ref_counted.cc',
-    'revocable_store.cc',
-    'scoped_temp_dir.cc',
-    'simple_thread.cc',
-    'stats_table.cc',
-    'string_piece.cc',
-    'string_util.cc',
-    'system_monitor.cc',
-    'task_queue.cc',
-    'thread.cc',
-    'thread_collision_warner.cc',
-    'time.cc',
-    'timer.cc',
-    'trace_event.cc',
-    'tracked.cc',
-    'tracked_objects.cc',
+    'src/base/at_exit.cc',
+    'src/base/base_paths.cc',
+    'src/base/base_switches.cc',
+    'src/chrome/common/child_process.cc',
+    'src/chrome/common/child_process_host.cc',
+    'src/chrome/common/child_process_info.cc',
+    'src/chrome/common/child_thread.cc',
+    'src/chrome/common/chrome_counters.cc',
+    'src/chrome/common/chrome_paths.cc',
+    'src/chrome/common/chrome_switches.cc',
+    'src/base/command_line.cc',
+    'src/chrome/common/debug_flags.cc',
+    'src/base/debug_util.cc',
+    'src/chrome/common/env_vars.cc',
+    'src/base/file_path.cc',
+    'src/base/file_util.cc',
+    'src/base/histogram.cc',
+    'src/chrome/common/ipc_channel_proxy.cc',
+    'src/chrome/common/ipc_logging.cc',
+    'src/chrome/common/ipc_message.cc',
+    'src/chrome/common/ipc_sync_channel.cc',
+    'src/chrome/common/ipc_sync_message.cc',
+    'src/base/lazy_instance.cc',
+    'src/base/lock.cc',
+    'src/base/logging.cc',
+    'src/base/memory_debug.cc',
+    'src/base/message_loop.cc',
+    'src/base/message_pump_default.cc',
+    'src/chrome/common/message_router.cc',
+    'src/base/non_thread_safe.cc',
+    'src/chrome/common/notification_service.cc',
+    'src/base/path_service.cc',
+    'src/base/pickle.cc',
+    'src/base/rand_util.cc',
+    'src/base/ref_counted.cc',
+    'src/base/revocable_store.cc',
+    'src/base/scoped_temp_dir.cc',
+    'src/base/simple_thread.cc',
+    'src/base/stats_table.cc',
+    'src/base/string_piece.cc',
+    'src/base/string_util.cc',
+    'src/base/system_monitor.cc',
+    'src/chrome/common/task_queue.cc',
+    'src/base/thread.cc',
+    'src/base/thread_collision_warner.cc',
+    'src/base/time.cc',
+    'src/base/timer.cc',
+    'src/base/trace_event.cc',
+    'src/base/tracked.cc',
+    'src/base/tracked_objects.cc',
 ]
 
 if os_win:
     CPP_SOURCES += [
-        'base_paths_win.cc',
-        'cpu.cc',
-        'condition_variable_win.cc',
-        'debug_util_win.cc',
-        'event_recorder.cc',
-        'file_util_win.cc',
-        'file_version_info.cc',
-        'lock_impl_win.cc',
-        'idle_timer.cc',
-        'message_pump_win.cc',
-        'object_watcher.cc',
-        'platform_file_win.cc',
-        'platform_thread_win.cc',
-        'process_util_win.cc',
-        'process_win.cc',
-        'rand_util_win.cc',
-        'registry.cc',
-        'shared_memory_win.cc',
-        'sys_info_win.cc',
-        'sys_string_conversions_win.cc',
-        'system_monitor_win.cc',
-        'thread_local_storage_win.cc',
-        'thread_local_win.cc',
-        'time_win.cc',
-        'waitable_event_watcher_win.cc',
-        'waitable_event_win.cc',
-        'win_util.cc',
-        'chrome_paths_win.cc',
-        'chrome_constants.cc',
-        'ipc_channel_win.cc',
-        'process_watcher_win.cc',
-        'transport_dib_win.cc',
+        'src/base/base_paths_win.cc',
+        'src/base/cpu.cc',
+        'src/base/condition_variable_win.cc',
+        'src/base/debug_util_win.cc',
+        'src/base/event_recorder.cc',
+        'src/base/file_util_win.cc',
+        'src/base/file_version_info.cc',
+        'src/base/lock_impl_win.cc',
+        'src/base/idle_timer.cc',
+        'src/base/message_pump_win.cc',
+        'src/base/object_watcher.cc',
+        'src/base/platform_file_win.cc',
+        'src/base/platform_thread_win.cc',
+        'src/base/process_util_win.cc',
+        'src/base/process_win.cc',
+        'src/base/rand_util_win.cc',
+        'src/base/registry.cc',
+        'src/base/shared_memory_win.cc',
+        'src/base/sys_info_win.cc',
+        'src/base/sys_string_conversions_win.cc',
+        'src/base/system_monitor_win.cc',
+        'src/base/thread_local_storage_win.cc',
+        'src/base/thread_local_win.cc',
+        'src/base/time_win.cc',
+        'src/base/waitable_event_watcher_win.cc',
+        'src/base/waitable_event_win.cc',
+        'src/base/win_util.cc',
+        'src/chrome/common/chrome_paths_win.cc',
+        'src/chrome/common/chrome_constants.cc',
+        'src/chrome/common/ipc_channel_win.cc',
+        'src/chrome/common/process_watcher_win.cc',
+        'src/chrome/common/transport_dib_win.cc',
     ]
 
 if os_posix:
     CPP_SOURCES += [
-        'condition_variable_posix.cc',
-        'debug_util_posix.cc',
-        'event_recorder_stubs.cc',
-        'file_descriptor_shuffle.cc',
-        'file_util_posix.cc',
-        'lock_impl_posix.cc',
-        'message_pump_libevent.cc',
-        'platform_file_posix.cc',
-        'platform_thread_posix.cc',
-        'process_posix.cc',
-        'process_util_posix.cc',
-        'rand_util_posix.cc',
-        'shared_memory_posix.cc',
-        'string16.cc',
-        'system_monitor_posix.cc',
-        'sys_info_posix.cc',
-        'thread_local_posix.cc',
-        'thread_local_storage_posix.cc',
-        'waitable_event_posix.cc',
-        'waitable_event_watcher_posix.cc',
-        'file_descriptor_set_posix.cc',
-        'ipc_channel_posix.cc',
-        'process_watcher_posix_sigchld.cc',
+        'src/base/condition_variable_posix.cc',
+        'src/base/debug_util_posix.cc',
+        'src/base/event_recorder_stubs.cc',
+        'src/base/file_descriptor_shuffle.cc',
+        'src/base/file_util_posix.cc',
+        'src/base/lock_impl_posix.cc',
+        'src/base/message_pump_libevent.cc',
+        'src/base/platform_file_posix.cc',
+        'src/base/platform_thread_posix.cc',
+        'src/base/process_posix.cc',
+        'src/base/process_util_posix.cc',
+        'src/base/rand_util_posix.cc',
+        'src/base/shared_memory_posix.cc',
+        'src/base/string16.cc',
+        'src/base/system_monitor_posix.cc',
+        'src/base/sys_info_posix.cc',
+        'src/base/thread_local_posix.cc',
+        'src/base/thread_local_storage_posix.cc',
+        'src/base/waitable_event_posix.cc',
+        'src/base/waitable_event_watcher_posix.cc',
+        'src/chrome/common/file_descriptor_set_posix.cc',
+        'src/chrome/common/ipc_channel_posix.cc',
+        'src/chrome/common/process_watcher_posix_sigchld.cc',
     ]
     if CONFIG['OS_TARGET'] == 'Android':
         CPP_SOURCES += [
-            'message_pump_android.cc',
+            'src/base/message_pump_android.cc',
         ]
 
 if os_macosx:
     CPP_SOURCES += [
-        'debug_util_mac.cc',
-        'hmac_mac.cc',
-        'idle_timer.cc',
-        'sys_info_mac.cc',
-        'time_mac.cc',
-        'mach_message_source_mac.cc',
-        'transport_dib_mac.cc',
+        'src/base/debug_util_mac.cc',
+        'src/base/hmac_mac.cc',
+        'src/base/idle_timer.cc',
+        'src/base/sys_info_mac.cc',
+        'src/base/time_mac.cc',
+        'src/chrome/common/mach_message_source_mac.cc',
+        'src/chrome/common/transport_dib_mac.cc',
     ]
     CMMSRCS += [
         'base_paths_mac.mm',
@@ -183,54 +183,60 @@ if os_macosx:
 
 if os_linux:
     CPP_SOURCES += [
-        'atomicops_internals_x86_gcc.cc',
-        'base_paths_linux.cc',
-        'file_version_info_linux.cc',
-        'idle_timer_none.cc',
-        'process_util_linux.cc',
-        'time_posix.cc',
+        'src/base/atomicops_internals_x86_gcc.cc',
+        'src/base/base_paths_linux.cc',
+        'src/base/file_version_info_linux.cc',
+        'src/base/idle_timer_none.cc',
+        'src/base/process_util_linux.cc',
+        'src/base/time_posix.cc',
     ]
     if CONFIG['MOZ_WIDGET_GTK']:
         CPP_SOURCES += [
-            'message_pump_glib.cc',
+            'src/base/message_pump_glib.cc',
         ]
     if CONFIG['MOZ_ENABLE_QT']:
         CPP_SOURCES += [
-            'moc_message_pump_qt.cc',
-            'message_pump_qt.cc',
+            'src/base/moc_message_pump_qt.cc',
+            'src/base/message_pump_qt.cc',
         ]
 
 if os_bsd:
     CPP_SOURCES += [
-        'atomicops_internals_x86_gcc.cc',
-        'time_posix.cc',
+        'src/base/atomicops_internals_x86_gcc.cc',
+        'src/base/time_posix.cc',
     ]
     if CONFIG['OS_ARCH'] == 'GNU_kFreeBSD':
-        CPP_SOURCES += ['process_util_linux.cc']
+        CPP_SOURCES += [
+            'src/base/process_util_linux.cc'
+        ]
     else:
-        CPP_SOURCES += ['process_util_bsd.cc']
+        CPP_SOURCES += [
+            'src/base/process_util_bsd.cc'
+        ]
     if CONFIG['MOZ_WIDGET_GTK']:
         CPP_SOURCES += [
-            'message_pump_glib.cc',
+            'src/base/message_pump_glib.cc',
         ]
     if CONFIG['MOZ_ENABLE_QT']:
         CPP_SOURCES += [
-            'moc_message_pump_qt.cc',
-            'message_pump_qt.cc',
+            'src/base/moc_message_pump_qt.cc',
+            'src/base/message_pump_qt.cc',
         ]
 
 if CONFIG['_MSC_VER']:
     CPP_SOURCES += [
-        'debug_on_start.cc',
+        'src/base/debug_on_start.cc',
     ]
 
 ost = CONFIG['OS_TEST']
 if ost.find('86') == -1 and ost.find('arm') == -1 and ost.find('mips') == -1:
     CPP_SOURCES += [
-        'atomicops_internals_mutex.cc',
+        'src/base/atomicops_internals_mutex.cc',
     ]
 
 LIBXUL_LIBRARY = True
 
 LIBRARY_NAME = 'chromium_s'
+
+EXPORT_LIBRARY = True
 

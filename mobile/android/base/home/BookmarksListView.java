@@ -62,17 +62,6 @@ public class BookmarksListView extends HomeListView
 
     @Override
     public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-        final ListView list = (ListView) parent;
-        final int headerCount = list.getHeaderViewsCount();
-
-        if (position < headerCount) {
-            // The click is on a header, don't do anything.
-            return;
-        }
-
-        // Absolute position for the adapter.
-        position -= headerCount;
-
         final BookmarksListAdapter adapter = getBookmarksListAdapter();
         if (adapter.isShowingChildFolder()) {
             if (position == 0) {

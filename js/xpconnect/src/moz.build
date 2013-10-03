@@ -16,8 +16,6 @@ EXPORTS += [
 ]
 
 CPP_SOURCES += [
-    'DictionaryHelpers.cpp',
-    'GeneratedEvents.cpp',
     'XPCCallContext.cpp',
     'XPCComponents.cpp',
     'XPCContext.cpp',
@@ -46,7 +44,6 @@ CPP_SOURCES += [
     'XPCWrappedNativeProto.cpp',
     'XPCWrappedNativeScope.cpp',
     'XPCWrapper.cpp',
-    'dom_quickstubs.cpp',
     'nsCxPusher.cpp',
     'nsScriptError.cpp',
     'nsXPConnect.cpp',

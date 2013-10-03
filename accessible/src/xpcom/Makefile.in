@@ -9,6 +9,8 @@ xpcaccevents_FILES := xpcAccEvents.h
 xpcaccevents_DEST = $(DIST)/include
 xpcaccevents_TARGET := export
 
+CPPSRCS += xpcAccEvents.cpp
+
 include $(topsrcdir)/config/rules.mk
 
 ifneq ($(A11Y_LOG),0)

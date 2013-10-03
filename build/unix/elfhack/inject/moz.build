@@ -5,16 +5,3 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 NO_DIST_INSTALL = True
-
-
-if CONFIG['TARGET_CPU'].endswith('86'):
-    cpu = 'x86'
-elif CONFIG['TARGET_CPU'].startswith('arm'):
-    cpu = 'arm'
-else:
-    cpu = CONFIG['TARGET_CPU']
-
-CSRCS += [
-    "%s-noinit.c" % (cpu),
-    "%s.c" % (cpu),
-]

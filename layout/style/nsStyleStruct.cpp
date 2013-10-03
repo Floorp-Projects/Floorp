@@ -28,6 +28,7 @@
 
 #include "mozilla/Likely.h"
 #include "nsIURI.h"
+#include "nsIDocument.h"
 #include <algorithm>
 
 static_assert((((1 << nsStyleStructID_Length) - 1) &
