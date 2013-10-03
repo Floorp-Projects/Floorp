@@ -12,18 +12,6 @@
       <html:span style="display: none;"><children/></html:span>
     </content>
 
-    <implementation implements="nsIObserver">
-      <method name="observe">
-        <parameter name="aSubject"/>
-        <parameter name="aTopic"/>
-        <parameter name="aData"/>
-        <body>
-          if (aTopic == "prettyprint-dom-created")
-            document.getAnonymousNodes(this).item(0).appendChild(aSubject);
-        </body>
-      </method>
-    </implementation>
-
     <handlers>
       <handler event="click" button="0">
       <![CDATA[
@@ -42,6 +30,11 @@
         } catch (e) {
         }
       ]]>
+      </handler>
+      <handler event="prettyprint-dom-created" allowuntrusted="false">
+        <![CDATA[
+          document.getAnonymousNodes(this).item(0).appendChild(event.detail);
+        ]]>
       </handler>
     </handlers>
 
