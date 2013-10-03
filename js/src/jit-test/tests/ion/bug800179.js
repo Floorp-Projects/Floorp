@@ -1,4 +1,5 @@
-// |jit-test| error: is not iterable
+// |jit-test| error: TypeError
+
 try {
     x = []
     y = function() {}
