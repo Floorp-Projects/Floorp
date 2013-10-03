@@ -104,6 +104,16 @@ GonkDisplayJB::GonkDisplayJB()
     ALOGW_IF(err, "Couldn't load %s module (%s)", POWER_HARDWARE_MODULE_ID, strerror(-err));
 
     mAlloc = new GraphicBufferAlloc();
+
+    status_t error;
+    uint32_t usage = GRALLOC_USAGE_HW_FB | GRALLOC_USAGE_HW_RENDER | GRALLOC_USAGE_HW_COMPOSER;
+    mBootAnimBuffer = mAlloc->createGraphicBuffer(mWidth, mHeight, surfaceformat, usage, &error);
+    if (error != NO_ERROR || !mBootAnimBuffer.get()) {
+        ALOGI("Trying to create BRGA format framebuffer");
+        surfaceformat = HAL_PIXEL_FORMAT_BGRA_8888;
+        mBootAnimBuffer = mAlloc->createGraphicBuffer(mWidth, mHeight, surfaceformat, usage, &error);
+    }
+
     mFBSurface = new FramebufferSurface(0, mWidth, mHeight, surfaceformat, mAlloc);
 
 #if ANDROID_VERSION == 17
@@ -117,11 +127,10 @@ GonkDisplayJB::GonkDisplayJB()
     if (mHwc)
         mHwc->blank(mHwc, HWC_DISPLAY_PRIMARY, 0);
 
-    status_t error;
-    mBootAnimBuffer = mAlloc->createGraphicBuffer(mWidth, mHeight, surfaceformat, GRALLOC_USAGE_HW_FB | GRALLOC_USAGE_HW_RENDER | GRALLOC_USAGE_HW_COMPOSER, &error);
-    if (error == NO_ERROR && mBootAnimBuffer.get())
+    if (error == NO_ERROR && mBootAnimBuffer.get()) {
+        ALOGI("Starting bootanimation with (%d) format framebuffer", surfaceformat);
         StartBootAnimation();
-    else
+    } else
         ALOGW("Couldn't show bootanimation (%s)", strerror(-error));
 }
 
