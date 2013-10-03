@@ -324,75 +324,44 @@ RTCPeerConnection.prototype = {
   },
 
   /**
-   * Constraints look like this:
+   * MediaConstraints look like this:
    *
    * {
    *   mandatory: {"OfferToReceiveAudio": true, "OfferToReceiveVideo": true },
    *   optional: [{"VoiceActivityDetection": true}, {"FooBar": 10}]
    * }
    *
-   * We check for basic structure of constraints and the validity of
-   * mandatory constraints against those we support (fail if we don't).
-   * Unknown optional constraints may be of any type.
+   * WebIDL normalizes the top structure for us, but the mandatory constraints
+   * member comes in as a raw object so we can detect unknown constraints.
+   * We compare its members against ones we support, and fail if not found.
    */
   _mustValidateConstraints: function(constraints, errorMsg) {
-    function isObject(obj) {
-      return obj && (typeof obj === "object");
-    }
-    function isArraylike(obj) {
-      return isObject(obj) && ("length" in obj);
-    }
-    const SUPPORTED_CONSTRAINTS = {
-      OfferToReceiveAudio:1,
-      OfferToReceiveVideo:1,
-      MozDontOfferDataChannel:1
-    };
-    const OTHER_KNOWN_CONSTRAINTS = {
-      VoiceActivityDetection:1,
-      IceTransports:1,
-      RequestIdentity:1
-    };
-    // Parse-aid: Testing for pilot error of missing outer block avoids
-    // otherwise silent no-op since both mandatory and optional are optional
-    if (!isObject(constraints) || Array.isArray(constraints)) {
-      throw new this._win.DOMError("", errorMsg);
-    }
     if (constraints.mandatory) {
-      // Testing for pilot error of using [] on mandatory here throws nicer msg
-      // (arrays would throw in loop below regardless but with more cryptic msg)
-      if (!isObject(constraints.mandatory) || Array.isArray(constraints.mandatory)) {
-        throw new this._win.DOMError("",
-            errorMsg + " - malformed mandatory constraints");
+      let supported;
+      try {
+        // Passing the raw constraints.mandatory here validates its structure
+        supported = this._observer.getSupportedConstraints(constraints.mandatory);
+      } catch (e) {
+        throw new this._win.DOMError("", errorMsg + " - " + e.message);
       }
-      for (let constraint in constraints.mandatory) {
-        if (!(constraint in SUPPORTED_CONSTRAINTS) &&
-            constraints.mandatory.hasOwnProperty(constraint)) {
-          throw new this._win.DOMError("", errorMsg + " - " +
-              ((constraint in OTHER_KNOWN_CONSTRAINTS)? "unsupported" : "unknown") +
-              " mandatory constraint: " + constraint);
+
+      for (let constraint of Object.keys(constraints.mandatory)) {
+        if (!(constraint in supported)) {
+          throw new this._win.DOMError("",
+              errorMsg + " - unsupported mandatory constraint: " + constraint);
         }
       }
     }
     if (constraints.optional) {
-      if (!isArraylike(constraints.optional)) {
-        throw new this._win.DOMError("",
-            errorMsg + " - malformed optional constraint array");
-      }
       let len = constraints.optional.length;
-      for (let i = 0; i < len; i += 1) {
-        if (!isObject(constraints.optional[i])) {
-          throw new this._win.DOMError("", errorMsg +
-              " - malformed optional constraint: " + constraints.optional[i]);
-        }
+      for (let i = 0; i < len; i++) {
         let constraints_per_entry = 0;
-        for (let constraint in constraints.optional[i]) {
-          if (constraints.optional[i].hasOwnProperty(constraint)) {
-            if (constraints_per_entry) {
-              throw new this._win.DOMError("", errorMsg +
-                  " - optional constraint must be single key/value pair");
-            }
-            constraints_per_entry += 1;
+        for (let constraint in Object.keys(constraints.optional[i])) {
+          if (constraints_per_entry) {
+            throw new this._win.DOMError("", errorMsg +
+                " - optional constraint must be single key/value pair");
           }
+          constraints_per_entry += 1;
         }
       }
     }
@@ -1106,6 +1075,14 @@ PeerConnectionObserver.prototype = {
 
   notifyClosedConnection: function() {
     this.dispatchEvent(new this._dompc._win.Event("closedconnection"));
+  },
+
+  getSupportedConstraints: function(dict) {
+// TODO: Once Bug 917328 makes this a webidl object, we just return our arg
+//    return dict;
+    return { "OfferToReceiveAudio":true,
+             "OfferToReceiveVideo":true,
+             "MozDontOfferDataChannel":true };
   }
 };
 
