@@ -29,6 +29,10 @@ LOCAL_INCLUDES += \
   -I$(topsrcdir)/dom/bindings \
   $(NULL)
 
+CPPSRCS += \
+  $(subst .webidl,Binding.cpp,$(test_webidl_files)) \
+  $(subst .webidl,Binding.cpp,$(preprocessed_test_webidl_files)) \
+  $(NULL)
 
 # If you change bindinggen_dependencies here, change it in
 # dom/bindings/Makefile.in too.  But note that we include ../Makefile

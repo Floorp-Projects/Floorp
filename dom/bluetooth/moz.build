@@ -33,9 +33,9 @@ if CONFIG['MOZ_B2G_BT']:
         'BluetoothReplyRunnable.cpp',
         'BluetoothPropertyContainer.cpp',
         'BluetoothUtils.cpp',
-        'BluetoothChild.cpp',
-        'BluetoothParent.cpp',
-        'BluetoothServiceChildProcess.cpp',
+        'ipc/BluetoothChild.cpp',
+        'ipc/BluetoothParent.cpp',
+        'ipc/BluetoothServiceChildProcess.cpp',
         'BluetoothUnixSocketConnector.cpp',
         'BluetoothA2dpManager.cpp',
         'BluetoothHfpManager.cpp',
@@ -54,13 +54,13 @@ if CONFIG['MOZ_B2G_BT']:
 
     if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'gonk':
         CPP_SOURCES += [
-            'BluetoothDBusService.cpp',
-            'BluetoothGonkService.cpp',
+            'linux/BluetoothDBusService.cpp',
+            'gonk/BluetoothGonkService.cpp',
         ]
     else:
         if CONFIG['MOZ_ENABLE_DBUS']:
             CPP_SOURCES += [
-                'BluetoothDBusService.cpp',
+                'linux/BluetoothDBusService.cpp',
             ]
 
 EXPORTS.mozilla.dom.bluetooth.ipc += [

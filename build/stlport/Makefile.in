@@ -12,6 +12,7 @@ LIBRARY = $(LIB_PREFIX)$(LIBRARY_NAME).$(LIB_SUFFIX)
 
 VPATH += $(srcdir)/src
 
+CPPSRCS += $(notdir $(wildcard $(srcdir)/src/*.cpp))
 CSRCS = $(notdir $(wildcard $(srcdir)/src/*.c))
 
 include $(topsrcdir)/config/rules.mk
