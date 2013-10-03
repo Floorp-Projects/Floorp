@@ -411,7 +411,7 @@ ShadowLayerForwarder::RemoveTexture(CompositableClient* aCompositable,
   mTxn->AddEdit(OpRemoveTexture(nullptr, aCompositable->GetIPDLActor(),
                                 aTexture,
                                 aFlags));
-  if (!(aFlags & TEXTURE_DEALLOCATE_HOST)) {
+  if (aFlags & TEXTURE_DEALLOCATE_CLIENT) {
     mTxn->MarkSyncTransaction();
   }
 }

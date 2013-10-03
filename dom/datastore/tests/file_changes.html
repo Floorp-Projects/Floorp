@@ -1,0 +1,135 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Test for DataStore - basic operation on a readonly db</title>
+</head>
+<body>
+<p id="display"></p>
+<div id="content" style="display: none">
+
+</div>
+<pre id="test">
+  <script type="application/javascript;version=1.7">
+
+  var gStore;
+  var gChangeId = null;
+  var gChangeOperation = null;
+
+  function is(a, b, msg) {
+    alert((a === b ? 'OK' : 'KO') + ' ' + msg)
+  }
+
+  function ok(a, msg) {
+    alert((a ? 'OK' : 'KO')+ ' ' + msg)
+  }
+
+  function cbError() {
+    alert('KO error');
+  }
+
+  function finish() {
+    alert('DONE');
+  }
+
+  function testGetDataStores() {
+    navigator.getDataStores('foo').then(function(stores) {
+      is(stores.length, 1, "getDataStores('foo') returns 1 element");
+      is(stores[0].name, 'foo', 'The dataStore.name is foo');
+      is(stores[0].readOnly, false, 'The dataStore foo is not in readonly');
+
+      gStore = stores[0];
+      runTest();
+    }, cbError);
+  }
+
+  function testStoreAdd(value, expectedId) {
+    gStore.add(value).then(function(id) {
+      is(id, expectedId, "store.add() is called");
+    }, cbError);
+  }
+
+  function testStoreUpdate(id, value) {
+    gStore.update(id, value).then(function(retId) {
+      is(id, retId, "store.update() is called with the right id");
+    }, cbError);
+  }
+
+  function testStoreRemove(id, expectedSuccess) {
+    gStore.remove(id).then(function(success) {
+      is(success, expectedSuccess, "store.remove() returns the right value");
+    }, cbError);
+  }
+
+  function eventListener(evt) {
+    ok(evt, "OnChangeListener is called with data");
+    is(/[0-9a-zA-Z]{8}-[0-9a-zA-Z]{4}-[0-9a-zA-Z]{4}-[0-9a-zA-Z]{4}-[0-9a-zA-Z]{12}/.test(evt.revisionId), true, "event.revisionId returns something");
+    is(evt.id, gChangeId, "OnChangeListener is called with the right ID: " + evt.id);
+    is(evt.operation, gChangeOperation, "OnChangeListener is called with the right operation:" + evt.operation + " " + gChangeOperation);
+    runTest();
+  }
+
+  var tests = [
+    // Test for GetDataStore
+    testGetDataStores,
+
+    // Add onchange = function
+    function() {
+      gStore.onchange = eventListener;
+      is(gStore.onchange, eventListener, "onChange is set");
+      runTest();
+    },
+
+    // Add
+    function() { gChangeId = 1; gChangeOperation = 'added';
+                 testStoreAdd({ number: 42 }, 1); },
+
+    // Update
+    function() { gChangeId = 1; gChangeOperation = 'updated';
+                 testStoreUpdate(1, { number: 43 }); },
+
+    // Remove
+    function() { gChangeId = 1; gChangeOperation = 'removed';
+                 testStoreRemove(1, true); },
+
+    // Remove onchange function and replace it with addEventListener
+    function() {
+      gStore.onchange = null;
+      gStore.addEventListener('change', eventListener);
+      runTest();
+    },
+
+    // Add
+    function() { gChangeId = 2; gChangeOperation = 'added';
+                 testStoreAdd({ number: 42 }, 2); },
+
+    // Update
+    function() { gChangeId = 2; gChangeOperation = 'updated';
+                 testStoreUpdate(2, { number: 43 }); },
+
+    // Remove
+    function() { gChangeId = 2; gChangeOperation = 'removed';
+                 testStoreRemove(2, true); },
+
+    // Remove event listener
+    function() {
+      gStore.removeEventListener('change', eventListener);
+      runTest();
+    },
+  ];
+
+  function runTest() {
+    if (!tests.length) {
+      finish();
+      return;
+    }
+
+    var test = tests.shift();
+    test();
+  }
+
+  runTest();
+  </script>
+</pre>
+</body>
+</html>

@@ -20,6 +20,7 @@
 #include "nsCSSPseudoElements.h"
 #include "nsIAnonymousContentCreator.h"
 #include "nsFrameManager.h"
+#include "nsIDocument.h"
 
 struct nsFrameItems;
 struct nsAbsoluteItems;

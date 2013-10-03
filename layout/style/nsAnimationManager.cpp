@@ -15,6 +15,7 @@
 #include "nsEventDispatcher.h"
 #include "nsLayoutUtils.h"
 #include "nsIFrame.h"
+#include "nsIDocument.h"
 #include <math.h>
 
 using namespace mozilla;
