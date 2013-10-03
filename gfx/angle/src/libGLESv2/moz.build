@@ -8,7 +8,7 @@ MODULE = 'libglesv2'
 
 # Target: 'preprocessor'
 # src/compiler/preprocessor:
-CPP_SOURCES += [
+CPP_SOURCES += ['../compiler/preprocessor/' + src for src in [
     'DiagnosticsBase.cpp',
     'DirectiveHandlerBase.cpp',
     'DirectiveParser.cpp',
@@ -20,13 +20,13 @@ CPP_SOURCES += [
     'Preprocessor.cpp',
     'Token.cpp',
     'Tokenizer.cpp',
-]
+]]
 
 
 # Target: 'translator_common'
 #   Requires: 'preprocessor'
 # src/compiler:
-CPP_SOURCES += [
+CPP_SOURCES += ['../compiler/' + src for src in [
     'BuiltInFunctionEmulator.cpp',
     'Compiler.cpp',
     'compiler_debug.cpp',
@@ -55,46 +55,46 @@ CPP_SOURCES += [
     'ValidateLimitations.cpp',
     'VariableInfo.cpp',
     'VariablePacker.cpp',
-]
+]]
 
 # src/compiler/depgraph:
-CPP_SOURCES += [
+CPP_SOURCES += ['../compiler/depgraph/' + src for src in [
     'DependencyGraph.cpp',
     'DependencyGraphBuilder.cpp',
     'DependencyGraphOutput.cpp',
     'DependencyGraphTraverse.cpp',
-]
+]]
 
 # src/compiler/timing:
-CPP_SOURCES += [
+CPP_SOURCES += ['../compiler/timing/' + src for src in [
     'RestrictFragmentShaderTiming.cpp',
     'RestrictVertexShaderTiming.cpp',
-]
+]]
 
 # src/third_party/compiler:
-CPP_SOURCES += [
+CPP_SOURCES += ['../third_party/compiler/' + src for src in [
     'ArrayBoundsClamper.cpp',
-]
+]]
 
 # src/third_party/murmurhash:
-CPP_SOURCES += [
+CPP_SOURCES += ['../third_party/murmurhash/' + src for src in [
     'MurmurHash3.cpp',
-]
+]]
 
 if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'windows':
     CPP_SOURCES += [
-        'ossource_win.cpp',
+        '../compiler/ossource_win.cpp',
     ]
 else:
     CPP_SOURCES += [
-        'ossource_posix.cpp',
+        '../compiler/ossource_posix.cpp',
     ]
 
 
 # Target: 'translator_hlsl'
 #   Requires: 'translator_common'
 # src/compiler:
-CPP_SOURCES += [
+CPP_SOURCES += ['../compiler/' + src for src in [
     'ShaderLang.cpp',
     'DetectDiscontinuity.cpp',
     'CodeGenHLSL.cpp',
@@ -102,16 +102,16 @@ CPP_SOURCES += [
     'TranslatorHLSL.cpp',
     'UnfoldShortCircuit.cpp',
     'SearchSymbol.cpp',
-]
+]]
 
 
 # Target: 'libGLESv2'
 #   Requires: 'translator_hlsl'
 # src/common:
-CPP_SOURCES += [
+CPP_SOURCES += ['../common/' + src for src in [
     'debug.cpp',
     'RefCountObject.cpp',
-]
+]]
 
 # src/libGLESv2:
 CPP_SOURCES += [
@@ -136,7 +136,7 @@ CPP_SOURCES += [
 ]
 
 # src/libGLESv2/renderer:
-CPP_SOURCES += [
+CPP_SOURCES += ['renderer/' + src for src in [
     'Blit.cpp',
     'BufferStorage.cpp',
     'BufferStorage9.cpp',
@@ -175,6 +175,6 @@ CPP_SOURCES += [
     'VertexBuffer11.cpp',
     'VertexDataManager.cpp',
     'VertexDeclarationCache.cpp',
-]
+]]
 
 LIBRARY_NAME = 'libGLESv2'

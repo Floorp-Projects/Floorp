@@ -14,3 +14,5 @@ LIBRARY_NAME = 'windowsproxy'
 
 LIBXUL_LIBRARY = True
 
+EXPORT_LIBRARY = True
+

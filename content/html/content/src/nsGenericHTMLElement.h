@@ -17,6 +17,7 @@
 #include "nsIDOMHTMLMenuElement.h"
 #include "mozilla/dom/DOMRect.h"
 #include "mozilla/dom/ValidityState.h"
+#include "mozilla/dom/ElementInlines.h"
 
 class nsIDOMAttr;
 class nsIDOMEventListener;

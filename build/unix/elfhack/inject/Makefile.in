@@ -16,6 +16,11 @@ CPU := $(TARGET_CPU)
 endif
 endif
 
+CSRCS := \
+  $(CPU).c \
+  $(CPU)-noinit.c \
+  $(NULL)
+
 include $(topsrcdir)/config/rules.mk
 
 export:: $(CSRCS:.c=.$(OBJ_SUFFIX))

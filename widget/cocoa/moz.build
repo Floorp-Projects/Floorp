@@ -68,3 +68,6 @@ if CONFIG['TARGET_CPU'] == 'x86_64':
     CMMSRCS += [
         'ComplexTextInputPanel.mm',
     ]
+
+EXPORT_LIBRARY = True
+

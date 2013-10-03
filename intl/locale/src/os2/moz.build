@@ -17,3 +17,5 @@ LIBRARY_NAME = 'platlocale_s'
 
 LIBXUL_LIBRARY = True
 
+EXPORT_LIBRARY = True
+

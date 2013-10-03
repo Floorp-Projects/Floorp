@@ -6,10 +6,6 @@
 
 
 
-EXPORT_LIBRARY = 1
-
-# REQUIRES	= java js
-
 ifdef JS_THREADSAFE
 DEFINES         += -DJS_THREADSAFE
 endif

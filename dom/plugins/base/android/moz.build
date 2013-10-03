@@ -31,3 +31,5 @@ LIBXUL_LIBRARY = True
 
 LIBRARY_NAME = 'gkpluginandroid_s'
 
+EXPORT_LIBRARY = True
+

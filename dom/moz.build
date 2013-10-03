@@ -46,6 +46,7 @@ PARALLEL_DIRS += [
     'contacts',
     'phonenumberutils',
     'alarm',
+    'datastore',
     'devicestorage',
     'encoding',
     'file',

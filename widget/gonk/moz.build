@@ -23,7 +23,7 @@ EXPORTS += [
 DIRS += ['libdisplay', 'nativewindow']
 
 # libui files
-CPP_SOURCES += [
+CPP_SOURCES += ['libui/' + src for src in [
     'EventHub.cpp',
     'Input.cpp',
     'InputApplication.cpp',
@@ -42,7 +42,7 @@ CPP_SOURCES += [
     'VelocityControl.cpp',
     'VelocityTracker.cpp',
     'VirtualKeyMap.cpp',
-]
+]]
 
 CPP_SOURCES += [
     'Framebuffer.cpp',
@@ -62,4 +62,6 @@ CPP_SOURCES += [
 LIBXUL_LIBRARY = True
 
 LIBRARY_NAME = 'widget_gonk'
+
+EXPORT_LIBRARY = True
 
