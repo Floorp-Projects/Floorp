@@ -17,6 +17,7 @@
 
 #include "AccessCheck.h"
 #include "jsfriendapi.h"
+#include "js/OldDebugAPI.h"
 #include "nsIDOMGlobalPropertyInitializer.h"
 #include "nsIXPConnect.h"
 #include "WrapperFactory.h"
@@ -216,6 +217,10 @@ ErrorResult::ReportJSExceptionFromJSImplementation(JSContext* aCx)
   errorReport.errorNumber = JSMSG_USER_DEFINED_ERROR;
   errorReport.ucmessage = message.get();
   errorReport.exnType = JSEXN_ERR;
+  JS::Rooted<JSScript*> script(aCx);
+  if (JS_DescribeScriptedCaller(aCx, &script, &errorReport.lineno)) {
+    errorReport.filename = JS_GetScriptFilename(aCx, script);
+  }
   JS_ThrowReportedError(aCx, nullptr, &errorReport);
   JS_RemoveValueRoot(aCx, &mJSException);
   
