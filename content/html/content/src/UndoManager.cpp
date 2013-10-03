@@ -18,6 +18,7 @@
 #include "nsEventDispatcher.h"
 #include "nsContentUtils.h"
 #include "jsapi.h"
+#include "nsIDocument.h"
 
 #include "mozilla/Preferences.h"
 #include "mozilla/ErrorResult.h"

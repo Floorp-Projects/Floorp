@@ -23,7 +23,6 @@
 #include "nsIWindowProvider.h"
 #include "nsIDOMWindow.h"
 #include "nsIDocShell.h"
-#include "nsIDocument.h"
 #include "nsIInterfaceRequestorUtils.h"
 #include "nsFrameMessageManager.h"
 #include "nsIWebProgressListener.h"
@@ -354,17 +353,7 @@ public:
       return static_cast<TabChild*>(tc.get());
     }
 
-    static inline TabChild*
-    GetFrom(nsIPresShell* aPresShell)
-    {
-      nsIDocument* doc = aPresShell->GetDocument();
-      if (!doc) {
-          return nullptr;
-      }
-      nsCOMPtr<nsISupports> container = doc->GetContainer();
-      nsCOMPtr<nsIDocShell> docShell(do_QueryInterface(container));
-      return GetFrom(docShell);
-    }
+    static TabChild* GetFrom(nsIPresShell* aPresShell);
 
     static inline TabChild*
     GetFrom(nsIDOMWindow* aWindow)

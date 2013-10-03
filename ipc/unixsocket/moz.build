@@ -20,3 +20,5 @@ LIBXUL_LIBRARY = True
 
 LIBRARY_NAME = 'mozipcunixsocket_s'
 
+EXPORT_LIBRARY = True
+
