@@ -1900,6 +1900,9 @@ pref("layout.css.osx-font-smoothing.enabled", true);
 pref("layout.css.osx-font-smoothing.enabled", false);
 #endif
 
+// Is support for the CSS-wide "unset" value enabled?
+pref("layout.css.unset-value.enabled", true);
+
 // pref for which side vertical scrollbars should be on
 // 0 = end-side in UI direction
 // 1 = end-side in document/content direction
