@@ -859,6 +859,12 @@ Declaration::GetValue(nsCSSProperty aProperty, nsAString& aValue) const
       AppendValueToString(subprops[0], aValue);
       break;
     }
+    case eCSSProperty_all:
+      // If we got here, then we didn't have all "inherit" or "initial" or
+      // "unset" values for all of the longhand property components of 'all'.
+      // There is no other possible value that is valid for all properties,
+      // so serialize as the empty string.
+      break;
     default:
       NS_ABORT_IF_FALSE(false, "no other shorthands");
       break;
