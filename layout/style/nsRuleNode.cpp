@@ -1229,6 +1229,8 @@ SetDiscrete(const nsCSSValue& aValue, FieldT & aField,
 #define SETFCT_POSITIVE 0x01        // assert value is >= 0.0f
 #define SETFCT_OPACITY  0x02        // clamp value to [0.0f .. 1.0f]
 #define SETFCT_NONE     0x04        // allow _None (uses aInitialValue).
+#define SETFCT_UNSET_INHERIT  0x00400000
+#define SETFCT_UNSET_INITIAL  0x00800000
 
 static void
 SetFactor(const nsCSSValue& aValue, float& aField, bool& aCanStoreInRuleTree,
@@ -1264,6 +1266,18 @@ SetFactor(const nsCSSValue& aValue, float& aField, bool& aCanStoreInRuleTree,
 
   case eCSSUnit_None:
     if (aFlags & SETFCT_NONE) {
+      aField = aInitialValue;
+      return;
+    }
+    break;
+
+  case eCSSUnit_Unset:
+    if (aFlags & SETFCT_UNSET_INHERIT) {
+      aCanStoreInRuleTree = false;
+      aField = aParentValue;
+      return;
+    }
+    if (aFlags & SETFCT_UNSET_INITIAL) {
       aField = aInitialValue;
       return;
     }
