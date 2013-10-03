@@ -3,7 +3,7 @@
 <!--
 -->
 <head>
-  <title>Test for computation of CSS 'inherit'</title>
+  <title>Test for computation of CSS 'inherit' on all properties and 'unset' on inherited properties</title>
   <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
   <script type="text/javascript" src="property_database.js"></script>
   <style type="text/css" id="stylesheet"></style>
@@ -19,7 +19,8 @@
 <pre id="test">
 <script class="testbody" type="text/javascript">
 
-/** Test for computation of CSS 'inherit' **/
+/** Test for computation of CSS 'inherit' on all properties and 'unset' on
+    inherited properties **/
 
 // elements without a frame
 var gNParent = document.getElementById("nparent");
@@ -35,6 +36,8 @@ var gChildRule3 = gStyleSheet.cssRules[gStyleSheet.insertRule("#nchild.allother,
 var gChildRuleTop = gStyleSheet.cssRules[gStyleSheet.insertRule("#nchild, #nchild.allother, #fchild, #fchild.allother {}", gStyleSheet.cssRules.length)];
 var gParentRuleTop = gStyleSheet.cssRules[gStyleSheet.insertRule("#nparent, #fparent {}", gStyleSheet.cssRules.length)];
 
+var gTestUnset = SpecialPowers.getBoolPref("layout.css.unset-value.enabled");
+
 function get_computed_value_node(node, property)
 {
   var cs = getComputedStyle(node, "");
@@ -47,95 +50,101 @@ function test_property(property)
   if (info.backend_only)
     return;
 
-  if ("prerequisites" in info) {
-    var prereqs = info.prerequisites;
-    for (var prereq in prereqs) {
-      gParentRuleTop.style.setProperty(prereq, prereqs[prereq], "");
-      gChildRuleTop.style.setProperty(prereq, prereqs[prereq], "");
-    }
-  }
+  var keywords = ["inherit"];
+  if (info.inherited && gTestUnset)
+    keywords.push("unset");
 
-  if (info.inherited) {
-    gParentRuleTop.style.setProperty(property, info.initial_values[0], "");
-    var initial_computed_n = get_computed_value_node(gNChild, property);
-    var initial_computed_f = get_computed_value_node(gFChild, property);
-    gChildRule1.style.setProperty(property, info.other_values[0], "");
-    var other_computed_n = get_computed_value_node(gNChild, property);
-    var other_computed_f = get_computed_value_node(gFChild, property);
-    isnot(other_computed_n, initial_computed_n,
-          "should be testing with values that compute to different things " +
-          "for '" + property + "'");
-    isnot(other_computed_f, initial_computed_f,
-          "should be testing with values that compute to different things " +
-          "for '" + property + "'");
-    gChildRule3.style.setProperty(property, "inherit", "");
-    gFChild.className="allother";
-    gNChild.className="allother";
-    var inherit_initial_computed_n = get_computed_value_node(gNChild, property);
-    var inherit_initial_computed_f = get_computed_value_node(gFChild, property);
-    is(inherit_initial_computed_n, initial_computed_n,
-       "inherit should cause inheritance of initial value for '" +
-       property + "'");
-    is(inherit_initial_computed_f, initial_computed_f,
-       "inherit should cause inheritance of initial value for '" +
-       property + "'");
-    gParentRuleTop.style.setProperty(property, info.other_values[0], "");
-    var inherit_other_computed_n = get_computed_value_node(gNChild, property);
-    var inherit_other_computed_f = get_computed_value_node(gFChild, property);
-    is(inherit_other_computed_n, other_computed_n,
-       "inherit should cause inheritance of other value for '" +
-       property + "'");
-    is(inherit_other_computed_f, other_computed_f,
-       "inherit should cause inheritance of other value for '" +
-       property + "'");
-    gParentRuleTop.style.removeProperty(property);
-    gChildRule1.style.removeProperty(property);
-    gChildRule3.style.setProperty(property, info.other_values[0], "");
-    gFChild.className="";
-    gNChild.className="";
-  } else {
-    gParentRuleTop.style.setProperty(property, info.other_values[0], "");
-    var initial_computed_n = get_computed_value_node(gNChild, property);
-    var initial_computed_f = get_computed_value_node(gFChild, property);
-    var other_computed_n = get_computed_value_node(gNParent, property);
-    var other_computed_f = get_computed_value_node(gFParent, property);
-    isnot(other_computed_n, initial_computed_n,
-          "should be testing with values that compute to different things " +
-          "for '" + property + "'");
-    isnot(other_computed_f, initial_computed_f,
-          "should be testing with values that compute to different things " +
-          "for '" + property + "'");
-    gChildRule2.style.setProperty(property, "inherit", "");
-    var inherit_other_computed_n = get_computed_value_node(gNChild, property);
-    var inherit_other_computed_f = get_computed_value_node(gFChild, property);
-    is(inherit_other_computed_n, other_computed_n,
-       "inherit should cause inheritance of other value for '" +
-       property + "'");
-    is(inherit_other_computed_f, other_computed_f,
-       "inherit should cause inheritance of other value for '" +
-       property + "'");
-    gParentRuleTop.style.removeProperty(property);
-    gChildRule1.style.setProperty(property, info.other_values[0], "");
-    var inherit_initial_computed_n = get_computed_value_node(gNChild, property);
-    var inherit_initial_computed_f = get_computed_value_node(gFChild, property);
-    is(inherit_initial_computed_n, initial_computed_n,
-       "inherit should cause inheritance of initial value for '" +
-       property + "'");
-    is(inherit_initial_computed_f, initial_computed_f,
-       "inherit should cause inheritance of initial value for '" +
-       property + "'");
-    gParentRuleTop.style.removeProperty(property);
-    gChildRule1.style.removeProperty(property);
-    gChildRule2.style.removeProperty(property);
-  }
-
-  if ("prerequisites" in info) {
-    var prereqs = info.prerequisites;
-    for (var prereq in prereqs) {
-      gParentRuleTop.style.removeProperty(prereq);
-      gChildRuleTop.style.removeProperty(prereq);
+  keywords.forEach(function(keyword) {
+    if ("prerequisites" in info) {
+      var prereqs = info.prerequisites;
+      for (var prereq in prereqs) {
+        gParentRuleTop.style.setProperty(prereq, prereqs[prereq], "");
+        gChildRuleTop.style.setProperty(prereq, prereqs[prereq], "");
+      }
     }
-  }
+
+    if (info.inherited) {
+      gParentRuleTop.style.setProperty(property, info.initial_values[0], "");
+      var initial_computed_n = get_computed_value_node(gNChild, property);
+      var initial_computed_f = get_computed_value_node(gFChild, property);
+      gChildRule1.style.setProperty(property, info.other_values[0], "");
+      var other_computed_n = get_computed_value_node(gNChild, property);
+      var other_computed_f = get_computed_value_node(gFChild, property);
+      isnot(other_computed_n, initial_computed_n,
+            "should be testing with values that compute to different things " +
+            "for '" + property + "'");
+      isnot(other_computed_f, initial_computed_f,
+            "should be testing with values that compute to different things " +
+            "for '" + property + "'");
+      gChildRule3.style.setProperty(property, keyword, "");
+      gFChild.className="allother";
+      gNChild.className="allother";
+      var inherit_initial_computed_n = get_computed_value_node(gNChild, property);
+      var inherit_initial_computed_f = get_computed_value_node(gFChild, property);
+      is(inherit_initial_computed_n, initial_computed_n,
+         keyword + " should cause inheritance of initial value for '" +
+         property + "'");
+      is(inherit_initial_computed_f, initial_computed_f,
+         keyword + " should cause inheritance of initial value for '" +
+         property + "'");
+      gParentRuleTop.style.setProperty(property, info.other_values[0], "");
+      var inherit_other_computed_n = get_computed_value_node(gNChild, property);
+      var inherit_other_computed_f = get_computed_value_node(gFChild, property);
+      is(inherit_other_computed_n, other_computed_n,
+         keyword + " should cause inheritance of other value for '" +
+         property + "'");
+      is(inherit_other_computed_f, other_computed_f,
+         keyword + " should cause inheritance of other value for '" +
+         property + "'");
+      gParentRuleTop.style.removeProperty(property);
+      gChildRule1.style.removeProperty(property);
+      gChildRule3.style.setProperty(property, info.other_values[0], "");
+      gFChild.className="";
+      gNChild.className="";
+    } else {
+      gParentRuleTop.style.setProperty(property, info.other_values[0], "");
+      var initial_computed_n = get_computed_value_node(gNChild, property);
+      var initial_computed_f = get_computed_value_node(gFChild, property);
+      var other_computed_n = get_computed_value_node(gNParent, property);
+      var other_computed_f = get_computed_value_node(gFParent, property);
+      isnot(other_computed_n, initial_computed_n,
+            "should be testing with values that compute to different things " +
+            "for '" + property + "'");
+      isnot(other_computed_f, initial_computed_f,
+            "should be testing with values that compute to different things " +
+            "for '" + property + "'");
+      gChildRule2.style.setProperty(property, keyword, "");
+      var inherit_other_computed_n = get_computed_value_node(gNChild, property);
+      var inherit_other_computed_f = get_computed_value_node(gFChild, property);
+      is(inherit_other_computed_n, other_computed_n,
+         keyword + " should cause inheritance of other value for '" +
+         property + "'");
+      is(inherit_other_computed_f, other_computed_f,
+         keyword + " should cause inheritance of other value for '" +
+         property + "'");
+      gParentRuleTop.style.removeProperty(property);
+      gChildRule1.style.setProperty(property, info.other_values[0], "");
+      var inherit_initial_computed_n = get_computed_value_node(gNChild, property);
+      var inherit_initial_computed_f = get_computed_value_node(gFChild, property);
+      is(inherit_initial_computed_n, initial_computed_n,
+         keyword + " should cause inheritance of initial value for '" +
+         property + "'");
+      is(inherit_initial_computed_f, initial_computed_f,
+         keyword + " should cause inheritance of initial value for '" +
+         property + "'");
+      gParentRuleTop.style.removeProperty(property);
+      gChildRule1.style.removeProperty(property);
+      gChildRule2.style.removeProperty(property);
+    }
+
+    if ("prerequisites" in info) {
+      var prereqs = info.prerequisites;
+      for (var prereq in prereqs) {
+        gParentRuleTop.style.removeProperty(prereq);
+        gChildRuleTop.style.removeProperty(prereq);
+      }
+    }
+  });
 }
 
 for (var prop in gCSSProperties) {
