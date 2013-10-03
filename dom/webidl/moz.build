@@ -18,7 +18,6 @@ PREPROCESSED_WEBIDL_FILES = [
 WEBIDL_FILES = [
     'AnalyserNode.webidl',
     'AnimationEvent.webidl',
-    'AppNotificationServiceOptions.webidl',
     'ArchiveReader.webidl',
     'ArchiveRequest.webidl',
     'Attr.webidl',
