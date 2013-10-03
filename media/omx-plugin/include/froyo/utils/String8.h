@@ -31,7 +31,9 @@
 
 extern "C" {
 
+#if !defined(__cplusplus) || __cplusplus == 199711L // C or C++98
 typedef uint32_t char32_t;
+#endif
 
 size_t strlen32(const char32_t *);
 size_t strnlen32(const char32_t *, size_t);

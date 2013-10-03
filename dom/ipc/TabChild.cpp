@@ -2425,6 +2425,18 @@ TabChild::DoSendAsyncMessage(JSContext* aCx,
   return SendAsyncMessage(nsString(aMessage), data, cpows);
 }
 
+TabChild*
+TabChild::GetFrom(nsIPresShell* aPresShell)
+{
+  nsIDocument* doc = aPresShell->GetDocument();
+  if (!doc) {
+      return nullptr;
+  }
+  nsCOMPtr<nsISupports> container = doc->GetContainer();
+  nsCOMPtr<nsIDocShell> docShell(do_QueryInterface(container));
+  return GetFrom(docShell);
+}
+
 
 TabChildGlobal::TabChildGlobal(TabChild* aTabChild)
 : mTabChild(aTabChild)

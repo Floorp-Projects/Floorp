@@ -21,13 +21,13 @@ SharedTextureClientOGL::SharedTextureClientOGL(TextureFlags aFlags)
   , mHandle(0)
   , mInverted(false)
 {
-  MOZ_ASSERT(!(aFlags & (TEXTURE_DEALLOCATE_CLIENT|TEXTURE_DEALLOCATE_HOST)),
-             "SharedTextureClientOGL doesn't know how to release textures!");
+  // SharedTextureClient is always owned externally.
+  mFlags |= TEXTURE_DEALLOCATE_CLIENT;
 }
 
 SharedTextureClientOGL::~SharedTextureClientOGL()
 {
-  // the data is owned externally.
+  // the shared data is owned externally.
 }
 
 

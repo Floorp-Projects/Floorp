@@ -41,6 +41,7 @@
 #include "nsPrintfCString.h"
 #include "nsRenderingContext.h"
 #include "nsStyleUtil.h"
+#include "nsIDocument.h"
 #include "prtime.h"
 
 #if defined(_MSC_VER) || defined(__MINGW32__)

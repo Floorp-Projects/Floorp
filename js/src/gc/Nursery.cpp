@@ -56,7 +56,7 @@ js::Nursery::init()
     rt->gcNurseryEnd_ = chunk(LastNurseryChunk).end();
     numActiveChunks_ = 1;
     setCurrentChunk(0);
-#ifdef DEBUG
+#ifdef JS_GC_ZEAL
     JS_POISON(heap, FreshNursery, NurserySize);
 #endif
     for (int i = 0; i < NumNurseryChunks; ++i)
@@ -77,7 +77,7 @@ js::Nursery::enable()
 {
     if (isEnabled())
         return;
-    JS_ASSERT(position_ == start());
+    JS_ASSERT_IF(runtime()->gcZeal_ != ZealGenerationalGCValue, position_ == start());
     numActiveChunks_ = 1;
     setCurrentChunk(0);
 }
@@ -87,7 +87,7 @@ js::Nursery::disable()
 {
     if (!isEnabled())
         return;
-    JS_ASSERT(position_ == start());
+    JS_ASSERT_IF(runtime()->gcZeal_ != ZealGenerationalGCValue, position_ == start());
     numActiveChunks_ = 0;
     currentEnd_ = 0;
 }
@@ -106,7 +106,7 @@ js::Nursery::allocate(size_t size)
     void *thing = (void *)position();
     position_ = position() + size;
 
-#ifdef DEBUG
+#ifdef JS_GC_ZEAL
     JS_POISON(thing, AllocatedThing, size);
 #endif
     return thing;
@@ -616,7 +616,7 @@ js::Nursery::collect(JSRuntime *rt, JS::gcreason::Reason reason)
         shrinkAllocableSpace();
 
     /* Sweep. */
-    sweep(rt->defaultFreeOp());
+    sweep(rt);
     rt->gcStoreBuffer.clear();
 
     /*
@@ -629,16 +629,29 @@ js::Nursery::collect(JSRuntime *rt, JS::gcreason::Reason reason)
 }
 
 void
-js::Nursery::sweep(FreeOp *fop)
+js::Nursery::sweep(JSRuntime *rt)
 {
+    /* Free malloced pointers owned by freed things in the nursery. */
     for (HugeSlotsSet::Range r = hugeSlots.all(); !r.empty(); r.popFront())
-        fop->free_(r.front());
+        rt->defaultFreeOp()->free_(r.front());
     hugeSlots.clear();
 
-#ifdef DEBUG
+#ifdef JS_GC_ZEAL
+    /* Poison the nursery contents so touching a freed object will crash. */
     JS_POISON((void *)start(), SweptNursery, NurserySize - sizeof(JSRuntime *));
     for (int i = 0; i < NumNurseryChunks; ++i)
         chunk(i).runtime = runtime();
+
+    if (rt->gcZeal_ == ZealGenerationalGCValue) {
+        /* Undo any grow or shrink the collection may have done. */
+        numActiveChunks_ = NumNurseryChunks;
+
+        /* Only reset the alloc point when we are close to the end. */
+        if (currentChunk_ + 1 == NumNurseryChunks)
+            setCurrentChunk(0);
+
+        return;
+    }
 #endif
 
     setCurrentChunk(0);
