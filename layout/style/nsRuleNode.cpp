@@ -653,6 +653,8 @@ GetFloatFromBoxPosition(int32_t aEnumValue)
 #define SETCOORD_STORE_CALC             0x00080000
 #define SETCOORD_BOX_POSITION           0x00100000 // exclusive with _ENUMERATED
 #define SETCOORD_ANGLE                  0x00200000
+#define SETCOORD_UNSET_INHERIT          0x00400000
+#define SETCOORD_UNSET_INITIAL          0x00800000
 
 #define SETCOORD_LP     (SETCOORD_LENGTH | SETCOORD_PERCENT)
 #define SETCOORD_LH     (SETCOORD_LENGTH | SETCOORD_INHERIT)
@@ -714,8 +716,10 @@ static bool SetCoord(const nsCSSValue& aValue, nsStyleCoord& aCoord,
            (aValue.GetUnit() == eCSSUnit_Auto)) {
     aCoord.SetAutoValue();
   }
-  else if (((aMask & SETCOORD_INHERIT) != 0) &&
-           (aValue.GetUnit() == eCSSUnit_Inherit)) {
+  else if ((((aMask & SETCOORD_INHERIT) != 0) &&
+            aValue.GetUnit() == eCSSUnit_Inherit) ||
+           (((aMask & SETCOORD_UNSET_INHERIT) != 0) &&
+            aValue.GetUnit() == eCSSUnit_Unset)) {
     aCoord = aParentCoord;  // just inherit value from parent
     aCanStoreInRuleTree = false;
   }
@@ -736,7 +740,9 @@ static bool SetCoord(const nsCSSValue& aValue, nsStyleCoord& aCoord,
     SpecifiedCalcToComputedCalc(aValue, aCoord, aStyleContext,
                                 aCanStoreInRuleTree);
   }
-  else if (aValue.GetUnit() == eCSSUnit_Initial) {
+  else if (aValue.GetUnit() == eCSSUnit_Initial ||
+           (aValue.GetUnit() == eCSSUnit_Unset &&
+            ((aMask & SETCOORD_UNSET_INITIAL) != 0))) {
     if ((aMask & SETCOORD_INITIAL_AUTO) != 0) {
       aCoord.SetAutoValue();
     }
@@ -785,13 +791,15 @@ static bool SetCoord(const nsCSSValue& aValue, nsStyleCoord& aCoord,
 }
 
 // This inline function offers a shortcut for SetCoord() by refusing to accept
-// SETCOORD_LENGTH and SETCOORD_INHERIT masks.
+// SETCOORD_LENGTH, SETCOORD_INHERIT and SETCOORD_UNSET_* masks.
 static inline bool SetAbsCoord(const nsCSSValue& aValue,
                                  nsStyleCoord& aCoord,
                                  int32_t aMask)
 {
-  NS_ABORT_IF_FALSE((aMask & SETCOORD_LH) == 0,
-                    "does not handle SETCOORD_LENGTH and SETCOORD_INHERIT");
+  NS_ABORT_IF_FALSE((aMask & (SETCOORD_LH | SETCOORD_UNSET_INHERIT |
+                              SETCOORD_UNSET_INITIAL)) == 0,
+                    "does not handle SETCOORD_LENGTH, SETCOORD_INHERIT and "
+                    "SETCOORD_UNSET_*");
 
   // The values of the following variables will never be used; so it does not
   // matter what to set.
