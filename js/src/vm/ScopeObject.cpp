@@ -1803,7 +1803,7 @@ DebugScopes::onPopCall(AbstractFramePtr frame, JSContext *cx)
          * but are aliased via the arguments object.
          */
         RootedScript script(cx, frame.script());
-        if (script->needsArgsObj() && frame.hasArgsObj()) {
+        if (script->analyzedArgsUsage() && script->needsArgsObj() && frame.hasArgsObj()) {
             for (unsigned i = 0; i < frame.numFormalArgs(); ++i) {
                 if (script->formalLivesInArgumentsObject(i))
                     vec[i] = frame.argsObj().arg(i);
