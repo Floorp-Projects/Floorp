@@ -32,10 +32,11 @@
 
 <!ENTITY optionsHeader.privacy.passwords.label                   "Remember Passwords">
 <!ENTITY doNotTrack.title                                        "Do Not Track">
-<!ENTITY doNotTrack.desc                                         "Tell sites:">
-<!ENTITY doNotTrack.options.trackingNotOkay                      "I do not want to be tracked">
-<!ENTITY doNotTrack.options.noPreference                         "Nothing about my tracking preferences">
-<!ENTITY doNotTrack.options.trackingOkay                         "I want to be tracked">
+<!ENTITY doNotTrack.options.doNotTrack                           "Tell websites that I do not want to be tracked">
+<!ENTITY doNotTrack.options.doTrack                              "Tell websites that I want to be tracked">
+<!ENTITY doNotTrack.options.default                              "Do not tell websites anything about my tracking preferences">
+<!ENTITY doNotTrack.learnMoreLink                                "Learn more&#x2026;">
+
 <!ENTITY optionsHeader.reporting.title                           "Crash Reporter">
 <!ENTITY optionsHeader.reporting.crashes.label                   "&brandShortName; submits crash reports to help Mozilla make your browser more stable and secure">
 <!ENTITY optionsHeader.telemetry.title                            "Telemetry">

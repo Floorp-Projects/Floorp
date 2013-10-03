@@ -7,6 +7,9 @@
 #include "nsEventDispatcher.h"
 #include "nsIPresShell.h"
 #include "mozilla/BasicEvents.h"
+#include "nsIDocument.h"
+
+using namespace mozilla;
 
 nsHtml5SVGLoadDispatcher::nsHtml5SVGLoadDispatcher(nsIContent* aElement)
   : mElement(aElement)
@@ -18,7 +21,7 @@ nsHtml5SVGLoadDispatcher::nsHtml5SVGLoadDispatcher(nsIContent* aElement)
 NS_IMETHODIMP
 nsHtml5SVGLoadDispatcher::Run()
 {
-  nsEvent event(true, NS_SVG_LOAD);
+  WidgetEvent event(true, NS_SVG_LOAD);
   event.mFlags.mBubbles = false;
   // Do we care about forcing presshell creation if it hasn't happened yet?
   // That is, should this code flush or something?  Does it really matter?

@@ -42,6 +42,10 @@ pref("gfx.azpc.fling_repaint_interval", "50"); // prefer 20 fps
 pref("gfx.axis.fling_friction", "0.002");
 pref("gfx.axis.fling_stopped_threshold", "0.2");
 
+// 0 = free, 1 = standard, 2 = sticky
+pref("apzc.axis_lock_mode", 2);
+pref("apzc.cross_slide.enabled", true);
+
 // Enable Microsoft TSF support by default for imes.
 pref("intl.enable_tsf_support", true);
 
@@ -214,6 +218,9 @@ pref("extensions.blocklist.detailsURL", "https://www.mozilla.org/%LOCALE%/blockl
 /* block popups by default, and notify the user about blocked popups */
 pref("dom.disable_open_during_load", true);
 pref("privacy.popups.showBrowserMessage", true);
+
+// Metro Firefox keeps this set to -1 when donottrackheader.enabled is false.
+pref("privacy.donottrackheader.value", -1);
 
 /* disable opening windows with the dialog feature */
 pref("dom.disable_window_open_dialog_feature", true);
@@ -561,10 +568,10 @@ pref("browser.chrome.toolbar_tips", false);
 // Completely disable pdf.js as an option to preview pdfs within firefox.
 // Note: if this is not disabled it does not necessarily mean pdf.js is the pdf
 // handler just that it is an option.
-pref("pdfjs.disabled", false);
+pref("pdfjs.disabled", true);
 // Used by pdf.js to know the first time firefox is run with it installed so it
 // can become the default pdf viewer.
-pref("pdfjs.firstRun", true);
+pref("pdfjs.firstRun", false);
 // The values of preferredAction and alwaysAskBeforeHandling before pdf.js
 // became the default.
 pref("pdfjs.previousHandler.preferredAction", 0);

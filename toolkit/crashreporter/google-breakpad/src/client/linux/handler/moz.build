@@ -8,7 +8,7 @@ MODULE = 'handler'
 
 CPP_SOURCES += [
     'exception_handler.cc',
-    'log.cc',
+    '../log/log.cc',
     'minidump_descriptor.cc',
 ]
 

@@ -44,7 +44,7 @@ this.EXPORTED_SYMBOLS = ["VariablesViewController", "StackFrameUtils"];
  *
  * @param VariablesView aView
  *        The view to attach to.
- * @param object aOptions
+ * @param object aOptions [optional]
  *        Options for configuring the controller. Supported options:
  *        - getObjectClient: callback for creating an object grip client
  *        - getLongStringClient: callback for creating a long string grip client
@@ -54,7 +54,7 @@ this.EXPORTED_SYMBOLS = ["VariablesViewController", "StackFrameUtils"];
  *        - getterOrSetterEvalMacro: callback for creating a getter/setter eval macro
  *        - simpleValueEvalMacro: callback for creating a simple value eval macro
  */
-function VariablesViewController(aView, aOptions) {
+function VariablesViewController(aView, aOptions = {}) {
   this.addExpander = this.addExpander.bind(this);
 
   this._getObjectClient = aOptions.getObjectClient;
@@ -441,6 +441,37 @@ VariablesViewController.prototype = {
         this.releaseActor(actor);
       }
     }
+  },
+
+  /**
+   * Helper function for setting up a single Scope with a single Variable
+   * contained within it.
+   *
+   * @param object aOptions
+   *        Options for the contents of the view:
+   *        - objectActor: the grip of the new ObjectActor to show.
+   *        - rawObject: the new raw object to show.
+   *        - label: the new label for the inspected object.
+   * @return Object
+   *         - variable: the created Variable.
+   *         - expanded: the Promise that resolves when the variable expands.
+   */
+  setSingleVariable: function(aOptions) {
+    let scope = this.view.addScope(aOptions.label);
+    scope.expanded = true;
+    scope.locked = true;
+
+    let variable = scope.addItem();
+    let expanded;
+
+    if (aOptions.objectActor) {
+      expanded = this.expand(variable, aOptions.objectActor);
+    } else if (aOptions.rawObject) {
+      variable.populate(aOptions.rawObject, { expanded: true });
+      expanded = promise.resolve();
+    }
+
+    return { variable: variable, expanded: expanded };
   },
 };
 

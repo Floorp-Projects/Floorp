@@ -177,7 +177,7 @@ public:
                                             bool aDoCapture, bool aConsumeRollupEvent);
   NS_IMETHOD            GetToggledKeyState(uint32_t aKeyCode,
                                            bool* aLEDState);
-  NS_IMETHOD            DispatchEvent(nsGUIEvent* event,
+  NS_IMETHOD            DispatchEvent(mozilla::WidgetGUIEvent* aEvent,
                                       nsEventStatus& aStatus);
   NS_IMETHOD            ReparentNativeWidget(nsIWidget* aNewParent);
 
@@ -235,9 +235,10 @@ protected:
   bool                  ImeConversionString(HIMI himi);
   bool                  OnImeRequest(MPARAM mp1, MPARAM mp2);
   bool                  DispatchKeyEvent(MPARAM mp1, MPARAM mp2);
-  void                  InitEvent(nsGUIEvent& event, nsIntPoint* pt = 0);
-  bool                  DispatchWindowEvent(nsGUIEvent* event);
-  bool                  DispatchWindowEvent(nsGUIEvent* event,
+  void                  InitEvent(mozilla::WidgetGUIEvent& aEvent,
+                                  nsIntPoint* pt = 0);
+  bool                  DispatchWindowEvent(mozilla::WidgetGUIEvent* aEvent);
+  bool                  DispatchWindowEvent(mozilla::WidgetGUIEvent* aEvent,
                                             nsEventStatus& aStatus);
   bool                  DispatchCommandEvent(uint32_t aEventCommand);
   bool                  DispatchDragDropEvent(uint32_t aMsg);
@@ -247,7 +248,7 @@ protected:
   bool                  DispatchMouseEvent(uint32_t aEventType,
                                            MPARAM mp1, MPARAM mp2, 
                                            bool aIsContextMenuKey = false,
-                                           int16_t aButton = nsMouseEvent::eLeftButton);
+                                           int16_t aButton = mozilla::WidgetMouseEvent::eLeftButton);
   bool                  DispatchActivationEvent(uint32_t aEventType);
   bool                  DispatchScrollEvent(ULONG msg, MPARAM mp1, MPARAM mp2);
 

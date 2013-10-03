@@ -20,3 +20,5 @@ MSVC_ENABLE_PGO = True
 
 LIBRARY_NAME = 'pref'
 
+EXPORT_LIBRARY = True
+

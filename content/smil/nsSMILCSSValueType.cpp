@@ -16,6 +16,7 @@
 #include "mozilla/dom/Element.h"
 #include "nsDebug.h"
 #include "nsStyleUtil.h"
+#include "nsIDocument.h"
 
 using namespace mozilla::dom;
 

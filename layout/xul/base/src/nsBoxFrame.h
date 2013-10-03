@@ -212,10 +212,10 @@ protected:
 
     // Get the point associated with this event. Returns true if a single valid
     // point was found. Otherwise false.
-    bool GetEventPoint(nsGUIEvent *aEvent, nsPoint &aPoint);
+    bool GetEventPoint(mozilla::WidgetGUIEvent* aEvent, nsPoint& aPoint);
     // Gets the event coordinates relative to the widget offset associated with
     // this frame. Return true if a single valid point was found.
-    bool GetEventPoint(nsGUIEvent *aEvent, nsIntPoint &aPoint);
+    bool GetEventPoint(mozilla::WidgetGUIEvent* aEvent, nsIntPoint& aPoint);
 
 protected:
     void RegUnregAccessKey(bool aDoReg);

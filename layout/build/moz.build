@@ -26,3 +26,5 @@ MSVC_ENABLE_PGO = True
 
 LIBRARY_NAME = 'gklayout'
 
+EXPORT_LIBRARY = True
+

@@ -749,7 +749,7 @@ interface nsIDOMWindowUtils : nsISupports {
                                        in boolean aTrusted);
 
   /**
-   * Sets nsEvent::mFlags::mOnlyChromeDispatch to true to ensure that
+   * Sets WidgetEvent::mFlags::mOnlyChromeDispatch to true to ensure that
    * the event is propagated only to chrome.
    * Event's .target property will be aTarget.
    * Returns the same value as what EventTarget.dispatchEvent does.

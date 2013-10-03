@@ -20,8 +20,7 @@ VideoFrameContainer::VideoFrameContainer(dom::HTMLMediaElement* aElement,
                                          already_AddRefed<ImageContainer> aContainer)
   : mElement(aElement),
     mImageContainer(aContainer), mMutex("nsVideoFrameContainer"),
-    mIntrinsicSizeChanged(false), mImageSizeChanged(false),
-    mNeedInvalidation(true)
+    mIntrinsicSizeChanged(false), mImageSizeChanged(false)
 {
   NS_ASSERTION(aElement, "aElement must not be null");
   NS_ASSERTION(mImageContainer, "aContainer must not be null");
@@ -61,7 +60,6 @@ void VideoFrameContainer::SetCurrentFrame(const gfxIntSize& aIntrinsicSize,
   gfxIntSize newFrameSize = mImageContainer->GetCurrentSize();
   if (oldFrameSize != newFrameSize) {
     mImageSizeChanged = true;
-    mNeedInvalidation = true;
   }
 
   mPaintTarget = aTargetTime;
@@ -89,10 +87,6 @@ void VideoFrameContainer::ClearCurrentFrame(bool aResetSize)
 
   mImageContainer->SetCurrentImage(nullptr);
   mImageSizeChanged = aResetSize;
-
-  // We removed the current image so we will have to invalidate once
-  // again to setup the ImageContainer <-> Compositor pair.
-  mNeedInvalidation = true;
 }
 
 ImageContainer* VideoFrameContainer::GetImageContainer() {
@@ -106,20 +100,9 @@ double VideoFrameContainer::GetFrameDelay()
   return mPaintDelay.ToSeconds();
 }
 
-void VideoFrameContainer::Invalidate()
+void VideoFrameContainer::InvalidateWithFlags(uint32_t aFlags)
 {
   NS_ASSERTION(NS_IsMainThread(), "Must call on main thread");
-
-  if (!mNeedInvalidation) {
-    return;
-  }
-
-  if (mImageContainer &&
-      mImageContainer->IsAsync() &&
-      mImageContainer->HasCurrentImage() &&
-      !mIntrinsicSizeChanged) {
-    mNeedInvalidation = false;
-  }
 
   if (!mElement) {
     // Element has been destroyed
@@ -150,11 +133,16 @@ void VideoFrameContainer::Invalidate()
     }
   }
 
+  bool asyncInvalidate = mImageContainer &&
+                         mImageContainer->IsAsync() &&
+                         !(aFlags & INVALIDATE_FORCE);
+
   if (frame) {
     if (invalidateFrame) {
       frame->InvalidateFrame();
     } else {
-      frame->InvalidateLayer(nsDisplayItem::TYPE_VIDEO);
+      frame->InvalidateLayer(nsDisplayItem::TYPE_VIDEO, nullptr,
+                             asyncInvalidate ? nsIFrame::UPDATE_IS_ASYNC : 0);
     }
   }
 

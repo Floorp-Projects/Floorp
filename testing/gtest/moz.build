@@ -54,9 +54,9 @@ EXPORTS.gmock.internal += [
 ]
 
 CPP_SOURCES += [
-    'GTestRunner.cpp',
-    'gmock-all.cc',
-    'gtest-all.cc',
+    'gmock/src/gmock-all.cc',
+    'gtest/src/gtest-all.cc',
+    'mozilla/GTestRunner.cpp',
 ]
 
 LIBRARY_NAME = 'gtest'
@@ -66,4 +66,6 @@ GTEST_CPP_SOURCES += [
 ]
 
 LIBXUL_LIBRARY = True
+
+EXPORT_LIBRARY = True
 

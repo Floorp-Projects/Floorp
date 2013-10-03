@@ -20,15 +20,7 @@ STL_FLAGS =
 # must link statically with the CRT; this isn't Gecko code
 USE_STATIC_LIBS = 1
 
-# Need to custom install OMX media plugin
-NO_INSTALL = 1
-
 include $(topsrcdir)/config/rules.mk
-
-ifdef GNU_CXX
-# Turn off C++ 11 features due to conflicts with Android OS headers and char16_t definition
-CXXFLAGS += -std=gnu++98
-endif
 
 INCLUDES        += \
                 -I$(topsrcdir)/media/omx-plugin/include/gb \

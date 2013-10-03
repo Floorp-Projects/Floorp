@@ -129,7 +129,7 @@ class Fake_VideoGenerator {
     const uint8_t lumaBpp = 8;
     const uint8_t chromaBpp = 4;
 
-    mozilla::layers::PlanarYCbCrImage::Data data;
+    mozilla::layers::PlanarYCbCrData data;
     data.mYChannel = frame;
     data.mYSize = gfxIntSize(WIDTH, HEIGHT);
     data.mYStride = (int32_t) (WIDTH * lumaBpp / 8.0);

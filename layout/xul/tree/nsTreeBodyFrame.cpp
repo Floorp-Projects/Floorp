@@ -2551,7 +2551,7 @@ nsTreeBodyFrame::GetCursor(const nsPoint& aPoint,
   return nsLeafBoxFrame::GetCursor(aPoint, aCursor);
 }
 
-static uint32_t GetDropEffect(nsGUIEvent* aEvent)
+static uint32_t GetDropEffect(WidgetGUIEvent* aEvent)
 {
   NS_ASSERTION(aEvent->eventStructType == NS_DRAG_EVENT, "wrong event type");
   WidgetDragEvent* dragEvent = static_cast<WidgetDragEvent*>(aEvent);
@@ -2565,7 +2565,7 @@ static uint32_t GetDropEffect(nsGUIEvent* aEvent)
 
 NS_IMETHODIMP
 nsTreeBodyFrame::HandleEvent(nsPresContext* aPresContext,
-                             nsGUIEvent* aEvent,
+                             WidgetGUIEvent* aEvent,
                              nsEventStatus* aEventStatus)
 {
   if (aEvent->message == NS_MOUSE_ENTER_SYNTH || aEvent->message == NS_MOUSE_MOVE) {
@@ -4334,7 +4334,9 @@ nsTreeBodyFrame::CanAutoScroll(int32_t aRowIndex)
 // For non-containers, if the mouse is in the top 50% of the row, the drop is
 // _before_ and the bottom 50% _after_
 void 
-nsTreeBodyFrame::ComputeDropPosition(nsGUIEvent* aEvent, int32_t* aRow, int16_t* aOrient,
+nsTreeBodyFrame::ComputeDropPosition(WidgetGUIEvent* aEvent,
+                                     int32_t* aRow,
+                                     int16_t* aOrient,
                                      int16_t* aScrollLines)
 {
   *aOrient = -1;
@@ -4473,7 +4475,7 @@ void
 nsTreeBodyFrame::FireScrollEvent()
 {
   mScrollEvent.Forget();
-  nsGUIEvent event(true, NS_SCROLL_EVENT, nullptr);
+  WidgetGUIEvent event(true, NS_SCROLL_EVENT, nullptr);
   // scroll events fired at elements don't bubble
   event.mFlags.mBubbles = false;
   nsEventDispatcher::Dispatch(GetContent(), PresContext(), &event);

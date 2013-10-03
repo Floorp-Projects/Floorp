@@ -10,7 +10,6 @@
 #include <stdint.h>                     // for uint32_t, uint8_t, uint64_t
 #include "GLContextTypes.h"             // for GLContext (ptr only), etc
 #include "GLTextureImage.h"             // for TextureImage
-#include "ImageContainer.h"             // for PlanarYCbCrImage, etc
 #include "ImageTypes.h"                 // for StereoMode
 #include "mozilla/Assertions.h"         // for MOZ_ASSERT, etc
 #include "mozilla/Attributes.h"         // for MOZ_OVERRIDE
@@ -37,6 +36,9 @@ class ContentClient;
 class CompositableForwarder;
 class ISurfaceAllocator;
 class CompositableClient;
+class PlanarYCbCrImage;
+class PlanarYCbCrData;
+class Image;
 
 /**
  * TextureClient is the abstraction that allows us to share data between the
@@ -63,7 +65,7 @@ public:
 class TextureClientYCbCr
 {
 public:
-  virtual bool UpdateYCbCr(const PlanarYCbCrImage::Data& aData) = 0;
+  virtual bool UpdateYCbCr(const PlanarYCbCrData& aData) = 0;
   virtual bool AllocateForYCbCr(gfx::IntSize aYSize,
                                 gfx::IntSize aCbCrSize,
                                 StereoMode aStereoMode) = 0;
@@ -218,13 +220,6 @@ protected:
   void AddFlags(TextureFlags  aFlags)
   {
     MOZ_ASSERT(!IsSharedWithCompositor());
-    // make sure we don't deallocate on both client and host;
-    MOZ_ASSERT(!(aFlags & TEXTURE_DEALLOCATE_CLIENT && aFlags & TEXTURE_DEALLOCATE_HOST));
-    if (aFlags & TEXTURE_DEALLOCATE_CLIENT) {
-      mFlags &= ~TEXTURE_DEALLOCATE_HOST;
-    } else if (aFlags & TEXTURE_DEALLOCATE_HOST) {
-      mFlags &= ~TEXTURE_DEALLOCATE_CLIENT;
-    }
     mFlags |= aFlags;
   }
 
@@ -271,7 +266,7 @@ public:
 
   virtual TextureClientYCbCr* AsTextureClientYCbCr() MOZ_OVERRIDE { return this; }
 
-  virtual bool UpdateYCbCr(const PlanarYCbCrImage::Data& aData) MOZ_OVERRIDE;
+  virtual bool UpdateYCbCr(const PlanarYCbCrData& aData) MOZ_OVERRIDE;
 
   virtual bool AllocateForYCbCr(gfx::IntSize aYSize,
                                 gfx::IntSize aCbCrSize,
