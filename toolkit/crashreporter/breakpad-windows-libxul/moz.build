@@ -5,11 +5,7 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 CPP_SOURCES += [
-    '$(objs_common)',
-    '$(objs_crash_generation)',
-    '$(objs_handler)',
-    '$(objs_sender)',
-    'http_upload.cc',
+    '../google-breakpad/src/common/windows/http_upload.cc',
 ]
 
 LIBRARY_NAME = 'google_breakpad_libxul_s'

@@ -21,3 +21,9 @@ VPATH += \
   $(NULL)
 
 DEFINES += -DUNICODE -DUNICODE_ -DBREAKPAD_NO_TERMINATE_THREAD -DNOMINMAX
+
+CPPSRCS += \
+  $(objs_common) \
+  $(objs_crash_generation) \
+  $(objs_handler) \
+  $(NULL)
