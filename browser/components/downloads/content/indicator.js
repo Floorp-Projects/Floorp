@@ -326,18 +326,39 @@ const DownloadsIndicatorView = {
       return;
     }
 
-    function DIV_SEN_callback() {
-      if (this._notificationTimeout) {
-        clearTimeout(this._notificationTimeout);
-      }
-
-      let indicator = this.indicator;
-      indicator.setAttribute("notification", aType);
-      this._notificationTimeout = setTimeout(
-        function () indicator.removeAttribute("notification"), 1000);
+    // If the anchor is not there or its container is hidden, don't show
+    // a notification
+    let anchor = DownloadsButton._placeholder;
+    if (!anchor || !isElementVisible(anchor.parentNode)) {
+      return;
     }
 
-    this._ensureOperational(DIV_SEN_callback.bind(this));
+    if (this._notificationTimeout) {
+      clearTimeout(this._notificationTimeout);
+    }
+
+    // The notification element is positioned to show in the same location as
+    // the downloads button. It's not in the downloads button itself in order to
+    // be able to anchor the notification elsewhere if required, and to ensure
+    // the notification isn't clipped by overflow properties of the anchor's
+    // container.
+    let notifier = this.notifier;
+    if (notifier.style.transform == '') {
+      let anchorRect = anchor.getBoundingClientRect();
+      let notifierRect = notifier.getBoundingClientRect();
+      let topDiff = anchorRect.top - notifierRect.top;
+      let leftDiff = anchorRect.left - notifierRect.left;
+      let heightDiff = anchorRect.height - notifierRect.height;
+      let widthDiff = anchorRect.width - notifierRect.width;
+      let translateX = (leftDiff + .5 * widthDiff) + "px";
+      let translateY = (topDiff + .5 * heightDiff) + "px";
+      notifier.style.transform = "translate(" +  translateX + ", " + translateY + ")";
+    }
+    notifier.setAttribute("notification", aType);
+    this._notificationTimeout = setTimeout(function () {
+      notifier.removeAttribute("notification");
+      notifier.style.transform = '';
+    }, 1000);
   },
 
   //////////////////////////////////////////////////////////////////////////////
@@ -545,6 +566,12 @@ const DownloadsIndicatorView = {
   {
     return this.__indicatorProgress ||
       (this.__indicatorProgress = document.getElementById("downloads-indicator-progress"));
+  },
+
+  get notifier()
+  {
+    return this._notifier ||
+      (this._notifier = document.getElementById("downloads-notification-anchor"));
   },
 
   _onCustomizedAway: function() {

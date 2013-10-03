@@ -276,6 +276,12 @@ pref("media.video_stats.enabled", true);
 // Whether to enable the audio writing APIs on the audio element
 pref("media.audio_data.enabled", true);
 
+// Whether to lock touch scrolling to one axis at a time
+// 0 = FREE (No locking at all)
+// 1 = STANDARD (Once locked, remain locked until scrolling ends)
+// 2 = STICKY (Allow lock to be broken, with hysteresis)
+pref("apzc.axis_lock_mode", 0);
+
 #ifdef XP_MACOSX
 // Whether to run in native HiDPI mode on machines with "Retina"/HiDPI display;
 //   <= 0 : hidpi mode disabled, display will just use pixel-based upscaling
