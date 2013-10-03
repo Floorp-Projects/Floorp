@@ -63,6 +63,12 @@ IonBuilder::clearForBackEnd()
 {
     cx = NULL;
     baselineFrame_ = NULL;
+
+    // The GSN cache allocates data from the malloc heap. Release this before
+    // later phases of compilation to avoid leaks, as the top level IonBuilder
+    // is not explicitly destroyed. Note that builders for inner scripts are
+    // constructed on the stack and will release this memory on destruction.
+    gsn.purge();
 }
 
 bool
