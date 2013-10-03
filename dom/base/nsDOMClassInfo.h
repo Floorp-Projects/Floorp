@@ -471,34 +471,6 @@ public:
 };
 
 
-// History helper
-
-class nsHistorySH : public nsStringArraySH
-{
-protected:
-  nsHistorySH(nsDOMClassInfoData* aData) : nsStringArraySH(aData)
-  {
-  }
-
-  virtual ~nsHistorySH()
-  {
-  }
-
-  virtual nsresult GetStringAt(nsISupports *aNative, int32_t aIndex,
-                               nsAString& aResult) MOZ_OVERRIDE;
-
-public:
-  NS_IMETHOD PreCreate(nsISupports *nativeObj, JSContext *cx,
-                       JSObject *globalObj, JSObject **parentObj) MOZ_OVERRIDE;
-  NS_IMETHOD GetProperty(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
-                         JSObject *obj, jsid id, JS::Value *vp, bool *_retval) MOZ_OVERRIDE;
-
-  static nsIClassInfo *doCreate(nsDOMClassInfoData* aData)
-  {
-    return new nsHistorySH(aData);
-  }
-};
-
 // StringList scriptable helper
 
 class nsStringListSH : public nsStringArraySH
