@@ -39,7 +39,7 @@ void mozilla_sampler_free_backtrace(ProfilerBacktrace* aBacktrace);
 
 bool mozilla_sampler_is_active();
 
-void mozilla_sampler_responsiveness(const TimeStamp& time);
+void mozilla_sampler_responsiveness(const mozilla::TimeStamp& time);
 
 void mozilla_sampler_frame_number(int frameNumber);
 
@@ -73,7 +73,7 @@ bool mozilla_sampler_register_thread(const char* name, void* stackTop);
 void mozilla_sampler_unregister_thread();
 
 double mozilla_sampler_time();
-double mozilla_sampler_time(const TimeStamp& aTime);
+double mozilla_sampler_time(const mozilla::TimeStamp& aTime);
 
 /* Returns true if env var SPS_NEW is set to anything, else false. */
 extern bool sps_version2();
