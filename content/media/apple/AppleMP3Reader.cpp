@@ -440,7 +440,7 @@ AppleMP3Reader::SetupDecoder()
   AudioStreamBasicDescription inputFormat, outputFormat;
   GetProperty(mAudioFileStream, kAudioFileStreamProperty_DataFormat, &inputFormat);
 
-  outputFormat = { 0, 0, 0, 0, 0, 0, 0, 0, 0 };
+  memset(&outputFormat, 0, sizeof(outputFormat));
 
   // Set output format
 #if defined(MOZ_SAMPLE_TYPE_FLOAT32)
