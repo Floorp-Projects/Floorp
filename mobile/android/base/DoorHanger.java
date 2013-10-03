@@ -6,6 +6,7 @@
 package org.mozilla.gecko;
 
 import org.mozilla.gecko.widget.Divider;
+import org.mozilla.gecko.prompts.PromptInput;
 
 import org.json.JSONArray;
 import org.json.JSONException;
