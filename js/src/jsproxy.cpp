@@ -302,7 +302,7 @@ BaseProxyHandler::construct(JSContext *cx, HandleObject proxy, const CallArgs &a
 const char *
 BaseProxyHandler::className(JSContext *cx, HandleObject proxy)
 {
-    return proxy->is<FunctionProxyObject>() ? "Function" : "Object";
+    return proxy->isCallable() ? "Function" : "Object";
 }
 
 JSString *
@@ -724,21 +724,6 @@ ArrayToIdVector(JSContext *cx, const Value &array, AutoIdVector &props)
     }
 
     return true;
-}
-
-inline HeapSlot &
-FunctionProxyObject::construct()
-{
-    JS_ASSERT(slotSpan() > CONSTRUCT_SLOT);
-    return getSlotRef(CONSTRUCT_SLOT);
-}
-
-inline Value
-FunctionProxyObject::constructOrUndefined() const
-{
-    if (slotSpan() <= CONSTRUCT_SLOT)
-        return UndefinedValue();
-    return getSlot(CONSTRUCT_SLOT);
 }
 
 namespace {
@@ -2991,17 +2976,6 @@ ProxyObject::trace(JSTracer *trc, JSObject *obj)
         MarkSlot(trc, proxy->slotOfExtra(1), "extra1");
 }
 
-static void
-proxy_TraceFunction(JSTracer *trc, JSObject *obj)
-{
-    // NB: If you add new slots here, make sure to change
-    // nuke() to cope.
-    FunctionProxyObject *proxy = &obj->as<FunctionProxyObject>();
-    MarkCrossCompartmentSlot(trc, proxy, &proxy->call(), "call");
-    MarkSlot(trc, &proxy->construct(), "construct");
-    ProxyObject::trace(trc, proxy);
-}
-
 static JSObject *
 proxy_WeakmapKeyDelegate(JSObject *obj)
 {
@@ -3033,6 +3007,24 @@ proxy_HasInstance(JSContext *cx, HandleObject proxy, MutableHandleValue v, bool 
     return true;
 }
 
+static bool
+proxy_Call(JSContext *cx, unsigned argc, Value *vp)
+{
+    CallArgs args = CallArgsFromVp(argc, vp);
+    RootedObject proxy(cx, &args.callee());
+    JS_ASSERT(proxy->is<ProxyObject>());
+    return Proxy::call(cx, proxy, args);
+}
+
+static bool
+proxy_Construct(JSContext *cx, unsigned argc, Value *vp)
+{
+    CallArgs args = CallArgsFromVp(argc, vp);
+    RootedObject proxy(cx, &args.callee());
+    JS_ASSERT(proxy->is<ProxyObject>());
+    return Proxy::construct(cx, proxy, args);
+}
+
 #define PROXY_CLASS_EXT                             \
     {                                               \
         NULL,                /* outerObject */      \
@@ -3042,53 +3034,59 @@ proxy_HasInstance(JSContext *cx, HandleObject proxy, MutableHandleValue v, bool 
         proxy_WeakmapKeyDelegate                    \
     }
 
-const Class js::ObjectProxyObject::class_ = {
-    "Proxy",
-    Class::NON_NATIVE | JSCLASS_IMPLEMENTS_BARRIERS | JSCLASS_HAS_RESERVED_SLOTS(4) |
-    JSCLASS_HAS_CACHED_PROTO(JSProto_Proxy),
-    JS_PropertyStub,         /* addProperty */
-    JS_DeletePropertyStub,   /* delProperty */
-    JS_PropertyStub,         /* getProperty */
-    JS_StrictPropertyStub,   /* setProperty */
-    JS_EnumerateStub,
-    JS_ResolveStub,
-    proxy_Convert,
-    proxy_Finalize,          /* finalize    */
-    NULL,                    /* checkAccess */
-    NULL,                    /* call        */
-    proxy_HasInstance,       /* hasInstance */
-    NULL,                    /* construct   */
-    ProxyObject::trace,      /* trace       */
-    PROXY_CLASS_EXT,
-    {
-        proxy_LookupGeneric,
-        proxy_LookupProperty,
-        proxy_LookupElement,
-        proxy_LookupSpecial,
-        proxy_DefineGeneric,
-        proxy_DefineProperty,
-        proxy_DefineElement,
-        proxy_DefineSpecial,
-        proxy_GetGeneric,
-        proxy_GetProperty,
-        proxy_GetElement,
-        proxy_GetElementIfPresent,
-        proxy_GetSpecial,
-        proxy_SetGeneric,
-        proxy_SetProperty,
-        proxy_SetElement,
-        proxy_SetSpecial,
-        proxy_GetGenericAttributes,
-        proxy_SetGenericAttributes,
-        proxy_DeleteProperty,
-        proxy_DeleteElement,
-        proxy_DeleteSpecial,
-        NULL,                /* enumerate       */
-        NULL,                /* thisObject      */
-    }
-};
+#define PROXY_CLASS(callOp, constructOp) {          \
+    "Proxy",                                        \
+    Class::NON_NATIVE |                             \
+           JSCLASS_IMPLEMENTS_BARRIERS |            \
+           JSCLASS_HAS_RESERVED_SLOTS(4) |          \
+    JSCLASS_HAS_CACHED_PROTO(JSProto_Proxy),        \
+    JS_PropertyStub,         /* addProperty */      \
+    JS_DeletePropertyStub,   /* delProperty */      \
+    JS_PropertyStub,         /* getProperty */      \
+    JS_StrictPropertyStub,   /* setProperty */      \
+    JS_EnumerateStub,                               \
+    JS_ResolveStub,                                 \
+    proxy_Convert,                                  \
+    proxy_Finalize,          /* finalize    */      \
+    NULL,                    /* checkAccess */      \
+    callOp,                  /* call        */      \
+    proxy_HasInstance,       /* hasInstance */      \
+    constructOp,             /* construct   */      \
+    ProxyObject::trace,      /* trace       */      \
+    PROXY_CLASS_EXT,                                \
+    {                                               \
+        proxy_LookupGeneric,                        \
+        proxy_LookupProperty,                       \
+        proxy_LookupElement,                        \
+        proxy_LookupSpecial,                        \
+        proxy_DefineGeneric,                        \
+        proxy_DefineProperty,                       \
+        proxy_DefineElement,                        \
+        proxy_DefineSpecial,                        \
+        proxy_GetGeneric,                           \
+        proxy_GetProperty,                          \
+        proxy_GetElement,                           \
+        proxy_GetElementIfPresent,                  \
+        proxy_GetSpecial,                           \
+        proxy_SetGeneric,                           \
+        proxy_SetProperty,                          \
+        proxy_SetElement,                           \
+        proxy_SetSpecial,                           \
+        proxy_GetGenericAttributes,                 \
+        proxy_SetGenericAttributes,                 \
+        proxy_DeleteProperty,                       \
+        proxy_DeleteElement,                        \
+        proxy_DeleteSpecial,                        \
+        NULL,                /* enumerate       */  \
+        NULL,                /* thisObject      */  \
+    }                                               \
+}
 
-const Class* const js::ObjectProxyClassPtr = &ObjectProxyObject::class_;
+const Class js::ProxyObject::uncallableClass_ = PROXY_CLASS(NULL, NULL);
+const Class js::ProxyObject::callableClass_ = PROXY_CLASS(proxy_Call, proxy_Construct);
+
+const Class* const js::CallableProxyClassPtr = &ProxyObject::callableClass_;
+const Class* const js::UncallableProxyClassPtr = &ProxyObject::uncallableClass_;
 
 const Class js::OuterWindowProxyObject::class_ = {
     "Proxy",
@@ -3143,71 +3141,6 @@ const Class js::OuterWindowProxyObject::class_ = {
 
 const Class* const js::OuterWindowProxyClassPtr = &OuterWindowProxyObject::class_;
 
-static bool
-proxy_Call(JSContext *cx, unsigned argc, Value *vp)
-{
-    CallArgs args = CallArgsFromVp(argc, vp);
-    RootedObject proxy(cx, &args.callee());
-    JS_ASSERT(proxy->is<ProxyObject>());
-    return Proxy::call(cx, proxy, args);
-}
-
-static bool
-proxy_Construct(JSContext *cx, unsigned argc, Value *vp)
-{
-    CallArgs args = CallArgsFromVp(argc, vp);
-    RootedObject proxy(cx, &args.callee());
-    JS_ASSERT(proxy->is<ProxyObject>());
-    return Proxy::construct(cx, proxy, args);
-}
-
-const Class js::FunctionProxyObject::class_ = {
-    "Proxy",
-    Class::NON_NATIVE | JSCLASS_IMPLEMENTS_BARRIERS | JSCLASS_HAS_RESERVED_SLOTS(6),
-    JS_PropertyStub,         /* addProperty */
-    JS_DeletePropertyStub,   /* delProperty */
-    JS_PropertyStub,         /* getProperty */
-    JS_StrictPropertyStub,   /* setProperty */
-    JS_EnumerateStub,
-    JS_ResolveStub,
-    JS_ConvertStub,
-    proxy_Finalize,          /* finalize */
-    NULL,                    /* checkAccess */
-    proxy_Call,
-    proxy_HasInstance,
-    proxy_Construct,
-    proxy_TraceFunction,     /* trace       */
-    PROXY_CLASS_EXT,
-    {
-        proxy_LookupGeneric,
-        proxy_LookupProperty,
-        proxy_LookupElement,
-        proxy_LookupSpecial,
-        proxy_DefineGeneric,
-        proxy_DefineProperty,
-        proxy_DefineElement,
-        proxy_DefineSpecial,
-        proxy_GetGeneric,
-        proxy_GetProperty,
-        proxy_GetElement,
-        proxy_GetElementIfPresent,
-        proxy_GetSpecial,
-        proxy_SetGeneric,
-        proxy_SetProperty,
-        proxy_SetElement,
-        proxy_SetSpecial,
-        proxy_GetGenericAttributes,
-        proxy_SetGenericAttributes,
-        proxy_DeleteProperty,
-        proxy_DeleteElement,
-        proxy_DeleteSpecial,
-        NULL,                /* enumerate       */
-        NULL,                /* thisObject      */
-    }
-};
-
-const Class* const js::FunctionProxyClassPtr = &FunctionProxyObject::class_;
-
 /* static */ ProxyObject *
 ProxyObject::New(JSContext *cx, BaseProxyHandler *handler, HandleValue priv, TaggedProto proto_,
                  JSObject *parent_, ProxyCallable callable, bool singleton)
@@ -3218,11 +3151,11 @@ ProxyObject::New(JSContext *cx, BaseProxyHandler *handler, HandleValue priv, Tag
     JS_ASSERT_IF(proto.isObject(), cx->compartment() == proto.toObject()->compartment());
     JS_ASSERT_IF(parent, cx->compartment() == parent->compartment());
     const Class *clasp;
-    if (callable)
-        clasp = &FunctionProxyObject::class_;
+    if (handler->isOuterWindow())
+        clasp = &OuterWindowProxyObject::class_;
     else
-        clasp = handler->isOuterWindow() ? &OuterWindowProxyObject::class_
-                                         : &ObjectProxyObject::class_;
+        clasp = callable ? &ProxyObject::callableClass_
+                         : &ProxyObject::uncallableClass_;
 
     /*
      * Eagerly mark properties unknown for proxies, so we don't try to track
@@ -3263,38 +3196,12 @@ js::NewProxyObject(JSContext *cx, BaseProxyHandler *handler, HandleValue priv, J
                             callable, singleton);
 }
 
-/* static */ FunctionProxyObject *
-FunctionProxyObject::New(JSContext *cx, BaseProxyHandler *handler, HandleValue priv,
-                         JSObject *proto, JSObject *parent, JSObject *callArg,
-                         JSObject *constructArg)
-{
-    RootedObject call(cx, callArg);
-    RootedObject construct(cx, constructArg);
-
-    JS_ASSERT(call || construct);
-    JS_ASSERT_IF(construct, cx->compartment() == construct->compartment());
-    JS_ASSERT_IF(call && cx->compartment() != call->compartment(), priv == ObjectValue(*call));
-
-    ProxyObject *obj = ProxyObject::New(cx, handler, priv, TaggedProto(proto), parent,
-                                        ProxyIsCallable);
-    if (!obj)
-        return NULL;
-
-    FunctionProxyObject *proxy = &obj->as<FunctionProxyObject>();
-    if (call)
-        proxy->initCrossCompartmentSlot(CALL_SLOT, ObjectValue(*call));
-    if (construct)
-        proxy->initCrossCompartmentSlot(CONSTRUCT_SLOT, ObjectValue(*construct));
-
-    return proxy;
-}
-
 void
 ProxyObject::renew(JSContext *cx, BaseProxyHandler *handler, Value priv)
 {
     JS_ASSERT_IF(IsCrossCompartmentWrapper(this), IsDeadProxyObject(this));
     JS_ASSERT(getParent() == cx->global());
-    JS_ASSERT(getClass() == &ObjectProxyObject::class_);
+    JS_ASSERT(getClass() == &uncallableClass_);
     JS_ASSERT(getTaggedProto().isLazy());
 #ifdef DEBUG
     AutoSuppressGC suppressGC(cx);
@@ -3442,6 +3349,6 @@ js_InitProxyClass(JSContext *cx, HandleObject obj)
         return NULL;
     }
 
-    MarkStandardClassInitializedNoProto(obj, &ObjectProxyObject::class_);
+    MarkStandardClassInitializedNoProto(obj, &ProxyObject::uncallableClass_);
     return ctor;
 }
