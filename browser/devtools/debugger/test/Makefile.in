@@ -30,6 +30,7 @@ MOCHITEST_BROWSER_TESTS = \
 	browser_dbg_debugger-statement.js \
 	browser_dbg_editor-contextmenu.js \
 	browser_dbg_editor-mode.js \
+	browser_dbg_file-reload.js \
 	browser_dbg_function-display-name.js \
 	browser_dbg_globalactor.js \
 	browser_dbg_iframes.js \
@@ -142,6 +143,7 @@ MOCHITEST_BROWSER_PAGES = \
 	doc_large-array-buffer.html \
 	doc_minified.html \
 	doc_pause-exceptions.html \
+	doc_random-javascript.html \
 	doc_recursion-stack.html \
 	doc_script-switching-01.html \
 	doc_script-switching-02.html \
@@ -165,6 +167,7 @@ MOCHITEST_BROWSER_PAGES = \
 	code_script-switching-01.js \
 	code_script-switching-02.js \
 	code_test-editor-mode \
+	sjs_random-javascript.sjs \
 	testactors.js \
 	addon1.xpi \
 	addon2.xpi \
