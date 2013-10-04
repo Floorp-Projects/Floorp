@@ -399,6 +399,12 @@ public:
   virtual nsIWidget* GetWidget() const { return nullptr; }
   virtual const nsIntSize& GetWidgetSize() = 0;
 
+  // Call before and after any rendering not done by this compositor but which
+  // might affect the compositor's internal state or the state of any APIs it
+  // uses. For example, internal GL state.
+  virtual void SaveState() {}
+  virtual void RestoreState() {}
+
   /**
    * Debug-build assertion that can be called to ensure code is running on the
    * compositor thread.
