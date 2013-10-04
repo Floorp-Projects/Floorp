@@ -3012,11 +3012,18 @@ let SessionStoreInternal = {
       delete this._statesToRestore[aWindow.__SS_restoreID];
       delete aWindow.__SS_restoreID;
       delete this._windows[aWindow.__SSi]._restoring;
-
-      // It's important to set the window state to dirty so that
-      // we collect their data for the first time when saving state.
-      this._dirtyWindows[aWindow.__SSi] = true;
     }
+
+    // It's important to set the window state to dirty so that
+    // we collect their data for the first time when saving state.
+    this._dirtyWindows[aWindow.__SSi] = true;
+
+    // Set the state to restore as the window's current state. Normally, this
+    // will just be overridden the next time we collect state but we need this
+    // as a fallback should Firefox be shutdown early without notifying us
+    // beforehand.
+    this._windows[aWindow.__SSi].tabs = aTabData.slice();
+    this._windows[aWindow.__SSi].selected = aSelectTab;
 
     if (aTabs.length == 0) {
       // this is normally done in restoreHistory() but as we're returning early
