@@ -1787,12 +1787,22 @@ RangeAnalysis::addRangeAssertions()
             MInstruction *ins = *iter;
 
             Range *r = ins->range();
-            if (!r || ins->isAssertRange() || ins->isBeta())
+            if (!r)
                 continue;
 
-            MAssertRange *guard = MAssertRange::New(ins);
-            guard->setRange(new Range(*r));
-            block->insertAfter(ins, guard);
+            MAssertRange *guard = MAssertRange::New(ins, new Range(*r));
+
+            // The code that removes beta nodes assumes that it can find them
+            // in a contiguous run at the top of each block. Don't insert
+            // range assertions in between beta nodes.
+            MInstructionIterator insertIter = iter;
+            while (insertIter->isBeta())
+                insertIter++;
+
+            if (*insertIter == *iter)
+                block->insertAfter(*insertIter,  guard);
+            else
+                block->insertBefore(*insertIter, guard);
         }
     }
 
