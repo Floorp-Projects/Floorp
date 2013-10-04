@@ -8985,21 +8985,27 @@ typedef Vector<MDefinition *, 8, IonAllocPolicy> MDefinitionVector;
 bool ElementAccessIsDenseNative(MDefinition *obj, MDefinition *id);
 bool ElementAccessIsTypedArray(MDefinition *obj, MDefinition *id,
                                ScalarTypeRepresentation::Type *arrayType);
-bool ElementAccessIsPacked(JSContext *cx, MDefinition *obj);
-bool ElementAccessHasExtraIndexedProperty(JSContext *cx, MDefinition *obj);
-bool DenseNativeElementType(JSContext *cx, MDefinition *obj, MIRType *result);
-bool PropertyReadNeedsTypeBarrier(JSContext *cx, types::TypeObject *object, PropertyName *name,
-                                  types::StackTypeSet *observed, bool updateObserved, bool *result);
-bool PropertyReadNeedsTypeBarrier(JSContext *cx, MDefinition *obj, PropertyName *name,
-                                  types::StackTypeSet *observed, bool *result);
-bool PropertyReadOnPrototypeNeedsTypeBarrier(JSContext *cx, MDefinition *obj, PropertyName *name,
-                                             types::TemporaryTypeSet *observed, bool *result);
-bool PropertyReadIsIdempotent(JSContext *cx, MDefinition *obj, PropertyName *name, bool *result);
+bool ElementAccessIsPacked(types::CompilerConstraintList *constraints, MDefinition *obj);
+bool ElementAccessHasExtraIndexedProperty(types::CompilerConstraintList *constraints,
+                                          MDefinition *obj);
+MIRType DenseNativeElementType(types::CompilerConstraintList *constraints, MDefinition *obj);
+bool PropertyReadNeedsTypeBarrier(JSContext *cx, types::CompilerConstraintList *constraints,
+                                  types::TypeObjectKey *object, PropertyName *name,
+                                  types::StackTypeSet *observed, bool updateObserved);
+bool PropertyReadNeedsTypeBarrier(JSContext *cx, types::CompilerConstraintList *constraints,
+                                  MDefinition *obj, PropertyName *name,
+                                  types::StackTypeSet *observed);
+bool PropertyReadOnPrototypeNeedsTypeBarrier(JSContext *cx, types::CompilerConstraintList *constraints,
+                                             MDefinition *obj, PropertyName *name,
+                                             types::TemporaryTypeSet *observed);
+bool PropertyReadIsIdempotent(types::CompilerConstraintList *constraints,
+                              MDefinition *obj, PropertyName *name);
 bool AddObjectsForPropertyRead(JSContext *cx, MDefinition *obj, PropertyName *name,
                                types::StackTypeSet *observed);
-bool PropertyWriteNeedsTypeBarrier(JSContext *cx, MBasicBlock *current, MDefinition **pobj,
+bool PropertyWriteNeedsTypeBarrier(types::CompilerConstraintList *constraints,
+                                   MBasicBlock *current, MDefinition **pobj,
                                    PropertyName *name, MDefinition **pvalue,
-                                   bool canModify, bool *result);
+                                   bool canModify);
 
 } // namespace jit
 } // namespace js
