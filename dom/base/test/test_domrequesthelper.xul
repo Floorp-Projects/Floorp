@@ -17,91 +17,327 @@
   <script type="application/javascript">
   <![CDATA[
     Components.utils.import("resource://gre/modules/DOMRequestHelper.jsm");
-    function DummyHelperSubclass() {
-      this.initDOMRequestHelper(window, []);
-    }
 
+    function DummyHelperSubclass() {
+    }
     DummyHelperSubclass.prototype = {
       __proto__: DOMRequestIpcHelper.prototype
     };
 
     var dummy = new DummyHelperSubclass();
 
-    function createPromise() {
-      ok(Promise, "Promise object should exist");
+    /**
+     * Init & destroy.
+     */
+    function initDOMRequestHelperTest(aMessages) {
+      is(dummy._requests, undefined, "Request is undefined");
+      is(dummy._messages, undefined, "Messages is undefined");
+      is(dummy._window, undefined, "Window is undefined");
 
-      var promise = dummy.createPromise(function(resolve, reject) {
-        resolve(true);
-      });
-      ok(promise instanceof Promise, "returned a Promise");
-      promise.then(runTest);
+      dummy.initDOMRequestHelper(window, aMessages);
+
+      ok(dummy._window, "Window exists");
+      is(dummy._window, window, "Correct window");
+      if (aMessages) {
+        is(typeof dummy._listeners, "object", "Listeners is an object");
+      }
     }
 
-    function getResolver() {
-      var id;
-      var resolver;
-      var promise = dummy.createPromise(function(resolve, reject) {
-        var r = { resolve: resolve, reject: reject };
-        id = dummy.getPromiseResolverId(r);
-        resolver = r;
-        ok(typeof id === "string", "id should be string");
-        r.resolve(true);
-      }).then(function(unused) {
-        var r = dummy.getPromiseResolver(id);
-        ok(resolver === r, "get should succeed");
-        runTest();
-      });
+    function destroyDOMRequestHelperTest() {
+      dummy.destroyDOMRequestHelper();
+
+      is(dummy._requests, undefined, "Request is undefined");
+      is(dummy._messages, undefined, "Messages is undefined");
+      is(dummy._window, undefined, "Window is undefined");
     }
 
-    function removeResolver() {
-      var id;
-      var promise = dummy.createPromise(function(resolve, reject) {
-        var r = { resolve: resolve, reject: reject };
-        id = dummy.getPromiseResolverId(r);
-        ok(typeof id === "string", "id should be string");
-
-        var resolver = dummy.getPromiseResolver(id);
-        ok(resolver === r, "resolver get should succeed");
-
-        r.resolve(true);
-      }).then(function(unused) {
-        dummy.removePromiseResolver(id);
-        var resolver = dummy.getPromiseResolver(id);
-        ok(resolver === undefined, "removeResolver: get should fail");
-        runTest();
+    /**
+     * Message listeners.
+     */
+    function checkMessageListeners(aExpectedListeners, aCount) {
+      ok(true, "Checking message listeners\n" + "Expected listeners " +
+         JSON.stringify(aExpectedListeners) + " \nExpected count " + aCount);
+      let count = 0;
+      Object.keys(dummy._listeners).forEach(function(name) {
+        count++;
+        is(aExpectedListeners[name], dummy._listeners[name],
+           "Message found " + name + " - Same listeners");
       });
+      is(aCount, count, "Correct number of listeners");
     }
 
-    function takeResolver() {
-      var id;
-      var resolver;
-      var promise = dummy.createPromise(function(resolve, reject) {
-        var r = { resolve: resolve, reject: reject };
-        id = dummy.getPromiseResolverId(r);
-        resolver = r;
-        ok(typeof id === "string", "id should be string");
-
-        var gotR = dummy.getPromiseResolver(id);
-        ok(gotR === r, "resolver get should succeed");
-
-        r.resolve(true);
-      }).then(function(unused) {
-        var r = dummy.takePromiseResolver(id);
-        ok(resolver === r, "take should succeed");
-
-        r = dummy.getPromiseResolver(id);
-        ok(r === undefined, "takeResolver: get should fail");
-        runTest();
-      });
+    function addMessageListenersTest(aMessages, aExpectedListeners, aCount) {
+      dummy.addMessageListeners(aMessages);
+      ok(true, JSON.stringify(dummy._listeners));
+      checkMessageListeners(aExpectedListeners, aCount);
     }
 
-    var tests = [ createPromise,
-                  getResolver,
-                  removeResolver,
-                  takeResolver,
-                ];
+    function removeMessageListenersTest(aMessages, aExpectedListeners, aCount) {
+      dummy.removeMessageListeners(aMessages);
+      checkMessageListeners(aExpectedListeners, aCount);
+    }
 
-    function runTest() {
+    /**
+     * Test steps.
+     */
+    var tests = [
+      function() {
+        ok(true, "== InitDOMRequestHelper no messages");
+        initDOMRequestHelperTest(null);
+        next();
+      },
+      function() {
+        ok(true, "== DestroyDOMRequestHelper");
+        destroyDOMRequestHelperTest();
+        next();
+      },
+      function() {
+        ok(true, "== InitDOMRequestHelper empty array");
+        initDOMRequestHelperTest([]);
+        checkMessageListeners({}, 0);
+        next();
+      },
+      function() {
+        ok(true, "== DestroyDOMRequestHelper");
+        destroyDOMRequestHelperTest();
+        next();
+      },
+      function() {
+        ok(true, "== InitDOMRequestHelper with strings array");
+        initDOMRequestHelperTest(["name1", "nameN"]);
+        checkMessageListeners({"name1": false, "nameN": false}, 2);
+        next();
+      },
+      function() {
+        ok(true, "== DestroyDOMRequestHelper");
+        destroyDOMRequestHelperTest();
+        next();
+      },
+      function() {
+        ok(true, "== InitDOMRequestHelper with objects array");
+        initDOMRequestHelperTest([{
+          name: "name1",
+          strongRef: false
+        }, {
+          name: "nameN",
+          strongRef: true
+        }]);
+        checkMessageListeners({"name1": false, "nameN": true}, 2);
+        next();
+      },
+      function() {
+        ok(true, "== AddMessageListeners empty array");
+        addMessageListenersTest([], {"name1": false, "nameN": true}, 2);
+        next();
+      },
+      function() {
+        ok(true, "== AddMessageListeners null");
+        addMessageListenersTest(null, {"name1": false, "nameN": true}, 2);
+        next();
+      },
+      function() {
+        ok(true, "== AddMessageListeners new listener, string only");
+        addMessageListenersTest("name2", {
+          "name1": false,
+          "name2": false,
+          "nameN": true
+        }, 3);
+        next();
+      },
+      function() {
+        ok(true, "== AddMessageListeners new listeners, strings array");
+        addMessageListenersTest(["name3", "name4"], {
+          "name1": false,
+          "name2": false,
+          "name3": false,
+          "name4": false,
+          "nameN": true
+        }, 5);
+        next();
+      },
+      function() {
+        ok(true, "== AddMessageListeners new listeners, objects array");
+        addMessageListenersTest([{
+          name: "name5",
+          strongRef: true
+        }, {
+          name: "name6",
+          strongRef: false
+        }], {
+          "name1": false,
+          "name2": false,
+          "name3": false,
+          "name4": false,
+          "name5": true,
+          "name6": false,
+          "nameN": true
+        }, 7);
+        next();
+      },
+      function() {
+        ok(true, "== RemoveMessageListeners, null");
+        removeMessageListenersTest(null, {
+          "name1": false,
+          "name2": false,
+          "name3": false,
+          "name4": false,
+          "name5": true,
+          "name6": false,
+          "nameN": true
+        }, 7);
+        next();
+      },
+      function() {
+        ok(true, "== RemoveMessageListeners, one message");
+        removeMessageListenersTest("name1", {
+          "name2": false,
+          "name3": false,
+          "name4": false,
+          "name5": true,
+          "name6": false,
+          "nameN": true
+        }, 6);
+        next();
+      },
+      function() {
+        ok(true, "== RemoveMessageListeners, array of messages");
+        removeMessageListenersTest(["name2", "name3"], {
+          "name4": false,
+          "name5": true,
+          "name6": false,
+          "nameN": true
+        }, 4);
+        next();
+      },
+      function() {
+        ok(true, "== RemoveMessageListeners, unknown message");
+        removeMessageListenersTest("unknown", {
+          "name4": false,
+          "name5": true,
+          "name6": false,
+          "nameN": true
+        }, 4);
+        next();
+      },
+      function() {
+        try {
+          ok(true, "== AddMessageListeners, same message, same kind");
+          addMessageListenersTest("name4", {
+            "name4": false,
+            "name5": true,
+            "name6": false,
+            "nameN": true
+          }, 4);
+          next();
+        } catch (ex) {
+          ok(false, "Unexpected exception " + ex);
+        }
+      },
+      function() {
+        ok(true, "== AddMessageListeners, same message, different kind");
+        try {
+          addMessageListenersTest({name: "name4", strongRef: true}, {
+            "name4": true,
+            "name5": true,
+            "name6": false,
+            "nameN": true
+          }, 4);
+          ok(false, "Should have thrown an exception");
+        } catch (ex) {
+          ok(true, "Expected exception");
+          next();
+        }
+      },
+      function() {
+        ok(true, "== Test createRequest()");
+        ok(DOMRequest, "DOMRequest object exists");
+        var req = dummy.createRequest();
+        ok(req instanceof DOMRequest, "Returned a DOMRequest");
+        next();
+      },
+      function() {
+        ok(true, "== Test getRequestId(), removeRequest() and getRequest()");
+        var req = dummy.createRequest();
+        var id = dummy.getRequestId(req);
+        is(typeof id, "string", "id is a string");
+        var req_ = dummy.getRequest(id);
+        is(req, req_, "Got correct request");
+        dummy.removeRequest(id);
+        req = dummy.getRequest(id);
+        is(req, null, "No request");
+        next();
+      },
+      function() {
+        ok(true, "== Test createPromise()");
+        ok(Promise, "Promise object exists");
+        var promise = dummy.createPromise(function(resolve, reject) {
+          resolve(true);
+        });
+        ok(promise instanceof Promise, "Returned a Promise");
+        promise.then(next);
+      },
+      function() {
+        ok(true, "== Test getResolver()");
+        var id;
+        var resolver;
+        var promise = dummy.createPromise(function(resolve, reject) {
+          var r = { resolve: resolve, reject: reject };
+          id = dummy.getPromiseResolverId(r);
+          resolver = r;
+          ok(typeof id === "string", "id is a string");
+          r.resolve(true);
+        }).then(function(unused) {
+          var r = dummy.getPromiseResolver(id);
+          ok(resolver === r, "Get succeeded");
+          next();
+        });
+      },
+      function() {
+        ok(true, "== Test removeResolver");
+        var id;
+        var promise = dummy.createPromise(function(resolve, reject) {
+          var r = { resolve: resolve, reject: reject };
+          id = dummy.getPromiseResolverId(r);
+          ok(typeof id === "string", "id is a string");
+
+          var resolver = dummy.getPromiseResolver(id);
+          ok(true, "Got resolver " + JSON.stringify(resolver));
+          ok(resolver === r, "Resolver get succeeded");
+
+          r.resolve(true);
+        }).then(function(unused) {
+          dummy.removePromiseResolver(id);
+          var resolver = dummy.getPromiseResolver(id);
+          ok(resolver === undefined, "removeResolver: get failed");
+          next();
+        });
+      },
+      function() {
+        ok(true, "== Test takeResolver");
+        var id;
+        var resolver;
+        var promise = dummy.createPromise(function(resolve, reject) {
+          var r = { resolve: resolve, reject: reject };
+          id = dummy.getPromiseResolverId(r);
+          resolver = r;
+          ok(typeof id === "string", "id is a string");
+
+          var gotR = dummy.getPromiseResolver(id);
+          ok(gotR === r, "resolver get succeeded");
+
+          r.resolve(true);
+        }).then(function(unused) {
+          var r = dummy.takePromiseResolver(id);
+          ok(resolver === r, "take should succeed");
+
+          r = dummy.getPromiseResolver(id);
+          ok(r === undefined, "takeResolver: get failed");
+          next();
+        });
+      }
+    ];
+
+    function next() {
       if (!tests.length) {
         SimpleTest.finish();
         return;
@@ -113,7 +349,7 @@
 
     function start() {
       SimpleTest.waitForExplicitFinish();
-      runTest();
+      next();
     }
   ]]>
   </script>
