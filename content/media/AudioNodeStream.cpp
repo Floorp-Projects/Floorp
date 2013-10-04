@@ -17,12 +17,13 @@ namespace mozilla {
 
 /**
  * An AudioNodeStream produces a single audio track with ID
- * AUDIO_TRACK. This track has rate AudioContext::sIdealAudioRate
+ * AUDIO_NODE_STREAM_TRACK_ID. This track has rate AudioContext::sIdealAudioRate
  * for regular audio contexts, and the rate requested by the web content
  * for offline audio contexts.
  * Each chunk in the track is a single block of WEBAUDIO_BLOCK_SIZE samples.
  * Note: This must be a different value than MEDIA_STREAM_DEST_TRACK_ID
  */
+static const int AUDIO_NODE_STREAM_TRACK_ID = 1;
 
 AudioNodeStream::~AudioNodeStream()
 {
@@ -408,7 +409,7 @@ AudioNodeStream::ProduceOutput(GraphTime aFrom, GraphTime aTo)
     FinishOutput();
   }
 
-  EnsureTrack(AUDIO_TRACK, mSampleRate);
+  EnsureTrack(AUDIO_NODE_STREAM_TRACK_ID, mSampleRate);
 
   uint16_t outputCount = std::max(uint16_t(1), mEngine->OutputCount());
   mLastChunks.SetLength(outputCount);
@@ -440,7 +441,7 @@ AudioNodeStream::ProduceOutput(GraphTime aFrom, GraphTime aTo)
     }
   }
 
-  if (mDisabledTrackIDs.Contains(static_cast<TrackID>(AUDIO_TRACK))) {
+  if (mDisabledTrackIDs.Contains(AUDIO_NODE_STREAM_TRACK_ID)) {
     for (uint32_t i = 0; i < mLastChunks.Length(); ++i) {
       mLastChunks[i].SetNull(WEBAUDIO_BLOCK_SIZE);
     }
@@ -452,7 +453,7 @@ AudioNodeStream::ProduceOutput(GraphTime aFrom, GraphTime aTo)
 void
 AudioNodeStream::AdvanceOutputSegment()
 {
-  StreamBuffer::Track* track = EnsureTrack(AUDIO_TRACK, mSampleRate);
+  StreamBuffer::Track* track = EnsureTrack(AUDIO_NODE_STREAM_TRACK_ID, mSampleRate);
   AudioSegment* segment = track->Get<AudioSegment>();
 
   if (mKind == MediaStreamGraph::EXTERNAL_STREAM) {
@@ -466,7 +467,7 @@ AudioNodeStream::AdvanceOutputSegment()
     AudioChunk copyChunk = mLastChunks[0];
     AudioSegment tmpSegment;
     tmpSegment.AppendAndConsumeChunk(&copyChunk);
-    l->NotifyQueuedTrackChanges(Graph(), AUDIO_TRACK,
+    l->NotifyQueuedTrackChanges(Graph(), AUDIO_NODE_STREAM_TRACK_ID,
                                 mSampleRate, segment->GetDuration(), 0,
                                 tmpSegment);
   }
@@ -475,7 +476,7 @@ AudioNodeStream::AdvanceOutputSegment()
 TrackTicks
 AudioNodeStream::GetCurrentPosition()
 {
-  return EnsureTrack(AUDIO_TRACK, mSampleRate)->Get<AudioSegment>()->GetDuration();
+  return EnsureTrack(AUDIO_NODE_STREAM_TRACK_ID, mSampleRate)->Get<AudioSegment>()->GetDuration();
 }
 
 void
@@ -485,14 +486,14 @@ AudioNodeStream::FinishOutput()
     return;
   }
 
-  StreamBuffer::Track* track = EnsureTrack(AUDIO_TRACK, mSampleRate);
+  StreamBuffer::Track* track = EnsureTrack(AUDIO_NODE_STREAM_TRACK_ID, mSampleRate);
   track->SetEnded();
   FinishOnGraphThread();
 
   for (uint32_t j = 0; j < mListeners.Length(); ++j) {
     MediaStreamListener* l = mListeners[j];
     AudioSegment emptySegment;
-    l->NotifyQueuedTrackChanges(Graph(), AUDIO_TRACK,
+    l->NotifyQueuedTrackChanges(Graph(), AUDIO_NODE_STREAM_TRACK_ID,
                                 mSampleRate,
                                 track->GetSegment()->GetDuration(),
                                 MediaStreamListener::TRACK_EVENT_ENDED, emptySegment);
