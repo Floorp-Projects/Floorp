@@ -680,7 +680,7 @@ TransplantObjectWithWrapper(JSContext *cx,
         return newSameCompartmentWrapper;
 
     RootedObject newIdentity(cx, Wrapper::wrappedObject(newSameCompartmentWrapper));
-    MOZ_ASSERT(js::IsWrapper(newIdentity));
+    MOZ_ASSERT(!js::IsWrapper(newIdentity));
     if (!FixWaiverAfterTransplant(cx, oldWaiver, newIdentity))
         return NULL;
     return newSameCompartmentWrapper;
