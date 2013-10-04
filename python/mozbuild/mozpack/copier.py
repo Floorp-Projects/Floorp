@@ -169,6 +169,17 @@ class FileCopier(FileRegistry):
         have_symlinks = hasattr(os, 'symlink')
         destination = os.path.normpath(destination)
 
+        # We create the destination directory specially. We can't do this as
+        # part of the loop doing mkdir() below because that loop munges
+        # symlinks and permissions and parent directories of the destination
+        # directory may have their own weird schema. The contract is we only
+        # manage children of destination, not its parents.
+        try:
+            os.makedirs(destination)
+        except OSError as e:
+            if e.errno != errno.EEXIST:
+                raise
+
         # Because we could be handling thousands of files, code in this
         # function is optimized to minimize system calls. We prefer CPU time
         # in Python over possibly I/O bound filesystem calls to stat() and
