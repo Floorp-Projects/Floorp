@@ -3240,17 +3240,8 @@ JS_FRIEND_API(JSObject *)
 js::NewProxyObject(JSContext *cx, BaseProxyHandler *handler, HandleValue priv, JSObject *proto_,
                    JSObject *parent_, ProxyCallable callable, bool singleton)
 {
-    return ProxyObject::New(cx, handler, priv, TaggedProto(proto_), parent_, callable, singleton);
-}
-
-static ProxyObject *
-NewProxyObject(JSContext *cx, BaseProxyHandler *handler, HandleValue priv, JSObject *proto,
-               JSObject *parent, JSObject *call, JSObject *construct)
-{
-    if (!call && !construct)
-        return ProxyObject::New(cx, handler, priv, TaggedProto(proto), parent, ProxyNotCallable);
-
-    return FunctionProxyObject::New(cx, handler, priv, proto, parent, call, construct);
+    return ProxyObject::New(cx, handler, priv, TaggedProto(proto_), parent_,
+                            callable, singleton);
 }
 
 /* static */ FunctionProxyObject *
@@ -3315,10 +3306,12 @@ proxy(JSContext *cx, unsigned argc, jsval *vp)
     RootedObject proto(cx);
     if (!JSObject::getProto(cx, target, &proto))
         return false;
-    RootedObject fun(cx, target->isCallable() ? target.get() : (JSObject *) NULL);
     RootedValue priv(cx, ObjectValue(*target));
-    ProxyObject *proxy = NewProxyObject(cx, &ScriptedDirectProxyHandler::singleton,
-                                        priv, proto, cx->global(), fun, fun);
+    ProxyObject *proxy = target->isCallable()
+      ? FunctionProxyObject::New(cx, &ScriptedDirectProxyHandler::singleton,
+                                 priv, proto, cx->global(), target, target)
+      : ProxyObject::New(cx, &ScriptedDirectProxyHandler::singleton,
+                         priv, TaggedProto(proto), cx->global(), ProxyNotCallable);
     if (!proxy)
         return false;
     proxy->setExtra(0, ObjectOrNullValue(handler));
@@ -3386,8 +3379,9 @@ proxy_createFunction(JSContext *cx, unsigned argc, Value *vp)
     }
 
     RootedValue priv(cx, ObjectValue(*handler));
-    JSObject *proxy = NewProxyObject(cx, &ScriptedIndirectProxyHandler::singleton,
-                                     priv, proto, parent, call, construct);
+    JSObject *proxy =
+      FunctionProxyObject::New(cx, &ScriptedIndirectProxyHandler::singleton,
+                               priv, proto, parent, call, construct);
     if (!proxy)
         return false;
 
