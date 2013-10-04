@@ -24,24 +24,22 @@
   font-weight: bold;
 }
 
-.side-menu-widget-item-checkbox {
+#sources .side-menu-widget-item-checkbox {
   -moz-appearance: none;
-  -moz-margin-end: -6px;
-  padding: 0;
   opacity: 0;
   transition: opacity .15s ease-out 0s;
 }
 
 /* Only show the checkbox when the source is hovered over, is selected, or if it
  * is not checked. */
-.side-menu-widget-item:hover > .side-menu-widget-item-checkbox,
-.side-menu-widget-item.selected > .side-menu-widget-item-checkbox,
-.side-menu-widget-item-checkbox:not([checked]) {
+#sources .side-menu-widget-item:hover > .side-menu-widget-item-checkbox,
+#sources .side-menu-widget-item.selected > .side-menu-widget-item-checkbox,
+#sources .side-menu-widget-item-checkbox:not([checked]) {
   opacity: 1;
   transition: opacity .15s ease-out 0s;
 }
 
-.side-menu-widget-item-checkbox > .checkbox-check {
+#sources .side-menu-widget-item-checkbox > .checkbox-check {
   -moz-appearance: none;
   background: none;
   background-image: url(itemToggle.png);
@@ -54,15 +52,15 @@
   border: 0;
 }
 
-.side-menu-widget-item-checkbox[checked] > .checkbox-check {
+#sources .side-menu-widget-item-checkbox[checked] > .checkbox-check {
   background-position: 0 0;
 }
 
-.side-menu-widget-item-checkbox:not([checked]) ~ .side-menu-widget-item-contents {
+#sources .side-menu-widget-item-checkbox:not([checked]) ~ .side-menu-widget-item-contents {
   color: #888;
 }
 
-.side-menu-widget-item-checkbox:not([checked]) ~ .side-menu-widget-item-contents > .dbg-breakpoint {
+#sources .side-menu-widget-item-checkbox:not([checked]) ~ .side-menu-widget-item-contents > .dbg-breakpoint {
   display: none;
 }
 
@@ -151,6 +149,17 @@
   margin: 2px;
 }
 
+/* Instruments pane (watch expressions, variables, event listeners...) */
+
+#instruments-pane > tabs > tab {
+  min-height: 2em !important;
+  padding: 0 !important;
+}
+
+#instruments-pane > tabpanels > tabpanel {
+  background: #fff;
+}
+
 /* Watch expressions view */
 
 #expressions {
@@ -165,11 +174,33 @@
 .dbg-expression-arrow {
   width: 16px;
   height: auto;
-  background: -moz-image-rect(url("chrome://browser/skin/devtools/commandline-icon.png"), 0, 32, 16, 16);
+  background: -moz-image-rect(url(commandline-icon.png), 0, 32, 16, 16);
 }
 
 .dbg-expression-input {
   -moz-padding-start: 2px !important;
+}
+
+/* Event listeners view */
+
+.dbg-event-listener {
+  padding: 4px 8px;
+}
+
+.dbg-event-listener-type {
+  font-weight: 600;
+}
+
+.dbg-event-listener-separator {
+  color: #999;
+}
+
+.dbg-event-listener-targets {
+  color: #046;
+}
+
+.dbg-event-listener-location {
+  color: #666;
 }
 
 /* Searchbox and the search operations help panel */
@@ -323,7 +354,7 @@
   transform: scale(1.75, 1.75);
 }
 
-/* Toolbar Controls */
+/* Toolbar controls */
 
 #resumption-panel-desc {
   width: 200px;
