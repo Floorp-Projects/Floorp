@@ -8,6 +8,11 @@ let { Loader, main, unload, parseStack } = require('toolkit/loader');
 
 let root = module.uri.substr(0, module.uri.lastIndexOf('/'))
 
+// The following adds Debugger constructor to the global namespace.
+const { Cu } = require('chrome');
+const { addDebuggerToGlobal } = Cu.import('resource://gre/modules/jsdebugger.jsm', {});
+addDebuggerToGlobal(this);
+
 exports['test dependency cycles'] = function(assert) {
   let uri = root + '/fixtures/loader/cycles/';
   let loader = Loader({ paths: { '': uri } });
@@ -142,6 +147,24 @@ exports['test early errors in module'] = function(assert) {
   } finally {
     unload(loader);
   }
+}
+
+exports['test setting metadata for newly created sandboxes'] = function(assert) {
+  let addonID = 'random-addon-id';
+  let uri = root + '/fixtures/loader/cycles/';
+  let loader = Loader({ paths: { '': uri }, id: addonID });
+
+  let dbg = new Debugger();
+  dbg.onNewGlobalObject = function(global) {
+    dbg.onNewGlobalObject = undefined;
+
+    let metadata = Cu.getSandboxMetadata(global.unsafeDereference());
+    assert.ok(metadata, 'this global has attached metadata');
+    assert.equal(metadata.URI, uri + 'main.js', 'URI is set properly');
+    assert.equal(metadata.addonID, addonID, 'addon ID is set');
+  }
+
+  let program = main(loader, 'main');
 }
 
 require('test').run(exports);

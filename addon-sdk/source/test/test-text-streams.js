@@ -6,41 +6,41 @@ const file = require("sdk/io/file");
 const { pathFor } = require("sdk/system");
 const { Loader } = require("sdk/test/loader");
 
-const STREAM_CLOSED_ERROR = "The stream is closed and cannot be used.";
+const STREAM_CLOSED_ERROR = new RegExp("The stream is closed and cannot be used.");
 
 // This should match the constant of the same name in text-streams.js.
 const BUFFER_BYTE_LEN = 0x8000;
 
-exports.testWriteRead = function (test) {
+exports.testWriteRead = function (assert) {
   let fname = dataFileFilename();
 
   // Write a small string less than the stream's buffer size...
   let str = "exports.testWriteRead data!";
   let stream = file.open(fname, "w");
-  test.assert(!stream.closed, "stream.closed after open should be false");
+  assert.ok(!stream.closed, "stream.closed after open should be false");
   stream.write(str);
   stream.close();
-  test.assert(stream.closed, "stream.closed after close should be true");
-  test.assertRaises(function () stream.close(),
+  assert.ok(stream.closed, "stream.closed after close should be true");
+  assert.throws(function () stream.close(),
                     STREAM_CLOSED_ERROR,
                     "stream.close after already closed should raise error");
-  test.assertRaises(function () stream.write("This shouldn't be written!"),
+  assert.throws(function () stream.write("This shouldn't be written!"),
                     STREAM_CLOSED_ERROR,
                     "stream.write after close should raise error");
 
   // ... and read it.
   stream = file.open(fname);
-  test.assert(!stream.closed, "stream.closed after open should be false");
-  test.assertEqual(stream.read(), str,
+  assert.ok(!stream.closed, "stream.closed after open should be false");
+  assert.equal(stream.read(), str,
                    "stream.read should return string written");
-  test.assertEqual(stream.read(), "",
+  assert.equal(stream.read(), "",
                    "stream.read at EOS should return empty string");
   stream.close();
-  test.assert(stream.closed, "stream.closed after close should be true");
-  test.assertRaises(function () stream.close(),
+  assert.ok(stream.closed, "stream.closed after close should be true");
+  assert.throws(function () stream.close(),
                     STREAM_CLOSED_ERROR,
                     "stream.close after already closed should raise error");
-  test.assertRaises(function () stream.read(),
+  assert.throws(function () stream.read(),
                     STREAM_CLOSED_ERROR,
                     "stream.read after close should raise error");
 
@@ -56,7 +56,7 @@ exports.testWriteRead = function (test) {
   stream.write(str);
   stream.close();
   stream = file.open(fname);
-  test.assertEqual(stream.read(), str,
+  assert.equal(stream.read(), str,
                    "stream.read should return string written");
   stream.close();
 
@@ -79,24 +79,24 @@ exports.testWriteRead = function (test) {
     readStr += frag;
   } while (frag);
   stream.close();
-  test.assertEqual(readStr, str,
+  assert.equal(readStr, str,
                    "stream.write and read in chunks should work as expected");
 
   // Read the same file, passing in strange numbers of bytes to read.
   stream = file.open(fname);
-  test.assertEqual(stream.read(fileSize * 100), str,
+  assert.equal(stream.read(fileSize * 100), str,
                    "stream.read with big byte length should return string " +
                    "written");
   stream.close();
 
   stream = file.open(fname);
-  test.assertEqual(stream.read(0), "",
+  assert.equal(stream.read(0), "",
                    "string.read with zero byte length should return empty " +
                    "string");
   stream.close();
 
   stream = file.open(fname);
-  test.assertEqual(stream.read(-1), "",
+  assert.equal(stream.read(-1), "",
                    "string.read with negative byte length should return " +
                    "empty string");
   stream.close();
@@ -104,40 +104,38 @@ exports.testWriteRead = function (test) {
   file.remove(fname);
 };
 
-exports.testWriteAsync = function (test) {
-  test.waitUntilDone();
-
+exports.testWriteAsync = function (assert, done) {
   let fname = dataFileFilename();
   let str = "exports.testWriteAsync data!";
   let stream = file.open(fname, "w");
-  test.assert(!stream.closed, "stream.closed after open should be false");
+  assert.ok(!stream.closed, "stream.closed after open should be false");
 
   // Write.
   stream.writeAsync(str, function (err) {
-    test.assertEqual(this, stream, "|this| should be the stream object");
-    test.assertEqual(err, undefined,
+    assert.equal(this, stream, "|this| should be the stream object");
+    assert.equal(err, undefined,
                      "stream.writeAsync should not cause error");
-    test.assert(stream.closed, "stream.closed after write should be true");
-    test.assertRaises(function () stream.close(),
+    assert.ok(stream.closed, "stream.closed after write should be true");
+    assert.throws(function () stream.close(),
                       STREAM_CLOSED_ERROR,
                       "stream.close after already closed should raise error");
-    test.assertRaises(function () stream.writeAsync("This shouldn't work!"),
+    assert.throws(function () stream.writeAsync("This shouldn't work!"),
                       STREAM_CLOSED_ERROR,
                       "stream.writeAsync after close should raise error");
 
     // Read.
     stream = file.open(fname, "r");
-    test.assert(!stream.closed, "stream.closed after open should be false");
+    assert.ok(!stream.closed, "stream.closed after open should be false");
     let readStr = stream.read();
-    test.assertEqual(readStr, str,
+    assert.equal(readStr, str,
                      "string.read should yield string written");
     stream.close();
     file.remove(fname);
-    test.done();
+    done();
   });
 };
 
-exports.testUnload = function (test) {
+exports.testUnload = function (assert) {
   let loader = Loader(module);
   let file = loader.require("sdk/io/file");
 
@@ -145,10 +143,12 @@ exports.testUnload = function (test) {
   let stream = file.open(filename, "w");
 
   loader.unload();
-  test.assert(stream.closed, "stream should be closed after module unload");
+  assert.ok(stream.closed, "stream should be closed after module unload");
 };
 
 // Returns the name of a file that should be used to test writing and reading.
 function dataFileFilename() {
   return file.join(pathFor("ProfD"), "test-text-streams-data");
 }
+
+require('sdk/test').run(exports);

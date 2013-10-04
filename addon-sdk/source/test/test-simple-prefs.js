@@ -12,18 +12,18 @@ const { prefs: sp } = simplePrefs;
 
 const specialChars = "!@#$%^&*()_-=+[]{}~`\'\"<>,./?;:";
 
-exports.testIterations = function(test) {
+exports.testIterations = function(assert) {
   sp["test"] = true;
   sp["test.test"] = true;
   let prefAry = [];
   for (var name in sp ) {
     prefAry.push(name);
   }
-  test.assert("test" in sp);
-  test.assert(!sp.getPropertyDescriptor);
-  test.assert(Object.prototype.hasOwnProperty.call(sp, "test"));
-  test.assertEqual(["test", "test.test"].toString(), prefAry.sort().toString(), "for (x in y) part 1/2 works");
-  test.assertEqual(["test", "test.test"].toString(), Object.keys(sp).sort().toString(), "Object.keys works");
+  assert.ok("test" in sp);
+  assert.ok(!sp.getPropertyDescriptor);
+  assert.ok(Object.prototype.hasOwnProperty.call(sp, "test"));
+  assert.equal(["test", "test.test"].toString(), prefAry.sort().toString(), "for (x in y) part 1/2 works");
+  assert.equal(["test", "test.test"].toString(), Object.keys(sp).sort().toString(), "Object.keys works");
 
   delete sp["test"];
   delete sp["test.test"];
@@ -31,17 +31,17 @@ exports.testIterations = function(test) {
   for (var name in sp ) {
     prefAry.push(name);
   }
-  test.assertEqual([].toString(), prefAry.toString(), "for (x in y) part 2/2 works");
+  assert.equal([].toString(), prefAry.toString(), "for (x in y) part 2/2 works");
 }
 
-exports.testSetGetBool = function(test) {
-  test.assertEqual(sp.test, undefined, "Value should not exist");
+exports.testSetGetBool = function(assert) {
+  assert.equal(sp.test, undefined, "Value should not exist");
   sp.test = true;
-  test.assert(sp.test, "Value read should be the value previously set");
+  assert.ok(sp.test, "Value read should be the value previously set");
 };
 
 // TEST: setting and getting preferences with special characters work
-exports.testSpecialChars = function(test) {
+exports.testSpecialChars = function(assert) {
   let chars = specialChars.split("");
   let len = chars.length;
 
@@ -50,7 +50,7 @@ exports.testSpecialChars = function(test) {
     let rand = Math.random() + "";
     simplePrefs.on(char, function onPrefChanged() {
       simplePrefs.removeListener(char, onPrefChanged);
-      test.assertEqual(sp[char], rand, "setting pref with a name that is a special char, " + char + ", worked!");
+      assert.equal(sp[char], rand, "setting pref with a name that is a special char, " + char + ", worked!");
 
       // end test
       if (++count == len)
@@ -60,42 +60,40 @@ exports.testSpecialChars = function(test) {
   });
 };
 
-exports.testSetGetInt = function(test) {
-  test.assertEqual(sp["test-int"], undefined, "Value should not exist");
+exports.testSetGetInt = function(assert) {
+  assert.equal(sp["test-int"], undefined, "Value should not exist");
   sp["test-int"] = 1;
-  test.assertEqual(sp["test-int"], 1, "Value read should be the value previously set");
+  assert.equal(sp["test-int"], 1, "Value read should be the value previously set");
 };
 
-exports.testSetComplex = function(test) {
+exports.testSetComplex = function(assert) {
   try {
     sp["test-complex"] = {test: true};
-    test.fail("Complex values are not allowed");
+    assert.fail("Complex values are not allowed");
   }
   catch (e) {
-    test.pass("Complex values are not allowed");
+    assert.pass("Complex values are not allowed");
   }
 };
 
-exports.testSetGetString = function(test) {
-  test.assertEqual(sp["test-string"], undefined, "Value should not exist");
+exports.testSetGetString = function(assert) {
+  assert.equal(sp["test-string"], undefined, "Value should not exist");
   sp["test-string"] = "test";
-  test.assertEqual(sp["test-string"], "test", "Value read should be the value previously set");
+  assert.equal(sp["test-string"], "test", "Value read should be the value previously set");
 };
 
-exports.testHasAndRemove = function(test) {
+exports.testHasAndRemove = function(assert) {
   sp.test = true;
-  test.assert(("test" in sp), "Value exists");
+  assert.ok(("test" in sp), "Value exists");
   delete sp.test;
-  test.assertEqual(sp.test, undefined, "Value should be undefined");
+  assert.equal(sp.test, undefined, "Value should be undefined");
 };
 
-exports.testPrefListener = function(test) {
-  test.waitUntilDone();
-
+exports.testPrefListener = function(assert, done) {
   let listener = function(prefName) {
     simplePrefs.removeListener('test-listener', listener);
-    test.assertEqual(prefName, "test-listen", "The prefs listener heard the right event");
-    test.done();
+    assert.equal(prefName, "test-listen", "The prefs listener heard the right event");
+    done();
   };
 
   simplePrefs.on("test-listen", listener);
@@ -116,47 +114,43 @@ exports.testPrefListener = function(test) {
     sp[pref] = true;
   });
 
-  test.assert((observed.length == 3 && toSet.length == 3),
+  assert.ok((observed.length == 3 && toSet.length == 3),
       "Wildcard lengths inconsistent" + JSON.stringify([observed.length, toSet.length]));
 
   toSet.forEach(function(pref,ii) {
-    test.assertEqual(observed[ii], pref, "Wildcard observed " + pref);
+    assert.equal(observed[ii], pref, "Wildcard observed " + pref);
   });
 
   simplePrefs.removeListener('',wildlistener);
 
 };
 
-exports.testBtnListener = function(test) {
-  test.waitUntilDone();
-
+exports.testBtnListener = function(assert, done) {
   let name = "test-btn-listen";
   simplePrefs.on(name, function listener() {
     simplePrefs.removeListener(name, listener);
-    test.pass("Button press event was heard");
-    test.done();
+    assert.pass("Button press event was heard");
+    done();
   });
   notify((id + "-cmdPressed"), "", name);
 };
 
-exports.testPrefRemoveListener = function(test) {
-  test.waitUntilDone();
-
+exports.testPrefRemoveListener = function(assert, done) {
   let counter = 0;
 
   let listener = function() {
-    test.pass("The prefs listener was not removed yet");
+    assert.pass("The prefs listener was not removed yet");
 
     if (++counter > 1)
-      test.fail("The prefs listener was not removed");
+      assert.fail("The prefs listener was not removed");
 
     simplePrefs.removeListener("test-listen2", listener);
 
     sp["test-listen2"] = false;
 
     setTimeout(function() {
-      test.pass("The prefs listener was removed");
-      test.done();
+      assert.pass("The prefs listener was removed");
+      done();
     }, 250);
   };
 
@@ -167,15 +161,13 @@ exports.testPrefRemoveListener = function(test) {
 };
 
 // Bug 710117: Test that simple-pref listeners are removed on unload
-exports.testPrefUnloadListener = function(test) {
-  test.waitUntilDone();
-
+exports.testPrefUnloadListener = function(assert, done) {
   let loader = Loader(module);
   let sp = loader.require("sdk/simple-prefs");
   let counter = 0;
 
   let listener = function() {
-    test.assertEqual(++counter, 1, "This listener should only be called once");
+    assert.equal(++counter, 1, "This listener should only be called once");
 
     loader.unload();
 
@@ -184,7 +176,7 @@ exports.testPrefUnloadListener = function(test) {
     // this should execute, but also definitely shouldn't fire listener
     require("sdk/simple-prefs").prefs["test-listen3"] = false;
 
-    test.done();
+    done();
   };
 
   sp.on("test-listen3", listener);
@@ -195,15 +187,14 @@ exports.testPrefUnloadListener = function(test) {
 
 
 // Bug 710117: Test that simple-pref listeners are removed on unload
-exports.testPrefUnloadWildcardListener = function(test) {
-  test.waitUntilDone();
+exports.testPrefUnloadWildcardListener = function(assert, done) {
   let testpref = "test-wildcard-unload-listener";
   let loader = Loader(module);
   let sp = loader.require("sdk/simple-prefs");
   let counter = 0;
 
   let listener = function() {
-    test.assertEqual(++counter, 1, "This listener should only be called once");
+    assert.equal(++counter, 1, "This listener should only be called once");
 
     loader.unload();
 
@@ -212,7 +203,7 @@ exports.testPrefUnloadWildcardListener = function(test) {
     // this should execute, but also definitely shouldn't fire listener
     require("sdk/simple-prefs").prefs[testpref] = false;
 
-    test.done();
+    done();
   };
 
   sp.on("", listener);
@@ -222,10 +213,12 @@ exports.testPrefUnloadWildcardListener = function(test) {
 
 
 // Bug 732919 - JSON.stringify() fails on simple-prefs.prefs
-exports.testPrefJSONStringification = function(test) {
+exports.testPrefJSONStringification = function(assert) {
   var sp = require("sdk/simple-prefs").prefs;
-  test.assertEqual(
+  assert.equal(
       Object.keys(sp).join(),
       Object.keys(JSON.parse(JSON.stringify(sp))).join(),
       "JSON stringification should work.");
 };
+
+require('sdk/test').run(exports);
