@@ -106,10 +106,10 @@ SpewRange(MDefinition *def)
 {
 #ifdef DEBUG
     if (IonSpewEnabled(IonSpew_Range) && def->type() != MIRType_None && def->range()) {
-        Sprinter sp(GetIonContext()->cx);
-        sp.init();
-        def->range()->print(sp);
-        IonSpew(IonSpew_Range, "%d has range %s", def->id(), sp.string());
+        IonSpewHeader(IonSpew_Range);
+        def->printName(IonSpewFile);
+        fprintf(IonSpewFile, " has range ");
+        def->range()->dump(IonSpewFile);
     }
 #endif
 }
@@ -235,7 +235,12 @@ RangeAnalysis::addBetaNodes()
                       // [-\inf, bound-1] U [bound+1, \inf] but we only use contiguous ranges.
         }
 
-        IonSpew(IonSpew_Range, "Adding beta node for %d", val->id());
+        if (IonSpewEnabled(IonSpew_Range)) {
+            IonSpewHeader(IonSpew_Range);
+            fprintf(IonSpewFile, "Adding beta node for %d with range ", val->id());
+            comp.dump(IonSpewFile);
+        }
+
         MBeta *beta = MBeta::New(val, new Range(comp));
         block->insertBefore(*block->begin(), beta);
         replaceDominatedUsesWith(val, beta, block);
@@ -320,6 +325,15 @@ Range::print(Sprinter &sp) const
         sp.printf(" (U inf)");
     else if (!hasInt32UpperBound_ || !hasInt32LowerBound_)
         sp.printf(" (< pow(2, %d+1))", max_exponent_);
+}
+
+void
+Range::dump(FILE *fp) const
+{
+    Sprinter sp(GetIonContext()->cx);
+    sp.init();
+    print(sp);
+    fprintf(fp, "%s\n", sp.string());
 }
 
 Range *
