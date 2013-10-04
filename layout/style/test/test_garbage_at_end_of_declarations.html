@@ -40,8 +40,8 @@ var gDeclaration = gElement.style;
 /*
  * This lists properties where garbage identifiers are allowed at the
  * end, with values in property_database.js that are exceptions that
- * should be tested anyway.  "inherit" and "initial" are always
- * tested
+ * should be tested anyway.  "inherit", "initial" and "unset" are always
+ * tested.
  */
 var gAllowsExtra = {
   "counter-increment": { "none": true },
@@ -71,7 +71,7 @@ var gAllowsExtraUnusual = {
                  "ease-in-out": true, "2s ease-in": true,
                  "ease-out 2s": true, "1s bounce, 2s": true,
                  "1s bounce, 2s none": true },
-  "font-family": { "inherit": true, "initial": true }
+  "font-family": { "inherit": true, "initial": true, "unset": true }
 };
 
 gAllowsExtraUnusual["-moz-transition"] = gAllowsExtraUnusual["transition"];
@@ -83,7 +83,7 @@ function test_property(property)
 
   function test_value(value) {
     if (property in gAllowsExtra &&
-        value != "inherit" && value != "initial" &&
+        value != "inherit" && value != "initial" && value != "unset" &&
         !(value in gAllowsExtra[property])) {
       return;
     }
@@ -110,6 +110,8 @@ function test_property(property)
   var idx;
   test_value("inherit");
   test_value("initial");
+  if (SpecialPowers.getBoolPref("layout.css.unset-value.enabled"))
+    test_value("unset");
   for (idx in info.initial_values)
     test_value(info.initial_values[idx]);
   for (idx in info.other_values)

@@ -2144,6 +2144,13 @@ jit::AnalyzeNewScriptProperties(JSContext *cx, JSFunction *fun,
             }
         }
 
+        // Also check to see if the instruction is inside a loop body. Even if
+        // an access will always execute in the script, if it executes multiple
+        // times then we can get confused when rolling back objects while
+        // clearing the new script information.
+        if (ins->block()->loopDepth() != 0)
+            definitelyExecuted = false;
+
         bool handled = false;
         if (!AnalyzePoppedThis(cx, type, thisValue, ins, definitelyExecuted,
                                baseobj, initializerList, &accessedProperties, &handled))

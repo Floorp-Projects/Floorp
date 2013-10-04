@@ -1,0 +1,99 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test that preffed off properties do not appear in computed style</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=919594">Mozilla Bug 919594</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+  
+</div>
+<pre id="test">
+<script type="application/javascript; version=1.7">
+
+/** Test that preffed off properties do not appear in computed style **/
+
+function testWithAllPrefsDisabled() {
+  let exposedProperties = Object.keys(gCS).map(i => gCS[i]);
+
+  // Store the number of properties for later tests to use.
+  gLengthWithAllPrefsDisabled = gCS.length;
+
+  // Check that all of the properties behind the prefs are not exposed.
+  for (let pref in gProps) {
+    for (let prop of gProps[pref]) {
+      ok(exposedProperties.indexOf(prop) == -1, prop + " not exposed when prefs are false");
+    }
+  }
+}
+
+function testWithOnePrefEnabled(aPref) {
+  let exposedProperties = Object.keys(gCS).map(i => gCS[i]);
+
+  // Check that the number of properties on the object is as expected.
+  is(gCS.length, gLengthWithAllPrefsDisabled + gProps[aPref].length, "length when " + aPref + " is true");
+
+  // Check that the properties corresponding to aPref are exposed.
+  for (let prop of gProps[aPref]) {
+    ok(exposedProperties.indexOf(prop) != -1, prop + " exposed when " + aPref + " is true");
+  }
+}
+
+function step() {
+  if (gTestIndex == gTests.length) {
+    // Reached the end of the tests.
+    SimpleTest.finish();
+    return;
+  }
+
+  if (gPrefsPushed) {
+    // We've just finished running one tests.  Pop the prefs and go on to
+    // the next test.
+    gTestIndex++;
+    gPrefsPushed = false;
+    SpecialPowers.popPrefEnv(step);
+    return;
+  }
+
+  // About to run one test.  Push the prefs and run it.
+  let fn = gTests[gTestIndex].fn;
+  gPrefsPushed = true;
+  SpecialPowers.pushPrefEnv(gTests[gTestIndex].settings,
+                            function() { fn(); SimpleTest.executeSoon(step); });
+}
+
+// ----
+
+var gProps = {
+  "layout.css.vertical-text.enabled": ["text-combine-horizontal", "text-orientation", "writing-mode"],
+  "layout.css.flexbox.enabled": ["align-items", "align-self", "flex-basis", "flex-direction", "flex-grow", "flex-shrink", "order", "justify-content"],
+  "layout.css.font-features.enabled": ["font-kerning", "font-synthesis", "font-variant-alternates", "font-variant-caps", "font-variant-east-asian", "font-variant-ligatures", "font-variant-numeric", "font-variant-position"],
+  "layout.css.image-orientation.enabled": ["image-orientation"],
+  "layout.css.mix-blend-mode.enabled": ["mix-blend-mode"],
+  "layout.css.masking.enabled": ["mask-type"]
+};
+
+var gCS = getComputedStyle(document.body, "");
+var gLengthWithAllPrefsDisabled;
+
+var gTestIndex = 0;
+var gPrefsPushed = false;
+var gTests = [
+  // First, test when all of the prefs are disabled.
+  { settings: { set: Object.keys(gProps).map(x => [x, false]) },
+    fn:       testWithAllPrefsDisabled },
+  // Then, test each pref enabled individually.
+  ...Object.keys(gProps).map(p =>
+    ({ settings: { set: Object.keys(gProps).map(x => [x, x == p]) },
+       fn:       testWithOnePrefEnabled.bind(null, p) }))
+];
+
+SimpleTest.waitForExplicitFinish();
+step();
+</script>
+</pre>
+</body>
+</html>

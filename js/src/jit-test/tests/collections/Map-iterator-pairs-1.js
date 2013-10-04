@@ -1,8 +1,10 @@
 // mapiter.next() returns an actual array.
 
+load(libdir + "iteration.js");
+
 var key = {};
 var map = Map([[key, 'value']]);
-var entry = map.iterator().next();
+var entry = map[std_iterator]().next().value;
 assertEq(Array.isArray(entry), true);
 assertEq(Object.getPrototypeOf(entry), Array.prototype);
 assertEq(Object.isExtensible(entry), true);

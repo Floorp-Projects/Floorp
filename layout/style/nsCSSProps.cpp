@@ -1926,6 +1926,17 @@ const uint32_t nsCSSProps::kFlagsTable[eCSSProperty_COUNT] = {
 #undef CSS_PROP_SHORTHAND
 };
 
+static const nsCSSProperty gAllSubpropTable[] = {
+#define CSS_PROP_LIST_ONLY_COMPONENTS_OF_ALL_SHORTHAND
+#define CSS_PROP(name_, id_, method_, flags_, pref_, parsevariant_, kwtable_, \
+                 stylestruct_, stylestructoffset_, animtype_)                 \
+  eCSSProperty_##id_,
+#include "nsCSSPropList.h"
+#undef CSS_PROP
+#undef CSS_PROP_LIST_ONLY_COMPONENTS_OF_ALL_SHORTHAND
+  eCSSProperty_UNKNOWN
+};
+
 static const nsCSSProperty gAnimationSubpropTable[] = {
   eCSSProperty_animation_duration,
   eCSSProperty_animation_timing_function,

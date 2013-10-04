@@ -1,0 +1,39 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=923010
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug 923010</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <script type="application/javascript">
+  /** Test for Bug 923010 **/
+  try {
+    var conn = new mozRTCPeerConnection();
+    try {
+      conn.createAnswer(function() {}, null, { "mandatory": { "BOGUS": 5 } } )
+      ok(false, "That call to createAnswer should have thrown");
+    } catch (e) {
+      is(e.lineNumber, 16, "Exception should have been on line 15");
+      is(e.message,
+         "createAnswer passed invalid constraints - unknown mandatory constraint: BOGUS",
+         "Should have the exception we expect");
+    }
+  } catch (e) {
+    // b2g has no WebRTC, apparently
+    todo(false, "No WebRTC on b2g yet");
+  }
+  </script>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=923010">Mozilla Bug 923010</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+
+</div>
+<pre id="test">
+</pre>
+</body>
+</html>
