@@ -60,7 +60,7 @@ function cbError(aError) {
 
 SimpleTest.waitForExplicitFinish();
 
-var installTestApp;
+var installTestApp, mm;
 
 var steps = [
   function() {
@@ -85,21 +85,32 @@ var steps = [
     // devtools jsm into mochitest scope. We end up not receiving
     // DebuggerClient.addListener callback arguments...
     let scriptUrl = SimpleTest.getTestFileURL("debugger-protocol-helper.js");
-    let mm = SpecialPowers.loadChromeScript(scriptUrl);
+    mm = SpecialPowers.loadChromeScript(scriptUrl);
     installTestApp = function (url, appId, callback) {
       let installResponse, appObject;
+      let installedEvent = false;
       mm.sendAsyncMessage("install", {url: url, appId: appId});
       mm.addMessageListener("installed", function onInstalled(aResponse) {
         mm.removeMessageListener("installed", onInstalled);
+        ok(true, "install request replied");
         installResponse = aResponse;
-        if (appObject)
-          callback(aResponse, appObject);
+        checkEnd();
+      });
+      mm.addMessageListener("installed-event", function onInstalledEvent(aResponse) {
+        mm.removeMessageListener("installed-event", onInstalledEvent);
+        ok(true, "received appInstall actor event");
+        installedEvent = true;
+        checkEnd();
       });
       navigator.mozApps.mgmt.oninstall = function(evt) {
         appObject = evt.application;
-        if (installResponse)
-          callback(installResponse, appObject);
+        ok(true, "mozApps.mgmt install event fired");
+        checkEnd();
       };
+      function checkEnd() {
+        if (appObject && installResponse && installedEvent)
+          callback(installResponse, appObject);
+      }
     };
     SpecialPowers.autoConfirmAppInstall(next);
   },
@@ -145,6 +156,7 @@ var steps = [
   },
   function() {
     ok(true, "all done!\n");
+    mm.sendAsyncMessage("cleanup");
     SpecialPowers.popPrefEnv(finish);
   }
 ];
