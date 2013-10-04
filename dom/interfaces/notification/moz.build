@@ -6,7 +6,6 @@
 
 XPIDL_SOURCES += [
     'nsIDOMDesktopNotification.idl',
-    'nsINotificationStorage.idl',
 ]
 
 XPIDL_MODULE = 'dom_notification'
