@@ -266,7 +266,7 @@ JSONSpewer::spewMDef(MDefinition *def)
     if (def->isAdd() || def->isSub() || def->isMod() || def->isMul() || def->isDiv())
         isTruncated = static_cast<MBinaryArithInstruction*>(def)->isTruncated();
 
-    if (def->range()) {
+    if (def->type() != MIRType_None && def->range()) {
         Sprinter sp(GetIonContext()->cx);
         sp.init();
         def->range()->print(sp);
