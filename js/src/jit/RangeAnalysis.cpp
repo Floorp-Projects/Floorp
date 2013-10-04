@@ -1163,6 +1163,44 @@ MMod::computeRange()
 }
 
 void
+MDiv::computeRange()
+{
+    if (specialization() != MIRType_Int32 && specialization() != MIRType_Double)
+        return;
+    Range lhs(getOperand(0));
+    Range rhs(getOperand(1));
+
+    // If either operand is a NaN, the result is NaN. This also conservatively
+    // handles Infinity cases.
+    if (!lhs.hasInt32Bounds() || !rhs.hasInt32Bounds())
+        return;
+
+    // Something simple for now: When dividing by a positive rhs, the result
+    // won't be further from zero than lhs.
+    if (rhs.lower() > 0 && lhs.lower() >= 0)
+        setRange(new Range(0, lhs.upper(), true, lhs.exponent()));
+}
+
+void
+MSqrt::computeRange()
+{
+    Range input(getOperand(0));
+
+    // If either operand is a NaN, the result is NaN. This also conservatively
+    // handles Infinity cases.
+    if (!input.hasInt32Bounds())
+        return;
+
+    // Sqrt of a negative non-zero value is NaN.
+    if (input.lower() < 0)
+        return;
+
+    // Something simple for now: When taking the sqrt of a positive value, the
+    // result won't be further from zero than the input.
+    setRange(new Range(0, input.upper(), true, input.exponent()));
+}
+
+void
 MToDouble::computeRange()
 {
     setRange(new Range(getOperand(0)));
