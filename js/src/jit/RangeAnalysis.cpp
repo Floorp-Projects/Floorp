@@ -105,7 +105,7 @@ static inline void
 SpewRange(MDefinition *def)
 {
 #ifdef DEBUG
-    if (IonSpewEnabled(IonSpew_Range) && def->range()) {
+    if (IonSpewEnabled(IonSpew_Range) && def->type() != MIRType_None && def->range()) {
         Sprinter sp(GetIonContext()->cx);
         sp.init();
         def->range()->print(sp);
@@ -398,11 +398,10 @@ Range::Range(const MDefinition *def)
         return;
     }
 
+    JS_ASSERT_IF(def->type() == MIRType_Boolean, other->isBoolean());
+
     *this = *other;
     symbolicLower_ = symbolicUpper_ = nullptr;
-
-    if (def->type() == MIRType_Boolean)
-        wrapAroundToBoolean();
 }
 
 static inline bool
@@ -1786,6 +1785,9 @@ RangeAnalysis::addRangeAssertions()
         for (MInstructionIterator iter(block->begin()); iter != block->end(); iter++) {
             MInstruction *ins = *iter;
 
+            if (ins->type() == MIRType_None)
+                continue;
+
             Range *r = ins->range();
             if (!r)
                 continue;
@@ -2147,6 +2149,9 @@ RangeAnalysis::truncate()
 
     for (PostorderIterator block(graph_.poBegin()); block != graph_.poEnd(); block++) {
         for (MInstructionReverseIterator iter(block->rbegin()); iter != block->rend(); iter++) {
+            if (iter->type() == MIRType_None)
+                continue;
+
             // Remember all bitop instructions for folding after range analysis.
             switch (iter->op()) {
               case MDefinition::Op_BitAnd:

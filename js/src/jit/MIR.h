@@ -365,9 +365,11 @@ class MDefinition : public MNode
     // errors. Instead, one should define the collectRangeInfo() to set the
     // right set of flags which are dependent on the range of the inputs.
     Range *range() const {
+        JS_ASSERT(type() != MIRType_None);
         return range_;
     }
     void setRange(Range *range) {
+        JS_ASSERT(type() != MIRType_None);
         range_ = range;
     }
 
