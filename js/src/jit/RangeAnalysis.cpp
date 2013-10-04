@@ -454,9 +454,9 @@ Range::and_(const Range *lhs, const Range *rhs)
     int64_t upper;
 
     // If both numbers can be negative, result can be negative in the whole range
-    if (lhs->lower_ < 0 && rhs->lower_ < 0) {
+    if (lhs->lower() < 0 && rhs->lower() < 0) {
         lower = INT_MIN;
-        upper = Max(lhs->upper_, rhs->upper_);
+        upper = Max(lhs->upper(), rhs->upper());
         return Range::NewInt32Range(lower, upper);
     }
 
@@ -464,15 +464,15 @@ Range::and_(const Range *lhs, const Range *rhs)
     // - result can't be negative
     // - Upper bound is minimum of both upper range,
     lower = 0;
-    upper = Min(lhs->upper_, rhs->upper_);
+    upper = Min(lhs->upper(), rhs->upper());
 
     // EXCEPT when upper bound of non negative number is max value,
     // because negative value can return the whole max value.
     // -1 & 5 = 5
-    if (lhs->lower_ < 0)
-       upper = rhs->upper_;
-    if (rhs->lower_ < 0)
-        upper = lhs->upper_;
+    if (lhs->lower() < 0)
+       upper = rhs->upper();
+    if (rhs->lower() < 0)
+        upper = lhs->upper();
 
     return Range::NewInt32Range(lower, upper);
 }
@@ -486,44 +486,44 @@ Range::or_(const Range *lhs, const Range *rhs)
     // can compute a fully precise result. Handling these up front also
     // protects the code below from calling CountLeadingZeroes32 with a zero
     // operand or from shifting an int32_t by 32.
-    if (lhs->lower_ == lhs->upper_) {
-        if (lhs->lower_ == 0)
+    if (lhs->lower() == lhs->upper()) {
+        if (lhs->lower() == 0)
             return new Range(*rhs);
-        if (lhs->lower_ == -1)
+        if (lhs->lower() == -1)
             return new Range(*lhs);;
     }
-    if (rhs->lower_ == rhs->upper_) {
-        if (rhs->lower_ == 0)
+    if (rhs->lower() == rhs->upper()) {
+        if (rhs->lower() == 0)
             return new Range(*lhs);
-        if (rhs->lower_ == -1)
+        if (rhs->lower() == -1)
             return new Range(*rhs);;
     }
 
     // The code below uses CountLeadingZeroes32, which has undefined behavior
     // if its operand is 0. We rely on the code above to protect it.
-    JS_ASSERT_IF(lhs->lower_ >= 0, lhs->upper_ != 0);
-    JS_ASSERT_IF(rhs->lower_ >= 0, rhs->upper_ != 0);
-    JS_ASSERT_IF(lhs->upper_ < 0, lhs->lower_ != -1);
-    JS_ASSERT_IF(rhs->upper_ < 0, rhs->lower_ != -1);
+    JS_ASSERT_IF(lhs->lower() >= 0, lhs->upper() != 0);
+    JS_ASSERT_IF(rhs->lower() >= 0, rhs->upper() != 0);
+    JS_ASSERT_IF(lhs->upper() < 0, lhs->lower() != -1);
+    JS_ASSERT_IF(rhs->upper() < 0, rhs->lower() != -1);
 
     int64_t lower = INT32_MIN;
     int64_t upper = INT32_MAX;
 
-    if (lhs->lower_ >= 0 && rhs->lower_ >= 0) {
+    if (lhs->lower() >= 0 && rhs->lower() >= 0) {
         // Both operands are non-negative, so the result won't be less than either.
-        lower = Max(lhs->lower_, rhs->lower_);
+        lower = Max(lhs->lower(), rhs->lower());
         // The result will have leading zeros where both operands have leading zeros.
-        upper = UINT32_MAX >> Min(CountLeadingZeroes32(lhs->upper_),
-                                  CountLeadingZeroes32(rhs->upper_));
+        upper = UINT32_MAX >> Min(CountLeadingZeroes32(lhs->upper()),
+                                  CountLeadingZeroes32(rhs->upper()));
     } else {
         // The result will have leading ones where either operand has leading ones.
-        if (lhs->upper_ < 0) {
-            unsigned leadingOnes = CountLeadingZeroes32(~lhs->lower_);
+        if (lhs->upper() < 0) {
+            unsigned leadingOnes = CountLeadingZeroes32(~lhs->lower());
             lower = Max(lower, int64_t(~int32_t(UINT32_MAX >> leadingOnes)));
             upper = -1;
         }
-        if (rhs->upper_ < 0) {
-            unsigned leadingOnes = CountLeadingZeroes32(~rhs->lower_);
+        if (rhs->upper() < 0) {
+            unsigned leadingOnes = CountLeadingZeroes32(~rhs->lower());
             lower = Max(lower, int64_t(~int32_t(UINT32_MAX >> leadingOnes)));
             upper = -1;
         }
@@ -537,10 +537,10 @@ Range::xor_(const Range *lhs, const Range *rhs)
 {
     JS_ASSERT(lhs->isInt32());
     JS_ASSERT(rhs->isInt32());
-    int32_t lhsLower = lhs->lower_;
-    int32_t lhsUpper = lhs->upper_;
-    int32_t rhsLower = rhs->lower_;
-    int32_t rhsUpper = rhs->upper_;
+    int32_t lhsLower = lhs->lower();
+    int32_t lhsUpper = lhs->upper();
+    int32_t rhsLower = rhs->lower();
+    int32_t rhsUpper = rhs->upper();
     bool invertAfter = false;
 
     // If either operand is negative, bitwise-negate it, and arrange to negate
@@ -600,7 +600,7 @@ Range *
 Range::not_(const Range *op)
 {
     JS_ASSERT(op->isInt32());
-    return Range::NewInt32Range(~op->upper_, ~op->lower_);
+    return Range::NewInt32Range(~op->upper(), ~op->lower());
 }
 
 Range *
@@ -628,10 +628,10 @@ Range::mul(const Range *lhs, const Range *rhs)
 
     if (MissingAnyInt32Bounds(lhs, rhs))
         return new Range(NoInt32LowerBound, NoInt32UpperBound, fractional, exponent);
-    int64_t a = (int64_t)lhs->lower_ * (int64_t)rhs->lower_;
-    int64_t b = (int64_t)lhs->lower_ * (int64_t)rhs->upper_;
-    int64_t c = (int64_t)lhs->upper_ * (int64_t)rhs->lower_;
-    int64_t d = (int64_t)lhs->upper_ * (int64_t)rhs->upper_;
+    int64_t a = (int64_t)lhs->lower() * (int64_t)rhs->lower();
+    int64_t b = (int64_t)lhs->lower() * (int64_t)rhs->upper();
+    int64_t c = (int64_t)lhs->upper() * (int64_t)rhs->lower();
+    int64_t d = (int64_t)lhs->upper() * (int64_t)rhs->upper();
     return new Range(
         Min( Min(a, b), Min(c, d) ),
         Max( Max(a, b), Max(c, d) ),
@@ -646,12 +646,12 @@ Range::lsh(const Range *lhs, int32_t c)
 
     // If the shift doesn't loose bits or shift bits into the sign bit, we
     // can simply compute the correct range by shifting.
-    if ((int32_t)((uint32_t)lhs->lower_ << shift << 1 >> shift >> 1) == lhs->lower_ &&
-        (int32_t)((uint32_t)lhs->upper_ << shift << 1 >> shift >> 1) == lhs->upper_)
+    if ((int32_t)((uint32_t)lhs->lower() << shift << 1 >> shift >> 1) == lhs->lower() &&
+        (int32_t)((uint32_t)lhs->upper() << shift << 1 >> shift >> 1) == lhs->upper())
     {
         return Range::NewInt32Range(
-            (uint32_t)lhs->lower_ << shift,
-            (uint32_t)lhs->upper_ << shift);
+            uint32_t(lhs->lower()) << shift,
+            uint32_t(lhs->upper()) << shift);
     }
 
     return Range::NewInt32Range(INT32_MIN, INT32_MAX);
@@ -663,21 +663,26 @@ Range::rsh(const Range *lhs, int32_t c)
     JS_ASSERT(lhs->isInt32());
     int32_t shift = c & 0x1f;
     return Range::NewInt32Range(
-        lhs->lower_ >> shift,
-        lhs->upper_ >> shift);
+        lhs->lower() >> shift,
+        lhs->upper() >> shift);
 }
 
 Range *
 Range::ursh(const Range *lhs, int32_t c)
 {
+    // ursh's left operand is uint32, not int32, but for range analysis we
+    // currently approximate it as int32. We assume here that the range has
+    // already been adjusted accordingly by our callers.
+    JS_ASSERT(lhs->isInt32());
+
     int32_t shift = c & 0x1f;
 
     // If the value is always non-negative or always negative, we can simply
     // compute the correct range by shifting.
     if (lhs->isFiniteNonNegative() || lhs->isFiniteNegative()) {
         return Range::NewUInt32Range(
-            uint32_t(lhs->lower_) >> shift,
-            uint32_t(lhs->upper_) >> shift);
+            uint32_t(lhs->lower()) >> shift,
+            uint32_t(lhs->upper()) >> shift);
     }
 
     // Otherwise return the most general range after the shift.
@@ -703,6 +708,11 @@ Range::rsh(const Range *lhs, const Range *rhs)
 Range *
 Range::ursh(const Range *lhs, const Range *rhs)
 {
+    // ursh's left operand is uint32, not int32, but for range analysis we
+    // currently approximate it as int32. We assume here that the range has
+    // already been adjusted accordingly by our callers.
+    JS_ASSERT(lhs->isInt32());
+    JS_ASSERT(rhs->isInt32());
     return Range::NewUInt32Range(0, lhs->isFiniteNonNegative() ? lhs->upper() : UINT32_MAX);
 }
 
@@ -712,8 +722,8 @@ Range::abs(const Range *op)
     // Get the lower and upper values of the operand, and adjust them
     // for infinities. Range's constructor treats any value beyond the
     // int32_t range as infinity.
-    int64_t l = (int64_t)op->lower() - !op->hasInt32LowerBound();
-    int64_t u = (int64_t)op->upper() + !op->hasInt32UpperBound();
+    int64_t l = (int64_t)op->lower_ - !op->hasInt32LowerBound();
+    int64_t u = (int64_t)op->upper_ + !op->hasInt32UpperBound();
 
     return new Range(Max(Max(int64_t(0), l), -u),
                      Max(Abs(l), Abs(u)),
@@ -987,6 +997,13 @@ MUrsh::computeRange()
 {
     Range left(getOperand(0));
     Range right(getOperand(1));
+
+    // ursh can be thought of as converting its left operand to uint32, or it
+    // can be thought of as converting its left operand to int32, and then
+    // reinterpreting the int32 bits as a uint32 value. Both approaches yield
+    // the same result. Since we lack support for full uint32 ranges, we use
+    // the second interpretation, though it does cause us to be conservative.
+    left.wrapAroundToInt32();
 
     MDefinition *rhs = getOperand(1);
     if (!rhs->isConstant()) {
@@ -1794,6 +1811,7 @@ Range::wrapAroundToInt32()
 void
 Range::wrapAroundToShiftCount()
 {
+    wrapAroundToInt32();
     if (lower() < 0 || upper() >= 32)
         set(0, 31);
 }
@@ -1801,6 +1819,7 @@ Range::wrapAroundToShiftCount()
 void
 Range::wrapAroundToBoolean()
 {
+    wrapAroundToInt32();
     if (!isBoolean())
         set(0, 1);
 }
