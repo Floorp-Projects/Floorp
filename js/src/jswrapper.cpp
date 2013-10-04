@@ -174,7 +174,7 @@ CrossCompartmentWrapper::~CrossCompartmentWrapper()
 {
 }
 
-bool CrossCompartmentWrapper::finalizeInBackground(Value priv)
+bool Wrapper::finalizeInBackground(Value priv)
 {
     if (!priv.isObject())
         return true;
