@@ -359,11 +359,15 @@ class Range : public TempObject {
         return exponent() + 1; // 2^0 -> 1
     }
 
+    // Return the lower bound. Asserts that the value has an int32 bound.
     int32_t lower() const {
+        JS_ASSERT(hasInt32LowerBound());
         return lower_;
     }
 
+    // Return the upper bound. Asserts that the value has an int32 bound.
     int32_t upper() const {
+        JS_ASSERT(hasInt32UpperBound());
         return upper_;
     }
 
