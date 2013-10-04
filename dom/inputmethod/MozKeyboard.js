@@ -475,7 +475,8 @@ MozInputContext.prototype = {
 
   QueryInterface: XPCOMUtils.generateQI([
     Ci.nsIB2GInputContext,
-    Ci.nsIObserver
+    Ci.nsIObserver,
+    Ci.nsISupportsWeakReference
   ]),
 
   classInfo: XPCOMUtils.generateCI({
