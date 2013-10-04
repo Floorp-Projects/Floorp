@@ -27,6 +27,8 @@
 #include "nsTHashtable.h"                // for member
 #include "mozilla/dom/DocumentBinding.h"
 #include "Units.h"
+#include "nsExpirationTracker.h"
+#include "nsClassHashtable.h"
 
 class imgIRequest;
 class nsAString;
@@ -80,6 +82,7 @@ class nsDOMCaretPosition;
 class nsViewportInfo;
 class nsDOMEvent;
 class nsIGlobalObject;
+class nsCSSSelectorList;
 
 namespace mozilla {
 class ErrorResult;
@@ -660,7 +663,61 @@ public:
 protected:
   virtual Element *GetRootElementInternal() const = 0;
 
+private:
+  class SelectorCacheKey
+  {
+    public:
+      SelectorCacheKey(const nsAString& aString) : mKey(aString)
+      {
+        MOZ_COUNT_CTOR(SelectorCacheKey);
+      }
+
+      nsString mKey;
+      nsExpirationState mState;
+
+      nsExpirationState* GetExpirationState() { return &mState; }
+
+      ~SelectorCacheKey()
+      {
+        MOZ_COUNT_DTOR(SelectorCacheKey);
+      }
+  };
+
+  class SelectorCacheKeyDeleter;
+
 public:
+  class SelectorCache MOZ_FINAL
+    : public nsExpirationTracker<SelectorCacheKey, 4>
+  {
+    public:
+      SelectorCache();
+
+      // CacheList takes ownership of aSelectorList.
+      void CacheList(const nsAString& aSelector, nsCSSSelectorList* aSelectorList);
+
+      virtual void NotifyExpired(SelectorCacheKey* aSelector) MOZ_OVERRIDE;
+
+      // We do not call MarkUsed because it would just slow down lookups and
+      // because we're OK expiring things after a few seconds even if they're
+      // being used.
+      nsCSSSelectorList* GetList(const nsAString& aSelector)
+      {
+        return mTable.Get(aSelector);
+      }
+
+      ~SelectorCache()
+      {
+        AgeAllGenerations();
+      }
+
+    private:
+      nsClassHashtable<nsStringHashKey, nsCSSSelectorList> mTable;
+  };
+
+  SelectorCache& GetSelectorCache()
+  {
+    return mSelectorCache;
+  }
   // Get the root <html> element, or return null if there isn't one (e.g.
   // if the root isn't <html>)
   Element* GetHtmlElement() const;
@@ -2133,6 +2190,7 @@ public:
 
 private:
   uint64_t mWarnedAbout;
+  SelectorCache mSelectorCache;
 
 protected:
   ~nsIDocument();
