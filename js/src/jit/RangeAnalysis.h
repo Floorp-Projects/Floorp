@@ -328,6 +328,7 @@ class Range : public TempObject {
     }
 
     void print(Sprinter &sp) const;
+    void dump(FILE *fp) const;
     bool update(const Range *other);
 
     // Unlike the other operations, unionWith is an in-place

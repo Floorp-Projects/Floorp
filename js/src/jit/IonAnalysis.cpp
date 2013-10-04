@@ -1893,6 +1893,15 @@ LinearSum::print(Sprinter &sp) const
         sp.printf("%d", constant_);
 }
 
+void
+LinearSum::dump(FILE *fp) const
+{
+    Sprinter sp(GetIonContext()->cx);
+    sp.init();
+    print(sp);
+    fprintf(fp, "%s\n", sp.string());
+}
+
 static bool
 AnalyzePoppedThis(JSContext *cx, types::TypeObject *type,
                   MDefinition *thisValue, MInstruction *ins, bool definitelyExecuted,
