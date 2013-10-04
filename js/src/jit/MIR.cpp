@@ -543,6 +543,16 @@ MLoadTypedArrayElement::printOpcode(FILE *fp) const
     fprintf(fp, " %s", ScalarTypeRepresentation::typeName(arrayType()));
 }
 
+void
+MAssertRange::printOpcode(FILE *fp) const
+{
+    MDefinition::printOpcode(fp);
+    Sprinter sp(GetIonContext()->cx);
+    sp.init();
+    assertedRange()->print(sp);
+    fprintf(fp, " %s", sp.string());
+}
+
 MParameter *
 MParameter::New(int32_t index, types::TemporaryTypeSet *types)
 {
