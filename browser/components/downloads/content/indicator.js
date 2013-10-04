@@ -119,10 +119,12 @@ const DownloadsButton = {
 
     indicator.open = this._anchorRequested;
 
-    // Determine if we're located on an invisible toolbar.
-    if (!isElementVisible(indicator.parentNode)) {
-      return null;
-    }
+    let widget = CustomizableUI.getWidget("downloads-button")
+                               .forWindow(window);
+     // Determine if the indicator is located on an invisible toolbar.
+     if (!isElementVisible(indicator.parentNode) && !widget.overflowed) {
+       return null;
+     }
 
     return DownloadsIndicatorView.indicatorAnchor;
   },
@@ -495,7 +497,13 @@ const DownloadsIndicatorView = {
       DownloadsCommon.getIndicatorData(window).attention = false;
       BrowserDownloadsUI();
     } else {
-      DownloadsPanel.showPanel();
+      // If the downloads button is in the menu panel, open the Library
+      let widgetGroup = CustomizableUI.getWidget("downloads-button");
+      if (widgetGroup.areaType == CustomizableUI.TYPE_MENU_PANEL) {
+        DownloadsPanel.showDownloadsHistory();
+      } else {
+        DownloadsPanel.showPanel();
+      }
     }
 
     aEvent.stopPropagation();
@@ -528,7 +536,6 @@ const DownloadsIndicatorView = {
   },
 
   _indicator: null,
-  _indicatorAnchor: null,
   __indicatorCounter: null,
   __indicatorProgress: null,
 
@@ -552,8 +559,12 @@ const DownloadsIndicatorView = {
 
   get indicatorAnchor()
   {
-    return this._indicatorAnchor ||
-      (this._indicatorAnchor = document.getElementById("downloads-indicator-anchor"));
+    let widget = CustomizableUI.getWidget("downloads-button")
+                               .forWindow(window);
+    if (widget.overflowed) {
+      return widget.anchor;
+    }
+    return document.getElementById("downloads-indicator-anchor");
   },
 
   get _indicatorCounter()
@@ -576,7 +587,6 @@ const DownloadsIndicatorView = {
 
   _onCustomizedAway: function() {
     this._indicator = null;
-    this._indicatorAnchor = null;
     this.__indicatorCounter = null;
     this.__indicatorProgress = null;
   },
