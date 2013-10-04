@@ -32,10 +32,17 @@ function connect(onDone) {
     gClient.listTabs(function onListTabs(aResponse) {
       gActor = aResponse.webappsActor;
       if (gActor)
-        onDone();
+        webappActorRequest({type: "watchApps"}, onDone);
     });
   });
 
+  gClient.addListener("appInstall", function (aState, aType, aPacket) {
+    sendAsyncMessage("installed-event", { manifestURL: aType.manifestURL });
+  });
+
+  gClient.addListener("appUninstall", function (aState, aType, aPacket) {
+    sendAsyncMessage("uninstalled-event", { manifestURL: aType.manifestURL });
+  });
 }
 
 function webappActorRequest(request, onResponse) {
@@ -84,3 +91,10 @@ addMessageListener("install", function (aMessage) {
     dump("installTestApp exception: " + e + "\n");
   }
 });
+
+addMessageListener("cleanup", function () {
+  webappActorRequest({type: "unwatchApps"}, function () {
+    gClient.close();
+  });
+});
+

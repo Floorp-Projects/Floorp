@@ -199,7 +199,11 @@ const UnsolicitedNotifications = {
   "pageError": "pageError",
   "documentLoad": "documentLoad",
   "enteredFrame": "enteredFrame",
-  "exitedFrame": "exitedFrame"
+  "exitedFrame": "exitedFrame",
+  "appOpen": "appOpen",
+  "appClose": "appClose",
+  "appInstall": "appInstall",
+  "appUninstall": "appUninstall"
 };
 
 /**
