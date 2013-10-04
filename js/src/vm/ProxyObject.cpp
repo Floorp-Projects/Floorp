@@ -15,7 +15,7 @@ using namespace js;
 
 /* static */ ProxyObject *
 ProxyObject::New(JSContext *cx, BaseProxyHandler *handler, HandleValue priv, TaggedProto proto_,
-                 JSObject *parent_, ProxyCallable callable, bool singleton)
+                 JSObject *parent_, const ProxyOptions &options)
 {
     Rooted<TaggedProto> proto(cx, proto_);
     RootedObject parent(cx, parent_);
@@ -26,22 +26,22 @@ ProxyObject::New(JSContext *cx, BaseProxyHandler *handler, HandleValue priv, Tag
     if (handler->isOuterWindow())
         clasp = &OuterWindowProxyObject::class_;
     else
-        clasp = callable ? &ProxyObject::callableClass_
-                         : &ProxyObject::uncallableClass_;
+        clasp = options.callable() ? &ProxyObject::callableClass_
+                                   : &ProxyObject::uncallableClass_;
 
     /*
      * Eagerly mark properties unknown for proxies, so we don't try to track
      * their properties and so that we don't need to walk the compartment if
      * their prototype changes later.
      */
-    if (proto.isObject() && !singleton) {
+    if (proto.isObject() && !options.singleton()) {
         RootedObject protoObj(cx, proto.toObject());
         if (!JSObject::setNewTypeUnknown(cx, clasp, protoObj))
             return NULL;
     }
 
     NewObjectKind newKind =
-        (clasp == &OuterWindowProxyObject::class_ || singleton) ? SingletonObject : GenericObject;
+        (clasp == &OuterWindowProxyObject::class_ || options.singleton()) ? SingletonObject : GenericObject;
     gc::AllocKind allocKind = gc::GetGCObjectKind(clasp);
     if (handler->finalizeInBackground(priv))
         allocKind = GetBackgroundAllocKind(allocKind);
