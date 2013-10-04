@@ -734,6 +734,7 @@ ResultsPanelContainer.prototype = Heritage.extend(WidgetMethods, {
         this._panel.className = "results-panel";
         this._panel.setAttribute("level", "top");
         this._panel.setAttribute("noautofocus", "true");
+        this._panel.setAttribute("consumeoutsideclicks", "false");
         document.documentElement.appendChild(this._panel);
       }
       if (!this.widget) {

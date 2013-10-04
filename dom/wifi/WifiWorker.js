@@ -2348,7 +2348,7 @@ function WifiWorker() {
       self.networksArray = [];
       for (let i = 1; i < lines.length; ++i) {
         // bssid / frequency / signal level / flags / ssid
-        var match = /([\S]+)\s+([\S]+)\s+([\S]+)\s+(\[[\S]+\])?\s+(.*)/.exec(lines[i]);
+        var match = /([\S]+)\s+([\S]+)\s+([\S]+)\s+(\[[\S]+\])?\s(.*)/.exec(lines[i]);
 
         if (match && match[5]) {
           let ssid = match[5],
