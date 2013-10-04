@@ -151,9 +151,12 @@ public class TwoLinePageRow extends LinearLayout
 
     /**
      * Replaces the page URL with "Switch to tab" if there is already a tab open with that URL.
+     * Only looks for tabs that are either private or non-private, depending on the current 
+     * selected tab.
      */
     private void updateDisplayedUrl() {
-        int tabId = Tabs.getInstance().getTabIdForUrl(mPageUrl);
+        boolean isPrivate = Tabs.getInstance().getSelectedTab().isPrivate();
+        int tabId = Tabs.getInstance().getTabIdForUrl(mPageUrl, isPrivate);
         if (!mShowIcons || tabId < 0) {
             setUrl(mPageUrl);
             setUrlIcon(NO_ICON);
