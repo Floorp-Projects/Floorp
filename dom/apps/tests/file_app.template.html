@@ -52,7 +52,8 @@ function checkApp(app) {
   installed(!!app);
   if (app) {
     var appName = "Really Rapid Release (APPTYPETOKEN)";
-    is(app.manifest.name, appName, "Manifest name should be correct");
+    var manifest = SpecialPowers.wrap(app.manifest);
+    is(manifest.name, appName, "Manifest name should be correct");
     is(app.origin, "http://test", "App origin should be correct");
     is(app.installOrigin, "http://mochi.test:8888", "Install origin should be correct");
   }
