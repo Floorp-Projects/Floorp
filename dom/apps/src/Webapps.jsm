@@ -2141,6 +2141,8 @@ this.DOMApplicationRegistry = {
         this._saveApps((function() {
           this.updateAppHandlers(null, aManifest, appObject);
           this.broadcastMessage("Webapps:AddApp", { id: aId, app: appObject });
+          Services.obs.notifyObservers(null, "webapps-installed",
+            JSON.stringify({ manifestURL: appObject.manifestURL }));
 
           if (supportUseCurrentProfile()) {
             // Update the permissions for this app.
@@ -2279,6 +2281,8 @@ this.DOMApplicationRegistry = {
     this._saveApps((function() {
       this.broadcastMessage("Webapps:AddApp", { id: id, app: appObject });
       this.broadcastMessage("Webapps:Install:Return:OK", aData);
+      Services.obs.notifyObservers(null, "webapps-installed",
+        JSON.stringify({ manifestURL: app.manifestURL }));
     }).bind(this));
 
     if (!aData.isPackage) {
