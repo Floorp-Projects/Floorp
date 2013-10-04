@@ -350,15 +350,32 @@ SetProxyExtra(JSObject *obj, size_t n, const Value &extra)
     SetReservedSlot(obj, PROXY_EXTRA_SLOT + n, extra);
 }
 
-enum ProxyCallable {
-    ProxyNotCallable = false,
-    ProxyIsCallable = true
+class MOZ_STACK_CLASS ProxyOptions {
+  public:
+    ProxyOptions() : callable_(false),
+                     singleton_(false)
+    {}
+
+    bool callable() const { return callable_; }
+    ProxyOptions &setCallable(bool flag) {
+        callable_ = flag;
+        return *this;
+    }
+
+    bool singleton() const { return singleton_; }
+    ProxyOptions &setSingleton(bool flag) {
+        singleton_ = flag;
+        return *this;
+    }
+
+  private:
+    bool callable_;
+    bool singleton_;
 };
 
 JS_FRIEND_API(JSObject *)
 NewProxyObject(JSContext *cx, BaseProxyHandler *handler, HandleValue priv,
-               JSObject *proto, JSObject *parent,
-               ProxyCallable callable = ProxyNotCallable, bool singleton = false);
+               JSObject *proto, JSObject *parent, const ProxyOptions &options = ProxyOptions());
 
 JSObject *
 RenewProxyObject(JSContext *cx, JSObject *obj, BaseProxyHandler *handler, Value priv);

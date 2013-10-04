@@ -3143,10 +3143,10 @@ const Class* const js::OuterWindowProxyClassPtr = &OuterWindowProxyObject::class
 
 JS_FRIEND_API(JSObject *)
 js::NewProxyObject(JSContext *cx, BaseProxyHandler *handler, HandleValue priv, JSObject *proto_,
-                   JSObject *parent_, ProxyCallable callable, bool singleton)
+                   JSObject *parent_, const ProxyOptions &options)
 {
     return ProxyObject::New(cx, handler, priv, TaggedProto(proto_), parent_,
-                            callable, singleton);
+                            options);
 }
 
 void
@@ -3186,11 +3186,12 @@ proxy(JSContext *cx, unsigned argc, jsval *vp)
     if (!JSObject::getProto(cx, target, &proto))
         return false;
     RootedValue priv(cx, ObjectValue(*target));
+    ProxyOptions options;
+    options.setCallable(target->isCallable());
     ProxyObject *proxy =
         ProxyObject::New(cx, &ScriptedDirectProxyHandler::singleton,
                          priv, TaggedProto(proto), cx->global(),
-                         target->isCallable() ? ProxyIsCallable
-                                              : ProxyNotCallable);
+                         options);
     if (!proxy)
         return false;
     proxy->setExtra(0, ObjectOrNullValue(handler));
@@ -3269,9 +3270,11 @@ proxy_createFunction(JSContext *cx, unsigned argc, Value *vp)
     ccHolder->setReservedSlot(1, ObjectValue(*construct));
 
     RootedValue priv(cx, ObjectValue(*handler));
+    ProxyOptions options;
+    options.setCallable(true);
     JSObject *proxy =
         ProxyObject::New(cx, &ScriptedIndirectProxyHandler::singleton,
-                         priv, TaggedProto(proto), parent, ProxyIsCallable);
+                         priv, TaggedProto(proto), parent, options);
     if (!proxy)
         return false;
     proxy->as<ProxyObject>().setExtra(0, ObjectValue(*ccHolder));
