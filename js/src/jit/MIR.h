@@ -3449,6 +3449,7 @@ class MSqrt
     AliasSet getAliasSet() const {
         return AliasSet::None();
     }
+    void computeRange();
 };
 
 // Inline implementation of atan2 (arctangent of y/x).
@@ -3869,6 +3870,7 @@ class MDiv : public MBinaryArithInstruction
 
     bool isFloat32Commutative() const { return true; }
 
+    void computeRange();
     bool fallible();
     bool truncate();
 };
