@@ -63,7 +63,7 @@ function testClick() {
     isnot(aPacket.why.type, "debuggerStatement",
       "The breakpoint was hit before the debugger statement.");
 
-    afterBreakpointHit();
+    ensureCaretAt(gPanel, 5, 1, true).then(afterBreakpointHit);
   });
 
   EventUtils.sendMouseEvent({ type: "click" },
@@ -99,9 +99,12 @@ function afterDebuggerStatementHit() {
   ok(isCaretPos(gPanel, 6),
     "The source editor caret position is incorrect (4).");
 
-  reloadActiveTab(gPanel, gDebugger.EVENTS.SOURCE_SHOWN)
-    .then(() => ensureThreadClientState(gPanel, "resumed"))
-    .then(() => testClickAgain());
+  promise.all([
+    waitForDebuggerEvents(gPanel, gDebugger.EVENTS.NEW_SOURCE),
+    waitForDebuggerEvents(gPanel, gDebugger.EVENTS.SOURCES_ADDED),
+    waitForDebuggerEvents(gPanel, gDebugger.EVENTS.SOURCE_SHOWN),
+    reloadActiveTab(gPanel, gDebugger.EVENTS.BREAKPOINT_SHOWN)
+  ]).then(testClickAgain);
 }
 
 function testClickAgain() {

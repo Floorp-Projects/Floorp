@@ -274,9 +274,15 @@ let DebuggerController = {
         // Reset UI.
         DebuggerView._handleTabNavigation();
 
-        // Discard all the old sources.
+        // Discard all the cached sources *before* the target starts navigating.
+        // Sources may be fetched during navigation, in which case we don't
+        // want to hang on to the old source contents.
+        DebuggerController.SourceScripts.clearCache();
         DebuggerController.Parser.clearCache();
         SourceUtils.clearCache();
+
+        // Prevent performing any actions that were scheduled before navigation.
+        clearNamedTimeout("new-source");
         break;
       }
       case "navigate": {
@@ -1011,6 +1017,13 @@ SourceScripts.prototype = {
   },
 
   /**
+   * Clears all the cached source contents.
+   */
+  clearCache: function() {
+    this._cache.clear();
+  },
+
+  /**
    * Handles any initialization on a tab navigation event issued by the client.
    */
   _handleTabNavigation: function() {
@@ -1019,12 +1032,8 @@ SourceScripts.prototype = {
     }
     dumpn("Handling tab navigation in the SourceScripts");
 
-    // Don't expect the old sources to matter after the tab navigated.
-    clearNamedTimeout("new-source");
-
     // Retrieve the list of script sources known to the server from before
     // the client was ready to handle "newSource" notifications.
-    this._cache.clear();
     this.activeThread.getSources(this._onSourcesAdded);
   },
 

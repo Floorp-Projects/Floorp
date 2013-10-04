@@ -29,7 +29,6 @@ function test() {
     enablePauseOnExceptions()
       .then(disableIgnoreCaughtExceptions)
       .then(() => reloadActiveTab(gPanel, gDebugger.EVENTS.SOURCE_SHOWN))
-      .then(() => ensureThreadClientState(gPanel, "resumed"))
       .then(testPauseOnExceptionsAfterReload)
       .then(disablePauseOnExceptions)
       .then(enableIgnoreCaughtExceptions)
@@ -106,9 +105,13 @@ function testPauseOnExceptionsAfterReload() {
     return finished;
   });
 
-  EventUtils.sendMouseEvent({ type: "click" },
-    gDebuggee.document.querySelector("button"),
-    gDebuggee.window);
+  // Spin the event loop before causing the debuggee to pause, to allow
+  // this function to return first.
+  executeSoon(() => {
+    EventUtils.sendMouseEvent({ type: "click" },
+      gDebuggee.document.querySelector("button"),
+      gDebuggee.window);
+  });
 
   return finished;
 }
