@@ -24,7 +24,8 @@ class ProxyObject : public JSObject
 
   public:
     static ProxyObject *New(JSContext *cx, BaseProxyHandler *handler, HandleValue priv,
-                            TaggedProto proto_, JSObject *parent_, ProxyCallable callable, bool singleton = false);
+                            TaggedProto proto_, JSObject *parent_,
+                            const ProxyOptions &options);
 
     const Value &private_() {
         return GetReservedSlot(this, PRIVATE_SLOT);
