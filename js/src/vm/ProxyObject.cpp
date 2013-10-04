@@ -44,14 +44,4 @@ ProxyObject::nuke(BaseProxyHandler *handler)
 
     NukeSlot(this, EXTRA_SLOT + 0);
     NukeSlot(this, EXTRA_SLOT + 1);
-
-    if (is<FunctionProxyObject>())
-        as<FunctionProxyObject>().nukeExtra();
-}
-
-void
-FunctionProxyObject::nukeExtra()
-{
-    NukeSlot(this, CALL_SLOT);
-    NukeSlot(this, CONSTRUCT_SLOT);
 }
