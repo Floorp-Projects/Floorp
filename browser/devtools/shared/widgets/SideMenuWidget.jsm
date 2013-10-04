@@ -8,8 +8,6 @@
 const Ci = Components.interfaces;
 const Cu = Components.utils;
 
-const ENSURE_SELECTION_VISIBLE_DELAY = 50; // ms
-
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource:///modules/devtools/ViewHelpers.jsm");
 Cu.import("resource:///modules/devtools/shared/event-emitter.js");
@@ -137,7 +135,7 @@ SideMenuWidget.prototype = {
     let element = item.insertSelfAt(aIndex);
 
     if (this.maintainSelectionVisible) {
-      this.ensureSelectionIsVisible({ withGroup: true, delayed: true });
+      this.ensureElementIsVisible(this.selectedItem);
     }
     if (maintainScrollAtBottom) {
       this._list.scrollTop = this._list.scrollHeight;
@@ -228,17 +226,7 @@ SideMenuWidget.prototype = {
       }
     }
 
-    // Repeated calls to ensureElementIsVisible would interfere with each other
-    // and may sometimes result in incorrect scroll positions.
-    this.ensureSelectionIsVisible({ delayed: true });
-  },
-
-  /**
-   * Ensures the selected element is visible.
-   * @see SideMenuWidget.prototype.ensureElementIsVisible.
-   */
-  ensureSelectionIsVisible: function(aFlags) {
-    this.ensureElementIsVisible(this.selectedItem, aFlags);
+    this.ensureElementIsVisible(this.selectedItem);
   },
 
   /**
@@ -246,32 +234,15 @@ SideMenuWidget.prototype = {
    *
    * @param nsIDOMNode aElement
    *        The element to make visible.
-   * @param object aFlags [optional]
-   *        An object containing some of the following flags:
-   *        - withGroup: true if the group header should also be made visible, if possible
-   *        - delayed: wait a few cycles before ensuring the selection is visible
    */
-  ensureElementIsVisible: function(aElement, aFlags = {}) {
+  ensureElementIsVisible: function(aElement) {
     if (!aElement) {
       return;
     }
 
-    if (aFlags.delayed) {
-      delete aFlags.delayed;
-      this.window.clearTimeout(this._ensureVisibleTimeout);
-      this._ensureVisibleTimeout = this.window.setTimeout(() => {
-        this.ensureElementIsVisible(aElement, aFlags);
-      }, ENSURE_SELECTION_VISIBLE_DELAY);
-      return;
-    }
-
-    if (aFlags.withGroup) {
-      let groupList = aElement.parentNode;
-      let groupContainer = groupList.parentNode;
-      groupContainer.scrollIntoView(true); // Align with the top.
-    }
-
+    // Ensure the element is visible but not scrolled horizontally.
     this._boxObject.ensureElementIsVisible(aElement);
+    this._boxObject.scrollBy(-aElement.clientWidth, 0);
   },
 
   /**
