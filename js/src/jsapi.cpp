@@ -1282,7 +1282,11 @@ js_TransplantObjectWithWrapper(JSContext *cx,
         // a new unreachable dummy object and swap it with the reflector.
         // After the swap we have a possibly-live object that isn't dangerous,
         // and a possibly-dangerous object that isn't live.
-        RootedObject reflectorGuts(cx, NewDeadProxyObject(cx, JS_GetGlobalForObject(cx, origobj)));
+        ProxyOptions options;
+        if (!IsBackgroundFinalized(origobj->tenuredGetAllocKind()))
+            options.setForceForegroundFinalization(true);
+        RootedObject reflectorGuts(cx, NewDeadProxyObject(cx, JS_GetGlobalForObject(cx, origobj),
+                                                          options));
         if (!reflectorGuts || !JSObject::swap(cx, origobj, reflectorGuts))
             MOZ_CRASH();
 

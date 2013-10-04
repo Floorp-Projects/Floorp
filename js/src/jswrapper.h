@@ -255,7 +255,8 @@ bool
 IsDeadProxyObject(JSObject *obj);
 
 JSObject *
-NewDeadProxyObject(JSContext *cx, JSObject *parent);
+NewDeadProxyObject(JSContext *cx, JSObject *parent,
+                   const ProxyOptions &options = ProxyOptions());
 
 void
 NukeCrossCompartmentWrapper(JSContext *cx, JSObject *wrapper);
