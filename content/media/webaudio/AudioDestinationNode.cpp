@@ -6,10 +6,15 @@
 
 #include "AudioDestinationNode.h"
 #include "mozilla/dom/AudioDestinationNodeBinding.h"
+#include "mozilla/Preferences.h"
+#include "AudioChannelAgent.h"
 #include "AudioNodeEngine.h"
 #include "AudioNodeStream.h"
 #include "MediaStreamGraph.h"
 #include "OfflineAudioCompletionEvent.h"
+#include "nsIInterfaceRequestorUtils.h"
+#include "nsIDocShell.h"
+#include "nsIDocument.h"
 
 namespace mozilla {
 namespace dom {
@@ -213,7 +218,55 @@ private:
   float mVolume;
 };
 
-NS_IMPL_ISUPPORTS_INHERITED0(AudioDestinationNode, AudioNode)
+class AudioChannelAgentCallback MOZ_FINAL : public nsIAudioChannelAgentCallback
+{
+public:
+  NS_DECL_CYCLE_COLLECTING_ISUPPORTS
+  NS_DECL_CYCLE_COLLECTION_CLASS(AudioChannelAgentCallback)
+
+  explicit AudioChannelAgentCallback(AudioDestinationNode* aNode)
+    : mNode(aNode)
+  {
+  }
+
+  ~AudioChannelAgentCallback()
+  {
+  }
+
+  NS_IMETHODIMP
+  CanPlayChanged(int32_t aCanPlay)
+  {
+    mNode->SetCanPlay(aCanPlay == AudioChannelState::AUDIO_CHANNEL_STATE_NORMAL);
+    return NS_OK;
+  }
+
+private:
+  nsRefPtr<AudioDestinationNode> mNode;
+};
+
+NS_IMPL_CYCLE_COLLECTION_1(AudioChannelAgentCallback, mNode)
+
+NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(AudioChannelAgentCallback)
+  NS_INTERFACE_MAP_ENTRY(nsIAudioChannelAgentCallback)
+NS_INTERFACE_MAP_END
+
+NS_IMPL_CYCLE_COLLECTING_ADDREF(AudioChannelAgentCallback)
+NS_IMPL_CYCLE_COLLECTING_RELEASE(AudioChannelAgentCallback)
+
+static bool UseAudioChannelService()
+{
+  return Preferences::GetBool("media.useAudioChannelService");
+}
+
+NS_IMPL_CYCLE_COLLECTION_INHERITED_1(AudioDestinationNode, AudioNode,
+                                     mAudioChannelAgent)
+
+NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION_INHERITED(AudioDestinationNode)
+  NS_INTERFACE_MAP_ENTRY(nsIDOMEventListener)
+NS_INTERFACE_MAP_END_INHERITING(AudioNode)
+
+NS_IMPL_ADDREF_INHERITED(AudioDestinationNode, AudioNode)
+NS_IMPL_RELEASE_INHERITED(AudioDestinationNode, AudioNode)
 
 AudioDestinationNode::AudioDestinationNode(AudioContext* aContext,
                                            bool aIsOffline,
@@ -235,6 +288,30 @@ AudioDestinationNode::AudioDestinationNode(AudioContext* aContext,
                             static_cast<AudioNodeEngine*>(new DestinationNodeEngine(this));
 
   mStream = graph->CreateAudioNodeStream(engine, MediaStreamGraph::EXTERNAL_STREAM);
+
+  if (!aIsOffline && UseAudioChannelService()) {
+    mAudioChannelAgent = new AudioChannelAgent();
+    mAudioChannelAgent->Init(nsIAudioChannelAgent::AUDIO_AGENT_CHANNEL_NORMAL,
+                             new AudioChannelAgentCallback(this));
+
+    nsCOMPtr<nsIDOMEventTarget> target = do_QueryInterface(GetOwner());
+    if (target) {
+      target->AddSystemEventListener(NS_LITERAL_STRING("visibilitychange"), this,
+                                     /* useCapture = */ true,
+                                     /* wantsUntrusted = */ false);
+    }
+
+    nsCOMPtr<nsIDocShell> docshell = do_GetInterface(GetOwner());
+    if (docshell) {
+      bool isActive = false;
+      docshell->GetIsActive(&isActive);
+      mAudioChannelAgent->SetVisibilityState(isActive);
+    }
+
+    int32_t state = 0;
+    mAudioChannelAgent->StartPlaying(&state);
+    SetCanPlay(state == AudioChannelState::AUDIO_CHANNEL_STATE_NORMAL);
+  }
 }
 
 void
@@ -248,6 +325,18 @@ AudioDestinationNode::DestroyMediaStream()
     MediaStreamGraph::DestroyNonRealtimeInstance(graph);
   }
   AudioNode::DestroyMediaStream();
+
+  if (mAudioChannelAgent && !Context()->IsOffline()) {
+    mAudioChannelAgent->StopPlaying();
+
+    nsCOMPtr<nsIDOMEventTarget> target = do_QueryInterface(GetOwner());
+    NS_ENSURE_TRUE_VOID(target);
+
+    target->RemoveSystemEventListener(NS_LITERAL_STRING("visibilitychange"), this,
+                                      /* useCapture = */ true);
+
+    mAudioChannelAgent = nullptr;
+  }
 }
 
 uint32_t
@@ -302,6 +391,32 @@ AudioDestinationNode::StartRendering()
 {
   mOfflineRenderingRef.Take(this);
   mStream->Graph()->StartNonRealtimeProcessing(mFramesToProduce);
+}
+
+void
+AudioDestinationNode::SetCanPlay(bool aCanPlay)
+{
+  mStream->SetTrackEnabled(AudioNodeStream::AUDIO_TRACK, aCanPlay);
+}
+
+NS_IMETHODIMP
+AudioDestinationNode::HandleEvent(nsIDOMEvent* aEvent)
+{
+  nsAutoString type;
+  aEvent->GetType(type);
+
+  if (!type.EqualsLiteral("visibilitychange")) {
+    return NS_ERROR_FAILURE;
+  }
+
+  nsCOMPtr<nsIDocShell> docshell = do_GetInterface(GetOwner());
+  NS_ENSURE_TRUE(docshell, NS_ERROR_FAILURE);
+
+  bool isActive = false;
+  docshell->GetIsActive(&isActive);
+
+  mAudioChannelAgent->SetVisibilityState(isActive);
+  return NS_OK;
 }
 
 }
