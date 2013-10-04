@@ -522,43 +522,237 @@ TypeSet::unionSets(TypeSet *a, TypeSet *b, LifoAlloc *alloc)
 }
 
 /////////////////////////////////////////////////////////////////////
-// Freeze constraints
+// Compiler constraints
 /////////////////////////////////////////////////////////////////////
+
+// Compiler constraints overview
+//
+// Constraints generated during Ion compilation capture assumptions made about
+// heap properties that will trigger invalidation of the resulting Ion code if
+// the constraint is violated. Constraints can only be attached to type sets on
+// the main thread, so to allow compilation to occur almost entirely off thread
+// the generation is split into two phases.
+//
+// During compilation, CompilerConstraint values are constructed in a list,
+// recording the heap property type set which was read from and its expected
+// contents, along with the assumption made about those contents.
+//
+// At the end of compilation, when linking the result on the main thread, the
+// list of compiler constraints are read and converted to type constraints and
+// attached to the type sets. If the property type sets have changed so that the
+// assumptions no longer hold then the compilation is aborted and its result
+// discarded.
+
+static LifoAlloc *IonAlloc() {
+    return jit::GetIonContext()->temp->lifoAlloc();
+}
+
+// Superclass of all constraints generated during Ion compilation. These may
+// be allocated off the main thread, using the current Ion context's allocator.
+class types::CompilerConstraint
+{
+  public:
+    // Property being queried by the compiler.
+    HeapTypeSetKey property;
+
+    // Contents of the property at the point when the query was performed. This
+    // may differ from the actual property types later in compilation as the
+    // main thread performs side effects.
+    TemporaryTypeSet *expected;
+
+    CompilerConstraint(const HeapTypeSetKey &property)
+      : property(property),
+        expected(property.actualTypes->clone(IonAlloc()))
+    {
+        // Note: CompilerConstraintList::add watches for OOM under clone().
+    }
+
+    // Generate the type constraint recording the assumption made by this
+    // compilation. Returns true if the assumption originally made still holds.
+    virtual bool generateTypeConstraint(JSContext *cx, RecompileInfo recompileInfo) = 0;
+};
+
+void
+CompilerConstraintList::add(CompilerConstraint *constraint)
+{
+    if (!constraint || !constraint->expected || !constraints.append(constraint))
+        setFailed();
+}
 
 namespace {
 
-/* Constraint which triggers recompilation of a script if any type is added to a type set. */
-class TypeConstraintFreeze : public TypeConstraint
+template <typename T>
+class CompilerConstraintInstance : public CompilerConstraint
+{
+    T data;
+
+  public:
+    CompilerConstraintInstance<T>(const HeapTypeSetKey &property, const T &data)
+      : CompilerConstraint(property), data(data)
+    {}
+
+    bool generateTypeConstraint(JSContext *cx, RecompileInfo recompileInfo);
+};
+
+// Constraint generated from a CompilerConstraint when linking the compilation.
+template <typename T>
+class TypeCompilerConstraint : public TypeConstraint
+{
+    // Compilation which this constraint may invalidate.
+    RecompileInfo compilation;
+
+    T data;
+
+  public:
+    TypeCompilerConstraint<T>(RecompileInfo compilation, const T &data)
+      : compilation(compilation), data(data)
+    {}
+
+    const char *kind() { return data.kind(); }
+
+    void newType(JSContext *cx, TypeSet *source, Type type) {
+        if (data.invalidateOnNewType(type))
+            cx->compartment()->types.addPendingRecompile(cx, compilation);
+    }
+
+    void newPropertyState(JSContext *cx, TypeSet *source) {
+        if (data.invalidateOnNewPropertyState(source))
+            cx->compartment()->types.addPendingRecompile(cx, compilation);
+    }
+
+    void newObjectState(JSContext *cx, TypeObject *object, bool force) {
+        if (data.invalidateOnNewObjectState(object, force))
+            cx->compartment()->types.addPendingRecompile(cx, compilation);
+    }
+};
+
+template <typename T>
+bool
+CompilerConstraintInstance<T>::generateTypeConstraint(JSContext *cx, RecompileInfo recompileInfo)
+{
+    if (!data.constraintHolds(cx, property, expected))
+        return false;
+
+    property.actualTypes->add(cx, cx->typeLifoAlloc().new_<TypeCompilerConstraint<T> >(recompileInfo, data),
+                              /* callExisting = */ false);
+    return true;
+}
+
+} /* anonymous namespace */
+
+const Class *
+TypeObjectKey::clasp()
+{
+    return isTypeObject() ? asTypeObject()->clasp : asSingleObject()->getClass();
+}
+
+TaggedProto
+TypeObjectKey::proto()
+{
+    return isTypeObject() ? asTypeObject()->proto : asSingleObject()->getProto();
+}
+
+JSObject *
+TypeObjectKey::singleton()
+{
+    return isTypeObject() ? asTypeObject()->singleton : asSingleObject();
+}
+
+TypeNewScript *
+TypeObjectKey::newScript()
+{
+    if (isTypeObject()) {
+        TypeObjectAddendum *addendum = asTypeObject()->addendum;
+        if (addendum && addendum->isNewScript())
+            return addendum->asNewScript();
+    }
+    return NULL;
+}
+
+bool
+TypeObjectKey::unknownProperties()
+{
+    JSContext *cx = jit::GetIonContext()->cx;
+    TypeObject *type = isSingleObject() ? asSingleObject()->getType(cx) : asTypeObject();
+    if (!type)
+        MOZ_CRASH();
+    return type->unknownProperties();
+}
+
+HeapTypeSetKey
+TypeObjectKey::property(jsid id)
+{
+    JSContext *cx = jit::GetIonContext()->cx;
+    TypeObject *type = isSingleObject() ? asSingleObject()->getType(cx) : asTypeObject();
+    if (!type)
+        MOZ_CRASH();
+    HeapTypeSetKey property;
+    property.actualTypes = type->getProperty(cx, id);
+    if (!property.actualTypes)
+        MOZ_CRASH();
+    return property;
+}
+
+bool
+types::FinishCompilation(JSContext *cx, JSScript *script, jit::ExecutionMode executionMode,
+                         CompilerConstraintList *constraints, RecompileInfo *precompileInfo)
+{
+    if (constraints->failed())
+        return false;
+
+    CompilerOutput co(script, executionMode);
+
+    TypeCompartment &types = cx->compartment()->types;
+    if (!types.constrainedOutputs) {
+        types.constrainedOutputs = cx->new_< Vector<CompilerOutput> >(cx);
+        if (!types.constrainedOutputs)
+            return false;
+    }
+
+    uint32_t index = types.constrainedOutputs->length();
+    if (!types.constrainedOutputs->append(co))
+        return false;
+
+    *precompileInfo = RecompileInfo(index);
+
+    for (size_t i = 0; i < constraints->length(); i++) {
+        CompilerConstraint *constraint = constraints->get(i);
+        if (!constraint->generateTypeConstraint(cx, *precompileInfo)) {
+            types.constrainedOutputs->back().invalidate();
+            return false;
+        }
+    }
+
+    return true;
+}
+
+namespace {
+
+// Constraint which triggers recompilation of a script if any type is added to a type set. */
+class ConstraintDataFreeze
 {
   public:
-    RecompileInfo info;
-
-    /* Whether a new type has already been added, triggering recompilation. */
-    bool typeAdded;
-
-    TypeConstraintFreeze(RecompileInfo info)
-        : info(info), typeAdded(false)
-    {}
+    ConstraintDataFreeze() {}
 
     const char *kind() { return "freeze"; }
 
-    void newType(JSContext *cx, TypeSet *source, Type type)
-    {
-        if (typeAdded)
-            return;
+    bool invalidateOnNewType(Type type) { return true; }
+    bool invalidateOnNewPropertyState(TypeSet *property) { return false; }
+    bool invalidateOnNewObjectState(TypeObject *object, bool force) { return false; }
 
-        typeAdded = true;
-        cx->compartment()->types.addPendingRecompile(cx, info);
+    bool constraintHolds(JSContext *cx,
+                         const HeapTypeSetKey &property, TemporaryTypeSet *expected)
+    {
+        return property.actualTypes->isSubset(expected);
     }
 };
 
 } /* anonymous namespace */
 
 void
-HeapTypeSet::addFreeze(JSContext *cx)
+HeapTypeSetKey::freeze(CompilerConstraintList *constraints)
 {
-    add(cx, cx->typeLifoAlloc().new_<TypeConstraintFreeze>(
-                cx->compartment()->types.compiledInfo), false);
+    constraints->add(IonAlloc()->new_<CompilerConstraintInstance<ConstraintDataFreeze> >(*this, ConstraintDataFreeze()));
 }
 
 static inline JSValueType
@@ -610,33 +804,6 @@ TemporaryTypeSet::getKnownTypeTag()
     return type;
 }
 
-JSValueType
-HeapTypeSet::getKnownTypeTag(JSContext *cx)
-{
-    TypeFlags flags = baseFlags();
-    JSValueType type;
-
-    if (baseObjectCount())
-        type = flags ? JSVAL_TYPE_UNKNOWN : JSVAL_TYPE_OBJECT;
-    else
-        type = GetValueTypeFromTypeFlags(flags);
-
-    if (type != JSVAL_TYPE_UNKNOWN)
-        addFreeze(cx);
-
-    /*
-     * If the type set is totally empty then it will be treated as unknown,
-     * but we still need to record the dependency as adding a new type can give
-     * it a definite type tag. This is not needed if there are enough types
-     * that the exact tag is unknown, as it will stay unknown as more types are
-     * added to the set.
-     */
-    DebugOnly<bool> empty = flags == 0 && baseObjectCount() == 0;
-    JS_ASSERT_IF(empty, type == JSVAL_TYPE_UNKNOWN);
-
-    return type;
-}
-
 bool
 TemporaryTypeSet::mightBeType(JSValueType type)
 {
@@ -649,42 +816,151 @@ TemporaryTypeSet::mightBeType(JSValueType type)
     return baseFlags() & PrimitiveTypeFlag(type);
 }
 
+JSValueType
+HeapTypeSetKey::knownTypeTag(CompilerConstraintList *constraints)
+{
+    if (actualTypes->unknown())
+        return JSVAL_TYPE_UNKNOWN;
+
+    TypeFlags flags = actualTypes->baseFlags() & ~TYPE_FLAG_ANYOBJECT;
+    JSValueType type;
+
+    if (actualTypes->unknownObject() || actualTypes->getObjectCount())
+        type = flags ? JSVAL_TYPE_UNKNOWN : JSVAL_TYPE_OBJECT;
+    else
+        type = GetValueTypeFromTypeFlags(flags);
+
+    if (type != JSVAL_TYPE_UNKNOWN)
+        freeze(constraints);
+
+    /*
+     * If the type set is totally empty then it will be treated as unknown,
+     * but we still need to record the dependency as adding a new type can give
+     * it a definite type tag. This is not needed if there are enough types
+     * that the exact tag is unknown, as it will stay unknown as more types are
+     * added to the set.
+     */
+    JS_ASSERT_IF(actualTypes->empty(), type == JSVAL_TYPE_UNKNOWN);
+
+    return type;
+}
+
+bool
+HeapTypeSetKey::notEmpty(CompilerConstraintList *constraints)
+{
+    if (!actualTypes->empty())
+        return true;
+    freeze(constraints);
+    return false;
+}
+
+bool
+HeapTypeSetKey::knownSubset(CompilerConstraintList *constraints, const HeapTypeSetKey &other)
+{
+    if (!actualTypes->isSubset(other.actualTypes))
+        return false;
+    freeze(constraints);
+    return true;
+}
+
+JSObject *
+TemporaryTypeSet::getSingleton()
+{
+    if (baseFlags() != 0 || baseObjectCount() != 1)
+        return NULL;
+
+    return getSingleObject(0);
+}
+
+JSObject *
+HeapTypeSetKey::singleton(CompilerConstraintList *constraints)
+{
+    if (actualTypes->baseFlags() != 0 || actualTypes->getObjectCount() != 1)
+        return NULL;
+
+    JSObject *obj = actualTypes->getSingleObject(0);
+
+    if (obj)
+        freeze(constraints);
+
+    return obj;
+}
+
+bool
+HeapTypeSetKey::needsBarrier(CompilerConstraintList *constraints)
+{
+    bool result = actualTypes->unknownObject()
+               || actualTypes->getObjectCount() > 0
+               || actualTypes->hasAnyFlag(TYPE_FLAG_STRING);
+    if (!result)
+        freeze(constraints);
+    return result;
+}
+
 namespace {
 
-/* Constraint which triggers recompilation if an object acquires particular flags. */
-class TypeConstraintFreezeObjectFlags : public TypeConstraint
+// Constraint which triggers recompilation if an object acquires particular flags.
+class ConstraintDataFreezeObjectFlags
 {
   public:
-    RecompileInfo info;
+    // Object being queried.
+    TypeObjectKey *object;
 
-    /* Flags we are watching for on this object. */
+    // Flags we are watching for on this object.
     TypeObjectFlags flags;
 
-    /* Whether the object has already been marked as having one of the flags. */
-    bool marked;
-
-    TypeConstraintFreezeObjectFlags(RecompileInfo info, TypeObjectFlags flags)
-        : info(info), flags(flags),
-          marked(false)
+    ConstraintDataFreezeObjectFlags(TypeObjectKey *object, TypeObjectFlags flags)
+      : object(object), flags(flags)
     {}
 
     const char *kind() { return "freezeObjectFlags"; }
 
-    void newType(JSContext *cx, TypeSet *source, Type type) {}
+    bool invalidateOnNewType(Type type) { return false; }
+    bool invalidateOnNewPropertyState(TypeSet *property) { return false; }
+    bool invalidateOnNewObjectState(TypeObject *object, bool force) {
+        return flags ? object->hasAnyFlags(flags) : force;
+    }
 
-    void newObjectState(JSContext *cx, TypeObject *object, bool force)
+    bool constraintHolds(JSContext *cx,
+                         const HeapTypeSetKey &property, TemporaryTypeSet *expected)
     {
-        if (!marked && (object->hasAnyFlags(flags) || (!flags && force))) {
-            marked = true;
-            cx->compartment()->types.addPendingRecompile(cx, info);
-        }
+        // FIXME: There is not yet any way to test if constraints with no
+        // associated flags (i.e. those invalidated via |force|) still hold.
+        TypeObject *type = object->isSingleObject()
+                           ? object->asSingleObject()->type()
+                           : object->asTypeObject();
+        return !type->hasAnyFlags(flags);
     }
 };
 
 } /* anonymous namespace */
 
 bool
-TemporaryTypeSet::hasObjectFlags(JSContext *cx, TypeObjectFlags flags)
+TypeObjectKey::hasFlags(CompilerConstraintList *constraints, TypeObjectFlags flags)
+{
+    JS_ASSERT(flags);
+
+    JSContext *cx = jit::GetIonContext()->cx;
+    TypeObject *type = isSingleObject() ? asSingleObject()->getType(cx) : asTypeObject();
+    if (!type)
+        MOZ_CRASH();
+    if (type->hasAnyFlags(flags))
+        return true;
+
+    HeapTypeSetKey objectProperty = property(JSID_EMPTY);
+    constraints->add(IonAlloc()->new_<CompilerConstraintInstance<ConstraintDataFreezeObjectFlags> >(objectProperty, ConstraintDataFreezeObjectFlags(this, flags)));
+    return false;
+}
+
+void
+TypeObjectKey::watchStateChange(CompilerConstraintList *constraints)
+{
+    HeapTypeSetKey objectProperty = property(JSID_EMPTY);
+    constraints->add(IonAlloc()->new_<CompilerConstraintInstance<ConstraintDataFreezeObjectFlags> >(objectProperty, ConstraintDataFreezeObjectFlags(this, 0)));
+}
+
+bool
+TemporaryTypeSet::hasObjectFlags(CompilerConstraintList *constraints, TypeObjectFlags flags)
 {
     if (unknownObject())
         return true;
@@ -696,44 +972,13 @@ TemporaryTypeSet::hasObjectFlags(JSContext *cx, TypeObjectFlags flags)
     if (baseObjectCount() == 0)
         return true;
 
-    RootedObject obj(cx);
     unsigned count = getObjectCount();
     for (unsigned i = 0; i < count; i++) {
-        TypeObject *object = getTypeObject(i);
-        if (!object) {
-            if (!(obj = getSingleObject(i)))
-                continue;
-            if (!(object = obj->getType(cx)))
-                return true;
-        }
-        if (object->hasAnyFlags(flags))
+        TypeObjectKey *object = getObject(i);
+        if (object && object->hasFlags(constraints, flags))
             return true;
-
-        /*
-         * Add a constraint on the the object to pick up changes in the
-         * object's properties.
-         */
-        HeapTypeSet *types = object->getProperty(cx, JSID_EMPTY);
-        if (!types)
-            return true;
-        types->add(cx, cx->typeLifoAlloc().new_<TypeConstraintFreezeObjectFlags>(
-                          cx->compartment()->types.compiledInfo, flags), false);
     }
 
-    return false;
-}
-
-bool
-HeapTypeSet::HasObjectFlags(JSContext *cx, TypeObject *object, TypeObjectFlags flags)
-{
-    if (object->hasAnyFlags(flags))
-        return true;
-
-    HeapTypeSet *types = object->getProperty(cx, JSID_EMPTY);
-    if (!types)
-        return true;
-    types->add(cx, cx->typeLifoAlloc().new_<TypeConstraintFreezeObjectFlags>(
-                      cx->compartment()->types.compiledInfo, flags), false);
     return false;
 }
 
@@ -763,49 +1008,63 @@ ObjectStateChange(ExclusiveContext *cxArg, TypeObject *object, bool markingUnkno
     }
 }
 
-void
-HeapTypeSet::WatchObjectStateChange(JSContext *cx, TypeObject *obj)
-{
-    JS_ASSERT(!obj->unknownProperties());
-    HeapTypeSet *types = obj->getProperty(cx, JSID_EMPTY);
-    if (!types)
-        return;
-
-    /*
-     * Use a constraint which triggers recompilation when markStateChange is
-     * called, which will set 'force' to true.
-     */
-    types->add(cx, cx->typeLifoAlloc().new_<TypeConstraintFreezeObjectFlags>(
-                     cx->compartment()->types.compiledInfo,
-                     0));
-}
+static void
+CheckNewScriptProperties(JSContext *cx, TypeObject *type, JSFunction *fun);
 
 namespace {
 
-class TypeConstraintFreezeConfiguredProperty : public TypeConstraint
+class ConstraintDataFreezeConfiguredProperty
 {
   public:
-    RecompileInfo info;
+    TypeObjectKey *object;
 
-    TypeConstraintFreezeConfiguredProperty(RecompileInfo info)
-      : info(info)
+    ConstraintDataFreezeConfiguredProperty(TypeObjectKey *object)
+      : object(object)
     {}
 
-    const char *kind() { return "freezeOwnProperty"; }
+    const char *kind() { return "freezeConfiguredProperty"; }
 
-    void newType(JSContext *cx, TypeSet *source, Type type) {}
+    bool invalidateOnNewType(Type type) { return false; }
+    bool invalidateOnNewPropertyState(TypeSet *property) {
+        return property->configuredProperty();
+    }
+    bool invalidateOnNewObjectState(TypeObject *object, bool force) { return false; }
 
-    void newPropertyState(JSContext *cx, TypeSet *source)
+    bool constraintHolds(JSContext *cx,
+                         const HeapTypeSetKey &property, TemporaryTypeSet *expected)
     {
-        if (source->configuredProperty())
-            cx->compartment()->types.addPendingRecompile(cx, info);
+        // Everywhere compiled code depends on definite properties associated
+        // with a type object's newScript, we need to make sure there are
+        // constraints in place which will mark those properties as configured
+        // should the definite properties be invalidated.
+        TypeObject *type = object->isSingleObject()
+                           ? object->asSingleObject()->type()
+                           : object->asTypeObject();
+        if (type->flags & OBJECT_FLAG_NEW_SCRIPT_REGENERATE) {
+            type->flags &= ~OBJECT_FLAG_NEW_SCRIPT_REGENERATE;
+            if (type->hasNewScript()) {
+                CheckNewScriptProperties(cx, type, type->newScript()->fun);
+            } else {
+                JS_ASSERT(type->flags & OBJECT_FLAG_ADDENDUM_CLEARED);
+                type->flags &= ~OBJECT_FLAG_NEW_SCRIPT_REGENERATE;
+            }
+        }
+
+        return !property.actualTypes->configuredProperty();
     }
 };
 
 } /* anonymous namespace */
 
-static void
-CheckNewScriptProperties(JSContext *cx, HandleTypeObject type, HandleFunction fun);
+bool
+HeapTypeSetKey::configured(CompilerConstraintList *constraints, TypeObjectKey *type)
+{
+    if (actualTypes->configuredProperty())
+        return true;
+
+    constraints->add(IonAlloc()->new_<CompilerConstraintInstance<ConstraintDataFreezeConfiguredProperty> >(*this, ConstraintDataFreezeConfiguredProperty(type)));
+    return false;
+}
 
 bool
 TypeObject::incrementTenureCount()
@@ -820,46 +1079,6 @@ TypeObject::incrementTenureCount()
           | ((count + 1) << OBJECT_FLAG_TENURE_COUNT_SHIFT);
 
     return count >= MaxJITAllocTenures;
-}
-
-bool
-HeapTypeSet::isConfiguredProperty(JSContext *cx, TypeObject *object)
-{
-    /*
-     * Everywhere compiled code depends on definite properties associated with
-     * a type object's newScript, we need to make sure there are constraints
-     * in place which will mark those properties as configured should the
-     * definite properties be invalidated.
-     */
-    if (object->flags & OBJECT_FLAG_NEW_SCRIPT_REGENERATE) {
-        object->flags &= ~OBJECT_FLAG_NEW_SCRIPT_REGENERATE;
-        if (object->hasNewScript()) {
-            Rooted<TypeObject*> typeObj(cx, object);
-            RootedFunction fun(cx, object->newScript()->fun);
-            CheckNewScriptProperties(cx, typeObj, fun);
-        } else {
-            JS_ASSERT(object->flags & OBJECT_FLAG_ADDENDUM_CLEARED);
-            object->flags &= ~OBJECT_FLAG_NEW_SCRIPT_REGENERATE;
-        }
-    }
-
-    if (configuredProperty())
-        return true;
-
-    add(cx, cx->typeLifoAlloc().new_<TypeConstraintFreezeConfiguredProperty>(
-                cx->compartment()->types.compiledInfo), false);
-    return false;
-}
-
-bool
-HeapTypeSet::knownNonEmpty(JSContext *cx)
-{
-    if (baseFlags() != 0 || baseObjectCount() != 0)
-        return true;
-
-    addFreeze(cx);
-
-    return false;
 }
 
 bool
@@ -890,7 +1109,7 @@ TemporaryTypeSet::filtersType(const TemporaryTypeSet *other, Type filteredType) 
 }
 
 TemporaryTypeSet::DoubleConversion
-TemporaryTypeSet::convertDoubleElements(JSContext *cx)
+TemporaryTypeSet::convertDoubleElements(CompilerConstraintList *constraints)
 {
     if (unknownObject() || !getObjectCount())
         return AmbiguousDoubleConversion;
@@ -900,33 +1119,25 @@ TemporaryTypeSet::convertDoubleElements(JSContext *cx)
     bool dontConvert = false;
 
     for (unsigned i = 0; i < getObjectCount(); i++) {
-        TypeObject *type = getTypeObject(i);
-        if (!type) {
-            if (JSObject *obj = getSingleObject(i)) {
-                type = obj->getType(cx);
-                if (!type)
-                    return AmbiguousDoubleConversion;
-            } else {
-                continue;
-            }
-        }
+        TypeObjectKey *type = getObject(i);
+        if (!type)
+            continue;
 
         if (type->unknownProperties()) {
             alwaysConvert = false;
             continue;
         }
 
-        HeapTypeSet *types = type->getProperty(cx, JSID_VOID);
-        if (!types)
-            return AmbiguousDoubleConversion;
-
-        types->addFreeze(cx);
+        HeapTypeSetKey property = type->property(JSID_VOID);
+        property.freeze(constraints);
 
         // We can't convert to double elements for objects which do not have
         // double in their element types (as the conversion may render the type
         // information incorrect), nor for non-array objects (as their elements
         // may point to emptyObjectElements, which cannot be converted).
-        if (!types->hasType(Type::DoubleType()) || type->clasp != &ArrayObject::class_) {
+        if (!property.actualTypes->hasType(Type::DoubleType()) ||
+            type->clasp() != &ArrayObject::class_)
+        {
             dontConvert = true;
             alwaysConvert = false;
             continue;
@@ -935,8 +1146,8 @@ TemporaryTypeSet::convertDoubleElements(JSContext *cx)
         // Only bother with converting known packed arrays whose possible
         // element types are int or double. Other arrays require type tests
         // when elements are accessed regardless of the conversion.
-        if (types->getKnownTypeTag(cx) == JSVAL_TYPE_DOUBLE &&
-            !HeapTypeSet::HasObjectFlags(cx, type, OBJECT_FLAG_NON_PACKED))
+        if (property.knownTypeTag(constraints) == JSVAL_TYPE_DOUBLE &&
+            !type->hasFlags(constraints, OBJECT_FLAG_NON_PACKED))
         {
             maybeConvert = true;
         } else {
@@ -953,17 +1164,6 @@ TemporaryTypeSet::convertDoubleElements(JSContext *cx)
     if (maybeConvert)
         return MaybeConvertToDoubles;
     return DontConvertToDoubles;
-}
-
-bool
-HeapTypeSet::knownSubset(JSContext *cx, HeapTypeSet *other)
-{
-    if (!isSubset(other))
-        return false;
-
-    addFreeze(cx);
-
-    return true;
 }
 
 const Class *
@@ -1086,61 +1286,23 @@ TemporaryTypeSet::getCommonPrototype()
     return proto;
 }
 
-JSObject *
-TemporaryTypeSet::getSingleton()
-{
-    if (baseFlags() != 0 || baseObjectCount() != 1)
-        return NULL;
-
-    return getSingleObject(0);
-}
-
-JSObject *
-HeapTypeSet::getSingleton(JSContext *cx)
-{
-    if (baseFlags() != 0 || baseObjectCount() != 1)
-        return NULL;
-
-    RootedObject obj(cx, getSingleObject(0));
-
-    if (obj)
-        addFreeze(cx);
-
-    return obj;
-}
-
 bool
-HeapTypeSet::needsBarrier(JSContext *cx)
+TemporaryTypeSet::propertyNeedsBarrier(CompilerConstraintList *constraints, jsid id)
 {
-    bool result = unknownObject()
-               || getObjectCount() > 0
-               || hasAnyFlag(TYPE_FLAG_STRING);
-    if (!result)
-        addFreeze(cx);
-    return result;
-}
-
-bool
-TemporaryTypeSet::propertyNeedsBarrier(JSContext *cx, jsid id)
-{
-    RootedId typeId(cx, IdToTypeId(id));
-
     if (unknownObject())
         return true;
 
     for (unsigned i = 0; i < getObjectCount(); i++) {
-        if (getSingleObject(i))
+        TypeObjectKey *type = getObject(i);
+        if (!type)
+            continue;
+
+        if (type->unknownProperties())
             return true;
 
-        if (types::TypeObject *otype = getTypeObject(i)) {
-            if (otype->unknownProperties())
-                return true;
-
-            if (types::HeapTypeSet *propTypes = otype->maybeGetProperty(cx, typeId)) {
-                if (propTypes->needsBarrier(cx))
-                    return true;
-            }
-        }
+        HeapTypeSetKey property = type->property(id);
+        if (property.needsBarrier(constraints))
+            return true;
     }
 
     return false;
@@ -1193,7 +1355,6 @@ class TypeConstraintFreezeStack : public TypeConstraint
 TypeCompartment::TypeCompartment()
 {
     PodZero(this);
-    compiledInfo.outputIndex = RecompileInfo::NoCompilerRunning;
 }
 
 void
@@ -1471,18 +1632,16 @@ ClassCanHaveExtraProperties(const Class *clasp)
 }
 
 static inline bool
-PrototypeHasIndexedProperty(JSContext *cx, JSObject *obj)
+PrototypeHasIndexedProperty(CompilerConstraintList *constraints, JSObject *obj)
 {
     do {
-        TypeObject *type = obj->getType(cx);
-        if (!type)
-            return true;
-        if (ClassCanHaveExtraProperties(type->clasp))
+        TypeObjectKey *type = TypeObjectKey::get(obj);
+        if (ClassCanHaveExtraProperties(type->clasp()))
             return true;
         if (type->unknownProperties())
             return true;
-        HeapTypeSet *indexTypes = type->getProperty(cx, JSID_VOID);
-        if (!indexTypes || indexTypes->isConfiguredProperty(cx, type) || indexTypes->knownNonEmpty(cx))
+        HeapTypeSetKey index = type->property(JSID_VOID);
+        if (index.configured(constraints, type) || index.notEmpty(constraints))
             return true;
         obj = obj->getProto();
     } while (obj);
@@ -1491,20 +1650,19 @@ PrototypeHasIndexedProperty(JSContext *cx, JSObject *obj)
 }
 
 bool
-types::ArrayPrototypeHasIndexedProperty(JSContext *cx, HandleScript script)
+types::ArrayPrototypeHasIndexedProperty(CompilerConstraintList *constraints,
+                                        HandleScript script)
 {
-    if (!cx->typeInferenceEnabled() || !script->compileAndGo)
-        return true;
-
-    JSObject *proto = script->global().getOrCreateArrayPrototype(cx);
+    JSObject *proto = script->global().getOrCreateArrayPrototype(jit::GetIonContext()->cx);
     if (!proto)
         return true;
 
-    return PrototypeHasIndexedProperty(cx, proto);
+    return PrototypeHasIndexedProperty(constraints, proto);
 }
 
 bool
-types::TypeCanHaveExtraIndexedProperties(JSContext *cx, TemporaryTypeSet *types)
+types::TypeCanHaveExtraIndexedProperties(CompilerConstraintList *constraints,
+                                         TemporaryTypeSet *types)
 {
     const Class *clasp = types->getKnownClass();
 
@@ -1514,14 +1672,14 @@ types::TypeCanHaveExtraIndexedProperties(JSContext *cx, TemporaryTypeSet *types)
     if (!clasp || (ClassCanHaveExtraProperties(clasp) && !IsTypedArrayClass(clasp)))
         return true;
 
-    if (types->hasObjectFlags(cx, types::OBJECT_FLAG_SPARSE_INDEXES))
+    if (types->hasObjectFlags(constraints, types::OBJECT_FLAG_SPARSE_INDEXES))
         return true;
 
     JSObject *proto = types->getCommonPrototype();
     if (!proto)
         return true;
 
-    return PrototypeHasIndexedProperty(cx, proto);
+    return PrototypeHasIndexedProperty(constraints, proto);
 }
 
 bool
@@ -1622,34 +1780,8 @@ void
 TypeCompartment::addPendingRecompile(JSContext *cx, const RecompileInfo &info)
 {
     CompilerOutput *co = info.compilerOutput(cx);
-    if (!co)
+    if (!co || !co->isValid() || co->pendingInvalidation())
         return;
-
-    if (co->pendingRecompilation)
-        return;
-
-    if (co->isValid())
-        CancelOffThreadIonCompile(cx->compartment(), co->script);
-
-    if (compiledInfo.outputIndex == info.outputIndex) {
-        /* Tell Ion to discard generated code when it's done. */
-        JS_ASSERT(compiledInfo.outputIndex != RecompileInfo::NoCompilerRunning);
-        JS_ASSERT(co->kind() == CompilerOutput::Ion || co->kind() == CompilerOutput::ParallelIon);
-        co->invalidate();
-        return;
-    }
-
-    if (!co->isValid()) {
-        JS_ASSERT(co->script == NULL);
-        return;
-    }
-
-#if defined(JS_ION)
-    if (!co->script->hasAnyIonScript()) {
-        /* Scripts which haven't been compiled yet don't need to be recompiled. */
-        return;
-    }
-#endif
 
     if (!pendingRecompiles) {
         pendingRecompiles = cx->new_< Vector<RecompileInfo> >(cx);
@@ -1659,21 +1791,15 @@ TypeCompartment::addPendingRecompile(JSContext *cx, const RecompileInfo &info)
         }
     }
 
-#if DEBUG
-    for (size_t i = 0; i < pendingRecompiles->length(); i++) {
-        RecompileInfo pr = (*pendingRecompiles)[i];
-        JS_ASSERT(info.outputIndex != pr.outputIndex);
-    }
-#endif
-
     if (!pendingRecompiles->append(info)) {
         cx->compartment()->types.setPendingNukeTypes(cx);
         return;
     }
 
-    InferSpew(ISpewOps, "addPendingRecompile: %p:%s:%d", co->script, co->script->filename(), co->script->lineno);
+    InferSpew(ISpewOps, "addPendingRecompile: %p:%s:%d",
+              co->script(), co->script()->filename(), co->script()->lineno);
 
-    co->setPendingRecompilation();
+    co->setPendingInvalidation();
 }
 
 void
@@ -1697,30 +1823,9 @@ TypeCompartment::addPendingRecompile(JSContext *cx, JSScript *script)
         addPendingRecompile(cx, script->parallelIonScript()->recompileInfo());
 #endif
 
-    /*
-     * Remind Ion not to save the compile code if generating type
-     * inference information mid-compilation causes an invalidation of the
-     * script being compiled.
-     */
-    if (compiledInfo.outputIndex != RecompileInfo::NoCompilerRunning) {
-        CompilerOutput *co = compiledInfo.compilerOutput(cx);
-        if (!co) {
-            if (script->compartment() != cx->compartment())
-                MOZ_CRASH();
-            return;
-        }
-
-        JS_ASSERT(co->kind() == CompilerOutput::Ion || co->kind() == CompilerOutput::ParallelIon);
-
-        if (co->script == script)
-            co->invalidate();
-    }
-
-    /*
-     * When one script is inlined into another the caller listens to state
-     * changes on the callee's script, so trigger these to force recompilation
-     * of any such callers.
-     */
+    // When one script is inlined into another the caller listens to state
+    // changes on the callee's script, so trigger these to force recompilation
+    // of any such callers.
     if (script->function() && !script->function()->hasLazyType())
         ObjectStateChange(cx, script->function()->type(), false, true);
 }
@@ -2781,8 +2886,10 @@ types::AddClearDefiniteFunctionUsesInScript(JSContext *cx, TypeObject *type,
  * newScript on the type after they were cleared by a GC.
  */
 static void
-CheckNewScriptProperties(JSContext *cx, HandleTypeObject type, HandleFunction fun)
+CheckNewScriptProperties(JSContext *cx, TypeObject *type, JSFunction *fun)
 {
+    JS_ASSERT(cx->compartment()->activeAnalysis);
+
 #ifdef JS_ION
     if (type->unknownProperties())
         return;
@@ -2832,8 +2939,9 @@ CheckNewScriptProperties(JSContext *cx, HandleTypeObject type, HandleFunction fu
      * than we will use for subsequent new objects. Generate an object with the
      * appropriate final shape.
      */
+    Rooted<TypeObject *> rootedType(cx, type);
     RootedShape shape(cx, baseobj->lastProperty());
-    baseobj = NewReshapedObject(cx, type, baseobj->getParent(), kind, shape);
+    baseobj = NewReshapedObject(cx, rootedType, baseobj->getParent(), kind, shape);
     if (!baseobj ||
         !type->addDefiniteProperties(cx, baseobj) ||
         !initializerList.append(done))
@@ -3706,8 +3814,6 @@ TypeCompartment::sweep(FreeOp *fop)
 
     pendingArray = NULL;
     pendingCapacity = 0;
-
-    sweepCompilerOutputs(fop, true);
 }
 
 void
@@ -3732,36 +3838,15 @@ TypeCompartment::sweepShapes(FreeOp *fop)
 }
 
 void
-TypeCompartment::sweepCompilerOutputs(FreeOp *fop, bool discardConstraints)
+TypeCompartment::clearCompilerOutputs(FreeOp *fop)
 {
     if (constrainedOutputs) {
-        if (discardConstraints) {
-            JS_ASSERT(compiledInfo.outputIndex == RecompileInfo::NoCompilerRunning);
-#if DEBUG
-            for (unsigned i = 0; i < constrainedOutputs->length(); i++) {
-                CompilerOutput &co = (*constrainedOutputs)[i];
-                JS_ASSERT(!co.isValid());
-            }
-#endif
-
-            fop->delete_(constrainedOutputs);
-            constrainedOutputs = NULL;
-        } else {
-            // Constraints have captured an index to the constrained outputs
-            // vector.  Thus, we invalidate all compilations except the one
-            // which is potentially running now.
-            size_t len = constrainedOutputs->length();
-            for (unsigned i = 0; i < len; i++) {
-                if (i != compiledInfo.outputIndex) {
-                    CompilerOutput &co = (*constrainedOutputs)[i];
-                    JS_ASSERT(!co.isValid());
-                    co.invalidate();
-                }
-            }
-        }
+        fop->delete_(constrainedOutputs);
+        constrainedOutputs = NULL;
     }
 
     if (pendingRecompiles) {
+        JS_ASSERT(pendingRecompiles->length() == 0);
         fop->delete_(pendingRecompiles);
         pendingRecompiles = NULL;
     }

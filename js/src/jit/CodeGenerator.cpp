@@ -5708,16 +5708,17 @@ CodeGenerator::generate()
 }
 
 bool
-CodeGenerator::link()
+CodeGenerator::link(JSContext *cx, types::CompilerConstraintList *constraints)
 {
-    JSContext *cx = GetIonContext()->cx;
+    JSScript *script = gen->info().script();
+    ExecutionMode executionMode = gen->info().executionMode();
+    JS_ASSERT(!HasIonScript(script, executionMode));
 
     // Check to make sure we didn't have a mid-build invalidation. If so, we
     // will trickle to jit::Compile() and return Method_Skipped.
-    if (cx->compartment()->types.compiledInfo.compilerOutput(cx)->isInvalidated())
+    types::RecompileInfo recompileInfo;
+    if (!types::FinishCompilation(cx, script, executionMode, constraints, &recompileInfo))
         return true;
-
-    ExecutionMode executionMode = gen->info().executionMode();
 
     uint32_t scriptFrameSize = frameClass_ == FrameSizeClass::None()
                            ? frameDepth_
@@ -5733,7 +5734,8 @@ CodeGenerator::link()
         AddPossibleCallees(cx, graph.mir(), callTargets);
 
     IonScript *ionScript =
-      IonScript::New(cx, graph.totalSlotCount(), scriptFrameSize, snapshots_.size(),
+      IonScript::New(cx, recompileInfo,
+                     graph.totalSlotCount(), scriptFrameSize, snapshots_.size(),
                      bailouts_.length(), graph.numConstants(),
                      safepointIndices_.length(), osiIndices_.length(),
                      cacheList_.length(), runtimeData_.length(),
@@ -5765,9 +5767,6 @@ CodeGenerator::link()
         js_free(ionScript);
         return false;
     }
-
-    JSScript *script = gen->info().script();
-    JS_ASSERT(!HasIonScript(script, executionMode));
 
     ionScript->setMethod(code);
     ionScript->setSkipArgCheckEntryOffset(getSkipArgCheckEntryOffset());

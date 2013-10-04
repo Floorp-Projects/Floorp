@@ -101,17 +101,6 @@ CompilingOffThread(HandleScript script, ExecutionMode cmode)
     MOZ_ASSUME_UNREACHABLE("No such execution mode");
 }
 
-static inline types::CompilerOutput::Kind
-CompilerOutputKind(ExecutionMode cmode)
-{
-    switch (cmode) {
-      case SequentialExecution: return types::CompilerOutput::Ion;
-      case ParallelExecution: return types::CompilerOutput::ParallelIon;
-      default:;
-    }
-    MOZ_ASSUME_UNREACHABLE("No such execution mode");
-}
-
 } // namespace jit
 } // namespace js
 
