@@ -301,7 +301,12 @@ Range::print(Sprinter &sp) const
     }
 
     sp.printf("]");
-    sp.printf(" (%db)", numBits());
+    if (max_exponent_ == IncludesInfinityAndNaN)
+        sp.printf(" (U inf U NaN)", max_exponent_);
+    else if (max_exponent_ == IncludesInfinity)
+        sp.printf(" (U inf)");
+    else if (!hasInt32UpperBound_ || !hasInt32LowerBound_)
+        sp.printf(" (< pow(2, %d+1))", max_exponent_);
 }
 
 Range *
@@ -381,7 +386,7 @@ Range::Range(const MDefinition *def)
         else if (def->type() == MIRType_Boolean)
             set(0, 1);
         else
-            set(NoInt32LowerBound, NoInt32UpperBound, true, MaxDoubleExponent);
+            set(NoInt32LowerBound, NoInt32UpperBound, true, IncludesInfinityAndNaN);
         symbolicLower_ = symbolicUpper_ = nullptr;
         return;
     }
@@ -411,8 +416,13 @@ Range::add(const Range *lhs, const Range *rhs)
     if (!lhs->hasInt32UpperBound() || !rhs->hasInt32UpperBound())
         h = NoInt32UpperBound;
 
-    return new Range(l, h, lhs->canHaveFractionalPart() || rhs->canHaveFractionalPart(),
-                     Max(lhs->exponent(), rhs->exponent()) + 1);
+    // The exponent is at most one greater than the greater of the operands'
+    // exponents, except for NaN and infinity cases.
+    uint16_t e = Max(lhs->max_exponent_, rhs->max_exponent_);
+    if (e <= Range::MaxFiniteExponent)
+        ++e;
+
+    return new Range(l, h, lhs->canHaveFractionalPart() || rhs->canHaveFractionalPart(), e);
 }
 
 Range *
@@ -426,8 +436,13 @@ Range::sub(const Range *lhs, const Range *rhs)
     if (!lhs->hasInt32UpperBound() || !rhs->hasInt32LowerBound())
         h = NoInt32UpperBound;
 
-    return new Range(l, h, lhs->canHaveFractionalPart() || rhs->canHaveFractionalPart(),
-                     Max(lhs->exponent(), rhs->exponent()) + 1);
+    // The exponent is at most one greater than the greater of the operands'
+    // exponents, except for NaN and infinity cases.
+    uint16_t e = Max(lhs->max_exponent_, rhs->max_exponent_);
+    if (e <= Range::MaxFiniteExponent)
+        ++e;
+
+    return new Range(l, h, lhs->canHaveFractionalPart() || rhs->canHaveFractionalPart(), e);
 }
 
 Range *
@@ -592,7 +607,25 @@ Range *
 Range::mul(const Range *lhs, const Range *rhs)
 {
     bool fractional = lhs->canHaveFractionalPart() || rhs->canHaveFractionalPart();
-    uint16_t exponent = lhs->numBits() + rhs->numBits() - 1;
+
+    uint16_t exponent;
+    if (!lhs->canBeInfiniteOrNaN() && !rhs->canBeInfiniteOrNaN()) {
+        // Two finite values.
+        exponent = lhs->numBits() + rhs->numBits() - 1;
+        if (exponent > Range::MaxFiniteExponent)
+            exponent = Range::IncludesInfinity;
+    } else if (!lhs->canBeNaN() &&
+               !rhs->canBeNaN() &&
+               !(lhs->canBeZero() && rhs->canBeInfiniteOrNaN()) &&
+               !(rhs->canBeZero() && lhs->canBeInfiniteOrNaN()))
+    {
+        // Two values that multiplied together won't produce a NaN.
+        exponent = Range::IncludesInfinity;
+    } else {
+        // Could be anything.
+        exponent = Range::IncludesInfinityAndNaN;
+    }
+
     if (MissingAnyInt32Bounds(lhs, rhs))
         return new Range(NoInt32LowerBound, NoInt32UpperBound, fractional, exponent);
     int64_t a = (int64_t)lhs->lower_ * (int64_t)rhs->lower_;
@@ -686,8 +719,8 @@ Range::abs(const Range *op)
 
     return new Range(Max(Max(int64_t(0), l), -u),
                      Max(Abs(l), Abs(u)),
-                     op->canHaveFractionalPart(),
-                     op->exponent());
+                     op->canHaveFractionalPart_,
+                     op->max_exponent_);
 }
 
 Range *
@@ -819,7 +852,6 @@ MConstant::computeRange()
         return;
 
     double d = value().toDouble();
-    int exp = Range::MaxDoubleExponent;
 
     // NaN is estimated as a Double which covers everything.
     if (IsNaN(d))
@@ -828,14 +860,16 @@ MConstant::computeRange()
     // Beyond-int32 values are used to set both lower and upper to the range boundaries.
     if (IsInfinite(d)) {
         if (IsNegative(d))
-            setRange(new Range(Range::NoInt32LowerBound, Range::NoInt32LowerBound, false, exp));
+            setRange(new Range(Range::NoInt32LowerBound, Range::NoInt32LowerBound,
+                               false, Range::IncludesInfinity));
         else
-            setRange(new Range(Range::NoInt32UpperBound, Range::NoInt32UpperBound, false, exp));
+            setRange(new Range(Range::NoInt32UpperBound, Range::NoInt32UpperBound,
+                               false, Range::IncludesInfinity));
         return;
     }
 
     // Extract the exponent, to approximate it with the range analysis.
-    exp = ExponentComponent(d);
+    int exp = ExponentComponent(d);
     if (exp < 0) {
         // This double only has a fractional part.
         if (IsNegative(d))
