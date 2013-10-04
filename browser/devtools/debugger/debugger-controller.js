@@ -1124,11 +1124,6 @@ SourceScripts.prototype = {
     DebuggerController.Breakpoints.updateEditorBreakpoints();
     DebuggerController.Breakpoints.updatePaneBreakpoints();
 
-    // Make sure the events listeners are up to date.
-    if (DebuggerView.instrumentsPaneTab == "events-tab") {
-      DebuggerController.Breakpoints.DOM.scheduleEventListenersFetch();
-    }
-
     // Signal that sources have been added.
     window.emit(EVENTS.SOURCES_ADDED);
   },
