@@ -580,6 +580,9 @@ public class LayerRenderer implements Tabs.OnTabsChangedListener {
 
         /** This function is invoked via JNI; be careful when modifying signature. */
         public void drawBackground() {
+            // Any GL state which is changed here must be restored in
+            // CompositorOGL::RestoreState
+
             GLES20.glDisable(GLES20.GL_SCISSOR_TEST);
 
             // Draw the overscroll background area as a solid color
@@ -612,6 +615,9 @@ public class LayerRenderer implements Tabs.OnTabsChangedListener {
 
         /** This function is invoked via JNI; be careful when modifying signature. */
         public void drawForeground() {
+            // Any GL state which is changed here must be restored in
+            // CompositorOGL::RestoreState
+
             /* Draw any extra layers that were added (likely plugins) */
             if (mExtraLayers.size() > 0) {
                 for (Layer layer : mExtraLayers) {
