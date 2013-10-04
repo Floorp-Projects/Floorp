@@ -333,6 +333,8 @@ DEBUG_CheckUnwrapSafety(HandleObject obj, js::Wrapper *handler,
     } else if (WrapperFactory::IsComponentsObject(obj)) {
         // The Components object that is restricted regardless of origin.
         MOZ_ASSERT(!handler->isSafeToUnwrap());
+    } else if (AccessCheck::needsSystemOnlyWrapper(obj)) {
+        // The rules for SOWs are complicated enough. Just skip double-checking them here.
     } else if (handler == &FilteringWrapper<CrossCompartmentSecurityWrapper, GentlyOpaque>::singleton) {
         // We explicitly use a SecurityWrapper to protect privileged callers from
         // less-privileged objects that they should never see. Skip the check in
