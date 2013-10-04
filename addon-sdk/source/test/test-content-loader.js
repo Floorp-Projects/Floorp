@@ -6,28 +6,28 @@
 const { Loader } = require('sdk/content/loader');
 const self = require("sdk/self");
 
-exports['test:contentURL'] = function(test) {
+exports['test:contentURL'] = function(assert) {
   let loader = Loader(),
       value, emitted = 0, changes = 0;
 
-  test.assertRaises(
+  assert.throws(
     function() loader.contentURL = 4,
-    'The `contentURL` option must be a valid URL.',
+    /The `contentURL` option must be a valid URL./,
     'Must throw an exception if `contentURL` is not URL.'
   );
- test.assertRaises(
+ assert.throws(
     function() loader.contentURL = { toString: function() 'Oops' },
-    'The `contentURL` option must be a valid URL.',
+    /The `contentURL` option must be a valid URL./,
     'Must throw an exception if `contentURL` is not URL.'
   );
 
   function listener(e) {
     emitted ++;
-    test.assert(
+    assert.ok(
       'contentURL' in e,
       'emitted event must contain "content" property'
     );
-    test.assert(
+    assert.ok(
       value,
       '' + e.contentURL,
       'content property of an event must match value'
@@ -35,42 +35,42 @@ exports['test:contentURL'] = function(test) {
   }
   loader.on('propertyChange', listener);
 
-  test.assertEqual(
+  assert.equal(
     null,
     loader.contentURL,
     'default value is `null`'
   );
   loader.contentURL = value = 'data:text/html,<html><body>Hi</body><html>';
-  test.assertEqual(
+  assert.equal(
     value,
     '' + loader.contentURL,
     'data uri is ok'
   );
-  test.assertEqual(
+  assert.equal(
     ++changes,
     emitted,
     'had to emit `propertyChange`'
   );
   loader.contentURL = value;
-  test.assertEqual(
+  assert.equal(
     changes,
     emitted,
     'must not emit `propertyChange` if same value is set'
   );
 
   loader.contentURL = value = 'http://google.com/';
-  test.assertEqual(
+  assert.equal(
     value,
     '' + loader.contentURL,
     'value must be set'
   );
-  test.assertEqual(
+  assert.equal(
     ++ changes,
     emitted,
     'had to emit `propertyChange`'
   );
   loader.contentURL = value;
-  test.assertEqual(
+  assert.equal(
     changes,
     emitted,
     'must not emit `propertyChange` if same value is set'
@@ -78,27 +78,27 @@ exports['test:contentURL'] = function(test) {
 
   loader.removeListener('propertyChange', listener);
   loader.contentURL = value = 'about:blank';
-  test.assertEqual(
+  assert.equal(
     value,
     '' + loader.contentURL,
     'contentURL must be an actual value'
   );
-  test.assertEqual(
+  assert.equal(
     changes,
     emitted,
     'listener had to be romeved'
   );
 };
 
-exports['test:contentScriptWhen'] = function(test) {
+exports['test:contentScriptWhen'] = function(assert) {
   let loader = Loader();
-  test.assertEqual(
+  assert.equal(
     'end',
     loader.contentScriptWhen,
     '`contentScriptWhen` defaults to "end"'
   );
   loader.contentScriptWhen = "end";
-  test.assertEqual(
+  assert.equal(
     "end",
     loader.contentScriptWhen
   );
@@ -106,38 +106,38 @@ exports['test:contentScriptWhen'] = function(test) {
     loader.contentScriptWhen = 'boom';
     test.fail('must throw when wrong value is set');
   } catch(e) {
-    test.assertEqual(
+    assert.equal(
       'The `contentScriptWhen` option must be either "start", "ready" or "end".',
       e.message
     );
   }
   loader.contentScriptWhen = null;
-  test.assertEqual(
+  assert.equal(
     'end',
     loader.contentScriptWhen,
     '`contentScriptWhen` defaults to "end"'
   );
   loader.contentScriptWhen = "ready";
-  test.assertEqual(
+  assert.equal(
     "ready",
     loader.contentScriptWhen
   );
   loader.contentScriptWhen = "start";
-  test.assertEqual(
+  assert.equal(
     'start',
     loader.contentScriptWhen
   );
 };
 
-exports['test:contentScript'] = function(test) {
+exports['test:contentScript'] = function(assert) {
   let loader = Loader(), value;
-  test.assertEqual(
+  assert.equal(
     null,
     loader.contentScript,
     '`contentScript` defaults to `null`'
   );
   loader.contentScript = value = 'let test = {};';
-  test.assertEqual(
+  assert.equal(
     value,
     loader.contentScript
   );
@@ -145,7 +145,7 @@ exports['test:contentScript'] = function(test) {
     loader.contentScript = { 1: value }
     test.fail('must throw when wrong value is set');
   } catch(e) {
-    test.assertEqual(
+    assert.equal(
       'The `contentScript` option must be a string or an array of strings.',
       e.message
     );
@@ -154,32 +154,32 @@ exports['test:contentScript'] = function(test) {
     loader.contentScript = ['oue', 2]
     test.fail('must throw when wrong value is set');
   } catch(e) {
-    test.assertEqual(
+    assert.equal(
       'The `contentScript` option must be a string or an array of strings.',
       e.message
     );
   }
   loader.contentScript = undefined;
-  test.assertEqual(
+  assert.equal(
     null,
     loader.contentScript
   );
   loader.contentScript = value = ["1;", "2;"];
-  test.assertEqual(
+  assert.equal(
     value,
     loader.contentScript
   );
 };
 
-exports['test:contentScriptFile'] = function(test) {
+exports['test:contentScriptFile'] = function(assert) {
   let loader = Loader(), value, uri = self.data.url("test-content-loader.js");
-  test.assertEqual(
+  assert.equal(
     null,
     loader.contentScriptFile,
     '`contentScriptFile` defaults to `null`'
   );
   loader.contentScriptFile = value = uri;
-  test.assertEqual(
+  assert.equal(
     value,
     loader.contentScriptFile
   );
@@ -187,7 +187,7 @@ exports['test:contentScriptFile'] = function(test) {
     loader.contentScriptFile = { 1: uri }
     test.fail('must throw when wrong value is set');
   } catch(e) {
-    test.assertEqual(
+    assert.equal(
       'The `contentScriptFile` option must be a local URL or an array of URLs.',
       e.message
     );
@@ -197,20 +197,22 @@ exports['test:contentScriptFile'] = function(test) {
     loader.contentScriptFile = [ 'oue', uri ]
     test.fail('must throw when wrong value is set');
   } catch(e) {
-    test.assertEqual(
+    assert.equal(
       'The `contentScriptFile` option must be a local URL or an array of URLs.',
       e.message
     );
   }
 
   loader.contentScriptFile = undefined;
-  test.assertEqual(
+  assert.equal(
     null,
     loader.contentScriptFile
   );
   loader.contentScriptFile = value = [uri];
-  test.assertEqual(
+  assert.equal(
     value,
     loader.contentScriptFile
   );
 };
+
+require('sdk/test').run(exports);
