@@ -148,12 +148,15 @@ RangeAnalysis::addBetaNodes()
         MDefinition *left = compare->getOperand(0);
         MDefinition *right = compare->getOperand(1);
         int32_t bound;
+        int16_t exponent = Range::IncludesInfinity;
         MDefinition *val = nullptr;
 
         JSOp jsop = compare->jsop();
 
-        if (branch_dir == FALSE_BRANCH)
+        if (branch_dir == FALSE_BRANCH) {
             jsop = analyze::NegateCompareOp(jsop);
+            exponent = Range::IncludesInfinityAndNaN;
+        }
 
         if (left->isConstant() && left->toConstant()->value().isInt32()) {
             bound = left->toConstant()->value().toInt32();
@@ -195,27 +198,26 @@ RangeAnalysis::addBetaNodes()
 
         Range comp;
         if (val->type() == MIRType_Int32)
-            comp.setInt32();
+            comp.setInt32(JSVAL_INT_MIN, JSVAL_INT_MAX);
         switch (jsop) {
           case JSOP_LE:
-            comp.setUpper(bound);
+            comp.set(Range::NoInt32LowerBound, bound, true, exponent);
             break;
           case JSOP_LT:
             if (!SafeSub(bound, 1, &bound))
                 break;
-            comp.setUpper(bound);
+            comp.set(Range::NoInt32LowerBound, bound, true, exponent);
             break;
           case JSOP_GE:
-            comp.setLower(bound);
+            comp.set(bound, Range::NoInt32UpperBound, true, exponent);
             break;
           case JSOP_GT:
             if (!SafeAdd(bound, 1, &bound))
                 break;
-            comp.setLower(bound);
+            comp.set(bound, Range::NoInt32UpperBound, true, exponent);
             break;
           case JSOP_EQ:
-            comp.setLower(bound);
-            comp.setUpper(bound);
+            comp.set(bound, bound, true, exponent);
           default:
             break; // well, for neq we could have
                    // [-\inf, bound-1] U [bound+1, \inf] but we only use contiguous ranges.
@@ -344,35 +346,28 @@ Range::intersect(const Range *lhs, const Range *rhs, bool *emptyRange)
         return nullptr;
     }
 
-    Range *r = new Range(
-        newLower, newUpper,
-        lhs->canHaveFractionalPart_ && rhs->canHaveFractionalPart_,
-        Min(lhs->max_exponent_, rhs->max_exponent_));
+    bool newHasInt32LowerBound = lhs->hasInt32LowerBound_ || rhs->hasInt32LowerBound_;
+    bool newHasInt32UpperBound = lhs->hasInt32UpperBound_ || rhs->hasInt32UpperBound_;
+    bool newFractional = lhs->canHaveFractionalPart_ && rhs->canHaveFractionalPart_;
+    uint16_t newExponent = Min(lhs->max_exponent_, rhs->max_exponent_);
 
-    r->hasInt32LowerBound_ = lhs->hasInt32LowerBound_ || rhs->hasInt32LowerBound_;
-    r->hasInt32UpperBound_ = lhs->hasInt32UpperBound_ || rhs->hasInt32UpperBound_;
-
-    return r;
+    return new Range(newLower, newHasInt32LowerBound, newUpper, newHasInt32UpperBound,
+                     newFractional, newExponent);
 }
 
 void
 Range::unionWith(const Range *other)
 {
-    bool canHaveFractionalPart = canHaveFractionalPart_ | other->canHaveFractionalPart_;
-    uint16_t max_exponent = Max(max_exponent_, other->max_exponent_);
+    int32_t newLower = Min(lower_, other->lower_);
+    int32_t newUpper = Max(upper_, other->upper_);
 
-    if (!hasInt32LowerBound_ || !other->hasInt32LowerBound_)
-        dropInt32LowerBound();
-    else
-        setLowerInit(Min(lower_, other->lower_));
+    bool newHasInt32LowerBound = hasInt32LowerBound_ && other->hasInt32LowerBound_;
+    bool newHasInt32UpperBound = hasInt32UpperBound_ && other->hasInt32UpperBound_;
+    bool newFractional = canHaveFractionalPart_ || other->canHaveFractionalPart_;
+    uint16_t newExponent = Max(max_exponent_, other->max_exponent_);
 
-    if (!hasInt32UpperBound_ || !other->hasInt32UpperBound_)
-        dropInt32UpperBound();
-    else
-        setUpperInit(Max(upper_, other->upper_));
-
-    canHaveFractionalPart_ = canHaveFractionalPart;
-    max_exponent_ = max_exponent;
+    rawInitialize(newLower, newHasInt32LowerBound, newUpper, newHasInt32UpperBound,
+                  newFractional, newExponent);
 }
 
 Range::Range(const MDefinition *def)
@@ -382,11 +377,11 @@ Range::Range(const MDefinition *def)
     const Range *other = def->range();
     if (!other) {
         if (def->type() == MIRType_Int32)
-            set(JSVAL_INT_MIN, JSVAL_INT_MAX);
+            setInt32(JSVAL_INT_MIN, JSVAL_INT_MAX);
         else if (def->type() == MIRType_Boolean)
-            set(0, 1);
+            setInt32(0, 1);
         else
-            set(NoInt32LowerBound, NoInt32UpperBound, true, IncludesInfinityAndNaN);
+            setUnknown();
         symbolicLower_ = symbolicUpper_ = nullptr;
         return;
     }
@@ -716,14 +711,13 @@ Range::ursh(const Range *lhs, const Range *rhs)
 Range *
 Range::abs(const Range *op)
 {
-    // Get the lower and upper values of the operand, and adjust them
-    // for infinities. Range's constructor treats any value beyond the
-    // int32_t range as infinity.
-    int64_t l = (int64_t)op->lower_ - !op->hasInt32LowerBound();
-    int64_t u = (int64_t)op->upper_ + !op->hasInt32UpperBound();
+    int32_t l = op->lower_;
+    int32_t u = op->upper_;
 
-    return new Range(Max(Max(int64_t(0), l), -u),
-                     Max(Abs(l), Abs(u)),
+    return new Range(Max(Max(int32_t(0), l), u == INT32_MIN ? INT32_MAX : -u),
+                     true,
+                     Max(Max(int32_t(0), u), l == INT32_MIN ? INT32_MAX : -l),
+                     op->hasInt32LowerBound_ && op->hasInt32UpperBound_ && l != INT32_MIN,
                      op->canHaveFractionalPart_,
                      op->max_exponent_);
 }
@@ -732,26 +726,30 @@ Range *
 Range::min(const Range *lhs, const Range *rhs)
 {
     // If either operand is NaN, the result is NaN.
-    if (!lhs->hasInt32Bounds() || !rhs->hasInt32Bounds())
+    if (lhs->canBeNaN() || rhs->canBeNaN())
         return new Range();
 
-    return new Range(Min(lhs->lower(), rhs->lower()),
-                     Min(lhs->upper(), rhs->upper()),
-                     lhs->canHaveFractionalPart() || rhs->canHaveFractionalPart(),
-                     Max(lhs->exponent(), rhs->exponent()));
+    return new Range(Min(lhs->lower_, rhs->lower_),
+                     lhs->hasInt32LowerBound_ && rhs->hasInt32LowerBound_,
+                     Min(lhs->upper_, rhs->upper_),
+                     lhs->hasInt32UpperBound_ || rhs->hasInt32UpperBound_,
+                     lhs->canHaveFractionalPart_ || rhs->canHaveFractionalPart_,
+                     Max(lhs->max_exponent_, rhs->max_exponent_));
 }
 
 Range *
 Range::max(const Range *lhs, const Range *rhs)
 {
     // If either operand is NaN, the result is NaN.
-    if (!lhs->hasInt32Bounds() || !rhs->hasInt32Bounds())
+    if (lhs->canBeNaN() || rhs->canBeNaN())
         return new Range();
 
-    return new Range(Max(lhs->lower(), rhs->lower()),
-                     Max(lhs->upper(), rhs->upper()),
-                     lhs->canHaveFractionalPart() || rhs->canHaveFractionalPart(),
-                     Max(lhs->exponent(), rhs->exponent()));
+    return new Range(Max(lhs->lower_, rhs->lower_),
+                     lhs->hasInt32LowerBound_ || rhs->hasInt32LowerBound_,
+                     Max(lhs->upper_, rhs->upper_),
+                     lhs->hasInt32UpperBound_ && rhs->hasInt32UpperBound_,
+                     lhs->canHaveFractionalPart_ || rhs->canHaveFractionalPart_,
+                     Max(lhs->max_exponent_, rhs->max_exponent_));
 }
 
 bool
@@ -849,18 +847,20 @@ MConstant::computeRange()
 
     double d = value().toDouble();
 
-    // NaN is estimated as a Double which covers everything.
+    // NaN is not handled by range analysis.
     if (IsNaN(d))
         return;
 
     // Beyond-int32 values are used to set both lower and upper to the range boundaries.
     if (IsInfinite(d)) {
         if (IsNegative(d))
-            setRange(new Range(Range::NoInt32LowerBound, Range::NoInt32LowerBound,
-                               false, Range::IncludesInfinity));
+            setRange(Range::NewDoubleRange(Range::NoInt32LowerBound,
+                                           Range::NoInt32LowerBound,
+                                           Range::IncludesInfinity));
         else
-            setRange(new Range(Range::NoInt32UpperBound, Range::NoInt32UpperBound,
-                               false, Range::IncludesInfinity));
+            setRange(Range::NewDoubleRange(Range::NoInt32UpperBound,
+                                           Range::NoInt32UpperBound,
+                                           Range::IncludesInfinity));
         return;
     }
 
@@ -892,9 +892,13 @@ MConstant::computeRange()
         // This double has a precision loss. This also mean that it cannot
         // encode any values with fractional parts.
         if (IsNegative(d))
-            setRange(new Range(Range::NoInt32LowerBound, Range::NoInt32LowerBound, false, exp));
+            setRange(Range::NewDoubleRange(Range::NoInt32LowerBound,
+                                           Range::NoInt32LowerBound,
+                                           exp));
         else
-            setRange(new Range(Range::NoInt32UpperBound, Range::NoInt32UpperBound, false, exp));
+            setRange(Range::NewDoubleRange(Range::NoInt32UpperBound,
+                                           Range::NoInt32UpperBound,
+                                           exp));
     }
 }
 
@@ -1129,7 +1133,8 @@ MMod::computeRange()
     int64_t lower = lhs.lower() >= 0 ? 0 : -absBound;
     int64_t upper = lhs.upper() <= 0 ? 0 : absBound;
 
-    setRange(new Range(lower, upper, lhs.canHaveFractionalPart() || rhs.canHaveFractionalPart()));
+    setRange(new Range(lower, upper, lhs.canHaveFractionalPart() || rhs.canHaveFractionalPart(),
+                       Min(lhs.exponent(), rhs.exponent())));
 }
 
 void
@@ -1551,12 +1556,12 @@ RangeAnalysis::analyzeLoopPhi(MBasicBlock *header, LoopIterationBound *loopBound
     Range *initRange = initial->range();
     if (modified.constant > 0) {
         if (initRange && initRange->hasInt32LowerBound())
-            phi->range()->setLower(initRange->lower());
+            phi->range()->refineLower(initRange->lower());
         phi->range()->setSymbolicLower(new SymbolicBound(nullptr, initialSum));
         phi->range()->setSymbolicUpper(new SymbolicBound(loopBound, limitSum));
     } else {
         if (initRange && initRange->hasInt32UpperBound())
-            phi->range()->setUpper(initRange->upper());
+            phi->range()->refineUpper(initRange->upper());
         phi->range()->setSymbolicUpper(new SymbolicBound(nullptr, initialSum));
         phi->range()->setSymbolicLower(new SymbolicBound(loopBound, limitSum));
     }
@@ -1793,16 +1798,16 @@ Range::clampToInt32()
         return;
     int32_t l = hasInt32LowerBound() ? lower() : JSVAL_INT_MIN;
     int32_t h = hasInt32UpperBound() ? upper() : JSVAL_INT_MAX;
-    set(l, h);
+    setInt32(l, h);
 }
 
 void
 Range::wrapAroundToInt32()
 {
     if (!hasInt32Bounds())
-        set(JSVAL_INT_MIN, JSVAL_INT_MAX);
+        setInt32(JSVAL_INT_MIN, JSVAL_INT_MAX);
     else if (canHaveFractionalPart())
-        set(lower(), upper(), false, exponent());
+        canHaveFractionalPart_ = false;
 }
 
 void
@@ -1810,7 +1815,7 @@ Range::wrapAroundToShiftCount()
 {
     wrapAroundToInt32();
     if (lower() < 0 || upper() >= 32)
-        set(0, 31);
+        setInt32(0, 31);
 }
 
 void
@@ -1818,7 +1823,7 @@ Range::wrapAroundToBoolean()
 {
     wrapAroundToInt32();
     if (!isBoolean())
-        set(0, 1);
+        setInt32(0, 1);
 }
 
 bool
@@ -1839,7 +1844,7 @@ MConstant::truncate()
     value_.setInt32(res);
     setResultType(MIRType_Int32);
     if (range())
-        range()->set(res, res);
+        range()->setInt32(res, res);
     return true;
 }
 

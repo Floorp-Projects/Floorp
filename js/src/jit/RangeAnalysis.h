@@ -173,20 +173,24 @@ class Range : public TempObject {
     const SymbolicBound *symbolicLower_;
     const SymbolicBound *symbolicUpper_;
 
+    // Set the lower_ and hasInt32LowerBound_ values.
     void setLowerInit(int64_t x) {
         if (x > JSVAL_INT_MAX) {
             lower_ = JSVAL_INT_MAX;
             hasInt32LowerBound_ = true;
         } else if (x < JSVAL_INT_MIN) {
-            dropInt32LowerBound();
+            lower_ = JSVAL_INT_MIN;
+            hasInt32LowerBound_ = false;
         } else {
             lower_ = int32_t(x);
             hasInt32LowerBound_ = true;
         }
     }
+    // Set the upper_ and hasInt32UpperBound_ values.
     void setUpperInit(int64_t x) {
         if (x > JSVAL_INT_MAX) {
-            dropInt32UpperBound();
+            upper_ = JSVAL_INT_MAX;
+            hasInt32UpperBound_ = false;
         } else if (x < JSVAL_INT_MIN) {
             upper_ = JSVAL_INT_MIN;
             hasInt32UpperBound_ = true;
@@ -196,48 +200,82 @@ class Range : public TempObject {
         }
     }
 
+    // Compute the least exponent value that would be compatible with the
+    // values of lower() and upper().
+    //
+    // Note:
+    //     exponent of JSVAL_INT_MIN == 31
+    //     exponent of JSVAL_INT_MAX == 30
+    uint16_t exponentImpliedByInt32Bounds() const {
+         // The number of bits needed to encode |max| is the power of 2 plus one.
+         uint32_t max = Max(mozilla::Abs(lower()), mozilla::Abs(upper()));
+         uint16_t result = mozilla::FloorLog2(max);
+         JS_ASSERT(result == (max == 0 ? 0 : mozilla::ExponentComponent(double(max))));
+         return result;
+    }
+
+    // If the value of any of the fields implies a stronger possible value for
+    // any other field, update that field to the stronger value. The range must
+    // be completely valid before and it is guaranteed to be kept valid.
+    void optimize() {
+        if (hasInt32Bounds()) {
+            // Examine lower() and upper(), and if they imply a better exponent
+            // bound than max_exponent_, set that value as the new
+            // max_exponent_.
+            uint16_t newExponent = exponentImpliedByInt32Bounds();
+            if (newExponent < max_exponent_)
+                max_exponent_ = newExponent;
+
+            // If we have a completely precise range, the value is an integer,
+            // since we can only represent integers.
+            if (canHaveFractionalPart_ && lower_ == upper_)
+                canHaveFractionalPart_ = false;
+        }
+    }
+
+    // Set the range fields to the given raw values.
+    void rawInitialize(int32_t l, bool lb, int32_t h, bool hb, bool f, uint16_t e) {
+        lower_ = l;
+        hasInt32LowerBound_ = lb;
+        upper_ = h;
+        hasInt32UpperBound_ = hb;
+        canHaveFractionalPart_ = f;
+        max_exponent_ = e;
+        optimize();
+    }
+
+    // Construct a range from the given raw values.
+    Range(int32_t l, bool lb, int32_t h, bool hb, bool f, uint16_t e)
+      : symbolicLower_(NULL),
+        symbolicUpper_(NULL)
+     {
+        rawInitialize(l, lb, h, hb, f, e);
+     }
+
   public:
     Range()
-        : lower_(JSVAL_INT_MIN),
-          hasInt32LowerBound_(false),
-          upper_(JSVAL_INT_MAX),
-          hasInt32UpperBound_(false),
-          canHaveFractionalPart_(true),
-          max_exponent_(IncludesInfinityAndNaN),
-          symbolicLower_(nullptr),
-          symbolicUpper_(nullptr)
+      : symbolicLower_(nullptr),
+        symbolicUpper_(nullptr)
     {
-        JS_ASSERT_IF(!hasInt32LowerBound_, lower_ == JSVAL_INT_MIN);
-        JS_ASSERT_IF(!hasInt32UpperBound_, upper_ == JSVAL_INT_MAX);
+        setUnknown();
     }
 
     Range(int64_t l, int64_t h, bool f = false, uint16_t e = MaxInt32Exponent)
-        : hasInt32LowerBound_(false),
-          hasInt32UpperBound_(false),
-          canHaveFractionalPart_(f),
-          max_exponent_(e),
-          symbolicLower_(nullptr),
-          symbolicUpper_(nullptr)
+      : symbolicLower_(nullptr),
+        symbolicUpper_(nullptr)
     {
-        JS_ASSERT(e >= (h == INT64_MIN ? IncludesInfinity : mozilla::FloorLog2(mozilla::Abs(h))));
-        JS_ASSERT(e >= (l == INT64_MIN ? IncludesInfinity : mozilla::FloorLog2(mozilla::Abs(l))));
-
-        setLowerInit(l);
-        setUpperInit(h);
-        rectifyExponent();
-        JS_ASSERT_IF(!hasInt32LowerBound_, lower_ == JSVAL_INT_MIN);
-        JS_ASSERT_IF(!hasInt32UpperBound_, upper_ == JSVAL_INT_MAX);
+        set(l, h, f, e);
     }
 
     Range(const Range &other)
-        : lower_(other.lower_),
-          hasInt32LowerBound_(other.hasInt32LowerBound_),
-          upper_(other.upper_),
-          hasInt32UpperBound_(other.hasInt32UpperBound_),
-          canHaveFractionalPart_(other.canHaveFractionalPart_),
-          max_exponent_(other.max_exponent_),
-          symbolicLower_(nullptr),
-          symbolicUpper_(nullptr)
+      : lower_(other.lower_),
+        hasInt32LowerBound_(other.hasInt32LowerBound_),
+        upper_(other.upper_),
+        hasInt32UpperBound_(other.hasInt32UpperBound_),
+        canHaveFractionalPart_(other.canHaveFractionalPart_),
+        max_exponent_(other.max_exponent_),
+        symbolicLower_(nullptr),
+        symbolicUpper_(nullptr)
     {
         JS_ASSERT_IF(!hasInt32LowerBound_, lower_ == JSVAL_INT_MIN);
         JS_ASSERT_IF(!hasInt32UpperBound_, upper_ == JSVAL_INT_MAX);
@@ -290,19 +328,6 @@ class Range : public TempObject {
     static Range * max(const Range *lhs, const Range *rhs);
 
     static bool negativeZeroMul(const Range *lhs, const Range *rhs);
-
-    void dropInt32LowerBound() {
-        hasInt32LowerBound_ = false;
-        lower_ = JSVAL_INT_MIN;
-        if (max_exponent_ < MaxInt32Exponent)
-            max_exponent_ = MaxInt32Exponent;
-    }
-    void dropInt32UpperBound() {
-        hasInt32UpperBound_ = false;
-        upper_ = JSVAL_INT_MAX;
-        if (max_exponent_ < MaxInt32Exponent)
-            max_exponent_ = MaxInt32Exponent;
-    }
 
     bool hasInt32LowerBound() const {
         return hasInt32LowerBound_;
@@ -393,32 +418,45 @@ class Range : public TempObject {
         return upper_ >= 0;
     }
 
-    void setLower(int64_t x) {
-        setLowerInit(x);
-        rectifyExponent();
+    // Set this range to have a lower bound not less than x.
+    void refineLower(int32_t x) {
+        hasInt32LowerBound_ = true;
+        lower_ = Max(lower_, x);
+        optimize();
         JS_ASSERT_IF(!hasInt32LowerBound_, lower_ == JSVAL_INT_MIN);
     }
-    void setUpper(int64_t x) {
-        setUpperInit(x);
-        rectifyExponent();
+
+    // Set this range to have an upper bound not greater than x.
+    void refineUpper(int32_t x) {
+        hasInt32UpperBound_ = true;
+        upper_ = Min(upper_, x);
+        optimize();
         JS_ASSERT_IF(!hasInt32UpperBound_, upper_ == JSVAL_INT_MAX);
     }
 
-    void setInt32() {
+    void setInt32(int32_t l, int32_t h) {
         hasInt32LowerBound_ = true;
         hasInt32UpperBound_ = true;
+        lower_ = l;
+        upper_ = h;
         canHaveFractionalPart_ = false;
-        max_exponent_ = MaxInt32Exponent;
+        max_exponent_ = exponentImpliedByInt32Bounds();
     }
 
-    void set(int64_t l, int64_t h, bool f = false, uint16_t e = MaxInt32Exponent) {
+    void setUnknown() {
+        setDouble(NoInt32LowerBound, NoInt32UpperBound);
+    }
+
+    void setDouble(int64_t l, int64_t h, uint16_t e = IncludesInfinityAndNaN) {
+        set(l, h, true, e);
+    }
+
+    void set(int64_t l, int64_t h, bool f, uint16_t e) {
         max_exponent_ = e;
+        canHaveFractionalPart_ = f;
         setLowerInit(l);
         setUpperInit(h);
-        canHaveFractionalPart_ = f;
-        rectifyExponent();
-        JS_ASSERT_IF(!hasInt32LowerBound_, lower_ == JSVAL_INT_MIN);
-        JS_ASSERT_IF(!hasInt32UpperBound_, upper_ == JSVAL_INT_MAX);
+        optimize();
     }
 
     // Make the lower end of this range at least INT32_MIN, and make
@@ -443,26 +481,6 @@ class Range : public TempObject {
     void extendUInt32ToInt32Min() {
         JS_ASSERT(!hasInt32UpperBound());
         lower_ = JSVAL_INT_MIN;
-    }
-
-    // Set the exponent by using the precise range analysis on the full
-    // range of Int32 values. This might shrink the exponent after some
-    // operations.
-    //
-    // Note:
-    //     exponent of JSVAL_INT_MIN == 32
-    //     exponent of JSVAL_INT_MAX == 31
-    void rectifyExponent() {
-        if (!hasInt32Bounds()) {
-            JS_ASSERT(max_exponent_ >= MaxInt32Exponent);
-            return;
-        }
-
-        uint32_t max = Max(mozilla::Abs<int64_t>(lower()), mozilla::Abs<int64_t>(upper()));
-        JS_ASSERT_IF(lower() == JSVAL_INT_MIN, max == (uint32_t) JSVAL_INT_MIN);
-        JS_ASSERT(max <= (uint32_t) JSVAL_INT_MIN);
-        // The number of bits needed to encode |max| is the power of 2 plus one.
-        max_exponent_ = max ? mozilla::FloorLog2Size(max) : max;
     }
 
     const SymbolicBound *symbolicLower() const {
