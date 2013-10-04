@@ -173,6 +173,27 @@ class Range : public TempObject {
     const SymbolicBound *symbolicLower_;
     const SymbolicBound *symbolicUpper_;
 
+    // This function simply makes several JS_ASSERTs to verify the internal
+    // consistency of this range.
+    void assertInvariants() const {
+        JS_ASSERT(lower_ <= upper_);
+        JS_ASSERT_IF(!hasInt32LowerBound_, lower_ == JSVAL_INT_MIN);
+        JS_ASSERT_IF(!hasInt32UpperBound_, upper_ == JSVAL_INT_MAX);
+        JS_ASSERT_IF(!hasInt32LowerBound_ || !hasInt32UpperBound_, max_exponent_ >= MaxInt32Exponent);
+        JS_ASSERT(max_exponent_ <= MaxFiniteExponent ||
+                  max_exponent_ == IncludesInfinity ||
+                  max_exponent_ == IncludesInfinityAndNaN);
+        JS_ASSERT(max_exponent_ >= mozilla::FloorLog2(mozilla::Abs(upper_)));
+        JS_ASSERT(max_exponent_ >= mozilla::FloorLog2(mozilla::Abs(lower_)));
+
+        // The following are essentially static assertions, but FloorLog2 isn't
+        // trivially suitable for constexpr :(.
+        JS_ASSERT(mozilla::FloorLog2(JSVAL_INT_MIN) == MaxInt32Exponent);
+        JS_ASSERT(mozilla::FloorLog2(JSVAL_INT_MAX) == 30);
+        JS_ASSERT(mozilla::FloorLog2(UINT32_MAX) == MaxUInt32Exponent);
+        JS_ASSERT(mozilla::FloorLog2(0) == 0);
+    }
+
     // Set the lower_ and hasInt32LowerBound_ values.
     void setLowerInit(int64_t x) {
         if (x > JSVAL_INT_MAX) {
@@ -218,18 +239,24 @@ class Range : public TempObject {
     // any other field, update that field to the stronger value. The range must
     // be completely valid before and it is guaranteed to be kept valid.
     void optimize() {
+        assertInvariants();
+
         if (hasInt32Bounds()) {
             // Examine lower() and upper(), and if they imply a better exponent
             // bound than max_exponent_, set that value as the new
             // max_exponent_.
             uint16_t newExponent = exponentImpliedByInt32Bounds();
-            if (newExponent < max_exponent_)
+            if (newExponent < max_exponent_) {
                 max_exponent_ = newExponent;
+                assertInvariants();
+            }
 
             // If we have a completely precise range, the value is an integer,
             // since we can only represent integers.
-            if (canHaveFractionalPart_ && lower_ == upper_)
+            if (canHaveFractionalPart_ && lower_ == upper_) {
                 canHaveFractionalPart_ = false;
+                assertInvariants();
+            }
         }
     }
 
@@ -277,8 +304,7 @@ class Range : public TempObject {
         symbolicLower_(nullptr),
         symbolicUpper_(nullptr)
     {
-        JS_ASSERT_IF(!hasInt32LowerBound_, lower_ == JSVAL_INT_MIN);
-        JS_ASSERT_IF(!hasInt32UpperBound_, upper_ == JSVAL_INT_MAX);
+        assertInvariants();
     }
 
     Range(const MDefinition *def);
@@ -420,18 +446,18 @@ class Range : public TempObject {
 
     // Set this range to have a lower bound not less than x.
     void refineLower(int32_t x) {
+        assertInvariants();
         hasInt32LowerBound_ = true;
         lower_ = Max(lower_, x);
         optimize();
-        JS_ASSERT_IF(!hasInt32LowerBound_, lower_ == JSVAL_INT_MIN);
     }
 
     // Set this range to have an upper bound not greater than x.
     void refineUpper(int32_t x) {
+        assertInvariants();
         hasInt32UpperBound_ = true;
         upper_ = Min(upper_, x);
         optimize();
-        JS_ASSERT_IF(!hasInt32UpperBound_, upper_ == JSVAL_INT_MAX);
     }
 
     void setInt32(int32_t l, int32_t h) {
@@ -441,6 +467,7 @@ class Range : public TempObject {
         upper_ = h;
         canHaveFractionalPart_ = false;
         max_exponent_ = exponentImpliedByInt32Bounds();
+        assertInvariants();
     }
 
     void setUnknown() {

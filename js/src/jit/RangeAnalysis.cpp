@@ -281,8 +281,7 @@ SymbolicBound::print(Sprinter &sp) const
 void
 Range::print(Sprinter &sp) const
 {
-    JS_ASSERT_IF(!hasInt32LowerBound_, lower_ == JSVAL_INT_MIN);
-    JS_ASSERT_IF(!hasInt32UpperBound_, upper_ == JSVAL_INT_MAX);
+    assertInvariants();
 
     // Floating-point or Integer subset.
     if (canHaveFractionalPart_)
@@ -789,6 +788,7 @@ Range::update(const Range *other)
         hasInt32UpperBound_ = other->hasInt32UpperBound_;
         canHaveFractionalPart_ = other->canHaveFractionalPart_;
         max_exponent_ = other->max_exponent_;
+        assertInvariants();
     }
 
     return changed;
