@@ -44,14 +44,17 @@ WebappsRegistry.prototype = {
     let app = msg.app;
     switch (aMessage.name) {
       case "Webapps:Install:Return:OK":
+        this.removeMessageListeners("Webapps:Install:Return:KO");
         Services.DOMRequest.fireSuccess(req, createApplicationObject(this._window, app));
         cpmm.sendAsyncMessage("Webapps:Install:Return:Ack",
                               { manifestURL : app.manifestURL });
         break;
       case "Webapps:Install:Return:KO":
+        this.removeMessageListeners(aMessage.name);
         Services.DOMRequest.fireError(req, msg.error || "DENIED");
         break;
       case "Webapps:GetSelf:Return:OK":
+        this.removeMessageListeners(aMessage.name);
         if (msg.apps.length) {
           app = msg.apps[0];
           Services.DOMRequest.fireSuccess(req, createApplicationObject(this._window, app));
@@ -60,9 +63,11 @@ WebappsRegistry.prototype = {
         }
         break;
       case "Webapps:CheckInstalled:Return:OK":
+        this.removeMessageListeners(aMessage.name);
         Services.DOMRequest.fireSuccess(req, msg.app);
         break;
       case "Webapps:GetInstalled:Return:OK":
+        this.removeMessageListeners(aMessage.name);
         Services.DOMRequest.fireSuccess(req, convertAppsArray(msg.apps, this._window));
         break;
     }
@@ -155,6 +160,7 @@ WebappsRegistry.prototype = {
     let request = this.createRequest();
 
     if (this._ensureForeground(request)) {
+      this.addMessageListeners("Webapps:Install:Return:KO");
       cpmm.sendAsyncMessage("Webapps:Install",
                             this._prepareInstall(uri, request, aParams, false));
     }
@@ -164,6 +170,7 @@ WebappsRegistry.prototype = {
 
   getSelf: function() {
     let request = this.createRequest();
+    this.addMessageListeners("Webapps:GetSelf:Return:OK");
     cpmm.sendAsyncMessage("Webapps:GetSelf", { origin: this._getOrigin(this._window.location.href),
                                                appId: this._window.document.nodePrincipal.appId,
                                                oid: this._id,
@@ -176,6 +183,8 @@ WebappsRegistry.prototype = {
     this._window.document.nodePrincipal.checkMayLoad(manifestURL, true, false);
 
     let request = this.createRequest();
+
+    this.addMessageListeners("Webapps:CheckInstalled:Return:OK");
     cpmm.sendAsyncMessage("Webapps:CheckInstalled", { origin: this._getOrigin(this._window.location.href),
                                                       manifestURL: manifestURL.spec,
                                                       oid: this._id,
@@ -185,6 +194,7 @@ WebappsRegistry.prototype = {
 
   getInstalled: function() {
     let request = this.createRequest();
+    this.addMessageListeners("Webapps:GetInstalled:Return:OK");
     cpmm.sendAsyncMessage("Webapps:GetInstalled", { origin: this._getOrigin(this._window.location.href),
                                                     oid: this._id,
                                                     requestID: this.getRequestId(request) });
@@ -213,6 +223,7 @@ WebappsRegistry.prototype = {
     let request = this.createRequest();
 
     if (this._ensureForeground(request)) {
+      this.addMessageListeners("Webapps:Install:Return:KO");
       cpmm.sendAsyncMessage("Webapps:InstallPackage",
                             this._prepareInstall(uri, request, aParams, true));
     }
@@ -222,10 +233,7 @@ WebappsRegistry.prototype = {
 
   // nsIDOMGlobalPropertyInitializer implementation
   init: function(aWindow) {
-    this.initDOMRequestHelper(aWindow, ["Webapps:Install:Return:OK", "Webapps:Install:Return:KO",
-                              "Webapps:GetInstalled:Return:OK",
-                              "Webapps:GetSelf:Return:OK",
-                              "Webapps:CheckInstalled:Return:OK" ]);
+    this.initDOMRequestHelper(aWindow, "Webapps:Install:Return:OK");
 
     let util = this._window.QueryInterface(Ci.nsIInterfaceRequestor)
                            .getInterface(Ci.nsIDOMWindowUtils);
@@ -338,16 +346,15 @@ WebappsApplication.prototype = {
 
     this._downloadError = null;
 
-    this.initDOMRequestHelper(aWindow, ["Webapps:OfflineCache",
-                              "Webapps:CheckForUpdate:Return:OK",
-                              "Webapps:CheckForUpdate:Return:KO",
-                              "Webapps:Launch:Return:OK",
-                              "Webapps:Launch:Return:KO",
-                              "Webapps:PackageEvent",
-                              "Webapps:ClearBrowserData:Return",
-                              "Webapps:Connect:Return:OK",
-                              "Webapps:Connect:Return:KO",
-                              "Webapps:GetConnections:Return:OK"]);
+    this.initDOMRequestHelper(aWindow, [
+      "Webapps:OfflineCache",
+      "Webapps:CheckForUpdate:Return:OK",
+      "Webapps:CheckForUpdate:Return:KO",
+      "Webapps:PackageEvent",
+      "Webapps:Connect:Return:OK",
+      "Webapps:Connect:Return:KO",
+      "Webapps:GetConnections:Return:OK"
+    ]);
 
     cpmm.sendAsyncMessage("Webapps:RegisterForMessages",
                           {
@@ -441,6 +448,8 @@ WebappsApplication.prototype = {
 
   launch: function(aStartPoint) {
     let request = this.createRequest();
+    this.addMessageListeners(["Webapps:Launch:Return:OK",
+                              "Webapps:Launch:Return:KO"]);
     cpmm.sendAsyncMessage("Webapps:Launch", { origin: this.origin,
                                               manifestURL: this.manifestURL,
                                               startPoint: aStartPoint || "",
@@ -455,6 +464,7 @@ WebappsApplication.prototype = {
     let browserChild =
       BrowserElementPromptService.getBrowserElementChildForWindow(this._window);
     if (browserChild) {
+      this.addMessageListeners("Webapps:ClearBrowserData:Return");
       browserChild.messageManager.sendAsyncMessage(
         "Webapps:ClearBrowserData",
         { manifestURL: this.manifestURL,
@@ -536,9 +546,13 @@ WebappsApplication.prototype = {
       return;
     switch (aMessage.name) {
       case "Webapps:Launch:Return:KO":
+        this.removeMessageListeners(["Webapps:Launch:Return:OK",
+                                     "Webapps:Launch:Return:KO"]);
         Services.DOMRequest.fireError(req, "APP_INSTALL_PENDING");
         break;
       case "Webapps:Launch:Return:OK":
+        this.removeMessageListeners(["Webapps:Launch:Return:OK",
+                                     "Webapps:Launch:Return:KO"]);
         Services.DOMRequest.fireSuccess(req, null);
         break;
       case "Webapps:CheckForUpdate:Return:KO":
@@ -648,6 +662,7 @@ WebappsApplication.prototype = {
         }
         break;
       case "Webapps:ClearBrowserData:Return":
+        this.removeMessageListeners(aMessage.name);
         Services.DOMRequest.fireSuccess(req, null);
         break;
       case "Webapps:Connect:Return:OK":
@@ -691,13 +706,14 @@ WebappsApplication.prototype = {
   * mozIDOMApplicationMgmt object
   */
 function WebappsApplicationMgmt(aWindow) {
-  this.initDOMRequestHelper(aWindow, ["Webapps:GetAll:Return:OK",
-                            "Webapps:GetAll:Return:KO",
-                            "Webapps:Uninstall:Return:OK",
-                            "Webapps:Uninstall:Broadcast:Return:OK",
-                            "Webapps:Uninstall:Return:KO",
-                            "Webapps:Install:Return:OK",
-                            "Webapps:GetNotInstalled:Return:OK"]);
+  this.initDOMRequestHelper(aWindow, [
+    { name: "Webapps:GetAll:Return:OK", strongRef: true },
+    { name: "Webapps:GetAll:Return:KO", strongRef: true },
+    { name: "Webapps:Uninstall:Return:OK", strongRef: true },
+    { name: "Webapps:Uninstall:Broadcast:Return:OK", strongRef: true },
+    { name: "Webapps:Uninstall:Return:KO", strongRef: true },
+    { name: "Webapps:Install:Return:OK", strongRef: true },
+    { name: "Webapps:GetNotInstalled:Return:OK", strongRef: true }]);
 
   cpmm.sendAsyncMessage("Webapps:RegisterForMessages",
                         {
