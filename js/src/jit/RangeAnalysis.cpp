@@ -23,8 +23,10 @@ using namespace js::jit;
 
 using mozilla::Abs;
 using mozilla::CountLeadingZeroes32;
+using mozilla::DoubleIsInt32;
 using mozilla::ExponentComponent;
 using mozilla::IsInfinite;
+using mozilla::IsFinite;
 using mozilla::IsNaN;
 using mozilla::IsNegative;
 using mozilla::Swap;
@@ -147,7 +149,7 @@ RangeAnalysis::addBetaNodes()
 
         MDefinition *left = compare->getOperand(0);
         MDefinition *right = compare->getOperand(1);
-        int32_t bound;
+        double bound;
         int16_t exponent = Range::IncludesInfinity;
         MDefinition *val = nullptr;
 
@@ -158,12 +160,12 @@ RangeAnalysis::addBetaNodes()
             exponent = Range::IncludesInfinityAndNaN;
         }
 
-        if (left->isConstant() && left->toConstant()->value().isInt32()) {
-            bound = left->toConstant()->value().toInt32();
+        if (left->isConstant() && left->toConstant()->value().isNumber()) {
+            bound = left->toConstant()->value().toNumber();
             val = right;
             jsop = analyze::ReverseCompareOp(jsop);
-        } else if (right->isConstant() && right->toConstant()->value().isInt32()) {
-            bound = right->toConstant()->value().toInt32();
+        } else if (right->isConstant() && right->toConstant()->value().isNumber()) {
+            bound = right->toConstant()->value().toNumber();
             val = left;
         } else if (left->type() == MIRType_Int32 && right->type() == MIRType_Int32) {
             MDefinition *smaller = nullptr;
@@ -195,32 +197,42 @@ RangeAnalysis::addBetaNodes()
         // val is the other operand.
         JS_ASSERT(val);
 
+        // If we can't convert this bound to an int32_t, it won't be as easy to
+        // create interesting Ranges with.
+        if (!IsFinite(bound) || bound < INT32_MIN || bound > INT32_MAX)
+            continue;
 
         Range comp;
-        if (val->type() == MIRType_Int32)
-            comp.setInt32(JSVAL_INT_MIN, JSVAL_INT_MAX);
         switch (jsop) {
           case JSOP_LE:
-            comp.set(Range::NoInt32LowerBound, bound, true, exponent);
+            comp.set(Range::NoInt32LowerBound, ceil(bound), true, exponent);
             break;
           case JSOP_LT:
-            if (!SafeSub(bound, 1, &bound))
-                break;
-            comp.set(Range::NoInt32LowerBound, bound, true, exponent);
+            // For integers, if x < c, the upper bound of x is c-1.
+            if (val->type() == MIRType_Int32) {
+                int32_t intbound;
+                if (DoubleIsInt32(bound, &intbound) && SafeSub(intbound, 1, &intbound))
+                    bound = intbound;
+            }
+            comp.set(Range::NoInt32LowerBound, ceil(bound), true, exponent);
             break;
           case JSOP_GE:
-            comp.set(bound, Range::NoInt32UpperBound, true, exponent);
+            comp.set(floor(bound), Range::NoInt32UpperBound, true, exponent);
             break;
           case JSOP_GT:
-            if (!SafeAdd(bound, 1, &bound))
-                break;
-            comp.set(bound, Range::NoInt32UpperBound, true, exponent);
+            // For integers, if x > c, the lower bound of x is c+1.
+            if (val->type() == MIRType_Int32) {
+                int32_t intbound;
+                if (DoubleIsInt32(bound, &intbound) && SafeAdd(intbound, 1, &intbound))
+                    bound = intbound;
+            }
+            comp.set(floor(bound), Range::NoInt32UpperBound, true, exponent);
             break;
           case JSOP_EQ:
-            comp.set(bound, bound, true, exponent);
+            comp.set(floor(bound), ceil(bound), true, exponent);
           default:
-            break; // well, for neq we could have
-                   // [-\inf, bound-1] U [bound+1, \inf] but we only use contiguous ranges.
+            continue; // well, for neq we could have
+                      // [-\inf, bound-1] U [bound+1, \inf] but we only use contiguous ranges.
         }
 
         IonSpew(IonSpew_Range, "Adding beta node for %d", val->id());
