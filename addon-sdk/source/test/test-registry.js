@@ -4,20 +4,20 @@
 
 'use strict';
 
-exports['test:add'] = function(test) {
+exports['test:add'] = function(assert) {
   function Class() {}
   let fixture = require('sdk/util/registry').Registry(Class);
   let isAddEmitted = false;
   fixture.on('add', function(item) {
-    test.assert(
+    assert.ok(
       item instanceof Class,
       'if object added is not an instance should construct instance from it'
     );
-    test.assert(
+    assert.ok(
       fixture.has(item),
       'callback is called after instance is added'
     );
-    test.assert(
+    assert.ok(
       !isAddEmitted,
       'callback should be called for the same item only once'
     );
@@ -28,19 +28,19 @@ exports['test:add'] = function(test) {
   fixture.add(object);
 };
 
-exports['test:remove'] = function(test) {
+exports['test:remove'] = function(assert) {
   function Class() {}
   let fixture = require('sdk/util/registry').Registry(Class);
   fixture.on('remove', function(item) {
-     test.assert(
+     assert.ok(
       item instanceof Class,
       'if object removed can be only instance of Class'
     );
-    test.assert(
+    assert.ok(
       fixture.has(item),
       'callback is called before instance is removed'
     );
-    test.assert(
+    assert.ok(
       !isRemoveEmitted,
       'callback should be called for the same item only once'
     );
@@ -53,7 +53,7 @@ exports['test:remove'] = function(test) {
   fixture.remove(object);
 };
 
-exports['test:items'] = function(test) {
+exports['test:items'] = function(assert) {
   function Class() {}
   let fixture = require('sdk/util/registry').Registry(Class),
       actual,
@@ -61,7 +61,7 @@ exports['test:items'] = function(test) {
 
   function testItem(item) {
     times ++;
-    test.assertEqual(
+    assert.equal(
       actual,
       item,
       'item should match actual item being added/removed'
@@ -75,6 +75,8 @@ exports['test:items'] = function(test) {
   
   fixture.remove(actual);
   fixture.remove(fixture.add(actual = new Class()));
-  test.assertEqual(3, times, 'should notify listeners on each call');
-}
+  assert.equal(3, times, 'should notify listeners on each call');
+};
+
+require('sdk/test').run(exports);
 
