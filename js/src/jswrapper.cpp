@@ -837,10 +837,11 @@ DeadObjectProxy DeadObjectProxy::singleton;
 const char DeadObjectProxy::sDeadObjectFamily = 0;
 
 JSObject *
-js::NewDeadProxyObject(JSContext *cx, JSObject *parent)
+js::NewDeadProxyObject(JSContext *cx, JSObject *parent,
+                       const ProxyOptions &options)
 {
     return NewProxyObject(cx, &DeadObjectProxy::singleton, JS::NullHandleValue,
-                          NULL, parent);
+                          NULL, parent, options);
 }
 
 bool
