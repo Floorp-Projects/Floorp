@@ -1522,6 +1522,7 @@ EventListenersView.prototype = Heritage.extend(WidgetMethods, {
     this._eventCheckboxTooltip = L10N.getStr("eventCheckboxTooltip");
     this._onSelectorString = " " + L10N.getStr("eventOnSelector") + " ";
     this._inSourceString = " " + L10N.getStr("eventInSource") + " ";
+    this._inNativeCodeString = L10N.getStr("eventNative");
 
     this.widget.addEventListener("check", this._onCheck, false);
     this.widget.addEventListener("click", this._onClick, false);
@@ -1624,6 +1625,12 @@ EventListenersView.prototype = Heritage.extend(WidgetMethods, {
       group = L10N.getStr("touchEvents");
     } else {
       group = L10N.getStr("otherEvents");
+    }
+
+    // Some listener objects may be added from plugins, thus getting
+    // translated to native code.
+    if (!url) {
+      url = this._inNativeCodeString;
     }
 
     // Create the element node for the event listener item.
@@ -1751,7 +1758,8 @@ EventListenersView.prototype = Heritage.extend(WidgetMethods, {
 
   _eventCheckboxTooltip: "",
   _onSelectorString: "",
-  _inSourceString: ""
+  _inSourceString: "",
+  _inNativeCodeString: ""
 });
 
 /**
