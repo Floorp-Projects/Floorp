@@ -367,6 +367,28 @@ class Range : public TempObject {
         return upper_;
     }
 
+    // Test whether all values in this range can are finite and negative.
+    bool isFiniteNegative() const {
+        return upper_ < 0 && !canBeInfiniteOrNaN();
+    }
+
+    // Test whether all values in this range can are finite and non-negative.
+    bool isFiniteNonNegative() const {
+        return lower_ >= 0 && !canBeInfiniteOrNaN();
+    }
+
+    // Test whether a value in this range can possibly be a finite
+    // negative value.
+    bool canBeFiniteNegative() const {
+        return lower_ < 0;
+    }
+
+    // Test whether a value in this range can possibly be a finite
+    // non-negative value.
+    bool canBeFiniteNonNegative() const {
+        return upper_ >= 0;
+    }
+
     void setLower(int64_t x) {
         setLowerInit(x);
         rectifyExponent();
