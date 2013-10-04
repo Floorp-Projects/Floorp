@@ -786,6 +786,21 @@ class ScriptedIndirectProxyHandler : public BaseProxyHandler
     static ScriptedIndirectProxyHandler singleton;
 };
 
+/*
+ * Old-style indirect proxies allow callers to specify distinct scripted
+ * [[Call]] and [[Construct]] traps. We use an intermediate object so that we
+ * can stash this information in a single reserved slot on the proxy object.
+ *
+ * Note - Currently this is slightly unnecesary, because we actually have 2
+ * extra slots, neither of which are used for ScriptedIndirectProxy. But we're
+ * eventually moving towards eliminating one of those slots, and so we don't
+ * want to add a dependency here.
+ */
+static Class CallConstructHolder = {
+    "CallConstructHolder",
+    JSCLASS_HAS_RESERVED_SLOTS(2) | JSCLASS_IS_ANONYMOUS
+};
+
 } /* anonymous namespace */
 
 // This variable exists solely to provide a unique address for use as an identifier.
@@ -1004,7 +1019,10 @@ bool
 ScriptedIndirectProxyHandler::call(JSContext *cx, HandleObject proxy, const CallArgs &args)
 {
     assertEnteredPolicy(cx, proxy, JSID_VOID);
-    RootedValue call(cx, proxy->as<FunctionProxyObject>().call());
+    RootedObject ccHolder(cx, &proxy->as<ProxyObject>().extra(0).toObject());
+    JS_ASSERT(ccHolder->getClass() == &CallConstructHolder);
+    RootedValue call(cx, ccHolder->getReservedSlot(0));
+    JS_ASSERT(call.isObject() && call.toObject().isCallable());
     return Invoke(cx, args.thisv(), call, args.length(), args.array(), args.rval());
 }
 
@@ -1012,10 +1030,12 @@ bool
 ScriptedIndirectProxyHandler::construct(JSContext *cx, HandleObject proxy, const CallArgs &args)
 {
     assertEnteredPolicy(cx, proxy, JSID_VOID);
-    RootedValue fval(cx, proxy->as<FunctionProxyObject>().constructOrUndefined());
-    if (fval.isUndefined())
-        fval = proxy->as<FunctionProxyObject>().call();
-    return InvokeConstructor(cx, fval, args.length(), args.array(), args.rval().address());
+    RootedObject ccHolder(cx, &proxy->as<ProxyObject>().extra(0).toObject());
+    JS_ASSERT(ccHolder->getClass() == &CallConstructHolder);
+    RootedValue construct(cx, ccHolder->getReservedSlot(1));
+    JS_ASSERT(construct.isObject() && construct.toObject().isCallable());
+    return InvokeConstructor(cx, construct, args.length(), args.array(),
+                             args.rval().address());
 }
 
 bool
@@ -1029,15 +1049,14 @@ JSString *
 ScriptedIndirectProxyHandler::fun_toString(JSContext *cx, HandleObject proxy, unsigned indent)
 {
     assertEnteredPolicy(cx, proxy, JSID_VOID);
-    Value fval = proxy->as<FunctionProxyObject>().call();
-    if (fval.isPrimitive() || !fval.toObject().is<JSFunction>()) {
+    if (!proxy->isCallable()) {
         JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
                              JSMSG_INCOMPATIBLE_PROTO,
                              js_Function_str, js_toString_str,
                              "object");
         return NULL;
     }
-    RootedObject obj(cx, &fval.toObject());
+    RootedObject obj(cx, &proxy->as<ProxyObject>().extra(0).toObject().getReservedSlot(0).toObject());
     return fun_toStringHelper(cx, obj, indent);
 }
 
@@ -3376,14 +3395,26 @@ proxy_createFunction(JSContext *cx, unsigned argc, Value *vp)
         construct = ValueToCallable(cx, vp[4], argc - 3);
         if (!construct)
             return false;
+    } else {
+        construct = call;
     }
+
+    // Stash the call and construct traps on a holder object that we can stick
+    // in a slot on the proxy.
+    RootedObject ccHolder(cx, JS_NewObjectWithGivenProto(cx, Jsvalify(&CallConstructHolder),
+                                                         NULL, cx->global()));
+    if (!ccHolder)
+        return false;
+    ccHolder->setReservedSlot(0, ObjectValue(*call));
+    ccHolder->setReservedSlot(1, ObjectValue(*construct));
 
     RootedValue priv(cx, ObjectValue(*handler));
     JSObject *proxy =
-      FunctionProxyObject::New(cx, &ScriptedIndirectProxyHandler::singleton,
-                               priv, proto, parent, call, construct);
+        ProxyObject::New(cx, &ScriptedIndirectProxyHandler::singleton,
+                         priv, TaggedProto(proto), parent, ProxyIsCallable);
     if (!proxy)
         return false;
+    proxy->as<ProxyObject>().setExtra(0, ObjectValue(*ccHolder));
 
     vp->setObject(*proxy);
     return true;
