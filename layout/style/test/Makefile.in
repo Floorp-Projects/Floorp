@@ -22,6 +22,7 @@ HOST_SIMPLE_PROGRAMS	= $(addprefix host_, $(host_cppsrcs:.cpp=$(HOST_BIN_SUFFIX)
 #LIBS += ../nsCSSKeywords.$(OBJ_SUFFIX) ../nsCSSProps.$(OBJ_SUFFIX) $(XPCOM_LIBS)
 
 MOCHITEST_FILES =	test_acid3_test46.html \
+		test_all_shorthand.html \
 		test_animations.html \
 		test_any_dynamic.html \
 		test_at_rule_parse_serialize.html \
@@ -87,6 +88,7 @@ MOCHITEST_FILES =	test_acid3_test46.html \
 		test_compute_data_with_start_struct.html \
 		test_computed_style.html \
 		test_computed_style_no_pseudo.html \
+		test_computed_style_prefs.html \
 		test_condition_text.html \
 		test_condition_text_assignment.html \
 		test_default_computed_style.html \

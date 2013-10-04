@@ -1,6 +1,8 @@
 // Changing arguments.length during a for-of loop iterating over arguments affects the loop.
 
-Object.prototype.iterator = Array.prototype.iterator;
+load(libdir + "iteration.js");
+
+Object.prototype[std_iterator] = Array.prototype[std_iterator];
 
 var s;
 function f() {

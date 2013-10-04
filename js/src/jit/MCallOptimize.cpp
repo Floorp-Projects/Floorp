@@ -1170,6 +1170,7 @@ IonBuilder::inlineForceSequentialOrInParallelSection(CallInfo &callInfo)
     ExecutionMode executionMode = info().executionMode();
     switch (executionMode) {
       case SequentialExecution:
+      case DefinitePropertiesAnalysis:
         // In sequential mode, leave as is, because we'd have to
         // access the "in warmup" flag of the runtime.
         return InliningStatus_NotInlined;
@@ -1184,8 +1185,6 @@ IonBuilder::inlineForceSequentialOrInParallelSection(CallInfo &callInfo)
         current->push(ins);
         return InliningStatus_Inlined;
       }
-
-      default:;
     }
 
     MOZ_ASSUME_UNREACHABLE("Invalid execution mode");
@@ -1350,10 +1349,10 @@ IonBuilder::inlineNewDenseArray(CallInfo &callInfo)
     ExecutionMode executionMode = info().executionMode();
     switch (executionMode) {
       case SequentialExecution:
+      case DefinitePropertiesAnalysis:
         return inlineNewDenseArrayForSequentialExecution(callInfo);
       case ParallelExecution:
         return inlineNewDenseArrayForParallelExecution(callInfo);
-      default:;
     }
 
     MOZ_ASSUME_UNREACHABLE("unknown ExecutionMode");

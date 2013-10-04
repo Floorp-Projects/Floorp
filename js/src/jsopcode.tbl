@@ -400,13 +400,14 @@ OPDEF(JSOP_ENTERLET0,     185,"enterlet0",  NULL,     5, -1, -1,  JOF_OBJECT)
 
 /* Enter a let block/expr whose slots are 1 below the top of the stack. */
 OPDEF(JSOP_ENTERLET1,     186,"enterlet1",  NULL,     5, -1, -1,  JOF_OBJECT)
+/* Enter a let block/expr whose slots are 2 below the top of the stack. */
+OPDEF(JSOP_ENTERLET2,     187,"enterlet2",  NULL,     5, -1, -1,  JOF_OBJECT)
 
 /*
  * Opcode to hold 24-bit immediate integer operands.
  */
-OPDEF(JSOP_UINT24,        187,"uint24",     NULL,     4,  0,  1, JOF_UINT24)
+OPDEF(JSOP_UINT24,        188,"uint24",     NULL,     4,  0,  1, JOF_UINT24)
 
-OPDEF(JSOP_UNUSED188,     188,"unused188",   NULL,    1,  0,  0,  JOF_BYTE)
 OPDEF(JSOP_UNUSED189,     189,"unused189",   NULL,    1,  0,  0,  JOF_BYTE)
 OPDEF(JSOP_UNUSED190,     190,"unused190",   NULL,    1,  0,  0,  JOF_BYTE)
 OPDEF(JSOP_UNUSED191,     191,"unused191",   NULL,    1,  0,  0,  JOF_BYTE)

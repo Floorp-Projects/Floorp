@@ -1,13 +1,15 @@
 // for-of on a proxy causes a predictable sequence of trap calls.
 
+load(libdir + "iteration.js");
+
 var s = '';
 
 var i = 0;
 var next_fn = Proxy.createFunction({}, function () {
     s += "n";
     if (i == 3)
-        throw StopIteration;
-    return i++;
+        return { value: undefined, done: true };
+    return { value: i++, done: false };
 });
 
 var it = Proxy.create({
@@ -29,7 +31,7 @@ var iterator_fn = Proxy.createFunction({}, function () {
 
 var obj = Proxy.create({
     get: function (receiver, name) {
-        assertEq(name, "iterator");
+        assertEq(name, std_iterator);
         s += "I";
         return iterator_fn;
     }
