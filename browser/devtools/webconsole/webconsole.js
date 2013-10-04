@@ -2576,16 +2576,7 @@ WebConsoleFrame.prototype = {
     // Make the location clickable.
     this._addMessageLinkCallback(locationNode, () => {
       if (isScratchpad) {
-        let wins = Services.wm.getEnumerator("devtools:scratchpad");
-
-        while (wins.hasMoreElements()) {
-          let win = wins.getNext();
-
-          if (!win.closed && win.Scratchpad.uniqueName === aSourceURL) {
-            win.focus();
-            return;
-          }
-        }
+        this.owner.viewSourceInScratchpad(aSourceURL);
       }
       else if (locationNode.parentNode.category == CATEGORY_CSS) {
         this.owner.viewSourceInStyleEditor(fullURL, aSourceLine);
