@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<title>Test the 'all' shorthand property</title>
+<script src="/tests/SimpleTest/SimpleTest.js"></script>
+<script src="property_database.js"></script>
+<link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css">
+<body>
+
+<style id="stylesheet">
+#parent { }
+#child { }
+#child { }
+</style>
+
+<div style="display: none">
+  <div id="parent">
+    <div id="child"></div>
+  </div>
+</div>
+
+<script>
+function runTest() {
+  var sheet = document.getElementById("stylesheet").sheet;
+  var parentRule = sheet.cssRules[0];
+  var childRule1 = sheet.cssRules[1];
+  var childRule2 = sheet.cssRules[2];
+  var parent = document.getElementById("parent");
+  var child = document.getElementById("child");
+
+  // Longhand properties that are NOT considered to be subproperties of the 'all'
+  // shorthand.
+  var excludedSubproperties = ["direction", "unicode-bidi"];
+  var excludedSubpropertiesSet = new Set(excludedSubproperties);
+
+  // Longhand properties that are considered to be subproperties of the 'all'
+  // shorthand.
+  var includedSubproperties = Object.keys(gCSSProperties).filter(function(prop) {
+    var info = gCSSProperties[prop];
+    return info.type == CSS_TYPE_LONGHAND &&
+           !excludedSubpropertiesSet.has(prop);
+  });
+
+  // All longhand properties to be tested.
+  var allSubproperties = includedSubproperties.concat(excludedSubproperties);
+
+
+  // First, get the computed value for the initial value and one other value of
+  // each property.
+  var initialComputedValues = new Map();
+  var otherComputedValues = new Map();
+
+  allSubproperties.forEach(function(prop) {
+    parentRule.style.setProperty(prop, "initial", "");
+    initialComputedValues.set(prop, getComputedStyle(parent, "").getPropertyValue(prop));
+    parentRule.style.cssText = "";
+  });
+
+  allSubproperties.forEach(function(prop) {
+    var info = gCSSProperties[prop];
+    parentRule.style.setProperty(prop, info.other_values[0], "");
+    otherComputedValues.set(prop, getComputedStyle(parent, "").getPropertyValue(prop));
+    parentRule.style.cssText = "";
+  });
+
+
+  // Test setting all:inherit through setProperty.
+  includedSubproperties.forEach(function(prop) {
+    var info = gCSSProperties[prop];
+    parentRule.style.setProperty(prop, info.other_values[0], "");
+    childRule1.style.setProperty(prop, "initial");
+    childRule2.style.setProperty("all", "inherit");
+    is(getComputedStyle(child, "").getPropertyValue(prop), otherComputedValues.get(prop),
+       "computed value for " + prop + " when 'all:inherit' set with setProperty");
+    parentRule.style.cssText = "";
+    childRule1.style.cssText = "";
+    childRule2.style.cssText = "";
+  });
+  excludedSubproperties.forEach(function(prop) {
+    var info = gCSSProperties[prop];
+    parentRule.style.setProperty(prop, info.other_values[0], "");
+    childRule1.style.setProperty(prop, "initial");
+    childRule2.style.setProperty("all", "inherit");
+    is(getComputedStyle(child, "").getPropertyValue(prop), initialComputedValues.get(prop),
+       "computed value for excluded subproperty " + prop + " when 'all:inherit' set with setProperty");
+    parentRule.style.cssText = "";
+    childRule1.style.cssText = "";
+    childRule2.style.cssText = "";
+  });
+
+  // Test setting all:initial through setProperty.
+  includedSubproperties.forEach(function(prop) {
+    var info = gCSSProperties[prop];
+    parentRule.style.setProperty(prop, info.other_values[0], "");
+    childRule1.style.setProperty(prop, "inherit");
+    childRule2.style.setProperty("all", "initial");
+    is(getComputedStyle(child, "").getPropertyValue(prop), initialComputedValues.get(prop),
+       "computed value for " + prop + " when 'all:initial' set with setProperty");
+    parentRule.style.cssText = "";
+    childRule1.style.cssText = "";
+    childRule2.style.cssText = "";
+  });
+  excludedSubproperties.forEach(function(prop) {
+    var info = gCSSProperties[prop];
+    parentRule.style.setProperty(prop, info.other_values[0], "");
+    childRule1.style.setProperty(prop, info.other_values[0], "");
+    childRule2.style.setProperty("all", "initial");
+    is(getComputedStyle(child, "").getPropertyValue(prop), otherComputedValues.get(prop),
+       "computed value for excluded subproperty " + prop + " when 'all:initial' set with setProperty");
+    parentRule.style.cssText = "";
+    childRule1.style.cssText = "";
+    childRule2.style.cssText = "";
+  });
+
+  // Test setting all:unset through setProperty.
+  includedSubproperties.forEach(function(prop) {
+    var info = gCSSProperties[prop];
+    if (info.inherited) {
+      parentRule.style.setProperty(prop, info.other_values[0], "");
+      childRule1.style.setProperty(prop, "initial", "");
+      childRule2.style.setProperty("all", "unset");
+      is(getComputedStyle(child, "").getPropertyValue(prop), otherComputedValues.get(prop),
+         "computed value for " + prop + " when 'all:unset' set with setProperty");
+    } else {
+      parentRule.style.setProperty(prop, info.other_values[0], "");
+      childRule1.style.setProperty(prop, info.other_values[0], "");
+      childRule2.style.setProperty("all", "unset");
+      is(getComputedStyle(child, "").getPropertyValue(prop), initialComputedValues.get(prop),
+         "computed value for " + prop + " when 'all:unset' set with setProperty");
+    }
+    parentRule.style.cssText = "";
+    childRule1.style.cssText = "";
+    childRule2.style.cssText = "";
+  });
+  excludedSubproperties.forEach(function(prop) {
+    var info = gCSSProperties[prop];
+    if (info.inherited) {
+      parentRule.style.setProperty(prop, info.other_values[0], "");
+      childRule1.style.setProperty(prop, "initial", "");
+      childRule2.style.setProperty("all", "unset");
+      is(getComputedStyle(child, "").getPropertyValue(prop), initialComputedValues.get(prop),
+         "computed value for excluded subproperty " + prop + " when 'all:unset' set with setProperty");
+    } else {
+      parentRule.style.setProperty(prop, info.other_values[0], "");
+      childRule1.style.setProperty(prop, info.other_values[0], "");
+      childRule2.style.setProperty("all", "unset");
+      is(getComputedStyle(child, "").getPropertyValue(prop), otherComputedValues.get(prop),
+         "computed value for excluded subproperty " + prop + " when 'all:unset' set with setProperty");
+    }
+    parentRule.style.cssText = "";
+    childRule1.style.cssText = "";
+    childRule2.style.cssText = "";
+  });
+
+  SimpleTest.finish();
+}
+
+SimpleTest.waitForExplicitFinish();
+SpecialPowers.pushPrefEnv({ "set": [["layout.css.all-shorthand.enabled", true],
+                                    ["layout.css.unset-value.enabled", true]] }, runTest);
+</script>

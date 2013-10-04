@@ -1465,13 +1465,6 @@ PrimitiveToObject(JSContext *cx, const Value &v);
 
 } /* namespace js */
 
-extern bool
-js_ValueToObjectOrNull(JSContext *cx, const js::Value &v, JS::MutableHandleObject objp);
-
-/* Throws if v could not be converted to an object. */
-extern JSObject *
-js_ValueToNonNullObject(JSContext *cx, const js::Value &v);
-
 namespace js {
 
 /*

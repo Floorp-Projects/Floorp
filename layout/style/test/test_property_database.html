@@ -51,6 +51,10 @@ for (var idx in gShorthandProperties) {
   if (prop.pref && !SpecialPowers.getBoolPref(prop.pref)) {
     continue;
   }
+  if (prop.name == "all") {
+    // "all" isn't listed in property_database.js.
+    continue;
+  }
   var present = prop.name in gCSSProperties;
   ok(present,
      "'" + prop.name + "' listed in gCSSProperties");

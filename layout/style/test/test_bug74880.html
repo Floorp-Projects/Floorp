@@ -39,6 +39,12 @@ var gLengthValues = [ "inherit", "initial", "2px", "1em" ];
 var gColorValues = [ "inherit", "initial", "currentColor", "green" ];
 var gStyleValues = [ "inherit", "initial", "double", "dashed" ];
 
+if (SpecialPowers.getBoolPref("layout.css.unset-value.enabled")) {
+  gLengthValues.push("unset");
+  gColorValues.push("unset");
+  gStyleValues.push("unset");
+}
+
 function values_for(set) {
   var values;
   if (set[0].match(/style$/))
@@ -62,7 +68,7 @@ for (var set of gProps) {
       s.setProperty("direction", dir, "");
       s.setProperty(pvisual, val, "");
       var v1 = c.getPropertyValue(pvisual);
-      if (val != "initial" && val != "currentColor")
+      if (val != "initial" && val != "unset" && val != "currentColor")
         isnot(v1, v0, "setProperty set the property " + pvisual + ": " + val);
       s.removeProperty(pvisual);
       is(c.getPropertyValue(pvisual), v0, "removeProperty worked for " + pvisual);

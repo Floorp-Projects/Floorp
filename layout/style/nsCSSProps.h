@@ -34,7 +34,7 @@
 #define VARIANT_IDENTIFIER_NO_INHERIT 0x004000 // like above, but excluding
 // 'inherit' and 'initial'
 #define VARIANT_AUTO            0x010000  // A
-#define VARIANT_INHERIT         0x020000  // H eCSSUnit_Initial, eCSSUnit_Inherit
+#define VARIANT_INHERIT         0x020000  // H eCSSUnit_Initial, eCSSUnit_Inherit, eCSSUnit_Unset
 #define VARIANT_NONE            0x040000  // O
 #define VARIANT_NORMAL          0x080000  // M
 #define VARIANT_SYSFONT         0x100000  // eCSSUnit_System_Font

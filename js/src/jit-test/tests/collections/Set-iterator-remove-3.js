@@ -1,12 +1,12 @@
 // A set iterator can cope with removing the next entry, then the current entry.
 
-load(libdir + "asserts.js");
+load(libdir + "iteration.js");
 
 var set = Set("abcd");
-var iter = set.iterator();
-assertEq(iter.next(), "a");
-assertEq(iter.next(), "b");
+var iter = set[std_iterator]();
+assertIteratorResult(iter.next(), "a", false);
+assertIteratorResult(iter.next(), "b", false);
 set.delete("c");
 set.delete("b");
-assertEq(iter.next(), "d");
-assertThrowsValue(function () { iter.next(); }, StopIteration);
+assertIteratorResult(iter.next(), "d", false);
+assertIteratorResult(iter.next(), undefined, true);

@@ -2050,8 +2050,10 @@ MToDouble::foldsTo(bool useValueNumbers)
     }
 
     // Fold unnecessary numeric conversions.
-    if (input()->isToInt32())
+    if (input()->isToInt32()) {
         replaceOperand(0, input()->getOperand(0));
+        conversion_ = NonStringPrimitives;
+    }
 
     return this;
 }

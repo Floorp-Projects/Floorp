@@ -161,10 +161,10 @@ Declaration::GetValue(nsCSSProperty aProperty, nsAString& aValue) const
   //   (1) Since a shorthand sets all sub-properties, if some of its
   //       subproperties were not specified, we must return the empty
   //       string.
-  //   (2) Since 'inherit' and 'initial' can only be specified as the
-  //       values for entire properties, we need to return the empty
-  //       string if some but not all of the subproperties have one of
-  //       those values.
+  //   (2) Since 'inherit', 'initial' and 'unset' can only be specified
+  //       as the values for entire properties, we need to return the
+  //       empty string if some but not all of the subproperties have one
+  //       of those values.
   //   (3) Since a single value only makes sense with or without
   //       !important, we return the empty string if some values are
   //       !important and some are not.
@@ -172,7 +172,7 @@ Declaration::GetValue(nsCSSProperty aProperty, nsAString& aValue) const
   // we can also simplify the property serialization code by serializing
   // those values up front as well.
   uint32_t totalCount = 0, importantCount = 0,
-           initialCount = 0, inheritCount = 0;
+           initialCount = 0, inheritCount = 0, unsetCount = 0;
   CSSPROPS_FOR_SHORTHAND_SUBPROPERTIES(p, aProperty) {
     if (*p == eCSSProperty__x_system_font ||
          nsCSSProps::PropHasFlags(*p, CSS_PROPERTY_DIRECTIONAL_SOURCE)) {
@@ -195,6 +195,8 @@ Declaration::GetValue(nsCSSProperty aProperty, nsAString& aValue) const
       ++inheritCount;
     } else if (val->GetUnit() == eCSSUnit_Initial) {
       ++initialCount;
+    } else if (val->GetUnit() == eCSSUnit_Unset) {
+      ++unsetCount;
     }
   }
   if (importantCount != 0 && importantCount != totalCount) {
@@ -211,8 +213,13 @@ Declaration::GetValue(nsCSSProperty aProperty, nsAString& aValue) const
     nsCSSValue(eCSSUnit_Inherit).AppendToString(eCSSProperty_UNKNOWN, aValue);
     return;
   }
-  if (initialCount != 0 || inheritCount != 0) {
-    // Case (2): partially initial or inherit.
+  if (unsetCount == totalCount) {
+    // Simplify serialization below by serializing unset up-front.
+    nsCSSValue(eCSSUnit_Unset).AppendToString(eCSSProperty_UNKNOWN, aValue);
+    return;
+  }
+  if (initialCount != 0 || inheritCount != 0 || unsetCount != 0) {
+    // Case (2): partially initial, inherit or unset.
     return;
   }
 
@@ -852,6 +859,12 @@ Declaration::GetValue(nsCSSProperty aProperty, nsAString& aValue) const
       AppendValueToString(subprops[0], aValue);
       break;
     }
+    case eCSSProperty_all:
+      // If we got here, then we didn't have all "inherit" or "initial" or
+      // "unset" values for all of the longhand property components of 'all'.
+      // There is no other possible value that is valid for all properties,
+      // so serialize as the empty string.
+      break;
     default:
       NS_ABORT_IF_FALSE(false, "no other shorthands");
       break;

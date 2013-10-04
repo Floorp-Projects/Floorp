@@ -358,8 +358,9 @@
   <panel id="searchbox-help-panel"
          level="top"
          type="arrow"
+         position="before_start"
          noautofocus="true"
-         position="before_start">
+         consumeoutsideclicks="false">
     <vbox>
       <hbox>
         <label id="filter-label"/>
@@ -405,10 +406,10 @@
   </panel>
 
   <panel id="conditional-breakpoint-panel"
-         hidden="true"
          level="top"
          type="arrow"
-         noautofocus="true">
+         noautofocus="true"
+         consumeoutsideclicks="false">
     <vbox>
       <label id="conditional-breakpoint-panel-description"
              value="&debuggerUI.condBreakPanelTitle;"/>
@@ -418,8 +419,9 @@
 
   <panel id="resumption-order-panel"
          type="arrow"
+         position="before_start"
          noautofocus="true"
-         position="before_start">
+         consumeoutsideclicks="false">
     <hbox align="start">
       <image class="alert-icon"/>
       <label id="resumption-panel-desc" class="description"/>
