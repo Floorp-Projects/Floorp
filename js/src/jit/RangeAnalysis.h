@@ -96,8 +96,8 @@ class RangeAnalysis
 
 class Range : public TempObject {
   public:
-    // Int32 are signed, so the value needs 31 bits except for INT_MIN value
-    // which needs 32 bits.
+    // Int32 are signed. INT32_MAX is pow(2,31)-1 and INT32_MIN is -pow(2,31),
+    // so the greatest exponent we need is 31.
     static const uint16_t MaxInt32Exponent = 31;
 
     // UInt32 are unsigned. UINT32_MAX is pow(2,32)-1, so it's the greatest
@@ -109,8 +109,16 @@ class Range : public TempObject {
     // represented without loss.
     static const uint16_t MaxTruncatableExponent = mozilla::DoubleExponentShift;
 
-    // 11 bits of signed exponent, so the max is encoded on 10 bits.
-    static const uint16_t MaxDoubleExponent = mozilla::DoubleExponentBias;
+    // Maximum exponent for finite values.
+    static const uint16_t MaxFiniteExponent = mozilla::DoubleExponentBias;
+
+    // An special exponent value representing all non-NaN values. This
+    // includes finite values and the infinities.
+    static const uint16_t IncludesInfinity = MaxFiniteExponent + 1;
+
+    // An special exponent value representing all possible double-precision
+    // values. This includes finite values, the infinities, and NaNs.
+    static const uint16_t IncludesInfinityAndNaN = UINT16_MAX;
 
     // This range class uses int32_t ranges, but has several interfaces which
     // use int64_t, which either holds an int32_t value, or one of the following
@@ -195,7 +203,7 @@ class Range : public TempObject {
           upper_(JSVAL_INT_MAX),
           hasInt32UpperBound_(false),
           canHaveFractionalPart_(true),
-          max_exponent_(MaxDoubleExponent),
+          max_exponent_(IncludesInfinityAndNaN),
           symbolicLower_(nullptr),
           symbolicUpper_(nullptr)
     {
@@ -211,8 +219,8 @@ class Range : public TempObject {
           symbolicLower_(nullptr),
           symbolicUpper_(nullptr)
     {
-        JS_ASSERT(e >= (h == INT64_MIN ? MaxDoubleExponent : mozilla::FloorLog2(mozilla::Abs(h))));
-        JS_ASSERT(e >= (l == INT64_MIN ? MaxDoubleExponent : mozilla::FloorLog2(mozilla::Abs(l))));
+        JS_ASSERT(e >= (h == INT64_MIN ? IncludesInfinity : mozilla::FloorLog2(mozilla::Abs(h))));
+        JS_ASSERT(e >= (l == INT64_MIN ? IncludesInfinity : mozilla::FloorLog2(mozilla::Abs(l))));
 
         setLowerInit(l);
         setUpperInit(h);
@@ -247,12 +255,12 @@ class Range : public TempObject {
         return new Range(l, h, false, MaxUInt32Exponent);
     }
 
-    static Range *NewDoubleRange(int64_t l, int64_t h, uint16_t e = MaxDoubleExponent) {
+    static Range *NewDoubleRange(int64_t l, int64_t h, uint16_t e = IncludesInfinityAndNaN) {
         return new Range(l, h, true, e);
     }
 
     static Range *NewSingleValueRange(int64_t v) {
-        return new Range(v, v, false, MaxDoubleExponent);
+        return new Range(v, v, false, IncludesInfinityAndNaN);
     }
 
     void print(Sprinter &sp) const;
@@ -320,11 +328,22 @@ class Range : public TempObject {
     }
 
     bool canHaveRoundingErrors() const {
-        return canHaveFractionalPart() || exponent() >= MaxTruncatableExponent;
+        return canHaveFractionalPart() || max_exponent_ >= MaxTruncatableExponent;
     }
 
+    // Test whether the range contains zero.
+    bool canBeZero() const {
+        return lower_ <= 0 && upper_ >= 0;
+    }
+
+    // Test whether the range contains NaN values.
+    bool canBeNaN() const {
+        return max_exponent_ == IncludesInfinityAndNaN;
+    }
+
+    // Test whether the range contains infinities or NaN values.
     bool canBeInfiniteOrNaN() const {
-        return exponent() >= MaxDoubleExponent;
+        return max_exponent_ >= IncludesInfinity;
     }
 
     bool canHaveFractionalPart() const {
@@ -332,11 +351,12 @@ class Range : public TempObject {
     }
 
     uint16_t exponent() const {
+        JS_ASSERT(!canBeInfiniteOrNaN());
         return max_exponent_;
     }
 
     uint16_t numBits() const {
-        return max_exponent_ + 1; // 2^0 -> 1
+        return exponent() + 1; // 2^0 -> 1
     }
 
     int32_t lower() const {
