@@ -91,7 +91,8 @@ PhoneNumberService.prototype = {
 
   classID : Components.ID("{e2768710-eb17-11e2-91e2-0800200c9a66}"),
   contractID : "@mozilla.org/phoneNumberService;1",
-  QueryInterface : XPCOMUtils.generateQI([Ci.nsIDOMGlobalPropertyInitializer]),
+  QueryInterface : XPCOMUtils.generateQI([Ci.nsIDOMGlobalPropertyInitializer,
+                                          Ci.nsISupportsWeakReference]),
 }
 
 this.NSGetFactory = XPCOMUtils.generateNSGetFactory([PhoneNumberService]);
