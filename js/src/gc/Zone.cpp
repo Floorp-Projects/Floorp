@@ -183,7 +183,7 @@ Zone::sweepBreakpoints(FreeOp *fop)
 }
 
 void
-Zone::discardJitCode(FreeOp *fop, bool discardConstraints)
+Zone::discardJitCode(FreeOp *fop)
 {
 #ifdef JS_ION
     if (isPreservingCode()) {
@@ -227,7 +227,7 @@ Zone::discardJitCode(FreeOp *fop, bool discardConstraints)
             if (comp->ionCompartment())
                 comp->ionCompartment()->optimizedStubSpace()->free();
 
-            comp->types.sweepCompilerOutputs(fop, discardConstraints);
+            comp->types.clearCompilerOutputs(fop);
         }
     }
 #endif
