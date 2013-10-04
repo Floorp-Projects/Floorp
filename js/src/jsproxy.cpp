@@ -308,7 +308,10 @@ BaseProxyHandler::className(JSContext *cx, HandleObject proxy)
 JSString *
 BaseProxyHandler::fun_toString(JSContext *cx, HandleObject proxy, unsigned indent)
 {
-    MOZ_ASSUME_UNREACHABLE("callable proxies should implement fun_toString trap");
+    if (proxy->isCallable())
+        return JS_NewStringCopyZ(cx, "function () {\n    [native code]\n}");
+    ReportIsNotFunction(cx, ObjectValue(*proxy));
+    return NULL;
 }
 
 bool
@@ -2691,12 +2694,8 @@ Proxy::fun_toString(JSContext *cx, HandleObject proxy, unsigned indent)
     AutoEnterPolicy policy(cx, handler, proxy, JSID_VOIDHANDLE,
                            BaseProxyHandler::GET, /* mayThrow = */ false);
     // Do the safe thing if the policy rejects.
-    if (!policy.allowed()) {
-        if (proxy->isCallable())
-            return JS_NewStringCopyZ(cx, "function () {\n    [native code]\n}");
-        ReportIsNotFunction(cx, ObjectValue(*proxy));
-        return NULL;
-    }
+    if (!policy.allowed())
+        return handler->BaseProxyHandler::fun_toString(cx, proxy, indent);
     return handler->fun_toString(cx, proxy, indent);
 }
 
