@@ -830,7 +830,7 @@ fun_toSource(JSContext *cx, unsigned argc, Value *vp)
         return false;
 
     RootedString str(cx);
-    if (obj->is<JSFunction>() || obj->is<FunctionProxyObject>())
+    if (obj->isCallable())
         str = fun_toStringHelper(cx, obj, JS_DONT_PRETTY_PRINT);
     else
         str = ObjectToSource(cx, obj);
