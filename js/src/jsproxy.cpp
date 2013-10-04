@@ -3307,11 +3307,11 @@ proxy(JSContext *cx, unsigned argc, jsval *vp)
     if (!JSObject::getProto(cx, target, &proto))
         return false;
     RootedValue priv(cx, ObjectValue(*target));
-    ProxyObject *proxy = target->isCallable()
-      ? FunctionProxyObject::New(cx, &ScriptedDirectProxyHandler::singleton,
-                                 priv, proto, cx->global(), target, target)
-      : ProxyObject::New(cx, &ScriptedDirectProxyHandler::singleton,
-                         priv, TaggedProto(proto), cx->global(), ProxyNotCallable);
+    ProxyObject *proxy =
+        ProxyObject::New(cx, &ScriptedDirectProxyHandler::singleton,
+                         priv, TaggedProto(proto), cx->global(),
+                         target->isCallable() ? ProxyIsCallable
+                                              : ProxyNotCallable);
     if (!proxy)
         return false;
     proxy->setExtra(0, ObjectOrNullValue(handler));
