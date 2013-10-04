@@ -34,6 +34,7 @@ EXTRA_JS_MODULES += [
     'SelectContentHelper.jsm',
     'SelectParentHelper.jsm',
     'Sntp.jsm',
+    'SpatialNavigation.jsm',
     'Sqlite.jsm',
     'Task.jsm',
     'TelemetryTimestamps.jsm',
