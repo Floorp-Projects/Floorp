@@ -29,10 +29,17 @@ Cu.import("resource://gre/modules/PermissionsTable.jsm");
 var permissionManager = Cc["@mozilla.org/permissionmanager;1"].getService(Ci.nsIPermissionManager);
 var secMan = Cc["@mozilla.org/scriptsecuritymanager;1"].getService(Ci.nsIScriptSecurityManager);
 
+let permissionSpecificChecker = {};
+
 XPCOMUtils.defineLazyServiceGetter(this,
                                    "PermSettings",
                                    "@mozilla.org/permissionSettings;1",
                                    "nsIDOMPermissionSettings");
+
+XPCOMUtils.defineLazyServiceGetter(this,
+                                   "AudioManager",
+                                   "@mozilla.org/telephony/audiomanager;1",
+                                   "nsIAudioManager");
 
 function rememberPermission(aPermission, aPrincipal, aSession)
 {
@@ -115,6 +122,12 @@ ContentPermissionPrompt.prototype = {
     return true;
   },
 
+  handledByPermissionType: function handledByPermissionType(request) {
+    return permissionSpecificChecker.hasOwnProperty(request.type)
+             ? permissionSpecificChecker[request.type](request)
+             : false;
+  },
+
   _id: 0,
   prompt: function(request) {
     if (secMan.isSystemPrincipal(request.principal)) {
@@ -122,8 +135,10 @@ ContentPermissionPrompt.prototype = {
       return true;
     }
 
-    if (this.handledByApp(request))
-        return;
+    if (this.handledByApp(request) ||
+        this.handledByPermissionType(request)) {
+      return;
+    }
 
     // returns true if the request was handled
     if (this.handleExistingPermission(request))
@@ -261,6 +276,18 @@ ContentPermissionPrompt.prototype = {
 
   QueryInterface: XPCOMUtils.generateQI([Ci.nsIContentPermissionPrompt])
 };
+
+(function() {
+  // Do not allow GetUserMedia while in call.
+  permissionSpecificChecker["audio-capture"] = function(request) {
+    if (AudioManager.phoneState === Ci.nsIAudioManager.PHONE_STATE_IN_CALL) {
+      request.cancel();
+      return true;
+    } else {
+      return false;
+    }
+  };
+})();
 
 
 //module initialization
