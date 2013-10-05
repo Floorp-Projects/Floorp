@@ -251,15 +251,6 @@ MediaSource::SetReadyState(MediaSourceReadyState aState)
 }
 
 void
-MediaSource::GetBuffered(TimeRanges* aRanges)
-{
-  if (mActiveSourceBuffers->Length() == 0) {
-    return;
-  }
-  // TODO: Implement intersection computation.
-}
-
-void
 MediaSource::DispatchSimpleEvent(const char* aName)
 {
   LOG(PR_LOG_DEBUG, ("%p Dispatching event %s to MediaSource", this, aName));

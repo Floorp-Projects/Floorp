@@ -10,10 +10,13 @@
 #include "MediaDecoderReader.h"
 #include "MediaDecoderStateMachine.h"
 #include "mozilla/Assertions.h"
+#include "mozilla/FloatingPoint.h"
 #include "mozilla/dom/HTMLMediaElement.h"
+#include "mozilla/dom/TimeRanges.h"
 #include "mozilla/mozalloc.h"
 #include "nsISupports.h"
 #include "prlog.h"
+#include "MediaSource.h"
 #include "SubBufferDecoder.h"
 #include "SourceBufferResource.h"
 
@@ -141,6 +144,22 @@ MediaSourceDecoder::CreateStateMachine()
 nsresult
 MediaSourceDecoder::Load(nsIStreamListener**, MediaDecoder*)
 {
+  return NS_OK;
+}
+
+nsresult
+MediaSourceDecoder::GetSeekable(TimeRanges* aSeekable)
+{
+  double duration = mMediaSource->Duration();
+  if (IsNaN(duration)) {
+    // Return empty range.
+  } else if (duration > 0 && mozilla::IsInfinite(duration)) {
+    nsRefPtr<TimeRanges> bufferedRanges = new TimeRanges();
+    GetBuffered(bufferedRanges);
+    aSeekable->Add(0, bufferedRanges->GetFinalEndTime());
+  } else {
+    aSeekable->Add(0, duration);
+  }
   return NS_OK;
 }
 
