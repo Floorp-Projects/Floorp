@@ -544,6 +544,32 @@ WebappsActor.prototype = {
     return deferred.promise;
   },
 
+  getApp: function wa_actorGetApp(aRequest) {
+    debug("getApp");
+
+    let manifestURL = aRequest.manifestURL;
+    if (!manifestURL) {
+      return { error: "missingParameter",
+               message: "missing parameter manifestURL" };
+    }
+
+    let reg = DOMApplicationRegistry;
+    let app = reg.getAppByManifestURL(manifestURL);
+    if (!app) {
+      return { error: "appNotFound" };
+    }
+
+    if (this._isAppAllowedForManifest(app.manifestURL)) {
+      let deferred = promise.defer();
+      reg.getManifestFor(manifestURL, function (manifest) {
+        app.manifest = manifest;
+        deferred.resolve({app: app});
+      });
+      return deferred.promise;
+    }
+    return { error: "forbidden" };
+  },
+
   _areCertifiedAppsAllowed: function wa__areCertifiedAppsAllowed() {
     let pref = "devtools.debugger.forbid-certified-apps";
     return !Services.prefs.getBoolPref(pref);
@@ -955,6 +981,7 @@ if (Services.prefs.getBoolPref("devtools.debugger.enable-content-actors")) {
   let requestTypes = WebappsActor.prototype.requestTypes;
   requestTypes.uploadPackage = WebappsActor.prototype.uploadPackage;
   requestTypes.getAll = WebappsActor.prototype.getAll;
+  requestTypes.getApp = WebappsActor.prototype.getApp;
   requestTypes.launch = WebappsActor.prototype.launch;
   requestTypes.close  = WebappsActor.prototype.close;
   requestTypes.uninstall = WebappsActor.prototype.uninstall;

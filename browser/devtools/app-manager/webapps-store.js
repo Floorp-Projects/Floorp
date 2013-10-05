@@ -8,9 +8,6 @@ const {Connection} = require("devtools/client/connection-manager");
 
 const {Cu} = require("chrome");
 const dbgClient = Cu.import("resource://gre/modules/devtools/dbg-client.jsm");
-dbgClient.UnsolicitedNotifications.appOpen = "appOpen";
-dbgClient.UnsolicitedNotifications.appClose = "appClose"
-
 const _knownWebappsStores = new WeakMap();
 
 let WebappsStore;
@@ -103,6 +100,14 @@ WebappsStore.prototype = {
         this._onAppClose(manifestURL);
       });
 
+      client.addListener("appInstall", (type, { manifestURL }) => {
+        this._onAppInstall(manifestURL);
+      });
+
+      client.addListener("appUninstall", (type, { manifestURL }) => {
+        this._onAppUninstall(manifestURL);
+      });
+
       return deferred.resolve();
     })
     return deferred.promise;
@@ -177,6 +182,10 @@ WebappsStore.prototype = {
       let a = allApps[idx++];
       request.manifestURL = a.manifestURL;
       return client.request(request, (res) => {
+        if (res.error) {
+          Cu.reportError(res.message || res.error);
+        }
+
         if (res.url) {
           a.iconURL = res.url;
         }
@@ -202,6 +211,59 @@ WebappsStore.prototype = {
     let running = this.object.running;
     this.object.running = running.filter((m) => {
       return m != manifest;
+    });
+  },
+
+  _onAppInstall: function(manifest) {
+    let client = this._connection.client;
+    let request = {
+      to: this._webAppsActor,
+      type: "getApp",
+      manifestURL: manifest
+    };
+
+    client.request(request, (res) => {
+      if (res.error) {
+        if (res.error == "forbidden") {
+          // We got a notification for an app we don't have access to.
+          // Ignore.
+          return;
+        }
+        Cu.reportError(res.message || res.error);
+        return;
+      }
+
+      let app = res.app;
+      app.running = false;
+
+      let notFound = true;
+      let proxifiedApp;
+      for (let i = 0; i < this.object.all.length; i++) {
+        let storedApp = this.object.all[i];
+        if (storedApp.manifestURL == app.manifestURL) {
+          this.object.all[i] = app;
+          proxifiedApp = this.object.all[i];
+          notFound = false;
+          break;
+        }
+      }
+      if (notFound) {
+        this.object.all.push(app);
+        proxifiedApp = this.object.all[this.object.all.length - 1];
+      }
+
+      request.type = "getIconAsDataURL";
+      client.request(request, (res) => {
+        if (res.url) {
+          proxifiedApp.iconURL = res.url;
+        }
+      });
+    });
+  },
+
+  _onAppUninstall: function(manifest) {
+    this.object.all = this.object.all.filter((app) => {
+      return (app.manifestURL != manifest);
     });
   },
 }
