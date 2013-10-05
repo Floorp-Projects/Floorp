@@ -98,3 +98,9 @@ function attach(worker, window) {
   trait.attach(window);
 }
 exports.attach = attach;
+
+function destroy(worker) {
+  let trait = traitFor(worker);
+  if (trait) trait.destroy();
+}
+exports.destroy = destroy;

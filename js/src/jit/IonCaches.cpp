@@ -1539,9 +1539,9 @@ GenerateProxyClassGuards(MacroAssembler &masm, Register object, Register scratch
     // that it is one of an ObjectProxy, FunctionProxy, or OuterWindowProxy.
     // This is equivalent to obj->is<ProxyObject>().
     masm.branchTestObjClass(Assembler::Equal, object, scratchReg,
-                            ObjectProxyClassPtr, success);
+                            CallableProxyClassPtr, success);
     masm.branchTestObjClass(Assembler::Equal, object, scratchReg,
-                            FunctionProxyClassPtr, success);
+                            UncallableProxyClassPtr, success);
     masm.branchTestObjClass(Assembler::NotEqual, object, scratchReg,
                             OuterWindowProxyClassPtr, failures);
 }
@@ -1964,8 +1964,7 @@ SetPropertyIC::attachNativeExisting(JSContext *cx, IonScript *ion, HandleObject 
 
         if (checkTypeset) {
             TypedOrValueRegister valReg = value().reg();
-            RootedId id(cx, types::IdToTypeId(AtomToId(name())));
-            types::HeapTypeSet *propTypes = type->maybeGetProperty(cx, id);
+            types::HeapTypeSet *propTypes = type->maybeGetProperty(cx, NameToId(name()));
             JS_ASSERT(propTypes);
             JS_ASSERT(!propTypes->unknown());
 
@@ -2613,8 +2612,7 @@ IsPropertySetInlineable(JSContext *cx, const SetPropertyIC &cache, HandleObject 
     bool shouldCheck = false;
     types::TypeObject *type = obj->getType(cx);
     if (cache.needsTypeBarrier() && !type->unknownProperties()) {
-        RootedId typeId(cx, types::IdToTypeId(id));
-        types::HeapTypeSet *propTypes = type->maybeGetProperty(cx, typeId);
+        types::HeapTypeSet *propTypes = type->maybeGetProperty(cx, id);
         if (!propTypes)
             return false;
         if (!propTypes->unknown()) {

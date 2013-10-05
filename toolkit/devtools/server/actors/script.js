@@ -2661,9 +2661,15 @@ ObjectActor.prototype = {
 
       // Check if the developer has added a de-facto standard displayName
       // property for us to use.
-      let desc = this.obj.getOwnPropertyDescriptor("displayName");
-      if (desc && desc.value && typeof desc.value == "string") {
-        g.userDisplayName = this.threadActor.createValueGrip(desc.value);
+      try {
+        let desc = this.obj.getOwnPropertyDescriptor("displayName");
+        if (desc && desc.value && typeof desc.value == "string") {
+          g.userDisplayName = this.threadActor.createValueGrip(desc.value);
+        }
+      } catch (e) {
+        // Calling getOwnPropertyDescriptor with displayName might throw
+        // with "permission denied" errors for some functions.
+        dumpn(e);
       }
 
       // Add source location information.

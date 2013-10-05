@@ -258,7 +258,7 @@ struct Zone : public JS::shadow::Zone,
 
     void findOutgoingEdges(js::gc::ComponentFinder<JS::Zone> &finder);
 
-    void discardJitCode(js::FreeOp *fop, bool discardConstraints);
+    void discardJitCode(js::FreeOp *fop);
 
     void addSizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf, size_t *typePool);
 

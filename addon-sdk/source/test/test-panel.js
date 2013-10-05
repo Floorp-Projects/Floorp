@@ -560,11 +560,9 @@ exports["test Automatic Destroy"] = function(assert) {
 
   loader.unload();
 
-  panel.port.on("event-back", function () {
-    assert.fail("Panel should have been destroyed on module unload");
-  });
-  panel.port.emit("event");
-  assert.pass("check automatic destroy");
+  assert.throws(() => {
+    panel.port.emit("event");
+  }, /already have been unloaded/, "check automatic destroy");
 };
 
 exports["test Show Then Destroy"] = makeEventOrderTest({
@@ -940,6 +938,30 @@ exports['test nested popups'] = function (assert, done) {
   });
 
   panel.show();
+};
+
+exports['test emits on url changes'] = function (assert, done) {
+  let loader = Loader(module);
+  let { Panel } = loader.require('sdk/panel');
+  let uriA = 'data:text/html;charset=utf-8,A';
+  let uriB = 'data:text/html;charset=utf-8,B';
+
+  let panel = Panel({
+    contentURL: uriA,
+    contentScript: 'new ' + function() {
+      self.port.on('hi', function() {
+        self.port.emit('bye', document.URL);
+      });
+    }
+  });
+
+  panel.contentURL = uriB;
+  panel.port.emit('hi', 'hi')
+  panel.port.on('bye', function(uri) {
+    assert.equal(uri, uriB, 'message was delivered to new uri');
+    loader.unload();
+    done();
+  });
 };
 
 if (isWindowPBSupported) {
