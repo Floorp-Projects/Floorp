@@ -5846,9 +5846,22 @@ EmitObject(ExclusiveContext *cx, BytecodeEmitter *bce, ParseNode *pn)
     for (ParseNode *pn2 = pn->pn_head; pn2; pn2 = pn2->pn_next) {
         /* Emit an index for t[2] for later consumption by JSOP_INITELEM. */
         ParseNode *pn3 = pn2->pn_left;
+        bool isIndex = false;
         if (pn3->isKind(PNK_NUMBER)) {
             if (!EmitNumberOp(cx, pn3->pn_dval, bce))
                 return false;
+            isIndex = true;
+        } else {
+            // The parser already checked for atoms representing indexes and
+            // used PNK_NUMBER instead, but also watch for ids which TI treats
+            // as indexes for simpliciation of downstream analysis.
+            JS_ASSERT(pn3->isKind(PNK_NAME) || pn3->isKind(PNK_STRING));
+            jsid id = NameToId(pn3->pn_atom->asPropertyName());
+            if (id != types::IdToTypeId(id)) {
+                if (!EmitTree(cx, bce, pn3))
+                    return false;
+                isIndex = true;
+            }
         }
 
         /* Emit code for the property initializer. */
@@ -5863,7 +5876,7 @@ EmitObject(ExclusiveContext *cx, BytecodeEmitter *bce, ParseNode *pn)
         if (op == JSOP_INITPROP_GETTER || op == JSOP_INITPROP_SETTER)
             obj = nullptr;
 
-        if (pn3->isKind(PNK_NUMBER)) {
+        if (isIndex) {
             obj = nullptr;
             switch (op) {
               case JSOP_INITPROP:        op = JSOP_INITELEM;        break;

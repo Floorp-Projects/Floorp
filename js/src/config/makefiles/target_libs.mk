@@ -108,12 +108,12 @@ BINARIES_INSTALL_TARGETS := $(foreach category,$(INSTALL_TARGETS),$(if $(filter 
 # and with dependencies on the relevant backend files.
 BINARIES_PP := $(MDDEPDIR)/binaries.pp
 
-$(BINARIES_PP): Makefile $(if $(EXTERNALLY_MANAGED_MAKE_FILE),,backend.mk) $(call mkdir_deps,$(MDDEPDIR))
+$(BINARIES_PP): Makefile $(wildcard backend.mk) $(call mkdir_deps,$(MDDEPDIR))
 	@echo "$(strip $(foreach category,$(BINARIES_INSTALL_TARGETS),\
 		$(foreach file,$($(category)_FILES) $($(category)_EXECUTABLES),\
 			$($(category)_DEST)/$(notdir $(file)): $(file)%\
 		)\
-	))binaries: Makefile $(if $(EXTERNALLY_MANAGED_MAKE_FILE),,backend.mk)" | tr % '\n' > $@
+	))binaries: Makefile $(wildcard backend.mk)" | tr % '\n' > $@
 
 else
 binaries::

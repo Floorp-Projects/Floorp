@@ -2864,7 +2864,7 @@ BeginMarkPhase(JSRuntime *rt)
     if (rt->gcIsIncremental) {
         for (GCZonesIter zone(rt); !zone.done(); zone.next()) {
             gcstats::AutoPhase ap(rt->gcStats, gcstats::PHASE_MARK_DISCARD_CODE);
-            zone->discardJitCode(rt->defaultFreeOp(), false);
+            zone->discardJitCode(rt->defaultFreeOp());
         }
     }
 
@@ -3739,7 +3739,7 @@ BeginSweepingZoneGroup(JSRuntime *rt)
 
         for (GCZoneGroupIter zone(rt); !zone.done(); zone.next()) {
             gcstats::AutoPhase ap(rt->gcStats, gcstats::PHASE_SWEEP_DISCARD_CODE);
-            zone->discardJitCode(&fop, !zone->isPreservingCode());
+            zone->discardJitCode(&fop);
         }
 
         bool releaseTypes = ReleaseObservedTypes(rt);
@@ -5009,7 +5009,7 @@ js::ReleaseAllJITCode(FreeOp *fop)
 
     /* Sweep now invalidated compiler outputs from each compartment. */
     for (CompartmentsIter comp(fop->runtime()); !comp.done(); comp.next())
-        comp->types.sweepCompilerOutputs(fop, false);
+        comp->types.clearCompilerOutputs(fop);
 #endif
 }
 

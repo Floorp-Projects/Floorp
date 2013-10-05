@@ -66,6 +66,8 @@ class JS_FRIEND_API(Wrapper) : public DirectProxyHandler
 
     virtual ~Wrapper();
 
+    virtual bool finalizeInBackground(Value priv) MOZ_OVERRIDE;
+
     static Wrapper singleton;
     static Wrapper singletonWithPrototype;
 };
@@ -77,8 +79,6 @@ class JS_FRIEND_API(CrossCompartmentWrapper) : public Wrapper
     CrossCompartmentWrapper(unsigned flags, bool hasPrototype = false);
 
     virtual ~CrossCompartmentWrapper();
-
-    virtual bool finalizeInBackground(Value priv) MOZ_OVERRIDE;
 
     /* ES5 Harmony fundamental wrapper traps. */
     virtual bool preventExtensions(JSContext *cx, HandleObject wrapper) MOZ_OVERRIDE;
@@ -255,7 +255,8 @@ bool
 IsDeadProxyObject(JSObject *obj);
 
 JSObject *
-NewDeadProxyObject(JSContext *cx, JSObject *parent);
+NewDeadProxyObject(JSContext *cx, JSObject *parent,
+                   const ProxyOptions &options = ProxyOptions());
 
 void
 NukeCrossCompartmentWrapper(JSContext *cx, JSObject *wrapper);

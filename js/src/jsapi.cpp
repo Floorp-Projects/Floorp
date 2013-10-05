@@ -1282,7 +1282,11 @@ js_TransplantObjectWithWrapper(JSContext *cx,
         // a new unreachable dummy object and swap it with the reflector.
         // After the swap we have a possibly-live object that isn't dangerous,
         // and a possibly-dangerous object that isn't live.
-        RootedObject reflectorGuts(cx, NewDeadProxyObject(cx, JS_GetGlobalForObject(cx, origobj)));
+        ProxyOptions options;
+        if (!IsBackgroundFinalized(origobj->tenuredGetAllocKind()))
+            options.setForceForegroundFinalization(true);
+        RootedObject reflectorGuts(cx, NewDeadProxyObject(cx, JS_GetGlobalForObject(cx, origobj),
+                                                          options));
         if (!reflectorGuts || !JSObject::swap(cx, origobj, reflectorGuts))
             MOZ_CRASH();
 
@@ -1371,7 +1375,7 @@ static const JSStdName standard_class_atoms[] = {
 #ifdef ENABLE_PARALLEL_JS
     {js_InitParallelArrayClass,         EAGER_ATOM_AND_OCLASP(ParallelArray)},
 #endif
-    {js_InitProxyClass,                 EAGER_CLASS_ATOM(Proxy), OCLASP(ObjectProxy)},
+    {js_InitProxyClass,                 EAGER_CLASS_ATOM(Proxy), &ProxyObject::uncallableClass_},
 #if EXPOSE_INTL_API
     {js_InitIntlClass,                  EAGER_ATOM_AND_CLASP(Intl)},
 #endif
