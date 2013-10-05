@@ -9,7 +9,7 @@
 <Url type="application/x-suggestions+json" method="GET"
      template="http://ff.search.yahoo.com/gossip?output=fxjson&amp;command={searchTerms}" />
 <Url type="text/html" method="GET" template="http://search.yahoo.com/search">
-  <Param name="p" value="{searchterms}" />
+  <Param name="p" value="{searchTerms}" />
   <Param name="ei" value="UTF-8" />
   <Param name="fr" value="mozilla_mobile_search" />
 </Url>
