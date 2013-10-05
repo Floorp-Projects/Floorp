@@ -24,8 +24,8 @@ const TEST_DOC_URL = module.uri.replace(/\.js$/, ".html");
 
 // Tests that when present the separator is placed before the separator from
 // the old context-menu module
-exports.testSeparatorPosition = function (test) {
-  test = new TestHelper(test);
+exports.testSeparatorPosition = function (assert, done) {
+  let test = new TestHelper(assert, done);
   let loader = test.newLoader();
 
   // Create the old separator
@@ -37,7 +37,7 @@ exports.testSeparatorPosition = function (test) {
   let item = new loader.cm.Item({ label: "item" });
 
   test.showMenu(null, function (popup) {
-    test.assertEqual(test.contextMenuSeparator.nextSibling.nextSibling, oldSeparator,
+    assert.equal(test.contextMenuSeparator.nextSibling.nextSibling, oldSeparator,
                      "New separator should appear before the old one");
     test.contextMenuPopup.removeChild(oldSeparator);
     test.done();
@@ -46,13 +46,13 @@ exports.testSeparatorPosition = function (test) {
 
 // Destroying items that were previously created should cause them to be absent
 // from the menu.
-exports.testConstructDestroy = function (test) {
-  test = new TestHelper(test);
+exports.testConstructDestroy = function (assert, done) {
+  let test = new TestHelper(assert, done);
   let loader = test.newLoader();
 
   // Create an item.
   let item = new loader.cm.Item({ label: "item" });
-  test.assertEqual(item.parentMenu, loader.cm.contentContextMenu,
+  assert.equal(item.parentMenu, loader.cm.contentContextMenu,
                    "item's parent menu should be correct");
 
   test.showMenu(null, function (popup) {
@@ -75,8 +75,8 @@ exports.testConstructDestroy = function (test) {
 
 
 // Destroying an item twice should not cause an error.
-exports.testDestroyTwice = function (test) {
-  test = new TestHelper(test);
+exports.testDestroyTwice = function (assert, done) {
+  let test = new TestHelper(assert, done);
   let loader = test.newLoader();
 
   let item = new loader.cm.Item({ label: "item" });
@@ -90,8 +90,8 @@ exports.testDestroyTwice = function (test) {
 
 // CSS selector contexts should cause their items to be present in the menu
 // when the menu is invoked on nodes that match the selectors.
-exports.testSelectorContextMatch = function (test) {
-  test = new TestHelper(test);
+exports.testSelectorContextMatch = function (assert, done) {
+  let test = new TestHelper(assert, done);
   let loader = test.newLoader();
 
   let item = new loader.cm.Item({
@@ -112,8 +112,8 @@ exports.testSelectorContextMatch = function (test) {
 // CSS selector contexts should cause their items to be present in the menu
 // when the menu is invoked on nodes that have ancestors that match the
 // selectors.
-exports.testSelectorAncestorContextMatch = function (test) {
-  test = new TestHelper(test);
+exports.testSelectorAncestorContextMatch = function (assert, done) {
+  let test = new TestHelper(assert, done);
   let loader = test.newLoader();
 
   let item = new loader.cm.Item({
@@ -134,8 +134,8 @@ exports.testSelectorAncestorContextMatch = function (test) {
 // CSS selector contexts should cause their items to be absent from the menu
 // when the menu is not invoked on nodes that match or have ancestors that
 // match the selectors.
-exports.testSelectorContextNoMatch = function (test) {
-  test = new TestHelper(test);
+exports.testSelectorContextNoMatch = function (assert, done) {
+  let test = new TestHelper(assert, done);
   let loader = test.newLoader();
 
   let item = new loader.cm.Item({
@@ -153,8 +153,8 @@ exports.testSelectorContextNoMatch = function (test) {
 
 // Page contexts should cause their items to be present in the menu when the
 // menu is not invoked on an active element.
-exports.testPageContextMatch = function (test) {
-  test = new TestHelper(test);
+exports.testPageContextMatch = function (assert, done) {
+  let test = new TestHelper(assert, done);
   let loader = test.newLoader();
 
   let items = [
@@ -184,8 +184,8 @@ exports.testPageContextMatch = function (test) {
 
 // Page contexts should cause their items to be absent from the menu when the
 // menu is invoked on an active element.
-exports.testPageContextNoMatch = function (test) {
-  test = new TestHelper(test);
+exports.testPageContextNoMatch = function (assert, done) {
+  let test = new TestHelper(assert, done);
   let loader = test.newLoader();
 
   let items = [
@@ -216,8 +216,8 @@ exports.testPageContextNoMatch = function (test) {
 
 
 // Selection contexts should cause items to appear when a selection exists.
-exports.testSelectionContextMatch = function (test) {
-  test = new TestHelper(test);
+exports.testSelectionContextMatch = function (assert, done) {
+  let test = new TestHelper(assert, done);
   let loader = test.newLoader();
 
   let item = loader.cm.Item({
@@ -237,8 +237,8 @@ exports.testSelectionContextMatch = function (test) {
 
 // Selection contexts should cause items to appear when a selection exists in
 // a text field.
-exports.testSelectionContextMatchInTextField = function (test) {
-  test = new TestHelper(test);
+exports.testSelectionContextMatchInTextField = function (assert, done) {
+  let test = new TestHelper(assert, done);
   let loader = test.newLoader();
 
   let item = loader.cm.Item({
@@ -259,8 +259,8 @@ exports.testSelectionContextMatchInTextField = function (test) {
 
 // Selection contexts should not cause items to appear when a selection does
 // not exist in a text field.
-exports.testSelectionContextNoMatchInTextField = function (test) {
-  test = new TestHelper(test);
+exports.testSelectionContextNoMatchInTextField = function (assert, done) {
+  let test = new TestHelper(assert, done);
   let loader = test.newLoader();
 
   let item = loader.cm.Item({
@@ -281,8 +281,8 @@ exports.testSelectionContextNoMatchInTextField = function (test) {
 
 // Selection contexts should not cause items to appear when a selection does
 // not exist.
-exports.testSelectionContextNoMatch = function (test) {
-  test = new TestHelper(test);
+exports.testSelectionContextNoMatch = function (assert, done) {
+  let test = new TestHelper(assert, done);
   let loader = test.newLoader();
 
   let item = loader.cm.Item({
@@ -299,8 +299,8 @@ exports.testSelectionContextNoMatch = function (test) {
 
 // Selection contexts should cause items to appear when a selection exists even
 // for newly opened pages
-exports.testSelectionContextInNewTab = function (test) {
-  test = new TestHelper(test);
+exports.testSelectionContextInNewTab = function (assert, done) {
+  let test = new TestHelper(assert, done);
   let loader = test.newLoader();
 
   let item = loader.cm.Item({
@@ -336,8 +336,8 @@ exports.testSelectionContextInNewTab = function (test) {
 
 
 // Selection contexts should work when right clicking a form button
-exports.testSelectionContextButtonMatch = function (test) {
-  test = new TestHelper(test);
+exports.testSelectionContextButtonMatch = function (assert, done) {
+  let test = new TestHelper(assert, done);
   let loader = test.newLoader();
 
   let item = loader.cm.Item({
@@ -357,8 +357,8 @@ exports.testSelectionContextButtonMatch = function (test) {
 
 
 //Selection contexts should work when right clicking a form button
-exports.testSelectionContextButtonNoMatch = function (test) {
-  test = new TestHelper(test);
+exports.testSelectionContextButtonNoMatch = function (assert, done) {
+  let test = new TestHelper(assert, done);
   let loader = test.newLoader();
 
   let item = loader.cm.Item({
@@ -377,8 +377,8 @@ exports.testSelectionContextButtonNoMatch = function (test) {
 
 
 // URL contexts should cause items to appear on pages that match.
-exports.testURLContextMatch = function (test) {
-  test = new TestHelper(test);
+exports.testURLContextMatch = function (assert, done) {
+  let test = new TestHelper(assert, done);
   let loader = test.newLoader();
 
   let items = [
@@ -406,8 +406,8 @@ exports.testURLContextMatch = function (test) {
 
 
 // URL contexts should not cause items to appear on pages that do not match.
-exports.testURLContextNoMatch = function (test) {
-  test = new TestHelper(test);
+exports.testURLContextNoMatch = function (assert, done) {
+  let test = new TestHelper(assert, done);
   let loader = test.newLoader();
 
   let items = [
@@ -437,8 +437,8 @@ exports.testURLContextNoMatch = function (test) {
 // Removing a non-matching URL context after its item is created and the page is
 // loaded should cause the item's content script to be evaluated when the
 // context menu is next opened.
-exports.testURLContextRemove = function (test) {
-  test = new TestHelper(test);
+exports.testURLContextRemove = function (assert, done) {
+  let test = new TestHelper(assert, done);
   let loader = test.newLoader();
 
   let shouldBeEvaled = false;
@@ -448,9 +448,9 @@ exports.testURLContextRemove = function (test) {
     context: context,
     contentScript: 'self.postMessage("ok"); self.on("context", function () true);',
     onMessage: function (msg) {
-      test.assert(shouldBeEvaled,
+      assert.ok(shouldBeEvaled,
                   "content script should be evaluated when expected");
-      test.assertEqual(msg, "ok", "Should have received the right message");
+      assert.equal(msg, "ok", "Should have received the right message");
       shouldBeEvaled = false;
     }
   });
@@ -467,7 +467,7 @@ exports.testURLContextRemove = function (test) {
         test.showMenu(null, function (popup) {
           test.checkMenu([item], [], []);
 
-          test.assert(!shouldBeEvaled,
+          assert.ok(!shouldBeEvaled,
                       "content script should have been evaluated");
 
           test.hideMenu(function () {
@@ -485,8 +485,8 @@ exports.testURLContextRemove = function (test) {
 
 // Loading a new page in the same tab should correctly start a new worker for
 // any content scripts
-exports.testPageReload = function (test) {
-  test = new TestHelper(test);
+exports.testPageReload = function (assert, done) {
+  let test = new TestHelper(assert, done);
   let loader = test.newLoader();
 
   let item = loader.cm.Item({
@@ -532,8 +532,8 @@ exports.testPageReload = function (test) {
 
 // Closing a page after it's been used with a worker should cause the worker
 // to be destroyed
-/*exports.testWorkerDestroy = function (test) {
-  test = new TestHelper(test);
+/*exports.testWorkerDestroy = function (assert, done) {
+  let test = new TestHelper(assert, done);
   let loader = test.newLoader();
 
   let loadExpected = false;
@@ -545,7 +545,7 @@ exports.testPageReload = function (test) {
       console.log("Saw " + msg)
       switch (msg) {
       case "loaded":
-        test.assert(loadExpected, "Should have seen the load event at the right time");
+        assert.ok(loadExpected, "Should have seen the load event at the right time");
         loadExpected = false;
         break;
       case "detach":
@@ -558,7 +558,7 @@ exports.testPageReload = function (test) {
   test.withTestDoc(function (window, doc) {
     loadExpected = true;
     test.showMenu(null, function (popup) {
-      test.assert(!loadExpected, "Should have seen a message");
+      assert.ok(!loadExpected, "Should have seen a message");
 
       test.checkMenu([item], [], []);
 
@@ -570,8 +570,8 @@ exports.testPageReload = function (test) {
 
 // Content contexts that return true should cause their items to be present
 // in the menu.
-exports.testContentContextMatch = function (test) {
-  test = new TestHelper(test);
+exports.testContentContextMatch = function (assert, done) {
+  let test = new TestHelper(assert, done);
   let loader = test.newLoader();
 
   let item = new loader.cm.Item({
@@ -588,8 +588,8 @@ exports.testContentContextMatch = function (test) {
 
 // Content contexts that return false should cause their items to be absent
 // from the menu.
-exports.testContentContextNoMatch = function (test) {
-  test = new TestHelper(test);
+exports.testContentContextNoMatch = function (assert, done) {
+  let test = new TestHelper(assert, done);
   let loader = test.newLoader();
 
   let item = new loader.cm.Item({
@@ -606,8 +606,8 @@ exports.testContentContextNoMatch = function (test) {
 
 // Content contexts that return undefined should cause their items to be absent
 // from the menu.
-exports.testContentContextUndefined = function (test) {
-  test = new TestHelper(test);
+exports.testContentContextUndefined = function (assert, done) {
+  let test = new TestHelper(assert, done);
   let loader = test.newLoader();
 
   let item = new loader.cm.Item({
@@ -624,8 +624,8 @@ exports.testContentContextUndefined = function (test) {
 
 // Content contexts that return an empty string should cause their items to be
 // absent from the menu and shouldn't wipe the label
-exports.testContentContextEmptyString = function (test) {
-  test = new TestHelper(test);
+exports.testContentContextEmptyString = function (assert, done) {
+  let test = new TestHelper(assert, done);
   let loader = test.newLoader();
 
   let item = new loader.cm.Item({
@@ -635,7 +635,7 @@ exports.testContentContextEmptyString = function (test) {
 
   test.showMenu(null, function (popup) {
     test.checkMenu([item], [item], []);
-    test.assertEqual(item.label, "item", "Label should still be correct");
+    assert.equal(item.label, "item", "Label should still be correct");
     test.done();
   });
 };
@@ -643,8 +643,8 @@ exports.testContentContextEmptyString = function (test) {
 
 // If any content contexts returns true then their items should be present in
 // the menu.
-exports.testMultipleContentContextMatch1 = function (test) {
-  test = new TestHelper(test);
+exports.testMultipleContentContextMatch1 = function (assert, done) {
+  let test = new TestHelper(assert, done);
   let loader = test.newLoader();
 
   let item = new loader.cm.Item({
@@ -665,8 +665,8 @@ exports.testMultipleContentContextMatch1 = function (test) {
 
 // If any content contexts returns true then their items should be present in
 // the menu.
-exports.testMultipleContentContextMatch2 = function (test) {
-  test = new TestHelper(test);
+exports.testMultipleContentContextMatch2 = function (assert, done) {
+  let test = new TestHelper(assert, done);
   let loader = test.newLoader();
 
   let item = new loader.cm.Item({
@@ -684,8 +684,8 @@ exports.testMultipleContentContextMatch2 = function (test) {
 
 // If any content contexts returns a string then their items should be present
 // in the menu.
-exports.testMultipleContentContextString1 = function (test) {
-  test = new TestHelper(test);
+exports.testMultipleContentContextString1 = function (assert, done) {
+  let test = new TestHelper(assert, done);
   let loader = test.newLoader();
 
   let item = new loader.cm.Item({
@@ -696,7 +696,7 @@ exports.testMultipleContentContextString1 = function (test) {
 
   test.showMenu(null, function (popup) {
     test.checkMenu([item], [], []);
-    test.assertEqual(item.label, "new label", "Label should have changed");
+    assert.equal(item.label, "new label", "Label should have changed");
     test.done();
   });
 };
@@ -704,8 +704,8 @@ exports.testMultipleContentContextString1 = function (test) {
 
 // If any content contexts returns a string then their items should be present
 // in the menu.
-exports.testMultipleContentContextString2 = function (test) {
-  test = new TestHelper(test);
+exports.testMultipleContentContextString2 = function (assert, done) {
+  let test = new TestHelper(assert, done);
   let loader = test.newLoader();
 
   let item = new loader.cm.Item({
@@ -716,15 +716,15 @@ exports.testMultipleContentContextString2 = function (test) {
 
   test.showMenu(null, function (popup) {
     test.checkMenu([item], [], []);
-    test.assertEqual(item.label, "new label", "Label should have changed");
+    assert.equal(item.label, "new label", "Label should have changed");
     test.done();
   });
 };
 
 
 // If many content contexts returns a string then the first should take effect
-exports.testMultipleContentContextString3 = function (test) {
-  test = new TestHelper(test);
+exports.testMultipleContentContextString3 = function (assert, done) {
+  let test = new TestHelper(assert, done);
   let loader = test.newLoader();
 
   let item = new loader.cm.Item({
@@ -735,7 +735,7 @@ exports.testMultipleContentContextString3 = function (test) {
 
   test.showMenu(null, function (popup) {
     test.checkMenu([item], [], []);
-    test.assertEqual(item.label, "new label 1", "Label should have changed");
+    assert.equal(item.label, "new label 1", "Label should have changed");
     test.done();
   });
 };
@@ -743,8 +743,8 @@ exports.testMultipleContentContextString3 = function (test) {
 
 // Content contexts that return true should cause their items to be present
 // in the menu when context clicking an active element.
-exports.testContentContextMatchActiveElement = function (test) {
-  test = new TestHelper(test);
+exports.testContentContextMatchActiveElement = function (assert, done) {
+  let test = new TestHelper(assert, done);
   let loader = test.newLoader();
 
   let items = [
@@ -781,8 +781,8 @@ exports.testContentContextMatchActiveElement = function (test) {
 
 // Content contexts that return false should cause their items to be absent
 // from the menu when context clicking an active element.
-exports.testContentContextNoMatchActiveElement = function (test) {
-  test = new TestHelper(test);
+exports.testContentContextNoMatchActiveElement = function (assert, done) {
+  let test = new TestHelper(assert, done);
   let loader = test.newLoader();
 
   let items = [
@@ -819,8 +819,8 @@ exports.testContentContextNoMatchActiveElement = function (test) {
 
 // Content contexts that return undefined should cause their items to be absent
 // from the menu when context clicking an active element.
-exports.testContentContextNoMatchActiveElement = function (test) {
-  test = new TestHelper(test);
+exports.testContentContextNoMatchActiveElement = function (assert, done) {
+  let test = new TestHelper(assert, done);
   let loader = test.newLoader();
 
   let items = [
@@ -857,8 +857,8 @@ exports.testContentContextNoMatchActiveElement = function (test) {
 
 // Content contexts that return a string should cause their items to be present
 // in the menu and the items' labels to be updated.
-exports.testContentContextMatchString = function (test) {
-  test = new TestHelper(test);
+exports.testContentContextMatchString = function (assert, done) {
+  let test = new TestHelper(assert, done);
   let loader = test.newLoader();
 
   let item = new loader.cm.Item({
@@ -868,7 +868,7 @@ exports.testContentContextMatchString = function (test) {
 
   test.showMenu(null, function (popup) {
     test.checkMenu([item], [], []);
-    test.assertEqual(item.label, "second label",
+    assert.equal(item.label, "second label",
                      "item's label should be updated");
     test.done();
   });
@@ -876,19 +876,19 @@ exports.testContentContextMatchString = function (test) {
 
 
 // Ensure that contentScriptFile is working correctly
-exports.testContentScriptFile = function (test) {
-  test = new TestHelper(test);
+exports.testContentScriptFile = function (assert, done) {
+  let test = new TestHelper(assert, done);
   let loader = test.newLoader();
 
   // Reject remote files
-  test.assertRaises(function() {
+  assert.throws(function() {
       new loader.cm.Item({
         label: "item",
         contentScriptFile: "http://mozilla.com/context-menu.js"
       });
     },
-    "The 'contentScriptFile' option must be a local file URL " +
-    "or an array of local file URLs.",
+    new RegExp("The 'contentScriptFile' option must be a local file URL " +
+    "or an array of local file URLs."),
     "Item throws when contentScriptFile is a remote URL");
 
   // But accept files from data folder
@@ -905,8 +905,8 @@ exports.testContentScriptFile = function (test) {
 
 
 // The args passed to context listeners should be correct.
-exports.testContentContextArgs = function (test) {
-  test = new TestHelper(test);
+exports.testContentContextArgs = function (assert, done) {
+  let test = new TestHelper(assert, done);
   let loader = test.newLoader();
   let callbacks = 0;
 
@@ -917,7 +917,7 @@ exports.testContentContextArgs = function (test) {
                    '  return false;' +
                    '});',
     onMessage: function (tagName) {
-      test.assertEqual(tagName, "HTML", "node should be an HTML element");
+      assert.equal(tagName, "HTML", "node should be an HTML element");
       if (++callbacks == 2) test.done();
     }
   });
@@ -929,8 +929,8 @@ exports.testContentContextArgs = function (test) {
 
 // Multiple contexts imply intersection, not union, and content context
 // listeners should not be called if all declarative contexts are not current.
-exports.testMultipleContexts = function (test) {
-  test = new TestHelper(test);
+exports.testMultipleContexts = function (assert, done) {
+  let test = new TestHelper(assert, done);
   let loader = test.newLoader();
 
   let item = new loader.cm.Item({
@@ -951,8 +951,8 @@ exports.testMultipleContexts = function (test) {
 };
 
 // Once a context is removed, it should no longer cause its item to appear.
-exports.testRemoveContext = function (test) {
-  test = new TestHelper(test);
+exports.testRemoveContext = function (assert, done) {
+  let test = new TestHelper(assert, done);
   let loader = test.newLoader();
 
   let ctxt = loader.cm.SelectorContext("img");
@@ -980,8 +980,8 @@ exports.testRemoveContext = function (test) {
 
 
 // Lots of items should overflow into the overflow submenu.
-exports.testOverflow = function (test) {
-  test = new TestHelper(test);
+exports.testOverflow = function (assert, done) {
+  let test = new TestHelper(assert, done);
   let loader = test.newLoader();
 
   let items = [];
@@ -998,8 +998,8 @@ exports.testOverflow = function (test) {
 
 
 // Module unload should cause all items to be removed.
-exports.testUnload = function (test) {
-  test = new TestHelper(test);
+exports.testUnload = function (assert, done) {
+  let test = new TestHelper(assert, done);
   let loader = test.newLoader();
 
   let item = new loader.cm.Item({ label: "item" });
@@ -1024,8 +1024,8 @@ exports.testUnload = function (test) {
 
 // Using multiple module instances to add items without causing overflow should
 // work OK.  Assumes OVERFLOW_THRESH_DEFAULT >= 2.
-exports.testMultipleModulesAdd = function (test) {
-  test = new TestHelper(test);
+exports.testMultipleModulesAdd = function (assert, done) {
+  let test = new TestHelper(assert, done);
   let loader0 = test.newLoader();
   let loader1 = test.newLoader();
 
@@ -1061,8 +1061,8 @@ exports.testMultipleModulesAdd = function (test) {
 
 
 // Using multiple module instances to add items causing overflow should work OK.
-exports.testMultipleModulesAddOverflow = function (test) {
-  test = new TestHelper(test);
+exports.testMultipleModulesAddOverflow = function (assert, done) {
+  let test = new TestHelper(assert, done);
   let loader0 = test.newLoader();
   let loader1 = test.newLoader();
 
@@ -1110,8 +1110,8 @@ exports.testMultipleModulesAddOverflow = function (test) {
 // should work OK.  This test creates two loaders and:
 // loader0 create item -> loader1 create item -> loader0.unload ->
 // loader1.unload
-exports.testMultipleModulesDiffContexts1 = function (test) {
-  test = new TestHelper(test);
+exports.testMultipleModulesDiffContexts1 = function (assert, done) {
+  let test = new TestHelper(assert, done);
   let loader0 = test.newLoader();
   let loader1 = test.newLoader();
 
@@ -1153,8 +1153,8 @@ exports.testMultipleModulesDiffContexts1 = function (test) {
 // should work OK.  This test creates two loaders and:
 // loader1 create item -> loader0 create item -> loader0.unload ->
 // loader1.unload
-exports.testMultipleModulesDiffContexts2 = function (test) {
-  test = new TestHelper(test);
+exports.testMultipleModulesDiffContexts2 = function (assert, done) {
+  let test = new TestHelper(assert, done);
   let loader0 = test.newLoader();
   let loader1 = test.newLoader();
 
@@ -1196,8 +1196,8 @@ exports.testMultipleModulesDiffContexts2 = function (test) {
 // should work OK.  This test creates two loaders and:
 // loader0 create item -> loader1 create item -> loader1.unload ->
 // loader0.unload
-exports.testMultipleModulesDiffContexts3 = function (test) {
-  test = new TestHelper(test);
+exports.testMultipleModulesDiffContexts3 = function (assert, done) {
+  let test = new TestHelper(assert, done);
   let loader0 = test.newLoader();
   let loader1 = test.newLoader();
 
@@ -1239,8 +1239,8 @@ exports.testMultipleModulesDiffContexts3 = function (test) {
 // should work OK.  This test creates two loaders and:
 // loader1 create item -> loader0 create item -> loader1.unload ->
 // loader0.unload
-exports.testMultipleModulesDiffContexts4 = function (test) {
-  test = new TestHelper(test);
+exports.testMultipleModulesDiffContexts4 = function (assert, done) {
+  let test = new TestHelper(assert, done);
   let loader0 = test.newLoader();
   let loader1 = test.newLoader();
 
@@ -1280,8 +1280,8 @@ exports.testMultipleModulesDiffContexts4 = function (test) {
 
 // Test interactions between a loaded module, unloading another module, and the
 // menu separator and overflow submenu.
-exports.testMultipleModulesAddRemove = function (test) {
-  test = new TestHelper(test);
+exports.testMultipleModulesAddRemove = function (assert, done) {
+  let test = new TestHelper(assert, done);
   let loader0 = test.newLoader();
   let loader1 = test.newLoader();
 
@@ -1317,8 +1317,8 @@ exports.testMultipleModulesAddRemove = function (test) {
 
 // Checks that the order of menu items is correct when adding/removing across
 // multiple modules. All items from a single module should remain in a group
-exports.testMultipleModulesOrder = function (test) {
-  test = new TestHelper(test);
+exports.testMultipleModulesOrder = function (assert, done) {
+  let test = new TestHelper(assert, done);
   let loader0 = test.newLoader();
   let loader1 = test.newLoader();
 
@@ -1356,8 +1356,8 @@ exports.testMultipleModulesOrder = function (test) {
 // Checks that the order of menu items is correct when adding/removing across
 // multiple modules when overflowing. All items from a single module should
 // remain in a group
-exports.testMultipleModulesOrderOverflow = function (test) {
-  test = new TestHelper(test);
+exports.testMultipleModulesOrderOverflow = function (assert, done) {
+  let test = new TestHelper(assert, done);
   let loader0 = test.newLoader();
   let loader1 = test.newLoader();
 
@@ -1397,8 +1397,8 @@ exports.testMultipleModulesOrderOverflow = function (test) {
 
 // Checks that if a module's items are all hidden then the overflow menu doesn't
 // get hidden
-exports.testMultipleModulesOverflowHidden = function (test) {
-  test = new TestHelper(test);
+exports.testMultipleModulesOverflowHidden = function (assert, done) {
+  let test = new TestHelper(assert, done);
   let loader0 = test.newLoader();
   let loader1 = test.newLoader();
 
@@ -1422,8 +1422,8 @@ exports.testMultipleModulesOverflowHidden = function (test) {
 
 // Checks that if a module's items are all hidden then the overflow menu doesn't
 // get hidden (reverse order to above)
-exports.testMultipleModulesOverflowHidden2 = function (test) {
-  test = new TestHelper(test);
+exports.testMultipleModulesOverflowHidden2 = function (assert, done) {
+  let test = new TestHelper(assert, done);
   let loader0 = test.newLoader();
   let loader1 = test.newLoader();
 
@@ -1447,8 +1447,8 @@ exports.testMultipleModulesOverflowHidden2 = function (test) {
 
 // Checks that we don't overflow if there are more items than the overflow
 // threshold but not all of them are visible
-exports.testOverflowIgnoresHidden = function (test) {
-  test = new TestHelper(test);
+exports.testOverflowIgnoresHidden = function (assert, done) {
+  let test = new TestHelper(assert, done);
   let loader = test.newLoader();
 
   let prefs = loader.loader.require("sdk/preferences/service");
@@ -1477,8 +1477,8 @@ exports.testOverflowIgnoresHidden = function (test) {
 
 // Checks that we don't overflow if there are more items than the overflow
 // threshold but not all of them are visible
-exports.testOverflowIgnoresHiddenMultipleModules1 = function (test) {
-  test = new TestHelper(test);
+exports.testOverflowIgnoresHiddenMultipleModules1 = function (assert, done) {
+  let test = new TestHelper(assert, done);
   let loader0 = test.newLoader();
   let loader1 = test.newLoader();
 
@@ -1512,8 +1512,8 @@ exports.testOverflowIgnoresHiddenMultipleModules1 = function (test) {
 
 // Checks that we don't overflow if there are more items than the overflow
 // threshold but not all of them are visible
-exports.testOverflowIgnoresHiddenMultipleModules2 = function (test) {
-  test = new TestHelper(test);
+exports.testOverflowIgnoresHiddenMultipleModules2 = function (assert, done) {
+  let test = new TestHelper(assert, done);
   let loader0 = test.newLoader();
   let loader1 = test.newLoader();
 
@@ -1547,8 +1547,8 @@ exports.testOverflowIgnoresHiddenMultipleModules2 = function (test) {
 
 // Checks that we don't overflow if there are more items than the overflow
 // threshold but not all of them are visible
-exports.testOverflowIgnoresHiddenMultipleModules3 = function (test) {
-  test = new TestHelper(test);
+exports.testOverflowIgnoresHiddenMultipleModules3 = function (assert, done) {
+  let test = new TestHelper(assert, done);
   let loader0 = test.newLoader();
   let loader1 = test.newLoader();
 
@@ -1582,8 +1582,8 @@ exports.testOverflowIgnoresHiddenMultipleModules3 = function (test) {
 
 // Tests that we transition between overflowing to non-overflowing to no items
 // and back again
-exports.testOverflowTransition = function (test) {
-  test = new TestHelper(test);
+exports.testOverflowTransition = function (assert, done) {
+  let test = new TestHelper(assert, done);
   let loader = test.newLoader();
 
   let prefs = loader.loader.require("sdk/preferences/service");
@@ -1660,8 +1660,8 @@ exports.testOverflowTransition = function (test) {
 
 
 // An item's command listener should work.
-exports.testItemCommand = function (test) {
-  test = new TestHelper(test);
+exports.testItemCommand = function (assert, done) {
+  let test = new TestHelper(assert, done);
   let loader = test.newLoader();
 
   let item = new loader.cm.Item({
@@ -1674,9 +1674,9 @@ exports.testItemCommand = function (test) {
                    '  });' +
                    '});',
     onMessage: function (data) {
-      test.assertEqual(this, item, "`this` inside onMessage should be item");
-      test.assertEqual(data.tagName, "HTML", "node should be an HTML element");
-      test.assertEqual(data.data, item.data, "data should be item data");
+      assert.equal(this, item, "`this` inside onMessage should be item");
+      assert.equal(data.tagName, "HTML", "node should be an HTML element");
+      assert.equal(data.data, item.data, "data should be item data");
       test.done();
     }
   });
@@ -1697,11 +1697,11 @@ exports.testItemCommand = function (test) {
 // sub-items appropriately.  This also tests menus and ensures that when a CSS
 // selector context matches the clicked node's ancestor, the matching ancestor
 // is passed to listeners as the clicked node.
-exports.testMenuCommand = function (test) {
+exports.testMenuCommand = function (assert, done) {
   // Create a top-level menu, submenu, and item, like this:
   // topMenu -> submenu -> item
   // Click the item and make sure the click bubbles.
-  test = new TestHelper(test);
+  let test = new TestHelper(assert, done);
   let loader = test.newLoader();
 
   let item = new loader.cm.Item({
@@ -1725,9 +1725,9 @@ exports.testMenuCommand = function (test) {
                    '  });' +
                    '});',
     onMessage: function (data) {
-      test.assertEqual(this, topMenu, "`this` inside top menu should be menu");
-      test.assertEqual(data.tagName, "A", "Clicked node should be anchor");
-      test.assertEqual(data.data, item.data,
+      assert.equal(this, topMenu, "`this` inside top menu should be menu");
+      assert.equal(data.tagName, "A", "Clicked node should be anchor");
+      assert.equal(data.data, item.data,
                        "Clicked item data should be correct");
       test.done();
     },
@@ -1754,8 +1754,8 @@ exports.testMenuCommand = function (test) {
 
 
 // Click listeners should work when multiple modules are loaded.
-exports.testItemCommandMultipleModules = function (test) {
-  test = new TestHelper(test);
+exports.testItemCommandMultipleModules = function (assert, done) {
+  let test = new TestHelper(assert, done);
   let loader0 = test.newLoader();
   let loader1 = test.newLoader();
 
@@ -1790,8 +1790,8 @@ exports.testItemCommandMultipleModules = function (test) {
 
 
 // An item's click listener should work.
-exports.testItemClick = function (test) {
-  test = new TestHelper(test);
+exports.testItemClick = function (assert, done) {
+  let test = new TestHelper(assert, done);
   let loader = test.newLoader();
 
   let item = new loader.cm.Item({
@@ -1804,9 +1804,9 @@ exports.testItemClick = function (test) {
                    '  });' +
                    '});',
     onMessage: function (data) {
-      test.assertEqual(this, item, "`this` inside onMessage should be item");
-      test.assertEqual(data.tagName, "HTML", "node should be an HTML element");
-      test.assertEqual(data.data, item.data, "data should be item data");
+      assert.equal(this, item, "`this` inside onMessage should be item");
+      assert.equal(data.tagName, "HTML", "node should be an HTML element");
+      assert.equal(data.data, item.data, "data should be item data");
       test.done();
     }
   });
@@ -1823,11 +1823,11 @@ exports.testItemClick = function (test) {
 // sub-items appropriately.  This also tests menus and ensures that when a CSS
 // selector context matches the clicked node's ancestor, the matching ancestor
 // is passed to listeners as the clicked node.
-exports.testMenuClick = function (test) {
+exports.testMenuClick = function (assert, done) {
   // Create a top-level menu, submenu, and item, like this:
   // topMenu -> submenu -> item
   // Click the item and make sure the click bubbles.
-  test = new TestHelper(test);
+  let test = new TestHelper(assert, done);
   let loader = test.newLoader();
 
   let item = new loader.cm.Item({
@@ -1851,9 +1851,9 @@ exports.testMenuClick = function (test) {
                    '  });' +
                    '});',
     onMessage: function (data) {
-      test.assertEqual(this, topMenu, "`this` inside top menu should be menu");
-      test.assertEqual(data.tagName, "A", "Clicked node should be anchor");
-      test.assertEqual(data.data, item.data,
+      assert.equal(this, topMenu, "`this` inside top menu should be menu");
+      assert.equal(data.tagName, "A", "Clicked node should be anchor");
+      assert.equal(data.data, item.data,
                        "Clicked item data should be correct");
       test.done();
     },
@@ -1875,8 +1875,8 @@ exports.testMenuClick = function (test) {
 };
 
 // Click listeners should work when multiple modules are loaded.
-exports.testItemClickMultipleModules = function (test) {
-  test = new TestHelper(test);
+exports.testItemClickMultipleModules = function (assert, done) {
+  let test = new TestHelper(assert, done);
   let loader0 = test.newLoader();
   let loader1 = test.newLoader();
 
@@ -1905,8 +1905,8 @@ exports.testItemClickMultipleModules = function (test) {
 
 
 // Adding a separator to a submenu should work OK.
-exports.testSeparator = function (test) {
-  test = new TestHelper(test);
+exports.testSeparator = function (assert, done) {
+  let test = new TestHelper(assert, done);
   let loader = test.newLoader();
 
   let menu = new loader.cm.Menu({
@@ -1922,8 +1922,8 @@ exports.testSeparator = function (test) {
 
 
 // The parentMenu option should work
-exports.testParentMenu = function (test) {
-  test = new TestHelper(test);
+exports.testParentMenu = function (assert, done) {
+  let test = new TestHelper(assert, done);
   let loader = test.newLoader();
 
   let menu = new loader.cm.Menu({
@@ -1937,7 +1937,7 @@ exports.testParentMenu = function (test) {
     parentMenu: menu,
   });
 
-  test.assertEqual(menu.items[1], item, "Item should be in the sub menu");
+  assert.equal(menu.items[1], item, "Item should be in the sub menu");
 
   test.showMenu(null, function (popup) {
     test.checkMenu([menu], [], []);
@@ -1947,8 +1947,8 @@ exports.testParentMenu = function (test) {
 
 
 // Existing context menu modifications should apply to new windows.
-exports.testNewWindow = function (test) {
-  test = new TestHelper(test);
+exports.testNewWindow = function (assert, done) {
+  let test = new TestHelper(assert, done);
   let loader = test.newLoader();
 
   let item = new loader.cm.Item({ label: "item" });
@@ -1964,8 +1964,8 @@ exports.testNewWindow = function (test) {
 
 // When a new window is opened, items added by an unloaded module should not
 // be present in the menu.
-exports.testNewWindowMultipleModules = function (test) {
-  test = new TestHelper(test);
+exports.testNewWindowMultipleModules = function (assert, done) {
+  let test = new TestHelper(assert, done);
   let loader = test.newLoader();
   let item = new loader.cm.Item({ label: "item" });
 
@@ -1984,8 +1984,8 @@ exports.testNewWindowMultipleModules = function (test) {
 
 
 // Existing context menu modifications should not apply to new private windows.
-exports.testNewPrivateWindow = function (test) {
-  test = new TestHelper(test);
+exports.testNewPrivateWindow = function (assert, done) {
+  let test = new TestHelper(assert, done);
   let loader = test.newLoader();
 
   let item = new loader.cm.Item({ label: "item" });
@@ -2006,8 +2006,8 @@ exports.testNewPrivateWindow = function (test) {
 
 // Existing context menu modifications should apply to new private windows when
 // private browsing support is enabled.
-exports.testNewPrivateEnabledWindow = function (test) {
-  test = new TestHelper(test);
+exports.testNewPrivateEnabledWindow = function (assert, done) {
+  let test = new TestHelper(assert, done);
   let loader = test.newPrivateLoader();
 
   let item = new loader.cm.Item({ label: "item" });
@@ -2028,8 +2028,8 @@ exports.testNewPrivateEnabledWindow = function (test) {
 
 // Existing context menu modifications should apply to new private windows when
 // private browsing support is enabled unless unloaded.
-exports.testNewPrivateEnabledWindowUnloaded = function (test) {
-  test = new TestHelper(test);
+exports.testNewPrivateEnabledWindowUnloaded = function (assert, done) {
+  let test = new TestHelper(assert, done);
   let loader = test.newPrivateLoader();
 
   let item = new loader.cm.Item({ label: "item" });
@@ -2051,8 +2051,8 @@ exports.testNewPrivateEnabledWindowUnloaded = function (test) {
 
 
 // Items in the context menu should be sorted according to locale.
-exports.testSorting = function (test) {
-  test = new TestHelper(test);
+exports.testSorting = function (assert, done) {
+  let test = new TestHelper(assert, done);
   let loader = test.newLoader();
 
   // Make an unsorted items list.  It'll look like this:
@@ -2071,8 +2071,8 @@ exports.testSorting = function (test) {
 
 
 // Items in the overflow menu should be sorted according to locale.
-exports.testSortingOverflow = function (test) {
-  test = new TestHelper(test);
+exports.testSortingOverflow = function (assert, done) {
+  let test = new TestHelper(assert, done);
   let loader = test.newLoader();
 
   // Make an unsorted items list.  It'll look like this:
@@ -2091,8 +2091,8 @@ exports.testSortingOverflow = function (test) {
 
 
 // Multiple modules shouldn't interfere with sorting.
-exports.testSortingMultipleModules = function (test) {
-  test = new TestHelper(test);
+exports.testSortingMultipleModules = function (assert, done) {
+  let test = new TestHelper(assert, done);
   let loader0 = test.newLoader();
   let loader1 = test.newLoader();
 
@@ -2129,8 +2129,8 @@ exports.testSortingMultipleModules = function (test) {
 
 // Content click handlers and context handlers should be able to communicate,
 // i.e., they're eval'ed in the same worker and sandbox.
-exports.testContentCommunication = function (test) {
-  test = new TestHelper(test);
+exports.testContentCommunication = function (assert, done) {
+  let test = new TestHelper(assert, done);
   let loader = test.newLoader();
 
   let item = new loader.cm.Item({
@@ -2146,7 +2146,7 @@ exports.testContentCommunication = function (test) {
   });
 
   item.on("message", function (data) {
-    test.assertEqual(data, "potato", "That's a lot of potatoes!");
+    assert.equal(data, "potato", "That's a lot of potatoes!");
     test.done();
   });
 
@@ -2161,8 +2161,8 @@ exports.testContentCommunication = function (test) {
 // When the context menu is invoked on a tab that was already open when the
 // module was loaded, it should contain the expected items and content workers
 // should function as expected.
-exports.testLoadWithOpenTab = function (test) {
-  test = new TestHelper(test);
+exports.testLoadWithOpenTab = function (assert, done) {
+  let test = new TestHelper(assert, done);
   test.withTestDoc(function (window, doc) {
     let loader = test.newLoader();
     let item = new loader.cm.Item({
@@ -2183,8 +2183,8 @@ exports.testLoadWithOpenTab = function (test) {
 
 // Bug 732716: Ensure that the node given in `click` event works fine
 // (i.e. is correctly wrapped)
-exports.testDrawImageOnClickNode = function (test) {
-  test = new TestHelper(test);
+exports.testDrawImageOnClickNode = function (assert, done) {
+  let test = new TestHelper(assert, done);
   test.withTestDoc(function (window, doc) {
     let loader = test.newLoader();
     let item = new loader.cm.Item({
@@ -2212,8 +2212,8 @@ exports.testDrawImageOnClickNode = function (test) {
 
 // Setting an item's label before the menu is ever shown should correctly change
 // its label.
-exports.testSetLabelBeforeShow = function (test) {
-  test = new TestHelper(test);
+exports.testSetLabelBeforeShow = function (assert, done) {
+  let test = new TestHelper(assert, done);
   let loader = test.newLoader();
 
   let items = [
@@ -2221,7 +2221,7 @@ exports.testSetLabelBeforeShow = function (test) {
     new loader.cm.Item({ label: "b" })
   ]
   items[0].label = "z";
-  test.assertEqual(items[0].label, "z");
+  assert.equal(items[0].label, "z");
 
   test.showMenu(null, function (popup) {
     test.checkMenu(items, [], []);
@@ -2232,8 +2232,8 @@ exports.testSetLabelBeforeShow = function (test) {
 
 // Setting an item's label after the menu is shown should correctly change its
 // label.
-exports.testSetLabelAfterShow = function (test) {
-  test = new TestHelper(test);
+exports.testSetLabelAfterShow = function (assert, done) {
+  let test = new TestHelper(assert, done);
   let loader = test.newLoader();
 
   let items = [
@@ -2246,7 +2246,7 @@ exports.testSetLabelAfterShow = function (test) {
     popup.hidePopup();
 
     items[0].label = "z";
-    test.assertEqual(items[0].label, "z");
+    assert.equal(items[0].label, "z");
     test.showMenu(null, function (popup) {
       test.checkMenu(items, [], []);
       test.done();
@@ -2257,8 +2257,8 @@ exports.testSetLabelAfterShow = function (test) {
 
 // Setting an item's label before the menu is ever shown should correctly change
 // its label.
-exports.testSetLabelBeforeShowOverflow = function (test) {
-  test = new TestHelper(test);
+exports.testSetLabelBeforeShowOverflow = function (assert, done) {
+  let test = new TestHelper(assert, done);
   let loader = test.newLoader();
 
   let prefs = loader.loader.require("sdk/preferences/service");
@@ -2269,7 +2269,7 @@ exports.testSetLabelBeforeShowOverflow = function (test) {
     new loader.cm.Item({ label: "b" })
   ]
   items[0].label = "z";
-  test.assertEqual(items[0].label, "z");
+  assert.equal(items[0].label, "z");
 
   test.showMenu(null, function (popup) {
     test.checkMenu(items, [], []);
@@ -2280,8 +2280,8 @@ exports.testSetLabelBeforeShowOverflow = function (test) {
 
 // Setting an item's label after the menu is shown should correctly change its
 // label.
-exports.testSetLabelAfterShowOverflow = function (test) {
-  test = new TestHelper(test);
+exports.testSetLabelAfterShowOverflow = function (assert, done) {
+  let test = new TestHelper(assert, done);
   let loader = test.newLoader();
 
   let prefs = loader.loader.require("sdk/preferences/service");
@@ -2297,7 +2297,7 @@ exports.testSetLabelAfterShowOverflow = function (test) {
     popup.hidePopup();
 
     items[0].label = "z";
-    test.assertEqual(items[0].label, "z");
+    assert.equal(items[0].label, "z");
     test.showMenu(null, function (popup) {
       test.checkMenu(items, [], []);
       test.done();
@@ -2307,8 +2307,8 @@ exports.testSetLabelAfterShowOverflow = function (test) {
 
 
 // Setting the label of an item in a Menu should work.
-exports.testSetLabelMenuItem = function (test) {
-  test = new TestHelper(test);
+exports.testSetLabelMenuItem = function (assert, done) {
+  let test = new TestHelper(assert, done);
   let loader = test.newLoader();
 
   let menu = loader.cm.Menu({
@@ -2317,7 +2317,7 @@ exports.testSetLabelMenuItem = function (test) {
   });
   menu.items[0].label = "z";
 
-  test.assertEqual(menu.items[0].label, "z");
+  assert.equal(menu.items[0].label, "z");
 
   test.showMenu(null, function (popup) {
     test.checkMenu([menu], [], []);
@@ -2327,8 +2327,8 @@ exports.testSetLabelMenuItem = function (test) {
 
 
 // Menu.addItem() should work.
-exports.testMenuAddItem = function (test) {
-  test = new TestHelper(test);
+exports.testMenuAddItem = function (assert, done) {
+  let test = new TestHelper(assert, done);
   let loader = test.newLoader();
 
   let menu = loader.cm.Menu({
@@ -2340,12 +2340,12 @@ exports.testMenuAddItem = function (test) {
   menu.addItem(loader.cm.Item({ label: "item 1" }));
   menu.addItem(loader.cm.Item({ label: "item 2" }));
 
-  test.assertEqual(menu.items.length, 3,
+  assert.equal(menu.items.length, 3,
                    "menu should have correct number of items");
   for (let i = 0; i < 3; i++) {
-    test.assertEqual(menu.items[i].label, "item " + i,
+    assert.equal(menu.items[i].label, "item " + i,
                      "item label should be correct");
-    test.assertEqual(menu.items[i].parentMenu, menu,
+    assert.equal(menu.items[i].parentMenu, menu,
                      "item's parent menu should be correct");
   }
 
@@ -2357,8 +2357,8 @@ exports.testMenuAddItem = function (test) {
 
 
 // Adding the same item twice to a menu should work as expected.
-exports.testMenuAddItemTwice = function (test) {
-  test = new TestHelper(test);
+exports.testMenuAddItemTwice = function (assert, done) {
+  let test = new TestHelper(assert, done);
   let loader = test.newLoader();
 
   let menu = loader.cm.Menu({
@@ -2370,10 +2370,10 @@ exports.testMenuAddItemTwice = function (test) {
   menu.addItem(loader.cm.Item({ label: "item 0" }));
   menu.addItem(subitem);
 
-  test.assertEqual(menu.items.length, 2,
+  assert.equal(menu.items.length, 2,
                    "menu should have correct number of items");
   for (let i = 0; i < 2; i++) {
-    test.assertEqual(menu.items[i].label, "item " + i,
+    assert.equal(menu.items[i].label, "item " + i,
                      "item label should be correct");
   }
 
@@ -2385,8 +2385,8 @@ exports.testMenuAddItemTwice = function (test) {
 
 
 // Menu.removeItem() should work.
-exports.testMenuRemoveItem = function (test) {
-  test = new TestHelper(test);
+exports.testMenuRemoveItem = function (assert, done) {
+  let test = new TestHelper(assert, done);
   let loader = test.newLoader();
 
   let subitem = loader.cm.Item({ label: "item 1" });
@@ -2403,14 +2403,14 @@ exports.testMenuRemoveItem = function (test) {
   menu.removeItem(subitem);
   menu.removeItem(subitem);
 
-  test.assertEqual(subitem.parentMenu, null,
+  assert.equal(subitem.parentMenu, null,
                    "item's parent menu should be correct");
 
-  test.assertEqual(menu.items.length, 2,
+  assert.equal(menu.items.length, 2,
                    "menu should have correct number of items");
-  test.assertEqual(menu.items[0].label, "item 0",
+  assert.equal(menu.items[0].label, "item 0",
                    "item label should be correct");
-  test.assertEqual(menu.items[1].label, "item 2",
+  assert.equal(menu.items[1].label, "item 2",
                    "item label should be correct");
 
   test.showMenu(null, function (popup) {
@@ -2421,8 +2421,8 @@ exports.testMenuRemoveItem = function (test) {
 
 
 // Adding an item currently contained in one menu to another menu should work.
-exports.testMenuItemSwap = function (test) {
-  test = new TestHelper(test);
+exports.testMenuItemSwap = function (assert, done) {
+  let test = new TestHelper(assert, done);
   let loader = test.newLoader();
 
   let subitem = loader.cm.Item({ label: "item" });
@@ -2436,15 +2436,15 @@ exports.testMenuItemSwap = function (test) {
   });
   menu1.addItem(subitem);
 
-  test.assertEqual(menu0.items.length, 0,
+  assert.equal(menu0.items.length, 0,
                    "menu should have correct number of items");
 
-  test.assertEqual(menu1.items.length, 1,
+  assert.equal(menu1.items.length, 1,
                    "menu should have correct number of items");
-  test.assertEqual(menu1.items[0].label, "item",
+  assert.equal(menu1.items[0].label, "item",
                    "item label should be correct");
 
-  test.assertEqual(subitem.parentMenu, menu1,
+  assert.equal(subitem.parentMenu, menu1,
                    "item's parent menu should be correct");
 
   test.showMenu(null, function (popup) {
@@ -2455,8 +2455,8 @@ exports.testMenuItemSwap = function (test) {
 
 
 // Destroying an item should remove it from its parent menu.
-exports.testMenuItemDestroy = function (test) {
-  test = new TestHelper(test);
+exports.testMenuItemDestroy = function (assert, done) {
+  let test = new TestHelper(assert, done);
   let loader = test.newLoader();
 
   let subitem = loader.cm.Item({ label: "item" });
@@ -2466,9 +2466,9 @@ exports.testMenuItemDestroy = function (test) {
   });
   subitem.destroy();
 
-  test.assertEqual(menu.items.length, 0,
+  assert.equal(menu.items.length, 0,
                    "menu should have correct number of items");
-  test.assertEqual(subitem.parentMenu, null,
+  assert.equal(subitem.parentMenu, null,
                    "item's parent menu should be correct");
 
   test.showMenu(null, function (popup) {
@@ -2479,8 +2479,8 @@ exports.testMenuItemDestroy = function (test) {
 
 
 // Setting Menu.items should work.
-exports.testMenuItemsSetter = function (test) {
-  test = new TestHelper(test);
+exports.testMenuItemsSetter = function (assert, done) {
+  let test = new TestHelper(assert, done);
   let loader = test.newLoader();
 
   let menu = loader.cm.Menu({
@@ -2496,12 +2496,12 @@ exports.testMenuItemsSetter = function (test) {
     loader.cm.Item({ label: "new item 2" })
   ];
 
-  test.assertEqual(menu.items.length, 3,
+  assert.equal(menu.items.length, 3,
                    "menu should have correct number of items");
   for (let i = 0; i < 3; i++) {
-    test.assertEqual(menu.items[i].label, "new item " + i,
+    assert.equal(menu.items[i].label, "new item " + i,
                      "item label should be correct");
-    test.assertEqual(menu.items[i].parentMenu, menu,
+    assert.equal(menu.items[i].parentMenu, menu,
                      "item's parent menu should be correct");
   }
 
@@ -2513,14 +2513,14 @@ exports.testMenuItemsSetter = function (test) {
 
 
 // Setting Item.data should work.
-exports.testItemDataSetter = function (test) {
-  test = new TestHelper(test);
+exports.testItemDataSetter = function (assert, done) {
+  let test = new TestHelper(assert, done);
   let loader = test.newLoader();
 
   let item = loader.cm.Item({ label: "old item 0", data: "old" });
   item.data = "new";
 
-  test.assertEqual(item.data, "new", "item should have correct data");
+  assert.equal(item.data, "new", "item should have correct data");
 
   test.showMenu(null, function (popup) {
     test.checkMenu([item], [], []);
@@ -2531,8 +2531,8 @@ exports.testItemDataSetter = function (test) {
 
 // Open the test doc, load the module, make sure items appear when context-
 // clicking the iframe.
-exports.testAlreadyOpenIframe = function (test) {
-  test = new TestHelper(test);
+exports.testAlreadyOpenIframe = function (assert, done) {
+  let test = new TestHelper(assert, done);
   test.withTestDoc(function (window, doc) {
     let loader = test.newLoader();
     let item = new loader.cm.Item({
@@ -2547,40 +2547,40 @@ exports.testAlreadyOpenIframe = function (test) {
 
 
 // Tests that a missing label throws an exception
-exports.testItemNoLabel = function (test) {
-  test = new TestHelper(test);
+exports.testItemNoLabel = function (assert, done) {
+  let test = new TestHelper(assert, done);
   let loader = test.newLoader();
 
   try {
     new loader.cm.Item({});
-    test.assert(false, "Should have seen exception");
+    assert.ok(false, "Should have seen exception");
   }
   catch (e) {
-    test.assert(true, "Should have seen exception");
+    assert.ok(true, "Should have seen exception");
   }
 
   try {
     new loader.cm.Item({ label: null });
-    test.assert(false, "Should have seen exception");
+    assert.ok(false, "Should have seen exception");
   }
   catch (e) {
-    test.assert(true, "Should have seen exception");
+    assert.ok(true, "Should have seen exception");
   }
 
   try {
     new loader.cm.Item({ label: undefined });
-    test.assert(false, "Should have seen exception");
+    assert.ok(false, "Should have seen exception");
   }
   catch (e) {
-    test.assert(true, "Should have seen exception");
+    assert.ok(true, "Should have seen exception");
   }
 
   try {
     new loader.cm.Item({ label: "" });
-    test.assert(false, "Should have seen exception");
+    assert.ok(false, "Should have seen exception");
   }
   catch (e) {
-    test.assert(true, "Should have seen exception");
+    assert.ok(true, "Should have seen exception");
   }
 
   test.done();
@@ -2588,12 +2588,12 @@ exports.testItemNoLabel = function (test) {
 
 
 // Tests that items can have an empty data property
-exports.testItemNoData = function (test) {
-  test = new TestHelper(test);
+exports.testItemNoData = function (assert, done) {
+  let test = new TestHelper(assert, done);
   let loader = test.newLoader();
 
   function checkData(data) {
-    test.assertEqual(data, undefined, "Data should be undefined");
+    assert.equal(data, undefined, "Data should be undefined");
   }
 
   let item1 = new loader.cm.Item({
@@ -2614,9 +2614,9 @@ exports.testItemNoData = function (test) {
     onMessage: checkData
   });
 
-  test.assertEqual(item1.data, undefined, "Should be no defined data");
-  test.assertEqual(item2.data, null, "Should be no defined data");
-  test.assertEqual(item3.data, undefined, "Should be no defined data");
+  assert.equal(item1.data, undefined, "Should be no defined data");
+  assert.equal(item2.data, null, "Should be no defined data");
+  assert.equal(item3.data, undefined, "Should be no defined data");
 
   test.showMenu(null, function (popup) {
     test.checkMenu([item1, item2, item3], [], []);
@@ -2644,17 +2644,17 @@ exports.testItemNoData = function (test) {
 
 
 // Tests that items without an image don't attempt to show one
-exports.testItemNoImage = function (test) {
-  test = new TestHelper(test);
+exports.testItemNoImage = function (assert, done) {
+  let test = new TestHelper(assert, done);
   let loader = test.newLoader();
 
   let item1 = new loader.cm.Item({ label: "item 1" });
   let item2 = new loader.cm.Item({ label: "item 2", image: null });
   let item3 = new loader.cm.Item({ label: "item 3", image: undefined });
 
-  test.assertEqual(item1.image, undefined, "Should be no defined image");
-  test.assertEqual(item2.image, null, "Should be no defined image");
-  test.assertEqual(item3.image, undefined, "Should be no defined image");
+  assert.equal(item1.image, undefined, "Should be no defined image");
+  assert.equal(item2.image, null, "Should be no defined image");
+  assert.equal(item3.image, undefined, "Should be no defined image");
 
   test.showMenu(null, function (popup) {
     test.checkMenu([item1, item2, item3], [], []);
@@ -2665,8 +2665,8 @@ exports.testItemNoImage = function (test) {
 
 
 // Test image support.
-exports.testItemImage = function (test) {
-  test = new TestHelper(test);
+exports.testItemImage = function (assert, done) {
+  let test = new TestHelper(assert, done);
   let loader = test.newLoader();
 
   let imageURL = require("sdk/self").data.url("moz_favicon.ico");
@@ -2674,8 +2674,8 @@ exports.testItemImage = function (test) {
   let menu = new loader.cm.Menu({ label: "menu", image: imageURL, items: [
     loader.cm.Item({ label: "subitem" })
   ]});
-  test.assertEqual(item.image, imageURL, "Should have set the image correctly");
-  test.assertEqual(menu.image, imageURL, "Should have set the image correctly");
+  assert.equal(item.image, imageURL, "Should have set the image correctly");
+  assert.equal(menu.image, imageURL, "Should have set the image correctly");
 
   test.showMenu(null, function (popup) {
     test.checkMenu([item, menu], [], []);
@@ -2683,14 +2683,14 @@ exports.testItemImage = function (test) {
     let imageURL2 = require("sdk/self").data.url("dummy.ico");
     item.image = imageURL2;
     menu.image = imageURL2;
-    test.assertEqual(item.image, imageURL2, "Should have set the image correctly");
-    test.assertEqual(menu.image, imageURL2, "Should have set the image correctly");
+    assert.equal(item.image, imageURL2, "Should have set the image correctly");
+    assert.equal(menu.image, imageURL2, "Should have set the image correctly");
     test.checkMenu([item, menu], [], []);
 
     item.image = null;
     menu.image = null;
-    test.assertEqual(item.image, null, "Should have set the image correctly");
-    test.assertEqual(menu.image, null, "Should have set the image correctly");
+    assert.equal(item.image, null, "Should have set the image correctly");
+    assert.equal(menu.image, null, "Should have set the image correctly");
     test.checkMenu([item, menu], [], []);
 
     test.done();
@@ -2698,32 +2698,32 @@ exports.testItemImage = function (test) {
 };
 
 // Test image URL validation.
-exports.testItemImageValidURL = function (test) {
-  test = new TestHelper(test);
+exports.testItemImageValidURL = function (assert, done) {
+  let test = new TestHelper(assert, done);
   let loader = test.newLoader();
  
-  test.assertRaises(function(){
+  assert.throws(function(){
       new loader.cm.Item({
         label: "item 1",
         image: "foo"
       })
-    }, "Image URL validation failed"
+    }, /Image URL validation failed/
   );
 
-  test.assertRaises(function(){
+  assert.throws(function(){
       new loader.cm.Item({
         label: "item 2",
         image: false
       })
-    }, "Image URL validation failed"
+    }, /Image URL validation failed/
   );
 
-  test.assertRaises(function(){
+  assert.throws(function(){
       new loader.cm.Item({
         label: "item 3",
         image: 0
       })
-    }, "Image URL validation failed"
+    }, /Image URL validation failed/
   );
    
   let imageURL = require("sdk/self").data.url("moz_favicon.ico");
@@ -2731,17 +2731,17 @@ exports.testItemImageValidURL = function (test) {
   let item5 = new loader.cm.Item({ label: "item 5", image: null });
   let item6 = new loader.cm.Item({ label: "item 6", image: undefined });
 
-  test.assertEqual(item4.image, imageURL, "Should be proper image URL");
-  test.assertEqual(item5.image, null, "Should be null image");
-  test.assertEqual(item6.image, undefined, "Should be undefined image");
+  assert.equal(item4.image, imageURL, "Should be proper image URL");
+  assert.equal(item5.image, null, "Should be null image");
+  assert.equal(item6.image, undefined, "Should be undefined image");
 
   test.done();
-}
+};
 
 
 // Menu.destroy should destroy the item tree rooted at that menu.
-exports.testMenuDestroy = function (test) {
-  test = new TestHelper(test);
+exports.testMenuDestroy = function (assert, done) {
+  let test = new TestHelper(assert, done);
   let loader = test.newLoader();
 
   let menu = loader.cm.Menu({
@@ -2766,7 +2766,7 @@ exports.testMenuDestroy = function (test) {
     for (let itemID in bwin.items)
       numRegistryEntries++;
   });
-  test.assertEqual(numRegistryEntries, 0, "All items should be unregistered.");*/
+  assert.equal(numRegistryEntries, 0, "All items should be unregistered.");*/
 
   test.showMenu(null, function (popup) {
     test.checkMenu([menu], [], [menu]);
@@ -2776,8 +2776,8 @@ exports.testMenuDestroy = function (test) {
 
 // Checks that if a menu contains sub items that are hidden then the menu is
 // hidden too. Also checks that content scripts and contexts work for sub items.
-exports.testSubItemContextNoMatchHideMenu = function (test) {
-  test = new TestHelper(test);
+exports.testSubItemContextNoMatchHideMenu = function (assert, done) {
+  let test = new TestHelper(assert, done);
   let loader = test.newLoader();
 
   let items = [
@@ -2823,8 +2823,8 @@ exports.testSubItemContextNoMatchHideMenu = function (test) {
 
 // Checks that if a menu contains a combination of hidden and visible sub items
 // then the menu is still visible too.
-exports.testSubItemContextMatch = function (test) {
-  test = new TestHelper(test);
+exports.testSubItemContextMatch = function (assert, done) {
+  let test = new TestHelper(assert, done);
   let loader = test.newLoader();
 
   let hiddenItems = [
@@ -2902,8 +2902,8 @@ exports.testSubItemContextMatch = function (test) {
 
 
 // Child items should default to visible, not to PageContext
-exports.testSubItemDefaultVisible = function (test) {
-  test = new TestHelper(test);
+exports.testSubItemDefaultVisible = function (assert, done) {
+  let test = new TestHelper(assert, done);
   let loader = test.newLoader();
 
   let items = [
@@ -2939,8 +2939,8 @@ exports.testSubItemDefaultVisible = function (test) {
 
 // Tests that the click event on sub menuitem
 // tiggers the click event for the sub menuitem and the parent menu
-exports.testSubItemClick = function (test) {
-  test = new TestHelper(test);
+exports.testSubItemClick = function (assert, done) {
+  let test = new TestHelper(assert, done);
   let loader = test.newLoader();
 
   let state = 0;
@@ -2959,9 +2959,9 @@ exports.testSubItemClick = function (test) {
                          '  });' +
                          '});',
           onMessage: function(msg) {
-            test.assertEqual(msg.tagName, "HTML", "should have seen the right node");
-            test.assertEqual(msg.data, "foobar", "should have seen the right data");
-            test.assertEqual(state, 0, "should have seen the event at the right time");
+            assert.equal(msg.tagName, "HTML", "should have seen the right node");
+            assert.equal(msg.data, "foobar", "should have seen the right data");
+            assert.equal(state, 0, "should have seen the event at the right time");
             state++;
           }
         })
@@ -2973,9 +2973,9 @@ exports.testSubItemClick = function (test) {
                      '  });' +
                      '});',
       onMessage: function(msg) {
-        test.assertEqual(msg.tagName, "HTML", "should have seen the right node");
-        test.assertEqual(msg.data, "foobar", "should have seen the right data");
-        test.assertEqual(state, 1, "should have seen the event at the right time");
+        assert.equal(msg.tagName, "HTML", "should have seen the right node");
+        assert.equal(msg.data, "foobar", "should have seen the right data");
+        assert.equal(state, 1, "should have seen the event at the right time");
 
         test.done();
       }
@@ -2996,8 +2996,8 @@ exports.testSubItemClick = function (test) {
 
 // Tests that the command event on sub menuitem
 // tiggers the click event for the sub menuitem and the parent menu
-exports.testSubItemCommand = function (test) {
-  test = new TestHelper(test);
+exports.testSubItemCommand = function (assert, done) {
+  let test = new TestHelper(assert, done);
   let loader = test.newLoader();
 
   let state = 0;
@@ -3016,9 +3016,9 @@ exports.testSubItemCommand = function (test) {
                          '  });' +
                          '});',
           onMessage: function(msg) {
-            test.assertEqual(msg.tagName, "HTML", "should have seen the right node");
-            test.assertEqual(msg.data, "foobar", "should have seen the right data");
-            test.assertEqual(state, 0, "should have seen the event at the right time");
+            assert.equal(msg.tagName, "HTML", "should have seen the right node");
+            assert.equal(msg.data, "foobar", "should have seen the right data");
+            assert.equal(state, 0, "should have seen the event at the right time");
             state++;
           }
         })
@@ -3030,9 +3030,9 @@ exports.testSubItemCommand = function (test) {
                      '  });' +
                      '});',
       onMessage: function(msg) {
-        test.assertEqual(msg.tagName, "HTML", "should have seen the right node");
-        test.assertEqual(msg.data, "foobar", "should have seen the right data");
-        test.assertEqual(state, 1, "should have seen the event at the right time");
+        assert.equal(msg.tagName, "HTML", "should have seen the right node");
+        assert.equal(msg.data, "foobar", "should have seen the right data");
+        assert.equal(state, 1, "should have seen the event at the right time");
         state++
 
         test.done();
@@ -3058,8 +3058,8 @@ exports.testSubItemCommand = function (test) {
 
 // Tests that opening a context menu for an outer frame when an inner frame
 // has a selection doesn't activate the SelectionContext
-exports.testSelectionInInnerFrameNoMatch = function (test) {
-  test = new TestHelper(test);
+exports.testSelectionInInnerFrameNoMatch = function (assert, done) {
+  let test = new TestHelper(assert, done);
   let loader = test.newLoader();
 
   let state = 0;
@@ -3084,8 +3084,8 @@ exports.testSelectionInInnerFrameNoMatch = function (test) {
 
 // Tests that opening a context menu for an inner frame when the inner frame
 // has a selection does activate the SelectionContext
-exports.testSelectionInInnerFrameMatch = function (test) {
-  test = new TestHelper(test);
+exports.testSelectionInInnerFrameMatch = function (assert, done) {
+  let test = new TestHelper(assert, done);
   let loader = test.newLoader();
 
   let state = 0;
@@ -3110,8 +3110,8 @@ exports.testSelectionInInnerFrameMatch = function (test) {
 
 // Tests that opening a context menu for an inner frame when the outer frame
 // has a selection doesn't activate the SelectionContext
-exports.testSelectionInOuterFrameNoMatch = function (test) {
-  test = new TestHelper(test);
+exports.testSelectionInOuterFrameNoMatch = function (assert, done) {
+  let test = new TestHelper(assert, done);
   let loader = test.newLoader();
 
   let state = 0;
@@ -3141,9 +3141,9 @@ exports.testSelectionInOuterFrameNoMatch = function (test) {
 // on instances of this class.  Don't forget to call done() to end the test!
 // WARNING: This looks up items in popups by comparing labels, so don't give two
 // items the same label.
-function TestHelper(test) {
-  test.waitUntilDone();
-  this.test = test;
+function TestHelper(assert, done) {
+  this.assert = assert;
+  this.end = done;
   this.loaders = [];
   this.browserWindow = Cc["@mozilla.org/appshell/window-mediator;1"].
                        getService(Ci.nsIWindowMediator).
@@ -3175,7 +3175,7 @@ TestHelper.prototype = {
 
   // Methods on the wrapped test can be called on this object.
   __noSuchMethod__: function (methodName, args) {
-    this.test[methodName].apply(this.test, args);
+    this.assert[methodName].apply(this.assert, args);
   },
 
   // Asserts that elt, a DOM element representing item, looks OK.
@@ -3184,44 +3184,44 @@ TestHelper.prototype = {
 
     switch (itemType) {
     case "Item":
-      this.test.assertEqual(elt.localName, "menuitem",
+      this.assert.equal(elt.localName, "menuitem",
                             "Item DOM element should be a xul:menuitem");
       if (typeof(item.data) === "string") {
-        this.test.assertEqual(elt.getAttribute("value"), item.data,
+        this.assert.equal(elt.getAttribute("value"), item.data,
                               "Item should have correct data");
       }
       break
     case "Menu":
-      this.test.assertEqual(elt.localName, "menu",
+      this.assert.equal(elt.localName, "menu",
                             "Menu DOM element should be a xul:menu");
       let subPopup = elt.firstChild;
-      this.test.assert(subPopup, "xul:menu should have a child");
-      this.test.assertEqual(subPopup.localName, "menupopup",
+      this.assert.ok(subPopup, "xul:menu should have a child");
+      this.assert.equal(subPopup.localName, "menupopup",
                             "xul:menu's first child should be a menupopup");
       break;
     case "Separator":
-      this.test.assertEqual(elt.localName, "menuseparator",
+      this.assert.equal(elt.localName, "menuseparator",
                          "Separator DOM element should be a xul:menuseparator");
       break;
     }
 
     if (itemType === "Item" || itemType === "Menu") {
-      this.test.assertEqual(elt.getAttribute("label"), item.label,
+      this.assert.equal(elt.getAttribute("label"), item.label,
                             "Item should have correct title");
       if (typeof(item.image) === "string") {
-        this.test.assertEqual(elt.getAttribute("image"), item.image,
+        this.assert.equal(elt.getAttribute("image"), item.image,
                               "Item should have correct image");
         if (itemType === "Menu")
-          this.test.assert(elt.classList.contains("menu-iconic"),
+          this.assert.ok(elt.classList.contains("menu-iconic"),
                            "Menus with images should have the correct class")
         else
-          this.test.assert(elt.classList.contains("menuitem-iconic"),
+          this.assert.ok(elt.classList.contains("menuitem-iconic"),
                            "Items with images should have the correct class")
       }
       else {
-        this.test.assert(!elt.getAttribute("image"),
+        this.assert.ok(!elt.getAttribute("image"),
                          "Item should not have image");
-        this.test.assert(!elt.classList.contains("menu-iconic") && !elt.classList.contains("menuitem-iconic"),
+        this.assert.ok(!elt.classList.contains("menu-iconic") && !elt.classList.contains("menuitem-iconic"),
                          "The iconic classes should not be present")
       }
     }
@@ -3241,33 +3241,33 @@ TestHelper.prototype = {
 
     let separator = this.contextMenuSeparator;
     if (total == 0) {
-      this.test.assert(!separator || separator.hidden,
+      this.assert.ok(!separator || separator.hidden,
                        "separator should not be present");
     }
     else {
-      this.test.assert(separator && !separator.hidden,
+      this.assert.ok(separator && !separator.hidden,
                        "separator should be present");
     }
 
     let mainNodes = this.browserWindow.document.querySelectorAll("#contentAreaContextMenu > ." + ITEM_CLASS);
     let overflowNodes = this.browserWindow.document.querySelectorAll("." + OVERFLOW_POPUP_CLASS + " > ." + ITEM_CLASS);
 
-    this.test.assert(mainNodes.length == 0 || overflowNodes.length == 0,
+    this.assert.ok(mainNodes.length == 0 || overflowNodes.length == 0,
                      "Should only see nodes at the top level or in overflow");
 
     let overflow = this.overflowSubmenu;
     if (this.shouldOverflow(total)) {
-      this.test.assert(overflow && !overflow.hidden,
+      this.assert.ok(overflow && !overflow.hidden,
                        "overflow menu should be present");
-      this.test.assertEqual(mainNodes.length, 0,
+      this.assert.equal(mainNodes.length, 0,
                             "should be no items in the main context menu");
     }
     else {
-      this.test.assert(!overflow || overflow.hidden,
+      this.assert.ok(!overflow || overflow.hidden,
                        "overflow menu should not be present");
       // When visible nodes == 0 they could be in overflow or top level
       if (total > 0) {
-        this.test.assertEqual(overflowNodes.length, 0,
+        this.assert.equal(overflowNodes.length, 0,
                               "should be no items in the overflow context menu");
       }
     }
@@ -3290,30 +3290,30 @@ TestHelper.prototype = {
         continue;
 
       if (nodes.length <= pos) {
-        this.test.assert(false, "Not enough nodes");
+        this.assert.ok(false, "Not enough nodes");
         return;
       }
 
       let hidden = absentItems.indexOf(item) >= 0;
 
       this.checkItemElt(nodes[pos], item);
-      this.test.assertEqual(nodes[pos].hidden, hidden,
+      this.assert.equal(nodes[pos].hidden, hidden,
                             "hidden should be set correctly");
 
       // The contents of hidden menus doesn't matter so much
       if (!hidden && this.getItemType(item) == "Menu") {
-        this.test.assertEqual(nodes[pos].firstChild.localName, "menupopup",
+        this.assert.equal(nodes[pos].firstChild.localName, "menupopup",
                               "menu XUL should contain a menupopup");
         this.checkNodes(nodes[pos].firstChild.childNodes, item.items, absentItems, removedItems);
       }
 
       if (pos > 0)
-        this.test.assertEqual(nodes[pos].previousSibling, nodes[pos - 1],
+        this.assert.equal(nodes[pos].previousSibling, nodes[pos - 1],
                               "nodes should all be in the same group");
       pos++;
     }
 
-    this.test.assertEqual(nodes.length, pos,
+    this.assert.equal(nodes.length, pos,
                           "should have checked all the XUL nodes");
   },
 
@@ -3335,8 +3335,8 @@ TestHelper.prototype = {
           callback.call(self, evt);
         }
         catch (err) {
-          self.test.exception(err);
-          self.test.done();
+          self.assert.fail(err);
+          self.end();
         }
       }, 20);
     }, useCapture);
@@ -3354,7 +3354,7 @@ TestHelper.prototype = {
 
       require("sdk/preferences/service").set(OVERFLOW_THRESH_PREF, self.overflowThreshValue);
 
-      this.test.done();
+      this.end();
     }
 
     function closeBrowserWindow() {
@@ -3558,3 +3558,5 @@ TestHelper.prototype = {
     });
   }
 };
+
+require('sdk/test').run(exports);

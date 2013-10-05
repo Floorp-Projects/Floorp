@@ -107,6 +107,7 @@ OptionsPanel.prototype = {
         atleastOneToolNotSupported = true;
         checkbox.setAttribute("label",
                               l10n("options.toolNotSupportedMarker", tool.label));
+        checkbox.setAttribute("unsupported", "");
       }
       checkbox.setAttribute("checked", pref(tool.visibilityswitch));
       checkbox.addEventListener("command", onCheckboxClick.bind(checkbox, tool.id));
