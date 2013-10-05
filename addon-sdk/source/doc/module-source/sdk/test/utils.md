@@ -88,3 +88,24 @@ finished:
 
 </api>
 
+<api name="waitUntil">
+@function
+  `waitUntil` returns a promise that resolves upon the
+  `predicate` returning a truthy value, which is called every
+  `interval` milliseconds.
+
+ @param predicate {Function}
+    A function that gets called every `interval` milliseconds
+    to determine if the promise should be resolved.
+
+ @param [interval] {Number}
+    The frequency in milliseconds to execute `predicate`.
+    Defaults to `10`.
+
+ @returns {Promise}
+    `waitUntil` returns a promise that becomes resolved once
+    the `predicate` returns a truthy value. The promise cannot
+    be rejected.
+
+</api>
+
