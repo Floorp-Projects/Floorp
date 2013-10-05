@@ -36,8 +36,8 @@ function test()
   function onConsoleMessage()
   {
     hud.jsterm.once("messages-cleared", onClear);
-    info("try ctrl-k to clear output");
-    EventUtils.synthesizeKey("K", { accelKey: true });
+    info("try ctrl-l to clear output");
+    EventUtils.synthesizeKey("l", { ctrlKey: true });
   }
 
   function onClear()

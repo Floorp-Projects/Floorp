@@ -180,6 +180,21 @@ exports['test once'] = function(assert) {
   assert.equal(target.state, 1, 'this was passed in and called only once');
 };
 
+exports['test once with argument'] = function(assert) {
+  let n = 0;
+  let increment = once(function(a) n++);
+
+  increment();
+  increment('foo');
+
+  assert.equal(n, 1, 'only incremented once');
+
+  increment();
+  increment('foo');
+
+  assert.equal(n, 1, 'only incremented once');
+};
+
 exports['test chain'] = function (assert) {
   let Player = function () { this.volume = 5; };
   Player.prototype = {

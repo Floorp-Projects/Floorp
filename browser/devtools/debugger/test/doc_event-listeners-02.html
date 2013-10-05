@@ -1,0 +1,49 @@
+<!-- Any copyright is dedicated to the Public Domain.
+     http://creativecommons.org/publicdomain/zero/1.0/ -->
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8"/>
+    <title>Debugger test page</title>
+  </head>
+
+  <body>
+    <button>Click me!</button>
+    <input type="text" onchange="changeHandler()">
+
+    <script type="text/javascript">
+      window.addEventListener("load", function onload() {
+        window.removeEventListener("load", onload);
+        function initialSetup(event) {
+          debugger;
+          var button = document.querySelector("button");
+          button.onclick = clickHandler;
+        }
+        function clickHandler(event) {
+          window.foobar = "clickHandler";
+        }
+        function changeHandler(event) {
+          window.foobar = "changeHandler";
+        }
+        function keyupHandler(event) {
+          window.foobar = "keyupHandler";
+        }
+        function keydownHandler(event) {
+          window.foobar = "keydownHandler";
+        }
+
+        var button = document.querySelector("button");
+        button.onclick = initialSetup;
+
+        var input = document.querySelector("input");
+        input.addEventListener("keyup", keyupHandler, true);
+
+        window.addEventListener("keydown", keydownHandler, true);
+        document.body.addEventListener("keydown", keydownHandler, true);
+
+        window.changeHandler = changeHandler;
+      });
+    </script>
+  </body>
+
+</html>

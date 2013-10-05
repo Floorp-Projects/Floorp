@@ -12,31 +12,31 @@ const PREF_MATCH_OS_LOCALE  = "intl.locale.matchOS";
 const PREF_SELECTED_LOCALE  = "general.useragent.locale";
 const PREF_ACCEPT_LANGUAGES = "intl.accept_languages";
 
-function assertPrefered(test, expected, msg) {
-  test.assertEqual(JSON.stringify(getPreferedLocales()), JSON.stringify(expected),
+function assertPrefered(assert, expected, msg) {
+  assert.equal(JSON.stringify(getPreferedLocales()), JSON.stringify(expected),
                    msg);
 }
 
-exports.testGetPreferedLocales = function(test) {
+exports.testGetPreferedLocales = function(assert) {
   prefs.set(PREF_MATCH_OS_LOCALE, false);
   prefs.set(PREF_SELECTED_LOCALE, "");
   prefs.set(PREF_ACCEPT_LANGUAGES, "");
-  assertPrefered(test, ["en-us"],
+  assertPrefered(assert, ["en-us"],
                  "When all preferences are empty, we only have en-us");
 
   prefs.set(PREF_SELECTED_LOCALE, "fr");
   prefs.set(PREF_ACCEPT_LANGUAGES, "jp");
-  assertPrefered(test, ["fr", "jp", "en-us"],
+  assertPrefered(assert, ["fr", "jp", "en-us"],
                  "We first have useragent locale, then web one and finally en-US");
 
   prefs.set(PREF_SELECTED_LOCALE, "en-US");
   prefs.set(PREF_ACCEPT_LANGUAGES, "en-US");
-  assertPrefered(test, ["en-us"],
+  assertPrefered(assert, ["en-us"],
                  "We do not have duplicates");
 
   prefs.set(PREF_SELECTED_LOCALE, "en-US");
   prefs.set(PREF_ACCEPT_LANGUAGES, "fr");
-  assertPrefered(test, ["en-us", "fr"],
+  assertPrefered(assert, ["en-us", "fr"],
                  "en-US can be first if specified by higher priority preference");
 
   // Reset what we changed
@@ -48,7 +48,7 @@ exports.testGetPreferedLocales = function(test) {
 // In some cases, mainly on Fennec and on Linux version,
 // `general.useragent.locale` is a special 'localized' value, like:
 // "chrome://global/locale/intl.properties"
-exports.testPreferedLocalizedLocale = function(test) {
+exports.testPreferedLocalizedLocale = function(assert) {
   prefs.set(PREF_MATCH_OS_LOCALE, false);
   let bundleURL = "chrome://global/locale/intl.properties";
   prefs.setLocalized(PREF_SELECTED_LOCALE, bundleURL);
@@ -71,7 +71,7 @@ exports.testPreferedLocalizedLocale = function(test) {
   if (expectedLocaleList.indexOf("en-us") == -1)
     expectedLocaleList.push("en-us");
 
-  assertPrefered(test, expectedLocaleList, "test localized pref value");
+  assertPrefered(assert, expectedLocaleList, "test localized pref value");
 
   // Reset what we have changed
   prefs.reset(PREF_MATCH_OS_LOCALE);
@@ -79,7 +79,7 @@ exports.testPreferedLocalizedLocale = function(test) {
   prefs.reset(PREF_ACCEPT_LANGUAGES);
 }
 
-exports.testPreferedOsLocale = function(test) {
+exports.testPreferedOsLocale = function(assert) {
   prefs.set(PREF_MATCH_OS_LOCALE, true);
   prefs.set(PREF_SELECTED_LOCALE, "");
   prefs.set(PREF_ACCEPT_LANGUAGES, "");
@@ -92,7 +92,7 @@ exports.testPreferedOsLocale = function(test) {
   if (expectedLocale != "en-us")
     expectedLocaleList.push("en-us");
 
-  assertPrefered(test, expectedLocaleList, "Ensure that we select OS locale when related preference is set");
+  assertPrefered(assert, expectedLocaleList, "Ensure that we select OS locale when related preference is set");
 
   // Reset what we have changed
   prefs.reset(PREF_MATCH_OS_LOCALE);
@@ -100,42 +100,44 @@ exports.testPreferedOsLocale = function(test) {
   prefs.reset(PREF_ACCEPT_LANGUAGES);
 }
 
-exports.testFindClosestLocale = function(test) {
+exports.testFindClosestLocale = function(assert) {
   // Second param of findClosestLocale (aMatchLocales) have to be in lowercase
-  test.assertEqual(findClosestLocale([], []), null,
+  assert.equal(findClosestLocale([], []), null,
                    "When everything is empty we get null");
 
-  test.assertEqual(findClosestLocale(["en", "en-US"], ["en"]),
+  assert.equal(findClosestLocale(["en", "en-US"], ["en"]),
                    "en", "We always accept exact match first 1/5");
-  test.assertEqual(findClosestLocale(["en-US", "en"], ["en"]),
+  assert.equal(findClosestLocale(["en-US", "en"], ["en"]),
                    "en", "We always accept exact match first 2/5");
-  test.assertEqual(findClosestLocale(["en", "en-US"], ["en-us"]),
+  assert.equal(findClosestLocale(["en", "en-US"], ["en-us"]),
                    "en-US", "We always accept exact match first 3/5");
-  test.assertEqual(findClosestLocale(["ja-JP-mac", "ja", "ja-JP"], ["ja-jp"]),
+  assert.equal(findClosestLocale(["ja-JP-mac", "ja", "ja-JP"], ["ja-jp"]),
                    "ja-JP", "We always accept exact match first 4/5");
-  test.assertEqual(findClosestLocale(["ja-JP-mac", "ja", "ja-JP"], ["ja-jp-mac"]),
+  assert.equal(findClosestLocale(["ja-JP-mac", "ja", "ja-JP"], ["ja-jp-mac"]),
                    "ja-JP-mac", "We always accept exact match first 5/5");
 
-  test.assertEqual(findClosestLocale(["en", "en-GB"], ["en-us"]),
+  assert.equal(findClosestLocale(["en", "en-GB"], ["en-us"]),
                    "en", "We accept more generic locale, when there is no exact match 1/2");
-  test.assertEqual(findClosestLocale(["en-ZA", "en"], ["en-gb"]),
+  assert.equal(findClosestLocale(["en-ZA", "en"], ["en-gb"]),
                    "en", "We accept more generic locale, when there is no exact match 2/2");
 
-  test.assertEqual(findClosestLocale(["ja-JP"], ["ja"]),
+  assert.equal(findClosestLocale(["ja-JP"], ["ja"]),
                    "ja-JP", "We accept more specialized locale, when there is no exact match 1/2");
   // Better to select "ja" in this case but behave same as current AddonManager
-  test.assertEqual(findClosestLocale(["ja-JP-mac", "ja"], ["ja-jp"]),
+  assert.equal(findClosestLocale(["ja-JP-mac", "ja"], ["ja-jp"]),
                    "ja-JP-mac", "We accept more specialized locale, when there is no exact match 2/2");
 
-  test.assertEqual(findClosestLocale(["en-US"], ["en-us"]),
+  assert.equal(findClosestLocale(["en-US"], ["en-us"]),
                    "en-US", "We keep the original one as result 1/2");
-  test.assertEqual(findClosestLocale(["en-us"], ["en-us"]),
+  assert.equal(findClosestLocale(["en-us"], ["en-us"]),
                    "en-us", "We keep the original one as result 2/2");
 
-  test.assertEqual(findClosestLocale(["ja-JP-mac"], ["ja-jp-mac"]),
+  assert.equal(findClosestLocale(["ja-JP-mac"], ["ja-jp-mac"]),
                    "ja-JP-mac", "We accept locale with 3 parts");
-  test.assertEqual(findClosestLocale(["ja-JP"], ["ja-jp-mac"]),
+  assert.equal(findClosestLocale(["ja-JP"], ["ja-jp-mac"]),
                    "ja-JP", "We accept locale with 2 parts from locale with 3 parts");
-  test.assertEqual(findClosestLocale(["ja"], ["ja-jp-mac"]),
+  assert.equal(findClosestLocale(["ja"], ["ja-jp-mac"]),
                    "ja", "We accept locale with 1 part from locale with 3 parts");
-}
+};
+
+require('sdk/test').run(exports);

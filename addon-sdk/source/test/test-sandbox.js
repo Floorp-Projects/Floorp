@@ -6,6 +6,11 @@ const { sandbox, load, evaluate } = require('sdk/loader/sandbox');
 const xulApp = require("sdk/system/xul-app");
 const fixturesURI = module.uri.split('test-sandbox.js')[0] + 'fixtures/';
 
+// The following adds Debugger constructor to the global namespace.
+const { Cu } = require('chrome');
+const { addDebuggerToGlobal } =
+  Cu.import('resource://gre/modules/jsdebugger.jsm', {});
+addDebuggerToGlobal(this);
 
 exports['test basics'] = function(assert) {
   let fixture = sandbox('http://example.com');
@@ -117,5 +122,19 @@ exports['test load script with data: URL and complex char'] = function(assert) {
 
   assert.equal(fixture.chars, 'გამარჯობა', 'complex chars were loaded correctly');
 };
+
+exports['test metadata']  = function(assert) {
+  let dbg = new Debugger();
+  dbg.onNewGlobalObject = function(global) {
+    let metadata = Cu.getSandboxMetadata(global.unsafeDereference());
+    assert.ok(metadata, 'this global has attached metadata');
+    assert.equal(metadata.addonID, self.id, 'addon ID is set');
+
+    dbg.onNewGlobalObject = undefined;
+  }
+
+  let fixture = sandbox();
+  let self = require('sdk/self');
+}
 
 require('test').run(exports);

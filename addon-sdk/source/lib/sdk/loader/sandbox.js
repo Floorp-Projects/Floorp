@@ -11,15 +11,21 @@ const { Cc, Ci, CC, Cu } = require('chrome');
 const systemPrincipal = CC('@mozilla.org/systemprincipal;1', 'nsIPrincipal')();
 const scriptLoader = Cc['@mozilla.org/moz/jssubscript-loader;1'].
                      getService(Ci.mozIJSSubScriptLoader);
+const self = require('sdk/self');
 
 /**
  * Make a new sandbox that inherits given `source`'s principals. Source can be
  * URI string, DOMWindow or `null` for system principals.
  */
 function sandbox(target, options) {
-  return Cu.Sandbox(target || systemPrincipal, options || {});
+  options = options || {};
+  options.metadata = options.metadata ? options.metadata : {};
+  options.metadata.addonID = options.metadata.addonID ?
+    options.metadata.addonID : self.id;
+
+  return Cu.Sandbox(target || systemPrincipal, options);
 }
-exports.sandbox = sandbox
+exports.sandbox = sandbox;
 
 /**
  * Evaluates given `source` in a given `sandbox` and returns result.

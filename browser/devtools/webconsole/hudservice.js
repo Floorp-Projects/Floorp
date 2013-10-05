@@ -503,6 +503,43 @@ WebConsole.prototype = {
     });
   },
 
+
+  /**
+   * Tries to open a JavaScript file related to the web page for the web console
+   * instance in the corresponding Scratchpad.
+   *
+   * @param string aSourceURL
+   *        The URL of the file which corresponds to a Scratchpad id.
+   */
+  viewSourceInScratchpad: function WC_viewSourceInScratchpad(aSourceURL)
+  {
+    // Check for matching top level Scratchpad window.
+    let wins = Services.wm.getEnumerator("devtools:scratchpad");
+
+    while (wins.hasMoreElements()) {
+      let win = wins.getNext();
+
+      if (!win.closed && win.Scratchpad.uniqueName === aSourceURL) {
+        win.focus();
+        return;
+      }
+    }
+
+    // Check for matching Scratchpad toolbox tab.
+    for (let [, toolbox] of gDevTools) {
+      let scratchpadPanel = toolbox.getPanel("scratchpad");
+      if (scratchpadPanel) {
+        let { scratchpad } = scratchpadPanel;
+        if (scratchpad.uniqueName === aSourceURL) {
+          toolbox.selectTool("scratchpad");
+          toolbox.raise();
+          scratchpad.editor.focus();
+          return;
+        }
+      }
+    }
+  },
+
   /**
    * Retrieve information about the JavaScript debugger's stackframes list. This
    * is used to allow the Web Console to evaluate code in the selected

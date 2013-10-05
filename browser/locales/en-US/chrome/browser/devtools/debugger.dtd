@@ -125,6 +125,11 @@ button that pretty prints the selected source. -->
 <!ENTITY debuggerUI.seMenuCondBreak     "Add conditional breakpoint">
 <!ENTITY debuggerUI.seMenuCondBreak.key "B">
 
+<!-- LOCALIZATION NOTE (debuggerUI.instruments.*): This is the text that
+  -  appears in the debugger's instruments pane tabs. -->
+<!ENTITY debuggerUI.tabs.variables      "Variables">
+<!ENTITY debuggerUI.tabs.events         "Events">
+
 <!-- LOCALIZATION NOTE (debuggerUI.seMenuAddWatch): This is the text that
   -  appears in the source editor context menu for adding an expression. -->
 <!ENTITY debuggerUI.seMenuAddWatch      "Selection to watch expression">

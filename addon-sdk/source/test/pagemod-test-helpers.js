@@ -14,11 +14,11 @@ const { openTab, getBrowserForTab, closeTab } = require("sdk/tabs/utils");
  * A helper function that creates a PageMod, then opens the specified URL
  * and checks the effect of the page mod on 'onload' event via testCallback.
  */
-exports.testPageMod = function testPageMod(test, testURL, pageModOptions,
+exports.testPageMod = function testPageMod(assert, done, testURL, pageModOptions,
                                            testCallback, timeout) {
   if (!xulApp.versionInRange(xulApp.platformVersion, "1.9.3a3", "*") &&
       !xulApp.versionInRange(xulApp.platformVersion, "1.9.2.7", "1.9.2.*")) {
-    test.pass("Note: not testing PageMod, as it doesn't work on this platform version");
+    assert.pass("Note: not testing PageMod, as it doesn't work on this platform version");
     return null;
   }
 
@@ -26,15 +26,10 @@ exports.testPageMod = function testPageMod(test, testURL, pageModOptions,
            .getService(Ci.nsIWindowMediator);
   var browserWindow = wm.getMostRecentWindow("navigator:browser");
   if (!browserWindow) {
-    test.pass("page-mod tests: could not find the browser window, so " +
+    assert.pass("page-mod tests: could not find the browser window, so " +
               "will not run. Use -a firefox to run the pagemod tests.")
     return null;
   }
-
-  if (timeout !== undefined)
-    test.waitUntilDone(timeout);
-  else
-    test.waitUntilDone();
 
   let loader = Loader(module);
   let pageMod = loader.require("sdk/page-mod");
@@ -54,12 +49,12 @@ exports.testPageMod = function testPageMod(test, testURL, pageModOptions,
     // this code again.
     timer.setTimeout(testCallback, 0,
       b.contentWindow.wrappedJSObject, 
-      function done() {
+      function () {
         pageMods.forEach(function(mod) mod.destroy());
         // XXX leaks reported if we don't close the tab?
         closeTab(newTab);
         loader.unload();
-        test.done();
+        done();
       }
     );
   }

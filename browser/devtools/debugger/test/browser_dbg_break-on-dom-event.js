@@ -212,7 +212,7 @@ function triggerInputKeyup() {
 }
 
 function triggerButtonClick() {
-  EventUtils.sendMouseEvent({ type: "click" }, gButton)
+  EventUtils.sendMouseEvent({ type: "click" }, gButton);
 }
 
 function triggerInputChange() {

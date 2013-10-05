@@ -4,7 +4,7 @@
 'use strict';
 
 const { Ci } = require('chrome');
-const { merge } = require('sdk/util/object');
+const { safeMerge } = require('sdk/util/object');
 const windows = require('sdk/windows').browserWindows;
 const tabs = require('sdk/tabs');
 const winUtils = require('sdk/window/utils');
@@ -25,69 +25,67 @@ const kAutoStartPref = "browser.privatebrowsing.autostart";
 
 // is global pb is enabled?
 if (isGlobalPBSupported) {
-  merge(module.exports, require('./private-browsing/global'));
+  safeMerge(module.exports, require('./private-browsing/global'));
 
-  exports.testGlobalOnlyOnFirefox = function(test) {
-    test.assert(is("Firefox"), "isGlobalPBSupported is only true on Firefox");
+  exports.testGlobalOnlyOnFirefox = function(assert) {
+    assert.ok(is("Firefox"), "isGlobalPBSupported is only true on Firefox");
   }
 }
 else if (isWindowPBSupported) {
-  merge(module.exports, require('./private-browsing/windows'));
+  safeMerge(module.exports, require('./private-browsing/windows'));
 
-  exports.testPWOnlyOnFirefox = function(test) {
-    test.assert(is("Firefox"), "isWindowPBSupported is only true on Firefox");
+  exports.testPWOnlyOnFirefox = function(assert) {
+    assert.ok(is("Firefox"), "isWindowPBSupported is only true on Firefox");
   }
 }
 // only on Fennec
 else if (isTabPBSupported) {
-  merge(module.exports, require('./private-browsing/tabs'));
+  safeMerge(module.exports, require('./private-browsing/tabs'));
 
-  exports.testPTOnlyOnFennec = function(test) {
-    test.assert(is("Fennec"), "isTabPBSupported is only true on Fennec");
+  exports.testPTOnlyOnFennec = function(assert) {
+    assert.ok(is("Fennec"), "isTabPBSupported is only true on Fennec");
   }
 }
 
-exports.testIsPrivateDefaults = function(test) {
-  test.assertEqual(isPrivate(), false, 'undefined is not private');
-  test.assertEqual(isPrivate('test'), false, 'strings are not private');
-  test.assertEqual(isPrivate({}), false, 'random objects are not private');
-  test.assertEqual(isPrivate(4), false, 'numbers are not private');
-  test.assertEqual(isPrivate(/abc/), false, 'regex are not private');
-  test.assertEqual(isPrivate(function() {}), false, 'functions are not private');
+exports.testIsPrivateDefaults = function(assert) {
+  assert.equal(isPrivate(), false, 'undefined is not private');
+  assert.equal(isPrivate('test'), false, 'strings are not private');
+  assert.equal(isPrivate({}), false, 'random objects are not private');
+  assert.equal(isPrivate(4), false, 'numbers are not private');
+  assert.equal(isPrivate(/abc/), false, 'regex are not private');
+  assert.equal(isPrivate(function() {}), false, 'functions are not private');
 };
 
-exports.testWindowDefaults = function(test) {
+exports.testWindowDefaults = function(assert) {
   setPref(DEPRECATE_PREF, true);
   // Ensure that browserWindow still works while being deprecated
   let { loader, messages } = LoaderWithHookedConsole(module);
   let windows = loader.require("sdk/windows").browserWindows;
-  test.assertEqual(windows.activeWindow.isPrivateBrowsing, false,
+  assert.equal(windows.activeWindow.isPrivateBrowsing, false,
                    'window is not private browsing by default');
-  test.assertMatches(messages[0].msg, /DEPRECATED.+isPrivateBrowsing/,
+  assert.ok(/DEPRECATED.+isPrivateBrowsing/.test(messages[0].msg),
                      'isPrivateBrowsing is deprecated');
 
   let chromeWin = winUtils.getMostRecentBrowserWindow();
-  test.assertEqual(getMode(chromeWin), false);
-  test.assertEqual(isWindowPrivate(chromeWin), false);
-}
+  assert.equal(getMode(chromeWin), false);
+  assert.equal(isWindowPrivate(chromeWin), false);
+};
 
 // tests for the case where private browsing doesn't exist
-exports.testIsActiveDefault = function(test) {
-  test.assertEqual(pb.isActive, false,
+exports.testIsActiveDefault = function(assert) {
+  assert.equal(pb.isActive, false,
                    'pb.isActive returns false when private browsing isn\'t supported');
 };
 
-exports.testIsPrivateBrowsingFalseDefault = function(test) {
-  test.assertEqual(isPrivateBrowsingSupported, false,
+exports.testIsPrivateBrowsingFalseDefault = function(assert) {
+  assert.equal(isPrivateBrowsingSupported, false,
   	               'isPrivateBrowsingSupported property is false by default');
 };
 
-exports.testGetOwnerWindow = function(test) {
-  test.waitUntilDone();
-
+exports.testGetOwnerWindow = function(assert, done) {
   let window = windows.activeWindow;
   let chromeWindow = getOwnerWindow(window);
-  test.assert(chromeWindow instanceof Ci.nsIDOMWindow, 'associated window is found');
+  assert.ok(chromeWindow instanceof Ci.nsIDOMWindow, 'associated window is found');
 
   tabs.open({
     url: 'about:blank',
@@ -95,28 +93,30 @@ exports.testGetOwnerWindow = function(test) {
     onOpen: function(tab) {
       // test that getOwnerWindow works as expected
       if (is('Fennec')) {
-        test.assertNotStrictEqual(chromeWindow, getOwnerWindow(tab)); 
-        test.assert(getOwnerWindow(tab) instanceof Ci.nsIDOMWindow); 
+        assert.notStrictEqual(chromeWindow, getOwnerWindow(tab)); 
+        assert.ok(getOwnerWindow(tab) instanceof Ci.nsIDOMWindow); 
       }
       else {
-        test.assertStrictEqual(chromeWindow, getOwnerWindow(tab), 'associated window is the same for window and window\'s tab');
+        assert.strictEqual(chromeWindow, getOwnerWindow(tab), 'associated window is the same for window and window\'s tab');
       }
 
       // test that the tab is not private
       // private flag should be ignored by default
-      test.assert(!isPrivate(tab));
-      test.assert(!isPrivate(getOwnerWindow(tab)));
+      assert.ok(!isPrivate(tab));
+      assert.ok(!isPrivate(getOwnerWindow(tab)));
 
-      tab.close(function() test.done());
+      tab.close(done);
     }
   });
 };
 
-exports.testNewGlobalPBService = function(test) {
-  test.assertEqual(isPrivate(), false, 'isPrivate() is false by default');
+exports.testNewGlobalPBService = function(assert) {
+  assert.equal(isPrivate(), false, 'isPrivate() is false by default');
   prefs.set(kAutoStartPref, true);
-  test.assertEqual(prefs.get(kAutoStartPref, false), true, kAutoStartPref + ' is true now');
-  test.assertEqual(isPrivate(), true, 'isPrivate() is true now');
+  assert.equal(prefs.get(kAutoStartPref, false), true, kAutoStartPref + ' is true now');
+  assert.equal(isPrivate(), true, 'isPrivate() is true now');
   prefs.set(kAutoStartPref, false);
-  test.assertEqual(isPrivate(), false, 'isPrivate() is false again');
-}
+  assert.equal(isPrivate(), false, 'isPrivate() is false again');
+};
+
+require('sdk/test').run(exports);
