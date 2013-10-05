@@ -57,6 +57,8 @@ find the modules it is asked to load. **Mandatory**.
 * [`globals`](modules/toolkit/loader.html#globals): provides a set of globals shared across modules loaded
 via this loader. **Optional**.
 * [`resolve`](modules/toolkit/loader.html#resolve): provide customized module resolution logic. **Optional**.
+* [`id`](modules/toolkit/loader.html#id): provide add-on id to attach to loaded
+modules. **Optional**.
 
 ### paths
 
@@ -231,6 +233,12 @@ Thrown exceptions will propagate to the caller of `require()`. If
 the function assigned to `resolve`
 does not return a string value, an exception will still be thrown as
 the loader will be unable to resolve the required module's location.
+
+### id
+
+Add-on debugging requires knowing which objects belong to which add-on.
+When created with this option, Loader will transparently mark all new global
+objects with the provided value.
 
 ### All Together
 

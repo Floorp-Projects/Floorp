@@ -51,11 +51,11 @@ function testLocationChange() {
     is(gSources.widget.getAttribute("tooltiptext"), "example.com test",
       "The sources widget should have a correct tooltip text attribute.");
 
-    is(gDebugger.document.querySelectorAll(".side-menu-widget-empty-notice-container").length, 0,
+    is(gDebugger.document.querySelectorAll("#sources .side-menu-widget-empty-notice-container").length, 0,
       "The sources widget should not display any notice at this point (1).");
-    is(gDebugger.document.querySelectorAll(".side-menu-widget-empty-notice").length, 0,
+    is(gDebugger.document.querySelectorAll("#sources .side-menu-widget-empty-notice").length, 0,
       "The sources widget should not display any notice at this point (2).");
-    is(gDebugger.document.querySelector(".side-menu-widget-empty-notice > label"), null,
+    is(gDebugger.document.querySelector("#sources .side-menu-widget-empty-notice > label"), null,
       "The sources widget should not display a notice at this point (3).");
 
     closeDebuggerAndFinish(gPanel);

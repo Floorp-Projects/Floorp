@@ -2311,24 +2311,6 @@ BluetoothDBusService::GetDevicePath(const nsAString& aAdapterPath,
   return true;
 }
 
-// static
-bool
-BluetoothDBusService::RemoveReservedServicesInternal(
-                                      const nsTArray<uint32_t>& aServiceHandles)
-{
-  MOZ_ASSERT(!NS_IsMainThread());
-
-  int length = aServiceHandles.Length();
-  if (length == 0) return false;
-
-  const uint32_t* services = aServiceHandles.Elements();
-
-  return gThreadConnection->SendWithError(nullptr, nullptr, -1,
-    NS_ConvertUTF16toUTF8(sAdapterPath).get(), DBUS_ADAPTER_IFACE,
-    "RemoveReservedServiceRecords", DBUS_TYPE_ARRAY, DBUS_TYPE_UINT32,
-    &services, length, DBUS_TYPE_INVALID);
-}
-
 nsresult
 BluetoothDBusService::CreatePairedDeviceInternal(
                                               const nsAString& aDeviceAddress,

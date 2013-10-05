@@ -3,6 +3,7 @@
 const { open, focus, close } = require('sdk/window/helpers');
 const { isPrivate } = require('sdk/private-browsing');
 const { defer } = require('sdk/core/promise');
+const { browserWindows: windows } = require('sdk/windows');
 
 const BROWSER = 'chrome://browser/content/browser.xul';
 
@@ -15,6 +16,11 @@ exports.testShowPanelInPrivateWindow = function(assert, done) {
   let panel = require('sdk/panel').Panel({
     contentURL: "data:text/html;charset=utf-8,"
   });
+
+  assert.ok(windows.length > 0, 'there is at least one open window');
+  for (let window of windows) {
+    assert.equal(isPrivate(window), false, 'open window is private');
+  }
 
   testShowPanel(assert, panel).
     then(makeEmptyPrivateBrowserWindow).
@@ -63,20 +69,25 @@ function makeEmptyPrivateBrowserWindow(options) {
 
 function testShowPanel(assert, panel) {
   let { promise, resolve } = defer();
+  let shown = false;
 
   assert.ok(!panel.isShowing, 'the panel is not showing [1]');
 
+  panel.once('hide', function() {
+    assert.ok(!panel.isShowing, 'the panel is not showing [2]');
+    assert.ok(shown, 'the panel was shown')
+
+    resolve(null);
+  });
+
   panel.once('show', function() {
+    shown = true;
+
     assert.ok(panel.isShowing, 'the panel is showing');
 
-    panel.once('hide', function() {
-      assert.ok(!panel.isShowing, 'the panel is not showing [2]');
-
-      resolve(null);
-    });
-
     panel.hide();
-  })
+  });
+
   panel.show();
 
   return promise;

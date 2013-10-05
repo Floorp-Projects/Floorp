@@ -49,8 +49,8 @@ exports.testSideBarIsNotInNewPrivateWindows = function(assert, done) {
   })
 }
 
-/*
 exports.testSidebarIsNotOpenInNewPrivateWindow = function(assert, done) {
+  const { Sidebar } = require('sdk/ui/sidebar');
   let testName = 'testSidebarIsNotOpenInNewPrivateWindow';
   let window = getMostRecentBrowserWindow();
 
@@ -73,15 +73,15 @@ exports.testSidebarIsNotOpenInNewPrivateWindow = function(assert, done) {
           assert.equal(isSidebarShowing(window), true, 'the sidebar is showing in old window still');
           assert.equal(isSidebarShowing(window2), false, 'the sidebar is not showing in the new private window');
           assert.equal(isShowing(sidebar), false, 'the sidebar is not showing');
+
           sidebar.destroy();
           close(window2).then(done);
-        }, 500)
+        }, 500);
       })
     });
 
     sidebar.show();
 }
-*/
 
 // TEST: edge case where web panel is destroyed while loading
 exports.testDestroyEdgeCaseBugWithPrivateWindow = function(assert, done) {

@@ -61,9 +61,6 @@ public:
   AddReservedServicesInternal(const nsTArray<uint32_t>& aServices,
                               nsTArray<uint32_t>& aServiceHandlesContainer);
 
-  static bool
-  RemoveReservedServicesInternal(const nsTArray<uint32_t>& aServiceHandles);
-
   virtual nsresult
   GetScoSocket(const nsAString& aObjectPath,
                bool aAuth,
