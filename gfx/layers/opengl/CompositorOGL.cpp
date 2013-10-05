@@ -510,7 +510,7 @@ CompositorOGL::Initialize()
   if (console) {
     nsString msg;
     msg +=
-      NS_LITERAL_STRING("OpenGL LayerManager Initialized Succesfully.\nVersion: ");
+      NS_LITERAL_STRING("OpenGL compositor Initialized Succesfully.\nVersion: ");
     msg += NS_ConvertUTF8toUTF16(
       nsDependentCString((const char*)mGLContext->fGetString(LOCAL_GL_VERSION)));
     msg += NS_LITERAL_STRING("\nVendor: ");
@@ -817,6 +817,8 @@ CompositorOGL::BeginFrame(const Rect *aClipRectIn, const gfxMatrix& aTransform,
                                  LOCAL_GL_ONE, LOCAL_GL_ONE);
   mGLContext->fEnable(LOCAL_GL_BLEND);
 
+  mGLContext->fEnable(LOCAL_GL_SCISSOR_TEST);
+
   if (!aClipRectIn) {
     mGLContext->fScissor(0, 0, width, height);
     if (aClipRectOut) {
@@ -825,8 +827,6 @@ CompositorOGL::BeginFrame(const Rect *aClipRectIn, const gfxMatrix& aTransform,
   } else {
     mGLContext->fScissor(aClipRectIn->x, aClipRectIn->y, aClipRectIn->width, aClipRectIn->height);
   }
-
-  mGLContext->fEnable(LOCAL_GL_SCISSOR_TEST);
 
   // If the Android compositor is being used, this clear will be done in
   // DrawWindowUnderlay. Make sure the bits used here match up with those used
@@ -986,8 +986,12 @@ CompositorOGL::DrawQuad(const Rect& aRect, const Rect& aClipRect,
   PROFILER_LABEL("CompositorOGL", "DrawQuad");
   MOZ_ASSERT(mFrameInProgress, "frame not started");
 
+  Rect clipRect = aClipRect;
+  if (!mTarget) {
+    clipRect.MoveBy(mRenderOffset.x, mRenderOffset.y);
+  }
   IntRect intClipRect;
-  aClipRect.ToIntRect(&intClipRect);
+  clipRect.ToIntRect(&intClipRect);
   mGLContext->PushScissorRect(nsIntRect(intClipRect.x, intClipRect.y,
                                         intClipRect.width, intClipRect.height));
 
@@ -1439,6 +1443,21 @@ CompositorOGL::GetMaxTextureSize() const
                             &texSize);
   MOZ_ASSERT(texSize != 0);
   return texSize;
+}
+
+void
+CompositorOGL::SaveState()
+{
+  mGLContext->PushScissorRect();
+}
+
+void
+CompositorOGL::RestoreState()
+{
+  // Restore state that might be changed by drawBackground/drawForeground in
+  // mobile/android/base/gfx/LayerRenderer.java
+  mGLContext->fEnable(LOCAL_GL_SCISSOR_TEST);
+  mGLContext->PopScissorRect();
 }
 
 void

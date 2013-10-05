@@ -158,6 +158,9 @@ public:
     return gfx::FORMAT_R8G8B8A8;
   }
 
+  virtual void SaveState() MOZ_OVERRIDE;
+  virtual void RestoreState() MOZ_OVERRIDE;
+
   /**
    * The compositor provides with temporary textures for use with direct
    * textruing like gralloc texture.

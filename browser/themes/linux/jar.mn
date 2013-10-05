@@ -215,6 +215,7 @@ browser.jar:
   skin/classic/browser/devtools/tool-styleeditor.png      (devtools/tool-styleeditor.png)
   skin/classic/browser/devtools/tool-profiler.png         (devtools/tool-profiler.png)
   skin/classic/browser/devtools/tool-network.png          (devtools/tool-network.png)
+  skin/classic/browser/devtools/tool-scratchpad.png       (devtools/tool-scratchpad.png)
   skin/classic/browser/devtools/close.png                 (devtools/close.png)
   skin/classic/browser/devtools/vview-delete.png          (devtools/vview-delete.png)
   skin/classic/browser/devtools/vview-edit.png            (devtools/vview-edit.png)

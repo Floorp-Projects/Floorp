@@ -4,10 +4,11 @@
 
 "use strict";
 
-const { pathFor } = require("sdk/system");
+const { pathFor, platform } = require("sdk/system");
 const fs = require("sdk/io/fs");
 const url = require("sdk/url");
 const path = require("sdk/fs/path");
+const { defer } = require("sdk/core/promise");
 const { Buffer } = require("sdk/io/buffer");
 const { is } = require("sdk/system/xul-app");
 
@@ -23,14 +24,17 @@ const unlinkPath = path.join(profilePath, "sdk-fixture-unlink");
 const truncatePath = path.join(profilePath, "sdk-fixture-truncate");
 const renameFromPath = path.join(profilePath, "sdk-fixture-rename-from");
 const renameToPath = path.join(profilePath, "sdk-fixture-rename-to");
+const chmodPath = path.join(profilePath, "sdk-fixture-chmod");
 
 const profileEntries = [
   "compatibility.ini",
   "extensions",
   "prefs.js"
-  // There are likely to be a lot more files but we can't really
+  // There are likely to be a lot more files but we can"t really
   // on consistent list so we limit to this.
 ];
+
+const isWindows = platform.indexOf('win') === 0;
 
 exports["test readdir"] = function(assert, end) {
   var async = false;
@@ -481,6 +485,137 @@ exports["test fs.writeFile (with large files)"] = function(assert, end) {
     end();
   });
   async = true;
+};
+
+exports["test fs.writeFile error"] = function (assert, done) {
+  try {
+    fs.writeFile({}, 'content', function (err) {
+      assert.fail('Error thrown from TypeError should not be caught');
+    });
+  } catch (e) {
+    assert.ok(e,
+      'writeFile with a non-string error should not be caught');
+    assert.equal(e.name, 'TypeError', 'error should be TypeError');
+  }
+  fs.writeFile('not/a/valid/path', 'content', function (err) {
+    assert.ok(err, 'error caught and handled in callback');
+    done();
+  });
+};
+
+exports["test fs.chmod"] = function (assert, done) {
+  let content = ["hej från sverige"];
+
+  fs.writeFile(chmodPath, content, function (err) {
+    testPerm("0755")()
+      .then(testPerm("0777"))
+      .then(testPerm("0666"))
+      .then(testPerm(parseInt("0511", 8)))
+      .then(testPerm(parseInt("0200", 8)))
+      .then(testPerm("0040"))
+      .then(testPerm("0000"))
+      .then(testPermSync(parseInt("0777", 8)))
+      .then(testPermSync(parseInt("0666", 8)))
+      .then(testPermSync("0511"))
+      .then(testPermSync("0200"))
+      .then(testPermSync("0040"))
+      .then(testPermSync("0000"))
+      .then(() => {
+        assert.pass("Successful chmod passes");
+      }, assert.fail)
+      // Test invalid paths
+      .then(() => chmod("not-a-valid-file", parseInt("0755", 8)))
+      .then(assert.fail, (err) => {
+        checkPermError(err, "not-a-valid-file");
+      })
+      .then(() => chmod("not-a-valid-file", parseInt("0755", 8), "sync"))
+      .then(assert.fail, (err) => {
+        checkPermError(err, "not-a-valid-file");
+      })
+      // Test invalid files
+      .then(() => chmod("resource://not-a-real-file", parseInt("0755", 8)))
+      .then(assert.fail, (err) => {
+        checkPermError(err, "resource://not-a-real-file");
+      })
+      .then(() => chmod("resource://not-a-real-file", parseInt("0755", 8), 'sync'))
+      .then(assert.fail, (err) => {
+        checkPermError(err, "resource://not-a-real-file");
+      })
+      .then(done, assert.fail);
+  });
+
+  function checkPermError (err, path) {
+    assert.equal(err.message, "ENOENT, chmod " + path);
+    assert.equal(err.code, "ENOENT", "error has a code");
+    assert.equal(err.path, path, "error has a path");
+    assert.equal(err.errno, 34, "error has a errno");
+  }
+
+  function chmod (path, mode, sync) {
+    let { promise, resolve, reject } = defer();
+    if (!sync) {
+      fs.chmod(path, mode, (err) => {
+        if (err) reject(err);
+        else resolve();
+      });
+    } else {
+      fs.chmodSync(path, mode);
+      resolve();
+    }
+    return promise;
+  }
+
+  function testPerm (mode, sync) {
+    return function () {
+      return chmod(chmodPath, mode, sync)
+        .then(() => getPerm(chmodPath))
+        .then(perm => {
+          let nMode = normalizeMode(mode);
+          if (isWindows)
+            assert.equal(perm, nMode,
+              "mode correctly set to " + mode + " (" + nMode + " on windows)");
+          else
+            assert.equal(perm, nMode, "mode correctly set to " + nMode);
+        });
+    };
+  }
+
+  function testPermSync (mode) {
+    return testPerm(mode, true);
+  }
+
+  function getPerm (path) {
+    let { promise, resolve, reject } = defer();
+    fs.stat(path, function (err, stat) {
+      if (err) reject(err);
+      else resolve(stat.mode);
+    });
+    return promise;
+  }
+
+  /*
+   * Converts a unix mode `0755` into a Windows version of unix permissions
+   */
+  function normalizeMode (mode) {
+    if (typeof mode === "string")
+      mode = parseInt(mode, 8);
+
+    if (!isWindows)
+      return mode;
+
+    var ANY_READ = parseInt("0444", 8);
+    var ANY_WRITE = parseInt("0222", 8);
+    var winMode = 0;
+
+    // On Windows, if WRITE is true, then READ is also true
+    if (mode & ANY_WRITE)
+      winMode |= ANY_WRITE | ANY_READ;
+    // Minimum permissions are READ for Windows
+    else
+      winMode |= ANY_READ;
+
+    return winMode;
+  }
 };
 
 require("test").run(exports);

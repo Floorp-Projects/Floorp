@@ -208,8 +208,7 @@ nsXBLPrototypeBinding::SetBindingElement(nsIContent* aElement)
                             nsGkAtoms::_false, eCaseMatters))
     mInheritStyle = false;
 
-  mChromeOnlyContent = IsChrome() &&
-                       mBinding->AttrValueIs(kNameSpaceID_None,
+  mChromeOnlyContent = mBinding->AttrValueIs(kNameSpaceID_None,
                                              nsGkAtoms::chromeOnlyContent,
                                              nsGkAtoms::_true, eCaseMatters);
 }
