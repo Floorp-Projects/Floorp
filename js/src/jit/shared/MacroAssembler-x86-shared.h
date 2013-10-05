@@ -638,13 +638,6 @@ class MacroAssemblerX86Shared : public Assembler
         return addCodeLabel(cl);
     }
 
-    bool buildOOLFakeExitFrame(void *fakeReturnAddr) {
-        uint32_t descriptor = MakeFrameDescriptor(framePushed(), IonFrame_OptimizedJS);
-        Push(Imm32(descriptor));
-        Push(ImmPtr(fakeReturnAddr));
-        return true;
-    }
-
     void callWithExitFrame(IonCode *target) {
         uint32_t descriptor = MakeFrameDescriptor(framePushed(), IonFrame_OptimizedJS);
         Push(Imm32(descriptor));
@@ -661,9 +654,17 @@ class MacroAssemblerX86Shared : public Assembler
     CodeOffsetLabel labelForPatch() {
         return CodeOffsetLabel(size());
     }
-    
+
     void abiret() {
         ret();
+    }
+
+  protected:
+    bool buildOOLFakeExitFrame(void *fakeReturnAddr) {
+        uint32_t descriptor = MakeFrameDescriptor(framePushed(), IonFrame_OptimizedJS);
+        Push(Imm32(descriptor));
+        Push(ImmPtr(fakeReturnAddr));
+        return true;
     }
 };
 
