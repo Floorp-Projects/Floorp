@@ -8,8 +8,8 @@ MODULE = 'memory'
 NO_DIST_INSTALL = True
 
 CSRCS += [
-    'jemalloc_config.c',
-    'mozjemalloc_compat.c',
+    '../../build/jemalloc_config.c',
+    '../../build/mozjemalloc_compat.c',
 ]
 
 # Android doesn't have pthread_atfork, so just implement a dummy function.
