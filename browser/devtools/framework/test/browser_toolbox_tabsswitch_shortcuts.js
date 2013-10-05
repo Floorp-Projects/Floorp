@@ -10,8 +10,10 @@ function test() {
   waitForExplicitFinish();
 
   addTab("about:blank", function() {
-    toolIDs = [tool.id for (tool of gDevTools.getToolDefinitionArray())];
     let target = TargetFactory.forTab(gBrowser.selectedTab);
+    toolIDs = gDevTools.getToolDefinitionArray()
+                .filter(def => def.isTargetSupported(target))
+                .map(def => def.id);
     idIndex = 0;
     gDevTools.showToolbox(target, toolIDs[0], Toolbox.HostType.BOTTOM)
              .then(testShortcuts);

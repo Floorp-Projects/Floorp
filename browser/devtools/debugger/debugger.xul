@@ -333,7 +333,7 @@
         </vbox>
         <splitter class="devtools-side-splitter"/>
         <deck id="editor-deck" flex="1" selectedIndex="0">
-          <vbox id="editor" />
+          <vbox id="editor"/>
           <vbox id="black-boxed-message" align="center">
             <label id="black-boxed-message-label">
               &debuggerUI.blackBoxMessage.label;
@@ -346,11 +346,24 @@
           </vbox>
         </deck>
         <splitter class="devtools-side-splitter"/>
-        <vbox id="instruments-pane" hidden="true">
-          <vbox id="expressions"/>
-          <splitter class="devtools-horizontal-splitter"/>
-          <vbox id="variables" flex="1"/>
-        </vbox>
+        <tabbox id="instruments-pane"
+                class="devtools-sidebar-tabs"
+                hidden="true">
+          <tabs>
+            <tab id="variables-tab" label="&debuggerUI.tabs.variables;"/>
+            <tab id="events-tab" label="&debuggerUI.tabs.events;"/>
+          </tabs>
+          <tabpanels flex="1">
+            <tabpanel id="variables-tabpanel">
+              <vbox id="expressions"/>
+              <splitter class="devtools-horizontal-splitter"/>
+              <vbox id="variables" flex="1"/>
+            </tabpanel>
+            <tabpanel id="events-tabpanel">
+              <vbox id="event-listeners" flex="1"/>
+            </tabpanel>
+          </tabpanels>
+        </tabbox>
       </hbox>
     </vbox>
   </vbox>

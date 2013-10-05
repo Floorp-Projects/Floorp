@@ -99,6 +99,13 @@ exports.disable = function disable(addonId) {
   });
 };
 
+exports.enable = function enabled(addonId) {
+  return getAddon(addonId).then(addon => {
+    addon.userDisabled = false;
+    return addonId;
+  });
+};
+
 exports.isActive = function isActive(addonId) {
   return getAddon(addonId).then(addon => addon.isActive && !addon.appDisabled);
 };

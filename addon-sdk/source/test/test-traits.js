@@ -6,7 +6,7 @@
 
 const { Trait } = require('sdk/deprecated/traits');
 
-exports['test:simple compose'] = function(test) {
+exports['test:simple compose'] = function(assert) {
   let List = Trait.compose({
     _list: null,
     constructor: function List() {
@@ -21,35 +21,35 @@ exports['test:simple compose'] = function(test) {
     }
   });
 
-  test.assertNotEqual(undefined, List, 'should not be undefined');
-  test.assertEqual('function', typeof List, 'type should be function');
-  test.assertEqual(
+  assert.notEqual(undefined, List, 'should not be undefined');
+  assert.equal('function', typeof List, 'type should be function');
+  assert.equal(
     Trait.compose,
     List.compose,
     'should inherit static compose'
   );
-  test.assertEqual(
+  assert.equal(
     Trait.override,
     List.override,
     'should inherit static override'
   );
-  test.assertEqual(
+  assert.equal(
     Trait.required,
     List.required,
     'should inherit static required'
   );
-  test.assertEqual(
+  assert.equal(
     Trait.resolve,
     List.resolve,
     'should inherit static resolve'
   );
 
-  test.assert(
+  assert.ok(
     !('_list' in List.prototype),
     'should not expose private API'
   );
 }
-exports['test: compose trait instance and create instance'] = function(test) {
+exports['test: compose trait instance and create instance'] = function(assert) {
   let List = Trait.compose({
     constructor: function List(options) {
       this._list = [];
@@ -67,20 +67,20 @@ exports['test: compose trait instance and create instance'] = function(test) {
   });
   let list = List({ publicMember: true });
 
-  test.assertEqual('object', typeof list, 'should return an object')
-  test.assertEqual(
+  assert.equal('object', typeof list, 'should return an object')
+  assert.equal(
     true,
     list instanceof List,
     'should be instance of a List'
   );
 
-  test.assertEqual(
+  assert.equal(
     undefined,
     list._privateMember,
     'instance should not expose private API'
   );
 
-  test.assertEqual(
+  assert.equal(
     true,
     list.privateMember,
     'privates are accessible by  public API'
@@ -88,35 +88,35 @@ exports['test: compose trait instance and create instance'] = function(test) {
 
   list._privateMember = false;
 
-  test.assertEqual(
+  assert.equal(
     true,
     list.privateMember,
     'property changes on instance must not affect privates'
   );
 
-  test.assert(
+  assert.ok(
     !('_list' in list),
     'instance should not expose private members'
   );
 
-  test.assertEqual(
+  assert.equal(
     true,
     list.publicMember,
     'public members are exposed'
   )
-  test.assertEqual(
+  assert.equal(
     'function',
     typeof list.add,
     'should be function'
   )
-  test.assertEqual(
+  assert.equal(
     'function',
     typeof list.remove,
     'should be function'
   );
 
   list.add(1);
-  test.assertEqual(
+  assert.equal(
     1,
     list.list[0],
     'exposed public API should be able of modifying privates'
@@ -124,7 +124,7 @@ exports['test: compose trait instance and create instance'] = function(test) {
 };
 
 
-exports['test:instances must not be hackable'] = function(test) {
+exports['test:instances must not be hackable'] = function(assert) {
   let SECRET = 'There is no secret!',
       secret = null;
 
@@ -136,7 +136,7 @@ exports['test:instances must not be hackable'] = function(test) {
   let i1 = Class();
   i1.protect(SECRET);
 
-  test.assertEqual(
+  assert.equal(
     undefined,
     (function() this._secret).call(i1),
     'call / apply can\'t access private state'
@@ -147,7 +147,7 @@ exports['test:instances must not be hackable'] = function(test) {
     proto.reveal = function() this._secret;
     secret = i1.reveal();
   } catch(e) {}
-  test.assertNotEqual(
+  assert.notEqual(
     SECRET,
     secret,
     'public __proto__ changes should not affect privates'
@@ -164,14 +164,14 @@ exports['test:instances must not be hackable'] = function(test) {
     Object.prototype.reveal = function() this._secret;
     secret = i2.reveal();
   } catch(e) {}
-  test.assertNotEqual(
+  assert.notEqual(
     SECRET,
     secret,
     'Object.prototype changes must not affect instances'
   );
 }
 
-exports['test:instanceof'] = function(test) {
+exports['test:instanceof'] = function(assert) {
   const List = Trait.compose({
     // private API:
     _list: null,
@@ -188,11 +188,11 @@ exports['test:instanceof'] = function(test) {
     }
   });
 
-  test.assert(List() instanceof List, 'Must be instance of List');
-  test.assert(new List() instanceof List, 'Must be instance of List');
+  assert.ok(List() instanceof List, 'Must be instance of List');
+  assert.ok(new List() instanceof List, 'Must be instance of List');
 };
 
-exports['test:privates are unaccessible'] = function(test) {
+exports['test:privates are unaccessible'] = function(assert) {
   const List = Trait.compose({
     // private API:
     _list: null,
@@ -210,14 +210,14 @@ exports['test:privates are unaccessible'] = function(test) {
   });
 
   let list = List();
-  test.assert(!('_list' in list), 'no privates on instance');
-  test.assert(
+  assert.ok(!('_list' in list), 'no privates on instance');
+  assert.ok(
     !('_list' in List.prototype),
     'no privates on prototype'
   );
 };
 
-exports['test:public API can access private API'] = function(test) {
+exports['test:public API can access private API'] = function(assert) {
   const List = Trait.compose({
     // private API:
     _list: null,
@@ -237,14 +237,14 @@ exports['test:public API can access private API'] = function(test) {
 
   list.add('test');
 
-  test.assertEqual(
+  assert.equal(
     1,
     list.length,
     'should be able to add element and access it from public getter'
   );
 };
 
-exports['test:required'] = function(test) {
+exports['test:required'] = function(assert) {
   const Enumerable = Trait.compose({
     list: Trait.required,
     forEach: function forEach(consumer) {
@@ -254,9 +254,9 @@ exports['test:required'] = function(test) {
 
   try {
     let i = Enumerable();
-    test.fail('should throw when creating instance with required properties');
+    assert.fail('should throw when creating instance with required properties');
   } catch(e) {
-    test.assertEqual(
+    assert.equal(
       'Error: Missing required property: list',
       e.toString(),
       'required prop error'
@@ -264,7 +264,7 @@ exports['test:required'] = function(test) {
   }
 };
 
-exports['test:compose with required'] = function(test) {
+exports['test:compose with required'] = function(assert) {
   const List = Trait.compose({
     // private API:
     _list: null,
@@ -298,16 +298,16 @@ exports['test:compose with required'] = function(test) {
   let number = 0;
   l.forEach(function(element, index) {
     number ++;
-    test.assertEqual(array[index], element, 'should mach array element')
+    assert.equal(array[index], element, 'should mach array element')
   });
-  test.assertEqual(
+  assert.equal(
     array.length,
     number,
     'should perform as many asserts as elements in array'
   );
 };
 
-exports['test:resolve'] = function(test) {
+exports['test:resolve'] = function(assert) {
   const List = Trait.compose({
     // private API:
     _list: null,
@@ -344,18 +344,18 @@ exports['test:resolve'] = function(test) {
 
   let r = Range(0, 10);
 
-  test.assertEqual(
+  assert.equal(
     0,
     r.min,
     'constructor must have set min'
   );
-  test.assertEqual(
+  assert.equal(
     10,
     r.max,
     'constructor must have set max'
   );
 
-  test.assertEqual(
+  assert.equal(
     0,
     r.length,
     'should not contain any elements'
@@ -363,7 +363,7 @@ exports['test:resolve'] = function(test) {
 
   r.add(5);
 
-  test.assertEqual(
+  assert.equal(
     1,
     r.length,
     'should add `5` to list'
@@ -371,14 +371,14 @@ exports['test:resolve'] = function(test) {
 
   r.add(12);
 
-  test.assertEqual(
+  assert.equal(
     1,
     r.length,
     'should not add `12` to list'
   );
 };
 
-exports['test:custom iterator'] = function(test) {
+exports['test:custom iterator'] = function(assert) {
   let Sub = Trait.compose({
     foo: "foo",
     bar: "bar",
@@ -392,7 +392,8 @@ exports['test:custom iterator'] = function(test) {
 
   let (i = 0, sub = Sub()) {
     for (let item in sub)
-    test.assertEqual(++i, item, "iterated item has the right value");
+    assert.equal(++i, item, "iterated item has the right value");
   };
 };
 
+require('sdk/test').run(exports);

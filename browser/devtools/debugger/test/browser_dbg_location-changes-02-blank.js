@@ -48,11 +48,11 @@ function testLocationChange() {
     is(gSources.widget.getAttribute("tooltiptext"), "",
       "The sources widget shouldn't have any tooltip text attribute when there are no sources available.");
 
-    is(gDebugger.document.querySelectorAll(".side-menu-widget-empty-notice-container").length, 1,
+    is(gDebugger.document.querySelectorAll("#sources .side-menu-widget-empty-notice-container").length, 1,
       "The sources widget should now display a notice (1).");
-    is(gDebugger.document.querySelectorAll(".side-menu-widget-empty-notice").length, 1,
+    is(gDebugger.document.querySelectorAll("#sources .side-menu-widget-empty-notice").length, 1,
       "The sources widget should now display a notice (2).");
-    is(gDebugger.document.querySelector(".side-menu-widget-empty-notice").getAttribute("value"),
+    is(gDebugger.document.querySelector("#sources .side-menu-widget-empty-notice").getAttribute("value"),
        gSources.widget.getAttribute("label"),
       "The sources widget should now display a notice (3).");
 
