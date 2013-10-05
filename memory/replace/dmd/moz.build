@@ -12,12 +12,12 @@ EXPORTS += [
 
 CPP_SOURCES += [
     'DMD.cpp',
-    'HashFunctions.cpp',
-    'nsStackWalk.cpp',
+    '../../../mfbt/HashFunctions.cpp',
+    '../../../xpcom/base/nsStackWalk.cpp',
 ]
 
 CSRCS += [
-    'strcpy.c',
+    '../../../nsprpub/lib/libc/src/strcpy.c',
 ]
 
 LIBRARY_NAME = 'dmd'
