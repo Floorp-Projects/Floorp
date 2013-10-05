@@ -5,6 +5,7 @@
 
 from __future__ import with_statement
 import glob, logging, os, platform, shutil, subprocess, sys, tempfile, urllib2, zipfile
+import base64
 import re
 from urlparse import urlparse
 
@@ -43,7 +44,8 @@ __all__ = [
   'KeyValueParseError',
   'parseKeyValue',
   'systemMemory',
-  'environment'
+  'environment',
+  'dumpScreen',
   ]
 
 # Map of debugging programs to information about them, like default arguments
@@ -473,3 +475,56 @@ def environment(xrePath, env=None, crashreporter=True):
       log.info(message)
 
   return env
+
+
+def dumpScreen(utilityPath):
+  """dumps the screen to the log file as a data URI"""
+
+  # Need to figure out what tool and whether it write to a file or stdout
+  if mozinfo.isUnix:
+    utility = [os.path.join(utilityPath, "screentopng")]
+    imgoutput = 'stdout'
+  elif mozinfo.isMac:
+    utility = ['/usr/sbin/screencapture', '-C', '-x', '-t', 'png']
+    imgoutput = 'file'
+  elif mozinfo.isWin:
+    utility = [os.path.join(utilityPath, "screenshot.exe")]
+    imgoutput = 'file'
+  else:
+    log.warn("Unable to dump screen on platform '%s'", sys.platform)
+
+  # Run the capture correctly for the type of capture
+  kwargs = {'stdout': subprocess.PIPE}
+  if imgoutput == 'file':
+    tmpfd, imgfilename = tempfile.mkstemp(prefix='mozilla-test-fail_')
+    os.close(tmpfd)
+    utility.append(imgfilename)
+  elif imgoutput == 'stdout':
+    kwargs.update(dict(bufsize=-1, close_fds=True))
+  try:
+    dumper = subprocess.Popen(utility, **kwargs)
+  except OSError, err:
+    log.info("Failed to start %s for screenshot: %s",
+             utility[0], err.strerror)
+    return
+
+  # Check whether the capture utility ran successfully
+  stdout, _ = dumper.communicate()
+  returncode = dumper.poll()
+  if returncode:
+    log.info("%s exited with code %d", utility, returncode)
+    return
+
+  try:
+    if imgoutput == 'stdout':
+      image = stdout
+    elif imgoutput == 'file':
+      with open(imgfilename, 'rb') as imgfile:
+        image = imgfile.read()
+  except IOError, err:
+    log.info("Failed to read image from %s", imgoutput)
+
+  encoded = base64.b64encode(image)
+  uri = "data:image/png;base64,%s" %  encoded
+  log.info("SCREENSHOT: %s", uri)
+  return uri
