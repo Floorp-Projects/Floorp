@@ -569,6 +569,7 @@ CustomizeMode.prototype = {
   },
 
   reset: function() {
+    this.resetting = true;
     return Task.spawn(function() {
       this._removePanelCustomizationPlaceholders();
       yield this.depopulatePalette();
@@ -591,6 +592,7 @@ CustomizeMode.prototype = {
 
       this._updateResetButton();
       this._showPanelCustomizationPlaceholders();
+      this.resetting = false;
     }.bind(this)).then(null, ERROR);
   },
 
@@ -616,7 +618,7 @@ CustomizeMode.prototype = {
   },
 
   onWidgetBeforeDOMChange: function(aNodeToChange, aSecondaryNode, aContainer) {
-    if (aContainer.ownerDocument.defaultView != this.window) {
+    if (aContainer.ownerDocument.defaultView != this.window || this.resetting) {
       return;
     }
     if (aContainer.id == CustomizableUI.AREA_PANEL) {
@@ -633,7 +635,7 @@ CustomizeMode.prototype = {
   },
 
   onWidgetAfterDOMChange: function(aNodeToChange, aSecondaryNode, aContainer) {
-    if (aContainer.ownerDocument.defaultView != this.window) {
+    if (aContainer.ownerDocument.defaultView != this.window || this.resetting) {
       return;
     }
     // If the node is still attached to the container, wrap it again:
