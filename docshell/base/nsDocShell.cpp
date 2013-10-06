@@ -99,7 +99,6 @@
 #include "nsISHEntry.h"
 #include "nsIWindowWatcher.h"
 #include "nsIPromptFactory.h"
-#include "nsIObserver.h"
 #include "nsITransportSecurityInfo.h"
 #include "nsINSSErrorsService.h"
 #include "nsIApplicationCacheChannel.h"
@@ -196,6 +195,11 @@ static NS_DEFINE_CID(kAppShellCID, NS_APPSHELL_CID);
 
 using namespace mozilla;
 using namespace mozilla::dom;
+
+// True means sUseErrorPages has been added to preferences var cache.
+static bool gAddedPreferencesVarCache = false;
+
+bool nsDocShell::sUseErrorPages = false;
 
 // Number of documents currently loading
 static int32_t gNumberOfDocumentsLoading = 0;
@@ -898,7 +902,6 @@ NS_INTERFACE_MAP_BEGIN(nsDocShell)
     NS_INTERFACE_MAP_ENTRY(nsIContentViewerContainer)
     NS_INTERFACE_MAP_ENTRY(nsIWebPageDescriptor)
     NS_INTERFACE_MAP_ENTRY(nsIAuthPromptProvider)
-    NS_INTERFACE_MAP_ENTRY(nsIObserver)
     NS_INTERFACE_MAP_ENTRY(nsILoadContext)
     NS_INTERFACE_MAP_ENTRY(nsIWebShellServices)
     NS_INTERFACE_MAP_ENTRY(nsILinkHandler)
@@ -2573,16 +2576,15 @@ nsDocShell::SetSecurityUI(nsISecureBrowserUI *aSecurityUI)
 NS_IMETHODIMP
 nsDocShell::GetUseErrorPages(bool *aUseErrorPages)
 {
-    *aUseErrorPages = mUseErrorPages;
+    *aUseErrorPages = UseErrorPages();
     return NS_OK;
 }
 
 NS_IMETHODIMP
 nsDocShell::SetUseErrorPages(bool aUseErrorPages)
 {
-    // If mUseErrorPages is set explicitly, stop observing the pref.
+    // If mUseErrorPages is set explicitly, stop using sUseErrorPages.
     if (mObserveErrorPages) {
-        Preferences::RemoveObserver(this, "browser.xul.error_pages.enabled");
         mObserveErrorPages = false;
     }
     mUseErrorPages = aUseErrorPages;
@@ -4486,7 +4488,8 @@ nsDocShell::DisplayLoadError(nsresult aError, nsIURI *aURI,
 
     // Display the error as a page or an alert prompt
     NS_ENSURE_FALSE(messageStr.IsEmpty(), NS_ERROR_FAILURE);
-    if (mUseErrorPages) {
+
+    if (UseErrorPages()) {
         // Display an error page
         LoadErrorPage(aURI, aURL, errorPage.get(), error.get(),
                       messageStr.get(), cssClass.get(), aFailedChannel);
@@ -4939,8 +4942,11 @@ nsDocShell::Create()
     mUseErrorPages =
         Preferences::GetBool("browser.xul.error_pages.enabled", mUseErrorPages);
 
-    if (mObserveErrorPages) {
-        Preferences::AddStrongObserver(this, "browser.xul.error_pages.enabled");
+    if(!gAddedPreferencesVarCache) {
+        Preferences::AddBoolVarCache(&sUseErrorPages, 
+                                     "browser.xul.error_pages.enabled", 
+                                     mUseErrorPages);
+        gAddedPreferencesVarCache = true;
     }
 
     nsCOMPtr<nsIObserverService> serv = services::GetObserverService();
@@ -4972,7 +4978,6 @@ nsDocShell::Destroy()
 
     // Remove our pref observers
     if (mObserveErrorPages) {
-        Preferences::RemoveObserver(this, "browser.xul.error_pages.enabled");
         mObserveErrorPages = false;
     }
 
@@ -6976,7 +6981,7 @@ nsDocShell::EndPageLoad(nsIWebProgress * aProgress,
              aStatus == NS_ERROR_CONNECTION_REFUSED ||
              aStatus == NS_ERROR_UNKNOWN_PROXY_HOST || 
              aStatus == NS_ERROR_PROXY_CONNECTION_REFUSED) &&
-            (isTopFrame || mUseErrorPages)) {
+            (isTopFrame || UseErrorPages())) {
             DisplayLoadError(aStatus, url, nullptr, aChannel);
         }
         // Errors to be shown for any frame
@@ -11945,31 +11950,6 @@ nsDocShell::GetAuthPrompt(uint32_t aPromptReason, const nsIID& iid,
 
     return wwatch->GetPrompt(mScriptGlobal, iid,
                              reinterpret_cast<void**>(aResult));
-}
-
-//*****************************************************************************
-// nsDocShell::nsIObserver
-//*****************************************************************************
-
-NS_IMETHODIMP
-nsDocShell::Observe(nsISupports *aSubject, const char *aTopic,
-                    const PRUnichar *aData)
-{
-    nsresult rv = NS_OK;
-    if (mObserveErrorPages &&
-        !nsCRT::strcmp(aTopic, NS_PREFBRANCH_PREFCHANGE_TOPIC_ID) &&
-        !nsCRT::strcmp(aData,
-          NS_LITERAL_STRING("browser.xul.error_pages.enabled").get())) {
-
-        bool tmpbool;
-        rv = Preferences::GetBool("browser.xul.error_pages.enabled", &tmpbool);
-        if (NS_SUCCEEDED(rv))
-            mUseErrorPages = tmpbool;
-
-    } else {
-        rv = NS_ERROR_UNEXPECTED;
-    }
-    return rv;
 }
 
 //*****************************************************************************
