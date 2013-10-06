@@ -544,7 +544,11 @@ TypeSet::unionSets(TypeSet *a, TypeSet *b, LifoAlloc *alloc)
 // discarded.
 
 static LifoAlloc *IonAlloc() {
+#ifdef JS_ION
     return jit::GetIonContext()->temp->lifoAlloc();
+#else
+    MOZ_CRASH();
+#endif
 }
 
 // Superclass of all constraints generated during Ion compilation. These may
@@ -575,8 +579,12 @@ class types::CompilerConstraint
 void
 CompilerConstraintList::add(CompilerConstraint *constraint)
 {
+#ifdef JS_ION
     if (!constraint || !constraint->expected || !constraints.append(constraint))
         setFailed();
+#else
+    MOZ_CRASH();
+#endif
 }
 
 namespace {
@@ -672,16 +680,21 @@ TypeObjectKey::newScript()
 bool
 TypeObjectKey::unknownProperties()
 {
+#ifdef JS_ION
     JSContext *cx = jit::GetIonContext()->cx;
     TypeObject *type = isSingleObject() ? asSingleObject()->getType(cx) : asTypeObject();
     if (!type)
         MOZ_CRASH();
     return type->unknownProperties();
+#else
+    MOZ_CRASH();
+#endif
 }
 
 HeapTypeSetKey
 TypeObjectKey::property(jsid id)
 {
+#ifdef JS_ION
     JSContext *cx = jit::GetIonContext()->cx;
     TypeObject *type = isSingleObject() ? asSingleObject()->getType(cx) : asTypeObject();
     if (!type)
@@ -691,6 +704,9 @@ TypeObjectKey::property(jsid id)
     if (!property.actualTypes)
         MOZ_CRASH();
     return property;
+#else
+    MOZ_CRASH();
+#endif
 }
 
 bool
@@ -938,6 +954,7 @@ class ConstraintDataFreezeObjectFlags
 bool
 TypeObjectKey::hasFlags(CompilerConstraintList *constraints, TypeObjectFlags flags)
 {
+#ifdef JS_ION
     JS_ASSERT(flags);
 
     JSContext *cx = jit::GetIonContext()->cx;
@@ -950,6 +967,9 @@ TypeObjectKey::hasFlags(CompilerConstraintList *constraints, TypeObjectFlags fla
     HeapTypeSetKey objectProperty = property(JSID_EMPTY);
     constraints->add(IonAlloc()->new_<CompilerConstraintInstance<ConstraintDataFreezeObjectFlags> >(objectProperty, ConstraintDataFreezeObjectFlags(this, flags)));
     return false;
+#else
+    MOZ_CRASH();
+#endif
 }
 
 void
@@ -1653,11 +1673,15 @@ bool
 types::ArrayPrototypeHasIndexedProperty(CompilerConstraintList *constraints,
                                         HandleScript script)
 {
+#ifdef JS_ION
     JSObject *proto = script->global().getOrCreateArrayPrototype(jit::GetIonContext()->cx);
     if (!proto)
         return true;
 
     return PrototypeHasIndexedProperty(constraints, proto);
+#else
+    MOZ_CRASH();
+#endif
 }
 
 bool

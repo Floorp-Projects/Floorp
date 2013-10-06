@@ -41,9 +41,11 @@ interface nsIURIContentListener : nsISupports
   * @param aContentHandler      nsIStreamListener that will consume the data.
   *                             This should be set to <code>nullptr</code> if
   *                             this content listener can't handle the content
-  *                             type.
+  *                             type; in this case, doContent should also fail
+  *                             (i.e., return failure nsresult).
   *
-  * @return                     <code>true</code> if the consumer wants to
+  * @return                     <code>true</code> if the load should
+  *                             be aborted and consumer wants to
   *                             handle the load completely by itself.  This
   *                             causes the URI Loader do nothing else...
   *                             <code>false</code> if the URI Loader should
