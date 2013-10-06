@@ -548,10 +548,10 @@
              overflowable="true"
              overflowbutton="nav-bar-overflow-button"
              overflowtarget="widget-overflow-list"
-             flex="501"
+             flex="1"
              context="toolbar-context-menu">
 
-      <hbox id="nav-bar-customizationtarget" class="customization-target" flex="1">
+      <hbox id="nav-bar-customizationtarget" class="customization-target" flex="501">
         <toolbaritem id="urlbar-container" align="center" flex="400" persist="width"
                      forwarddisabled="true" title="&locationItem.title;" removable="false"
                      customizableui-areatype="toolbar"
