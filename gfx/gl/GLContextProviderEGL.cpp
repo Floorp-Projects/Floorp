@@ -596,9 +596,13 @@ public:
     {
         if (mSurface && !mPlatformContext) {
 #ifdef MOZ_WIDGET_GONK
-            if (!mIsOffscreen)
-                return GetGonkDisplay()->SwapBuffers(EGL_DISPLAY(), mSurface);
-            else
+            if (!mIsOffscreen) {
+                if (mHwc) {
+                    return mHwc->Render(EGL_DISPLAY(), mSurface);
+                } else {
+                    return GetGonkDisplay()->SwapBuffers(EGL_DISPLAY(), mSurface);
+                }
+            } else
 #endif
                 return sEGLLibrary.fSwapBuffers(EGL_DISPLAY(), mSurface);
         } else {

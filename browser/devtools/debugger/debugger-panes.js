@@ -1552,6 +1552,13 @@ EventListenersView.prototype = Heritage.extend(WidgetMethods, {
    */
   addListener: function(aListener, aOptions = {}) {
     let { node: { selector }, function: { url }, type } = aListener;
+    if (!type) return;
+
+    // Some listener objects may be added from plugins, thus getting
+    // translated to native code.
+    if (!url) {
+      url = this._inNativeCodeString;
+    }
 
     // If an event item for this listener's url and type was already added,
     // avoid polluting the view and simply increase the "targets" count.
@@ -1625,12 +1632,6 @@ EventListenersView.prototype = Heritage.extend(WidgetMethods, {
       group = L10N.getStr("touchEvents");
     } else {
       group = L10N.getStr("otherEvents");
-    }
-
-    // Some listener objects may be added from plugins, thus getting
-    // translated to native code.
-    if (!url) {
-      url = this._inNativeCodeString;
     }
 
     // Create the element node for the event listener item.
