@@ -43,6 +43,10 @@ public:
 
     virtual bool QueueBuffer(ANativeWindowBuffer* buf) = 0;
 
+    virtual void UpdateFBSurface(EGLDisplay dpy, EGLSurface sur) = 0;
+
+    virtual void SetFBReleaseFd(int fd) = 0;
+
     float xdpi;
     uint32_t surfaceformat;
 };
