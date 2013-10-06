@@ -1402,8 +1402,10 @@ FinishCompilation(JSContext *cx, JSScript *script, jit::ExecutionMode executionM
 class CompilerConstraint;
 class CompilerConstraintList
 {
+#ifdef JS_ION
     // Generated constraints.
     Vector<CompilerConstraint *, 0, jit::IonAllocPolicy> constraints;
+#endif
 
     // OOM during generation of some constraint.
     bool failed_;
@@ -1416,10 +1418,18 @@ class CompilerConstraintList
     void add(CompilerConstraint *constraint);
 
     size_t length() {
+#ifdef JS_ION
         return constraints.length();
+#else
+        MOZ_CRASH();
+#endif
     }
     CompilerConstraint *get(size_t i) {
+#ifdef JS_ION
         return constraints[i];
+#else
+        MOZ_CRASH();
+#endif
     }
 
     bool failed() {

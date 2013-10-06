@@ -451,9 +451,9 @@ nsImageFrame::ShouldCreateImageFrameFor(Element* aElement,
   //  - if our special "force icons" style is set, show an icon
   //  - else if our "do not show placeholders" pref is set, skip the icon
   //  - else:
-  //  - if QuirksMode, and there is no alt attribute, and this is not an
-  //    <object> (which could not possibly have such an attribute), show an
-  //    icon.
+  //  - if there is a src attribute, there is no alt attribute,
+  //    and this is not an <object> (which could not possibly have
+  //    such an attribute), show an icon.
   //  - if QuirksMode, and the IMG has a size show an icon.
   //  - otherwise, skip the icon
   bool useSizedBox;
@@ -464,31 +464,24 @@ nsImageFrame::ShouldCreateImageFrameFor(Element* aElement,
   else if (gIconLoad && gIconLoad->mPrefForceInlineAltText) {
     useSizedBox = false;
   }
-  else {
-    if (aStyleContext->PresContext()->CompatibilityMode() !=
-        eCompatibility_NavQuirks) {
-      useSizedBox = false;
-    }
-    else {
-      // We are in quirks mode, so we can just check the tag name; no need to
-      // check the namespace.
-      nsIAtom *localName = aElement->Tag();
-
-      // Use a sized box if we have no alt text.  This means no alt attribute
-      // and the node is not an object or an input (since those always have alt
-      // text).
-      if (!aElement->HasAttr(kNameSpaceID_None, nsGkAtoms::alt) &&
-          localName != nsGkAtoms::object &&
-          localName != nsGkAtoms::input) {
-        useSizedBox = true;
-      }
-      else {
-        // check whether we have fixed size
-        useSizedBox = HaveFixedSize(aStyleContext->StylePosition());
-      }
-    }
+  else if (aElement->HasAttr(kNameSpaceID_None, nsGkAtoms::src) &&
+           !aElement->HasAttr(kNameSpaceID_None, nsGkAtoms::alt) &&
+           !aElement->IsHTML(nsGkAtoms::object) &&
+           !aElement->IsHTML(nsGkAtoms::input)) {
+    // Use a sized box if we have no alt text.  This means no alt attribute
+    // and the node is not an object or an input (since those always have alt
+    // text).
+    useSizedBox = true;
   }
-  
+  else if (aStyleContext->PresContext()->CompatibilityMode() !=
+           eCompatibility_NavQuirks) {
+    useSizedBox = false;
+  }
+  else {
+    // check whether we have fixed size
+    useSizedBox = HaveFixedSize(aStyleContext->StylePosition());
+  }
+
   return useSizedBox;
 }
 
@@ -720,9 +713,7 @@ nsImageFrame::EnsureIntrinsicSizeAndRatio(nsPresContext* aPresContext)
       // invalid image specified
       // - make the image big enough for the icon (it may not be
       // used if inline alt expansion is used instead)
-      // XXX: we need this in composer, but it is also good for
-      // XXX: general quirks mode to always have room for the icon
-      if (aPresContext->CompatibilityMode() == eCompatibility_NavQuirks) {
+      if (!(GetStateBits() & NS_FRAME_GENERATED_CONTENT)) {
         nscoord edgeLengthToUse =
           nsPresContext::CSSPixelsToAppUnits(
             ICON_SIZE + (2 * (ICON_PADDING + ALT_BORDER_WIDTH)));

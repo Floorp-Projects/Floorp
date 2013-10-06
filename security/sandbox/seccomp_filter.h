@@ -70,6 +70,15 @@
 #define SECCOMP_WHITELIST_ADD_ARM_LAST
 #endif
 
+/* System calls used by the profiler */
+#ifdef MOZ_PROFILING
+#define PROFILING_WHITELIST_ADD \
+  ALLOW_SYSCALL(sigaction), \
+  ALLOW_SYSCALL(tgkill),
+#else
+#define PROFILING_WHITELIST_ADD
+#endif
+
 /* Syscalls specific to arm that should eventually be removed */
 #if defined(__arm__)
 #define SECCOMP_WHITELIST_REMOVE_ARM \
@@ -151,6 +160,7 @@
   ALLOW_SYSCALL(getpriority), \
   ALLOW_SYSCALL(setpriority), \
   ALLOW_SYSCALL(sched_setscheduler), \
+  PROFILING_WHITELIST_ADD \
   /* Always last and always OK calls */ \
   SECCOMP_WHITELIST_ADD_ARM_LAST \
   /* restart_syscall is called internally, generally when debugging */ \

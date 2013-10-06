@@ -237,6 +237,21 @@ class MacroAssembler : public MacroAssemblerSpecific
 #endif
     }
 
+    MacroAssembler(JSContext *cx, IonScript *ion)
+      : enoughMemory_(true),
+        embedsNurseryPointers_(false),
+        sps_(NULL)
+    {
+        constructRoot(cx);
+         ionContext_.construct(cx, (js::jit::TempAllocator *)NULL);
+         alloc_.construct(cx);
+#ifdef JS_CPU_ARM
+         initWithAllocator();
+         m_buffer.id = GetIonContext()->getNextAssemblerId();
+#endif
+        setFramePushed(ion->frameSize());
+    }
+
     void setInstrumentation(IonInstrumentation *sps) {
         sps_ = sps;
     }
@@ -1313,6 +1328,26 @@ class MacroAssembler : public MacroAssemblerSpecific
                                   Label *fail)
     {
         convertTypedOrValueToInt(src, temp, output, fail, IntConversion_ClampToUint8);
+    }
+
+  public:
+    class AfterICSaveLive {
+        friend class MacroAssembler;
+        AfterICSaveLive()
+        {}
+    };
+
+    AfterICSaveLive icSaveLive(RegisterSet &liveRegs) {
+        PushRegsInMask(liveRegs);
+        return AfterICSaveLive();
+    }
+
+    bool icBuildOOLFakeExitFrame(void *fakeReturnAddr, AfterICSaveLive &aic) {
+        return buildOOLFakeExitFrame(fakeReturnAddr);
+    }
+
+    void icRestoreLive(RegisterSet &liveRegs, AfterICSaveLive &aic) {
+        PopRegsInMask(liveRegs);
     }
 };
 
