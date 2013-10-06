@@ -441,7 +441,7 @@ bool RawDBusConnection::SendWithError(DBusMessage** aReply,
     *aReply = t->GetReply();
   }
 
-  return false;
+  return true;
 }
 
 bool RawDBusConnection::SendWithError(DBusMessage** aReply,
