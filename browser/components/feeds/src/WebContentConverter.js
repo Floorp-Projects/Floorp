@@ -451,14 +451,13 @@ WebContentConverterRegistrar.prototype = {
           hs.store(handlerInfo);
         }
     };
-    var buttons;
     var browserElement = this._getBrowserForContentWindow(browserWindow, aContentWindow);
     var notificationBox = browserWindow.getBrowser().getNotificationBox(browserElement);
     notificationBox.appendNotification(message,
                                        notificationValue,
                                        notificationIcon,
                                        notificationBox.PRIORITY_INFO_LOW,
-                                       buttons);
+                                       [addButton]);
   },
 
   /**
