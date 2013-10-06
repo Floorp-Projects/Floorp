@@ -839,7 +839,7 @@ EmitGetterCall(JSContext *cx, MacroAssembler &masm,
                void *returnAddr)
 {
     // saveLive()
-    masm.PushRegsInMask(liveRegs);
+    MacroAssembler::AfterICSaveLive aic = masm.icSaveLive(liveRegs);
 
     // Remaining registers should basically be free, but we need to use |object| still
     // so leave it alone.
@@ -890,7 +890,7 @@ EmitGetterCall(JSContext *cx, MacroAssembler &masm,
         masm.Push(argUintNReg);
         attacher.pushStubCodePointer(masm);
 
-        if (!masm.buildOOLFakeExitFrame(returnAddr))
+        if (!masm.icBuildOOLFakeExitFrame(returnAddr, aic))
             return false;
         masm.enterFakeExitFrame(ION_FRAME_OOL_NATIVE);
 
@@ -936,7 +936,7 @@ EmitGetterCall(JSContext *cx, MacroAssembler &masm,
 
         masm.loadJSContext(argJSContextReg);
 
-        if (!masm.buildOOLFakeExitFrame(returnAddr))
+        if (!masm.icBuildOOLFakeExitFrame(returnAddr, aic))
             return false;
         masm.enterFakeExitFrame(ION_FRAME_OOL_PROPERTY_OP);
 
@@ -1292,7 +1292,7 @@ EmitCallProxyGet(JSContext *cx, MacroAssembler &masm, IonCache::StubAttacher &at
 {
     JS_ASSERT(output.hasValue());
     // saveLive()
-    masm.PushRegsInMask(liveRegs);
+    MacroAssembler::AfterICSaveLive aic = masm.icSaveLive(liveRegs);
 
     // Remaining registers should be free, but we need to use |object| still
     // so leave it alone.
@@ -1329,7 +1329,7 @@ EmitCallProxyGet(JSContext *cx, MacroAssembler &masm, IonCache::StubAttacher &at
 
     masm.loadJSContext(argJSContextReg);
 
-    if (!masm.buildOOLFakeExitFrame(returnAddr))
+    if (!masm.icBuildOOLFakeExitFrame(returnAddr, aic))
         return false;
     masm.enterFakeExitFrame(ION_FRAME_OOL_PROXY);
 
@@ -2060,7 +2060,7 @@ EmitCallProxySet(JSContext *cx, MacroAssembler &masm, IonCache::StubAttacher &at
                  ConstantOrRegister value, void *returnAddr, bool strict)
 {
     // saveLive()
-    masm.PushRegsInMask(liveRegs);
+    MacroAssembler::AfterICSaveLive aic = masm.icSaveLive(liveRegs);
 
     // Remaining registers should be free, but we need to use |object| still
     // so leave it alone.
@@ -2098,7 +2098,7 @@ EmitCallProxySet(JSContext *cx, MacroAssembler &masm, IonCache::StubAttacher &at
     masm.loadJSContext(argJSContextReg);
     masm.move32(Imm32(strict? 1 : 0), argStrictReg);
 
-    if (!masm.buildOOLFakeExitFrame(returnAddr))
+    if (!masm.icBuildOOLFakeExitFrame(returnAddr, aic))
         return false;
     masm.enterFakeExitFrame(ION_FRAME_OOL_PROXY);
 
@@ -2266,7 +2266,7 @@ GenerateCallSetter(JSContext *cx, IonScript *ion, MacroAssembler &masm,
     // Good to go for invoking setter.
 
     // saveLive()
-    masm.PushRegsInMask(liveRegs);
+    MacroAssembler::AfterICSaveLive aic = masm.icSaveLive(liveRegs);
 
     // Remaining registers should basically be free, but we need to use |object| still
     // so leave it alone.
@@ -2319,7 +2319,7 @@ GenerateCallSetter(JSContext *cx, IonScript *ion, MacroAssembler &masm,
         masm.Push(argUintNReg);
         attacher.pushStubCodePointer(masm);
 
-        if (!masm.buildOOLFakeExitFrame(returnAddr))
+        if (!masm.icBuildOOLFakeExitFrame(returnAddr, aic))
             return false;
         masm.enterFakeExitFrame(ION_FRAME_OOL_NATIVE);
 
@@ -2362,7 +2362,7 @@ GenerateCallSetter(JSContext *cx, IonScript *ion, MacroAssembler &masm,
 
         masm.loadJSContext(argJSContextReg);
 
-        if (!masm.buildOOLFakeExitFrame(returnAddr))
+        if (!masm.icBuildOOLFakeExitFrame(returnAddr, aic))
             return false;
         masm.enterFakeExitFrame(ION_FRAME_OOL_PROPERTY_OP);
 

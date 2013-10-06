@@ -127,7 +127,7 @@ ToStackIndex(LAllocation *a)
         return a->toStackSlot()->slot();
     }
     JS_ASSERT(-int32_t(sizeof(IonJSFrameLayout)) <= a->toArgument()->index());
-    return -(sizeof(IonJSFrameLayout) + a->toArgument()->index());
+    return -int32_t(sizeof(IonJSFrameLayout) + a->toArgument()->index());
 }
 
 bool

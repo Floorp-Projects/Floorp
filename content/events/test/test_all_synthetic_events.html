@@ -384,6 +384,10 @@ const kEventConstructors = {
                                                          return e;
                                                        },
                                              },
+  TrackEvent:                                { create: function (aName, aProps) {
+                                                         return new TrackEvent(aName, aProps);
+                                                       },
+                                             },
   TransitionEvent:                           { create: function (aName, aProps) {
                                                          return new TransitionEvent(aName, aProps);
                                                        },
