@@ -477,11 +477,11 @@ private:
 
 NS_IMPL_ISUPPORTS1(DirPickerRecursiveFileEnumerator, nsISimpleEnumerator)
 
-class DirPickerBuildFileListTask MOZ_FINAL
+class DirPickerFileListBuilderTask MOZ_FINAL
   : public nsRunnable
 {
 public:
-  DirPickerBuildFileListTask(HTMLInputElement* aInput, nsIFile* aTopDir)
+  DirPickerFileListBuilderTask(HTMLInputElement* aInput, nsIFile* aTopDir)
     : mInput(aInput)
     , mTopDir(aTopDir)
   {}
@@ -593,10 +593,10 @@ HTMLInputElement::nsFilePickerShownCallback::Done(int16_t aResult)
     mInput->ResetProgressCounters();
     mInput->StartProgressEventTimer();
 
-    // DirPickerBuildFileListTask takes care of calling SetFiles() and
+    // DirPickerFileListBuilderTask takes care of calling SetFiles() and
     // dispatching the "change" event.
-    nsRefPtr<DirPickerBuildFileListTask> event =
-      new DirPickerBuildFileListTask(mInput.get(), pickedDir.get());
+    nsRefPtr<DirPickerFileListBuilderTask> event =
+      new DirPickerFileListBuilderTask(mInput.get(), pickedDir.get());
     return target->Dispatch(event, NS_DISPATCH_NORMAL);
   }
 
