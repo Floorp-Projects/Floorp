@@ -39,7 +39,6 @@
 #include "nsIWebProgressListener.h"
 #include "nsIDocShellLoadInfo.h"
 #include "nsIAuthPromptProvider.h"
-#include "nsIObserver.h"
 #include "nsILoadContext.h"
 #include "nsIWebShellServices.h"
 #include "nsILinkHandler.h"
@@ -136,7 +135,6 @@ class nsDocShell : public nsDocLoader,
                    public nsIWebProgressListener,
                    public nsIWebPageDescriptor,
                    public nsIAuthPromptProvider,
-                   public nsIObserver,
                    public nsILoadContext,
                    public nsIWebShellServices,
                    public nsILinkHandler,
@@ -169,7 +167,6 @@ public:
     NS_DECL_NSICONTENTVIEWERCONTAINER
     NS_DECL_NSIWEBPAGEDESCRIPTOR
     NS_DECL_NSIAUTHPROMPTPROVIDER
-    NS_DECL_NSIOBSERVER
     NS_DECL_NSICLIPBOARDCOMMANDS
     NS_DECL_NSIWEBSHELLSERVICES
     NS_FORWARD_SAFE_NSIDOMSTORAGEMANAGER(TopSessionStorageManager())
@@ -527,6 +524,11 @@ protected:
       return  uint32_t(t_usec /= usec_per_sec);
     }
 
+    inline bool UseErrorPages()
+    {
+      return (mObserveErrorPages ? sUseErrorPages : mUseErrorPages);
+    }
+
     bool IsFrame();
 
     //
@@ -788,6 +790,9 @@ protected:
         PARENT_PROHIBITS
     };
     FullscreenAllowedState     mFullscreenAllowed;
+
+    // Cached value of the "browser.xul.error_pages.enabled" preference.
+    static bool                sUseErrorPages;
 
     bool                       mCreated;
     bool                       mAllowSubframes;
