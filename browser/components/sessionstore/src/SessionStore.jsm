@@ -730,7 +730,7 @@ let SessionStoreInternal = {
           // We're starting with a single private window. Save the state we
           // actually wanted to restore so that we can do it later in case
           // the user opens another, non-private window.
-          this._deferredInitialState = aInitialState;
+          this._deferredInitialState = gSessionStartup.state;
 
           // Nothing to restore now, notify observers things are complete.
           Services.obs.notifyObservers(null, NOTIFY_WINDOWS_RESTORED, "");
@@ -1382,6 +1382,9 @@ let SessionStoreInternal = {
 
     // Don't include the last session state in getBrowserState().
     delete state.lastSessionState;
+
+    // Don't include any deferred initial state.
+    delete state.deferredInitialState;
 
     return this._toJSONString(state);
   },
@@ -2488,6 +2491,13 @@ let SessionStoreInternal = {
     // Persist the last session if we deferred restoring it
     if (this._lastSessionState) {
       state.lastSessionState = this._lastSessionState;
+    }
+
+    // If we were called by the SessionSaver and started with only a private
+    // window we want to pass the deferred initial state to not lose the
+    // previous session.
+    if (this._deferredInitialState) {
+      state.deferredInitialState = this._deferredInitialState;
     }
 
     return state;
@@ -3946,6 +3956,14 @@ let SessionStoreInternal = {
    * @returns [defaultState, state]
    */
   _prepDataForDeferredRestore: function ssi_prepDataForDeferredRestore(state) {
+    // Make sure that we don't modify the global state as provided by
+    // nsSessionStartup.state. Converting the object to a JSON string and
+    // parsing it again is the easiest way to do that, although not the most
+    // efficient one. Deferred sessions that don't have automatic session
+    // restore enabled tend to be a lot smaller though so that this shouldn't
+    // be a big perf hit.
+    state = JSON.parse(JSON.stringify(state));
+
     let defaultState = { windows: [], selectedWindow: 1 };
 
     state.selectedWindow = state.selectedWindow || 1;
