@@ -336,7 +336,7 @@ struct LifetimeVariable
                 return segment;
             segment = segment->next;
         }
-        return NULL;
+        return nullptr;
     }
 
     /*
