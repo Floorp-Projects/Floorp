@@ -795,9 +795,7 @@ var gPluginHandler = {
     let contentDoc = aBrowser.contentDocument;
     let cwu = contentWindow.QueryInterface(Ci.nsIInterfaceRequestor)
                            .getInterface(Ci.nsIDOMWindowUtils);
-    // cwu.plugins may contain non-plugin <object>s, filter them out
-    let plugins = cwu.plugins.filter((plugin) =>
-      plugin.getContentTypeForMIMEType(plugin.actualType) == Ci.nsIObjectLoadingContent.TYPE_PLUGIN);
+    let plugins = cwu.plugins;
     if (plugins.length == 0) {
       if (notification) {
         PopupNotifications.remove(notification);
