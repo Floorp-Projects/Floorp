@@ -22,6 +22,15 @@
 #define SECCOMP_WHITELIST_ADD
 #endif
 
+/* System calls used by the profiler */
+#ifdef MOZ_PROFILING
+#define PROFILING_WHITELIST_ADD \
+  ALLOW_SYSCALL(sigaction), \
+  ALLOW_SYSCALL(tgkill),
+#else
+#define PROFILING_WHITELIST_ADD
+#endif
+
 /**
  * Bug 909658: no __NR_recv, __NR_msgget, __NR_semget in emulator-x86.
  *
@@ -100,6 +109,7 @@
   ALLOW_SYSCALL(setpriority), \
   ALLOW_SYSCALL(sigprocmask), \
   ALLOW_SYSCALL(sched_setscheduler), \
+  PROFILING_WHITELIST_ADD \
   /* Always last and always OK calls */ \
   SECCOMP_WHITELIST_ADD \
   /* restart_syscall is called internally, generally when debugging */ \
