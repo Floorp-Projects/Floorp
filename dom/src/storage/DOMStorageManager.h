@@ -13,6 +13,8 @@
 #include "DOMStorageCache.h"
 
 #include "nsTHashtable.h"
+#include "nsDataHashtable.h"
+#include "nsHashKeys.h"
 
 namespace mozilla {
 namespace dom {
@@ -35,6 +37,8 @@ public:
   static uint32_t GetQuota();
   // Gets (but not ensures) cache for the given scope
   DOMStorageCache* GetCache(const nsACString& aScope) const;
+  // Returns object keeping usage cache for the scope.
+  already_AddRefed<DOMStorageUsage> GetScopeUsage(const nsACString& aScope);
 
 protected:
   DOMStorageManager(nsPIDOMStorage::StorageType aType);
@@ -97,6 +101,9 @@ private:
                                               void* aClosure);
 
 protected:
+  // Keeps usage cache objects for eTLD+1 scopes we have touched.
+  nsDataHashtable<nsCStringHashKey, nsRefPtr<DOMStorageUsage> > mUsages;
+
   friend class DOMStorageCache;
   // Releases cache since it is no longer referrered by any DOMStorage object.
   virtual void DropCache(DOMStorageCache* aCache);

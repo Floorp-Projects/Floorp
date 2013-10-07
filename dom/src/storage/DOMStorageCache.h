@@ -20,6 +20,7 @@ namespace mozilla {
 namespace dom {
 
 class DOMStorage;
+class DOMStorageUsage;
 class DOMStorageManager;
 class DOMStorageDBBridge;
 
@@ -170,6 +171,10 @@ private:
   // Cache could potentially overlive the manager, hence the hard ref.
   nsRefPtr<DOMStorageManager> mManager;
 
+  // Reference to the usage counter object we check on for eTLD+1 quota limit.
+  // Obtained from the manager during initialization (Init method).
+  nsRefPtr<DOMStorageUsage> mUsage;
+
   // Timer that holds this cache alive for a while after it has been preloaded.
   nsCOMPtr<nsITimer> mKeepAliveTimer;
 
@@ -227,10 +232,17 @@ private:
 class DOMStorageUsageBridge
 {
 public:
+  NS_IMETHOD_(nsrefcnt) AddRef(void);
+  NS_IMETHOD_(nsrefcnt) Release(void);
+
   virtual ~DOMStorageUsageBridge() {}
 
   virtual const nsCString& Scope() = 0;
   virtual void LoadUsage(const int64_t aUsage) = 0;
+
+protected:
+  ThreadSafeAutoRefCnt mRefCnt;
+  NS_DECL_OWNINGTHREAD
 };
 
 class DOMStorageUsage : public DOMStorageUsageBridge
