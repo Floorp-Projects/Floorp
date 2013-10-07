@@ -25,6 +25,10 @@ Cu.import("resource:///modules/devtools/shared/event-emitter.js");
 XPCOMUtils.defineLazyModuleGetter(this, "devtools",
   "resource://gre/modules/devtools/Loader.jsm");
 
+XPCOMUtils.defineLazyServiceGetter(this, "clipboardHelper",
+  "@mozilla.org/widget/clipboardhelper;1",
+  "nsIClipboardHelper");
+
 Object.defineProperty(this, "WebConsoleUtils", {
   get: function() {
     return devtools.require("devtools/toolkit/webconsole/utils").Utils;
@@ -77,11 +81,13 @@ this.VariablesView = function VariablesView(aParentNode, aFlags = {}) {
   this._onSearchboxInput = this._onSearchboxInput.bind(this);
   this._onSearchboxKeyPress = this._onSearchboxKeyPress.bind(this);
   this._onViewKeyPress = this._onViewKeyPress.bind(this);
+  this._onViewKeyDown = this._onViewKeyDown.bind(this);
 
   // Create an internal scrollbox container.
   this._list = this.document.createElement("scrollbox");
   this._list.setAttribute("orient", "vertical");
   this._list.addEventListener("keypress", this._onViewKeyPress, false);
+  this._list.addEventListener("keydown", this._onViewKeyDown, false);
   this._parent.appendChild(this._list);
   this._boxObject = this._list.boxObject.QueryInterface(Ci.nsIScrollBoxObject);
 
@@ -180,7 +186,9 @@ VariablesView.prototype = {
 
     this.window.setTimeout(() => {
       prevList.removeEventListener("keypress", this._onViewKeyPress, false);
+      prevList.removeEventListener("keydown", this._onViewKeyDown, false);
       currList.addEventListener("keypress", this._onViewKeyPress, false);
+      currList.addEventListener("keydown", this._onViewKeyDown, false);
       currList.setAttribute("orient", "vertical");
 
       this._parent.removeChild(prevList);
@@ -816,6 +824,21 @@ VariablesView.prototype = {
           item._onDelete(e);
         }
         return;
+    }
+  },
+
+  /**
+   * Listener handling a key down event on the view.
+   */
+  _onViewKeyDown: function(e) {
+    if (e.keyCode == e.DOM_VK_C) {
+      // Copy current selection to clipboard.
+      if (e.ctrlKey || e.metaKey) {
+        let item = this.getFocusedItem();
+        clipboardHelper.copyString(
+          item._nameString + item.separatorStr + item._valueString
+        );
+      }
     }
   },
 

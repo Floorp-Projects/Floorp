@@ -7,10 +7,6 @@ FORCE_SHARED_LIB= 1
 
 DEFINES 	+= -DMOZ_NO_MOZALLOC
 
-VPATH 		+= $(topsrcdir)/xpcom/base
-VPATH 		+= $(topsrcdir)/nsprpub/lib/libc/src
-VPATH 		+= $(topsrcdir)/mfbt
-
 # Disable mozglue.
 WRAP_LDFLAGS 	=
 MOZ_GLUE_LDFLAGS=

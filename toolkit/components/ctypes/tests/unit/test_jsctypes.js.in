@@ -254,9 +254,9 @@ function run_abstract_class_tests()
   do_check_true(ctypes.CType.prototype.prototype === ctypes.CData.prototype);
 
   // Check that the shared properties and functions on ctypes.CType.prototype throw.
-  do_check_throws(function() { ctypes.CType.prototype.name; }, Error);
-  do_check_throws(function() { ctypes.CType.prototype.size; }, Error);
-  do_check_throws(function() { ctypes.CType.prototype.ptr; }, Error);
+  do_check_throws(function() { ctypes.CType.prototype.name; }, TypeError);
+  do_check_throws(function() { ctypes.CType.prototype.size; }, TypeError);
+  do_check_throws(function() { ctypes.CType.prototype.ptr; }, TypeError);
   do_check_throws(function() { ctypes.CType.prototype.array(); }, Error);
 
 
@@ -288,8 +288,8 @@ function run_abstract_class_tests()
   do_check_true(ctypes.CData.prototype.hasOwnProperty("toSource"));
 
   // Check that the shared properties and functions on ctypes.CData.prototype throw.
-  do_check_throws(function() { ctypes.CData.prototype.value; }, Error);
-  do_check_throws(function() { ctypes.CData.prototype.value = null; }, Error);
+  do_check_throws(function() { ctypes.CData.prototype.value; }, TypeError);
+  do_check_throws(function() { ctypes.CData.prototype.value = null; }, TypeError);
   do_check_throws(function() { ctypes.CData.prototype.address(); }, Error);
   do_check_throws(function() { ctypes.CData.prototype.readString(); }, Error);
 
@@ -750,8 +750,8 @@ function run_basic_class_tests(t)
   do_check_true(t.prototype.constructor === t);
 
   // Check that the shared properties and functions on 't.prototype' throw.
-  do_check_throws(function() { t.prototype.value; }, Error);
-  do_check_throws(function() { t.prototype.value = null; }, Error);
+  do_check_throws(function() { t.prototype.value; }, TypeError);
+  do_check_throws(function() { t.prototype.value = null; }, TypeError);
   do_check_throws(function() { t.prototype.address(); }, Error);
   do_check_throws(function() { t.prototype.readString(); }, Error);
 
@@ -1299,7 +1299,7 @@ function run_type_ctor_class_tests(c, t, t2, props, fns, instanceProps, instance
 
   // Check that the shared properties and functions on 'c.prototype' throw.
   for each (let p in props)
-    do_check_throws(function() { c.prototype[p]; }, Error);
+    do_check_throws(function() { c.prototype[p]; }, TypeError);
   for each (let f in fns)
     do_check_throws(function() { c.prototype[f](); }, Error);
 
@@ -1334,8 +1334,8 @@ function run_type_ctor_class_tests(c, t, t2, props, fns, instanceProps, instance
   // Check that the shared properties and functions on 't.prototype.__proto__'
   // (and thus also 't.prototype') throw.
   for each (let p in instanceProps) {
-    do_check_throws(function() { t.prototype.__proto__[p]; }, Error);
-    do_check_throws(function() { t.prototype[p]; }, Error);
+    do_check_throws(function() { t.prototype.__proto__[p]; }, TypeError);
+    do_check_throws(function() { t.prototype[p]; }, TypeError);
   }
   for each (let f in instanceFns) {
     do_check_throws(function() { t.prototype.__proto__[f]() }, Error);

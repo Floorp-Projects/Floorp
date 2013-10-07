@@ -237,6 +237,21 @@ class MacroAssembler : public MacroAssemblerSpecific
 #endif
     }
 
+    MacroAssembler(JSContext *cx, IonScript *ion)
+      : enoughMemory_(true),
+        embedsNurseryPointers_(false),
+        sps_(NULL)
+    {
+        constructRoot(cx);
+         ionContext_.construct(cx, (js::jit::TempAllocator *)NULL);
+         alloc_.construct(cx);
+#ifdef JS_CPU_ARM
+         initWithAllocator();
+         m_buffer.id = GetIonContext()->getNextAssemblerId();
+#endif
+        setFramePushed(ion->frameSize());
+    }
+
     void setInstrumentation(IonInstrumentation *sps) {
         sps_ = sps;
     }
@@ -912,9 +927,9 @@ class MacroAssembler : public MacroAssemblerSpecific
         // of the JSObject::isWrapper test performed in EmulatesUndefined.  If none
         // of the branches are taken, we can check class flags directly.
         loadObjClass(objReg, scratch);
-        branchPtr(Assembler::Equal, scratch, ImmPtr(&ObjectProxyObject::class_), slowCheck);
+        branchPtr(Assembler::Equal, scratch, ImmPtr(&ProxyObject::callableClass_), slowCheck);
+        branchPtr(Assembler::Equal, scratch, ImmPtr(&ProxyObject::uncallableClass_), slowCheck);
         branchPtr(Assembler::Equal, scratch, ImmPtr(&OuterWindowProxyObject::class_), slowCheck);
-        branchPtr(Assembler::Equal, scratch, ImmPtr(&FunctionProxyObject::class_), slowCheck);
 
         test32(Address(scratch, Class::offsetOfFlags()), Imm32(JSCLASS_EMULATES_UNDEFINED));
         return truthy ? Assembler::Zero : Assembler::NonZero;
@@ -1313,6 +1328,26 @@ class MacroAssembler : public MacroAssemblerSpecific
                                   Label *fail)
     {
         convertTypedOrValueToInt(src, temp, output, fail, IntConversion_ClampToUint8);
+    }
+
+  public:
+    class AfterICSaveLive {
+        friend class MacroAssembler;
+        AfterICSaveLive()
+        {}
+    };
+
+    AfterICSaveLive icSaveLive(RegisterSet &liveRegs) {
+        PushRegsInMask(liveRegs);
+        return AfterICSaveLive();
+    }
+
+    bool icBuildOOLFakeExitFrame(void *fakeReturnAddr, AfterICSaveLive &aic) {
+        return buildOOLFakeExitFrame(fakeReturnAddr);
+    }
+
+    void icRestoreLive(RegisterSet &liveRegs, AfterICSaveLive &aic) {
+        PopRegsInMask(liveRegs);
     }
 };
 

@@ -397,8 +397,10 @@ AudioChannelService::SetDefaultVolumeControlChannelInternal(
   nsString channelName;
   channelName.AssignASCII(ChannelName(aType));
   nsCOMPtr<nsIObserverService> obs = mozilla::services::GetObserverService();
-  obs->NotifyObservers(nullptr, "default-volume-channel-changed",
-                       channelName.get());
+  if (obs) {
+    obs->NotifyObservers(nullptr, "default-volume-channel-changed",
+                         channelName.get());
+  }
 }
 
 void
@@ -412,8 +414,10 @@ AudioChannelService::SendAudioChannelChangedNotification(uint64_t aChildID)
   props->SetPropertyAsUint64(NS_LITERAL_STRING("childID"), aChildID);
 
   nsCOMPtr<nsIObserverService> obs = mozilla::services::GetObserverService();
-  obs->NotifyObservers(static_cast<nsIWritablePropertyBag*>(props),
-                       "audio-channel-process-changed", nullptr);
+  if (obs) {
+    obs->NotifyObservers(static_cast<nsIWritablePropertyBag*>(props),
+                         "audio-channel-process-changed", nullptr);
+  }
 
   // Calculating the most important active channel.
   AudioChannelType higher = AUDIO_CHANNEL_LAST;

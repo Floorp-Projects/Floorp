@@ -1648,6 +1648,11 @@ public:
   static bool CSSFiltersEnabled();
 
   /**
+   * Checks whether support for the CSS-wide "unset" value is enabled.
+   */
+  static bool UnsetValueEnabled();
+
+  /**
    * Unions the overflow areas of all non-popup children of aFrame with
    * aOverflowAreas.
    */

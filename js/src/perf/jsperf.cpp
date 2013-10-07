@@ -106,7 +106,7 @@ static const JSFunctionSpec pm_fns[] = {
 };
 
 const uint8_t PM_PATTRS =
-    JSPROP_ENUMERATE | JSPROP_PERMANENT | JSPROP_SHARED;
+    JSPROP_ENUMERATE | JSPROP_PERMANENT;
 
 #define GETTER(name)                            \
     JS_PSG(#name, pm_get_##name, PM_PATTRS)

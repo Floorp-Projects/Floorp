@@ -365,9 +365,11 @@ class MDefinition : public MNode
     // errors. Instead, one should define the collectRangeInfo() to set the
     // right set of flags which are dependent on the range of the inputs.
     Range *range() const {
+        JS_ASSERT(type() != MIRType_None);
         return range_;
     }
     void setRange(Range *range) {
+        JS_ASSERT(type() != MIRType_None);
         range_ = range;
     }
 
@@ -2360,8 +2362,13 @@ class MGuardString
 class MAssertRange
   : public MUnaryInstruction
 {
-    MAssertRange(MDefinition *ins)
-      : MUnaryInstruction(ins)
+    // This is the range checked by the assertion. Don't confuse this with the
+    // range_ member or the range() accessor. Since MAssertRange doesn't return
+    // a value, it doesn't use those.
+    const Range *assertedRange_;
+
+    MAssertRange(MDefinition *ins, const Range *assertedRange)
+      : MUnaryInstruction(ins), assertedRange_(assertedRange)
     {
         setGuard();
         setMovable();
@@ -2371,13 +2378,19 @@ class MAssertRange
   public:
     INSTRUCTION_HEADER(AssertRange)
 
-    static MAssertRange *New(MDefinition *ins) {
-        return new MAssertRange(ins);
+    static MAssertRange *New(MDefinition *ins, const Range *assertedRange) {
+        return new MAssertRange(ins, assertedRange);
+    }
+
+    const Range *assertedRange() const {
+        return assertedRange_;
     }
 
     AliasSet getAliasSet() const {
         return AliasSet::None();
     }
+
+    void printOpcode(FILE *fp) const;
 };
 
 // Caller-side allocation of |this| for |new|:
@@ -3436,6 +3449,7 @@ class MSqrt
     AliasSet getAliasSet() const {
         return AliasSet::None();
     }
+    void computeRange();
 };
 
 // Inline implementation of atan2 (arctangent of y/x).
@@ -3856,6 +3870,7 @@ class MDiv : public MBinaryArithInstruction
 
     bool isFloat32Commutative() const { return true; }
 
+    void computeRange();
     bool fallible();
     bool truncate();
 };
@@ -4211,7 +4226,12 @@ class MPhi MOZ_FINAL : public MDefinition, public InlineForwardListNode<MPhi>
 class MBeta : public MUnaryInstruction
 {
   private:
+    // This is the range induced by a comparison and branch in a preceding
+    // block. Note that this does not reflect any range constraints from
+    // the input value itself, so this value may differ from the range()
+    // range after it is computed.
     const Range *comparison_;
+
     MBeta(MDefinition *val, const Range *comp)
         : MUnaryInstruction(val),
           comparison_(comp)
@@ -8965,21 +8985,27 @@ typedef Vector<MDefinition *, 8, IonAllocPolicy> MDefinitionVector;
 bool ElementAccessIsDenseNative(MDefinition *obj, MDefinition *id);
 bool ElementAccessIsTypedArray(MDefinition *obj, MDefinition *id,
                                ScalarTypeRepresentation::Type *arrayType);
-bool ElementAccessIsPacked(JSContext *cx, MDefinition *obj);
-bool ElementAccessHasExtraIndexedProperty(JSContext *cx, MDefinition *obj);
-bool DenseNativeElementType(JSContext *cx, MDefinition *obj, MIRType *result);
-bool PropertyReadNeedsTypeBarrier(JSContext *cx, types::TypeObject *object, PropertyName *name,
-                                  types::StackTypeSet *observed, bool updateObserved, bool *result);
-bool PropertyReadNeedsTypeBarrier(JSContext *cx, MDefinition *obj, PropertyName *name,
-                                  types::StackTypeSet *observed, bool *result);
-bool PropertyReadOnPrototypeNeedsTypeBarrier(JSContext *cx, MDefinition *obj, PropertyName *name,
-                                             types::TemporaryTypeSet *observed, bool *result);
-bool PropertyReadIsIdempotent(JSContext *cx, MDefinition *obj, PropertyName *name, bool *result);
+bool ElementAccessIsPacked(types::CompilerConstraintList *constraints, MDefinition *obj);
+bool ElementAccessHasExtraIndexedProperty(types::CompilerConstraintList *constraints,
+                                          MDefinition *obj);
+MIRType DenseNativeElementType(types::CompilerConstraintList *constraints, MDefinition *obj);
+bool PropertyReadNeedsTypeBarrier(JSContext *cx, types::CompilerConstraintList *constraints,
+                                  types::TypeObjectKey *object, PropertyName *name,
+                                  types::StackTypeSet *observed, bool updateObserved);
+bool PropertyReadNeedsTypeBarrier(JSContext *cx, types::CompilerConstraintList *constraints,
+                                  MDefinition *obj, PropertyName *name,
+                                  types::StackTypeSet *observed);
+bool PropertyReadOnPrototypeNeedsTypeBarrier(JSContext *cx, types::CompilerConstraintList *constraints,
+                                             MDefinition *obj, PropertyName *name,
+                                             types::TemporaryTypeSet *observed);
+bool PropertyReadIsIdempotent(types::CompilerConstraintList *constraints,
+                              MDefinition *obj, PropertyName *name);
 bool AddObjectsForPropertyRead(JSContext *cx, MDefinition *obj, PropertyName *name,
                                types::StackTypeSet *observed);
-bool PropertyWriteNeedsTypeBarrier(JSContext *cx, MBasicBlock *current, MDefinition **pobj,
+bool PropertyWriteNeedsTypeBarrier(types::CompilerConstraintList *constraints,
+                                   MBasicBlock *current, MDefinition **pobj,
                                    PropertyName *name, MDefinition **pvalue,
-                                   bool canModify, bool *result);
+                                   bool canModify);
 
 } // namespace jit
 } // namespace js

@@ -2347,18 +2347,25 @@ inline int CheckIsNative(JSNative native);
   (static_cast<void>(sizeof(JS::detail::CheckIsNative(v))), \
    reinterpret_cast<To>(v))
 
+#define JS_CHECK_ACCESSOR_FLAGS(flags) \
+  (static_cast<mozilla::EnableIf<!((flags) & (JSPROP_READONLY | JSPROP_SHARED | JSPROP_NATIVE_ACCESSORS))>::Type>(0), \
+   (flags))
+
 /*
  * JSPropertySpec uses JSAPI JSPropertyOp and JSStrictPropertyOp in function
- * signatures, but with JSPROP_NATIVE_ACCESSORS the actual values must be
- * JSNatives. To avoid widespread casting, have JS_PSG and JS_PSGS perform
- * type-safe casts.
+ * signatures.  These macros encapsulate the definition of JSNative-backed
+ * JSPropertySpecs, performing type-safe casts on the getter/setter functions
+ * and adding the necessary property flags to trigger interpretation as
+ * JSNatives.
  */
 #define JS_PSG(name, getter, flags) \
-    {name, 0, (flags) | JSPROP_SHARED | JSPROP_NATIVE_ACCESSORS, \
+    {name, 0, \
+     uint8_t(JS_CHECK_ACCESSOR_FLAGS(flags) | JSPROP_SHARED | JSPROP_NATIVE_ACCESSORS), \
      JSOP_WRAPPER(JS_CAST_NATIVE_TO(getter, JSPropertyOp)), \
      JSOP_NULLWRAPPER}
 #define JS_PSGS(name, getter, setter, flags) \
-    {name, 0, (flags) | JSPROP_SHARED | JSPROP_NATIVE_ACCESSORS, \
+    {name, 0, \
+     uint8_t(JS_CHECK_ACCESSOR_FLAGS(flags) | JSPROP_SHARED | JSPROP_NATIVE_ACCESSORS), \
      JSOP_WRAPPER(JS_CAST_NATIVE_TO(getter, JSPropertyOp)), \
      JSOP_WRAPPER(JS_CAST_NATIVE_TO(setter, JSStrictPropertyOp))}
 #define JS_PS_END {0, 0, 0, JSOP_NULLWRAPPER, JSOP_NULLWRAPPER}

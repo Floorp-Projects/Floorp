@@ -271,7 +271,7 @@ CallJSNativeConstructor(JSContext *cx, Native native, const CallArgs &args)
      *
      * - (new Object(Object)) returns the callee.
      */
-    JS_ASSERT_IF(native != FunctionProxyObject::class_.construct &&
+    JS_ASSERT_IF(native != ProxyObject::callableClass_.construct &&
                  native != js::CallOrConstructBoundFunction &&
                  native != js::IteratorConstructor &&
                  (!callee->is<JSFunction>() || callee->as<JSFunction>().native() != obj_construct),

@@ -190,12 +190,7 @@ let SessionSaverInternal = {
     this.cancel();
 
     stopWatchStart("COLLECT_DATA_MS", "COLLECT_DATA_LONGEST_OP_MS");
-
     let state = SessionStore.getCurrentState(forceUpdateAllWindows);
-    if (!state) {
-      stopWatchCancel("COLLECT_DATA_MS", "COLLECT_DATA_LONGEST_OP_MS");
-      return;
-    }
 
     // Forget about private windows.
     for (let i = state.windows.length - 1; i >= 0; i--) {

@@ -1,0 +1,68 @@
+<html xmlns="http://www.w3.org/1999/xhtml">
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=914618
+-->
+<head>
+  <title>Test for Bug 914618</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <bindings xmlns="http://www.mozilla.org/xbl"
+            xmlns:html="http://www.w3.org/1999/xhtml">
+    <binding id="testBinding" chromeOnlyContent="true">
+      <!-- The root of the anonymous subtree is special, and is not allowed to
+           be adopted, among other things. Work with a child of the root. -->
+      <content><html:div><html:span id="nac">hidden text</html:span></html:div></content>
+      <implementation>
+        <constructor>
+          var win = XPCNativeWrapper.unwrap(window);
+          var nac = document.getAnonymousNodes(this)[0].firstChild;
+          win.is(nac.textContent, "hidden text", "XBL can see NAC");
+          win.playWithNAC(nac);
+        </constructor>
+      </implementation>
+    </binding>
+  </bindings>
+  <script type="application/javascript">
+  <![CDATA[
+
+  /** Test for Bug 914618 **/
+  SimpleTest.waitForExplicitFinish();
+
+  function checkThrows(fn) {
+    try {
+      fn();
+      ok(false, "Should have thrown");
+    } catch (e) {
+      ok(/denied|insecure|/.test(e), "Should have thrown security error");
+    }
+  }
+
+  function playWithNAC(nac) {
+    checkThrows(function() { nac.toString(); });
+    checkThrows(function() { nac.textContent; });
+    var iwin = document.getElementById('ifr').contentWindow;
+    iwin.nac = window.nac = nac;
+    checkThrows(new iwin.Function('nac.toString();'));
+    checkThrows(new iwin.Function('nac.textContent;'));
+
+    // Try adopting the NAC into another scope using a different XBL binding.
+    // The <constructor> in file_nac.xhtml will call SimpleTest.finish().
+    var ifr2 = document.createElement('iframe');
+    document.body.appendChild(ifr2);
+    ifr2.contentWindow.location = 'file_nac.xhtml';
+  }
+
+  ]]>
+</script>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=914618">Mozilla Bug 914618</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+</div>
+<div id="bindingSink" style="-moz-binding: url(#testBinding);"></div>
+<iframe id="ifr"></iframe>
+<pre id="test">
+</pre>
+</body>
+</html>

@@ -51,6 +51,7 @@ function initializeOnload() {
   var firstimg = document.createElement('img');
   firstimg.addEventListener("load", imageLoad, false);
   firstimg.addEventListener("error", imageLoad, false);
+  firstimg.alt = "";
   firstimg.src = "bug733553.sjs";
   document.getElementById('content').appendChild(firstimg);
 

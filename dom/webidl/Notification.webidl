@@ -19,6 +19,9 @@ interface Notification : EventTarget {
   [Throws]
   static void requestPermission(optional NotificationPermissionCallback permissionCallback);
 
+  [Throws]
+  static Promise get(optional GetNotificationOptions filter);
+
   attribute EventHandler onclick;
 
   attribute EventHandler onshow;
@@ -52,8 +55,12 @@ dictionary NotificationOptions {
   NotificationDirection dir = "auto";
   DOMString lang = "";
   DOMString body = "";
-  DOMString tag;
+  DOMString tag = "";
   DOMString icon = "";
+};
+
+dictionary GetNotificationOptions {
+  DOMString tag;
 };
 
 enum NotificationPermission {

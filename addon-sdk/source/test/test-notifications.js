@@ -4,14 +4,14 @@
 
 const { Loader } = require('sdk/test/loader');
 
-exports.testOnClick = function (test) {
+exports.testOnClick = function (assert) {
   let [loader, mockAlertServ] = makeLoader(module);
   let notifs = loader.require("sdk/notifications");
   let data = "test data";
   let opts = {
     onClick: function (clickedData) {
-      test.assertEqual(this, notifs, "|this| should be notifications module");
-      test.assertEqual(clickedData, data,
+      assert.equal(this, notifs, "|this| should be notifications module");
+      assert.equal(clickedData, data,
                        "data passed to onClick should be correct");
     },
     data: data,
@@ -25,7 +25,7 @@ exports.testOnClick = function (test) {
 };
 
 // Returns [loader, mockAlertService].
-function makeLoader(test) {
+function makeLoader(module) {
   let loader = Loader(module);
   let mockAlertServ = {
     showAlertNotification: function (imageUrl, title, text, textClickable,
@@ -41,4 +41,6 @@ function makeLoader(test) {
   let scope = loader.sandbox("sdk/notifications");
   scope.notify = mockAlertServ.showAlertNotification.bind(mockAlertServ);
   return [loader, mockAlertServ];
-};
+}
+
+require('sdk/test').run(exports);
