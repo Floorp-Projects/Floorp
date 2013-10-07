@@ -114,6 +114,20 @@ XPCOMUtils.defineLazyServiceGetter(this, "cpmm",
                                    "@mozilla.org/childprocessmessagemanager;1",
                                    "nsISyncMessageSender");
 
+XPCOMUtils.defineLazyGetter(this, "gNumRadioInterfaces", function () {
+  let appInfo = Cc["@mozilla.org/xre/app-info;1"];
+  let isParentProcess = !appInfo || appInfo.getService(Ci.nsIXULRuntime)
+                          .processType == Ci.nsIXULRuntime.PROCESS_TYPE_DEFAULT;
+
+  if (isParentProcess) {
+    let ril = Cc["@mozilla.org/ril;1"].getService(Ci.nsIRadioInterfaceLayer);
+    return ril.numRadioInterfaces;
+  }
+
+  let num = cpmm.sendSyncMessage("RIL:GetNumRadioInterfaces")[0];
+  return num;
+});
+
 function MobileIccCardLockResult(options) {
   this.lockType = options.lockType;
   this.enabled = options.enabled;

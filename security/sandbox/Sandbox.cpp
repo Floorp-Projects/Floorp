@@ -14,6 +14,7 @@
 #include "mozilla/Util.h"
 #if defined(ANDROID)
 #include "android_ucontext.h"
+#include <android/log.h>
 #endif
 #include "seccomp_filter.h"
 
@@ -24,8 +25,13 @@
 #include "prlog.h"
 
 namespace mozilla {
-#ifdef PR_LOGGING
+#if defined(ANDROID)
+#define LOG_ERROR(args...) __android_log_print(ANDROID_LOG_ERROR, "Sandbox", ## args)
+#elif defined(PR_LOGGING)
 static PRLogModuleInfo* gSeccompSandboxLog;
+#define LOG_ERROR(args...) PR_LOG(gSeccompSandboxLog, PR_LOG_ERROR, ## args)
+#else
+#define LOG_ERROR(args...)
 #endif
 
 struct sock_filter seccomp_filter[] = {
@@ -73,7 +79,7 @@ Reporter(int nr, siginfo_t *info, void *void_context)
   syscall = SECCOMP_SYSCALL(ctx);
   arg1 = SECCOMP_PARM1(ctx);
 
-  PR_LOG(gSeccompSandboxLog, PR_LOG_ERROR, ("PID %u is missing syscall %u, arg1 %u\n", getpid(), syscall, arg1));
+  LOG_ERROR("PID %u is missing syscall %u, arg1 %u\n", getpid(), syscall, arg1);
 
   _exit(127);
 }
@@ -149,7 +155,7 @@ InstallSyscallFilter(void)
 void
 SetCurrentProcessSandbox(void)
 {
-#ifdef PR_LOGGING
+#if !defined(ANDROID) && defined(PR_LOGGING)
   if (!gSeccompSandboxLog) {
     gSeccompSandboxLog = PR_NewLogModule("SeccompSandbox");
   }
@@ -158,7 +164,7 @@ SetCurrentProcessSandbox(void)
 
 #ifdef MOZ_CONTENT_SANDBOX_REPORTER
   if (InstallSyscallReporter()) {
-    PR_LOG(gSeccompSandboxLog, PR_LOG_ERROR, ("install_syscall_reporter() failed\n"));
+    LOG_ERROR("install_syscall_reporter() failed\n");
     /* This is disabled so that we do not exit if seccomp-bpf is not available
      * This will be re-enabled when all B2G devices are required to support seccomp-bpf
      * See bug 880797 for reversal
@@ -170,7 +176,7 @@ SetCurrentProcessSandbox(void)
 #endif
 
   if (InstallSyscallFilter()) {
-    PR_LOG(gSeccompSandboxLog, PR_LOG_ERROR, ("install_syscall_filter() failed\n"));
+    LOG_ERROR("install_syscall_filter() failed\n");
     /* This is disabled so that we do not exit if seccomp-bpf is not available
      * This will be re-enabled when all B2G devices are required to support seccomp-bpf
      * See bug 880797 for reversal

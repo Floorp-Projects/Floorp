@@ -348,6 +348,8 @@
 @BINPATH@/components/ContactManager.manifest
 @BINPATH@/components/PhoneNumberService.js
 @BINPATH@/components/PhoneNumberService.manifest
+@BINPATH@/components/NotificationStorage.js
+@BINPATH@/components/NotificationStorage.manifest
 @BINPATH@/components/PermissionSettings.js
 @BINPATH@/components/PermissionSettings.manifest
 @BINPATH@/components/PermissionPromptService.js

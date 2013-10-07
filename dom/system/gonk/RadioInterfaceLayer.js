@@ -78,6 +78,7 @@ const RADIO_POWER_OFF_TIMEOUT = 30000;
 const SMS_HANDLED_WAKELOCK_TIMEOUT = 5000;
 
 const RIL_IPC_MOBILECONNECTION_MSG_NAMES = [
+  "RIL:GetNumRadioInterfaces",
   "RIL:GetRilContext",
   "RIL:GetAvailableNetworks",
   "RIL:SelectNetwork",
@@ -102,6 +103,7 @@ const RIL_IPC_MOBILECONNECTION_MSG_NAMES = [
 ];
 
 const RIL_IPC_ICCMANAGER_MSG_NAMES = [
+  "RIL:GetNumRadioInterfaces",
   "RIL:SendStkResponse",
   "RIL:SendStkMenuSelection",
   "RIL:SendStkTimerExpiration",
@@ -119,11 +121,13 @@ const RIL_IPC_ICCMANAGER_MSG_NAMES = [
 ];
 
 const RIL_IPC_VOICEMAIL_MSG_NAMES = [
+  "RIL:GetNumRadioInterfaces",
   "RIL:RegisterVoicemailMsg",
   "RIL:GetVoicemailInfo"
 ];
 
 const RIL_IPC_CELLBROADCAST_MSG_NAMES = [
+  "RIL:GetNumRadioInterfaces",
   "RIL:RegisterCellBroadcastMsg"
 ];
 
@@ -387,6 +391,8 @@ XPCOMUtils.defineLazyGetter(this, "gMessageManager", function () {
       }
 
       switch (msg.name) {
+        case "RIL:GetNumRadioInterfaces":
+          return this.ril.numRadioInterfaces;
         case "RIL:RegisterMobileConnectionMsg":
           this._registerMessageTarget("mobileconnection", msg.target);
           return null;
