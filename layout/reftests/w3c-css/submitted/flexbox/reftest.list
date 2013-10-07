@@ -50,12 +50,14 @@ fuzzy-if(Android,158,32) == flexbox-align-self-vert-rtl-1.xhtml  flexbox-align-s
 == flexbox-items-as-stacking-contexts-3.html flexbox-items-as-stacking-contexts-3-ref.html
 
 # Tests for main-axis alignment (jusify-content property)
-== flexbox-justify-content-horiz-1.xhtml flexbox-justify-content-horiz-1-ref.xhtml
+== flexbox-justify-content-horiz-1a.xhtml flexbox-justify-content-horiz-1-ref.xhtml
+== flexbox-justify-content-horiz-1b.xhtml flexbox-justify-content-horiz-1-ref.xhtml
 == flexbox-justify-content-horiz-2.xhtml flexbox-justify-content-horiz-2-ref.xhtml
 == flexbox-justify-content-horiz-3.xhtml flexbox-justify-content-horiz-3-ref.xhtml
 == flexbox-justify-content-horiz-4.xhtml flexbox-justify-content-horiz-4-ref.xhtml
 == flexbox-justify-content-horiz-5.xhtml flexbox-justify-content-horiz-5-ref.xhtml
-== flexbox-justify-content-vert-1.xhtml flexbox-justify-content-vert-1-ref.xhtml
+== flexbox-justify-content-vert-1a.xhtml flexbox-justify-content-vert-1-ref.xhtml
+== flexbox-justify-content-vert-1b.xhtml flexbox-justify-content-vert-1-ref.xhtml
 == flexbox-justify-content-vert-2.xhtml flexbox-justify-content-vert-2-ref.xhtml
 == flexbox-justify-content-vert-3.xhtml flexbox-justify-content-vert-3-ref.xhtml
 == flexbox-justify-content-vert-4.xhtml flexbox-justify-content-vert-4-ref.xhtml
