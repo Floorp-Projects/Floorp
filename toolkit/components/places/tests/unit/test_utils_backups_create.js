@@ -32,32 +32,32 @@ function run_test() {
   // Sort dates from oldest to newest.
   dates.sort();
 
-  // Get and cleanup the backups folder.
-  var bookmarksBackupDir = PlacesBackups.folder;
-
-  // Fake backups are created backwards to ensure we won't consider file
-  // creation time.
-  // Create fake backups for the newest dates.
-  for (let i = dates.length - 1; i >= 0; i--) {
-    let backupFilename;
-    if (i > Math.floor(dates.length/2))
-      backupFilename = PREFIX + dates[i] + SUFFIX;
-    else
-      backupFilename = LOCALIZED_PREFIX + dates[i] + SUFFIX;
-    dump("creating: " + backupFilename + "\n");
-    let backupFile = bookmarksBackupDir.clone();
-    backupFile.append(backupFilename);
-    backupFile.create(Ci.nsIFile.NORMAL_FILE_TYPE, 0666);
-    do_check_true(backupFile.exists());
-  }
- 
-  // Replace PlacesUtils getFormattedString so that it will return the localized
-  // string we want.
-  PlacesUtils.getFormattedString = function (aKey, aValue) {
-    return LOCALIZED_PREFIX + aValue;
-  }
-
   Task.spawn(function() {
+    // Get and cleanup the backups folder.
+    let backupFolderPath = yield PlacesBackups.getBackupFolder();
+    let bookmarksBackupDir = new FileUtils.File(backupFolderPath);
+
+    // Fake backups are created backwards to ensure we won't consider file
+    // creation time.
+    // Create fake backups for the newest dates.
+    for (let i = dates.length - 1; i >= 0; i--) {
+      let backupFilename;
+      if (i > Math.floor(dates.length/2))
+        backupFilename = PREFIX + dates[i] + SUFFIX;
+      else
+        backupFilename = LOCALIZED_PREFIX + dates[i] + SUFFIX;
+      let backupFile = bookmarksBackupDir.clone();
+      backupFile.append(backupFilename);
+      backupFile.create(Ci.nsIFile.NORMAL_FILE_TYPE, 0666);
+      do_check_true(backupFile.exists());
+    }
+
+    // Replace PlacesUtils getFormattedString so that it will return the localized
+    // string we want.
+    PlacesUtils.getFormattedString = function (aKey, aValue) {
+      return LOCALIZED_PREFIX + aValue;
+    }
+
     yield PlacesBackups.create(Math.floor(dates.length/2));
     // Add today's backup.
     dates.push(dateObj.toLocaleFormat("%Y-%m-%d"));
@@ -99,9 +99,6 @@ function run_test() {
       entry.remove(false);
     }
     do_check_false(bookmarksBackupDir.directoryEntries.hasMoreElements());
-
-    // Recreate the folder.
-    PlacesBackups.folder;
 
     do_test_finished();
   });
