@@ -255,8 +255,9 @@ DOMStorage::CanUseStorage(DOMStorage* aStorage)
   }
 
   uint32_t perm;
-  permissionManager->TestPermissionFromPrincipal(subjectPrincipal,
-                                                 kPermissionType, &perm);
+  rv = permissionManager->TestPermissionFromPrincipal(subjectPrincipal,
+                                                      kPermissionType, &perm);
+  NS_ENSURE_SUCCESS(rv, false);
 
   if (perm == nsIPermissionManager::DENY_ACTION) {
     return false;
