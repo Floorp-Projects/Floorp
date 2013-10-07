@@ -229,6 +229,8 @@ MOCHITEST_BROWSER_FILES = \
                  browser_popupUI.js \
                  browser_private_browsing_window.js \
                  browser_private_no_prompt.js \
+                 browser_registerProtocolHandler_notification.html \
+                 browser_registerProtocolHandler_notification.js \
                  browser_relatedTabs.js \
                  browser_removeTabsToTheEnd.js \
                  browser_sanitize-passwordDisabledHosts.js \
