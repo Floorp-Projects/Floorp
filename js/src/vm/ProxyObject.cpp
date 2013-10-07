@@ -37,7 +37,7 @@ ProxyObject::New(JSContext *cx, BaseProxyHandler *handler, HandleValue priv, Tag
     if (proto.isObject() && !options.singleton()) {
         RootedObject protoObj(cx, proto.toObject());
         if (!JSObject::setNewTypeUnknown(cx, clasp, protoObj))
-            return NULL;
+            return nullptr;
     }
 
     NewObjectKind newKind =
@@ -47,7 +47,7 @@ ProxyObject::New(JSContext *cx, BaseProxyHandler *handler, HandleValue priv, Tag
         allocKind = GetBackgroundAllocKind(allocKind);
     RootedObject obj(cx, NewObjectWithGivenProto(cx, clasp, proto, parent, allocKind, newKind));
     if (!obj)
-        return NULL;
+        return nullptr;
 
     Rooted<ProxyObject*> proxy(cx, &obj->as<ProxyObject>());
     proxy->initHandler(handler);
