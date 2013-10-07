@@ -44,7 +44,7 @@ add_task(function test_corrupt_file() {
                                          true);
 
   // Check that bookmarks that are not corrupt have been imported.
-  yield Task.spawn(database_check);
+  yield database_check();
 });
 
 add_task(function test_corrupt_database() {
@@ -66,7 +66,7 @@ add_task(function test_corrupt_database() {
   // Import again and check for correctness.
   remove_all_bookmarks();
   yield BookmarkHTMLUtils.importFromFile(bookmarksFile, true);
-  yield Task.spawn(database_check);
+  yield database_check();
 });
 
 /*
@@ -77,113 +77,122 @@ add_task(function test_corrupt_database() {
  * @rejects Never.
  */
 function database_check() {
-  // BOOKMARKS MENU
-  var query = hs.getNewQuery();
-  query.setFolders([bs.bookmarksMenuFolder], 1);
-  var options = hs.getNewQueryOptions();
-  options.queryType = Ci.nsINavHistoryQueryOptions.QUERY_TYPE_BOOKMARKS;
-  var result = hs.executeQuery(query, options);
-  var rootNode = result.root;
-  rootNode.containerOpen = true;
-  do_check_eq(rootNode.childCount, 2);
+  return Task.spawn(function() {
+    // BOOKMARKS MENU
+    var query = hs.getNewQuery();
+    query.setFolders([bs.bookmarksMenuFolder], 1);
+    var options = hs.getNewQueryOptions();
+    options.queryType = Ci.nsINavHistoryQueryOptions.QUERY_TYPE_BOOKMARKS;
+    var result = hs.executeQuery(query, options);
+    var rootNode = result.root;
+    rootNode.containerOpen = true;
+    do_check_eq(rootNode.childCount, 2);
 
-  // get test folder
-  var testFolder = rootNode.getChild(1);
-  do_check_eq(testFolder.type, testFolder.RESULT_TYPE_FOLDER);
-  do_check_eq(testFolder.title, "test");
-  // add date
-  do_check_eq(bs.getItemDateAdded(testFolder.itemId)/1000000, 1177541020);
-  // last modified
-  do_check_eq(bs.getItemLastModified(testFolder.itemId)/1000000, 1177541050);
-  testFolder = testFolder.QueryInterface(Ci.nsINavHistoryQueryResultNode);
-  do_check_eq(testFolder.hasChildren, true);
-  // folder description
-  do_check_true(as.itemHasAnnotation(testFolder.itemId,
-                                          DESCRIPTION_ANNO));
-  do_check_eq("folder test comment",
-              as.getItemAnnotation(testFolder.itemId, DESCRIPTION_ANNO));
-  // open test folder, and test the children
-  testFolder.containerOpen = true;
-  var cc = testFolder.childCount;
-  do_check_eq(cc, 1);
+    // get test folder
+    var testFolder = rootNode.getChild(1);
+    do_check_eq(testFolder.type, testFolder.RESULT_TYPE_FOLDER);
+    do_check_eq(testFolder.title, "test");
+    // add date
+    do_check_eq(bs.getItemDateAdded(testFolder.itemId)/1000000, 1177541020);
+    // last modified
+    do_check_eq(bs.getItemLastModified(testFolder.itemId)/1000000, 1177541050);
+    testFolder = testFolder.QueryInterface(Ci.nsINavHistoryQueryResultNode);
+    do_check_eq(testFolder.hasChildren, true);
+    // folder description
+    do_check_true(as.itemHasAnnotation(testFolder.itemId,
+                                       DESCRIPTION_ANNO));
+    do_check_eq("folder test comment",
+                as.getItemAnnotation(testFolder.itemId, DESCRIPTION_ANNO));
+    // open test folder, and test the children
+    testFolder.containerOpen = true;
+    var cc = testFolder.childCount;
+    do_check_eq(cc, 1);
 
-  // test bookmark 1
-  var testBookmark1 = testFolder.getChild(0);
-  // url
-  do_check_eq("http://test/post", testBookmark1.uri);
-  // title
-  do_check_eq("test post keyword", testBookmark1.title);
-  // keyword
-  do_check_eq("test", bs.getKeywordForBookmark(testBookmark1.itemId));
-  // sidebar
-  do_check_true(as.itemHasAnnotation(testBookmark1.itemId,
-                                          LOAD_IN_SIDEBAR_ANNO));
-  // add date
-  do_check_eq(testBookmark1.dateAdded/1000000, 1177375336);
-  // last modified
-  do_check_eq(testBookmark1.lastModified/1000000, 1177375423);
-  // post data
-  do_check_true(as.itemHasAnnotation(testBookmark1.itemId,
-                                          POST_DATA_ANNO));
-  do_check_eq("hidden1%3Dbar&text1%3D%25s",
-              as.getItemAnnotation(testBookmark1.itemId, POST_DATA_ANNO));
-  // last charset
-  var testURI = uri(testBookmark1.uri);
-  do_check_eq((yield PlacesUtils.getCharsetForURI(testURI)), "ISO-8859-1");
+    // test bookmark 1
+    var testBookmark1 = testFolder.getChild(0);
+    // url
+    do_check_eq("http://test/post", testBookmark1.uri);
+    // title
+    do_check_eq("test post keyword", testBookmark1.title);
+    // keyword
+    do_check_eq("test", bs.getKeywordForBookmark(testBookmark1.itemId));
+    // sidebar
+    do_check_true(as.itemHasAnnotation(testBookmark1.itemId,
+                                       LOAD_IN_SIDEBAR_ANNO));
+    // add date
+    do_check_eq(testBookmark1.dateAdded/1000000, 1177375336);
+    // last modified
+    do_check_eq(testBookmark1.lastModified/1000000, 1177375423);
+    // post data
+    do_check_true(as.itemHasAnnotation(testBookmark1.itemId,
+                                       POST_DATA_ANNO));
+    do_check_eq("hidden1%3Dbar&text1%3D%25s",
+                as.getItemAnnotation(testBookmark1.itemId, POST_DATA_ANNO));
+    // last charset
+    var testURI = uri(testBookmark1.uri);
+    do_check_eq((yield PlacesUtils.getCharsetForURI(testURI)), "ISO-8859-1");
 
-  // description
-  do_check_true(as.itemHasAnnotation(testBookmark1.itemId,
-                                          DESCRIPTION_ANNO));
-  do_check_eq("item description",
-              as.getItemAnnotation(testBookmark1.itemId,
-                                        DESCRIPTION_ANNO));
+    // description
+    do_check_true(as.itemHasAnnotation(testBookmark1.itemId,
+                                       DESCRIPTION_ANNO));
+    do_check_eq("item description",
+                as.getItemAnnotation(testBookmark1.itemId,
+                                     DESCRIPTION_ANNO));
 
-  // clean up
-  testFolder.containerOpen = false;
-  rootNode.containerOpen = false;
+    // clean up
+    testFolder.containerOpen = false;
+    rootNode.containerOpen = false;
 
-  // BOOKMARKS TOOLBAR
-  query.setFolders([bs.toolbarFolder], 1);
-  result = hs.executeQuery(query, hs.getNewQueryOptions());
-  var toolbar = result.root;
-  toolbar.containerOpen = true;
-  do_check_eq(toolbar.childCount, 3);
+    // BOOKMARKS TOOLBAR
+    query.setFolders([bs.toolbarFolder], 1);
+    result = hs.executeQuery(query, hs.getNewQueryOptions());
+    var toolbar = result.root;
+    toolbar.containerOpen = true;
+    do_check_eq(toolbar.childCount, 3);
 
-  // livemark
-  var livemark = toolbar.getChild(1);
-  // title
-  do_check_eq("Latest Headlines", livemark.title);
-  PlacesUtils.livemarks.getLivemark(
-    { id: livemark.itemId },
-    function (aStatus, aLivemark) {
-      do_check_true(Components.isSuccessCode(aStatus));
-      do_check_eq("http://en-us.fxfeeds.mozilla.com/en-US/firefox/livebookmarks/",
-                  aLivemark.siteURI.spec);
-      do_check_eq("http://en-us.fxfeeds.mozilla.com/en-US/firefox/headlines.xml",
-                  aLivemark.feedURI.spec);
-    }
-  );
+    // livemark
+    var livemark = toolbar.getChild(1);
+    // title
+    do_check_eq("Latest Headlines", livemark.title);
 
-  // cleanup
-  toolbar.containerOpen = false;
+    let deferGetLivemark = Promise.defer();
+    PlacesUtils.livemarks.getLivemark(
+      { id: livemark.itemId },
+      function (aStatus, aLivemark) {
+        do_check_true(Components.isSuccessCode(aStatus));
+        do_check_eq("http://en-us.fxfeeds.mozilla.com/en-US/firefox/livebookmarks/",
+                    aLivemark.siteURI.spec);
+        do_check_eq("http://en-us.fxfeeds.mozilla.com/en-US/firefox/headlines.xml",
+                    aLivemark.feedURI.spec);
+        deferGetLivemark.resolve();
+      }
+    );
+    yield deferGetLivemark.promise;
 
-  // UNFILED BOOKMARKS
-  query.setFolders([bs.unfiledBookmarksFolder], 1);
-  result = hs.executeQuery(query, hs.getNewQueryOptions());
-  var unfiledBookmarks = result.root;
-  unfiledBookmarks.containerOpen = true;
-  do_check_eq(unfiledBookmarks.childCount, 1);
-  unfiledBookmarks.containerOpen = false;
+    // cleanup
+    toolbar.containerOpen = false;
 
-  // favicons
-  icos.getFaviconDataForPage(uri(TEST_FAVICON_PAGE_URL),
-    function DC_onComplete(aURI, aDataLen, aData, aMimeType) {
-      // aURI should never be null when aDataLen > 0.
-      do_check_neq(aURI, null);
-      // Favicon data is stored in the bookmarks file as a "data:" URI.  For
-      // simplicity, instead of converting the data we receive to a "data:" URI
-      // and comparing it, we just check the data size.
-      do_check_eq(TEST_FAVICON_DATA_SIZE, aDataLen);
-    }
-  );
+    // UNFILED BOOKMARKS
+    query.setFolders([bs.unfiledBookmarksFolder], 1);
+    result = hs.executeQuery(query, hs.getNewQueryOptions());
+    var unfiledBookmarks = result.root;
+    unfiledBookmarks.containerOpen = true;
+    do_check_eq(unfiledBookmarks.childCount, 1);
+    unfiledBookmarks.containerOpen = false;
+
+    // favicons
+    let deferGetFaviconData = Promise.defer();
+    icos.getFaviconDataForPage(uri(TEST_FAVICON_PAGE_URL),
+      function DC_onComplete(aURI, aDataLen, aData, aMimeType) {
+        // aURI should never be null when aDataLen > 0.
+        do_check_neq(aURI, null);
+        // Favicon data is stored in the bookmarks file as a "data:" URI.  For
+        // simplicity, instead of converting the data we receive to a "data:" URI
+        // and comparing it, we just check the data size.
+        do_check_eq(TEST_FAVICON_DATA_SIZE, aDataLen);
+        deferGetFaviconData.resolve();
+      }
+    );
+    yield deferGetFaviconData.promise;
+  });
 }
