@@ -9,7 +9,6 @@
 #include "gfxPoint.h"
 #include "gfxTypes.h"
 #include "gfxRect.h"
-#include "nsMathUtils.h"
 
 // XX - I don't think this class should use gfxFloat at all,
 // but should use 'double' and be called gfxDoubleMatrix;

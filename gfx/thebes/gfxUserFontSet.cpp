@@ -10,14 +10,14 @@
 
 #include "gfxUserFontSet.h"
 #include "gfxPlatform.h"
-#include "nsReadableUtils.h"
 #include "nsUnicharUtils.h"
 #include "nsNetUtil.h"
 #include "nsICacheService.h"
 #include "nsIProtocolHandler.h"
 #include "nsIPrincipal.h"
+#include "gfxFontConstants.h"
 #include "mozilla/Services.h"
-#include "mozilla/Telemetry.h"
+#include "mozilla/gfx/2D.h"
 
 #include "opentype-sanitiser.h"
 #include "ots-memory-stream.h"

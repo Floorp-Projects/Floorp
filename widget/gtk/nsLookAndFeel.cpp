@@ -23,6 +23,8 @@
 
 #include "gtkdrawing.h"
 #include "nsStyleConsts.h"
+#include "gfxFontConstants.h"
+#include "mozilla/gfx/2D.h"
 
 using mozilla::LookAndFeel;
 

@@ -7,7 +7,6 @@
 #include "gfxASurface.h"
 #include "gfxContext.h"
 #include "gfxPlatform.h"
-#include "mozilla/arm.h"
 #ifdef MOZ_X11
 #include "cairo.h"
 #include "gfxXlibSurface.h"

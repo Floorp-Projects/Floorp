@@ -50,6 +50,7 @@
 #include "nsIComponentRegistrar.h"
 #include "nsComponentManagerUtils.h"
 #include "nsAutoPtr.h"
+#include "mozilla/gfx/2D.h"
 #include <gtk/gtk.h>
 
 using namespace mozilla;
