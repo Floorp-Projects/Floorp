@@ -2517,7 +2517,7 @@ toolbarbutton.chevron > .toolbarbutton-menu-dropmarker {
   box-shadow: @focusRingShadow@;
 }
 
-#main-window:not([privatebrowsingmode=temporary]):not([customizing]):not([customize-exiting]) #navigator-toolbox:not(:-moz-lwtheme)::before {
+#main-window:not(:-moz-any([privatebrowsingmode=temporary],[customizing],[customize-exiting],[tabsintitlebar])) #navigator-toolbox:not(:-moz-lwtheme)::before {
   /* We want the titlebar to be unified, but we still want to be able
    * to give #TabsToolbar a background. So we can't set -moz-appearance:
    * toolbar on #TabsToolbar itself. Instead, we set it on a box of the
