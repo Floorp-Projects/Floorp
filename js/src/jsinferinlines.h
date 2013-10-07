@@ -29,7 +29,7 @@
 inline bool
 js::TaggedProto::isObject() const
 {
-    /* Skip NULL and Proxy::LazyProto. */
+    /* Skip nullptr and Proxy::LazyProto. */
     return uintptr_t(proto) > uintptr_t(Proxy::LazyProto);
 }
 
@@ -107,7 +107,7 @@ inline CompilerOutput*
 RecompileInfo::compilerOutput(TypeCompartment &types) const
 {
     if (!types.constrainedOutputs || outputIndex >= types.constrainedOutputs->length())
-        return NULL;
+        return nullptr;
     return &(*types.constrainedOutputs)[outputIndex];
 }
 
@@ -371,7 +371,7 @@ GetTypeNewObject(JSContext *cx, JSProtoKey key)
 {
     RootedObject proto(cx);
     if (!js_GetClassPrototype(cx, key, &proto))
-        return NULL;
+        return nullptr;
     return cx->getNewType(GetClassForProtoKey(key), proto.get());
 }
 
@@ -623,8 +623,8 @@ TypeScript::BytecodeTypes(JSScript *script, jsbytecode *pc)
 TypeScript::StandardType(JSContext *cx, JSProtoKey key)
 {
     RootedObject proto(cx);
-    if (!js_GetClassPrototype(cx, key, &proto, NULL))
-        return NULL;
+    if (!js_GetClassPrototype(cx, key, &proto, nullptr))
+        return nullptr;
     return cx->getNewType(GetClassForProtoKey(key), proto.get());
 }
 
@@ -891,7 +891,7 @@ HashKey(T v)
 
 /*
  * Insert space for an element into the specified set and grow its capacity if needed.
- * returned value is an existing or new entry (NULL if new).
+ * returned value is an existing or new entry (nullptr if new).
  */
 template <class T, class U, class KEY>
 static U **
@@ -904,7 +904,7 @@ HashSetInsertTry(LifoAlloc &alloc, U **&values, unsigned &count, T key)
     bool converting = (count == SET_ARRAY_SIZE);
 
     if (!converting) {
-        while (values[insertpos] != NULL) {
+        while (values[insertpos] != nullptr) {
             if (KEY::getKey(values[insertpos]) == key)
                 return &values[insertpos];
             insertpos = (insertpos + 1) & (capacity - 1);
@@ -921,13 +921,13 @@ HashSetInsertTry(LifoAlloc &alloc, U **&values, unsigned &count, T key)
 
     U **newValues = alloc.newArray<U*>(newCapacity);
     if (!newValues)
-        return NULL;
+        return nullptr;
     mozilla::PodZero(newValues, newCapacity);
 
     for (unsigned i = 0; i < capacity; i++) {
         if (values[i]) {
             unsigned pos = HashKey<T,KEY>(KEY::getKey(values[i])) & (newCapacity - 1);
-            while (newValues[pos] != NULL)
+            while (newValues[pos] != nullptr)
                 pos = (pos + 1) & (newCapacity - 1);
             newValues[pos] = values[i];
         }
@@ -936,21 +936,21 @@ HashSetInsertTry(LifoAlloc &alloc, U **&values, unsigned &count, T key)
     values = newValues;
 
     insertpos = HashKey<T,KEY>(key) & (newCapacity - 1);
-    while (values[insertpos] != NULL)
+    while (values[insertpos] != nullptr)
         insertpos = (insertpos + 1) & (newCapacity - 1);
     return &values[insertpos];
 }
 
 /*
  * Insert an element into the specified set if it is not already there, returning
- * an entry which is NULL if the element was not there.
+ * an entry which is nullptr if the element was not there.
  */
 template <class T, class U, class KEY>
 static inline U **
 HashSetInsert(LifoAlloc &alloc, U **&values, unsigned &count, T key)
 {
     if (count == 0) {
-        JS_ASSERT(values == NULL);
+        JS_ASSERT(values == nullptr);
         count++;
         return (U **) &values;
     }
@@ -963,7 +963,7 @@ HashSetInsert(LifoAlloc &alloc, U **&values, unsigned &count, T key)
         values = alloc.newArray<U*>(SET_ARRAY_SIZE);
         if (!values) {
             values = (U **) oldData;
-            return NULL;
+            return nullptr;
         }
         mozilla::PodZero(values, SET_ARRAY_SIZE);
         count++;
@@ -987,35 +987,35 @@ HashSetInsert(LifoAlloc &alloc, U **&values, unsigned &count, T key)
     return HashSetInsertTry<T,U,KEY>(alloc, values, count, key);
 }
 
-/* Lookup an entry in a hash set, return NULL if it does not exist. */
+/* Lookup an entry in a hash set, return nullptr if it does not exist. */
 template <class T, class U, class KEY>
 static inline U *
 HashSetLookup(U **values, unsigned count, T key)
 {
     if (count == 0)
-        return NULL;
+        return nullptr;
 
     if (count == 1)
-        return (KEY::getKey((U *) values) == key) ? (U *) values : NULL;
+        return (KEY::getKey((U *) values) == key) ? (U *) values : nullptr;
 
     if (count <= SET_ARRAY_SIZE) {
         for (unsigned i = 0; i < count; i++) {
             if (KEY::getKey(values[i]) == key)
                 return values[i];
         }
-        return NULL;
+        return nullptr;
     }
 
     unsigned capacity = HashSetCapacity(count);
     unsigned pos = HashKey<T,KEY>(key) & (capacity - 1);
 
-    while (values[pos] != NULL) {
+    while (values[pos] != nullptr) {
         if (KEY::getKey(values[pos]) == key)
             return values[pos];
         pos = (pos + 1) & (capacity - 1);
     }
 
-    return NULL;
+    return nullptr;
 }
 
 inline TypeObjectKey *
@@ -1060,7 +1060,7 @@ TypeSet::hasType(Type type) const
     } else {
         return !!(flags & TYPE_FLAG_ANYOBJECT) ||
             HashSetLookup<TypeObjectKey*,TypeObjectKey,TypeObjectKey>
-            (objectSet, baseObjectCount(), type.objectKey()) != NULL;
+            (objectSet, baseObjectCount(), type.objectKey()) != nullptr;
     }
 }
 
@@ -1076,7 +1076,7 @@ inline void
 TypeSet::clearObjects()
 {
     setBaseObjectCount(0);
-    objectSet = NULL;
+    objectSet = nullptr;
 }
 
 inline void
@@ -1205,14 +1205,14 @@ inline JSObject *
 TypeSet::getSingleObject(unsigned i) const
 {
     TypeObjectKey *key = getObject(i);
-    return (key && key->isSingleObject()) ? key->asSingleObject() : NULL;
+    return (key && key->isSingleObject()) ? key->asSingleObject() : nullptr;
 }
 
 inline TypeObject *
 TypeSet::getTypeObject(unsigned i) const
 {
     TypeObjectKey *key = getObject(i);
-    return (key && key->isTypeObject()) ? key->asTypeObject() : NULL;
+    return (key && key->isTypeObject()) ? key->asTypeObject() : nullptr;
 }
 
 inline bool
@@ -1221,7 +1221,7 @@ TypeSet::getTypeOrSingleObject(JSContext *cx, unsigned i, TypeObject **result) c
     JS_ASSERT(result);
     JS_ASSERT(cx->compartment()->activeAnalysis);
 
-    *result = NULL;
+    *result = nullptr;
 
     TypeObject *type = getTypeObject(i);
     if (!type) {
@@ -1246,7 +1246,7 @@ TypeSet::getObjectClass(unsigned i) const
         return object->getClass();
     if (TypeObject *object = getTypeObject(i))
         return object->clasp;
-    return NULL;
+    return nullptr;
 }
 
 /////////////////////////////////////////////////////////////////////
@@ -1297,15 +1297,15 @@ TypeObject::getProperty(ExclusiveContext *cx, jsid id)
         (cx->typeLifoAlloc(), propertySet, propertyCount, id);
     if (!pprop) {
         cx->compartment()->types.setPendingNukeTypes(cx);
-        return NULL;
+        return nullptr;
     }
 
     if (!*pprop) {
         setBasePropertyCount(propertyCount);
         if (!addProperty(cx, id, pprop)) {
             setBasePropertyCount(0);
-            propertySet = NULL;
-            return NULL;
+            propertySet = nullptr;
+            return nullptr;
         }
         if (propertyCount == OBJECT_FLAG_PROPERTY_COUNT_LIMIT) {
             markUnknown(cx);
@@ -1337,7 +1337,7 @@ TypeObject::maybeGetProperty(ExclusiveContext *cx, jsid id)
     Property *prop = HashSetLookup<jsid,Property,Property>
         (propertySet, basePropertyCount(), id);
 
-    return prop ? &prop->types : NULL;
+    return prop ? &prop->types : nullptr;
 }
 
 inline unsigned
@@ -1484,8 +1484,8 @@ inline void
 JSScript::clearAnalysis()
 {
     if (types) {
-        types->analysis = NULL;
-        types->bytecodeMap = NULL;
+        types->analysis = nullptr;
+        types->bytecodeMap = nullptr;
     }
 }
 
