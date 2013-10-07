@@ -269,6 +269,28 @@ DOMStorageManager::GetCache(const nsACString& aScope) const
   return entry->cache();
 }
 
+already_AddRefed<DOMStorageUsage>
+DOMStorageManager::GetScopeUsage(const nsACString& aScope)
+{
+  nsRefPtr<DOMStorageUsage> usage;
+  if (mUsages.Get(aScope, &usage)) {
+    return usage.forget();
+  }
+
+  usage = new DOMStorageUsage(aScope);
+
+  if (mType == LocalStorage) {
+    DOMStorageDBBridge* db = DOMStorageCache::StartDatabase();
+    if (db) {
+      db->AsyncGetUsage(usage);
+    }
+  }
+
+  mUsages.Put(aScope, usage);
+
+  return usage.forget();
+}
+
 already_AddRefed<DOMStorageCache>
 DOMStorageManager::PutCache(const nsACString& aScope,
                             nsIPrincipal* aPrincipal)
@@ -283,7 +305,7 @@ DOMStorageManager::PutCache(const nsACString& aScope,
   case SessionStorage:
     // Lifetime handled by the manager, don't persist
     entry->HardRef();
-    cache->Init(nullptr, false, aPrincipal, quotaScope);
+    cache->Init(this, false, aPrincipal, quotaScope);
     break;
 
   case LocalStorage:
