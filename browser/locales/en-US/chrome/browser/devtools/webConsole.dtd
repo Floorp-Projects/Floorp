@@ -68,7 +68,7 @@
   -  console.error(). -->
 <!ENTITY btnPageLogging.label   "Logging">
 <!ENTITY btnPageLogging.tooltip "Log messages sent to the window.console object">
-<!ENTITY btnPageLogging.accesskey2 "R">
+<!ENTITY btnPageLogging.accesskey3 "L">
 <!ENTITY btnConsoleErrors       "Errors">
 <!ENTITY btnConsoleInfo         "Info">
 <!ENTITY btnConsoleWarnings     "Warnings">
@@ -77,6 +77,7 @@
 <!ENTITY filterOutput.placeholder "Filter output">
 <!ENTITY btnClear.label        "Clear">
 <!ENTITY btnClear.tooltip      "Clear the Web Console output">
+<!ENTITY btnClear.accesskey    "r">
 
 <!ENTITY fullZoomEnlargeCmd.commandkey  "+">
 <!ENTITY fullZoomEnlargeCmd.commandkey2 "="> <!-- + is above this key on many keyboards -->
@@ -93,5 +94,4 @@
 
 <!ENTITY closeCmd.key         "W">
 <!ENTITY findCmd.key          "F">
-<!ENTITY clearOutputCmd.key   "K">
 <!ENTITY clearOutputCtrl.key  "L">

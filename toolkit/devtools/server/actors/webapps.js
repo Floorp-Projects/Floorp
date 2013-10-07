@@ -190,6 +190,9 @@ WebappsActor.prototype = {
                                requestID: "bar"
                              });
 
+        Services.obs.notifyObservers(null, "webapps-installed",
+          JSON.stringify({ manifestURL: aApp.manifestURL }));
+
         delete aApp.manifest;
         aDeferred.resolve({ appId: aId, path: aDir.path });
 
@@ -541,6 +544,32 @@ WebappsActor.prototype = {
     return deferred.promise;
   },
 
+  getApp: function wa_actorGetApp(aRequest) {
+    debug("getApp");
+
+    let manifestURL = aRequest.manifestURL;
+    if (!manifestURL) {
+      return { error: "missingParameter",
+               message: "missing parameter manifestURL" };
+    }
+
+    let reg = DOMApplicationRegistry;
+    let app = reg.getAppByManifestURL(manifestURL);
+    if (!app) {
+      return { error: "appNotFound" };
+    }
+
+    if (this._isAppAllowedForManifest(app.manifestURL)) {
+      let deferred = promise.defer();
+      reg.getManifestFor(manifestURL, function (manifest) {
+        app.manifest = manifest;
+        deferred.resolve({app: app});
+      });
+      return deferred.promise;
+    }
+    return { error: "forbidden" };
+  },
+
   _areCertifiedAppsAllowed: function wa__areCertifiedAppsAllowed() {
     let pref = "devtools.debugger.forbid-certified-apps";
     return !Services.prefs.getBoolPref(pref);
@@ -853,20 +882,29 @@ WebappsActor.prototype = {
 
   watchApps: function () {
     this._openedApps = new Set();
-    let chromeWindow = Services.wm.getMostRecentWindow('navigator:browser');
-    let systemAppFrame = chromeWindow.getContentWindow();
-    systemAppFrame.addEventListener("appwillopen", this);
-    systemAppFrame.addEventListener("appterminated", this);
+    // For now, app open/close events are only implement on b2g
+    if (Services.appinfo.ID == "{3c2e2abc-06d4-11e1-ac3b-374f68613e61}") {
+      let chromeWindow = Services.wm.getMostRecentWindow('navigator:browser');
+      let systemAppFrame = chromeWindow.getContentWindow();
+      systemAppFrame.addEventListener("appwillopen", this);
+      systemAppFrame.addEventListener("appterminated", this);
+    }
+    Services.obs.addObserver(this, "webapps-installed", false);
+    Services.obs.addObserver(this, "webapps-uninstall", false);
 
     return {};
   },
 
   unwatchApps: function () {
     this._openedApps = null;
-    let chromeWindow = Services.wm.getMostRecentWindow('navigator:browser');
-    let systemAppFrame = chromeWindow.getContentWindow();
-    systemAppFrame.removeEventListener("appwillopen", this);
-    systemAppFrame.removeEventListener("appterminated", this);
+    if (Services.appinfo.ID == "{3c2e2abc-06d4-11e1-ac3b-374f68613e61}") {
+      let chromeWindow = Services.wm.getMostRecentWindow('navigator:browser');
+      let systemAppFrame = chromeWindow.getContentWindow();
+      systemAppFrame.removeEventListener("appwillopen", this);
+      systemAppFrame.removeEventListener("appterminated", this);
+    }
+    Services.obs.removeObserver(this, "webapps-installed", false);
+    Services.obs.removeObserver(this, "webapps-uninstall", false);
 
     return {};
   },
@@ -912,6 +950,21 @@ WebappsActor.prototype = {
 
         break;
     }
+  },
+
+  observe: function (subject, topic, data) {
+    let app = JSON.parse(data);
+    if (topic == "webapps-installed") {
+      this.conn.send({ from: this.actorID,
+                       type: "appInstall",
+                       manifestURL: app.manifestURL
+                     });
+    } else if (topic == "webapps-uninstall") {
+      this.conn.send({ from: this.actorID,
+                       type: "appUninstall",
+                       manifestURL: app.manifestURL
+                     });
+    }
   }
 };
 
@@ -928,6 +981,7 @@ if (Services.prefs.getBoolPref("devtools.debugger.enable-content-actors")) {
   let requestTypes = WebappsActor.prototype.requestTypes;
   requestTypes.uploadPackage = WebappsActor.prototype.uploadPackage;
   requestTypes.getAll = WebappsActor.prototype.getAll;
+  requestTypes.getApp = WebappsActor.prototype.getApp;
   requestTypes.launch = WebappsActor.prototype.launch;
   requestTypes.close  = WebappsActor.prototype.close;
   requestTypes.uninstall = WebappsActor.prototype.uninstall;

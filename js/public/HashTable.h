@@ -575,6 +575,19 @@ struct DefaultHasher<double>
     }
 };
 
+template <>
+struct DefaultHasher<float>
+{
+    typedef float Lookup;
+    static HashNumber hash(float f) {
+        JS_STATIC_ASSERT(sizeof(HashNumber) == 4);
+        return HashNumber(mozilla::BitwiseCast<uint32_t>(f));
+    }
+    static bool match(float lhs, float rhs) {
+        return mozilla::BitwiseCast<uint32_t>(lhs) == mozilla::BitwiseCast<uint32_t>(rhs);
+    }
+};
+
 /*****************************************************************************/
 
 // Both HashMap and HashSet are implemented by a single HashTable that is even

@@ -211,11 +211,12 @@ WindowNamedPropertiesHandler::Install(JSContext* aCx,
   // chain, it needs a singleton type to avoid polluting type information
   // for properties on the window.
   JS::Rooted<JSObject*> gsp(aCx);
+  js::ProxyOptions options;
+  options.setSingleton(true);
   gsp = js::NewProxyObject(aCx, WindowNamedPropertiesHandler::getInstance(),
                            JS::NullHandleValue, protoProto,
                            js::GetGlobalForObjectCrossCompartment(aProto),
-                           js::ProxyNotCallable,
-                           /* singleton = */ true);
+                           options);
   if (!gsp) {
     return;
   }

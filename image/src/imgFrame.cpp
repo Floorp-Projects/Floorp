@@ -19,6 +19,7 @@ static bool gDisableOptimize = false;
 #include "mozilla/Likely.h"
 #include "mozilla/MemoryReporting.h"
 #include "nsMargin.h"
+#include "mozilla/CheckedInt.h"
 
 #if defined(XP_WIN)
 
@@ -55,13 +56,8 @@ static bool AllowedImageSize(int32_t aWidth, int32_t aHeight)
   }
 
   // check to make sure we don't overflow a 32-bit
-  int32_t tmp = aWidth * aHeight;
-  if (MOZ_UNLIKELY(tmp / aHeight != aWidth)) {
-    NS_WARNING("width or height too large");
-    return false;
-  }
-  tmp = tmp * 4;
-  if (MOZ_UNLIKELY(tmp / 4 != aWidth * aHeight)) {
+  CheckedInt32 requiredBytes = CheckedInt32(aWidth) * CheckedInt32(aHeight) * 4;
+  if (MOZ_UNLIKELY(!requiredBytes.isValid())) {
     NS_WARNING("width or height too large");
     return false;
   }

@@ -78,7 +78,7 @@ function prefChanged(event, data) {
 }
 
 function checkTools() {
-  let toolsPref = panelWin.document.querySelectorAll("#default-tools-box > checkbox");
+  let toolsPref = panelWin.document.querySelectorAll("#default-tools-box > checkbox:not([unsupported])");
   prefNodes = [];
   index = 0;
   for (let tool of toolsPref) {

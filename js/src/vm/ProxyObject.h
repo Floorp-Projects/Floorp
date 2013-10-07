@@ -24,7 +24,8 @@ class ProxyObject : public JSObject
 
   public:
     static ProxyObject *New(JSContext *cx, BaseProxyHandler *handler, HandleValue priv,
-                            TaggedProto proto_, JSObject *parent_, ProxyCallable callable, bool singleton = false);
+                            TaggedProto proto_, JSObject *parent_,
+                            const ProxyOptions &options);
 
     const Value &private_() {
         return GetReservedSlot(this, PRIVATE_SLOT);
@@ -78,35 +79,12 @@ class ProxyObject : public JSObject
     static void trace(JSTracer *trc, JSObject *obj);
 
     void nuke(BaseProxyHandler *handler);
+
+    static const Class callableClass_;
+    static const Class uncallableClass_;
 };
 
-class FunctionProxyObject : public ProxyObject
-{
-    static const uint32_t CALL_SLOT      = 4;
-    static const uint32_t CONSTRUCT_SLOT = 5;
-
-  public:
-    static const Class class_;
-
-    static FunctionProxyObject *New(JSContext *cx, BaseProxyHandler *handler, HandleValue priv,
-                                    JSObject *proto, JSObject *parent, JSObject *call,
-                                    JSObject *construct);
-
-    HeapSlot &call() { return getSlotRef(CALL_SLOT); }
-
-    inline HeapSlot &construct();
-    inline Value constructOrUndefined() const;
-
-    void nukeExtra();
-};
-
-class ObjectProxyObject : public ProxyObject
-{
-  public:
-    static const Class class_;
-};
-
-class OuterWindowProxyObject : public ObjectProxyObject
+class OuterWindowProxyObject : public ProxyObject
 {
   public:
     static const Class class_;
@@ -125,23 +103,6 @@ inline bool
 JSObject::is<js::ProxyObject>() const
 {
     return js::IsProxy(const_cast<JSObject*>(this));
-}
-
-template<>
-inline bool
-JSObject::is<js::FunctionProxyObject>() const
-{
-    return js::IsFunctionProxy(const_cast<JSObject*>(this));
-}
-
-// WARNING: This function succeeds for ObjectProxyObject *and*
-// OuterWindowProxyObject (which is a sub-class).  If you want a test that only
-// succeeds for ObjectProxyObject, use |hasClass(&ObjectProxyObject::class_)|.
-template<>
-inline bool
-JSObject::is<js::ObjectProxyObject>() const
-{
-    return js::IsObjectProxy(const_cast<JSObject*>(this));
 }
 
 #endif /* vm_ProxyObject_h */

@@ -28,19 +28,6 @@ CountArgSlots(JSScript *script, JSFunction *fun)
     return StartArgSlot(script, fun) + (fun ? fun->nargs + 1 : 0);
 }
 
-enum ExecutionMode {
-    // Normal JavaScript execution
-    SequentialExecution,
-
-    // JavaScript code to be executed in parallel worker threads,
-    // e.g. by ParallelArray
-    ParallelExecution,
-
-    // MIR analysis performed when invoking 'new' on a script, to determine
-    // definite properties
-    DefinitePropertiesAnalysis
-};
-
 // Not as part of the enum so we don't get warnings about unhandled enum
 // values.
 static const unsigned NumExecutionModes = ParallelExecution + 1;

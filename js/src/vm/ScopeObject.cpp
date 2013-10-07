@@ -1508,7 +1508,7 @@ DebugScopeObject::create(JSContext *cx, ScopeObject &scope, HandleObject enclosi
     JS_ASSERT(scope.compartment() == cx->compartment());
     RootedValue priv(cx, ObjectValue(scope));
     JSObject *obj = NewProxyObject(cx, &DebugScopeProxy::singleton, priv,
-                                   nullptr /* proto */, &scope.global(), ProxyNotCallable);
+                                   nullptr /* proto */, &scope.global());
     if (!obj)
         return nullptr;
 
@@ -1555,9 +1555,9 @@ DebugScopeObject::isForDeclarative() const
 }
 
 bool
-js_IsDebugScopeSlow(ObjectProxyObject *proxy)
+js_IsDebugScopeSlow(ProxyObject *proxy)
 {
-    JS_ASSERT(proxy->hasClass(&ObjectProxyObject::class_));
+    JS_ASSERT(proxy->hasClass(&ProxyObject::uncallableClass_));
     return proxy->handler() == &DebugScopeProxy::singleton;
 }
 
@@ -1803,7 +1803,7 @@ DebugScopes::onPopCall(AbstractFramePtr frame, JSContext *cx)
          * but are aliased via the arguments object.
          */
         RootedScript script(cx, frame.script());
-        if (script->needsArgsObj() && frame.hasArgsObj()) {
+        if (script->analyzedArgsUsage() && script->needsArgsObj() && frame.hasArgsObj()) {
             for (unsigned i = 0; i < frame.numFormalArgs(); ++i) {
                 if (script->formalLivesInArgumentsObject(i))
                     vec[i] = frame.argsObj().arg(i);

@@ -34,7 +34,7 @@ inline const void* ProxyFamily() { return &HandlerFamily; }
 inline bool IsDOMProxy(JSObject *obj, const js::Class* clasp)
 {
     MOZ_ASSERT(js::GetObjectClass(obj) == clasp);
-    return (js::IsObjectProxyClass(clasp) || js::IsFunctionProxyClass(clasp)) &&
+    return js::IsProxyClass(clasp) &&
            js::GetProxyHandler(obj)->family() == ProxyFamily();
 }
 

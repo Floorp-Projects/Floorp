@@ -81,6 +81,10 @@ function isOpen(panel) {
 }
 exports.isOpen = isOpen;
 
+function isOpening(panel) {
+  return panel.state === "showing"
+}
+exports.isOpening = isOpening
 
 function close(panel) {
   // Sometimes "TypeError: panel.hidePopup is not a function" is thrown
@@ -363,8 +367,10 @@ function style(panel) {
 }
 exports.style = style;
 
-function getContentFrame(panel) isOpen(panel) ? panel.firstChild :
-                                                panel.backgroundFrame
+let getContentFrame = panel =>
+    (isOpen(panel) || isOpening(panel)) ?
+    panel.firstChild :
+    panel.backgroundFrame
 exports.getContentFrame = getContentFrame;
 
 function getContentDocument(panel) getContentFrame(panel).contentDocument

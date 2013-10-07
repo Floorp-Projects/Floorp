@@ -10,7 +10,7 @@ module.metadata = {
 const { Class } = require('./core/heritage');
 const { on, emit, off, setListeners } = require('./event/core');
 const { filter, pipe, map, merge: streamMerge } = require('./event/utils');
-const { WorkerHost, Worker, detach, attach } = require('./worker/utils');
+const { WorkerHost, Worker, detach, attach, destroy } = require('./worker/utils');
 const { Disposable } = require('./core/disposable');
 const { EventTarget } = require('./event/target');
 const { unload } = require('./system/unload');
@@ -131,7 +131,7 @@ const Page = Class({
     let view = viewFor(this);
     if (view.parentNode) view.parentNode.removeChild(view);
     views.delete(this);
-    detach(workers.get(this));
+    destroy(workers.get(this));
   },
   toString: function () '[object Page]'
 });

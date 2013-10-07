@@ -1,23 +1,30 @@
-let a = [];
-a.length = getMaxArgs() + 1;
 
-let f = function() {
-};
+var config = getBuildConfiguration();
 
-try {
-  f(...a);
-} catch (e) {
-  assertEq(e.message, "too many function arguments");
-}
+// FIXME: ASAN debug builds run this too slowly for now.  Re-enable
+// after bug 919948 lands.
+if (!(config.debug && config.asan)) {
+    let a = [];
+    a.length = getMaxArgs() + 1;
 
-try {
-  new f(...a);
-} catch (e) {
-  assertEq(e.message, "too many constructor arguments");
-}
+    let f = function() {
+    };
 
-try {
-  eval(...a);
-} catch (e) {
-  assertEq(e.message, "too many function arguments");
+    try {
+        f(...a);
+    } catch (e) {
+        assertEq(e.message, "too many function arguments");
+    }
+
+    try {
+        new f(...a);
+    } catch (e) {
+        assertEq(e.message, "too many constructor arguments");
+    }
+
+    try {
+        eval(...a);
+    } catch (e) {
+        assertEq(e.message, "too many function arguments");
+    }
 }

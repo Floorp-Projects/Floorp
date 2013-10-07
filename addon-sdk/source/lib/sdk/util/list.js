@@ -9,8 +9,9 @@ module.metadata = {
 
 const { Class } = require('../core/heritage');
 const listNS = require('../core/namespace').ns();
+const { iteratorSymbol } = require('../util/iteration');
 
-const List = Class({
+const listOptions = {
   /**
    * List constructor can take any number of element to populate itself.
    * @params {Object|String|Number} element
@@ -46,14 +47,11 @@ const List = Class({
     for each(let element in array)
       yield onKeyValue ? [++i, element] : onKeys ? ++i : element;
   },
-  iterator: function iterator() {
-    let array = listNS(this).keyValueMap.slice(0),
-                i = -1;
-
-    for (let element of array)
-      yield element;
-  }
-});
+};
+listOptions[iteratorSymbol] = function iterator() {
+    return listNS(this).keyValueMap.slice(0)[iteratorSymbol]();
+};
+const List = Class(listOptions);
 exports.List = List;
 
 function addListItem(that, value) {

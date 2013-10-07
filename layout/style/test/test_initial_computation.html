@@ -3,7 +3,7 @@
 <!--
 -->
 <head>
-  <title>Test for computation of CSS 'initial'</title>
+  <title>Test for computation of CSS 'initial' on all properties and 'unset' on reset properties</title>
   <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
   <script type="text/javascript" src="property_database.js"></script>
   <style type="text/css" id="stylesheet"></style>
@@ -36,7 +36,8 @@
 <pre id="test">
 <script class="testbody" type="text/javascript">
 
-/** Test for computation of CSS 'initial' **/
+/** Test for computation of CSS 'initial' on all properties and 'unset' on
+    reset properties **/
 
 var gBrokenInitial = {
 };
@@ -56,6 +57,8 @@ var gInitialValuesF;
 var gInitialPrereqsRuleN;
 var gInitialPrereqsRuleF;
 
+var gTestUnset = SpecialPowers.getBoolPref("layout.css.unset-value.enabled");
+
 function setup_initial_values(id, ivalprop, prereqprop) {
   var iframe = document.getElementById(id);
   window[ivalprop] = iframe.contentWindow.getComputedStyle(
@@ -73,71 +76,77 @@ function test_property(property)
   if (info.backend_only)
     return;
 
-  if ("prerequisites" in info) {
-    var prereqs = info.prerequisites;
-    for (var prereq in prereqs) {
-      gRule1.style.setProperty(prereq, prereqs[prereq], "");
-      gInitialPrereqsRuleN.style.setProperty(prereq, prereqs[prereq], "");
-      gInitialPrereqsRuleF.style.setProperty(prereq, prereqs[prereq], "");
+  var keywords = ["initial"];
+  if (!info.inherited && gTestUnset)
+    keywords.push("unset");
+
+  keywords.forEach(function(keyword) {
+    if ("prerequisites" in info) {
+      var prereqs = info.prerequisites;
+      for (var prereq in prereqs) {
+        gRule1.style.setProperty(prereq, prereqs[prereq], "");
+        gInitialPrereqsRuleN.style.setProperty(prereq, prereqs[prereq], "");
+        gInitialPrereqsRuleF.style.setProperty(prereq, prereqs[prereq], "");
+      }
     }
-  }
-  if (info.inherited) {
-    gElementN.parentNode.style.setProperty(property, info.other_values[0], "");
-    gElementF.parentNode.style.setProperty(property, info.other_values[0], "");
-  }
-
-  var initial_computed_n = get_computed_value(gInitialValuesN, property);
-  var initial_computed_f = get_computed_value(gInitialValuesF, property);
-  gRule1.style.setProperty(property, info.other_values[0], "");
-  var other_computed_n = get_computed_value(getComputedStyle(gElementN, ""), property);
-  var other_computed_f = get_computed_value(getComputedStyle(gElementF, ""), property);
-  isnot(other_computed_n, initial_computed_n,
-        "should be testing with values that compute to different things " +
-        "for '" + property + "'");
-  isnot(other_computed_f, initial_computed_f,
-        "should be testing with values that compute to different things " +
-        "for '" + property + "'");
-  // It's important (given the current design of nsRuleNode) that we're
-  // modifying the most specific rule that matches the element, and that
-  // we've already requested style while that rule was empty.  This
-  // means we'll have a cached aStartStruct from the parent in the rule
-  // tree (caching the "other" value), so we'll make sure we don't get
-  // the initial value from the luck of default-initialization.
-  // This means that it's important that we set the prereqs on
-  // gRule1.style rather than on gElement.style.
-  gRule2.style.setProperty(property, "initial", "");
-  var initial_val_computed_n = get_computed_value(getComputedStyle(gElementN, ""), property);
-  var initial_val_computed_f = get_computed_value(getComputedStyle(gElementF, ""), property);
-  (xfail_initial(property) ? todo_is : is)(
-     initial_val_computed_n, initial_computed_n,
-     "initial should cause initial value for '" + property + "'");
-  (xfail_initial(property) ? todo_is : is)(
-     initial_val_computed_f, initial_computed_f,
-     "initial should cause initial value for '" + property + "'");
-  gRule1.style.removeProperty(property);
-  gRule2.style.removeProperty(property);
-
-  if ("prerequisites" in info) {
-    var prereqs = info.prerequisites;
-    for (var prereq in prereqs) {
-      gRule1.style.removeProperty(prereq);
-      gInitialPrereqsRuleN.style.removeProperty(prereq);
-      gInitialPrereqsRuleF.style.removeProperty(prereq);
+    if (info.inherited) {
+      gElementN.parentNode.style.setProperty(property, info.other_values[0], "");
+      gElementF.parentNode.style.setProperty(property, info.other_values[0], "");
     }
-  }
-  if (info.inherited) {
-    gElementN.parentNode.style.removeProperty(property);
-    gElementF.parentNode.style.removeProperty(property);
-  }
 
-  // FIXME: Something (maybe with the -moz-binding values in
-  // test_value_computation.html, but may as well do it here to match)
-  // causes gElementF's frame to get lost.  Force it to get recreated
-  // after each property.
-  gElementF.parentNode.style.display = "none";
-  get_computed_value(getComputedStyle(gElementF, ""), "width");
-  gElementF.parentNode.style.display = "";
-  get_computed_value(getComputedStyle(gElementF, ""), "width");
+    var initial_computed_n = get_computed_value(gInitialValuesN, property);
+    var initial_computed_f = get_computed_value(gInitialValuesF, property);
+    gRule1.style.setProperty(property, info.other_values[0], "");
+    var other_computed_n = get_computed_value(getComputedStyle(gElementN, ""), property);
+    var other_computed_f = get_computed_value(getComputedStyle(gElementF, ""), property);
+    isnot(other_computed_n, initial_computed_n,
+          "should be testing with values that compute to different things " +
+          "for '" + property + "'");
+    isnot(other_computed_f, initial_computed_f,
+          "should be testing with values that compute to different things " +
+          "for '" + property + "'");
+    // It's important (given the current design of nsRuleNode) that we're
+    // modifying the most specific rule that matches the element, and that
+    // we've already requested style while that rule was empty.  This
+    // means we'll have a cached aStartStruct from the parent in the rule
+    // tree (caching the "other" value), so we'll make sure we don't get
+    // the initial value from the luck of default-initialization.
+    // This means that it's important that we set the prereqs on
+    // gRule1.style rather than on gElement.style.
+    gRule2.style.setProperty(property, keyword, "");
+    var initial_val_computed_n = get_computed_value(getComputedStyle(gElementN, ""), property);
+    var initial_val_computed_f = get_computed_value(getComputedStyle(gElementF, ""), property);
+    (xfail_initial(property) ? todo_is : is)(
+       initial_val_computed_n, initial_computed_n,
+       keyword + " should cause initial value for '" + property + "'");
+    (xfail_initial(property) ? todo_is : is)(
+       initial_val_computed_f, initial_computed_f,
+       keyword + " should cause initial value for '" + property + "'");
+    gRule1.style.removeProperty(property);
+    gRule2.style.removeProperty(property);
+
+    if ("prerequisites" in info) {
+      var prereqs = info.prerequisites;
+      for (var prereq in prereqs) {
+        gRule1.style.removeProperty(prereq);
+        gInitialPrereqsRuleN.style.removeProperty(prereq);
+        gInitialPrereqsRuleF.style.removeProperty(prereq);
+      }
+    }
+    if (info.inherited) {
+      gElementN.parentNode.style.removeProperty(property);
+      gElementF.parentNode.style.removeProperty(property);
+    }
+
+    // FIXME: Something (maybe with the -moz-binding values in
+    // test_value_computation.html, but may as well do it here to match)
+    // causes gElementF's frame to get lost.  Force it to get recreated
+    // after each property.
+    gElementF.parentNode.style.display = "none";
+    get_computed_value(getComputedStyle(gElementF, ""), "width");
+    gElementF.parentNode.style.display = "";
+    get_computed_value(getComputedStyle(gElementF, ""), "width");
+  });
 }
 
 function run_tests() {
