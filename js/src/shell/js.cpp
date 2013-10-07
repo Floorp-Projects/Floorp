@@ -2397,7 +2397,7 @@ GetPDA(JSContext *cx, unsigned argc, jsval *vp)
     JSPropertyDesc *pd;
 
     CallArgs args = CallArgsFromVp(argc, vp);
-    if (!JS_ValueToObject(cx, args[0], &vobj))
+    if (!JS_ValueToObject(cx, args.get(0), &vobj))
         return false;
     if (!vobj) {
         args.rval().setUndefined();
