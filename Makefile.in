@@ -53,7 +53,9 @@ ifndef MOZ_PROFILE_USE
 # We need to explicitly put backend.RecursiveMakeBackend.built here
 # otherwise the rule in rules.mk doesn't run early enough.
 libs export tools:: CLOBBER $(topsrcdir)/configure config.status backend.RecursiveMakeBackend.built
+ifndef LIBXUL_SDK
 	$(call SUBMAKE,backend.RecursiveMakeBackend.built,js/src,1)
+endif
 
 export::
 	$(call py_action,purge_manifests,-d _build_manifests/purge .)
@@ -88,7 +90,7 @@ include $(topsrcdir)/testing/testsuite-targets.mk
 endif
 
 export::
-	$(call py_action,process_install_manifest,$(DIST)/include _build_manifests/install/dist_include js/src/_build_manifests/install/dist_include)
+	$(call py_action,process_install_manifest,$(DIST)/include _build_manifests/install/dist_include $(if $(LIBXUL_SDK),,js/src/_build_manifests/install/dist_include))
 
 default all::
 	$(call BUILDSTATUS,TIERS export compile libs tools)
@@ -193,6 +195,7 @@ scheck::
 	@relcount=`find $(DIST)/bin -name "*.so" | xargs objdump -R | grep R_386_PC32 | wc -l` && if test $$relcount -gt 0; then echo "FAILED: R_386_PC32 relocations detected in a shared library.  Did you use a system header without adding it to config/system-headers?"; exit 1; else echo "PASSED"; fi
 endif
 
+ifndef LIBXUL_SDK
 js/src/Makefile: subsrcdir := js/src
 
 ifdef ENABLE_TESTS
@@ -200,4 +203,5 @@ ifdef ENABLE_TESTS
 # into moz.build files someday.
 check::
 	$(call SUBMAKE,$@,js/src)
+endif
 endif
