@@ -1,0 +1,15 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN">
+<html>
+  <head>
+    <title>Protocol registrar page</title>
+    <meta content="text/html;charset=utf-8" http-equiv="Content-Type">
+    <meta content="utf-8" http-equiv="encoding">
+  </head>
+  <body>
+    <script type="text/javascript">
+      navigator.registerProtocolHandler("testprotocol",
+          "https://example.com/foobar?uri=%s",
+          "Test Protocol");
+    </script>
+  </body>
+</html>
