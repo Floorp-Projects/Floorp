@@ -31,6 +31,8 @@ DIRS += [
     'failures/webapps/XMLHttpRequest/tests/submissions/Ms2ger'
 ]
 
-include('editing.mozbuild')
-include('html.mozbuild')
-include('webapps.mozbuild')
+MOCHITEST_MANIFESTS += [
+    'editing/mochitest.ini',
+    'html/mochitest.ini',
+    'webapps/mochitest.ini',
+]
