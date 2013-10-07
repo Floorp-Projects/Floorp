@@ -158,7 +158,7 @@ Stack::Stack(uint64_t id)
 bool
 Stack::snapshot()
 {
-    snaptime = time(NULL);
+    snaptime = time(nullptr);
     return GetStack(&stack_base, &stack_len, &regs, stack, sizeof(stack));
 }
 
@@ -182,7 +182,7 @@ Ring::Ring(uint64_t id)
 void
 Ring::push(uint64_t tag, void *data, size_t size)
 {
-    uint64_t t = time(NULL);
+    uint64_t t = time(nullptr);
 
     copyBytes(&tag, sizeof(uint64_t));
     copyBytes(&t, sizeof(uint64_t));
