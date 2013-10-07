@@ -232,17 +232,12 @@ private:
 class DOMStorageUsageBridge
 {
 public:
-  NS_IMETHOD_(nsrefcnt) AddRef(void);
-  NS_IMETHOD_(nsrefcnt) Release(void);
+  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(DOMStorageUsageBridge)
 
   virtual ~DOMStorageUsageBridge() {}
 
   virtual const nsCString& Scope() = 0;
   virtual void LoadUsage(const int64_t aUsage) = 0;
-
-protected:
-  ThreadSafeAutoRefCnt mRefCnt;
-  NS_DECL_OWNINGTHREAD
 };
 
 class DOMStorageUsage : public DOMStorageUsageBridge
