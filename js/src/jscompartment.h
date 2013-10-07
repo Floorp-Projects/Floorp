@@ -35,14 +35,14 @@ struct NativeIterator;
 class DtoaCache {
     double       d;
     int          base;
-    JSFlatString *s;      // if s==NULL, d and base are not valid
+    JSFlatString *s;      // if s==nullptr, d and base are not valid
 
   public:
-    DtoaCache() : s(NULL) {}
-    void purge() { s = NULL; }
+    DtoaCache() : s(nullptr) {}
+    void purge() { s = nullptr; }
 
     JSFlatString *lookup(int base, double d) {
-        return this->s && base == this->base && d == this->d ? this->s : NULL;
+        return this->s && base == this->base && d == this->d ? this->s : nullptr;
     }
 
     void cache(int base, double d, JSFlatString *s) {
@@ -71,18 +71,18 @@ struct CrossCompartmentKey
     js::gc::Cell *wrapped;
 
     CrossCompartmentKey()
-      : kind(ObjectWrapper), debugger(NULL), wrapped(NULL) {}
+      : kind(ObjectWrapper), debugger(nullptr), wrapped(nullptr) {}
     CrossCompartmentKey(JSObject *wrapped)
-      : kind(ObjectWrapper), debugger(NULL), wrapped(wrapped) {}
+      : kind(ObjectWrapper), debugger(nullptr), wrapped(wrapped) {}
     CrossCompartmentKey(JSString *wrapped)
-      : kind(StringWrapper), debugger(NULL), wrapped(wrapped) {}
+      : kind(StringWrapper), debugger(nullptr), wrapped(wrapped) {}
     CrossCompartmentKey(Value wrapped)
       : kind(wrapped.isString() ? StringWrapper : ObjectWrapper),
-        debugger(NULL),
+        debugger(nullptr),
         wrapped((js::gc::Cell *)wrapped.toGCThing()) {}
     CrossCompartmentKey(const RootedValue &wrapped)
       : kind(wrapped.get().isString() ? StringWrapper : ObjectWrapper),
-        debugger(NULL),
+        debugger(nullptr),
         wrapped((js::gc::Cell *)wrapped.get().toGCThing()) {}
     CrossCompartmentKey(Kind kind, JSObject *dbg, js::gc::Cell *wrapped)
       : kind(kind), debugger(dbg), wrapped(wrapped) {}
@@ -165,11 +165,11 @@ struct JSCompartment
     }
 
     /*
-     * Nb: global_ might be NULL, if (a) it's the atoms compartment, or (b) the
-     * compartment's global has been collected.  The latter can happen if e.g.
-     * a string in a compartment is rooted but no object is, and thus the global
-     * isn't rooted, and thus the global can be finalized while the compartment
-     * lives on.
+     * Nb: global_ might be nullptr, if (a) it's the atoms compartment, or
+     * (b) the compartment's global has been collected.  The latter can happen
+     * if e.g. a string in a compartment is rooted but no object is, and thus
+     * the global isn't rooted, and thus the global can be finalized while the
+     * compartment lives on.
      *
      * In contrast, JSObject::global() is infallible because marking a JSObject
      * always marks its global as well.
@@ -366,10 +366,10 @@ struct JSCompartment
     bool addDebuggee(JSContext *cx, js::GlobalObject *global,
                      js::AutoDebugModeGC &dmgc);
     void removeDebuggee(js::FreeOp *fop, js::GlobalObject *global,
-                        js::GlobalObjectSet::Enum *debuggeesEnum = NULL);
+                        js::GlobalObjectSet::Enum *debuggeesEnum = nullptr);
     void removeDebuggee(js::FreeOp *fop, js::GlobalObject *global,
                         js::AutoDebugModeGC &dmgc,
-                        js::GlobalObjectSet::Enum *debuggeesEnum = NULL);
+                        js::GlobalObjectSet::Enum *debuggeesEnum = nullptr);
     bool setDebugModeFromC(JSContext *cx, bool b, js::AutoDebugModeGC &dmgc);
 
     void clearBreakpointsIn(js::FreeOp *fop, js::Debugger *dbg, JSObject *handler);
