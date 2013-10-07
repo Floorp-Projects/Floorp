@@ -4,8 +4,8 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "nsUnicodeRange.h"
-#include "nsIAtom.h"
 #include "nsGkAtoms.h"
+#include "mozilla/NullPtr.h"
 
 // This table depends on unicode range definitions. 
 // Each item's index must correspond unicode range value

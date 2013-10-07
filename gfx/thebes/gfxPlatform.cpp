@@ -12,7 +12,6 @@
 #include "mozilla/layers/ImageBridgeChild.h"
 
 #include "prlog.h"
-#include "prenv.h"
 
 #include "gfxPlatform.h"
 
@@ -38,17 +37,15 @@
 #include "gfxPlatformFontList.h"
 #include "gfxContext.h"
 #include "gfxImageSurface.h"
-#include "gfxUserFontSet.h"
 #include "nsUnicodeProperties.h"
 #include "harfbuzz/hb.h"
 #include "gfxGraphiteShaper.h"
+#include "gfx2DGlue.h"
 
 #include "nsUnicodeRange.h"
 #include "nsServiceManagerUtils.h"
 #include "nsTArray.h"
-#include "nsUnicharUtilCIID.h"
 #include "nsILocaleService.h"
-#include "nsReadableUtils.h"
 
 #include "nsWeakReference.h"
 
@@ -66,12 +63,6 @@
 
 #ifdef USE_SKIA
 #include "skia/SkGraphics.h"
-#endif
-
-#ifdef USE_SKIA_GPU
-#include "skia/GrContext.h"
-#include "skia/GrGLInterface.h"
-#include "GLContextSkia.h"
 #endif
 
 #include "mozilla/Preferences.h"

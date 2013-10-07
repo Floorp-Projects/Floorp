@@ -6,14 +6,7 @@
 #ifndef GFX_FONT_UTILS_H
 #define GFX_FONT_UTILS_H
 
-#include "gfxTypes.h"
 #include "gfxPlatform.h"
-
-#include "nsAlgorithm.h"
-#include "prcpucfg.h"
-
-#include "nsDataHashtable.h"
-
 #include "nsITimer.h"
 #include "nsCOMPtr.h"
 #include "nsComponentManagerUtils.h"

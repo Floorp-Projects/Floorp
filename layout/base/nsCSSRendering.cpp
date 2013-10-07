@@ -48,6 +48,7 @@
 #include "ImageContainer.h"
 #include "mozilla/Telemetry.h"
 #include "gfxUtils.h"
+#include "gfxColor.h"
 #include <algorithm>
 
 using namespace mozilla;

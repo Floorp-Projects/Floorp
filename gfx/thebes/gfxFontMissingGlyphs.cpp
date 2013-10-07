@@ -5,6 +5,8 @@
 
 #include "gfxFontMissingGlyphs.h"
 #include "nsDeviceContext.h"
+#include "gfxContext.h"
+#include "gfxColor.h"
 
 #define CHAR_BITS(b00, b01, b02, b10, b11, b12, b20, b21, b22, b30, b31, b32, b40, b41, b42) \
   ((b00 << 0) | (b01 << 1) | (b02 << 2) | (b10 << 3) | (b11 << 4) | (b12 << 5) | \

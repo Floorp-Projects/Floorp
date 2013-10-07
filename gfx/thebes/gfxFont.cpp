@@ -12,7 +12,6 @@
 #include "prlog.h"
 
 #include "nsServiceManagerUtils.h"
-#include "nsReadableUtils.h"
 #include "nsExpirationTracker.h"
 #include "nsILanguageAtomService.h"
 #include "nsITimer.h"
@@ -22,7 +21,6 @@
 #include "nsGkAtoms.h"
 
 #include "gfxTypes.h"
-#include "nsAlgorithm.h"
 #include "gfxContext.h"
 #include "gfxFontMissingGlyphs.h"
 #include "gfxUserFontSet.h"
@@ -40,6 +38,7 @@
 #include "mozilla/Services.h"
 #include "mozilla/Telemetry.h"
 #include "gfxSVGGlyphs.h"
+#include "gfx2DGlue.h"
 
 #include "cairo.h"
 #include "gfxFontTest.h"
@@ -50,6 +49,7 @@
 
 #include "nsCRT.h"
 #include "GeckoProfiler.h"
+#include "gfxFontConstants.h"
 
 #include <algorithm>
 

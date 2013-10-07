@@ -9,20 +9,16 @@
 #include "gfxQuartzSurface.h"
 #include "gfxQuartzImageSurface.h"
 #include "mozilla/gfx/2D.h"
-#include "mozilla/gfx/QuartzSupport.h"
 
 #include "gfxMacPlatformFontList.h"
 #include "gfxMacFont.h"
 #include "gfxCoreTextShaper.h"
 #include "gfxUserFontSet.h"
 
-#include "nsCRT.h"
 #include "nsTArray.h"
-#include "nsUnicodeRange.h"
-
 #include "mozilla/Preferences.h"
-
 #include "qcms.h"
+#include "gfx2DGlue.h"
 
 #include <dlfcn.h>
 

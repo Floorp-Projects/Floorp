@@ -8,8 +8,6 @@
 
 #include "gfxTypes.h"
 #include "GraphicsFilter.h"
-#include "gfxImageSurface.h"
-#include "mozilla/gfx/2D.h"
 #include "imgIContainer.h"
 
 class gfxDrawable;

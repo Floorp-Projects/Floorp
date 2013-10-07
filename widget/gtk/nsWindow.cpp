@@ -71,6 +71,7 @@
 #include "nsIIdleServiceInternal.h"
 #include "nsIPropertyBag2.h"
 #include "GLContext.h"
+#include "gfx2DGlue.h"
 
 #ifdef ACCESSIBILITY
 #include "mozilla/a11y/Accessible.h"
