@@ -2539,7 +2539,8 @@ toolbarbutton.chevron > .toolbarbutton-menu-dropmarker {
 /*
  * Draw the bottom border of the tabstrip:
  */
-#TabsToolbar::after {
+#main-window:not([tabsintitlebar]) #TabsToolbar::after,
+#TabsToolbar:-moz-lwtheme::after {
   content: '';
   /* Because we use placeholders for window controls etc. in the tabstrip,
    * and position those with ordinal attributes, and because our layout code
