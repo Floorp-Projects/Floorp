@@ -9,14 +9,14 @@
 
 BEGIN_TEST(testGCExactRooting)
 {
-    JS::RootedObject rootCx(cx, JS_NewObject(cx, NULL, NULL, NULL));
-    JS::RootedObject rootRt(cx->runtime(), JS_NewObject(cx, NULL, NULL, NULL));
+    JS::RootedObject rootCx(cx, JS_NewObject(cx, nullptr, nullptr, nullptr));
+    JS::RootedObject rootRt(cx->runtime(), JS_NewObject(cx, nullptr, nullptr, nullptr));
 
     JS_GC(cx->runtime());
 
     /* Use the objects we just created to ensure that they are still alive. */
-    JS_DefineProperty(cx, rootCx, "foo", JS::DoubleValue(0), NULL, NULL, 0);
-    JS_DefineProperty(cx, rootRt, "foo", JS::DoubleValue(0), NULL, NULL, 0);
+    JS_DefineProperty(cx, rootCx, "foo", JS::DoubleValue(0), nullptr, nullptr, 0);
+    JS_DefineProperty(cx, rootRt, "foo", JS::DoubleValue(0), nullptr, nullptr, 0);
 
     return true;
 }

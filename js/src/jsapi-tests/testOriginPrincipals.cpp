@@ -5,7 +5,7 @@
 #include "js/OldDebugAPI.h"
 #include "jsapi-tests/tests.h"
 
-JSPrincipals *sOriginPrincipalsInErrorReporter = NULL;
+JSPrincipals *sOriginPrincipalsInErrorReporter = nullptr;
 
 static void
 ErrorReporter(JSContext *cx, const char *message, JSErrorReport *report)
