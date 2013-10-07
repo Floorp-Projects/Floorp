@@ -6,11 +6,12 @@
 #ifndef _GFXALPHARECOVERY_H_
 #define _GFXALPHARECOVERY_H_
 
-#include "gfxContext.h"
-#include "gfxImageSurface.h"
 #include "mozilla/SSE.h"
+#include "gfxTypes.h"
+#include "nsRect.h"
 
 struct nsIntRect;
+class gfxImageSurface;
 
 class gfxAlphaRecovery {
 public:

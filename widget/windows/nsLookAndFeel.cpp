@@ -13,6 +13,7 @@
 #include "gfxWindowsPlatform.h"
 #include "WinUtils.h"
 #include "mozilla/Telemetry.h"
+#include "gfxFontConstants.h"
 
 using namespace mozilla::widget;
 using mozilla::LookAndFeel;

@@ -28,6 +28,7 @@
 #include "imgIEncoder.h"
 #include "nsIThread.h"
 #include "MainThreadUtils.h"
+#include "gfxColor.h"
 
 #ifdef NS_ENABLE_TSF
 #include <textstor.h>

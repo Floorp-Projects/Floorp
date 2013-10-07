@@ -4,8 +4,8 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "gfxQuartzImageSurface.h"
+#include "gfxImageSurface.h"
 
-#include "cairo-quartz.h"
 #include "cairo-quartz-image.h"
 
 gfxQuartzImageSurface::gfxQuartzImageSurface(gfxImageSurface *imageSurface)

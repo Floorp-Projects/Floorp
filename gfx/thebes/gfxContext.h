@@ -9,14 +9,13 @@
 #include "gfxTypes.h"
 
 #include "gfxASurface.h"
-#include "gfxColor.h"
 #include "gfxPoint.h"
 #include "gfxRect.h"
 #include "gfxMatrix.h"
 #include "gfxPattern.h"
 #include "gfxPath.h"
-#include "nsISupportsImpl.h"
 #include "nsTArray.h"
+#include "nsAutoPtr.h"
 
 #include "mozilla/gfx/2D.h"
 

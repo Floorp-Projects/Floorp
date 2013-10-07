@@ -6,16 +6,13 @@
 #ifndef GFX_PLATFORM_MAC_H
 #define GFX_PLATFORM_MAC_H
 
-#include "nsTArray.h"
+#include "nsTArrayForwardDeclare.h"
 #include "gfxPlatform.h"
 
 #define MAC_OS_X_VERSION_10_6_HEX 0x00001060
 #define MAC_OS_X_VERSION_10_7_HEX 0x00001070
 
 #define MAC_OS_X_MAJOR_VERSION_MASK 0xFFFFFFF0U
-
-class gfxTextRun;
-class gfxFontFamily;
 
 namespace mozilla { namespace gfx { class DrawTarget; }}
 

@@ -5,6 +5,7 @@
 
 
 #include "nsMathMLmphantomFrame.h"
+#include "mozilla/gfx/2D.h"
 
 //
 // <mphantom> -- make content invisible but preserve its size

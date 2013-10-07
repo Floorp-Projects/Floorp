@@ -23,12 +23,14 @@
 #include "SurfaceStream.h"
 #include "GfxTexturesReporter.h"
 #include "TextureGarbageBin.h"
+#include "gfx2DGlue.h"
 
 #include "mozilla/DebugOnly.h"
 #include "mozilla/Preferences.h"
 
 #ifdef XP_MACOSX
 #include <CoreServices/CoreServices.h>
+#include "gfxColor.h"
 #endif
 
 #if defined(MOZ_WIDGET_COCOA)
