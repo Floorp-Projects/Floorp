@@ -2179,7 +2179,16 @@ function WidgetSingleWrapper(aWidget, aNode) {
   });
 
   this.__defineGetter__("anchor", function() {
-    let anchorId = aNode.getAttribute("customizableui-anchorid");
+    let anchorId;
+    // First check for an anchor for the area:
+    let placement = CustomizableUIInternal.getPlacementOfWidget(aWidgetId);
+    if (placement) {
+      anchorId = gAreas.get(placement.area).get("anchor");
+    }
+    if (!anchorId) {
+      anchorId = aNode.getAttribute("customizableui-anchorid");
+    }
+
     return anchorId ? aNode.ownerDocument.getElementById(anchorId)
                     : aNode;
   });
@@ -2259,7 +2268,16 @@ function XULWidgetSingleWrapper(aWidgetId, aNode) {
   this.node = aNode;
 
   this.__defineGetter__("anchor", function() {
-    let anchorId = aNode.getAttribute("customizableui-anchorid");
+    let anchorId;
+    // First check for an anchor for the area:
+    let placement = CustomizableUIInternal.getPlacementOfWidget(aWidgetId);
+    if (placement) {
+      anchorId = gAreas.get(placement.area).get("anchor");
+    }
+    if (!anchorId) {
+      anchorId = aNode.getAttribute("customizableui-anchorid");
+    }
+
     return anchorId ? aNode.ownerDocument.getElementById(anchorId)
                     : aNode;
   });

@@ -328,10 +328,20 @@ const DownloadsIndicatorView = {
       return;
     }
 
-    // If the anchor is not there or its container is hidden, don't show
-    // a notification
     let anchor = DownloadsButton._placeholder;
+    let widgetGroup = CustomizableUI.getWidget("downloads-button");
+    let widgetInWindow = widgetGroup.forWindow(window);
+    if (widgetInWindow.overflowed || widgetGroup.areaType == CustomizableUI.TYPE_MENU_PANEL) {
+      if (anchor && isElementVisible(anchor.parentNode)) {
+        // If the panel is open, don't do anything:
+        return;
+      }
+
+      // Otherwise, try to use the anchor of the panel:
+      anchor = widgetInWindow.anchor;
+    }
     if (!anchor || !isElementVisible(anchor.parentNode)) {
+      // Our container isn't visible, so can't show the animation:
       return;
     }
 
