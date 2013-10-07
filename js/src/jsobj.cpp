@@ -5147,24 +5147,6 @@ js::PrimitiveToObject(JSContext *cx, const Value &v)
     return BooleanObject::create(cx, v.toBoolean());
 }
 
-bool
-js_ValueToObjectOrNull(JSContext *cx, const Value &v, MutableHandleObject objp)
-{
-    JSObject *obj;
-
-    if (v.isObjectOrNull()) {
-        obj = v.toObjectOrNull();
-    } else if (v.isUndefined()) {
-        obj = NULL;
-    } else {
-        obj = PrimitiveToObject(cx, v);
-        if (!obj)
-            return false;
-    }
-    objp.set(obj);
-    return true;
-}
-
 /* Callers must handle the already-object case . */
 JSObject *
 js::ToObjectSlow(JSContext *cx, HandleValue val, bool reportScanStack)
@@ -5183,20 +5165,6 @@ js::ToObjectSlow(JSContext *cx, HandleValue val, bool reportScanStack)
     }
 
     return PrimitiveToObject(cx, val);
-}
-
-JSObject *
-js_ValueToNonNullObject(JSContext *cx, const Value &v)
-{
-    RootedObject obj(cx);
-
-    if (!js_ValueToObjectOrNull(cx, v, &obj))
-        return NULL;
-    if (!obj) {
-        RootedValue val(cx, v);
-        js_ReportIsNullOrUndefined(cx, JSDVG_SEARCH_STACK, val, NullPtr());
-    }
-    return obj;
 }
 
 void

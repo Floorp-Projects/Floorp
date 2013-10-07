@@ -25,7 +25,9 @@
 #include "jswatchpoint.h"
 #include "jswrapper.h"
 
-#include "assembler/assembler/MacroAssembler.h"
+#if defined(JS_ION)
+# include "assembler/assembler/MacroAssembler.h"
+#endif
 #include "jit/AsmJSSignalHandlers.h"
 #include "jit/IonCompartment.h"
 #include "jit/PcScriptCache.h"

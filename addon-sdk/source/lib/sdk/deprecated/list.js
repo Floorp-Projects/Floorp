@@ -8,6 +8,7 @@ module.metadata = {
 };
 
 const { Trait } = require('../deprecated/traits');
+const { iteratorSymbol } = require('../util/iteration');
 
 /**
  * @see https://jetpack.mozillalabs.com/sdk/latest/docs/#module/api-utils/list
@@ -38,7 +39,7 @@ exports.Iterable = Iterable;
  * elements of the list). List is a base trait and is meant to be a part of
  * composition, since all of it's API is private except length property.
  */
-const List = Trait.resolve({ toString: null }).compose({
+const listOptions = {
   _keyValueMap: null,
   /**
    * List constructor can take any number of element to populate itself.
@@ -114,12 +115,12 @@ const List = Trait.resolve({ toString: null }).compose({
     for (let element of array)
       yield onKeyValue ? [++i, element] : onKeys ? ++i : element;
   },
-  iterator: function iterator() {
-    let array = this._keyValueMap.slice(0);
+};
+listOptions[iteratorSymbol] = function* iterator() {
+  let array = this._keyValueMap.slice(0);
 
-    for (let element of array)
-      yield element;
-  }
-
-});
+  for (let element of array)
+    yield element;
+}
+const List = Trait.resolve({ toString: null }).compose(listOptions);
 exports.List = List;

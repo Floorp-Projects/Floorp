@@ -2469,6 +2469,12 @@ BaselineCompiler::emit_JSOP_ENTERLET1()
     return emitEnterBlock();
 }
 
+bool
+BaselineCompiler::emit_JSOP_ENTERLET2()
+{
+    return emitEnterBlock();
+}
+
 typedef bool (*LeaveBlockFn)(JSContext *, BaselineFrame *);
 static const VMFunction LeaveBlockInfo = FunctionInfo<LeaveBlockFn>(jit::LeaveBlock);
 

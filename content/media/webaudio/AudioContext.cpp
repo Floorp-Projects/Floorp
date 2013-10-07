@@ -71,19 +71,20 @@ AudioContext::AudioContext(nsPIDOMWindow* aWindow,
                            uint32_t aLength,
                            float aSampleRate)
   : mSampleRate(aIsOffline ? aSampleRate : IdealAudioRate())
-  , mDestination(new AudioDestinationNode(MOZ_THIS_IN_INITIALIZER_LIST(),
-                                          aIsOffline, aNumberOfChannels,
-                                          aLength, aSampleRate))
   , mNumberOfChannels(aNumberOfChannels)
   , mIsOffline(aIsOffline)
   , mIsStarted(!aIsOffline)
   , mIsShutDown(false)
 {
-  // Actually play audio
-  mDestination->Stream()->AddAudioOutput(&gWebAudioOutputKey);
   nsDOMEventTargetHelper::BindToOwner(aWindow);
   aWindow->AddAudioContext(this);
   SetIsDOMBinding();
+
+  // Note: AudioDestinationNode needs an AudioContext that must already be
+  // bound to the window.
+  mDestination = new AudioDestinationNode(this, aIsOffline, aNumberOfChannels,
+                                          aLength, aSampleRate);
+  mDestination->Stream()->AddAudioOutput(&gWebAudioOutputKey);
 }
 
 AudioContext::~AudioContext()
