@@ -102,7 +102,6 @@ var BrowserUI = {
     window.addEventListener("MozImprecisePointer", this, true);
 
     Services.prefs.addObserver("browser.cache.disk_cache_ssl", this, false);
-    Services.obs.addObserver(this, "metro_viewstate_changed", false);
 
     // Init core UI modules
     ContextUI.init();
@@ -111,9 +110,6 @@ var BrowserUI = {
     PageThumbs.init();
     SettingsCharm.init();
     NavButtonSlider.init();
-
-    // show the right toolbars, awesomescreen, etc for the os viewstate
-    BrowserUI._adjustDOMforViewState();
 
     // We can delay some initialization until after startup.  We wait until
     // the first page is shown, then dispatch a UIReadyDelayed event.
@@ -178,6 +174,7 @@ var BrowserUI = {
     messageManager.removeMessageListener("Browser:MozApplicationManifest", OfflineApps);
 
     PanelUI.uninit();
+    FlyoutPanelsUI.uninit();
     Downloads.uninit();
     SettingsCharm.uninit();
     messageManager.removeMessageListener("Content:StateChange", this);
@@ -593,13 +590,6 @@ var BrowserUI = {
             break;
         }
         break;
-      case "metro_viewstate_changed":
-        this._adjustDOMforViewState(aData);
-        if (aData == "snapped") {
-          FlyoutPanelsUI.hide();
-        }
-
-        break;
     }
   },
 
@@ -636,28 +626,6 @@ var BrowserUI = {
     pullDesktopControlledPrefType(Ci.nsIPrefBranch.PREF_INT, "setIntPref");
     pullDesktopControlledPrefType(Ci.nsIPrefBranch.PREF_BOOL, "setBoolPref");
     pullDesktopControlledPrefType(Ci.nsIPrefBranch.PREF_STRING, "setCharPref");
-  },
-
-  _adjustDOMforViewState: function(aState) {
-    let currViewState = aState;
-    if (!currViewState && Services.metro.immersive) {
-      switch (Services.metro.snappedState) {
-        case Ci.nsIWinMetroUtils.fullScreenLandscape:
-          currViewState = "landscape";
-          break;
-        case Ci.nsIWinMetroUtils.fullScreenPortrait:
-          currViewState = "portrait";
-          break;
-        case Ci.nsIWinMetroUtils.filled:
-          currViewState = "filled";
-          break;
-        case Ci.nsIWinMetroUtils.snapped:
-          currViewState = "snapped";
-          break;
-      }
-    }
-
-    Elements.windowState.setAttribute("viewstate", currViewState);
   },
 
   _titleChanged: function(aBrowser) {

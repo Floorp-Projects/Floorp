@@ -111,7 +111,7 @@ gTests.push({
   },
   tearDown: function() {
     BookmarksTestHelper.restore();
-    restoreViewstate();
+    yield restoreViewstate();
   }
 });
 
@@ -160,6 +160,6 @@ gTests.push({
   tearDown: function() {
     BookmarksTestHelper.restore();
     HistoryTestHelper.restore();
-    restoreViewstate();
+    yield restoreViewstate();
   }
 });

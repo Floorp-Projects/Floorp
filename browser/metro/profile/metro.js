@@ -377,6 +377,9 @@ pref("geo.wifi.uri", "https://www.googleapis.com/geolocation/v1/geolocate?key=%G
 // JS error console
 pref("devtools.errorconsole.enabled", false);
 
+// snapped view
+pref("browser.ui.snapped.maxWidth", 600);
+
 // kinetic tweakables
 pref("browser.ui.kinetic.updateInterval", 16);
 pref("browser.ui.kinetic.exponentialC", 1400);

@@ -11,8 +11,8 @@ Cu.import("resource://gre/modules/PageThumbs.jsm");
 Cu.import("resource:///modules/colorUtils.jsm");
 
 function TopSitesView(aGrid, aMaxSites) {
-  this._set = aGrid;
-  this._set.controller = this;
+  View.call(this, aGrid);
+
   this._topSitesMax = aMaxSites;
 
   // clean up state when the appbar closes
@@ -23,9 +23,6 @@ function TopSitesView(aGrid, aMaxSites) {
 
   PageThumbs.addExpirationFilter(this);
   Services.obs.addObserver(this, "Metro:RefreshTopsiteThumbnail", false);
-  Services.obs.addObserver(this, "metro_viewstate_changed", false);
-
-  this._adjustDOMforViewState();
 
   NewTabUtils.allPages.register(this);
   TopSites.prepareCache().then(function(){
@@ -43,12 +40,12 @@ TopSitesView.prototype = Util.extend(Object.create(View.prototype), {
 
   destruct: function destruct() {
     Services.obs.removeObserver(this, "Metro:RefreshTopsiteThumbnail");
-    Services.obs.removeObserver(this, "metro_viewstate_changed");
     PageThumbs.removeExpirationFilter(this);
     NewTabUtils.allPages.unregister(this);
     if (StartUI.chromeWin) {
       StartUI.chromeWin.removeEventListener('MozAppbarDismissing', this, false);
     }
+    View.prototype.destruct.call(this);
   },
 
   handleItemClick: function tabview_handleItemClick(aItem) {
@@ -137,6 +134,7 @@ TopSitesView.prototype = Util.extend(Object.create(View.prototype), {
       case "MozAppbarDismissing":
         // clean up when the context appbar is dismissed - we don't remember selections
         this._lastSelectedSites = null;
+        break;
     }
   },
 
@@ -234,6 +232,13 @@ TopSitesView.prototype = Util.extend(Object.create(View.prototype), {
 
     View.prototype._adjustDOMforViewState.call(this, aState);
 
+    // Don't show thumbnails in snapped view.
+    if (aState == "snapped") {
+      document.getElementById("start-topsites-grid").removeAttribute("tiletype");
+    } else {
+      document.getElementById("start-topsites-grid").setAttribute("tiletype", "thumbnail");
+    }
+
     // propogate tiletype changes down to tile children
     let tileType = this._set.getAttribute("tiletype");
     for (let item of this._set.children) {
@@ -250,9 +255,6 @@ TopSitesView.prototype = Util.extend(Object.create(View.prototype), {
     switch(aTopic) {
       case "Metro:RefreshTopsiteThumbnail":
         this.forceReloadOfThumbnail(aState);
-        break;
-      case "metro_viewstate_changed":
-        this.onViewStateChange(aState);
         break;
     }
   },
