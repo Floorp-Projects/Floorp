@@ -136,3 +136,4 @@ fuzzy-if(d2d,47,400) == linear-onestopposition-1.html linear-onestopposition-1-r
 == repeating-radial-onestopposition-1a.html orange-square.html
 == repeating-radial-onestopposition-1b.html orange-square.html
 == repeating-radial-onestopposition-1c.html orange-square.html
+== bug-916535-background-repeat-linear.html bug-916535-background-repeat-linear-ref.html
