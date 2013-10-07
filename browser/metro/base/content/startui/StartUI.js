@@ -26,7 +26,7 @@ var StartUI = {
     document.getElementById("bcast_preciseInput").setAttribute("input",
       this.chromeWin.InputSourceHelper.isPrecise ? "precise" : "imprecise");
 
-    this._adjustDOMforViewState();
+    this._adjustDOMforViewState(this.chromeWin.ContentAreaObserver.viewstate);
 
     TopSitesStartView.init();
     BookmarksStartView.init();
@@ -81,6 +81,10 @@ var StartUI = {
     section.setAttribute("expanded", "true");
   },
 
+  _adjustDOMforViewState: function(aState) {
+    document.getElementById("bcast_windowState").setAttribute("viewstate", aState);
+  },
+
   handleEvent: function handleEvent(aEvent) {
     switch (aEvent.type) {
       case "MozPrecisePointer":
@@ -103,33 +107,6 @@ var StartUI = {
         aEvent.preventDefault();
         aEvent.stopPropagation();
         break;
-    }
-  },
-
-  _adjustDOMforViewState: function(aState) {
-    let currViewState = aState;
-    if (!currViewState && Services.metro.immersive) {
-      switch (Services.metro.snappedState) {
-        case Ci.nsIWinMetroUtils.fullScreenLandscape:
-          currViewState = "landscape";
-          break;
-        case Ci.nsIWinMetroUtils.fullScreenPortrait:
-          currViewState = "portrait";
-          break;
-        case Ci.nsIWinMetroUtils.filled:
-          currViewState = "filled";
-          break;
-        case Ci.nsIWinMetroUtils.snapped:
-          currViewState = "snapped";
-          break;
-      }
-    }
-
-    document.getElementById("bcast_windowState").setAttribute("viewstate", currViewState);
-    if (currViewState == "snapped") {
-      document.getElementById("start-topsites-grid").removeAttribute("tiletype");
-    } else {
-      document.getElementById("start-topsites-grid").setAttribute("tiletype", "thumbnail");
     }
   },
 
