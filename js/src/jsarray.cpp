@@ -675,7 +675,7 @@ js::ArraySetLength(JSContext *cx, Handle<ArrayObject*> arr, HandleId id, unsigne
 }
 
 bool
-js::WouldDefinePastNonwritableLength(ExclusiveContext *cx,
+js::WouldDefinePastNonwritableLength(ThreadSafeContext *cx,
                                      HandleObject obj, uint32_t index, bool strict,
                                      bool *definesPast)
 {

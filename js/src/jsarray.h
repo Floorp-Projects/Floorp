@@ -76,7 +76,7 @@ NewDenseCopiedArray(JSContext *cx, uint32_t length, const Value *values, JSObjec
  * increase the length of the array.
  */
 extern bool
-WouldDefinePastNonwritableLength(ExclusiveContext *cx,
+WouldDefinePastNonwritableLength(ThreadSafeContext *cx,
                                  HandleObject obj, uint32_t index, bool strict,
                                  bool *definesPast);
 
