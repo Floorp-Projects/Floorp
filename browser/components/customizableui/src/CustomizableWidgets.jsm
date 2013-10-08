@@ -277,6 +277,7 @@ const CustomizableWidgets = [{
       // Set this as an attribute in addition to the property to make sure we can style correctly.
       node.setAttribute("removable", "true");
       node.classList.add("chromeclass-toolbar-additional");
+      node.classList.add("toolbaritem-combined-buttons");
       node.classList.add(kWidePanelItemClass);
 
       buttons.forEach(function(aButton) {
@@ -424,6 +425,7 @@ const CustomizableWidgets = [{
       // Set this as an attribute in addition to the property to make sure we can style correctly.
       node.setAttribute("removable", "true");
       node.classList.add("chromeclass-toolbar-additional");
+      node.classList.add("toolbaritem-combined-buttons");
       node.classList.add(kWidePanelItemClass);
 
       buttons.forEach(function(aButton) {

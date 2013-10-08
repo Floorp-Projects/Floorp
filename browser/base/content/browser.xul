@@ -812,7 +812,7 @@
                        command="Social:SharePage"/>
 
         <toolbaritem id="social-toolbar-item"
-                     class="chromeclass-toolbar-additional"
+                     class="chromeclass-toolbar-additional toolbaritem-with-separator"
                      removable="false"
                      title="&socialToolbar.title;"
                      hidden="true"
