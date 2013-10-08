@@ -1384,7 +1384,7 @@ TypeNewScript::writeBarrierPre(TypeNewScript *newScript)
     if (!newScript || !newScript->fun->runtimeFromAnyThread()->needsBarrier())
         return;
 
-    JS::Zone *zone = newScript->fun->zone();
+    JS::Zone *zone = newScript->fun->zoneFromAnyThread();
     if (zone->needsBarrier()) {
         MarkObject(zone->barrierTracer(), &newScript->fun, "write barrier");
         MarkShape(zone->barrierTracer(), &newScript->shape, "write barrier");
