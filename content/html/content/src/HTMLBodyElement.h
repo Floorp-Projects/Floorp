@@ -135,9 +135,6 @@ public:
 
   virtual bool IsEventAttributeName(nsIAtom* aName) MOZ_OVERRIDE;
 
-private:
-  nsresult GetColorHelper(nsIAtom* aAtom, nsAString& aColor);
-
 protected:
   virtual JSObject* WrapNode(JSContext *aCx,
                              JS::Handle<JSObject*> aScope) MOZ_OVERRIDE;

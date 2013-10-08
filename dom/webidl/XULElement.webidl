@@ -128,6 +128,6 @@ interface MozFrameLoaderOwner {
 };
 
 XULElement implements GlobalEventHandlers;
-XULElement implements NodeEventHandlers;
 XULElement implements TouchEventHandlers;
 XULElement implements MozFrameLoaderOwner;
+XULElement implements OnErrorEventHandlerForNodes;

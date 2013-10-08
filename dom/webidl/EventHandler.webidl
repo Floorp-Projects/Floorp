@@ -15,6 +15,8 @@ callback EventHandlerNonNull = any (Event event);
 typedef EventHandlerNonNull? EventHandler;
 
 [TreatNonCallableAsNull]
+// https://www.w3.org/Bugs/Public/show_bug.cgi?id=23489
+//callback OnBeforeUnloadEventHandlerNonNull = DOMString (Event event);
 callback OnBeforeUnloadEventHandlerNonNull = DOMString? (Event event);
 typedef OnBeforeUnloadEventHandlerNonNull? OnBeforeUnloadEventHandler;
 
@@ -25,21 +27,24 @@ typedef OnErrorEventHandlerNonNull? OnErrorEventHandler;
 [NoInterfaceObject]
 interface GlobalEventHandlers {
            attribute EventHandler onabort;
-           //(Not implemented)[SetterThrows]
+           attribute EventHandler onblur;
+// We think the spec is wrong here. See OnErrorEventHandlerForNodes/Window
+// below.
+//         attribute OnErrorEventHandler onerror;
+           attribute EventHandler onfocus;
            //(Not implemented)attribute EventHandler oncancel;
            attribute EventHandler oncanplay;
            attribute EventHandler oncanplaythrough;
            attribute EventHandler onchange;
            attribute EventHandler onclick;
-           //(Not implemented)[SetterThrows]
            //(Not implemented)attribute EventHandler onclose;
            attribute EventHandler oncontextmenu;
-           //(Not implemented)[SetterThrows]
            //(Not implemented)attribute EventHandler oncuechange;
            attribute EventHandler ondblclick;
            attribute EventHandler ondrag;
            attribute EventHandler ondragend;
            attribute EventHandler ondragenter;
+           //(Not implemented)attribute EventHandler ondragexit;
            attribute EventHandler ondragleave;
            attribute EventHandler ondragover;
            attribute EventHandler ondragstart;
@@ -52,15 +57,17 @@ interface GlobalEventHandlers {
            attribute EventHandler onkeydown;
            attribute EventHandler onkeypress;
            attribute EventHandler onkeyup;
+           attribute EventHandler onload;
            attribute EventHandler onloadeddata;
            attribute EventHandler onloadedmetadata;
            attribute EventHandler onloadstart;
            attribute EventHandler onmousedown;
+  [LenientThis] attribute EventHandler onmouseenter;
+  [LenientThis] attribute EventHandler onmouseleave;
            attribute EventHandler onmousemove;
            attribute EventHandler onmouseout;
            attribute EventHandler onmouseover;
            attribute EventHandler onmouseup;
-           //(Not implemented)[SetterThrows]
            //(Not implemented)attribute EventHandler onmousewheel;
            attribute EventHandler onpause;
            attribute EventHandler onplay;
@@ -68,11 +75,11 @@ interface GlobalEventHandlers {
            attribute EventHandler onprogress;
            attribute EventHandler onratechange;
            attribute EventHandler onreset;
+           attribute EventHandler onscroll;
            attribute EventHandler onseeked;
            attribute EventHandler onseeking;
            attribute EventHandler onselect;
            attribute EventHandler onshow;
-           //(Not implemented)[SetterThrows]
            //(Not implemented)attribute EventHandler onsort;
            attribute EventHandler onstalled;
            attribute EventHandler onsubmit;
@@ -89,29 +96,10 @@ interface GlobalEventHandlers {
 };
 
 [NoInterfaceObject]
-interface NodeEventHandlers {
-           attribute EventHandler onblur;
-  // We think the spec is wrong here.
-  //         attribute OnErrorEventHandler onerror;
-           attribute EventHandler onerror;
-           attribute EventHandler onfocus;
-           attribute EventHandler onload;
-           attribute EventHandler onscroll;
-};
-
-[NoInterfaceObject]
 interface WindowEventHandlers {
            attribute EventHandler onafterprint;
            attribute EventHandler onbeforeprint;
            attribute OnBeforeUnloadEventHandler onbeforeunload;
-  //       For now, onerror comes from NodeEventHandlers
-  //       When we convert Window to WebIDL this may need to change.
-  //       [SetterThrows]
-  //       attribute OnErrorEventHandler onerror;
-           //(Not implemented)[SetterThrows]
-           //(Not implemented)attribute EventHandler onfullscreenchange;
-           //(Not implemented)[SetterThrows]
-           //(Not implemented)attribute EventHandler onfullscreenerror;
            attribute EventHandler onhashchange;
            attribute EventHandler onmessage;
            attribute EventHandler onoffline;
@@ -120,7 +108,21 @@ interface WindowEventHandlers {
            attribute EventHandler onpageshow;
            attribute EventHandler onpopstate;
            attribute EventHandler onresize;
-           //(Not implemented)[SetterThrows]
            //(Not implemented)attribute EventHandler onstorage;
            attribute EventHandler onunload;
 };
+
+// The spec has |attribute OnErrorEventHandler onerror;| on
+// GlobalEventHandlers, and calls the handler differently depending on
+// whether an ErrorEvent was fired. We don't do that, and until we do we'll
+// need to distinguish between onerror on Window or on nodes.
+
+[NoInterfaceObject]
+interface OnErrorEventHandlerForNodes {
+           attribute EventHandler onerror;
+};
+
+//[NoInterfaceObject]
+//interface OnErrorEventHandlerForWindow {
+//           attribute OnErrorEventHandler onerror;
+//};
