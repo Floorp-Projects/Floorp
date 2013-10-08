@@ -10,13 +10,9 @@ import android.net.Uri;
 import android.support.v4.view.ViewPager;
 import android.text.TextUtils;
 import android.view.View;
-import android.view.ViewGroup;
-import android.widget.GridView;
-import android.widget.LinearLayout;
 import android.widget.TabWidget;
 import android.widget.ListAdapter;
 import android.widget.ListView;
-import android.widget.TextView;
 
 import java.lang.reflect.Method;
 import java.util.ArrayList;
@@ -57,72 +53,6 @@ abstract class AboutHomeTest extends BaseTest {
         return null;
     }
     protected ListView getHistoryList(String waitText) {
-        return null;
-    }
-
-    // Returns true if the bookmark is displayed in the bookmarks tab, false otherwise - does not check in folders
-    protected boolean isBookmarkDisplayed(String url) {
-        View bookmark = getDisplayedBookmark(url);
-        if (bookmark != null) {
-            return true;
-        } else {
-            return false;
-        }
-    }
-
-    // Loads a bookmark by tapping on the bookmark view in the Bookmarks tab
-    protected void loadBookmark(String url) {
-        View bookmark = getDisplayedBookmark(url);
-        if (bookmark != null) {
-            Actions.EventExpecter contentEventExpecter = mActions.expectGeckoEvent("DOMContentLoaded");
-            mSolo.clickOnView(bookmark);
-            contentEventExpecter.blockForEvent();
-            contentEventExpecter.unregisterListener();
-        } else {
-            mAsserter.ok(false, url + " is not one of the displayed bookmarks", "Please make sure the url provided is ookmarked");
-        }
-    }
-
-    // Opens the bookmark context menu by long-tapping on it
-    protected void openBookmarkContextMenu(String url) {
-        View bookmark = getDisplayedBookmark(url);
-        if (bookmark != null) {
-            mSolo.clickLongOnView(bookmark);
-            waitForText("Share");
-        } else {
-            mAsserter.ok(false, url + " is not one of the displayed bookmarks", "Please make sure the url provided is bookmarked");
-        }
-    }
-
-    // @return the View associated with bookmark for the provided url or null if the link is not bookmarked
-    protected View getDisplayedBookmark(String url) {
-        openAboutHomeTab(AboutHomeTabs.BOOKMARKS);
-        ListView bookmarksTabList = findListViewWithTag("bookmarks");
-        waitForListToLoad(bookmarksTabList);
-        ListAdapter adapter = bookmarksTabList.getAdapter();
-        if (adapter != null) {
-            for (int i = 0; i < adapter.getCount(); i++ ) {
-                // I am unable to click the view taken with getView for some reason so getting the child at i
-                bookmarksTabList.smoothScrollToPosition(i);
-                View bookmarkView = bookmarksTabList.getChildAt(i);
-                if (bookmarkView instanceof android.widget.LinearLayout) {
-                    ViewGroup bookmarkItemView = (ViewGroup) bookmarkView;
-                    for (int j = 0 ; j < bookmarkItemView.getChildCount(); j++) {
-                         View bookmarkContent = bookmarkItemView.getChildAt(j);
-                         if (bookmarkContent instanceof android.widget.LinearLayout) {
-                             ViewGroup bookmarkItemLayout = (ViewGroup) bookmarkContent;
-                             for (int k = 0 ; k < bookmarkItemLayout.getChildCount(); k++) {
-                                  // Both the title and url are represented as text views so we can cast the view without any ssues
-                                  TextView bookmarkTextContent = (TextView)bookmarkItemLayout.getChildAt(k);
-                                  if (url.equals(bookmarkTextContent.getText().toString())) {
-                                      return bookmarkView;
-                                  }
-                            }
-                        }
-                    }
-                }
-            }
-        }
         return null;
     }
 

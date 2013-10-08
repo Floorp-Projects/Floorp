@@ -123,16 +123,4 @@ class StringHelper {
     public static final String RELOAD_LABEL = "Reload";
     public static final String FORWARD_LABEL = "Forward";
     public static final String BOOKMARK_LABEL = "Bookmark";
-
-    // Bookmark Toast Notification
-    public static final String BOOKMARK_ADDED_LABEL = "Bookmark added";
-    public static final String BOOKMARK_REMOVED_LABEL = "Bookmark removed";
-    public static final String BOOKMARK_UPDATED_LABEL = "Bookmark updated";
-    public static final String BOOKMARK_OPTIONS_LABEL = "Options";
-
-    // Bookmark Options Context Menu items
-    public static final String[] BOOKMARKS_OPTIONS_CONTEXTMENU_ITEMS = new String[] {
-    "Edit",
-    "Add to Home Screen"
-    };
 }
