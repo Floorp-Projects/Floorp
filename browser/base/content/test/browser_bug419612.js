@@ -26,7 +26,7 @@ function test() {
 
     if (gPrefService.prefHasUserValue("browser.zoom.updateBackgroundTabs"))
       gPrefService.clearUserPref("browser.zoom.updateBackgroundTabs");
-    gBrowser.removeTab(tab1);
-    gBrowser.removeTab(tab2);
+    yield FullZoomHelper.removeTabAndWaitForLocationChange(tab1);
+    yield FullZoomHelper.removeTabAndWaitForLocationChange(tab2);
   }).then(finish, FullZoomHelper.failAndContinue(finish));
 }
