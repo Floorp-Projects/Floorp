@@ -90,17 +90,17 @@ const char* const TraceLogging::typeName[] = {
     "e,b",  // engine baseline
     "e,o"   // engine ionmonkey
 };
-TraceLogging* TraceLogging::loggers[] = {NULL, NULL, NULL};
+TraceLogging* TraceLogging::loggers[] = {nullptr, nullptr, nullptr};
 bool TraceLogging::atexitSet = false;
 uint64_t TraceLogging::startupTime = 0;
 
 TraceLogging::TraceLogging(Logger id)
   : nextTextId(1),
-    entries(NULL),
+    entries(nullptr),
     curEntry(0),
     numEntries(1000000),
     fileno(0),
-    out(NULL),
+    out(nullptr),
     id(id)
 {
     textMap.init();
@@ -111,12 +111,12 @@ TraceLogging::~TraceLogging()
     if (entries) {
         flush();
         free(entries);
-        entries = NULL;
+        entries = nullptr;
     }
 
     if (out) {
         fclose(out);
-        out = NULL;
+        out = nullptr;
     }
 }
 
@@ -137,7 +137,7 @@ TraceLogging::grow()
 }
 
 void
-TraceLogging::log(Type type, const char* text /* = NULL */, unsigned int number /* = 0 */)
+TraceLogging::log(Type type, const char* text /* = nullptr */, unsigned int number /* = 0 */)
 {
     uint64_t now = rdtsc() - startupTime;
 
@@ -149,7 +149,7 @@ TraceLogging::log(Type type, const char* text /* = NULL */, unsigned int number 
     }
 
     uint32_t textId = 0;
-    char *text_ = NULL;
+    char *text_ = nullptr;
 
     if (text) {
         TextHashMap::AddPtr p = textMap.lookupForAdd(text);
@@ -248,9 +248,9 @@ TraceLogging::flush()
             exit(-1);
         }
 
-        if (entries[i].text() != NULL) {
+        if (entries[i].text() != nullptr) {
             free(entries[i].text());
-            entries[i].text_ = NULL;
+            entries[i].text_ = nullptr;
         }
     }
     curEntry = 0;
@@ -279,7 +279,7 @@ TraceLogging::releaseLoggers()
             continue;
 
         delete loggers[i];
-        loggers[i] = NULL;
+        loggers[i] = nullptr;
     }
 }
 

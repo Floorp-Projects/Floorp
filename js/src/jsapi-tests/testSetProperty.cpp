@@ -16,7 +16,7 @@ nativeGet(JSContext *cx, JS::HandleObject obj, JS::HandleId id, JS::MutableHandl
 
 BEGIN_TEST(testSetProperty_NativeGetterStubSetter)
 {
-    JS::RootedObject obj(cx, JS_NewObject(cx, NULL, NULL, NULL));
+    JS::RootedObject obj(cx, JS_NewObject(cx, nullptr, nullptr, nullptr));
     CHECK(obj);
     JS::RootedValue vobj(cx, OBJECT_TO_JSVAL(obj));
 
@@ -73,7 +73,7 @@ BEGIN_TEST(testSetProperty_InheritedGlobalSetter)
     // shell can't.
     JS_ASSERT(JS_GetClass(global)->resolve == &JS_ResolveStub);
 
-    CHECK(JS_DefineProperty(cx, global, "HOTLOOP", INT_TO_JSVAL(8), NULL, NULL, 0));
+    CHECK(JS_DefineProperty(cx, global, "HOTLOOP", INT_TO_JSVAL(8), nullptr, nullptr, 0));
     EXEC("var n = 0;\n"
          "var global = this;\n"
          "function f() { n++; }\n"

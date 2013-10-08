@@ -60,7 +60,7 @@ void
 JSONParser::error(const char *msg)
 {
     if (errorHandling == RaiseError)
-        JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_JSON_BAD_PARSE, msg);
+        JS_ReportErrorNumber(cx, js_GetErrorMessage, nullptr, JSMSG_JSON_BAD_PARSE, msg);
 }
 
 bool
@@ -540,7 +540,7 @@ JSONParser::createFinishedObject(PropertyVector &properties)
     gc::AllocKind allocKind = gc::GetGCObjectKind(properties.length());
     RootedObject obj(cx, NewBuiltinClassInstance(cx, &JSObject::class_, allocKind));
     if (!obj)
-        return NULL;
+        return nullptr;
 
     RootedId propid(cx);
     RootedValue value(cx);
@@ -552,7 +552,7 @@ JSONParser::createFinishedObject(PropertyVector &properties)
                                   JS_PropertyStub, JS_StrictPropertyStub, JSPROP_ENUMERATE,
                                   0, 0))
         {
-            return NULL;
+            return nullptr;
         }
     }
 

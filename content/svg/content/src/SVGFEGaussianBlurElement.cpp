@@ -106,8 +106,8 @@ BoxBlur(const uint8_t *aInput, uint8_t *aOutput,
         int32_t aLeftLobe, int32_t aRightLobe, bool aAlphaOnly)
 {
   int32_t boxSize = aLeftLobe + aRightLobe + 1;
-  int32_t scaledDivisor = ComputeScaledDivisor(boxSize);
-  int32_t sums[4] = {0, 0, 0, 0};
+  uint32_t scaledDivisor = ComputeScaledDivisor(boxSize);
+  uint32_t sums[4] = {0, 0, 0, 0};
 
   for (int32_t i=0; i < boxSize; i++) {
     int32_t pos = aStartMinor - aLeftLobe + i;
@@ -119,7 +119,7 @@ BoxBlur(const uint8_t *aInput, uint8_t *aOutput,
   }
 
   aOutput += aStrideMinor*aStartMinor;
-  if (aStartMinor + int32_t(boxSize) <= aEndMinor) {
+  if (aStartMinor + boxSize <= aEndMinor) {
     const uint8_t *lastInput = aInput + aStartMinor*aStrideMinor;
     const uint8_t *nextInput = aInput + (aStartMinor + aRightLobe + 1)*aStrideMinor;
 #define OUTPUT(j)     aOutput[j] = (sums[j]*scaledDivisor) >> 24;

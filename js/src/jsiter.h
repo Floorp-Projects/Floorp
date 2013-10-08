@@ -98,8 +98,8 @@ struct NativeIterator
 
         next_->prev_ = prev_;
         prev_->next_ = next_;
-        next_ = NULL;
-        prev_ = NULL;
+        next_ = nullptr;
+        prev_ = nullptr;
     }
 
     static NativeIterator *allocateSentinel(JSContext *cx);
