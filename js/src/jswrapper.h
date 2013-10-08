@@ -234,7 +234,7 @@ IsWrapper(JSObject *obj)
 // previously wrapped. Otherwise, this returns the first object for
 // which JSObject::isWrapper returns false.
 JS_FRIEND_API(JSObject *)
-UncheckedUnwrap(JSObject *obj, bool stopAtOuter = true, unsigned *flagsp = NULL);
+UncheckedUnwrap(JSObject *obj, bool stopAtOuter = true, unsigned *flagsp = nullptr);
 
 // Given a JSObject, returns that object stripped of wrappers. At each stage,
 // the security wrapper has the opportunity to veto the unwrap. Since checked

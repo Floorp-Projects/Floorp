@@ -6,7 +6,7 @@
 
 BEGIN_TEST(testJSEvaluateScript)
 {
-    JS::RootedObject obj(cx, JS_NewObject(cx, NULL, NULL, global));
+    JS::RootedObject obj(cx, JS_NewObject(cx, nullptr, nullptr, global));
     CHECK(obj);
 
     uint32_t options = JS_GetOptions(cx);

@@ -28,8 +28,9 @@ ObjectEmulatingUndefinedConstructor(JSContext *cx, unsigned argc, jsval *vp)
 
 BEGIN_TEST(testObjectEmulatingUndefined_truthy)
 {
-    CHECK(JS_InitClass(cx, global, NULL, &ObjectEmulatingUndefinedClass,
-                       ObjectEmulatingUndefinedConstructor, 0, NULL, NULL, NULL, NULL));
+    CHECK(JS_InitClass(cx, global, nullptr, &ObjectEmulatingUndefinedClass,
+                       ObjectEmulatingUndefinedConstructor, 0,
+                       nullptr, nullptr, nullptr, nullptr));
 
     JS::RootedValue result(cx);
 
@@ -53,8 +54,9 @@ END_TEST(testObjectEmulatingUndefined_truthy)
 
 BEGIN_TEST(testObjectEmulatingUndefined_equal)
 {
-    CHECK(JS_InitClass(cx, global, NULL, &ObjectEmulatingUndefinedClass,
-                       ObjectEmulatingUndefinedConstructor, 0, NULL, NULL, NULL, NULL));
+    CHECK(JS_InitClass(cx, global, nullptr, &ObjectEmulatingUndefinedClass,
+                       ObjectEmulatingUndefinedConstructor, 0,
+                       nullptr, nullptr, nullptr, nullptr));
 
     JS::RootedValue result(cx);
 

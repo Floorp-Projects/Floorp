@@ -7777,7 +7777,7 @@ IonBuilder::freezePropTypeSets(types::TemporaryTypeSet *types,
             continue;
 
         // Walk the prototype chain. Everyone has to have the property, since we
-        // just checked, so propSet cannot be NULL.
+        // just checked, so propSet cannot be nullptr.
         while (true) {
             types::HeapTypeSetKey property = type->property(NameToId(name));
             JS_ALWAYS_TRUE(!property.notEmpty(constraints()));

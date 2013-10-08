@@ -318,7 +318,7 @@ PutEscapedStringImpl(char *buffer, size_t bufferSize, FILE *fp, const jschar *ch
 inline size_t
 PutEscapedString(char *buffer, size_t size, JSLinearString *str, uint32_t quote)
 {
-    size_t n = PutEscapedStringImpl(buffer, size, NULL, str, quote);
+    size_t n = PutEscapedStringImpl(buffer, size, nullptr, str, quote);
 
     /* PutEscapedStringImpl can only fail with a file. */
     JS_ASSERT(n != size_t(-1));
@@ -328,7 +328,7 @@ PutEscapedString(char *buffer, size_t size, JSLinearString *str, uint32_t quote)
 inline size_t
 PutEscapedString(char *buffer, size_t bufferSize, const jschar *chars, size_t length, uint32_t quote)
 {
-    size_t n = PutEscapedStringImpl(buffer, bufferSize, NULL, chars, length, quote);
+    size_t n = PutEscapedStringImpl(buffer, bufferSize, nullptr, chars, length, quote);
 
     /* PutEscapedStringImpl can only fail with a file. */
     JS_ASSERT(n != size_t(-1));
@@ -343,7 +343,7 @@ PutEscapedString(char *buffer, size_t bufferSize, const jschar *chars, size_t le
 inline bool
 FileEscapedString(FILE *fp, JSLinearString *str, uint32_t quote)
 {
-    return PutEscapedStringImpl(NULL, 0, fp, str, quote) != size_t(-1);
+    return PutEscapedStringImpl(nullptr, 0, fp, str, quote) != size_t(-1);
 }
 
 bool

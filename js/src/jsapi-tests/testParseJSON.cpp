@@ -19,7 +19,7 @@ class AutoInflatedString {
     size_t length_;
 
   public:
-    AutoInflatedString(JSContext *cx) : cx(cx), chars_(NULL), length_(0) { }
+    AutoInflatedString(JSContext *cx) : cx(cx), chars_(nullptr), length_(0) { }
     ~AutoInflatedString() {
         JS_free(cx, chars_);
     }
@@ -190,7 +190,7 @@ Error(JSContext *cx, const char (&input)[N])
     JSErrorReporter old = JS_SetErrorReporter(cx, reportJSONEror);
     bool ok = JS_ParseJSON(cx, str.chars(), str.length(), &dummy);
     JS_SetErrorReporter(cx, old);
-    JS_SetContextPrivate(cx, NULL);
+    JS_SetContextPrivate(cx, nullptr);
 
     CHECK(!ok);
     CHECK(!p.unexpectedErrorCount);
