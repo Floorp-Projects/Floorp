@@ -170,6 +170,12 @@ JSObject::removeDenseElementForSparseIndex(js::ExclusiveContext *cx,
         obj->setDenseElement(index, js::MagicValue(JS_ELEMENTS_HOLE));
 }
 
+inline bool
+JSObject::writeToIndexWouldMarkNotPacked(uint32_t index)
+{
+    return getElementsHeader()->initializedLength < index;
+}
+
 inline void
 JSObject::markDenseElementsNotPacked(js::ExclusiveContext *cx)
 {
@@ -178,8 +184,11 @@ JSObject::markDenseElementsNotPacked(js::ExclusiveContext *cx)
 }
 
 inline void
-JSObject::ensureDenseInitializedLength(js::ExclusiveContext *cx, uint32_t index, uint32_t extra)
+JSObject::ensureDenseInitializedLengthNoPackedCheck(js::ThreadSafeContext *cx, uint32_t index,
+                                                    uint32_t extra)
 {
+    JS_ASSERT(cx->isThreadLocal(this));
+
     /*
      * Ensure that the array's contents have been initialized up to index, and
      * mark the elements through 'index + extra' as initialized in preparation
@@ -187,8 +196,6 @@ JSObject::ensureDenseInitializedLength(js::ExclusiveContext *cx, uint32_t index,
      */
     JS_ASSERT(index + extra <= getDenseCapacity());
     uint32_t &initlen = getElementsHeader()->initializedLength;
-    if (initlen < index)
-        markDenseElementsNotPacked(cx);
 
     if (initlen < index + extra) {
         JSRuntime *rt = runtimeFromAnyThread();
@@ -201,10 +208,28 @@ JSObject::ensureDenseInitializedLength(js::ExclusiveContext *cx, uint32_t index,
     }
 }
 
+inline void
+JSObject::ensureDenseInitializedLength(js::ExclusiveContext *cx, uint32_t index, uint32_t extra)
+{
+    if (writeToIndexWouldMarkNotPacked(index))
+        markDenseElementsNotPacked(cx);
+    ensureDenseInitializedLengthNoPackedCheck(cx, index, extra);
+}
+
+inline void
+JSObject::ensureDenseInitializedLengthPreservePackedFlag(js::ThreadSafeContext *cx,
+                                                         uint32_t index, uint32_t extra)
+{
+    JS_ASSERT(!writeToIndexWouldMarkNotPacked(index));
+    ensureDenseInitializedLengthNoPackedCheck(cx, index, extra);
+}
+
 JSObject::EnsureDenseResult
 JSObject::extendDenseElements(js::ThreadSafeContext *cx,
                               uint32_t requiredCapacity, uint32_t extra)
 {
+    JS_ASSERT(cx->isThreadLocal(this));
+
     /*
      * Don't grow elements for non-extensible objects or watched objects. Dense
      * elements can be added/written with no extensible or watchpoint checks as
@@ -239,45 +264,7 @@ JSObject::extendDenseElements(js::ThreadSafeContext *cx,
 }
 
 inline JSObject::EnsureDenseResult
-JSObject::parExtendDenseElements(js::ThreadSafeContext *cx, js::Value *v, uint32_t extra)
-{
-    JS_ASSERT(isNative());
-    JS_ASSERT_IF(is<js::ArrayObject>(), as<js::ArrayObject>().lengthIsWritable());
-
-    js::ObjectElements *header = getElementsHeader();
-    uint32_t initializedLength = header->initializedLength;
-    uint32_t requiredCapacity = initializedLength + extra;
-    if (requiredCapacity < initializedLength)
-        return ED_SPARSE; /* Overflow. */
-
-    if (requiredCapacity > header->capacity) {
-        EnsureDenseResult edr = extendDenseElements(cx, requiredCapacity, extra);
-        if (edr != ED_OK)
-            return edr;
-    }
-
-    // Watch out lest the header has been reallocated by
-    // extendDenseElements():
-    header = getElementsHeader();
-
-    js::HeapSlot *sp = elements + initializedLength;
-    if (v) {
-        for (uint32_t i = 0; i < extra; i++) {
-            JS_ASSERT_IF(v[i].isMarkable(), static_cast<js::gc::Cell *>(v[i].toGCThing())->isTenured());
-            *sp[i].unsafeGet() = v[i];
-        }
-    } else {
-        for (uint32_t i = 0; i < extra; i++)
-            *sp[i].unsafeGet() = js::MagicValue(JS_ELEMENTS_HOLE);
-    }
-    header->initializedLength = requiredCapacity;
-    if (header->length < requiredCapacity)
-        header->length = requiredCapacity;
-    return ED_OK;
-}
-
-inline JSObject::EnsureDenseResult
-JSObject::ensureDenseElements(js::ExclusiveContext *cx, uint32_t index, uint32_t extra)
+JSObject::ensureDenseElementsNoPackedCheck(js::ThreadSafeContext *cx, uint32_t index, uint32_t extra)
 {
     JS_ASSERT(isNative());
 
@@ -287,7 +274,7 @@ JSObject::ensureDenseElements(js::ExclusiveContext *cx, uint32_t index, uint32_t
     if (extra == 1) {
         /* Optimize for the common case. */
         if (index < currentCapacity) {
-            ensureDenseInitializedLength(cx, index, 1);
+            ensureDenseInitializedLengthNoPackedCheck(cx, index, 1);
             return ED_OK;
         }
         requiredCapacity = index + 1;
@@ -302,7 +289,7 @@ JSObject::ensureDenseElements(js::ExclusiveContext *cx, uint32_t index, uint32_t
             return ED_SPARSE;
         }
         if (requiredCapacity <= currentCapacity) {
-            ensureDenseInitializedLength(cx, index, extra);
+            ensureDenseInitializedLengthNoPackedCheck(cx, index, extra);
             return ED_OK;
         }
     }
@@ -311,8 +298,24 @@ JSObject::ensureDenseElements(js::ExclusiveContext *cx, uint32_t index, uint32_t
     if (edr != ED_OK)
         return edr;
 
-    ensureDenseInitializedLength(cx, index, extra);
+    ensureDenseInitializedLengthNoPackedCheck(cx, index, extra);
     return ED_OK;
+}
+
+inline JSObject::EnsureDenseResult
+JSObject::ensureDenseElements(js::ExclusiveContext *cx, uint32_t index, uint32_t extra)
+{
+    if (writeToIndexWouldMarkNotPacked(index))
+        markDenseElementsNotPacked(cx);
+    return ensureDenseElementsNoPackedCheck(cx, index, extra);
+}
+
+inline JSObject::EnsureDenseResult
+JSObject::ensureDenseElementsPreservePackedFlag(js::ThreadSafeContext *cx, uint32_t index,
+                                                uint32_t extra)
+{
+    JS_ASSERT(!writeToIndexWouldMarkNotPacked(index));
+    return ensureDenseElementsNoPackedCheck(cx, index, extra);
 }
 
 /* static */ inline bool
