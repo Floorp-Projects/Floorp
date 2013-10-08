@@ -3107,14 +3107,15 @@ Serialize(Element* aRoot, bool aDescendentsOnly, nsAString& aOut)
   }
 }
 
-nsresult
+void
 Element::GetMarkup(bool aIncludeSelf, nsAString& aMarkup)
 {
   aMarkup.Truncate();
 
   nsIDocument* doc = OwnerDoc();
   if (IsInHTMLDocument()) {
-    return Serialize(this, !aIncludeSelf, aMarkup) ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
+    Serialize(this, !aIncludeSelf, aMarkup);
+    return;
   }
 
   nsAutoString contentType;
@@ -3135,7 +3136,7 @@ Element::GetMarkup(bool aIncludeSelf, nsAString& aMarkup)
     docEncoder = do_CreateInstance(NS_DOC_ENCODER_CONTRACTID_BASE "application/xml");
   }
 
-  NS_ENSURE_TRUE(docEncoder, NS_ERROR_FAILURE);
+  NS_ENSURE_TRUE_VOID(docEncoder);
 
   uint32_t flags = nsIDocumentEncoder::OutputEncodeBasicEntities |
                    // Output DOM-standard newlines
@@ -3153,8 +3154,8 @@ Element::GetMarkup(bool aIncludeSelf, nsAString& aMarkup)
     }
   }
 
-  nsresult rv = docEncoder->NativeInit(doc, contentType, flags);
-  NS_ENSURE_SUCCESS(rv, rv);
+  DebugOnly<nsresult> rv = docEncoder->NativeInit(doc, contentType, flags);
+  MOZ_ASSERT(NS_SUCCEEDED(rv));
 
   if (aIncludeSelf) {
     docEncoder->SetNativeNode(this);
@@ -3162,10 +3163,10 @@ Element::GetMarkup(bool aIncludeSelf, nsAString& aMarkup)
     docEncoder->SetNativeContainerNode(this);
   }
   rv = docEncoder->EncodeToString(aMarkup);
+  MOZ_ASSERT(NS_SUCCEEDED(rv));
   if (!aIncludeSelf) {
     doc->SetCachedEncoder(docEncoder.forget());
   }
-  return rv;
 }
 
 /**
@@ -3197,10 +3198,11 @@ FireMutationEventsForDirectParsing(nsIDocument* aDoc, nsIContent* aDest,
   }
 }
 
-void
-Element::GetInnerHTML(nsAString& aInnerHTML, ErrorResult& aError)
+NS_IMETHODIMP
+Element::GetInnerHTML(nsAString& aInnerHTML)
 {
-  aError = GetMarkup(false, aInnerHTML);
+  GetMarkup(false, aInnerHTML);
+  return NS_OK;
 }
 
 void
@@ -3266,9 +3268,9 @@ Element::SetInnerHTML(const nsAString& aInnerHTML, ErrorResult& aError)
 }
 
 void
-Element::GetOuterHTML(nsAString& aOuterHTML, ErrorResult& aError)
+Element::GetOuterHTML(nsAString& aOuterHTML)
 {
-  aError = GetMarkup(true, aOuterHTML);
+  GetMarkup(true, aOuterHTML);
 }
 
 void
