@@ -117,16 +117,20 @@ GetElement(JSContext *cx, HandleObject obj, uint32_t index, MutableHandleValue v
     return GetElement(cx, obj, obj, index, vp);
 }
 
+template <ExecutionMode mode>
 extern bool
-SetPropertyHelper(JSContext *cx, HandleObject obj, HandleObject receiver, HandleId id,
-                  unsigned defineHow, MutableHandleValue vp, bool strict);
+SetPropertyHelper(typename ExecutionModeTraits<mode>::ContextType cx, HandleObject obj,
+                  HandleObject receiver, HandleId id, unsigned defineHow,
+                  MutableHandleValue vp, bool strict);
 
+template <ExecutionMode mode>
 inline bool
-SetPropertyHelper(JSContext *cx, HandleObject obj, HandleObject receiver, PropertyName *name,
-                  unsigned defineHow, MutableHandleValue vp, bool strict)
+SetPropertyHelper(typename ExecutionModeTraits<mode>::ContextType cx, HandleObject obj,
+                  HandleObject receiver, PropertyName *name, unsigned defineHow,
+                  MutableHandleValue vp, bool strict)
 {
     Rooted<jsid> id(cx, NameToId(name));
-    return SetPropertyHelper(cx, obj, receiver, id, defineHow, vp, strict);
+    return SetPropertyHelper<mode>(cx, obj, receiver, id, defineHow, vp, strict);
 }
 
 extern bool
@@ -230,7 +234,7 @@ class JSObject : public js::ObjectImpl
      * Update the last property, keeping the number of allocated slots in sync
      * with the object's new slot span.
      */
-    static bool setLastProperty(js::ExclusiveContext *cx,
+    static bool setLastProperty(js::ThreadSafeContext *cx,
                                 JS::HandleObject obj, js::HandleShape shape);
 
     /* As above, but does not change the slot span. */
@@ -267,7 +271,7 @@ class JSObject : public js::ObjectImpl
      * Update the slot span directly for a dictionary object, and allocate
      * slots to cover the new span if necessary.
      */
-    static bool setSlotSpan(js::ExclusiveContext *cx, JS::HandleObject obj, uint32_t span);
+    static bool setSlotSpan(js::ThreadSafeContext *cx, JS::HandleObject obj, uint32_t span);
 
     /* Upper bound on the number of elements in an object. */
     static const uint32_t NELEMENTS_LIMIT = JS_BIT(28);
@@ -369,15 +373,15 @@ class JSObject : public js::ObjectImpl
      * The number of allocated slots is not stored explicitly, and changes to
      * the slots must track changes in the slot span.
      */
-    static bool growSlots(js::ExclusiveContext *cx, js::HandleObject obj, uint32_t oldCount,
+    static bool growSlots(js::ThreadSafeContext *cx, js::HandleObject obj, uint32_t oldCount,
                           uint32_t newCount);
-    static void shrinkSlots(js::ExclusiveContext *cx, js::HandleObject obj, uint32_t oldCount,
+    static void shrinkSlots(js::ThreadSafeContext *cx, js::HandleObject obj, uint32_t oldCount,
                             uint32_t newCount);
 
     bool hasDynamicSlots() const { return slots != nullptr; }
 
   protected:
-    static inline bool updateSlotsForSpan(js::ExclusiveContext *cx,
+    static inline bool updateSlotsForSpan(js::ThreadSafeContext *cx,
                                           js::HandleObject obj, size_t oldSpan, size_t newSpan);
 
   public:
@@ -403,6 +407,8 @@ class JSObject : public js::ObjectImpl
         JS_ASSERT(slot < slotSpan());
         return setSlot(slot, value);
     }
+
+    inline bool nativeSetSlotIfHasType(js::Shape *shape, const js::Value &value);
 
     static inline void nativeSetSlotWithType(js::ExclusiveContext *cx,
                                              js::HandleObject, js::Shape *shape,
@@ -635,6 +641,7 @@ class JSObject : public js::ObjectImpl
             setDenseElement(index, val);
     }
 
+    inline bool setDenseElementIfHasType(uint32_t index, const js::Value &val);
     static inline void setDenseElementWithType(js::ExclusiveContext *cx, js::HandleObject obj,
                                                uint32_t index, const js::Value &val);
     static inline void initDenseElementWithType(js::ExclusiveContext *cx, js::HandleObject obj,
@@ -660,7 +667,7 @@ class JSObject : public js::ObjectImpl
     void initDenseElements(uint32_t dstStart, const js::Value *src, uint32_t count) {
         JS_ASSERT(dstStart + count <= getDenseCapacity());
         memcpy(&elements[dstStart], src, count * sizeof(js::HeapSlot));
-        DenseRangeWriteBarrierPost(runtimeFromMainThread(), this, dstStart, count);
+        DenseRangeWriteBarrierPost(runtimeFromAnyThread(), this, dstStart, count);
     }
 
     void moveDenseElements(uint32_t dstStart, uint32_t srcStart, uint32_t count) {
@@ -796,7 +803,7 @@ class JSObject : public js::ObjectImpl
      * after calling object-parameter-free shape methods, avoiding coupling
      * logic across the object vs. shape module wall.
      */
-    static bool allocSlot(js::ExclusiveContext *cx, JS::HandleObject obj, uint32_t *slotp);
+    static bool allocSlot(js::ThreadSafeContext *cx, JS::HandleObject obj, uint32_t *slotp);
     void freeSlot(uint32_t slot);
 
   public:
@@ -814,8 +821,28 @@ class JSObject : public js::ObjectImpl
                     js::MutableHandleValue vp);
 
   private:
+    static js::Shape *getChildPropertyOnDictionary(js::ThreadSafeContext *cx, JS::HandleObject obj,
+                                                   js::HandleShape parent, js::StackShape &child);
     static js::Shape *getChildProperty(js::ExclusiveContext *cx, JS::HandleObject obj,
                                        js::HandleShape parent, js::StackShape &child);
+    template <js::ExecutionMode mode>
+    static inline js::Shape *
+    getOrLookupChildProperty(typename js::ExecutionModeTraits<mode>::ExclusiveContextType cx,
+                             JS::HandleObject obj, js::HandleShape parent, js::StackShape &child)
+    {
+        if (mode == js::ParallelExecution)
+            return lookupChildProperty(cx, obj, parent, child);
+        return getChildProperty(cx->asExclusiveContext(), obj, parent, child);
+    }
+
+  public:
+    /*
+     * XXX: This should be private, but is public because it needs to be a
+     * friend of ThreadSafeContext to get to the propertyTree on cx->compartment_.
+     */
+    static js::Shape *lookupChildProperty(js::ThreadSafeContext *cx, JS::HandleObject obj,
+                                          js::HandleShape parent, js::StackShape &child);
+
 
   protected:
     /*
@@ -825,12 +852,14 @@ class JSObject : public js::ObjectImpl
      * 1. getter and setter must be normalized based on flags (see jsscope.cpp).
      * 2. Checks for non-extensibility must be done by callers.
      */
-    static js::Shape *addPropertyInternal(js::ExclusiveContext *cx,
-                                          JS::HandleObject obj, JS::HandleId id,
-                                          JSPropertyOp getter, JSStrictPropertyOp setter,
-                                          uint32_t slot, unsigned attrs,
-                                          unsigned flags, int shortid, js::Shape **spp,
-                                          bool allowDictionary);
+    template <js::ExecutionMode mode>
+    static js::Shape *
+    addPropertyInternal(typename js::ExecutionModeTraits<mode>::ExclusiveContextType cx,
+                        JS::HandleObject obj, JS::HandleId id,
+                        JSPropertyOp getter, JSStrictPropertyOp setter,
+                        uint32_t slot, unsigned attrs,
+                        unsigned flags, int shortid, js::Shape **spp,
+                        bool allowDictionary);
 
   private:
     struct TradeGutsReserved;
@@ -854,15 +883,20 @@ class JSObject : public js::ObjectImpl
                                uint32_t slot, unsigned attrs);
 
     /* Add or overwrite a property for id in this scope. */
-    static js::Shape *putProperty(js::ExclusiveContext *cx, JS::HandleObject obj, JS::HandleId id,
-                                  JSPropertyOp getter, JSStrictPropertyOp setter,
-                                  uint32_t slot, unsigned attrs,
-                                  unsigned flags, int shortid);
-    static inline js::Shape *putProperty(js::ExclusiveContext *cx, JS::HandleObject obj,
-                                         js::PropertyName *name,
-                                         JSPropertyOp getter, JSStrictPropertyOp setter,
-                                         uint32_t slot, unsigned attrs,
-                                         unsigned flags, int shortid);
+    template <js::ExecutionMode mode>
+    static js::Shape *
+    putProperty(typename js::ExecutionModeTraits<mode>::ExclusiveContextType cx,
+                JS::HandleObject obj, JS::HandleId id,
+                JSPropertyOp getter, JSStrictPropertyOp setter,
+                uint32_t slot, unsigned attrs,
+                unsigned flags, int shortid);
+    template <js::ExecutionMode mode>
+    static inline js::Shape *
+    putProperty(typename js::ExecutionModeTraits<mode>::ExclusiveContextType cx,
+                JS::HandleObject obj, js::PropertyName *name,
+                JSPropertyOp getter, JSStrictPropertyOp setter,
+                uint32_t slot, unsigned attrs,
+                unsigned flags, int shortid);
 
     /* Change the given property into a sibling with the same id in this scope. */
     static js::Shape *changeProperty(js::ExclusiveContext *cx, js::HandleObject obj,
@@ -987,7 +1021,8 @@ class JSObject : public js::ObjectImpl
     {
         if (obj->getOps()->setGeneric)
             return nonNativeSetProperty(cx, obj, id, vp, strict);
-        return js::baseops::SetPropertyHelper(cx, obj, receiver, id, 0, vp, strict);
+        return js::baseops::SetPropertyHelper<js::SequentialExecution>(cx, obj, receiver, id, 0,
+                                                                       vp, strict);
     }
 
     static bool setProperty(JSContext *cx, js::HandleObject obj, js::HandleObject receiver,
@@ -1418,15 +1453,18 @@ LookupNameWithGlobalDefault(JSContext *cx, HandlePropertyName name, HandleObject
 extern JSObject *
 js_FindVariableScope(JSContext *cx, JSFunction **funp);
 
-extern bool
-js_NativeGet(JSContext *cx, js::Handle<JSObject*> obj, js::Handle<JSObject*> pobj,
-             js::Handle<js::Shape*> shape, js::MutableHandle<js::Value> vp);
-
-extern bool
-js_NativeSet(JSContext *cx, js::Handle<JSObject*> obj, js::Handle<JSObject*> receiver,
-             js::Handle<js::Shape*> shape, bool strict, js::MutableHandleValue vp);
 
 namespace js {
+
+bool
+NativeGet(JSContext *cx, js::Handle<JSObject*> obj, js::Handle<JSObject*> pobj,
+          js::Handle<js::Shape*> shape, js::MutableHandle<js::Value> vp);
+
+template <js::ExecutionMode mode>
+bool
+NativeSet(typename js::ExecutionModeTraits<mode>::ContextType cx,
+          js::Handle<JSObject*> obj, js::Handle<JSObject*> receiver,
+          js::Handle<js::Shape*> shape, bool strict, js::MutableHandleValue vp);
 
 bool
 LookupPropertyPure(JSObject *obj, jsid id, JSObject **objp, Shape **propp);

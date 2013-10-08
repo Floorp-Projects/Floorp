@@ -135,6 +135,15 @@ JSObject::setShouldConvertDoubleElements()
     getElementsHeader()->setShouldConvertDoubleElements();
 }
 
+inline bool
+JSObject::setDenseElementIfHasType(uint32_t index, const js::Value &val)
+{
+    if (!js::types::HasTypePropertyId(this, JSID_VOID, val))
+        return false;
+    setDenseElementMaybeConvertDouble(index, val);
+    return true;
+}
+
 /* static */ inline void
 JSObject::setDenseElementWithType(js::ExclusiveContext *cx, js::HandleObject obj, uint32_t index,
                                   const js::Value &val)
@@ -509,6 +518,15 @@ JSObject::hasProperty(JSContext *cx, js::HandleObject obj,
         return false;
     }
     *foundp = !!prop;
+    return true;
+}
+
+inline bool
+JSObject::nativeSetSlotIfHasType(js::Shape *shape, const js::Value &value)
+{
+    if (!js::types::HasTypePropertyId(this, shape->propid(), value))
+        return false;
+    nativeSetSlot(shape->slot(), value);
     return true;
 }
 

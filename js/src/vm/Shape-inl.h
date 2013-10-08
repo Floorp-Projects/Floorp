@@ -179,7 +179,7 @@ Shape::search(ExclusiveContext *cx, Shape *start, jsid id, Shape ***pspp, bool a
 }
 
 inline
-AutoRooterGetterSetter::Inner::Inner(ExclusiveContext *cx, uint8_t attrs,
+AutoRooterGetterSetter::Inner::Inner(ThreadSafeContext *cx, uint8_t attrs,
                                      PropertyOp *pgetter_, StrictPropertyOp *psetter_)
   : CustomAutoRooter(cx), attrs(attrs),
     pgetter(pgetter_), psetter(psetter_),
@@ -190,7 +190,7 @@ AutoRooterGetterSetter::Inner::Inner(ExclusiveContext *cx, uint8_t attrs,
 }
 
 inline
-AutoRooterGetterSetter::AutoRooterGetterSetter(ExclusiveContext *cx, uint8_t attrs,
+AutoRooterGetterSetter::AutoRooterGetterSetter(ThreadSafeContext *cx, uint8_t attrs,
                                                PropertyOp *pgetter, StrictPropertyOp *psetter
                                                MOZ_GUARD_OBJECT_NOTIFIER_PARAM_IN_IMPL)
 {
@@ -208,7 +208,7 @@ StackBaseShape::AutoRooter::AutoRooter(ThreadSafeContext *cx, const StackBaseSha
 }
 
 inline
-StackShape::AutoRooter::AutoRooter(ExclusiveContext *cx, const StackShape *shape_
+StackShape::AutoRooter::AutoRooter(ThreadSafeContext *cx, const StackShape *shape_
                                    MOZ_GUARD_OBJECT_NOTIFIER_PARAM_IN_IMPL)
   : CustomAutoRooter(cx), shape(shape_), skip(cx, shape_)
 {

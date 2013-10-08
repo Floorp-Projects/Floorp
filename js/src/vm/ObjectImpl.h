@@ -1033,7 +1033,7 @@ class ObjectImpl : public gc::BarrieredCell<ObjectImpl>
 #endif
 
     Shape *
-    replaceWithNewEquivalentShape(ExclusiveContext *cx,
+    replaceWithNewEquivalentShape(ThreadSafeContext *cx,
                                   Shape *existingShape, Shape *newShape = nullptr);
 
     enum GenerateShape {
@@ -1168,7 +1168,7 @@ class ObjectImpl : public gc::BarrieredCell<ObjectImpl>
         return shape_;
     }
 
-    bool generateOwnShape(ExclusiveContext *cx, js::Shape *newShape = nullptr) {
+    bool generateOwnShape(ThreadSafeContext *cx, js::Shape *newShape = nullptr) {
         return replaceWithNewEquivalentShape(cx, lastProperty(), newShape);
     }
 

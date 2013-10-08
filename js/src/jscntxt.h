@@ -143,6 +143,9 @@ struct ThreadSafeContext : ContextFriendFields,
     friend struct StackBaseShape;
     friend UnownedBaseShape *BaseShape::lookupUnowned(ThreadSafeContext *cx,
                                                       const StackBaseShape &base);
+    friend Shape *JSObject::lookupChildProperty(ThreadSafeContext *cx,
+                                                JS::HandleObject obj, js::HandleShape parent,
+                                                js::StackShape &child);
 
   public:
     enum ContextKind {
