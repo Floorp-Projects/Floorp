@@ -475,6 +475,15 @@ public:
             return;
 
         // Else, surface changed...
+        if (Screen()) {
+            /* Blit `draw` to `read` if we need to, before we potentially juggle
+             * `read` around. If we don't, we might attach a different `read`,
+             * and *then* hit AssureBlitted, which will blit a dirty `draw` onto
+             * the wrong `read`!
+             */
+            Screen()->AssureBlitted();
+        }
+
         mCurSurface = eglSurface;
         MakeCurrent(true);
     }
@@ -596,13 +605,9 @@ public:
     {
         if (mSurface && !mPlatformContext) {
 #ifdef MOZ_WIDGET_GONK
-            if (!mIsOffscreen) {
-                if (mHwc) {
-                    return mHwc->Render(EGL_DISPLAY(), mSurface);
-                } else {
-                    return GetGonkDisplay()->SwapBuffers(EGL_DISPLAY(), mSurface);
-                }
-            } else
+            if (!mIsOffscreen)
+                return GetGonkDisplay()->SwapBuffers(EGL_DISPLAY(), mSurface);
+            else
 #endif
                 return sEGLLibrary.fSwapBuffers(EGL_DISPLAY(), mSurface);
         } else {
