@@ -89,7 +89,7 @@ struct AtomHasher
         size_t          length;
         const JSAtom    *atom; /* Optional. */
 
-        Lookup(const jschar *chars, size_t length) : chars(chars), length(length), atom(NULL) {}
+        Lookup(const jschar *chars, size_t length) : chars(chars), length(length), atom(nullptr) {}
         inline Lookup(const JSAtom *atom);
     };
 

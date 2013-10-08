@@ -10,37 +10,31 @@
 #include "nsDOMEventTargetHelper.h"
 #include "nsIObserver.h"
 
-#include "nsCycleCollectionParticipant.h"
-
 namespace mozilla {
 namespace dom {
 
-
 class NotificationObserver;
-class Promise;
 
 class Notification : public nsDOMEventTargetHelper
 {
   friend class NotificationTask;
   friend class NotificationPermissionRequest;
   friend class NotificationObserver;
-  friend class NotificationStorageCallback;
-
 public:
   IMPL_EVENT_HANDLER(click)
   IMPL_EVENT_HANDLER(show)
   IMPL_EVENT_HANDLER(error)
   IMPL_EVENT_HANDLER(close)
 
+  Notification(const nsAString& aTitle, const nsAString& aBody,
+               NotificationDirection aDir, const nsAString& aLang,
+               const nsAString& aTag, const nsAString& aIconUrl);
+
   static already_AddRefed<Notification> Constructor(const GlobalObject& aGlobal,
                                                     const nsAString& aTitle,
                                                     const NotificationOptions& aOption,
                                                     ErrorResult& aRv);
-  void GetID(nsAString& aRetval) {
-    aRetval = mID;
-  }
-
-  void GetTitle(nsAString& aRetval)
+  void GetTitle(nsString& aRetval)
   {
     aRetval = mTitle;
   }
@@ -50,22 +44,24 @@ public:
     return mDir;
   }
 
-  void GetLang(nsAString& aRetval)
+  void GetLang(nsString& aRetval)
   {
     aRetval = mLang;
   }
 
-  void GetBody(nsAString& aRetval)
+  void GetBody(nsString& aRetval)
   {
     aRetval = mBody;
   }
 
-  void GetTag(nsAString& aRetval)
+  void GetTag(nsString& aRetval)
   {
-    aRetval = mTag;
+    if (StringBeginsWith(mTag, NS_LITERAL_STRING("tag:"))) {
+      aRetval = Substring(mTag, 4);
+    }
   }
 
-  void GetIcon(nsAString& aRetval)
+  void GetIcon(nsString& aRetval)
   {
     aRetval = mIconUrl;
   }
@@ -76,10 +72,6 @@ public:
 
   static NotificationPermission GetPermission(const GlobalObject& aGlobal,
                                               ErrorResult& aRv);
-
-  static already_AddRefed<Promise> Get(const GlobalObject& aGlobal,
-                                       const GetNotificationOptions& aFilter,
-                                       ErrorResult& aRv);
 
   void Close();
 
@@ -93,17 +85,8 @@ public:
   virtual JSObject* WrapObject(JSContext* aCx,
                                JS::Handle<JSObject*> aScope) MOZ_OVERRIDE;
 protected:
-  Notification(const nsAString& aID, const nsAString& aTitle, const nsAString& aBody,
-               NotificationDirection aDir, const nsAString& aLang,
-               const nsAString& aTag, const nsAString& aIconUrl);
-
-  static already_AddRefed<Notification> CreateInternal(nsPIDOMWindow* aWindow,
-                                                       const nsAString& aID,
-                                                       const nsAString& aTitle,
-                                                       const NotificationOptions& aOptions);
-
-  void ShowInternal();
-  void CloseInternal();
+  nsresult ShowInternal();
+  nsresult CloseInternal();
 
   static NotificationPermission GetPermissionInternal(nsISupports* aGlobal,
                                                       ErrorResult& rv);
@@ -120,22 +103,8 @@ protected:
     }
   }
 
-  static const NotificationDirection StringToDirection(const nsAString& aDirection)
-  {
-    if (aDirection.EqualsLiteral("ltr")) {
-      return NotificationDirection::Ltr;
-    }
-    if (aDirection.EqualsLiteral("rtl")) {
-      return NotificationDirection::Rtl;
-    }
-    return NotificationDirection::Auto;
-  }
-
-  static nsresult GetOrigin(nsPIDOMWindow* aWindow, nsString& aOrigin);
-
   nsresult GetAlertName(nsString& aAlertName);
 
-  nsString mID;
   nsString mTitle;
   nsString mBody;
   NotificationDirection mDir;

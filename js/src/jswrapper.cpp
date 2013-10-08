@@ -109,7 +109,7 @@ js::UnwrapOneChecked(JSObject *obj, bool stopAtOuter)
     }
 
     Wrapper *handler = Wrapper::wrapperHandler(obj);
-    return handler->isSafeToUnwrap() ? Wrapper::wrappedObject(obj) : NULL;
+    return handler->isSafeToUnwrap() ? Wrapper::wrappedObject(obj) : nullptr;
 }
 
 bool
@@ -364,7 +364,7 @@ struct AutoCloseIterator
 
     ~AutoCloseIterator() { if (obj) CloseIterator(cx, obj); }
 
-    void clear() { obj = NULL; }
+    void clear() { obj = nullptr; }
 
   private:
     JSContext *cx;
@@ -550,10 +550,10 @@ CrossCompartmentWrapper::fun_toString(JSContext *cx, HandleObject wrapper, unsig
         AutoCompartment call(cx, wrappedObject(wrapper));
         str = Wrapper::fun_toString(cx, wrapper, indent);
         if (!str)
-            return NULL;
+            return nullptr;
     }
     if (!cx->compartment()->wrap(cx, str.address()))
-        return NULL;
+        return nullptr;
     return str;
 }
 
@@ -623,7 +623,7 @@ bool
 SecurityWrapper<Base>::preventExtensions(JSContext *cx, HandleObject wrapper)
 {
     // See above.
-    JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_UNWRAP_DENIED);
+    JS_ReportErrorNumber(cx, js_GetErrorMessage, nullptr, JSMSG_UNWRAP_DENIED);
     return false;
 }
 
@@ -632,7 +632,7 @@ bool
 SecurityWrapper<Base>::enter(JSContext *cx, HandleObject wrapper, HandleId id,
                              Wrapper::Action act, bool *bp)
 {
-    JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_UNWRAP_DENIED);
+    JS_ReportErrorNumber(cx, js_GetErrorMessage, nullptr, JSMSG_UNWRAP_DENIED);
     *bp = false;
     return false;
 }
@@ -642,7 +642,7 @@ bool
 SecurityWrapper<Base>::nativeCall(JSContext *cx, IsAcceptableThis test, NativeImpl impl,
                                   CallArgs args)
 {
-    JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_UNWRAP_DENIED);
+    JS_ReportErrorNumber(cx, js_GetErrorMessage, nullptr, JSMSG_UNWRAP_DENIED);
     return false;
 }
 
@@ -678,8 +678,8 @@ SecurityWrapper<Base>::defineProperty(JSContext *cx, HandleObject wrapper,
 {
     if (desc.getter() || desc.setter()) {
         JSString *str = IdToString(cx, id);
-        const jschar *prop = str ? str->getCharsZ(cx) : NULL;
-        JS_ReportErrorNumberUC(cx, js_GetErrorMessage, NULL,
+        const jschar *prop = str ? str->getCharsZ(cx) : nullptr;
+        JS_ReportErrorNumberUC(cx, js_GetErrorMessage, nullptr,
                                JSMSG_ACCESSOR_DEF_DENIED, prop);
         return false;
     }
@@ -707,7 +707,7 @@ DeadObjectProxy::isExtensible(JSContext *cx, HandleObject proxy, bool *extensibl
 bool
 DeadObjectProxy::preventExtensions(JSContext *cx, HandleObject proxy)
 {
-    JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_DEAD_OBJECT);
+    JS_ReportErrorNumber(cx, js_GetErrorMessage, nullptr, JSMSG_DEAD_OBJECT);
     return false;
 }
 
@@ -715,7 +715,7 @@ bool
 DeadObjectProxy::getPropertyDescriptor(JSContext *cx, HandleObject wrapper, HandleId id,
                                        MutableHandle<PropertyDescriptor> desc, unsigned flags)
 {
-    JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_DEAD_OBJECT);
+    JS_ReportErrorNumber(cx, js_GetErrorMessage, nullptr, JSMSG_DEAD_OBJECT);
     return false;
 }
 
@@ -723,7 +723,7 @@ bool
 DeadObjectProxy::getOwnPropertyDescriptor(JSContext *cx, HandleObject wrapper, HandleId id,
                                           MutableHandle<PropertyDescriptor> desc, unsigned flags)
 {
-    JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_DEAD_OBJECT);
+    JS_ReportErrorNumber(cx, js_GetErrorMessage, nullptr, JSMSG_DEAD_OBJECT);
     return false;
 }
 
@@ -731,7 +731,7 @@ bool
 DeadObjectProxy::defineProperty(JSContext *cx, HandleObject wrapper, HandleId id,
                                 MutableHandle<PropertyDescriptor> desc)
 {
-    JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_DEAD_OBJECT);
+    JS_ReportErrorNumber(cx, js_GetErrorMessage, nullptr, JSMSG_DEAD_OBJECT);
     return false;
 }
 
@@ -739,56 +739,56 @@ bool
 DeadObjectProxy::getOwnPropertyNames(JSContext *cx, HandleObject wrapper,
                                      AutoIdVector &props)
 {
-    JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_DEAD_OBJECT);
+    JS_ReportErrorNumber(cx, js_GetErrorMessage, nullptr, JSMSG_DEAD_OBJECT);
     return false;
 }
 
 bool
 DeadObjectProxy::delete_(JSContext *cx, HandleObject wrapper, HandleId id, bool *bp)
 {
-    JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_DEAD_OBJECT);
+    JS_ReportErrorNumber(cx, js_GetErrorMessage, nullptr, JSMSG_DEAD_OBJECT);
     return false;
 }
 
 bool
 DeadObjectProxy::enumerate(JSContext *cx, HandleObject wrapper, AutoIdVector &props)
 {
-    JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_DEAD_OBJECT);
+    JS_ReportErrorNumber(cx, js_GetErrorMessage, nullptr, JSMSG_DEAD_OBJECT);
     return false;
 }
 
 bool
 DeadObjectProxy::call(JSContext *cx, HandleObject wrapper, const CallArgs &args)
 {
-    JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_DEAD_OBJECT);
+    JS_ReportErrorNumber(cx, js_GetErrorMessage, nullptr, JSMSG_DEAD_OBJECT);
     return false;
 }
 
 bool
 DeadObjectProxy::construct(JSContext *cx, HandleObject wrapper, const CallArgs &args)
 {
-    JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_DEAD_OBJECT);
+    JS_ReportErrorNumber(cx, js_GetErrorMessage, nullptr, JSMSG_DEAD_OBJECT);
     return false;
 }
 
 bool
 DeadObjectProxy::nativeCall(JSContext *cx, IsAcceptableThis test, NativeImpl impl, CallArgs args)
 {
-    JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_DEAD_OBJECT);
+    JS_ReportErrorNumber(cx, js_GetErrorMessage, nullptr, JSMSG_DEAD_OBJECT);
     return false;
 }
 
 bool
 DeadObjectProxy::hasInstance(JSContext *cx, HandleObject proxy, MutableHandleValue v, bool *bp)
 {
-    JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_DEAD_OBJECT);
+    JS_ReportErrorNumber(cx, js_GetErrorMessage, nullptr, JSMSG_DEAD_OBJECT);
     return false;
 }
 
 bool
 DeadObjectProxy::objectClassIs(HandleObject obj, ESClassValue classValue, JSContext *cx)
 {
-    JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_DEAD_OBJECT);
+    JS_ReportErrorNumber(cx, js_GetErrorMessage, nullptr, JSMSG_DEAD_OBJECT);
     return false;
 }
 
@@ -801,20 +801,20 @@ DeadObjectProxy::className(JSContext *cx, HandleObject wrapper)
 JSString *
 DeadObjectProxy::fun_toString(JSContext *cx, HandleObject proxy, unsigned indent)
 {
-    return NULL;
+    return nullptr;
 }
 
 bool
 DeadObjectProxy::regexp_toShared(JSContext *cx, HandleObject proxy, RegExpGuard *g)
 {
-    JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_DEAD_OBJECT);
+    JS_ReportErrorNumber(cx, js_GetErrorMessage, nullptr, JSMSG_DEAD_OBJECT);
     return false;
 }
 
 bool
 DeadObjectProxy::defaultValue(JSContext *cx, HandleObject obj, JSType hint, MutableHandleValue vp)
 {
-    JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_DEAD_OBJECT);
+    JS_ReportErrorNumber(cx, js_GetErrorMessage, nullptr, JSMSG_DEAD_OBJECT);
     return false;
 }
 
@@ -822,14 +822,14 @@ bool
 DeadObjectProxy::getElementIfPresent(JSContext *cx, HandleObject obj, HandleObject receiver,
                                      uint32_t index, MutableHandleValue vp, bool *present)
 {
-    JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_DEAD_OBJECT);
+    JS_ReportErrorNumber(cx, js_GetErrorMessage, nullptr, JSMSG_DEAD_OBJECT);
     return false;
 }
 
 bool
 DeadObjectProxy::getPrototypeOf(JSContext *cx, HandleObject proxy, MutableHandleObject protop)
 {
-    protop.set(NULL);
+    protop.set(nullptr);
     return true;
 }
 
@@ -841,7 +841,7 @@ js::NewDeadProxyObject(JSContext *cx, JSObject *parent,
                        const ProxyOptions &options)
 {
     return NewProxyObject(cx, &DeadObjectProxy::singleton, JS::NullHandleValue,
-                          NULL, parent, options);
+                          nullptr, parent, options);
 }
 
 bool

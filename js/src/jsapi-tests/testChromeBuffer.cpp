@@ -22,8 +22,8 @@ const JSClass global_class = {
     JS_ConvertStub
 };
 
-JSObject *trusted_glob = NULL;
-JSObject *trusted_fun = NULL;
+JSObject *trusted_glob = nullptr;
+JSObject *trusted_fun = nullptr;
 
 bool
 CallTrusted(JSContext *cx, unsigned argc, jsval *vp)
@@ -34,8 +34,8 @@ CallTrusted(JSContext *cx, unsigned argc, jsval *vp)
     bool ok = false;
     {
         JSAutoCompartment ac(cx, trusted_glob);
-        ok = JS_CallFunctionValue(cx, NULL, JS::ObjectValue(*trusted_fun),
-                                  0, NULL, vp);
+        ok = JS_CallFunctionValue(cx, nullptr, JS::ObjectValue(*trusted_fun),
+                                  0, nullptr, vp);
     }
     JS_RestoreFrameChain(cx);
     return ok;
@@ -89,7 +89,7 @@ BEGIN_TEST(testChromeBuffer)
                                        bytes, strlen(bytes), "", 0));
 
         JS::RootedValue rval(cx);
-        CHECK(JS_CallFunction(cx, NULL, fun, 1, v.address(), rval.address()));
+        CHECK(JS_CallFunction(cx, nullptr, fun, 1, v.address(), rval.address()));
         CHECK(JSVAL_TO_INT(rval) == 100);
     }
 
@@ -126,7 +126,7 @@ BEGIN_TEST(testChromeBuffer)
                                        bytes, strlen(bytes), "", 0));
 
         JS::RootedValue rval(cx);
-        CHECK(JS_CallFunction(cx, NULL, fun, 1, v.address(), rval.address()));
+        CHECK(JS_CallFunction(cx, nullptr, fun, 1, v.address(), rval.address()));
         bool match;
         CHECK(JS_StringEqualsAscii(cx, JSVAL_TO_STRING(rval), "From trusted: InternalError: too much recursion", &match));
         CHECK(match);
@@ -142,8 +142,8 @@ BEGIN_TEST(testChromeBuffer)
             const char *bytes = "return 42";
             JS::HandleObject global = JS::HandleObject::fromMarkedLocation(&trusted_glob);
             CHECK(fun = JS_CompileFunctionForPrincipals(cx, global, &system_principals,
-                                                        "trusted", 0, NULL, bytes, strlen(bytes),
-                                                        "", 0));
+                                                        "trusted", 0, nullptr,
+                                                        bytes, strlen(bytes), "", 0));
             trusted_fun = JS_GetFunctionObject(fun);
         }
 
@@ -161,7 +161,7 @@ BEGIN_TEST(testChromeBuffer)
 
         JS::RootedValue arg(cx, JS::ObjectValue(*callTrusted));
         JS::RootedValue rval(cx);
-        CHECK(JS_CallFunction(cx, NULL, fun, 1, arg.address(), rval.address()));
+        CHECK(JS_CallFunction(cx, nullptr, fun, 1, arg.address(), rval.address()));
         CHECK(JSVAL_TO_INT(rval) == 42);
     }
 
