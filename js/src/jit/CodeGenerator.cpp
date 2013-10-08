@@ -4839,7 +4839,11 @@ CodeGenerator::visitStoreElementHoleV(LStoreElementHoleV *lir)
 
 typedef bool (*SetObjectElementFn)(JSContext *, HandleObject, HandleValue, HandleValue,
                                    bool strict);
-static const VMFunction SetObjectElementInfo = FunctionInfo<SetObjectElementFn>(SetObjectElement);
+typedef ParallelResult (*SetElementParFn)(ForkJoinSlice *, HandleObject, HandleValue,
+                                          HandleValue, bool);
+static const VMFunctionsModal SetObjectElementInfo = VMFunctionsModal(
+    FunctionInfo<SetObjectElementFn>(SetObjectElement),
+    FunctionInfo<SetElementParFn>(SetElementPar));
 
 bool
 CodeGenerator::visitOutOfLineStoreElementHole(OutOfLineStoreElementHole *ool)
@@ -4917,7 +4921,6 @@ CodeGenerator::visitOutOfLineStoreElementHole(OutOfLineStoreElementHole *ool)
     else
         pushArg(TypedOrValueRegister(MIRType_Int32, ToAnyRegister(index)));
     pushArg(object);
-    // FIXME: Handle parallel case in upcoming patch.
     if (!callVM(SetObjectElementInfo, ins))
         return false;
 
