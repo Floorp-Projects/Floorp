@@ -460,7 +460,7 @@ public:
                        const nsAString& aTypeString,
                        mozilla::dom::EventHandlerNonNull* aHandler);
   void SetEventHandler(mozilla::dom::OnErrorEventHandlerNonNull* aHandler);
-  void SetEventHandler(mozilla::dom::BeforeUnloadEventHandlerNonNull* aHandler);
+  void SetEventHandler(mozilla::dom::OnBeforeUnloadEventHandlerNonNull* aHandler);
 
   /**
    * Get the value of the "inline" event listener for aEventName.
@@ -484,11 +484,11 @@ public:
       GetEventHandlerInternal(nsGkAtoms::onerror, EmptyString());
     return handler ? handler->OnErrorEventHandler() : nullptr;
   }
-  mozilla::dom::BeforeUnloadEventHandlerNonNull* GetOnBeforeUnloadEventHandler()
+  mozilla::dom::OnBeforeUnloadEventHandlerNonNull* GetOnBeforeUnloadEventHandler()
   {
     const nsEventHandler* handler =
       GetEventHandlerInternal(nsGkAtoms::onbeforeunload, EmptyString());
-    return handler ? handler->BeforeUnloadEventHandler() : nullptr;
+    return handler ? handler->OnBeforeUnloadEventHandler() : nullptr;
   }
 
 protected:
