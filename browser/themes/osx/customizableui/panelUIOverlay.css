@@ -1,0 +1,69 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+%filter substitution
+%define menuPanelWidth 21em
+
+%include ../../shared/customizableui/panelUIOverlay.inc.css
+
+@media (min-resolution: 2dppx) {
+  #customization-palette toolbarbutton > .toolbarbutton-icon,
+  #PanelUI-contents toolbarbutton > .toolbarbutton-icon {
+    width: 20px;
+  }
+
+  #PanelUI-customize {
+    list-style-image: url(chrome://browser/skin/menuPanel-customize@2x.png);
+  }
+
+  #PanelUI-help {
+    list-style-image: url(chrome://browser/skin/menuPanel-help@2x.png);
+  }
+
+  #PanelUI-quit {
+    list-style-image: url(chrome://browser/skin/menuPanel-exit@2x.png);
+  }
+
+  #PanelUI-customize,
+  #PanelUI-help,
+  #PanelUI-quit {
+    -moz-image-region: rect(0, 32px, 32px, 0);
+  }
+
+  #PanelUI-customize:hover,
+  #PanelUI-help:not([disabled]):hover,
+  #PanelUI-quit:not([disabled]):hover {
+    -moz-image-region: rect(0, 64px, 32px, 32px);
+  }
+
+  #PanelUI-customize:hover:active,
+  #PanelUI-help:not([disabled]):hover:active,
+  #PanelUI-quit:not([disabled]):hover:active {
+    -moz-image-region: rect(0, 96px, 32px, 64px);
+  }
+}
+
+#edit-controls@inAnyPanel@ > toolbarbutton:not(:first-child),
+#zoom-controls@inAnyPanel@ > toolbarbutton:not(:first-child) {
+  margin-left: 0;
+  margin-right: 0;
+}
+#edit-controls@inAnyPanel@ > toolbarbutton:not(:first-child):not(:last-child),
+#zoom-controls@inAnyPanel@ > toolbarbutton:not(:first-child):not(:last-child) {
+  margin-left: 0;
+  margin-right: 0;
+}
+
+#zoom-controls@inAnyPanel@ > #zoom-in-button,
+#zoom-controls@inAnyPanel@ > #zoom-out-button,
+toolbarpaletteitem[place="palette"] > #zoom-controls > #zoom-in-button,
+toolbarpaletteitem[place="palette"] > #zoom-controls > #zoom-out-button {
+  padding-left: 12px;
+  padding-right: 12px;
+}
+
+.panel-combined-item[customizableui-areatype="menu-panel"] > toolbarbutton,
+toolbarbutton[customizableui-areatype="menu-panel"] {
+  margin: 0;
+}
