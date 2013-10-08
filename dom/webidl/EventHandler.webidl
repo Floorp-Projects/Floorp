@@ -15,8 +15,8 @@ callback EventHandlerNonNull = any (Event event);
 typedef EventHandlerNonNull? EventHandler;
 
 [TreatNonCallableAsNull]
-callback BeforeUnloadEventHandlerNonNull = DOMString? (Event event);
-typedef BeforeUnloadEventHandlerNonNull? BeforeUnloadEventHandler;
+callback OnBeforeUnloadEventHandlerNonNull = DOMString? (Event event);
+typedef OnBeforeUnloadEventHandlerNonNull? OnBeforeUnloadEventHandler;
 
 [TreatNonCallableAsNull]
 callback OnErrorEventHandlerNonNull = boolean ((Event or DOMString) event, optional DOMString source, optional unsigned long lineno, optional unsigned long column);
@@ -103,7 +103,7 @@ interface NodeEventHandlers {
 interface WindowEventHandlers {
            attribute EventHandler onafterprint;
            attribute EventHandler onbeforeprint;
-           attribute BeforeUnloadEventHandler onbeforeunload;
+           attribute OnBeforeUnloadEventHandler onbeforeunload;
   //       For now, onerror comes from NodeEventHandlers
   //       When we convert Window to WebIDL this may need to change.
   //       [SetterThrows]
