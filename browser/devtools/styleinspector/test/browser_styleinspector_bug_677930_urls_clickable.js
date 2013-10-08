@@ -26,12 +26,14 @@ function selectNode(aInspector, aRuleView)
   let inline = doc.querySelector(".inline");
   let base64 = doc.querySelector(".base64");
   let noimage = doc.querySelector(".noimage");
+  let inlineresolved = doc.querySelector(".inline-resolved");
 
   ok(relative, "captain, we have the relative div");
   ok(absolute, "captain, we have the absolute div");
   ok(inline, "captain, we have the inline div");
   ok(base64, "captain, we have the base64 div");
   ok(noimage, "captain, we have the noimage div");
+  ok(inlineresolved, "captain, we have the inlineresolved div");
 
   inspector.selection.setNode(relative);
   inspector.once("inspector-updated", () => {
@@ -61,12 +63,20 @@ function selectNode(aInspector, aRuleView)
           ok (base64Link, "Link exists for base64 node");
           ok (base64Link.getAttribute("href"), BASE_64_URL);
 
-          inspector.selection.setNode(noimage);
+          inspector.selection.setNode(inlineresolved);
           inspector.once("inspector-updated", () => {
-            is(inspector.selection.node, noimage, "selection matches the inline element");
-            let noimageLink = contentDoc.querySelector(".ruleview-propertycontainer a");
-            ok (!noimageLink, "There is no link for the node with no background image");
-            finishUp();
+            is(inspector.selection.node, inlineresolved, "selection matches the style tag element");
+            let inlineResolvedLink = contentDoc.querySelector(".ruleview-propertycontainer a");
+            ok (inlineResolvedLink, "Link exists for style tag node");
+            ok (inlineResolvedLink.getAttribute("href"), TEST_IMAGE);
+
+            inspector.selection.setNode(noimage);
+            inspector.once("inspector-updated", () => {
+              is(inspector.selection.node, noimage, "selection matches the inline element");
+              let noimageLink = contentDoc.querySelector(".ruleview-propertycontainer a");
+              ok (!noimageLink, "There is no link for the node with no background image");
+              finishUp();
+            });
           });
         });
       });
