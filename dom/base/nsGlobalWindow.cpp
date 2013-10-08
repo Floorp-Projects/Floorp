@@ -148,6 +148,7 @@
 #include "nsMenuPopupFrame.h"
 #endif
 #include "nsIDOMCustomEvent.h"
+#include "nsIFrameRequestCallback.h"
 
 #include "xpcprivate.h"
 

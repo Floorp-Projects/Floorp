@@ -213,6 +213,8 @@
 #include "nsISecurityConsoleMessage.h"
 #include "nsCharSeparatedTokenizer.h"
 #include "mozilla/dom/XPathEvaluator.h"
+#include "nsIDocumentEncoder.h"
+#include "nsIStructuredCloneContainer.h"
 
 using namespace mozilla;
 using namespace mozilla::dom;
@@ -11373,6 +11375,43 @@ nsIDocument::XPathEvaluator()
     mXPathEvaluator = new dom::XPathEvaluator(this);
   }
   return mXPathEvaluator;
+}
+
+already_AddRefed<nsIDocumentEncoder>
+nsIDocument::GetCachedEncoder()
+{
+  return mCachedEncoder.forget();
+}
+
+void
+nsIDocument::SetCachedEncoder(already_AddRefed<nsIDocumentEncoder> aEncoder)
+{
+  mCachedEncoder = aEncoder;
+}
+
+void
+nsIDocument::SetContentTypeInternal(const nsACString& aType)
+{
+  mCachedEncoder = nullptr;
+  mContentType = aType;
+}
+
+nsILoadContext*
+nsIDocument::GetLoadContext() const
+{
+  nsCOMPtr<nsISupports> container = GetContainer();
+  if (container) {
+    nsCOMPtr<nsILoadContext> loadContext = do_QueryInterface(container);
+    return loadContext;
+  }
+  return nullptr;
+}
+
+void
+nsIDocument::SetStateObject(nsIStructuredCloneContainer *scContainer)
+{
+  mStateObjectContainer = scContainer;
+  mStateObjectCached = nullptr;
 }
 
 bool
