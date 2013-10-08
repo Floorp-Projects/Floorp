@@ -71,10 +71,6 @@ interface Element : Node {
 
   // Mozilla specific stuff
 
-  [LenientThis]
-           attribute EventHandler onmouseenter;
-  [LenientThis]
-           attribute EventHandler onmouseleave;
            attribute EventHandler onwheel;
 
   // Selectors API
