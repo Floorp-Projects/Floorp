@@ -7477,7 +7477,7 @@ bool CSSParserImpl::ParseBackgroundPositionValues(nsCSSValue& aOut,
   }
 
   // For compatibility with CSS2.1 code the edges can be unspecified.
-  // Unspecified edges are recorded as NULL.
+  // Unspecified edges are recorded as nullptr.
   NS_ASSERTION((eCSSUnit_Enumerated == xEdge.GetUnit()  ||
                 eCSSUnit_Null       == xEdge.GetUnit()) &&
                (eCSSUnit_Enumerated == yEdge.GetUnit()  ||
