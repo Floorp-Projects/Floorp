@@ -5901,18 +5901,9 @@ class CGSpecializedReplaceableSetter(CGSpecializedSetter):
 
     def definition_body(self):
         attrName = self.attr.identifier.name
-        return CGIndenter(CGGeneric("""JS::Rooted<JSPropertyDescriptor> desc(cx);
-desc.object().set(obj);
-desc.setEnumerable();
-desc.value().set(args[0]);
-
-JS::Rooted<jsid> id(cx);
-if (!InternJSString(cx, id.get(), "%s")) {
-  return false;
-}
-
-bool b;
-return js_DefineOwnProperty(cx, obj, id, desc, &b);""" % attrName)).define()
+        # JS_DefineProperty can only deal with ASCII
+        assert all(ord(c) < 128 for c in attrName)
+        return CGIndenter(CGGeneric("""return JS_DefineProperty(cx, obj, "%s", args[0], nullptr, nullptr, JSPROP_ENUMERATE);""" % attrName)).define()
 
 def memberReturnsNewObject(member):
     return member.getExtendedAttribute("NewObject") is not None
