@@ -46,10 +46,10 @@ Compressor::Compressor(const unsigned char *inp, size_t inplen)
       outbytes(0)
 {
     JS_ASSERT(inplen > 0);
-    zs.opaque = NULL;
+    zs.opaque = nullptr;
     zs.next_in = (Bytef *)inp;
     zs.avail_in = 0;
-    zs.next_out = NULL;
+    zs.next_out = nullptr;
     zs.avail_out = 0;
     zs.zalloc = zlib_alloc;
     zs.zfree = zlib_free;
@@ -123,7 +123,7 @@ js::DecompressString(const unsigned char *inp, size_t inplen, unsigned char *out
     z_stream zs;
     zs.zalloc = zlib_alloc;
     zs.zfree = zlib_free;
-    zs.opaque = NULL;
+    zs.opaque = nullptr;
     zs.next_in = (Bytef *)inp;
     zs.avail_in = inplen;
     zs.next_out = out;

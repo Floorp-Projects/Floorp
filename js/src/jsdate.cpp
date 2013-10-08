@@ -2445,7 +2445,7 @@ date_toISOString_impl(JSContext *cx, CallArgs args)
 {
     double utctime = args.thisv().toObject().as<DateObject>().UTCTime().toNumber();
     if (!IsFinite(utctime)) {
-        JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_INVALID_DATE);
+        JS_ReportErrorNumber(cx, js_GetErrorMessage, nullptr, JSMSG_INVALID_DATE);
         return false;
     }
 
@@ -2496,7 +2496,7 @@ date_toJSON(JSContext *cx, unsigned argc, Value *vp)
 
     /* Step 5. */
     if (!js_IsCallable(toISO)) {
-        JS_ReportErrorFlagsAndNumber(cx, JSREPORT_ERROR, js_GetErrorMessage, NULL,
+        JS_ReportErrorFlagsAndNumber(cx, JSREPORT_ERROR, js_GetErrorMessage, nullptr,
                                      JSMSG_BAD_TOISOSTRING_PROP);
         return false;
     }
@@ -3036,19 +3036,19 @@ js_InitDateClass(JSContext *cx, HandleObject obj)
 
     RootedObject dateProto(cx, global->createBlankPrototype(cx, &DateObject::class_));
     if (!dateProto)
-        return NULL;
+        return nullptr;
     dateProto->as<DateObject>().setUTCTime(GenericNaN());
 
     RootedFunction ctor(cx);
     ctor = global->createConstructor(cx, js_Date, cx->names().Date, MAXARGS);
     if (!ctor)
-        return NULL;
+        return nullptr;
 
     if (!LinkConstructorAndPrototype(cx, ctor, dateProto))
-        return NULL;
+        return nullptr;
 
-    if (!DefinePropertiesAndBrand(cx, ctor, NULL, date_static_methods))
-        return NULL;
+    if (!DefinePropertiesAndBrand(cx, ctor, nullptr, date_static_methods))
+        return nullptr;
 
     /*
      * Define all Date.prototype.* functions, then brand for trace-jitted code.
@@ -3056,7 +3056,7 @@ js_InitDateClass(JSContext *cx, HandleObject obj)
      * Date.prototype.toUTCString.
      */
     if (!JS_DefineFunctions(cx, dateProto, date_methods))
-        return NULL;
+        return nullptr;
     RootedValue toUTCStringFun(cx);
     RootedId toUTCStringId(cx, NameToId(cx->names().toUTCString));
     RootedId toGMTStringId(cx, NameToId(cx->names().toGMTString));
@@ -3064,11 +3064,11 @@ js_InitDateClass(JSContext *cx, HandleObject obj)
         !baseops::DefineGeneric(cx, dateProto, toGMTStringId, toUTCStringFun,
                                 JS_PropertyStub, JS_StrictPropertyStub, 0))
     {
-        return NULL;
+        return nullptr;
     }
 
     if (!DefineConstructorAndPrototype(cx, global, JSProto_Date, ctor, dateProto))
-        return NULL;
+        return nullptr;
 
     return dateProto;
 }
@@ -3078,7 +3078,7 @@ js_NewDateObjectMsec(JSContext *cx, double msec_time)
 {
     JSObject *obj = NewBuiltinClassInstance(cx, &DateObject::class_);
     if (!obj)
-        return NULL;
+        return nullptr;
     obj->as<DateObject>().setUTCTime(msec_time);
     return obj;
 }

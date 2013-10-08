@@ -147,9 +147,11 @@ this.DataStore.prototype = {
     let pendingIds = aIds.length;
     let indexPos = 0;
 
+    let self = this;
+
     function getInternalSuccess(aEvent, aPos) {
       debug("GetInternal success. Record: " + aEvent.target.result);
-      results[aPos] = aEvent.target.result;
+      results[aPos] = ObjectWrapper.wrap(aEvent.target.result, self._window);
       if (!--pendingIds) {
         aCallback(results);
         return;

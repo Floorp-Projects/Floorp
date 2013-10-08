@@ -135,7 +135,7 @@ void setup(unsigned count)
     vertex_count = count;
     for (unsigned i = 0; i < MaxVertices; ++i) {
         TestNode &v = Vertex[i];
-        v.gcNextGraphNode = NULL;
+        v.gcNextGraphNode = nullptr;
         v.index = i;
         memset(&v.hasEdge, 0, sizeof(v.hasEdge));
     }
@@ -161,14 +161,14 @@ bool group(int vertex, ...)
     va_list ap;
     va_start(ap, vertex);
     while (vertex != -1) {
-        CHECK(v != NULL);
+        CHECK(v != nullptr);
         CHECK(v->index == unsigned(vertex));
         v = v->nextNodeInGroup();
         vertex = va_arg(ap, int);
     }
     va_end(ap);
 
-    CHECK(v == NULL);
+    CHECK(v == nullptr);
     resultsList = resultsList->nextGroup();
     return true;
 }
@@ -180,24 +180,24 @@ bool remaining(int vertex, ...)
     va_list ap;
     va_start(ap, vertex);
     while (vertex != -1) {
-        CHECK(v != NULL);
+        CHECK(v != nullptr);
         CHECK(v->index == unsigned(vertex));
         v = (TestNode *)v->gcNextGraphNode;
         vertex = va_arg(ap, int);
     }
     va_end(ap);
 
-    CHECK(v == NULL);
-    resultsList = NULL;
+    CHECK(v == nullptr);
+    resultsList = nullptr;
     return true;
 }
 
 bool end()
 {
-    CHECK(resultsList == NULL);
+    CHECK(resultsList == nullptr);
 
     delete finder;
-    finder = NULL;
+    finder = nullptr;
     return true;
 }
 END_TEST(testFindSCCs)
@@ -207,7 +207,7 @@ struct TestNode2 : public GraphNodeBase<TestNode2>
     TestNode2 *edge;
 
     TestNode2() :
-        edge(NULL)
+        edge(nullptr)
     {
     }
 

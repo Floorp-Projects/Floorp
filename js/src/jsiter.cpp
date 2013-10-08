@@ -250,7 +250,7 @@ Snapshot(JSContext *cx, JSObject *pobj_, unsigned flags, AutoIdVector *props)
         if (flags & JSITER_OWNONLY)
             break;
 
-    } while ((pobj = pobj->getProto()) != NULL);
+    } while ((pobj = pobj->getProto()) != nullptr);
 
 #ifdef JS_MORE_DETERMINISTIC
 
@@ -374,24 +374,24 @@ static inline PropertyIteratorObject *
 NewPropertyIteratorObject(JSContext *cx, unsigned flags)
 {
     if (flags & JSITER_ENUMERATE) {
-        RootedTypeObject type(cx, cx->getNewType(&PropertyIteratorObject::class_, NULL));
+        RootedTypeObject type(cx, cx->getNewType(&PropertyIteratorObject::class_, nullptr));
         if (!type)
-            return NULL;
+            return nullptr;
 
-        JSObject *metadata = NULL;
+        JSObject *metadata = nullptr;
         if (!NewObjectMetadata(cx, &metadata))
-            return NULL;
+            return nullptr;
 
         const Class *clasp = &PropertyIteratorObject::class_;
-        RootedShape shape(cx, EmptyShape::getInitialShape(cx, clasp, NULL, NULL, metadata,
+        RootedShape shape(cx, EmptyShape::getInitialShape(cx, clasp, nullptr, nullptr, metadata,
                                                           ITERATOR_FINALIZE_KIND));
         if (!shape)
-            return NULL;
+            return nullptr;
 
         JSObject *obj = JSObject::create(cx, ITERATOR_FINALIZE_KIND,
                                          GetInitialHeap(GenericObject, clasp), shape, type);
         if (!obj)
-            return NULL;
+            return nullptr;
 
         JS_ASSERT(obj->numFixedSlots() == JSObject::ITER_CLASS_NFIXED_SLOTS);
         return &obj->as<PropertyIteratorObject>();
@@ -409,7 +409,7 @@ NativeIterator::allocateIterator(JSContext *cx, uint32_t slength, const AutoIdVe
                     + plength * sizeof(JSString *)
                     + slength * sizeof(Shape *));
     if (!ni)
-        return NULL;
+        return nullptr;
     AutoValueVector strings(cx);
     ni->props_array = ni->props_cursor = (HeapPtr<JSFlatString> *) (ni + 1);
     ni->props_end = ni->props_array + plength;
@@ -417,12 +417,12 @@ NativeIterator::allocateIterator(JSContext *cx, uint32_t slength, const AutoIdVe
         for (size_t i = 0; i < plength; i++) {
             JSFlatString *str = IdToString(cx, props[i]);
             if (!str || !strings.append(StringValue(str)))
-                return NULL;
+                return nullptr;
             ni->props_array[i].init(str);
         }
     }
-    ni->next_ = NULL;
-    ni->prev_ = NULL;
+    ni->next_ = nullptr;
+    ni->prev_ = nullptr;
     return ni;
 }
 
@@ -431,7 +431,7 @@ NativeIterator::allocateSentinel(JSContext *cx)
 {
     NativeIterator *ni = (NativeIterator *)js_malloc(sizeof(NativeIterator));
     if (!ni)
-        return NULL;
+        return nullptr;
 
     PodZero(ni);
 
@@ -578,12 +578,12 @@ js::GetIterator(JSContext *cx, HandleObject obj, unsigned flags, MutableHandleVa
             char *bytes = DecompileValueGenerator(cx, JSDVG_SEARCH_STACK, val, NullPtr());
             if (!bytes)
                 return false;
-            JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_NOT_ITERABLE, bytes);
+            JS_ReportErrorNumber(cx, js_GetErrorMessage, nullptr, JSMSG_NOT_ITERABLE, bytes);
             js_free(bytes);
             return false;
         }
 
-        if (!Invoke(cx, ObjectOrNullValue(obj), method, 0, NULL, vp))
+        if (!Invoke(cx, ObjectOrNullValue(obj), method, 0, nullptr, vp))
             return false;
 
         JSObject *resultObj = ToObject(cx, vp);
@@ -695,13 +695,13 @@ js::GetIterator(JSContext *cx, HandleObject obj, unsigned flags, MutableHandleVa
 
     AutoIdVector keys(cx);
     if (flags & JSITER_FOREACH) {
-        if (JS_LIKELY(obj != NULL) && !Snapshot(cx, obj, flags, &keys))
+        if (JS_LIKELY(obj != nullptr) && !Snapshot(cx, obj, flags, &keys))
             return false;
         JS_ASSERT(shapes.empty());
         if (!VectorToValueIterator(cx, obj, flags, keys, vp))
             return false;
     } else {
-        if (JS_LIKELY(obj != NULL) && !Snapshot(cx, obj, flags, &keys))
+        if (JS_LIKELY(obj != nullptr) && !Snapshot(cx, obj, flags, &keys))
             return false;
         if (!VectorToKeyIterator(cx, obj, flags, keys, shapes.length(), key, vp))
             return false;
@@ -723,7 +723,7 @@ js::GetIteratorObject(JSContext *cx, HandleObject obj, uint32_t flags)
 {
     RootedValue value(cx);
     if (!GetIterator(cx, obj, flags, &value))
-        return NULL;
+        return nullptr;
     return &value.toObject();
 }
 
@@ -860,14 +860,14 @@ const Class PropertyIteratorObject::class_ = {
     JS_ResolveStub,
     JS_ConvertStub,
     finalize,
-    NULL,                    /* checkAccess */
-    NULL,                    /* call        */
-    NULL,                    /* hasInstance */
-    NULL,                    /* construct   */
+    nullptr,                 /* checkAccess */
+    nullptr,                 /* call        */
+    nullptr,                 /* hasInstance */
+    nullptr,                 /* construct   */
     trace,
     {
-        NULL,                /* outerObject    */
-        NULL,                /* innerObject    */
+        nullptr,             /* outerObject    */
+        nullptr,             /* innerObject    */
         iterator_iteratorObject,
     }
 };
@@ -879,7 +879,7 @@ ElementIteratorObject::create(JSContext *cx, Handle<Value> target)
 {
     RootedObject proto(cx, cx->global()->getOrCreateElementIteratorPrototype(cx));
     if (!proto)
-        return NULL;
+        return nullptr;
     RootedObject iterobj(cx, NewObjectWithGivenProto(cx, &class_, proto, cx->global()));
     if (iterobj) {
         iterobj->setReservedSlot(TargetSlot, target);
@@ -962,7 +962,7 @@ const Class ElementIteratorObject::class_ = {
     JS_EnumerateStub,
     JS_ResolveStub,
     JS_ConvertStub,
-    NULL                     /* finalize    */
+    nullptr                  /* finalize    */
 };
 
 const JSFunctionSpec ElementIteratorObject::methods[] = {
@@ -1140,7 +1140,7 @@ SuppressDeletedPropertyHelper(JSContext *cx, HandleObject obj, StringPredicate p
                          * it's no longer going to be marked, and ensures that
                          * any existing remembered set entry will be dropped.
                          */
-                        *ni->props_end = NULL;
+                        *ni->props_end = nullptr;
                     }
 
                     /* Don't reuse modified native iterators. */
@@ -1215,7 +1215,7 @@ bool
 js_IteratorMore(JSContext *cx, HandleObject iterobj, MutableHandleValue rval)
 {
     /* Fast path for native iterators */
-    NativeIterator *ni = NULL;
+    NativeIterator *ni = nullptr;
     if (iterobj->is<PropertyIteratorObject>()) {
         /* Key iterators are handled by fast-paths. */
         ni = iterobj->as<PropertyIteratorObject>().getNativeIterator();
@@ -1252,7 +1252,7 @@ js_IteratorMore(JSContext *cx, HandleObject iterobj, MutableHandleValue rval)
         /* Call the iterator object's .next method. */
         if (!JSObject::getProperty(cx, iterobj, iterobj, cx->names().next, rval))
             return false;
-        if (!Invoke(cx, ObjectValue(*iterobj), rval, 0, NULL, rval)) {
+        if (!Invoke(cx, ObjectValue(*iterobj), rval, 0, nullptr, rval)) {
             /* Check for StopIteration. */
             if (!cx->isExceptionPending() || !JS_IsStopIteration(cx->getPendingException()))
                 return false;
@@ -1314,11 +1314,11 @@ const Class StopIterationObject::class_ = {
     JS_EnumerateStub,
     JS_ResolveStub,
     JS_ConvertStub,
-    NULL,                    /* finalize    */
-    NULL,                    /* checkAccess */
-    NULL,                    /* call        */
+    nullptr,                 /* finalize    */
+    nullptr,                 /* checkAccess */
+    nullptr,                 /* call        */
     stopiter_hasInstance,
-    NULL                     /* construct   */
+    nullptr                  /* construct   */
 };
 
 bool
@@ -1367,7 +1367,7 @@ FinalizeGenerator(FreeOp *fop, JSObject *obj)
     JS_ASSERT(gen->state == JSGEN_NEWBORN ||
               gen->state == JSGEN_CLOSED ||
               gen->state == JSGEN_OPEN);
-    // If gen->state is JSGEN_CLOSED, gen->fp may be NULL.
+    // If gen->state is JSGEN_CLOSED, gen->fp may be nullptr.
     if (gen->fp)
         JS_POISON(gen->fp, JS_FREE_PATTERN, sizeof(StackFrame));
     JS_POISON(gen, JS_FREE_PATTERN, sizeof(JSGenerator));
@@ -1433,7 +1433,7 @@ SetGeneratorClosed(JSContext *cx, JSGenerator *gen)
     MakeRangeGCSafe(gen->fp->generatorSlotsSnapshotBegin(),
                     gen->regs.sp);
     PodZero(&gen->regs, 1);
-    gen->fp = NULL;
+    gen->fp = nullptr;
 #endif
 }
 
@@ -1499,14 +1499,14 @@ const Class LegacyGeneratorObject::class_ = {
     JS_ResolveStub,
     JS_ConvertStub,
     FinalizeGenerator<LegacyGeneratorObject>,
-    NULL,                    /* checkAccess */
-    NULL,                    /* call        */
-    NULL,                    /* hasInstance */
-    NULL,                    /* construct   */
+    nullptr,                 /* checkAccess */
+    nullptr,                 /* call        */
+    nullptr,                 /* hasInstance */
+    nullptr,                 /* construct   */
     TraceGenerator<LegacyGeneratorObject>,
     {
-        NULL,                /* outerObject    */
-        NULL,                /* innerObject    */
+        nullptr,             /* outerObject    */
+        nullptr,             /* innerObject    */
         iterator_iteratorObject,
     }
 };
@@ -1522,14 +1522,14 @@ const Class StarGeneratorObject::class_ = {
     JS_ResolveStub,
     JS_ConvertStub,
     FinalizeGenerator<StarGeneratorObject>,
-    NULL,                    /* checkAccess */
-    NULL,                    /* call        */
-    NULL,                    /* hasInstance */
-    NULL,                    /* construct   */
+    nullptr,                 /* checkAccess */
+    nullptr,                 /* call        */
+    nullptr,                 /* hasInstance */
+    nullptr,                 /* construct   */
     TraceGenerator<StarGeneratorObject>,
     {
-        NULL,                /* outerObject    */
-        NULL,                /* innerObject    */
+        nullptr,             /* outerObject    */
+        nullptr,             /* innerObject    */
         iterator_iteratorObject,
     }
 };
@@ -1558,23 +1558,23 @@ js_NewGenerator(JSContext *cx, const FrameRegs &stackRegs)
         // FIXME: This would be faster if we could avoid doing a lookup to get
         // the prototype for the instance.  Bug 906600.
         if (!JSObject::getProperty(cx, fun, fun, cx->names().classPrototype, &pval))
-            return NULL;
-        JSObject *proto = pval.isObject() ? &pval.toObject() : NULL;
+            return nullptr;
+        JSObject *proto = pval.isObject() ? &pval.toObject() : nullptr;
         if (!proto) {
             proto = global->getOrCreateStarGeneratorObjectPrototype(cx);
             if (!proto)
-                return NULL;
+                return nullptr;
         }
         obj = NewObjectWithGivenProto(cx, &StarGeneratorObject::class_, proto, global);
     } else {
         JS_ASSERT(stackfp->script()->isLegacyGenerator());
         JSObject *proto = global->getOrCreateLegacyGeneratorObjectPrototype(cx);
         if (!proto)
-            return NULL;
+            return nullptr;
         obj = NewObjectWithGivenProto(cx, &LegacyGeneratorObject::class_, proto, global);
     }
     if (!obj)
-        return NULL;
+        return nullptr;
 
     /* Load and compute stack slot counts. */
     Value *stackvp = stackfp->generatorArgsSnapshotBegin();
@@ -1592,7 +1592,7 @@ js_NewGenerator(JSContext *cx, const FrameRegs &stackRegs)
 
     JSGenerator *gen = (JSGenerator *) cx->calloc_(nbytes);
     if (!gen)
-        return NULL;
+        return nullptr;
 
     /* Cut up floatingStack space. */
     HeapValue *genvp = gen->stackSnapshot;
@@ -1604,7 +1604,7 @@ js_NewGenerator(JSContext *cx, const FrameRegs &stackRegs)
     gen->obj.init(obj);
     gen->state = JSGEN_NEWBORN;
     gen->fp = genfp;
-    gen->prevGenerator = NULL;
+    gen->prevGenerator = nullptr;
 
     /* Copy from the stack to the generator's floating frame. */
     gen->regs.rebaseFromTo(stackRegs, *genfp);
@@ -1637,7 +1637,7 @@ SendToGenerator(JSContext *cx, JSGeneratorOp op, HandleObject obj,
     JS_ASSERT(generatorKind == LegacyGenerator || generatorKind == StarGenerator);
 
     if (gen->state == JSGEN_RUNNING || gen->state == JSGEN_CLOSING) {
-        JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_NESTING_GENERATOR);
+        JS_ReportErrorNumber(cx, js_GetErrorMessage, nullptr, JSMSG_NESTING_GENERATOR);
         return false;
     }
 
@@ -1720,7 +1720,7 @@ star_generator_next(JSContext *cx, CallArgs args)
     JSGenerator *gen = thisObj->as<StarGeneratorObject>().getGenerator();
 
     if (gen->state == JSGEN_CLOSED) {
-        JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_GENERATOR_FINISHED);
+        JS_ReportErrorNumber(cx, js_GetErrorMessage, nullptr, JSMSG_GENERATOR_FINISHED);
         return false;
     }
 
@@ -1742,7 +1742,7 @@ star_generator_throw(JSContext *cx, CallArgs args)
 
     JSGenerator *gen = thisObj->as<StarGeneratorObject>().getGenerator();
     if (gen->state == JSGEN_CLOSED) {
-        JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_GENERATOR_FINISHED);
+        JS_ReportErrorNumber(cx, js_GetErrorMessage, nullptr, JSMSG_GENERATOR_FINISHED);
         return false;
     }
 
@@ -1862,7 +1862,7 @@ NewObjectWithObjectPrototype(JSContext *cx, Handle<GlobalObject *> global)
 {
     JSObject *proto = global->getOrCreateObjectPrototype(cx);
     if (!proto)
-        return NULL;
+        return nullptr;
     return NewObjectWithGivenProto(cx, &JSObject::class_, proto, global);
 }
 
@@ -1871,7 +1871,7 @@ NewObjectWithFunctionPrototype(JSContext *cx, Handle<GlobalObject *> global)
 {
     JSObject *proto = global->getOrCreateFunctionPrototype(cx);
     if (!proto)
-        return NULL;
+        return nullptr;
     return NewObjectWithGivenProto(cx, &JSObject::class_, proto, global);
 }
 
@@ -1891,7 +1891,7 @@ GlobalObject::initIteratorClasses(JSContext *cx, Handle<GlobalObject *> global)
         NativeIterator *ni = NativeIterator::allocateIterator(cx, 0, blank);
         if (!ni)
             return false;
-        ni->init(NULL, NULL, 0 /* flags */, 0, 0);
+        ni->init(nullptr, nullptr, 0 /* flags */, 0, 0);
 
         iteratorProto->as<PropertyIteratorObject>().setNativeIterator(ni);
 
@@ -1901,7 +1901,7 @@ GlobalObject::initIteratorClasses(JSContext *cx, Handle<GlobalObject *> global)
             return false;
         if (!LinkConstructorAndPrototype(cx, ctor, iteratorProto))
             return false;
-        if (!DefinePropertiesAndBrand(cx, iteratorProto, NULL, iterator_methods))
+        if (!DefinePropertiesAndBrand(cx, iteratorProto, nullptr, iterator_methods))
             return false;
         if (!DefineConstructorAndPrototype(cx, global, JSProto_Iterator, ctor, iteratorProto))
             return false;
@@ -1911,14 +1911,14 @@ GlobalObject::initIteratorClasses(JSContext *cx, Handle<GlobalObject *> global)
     if (global->getSlot(ELEMENT_ITERATOR_PROTO).isUndefined()) {
         const Class *cls = &ElementIteratorObject::class_;
         proto = global->createBlankPrototypeInheriting(cx, cls, *iteratorProto);
-        if (!proto || !DefinePropertiesAndBrand(cx, proto, NULL, ElementIteratorObject::methods))
+        if (!proto || !DefinePropertiesAndBrand(cx, proto, nullptr, ElementIteratorObject::methods))
             return false;
         global->setReservedSlot(ELEMENT_ITERATOR_PROTO, ObjectValue(*proto));
     }
 
     if (global->getSlot(LEGACY_GENERATOR_OBJECT_PROTO).isUndefined()) {
         proto = NewObjectWithObjectPrototype(cx, global);
-        if (!proto || !DefinePropertiesAndBrand(cx, proto, NULL, legacy_generator_methods))
+        if (!proto || !DefinePropertiesAndBrand(cx, proto, nullptr, legacy_generator_methods))
             return false;
         global->setReservedSlot(LEGACY_GENERATOR_OBJECT_PROTO, ObjectValue(*proto));
     }
@@ -1927,7 +1927,7 @@ GlobalObject::initIteratorClasses(JSContext *cx, Handle<GlobalObject *> global)
         RootedObject genObjectProto(cx, NewObjectWithObjectPrototype(cx, global));
         if (!genObjectProto)
             return false;
-        if (!DefinePropertiesAndBrand(cx, genObjectProto, NULL, star_generator_methods))
+        if (!DefinePropertiesAndBrand(cx, genObjectProto, nullptr, star_generator_methods))
             return false;
 
         RootedObject genFunctionProto(cx, NewObjectWithFunctionPrototype(cx, global));
@@ -1973,6 +1973,6 @@ js_InitIteratorClasses(JSContext *cx, HandleObject obj)
 {
     Rooted<GlobalObject*> global(cx, &obj->as<GlobalObject>());
     if (!GlobalObject::initIteratorClasses(cx, global))
-        return NULL;
+        return nullptr;
     return global->getIteratorPrototype();
 }
