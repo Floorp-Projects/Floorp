@@ -41,13 +41,13 @@ const backgroundPageThumbsContent = {
   observe: function (subj, topic, data) {
     // Arrange to prevent (most) popup dialogs for this window - popups done
     // in the parent (eg, auth) aren't prevented, but alert() etc are.
-    // preventFurtherDialogs only works on the current inner window, so it has
+    // disableDialogs only works on the current inner window, so it has
     // to be called every page load, but before scripts run.
     if (subj == content.document) {
       content.
         QueryInterface(Ci.nsIInterfaceRequestor).
         getInterface(Ci.nsIDOMWindowUtils).
-        preventFurtherDialogs();
+        disableDialogs();
     }
   },
 
