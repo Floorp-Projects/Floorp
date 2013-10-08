@@ -1064,6 +1064,7 @@ struct TypeObject : gc::BarrieredCell<TypeObject>
     void clearAddendum(ExclusiveContext *cx);
     void clearNewScriptAddendum(ExclusiveContext *cx);
     void clearTypedObjectAddendum(ExclusiveContext *cx);
+    bool isPropertyConfigured(jsid id);
 
     void print();
 

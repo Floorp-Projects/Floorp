@@ -884,7 +884,7 @@ DefinePropertyOnArray(JSContext *cx, Handle<ArrayObject*> arr, HandleId id, cons
         RootedValue v(cx);
         if (desc.hasValue()) {
             uint32_t newLen;
-            if (!CanonicalizeArrayLengthValue(cx, desc.value(), &newLen))
+            if (!CanonicalizeArrayLengthValue<SequentialExecution>(cx, desc.value(), &newLen))
                 return false;
             v.setNumber(newLen);
         } else {
@@ -908,7 +908,7 @@ DefinePropertyOnArray(JSContext *cx, Handle<ArrayObject*> arr, HandleId id, cons
                 attrs = attrs | JSPROP_READONLY;
         }
 
-        return ArraySetLength(cx, arr, id, attrs, v, throwError);
+        return ArraySetLength<SequentialExecution>(cx, arr, id, attrs, v, throwError);
     }
 
     /* Step 3. */
@@ -3532,12 +3532,10 @@ DefinePropertyOrElement(typename ExecutionModeTraits<mode>::ExclusiveContextType
     if (obj->is<ArrayObject>()) {
         Rooted<ArrayObject*> arr(cx, &obj->as<ArrayObject>());
         if (id == NameToId(cx->names().length)) {
-            if (mode == ParallelExecution)
+            if (mode == SequentialExecution && !cx->shouldBeJSContext())
                 return false;
-
-            if (!cx->shouldBeJSContext())
-                return false;
-            return ArraySetLength(cx->asJSContext(), arr, id, attrs, value, setterIsStrict);
+            return ArraySetLength<mode>(ExecutionModeTraits<mode>::toContextType(cx), arr, id,
+                                        attrs, value, setterIsStrict);
         }
 
         uint32_t index;
@@ -3634,14 +3632,14 @@ js::DefineNativeProperty(ExclusiveContext *cx, HandleObject obj, HandleId id, Ha
                 shape = obj->nativeLookup(cx, id);
             }
             if (shape->isAccessorDescriptor()) {
-                shape = JSObject::changeProperty(cx, obj, shape, attrs,
-                                                 JSPROP_GETTER | JSPROP_SETTER,
-                                                 (attrs & JSPROP_GETTER)
-                                                 ? getter
-                                                 : shape->getter(),
-                                                 (attrs & JSPROP_SETTER)
-                                                 ? setter
-                                                 : shape->setter());
+                shape = JSObject::changeProperty<SequentialExecution>(cx, obj, shape, attrs,
+                                                                      JSPROP_GETTER | JSPROP_SETTER,
+                                                                      (attrs & JSPROP_GETTER)
+                                                                      ? getter
+                                                                      : shape->getter(),
+                                                                      (attrs & JSPROP_SETTER)
+                                                                      ? setter
+                                                                      : shape->setter());
                 if (!shape)
                     return false;
             } else {
@@ -4813,12 +4811,8 @@ baseops::SetPropertyHelper(typename ExecutionModeTraits<mode>::ContextType cxArg
     }
 
     if (obj->is<ArrayObject>() && id == NameToId(cxArg->names().length)) {
-        if (mode == ParallelExecution)
-            return false;
-
-        JSContext *cx = cxArg->asJSContext();
-        Rooted<ArrayObject*> arr(cx, &obj->as<ArrayObject>());
-        return ArraySetLength(cx, arr, id, attrs, vp, strict);
+        Rooted<ArrayObject*> arr(cxArg, &obj->as<ArrayObject>());
+        return ArraySetLength<mode>(cxArg, arr, id, attrs, vp, strict);
     }
 
     if (!shape) {

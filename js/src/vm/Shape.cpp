@@ -904,11 +904,14 @@ JSObject::putProperty<ParallelExecution>(ForkJoinSlice *cx,
                                          uint32_t slot, unsigned attrs,
                                          unsigned flags, int shortid);
 
+template <ExecutionMode mode>
 /* static */ Shape *
-JSObject::changeProperty(ExclusiveContext *cx, HandleObject obj, HandleShape shape, unsigned attrs,
+JSObject::changeProperty(typename ExecutionModeTraits<mode>::ExclusiveContextType cx,
+                         HandleObject obj, HandleShape shape, unsigned attrs,
                          unsigned mask, PropertyOp getter, StrictPropertyOp setter)
 {
-    JS_ASSERT(obj->nativeContains(cx, shape));
+    JS_ASSERT(cx->isThreadLocal(obj));
+    JS_ASSERT(obj->nativeContainsPure(shape));
 
     attrs |= shape->attrs & mask;
 
@@ -916,9 +919,22 @@ JSObject::changeProperty(ExclusiveContext *cx, HandleObject obj, HandleShape sha
     JS_ASSERT(!((attrs ^ shape->attrs) & JSPROP_SHARED) ||
               !(attrs & JSPROP_SHARED));
 
-    types::MarkTypePropertyConfigured(cx, obj, shape->propid());
-    if (attrs & (JSPROP_GETTER | JSPROP_SETTER))
-        types::AddTypePropertyId(cx, obj, shape->propid(), types::Type::UnknownType());
+    if (mode == ParallelExecution) {
+        if (!types::IsTypePropertyIdMarkedConfigured(obj, shape->propid()))
+            return nullptr;
+    } else {
+        types::MarkTypePropertyConfigured(cx->asExclusiveContext(), obj, shape->propid());
+    }
+
+    if (attrs & (JSPROP_GETTER | JSPROP_SETTER)) {
+        if (mode == ParallelExecution) {
+            if (!types::HasTypePropertyId(obj, shape->propid(), types::Type::UnknownType()))
+                return nullptr;
+        } else {
+            types::AddTypePropertyId(cx->asExclusiveContext(), obj, shape->propid(),
+                                     types::Type::UnknownType());
+        }
+    }
 
     if (getter == JS_PropertyStub)
         getter = nullptr;
@@ -938,13 +954,24 @@ JSObject::changeProperty(ExclusiveContext *cx, HandleObject obj, HandleShape sha
      * putProperty won't re-allocate it.
      */
     RootedId propid(cx, shape->propid());
-    Shape *newShape = putProperty<SequentialExecution>(cx, obj, propid, getter, setter,
-                                                       shape->maybeSlot(), attrs, shape->flags,
-                                                       shape->maybeShortid());
+    Shape *newShape = putProperty<mode>(cx, obj, propid, getter, setter,
+                                        shape->maybeSlot(), attrs, shape->flags,
+                                        shape->maybeShortid());
 
     obj->checkShapeConsistency();
     return newShape;
 }
+
+template /* static */ Shape *
+JSObject::changeProperty<SequentialExecution>(ExclusiveContext *cx,
+                                              HandleObject obj, HandleShape shape,
+                                              unsigned attrs, unsigned mask,
+                                              PropertyOp getter, StrictPropertyOp setter);
+template /* static */ Shape *
+JSObject::changeProperty<ParallelExecution>(ForkJoinSlice *slice,
+                                            HandleObject obj, HandleShape shape,
+                                            unsigned attrs, unsigned mask,
+                                            PropertyOp getter, StrictPropertyOp setter);
 
 bool
 JSObject::removeProperty(ExclusiveContext *cx, jsid id_)

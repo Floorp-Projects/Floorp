@@ -676,9 +676,11 @@ class ArrayBufferObject;
  * |setterIsStrict| indicates whether invalid changes will cause a TypeError
  * to be thrown.
  */
+template <ExecutionMode mode>
 extern bool
-ArraySetLength(JSContext *cx, Handle<ArrayObject*> obj, HandleId id, unsigned attrs,
-               HandleValue value, bool setterIsStrict);
+ArraySetLength(typename ExecutionModeTraits<mode>::ContextType cx,
+               Handle<ArrayObject*> obj, HandleId id,
+               unsigned attrs, HandleValue value, bool setterIsStrict);
 
 /*
  * Elements header used for all native objects. The elements component of such
@@ -768,9 +770,11 @@ class ObjectElements
     friend class ArrayBufferObject;
     friend class Nursery;
 
+    template <ExecutionMode mode>
     friend bool
-    ArraySetLength(JSContext *cx, Handle<ArrayObject*> obj, HandleId id, unsigned attrs,
-                   HandleValue value, bool setterIsStrict);
+    ArraySetLength(typename ExecutionModeTraits<mode>::ContextType cx,
+                   Handle<ArrayObject*> obj, HandleId id,
+                   unsigned attrs, HandleValue value, bool setterIsStrict);
 
     /* See Flags enum above. */
     uint32_t flags;

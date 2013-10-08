@@ -34,7 +34,8 @@ JSObject::setGenericAttributes(JSContext *cx, js::HandleObject obj,
 JSObject::changePropertyAttributes(JSContext *cx, js::HandleObject obj,
                                    js::HandleShape shape, unsigned attrs)
 {
-    return !!changeProperty(cx, obj, shape, attrs, 0, shape->getter(), shape->setter());
+    return !!changeProperty<js::SequentialExecution>(cx, obj, shape, attrs, 0,
+                                                     shape->getter(), shape->setter());
 }
 
 /* static */ inline bool
