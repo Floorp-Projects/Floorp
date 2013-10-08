@@ -170,30 +170,22 @@ WifiGeoPositionProvider.prototype = {
 
     // This is a background load
   
-    try {
-        xhr.open("POST", url, true);
-    } catch (e) {
-       triggerError();
-       return;
-    }
+    xhr.open("POST", url, true);
     xhr.setRequestHeader("Content-Type", "application/json; charset=UTF-8");
     xhr.responseType = "json";
     xhr.mozBackgroundRequest = true;
     xhr.channel.loadFlags = Ci.nsIChannel.LOAD_ANONYMOUS;
     xhr.onerror = function() {
         LOG("onerror: " + xhr);
-        triggerError();
     };
 
     xhr.onload = function() {  
         LOG("gls returned status: " + xhr.status + " --> " +  JSON.stringify(xhr.response));
         if (xhr.channel instanceof Ci.nsIHttpChannel && xhr.status != 200) {
-            triggerError();
             return;
         }
 
         if (!xhr.response || !xhr.response.location) {
-            triggerError();
             return;
         }
 
@@ -226,8 +218,4 @@ WifiGeoPositionProvider.prototype = {
   },
 };
 
-function triggerError() {
-    Cc["@mozilla.org/geolocation/service;1"].getService(Ci.nsIGeolocationUpdate)
-        .notifyError(Ci.nsIDOMGeoPositionError.POSITION_UNAVAILABLE);
-}
 this.NSGetFactory = XPCOMUtils.generateNSGetFactory([WifiGeoPositionProvider]);
