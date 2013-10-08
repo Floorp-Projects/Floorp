@@ -466,7 +466,7 @@ static void darken_gdk_color(GdkColor *src, GdkColor *dest)
 
 static int32_t CheckWidgetStyle(GtkWidget* aWidget, const char* aStyle, int32_t aResult) {
     gboolean value = FALSE;
-    gtk_widget_style_get(aWidget, aStyle, &value, NULL);
+    gtk_widget_style_get(aWidget, aStyle, &value, nullptr);
     return value ? aResult : 0;
 }
 
@@ -522,7 +522,7 @@ nsLookAndFeel::GetIntImpl(IntID aID, int32_t &aResult)
             g_object_get (settings,
                           "gtk-cursor-blink-time", &blink_time,
                           "gtk-cursor-blink", &blink,
-                          NULL);
+                          nullptr);
  
             if (blink)
                 aResult = (int32_t) blink_time;
@@ -548,7 +548,7 @@ nsLookAndFeel::GetIntImpl(IntID aID, int32_t &aResult)
             g_object_get(settings, 
                          "gtk-entry-select-on-focus",
                          &select_on_focus,
-                         NULL);
+                         nullptr);
             
             if(select_on_focus)
                 aResult = 1;
@@ -565,7 +565,7 @@ nsLookAndFeel::GetIntImpl(IntID aID, int32_t &aResult)
             gint delay;
 
             settings = gtk_settings_get_default ();
-            g_object_get (settings, "gtk-menu-popup-delay", &delay, NULL);
+            g_object_get (settings, "gtk-menu-popup-delay", &delay, nullptr);
             aResult = (int32_t) delay;
             break;
         }
@@ -588,7 +588,7 @@ nsLookAndFeel::GetIntImpl(IntID aID, int32_t &aResult)
             gint threshold = 0;
             g_object_get(gtk_widget_get_settings(box),
                          "gtk-dnd-drag-threshold", &threshold,
-                         NULL);
+                         nullptr);
             g_object_ref_sink(box);
             
             aResult = threshold;
@@ -708,7 +708,7 @@ GetSystemFontInfo(GtkWidget *aWidget,
     aFontStyle->style       = NS_FONT_STYLE_NORMAL;
 
     gchar *fontname;
-    g_object_get(settings, "gtk-font-name", &fontname, NULL);
+    g_object_get(settings, "gtk-font-name", &fontname, nullptr);
 
     PangoFontDescription *desc;
     desc = pango_font_description_from_string(fontname);
@@ -824,9 +824,9 @@ nsLookAndFeel::GetFontImpl(FontID aID, nsString& aFontName,
                            gfxFontStyle& aFontStyle,
                            float aDevPixPerCSSPixel)
 {
-  nsString *cachedFontName = NULL;
-  gfxFontStyle *cachedFontStyle = NULL;
-  bool *isCached = NULL;
+  nsString *cachedFontName = nullptr;
+  gfxFontStyle *cachedFontStyle = nullptr;
+  bool *isCached = nullptr;
 
   switch (aID) {
     case eFont_Menu:         // css2
@@ -938,8 +938,8 @@ nsLookAndFeel::Init()
     gtk_container_add(GTK_CONTAINER(menuitem), accel_label);
     gtk_menu_shell_append(GTK_MENU_SHELL(menu), menuitem);
 
-    gtk_widget_set_style(accel_label, NULL);
-    gtk_widget_set_style(menu, NULL);
+    gtk_widget_set_style(accel_label, nullptr);
+    gtk_widget_set_style(menu, nullptr);
     gtk_widget_realize(menu);
     gtk_widget_realize(accel_label);
 
@@ -1064,14 +1064,14 @@ nsLookAndFeel::Init()
     gtk_container_add(GTK_CONTAINER(parent), entry);
     
 #if (MOZ_WIDGET_GTK == 2)
-    gtk_widget_set_style(button, NULL);
-    gtk_widget_set_style(label, NULL);
-    gtk_widget_set_style(treeView, NULL);
-    gtk_widget_set_style(linkButton, NULL);
-    gtk_widget_set_style(combobox, NULL);
-    gtk_widget_set_style(comboboxLabel, NULL);
-    gtk_widget_set_style(menuBar, NULL);
-    gtk_widget_set_style(entry, NULL);
+    gtk_widget_set_style(button, nullptr);
+    gtk_widget_set_style(label, nullptr);
+    gtk_widget_set_style(treeView, nullptr);
+    gtk_widget_set_style(linkButton, nullptr);
+    gtk_widget_set_style(combobox, nullptr);
+    gtk_widget_set_style(comboboxLabel, nullptr);
+    gtk_widget_set_style(menuBar, nullptr);
+    gtk_widget_set_style(entry, nullptr);
 
     gtk_widget_realize(button);
     gtk_widget_realize(label);
@@ -1108,17 +1108,17 @@ nsLookAndFeel::Init()
     //    slightly by a hardcoded value (gtkstyle.c)
     // 3) If neither are defined, take the base background color and
     //    darken that by a hardcoded value
-    colorValuePtr = NULL;
+    colorValuePtr = nullptr;
     gtk_widget_style_get(treeView,
                          "odd-row-color", &colorValuePtr,
-                         NULL);
+                         nullptr);
 
     if (colorValuePtr) {
         colorValue = *colorValuePtr;
     } else {
         gtk_widget_style_get(treeView,
                              "even-row-color", &colorValuePtr,
-                             NULL);
+                             nullptr);
         if (colorValuePtr)
             darken_gdk_color(colorValuePtr, &colorValue);
         else
@@ -1192,13 +1192,13 @@ nsLookAndFeel::Init()
         if (g_type_is_a(G_PARAM_SPEC_VALUE_TYPE(param_spec), G_TYPE_BOOLEAN)) {
             gtk_widget_style_get(menuBar,
                                  "window-dragging", &supports_menubar_drag,
-                                 NULL);
+                                 nullptr);
         }
     }
     sMenuSupportsDrag = supports_menubar_drag;
 
-    colorValuePtr = NULL;
-    gtk_widget_style_get(linkButton, "link-color", &colorValuePtr, NULL);
+    colorValuePtr = nullptr;
+    gtk_widget_style_get(linkButton, "link-color", &colorValuePtr, nullptr);
     if (colorValuePtr) {
         colorValue = *colorValuePtr; // we can't pass deref pointers to GDK_COLOR_TO_NS_RGB
         sNativeHyperLinkText = GDK_COLOR_TO_NS_RGB(colorValue);
@@ -1209,13 +1209,13 @@ nsLookAndFeel::Init()
 
     // invisible character styles
     guint value;
-    g_object_get (entry, "invisible-char", &value, NULL);
+    g_object_get (entry, "invisible-char", &value, nullptr);
     sInvisibleCharacter = PRUnichar(value);
 
     // caret styles
     gtk_widget_style_get(entry,
                          "cursor-aspect-ratio", &sCaretRatio,
-                         NULL);
+                         nullptr);
 
     gtk_widget_destroy(window);
 }
