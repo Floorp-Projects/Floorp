@@ -140,6 +140,10 @@ namespace frontend { struct CompileError; }
 struct ThreadSafeContext : ContextFriendFields,
                            public MallocProvider<ThreadSafeContext>
 {
+    friend struct StackBaseShape;
+    friend UnownedBaseShape *BaseShape::lookupUnowned(ThreadSafeContext *cx,
+                                                      const StackBaseShape &base);
+
   public:
     enum ContextKind {
         Context_JS,
