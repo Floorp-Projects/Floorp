@@ -19,19 +19,6 @@ bool IsThreadLocalObject(ForkJoinSlice *slice, JSObject *object);
 bool CheckOverRecursedPar(ForkJoinSlice *slice);
 bool CheckInterruptPar(ForkJoinSlice *slice);
 
-// We pass the arguments to PushPar in a structure because, in code
-// gen, it is convenient to store them on the stack to avoid
-// constraining the reg alloc for the slow path.
-struct PushParArgs {
-    JSObject *object;
-    Value value;
-};
-
-// Extends the given object with the given value (like `Array.push`).
-// Returns nullptr on failure or else `args->object`, which is convenient
-// during code generation.
-JSObject *PushPar(PushParArgs *args);
-
 // Extends the given array with `length` new holes.  Returns nullptr on
 // failure or else `array`, which is convenient during code
 // generation.

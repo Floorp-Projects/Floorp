@@ -602,6 +602,11 @@ class JSObject : public js::ObjectImpl
         return getElementsHeader()->capacity;
     }
 
+  private:
+    inline void ensureDenseInitializedLengthNoPackedCheck(js::ThreadSafeContext *cx,
+                                                          uint32_t index, uint32_t extra);
+
+  public:
     void setDenseInitializedLength(uint32_t length) {
         JS_ASSERT(isNative());
         JS_ASSERT(length <= getDenseCapacity());
@@ -611,6 +616,8 @@ class JSObject : public js::ObjectImpl
 
     inline void ensureDenseInitializedLength(js::ExclusiveContext *cx,
                                              uint32_t index, uint32_t extra);
+    inline void ensureDenseInitializedLengthPreservePackedFlag(js::ThreadSafeContext *cx,
+                                                               uint32_t index, uint32_t extra);
     void setDenseElement(uint32_t index, const js::Value &val) {
         JS_ASSERT(isNative() && index < getDenseInitializedLength());
         elements[index].set(this, js::HeapSlot::Element, index, val);
@@ -709,6 +716,7 @@ class JSObject : public js::ObjectImpl
     inline void setShouldConvertDoubleElements();
 
     /* Packed information for this object's elements. */
+    inline bool writeToIndexWouldMarkNotPacked(uint32_t index);
     inline void markDenseElementsNotPacked(js::ExclusiveContext *cx);
 
     /*
@@ -719,10 +727,16 @@ class JSObject : public js::ObjectImpl
      * two cases the object is kept intact.
      */
     enum EnsureDenseResult { ED_OK, ED_FAILED, ED_SPARSE };
+
+  private:
+    inline EnsureDenseResult ensureDenseElementsNoPackedCheck(js::ThreadSafeContext *cx,
+                                                              uint32_t index, uint32_t extra);
+
+  public:
     inline EnsureDenseResult ensureDenseElements(js::ExclusiveContext *cx,
                                                  uint32_t index, uint32_t extra);
-    inline EnsureDenseResult parExtendDenseElements(js::ThreadSafeContext *cx, js::Value *v,
-                                                    uint32_t extra);
+    inline EnsureDenseResult ensureDenseElementsPreservePackedFlag(js::ThreadSafeContext *cx,
+                                                                   uint32_t index, uint32_t extra);
 
     inline EnsureDenseResult extendDenseElements(js::ThreadSafeContext *cx,
                                                  uint32_t requiredCapacity, uint32_t extra);
