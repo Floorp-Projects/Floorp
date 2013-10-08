@@ -495,7 +495,9 @@ AudioChannelService::SendAudioChannelChangedNotification(uint64_t aChildID)
       channelName.AssignLiteral("none");
     }
 
-    obs->NotifyObservers(nullptr, "audio-channel-changed", channelName.get());
+    if (obs) {
+      obs->NotifyObservers(nullptr, "audio-channel-changed", channelName.get());
+    }
   }
 
   if (visibleHigher != mCurrentVisibleHigherChannel) {
@@ -508,7 +510,9 @@ AudioChannelService::SendAudioChannelChangedNotification(uint64_t aChildID)
       channelName.AssignLiteral("none");
     }
 
-    obs->NotifyObservers(nullptr, "visible-audio-channel-changed", channelName.get());
+    if (obs) {
+      obs->NotifyObservers(nullptr, "visible-audio-channel-changed", channelName.get());
+    }
   }
 }
 
