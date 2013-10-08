@@ -117,12 +117,12 @@ nsDragService::CreateDragImage(nsIDOMNode *aDOMNode,
   bmih.bV5BlueMask    = 0x000000FF;
   bmih.bV5AlphaMask   = 0xFF000000;
 
-  HDC hdcSrc = CreateCompatibleDC(NULL);
-  void *lpBits = NULL;
+  HDC hdcSrc = CreateCompatibleDC(nullptr);
+  void *lpBits = nullptr;
   if (hdcSrc) {
     psdi->hbmpDragImage = 
     ::CreateDIBSection(hdcSrc, (BITMAPINFO*)&bmih, DIB_RGB_COLORS,
-                       (void**)&lpBits, NULL, 0);
+                       (void**)&lpBits, nullptr, 0);
     if (psdi->hbmpDragImage && lpBits) {
       memcpy(lpBits,imgSurface->Data(),(bmWidth*bmHeight*4));
     }
@@ -144,7 +144,7 @@ nsDragService::CreateDragImage(nsIDOMNode *aDOMNode,
     DeleteDC(hdcSrc);
   }
 
-  return psdi->hbmpDragImage != NULL;
+  return psdi->hbmpDragImage != nullptr;
 }
 
 //-------------------------------------------------------------------------
@@ -217,7 +217,8 @@ nsDragService::InvokeDragSession(nsIDOMNode *aDOMNode,
 
   // Create a drag image if support is available
   IDragSourceHelper *pdsh;
-  if (SUCCEEDED(CoCreateInstance(CLSID_DragDropHelper, NULL, CLSCTX_INPROC_SERVER,
+  if (SUCCEEDED(CoCreateInstance(CLSID_DragDropHelper, nullptr,
+                                 CLSCTX_INPROC_SERVER,
                                  IID_IDragSourceHelper, (void**)&pdsh))) {
     SHDRAGIMAGE sdi;
     if (CreateDragImage(aDOMNode, aRegion, &sdi)) {
@@ -367,7 +368,7 @@ nsDragService::GetNumDropItems(uint32_t * aNumItems)
       STGMEDIUM stm;
       if (mDataObject->GetData(&fe2, &stm) == S_OK) {
         HDROP hdrop = (HDROP)GlobalLock(stm.hGlobal);
-        *aNumItems = ::DragQueryFileW(hdrop, 0xFFFFFFFF, NULL, 0);
+        *aNumItems = ::DragQueryFileW(hdrop, 0xFFFFFFFF, nullptr, 0);
         ::GlobalUnlock(stm.hGlobal);
         ::ReleaseStgMedium(&stm);
         // Data may be provided later, so assume we have 1 item
