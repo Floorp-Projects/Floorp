@@ -641,11 +641,15 @@ nsCopySupport::FireClipboardEvent(int32_t aType, int32_t aClipboardType, nsIPres
   if (!nsContentUtils::IsSafeToRunScript())
     return false;
 
+  int32_t type = -1;
+  nsCOMPtr<nsIDocShell> docShell = do_GetInterface(piWindow);
+  bool chromeShell = (docShell && NS_SUCCEEDED(docShell->GetItemType(&type)) &&
+                      type == nsIDocShellTreeItem::typeChrome);
+
   // next, fire the cut, copy or paste event
-  // XXXndeakin Bug 844941 - why was a preference added here without a running-in-chrome check?
   bool doDefault = true;
   nsRefPtr<nsDOMDataTransfer> clipboardData;
-  if (Preferences::GetBool("dom.event.clipboardevents.enabled", true)) {
+  if (chromeShell || Preferences::GetBool("dom.event.clipboardevents.enabled", true)) {
     clipboardData = new nsDOMDataTransfer(aType, aType == NS_PASTE, aClipboardType);
 
     nsEventStatus status = nsEventStatus_eIgnore;
