@@ -43,9 +43,9 @@ NS_IMPL_ISUPPORTS_INHERITED1(nsPrintSettingsGTK,
 /** ---------------------------------------------------
  */
 nsPrintSettingsGTK::nsPrintSettingsGTK() :
-  mPageSetup(NULL),
-  mPrintSettings(NULL),
-  mGTKPrinter(NULL),
+  mPageSetup(nullptr),
+  mPrintSettings(nullptr),
+  mGTKPrinter(nullptr),
   mPrintSelectionOnly(false)
 {
   // The aim here is to set up the objects enough that silent printing works well.
@@ -56,7 +56,7 @@ nsPrintSettingsGTK::nsPrintSettingsGTK() :
 
   SetOutputFormat(nsIPrintSettings::kOutputFormatNative);
 
-  GtkPaperSize* defaultPaperSize = gtk_paper_size_new(NULL);
+  GtkPaperSize* defaultPaperSize = gtk_paper_size_new(nullptr);
   mPaperSize = moz_gtk_paper_size_copy_to_new_custom(defaultPaperSize);
   gtk_paper_size_free(defaultPaperSize);
   SaveNewPageSize();
@@ -68,15 +68,15 @@ nsPrintSettingsGTK::~nsPrintSettingsGTK()
 {
   if (mPageSetup) {
     g_object_unref(mPageSetup);
-    mPageSetup = NULL;
+    mPageSetup = nullptr;
   }
   if (mPrintSettings) {
     g_object_unref(mPrintSettings);
-    mPrintSettings = NULL;
+    mPrintSettings = nullptr;
   }
   if (mGTKPrinter) {
     g_object_unref(mGTKPrinter);
-    mGTKPrinter = NULL;
+    mGTKPrinter = nullptr;
   }
   gtk_paper_size_free(mPaperSize);
 }
@@ -84,9 +84,9 @@ nsPrintSettingsGTK::~nsPrintSettingsGTK()
 /** ---------------------------------------------------
  */
 nsPrintSettingsGTK::nsPrintSettingsGTK(const nsPrintSettingsGTK& aPS) :
-  mPageSetup(NULL),
-  mPrintSettings(NULL),
-  mGTKPrinter(NULL),
+  mPageSetup(nullptr),
+  mPrintSettings(nullptr),
+  mGTKPrinter(nullptr),
   mPrintSelectionOnly(false)
 {
   *this = aPS;
@@ -406,7 +406,8 @@ nsPrintSettingsGTK::SetToFileName(const PRUnichar * aToFileName)
 {
   if (aToFileName[0] == 0) {
     mToFileName.SetLength(0);
-    gtk_print_settings_set(mPrintSettings, GTK_PRINT_SETTINGS_OUTPUT_URI, NULL);
+    gtk_print_settings_set(mPrintSettings, GTK_PRINT_SETTINGS_OUTPUT_URI,
+                           nullptr);
     return NS_OK;
   }
 
@@ -710,11 +711,11 @@ nsPrintSettingsGTK::SetupSilentPrinting()
   // We have to get a printer here, rather than when the print settings are constructed.
   // This is because when we request sync, GTK makes us wait in the *event loop* while waiting
   // for the enumeration to finish. We must do this when event loop runs are expected.
-  gtk_enumerate_printers(printer_enumerator, this, NULL, TRUE);
+  gtk_enumerate_printers(printer_enumerator, this, nullptr, TRUE);
 
   // XXX If no default printer set, get the first one.
   if (!GTK_IS_PRINTER(mGTKPrinter))
-    gtk_enumerate_printers(ref_printer, this, NULL, TRUE);
+    gtk_enumerate_printers(ref_printer, this, nullptr, TRUE);
 
   return NS_OK;
 }
