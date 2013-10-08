@@ -171,8 +171,6 @@ class CGDOMJSClass(CGThing):
     def __init__(self, descriptor):
         CGThing.__init__(self)
         self.descriptor = descriptor
-        # Our current reserved slot situation is unsafe for globals. Fix bug 760095!
-        assert "Window" not in descriptor.interface.identifier.name
     def declare(self):
         return ""
     def define(self):
@@ -2154,6 +2152,11 @@ def CreateBindingJSObject(descriptor, properties, parent):
 
   js::SetReservedSlot(obj, DOM_OBJECT_SLOT, PRIVATE_TO_JSVAL(aObject));
 """
+        if "Window" in descriptor.interface.identifier.name:
+            create = """  MOZ_ASSERT(false,
+             "Our current reserved slot situation is unsafe for globals. Fix "
+             "bug 760095!");
+""" + create
     create = objDecl + create
 
     if descriptor.nativeOwnership == 'refcounted':

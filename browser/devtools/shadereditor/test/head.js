@@ -135,7 +135,7 @@ function once(aTarget, aEventName, aUseCapture = false) {
 
 function waitForFrame(aDebuggee) {
   let deferred = promise.defer();
-  aDebuggee.mozRequestAnimationFrame(deferred.resolve);
+  aDebuggee.requestAnimationFrame(deferred.resolve);
   return deferred.promise;
 }
 
