@@ -26,15 +26,17 @@ function test() {
 // -------------
 // Test clean-up
 function endTest() {
-  gBrowser.removeTab(tab);
+  Task.spawn(function () {
+    yield FullZoomHelper.removeTabAndWaitForLocationChange(tab);
 
-  tab = null;
+    tab = null;
 
-  if (gPrefService.prefHasUserValue("browser.zoom.updateBackgroundTabs"))
-    gPrefService.clearUserPref("browser.zoom.updateBackgroundTabs");
+    if (gPrefService.prefHasUserValue("browser.zoom.updateBackgroundTabs"))
+      gPrefService.clearUserPref("browser.zoom.updateBackgroundTabs");
 
-  if (gPrefService.prefHasUserValue("browser.zoom.siteSpecific"))
-    gPrefService.clearUserPref("browser.zoom.siteSpecific");
+    if (gPrefService.prefHasUserValue("browser.zoom.siteSpecific"))
+      gPrefService.clearUserPref("browser.zoom.siteSpecific");
 
-  finish();
+    finish();
+  });
 }
