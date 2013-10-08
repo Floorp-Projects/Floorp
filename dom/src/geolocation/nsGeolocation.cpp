@@ -79,6 +79,7 @@ class nsGeolocationRequest
   void SendLocation(nsIDOMGeoPosition* location);
   bool WantsHighAccuracy() {return mOptions && mOptions->mEnableHighAccuracy;}
   void SetTimeoutTimer();
+  void NotifyErrorAndShutdown(uint16_t);
   nsIPrincipal* GetPrincipal();
 
   ~nsGeolocationRequest();
@@ -367,6 +368,13 @@ NS_IMPL_CYCLE_COLLECTION_3(nsGeolocationRequest, mCallback, mErrorCallback, mLoc
 NS_IMETHODIMP
 nsGeolocationRequest::Notify(nsITimer* aTimer)
 {
+  NotifyErrorAndShutdown(nsIDOMGeoPositionError::TIMEOUT);
+  return NS_OK;
+}
+
+void
+nsGeolocationRequest::NotifyErrorAndShutdown(uint16_t aErrorCode)
+{
   MOZ_ASSERT(!mShutdown, "timeout after shutdown");
 
   if (!mIsWatchPositionRequest) {
@@ -374,13 +382,11 @@ nsGeolocationRequest::Notify(nsITimer* aTimer)
     mLocator->RemoveRequest(this);
   }
 
-  NotifyError(nsIDOMGeoPositionError::TIMEOUT);
+  NotifyError(aErrorCode);
 
   if (!mShutdown) {
     SetTimeoutTimer();
   }
-
-  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -1160,13 +1166,13 @@ Geolocation::NotifyError(uint16_t aErrorCode)
   }
 
   for (uint32_t i = mPendingCallbacks.Length(); i > 0; i--) {
-    mPendingCallbacks[i-1]->NotifyError(aErrorCode);
-    RemoveRequest(mPendingCallbacks[i-1]);
+    mPendingCallbacks[i-1]->NotifyErrorAndShutdown(aErrorCode);
+    //NotifyErrorAndShutdown() removes the request from the array
   }
 
   // notify everyone that is watching
   for (uint32_t i = 0; i < mWatchingCallbacks.Length(); i++) {
-    mWatchingCallbacks[i]->NotifyError(aErrorCode);
+    mWatchingCallbacks[i]->NotifyErrorAndShutdown(aErrorCode);
   }
 
   return NS_OK;
