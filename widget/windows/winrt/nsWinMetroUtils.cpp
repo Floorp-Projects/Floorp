@@ -331,7 +331,7 @@ nsWinMetroUtils::LaunchInDesktop(const nsAString &aPath, const nsAString &aArgum
   // SEE_MASK_FLAG_LOG_USAGE is needed to change from immersive mode
   // to desktop.
   sinfo.fMask        = SEE_MASK_FLAG_LOG_USAGE;
-  sinfo.hwnd         = NULL;
+  sinfo.hwnd         = nullptr;
   sinfo.lpFile       = aPath.BeginReading();
   sinfo.lpParameters = aArguments.BeginReading();
   sinfo.lpVerb       = L"open";

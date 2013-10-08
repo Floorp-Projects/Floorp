@@ -58,7 +58,7 @@ MetroAppShell::Init()
   LogFunction();
 
   WNDCLASSW wc;
-  HINSTANCE module = GetModuleHandle(NULL);
+  HINSTANCE module = GetModuleHandle(nullptr);
 
   const PRUnichar *const kWindowClass = L"nsAppShell:EventWindowClass";
   if (!GetClassInfoW(module, kWindowClass, &wc)) {
@@ -67,16 +67,16 @@ MetroAppShell::Init()
     wc.cbClsExtra    = 0;
     wc.cbWndExtra    = 0;
     wc.hInstance     = module;
-    wc.hIcon         = NULL;
-    wc.hCursor       = NULL;
-    wc.hbrBackground = (HBRUSH) NULL;
-    wc.lpszMenuName  = (LPCWSTR) NULL;
+    wc.hIcon         = nullptr;
+    wc.hCursor       = nullptr;
+    wc.hbrBackground = (HBRUSH) nullptr;
+    wc.lpszMenuName  = (LPCWSTR) nullptr;
     wc.lpszClassName = kWindowClass;
     RegisterClassW(&wc);
   }
 
   mEventWnd = CreateWindowW(kWindowClass, L"nsAppShell:EventWindow",
-                           0, 0, 0, 10, 10, NULL, NULL, module, NULL);
+                           0, 0, 0, 10, 10, nullptr, nullptr, module, nullptr);
   NS_ENSURE_STATE(mEventWnd);
 
   nsresult rv;
@@ -121,7 +121,7 @@ WinLaunchDeferredMetroFirefox()
 
   nsRefPtr<IExecuteCommand> executeCommand;
   HRESULT hr = CoCreateInstance(CLSID_FirefoxMetroDEH,
-                                NULL,
+                                nullptr,
                                 CLSCTX_LOCAL_SERVER,
                                 IID_IExecuteCommand,
                                 getter_AddRefs(executeCommand));
@@ -140,7 +140,8 @@ WinLaunchDeferredMetroFirefox()
 
   // Create an IShellItem for the current browser path
   nsRefPtr<IShellItem> shellItem;
-  hr = WinUtils::SHCreateItemFromParsingName(exePath, NULL, IID_IShellItem, getter_AddRefs(shellItem));
+  hr = WinUtils::SHCreateItemFromParsingName(exePath, nullptr, IID_IShellItem,
+                                             getter_AddRefs(shellItem));
   if (FAILED(hr))
     return FALSE;
 
@@ -310,7 +311,8 @@ MetroAppShell::ProcessNextNativeEvent(bool mayWait)
     return true;
   }
   if (mayWait) {
-    DWORD result = ::MsgWaitForMultipleObjectsEx(0, NULL, MSG_WAIT_TIMEOUT, MOZ_QS_ALLEVENT,
+    DWORD result = ::MsgWaitForMultipleObjectsEx(0, nullptr, MSG_WAIT_TIMEOUT,
+                                                 MOZ_QS_ALLEVENT,
                                                  MWMO_INPUTAVAILABLE|MWMO_ALERTABLE);
     NS_WARN_IF_FALSE(result != WAIT_FAILED, "Wait failed");
   }
