@@ -91,7 +91,7 @@ WindowNamedPropertiesHandler::getOwnPropertyDescriptor(JSContext* aCx,
   nsCOMPtr<nsPIDOMWindow> piWin = do_QueryWrappedNative(wrapper);
   MOZ_ASSERT(piWin);
   nsGlobalWindow* win = static_cast<nsGlobalWindow*>(piWin.get());
-  if (win->GetLength() > 0) {
+  if (win->Length() > 0) {
     nsCOMPtr<nsIDOMWindow> childWin = win->GetChildWindow(str);
     if (childWin && ShouldExposeChildWindow(str, childWin)) {
       // We found a subframe of the right name. Shadowing via |var foo| in
