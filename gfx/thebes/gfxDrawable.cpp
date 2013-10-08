@@ -78,7 +78,7 @@ PreparePatternForUntiledDrawing(gfxPattern* aPattern,
                     aDeviceToImage.xy == 0.0 && aDeviceToImage.yx == 0.0;
 
                 GraphicsFilter filter =
-                    isDownscale ? aDefaultFilter : GraphicsFilter::FILTER_FAST;
+                    isDownscale ? aDefaultFilter : (const GraphicsFilter)GraphicsFilter::FILTER_FAST;
                 aPattern->SetFilter(filter);
 
                 // Use the default EXTEND_NONE
