@@ -429,18 +429,19 @@ menuitem.bookmark-item {
   padding: 8px 5px 7px;
 }
 
-#nav-bar #social-toolbar-item {
+#nav-bar .toolbaritem-combined-buttons {
   margin-left: 2px;
   margin-right: 2px;
 }
 
-#nav-bar #social-toolbar-item > .toolbarbutton-1 {
+#nav-bar .toolbaritem-combined-buttons > .toolbarbutton-1 {
   padding-left: 0;
   padding-right: 0;
 }
 
 #nav-bar .toolbarbutton-1:not(:hover):not(:active):not([open]) > .toolbarbutton-menubutton-dropmarker::before,
-#nav-bar #social-toolbar-item > .toolbarbutton-1:not(:hover):not(:active):not([open]) + .toolbarbutton-1:not(:hover):not(:active):not([open])::before {
+#nav-bar .toolbaritem-combined-buttons > .toolbarbutton-1:not([open]) + .toolbarbutton-1:not(:hover):not(:active):not([open])::before,
+#nav-bar .toolbaritem-combined-buttons > .toolbarbutton-1[disabled]:not(:active):not([open]) + .toolbarbutton-1[disabled]:not(:active):not([open])::before {
   content: "";
   display: -moz-box;
   width: 1px;
