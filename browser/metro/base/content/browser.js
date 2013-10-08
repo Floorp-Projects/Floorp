@@ -1238,6 +1238,8 @@ function Tab(aURI, aParams, aOwner) {
   this._browser = null;
   this._notification = null;
   this._loading = false;
+  this._progressActive = false;
+  this._progressCount = 0;
   this._chromeTab = null;
   this._eventDeferred = null;
   this._updateThumbnailTimeout = null;
