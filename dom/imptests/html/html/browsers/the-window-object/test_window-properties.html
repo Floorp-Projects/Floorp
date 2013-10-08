@@ -251,7 +251,7 @@ test(function() {
       var EventTargetProto = EventTarget.prototype;
       assert_true(id in window, id + " in window");
       assert_equals(window[id], EventTargetProto[id]);
-      assert_data_propdesc(Object.getOwnPropertyDescriptor(EventTargetProto, id),
+      assert_data_propdesc(Object.getOwnPropertyDescriptor(window, id),
                            true, true, true);
     }, "EventTarget method: " + id);
   });
@@ -262,9 +262,8 @@ test(function() {
     test(function() {
       var WindowProto = Window.prototype;
       assert_true(id in window, id + " in window");
-      assert_true(id in WindowProto, id + " in Window.prototype");
-      assert_equals(window[id], WindowProto[id]);
-      assert_data_propdesc(Object.getOwnPropertyDescriptor(WindowProto, id),
+      assert_false(id in WindowProto, id + " in Window.prototype");
+      assert_data_propdesc(Object.getOwnPropertyDescriptor(window, id),
                            true, true, true);
     }, "Window method: " + id);
   });
@@ -272,8 +271,8 @@ test(function() {
     test(function() {
       var WindowProto = Window.prototype;
       assert_true(id in window, id + " in window");
-      assert_true(id in WindowProto, id + " in Window.prototype");
-      assert_accessor_propdesc(Object.getOwnPropertyDescriptor(WindowProto, id),
+      assert_false(id in WindowProto, id + " in Window.prototype");
+      assert_accessor_propdesc(Object.getOwnPropertyDescriptor(window, id),
                                false, true, true);
     }, "Window readonly attribute: " + id);
   });
@@ -281,8 +280,8 @@ test(function() {
     test(function() {
       var WindowProto = Window.prototype;
       assert_true(id in window, id + " in window");
-      assert_true(id in WindowProto, id + " in Window.prototype");
-      assert_accessor_propdesc(Object.getOwnPropertyDescriptor(WindowProto, id),
+      assert_false(id in WindowProto, id + " in Window.prototype");
+      assert_accessor_propdesc(Object.getOwnPropertyDescriptor(window, id),
                                true, true, true);
     }, "Window attribute: " + id);
   });
@@ -290,18 +289,18 @@ test(function() {
     test(function() {
       var WindowProto = Window.prototype;
       assert_true(id in window, id + " in window");
+      assert_false(id in WindowProto, id + " in Window.prototype");
       // location has a [PutForwards] extended attribute.
       assert_accessor_propdesc(Object.getOwnPropertyDescriptor(window, id),
                                id === "location", true, false);
-      assert_false(id in WindowProto, id + " in Window.prototype");
     }, "Window unforgeable attribute: " + id);
   });
   replacableAttributes.forEach(function(id) {
     test(function() {
       var WindowProto = Window.prototype;
       assert_true(id in window, id + " in window");
-      assert_true(id in WindowProto, id + " in Window.prototype");
-      assert_accessor_propdesc(Object.getOwnPropertyDescriptor(WindowProto, id),
+      assert_false(id in WindowProto, id + " in Window.prototype");
+      assert_accessor_propdesc(Object.getOwnPropertyDescriptor(window, id),
                                true, true, true);
     }, "Window replaceable attribute: " + id);
   });
