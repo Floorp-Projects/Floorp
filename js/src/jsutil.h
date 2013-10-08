@@ -14,6 +14,8 @@
 #include "mozilla/Compiler.h"
 #include "mozilla/GuardObjects.h"
 
+#include <limits.h>
+
 #ifdef USE_ZLIB
 #include <zlib.h>
 #endif
@@ -204,16 +206,18 @@ UnsignedPtrDiff(const void *bigger, const void *smaller)
 
 /* A bit array is an array of bits represented by an array of words (size_t). */
 
+static const size_t BitArrayElementBits = sizeof(size_t) * CHAR_BIT;
+
 static inline unsigned
 NumWordsForBitArrayOfLength(size_t length)
 {
-    return (length + (JS_BITS_PER_WORD - 1)) / JS_BITS_PER_WORD;
+    return (length + (BitArrayElementBits - 1)) / BitArrayElementBits;
 }
 
 static inline unsigned
 BitArrayIndexToWordIndex(size_t length, size_t bitIndex)
 {
-    unsigned wordIndex = bitIndex / JS_BITS_PER_WORD;
+    unsigned wordIndex = bitIndex / BitArrayElementBits;
     JS_ASSERT(wordIndex < length);
     return wordIndex;
 }
@@ -221,7 +225,7 @@ BitArrayIndexToWordIndex(size_t length, size_t bitIndex)
 static inline size_t
 BitArrayIndexToWordMask(size_t i)
 {
-    return size_t(1) << (i % JS_BITS_PER_WORD);
+    return size_t(1) << (i % BitArrayElementBits);
 }
 
 static inline bool
