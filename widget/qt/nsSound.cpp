@@ -292,7 +292,7 @@ NS_IMETHODIMP nsSound::OnStreamComplete(nsIStreamLoader *aLoader,
     }
 #endif
 
-    fd = (*EsdPlayStream)(mask, samples_per_sec, NULL, "mozillaSound"); 
+    fd = (*EsdPlayStream)(mask, samples_per_sec, nullptr, "mozillaSound"); 
   
     if (fd < 0) {
       int *esd_audio_format = (int *) PR_FindSymbol(elib, "esd_audio_format");
