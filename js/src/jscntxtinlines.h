@@ -563,4 +563,10 @@ JSParallelNativeThreadSafeWrapper(js::ForkJoinSlice *slice, unsigned argc, JS::V
     return threadSafeNative(slice, argc, vp) ? js::TP_SUCCESS : js::TP_FATAL;
 }
 
+/* static */ inline JSContext *
+js::ExecutionModeTraits<js::SequentialExecution>::toContextType(ExclusiveContext *cx)
+{
+    return cx->asJSContext();
+}
+
 #endif /* jscntxtinlines_h */

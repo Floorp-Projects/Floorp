@@ -197,6 +197,36 @@ PropertyTree::getChild(ExclusiveContext *cx, Shape *parent_, uint32_t nfixed, co
     return shape;
 }
 
+Shape *
+PropertyTree::lookupChild(ThreadSafeContext *cx, Shape *parent, const StackShape &child)
+{
+    /* Keep this in sync with the logic of getChild above. */
+    Shape *shape = nullptr;
+
+    JS_ASSERT(parent);
+
+    KidsPointer *kidp = &parent->kids;
+    if (kidp->isShape()) {
+        Shape *kid = kidp->toShape();
+        if (kid->matches(child))
+            shape = kid;
+    } else if (kidp->isHash()) {
+        if (KidsHash::Ptr p = kidp->toHash()->readonlyThreadsafeLookup(child))
+            shape = *p;
+    } else {
+        return nullptr;
+    }
+
+#ifdef JSGC_INCREMENTAL
+    mozilla::DebugOnly<JS::Zone *> zone = shape->arenaHeader()->zone;
+    JS_ASSERT(!zone->needsBarrier());
+    JS_ASSERT(!(zone->isGCSweeping() && !shape->isMarked() &&
+		!shape->arenaHeader()->allocatedDuringIncremental));
+#endif
+
+    return shape;
+}
+
 void
 Shape::sweep()
 {

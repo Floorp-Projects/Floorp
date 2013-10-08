@@ -361,8 +361,8 @@ DeclEnvObject::createTemplateObject(JSContext *cx, HandleFunction fun, gc::Initi
     Rooted<jsid> id(cx, AtomToId(fun->atom()));
     const Class *clasp = obj->getClass();
     unsigned attrs = JSPROP_ENUMERATE | JSPROP_PERMANENT | JSPROP_READONLY;
-    if (!JSObject::putProperty(cx, obj, id, clasp->getProperty, clasp->setProperty,
-                               lambdaSlot(), attrs, 0, 0))
+    if (!JSObject::putProperty<SequentialExecution>(cx, obj, id, clasp->getProperty,
+                                                    clasp->setProperty, lambdaSlot(), attrs, 0, 0))
     {
         return nullptr;
     }
@@ -709,11 +709,12 @@ StaticBlockObject::addVar(ExclusiveContext *cx, Handle<StaticBlockObject*> block
      * block's shape later.
      */
     uint32_t slot = JSSLOT_FREE(&BlockObject::class_) + index;
-    return JSObject::addPropertyInternal(cx, block, id,
-                                         /* getter = */ nullptr, /* setter = */ nullptr,
-                                         slot, JSPROP_ENUMERATE | JSPROP_PERMANENT,
-                                         Shape::HAS_SHORTID, index, spp,
-                                         /* allowDictionary = */ false);
+    return JSObject::addPropertyInternal<SequentialExecution>(
+        cx, block, id,
+        /* getter = */ nullptr, /* setter = */ nullptr,
+        slot, JSPROP_ENUMERATE | JSPROP_PERMANENT,
+        Shape::HAS_SHORTID, index, spp,
+        /* allowDictionary = */ false);
 }
 
 const Class BlockObject::class_ = {

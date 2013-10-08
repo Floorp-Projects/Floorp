@@ -1323,7 +1323,7 @@ class AutoRooterGetterSetter
     class Inner : private JS::CustomAutoRooter
     {
       public:
-        inline Inner(ExclusiveContext *cx, uint8_t attrs,
+        inline Inner(ThreadSafeContext *cx, uint8_t attrs,
                      PropertyOp *pgetter_, StrictPropertyOp *psetter_);
 
       private:
@@ -1336,7 +1336,7 @@ class AutoRooterGetterSetter
     };
 
   public:
-    inline AutoRooterGetterSetter(ExclusiveContext *cx, uint8_t attrs,
+    inline AutoRooterGetterSetter(ThreadSafeContext *cx, uint8_t attrs,
                                   PropertyOp *pgetter, StrictPropertyOp *psetter
                                   MOZ_GUARD_OBJECT_NOTIFIER_PARAM);
 
@@ -1484,7 +1484,7 @@ struct StackShape
     class AutoRooter : private JS::CustomAutoRooter
     {
       public:
-        inline AutoRooter(ExclusiveContext *cx, const StackShape *shape_
+        inline AutoRooter(ThreadSafeContext *cx, const StackShape *shape_
                           MOZ_GUARD_OBJECT_NOTIFIER_PARAM);
 
       private:
