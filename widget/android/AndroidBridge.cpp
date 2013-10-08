@@ -233,7 +233,7 @@ AndroidBridge::SetMainThread(pthread_t thr)
 
 // Raw JNIEnv variants.
 jstring AndroidBridge::NewJavaString(JNIEnv* env, const PRUnichar* string, uint32_t len) {
-   jstring ret = env->NewString(string, len);
+   jstring ret = env->NewString(reinterpret_cast<const jchar*>(string), len);
    if (env->ExceptionCheck()) {
        ALOG_BRIDGE("Exceptional exit of: %s", __PRETTY_FUNCTION__);
        env->ExceptionDescribe();
