@@ -173,6 +173,8 @@ protected:
   nsTArray<uint64_t> mWithVideoChildIDs;
   bool mActiveContentChildIDsFrozen;
 
+  bool mDisabled;
+
   nsCOMPtr<nsITimer> mDeferTelChannelTimer;
   bool mTimerElementHidden;
   uint64_t mTimerChildID;

@@ -75,12 +75,14 @@ AudioChannelService::AudioChannelService()
 : mCurrentHigherChannel(AUDIO_CHANNEL_LAST)
 , mCurrentVisibleHigherChannel(AUDIO_CHANNEL_LAST)
 , mActiveContentChildIDsFrozen(false)
+, mDisabled(false)
 , mDefChannelChildID(CONTENT_PROCESS_ID_UNKNOWN)
 {
   if (XRE_GetProcessType() == GeckoProcessType_Default) {
     nsCOMPtr<nsIObserverService> obs = mozilla::services::GetObserverService();
     if (obs) {
       obs->AddObserver(this, "ipc:content-shutdown", false);
+      obs->AddObserver(this, "xpcom-shutdown", false);
 #ifdef MOZ_WIDGET_GONK
       // To monitor the volume settings based on audio channel.
       obs->AddObserver(this, "mozsettings-changed", false);
@@ -98,6 +100,10 @@ AudioChannelService::RegisterAudioChannelAgent(AudioChannelAgent* aAgent,
                                                AudioChannelType aType,
                                                bool aWithVideo)
 {
+  if (mDisabled) {
+    return;
+  }
+
   MOZ_ASSERT(aType != AUDIO_CHANNEL_DEFAULT);
 
   AudioChannelAgentData* data = new AudioChannelAgentData(aType,
@@ -111,6 +117,10 @@ AudioChannelService::RegisterAudioChannelAgent(AudioChannelAgent* aAgent,
 void
 AudioChannelService::RegisterType(AudioChannelType aType, uint64_t aChildID, bool aWithVideo)
 {
+  if (mDisabled) {
+    return;
+  }
+
   AudioChannelInternalType type = GetInternalType(aType, true);
   mChannelCounters[type].AppendElement(aChildID);
 
@@ -137,6 +147,10 @@ AudioChannelService::RegisterType(AudioChannelType aType, uint64_t aChildID, boo
 void
 AudioChannelService::UnregisterAudioChannelAgent(AudioChannelAgent* aAgent)
 {
+  if (mDisabled) {
+    return;
+  }
+
   nsAutoPtr<AudioChannelAgentData> data;
   mAgents.RemoveAndForget(aAgent, data);
 
@@ -152,6 +166,10 @@ AudioChannelService::UnregisterType(AudioChannelType aType,
                                     uint64_t aChildID,
                                     bool aWithVideo)
 {
+  if (mDisabled) {
+    return;
+  }
+
   // There are two reasons to defer the decrease of telephony channel.
   // 1. User can have time to remove device from his ear before music resuming.
   // 2. Give BT SCO to be disconnected before starting to connect A2DP.
@@ -495,7 +513,9 @@ AudioChannelService::SendAudioChannelChangedNotification(uint64_t aChildID)
       channelName.AssignLiteral("none");
     }
 
-    obs->NotifyObservers(nullptr, "audio-channel-changed", channelName.get());
+    if (obs) {
+      obs->NotifyObservers(nullptr, "audio-channel-changed", channelName.get());
+    }
   }
 
   if (visibleHigher != mCurrentVisibleHigherChannel) {
@@ -508,7 +528,9 @@ AudioChannelService::SendAudioChannelChangedNotification(uint64_t aChildID)
       channelName.AssignLiteral("none");
     }
 
-    obs->NotifyObservers(nullptr, "visible-audio-channel-changed", channelName.get());
+    if (obs) {
+      obs->NotifyObservers(nullptr, "visible-audio-channel-changed", channelName.get());
+    }
   }
 }
 
@@ -594,6 +616,10 @@ AudioChannelService::ChannelName(AudioChannelType aType)
 NS_IMETHODIMP
 AudioChannelService::Observe(nsISupports* aSubject, const char* aTopic, const PRUnichar* aData)
 {
+  if (!strcmp(aTopic, "xpcom-shutdown")) {
+    mDisabled = true;
+  }
+
   if (!strcmp(aTopic, "ipc:content-shutdown")) {
     nsCOMPtr<nsIPropertyBag2> props = do_QueryInterface(aSubject);
     if (!props) {
