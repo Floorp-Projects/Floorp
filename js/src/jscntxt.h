@@ -248,6 +248,9 @@ struct ThreadSafeContext : ContextFriendFields,
         return thing->compartment() == compartment_;
     }
 
+    template <typename T>
+    inline bool isThreadLocal(T thing) const;
+
     void *onOutOfMemory(void *p, size_t nbytes) {
         return runtime_->onOutOfMemory(p, nbytes, maybeJSContext());
     }

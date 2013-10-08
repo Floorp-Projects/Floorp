@@ -15,9 +15,9 @@ namespace jit {
 
 ForkJoinSlice *ForkJoinSlicePar();
 JSObject *NewGCThingPar(ForkJoinSlice *slice, gc::AllocKind allocKind);
-bool IsThreadLocalObject(ForkJoinSlice *context, JSObject *object);
+bool IsThreadLocalObject(ForkJoinSlice *slice, JSObject *object);
 bool CheckOverRecursedPar(ForkJoinSlice *slice);
-bool CheckInterruptPar(ForkJoinSlice *context);
+bool CheckInterruptPar(ForkJoinSlice *slice);
 
 // We pass the arguments to PushPar in a structure because, in code
 // gen, it is convenient to store them on the stack to avoid
