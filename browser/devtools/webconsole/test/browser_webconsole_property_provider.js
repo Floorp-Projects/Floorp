@@ -31,8 +31,10 @@ function testPropertyProvider() {
   completion = JSPropertyProvider(content, strComplete);
   ok(completion.matches.length == 2, "two matches found");
   ok(completion.matchProp == "locatio", "matching part is 'test'");
-  ok(completion.matches[0] == "location", "the first match is 'location'");
-  ok(completion.matches[1] == "locationbar", "the second match is 'locationbar'");
+  var matches = completion.matches;
+  matches.sort();
+  ok(matches[0] == "location", "the first match is 'location'");
+  ok(matches[1] == "locationbar", "the second match is 'locationbar'");
 
   finishTest();
 }

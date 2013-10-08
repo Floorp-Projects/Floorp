@@ -28,23 +28,6 @@ members = [
     # (And nsIDOMModalContentWindow.returnValue is an attribute of type
     # nsIVariant, which qsgen.py can't handle.)
     #
-    'nsIDOMWindow.name',
-    'nsIDOMWindow.parent',
-    'nsIDOMWindow.top',
-    'nsIDOMWindow.self',
-    # Several window properties are magically resolved, including
-    # location, _content, navigator, document, and window itself.
-    # These do not need quick stubs.
-    #'nsIDOMWindow.document',
-    'nsIDOMWindow.getSelection',
-    'nsIDOMWindow.scrollByLines',
-    'nsIDOMWindow.getComputedStyle',
-    'nsIDOMWindow.sessionStorage',
-    'nsIDOMWindow.localStorage',
-    'nsIDOMWindow.onmouseenter',
-    'nsIDOMWindow.onmouseleave',
-    'nsIDOMWindowPerformance.performance',
-    'nsIDOMJSWindow.dump',
     # nsLocationSH has ~ALLOW_PROP_MODS_TO_PROTOTYPE, so don't try.
     #'nsIDOMLocation.hostname',
     #'nsIDOMLocation.href',
@@ -105,14 +88,12 @@ irregularFilenames = {
     'nsIDOMBlob': 'nsIDOMFile',
     'nsIIndexedDatabaseUsageCallback': 'nsIIndexedDatabaseManager',
     'nsITelephoneCallback': 'nsITelephone',
-    'nsIDOMWindowPerformance': 'nsIDOMWindow',
     }
 
 customIncludes = [
-    'nsPerformance.h',
-    'nsPIDOMWindow.h',
     'mozilla/dom/BindingUtils.h',
     'mozilla/dom/EventTargetBinding.h',
+    'mozilla/dom/WindowBinding.h',
     ]
 
 nsIDOMStorage_Clear_customMethodCallCode = """
@@ -125,31 +106,11 @@ customMethodCalls = {
     'nsIDOMStorage_Clear': {
         'code': nsIDOMStorage_Clear_customMethodCallCode
         },
-    'nsIDOMWindow_GetOnmouseenter' : {
-        'thisType' : 'nsIDOMWindow',
-        'unwrapThisFailureFatal' : False
-        },
-    'nsIDOMWindow_SetOnmouseenter' : {
-        'thisType' : 'nsIDOMWindow',
-        'unwrapThisFailureFatal' : False
-        },
-    'nsIDOMWindow_GetOnmouseleave' : {
-        'thisType' : 'nsIDOMWindow',
-        'unwrapThisFailureFatal' : False
-        },
-    'nsIDOMWindow_SetOnmouseleave' : {
-        'thisType' : 'nsIDOMWindow',
-        'unwrapThisFailureFatal' : False
-        },
-    'nsIDOMWindowPerformance_GetPerformance' : {
-        'thisType': 'nsPIDOMWindow',
-        'code' : '    nsPerformance* result = self->GetPerformance();\n',
-        'canFail': False,
-        },
     }
 
 newBindingProperties = {
     # Once the last entry here goes away, we can make the sNativePropertyHooks
     # of bindings static.
     'nsIDOMEventTarget': 'mozilla::dom::EventTargetBinding::sNativePropertyHooks->mNativeProperties.regular',
+    'nsIDOMWindow': 'mozilla::dom::WindowBinding::sNativePropertyHooks->mNativeProperties.regular',
     }

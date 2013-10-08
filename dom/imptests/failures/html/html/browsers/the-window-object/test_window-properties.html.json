@@ -30,13 +30,5 @@
   "Window unforgeable attribute: document": true,
   "Window unforgeable attribute: location": true,
   "Window unforgeable attribute: top": true,
-  "Window replaceable attribute: locationbar": true,
-  "Window replaceable attribute: menubar": true,
-  "Window replaceable attribute: personalbar": true,
-  "Window replaceable attribute: scrollbars": true,
-  "Window replaceable attribute: statusbar": true,
-  "Window replaceable attribute: toolbar": true,
-  "Window replaceable attribute: frames": true,
-  "Window replaceable attribute: length": true,
   "constructor": true
 }

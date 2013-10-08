@@ -125,7 +125,7 @@ WorkerMessagePort::_finalize(JSFreeOp* aFop)
 }
 
 void
-WorkerMessagePort::PostMessage(
+WorkerMessagePort::PostMessageMoz(
                              JSContext* /* aCx */, JS::HandleValue aMessage,
                              const Optional<Sequence<JS::Value>>& aTransferable,
                              ErrorResult& aRv)
