@@ -123,7 +123,7 @@ class ParallelSafetyVisitor : public MInstructionVisitor
     UNSAFE_OP(DefVar)
     UNSAFE_OP(DefFun)
     UNSAFE_OP(CreateThis)
-    UNSAFE_OP(CreateThisWithTemplate)
+    CUSTOM_OP(CreateThisWithTemplate)
     UNSAFE_OP(CreateThisWithProto)
     UNSAFE_OP(CreateArgumentsObject)
     UNSAFE_OP(GetArgumentsObjectArg)
@@ -502,10 +502,15 @@ ParallelSafetyVisitor::convertToBailout(MBasicBlock *block, MInstruction *ins)
 // These allocations will take place using per-helper-thread arenas.
 
 bool
+ParallelSafetyVisitor::visitCreateThisWithTemplate(MCreateThisWithTemplate *ins)
+{
+    return replaceWithNewPar(ins, ins->templateObject());
+}
+
+bool
 ParallelSafetyVisitor::visitNewParallelArray(MNewParallelArray *ins)
 {
-    replace(ins, new MNewPar(forkJoinSlice(), ins->templateObject()));
-    return true;
+    return replaceWithNewPar(ins, ins->templateObject());
 }
 
 bool
