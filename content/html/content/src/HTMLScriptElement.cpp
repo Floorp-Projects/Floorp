@@ -226,10 +226,11 @@ HTMLScriptElement::AfterSetAttr(int32_t aNamespaceID, nsIAtom* aName,
                                             aNotify);
 }
 
-void
-HTMLScriptElement::GetInnerHTML(nsAString& aInnerHTML, ErrorResult& aError)
+NS_IMETHODIMP
+HTMLScriptElement::GetInnerHTML(nsAString& aInnerHTML)
 {
   nsContentUtils::GetNodeTextContent(this, false, aInnerHTML);
+  return NS_OK;
 }
 
 void

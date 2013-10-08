@@ -201,10 +201,11 @@ HTMLStyleElement::UnsetAttr(int32_t aNameSpaceID, nsIAtom* aAttribute,
   return rv;
 }
 
-void
-HTMLStyleElement::GetInnerHTML(nsAString& aInnerHTML, ErrorResult& aError)
+NS_IMETHODIMP
+HTMLStyleElement::GetInnerHTML(nsAString& aInnerHTML)
 {
   nsContentUtils::GetNodeTextContent(this, false, aInnerHTML);
+  return NS_OK;
 }
 
 void
