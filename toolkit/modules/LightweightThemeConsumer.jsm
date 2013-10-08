@@ -41,6 +41,9 @@ LightweightThemeConsumer.prototype = {
   _lastData: null,
   _lastScreenWidth: null,
   _lastScreenHeight: null,
+#ifdef XP_MACOSX
+  _chromemarginDefault: undefined,
+#endif
 
   observe: function (aSubject, aTopic, aData) {
     if (aTopic != "lightweight-theme-styling-update")
@@ -110,10 +113,21 @@ LightweightThemeConsumer.prototype = {
     }
 
 #ifdef XP_MACOSX
-    if (active)
-      root.setAttribute("drawintitlebar", "true");
-    else
-      root.removeAttribute("drawintitlebar");
+    // Sample whether or not we draw in the titlebar by default the first time we update.
+    // If the root has no chromemargin attribute, getAttribute will return null, and
+    // we'll remove the attribute when the lw-theme is deactivated.
+    if (this._chromemarginDefault === undefined)
+      this._chromemarginDefault = root.getAttribute("chromemargin");
+
+    if (active) {
+      root.setAttribute("chromemargin", "0,-1,-1,-1");
+    }
+    else {
+      if (this._chromemarginDefault)
+        root.setAttribute("chromemargin", this._chromemarginDefault);
+      else
+        root.removeAttribute("chromemargin");
+    }
 #endif
   }
 }
