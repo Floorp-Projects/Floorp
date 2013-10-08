@@ -345,12 +345,13 @@ JS_DumpHistogram(JSBasicStats *bs, FILE *fp);
 
 /* A jsbitmap_t is a long integer that can be used for bitmaps. */
 typedef size_t jsbitmap;
-#define JS_TEST_BIT(_map,_bit)  ((_map)[(_bit)>>JS_BITS_PER_WORD_LOG2] &      \
-                                 ((jsbitmap)1<<((_bit)&(JS_BITS_PER_WORD-1))))
-#define JS_SET_BIT(_map,_bit)   ((_map)[(_bit)>>JS_BITS_PER_WORD_LOG2] |=     \
-                                 ((jsbitmap)1<<((_bit)&(JS_BITS_PER_WORD-1))))
-#define JS_CLEAR_BIT(_map,_bit) ((_map)[(_bit)>>JS_BITS_PER_WORD_LOG2] &=     \
-                                 ~((jsbitmap)1<<((_bit)&(JS_BITS_PER_WORD-1))))
+#define JS_BITMAP_NBITS (sizeof(jsbitmap) * CHAR_BIT)
+#define JS_TEST_BIT(_map,_bit)  ((_map)[(_bit)/JS_BITMAP_NBITS] &             \
+                                 (jsbitmap(1)<<((_bit)%JS_BITMAP_NBITS)))
+#define JS_SET_BIT(_map,_bit)   ((_map)[(_bit)/JS_BITMAP_NBITS] |=            \
+                                 (jsbitmap(1)<<((_bit)%JS_BITMAP_NBITS)))
+#define JS_CLEAR_BIT(_map,_bit) ((_map)[(_bit)/JS_BITMAP_NBITS] &=            \
+                                 ~(jsbitmap(1)<<((_bit)%JS_BITMAP_NBITS)))
 
 /* Wrapper for various macros to stop warnings coming from their expansions. */
 #if defined(__clang__)
