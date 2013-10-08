@@ -17,4 +17,3 @@ skip-if(Android||B2G) load 780392-1.html # bug 833371 for B2G
 skip-if(Android||B2G) load 789933-1.html # bug 833371
 load 794463-1.html
 load 802926-1.html
-load 916128-1.html
