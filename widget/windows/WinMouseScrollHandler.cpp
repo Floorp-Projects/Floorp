@@ -1163,7 +1163,7 @@ MouseScrollHandler::Device::Elantech::GetDriverMajorVersion()
   // or at the start of the string.
   for (PRUnichar* p = buf; *p; p++) {
     if (*p >= L'0' && *p <= L'9' && (p == buf || *(p - 1) == L' ')) {
-      return wcstol(p, NULL, 10);
+      return wcstol(p, nullptr, 10);
     }
   }
 
@@ -1400,11 +1400,11 @@ MouseScrollHandler::Device::UltraNav::IsObsoleteDriverInstalled()
     return false;
   }
 
-  int majorVersion = wcstol(buf, NULL, 10);
+  int majorVersion = wcstol(buf, nullptr, 10);
   int minorVersion = 0;
   PRUnichar* p = wcschr(buf, L'.');
   if (p) {
-    minorVersion = wcstol(p + 1, NULL, 10);
+    minorVersion = wcstol(p + 1, nullptr, 10);
   }
   PR_LOG(gMouseScrollLog, PR_LOG_ALWAYS,
     ("MouseScroll::Device::UltraNav::IsObsoleteDriverInstalled(): "

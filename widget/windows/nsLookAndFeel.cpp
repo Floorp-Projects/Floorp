@@ -430,9 +430,9 @@ nsLookAndFeel::GetIntImpl(IntID aID, int32_t &aResult)
         aResult = 0;
         {
           // Get task bar window handle
-          HWND shellWindow = FindWindowW(L"Shell_TrayWnd", NULL);
+          HWND shellWindow = FindWindowW(L"Shell_TrayWnd", nullptr);
 
-          if (shellWindow != NULL)
+          if (shellWindow != nullptr)
           {
             // Determine position
             APPBARDATA appBarData;
@@ -531,7 +531,7 @@ GetSysFontInfo(HDC aHDC, LookAndFeel::FontID anID,
                nsString &aFontName,
                gfxFontStyle &aFontStyle)
 {
-  LOGFONTW* ptrLogFont = NULL;
+  LOGFONTW* ptrLogFont = nullptr;
   LOGFONTW logFont;
   NONCLIENTMETRICSW ncm;
   HGDIOBJ hGDI;
@@ -660,9 +660,9 @@ nsLookAndFeel::GetFontImpl(FontID anID, nsString &aFontName,
                            gfxFontStyle &aFontStyle,
                            float aDevPixPerCSSPixel)
 {
-  HDC tdc = GetDC(NULL);
+  HDC tdc = GetDC(nullptr);
   bool status = GetSysFontInfo(tdc, anID, aFontName, aFontStyle);
-  ReleaseDC(NULL, tdc);
+  ReleaseDC(nullptr, tdc);
   // now convert the logical font size from GetSysFontInfo into device pixels for layout
   aFontStyle.size *= aDevPixPerCSSPixel;
   return status;
