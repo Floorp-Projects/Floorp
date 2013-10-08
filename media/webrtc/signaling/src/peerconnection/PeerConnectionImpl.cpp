@@ -36,12 +36,12 @@
 #include "PeerConnectionCtx.h"
 #include "PeerConnectionImpl.h"
 #include "PeerConnectionMedia.h"
-#include "nsPIDOMWindow.h"
 #include "nsDOMDataChannelDeclarations.h"
 #include "dtlsidentity.h"
 
 #ifdef MOZILLA_INTERNAL_API
 #include "nsPerformance.h"
+#include "nsGlobalWindow.h"
 #include "nsDOMDataChannel.h"
 #include "mozilla/TimeStamp.h"
 #include "mozilla/Telemetry.h"
@@ -623,7 +623,7 @@ PeerConnectionImpl::ConvertRTCConfiguration(const RTCConfiguration& aSrc,
 
 NS_IMETHODIMP
 PeerConnectionImpl::Initialize(PeerConnectionObserver& aObserver,
-                               nsIDOMWindow* aWindow,
+                               nsGlobalWindow* aWindow,
                                const IceConfiguration* aConfiguration,
                                const RTCConfiguration* aRTCConfiguration,
                                nsISupports* aThread)
@@ -652,7 +652,7 @@ PeerConnectionImpl::Initialize(PeerConnectionObserver& aObserver,
   // Currently no standalone unit tests for DataChannel,
   // which is the user of mWindow
   MOZ_ASSERT(aWindow);
-  mWindow = do_QueryInterface(aWindow);
+  mWindow = aWindow;
   NS_ENSURE_STATE(mWindow);
 #endif
 
