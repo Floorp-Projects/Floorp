@@ -61,12 +61,12 @@ struct InefficientNonFlatteningStringHashPolicy
 #define ZERO_SIZE(gc, mSize)                      mSize(0),
 #define COPY_OTHER_SIZE(gc, mSize)                mSize(other.mSize),
 #define ADD_OTHER_SIZE(gc, mSize)                 mSize += other.mSize;
-#define ADD_SIZE_TO_N_IF_LIVE_GC_THING(gc, mSize) n += (gc == js::IsLiveGCThing) ? mSize : 0;
+#define ADD_SIZE_TO_N_IF_LIVE_GC_THING(gc, mSize) n += (gc) ? mSize : 0;
 
 // Used to annotate which size_t fields measure live GC things and which don't.
 enum {
-    IsLiveGCThing,
-    NotLiveGCThing
+    NotLiveGCThing = false,
+    IsLiveGCThing = true
 };
 
 struct ZoneStatsPod
