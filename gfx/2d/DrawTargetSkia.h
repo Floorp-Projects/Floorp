@@ -135,7 +135,6 @@ private:
   IntSize mSize;
   SkRefPtr<SkCanvas> mCanvas;
   SourceSurfaceSkia* mSnapshot;
-  bool mSoftClipping;
 };
 
 }
