@@ -46,7 +46,7 @@ nsPrintData::nsPrintData(ePrintDataType aType) :
   mIsAborted(false), mPreparingForPrint(false), mDocWasToBeDestroyed(false),
   mShrinkToFit(false), mPrintFrameType(nsIPrintSettings::kFramesAsIs), 
   mNumPrintablePages(0), mNumPagesPrinted(0),
-  mShrinkRatio(1.0), mOrigDCScale(1.0), mPPEventListeners(NULL), 
+  mShrinkRatio(1.0), mOrigDCScale(1.0), mPPEventListeners(nullptr), 
   mBrandName(nullptr)
 {
   MOZ_COUNT_CTOR(nsPrintData);

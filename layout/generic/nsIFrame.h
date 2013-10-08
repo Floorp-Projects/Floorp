@@ -2057,7 +2057,7 @@ public:
   virtual nsIWidget* GetNearestWidget(nsPoint& aOffset) const;
 
   /**
-   * Get the "type" of the frame. May return a NULL atom pointer
+   * Get the "type" of the frame. May return nullptr.
    *
    * @see nsGkAtoms
    */

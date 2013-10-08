@@ -2809,7 +2809,7 @@ nsComputedDOMStyle::DoGetTextDecoration()
 
   // If decoration style or color wasn't initial value, the author knew the
   // text-decoration is a shorthand property in CSS 3.
-  // Return NULL in such cases.
+  // Return nullptr in such cases.
   if (textReset->GetDecorationStyle() != NS_STYLE_TEXT_DECORATION_STYLE_SOLID) {
     return nullptr;
   }
