@@ -590,14 +590,14 @@ _InstanceClass##Constructor(nsISupports *aOuter, REFNSIID aIID,               \
 {                                                                             \
     nsresult rv;                                                              \
                                                                               \
-    *aResult = NULL;                                                          \
-    if (NULL != aOuter) {                                                     \
+    *aResult = nullptr;                                                       \
+    if (nullptr != aOuter) {                                                  \
         rv = NS_ERROR_NO_AGGREGATION;                                         \
         return rv;                                                            \
     }                                                                         \
                                                                               \
     _InstanceClass * inst = new _InstanceClass();                             \
-    if (NULL == inst) {                                                       \
+    if (nullptr == inst) {                                                    \
         rv = NS_ERROR_OUT_OF_MEMORY;                                          \
         return rv;                                                            \
     }                                                                         \
@@ -953,158 +953,158 @@ nsEditingCommandTableConstructor(nsISupports *aOuter, REFNSIID aIID,
 static const mozilla::Module::CIDEntry kLayoutCIDs[] = {
   XPCONNECT_CIDENTRIES
 #ifdef DEBUG
-  { &kNS_FRAME_UTIL_CID, false, NULL, CreateNewFrameUtil },
-  { &kNS_LAYOUT_DEBUGGER_CID, false, NULL, CreateNewLayoutDebugger },
+  { &kNS_FRAME_UTIL_CID, false, nullptr, CreateNewFrameUtil },
+  { &kNS_LAYOUT_DEBUGGER_CID, false, nullptr, CreateNewLayoutDebugger },
 #endif
-  { &kNS_FRAMETRAVERSAL_CID, false, NULL, CreateNewFrameTraversal },
-  { &kNS_BOXOBJECT_CID, false, NULL, CreateNewBoxObject },
+  { &kNS_FRAMETRAVERSAL_CID, false, nullptr, CreateNewFrameTraversal },
+  { &kNS_BOXOBJECT_CID, false, nullptr, CreateNewBoxObject },
 #ifdef MOZ_XUL
-  { &kNS_LISTBOXOBJECT_CID, false, NULL, CreateNewListBoxObject },
-  { &kNS_MENUBOXOBJECT_CID, false, NULL, CreateNewMenuBoxObject },
-  { &kNS_POPUPBOXOBJECT_CID, false, NULL, CreateNewPopupBoxObject },
-  { &kNS_CONTAINERBOXOBJECT_CID, false, NULL, CreateNewContainerBoxObject },
-  { &kNS_SCROLLBOXOBJECT_CID, false, NULL, CreateNewScrollBoxObject },
-  { &kNS_TREEBOXOBJECT_CID, false, NULL, CreateNewTreeBoxObject },
+  { &kNS_LISTBOXOBJECT_CID, false, nullptr, CreateNewListBoxObject },
+  { &kNS_MENUBOXOBJECT_CID, false, nullptr, CreateNewMenuBoxObject },
+  { &kNS_POPUPBOXOBJECT_CID, false, nullptr, CreateNewPopupBoxObject },
+  { &kNS_CONTAINERBOXOBJECT_CID, false, nullptr, CreateNewContainerBoxObject },
+  { &kNS_SCROLLBOXOBJECT_CID, false, nullptr, CreateNewScrollBoxObject },
+  { &kNS_TREEBOXOBJECT_CID, false, nullptr, CreateNewTreeBoxObject },
 #endif // MOZ_XUL
 #ifdef MOZ_XUL
-  { &kIN_DOMVIEW_CID, false, NULL, inDOMViewConstructor },
+  { &kIN_DOMVIEW_CID, false, nullptr, inDOMViewConstructor },
 #endif
-  { &kIN_DEEPTREEWALKER_CID, false, NULL, inDeepTreeWalkerConstructor },
-  { &kIN_FLASHER_CID, false, NULL, inFlasherConstructor },
-  { &kIN_CSSVALUESEARCH_CID, false, NULL, inCSSValueSearchConstructor },
-  { &kIN_DOMUTILS_CID, false, NULL, inDOMUtilsConstructor },
-  { &kNS_NAMESPACEMANAGER_CID, false, NULL, CreateNameSpaceManager },
-  { &kNS_CONTENT_VIEWER_CID, false, NULL, CreateContentViewer },
-  { &kNS_HTMLDOCUMENT_CID, false, NULL, CreateHTMLDocument },
-  { &kNS_XMLDOCUMENT_CID, false, NULL, CreateXMLDocument },
-  { &kNS_SVGDOCUMENT_CID, false, NULL, CreateSVGDocument },
-  { &kNS_IMAGEDOCUMENT_CID, false, NULL, CreateImageDocument },
-  { &kNS_DOMMULTIPARTBLOB_CID, false, NULL, CreateDOMBlob },
-  { &kNS_DOMMULTIPARTFILE_CID, false, NULL, CreateDOMFile },
-  { &kNS_DOMSELECTION_CID, false, NULL, CreateDOMSelection },
-  { &kNS_CONTENTITERATOR_CID, false, NULL, CreateContentIterator },
-  { &kNS_PRECONTENTITERATOR_CID, false, NULL, CreatePreContentIterator },
-  { &kNS_SUBTREEITERATOR_CID, false, NULL, CreateSubtreeIterator },
-  { &kNS_CANVASRENDERINGCONTEXTWEBGL_CID, false, NULL, CreateCanvasRenderingContextWebGL },
-  { &kNS_TEXT_ENCODER_CID, false, NULL, CreateTextEncoder },
-  { &kNS_HTMLCOPY_TEXT_ENCODER_CID, false, NULL, CreateHTMLCopyTextEncoder },
-  { &kNS_XMLCONTENTSERIALIZER_CID, false, NULL, CreateXMLContentSerializer },
-  { &kNS_HTMLCONTENTSERIALIZER_CID, false, NULL, CreateHTMLContentSerializer },
-  { &kNS_XHTMLCONTENTSERIALIZER_CID, false, NULL, CreateXHTMLContentSerializer },
-  { &kNS_PLAINTEXTSERIALIZER_CID, false, NULL, CreatePlainTextSerializer },
-  { &kNS_PARSERUTILS_CID, false, NULL, nsParserUtilsConstructor },
-  { &kNS_SCRIPTABLEUNESCAPEHTML_CID, false, NULL, nsParserUtilsConstructor },
-  { &kNS_CONTENTPOLICY_CID, false, NULL, CreateContentPolicy },
-  { &kNS_DATADOCUMENTCONTENTPOLICY_CID, false, NULL, nsDataDocumentContentPolicyConstructor },
-  { &kNS_NODATAPROTOCOLCONTENTPOLICY_CID, false, NULL, nsNoDataProtocolContentPolicyConstructor },
-  { &kNS_XULCONTROLLERS_CID, false, NULL, NS_NewXULControllers },
+  { &kIN_DEEPTREEWALKER_CID, false, nullptr, inDeepTreeWalkerConstructor },
+  { &kIN_FLASHER_CID, false, nullptr, inFlasherConstructor },
+  { &kIN_CSSVALUESEARCH_CID, false, nullptr, inCSSValueSearchConstructor },
+  { &kIN_DOMUTILS_CID, false, nullptr, inDOMUtilsConstructor },
+  { &kNS_NAMESPACEMANAGER_CID, false, nullptr, CreateNameSpaceManager },
+  { &kNS_CONTENT_VIEWER_CID, false, nullptr, CreateContentViewer },
+  { &kNS_HTMLDOCUMENT_CID, false, nullptr, CreateHTMLDocument },
+  { &kNS_XMLDOCUMENT_CID, false, nullptr, CreateXMLDocument },
+  { &kNS_SVGDOCUMENT_CID, false, nullptr, CreateSVGDocument },
+  { &kNS_IMAGEDOCUMENT_CID, false, nullptr, CreateImageDocument },
+  { &kNS_DOMMULTIPARTBLOB_CID, false, nullptr, CreateDOMBlob },
+  { &kNS_DOMMULTIPARTFILE_CID, false, nullptr, CreateDOMFile },
+  { &kNS_DOMSELECTION_CID, false, nullptr, CreateDOMSelection },
+  { &kNS_CONTENTITERATOR_CID, false, nullptr, CreateContentIterator },
+  { &kNS_PRECONTENTITERATOR_CID, false, nullptr, CreatePreContentIterator },
+  { &kNS_SUBTREEITERATOR_CID, false, nullptr, CreateSubtreeIterator },
+  { &kNS_CANVASRENDERINGCONTEXTWEBGL_CID, false, nullptr, CreateCanvasRenderingContextWebGL },
+  { &kNS_TEXT_ENCODER_CID, false, nullptr, CreateTextEncoder },
+  { &kNS_HTMLCOPY_TEXT_ENCODER_CID, false, nullptr, CreateHTMLCopyTextEncoder },
+  { &kNS_XMLCONTENTSERIALIZER_CID, false, nullptr, CreateXMLContentSerializer },
+  { &kNS_HTMLCONTENTSERIALIZER_CID, false, nullptr, CreateHTMLContentSerializer },
+  { &kNS_XHTMLCONTENTSERIALIZER_CID, false, nullptr, CreateXHTMLContentSerializer },
+  { &kNS_PLAINTEXTSERIALIZER_CID, false, nullptr, CreatePlainTextSerializer },
+  { &kNS_PARSERUTILS_CID, false, nullptr, nsParserUtilsConstructor },
+  { &kNS_SCRIPTABLEUNESCAPEHTML_CID, false, nullptr, nsParserUtilsConstructor },
+  { &kNS_CONTENTPOLICY_CID, false, nullptr, CreateContentPolicy },
+  { &kNS_DATADOCUMENTCONTENTPOLICY_CID, false, nullptr, nsDataDocumentContentPolicyConstructor },
+  { &kNS_NODATAPROTOCOLCONTENTPOLICY_CID, false, nullptr, nsNoDataProtocolContentPolicyConstructor },
+  { &kNS_XULCONTROLLERS_CID, false, nullptr, NS_NewXULControllers },
 #ifdef MOZ_XUL
-  { &kNS_XULSORTSERVICE_CID, false, NULL, CreateXULSortService },
-  { &kNS_XULTEMPLATEBUILDER_CID, false, NULL, NS_NewXULContentBuilder },
-  { &kNS_XULTREEBUILDER_CID, false, NULL, NS_NewXULTreeBuilder },
-  { &kNS_XULDOCUMENT_CID, false, NULL, CreateXULDocument },
+  { &kNS_XULSORTSERVICE_CID, false, nullptr, CreateXULSortService },
+  { &kNS_XULTEMPLATEBUILDER_CID, false, nullptr, NS_NewXULContentBuilder },
+  { &kNS_XULTREEBUILDER_CID, false, nullptr, NS_NewXULTreeBuilder },
+  { &kNS_XULDOCUMENT_CID, false, nullptr, CreateXULDocument },
 #endif
-  { &kNS_CONTENT_DOCUMENT_LOADER_FACTORY_CID, false, NULL, CreateContentDLF },
-  { &kNS_DOM_SCRIPT_OBJECT_FACTORY_CID, false, NULL, nsDOMScriptObjectFactoryConstructor },
-  { &kNS_JSPROTOCOLHANDLER_CID, false, NULL, nsJSProtocolHandler::Create },
-  { &kNS_JSURI_CID, false, NULL, nsJSURIConstructor },
-  { &kNS_WINDOWCOMMANDTABLE_CID, false, NULL, CreateWindowCommandTableConstructor },
-  { &kNS_WINDOWCONTROLLER_CID, false, NULL, CreateWindowControllerWithSingletonCommandTable },
-  { &kNS_PLUGINDOCLOADERFACTORY_CID, false, NULL, CreateContentDLF },
-  { &kNS_PLUGINDOCUMENT_CID, false, NULL, CreatePluginDocument },
-  { &kNS_VIDEODOCUMENT_CID, false, NULL, CreateVideoDocument },
-  { &kNS_STYLESHEETSERVICE_CID, false, NULL, nsStyleSheetServiceConstructor },
-  { &kTRANSFORMIIX_XSLT_PROCESSOR_CID, false, NULL, txMozillaXSLTProcessorConstructor },
-  { &kTRANSFORMIIX_XPATH_EVALUATOR_CID, false, NULL, XPathEvaluatorConstructor },
-  { &kTRANSFORMIIX_NODESET_CID, false, NULL, txNodeSetAdaptorConstructor },
-  { &kNS_XMLSERIALIZER_CID, false, NULL, nsDOMSerializerConstructor },
-  { &kNS_FILEREADER_CID, false, NULL, nsDOMFileReaderConstructor },
-  { &kNS_FORMDATA_CID, false, NULL, nsFormDataConstructor },
-  { &kNS_BLOBPROTOCOLHANDLER_CID, false, NULL, nsBlobProtocolHandlerConstructor },
-  { &kNS_MEDIASTREAMPROTOCOLHANDLER_CID, false, NULL, nsMediaStreamProtocolHandlerConstructor },
-  { &kNS_MEDIASOURCEPROTOCOLHANDLER_CID, false, NULL, nsMediaSourceProtocolHandlerConstructor },
-  { &kNS_FONTTABLEPROTOCOLHANDLER_CID, false, NULL, nsFontTableProtocolHandlerConstructor },
-  { &kNS_HOSTOBJECTURI_CID, false, NULL, nsHostObjectURIConstructor },
-  { &kNS_XMLHTTPREQUEST_CID, false, NULL, nsXMLHttpRequestConstructor },
-  { &kNS_EVENTSOURCE_CID, false, NULL, EventSourceConstructor },
-  { &kNS_DOMACTIVITY_CID, false, NULL, ActivityConstructor },
-  { &kNS_DOMPARSER_CID, false, NULL, DOMParserConstructor },
-  { &kNS_XPCEXCEPTION_CID, false, NULL, ExceptionConstructor },
-  { &kNS_DOMSESSIONSTORAGEMANAGER_CID, false, NULL, DOMSessionStorageManagerConstructor },
-  { &kNS_DOMLOCALSTORAGEMANAGER_CID, false, NULL, DOMLocalStorageManagerConstructor },
-  { &kNS_DOMJSON_CID, false, NULL, NS_NewJSON },
-  { &kNS_TEXTEDITOR_CID, false, NULL, nsPlaintextEditorConstructor },
-  { &kINDEXEDDB_MANAGER_CID, false, NULL, IndexedDatabaseManagerConstructor },
-  { &kDOMREQUEST_SERVICE_CID, false, NULL, DOMRequestServiceConstructor },
-  { &kQUOTA_MANAGER_CID, false, NULL, QuotaManagerConstructor },
+  { &kNS_CONTENT_DOCUMENT_LOADER_FACTORY_CID, false, nullptr, CreateContentDLF },
+  { &kNS_DOM_SCRIPT_OBJECT_FACTORY_CID, false, nullptr, nsDOMScriptObjectFactoryConstructor },
+  { &kNS_JSPROTOCOLHANDLER_CID, false, nullptr, nsJSProtocolHandler::Create },
+  { &kNS_JSURI_CID, false, nullptr, nsJSURIConstructor },
+  { &kNS_WINDOWCOMMANDTABLE_CID, false, nullptr, CreateWindowCommandTableConstructor },
+  { &kNS_WINDOWCONTROLLER_CID, false, nullptr, CreateWindowControllerWithSingletonCommandTable },
+  { &kNS_PLUGINDOCLOADERFACTORY_CID, false, nullptr, CreateContentDLF },
+  { &kNS_PLUGINDOCUMENT_CID, false, nullptr, CreatePluginDocument },
+  { &kNS_VIDEODOCUMENT_CID, false, nullptr, CreateVideoDocument },
+  { &kNS_STYLESHEETSERVICE_CID, false, nullptr, nsStyleSheetServiceConstructor },
+  { &kTRANSFORMIIX_XSLT_PROCESSOR_CID, false, nullptr, txMozillaXSLTProcessorConstructor },
+  { &kTRANSFORMIIX_XPATH_EVALUATOR_CID, false, nullptr, XPathEvaluatorConstructor },
+  { &kTRANSFORMIIX_NODESET_CID, false, nullptr, txNodeSetAdaptorConstructor },
+  { &kNS_XMLSERIALIZER_CID, false, nullptr, nsDOMSerializerConstructor },
+  { &kNS_FILEREADER_CID, false, nullptr, nsDOMFileReaderConstructor },
+  { &kNS_FORMDATA_CID, false, nullptr, nsFormDataConstructor },
+  { &kNS_BLOBPROTOCOLHANDLER_CID, false, nullptr, nsBlobProtocolHandlerConstructor },
+  { &kNS_MEDIASTREAMPROTOCOLHANDLER_CID, false, nullptr, nsMediaStreamProtocolHandlerConstructor },
+  { &kNS_MEDIASOURCEPROTOCOLHANDLER_CID, false, nullptr, nsMediaSourceProtocolHandlerConstructor },
+  { &kNS_FONTTABLEPROTOCOLHANDLER_CID, false, nullptr, nsFontTableProtocolHandlerConstructor },
+  { &kNS_HOSTOBJECTURI_CID, false, nullptr, nsHostObjectURIConstructor },
+  { &kNS_XMLHTTPREQUEST_CID, false, nullptr, nsXMLHttpRequestConstructor },
+  { &kNS_EVENTSOURCE_CID, false, nullptr, EventSourceConstructor },
+  { &kNS_DOMACTIVITY_CID, false, nullptr, ActivityConstructor },
+  { &kNS_DOMPARSER_CID, false, nullptr, DOMParserConstructor },
+  { &kNS_XPCEXCEPTION_CID, false, nullptr, ExceptionConstructor },
+  { &kNS_DOMSESSIONSTORAGEMANAGER_CID, false, nullptr, DOMSessionStorageManagerConstructor },
+  { &kNS_DOMLOCALSTORAGEMANAGER_CID, false, nullptr, DOMLocalStorageManagerConstructor },
+  { &kNS_DOMJSON_CID, false, nullptr, NS_NewJSON },
+  { &kNS_TEXTEDITOR_CID, false, nullptr, nsPlaintextEditorConstructor },
+  { &kINDEXEDDB_MANAGER_CID, false, nullptr, IndexedDatabaseManagerConstructor },
+  { &kDOMREQUEST_SERVICE_CID, false, nullptr, DOMRequestServiceConstructor },
+  { &kQUOTA_MANAGER_CID, false, nullptr, QuotaManagerConstructor },
 #ifdef MOZ_B2G_RIL
-  { &kSYSTEMWORKERMANAGER_CID, true, NULL, SystemWorkerManagerConstructor },
+  { &kSYSTEMWORKERMANAGER_CID, true, nullptr, SystemWorkerManagerConstructor },
 #endif
 #ifdef MOZ_B2G_BT
-  { &kBLUETOOTHSERVICE_CID, true, NULL, BluetoothServiceConstructor },
+  { &kBLUETOOTHSERVICE_CID, true, nullptr, BluetoothServiceConstructor },
 #endif
 #ifdef MOZ_WIDGET_GONK
-  { &kNS_AUDIOMANAGER_CID, true, NULL, AudioManagerConstructor },
-  { &kNS_VOLUMESERVICE_CID, true, NULL, nsVolumeServiceConstructor },
+  { &kNS_AUDIOMANAGER_CID, true, nullptr, AudioManagerConstructor },
+  { &kNS_VOLUMESERVICE_CID, true, nullptr, nsVolumeServiceConstructor },
 #endif
-  { &kNS_AUDIOCHANNELAGENT_CID, true, NULL, AudioChannelAgentConstructor },
-  { &kNS_HTMLEDITOR_CID, false, NULL, nsHTMLEditorConstructor },
-  { &kNS_EDITORCONTROLLER_CID, false, NULL, nsEditorControllerConstructor },
-  { &kNS_EDITINGCONTROLLER_CID, false, NULL, nsEditingControllerConstructor },
-  { &kNS_EDITORCOMMANDTABLE_CID, false, NULL, nsEditorCommandTableConstructor },
-  { &kNS_EDITINGCOMMANDTABLE_CID, false, NULL, nsEditingCommandTableConstructor },
-  { &kNS_TEXTSERVICESDOCUMENT_CID, false, NULL, nsTextServicesDocumentConstructor },
-  { &kNS_GEOLOCATION_SERVICE_CID, false, NULL, nsGeolocationServiceConstructor },
-  { &kNS_GEOLOCATION_CID, false, NULL, GeolocationConstructor },
-  { &kNS_AUDIOCHANNEL_SERVICE_CID, false, NULL, AudioChannelServiceConstructor },
-  { &kNS_FOCUSMANAGER_CID, false, NULL, CreateFocusManager },
+  { &kNS_AUDIOCHANNELAGENT_CID, true, nullptr, AudioChannelAgentConstructor },
+  { &kNS_HTMLEDITOR_CID, false, nullptr, nsHTMLEditorConstructor },
+  { &kNS_EDITORCONTROLLER_CID, false, nullptr, nsEditorControllerConstructor },
+  { &kNS_EDITINGCONTROLLER_CID, false, nullptr, nsEditingControllerConstructor },
+  { &kNS_EDITORCOMMANDTABLE_CID, false, nullptr, nsEditorCommandTableConstructor },
+  { &kNS_EDITINGCOMMANDTABLE_CID, false, nullptr, nsEditingCommandTableConstructor },
+  { &kNS_TEXTSERVICESDOCUMENT_CID, false, nullptr, nsTextServicesDocumentConstructor },
+  { &kNS_GEOLOCATION_SERVICE_CID, false, nullptr, nsGeolocationServiceConstructor },
+  { &kNS_GEOLOCATION_CID, false, nullptr, GeolocationConstructor },
+  { &kNS_AUDIOCHANNEL_SERVICE_CID, false, nullptr, AudioChannelServiceConstructor },
+  { &kNS_FOCUSMANAGER_CID, false, nullptr, CreateFocusManager },
 #ifdef MOZ_WEBSPEECH
-  { &kNS_FAKE_SPEECH_RECOGNITION_SERVICE_CID, false, NULL, FakeSpeechRecognitionServiceConstructor },
-  { &kNS_SYNTHVOICEREGISTRY_CID, true, NULL, nsSynthVoiceRegistryConstructor },
+  { &kNS_FAKE_SPEECH_RECOGNITION_SERVICE_CID, false, nullptr, FakeSpeechRecognitionServiceConstructor },
+  { &kNS_SYNTHVOICEREGISTRY_CID, true, nullptr, nsSynthVoiceRegistryConstructor },
 #endif
-  { &kCSPSERVICE_CID, false, NULL, CSPServiceConstructor },
-  { &kNS_MIXEDCONTENTBLOCKER_CID, false, NULL, nsMixedContentBlockerConstructor },
-  { &kNS_EVENTLISTENERSERVICE_CID, false, NULL, CreateEventListenerService },
-  { &kNS_GLOBALMESSAGEMANAGER_CID, false, NULL, CreateGlobalMessageManager },
-  { &kNS_PARENTPROCESSMESSAGEMANAGER_CID, false, NULL, CreateParentMessageManager },
-  { &kNS_CHILDPROCESSMESSAGEMANAGER_CID, false, NULL, CreateChildMessageManager },
-  { &kNSCHANNELPOLICY_CID, false, NULL, nsChannelPolicyConstructor },
-  { &kNS_SCRIPTSECURITYMANAGER_CID, false, NULL, Construct_nsIScriptSecurityManager },
-  { &kNS_PRINCIPAL_CID, false, NULL, nsPrincipalConstructor },
-  { &kNS_SYSTEMPRINCIPAL_CID, false, NULL, nsSystemPrincipalConstructor },
-  { &kNS_NULLPRINCIPAL_CID, false, NULL, nsNullPrincipalConstructor },
-  { &kNS_SECURITYNAMESET_CID, false, NULL, nsSecurityNameSetConstructor },
-  { &kNS_DEVICE_SENSORS_CID, false, NULL, nsDeviceSensorsConstructor },
+  { &kCSPSERVICE_CID, false, nullptr, CSPServiceConstructor },
+  { &kNS_MIXEDCONTENTBLOCKER_CID, false, nullptr, nsMixedContentBlockerConstructor },
+  { &kNS_EVENTLISTENERSERVICE_CID, false, nullptr, CreateEventListenerService },
+  { &kNS_GLOBALMESSAGEMANAGER_CID, false, nullptr, CreateGlobalMessageManager },
+  { &kNS_PARENTPROCESSMESSAGEMANAGER_CID, false, nullptr, CreateParentMessageManager },
+  { &kNS_CHILDPROCESSMESSAGEMANAGER_CID, false, nullptr, CreateChildMessageManager },
+  { &kNSCHANNELPOLICY_CID, false, nullptr, nsChannelPolicyConstructor },
+  { &kNS_SCRIPTSECURITYMANAGER_CID, false, nullptr, Construct_nsIScriptSecurityManager },
+  { &kNS_PRINCIPAL_CID, false, nullptr, nsPrincipalConstructor },
+  { &kNS_SYSTEMPRINCIPAL_CID, false, nullptr, nsSystemPrincipalConstructor },
+  { &kNS_NULLPRINCIPAL_CID, false, nullptr, nsNullPrincipalConstructor },
+  { &kNS_SECURITYNAMESET_CID, false, nullptr, nsSecurityNameSetConstructor },
+  { &kNS_DEVICE_SENSORS_CID, false, nullptr, nsDeviceSensorsConstructor },
 #ifndef MOZ_WIDGET_GONK
 #if defined(ANDROID)
-  { &kNS_HAPTICFEEDBACK_CID, false, NULL, nsHapticFeedbackConstructor },
+  { &kNS_HAPTICFEEDBACK_CID, false, nullptr, nsHapticFeedbackConstructor },
 #endif
 #endif
-  { &kTHIRDPARTYUTIL_CID, false, NULL, ThirdPartyUtilConstructor },
-  { &kNS_STRUCTUREDCLONECONTAINER_CID, false, NULL, nsStructuredCloneContainerConstructor },
-  { &kSMS_SERVICE_CID, false, NULL, nsISmsServiceConstructor },
-  { &kMMS_SERVICE_CID, false, NULL, nsIMmsServiceConstructor },
-  { &kMOBILE_MESSAGE_SERVICE_CID, false, NULL, nsIMobileMessageServiceConstructor },
-  { &kMOBILE_MESSAGE_DATABASE_SERVICE_CID, false, NULL, nsIMobileMessageDatabaseServiceConstructor },
-  { &kNS_POWERMANAGERSERVICE_CID, false, NULL, nsIPowerManagerServiceConstructor },
-  { &kOSFILECONSTANTSSERVICE_CID, true, NULL, OSFileConstantsServiceConstructor },
-  { &kNS_ALARMHALSERVICE_CID, false, NULL, nsIAlarmHalServiceConstructor },
-  { &kTCPSOCKETCHILD_CID, false, NULL, TCPSocketChildConstructor },
-  { &kTCPSOCKETPARENT_CID, false, NULL, TCPSocketParentConstructor },
-  { &kTCPSERVERSOCKETCHILD_CID, false, NULL, TCPServerSocketChildConstructor },
-  { &kNS_TIMESERVICE_CID, false, NULL, nsITimeServiceConstructor },
+  { &kTHIRDPARTYUTIL_CID, false, nullptr, ThirdPartyUtilConstructor },
+  { &kNS_STRUCTUREDCLONECONTAINER_CID, false, nullptr, nsStructuredCloneContainerConstructor },
+  { &kSMS_SERVICE_CID, false, nullptr, nsISmsServiceConstructor },
+  { &kMMS_SERVICE_CID, false, nullptr, nsIMmsServiceConstructor },
+  { &kMOBILE_MESSAGE_SERVICE_CID, false, nullptr, nsIMobileMessageServiceConstructor },
+  { &kMOBILE_MESSAGE_DATABASE_SERVICE_CID, false, nullptr, nsIMobileMessageDatabaseServiceConstructor },
+  { &kNS_POWERMANAGERSERVICE_CID, false, nullptr, nsIPowerManagerServiceConstructor },
+  { &kOSFILECONSTANTSSERVICE_CID, true, nullptr, OSFileConstantsServiceConstructor },
+  { &kNS_ALARMHALSERVICE_CID, false, nullptr, nsIAlarmHalServiceConstructor },
+  { &kTCPSOCKETCHILD_CID, false, nullptr, TCPSocketChildConstructor },
+  { &kTCPSOCKETPARENT_CID, false, nullptr, TCPSocketParentConstructor },
+  { &kTCPSERVERSOCKETCHILD_CID, false, nullptr, TCPServerSocketChildConstructor },
+  { &kNS_TIMESERVICE_CID, false, nullptr, nsITimeServiceConstructor },
 #ifdef MOZ_WIDGET_GONK
-  { &kGONK_GPS_GEOLOCATION_PROVIDER_CID, false, NULL, nsIGeolocationProviderConstructor },
+  { &kGONK_GPS_GEOLOCATION_PROVIDER_CID, false, nullptr, nsIGeolocationProviderConstructor },
 #endif
-  { &kNS_MEDIAMANAGERSERVICE_CID, false, NULL, nsIMediaManagerServiceConstructor },
+  { &kNS_MEDIAMANAGERSERVICE_CID, false, nullptr, nsIMediaManagerServiceConstructor },
 #ifdef MOZ_GAMEPAD
-  { &kNS_GAMEPAD_TEST_CID, false, NULL, GamepadServiceTestConstructor },
+  { &kNS_GAMEPAD_TEST_CID, false, nullptr, GamepadServiceTestConstructor },
 #endif
 #ifdef ACCESSIBILITY
-  { &kNS_ACCESSIBILITY_SERVICE_CID, false, NULL, CreateA11yService },
+  { &kNS_ACCESSIBILITY_SERVICE_CID, false, nullptr, CreateA11yService },
 #endif
-  { &kTELEPHONY_PROVIDER_CID, false, NULL, nsITelephonyProviderConstructor },
-  { NULL }
+  { &kTELEPHONY_PROVIDER_CID, false, nullptr, nsITelephonyProviderConstructor },
+  { nullptr }
 };
 
 static const mozilla::Module::ContractIDEntry kLayoutContracts[] = {
@@ -1261,7 +1261,7 @@ static const mozilla::Module::ContractIDEntry kLayoutContracts[] = {
   { "@mozilla.org/accessibleRetrieval;1", &kNS_ACCESSIBILITY_SERVICE_CID },
 #endif
   { TELEPHONY_PROVIDER_CONTRACTID, &kTELEPHONY_PROVIDER_CID },
-  { NULL }
+  { nullptr }
 };
 
 static const mozilla::Module::CategoryEntry kLayoutCategories[] = {
@@ -1284,7 +1284,7 @@ static const mozilla::Module::CategoryEntry kLayoutCategories[] = {
 #ifdef MOZ_B2G_BT
   { "profile-after-change", "Bluetooth Service", BLUETOOTHSERVICE_CONTRACTID },
 #endif
-  { NULL }
+  { nullptr }
 };
 
 static void
@@ -1299,7 +1299,7 @@ static const mozilla::Module kLayoutModule = {
   kLayoutCIDs,
   kLayoutContracts,
   kLayoutCategories,
-  NULL,
+  nullptr,
   Initialize,
   LayoutModuleDtor
 };

@@ -1250,7 +1250,7 @@ nsMathMLChar::StretchEnumContext::EnumCallback(const nsString& aFamily,
   nsStyleContext *sc = context->mChar->mStyleContext;
   nsFont font = sc->StyleFont()->mFont;
   if (!aGeneric && !SetFontFamily(sc, context->mRenderingContext,
-                                  font, NULL, kNullGlyph, aFamily))
+                                  font, nullptr, kNullGlyph, aFamily))
      return true; // Could not set the family
 
   context->mGlyphTable = glyphTable;
