@@ -919,6 +919,7 @@ IsObjectValueInCompartment(js::Value v, JSCompartment *comp);
 class ObjectImpl : public gc::BarrieredCell<ObjectImpl>
 {
     friend Zone *js::gc::BarrieredCell<ObjectImpl>::zone() const;
+    friend Zone *js::gc::BarrieredCell<ObjectImpl>::zoneFromAnyThread() const;
 
   protected:
     /*
@@ -1524,11 +1525,12 @@ BarrieredCell<ObjectImpl>::zone() const
     return zone;
 }
 
-template<>
-inline bool
-BarrieredCell<ObjectImpl>::isInsideZone(JS::Zone *zone_) const
+template <>
+JS_ALWAYS_INLINE Zone *
+BarrieredCell<ObjectImpl>::zoneFromAnyThread() const
 {
-    MOZ_CRASH("shouldn't be needed for ObjectImpl, and the default implementation won't work");
+    const ObjectImpl* obj = static_cast<const ObjectImpl*>(this);
+    return obj->shape_->zoneFromAnyThread();
 }
 
 // TypeScript::global uses 0x1 as a special value.

@@ -240,7 +240,7 @@ struct ThreadSafeContext : ContextFriendFields,
 
     template <typename T>
     bool isInsideCurrentZone(T thing) const {
-        return thing->isInsideZone(zone_);
+        return thing->zoneFromAnyThread() == zone_;
     }
 
     template <typename T>
