@@ -201,6 +201,7 @@ public:
 
   void SetFiles(const nsTArray<nsCOMPtr<nsIDOMFile> >& aFiles, bool aSetValueChanged);
   void SetFiles(nsIDOMFileList* aFiles, bool aSetValueChanged);
+  void ClearFiles();
 
   void SetCheckedChangedInternal(bool aCheckedChanged);
   bool GetCheckedChanged() const {
