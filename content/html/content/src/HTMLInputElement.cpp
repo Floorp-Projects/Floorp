@@ -548,12 +548,17 @@ public:
       mInput->mProgressTimer->Cancel();
     }
 
+    mInput->MaybeDispatchProgressEvent(true);        // Last progress event.
+    mInput->mDirPickerFileListBuilderTask = nullptr; // Now null out.
+
+    if (mCanceled) { // The last progress event may have canceled us
+      return NS_OK;
+    }
+
     // The text control frame (if there is one) isn't going to send a change
     // event because it will think this is done by a script.
     // So, we can safely send one by ourself.
     mInput->SetFiles(mFileList, true);
-    mInput->MaybeDispatchProgressEvent(true);        // Last progress event.
-    mInput->mDirPickerFileListBuilderTask = nullptr; // Now null out.
     nsresult rv =
       nsContentUtils::DispatchTrustedEvent(mInput->OwnerDoc(),
                                            static_cast<nsIDOMHTMLInputElement*>(mInput.get()),
@@ -2609,12 +2614,16 @@ HTMLInputElement::DispatchProgressEvent(const nsAString& aType,
     return;
   }
 
-  progress->InitProgressEvent(aType, false, false, aLengthComputable,
+  progress->InitProgressEvent(aType, false, true, aLengthComputable,
                               aLoaded, (aTotal == UINT64_MAX) ? 0 : aTotal);
 
   event->SetTrusted(true);
 
-  DispatchDOMEvent(nullptr, event, nullptr, nullptr);
+  bool doDefaultAction;
+  rv = DispatchEvent(event, &doDefaultAction);
+  if (NS_SUCCEEDED(rv) && !doDefaultAction) {
+    CancelDirectoryPickerScanIfRunning();
+  }
 }
 
 nsresult
