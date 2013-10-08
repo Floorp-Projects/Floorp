@@ -908,8 +908,8 @@ nsEventListenerManager::CompileEventHandlerInternal(nsListenerStruct *aListenerS
         new OnErrorEventHandlerNonNull(boundHandler);
       listener->SetHandler(handlerCallback);
     } else if (listener->EventName() == nsGkAtoms::onbeforeunload && win) {
-      nsRefPtr<BeforeUnloadEventHandlerNonNull> handlerCallback =
-        new BeforeUnloadEventHandlerNonNull(boundHandler);
+      nsRefPtr<OnBeforeUnloadEventHandlerNonNull> handlerCallback =
+        new OnBeforeUnloadEventHandlerNonNull(boundHandler);
       listener->SetHandler(handlerCallback);
     } else {
       nsRefPtr<EventHandlerNonNull> handlerCallback =
@@ -1255,7 +1255,7 @@ nsEventListenerManager::SetEventHandler(OnErrorEventHandlerNonNull* aHandler)
 }
 
 void
-nsEventListenerManager::SetEventHandler(BeforeUnloadEventHandlerNonNull* aHandler)
+nsEventListenerManager::SetEventHandler(OnBeforeUnloadEventHandlerNonNull* aHandler)
 {
   if (!aHandler) {
     RemoveEventHandler(nsGkAtoms::onbeforeunload, EmptyString());
