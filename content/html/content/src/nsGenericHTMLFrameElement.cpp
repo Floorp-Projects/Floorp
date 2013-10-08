@@ -14,7 +14,7 @@
 #include "mozilla/ErrorResult.h"
 #include "nsIAppsService.h"
 #include "nsServiceManagerUtils.h"
-#include "nsIDOMApplicationRegistry.h"
+#include "mozIApplication.h"
 #include "nsIPermissionManager.h"
 #include "GeckoProfiler.h"
 
@@ -415,7 +415,7 @@ nsGenericHTMLFrameElement::GetAppManifestURL(nsAString& aOut)
   nsCOMPtr<nsIAppsService> appsService = do_GetService(APPS_SERVICE_CONTRACTID);
   NS_ENSURE_TRUE(appsService, NS_OK);
 
-  nsCOMPtr<mozIDOMApplication> app;
+  nsCOMPtr<mozIApplication> app;
   appsService->GetAppByManifestURL(manifestURL, getter_AddRefs(app));
   if (app) {
     aOut.Assign(manifestURL);
