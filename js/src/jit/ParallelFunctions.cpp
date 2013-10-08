@@ -160,6 +160,25 @@ jit::ExtendArrayPar(ForkJoinSlice *slice, JSObject *array, uint32_t length)
 }
 
 ParallelResult
+jit::SetElementPar(ForkJoinSlice *slice, HandleObject obj, HandleValue index, HandleValue value,
+                   bool strict)
+{
+    RootedId id(slice);
+    if (!ValueToIdPure(index, id.address()))
+        return TP_RETRY_SEQUENTIALLY;
+
+    // SetObjectElementOperation, the sequential version, has several checks
+    // for certain deoptimizing behaviors, such as marking having written to
+    // holes and non-indexed element accesses. We don't do that here, as we
+    // can't modify any TI state anyways. If we need to add a new type, we
+    // would bail out.
+    RootedValue v(slice, value);
+    if (!baseops::SetPropertyHelper<ParallelExecution>(slice, obj, obj, id, 0, &v, strict))
+        return TP_RETRY_SEQUENTIALLY;
+    return TP_SUCCESS;
+}
+
+ParallelResult
 jit::ConcatStringsPar(ForkJoinSlice *slice, HandleString left, HandleString right,
                       MutableHandleString out)
 {
