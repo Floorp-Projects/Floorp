@@ -24,6 +24,10 @@ bool CheckInterruptPar(ForkJoinSlice *slice);
 // generation.
 JSObject *ExtendArrayPar(ForkJoinSlice *slice, JSObject *array, uint32_t length);
 
+// Set properties and elements on thread local objects.
+ParallelResult SetElementPar(ForkJoinSlice *slice, HandleObject obj, HandleValue index,
+                             HandleValue value, bool strict);
+
 // String related parallel functions. These tend to call existing VM functions
 // that take a ThreadSafeContext.
 ParallelResult ConcatStringsPar(ForkJoinSlice *slice, HandleString left, HandleString right,
