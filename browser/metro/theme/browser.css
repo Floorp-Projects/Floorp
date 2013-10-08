@@ -743,6 +743,10 @@ documenttab[selected] .documenttab-selection {
   visibility: collapse;
 }
 
+#download-progress:not([progress]) {
+  visibility: collapse;
+}
+
 #download-progress {
   -moz-image-region: rect(0px, 40px, 40px, 0px) !important;
 }

@@ -54,7 +54,6 @@ var MetroDownloadsView = {
     Services.obs.addObserver(this, "dl-done", true);
     Services.obs.addObserver(this, "dl-run", true);
     Services.obs.addObserver(this, "dl-failed", true);
-    Services.obs.addObserver(this, "dl-request", true);
 
     this._notificationBox = Browser.getNotificationBox();
     this._notificationBox.addEventListener('AlertClose', this.handleEvent, true);
@@ -75,7 +74,6 @@ var MetroDownloadsView = {
       Services.obs.removeObserver(this, "dl-done");
       Services.obs.removeObserver(this, "dl-run");
       Services.obs.removeObserver(this, "dl-failed");
-      Services.obs.removeObserver(this, "dl-request");
     }
   },
 
@@ -93,7 +91,7 @@ var MetroDownloadsView = {
       }
     }
     if (this.manager.activeDownloadCount) {
-      Services.obs.notifyObservers(null, "dl-request", "");
+      ContextUI.displayNavbar();
     }
   },
 
@@ -415,6 +413,8 @@ var MetroDownloadsView = {
       this._progressNotification =
         this.showNotification("download-progress", message, buttons,
         this._notificationBox.PRIORITY_WARNING_LOW);
+
+      ContextUI.displayNavbar();
     } else {
       this._progressNotification.label = message;
     }
@@ -490,11 +490,6 @@ var MetroDownloadsView = {
       case "dl-failed":
         download = aSubject.QueryInterface(Ci.nsIDownload);
         this._showDownloadFailedNotification(download);
-        break;
-      case "dl-request":
-        setTimeout(function() {
-          ContextUI.displayNavbar();
-        }, 1000);
         break;
     }
   },
