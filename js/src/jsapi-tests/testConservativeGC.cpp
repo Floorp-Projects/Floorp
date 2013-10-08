@@ -72,7 +72,7 @@ BEGIN_TEST(testDerivedValues)
   JS::Anchor<JSString *> str_anchor(str);
   static const jschar expected[] = { 'o', 'n', 'c', 'e' };
   const jschar *ch = JS_GetStringCharsZ(cx, str);
-  str = NULL;
+  str = nullptr;
 
   /* Do a lot of allocation and collection. */
   for (int i = 0; i < 3; i++) {

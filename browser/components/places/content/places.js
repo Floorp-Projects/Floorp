@@ -407,59 +407,64 @@ var PlacesOrganizer = {
     while (restorePopup.childNodes.length > 1)
       restorePopup.removeChild(restorePopup.firstChild);
 
-    let backupFiles = PlacesBackups.entries;
-    if (backupFiles.length == 0)
-      return;
+    Task.spawn(function() {
+      let backupFiles = yield PlacesBackups.getBackupFiles();
+      if (backupFiles.length == 0)
+        return;
 
-    // Populate menu with backups.
-    for (let i = 0; i < backupFiles.length; i++) {
-      let [size, unit] = DownloadUtils.convertByteUnits(backupFiles[i].fileSize);
-      let sizeString = PlacesUtils.getFormattedString("backupFileSizeText",
-                                                      [size, unit]);
-      let sizeInfo;
-      let bookmarkCount = PlacesBackups.getBookmarkCountForFile(backupFiles[i]);
-      if (bookmarkCount != null) {
-        sizeInfo = " (" + sizeString + " - " +
-                   PlacesUIUtils.getPluralString("detailsPane.itemsCountLabel",
-                                                  bookmarkCount,
-                                                  [bookmarkCount]) +
-                   ")";
-      } else {
-        sizeInfo = " (" + sizeString + ")";
+      // Populate menu with backups.
+      for (let i = 0; i < backupFiles.length; i++) {
+        let fileSize = (yield OS.File.stat(backupFiles[i])).size;
+        let [size, unit] = DownloadUtils.convertByteUnits(fileSize);
+        let sizeString = PlacesUtils.getFormattedString("backupFileSizeText",
+                                                        [size, unit]);
+        let sizeInfo;
+        let bookmarkCount = PlacesBackups.getBookmarkCountForFile(backupFiles[i]);
+        if (bookmarkCount != null) {
+          sizeInfo = " (" + sizeString + " - " +
+                     PlacesUIUtils.getPluralString("detailsPane.itemsCountLabel",
+                                                   bookmarkCount,
+                                                   [bookmarkCount]) +
+                     ")";
+        } else {
+          sizeInfo = " (" + sizeString + ")";
+        }
+
+        let backupDate = PlacesBackups.getDateForFile(backupFiles[i]);
+        let m = restorePopup.insertBefore(document.createElement("menuitem"),
+                                          document.getElementById("restoreFromFile"));
+        m.setAttribute("label",
+                       dateSvc.FormatDate("",
+                                          Ci.nsIScriptableDateFormat.dateFormatLong,
+                                          backupDate.getFullYear(),
+                                          backupDate.getMonth() + 1,
+                                          backupDate.getDate()) +
+                                          sizeInfo);
+        m.setAttribute("value", OS.Path.basename(backupFiles[i]));
+        m.setAttribute("oncommand",
+                       "PlacesOrganizer.onRestoreMenuItemClick(this);");
       }
 
-      let backupDate = PlacesBackups.getDateForFile(backupFiles[i]);
-      let m = restorePopup.insertBefore(document.createElement("menuitem"),
-                                        document.getElementById("restoreFromFile"));
-      m.setAttribute("label",
-                     dateSvc.FormatDate("",
-                                        Ci.nsIScriptableDateFormat.dateFormatLong,
-                                        backupDate.getFullYear(),
-                                        backupDate.getMonth() + 1,
-                                        backupDate.getDate()) +
-                                        sizeInfo);
-      m.setAttribute("value", backupFiles[i].leafName);
-      m.setAttribute("oncommand",
-                     "PlacesOrganizer.onRestoreMenuItemClick(this);");
-    }
-
-    // Add the restoreFromFile item.
-    restorePopup.insertBefore(document.createElement("menuseparator"),
-                              document.getElementById("restoreFromFile"));
+      // Add the restoreFromFile item.
+      restorePopup.insertBefore(document.createElement("menuseparator"),
+                                document.getElementById("restoreFromFile"));
+    });
   },
 
   /**
    * Called when a menuitem is selected from the restore menu.
    */
   onRestoreMenuItemClick: function PO_onRestoreMenuItemClick(aMenuItem) {
-    let backupName = aMenuItem.getAttribute("value");
-    let backupFiles = PlacesBackups.entries;
-    for (let i = 0; i < backupFiles.length; i++) {
-      if (backupFiles[i].leafName == backupName) {
-        this.restoreBookmarksFromFile(backupFiles[i]);
-        break;
+    Task.spawn(function() {
+      let backupName = aMenuItem.getAttribute("value");
+      let backupFilePaths = yield PlacesBackups.getBackupFiles();
+      for (let backupFilePath of backupFilePaths) {
+        if (OS.Path.basename(backupFilePath) == backupName) {
+          PlacesOrganizer.restoreBookmarksFromFile(new FileUtils.File(backupFilePath));
+          break;
+        }
       }
-    }
+    });
   },
 
   /**

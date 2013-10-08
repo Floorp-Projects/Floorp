@@ -101,7 +101,7 @@ struct ToCStringBuf
 /*
  * Convert a number to a C string.  When base==10, this function implements
  * ToString() as specified by ECMA-262-5 section 9.8.1.  It handles integral
- * values cheaply.  Return NULL if we ran out of memory.  See also
+ * values cheaply.  Return nullptr if we ran out of memory.  See also
  * js_NumberToCString().
  */
 extern char *

@@ -687,7 +687,7 @@ class IonBuilder : public MIRGenerator
     }
 
     bool isInlineBuilder() const {
-        return callerBuilder_ != NULL;
+        return callerBuilder_ != nullptr;
     }
 
   private:

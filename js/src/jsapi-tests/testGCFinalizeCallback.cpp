@@ -126,7 +126,7 @@ BEGIN_TEST(testGCFinalizeCallback)
     CHECK(JS_IsGlobalObject(global2));
     CHECK(JS_IsGlobalObject(global3));
 
-    JS_SetFinalizeCallback(rt, NULL);
+    JS_SetFinalizeCallback(rt, nullptr);
     return true;
 }
 

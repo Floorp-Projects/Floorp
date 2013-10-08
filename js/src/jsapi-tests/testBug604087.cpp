@@ -38,7 +38,7 @@ wrap(JSContext *cx, JS::HandleObject toWrap, JS::HandleObject target)
     JSAutoCompartment ac(cx, target);
     JS::RootedObject wrapper(cx, toWrap);
     if (!JS_WrapObject(cx, wrapper.address()))
-        return NULL;
+        return nullptr;
     return wrapper;
 }
 
@@ -67,9 +67,9 @@ BEGIN_TEST(testBug604087)
 {
     JS::RootedObject outerObj(cx, js::Wrapper::New(cx, global, global->getProto(), global,
                                                &OuterWrapper::singleton));
-    JS::RootedObject compartment2(cx, JS_NewGlobalObject(cx, getGlobalClass(), NULL, JS::FireOnNewGlobalHook));
-    JS::RootedObject compartment3(cx, JS_NewGlobalObject(cx, getGlobalClass(), NULL, JS::FireOnNewGlobalHook));
-    JS::RootedObject compartment4(cx, JS_NewGlobalObject(cx, getGlobalClass(), NULL, JS::FireOnNewGlobalHook));
+    JS::RootedObject compartment2(cx, JS_NewGlobalObject(cx, getGlobalClass(), nullptr, JS::FireOnNewGlobalHook));
+    JS::RootedObject compartment3(cx, JS_NewGlobalObject(cx, getGlobalClass(), nullptr, JS::FireOnNewGlobalHook));
+    JS::RootedObject compartment4(cx, JS_NewGlobalObject(cx, getGlobalClass(), nullptr, JS::FireOnNewGlobalHook));
 
     JS::RootedObject c2wrapper(cx, wrap(cx, outerObj, compartment2));
     CHECK(c2wrapper);
@@ -82,7 +82,7 @@ BEGIN_TEST(testBug604087)
     JS::RootedObject c4wrapper(cx, wrap(cx, outerObj, compartment4));
     CHECK(c4wrapper);
     c4wrapper->as<js::ProxyObject>().setExtra(0, js::Int32Value(4));
-    compartment4 = c4wrapper = NULL;
+    compartment4 = c4wrapper = nullptr;
 
     JS::RootedObject next(cx);
     {
