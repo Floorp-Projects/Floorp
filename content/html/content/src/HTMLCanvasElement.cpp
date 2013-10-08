@@ -154,18 +154,12 @@ HTMLCanvasElement::GetWidthHeight()
       value->Type() == nsAttrValue::eInteger)
   {
       size.width = value->GetIntegerValue();
-      if (size.width <= 0) {
-        size.width = 1;
-      }
   }
 
   if ((value = GetParsedAttr(nsGkAtoms::height)) &&
       value->Type() == nsAttrValue::eInteger)
   {
       size.height = value->GetIntegerValue();
-      if (size.height <= 0) {
-        size.height = 1;
-      }
   }
 
   return size;

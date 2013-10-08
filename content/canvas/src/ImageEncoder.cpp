@@ -24,7 +24,6 @@ public:
     , mScriptContext(aScriptContext)
     , mEncoderThread(aEncoderThread)
     , mCallback(&aCallback)
-    , mFailed(false)
   {}
   virtual ~EncodingCompleteEvent() {}
 
@@ -32,28 +31,19 @@ public:
   {
     MOZ_ASSERT(NS_IsMainThread());
 
-    mozilla::ErrorResult rv;
+    nsRefPtr<nsDOMMemoryFile> blob =
+      new nsDOMMemoryFile(mImgData, mImgSize, mType);
 
-    if (!mFailed) {
-      nsRefPtr<nsDOMMemoryFile> blob =
-        new nsDOMMemoryFile(mImgData, mImgSize, mType);
-
-      if (mScriptContext) {
-        JSContext* jsContext = mScriptContext->GetNativeContext();
-        if (jsContext) {
-          JS_updateMallocCounter(jsContext, mImgSize);
-        }
+    if (mScriptContext) {
+      JSContext* jsContext = mScriptContext->GetNativeContext();
+      if (jsContext) {
+        JS_updateMallocCounter(jsContext, mImgSize);
       }
-
-      mCallback->Call(blob, rv);
     }
 
-    // These members aren't thread-safe. We're making sure that they're being
-    // released on the main thread here. Otherwise, they could be getting
-    // released by EncodingRunnable's destructor on the encoding thread
-    // (bug 916128).
-    mScriptContext = nullptr;
-    mCallback = nullptr;
+    mozilla::ErrorResult rv;
+    mCallback->Call(blob, rv);
+    NS_ENSURE_SUCCESS(rv.ErrorCode(), rv.ErrorCode());
 
     mEncoderThread->Shutdown();
     return rv.ErrorCode();
@@ -66,11 +56,6 @@ public:
     mType = aType;
   }
 
-  void SetFailed()
-  {
-    mFailed = true;
-  }
-
 private:
   uint64_t mImgSize;
   nsAutoString mType;
@@ -78,7 +63,6 @@ private:
   nsCOMPtr<nsIScriptContext> mScriptContext;
   nsCOMPtr<nsIThread> mEncoderThread;
   nsRefPtr<FileCallback> mCallback;
-  bool mFailed;
 };
 
 NS_IMPL_ISUPPORTS1(EncodingCompleteEvent, nsIRunnable);
@@ -107,7 +91,7 @@ public:
   {}
   virtual ~EncodingRunnable() {}
 
-  nsresult ProcessImageData(uint64_t* aImgSize, void** aImgData)
+  NS_IMETHOD Run()
   {
     nsCOMPtr<nsIInputStream> stream;
     nsresult rv = ImageEncoder::ExtractDataInternal(mType,
@@ -133,33 +117,18 @@ public:
     }
     NS_ENSURE_SUCCESS(rv, rv);
 
-    rv = stream->Available(aImgSize);
-    NS_ENSURE_SUCCESS(rv, rv);
-    NS_ENSURE_TRUE(*aImgSize <= UINT32_MAX, NS_ERROR_FILE_TOO_BIG);
-
-    rv = NS_ReadInputStreamToBuffer(stream, aImgData, *aImgSize);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    return rv;
-  }
-
-  NS_IMETHOD Run()
-  {
     uint64_t imgSize;
-    void* imgData = nullptr;
+    rv = stream->Available(&imgSize);
+    NS_ENSURE_SUCCESS(rv, rv);
+    NS_ENSURE_TRUE(imgSize <= UINT32_MAX, NS_ERROR_FILE_TOO_BIG);
 
-    nsresult rv = ProcessImageData(&imgSize, &imgData);
-    if (NS_FAILED(rv)) {
-      mEncodingCompleteEvent->SetFailed();
-    } else {
-      mEncodingCompleteEvent->SetMembers(imgData, imgSize, mType);
-    }
+    void* imgData = nullptr;
+    rv = NS_ReadInputStreamToBuffer(stream, &imgData, imgSize);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    mEncodingCompleteEvent->SetMembers(imgData, imgSize, mType);
     rv = NS_DispatchToMainThread(mEncodingCompleteEvent, NS_DISPATCH_NORMAL);
-    if (NS_FAILED(rv)) {
-      // Better to leak than to crash.
-      mEncodingCompleteEvent.forget();
-      return rv;
-    }
+    NS_ENSURE_SUCCESS(rv, rv);
 
     return rv;
   }
