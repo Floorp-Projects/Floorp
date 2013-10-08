@@ -2517,6 +2517,15 @@ TypeObject::markPropertyConfigured(ExclusiveContext *cx, jsid id)
         types->setConfiguredProperty(cx);
 }
 
+bool
+TypeObject::isPropertyConfigured(jsid id)
+{
+    TypeSet *types = maybeGetProperty(id);
+    if (types)
+        return types->configuredProperty();
+    return false;
+}
+
 void
 TypeObject::markStateChange(ExclusiveContext *cxArg)
 {

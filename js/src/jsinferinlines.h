@@ -533,6 +533,12 @@ MarkTypePropertyConfigured(ExclusiveContext *cx, HandleObject obj, jsid id)
     }
 }
 
+inline bool
+IsTypePropertyIdMarkedConfigured(JSObject *obj, jsid id)
+{
+    return obj->type()->isPropertyConfigured(id);
+}
+
 /* Mark a state change on a particular object. */
 inline void
 MarkObjectStateChange(ExclusiveContext *cx, JSObject *obj)
