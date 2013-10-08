@@ -30,9 +30,9 @@ jit::ForkJoinSlicePar()
 // parallel code.  It uses the ArenaLists for the current thread and
 // allocates from there.
 JSObject *
-jit::NewGCThingPar(gc::AllocKind allocKind)
+jit::NewGCThingPar(ForkJoinSlice *slice, gc::AllocKind allocKind)
 {
-    ForkJoinSlice *slice = ForkJoinSlice::Current();
+    JS_ASSERT(ForkJoinSlice::Current() == slice);
     uint32_t thingSize = (uint32_t)gc::Arena::thingSize(allocKind);
     return gc::NewGCThing<JSObject, NoGC>(slice, allocKind, thingSize, gc::DefaultHeap);
 }

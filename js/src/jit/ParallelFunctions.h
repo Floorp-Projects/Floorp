@@ -14,7 +14,7 @@ namespace js {
 namespace jit {
 
 ForkJoinSlice *ForkJoinSlicePar();
-JSObject *NewGCThingPar(gc::AllocKind allocKind);
+JSObject *NewGCThingPar(ForkJoinSlice *slice, gc::AllocKind allocKind);
 bool IsThreadLocalObject(ForkJoinSlice *context, JSObject *object);
 bool CheckOverRecursedPar(ForkJoinSlice *slice);
 bool CheckInterruptPar(ForkJoinSlice *context);
