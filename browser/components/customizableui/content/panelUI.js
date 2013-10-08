@@ -90,9 +90,7 @@ const PanelUI = {
 
   /**
    * Opens the menu panel if it's closed, or closes it if it's
-   * open. If the event target has a child with the toolbarbutton-icon
-   * attribute, the panel will be anchored on that child. Otherwise, the panel
-   * is anchored on the event target itself.
+   * open.
    *
    * @param aEvent the event that triggers the toggle.
    */
@@ -106,38 +104,58 @@ const PanelUI = {
     if (this.panel.state == "open") {
       this.hide();
     } else if (this.panel.state == "closed") {
-      this.ensureReady().then(function() {
-        this.panel.hidden = false;
-        let editControlPlacement = CustomizableUI.getPlacementOfWidget("edit-controls");
-        if (editControlPlacement && editControlPlacement.area == CustomizableUI.AREA_PANEL) {
-          updateEditUIVisibility();
-        }
-
-        let anchor;
-        if (aEvent.type == "mousedown" ||
-            aEvent.type == "command") {
-          anchor = this.menuButton;
-        } else {
-          anchor = aEvent.target;
-        }
-        let iconAnchor =
-          document.getAnonymousElementByAttribute(anchor, "class",
-                                                  "toolbarbutton-icon");
-
-        // Only focus the panel if it's opened using the keyboard, so that
-        // cut/copy/paste buttons will work for mouse users.
-        let keyboardOpened = aEvent.sourceEvent &&
-                             aEvent.sourceEvent.target.localName == "key";
-        this.panel.setAttribute("noautofocus", !keyboardOpened);
-        this.panel.openPopup(iconAnchor || anchor, "bottomcenter topright");
-      }.bind(this));
+      this.show(aEvent);
     }
+  },
+
+  /**
+   * Opens the menu panel. If the event target has a child with the
+   * toolbarbutton-icon attribute, the panel will be anchored on that child.
+   * Otherwise, the panel is anchored on the event target itself.
+   *
+   * @param aEvent the event (if any) that triggers showing the menu.
+   */
+  show: function(aEvent) {
+    if (this.panel.state == "open" || this.panel.state == "showing" ||
+        document.documentElement.hasAttribute("customizing")) {
+      return;
+    }
+
+    this.ensureReady().then(() => {
+      this.panel.hidden = false;
+      let editControlPlacement = CustomizableUI.getPlacementOfWidget("edit-controls");
+      if (editControlPlacement && editControlPlacement.area == CustomizableUI.AREA_PANEL) {
+        updateEditUIVisibility();
+      }
+
+      let anchor;
+      if (aEvent.type == "mousedown" ||
+          aEvent.type == "command") {
+        anchor = this.menuButton;
+      } else {
+        anchor = aEvent.target;
+      }
+      let iconAnchor =
+        document.getAnonymousElementByAttribute(anchor, "class",
+                                                "toolbarbutton-icon");
+
+      // Only focus the panel if it's opened using the keyboard, so that
+      // cut/copy/paste buttons will work for mouse users.
+      let keyboardOpened = aEvent.sourceEvent &&
+                           aEvent.sourceEvent.target.localName == "key";
+      this.panel.setAttribute("noautofocus", !keyboardOpened);
+      this.panel.openPopup(iconAnchor || anchor, "bottomcenter topright");
+    });
   },
 
   /**
    * If the menu panel is being shown, hide it.
    */
   hide: function() {
+    if (document.documentElement.hasAttribute("customizing")) {
+      return;
+    }
+
     this.panel.hidePopup();
   },
 
