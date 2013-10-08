@@ -22,6 +22,7 @@
 #include "mozilla/gfx/Rect.h"
 #include "mozilla/gfx/2D.h"
 #include "gfx2DGlue.h"
+#include "imgIEncoder.h"
 
 class nsXULElement;
 
@@ -453,6 +454,8 @@ public:
   }
 
   friend class CanvasRenderingContext2DUserData;
+
+  virtual void GetImageBuffer(uint8_t** aImageBuffer, int32_t* aFormat);
 
 protected:
   nsresult GetImageDataArray(JSContext* aCx, int32_t aX, int32_t aY,
