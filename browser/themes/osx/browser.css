@@ -393,12 +393,10 @@ toolbarbutton.bookmark-item > menupopup {
 
 /**
  * Draw seperators before toolbar button dropmarkers, as well as between
- * consecutive toolbarbutton-1's within a toolbaritem. We special-case
- * the urlbar-container, since the back and forward buttons certainly do
- * not need a separator between them.
+ * consecutive toolbarbutton-1's within a toolbaritem.
  */
 #nav-bar .toolbarbutton-1 > .toolbarbutton-menubutton-dropmarker::before,
-#nav-bar toolbaritem:not(#urlbar-container) > .toolbarbutton-1 + .toolbarbutton-1::before {
+#nav-bar .toolbaritem-combined-buttons > .toolbarbutton-1 + .toolbarbutton-1::before {
   content: "";
   display: -moz-box;
   position: absolute;
