@@ -150,24 +150,10 @@ jit::CheckInterruptPar(ForkJoinSlice *slice)
 }
 
 JSObject *
-jit::PushPar(PushParArgs *args)
-{
-    // It is awkward to have the MIR pass the current slice in, so
-    // just fetch it from TLS.  Extending the array is kind of the
-    // slow path anyhow as it reallocates the elements vector.
-    ForkJoinSlice *slice = js::ForkJoinSlice::Current();
-    JSObject::EnsureDenseResult res =
-        args->object->parExtendDenseElements(slice, &args->value, 1);
-    if (res != JSObject::ED_OK)
-        return nullptr;
-    return args->object;
-}
-
-JSObject *
 jit::ExtendArrayPar(ForkJoinSlice *slice, JSObject *array, uint32_t length)
 {
     JSObject::EnsureDenseResult res =
-        array->parExtendDenseElements(slice, nullptr, length);
+        array->ensureDenseElementsPreservePackedFlag(slice, 0, length);
     if (res != JSObject::ED_OK)
         return nullptr;
     return array;
@@ -556,10 +542,13 @@ jit::InitRestParameterPar(ForkJoinSlice *slice, uint32_t length, Value *rest,
     JS_ASSERT(!res->getDenseInitializedLength());
     JS_ASSERT(res->type() == templateObj->type());
 
-    if (length) {
-        JSObject::EnsureDenseResult edr = res->parExtendDenseElements(slice, rest, length);
+    if (length > 0) {
+        JSObject::EnsureDenseResult edr =
+            res->ensureDenseElementsPreservePackedFlag(slice, 0, length);
         if (edr != JSObject::ED_OK)
             return TP_FATAL;
+        res->initDenseElements(0, rest, length);
+        res->as<ArrayObject>().setLengthInt32(length);
     }
 
     out.set(res);
