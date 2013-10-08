@@ -1873,9 +1873,8 @@ nsPresContext::HandleMediaFeatureValuesChangedEvent()
   }
 }
 
-void
-nsPresContext::MatchMedia(const nsAString& aMediaQueryList,
-                          nsIDOMMediaQueryList** aResult)
+already_AddRefed<nsIDOMMediaQueryList>
+nsPresContext::MatchMedia(const nsAString& aMediaQueryList)
 {
   nsRefPtr<nsDOMMediaQueryList> result =
     new nsDOMMediaQueryList(this, aMediaQueryList);
@@ -1883,7 +1882,7 @@ nsPresContext::MatchMedia(const nsAString& aMediaQueryList,
   // Insert the new item at the end of the linked list.
   PR_INSERT_BEFORE(result, &mDOMMediaQueryLists);
 
-  result.forget(aResult);
+  return result.forget();
 }
 
 nsCompatibility
