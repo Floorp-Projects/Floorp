@@ -33,5 +33,5 @@ interface SVGElement : Element {
 };
 
 SVGElement implements GlobalEventHandlers;
-SVGElement implements NodeEventHandlers;
 SVGElement implements TouchEventHandlers;
+SVGElement implements OnErrorEventHandlerForNodes;

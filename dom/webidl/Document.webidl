@@ -139,8 +139,6 @@ partial interface Document {
   [LenientThis] attribute EventHandler onreadystatechange;
 
   // Gecko extensions?
-  [LenientThis] attribute EventHandler onmouseenter;
-  [LenientThis] attribute EventHandler onmouseleave;
                 attribute EventHandler onwheel;
                 attribute EventHandler oncopy;
                 attribute EventHandler oncut;
@@ -335,6 +333,6 @@ partial interface Document {
 
 Document implements XPathEvaluator;
 Document implements GlobalEventHandlers;
-Document implements NodeEventHandlers;
 Document implements TouchEventHandlers;
 Document implements ParentNode;
+Document implements OnErrorEventHandlerForNodes;
