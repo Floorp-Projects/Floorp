@@ -45,10 +45,6 @@ public:
 
     virtual bool QueueBuffer(ANativeWindowBuffer* buf);
 
-    virtual void UpdateFBSurface(EGLDisplay dpy, EGLSurface sur);
-
-    virtual void SetFBReleaseFd(int fd);
-
     bool Post(buffer_handle_t buf, int fence);
 
 private:
