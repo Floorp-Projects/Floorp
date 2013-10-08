@@ -1045,7 +1045,7 @@ class ObjectImpl : public gc::BarrieredCell<ObjectImpl>
                  GenerateShape generateShape = GENERATE_NONE);
     bool clearFlag(ExclusiveContext *cx, /*BaseShape::Flag*/ uint32_t flag);
 
-    bool toDictionaryMode(ExclusiveContext *cx);
+    bool toDictionaryMode(ThreadSafeContext *cx);
 
   private:
     friend class Nursery;
