@@ -33,7 +33,7 @@ using mozilla::PodZero;
 using mozilla::CeilingLog2Size;
 
 bool
-ShapeTable::init(ExclusiveContext *cx, Shape *lastProp)
+ShapeTable::init(ThreadSafeContext *cx, Shape *lastProp)
 {
     /*
      * Either we're creating a table for a large scope that was populated
@@ -57,6 +57,7 @@ ShapeTable::init(ExclusiveContext *cx, Shape *lastProp)
     hashShift = HASH_BITS - sizeLog2;
     for (Shape::Range<NoGC> r(lastProp); !r.empty(); r.popFront()) {
         Shape &shape = r.front();
+        JS_ASSERT(cx->isThreadLocal(&shape));
         Shape **spp = search(shape.propid(), true);
 
         /*
@@ -105,9 +106,10 @@ Shape::insertIntoDictionary(HeapPtrShape *dictp)
 }
 
 bool
-Shape::makeOwnBaseShape(ExclusiveContext *cx)
+Shape::makeOwnBaseShape(ThreadSafeContext *cx)
 {
     JS_ASSERT(!base()->isOwned());
+    JS_ASSERT(cx->isThreadLocal(this));
     assertSameCompartmentDebugOnly(cx, compartment());
 
     BaseShape *nbase = js_NewGCBaseShape<NoGC>(cx);
@@ -143,7 +145,7 @@ Shape::handoffTableTo(Shape *shape)
 }
 
 /* static */ bool
-Shape::hashify(ExclusiveContext *cx, Shape *shape)
+Shape::hashify(ThreadSafeContext *cx, Shape *shape)
 {
     JS_ASSERT(!shape->hasTable());
 
@@ -249,7 +251,7 @@ ShapeTable::search(jsid id, bool adding)
 }
 
 bool
-ShapeTable::change(int log2Delta, ExclusiveContext *cx)
+ShapeTable::change(int log2Delta, ThreadSafeContext *cx)
 {
     JS_ASSERT(entries);
 
@@ -273,6 +275,7 @@ ShapeTable::change(int log2Delta, ExclusiveContext *cx)
     /* Copy only live entries, leaving removed and free ones behind. */
     for (Shape **oldspp = oldTable; oldsize != 0; oldspp++) {
         Shape *shape = SHAPE_FETCH(oldspp);
+        JS_ASSERT(cx->isThreadLocal(shape));
         if (shape) {
             Shape **spp = search(shape->propid(), true);
             JS_ASSERT(SHAPE_IS_FREE(*spp));
@@ -287,7 +290,7 @@ ShapeTable::change(int log2Delta, ExclusiveContext *cx)
 }
 
 bool
-ShapeTable::grow(ExclusiveContext *cx)
+ShapeTable::grow(ThreadSafeContext *cx)
 {
     JS_ASSERT(needsToGrow());
 
@@ -399,12 +402,19 @@ JSObject::getChildProperty(ExclusiveContext *cx,
 }
 
 bool
-js::ObjectImpl::toDictionaryMode(ExclusiveContext *cx)
+js::ObjectImpl::toDictionaryMode(ThreadSafeContext *cx)
 {
     JS_ASSERT(!inDictionaryMode());
 
     /* We allocate the shapes from cx->compartment(), so make sure it's right. */
     JS_ASSERT(cx->isInsideCurrentCompartment(this));
+
+    /*
+     * This function is thread safe as long as the object is thread local. It
+     * does not modify the shared shapes, and only allocates newly allocated
+     * (and thus also thread local) shapes.
+     */
+    JS_ASSERT(cx->isThreadLocal(this));
 
     uint32_t span = slotSpan();
 
@@ -1301,6 +1311,18 @@ BaseShape::getUnowned(ExclusiveContext *cx, const StackBaseShape &base)
         return nullptr;
 
     return nbase;
+}
+
+/* static */ UnownedBaseShape *
+BaseShape::lookupUnowned(ThreadSafeContext *cx, const StackBaseShape &base)
+{
+    BaseShapeSet &table = cx->compartment_->baseShapes;
+
+    if (!table.initialized())
+        return nullptr;
+
+    BaseShapeSet::Ptr p = table.readonlyThreadsafeLookup(&base);
+    return *p;
 }
 
 void

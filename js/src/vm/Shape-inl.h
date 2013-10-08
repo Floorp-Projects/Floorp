@@ -16,11 +16,12 @@
 
 #include "jsatominlines.h"
 #include "jscntxtinlines.h"
+#include "jsgcinlines.h"
 
 namespace js {
 
 inline
-StackBaseShape::StackBaseShape(ExclusiveContext *cx, const Class *clasp,
+StackBaseShape::StackBaseShape(ThreadSafeContext *cx, const Class *clasp,
                                JSObject *parent, JSObject *metadata, uint32_t objectFlags)
   : flags(objectFlags),
     clasp(clasp),
@@ -73,6 +74,40 @@ Shape::get(JSContext* cx, HandleObject receiver, JSObject* obj, JSObject *pobj,
     return CallJSPropertyOp(cx, self->getterOp(), receiver, id, vp);
 }
 
+inline Shape *
+Shape::search(ExclusiveContext *cx, jsid id)
+{
+    Shape **_;
+    return search(cx, this, id, &_);
+}
+
+inline Shape *
+Shape::searchThreadLocal(ThreadSafeContext *cx, Shape *start, jsid id,
+                         Shape ***pspp, bool adding)
+{
+    /*
+     * Note that adding is a best-effort attempt to claim an entry in a shape
+     * table. In the sequential case, this can be done either when the object
+     * is in dictionary mode, or when it has been hashified.
+     *
+     * In parallel, an object that is in dictionary mode may be thread
+     * local. That is, it was converted to a dictionary in the current thread,
+     * with all its shapes cloned into the current thread, and its shape table
+     * allocated thread locally. In that case, we may add to the
+     * table. Otherwise it is not allowed.
+     */
+    JS_ASSERT_IF(adding, cx->isThreadLocal(start) && start->inDictionary());
+
+    if (start->inDictionary()) {
+        *pspp = start->table().search(id, adding);
+        return SHAPE_FETCH(*pspp);
+    }
+
+    *pspp = nullptr;
+
+    return searchNoHashify(start, id);
+}
+
 inline bool
 Shape::set(JSContext* cx, HandleObject obj, HandleObject receiver, bool strict,
            MutableHandleValue vp)
@@ -104,6 +139,45 @@ Shape::set(JSContext* cx, HandleObject obj, HandleObject receiver, bool strict,
     return CallJSPropertyOpSetter(cx, self->setterOp(), obj, id, strict, vp);
 }
 
+/* static */ inline Shape *
+Shape::search(ExclusiveContext *cx, Shape *start, jsid id, Shape ***pspp, bool adding)
+{
+    if (start->inDictionary()) {
+        *pspp = start->table().search(id, adding);
+        return SHAPE_FETCH(*pspp);
+    }
+
+    *pspp = nullptr;
+
+    if (start->hasTable()) {
+        Shape **spp = start->table().search(id, adding);
+        return SHAPE_FETCH(spp);
+    }
+
+    if (start->numLinearSearches() == LINEAR_SEARCHES_MAX) {
+        if (start->isBigEnoughForAShapeTable()) {
+            if (Shape::hashify(cx, start)) {
+                Shape **spp = start->table().search(id, adding);
+                return SHAPE_FETCH(spp);
+            }
+        }
+        /*
+         * No table built -- there weren't enough entries, or OOM occurred.
+         * Don't increment numLinearSearches, to keep hasTable() false.
+         */
+        JS_ASSERT(!start->hasTable());
+    } else {
+        start->incrementNumLinearSearches();
+    }
+
+    for (Shape *shape = start; shape; shape = shape->parent) {
+        if (shape->propidRef() == id)
+            return shape;
+    }
+
+    return nullptr;
+}
+
 inline
 AutoRooterGetterSetter::Inner::Inner(ExclusiveContext *cx, uint8_t attrs,
                                      PropertyOp *pgetter_, StrictPropertyOp *psetter_)
@@ -126,7 +200,7 @@ AutoRooterGetterSetter::AutoRooterGetterSetter(ExclusiveContext *cx, uint8_t att
 }
 
 inline
-StackBaseShape::AutoRooter::AutoRooter(ExclusiveContext *cx, const StackBaseShape *base_
+StackBaseShape::AutoRooter::AutoRooter(ThreadSafeContext *cx, const StackBaseShape *base_
                                        MOZ_GUARD_OBJECT_NOTIFIER_PARAM_IN_IMPL)
   : CustomAutoRooter(cx), base(base_), skip(cx, base_)
 {
