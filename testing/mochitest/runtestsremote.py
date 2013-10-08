@@ -23,6 +23,7 @@ from mochitest_options import MochitestOptions
 import devicemanager
 import droid
 import manifestparser
+import mozinfo
 import mozlog
 
 log = mozlog.getLogger('Mochi-Remote')
@@ -577,6 +578,12 @@ def main():
 
     mochitest.printDeviceInfo()
 
+    # Add Android version (SDK level) to mozinfo so that manifest entries
+    # can be conditional on android_version.
+    androidVersion = dm.shellCheckOutput(['getprop', 'ro.build.version.sdk'])
+    log.info("Android sdk version '%s'; will use this to filter manifests" % str(androidVersion))
+    mozinfo.info['android_version'] = androidVersion
+
     procName = options.app.split('/')[-1]
     if (dm.processExist(procName)):
         dm.killProcess(procName)
@@ -587,7 +594,7 @@ def main():
         mp = manifestparser.TestManifest(strict=False)
         # TODO: pull this in dynamically
         mp.read(options.robocopIni)
-        robocop_tests = mp.active_tests(exists=False)
+        robocop_tests = mp.active_tests(exists=False, **mozinfo.info)
         tests = []
         my_tests = tests
         for test in robocop_tests:
