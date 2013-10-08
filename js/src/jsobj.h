@@ -899,9 +899,11 @@ class JSObject : public js::ObjectImpl
                 unsigned flags, int shortid);
 
     /* Change the given property into a sibling with the same id in this scope. */
-    static js::Shape *changeProperty(js::ExclusiveContext *cx, js::HandleObject obj,
-                                     js::HandleShape shape, unsigned attrs, unsigned mask,
-                                     JSPropertyOp getter, JSStrictPropertyOp setter);
+    template <js::ExecutionMode mode>
+    static js::Shape *
+    changeProperty(typename js::ExecutionModeTraits<mode>::ExclusiveContextType cx,
+                   js::HandleObject obj, js::HandleShape shape, unsigned attrs, unsigned mask,
+                   JSPropertyOp getter, JSStrictPropertyOp setter);
 
     static inline bool changePropertyAttributes(JSContext *cx, js::HandleObject obj,
                                                 js::HandleShape shape, unsigned attrs);
