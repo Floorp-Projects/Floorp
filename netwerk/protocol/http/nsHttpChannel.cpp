@@ -2089,6 +2089,25 @@ nsHttpChannel::ProcessPartialContent()
 
     nsresult rv;
 
+    int64_t cachedContentLength = mCachedResponseHead->ContentLength();
+    int64_t entitySize = mResponseHead->TotalEntitySize();
+
+    LOG(("nsHttpChannel::ProcessPartialContent [this=%p trans=%p] "
+         "original content-length %lld, entity-size %lld, content-range %s\n",
+         this, mTransaction.get(), cachedContentLength, entitySize,
+         mResponseHead->PeekHeader(nsHttp::Content_Range)));
+
+    if ((entitySize >= 0) && (cachedContentLength >= 0) &&
+        (entitySize != cachedContentLength)) {
+        LOG(("nsHttpChannel::ProcessPartialContent [this=%p] "
+             "206 has different total entity size than the content length "
+             "of the original partially cached entity.\n", this));
+        
+        mCacheEntry->AsyncDoom(nullptr);
+        Cancel(NS_ERROR_CORRUPTED_CONTENT);
+        return CallOnStartRequest();
+    }
+
     if (mConcurentCacheAccess) {
         // We started to read cached data sooner than its write has been done.
         // But the concurrent write has not finished completely, so we had to
@@ -5237,7 +5256,10 @@ nsHttpChannel::OnDataAvailable(nsIRequest *request, nsISupports *ctxt,
 
         uint64_t progressMax(uint64_t(mResponseHead->ContentLength()));
         uint64_t progress = mLogicalOffset + uint64_t(count);
-        MOZ_ASSERT(progress <= progressMax, "unexpected progress values");
+
+        if (progress > progressMax)
+            NS_WARNING("unexpected progress values - "
+                       "is server exceeding content length?");
 
         if (NS_IsMainThread()) {
             OnTransportStatus(nullptr, transportStatus, progress, progressMax);
