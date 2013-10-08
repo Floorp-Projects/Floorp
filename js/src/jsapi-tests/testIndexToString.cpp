@@ -97,7 +97,7 @@ BEGIN_TEST(testStringToPropertyName)
     JSFlatString *hiStr = NewString(cx, hiChars);
     CHECK(hiStr);
     CHECK(!hiStr->isIndex(&index));
-    CHECK(hiStr->toPropertyName(cx) != NULL);
+    CHECK(hiStr->toPropertyName(cx) != nullptr);
 
     static const jschar maxChars[] = { '4', '2', '9', '4', '9', '6', '7', '2', '9', '5' };
     JSFlatString *maxStr = NewString(cx, maxChars);
@@ -109,7 +109,7 @@ BEGIN_TEST(testStringToPropertyName)
     JSFlatString *maxPlusOneStr = NewString(cx, maxPlusOneChars);
     CHECK(maxPlusOneStr);
     CHECK(!maxPlusOneStr->isIndex(&index));
-    CHECK(maxPlusOneStr->toPropertyName(cx) != NULL);
+    CHECK(maxPlusOneStr->toPropertyName(cx) != nullptr);
 
     return true;
 }

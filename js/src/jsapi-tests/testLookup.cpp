@@ -63,16 +63,17 @@ document_resolve(JSContext *cx, JS::HandleObject obj, JS::HandleId id, unsigned 
         if (!flatStr)
             return false;
         if (JS_FlatStringEqualsAscii(flatStr, "all")) {
-            JS::Rooted<JSObject*> docAll(cx, JS_NewObject(cx, &DocumentAllClass, NULL, NULL));
+            JS::Rooted<JSObject*> docAll(cx,
+                                         JS_NewObject(cx, &DocumentAllClass, nullptr, nullptr));
             if (!docAll)
                 return false;
             JS::Rooted<JS::Value> allValue(cx, ObjectValue(*docAll));
-            bool ok = JS_DefinePropertyById(cx, obj, id, allValue, NULL, NULL, 0);
-            objp.set(ok ? obj.get() : NULL);
+            bool ok = JS_DefinePropertyById(cx, obj, id, allValue, nullptr, nullptr, 0);
+            objp.set(ok ? obj.get() : nullptr);
             return ok;
         }
     }
-    objp.set(NULL);
+    objp.set(nullptr);
     return true;
 }
 
@@ -84,9 +85,9 @@ static const JSClass document_class = {
 
 BEGIN_TEST(testLookup_bug570195)
 {
-    JS::RootedObject obj(cx, JS_NewObject(cx, &document_class, NULL, NULL));
+    JS::RootedObject obj(cx, JS_NewObject(cx, &document_class, nullptr, nullptr));
     CHECK(obj);
-    CHECK(JS_DefineProperty(cx, global, "document", OBJECT_TO_JSVAL(obj), NULL, NULL, 0));
+    CHECK(JS_DefineProperty(cx, global, "document", OBJECT_TO_JSVAL(obj), nullptr, nullptr, 0));
     JS::RootedValue v(cx);
     EVAL("document.all ? true : false", v.address());
     CHECK_SAME(v, JSVAL_FALSE);

@@ -286,7 +286,7 @@ OptionParser::handleOption(Option *opt, size_t argc, char **argv, size_t *i, boo
        */
       case OptionKindString:
       {
-        char *value = NULL;
+        char *value = nullptr;
         if (Result r = extractValue(argc, argv, i, &value))
             return r;
         opt->asStringOption()->value = value;
@@ -294,7 +294,7 @@ OptionParser::handleOption(Option *opt, size_t argc, char **argv, size_t *i, boo
       }
       case OptionKindInt:
       {
-        char *value = NULL;
+        char *value = nullptr;
         if (Result r = extractValue(argc, argv, i, &value))
             return r;
         opt->asIntOption()->value = atoi(value);
@@ -302,7 +302,7 @@ OptionParser::handleOption(Option *opt, size_t argc, char **argv, size_t *i, boo
       }
       case OptionKindMultiString:
       {
-        char *value = NULL;
+        char *value = nullptr;
         if (Result r = extractValue(argc, argv, i, &value))
             return r;
         StringArg arg(value, *i);
@@ -466,7 +466,7 @@ OptionParser::findOption(char shortflag)
             return *it;
     }
 
-    return helpOption.shortflag == shortflag ? &helpOption : NULL;
+    return helpOption.shortflag == shortflag ? &helpOption : nullptr;
 }
 
 const Option *
@@ -496,7 +496,7 @@ OptionParser::findOption(const char *longflag)
   no_match:;
     }
 
-    return strcmp(helpOption.longflag, longflag) ? NULL : &helpOption;
+    return strcmp(helpOption.longflag, longflag) ? nullptr : &helpOption;
 }
 
 const Option *
@@ -522,14 +522,14 @@ Option *
 OptionParser::findArgument(const char *name)
 {
     int index = findArgumentIndex(name);
-    return (index == -1) ? NULL : arguments[index];
+    return (index == -1) ? nullptr : arguments[index];
 }
 
 const Option *
 OptionParser::findArgument(const char *name) const
 {
     int index = findArgumentIndex(name);
-    return (index == -1) ? NULL : arguments[index];
+    return (index == -1) ? nullptr : arguments[index];
 }
 
 const char *
@@ -605,7 +605,7 @@ OptionParser::addOptionalStringArg(const char *name, const char *help)
 {
     if (!arguments.reserve(arguments.length() + 1))
         return false;
-    StringOption *so = js_new<StringOption>(1, name, help, (const char *) NULL);
+    StringOption *so = js_new<StringOption>(1, name, help, (const char *) nullptr);
     if (!so)
         return false;
     arguments.infallibleAppend(so);
@@ -618,7 +618,7 @@ OptionParser::addOptionalMultiStringArg(const char *name, const char *help)
     JS_ASSERT_IF(!arguments.empty(), !arguments.back()->isVariadic());
     if (!arguments.reserve(arguments.length() + 1))
         return false;
-    MultiStringOption *mso = js_new<MultiStringOption>(1, name, help, (const char *) NULL);
+    MultiStringOption *mso = js_new<MultiStringOption>(1, name, help, (const char *) nullptr);
     if (!mso)
         return false;
     arguments.infallibleAppend(mso);
