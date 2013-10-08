@@ -105,7 +105,6 @@ JS_IterateCompartments(JSRuntime *rt, void *data,
     JS_ASSERT(!rt->isHeapBusy());
 
     AutoTraceSession session(rt);
-    rt->gcHelperThread.waitBackgroundSweepOrAllocEnd();
 
     for (CompartmentsIter c(rt); !c.done(); c.next())
         (*compartmentCallback)(rt, data, c);
