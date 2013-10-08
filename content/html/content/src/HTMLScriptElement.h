@@ -30,9 +30,7 @@ public:
   // nsISupports
   NS_DECL_ISUPPORTS_INHERITED
 
-  using nsGenericHTMLElement::GetInnerHTML;
-  virtual void GetInnerHTML(nsAString& aInnerHTML,
-                            mozilla::ErrorResult& aError) MOZ_OVERRIDE;
+  NS_IMETHOD GetInnerHTML(nsAString& aInnerHTML) MOZ_OVERRIDE;
   using nsGenericHTMLElement::SetInnerHTML;
   virtual void SetInnerHTML(const nsAString& aInnerHTML,
                             mozilla::ErrorResult& aError) MOZ_OVERRIDE;
