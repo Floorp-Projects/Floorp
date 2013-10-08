@@ -44,10 +44,10 @@ CustomMethod(JSContext *cx, unsigned argc, Value *vp)
 BEGIN_TEST(test_CallNonGenericMethodOnProxy)
 {
   // Create the first global object and compartment
-  JS::RootedObject globalA(cx, JS_NewGlobalObject(cx, getGlobalClass(), NULL, JS::FireOnNewGlobalHook));
+  JS::RootedObject globalA(cx, JS_NewGlobalObject(cx, getGlobalClass(), nullptr, JS::FireOnNewGlobalHook));
   CHECK(globalA);
 
-  JS::RootedObject customA(cx, JS_NewObject(cx, &CustomClass, NULL, NULL));
+  JS::RootedObject customA(cx, JS_NewObject(cx, &CustomClass, nullptr, nullptr));
   CHECK(customA);
   JS_SetReservedSlot(customA, CUSTOM_SLOT, Int32Value(17));
 
@@ -55,17 +55,17 @@ BEGIN_TEST(test_CallNonGenericMethodOnProxy)
   CHECK(customMethodA);
 
   JS::RootedValue rval(cx);
-  CHECK(JS_CallFunction(cx, customA, customMethodA, 0, NULL, rval.address()));
+  CHECK(JS_CallFunction(cx, customA, customMethodA, 0, nullptr, rval.address()));
   CHECK_SAME(rval, Int32Value(17));
 
   // Now create the second global object and compartment...
   {
-    JS::RootedObject globalB(cx, JS_NewGlobalObject(cx, getGlobalClass(), NULL, JS::FireOnNewGlobalHook));
+    JS::RootedObject globalB(cx, JS_NewGlobalObject(cx, getGlobalClass(), nullptr, JS::FireOnNewGlobalHook));
     CHECK(globalB);
 
     // ...and enter it.
     JSAutoCompartment enter(cx, globalB);
-    JS::RootedObject customB(cx, JS_NewObject(cx, &CustomClass, NULL, NULL));
+    JS::RootedObject customB(cx, JS_NewObject(cx, &CustomClass, nullptr, nullptr));
     CHECK(customB);
     JS_SetReservedSlot(customB, CUSTOM_SLOT, Int32Value(42));
 
@@ -73,14 +73,14 @@ BEGIN_TEST(test_CallNonGenericMethodOnProxy)
     CHECK(customMethodB);
 
     JS::RootedValue rval(cx);
-    CHECK(JS_CallFunction(cx, customB, customMethodB, 0, NULL, rval.address()));
+    CHECK(JS_CallFunction(cx, customB, customMethodB, 0, nullptr, rval.address()));
     CHECK_SAME(rval, Int32Value(42));
 
     JS::RootedObject wrappedCustomA(cx, customA);
     CHECK(JS_WrapObject(cx, wrappedCustomA.address()));
 
     JS::RootedValue rval2(cx);
-    CHECK(JS_CallFunction(cx, wrappedCustomA, customMethodB, 0, NULL, rval2.address()));
+    CHECK(JS_CallFunction(cx, wrappedCustomA, customMethodB, 0, nullptr, rval2.address()));
     CHECK_SAME(rval, Int32Value(42));
   }
 

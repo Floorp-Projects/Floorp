@@ -142,7 +142,7 @@ js::GetNativeStackBaseImpl()
         if (fs) {
             char line[100];
             unsigned long stackAddr = (unsigned long)&sattr;
-            while (fgets(line, sizeof(line), fs) != NULL) {
+            while (fgets(line, sizeof(line), fs) != nullptr) {
                 unsigned long stackStart;
                 unsigned long stackEnd;
                 if (sscanf(line, "%lx-%lx ", &stackStart, &stackEnd) == 2 &&

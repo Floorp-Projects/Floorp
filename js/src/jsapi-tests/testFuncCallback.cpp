@@ -36,7 +36,7 @@ funcTransition2(const JSFunction *, const JSScript*, const JSContext*, int)
 }
 
 static int overlays = 0;
-static JSFunctionCallback innerCallback = NULL;
+static JSFunctionCallback innerCallback = nullptr;
 static void
 funcTransitionOverlay(const JSFunction *fun,
                       const JSScript *script,
@@ -78,7 +78,7 @@ BEGIN_TEST(testFuncCallback_bug507012)
     CHECK_EQUAL(enters, 777);
 
     // Check whether we can turn off function tracing
-    JS_SetFunctionCallback(cx, NULL);
+    JS_SetFunctionCallback(cx, nullptr);
     EXEC("f(1)");
     CHECK_EQUAL(enters, 777);
     interpreted = enters = leaves = depth = 0;

@@ -102,7 +102,7 @@ class TraceLogging
     TraceLogging(Logger id);
     ~TraceLogging();
 
-    void log(Type type, const char* text = NULL, unsigned int number = 0);
+    void log(Type type, const char* text = nullptr, unsigned int number = 0);
     void log(Type type, const JS::CompileOptions &options);
     void log(Type type, JSScript* script);
     void log(const char* log);
