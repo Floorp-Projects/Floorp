@@ -50,10 +50,8 @@ let gMgr = Cc["@mozilla.org/memory-reporter-manager;1"]
 
 // We need to know about "child-memory-reporter-update" events from child
 // processes.
-let gOs = Cc["@mozilla.org/observer-service;1"]
-            .getService(Ci.nsIObserverService);
-gOs.addObserver(updateAboutMemoryFromReporters,
-                "child-memory-reporter-update", false);
+Services.obs.addObserver(updateAboutMemoryFromReporters,
+                         "child-memory-reporter-update", false);
 
 let gUnnamedProcessStr = "Main Process";
 
@@ -122,8 +120,8 @@ function debug(x)
 
 function onUnload()
 {
-  gOs.removeObserver(updateAboutMemoryFromReporters,
-                     "child-memory-reporter-update");
+  Services.obs.removeObserver(updateAboutMemoryFromReporters,
+                              "child-memory-reporter-update");
 }
 
 //---------------------------------------------------------------------------
@@ -411,9 +409,7 @@ function onLoad()
 function doGC()
 {
   Cu.forceGC();
-  let os = Cc["@mozilla.org/observer-service;1"]
-             .getService(Ci.nsIObserverService);
-  os.notifyObservers(null, "child-gc-request", null);
+  Services.obs.notifyObservers(null, "child-gc-request", null);
   updateMainAndFooter("Garbage collection completed", HIDE_FOOTER);
 }
 
@@ -422,9 +418,7 @@ function doCC()
   window.QueryInterface(Ci.nsIInterfaceRequestor)
         .getInterface(Ci.nsIDOMWindowUtils)
         .cycleCollect();
-  let os = Cc["@mozilla.org/observer-service;1"]
-             .getService(Ci.nsIObserverService);
-  os.notifyObservers(null, "child-cc-request", null);
+  Services.obs.notifyObservers(null, "child-cc-request", null);
   updateMainAndFooter("Cycle collection completed", HIDE_FOOTER);
 }
 
@@ -440,7 +434,7 @@ function doMeasure()
   // update the page.  If any reports come back from children,
   // updateAboutMemoryFromReporters() will be called again and the page will
   // regenerate.
-  gOs.notifyObservers(null, "child-memory-reporter-request", null);
+  Services.obs.notifyObservers(null, "child-memory-reporter-request", null);
   updateAboutMemoryFromReporters();
 }
 
@@ -616,8 +610,6 @@ function updateAboutMemoryFromTwoFiles(aFilename1, aFilename2)
 function updateAboutMemoryFromClipboard()
 {
   // Get the clipboard's contents.
-  let cb = Cc["@mozilla.org/widget/clipboard;1"].
-           getService(Components.interfaces.nsIClipboard);
   let transferable = Cc["@mozilla.org/widget/transferable;1"]
                        .createInstance(Ci.nsITransferable);
   let loadContext = window.QueryInterface(Ci.nsIInterfaceRequestor)
@@ -625,7 +617,7 @@ function updateAboutMemoryFromClipboard()
                           .QueryInterface(Ci.nsILoadContext);
   transferable.init(loadContext);
   transferable.addDataFlavor('text/unicode');
-  cb.getData(transferable, Ci.nsIClipboard.kGlobalClipboard);
+  Services.clipboard.getData(transferable, Ci.nsIClipboard.kGlobalClipboard);
 
   var cbData = {};
   try {
