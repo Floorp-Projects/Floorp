@@ -5081,7 +5081,7 @@ class ParallelCompilationGuard
 {
     WorkerThreadState *parallelState_;
   public:
-    ParallelCompilationGuard() : parallelState_(NULL) {}
+    ParallelCompilationGuard() : parallelState_(nullptr) {}
     ~ParallelCompilationGuard() {
         if (parallelState_) {
             JS_ASSERT(parallelState_->asmJSCompilationInProgress == true);

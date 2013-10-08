@@ -27,7 +27,7 @@ callCountHook(JSContext *cx, JSAbstractFramePtr frame, bool isConstructing, bool
 BEGIN_TEST(testDebugger_bug519719)
 {
     CHECK(JS_SetDebugMode(cx, true));
-    JS_SetCallHook(rt, callCountHook, NULL);
+    JS_SetCallHook(rt, callCountHook, nullptr);
     EXEC("function call(fn) { fn(0); }\n"
          "function f(g) { for (var i = 0; i < 9; i++) call(g); }\n"
          "f(Math.sin);\n"    // record loop, starting in f
@@ -48,7 +48,7 @@ nonStrictThisHook(JSContext *cx, JSAbstractFramePtr frame, bool isConstructing, 
         frame.getThisValue(cx, &thisv);
         *allWrapped = *allWrapped && !JSVAL_IS_PRIMITIVE(thisv);
     }
-    return NULL;
+    return nullptr;
 }
 
 BEGIN_TEST(testDebugger_getThisNonStrict)
@@ -87,7 +87,7 @@ strictThisHook(JSContext *cx, JSAbstractFramePtr frame, bool isConstructing, boo
         frame.getThisValue(cx, &thisv);
         *anyWrapped = *anyWrapped || !JSVAL_IS_PRIMITIVE(thisv);
     }
-    return NULL;
+    return nullptr;
 }
 
 BEGIN_TEST(testDebugger_getThisStrict)
@@ -132,7 +132,7 @@ ThrowHook(JSContext *cx, JSScript *, jsbytecode *, jsval *rval, void *closure)
 BEGIN_TEST(testDebugger_throwHook)
 {
     CHECK(JS_SetDebugMode(cx, true));
-    CHECK(JS_SetThrowHook(rt, ThrowHook, NULL));
+    CHECK(JS_SetThrowHook(rt, ThrowHook, nullptr));
     EXEC("function foo() { throw 3 };\n"
          "for (var i = 0; i < 10; ++i) { \n"
          "  var x = {}\n"
@@ -141,7 +141,7 @@ BEGIN_TEST(testDebugger_throwHook)
          "  } catch(e) {}\n"
          "}\n");
     CHECK(called);
-    CHECK(JS_SetThrowHook(rt, NULL, NULL));
+    CHECK(JS_SetThrowHook(rt, nullptr, nullptr));
     return true;
 }
 END_TEST(testDebugger_throwHook)
@@ -149,7 +149,7 @@ END_TEST(testDebugger_throwHook)
 BEGIN_TEST(testDebugger_debuggerObjectVsDebugMode)
 {
     CHECK(JS_DefineDebuggerObject(cx, global));
-    JS::RootedObject debuggee(cx, JS_NewGlobalObject(cx, getGlobalClass(), NULL, JS::FireOnNewGlobalHook));
+    JS::RootedObject debuggee(cx, JS_NewGlobalObject(cx, getGlobalClass(), nullptr, JS::FireOnNewGlobalHook));
     CHECK(debuggee);
 
     {
@@ -189,7 +189,7 @@ BEGIN_TEST(testDebugger_newScriptHook)
 {
     // Test that top-level indirect eval fires the newScript hook.
     CHECK(JS_DefineDebuggerObject(cx, global));
-    JS::RootedObject g(cx, JS_NewGlobalObject(cx, getGlobalClass(), NULL, JS::FireOnNewGlobalHook));
+    JS::RootedObject g(cx, JS_NewGlobalObject(cx, getGlobalClass(), nullptr, JS::FireOnNewGlobalHook));
     CHECK(g);
     {
         JSAutoCompartment ae(cx, g);
@@ -240,7 +240,7 @@ END_TEST(testDebugger_newScriptHook)
 BEGIN_TEST(testDebugger_singleStepThrow)
     {
         CHECK(JS_SetDebugModeForCompartment(cx, cx->compartment(), true));
-        CHECK(JS_SetInterrupt(rt, onStep, NULL));
+        CHECK(JS_SetInterrupt(rt, onStep, nullptr));
 
         CHECK(JS_DefineFunction(cx, global, "setStepMode", setStepMode, 0, 0));
         EXEC("var e;\n"
@@ -255,7 +255,7 @@ BEGIN_TEST(testDebugger_singleStepThrow)
     setStepMode(JSContext *cx, unsigned argc, jsval *vp)
     {
         JS::RootedScript script(cx);
-        JS_DescribeScriptedCaller(cx, &script, NULL);
+        JS_DescribeScriptedCaller(cx, &script, nullptr);
         JS_ASSERT(script);
 
         if (!JS_SetSingleStepMode(cx, script, true))
