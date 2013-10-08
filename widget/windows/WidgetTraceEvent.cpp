@@ -28,13 +28,13 @@
 namespace {
 
 // Used for signaling the background thread from the main thread.
-HANDLE sEventHandle = NULL;
+HANDLE sEventHandle = nullptr;
 
 // We need a runnable in order to find the hidden window on the main
 // thread.
 class HWNDGetter : public nsRunnable {
 public:
-  HWNDGetter() : hidden_window_hwnd(NULL) {
+  HWNDGetter() : hidden_window_hwnd(nullptr) {
     MOZ_COUNT_CTOR(HWNDGetter);
   }
   ~HWNDGetter() {
@@ -91,20 +91,20 @@ namespace mozilla {
 
 bool InitWidgetTracing()
 {
-  sEventHandle = CreateEvent(NULL, FALSE, FALSE, NULL);
-  return sEventHandle != NULL;
+  sEventHandle = CreateEvent(nullptr, FALSE, FALSE, nullptr);
+  return sEventHandle != nullptr;
 }
 
 void CleanUpWidgetTracing()
 {
   CloseHandle(sEventHandle);
-  sEventHandle = NULL;
+  sEventHandle = nullptr;
 }
 
 // This function is called from the main (UI) thread.
 void SignalTracerThread()
 {
-  if (sEventHandle != NULL)
+  if (sEventHandle != nullptr)
     SetEvent(sEventHandle);
 }
 
@@ -114,12 +114,12 @@ bool FireAndWaitForTracerEvent()
   NS_ABORT_IF_FALSE(sEventHandle, "Tracing not initialized!");
 
   // First, try to find the hidden window.
-  static HWND hidden_window = NULL;
-  if (hidden_window == NULL) {
+  static HWND hidden_window = nullptr;
+  if (hidden_window == nullptr) {
     hidden_window = GetHiddenWindowHWND();
   }
 
-  if (hidden_window == NULL)
+  if (hidden_window == nullptr)
     return false;
 
   // Post the tracer message into the hidden window's message queue,
