@@ -32,6 +32,7 @@ namespace mozilla {
 namespace dom {
 
 class Date;
+class DirPickerFileListBuilderTask;
 
 class UploadLastDir MOZ_FINAL : public nsIObserver, public nsSupportsWeakReference {
 public:
@@ -87,6 +88,8 @@ class HTMLInputElement MOZ_FINAL : public nsGenericHTMLFormElementWithState,
                                    public nsITimerCallback,
                                    public nsIConstraintValidation
 {
+  friend class DirPickerFileListBuilderTask;
+
 public:
   using nsIConstraintValidation::GetValidationMessage;
   using nsIConstraintValidation::CheckValidity;
@@ -402,12 +405,8 @@ public:
   nsDOMFileList* GetFiles();
 
   void OpenDirectoryPicker(ErrorResult& aRv);
+  void CancelDirectoryPickerScanIfRunning();
 
-  void ResetProgressCounters()
-  {
-    mFileListProgress = 0;
-    mLastFileListProgress = 0;
-  }
   void StartProgressEventTimer();
   void MaybeDispatchProgressEvent(bool aFinalProgress);
   void DispatchProgressEvent(const nsAString& aType,
@@ -676,13 +675,6 @@ public:
   // XPCOM SetUserInput() is OK
 
   // XPCOM GetPhonetic() is OK
-
-  void SetFileListProgress(uint32_t mFileCount)
-  {
-    MOZ_ASSERT(!NS_IsMainThread(),
-               "Why are we calling this on the main thread?");
-    mFileListProgress = mFileCount;
-  }
 
 protected:
   virtual JSObject* WrapNode(JSContext* aCx,
@@ -1162,6 +1154,8 @@ protected:
 
   nsRefPtr<nsDOMFileList>  mFileList;
 
+  nsRefPtr<DirPickerFileListBuilderTask> mDirPickerFileListBuilderTask;
+
   nsString mStaticDocFileList;
   
   /** 
@@ -1201,19 +1195,6 @@ protected:
 
   // Float value returned by GetStep() when the step attribute is set to 'any'.
   static const Decimal kStepAny;
-
-  /**
-   * The number of files added to the FileList being built off-main-thread when
-   * mType == NS_FORM_INPUT_FILE and the user selects a directory. This is set
-   * off the main thread, read on main thread.
-   */
-  mozilla::Atomic<uint32_t> mFileListProgress;
-
-  /**
-   * The number of files added to the FileList at the time the last progress
-   * event was fired.
-   */
-  uint32_t mLastFileListProgress;
 
   /**
    * The type of this input (<input type=...>) as an integer.
