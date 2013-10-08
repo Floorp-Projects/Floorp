@@ -521,18 +521,9 @@ public:
 
   // These functions are used for controlling and determining whether dialogs
   // (alert, prompt, confirm) are currently allowed in this window.
-  //
-  // If LimitDialogs gets called, further dialogs on this window will be
-  // rate-limited to 1 dialog every dom.successive_dialog_time_limit ms.
-  //
-  // Even if AreDialogsEnabled returns true, it might not be possible to show
-  // a dialog, due to the rate-limiting imposed by LimitDialogs. Use
-  // CanDialogCurrentlyBeShown to find out if a dialog can be shown.
   void EnableDialogs();
   void DisableDialogs();
   bool AreDialogsEnabled();
-  void LimitDialogs();
-  bool CanDialogCurrentlyBeShown();
 
   virtual void SetHasAudioAvailableEventListeners();
 
@@ -1264,15 +1255,9 @@ protected:
   // to allow disabling of further dialogs from this window.
   TimeStamp                     mLastDialogQuitTime;
 
-  // This is set to true once the user has opted-in to preventing further
-  // dialogs for this window. Subsequent dialogs may still open if
-  // mDialogAbuseCount gets reset.
-  bool                          mStopAbuseDialogs;
-
-  // This flag gets set when dialogs should be permanently disabled for this
-  // window (e.g. when we are closing the tab and therefore are guaranteed to be
-  // destroying this window).
-  bool                          mDialogsPermanentlyDisabled;
+  // This flag keeps track of whether dialogs are
+  // currently enabled on this window.
+  bool                          mAreDialogsEnabled;
 
   nsTHashtable<nsPtrHashKey<nsDOMEventTargetHelper> > mEventTargetObjects;
 
