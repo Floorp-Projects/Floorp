@@ -273,8 +273,8 @@ class Range : public TempObject {
 
     // Construct a range from the given raw values.
     Range(int32_t l, bool lb, int32_t h, bool hb, bool f, uint16_t e)
-      : symbolicLower_(NULL),
-        symbolicUpper_(NULL)
+      : symbolicLower_(nullptr),
+        symbolicUpper_(nullptr)
      {
         rawInitialize(l, lb, h, hb, f, e);
      }

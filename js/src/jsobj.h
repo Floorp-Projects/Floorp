@@ -245,7 +245,7 @@ class JSObject : public js::ObjectImpl
                                    js::gc::InitialHeap heap,
                                    js::HandleShape shape,
                                    js::HandleTypeObject type,
-                                   js::HeapSlot *extantSlots = NULL);
+                                   js::HeapSlot *extantSlots = nullptr);
 
     /* Make an array object with the specified initial state. */
     static inline js::ArrayObject *createArray(js::ExclusiveContext *cx,
@@ -374,7 +374,7 @@ class JSObject : public js::ObjectImpl
     static void shrinkSlots(js::ExclusiveContext *cx, js::HandleObject obj, uint32_t oldCount,
                             uint32_t newCount);
 
-    bool hasDynamicSlots() const { return slots != NULL; }
+    bool hasDynamicSlots() const { return slots != nullptr; }
 
   protected:
     static inline bool updateSlotsForSpan(js::ExclusiveContext *cx,
@@ -450,7 +450,7 @@ class JSObject : public js::ObjectImpl
      *
      * 1. obj->getProto() returns the prototype, but asserts if obj is a proxy.
      * 2. obj->getTaggedProto() returns a TaggedProto, which can be tested to
-     *    check if the proto is an object, NULL, or lazily computed.
+     *    check if the proto is an object, nullptr, or lazily computed.
      * 3. JSObject::getProto(cx, obj, &proto) computes the proto of an object.
      *    If obj is a proxy and the proto is lazy, this code may allocate or
      *    GC in order to compute the proto. Currently, it will not run JS code.
@@ -498,10 +498,10 @@ class JSObject : public js::ObjectImpl
     /*
      * Parents and scope chains.
      *
-     * All script-accessible objects with a NULL parent are global objects,
-     * and all global objects have a NULL parent. Some builtin objects which
-     * are not script-accessible also have a NULL parent, such as parser
-     * created functions for non-compileAndGo scripts.
+     * All script-accessible objects with a nullptr parent are global objects,
+     * and all global objects have a nullptr parent. Some builtin objects
+     * which are not script-accessible also have a nullptr parent, such as
+     * parser created functions for non-compileAndGo scripts.
      *
      * Except for the non-script-accessible builtins, the global with which an
      * object is associated can be reached by following parent links to that
@@ -1249,7 +1249,7 @@ js_IdentifyClassPrototype(JSObject *obj);
  */
 bool
 js_FindClassObject(js::ExclusiveContext *cx, JSProtoKey protoKey, js::MutableHandleValue vp,
-                   const js::Class *clasp = NULL);
+                   const js::Class *clasp = nullptr);
 
 /*
  * Find or create a property named by id in obj's scope, with the given getter
@@ -1335,7 +1335,7 @@ const unsigned DNP_UNQUALIFIED  = 2;   /* Unqualified property set.  Only used i
 const unsigned DNP_SKIP_TYPE    = 4;   /* Don't update type information */
 
 /*
- * Return successfully added or changed shape or NULL on error.
+ * Return successfully added or changed shape or nullptr on error.
  */
 extern bool
 DefineNativeProperty(ExclusiveContext *cx, HandleObject obj, HandleId id, HandleValue value,
@@ -1517,7 +1517,7 @@ js_InferFlags(JSContext *cx, unsigned defaultFlags);
  */
 extern bool
 js_GetClassPrototype(js::ExclusiveContext *cx, JSProtoKey protoKey, js::MutableHandleObject protop,
-                     const js::Class *clasp = NULL);
+                     const js::Class *clasp = nullptr);
 
 namespace js {
 

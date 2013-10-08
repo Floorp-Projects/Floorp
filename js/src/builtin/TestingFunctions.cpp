@@ -830,7 +830,7 @@ DumpHeapComplete(JSContext *cx, unsigned argc, jsval *vp)
     CallArgs args = CallArgsFromVp(argc, vp);
 
     DumpHeapNurseryBehaviour nurseryBehaviour = js::IgnoreNurseryObjects;
-    FILE *dumpFile = NULL;
+    FILE *dumpFile = nullptr;
 
     unsigned i = 0;
     if (argc > i) {

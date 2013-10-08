@@ -31,7 +31,7 @@ BEGIN_TEST(testValueABI_retparam)
 {
     JS::RootedObject obj(cx, JS::CurrentGlobalOrNull(cx));
     jsval v = OBJECT_TO_JSVAL(obj);
-    obj = NULL;
+    obj = nullptr;
     CHECK(C_ValueToObject(cx, v, obj.address()));
     bool equal;
     CHECK(JS_StrictlyEqual(cx, v, OBJECT_TO_JSVAL(obj), &equal));

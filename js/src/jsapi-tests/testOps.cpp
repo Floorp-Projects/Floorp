@@ -33,7 +33,7 @@ createMyObject(JSContext* context, unsigned argc, jsval *vp)
 
     //JS_GC(context); //<- if we make GC here, all is ok
 
-    JSObject* myObject = JS_NewObject(context, &myClass, NULL, NULL);
+    JSObject* myObject = JS_NewObject(context, &myClass, nullptr, nullptr);
     *vp = OBJECT_TO_JSVAL(myObject);
 
     JS_EndRequest(context);
@@ -55,7 +55,7 @@ BEGIN_TEST(testOps_bug559006)
 
     for (int i = 0; i < 9; i++) {
         JS::RootedValue rval(cx);
-        CHECK(JS_CallFunctionName(cx, global, "main", 0, NULL, rval.address()));
+        CHECK(JS_CallFunctionName(cx, global, "main", 0, nullptr, rval.address()));
         CHECK_SAME(rval, INT_TO_JSVAL(123));
     }
     return true;

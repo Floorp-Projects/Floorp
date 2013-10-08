@@ -96,13 +96,13 @@ js_dtostr(DtoaState *state, char *buffer, size_t bufferSize, JSDToStrMode mode, 
     dval(d) = dinput;
     numBegin = dtoa(PASS_STATE d, dtoaModes[mode], precision, &decPt, &sign, &numEnd);
     if (!numBegin) {
-        return NULL;
+        return nullptr;
     }
 
     nDigits = numEnd - numBegin;
     JS_ASSERT((size_t) nDigits <= bufferSize - 2);
     if ((size_t) nDigits > bufferSize - 2) {
-        return NULL;
+        return nullptr;
     }
 
     js_memcpy(buffer + 2, numBegin, nDigits);
@@ -300,7 +300,7 @@ js_dtobasestr(DtoaState *state, int base, double dinput)
     dval(d) = dinput;
     buffer = (char*) js_malloc(DTOBASESTR_BUFFER_SIZE);
     if (!buffer)
-        return NULL;
+        return nullptr;
     p = buffer;
 
     if (dval(d) < 0.0
@@ -343,7 +343,7 @@ js_dtobasestr(DtoaState *state, int base, double dinput)
           nomem1:
             Bfree(PASS_STATE b);
             js_free(buffer);
-            return NULL;
+            return nullptr;
         }
         do {
             digit = divrem(b, base);
@@ -367,7 +367,7 @@ js_dtobasestr(DtoaState *state, int base, double dinput)
         int32_t s2, done;
         Bigint *b, *s, *mlo, *mhi;
 
-        b = s = mlo = mhi = NULL;
+        b = s = mlo = mhi = nullptr;
 
         *p++ = '.';
         b = d2b(PASS_STATE df, &e, &bbits);
@@ -379,7 +379,7 @@ js_dtobasestr(DtoaState *state, int base, double dinput)
                 Bfree(PASS_STATE mlo);
             Bfree(PASS_STATE mhi);
             js_free(buffer);
-            return NULL;
+            return nullptr;
         }
         JS_ASSERT(e < 0);
         /* At this point df = b * 2^e.  e must be less than zero because 0 < df < 1. */

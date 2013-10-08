@@ -211,7 +211,7 @@ _OldCacheEntryWrapper::_OldCacheEntryWrapper(nsICacheEntryDescriptor* desc)
 }
 
 _OldCacheEntryWrapper::_OldCacheEntryWrapper(nsICacheEntryInfo* info)
-: mOldInfo(info)
+: mOldDesc(nullptr), mOldInfo(info)
 {
   MOZ_COUNT_CTOR(_OldCacheEntryWrapper);
   LOG(("Creating _OldCacheEntryWrapper %p for info %p", this, info));

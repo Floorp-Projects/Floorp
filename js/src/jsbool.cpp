@@ -142,35 +142,35 @@ js_InitBooleanClass(JSContext *cx, HandleObject obj)
 
     RootedObject booleanProto (cx, global->createBlankPrototype(cx, &BooleanObject::class_));
     if (!booleanProto)
-        return NULL;
+        return nullptr;
     booleanProto->setFixedSlot(BooleanObject::PRIMITIVE_VALUE_SLOT, BooleanValue(false));
 
     RootedFunction ctor(cx, global->createConstructor(cx, Boolean, cx->names().Boolean, 1));
     if (!ctor)
-        return NULL;
+        return nullptr;
 
     if (!LinkConstructorAndPrototype(cx, ctor, booleanProto))
-        return NULL;
+        return nullptr;
 
-    if (!DefinePropertiesAndBrand(cx, booleanProto, NULL, boolean_methods))
-        return NULL;
+    if (!DefinePropertiesAndBrand(cx, booleanProto, nullptr, boolean_methods))
+        return nullptr;
 
     Handle<PropertyName*> valueOfName = cx->names().valueOf;
     RootedFunction
         valueOf(cx, NewFunction(cx, NullPtr(), bool_valueOf, 0, JSFunction::NATIVE_FUN,
                                 global, valueOfName));
     if (!valueOf)
-        return NULL;
+        return nullptr;
 
     RootedValue value(cx, ObjectValue(*valueOf));
     if (!JSObject::defineProperty(cx, booleanProto, valueOfName, value,
                                   JS_PropertyStub, JS_StrictPropertyStub, 0))
     {
-        return NULL;
+        return nullptr;
     }
 
     if (!DefineConstructorAndPrototype(cx, global, JSProto_Boolean, ctor, booleanProto))
-        return NULL;
+        return nullptr;
 
     return booleanProto;
 }
