@@ -103,16 +103,8 @@ public:
     {
         MarkDestroyed();
 
-        if (mContext) {
-            if ([NSOpenGLContext currentContext] == mContext) {
-                // Clear the current context before releasing. If we don't do
-                // this, the next time we call [NSOpenGLContext currentContext],
-                // "invalid context" will be printed to the console.
-                [NSOpenGLContext clearCurrentContext];
-            }
+        if (mContext)
             [mContext release];
-        }
-
     }
 
     GLContextType GetContextType() {
