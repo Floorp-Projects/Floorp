@@ -1,0 +1,28 @@
+<!--docytpe html-->
+<html><head>
+<meta http-equiv="content-type" content="text/html; charset=UTF-8">
+<meta charset="UTF-8">
+<script>
+window.onload=function(){
+var c=document.getElementById("myCanvas").getContext("2d");
+var in1=document.getElementById("in1");
+var in2=document.getElementById("in2");
+in1.focus();
+if(c.drawCustomFocusRing(in1)) {
+   c.beginPath();
+   c.strokeRect(10, 10, 200, 200);
+}
+if(c.drawCustomFocusRing(in2)) {
+   c.beginPath();
+   c.strokeRect(10, 220, 200, 200);
+}
+}
+</script>
+</head>
+<body>
+<canvas id="myCanvas" height="500" width="500" style="border:1px solid black">
+   <input id="in1" type="range" min="1" max="12">
+   <input id="in2" type="range" min="1" max="12">
+</canvas>
+
+</body></html>
