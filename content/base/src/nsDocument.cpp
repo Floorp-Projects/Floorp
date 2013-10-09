@@ -1315,6 +1315,49 @@ nsDOMStyleSheetSetList::GetSets(nsTArray<nsString>& aStyleSets)
 }
 
 // ==================================================================
+nsIDocument::SelectorCache::SelectorCache()
+  : nsExpirationTracker<SelectorCacheKey, 4>(1000) { }
+
+// CacheList takes ownership of aSelectorList.
+void nsIDocument::SelectorCache::CacheList(const nsAString& aSelector,
+                                           nsCSSSelectorList* aSelectorList)
+{
+  SelectorCacheKey* key = new SelectorCacheKey(aSelector);
+  mTable.Put(key->mKey, aSelectorList);
+  AddObject(key);
+}
+
+class nsIDocument::SelectorCacheKeyDeleter MOZ_FINAL : public nsRunnable
+{
+public:
+  explicit SelectorCacheKeyDeleter(SelectorCacheKey* aToDelete)
+    : mSelector(aToDelete)
+  {
+    MOZ_COUNT_CTOR(SelectorCacheKeyDeleter);
+  }
+
+  ~SelectorCacheKeyDeleter()
+  {
+    MOZ_COUNT_DTOR(SelectorCacheKeyDeleter);
+  }
+
+  NS_IMETHOD Run()
+  {
+    return NS_OK;
+  }
+
+private:
+  nsAutoPtr<SelectorCacheKey> mSelector;
+};
+
+void nsIDocument::SelectorCache::NotifyExpired(SelectorCacheKey* aSelector)
+{
+  RemoveObject(aSelector);
+  mTable.Remove(aSelector->mKey);
+  nsCOMPtr<nsIRunnable> runnable = new SelectorCacheKeyDeleter(aSelector);
+  NS_DispatchToCurrentThread(runnable);
+}
+
 
 struct nsIDocument::FrameRequest
 {
