@@ -12,10 +12,6 @@ ANDROID_EXTRA_JARS += \
   $(srcdir)/robotium-solo-4.2.jar \
   $(NULL)
 
-ANDROID_RESFILES = \
-  res/values/strings.xml \
-  $(NULL)
-
 ANDROID_ASSETS_DIR := $(TESTPATH)/assets
 
 _JAVA_HARNESS := \
