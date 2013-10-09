@@ -448,28 +448,6 @@ documenttab[selected] .documenttab-selection {
   visibility: hidden;
 }
 
-.circularprogressindicator-progressRing {
-  visibility: visible;
-  margin: 0 @toolbar_horizontal_spacing@;
-  pointer-events:none;
-  position: absolute;
-}
-.circularprogressindicator-progressTrack {
-  visibility: visible;
-  margin: 0 @toolbar_horizontal_spacing@;
-  pointer-events: none;
-  position: absolute;
-  width: 40px;
-  height: 40px;
-  background-repeat: no-repeat;
-  background-size: 40px 40px;
-  background-image: url(chrome://browser/skin/images/progresscircle-bg.png);
-}
-.circularprogressindicator-progressRing:not([progress]),
-.circularprogressindicator-progressTrack:not([progress]) {
-  visibility: hidden;
-}
-
 /* Progress meter ---------------------------------------------------------- */
 
 #progress-container {
@@ -765,14 +743,17 @@ documenttab[selected] .documenttab-selection {
   visibility: collapse;
 }
 
-.circularprogressindicator-progressButton {
-  margin: 0 @toolbar_horizontal_spacing@;
+#download-progress:not([progress]) {
+  visibility: collapse;
+}
+
+#download-progress {
   -moz-image-region: rect(0px, 40px, 40px, 0px) !important;
 }
-.circularprogressindicator-progressButton:hover {
+#download-progress:hover {
   -moz-image-region: rect(40px, 40px, 80px, 0px) !important;
 }
-.circularprogressindicator-progressButton:active {
+#download-progress:active {
   -moz-image-region: rect(80px, 40px, 120px, 0px) !important;
 }
 

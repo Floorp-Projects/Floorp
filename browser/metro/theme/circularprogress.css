@@ -1,0 +1,31 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+%filter substitution
+%include defines.inc
+
+.circularprogressindicator-progressButton,
+.circularprogressindicator-progressRing,
+.circularprogressindicator-progressTrack {
+  margin: 0 @toolbar_horizontal_spacing@;
+}
+
+.circularprogressindicator-progressRing,
+.circularprogressindicator-progressTrack {
+  pointer-events:none;
+  position: absolute;
+}
+
+.circularprogressindicator-progressTrack {
+  width: 40px;
+  height: 40px;
+  background-repeat: no-repeat;
+  background-size: 40px 40px;
+  background-image: url(chrome://browser/skin/images/progresscircle-bg.png);
+}
+
+.circularprogressindicator-progressRing:not([progress]),
+.circularprogressindicator-progressTrack:not([progress]) {
+  visibility: hidden;
+}

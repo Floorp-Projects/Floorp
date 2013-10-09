@@ -4962,13 +4962,9 @@ var ErrorPageEventHandler = {
                 Cu.reportError("Couldn't get malware report URL: " + e);
               }
             } else {
-              // It's a phishing site, not malware. (There's no report URL)
-              try {
-                let reportURL = formatter.formatURLPref("browser.safebrowsing.warning.infoURL");
-                BrowserApp.selectedBrowser.loadURI(reportURL);
-              } catch (e) {
-                Cu.reportError("Couldn't get phishing info URL: " + e);
-              }
+              // It's a phishing site, just link to the generic information page
+              let url = Services.urlFormatter.formatURLPref("app.support.baseURL");
+              BrowserApp.selectedBrowser.loadURI(url + "phishing-malware");
             }
           } else if (target == errorDoc.getElementById("ignoreWarningButton")) {
             Telemetry.addData("SECURITY_UI", nsISecTel[bucketName + "IGNORE_WARNING"]);

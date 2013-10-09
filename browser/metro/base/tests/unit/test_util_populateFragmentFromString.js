@@ -5,10 +5,8 @@
 
 "use strict";
 
-let Cu = Components.utils;
-Cu.import("resource://gre/modules/XPCOMUtils.jsm");
-Cu.import("resource:///modules/ContentUtil.jsm");
-load("Util.js");
+Components.utils.import("resource:///modules/ContentUtil.jsm");
+let Util = ContentUtil;
 
 function empty_node(node) {
   let cnode;
@@ -34,8 +32,6 @@ function run_test() {
   do_print("Testing Util.populateFragmentFromString");
 
   do_check_true(!!Util.populateFragmentFromString);
-  do_check_true(!!ContentUtil.populateFragmentFromString);
-  do_check_eq(ContentUtil.populateFragmentFromString, Util.populateFragmentFromString);
 
   do_print("Loading blank document");
   doc = do_parse_document("blank.xhtml", "application/xhtml+xml");
