@@ -27,7 +27,7 @@ public:
    *
    * @param   aPrintOptions options for printing
    * @param   aStatusCallback interface that the client provides to receive
-   *            progress notifications. Can be NULL
+   *            progress notifications. Can be nullptr
    * @return  NS_OK if successful
    *          NS_ERROR_ABORT if the client cancels printing using the callback
    *            interface

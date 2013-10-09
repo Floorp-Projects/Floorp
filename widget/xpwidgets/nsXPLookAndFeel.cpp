@@ -12,6 +12,7 @@
 #include "nsCRT.h"
 #include "nsFont.h"
 #include "mozilla/Preferences.h"
+#include "mozilla/gfx/2D.h"
 
 #include "gfxPlatform.h"
 #include "qcms.h"

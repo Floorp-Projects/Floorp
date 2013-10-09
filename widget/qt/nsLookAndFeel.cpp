@@ -451,10 +451,10 @@ nsLookAndFeel::GetFontImpl(FontID aID, nsString& aFontName,
                            gfxFontStyle& aFontStyle,
                            float aDevPixPerCSSPixel)
 {
-  const char *className = NULL;
-  nsString *cachedFontName = NULL;
-  gfxFontStyle *cachedFontStyle = NULL;
-  bool *isCached = NULL;
+  const char *className = nullptr;
+  nsString *cachedFontName = nullptr;
+  gfxFontStyle *cachedFontStyle = nullptr;
+  bool *isCached = nullptr;
 
   switch (aID) {
     case eFont_Menu:         // css2

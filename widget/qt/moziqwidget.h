@@ -32,7 +32,7 @@ public:
      */
     virtual void setModal(bool) {}
     virtual void dropReceiver() { };
-    virtual nsWindow* getReceiver() { return NULL; };
+    virtual nsWindow* getReceiver() { return nullptr; };
 
     virtual void activate() {}
     virtual void deactivate() {}
@@ -118,7 +118,7 @@ public:
     MozQGraphicsView(QWidget * aParent = nullptr)
      : QGraphicsView (new QGraphicsScene(), aParent)
      , mEventHandler(this)
-     , mTopLevelWidget(NULL)
+     , mTopLevelWidget(nullptr)
      , mGLWidget(0)
     {
         setMouseTracking(true);
@@ -260,8 +260,8 @@ public:
     MozMGraphicsView(QWidget* aParent = nullptr)
      : MWindow(aParent)
      , mEventHandler(this)
-     , mTopLevelWidget(NULL)
-     , mSceneWin(NULL)
+     , mTopLevelWidget(nullptr)
+     , mSceneWin(nullptr)
     {
         QObject::connect(this, SIGNAL(switcherEntered()), this, SLOT(onSwitcherEntered()));
         QObject::connect(this, SIGNAL(switcherExited()), this, SLOT(onSwitcherExited()));

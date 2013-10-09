@@ -677,13 +677,9 @@ var Browser = {
         break;
       }
       case "report-phishing": {
-        // It's a phishing site, not malware
-        try {
-          let reportURL = formatter.formatURLPref("browser.safebrowsing.warning.infoURL");
-          this.loadURI(reportURL);
-        } catch (e) {
-          Cu.reportError("Couldn't get phishing info URL: " + e);
-        }
+        // It's a phishing site, just link to the generic information page
+        let url = Services.urlFormatter.formatURLPref("app.support.baseURL");
+        this.loadURI(url + "phishing-malware");
         break;
       }
     }
@@ -1242,6 +1238,8 @@ function Tab(aURI, aParams, aOwner) {
   this._browser = null;
   this._notification = null;
   this._loading = false;
+  this._progressActive = false;
+  this._progressCount = 0;
   this._chromeTab = null;
   this._eventDeferred = null;
   this._updateThumbnailTimeout = null;

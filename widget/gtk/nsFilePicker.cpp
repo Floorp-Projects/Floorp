@@ -92,10 +92,11 @@ UpdateFilePreviewWidget(GtkFileChooser *file_chooser,
   if (preview_width > MAX_PREVIEW_SIZE || preview_height > MAX_PREVIEW_SIZE) {
     preview_pixbuf = gdk_pixbuf_new_from_file_at_size(image_filename,
                                                       MAX_PREVIEW_SIZE,
-                                                      MAX_PREVIEW_SIZE, NULL);
+                                                      MAX_PREVIEW_SIZE,
+                                                      nullptr);
   }
   else {
-    preview_pixbuf = gdk_pixbuf_new_from_file(image_filename, NULL);
+    preview_pixbuf = gdk_pixbuf_new_from_file(image_filename, nullptr);
   }
 
   g_free(image_filename);
@@ -367,7 +368,7 @@ nsFilePicker::Open(nsIFilePickerShownCallback *aCallback)
       gtk_file_chooser_dialog_new(title, parent_widget, action,
                                   GTK_STOCK_CANCEL, GTK_RESPONSE_CANCEL,
                                   accept_button, GTK_RESPONSE_ACCEPT,
-                                  NULL);
+                                  nullptr);
   gtk_dialog_set_alternative_button_order(GTK_DIALOG(file_chooser),
                                           GTK_RESPONSE_ACCEPT,
                                           GTK_RESPONSE_CANCEL,
@@ -435,7 +436,7 @@ nsFilePicker::Open(nsIFilePickerShownCallback *aCallback)
     }
 
     GtkFileFilter *filter = gtk_file_filter_new();
-    for (int j = 0; patterns[j] != NULL; ++j) {
+    for (int j = 0; patterns[j] != nullptr; ++j) {
       nsAutoCString caseInsensitiveFilter = MakeCaseInsensitiveShellGlob(g_strstrip(patterns[j]));
       gtk_file_filter_add_pattern(filter, caseInsensitiveFilter.get());
     }

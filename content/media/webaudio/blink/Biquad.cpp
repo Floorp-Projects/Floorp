@@ -81,12 +81,6 @@ void Biquad::process(const float* sourceP, float* destP, size_t framesToProcess)
     m_x2 = DenormalDisabler::flushDenormalFloatToZero(x2);
     m_y1 = DenormalDisabler::flushDenormalFloatToZero(y1);
     m_y2 = DenormalDisabler::flushDenormalFloatToZero(y2);
-
-    m_b0 = b0;
-    m_b1 = b1;
-    m_b2 = b2;
-    m_a1 = a1;
-    m_a2 = a2;
 }
 
 void Biquad::reset()
