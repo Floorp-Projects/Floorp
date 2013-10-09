@@ -6,3 +6,6 @@
 
 MODULE = 'robocop'
 
+ANDROID_RESFILES = [
+    'res/values/strings.xml',
+]

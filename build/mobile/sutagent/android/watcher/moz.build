@@ -6,3 +6,13 @@
 
 MODULE = 'Watcher'
 
+ANDROID_RESFILES = [
+    'res/drawable-hdpi/ateamlogo.png',
+    'res/drawable-hdpi/icon.png',
+    'res/drawable-ldpi/ateamlogo.png',
+    'res/drawable-ldpi/icon.png',
+    'res/drawable-mdpi/ateamlogo.png',
+    'res/drawable-mdpi/icon.png',
+    'res/layout/main.xml',
+    'res/values/strings.xml',
+]
