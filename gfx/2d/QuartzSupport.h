@@ -87,8 +87,8 @@ private:
   mozilla::RefPtr<MacIOSurface> mIOSurface;
   uint32_t                  mFBO;
   uint32_t                  mIOTexture;
-  uint32_t                  mUnsupportedWidth;
-  uint32_t                  mUnsupportedHeight;
+  int                       mUnsupportedWidth;
+  int                       mUnsupportedHeight;
   AllowOfflineRendererEnum  mAllowOfflineRenderer;
   double                    mContentsScaleFactor;
 };

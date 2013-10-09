@@ -807,7 +807,8 @@ void nsCARenderer::AttachIOSurface(RefPtr<MacIOSurface> aSurface) {
     // Rebind the FBO to make it live
     ::glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, mFBO);
 
-    if (mIOSurface->GetWidth() != width || mIOSurface->GetHeight() != height) {
+    if (static_cast<int>(mIOSurface->GetWidth()) != width ||
+        static_cast<int>(mIOSurface->GetHeight()) != height) {
       width = mIOSurface->GetWidth();
       height = mIOSurface->GetHeight();
       SetBounds(width, height);
