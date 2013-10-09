@@ -239,7 +239,7 @@ void
 nsDeviceSensors::FireDOMLightEvent(mozilla::dom::EventTarget* aTarget,
                                    double aValue)
 {
-  DeviceLightEventInit init;
+  DeviceLightEventInitInitializer init;
   init.mBubbles = true;
   init.mCancelable = false;
   init.mValue = aValue;
@@ -258,7 +258,7 @@ nsDeviceSensors::FireDOMProximityEvent(mozilla::dom::EventTarget* aTarget,
                                        double aMin,
                                        double aMax)
 {
-  DeviceProximityEventInit init;
+  DeviceProximityEventInitInitializer init;
   init.mBubbles = true;
   init.mCancelable = false;
   init.mValue = aValue;
@@ -289,7 +289,7 @@ void
 nsDeviceSensors::FireDOMUserProximityEvent(mozilla::dom::EventTarget* aTarget,
                                            bool aNear)
 {
-  UserProximityEventInit init;
+  UserProximityEventInitInitializer init;
   init.mBubbles = true;
   init.mCancelable = false;
   init.mNear = aNear;

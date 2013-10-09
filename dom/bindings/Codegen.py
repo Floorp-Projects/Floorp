@@ -3544,13 +3544,9 @@ for (uint32_t i = 0; i < length; ++i) {
         assert not isOptional
 
         typeName = CGDictionary.makeDictionaryName(type.inner)
-        if not isMember:
-            # Since we're not a member and not nullable or optional, no one will
-            # see our real type, so we can do the fast version of the dictionary
-            # that doesn't pre-initialize members.
-            typeName = "detail::Fast" + typeName
+        actualTypeName = typeName
 
-        declType = CGGeneric(typeName)
+        declType = CGGeneric(actualTypeName)
 
         # We do manual default value handling here, because we
         # actually do want a jsval, and we only handle null anyway
@@ -4428,7 +4424,8 @@ def getRetvalDeclarationForType(returnType, descriptorProvider,
         return result, True, rooter, None
     if returnType.isDictionary():
         nullable = returnType.nullable()
-        dictName = CGDictionary.makeDictionaryName(returnType.unroll().inner)
+        dictName = (CGDictionary.makeDictionaryName(returnType.unroll().inner) +
+                    "Initializer")
         result = CGGeneric(dictName)
         if not isMember and typeNeedsRooting(returnType):
             if nullable:
@@ -8382,20 +8379,7 @@ if (""",
                                visibility="public",
                                body=self.getMemberInitializer(m))
                    for m in self.memberInfo]
-        ctors = [
-            ClassConstructor(
-                [],
-                visibility="public",
-                body=(
-                    "// Safe to pass a null context if we pass a null value\n"
-                    "Init(nullptr, JS::NullHandleValue);")),
-            ClassConstructor(
-                [Argument("int", "")],
-                visibility="protected",
-                explicit=True,
-                bodyInHeader=True,
-                body='// Do nothing here; this is used by our "Fast" subclass')
-            ]
+        ctors = [ClassConstructor([], bodyInHeader=True, visibility="public")]
         methods = []
 
         if self.needToInitIds:
@@ -8429,23 +8413,17 @@ if (""",
             disallowCopyConstruction=disallowCopyConstruction)
 
 
-        fastDictionaryCtor = ClassConstructor(
-            [],
+        initializerCtor = ClassConstructor([],
             visibility="public",
-            bodyInHeader=True,
-            baseConstructors=["%s(42)" % selfName],
-            body="// Doesn't matter what int we pass to the parent constructor"
-            )
-
-        fastStruct = CGClass("Fast" + selfName,
+            body=(
+                "// Safe to pass a null context if we pass a null value\n"
+                "Init(nullptr, JS::NullHandleValue);"))
+        initializerStruct = CGClass(selfName + "Initializer",
             bases=[ClassBase(selfName)],
-            constructors=[fastDictionaryCtor],
+            constructors=[initializerCtor],
             isStruct=True)
 
-        return CGList([struct,
-                       CGNamespace.build(['detail'],
-                                         fastStruct)],
-                      "\n")
+        return CGList([struct, initializerStruct])
 
     def deps(self):
         return self.dictionary.getDeps()

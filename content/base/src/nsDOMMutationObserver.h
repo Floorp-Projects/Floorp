@@ -26,7 +26,7 @@
 #include "nsIDocument.h"
 
 class nsDOMMutationObserver;
-using mozilla::dom::MutationObservingInfo;
+using mozilla::dom::MutationObservingInfoInitializer;
 
 class nsDOMMutationRecord : public nsISupports,
                             public nsWrapperCache
@@ -379,7 +379,7 @@ public:
 
   void HandleMutation();
 
-  void GetObservingInfo(nsTArray<Nullable<MutationObservingInfo> >& aResult);
+  void GetObservingInfo(nsTArray<Nullable<MutationObservingInfoInitializer> >& aResult);
 
   mozilla::dom::MutationCallback* MutationCallback() { return mCallback; }
 
