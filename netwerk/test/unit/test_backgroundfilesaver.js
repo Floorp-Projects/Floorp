@@ -429,6 +429,29 @@ add_task(function test_setTarget_after_close_stream()
   destFile.remove(false);
 });
 
+add_task(function test_setTarget_fast()
+{
+  // This test checks a fast rename of the target file.
+  let destFile1 = getTempFile(TEST_FILE_NAME_1);
+  let destFile2 = getTempFile(TEST_FILE_NAME_2);
+  let saver = new BackgroundFileSaverOutputStream();
+  let completionPromise = promiseSaverComplete(saver);
+
+  // Set the initial name after the stream is closed, then rename immediately.
+  yield promiseCopyToSaver(TEST_DATA_SHORT, saver, true);
+  saver.setTarget(destFile1, false);
+  saver.setTarget(destFile2, false);
+
+  // Wait for all the operations to complete.
+  saver.finish(Cr.NS_OK);
+  yield completionPromise;
+
+  // Verify results and clean up.
+  do_check_false(destFile1.exists());
+  yield promiseVerifyContents(destFile2, TEST_DATA_SHORT);
+  destFile2.remove(false);
+});
+
 add_task(function test_setTarget_multiple()
 {
   // This test checks multiple renames of the target file.
@@ -480,6 +503,43 @@ add_task(function test_enableAppend()
 
   // Clean up.
   destFile.remove(false);
+});
+
+add_task(function test_enableAppend_setTarget_fast()
+{
+  // This test checks a fast rename of the target file in append mode.
+  let destFile1 = getTempFile(TEST_FILE_NAME_1);
+  let destFile2 = getTempFile(TEST_FILE_NAME_2);
+
+  // Test the case where the file does not already exists first, then the case
+  // where the file already exists.
+  for (let i = 0; i < 2; i++) {
+    let saver = new BackgroundFileSaverOutputStream();
+    saver.enableAppend();
+    let completionPromise = promiseSaverComplete(saver);
+
+    yield promiseCopyToSaver(TEST_DATA_SHORT, saver, true);
+
+    // The first time, we start appending to the first file and rename to the
+    // second file.  The second time, we start appending to the second file,
+    // that was created the first time, and rename back to the first file.
+    let firstFile = (i == 0) ? destFile1 : destFile2;
+    let secondFile = (i == 0) ? destFile2 : destFile1;
+    saver.setTarget(firstFile, false);
+    saver.setTarget(secondFile, false);
+
+    saver.finish(Cr.NS_OK);
+    yield completionPromise;
+
+    // Verify results.
+    do_check_false(firstFile.exists());
+    let expectedContents = (i == 0 ? TEST_DATA_SHORT
+                                   : TEST_DATA_SHORT + TEST_DATA_SHORT);
+    yield promiseVerifyContents(secondFile, expectedContents);
+  }
+
+  // Clean up.
+  destFile1.remove(false);
 });
 
 add_task(function test_enableAppend_hash()
