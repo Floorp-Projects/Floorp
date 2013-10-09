@@ -38,6 +38,7 @@
 #include "nsIDOMWindow.h"
 #include "nsPIDOMWindow.h"
 #include "nsDisplayList.h"
+#include "nsFocusManager.h"
 
 #include "nsTArray.h"
 
@@ -1726,6 +1727,90 @@ CanvasRenderingContext2D::Stroke()
            strokeOptions, DrawOptions(state.globalAlpha, UsedOperation()));
 
   Redraw();
+}
+
+void CanvasRenderingContext2D::DrawSystemFocusRing(mozilla::dom::Element& aElement)
+{
+  EnsureUserSpacePath();
+
+  if (!mPath) {
+    return;
+  }
+
+  if(DrawCustomFocusRing(aElement)) {
+    Save();
+
+    // set state to conforming focus state
+    ContextState& state = CurrentState();
+    state.globalAlpha = 1.0;
+    state.shadowBlur = 0;
+    state.shadowOffset.x = 0;
+    state.shadowOffset.y = 0;
+    state.op = mozilla::gfx::OP_OVER;
+
+    state.lineCap = CAP_BUTT;
+    state.lineJoin = mozilla::gfx::JOIN_MITER_OR_BEVEL;
+    state.lineWidth = 1;
+    CurrentState().dash.Clear();
+
+    // color and style of the rings is the same as for image maps
+    // set the background focus color
+    CurrentState().SetColorStyle(STYLE_STROKE, NS_RGBA(255, 255, 255, 255));
+    // draw the focus ring
+    Stroke();
+
+    // set dashing for foreground
+    FallibleTArray<mozilla::gfx::Float>& dash = CurrentState().dash;
+    dash.AppendElement(1);
+    dash.AppendElement(1);
+
+    // set the foreground focus color
+    CurrentState().SetColorStyle(STYLE_STROKE, NS_RGBA(0,0,0, 255));
+    // draw the focus ring
+    Stroke();
+
+    Restore();
+  }
+}
+
+bool CanvasRenderingContext2D::DrawCustomFocusRing(mozilla::dom::Element& aElement)
+{
+  EnsureUserSpacePath();
+
+  HTMLCanvasElement* canvas = GetCanvas();
+
+  if (!canvas|| !nsContentUtils::ContentIsDescendantOf(&aElement, canvas)) {
+    return false;
+  }
+
+  nsIFocusManager* fm = nsFocusManager::GetFocusManager();
+  if (fm) {
+    // check that the element i focused
+    nsCOMPtr<nsIDOMElement> focusedElement;
+    fm->GetFocusedElement(getter_AddRefs(focusedElement));
+    if (SameCOMIdentity(aElement.AsDOMNode(), focusedElement)) {
+      // get the bounds of the current path
+      mgfx::Rect bounds;
+      bounds = mPath->GetBounds(mTarget->GetTransform());
+
+      // and set them as the accessible area
+      nsRect rect(canvas->ClientLeft() + bounds.x, canvas->ClientTop() + bounds.y,
+               bounds.width, bounds.height);
+      rect.x *= AppUnitsPerCSSPixel();
+      rect.y *= AppUnitsPerCSSPixel();
+      rect.width *= AppUnitsPerCSSPixel();
+      rect.height *= AppUnitsPerCSSPixel();
+
+      nsIFrame* frame = aElement.GetPrimaryFrame();
+      if(frame) {
+        frame->SetRect(rect);
+      }
+
+      return true;
+    }
+  }
+
+  return false;
 }
 
 void
