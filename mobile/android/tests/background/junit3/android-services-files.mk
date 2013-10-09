@@ -100,11 +100,3 @@ BACKGROUND_TESTS_JAVA_FILES := \
   src/testhelpers/WBORepository.java \
   $(NULL)
 
-BACKGROUND_TESTS_RES_FILES := \
-  res/drawable-hdpi/icon.png \
-  res/drawable-ldpi/icon.png \
-  res/drawable-mdpi/icon.png \
-  res/layout/main.xml \
-  res/values/strings.xml \
-  $(NULL)
-
