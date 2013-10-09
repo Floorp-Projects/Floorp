@@ -44,7 +44,7 @@ NS_IMETHODIMP
 nsScreenOS2 :: GetAvailRect(int32_t *outLeft, int32_t *outTop, int32_t *outWidth, int32_t *outHeight)
 {
   static APIRET rc = 0;
-  static BOOL (APIENTRY * pfnQueryDesktopWorkArea)(HWND hwndDesktop, PWRECT pwrcWorkArea) = NULL;
+  static BOOL (APIENTRY * pfnQueryDesktopWorkArea)(HWND hwndDesktop, PWRECT pwrcWorkArea) = nullptr;
 
   GetRect(outLeft, outTop, outWidth, outHeight);
 
@@ -58,7 +58,7 @@ nsScreenOS2 :: GetAvailRect(int32_t *outLeft, int32_t *outTop, int32_t *outWidth
       rc = DosQueryModuleHandle( "PMMERGE", &hmod );
       if ( !rc )
       {
-          rc = DosQueryProcAddr( hmod, 5469, NULL, (PFN*) &pfnQueryDesktopWorkArea ); // WinQueryDesktopWorkArea
+          rc = DosQueryProcAddr( hmod, 5469, nullptr, (PFN*) &pfnQueryDesktopWorkArea ); // WinQueryDesktopWorkArea
       }
   }
   if ( pfnQueryDesktopWorkArea && !rc )

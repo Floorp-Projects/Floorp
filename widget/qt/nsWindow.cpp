@@ -2279,7 +2279,7 @@ nsWindow::SetWindowClass(const nsAString &xulWinType)
     XClassHint *class_hint = XAllocClassHint();
     if (!class_hint)
       return NS_ERROR_OUT_OF_MEMORY;
-    const char *role = NULL;
+    const char *role = nullptr;
     class_hint->res_name = ToNewCString(xulWinType);
     if (!class_hint->res_name) {
       XFree(class_hint);
@@ -2588,7 +2588,7 @@ nsWindow::createQWidget(MozQWidget *parent,
                         nsNativeWidget nativeParent,
                         nsWidgetInitData *aInitData)
 {
-    const char *windowName = NULL;
+    const char *windowName = nullptr;
     Qt::WindowFlags flags = Qt::Widget;
     QWidget *parentWidget = (parent && parent->getReceiver()) ?
             parent->getReceiver()->GetViewWidget() : nullptr;

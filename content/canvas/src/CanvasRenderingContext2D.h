@@ -20,6 +20,8 @@
 #include "mozilla/dom/CanvasRenderingContext2DBinding.h"
 #include "mozilla/dom/CanvasPattern.h"
 #include "mozilla/gfx/Rect.h"
+#include "mozilla/gfx/2D.h"
+#include "gfx2DGlue.h"
 
 class nsXULElement;
 

@@ -4,12 +4,8 @@
 
 #include "gfxSVGGlyphs.h"
 
-#include "nscore.h"
 #include "nsError.h"
-#include "nsAutoPtr.h"
-#include "nsIParser.h"
 #include "nsIDOMDocument.h"
-#include "nsIDOMNodeList.h"
 #include "nsString.h"
 #include "nsIDocument.h"
 #include "nsICategoryManager.h"
@@ -18,9 +14,6 @@
 #include "nsIStreamListener.h"
 #include "nsServiceManagerUtils.h"
 #include "nsIPresShell.h"
-#include "nsQueryFrame.h"
-#include "nsIContentSink.h"
-#include "nsXMLContentSink.h"
 #include "nsNetUtil.h"
 #include "nsIInputStream.h"
 #include "nsStringStream.h"
@@ -33,6 +26,8 @@
 #include "nsContentUtils.h"
 #include "gfxFont.h"
 #include "nsSMILAnimationController.h"
+#include "gfxContext.h"
+#include "gfxColor.h"
 #include "harfbuzz/hb.h"
 
 #define SVG_CONTENT_TYPE NS_LITERAL_CSTRING("image/svg+xml")

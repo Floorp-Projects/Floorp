@@ -6,9 +6,17 @@
 #define GFXSHMCOWSURFACEWRAPPER
 
 #include "gfxReusableSurfaceWrapper.h"
-#include "mozilla/layers/ISurfaceAllocator.h"
 
 class gfxSharedImageSurface;
+
+namespace mozilla {
+namespace ipc {
+class Shmem;
+}
+namespace layers {
+class ISurfaceAllocator;
+}
+}
 
 /**
  * A cross-process capable implementation of gfxReusableSurfaceWrapper based
