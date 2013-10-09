@@ -4,4 +4,20 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-TEST_DIRS += ['content/test']
+TEST_DIRS += [
+    'content/test/general',
+]
+
+MOCHITEST_MANIFESTS += [
+    'content/test/general/mochitest.ini',
+]
+
+MOCHITEST_CHROME_MANIFESTS += [
+    'content/test/chrome/chrome.ini',
+]
+
+BROWSER_CHROME_MANIFESTS += [
+    'content/test/general/browser.ini',
+    'content/test/newtab/browser.ini',
+    'content/test/social/browser.ini',
+]
