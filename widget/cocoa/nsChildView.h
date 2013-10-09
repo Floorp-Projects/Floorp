@@ -323,7 +323,6 @@ typedef NSInteger NSEventGestureAxis;
                              type:(mozilla::WidgetMouseEvent::exitType)aType;
 
 - (void)update;
-- (void)lockFocus;
 - (void) _surfaceNeedsUpdate:(NSNotification*)notification;
 
 - (BOOL)isPluginView;
