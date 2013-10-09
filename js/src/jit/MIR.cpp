@@ -554,6 +554,45 @@ MAssertRange::printOpcode(FILE *fp) const
     fprintf(fp, " %s", sp.string());
 }
 
+const char *
+MMathFunction::FunctionName(Function function)
+{
+    switch (function) {
+      case Log:    return "Log";
+      case Sin:    return "Sin";
+      case Cos:    return "Cos";
+      case Exp:    return "Exp";
+      case Tan:    return "Tan";
+      case ACos:   return "ACos";
+      case ASin:   return "ASin";
+      case ATan:   return "ATan";
+      case Log10:  return "Log10";
+      case Log2:   return "Log2";
+      case Log1P:  return "Log1P";
+      case ExpM1:  return "ExpM1";
+      case CosH:   return "CosH";
+      case SinH:   return "SinH";
+      case TanH:   return "TanH";
+      case ACosH:  return "ACosH";
+      case ASinH:  return "ASinH";
+      case ATanH:  return "ATanH";
+      case Sign:   return "Sign";
+      case Trunc:  return "Trunc";
+      case Cbrt:   return "Cbrt";
+      case Floor:  return "Floor";
+      case Round:  return "Round";
+      default:
+        MOZ_ASSUME_UNREACHABLE("Unknown math function");
+    }
+}
+
+void
+MMathFunction::printOpcode(FILE *fp) const
+{
+    MDefinition::printOpcode(fp);
+    fprintf(fp, " %s", FunctionName(function()));
+}
+
 MParameter *
 MParameter::New(int32_t index, types::TemporaryTypeSet *types)
 {

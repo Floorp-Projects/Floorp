@@ -3658,6 +3658,10 @@ class MMathFunction
     bool possiblyCalls() const {
         return true;
     }
+
+    void printOpcode(FILE *fp) const;
+
+    static const char *FunctionName(Function function);
 };
 
 class MAdd : public MBinaryArithInstruction
