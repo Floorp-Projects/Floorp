@@ -120,7 +120,7 @@ void
 TextTrackList::CreateAndDispatchTrackEventRunner(TextTrack* aTrack,
                                                  const nsAString& aEventName)
 {
-  TrackEventInitInitializer eventInit;
+  TrackEventInit eventInit;
   eventInit.mBubbles = false;
   eventInit.mCancelable = false;
   eventInit.mTrack = aTrack;
