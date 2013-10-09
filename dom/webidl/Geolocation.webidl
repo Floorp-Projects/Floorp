@@ -13,7 +13,7 @@
 dictionary PositionOptions {
   boolean enableHighAccuracy = false;
   long timeout = 0x7fffffff;
-  long maximumAge = 30000; /* non-conformant, should be 0 */
+  long maximumAge = 0;
 };
 
 [NoInterfaceObject]

@@ -62,6 +62,8 @@
 #include "nsIImageLoadingContent.h"
 
 #include "nsCSSParser.h"
+#include "nsBidiUtils.h"
+#include "nsServiceManagerUtils.h"
 
 using namespace mozilla;
 using namespace mozilla::dom;

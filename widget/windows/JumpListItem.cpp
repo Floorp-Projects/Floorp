@@ -286,7 +286,7 @@ nsresult JumpListSeparator::GetSeparator(nsRefPtr<IShellLinkW>& aShellLink)
   IShellLinkW* psl;
 
   // Create a IShellLink.
-  hr = CoCreateInstance(CLSID_ShellLink, NULL, CLSCTX_INPROC_SERVER, 
+  hr = CoCreateInstance(CLSID_ShellLink, nullptr, CLSCTX_INPROC_SERVER, 
                         IID_IShellLinkW, (LPVOID*)&psl);
   if (FAILED(hr))
     return NS_ERROR_UNEXPECTED;
@@ -338,7 +338,7 @@ nsresult JumpListShortcut::GetShellLink(nsCOMPtr<nsIJumpListItem>& item,
   NS_ENSURE_SUCCESS(rv, rv);
 
   // Create a IShellLink 
-  hr = CoCreateInstance(CLSID_ShellLink, NULL, CLSCTX_INPROC_SERVER,
+  hr = CoCreateInstance(CLSID_ShellLink, nullptr, CLSCTX_INPROC_SERVER,
                         IID_IShellLinkW, (LPVOID*)&psl);
   if (FAILED(hr))
     return NS_ERROR_UNEXPECTED;
@@ -476,7 +476,7 @@ nsresult JumpListShortcut::GetJumpListShortcut(IShellLinkW *pLink, nsCOMPtr<nsIJ
   PRUnichar buf[MAX_PATH];
 
   // Path
-  hres = pLink->GetPath((LPWSTR)&buf, MAX_PATH, NULL, SLGP_UNCPRIORITY);
+  hres = pLink->GetPath((LPWSTR)&buf, MAX_PATH, nullptr, SLGP_UNCPRIORITY);
   if (FAILED(hres))
     return NS_ERROR_INVALID_ARG;
 
@@ -563,7 +563,8 @@ nsresult JumpListLink::GetShellItem(nsCOMPtr<nsIJumpListItem>& item, nsRefPtr<IS
 
   // Create the IShellItem
   if (FAILED(WinUtils::SHCreateItemFromParsingName(
-               NS_ConvertASCIItoUTF16(spec).get(), NULL, IID_PPV_ARGS(&psi)))) {
+               NS_ConvertASCIItoUTF16(spec).get(),
+               nullptr, IID_PPV_ARGS(&psi)))) {
     return NS_ERROR_INVALID_ARG;
   }
 
@@ -599,7 +600,7 @@ nsresult JumpListLink::GetJumpListLink(IShellItem *pItem, nsCOMPtr<nsIJumpListLi
   // We assume for now these are URI links, but through properties we could
   // query and create other types.
   nsresult rv;
-  LPWSTR lpstrName = NULL;
+  LPWSTR lpstrName = nullptr;
 
   if (SUCCEEDED(pItem->GetDisplayName(SIGDN_URL, &lpstrName))) {
     nsCOMPtr<nsIURI> uri;

@@ -428,8 +428,7 @@ LiveRangeAllocator<VREG>::init()
             for (size_t j = 0; j < ins->numDefs(); j++) {
                 LDefinition *def = ins->getDef(j);
                 if (def->policy() != LDefinition::PASSTHROUGH) {
-                    uint32_t reg = def->virtualRegister();
-                    if (!vregs[reg].init(reg, block, *ins, def, /* isTemp */ false))
+                    if (!vregs[def].init(block, *ins, def, /* isTemp */ false))
                         return false;
                 }
             }
@@ -438,14 +437,14 @@ LiveRangeAllocator<VREG>::init()
                 LDefinition *def = ins->getTemp(j);
                 if (def->isBogusTemp())
                     continue;
-                if (!vregs[def].init(def->virtualRegister(), block, *ins, def, /* isTemp */ true))
+                if (!vregs[def].init(block, *ins, def, /* isTemp */ true))
                     return false;
             }
         }
         for (size_t j = 0; j < block->numPhis(); j++) {
             LPhi *phi = block->getPhi(j);
             LDefinition *def = phi->getDef(0);
-            if (!vregs[def].init(phi->id(), block, phi, def, /* isTemp */ false))
+            if (!vregs[def].init(block, phi, def, /* isTemp */ false))
                 return false;
         }
     }

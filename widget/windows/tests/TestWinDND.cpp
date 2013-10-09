@@ -613,7 +613,7 @@ nsresult Do_CheckSetArbitraryData(bool aMultiple)
   HGLOBAL hg = GlobalAlloc(GPTR, 1024);
   stg.tymed = TYMED_HGLOBAL;
   stg.hGlobal = hg;
-  stg.pUnkForRelease = NULL;
+  stg.pUnkForRelease = nullptr;
 
   if (dataObj->SetData(&fe, &stg, true) != S_OK) {
     if (aMultiple) {
