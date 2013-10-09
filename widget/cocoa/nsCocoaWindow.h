@@ -76,6 +76,8 @@ typedef struct _nsCocoaWindowList {
   float mDPI;
 
   NSTrackingArea* mTrackingArea;
+
+  BOOL mBeingShown;
 }
 
 - (void)importState:(NSDictionary*)aState;
@@ -94,6 +96,8 @@ typedef struct _nsCocoaWindowList {
 - (void)mouseMoved:(NSEvent*)aEvent;
 - (void)updateTrackingArea;
 - (NSView*)trackingAreaView;
+
+- (BOOL)isVisibleOrBeingShown;
 
 - (ChildView*)mainChildView;
 
