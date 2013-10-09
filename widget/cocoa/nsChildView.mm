@@ -366,6 +366,7 @@ nsChildView::nsChildView() : nsBaseWidget()
 , mView(nullptr)
 , mParentView(nullptr)
 , mParentWidget(nullptr)
+, mViewTearDownLock("ChildViewTearDown")
 , mEffectsLock("WidgetEffects")
 , mShowsResizeIndicator(false)
 , mHasRoundedBottomCorners(false)
@@ -572,6 +573,10 @@ nsChildView::GetXULWindowWidget()
 NS_IMETHODIMP nsChildView::Destroy()
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
+
+  // Make sure that no composition is in progress while disconnecting
+  // ourselves from the view.
+  MutexAutoLock lock(mViewTearDownLock);
 
   if (mOnDestroyCalled)
     return NS_OK;
@@ -2029,8 +2034,19 @@ nsChildView::PreRender(LayerManager* aManager)
   if (!manager) {
     return true;
   }
+
+  // The lock makes sure that we don't attempt to tear down the view while
+  // compositing. That would make us unable to call postRender on it when the
+  // composition is done, thus keeping the GL context locked forever.
+  mViewTearDownLock.Lock();
+
   NSOpenGLContext *glContext = (NSOpenGLContext *)manager->gl()->GetNativeData(GLContext::NativeGLContext);
-  return [(ChildView*)mView preRender:glContext];
+
+  if (![(ChildView*)mView preRender:glContext]) {
+    mViewTearDownLock.Unlock();
+    return false;
+  }
+  return true;
 }
 
 void
@@ -2042,6 +2058,7 @@ nsChildView::PostRender(LayerManager* aManager)
   }
   NSOpenGLContext *glContext = (NSOpenGLContext *)manager->gl()->GetNativeData(GLContext::NativeGLContext);
   [(ChildView*)mView postRender:glContext];
+  mViewTearDownLock.Unlock();
 }
 
 void
