@@ -20,10 +20,13 @@ Cu.import("resource://gre/modules/PermissionsInstaller.jsm");
 Cu.import('resource://gre/modules/Payment.jsm');
 Cu.import("resource://gre/modules/Task.jsm");
 Cu.import("resource://gre/modules/Promise.jsm");
+Cu.import("resource://gre/modules/osfile.jsm");
 
 // Initialize window-independent handling of webapps- notifications.
 Cu.import("resource://webapprt/modules/WebappsHandler.jsm");
 Cu.import("resource://webapprt/modules/WebappRT.jsm");
+
+const PROFILE_DIR = OS.Constants.Path.profileDir;
 
 function isFirstRunOrUpdate() {
   let savedBuildID = null;
@@ -39,6 +42,38 @@ function isFirstRunOrUpdate() {
   }
 
   return false;
+}
+
+function writeFile(aPath, aData) {
+  return Task.spawn(function() {
+    let data = TextEncoder().encode(aData);
+    yield OS.File.writeAtomic(aPath, data, { tmpPath: aPath + ".tmp" });
+  });
+}
+
+function createBrandingFiles() {
+  return Task.spawn(function() {
+    let manifest = WebappRT.localeManifest;
+    let name = WebappRT.localeManifest.name;
+    let developer = " ";
+    if (WebappRT.localeManifest.developer) {
+      developer = WebappRT.localeManifest.developer.name;
+    }
+
+    let brandDTDContent = '<!ENTITY brandShortName "' + name + '">\n\
+  <!ENTITY brandFullName "' + name + '">\n\
+  <!ENTITY vendorShortName "' + developer + '">\n\
+  <!ENTITY trademarkInfo.part1 " ">';
+
+    yield writeFile(OS.Path.join(PROFILE_DIR, "brand.dtd"), brandDTDContent);
+
+    let brandPropertiesContent = 'brandShortName=' + name + '\n\
+  brandFullName=' + name + '\n\
+  vendorShortName=' + developer;
+
+    yield writeFile(OS.Path.join(PROFILE_DIR, "brand.properties"),
+                    brandPropertiesContent);
+  });
 }
 
 // Observes all the events needed to actually launch an application.
@@ -79,8 +114,20 @@ this.startup = function(window) {
       // TODO: Update the permissions when the application is updated.
       if (isFirstRunOrUpdate(Services.prefs)) {
         PermissionsInstaller.installPermissions(WebappRT.config.app, true);
+        yield createBrandingFiles();
       }
     }
+
+    // Branding substitution
+    let aliasFile = Components.classes["@mozilla.org/file/local;1"]
+                              .createInstance(Ci.nsIFile);
+    aliasFile.initWithPath(PROFILE_DIR);
+
+    let aliasURI = Services.io.newFileURI(aliasFile);
+
+    Services.io.getProtocolHandler("resource")
+               .QueryInterface(Ci.nsIResProtocolHandler)
+               .setSubstitution("webappbranding", aliasURI);
 
     // Wait for XUL window loading
     yield deferredWindowLoad.promise;
