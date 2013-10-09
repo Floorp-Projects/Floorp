@@ -89,7 +89,7 @@ public:
 
   virtual void OnDetach() MOZ_OVERRIDE;
 
-  virtual void AddTextureClient(TextureClient* aTexture) MOZ_OVERRIDE;
+  virtual bool AddTextureClient(TextureClient* aTexture) MOZ_OVERRIDE;
 
   virtual TemporaryRef<BufferTextureClient>
   CreateBufferTextureClient(gfx::SurfaceFormat aFormat, TextureFlags aFlags) MOZ_OVERRIDE;
