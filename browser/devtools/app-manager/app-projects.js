@@ -40,7 +40,14 @@ const IDB = {
       objectStore.openCursor().onsuccess = function(event) {
         let cursor = event.target.result;
         if (cursor) {
-          projects.push(cursor.value);
+          if (cursor.value.location) {
+            // We need to make sure this object has a `.location` property.
+            // The UI depends on this property.
+            // This should not be needed as we make sure to register valid
+            // projects, but in the past (before bug 924568), we might have
+            // registered invalid objects.
+            projects.push(cursor.value);
+          }
           cursor.continue();
         } else {
           deferred.resolve(projects);
@@ -54,16 +61,21 @@ const IDB = {
   add: function(project) {
     let deferred = promise.defer();
 
-    var transaction = IDB._db.transaction(["projects"], "readwrite");
-    var objectStore = transaction.objectStore("projects");
-    var request = objectStore.add(project);
-    request.onerror = function(event) {
-      deferred.reject("Unable to add project to the AppProjects indexedDB: " +
-                      this.error.name + " - " + this.error.message );
-    };
-    request.onsuccess = function() {
-      deferred.resolve();
-    };
+    if (!project.location) {
+      // We need to make sure this object has a `.location` property.
+      deferred.reject("Missing location property on project object.");
+    } else {
+      let transaction = IDB._db.transaction(["projects"], "readwrite");
+      let objectStore = transaction.objectStore("projects");
+      let request = objectStore.add(project);
+      request.onerror = function(event) {
+        deferred.reject("Unable to add project to the AppProjects indexedDB: " +
+                        this.error.name + " - " + this.error.message );
+      };
+      request.onsuccess = function() {
+        deferred.resolve();
+      };
+    }
 
     return deferred.promise;
   },

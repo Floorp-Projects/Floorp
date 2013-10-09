@@ -6434,6 +6434,14 @@ var gIdentityHandler = {
   },
 
   /**
+   * Handler for commands on the help button in the "identity-popup" panel.
+   */
+  handleHelpCommand : function(event) {
+    openHelpLink("secure-connection");
+    this._identityPopup.hidePopup();
+  },
+
+  /**
    * Handler for mouseclicks on the "More Information" button in the
    * "identity-popup" panel.
    */
