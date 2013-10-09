@@ -43,7 +43,7 @@ SurfaceFactory_Gralloc::SurfaceFactory_Gralloc(GLContext* prodGL,
 
     MOZ_ASSERT(allocator);
 
-    mAllocator = allocator;
+    mAllocator = allocator->asWeakPtr();
 }
 
 SharedSurface_Gralloc*
@@ -132,7 +132,10 @@ SharedSurface_Gralloc::~SharedSurface_Gralloc()
     mGL->fDeleteTextures(1, (GLuint*)&mProdTex);
 
     SurfaceDescriptor desc(mDesc);
-    mAllocator->DestroySharedSurface(&desc);
+
+    if (mAllocator) {
+        mAllocator->DestroySharedSurface(&desc);
+    }
 }
 
 void
