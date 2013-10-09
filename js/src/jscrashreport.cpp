@@ -46,7 +46,7 @@ GetStack(uint64_t *stack, uint64_t *stack_len, CrashRegisters *regs, char *buffe
     *stack_len = len;
 
     /* Get the register state. */
-#if defined(_MSC_VER) && JS_BITS_PER_WORD == 32
+#if defined(_MSC_VER) && defined(_M_IX86)
     /* ASM version for win2k that doesn't support RtlCaptureContext */
     uint32_t vip, vsp, vbp;
     __asm {
@@ -62,14 +62,16 @@ GetStack(uint64_t *stack, uint64_t *stack_len, CrashRegisters *regs, char *buffe
 #else
     CONTEXT context;
     RtlCaptureContext(&context);
-#if JS_BITS_PER_WORD == 32
+#if defined(_M_IX86)
     regs->ip = context.Eip;
     regs->sp = context.Esp;
     regs->bp = context.Ebp;
-#else
+#elif defined(_M_X64)
     regs->ip = context.Rip;
     regs->sp = context.Rsp;
     regs->bp = context.Rbp;
+#else
+#error unknown cpu architecture
 #endif
 #endif
 
@@ -114,14 +116,16 @@ GetStack(uint64_t *stack, uint64_t *stack_len, CrashRegisters *regs, char *buffe
     if (getcontext(&context) != 0)
 	return false;
 
-#if JS_BITS_PER_WORD == 64
+#if defined(__x86_64__)
     regs->sp = (uint64_t)context.uc_mcontext.gregs[REG_RSP];
     regs->bp = (uint64_t)context.uc_mcontext.gregs[REG_RBP];
     regs->ip = (uint64_t)context.uc_mcontext.gregs[REG_RIP];
-#elif JS_BITS_PER_WORD == 32
+#elif defined(__i386__)
     regs->sp = (uint64_t)context.uc_mcontext.gregs[REG_ESP];
     regs->bp = (uint64_t)context.uc_mcontext.gregs[REG_EBP];
     regs->ip = (uint64_t)context.uc_mcontext.gregs[REG_EIP];
+#else
+#error unknown cpu architecture
 #endif
 
     js_memcpy(buffer, (void *)p, len);
