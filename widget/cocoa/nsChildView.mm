@@ -2870,8 +2870,9 @@ NSEvent* gLastDragMouseDownEvent = nil;
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_RETURN;
 
-  if ([[self window] isKindOfClass:[BaseWindow class]] &&
-      ![(BaseWindow*)[self window] isVisibleOrBeingShown]) {
+  if (![self window] ||
+      ([[self window] isKindOfClass:[BaseWindow class]] &&
+       ![(BaseWindow*)[self window] isVisibleOrBeingShown])) {
     // Before the window is shown, our GL context's front FBO is not
     // framebuffer complete, so we refuse to render.
     return false;
