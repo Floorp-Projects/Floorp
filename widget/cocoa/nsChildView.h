@@ -322,8 +322,8 @@ typedef NSInteger NSEventGestureAxis;
                             enter:(BOOL)aEnter
                              type:(mozilla::WidgetMouseEvent::exitType)aType;
 
-- (void)update;
-- (void) _surfaceNeedsUpdate:(NSNotification*)notification;
+- (void)updateGLContext;
+- (void)_surfaceNeedsUpdate:(NSNotification*)notification;
 
 - (BOOL)isPluginView;
 
