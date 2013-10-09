@@ -936,7 +936,7 @@ CodeGenerator::visitTableSwitch(LTableSwitch *ins)
     const LAllocation *temp;
 
     if (ins->index()->isDouble()) {
-        temp = ins->tempInt();
+        temp = ins->tempInt()->output();
 
         // The input is a double, so try and convert it to an integer.
         // If it does not fit in an integer, take the default case.
@@ -3213,7 +3213,7 @@ CodeGenerator::visitNewDenseArrayPar(LNewDenseArrayPar *lir)
     // the various fields of the object, and I didn't want to
     // duplicate the code in initGCThing() that already does such an
     // admirable job.
-    masm.setupUnalignedABICall(3, CallTempReg3);
+    masm.setupUnalignedABICall(3, tempReg0);
     masm.passABIArg(sliceReg);
     masm.passABIArg(tempReg2);
     masm.passABIArg(lengthReg);
@@ -3276,9 +3276,11 @@ public:
     LInstruction *lir;
     gc::AllocKind allocKind;
     Register objReg;
+    Register sliceReg;
 
-    OutOfLineNewGCThingPar(LInstruction *lir, gc::AllocKind allocKind, Register objReg)
-      : lir(lir), allocKind(allocKind), objReg(objReg)
+    OutOfLineNewGCThingPar(LInstruction *lir, gc::AllocKind allocKind, Register objReg,
+                           Register sliceReg)
+      : lir(lir), allocKind(allocKind), objReg(objReg), sliceReg(sliceReg)
     {}
 
     bool accept(CodeGenerator *codegen) {
@@ -3292,12 +3294,11 @@ CodeGenerator::emitAllocateGCThingPar(LInstruction *lir, const Register &objReg,
                                       const Register &tempReg2, JSObject *templateObj)
 {
     gc::AllocKind allocKind = templateObj->tenuredGetAllocKind();
-    OutOfLineNewGCThingPar *ool = new OutOfLineNewGCThingPar(lir, allocKind, objReg);
+    OutOfLineNewGCThingPar *ool = new OutOfLineNewGCThingPar(lir, allocKind, objReg, sliceReg);
     if (!ool || !addOutOfLineCode(ool))
         return false;
 
-    masm.newGCThingPar(objReg, sliceReg, tempReg1, tempReg2,
-                            templateObj, ool->entry());
+    masm.newGCThingPar(objReg, sliceReg, tempReg1, tempReg2, templateObj, ool->entry());
     masm.bind(ool->rejoin());
     masm.initGCThing(objReg, templateObj);
     return true;
@@ -3310,32 +3311,21 @@ CodeGenerator::visitOutOfLineNewGCThingPar(OutOfLineNewGCThingPar *ool)
     // C helper NewGCThingPar(), which calls into the GC code.  If it
     // returns nullptr, we bail.  If returns non-nullptr, we rejoin the
     // original instruction.
+    Register out = ool->objReg;
 
-    // This saves all caller-save registers, regardless of whether
-    // they are live.  This is wasteful but a simplification, given
-    // that for some of the LIR that this is used with
-    // (e.g., LLambdaPar) there are values in those registers
-    // that must not be clobbered but which are not technically
-    // considered live.
-    RegisterSet saveSet(RegisterSet::Volatile());
-
-    // Also preserve the temps we're about to overwrite,
-    // but don't bother to save the objReg.
-    saveSet.addUnchecked(CallTempReg0);
-    saveSet.addUnchecked(CallTempReg1);
-    saveSet.takeUnchecked(AnyRegister(ool->objReg));
-
-    masm.PushRegsInMask(saveSet);
-    masm.move32(Imm32(ool->allocKind), CallTempReg0);
-    masm.setupUnalignedABICall(1, CallTempReg1);
-    masm.passABIArg(CallTempReg0);
+    saveVolatile(out);
+    masm.setupUnalignedABICall(2, out);
+    masm.passABIArg(ool->sliceReg);
+    masm.move32(Imm32(ool->allocKind), out);
+    masm.passABIArg(out);
     masm.callWithABI(JS_FUNC_TO_DATA_PTR(void *, NewGCThingPar));
-    masm.movePtr(ReturnReg, ool->objReg);
-    masm.PopRegsInMask(saveSet);
+    masm.storeCallResult(out);
+    restoreVolatile(out);
+
     OutOfLineAbortPar *bail = oolAbortPar(ParallelBailoutOutOfMemory, ool->lir);
     if (!bail)
         return false;
-    masm.branchTestPtr(Assembler::Zero, ool->objReg, ool->objReg, bail->entry());
+    masm.branchTestPtr(Assembler::Zero, out, out, bail->entry());
     masm.jump(ool->rejoin());
     return true;
 }
@@ -3475,7 +3465,7 @@ static const VMFunction NewGCThingInfo =
 bool
 CodeGenerator::visitCreateThisWithTemplate(LCreateThisWithTemplate *lir)
 {
-    JSObject *templateObject = lir->mir()->getTemplateObject();
+    JSObject *templateObject = lir->mir()->templateObject();
     gc::AllocKind allocKind = templateObject->tenuredGetAllocKind();
     int thingSize = (int)gc::Arena::thingSize(allocKind);
     gc::InitialHeap initialHeap = templateObject->type()->initialHeapForJITAlloc();
@@ -4849,7 +4839,11 @@ CodeGenerator::visitStoreElementHoleV(LStoreElementHoleV *lir)
 
 typedef bool (*SetObjectElementFn)(JSContext *, HandleObject, HandleValue, HandleValue,
                                    bool strict);
-static const VMFunction SetObjectElementInfo = FunctionInfo<SetObjectElementFn>(SetObjectElement);
+typedef ParallelResult (*SetElementParFn)(ForkJoinSlice *, HandleObject, HandleValue,
+                                          HandleValue, bool);
+static const VMFunctionsModal SetObjectElementInfo = VMFunctionsModal(
+    FunctionInfo<SetObjectElementFn>(SetObjectElement),
+    FunctionInfo<SetElementParFn>(SetElementPar));
 
 bool
 CodeGenerator::visitOutOfLineStoreElementHole(OutOfLineStoreElementHole *ool)
@@ -4879,25 +4873,17 @@ CodeGenerator::visitOutOfLineStoreElementHole(OutOfLineStoreElementHole *ool)
             value = TypedOrValueRegister(valueType, ToAnyRegister(store->value()));
     }
 
-    // We can bump the initialized length inline if index ==
-    // initializedLength and index < capacity.  Otherwise, we have to
-    // consider fallback options.  In fallback cases, we branch to one
-    // of two labels because (at least in parallel mode) we can
-    // recover from index < capacity but not index !=
-    // initializedLength.
-    Label indexNotInitLen;
-    Label indexWouldExceedCapacity;
-
     // If index == initializedLength, try to bump the initialized length inline.
     // If index > initializedLength, call a stub. Note that this relies on the
     // condition flags sticking from the incoming branch.
-    masm.j(Assembler::NotEqual, &indexNotInitLen);
+    Label callStub;
+    masm.j(Assembler::NotEqual, &callStub);
 
     Int32Key key = ToInt32Key(index);
 
     // Check array capacity.
     masm.branchKey(Assembler::BelowOrEqual, Address(elements, ObjectElements::offsetOfCapacity()),
-                   key, &indexWouldExceedCapacity);
+                   key, &callStub);
 
     // Update initialized length. The capacity guard above ensures this won't overflow,
     // due to NELEMENTS_LIMIT.
@@ -4925,89 +4911,22 @@ CodeGenerator::visitOutOfLineStoreElementHole(OutOfLineStoreElementHole *ool)
         masm.jump(ool->rejoinStore());
     }
 
-    switch (gen->info().executionMode()) {
-      case SequentialExecution:
-        masm.bind(&indexNotInitLen);
-        masm.bind(&indexWouldExceedCapacity);
-        saveLive(ins);
+    masm.bind(&callStub);
+    saveLive(ins);
 
-        pushArg(Imm32(current->mir()->strict()));
-        pushArg(value);
-        if (index->isConstant())
-            pushArg(*index->toConstant());
-        else
-            pushArg(TypedOrValueRegister(MIRType_Int32, ToAnyRegister(index)));
-        pushArg(object);
-        if (!callVM(SetObjectElementInfo, ins))
-            return false;
+    pushArg(Imm32(current->mir()->strict()));
+    pushArg(value);
+    if (index->isConstant())
+        pushArg(*index->toConstant());
+    else
+        pushArg(TypedOrValueRegister(MIRType_Int32, ToAnyRegister(index)));
+    pushArg(object);
+    if (!callVM(SetObjectElementInfo, ins))
+        return false;
 
-        restoreLive(ins);
-        masm.jump(ool->rejoin());
-        return true;
-
-      case ParallelExecution: {
-        //////////////////////////////////////////////////////////////
-        // If the problem is that we do not have sufficient capacity,
-        // try to reallocate the elements array and then branch back
-        // to perform the actual write.  Note that we do not want to
-        // force the reg alloc to assign any particular register, so
-        // we make space on the stack and pass the arguments that way.
-        // (Also, outside of the VM call mechanism, it's very hard to
-        // pass in a Value to a C function!).
-        masm.bind(&indexWouldExceedCapacity);
-
-        OutOfLineAbortPar *bail = oolAbortPar(ParallelBailoutOutOfMemory, ins);
-        if (!bail)
-            return false;
-
-        // The use of registers here is somewhat subtle.  We need to
-        // save and restore the volatile registers but we also need to
-        // preserve the ReturnReg. Normally we'd just add a constraint
-        // to the regalloc, but since this is the slow path of a hot
-        // instruction we don't want to do that.  So instead we push
-        // the volatile registers but we don't save the register
-        // `object`.  We will copy the ReturnReg into `object`.  The
-        // function we are calling (`PushPar`) agrees to either return
-        // `object` unchanged or nullptr.  This way after we restore
-        // the registers, we can examine `object` to know whether an
-        // error occurred.
-        RegisterSet saveSet(ins->safepoint()->liveRegs());
-        saveSet.takeUnchecked(object);
-
-        masm.PushRegsInMask(saveSet);
-        masm.reserveStack(sizeof(PushParArgs));
-        masm.storePtr(object, Address(StackPointer, offsetof(PushParArgs, object)));
-        masm.storeConstantOrRegister(value, Address(StackPointer,
-                                                    offsetof(PushParArgs, value)));
-        masm.movePtr(StackPointer, CallTempReg0);
-        masm.setupUnalignedABICall(1, CallTempReg1);
-        masm.passABIArg(CallTempReg0);
-        masm.callWithABI(JS_FUNC_TO_DATA_PTR(void *, PushPar));
-        masm.freeStack(sizeof(PushParArgs));
-        masm.movePtr(ReturnReg, object);
-        masm.PopRegsInMask(saveSet);
-        masm.branchTestPtr(Assembler::Zero, object, object, bail->entry());
-        masm.jump(ool->rejoin());
-
-        //////////////////////////////////////////////////////////////
-        // If the problem is that we are trying to write an index that
-        // is not the initialized length, that would result in a
-        // sparse array, and since we don't want to think about that
-        // case right now, we just bail out.
-        masm.bind(&indexNotInitLen);
-        OutOfLineAbortPar *bail1 = oolAbortPar(ParallelBailoutUnsupportedSparseArray, ins);
-        if (!bail1)
-            return false;
-        masm.jump(bail1->entry());
-        return true;
-      }
-
-      default:
-        MOZ_ASSUME_UNREACHABLE("No such execution mode");
-    }
-
-    JS_ASSERT(false);
-    return false;
+    restoreLive(ins);
+    masm.jump(ool->rejoin());
+    return true;
 }
 
 typedef bool (*ArrayPopShiftFn)(JSContext *, HandleObject, MutableHandleValue);

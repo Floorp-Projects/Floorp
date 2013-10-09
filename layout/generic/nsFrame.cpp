@@ -7098,7 +7098,7 @@ RecomputePreserve3DChildrenOverflow(nsIFrame* aFrame, const nsRect* aBounds)
         continue; // frame does not maintain overflow rects
       }
       if (child->Preserves3DChildren()) {
-        RecomputePreserve3DChildrenOverflow(child, NULL);
+        RecomputePreserve3DChildrenOverflow(child, nullptr);
       } else if (child->Preserves3D()) {
         nsOverflowAreas* overflow = 
           static_cast<nsOverflowAreas*>(child->Properties().Get(nsIFrame::InitialOverflowProperty()));

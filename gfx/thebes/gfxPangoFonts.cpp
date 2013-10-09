@@ -29,6 +29,7 @@
 #include "nsUnicodeScriptCodes.h"
 #include "gfxFontconfigUtils.h"
 #include "gfxUserFontSet.h"
+#include "gfxFontConstants.h"
 
 #include <cairo.h>
 #include <cairo-ft.h>

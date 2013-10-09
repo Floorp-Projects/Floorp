@@ -127,11 +127,11 @@ nsIntRegion nsWindow::GetRegionToPaint(bool aForceFullRepaint,
   }
 
   HRGN paintRgn = ::CreateRectRgn(0, 0, 0, 0);
-  if (paintRgn != NULL) {
+  if (paintRgn != nullptr) {
     int result = GetRandomRgn(aDC, paintRgn, SYSRGN);
     if (result == 1) {
       POINT pt = {0,0};
-      ::MapWindowPoints(NULL, mWnd, &pt, 1);
+      ::MapWindowPoints(nullptr, mWnd, &pt, 1);
       ::OffsetRgn(paintRgn, pt.x, pt.y);
     }
     nsIntRegion rgn(WinUtils::ConvertHRGNToRegion(paintRgn));
@@ -209,7 +209,7 @@ bool nsWindow::OnPaint(HDC aDC, uint32_t aNestingLevel)
       NS_WARNING("Plugin failed to subclass our window");
     }
 
-    ValidateRect(mWnd, NULL);
+    ValidateRect(mWnd, nullptr);
     return true;
   }
 
@@ -251,8 +251,8 @@ bool nsWindow::OnPaint(HDC aDC, uint32_t aNestingLevel)
   mPainting = true;
 
 #ifdef WIDGET_DEBUG_OUTPUT
-  HRGN debugPaintFlashRegion = NULL;
-  HDC debugPaintFlashDC = NULL;
+  HRGN debugPaintFlashRegion = nullptr;
+  HDC debugPaintFlashDC = nullptr;
 
   if (debug_WantPaintFlashing())
   {
@@ -270,7 +270,7 @@ bool nsWindow::OnPaint(HDC aDC, uint32_t aNestingLevel)
 #ifdef MOZ_XUL
   bool forceRepaint = aDC || (eTransparencyTransparent == mTransparencyMode);
 #else
-  bool forceRepaint = NULL != aDC;
+  bool forceRepaint = nullptr != aDC;
 #endif
   nsIntRegion region = GetRegionToPaint(forceRepaint, ps, hDC);
   if (!region.IsEmpty() && listener)
@@ -605,7 +605,7 @@ bool nsWindow::OnPaint(HDC aDC, uint32_t aNestingLevel)
   if (listener)
     listener->DidPaintWindow();
 
-  if (aNestingLevel == 0 && ::GetUpdateRect(mWnd, NULL, false)) {
+  if (aNestingLevel == 0 && ::GetUpdateRect(mWnd, nullptr, false)) {
     OnPaint(aDC, 1);
   }
 
@@ -714,7 +714,7 @@ uint8_t* nsWindowGfx::Data32BitTo1Bit(uint8_t* aImageData,
   // Allocate and clear mask buffer
   uint8_t* outData = (uint8_t*)PR_Calloc(outBpr, aHeight);
   if (!outData)
-    return NULL;
+    return nullptr;
 
   int32_t *imageRow = (int32_t*)aImageData;
   for (uint32_t curRow = 0; curRow < aHeight; curRow++) {
@@ -748,14 +748,14 @@ uint8_t* nsWindowGfx::Data32BitTo1Bit(uint8_t* aImageData,
  *
  * @return The HBITMAP representing the image. Caller should call
  *         DeleteObject when done with the bitmap.
- *         On failure, NULL will be returned.
+ *         On failure, nullptr will be returned.
  */
 HBITMAP nsWindowGfx::DataToBitmap(uint8_t* aImageData,
                                   uint32_t aWidth,
                                   uint32_t aHeight,
                                   uint32_t aDepth)
 {
-  HDC dc = ::GetDC(NULL);
+  HDC dc = ::GetDC(nullptr);
 
   if (aDepth == 32) {
     // Alpha channel. We need the new header.
@@ -783,7 +783,7 @@ HBITMAP nsWindowGfx::DataToBitmap(uint8_t* aImageData,
                                    aImageData,
                                    reinterpret_cast<CONST BITMAPINFO*>(&head),
                                    DIB_RGB_COLORS);
-    ::ReleaseDC(NULL, dc);
+    ::ReleaseDC(nullptr, dc);
     return bmp;
   }
 
@@ -813,6 +813,6 @@ HBITMAP nsWindowGfx::DataToBitmap(uint8_t* aImageData,
   }
 
   HBITMAP bmp = ::CreateDIBitmap(dc, &head, CBM_INIT, aImageData, &bi, DIB_RGB_COLORS);
-  ::ReleaseDC(NULL, dc);
+  ::ReleaseDC(nullptr, dc);
   return bmp;
 }
