@@ -1,0 +1,5 @@
+{
+  "name": "mozPay Test Webapp",
+  "description": "A webapp that wants to be paid (and shall be paid).",
+  "launch_path": "/webapprtChrome/webapprt/test/chrome/mozpay.html"
+}
