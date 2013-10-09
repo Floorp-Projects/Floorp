@@ -195,9 +195,7 @@ nsCookiePermission::CanSetCookie(nsIURI     *aURI,
     return NS_ERROR_UNEXPECTED;
 
   uint32_t perm;
-  nsresult rv = mPermMgr->TestPermission(aURI, kPermissionType, &perm);
-  NS_ENSURE_SUCCESS(rv, false);
-
+  mPermMgr->TestPermission(aURI, kPermissionType, &perm);
   bool isThirdParty = false;
   switch (perm) {
   case nsICookiePermission::ACCESS_SESSION:
