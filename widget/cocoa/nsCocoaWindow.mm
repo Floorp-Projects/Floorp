@@ -35,7 +35,6 @@
 #include "gfxPlatform.h"
 #include "qcms.h"
 
-#include "mozilla/AutoRestore.h"
 #include "mozilla/BasicEvents.h"
 #include "mozilla/Preferences.h"
 #include <algorithm>
@@ -2519,29 +2518,9 @@ GetDPI(NSWindow* aWindow)
   mScheduledShadowInvalidation = NO;
   mDPI = GetDPI(self);
   mTrackingArea = nil;
-  mBeingShown = NO;
   [self updateTrackingArea];
 
   return self;
-}
-
-- (BOOL)isVisibleOrBeingShown
-{
-  return [super isVisible] || mBeingShown;
-}
-
-- (void)orderFront:(id)sender
-{
-  AutoRestore<BOOL> saveBeingShown(mBeingShown);
-  mBeingShown = YES;
-  [super orderFront:sender];
-}
-
-- (void)makeKeyAndOrderFront:(id)sender
-{
-  AutoRestore<BOOL> saveBeingShown(mBeingShown);
-  mBeingShown = YES;
-  [super makeKeyAndOrderFront:sender];
 }
 
 - (void)dealloc

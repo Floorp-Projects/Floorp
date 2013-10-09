@@ -333,8 +333,9 @@ enum {
                             enter:(BOOL)aEnter
                              type:(mozilla::WidgetMouseEvent::exitType)aType;
 
-- (void)updateGLContext;
-- (void)_surfaceNeedsUpdate:(NSNotification*)notification;
+- (void)update;
+- (void)lockFocus;
+- (void) _surfaceNeedsUpdate:(NSNotification*)notification;
 
 - (BOOL)isPluginView;
 
@@ -343,8 +344,7 @@ enum {
 - (BOOL)isInFailingLeftClickThrough;
 
 - (void)setGLContext:(NSOpenGLContext *)aGLContext;
-- (bool)preRender:(NSOpenGLContext *)aGLContext;
-- (void)postRender:(NSOpenGLContext *)aGLContext;
+- (void)preRender:(NSOpenGLContext *)aGLContext;
 
 - (BOOL)isCoveringTitlebar;
 
@@ -550,8 +550,7 @@ public:
   virtual gfxASurface* GetThebesSurface();
   virtual void PrepareWindowEffects() MOZ_OVERRIDE;
   virtual void CleanupWindowEffects() MOZ_OVERRIDE;
-  virtual bool PreRender(LayerManager* aManager) MOZ_OVERRIDE;
-  virtual void PostRender(LayerManager* aManager) MOZ_OVERRIDE;
+  virtual void PreRender(LayerManager* aManager) MOZ_OVERRIDE;
   virtual void DrawWindowOverlay(LayerManager* aManager, nsIntRect aRect) MOZ_OVERRIDE;
 
   virtual void UpdateThemeGeometries(const nsTArray<ThemeGeometry>& aThemeGeometries);
@@ -652,10 +651,6 @@ protected:
 
 
   nsRefPtr<gfxASurface> mTempThebesSurface;
-
-  // Protects the view from being teared down while a composition is in
-  // progress on the compositor thread.
-  mozilla::Mutex mViewTearDownLock;
 
   mozilla::Mutex mEffectsLock;
 

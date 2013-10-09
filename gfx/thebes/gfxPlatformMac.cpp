@@ -429,7 +429,12 @@ gfxPlatformMac::UseAcceleratedCanvas()
 bool
 gfxPlatformMac::SupportsOffMainThreadCompositing()
 {
-  return true;
+  // 10.6.X has crashes on tinderbox with OMTC, so disable it
+  // for now.
+  if (OSXVersion() >= 0x1070) {
+    return true;
+  }
+  return GetPrefLayersOffMainThreadCompositionForceEnabled();
 }
 
 qcms_profile *
