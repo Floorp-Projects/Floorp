@@ -140,6 +140,13 @@ namespace frontend { struct CompileError; }
 struct ThreadSafeContext : ContextFriendFields,
                            public MallocProvider<ThreadSafeContext>
 {
+    friend struct StackBaseShape;
+    friend UnownedBaseShape *BaseShape::lookupUnowned(ThreadSafeContext *cx,
+                                                      const StackBaseShape &base);
+    friend Shape *JSObject::lookupChildProperty(ThreadSafeContext *cx,
+                                                JS::HandleObject obj, js::HandleShape parent,
+                                                js::StackShape &child);
+
   public:
     enum ContextKind {
         Context_JS,
@@ -240,13 +247,16 @@ struct ThreadSafeContext : ContextFriendFields,
 
     template <typename T>
     bool isInsideCurrentZone(T thing) const {
-        return thing->isInsideZone(zone_);
+        return thing->zoneFromAnyThread() == zone_;
     }
 
     template <typename T>
     inline bool isInsideCurrentCompartment(T thing) const {
         return thing->compartment() == compartment_;
     }
+
+    template <typename T>
+    inline bool isThreadLocal(T thing) const;
 
     void *onOutOfMemory(void *p, size_t nbytes) {
         return runtime_->onOutOfMemory(p, nbytes, maybeJSContext());

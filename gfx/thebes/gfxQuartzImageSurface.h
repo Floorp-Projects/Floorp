@@ -7,7 +7,9 @@
 #define GFX_QUARTZIMAGESURFACE_H
 
 #include "gfxASurface.h"
-#include "gfxImageSurface.h"
+#include "nsSize.h"
+
+class gfxImageSurface;
 
 class gfxQuartzImageSurface : public gfxASurface {
 public:

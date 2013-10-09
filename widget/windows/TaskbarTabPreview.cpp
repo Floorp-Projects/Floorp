@@ -22,8 +22,8 @@ const PRUnichar *const kWindowClass = L"MozillaTaskbarPreviewClass";
 
 TaskbarTabPreview::TaskbarTabPreview(ITaskbarList4 *aTaskbar, nsITaskbarPreviewController *aController, HWND aHWND, nsIDocShell *aShell)
   : TaskbarPreview(aTaskbar, aController, aHWND, aShell),
-    mProxyWindow(NULL),
-    mIcon(NULL),
+    mProxyWindow(nullptr),
+    mIcon(nullptr),
     mRegistered(false)
 {
   WindowHook &hook = GetWindowHook();
@@ -33,7 +33,7 @@ TaskbarTabPreview::TaskbarTabPreview(ITaskbarList4 *aTaskbar, nsITaskbarPreviewC
 TaskbarTabPreview::~TaskbarTabPreview() {
   if (mIcon) {
     ::DestroyIcon(mIcon);
-    mIcon = NULL;
+    mIcon = nullptr;
   }
 
   // We need to ensure that proxy window disappears or else Bad Things happen.
@@ -45,16 +45,15 @@ TaskbarTabPreview::~TaskbarTabPreview() {
   if (IsWindowAvailable()) {
     DetachFromNSWindow();
   } else {
-    mWnd = NULL;
+    mWnd = nullptr;
   }
 }
 
 nsresult
 TaskbarTabPreview::ShowActive(bool active) {
   NS_ASSERTION(mVisible && CanMakeTaskbarCalls(), "ShowActive called on invisible window or before taskbar calls can be made for this window");
-  return FAILED(mTaskbar->SetTabActive(active ? mProxyWindow : NULL, mWnd, 0))
-       ? NS_ERROR_FAILURE
-       : NS_OK;
+  return FAILED(mTaskbar->SetTabActive(active ? mProxyWindow : nullptr,
+                                       mWnd, 0)) ? NS_ERROR_FAILURE : NS_OK;
 }
 
 HWND &
@@ -88,7 +87,7 @@ TaskbarTabPreview::SetTitle(const nsAString &aTitle) {
 
 NS_IMETHODIMP
 TaskbarTabPreview::SetIcon(imgIContainer *icon) {
-  HICON hIcon = NULL;
+  HICON hIcon = nullptr;
   if (icon) {
     nsresult rv;
     rv = nsWindowGfx::CreateIcon(icon, false, 0, 0,
@@ -211,7 +210,7 @@ TaskbarTabPreview::GlobalWndProc(HWND hWnd, UINT nMsg, WPARAM wParam, LPARAM lPa
 nsresult
 TaskbarTabPreview::Enable() {
   WNDCLASSW wc;
-  HINSTANCE module = GetModuleHandle(NULL);
+  HINSTANCE module = GetModuleHandle(nullptr);
 
   if (!GetClassInfoW(module, kWindowClass, &wc)) {
     wc.style         = 0;
@@ -219,15 +218,16 @@ TaskbarTabPreview::Enable() {
     wc.cbClsExtra    = 0;
     wc.cbWndExtra    = 0;
     wc.hInstance     = module;
-    wc.hIcon         = NULL;
-    wc.hCursor       = NULL;
-    wc.hbrBackground = (HBRUSH) NULL;
-    wc.lpszMenuName  = (LPCWSTR) NULL;
+    wc.hIcon         = nullptr;
+    wc.hCursor       = nullptr;
+    wc.hbrBackground = (HBRUSH) nullptr;
+    wc.lpszMenuName  = (LPCWSTR) nullptr;
     wc.lpszClassName = kWindowClass;
     RegisterClassW(&wc);
   }
   ::CreateWindowW(kWindowClass, L"TaskbarPreviewWindow",
-                  WS_CAPTION | WS_SYSMENU, 0, 0, 200, 60, NULL, NULL, module, this);
+                  WS_CAPTION | WS_SYSMENU, 0, 0, 200, 60,
+                  nullptr, nullptr, module, this);
   // GlobalWndProc will set mProxyWindow so that WM_CREATE can have a valid HWND
   if (!mProxyWindow)
     return NS_ERROR_INVALID_ARG;
@@ -262,7 +262,7 @@ TaskbarTabPreview::Disable() {
   // TaskbarPreview::WndProc will set mProxyWindow to null
   if (!DestroyWindow(mProxyWindow))
     return NS_ERROR_FAILURE;
-  mProxyWindow = NULL;
+  mProxyWindow = nullptr;
   return NS_OK;
 }
 
@@ -330,7 +330,7 @@ TaskbarTabPreview::UpdateIcon() {
 nsresult
 TaskbarTabPreview::UpdateNext() {
   NS_ASSERTION(CanMakeTaskbarCalls() && mVisible, "UpdateNext called on invisible tab preview");
-  HWND hNext = NULL;
+  HWND hNext = nullptr;
   if (mNext) {
     bool visible;
     nsresult rv = mNext->GetVisible(&visible);

@@ -1912,7 +1912,7 @@
               // Prevent this tab from showing further dialogs, since we're closing it
               var windowUtils = browser.contentWindow.QueryInterface(Ci.nsIInterfaceRequestor).
                                 getInterface(Ci.nsIDOMWindowUtils);
-              windowUtils.preventFurtherDialogs();
+              windowUtils.disableDialogs();
             }
 
             // Remove the tab's filter and progress listener.

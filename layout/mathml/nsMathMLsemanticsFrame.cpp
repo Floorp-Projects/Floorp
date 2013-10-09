@@ -6,6 +6,7 @@
 
 #include "nsMathMLsemanticsFrame.h"
 #include "nsMimeTypes.h"
+#include "mozilla/gfx/2D.h"
 
 //
 // <semantics> -- associate annotations with a MathML expression
