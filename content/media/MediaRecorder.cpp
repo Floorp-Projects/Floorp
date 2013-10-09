@@ -492,7 +492,7 @@ MediaRecorder::CreateAndDispatchBlobEvent(Session *aSession)
     return NS_ERROR_DOM_SECURITY_ERR;
   }
 
-  BlobEventInit init;
+  BlobEventInitInitializer init;
   init.mBubbles = false;
   init.mCancelable = false;
   init.mData = aSession->GetEncodedData();

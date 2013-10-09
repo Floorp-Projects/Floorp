@@ -713,7 +713,7 @@ SpeechRecognition::Start(ErrorResult& aRv)
   NS_ENSURE_SUCCESS_VOID(rv);
 
   AutoSafeJSContext cx;
-  MediaStreamConstraints constraints;
+  MediaStreamConstraintsInitializer constraints;
   constraints.mAudio.SetAsBoolean() = true;
 
   if (!mTestConfig.mFakeFSMEvents) {

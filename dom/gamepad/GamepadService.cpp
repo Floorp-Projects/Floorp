@@ -244,7 +244,7 @@ GamepadService::FireButtonEvent(EventTarget* aTarget,
 {
   nsString name = aValue == 1.0L ? NS_LITERAL_STRING("gamepadbuttondown") :
                                    NS_LITERAL_STRING("gamepadbuttonup");
-  GamepadButtonEventInit init;
+  GamepadButtonEventInitInitializer init;
   init.mBubbles = false;
   init.mCancelable = false;
   init.mGamepad = aGamepad;
@@ -307,7 +307,7 @@ GamepadService::FireAxisMoveEvent(EventTarget* aTarget,
                                   uint32_t aAxis,
                                   double aValue)
 {
-  GamepadAxisMoveEventInit init;
+  GamepadAxisMoveEventInitInitializer init;
   init.mBubbles = false;
   init.mCancelable = false;
   init.mGamepad = aGamepad;
@@ -388,7 +388,7 @@ GamepadService::FireConnectionEvent(EventTarget* aTarget,
 {
   nsString name = aConnected ? NS_LITERAL_STRING("gamepadconnected") :
                                NS_LITERAL_STRING("gamepaddisconnected");
-  GamepadEventInit init;
+  GamepadEventInitInitializer init;
   init.mBubbles = false;
   init.mCancelable = false;
   init.mGamepad = aGamepad;

@@ -587,7 +587,7 @@ public:
   // Dictionary tests
   void PassDictionary(JSContext*, const Dict&);
   void ReceiveDictionary(JSContext*, Dict&);
-  void ReceiveNullableDictionary(JSContext*, Nullable<Dict>&);
+  void ReceiveNullableDictionary(JSContext*, Nullable<DictInitializer>&);
   void PassOtherDictionary(const GrandparentDict&);
   void PassSequenceOfDictionaries(JSContext*, const Sequence<Dict>&);
   void PassDictionaryOrLong(JSContext*, const Dict&);
