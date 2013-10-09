@@ -928,16 +928,18 @@ CanvasRenderingContext2D::SetDimensions(int32_t width, int32_t height)
 {
   ClearTarget();
 
-  // Zero sized surfaces cause issues, so just go with 1x1.
-  if (height == 0 || width == 0) {
+  // Zero sized surfaces can cause problems.
+  mZero = false;
+  if (height == 0) {
+    height = 1;
     mZero = true;
-    mWidth = 1;
-    mHeight = 1;
-  } else {
-    mZero = false;
-    mWidth = width;
-    mHeight = height;
   }
+  if (width == 0) {
+    width = 1;
+    mZero = true;
+  }
+  mWidth = width;
+  mHeight = height;
 
   return NS_OK;
 }
