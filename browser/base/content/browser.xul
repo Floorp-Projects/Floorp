@@ -342,7 +342,11 @@
         </vbox>
       </hbox>
       <!-- Footer button to open security page info -->
-      <hbox id="identity-popup-button-container" pack="end">
+      <hbox id="identity-popup-button-container" align="center">
+        <button id="identity-popup-help-icon"
+               oncommand="gIdentityHandler.handleHelpCommand(event);"
+               tooltiptext="&identity.help.tooltip;"/>
+        <spacer flex="1"/>
         <button id="identity-popup-more-info-button"
                 label="&identity.moreInfoLinkText;"
                 oncommand="gIdentityHandler.handleMoreInfoClick(event);"/>
