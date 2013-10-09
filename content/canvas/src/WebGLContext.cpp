@@ -911,7 +911,7 @@ WebGLContext::GetCanvasLayer(nsDisplayListBuilder* aBuilder,
 }
 
 void
-WebGLContext::GetContextAttributes(Nullable<dom::WebGLContextAttributesInitializer> &retval)
+WebGLContext::GetContextAttributes(Nullable<dom::WebGLContextAttributes> &retval)
 {
     retval.SetNull();
     if (IsContextLost())
