@@ -82,6 +82,10 @@ let UI = {
   },
 
   addHosted: function() {
+    let form = document.querySelector("#new-hosted-project-wrapper")
+    if (!form.checkValidity())
+      return;
+
     let urlInput = document.querySelector("#url-input");
     let manifestURL = urlInput.value;
     AppProjects.addHosted(manifestURL)
