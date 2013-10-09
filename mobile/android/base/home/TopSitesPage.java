@@ -29,6 +29,7 @@ import android.content.Context;
 import android.content.res.Configuration;
 import android.database.Cursor;
 import android.graphics.Bitmap;
+import android.net.Uri;
 import android.os.Bundle;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.LoaderManager;
@@ -320,7 +321,8 @@ public class TopSitesPage extends HomeFragment {
             if (item.getItemId() == R.id.top_sites_open_private_tab)
                 flags |= Tabs.LOADURL_PRIVATE;
 
-            Tabs.getInstance().loadUrl(info.url, flags);
+            // Decode "user-entered" URLs before loading them.
+            Tabs.getInstance().loadUrl(decodeUserEnteredUrl(info.url), flags);
             Toast.makeText(activity, R.string.new_tab_opened, Toast.LENGTH_SHORT).show();
             return true;
         }
@@ -366,6 +368,18 @@ public class TopSitesPage extends HomeFragment {
     @Override
     protected void load() {
         getLoaderManager().initLoader(LOADER_ID_TOP_SITES, null, mCursorLoaderCallbacks);
+    }
+
+    static String encodeUserEnteredUrl(String url) {
+        return Uri.fromParts("user-entered", url, null).toString();
+    }
+
+    static String decodeUserEnteredUrl(String url) {
+        Uri uri = Uri.parse(url);
+        if ("user-entered".equals(uri.getScheme())) {
+            return uri.getSchemeSpecificPart();
+        }
+        return url;
     }
 
     /**
