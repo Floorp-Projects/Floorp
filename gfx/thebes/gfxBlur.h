@@ -6,9 +6,14 @@
 #ifndef GFX_BLUR_H
 #define GFX_BLUR_H
 
-#include "gfxContext.h"
-#include "gfxImageSurface.h"
 #include "gfxTypes.h"
+#include "nsSize.h"
+#include "nsAutoPtr.h"
+#include "gfxPoint.h"
+
+class gfxContext;
+class gfxImageSurface;
+struct gfxRect;
 
 namespace mozilla {
   namespace gfx {

@@ -982,7 +982,7 @@ ArrayBufferObject::obj_setGeneric(JSContext *cx, HandleObject obj, HandleId id,
     if (!delegate)
         return false;
 
-    return baseops::SetPropertyHelper(cx, delegate, obj, id, 0, vp, strict);
+    return baseops::SetPropertyHelper<SequentialExecution>(cx, delegate, obj, id, 0, vp, strict);
 }
 
 bool

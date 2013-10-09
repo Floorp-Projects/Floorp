@@ -7,6 +7,7 @@
 #include "gfxPattern.h"
 #include "gfxASurface.h"
 #include "gfxPlatform.h"
+#include "gfx2DGlue.h"
 
 #include "cairo.h"
 

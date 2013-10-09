@@ -62,12 +62,12 @@ nsNativeDragTarget::~nsNativeDragTarget()
 STDMETHODIMP
 nsNativeDragTarget::QueryInterface(REFIID riid, void** ppv)
 {
-  *ppv=NULL;
+  *ppv=nullptr;
 
   if (IID_IUnknown == riid || IID_IDropTarget == riid)
     *ppv=this;
 
-  if (NULL!=*ppv) {
+  if (nullptr!=*ppv) {
     ((LPUNKNOWN)*ppv)->AddRef();
     return S_OK;
   }
@@ -165,7 +165,7 @@ nsNativeDragTarget::DispatchDragDropEvent(uint32_t aEventType, POINTL aPT)
   cpos.x = aPT.x;
   cpos.y = aPT.y;
 
-  if (mHWnd != NULL) {
+  if (mHWnd != nullptr) {
     ::ScreenToClient(mHWnd, &cpos);
     event.refPoint.x = cpos.x;
     event.refPoint.y = cpos.y;
@@ -455,7 +455,7 @@ IDropTargetHelper*
 nsNativeDragTarget::GetDropTargetHelper()
 {
   if (!mDropTargetHelper) { 
-    CoCreateInstance(CLSID_DragDropHelper, NULL, CLSCTX_INPROC_SERVER,
+    CoCreateInstance(CLSID_DragDropHelper, nullptr, CLSCTX_INPROC_SERVER,
                      IID_IDropTargetHelper, (LPVOID*)&mDropTargetHelper);
   }
 

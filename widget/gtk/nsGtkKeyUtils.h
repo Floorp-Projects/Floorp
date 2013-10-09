@@ -159,7 +159,7 @@ protected:
 
     /**
      * GetModifierKey() returns modifier key information of the hardware
-     * keycode.  If the key isn't a modifier key, returns NULL.
+     * keycode.  If the key isn't a modifier key, returns nullptr.
      */
     ModifierKey* GetModifierKey(guint aHardwareKeycode);
 
@@ -221,7 +221,7 @@ protected:
      * GetCharCodeFor() Computes what character is inputted by the key event
      * with aModifierState and aGroup.
      *
-     * @param aGdkKeyEvent      Native key event, must not be NULL.
+     * @param aGdkKeyEvent      Native key event, must not be nullptr.
      * @param aModifierState    Combination of GdkModifierType which you
      *                          want to test with aGdkKeyEvent.
      * @param aGroup            Set group in the mGdkKeymap.
@@ -236,7 +236,7 @@ protected:
     /**
      * GetKeyLevel() returns level of the aGdkKeyEvent in mGdkKeymap.
      *
-     * @param aGdkKeyEvent      Native key event, must not be NULL.
+     * @param aGdkKeyEvent      Native key event, must not be nullptr.
      * @return                  Using level.  Typically, this is 0 or 1.
      *                          If failed, this returns -1.
      */
@@ -287,7 +287,7 @@ protected:
      * InitKeypressEvent() intializes keyCode, charCode and
      * alternativeCharCodes of keypress event.
      *
-     * @param aKeyEvent         An NS_KEY_PRESS event, must not be NULL.
+     * @param aKeyEvent         An NS_KEY_PRESS event, must not be nullptr.
      *                          The modifier related members and keyCode must
      *                          be initialized already.
      * @param aGdkKeyEvent      A native key event which causes dispatching

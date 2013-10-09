@@ -212,7 +212,7 @@ nsGtkIMModule::PrepareToDestroyContext(GtkIMContext *aContext)
 #if (MOZ_WIDGET_GTK == 2)
     GtkIMContext *slave = multicontext->slave;
 #else
-    GtkIMContext *slave = NULL; //TODO GTK3
+    GtkIMContext *slave = nullptr; //TODO GTK3
 #endif
     if (!slave) {
         return;
@@ -221,7 +221,7 @@ nsGtkIMModule::PrepareToDestroyContext(GtkIMContext *aContext)
     GType slaveType = G_TYPE_FROM_INSTANCE(slave);
     const gchar *im_type_name = g_type_name(slaveType);
     if (strcmp(im_type_name, "GtkIMContextXIM") == 0) {
-        if (gtk_check_version(2, 12, 1) == NULL) {
+        if (gtk_check_version(2, 12, 1) == nullptr) {
             return; // gtk bug has been fixed
         }
 
@@ -240,7 +240,7 @@ nsGtkIMModule::PrepareToDestroyContext(GtkIMContext *aContext)
 
         g_signal_handlers_disconnect_matched(
             gtk_widget_get_display(GTK_WIDGET(container)),
-            G_SIGNAL_MATCH_DATA, 0, 0, NULL, NULL, signal_data);
+            G_SIGNAL_MATCH_DATA, 0, 0, nullptr, nullptr, signal_data);
 
         // Add a reference to prevent the XIM module from being unloaded
         // and reloaded: each time the module is loaded and used, it
@@ -1201,7 +1201,7 @@ nsGtkIMModule::SetTextRangeList(nsTArray<TextRange> &aTextRangeList)
         } else {
             glong uniStrLen;
             uniStr = g_utf8_to_utf16(preedit_string, start,
-                                     NULL, &uniStrLen, NULL);
+                                     nullptr, &uniStrLen, nullptr);
             if (uniStr) {
                 range.mStartOffset = uniStrLen;
                 g_free(uniStr);
@@ -1211,7 +1211,7 @@ nsGtkIMModule::SetTextRangeList(nsTArray<TextRange> &aTextRangeList)
 
         glong uniStrLen;
         uniStr = g_utf8_to_utf16(preedit_string + start, end - start,
-                                 NULL, &uniStrLen, NULL);
+                                 nullptr, &uniStrLen, nullptr);
         if (!uniStr) {
             range.mEndOffset = range.mStartOffset;
         } else {

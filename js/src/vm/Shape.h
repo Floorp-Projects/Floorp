@@ -448,15 +448,15 @@ struct ShapeTable {
      * and returns false.  This will make any extant pointers into the
      * table invalid.  Don't call this unless needsToGrow() is true.
      */
-    bool grow(ExclusiveContext *cx);
+    bool grow(ThreadSafeContext *cx);
 
     /*
      * NB: init and change are fallible but do not report OOM, so callers can
      * cope or ignore. They do however use the context's calloc_ method in
      * order to update the malloc counter on success.
      */
-    bool            init(ExclusiveContext *cx, Shape *lastProp);
-    bool            change(int log2Delta, ExclusiveContext *cx);
+    bool            init(ThreadSafeContext *cx, Shape *lastProp);
+    bool            change(int log2Delta, ThreadSafeContext *cx);
     Shape           **search(jsid id, bool adding);
 };
 
@@ -707,8 +707,17 @@ class BaseShape : public gc::BarrieredCell<BaseShape>
 
     JSCompartment *compartment() const { return compartment_; }
 
-    /* Lookup base shapes from the compartment's baseShapes table. */
+    /*
+     * Lookup base shapes from the compartment's baseShapes table, adding if
+     * not already found.
+     */
     static UnownedBaseShape* getUnowned(ExclusiveContext *cx, const StackBaseShape &base);
+
+    /*
+     * Lookup base shapes from the compartment's baseShapes table, returning
+     * nullptr if not found.
+     */
+    static UnownedBaseShape *lookupUnowned(ThreadSafeContext *cx, const StackBaseShape &base);
 
     /* Get the canonical base shape. */
     inline UnownedBaseShape* unowned();
@@ -812,7 +821,7 @@ struct StackBaseShape
         compartment(base->compartment())
     {}
 
-    inline StackBaseShape(ExclusiveContext *cx, const Class *clasp,
+    inline StackBaseShape(ThreadSafeContext *cx, const Class *clasp,
                           JSObject *parent, JSObject *metadata, uint32_t objectFlags);
     inline StackBaseShape(Shape *shape);
 
@@ -837,7 +846,7 @@ struct StackBaseShape
     class AutoRooter : private JS::CustomAutoRooter
     {
       public:
-        inline AutoRooter(ExclusiveContext *cx, const StackBaseShape *base_
+        inline AutoRooter(ThreadSafeContext *cx, const StackBaseShape *base_
                           MOZ_GUARD_OBJECT_NOTIFIER_PARAM);
 
       private:
@@ -931,6 +940,8 @@ class Shape : public gc::BarrieredCell<Shape>
 
     static inline Shape *search(ExclusiveContext *cx, Shape *start, jsid id,
                                 Shape ***pspp, bool adding = false);
+    static inline Shape *searchThreadLocal(ThreadSafeContext *cx, Shape *start, jsid id,
+                                           Shape ***pspp, bool adding = false);
     static inline Shape *searchNoHashify(Shape *start, jsid id);
 
     void removeFromDictionary(ObjectImpl *obj);
@@ -950,7 +961,12 @@ class Shape : public gc::BarrieredCell<Shape>
     static Shape *replaceLastProperty(ExclusiveContext *cx, const StackBaseShape &base,
                                       TaggedProto proto, HandleShape shape);
 
-    static bool hashify(ExclusiveContext *cx, Shape *shape);
+    /*
+     * This function is thread safe if every shape in the lineage of |shape|
+     * is thread local, which is the case when we clone the entire shape
+     * lineage in preparation for converting an object to dictionary mode.
+     */
+    static bool hashify(ThreadSafeContext *cx, Shape *shape);
     void handoffTableTo(Shape *newShape);
 
     void setParent(Shape *p) {
@@ -961,13 +977,13 @@ class Shape : public gc::BarrieredCell<Shape>
         parent = p;
     }
 
-    bool ensureOwnBaseShape(ExclusiveContext *cx) {
+    bool ensureOwnBaseShape(ThreadSafeContext *cx) {
         if (base()->isOwned())
             return true;
         return makeOwnBaseShape(cx);
     }
 
-    bool makeOwnBaseShape(ExclusiveContext *cx);
+    bool makeOwnBaseShape(ThreadSafeContext *cx);
 
   public:
     bool hasTable() const { return base()->hasTable(); }
@@ -1278,10 +1294,7 @@ class Shape : public gc::BarrieredCell<Shape>
             MarkShape(trc, &parent, "parent");
     }
 
-    inline Shape *search(ExclusiveContext *cx, jsid id) {
-        Shape **_;
-        return search(cx, this, id, &_);
-    }
+    inline Shape *search(ExclusiveContext *cx, jsid id);
 
     /* For JIT usage */
     static inline size_t offsetOfBase() { return offsetof(Shape, base_); }
@@ -1310,7 +1323,7 @@ class AutoRooterGetterSetter
     class Inner : private JS::CustomAutoRooter
     {
       public:
-        inline Inner(ExclusiveContext *cx, uint8_t attrs,
+        inline Inner(ThreadSafeContext *cx, uint8_t attrs,
                      PropertyOp *pgetter_, StrictPropertyOp *psetter_);
 
       private:
@@ -1323,7 +1336,7 @@ class AutoRooterGetterSetter
     };
 
   public:
-    inline AutoRooterGetterSetter(ExclusiveContext *cx, uint8_t attrs,
+    inline AutoRooterGetterSetter(ThreadSafeContext *cx, uint8_t attrs,
                                   PropertyOp *pgetter, StrictPropertyOp *psetter
                                   MOZ_GUARD_OBJECT_NOTIFIER_PARAM);
 
@@ -1471,7 +1484,7 @@ struct StackShape
     class AutoRooter : private JS::CustomAutoRooter
     {
       public:
-        inline AutoRooter(ExclusiveContext *cx, const StackShape *shape_
+        inline AutoRooter(ThreadSafeContext *cx, const StackShape *shape_
                           MOZ_GUARD_OBJECT_NOTIFIER_PARAM);
 
       private:
@@ -1567,45 +1580,6 @@ Shape::Shape(UnownedBaseShape *base, uint32_t nfixed)
 {
     JS_ASSERT(base);
     kids.setNull();
-}
-
-inline Shape *
-Shape::search(ExclusiveContext *cx, Shape *start, jsid id, Shape ***pspp, bool adding)
-{
-    if (start->inDictionary()) {
-        *pspp = start->table().search(id, adding);
-        return SHAPE_FETCH(*pspp);
-    }
-
-    *pspp = nullptr;
-
-    if (start->hasTable()) {
-        Shape **spp = start->table().search(id, adding);
-        return SHAPE_FETCH(spp);
-    }
-
-    if (start->numLinearSearches() == LINEAR_SEARCHES_MAX) {
-        if (start->isBigEnoughForAShapeTable()) {
-            if (Shape::hashify(cx, start)) {
-                Shape **spp = start->table().search(id, adding);
-                return SHAPE_FETCH(spp);
-            }
-        }
-        /*
-         * No table built -- there weren't enough entries, or OOM occurred.
-         * Don't increment numLinearSearches, to keep hasTable() false.
-         */
-        JS_ASSERT(!start->hasTable());
-    } else {
-        start->incrementNumLinearSearches();
-    }
-
-    for (Shape *shape = start; shape; shape = shape->parent) {
-        if (shape->propidRef() == id)
-            return shape;
-    }
-
-    return nullptr;
 }
 
 /*

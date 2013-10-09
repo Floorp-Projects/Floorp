@@ -129,22 +129,20 @@ public:
   // The following metrics are all in widget space/device pixels.
   //
 
-  // This is the area within the widget that we're compositing to, which means
-  // that it is the visible region of this frame. It is not relative to
-  // anything.
-  // So { 0, 0, [compositeArea.width], [compositeArea.height] }.
+  // This is the area within the widget that we're compositing to. It is relative
+  // to the layer tree origin.
   //
   // This is useful because, on mobile, the viewport and composition dimensions
   // are not always the same. In this case, we calculate the displayport using
   // an area bigger than the region we're compositing to. If we used the
   // viewport dimensions to calculate the displayport, we'd run into situations
   // where we're prerendering the wrong regions and the content may be clipped,
-  // or too much of it prerendered. If the displayport is the same as the
-  // viewport, there is no need for this and we can just use the viewport
+  // or too much of it prerendered. If the composition dimensions are the same as the
+  // viewport dimensions, there is no need for this and we can just use the viewport
   // instead.
   //
-  // This is only valid on the root layer. Nested iframes do not need this
-  // metric as they do not have a displayport set. See bug 775452.
+  // This value is valid for nested scrollable layers as well, and is still
+  // relative to the layer tree origin.
   ScreenIntRect mCompositionBounds;
 
   // ---------------------------------------------------------------------------

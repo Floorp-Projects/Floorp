@@ -442,6 +442,30 @@ struct GLContextSymbols
     // EXT_transform_feedback only
     typedef void (GLAPIENTRY * PFNGLBINDBUFFEROFFSET) (GLenum target, GLuint index, GLuint buffer, GLintptr offset);
     PFNGLBINDBUFFEROFFSET fBindBufferOffset;
+
+    // KHR_debug
+    typedef void (GLAPIENTRY * PFNGLDEBUGMESSAGECONTROL) (GLenum source, GLenum type, GLenum severity, GLsizei count, const GLuint* ids, realGLboolean enabled);
+    PFNGLDEBUGMESSAGECONTROL fDebugMessageControl;
+    typedef void (GLAPIENTRY * PFNGLDEBUGMESSAGEINSERT) (GLenum source, GLenum type, GLuint id, GLenum severity, GLsizei length, const GLchar* buf);
+    PFNGLDEBUGMESSAGEINSERT fDebugMessageInsert;
+    typedef void (GLAPIENTRY * PFNGLDEBUGMESSAGECALLBACK) (GLDEBUGPROC callback, const GLvoid* userParam);
+    PFNGLDEBUGMESSAGECALLBACK fDebugMessageCallback;
+    typedef GLuint (GLAPIENTRY * PFNGLDEBUGMESSAGELOG) (GLuint count, GLsizei bufsize, GLenum* sources, GLenum* types, GLuint* ids, GLenum* severities, GLsizei* lengths, GLchar* messageLog);
+    PFNGLDEBUGMESSAGELOG fGetDebugMessageLog;
+    typedef void (GLAPIENTRY * PFNGLGETPOINTERV) (GLenum pname, GLvoid** params);
+    PFNGLGETPOINTERV fGetPointerv;
+    typedef void (GLAPIENTRY * PFNGLPUSHDEBUGGROUP) (GLenum source, GLuint id, GLsizei length, const GLchar* message);
+    PFNGLPUSHDEBUGGROUP fPushDebugGroup;
+    typedef void (GLAPIENTRY * PFNGLPOPDEBUGGROUP) (void);
+    PFNGLPOPDEBUGGROUP fPopDebugGroup;
+    typedef void (GLAPIENTRY * PFNGLOBJECTLABEL) (GLenum identifier, GLuint name, GLsizei length, const GLchar* label);
+    PFNGLOBJECTLABEL fObjectLabel;
+    typedef void (GLAPIENTRY * PFNGLGETOBJECTLABEL) (GLenum identifier, GLuint name, GLsizei bufSize, GLsizei* length, GLchar* label);
+    PFNGLGETOBJECTLABEL fGetObjectLabel;
+    typedef void (GLAPIENTRY * PFNGLOBJECTPTRLABEL) (GLvoid* ptr, GLsizei length, const GLchar* label);
+    PFNGLOBJECTPTRLABEL fObjectPtrLabel;
+    typedef void (GLAPIENTRY * PFNGLGETOBJECTPTRLABEL) (GLvoid* ptr, GLsizei bufSize, GLsizei* length, GLchar* label);
+    PFNGLGETOBJECTPTRLABEL fGetObjectPtrLabel;
 };
 
 }

@@ -30,6 +30,7 @@
 #ifdef XP_WIN
 #include "gfxWindowsPlatform.h"
 #endif
+#include "gfx2DGlue.h"
 
 namespace mozilla {
 

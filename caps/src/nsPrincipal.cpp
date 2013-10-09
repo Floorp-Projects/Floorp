@@ -572,9 +572,8 @@ nsPrincipal::GetAppStatus()
   nsCOMPtr<nsIAppsService> appsService = do_GetService(APPS_SERVICE_CONTRACTID);
   NS_ENSURE_TRUE(appsService, nsIPrincipal::APP_STATUS_NOT_INSTALLED);
 
-  nsCOMPtr<mozIDOMApplication> domApp;
-  appsService->GetAppByLocalId(mAppId, getter_AddRefs(domApp));
-  nsCOMPtr<mozIApplication> app = do_QueryInterface(domApp);
+  nsCOMPtr<mozIApplication> app;
+  appsService->GetAppByLocalId(mAppId, getter_AddRefs(app));
   NS_ENSURE_TRUE(app, nsIPrincipal::APP_STATUS_NOT_INSTALLED);
 
   uint16_t status = nsIPrincipal::APP_STATUS_INSTALLED;

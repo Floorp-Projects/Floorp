@@ -217,38 +217,38 @@ NS_DEFINE_NAMED_CID(NS_DEVICE_CONTEXT_SPEC_CID);
 
 
 static const mozilla::Module::CIDEntry kWidgetCIDs[] = {
-  { &kNS_WINDOW_CID, false, NULL, WindowConstructor },
-  { &kNS_CHILD_CID, false, NULL, ChildWindowConstructor },
-  { &kNS_FILEPICKER_CID, false, NULL, FilePickerConstructor },
-  { &kNS_COLORPICKER_CID, false, NULL, ColorPickerConstructor },
-  { &kNS_APPSHELL_CID, false, NULL, nsAppShellConstructor },
-  { &kNS_SCREENMANAGER_CID, false, NULL, nsScreenManagerWinConstructor },
-  { &kNS_GFXINFO_CID, false, NULL, GfxInfoConstructor },
-  { &kNS_THEMERENDERER_CID, false, NULL, NS_NewNativeTheme },
-  { &kNS_IDLE_SERVICE_CID, false, NULL, nsIdleServiceWinConstructor },
-  { &kNS_CLIPBOARD_CID, false, NULL, nsClipboardConstructor },
-  { &kNS_CLIPBOARDHELPER_CID, false, NULL, nsClipboardHelperConstructor },
-  { &kNS_SOUND_CID, false, NULL, nsSoundConstructor },
-  { &kNS_TRANSFERABLE_CID, false, NULL, nsTransferableConstructor },
-  { &kNS_HTMLFORMATCONVERTER_CID, false, NULL, nsHTMLFormatConverterConstructor },
-  { &kNS_WIN_TASKBAR_CID, false, NULL, WinTaskbarConstructor },
-  { &kNS_WIN_JUMPLISTBUILDER_CID, false, NULL, JumpListBuilderConstructor },
-  { &kNS_WIN_JUMPLISTITEM_CID, false, NULL, JumpListItemConstructor },
-  { &kNS_WIN_JUMPLISTSEPARATOR_CID, false, NULL, JumpListSeparatorConstructor },
-  { &kNS_WIN_JUMPLISTLINK_CID, false, NULL, JumpListLinkConstructor },
-  { &kNS_WIN_JUMPLISTSHORTCUT_CID, false, NULL, JumpListShortcutConstructor },
-  { &kNS_DRAGSERVICE_CID, false, NULL, nsDragServiceConstructor },
-  { &kNS_BIDIKEYBOARD_CID, false, NULL, nsBidiKeyboardConstructor },
+  { &kNS_WINDOW_CID, false, nullptr, WindowConstructor },
+  { &kNS_CHILD_CID, false, nullptr, ChildWindowConstructor },
+  { &kNS_FILEPICKER_CID, false, nullptr, FilePickerConstructor },
+  { &kNS_COLORPICKER_CID, false, nullptr, ColorPickerConstructor },
+  { &kNS_APPSHELL_CID, false, nullptr, nsAppShellConstructor },
+  { &kNS_SCREENMANAGER_CID, false, nullptr, nsScreenManagerWinConstructor },
+  { &kNS_GFXINFO_CID, false, nullptr, GfxInfoConstructor },
+  { &kNS_THEMERENDERER_CID, false, nullptr, NS_NewNativeTheme },
+  { &kNS_IDLE_SERVICE_CID, false, nullptr, nsIdleServiceWinConstructor },
+  { &kNS_CLIPBOARD_CID, false, nullptr, nsClipboardConstructor },
+  { &kNS_CLIPBOARDHELPER_CID, false, nullptr, nsClipboardHelperConstructor },
+  { &kNS_SOUND_CID, false, nullptr, nsSoundConstructor },
+  { &kNS_TRANSFERABLE_CID, false, nullptr, nsTransferableConstructor },
+  { &kNS_HTMLFORMATCONVERTER_CID, false, nullptr, nsHTMLFormatConverterConstructor },
+  { &kNS_WIN_TASKBAR_CID, false, nullptr, WinTaskbarConstructor },
+  { &kNS_WIN_JUMPLISTBUILDER_CID, false, nullptr, JumpListBuilderConstructor },
+  { &kNS_WIN_JUMPLISTITEM_CID, false, nullptr, JumpListItemConstructor },
+  { &kNS_WIN_JUMPLISTSEPARATOR_CID, false, nullptr, JumpListSeparatorConstructor },
+  { &kNS_WIN_JUMPLISTLINK_CID, false, nullptr, JumpListLinkConstructor },
+  { &kNS_WIN_JUMPLISTSHORTCUT_CID, false, nullptr, JumpListShortcutConstructor },
+  { &kNS_DRAGSERVICE_CID, false, nullptr, nsDragServiceConstructor },
+  { &kNS_BIDIKEYBOARD_CID, false, nullptr, nsBidiKeyboardConstructor },
 #ifdef MOZ_METRO
-  { &kNS_WIN_METROUTILS_CID, false, NULL, nsWinMetroUtilsConstructor },
+  { &kNS_WIN_METROUTILS_CID, false, nullptr, nsWinMetroUtilsConstructor },
 #endif
 #ifdef NS_PRINTING
-  { &kNS_PRINTSETTINGSSERVICE_CID, false, NULL, nsPrintOptionsWinConstructor },
-  { &kNS_PRINTER_ENUMERATOR_CID, false, NULL, nsPrinterEnumeratorWinConstructor },
-  { &kNS_PRINTSESSION_CID, false, NULL, nsPrintSessionConstructor },
-  { &kNS_DEVICE_CONTEXT_SPEC_CID, false, NULL, nsDeviceContextSpecWinConstructor },
+  { &kNS_PRINTSETTINGSSERVICE_CID, false, nullptr, nsPrintOptionsWinConstructor },
+  { &kNS_PRINTER_ENUMERATOR_CID, false, nullptr, nsPrinterEnumeratorWinConstructor },
+  { &kNS_PRINTSESSION_CID, false, nullptr, nsPrintSessionConstructor },
+  { &kNS_DEVICE_CONTEXT_SPEC_CID, false, nullptr, nsDeviceContextSpecWinConstructor },
 #endif
-  { NULL }
+  { nullptr }
 };
 
 static const mozilla::Module::ContractIDEntry kWidgetContracts[] = {
@@ -283,7 +283,7 @@ static const mozilla::Module::ContractIDEntry kWidgetContracts[] = {
   { "@mozilla.org/gfx/printsession;1", &kNS_PRINTSESSION_CID },
   { "@mozilla.org/gfx/devicecontextspec;1", &kNS_DEVICE_CONTEXT_SPEC_CID },
 #endif
-  { NULL }
+  { nullptr }
 };
 
 static void
@@ -300,8 +300,8 @@ static const mozilla::Module kWidgetModule = {
   mozilla::Module::kVersion,
   kWidgetCIDs,
   kWidgetContracts,
-  NULL,
-  NULL,
+  nullptr,
+  nullptr,
   nsAppShellInit,
   nsWidgetWindowsModuleDtor
 };

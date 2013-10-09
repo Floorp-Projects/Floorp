@@ -16,6 +16,7 @@
 #include "gfxContext.h"
 #include "mozilla/Preferences.h"
 #include "nsUnicodeProperties.h"
+#include "gfxFontConstants.h"
 
 #include "cairo-win32.h"
 

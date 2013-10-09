@@ -80,7 +80,7 @@ public:
 
   STDMETHODIMP QueryInterface(REFIID riid, void** ppv)
   {
-    *ppv=NULL;
+    *ppv=nullptr;
     if ( (IID_IUnknown == riid) || (IID_ITfInputScope == riid) ) {
       *ppv = static_cast<ITfInputScope*>(this);
     }
@@ -130,15 +130,15 @@ private:
 /* nsTextStore                                                    */
 /******************************************************************/
 
-ITfThreadMgr*           nsTextStore::sTsfThreadMgr   = NULL;
-ITfMessagePump*         nsTextStore::sMessagePump    = NULL;
-ITfKeystrokeMgr*        nsTextStore::sKeystrokeMgr   = NULL;
-ITfDisplayAttributeMgr* nsTextStore::sDisplayAttrMgr = NULL;
-ITfCategoryMgr*         nsTextStore::sCategoryMgr    = NULL;
-ITfDocumentMgr*         nsTextStore::sTsfDisabledDocumentMgr = NULL;
-ITfContext*             nsTextStore::sTsfDisabledContext = NULL;
+ITfThreadMgr*           nsTextStore::sTsfThreadMgr   = nullptr;
+ITfMessagePump*         nsTextStore::sMessagePump    = nullptr;
+ITfKeystrokeMgr*        nsTextStore::sKeystrokeMgr   = nullptr;
+ITfDisplayAttributeMgr* nsTextStore::sDisplayAttrMgr = nullptr;
+ITfCategoryMgr*         nsTextStore::sCategoryMgr    = nullptr;
+ITfDocumentMgr*         nsTextStore::sTsfDisabledDocumentMgr = nullptr;
+ITfContext*             nsTextStore::sTsfDisabledContext = nullptr;
 DWORD         nsTextStore::sTsfClientId  = 0;
-nsTextStore*  nsTextStore::sTsfTextStore = NULL;
+nsTextStore*  nsTextStore::sTsfTextStore = nullptr;
 
 UINT nsTextStore::sFlushTIPInputMessage  = 0;
 
@@ -560,7 +560,7 @@ nsTextStore::Create(nsWindowBase* aWidget)
     PR_LOG(sTextStoreLog, PR_LOG_ERROR,
       ("TSF: 0x%p   nsTextStore::Create() FAILED to create the context "
        "(0x%08X)", this, hr));
-    mDocumentMgr = NULL;
+    mDocumentMgr = nullptr;
     return false;
   }
 
@@ -570,8 +570,8 @@ nsTextStore::Create(nsWindowBase* aWidget)
       ("TSF: 0x%p   nsTextStore::Create() FAILED to push the context (0x%08X)",
        this, hr));
     // XXX Why don't we use NS_IF_RELEASE() here??
-    mContext = NULL;
-    mDocumentMgr = NULL;
+    mContext = nullptr;
+    mDocumentMgr = nullptr;
     return false;
   }
 
@@ -604,12 +604,12 @@ nsTextStore::Destroy(void)
       ::DispatchMessageW(&msg);
     }
   }
-  mContext = NULL;
+  mContext = nullptr;
   if (mDocumentMgr) {
     mDocumentMgr->Pop(TF_POPF_ALL);
-    mDocumentMgr = NULL;
+    mDocumentMgr = nullptr;
   }
-  mSink = NULL;
+  mSink = nullptr;
   mWidget = nullptr;
 
   PR_LOG(sTextStoreLog, PR_LOG_ALWAYS,
@@ -621,7 +621,7 @@ STDMETHODIMP
 nsTextStore::QueryInterface(REFIID riid,
                             void** ppv)
 {
-  *ppv=NULL;
+  *ppv=nullptr;
   if ( (IID_IUnknown == riid) || (IID_ITextStoreACP == riid) ) {
     *ppv = static_cast<ITextStoreACP*>(this);
   } else if (IID_ITfContextOwnerCompositionSink == riid) {
@@ -734,7 +734,7 @@ nsTextStore::UnadviseSink(IUnknown *punk)
        "the sink being different from the stored sink", this));
     return CONNECT_E_NOCONNECTION;
   }
-  mSink = NULL;
+  mSink = nullptr;
   mSinkMask = 0;
   return S_OK;
 }
@@ -1319,7 +1319,7 @@ nsTextStore::GetDisplayAttribute(ITfProperty* aAttrProperty,
   NS_ENSURE_TRUE(sDisplayAttrMgr, E_FAIL);
   nsRefPtr<ITfDisplayAttributeInfo> info;
   hr = sDisplayAttrMgr->GetDisplayAttributeInfo(guid, getter_AddRefs(info),
-                                                NULL);
+                                                nullptr);
   if (FAILED(hr) || !info) {
     PR_LOG(sTextStoreLog, PR_LOG_ERROR,
            ("TSF: 0x%p   nsTextStore::GetDisplayAttribute() FAILED due to "
@@ -1526,7 +1526,7 @@ nsTextStore::RecordCompositionUpdateAction()
   textRanges.AppendElement(newRange);
 
   nsRefPtr<ITfRange> range;
-  while (S_OK == enumRanges->Next(1, getter_AddRefs(range), NULL) && range) {
+  while (S_OK == enumRanges->Next(1, getter_AddRefs(range), nullptr) && range) {
 
     LONG start = 0, length = 0;
     if (FAILED(GetRangeExtent(range, &start, &length)))
@@ -2907,7 +2907,7 @@ nsTextStore::OnFocusChange(bool aGotFocus,
     if (ThinksHavingFocus()) {
       DebugOnly<HRESULT> hr = sTsfThreadMgr->AssociateFocus(
                                 sTsfTextStore->mWidget->GetWindowHandle(),
-                                NULL, getter_AddRefs(prevFocusedDocumentMgr));
+                                nullptr, getter_AddRefs(prevFocusedDocumentMgr));
       NS_ASSERTION(SUCCEEDED(hr), "Disassociating focus failed");
       NS_ASSERTION(prevFocusedDocumentMgr == sTsfTextStore->mDocumentMgr,
                    "different documentMgr has been associated with the window");
@@ -3078,7 +3078,7 @@ nsTextStore::CommitCompositionInternal(bool aDiscard)
                ("TSF: 0x%p   nsTextStore::CommitCompositionInternal(), "
                 "requesting TerminateComposition() for the context 0x%p...",
                 this, context.get()));
-        services->TerminateComposition(NULL);
+        services->TerminateComposition(nullptr);
       }
     }
     if (context != mContext)
@@ -3101,7 +3101,7 @@ GetCompartment(IUnknown* pUnk,
   if (!compMgr) return false;
 
   return SUCCEEDED(compMgr->GetCompartment(aID, aCompartment)) &&
-         (*aCompartment) != NULL;
+         (*aCompartment) != nullptr;
 }
 
 // static
@@ -3250,7 +3250,7 @@ nsTextStore::Initialize(void)
   }
 
   if (!sTsfThreadMgr) {
-    if (SUCCEEDED(CoCreateInstance(CLSID_TF_ThreadMgr, NULL,
+    if (SUCCEEDED(CoCreateInstance(CLSID_TF_ThreadMgr, nullptr,
           CLSCTX_INPROC_SERVER, IID_ITfThreadMgr,
           reinterpret_cast<void**>(&sTsfThreadMgr)))) {
       DebugOnly<HRESULT> hr =
@@ -3292,7 +3292,7 @@ nsTextStore::Initialize(void)
       ("TSF:   nsTextStore::Initialize() is creating "
        "a display attribute manager instance..."));
     HRESULT hr =
-      ::CoCreateInstance(CLSID_TF_DisplayAttributeMgr, NULL,
+      ::CoCreateInstance(CLSID_TF_DisplayAttributeMgr, nullptr,
                          CLSCTX_INPROC_SERVER, IID_ITfDisplayAttributeMgr,
                          reinterpret_cast<void**>(&sDisplayAttrMgr));
     if (FAILED(hr) || !sDisplayAttrMgr) {
@@ -3306,7 +3306,7 @@ nsTextStore::Initialize(void)
       ("TSF:   nsTextStore::Initialize() is creating "
        "a category manager instance..."));
     HRESULT hr =
-      ::CoCreateInstance(CLSID_TF_CategoryMgr, NULL,
+      ::CoCreateInstance(CLSID_TF_CategoryMgr, nullptr,
                          CLSCTX_INPROC_SERVER, IID_ITfCategoryMgr,
                          reinterpret_cast<void**>(&sCategoryMgr));
     if (FAILED(hr) || !sCategoryMgr) {
@@ -3329,7 +3329,7 @@ nsTextStore::Initialize(void)
     }
     if (sTsfDisabledDocumentMgr) {
       DWORD editCookie = 0;
-      hr = sTsfDisabledDocumentMgr->CreateContext(sTsfClientId, 0, NULL,
+      hr = sTsfDisabledDocumentMgr->CreateContext(sTsfClientId, 0, nullptr,
                                                   &sTsfDisabledContext,
                                                   &editCookie);
       if (FAILED(hr) || !sTsfDisabledContext) {
@@ -3585,7 +3585,7 @@ nsTextStore::CurrentKeyboardLayoutHasIME()
   //     ITfInputProcessorProfileMgr instance without ITfInputProcessorProfiles
   //     instance.
   nsRefPtr<ITfInputProcessorProfiles> profiles;
-  HRESULT hr = ::CoCreateInstance(CLSID_TF_InputProcessorProfiles, NULL,
+  HRESULT hr = ::CoCreateInstance(CLSID_TF_InputProcessorProfiles, nullptr,
                                   CLSCTX_INPROC_SERVER,
                                   IID_ITfInputProcessorProfiles,
                                   getter_AddRefs(profiles));

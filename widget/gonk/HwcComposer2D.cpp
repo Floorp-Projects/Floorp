@@ -445,114 +445,45 @@ HwcComposer2D::TryHwComposition()
 {
     FramebufferSurface* fbsurface = (FramebufferSurface*)(GetGonkDisplay()->GetFBSurface());
 
-    if (!(fbsurface && fbsurface->lastHandle)) {
-        LOGD("H/W Composition failed. FBSurface not initialized.");
-        return false;
-    }
-
-    // Add FB layer
-    int idx = mList->numHwLayers++;
-    if (idx >= mMaxLayerCount) {
-        if (!ReallocLayerList() || idx >= mMaxLayerCount) {
-            LOGE("TryHwComposition failed! Could not add FB layer");
-            return false;
-        }
-    }
-
-    Prepare(fbsurface->lastHandle, -1);
-
-    for (int j = 0; j < idx; j++) {
-        if (mList->hwLayers[j].compositionType == HWC_FRAMEBUFFER) {
-            LOGD("GPU or Partial HWC Composition");
-            return false;
-        }
-    }
-
-    // Full HWC Composition
-    Commit();
-
-    // No composition on FB layer, so closing releaseFenceFd
-    close(mList->hwLayers[idx].releaseFenceFd);
-    mList->hwLayers[idx].releaseFenceFd = -1;
-    mList->numHwLayers = 0;
-    return true;
-}
-
-bool
-HwcComposer2D::Render(EGLDisplay dpy, EGLSurface sur)
-{
-    if (!mList) {
-        // After boot, HWC list hasn't been created yet
-        return GetGonkDisplay()->SwapBuffers(dpy, sur);
-    }
-
-    GetGonkDisplay()->UpdateFBSurface(dpy, sur);
-
-    FramebufferSurface* fbsurface = (FramebufferSurface*)(GetGonkDisplay()->GetFBSurface());
     if (!fbsurface) {
         LOGE("H/W Composition failed. FBSurface not initialized.");
         return false;
     }
 
-    if (mList->numHwLayers != 0) {
-        // No mHwc prepare, if already prepared in current draw cycle
-        mList->hwLayers[mList->numHwLayers - 1].handle = fbsurface->lastHandle;
-        mList->hwLayers[mList->numHwLayers - 1].acquireFenceFd = fbsurface->lastFenceFD;
-    } else {
-        mList->numHwLayers = 2;
-        mList->hwLayers[0].hints = 0;
-        mList->hwLayers[0].compositionType = HWC_BACKGROUND;
-        mList->hwLayers[0].flags = HWC_SKIP_LAYER;
-        mList->hwLayers[0].backgroundColor = {0};
-        mList->hwLayers[0].displayFrame = {0, 0, mScreenRect.width, mScreenRect.height};
-        Prepare(fbsurface->lastHandle, fbsurface->lastFenceFD);
-    }
-
-    // GPU or partial HWC Composition
-    Commit();
-
-    GetGonkDisplay()->SetFBReleaseFd(mList->hwLayers[mList->numHwLayers - 1].releaseFenceFd);
-    mList->numHwLayers = 0;
-    return true;
-}
-
-void
-HwcComposer2D::Prepare(buffer_handle_t fbHandle, int fence)
-{
-    int idx = mList->numHwLayers - 1;
+    hwc_display_contents_1_t *displays[HWC_NUM_DISPLAY_TYPES] = {NULL};
     const hwc_rect_t r = {0, 0, mScreenRect.width, mScreenRect.height};
-    hwc_display_contents_1_t *displays[HWC_NUM_DISPLAY_TYPES] = { nullptr };
+    int idx = mList->numHwLayers;
 
     displays[HWC_DISPLAY_PRIMARY] = mList;
     mList->flags = HWC_GEOMETRY_CHANGED;
-    mList->outbufAcquireFenceFd = -1;
-    mList->outbuf = nullptr;
     mList->retireFenceFd = -1;
 
     mList->hwLayers[idx].hints = 0;
     mList->hwLayers[idx].flags = 0;
     mList->hwLayers[idx].transform = 0;
-    mList->hwLayers[idx].handle = fbHandle;
+    mList->hwLayers[idx].handle = fbsurface->lastHandle;
     mList->hwLayers[idx].blending = HWC_BLENDING_PREMULT;
     mList->hwLayers[idx].compositionType = HWC_FRAMEBUFFER_TARGET;
     mList->hwLayers[idx].sourceCrop = r;
     mList->hwLayers[idx].displayFrame = r;
     mList->hwLayers[idx].visibleRegionScreen.numRects = 1;
     mList->hwLayers[idx].visibleRegionScreen.rects = &mList->hwLayers[idx].sourceCrop;
-    mList->hwLayers[idx].acquireFenceFd = fence;
+    mList->hwLayers[idx].acquireFenceFd = -1;
     mList->hwLayers[idx].releaseFenceFd = -1;
     mList->hwLayers[idx].planeAlpha = 0xFF;
+    mList->numHwLayers++;
 
     mHwc->prepare(mHwc, HWC_NUM_DISPLAY_TYPES, displays);
-}
 
-bool
-HwcComposer2D::Commit()
-{
-    hwc_display_contents_1_t *displays[HWC_NUM_DISPLAY_TYPES] = { nullptr };
-    displays[HWC_DISPLAY_PRIMARY] = mList;
+    for (int j = 0; j < idx; j++) {
+        if (mList->hwLayers[j].compositionType == HWC_FRAMEBUFFER) {
+            LOGD("GPU or Partial MDP Composition");
+            return false;
+        }
+    }
 
-    int err = mHwc->set(mHwc, HWC_NUM_DISPLAY_TYPES, displays);
+    // Full MDP Composition
+    mHwc->set(mHwc, HWC_NUM_DISPLAY_TYPES, displays);
 
     for (int i = 0; i <= MAX_HWC_LAYERS; i++) {
         if (mPrevRelFd[i] <= 0) {
@@ -573,27 +504,24 @@ HwcComposer2D::Commit()
     }
 
     mPrevRelFd[0] = mList->retireFenceFd;
-    for (uint32_t j = 0; j < (mList->numHwLayers - 1); j++) {
+    for (uint32_t j = 0; j < idx; j++) {
         if (mList->hwLayers[j].compositionType == HWC_OVERLAY) {
             mPrevRelFd[j + 1] = mList->hwLayers[j].releaseFenceFd;
             mList->hwLayers[j].releaseFenceFd = -1;
         }
     }
 
+    close(mList->hwLayers[idx].releaseFenceFd);
+    mList->hwLayers[idx].releaseFenceFd = -1;
     mList->retireFenceFd = -1;
-    return !err;
+    mList->numHwLayers = 0;
+    return true;
 }
 #else
 bool
 HwcComposer2D::TryHwComposition()
 {
     return !mHwc->set(mHwc, mDpy, mSur, mList);
-}
-
-bool
-HwcComposer2D::Render(EGLDisplay dpy, EGLSurface sur)
-{
-    return GetGonkDisplay()->SwapBuffers(dpy, sur);
 }
 #endif
 
@@ -621,13 +549,13 @@ HwcComposer2D::TryRender(Layer* aRoot,
                           aGLWorldTransform))
     {
         LOGD("Render aborted. Nothing was drawn to the screen");
-        mList->numHwLayers = 0;
         return false;
     }
 
     if (!TryHwComposition()) {
-        LOGD("H/W Composition failed");
-        return false;
+      // Full MDP Composition
+      LOGE("H/W Composition failed");
+      return false;
     }
 
     LOGD("Frame rendered");

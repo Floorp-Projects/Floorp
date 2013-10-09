@@ -25,13 +25,14 @@ NS_INTERFACE_MAP_END_INHERITING(AudioNode)
 NS_IMPL_ADDREF_INHERITED(BiquadFilterNode, AudioNode)
 NS_IMPL_RELEASE_INHERITED(BiquadFilterNode, AudioNode)
 
-void SetParamsOnBiquad(WebCore::Biquad& aBiquad,
-                       float aSampleRate,
-                       BiquadFilterType aType,
-                       double aFrequency,
-                       double aQ,
-                       double aGain,
-                       double aDetune)
+static void
+SetParamsOnBiquad(WebCore::Biquad& aBiquad,
+                  float aSampleRate,
+                  BiquadFilterType aType,
+                  double aFrequency,
+                  double aQ,
+                  double aGain,
+                  double aDetune)
 {
   const double nyquist = aSampleRate * 0.5;
   double normalizedFrequency = aFrequency / nyquist;
@@ -158,10 +159,16 @@ public:
     double gain = mGain.GetValueAtTime(pos);
     double detune = mDetune.GetValueAtTime(pos);
 
+    float inputBuffer[WEBAUDIO_BLOCK_SIZE];
     for (uint32_t i = 0; i < numberOfChannels; ++i) {
+      auto input = static_cast<const float*>(aInput.mChannelData[i]);
+      if (aInput.mVolume != 1.0) {
+        AudioBlockCopyChannelWithScale(input, aInput.mVolume, inputBuffer);
+        input = inputBuffer;
+      }
       SetParamsOnBiquad(mBiquads[i], aStream->SampleRate(), mType, freq, q, gain, detune);
 
-      mBiquads[i].process(static_cast<const float*>(aInput.mChannelData[i]),
+      mBiquads[i].process(input,
                           static_cast<float*>(const_cast<void*>(aOutput->mChannelData[i])),
                           aInput.GetDuration());
     }

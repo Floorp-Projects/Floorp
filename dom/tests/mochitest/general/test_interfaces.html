@@ -43,6 +43,7 @@ var ecmaGlobals =
     "Int32Array",
     "Int8Array",
     "InternalError",
+    {name: "Intl", desktop: true},
     "Iterator",
     "JSON",
     "Map",
@@ -610,36 +611,38 @@ function createInterfaceMap(isXBLScope) {
   var isRelease = !version.contains("a");
   var isDesktop = !/Mobile|Tablet/.test(navigator.userAgent);
   var isB2G = !isDesktop && !navigator.userAgent.contains("Android");
+
   var interfaceMap = {};
-  for (var entry of ecmaGlobals) {
-    if (typeof(entry) === "string") {
-      // Standard ECMAScript global objects are not defined on the XBL scope.
-      interfaceMap[entry] = !isXBLScope;
-    } else if (entry.nightly === isNightly) {
-      interfaceMap[entry.name] = !isXBLScope;
-    } else {
-      interfaceMap[entry.name] = false;
+
+  function addInterfaces(interfaces, shouldExpect)
+  {
+    for (var entry of interfaces) {
+      if (typeof(entry) === "string") {
+        interfaceMap[entry] = shouldExpect;
+      } else if ((entry.nightly === !isNightly) ||
+                 (entry.xbl === !isXBLScope) ||
+                 (entry.desktop === !isDesktop) ||
+                 (entry.b2g === !isB2G) ||
+                 (entry.release === !isRelease)) {
+        interfaceMap[entry.name] = false;
+      } else {
+        interfaceMap[entry.name] = shouldExpect;
+      }
     }
   }
-  for (var entry of interfaceNamesInGlobalScope) {
-    if (typeof(entry) === "string") {
-      interfaceMap[entry] = true;
-    } else if (entry.xbl === !isXBLScope ||
-               entry.desktop === !isDesktop ||
-               entry.b2g === !isB2G ||
-               entry.release === !isRelease) {
-      interfaceMap[entry.name] = false;
-    } else {
-      interfaceMap[entry.name] = true;
-    }
-  }
+
+  // Standard ECMAScript global objects are not defined on the XBL scope, but
+  // everything else exists everywhere.
+  addInterfaces(ecmaGlobals, !isXBLScope);
+  addInterfaces(interfaceNamesInGlobalScope, true);
+
   return interfaceMap;
 }
 
 function runTest(isXBLScope) {
   var interfaceMap = createInterfaceMap(isXBLScope);
   for (var name of Object.getOwnPropertyNames(window)) {
-    // An interfae name should start with an upper case character.
+    // An interface name should start with an upper case character.
     if (!/^(moz)?[A-Z]/.test(name)) {
       continue;
     }

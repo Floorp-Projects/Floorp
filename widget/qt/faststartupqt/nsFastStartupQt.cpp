@@ -18,7 +18,7 @@
 #include "nsXULAppAPI.h"
 
 
-static nsFastStartup* sFastStartup = NULL;
+static nsFastStartup* sFastStartup = nullptr;
 
 void
 GeckoThread::run()
@@ -46,7 +46,7 @@ void nsFastStartup::painted()
 MozGraphicsView*
 nsFastStartup::GetStartupGraphicsView(QWidget* parentWidget, IMozQWidget* aTopChild)
 {
-  MozGraphicsView* view = NULL;
+  MozGraphicsView* view = nullptr;
   if (sFastStartup && sFastStartup->mGraphicsView) {
     view = sFastStartup->mGraphicsView;
   } else {
@@ -110,8 +110,8 @@ nsFastStartup::CreateFastStartup(int& argc, char ** argv,
           this, SLOT(symbolsLoadingFinished(bool)));
   mThread->SetLoader(aFunc, execPath);
   // Create Static UI widget and view
-  IMozQWidget* fakeWidget = new MozQWidgetFast(NULL, NULL);
-  mGraphicsView = GetStartupGraphicsView(NULL, fakeWidget);
+  IMozQWidget* fakeWidget = new MozQWidgetFast(nullptr, nullptr);
+  mGraphicsView = GetStartupGraphicsView(nullptr, fakeWidget);
   mFakeWidget = fakeWidget;
 
   mThread->start();

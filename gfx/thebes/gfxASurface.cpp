@@ -47,7 +47,6 @@
 #include "nsComponentManagerUtils.h"
 #include "nsISupportsUtils.h"
 #include "nsCOMPtr.h"
-#include "nsIConsoleService.h"
 #include "nsServiceManagerUtils.h"
 #include "nsString.h"
 #include "nsIClipboardHelper.h"

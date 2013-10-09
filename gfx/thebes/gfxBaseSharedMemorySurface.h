@@ -9,11 +9,12 @@
 
 #include "mozilla/ipc/Shmem.h"
 #include "mozilla/ipc/SharedMemory.h"
-#include "cairo.h"
- 
+
 #include "gfxASurface.h"
 #include "gfxImageSurface.h"
 #include "pratom.h"
+
+typedef struct _cairo_user_data_key cairo_user_data_key_t;
 
 struct SharedImageInfo {
     int32_t width;

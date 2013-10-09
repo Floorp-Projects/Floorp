@@ -8,16 +8,16 @@
 
 #include "gfxTypes.h"
 
-#include "gfxColor.h"
 #include "gfxMatrix.h"
-#include "nsISupportsImpl.h"
-#include "nsAutoPtr.h"
 #include "mozilla/Alignment.h"
 #include "mozilla/gfx/2D.h"
 #include "GraphicsFilter.h"
+#include "nsISupportsImpl.h"
+#include "nsAutoPtr.h"
 
 class gfxContext;
 class gfxASurface;
+struct gfxRGBA;
 typedef struct _cairo_pattern cairo_pattern_t;
 
 
