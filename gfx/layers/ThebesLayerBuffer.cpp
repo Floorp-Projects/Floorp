@@ -30,6 +30,7 @@
 #include "mozilla/layers/ShadowLayers.h"  // for ShadowableLayer
 #include "mozilla/layers/TextureClient.h"  // for DeprecatedTextureClient
 #include "nsSize.h"                     // for nsIntSize
+#include "gfx2DGlue.h"
 
 namespace mozilla {
 

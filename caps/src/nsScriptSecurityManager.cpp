@@ -1560,6 +1560,11 @@ nsScriptSecurityManager::CheckLoadURIStrWithPrincipal(nsIPrincipal* aPrincipal,
     NS_ENSURE_SUCCESS(rv, rv);
 
     rv = CheckLoadURIWithPrincipal(aPrincipal, target, aFlags);
+    if (rv == NS_ERROR_DOM_BAD_URI) {
+        // Don't warn because NS_ERROR_DOM_BAD_URI is one of the expected
+        // return values.
+        return rv;
+    }
     NS_ENSURE_SUCCESS(rv, rv);
 
     // Now start testing fixup -- since aTargetURIStr is a string, not
@@ -1584,6 +1589,11 @@ nsScriptSecurityManager::CheckLoadURIStrWithPrincipal(nsIPrincipal* aPrincipal,
         NS_ENSURE_SUCCESS(rv, rv);
 
         rv = CheckLoadURIWithPrincipal(aPrincipal, target, aFlags);
+        if (rv == NS_ERROR_DOM_BAD_URI) {
+            // Don't warn because NS_ERROR_DOM_BAD_URI is one of the expected
+            // return values.
+            return rv;
+        }
         NS_ENSURE_SUCCESS(rv, rv);
     }
 

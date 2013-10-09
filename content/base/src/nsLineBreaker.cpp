@@ -9,6 +9,7 @@
 #include "gfxFont.h" // for the gfxTextRun::CompressedGlyph::FLAG_BREAK_TYPE_* values
 #include "nsHyphenationManager.h"
 #include "nsHyphenator.h"
+#include "mozilla/gfx/2D.h"
 
 nsLineBreaker::nsLineBreaker()
   : mCurrentWordLanguage(nullptr),

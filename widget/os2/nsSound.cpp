@@ -159,7 +159,7 @@ NS_IMETHODIMP nsSound::OnStreamComplete(nsIStreamLoader *aLoader,
   memcpy(arg->buffer, data, dataLen);
 
   // Play the sound on a new thread using MMOS2
-  if (_beginthread(playSound, NULL, 32768, (void*)arg) < 0) {
+  if (_beginthread(playSound, nullptr, 32768, (void*)arg) < 0) {
     DosFreeMem((void*)arg);
     DBG_MSG("nsSound::OnStreamComplete:  _beginthread failed");
   }
@@ -434,7 +434,7 @@ static void playSound(void * aArgs)
       break;
     }
 
-    hmmio = _mmioOpen(NULL, &mi, MMIO_READ | MMIO_DENYWRITE);
+    hmmio = _mmioOpen(nullptr, &mi, MMIO_READ | MMIO_DENYWRITE);
     if (!hmmio) {
       DBG_MSG("playSound:  _mmioOpen failed");
       break;

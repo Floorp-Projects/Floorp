@@ -2894,8 +2894,8 @@ protected:
   
   // Either null, or pointing to the frame's TabWidthProperty.
   TabWidthStore*        mTabWidths;
-  // How far we've done tab-width calculation; this is ONLY valid
-  // when mTabWidths is NULL (otherwise rely on mTabWidths->mLimit instead).
+  // How far we've done tab-width calculation; this is ONLY valid when
+  // mTabWidths is nullptr (otherwise rely on mTabWidths->mLimit instead).
   // It's a DOM offset relative to the current frame's offset.
   uint32_t              mTabWidthsAnalyzedLimit;
 

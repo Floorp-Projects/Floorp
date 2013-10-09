@@ -22,7 +22,7 @@ class nsAppShell : public nsBaseAppShell
 {
 public:
   nsAppShell() :
-    mEventWnd(NULL),
+    mEventWnd(nullptr),
     mNativeCallbackPending(false),
     mLastNativeEventScheduledMutex("nsAppShell::mLastNativeEventScheduledMutex")
   {}

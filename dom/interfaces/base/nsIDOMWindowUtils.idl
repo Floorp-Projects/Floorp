@@ -43,7 +43,7 @@ interface nsIDOMEventTarget;
 interface nsIRunnable;
 interface nsICompositionStringSynthesizer;
 
-[scriptable, uuid(750a47b6-8bdb-4cad-ba2c-b7d3e66d8021)]
+[scriptable, uuid(928356ff-26b2-434e-a7ce-c1a660162d81)]
 interface nsIDOMWindowUtils : nsISupports {
 
   /**
@@ -1303,10 +1303,12 @@ interface nsIDOMWindowUtils : nsISupports {
                                               in float aBottom, in float aLeft);
 
   /**
-   * Prevent this window (and any child windows) from displaying any further
-   * dialogs (e.g. window.alert()).
+   * These are used to control whether dialogs (alert, prompt, confirm) are
+   * allowed.
    */
-  void preventFurtherDialogs();
+  void disableDialogs();
+  void enableDialogs();
+  bool areDialogsEnabled();
 
   const unsigned long AGENT_SHEET = 0;
   const unsigned long USER_SHEET = 1;

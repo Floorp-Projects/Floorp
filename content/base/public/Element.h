@@ -725,9 +725,9 @@ public:
   {
   }
 
-  virtual void GetInnerHTML(nsAString& aInnerHTML, ErrorResult& aError);
+  NS_IMETHOD GetInnerHTML(nsAString& aInnerHTML);
   virtual void SetInnerHTML(const nsAString& aInnerHTML, ErrorResult& aError);
-  void GetOuterHTML(nsAString& aOuterHTML, ErrorResult& aError);
+  void GetOuterHTML(nsAString& aOuterHTML);
   void SetOuterHTML(const nsAString& aOuterHTML, ErrorResult& aError);
   void InsertAdjacentHTML(const nsAString& aPosition, const nsAString& aText,
                           ErrorResult& aError);
@@ -1124,7 +1124,7 @@ private:
   nsIScrollableFrame* GetScrollFrame(nsIFrame **aStyledFrame = nullptr,
                                      bool aFlushLayout = true);
 
-  nsresult GetMarkup(bool aIncludeSelf, nsAString& aMarkup);
+  void GetMarkup(bool aIncludeSelf, nsAString& aMarkup);
 
   // Data members
   nsEventStates mState;

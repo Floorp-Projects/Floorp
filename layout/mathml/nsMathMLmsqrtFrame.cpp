@@ -4,6 +4,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "nsMathMLmsqrtFrame.h"
+#include "mozilla/gfx/2D.h"
 
 //
 // <msqrt> -- form a radical - implementation

@@ -128,24 +128,6 @@ ValuePropertyBearer(JSContext *cx, StackFrame *fp, HandleValue v, int spindex)
 }
 
 inline bool
-NativeGet(JSContext *cx, JSObject *objArg, JSObject *pobjArg, Shape *shapeArg,
-          MutableHandleValue vp)
-{
-    if (shapeArg->isDataDescriptor() && shapeArg->hasDefaultGetter()) {
-        /* Fast path for Object instance properties. */
-        JS_ASSERT(shapeArg->hasSlot());
-        vp.set(pobjArg->nativeGetSlot(shapeArg->slot()));
-    } else {
-        RootedObject obj(cx, objArg);
-        RootedObject pobj(cx, pobjArg);
-        RootedShape shape(cx, shapeArg);
-        if (!js_NativeGet(cx, obj, pobj, shape, vp))
-            return false;
-    }
-    return true;
-}
-
-inline bool
 GetLengthProperty(const Value &lval, MutableHandleValue vp)
 {
     /* Optimize length accesses on strings, arrays, and arguments. */
@@ -203,8 +185,13 @@ FetchName(JSContext *cx, HandleObject obj, HandleObject obj2, HandlePropertyName
         Rooted<JSObject*> normalized(cx, obj);
         if (normalized->getClass() == &WithObject::class_ && !shape->hasDefaultGetter())
             normalized = &normalized->as<WithObject>().object();
-        if (!NativeGet(cx, normalized, obj2, shape, vp))
+        if (shape->isDataDescriptor() && shape->hasDefaultGetter()) {
+            /* Fast path for Object instance properties. */
+            JS_ASSERT(shape->hasSlot());
+            vp.set(obj2->nativeGetSlot(shape->slot()));
+        } else if (!NativeGet(cx, normalized, obj2, shape, vp)) {
             return false;
+        }
     }
     return true;
 }
@@ -252,7 +239,8 @@ SetNameOperation(JSContext *cx, JSScript *script, jsbytecode *pc, HandleObject s
     if (scope->is<GlobalObject>()) {
         JS_ASSERT(!scope->getOps()->setProperty);
         RootedId id(cx, NameToId(name));
-        return baseops::SetPropertyHelper(cx, scope, scope, id, DNP_UNQUALIFIED, &valCopy, strict);
+        return baseops::SetPropertyHelper<SequentialExecution>(cx, scope, scope, id,
+                                                               DNP_UNQUALIFIED, &valCopy, strict);
     }
 
     return JSObject::setProperty(cx, scope, scope, name, &valCopy, strict);

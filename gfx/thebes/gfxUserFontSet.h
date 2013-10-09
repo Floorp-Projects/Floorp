@@ -6,20 +6,15 @@
 #ifndef GFX_USER_FONT_SET_H
 #define GFX_USER_FONT_SET_H
 
-#include "gfxTypes.h"
 #include "gfxFont.h"
-#include "gfxFontUtils.h"
 #include "nsRefPtrHashtable.h"
 #include "nsAutoPtr.h"
 #include "nsCOMPtr.h"
 #include "nsIURI.h"
-#include "nsIFile.h"
 #include "nsIPrincipal.h"
-#include "nsISupportsImpl.h"
 #include "nsIScriptError.h"
 #include "nsURIHashKey.h"
 
-class gfxMixedFontFamily;
 class nsFontFaceLoader;
 
 //#define DEBUG_USERFONT_CACHE

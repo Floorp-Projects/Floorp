@@ -4,6 +4,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "nsMathMLmrowFrame.h"
+#include "mozilla/gfx/2D.h"
 
 //
 // <mrow> -- horizontally group any number of subexpressions - implementation

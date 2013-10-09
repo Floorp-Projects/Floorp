@@ -30,9 +30,9 @@ jit::ForkJoinSlicePar()
 // parallel code.  It uses the ArenaLists for the current thread and
 // allocates from there.
 JSObject *
-jit::NewGCThingPar(gc::AllocKind allocKind)
+jit::NewGCThingPar(ForkJoinSlice *slice, gc::AllocKind allocKind)
 {
-    ForkJoinSlice *slice = ForkJoinSlice::Current();
+    JS_ASSERT(ForkJoinSlice::Current() == slice);
     uint32_t thingSize = (uint32_t)gc::Arena::thingSize(allocKind);
     return gc::NewGCThing<JSObject, NoGC>(slice, allocKind, thingSize, gc::DefaultHeap);
 }
@@ -43,8 +43,7 @@ bool
 jit::IsThreadLocalObject(ForkJoinSlice *slice, JSObject *object)
 {
     JS_ASSERT(ForkJoinSlice::Current() == slice);
-    return !IsInsideNursery(slice->runtime(), object) &&
-           slice->allocator()->arenas.containsArena(slice->runtime(), object->arenaHeader());
+    return slice->isThreadLocal(object);
 }
 
 #ifdef DEBUG
@@ -151,27 +150,32 @@ jit::CheckInterruptPar(ForkJoinSlice *slice)
 }
 
 JSObject *
-jit::PushPar(PushParArgs *args)
-{
-    // It is awkward to have the MIR pass the current slice in, so
-    // just fetch it from TLS.  Extending the array is kind of the
-    // slow path anyhow as it reallocates the elements vector.
-    ForkJoinSlice *slice = js::ForkJoinSlice::Current();
-    JSObject::EnsureDenseResult res =
-        args->object->parExtendDenseElements(slice, &args->value, 1);
-    if (res != JSObject::ED_OK)
-        return nullptr;
-    return args->object;
-}
-
-JSObject *
 jit::ExtendArrayPar(ForkJoinSlice *slice, JSObject *array, uint32_t length)
 {
     JSObject::EnsureDenseResult res =
-        array->parExtendDenseElements(slice, nullptr, length);
+        array->ensureDenseElementsPreservePackedFlag(slice, 0, length);
     if (res != JSObject::ED_OK)
         return nullptr;
     return array;
+}
+
+ParallelResult
+jit::SetElementPar(ForkJoinSlice *slice, HandleObject obj, HandleValue index, HandleValue value,
+                   bool strict)
+{
+    RootedId id(slice);
+    if (!ValueToIdPure(index, id.address()))
+        return TP_RETRY_SEQUENTIALLY;
+
+    // SetObjectElementOperation, the sequential version, has several checks
+    // for certain deoptimizing behaviors, such as marking having written to
+    // holes and non-indexed element accesses. We don't do that here, as we
+    // can't modify any TI state anyways. If we need to add a new type, we
+    // would bail out.
+    RootedValue v(slice, value);
+    if (!baseops::SetPropertyHelper<ParallelExecution>(slice, obj, obj, id, 0, &v, strict))
+        return TP_RETRY_SEQUENTIALLY;
+    return TP_SUCCESS;
 }
 
 ParallelResult
@@ -557,10 +561,13 @@ jit::InitRestParameterPar(ForkJoinSlice *slice, uint32_t length, Value *rest,
     JS_ASSERT(!res->getDenseInitializedLength());
     JS_ASSERT(res->type() == templateObj->type());
 
-    if (length) {
-        JSObject::EnsureDenseResult edr = res->parExtendDenseElements(slice, rest, length);
+    if (length > 0) {
+        JSObject::EnsureDenseResult edr =
+            res->ensureDenseElementsPreservePackedFlag(slice, 0, length);
         if (edr != JSObject::ED_OK)
             return TP_FATAL;
+        res->initDenseElements(0, rest, length);
+        res->as<ArrayObject>().setLengthInt32(length);
     }
 
     out.set(res);

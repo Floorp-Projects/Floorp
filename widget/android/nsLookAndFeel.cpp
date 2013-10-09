@@ -8,6 +8,8 @@
 #include "nsXULAppAPI.h"
 #include "nsLookAndFeel.h"
 #include "gfxFont.h"
+#include "gfxFontConstants.h"
+#include "mozilla/gfx/2D.h"
 
 using namespace mozilla;
 using mozilla::dom::ContentChild;

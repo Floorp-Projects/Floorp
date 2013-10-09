@@ -49,6 +49,27 @@ ThreadSafeContext::allocator()
     return allocator_;
 }
 
+template <typename T>
+inline bool
+ThreadSafeContext::isThreadLocal(T thing) const
+{
+    if (!isForkJoinSlice())
+        return true;
+
+    if (!IsInsideNursery(runtime_, thing) &&
+        allocator_->arenas.containsArena(runtime_, thing->arenaHeader()))
+    {
+        // GC should be suppressed in preparation for mutating thread local
+        // objects, as we don't want to trip any barriers.
+        JS_ASSERT(!thing->zoneFromAnyThread()->needsBarrier());
+        JS_ASSERT(!thing->runtimeFromAnyThread()->needsBarrier());
+
+        return true;
+    }
+
+    return false;
+}
+
 namespace gc {
 
 static inline AllocKind

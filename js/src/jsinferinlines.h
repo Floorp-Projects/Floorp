@@ -413,7 +413,7 @@ TrackPropertyTypes(ExclusiveContext *cx, JSObject *obj, jsid id)
     if (!cx->typeInferenceEnabled() || obj->hasLazyType() || obj->type()->unknownProperties())
         return false;
 
-    if (obj->hasSingletonType() && !obj->type()->maybeGetProperty(cx, id))
+    if (obj->hasSingletonType() && !obj->type()->maybeGetProperty(id))
         return false;
 
     return true;
@@ -435,6 +435,27 @@ EnsureTrackPropertyTypes(JSContext *cx, JSObject *obj, jsid id)
     }
 
     JS_ASSERT(obj->type()->unknownProperties() || TrackPropertyTypes(cx, obj, id));
+}
+
+inline bool
+HasTypePropertyId(JSObject *obj, jsid id, Type type)
+{
+    if (obj->hasLazyType())
+        return true;
+
+    if (obj->type()->unknownProperties())
+        return true;
+
+    if (HeapTypeSet *types = obj->type()->maybeGetProperty(IdToTypeId(id)))
+        return types->hasType(type);
+
+    return false;
+}
+
+inline bool
+HasTypePropertyId(JSObject *obj, jsid id, const Value &value)
+{
+    return HasTypePropertyId(obj, id, GetValueType(value));
 }
 
 /* Add a possible type for a property of obj. */
@@ -510,6 +531,12 @@ MarkTypePropertyConfigured(ExclusiveContext *cx, HandleObject obj, jsid id)
         if (TrackPropertyTypes(cx, obj, id))
             obj->type()->markPropertyConfigured(cx, id);
     }
+}
+
+inline bool
+IsTypePropertyIdMarkedConfigured(JSObject *obj, jsid id)
+{
+    return obj->type()->isPropertyConfigured(id);
 }
 
 /* Mark a state change on a particular object. */
@@ -1328,7 +1355,7 @@ TypeObject::getProperty(ExclusiveContext *cx, jsid id)
 }
 
 inline HeapTypeSet *
-TypeObject::maybeGetProperty(ExclusiveContext *cx, jsid id)
+TypeObject::maybeGetProperty(jsid id)
 {
     JS_ASSERT(JSID_IS_VOID(id) || JSID_IS_EMPTY(id) || JSID_IS_STRING(id));
     JS_ASSERT_IF(!JSID_IS_EMPTY(id), id == IdToTypeId(id));
@@ -1384,7 +1411,7 @@ TypeNewScript::writeBarrierPre(TypeNewScript *newScript)
     if (!newScript || !newScript->fun->runtimeFromAnyThread()->needsBarrier())
         return;
 
-    JS::Zone *zone = newScript->fun->zone();
+    JS::Zone *zone = newScript->fun->zoneFromAnyThread();
     if (zone->needsBarrier()) {
         MarkObject(zone->barrierTracer(), &newScript->fun, "write barrier");
         MarkShape(zone->barrierTracer(), &newScript->shape, "write barrier");
@@ -1396,7 +1423,7 @@ TypeNewScript::writeBarrierPre(TypeNewScript *newScript)
 // constraints for the compilation. Returns whether the type constraints
 // still hold.
 bool
-FinishCompilation(JSContext *cx, JSScript *script, jit::ExecutionMode executionMode,
+FinishCompilation(JSContext *cx, JSScript *script, ExecutionMode executionMode,
                   CompilerConstraintList *constraints, RecompileInfo *precompileInfo);
 
 class CompilerConstraint;

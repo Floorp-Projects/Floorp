@@ -7,7 +7,6 @@
 #include "gfxASurface.h"
 #include "gfxContext.h"
 #include "gfxPlatform.h"
-#include "mozilla/arm.h"
 #ifdef MOZ_X11
 #include "cairo.h"
 #include "gfxXlibSurface.h"
@@ -79,7 +78,7 @@ PreparePatternForUntiledDrawing(gfxPattern* aPattern,
                     aDeviceToImage.xy == 0.0 && aDeviceToImage.yx == 0.0;
 
                 GraphicsFilter filter =
-                    isDownscale ? aDefaultFilter : GraphicsFilter::FILTER_FAST;
+                    isDownscale ? aDefaultFilter : (const GraphicsFilter)GraphicsFilter::FILTER_FAST;
                 aPattern->SetFilter(filter);
 
                 // Use the default EXTEND_NONE

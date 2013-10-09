@@ -65,7 +65,7 @@ nsPSPrinterList::GetPrinterList(nsTArray<nsCString>& aList)
             for (int i = 0; i < num_dests; i++) {
                 nsAutoCString fullName(NS_CUPS_PRINTER);
                 fullName.Append(dests[i].name);
-                if (dests[i].instance != NULL) {
+                if (dests[i].instance != nullptr) {
                     fullName.Append("/");
                     fullName.Append(dests[i].instance);
                 }

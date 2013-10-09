@@ -371,13 +371,8 @@ NeckoParent::AllocPRemoteOpenFileParent(const URIParams& aURI,
       nsRefPtr<TabParent> tabParent =
         static_cast<TabParent*>(Manager()->ManagedPBrowserParent()[i]);
       uint32_t appId = tabParent->OwnOrContainingAppId();
-      nsCOMPtr<mozIDOMApplication> domApp;
-      nsresult rv = appsService->GetAppByLocalId(appId, getter_AddRefs(domApp));
-      if (!domApp) {
-        continue;
-      }
-      mozApp = do_QueryInterface(domApp);
-      if (!mozApp) {
+      nsresult rv = appsService->GetAppByLocalId(appId, getter_AddRefs(mozApp));
+      if (NS_FAILED(rv) || !mozApp) {
         continue;
       }
       hasManage = false;

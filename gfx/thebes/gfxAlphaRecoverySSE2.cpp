@@ -3,8 +3,9 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "mozilla/SSE.h"
 #include "gfxAlphaRecovery.h"
+#include "gfxImageSurface.h"
+#include "nsRect.h"
 #include <emmintrin.h>
 
 // This file should only be compiled on x86 and x64 systems.  Additionally,

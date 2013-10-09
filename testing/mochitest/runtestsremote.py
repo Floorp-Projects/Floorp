@@ -23,6 +23,7 @@ from mochitest_options import MochitestOptions
 import devicemanager
 import droid
 import manifestparser
+import mozinfo
 import mozlog
 
 log = mozlog.getLogger('Mochi-Remote')
@@ -577,6 +578,12 @@ def main():
 
     mochitest.printDeviceInfo()
 
+    # Add Android version (SDK level) to mozinfo so that manifest entries
+    # can be conditional on android_version.
+    androidVersion = dm.shellCheckOutput(['getprop', 'ro.build.version.sdk'])
+    log.info("Android sdk version '%s'; will use this to filter manifests" % str(androidVersion))
+    mozinfo.info['android_version'] = androidVersion
+
     procName = options.app.split('/')[-1]
     if (dm.processExist(procName)):
         dm.killProcess(procName)
@@ -587,7 +594,7 @@ def main():
         mp = manifestparser.TestManifest(strict=False)
         # TODO: pull this in dynamically
         mp.read(options.robocopIni)
-        robocop_tests = mp.active_tests(exists=False)
+        robocop_tests = mp.active_tests(exists=False, **mozinfo.info)
         tests = []
         my_tests = tests
         for test in robocop_tests:
@@ -615,7 +622,7 @@ def main():
         options.extraPrefs.append('browser.chrome.dynamictoolbar=false')
 
         if (options.dm_trans == 'adb' and options.robocopApk):
-          dm._checkCmd(["install", "-r", options.robocopApk])
+            dm._checkCmd(["install", "-r", options.robocopApk])
 
         retVal = None
         for test in robocop_tests:
@@ -623,6 +630,10 @@ def main():
                 continue
 
             if not test['name'] in my_tests:
+                continue
+
+            if 'disabled' in test:
+                log.info('TEST-INFO | skipping %s | %s' % (test['name'], test['disabled']))
                 continue
 
             # When running in a loop, we need to create a fresh profile for each cycle

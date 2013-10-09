@@ -15,8 +15,8 @@ using mozilla::MutexAutoLock;
 
 namespace {
 
-Mutex* sMutex = NULL;
-CondVar* sCondVar = NULL;
+Mutex* sMutex = nullptr;
+CondVar* sCondVar = nullptr;
 bool sTracerProcessed = false;
 
 // This function is called from the main (UI) thread.
@@ -41,8 +41,8 @@ void CleanUpWidgetTracing()
 {
   delete sMutex;
   delete sCondVar;
-  sMutex = NULL;
-  sCondVar = NULL;
+  sMutex = nullptr;
+  sCondVar = nullptr;
 }
 
 // This function is called from the background tracer thread.
@@ -56,8 +56,8 @@ bool FireAndWaitForTracerEvent()
   NS_ABORT_IF_FALSE(!sTracerProcessed, "Tracer synchronization state is wrong");
   g_idle_add_full(G_PRIORITY_DEFAULT,
                   TracerCallback,
-                  NULL,
-                  NULL);
+                  nullptr,
+                  nullptr);
   while (!sTracerProcessed)
     sCondVar->Wait();
   sTracerProcessed = false;

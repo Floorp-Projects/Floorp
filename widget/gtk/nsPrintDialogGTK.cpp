@@ -69,7 +69,7 @@ ShowCustomDialog(GtkComboBox *changed_box, gpointer user_data)
 #endif
                                                          GTK_STOCK_CANCEL, GTK_RESPONSE_REJECT,
                                                          GTK_STOCK_OK, GTK_RESPONSE_ACCEPT,
-                                                         NULL);
+                                                         nullptr);
   gtk_dialog_set_default_response(GTK_DIALOG(prompt_dialog), GTK_RESPONSE_ACCEPT);
   gtk_dialog_set_alternative_button_order(GTK_DIALOG(prompt_dialog),
                                           GTK_RESPONSE_ACCEPT,
@@ -186,7 +186,7 @@ nsPrintDialogWidgetGTK::nsPrintDialogWidgetGTK(nsIDOMWindow *aParent, nsIPrintSe
 
   int16_t frameUIFlag;
   aSettings->GetHowToEnableFrameUI(&frameUIFlag);
-  radio_as_laid_out = gtk_radio_button_new_with_mnemonic(NULL, GetUTF8FromBundle("asLaidOut").get());
+  radio_as_laid_out = gtk_radio_button_new_with_mnemonic(nullptr, GetUTF8FromBundle("asLaidOut").get());
   if (frameUIFlag == nsIPrintSettings::kFrameEnableNone)
     gtk_widget_set_sensitive(radio_as_laid_out, FALSE);
 
@@ -202,7 +202,7 @@ nsPrintDialogWidgetGTK::nsPrintDialogWidgetGTK(nsIDOMWindow *aParent, nsIPrintSe
     gtk_widget_set_sensitive(radio_separate_frames, FALSE);
 
   // "Print Frames" options label, bold and center-aligned
-  GtkWidget* print_frames_label = gtk_label_new(NULL);
+  GtkWidget* print_frames_label = gtk_label_new(nullptr);
   char* pangoMarkup = g_markup_printf_escaped("<b>%s</b>", GetUTF8FromBundle("printFramesTitleGTK").get());
   gtk_label_set_markup(GTK_LABEL(print_frames_label), pangoMarkup);
   g_free(pangoMarkup);
@@ -235,7 +235,7 @@ nsPrintDialogWidgetGTK::nsPrintDialogWidgetGTK(nsIDOMWindow *aParent, nsIPrintSe
                  "support-selection", TRUE,
                  "has-selection", canSelectText,
                  "embed-page-setup", TRUE,
-                 NULL);
+                 nullptr);
   } else {
     useNativeSelection = false;
     selection_only_toggle = gtk_check_button_new_with_mnemonic(GetUTF8FromBundle("selectionOnly").get());
@@ -251,7 +251,7 @@ nsPrintDialogWidgetGTK::nsPrintDialogWidgetGTK(nsIDOMWindow *aParent, nsIPrintSe
   gtk_box_pack_start(GTK_BOX(appearance_buttons_container), print_bg_images_toggle, FALSE, FALSE, 0);
 
   // "Appearance" options label, bold and center-aligned
-  GtkWidget* appearance_label = gtk_label_new(NULL);
+  GtkWidget* appearance_label = gtk_label_new(nullptr);
   pangoMarkup = g_markup_printf_escaped("<b>%s</b>", GetUTF8FromBundle("printBGOptions").get());
   gtk_label_set_markup(GTK_LABEL(appearance_label), pangoMarkup);
   g_free(pangoMarkup);
@@ -266,7 +266,7 @@ nsPrintDialogWidgetGTK::nsPrintDialogWidgetGTK(nsIDOMWindow *aParent, nsIPrintSe
   gtk_box_pack_start(GTK_BOX(appearance_vertical_squasher), appearance_container, FALSE, FALSE, 0);
 
   // "Header & Footer" options label, bold and center-aligned
-  GtkWidget* header_footer_label = gtk_label_new(NULL);
+  GtkWidget* header_footer_label = gtk_label_new(nullptr);
   pangoMarkup = g_markup_printf_escaped("<b>%s</b>", GetUTF8FromBundle("headerFooter").get());
   gtk_label_set_markup(GTK_LABEL(header_footer_label), pangoMarkup);
   g_free(pangoMarkup);
@@ -485,7 +485,7 @@ nsPrintDialogWidgetGTK::ConstructHeaderFooterDropdown(const PRUnichar *currentSt
 #if (MOZ_WIDGET_GTK == 2)
     gtk_combo_box_append_text(GTK_COMBO_BOX(dropdown), GetUTF8FromBundle(hf_options[i]).get());
 #else
-    gtk_combo_box_text_append(GTK_COMBO_BOX_TEXT(dropdown), NULL, 
+    gtk_combo_box_text_append(GTK_COMBO_BOX_TEXT(dropdown), nullptr, 
                               GetUTF8FromBundle(hf_options[i]).get());
 #endif
   }

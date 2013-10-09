@@ -6,10 +6,8 @@
 #ifndef GFX_RECT_H
 #define GFX_RECT_H
 
-#include "nsAlgorithm.h"
 #include "gfxTypes.h"
 #include "gfxPoint.h"
-#include "gfxCore.h"
 #include "nsDebug.h"
 #include "nsRect.h"
 #include "mozilla/gfx/BaseMargin.h"

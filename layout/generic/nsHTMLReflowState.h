@@ -227,7 +227,7 @@ struct nsHTMLReflowState : public nsCSSOffsetState {
   // pointer to the float manager associated with this area
   nsFloatManager* mFloatManager;
 
-  // LineLayout object (only for inline reflow; set to NULL otherwise)
+  // LineLayout object (only for inline reflow; set to nullptr otherwise)
   nsLineLayout*    mLineLayout;
 
   // The appropriate reflow state for the containing block (for

@@ -457,7 +457,7 @@ public:
 
   /**
    * Returns the page sequence frame associated with the frame hierarchy.
-   * Returns NULL if not a paginated view.
+   * Returns nullptr if not a paginated view.
    */
   virtual NS_HIDDEN_(nsIPageSequenceFrame*) GetPageSequenceFrame() const = 0;
 

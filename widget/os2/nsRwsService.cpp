@@ -1106,7 +1106,7 @@ static nsresult nsRwsServiceInit(nsRwsService **aClass)
 
   // get the list of registered WPS classes
   ULONG  cbClass;
-  if (!WinEnumObjectClasses(NULL, &cbClass))
+  if (!WinEnumObjectClasses(nullptr, &cbClass))
     return NS_ERROR_NOT_AVAILABLE;
 
   char *pBuf = (char*)NS_Alloc(cbClass + CCHMAXPATH);
@@ -1211,7 +1211,7 @@ NS_IMETHODIMP nsRwsServiceConstructor(nsISupports *aOuter, REFNSIID aIID,
 {
   nsresult rv;
   nsRwsService *inst;
-  *aResult = NULL;
+  *aResult = nullptr;
 
   if (aOuter) {
     rv = NS_ERROR_NO_AGGREGATION;

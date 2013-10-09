@@ -1506,7 +1506,7 @@ public:
   struct SurfaceFromElementResult {
     SurfaceFromElementResult();
 
-    /* mSurface will contain the resulting surface, or will be NULL on error */
+    /* mSurface will contain the resulting surface, or will be nullptr on error */
     nsRefPtr<gfxASurface> mSurface;
     /* The size of the surface */
     gfxIntSize mSize;
@@ -1542,7 +1542,7 @@ public:
    * When the document is editable by contenteditable attribute of its root
    * content or body content.
    *
-   * Be aware, this returns NULL if it's in designMode.
+   * Be aware, this returns nullptr if it's in designMode.
    *
    * For example:
    *
@@ -1556,7 +1556,7 @@ public:
    *          created by script with XHTML.
    *
    *  <body><p contenteditable="true"></p></body>
-   *    returns NULL because <body> isn't editable.
+   *    returns nullptr because <body> isn't editable.
    */
   static nsIContent*
     GetEditableRootContentByContentEditable(nsIDocument* aDocument);
