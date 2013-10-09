@@ -3548,7 +3548,7 @@ for (uint32_t i = 0; i < length; ++i) {
             # Since we're not a member and not nullable or optional, no one will
             # see our real type, so we can do the fast version of the dictionary
             # that doesn't pre-initialize members.
-            typeName = "detail::Fast" + typeName
+            typeName = "dictionary_detail::Fast" + typeName
 
         declType = CGGeneric(typeName)
 
@@ -8443,7 +8443,7 @@ if (""",
             isStruct=True)
 
         return CGList([struct,
-                       CGNamespace.build(['detail'],
+                       CGNamespace.build(['dictionary_detail'],
                                          fastStruct)],
                       "\n")
 
