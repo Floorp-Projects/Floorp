@@ -589,14 +589,10 @@ var gEditItemOverlay = {
 
   onLoadInSidebarCheckboxCommand:
   function EIO_onLoadInSidebarCheckboxCommand() {
-    var loadInSidebarChecked = this._element("loadInSidebarCheckbox").checked;
-    var annoObj = { name   : PlacesUIUtils.LOAD_IN_SIDEBAR_ANNO,
-                    type   : Ci.nsIAnnotationService.TYPE_INT32,
-                    flags  : 0,
-                    value  : loadInSidebarChecked,
-                    expires: Ci.nsIAnnotationService.EXPIRE_NEVER };
-    var txn = new PlacesSetItemAnnotationTransaction(this._itemId,
-                                                     annoObj);
+    let annoObj = { name : PlacesUIUtils.LOAD_IN_SIDEBAR_ANNO };
+    if (this._element("loadInSidebarCheckbox").checked)
+      annoObj.value = true;
+    let txn = new PlacesSetItemAnnotationTransaction(this._itemId, annoObj);
     PlacesUtils.transactionManager.doTransaction(txn);
   },
 
