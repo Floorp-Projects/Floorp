@@ -25,7 +25,7 @@
       <div id="new-packaged-project" onclick="UI.addPackaged()" title="&projects.addPackagedTooltip;">&projects.addPackaged;</div>
       <div id="new-hosted-project">&projects.addHosted;
         <form onsubmit="UI.addHosted(); return false;" id="new-hosted-project-wrapper">
-          <input value="" id="url-input" type="url" pattern="https?://.+" placeholder="&projects.hostedManifestPlaceHolder2;" size="50" />
+          <input value="" id="url-input" type="url" required="true" pattern="https?://.+" placeholder="&projects.hostedManifestPlaceHolder2;" size="50" />
           <div onclick="UI.addHosted()" id="new-hosted-project-click" title="&projects.addHostedTooltip;"></div>
           <input type="submit" hidden="true"></input>
         </form>
