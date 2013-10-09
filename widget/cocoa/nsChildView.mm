@@ -2039,15 +2039,15 @@ nsChildView::CleanupWindowEffects()
   mTitlebarImage = nullptr;
 }
 
-void
+bool
 nsChildView::PreRender(LayerManager* aManager)
 {
   nsAutoPtr<GLManager> manager(GLManager::CreateGLManager(aManager));
   if (!manager) {
-    return;
+    return true;
   }
   NSOpenGLContext *glContext = (NSOpenGLContext *)manager->gl()->GetNativeData(GLContext::NativeGLContext);
-  [(ChildView*)mView preRender:glContext];
+  return [(ChildView*)mView preRender:glContext];
 }
 
 void
@@ -2442,7 +2442,9 @@ nsChildView::CleanupRemoteDrawing()
 void
 nsChildView::DoRemoteComposition(const nsIntRect& aRenderRect)
 {
-  [(ChildView*)mView preRender:mGLPresenter->GetNSOpenGLContext()];
+  if (![(ChildView*)mView preRender:mGLPresenter->GetNSOpenGLContext()]) {
+    return;
+  }
   mGLPresenter->BeginFrame(aRenderRect.Size());
 
   // Draw the result from the basic compositor.
@@ -2883,18 +2885,26 @@ NSEvent* gLastDragMouseDownEvent = nil;
   NS_OBJC_END_TRY_ABORT_BLOCK;
 }
 
--(void)preRender:(NSOpenGLContext *)aGLContext
+- (bool)preRender:(NSOpenGLContext *)aGLContext
 {
-  NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_RETURN;
 
   if (!mGLContext) {
     [self setGLContext:aGLContext];
   }
 
+  if ([[self window] isKindOfClass:[BaseWindow class]] &&
+      ![(BaseWindow*)[self window] isVisibleOrBeingShown]) {
+    // Before the window is shown, our GL context's front FBO is not
+    // framebuffer complete, so we refuse to render.
+    return false;
+  }
   [aGLContext setView:self];
   [aGLContext update];
 
-  NS_OBJC_END_TRY_ABORT_BLOCK;
+  return true;
+
+  NS_OBJC_END_TRY_ABORT_BLOCK_RETURN(false);
 }
 
 - (void)dealloc
