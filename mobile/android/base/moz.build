@@ -8,6 +8,14 @@ DIRS += ['locales']
 
 include('android-services.mozbuild')
 
+ANDROID_GENERATED_RESFILES += [
+    'res/drawable-hdpi/icon.png',
+    'res/drawable-mdpi/icon.png',
+    'res/drawable-xhdpi/icon.png',
+    'res/drawable-xxhdpi/icon.png',
+    'res/values/strings.xml',
+]
+
 ANDROID_RESFILES += [
     'resources/anim/grow_fade_in.xml',
     'resources/anim/grow_fade_in_center.xml',
