@@ -27,8 +27,14 @@
     try { pconnect.createOffer(step1, failed, 1); } catch (e) { exception = e; }
     ok(exception, "createOffer(step1, failed, 1) throws");
     exception = null;
+    try { pconnect.createOffer(step1, failed, []); } catch (e) { exception = e; }
+    ok(exception, "createOffer(step1, failed, []) throws");
+    exception = null;
     try { pconnects.createOffer(step1, failed, {}); } catch (e) { exception = e; }
     ok(!exception, "createOffer(step1, failed, {}) succeeds");
+    exception = null;
+    try { pconnect.createOffer(step1, failed, { mandatory: [] }); } catch (e) { exception = e; }
+    ok(exception, "createOffer(step1, failed, { mandatory: [] }) throws");
     exception = null;
     try {
         pconnect.createOffer(step1, failed, { mandatory: { FooBar: true } });
@@ -37,6 +43,9 @@
         exception = e;
     }
     ok(exception, "createOffer(step1, failed, { mandatory: { FooBar: true } }) throws");
+    exception = null;
+    try { pconnect.createOffer(step1, failed, { optional: {} }); } catch (e) { exception = e; }
+    ok(exception, "createOffer(step1, failed, { optional: {} }) throws");
     exception = null;
     try { pconnects.createOffer(step1, failed, { optional: [] }); } catch (e) { exception = e; }
     ok(!exception, "createOffer(step1, failed, { optional: [] }) succeeds");
