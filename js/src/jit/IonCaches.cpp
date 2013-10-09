@@ -1964,7 +1964,7 @@ SetPropertyIC::attachNativeExisting(JSContext *cx, IonScript *ion, HandleObject 
 
         if (checkTypeset) {
             TypedOrValueRegister valReg = value().reg();
-            types::HeapTypeSet *propTypes = type->maybeGetProperty(cx, NameToId(name()));
+            types::HeapTypeSet *propTypes = type->maybeGetProperty(NameToId(name()));
             JS_ASSERT(propTypes);
             JS_ASSERT(!propTypes->unknown());
 
@@ -2612,7 +2612,7 @@ IsPropertySetInlineable(JSContext *cx, const SetPropertyIC &cache, HandleObject 
     bool shouldCheck = false;
     types::TypeObject *type = obj->getType(cx);
     if (cache.needsTypeBarrier() && !type->unknownProperties()) {
-        types::HeapTypeSet *propTypes = type->maybeGetProperty(cx, id);
+        types::HeapTypeSet *propTypes = type->maybeGetProperty(id);
         if (!propTypes)
             return false;
         if (!propTypes->unknown()) {

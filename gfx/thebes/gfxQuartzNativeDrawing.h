@@ -11,6 +11,7 @@
 #include "gfxContext.h"
 #include "gfxQuartzSurface.h"
 #include "mozilla/gfx/BorrowedContext.h"
+#include "nsAutoPtr.h"
 
 class gfxQuartzNativeDrawing {
 public:

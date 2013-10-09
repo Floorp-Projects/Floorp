@@ -50,6 +50,7 @@
 #include "nsIComponentRegistrar.h"
 #include "nsComponentManagerUtils.h"
 #include "nsAutoPtr.h"
+#include "mozilla/gfx/2D.h"
 #include <gtk/gtk.h>
 
 using namespace mozilla;
@@ -91,14 +92,14 @@ nsNativeThemeGTKConstructor(nsISupports *aOuter, REFNSIID aIID,
     if (gDisableNativeTheme)
         return NS_ERROR_NO_INTERFACE;
 
-    *aResult = NULL;
-    if (NULL != aOuter) {
+    *aResult = nullptr;
+    if (nullptr != aOuter) {
         rv = NS_ERROR_NO_AGGREGATION;
         return rv;
     }
 
     inst = new nsNativeThemeGTK();
-    if (NULL == inst) {
+    if (nullptr == inst) {
         rv = NS_ERROR_OUT_OF_MEMORY;
         return rv;
     }
@@ -180,14 +181,14 @@ nsNativeKeyBindingsConstructor(nsISupports *aOuter, REFNSIID aIID,
 
     nsNativeKeyBindings *inst;
 
-    *aResult = NULL;
-    if (NULL != aOuter) {
+    *aResult = nullptr;
+    if (nullptr != aOuter) {
         rv = NS_ERROR_NO_AGGREGATION;
         return rv;
     }
 
     inst = new nsNativeKeyBindings();
-    if (NULL == inst) {
+    if (nullptr == inst) {
         rv = NS_ERROR_OUT_OF_MEMORY;
         return rv;
     }
@@ -251,40 +252,40 @@ NS_DEFINE_NAMED_CID(NS_GFXINFO_CID);
 
 
 static const mozilla::Module::CIDEntry kWidgetCIDs[] = {
-    { &kNS_WINDOW_CID, false, NULL, nsWindowConstructor },
-    { &kNS_CHILD_CID, false, NULL, nsChildWindowConstructor },
-    { &kNS_APPSHELL_CID, false, NULL, nsAppShellConstructor },
-    { &kNS_COLORPICKER_CID, false, NULL, nsColorPickerConstructor },
-    { &kNS_FILEPICKER_CID, false, NULL, nsFilePickerConstructor },
-    { &kNS_SOUND_CID, false, NULL, nsSoundConstructor },
-    { &kNS_TRANSFERABLE_CID, false, NULL, nsTransferableConstructor },
+    { &kNS_WINDOW_CID, false, nullptr, nsWindowConstructor },
+    { &kNS_CHILD_CID, false, nullptr, nsChildWindowConstructor },
+    { &kNS_APPSHELL_CID, false, nullptr, nsAppShellConstructor },
+    { &kNS_COLORPICKER_CID, false, nullptr, nsColorPickerConstructor },
+    { &kNS_FILEPICKER_CID, false, nullptr, nsFilePickerConstructor },
+    { &kNS_SOUND_CID, false, nullptr, nsSoundConstructor },
+    { &kNS_TRANSFERABLE_CID, false, nullptr, nsTransferableConstructor },
 #ifdef MOZ_X11
-    { &kNS_CLIPBOARD_CID, false, NULL, nsClipboardConstructor },
-    { &kNS_CLIPBOARDHELPER_CID, false, NULL, nsClipboardHelperConstructor },
-    { &kNS_DRAGSERVICE_CID, false, NULL, nsDragServiceConstructor },
+    { &kNS_CLIPBOARD_CID, false, nullptr, nsClipboardConstructor },
+    { &kNS_CLIPBOARDHELPER_CID, false, nullptr, nsClipboardHelperConstructor },
+    { &kNS_DRAGSERVICE_CID, false, nullptr, nsDragServiceConstructor },
 #endif
-    { &kNS_HTMLFORMATCONVERTER_CID, false, NULL, nsHTMLFormatConverterConstructor },
-    { &kNS_BIDIKEYBOARD_CID, false, NULL, nsBidiKeyboardConstructor },
-    { &kNS_NATIVEKEYBINDINGSINPUT_CID, false, NULL, nsNativeKeyBindingsInputConstructor },
-    { &kNS_NATIVEKEYBINDINGSTEXTAREA_CID, false, NULL, nsNativeKeyBindingsTextAreaConstructor },
-    { &kNS_NATIVEKEYBINDINGSEDITOR_CID, false, NULL, nsNativeKeyBindingsTextAreaConstructor },
-    { &kNS_SCREENMANAGER_CID, false, NULL, nsScreenManagerGtkConstructor },
+    { &kNS_HTMLFORMATCONVERTER_CID, false, nullptr, nsHTMLFormatConverterConstructor },
+    { &kNS_BIDIKEYBOARD_CID, false, nullptr, nsBidiKeyboardConstructor },
+    { &kNS_NATIVEKEYBINDINGSINPUT_CID, false, nullptr, nsNativeKeyBindingsInputConstructor },
+    { &kNS_NATIVEKEYBINDINGSTEXTAREA_CID, false, nullptr, nsNativeKeyBindingsTextAreaConstructor },
+    { &kNS_NATIVEKEYBINDINGSEDITOR_CID, false, nullptr, nsNativeKeyBindingsTextAreaConstructor },
+    { &kNS_SCREENMANAGER_CID, false, nullptr, nsScreenManagerGtkConstructor },
 #ifdef NATIVE_THEME_SUPPORT
-    { &kNS_THEMERENDERER_CID, false, NULL, nsNativeThemeGTKConstructor },
+    { &kNS_THEMERENDERER_CID, false, nullptr, nsNativeThemeGTKConstructor },
 #endif
 #ifdef NS_PRINTING
-    { &kNS_PRINTSETTINGSSERVICE_CID, false, NULL, nsPrintOptionsGTKConstructor },
-    { &kNS_PRINTER_ENUMERATOR_CID, false, NULL, nsPrinterEnumeratorGTKConstructor },
-    { &kNS_PRINTSESSION_CID, false, NULL, nsPrintSessionConstructor },
-    { &kNS_DEVICE_CONTEXT_SPEC_CID, false, NULL, nsDeviceContextSpecGTKConstructor },
-    { &kNS_PRINTDIALOGSERVICE_CID, false, NULL, nsPrintDialogServiceGTKConstructor },
+    { &kNS_PRINTSETTINGSSERVICE_CID, false, nullptr, nsPrintOptionsGTKConstructor },
+    { &kNS_PRINTER_ENUMERATOR_CID, false, nullptr, nsPrinterEnumeratorGTKConstructor },
+    { &kNS_PRINTSESSION_CID, false, nullptr, nsPrintSessionConstructor },
+    { &kNS_DEVICE_CONTEXT_SPEC_CID, false, nullptr, nsDeviceContextSpecGTKConstructor },
+    { &kNS_PRINTDIALOGSERVICE_CID, false, nullptr, nsPrintDialogServiceGTKConstructor },
 #endif 
-    { &kNS_IMAGE_TO_PIXBUF_CID, false, NULL, nsImageToPixbufConstructor },
+    { &kNS_IMAGE_TO_PIXBUF_CID, false, nullptr, nsImageToPixbufConstructor },
 #if defined(MOZ_X11)
-    { &kNS_IDLE_SERVICE_CID, false, NULL, nsIdleServiceGTKConstructor },
-    { &kNS_GFXINFO_CID, false, NULL, mozilla::widget::GfxInfoConstructor },
+    { &kNS_IDLE_SERVICE_CID, false, nullptr, nsIdleServiceGTKConstructor },
+    { &kNS_GFXINFO_CID, false, nullptr, mozilla::widget::GfxInfoConstructor },
 #endif
-    { NULL }
+    { nullptr }
 };
 
 static const mozilla::Module::ContractIDEntry kWidgetContracts[] = {
@@ -321,7 +322,7 @@ static const mozilla::Module::ContractIDEntry kWidgetContracts[] = {
     { "@mozilla.org/widget/idleservice;1", &kNS_IDLE_SERVICE_CID },
     { "@mozilla.org/gfx/info;1", &kNS_GFXINFO_CID },
 #endif
-    { NULL }
+    { nullptr }
 };
 
 static void
@@ -339,8 +340,8 @@ static const mozilla::Module kWidgetModule = {
     mozilla::Module::kVersion,
     kWidgetCIDs,
     kWidgetContracts,
-    NULL,
-    NULL,
+    nullptr,
+    nullptr,
     nsAppShellInit,
     nsWidgetGtk2ModuleDtor
 };

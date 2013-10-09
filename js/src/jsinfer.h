@@ -102,22 +102,71 @@ class RootedBase<TaggedProto> : public TaggedProtoOperations<Rooted<TaggedProto>
 
 class CallObject;
 
+/*
+ * Execution Mode Overview
+ *
+ * JavaScript code can execute either sequentially or in parallel, such as in
+ * PJS. Functions which behave identically in either execution mode can take a
+ * ThreadSafeContext, and functions which have similar but not identical
+ * behavior between execution modes can be templated on the mode. Such
+ * functions use a context parameter type from ExecutionModeTraits below
+ * indicating whether they are only permitted constrained operations (such as
+ * thread safety, and side effects limited to being thread-local), or whether
+ * they can have arbitrary side effects.
+ */
+
+enum ExecutionMode {
+    /* Normal JavaScript execution. */
+    SequentialExecution,
+
+    /*
+     * JavaScript code to be executed in parallel worker threads in PJS in a
+     * fork join fashion.
+     */
+    ParallelExecution,
+
+    /*
+     * Modes after this point are internal and are not counted in
+     * NumExecutionModes below.
+     */
+
+    /*
+     * MIR analysis performed when invoking 'new' on a script, to determine
+     * definite properties. Used by the optimizing JIT.
+     */
+    DefinitePropertiesAnalysis
+};
+
+/*
+ * Not as part of the enum so we don't get warnings about unhandled enum
+ * values.
+ */
+static const unsigned NumExecutionModes = ParallelExecution + 1;
+
+template <ExecutionMode mode>
+struct ExecutionModeTraits
+{
+};
+
+template <> struct ExecutionModeTraits<SequentialExecution>
+{
+    typedef JSContext * ContextType;
+    typedef ExclusiveContext * ExclusiveContextType;
+
+    static inline JSContext *toContextType(ExclusiveContext *cx);
+};
+
+template <> struct ExecutionModeTraits<ParallelExecution>
+{
+    typedef ForkJoinSlice * ContextType;
+    typedef ForkJoinSlice * ExclusiveContextType;
+
+    static inline ForkJoinSlice *toContextType(ForkJoinSlice *cx) { return cx; }
+};
+
 namespace jit {
     struct IonScript;
     class IonAllocPolicy;
-
-    enum ExecutionMode {
-        // Normal JavaScript execution
-        SequentialExecution,
-
-        // JavaScript code to be executed in parallel worker threads,
-        // e.g. by ParallelArray
-        ParallelExecution,
-
-        // MIR analysis performed when invoking 'new' on a script, to determine
-        // definite properties
-        DefinitePropertiesAnalysis
-    };
 }
 
 namespace analyze {
@@ -960,7 +1009,7 @@ struct TypeObject : gc::BarrieredCell<TypeObject>
     inline HeapTypeSet *getProperty(ExclusiveContext *cx, jsid id);
 
     /* Get a property only if it already exists. */
-    inline HeapTypeSet *maybeGetProperty(ExclusiveContext *cx, jsid id);
+    inline HeapTypeSet *maybeGetProperty(jsid id);
 
     inline unsigned getPropertyCount();
     inline Property *getProperty(unsigned i);
@@ -1015,6 +1064,7 @@ struct TypeObject : gc::BarrieredCell<TypeObject>
     void clearAddendum(ExclusiveContext *cx);
     void clearNewScriptAddendum(ExclusiveContext *cx);
     void clearTypedObjectAddendum(ExclusiveContext *cx);
+    bool isPropertyConfigured(jsid id);
 
     void print();
 
@@ -1235,22 +1285,22 @@ class CompilerOutput
     // If this compilation has not been invalidated, the associated script and
     // kind of compilation being performed.
     JSScript *script_;
-    unsigned mode_ : 2;
+    ExecutionMode mode_ : 2;
 
     // Whether this compilation is about to be invalidated.
     bool pendingInvalidation_ : 1;
 
   public:
     CompilerOutput()
-      : script_(nullptr), mode_(0), pendingInvalidation_(false)
+      : script_(nullptr), mode_(SequentialExecution), pendingInvalidation_(false)
     {}
 
-    CompilerOutput(JSScript *script, jit::ExecutionMode mode)
+    CompilerOutput(JSScript *script, ExecutionMode mode)
       : script_(script), mode_(mode), pendingInvalidation_(false)
     {}
 
     JSScript *script() const { return script_; }
-    inline jit::ExecutionMode mode() const { return static_cast<jit::ExecutionMode>(mode_); }
+    inline ExecutionMode mode() const { return mode_; }
 
     inline jit::IonScript *ion() const;
 
