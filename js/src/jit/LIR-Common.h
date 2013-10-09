@@ -2335,6 +2335,9 @@ class LMathFunctionD : public LCallInstructionHelper<1, 1, 1>
     MMathFunction *mir() const {
         return mir_->toMathFunction();
     }
+    const char *extraName() const {
+        return MMathFunction::FunctionName(mir()->function());
+    }
 };
 
 // Adds two integers, returning an integer value.
