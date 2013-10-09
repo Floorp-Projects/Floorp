@@ -27,6 +27,9 @@ class LBox : public LInstructionHelper<1, 1, 0>
     MIRType type() const {
         return type_;
     }
+    const char *extraName() const {
+        return StringFromMIRType(type_);
+    }
 };
 
 // Given an untyped input, guards on whether it's a specific type and returns
@@ -67,6 +70,9 @@ class LUnboxFloatingPoint : public LUnboxBase {
 
     MIRType type() const {
         return type_;
+    }
+    const char *extraName() const {
+        return StringFromMIRType(type_);
     }
 };
 
