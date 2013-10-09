@@ -82,7 +82,6 @@ const BCH_TESTS = [
                  "actions and openURL",
     actions: "showNotification showURL showAlert",
     openURL: DEFAULT_UPDATE_URL
-/* XXX Disabled due to bug 918107
   }, {
     description: "update with 'showAlert' for actions",
     actions: "showAlert"
@@ -102,7 +101,6 @@ const BCH_TESTS = [
     description: "update with 'silent showURL showAlert showNotification' " +
                  "for actions and openURL",
     actions: "silent showURL showAlert showNotification"
-*/
   }
 ];
 
