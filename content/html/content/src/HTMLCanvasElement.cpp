@@ -597,9 +597,14 @@ HTMLCanvasElement::ToBlob(JSContext* aCx,
 
 #ifdef DEBUG
   if (mCurrentContext) {
+    // We disallow canvases of width or height zero, and set them to 1, so
+    // we will have a discrepancy with the sizes of the canvas and the context.
+    // That discrepancy is OK, the rest are not.
     nsIntSize elementSize = GetWidthHeight();
-    MOZ_ASSERT(elementSize.width == mCurrentContext->GetWidth());
-    MOZ_ASSERT(elementSize.height == mCurrentContext->GetHeight());
+    MOZ_ASSERT(elementSize.width == mCurrentContext->GetWidth() ||
+               (elementSize.width == 0 && mCurrentContext->GetWidth() == 1));
+    MOZ_ASSERT(elementSize.height == mCurrentContext->GetHeight() ||
+               (elementSize.height == 0 && mCurrentContext->GetHeight() == 1));
   }
 #endif
 

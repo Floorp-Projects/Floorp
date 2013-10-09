@@ -381,8 +381,10 @@ WebGLContext::SetDimensions(int32_t width, int32_t height)
         return NS_OK;
 
     // Zero-sized surfaces can cause problems.
-    if (width == 0 || height == 0) {
+    if (width == 0) {
         width = 1;
+    }
+    if (height == 0) {
         height = 1;
     }
 
