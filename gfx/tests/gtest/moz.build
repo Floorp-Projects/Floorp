@@ -15,7 +15,6 @@ GTEST_CPP_SOURCES += [
     # Test works but it doesn't assert anything
     #'gfxTextRunPerfTest.cpp',
     'gfxWordCacheTest.cpp',
-    'LayerTestUtils.cpp',
     'TestAsyncPanZoomController.cpp',
     'TestLayers.cpp',
     'TestTiledLayerBuffer.cpp',
