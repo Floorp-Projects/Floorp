@@ -234,11 +234,6 @@ WebGLProgram::GetUniformInfoForMappedIdentifier(const nsACString& name) {
     mUniformInfoMap->Get(mutableName, &info);
     // we don't check if that Get failed, as if it did, it left info with default values
 
-    // if there is a bracket and it's not [0], then we're not an array, we're just an entry in an array
-    if (hadBracketPart && !bracketPart.EqualsLiteral("[0]")) {
-        info.isArray = false;
-        info.arraySize = 1;
-    }
     return info;
 }
 
