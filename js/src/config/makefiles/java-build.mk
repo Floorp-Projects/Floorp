@@ -8,6 +8,7 @@
 ifndef INCLUDED_JAVA_BUILD_MK #{
 
 ifdef ANDROID_RESFILES #{
+ifndef IGNORE_ANDROID_RESFILES #{
 res-dep := .deps-copy-java-res
 
 GENERATED_DIRS += res
@@ -25,6 +26,7 @@ res-dep-preqs := \
 $(res-dep): $(res-dep-preqs)
 	$(call copy_dir,$(srcdir)/res,$(CURDIR)/res)
 	@$(TOUCH) $@
+endif #} IGNORE_ANDROID_RESFILES
 endif #} ANDROID_RESFILES
 
 
