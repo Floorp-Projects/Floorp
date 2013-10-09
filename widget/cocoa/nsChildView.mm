@@ -1964,18 +1964,6 @@ nsChildView::CreateCompositor()
 {
   nsBaseWidget::CreateCompositor();
   if (mCompositorChild) {
-    LayerManagerComposite *manager =
-      compositor::GetLayerManager(mCompositorParent);
-    Compositor *compositor = manager->GetCompositor();
-
-    ClientLayerManager *clientManager = static_cast<ClientLayerManager*>(GetLayerManager());
-    if (clientManager->GetCompositorBackendType() == LAYERS_OPENGL) {
-      CompositorOGL *compositorOGL = static_cast<CompositorOGL*>(compositor);
-
-      NSOpenGLContext *glContext = (NSOpenGLContext *)compositorOGL->gl()->GetNativeData(GLContext::NativeGLContext);
-
-      [(ChildView *)mView setGLContext:glContext];
-    }
     [(ChildView *)mView setUsingOMTCompositor:true];
   }
 }
@@ -2870,7 +2858,7 @@ NSEvent* gLastDragMouseDownEvent = nil;
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
 
   [mGLContext clearDrawable];
-  [mGLContext setView:self];
+  [self updateGLContext];
 
   NS_OBJC_END_TRY_ABORT_BLOCK;
 }
@@ -2889,18 +2877,17 @@ NSEvent* gLastDragMouseDownEvent = nil;
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_RETURN;
 
-  if (!mGLContext) {
-    [self setGLContext:aGLContext];
-  }
-
   if ([[self window] isKindOfClass:[BaseWindow class]] &&
       ![(BaseWindow*)[self window] isVisibleOrBeingShown]) {
     // Before the window is shown, our GL context's front FBO is not
     // framebuffer complete, so we refuse to render.
     return false;
   }
-  [aGLContext setView:self];
-  [aGLContext update];
+
+  if (!mGLContext) {
+    [self setGLContext:aGLContext];
+    [self updateGLContext];
+  }
 
   return true;
 
@@ -3236,16 +3223,17 @@ NSEvent* gLastDragMouseDownEvent = nil;
   return [[self window] isMovableByWindowBackground];
 }
 
--(void)update
+-(void)updateGLContext
 {
   if (mGLContext) {
+    [mGLContext setView:self];
     [mGLContext update];
   }
 }
 
-- (void) _surfaceNeedsUpdate:(NSNotification*)notification
+- (void)_surfaceNeedsUpdate:(NSNotification*)notification
 {
-   [self update];
+   [self updateGLContext];
 }
 
 - (BOOL)wantsBestResolutionOpenGLSurface
@@ -3460,7 +3448,7 @@ NSEvent* gLastDragMouseDownEvent = nil;
   if (!mGeckoChild || ![self window])
     return NO;
 
-  return mGLContext || [self isUsingMainThreadOpenGL];
+  return mGLContext || mUsingOMTCompositor || [self isUsingMainThreadOpenGL];
 }
 
 - (void)drawUsingOpenGL
@@ -3483,10 +3471,8 @@ NSEvent* gLastDragMouseDownEvent = nil;
 
     if (!mGLContext) {
       [self setGLContext:glContext];
+      [self updateGLContext];
     }
-
-    [glContext setView:self];
-    [glContext update];
   }
 
   mGeckoChild->PaintWindow(region);
