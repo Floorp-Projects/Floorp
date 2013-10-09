@@ -270,7 +270,7 @@ public class AwesomeBar extends GeckoActivity
 
         mGoButton.setVisibility(View.VISIBLE);
 
-        if (InputMethods.shouldDisableUrlBarUpdate(mUrlEditText.getContext())) {
+        if (InputMethods.shouldDisableUrlBarUpdate(mText.getContext())) {
             return;
         }
 
