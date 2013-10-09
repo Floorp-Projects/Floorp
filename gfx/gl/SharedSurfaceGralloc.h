@@ -8,6 +8,7 @@
 
 #include "SharedSurfaceGL.h"
 #include "mozilla/layers/LayersSurfaces.h"
+#include "mozilla/layers/ISurfaceAllocator.h"
 
 namespace mozilla {
 namespace layers {
@@ -92,7 +93,7 @@ class SurfaceFactory_Gralloc
     : public SurfaceFactory_GL
 {
 protected:
-    layers::ISurfaceAllocator* mAllocator;
+    WeakPtr<layers::ISurfaceAllocator> mAllocator;
 
 public:
     SurfaceFactory_Gralloc(GLContext* prodGL,
@@ -101,6 +102,9 @@ public:
 
     virtual SharedSurface* CreateShared(const gfxIntSize& size) {
         bool hasAlpha = mReadCaps.alpha;
+        if (!mAllocator) {
+            return nullptr;
+        }
         return SharedSurface_Gralloc::Create(mGL, mFormats, size, hasAlpha, mAllocator);
     }
 };
