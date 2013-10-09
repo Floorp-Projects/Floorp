@@ -3,17 +3,14 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "nsIDOMEventTarget.idl"
-#include "SimToolKit.idl"
 
-interface nsIDOMDOMRequest;
-interface nsIDOMEventListener;
-interface nsIDOMMozIccInfo;
+interface nsIDOMMozIcc;
 
-[scriptable, builtinclass, uuid(50782fe0-4185-4471-a374-e362b73febdb)]
+[scriptable, builtinclass, uuid(23067d6f-e0cb-4f34-8648-77c2b25a11f5)]
 interface nsIDOMMozIccManager : nsIDOMEventTarget
 {
   /**
-   * STK Menu Presentation types.
+   * STK menu presentation types.
    */
   const unsigned short STK_MENU_TYPE_NOT_SPECIFIED      = 0x00;
   const unsigned short STK_MENU_TYPE_DATA_VALUES        = 0x01;
@@ -27,7 +24,7 @@ interface nsIDOMMozIccManager : nsIDOMEventTarget
   const unsigned short STK_BROWSER_MODE_USING_NEW_BROWSER              = 0x03;
 
   /**
-   * STK Proactive commands.
+   * STK proactive commands.
    *
    * @see TS 11.14, clause 13.4
    */
@@ -56,7 +53,7 @@ interface nsIDOMMozIccManager : nsIDOMEventTarget
   const unsigned short STK_CMD_SEND_DATA             = 0x33;
 
   /**
-   * STK Result code.
+   * STK result code.
    *
    * @see TS 11.14, clause 12.12
    *
@@ -128,7 +125,7 @@ interface nsIDOMMozIccManager : nsIDOMEventTarget
   /** Command number not known by terminal */
   const unsigned short STK_RESULT_CMD_NUM_NOT_KNOWN                 = 0x33;
 
-  /** SS Return Error */
+  /** SS return error */
   const unsigned short STK_RESULT_SS_RETURN_ERROR                   = 0x34;
 
   /** SMS RP-ERROR */
@@ -137,7 +134,7 @@ interface nsIDOMMozIccManager : nsIDOMEventTarget
   /** Error, required values are missing */
   const unsigned short STK_RESULT_REQUIRED_VALUES_MISSING           = 0x36;
 
-  /** USSD Return Error */
+  /** USSD return error */
   const unsigned short STK_RESULT_USSD_RETURN_ERROR                 = 0x37;
 
   /** MultipleCard commands error */
@@ -145,40 +142,40 @@ interface nsIDOMMozIccManager : nsIDOMEventTarget
 
   /**
    * Interaction with call control by USIM or MO short message control by
-   * USIM, permanent problem
+   * USIM, permanent problem.
    */
   const unsigned short STK_RESULT_USIM_CALL_CONTROL_PERMANENT       = 0x39;
 
-  /** Bearer Independent Protocol error */
+  /** Bearer independent protocol error */
   const unsigned short STK_RESULT_BIP_ERROR                         = 0x3a;
 
   /**
-   * STK Event List
+   * STK event list.
    */
-   const unsigned short STK_EVENT_TYPE_MT_CALL                          = 0x00;
-   const unsigned short STK_EVENT_TYPE_CALL_CONNECTED                   = 0x01;
-   const unsigned short STK_EVENT_TYPE_CALL_DISCONNECTED                = 0x02;
-   const unsigned short STK_EVENT_TYPE_LOCATION_STATUS                  = 0x03;
-   const unsigned short STK_EVENT_TYPE_USER_ACTIVITY                    = 0x04;
-   const unsigned short STK_EVENT_TYPE_IDLE_SCREEN_AVAILABLE            = 0x05;
-   const unsigned short STK_EVENT_TYPE_CARD_READER_STATUS               = 0x06;
-   const unsigned short STK_EVENT_TYPE_LANGUAGE_SELECTION               = 0x07;
-   const unsigned short STK_EVENT_TYPE_BROWSER_TERMINATION              = 0x08;
-   const unsigned short STK_EVENT_TYPE_DATA_AVAILABLE                   = 0x09;
-   const unsigned short STK_EVENT_TYPE_CHANNEL_STATUS                   = 0x0a;
-   const unsigned short STK_EVENT_TYPE_SINGLE_ACCESS_TECHNOLOGY_CHANGED = 0x0b;
-   const unsigned short STK_EVENT_TYPE_DISPLAY_PARAMETER_CHANGED        = 0x0c;
-   const unsigned short STK_EVENT_TYPE_LOCAL_CONNECTION                 = 0x0d;
-   const unsigned short STK_EVENT_TYPE_NETWORK_SEARCH_MODE_CHANGED      = 0x0e;
-   const unsigned short STK_EVENT_TYPE_BROWSING_STATUS                  = 0x0f;
-   const unsigned short STK_EVENT_TYPE_FRAMES_INFORMATION_CHANGED       = 0x10;
+  const unsigned short STK_EVENT_TYPE_MT_CALL                          = 0x00;
+  const unsigned short STK_EVENT_TYPE_CALL_CONNECTED                   = 0x01;
+  const unsigned short STK_EVENT_TYPE_CALL_DISCONNECTED                = 0x02;
+  const unsigned short STK_EVENT_TYPE_LOCATION_STATUS                  = 0x03;
+  const unsigned short STK_EVENT_TYPE_USER_ACTIVITY                    = 0x04;
+  const unsigned short STK_EVENT_TYPE_IDLE_SCREEN_AVAILABLE            = 0x05;
+  const unsigned short STK_EVENT_TYPE_CARD_READER_STATUS               = 0x06;
+  const unsigned short STK_EVENT_TYPE_LANGUAGE_SELECTION               = 0x07;
+  const unsigned short STK_EVENT_TYPE_BROWSER_TERMINATION              = 0x08;
+  const unsigned short STK_EVENT_TYPE_DATA_AVAILABLE                   = 0x09;
+  const unsigned short STK_EVENT_TYPE_CHANNEL_STATUS                   = 0x0a;
+  const unsigned short STK_EVENT_TYPE_SINGLE_ACCESS_TECHNOLOGY_CHANGED = 0x0b;
+  const unsigned short STK_EVENT_TYPE_DISPLAY_PARAMETER_CHANGED        = 0x0c;
+  const unsigned short STK_EVENT_TYPE_LOCAL_CONNECTION                 = 0x0d;
+  const unsigned short STK_EVENT_TYPE_NETWORK_SEARCH_MODE_CHANGED      = 0x0e;
+  const unsigned short STK_EVENT_TYPE_BROWSING_STATUS                  = 0x0f;
+  const unsigned short STK_EVENT_TYPE_FRAMES_INFORMATION_CHANGED       = 0x10;
 
-   /**
-    * The service state of STK Location Status.
-    */
-   const unsigned short STK_SERVICE_STATE_NORMAL      = 0x00;
-   const unsigned short STK_SERVICE_STATE_LIMITED     = 0x01;
-   const unsigned short STK_SERVICE_STATE_UNAVAILABLE = 0x02;
+  /**
+   * The service state of STK location status.
+   */
+  const unsigned short STK_SERVICE_STATE_NORMAL      = 0x00;
+  const unsigned short STK_SERVICE_STATE_LIMITED     = 0x01;
+  const unsigned short STK_SERVICE_STATE_UNAVAILABLE = 0x02;
 
   /**
    * Tone type.
@@ -196,14 +193,14 @@ interface nsIDOMMozIccManager : nsIDOMEventTarget
   const unsigned short STK_TONE_TYPE_NEGATIVE_ACK_TONE        = 0x12;
 
   /**
-   * Time unit
+   * Time unit.
    */
   const unsigned short STK_TIME_UNIT_MINUTE       = 0x00;
   const unsigned short STK_TIME_UNIT_SECOND       = 0x01;
   const unsigned short STK_TIME_UNIT_TENTH_SECOND = 0x02;
 
   /**
-   * Local Information list
+   * Local Information list.
    *
    * @see TS 102.223, clause 8.6
    */
@@ -212,345 +209,41 @@ interface nsIDOMMozIccManager : nsIDOMEventTarget
   const unsigned short STK_LOCAL_INFO_DATE_TIME_ZONE = 0x03;
   const unsigned short STK_LOCAL_INFO_LANGUAGE       = 0x04;
 
-   /**
-   * Timer Management
+  /**
+   * Timer management.
    */
   const unsigned short STK_TIMER_START             = 0x00;
   const unsigned short STK_TIMER_DEACTIVATE        = 0x01;
   const unsigned short STK_TIMER_GET_CURRENT_VALUE = 0x02;
 
   /**
-   * Browser Termination Cause
+   * Browser termination cause.
    */
   const unsigned short STK_BROWSER_TERMINATION_CAUSE_USER  = 0x00;
   const unsigned short STK_BROWSER_TERMINATION_CAUSE_ERROR = 0x01;
 
   /**
-   * Send the response back to ICC after an attempt to execute STK Proactive
-   * Command.
-   *
-   * @param command
-   *        Command received from ICC. See MozStkCommand.
-   * @param response
-   *        The response that will be sent to ICC.
-   * @see MozStkResponse for the detail of response.
+   * Array of iccIds that are currently detected.
    */
-  void sendStkResponse(in jsval command, in jsval response);
+  readonly attribute jsval iccIds;  // DOMString[]
 
   /**
-   * Send the "Menu Selection" Envelope command to ICC for menu selection.
+   * Get ICC object by iccId.
    *
-   * @param itemIdentifier
-   *        The identifier of the item selected by user.
-   * @param helpRequested
-   *        true if user requests to provide help information, false otherwise.
+   * @param iccId
+   *        The identifier of the ICC.
+   *
+   * @return see MozIcc.webidl for the detail.
    */
-  void sendStkMenuSelection(in unsigned short itemIdentifier,
-                            in boolean        helpRequested);
+  nsISupports getIccById(in DOMString iccId);
 
   /**
-   * Send the "Timer Expiration" Envelope command to ICC for TIMER MANAGEMENT.
-   *
-   * @param timer
-   *        The identifier and value for a timer.
-   *        timerId: Identifier of the timer that has expired.
-   *        timerValue: Different between the time when this command is issued
-   *                    and when the timer was initially started.
-   *        @see MozStkTimer
+   * 'oniccdetected' event is notified whenever a new ICC is detected.
    */
-  void sendStkTimerExpiration(in jsval timer);
+  [implicit_jscontext] attribute jsval oniccdetected;
 
   /**
-   * Send "Event Download" Envelope command to ICC.
-   * ICC will not respond with any data for this command.
-   *
-   * @param event
-   *        one of events below:
-   *        - MozStkLocationEvent
-   *        - MozStkCallEvent
-   *        - MozStkLanguageSelectionEvent
-   *        - MozStkGeneralEvent
-   *        - MozStkBrowserTerminationEvent
+   * 'oniccundetected' event is notified whenever an ICC becomes undetected.
    */
-  void sendStkEventDownload(in jsval event);
-
-  /**
-   * The 'stkcommand' event is notified whenever STK Proactive Command is
-   * issued from ICC.
-   */
-  [implicit_jscontext] attribute jsval onstkcommand;
-
-  /**
-   * 'stksessionend' event is notified whenever STK Session is terminated by
-   * ICC.
-   */
-  [implicit_jscontext] attribute jsval onstksessionend;
-
-  // UICC Card Information.
-
-  /**
-   * Information stored in the device's ICC card.
-   *
-   * Null if the card is not detected.
-   */
-  readonly attribute nsIDOMMozIccInfo iccInfo;
-
-  /**
-   * The 'iccinfochange' event is notified whenever the icc info object
-   * changes.
-   */
-  [implicit_jscontext] attribute jsval oniccinfochange;
-
-  // UICC Card State.
-
-  /**
-   * Indicates the state of the device's ICC card.
-   *
-   * Possible values: null, 'illegal', 'unknown', 'absent', 'pinRequired',
-   * 'pukRequired', 'personalizationInProgress', 'networkLocked',
-   * 'corporateLocked', 'serviceProviderLocked', 'networkPukRequired',
-   * 'corporatePukRequired', 'serviceProviderPukRequired',
-   * 'personalizationReady', 'ready', 'permanentBlocked'.
-   */
-  readonly attribute DOMString cardState;
-
-  /**
-   * The 'cardstatechange' event is notified when the 'cardState' attribute
-   * changes value.
-   */
-  [implicit_jscontext] attribute jsval oncardstatechange;
-
-  // UICC Card Lock interfaces.
-
-  /**
-   * Find out about the status of an ICC lock (e.g. the PIN lock).
-   *
-   * @param lockType
-   *        Identifies the lock type, e.g. "pin" for the PIN lock, "fdn" for
-   *        the FDN lock.
-   *
-   * @return a DOM Request.
-   *         The request's result will be an object containing
-   *         information about the specified lock's status,
-   *         e.g. {lockType: "pin", enabled: true}.
-   */
-  nsIDOMDOMRequest getCardLock(in DOMString lockType);
-
-  /**
-   * Unlock a card lock.
-   *
-   * @param info
-   *        An object containing the information necessary to unlock
-   *        the given lock. At a minimum, this object must have a
-   *        "lockType" attribute which specifies the type of lock, e.g.
-   *        "pin" for the PIN lock. Other attributes are dependent on
-   *        the lock type.
-   *
-   * Examples:
-   *
-   * (1) Unlocking the PIN:
-   *
-   *   unlockCardLock({lockType: "pin",
-   *                   pin: "..."});
-   *
-   * (2) Unlocking the PUK and supplying a new PIN:
-   *
-   *   unlockCardLock({lockType: "puk",
-   *                   puk: "...",
-   *                   newPin: "..."});
-   *
-   * (3) Network depersonalization. Unlocking the network control key (NCK).
-   *
-   *   unlockCardLock({lockType: "nck",
-   *                   pin: "..."});
-   *
-   * (4) Corporate depersonalization. Unlocking the corporate control key (CCK).
-   *
-   *   unlockCardLock({lockType: "cck",
-   *                   pin: "..."});
-   *
-   * (5) Service Provider depersonalization. Unlocking the service provider
-   *     control key (SPCK).
-   *
-   *   unlockCardLock({lockType: "spck",
-   *                   pin: "..."});
-   *
-   * (6) Network PUK depersonalization. Unlocking the network control key (NCK).
-   *
-   *   unlockCardLock({lockType: "nckPuk",
-   *                   puk: "..."});
-   *
-   * (7) Corporate PUK depersonalization. Unlocking the corporate control key
-   *     (CCK).
-   *
-   *   unlockCardLock({lockType: "cckPuk",
-   *                   puk: "..."});
-   *
-   * (8) Service Provider PUK depersonalization. Unlocking the service provider
-   *     control key (SPCK).
-   *
-   *   unlockCardLock({lockType: "spckPuk",
-   *                   puk: "..."});
-   *
-   * @return a nsIDOMDOMRequest.
-   *         The request's result will be an object containing
-   *         information about the unlock operation.
-   *
-   * Examples:
-   *
-   * (1) Unlocking failed:
-   *
-   *     {
-   *       lockType:   "pin",
-   *       success:    false,
-   *       retryCount: 2
-   *     }
-   *
-   * (2) Unlocking succeeded:
-   *
-   *     {
-   *       lockType:  "pin",
-   *       success:   true
-   *     }
-   */
-  nsIDOMDOMRequest unlockCardLock(in jsval info);
-
-  /**
-   * Modify the state of a card lock.
-   *
-   * @param info
-   *        An object containing information about the lock and
-   *        how to modify its state. At a minimum, this object
-   *        must have a "lockType" attribute which specifies the
-   *        type of lock, e.g. "pin" for the PIN lock. Other
-   *        attributes are dependent on the lock type.
-   *
-   * Examples:
-   *
-   * (1a) Disabling the PIN lock:
-   *
-   *   setCardLock({lockType: "pin",
-   *                pin: "...",
-   *                enabled: false});
-   *
-   * (1b) Disabling the FDN lock:
-   *
-   *   setCardLock({lockType: "fdn",
-   *                pin2: "...",
-   *                enabled: false});
-   *
-   * (2) Changing the PIN:
-   *
-   *   setCardLock({lockType: "pin",
-   *                pin: "...",
-   *                newPin: "..."});
-   *
-   * @return a nsIDOMDOMRequest.
-   *         The request's result will be an object containing
-   *         information about the operation.
-   *
-   * Examples:
-   *
-   * (1) Enabling/Disabling card lock failed or change card lock failed.
-   *
-   *     {
-   *       lockType: "pin",
-   *       success: false,
-   *       retryCount: 2
-   *     }
-   *
-   * (2) Enabling/Disabling card lock succeed or change card lock succeed.
-   *
-   *     {
-   *       lockType: "pin",
-   *       success: true
-   *     }
-   */
-  nsIDOMDOMRequest setCardLock(in jsval info);
-
-  /**
-   * Retrieve the number of remaining tries for unlocking the card.
-   *
-   * @param lockType
-   *        Identifies the lock type, e.g. "pin" for the PIN lock, "puk" for
-   *        the PUK lock.
-   *
-   * @return a DOM Request.
-   *         If the lock type is "pin", or "puk", the request's result will be
-   *         an object containing the number of retries for the specified
-   *         lock. For any other lock type, the result is undefined.
-   */
-  nsIDOMDOMRequest getCardLockRetryCount(in DOMString lockType);
-
-  // UICC Phonebook Interfaces.
-
-  /**
-   * Read ICC contacts.
-   *
-   * @param contactType
-   *        One of type as below,
-   *        - 'adn': Abbreviated Dialling Number
-   *        - 'fdn': Fixed Dialling Number
-   */
-  nsIDOMDOMRequest readContacts(in DOMString contactType);
-
-  /**
-   * Update ICC Phonebook contact.
-   *
-   * @param contactType
-   *        One of type as below,
-   *        - 'adn': Abbreviated Dialling Number
-   *        - 'fdn': Fixed Dialling Number
-   * @param contact
-   *        The contact will be updated in ICC
-   * @param [optional] pin2
-   *        PIN2 is only required for 'fdn'.
-   */
-  nsIDOMDOMRequest updateContact(in DOMString contactType,
-                                 in jsval contact,
-                                 [optional] in DOMString pin2);
-
-  // End of UICC Phonebook Interfaces.
-
-  // UICC Secure Element Interfaces
-
-  /**
-   * A secure element is a smart card chip that can hold
-   * several different applications with the necessary security.
-   * The most known secure element is the Universal Integrated Circuit Card (UICC)
-   */
-
-  /**
-   * Send request to open a logical channel defined by its
-   * application identifier (AID)
-   *
-   * @param aid
-   *        The Application Identifier of the Applet to be selected on this channel
-   * return value : An instance of Channel (channelID) if available or null.
-   */
-  nsIDOMDOMRequest iccOpenChannel(in DOMString aid);
-
-  /**
-   * Interface, used to communicate with an applet through the
-   * Application Data Protocol Units (APDUs) and is
-   * used for all data that is exchanged between the UICC card and the terminal (ME).
-   *
-   * @param channel
-   *        The Application Identifier of the Applet to which APDU is directed
-   * @param apdu
-   *        Application Protocol Data Unit
-   * return value : Response APDU
-   */
-  nsIDOMDOMRequest iccExchangeAPDU(in long channel, in jsval apdu);
-
-  /**
-   * Send request to close the selected logical channel identified by its
-   * application identifier (AID)
-   *
-   * @param aid
-   *        The Application Identifier of the Applet , to be closed
-   */
-  nsIDOMDOMRequest iccCloseChannel(in long channel);
-
-  // End of UICC Secure Element Interfaces
+  [implicit_jscontext] attribute jsval oniccundetected;
 };
