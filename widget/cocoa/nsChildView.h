@@ -640,6 +640,10 @@ protected:
 
   nsRefPtr<gfxASurface> mTempThebesSurface;
 
+  // Protects the view from being teared down while a composition is in
+  // progress on the compositor thread.
+  mozilla::Mutex mViewTearDownLock;
+
   mozilla::Mutex mEffectsLock;
 
   // May be accessed from any thread, protected
