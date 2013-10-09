@@ -3236,23 +3236,6 @@ NSEvent* gLastDragMouseDownEvent = nil;
   return [[self window] isMovableByWindowBackground];
 }
 
-- (void)lockFocus
-{
-  NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
-
-  [super lockFocus];
-
-  if (mGLContext) {
-    if ([mGLContext view] != self) {
-      [mGLContext setView:self];
-    }
-
-    [mGLContext makeCurrentContext];
-  }
-
-  NS_OBJC_END_TRY_ABORT_BLOCK;
-}
-
 -(void)update
 {
   if (mGLContext) {
