@@ -43,6 +43,15 @@ from mozbuild.util import (
 
 VARIABLES = {
     # Variables controlling reading of other frontend files.
+    'ANDROID_GENERATED_RESFILES': (StrictOrderingOnAppendList, list, [],
+        """Android resource files generated as part of the build.
+
+        This variable contains a list of files that are expected to be
+        generated (often by preprocessing) into a 'res' directory as
+        part of the build process, and subsequently merged into an APK
+        file.
+        """, 'export'),
+
     'ANDROID_RESFILES': (StrictOrderingOnAppendList, list, [],
         """Android resource files.
 

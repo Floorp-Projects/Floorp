@@ -139,6 +139,7 @@ class TreeMetadataEmitter(LoggingMixin):
         passthru = VariablePassthru(sandbox)
         varmap = dict(
             # Makefile.in : moz.build
+            ANDROID_GENERATED_RESFILES='ANDROID_GENERATED_RESFILES',
             ANDROID_RESFILES='ANDROID_RESFILES',
             ASFILES='ASFILES',
             CMMSRCS='CMMSRCS',
