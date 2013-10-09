@@ -259,7 +259,7 @@ types::TypeHasProperty(JSContext *cx, TypeObject *obj, jsid id, const Value &val
          * haven't yet been accessed during analysis of the inheriting object.
          * Don't do the property instantiation now.
          */
-        TypeSet *types = obj->maybeGetProperty(cx, id);
+        TypeSet *types = obj->maybeGetProperty(id);
         if (!types)
             return true;
 
@@ -710,7 +710,7 @@ TypeObjectKey::property(jsid id)
 }
 
 bool
-types::FinishCompilation(JSContext *cx, JSScript *script, jit::ExecutionMode executionMode,
+types::FinishCompilation(JSContext *cx, JSScript *script, ExecutionMode executionMode,
                          CompilerConstraintList *constraints, RecompileInfo *precompileInfo)
 {
     if (constraints->failed())
@@ -1009,7 +1009,7 @@ ObjectStateChange(ExclusiveContext *cxArg, TypeObject *object, bool markingUnkno
         return;
 
     /* All constraints listening to state changes are on the empty id. */
-    TypeSet *types = object->maybeGetProperty(cxArg, JSID_EMPTY);
+    TypeSet *types = object->maybeGetProperty(JSID_EMPTY);
 
     /* Mark as unknown after getting the types, to avoid assertion. */
     if (markingUnknown)
@@ -2517,6 +2517,15 @@ TypeObject::markPropertyConfigured(ExclusiveContext *cx, jsid id)
         types->setConfiguredProperty(cx);
 }
 
+bool
+TypeObject::isPropertyConfigured(jsid id)
+{
+    TypeSet *types = maybeGetProperty(id);
+    if (types)
+        return types->configuredProperty();
+    return false;
+}
+
 void
 TypeObject::markStateChange(ExclusiveContext *cxArg)
 {
@@ -2524,7 +2533,7 @@ TypeObject::markStateChange(ExclusiveContext *cxArg)
         return;
 
     AutoEnterAnalysis enter(cxArg);
-    TypeSet *types = maybeGetProperty(cxArg, JSID_EMPTY);
+    TypeSet *types = maybeGetProperty(JSID_EMPTY);
     if (types) {
         if (JSContext *cx = cxArg->maybeJSContext()) {
             TypeConstraint *constraint = types->constraintList;

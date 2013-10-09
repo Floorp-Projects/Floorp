@@ -22,7 +22,7 @@ typedef struct                          /**** Printer Options ****/
 typedef struct               /**** Destination ****/
 {
     char          *name,       /* Printer or class name */
-                  *instance;   /* Local instance name or NULL */
+                  *instance;   /* Local instance name or nullptr */
     int           is_default;  /* Is this printer the default? */
     int           num_options; /* Number of options */
     cups_option_t *options;    /* Options */

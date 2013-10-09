@@ -103,7 +103,7 @@ AsyncColorChooser::Run()
   static COLORREF customColors[16] = {0} ;
 
   AutoDestroyTmpWindow adtw((HWND) (mParentWidget.get() ?
-    mParentWidget->GetNativeData(NS_NATIVE_TMP_WINDOW) : NULL));
+    mParentWidget->GetNativeData(NS_NATIVE_TMP_WINDOW) : nullptr));
 
   options.lStructSize   = sizeof(options);
   options.hwndOwner     = adtw.get();

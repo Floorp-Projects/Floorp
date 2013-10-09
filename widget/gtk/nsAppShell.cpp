@@ -80,8 +80,8 @@ nsAppShell::Init()
 #endif
 
     if (!sPollFunc) {
-        sPollFunc = g_main_context_get_poll_func(NULL);
-        g_main_context_set_poll_func(NULL, &PollWrapper);
+        sPollFunc = g_main_context_get_poll_func(nullptr);
+        g_main_context_set_poll_func(nullptr, &PollWrapper);
     }
 
     if (PR_GetEnv("MOZ_DEBUG_PAINTS"))
@@ -135,5 +135,5 @@ nsAppShell::ScheduleNativeEventCallback()
 bool
 nsAppShell::ProcessNextNativeEvent(bool mayWait)
 {
-    return g_main_context_iteration(NULL, mayWait);
+    return g_main_context_iteration(nullptr, mayWait);
 }

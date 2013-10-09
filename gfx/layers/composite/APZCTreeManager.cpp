@@ -21,7 +21,7 @@
 #include "nsThreadUtils.h"              // for NS_IsMainThread
 
 #define APZC_LOG(...)
-// #define APZC_LOG(args...) printf_stderr(args)
+// #define APZC_LOG(...) printf_stderr("APZC: " __VA_ARGS__)
 
 namespace mozilla {
 namespace layers {

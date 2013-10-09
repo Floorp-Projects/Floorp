@@ -39,7 +39,7 @@ MeegoFileDialog::~MeegoFileDialog()
 int
 MeegoFileDialog::exec()
 {
-    MApplicationPage* page = NULL;
+    MApplicationPage* page = nullptr;
     switch(mMode) {
     case Mode_OpenFile:
         page = createOpenFilePage();

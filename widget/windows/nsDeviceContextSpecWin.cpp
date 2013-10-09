@@ -145,7 +145,7 @@ nsDeviceContextSpecWin::nsDeviceContextSpecWin()
 {
   mDriverName    = nullptr;
   mDeviceName    = nullptr;
-  mDevMode       = NULL;
+  mDevMode       = nullptr;
 
 }
 
@@ -158,13 +158,13 @@ nsDeviceContextSpecWin::~nsDeviceContextSpecWin()
 {
   SetDeviceName(nullptr);
   SetDriverName(nullptr);
-  SetDevMode(NULL);
+  SetDevMode(nullptr);
 
   nsCOMPtr<nsIPrintSettingsWin> psWin(do_QueryInterface(mPrintSettings));
   if (psWin) {
     psWin->SetDeviceName(nullptr);
     psWin->SetDriverName(nullptr);
-    psWin->SetDevMode(NULL);
+    psWin->SetDevMode(nullptr);
   }
 
   // Free them, we won't need them for a while
@@ -187,10 +187,10 @@ EnumerateNativePrinters(DWORD aWhichPrinters, LPWSTR aPrinterName, bool& aIsFoun
 {
   DWORD             dwSizeNeeded = 0;
   DWORD             dwNumItems   = 0;
-  LPPRINTER_INFO_2W  lpInfo        = NULL;
+  LPPRINTER_INFO_2W  lpInfo        = nullptr;
 
   // Get buffer size
-  if (::EnumPrintersW(aWhichPrinters, NULL, 2, NULL, 0, &dwSizeNeeded,
+  if (::EnumPrintersW(aWhichPrinters, nullptr, 2, nullptr, 0, &dwSizeNeeded,
                       &dwNumItems)) {
     return NS_ERROR_FAILURE;
   }
@@ -201,7 +201,7 @@ EnumerateNativePrinters(DWORD aWhichPrinters, LPWSTR aPrinterName, bool& aIsFoun
     return NS_ERROR_OUT_OF_MEMORY;
   }
 
-  if (::EnumPrintersW(PRINTER_ENUM_LOCAL, NULL, 2, (LPBYTE)lpInfo,
+  if (::EnumPrintersW(PRINTER_ENUM_LOCAL, nullptr, 2, (LPBYTE)lpInfo,
                       dwSizeNeeded, &dwSizeNeeded, &dwNumItems) == 0) {
     free(lpInfo);
     return NS_OK;
@@ -499,7 +499,7 @@ NS_IMETHODIMP nsDeviceContextSpecWin::GetSurfaceForPrinter(gfxASurface **surface
   } else {
     if (mDevMode) {
       NS_WARN_IF_FALSE(mDriverName, "No driver!");
-      HDC dc = ::CreateDCW(mDriverName, mDeviceName, NULL, mDevMode);
+      HDC dc = ::CreateDCW(mDriverName, mDeviceName, nullptr, mDevMode);
 
       // have this surface take over ownership of this DC
       newSurface = new gfxWindowsSurface(dc, gfxWindowsSurface::FLAG_TAKE_DC | gfxWindowsSurface::FLAG_FOR_PRINTING);
@@ -653,32 +653,32 @@ nsDeviceContextSpecWin::GetDataFromPrinter(const PRUnichar * aName, nsIPrintSett
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
-  HANDLE hPrinter = NULL;
+  HANDLE hPrinter = nullptr;
   
   BOOL status = ::OpenPrinterW((LPWSTR)(aName),
-                              &hPrinter, NULL);
+                              &hPrinter, nullptr);
   if (status) {
 
     LPDEVMODEW   pDevMode;
     DWORD       dwNeeded, dwRet;
 
     // Allocate a buffer of the correct size.
-    dwNeeded = ::DocumentPropertiesW(NULL, hPrinter,
+    dwNeeded = ::DocumentPropertiesW(nullptr, hPrinter,
                                     const_cast<wchar_t*>(aName),
-                                    NULL, NULL, 0);
+                                    nullptr, nullptr, 0);
 
     pDevMode = (LPDEVMODEW)::HeapAlloc (::GetProcessHeap(), HEAP_ZERO_MEMORY, dwNeeded);
     if (!pDevMode) return NS_ERROR_FAILURE;
 
     // Get the default DevMode for the printer and modify it for our needs.
-    dwRet = DocumentPropertiesW(NULL, hPrinter, 
+    dwRet = DocumentPropertiesW(nullptr, hPrinter, 
                                const_cast<wchar_t*>(aName),
-                               pDevMode, NULL, DM_OUT_BUFFER);
+                               pDevMode, nullptr, DM_OUT_BUFFER);
 
     if (dwRet == IDOK && aPS) {
       SetupDevModeFromSettings(pDevMode, aPS);
       // Sets back the changes we made to the DevMode into the Printer Driver
-      dwRet = ::DocumentPropertiesW(NULL, hPrinter,
+      dwRet = ::DocumentPropertiesW(nullptr, hPrinter,
                                    const_cast<wchar_t*>(aName),
                                    pDevMode, pDevMode,
                                    DM_IN_BUFFER | DM_OUT_BUFFER);

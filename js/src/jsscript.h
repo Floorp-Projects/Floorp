@@ -542,7 +542,7 @@ class JSScript : public js::gc::BarrieredCell<JSScript>
     uint16_t        nslots;     /* vars plus maximum stack depth */
     uint16_t        staticLevel;/* static level for display maintenance */
 
-    // 4-bit fields.
+    // Bit fields.
 
   public:
     // The kinds of the optional arrays.
@@ -557,10 +557,13 @@ class JSScript : public js::gc::BarrieredCell<JSScript>
   private:
     // The bits in this field indicate the presence/non-presence of several
     // optional arrays in |data|.  See the comments above Create() for details.
-    uint8_t         hasArrayBits:4;
+    uint8_t         hasArrayBits:ARRAY_KIND_BITS;
 
     // The GeneratorKind of the script.
-    uint8_t         generatorKindBits_:4;
+    uint8_t         generatorKindBits_:2;
+
+    // Unused padding; feel free to steal these if you need them.
+    uint8_t         padToByte_:2;
 
     // 1-bit fields.
 
@@ -1076,11 +1079,9 @@ class JSScript : public js::gc::BarrieredCell<JSScript>
     void markChildren(JSTracer *trc);
 };
 
-/* The array kind flags are stored in a 4-bit field; make sure they fit. */
-JS_STATIC_ASSERT(JSScript::ARRAY_KIND_BITS <= 4);
-
 /* If this fails, add/remove padding within JSScript. */
-JS_STATIC_ASSERT(sizeof(JSScript) % js::gc::CellSize == 0);
+static_assert(sizeof(JSScript) % js::gc::CellSize == 0,
+              "Size of JSScript must be an integral multiple of js::gc::CellSize");
 
 namespace js {
 

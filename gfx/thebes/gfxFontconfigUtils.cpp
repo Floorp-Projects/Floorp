@@ -19,6 +19,8 @@
 
 #include "nsIAtom.h"
 #include "nsCRT.h"
+#include "gfxFontConstants.h"
+#include "mozilla/gfx/2D.h"
 
 using namespace mozilla;
 

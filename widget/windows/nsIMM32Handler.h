@@ -72,11 +72,11 @@ public:
     if (mIMC) {
       return false;
     }
-    if (!::ImmAssociateContextEx(mWnd, NULL, IACE_DEFAULT)) {
+    if (!::ImmAssociateContextEx(mWnd, nullptr, IACE_DEFAULT)) {
       return false;
     }
     mIMC = ::ImmGetContext(mWnd);
-    return (mIMC != NULL);
+    return (mIMC != nullptr);
   }
 
   bool Disassociate()
@@ -84,11 +84,11 @@ public:
     if (!mIMC) {
       return false;
     }
-    if (!::ImmAssociateContextEx(mWnd, NULL, 0)) {
+    if (!::ImmAssociateContextEx(mWnd, nullptr, 0)) {
       return false;
     }
     ::ImmReleaseContext(mWnd, mIMC);
-    mIMC = NULL;
+    mIMC = nullptr;
     return true;
   }
 

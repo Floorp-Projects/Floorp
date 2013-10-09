@@ -146,7 +146,7 @@ nsClipboard::SetData(nsITransferable *aTransferable,
     EmptyClipboard(aWhichClipboard);
 
     // List of suported targets
-    GtkTargetList *list = gtk_target_list_new(NULL, 0);
+    GtkTargetList *list = gtk_target_list_new(nullptr, 0);
 
     // Get the types of supported flavors
     nsCOMPtr<nsISupportsArray> flavors;
@@ -242,7 +242,7 @@ nsClipboard::GetData(nsITransferable *aTransferable, int32_t aWhichClipboard)
     GtkClipboard *clipboard;
     clipboard = gtk_clipboard_get(GetSelectionAtom(aWhichClipboard));
 
-    guchar        *data = NULL;
+    guchar        *data = nullptr;
     gint           length = 0;
     bool           foundData = false;
     nsAutoCString  foundFlavor;
@@ -399,7 +399,7 @@ nsClipboard::HasDataMatchingFlavors(const char** aFlavorList, uint32_t aLength,
         return NS_OK;
 
     gint n_targets = 0;
-    GdkAtom *targets = NULL;
+    GdkAtom *targets = nullptr;
 
     if (!gtk_selection_data_get_targets(selection_data, 
                                         &targets, &n_targets) ||
@@ -842,7 +842,7 @@ checkEventProc(Display *display, XEvent *event, XPointer arg)
             gdk_x11_window_lookup_for_display(gdk_x11_lookup_xdisplay(display),
                                               event->xany.window);
         if (cbWindow) {
-            GtkWidget *cbWidget = NULL;
+            GtkWidget *cbWidget = nullptr;
             gdk_window_get_user_data(cbWindow, (gpointer *)&cbWidget);
             if (cbWidget && GTK_IS_WIDGET(cbWidget)) {
                 context->cbWidget = cbWidget;
@@ -916,7 +916,7 @@ RetrievalContext::Wait()
 
     Display *xDisplay = GDK_DISPLAY_XDISPLAY(gdk_display_get_default()) ;
     checkEventContext context;
-    context.cbWidget = NULL;
+    context.cbWidget = nullptr;
     context.selAtom = gdk_x11_atom_to_xatom(gdk_atom_intern("GDK_SELECTION",
                                                             FALSE));
 
@@ -956,7 +956,7 @@ RetrievalContext::Wait()
         tv.tv_sec = 0;
         tv.tv_usec = std::max<int32_t>(0,
             kClipboardTimeout - (now - start).ToMicroseconds());
-        select_result = select(cnumber, &select_set, NULL, NULL, &tv);
+        select_result = select(cnumber, &select_set, nullptr, nullptr, &tv);
     } while (select_result == 1 ||
              (select_result == -1 && errno == EINTR));
 

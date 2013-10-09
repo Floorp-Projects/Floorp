@@ -49,7 +49,7 @@ MRESULT EXPENTRY FileDialogProc( HWND hwndDlg, ULONG msg, MPARAM mp1, MPARAM mp2
 //-------------------------------------------------------------------------
 nsFilePicker::nsFilePicker()
 {
-  mWnd = NULL;
+  mWnd = nullptr;
   mUnicodeEncoder = nullptr;
   mUnicodeDecoder = nullptr;
   mSelectedType   = 0;
@@ -693,7 +693,7 @@ MRESULT EXPENTRY DirDialogProc( HWND hwndDlg, ULONG msg, MPARAM mp1, MPARAM mp2)
          SWP           swp;
          HWND          hwndST;
          RECTL         rectlString = {0,0,1000,1000};
-         char          *ptr = NULL;
+         char          *ptr = nullptr;
          int           iHalfLen;
          int           iLength;
          CHAR          szString[CCHMAXPATH];
@@ -763,12 +763,12 @@ MRESULT EXPENTRY FileDialogProc( HWND hwndDlg, ULONG msg, MPARAM mp1, MPARAM mp2
                                         WS_VISIBLE | WS_PARENTCLIP | WS_SYNCPAINT | WS_TABSTOP | CBS_DROPDOWNLIST,
                                         swp.x, swp.y,
                                         swp.cx, swp.cy, hwndDlg, swp.hwndInsertBehind, 290,
-                                        NULL, NULL );
+                                        nullptr, nullptr );
        WinSendMsg( hwndTypeCombo, LM_DELETEALL, (MPARAM)0, (MPARAM)0 );
        pfiledlg = (PFILEDLG)WinQueryWindowULong( hwndDlg, QWL_USER );
        pmydata = (PMYDATA)pfiledlg->ulUser;
        i = 0;
-       while (*(pfiledlg->papszITypeList[i]) != NULL) {
+       while (*(pfiledlg->papszITypeList[i]) != nullptr) {
            WinSendMsg( hwndTypeCombo, LM_INSERTITEM, (MPARAM)LIT_END, (MPARAM)*(pfiledlg->papszITypeList[i]) );
            i++;
        }

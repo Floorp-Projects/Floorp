@@ -395,6 +395,7 @@ public:
         EXT_transform_feedback,
         NV_transform_feedback,
         ANGLE_depth_texture,
+        KHR_debug,
         Extensions_Max,
         Extensions_End
     };
@@ -896,6 +897,27 @@ public:
         AFTER_GL_CALL;
     }
 
+    void fDebugMessageCallback(GLDEBUGPROC callback, const GLvoid* userParam) {
+        BEFORE_GL_CALL;
+        ASSERT_SYMBOL_PRESENT(fDebugMessageCallback);
+        mSymbols.fDebugMessageCallback(callback, userParam);
+        AFTER_GL_CALL;
+    }
+
+    void fDebugMessageControl(GLenum source, GLenum type, GLenum severity, GLsizei count, const GLuint* ids, realGLboolean enabled) {
+        BEFORE_GL_CALL;
+        ASSERT_SYMBOL_PRESENT(fDebugMessageControl);
+        mSymbols.fDebugMessageControl(source, type, severity, count, ids, enabled);
+        AFTER_GL_CALL;
+    }
+
+    void fDebugMessageInsert(GLenum source, GLenum type, GLuint id, GLenum severity, GLsizei length, const GLchar* buf) {
+        BEFORE_GL_CALL;
+        ASSERT_SYMBOL_PRESENT(fDebugMessageInsert);
+        mSymbols.fDebugMessageInsert(source, type, id, severity, length, buf);
+        AFTER_GL_CALL;
+    }
+
     void fDetachShader(GLuint program, GLuint shader) {
         BEFORE_GL_CALL;
         mSymbols.fDetachShader(program, shader);
@@ -1094,6 +1116,35 @@ public:
         AFTER_GL_CALL;
     }
 
+    GLuint fGetDebugMessageLog(GLuint count, GLsizei bufsize, GLenum* sources, GLenum* types, GLuint* ids, GLenum* severities, GLsizei* lengths, GLchar* messageLog) {
+        BEFORE_GL_CALL;
+        ASSERT_SYMBOL_PRESENT(fGetDebugMessageLog);
+        GLuint ret = mSymbols.fGetDebugMessageLog(count, bufsize, sources, types, ids, severities, lengths, messageLog);
+        AFTER_GL_CALL;
+        return ret;
+    }
+
+    void fGetPointerv(GLenum pname, GLvoid** params) {
+        BEFORE_GL_CALL;
+        ASSERT_SYMBOL_PRESENT(fGetPointerv);
+        mSymbols.fGetPointerv(pname, params);
+        AFTER_GL_CALL;
+    }
+
+    void fGetObjectLabel(GLenum identifier, GLuint name, GLsizei bufSize, GLsizei* length, GLchar* label) {
+        BEFORE_GL_CALL;
+        ASSERT_SYMBOL_PRESENT(fGetObjectLabel);
+        mSymbols.fGetObjectLabel(identifier, name, bufSize, length, label);
+        AFTER_GL_CALL;
+    }
+
+    void fGetObjectPtrLabel(GLvoid* ptr, GLsizei bufSize, GLsizei* length, GLchar* label) {
+        BEFORE_GL_CALL;
+        ASSERT_SYMBOL_PRESENT(fGetObjectPtrLabel);
+        mSymbols.fGetObjectPtrLabel(ptr, bufSize, length, label);
+        AFTER_GL_CALL;
+    }
+
     void fGenerateMipmap(GLenum target) {
         BEFORE_GL_CALL;
         mSymbols.fGenerateMipmap(target);
@@ -1254,6 +1305,20 @@ public:
         AFTER_GL_CALL;
     }
 
+    void fObjectLabel(GLenum identifier, GLuint name, GLsizei length, const GLchar* label) {
+        BEFORE_GL_CALL;
+        ASSERT_SYMBOL_PRESENT(fObjectLabel);
+        mSymbols.fObjectLabel(identifier, name, length, label);
+        AFTER_GL_CALL;
+    }
+
+    void fObjectPtrLabel(GLvoid* ptr, GLsizei length, const GLchar* label) {
+        BEFORE_GL_CALL;
+        ASSERT_SYMBOL_PRESENT(fObjectPtrLabel);
+        mSymbols.fObjectPtrLabel(ptr, length, label);
+        AFTER_GL_CALL;
+    }
+
     void fPixelStorei(GLenum pname, GLint param) {
         BEFORE_GL_CALL;
         mSymbols.fPixelStorei(pname, param);
@@ -1269,6 +1334,20 @@ public:
     void fPolygonOffset(GLfloat factor, GLfloat bias) {
         BEFORE_GL_CALL;
         mSymbols.fPolygonOffset(factor, bias);
+        AFTER_GL_CALL;
+    }
+
+    void fPopDebugGroup() {
+        BEFORE_GL_CALL;
+        ASSERT_SYMBOL_PRESENT(fPopDebugGroup);
+        mSymbols.fPopDebugGroup();
+        AFTER_GL_CALL;
+    }
+
+    void fPushDebugGroup(GLenum source, GLuint id, GLsizei length, const GLchar* message) {
+        BEFORE_GL_CALL;
+        ASSERT_SYMBOL_PRESENT(fPushDebugGroup);
+        mSymbols.fPushDebugGroup(source, id, length, message);
         AFTER_GL_CALL;
     }
 

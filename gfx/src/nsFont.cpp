@@ -15,6 +15,7 @@
 #include "nsUnicharUtils.h"
 #include "nscore.h"                     // for PRUnichar
 #include "prtypes.h"                    // for PR_STATIC_ASSERT
+#include "mozilla/gfx/2D.h"
 
 nsFont::nsFont(const char* aName, uint8_t aStyle, uint8_t aVariant,
                uint16_t aWeight, int16_t aStretch, uint8_t aDecoration,

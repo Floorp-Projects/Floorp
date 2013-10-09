@@ -399,7 +399,7 @@ static const nsGtkCursor GtkCursors[] = {
   { moz_vertical_text_bits,  moz_vertical_text_mask_bits,  8,  4,  "048008013003cff3c00c801001200000" },
   { moz_nesw_resize_bits,    moz_nesw_resize_mask_bits,    8,  8,  "50585d75b494802d0151028115016902" },
   { moz_nwse_resize_bits,    moz_nwse_resize_mask_bits,    8,  8,  "38c5dff7c7b8962045400281044508d2" },
-  { moz_none_bits,           moz_none_mask_bits,           0,  0,  NULL }
+  { moz_none_bits,           moz_none_mask_bits,           0,  0,  nullptr }
 };
 
 #endif /* nsGtkCursors_h__ */

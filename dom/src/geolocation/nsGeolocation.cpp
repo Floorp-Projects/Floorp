@@ -454,15 +454,11 @@ nsGeolocationRequest::Allow()
   }
 
   // check to see if we can use a cached value
-  //
-  // either:
-  // a) the user has specified a maximumAge which allows us to return a cached value,
-  // -or-
-  // b) the cached position time is some reasonable value to return to the user (<30s)
+  // if the user has specified a maximumAge, return a cached value.
 
-  uint32_t maximumAge = 30 * PR_MSEC_PER_SEC;
+  uint32_t maximumAge = 0;
   if (mOptions) {
-    if (mOptions->mMaximumAge >= 0) {
+    if (mOptions->mMaximumAge > 0) {
       maximumAge = mOptions->mMaximumAge;
     }
   }
@@ -1125,8 +1121,6 @@ Geolocation::RemoveRequest(nsGeolocationRequest* aRequest)
     (mPendingCallbacks.RemoveElement(aRequest) !=
      mWatchingCallbacks.RemoveElement(aRequest));
 
-  // request must have been in one of the lists
-  MOZ_ASSERT(requestWasKnown);
   unused << requestWasKnown;
 }
 

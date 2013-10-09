@@ -78,7 +78,7 @@ nsAppShell::Init()
   NS_ASSERTION(sTaskbarButtonCreatedMsg, "Could not register taskbar button creation message");
 
   WNDCLASSW wc;
-  HINSTANCE module = GetModuleHandle(NULL);
+  HINSTANCE module = GetModuleHandle(nullptr);
 
   const PRUnichar *const kWindowClass = L"nsAppShell:EventWindowClass";
   if (!GetClassInfoW(module, kWindowClass, &wc)) {
@@ -87,16 +87,16 @@ nsAppShell::Init()
     wc.cbClsExtra    = 0;
     wc.cbWndExtra    = 0;
     wc.hInstance     = module;
-    wc.hIcon         = NULL;
-    wc.hCursor       = NULL;
-    wc.hbrBackground = (HBRUSH) NULL;
-    wc.lpszMenuName  = (LPCWSTR) NULL;
+    wc.hIcon         = nullptr;
+    wc.hCursor       = nullptr;
+    wc.hbrBackground = (HBRUSH) nullptr;
+    wc.lpszMenuName  = (LPCWSTR) nullptr;
     wc.lpszClassName = kWindowClass;
     RegisterClassW(&wc);
   }
 
   mEventWnd = CreateWindowW(kWindowClass, L"nsAppShell:EventWindow",
-                           0, 0, 0, 10, 10, NULL, NULL, module, NULL);
+                           0, 0, 0, 10, 10, nullptr, nullptr, module, nullptr);
   NS_ENSURE_STATE(mEventWnd);
 
   return nsBaseAppShell::Init();
@@ -191,7 +191,7 @@ nsAppShell::ProcessNextNativeEvent(bool mayWait)
     // internal message because it may make different modifier key state or
     // mouse cursor position between them.
     if (mozilla::widget::MouseScrollHandler::IsWaitingInternalMessage()) {
-      gotMessage = WinUtils::PeekMessage(&msg, NULL, MOZ_WM_MOUSEWHEEL_FIRST,
+      gotMessage = WinUtils::PeekMessage(&msg, nullptr, MOZ_WM_MOUSEWHEEL_FIRST,
                                          MOZ_WM_MOUSEWHEEL_LAST, PM_REMOVE);
       NS_ASSERTION(gotMessage,
                    "waiting internal wheel message, but it has not come");
@@ -199,7 +199,7 @@ nsAppShell::ProcessNextNativeEvent(bool mayWait)
     }
 
     if (!gotMessage) {
-      gotMessage = WinUtils::PeekMessage(&msg, NULL, 0, 0, PM_REMOVE);
+      gotMessage = WinUtils::PeekMessage(&msg, nullptr, 0, 0, PM_REMOVE);
       uiMessage =
         (msg.message >= WM_KEYFIRST && msg.message <= WM_IME_KEYLAST) ||
         (msg.message >= NS_WM_IMEFIRST && msg.message <= NS_WM_IMELAST) ||

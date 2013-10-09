@@ -2234,7 +2234,7 @@ KeyboardLayout::SynthesizeNativeKeyEvent(nsWindowBase* aWidget,
                                          const nsAString& aCharacters,
                                          const nsAString& aUnmodifiedCharacters)
 {
-  UINT keyboardLayoutListCount = ::GetKeyboardLayoutList(0, NULL);
+  UINT keyboardLayoutListCount = ::GetKeyboardLayoutList(0, nullptr);
   NS_ASSERTION(keyboardLayoutListCount > 0,
                "One keyboard layout must be installed at least");
   HKL keyboardLayoutListBuff[50];
@@ -2248,7 +2248,7 @@ KeyboardLayout::SynthesizeNativeKeyEvent(nsWindowBase* aWidget,
 
   nsPrintfCString layoutName("%08x", aNativeKeyboardLayout);
   HKL loadedLayout = LoadKeyboardLayoutA(layoutName.get(), KLF_NOTELLSHELL);
-  if (loadedLayout == NULL) {
+  if (loadedLayout == nullptr) {
     if (keyboardLayoutListBuff != keyboardLayoutList) {
       delete [] keyboardLayoutList;
     }
