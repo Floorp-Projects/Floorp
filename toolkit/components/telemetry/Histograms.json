@@ -3956,9 +3956,9 @@
     "extended_statistics_ok": true,
     "description": "BACKGROUND THUMBNAILS: Time the capture took once it started and successfully completed (ms)"
   },
-  "FX_THUMBNAILS_BG_CAPTURE_DONE_REASON": {
+  "FX_THUMBNAILS_BG_CAPTURE_DONE_REASON_2": {
     "kind": "enumerated",
-    "n_values": 4,
+    "n_values": 10,
     "description": "BACKGROUND THUMBNAILS: Reason the capture completed (see TEL_CAPTURE_DONE_* constants in BackgroundPageThumbs.jsm)"
   },
   "FX_THUMBNAILS_BG_CAPTURE_PAGE_LOAD_TIME_MS": {
