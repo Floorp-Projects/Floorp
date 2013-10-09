@@ -272,6 +272,20 @@ GonkDisplayJB::QueueBuffer(ANativeWindowBuffer* buf)
     return success;
 }
 
+void
+GonkDisplayJB::UpdateFBSurface(EGLDisplay dpy, EGLSurface sur)
+{
+    StopBootAnimation();
+    mBootAnimBuffer = nullptr;
+    eglSwapBuffers(dpy, sur);
+}
+
+void
+GonkDisplayJB::SetFBReleaseFd(int fd)
+{
+    mFBSurface->setReleaseFenceFd(fd);
+}
+
 __attribute__ ((visibility ("default")))
 GonkDisplay*
 GetGonkDisplay()

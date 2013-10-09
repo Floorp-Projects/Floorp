@@ -576,6 +576,10 @@ NetworkManager.prototype = {
   },
 
   resetRoutingTable: function resetRoutingTable(network) {
+    if (!network.ip || !network.netmask) {
+      debug("Either ip or netmask is null. Cannot reset routing table.");
+      return;
+    }
     let options = {
       cmd: "removeNetworkRoute",
       ifname: network.name,
