@@ -134,7 +134,7 @@ BrowserElementParent::DispatchOpenWindowEvent(Element* aOpenerFrameElement,
   // aFeatures.
 
   // Create the event's detail object.
-  OpenWindowEventDetailInitializer detail;
+  OpenWindowEventDetail detail;
   detail.mUrl = aURL;
   detail.mName = aName;
   detail.mFeatures = aFeatures;
@@ -307,7 +307,7 @@ NS_IMETHODIMP DispatchAsyncScrollEventRunnable::Run()
   NS_ENSURE_TRUE(globalObject, NS_ERROR_UNEXPECTED);
 
   // Create the event's detail object.
-  AsyncScrollEventDetailInitializer detail;
+  AsyncScrollEventDetail detail;
   detail.mLeft = mContentRect.x;
   detail.mTop = mContentRect.y;
   detail.mWidth = mContentRect.width;
