@@ -188,3 +188,7 @@ skip-if(!winWidget) pref(webgl.prefer-native-gl,true) pref(webgl.prefer-16bpp,tr
 
 # Bug 815648
 == stroketext-shadow.html stroketext-shadow-ref.html
+
+# focus rings
+pref(canvas.focusring.enabled,true) == drawSystemFocusRing.html drawSystemFocusRing-ref.html
+pref(canvas.focusring.enabled,true) == drawCustomFocusRing.html drawCustomFocusRing-ref.html
