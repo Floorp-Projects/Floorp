@@ -681,9 +681,14 @@ TelemetryPing.prototype = {
     request.addEventListener("load", handler(true, onSuccess).bind(this), false);
 
     request.setRequestHeader("Content-Encoding", "gzip");
+    let converter = Cc["@mozilla.org/intl/scriptableunicodeconverter"]
+                    .createInstance(Ci.nsIScriptableUnicodeConverter);
+    converter.charset = "UTF-8";
+    let utf8Payload = converter.ConvertFromUnicode(JSON.stringify(ping.payload));
+    utf8Payload += converter.Finish();
     let payloadStream = Cc["@mozilla.org/io/string-input-stream;1"]
                         .createInstance(Ci.nsIStringInputStream);
-    payloadStream.data = this.gzipCompressString(JSON.stringify(ping.payload));
+    payloadStream.data = this.gzipCompressString(utf8Payload);
     request.send(payloadStream);
   },
 

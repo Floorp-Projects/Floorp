@@ -23,7 +23,8 @@ const IGNORE_HISTOGRAM_TO_CLONE = "MEMORY_HEAP_ALLOCATED";
 const IGNORE_CLONED_HISTOGRAM = "test::ignore_me_also";
 const ADDON_NAME = "Telemetry test addon";
 const ADDON_HISTOGRAM = "addon-histogram";
-const FLASH_VERSION = "1.1.1.1";
+// Add some unicode characters here to ensure that sending them works correctly.
+const FLASH_VERSION = "\u201c1.1.1.1\u201d";
 const SHUTDOWN_TIME = 10000;
 const FAILED_PROFILE_LOCK_ATTEMPTS = 2;
 
@@ -155,7 +156,12 @@ function decodeRequestPayload(request) {
     converter.onStartRequest(null, null);
     converter.onDataAvailable(null, null, s, 0, s.available());
     converter.onStopRequest(null, null, null);
-    payload = decoder.decode(observer.buffer);
+    let unicodeConverter = Cc["@mozilla.org/intl/scriptableunicodeconverter"]
+                    .createInstance(Ci.nsIScriptableUnicodeConverter);
+    unicodeConverter.charset = "UTF-8";
+    let utf8string = unicodeConverter.ConvertToUnicode(observer.buffer);
+    utf8string += unicodeConverter.Finish();
+    payload = decoder.decode(utf8string);
   } else {
     payload = decoder.decodeFromStream(s, s.available());
   }
