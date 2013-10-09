@@ -287,11 +287,11 @@ class LTableSwitch : public LInstructionHelper<0, 1, 1>
     const LAllocation *index() {
         return getOperand(0);
     }
-    const LAllocation *tempInt() {
-        return getTemp(0)->output();
+    const LDefinition *tempInt() {
+        return getTemp(0);
     }
     // This is added to share the same CodeGenerator prefixes.
-    const LAllocation *tempPointer() {
+    const LDefinition *tempPointer() {
         return nullptr;
     }
 };
@@ -316,13 +316,13 @@ class LTableSwitchV : public LInstructionHelper<0, BOX_PIECES, 2>
 
     static const size_t InputValue = 0;
 
-    const LAllocation *tempInt() {
-        return getTemp(0)->output();
+    const LDefinition *tempInt() {
+        return getTemp(0);
     }
-    const LAllocation *tempFloat() {
-        return getTemp(1)->output();
+    const LDefinition *tempFloat() {
+        return getTemp(1);
     }
-    const LAllocation *tempPointer() {
+    const LDefinition *tempPointer() {
         return nullptr;
     }
 };
@@ -339,8 +339,8 @@ class LGuardShape : public LInstructionHelper<0, 1, 1>
     const MGuardShape *mir() const {
         return mir_->toGuardShape();
     }
-    const LAllocation *tempInt() {
-        return getTemp(0)->output();
+    const LDefinition *tempInt() {
+        return getTemp(0);
     }
 };
 
@@ -356,8 +356,8 @@ class LGuardObjectType : public LInstructionHelper<0, 1, 1>
     const MGuardObjectType *mir() const {
         return mir_->toGuardObjectType();
     }
-    const LAllocation *tempInt() {
-        return getTemp(0)->output();
+    const LDefinition *tempInt() {
+        return getTemp(0);
     }
 };
 

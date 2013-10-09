@@ -23,12 +23,14 @@
 #include "SurfaceStream.h"
 #include "GfxTexturesReporter.h"
 #include "TextureGarbageBin.h"
+#include "gfx2DGlue.h"
 
 #include "mozilla/DebugOnly.h"
 #include "mozilla/Preferences.h"
 
 #ifdef XP_MACOSX
 #include <CoreServices/CoreServices.h>
+#include "gfxColor.h"
 #endif
 
 #if defined(MOZ_WIDGET_COCOA)
@@ -114,6 +116,7 @@ static const char *sExtensionNames[] = {
     "GL_EXT_transform_feedback",
     "GL_NV_transform_feedback",
     "GL_ANGLE_depth_texture",
+    "GL_KHR_debug",
     nullptr
 };
 
@@ -972,6 +975,39 @@ GLContext::InitWithPrefix(const char *prefix, bool trygl)
             }
         }
 
+        if (IsExtensionSupported(KHR_debug)) {
+            SymLoadStruct extSymbols[] = {
+                { (PRFuncPtr*) &mSymbols.fDebugMessageControl,  { "DebugMessageControl",  "DebugMessageControlKHR",  nullptr } },
+                { (PRFuncPtr*) &mSymbols.fDebugMessageInsert,   { "DebugMessageInsert",   "DebugMessageInsertKHR",   nullptr } },
+                { (PRFuncPtr*) &mSymbols.fDebugMessageCallback, { "DebugMessageCallback", "DebugMessageCallbackKHR", nullptr } },
+                { (PRFuncPtr*) &mSymbols.fGetDebugMessageLog,   { "GetDebugMessageLog",   "GetDebugMessageLogKHR",   nullptr } },
+                { (PRFuncPtr*) &mSymbols.fGetPointerv,          { "GetPointerv",          "GetPointervKHR",          nullptr } },
+                { (PRFuncPtr*) &mSymbols.fPushDebugGroup,       { "PushDebugGroup",       "PushDebugGroupKHR",       nullptr } },
+                { (PRFuncPtr*) &mSymbols.fPopDebugGroup,        { "PopDebugGroup",        "PopDebugGroupKHR",        nullptr } },
+                { (PRFuncPtr*) &mSymbols.fObjectLabel,          { "ObjectLabel",          "ObjectLabelKHR",          nullptr } },
+                { (PRFuncPtr*) &mSymbols.fGetObjectLabel,       { "GetObjectLabel",       "GetObjectLabelKHR",       nullptr } },
+                { (PRFuncPtr*) &mSymbols.fObjectPtrLabel,       { "ObjectPtrLabel",       "ObjectPtrLabelKHR",       nullptr } },
+                { (PRFuncPtr*) &mSymbols.fGetObjectPtrLabel,    { "GetObjectPtrLabel",    "GetObjectPtrLabelKHR",    nullptr } },
+                { nullptr, { nullptr } },
+            };
+
+            if (!LoadSymbols(&extSymbols[0], trygl, prefix)) {
+                NS_ERROR("GL supports KHR_debug without supplying its functions.");
+
+                MarkExtensionUnsupported(KHR_debug);
+                mSymbols.fDebugMessageControl  = nullptr;
+                mSymbols.fDebugMessageInsert   = nullptr;
+                mSymbols.fDebugMessageCallback = nullptr;
+                mSymbols.fGetDebugMessageLog   = nullptr;
+                mSymbols.fGetPointerv          = nullptr;
+                mSymbols.fPushDebugGroup       = nullptr;
+                mSymbols.fPopDebugGroup        = nullptr;
+                mSymbols.fObjectLabel          = nullptr;
+                mSymbols.fGetObjectLabel       = nullptr;
+                mSymbols.fObjectPtrLabel       = nullptr;
+                mSymbols.fGetObjectPtrLabel    = nullptr;
+            }
+        }
 
         // Load developer symbols, don't fail if we can't find them.
         SymLoadStruct auxSymbols[] = {

@@ -66,9 +66,9 @@ void PRTQUEUE::InitWithPQI3(const PRQINFO3* pInfo)
 {
    // Make local copy of PPRQINFO3 object
    ULONG SizeNeeded;
-   ::SplQueryQueue (NULL, pInfo->pszName, 3, NULL, 0, &SizeNeeded);
+   ::SplQueryQueue (nullptr, pInfo->pszName, 3, nullptr, 0, &SizeNeeded);
    mpPQI3 = (PRQINFO3*)malloc (SizeNeeded);
-   ::SplQueryQueue (NULL, pInfo->pszName, 3, mpPQI3, SizeNeeded, &SizeNeeded);
+   ::SplQueryQueue (nullptr, pInfo->pszName, 3, mpPQI3, SizeNeeded, &SizeNeeded);
 
    mPQI3BufSize = SizeNeeded;
 
@@ -111,9 +111,11 @@ PRINTDLG::PRINTDLG()
   ULONG MemNeeded = 0;
   SPLERR rc;
   
-  rc = ::SplEnumQueue(NULL, 3, NULL, 0, &mQueueCount, &TotalQueues, &MemNeeded, NULL);
+  rc = ::SplEnumQueue(nullptr, 3, nullptr, 0, &mQueueCount,
+                      &TotalQueues, &MemNeeded, nullptr);
   PRQINFO3* pPQI3Buf = (PRQINFO3*) malloc (MemNeeded);
-  rc = ::SplEnumQueue(NULL, 3, pPQI3Buf, MemNeeded, &mQueueCount, &TotalQueues, &MemNeeded, NULL);
+  rc = ::SplEnumQueue(nullptr, 3, pPQI3Buf, MemNeeded, &mQueueCount,
+                      &TotalQueues, &MemNeeded, nullptr);
 
   if (mQueueCount > MAX_PRINT_QUEUES)
     mQueueCount = MAX_PRINT_QUEUES;
@@ -148,9 +150,11 @@ void PRINTDLG::RefreshPrintQueue()
   ULONG MemNeeded = 0;
   SPLERR rc;
   
-  rc = ::SplEnumQueue(NULL, 3, NULL, 0, &newQueueCount, &TotalQueues, &MemNeeded, NULL);
+  rc = ::SplEnumQueue(nullptr, 3, nullptr, 0, &newQueueCount,
+                      &TotalQueues, &MemNeeded, nullptr);
   PRQINFO3* pPQI3Buf = (PRQINFO3*)malloc(MemNeeded);
-  rc = ::SplEnumQueue(NULL, 3, pPQI3Buf, MemNeeded, &newQueueCount, &TotalQueues, &MemNeeded, NULL);
+  rc = ::SplEnumQueue(nullptr, 3, pPQI3Buf, MemNeeded, &newQueueCount,
+                      &TotalQueues, &MemNeeded, nullptr);
 
   if (newQueueCount > MAX_PRINT_QUEUES)
     newQueueCount = MAX_PRINT_QUEUES;
@@ -221,10 +225,10 @@ void PRINTDLG::GetPrinter(ULONG printerNdx, char** printerName)
 
 PRTQUEUE* PRINTDLG::SetPrinterQueue(ULONG printerNdx)
 {
-   PRTQUEUE *pPQ = NULL;
+   PRTQUEUE *pPQ = nullptr;
 
    if (printerNdx >= mQueueCount)
-      return NULL;
+      return nullptr;
 
    pPQ = mPQBuf[printerNdx];
 
@@ -239,7 +243,7 @@ LONG PRINTDLG::GetPrintDriverSize(ULONG printerNdx)
 PDRIVDATA PRINTDLG::GetPrintDriver(ULONG printerNdx)
 {
    if (printerNdx >= mQueueCount)
-      return NULL;
+      return nullptr;
 
    return mPQBuf[printerNdx]->PQI3().pDriverData;
 }
@@ -273,12 +277,12 @@ BOOL PRINTDLG::ShowProperties(ULONG printerNdx)
     BOOL          rc = FALSE;
     LONG          devrc = FALSE;
     PDRIVDATA     pOldDrivData;
-    PDRIVDATA     pNewDrivData = NULL;
+    PDRIVDATA     pNewDrivData = nullptr;
     LONG          buflen;
 
 /* check size of buffer required for job properties */
     buflen = DevPostDeviceModes( 0 /*hab*/,
-                                 NULL,
+                                 nullptr,
                                  mPQBuf[printerNdx]->DriverName (),
                                  mPQBuf[printerNdx]->DeviceName (),
                                  mPQBuf[printerNdx]->PrinterName (),
@@ -381,7 +385,7 @@ BOOL PrnQueryHardcopyCaps( HDC hdc, PHCINFO pHCInfo)
       long    lAvail, i;
 
       /* query how many forms are available */
-      lAvail = ::DevQueryHardcopyCaps( hdc, 0, 0, NULL);
+      lAvail = ::DevQueryHardcopyCaps( hdc, 0, 0, nullptr);
 
       pBuffer = (PHCINFO) malloc( lAvail * sizeof(HCINFO));
 

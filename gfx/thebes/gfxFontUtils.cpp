@@ -5,8 +5,8 @@
 
 #ifdef MOZ_LOGGING
 #define FORCE_PR_LOG /* Allow logging in the release build */
-#endif
 #include "prlog.h"
+#endif
 
 #include "mozilla/Util.h"
 
@@ -17,17 +17,12 @@
 #include "mozilla/Preferences.h"
 
 #include "nsIUUIDGenerator.h"
-#include "nsMemory.h"
 #include "nsICharsetConverterManager.h"
 
 #include "harfbuzz/hb.h"
 
 #include "plbase64.h"
 #include "prlog.h"
-
-#ifdef XP_MACOSX
-#include <CoreFoundation/CoreFoundation.h>
-#endif
 
 #ifdef PR_LOGGING
 
