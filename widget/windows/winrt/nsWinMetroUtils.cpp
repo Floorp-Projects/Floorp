@@ -345,7 +345,8 @@ nsWinMetroUtils::LaunchInDesktop(const nsAString &aPath, const nsAString &aArgum
 
 NS_IMETHODIMP
 nsWinMetroUtils::ShowNativeToast(const nsAString &aTitle,
-  const nsAString &aMessage, const nsAString &anImage)
+  const nsAString &aMessage, const nsAString &anImage,
+  const nsAString &aCookie)
 {
   // Firefox is in the foreground, no need for a notification.
   if (::GetActiveWindow() == ::GetForegroundWindow()) {
@@ -358,7 +359,7 @@ nsWinMetroUtils::ShowNativeToast(const nsAString &aTitle,
   HSTRING title = HStringReference(aTitle.BeginReading()).Get();
   HSTRING msg = HStringReference(aMessage.BeginReading()).Get();
   HSTRING imagePath = HStringReference(anImage.BeginReading()).Get();
-  notification_handler->DisplayNotification(title, msg, imagePath);
+  notification_handler->DisplayNotification(title, msg, imagePath, aCookie);
 
   return NS_OK;
 }
