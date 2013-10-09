@@ -330,8 +330,11 @@ SetPropertyOperation(JSContext *cx, HandleScript script, jsbytecode *pc, HandleV
 
     RootedId id(cx, NameToId(script->getName(pc)));
     if (JS_LIKELY(!obj->getOps()->setProperty)) {
-        if (!baseops::SetPropertyHelper(cx, obj, obj, id, 0, &rref, script->strict))
+        if (!baseops::SetPropertyHelper<SequentialExecution>(cx, obj, obj, id, 0,
+                                                             &rref, script->strict))
+        {
             return false;
+        }
     } else {
         if (!JSObject::setGeneric(cx, obj, obj, id, &rref, script->strict))
             return false;
@@ -2982,7 +2985,8 @@ BEGIN_CASE(JSOP_INITPROP)
     id = NameToId(name);
 
     if (JS_UNLIKELY(name == cx->names().proto)
-        ? !baseops::SetPropertyHelper(cx, obj, obj, id, 0, &rval, script->strict)
+        ? !baseops::SetPropertyHelper<SequentialExecution>(cx, obj, obj, id, 0, &rval,
+                                                           script->strict)
         : !DefineNativeProperty(cx, obj, id, rval, nullptr, nullptr,
                                 JSPROP_ENUMERATE, 0, 0, 0)) {
         goto error;

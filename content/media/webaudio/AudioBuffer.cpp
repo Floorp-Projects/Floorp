@@ -117,7 +117,7 @@ AudioBuffer::CopyFromChannel(const Float32Array& aDestination, uint32_t aChannel
   CheckedInt<uint32_t> end = aStartInChannel;
   end += length;
   if (aChannelNumber >= NumberOfChannels() ||
-      !end.isValid() || end.value() >= mLength) {
+      !end.isValid() || end.value() > mLength) {
     aRv.Throw(NS_ERROR_DOM_INDEX_SIZE_ERR);
     return;
   }
@@ -143,7 +143,7 @@ AudioBuffer::CopyToChannel(JSContext* aJSContext, const Float32Array& aSource,
   CheckedInt<uint32_t> end = aStartInChannel;
   end += length;
   if (aChannelNumber >= NumberOfChannels() ||
-      !end.isValid() || end.value() >= mLength) {
+      !end.isValid() || end.value() > mLength) {
     aRv.Throw(NS_ERROR_DOM_INDEX_SIZE_ERR);
     return;
   }

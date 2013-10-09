@@ -16,9 +16,7 @@ public:
   HTMLElement(already_AddRefed<nsINodeInfo> aNodeInfo);
   virtual ~HTMLElement();
 
-  using nsGenericHTMLElement::GetInnerHTML;
-  virtual void GetInnerHTML(nsAString& aInnerHTML,
-                            mozilla::ErrorResult& aError) MOZ_OVERRIDE;
+  NS_IMETHOD GetInnerHTML(nsAString& aInnerHTML) MOZ_OVERRIDE;
 
   virtual nsresult Clone(nsINodeInfo* aNodeInfo,
                          nsINode** aResult) const MOZ_OVERRIDE;
@@ -39,8 +37,8 @@ HTMLElement::~HTMLElement()
 
 NS_IMPL_ELEMENT_CLONE(HTMLElement)
 
-void
-HTMLElement::GetInnerHTML(nsAString& aInnerHTML, ErrorResult& aError)
+NS_IMETHODIMP
+HTMLElement::GetInnerHTML(nsAString& aInnerHTML)
 {
   /**
    * nsGenericHTMLElement::GetInnerHTML escapes < and > characters (at least).
@@ -52,10 +50,10 @@ HTMLElement::GetInnerHTML(nsAString& aInnerHTML, ErrorResult& aError)
   if (mNodeInfo->Equals(nsGkAtoms::xmp) ||
       mNodeInfo->Equals(nsGkAtoms::plaintext)) {
     nsContentUtils::GetNodeTextContent(this, false, aInnerHTML);
-    return;
+    return NS_OK;
   }
 
-  nsGenericHTMLElement::GetInnerHTML(aInnerHTML, aError);
+  return nsGenericHTMLElement::GetInnerHTML(aInnerHTML);
 }
 
 JSObject*

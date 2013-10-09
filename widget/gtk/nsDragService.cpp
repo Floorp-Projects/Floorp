@@ -48,7 +48,7 @@ enum {
   MOZ_GTK_DRAG_RESULT_NO_TARGET
 };
 
-static PRLogModuleInfo *sDragLm = NULL;
+static PRLogModuleInfo *sDragLm = nullptr;
 
 // data used for synthetic periodic motion events sent to the source widget
 // grabbing real events for the drag.
@@ -114,7 +114,7 @@ nsDragService::nsDragService()
     if (dragFailedID) {
         g_signal_connect_closure_by_id(mHiddenWidget, dragFailedID, 0,
                                        g_cclosure_new(G_CALLBACK(invisibleSourceDragFailed),
-                                                      this, NULL),
+                                                      this, nullptr),
                                        FALSE);
     }
 
@@ -194,7 +194,7 @@ DispatchMotionEventCopy(gpointer aData)
     sMotionEventTimerID = 0;
 
     GdkEvent *event = sMotionEvent;
-    sMotionEvent = NULL;
+    sMotionEvent = nullptr;
     // If there is no longer a grab on the widget, then the drag is over and
     // there is no need to continue drag motion.
     if (gtk_widget_has_grab(sGrabWidget)) {
@@ -246,7 +246,7 @@ OnSourceGrabEventAfter(GtkWidget *widget, GdkEvent *event, gpointer user_data)
     // recommends an interval of 350ms +/- 200ms.
     sMotionEventTimerID = 
         g_timeout_add_full(G_PRIORITY_DEFAULT_IDLE, 350,
-                           DispatchMotionEventCopy, NULL, NULL);
+                           DispatchMotionEventCopy, nullptr, nullptr);
 }
 
 static GtkWindow*
@@ -254,30 +254,30 @@ GetGtkWindow(nsIDOMDocument *aDocument)
 {
     nsCOMPtr<nsIDocument> doc = do_QueryInterface(aDocument);
     if (!doc)
-        return NULL;
+        return nullptr;
 
     nsCOMPtr<nsIPresShell> presShell = doc->GetShell();
     if (!presShell)
-        return NULL;
+        return nullptr;
 
     nsRefPtr<nsViewManager> vm = presShell->GetViewManager();
     if (!vm)
-        return NULL;
+        return nullptr;
 
     nsCOMPtr<nsIWidget> widget;
     vm->GetRootWidget(getter_AddRefs(widget));
     if (!widget)
-        return NULL;
+        return nullptr;
 
     GtkWidget *gtkWidget =
         static_cast<nsWindow*>(widget.get())->GetMozContainerWidget();
     if (!gtkWidget)
-        return NULL;
+        return nullptr;
 
-    GtkWidget *toplevel = NULL;
+    GtkWidget *toplevel = nullptr;
     toplevel = gtk_widget_get_toplevel(gtkWidget);
     if (!GTK_IS_WINDOW(toplevel))
-        return NULL;
+        return nullptr;
 
     return GTK_WINDOW(toplevel);
 }   
@@ -342,7 +342,7 @@ nsDragService::InvokeDragSession(nsIDOMNode *aDOMNode,
 
     // Put the drag widget in the window group of the source node so that the
     // gtk_grab_add during gtk_drag_begin is effective.
-    // gtk_window_get_group(NULL) returns the default window group.
+    // gtk_window_get_group(nullptr) returns the default window group.
     GtkWindowGroup *window_group =
         gtk_window_get_group(GetGtkWindow(mSourceDocument));
     gtk_window_group_add_window(window_group,
@@ -407,7 +407,7 @@ nsDragService::SetAlphaPixmap(gfxASurface *aSurface,
     if (!alphaColormap)
       return false;
 
-    GdkPixmap* pixmap = gdk_pixmap_new(NULL, dragRect.width, dragRect.height,
+    GdkPixmap* pixmap = gdk_pixmap_new(nullptr, dragRect.width, dragRect.height,
                                        gdk_colormap_get_visual(alphaColormap)->depth);
     if (!pixmap)
       return false;
@@ -433,7 +433,7 @@ nsDragService::SetAlphaPixmap(gfxASurface *aSurface,
     xPixmapCtx->Paint(DRAG_IMAGE_ALPHA_LEVEL);
 
     // The drag transaction addrefs the pixmap, so we can just unref it from us here
-    gtk_drag_set_icon_pixmap(aContext, alphaColormap, pixmap, NULL,
+    gtk_drag_set_icon_pixmap(aContext, alphaColormap, pixmap, nullptr,
                              aXOffset, aYOffset);
     g_object_unref(pixmap);
     return true;
@@ -460,7 +460,7 @@ nsDragService::EndDragSession(bool aDoneDrag)
         g_signal_handlers_disconnect_by_func(sGrabWidget,
              FuncToGpointer(OnSourceGrabEventAfter), this);
         g_object_unref(sGrabWidget);
-        sGrabWidget = NULL;
+        sGrabWidget = nullptr;
 
         if (sMotionEventTimerID) {
             g_source_remove(sMotionEventTimerID);
@@ -468,7 +468,7 @@ nsDragService::EndDragSession(bool aDoneDrag)
         }
         if (sMotionEvent) {
             gdk_event_free(sMotionEvent);
-            sMotionEvent = NULL;
+            sMotionEvent = nullptr;
         }
     }
 
@@ -980,7 +980,7 @@ nsDragService::IsDataFlavorSupported(const char *aDataFlavor,
          tmp; tmp = tmp->next) {
         /* Bug 331198 */
         GdkAtom atom = GDK_POINTER_TO_ATOM(tmp->data);
-        gchar *name = NULL;
+        gchar *name = nullptr;
         name = gdk_atom_name(atom);
         PR_LOG(sDragLm, PR_LOG_DEBUG,
                ("checking %s against %s\n", name, aDataFlavor));
@@ -1081,11 +1081,11 @@ nsDragService::IsTargetContextList(void)
 {
     bool retval = false;
 
-    // gMimeListType drags only work for drags within a single process.
-    // The gtk_drag_get_source_widget() function will return NULL if the
-    // source of the drag is another app, so we use it to check if a
-    // gMimeListType drop will work or not.
-    if (gtk_drag_get_source_widget(mTargetDragContext) == NULL)
+    // gMimeListType drags only work for drags within a single process. The
+    // gtk_drag_get_source_widget() function will return nullptr if the source
+    // of the drag is another app, so we use it to check if a gMimeListType
+    // drop will work or not.
+    if (gtk_drag_get_source_widget(mTargetDragContext) == nullptr)
         return retval;
 
     GList *tmp;
@@ -1096,7 +1096,7 @@ nsDragService::IsTargetContextList(void)
          tmp; tmp = tmp->next) {
         /* Bug 331198 */
         GdkAtom atom = GDK_POINTER_TO_ATOM(tmp->data);
-        gchar *name = NULL;
+        gchar *name = nullptr;
         name = gdk_atom_name(atom);
         if (name && strcmp(name, gMimeListType) == 0)
             retval = true;
@@ -1147,7 +1147,7 @@ GtkTargetList *
 nsDragService::GetSourceList(void)
 {
     if (!mSourceDataItems)
-        return NULL;
+        return nullptr;
     nsTArray<GtkTargetEntry*> targetArray;
     GtkTargetEntry *targets;
     GtkTargetList  *targetList = 0;
@@ -1326,7 +1326,7 @@ nsDragService::SourceEndDragSession(GdkDragContext *aContext,
         gint x, y;
         GdkDisplay* display = gdk_display_get_default();
         if (display) {
-            gdk_display_get_pointer(display, NULL, &x, &y, NULL);
+            gdk_display_get_pointer(display, nullptr, &x, &y, nullptr);
             SetDragEndPoint(nsIntPoint(x, y));
         }
     }
@@ -1341,7 +1341,8 @@ nsDragService::SourceEndDragSession(GdkDragContext *aContext,
 
         // With GTK+ versions 2.10.x and prior the drag may have been
         // cancelled (but no drag-failed signal would have been sent).
-        // aContext->dest_window will be non-NULL only if the drop was sent.
+        // aContext->dest_window will be non-nullptr only if the drop was
+        // sent.
         GdkDragAction action =
             gdk_drag_context_get_dest_window(aContext) ? 
                 gdk_drag_context_get_actions(aContext) : (GdkDragAction)0;
@@ -1374,14 +1375,14 @@ nsDragService::SourceEndDragSession(GdkDragContext *aContext,
     }
 
     // Schedule the appropriate drag end dom events.
-    Schedule(eDragTaskSourceEnd, nullptr, NULL, nsIntPoint(), 0);
+    Schedule(eDragTaskSourceEnd, nullptr, nullptr, nsIntPoint(), 0);
 }
 
 static void
 CreateUriList(nsISupportsArray *items, gchar **text, gint *length)
 {
     uint32_t i, count;
-    GString *uriList = g_string_new(NULL);
+    GString *uriList = g_string_new(nullptr);
 
     items->Count(&count);
     for (i = 0; i < count; i++) {
@@ -1392,7 +1393,7 @@ CreateUriList(nsISupportsArray *items, gchar **text, gint *length)
 
         if (item) {
             uint32_t tmpDataLen = 0;
-            void    *tmpData = NULL;
+            void    *tmpData = nullptr;
             nsresult rv = NS_OK;
             nsCOMPtr<nsISupports> data;
             rv = item->GetTransferData(kURLMime,
@@ -1498,7 +1499,7 @@ nsDragService::SourceDataGet(GtkWidget        *aWidget,
             actualFlavor = mimeFlavor;
 
         uint32_t tmpDataLen = 0;
-        void    *tmpData = NULL;
+        void    *tmpData = nullptr;
         nsresult rv;
         nsCOMPtr<nsISupports> data;
         rv = item->GetTransferData(actualFlavor,
@@ -1727,7 +1728,7 @@ nsDragService::ScheduleLeaveEvent()
     // We don't know at this stage whether a drop signal will immediately
     // follow.  If the drop signal gets sent it will happen before we return
     // to the main loop and the scheduled leave task will be replaced.
-    if (!Schedule(eDragTaskLeave, nullptr, NULL, nsIntPoint(), 0)) {
+    if (!Schedule(eDragTaskLeave, nullptr, nullptr, nsIntPoint(), 0)) {
         NS_WARNING("Drag leave after drop");
     }        
 }
@@ -1780,8 +1781,8 @@ nsDragService::Schedule(DragTask aTask, nsWindow *aWindow,
         // that a leave or drop is waiting, but managing different priorities
         // may not be worth the effort.  Motion tasks shouldn't queue up as
         // they should be throttled based on replies.
-        mTaskSource =
-            g_idle_add_full(G_PRIORITY_HIGH, TaskDispatchCallback, this, NULL);
+        mTaskSource = g_idle_add_full(G_PRIORITY_HIGH, TaskDispatchCallback,
+                                      this, nullptr);
     }
     return TRUE;
 }
@@ -1841,7 +1842,7 @@ nsDragService::RunScheduledTask()
     // This may be the start of a destination drag session.
     StartDragSession();
 
-    // mTargetWidget may be NULL if the window has been destroyed.
+    // mTargetWidget may be nullptr if the window has been destroyed.
     // (The leave event is not scheduled if a drop task is still scheduled.)
     // We still reply appropriately to indicate that the drop will or didn't
     // succeeed. 
@@ -1900,8 +1901,8 @@ nsDragService::RunScheduledTask()
     }
 
     // We're done with the drag context.
-    mTargetWidget = NULL;
-    mTargetDragContext = NULL;
+    mTargetWidget = nullptr;
+    mTargetDragContext = nullptr;
 
     // If we got another drag signal while running the sheduled task, that
     // must have happened while running a nested event loop.  Leave the task

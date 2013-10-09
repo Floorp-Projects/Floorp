@@ -6,13 +6,9 @@
 #ifndef GFX_CORETEXTSHAPER_H
 #define GFX_CORETEXTSHAPER_H
 
-#include "gfxTypes.h"
 #include "gfxFont.h"
-#include "gfxFontUtils.h"
-#include "gfxPlatform.h"
-#include "gfxMacPlatformFontList.h"
 
-#include <Carbon/Carbon.h>
+#include <ApplicationServices/ApplicationServices.h>
 
 class gfxMacFont;
 
