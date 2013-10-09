@@ -529,6 +529,12 @@ private:
   nsTArray<nsCOMPtr<nsIDOMFile> > mFileList;
 };
 
+/**
+ * This may return nullptr if aDomFile's implementation of
+ * nsIDOMFile::mozFullPathInternal does not successfully return a non-empty
+ * string that is a valid path. This can happen on Firefox OS, for example,
+ * where the file picker can create Blobs.
+ */
 static already_AddRefed<nsIFile>
 DOMFileToLocalFile(nsIDOMFile* aDomFile)
 {
@@ -630,10 +636,12 @@ HTMLInputElement::nsFilePickerShownCallback::Done(int16_t aResult)
 
   // Store the last used directory using the content pref service:
   nsCOMPtr<nsIFile> file = DOMFileToLocalFile(newFiles[0]);
-  nsCOMPtr<nsIFile> lastUsedDir;
-  file->GetParent(getter_AddRefs(lastUsedDir));
-  HTMLInputElement::gUploadLastDir->StoreLastUsedDirectory(
-    mInput->OwnerDoc(), lastUsedDir);
+  if (file) {
+    nsCOMPtr<nsIFile> lastUsedDir;
+    file->GetParent(getter_AddRefs(lastUsedDir));
+    HTMLInputElement::gUploadLastDir->StoreLastUsedDirectory(
+      mInput->OwnerDoc(), lastUsedDir);
+  }
 
   // The text control frame (if there is one) isn't going to send a change
   // event because it will think this is done by a script.
