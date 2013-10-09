@@ -389,6 +389,7 @@ MOCHITEST_FILES = \
 		file_srcdoc-2.html \
 		test_bug893537.html \
 		file_bug893537.html \
+		test_input_files_not_nsIFile.html \
 		$(NULL)
 
 MOCHITEST_CHROME_FILES = \

@@ -48,7 +48,11 @@ this.MockFilePicker = {
   filterAudio: Ci.nsIFilePicker.filterAudio,
   filterVideo: Ci.nsIFilePicker.filterVideo,
 
+  window: null,
+
   init: function(window) {
+    this.window = window;
+
     this.reset();
     this.factory = newFactory(window);
     if (!registrar.isCIDRegistered(newClassID)) {
@@ -86,6 +90,22 @@ this.MockFilePicker = {
     var file = FileUtils.getFile("TmpD", ["testfile"]);
     file.createUnique(Ci.nsIFile.NORMAL_FILE_TYPE, 0644);
     this.returnFiles = [file];
+  },
+
+  useBlobFile: function() {
+    var blob = new this.window.Blob([]);
+    var file = new this.window.File(blob, { name: 'helloworld.txt', type: 'plain/text' });
+    this.returnFiles = [file];
+  },
+
+  isNsIFile: function(aFile) {
+    let ret = false;
+    try {
+      if (aFile.QueryInterface(Ci.nsIFile))
+        ret = true;
+    } catch(e) {}
+
+    return ret;
   }
 };
 
@@ -113,12 +133,21 @@ MockFilePickerInstance.prototype = {
   filterIndex: 0,
   displayDirectory: null,
   get file() {
-    if (MockFilePicker.returnFiles.length >= 1)
+    if (MockFilePicker.returnFiles.length >= 1 &&
+        // window.File does not implement nsIFile
+        MockFilePicker.isNsIFile(MockFilePicker.returnFiles[0])) {
       return MockFilePicker.returnFiles[0];
+    }
+
     return null;
   },
   get domfile()  {
     if (MockFilePicker.returnFiles.length >= 1) {
+      // window.File does not implement nsIFile
+      if (!MockFilePicker.isNsIFile(MockFilePicker.returnFiles[0])) {
+        return MockFilePicker.returnFiles[0];
+      }
+
       let utils = this.parent.QueryInterface(Ci.nsIInterfaceRequestor)
                              .getInterface(Ci.nsIDOMWindowUtils);
       return utils.wrapDOMFile(MockFilePicker.returnFiles[0]);
@@ -126,8 +155,12 @@ MockFilePickerInstance.prototype = {
     return null;
   },
   get fileURL() {
-    if (MockFilePicker.returnFiles.length >= 1)
+    if (MockFilePicker.returnFiles.length >= 1 &&
+        // window.File does not implement nsIFile
+        MockFilePicker.isNsIFile(MockFilePicker.returnFiles[0])) {
       return Services.io.newFileURI(MockFilePicker.returnFiles[0]);
+    }
+
     return null;
   },
   get files() {
@@ -138,13 +171,17 @@ MockFilePickerInstance.prototype = {
         return this.index < MockFilePicker.returnFiles.length;
       },
       getNext: function() {
+        // window.File does not implement nsIFile
+        if (!MockFilePicker.isNsIFile(MockFilePicker.returnFiles[this.index])) {
+          return null;
+        }
         return MockFilePicker.returnFiles[this.index++];
       }
     };
   },
   get domfiles()  {
     let utils = this.parent.QueryInterface(Ci.nsIInterfaceRequestor)
-                      .getInterface(Ci.nsIDOMWindowUtils);
+                           .getInterface(Ci.nsIDOMWindowUtils);
     return {
       index: 0,
       QueryInterface: XPCOMUtils.generateQI([Ci.nsISimpleEnumerator]),
@@ -152,6 +189,10 @@ MockFilePickerInstance.prototype = {
         return this.index < MockFilePicker.returnFiles.length;
       },
       getNext: function() {
+        // window.File does not implement nsIFile
+        if (!MockFilePicker.isNsIFile(MockFilePicker.returnFiles[this.index])) {
+          return MockFilePicker.returnFiles[this.index++];
+        }
         return utils.wrapDOMFile(MockFilePicker.returnFiles[this.index++]);
       }
     };
