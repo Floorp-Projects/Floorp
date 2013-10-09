@@ -82,26 +82,20 @@ public class Utils {
   /**
    * Helper to convert a byte array to a hex-encoded string
    */
-  public static String byte2hex(byte[] b) {
-    // StringBuffer should be used instead.
-    String hs = "";
+  public static String byte2Hex(final byte[] b) {
+    final StringBuilder hs = new StringBuilder(b.length * 2);
     String stmp;
 
     for (int n = 0; n < b.length; n++) {
-      stmp = java.lang.Integer.toHexString(b[n] & 0XFF);
+      stmp = Integer.toHexString(b[n] & 0XFF);
 
       if (stmp.length() == 1) {
-        hs = hs + "0" + stmp;
-      } else {
-        hs = hs + stmp;
+        hs.append("0");
       }
-
-      if (n < b.length - 1) {
-        hs = hs + "";
-      }
+      hs.append(stmp);
     }
 
-    return hs;
+    return hs.toString();
   }
 
   public static byte[] concatAll(byte[] first, byte[]... rest) {

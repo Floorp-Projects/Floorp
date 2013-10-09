@@ -3,6 +3,10 @@
 
 "use strict";
 
+// Load common code from ../mochitest/head.js
+let mochitestDir = getRootDirectory(gTestPath).replace('/mochiperf', '/mochitest');
+Services.scriptloader.loadSubScript(mochitestDir + "head.js", this);
+
 // Misc. constants
 const kInfoHeader = "PERF-TEST | ";
 const kDeclareId = "DECLARE ";

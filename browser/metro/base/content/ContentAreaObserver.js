@@ -232,9 +232,11 @@ var ContentAreaObserver = {
 
     // Request info about the target form element to see if we
     // need to reposition the browser above the keyboard.
-    Browser.selectedBrowser.messageManager.sendAsyncMessage("Browser:RepositionInfoRequest", {
-      viewHeight: this.viewableHeight,
-    });
+    if (SelectionHelperUI.layerMode === 2 /*kContentLayer*/) {
+      Browser.selectedBrowser.messageManager.sendAsyncMessage("Browser:RepositionInfoRequest", {
+        viewHeight: this.viewableHeight,
+      });
+    }
   },
 
   _onRepositionResponse: function _onRepositionResponse(aJsonMsg) {

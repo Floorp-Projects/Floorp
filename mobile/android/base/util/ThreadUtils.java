@@ -28,7 +28,14 @@ public final class ThreadUtils {
     public static Thread sGeckoThread;
 
     // Delayed Runnable that resets the Gecko thread priority.
-    private static volatile Runnable sPriorityResetRunnable;
+    private static final Runnable sPriorityResetRunnable = new Runnable() {
+        @Override
+        public void run() {
+            resetGeckoPriority();
+        }
+    };
+
+    private static boolean sIsGeckoPriorityReduced;
 
     @SuppressWarnings("serial")
     public static class UiThreadBlockedException extends RuntimeException {
@@ -141,14 +148,11 @@ public final class ThreadUtils {
      * @param timeout Timeout in ms after which the priority will be reset
      */
     public static void reduceGeckoPriority(long timeout) {
-        sGeckoThread.setPriority(Thread.MIN_PRIORITY);
-        sPriorityResetRunnable = new Runnable() {
-            @Override
-            public void run() {
-                resetGeckoPriority();
-            }
-        };
-        getUiHandler().postDelayed(sPriorityResetRunnable, timeout);
+        if (!sIsGeckoPriorityReduced) {
+            sIsGeckoPriorityReduced = true;
+            sGeckoThread.setPriority(Thread.MIN_PRIORITY);
+            getUiHandler().postDelayed(sPriorityResetRunnable, timeout);
+        }
     }
 
     /**
@@ -156,11 +160,10 @@ public final class ThreadUtils {
      * by reduceGeckoPriority.
      */
     public static void resetGeckoPriority() {
-        if (sPriorityResetRunnable != null) {
+        if (sIsGeckoPriorityReduced) {
+            sIsGeckoPriorityReduced = false;
             sGeckoThread.setPriority(Thread.NORM_PRIORITY);
-
             getUiHandler().removeCallbacks(sPriorityResetRunnable);
-            sPriorityResetRunnable = null;
         }
     }
 }

@@ -46,10 +46,6 @@ public:
 
     virtual bool QueueBuffer(ANativeWindowBuffer* handle);
 
-    virtual void UpdateFBSurface(EGLDisplay dpy, EGLSurface sur);
-
-    virtual void SetFBReleaseFd(int fd);
-
 private:
     hw_module_t const*        mModule;
     hwc_composer_device_t*    mHwc;

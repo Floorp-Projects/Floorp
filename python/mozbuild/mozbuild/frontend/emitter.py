@@ -228,6 +228,7 @@ class TreeMetadataEmitter(LoggingMixin):
         test_manifests = dict(
             A11Y=('a11y', 'testing/mochitest/a11y', True),
             BROWSER_CHROME=('browser-chrome', 'testing/mochitest/browser', True),
+            METRO_CHROME=('metro-chrome', 'testing/mochitest/metro', True),
             MOCHITEST=('mochitest', 'testing/mochitest/tests', True),
             MOCHITEST_CHROME=('chrome', 'testing/mochitest/chrome', True),
             WEBRTC_SIGNALLING_TEST=('steeplechase', 'steeplechase', True),

@@ -34,9 +34,9 @@ splitPath.push('mochitest');
 const mochitestPath = splitPath.join('/') + '/';
 
 [
-  "BookmarksHelper.js",
-  "HistoryHelper.js",
-  "ViewStateHelper.js"
+  "helpers/BookmarksHelper.js",
+  "helpers/HistoryHelper.js",
+  "helpers/ViewStateHelper.js"
 ].forEach(function(lib) {
   Services.scriptloader.loadSubScript(mochitestPath + lib, this);
 }, this);

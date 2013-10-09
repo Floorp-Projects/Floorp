@@ -241,7 +241,7 @@ class TestEmitterBasic(unittest.TestCase):
         objs = [o for o in self.read_topsrcdir(reader)
                 if isinstance(o, TestManifest)]
 
-        self.assertEqual(len(objs), 5)
+        self.assertEqual(len(objs), 6)
 
         metadata = {
             'a11y.ini': {
@@ -261,6 +261,13 @@ class TestEmitterBasic(unittest.TestCase):
                     'test_browser.js',
                     'support1',
                     'support2',
+                },
+            },
+            'metro.ini': {
+                'flavor': 'metro-chrome',
+                'installs': {
+                    'metro.ini',
+                    'test_metro.js',
                 },
             },
             'mochitest.ini': {

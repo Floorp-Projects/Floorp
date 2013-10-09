@@ -477,6 +477,10 @@ VARIABLES = {
         """List of manifest files defining browser chrome tests.
         """, None),
 
+    'METRO_CHROME_MANIFESTS': (StrictOrderingOnAppendList, list, [],
+        """List of manifest files defining metro browser chrome tests.
+        """, None),
+
     'MOCHITEST_MANIFESTS': (StrictOrderingOnAppendList, list, [],
         """List of manifest files defining mochitest tests.
         """, None),
