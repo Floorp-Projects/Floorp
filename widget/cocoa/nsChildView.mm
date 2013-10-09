@@ -2039,6 +2039,17 @@ nsChildView::PreRender(LayerManager* aManager)
 }
 
 void
+nsChildView::PostRender(LayerManager* aManager)
+{
+  nsAutoPtr<GLManager> manager(GLManager::CreateGLManager(aManager));
+  if (!manager) {
+    return;
+  }
+  NSOpenGLContext *glContext = (NSOpenGLContext *)manager->gl()->GetNativeData(GLContext::NativeGLContext);
+  [(ChildView*)mView postRender:glContext];
+}
+
+void
 nsChildView::DrawWindowOverlay(LayerManager* aManager, nsIntRect aRect)
 {
   nsAutoPtr<GLManager> manager(GLManager::CreateGLManager(aManager));
@@ -2443,6 +2454,8 @@ nsChildView::DoRemoteComposition(const nsIntRect& aRenderRect)
   DrawWindowOverlay(mGLPresenter, aRenderRect);
 
   mGLPresenter->EndFrame();
+
+  [(ChildView*)mView postRender:mGLPresenter->GetNSOpenGLContext()];
 }
 
 #ifdef ACCESSIBILITY
@@ -2890,9 +2903,20 @@ NSEvent* gLastDragMouseDownEvent = nil;
     [self updateGLContext];
   }
 
+  CGLLockContext((CGLContextObj)[aGLContext CGLContextObj]);
+
   return true;
 
   NS_OBJC_END_TRY_ABORT_BLOCK_RETURN(false);
+}
+
+- (void)postRender:(NSOpenGLContext *)aGLContext
+{
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
+
+  CGLUnlockContext((CGLContextObj)[aGLContext CGLContextObj]);
+
+  NS_OBJC_END_TRY_ABORT_BLOCK;
 }
 
 - (void)dealloc
@@ -3227,8 +3251,10 @@ NSEvent* gLastDragMouseDownEvent = nil;
 -(void)updateGLContext
 {
   if (mGLContext) {
+    CGLLockContext((CGLContextObj)[mGLContext CGLContextObj]);
     [mGLContext setView:self];
     [mGLContext update];
+    CGLUnlockContext((CGLContextObj)[mGLContext CGLContextObj]);
   }
 }
 
