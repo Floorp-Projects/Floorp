@@ -326,7 +326,9 @@ LayerManagerComposite::Render()
 
   {
     PROFILER_LABEL("LayerManagerComposite", "PreRender");
-    mCompositor->GetWidget()->PreRender(this);
+    if (!mCompositor->GetWidget()->PreRender(this)) {
+      return;
+    }
   }
 
   nsIntRect clipRect;
