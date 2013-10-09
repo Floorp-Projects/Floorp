@@ -6,6 +6,7 @@
 #ifndef mozilla_dom_workers_workerprivate_h__
 #define mozilla_dom_workers_workerprivate_h__
 
+#include "mozilla/Attributes.h"
 #include "Workers.h"
 
 #include "nsIContentSecurityPolicy.h"
@@ -17,13 +18,13 @@
 #include "jsapi.h"
 #include "mozilla/Assertions.h"
 #include "mozilla/CondVar.h"
+#include "mozilla/Mutex.h"
 #include "mozilla/TimeStamp.h"
 #include "nsAutoPtr.h"
 #include "nsCOMPtr.h"
 #include "nsEventQueue.h"
 #include "nsStringGlue.h"
 #include "nsTArray.h"
-#include "nsThreadUtils.h"
 #include "nsTPriorityQueue.h"
 #include "StructuredCloneTags.h"
 
@@ -37,8 +38,9 @@ class nsIDocument;
 class nsIMemoryMultiReporter;
 class nsIPrincipal;
 class nsIScriptContext;
-class nsITimer;
 class nsIURI;
+class nsPIDOMWindow;
+class nsITimer;
 class nsIXPCScriptNotify;
 
 namespace JS {
@@ -236,8 +238,6 @@ public:
 template <class Derived>
 class WorkerPrivateParent : public EventTarget
 {
-  class SynchronizeAndResumeRunnable;
-
 public:
   struct LocationInfo
   {
@@ -276,7 +276,6 @@ private:
 
   // Only used for top level workers.
   nsTArray<nsRefPtr<WorkerRunnable> > mQueuedRunnables;
-  nsRevocableEventPtr<SynchronizeAndResumeRunnable> mSynchronizeRunnable;
 
   // Only for ChromeWorkers without window and only touched on the main thread.
   nsTArray<nsCString> mHostObjectURIs;
