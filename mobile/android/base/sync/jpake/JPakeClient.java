@@ -308,7 +308,7 @@ public class JPakeClient {
     payload.put(Constants.JSON_KEY_CIPHERTEXT, message64);
     payload.put(Constants.JSON_KEY_IV, iv64);
     if (makeHmac) {
-      String hmacHex = Utils.byte2hex(encrypted.getHMAC());
+      String hmacHex = Utils.byte2Hex(encrypted.getHMAC());
       payload.put(Constants.JSON_KEY_HMAC, hmacHex);
     }
     return payload;

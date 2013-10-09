@@ -19,7 +19,7 @@
 class nsAppShell : public nsBaseAppShell
 {
 public:
-  nsAppShell() : mEventWnd(NULL) {}
+  nsAppShell() : mEventWnd(nullptr) {}
 
   nsresult Init();
 

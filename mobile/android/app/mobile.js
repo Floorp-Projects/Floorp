@@ -245,6 +245,7 @@ pref("browser.search.log", false);
 // ordering of search engines in the engine list.
 pref("browser.search.order.1", "chrome://browser/locale/region.properties");
 pref("browser.search.order.2", "chrome://browser/locale/region.properties");
+pref("browser.search.order.3", "chrome://browser/locale/region.properties");
 
 // disable updating
 pref("browser.search.update", false);
@@ -587,7 +588,6 @@ pref("browser.safebrowsing.reportPhishURL", "http://%LOCALE%.phish-report.mozill
 pref("browser.safebrowsing.reportMalwareURL", "http://%LOCALE%.malware-report.mozilla.com/?hl=%LOCALE%");
 pref("browser.safebrowsing.reportMalwareErrorURL", "http://%LOCALE%.malware-error.mozilla.com/?hl=%LOCALE%");
 
-pref("browser.safebrowsing.warning.infoURL", "http://www.mozilla.com/%LOCALE%/firefox/phishing-protection/");
 pref("browser.safebrowsing.malware.reportURL", "http://safebrowsing.clients.google.com/safebrowsing/diagnostic?client=%NAME%&hl=%LOCALE%&site=");
 
 pref("browser.safebrowsing.id", @MOZ_APP_UA_NAME@);

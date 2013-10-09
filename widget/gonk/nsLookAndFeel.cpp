@@ -17,6 +17,8 @@
 #include "nsLookAndFeel.h"
 #include "nsStyleConsts.h"
 #include "gfxFont.h"
+#include "gfxFontConstants.h"
+#include "mozilla/gfx/2D.h"
 #include "cutils/properties.h"
 
 static const PRUnichar UNICODE_BULLET = 0x2022;

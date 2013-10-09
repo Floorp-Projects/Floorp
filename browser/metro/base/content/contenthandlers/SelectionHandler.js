@@ -322,17 +322,6 @@ var SelectionHandler = {
    * whether the browser deck needs repositioning.
    */
   _repositionInfoRequest: function _repositionInfoRequest(aJsonMsg) {
-    if (!this.isActive) {
-      Util.dumpLn("unexpected: repositionInfoRequest but selection isn't active.");
-      this.sendAsync("Content:RepositionInfoResponse", { reposition: false });
-      return;
-    }
-    
-    if (!this.targetIsEditable) {
-      Util.dumpLn("unexpected: repositionInfoRequest but targetIsEditable is false.");
-      this.sendAsync("Content:RepositionInfoResponse", { reposition: false });
-    }
-    
     let result = this._calcNewContentPosition(aJsonMsg.viewHeight);
 
     // no repositioning needed
@@ -422,9 +411,10 @@ var SelectionHandler = {
    * distance content should be raised to center the target element.
    */
   _calcNewContentPosition: function _calcNewContentPosition(aNewViewHeight) {
-    // We don't support this on non-editable elements
-    if (!this._targetIsEditable) {
-      return 0;
+    // We have no target element but the keyboard is up
+    // so lets not cover content
+    if (!this._cache || !this._cache.element) {
+      return Services.metro.keyboardHeight;
     }
 
     let position = Util.centerElementInView(aNewViewHeight, this._cache.element);

@@ -61,8 +61,8 @@ public class DSACryptoImplementation {
       byte[] second = new byte[signature.length / 2];
       System.arraycopy(signature, 0, first, 0, first.length);
       System.arraycopy(signature, first.length, second, 0, second.length);
-      BigInteger r = new BigInteger(Utils.byte2hex(first), 16);
-      BigInteger s = new BigInteger(Utils.byte2hex(second), 16);
+      BigInteger r = new BigInteger(Utils.byte2Hex(first), 16);
+      BigInteger s = new BigInteger(Utils.byte2Hex(second), 16);
       // This is awful, but encoding an extra 0 byte works better on devices.
       byte[] encoded = ASNUtils.encodeTwoArraysToASN1(
           Utils.hex2Byte(r.toString(16), 1 + SIGNATURE_LENGTH_BYTES / 2),
