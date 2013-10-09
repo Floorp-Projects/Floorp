@@ -210,7 +210,7 @@ public class CryptoRecord extends Record {
     CryptoInfo info = CryptoInfo.encrypt(cleartextBytes, keyBundle);
     String message = new String(Base64.encodeBase64(info.getMessage()));
     String iv      = new String(Base64.encodeBase64(info.getIV()));
-    String hmac    = Utils.byte2hex(info.getHMAC());
+    String hmac    = Utils.byte2Hex(info.getHMAC());
     ExtendedJSONObject ciphertext = new ExtendedJSONObject();
     ciphertext.put(KEY_CIPHERTEXT, message);
     ciphertext.put(KEY_HMAC, hmac);
