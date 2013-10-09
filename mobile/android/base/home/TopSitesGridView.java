@@ -95,7 +95,9 @@ public class TopSitesGridView extends GridView {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
                 TopSitesGridItemView row = (TopSitesGridItemView) view;
-                String url = row.getUrl();
+
+                // Decode "user-entered" URLs before loading them.
+                String url = TopSitesPage.decodeUserEnteredUrl(row.getUrl());
 
                 // If the url is empty, the user can pin a site.
                 // If not, navigate to the page given by the url.
