@@ -5,14 +5,14 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "nsIDOMApplicationRegistry.idl"
+#include "domstubs.idl"
 
 /**
  * We expose Gecko-internal helpers related to "web apps" through this
  * sub-interface.
  */
-[scriptable, uuid(11322d0c-e98e-442d-97a6-8b197d5b888e)]
-interface mozIApplication: mozIDOMApplication
+[scriptable, uuid(7bd62430-c374-49eb-be1b-ce821a180360)]
+interface mozIApplication: nsISupports
 {
   /* Return true if this app has |permission|. */
   boolean hasPermission(in string permission);
@@ -22,6 +22,12 @@ interface mozIApplication: mozIDOMApplication
 
   /* Returns the uuid of the app. */
   readonly attribute DOMString id;
+
+  /* Returns the origin of the app. */
+  readonly attribute DOMString origin;
+
+  /* Returns the manifest url of the app. */
+  readonly attribute DOMString manifestURL;
 
   /* Returns the local id of the app. */
   readonly attribute unsigned long localId;

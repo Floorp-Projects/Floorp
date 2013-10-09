@@ -196,17 +196,6 @@ GonkDisplayICS::QueueBuffer(ANativeWindowBuffer *buf)
     return !window->queueBuffer(window, buf);
 }
 
-void
-GonkDisplayICS::UpdateFBSurface(EGLDisplay dpy, EGLSurface sur)
-{
-    eglSwapBuffers(dpy, sur);
-}
-
-void
-GonkDisplayICS::SetFBReleaseFd(int fd)
-{
-}
-
 __attribute__ ((visibility ("default")))
 GonkDisplay*
 GetGonkDisplay()

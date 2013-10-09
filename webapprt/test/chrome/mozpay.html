@@ -1,0 +1,45 @@
+<!DOCTYPE HTML>
+<html>
+  <head>
+    <meta charset="utf-8">
+  </head>
+  <body>
+    <script>
+    // Payload
+    //  {
+    //    "aud": "mockpayprovider.phpfogapp.com",
+    //    "iss": "Enter you app key here!",
+    //    "request": {
+    //      "name": "Piece of Cake",
+    //      "price": "10.50",
+    //      "priceTier": 1,
+    //      "productdata": "transaction_id=86",
+    //      "currencyCode": "USD",
+    //      "description": "Virtual chocolate cake to fill your virtual tummy"
+    //    },
+    //    "exp": 1352232792,
+    //    "iat": 1352229192,
+    //    "typ": "mock/payments/inapp/v1"
+    //  }
+    var jwt = "eyJhbGciOiAiSFMyNTYiLCAidHlwIjogIkpXVCJ9.eyJhdWQiOiAibW9j" +
+              "a3BheXByb3ZpZGVyLnBocGZvZ2FwcC5jb20iLCAiaXNzIjogIkVudGVyI" +
+              "HlvdSBhcHAga2V5IGhlcmUhIiwgInJlcXVlc3QiOiB7Im5hbWUiOiAiUG" +
+              "llY2Ugb2YgQ2FrZSIsICJwcmljZSI6ICIxMC41MCIsICJwcmljZVRpZXI" +
+              "iOiAxLCAicHJvZHVjdGRhdGEiOiAidHJhbnNhY3Rpb25faWQ9ODYiLCAi" +
+              "Y3VycmVuY3lDb2RlIjogIlVTRCIsICJkZXNjcmlwdGlvbiI6ICJWaXJ0d" +
+              "WFsIGNob2NvbGF0ZSBjYWtlIHRvIGZpbGwgeW91ciB2aXJ0dWFsIHR1bW" +
+              "15In0sICJleHAiOiAxMzUyMjMyNzkyLCAiaWF0IjogMTM1MjIyOTE5Miw" +
+              "gInR5cCI6ICJtb2NrL3BheW1lbnRzL2luYXBwL3YxIn0.QZxc62USCy4U" +
+              "IyKIC1TKelVhNklvk-Ou1l_daKntaFI";
+
+    var request = navigator.mozPay(jwt);
+    request.onsuccess = function onsuccess() {
+      document.getElementById("msg").textContent = "Success.";
+    };
+    request.onerror = function onerror() {
+      document.getElementById("msg").textContent = "Failure.";
+    };
+    </script>
+    <p id="msg">Webapp waiting to be paid...</p>
+  </body>
+</html>

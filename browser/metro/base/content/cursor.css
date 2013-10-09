@@ -5,14 +5,6 @@
 @namespace xul url(http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul);
 @namespace html url(http://www.w3.org/1999/xhtml);
 
-xul|*:-moz-system-metric(touch-enabled) {
-  cursor: none !important;
-}
-
-html|*:-moz-system-metric(touch-enabled) {
-  cursor: none !important;
-}
-
 /* For touch input, *all* select boxes use the SelectHelper popup. */
 select option, select optgroup {
   pointer-events: none;

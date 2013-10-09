@@ -3,6 +3,7 @@
 
 A11Y_MANIFESTS += ['a11y.ini']
 BROWSER_CHROME_MANIFESTS += ['browser.ini']
+METRO_CHROME_MANIFESTS += ['metro.ini']
 MOCHITEST_MANIFESTS += ['mochitest.ini']
 MOCHITEST_CHROME_MANIFESTS += ['chrome.ini']
 XPCSHELL_TESTS_MANIFESTS += ['xpcshell.ini']

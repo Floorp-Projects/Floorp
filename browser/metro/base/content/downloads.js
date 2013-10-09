@@ -14,6 +14,7 @@ var MetroDownloadsView = {
    */
   _downloadCount: 0,
   _downloadsInProgress: 0,
+  _lastDownload: null,
   _inited: false,
   _progressAlert: null,
   _lastSec: Infinity,
@@ -54,10 +55,8 @@ var MetroDownloadsView = {
     Services.obs.addObserver(this, "dl-done", true);
     Services.obs.addObserver(this, "dl-run", true);
     Services.obs.addObserver(this, "dl-failed", true);
-    Services.obs.addObserver(this, "dl-request", true);
 
     this._notificationBox = Browser.getNotificationBox();
-    this._notificationBox.addEventListener('AlertClose', this.handleEvent, true);
 
     this._progress = new DownloadProgressListener(this);
     this.manager.addListener(this._progress);
@@ -75,7 +74,6 @@ var MetroDownloadsView = {
       Services.obs.removeObserver(this, "dl-done");
       Services.obs.removeObserver(this, "dl-run");
       Services.obs.removeObserver(this, "dl-failed");
-      Services.obs.removeObserver(this, "dl-request");
     }
   },
 
@@ -93,7 +91,7 @@ var MetroDownloadsView = {
       }
     }
     if (this.manager.activeDownloadCount) {
-      Services.obs.notifyObservers(null, "dl-request", "");
+      ContextUI.displayNavbar();
     }
   },
 
@@ -233,7 +231,7 @@ var MetroDownloadsView = {
       this._notificationBox.PRIORITY_WARNING_HIGH);
   },
 
-  _showDownloadCompleteNotification: function (aDownload) {
+  _showDownloadCompleteNotification: function () {
     let message = "";
     let showInFilesButtonText = Strings.browser.GetStringFromName("downloadShowInFiles");
 
@@ -242,9 +240,10 @@ var MetroDownloadsView = {
         label: showInFilesButtonText,
         accessKey: "",
         callback: function() {
-          let fileURI = aDownload.target;
+          let fileURI = MetroDownloadsView._lastDownload.target;
           let file = MetroDownloadsView._getLocalFile(fileURI);
           file.reveal();
+          MetroDownloadsView._resetCompletedDownloads();
         }
       }
     ];
@@ -257,22 +256,24 @@ var MetroDownloadsView = {
       let runButtonText =
         Strings.browser.GetStringFromName("downloadRun");
       message = Strings.browser.formatStringFromName("alertDownloadsDone2",
-        [aDownload.displayName], 1);
+        [this._lastDownload.displayName], 1);
 
       buttons.unshift({
         isDefault: true,
         label: runButtonText,
         accessKey: "",
         callback: function() {
-          MetroDownloadsView.openDownload(aDownload);
+          MetroDownloadsView.openDownload(MetroDownloadsView._lastDownload);
+          MetroDownloadsView._resetCompletedDownloads();
         }
       });
     }
+    this._removeNotification("download-complete");
     this.showNotification("download-complete", message, buttons,
       this._notificationBox.PRIORITY_WARNING_MEDIUM);
   },
 
-  _showDownloadCompleteToast: function (aDownload) {
+  _showDownloadCompleteToast: function () {
     let name = "DownloadComplete";
     let msg = "";
     let title = "";
@@ -287,36 +288,38 @@ var MetroDownloadsView = {
         observe: function (aSubject, aTopic, aData) {
           switch (aTopic) {
             case "alertclickcallback":
-              let fileURI = aDownload.target;
+              let fileURI = MetroDownloadsView._lastDownload.target;
               let file = MetroDownloadsView._getLocalFile(fileURI);
               file.reveal();
-
-              let downloadCompleteNotification =
-                MetroDownloadsView._notificationBox.getNotificationWithValue("download-complete");
-              MetroDownloadsView._notificationBox.removeNotification(downloadCompleteNotification);
+              MetroDownloadsView._resetCompletedDownloads();
               break;
           }
         }
       }
     } else {
       title = Strings.browser.formatStringFromName("alertDownloadsDone",
-        [aDownload.displayName], 1);
+        [this._lastDownload.displayName], 1);
       msg = Strings.browser.GetStringFromName("downloadRunNow");
       observer = {
         observe: function (aSubject, aTopic, aData) {
           switch (aTopic) {
             case "alertclickcallback":
-              MetroDownloadsView.openDownload(aDownload);
-
-              let downloadCompleteNotification =
-                MetroDownloadsView._notificationBox.getNotificationWithValue("download-complete");
-              MetroDownloadsView._notificationBox.removeNotification(downloadCompleteNotification);
+              MetroDownloadsView.openDownload(MetroDownloadsView._lastDownload);
+              MetroDownloadsView._resetCompletedDownloads();
               break;
           }
         }
       }
     }
     this.showAlert(name, msg, title, null, observer);
+  },
+
+  _resetCompletedDownloads: function () {
+    this._progressNotificationInfo.clear();
+    this._downloadCount = 0;
+    this._lastDownload = null;
+    this._downloadProgressIndicator.reset();
+    this._removeNotification("download-complete");
   },
 
   _updateCircularProgressMeter: function dv_updateCircularProgressMeter() {
@@ -381,14 +384,24 @@ var MetroDownloadsView = {
   },
 
   onDownloadButton: function dv_onDownloadButton() {
-    if (this._progressNotification) {
-      let progressBar = this._notificationBox.getNotificationWithValue("download-progress");
-      if (progressBar) {
-        this._notificationBox.removeNotification(progressBar);
-      } else {
+    if (this._downloadsInProgress) {
+      if (!this._removeNotification("download-progress")) {
         this.updateInfobar();
       }
+    } else if (this._downloadCount) {
+      if (!this._removeNotification("download-complete")) {
+        this._showDownloadCompleteNotification();
+      }
     }
+  },
+
+  _removeNotification: function (aValue) {
+    let notification = this._notificationBox.getNotificationWithValue(aValue);
+    if (!notification) {
+      return false;
+    }
+    this._notificationBox.removeNotification(notification);
+    return true;
   },
 
   updateInfobar: function dv_updateInfobar() {
@@ -415,6 +428,8 @@ var MetroDownloadsView = {
       this._progressNotification =
         this.showNotification("download-progress", message, buttons,
         this._notificationBox.PRIORITY_WARNING_LOW);
+
+      ContextUI.displayNavbar();
     } else {
       this._progressNotification.label = message;
     }
@@ -442,17 +457,6 @@ var MetroDownloadsView = {
     }
   },
 
-  handleEvent: function handleEvent(aEvent) {
-    switch (aEvent.type) {
-      case "AlertClose":
-        if (aEvent.notification.value == "download-complete" &&
-            !MetroDownloadsView._notificationBox.getNotificationWithValue("download-complete")) {
-          MetroDownloadsView._downloadProgressIndicator.reset();
-        }
-        break;
-    }
-  },
-
   observe: function (aSubject, aTopic, aData) {
     let message = "";
     let msgTitle = "";
@@ -470,6 +474,7 @@ var MetroDownloadsView = {
       case "dl-done":
         this._downloadsInProgress--;
         download = aSubject.QueryInterface(Ci.nsIDownload);
+        this._lastDownload = download;
         let runAfterDownload = this._runDownloadBooleanMap.get(download.targetFile.path);
         if (runAfterDownload) {
           this.openDownload(download);
@@ -478,11 +483,9 @@ var MetroDownloadsView = {
         this._runDownloadBooleanMap.delete(download.targetFile.path);
         if (this._downloadsInProgress == 0) {
           if (this._downloadCount > 1 || !runAfterDownload) {
-            this._showDownloadCompleteToast(download);
-            this._showDownloadCompleteNotification(download);
+            this._showDownloadCompleteToast();
+            this._showDownloadCompleteNotification();
           }
-          this._progressNotificationInfo.clear();
-          this._downloadCount = 0;
           this._notificationBox.removeNotification(this._progressNotification);
           this._progressNotification = null;
         }
@@ -490,11 +493,6 @@ var MetroDownloadsView = {
       case "dl-failed":
         download = aSubject.QueryInterface(Ci.nsIDownload);
         this._showDownloadFailedNotification(download);
-        break;
-      case "dl-request":
-        setTimeout(function() {
-          ContextUI.displayNavbar();
-        }, 1000);
         break;
     }
   },
