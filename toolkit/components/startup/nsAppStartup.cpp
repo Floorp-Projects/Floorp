@@ -107,8 +107,6 @@ public:
     // Tell the appshell to exit
     mService->mAppShell->Exit();
 
-    // We're done "shutting down".
-    mService->mShuttingDown = false;
     mService->mRunning = false;
     return NS_OK;
   }

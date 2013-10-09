@@ -481,12 +481,16 @@ VARIABLES = {
         """List of manifest files defining metro browser chrome tests.
         """, None),
 
+    'MOCHITEST_CHROME_MANIFESTS': (StrictOrderingOnAppendList, list, [],
+        """List of manifest files defining mochitest chrome tests.
+        """, None),
+
     'MOCHITEST_MANIFESTS': (StrictOrderingOnAppendList, list, [],
         """List of manifest files defining mochitest tests.
         """, None),
 
-    'MOCHITEST_CHROME_MANIFESTS': (StrictOrderingOnAppendList, list, [],
-        """List of manifest files defining mochitest chrome tests.
+    'MOCHITEST_WEBAPPRT_CHROME_MANIFESTS': (StrictOrderingOnAppendList, list, [],
+        """List of manifest files defining webapprt mochitest chrome tests.
         """, None),
 
     'WEBRTC_SIGNALLING_TEST_MANIFESTS': (StrictOrderingOnAppendList, list, [],
