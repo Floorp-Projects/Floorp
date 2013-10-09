@@ -6,6 +6,8 @@
 mozilla_StartupTimeline_Event(PROCESS_CREATION, "process")
 mozilla_StartupTimeline_Event(START, "start")
 mozilla_StartupTimeline_Event(MAIN, "main")
+mozilla_StartupTimeline_Event(SELECT_PROFILE, "selectProfile")
+mozilla_StartupTimeline_Event(AFTER_PROFILE_LOCKED, "afterProfileLocked")
 // Record the beginning and end of startup crash detection to compare with crash stats to know whether
 // detection should be improved to start or end sooner.
 mozilla_StartupTimeline_Event(STARTUP_CRASH_DETECTION_BEGIN, "startupCrashDetectionBegin")
