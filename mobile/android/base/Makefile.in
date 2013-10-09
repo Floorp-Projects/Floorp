@@ -605,14 +605,10 @@ res/values/strings.xml: $(call mkdir_deps,res/values)
 # rebuild gecko.ap_ if any of them change.
 MULTILOCALE_STRINGS_XML_FILES := $(wildcard res/values-*/strings.xml)
 all_resources = \
-  res/drawable-mdpi/icon.png \
-  res/drawable-hdpi/icon.png \
-  res/drawable-xhdpi/icon.png \
-  res/drawable-xxhdpi/icon.png \
-  res/values/strings.xml \
   $(MULTILOCALE_STRINGS_XML_FILES) \
   AndroidManifest.xml \
   $(subst resources/,res/,$(ANDROID_RESFILES)) \
+  $(ANDROID_GENERATED_RESFILES) \
   $(NULL)
 
 R.java: $(all_resources)
