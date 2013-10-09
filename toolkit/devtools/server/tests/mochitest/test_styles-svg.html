@@ -1,0 +1,75 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=921191
+Bug 921191 - allow inspection/editing of SVG elements' CSS properties
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug </title>
+
+  <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css">
+  <script type="application/javascript;version=1.8" src="inspector-helpers.js"></script>
+  <script type="application/javascript;version=1.8">
+Components.utils.import("resource://gre/modules/devtools/Loader.jsm");
+
+const promise = devtools.require("sdk/core/promise");
+const inspector = devtools.require("devtools/server/actors/inspector");
+
+window.onload = function() {
+  SimpleTest.waitForExplicitFinish();
+  runNextTest();
+}
+
+var gWalker = null;
+var gStyles = null;
+var gClient = null;
+
+addTest(function setup() {
+  let url = document.getElementById("inspectorContent").href;
+  attachURL(url, function(err, client, tab, doc) {
+    gInspectee = doc;
+    let {InspectorFront} = devtools.require("devtools/server/actors/inspector");
+    let inspector = InspectorFront(client, tab);
+    promiseDone(inspector.getWalker().then(walker => {
+      ok(walker, "getWalker() should return an actor.");
+      gClient = client;
+      gWalker = walker;
+      return inspector.getPageStyle();
+    }).then(styles => {
+      gStyles = styles;
+    }).then(runNextTest));
+  });
+});
+
+addTest(function inheritedUserStyles() {
+  let node = node;
+  promiseDone(gWalker.querySelector(gWalker.rootNode, "#svgcontent rect").then(node => {
+    return gStyles.getApplied(node, { inherited: true, filter: "user" });
+  }).then(applied => {
+    is(applied.length, 3, "Should have 3 rules");
+    is(applied[1].rule.cssText, "fill: rgb(1, 2, 3);", "cssText is right");
+  }).then(runNextTest));
+});
+
+addTest(function cleanup() {
+  delete gStyles;
+  delete gWalker;
+  delete gClient;
+  runNextTest();
+});
+
+  </script>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=921191">Mozilla Bug 921191</a>
+<a id="inspectorContent" target="_blank" href="inspector-styles-data.html">Test Document</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+
+</div>
+<pre id="test">
+</pre>
+</body>
+</html>
