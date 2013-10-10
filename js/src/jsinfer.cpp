@@ -2455,7 +2455,7 @@ TypeObject::matchDefiniteProperties(HandleObject obj)
     return true;
 }
 
-inline void
+static inline void
 InlineAddTypeProperty(ExclusiveContext *cx, TypeObject *obj, jsid id, Type type)
 {
     JS_ASSERT(id == IdToTypeId(id));

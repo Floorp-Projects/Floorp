@@ -3261,14 +3261,14 @@ nsXPCComponents_Utils::CanSetProperty(const nsIID * iid, const PRUnichar *proper
     return NS_OK;
 }
 
-nsresult
+static nsresult
 GetBoolOption(JSContext* cx, uint32_t aOption, bool* aValue)
 {
     *aValue = !!(JS_GetOptions(cx) & aOption);
     return NS_OK;
 }
 
-nsresult
+static nsresult
 SetBoolOption(JSContext* cx, uint32_t aOption, bool aValue)
 {
     uint32_t options = JS_GetOptions(cx);

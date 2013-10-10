@@ -101,18 +101,18 @@ static const char kXPConnectServiceContractID[] = "@mozilla.org/js/xpc/XPConnect
 #define EXITCODE_RUNTIME_ERROR 3
 #define EXITCODE_FILE_NOT_FOUND 4
 
-FILE *gOutFile = NULL;
-FILE *gErrFile = NULL;
-FILE *gInFile = NULL;
+static FILE *gOutFile = NULL;
+static FILE *gErrFile = NULL;
+static FILE *gInFile = NULL;
 
-int gExitCode = 0;
-bool gIgnoreReportedErrors = false;
-bool gQuitting = false;
+static int gExitCode = 0;
+static bool gIgnoreReportedErrors = false;
+static bool gQuitting = false;
 static bool reportWarnings = true;
 static bool compileOnly = false;
 
-JSPrincipals *gJSPrincipals = nullptr;
-nsAutoString *gWorkingDirectory = nullptr;
+static JSPrincipals *gJSPrincipals = nullptr;
+static nsAutoString *gWorkingDirectory = nullptr;
 
 static bool
 GetLocationProperty(JSContext *cx, HandleObject obj, HandleId id, MutableHandleValue vp)
@@ -753,7 +753,7 @@ File(JSContext *cx, unsigned argc, jsval *vp)
   return true;
 }
 
-Value sScriptedOperationCallback = UndefinedValue();
+static Value sScriptedOperationCallback = UndefinedValue();
 
 static bool
 XPCShellOperationCallback(JSContext *cx)
@@ -978,7 +978,7 @@ typedef enum JSShellErrNum {
     JSShellErr_Limit
 } JSShellErrNum;
 
-const JSErrorFormatString jsShell_ErrorFormatString[JSShellErr_Limit] = {
+static const JSErrorFormatString jsShell_ErrorFormatString[JSShellErr_Limit] = {
 #define MSG_DEF(name, number, count, exception, format) \
     { format, count } ,
 #include "jsshell.msg"
@@ -1383,7 +1383,7 @@ nsXPCFunctionThisTranslator::TranslateThis(nsISupports *aInitialThis,
 
 #endif
 
-void
+static void
 XPCShellErrorReporter(JSContext *cx, const char *message, JSErrorReport *rep)
 {
     if (gIgnoreReportedErrors)

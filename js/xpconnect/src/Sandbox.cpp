@@ -384,7 +384,7 @@ CloneNonReflectorsWrite(JSContext *cx, JSStructuredCloneWriter *writer,
     return false;
 }
 
-const JSStructuredCloneCallbacks gForwarderStructuredCloneCallbacks = {
+static const JSStructuredCloneCallbacks gForwarderStructuredCloneCallbacks = {
     CloneNonReflectorsRead,
     CloneNonReflectorsWrite,
     nullptr
@@ -396,7 +396,7 @@ const JSStructuredCloneCallbacks gForwarderStructuredCloneCallbacks = {
  * to clone to, and that if val is an object is from the compartment we
  * clone from.
  */
-bool
+static bool
 CloneNonReflectors(JSContext *cx, MutableHandleValue val)
 {
     JSAutoStructuredCloneBuffer buffer;
@@ -1629,7 +1629,7 @@ xpc::EvalInSandbox(JSContext *cx, HandleObject sandboxArg, const nsAString& sour
     return NS_OK;
 }
 
-bool
+static bool
 NonCloningFunctionForwarder(JSContext *cx, unsigned argc, Value *vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
@@ -1648,7 +1648,7 @@ NonCloningFunctionForwarder(JSContext *cx, unsigned argc, Value *vp)
  * Forwards the call to the exported function. Clones all the non reflectors, ignores
  * the |this| argument.
  */
-bool
+static bool
 CloningFunctionForwarder(JSContext *cx, unsigned argc, Value *vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
