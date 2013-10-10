@@ -81,31 +81,6 @@ WatchpointMap::init()
     return map.init();
 }
 
-#ifdef JSGC_GENERATIONAL
-void
-Mark(JSTracer *trc, WatchKey *key, const char *name)
-{
-    MarkId(trc, &key->id, "WatchKey id");
-    MarkObject(trc, &key->object, "WatchKey id");
-}
-#endif
-
-static void
-WatchpointWriteBarrierPost(JSRuntime *rt, WatchpointMap::Map *map, const WatchKey &key,
-                           const WatchpointStackValue &val)
-{
-#ifdef JSGC_GENERATIONAL
-    if ((JSID_IS_OBJECT(key.id) && IsInsideNursery(rt, JSID_TO_OBJECT(key.id))) ||
-        (JSID_IS_STRING(key.id) && IsInsideNursery(rt, JSID_TO_STRING(key.id))) ||
-        IsInsideNursery(rt, key.object) ||
-        IsInsideNursery(rt, val.closure))
-    {
-        typedef HashKeyRef<WatchpointMap::Map, WatchKey> WatchKeyRef;
-        rt->gcStoreBuffer.putGeneric(WatchKeyRef(map, key));
-    }
-#endif
-}
-
 bool
 WatchpointMap::watch(JSContext *cx, HandleObject obj, HandleId id,
                      JSWatchPointHandler handler, HandleObject closure)
@@ -120,7 +95,11 @@ WatchpointMap::watch(JSContext *cx, HandleObject obj, HandleId id,
         js_ReportOutOfMemory(cx);
         return false;
     }
-    WatchpointWriteBarrierPost(cx->runtime(), &map, WatchKey(obj, id), w);
+    /*
+     * For generational GC, we don't need to post-barrier writes to the
+     * hashtable here because we mark all watchpoints as part of root marking in
+     * markAll().
+     */
     return true;
 }
 
@@ -243,7 +222,7 @@ WatchpointMap::markAll(JSTracer *trc)
         MarkObject(trc, &entry.value.closure, "Watchpoint::closure");
 
         if (prior.object != key.object || prior.id != key.id)
-            e.rekeyFront(prior, key);
+            e.rekeyFront(key);
     }
 }
 
