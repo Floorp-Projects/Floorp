@@ -103,7 +103,7 @@ define java_jar_template
 $(1): $(2) $(3)
 	$$(REPORT_BUILD)
 	@$$(NSINSTALL) -D $(1:.jar=)-classes
-	@$$(if $$(filter-out ./,$$(@D)),$$(NSINSTALL) -D $$(@D))
+	@$$(if $$(filter-out .,$$(@D)),$$(NSINSTALL) -D $$(@D))
 	$$(JAVAC) $$(JAVAC_FLAGS)\
     $(4)\
 		-d $(1:.jar=)-classes\
