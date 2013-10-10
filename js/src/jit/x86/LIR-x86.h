@@ -26,6 +26,9 @@ class LBox : public LInstructionHelper<2, 1, 0>
     MIRType type() const {
         return type_;
     }
+    const char *extraName() const {
+        return StringFromMIRType(type_);
+    }
 };
 
 class LBoxFloatingPoint : public LInstructionHelper<2, 1, 1>
@@ -45,6 +48,9 @@ class LBoxFloatingPoint : public LInstructionHelper<2, 1, 1>
 
     MIRType type() const {
         return type_;
+    }
+    const char *extraName() const {
+        return StringFromMIRType(type_);
     }
 };
 
@@ -83,6 +89,9 @@ class LUnboxFloatingPoint : public LInstructionHelper<1, 2, 0>
 
     MIRType type() const {
         return type_;
+    }
+    const char *extraName() const {
+        return StringFromMIRType(type_);
     }
 };
 
