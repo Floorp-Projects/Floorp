@@ -26,25 +26,35 @@ let gSeenWidgets = new Set();
 // The class by which we recognize wide widgets:
 const kWidePanelItemClass = "panel-combined-item";
 
+// TODO(bug 885574): Merge this constant with the one in CustomizeMode.jsm,
+//                   maybe just use a pref for this.
+const kColumnsInMenuPanel = 3;
+
 let PanelWideWidgetTracker = {
   // Listeners used to validate panel contents whenever they change:
   onWidgetAdded: function(aWidgetId, aArea, aPosition) {
     if (aArea == gPanel) {
+      gPanelPlacements = CustomizableUI.getWidgetIdsInArea(gPanel);
       let moveForward = this.shouldMoveForward(aWidgetId, aPosition);
-      this.adjustWidgets(aWidgetId, aPosition, moveForward);
+      this.adjustWidgets(aWidgetId, moveForward);
     }
   },
   onWidgetMoved: function(aWidgetId, aArea, aOldPosition, aNewPosition) {
     if (aArea == gPanel) {
+      gPanelPlacements = CustomizableUI.getWidgetIdsInArea(gPanel);
       let moveForward = this.shouldMoveForward(aWidgetId, aNewPosition);
-      this.adjustWidgets(aWidgetId, Math.min(aOldPosition, aNewPosition), moveForward);
+      this.adjustWidgets(aWidgetId, moveForward);
     }
   },
   onWidgetRemoved: function(aWidgetId, aPrevArea) {
     if (aPrevArea == gPanel) {
+      gPanelPlacements = CustomizableUI.getWidgetIdsInArea(gPanel);
       let pos = gPanelPlacements.indexOf(aWidgetId);
-      this.adjustWidgets(aWidgetId, pos);
+      this.adjustWidgets(aWidgetId, false);
     }
+  },
+  onWidgetReset: function(aWidgetId) {
+    gPanelPlacements = CustomizableUI.getWidgetIdsInArea(gPanel);
   },
   // Listener to keep abreast of any new nodes. We use the DOM one because
   // we need access to the actual node's classlist, so we can't use the ones above.
@@ -63,46 +73,31 @@ let PanelWideWidgetTracker = {
     gWideWidgets.delete(aWidgetId);
   },
   shouldMoveForward: function(aWidgetId, aPosition) {
-    let currentWidgetAtPosition = gPanelPlacements[aPosition];
+    let currentWidgetAtPosition = gPanelPlacements[aPosition + 1];
     return gWideWidgets.has(currentWidgetAtPosition) && !gWideWidgets.has(aWidgetId);
   },
-  adjustWidgets: function(aWidgetId, aPosition, aMoveForwards) {
-    if (this.adjustmentStack == 0) {
-      this.movingForward = aMoveForwards;
-    }
-    gPanelPlacements = CustomizableUI.getWidgetIdsInArea(gPanel);
-    // First, make a list of all the widgets that are *after* the insertion/moving point.
-    let widgetsAffected = [];
-    for (let widget of gWideWidgets) {
-      let wideWidgetPos = gPanelPlacements.indexOf(widget);
-      // This would just be wideWidgetPos >= aPosition, except that if we start re-arranging
-      // widgets, we would re-enter here because obviously the wide widget ends up in its
-      // own position, and we'd never stop trying to rearrange things.
-      // So instead, we check the wide widget is after the insertion point *or*
-      // this is the first move, and the widget is exactly on the insertion point
-      if (wideWidgetPos > aPosition || (!this.adjustmentStack && wideWidgetPos == aPosition)) {
-        widgetsAffected.push(widget);
-      }
-    }
-    if (!widgetsAffected.length) {
+  adjustWidgets: function(aWidgetId, aMoveForwards) {
+    if (this.adjusting) {
       return;
     }
-    widgetsAffected.sort(function(a, b) gPanelPlacements.indexOf(a) < gPanelPlacements.indexOf(b));
-    this.adjustmentStack++;
-    this.adjustPosition(widgetsAffected[0]);
-    this.adjustmentStack--;
-    if (this.adjustmentStack == 0) {
-      delete this.movingForward;
+    this.adjusting = true;
+    let widgetsAffected = [w for (w of gPanelPlacements) if (gWideWidgets.has(w))];
+    // If we're moving the wide widgets forwards (down/to the right in the panel)
+    // we want to start with the last widgets. Otherwise we move widgets over other wide
+    // widgets, which might mess up their order. Likewise, if moving backwards we should start with
+    // the first widget and work our way down/right from there.
+    let compareFn = aMoveForwards ? (function(a, b) a < b) : (function(a, b) a > b)
+    widgetsAffected.sort(function(a, b) compareFn(gPanelPlacements.indexOf(a),
+                                                  gPanelPlacements.indexOf(b)));
+    for (let widget of widgetsAffected) {
+      this.adjustPosition(widget, aMoveForwards);
     }
+    this.adjusting = false;
   },
   // This function is called whenever an item gets moved in the menu panel. It
-  // adjusts the position of widgets within the panel to reduce single-column
-  // buttons from being placed in a row by themselves.
-  adjustPosition: function(aWidgetId) {
-    // TODO(bug 885574): Merge this constant with the one in CustomizeMode.jsm,
-    //                   maybe just use a pref for this.
-    const kColumnsInMenuPanel = 3;
-
+  // adjusts the position of widgets within the panel to prevent "gaps" between
+  // wide widgets that could be filled up with single column widgets
+  adjustPosition: function(aWidgetId, aMoveForwards) {
     // Make sure that there are n % columns = 0 narrow buttons before the widget.
     let placementIndex = gPanelPlacements.indexOf(aWidgetId);
     let prevSiblingCount = 0;
@@ -140,20 +135,15 @@ let PanelWideWidgetTracker = {
 
     if (fixedPos !== null || prevSiblingCount % kColumnsInMenuPanel) {
       let desiredPos = (fixedPos !== null) ? fixedPos : gPanelPlacements.indexOf(aWidgetId);
-      if (this.movingForward) {
-        // Add 1 because we're moving forward, and we would otherwise count the widget itself.
-        desiredPos += (kColumnsInMenuPanel - (prevSiblingCount % kColumnsInMenuPanel)) + 1;
-      } else {
-        desiredPos -= prevSiblingCount % kColumnsInMenuPanel;
+      let desiredChange = -(prevSiblingCount % kColumnsInMenuPanel);
+      if (aMoveForwards && fixedPos == null) {
+        // +1 because otherwise we'd count ourselves:
+        desiredChange = kColumnsInMenuPanel + desiredChange + 1;
       }
-      // We don't need to move all of the items in this pass, because
-      // this move will trigger adjustPosition to get called again. The
-      // function will stop recursing when it finds that there is no
-      // more work that is needed.
+      desiredPos += desiredChange;
       CustomizableUI.moveWidgetWithinArea(aWidgetId, desiredPos);
     }
   },
-  adjustmentStack: 0,
   init: function() {
     // Initialize our local placements copy and register the listener
     gPanelPlacements = CustomizableUI.getWidgetIdsInArea(gPanel);
