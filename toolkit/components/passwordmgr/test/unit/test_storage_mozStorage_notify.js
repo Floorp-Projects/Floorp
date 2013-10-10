@@ -6,8 +6,6 @@
  */
 
 
-const STORAGE_TYPE = "mozStorage";
-
 Components.utils.import("resource://gre/modules/XPCOMUtils.jsm");
 
 var expectedNotification;
@@ -92,7 +90,7 @@ var testdesc = "Initial connection to storage module"
 LoginTest.deleteFile(OUTDIR, "signons-unittest-notify.sqlite");
 
 var storage;
-storage = LoginTest.initStorage(INDIR, "signons-empty.txt", OUTDIR, "signons-unittest-notify.sqlite");
+storage = LoginTest.initStorage(OUTDIR, "signons-unittest-notify.sqlite");
 var logins = storage.getAllLogins();
 do_check_eq(logins.length, 0);
 var disabledHosts = storage.getAllDisabledHosts();
