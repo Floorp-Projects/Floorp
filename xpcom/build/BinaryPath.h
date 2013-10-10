@@ -27,7 +27,7 @@ public:
     if (NS_FAILED(rv))
       return rv;
     WideCharToMultiByte(CP_UTF8, 0, wide_path, -1,
-                        aResult, MAXPATHLEN, NULL, NULL);
+                        aResult, MAXPATHLEN, nullptr, nullptr);
     return NS_OK;
   }
 
@@ -112,7 +112,7 @@ private:
         found = true;
         break;
       }
-      token = strtok(NULL, ":");
+      token = strtok(nullptr, ":");
     }
     free(pathdup);
     if (found)

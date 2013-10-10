@@ -174,7 +174,7 @@ uint64_t
 TimeStamp::ComputeProcessUptime()
 {
   struct timeval tv;
-  int rv = gettimeofday(&tv, NULL);
+  int rv = gettimeofday(&tv, nullptr);
 
   if (rv == -1) {
     return 0;
@@ -190,7 +190,7 @@ TimeStamp::ComputeProcessUptime()
 
   struct kinfo_proc proc;
   size_t bufferSize = sizeof(proc);
-  rv = sysctl(mib, mibLen, &proc, &bufferSize, NULL, 0);
+  rv = sysctl(mib, mibLen, &proc, &bufferSize, nullptr, 0);
 
   if (rv == -1)
     return 0;
