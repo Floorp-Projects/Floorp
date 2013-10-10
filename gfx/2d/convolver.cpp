@@ -29,7 +29,6 @@
 #include "convolver.h"
 
 #include <algorithm>
-#include "nsAlgorithm.h"
 
 #include "skia/SkTypes.h"
 
