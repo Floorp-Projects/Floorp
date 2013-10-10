@@ -101,7 +101,7 @@ BOOL
 UpdateServiceDescription(SC_HANDLE serviceHandle)
 {
   WCHAR updaterINIPath[MAX_PATH + 1];
-  if (!GetModuleFileNameW(NULL, updaterINIPath, 
+  if (!GetModuleFileNameW(nullptr, updaterINIPath, 
                           sizeof(updaterINIPath) /
                           sizeof(updaterINIPath[0]))) {
     LOG_WARN(("Could not obtain module filename when attempting to "
@@ -213,8 +213,8 @@ FixServicePath(SC_HANDLE service,
 
 
   if (!ChangeServiceConfigW(service, SERVICE_NO_CHANGE, SERVICE_NO_CHANGE,
-                            SERVICE_NO_CHANGE, fixedPath, NULL, NULL, NULL,
-                            NULL, NULL, NULL)) {
+                            SERVICE_NO_CHANGE, fixedPath, nullptr, nullptr,
+                            nullptr, nullptr, nullptr, nullptr)) {
     LOG_WARN(("Could not fix service path.  (%d)", GetLastError()));
     return FALSE;
   }
@@ -235,7 +235,7 @@ BOOL
 SvcInstall(SvcInstallAction action)
 {
   // Get a handle to the local computer SCM database with full access rights.
-  nsAutoServiceHandle schSCManager(OpenSCManager(NULL, NULL, 
+  nsAutoServiceHandle schSCManager(OpenSCManager(nullptr, nullptr, 
                                                  SC_MANAGER_ALL_ACCESS));
   if (!schSCManager) {
     LOG_WARN(("Could not open service manager.  (%d)", GetLastError()));
@@ -243,7 +243,7 @@ SvcInstall(SvcInstallAction action)
   }
 
   WCHAR newServiceBinaryPath[MAX_PATH + 1];
-  if (!GetModuleFileNameW(NULL, newServiceBinaryPath, 
+  if (!GetModuleFileNameW(nullptr, newServiceBinaryPath, 
                           sizeof(newServiceBinaryPath) / 
                           sizeof(newServiceBinaryPath[0]))) {
     LOG_WARN(("Could not obtain module filename when attempting to "
@@ -276,7 +276,7 @@ SvcInstall(SvcInstallAction action)
 
     // The service exists and we opened it
     DWORD bytesNeeded;
-    if (!QueryServiceConfigW(schService, NULL, 0, &bytesNeeded) && 
+    if (!QueryServiceConfigW(schService, nullptr, 0, &bytesNeeded) && 
         GetLastError() != ERROR_INSUFFICIENT_BUFFER) {
       LOG_WARN(("Could not determine buffer size for query service config.  (%d)",
                 GetLastError()));
@@ -439,7 +439,8 @@ SvcInstall(SvcInstallAction action)
       // We made a copy of ourselves to the existing location.
       // The tmp file (the process of which we are executing right now) will be
       // left over.  Attempt to delete the file on the next reboot.
-      if (MoveFileExW(newServiceBinaryPath, NULL, MOVEFILE_DELAY_UNTIL_REBOOT)) {
+      if (MoveFileExW(newServiceBinaryPath, nullptr,
+                      MOVEFILE_DELAY_UNTIL_REBOOT)) {
         LOG(("Deleting the old file path on the next reboot: %ls.",
              newServiceBinaryPath));
       } else {
@@ -453,7 +454,7 @@ SvcInstall(SvcInstallAction action)
     // We don't need to copy ourselves to the existing location.
     // The tmp file (the process of which we are executing right now) will be
     // left over.  Attempt to delete the file on the next reboot.
-    MoveFileExW(newServiceBinaryPath, NULL, MOVEFILE_DELAY_UNTIL_REBOOT);
+    MoveFileExW(newServiceBinaryPath, nullptr, MOVEFILE_DELAY_UNTIL_REBOOT);
     
     // nothing to do, we already have a newer service installed
     return TRUE; 
@@ -471,8 +472,8 @@ SvcInstall(SvcInstallAction action)
   schService.own(CreateServiceW(schSCManager, SVC_NAME, SVC_DISPLAY_NAME,
                                 SERVICE_ALL_ACCESS, SERVICE_WIN32_OWN_PROCESS,
                                 SERVICE_DEMAND_START, SERVICE_ERROR_NORMAL,
-                                newServiceBinaryPath, NULL, NULL, NULL, 
-                                NULL, NULL));
+                                newServiceBinaryPath, nullptr, nullptr,
+                                nullptr, nullptr, nullptr));
   if (!schService) {
     LOG_WARN(("Could not create Windows service. "
               "This error should never happen since a service install "
@@ -501,7 +502,7 @@ BOOL
 StopService()
 {
   // Get a handle to the local computer SCM database with full access rights.
-  nsAutoServiceHandle schSCManager(OpenSCManager(NULL, NULL, 
+  nsAutoServiceHandle schSCManager(OpenSCManager(nullptr, nullptr, 
                                                  SC_MANAGER_ALL_ACCESS));
   if (!schSCManager) {
     LOG_WARN(("Could not open service manager.  (%d)", GetLastError()));
@@ -547,7 +548,7 @@ BOOL
 SvcUninstall()
 {
   // Get a handle to the local computer SCM database with full access rights.
-  nsAutoServiceHandle schSCManager(OpenSCManager(NULL, NULL, 
+  nsAutoServiceHandle schSCManager(OpenSCManager(nullptr, nullptr, 
                                                  SC_MANAGER_ALL_ACCESS));
   if (!schSCManager) {
     LOG_WARN(("Could not open service manager.  (%d)", GetLastError()));
@@ -597,8 +598,8 @@ SvcUninstall()
 BOOL
 SetUserAccessServiceDACL(SC_HANDLE hService)
 {
-  PACL pNewAcl = NULL;
-  PSECURITY_DESCRIPTOR psd = NULL;
+  PACL pNewAcl = nullptr;
+  PSECURITY_DESCRIPTOR psd = nullptr;
   DWORD lastError = SetUserAccessServiceDACL(hService, pNewAcl, psd);
   if (pNewAcl) {
     LocalFree((HLOCAL)pNewAcl);
@@ -649,7 +650,7 @@ SetUserAccessServiceDACL(SC_HANDLE hService, PACL &pNewAcl,
   }
 
   // Get the current DACL from the security descriptor.
-  PACL pacl = NULL;
+  PACL pacl = nullptr;
   BOOL bDaclPresent = FALSE;
   BOOL bDaclDefaulted = FALSE;
   if ( !GetSecurityDescriptorDacl(psd, &bDaclPresent, &pacl, 
@@ -666,7 +667,7 @@ SetUserAccessServiceDACL(SC_HANDLE hService, PACL &pNewAcl,
     return GetLastError();
   }
 
-  if (!CreateWellKnownSid(WinBuiltinUsersSid, NULL, sid, &SIDSize)) {
+  if (!CreateWellKnownSid(WinBuiltinUsersSid, nullptr, sid, &SIDSize)) {
     DWORD lastError = GetLastError();
     LOG_WARN(("Could not create well known SID.  (%d)", lastError));
     LocalFree(sid);
@@ -681,7 +682,7 @@ SetUserAccessServiceDACL(SC_HANDLE hService, PACL &pNewAcl,
   WCHAR domainName[DNLEN + 1] = { L'\0' };
   DWORD accountNameSize = UNLEN + 1;
   DWORD domainNameSize = DNLEN + 1;
-  if (!LookupAccountSidW(NULL, sid, accountName, 
+  if (!LookupAccountSidW(nullptr, sid, accountName, 
                          &accountNameSize, 
                          domainName, &domainNameSize, &accountType)) {
     LOG_WARN(("Could not lookup account Sid, will try Users.  (%d)",
@@ -691,7 +692,7 @@ SetUserAccessServiceDACL(SC_HANDLE hService, PACL &pNewAcl,
 
   // We already have the group name so we can get rid of the SID
   FreeSid(sid);
-  sid = NULL;
+  sid = nullptr;
 
   // Build the ACE, BuildExplicitAccessWithName cannot fail so it is not logged.
   EXPLICIT_ACCESS ea;
