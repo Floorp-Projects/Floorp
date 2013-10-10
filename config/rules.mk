@@ -52,6 +52,7 @@ _DEPRECATED_VARIABLES := \
   XPIDL_FLAGS \
   MOCHITEST_FILES_PARTS \
   MOCHITEST_BROWSER_FILES_PARTS \
+  MOCHITEST_WEBAPPRT_CHROME_FILES \
   $(NULL)
 
 ifndef EXTERNALLY_MANAGED_MAKE_FILE
@@ -1220,7 +1221,7 @@ endif
 ###############################################################################
 # Java rules
 ###############################################################################
-ifneq (,$(value JAVAFILES)$(value ANDROID_RESFILES))
+ifneq (,$(JAVAFILES)$(ANDROID_RESFILES)$(ANDROID_APKNAME)$(JAVA_JAR_TARGETS))
   include $(topsrcdir)/config/makefiles/java-build.mk
 endif
 
@@ -1728,7 +1729,6 @@ FREEZE_VARIABLES = \
   MOCHITEST_A11Y_FILES \
   MOCHITEST_METRO_FILES \
   MOCHITEST_ROBOCOP_FILES \
-  MOCHITEST_WEBAPPRT_CHROME_FILES \
   $(NULL)
 
 $(foreach var,$(FREEZE_VARIABLES),$(eval $(var)_FROZEN := '$($(var))'))

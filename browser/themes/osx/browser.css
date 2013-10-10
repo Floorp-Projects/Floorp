@@ -3036,11 +3036,42 @@ toolbarbutton.chevron > .toolbarbutton-menu-dropmarker {
   list-style-image: url("chrome://browser/skin/Secure-Glyph.png");
 }
 
+#identity-popup-help-icon {
+  -moz-appearance: none;
+  border: none;
+  margin: 10px 0 0 2px;
+  background: none;
+  min-width: 0;
+  list-style-image: url("chrome://global/skin/icons/question-16.png");
+  cursor: pointer;
+}
+
+#identity-popup-help-icon > .button-box > .button-text {
+  display: none;
+}
+
+#identity-popup-help-icon > .button-box > .button-icon {
+  height: 16px;
+  width: 16px;
+}
+
+#identity-popup-help-icon:focus {
+  @hudButtonFocused@
+}
+
+#identity-popup-help-icon:hover:active {
+  @hudButtonPressed@
+}
+
 @media (min-resolution: 2dppx) {
   #identity-popup-content-box.verifiedIdentity > #identity-popup-encryption > vbox > #identity-popup-encryption-icon ,
   #identity-popup-content-box.verifiedDomain > #identity-popup-encryption > vbox > #identity-popup-encryption-icon {
     list-style-image: url("chrome://browser/skin/Secure-Glyph@2x.png");
     width: 24px;
+  }
+
+  #identity-popup-help-icon {
+    list-style-image: url("chrome://global/skin/icons/question-32.png");
   }
 }
 

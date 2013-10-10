@@ -2532,7 +2532,7 @@ nsHttpChannel::OpenCacheEntry(bool usingSSL)
     NS_ENSURE_SUCCESS(rv, rv);
 
     uint32_t cacheEntryOpenFlags;
-    if (BYPASS_LOCAL_CACHE(mLoadFlags))
+    if (BYPASS_LOCAL_CACHE(mLoadFlags) && !mApplicationCache)
         cacheEntryOpenFlags = nsICacheStorage::OPEN_TRUNCATE;
     else
         cacheEntryOpenFlags = nsICacheStorage::OPEN_NORMALLY;

@@ -213,6 +213,8 @@
 #include "nsISecurityConsoleMessage.h"
 #include "nsCharSeparatedTokenizer.h"
 #include "mozilla/dom/XPathEvaluator.h"
+#include "nsIDocumentEncoder.h"
+#include "nsIStructuredCloneContainer.h"
 
 using namespace mozilla;
 using namespace mozilla::dom;
@@ -1315,6 +1317,49 @@ nsDOMStyleSheetSetList::GetSets(nsTArray<nsString>& aStyleSets)
 }
 
 // ==================================================================
+nsIDocument::SelectorCache::SelectorCache()
+  : nsExpirationTracker<SelectorCacheKey, 4>(1000) { }
+
+// CacheList takes ownership of aSelectorList.
+void nsIDocument::SelectorCache::CacheList(const nsAString& aSelector,
+                                           nsCSSSelectorList* aSelectorList)
+{
+  SelectorCacheKey* key = new SelectorCacheKey(aSelector);
+  mTable.Put(key->mKey, aSelectorList);
+  AddObject(key);
+}
+
+class nsIDocument::SelectorCacheKeyDeleter MOZ_FINAL : public nsRunnable
+{
+public:
+  explicit SelectorCacheKeyDeleter(SelectorCacheKey* aToDelete)
+    : mSelector(aToDelete)
+  {
+    MOZ_COUNT_CTOR(SelectorCacheKeyDeleter);
+  }
+
+  ~SelectorCacheKeyDeleter()
+  {
+    MOZ_COUNT_DTOR(SelectorCacheKeyDeleter);
+  }
+
+  NS_IMETHOD Run()
+  {
+    return NS_OK;
+  }
+
+private:
+  nsAutoPtr<SelectorCacheKey> mSelector;
+};
+
+void nsIDocument::SelectorCache::NotifyExpired(SelectorCacheKey* aSelector)
+{
+  RemoveObject(aSelector);
+  mTable.Remove(aSelector->mKey);
+  nsCOMPtr<nsIRunnable> runnable = new SelectorCacheKeyDeleter(aSelector);
+  NS_DispatchToCurrentThread(runnable);
+}
+
 
 struct nsIDocument::FrameRequest
 {
@@ -11330,6 +11375,43 @@ nsIDocument::XPathEvaluator()
     mXPathEvaluator = new dom::XPathEvaluator(this);
   }
   return mXPathEvaluator;
+}
+
+already_AddRefed<nsIDocumentEncoder>
+nsIDocument::GetCachedEncoder()
+{
+  return mCachedEncoder.forget();
+}
+
+void
+nsIDocument::SetCachedEncoder(already_AddRefed<nsIDocumentEncoder> aEncoder)
+{
+  mCachedEncoder = aEncoder;
+}
+
+void
+nsIDocument::SetContentTypeInternal(const nsACString& aType)
+{
+  mCachedEncoder = nullptr;
+  mContentType = aType;
+}
+
+nsILoadContext*
+nsIDocument::GetLoadContext() const
+{
+  nsCOMPtr<nsISupports> container = GetContainer();
+  if (container) {
+    nsCOMPtr<nsILoadContext> loadContext = do_QueryInterface(container);
+    return loadContext;
+  }
+  return nullptr;
+}
+
+void
+nsIDocument::SetStateObject(nsIStructuredCloneContainer *scContainer)
+{
+  mStateObjectContainer = scContainer;
+  mStateObjectCached = nullptr;
 }
 
 bool

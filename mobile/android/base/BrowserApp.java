@@ -1274,7 +1274,7 @@ abstract public class BrowserApp extends GeckoApp
         }
 
         final Tabs tabs = Tabs.getInstance();
-        final int tabId = tabs.getTabIdForUrl(url);
+        final int tabId = tabs.getTabIdForUrl(url, tabs.getSelectedTab().isPrivate());
         if (tabId < 0) {
             return false;
         }
