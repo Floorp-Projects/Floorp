@@ -118,7 +118,7 @@ public:
         MOZ_ASSERT(!NS_IsMainThread(),
             "AsyncLocalFileWinOperation should not be run on the main thread!");
 
-        CoInitialize(NULL);
+        CoInitialize(nullptr);
         switch(mOperation) {
         case RevealOp: {
             Reveal();
@@ -205,11 +205,11 @@ private:
         memset(&seinfo, 0, sizeof(seinfo));
         seinfo.cbSize = sizeof(SHELLEXECUTEINFOW);
         seinfo.fMask  = 0;
-        seinfo.hwnd   = NULL;
-        seinfo.lpVerb = NULL;
+        seinfo.hwnd   = nullptr;
+        seinfo.lpVerb = nullptr;
         seinfo.lpFile = mResolvedPath.get();
-        seinfo.lpParameters =  NULL;
-        seinfo.lpDirectory  = NULL;
+        seinfo.lpParameters =  nullptr;
+        seinfo.lpDirectory  = nullptr;
         seinfo.nShow  = SW_SHOWNORMAL;
 
         // Use the directory of the file we're launching as the working
@@ -326,7 +326,7 @@ private:
 ShortcutResolver::ShortcutResolver() :
     mLock("ShortcutResolver.mLock")
 {
-    CoInitialize(NULL);
+    CoInitialize(nullptr);
 }
 
 ShortcutResolver::~ShortcutResolver()
@@ -339,7 +339,7 @@ ShortcutResolver::Init()
 {
     // Get a pointer to the IPersistFile interface.
     if (FAILED(CoCreateInstance(CLSID_ShellLink,
-                                NULL,
+                                nullptr,
                                 CLSCTX_INPROC_SERVER,
                                 IID_IShellLinkW,
                                 getter_AddRefs(mShellLink))) ||
@@ -362,7 +362,7 @@ ShortcutResolver::Resolve(const WCHAR* in, WCHAR* out)
 
     if (FAILED(mPersistFile->Load(in, STGM_READ)) ||
         FAILED(mShellLink->Resolve(nullptr, SLR_NO_UI)) ||
-        FAILED(mShellLink->GetPath(out, MAX_PATH, NULL, SLGP_UNCPRIORITY)))
+        FAILED(mShellLink->GetPath(out, MAX_PATH, nullptr, SLGP_UNCPRIORITY)))
         return NS_ERROR_FAILURE;
     return NS_OK;
 }
@@ -636,7 +636,7 @@ OpenFile(const nsAFlatString &name, int osflags, int mode,
 
     HANDLE file = ::CreateFileW(name.get(), access,
                                 FILE_SHARE_READ|FILE_SHARE_WRITE,
-                                NULL, disposition, attributes, NULL);
+                                nullptr, disposition, attributes, nullptr);
 
     if (file == INVALID_HANDLE_VALUE) { 
         *fd = nullptr;
@@ -963,7 +963,7 @@ nsLocalFile::nsLocalFileConstructor(nsISupports* outer, const nsIID& aIID, void*
     NS_ENSURE_NO_AGGREGATION(outer);
 
     nsLocalFile* inst = new nsLocalFile();
-    if (inst == NULL)
+    if (inst == nullptr)
         return NS_ERROR_OUT_OF_MEMORY;
 
     nsresult rv = inst->QueryInterface(aIID, aInstancePtr);
@@ -1271,7 +1271,7 @@ nsLocalFile::Create(uint32_t type, uint32_t attributes)
         {
             *slash = L'\0';
 
-            if (!::CreateDirectoryW(mResolvedPath.get(), NULL)) {
+            if (!::CreateDirectoryW(mResolvedPath.get(), nullptr)) {
                 rv = ConvertWinError(GetLastError());
                 if (NS_ERROR_FILE_NOT_FOUND == rv &&
                     NS_ERROR_FILE_ACCESS_DENIED == directoryCreateError) {
@@ -1319,7 +1319,7 @@ nsLocalFile::Create(uint32_t type, uint32_t attributes)
 
     if (type == DIRECTORY_TYPE)
     {
-        if (!::CreateDirectoryW(mResolvedPath.get(), NULL)) {
+        if (!::CreateDirectoryW(mResolvedPath.get(), nullptr)) {
           rv = ConvertWinError(GetLastError());
           if (NS_ERROR_FILE_NOT_FOUND == rv && 
               NS_ERROR_FILE_ACCESS_DENIED == directoryCreateError) {
@@ -1692,9 +1692,9 @@ nsLocalFile::SetShortcut(nsIFile* targetFile,
       return rv;
     }
 
-    const WCHAR* targetFilePath = NULL;
-    const WCHAR* workingDirPath = NULL;
-    const WCHAR* iconFilePath = NULL;
+    const WCHAR* targetFilePath = nullptr;
+    const WCHAR* workingDirPath = nullptr;
+    const WCHAR* iconFilePath = nullptr;
 
     nsAutoString targetFilePathAuto;
     if (targetFile) {
@@ -1839,7 +1839,8 @@ nsLocalFile::CopySingleFile(nsIFile *sourceFile, nsIFile *destParent,
     
     if (!move)
     {
-        copyOK = ::CopyFileExW(filePath.get(), destPath.get(), NULL, NULL, NULL, dwCopyFlags);
+        copyOK = ::CopyFileExW(filePath.get(), destPath.get(), nullptr,
+                               nullptr, nullptr, dwCopyFlags);
     }
     else
     {
@@ -1849,7 +1850,8 @@ nsLocalFile::CopySingleFile(nsIFile *sourceFile, nsIFile *destParent,
         // as this could be an SMBV2 mapped drive.
         if (!copyOK && GetLastError() == ERROR_NOT_SAME_DEVICE)
         {
-            copyOK = CopyFileExW(filePath.get(), destPath.get(), NULL, NULL, NULL, dwCopyFlags);
+            copyOK = CopyFileExW(filePath.get(), destPath.get(), nullptr,
+                                 nullptr, nullptr, dwCopyFlags);
 
             if (copyOK)
                 DeleteFileW(filePath.get());
@@ -1862,16 +1864,16 @@ nsLocalFile::CopySingleFile(nsIFile *sourceFile, nsIFile *destParent,
     {
         // Set security permissions to inherit from parent.
         // Note: propagates to all children: slow for big file trees
-        PACL pOldDACL = NULL;
-        PSECURITY_DESCRIPTOR pSD = NULL;
+        PACL pOldDACL = nullptr;
+        PSECURITY_DESCRIPTOR pSD = nullptr;
         ::GetNamedSecurityInfoW((LPWSTR)destPath.get(), SE_FILE_OBJECT,
                                 DACL_SECURITY_INFORMATION,
-                                NULL, NULL, &pOldDACL, NULL, &pSD);
+                                nullptr, nullptr, &pOldDACL, nullptr, &pSD);
         if (pOldDACL)
             ::SetNamedSecurityInfoW((LPWSTR)destPath.get(), SE_FILE_OBJECT,
                                     DACL_SECURITY_INFORMATION |
                                     UNPROTECTED_DACL_SECURITY_INFORMATION,
-                                    NULL, NULL, pOldDACL, NULL);
+                                    nullptr, nullptr, pOldDACL, nullptr);
         if (pSD)
             LocalFree((HLOCAL)pSD);
     }
@@ -2336,10 +2338,10 @@ nsLocalFile::SetModDate(PRTime aLastModifiedTime, const PRUnichar *filePath)
     HANDLE file = ::CreateFileW(filePath,          // pointer to name of the file
                                 GENERIC_WRITE,     // access (write) mode
                                 0,                 // share mode
-                                NULL,              // pointer to security attributes
+                                nullptr,           // pointer to security attributes
                                 OPEN_EXISTING,     // how to create
                                 FILE_FLAG_BACKUP_SEMANTICS,  // file attributes
-                                NULL);
+                                nullptr);
 
     if (file == INVALID_HANDLE_VALUE)
     {
@@ -2364,7 +2366,7 @@ nsLocalFile::SetModDate(PRTime aLastModifiedTime, const PRUnichar *filePath)
     nsresult rv = NS_OK;
     // if at least one of these fails...
     if (!(SystemTimeToFileTime(&st, &ft) != 0 &&
-          SetFileTime(file, NULL, &ft, &ft) != 0))
+          SetFileTime(file, nullptr, &ft, &ft) != 0))
     {
       rv = ConvertWinError(GetLastError());
     }
@@ -2517,10 +2519,10 @@ nsLocalFile::SetFileSize(int64_t aFileSize)
     HANDLE hFile = ::CreateFileW(mResolvedPath.get(),// pointer to name of the file
                                  GENERIC_WRITE,      // access (write) mode
                                  FILE_SHARE_READ,    // share mode
-                                 NULL,               // pointer to security attributes
+                                 nullptr,            // pointer to security attributes
                                  OPEN_EXISTING,          // how to create
                                  FILE_ATTRIBUTE_NORMAL,  // file attributes
-                                 NULL);
+                                 nullptr);
     if (hFile == INVALID_HANDLE_VALUE)
     {
         return ConvertWinError(GetLastError());
@@ -2560,7 +2562,7 @@ nsLocalFile::GetDiskSpaceAvailable(int64_t *aDiskSpaceAvailable)
 
     ULARGE_INTEGER liFreeBytesAvailableToCaller, liTotalNumberOfBytes;
     if (::GetDiskFreeSpaceExW(mResolvedPath.get(), &liFreeBytesAvailableToCaller, 
-                              &liTotalNumberOfBytes, NULL))
+                              &liTotalNumberOfBytes, nullptr))
     {
         *aDiskSpaceAvailable = liFreeBytesAvailableToCaller.QuadPart;
         return NS_OK;
@@ -3350,8 +3352,8 @@ nsLocalFile::EnsureShortPath()
     DWORD lengthNeeded = ::GetShortPathNameW(mWorkingPath.get(), shortPath,
                                              ArrayLength(shortPath));
     // If an error occurred then lengthNeeded is set to 0 or the length of the
-    // needed buffer including NULL termination.  If it succeeds the number of
-    // wide characters not including NULL termination is returned.
+    // needed buffer including null termination.  If it succeeds the number of
+    // wide characters not including null termination is returned.
     if (lengthNeeded != 0 && lengthNeeded < ArrayLength(shortPath))
         mShortWorkingPath.Assign(shortPath);
     else
