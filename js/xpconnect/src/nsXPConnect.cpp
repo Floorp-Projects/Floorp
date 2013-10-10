@@ -333,7 +333,7 @@ xpc_TryUnmarkWrappedGrayObject(nsISupports* aWrappedJS)
 /***************************************************************************/
 // nsIXPConnect interface methods...
 
-inline nsresult UnexpectedFailure(nsresult rv)
+static inline nsresult UnexpectedFailure(nsresult rv)
 {
     NS_ERROR("This is not supposed to fail!");
     return rv;
@@ -1469,8 +1469,8 @@ nsXPConnect::NotifyDidPaint()
     return NS_OK;
 }
 
-const uint8_t HAS_PRINCIPALS_FLAG               = 1;
-const uint8_t HAS_ORIGIN_PRINCIPALS_FLAG        = 2;
+static const uint8_t HAS_PRINCIPALS_FLAG               = 1;
+static const uint8_t HAS_ORIGIN_PRINCIPALS_FLAG        = 2;
 
 static nsresult
 WriteScriptOrFunction(nsIObjectOutputStream *stream, JSContext *cx,

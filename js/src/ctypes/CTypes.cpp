@@ -794,7 +794,7 @@ static const JSFunctionSpec sModuleFunctions[] = {
   JS_FS_END
 };
 
-JS_ALWAYS_INLINE JSString*
+static JS_ALWAYS_INLINE JSString*
 NewUCString(JSContext* cx, const AutoString& from)
 {
   return JS_NewUCStringCopyN(cx, from.begin(), from.length());
@@ -805,7 +805,7 @@ NewUCString(JSContext* cx, const AutoString& from)
  *
  * Note: |align| must be a power of 2.
  */
-JS_ALWAYS_INLINE size_t
+static JS_ALWAYS_INLINE size_t
 Align(size_t val, size_t align)
 {
   // Ensure that align is a power of two.

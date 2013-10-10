@@ -679,7 +679,7 @@ JSObject::addPropertyInternal<ParallelExecution>(ForkJoinSlice *cx,
  * slot access optimizations are sound. It is responsibility of the callers to
  * enforce all restrictions from ECMA-262 v5 8.12.9 [[DefineOwnProperty]].
  */
-inline bool
+static inline bool
 CheckCanChangeAttrs(ThreadSafeContext *cx, JSObject *obj, Shape *shape, unsigned *attrsp)
 {
     if (shape->configurable())
