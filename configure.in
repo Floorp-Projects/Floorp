@@ -2498,40 +2498,7 @@ else
   AC_MSG_RESULT(no)
 fi
 
-dnl On the gcc trunk (as of 2001-02-09) _GNU_SOURCE, and thus __USE_GNU,
-dnl are defined when compiling C++ but not C.  Since the result of this
-dnl test is used only in C++, do it in C++.
 AC_LANG_CPLUSPLUS
-
-AC_MSG_CHECKING(for uname.domainname)
-AC_CACHE_VAL(ac_cv_have_uname_domainname_field,
-    [AC_TRY_COMPILE([#include <sys/utsname.h>],
-        [ struct utsname *res; char *domain;
-            (void)uname(res);  if (res != 0) { domain = res->domainname; } ],
-        [ac_cv_have_uname_domainname_field=true],
-        [ac_cv_have_uname_domainname_field=false])])
-
-if test "$ac_cv_have_uname_domainname_field" = "true"; then
-    AC_DEFINE(HAVE_UNAME_DOMAINNAME_FIELD)
-    AC_MSG_RESULT(yes)
-else
-    AC_MSG_RESULT(no)
-fi
-
-AC_MSG_CHECKING(for uname.__domainname)
-AC_CACHE_VAL(ac_cv_have_uname_us_domainname_field,
-    [AC_TRY_COMPILE([#include <sys/utsname.h>],
-        [ struct utsname *res; char *domain;
-            (void)uname(res);  if (res != 0) { domain = res->__domainname; } ],
-        [ac_cv_have_uname_us_domainname_field=true],
-        [ac_cv_have_uname_us_domainname_field=false])])
-
-if test "$ac_cv_have_uname_us_domainname_field" = "true"; then
-    AC_DEFINE(HAVE_UNAME_US_DOMAINNAME_FIELD)
-    AC_MSG_RESULT(yes)
-else
-    AC_MSG_RESULT(no)
-fi
 
 MOZ_CXX11
 
