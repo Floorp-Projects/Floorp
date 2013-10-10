@@ -505,12 +505,12 @@ public class Utils {
      * @param aClass Class to check for CharSequence-esqueness
      * @return True if the given class implements CharSequence, false otherwise.
      */
-    public static boolean isCharSequence(Class aClass) {
+    public static boolean isCharSequence(Class<?> aClass) {
         if (aClass.getCanonicalName().equals("java.lang.CharSequence")) {
             return true;
         }
-        Class[] interfaces = aClass.getInterfaces();
-        for (Class c : interfaces) {
+        Class<?>[] interfaces = aClass.getInterfaces();
+        for (Class<?> c : interfaces) {
             if (c.getCanonicalName().equals("java.lang.CharSequence")) {
                 return true;
             }

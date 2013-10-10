@@ -147,9 +147,7 @@ LoginManagerStorage_mozStorage.prototype = {
 
     _prefBranch   : null,  // Preferences service
     _signonsFile  : null,  // nsIFile for "signons.sqlite"
-    _importFile   : null,  // nsIFile for import from legacy
     _debug        : false, // mirrors signon.debug
-    _base64checked : false,
 
 
     /*
@@ -170,11 +168,8 @@ LoginManagerStorage_mozStorage.prototype = {
      *
      * Initialize the component, but override the default filename locations.
      * This is primarily used to the unit tests and profile migration.
-     * aImportFile is legacy storage file, aDBFile is a sqlite/mozStorage file.
      */
-    initWithFile : function(aImportFile, aDBFile) {
-        if (aImportFile)
-            this._importFile = aImportFile;
+    initWithFile : function(aDBFile) {
         if (aDBFile)
             this._signonsFile = aDBFile;
 
@@ -185,8 +180,6 @@ LoginManagerStorage_mozStorage.prototype = {
     /*
      * init
      *
-     * Initialize this storage component; import from legacy files, if
-     * necessary. Most of the work is done in _deferredInit.
      */
     init : function () {
         this._dbStmts = {};
@@ -197,6 +190,10 @@ LoginManagerStorage_mozStorage.prototype = {
 
         let isFirstRun;
         try {
+            // Force initialization of the crypto module.
+            // See bug 717490 comment 17.
+            this._crypto;
+
             // If initWithFile is calling us, _signonsFile may already be set.
             if (!this._signonsFile) {
                 // Initialize signons.sqlite
@@ -207,13 +204,6 @@ LoginManagerStorage_mozStorage.prototype = {
 
             // Initialize the database (create, migrate as necessary)
             isFirstRun = this._dbInit();
-
-            // On first run we want to import the default legacy storage files.
-            // Otherwise if passed a file, import from that.
-            if (isFirstRun && !this._importFile)
-                this._importLegacySignons();
-            else if (this._importFile)
-                this._importLegacySignons(this._importFile);
 
             this._initialized = true;
         } catch (e) {
@@ -231,28 +221,12 @@ LoginManagerStorage_mozStorage.prototype = {
      *
      */
     addLogin : function (login) {
-        this._addLogin(login, false);
-    },
-
-
-    /*
-     * _addLogin
-     *
-     * Private function wrapping core addLogin functionality.
-     */
-    _addLogin : function (login, isEncrypted) {
         let encUsername, encPassword;
 
         // Throws if there are bogus values.
         this._checkLoginValues(login);
 
-        // isEncrypted only set when importing from an legacy (signons3.txt)
-        // format, which only would have used SDR or BASE64 encoding. The
-        // latter of which is handled a little further down.
-        if (isEncrypted)
-            [encUsername, encPassword, encType] = [login.username, login.password, Ci.nsILoginManagerCrypto.ENCTYPE_SDR];
-        else
-            [encUsername, encPassword, encType] = this._encryptLogin(login);
+        [encUsername, encPassword, encType] = this._encryptLogin(login);
 
         // Clone the login, so we don't modify the caller's object.
         let loginClone = login.clone();
@@ -265,11 +239,6 @@ LoginManagerStorage_mozStorage.prototype = {
         } else {
             loginClone.guid = this._uuidService.generateUUID().toString();
         }
-
-        // If we're migrating legacy storage, check for base64 logins.
-        if (isEncrypted &&
-            (encUsername.charAt(0) == '~' || encPassword.charAt(0) == '~'))
-            encType = this._crypto.ENCTYPE_BASE64;
 
         // Set timestamps
         let currentTime = Date.now();
@@ -314,7 +283,7 @@ LoginManagerStorage_mozStorage.prototype = {
             stmt = this._dbCreateStatement(query, params);
             stmt.execute();
         } catch (e) {
-            this.log("_addLogin failed: " + e.name + " : " + e.message);
+            this.log("addLogin failed: " + e.name + " : " + e.message);
             throw "Couldn't write to database, login not added.";
         } finally {
             if (stmt) {
@@ -323,8 +292,7 @@ LoginManagerStorage_mozStorage.prototype = {
         }
 
         // Send a notification that a login was added.
-        if (!isEncrypted)
-            this._sendNotification("addLogin", loginClone);
+        this._sendNotification("addLogin", loginClone);
     },
 
 
@@ -687,9 +655,6 @@ LoginManagerStorage_mozStorage.prototype = {
         let stmt;
         let transaction = new Transaction(this._dbConnection);
  
-        // Delete any old, unused files.
-        this._removeOldSignonsFiles();
-
         // Disabled hosts kept, as one presumably doesn't want to erase those.
         // TODO: Add these items to the deleted items table once we've sorted
         //       out the issues from bug 756701
@@ -1064,76 +1029,6 @@ LoginManagerStorage_mozStorage.prototype = {
 
 
     /*
-     * _importLegacySignons
-     *
-     * Imports a file that uses Legacy storage. Will use importFile if provided
-     * else it will attempt to initialize the Legacy storage normally.
-     *
-     */
-    _importLegacySignons : function (importFile) {
-        this.log("Importing " + (importFile ? importFile.path : "legacy storage"));
-
-        let legacy = Cc["@mozilla.org/login-manager/storage/legacy;1"].
-                     createInstance(Ci.nsILoginManagerStorage);
-
-        // Import all logins and disabled hosts
-        try {
-            if (importFile)
-                legacy.initWithFile(importFile, null);
-            else
-                legacy.init();
-
-            // Import logins and disabledHosts
-            let logins = legacy.getAllEncryptedLogins();
-
-            // Wrap in a transaction for better performance.
-            let transaction = new Transaction(this._dbConnection);
-            for each (let login in logins) {
-                try {
-                    this._addLogin(login, true);
-                } catch (e) {
-                    this.log("_importLegacySignons failed to add login: " + e);
-                }
-            }
-            let disabledHosts = legacy.getAllDisabledHosts();
-            for each (let hostname in disabledHosts)
-                this.setLoginSavingEnabled(hostname, false);
-            transaction.commit();
-        } catch (e) {
-            this.log("_importLegacySignons failed: " + e.name + " : " + e.message);
-            throw "Import failed";
-        }
-    },
-
-
-    /*
-     * _removeOldSignonsFiles
-     *
-     * Deletes any storage files that we're not using any more.
-     */
-    _removeOldSignonsFiles : function () {
-        // We've used a number of prefs over time due to compatibility issues.
-        // We want to delete all files referenced in prefs, which are only for
-        // importing and clearing logins from storage-Legacy.js.
-        let filenamePrefs = ["SignonFileName3", "SignonFileName2", "SignonFileName"];
-        for each (let prefname in filenamePrefs) {
-            let filename = this._prefBranch.getCharPref(prefname);
-            let file = this._profileDir.clone();
-            file.append(filename);
-
-            if (file.exists()) {
-                this.log("Deleting old " + filename + " (" + prefname + ")");
-                try {
-                    file.remove(false);
-                } catch (e) {
-                    this.log("NOTICE: Couldn't delete " + filename + ": " + e);
-                }
-            }
-        }
-    },
-
-
-    /*
      * _encryptLogin
      *
      * Returns the encrypted username, password, and encrypton type for the specified
@@ -1143,9 +1038,6 @@ LoginManagerStorage_mozStorage.prototype = {
         let encUsername = this._crypto.encrypt(login.username);
         let encPassword = this._crypto.encrypt(login.password);
         let encType     = this._crypto.defaultEncType;
-
-        if (!this._base64checked)
-            this._reencryptBase64Logins();
 
         return [encUsername, encPassword, encType];
     },
@@ -1181,79 +1073,7 @@ LoginManagerStorage_mozStorage.prototype = {
             result.push(login);
         }
 
-        if (!this._base64checked)
-            this._reencryptBase64Logins();
-
         return result;
-    },
-
-
-    /*
-     * _reencryptBase64Logins
-     *
-     * Checks the signons DB for any logins using the old wallet-style base64
-     * obscuring of the username/password, instead of proper encryption. We're
-     * called once per session, after the user has successfully encrypted or
-     * decrypted some login (this helps ensure the user doesn't get mysterious
-     * prompts for a master password, when set).
-     */
-    _reencryptBase64Logins : function () {
-        let base64Type = Ci.nsILoginManagerCrypto.ENCTYPE_BASE64;
-        this._base64checked = true;
-        // Ignore failures, will try again next session...
-
-        this.log("Reencrypting Base64 logins");
-        let transaction;
-        try {
-            let [logins, ids] = this._searchLogins({ encType: base64Type });
-
-            if (!logins.length)
-                return;
-
-            try {
-                logins = this._decryptLogins(logins);
-            } catch (e) {
-                // User might have canceled master password entry, just ignore.
-                return;
-            }
-
-            transaction = new Transaction(this._dbConnection);
-
-            let encUsername, encPassword, stmt;
-            for each (let login in logins) {
-                [encUsername, encPassword, encType] = this._encryptLogin(login);
-
-                let query =
-                    "UPDATE moz_logins " +
-                    "SET encryptedUsername = :encryptedUsername, " +
-                        "encryptedPassword = :encryptedPassword, " +
-                        "encType = :encType " +
-                    "WHERE guid = :guid";
-                let params = {
-                    encryptedUsername: encUsername,
-                    encryptedPassword: encPassword,
-                    encType:           encType,
-                    guid:              login.guid
-                };
-                try {
-                    stmt = this._dbCreateStatement(query, params);
-                    stmt.execute();
-                } catch (e) {
-                    // Ignore singular errors, continue trying to update others.
-                    this.log("_reencryptBase64Logins caught error: " + e);
-                } finally {
-                    if (stmt) {
-                        stmt.reset();
-                    }
-                }
-            }
-        } catch (e) {
-            this.log("_reencryptBase64Logins failed: " + e);
-        } finally {
-            if (transaction) {
-                transaction.commit();
-            }
-        }
     },
 
 
@@ -1287,8 +1107,7 @@ LoginManagerStorage_mozStorage.prototype = {
      * _dbInit
      *
      * Attempts to initialize the database. This creates the file if it doesn't
-     * exist, performs any migrations, etc. When database is first created, we
-     * attempt to import legacy signons. Return if this is the first run.
+     * exist, performs any migrations, etc. Return if this is the first run.
      */
     _dbInit : function () {
         this.log("Initializing Database");
@@ -1481,6 +1300,7 @@ LoginManagerStorage_mozStorage.prototype = {
             stmt = this._dbCreateStatement(query);
             while (stmt.executeStep()) {
                 let params = { id: stmt.row.id };
+                // We will tag base64 logins correctly, but no longer support their use.
                 if (stmt.row.encryptedUsername.charAt(0) == '~' ||
                     stmt.row.encryptedPassword.charAt(0) == '~')
                     params.encType = Ci.nsILoginManagerCrypto.ENCTYPE_BASE64;

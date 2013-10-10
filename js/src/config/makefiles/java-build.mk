@@ -90,6 +90,40 @@ endif #} ANDROID_EXTRA_JARS
 include $(topsrcdir)/config/android-common.mk
 endif #} ANDROID_APK_NAME
 
+
+ifdef JAVA_JAR_TARGETS #{
+# Arg 1: Output target name with .jar suffix, like jars/jarfile.jar.
+#        Intermediate class files are generated in jars/jarfile-classes.
+# Arg 2: Java sources list.  We use VPATH and $^ so sources can be
+#        relative to $(srcdir) or $(CURDIR).
+# Arg 3: List of extra jars to link against.  We do not use VPATH so
+#        jars must be relative to $(CURDIR).
+# Arg 4: Additional JAVAC_FLAGS.
+define java_jar_template
+$(1): $(2) $(3)
+	$$(REPORT_BUILD)
+	@$$(NSINSTALL) -D $(1:.jar=)-classes
+	@$$(if $$(filter-out .,$$(@D)),$$(NSINSTALL) -D $$(@D))
+	$$(JAVAC) $$(JAVAC_FLAGS)\
+    $(4)\
+		-d $(1:.jar=)-classes\
+		$(if $(strip $(3)),-classpath $(subst $(NULL) ,:,$(strip $(3))))\
+		$$(filter %.java,$$^)
+	$$(JAR) cMf $$@ -C $(1:.jar=)-classes .
+
+GARBAGE += $(1)
+
+GARBAGE_DIRS += $(1:.jar=)-classes
+endef
+
+$(foreach jar,$(JAVA_JAR_TARGETS),\
+  $(if $($(jar)_DEST),,$(error Missing $(jar)_DEST))\
+  $(if $($(jar)_JAVAFILES),,$(error Missing $(jar)_JAVAFILES))\
+  $(eval $(call java_jar_template,$($(jar)_DEST),$($(jar)_JAVAFILES) $($(jar)_PP_JAVAFILES),$($(jar)_EXTRA_JARS),$($(jar)_JAVAC_FLAGS)))\
+)
+endif #} JAVA_JAR_TARGETS
+
+
 INCLUDED_JAVA_BUILD_MK := 1
 
 endif #} INCLUDED_JAVA_BUILD_MK

@@ -9,7 +9,7 @@ interface nsIFile;
 interface nsILoginInfo;
 interface nsIPropertyBag;
 
-[scriptable, uuid(d9fee9e2-c649-4c47-8c85-90fbbb5ccf67)]
+[scriptable, uuid(fe0a4e80-d36f-43cc-a37b-4e1906e77257)]
 
 /*
  * NOTE: This interface is intended to be implemented by modules
@@ -30,13 +30,11 @@ interface nsILoginManagerStorage : nsISupports {
      * locations. This is primarily used to the unit tests and profile
      * migration.
      *
-     * @param aInputFile
-     *        File to read for stored logins.
-     * @param aOutputFile
-     *        If non-null, file to output logins to.
+     * @param aFile
+     *        If non-null, file to use for login storage.
      *
      */
-    void initWithFile(in nsIFile aInputFile, in nsIFile aOutputFile);
+    void initWithFile(in nsIFile aFile);
 
 
     /**

@@ -1,9 +1,0 @@
-#2d
-.
-http://dummyhost.mozilla.org
-put_user_here
-MDoEEPgAAAAAAAAAAAAAAAAAAAEwFAYIKoZIhvcNAwcECIfQXnNdOlcABBCrqWo0hzkpOPmpGiybiVkU
-*put_pw_here
-MDoEEPgAAAAAAAAAAAAAAAAAAAEwFAYIKoZIhvcNAwcECO2TxG6B5o66BBA1PUI/iSkl1G020imhKgEa
-
-.
