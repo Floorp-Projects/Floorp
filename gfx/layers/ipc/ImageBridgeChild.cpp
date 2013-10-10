@@ -102,19 +102,20 @@ struct AutoEndTransaction {
   CompositableTransaction* mTxn;
 };
 
-void
+bool
 ImageBridgeChild::AddTexture(CompositableClient* aCompositable,
                              TextureClient* aTexture)
 {
   SurfaceDescriptor descriptor;
   if (!aTexture->ToSurfaceDescriptor(descriptor)) {
     NS_WARNING("ImageBridge: Failed to serialize a TextureClient");
-    return;
+    return false;
   }
   mTxn->AddEdit(OpAddTexture(nullptr, aCompositable->GetIPDLActor(),
                              aTexture->GetID(),
                              descriptor,
                              aTexture->GetFlags()));
+  return true;
 }
 
 void

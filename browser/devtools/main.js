@@ -59,6 +59,7 @@ Tools.options = {
   url: "chrome://browser/content/devtools/framework/toolbox-options.xul",
   icon: "chrome://browser/skin/devtools/tool-options.png",
   tooltip: l10n("optionsButton.tooltip", toolboxStrings),
+  inMenu: false,
   isTargetSupported: function(target) {
     return true;
   },
@@ -79,6 +80,7 @@ Tools.webConsole = {
   label: l10n("ToolboxTabWebconsole.label", webConsoleStrings),
   menuLabel: l10n("MenuWebconsole.label", webConsoleStrings),
   tooltip: l10n("ToolboxWebconsole.tooltip", webConsoleStrings),
+  inMenu: true,
 
   isTargetSupported: function(target) {
     return true;
@@ -99,6 +101,7 @@ Tools.inspector = {
   url: "chrome://browser/content/devtools/inspector/inspector.xul",
   label: l10n("inspector.label", inspectorStrings),
   tooltip: l10n("inspector.tooltip", inspectorStrings),
+  inMenu: true,
 
   preventClosingOnKey: true,
   onkey: function(panel) {
@@ -129,6 +132,7 @@ Tools.jsdebugger = {
   url: "chrome://browser/content/devtools/debugger.xul",
   label: l10n("ToolboxDebugger.label", debuggerStrings),
   tooltip: l10n("ToolboxDebugger.tooltip", debuggerStrings),
+  inMenu: true,
 
   isTargetSupported: function(target) {
     return true;
@@ -150,6 +154,7 @@ Tools.styleEditor = {
   url: "chrome://browser/content/devtools/styleeditor.xul",
   label: l10n("ToolboxStyleEditor.label", styleEditorStrings),
   tooltip: l10n("ToolboxStyleEditor.tooltip2", styleEditorStrings),
+  inMenu: true,
 
   isTargetSupported: function(target) {
     return true;
@@ -172,6 +177,7 @@ Tools.jsprofiler = {
   url: "chrome://browser/content/devtools/profiler.xul",
   label: l10n("profiler.label", profilerStrings),
   tooltip: l10n("profiler.tooltip2", profilerStrings),
+  inMenu: true,
 
   isTargetSupported: function (target) {
     return true;
@@ -194,6 +200,7 @@ Tools.netMonitor = {
   url: "chrome://browser/content/devtools/netmonitor.xul",
   label: l10n("netmonitor.label", netMonitorStrings),
   tooltip: l10n("netmonitor.tooltip", netMonitorStrings),
+  inMenu: true,
 
   isTargetSupported: function(target) {
     return !target.isApp;
@@ -213,6 +220,7 @@ Tools.scratchpad = {
   url: "chrome://browser/content/devtools/scratchpad.xul",
   label: l10n("scratchpad.label", scratchpadStrings),
   tooltip: l10n("scratchpad.tooltip", scratchpadStrings),
+  inMenu: false,
 
   isTargetSupported: function(target) {
     return target.isRemote;

@@ -7,7 +7,6 @@
  */
 
 
-const STORAGE_TYPE = "mozStorage";
 const ENCTYPE_BASE64 = 0;
 const ENCTYPE_SDR = 1;
 
@@ -16,15 +15,6 @@ function run_test() {
 try {
 
 var storage, testnum = 0;
-
-function countBase64Logins(conn) {
-    let stmt = conn.createStatement("SELECT COUNT(1) as numBase64 FROM moz_logins " +
-                                    "WHERE encType = " + ENCTYPE_BASE64);
-    do_check_true(stmt.executeStep());
-    let numBase64 = stmt.row.numBase64;
-    stmt.finalize();
-    return numBase64;
-}
 
 
 /* ========== 1 ========== */
@@ -57,58 +47,6 @@ LoginTest.deleteFile(OUTDIR, "signons.sqlite");
 
 
 /*
- * ---------------------- Bug 380961 ----------------------
- * Need to support decoding the mime64-obscured format still
- * used by SeaMonkey.
- */
-
-
-/* ========== 2 ========== */
-testnum++;
-
-testdesc = "checking import of mime64-obscured entries"
-storage = LoginTest.initStorage(INDIR, "signons-380961-1.txt",
-                               OUTDIR, "output-380961-1.sqlite");
-LoginTest.checkStorageData(storage, [], [dummyuser1]);
-
-testdesc = "[flush and reload for verification]"
-storage = LoginTest.reloadStorage(OUTDIR, "output-380961-1.sqlite");
-LoginTest.checkStorageData(storage, [], [dummyuser1]);
-
-LoginTest.deleteFile(OUTDIR, "output-380961-1.sqlite");
-
-
-/* ========== 3 ========== */
-testnum++;
-
-testdesc = "testing import of multiple mime-64 entries for a host"
-storage = LoginTest.initStorage(INDIR, "signons-380961-2.txt",
-                               OUTDIR, "output-380961-2.sqlite");
-LoginTest.checkStorageData(storage, [], [dummyuser2, dummyuser3]);
-
-testdesc = "[flush and reload for verification]"
-storage = LoginTest.reloadStorage(OUTDIR, "output-380961-2.sqlite");
-LoginTest.checkStorageData(storage, [], [dummyuser2, dummyuser3]);
-
-LoginTest.deleteFile(OUTDIR, "output-380961-2.sqlite");
-
-
-/* ========== 4 ========== */
-testnum++;
-
-testdesc = "testing import of mixed encrypted and mime-64 entries."
-storage = LoginTest.initStorage(INDIR, "signons-380961-3.txt",
-                               OUTDIR, "output-380961-3.sqlite");
-LoginTest.checkStorageData(storage, [], [dummyuser1, dummyuser2, dummyuser3]);
-
-testdesc = "[flush and reload for verification]"
-storage = LoginTest.reloadStorage(OUTDIR, "output-380961-3.sqlite");
-LoginTest.checkStorageData(storage, [], [dummyuser1, dummyuser2, dummyuser3]);
-
-LoginTest.deleteFile(OUTDIR, "output-380961-3.sqlite");
-
-
-/*
  * ---------------------- Bug 381262 ----------------------
  * The SecretDecoderRing can't handle UCS2, failure to
  * convert to UTF8 garbles the result.
@@ -117,7 +55,7 @@ LoginTest.deleteFile(OUTDIR, "output-380961-3.sqlite");
  * garbage, whereas the "bad" UCS2 looks ok!
  */
 
-/* ========== 5 ========== */
+/* ========== 2 ========== */
 testnum++;
 
 testdesc = "initializing login with non-ASCII data."
@@ -136,27 +74,11 @@ dummyuser4.formSubmitURL = "https://site.org";
 dummyuser4.httpRealm     = null;
 
 
-/* ========== 6 ========== */
-testnum++;
-
-testdesc = "testing import of non-ascii username and password."
-storage = LoginTest.initStorage(INDIR, "signons-381262.txt",
-                               OUTDIR, "output-381262-1.sqlite");
-LoginTest.checkStorageData(storage, [], [dummyuser4]);
-
-testdesc = "[flush and reload for verification]"
-storage = LoginTest.reloadStorage(OUTDIR, "output-381262-1.sqlite");
-LoginTest.checkStorageData(storage, [], [dummyuser4]);
-
-LoginTest.deleteFile(OUTDIR, "output-381262-1.sqlite");
-
-
-/* ========== 7 ========== */
+/* ========== 3 ========== */
 testnum++;
 
 testdesc = "testing storage of non-ascii username and password."
-storage = LoginTest.initStorage(INDIR, "signons-empty.txt",
-                               OUTDIR, "output-381262-2.sqlite");
+storage = LoginTest.initStorage(OUTDIR, "output-381262-2.sqlite");
 LoginTest.checkStorageData(storage, [], []);
 storage.addLogin(dummyuser4);
 LoginTest.checkStorageData(storage, [], [dummyuser4]);
@@ -169,51 +91,13 @@ LoginTest.deleteFile(OUTDIR, "output-381262-2.sqlite");
 
 
 /*
- * ---------------------- Bug 400751 ----------------------
- * Migrating from existing mime64 encoded format causes
- * errors in storage legacy's code
- */
-
-
-/* ========== 8 ========== */
-testnum++;
-
-testdesc = "checking double reading of mime64-obscured entries";
-storage = LoginTest.initStorage(INDIR, "signons-380961-1.txt",
-                               OUTDIR, "output-400751-0.sqlite");
-LoginTest.checkStorageData(storage, [], [dummyuser1]);
-
-testdesc = "checking double reading of mime64-obscured entries part 2";
-LoginTest.checkStorageData(storage, [], [dummyuser1]);
-
-LoginTest.deleteFile(OUTDIR, "output-400751-0.sqlite");
-
-
-/* ========== 9 ========== */
-testnum++;
-
-testdesc = "checking correct storage of mime64 converted entries";
-storage = LoginTest.initStorage(INDIR, "signons-380961-1.txt",
-                               OUTDIR, "output-400751-1.sqlite");
-LoginTest.checkStorageData(storage, [], [dummyuser1]);
-LoginTest.checkStorageData(storage, [], [dummyuser1]);
-storage.addLogin(dummyuser2); // trigger a write
-LoginTest.checkStorageData(storage, [], [dummyuser1, dummyuser2]);
-
-testdesc = "[flush and reload for verification]";
-storage = LoginTest.reloadStorage(OUTDIR, "output-400751-1.sqlite");
-LoginTest.checkStorageData(storage, [], [dummyuser1, dummyuser2]);
-
-LoginTest.deleteFile(OUTDIR, "output-400751-1.sqlite");
-
-
-/*
  * ---------------------- Bug 394610 ----------------------
- * Ensure input which might mess with the format or structure of
- * the store file is appropriately filtered.
+ * The ancient signons.txt format needed some input sanitation
+ * to avoid causing parse errors. We continuted to enforce this
+ * with sqlite, even though it's not strictly needed.
  */
 
-/* ========== 10 ========== */
+/* ========== 4 ========== */
 testnum++;
 
 function tryAddUser(storage, aUser, aExpectedError) {
@@ -228,8 +112,7 @@ function tryAddUser(storage, aUser, aExpectedError) {
 }
 
 testdesc = "preparting to try logins with bogus values";
-storage = LoginTest.initStorage(INDIR, "signons-empty.txt",
-                               OUTDIR, "output-394610-1.sqlite");
+storage = LoginTest.initStorage(OUTDIR, "output-394610-1.sqlite");
 LoginTest.checkStorageData(storage, [], []);
 
 
@@ -330,12 +213,11 @@ failUser.password = "password";
 LoginTest.deleteFile(OUTDIR, "output-394610-1.sqlite");
 
 
-/* ========== 11 ========== */
+/* ========== 5 ========== */
 testnum++;
 
 testdesc = "storing data values with special period-only value"
-storage = LoginTest.initStorage(INDIR, "signons-empty.txt",
-                               OUTDIR, "output-394610-2.sqlite");
+storage = LoginTest.initStorage(OUTDIR, "output-394610-2.sqlite");
 LoginTest.checkStorageData(storage, [], []);
 
 
@@ -370,13 +252,12 @@ LoginTest.checkStorageData(storage, [], []);
 LoginTest.deleteFile(OUTDIR, "output-394610-2.sqlite");
 
 
-/* ========== 12 ========== */
+/* ========== 6 ========== */
 testnum++;
 
 testdesc = "create logins with parens in host/httpRealm"
 
-storage = LoginTest.initStorage(INDIR, "signons-empty.txt",
-                               OUTDIR, "output-394610-3.sqlite");
+storage = LoginTest.initStorage(OUTDIR, "output-394610-3.sqlite");
 LoginTest.checkStorageData(storage, [], []);
 
 var parenUser1 = Cc["@mozilla.org/login-manager/loginInfo;1"].
@@ -450,7 +331,7 @@ LoginTest.checkStorageData(storage, [], parenLogins);
 LoginTest.deleteFile(OUTDIR, "output-394610-3.sqlite");
 
 
-/* ========== 13 ========== */
+/* ========== 7 ========== */
 testnum++;
 
 testdesc = "storing data values with embedded nulls."
@@ -459,8 +340,7 @@ testdesc = "storing data values with embedded nulls."
 do_check_eq( "foo\0bar", "foo\0bar");
 do_check_neq("foo\0bar", "foobar");
 
-storage = LoginTest.initStorage(INDIR, "signons-empty.txt",
-                               OUTDIR, "output-394610-4.sqlite");
+storage = LoginTest.initStorage(OUTDIR, "output-394610-4.sqlite");
 LoginTest.checkStorageData(storage, [], []);
 
 var nullUser = Cc["@mozilla.org/login-manager/loginInfo;1"].
@@ -545,12 +425,11 @@ LoginTest.deleteFile(OUTDIR, "output-394610-4.sqlite");
  * UCS2 characters above U+00FF.
  */
 
-/* ========== 14 ========== */
+/* ========== 8 ========== */
 testnum++;
 testdesc = "ensure UCS2 strings don't get mangled."
 
-storage = LoginTest.initStorage(INDIR, "signons-empty.txt",
-                               OUTDIR, "output-451155.sqlite");
+storage = LoginTest.initStorage(OUTDIR, "output-451155.sqlite");
 LoginTest.checkStorageData(storage, [], []);
 
 var testString = String.fromCharCode(355, 277, 349, 357, 533, 537, 101, 345, 185);
@@ -578,76 +457,6 @@ storage = LoginTest.reloadStorage(OUTDIR, "output-451155.sqlite");
 LoginTest.checkStorageData(storage, [utfHost], [utfUser1, utfUser2]);
 
 LoginTest.deleteFile(OUTDIR, "output-451155.sqlite");
-
-
-/*
- * ---------------------- Bug 316984 ----------------------
- * Ensure that base64 logins are reencrypted upon call to
- * getAllLogins
- */
-
-/* ========== 15 ========== */
-testnum++;
-testdesc = "ensure base64 logins are reencrypted on first call to getAllLogins"
-
-// signons-380961-3.txt contains 2 base64 logins & 1 normal
-storage = LoginTest.initStorage(INDIR, "signons-380961-3.txt",
-                               OUTDIR, "output-316984-1.sqlite");
-
-// Check that we do have 2 base64 logins here.
-let dbConnection = LoginTest.openDB("output-316984-1.sqlite");
-do_check_eq(countBase64Logins(dbConnection), 2);
-
-// This makes a call to getAllLogins which should reencrypt
-LoginTest.checkStorageData(storage, [], [dummyuser1, dummyuser2, dummyuser3]);
-
-// Check that there are 0 base64 logins remaining
-do_check_eq(countBase64Logins(dbConnection), 0);
-
-LoginTest.deleteFile(OUTDIR, "output-316984-1.sqlite");
-
-
-/* ========== 16 ========== */
-testnum++;
-testdesc = "ensure base64 logins are reencrypted when first new login is added"
-
-// signons-380961-3.txt contains 2 base64 logins & 1 normal
-storage = LoginTest.initStorage(INDIR, "signons-380961-3.txt",
-                               OUTDIR, "output-316984-2.sqlite");
-
-// Check that we do have 2 base64 logins here.
-dbConnection = LoginTest.openDB("output-316984-2.sqlite");
-do_check_eq(countBase64Logins(dbConnection), 2);
-
-// Adding a new user should reencrypt the first time
-storage.addLogin(dummyuser4)
-
-// Check that there are 0 base64 logins remaining
-do_check_eq(countBase64Logins(dbConnection), 0);
-
-LoginTest.deleteFile(OUTDIR, "output-316984-2.sqlite");
-
-
-/* ========== 17 ========== */
-testnum++;
-testdesc = "ensure base64 logins are NOT reencrypted on call to countLogins"
-
-// signons-380961-3.txt contains 2 base64 logins & 1 normal
-storage = LoginTest.initStorage(INDIR, "signons-380961-3.txt",
-                               OUTDIR, "output-316984-3.sqlite");
-
-// Check that we do have 2 base64 logins here.
-dbConnection = LoginTest.openDB("output-316984-3.sqlite");
-do_check_eq(countBase64Logins(dbConnection), 2);
-
-// countLogins should NOT reencrypt logins
-storage.countLogins("", "", "")
-
-// Check that there are still 2 base64 logins here
-do_check_eq(countBase64Logins(dbConnection), 2);
-
-LoginTest.deleteFile(OUTDIR, "output-316984-3.sqlite");
-
 
 
 /* ========== end ========== */

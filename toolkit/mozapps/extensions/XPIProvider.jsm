@@ -25,6 +25,8 @@ XPCOMUtils.defineLazyModuleGetter(this, "FileUtils",
                                   "resource://gre/modules/FileUtils.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "NetUtil",
                                   "resource://gre/modules/NetUtil.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "PermissionsUtils",
+                                  "resource://gre/modules/PermissionsUtils.jsm");
 
 XPCOMUtils.defineLazyServiceGetter(this,
                                    "ChromeRegistry",
@@ -57,8 +59,7 @@ const PREF_EM_AUTO_DISABLED_SCOPES    = "extensions.autoDisableScopes";
 const PREF_EM_SHOW_MISMATCH_UI        = "extensions.showMismatchUI";
 const PREF_XPI_ENABLED                = "xpinstall.enabled";
 const PREF_XPI_WHITELIST_REQUIRED     = "xpinstall.whitelist.required";
-const PREF_XPI_WHITELIST_PERMISSIONS  = "xpinstall.whitelist.add";
-const PREF_XPI_BLACKLIST_PERMISSIONS  = "xpinstall.blacklist.add";
+const PREF_XPI_PERMISSIONS_BRANCH     = "xpinstall.";
 const PREF_XPI_UNPACK                 = "extensions.alwaysUnpack";
 const PREF_INSTALL_REQUIREBUILTINCERTS = "extensions.install.requireBuiltInCerts";
 const PREF_INSTALL_DISTRO_ADDONS      = "extensions.installDistroAddons";
@@ -3128,26 +3129,8 @@ var XPIProvider = {
    * manager for the user to change later.
    */
   importPermissions: function XPI_importPermissions() {
-    function importList(aPrefBranch, aAction) {
-      let list = Services.prefs.getChildList(aPrefBranch, {});
-      list.forEach(function(aPref) {
-        let hosts = Prefs.getCharPref(aPref, "");
-        if (!hosts)
-          return;
-
-        hosts.split(",").forEach(function(aHost) {
-          Services.perms.add(NetUtil.newURI("http://" + aHost), XPI_PERMISSION,
-                             aAction);
-        });
-
-        Services.prefs.setCharPref(aPref, "");
-      });
-    }
-
-    importList(PREF_XPI_WHITELIST_PERMISSIONS,
-               Ci.nsIPermissionManager.ALLOW_ACTION);
-    importList(PREF_XPI_BLACKLIST_PERMISSIONS,
-               Ci.nsIPermissionManager.DENY_ACTION);
+    PermissionsUtils.importFromPrefs(PREF_XPI_PERMISSIONS_BRANCH,
+                                     XPI_PERMISSION);
   },
 
   /**
