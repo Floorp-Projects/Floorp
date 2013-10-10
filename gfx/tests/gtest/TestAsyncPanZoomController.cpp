@@ -188,6 +188,44 @@ TEST(AsyncPanZoomController, Pinch) {
   EXPECT_EQ(fm.mScrollOffset.y, 0);
 }
 
+TEST(AsyncPanZoomController, Overzoom) {
+  nsRefPtr<MockContentController> mcc = new MockContentController();
+  nsRefPtr<TestAsyncPanZoomController> apzc = new TestAsyncPanZoomController(0, mcc);
+
+  FrameMetrics fm;
+  fm.mViewport = CSSRect(0, 0, 100, 100);
+  fm.mCompositionBounds = ScreenIntRect(0, 0, 100, 100);
+  fm.mScrollableRect = CSSRect(0, 0, 125, 150);
+  fm.mScrollOffset = CSSPoint(10, 0);
+  fm.mZoom = CSSToScreenScale(1.0);
+  apzc->SetFrameMetrics(fm);
+  // the visible area of the document in CSS pixels is x=10 y=0 w=100 h=100
+
+  EXPECT_CALL(*mcc, SendAsyncScrollDOMEvent(_,_,_)).Times(1);
+  EXPECT_CALL(*mcc, RequestContentRepaint(_)).Times(1);
+
+  apzc->HandleInputEvent(PinchGestureInput(PinchGestureInput::PINCHGESTURE_START,
+                                           0,
+                                           ScreenPoint(50, 50),
+                                           10.0,
+                                           10.0));
+  apzc->HandleInputEvent(PinchGestureInput(PinchGestureInput::PINCHGESTURE_SCALE,
+                                           0,
+                                           ScreenPoint(50, 50),
+                                           5.0,
+                                           10.0));
+  apzc->HandleInputEvent(PinchGestureInput(PinchGestureInput::PINCHGESTURE_END,
+                                           0,
+                                           ScreenPoint(50, 50),
+                                           5.0,
+                                           5.0));
+
+  fm = apzc->GetFrameMetrics();
+  EXPECT_EQ(fm.mZoom.scale, 0.8f);
+  EXPECT_EQ(fm.mScrollOffset.x, 0);
+  EXPECT_EQ(fm.mScrollOffset.y, 0);
+}
+
 TEST(AsyncPanZoomController, SimpleTransform) {
   TimeStamp testStartTime = TimeStamp::Now();
   // RefCounted class can't live in the stack
