@@ -558,10 +558,10 @@ SwitchToUpdatedApp(nsIFile *greDir, nsIFile *updateDir, nsIFile *statusFile,
       argv[argc - 1] = "-ServerName:DefaultBrowserServer";
     }
 #endif
-    argv[argc] = NULL;
+    argv[argc] = nullptr;
   } else {
     argc = 4;
-    argv[4] = NULL;
+    argv[4] = nullptr;
   }
 
   if (gSafeMode) {
@@ -592,7 +592,7 @@ SwitchToUpdatedApp(nsIFile *greDir, nsIFile *updateDir, nsIFile *statusFile,
   LaunchChildMac(argc, argv);
   exit(0);
 #else
-  PR_CreateProcessDetached(updaterPath.get(), argv, NULL, NULL);
+  PR_CreateProcessDetached(updaterPath.get(), argv, nullptr, nullptr);
   exit(0);
 #endif
 }
@@ -842,10 +842,10 @@ ApplyUpdate(nsIFile *greDir, nsIFile *updateDir, nsIFile *statusFile,
       argv[argc - 1] = "-ServerName:DefaultBrowserServer";
     }
 #endif
-    argv[argc] = NULL;
+    argv[argc] = nullptr;
   } else {
     argc = 4;
-    argv[4] = NULL;
+    argv[4] = nullptr;
   }
 
   if (gSafeMode) {
@@ -880,11 +880,11 @@ ApplyUpdate(nsIFile *greDir, nsIFile *updateDir, nsIFile *statusFile,
   if (restart) {
     execv(updaterPath.get(), argv);
   } else {
-    *outpid = PR_CreateProcess(updaterPath.get(), argv, NULL, NULL);
+    *outpid = PR_CreateProcess(updaterPath.get(), argv, nullptr, nullptr);
   }
 #elif defined(XP_WIN)
   // Launch the update using updater.exe
-  if (!WinLaunchChild(updaterPathW.get(), argc, argv, NULL, outpid)) {
+  if (!WinLaunchChild(updaterPathW.get(), argc, argv, nullptr, outpid)) {
     return;
   }
 
@@ -902,7 +902,7 @@ ApplyUpdate(nsIFile *greDir, nsIFile *updateDir, nsIFile *statusFile,
     exit(0);
   }
 #else
-  *outpid = PR_CreateProcess(updaterPath.get(), argv, NULL, NULL);
+  *outpid = PR_CreateProcess(updaterPath.get(), argv, nullptr, nullptr);
   if (restart) {
     exit(0);
   }
