@@ -1348,29 +1348,11 @@ android-preqs = \
   $(call mkdir_deps,$(sort $(dir $(FENNEC_PP_JAVA_FILES)))) \
   $(call mkdir_deps,$(sort $(dir $(SYNC_PP_JAVA_FILES)))) \
   $(SERVICES_MANIFEST_FRAGMENTS) \
-  WebAppManifestFragment.xml.in \
-  WebAppsFragments.java \
   $(NULL)
 
 $(android-tgts): % : %.in $(android-preqs)
 	$(PYTHON) $(topsrcdir)/config/Preprocessor.py \
-             $(AUTOMATION_PPARGS) -DOBJDIR="`pwd`" $(DEFINES) $(ACDEFINES) $< > $@
-
-# Add a predefined number of WebApp<num> classes to the WebApps class.
-# These are used so that each webapp can launch in its own process
-# Keep this number in sync with the max web apps in WebAppAllocator.java
-NUM_WEB_APPS=100
-WebAppManifestFragment.xml.in: WebAppManifestFragment.xml.frag
-	@rm -f $@
-	@for n in `$(PYTHON) -c "for x in range($(NUM_WEB_APPS)): print x"`; do \
-		cat $< | sed s,@APPNUM@,$$n,g >> $@ ; \
-	done
-
-WebAppsFragments.java: WebAppsFragment.java.frag
-	@rm -f $@
-	@for n in `$(PYTHON) -c "for x in range($(NUM_WEB_APPS)): print x"`; do \
-		cat $< | sed s,@APPNUM@,$$n,g >> $@ ; \
-	done
+             $(AUTOMATION_PPARGS) $(DEFINES) $(ACDEFINES) $< > $@
 
 # Replace @VIEWTYPE@ with different View names.
 $(FENNEC_PP_JAVA_VIEW_FILES): GeckoView.java.frag
