@@ -1,0 +1,26 @@
+<?xml version="1.0"?>
+<?xml-stylesheet type="text/css" href="chrome://global/skin"?>
+<?xml-stylesheet type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css"?>
+<window title="Test for URL API"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+  <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"/>
+
+  <!-- test results are displayed in the html:body -->
+  <body xmlns="http://www.w3.org/1999/xhtml">
+  </body>
+
+  <!-- test code goes here -->
+  <script type="application/javascript"><![CDATA[
+
+  /** Test for URL API. **/
+  const Cu = Components.utils;
+
+  // Import our test JSM. We first strip the filename off
+  // the chrome url, then append the jsm filename.
+  var base = /.*\//.exec(window.location.href)[0];
+  Cu.import(base + "file_url.jsm");
+
+  checkFromJSM(ok, is);
+
+  ]]></script>
+</window>

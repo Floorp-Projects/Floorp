@@ -13,7 +13,6 @@
 class nsIDOMBlob;
 class nsISupports;
 class nsIURI;
-class nsPIDOMWindow;
 
 namespace mozilla {
 
@@ -33,15 +32,14 @@ class URLProxy;
 class URL MOZ_FINAL
 {
 public:
-  NS_INLINE_DECL_CYCLE_COLLECTING_NATIVE_REFCOUNTING(URL)
-  NS_DECL_CYCLE_COLLECTION_NATIVE_CLASS(URL)
+  NS_INLINE_DECL_REFCOUNTING(URL)
 
-  URL(nsPIDOMWindow* aWindow, nsIURI* aURI);
+  URL(nsIURI* aURI);
 
   // WebIDL methods
-  nsPIDOMWindow* GetParentObject() const
+  nsISupports* GetParentObject() const
   {
-    return mWindow;
+    return nullptr;
   }
 
   JSObject*
@@ -120,13 +118,13 @@ private:
     return mURI;
   }
 
-  static void CreateObjectURLInternal(nsISupports* aGlobal, nsISupports* aObject,
+  static void CreateObjectURLInternal(const GlobalObject& aGlobal,
+                                      nsISupports* aObject,
                                       const nsACString& aScheme,
                                       const objectURLOptions& aOptions,
                                       nsString& aResult,
                                       ErrorResult& aError);
 
-  nsRefPtr<nsPIDOMWindow> mWindow;
   nsCOMPtr<nsIURI> mURI;
 
   friend class mozilla::dom::workers::URLProxy;
