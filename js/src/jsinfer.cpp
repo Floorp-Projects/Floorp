@@ -1920,8 +1920,6 @@ void
 TypeCompartment::addPendingRecompile(JSContext *cx, JSScript *script)
 {
     JS_ASSERT(script);
-    if (!constrainedOutputs)
-        return;
 
 #ifdef JS_ION
     CancelOffThreadIonCompile(cx->compartment(), script);
