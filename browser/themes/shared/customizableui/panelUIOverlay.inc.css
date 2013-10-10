@@ -359,11 +359,13 @@ toolbarbutton.panel-multiview-anchor {
   display: none;
 }
 
-#edit-controls@inAnyPanel@,
 #edit-controls@inAnyPanel@ > toolbarbutton,
-#zoom-controls@inAnyPanel@,
 #zoom-controls@inAnyPanel@ > toolbarbutton {
   -moz-box-flex: 1;
+}
+
+#search-container@inAnyPanel@ {
+  width: @menuPanelWidth@;
 }
 
 #edit-controls@inAnyPanel@ > toolbarbutton,
