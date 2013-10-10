@@ -594,7 +594,7 @@ let CustomizableUIInternal = {
         continue;
       }
 
-      this.notifyListeners("onWidgetBeforeDOMChange", widgetNode, null, container);
+      this.notifyListeners("onWidgetBeforeDOMChange", widgetNode, null, container, true);
       this._removeParentFlex(widgetNode);
 
       if (gPalette.has(aWidgetId) || this.isSpecialWidget(aWidgetId)) {
@@ -607,7 +607,7 @@ let CustomizableUIInternal = {
         }
         areaNode.toolbox.palette.appendChild(widgetNode);
       }
-      this.notifyListeners("onWidgetAfterDOMChange", widgetNode, null, container);
+      this.notifyListeners("onWidgetAfterDOMChange", widgetNode, null, container, true);
 
       if (area.get("type") == CustomizableUI.TYPE_TOOLBAR) {
         areaNode.setAttribute("currentset", areaNode.currentSet);
@@ -2309,6 +2309,8 @@ OverflowableToolbar.prototype = {
     this._panel.addEventListener("popuphiding", this);
     CustomizableUIInternal.addPanelCloseListeners(this._panel);
 
+    CustomizableUI.addListener(this);
+
     this._initialized = true;
 
     // The 'overflow' event may have been fired before init was called.
@@ -2334,6 +2336,7 @@ OverflowableToolbar.prototype = {
     window.gNavToolbox.removeEventListener("aftercustomization", this);
     this._chevron.removeEventListener("command", this);
     this._panel.removeEventListener("popuphiding", this);
+    CustomizableUI.removeListener(this);
     CustomizableUIInternal.removePanelCloseListeners(this._panel);
   },
 
@@ -2398,6 +2401,9 @@ OverflowableToolbar.prototype = {
         child.setAttribute("customizableui-anchorid", this._chevron.id);
 
         this._list.insertBefore(child, this._list.firstChild);
+        if (!this._toolbar.hasAttribute("overflowing")) {
+          CustomizableUI.addListener(this);
+        }
         this._toolbar.setAttribute("overflowing", "true");
       }
       child = prevChild;
@@ -2456,6 +2462,7 @@ OverflowableToolbar.prototype = {
 
     if (!this._collapsed.size) {
       this._toolbar.removeAttribute("overflowing");
+      CustomizableUI.removeListener(this);
     }
   },
 
@@ -2477,6 +2484,87 @@ OverflowableToolbar.prototype = {
   _enable: function() {
     this._enabled = true;
     this._onOverflow();
+  },
+
+  onWidgetBeforeDOMChange: function(aNode, aNextNode, aContainer) {
+    if (aContainer != this._target) {
+      return;
+    }
+    // When we (re)move an item, update all the items that come after it in the list
+    // with the minsize *of the item before the to-be-removed node*. This way, we
+    // ensure that we try to move items back as soon as that's possible.
+    if (aNode.parentNode == this._list) {
+      let updatedMinSize;
+      if (aNode.previousSibling) {
+        updatedMinSize = this._collapsed.get(aNode.previousSibling.id);
+      } else {
+        // Force (these) items to try to flow back into the bar:
+        updatedMinSize = 1;
+      }
+      let nextItem = aNode.nextSibling;
+      while (nextItem) {
+        this._collapsed.set(nextItem.id, updatedMinSize);
+        nextItem = nextItem.nextSibling;
+      }
+    }
+  },
+
+  onWidgetAfterDOMChange: function(aNode, aNextNode, aContainer) {
+    if (aContainer != this._target) {
+      return;
+    }
+
+    let nowInBar = aNode.parentNode == aContainer;
+    let nowOverflowed = aNode.parentNode == this._list;
+    let wasOverflowed = this._collapsed.has(aNode.id);
+
+    // If this wasn't overflowed before...
+    if (!wasOverflowed) {
+      // ... but it is now, then we added to the overflow panel. Exciting stuff:
+      if (nowOverflowed) {
+        // NB: we're guaranteed that it has a previousSibling, because if it didn't,
+        // we would have added it to the toolbar instead. See getOverflowedNextNode.
+        let prevId = aNode.previousSibling.id;
+        let minSize = this._collapsed.get(prevId);
+        this._collapsed.set(aNode.id, minSize);
+        aNode.setAttribute("customizableui-anchorid", this._chevron.id);
+        aNode.classList.add("overflowedItem");
+      }
+      // If it is not overflowed and not in the toolbar, and was not overflowed
+      // either, it moved out of the toolbar. That means there's now space in there!
+      // Let's try to move stuff back:
+      else if (!nowInBar) {
+        this._moveItemsBackToTheirOrigin(true);
+      }
+      // If it's in the toolbar now, then we don't care. An overflow event may
+      // fire afterwards; that's ok!
+    }
+    // If it used to be overflowed...
+    else {
+      // ... and isn't anymore, let's remove our bookkeeping:
+      if (!nowOverflowed) {
+        this._collapsed.delete(aNode.id);
+        aNode.removeAttribute("customizableui-anchorid");
+        aNode.classList.remove("overflowedItem");
+
+        if (!this._collapsed.size) {
+          this._toolbar.removeAttribute("overflowing");
+          CustomizableUI.removeListener(this);
+        }
+      }
+      // but if it still is, it must have changed places. Bookkeep:
+      else {
+        if (aNode.previousSibling) {
+          let prevId = aNode.previousSibling.id;
+          let minSize = this._collapsed.get(prevId);
+          this._collapsed.set(aNode.id, minSize);
+        } else {
+          // If it's now the first item in the overflow list,
+          // maybe we can return it:
+          this._moveItemsBackToTheirOrigin();
+        }
+      }
+    }
   },
 
   getOverflowedInsertionPoints: function(aNode, aNextNodeId) {
