@@ -269,6 +269,56 @@ struct DeltaValues
   double deltaY;
 };
 
+/******************************************************************/
+/* nsScrollbarsForWheel                                           */
+/******************************************************************/
+
+class nsScrollbarsForWheel {
+public:
+  static void PrepareToScrollText(nsEventStateManager* aESM,
+                                  nsIFrame* aTargetFrame,
+                                  WheelEvent* aEvent);
+  static void SetActiveScrollTarget(nsIScrollableFrame* aScrollTarget);
+  // Hide all scrollbars (both mActiveOwner's and mActivatedScrollTargets')
+  static void MayInactivate();
+  static void Inactivate();
+  static bool IsActive();
+  static void OwnWheelTransaction(bool aOwn);
+
+protected:
+  static const size_t         kNumberOfTargets = 4;
+  static const DeltaValues    directions[kNumberOfTargets];
+  static nsWeakFrame          sActiveOwner;
+  static nsWeakFrame          sActivatedScrollTargets[kNumberOfTargets];
+  static bool                 sHadWheelStart;
+  static bool                 sOwnWheelTransaction;
+
+
+  /**
+   * These two methods are called upon NS_WHEEL_START/NS_WHEEL_STOP events
+   * to show/hide the right scrollbars.
+   */
+  static void TemporarilyActivateAllPossibleScrollTargets(
+                                  nsEventStateManager* aESM,
+                                  nsIFrame* aTargetFrame,
+                                  WheelEvent* aEvent);
+  static void DeactivateAllTemporarilyActivatedScrollTargets();
+};
+
+const DeltaValues nsScrollbarsForWheel::directions[kNumberOfTargets] = {
+  DeltaValues(-1, 0), DeltaValues(+1, 0), DeltaValues(0, -1), DeltaValues(0, +1)
+};
+nsWeakFrame nsScrollbarsForWheel::sActiveOwner = nullptr;
+nsWeakFrame nsScrollbarsForWheel::sActivatedScrollTargets[kNumberOfTargets] = {
+  nullptr, nullptr, nullptr, nullptr
+};
+bool nsScrollbarsForWheel::sHadWheelStart = false;
+bool nsScrollbarsForWheel::sOwnWheelTransaction = false;
+
+/******************************************************************/
+/* nsMouseWheelTransaction                                        */
+/******************************************************************/
+
 class nsMouseWheelTransaction {
 public:
   static nsIFrame* GetTargetFrame() { return sTargetFrame; }
@@ -277,11 +327,13 @@ public:
   // Be careful, UpdateTransaction may fire a DOM event, therefore, the target
   // frame might be destroyed in the event handler.
   static bool UpdateTransaction(WheelEvent* aEvent);
+  static void MayEndTransaction();
   static void EndTransaction();
   static void OnEvent(WidgetEvent* aEvent);
   static void Shutdown();
   static uint32_t GetTimeoutTime();
 
+  static void OwnScrollbars(bool aOwn);
 
   static DeltaValues AccelerateWheelDelta(WheelEvent* aEvent,
                                           bool aAllowScrollSpeedOverride);
@@ -299,12 +351,14 @@ protected:
   static int32_t GetAccelerationFactor();
   static DeltaValues OverrideSystemScrollSpeed(WheelEvent* aEvent);
   static double ComputeAcceleratedWheelDelta(double aDelta, int32_t aFactor);
+  static bool OutOfTime(uint32_t aBaseTime, uint32_t aThreshold);
 
   static nsWeakFrame sTargetFrame;
   static uint32_t    sTime;        // in milliseconds
   static uint32_t    sMouseMoved;  // in milliseconds
   static nsITimer*   sTimer;
   static int32_t     sScrollSeriesCounter;
+  static bool        sOwnScrollbars;
 };
 
 nsWeakFrame nsMouseWheelTransaction::sTargetFrame(nullptr);
@@ -312,13 +366,7 @@ uint32_t    nsMouseWheelTransaction::sTime        = 0;
 uint32_t    nsMouseWheelTransaction::sMouseMoved  = 0;
 nsITimer*   nsMouseWheelTransaction::sTimer       = nullptr;
 int32_t     nsMouseWheelTransaction::sScrollSeriesCounter = 0;
-
-static bool
-OutOfTime(uint32_t aBaseTime, uint32_t aThreshold)
-{
-  uint32_t now = PR_IntervalToMilliseconds(PR_IntervalNow());
-  return (now - aBaseTime > aThreshold);
-}
+bool        nsMouseWheelTransaction::sOwnScrollbars = false;
 
 static bool
 CanScrollInRange(nscoord aMin, nscoord aValue, nscoord aMax, double aDirection)
@@ -328,20 +376,33 @@ CanScrollInRange(nscoord aMin, nscoord aValue, nscoord aMax, double aDirection)
 }
 
 static bool
-CanScrollOn(nsIScrollableFrame* aScrollFrame, double aDeltaX, double aDeltaY)
+CanScrollOn(nsIScrollableFrame* aScrollFrame, double aDirectionX, double aDirectionY)
 {
   MOZ_ASSERT(aScrollFrame);
-  NS_ASSERTION(aDeltaX || aDeltaY,
+  NS_ASSERTION(aDirectionX || aDirectionY,
                "One of the delta values must be non-zero at least");
 
   nsPoint scrollPt = aScrollFrame->GetScrollPosition();
   nsRect scrollRange = aScrollFrame->GetScrollRange();
   uint32_t directions = aScrollFrame->GetPerceivedScrollingDirections();
 
-  return (aDeltaX && (directions & nsIScrollableFrame::HORIZONTAL) &&
-          CanScrollInRange(scrollRange.x, scrollPt.x, scrollRange.XMost(), aDeltaX)) ||
-         (aDeltaY && (directions & nsIScrollableFrame::VERTICAL) &&
-          CanScrollInRange(scrollRange.y, scrollPt.y, scrollRange.YMost(), aDeltaY));
+  return (aDirectionX && (directions & nsIScrollableFrame::HORIZONTAL) &&
+          CanScrollInRange(scrollRange.x, scrollPt.x, scrollRange.XMost(), aDirectionX)) ||
+         (aDirectionY && (directions & nsIScrollableFrame::VERTICAL) &&
+          CanScrollInRange(scrollRange.y, scrollPt.y, scrollRange.YMost(), aDirectionY));
+}
+
+bool
+nsMouseWheelTransaction::OutOfTime(uint32_t aBaseTime, uint32_t aThreshold)
+{
+  uint32_t now = PR_IntervalToMilliseconds(PR_IntervalNow());
+  return (now - aBaseTime > aThreshold);
+}
+
+void
+nsMouseWheelTransaction::OwnScrollbars(bool aOwn)
+{
+  sOwnScrollbars = aOwn;
 }
 
 void
@@ -349,6 +410,9 @@ nsMouseWheelTransaction::BeginTransaction(nsIFrame* aTargetFrame,
                                           WheelEvent* aEvent)
 {
   NS_ASSERTION(!sTargetFrame, "previous transaction is not finished!");
+  MOZ_ASSERT(aEvent->message == NS_WHEEL_WHEEL,
+             "Transaction must be started with a wheel event");
+  nsScrollbarsForWheel::OwnWheelTransaction(false);
   sTargetFrame = aTargetFrame;
   sScrollSeriesCounter = 0;
   if (!UpdateTransaction(aEvent)) {
@@ -386,12 +450,27 @@ nsMouseWheelTransaction::UpdateTransaction(WheelEvent* aEvent)
 }
 
 void
+nsMouseWheelTransaction::MayEndTransaction()
+{
+  if (!sOwnScrollbars && nsScrollbarsForWheel::IsActive()) {
+    nsScrollbarsForWheel::OwnWheelTransaction(true);
+  } else {
+    EndTransaction();
+  }
+}
+
+void
 nsMouseWheelTransaction::EndTransaction()
 {
   if (sTimer)
     sTimer->Cancel();
   sTargetFrame = nullptr;
   sScrollSeriesCounter = 0;
+  if (sOwnScrollbars) {
+    sOwnScrollbars = false;
+    nsScrollbarsForWheel::OwnWheelTransaction(false);
+    nsScrollbarsForWheel::Inactivate();
+  }
 }
 
 void
@@ -415,7 +494,7 @@ nsMouseWheelTransaction::OnEvent(WidgetEvent* aEvent)
           OutOfTime(sMouseMoved, GetIgnoreMoveDelayTime())) {
         // Terminate the current mousewheel transaction if the mouse moved more
         // than ignoremovedelay milliseconds ago
-        EndTransaction();
+        MayEndTransaction();
       }
       return;
     case NS_MOUSE_MOVE:
@@ -426,7 +505,7 @@ nsMouseWheelTransaction::OnEvent(WidgetEvent* aEvent)
         nsIntPoint pt = GetScreenPoint(static_cast<WidgetGUIEvent*>(aEvent));
         nsIntRect r = sTargetFrame->GetScreenRectExternal();
         if (!r.Contains(pt)) {
-          EndTransaction();
+          MayEndTransaction();
           return;
         }
 
@@ -475,8 +554,9 @@ nsMouseWheelTransaction::OnFailToScrollTarget()
   }
   // The target frame might be destroyed in the event handler, at that time,
   // we need to finish the current transaction
-  if (!sTargetFrame)
+  if (!sTargetFrame) {
     EndTransaction();
+  }
 }
 
 void
@@ -491,7 +571,7 @@ nsMouseWheelTransaction::OnTimeout(nsITimer* aTimer, void* aClosure)
   nsIFrame* frame = sTargetFrame;
   // We need to finish current transaction before DOM event firing. Because
   // the next DOM event might create strange situation for us.
-  EndTransaction();
+  MayEndTransaction();
 
   if (Preferences::GetBool("test.mousescroll", false)) {
     // This event is used for automated tests, see bug 442774.
@@ -623,6 +703,127 @@ nsMouseWheelTransaction::OverrideSystemScrollSpeed(WheelEvent* aEvent)
                                            overriddenDeltaValues.deltaX,
                                            overriddenDeltaValues.deltaY);
   return NS_FAILED(rv) ? DeltaValues(aEvent) : overriddenDeltaValues;
+}
+
+/******************************************************************/
+/* nsScrollbarsForWheel                                           */
+/******************************************************************/
+
+void
+nsScrollbarsForWheel::PrepareToScrollText(
+                                  nsEventStateManager* aESM,
+                                  nsIFrame* aTargetFrame,
+                                  WheelEvent* aEvent)
+{
+  if (aEvent->message == NS_WHEEL_START) {
+    nsMouseWheelTransaction::OwnScrollbars(false);
+    if (!IsActive()) {
+      TemporarilyActivateAllPossibleScrollTargets(aESM, aTargetFrame, aEvent);
+      sHadWheelStart = true;
+    }
+  } else {
+    DeactivateAllTemporarilyActivatedScrollTargets();
+  }
+}
+
+void
+nsScrollbarsForWheel::SetActiveScrollTarget(nsIScrollableFrame* aScrollTarget)
+{
+  if (!sHadWheelStart) {
+    return;
+  }
+  nsIScrollbarOwner* scrollbarOwner = do_QueryFrame(aScrollTarget);
+  if (!scrollbarOwner) {
+    return;
+  }
+  sHadWheelStart = false;
+  sActiveOwner = do_QueryFrame(aScrollTarget);
+  scrollbarOwner->ScrollbarActivityStarted();
+}
+
+void
+nsScrollbarsForWheel::MayInactivate()
+{
+  if (!sOwnWheelTransaction && nsMouseWheelTransaction::GetTargetFrame()) {
+    nsMouseWheelTransaction::OwnScrollbars(true);
+  } else {
+    Inactivate();
+  }
+}
+
+void
+nsScrollbarsForWheel::Inactivate()
+{
+  nsIScrollbarOwner* scrollbarOwner = do_QueryFrame(sActiveOwner);
+  if (scrollbarOwner) {
+    scrollbarOwner->ScrollbarActivityStopped();
+  }
+  sActiveOwner = nullptr;
+  DeactivateAllTemporarilyActivatedScrollTargets();
+  if (sOwnWheelTransaction) {
+    sOwnWheelTransaction = false;
+    nsMouseWheelTransaction::OwnScrollbars(false);
+    nsMouseWheelTransaction::EndTransaction();
+  }
+}
+
+bool
+nsScrollbarsForWheel::IsActive()
+{
+  if (sActiveOwner) {
+    return true;
+  }
+  for (size_t i = 0; i < kNumberOfTargets; ++i) {
+    if (sActivatedScrollTargets[i]) {
+      return true;
+    }
+  }
+  return false;
+}
+
+void
+nsScrollbarsForWheel::OwnWheelTransaction(bool aOwn)
+{
+  sOwnWheelTransaction = aOwn;
+}
+
+void
+nsScrollbarsForWheel::TemporarilyActivateAllPossibleScrollTargets(
+                                               nsEventStateManager* aESM,
+                                               nsIFrame* aTargetFrame,
+                                               WheelEvent* aEvent)
+{
+  for (size_t i = 0; i < kNumberOfTargets; i++) {
+    const DeltaValues *dir = &directions[i];
+    nsWeakFrame* scrollTarget = &sActivatedScrollTargets[i];
+    MOZ_ASSERT(!*scrollTarget, "scroll target still temporarily activated!");
+    nsIScrollableFrame* target =
+      aESM->ComputeScrollTarget(aTargetFrame, dir->deltaX, dir->deltaY, aEvent, 
+                                nsEventStateManager::COMPUTE_DEFAULT_ACTION_TARGET);
+    if (target) {
+      nsIScrollbarOwner* scrollbarOwner = do_QueryFrame(target);
+      if (scrollbarOwner) {
+        nsIFrame* targetFrame = do_QueryFrame(target);
+        *scrollTarget = targetFrame;
+        scrollbarOwner->ScrollbarActivityStarted();
+      }
+    }
+  }
+}
+
+void
+nsScrollbarsForWheel::DeactivateAllTemporarilyActivatedScrollTargets()
+{
+  for (size_t i = 0; i < kNumberOfTargets; i++) {
+    nsWeakFrame* scrollTarget = &sActivatedScrollTargets[i];
+    if (*scrollTarget) {
+      nsIScrollbarOwner* scrollbarOwner = do_QueryFrame(*scrollTarget);
+      if (scrollbarOwner) {
+        scrollbarOwner->ScrollbarActivityStopped();
+      }
+      *scrollTarget = nullptr;
+    }
+  }
 }
 
 /******************************************************************/
@@ -977,13 +1178,20 @@ nsEventStateManager::PreHandleEvent(nsPresContext* aPresContext,
     }
     break;
   case NS_WHEEL_WHEEL:
+  case NS_WHEEL_START:
+  case NS_WHEEL_STOP:
     {
       NS_ASSERTION(aEvent->mFlags.mIsTrusted,
                    "Untrusted wheel event shouldn't be here");
 
       nsIContent* content = GetFocusedContent();
-      if (content)
+      if (content) {
         mCurrentTargetContent = content;
+      }
+
+      if (aEvent->message != NS_WHEEL_WHEEL) {
+        break;
+      }
 
       WheelEvent* wheelEvent = static_cast<WheelEvent*>(aEvent);
       WheelPrefs::GetInstance()->ApplyUserPrefsToDelta(wheelEvent);
@@ -2546,6 +2754,20 @@ nsEventStateManager::ComputeScrollTarget(nsIFrame* aTargetFrame,
                                          WheelEvent* aEvent,
                                          ComputeScrollTargetOptions aOptions)
 {
+  return ComputeScrollTarget(aTargetFrame, aEvent->deltaX, aEvent->deltaY,
+                             aEvent, aOptions);
+}
+
+// Overload ComputeScrollTarget method to allow passing "test" dx and dy when looking
+// for which scrollbarowners to activate when two finger down on trackpad
+// and before any actual motion
+nsIScrollableFrame*
+nsEventStateManager::ComputeScrollTarget(nsIFrame* aTargetFrame,
+                                         double aDirectionX,
+                                         double aDirectionY,
+                                         WheelEvent* aEvent,
+                                         ComputeScrollTargetOptions aOptions)
+{
   if (aOptions & PREFER_MOUSE_WHEEL_TRANSACTION) {
     // If the user recently scrolled with the mousewheel, then they probably
     // want to scroll the same view as before instead of the view under the
@@ -2569,14 +2791,14 @@ nsEventStateManager::ComputeScrollTarget(nsIFrame* aTargetFrame,
   // If the event doesn't cause scroll actually, we cannot find scroll target
   // because we check if the event can cause scroll actually on each found
   // scrollable frame.
-  if (!aEvent->deltaX && !aEvent->deltaY) {
+  if (!aDirectionX && !aDirectionY) {
     return nullptr;
   }
 
   bool checkIfScrollableX =
-    aEvent->deltaX && (aOptions & PREFER_ACTUAL_SCROLLABLE_TARGET_ALONG_X_AXIS);
+    aDirectionX && (aOptions & PREFER_ACTUAL_SCROLLABLE_TARGET_ALONG_X_AXIS);
   bool checkIfScrollableY =
-    aEvent->deltaY && (aOptions & PREFER_ACTUAL_SCROLLABLE_TARGET_ALONG_Y_AXIS);
+    aDirectionY && (aOptions & PREFER_ACTUAL_SCROLLABLE_TARGET_ALONG_Y_AXIS);
 
   nsIScrollableFrame* frameToScroll = nullptr;
   nsIFrame* scrollFrame =
@@ -2604,8 +2826,7 @@ nsEventStateManager::ComputeScrollTarget(nsIFrame* aTargetFrame,
 
     // For default action, we should climb up the tree if cannot scroll it
     // by the event actually.
-    bool canScroll = CanScrollOn(frameToScroll,
-                                 aEvent->deltaX, aEvent->deltaY);
+    bool canScroll = CanScrollOn(frameToScroll, aDirectionX, aDirectionY);
     // Comboboxes need special care.
     nsIComboboxControlFrame* comboBox = do_QueryFrame(scrollFrame);
     if (comboBox) {
@@ -3170,33 +3391,51 @@ nsEventStateManager::PostHandleEvent(nsPresContext* aPresContext,
       }
     }
     break;
+  case NS_WHEEL_STOP:
+    {
+      MOZ_ASSERT(aEvent->mFlags.mIsTrusted);
+      nsScrollbarsForWheel::MayInactivate();
+    }
+    break;
   case NS_WHEEL_WHEEL:
+  case NS_WHEEL_START:
     {
       MOZ_ASSERT(aEvent->mFlags.mIsTrusted);
 
       if (*aStatus == nsEventStatus_eConsumeNoDefault) {
+        nsScrollbarsForWheel::Inactivate();
         break;
       }
 
       WheelEvent* wheelEvent = static_cast<WheelEvent*>(aEvent);
       switch (WheelPrefs::GetInstance()->ComputeActionFor(wheelEvent)) {
         case WheelPrefs::ACTION_SCROLL: {
-          if (!wheelEvent->deltaX && !wheelEvent->deltaY) {
-            break;
-          }
           // For scrolling of default action, we should honor the mouse wheel
           // transaction.
+          
+          nsScrollbarsForWheel::PrepareToScrollText(this, aTargetFrame, wheelEvent);
+          
+          if (aEvent->message != NS_WHEEL_WHEEL ||
+              (!wheelEvent->deltaX && !wheelEvent->deltaY)) {
+            break;
+          }
+
           nsIScrollableFrame* scrollTarget =
             ComputeScrollTarget(aTargetFrame, wheelEvent,
                                 COMPUTE_DEFAULT_ACTION_TARGET);
+
+          nsScrollbarsForWheel::SetActiveScrollTarget(scrollTarget);
+
           wheelEvent->overflowDeltaX = wheelEvent->deltaX;
           wheelEvent->overflowDeltaY = wheelEvent->deltaY;
+
           WheelPrefs::GetInstance()->
             CancelApplyingUserPrefsFromOverflowDelta(wheelEvent);
           if (scrollTarget) {
             DoScrollText(scrollTarget, wheelEvent);
           } else {
             nsMouseWheelTransaction::EndTransaction();
+            nsScrollbarsForWheel::Inactivate();
           }
           break;
         }
