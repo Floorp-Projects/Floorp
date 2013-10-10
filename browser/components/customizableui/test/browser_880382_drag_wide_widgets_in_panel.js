@@ -149,8 +149,6 @@ let gTests = [
                                    "preferences-button",
                                    "add-ons-button"];
       simulateItemDrag(developerButton, zoomControls);
-      // Currently, the developer-button is placed after the zoom-controls, but it should be
-      // placed like expectedPlacementsAfterInsert describes.
       assertAreaPlacements(CustomizableUI.AREA_PANEL, placementsAfterInsert);
       ok(!CustomizableUI.inDefaultState, "Should no longer be in default state.");
       let palette = document.getElementById("customization-palette");
@@ -166,6 +164,42 @@ let gTests = [
          "The developer-button should be wrapped by a toolbarpaletteitem");
       let newWindowButton = document.getElementById("new-window-button");
       simulateItemDrag(zoomControls, newWindowButton);
+      ok(CustomizableUI.inDefaultState, "Should be in default state again.");
+    },
+  },
+  {
+    desc: "Dragging an item from the palette to before the edit-controls " +
+          "should move it and two other buttons before the edit and zoom controls.",
+    setup: startCustomizing,
+    run: function() {
+      let developerButton = document.getElementById("developer-button");
+      let editControls = document.getElementById("edit-controls");
+      let placementsAfterInsert = ["developer-button",
+                                   "new-window-button",
+                                   "privatebrowsing-button",
+                                   "edit-controls",
+                                   "zoom-controls",
+                                   "save-page-button",
+                                   "print-button",
+                                   "history-panelmenu",
+                                   "fullscreen-button",
+                                   "find-button",
+                                   "preferences-button",
+                                   "add-ons-button"];
+      simulateItemDrag(developerButton, editControls);
+      assertAreaPlacements(CustomizableUI.AREA_PANEL, placementsAfterInsert);
+      ok(!CustomizableUI.inDefaultState, "Should no longer be in default state.");
+      let palette = document.getElementById("customization-palette");
+      // Check that the palette items are re-wrapped correctly.
+      let feedWrapper = document.getElementById("wrapper-feed-button");
+      let feedButton = document.getElementById("feed-button");
+      is(feedButton.parentNode, feedWrapper,
+         "feed-button should be a child of wrapper-feed-button");
+      is(feedWrapper.getAttribute("place"), "palette",
+         "The feed-button wrapper should have it's place set to 'palette'");
+      simulateItemDrag(developerButton, palette);
+      is(developerButton.parentNode.tagName, "toolbarpaletteitem",
+         "The developer-button should be wrapped by a toolbarpaletteitem");
       ok(CustomizableUI.inDefaultState, "Should be in default state again.");
     },
   },
