@@ -240,7 +240,7 @@ nsXPTIInterfaceInfoManagerGetSingleton(nsISupports* outer,
     return iim->QueryInterface(aIID, aInstancePtr);
 }
 
-nsComponentManagerImpl* nsComponentManagerImpl::gComponentManager = NULL;
+nsComponentManagerImpl* nsComponentManagerImpl::gComponentManager = nullptr;
 bool gXPCOMShuttingDown = false;
 bool gXPCOMThreadsShutDown = false;
 
@@ -279,16 +279,16 @@ CreateUnicharStreamFactory(const mozilla::Module& module,
 #include "XPCOMModule.inc"
 #undef COMPONENT
 
-#define COMPONENT(NAME, Ctor) { &kNS_##NAME##_CID, false, NULL, Ctor },
+#define COMPONENT(NAME, Ctor) { &kNS_##NAME##_CID, false, nullptr, Ctor },
 const mozilla::Module::CIDEntry kXPCOMCIDEntries[] = {
-    { &kComponentManagerCID, true, NULL, nsComponentManagerImpl::Create },
+    { &kComponentManagerCID, true, nullptr, nsComponentManagerImpl::Create },
     { &kINIParserFactoryCID, false, CreateINIParserFactory },
     { &kSimpleUnicharStreamFactoryCID, false, CreateUnicharStreamFactory },
 #include "XPCOMModule.inc"
-    { &kNS_CHROMEREGISTRY_CID, false, NULL, nsChromeRegistryConstructor },
-    { &kNS_CHROMEPROTOCOLHANDLER_CID, false, NULL, nsChromeProtocolHandlerConstructor },
-    { &kNS_SECURITY_CONSOLE_MESSAGE_CID, false, NULL, nsSecurityConsoleMessageConstructor },
-    { NULL }
+    { &kNS_CHROMEREGISTRY_CID, false, nullptr, nsChromeRegistryConstructor },
+    { &kNS_CHROMEPROTOCOLHANDLER_CID, false, nullptr, nsChromeProtocolHandlerConstructor },
+    { &kNS_SECURITY_CONSOLE_MESSAGE_CID, false, nullptr, nsSecurityConsoleMessageConstructor },
+    { nullptr }
 };
 #undef COMPONENT
 
@@ -299,7 +299,7 @@ const mozilla::Module::ContractIDEntry kXPCOMContracts[] = {
     { NS_NETWORK_PROTOCOL_CONTRACTID_PREFIX "chrome", &kNS_CHROMEPROTOCOLHANDLER_CID },
     { NS_INIPARSERFACTORY_CONTRACTID, &kINIParserFactoryCID },
     { NS_SECURITY_CONSOLE_MESSAGE_CONTRACTID, &kNS_SECURITY_CONSOLE_MESSAGE_CID },
-    { NULL }
+    { nullptr }
 };
 #undef COMPONENT
 
@@ -441,7 +441,7 @@ NS_InitXPCOM2(nsIServiceManager* *result,
 #ifndef ANDROID
     // If the locale hasn't already been setup by our embedder,
     // get us out of the "C" locale and into the system 
-    if (strcmp(setlocale(LC_ALL, NULL), "C") == 0)
+    if (strcmp(setlocale(LC_ALL, nullptr), "C") == 0)
         setlocale(LC_ALL, "");
 #endif
 
@@ -508,7 +508,7 @@ NS_InitXPCOM2(nsIServiceManager* *result,
 #endif
     }
 
-    NS_ASSERTION(nsComponentManagerImpl::gComponentManager == NULL, "CompMgr not null at init");
+    NS_ASSERTION(nsComponentManagerImpl::gComponentManager == nullptr, "CompMgr not null at init");
 
     // Create the Component/Service Manager
     nsComponentManagerImpl::gComponentManager = new nsComponentManagerImpl();

@@ -88,7 +88,7 @@ public:
                                  FileLocation &file)
         : mLoader(loader)
         , mFile(file)
-        , mResult(NULL)
+        , mResult(nullptr)
     { }
 
     NS_IMETHOD Run()
@@ -107,7 +107,7 @@ nsNativeModuleLoader::LoadModule(FileLocation &aFile)
 {
     if (aFile.IsZip()) {
         NS_ERROR("Binary components cannot be loaded from JARs");
-        return NULL;
+        return nullptr;
     }
     nsCOMPtr<nsIFile> file = aFile.GetBaseFile();
     nsresult rv;
@@ -123,7 +123,7 @@ nsNativeModuleLoader::LoadModule(FileLocation &aFile)
     nsCOMPtr<nsIHashable> hashedFile(do_QueryInterface(file));
     if (!hashedFile) {
         NS_ERROR("nsIFile is not nsIHashable");
-        return NULL;
+        return nullptr;
     }
 
     nsAutoCString filePath;
@@ -154,7 +154,7 @@ nsNativeModuleLoader::LoadModule(FileLocation &aFile)
         LogMessage("Failed to load native module at path '%s': (%lx) %s",
                    filePath.get(), rv, errorMsg);
 
-        return NULL;
+        return nullptr;
     }
 
 #ifdef IMPLEMENT_BREAK_AFTER_LOAD
@@ -180,7 +180,7 @@ nsNativeModuleLoader::LoadModule(FileLocation &aFile)
         LogMessage("Native module at path '%s' doesn't export symbol `NSModule`.",
                    filePath.get());
         PR_UnloadLibrary(data.library);
-        return NULL;
+        return nullptr;
     }
 
     data.module = *(mozilla::Module const *const *) module;
@@ -189,7 +189,7 @@ nsNativeModuleLoader::LoadModule(FileLocation &aFile)
                    filePath.get(), data.module->mVersion,
                    mozilla::Module::kVersion);
         PR_UnloadLibrary(data.library);
-        return NULL;
+        return nullptr;
     }
         
     mLibraries.Put(hashedFile, data); // infallible

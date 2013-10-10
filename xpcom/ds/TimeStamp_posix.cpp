@@ -330,7 +330,7 @@ TimeStamp::ComputeProcessUptime()
 
   KINFO_PROC proc;
   size_t bufferSize = sizeof(proc);
-  rv = sysctl(mib, mibLen, &proc, &bufferSize, NULL, 0);
+  rv = sysctl(mib, mibLen, &proc, &bufferSize, nullptr, 0);
 
   if (rv == -1)
     return 0;

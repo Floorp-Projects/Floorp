@@ -67,7 +67,7 @@ static const XPCOMFunctions kFrozenFunctions = {
     &NS_CStringContainerInit2,
     &NS_StringGetMutableData,
     &NS_CStringGetMutableData,
-    NULL,
+    nullptr,
 
     // these functions were added post 1.8
     &NS_DebugBreak,
