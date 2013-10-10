@@ -662,40 +662,11 @@ nsEventStatus AsyncPanZoomController::OnScale(const PinchGestureInput& aEvent) {
                           realMinZoom.scale / userZoom.scale,
                           realMaxZoom.scale / userZoom.scale);
 
-      switch (mX.ScaleWillOverscroll(spanRatio, cssFocusPoint.x))
-      {
-        case Axis::OVERSCROLL_NONE:
-          break;
-        case Axis::OVERSCROLL_MINUS:
-        case Axis::OVERSCROLL_PLUS:
-          neededDisplacement.x = -mX.ScaleWillOverscrollAmount(spanRatio, cssFocusPoint.x);
-          break;
-        case Axis::OVERSCROLL_BOTH:
-          // If scaling this way will make us overscroll in both directions, then
-          // we must already be at the maximum zoomed out amount. In this case, we
-          // don't want to allow this scaling to go through and instead clamp it
-          // here.
-          doScale = false;
-          break;
-      }
-    }
+      // Note that the spanRatio here should never put us into OVERSCROLL_BOTH because
+      // up above we clamped it.
+      neededDisplacement.x = -mX.ScaleWillOverscrollAmount(spanRatio, cssFocusPoint.x);
+      neededDisplacement.y = -mY.ScaleWillOverscrollAmount(spanRatio, cssFocusPoint.y);
 
-    if (doScale) {
-      switch (mY.ScaleWillOverscroll(spanRatio, cssFocusPoint.y))
-      {
-        case Axis::OVERSCROLL_NONE:
-          break;
-        case Axis::OVERSCROLL_MINUS:
-        case Axis::OVERSCROLL_PLUS:
-          neededDisplacement.y = -mY.ScaleWillOverscrollAmount(spanRatio, cssFocusPoint.y);
-          break;
-        case Axis::OVERSCROLL_BOTH:
-          doScale = false;
-          break;
-      }
-    }
-
-    if (doScale) {
       ScaleWithFocus(spanRatio, cssFocusPoint);
 
       if (neededDisplacement != CSSPoint()) {
