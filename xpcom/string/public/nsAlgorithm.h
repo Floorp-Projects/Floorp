@@ -11,12 +11,6 @@
   // for |nsCharSourceTraits|, |nsCharSinkTraits|
 #endif
 
-#ifndef nsDebug_h___
-#include "nsDebug.h"
-  // for NS_ASSERTION
-#endif
-
-
 template <class T>
 inline
 T
