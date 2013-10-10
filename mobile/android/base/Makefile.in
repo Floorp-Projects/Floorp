@@ -1230,6 +1230,77 @@ ifdef MOZ_WEBRTC
 ALL_JARS += jars/webrtc.jar
 endif
 
+JAVA_JAR_TARGETS += websockets
+websockets_DEST := jars/websockets.jar
+websockets_JAVAFILES := \
+  $(WEBSOCKETS_JAVA_FILES) \
+  $(NULL)
+websockets_JAVAC_FLAGS := -Xlint:all,-serial
+
+JAVA_JAR_TARGETS += gecko-browser
+gecko-browser_DEST := jars/gecko-browser.jar
+gecko-browser_JAVAFILES := \
+  $(FENNEC_JAVA_FILES) \
+  $(SYNC_JAVA_FILES) \
+  $(NULL)
+gecko-browser_PP_JAVAFILES := \
+  $(FENNEC_PP_JAVA_FILES) \
+  $(FENNEC_PP_JAVA_VIEW_FILES) \
+  $(SYNC_PP_JAVA_FILES) \
+  R.java \
+  $(NULL)
+gecko-browser_EXTRA_JARS := \
+  jars/gecko-mozglue.jar \
+  jars/gecko-util.jar \
+  jars/sync-thirdparty.jar \
+  jars/websockets.jar \
+  $(NULL)
+gecko-browser_JAVAC_FLAGS := -Xlint:all,-deprecation,-fallthrough
+
+JAVA_JAR_TARGETS += gecko-mozglue
+gecko-mozglue_DEST := jars/gecko-mozglue.jar
+gecko-mozglue_JAVAFILES := \
+  $(MOZGLUE_JAVA_FILES) \
+  $(NULL)
+gecko-mozglue_PP_JAVAFILES := \
+  $(MOZGLUE_PP_JAVA_FILES) \
+  $(NULL)
+gecko-mozglue_JAVAC_FLAGS := -Xlint:all
+
+JAVA_JAR_TARGETS += gecko-util
+gecko-util_DEST := jars/gecko-util.jar
+gecko-util_JAVAFILES := \
+  $(UTIL_JAVA_FILES) \
+  $(UTIL_PP_JAVA_FILES) \
+  $(NULL)
+gecko-util_EXTRA_JARS := \
+  jars/gecko-mozglue.jar \
+  $(NULL)
+gecko-util_JAVAC_FLAGS := -Xlint:all,-deprecation
+
+JAVA_JAR_TARGETS += sync-thirdparty
+sync-thirdparty_DEST := jars/sync-thirdparty.jar
+sync-thirdparty_JAVAFILES := \
+  $(SYNC_THIRDPARTY_JAVA_FILES) \
+  $(NULL)
+sync-thirdparty_JAVAC_FLAGS := -Xlint:none
+
+ifdef MOZ_WEBRTC
+JAVA_JAR_TARGETS += webrtc
+webrtc_DEST := jars/webrtc.jar
+webrtc_JAVAFILES := \
+  $(WEBRTC_JAVA_FILES) \
+  $(NULL)
+webrtc_EXTRA_JARS := \
+  jars/gecko-browser.jar \
+  jars/gecko-util.jar \
+  jars/gecko-mozglue.jar \
+  $(NULL)
+webrtc_JAVAC_FLAGS := -Xlint:all,-deprecation,-cast
+endif
+
+include $(topsrcdir)/config/makefiles/java-build.mk
+
 include $(topsrcdir)/config/rules.mk
 
 # Override the Java settings with some specific android settings
@@ -1242,49 +1313,7 @@ include $(topsrcdir)/config/android-common.mk
 # indices.
 classes.dex: $(ALL_JARS)
 	@echo "DX classes.dex"
-	$(DX) --dex --output=classes.dex jars $(ANDROID_COMPAT_LIB)
-
-jars/gecko-browser.jar: jars/gecko-mozglue.jar jars/gecko-util.jar jars/sync-thirdparty.jar jars/websockets.jar $(addprefix $(srcdir)/,$(FENNEC_JAVA_FILES)) $(FENNEC_PP_JAVA_FILES) $(FENNEC_PP_JAVA_VIEW_FILES) $(addprefix $(srcdir)/,$(SYNC_JAVA_FILES)) $(SYNC_PP_JAVA_FILES) R.java
-	@echo "JAR gecko-browser.jar"
-	$(NSINSTALL) -D classes/gecko-browser
-	$(JAVAC) $(JAVAC_FLAGS) -Xlint:all,-deprecation,-fallthrough -d classes/gecko-browser -classpath "jars/gecko-mozglue.jar:jars/gecko-util.jar:jars/sync-thirdparty.jar:jars/websockets.jar" $(addprefix $(srcdir)/,$(FENNEC_JAVA_FILES)) $(FENNEC_PP_JAVA_FILES) $(FENNEC_PP_JAVA_VIEW_FILES) $(addprefix $(srcdir)/,$(SYNC_JAVA_FILES)) $(SYNC_PP_JAVA_FILES) R.java
-	$(JAR) cMf jars/gecko-browser.jar -C classes/gecko-browser .
-
-jars/gecko-mozglue.jar: $(addprefix $(srcdir)/,$(MOZGLUE_JAVA_FILES)) $(MOZGLUE_PP_JAVA_FILES) jars
-	@echo "JAR gecko-mozglue.jar"
-	$(NSINSTALL) -D classes/gecko-mozglue
-	$(JAVAC) $(JAVAC_FLAGS) -Xlint:all -d classes/gecko-mozglue $(addprefix $(srcdir)/,$(MOZGLUE_JAVA_FILES)) $(MOZGLUE_PP_JAVA_FILES)
-	$(JAR) cMf jars/gecko-mozglue.jar -C classes/gecko-mozglue .
-
-jars/gecko-util.jar: jars/gecko-mozglue.jar $(addprefix $(srcdir)/,$(UTIL_JAVA_FILES)) jars
-	@echo "JAR gecko-util.jar"
-	$(NSINSTALL) -D classes/gecko-util
-	$(JAVAC) $(JAVAC_FLAGS) -Xlint:all,-deprecation -d classes/gecko-util -classpath "jars/gecko-mozglue.jar" $(addprefix $(srcdir)/,$(UTIL_JAVA_FILES))
-	$(JAR) cMf jars/gecko-util.jar -C classes/gecko-util .
-
-jars/sync-thirdparty.jar: $(addprefix $(srcdir)/,$(SYNC_THIRDPARTY_JAVA_FILES)) jars
-	@echo "JAR sync-thirdparty.jar"
-	$(NSINSTALL) -D classes/sync-thirdparty
-	$(JAVAC) $(JAVAC_FLAGS) -d classes/sync-thirdparty $(addprefix $(srcdir)/,$(SYNC_THIRDPARTY_JAVA_FILES))
-	$(JAR) cMf jars/sync-thirdparty.jar -C classes/sync-thirdparty .
-
-jars/websockets.jar: $(addprefix $(srcdir)/, $(WEBSOCKETS_JAVA_FILES)) jars
-	@echo "JAR websockets.jar"
-	$(NSINSTALL) -D classes/websockets
-	$(JAVAC) $(JAVAC_FLAGS) -Xlint:all,-serial -d classes/websockets $(addprefix $(srcdir)/,$(WEBSOCKETS_JAVA_FILES))
-	$(JAR) cMf jars/websockets.jar -C classes/websockets .
-
-ifdef MOZ_WEBRTC
-jars/webrtc.jar: $(addprefix $(srcdir)/, $(WEBRTC_JAVA_FILES)) jars jars/gecko-browser.jar jars/gecko-util.jar jars/gecko-mozglue.jar
-	@echo "JAR webrtc.jar"
-	$(NSINSTALL) -D classes/webrtc
-	$(JAVAC) $(JAVAC_FLAGS) -d classes/webrtc -classpath classes/gecko-browser:classes/gecko-util:classes/gecko-mozglue $(addprefix $(srcdir)/,$(WEBRTC_JAVA_FILES))
-	$(JAR) cMf jars/webrtc.jar -C classes/webrtc .
-endif
-
-jars:
-	@echo "MKDIR jars"
-	$(NSINSTALL) -D jars
+	$(DX) --dex --output=classes.dex $(ALL_JARS) $(ANDROID_COMPAT_LIB)
 
 CLASSES_WITH_JNI= \
     org.mozilla.gecko.GeckoAppShell \
