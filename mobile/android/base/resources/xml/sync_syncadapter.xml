@@ -1,12 +1,11 @@
-#filter substitution
 <?xml version="1.0" encoding="utf-8"?>
 <!-- This Source Code Form is subject to the terms of the Mozilla Public
    - License, v. 2.0. If a copy of the MPL was not distributed with this
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
 
 <sync-adapter xmlns:android="http://schemas.android.com/apk/res/android"
-    android:contentAuthority="@ANDROID_PACKAGE_NAME@.db.browser"
-    android:accountType="@MOZ_ANDROID_SHARED_ACCOUNT_TYPE@"
+    android:contentAuthority="@string/content_authority_db_browser"
+    android:accountType="@string/moz_android_shared_account_type"
     android:supportsUploading="true"
     android:userVisible="true"
 />
