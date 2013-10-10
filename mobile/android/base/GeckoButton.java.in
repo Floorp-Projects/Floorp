@@ -1,0 +1,3 @@
+#filter substitution
+#define VIEWTYPE Button
+#include GeckoView.java.frag
