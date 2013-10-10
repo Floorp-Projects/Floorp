@@ -69,8 +69,11 @@ tests.push({
 
     // Create a bookmarks.html in the profile.
     let profileBookmarksHTMLFile = create_bookmarks_html("bookmarks.glue.html");
-    // Get file lastModified and size.
-    let lastMod = profileBookmarksHTMLFile.lastModifiedTime;
+
+    // set the file's lastModifiedTime to one minute ago and get its size.
+    let lastMod = Date.now() - 60*1000;
+    profileBookmarksHTMLFile.lastModifiedTime = lastMod;
+
     let fileSize = profileBookmarksHTMLFile.fileSize;
 
     // Force nsBrowserGlue::_shutdownPlaces().
@@ -80,16 +83,8 @@ tests.push({
 
     // Check a new bookmarks.html has been created.
     let profileBookmarksHTMLFile = check_bookmarks_html();
-    //XXX not working on Linux unit boxes. Could be filestats caching issue.
-    let isLinux = ("@mozilla.org/gnome-gconf-service;1" in Cc);
-    if (!isLinux) {
-      //XXX this test does not working on Mac boxes as well.
-      let isOSX = ("nsILocalFileMac" in Ci);
-      if (!isOSX) {
-        do_check_true(profileBookmarksHTMLFile.lastModifiedTime > lastMod);
-      }
-      do_check_neq(profileBookmarksHTMLFile.fileSize, fileSize);
-    }
+    do_check_true(profileBookmarksHTMLFile.lastModifiedTime > lastMod);
+    do_check_neq(profileBookmarksHTMLFile.fileSize, fileSize);
 
     // Check preferences have not been reverted.
     do_check_true(ps.getBoolPref(PREF_AUTO_EXPORT_HTML));
