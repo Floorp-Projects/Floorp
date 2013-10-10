@@ -18,7 +18,7 @@ XPCOMUtils.defineLazyServiceGetter(this, "CharsetManager",
 
 const kNSXUL = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
 const kPrefCustomizationDebug = "browser.uiCustomization.debug";
-const kWidePanelItemClass = "panel-combined-item";
+const kWidePanelItemClass = "panel-wide-item";
 
 let gModuleName = "[CustomizableWidgets]";
 #include logging.js

@@ -24,7 +24,7 @@ let gWideWidgets = new Set();
 let gSeenWidgets = new Set();
 
 // The class by which we recognize wide widgets:
-const kWidePanelItemClass = "panel-combined-item";
+const kWidePanelItemClass = "panel-wide-item";
 
 // TODO(bug 885574): Merge this constant with the one in CustomizeMode.jsm,
 //                   maybe just use a pref for this.
