@@ -12,19 +12,10 @@ const LoginTest = {
    * initStorage
    *
    */
-  initStorage : function (aInputPathName,  aInputFileName,
-                          aOutputPathName, aOutputFileName, aExpectedError) {
+  initStorage : function (aOutputPathName, aOutputFileName, aExpectedError) {
     var err = null;
 
     var newStorage = this.newStorage();
-
-    var inputFile = null;
-    if (aInputFileName) {
-        var inputFile  = Cc["@mozilla.org/file/local;1"].
-                         createInstance(Ci.nsILocalFile);
-        inputFile.initWithPath(aInputPathName);
-        inputFile.append(aInputFileName);
-    }
 
     var outputFile = null;
     if (aOutputFileName) {
@@ -40,7 +31,7 @@ const LoginTest = {
     }
 
     try {
-        newStorage.initWithFile(inputFile, outputFile);
+        newStorage.initWithFile(outputFile);
     } catch (e) {
         err = e;
     }
@@ -69,15 +60,7 @@ const LoginTest = {
     }
 
     try {
-        // Different semantics for the modules...
-        // The legacy module uses initWF(input, output)
-        // The mozStorage uses initWF(import, DB)
-        if (STORAGE_TYPE == "legacy")
-            newStorage.initWithFile(inputFile, null);
-        else if (STORAGE_TYPE == "mozStorage")
-            newStorage.initWithFile(null, inputFile);
-        else
-            throw "Unknown STORAGE_TYPE";
+        newStorage.initWithFile(inputFile);
     } catch (e) {
         err = e;
     }
@@ -183,16 +166,8 @@ const LoginTest = {
   },
 
   newStorage : function () {
-    var ID;
 
-    if (STORAGE_TYPE == "legacy")
-        ID = "@mozilla.org/login-manager/storage/legacy;1";
-    else if (STORAGE_TYPE == "mozStorage")
-        ID = "@mozilla.org/login-manager/storage/mozStorage;1";
-    else
-        throw "Unknown STORAGE_TYPE";
-
-    var storage = Cc[ID].
+    var storage = Cc["@mozilla.org/login-manager/storage/mozStorage;1"].
                   createInstance(Ci.nsILoginManagerStorage);
     if (!storage)
       throw "Couldn't create storage instance.";
@@ -252,7 +227,6 @@ var PROFDIR = do_get_profile();
 var DATADIR = do_get_file("data/");
 // string versions...
 var OUTDIR = PROFDIR.path;
-var INDIR = DATADIR.path;
 
 // Copy key3.db into the profile used for the unit tests. Need this so we can
 // decrypt the encrypted logins stored in the various tests inputs.
