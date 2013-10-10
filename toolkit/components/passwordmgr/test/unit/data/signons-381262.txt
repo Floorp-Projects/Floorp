@@ -1,9 +1,0 @@
-#2d
-.
-https://site.org
-username
-MEIEEPgAAAAAAAAAAAAAAAAAAAEwFAYIKoZIhvcNAwcECCSKaJ7xRN+pBBgIZONGV3hhPmYgNGWx076wG7t4IfY9AOM=
-*password
-MDoEEPgAAAAAAAAAAAAAAAAAAAEwFAYIKoZIhvcNAwcECEBHDZz893BwBBAtfya3S/aHmc7dzxs3v3Dv
-https://site.org
-.

@@ -10,7 +10,6 @@ XPIDL_SOURCES += [
     'nsILoginInfo.idl',
     'nsILoginManager.idl',
     'nsILoginManagerCrypto.idl',
-    'nsILoginManagerIEMigrationHelper.idl',
     'nsILoginManagerPrompter.idl',
     'nsILoginManagerStorage.idl',
     'nsILoginMetaInfo.idl',
@@ -24,7 +23,6 @@ EXTRA_COMPONENTS += [
     'nsLoginManager.js',
     'nsLoginManagerPrompter.js',
     'passwordmgr.manifest',
-    'storage-Legacy.js',
 ]
 
 EXTRA_PP_COMPONENTS += [

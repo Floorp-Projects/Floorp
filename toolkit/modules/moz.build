@@ -19,6 +19,7 @@ EXTRA_JS_MODULES += [
     'LoadContextInfo.jsm',
     'NewTabUtils.jsm',
     'PageMenu.jsm',
+    'PermissionsUtils.jsm',
     'PopupNotifications.jsm',
     'Preferences.jsm',
     'PrivateBrowsingUtils.jsm',

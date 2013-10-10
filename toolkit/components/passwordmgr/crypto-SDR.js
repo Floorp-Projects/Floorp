@@ -145,14 +145,7 @@ LoginManagerCrypto_SDR.prototype = {
         this._uiBusy = true;
         try {
             let plainOctet;
-            if (cipherText.charAt(0) == '~') {
-                // The old Wallet file format obscured entries by
-                // base64-encoding them. These entries are signaled by a
-                // leading '~' character.
-                plainOctet = atob(cipherText.substring(1));
-            } else {
-                plainOctet = this._decoderRing.decryptString(cipherText);
-            }
+            plainOctet = this._decoderRing.decryptString(cipherText);
             plainText = this._utfConverter.ConvertToUnicode(plainOctet);
         } catch (e) {
             this.log("Failed to decrypt string: " + cipherText +
