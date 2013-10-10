@@ -1335,20 +1335,11 @@ jni-stubs.inc: jars/gecko-browser.jar jars/gecko-mozglue.jar jars/gecko-util.jar
 	$(JAVAH) -o javah.out -bootclasspath $(JAVA_BOOTCLASSPATH) -classpath $(subst $(NULL) $(NULL),:,$^) $(CLASSES_WITH_JNI)
 	$(PYTHON) $(topsrcdir)/mobile/android/base/jni-generator.py javah.out $@
 
-ANNOTATION_PROCESSOR_JAVA_FILES = \
-  build/annotationProcessors/AnnotationProcessor.java \
-  build/annotationProcessors/CodeGenerator.java \
-  build/annotationProcessors/MethodWithAnnotationInfo.java \
-  build/annotationProcessors/classloader/IterableJarLoadingURLClassLoader.java \
-  build/annotationProcessors/classloader/JarClassIterator.java \
-  build/annotationProcessors/utils/AlphabeticMethodComparator.java \
-  build/annotationProcessors/utils/GeneratableEntryPointIterator.java \
-  build/annotationProcessors/utils/Utils.java \
-  $(NULL)
+ANNOTATION_PROCESSOR_JAR_FILES := $(DEPTH)/build/annotationProcessors/annotationProcessors.jar
 
-GeneratedJNIWrappers.cpp: jars/gecko-browser.jar jars/gecko-mozglue.jar jars/gecko-util.jar jars/sync-thirdparty.jar
-	$(JAVAC) $(addprefix $(topsrcdir)/,$(ANNOTATION_PROCESSOR_JAVA_FILES)) -d $(CURDIR)
-	$(JAVA) -classpath $(JAVA_BOOTCLASSPATH):$(CURDIR) org.mozilla.gecko.annotationProcessors.AnnotationProcessor $^
+GeneratedJNIWrappers.cpp: $(ANNOTATION_PROCESSOR_JAR_FILES)
+GeneratedJNIWrappers.cpp: $(ALL_JARS)
+	$(JAVA) -classpath $(JAVA_BOOTCLASSPATH):$(ANNOTATION_PROCESSOR_JAR_FILES) org.mozilla.gecko.annotationProcessors.AnnotationProcessor $(ALL_JARS)
 
 PP_RES_XML= \
   $(SYNC_PP_RES_XML) \
