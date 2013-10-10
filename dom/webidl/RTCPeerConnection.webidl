@@ -51,6 +51,32 @@ dictionary RTCDataChannelInit {
   unsigned short stream; // now id
 };
 
+// Misnomer dictionaries housing PeerConnection-specific constraints.
+//
+// Important! Do not ever add members that might need tracing (e.g. object)
+// to MediaConstraintSet or any dictionary marked XxxInternal here
+
+dictionary MediaConstraintSet {
+  boolean OfferToReceiveAudio;
+  boolean OfferToReceiveVideo;
+  boolean MozDontOfferDataChannel;
+};
+
+// MediaConstraint = single-property-subset of MediaConstraintSet
+// Implemented as full set. Test Object.keys(pair).length == 1
+
+// typedef MediaConstraintSet MediaConstraint; // TODO: Bug 913053
+
+dictionary MediaConstraints {
+  object mandatory; // so we can see unknown + unsupported constraints
+  sequence<MediaConstraintSet> _optional; // a.k.a. MediaConstraint
+};
+
+dictionary MediaConstraintsInternal {
+  MediaConstraintSet mandatory; // holds only supported constraints
+  sequence<MediaConstraintSet> _optional; // a.k.a. MediaConstraint
+};
+
 interface RTCDataChannel;
 
 [Pref="media.peerconnection.enabled",
@@ -61,10 +87,10 @@ interface RTCDataChannel;
 interface mozRTCPeerConnection : EventTarget  {
   void createOffer (RTCSessionDescriptionCallback successCallback,
                     RTCPeerConnectionErrorCallback? failureCallback, // for apprtc
-                    optional object? constraints);
+                    optional MediaConstraints constraints);
   void createAnswer (RTCSessionDescriptionCallback successCallback,
                      RTCPeerConnectionErrorCallback? failureCallback, // for apprtc
-                     optional object? constraints);
+                     optional MediaConstraints constraints);
   void setLocalDescription (mozRTCSessionDescription description,
                             optional VoidFunction successCallback,
                             optional RTCPeerConnectionErrorCallback failureCallback);
@@ -75,7 +101,7 @@ interface mozRTCPeerConnection : EventTarget  {
   readonly attribute mozRTCSessionDescription? remoteDescription;
   readonly attribute RTCSignalingState signalingState;
   void updateIce (optional RTCConfiguration configuration,
-                  optional object? constraints);
+                  optional MediaConstraints constraints);
   void addIceCandidate (mozRTCIceCandidate candidate,
                         optional VoidFunction successCallback,
                         optional RTCPeerConnectionErrorCallback failureCallback);
@@ -84,7 +110,7 @@ interface mozRTCPeerConnection : EventTarget  {
   sequence<MediaStream> getLocalStreams ();
   sequence<MediaStream> getRemoteStreams ();
   MediaStream? getStreamById (DOMString streamId);
-  void addStream (MediaStream stream, optional object? constraints);
+  void addStream (MediaStream stream, optional MediaConstraints constraints);
   void removeStream (MediaStream stream);
   void close ();
   attribute EventHandler onnegotiationneeded;
