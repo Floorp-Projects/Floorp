@@ -30,7 +30,7 @@ public:
   //                  01234567890
   //    input : qwerty&key=value&qwerty
   //                  ^   ^     ^
-  //          aKeyBegin   |     aPastEnd (may point to NULL terminator)
+  //          aKeyBegin   |     aPastEnd (may point to null terminator)
   //                      aEquals
   //
   //    Special case: if aKeyBegin == aEquals, then there is only one string
