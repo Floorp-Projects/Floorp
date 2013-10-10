@@ -78,7 +78,7 @@ Break(const char *aMsg);
 using namespace mozilla;
 
 static bool sIsMultiprocess = false;
-static const char *sMultiprocessDescription = NULL;
+static const char *sMultiprocessDescription = nullptr;
 
 static Atomic<int32_t> gAssertionCount;
 
@@ -163,7 +163,7 @@ nsDebugImpl::GetIsDebuggerAttached(bool* aResult)
   size_t infoSize = sizeof(info);
   memset(&info, 0, infoSize);
 
-  if (sysctl(mib, mibSize, &info, &infoSize, NULL, 0)) {
+  if (sysctl(mib, mibSize, &info, &infoSize, nullptr, 0)) {
     // if the call fails, default to false
     *aResult = false;
     return NS_OK;
@@ -497,13 +497,11 @@ Break(const char *aMsg)
     wcscpy(msgCopy  , (PRUnichar*)NS_ConvertUTF8toUTF16(aMsg).get());
 
     if(GetModuleFileNameW(GetModuleHandleW(L"xpcom.dll"), (LPWCH)executable, MAX_PATH) &&
-       NULL != (pName = wcsrchr(executable, '\\')) &&
-       NULL != 
-       wcscpy((WCHAR*)
-       pName+1, L"windbgdlg.exe") &&
-       CreateProcessW((LPCWSTR)executable, (LPWSTR)msgCopy, NULL, NULL, false,
-                     DETACHED_PROCESS | NORMAL_PRIORITY_CLASS,
-                     NULL, NULL, &si, &pi)) {
+       nullptr != (pName = wcsrchr(executable, '\\')) &&
+       nullptr != wcscpy((WCHAR*)pName + 1, L"windbgdlg.exe") &&
+       CreateProcessW((LPCWSTR)executable, (LPWSTR)msgCopy, nullptr, nullptr,
+                      false, DETACHED_PROCESS | NORMAL_PRIORITY_CLASS,
+                      nullptr, nullptr, &si, &pi)) {
       WaitForSingleObject(pi.hProcess, INFINITE);
       GetExitCodeProcess(pi.hProcess, &code);
       CloseHandle(pi.hProcess);

@@ -176,7 +176,7 @@ void AbortOnBadWrite(int fd, const void *wbuf, size_t count) {
     if (IsDebugFile(fd))
         return;
 
-    // For writev we pass NULL in wbuf. We should only get here from
+    // For writev we pass nullptr in wbuf. We should only get here from
     // dbm, and it uses write, so assert that we have wbuf.
     if (!ValidWriteAssert(wbuf))
         return;
