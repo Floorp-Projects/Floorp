@@ -161,30 +161,30 @@ function checkItem(aExpected, aNode) {
                       aExpected.lastModified);
           break;
         case "url":
-          yield function() {
-            let deferred = Promise.defer();
+          let (deferred = Promise.defer()) {
             PlacesUtils.livemarks.getLivemark(
               { id: id },
               function (aStatus, aLivemark) {
-                if (!Components.isSuccessCode(aStatus)) {
-                  do_check_eq(aNode.uri, aExpected.url);
-                }
                 deferred.resolve();
               });
-            return deferred.promise; }();
+            let status = yield deferred.promise;
+            if (!Components.isSuccessCode(status)) {
+              do_check_eq(aNode.uri, aExpected.url);
+            }
+          }
           break;
         case "icon":
-          yield function() {
-            let deferred = Promise.defer();
+          let (deferred = Promise.defer(), data) {
             PlacesUtils.favicons.getFaviconDataForPage(
               NetUtil.newURI(aExpected.url),
               function (aURI, aDataLen, aData, aMimeType) {
-                let base64Icon = "data:image/png;base64," +
-                      base64EncodeString(String.fromCharCode.apply(String, aData));
-                do_check_true(base64Icon == aExpected.icon);
-                deferred.resolve();
+                deferred.resolve(aData);
               });
-            return deferred.promise; }();
+            data = yield deferred.promise;
+            let base64Icon = "data:image/png;base64," +
+                             base64EncodeString(String.fromCharCode.apply(String, data));
+            do_check_true(base64Icon == aExpected.icon);
+          }
           break;
         case "keyword":
           break;
@@ -201,17 +201,17 @@ function checkItem(aExpected, aNode) {
           do_check_eq((yield PlacesUtils.getCharsetForURI(testURI)), aExpected.charset);
           break;
         case "feedUrl":
-          yield function() {
-            let deferred = Promise.defer();
+          let (deferred = Promise.defer(), data) {
             PlacesUtils.livemarks.getLivemark(
               { id: id },
               function (aStatus, aLivemark) {
-                do_check_true(Components.isSuccessCode(aStatus));
-                do_check_eq(aLivemark.siteURI.spec, aExpected.url);
-                do_check_eq(aLivemark.feedURI.spec, aExpected.feedUrl);
-                deferred.resolve();
+                deferred.resolve({ status: aStatus, livemark: aLivemark });
               });
-            return deferred.promise; }();
+            data = yield deferred.promise;
+            do_check_true(Components.isSuccessCode(data.status));
+            do_check_eq(data.livemark.siteURI.spec, aExpected.url);
+            do_check_eq(data.livemark.feedURI.spec, aExpected.feedUrl);
+          }
           break;
         case "children":
           let folder = aNode.QueryInterface(Ci.nsINavHistoryContainerResultNode);
