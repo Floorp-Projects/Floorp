@@ -172,7 +172,13 @@
             </intent-filter>
         </activity>
 
-#include @OBJDIR@/WebAppManifestFragment.xml.in
+        <!-- Declare a predefined number of WebApp<num> activities. These are
+             used so that each web app can launch in its own process. Keep
+             this number in sync with the total number of web apps handled in
+             WebAppAllocator. -->
+
+#define FRAGMENT WebAppManifestFragment.xml.frag
+#include WebAppFragmentRepeater.inc
 
         <!-- Masquerade as the Resolver so that we can be opened from the Marketplace. -->
         <activity-alias
