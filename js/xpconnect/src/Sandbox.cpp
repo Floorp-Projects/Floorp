@@ -596,7 +596,7 @@ static const JSClass SandboxClass = {
     XPCONNECT_GLOBAL_FLAGS_WITH_EXTRA_SLOTS(1),
     JS_PropertyStub,   JS_DeletePropertyStub, JS_PropertyStub, JS_StrictPropertyStub,
     sandbox_enumerate, sandbox_resolve, sandbox_convert,  sandbox_finalize,
-    NULL, NULL, NULL, NULL, TraceXPCGlobal
+    nullptr, nullptr, nullptr, nullptr, TraceXPCGlobal
 };
 
 static const JSFunctionSpec SandboxFunctions[] = {
@@ -1152,7 +1152,7 @@ static nsresult
 GetPrincipalOrSOP(JSContext *cx, HandleObject from, nsISupports **out)
 {
     MOZ_ASSERT(out);
-    *out = NULL;
+    *out = nullptr;
 
     nsXPConnect* xpc = nsXPConnect::XPConnect();
     nsCOMPtr<nsIXPConnectWrappedNative> wrapper;
@@ -1293,7 +1293,7 @@ GetObjPropFromOptions(JSContext *cx, HandleObject from, const char *name, JSObje
     NS_ENSURE_SUCCESS(rv, rv);
 
     if (!found) {
-        *prop = NULL;
+        *prop = nullptr;
         return NS_OK;
     }
 
@@ -1725,7 +1725,7 @@ xpc::SetSandboxMetadata(JSContext *cx, HandleObject sandbox, HandleValue metadat
     RootedValue metadata(cx);
 
     JSAutoCompartment ac(cx, sandbox);
-    if (!JS_StructuredClone(cx, metadataArg, metadata.address(), NULL, NULL))
+    if (!JS_StructuredClone(cx, metadataArg, metadata.address(), nullptr, nullptr))
         return NS_ERROR_UNEXPECTED;
 
     JS_SetReservedSlot(sandbox, XPCONNECT_SANDBOX_CLASS_METADATA_SLOT, metadata);
