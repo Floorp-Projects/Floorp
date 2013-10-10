@@ -2893,12 +2893,6 @@ XPCWrappedNative::HasNativeMember(HandleId name)
     return GetSet()->FindMember(name, &member, &ignored) && !!member;
 }
 
-static inline nsresult UnexpectedFailure(nsresult rv)
-{
-    NS_ERROR("This is not supposed to fail!");
-    return rv;
-}
-
 /* void finishInitForWrappedGlobal (); */
 NS_IMETHODIMP XPCWrappedNative::FinishInitForWrappedGlobal()
 {
