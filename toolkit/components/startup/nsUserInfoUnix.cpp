@@ -110,10 +110,8 @@ nsUserInfo::GetDomain(char * *aDomain)
         return rv;
     }
 
-#if defined(HAVE_UNAME_DOMAINNAME_FIELD)
+#if defined(__linux__)
     domainname = buf.domainname;
-#elif defined(HAVE_UNAME_US_DOMAINNAME_FIELD)
-    domainname = buf.__domainname;
 #endif
 
     if (domainname && domainname[0]) {   
