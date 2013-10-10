@@ -1,13 +1,13 @@
 '\" t
 .\"     Title: CMSUTIL
 .\"    Author: [see the "Authors" section]
-.\" Generator: DocBook XSL Stylesheets v1.77.1 <http://docbook.sf.net/>
-.\"      Date: 15 February 2013
+.\" Generator: DocBook XSL Stylesheets v1.78.1 <http://docbook.sf.net/>
+.\"      Date: 19 July 2013
 .\"    Manual: NSS Security Tools
 .\"    Source: nss-tools
 .\"  Language: English
 .\"
-.TH "CMSUTIL" "1" "15 February 2013" "nss-tools" "NSS Security Tools"
+.TH "CMSUTIL" "1" "19 July 2013" "nss-tools" "NSS Security Tools"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -77,7 +77,12 @@ Sign a message\&.
 .PP
 \fBArguments\fR
 .PP
-Option arguments modify an action and are lowercase\&.
+Option arguments modify an action\&.
+.PP
+\-b
+.RS 4
+Decode a batch of files named in infile\&.
+.RE
 .PP
 \-c content
 .RS 4
@@ -94,9 +99,19 @@ Specify the key/certificate database directory (default is "\&.")
 Specify a file containing an enveloped message for a set of recipients to which you would like to send an encrypted message\&. If this is the first encrypted message for that set of recipients, a new enveloped message will be created that you can then use for future messages (encrypt only)\&.
 .RE
 .PP
+\-f pwfile
+.RS 4
+Use password file to set password on all PKCS#11 tokens\&.
+.RE
+.PP
 \-G
 .RS 4
 Include a signing time attribute (sign only)\&.
+.RE
+.PP
+\-H hash
+.RS 4
+Use specified hash algorithm (default:SHA1)\&.
 .RE
 .PP
 \-h num
@@ -107,6 +122,11 @@ Generate email headers with info about CMS message (decode only)\&.
 \-i infile
 .RS 4
 Use infile as a source of data (default is stdin)\&.
+.RE
+.PP
+\-k
+.RS 4
+Keep decoded encryption certs in permanent cert db\&.
 .RE
 .PP
 \-N nickname
@@ -147,6 +167,11 @@ Suppress content in CMS message (sign only)\&.
 \-u certusage
 .RS 4
 Set type of cert usage (default is certUsageEmailSigner)\&.
+.RE
+.PP
+\-v
+.RS 4
+Print debugging information\&.
 .RE
 .PP
 \-Y ekprefnick
@@ -237,12 +262,12 @@ Mailing lists: https://lists\&.mozilla\&.org/listinfo/dev\-tech\-crypto
 IRC: Freenode at #dogtag\-pki
 .SH "AUTHORS"
 .PP
-The NSS tools were written and maintained by developers with Netscape, Red Hat, and Sun\&.
+The NSS tools were written and maintained by developers with Netscape, Red Hat, Sun, Oracle, Mozilla, and Google\&.
 .PP
 Authors: Elio Maldonado <emaldona@redhat\&.com>, Deon Lackey <dlackey@redhat\&.com>\&.
 .SH "LICENSE"
 .PP
-Licensed under the Mozilla Public License, version 1\&.1, and/or the GNU General Public License, version 2 or later, and/or the GNU Lesser General Public License, version 2\&.1 or later\&.
+Licensed under the Mozilla Public License, v\&. 2\&.0\&. If a copy of the MPL was not distributed with this file, You can obtain one at http://mozilla\&.org/MPL/2\&.0/\&.
 .SH "NOTES"
 .IP " 1." 4
 Mozilla NSS bug 836477

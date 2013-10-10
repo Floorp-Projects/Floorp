@@ -162,6 +162,10 @@
 
 #define TLS_RSA_WITH_SEED_CBC_SHA		0x0096
 
+#define TLS_RSA_WITH_AES_128_GCM_SHA256         0x009C
+#define TLS_DHE_RSA_WITH_AES_128_GCM_SHA256     0x009E
+#define TLS_DHE_DSS_WITH_AES_128_GCM_SHA256     0x00A2
+
 /* TLS "Signaling Cipher Suite Value" (SCSV). May be requested by client.
  * Must NEVER be chosen by server.  SSL 3.0 server acknowledges by sending
  * back an empty Renegotiation Info (RI) server hello extension.
@@ -203,6 +207,11 @@
 
 #define TLS_ECDHE_ECDSA_WITH_AES_128_CBC_SHA256 0xC023
 #define TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256   0xC027
+
+#define TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256 0xC02B
+#define TLS_ECDH_ECDSA_WITH_AES_128_GCM_SHA256  0xC02D
+#define TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256   0xC02F
+#define TLS_ECDH_RSA_WITH_AES_128_GCM_SHA256    0xC031
 
 /* Netscape "experimental" cipher suites. */
 #define SSL_RSA_OLDFIPS_WITH_3DES_EDE_CBC_SHA	0xffe0

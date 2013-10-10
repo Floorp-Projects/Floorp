@@ -1,13 +1,13 @@
 '\" t
 .\"     Title: CERTUTIL
 .\"    Author: [see the "Authors" section]
-.\" Generator: DocBook XSL Stylesheets v1.77.1 <http://docbook.sf.net/>
-.\"      Date: 15 February 2013
+.\" Generator: DocBook XSL Stylesheets v1.78.1 <http://docbook.sf.net/>
+.\"      Date: 19 July 2013
 .\"    Manual: NSS Security Tools
 .\"    Source: nss-tools
 .\"  Language: English
 .\"
-.TH "CERTUTIL" "1" "15 February 2013" "nss-tools" "NSS Security Tools"
+.TH "CERTUTIL" "1" "19 July 2013" "nss-tools" "NSS Security Tools"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -28,7 +28,7 @@
 .\" * MAIN CONTENT STARTS HERE *
 .\" -----------------------------------------------------------------
 .SH "NAME"
-certutil \- Manage keys and certificate in the the NSS database\&.
+certutil \- Manage keys and certificate in both NSS databases and other NSS tokens
 .SH "SYNOPSIS"
 .HP \w'\fBcertutil\fR\ 'u
 \fBcertutil\fR [\fIoptions\fR] [[\fIarguments\fR]]
@@ -39,22 +39,20 @@ This documentation is still work in progress\&. Please contribute to the initial
 .SH "DESCRIPTION"
 .PP
 The Certificate Database Tool,
-\fBcertutil\fR, is a command\-line utility that manages certs and keys in both NSS databases and other NSS tokens (such as smart cards)\&. It can specifically list, generate, modify, or delete certificates within the database, create or change the password, generate new public and private key pairs, display the contents of the key database, or delete key pairs within the key database\&.
+\fBcertutil\fR, is a command\-line utility that can create and modify certificate and key databases\&. It can specifically list, generate, modify, or delete certificates, create or change the password, generate new public and private key pairs, display the contents of the key database, or delete key pairs within the key database\&.
 .PP
-The key and certificate management process generally includes certificate issuance once keys and certificates have been created in the key database\&. This document discusses certificate and key database management\&. For information security module database management, see the
+Certificate issuance, part of the key and certificate management process, requires that keys and certificates be created in the key database\&. This document discusses certificate and key database management\&. For information on the security module database management, see the
 \fBmodutil\fR
 manpage\&.
-.SH "OPTIONS AND ARGUMENTS"
+.SH "COMMAND OPTIONS AND ARGUMENTS"
 .PP
 Running
 \fBcertutil\fR
-always requires one and only one option to specify the type of certificate operation\&. Each option may take arguments, anywhere from none to multiple arguments\&. Run the command option and
+always requires one and only one command option to specify the type of certificate operation\&. Each command option may take zero or more arguments\&. The command option
 \fB\-H\fR
-to see the arguments available for each command option\&.
+will list all the command options and their relevant arguments\&.
 .PP
 \fBCommand Options\fR
-.PP
-Command options are typically upper case\&.
 .PP
 \-A
 .RS 4
@@ -102,12 +100,12 @@ When you delete keys, be sure to also remove any certificates associated with th
 .PP
 \-G
 .RS 4
-Generate a new public and private key pair within a key database\&. The key database should already exist; if one is not present, this option will initialize one by default\&. Some smart cards can store only one key pair\&. If you create a new key pair for such a card, the previous pair is overwritten\&.
+Generate a new public and private key pair within a key database\&. The key database should already exist; if one is not present, this command option will initialize one by default\&. Some smart cards can store only one key pair\&. If you create a new key pair for such a card, the previous pair is overwritten\&.
 .RE
 .PP
 \-H
 .RS 4
-Display a list of the command options and arguments used by the Certificate Database Tool\&.
+Display a list of the command options and arguments\&.
 .RE
 .PP
 \-K
@@ -167,11 +165,7 @@ Change the password to a key database\&.
 .PP
 \-\-merge
 .RS 4
-Merge a source database into the target database\&. This is used to merge legacy NSS databases (cert8\&.db
-and
-key3\&.db) into the newer SQLite databases (cert9\&.db
-and
-key4\&.db)\&.
+Merge two databases into one\&.
 .RE
 .PP
 \-\-upgrade\-merge
@@ -223,9 +217,7 @@ supports two types of databases: the legacy security databases (cert8\&.db,
 key3\&.db, and
 secmod\&.db) and new SQLite databases (cert9\&.db,
 key4\&.db, and
-pkcs11\&.txt)\&. If the prefix
-\fBsql:\fR
-is not used, then the tool assumes that the given databases are in the old format\&.
+pkcs11\&.txt)\&.
 .sp
 NSS recognizes the following prefixes:
 .sp
@@ -237,7 +229,7 @@ NSS recognizes the following prefixes:
 .sp -1
 .IP \(bu 2.3
 .\}
-\fBsql: explicitly requests the newer database\fR
+\fBsql: requests the newer database\fR
 .RE
 .sp
 .RS 4
@@ -248,19 +240,10 @@ NSS recognizes the following prefixes:
 .sp -1
 .IP \(bu 2.3
 .\}
-\fBdbm: explicitly requests the older database\fR
+\fBdbm: requests the legacy database\fR
 .RE
 .sp
-.RS 4
-.ie n \{\
-\h'-04'\(bu\h'+03'\c
-.\}
-.el \{\
-.sp -1
-.IP \(bu 2.3
-.\}
-\fBextern: explicitly reserved for future use\fR
-.RE
+If no prefix is specified the default type is retrieved from NSS_DEFAULT_DB_TYPE\&. If NSS_DEFAULT_DB_TYPE is not set then dbm: is the default\&.
 .RE
 .PP
 \-e
@@ -280,7 +263,7 @@ Set a key size to use when generating new public and private key pairs\&. The mi
 .PP
 \-h tokenname
 .RS 4
-Specify the name of a token to use or act on\&. Unless specified otherwise the default token is an internal slot\&.
+Specify the name of a token to use or act on\&. If not specified the default token is the internal database slot\&.
 .RE
 .PP
 \-i input_file
@@ -288,18 +271,11 @@ Specify the name of a token to use or act on\&. Unless specified otherwise the d
 Pass an input file to the command\&. Depending on the command option, an input file can be a specific certificate, a certificate request file, or a batch file of commands\&.
 .RE
 .PP
-\-k rsa|dsa|ec|all
-.RS 4
-Specify the type of a key\&. The valid options are RSA, DSA, ECC, or all\&. The default value is rsa\&. Specifying the type of key can avoid mistakes caused by duplicate nicknames\&.
-.RE
-.PP
 \-k key\-type\-or\-id
 .RS 4
 Specify the type or specific ID of a key\&.
 .sp
-The valid key type options are RSA, DSA, ECC, or all\&. The default value is rsa\&. Specifying the type of key can avoid mistakes caused by duplicate nicknames\&. Giving a key type generates a new key pair; giving the ID of an existing key reuses that key pair (which is required to renew certificates)\&.
-.sp
-The valid key type options are RSA, DSA, ECC, or all\&. The default value is rsa\&. Specifying the type of key can avoid mistakes caused by duplicate nicknames\&. Giving a key type generates a new key pair; giving the ID of an existing key reuses that key pair (which is required to renew certificates)\&.
+The valid key type options are rsa, dsa, ec, or all\&. The default value is rsa\&. Specifying the type of key can avoid mistakes caused by duplicate nicknames\&. Giving a key type generates a new key pair; giving the ID of an existing key reuses that key pair (which is required to renew certificates)\&.
 .RE
 .PP
 \-l
@@ -367,7 +343,6 @@ for each trust setting\&. In each category position, use none, any, or all of th
 .sp -1
 .IP \(bu 2.3
 .\}
-
 \fBp\fR
 \- Valid peer
 .RE
@@ -380,7 +355,6 @@ for each trust setting\&. In each category position, use none, any, or all of th
 .sp -1
 .IP \(bu 2.3
 .\}
-
 \fBP\fR
 \- Trusted peer (implies p)
 .RE
@@ -393,7 +367,6 @@ for each trust setting\&. In each category position, use none, any, or all of th
 .sp -1
 .IP \(bu 2.3
 .\}
-
 \fBc\fR
 \- Valid CA
 .RE
@@ -406,7 +379,6 @@ for each trust setting\&. In each category position, use none, any, or all of th
 .sp -1
 .IP \(bu 2.3
 .\}
-
 \fBT\fR
 \- Trusted CA (implies c)
 .RE
@@ -419,9 +391,8 @@ for each trust setting\&. In each category position, use none, any, or all of th
 .sp -1
 .IP \(bu 2.3
 .\}
-
 \fBC\fR
-\- rusted CA for client authentication (ssl server only)
+\- trusted CA for client authentication (ssl server only)
 .RE
 .sp
 .RS 4
@@ -432,7 +403,6 @@ for each trust setting\&. In each category position, use none, any, or all of th
 .sp -1
 .IP \(bu 2.3
 .\}
-
 \fBu\fR
 \- user
 .RE
@@ -930,6 +900,21 @@ Add the Inhibit Any Policy Access extension to the certificate\&. X\&.509 certif
 Add the Subject Key ID extension to the certificate\&. X\&.509 certificate extensions are described in RFC 5280\&.
 .RE
 .PP
+\-\-extNC
+.RS 4
+Add a Name Constraint extension to the certificate\&. X\&.509 certificate extensions are described in RFC 5280\&.
+.RE
+.PP
+\-\-keyAttrFlags attrflags
+.RS 4
+PKCS #11 key Attributes\&. Comma separated list of key attribute flags, selected from the following list of choices: {token | session} {public | private} {sensitive | insensitive} {modifiable | unmodifiable} {extractable | unextractable}
+.RE
+.PP
+\-\-keyFlagsOn opflags, \-\-keyFlagsOff opflags
+.RS 4
+PKCS #11 key Operation Flags\&. Comma separated list of one or more of the following: {token | session} {public | private} {sensitive | insensitive} {modifiable | unmodifiable} {extractable | unextractable}
+.RE
+.PP
 \-\-source\-dir certdir
 .RS 4
 Identify the certificate database directory to upgrade\&.
@@ -1035,7 +1020,6 @@ command options requires four arguments:
 .sp -1
 .IP \(bu 2.3
 .\}
-
 \fB\-k\fR
 to specify either the key type to generate or, when renewing a certificate, the existing key pair to use
 .RE
@@ -1048,7 +1032,6 @@ to specify either the key type to generate or, when renewing a certificate, the 
 .sp -1
 .IP \(bu 2.3
 .\}
-
 \fB\-g\fR
 to set the keysize of the key to generate
 .RE
@@ -1061,7 +1044,6 @@ to set the keysize of the key to generate
 .sp -1
 .IP \(bu 2.3
 .\}
-
 \fB\-s\fR
 to set the subject name of the certificate
 .RE
@@ -1074,7 +1056,6 @@ to set the subject name of the certificate
 .sp -1
 .IP \(bu 2.3
 .\}
-
 \fB\-d\fR
 to give the security database directory
 .RE
@@ -1087,28 +1068,10 @@ For example:
 .RS 4
 .\}
 .nf
-$ certutil \-R \-k ec \-q nistb409 \-g 512 \-s "CN=John Smith,O=Example Corp,L=Mountain View,ST=California,C=US" \-d sql:/home/my/sharednssdb \-p 650\-555\-0123 \-a \-o cert\&.cer
+$ certutil \-R \-k rsa \-g 1024 \-s "CN=John Smith,O=Example Corp,L=Mountain View,ST=California,C=US" \-d sql:$HOME/nssdb \-p 650\-555\-0123 \-a \-o cert\&.cer
 
 Generating key\&.  This may take a few moments\&.\&.\&.
 
-
-Certificate request generated by Netscape 
-Phone: 650\-555\-0123
-Common Name: John Smith
-Email: (not ed)
-Organization: Example Corp
-State: California
-Country: US
-
-\-\-\-\-\-BEGIN NEW CERTIFICATE REQUEST\-\-\-\-\-
-MIIBIDCBywIBADBmMQswCQYDVQQGEwJVUzETMBEGA1UECBMKQ2FsaWZvcm5pYTEW
-MBQGA1UEBxMNTW91bnRhaW4gVmlldzEVMBMGA1UEChMMRXhhbXBsZSBDb3JwMRMw
-EQYDVQQDEwpKb2huIFNtaXRoMFwwDQYJKoZIhvcNAQEBBQADSwAwSAJBAMVUpDOZ
-KmHnOx7reP8Cc0Lk+fFWEuYIDX9W5K/BioQOKvEjXyQZhit9aThzBVMoSf1Y1S8J
-CzdUbCg1+IbnXaECAwEAAaAAMA0GCSqGSIb3DQEBBQUAA0EAryqZvpYrUtQ486Ny
-qmtyQNjIi1F8c1Z+TL4uFYlMg8z6LG/J/u1E5t1QqB5e9Q4+BhRbrQjRR1JZx3tB
-1hP9Gg==
-\-\-\-\-\-END NEW CERTIFICATE REQUEST\-\-\-\-\-
 .fi
 .if n \{\
 .RE
@@ -1134,7 +1097,7 @@ $ certutil \-S \-k rsa|dsa|ec \-n certname \-s subject [\-c issuer |\-x] \-t tru
 .PP
 The series of numbers and
 \fB\-\-ext*\fR
-options set certificate extensions that can be added to the certificate when it is generated by the CA\&.
+options set certificate extensions that can be added to the certificate when it is generated by the CA\&. Interactive prompts will result\&.
 .PP
 For example, this creates a self\-signed certificate:
 .sp
@@ -1147,6 +1110,8 @@ $ certutil \-S \-s "CN=Example CA" \-n my\-ca\-cert \-x \-t "C,C,C" \-1 \-2 \-5 
 .if n \{\
 .RE
 .\}
+.PP
+The interative prompts for key usage and whether any extensions are critical and responses have been ommitted for brevity\&.
 .PP
 From there, new certificates can reference the self\-signed certificate:
 .sp
@@ -1184,35 +1149,7 @@ For example:
 .RS 4
 .\}
 .nf
-$ certutil \-C \-c "my\-ca\-cert" \-i /home/certs/cert\&.req \-o cert\&.cer \-m 010 \-v 12 \-w 1 \-d sql:/home/my/sharednssdb \-1 nonRepudiation,dataEncipherment \-5 sslClient \-6 clientAuth \-7 jsmith@example\&.com
-.fi
-.if n \{\
-.RE
-.\}
-.PP
-\fBGenerating Key Pairs\fR
-.PP
-Key pairs are generated automatically with a certificate request or certificate, but they can also be generated independently using the
-\fB\-G\fR
-command option\&.
-.sp
-.if n \{\
-.RS 4
-.\}
-.nf
-certutil \-G \-d [sql:]directory | \-h tokenname \-k key\-type \-g key\-size [\-y exponent\-value] \-q pqgfile|curve\-name
-.fi
-.if n \{\
-.RE
-.\}
-.PP
-For example:
-.sp
-.if n \{\
-.RS 4
-.\}
-.nf
-$ certutil \-G \-h lunasa \-k ec \-g 256 \-q sect193r2
+$ certutil \-C \-c "my\-ca\-cert" \-i /home/certs/cert\&.req \-o cert\&.cer \-m 010 \-v 12 \-w 1 \-d sql:$HOME/nssdb \-1 nonRepudiation,dataEncipherment \-5 sslClient \-6 clientAuth \-7 jsmith@example\&.com
 .fi
 .if n \{\
 .RE
@@ -1254,30 +1191,94 @@ argument prints the certificate in ASCII format:
 .RS 4
 .\}
 .nf
-$ certutil \-L \-d sql:/home/my/sharednssdb \-a \-n "Certificate Authority \- Example Domain"
-
+$ certutil \-L \-d sql:$HOME/nssdb \-a \-n my\-ca\-cert
 \-\-\-\-\-BEGIN CERTIFICATE\-\-\-\-\-
-MIIDmTCCAoGgAwIBAgIBATANBgkqhkiG9w0BAQUFADA5MRcwFQYDVQQKEw5FeGFt
-cGxlIERvbWFpbjEeMBwGA1UEAxMVQ2VydGlmaWNhdGUgQXV0aG9yaXR5MB4XDTEw
-MDQyOTIxNTY1OFoXDTEyMDQxODIxNTY1OFowOTEXMBUGA1UEChMORXhhbXBsZSBE
-b21haW4xHjAcBgNVBAMTFUNlcnRpZmljYXRlIEF1dGhvcml0eTCCASIwDQYJKoZI
-hvcNAQEBBQADggEPADCCAQoCggEBAO/bqUli2KwqXFKmMMG93KN1SANzNTXA/Vlf
-Tmrih3hQgjvR1ktIY9aG6cB7DSKWmtHp/+p4PUCMqL4ZrSGt901qxkePyZ2dYmM2
-RnelK+SEUIPiUtoZaDhNdiYsE/yuDE8vQWj0vHCVL0w72qFUcSQ/WZT7FCrnUIUI
-udeWnoPSUn70gLhcj/lvxl7K9BHyD4Sq5CzktwYtFWLiiwV+ZY/Fl6JgbGaQyQB2
-bP4iRMfloGqsxGuB1evWVDF1haGpFDSPgMnEPSLg3/3dXn+HDJbZ29EU8/xKzQEb
-3V0AHKbu80zGllLEt2Zx/WDIrgJEN9yMfgKFpcmL+BvIRsmh0VsCAwEAAaOBqzCB
-qDAfBgNVHSMEGDAWgBQATgxHQyRUfKIZtdp55bZlFr+tFzAPBgNVHRMBAf8EBTAD
-AQH/MA4GA1UdDwEB/wQEAwIBxjAdBgNVHQ4EFgQUAE4MR0MkVHyiGbXaeeW2ZRa/
-rRcwRQYIKwYBBQUHAQEEOTA3MDUGCCsGAQUFBzABhilodHRwOi8vbG9jYWxob3N0
-LmxvY2FsZG9tYWluOjkxODAvY2Evb2NzcDANBgkqhkiG9w0BAQUFAAOCAQEAi8Gk
-L3XO43u7/TDOeEsWPmq+jZsDZ3GZ85Ajt3KROLWeKVZZZa2E2Hnsvf2uXbk5amKe
-lRxdSeRH9g85pv4KY7Z8xZ71NrI3+K3uwmnqkc6t0hhYb1mw/gx8OAAoluQx3biX
-JBDxjI73Cf7XUopplHBjjiwyGIJUO8BEZJ5L+TF4P38MJz1snLtzZpEAX5bl0U76
-bfu/tZFWBbE8YAWYtkCtMcalBPj6jn2WD3M01kGozW4mmbvsj1cRB9HnsGsqyHCu
-U0ujlL1H/RWcjn607+CTeKH9jLMUqCIqPJNOa+kq/6F7NhNRRiuzASIbZc30BZ5a
-nI7q5n1USM3eWQlVXw==
+MIIB1DCCAT2gAwIBAgICDkIwDQYJKoZIhvcNAQEFBQAwFTETMBEGA1UEAxMKRXhh
+bXBsZSBDQTAeFw0xMzAzMTMxOTEwMjlaFw0xMzA2MTMxOTEwMjlaMBUxEzARBgNV
+BAMTCkV4YW1wbGUgQ0EwgZ8wDQYJKoZIhvcNAQEBBQADgY0AMIGJAoGBAJ4Kzqvz
+JyBVgFqDXRYSyTBNw1DrxUU/3GvWA/ngjAwHEv0Cul/6sO/gsCvnABHiH6unns6x
+XRzPORlC2WY3gkk7vmlsLvYpyecNazAi/NAwVnU/66HOsaoVFWE+gBQo99UrN2yk
+0BiK/GMFlLm5dXQROgA9ZKKyFdI0LIXtf6SbAgMBAAGjMzAxMBEGCWCGSAGG+EIB
+AQQEAwIHADAMBgNVHRMEBTADAQH/MA4GA1UdDwEB/wQEAwICBDANBgkqhkiG9w0B
+AQUFAAOBgQA6chkzkACN281d1jKMrc+RHG2UMaQyxiteaLVZO+Ro1nnRUvseDf09
+XKYFwPMJjWCihVku6bw/ihZfuMHhxK22Nue6inNQ6eDu7WmrqL8z3iUrQwxs+WiF
+ob2rb8XRVVJkzXdXxlk4uo3UtNvw8sAz7sWD71qxKaIHU5q49zijfg==
 \-\-\-\-\-END CERTIFICATE\-\-\-\-\-
+.fi
+.if n \{\
+.RE
+.\}
+.PP
+For a human\-readable display
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+$ certutil \-L \-d sql:$HOME/nssdb \-n my\-ca\-cert
+Certificate:
+    Data:
+        Version: 3 (0x2)
+        Serial Number: 3650 (0xe42)
+        Signature Algorithm: PKCS #1 SHA\-1 With RSA Encryption
+        Issuer: "CN=Example CA"
+        Validity:
+            Not Before: Wed Mar 13 19:10:29 2013
+            Not After : Thu Jun 13 19:10:29 2013
+        Subject: "CN=Example CA"
+        Subject Public Key Info:
+            Public Key Algorithm: PKCS #1 RSA Encryption
+            RSA Public Key:
+                Modulus:
+                    9e:0a:ce:ab:f3:27:20:55:80:5a:83:5d:16:12:c9:30:
+                    4d:c3:50:eb:c5:45:3f:dc:6b:d6:03:f9:e0:8c:0c:07:
+                    12:fd:02:ba:5f:fa:b0:ef:e0:b0:2b:e7:00:11:e2:1f:
+                    ab:a7:9e:ce:b1:5d:1c:cf:39:19:42:d9:66:37:82:49:
+                    3b:be:69:6c:2e:f6:29:c9:e7:0d:6b:30:22:fc:d0:30:
+                    56:75:3f:eb:a1:ce:b1:aa:15:15:61:3e:80:14:28:f7:
+                    d5:2b:37:6c:a4:d0:18:8a:fc:63:05:94:b9:b9:75:74:
+                    11:3a:00:3d:64:a2:b2:15:d2:34:2c:85:ed:7f:a4:9b
+                Exponent: 65537 (0x10001)
+        Signed Extensions:
+            Name: Certificate Type
+            Data: none
+
+            Name: Certificate Basic Constraints
+            Data: Is a CA with no maximum path length\&.
+
+            Name: Certificate Key Usage
+            Critical: True
+            Usages: Certificate Signing
+
+    Signature Algorithm: PKCS #1 SHA\-1 With RSA Encryption
+    Signature:
+        3a:72:19:33:90:00:8d:db:cd:5d:d6:32:8c:ad:cf:91:
+        1c:6d:94:31:a4:32:c6:2b:5e:68:b5:59:3b:e4:68:d6:
+        79:d1:52:fb:1e:0d:fd:3d:5c:a6:05:c0:f3:09:8d:60:
+        a2:85:59:2e:e9:bc:3f:8a:16:5f:b8:c1:e1:c4:ad:b6:
+        36:e7:ba:8a:73:50:e9:e0:ee:ed:69:ab:a8:bf:33:de:
+        25:2b:43:0c:6c:f9:68:85:a1:bd:ab:6f:c5:d1:55:52:
+        64:cd:77:57:c6:59:38:ba:8d:d4:b4:db:f0:f2:c0:33:
+        ee:c5:83:ef:5a:b1:29:a2:07:53:9a:b8:f7:38:a3:7e
+    Fingerprint (MD5):
+        86:D8:A5:8B:8A:26:BE:9E:17:A8:7B:66:10:6B:27:80
+    Fingerprint (SHA1):
+        48:78:09:EF:C5:D4:0C:BD:D2:64:45:59:EB:03:13:15:F7:A9:D6:F7
+
+    Certificate Trust Flags:
+        SSL Flags:
+            Valid CA
+            Trusted CA
+            User
+        Email Flags:
+            Valid CA
+            Trusted CA
+            User
+        Object Signing Flags:
+            Valid CA
+            Trusted CA
+            User
+
 .fi
 .if n \{\
 .RE
@@ -1297,7 +1298,7 @@ argument to give the path to the directory\&.
 .RS 4
 .\}
 .nf
-$ certutil \-K \-d sql:/home/my/sharednssdb
+$ certutil \-K \-d sql:$HOME/nssdb
 certutil: Checking token "NSS Certificate DB" in slot "NSS User Private Key and Certificate Services                  "
 < 0> rsa      455a6673bde9375c2887ec8bf8016b3f9f35861d   Thawte Freemail Member\*(Aqs Thawte Consulting (Pty) Ltd\&. ID
 < 1> rsa      40defeeb522ade11090eacebaaf1196a172127df   Example Domain Administrator Cert
@@ -1318,8 +1319,7 @@ There are ways to narrow the keys listed in the search results:
 .IP \(bu 2.3
 .\}
 To return a specific key, use the
-\fB\-n\fR
-\fIname\fR
+\fB\-n\fR\fIname\fR
 argument with the name of the key\&.
 .RE
 .sp
@@ -1332,8 +1332,7 @@ argument with the name of the key\&.
 .IP \(bu 2.3
 .\}
 If there are multiple security devices loaded, then the
-\fB\-h\fR
-\fItokenname\fR
+\fB\-h\fR\fItokenname\fR
 argument can search a specific token or all tokens\&.
 .RE
 .sp
@@ -1346,8 +1345,7 @@ argument can search a specific token or all tokens\&.
 .IP \(bu 2.3
 .\}
 If there are multiple key types available, then the
-\fB\-k\fR
-\fIkey\-type\fR
+\fB\-k\fR\fIkey\-type\fR
 argument can search a specific type of key, like RSA, DSA, or ECC\&.
 .RE
 .PP
@@ -1671,7 +1669,7 @@ secmod\&.db for PKCS #11 module information
 .PP
 BerkeleyDB has performance limitations, though, which prevent it from being easily used by multiple applications simultaneously\&. NSS has some flexibility that allows applications to use their own, independent database engine while keeping a shared database and working around the access issues\&. Still, NSS requires more flexibility to provide a truly shared security database\&.
 .PP
-In 2009, NSS introduced a new set of databases that are SQLite databases rather than BerkleyDB\&. These new databases provide more accessibility and performance:
+In 2009, NSS introduced a new set of databases that are SQLite databases rather than BerkeleyDB\&. These new databases provide more accessibility and performance:
 .sp
 .RS 4
 .ie n \{\
@@ -1703,7 +1701,7 @@ key4\&.db for keys
 .sp -1
 .IP \(bu 2.3
 .\}
-pkcs11\&.txt, which is listing of all of the PKCS #11 modules contained in a new subdirectory in the security databases directory
+pkcs11\&.txt, a listing of all of the PKCS #11 modules, contained in a new subdirectory in the security databases directory
 .RE
 .PP
 Because the SQLite databases are designed to be shared, these are the
@@ -1845,12 +1843,12 @@ Mailing lists: https://lists\&.mozilla\&.org/listinfo/dev\-tech\-crypto
 IRC: Freenode at #dogtag\-pki
 .SH "AUTHORS"
 .PP
-The NSS tools were written and maintained by developers with Netscape, Red Hat, and Sun\&.
+The NSS tools were written and maintained by developers with Netscape, Red Hat, Sun, Oracle, Mozilla, and Google\&.
 .PP
 Authors: Elio Maldonado <emaldona@redhat\&.com>, Deon Lackey <dlackey@redhat\&.com>\&.
 .SH "LICENSE"
 .PP
-Licensed under the Mozilla Public License, version 1\&.1, and/or the GNU General Public License, version 2 or later, and/or the GNU Lesser General Public License, version 2\&.1 or later\&.
+Licensed under the Mozilla Public License, v\&. 2\&.0\&. If a copy of the MPL was not distributed with this file, You can obtain one at http://mozilla\&.org/MPL/2\&.0/\&.
 .SH "NOTES"
 .IP " 1." 4
 Mozilla NSS bug 836477
