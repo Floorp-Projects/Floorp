@@ -45,12 +45,6 @@
 #include "nsXPIDLString.h"
 #endif
 
-#if defined(XP_MACOSX) && !defined(__LP64__)
-#include "nsAutoPtr.h"
-#include <Carbon/Carbon.h>
-#endif
-
-
 //*****************************************************************************
 // nsWebBrowserFind
 //*****************************************************************************
@@ -244,25 +238,6 @@ NS_IMETHODIMP nsWebBrowserFind::FindNext(bool *outDidFind)
 NS_IMETHODIMP nsWebBrowserFind::GetSearchString(PRUnichar * *aSearchString)
 {
     NS_ENSURE_ARG_POINTER(aSearchString);
-#if defined(XP_MACOSX) && !defined(__LP64__)
-    OSStatus err;
-    ScrapRef scrap;
-    err = ::GetScrapByName(kScrapFindScrap, kScrapGetNamedScrap, &scrap);
-    if (err == noErr) {
-        Size byteCount;
-        err = ::GetScrapFlavorSize(scrap, kScrapFlavorTypeUnicode, &byteCount);
-        if (err == noErr) {
-            NS_ASSERTION(byteCount%2 == 0, "byteCount not a multiple of 2");
-            nsAutoArrayPtr<PRUnichar> buffer(new PRUnichar[byteCount/2 + 1]);
-            NS_ENSURE_TRUE(buffer, NS_ERROR_OUT_OF_MEMORY);
-            err = ::GetScrapFlavorData(scrap, kScrapFlavorTypeUnicode, &byteCount, buffer.get());
-            if (err == noErr) {
-                buffer[byteCount/2] = PRUnichar('\0');
-                mSearchString.Assign(buffer);
-            }
-        }
-    }    
-#endif
     *aSearchString = ToNewUnicode(mSearchString);
     return NS_OK;
 }
@@ -270,15 +245,6 @@ NS_IMETHODIMP nsWebBrowserFind::GetSearchString(PRUnichar * *aSearchString)
 NS_IMETHODIMP nsWebBrowserFind::SetSearchString(const PRUnichar * aSearchString)
 {
     mSearchString.Assign(aSearchString);
-#if defined(XP_MACOSX) && !defined(__LP64__)
-    OSStatus err;
-    ScrapRef scrap;
-    err = ::GetScrapByName(kScrapFindScrap, kScrapClearNamedScrap, &scrap);
-    if (err == noErr) {
-        ::PutScrapFlavor(scrap, kScrapFlavorTypeUnicode, kScrapFlavorMaskNone,
-        (mSearchString.Length()*2), aSearchString);
-    }
-#endif
     return NS_OK;
 }
 
