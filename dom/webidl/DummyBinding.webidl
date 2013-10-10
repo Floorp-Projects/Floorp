@@ -27,6 +27,7 @@ interface DummyInterface : EventTarget {
   void DOMWindowResizeEventDetail(optional DOMWindowResizeEventDetail arg);
   void WifiOptions(optional WifiCommandOptions arg1,
                    optional WifiResultOptions arg2);
+  void AppNotificationServiceOptions(optional AppNotificationServiceOptions arg);
 };
 
 interface DummyInterfaceWorkers {
