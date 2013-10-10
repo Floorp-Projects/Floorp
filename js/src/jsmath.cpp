@@ -293,7 +293,7 @@ js::math_atan2(JSContext *cx, unsigned argc, Value *vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
 
-    if (args.length() == 0) {
+    if (args.length() <= 1) {
         args.rval().setNaN();
         return true;
     }
@@ -638,7 +638,7 @@ js_math_pow(JSContext *cx, unsigned argc, Value *vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
 
-    if (args.length() == 0) {
+    if (args.length() <= 1) {
         args.rval().setNaN();
         return true;
     }
