@@ -1,0 +1,25 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+JAVA_JAR_TARGETS += annotationProcessors
+annotationProcessors_DEST := annotationProcessors.jar
+annotationProcessors_JAVAFILES := \
+  AnnotationProcessor.java \
+  CodeGenerator.java \
+  MethodWithAnnotationInfo.java \
+  classloader/IterableJarLoadingURLClassLoader.java \
+  classloader/JarClassIterator.java \
+  utils/AlphabeticMethodComparator.java \
+  utils/GeneratableEntryPointIterator.java \
+  utils/Utils.java \
+  $(NULL)
+
+include $(topsrcdir)/config/rules.mk
+
+JAVA_CLASSPATH := $(ANDROID_SDK)/android.jar
+
+# Include Android specific java flags, instead of what's in rules.mk.
+include $(topsrcdir)/config/android-common.mk
+
+libs:: annotationProcessors.jar
