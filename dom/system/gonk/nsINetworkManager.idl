@@ -117,10 +117,23 @@ interface nsIWifiOperationModeCallback : nsISupports
   void wifiOperationModeResult(in jsval error);
 };
 
+[scriptable, function, uuid(097878b0-19fc-11e3-8ffd-0800200c9a66)]
+interface nsISetDhcpServerCallback : nsISupports
+{
+  /**
+   * Callback function used to report DHCP server result
+   *
+   * @param error
+   *        An error message if the operation wasn't successful,
+   *        or `null` if it was.
+   */
+  void dhcpServerResult(in jsval error);
+};
+
 /**
  * Manage network interfaces.
  */
-[scriptable, uuid(fad3fb08-664f-48e3-bba3-423186988c61)]
+[scriptable, uuid(f658c740-26bb-11e3-8224-0800200c9a66)]
 interface nsINetworkManager : nsISupports
 {
   /**
@@ -204,6 +217,30 @@ interface nsINetworkManager : nsISupports
                         in nsINetworkInterface networkInterface,
                         in jsval config,
                         in nsIWifiTetheringCallback callback);
+
+  /**
+   * Enable or disable DHCP server
+   *
+   * @param enabled
+   *        Boolean that indicates enabling or disabling DHCP server.
+   *
+   * @param config
+   *        Config used to enable the DHCP server. It contains
+   *        .startIp    start of the ip lease range (string)
+   *        .endIp      end of the ip lease range (string)
+   *        .serverIp   ip of the DHCP server (string)
+   *        .maskLength the length of the subnet mask
+   *        .ifname     the interface name
+   *
+   *        As for disabling the DHCP server, put this value |null|.
+   *
+   * @param callback
+   *        Callback function used to report status.
+   */
+  void setDhcpServer(in boolean enabled,
+                     in jsval config,
+                     in nsISetDhcpServerCallback callback);
+
 
   /**
    * Retrieve network interface stats.

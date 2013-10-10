@@ -1,0 +1,48 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test for &lt;input type='file'&gt; handling when its "files" do not implement nsIFile</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="application/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+
+<div id="content">
+  <input id='a' type='file'>
+</div>
+<button id='b' onclick="document.getElementById('a').click();">Show Filepicker</button>
+
+<input type="file" id="file" />
+<pre id="test">
+<script type="application/javascript">
+
+SimpleTest.waitForExplicitFinish();
+
+var MockFilePicker = SpecialPowers.MockFilePicker;
+MockFilePicker.init(window);
+
+SimpleTest.waitForFocus(function() {
+  MockFilePicker.useBlobFile();
+  MockFilePicker.returnValue = MockFilePicker.returnOK;
+
+  var b = document.getElementById('b');
+  b.focus(); // Be sure the element is visible.
+
+  document.getElementById('a').addEventListener("change", function(aEvent) {
+    ok(true, "change event correctly sent");
+
+    SimpleTest.executeSoon(function() {
+      MockFilePicker.cleanup();
+      SimpleTest.finish();
+    });
+  }, false);
+
+  b.click();
+});
+
+</script>
+</pre>
+</body>
+</html>
+
