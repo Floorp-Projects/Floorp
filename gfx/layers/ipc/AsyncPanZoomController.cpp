@@ -644,13 +644,23 @@ nsEventStatus AsyncPanZoomController::OnScale(const PinchGestureInput& aEvent) {
     // either axis such that we don't overscroll the boundaries when zooming.
     CSSPoint neededDisplacement;
 
-    bool doScale = (spanRatio > 1.0 && userZoom < mMaxZoom) ||
-                   (spanRatio < 1.0 && userZoom > mMinZoom);
+    CSSToScreenScale realMinZoom = mMinZoom;
+    CSSToScreenScale realMaxZoom = mMaxZoom;
+    realMinZoom.scale = std::max(realMinZoom.scale,
+                                 mFrameMetrics.mCompositionBounds.width / mFrameMetrics.mScrollableRect.width);
+    realMinZoom.scale = std::max(realMinZoom.scale,
+                                 mFrameMetrics.mCompositionBounds.height / mFrameMetrics.mScrollableRect.height);
+    if (realMaxZoom < realMinZoom) {
+      realMaxZoom = realMinZoom;
+    }
+
+    bool doScale = (spanRatio > 1.0 && userZoom < realMaxZoom) ||
+                   (spanRatio < 1.0 && userZoom > realMinZoom);
 
     if (doScale) {
       spanRatio = clamped(spanRatio,
-                          mMinZoom.scale / userZoom.scale,
-                          mMaxZoom.scale / userZoom.scale);
+                          realMinZoom.scale / userZoom.scale,
+                          realMaxZoom.scale / userZoom.scale);
 
       switch (mX.ScaleWillOverscroll(spanRatio, cssFocusPoint.x))
       {
