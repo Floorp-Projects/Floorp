@@ -9529,7 +9529,7 @@ IonBuilder::lookupTypeRepresentationSet(MDefinition *typedObj,
 
     TypeRepresentationSetBuilder set;
     for (uint32_t i = 0; i < types->getObjectCount(); i++) {
-        types::TypeObject *type = types->getTypeObject(0);
+        types::TypeObject *type = types->getTypeObject(i);
         if (!type || type->unknownProperties())
             return true;
 
