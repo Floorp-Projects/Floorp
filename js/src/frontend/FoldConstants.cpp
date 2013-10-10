@@ -191,7 +191,7 @@ FoldBinaryNumeric(ExclusiveContext *cx, JSOp op, ParseNode *pn1, ParseNode *pn2,
 // to the parse node being replaced. The replacement, *pn, is unchanged except
 // for its pn_next pointer; updating that is necessary if *pn's new parent is a
 // list node.
-void
+static void
 ReplaceNode(ParseNode **pnp, ParseNode *pn)
 {
     pn->pn_next = (*pnp)->pn_next;

@@ -496,7 +496,7 @@ getNative(nsISupports *idobj,
     return rv;
 }
 
-inline nsresult
+static inline nsresult
 getNativeFromWrapper(JSContext *cx,
                      XPCWrappedNative *wrapper,
                      const nsIID &iid,

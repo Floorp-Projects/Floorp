@@ -7600,7 +7600,7 @@ IonBuilder::jsop_not()
     return true;
 }
 
-inline bool
+static inline bool
 TestClassHasAccessorHook(const Class *clasp, bool isGetter)
 {
     if (isGetter && clasp->ops.getGeneric)
@@ -7610,7 +7610,7 @@ TestClassHasAccessorHook(const Class *clasp, bool isGetter)
     return false;
 }
 
-inline bool
+static inline bool
 TestTypeHasOwnProperty(types::TypeObjectKey *typeObj, PropertyName *name, bool &cont)
 {
     cont = true;
@@ -7621,7 +7621,7 @@ TestTypeHasOwnProperty(types::TypeObjectKey *typeObj, PropertyName *name, bool &
     return true;
 }
 
-inline bool
+static inline bool
 TestCommonAccessorProtoChain(JSContext *cx, PropertyName *name,
                              bool isGetter, JSObject *foundProto,
                              JSObject *obj, bool &cont)
@@ -7667,7 +7667,7 @@ TestCommonAccessorProtoChain(JSContext *cx, PropertyName *name,
     return true;
 }
 
-inline bool
+static inline bool
 SearchCommonPropFunc(JSContext *cx, types::TemporaryTypeSet *types,
                      PropertyName *name, bool isGetter,
                      JSObject *&found, JSObject *&foundProto, bool &cont)

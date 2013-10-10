@@ -2395,7 +2395,7 @@ GenerateCallSetter(JSContext *cx, IonScript *ion, MacroAssembler &masm,
     return true;
 }
 
-bool
+static bool
 IsCacheableDOMProxyUnshadowedSetterCall(JSContext *cx, HandleObject obj, HandlePropertyName name,
                                         MutableHandleObject holder, MutableHandleShape shape,
                                         bool *isSetter)
