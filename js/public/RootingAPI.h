@@ -375,7 +375,7 @@ class TenuredHeap : public js::HeapBase<T>
 template <typename T>
 class MOZ_NONHEAP_CLASS Handle : public js::HandleBase<T>
 {
-    friend class MutableHandle<T>;
+    friend class JS::MutableHandle<T>;
 
   public:
     /* Creates a handle from a handle of a type convertible to T. */

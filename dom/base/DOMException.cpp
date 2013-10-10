@@ -5,7 +5,6 @@
 
 #include "mozilla/dom/DOMException.h"
 
-#include "jsapi.h"
 #include "jsprf.h"
 #include "js/OldDebugAPI.h"
 #include "mozilla/HoldDropJSObjects.h"

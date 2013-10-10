@@ -12,7 +12,6 @@
 #include "mozilla/MathAlgorithms.h"
 #include "mozilla/PodOperations.h"
 
-#include "jsapi.h"
 #include "jsatom.h"
 #include "jscntxt.h"
 #include "jsobj.h"
