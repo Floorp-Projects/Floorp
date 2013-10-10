@@ -2340,10 +2340,13 @@ OverflowableToolbar.prototype = {
   handleEvent: function(aEvent) {
     switch(aEvent.type) {
       case "overflow":
-        if (this._initialized) {
-          this._onOverflow();
-        } else {
-          this._forceOnOverflow = true;
+        // Ignore vertical overflow:
+        if (aEvent.detail > 0) {
+          if (this._initialized) {
+            this._onOverflow();
+          } else {
+            this._forceOnOverflow = true;
+          }
         }
         break;
       case "resize":
