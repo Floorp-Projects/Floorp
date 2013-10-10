@@ -1,4 +1,3 @@
-#filter substitution
 <?xml version="1.0" encoding="UTF-8"?>
 <!-- This Source Code Form is subject to the terms of the Mozilla Public
    - License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -13,7 +12,7 @@
     android:summary="@string/sync_settings_summary_pair">
     <intent
       android:action="android.intent.action.MAIN"
-      android:targetPackage="@ANDROID_PACKAGE_NAME@"
+      android:targetPackage="@string/android_package_name"
       android:targetClass="org.mozilla.gecko.sync.setup.activities.SetupSyncActivity">
       <extra
         android:name="isSetup"
@@ -25,7 +24,7 @@
     android:title="@string/sync_configure_engines_title">
     <intent
       android:action="android.intent.action.MAIN"
-      android:targetPackage="@ANDROID_PACKAGE_NAME@"
+      android:targetPackage="@string/android_package_name"
       android:targetClass="org.mozilla.gecko.sync.config.activities.SelectEnginesActivity">
     </intent>
   </PreferenceScreen>
