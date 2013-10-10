@@ -19,6 +19,7 @@ extensions = [
     'sphinx.ext.autodoc',
     'sphinx.ext.graphviz',
     'sphinx.ext.todo',
+    'mozbuild.sphinx',
 ]
 
 templates_path = ['_templates']
