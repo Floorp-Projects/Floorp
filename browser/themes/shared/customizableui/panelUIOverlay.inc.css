@@ -2,13 +2,17 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+%filter substitution
+%define menuPanelWidth 21em
+%define exitSubviewGutterWidth 38px
+
 %include ../browser.inc
 
 .panel-subviews {
   background-image: linear-gradient(to bottom, white 1px, rgba(255, 255, 255, 0) 15px);
   background-color: -moz-dialog;
   box-shadow: -1px 0px 0px rgba(0, 0, 0, 0.2), -1px 0px 2px rgba(0, 0, 0, 0.1), 1px 0px 0px rgba(255, 255, 255, 0.2) inset;
-  -moz-margin-start: 38px;
+  -moz-margin-start: @exitSubviewGutterWidth@;
 }
 
 .panel-subviews:-moz-locale-dir(rtl) {
