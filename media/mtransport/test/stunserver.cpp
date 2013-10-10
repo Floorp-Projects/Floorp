@@ -205,6 +205,26 @@ TestStunServer::~TestStunServer() {
   delete response_addr_;
 }
 
+int TestStunServer::TryOpenListenSocket(nr_local_addr* addr, uint16_t port) {
+
+    if (nr_transport_addr_set_port(&addr->addr, port)) {
+      MOZ_MTLOG(ML_ERROR, "Couldn't set port");
+      return R_INTERNAL;
+    }
+
+    if (nr_transport_addr_fmt_addr_string(&addr->addr)) {
+      MOZ_MTLOG(ML_ERROR, "Couldn't re-set addr string");
+      return R_INTERNAL;
+    }
+
+    if (nr_socket_local_create(&addr->addr, &listen_sock_)) {
+      MOZ_MTLOG(ML_ERROR, "Couldn't create listen socket");
+      return R_ALREADY;
+    }
+
+    return 0;
+}
+
 TestStunServer* TestStunServer::Create() {
   NR_reg_init(NR_REG_MODE_LOCAL);
 
@@ -225,26 +245,23 @@ TestStunServer* TestStunServer::Create() {
     return nullptr;
   }
 
-  // Bind to the first address (arbitrarily) on configured port (default 3478)
-  r = nr_transport_addr_set_port(&addrs[0].addr, instance_port);
-  if (r) {
-    MOZ_MTLOG(ML_ERROR, "Couldn't set port");
-    return nullptr;
-  }
-
-  r = nr_transport_addr_fmt_addr_string(&addrs[0].addr);
-  if (r) {
-    MOZ_MTLOG(ML_ERROR, "Couldn't re-set addr string");
-    return nullptr;
-  }
-
-  r = nr_socket_local_create(&addrs[0].addr, &server->listen_sock_);
-  if (r) {
-    MOZ_MTLOG(ML_ERROR, "Couldn't create listen socket");
-    return nullptr;
-  }
-
   NR_SOCKET fd;
+  int tries = 10;
+  while (tries--) {
+    // Bind to the first address (arbitrarily) on configured port (default 3478)
+    r = server->TryOpenListenSocket(&addrs[0], instance_port);
+    // We interpret R_ALREADY to mean the addr is probably in use. Try another.
+    // Otherwise, it either worked or it didn't, and we check below.
+    if (r != R_ALREADY) {
+      break;
+    }
+    ++instance_port;
+  }
+
+  if (r) {
+    return nullptr;
+  }
+
   r = nr_socket_getfd(server->listen_sock_, &fd);
   if (r) {
     MOZ_MTLOG(ML_ERROR, "Couldn't get fd");
@@ -290,6 +307,7 @@ TestStunServer* TestStunServer::GetInstance() {
   if (!instance)
     instance = Create();
 
+  MOZ_ASSERT(instance);
   return instance;
 }
 
