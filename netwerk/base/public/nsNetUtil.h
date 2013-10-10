@@ -2326,7 +2326,8 @@ NS_SniffContent(const char* aSnifferType, nsIRequest* aRequest,
     return;
   }
 
-  const nsCOMArray<nsIContentSniffer>& sniffers = cache->GetEntries();
+  nsCOMArray<nsIContentSniffer> sniffers;
+  cache->GetEntries(sniffers);
   for (int32_t i = 0; i < sniffers.Count(); ++i) {
     nsresult rv = sniffers[i]->GetMIMETypeFromContent(aRequest, aData, aLength, aSniffedType);
     if (NS_SUCCEEDED(rv) && !aSniffedType.IsEmpty()) {
