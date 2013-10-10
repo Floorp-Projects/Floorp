@@ -20,14 +20,8 @@
 namespace mozilla {
 namespace dom {
 
-NS_IMPL_CYCLE_COLLECTION_1(URL, mWindow)
-
-NS_IMPL_CYCLE_COLLECTION_ROOT_NATIVE(URL, AddRef)
-NS_IMPL_CYCLE_COLLECTION_UNROOT_NATIVE(URL, Release)
-
-URL::URL(nsPIDOMWindow* aWindow, nsIURI* aURI)
-  : mWindow(aWindow)
-  , mURI(aURI)
+URL::URL(nsIURI* aURI)
+  : mURI(aURI)
 {
 }
 
@@ -41,12 +35,6 @@ URL::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aScope)
 URL::Constructor(const GlobalObject& aGlobal, const nsAString& aUrl,
                  URL& aBase, ErrorResult& aRv)
 {
-  nsCOMPtr<nsPIDOMWindow> window = do_QueryInterface(aGlobal.GetAsSupports());
-  if (!window) {
-    aRv.Throw(NS_ERROR_UNEXPECTED);
-    return nullptr;
-  }
-
   nsresult rv;
   nsCOMPtr<nsIIOService> ioService(do_GetService(NS_IOSERVICE_CONTRACTID, &rv));
   if (NS_FAILED(rv)) {
@@ -62,7 +50,7 @@ URL::Constructor(const GlobalObject& aGlobal, const nsAString& aUrl,
     return nullptr;
   }
 
-  nsRefPtr<URL> url = new URL(window, uri);
+  nsRefPtr<URL> url = new URL(uri);
   return url.forget();
 }
 
@@ -70,12 +58,6 @@ URL::Constructor(const GlobalObject& aGlobal, const nsAString& aUrl,
 URL::Constructor(const GlobalObject& aGlobal, const nsAString& aUrl,
                   const nsAString& aBase, ErrorResult& aRv)
 {
-  nsCOMPtr<nsPIDOMWindow> window = do_QueryInterface(aGlobal.GetAsSupports());
-  if (!window) {
-    aRv.Throw(NS_ERROR_UNEXPECTED);
-    return nullptr;
-  }
-
   nsresult rv;
   nsCOMPtr<nsIIOService> ioService(do_GetService(NS_IOSERVICE_CONTRACTID, &rv));
   if (NS_FAILED(rv)) {
@@ -99,7 +81,7 @@ URL::Constructor(const GlobalObject& aGlobal, const nsAString& aUrl,
     return nullptr;
   }
 
-  nsRefPtr<URL> url = new URL(window, uri);
+  nsRefPtr<URL> url = new URL(uri);
   return url.forget();
 }
 
@@ -110,7 +92,7 @@ URL::CreateObjectURL(const GlobalObject& aGlobal,
                      nsString& aResult,
                      ErrorResult& aError)
 {
-  CreateObjectURLInternal(aGlobal.GetAsSupports(), aBlob,
+  CreateObjectURLInternal(aGlobal, aBlob,
                           NS_LITERAL_CSTRING(BLOBURI_SCHEME), aOptions, aResult,
                           aError);
 }
@@ -121,7 +103,7 @@ URL::CreateObjectURL(const GlobalObject& aGlobal, DOMMediaStream& aStream,
                      nsString& aResult,
                      ErrorResult& aError)
 {
-  CreateObjectURLInternal(aGlobal.GetAsSupports(), &aStream,
+  CreateObjectURLInternal(aGlobal, &aStream,
                           NS_LITERAL_CSTRING(MEDIASTREAMURI_SCHEME), aOptions,
                           aResult, aError);
 }
@@ -132,65 +114,62 @@ URL::CreateObjectURL(const GlobalObject& aGlobal, MediaSource& aSource,
                      nsString& aResult,
                      ErrorResult& aError)
 {
-  CreateObjectURLInternal(aGlobal.GetAsSupports(), &aSource,
+  CreateObjectURLInternal(aGlobal, &aSource,
                           NS_LITERAL_CSTRING(MEDIASOURCEURI_SCHEME), aOptions,
                           aResult, aError);
 }
 
 void
-URL::CreateObjectURLInternal(nsISupports* aGlobal, nsISupports* aObject,
+URL::CreateObjectURLInternal(const GlobalObject& aGlobal, nsISupports* aObject,
                              const nsACString& aScheme,
                              const objectURLOptions& aOptions,
                              nsString& aResult, ErrorResult& aError)
 {
-  nsCOMPtr<nsPIDOMWindow> w = do_QueryInterface(aGlobal);
-  nsGlobalWindow* window = static_cast<nsGlobalWindow*>(w.get());
-  NS_PRECONDITION(!window || window->IsInnerWindow(),
-                  "Should be inner window");
-
-  if (!window || !window->GetExtantDoc()) {
-    aError.Throw(NS_ERROR_INVALID_POINTER);
-    return;
-  }
-
-  nsIDocument* doc = window->GetExtantDoc();
+  nsCOMPtr<nsIPrincipal> principal = nsContentUtils::GetObjectPrincipal(aGlobal.Get());
 
   nsCString url;
   nsresult rv = nsHostObjectProtocolHandler::AddDataEntry(aScheme, aObject,
-    doc->NodePrincipal(), url);
+                                                          principal, url);
   if (NS_FAILED(rv)) {
     aError.Throw(rv);
     return;
   }
 
-  doc->RegisterHostObjectUri(url);
+  nsCOMPtr<nsPIDOMWindow> w = do_QueryInterface(aGlobal.GetAsSupports());
+  nsGlobalWindow* window = static_cast<nsGlobalWindow*>(w.get());
+
+  if (window) {
+    NS_PRECONDITION(window->IsInnerWindow(), "Should be inner window");
+
+    if (!window->GetExtantDoc()) {
+      aError.Throw(NS_ERROR_INVALID_POINTER);
+      return;
+    }
+
+    nsIDocument* doc = window->GetExtantDoc();
+    if (doc) {
+      doc->RegisterHostObjectUri(url);
+    }
+  }
+
   CopyASCIItoUTF16(url, aResult);
 }
 
 void
 URL::RevokeObjectURL(const GlobalObject& aGlobal, const nsAString& aURL)
 {
-  nsCOMPtr<nsPIDOMWindow> w = do_QueryInterface(aGlobal.GetAsSupports());
-  nsGlobalWindow* window = static_cast<nsGlobalWindow*>(w.get());
-  NS_PRECONDITION(!window || window->IsInnerWindow(),
-                  "Should be inner window");
-  if (!window)
-    return;
+  nsIPrincipal* principal = nsContentUtils::GetObjectPrincipal(aGlobal.Get());
 
   NS_LossyConvertUTF16toASCII asciiurl(aURL);
 
-  nsIPrincipal* winPrincipal = window->GetPrincipal();
-  if (!winPrincipal) {
-    return;
-  }
-
-  nsIPrincipal* principal =
+  nsIPrincipal* urlPrincipal =
     nsHostObjectProtocolHandler::GetDataEntryPrincipal(asciiurl);
-  bool subsumes;
-  if (principal && winPrincipal &&
-      NS_SUCCEEDED(winPrincipal->Subsumes(principal, &subsumes)) &&
-      subsumes) {
-    if (window->GetExtantDoc()) {
+
+  if (urlPrincipal && principal->Subsumes(urlPrincipal)) {
+    nsCOMPtr<nsPIDOMWindow> w = do_QueryInterface(aGlobal.GetAsSupports());
+    nsGlobalWindow* window = static_cast<nsGlobalWindow*>(w.get());
+
+    if (window && window->GetExtantDoc()) {
       window->GetExtantDoc()->UnregisterHostObjectUri(asciiurl);
     }
     nsHostObjectProtocolHandler::RemoveDataEntry(asciiurl);

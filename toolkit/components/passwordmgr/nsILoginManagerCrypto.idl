@@ -9,7 +9,7 @@
 
 interface nsILoginManagerCrypto : nsISupports {
 
-    const unsigned long ENCTYPE_BASE64 = 0;
+    const unsigned long ENCTYPE_BASE64 = 0; // obsolete
     const unsigned long ENCTYPE_SDR = 1;
 
     /**

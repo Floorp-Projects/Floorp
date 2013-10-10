@@ -1027,7 +1027,7 @@ void CreateAnswer(sipcc::MediaConstraints& constraints, std::string offer,
   //Stops generating new audio data for transmission.
   //Should be called before Cleanup of the peer connection.
   void CloseSendStreams() {
-    static_cast<Fake_AudioStreamSource*>(
+    static_cast<Fake_MediaStream*>(
         domMediaStream_->GetStream())->StopStream();
   }
 
