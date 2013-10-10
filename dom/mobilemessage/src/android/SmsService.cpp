@@ -7,7 +7,6 @@
 #include "SmsService.h"
 #include "SmsSegmentInfo.h"
 #include "AndroidBridge.h"
-#include "jsapi.h"
 
 namespace mozilla {
 namespace dom {

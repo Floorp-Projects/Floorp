@@ -19,7 +19,7 @@
 #include "nsIWebNavigation.h"
 #include "nsIInterfaceRequestorUtils.h"
 #include "shared-libraries.h"
-#include "jsapi.h"
+#include "js/Value.h"
 
 using std::string;
 
