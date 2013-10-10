@@ -4504,9 +4504,8 @@ CodeGenerator::visitCharCodeAt(LCharCodeAt *lir)
         return false;
 
     Address lengthAndFlagsAddr(str, JSString::offsetOfLengthAndFlags());
-    masm.loadPtr(lengthAndFlagsAddr, output);
 
-    masm.branchTest32(Assembler::Zero, output, Imm32(JSString::FLAGS_MASK), ool->entry());
+    masm.branchTest32(Assembler::Zero, lengthAndFlagsAddr, Imm32(JSString::FLAGS_MASK), ool->entry());
 
     // getChars
     Address charsAddr(str, JSString::offsetOfChars());
