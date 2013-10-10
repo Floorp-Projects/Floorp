@@ -5,7 +5,6 @@
 #ifndef nsIDocument_h___
 #define nsIDocument_h___
 
-#include "mozilla/Attributes.h"
 #include "mozFlushType.h"                // for enum
 #include "nsAutoPtr.h"                   // for member
 #include "nsCOMArray.h"                  // for member
@@ -13,20 +12,17 @@
 #include "nsCompatibility.h"             // for member
 #include "nsCOMPtr.h"                    // for member
 #include "nsGkAtoms.h"                   // for static class members
-#include "nsIChannel.h"                  // for member
-#include "nsIDocumentEncoder.h"          // for member (in nsCOMPtr)
 #include "nsIDocumentObserver.h"         // for typedef (nsUpdateType)
-#include "nsIFrameRequestCallback.h"     // for member (in nsCOMPtr)
-#include "nsILoadContext.h"              // for member (in nsCOMPtr)
 #include "nsILoadGroup.h"                // for member (in nsCOMPtr)
 #include "nsINode.h"                     // for base class
 #include "nsIScriptGlobalObject.h"       // for member (in nsCOMPtr)
-#include "nsIStructuredCloneContainer.h" // for member (in nsCOMPtr)
 #include "nsPIDOMWindow.h"               // for use in inline functions
 #include "nsPropertyTable.h"             // for member
 #include "nsTHashtable.h"                // for member
 #include "mozilla/dom/DocumentBinding.h"
 #include "Units.h"
+#include "nsExpirationTracker.h"
+#include "nsClassHashtable.h"
 
 class imgIRequest;
 class nsAString;
@@ -46,6 +42,7 @@ class nsIChannel;
 class nsIContent;
 class nsIContentSink;
 class nsIDocShell;
+class nsIDocumentEncoder;
 class nsIDocumentObserver;
 class nsIDOMDocument;
 class nsIDOMDocumentFragment;
@@ -57,12 +54,14 @@ class nsIDOMXPathExpression;
 class nsIDOMXPathNSResolver;
 class nsIHTMLCollection;
 class nsILayoutHistoryState;
+class nsILoadContext;
 class nsIObjectLoadingContent;
 class nsIObserver;
 class nsIPresShell;
 class nsIPrincipal;
 class nsIRequest;
 class nsIStreamListener;
+class nsIStructuredCloneContainer;
 class nsIStyleRule;
 class nsIStyleSheet;
 class nsIURI;
@@ -80,6 +79,7 @@ class nsDOMCaretPosition;
 class nsViewportInfo;
 class nsDOMEvent;
 class nsIGlobalObject;
+class nsCSSSelectorList;
 
 namespace mozilla {
 class ErrorResult;
@@ -660,7 +660,61 @@ public:
 protected:
   virtual Element *GetRootElementInternal() const = 0;
 
+private:
+  class SelectorCacheKey
+  {
+    public:
+      SelectorCacheKey(const nsAString& aString) : mKey(aString)
+      {
+        MOZ_COUNT_CTOR(SelectorCacheKey);
+      }
+
+      nsString mKey;
+      nsExpirationState mState;
+
+      nsExpirationState* GetExpirationState() { return &mState; }
+
+      ~SelectorCacheKey()
+      {
+        MOZ_COUNT_DTOR(SelectorCacheKey);
+      }
+  };
+
+  class SelectorCacheKeyDeleter;
+
 public:
+  class SelectorCache MOZ_FINAL
+    : public nsExpirationTracker<SelectorCacheKey, 4>
+  {
+    public:
+      SelectorCache();
+
+      // CacheList takes ownership of aSelectorList.
+      void CacheList(const nsAString& aSelector, nsCSSSelectorList* aSelectorList);
+
+      virtual void NotifyExpired(SelectorCacheKey* aSelector) MOZ_OVERRIDE;
+
+      // We do not call MarkUsed because it would just slow down lookups and
+      // because we're OK expiring things after a few seconds even if they're
+      // being used.
+      nsCSSSelectorList* GetList(const nsAString& aSelector)
+      {
+        return mTable.Get(aSelector);
+      }
+
+      ~SelectorCache()
+      {
+        AgeAllGenerations();
+      }
+
+    private:
+      nsClassHashtable<nsStringHashKey, nsCSSSelectorList> mTable;
+  };
+
+  SelectorCache& GetSelectorCache()
+  {
+    return mSelectorCache;
+  }
   // Get the root <html> element, or return null if there isn't one (e.g.
   // if the root isn't <html>)
   Element* GetHtmlElement() const;
@@ -1108,15 +1162,7 @@ public:
   /**
    * Get the container's load context for this document.
    */
-  nsILoadContext* GetLoadContext() const
-  {
-    nsCOMPtr<nsISupports> container = GetContainer();
-    if (container) {
-      nsCOMPtr<nsILoadContext> loadContext = do_QueryInterface(container);
-      return loadContext;
-    }
-    return nullptr;
-  }
+  nsILoadContext* GetLoadContext() const;
 
   /**
    * Set and get XML declaration. If aVersion is null there is no declaration.
@@ -1424,15 +1470,9 @@ public:
     mMayStartLayout = aMayStartLayout;
   }
 
-  already_AddRefed<nsIDocumentEncoder> GetCachedEncoder()
-  {
-    return mCachedEncoder.forget();
-  }
+  already_AddRefed<nsIDocumentEncoder> GetCachedEncoder();
 
-  void SetCachedEncoder(already_AddRefed<nsIDocumentEncoder> aEncoder)
-  {
-    mCachedEncoder = aEncoder;
-  }
+  void SetCachedEncoder(already_AddRefed<nsIDocumentEncoder> aEncoder);
 
   // In case of failure, the document really can't initialize the frame loader.
   virtual nsresult InitializeFrameLoader(nsFrameLoader* aLoader) = 0;
@@ -1715,11 +1755,7 @@ public:
    * Set the document's pending state object (as serialized using structured
    * clone).
    */
-  void SetStateObject(nsIStructuredCloneContainer *scContainer)
-  {
-    mStateObjectContainer = scContainer;
-    mStateObjectCached = nullptr;
-  }
+  void SetStateObject(nsIStructuredCloneContainer *scContainer);
 
   /**
    * Returns Doc_Theme_None if there is no lightweight theme specified,
@@ -2133,6 +2169,7 @@ public:
 
 private:
   uint64_t mWarnedAbout;
+  SelectorCache mSelectorCache;
 
 protected:
   ~nsIDocument();
@@ -2161,11 +2198,7 @@ protected:
     return GetRootElement();
   }
 
-  void SetContentTypeInternal(const nsACString& aType)
-  {
-    mCachedEncoder = nullptr;
-    mContentType = aType;
-  }
+  void SetContentTypeInternal(const nsACString& aType);
 
   nsCString GetContentTypeInternal() const
   {

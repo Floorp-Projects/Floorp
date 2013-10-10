@@ -82,8 +82,10 @@ BackgroundFileSaver::BackgroundFileSaver()
 , mComplete(false)
 , mStatus(NS_OK)
 , mAppend(false)
-, mAssignedTarget(nullptr)
-, mAssignedTargetKeepPartial(false)
+, mInitialTarget(nullptr)
+, mInitialTargetKeepPartial(false)
+, mRenamedTarget(nullptr)
+, mRenamedTargetKeepPartial(false)
 , mAsyncCopyContext(nullptr)
 , mSha256Enabled(false)
 , mActualTarget(nullptr)
@@ -181,8 +183,13 @@ BackgroundFileSaver::SetTarget(nsIFile *aTarget, bool aKeepPartial)
   NS_ENSURE_ARG(aTarget);
   {
     MutexAutoLock lock(mLock);
-    aTarget->Clone(getter_AddRefs(mAssignedTarget));
-    mAssignedTargetKeepPartial = aKeepPartial;
+    if (!mInitialTarget) {
+      aTarget->Clone(getter_AddRefs(mInitialTarget));
+      mInitialTargetKeepPartial = aKeepPartial;
+    } else {
+      aTarget->Clone(getter_AddRefs(mRenamedTarget));
+      mRenamedTargetKeepPartial = aKeepPartial;
+    }
   }
 
   // After the worker thread wakes up because attention is requested, it will
@@ -373,15 +380,19 @@ BackgroundFileSaver::ProcessStateChange()
   }
 
   // Get a copy of the current shared state for the worker thread.
-  nsCOMPtr<nsIFile> target;
-  bool targetKeepPartial;
-  bool sha256Enabled = false;
-  bool append = false;
+  nsCOMPtr<nsIFile> initialTarget;
+  bool initialTargetKeepPartial;
+  nsCOMPtr<nsIFile> renamedTarget;
+  bool renamedTargetKeepPartial;
+  bool sha256Enabled;
+  bool append;
   {
     MutexAutoLock lock(mLock);
 
-    target = mAssignedTarget;
-    targetKeepPartial = mAssignedTargetKeepPartial;
+    initialTarget = mInitialTarget;
+    initialTargetKeepPartial = mInitialTargetKeepPartial;
+    renamedTarget = mRenamedTarget;
+    renamedTargetKeepPartial = mRenamedTargetKeepPartial;
     sha256Enabled = mSha256Enabled;
     append = mAppend;
 
@@ -389,60 +400,69 @@ BackgroundFileSaver::ProcessStateChange()
     mWorkerThreadAttentionRequested = false;
   }
 
-  // The target can only be null if it has never been assigned.  In this case,
-  // there is nothing to do since we never created any output file.
-  if (!target) {
+  // The initial target can only be null if it has never been assigned.  In this
+  // case, there is nothing to do since we never created any output file.
+  if (!initialTarget) {
     return NS_OK;
   }
 
+  // Determine if we are processing the attention request for the first time.
   bool isContinuation = !!mActualTarget;
-
-  // We will append to the initial target file only if it was requested by the
-  // caller, but we'll always append on subsequent accesses to the target file.
-  int32_t creationIoFlags;
-  if (isContinuation) {
-    creationIoFlags = PR_APPEND;
-  } else {
-    creationIoFlags = (append ? PR_APPEND : PR_TRUNCATE) | PR_CREATE_FILE;
+  if (!isContinuation) {
+    // Assign the target file for the first time.
+    mActualTarget = initialTarget;
+    mActualTargetKeepPartial = initialTargetKeepPartial;
   }
 
   // Verify whether we have actually been instructed to use a different file.
+  // This may happen the first time this function is executed, if SetTarget was
+  // called two times before the worker thread processed the attention request.
   bool equalToCurrent = false;
-  if (isContinuation) {
-    rv = mActualTarget->Equals(target, &equalToCurrent);
+  if (renamedTarget) {
+    rv = mActualTarget->Equals(renamedTarget, &equalToCurrent);
     NS_ENSURE_SUCCESS(rv, rv);
     if (!equalToCurrent)
     {
-      // We are moving the previous target file to a different location.
-      nsCOMPtr<nsIFile> targetParentDir;
-      rv = target->GetParent(getter_AddRefs(targetParentDir));
-      NS_ENSURE_SUCCESS(rv, rv);
-
-      nsAutoString targetName;
-      rv = target->GetLeafName(targetName);
-      NS_ENSURE_SUCCESS(rv, rv);
-
-      // We must delete any existing target file before moving the current one.
-      bool exists = false;
-      rv = target->Exists(&exists);
-      NS_ENSURE_SUCCESS(rv, rv);
+      // If we were asked to rename the file but the initial file did not exist,
+      // we simply create the file in the renamed location.  We avoid this check
+      // if we have already started writing the output file ourselves.
+      bool exists = true;
+      if (!isContinuation) {
+        rv = mActualTarget->Exists(&exists);
+        NS_ENSURE_SUCCESS(rv, rv);
+      }
       if (exists) {
-        rv = target->Remove(false);
+        // We are moving the previous target file to a different location.
+        nsCOMPtr<nsIFile> renamedTargetParentDir;
+        rv = renamedTarget->GetParent(getter_AddRefs(renamedTargetParentDir));
+        NS_ENSURE_SUCCESS(rv, rv);
+
+        nsAutoString renamedTargetName;
+        rv = renamedTarget->GetLeafName(renamedTargetName);
+        NS_ENSURE_SUCCESS(rv, rv);
+
+        // We must delete any existing target file before moving the current
+        // one.
+        rv = renamedTarget->Exists(&exists);
+        NS_ENSURE_SUCCESS(rv, rv);
+        if (exists) {
+          rv = renamedTarget->Remove(false);
+          NS_ENSURE_SUCCESS(rv, rv);
+        }
+
+        // Move the file.  If this fails, we still reference the original file
+        // in mActualTarget, so that it is deleted if requested.  If this
+        // succeeds, the nsIFile instance referenced by mActualTarget mutates
+        // and starts pointing to the new file, but we'll discard the reference.
+        rv = mActualTarget->MoveTo(renamedTargetParentDir, renamedTargetName);
         NS_ENSURE_SUCCESS(rv, rv);
       }
 
-      // Move the file.  If this fails, we still reference the original file
-      // in mActualTarget, so that it is deleted if requested.  If this
-      // succeeds, the nsIFile instance referenced by mActualTarget mutates and
-      // starts pointing to the new file, but we'll discard the reference.
-      rv = mActualTarget->MoveTo(targetParentDir, targetName);
-      NS_ENSURE_SUCCESS(rv, rv);
+      // Now we can update the actual target file name.
+      mActualTarget = renamedTarget;
+      mActualTargetKeepPartial = renamedTargetKeepPartial;
     }
   }
-
-  // Now we can update the actual target file name.
-  mActualTarget = target;
-  mActualTargetKeepPartial = targetKeepPartial;
 
   // Notify if the target file name actually changed.
   if (!equalToCurrent) {
@@ -528,6 +548,15 @@ BackgroundFileSaver::ProcessStateChange()
     }
   }
 
+  // We will append to the initial target file only if it was requested by the
+  // caller, but we'll always append on subsequent accesses to the target file.
+  int32_t creationIoFlags;
+  if (isContinuation) {
+    creationIoFlags = PR_APPEND;
+  } else {
+    creationIoFlags = (append ? PR_APPEND : PR_TRUNCATE) | PR_CREATE_FILE;
+  }
+
   // Create the target file, or append to it if we already started writing it.
   nsCOMPtr<nsIOutputStream> outputStream;
   rv = NS_NewLocalFileOutputStream(getter_AddRefs(outputStream),
@@ -602,16 +631,24 @@ BackgroundFileSaver::CheckCompletion()
     if (NS_SUCCEEDED(mStatus)) {
       failed = false;
 
-      // On success, if there is a pending rename operation, we must process it
-      // before finishing.  Otherwise, we can finish now if requested.
-      if ((mAssignedTarget && mAssignedTarget != mActualTarget) ||
-          !mFinishRequested) {
+      // We did not incur in an error, so we must determine if we can stop now.
+      // If the Finish method has not been called, we can just continue now.
+      if (!mFinishRequested) {
         return false;
       }
 
-      // If completion was requested, but we still have data to write to the
-      // output file, allow the copy operation to resume.  The Available getter
-      // may return an error if one of the pipe's streams has been already closed.
+      // We can only stop when all the operations requested by the control
+      // thread have been processed.  First, we check whether we have processed
+      // the first SetTarget call, if any.  Then, we check whether we have
+      // processed any rename requested by subsequent SetTarget calls.
+      if ((mInitialTarget && !mActualTarget) ||
+          (mRenamedTarget && mRenamedTarget != mActualTarget)) {
+        return false;
+      }
+
+      // If we still have data to write to the output file, allow the copy
+      // operation to resume.  The Available getter may return an error if one
+      // of the pipe's streams has been already closed.
       uint64_t available;
       rv = mPipeInputStream->Available(&available);
       if (NS_SUCCEEDED(rv) && available != 0) {

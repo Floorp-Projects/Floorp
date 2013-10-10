@@ -55,6 +55,9 @@ SharedTextureClientOGL::InitWith(gl::SharedTextureHandle aHandle,
   mSize = aSize;
   mShareType = aShareType;
   mInverted = aInverted;
+  if (mInverted) {
+    AddFlags(TEXTURE_NEEDS_Y_FLIP);
+  }
 }
 
 bool

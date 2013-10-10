@@ -38,6 +38,7 @@
 #include "nsVersionComparator.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/unused.h"
+#include "nsILoadContext.h"
 
 using namespace mozilla;
 

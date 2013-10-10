@@ -3590,12 +3590,13 @@ struct GlobalProperties {
     GlobalProperties() { mozilla::PodZero(this); }
     bool Parse(JSContext *cx, JS::HandleObject obj);
     bool Define(JSContext *cx, JS::HandleObject obj);
-    bool indexedDB;
-    bool XMLHttpRequest;
-    bool TextDecoder;
-    bool TextEncoder;
-    bool atob;
-    bool btoa;
+    bool indexedDB : 1;
+    bool XMLHttpRequest : 1;
+    bool TextDecoder : 1;
+    bool TextEncoder : 1;
+    bool URL : 1;
+    bool atob : 1;
+    bool btoa : 1;
 };
 
 // Infallible.

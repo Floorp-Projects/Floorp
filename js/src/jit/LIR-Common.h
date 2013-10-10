@@ -168,6 +168,9 @@ class LPointer : public LInstructionHelper<1, 0, 0>
     Kind kind() const {
         return kind_;
     }
+    const char *extraName() const {
+        return kind_ == GC_THING ? "GC_THING" : "NON_GC_THING";
+    }
 
     gc::Cell *gcptr() const {
         JS_ASSERT(kind() == GC_THING);
@@ -1542,6 +1545,9 @@ class LCompare : public LInstructionHelper<1, 2, 0>
     MCompare *mir() {
         return mir_->toCompare();
     }
+    const char *extraName() const {
+        return js_CodeName[jsop_];
+    }
 };
 
 // Compares two integral values of the same JS type, either integer or object.
@@ -1579,6 +1585,9 @@ class LCompareAndBranch : public LControlInstructionHelper<2, 2, 0>
     }
     MCompare *mir() {
         return mir_->toCompare();
+    }
+    const char *extraName() const {
+        return js_CodeName[jsop_];
     }
 };
 
@@ -2020,7 +2029,7 @@ class LBitOpI : public LInstructionHelper<1, 2, 0>
     const char *extraName() const {
         if (bitop() == JSOP_URSH && mir_->toUrsh()->canOverflow())
             return "UrshCanOverflow";
-        return nullptr;
+        return js_CodeName[op_];
     }
 
     JSOp bitop() const {
@@ -2042,6 +2051,10 @@ class LBitOpV : public LCallInstructionHelper<1, 2 * BOX_PIECES, 0>
 
     JSOp jsop() const {
         return jsop_;
+    }
+
+    const char *extraName() const {
+        return js_CodeName[jsop_];
     }
 
     static const size_t LhsInput = 0;
@@ -2067,6 +2080,10 @@ class LShiftI : public LBinaryMath<0>
 
     MInstruction *mir() {
         return mir_->toInstruction();
+    }
+
+    const char *extraName() const {
+        return js_CodeName[op_];
     }
 };
 
@@ -2123,6 +2140,9 @@ class LMinMaxI : public LInstructionHelper<1, 2, 0>
     MMinMax *mir() const {
         return mir_->toMinMax();
     }
+    const char *extraName() const {
+        return mir()->isMax() ? "Max" : "Min";
+    }
 };
 
 class LMinMaxD : public LInstructionHelper<1, 2, 0>
@@ -2146,6 +2166,9 @@ class LMinMaxD : public LInstructionHelper<1, 2, 0>
     }
     MMinMax *mir() const {
         return mir_->toMinMax();
+    }
+    const char *extraName() const {
+        return mir()->isMax() ? "Max" : "Min";
     }
 };
 
@@ -2312,6 +2335,9 @@ class LMathFunctionD : public LCallInstructionHelper<1, 1, 1>
     MMathFunction *mir() const {
         return mir_->toMathFunction();
     }
+    const char *extraName() const {
+        return MMathFunction::FunctionName(mir()->function());
+    }
 };
 
 // Adds two integers, returning an integer value.
@@ -2377,6 +2403,10 @@ class LMathD : public LBinaryMath<0>
     JSOp jsop() const {
         return jsop_;
     }
+
+    const char *extraName() const {
+        return js_CodeName[jsop_];
+    }
 };
 
 // Performs an add, sub, mul, or div on two double values.
@@ -2393,6 +2423,10 @@ class LMathF: public LBinaryMath<0>
 
     JSOp jsop() const {
         return jsop_;
+    }
+
+    const char *extraName() const {
+        return js_CodeName[jsop_];
     }
 };
 
@@ -2429,6 +2463,10 @@ class LBinaryV : public LCallInstructionHelper<BOX_PIECES, 2 * BOX_PIECES, 0>
 
     JSOp jsop() const {
         return jsop_;
+    }
+
+    const char *extraName() const {
+        return js_CodeName[jsop_];
     }
 
     static const size_t LhsInput = 0;
@@ -4001,6 +4039,9 @@ class LSetPropertyPolymorphicT : public LInstructionHelper<0, 2, 1>
     const MSetPropertyPolymorphic *mir() const {
         return mir_->toSetPropertyPolymorphic();
     }
+    const char *extraName() const {
+        return StringFromMIRType(valueType_);
+    }
 };
 
 class LGetElementCacheV : public LInstructionHelper<BOX_PIECES, 1 + BOX_PIECES, 0>
@@ -4355,6 +4396,9 @@ class LSetPropertyCacheT : public LInstructionHelper<0, 2, 1>
     }
     MIRType valueType() {
         return valueType_;
+    }
+    const char *extraName() const {
+        return StringFromMIRType(valueType_);
     }
 };
 

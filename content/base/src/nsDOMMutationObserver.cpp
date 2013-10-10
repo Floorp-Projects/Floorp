@@ -526,11 +526,11 @@ nsDOMMutationObserver::TakeRecords(
 }
 
 void
-nsDOMMutationObserver::GetObservingInfo(nsTArray<Nullable<MutationObservingInfoInitializer> >& aResult)
+nsDOMMutationObserver::GetObservingInfo(nsTArray<Nullable<MutationObservingInfo> >& aResult)
 {
   aResult.SetCapacity(mReceivers.Count());
   for (int32_t i = 0; i < mReceivers.Count(); ++i) {
-    MutationObservingInfoInitializer& info = aResult.AppendElement()->SetValue();
+    MutationObservingInfo& info = aResult.AppendElement()->SetValue();
     nsMutationReceiver* mr = mReceivers[i];
     info.mChildList = mr->ChildList();
     info.mAttributes = mr->Attributes();

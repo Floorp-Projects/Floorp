@@ -15,14 +15,21 @@ interface HTMLDocument : Document {
   // DOM tree accessors
   [Throws]
   getter object (DOMString name);
-           [SetterThrows]
+  [Pure, SetterThrows]
            attribute HTMLElement? body;
+  [Pure]
   readonly attribute HTMLHeadElement? head;
+  [Pure]
   readonly attribute HTMLCollection images;
+  [Pure]
   readonly attribute HTMLCollection embeds;
+  [Pure]
   readonly attribute HTMLCollection plugins;
+  [Pure]
   readonly attribute HTMLCollection links;
+  [Pure]
   readonly attribute HTMLCollection forms;
+  [Pure]
   readonly attribute HTMLCollection scripts;
   NodeList getElementsByName(DOMString elementName);
   NodeList getItems(optional DOMString typeNames = ""); // microdata
@@ -60,7 +67,9 @@ interface HTMLDocument : Document {
   [TreatNullAs=EmptyString] attribute DOMString alinkColor;
   [TreatNullAs=EmptyString] attribute DOMString bgColor;
 
+  [Pure]
   readonly attribute HTMLCollection anchors;
+  [Pure]
   readonly attribute HTMLCollection applets;
 
   void clear();

@@ -76,10 +76,10 @@ public:
 
   virtual void Update(gfx::IntSize aSize, ClientCanvasLayer* aLayer) MOZ_OVERRIDE;
 
-  virtual void AddTextureClient(TextureClient* aTexture) MOZ_OVERRIDE
+  virtual bool AddTextureClient(TextureClient* aTexture) MOZ_OVERRIDE
   {
     MOZ_ASSERT((mTextureInfo.mTextureFlags & aTexture->GetFlags()) == mTextureInfo.mTextureFlags);
-    CompositableClient::AddTextureClient(aTexture);
+    return CompositableClient::AddTextureClient(aTexture);
   }
 
   virtual TemporaryRef<BufferTextureClient>

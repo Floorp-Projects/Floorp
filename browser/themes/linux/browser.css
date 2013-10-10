@@ -1096,6 +1096,30 @@ toolbar[iconsize="small"] #webrtc-status-button {
   list-style-image: url("chrome://browser/skin/Secure.png");
 }
 
+#identity-popup-help-icon {
+  -moz-appearance: none;
+  margin-left: 0px;
+  border: none;
+  background: none;
+  min-width: 0;
+  list-style-image: url("chrome://global/skin/icons/question-16.png");
+  cursor: pointer;
+}
+
+#identity-popup-help-icon > .button-box > .button-text {
+  display: none;
+}
+
+#identity-popup-help-icon > .button-box > .button-icon {
+  height: 16px;
+  width: 16px;
+}
+
+#identity-popup-help-icon:-moz-focusring {
+  outline: 1px dotted;
+  outline-offset: 1px;
+}
+
 #identity-popup > .panel-arrowcontainer > .panel-arrowcontent {
   padding: 0;
 }
