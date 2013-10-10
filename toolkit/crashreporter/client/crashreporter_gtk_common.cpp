@@ -138,12 +138,12 @@ void LoadProxyinfo()
 
   GConfClient *conf = gconf_client_get_default();
 
-  if (gconf_client_get_bool(conf, HTTP_PROXY_DIR "/use_http_proxy", NULL)) {
+  if (gconf_client_get_bool(conf, HTTP_PROXY_DIR "/use_http_proxy", nullptr)) {
     gint port;
-    gchar *host = NULL, *httpproxy = NULL;
+    gchar *host = nullptr, *httpproxy = nullptr;
 
-    host = gconf_client_get_string(conf, HTTP_PROXY_DIR "/host", NULL);
-    port = gconf_client_get_int(conf, HTTP_PROXY_DIR "/port", NULL);
+    host = gconf_client_get_string(conf, HTTP_PROXY_DIR "/host", nullptr);
+    port = gconf_client_get_int(conf, HTTP_PROXY_DIR "/port", nullptr);
 
     if (port && host && *host != '\0') {
       httpproxy = g_strdup_printf("http://%s:%d/", host, port);
@@ -153,16 +153,17 @@ void LoadProxyinfo()
     g_free(host);
     g_free(httpproxy);
 
-    if(gconf_client_get_bool(conf, HTTP_PROXY_DIR "/use_authentication", NULL)) {
-      gchar *user, *password, *auth = NULL;
+    if (gconf_client_get_bool(conf, HTTP_PROXY_DIR "/use_authentication",
+                              nullptr)) {
+      gchar *user, *password, *auth = nullptr;
 
       user = gconf_client_get_string(conf,
                                      HTTP_PROXY_DIR "/authentication_user",
-                                     NULL);
+                                     nullptr);
       password = gconf_client_get_string(conf,
                                          HTTP_PROXY_DIR
                                          "/authentication_password",
-                                         NULL);
+                                         nullptr);
 
       if (user && password) {
         auth = g_strdup_printf("%s:%s", user, password);
@@ -209,7 +210,7 @@ gpointer SendThread(gpointer args)
   // http://library.gnome.org/devel/gtk-faq/stable/x499.html
   g_idle_add(ReportCompleted, (gpointer)success);
 
-  return NULL;
+  return nullptr;
 }
 
 gboolean WindowDeleted(GtkWidget* window,
@@ -275,7 +276,7 @@ bool UIInit()
   sigprocmask(SIG_UNBLOCK, &signals, &old);
 
   // tell glib we're going to use threads
-  g_thread_init(NULL);
+  g_thread_init(nullptr);
 
   if (gtk_init_check(&gArgc, &gArgv)) {
     gInitialized = true;
@@ -293,7 +294,7 @@ bool UIInit()
 void UIShowDefaultUI()
 {
   GtkWidget* errorDialog =
-    gtk_message_dialog_new(NULL, GTK_DIALOG_MODAL,
+    gtk_message_dialog_new(nullptr, GTK_DIALOG_MODAL,
                            GTK_MESSAGE_ERROR,
                            GTK_BUTTONS_CLOSE,
                            "%s", gStrings[ST_CRASHREPORTERDEFAULT].c_str());
@@ -312,7 +313,7 @@ void UIError_impl(const string& message)
   }
 
   GtkWidget* errorDialog =
-    gtk_message_dialog_new(NULL, GTK_DIALOG_MODAL,
+    gtk_message_dialog_new(nullptr, GTK_DIALOG_MODAL,
                            GTK_MESSAGE_ERROR,
                            GTK_BUTTONS_CLOSE,
                            "%s", message.c_str());
