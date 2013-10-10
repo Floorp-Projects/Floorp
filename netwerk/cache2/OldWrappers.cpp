@@ -704,6 +704,11 @@ NS_IMETHODIMP _OldStorage::AsyncOpenURI(nsIURI *aURI,
   if (!mAppCache && (mLookupAppCache || mOfflineStorage)) {
     rv = ChooseApplicationCache(cacheKey, getter_AddRefs(mAppCache));
     NS_ENSURE_SUCCESS(rv, rv);
+
+    if (mAppCache) {
+      // From a chosen appcache open only as readonly
+      aFlags &= ~nsICacheStorage::OPEN_TRUNCATE;
+    }
   }
 
   nsRefPtr<_OldCacheLoad> cacheLoad =
