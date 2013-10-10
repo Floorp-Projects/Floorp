@@ -313,12 +313,6 @@ FENNEC_PP_JAVA_FILES := \
   WebApps.java \
   $(NULL)
 
-FENNEC_PP_XML_FILES = \
-  res/xml/preferences.xml \
-  res/xml/preferences_customize.xml \
-  res/xml/searchable.xml \
-  $(NULL)
-
 ifneq (,$(findstring -march=armv7,$(OS_CFLAGS)))
 MIN_CPU_VERSION=7
 else
@@ -396,8 +390,6 @@ GARBAGE += \
   gecko.ap_  \
   res/values/strings.xml \
   R.java \
-  $(FENNEC_PP_XML_FILES) \
-  $(SYNC_PP_RES_XML) \
   package-name.txt \
   fennec_ids.txt \
   Manifest.java \
@@ -574,11 +566,14 @@ RES_VALUES_V16 = \
   $(NULL)
 
 RES_XML = \
+  res/xml/preferences.xml \
+  res/xml/preferences_customize.xml \
   res/xml/preferences_display.xml \
   res/xml/preferences_search.xml \
   res/xml/preferences_privacy.xml \
   res/xml/preferences_vendor.xml \
   res/xml/preferences_devtools.xml \
+  res/xml/searchable.xml \
   $(SYNC_RES_XML) \
   $(NULL)
 
@@ -1309,16 +1304,6 @@ GeneratedJNIWrappers.cpp: $(ANNOTATION_PROCESSOR_JAR_FILES)
 GeneratedJNIWrappers.cpp: $(ALL_JARS)
 	$(JAVA) -classpath $(JAVA_BOOTCLASSPATH):$(ANNOTATION_PROCESSOR_JAR_FILES) org.mozilla.gecko.annotationProcessors.AnnotationProcessor $(ALL_JARS)
 
-PP_RES_XML= \
-  $(SYNC_PP_RES_XML) \
-  $(FENNEC_PP_XML_FILES) \
-  $(NULL)
-
-# This is kinda awful; if any of the source files change, we remake them all.
-$(PP_RES_XML): $(patsubst res/%,$(srcdir)/resources/%.in,$(PP_RES_XML))
-	$(PYTHON) $(topsrcdir)/config/Preprocessor.py \
-             $(AUTOMATION_PPARGS) $(DEFINES) $(ACDEFINES) $(subst res/,$(srcdir)/resources/,$@).in > $@
-
 # AndroidManifest.xml includes these files, so they need to be marked as dependencies.
 SERVICES_MANIFEST_FRAGMENTS = $(wildcard $(topsrcdir)/mobile/android/services/manifests/*.in)
 
@@ -1383,7 +1368,6 @@ all_resources = \
   $(MULTILOCALE_STRINGS_XML_FILES) \
   AndroidManifest.xml \
   $(RESOURCES) \
-  $(PP_RES_XML) \
   $(NULL)
 
 R.java: $(all_resources)
