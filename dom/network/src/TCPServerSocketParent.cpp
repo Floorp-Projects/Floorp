@@ -3,8 +3,6 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "TCPServerSocketParent.h"
-#include "jsapi.h"
-#include "jsfriendapi.h"
 #include "nsJSUtils.h"
 #include "TCPSocketParent.h"
 #include "mozilla/unused.h"

@@ -20,7 +20,6 @@
 #include "MediaStreamList.h"
 #include "nsIScriptGlobalObject.h"
 #include "mozilla/Preferences.h"
-#include "jsapi.h"
 #endif
 
 using namespace mozilla;

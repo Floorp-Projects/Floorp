@@ -8,7 +8,6 @@
 #include "mozilla/ClearOnShutdown.h"
 #include "nsXULAppAPI.h"
 #include "WifiUtils.h"
-#include "jsapi.h"
 #include "nsCxPusher.h"
 
 #define NS_WIFIPROXYSERVICE_CID \

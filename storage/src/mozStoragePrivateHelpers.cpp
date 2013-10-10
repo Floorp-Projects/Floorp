@@ -6,7 +6,6 @@
 
 #include "sqlite3.h"
 
-#include "jsapi.h"
 #include "jsfriendapi.h"
 
 #include "nsPrintfCString.h"
