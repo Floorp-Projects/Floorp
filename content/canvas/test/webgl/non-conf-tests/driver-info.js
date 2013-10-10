@@ -134,7 +134,6 @@ DriverInfo = (function() {
     getOS: function() { return kOS; },
     getDriver: function() { return kDriver; },
     getOSVersion: function() { return kOSVersion; },
-    hasWebGL: function() { return kHasWebGL; },
   };
 })();
 
