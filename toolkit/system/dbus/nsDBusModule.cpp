@@ -25,13 +25,13 @@ NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsNetworkManagerListener, Init)
 NS_DEFINE_NAMED_CID(NS_DBUS_NETWORK_LINK_SERVICE_CID);
 
 static const mozilla::Module::CIDEntry kDBUSCIDs[] = {
-    { &kNS_DBUS_NETWORK_LINK_SERVICE_CID, false, NULL, nsNetworkManagerListenerConstructor },
-    { NULL }
+    { &kNS_DBUS_NETWORK_LINK_SERVICE_CID, false, nullptr, nsNetworkManagerListenerConstructor },
+    { nullptr }
 };
 
 static const mozilla::Module::ContractIDEntry kDBUSContracts[] = {
     { NS_NETWORK_LINK_SERVICE_CONTRACTID, &kNS_DBUS_NETWORK_LINK_SERVICE_CID },
-    { NULL }
+    { nullptr }
 };
 
 static const mozilla::Module kDBUSModule = {

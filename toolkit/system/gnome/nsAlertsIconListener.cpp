@@ -56,7 +56,7 @@ NS_IMPL_ISUPPORTS3(nsAlertsIconListener, imgINotificationObserver,
 
 nsAlertsIconListener::nsAlertsIconListener()
 : mLoadedFrame(false),
-  mNotification(NULL)
+  mNotification(nullptr)
 {
   if (!libNotifyHandle && !libNotifyNotAvail) {
     libNotifyHandle = dlopen("libnotify.so.4", RTLD_LAZY);
@@ -111,7 +111,7 @@ nsAlertsIconListener::OnStopRequest(imgIRequest* aRequest)
   NS_ENSURE_SUCCESS(rv, rv);
   if (imgStatus == imgIRequest::STATUS_ERROR && !mLoadedFrame) {
     // We have an error getting the image. Display the notification with no icon.
-    ShowAlert(NULL);
+    ShowAlert(nullptr);
   }
 
   if (mIconRequest) {
@@ -153,7 +153,8 @@ nsAlertsIconListener::OnStopFrame(imgIRequest* aRequest)
 nsresult
 nsAlertsIconListener::ShowAlert(GdkPixbuf* aPixbuf)
 {
-  mNotification = notify_notification_new(mAlertTitle.get(), mAlertText.get(), NULL, NULL);
+  mNotification = notify_notification_new(mAlertTitle.get(), mAlertText.get(),
+                                          nullptr, nullptr);
 
   if (!mNotification)
     return NS_ERROR_OUT_OF_MEMORY;
@@ -167,7 +168,7 @@ nsAlertsIconListener::ShowAlert(GdkPixbuf* aPixbuf)
     // string is "default" then that makes the entire bubble clickable
     // rather than creating a button.
     notify_notification_add_action(mNotification, "default", "Activate",
-                                   notify_action_cb, this, NULL);
+                                   notify_action_cb, this, nullptr);
   }
 
   // Fedora 10 calls NotifyNotification "closed" signal handlers with a
@@ -177,7 +178,7 @@ nsAlertsIconListener::ShowAlert(GdkPixbuf* aPixbuf)
   GClosure* closure = g_closure_new_simple(sizeof(GClosure), this);
   g_closure_set_marshal(closure, notify_closed_marshal);
   mClosureHandler = g_signal_connect_closure(mNotification, "closed", closure, FALSE);
-  gboolean result = notify_notification_show(mNotification, NULL);
+  gboolean result = notify_notification_show(mNotification, nullptr);
 
   return result ? NS_OK : NS_ERROR_FAILURE;
 }
@@ -194,22 +195,22 @@ nsAlertsIconListener::StartRequest(const nsAString & aImageUrl)
   nsCOMPtr<nsIURI> imageUri;
   NS_NewURI(getter_AddRefs(imageUri), aImageUrl);
   if (!imageUri)
-    return ShowAlert(NULL);
+    return ShowAlert(nullptr);
 
   nsCOMPtr<imgILoader> il(do_GetService("@mozilla.org/image/loader;1"));
   if (!il)
-    return ShowAlert(NULL);
+    return ShowAlert(nullptr);
 
-  return il->LoadImageXPCOM(imageUri, nullptr, nullptr, nullptr, nullptr, this,
-			    nullptr, nsIRequest::LOAD_NORMAL, nullptr, nullptr,
-			    getter_AddRefs(mIconRequest));
+  return il->LoadImageXPCOM(imageUri, nullptr, nullptr, nullptr, nullptr,
+                            this, nullptr, nsIRequest::LOAD_NORMAL, nullptr,
+                            nullptr, getter_AddRefs(mIconRequest));
 }
 
 void
 nsAlertsIconListener::SendCallback()
 {
   if (mAlertListener)
-    mAlertListener->Observe(NULL, "alertclickcallback", mAlertCookie.get());
+    mAlertListener->Observe(nullptr, "alertclickcallback", mAlertCookie.get());
 }
 
 void
@@ -217,10 +218,10 @@ nsAlertsIconListener::SendClosed()
 {
   if (mNotification) {
     g_object_unref(mNotification);
-    mNotification = NULL;
+    mNotification = nullptr;
   }
   if (mAlertListener)
-    mAlertListener->Observe(NULL, "alertfinished", mAlertCookie.get());
+    mAlertListener->Observe(nullptr, "alertfinished", mAlertCookie.get());
 }
 
 NS_IMETHODIMP
@@ -231,7 +232,7 @@ nsAlertsIconListener::Observe(nsISupports *aSubject, const char *aTopic,
   if (!nsCRT::strcmp(aTopic, "quit-application") && mNotification) {
     g_signal_handler_disconnect(mNotification, mClosureHandler);
     g_object_unref(mNotification);
-    mNotification = NULL;
+    mNotification = nullptr;
     Release(); // equivalent to NS_RELEASE(this)
   }
   return NS_OK;
@@ -278,13 +279,13 @@ nsAlertsIconListener::InitAlertAsync(const nsAString & aImageUrl,
     GList *server_caps = notify_get_server_caps();
     if (server_caps) {
       gHasCaps = true;
-      for (GList* cap = server_caps; cap != NULL; cap = cap->next) {
+      for (GList* cap = server_caps; cap != nullptr; cap = cap->next) {
         if (!strcmp((char*) cap->data, "actions")) {
           gHasActions = true;
           break;
         }
       }
-      g_list_foreach(server_caps, (GFunc)g_free, NULL);
+      g_list_foreach(server_caps, (GFunc)g_free, nullptr);
       g_list_free(server_caps);
     }
   }

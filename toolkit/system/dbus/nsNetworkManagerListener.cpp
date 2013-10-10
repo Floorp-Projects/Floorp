@@ -125,7 +125,7 @@ nsNetworkManagerListener::RegisterWithConnection(DBusConnection* connection)
     return;
   }
 
-  dbus_pending_call_set_notify(reply, NetworkStatusNotify, this, NULL);
+  dbus_pending_call_set_notify(reply, NetworkStatusNotify, this, nullptr);
   dbus_pending_call_unref(reply);
 }
 
@@ -172,7 +172,7 @@ void
 nsNetworkManagerListener::UpdateNetworkStatus(DBusMessage* msg)
 {
   int32_t result;
-  if (!dbus_message_get_args(msg, NULL, DBUS_TYPE_UINT32, &result,
+  if (!dbus_message_get_args(msg, nullptr, DBUS_TYPE_UINT32, &result,
                              DBUS_TYPE_INVALID)) {
     return;
   }
