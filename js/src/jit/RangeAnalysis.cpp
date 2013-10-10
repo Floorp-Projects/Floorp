@@ -1990,21 +1990,12 @@ MDiv::truncate()
     // Remember analysis, needed to remove negative zero checks.
     setTruncated(true);
 
-    if (type() == MIRType_Double || type() == MIRType_Int32) {
-        specialization_ = MIRType_Int32;
-        setResultType(MIRType_Int32);
-        if (range())
-            range()->wrapAroundToInt32();
-
-        // Divisions where the lhs and rhs are unsigned and the result is
-        // truncated can be lowered more efficiently.
-        if (tryUseUnsignedOperands())
-            unsigned_ = true;
-
+    // Divisions where the lhs and rhs are unsigned and the result is
+    // truncated can be lowered more efficiently.
+    if (specialization() == MIRType_Int32 && tryUseUnsignedOperands()) {
+        unsigned_ = true;
         return true;
     }
-
-    JS_ASSERT(specialization() != MIRType_Int32); // fixme
 
     // No modifications.
     return false;
