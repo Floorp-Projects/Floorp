@@ -671,7 +671,7 @@
         </toolbaritem>
 
         <toolbaritem id="search-container" title="&searchItem.title;"
-                     align="center" class="chromeclass-toolbar-additional"
+                     align="center" class="chromeclass-toolbar-additional panel-wide-item"
                      customizableui-areatype="toolbar"
                      flex="100" persist="width" removable="true">
           <searchbar id="searchbar" flex="1"/>

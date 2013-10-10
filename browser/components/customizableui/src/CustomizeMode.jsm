@@ -1261,11 +1261,11 @@ CustomizeMode.prototype = {
     this._removePanelCustomizationPlaceholders();
     let doc = this.document;
     let contents = this.panelUIContents;
-    let visibleCombinedButtons = contents.querySelectorAll("toolbarpaletteitem:not([hidden]) > .panel-combined-item");
+    let visibleWideItems = contents.querySelectorAll("toolbarpaletteitem:not([hidden]) > .panel-wide-item");
     let visibleChildren = contents.querySelectorAll("toolbarpaletteitem:not([hidden])");
     // TODO(bug 885578): Still doesn't handle a hole when there is a wide
     //                   widget located at the bottom of the panel.
-    let hangingItems = (visibleChildren.length - visibleCombinedButtons.length) % kColumnsInMenuPanel;
+    let hangingItems = (visibleChildren.length - visibleWideItems.length) % kColumnsInMenuPanel;
     let newPlaceholders = kColumnsInMenuPanel;
     let visiblePlaceholders = kColumnsInMenuPanel - hangingItems;
     while (newPlaceholders--) {

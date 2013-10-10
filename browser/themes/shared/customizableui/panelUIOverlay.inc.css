@@ -158,9 +158,8 @@ toolbarpaletteitem[place="palette"] > toolbaritem > toolbarbutton,
   padding-right: .5em;
 }
 
-#widget-overflow-list > #edit-controls,
-#widget-overflow-list > #zoom-controls,
-.panel-combined-item[customizableui-areatype="menu-panel"] {
+.panel-wide-item.overflowedItem,
+.panel-wide-item[customizableui-areatype="menu-panel"] {
   -moz-box-align: stretch;
   padding: .5em 0 .5em;
 }
