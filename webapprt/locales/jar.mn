@@ -7,3 +7,5 @@
 % locale webapprt @AB_CD@ %locale/webapprt/
     locale/webapprt/webapp.dtd                     (%webapprt/webapp.dtd)
     locale/webapprt/webapp.properties              (%webapprt/webapp.properties)
+
+% locale branding @AB_CD@ resource://webappbranding/

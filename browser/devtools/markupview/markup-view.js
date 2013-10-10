@@ -18,7 +18,6 @@ const CONTAINER_FLASHING_DURATION = 500;
 const {UndoStack} = require("devtools/shared/undo");
 const {editableField, InplaceEditor} = require("devtools/shared/inplace-editor");
 const {gDevTools} = Cu.import("resource:///modules/devtools/gDevTools.jsm", {});
-const {colorUtils} = require("devtools/css-color");
 const promise = require("sdk/core/promise");
 
 Cu.import("resource://gre/modules/devtools/LayoutHelpers.jsm");
@@ -410,7 +409,7 @@ MarkupView.prototype = {
         continue;
       }
       if (type === "attributes" || type === "characterData") {
-        container.update(false);
+        container.update();
       } else if (type === "childList") {
         container.childrenDirty = true;
         // Update the children to take care of changes in the DOM
@@ -1151,9 +1150,9 @@ MarkupContainer.prototype = {
    * Update the container's editor to the current state of the
    * viewed node.
    */
-  update: function(parseColors=true) {
+  update: function() {
     if (this.editor.update) {
-      this.editor.update(parseColors);
+      this.editor.update();
     }
   },
 
@@ -1367,7 +1366,7 @@ ElementEditor.prototype = {
   /**
    * Update the state of the editor from the node.
    */
-  update: function(parseColors=true) {
+  update: function() {
     let attrs = this.node.attributes;
     if (!attrs) {
       return;
@@ -1386,9 +1385,6 @@ ElementEditor.prototype = {
     // Get the attribute editor for each attribute that exists on
     // the node and show it.
     for (let attr of attrs) {
-      if (parseColors && typeof attr.value !== "undefined") {
-        attr.value = colorUtils.processCSSString(attr.value);
-      }
       let attribute = this._createAttribute(attr);
       if (!attribute.inplaceEditor) {
         attribute.style.removeProperty("display");

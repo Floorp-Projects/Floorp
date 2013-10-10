@@ -87,8 +87,9 @@ CanvasClient2D::Update(gfx::IntSize aSize, ClientCanvasLayer* aLayer)
 
   mBuffer->Unlock();
 
-  if (bufferCreated) {
-    AddTextureClient(mBuffer);
+  if (bufferCreated && !AddTextureClient(mBuffer)) {
+    mBuffer = nullptr;
+    return;
   }
 
   if (surface) {

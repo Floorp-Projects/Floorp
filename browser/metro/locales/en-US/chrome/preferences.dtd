@@ -7,10 +7,6 @@
 
 <!-- ## Options Flyout Panel ## -->
 <!ENTITY optionsHeader.title                                     "Options">
-<!ENTITY optionsHeader.startup.title                             "Startup">
-<!ENTITY optionsHeader.homepage.title                            "When &brandShortName; starts, show">
-<!ENTITY optionsHeader.homepage.startPage.button                 "start page">
-<!ENTITY optionsHeader.homepage.sessionRestore.button            "tabs from last time">
 <!ENTITY optionsHeader.char.title                                "Character Encoding">
 <!ENTITY optionsHeader.char.autodetect.label                     "Auto-detect">
 <!ENTITY optionsHeader.char.options.label                        "Show encoding options on the App Bar">

@@ -564,6 +564,14 @@ var StyleSheetActor = protocol.ActorClass({
       return this.actorID;
     }
 
+    let href;
+    if (this.rawSheet.ownerNode) {
+      if (this.rawSheet.ownerNode instanceof Ci.nsIDOMHTMLDocument)
+        href = this.rawSheet.ownerNode.location.href;
+      if (this.rawSheet.ownerNode.ownerDocument)
+        href = this.rawSheet.ownerNode.ownerDocument.location.href;
+    }
+
     return {
       actor: this.actorID,
 
@@ -572,7 +580,7 @@ var StyleSheetActor = protocol.ActorClass({
 
       // nodeHref stores the URI of the document that
       // included the sheet.
-      nodeHref: this.rawSheet.ownerNode ? this.rawSheet.ownerNode.ownerDocument.location.href : undefined,
+      nodeHref: href,
 
       system: !CssLogic.isContentStylesheet(this.rawSheet),
       disabled: this.rawSheet.disabled ? true : undefined
@@ -720,7 +728,11 @@ var StyleRuleActor = protocol.ActorClass({
     if (this.rawNode) {
       document = this.rawNode.ownerDocument;
     } else {
-      document = this.rawRule.parentStyleSheet.ownerNode.ownerDocument;
+      if (this.rawRule.parentStyleSheet.ownerNode instanceof Ci.nsIDOMHTMLDocument) {
+        document = this.rawRule.parentStyleSheet.ownerNode;
+      } else {
+        document = this.rawRule.parentStyleSheet.ownerNode.ownerDocument;
+      }
     }
 
     let tempElement = document.createElement("div");

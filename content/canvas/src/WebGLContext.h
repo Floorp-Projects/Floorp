@@ -76,7 +76,6 @@ namespace dom {
 class ImageData;
 
 struct WebGLContextAttributes;
-struct WebGLContextAttributesInitializer;
 template<typename> struct Nullable;
 }
 
@@ -258,7 +257,7 @@ public:
     GLsizei DrawingBufferWidth() const { return IsContextLost() ? 0 : mWidth; }
     GLsizei DrawingBufferHeight() const { return IsContextLost() ? 0 : mHeight; }
 
-    void GetContextAttributes(dom::Nullable<dom::WebGLContextAttributesInitializer>& retval);
+    void GetContextAttributes(dom::Nullable<dom::WebGLContextAttributes>& retval);
     bool IsContextLost() const { return mContextStatus != ContextNotLost; }
     void GetSupportedExtensions(JSContext *cx, dom::Nullable< nsTArray<nsString> > &retval);
     JSObject* GetExtension(JSContext* cx, const nsAString& aName, ErrorResult& rv);

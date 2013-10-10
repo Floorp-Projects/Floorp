@@ -139,7 +139,12 @@ IsNegativeZero(double d)
   return bits == DoubleSignBit;
 }
 
-/** Returns the exponent portion of the double. */
+/**
+ * Returns the exponent portion of the double.
+ *
+ * Zero is not special-cased, so ExponentComponent(0.0) is
+ * -int_fast16_t(DoubleExponentBias).
+ */
 static MOZ_ALWAYS_INLINE int_fast16_t
 ExponentComponent(double d)
 {

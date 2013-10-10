@@ -502,4 +502,3 @@ load 885009-1.html
 load 893523.html
 test-pref(layout.css.sticky.enabled,true) load 914891.html
 test-pref(layout.css.sticky.enabled,true) load 915475.xhtml
-asserts(1-3) test-pref(layout.css.sticky.enabled,true) load 914919.html

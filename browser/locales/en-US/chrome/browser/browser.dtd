@@ -606,6 +606,11 @@ just addresses the organization to follow, e.g. "This site is run by " -->
 
 <!ENTITY identity.permissions "Permissions">
 
+<!-- LOCALIZATION NOTE (identity.help.tooltip) : This string should be the
+     localized title of this SUMO article
+     https://support.mozilla.org/kb/how-do-i-tell-if-my-connection-is-secure -->
+<!ENTITY identity.help.tooltip "How do I tell if my connection to a website is secure?">
+
 <!-- Name for the tabs toolbar as spoken by screen readers.
      The word "toolbar" is appended automatically and should not be contained below! -->
 <!ENTITY tabsToolbar.label "Browser tabs">
