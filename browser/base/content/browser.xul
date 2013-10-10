@@ -435,8 +435,7 @@
 <vbox flex="1" id="browser-panel">
 
   <toolbox id="navigator-toolbox"
-           defaultmode="icons" mode="icons"
-           iconsize="large">
+           defaultmode="icons" mode="icons">
     <!-- Menu -->
     <toolbar type="menubar" id="toolbar-menubar" class="chromeclass-menubar" customizable="true"
              defaultset="menubar-items"
@@ -552,7 +551,7 @@
     <toolbar id="nav-bar" class="toolbar-primary chromeclass-toolbar"
              aria-label="&navbarCmd.label;"
              fullscreentoolbar="true" mode="icons" customizable="true"
-             iconsize="large"
+             iconsize="small"
              defaultset="urlbar-container,search-container,webrtc-status-button,bookmarks-menu-button,downloads-button,home-button,social-share-button,social-toolbar-item"
              customizationtarget="nav-bar-customizationtarget"
              overflowable="true"
