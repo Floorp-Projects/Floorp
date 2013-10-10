@@ -3504,7 +3504,6 @@ for file in $MALLOC_HEADERS; do
   fi
 done
 
-MOZ_ALLOCATING_FUNCS="strndup posix_memalign memalign valloc"
 AC_CHECK_FUNCS(strndup posix_memalign memalign valloc)
 
 AC_CHECK_FUNCS(malloc_usable_size)
