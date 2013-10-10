@@ -1270,7 +1270,9 @@ DrawTargetCG::Init(BackendType aType,
 void
 DrawTargetCG::Flush()
 {
-  CGContextFlush(mCg);
+  if (GetContextType(mCg) == CG_CONTEXT_TYPE_IOSURFACE) {
+    CGContextFlush(mCg);
+  }
 }
 
 bool
