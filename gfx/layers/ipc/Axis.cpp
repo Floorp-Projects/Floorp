@@ -271,7 +271,7 @@ float Axis::DisplacementWillOverscrollAmount(float aDisplacement) {
   }
 }
 
-Axis::Overscroll Axis::ScaleWillOverscroll(float aScale, float aFocus) {
+float Axis::ScaleWillOverscrollAmount(float aScale, float aFocus) {
   float originAfterScale = (GetOrigin() + aFocus) - (aFocus / aScale);
 
   bool both = ScaleWillOverscrollBothSides(aScale);
@@ -279,25 +279,17 @@ Axis::Overscroll Axis::ScaleWillOverscroll(float aScale, float aFocus) {
   bool plus = (originAfterScale + (GetCompositionLength() / aScale)) > GetPageEnd();
 
   if ((minus && plus) || both) {
-    return OVERSCROLL_BOTH;
+    // If we ever reach here it's a bug in the client code.
+    MOZ_ASSERT(false, "In an OVERSCROLL_BOTH condition in ScaleWillOverscrollAmount");
+    return 0;
   }
   if (minus) {
-    return OVERSCROLL_MINUS;
+    return originAfterScale - GetPageStart();
   }
   if (plus) {
-    return OVERSCROLL_PLUS;
+    return originAfterScale + (GetCompositionLength() / aScale) - GetPageEnd();
   }
-  return OVERSCROLL_NONE;
-}
-
-float Axis::ScaleWillOverscrollAmount(float aScale, float aFocus) {
-  float originAfterScale = (GetOrigin() + aFocus) - (aFocus / aScale);
-  switch (ScaleWillOverscroll(aScale, aFocus)) {
-  case OVERSCROLL_MINUS: return originAfterScale - GetPageStart();
-  case OVERSCROLL_PLUS: return originAfterScale + (GetCompositionLength() / aScale) - GetPageEnd();
-  // Don't handle OVERSCROLL_BOTH. Client code is expected to deal with it.
-  default: return 0;
-  }
+  return 0;
 }
 
 float Axis::GetVelocity() {
