@@ -186,9 +186,11 @@ TestStunServer::~TestStunServer() {
   // TODO(ekr@rtfm.com): Put this on the right thread.
 
   // Unhook callback from our listen socket.
-  NR_SOCKET fd;
-  if (!nr_socket_getfd(listen_sock_, &fd)) {
-    NR_ASYNC_CANCEL(fd, NR_ASYNC_WAIT_READ);
+  if (listen_sock_) {
+    NR_SOCKET fd;
+    if (!nr_socket_getfd(listen_sock_, &fd)) {
+      NR_ASYNC_CANCEL(fd, NR_ASYNC_WAIT_READ);
+    }
   }
 
   // Free up stun context and network resources
