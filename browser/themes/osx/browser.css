@@ -98,6 +98,12 @@ toolbarseparator {
   z-index: 1;
 }
 
+@media (min-resolution: 2dppx) {
+  #nav-bar {
+    background-size: 100px 100px, auto;
+  }
+}
+
 #nav-bar-customizationtarget {
   padding: 4px;
 }
