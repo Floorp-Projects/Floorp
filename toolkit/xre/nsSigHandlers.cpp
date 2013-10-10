@@ -109,7 +109,7 @@ child_ah_crap_handler(int signum)
 
 #if defined(MOZ_WIDGET_GTK) && (GLIB_MAJOR_VERSION > 2 || (GLIB_MAJOR_VERSION == 2 && GLIB_MINOR_VERSION >= 6))
 
-static GLogFunc orig_log_func = NULL;
+static GLogFunc orig_log_func = nullptr;
 
 extern "C" {
 static void
@@ -127,7 +127,7 @@ my_glib_log_func(const gchar *log_domain, GLogLevelFlags log_level,
     NS_DebugBreak(NS_DEBUG_WARNING, message, "glib warning", __FILE__, __LINE__);
   }
 
-  orig_log_func(log_domain, log_level, message, NULL);
+  orig_log_func(log_domain, log_level, message, nullptr);
 }
 
 #endif
@@ -301,7 +301,7 @@ void InstallSignalHandlers(const char *ProgramName)
        !strcmp(assertString, "trap") ||
        !strcmp(assertString, "break"))) {
     // Override the default glib logging function so we get stacks for it too.
-    orig_log_func = g_log_set_default_handler(my_glib_log_func, NULL);
+    orig_log_func = g_log_set_default_handler(my_glib_log_func, nullptr);
   }
 #endif
 }
