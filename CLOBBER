@@ -18,4 +18,4 @@
 # Modifying this file will now automatically clobber the buildbot machines \o/
 #
 
-Bug 915002 - Clobber needed for webidl updates for AppNotificationServiceOptions
+Bug 899574 needed a clobber, at least on Windows.
