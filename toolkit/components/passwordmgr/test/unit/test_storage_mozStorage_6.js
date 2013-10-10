@@ -7,8 +7,6 @@
  */
 
 
-const STORAGE_TYPE = "mozStorage";
-
 function run_test() {
 
 try {
@@ -56,7 +54,7 @@ var testdesc = "Initial connection to storage module"
 LoginTest.deleteFile(OUTDIR, "signons-unittest6.sqlite");
 
 var storage;
-storage = LoginTest.initStorage(INDIR, "signons-empty.txt", OUTDIR, "signons-unittest6.sqlite");
+storage = LoginTest.initStorage(OUTDIR, "signons-unittest6.sqlite");
 var logins = storage.getAllLogins();
 do_check_eq(logins.length, 0, "Checking for no initial logins");
 var disabledHosts = storage.getAllDisabledHosts();

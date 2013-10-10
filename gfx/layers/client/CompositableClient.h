@@ -126,7 +126,7 @@ public:
   /**
    * Tells the Compositor to create a TextureHost for this TextureClient.
    */
-  virtual void AddTextureClient(TextureClient* aClient);
+  virtual bool AddTextureClient(TextureClient* aClient);
 
   /**
    * Tells the Compositor to delete the TextureHost corresponding to this
