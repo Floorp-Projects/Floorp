@@ -340,12 +340,10 @@ float Axis::GetPageLength() {
 bool Axis::ScaleWillOverscrollBothSides(float aScale) {
   const FrameMetrics& metrics = mAsyncPanZoomController->GetFrameMetrics();
 
-  CSSRect cssContentRect = metrics.mScrollableRect;
-
   CSSToScreenScale scale(metrics.mZoom.scale * aScale);
-  CSSIntRect cssCompositionBounds = RoundedIn(metrics.mCompositionBounds / scale);
+  CSSRect cssCompositionBounds = metrics.mCompositionBounds / scale;
 
-  return GetRectLength(cssContentRect) < GetRectLength(CSSRect(cssCompositionBounds));
+  return GetRectLength(metrics.mScrollableRect) < GetRectLength(cssCompositionBounds);
 }
 
 AxisX::AxisX(AsyncPanZoomController* aAsyncPanZoomController)
