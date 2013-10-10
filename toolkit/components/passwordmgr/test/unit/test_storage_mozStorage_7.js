@@ -7,8 +7,6 @@
  */
 
 
-const STORAGE_TYPE = "mozStorage";
-
 function run_test() {
 
 try {
@@ -46,8 +44,7 @@ dummyuser4.init("http://dummyhost3.mozilla.org", null, null,
 testnum++;
 
 testdesc = "checking that searchLogins works with values passed"
-storage = LoginTest.initStorage(INDIR, null,
-                                OUTDIR, "output-searchLogins-1.sqlite");
+storage = LoginTest.initStorage(OUTDIR, "output-searchLogins-1.sqlite");
 
 storage.addLogin(dummyuser1);
 storage.addLogin(dummyuser2);
@@ -109,8 +106,7 @@ LoginTest.deleteFile(OUTDIR, "output-searchLogins-1.sqlite");
 testnum++;
 
 testdesc = "checking that searchLogins works as findLogins"
-storage = LoginTest.initStorage(INDIR, null,
-                                OUTDIR, "output-searchLogins-3.sqlite");
+storage = LoginTest.initStorage(OUTDIR, "output-searchLogins-3.sqlite");
 
 storage.addLogin(dummyuser1);
 storage.addLogin(dummyuser2);

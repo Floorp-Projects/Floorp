@@ -1,8 +1,0 @@
-#2c
-.
-http://dummyhost.mozilla.org
-put_user_here
-~dGVzdHVzZXIx
-*put_pw_here
-~dGVzdHBhc3Mx
-.
