@@ -266,6 +266,20 @@ Specify the url.
         </listitem>
       </varlistentry>
 
+      <varlistentry>
+        <term>-w pwd-string</term>
+        <listitem>
+          <para>Provide db password in command line.</para>
+        </listitem>
+      </varlistentry>
+
+      <varlistentry>
+        <term>-Z algorithm</term>
+        <listitem>
+          <para>Specify the hash algorithm to use for signing the CRL.</para>
+        </listitem>
+      </varlistentry>
+
     </variablelist>
   </refsection>
 

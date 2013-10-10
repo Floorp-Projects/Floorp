@@ -677,7 +677,7 @@ nssutil_mkSlotFlags(unsigned long defaultFlags)
     int i,j;
 
     for (i=0; i < sizeof(defaultFlags)*8; i++) {
-	if (defaultFlags & (1<<i)) {
+	if (defaultFlags & (1UL <<i)) {
 	    char *string = NULL;
 
 	    for (j=0; j < nssutil_argSlotFlagTableSize; j++) {
@@ -889,12 +889,12 @@ nssutil_mkCipherFlags(unsigned long ssl0, unsigned long ssl1)
     int i;
 
     for (i=0; i < sizeof(ssl0)*8; i++) {
-	if (ssl0 & (1<<i)) {
+	if (ssl0 & (1UL <<i)) {
 	    char *string;
-	    if ((1<<i) == SECMOD_FORTEZZA_FLAG) {
+	    if ((1UL <<i) == SECMOD_FORTEZZA_FLAG) {
 		string = PR_smprintf("%s",NSSUTIL_ARG_FORTEZZA_FLAG);
 	    } else {
-		string = PR_smprintf("0h0x%08x",1<<i);
+		string = PR_smprintf("0h0x%08lx", 1UL <<i);
 	    }
 	    if (cipher) {
 		char *tmp;
@@ -908,14 +908,14 @@ nssutil_mkCipherFlags(unsigned long ssl0, unsigned long ssl1)
 	}
     }
     for (i=0; i < sizeof(ssl0)*8; i++) {
-	if (ssl1 & (1<<i)) {
+	if (ssl1 & (1UL <<i)) {
 	    if (cipher) {
 		char *tmp;
-		tmp = PR_smprintf("%s,0l0x%08x",cipher,1<<i);
+		tmp = PR_smprintf("%s,0l0x%08lx",cipher, 1UL <<i);
 		PR_smprintf_free(cipher);
 		cipher = tmp;
 	    } else {
-		cipher = PR_smprintf("0l0x%08x",1<<i);
+		cipher = PR_smprintf("0l0x%08lx", 1UL <<i);
 	    }
 	}
     }

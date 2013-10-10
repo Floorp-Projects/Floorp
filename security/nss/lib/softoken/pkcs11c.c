@@ -3510,6 +3510,7 @@ CK_RV NSC_GenerateKey(CK_SESSION_HANDLE hSession,
     case CKM_DES2_KEY_GEN:
     case CKM_DES3_KEY_GEN:
 	checkWeak = PR_TRUE;
+        /* fall through */
     case CKM_RC2_KEY_GEN:
     case CKM_RC4_KEY_GEN:
     case CKM_GENERIC_SECRET_KEY_GEN:
@@ -3536,6 +3537,7 @@ CK_RV NSC_GenerateKey(CK_SESSION_HANDLE hSession,
 	break;
     case CKM_NETSCAPE_PBE_SHA1_FAULTY_3DES_CBC:
 	faultyPBE3DES = PR_TRUE;
+        /* fall through */
     case CKM_NETSCAPE_PBE_SHA1_TRIPLE_DES_CBC:
     case CKM_NETSCAPE_PBE_SHA1_40_BIT_RC2_CBC:
     case CKM_NETSCAPE_PBE_SHA1_DES_CBC:

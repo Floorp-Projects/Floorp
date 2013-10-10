@@ -3116,6 +3116,7 @@ SEC_PKCS12DecoderIterateNext(SEC_PKCS12DecoderContext *p12dcx,
 		    SECOID_CopyAlgorithmID(NULL, p12dcx->decitem.shroudAlg,
 			&bag->safeBagContent.pkcs8ShroudedKeyBag->algorithm);
 		}
+                /* fall through */
             case SEC_OID_PKCS12_V1_KEY_BAG_ID:
                 p12dcx->decitem.friendlyName = sec_pkcs12_get_friendlyName(bag);
                 break;

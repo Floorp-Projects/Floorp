@@ -1,6 +1,6 @@
-<html><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8"><title>CRLUTIL</title><meta name="generator" content="DocBook XSL Stylesheets V1.77.1"><link rel="home" href="index.html" title="CRLUTIL"></head><body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF"><div class="navheader"><table width="100%" summary="Navigation header"><tr><th colspan="3" align="center">CRLUTIL</th></tr></table><hr></div><div class="refentry"><a name="crlutil"></a><div class="titlepage"></div><div class="refnamediv"><h2>Name</h2><p>crlutil — 
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8"><title>CRLUTIL</title><meta name="generator" content="DocBook XSL Stylesheets V1.78.1"><link rel="home" href="index.html" title="CRLUTIL"></head><body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF"><div class="navheader"><table width="100%" summary="Navigation header"><tr><th colspan="3" align="center">CRLUTIL</th></tr></table><hr></div><div class="refentry"><a name="crlutil"></a><div class="titlepage"></div><div class="refnamediv"><h2>Name</h2><p>crlutil — 
 List, generate, modify, or delete CRLs within the NSS security database file(s) and list, create, modify or delete certificates entries in a particular CRL.
-    </p></div><div class="refsynopsisdiv"><h2>Synopsis</h2><div class="cmdsynopsis"><p><code class="command">crlutil</code>  [<em class="replaceable"><code>options</code></em>] [[<em class="replaceable"><code>arguments</code></em>]]</p></div></div><div class="refsection"><a name="idp188816"></a><h2>STATUS</h2><p>This documentation is still work in progress. Please contribute to the initial review in <a class="ulink" href="https://bugzilla.mozilla.org/show_bug.cgi?id=836477" target="_top">Mozilla NSS bug 836477</a>
+    </p></div><div class="refsynopsisdiv"><h2>Synopsis</h2><div class="cmdsynopsis"><p><code class="command">crlutil</code>  [<em class="replaceable"><code>options</code></em>] [[<em class="replaceable"><code>arguments</code></em>]]</p></div></div><div class="refsection"><a name="idm207693223392"></a><h2>STATUS</h2><p>This documentation is still work in progress. Please contribute to the initial review in <a class="ulink" href="https://bugzilla.mozilla.org/show_bug.cgi?id=836477" target="_top">Mozilla NSS bug 836477</a>
     </p></div><div class="refsection"><a name="description"></a><h2>Description</h2><p>The Certificate Revocation List (CRL) Management Tool, <span class="command"><strong>crlutil</strong></span>, is a command-line utility that can list, generate, modify, or delete CRLs within the NSS security database file(s) and list, create, modify or delete certificates entries in a particular CRL.
     </p><p>
 The key and certificate management process generally begins with creating keys in the key database, then generating and managing certificates in the certificate database(see certutil tool) and continues with certificates expiration or revocation.
@@ -58,7 +58,7 @@ Specify the output file name for new CRL. Bracket the output-file string with qu
 Specify type of CRL. possible types are: 0 - SEC_KRL_TYPE, 1 - SEC_CRL_TYPE. This option is obsolete
           </p></dd><dt><span class="term">-u url </span></dt><dd><p>
 Specify the url.
-          </p></dd></dl></div></div><div class="refsection"><a name="syntax"></a><h2>CRL Generation script syntax</h2><p>CRL generation script file has the following syntax:</p><p>
+          </p></dd><dt><span class="term">-w pwd-string</span></dt><dd><p>Provide db password in command line.</p></dd><dt><span class="term">-Z algorithm</span></dt><dd><p>Specify the hash algorithm to use for signing the CRL.</p></dd></dl></div></div><div class="refsection"><a name="syntax"></a><h2>CRL Generation script syntax</h2><p>CRL generation script file has the following syntax:</p><p>
     * Line with comments should have # as a first symbol of a line</p><p>
     * Set "this update" or "next update" CRL fields:
     </p><p>           
@@ -200,12 +200,10 @@ crlutil -G|-M -c crl-gen-file -n nickname [-i crl] [-u url] [-d keydir] [-P dbpr
     * Import CRL from file:
     </p><pre class="programlisting">
           crlutil -I -i crl [-t crlType] [-u url] [-d keydir] [-P dbprefix] [-B] 
-    </pre></div><div class="refsection"><a name="idp5089136"></a><h2>See also</h2><p>certutil(1)</p></div><div class="refsection"><a name="seealso"></a><h2>See Also</h2><p></p><p>
+    </pre></div><div class="refsection"><a name="idm207692123648"></a><h2>See also</h2><p>certutil(1)</p></div><div class="refsection"><a name="seealso"></a><h2>See Also</h2><p></p><p>
 	</p><p>
 	</p><p>
-	</p></div><div class="refsection"><a name="resources"></a><h2>Additional Resources</h2><p>For information about NSS and other tools related to NSS (like JSS), check out the NSS project wiki at <a class="ulink" href="http://www.mozilla.org/projects/security/pki/nss/" target="_top">http://www.mozilla.org/projects/security/pki/nss/</a>. The NSS site relates directly to NSS code changes and releases.</p><p>Mailing lists: https://lists.mozilla.org/listinfo/dev-tech-crypto</p><p>IRC: Freenode at #dogtag-pki</p></div><div class="refsection"><a name="authors"></a><h2>Authors</h2><p>The NSS tools were written and maintained by developers with Netscape, Red Hat, and Sun.</p><p>
+	</p></div><div class="refsection"><a name="resources"></a><h2>Additional Resources</h2><p>For information about NSS and other tools related to NSS (like JSS), check out the NSS project wiki at <a class="ulink" href="http://www.mozilla.org/projects/security/pki/nss/" target="_top">http://www.mozilla.org/projects/security/pki/nss/</a>. The NSS site relates directly to NSS code changes and releases.</p><p>Mailing lists: https://lists.mozilla.org/listinfo/dev-tech-crypto</p><p>IRC: Freenode at #dogtag-pki</p></div><div class="refsection"><a name="authors"></a><h2>Authors</h2><p>The NSS tools were written and maintained by developers with Netscape, Red Hat,  Sun, Oracle, Mozilla, and Google.</p><p>
 	Authors: Elio Maldonado &lt;emaldona@redhat.com&gt;, Deon Lackey &lt;dlackey@redhat.com&gt;.
-    </p></div><div class="refsection"><a name="license"></a><h2>LICENSE</h2><p>Licensed under the Mozilla Public License, version 1.1,
-        and/or the GNU General Public License, version 2 or later,
-        and/or the GNU Lesser General Public License, version 2.1 or later.
+    </p></div><div class="refsection"><a name="license"></a><h2>LICENSE</h2><p>Licensed under the Mozilla Public License, v. 2.0.  If a copy of the MPL was not distributed with this file, You can obtain one at http://mozilla.org/MPL/2.0/.
     </p></div></div><div class="navfooter"><hr></div></body></html>

@@ -89,8 +89,15 @@ The options and arguments for the cmsutil command are defined as follows:
     </variablelist>
 
 	<para><command>Arguments</command></para>
-	<para>Option arguments modify an action and are lowercase.</para>
+	<para>Option arguments modify an action.</para>
 	<variablelist>
+      <varlistentry>
+        <term>-b </term>
+        <listitem>
+          <para>Decode a batch of files named in infile.</para>
+        </listitem>
+      </varlistentry>
+
       <varlistentry>
         <term>-c content </term>
         <listitem>
@@ -113,12 +120,26 @@ The options and arguments for the cmsutil command are defined as follows:
       </varlistentry>
 
       <varlistentry>
+        <term>-f pwfile</term>
+        <listitem>
+          <para>Use password file to set password on all PKCS#11 tokens.</para>
+        </listitem>
+      </varlistentry>
+
+      <varlistentry>
         <term>-G</term>
         <listitem>
           <para>Include a signing time attribute (sign only).</para>
         </listitem>
       </varlistentry>
-	
+
+      <varlistentry>
+        <term>-H hash</term>
+        <listitem>
+          <para>Use specified hash algorithm (default:SHA1).</para>
+        </listitem>
+      </varlistentry>
+
       <varlistentry>
         <term>-h num</term>
         <listitem>
@@ -130,6 +151,13 @@ The options and arguments for the cmsutil command are defined as follows:
         <term>-i infile</term>
         <listitem>
           <para>Use infile as a source of data (default is stdin).</para>
+        </listitem>
+      </varlistentry>
+
+      <varlistentry>
+        <term>-k</term>
+        <listitem>
+          <para>Keep decoded encryption certs in permanent cert db.</para>
         </listitem>
       </varlistentry>
 
@@ -189,6 +217,13 @@ For certificates-only message, list of certificates to send.
         <term>-u certusage</term>
         <listitem>
           <para>Set type of cert usage (default is certUsageEmailSigner).</para>
+        </listitem>
+      </varlistentry>
+
+      <varlistentry>
+        <term>-v</term>
+        <listitem>
+          <para>Print debugging information.</para>
         </listitem>
       </varlistentry>
 
