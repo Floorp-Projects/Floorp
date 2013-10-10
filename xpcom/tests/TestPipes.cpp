@@ -448,7 +448,7 @@ main(int argc, char* argv[])
     nsresult rv;
 
     nsCOMPtr<nsIServiceManager> servMgr;
-    rv = NS_InitXPCOM2(getter_AddRefs(servMgr), NULL, NULL);
+    rv = NS_InitXPCOM2(getter_AddRefs(servMgr), nullptr, nullptr);
     if (NS_FAILED(rv)) return rv;
 
     if (argc > 1 && nsCRT::strcmp(argv[1], "-trace") == 0)
@@ -460,7 +460,7 @@ main(int argc, char* argv[])
     RunTests(4096, 16);
 
     servMgr = 0;
-    rv = NS_ShutdownXPCOM( NULL );
+    rv = NS_ShutdownXPCOM(nullptr);
     NS_ASSERTION(NS_SUCCEEDED(rv), "NS_ShutdownXPCOM failed");
 
     return 0;
