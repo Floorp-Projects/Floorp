@@ -44,6 +44,10 @@ EXPORTS.mozilla.net += [
 SOURCES += [
     'ASpdySession.cpp',
     'ConnectionDiagnostics.cpp',
+    'Http2Compression.cpp',
+    'Http2Push.cpp',
+    'Http2Session.cpp',
+    'Http2Stream.cpp',
     'HttpBaseChannel.cpp',
     'HttpChannelChild.cpp',
     'HttpChannelParent.cpp',
