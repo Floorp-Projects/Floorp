@@ -43,7 +43,7 @@ function do_test() {
   // test a property with keywords and colors
   var prop = "color";
   var values = utils.getCSSValuesForProperty(prop);
-  var expected = [ "initial", "inherit", "aliceblue", "antiquewhite", "aqua", "aquamarine", "azure",
+  var expected = [ "initial", "inherit", "unset", "aliceblue", "antiquewhite", "aqua", "aquamarine", "azure",
       "beige", "bisque", "black", "blanchedalmond", "blue", "blueviolet", "brown", "burlywood",
       "cadetblue", "chartreuse", "chocolate", "coral", "cornflowerblue", "cornsilk", "crimson",
       "cyan", "darkblue", "darkcyan", "darkgoldenrod", "darkgray", "darkgreen", "darkgrey",
@@ -69,7 +69,7 @@ function do_test() {
   // test a shorthand property
   var prop = "background";
   var values = utils.getCSSValuesForProperty(prop);
-  var expected = [ "initial", "inherit", "aliceblue", "antiquewhite", "aqua", "aquamarine", "azure",
+  var expected = [ "initial", "inherit", "unset", "aliceblue", "antiquewhite", "aqua", "aquamarine", "azure",
       "beige", "bisque", "black", "blanchedalmond", "blue", "blueviolet", "brown", "burlywood", "cadetblue",
       "chartreuse", "chocolate", "coral", "cornflowerblue", "cornsilk", "crimson", "cyan", "darkblue",
       "darkcyan", "darkgoldenrod", "darkgray", "darkgreen", "darkgrey", "darkkhaki", "darkmagenta",
@@ -96,7 +96,7 @@ function do_test() {
 
   var prop = "border";
   var values = utils.getCSSValuesForProperty(prop);
-  var expected = [ "-moz-calc", "initial", "-moz-use-text-color", "aliceblue",
+  var expected = [ "-moz-calc", "initial", "unset", "-moz-use-text-color", "aliceblue",
       "antiquewhite", "aqua", "aquamarine", "azure", "beige", "bisque", "black", "blanchedalmond", "blue", "blueviolet",
       "brown", "burlywood", "cadetblue", "calc", "chartreuse", "chocolate", "coral", "cornflowerblue", "cornsilk",
       "crimson", "cyan", "darkblue", "darkcyan", "darkgoldenrod", "darkgray", "darkgreen", "darkgrey", "darkkhaki",
@@ -122,7 +122,7 @@ function do_test() {
   // test keywords only
   var prop = "border-top";
   var values = utils.getCSSValuesForProperty(prop);
-  var expected = [ "initial", "inherit", "thin", "medium", "thick", "none", "hidden", "dotted",
+  var expected = [ "initial", "inherit", "unset", "thin", "medium", "thick", "none", "hidden", "dotted",
       "dashed", "solid", "double", "groove", "ridge", "inset", "outset", "-moz-use-text-color",
       "aliceblue", "antiquewhite", "aqua", "aquamarine", "azure", "beige", "bisque", "black",
       "blanchedalmond", "blue", "blueviolet", "brown", "burlywood", "cadetblue", "chartreuse",
@@ -149,13 +149,13 @@ function do_test() {
   // tests no keywords or colors
   var prop = "padding-bottom";
   var values = utils.getCSSValuesForProperty(prop);
-  var expected = [ "initial", "inherit", "calc", "-moz-calc" ];
+  var expected = [ "initial", "inherit", "unset", "calc", "-moz-calc" ];
   ok(testValues(values, expected), "property padding-bottom's values.");
 
   // test proprety
   var prop = "display";
   var values = utils.getCSSValuesForProperty(prop);
-  var expected = [ "initial", "inherit", "none", "inline", "block", "inline-block", "list-item",
+  var expected = [ "initial", "inherit", "unset", "none", "inline", "block", "inline-block", "list-item",
       "table", "inline-table", "table-row-group", "table-header-group", "table-footer-group", "table-row",
       "table-column-group", "table-column", "table-cell", "table-caption", "-moz-box", "-moz-inline-box",
       "-moz-grid", "-moz-inline-grid", "-moz-grid-group", "-moz-grid-line", "-moz-stack", "-moz-inline-stack",
@@ -165,25 +165,25 @@ function do_test() {
   // test property
   var prop = "float";
   var values = utils.getCSSValuesForProperty(prop);
-  var expected = [ "initial", "inherit", "none", "left", "right" ];
+  var expected = [ "initial", "inherit", "unset", "none", "left", "right" ];
   ok(testValues(values, expected), "proprety float values");
 
   // Test property with "auto"
   var prop = "margin";
   var values = utils.getCSSValuesForProperty(prop);
-  var expected = [ "-moz-calc", "initial", "auto", "calc", "inherit" ];
+  var expected = [ "-moz-calc", "initial", "unset", "auto", "calc", "inherit" ];
   ok(testValues(values, expected), "property margin's values.");
 
   // Test property with "normal"
   var prop = "font-style";
   var values = utils.getCSSValuesForProperty(prop);
-  var expected = [ "initial", "inherit", "italic", "normal", "oblique" ];
+  var expected = [ "initial", "inherit", "unset", "italic", "normal", "oblique" ];
   ok(testValues(values, expected), "property font-style's values.");
 
   // Test property with "cubic-bezier" and "step".
   var prop = "-moz-transition";
   var values = utils.getCSSValuesForProperty(prop);
-  var expected = [ "initial", "all", "cubic-bezier", "ease", "ease-in", "ease-in-out",
+  var expected = [ "initial", "all", "unset", "cubic-bezier", "ease", "ease-in", "ease-in-out",
                    "ease-out", "inherit", "linear", "none", "step-end", "step-start",
                    "steps" ];
   ok(testValues(values, expected), "property -moz-transition's values.");
