@@ -21,18 +21,18 @@ VerifySameFiles(LPCWSTR file1Path, LPCWSTR file2Path, BOOL &sameContent)
 {
   sameContent = FALSE;
   nsAutoHandle file1(CreateFileW(file1Path, GENERIC_READ, FILE_SHARE_READ, 
-                                 NULL, OPEN_EXISTING, 0, NULL));
+                                 nullptr, OPEN_EXISTING, 0, nullptr));
   if (INVALID_HANDLE_VALUE == file1) {
     return FALSE;
   }
   nsAutoHandle file2(CreateFileW(file2Path, GENERIC_READ, FILE_SHARE_READ, 
-                                 NULL, OPEN_EXISTING, 0, NULL));
+                                 nullptr, OPEN_EXISTING, 0, nullptr));
   if (INVALID_HANDLE_VALUE == file2) {
     return FALSE;
   }
 
-  DWORD fileSize1 = GetFileSize(file1, NULL);
-  DWORD fileSize2 = GetFileSize(file2, NULL);
+  DWORD fileSize1 = GetFileSize(file1, nullptr);
+  DWORD fileSize2 = GetFileSize(file2, nullptr);
   if (INVALID_FILE_SIZE == fileSize1 || INVALID_FILE_SIZE == fileSize2) {
     return FALSE;
   }
@@ -48,12 +48,12 @@ VerifySameFiles(LPCWSTR file1Path, LPCWSTR file2Path, BOOL &sameContent)
   DWORD leftOver = fileSize1 % COMPARE_BLOCKSIZE;
   DWORD readAmount;
   for (DWORD i = 0; i < numBlocks; i++) {
-    if (!ReadFile(file1, buf1, COMPARE_BLOCKSIZE, &readAmount, NULL) || 
+    if (!ReadFile(file1, buf1, COMPARE_BLOCKSIZE, &readAmount, nullptr) ||
         readAmount != COMPARE_BLOCKSIZE) {
       return FALSE;
     }
 
-    if (!ReadFile(file2, buf2, COMPARE_BLOCKSIZE, &readAmount, NULL) || 
+    if (!ReadFile(file2, buf2, COMPARE_BLOCKSIZE, &readAmount, nullptr) ||
         readAmount != COMPARE_BLOCKSIZE) {
       return FALSE;
     }
@@ -65,12 +65,12 @@ VerifySameFiles(LPCWSTR file1Path, LPCWSTR file2Path, BOOL &sameContent)
   }
 
   if (leftOver) {
-    if (!ReadFile(file1, buf1, leftOver, &readAmount, NULL) || 
+    if (!ReadFile(file1, buf1, leftOver, &readAmount, nullptr) ||
         readAmount != leftOver) {
       return FALSE;
     }
 
-    if (!ReadFile(file2, buf2, leftOver, &readAmount, NULL) || 
+    if (!ReadFile(file2, buf2, leftOver, &readAmount, nullptr) ||
         readAmount != leftOver) {
       return FALSE;
     }
