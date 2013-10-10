@@ -1,6 +1,6 @@
 WebGLUtil = (function() {
   // ---------------------------------------------------------------------------
-  // Error handling (for obvious failures, such as invalid element ids)
+  // Error handling
 
   function defaultErrorFunc(str) {
     console.log('Error: ' + str);
@@ -13,22 +13,6 @@ WebGLUtil = (function() {
 
   function error(str) {
     gErrorFunc(str);
-  }
-
-  // ---------------------------------------------------------------------------
-  // Warning handling (for failures that may be intentional)
-
-  function defaultWarningFunc(str) {
-    console.log('Warning: ' + str);
-  }
-
-  var gWarningFunc = defaultWarningFunc;
-  function setWarningFunc(func) {
-    gWarningFunc = func;
-  }
-
-  function warning(str) {
-    gWarningFunc(str);
   }
 
   // ---------------------------------------------------------------------------
@@ -79,19 +63,19 @@ WebGLUtil = (function() {
       return null;
     }
 
-    var src = getContentFromElem(elem);
+    var src = getContentById(id);
 
     var shader;
     if (elem.type == "x-shader/x-fragment") {
       shader = gl.createShader(gl.FRAGMENT_SHADER);
-    } else if (elem.type == "x-shader/x-vertex") {
+    } else if (shaderScript.type == "x-shader/x-vertex") {
       shader = gl.createShader(gl.VERTEX_SHADER);
     } else {
       error('Bad MIME type for shader \'' + id + '\': ' + elem.type + '.');
       return null;
     }
 
-    gl.shaderSource(shader, src);
+    gl.shaderSource(shader, str);
     gl.compileShader(shader);
 
     return shader;
@@ -109,11 +93,11 @@ WebGLUtil = (function() {
     gl.linkProgram(prog);
 
     if (!gl.getProgramParameter(prog, gl.LINK_STATUS)) {
-      var str = "Shader program linking failed:";
-      str += "\nShader program info log:\n" + gl.getProgramInfoLog(prog);
-      str += "\n\nVert shader log:\n" + gl.getShaderInfoLog(vs);
-      str += "\n\nFrag shader log:\n" + gl.getShaderInfoLog(fs);
-      warning(str);
+      var str = "Shader program linking failed:\n";
+      str += "Shader program info log:\n" + gl.getProgramInfoLog(prog) + "\n\n";
+      str += "Vert shader log:\n" + gl.getShaderInfoLog(vs) + "\n\n";
+      str += "Frag shader log:\n" + gl.getShaderInfoLog(fs);
+      error(str);
       return null;
     }
 
@@ -122,7 +106,6 @@ WebGLUtil = (function() {
 
   return {
     setErrorFunc: setErrorFunc,
-    setWarningFunc: setWarningFunc,
 
     getWebGL: getWebGL,
     createShaderById: createShaderById,
