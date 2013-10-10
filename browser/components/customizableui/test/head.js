@@ -187,6 +187,12 @@ function waitForCondition(aConditionFn, aMaxTries=50, aCheckInterval=100) {
   return deferred.promise;
 }
 
+function waitFor(aTimeout=100) {
+  let deferred = Promise.defer();
+  setTimeout(function() deferred.resolve(), aTimeout);
+  return deferred.promise;
+}
+
 function testRunner(testAry, asyncCleanup) {
   Services.prefs.setBoolPref("browser.uiCustomization.disableAnimation", true);
   for (let test of testAry) {
@@ -198,9 +204,9 @@ function testRunner(testAry, asyncCleanup) {
     info("Running test");
     yield test.run();
     info("Cleanup");
-    ok(!document.getElementById(CustomizableUI.AREA_NAVBAR).hasAttribute("overflowing"), "Shouldn't overflow");
     if (test.teardown)
       yield test.teardown();
+    ok(!document.getElementById(CustomizableUI.AREA_NAVBAR).hasAttribute("overflowing"), "Shouldn't overflow");
   }
   if (asyncCleanup) {
     yield asyncCleanup();
