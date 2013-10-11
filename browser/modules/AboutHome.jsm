@@ -169,7 +169,7 @@ let AboutHome = {
         window.BrowserSearch.recordSearchInHealthReport(data.engineName, "abouthome");
 #endif
         // Trigger a search through nsISearchEngine.getSubmission()
-        let submission = Services.search.currentEngine.getSubmission(data.searchTerms);
+        let submission = Services.search.currentEngine.getSubmission(data.searchTerms, null, "homepage");
         window.loadURI(submission.uri.spec, null, submission.postData);
         break;
     }
