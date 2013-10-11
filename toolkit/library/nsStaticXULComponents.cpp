@@ -261,7 +261,7 @@ extern const mozilla::Module *const *const kPStaticModules[] = {
 #ifdef MOZ_WIDGET_GONK
 MODULE(WifiProxyServiceModule)
 #endif
-  NULL
+  nullptr
 };
 
 #undef MODULE

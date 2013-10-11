@@ -11,6 +11,7 @@ LIBS = \
   $(DEPTH)/media/mtransport/standalone/$(LIB_PREFIX)mtransport_s.$(LIB_SUFFIX) \
   $(DEPTH)/media/webrtc/signalingtest/signaling_ecc/$(LIB_PREFIX)ecc.$(LIB_SUFFIX) \
   $(DEPTH)/media/webrtc/signalingtest/signaling_sipcc/$(LIB_PREFIX)sipcc.$(LIB_SUFFIX) \
+  $(DEPTH)/layout/media/webrtc/$(LIB_PREFIX)webrtc.$(LIB_SUFFIX) \
   $(DEPTH)/layout/media/$(LIB_PREFIX)gkmedias.$(LIB_SUFFIX) \
   $(DEPTH)/media/webrtc/trunk/testing/gtest_gtest/$(LIB_PREFIX)gtest.$(LIB_SUFFIX) \
   $(DEPTH)/netwerk/srtp/src/$(LIB_PREFIX)nksrtp_s.$(LIB_SUFFIX) \

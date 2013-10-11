@@ -174,9 +174,9 @@ struct nsCycleCollectorParams
     bool mAllTracesAtShutdown;
 
     nsCycleCollectorParams() :
-        mLogAll      (PR_GetEnv("XPCOM_CC_LOG_ALL") != NULL),
-        mLogShutdown (PR_GetEnv("XPCOM_CC_LOG_SHUTDOWN") != NULL),
-        mAllTracesAtShutdown (PR_GetEnv("XPCOM_CC_ALL_TRACES_AT_SHUTDOWN") != NULL)
+        mLogAll      (PR_GetEnv("XPCOM_CC_LOG_ALL") != nullptr),
+        mLogShutdown (PR_GetEnv("XPCOM_CC_LOG_SHUTDOWN") != nullptr),
+        mAllTracesAtShutdown (PR_GetEnv("XPCOM_CC_ALL_TRACES_AT_SHUTDOWN") != nullptr)
     {
     }
 };

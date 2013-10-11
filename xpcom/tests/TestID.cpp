@@ -29,7 +29,7 @@ int main(int argc, char** argv)
       return -1;
     }
     char* cp = id.ToString();
-    if (NULL == cp) {
+    if (nullptr == cp) {
       fprintf(stderr, "TestID: ToString failed on test #%d\n", i);
       return -1;
     }

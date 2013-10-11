@@ -1204,14 +1204,14 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsFormFillController)
 NS_DEFINE_NAMED_CID(NS_FORMFILLCONTROLLER_CID);
 
 static const mozilla::Module::CIDEntry kSatchelCIDs[] = {
-  { &kNS_FORMFILLCONTROLLER_CID, false, NULL, nsFormFillControllerConstructor },
-  { NULL }
+  { &kNS_FORMFILLCONTROLLER_CID, false, nullptr, nsFormFillControllerConstructor },
+  { nullptr }
 };
 
 static const mozilla::Module::ContractIDEntry kSatchelContracts[] = {
   { "@mozilla.org/satchel/form-fill-controller;1", &kNS_FORMFILLCONTROLLER_CID },
   { NS_FORMHISTORYAUTOCOMPLETE_CONTRACTID, &kNS_FORMFILLCONTROLLER_CID },
-  { NULL }
+  { nullptr }
 };
 
 static const mozilla::Module kSatchelModule = {

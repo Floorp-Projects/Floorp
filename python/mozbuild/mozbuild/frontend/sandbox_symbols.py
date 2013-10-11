@@ -24,34 +24,6 @@ from mozbuild.util import (
 )
 
 
-def doc_to_paragraphs(doc):
-    """Take a documentation string and converts it to paragraphs.
-
-    This normalizes the inline strings in VARIABLES and elsewhere in this file.
-
-    It returns a list of paragraphs. It is up to the caller to insert newlines
-    or to wrap long lines (e.g. by using textwrap.wrap()).
-    """
-    lines = [line.strip() for line in doc.split('\n')]
-
-    paragraphs = []
-    current = []
-    for line in lines:
-        if not len(line):
-            if len(current):
-                paragraphs.append(' '.join(current))
-                current = []
-
-            continue
-
-        current.append(line)
-
-    if len(current):
-        paragraphs.append(' '.join(current))
-
-    return paragraphs
-
-
 # This defines the set of mutable global variables.
 #
 # Each variable is a tuple of:
@@ -92,40 +64,42 @@ VARIABLES = {
     'DEFINES': (OrderedDict, dict, OrderedDict(),
         """Dictionary of compiler defines to declare.
 
-        These are passed in to the compiler as -Dkey='value' for string values,
-        -Dkey=value for numeric values, or -Dkey if the value is True. Note
-        that for string values, the outer-level of single-quotes will be
-        consumed by the shell. If you want to have a string-literal in the
-        program, the value needs to have double-quotes.
+        These are passed in to the compiler as ``-Dkey='value'`` for string
+        values, ``-Dkey=value`` for numeric values, or ``-Dkey`` if the
+        value is True. Note that for string values, the outer-level of
+        single-quotes will be consumed by the shell. If you want to have
+        a string-literal in the program, the value needs to have
+        double-quotes.
 
-        Example:
-        DEFINES['NS_NO_XPCOM'] = True
-        DEFINES['MOZ_EXTENSIONS_DB_SCHEMA'] = 15
-        DEFINES['DLL_SUFFIX'] = '".so"'
+        Example::
 
-        This will result in the compiler flags -DNS_NO_XPCOM,
-        -DMOZ_EXTENSIONS_DB_SCHEMA=15, and -DDLL_SUFFIX='".so"',
+           DEFINES['NS_NO_XPCOM'] = True
+           DEFINES['MOZ_EXTENSIONS_DB_SCHEMA'] = 15
+           DEFINES['DLL_SUFFIX'] = '".so"'
+
+        This will result in the compiler flags ``-DNS_NO_XPCOM``,
+        ``-DMOZ_EXTENSIONS_DB_SCHEMA=15``, and ``-DDLL_SUFFIX='".so"'``,
         respectively. These could also be combined into a single
-        update:
+        update::
 
-        DEFINES.update({
-            'NS_NO_XPCOM': True,
-            'MOZ_EXTENSIONS_DB_SCHEMA': 15,
-            'DLL_SUFFIX': '".so"',
-        })
+           DEFINES.update({
+               'NS_NO_XPCOM': True,
+               'MOZ_EXTENSIONS_DB_SCHEMA': 15,
+               'DLL_SUFFIX': '".so"',
+           })
         """, None),
 
     'DIRS': (list, list, [],
         """Child directories to descend into looking for build frontend files.
 
-        This works similarly to the DIRS variable in make files. Each str value
-        in the list is the name of a child directory. When this file is done
-        parsing, the build reader will descend into each listed directory and
-        read the frontend file there. If there is no frontend file, an error
+        This works similarly to the ``DIRS`` variable in make files. Each str
+        value in the list is the name of a child directory. When this file is
+        done parsing, the build reader will descend into each listed directory
+        and read the frontend file there. If there is no frontend file, an error
         is raised.
 
         Values are relative paths. They can be multiple directory levels
-        above or below. Use ".." for parent directories and "/" for path
+        above or below. Use ``..`` for parent directories and ``/`` for path
         delimiters.
         """, None),
 
@@ -136,37 +110,38 @@ VARIABLES = {
     'EXTRA_COMPONENTS': (StrictOrderingOnAppendList, list, [],
         """Additional component files to distribute.
 
-       This variable contains a list of files to copy into $(FINAL_TARGET)/components/.
+       This variable contains a list of files to copy into
+       ``$(FINAL_TARGET)/components/``.
         """, 'libs'),
 
     'EXTRA_JS_MODULES': (StrictOrderingOnAppendList, list, [],
         """Additional JavaScript files to distribute.
 
         This variable contains a list of files to copy into
-        $(FINAL_TARGET)/$(JS_MODULES_PATH). JS_MODULES_PATH defaults to
-        "modules" if left undefined.
+        ``$(FINAL_TARGET)/$(JS_MODULES_PATH)``. ``JS_MODULES_PATH`` defaults
+        to ``modules`` if left undefined.
         """, 'libs'),
 
     'EXTRA_PP_JS_MODULES': (StrictOrderingOnAppendList, list, [],
         """Additional JavaScript files to distribute.
 
         This variable contains a list of files to copy into
-        $(FINAL_TARGET)/$(JS_MODULES_PATH), after preprocessing.
-        JS_MODULES_PATH defaults to "modules" if left undefined.
+        ``$(FINAL_TARGET)/$(JS_MODULES_PATH)``, after preprocessing.
+        ``JS_MODULES_PATH`` defaults to ``modules`` if left undefined.
         """, 'libs'),
 
     'EXTRA_PP_COMPONENTS': (StrictOrderingOnAppendList, list, [],
         """Javascript XPCOM files.
 
        This variable contains a list of files to preprocess.  Generated
-       files will be installed in the /components directory of the distribution.
+       files will be installed in the ``/components`` directory of the distribution.
         """, 'libs'),
 
     'CPP_UNIT_TESTS': (StrictOrderingOnAppendList, list, [],
         """C++ source files for unit tests.
 
         This is a list of C++ unit test sources. Entries must be files that
-        exist. These generally have .cpp extensions.
+        exist. These generally have ``.cpp`` extensions.
         """, 'binaries'),
 
     'FAIL_ON_WARNINGS': (bool, bool, False,
@@ -199,7 +174,8 @@ VARIABLES = {
         """C++ source files for GTest unit tests.
 
         This is a list of C++ GTest unit test sources. Entries must be files
-        that exist. These generally have .cpp, .cc, or .cxx extensions.
+        that exist. These generally have ``.cpp``, ``.cc``, or ``.cxx``
+        extensions.
         """, 'compile'),
 
     'HOST_CPPSRCS': (StrictOrderingOnAppendList, list, [],
@@ -219,7 +195,7 @@ VARIABLES = {
         """, None),
 
     'PARALLEL_DIRS': (list, list, [],
-        """A parallel version of DIRS.
+        """A parallel version of ``DIRS``.
 
         Ideally this variable does not exist. It is provided so a transition
         from recursive makefiles can be made. Once the build system has been
@@ -232,22 +208,24 @@ VARIABLES = {
         """, 'binaries'),
 
     'JS_MODULES_PATH': (unicode, unicode, "",
-        """Sub-directory of $(FINAL_TARGET) to install EXTRA_JS_MODULES.
+        """Sub-directory of ``$(FINAL_TARGET)`` to install
+        ``EXTRA_JS_MODULES``.
 
-        EXTRA_JS_MODULES files are copied to
-        $(FINAL_TARGET)/$(JS_MODULES_PATH). This variable does not
+        ``EXTRA_JS_MODULES`` files are copied to
+        ``$(FINAL_TARGET)/$(JS_MODULES_PATH)``. This variable does not
         need to be defined if the desired destination directory is
-        $(FINAL_TARGET)/modules.
+        ``$(FINAL_TARGET)/modules``.
         """, None),
 
     'LIBRARY_NAME': (unicode, unicode, "",
         """The name of the library generated for a directory.
 
-        Example:
-        In example/components/moz.build,
-        LIBRARY_NAME = 'xpcomsample'
-        would generate example/components/libxpcomsample.so on Linux, or
-        example/components/xpcomsample.lib on Windows.
+        In ``example/components/moz.build``,::
+
+           LIBRARY_NAME = 'xpcomsample'
+
+        would generate ``example/components/libxpcomsample.so`` on Linux, or
+        ``example/components/xpcomsample.lib`` on Windows.
         """, 'binaries'),
 
     'LIBS': (StrictOrderingOnAppendList, list, [],
@@ -259,7 +237,7 @@ VARIABLES = {
     'LIBXUL_LIBRARY': (bool, bool, False,
         """Whether the library in this directory is linked into libxul.
 
-        Implies MOZILLA_INTERNAL_API and FORCE_STATIC_LIB.
+        Implies ``MOZILLA_INTERNAL_API`` and ``FORCE_STATIC_LIB``.
         """, None),
 
     'LOCAL_INCLUDES': (StrictOrderingOnAppendList, list, [],
@@ -279,19 +257,22 @@ VARIABLES = {
     'SDK_LIBRARY': (StrictOrderingOnAppendList, list, [],
         """Elements of the distributed SDK.
 
-        Files on this list will be copied into SDK_LIB_DIR ($DIST/sdk/lib).
+        Files on this list will be copied into ``SDK_LIB_DIR``
+        (``$DIST/sdk/lib``).
         """, None),
 
     'SHARED_LIBRARY_LIBS': (StrictOrderingOnAppendList, list, [],
         """Libraries linked into a shared library.
 
-        A list of static library paths which should be linked into the current shared library.
+        A list of static library paths which should be linked into the
+        current shared library.
         """, None),
 
     'SIMPLE_PROGRAMS': (StrictOrderingOnAppendList, list, [],
         """Generate a list of binaries from source.
 
-        A list of sources, one per program, to compile & link with libs into standalone programs.
+        A list of sources, one per program, to compile & link with libs
+        into standalone programs.
         """, 'binaries'),
 
     'SSRCS': (StrictOrderingOnAppendList, list, [],
@@ -334,7 +315,7 @@ VARIABLES = {
 
         Tiers are a way of working around deficiencies in recursive make. These
         will probably disappear once we no longer rely on recursive make for
-        the build backend. They will likely be replaced by DIRS.
+        the build backend. They will likely be replaced by ``DIRS``.
 
         This variable is typically not populated directly. Instead, it is
         populated by calling add_tier_dir().
@@ -343,61 +324,61 @@ VARIABLES = {
     'EXTERNAL_MAKE_DIRS': (list, list, [],
         """Directories that build with make but don't use moz.build files.
 
-        This is like DIRS except it implies that |make| is used to build the
+        This is like ``DIRS`` except it implies that ``make`` is used to build the
         directory and that the directory does not define itself with moz.build
         files.
         """, None),
 
     'PARALLEL_EXTERNAL_MAKE_DIRS': (list, list, [],
-        """Parallel version of EXTERNAL_MAKE_DIRS.
+        """Parallel version of ``EXTERNAL_MAKE_DIRS``.
         """, None),
 
     'CONFIGURE_SUBST_FILES': (StrictOrderingOnAppendList, list, [],
         """Output files that will be generated using configure-like substitution.
 
-        This is a substitute for AC_OUTPUT in autoconf. For each path in this
+        This is a substitute for ``AC_OUTPUT`` in autoconf. For each path in this
         list, we will search for a file in the srcdir having the name
-        {path}.in. The contents of this file will be read and variable patterns
-        like @foo@ will be substituted with the values of the AC_SUBST
-        variables declared during configure.
+        ``{path}.in``. The contents of this file will be read and variable
+        patterns like ``@foo@`` will be substituted with the values of the
+        ``AC_SUBST`` variables declared during configure.
         """, None),
 
     'MODULE': (unicode, unicode, "",
         """Module name.
 
         Historically, this variable was used to describe where to install header
-        files, but that feature is now handled by EXPORTS_NAMESPACES. MODULE
-        will likely be removed in the future.
+        files, but that feature is now handled by ``EXPORTS_NAMESPACES``.
+        ``MODULE`` will likely be removed in the future.
         """, None),
 
     'EXPORTS': (HierarchicalStringList, list, HierarchicalStringList(),
         """List of files to be exported, and in which subdirectories.
 
-        EXPORTS is generally used to list the include files to be exported to
-        dist/include, but it can be used for other files as well. This variable
+        ``EXPORTS`` is generally used to list the include files to be exported to
+        ``dist/include``, but it can be used for other files as well. This variable
         behaves as a list when appending filenames for export in the top-level
         directory. Files can also be appended to a field to indicate which
-        subdirectory they should be exported to. For example, to export 'foo.h'
-        to the top-level directory, and 'bar.h' to mozilla/dom/, append to
-        EXPORTS like so:
+        subdirectory they should be exported to. For example, to export
+        ``foo.h`` to the top-level directory, and ``bar.h`` to ``mozilla/dom/``,
+        append to ``EXPORTS`` like so::
 
-        EXPORTS += ['foo.h']
-        EXPORTS.mozilla.dom += ['bar.h']
+           EXPORTS += ['foo.h']
+           EXPORTS.mozilla.dom += ['bar.h']
         """, None),
 
     'PROGRAM' : (unicode, unicode, "",
         """Compiled executable name.
 
-        If the configuration token 'BIN_SUFFIX' is set, its value will be
-        automatically appended to PROGRAM. If PROGRAM already ends with
-        BIN_SUFFIX, PROGRAM will remain unchanged.
+        If the configuration token ``BIN_SUFFIX`` is set, its value will be
+        automatically appended to ``PROGRAM``. If ``PROGRAM`` already ends with
+        ``BIN_SUFFIX``, ``PROGRAM`` will remain unchanged.
         """, 'binaries'),
 
     'CPP_SOURCES': (list, list, [],
         """C++ source file list.
 
         This is a list of C++ files to be compiled. Entries must be files that
-        exist. These generally have .cpp, .cc, or .cxx extensions.
+        exist. These generally have ``.cpp``, ``.cc``, or ``.cxx`` extensions.
         """, 'compile'),
 
     'NO_DIST_INSTALL': (bool, bool, False,
@@ -412,41 +393,42 @@ VARIABLES = {
         """XPCOM Interface Definition Files (xpidl).
 
         This is a list of files that define XPCOM interface definitions.
-        Entries must be files that exist. Entries are almost certainly .idl
+        Entries must be files that exist. Entries are almost certainly ``.idl``
         files.
         """, 'libs'),
 
     'XPIDL_MODULE': (unicode, unicode, "",
         """XPCOM Interface Definition Module Name.
 
-        This is the name of the .xpt file that is created by linking
-        XPIDL_SOURCES together. If unspecified, it defaults to be the same as
-        MODULE.
+        This is the name of the ``.xpt`` file that is created by linking
+        ``XPIDL_SOURCES`` together. If unspecified, it defaults to be the same
+        as ``MODULE``.
         """, None),
 
     'IPDL_SOURCES': (StrictOrderingOnAppendList, list, [],
         """IPDL source files.
 
-        These are .ipdl files that will be parsed and converted to .cpp files.
+        These are ``.ipdl`` files that will be parsed and converted to
+        ``.cpp`` files.
         """, 'export'),
 
     'WEBIDL_FILES': (StrictOrderingOnAppendList, list, [],
         """WebIDL source files.
 
-        These will be parsed and converted to .cpp and .h files.
+        These will be parsed and converted to ``.cpp`` and ``.h`` files.
         """, 'export'),
 
     'GENERATED_EVENTS_WEBIDL_FILES': (StrictOrderingOnAppendList, list, [],
         """WebIDL source files for generated events.
 
-        These will be parsed and converted to .cpp and .h files.
+        These will be parsed and converted to ``.cpp`` and ``.h`` files.
         """, 'export'),
 
     'TEST_WEBIDL_FILES': (StrictOrderingOnAppendList, list, [],
          """Test WebIDL source files.
 
-         These will be parsed and converted to .cpp and .h files if tests are
-         enabled.
+         These will be parsed and converted to ``.cpp`` and ``.h`` files
+         if tests are enabled.
          """, 'export'),
 
     'GENERATED_WEBIDL_FILES': (StrictOrderingOnAppendList, list, [],
@@ -459,7 +441,7 @@ VARIABLES = {
          """Preprocessed test WebIDL source files.
 
          These will be preprocessed, then parsed and converted to .cpp
-         and .h files if tests are enabled.
+         and ``.h`` files if tests are enabled.
          """, 'export'),
 
     'PREPROCESSED_WEBIDL_FILES': (StrictOrderingOnAppendList, list, [],
@@ -514,7 +496,7 @@ FUNCTIONS = {
     'include': ('_include', (str,),
         """Include another mozbuild file in the context of this one.
 
-        This is similar to a #include in C languages. The filename passed to
+        This is similar to a ``#include`` in C languages. The filename passed to
         the function will be read and its contents will be evaluated within the
         context of the calling file.
 
@@ -522,17 +504,20 @@ FUNCTIONS = {
         currently being processed. If there is a chain of multiple include(),
         the relative path computation is from the most recent/active file.
 
-        If an absolute path is given, it is evaluated from TOPSRCDIR. In other
-        words, include('/foo') references the path TOPSRCDIR + '/foo'.
+        If an absolute path is given, it is evaluated from ``TOPSRCDIR``. In
+        other words, ``include('/foo')`` references the path
+        ``TOPSRCDIR + '/foo'``.
 
         Example usage
-        -------------
+        ^^^^^^^^^^^^^
 
-        # Include "sibling.build" from the current directory.
-        include('sibling.build')
+        Include ``sibling.build`` from the current directory.::
 
-        # Include "foo.build" from a path within the top source directory.
-        include('/elsewhere/foo.build')
+           include('sibling.build')
+
+        Include ``foo.build`` from a path within the top source directory::
+
+           include('/elsewhere/foo.build')
         """),
 
     'add_tier_dir': ('_add_tier_directory', (str, [str, list], bool, bool),
@@ -554,20 +539,24 @@ FUNCTIONS = {
         the same tier multiple times.
 
         Example usage
-        -------------
+        ^^^^^^^^^^^^^
 
-        # Register a single directory with the 'platform' tier.
-        add_tier_dir('platform', 'xul')
+        Register a single directory with the 'platform' tier::
 
-        # Register multiple directories with the 'app' tier.
-        add_tier_dir('app', ['components', 'base'])
+           add_tier_dir('platform', 'xul')
 
-        # Register a directory as having static content (no dependencies).
-        add_tier_dir('base', 'foo', static=True)
+        Register multiple directories with the 'app' tier.::
 
-        # Register a directory as having external content (same as static
-        # content, but traversed with export, libs, and tools subtiers.
-        add_tier_dir('base', 'bar', external=True)
+           add_tier_dir('app', ['components', 'base'])
+
+        Register a directory as having static content (no dependencies)::
+
+           add_tier_dir('base', 'foo', static=True)
+
+        Register a directory as having external content (same as static
+        content, but traversed with export, libs, and tools subtiers::
+
+           add_tier_dir('base', 'bar', external=True)
         """),
 
     'warning': ('_warning', (str,),
@@ -606,29 +595,29 @@ SPECIAL_VARIABLES = {
     'RELATIVEDIR': (str,
         """Constant defining the relative path of this file.
 
-        The relative path is from TOPSRCDIR. This is defined as relative to the
-        main file being executed, regardless of whether additional files have
-        been included using include().
+        The relative path is from ``TOPSRCDIR``. This is defined as relative
+        to the main file being executed, regardless of whether additional
+        files have been included using ``include()``.
         """),
 
     'SRCDIR': (str,
         """Constant defining the source directory of this file.
 
-        This is the path inside TOPSRCDIR where this file is located. It is the
-        same as TOPSRCDIR + RELATIVEDIR.
+        This is the path inside ``TOPSRCDIR`` where this file is located. It
+        is the same as ``TOPSRCDIR + RELATIVEDIR``.
         """),
 
     'OBJDIR': (str,
         """The path to the object directory for this file.
 
-        Is is the same as TOPOBJDIR + RELATIVEDIR.
+        Is is the same as ``TOPOBJDIR + RELATIVEDIR``.
         """),
 
     'CONFIG': (dict,
         """Dictionary containing the current configuration variables.
 
         All the variables defined by the configuration system are available
-        through this object. e.g. ENABLE_TESTS, CFLAGS, etc.
+        through this object. e.g. ``ENABLE_TESTS``, ``CFLAGS``, etc.
 
         Values in this container are read-only. Attempts at changing values
         will result in a run-time error.
@@ -641,8 +630,8 @@ SPECIAL_VARIABLES = {
 
         The set of exposed Python built-ins is currently:
 
-            True
-            False
-            None
+        - True
+        - False
+        - None
         """),
 }

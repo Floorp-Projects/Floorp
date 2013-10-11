@@ -1796,8 +1796,8 @@ struct MOZ_STACK_CLASS ExceptionArgParser
          * Argument 1: Result code (defaults to NS_ERROR_FAILURE) _or_ options
          *             object (see below).
          * Argument 2: Stack (defaults to the current stack, which we trigger
-         *                    by leaving this NULL in the parser).
-         * Argument 3: Optional user data (defaults to NULL).
+         *                    by leaving this nullptr in the parser).
+         * Argument 3: Optional user data (defaults to nullptr).
          *
          * To dig our way out of this clunky API, we now support passing an
          * options object as the second parameter (as opposed to a result code).
@@ -2910,7 +2910,7 @@ class PreciseGCRunnable : public nsRunnable
 
         JSContext *cx;
         JSContext *iter = nullptr;
-        while ((cx = JS_ContextIterator(rt, &iter)) != NULL) {
+        while ((cx = JS_ContextIterator(rt, &iter)) != nullptr) {
             if (JS_IsRunning(cx)) {
                 return NS_DispatchToMainThread(this);
             }
@@ -3049,7 +3049,7 @@ nsXPCComponents_Utils::CreateArrayIn(const Value &vobj, JSContext *cx, Value *rv
     RootedObject obj(cx);
     {
         JSAutoCompartment ac(cx, scope);
-        obj =  JS_NewArrayObject(cx, 0, NULL);
+        obj =  JS_NewArrayObject(cx, 0, nullptr);
         if (!obj)
             return NS_ERROR_FAILURE;
     }
@@ -3149,7 +3149,7 @@ nsXPCComponents_Utils::RecomputeWrappers(const jsval &vobj, JSContext *cx)
     // Determine the compartment of the given object, if any.
     JSCompartment *c = vobj.isObject()
                        ? js::GetObjectCompartment(js::UncheckedUnwrap(&vobj.toObject()))
-                       : NULL;
+                       : nullptr;
 
     // If no compartment was given, recompute all.
     if (!c)
@@ -3261,14 +3261,14 @@ nsXPCComponents_Utils::CanSetProperty(const nsIID * iid, const PRUnichar *proper
     return NS_OK;
 }
 
-nsresult
+static nsresult
 GetBoolOption(JSContext* cx, uint32_t aOption, bool* aValue)
 {
     *aValue = !!(JS_GetOptions(cx) & aOption);
     return NS_OK;
 }
 
-nsresult
+static nsresult
 SetBoolOption(JSContext* cx, uint32_t aOption, bool aValue)
 {
     uint32_t options = JS_GetOptions(cx);

@@ -4,7 +4,6 @@
 
 #include "mozilla/Services.h"
 #include "nsIDOMClassInfo.h"
-#include "nsIDOMIccCardLockErrorEvent.h"
 #include "nsIDOMIccInfo.h"
 #include "GeneratedEvents.h"
 #include "IccManager.h"
@@ -248,7 +247,6 @@ IccManager::UpdateContact(const nsAString& aContactType,
 
 NS_IMPL_EVENT_HANDLER(IccManager, stkcommand)
 NS_IMPL_EVENT_HANDLER(IccManager, stksessionend)
-NS_IMPL_EVENT_HANDLER(IccManager, icccardlockerror)
 NS_IMPL_EVENT_HANDLER(IccManager, cardstatechange)
 NS_IMPL_EVENT_HANDLER(IccManager, iccinfochange)
 
@@ -267,21 +265,6 @@ NS_IMETHODIMP
 IccManager::NotifyStkSessionEnd()
 {
   return DispatchTrustedEvent(NS_LITERAL_STRING("stksessionend"));
-}
-
-NS_IMETHODIMP
-IccManager::NotifyIccCardLockError(const nsAString& aLockType, uint32_t aRetryCount)
-{
-  nsCOMPtr<nsIDOMEvent> event;
-  NS_NewDOMIccCardLockErrorEvent(getter_AddRefs(event), this, nullptr, nullptr);
-
-  nsCOMPtr<nsIDOMIccCardLockErrorEvent> ce = do_QueryInterface(event);
-  nsresult rv =
-    ce->InitIccCardLockErrorEvent(NS_LITERAL_STRING("icccardlockerror"),
-                                  false, false, aLockType, aRetryCount);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  return DispatchTrustedEvent(ce);
 }
 
 NS_IMETHODIMP

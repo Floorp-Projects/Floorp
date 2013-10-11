@@ -106,30 +106,9 @@ ifdef MOZ_ENABLE_SKIA
 SHARED_LIBRARY_LIBS += $(MOZ_SKIA_LIBS)
 endif
 
-ifdef MOZ_WEBRTC
-ifndef MOZ_WEBRTC_IN_LIBXUL
-DEFINES += -DMOZ_WEBRTC_GKMEDIA=1
-include $(topsrcdir)/media/webrtc/shared_libs.mk
-SHARED_LIBRARY_LIBS += $(WEBRTC_LIBS)
-endif
-endif
-
 ifeq (WINNT,$(OS_TARGET))
 EXTRA_DSO_LDOPTS = $(MOZALLOC_LIB) $(NSPR_LIBS)
 OS_LIBS += $(call EXPAND_LIBNAME,usp10 ole32)
-
-ifdef MOZ_WEBRTC
-EXTRA_DSO_LDOPTS += \
-  -LIBPATH:"$(MOZ_DIRECTX_SDK_PATH)/lib/$(MOZ_DIRECTX_SDK_CPU_SUFFIX)" \
-  $(NULL)
-OS_LIBS += $(call EXPAND_LIBNAME,secur32 crypt32 iphlpapi strmiids dmoguids wmcodecdspuuid amstrmid msdmo wininet)
-ifdef _MSC_VER
-OS_LIBS += $(call EXPAND_LIBNAME,delayimp)
-EXTRA_DSO_LDOPTS += \
-  -DELAYLOAD:msdmo.dll \
-  $(NULL)
-endif
-endif
 DEFFILE = symbols.def
 endif
 

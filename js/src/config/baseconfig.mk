@@ -1,13 +1,17 @@
 installdir = $(libdir)/$(MOZ_APP_NAME)-$(MOZ_APP_VERSION)
 sdkdir = $(libdir)/$(MOZ_APP_NAME)-devel-$(MOZ_APP_VERSION)
 
+ifndef INCLUDED_FUNCTIONS_MK
+include $(topsrcdir)/config/makefiles/functions.mk
+endif
+
 ifneq (,$(filter /%,$(TOP_DIST)))
-DIST = $(TOP_DIST)
+DIST := $(call core_realpath,$(TOP_DIST))
 else
 ifeq (.,$(DEPTH))
-DIST = $(TOP_DIST)
+DIST := $(call core_realpath,$(TOP_DIST))
 else
-DIST = $(DEPTH)/$(TOP_DIST)
+DIST := $(call core_realpath,$(DEPTH)/$(TOP_DIST))
 endif
 endif
 

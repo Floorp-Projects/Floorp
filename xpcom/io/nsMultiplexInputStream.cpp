@@ -63,7 +63,7 @@ private:
 NS_IMPL_ADDREF(nsMultiplexInputStream)
 NS_IMPL_RELEASE(nsMultiplexInputStream)
 
-NS_IMPL_CLASSINFO(nsMultiplexInputStream, NULL, nsIClassInfo::THREADSAFE,
+NS_IMPL_CLASSINFO(nsMultiplexInputStream, nullptr, nsIClassInfo::THREADSAFE,
                   NS_MULTIPLEXINPUTSTREAM_CID)
 
 NS_IMPL_QUERY_INTERFACE4_CI(nsMultiplexInputStream,

@@ -312,9 +312,11 @@ class CodeGenerator : public CodeGeneratorSpecific
     bool visitGetPropertyIC(OutOfLineUpdateCache *ool, DataPtr<GetPropertyIC> &ic);
     bool visitGetPropertyParIC(OutOfLineUpdateCache *ool, DataPtr<GetPropertyParIC> &ic);
     bool visitSetPropertyIC(OutOfLineUpdateCache *ool, DataPtr<SetPropertyIC> &ic);
+    bool visitSetPropertyParIC(OutOfLineUpdateCache *ool, DataPtr<SetPropertyParIC> &ic);
     bool visitGetElementIC(OutOfLineUpdateCache *ool, DataPtr<GetElementIC> &ic);
     bool visitGetElementParIC(OutOfLineUpdateCache *ool, DataPtr<GetElementParIC> &ic);
     bool visitSetElementIC(OutOfLineUpdateCache *ool, DataPtr<SetElementIC> &ic);
+    bool visitSetElementParIC(OutOfLineUpdateCache *ool, DataPtr<SetElementParIC> &ic);
     bool visitBindNameIC(OutOfLineUpdateCache *ool, DataPtr<BindNameIC> &ic);
     bool visitNameIC(OutOfLineUpdateCache *ool, DataPtr<NameIC> &ic);
     bool visitCallsiteCloneIC(OutOfLineUpdateCache *ool, DataPtr<CallsiteCloneIC> &ic);
@@ -336,6 +338,12 @@ class CodeGenerator : public CodeGeneratorSpecific
                              bool allowGetters);
     bool addGetElementCache(LInstruction *ins, Register obj, ConstantOrRegister index,
                             TypedOrValueRegister output, bool monitoredResult);
+    bool addSetPropertyCache(LInstruction *ins, RegisterSet liveRegs, Register objReg,
+                             PropertyName *name, ConstantOrRegister value, bool strict,
+                             bool needsTypeBarrier);
+    bool addSetElementCache(LInstruction *ins, Register obj, Register unboxIndex, Register temp,
+                            FloatRegister tempFloat, ValueOperand index, ConstantOrRegister value,
+                            bool strict);
     bool checkForAbortPar(LInstruction *lir);
 
     bool generateBranchV(const ValueOperand &value, Label *ifTrue, Label *ifFalse, FloatRegister fr);

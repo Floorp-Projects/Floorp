@@ -58,7 +58,7 @@ WrapperFactory::GetXrayWaiver(JSObject *obj)
     MOZ_ASSERT(scope);
 
     if (!scope->mWaiverWrapperMap)
-        return NULL;
+        return nullptr;
 
     JSObject* xrayWaiver = scope->mWaiverWrapperMap->Find(obj);
     if (xrayWaiver)
@@ -585,7 +585,7 @@ WrapperFactory::WrapSOWObject(JSContext *cx, JSObject *objArg)
     // that case.
     MOZ_ASSERT(xpc::AllowXBLScope(js::GetContextCompartment(cx)));
     if (!JS_GetPrototype(cx, obj, &proto))
-        return NULL;
+        return nullptr;
     JSObject *wrapperObj =
         Wrapper::New(cx, obj, proto, JS_GetGlobalForObject(cx, obj),
                      &FilteringWrapper<SameCompartmentSecurityWrapper,
@@ -605,7 +605,7 @@ WrapperFactory::WrapComponentsObject(JSContext *cx, HandleObject obj)
 {
     RootedObject proto(cx);
     if (!JS_GetPrototype(cx, obj, &proto))
-        return NULL;
+        return nullptr;
     JSObject *wrapperObj =
         Wrapper::New(cx, obj, proto, JS_GetGlobalForObject(cx, obj),
                      &FilteringWrapper<SameCompartmentSecurityWrapper, ComponentsObjectPolicy>::singleton);
@@ -663,7 +663,7 @@ TransplantObject(JSContext *cx, JS::HandleObject origobj, JS::HandleObject targe
        return newIdentity;
 
     if (!FixWaiverAfterTransplant(cx, oldWaiver, newIdentity))
-        return NULL;
+        return nullptr;
     return newIdentity;
 }
 
@@ -682,7 +682,7 @@ TransplantObjectWithWrapper(JSContext *cx,
     RootedObject newIdentity(cx, Wrapper::wrappedObject(newSameCompartmentWrapper));
     MOZ_ASSERT(!js::IsWrapper(newIdentity));
     if (!FixWaiverAfterTransplant(cx, oldWaiver, newIdentity))
-        return NULL;
+        return nullptr;
     return newSameCompartmentWrapper;
 }
 

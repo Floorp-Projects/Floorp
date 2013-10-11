@@ -18,4 +18,4 @@
 # Modifying this file will now automatically clobber the buildbot machines \o/
 #
 
-Bug 899574 needed a clobber, at least on Windows.
+Bug 922461 needs a clobber to regenerate code and survive bug 925243's FAIL_ON_WARNINGS annotation.

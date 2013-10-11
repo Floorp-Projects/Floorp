@@ -6,17 +6,16 @@
 #include "nsIObserverService.h"
 #include "mozilla/Services.h"
 #include "nsISupportsPrimitives.h"
+#include "nsIStringEnumerator.h"
 
 #include "nsXPCOMCID.h"
 
 #include "nsCategoryCache.h"
 
-nsCategoryObserver::nsCategoryObserver(const char* aCategory,
-                                       nsCategoryListener* aListener)
-  : mListener(nullptr), mCategory(aCategory), mObserversRemoved(false)
+nsCategoryObserver::nsCategoryObserver(const char* aCategory)
+  : mCategory(aCategory)
+  , mObserversRemoved(false)
 {
-  mListener = aListener;
-
   // First, enumerate the currently existing entries
   nsCOMPtr<nsICategoryManager> catMan =
     do_GetService(NS_CATEGORYMANAGER_CONTRACTID);
@@ -29,23 +28,22 @@ nsCategoryObserver::nsCategoryObserver(const char* aCategory,
   if (NS_FAILED(rv))
     return;
 
-  nsTArray<nsCString> entries;
-  nsCOMPtr<nsISupports> entry;
-  while (NS_SUCCEEDED(enumerator->GetNext(getter_AddRefs(entry)))) {
-    nsCOMPtr<nsISupportsCString> entryName = do_QueryInterface(entry, &rv);
+  nsCOMPtr<nsIUTF8StringEnumerator> strings = do_QueryInterface(enumerator);
+  MOZ_ASSERT(strings);
 
+  bool more;
+  while (NS_SUCCEEDED(strings->HasMore(&more)) && more) {
+    nsAutoCString entryName;
+    strings->GetNext(entryName);
+
+    nsCString entryValue;
+    rv = catMan->GetCategoryEntry(aCategory,
+				  entryName.get(),
+				  getter_Copies(entryValue));
     if (NS_SUCCEEDED(rv)) {
-      nsAutoCString categoryEntry;
-      rv = entryName->GetData(categoryEntry);
-
-      nsCString entryValue;
-      catMan->GetCategoryEntry(aCategory,
-                               categoryEntry.get(),
-                               getter_Copies(entryValue));
-
-      if (NS_SUCCEEDED(rv)) {
-        mHash.Put(categoryEntry, entryValue);
-        entries.AppendElement(entryValue);
+      nsCOMPtr<nsISupports> service = do_GetService(entryValue.get());
+      if (service) {
+	mHash.Put(entryName, service);
       }
     }
   }
@@ -59,9 +57,6 @@ nsCategoryObserver::nsCategoryObserver(const char* aCategory,
     serv->AddObserver(this, NS_XPCOM_CATEGORY_ENTRY_REMOVED_OBSERVER_ID, false);
     serv->AddObserver(this, NS_XPCOM_CATEGORY_CLEARED_OBSERVER_ID, false);
   }
-
-  for (int32_t i = entries.Length() - 1; i >= 0; --i)
-    mListener->EntryAdded(entries[i]);
 }
 
 nsCategoryObserver::~nsCategoryObserver() {
@@ -71,11 +66,10 @@ NS_IMPL_ISUPPORTS1(nsCategoryObserver, nsIObserver)
 
 void
 nsCategoryObserver::ListenerDied() {
-  mListener = nullptr;
   RemoveObservers();
 }
 
-NS_HIDDEN_(void)
+void
 nsCategoryObserver::RemoveObservers() {
   if (mObserversRemoved)
     return;
@@ -94,12 +88,8 @@ nsCategoryObserver::RemoveObservers() {
 NS_IMETHODIMP
 nsCategoryObserver::Observe(nsISupports* aSubject, const char* aTopic,
                             const PRUnichar* aData) {
-  if (!mListener)
-    return NS_OK;
-
   if (strcmp(aTopic, NS_XPCOM_SHUTDOWN_OBSERVER_ID) == 0) {
     mHash.Clear();
-    mListener->CategoryCleared();
     RemoveObservers();
 
     return NS_OK;
@@ -120,7 +110,7 @@ nsCategoryObserver::Observe(nsISupports* aSubject, const char* aTopic,
     // added and an nsCategoryObserver gets instantiated before events get
     // processed, we'd get the notification for an existing entry.
     // Do nothing in that case.
-    if (mHash.Get(str, nullptr))
+    if (mHash.GetWeak(str))
       return NS_OK;
 
     nsCOMPtr<nsICategoryManager> catMan =
@@ -133,17 +123,15 @@ nsCategoryObserver::Observe(nsISupports* aSubject, const char* aTopic,
                              str.get(),
                              getter_Copies(entryValue));
 
-    mHash.Put(str, entryValue);
-    mListener->EntryAdded(entryValue);
-  } else if (strcmp(aTopic, NS_XPCOM_CATEGORY_ENTRY_REMOVED_OBSERVER_ID) == 0) {
-    nsAutoCString val;
-    if (mHash.Get(str, &val)) {
-      mHash.Remove(str);
-      mListener->EntryRemoved(val);
+    nsCOMPtr<nsISupports> service = do_GetService(entryValue.get());
+
+    if (service) {
+      mHash.Put(str, service);
     }
+  } else if (strcmp(aTopic, NS_XPCOM_CATEGORY_ENTRY_REMOVED_OBSERVER_ID) == 0) {
+    mHash.Remove(str);
   } else if (strcmp(aTopic, NS_XPCOM_CATEGORY_CLEARED_OBSERVER_ID) == 0) {
     mHash.Clear();
-    mListener->CategoryCleared();
   }
   return NS_OK;
 }
