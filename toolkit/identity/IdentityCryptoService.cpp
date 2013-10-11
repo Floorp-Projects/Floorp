@@ -117,9 +117,9 @@ private:
       return;
 
     SECKEY_DestroyPrivateKey(mPrivateKey);
-    mPrivateKey = NULL;
+    mPrivateKey = nullptr;
     SECKEY_DestroyPublicKey(mPublicKey);
-    mPublicKey = NULL;
+    mPublicKey = nullptr;
   }
 
   SECKEYPrivateKey * mPrivateKey;
@@ -156,7 +156,7 @@ private:
     if (isAlreadyShutDown())
       return;
 
-     mKeyPair = NULL;
+     mKeyPair = nullptr;
   }
 
   const KeyType mKeyType; // in
@@ -195,7 +195,7 @@ private:
       return;
 
     SECKEY_DestroyPrivateKey(mPrivateKey);
-    mPrivateKey = NULL;
+    mPrivateKey = nullptr;
   }
 
   const nsCString mTextToSign; // in
@@ -376,18 +376,18 @@ GenerateKeyPair(PK11SlotInfo * slot,
                 CK_MECHANISM_TYPE mechanism,
                 void * params)
 {
-  *publicKey = NULL;
+  *publicKey = nullptr;
   *privateKey = PK11_GenerateKeyPair(slot, mechanism, params, publicKey,
                                      PR_FALSE /*isPerm*/,
                                      PR_TRUE /*isSensitive*/,
-                                     NULL /*&pwdata*/);
+                                     nullptr /*&pwdata*/);
   if (!*privateKey) {
     MOZ_ASSERT(!*publicKey);
     return PRErrorCode_to_nsresult(PR_GetError());
   }
   if (!*publicKey) {
 	  SECKEY_DestroyPrivateKey(*privateKey);
-	  *privateKey = NULL;
+	  *privateKey = nullptr;
     MOZ_CRASH("PK11_GnerateKeyPair returned private key without public key");
   }
 
@@ -460,7 +460,7 @@ GenerateDSAKeyPair(PK11SlotInfo * slot,
   static_assert(MOZ_ARRAY_LENGTH(G) == 1024 / CHAR_BIT, "bad DSA G");
 
   PQGParams pqgParams  = {
-    NULL /*arena*/,
+    nullptr /*arena*/,
     { siBuffer, P, static_cast<unsigned int>(mozilla::ArrayLength(P)) },
     { siBuffer, Q, static_cast<unsigned int>(mozilla::ArrayLength(Q)) },
     { siBuffer, G, static_cast<unsigned int>(mozilla::ArrayLength(G)) }
@@ -484,8 +484,8 @@ KeyGenRunnable::Run()
       if (!slot) {
         mRv = NS_ERROR_UNEXPECTED;
       } else {
-        SECKEYPrivateKey *privk = NULL;
-        SECKEYPublicKey *pubk = NULL;
+        SECKEYPrivateKey *privk = nullptr;
+        SECKEYPublicKey *pubk = nullptr;
 
         switch (mKeyType) {
         case rsaKey:
@@ -538,11 +538,11 @@ SignRunnable::Run()
       // We need the output in PKCS#11 format, not DER encoding, so we must use
       // PK11_HashBuf and PK11_Sign instead of SEC_SignData.
 
-      SECItem sig = { siBuffer, NULL, 0 };
+      SECItem sig = { siBuffer, nullptr, 0 };
       int sigLength = PK11_SignatureLen(mPrivateKey);
       if (sigLength <= 0) {
         mRv = PRErrorCode_to_nsresult(PR_GetError());
-      } else if (!SECITEM_AllocItem(NULL, &sig, sigLength)) {
+      } else if (!SECITEM_AllocItem(nullptr, &sig, sigLength)) {
         mRv = PRErrorCode_to_nsresult(PR_GetError());
       } else {
         uint8_t hash[32]; // big enough for SHA-1 or SHA-256
@@ -586,13 +586,13 @@ NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(IdentityCryptoService, Init)
 NS_DEFINE_NAMED_CID(NS_IDENTITYCRYPTOSERVICE_CID);
 
 const mozilla::Module::CIDEntry kCIDs[] = {
-  { &kNS_IDENTITYCRYPTOSERVICE_CID, false, NULL, IdentityCryptoServiceConstructor },
-  { NULL }
+  { &kNS_IDENTITYCRYPTOSERVICE_CID, false, nullptr, IdentityCryptoServiceConstructor },
+  { nullptr }
 };
 
 const mozilla::Module::ContractIDEntry kContracts[] = {
   { "@mozilla.org/identity/crypto-service;1", &kNS_IDENTITYCRYPTOSERVICE_CID },
-  { NULL }
+  { nullptr }
 };
 
 const mozilla::Module kModule = {

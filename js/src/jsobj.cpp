@@ -2817,7 +2817,7 @@ JSObject::maybeDensifySparseElements(js::ExclusiveContext *cx, HandleObject obj)
     return ED_OK;
 }
 
-ObjectElements *
+static ObjectElements *
 AllocateElements(ThreadSafeContext *cx, JSObject *obj, uint32_t nelems)
 {
 #ifdef JSGC_GENERATIONAL
@@ -2828,7 +2828,7 @@ AllocateElements(ThreadSafeContext *cx, JSObject *obj, uint32_t nelems)
     return static_cast<js::ObjectElements *>(cx->malloc_(nelems * sizeof(HeapValue)));
 }
 
-ObjectElements *
+static ObjectElements *
 ReallocateElements(ThreadSafeContext *cx, JSObject *obj, ObjectElements *oldHeader,
                    uint32_t oldCount, uint32_t newCount)
 {
@@ -3502,15 +3502,8 @@ DefinePropertyOrElement(typename ExecutionModeTraits<mode>::ExclusiveContextType
         bool definesPast;
         if (!WouldDefinePastNonwritableLength(cx, obj, index, setterIsStrict, &definesPast))
             return false;
-        if (definesPast) {
-            /*
-             * Strict mode changes semantics and we must throw, so bail out of
-             * parallel execution if we are strict.
-             */
-            if (mode == ParallelExecution)
-                return !setterIsStrict;
+        if (definesPast)
             return true;
-        }
 
         JSObject::EnsureDenseResult result;
         if (mode == ParallelExecution) {
@@ -3543,12 +3536,8 @@ DefinePropertyOrElement(typename ExecutionModeTraits<mode>::ExclusiveContextType
             bool definesPast;
             if (!WouldDefinePastNonwritableLength(cx, arr, index, setterIsStrict, &definesPast))
                 return false;
-            if (definesPast) {
-                /* Bail out of parallel execution if we are strict to throw. */
-                if (mode == ParallelExecution)
-                    return !setterIsStrict;
+            if (definesPast)
                 return true;
-            }
         }
     }
 
@@ -4586,8 +4575,15 @@ js::ReportIfUndeclaredVarAssignment(JSContext *cx, HandleString propname)
 }
 
 bool
-JSObject::reportReadOnly(JSContext *cx, jsid id, unsigned report)
+JSObject::reportReadOnly(ThreadSafeContext *cxArg, jsid id, unsigned report)
 {
+    if (cxArg->isForkJoinSlice())
+        return cxArg->asForkJoinSlice()->reportError(ParallelBailoutUnsupportedVM, report);
+
+    if (!cxArg->isJSContext())
+        return true;
+
+    JSContext *cx = cxArg->asJSContext();
     RootedValue val(cx, IdToValue(id));
     return js_ReportValueErrorFlags(cx, report, JSMSG_READ_ONLY,
                                     JSDVG_IGNORE_STACK, val, NullPtr(),
@@ -4595,8 +4591,15 @@ JSObject::reportReadOnly(JSContext *cx, jsid id, unsigned report)
 }
 
 bool
-JSObject::reportNotConfigurable(JSContext *cx, jsid id, unsigned report)
+JSObject::reportNotConfigurable(ThreadSafeContext *cxArg, jsid id, unsigned report)
 {
+    if (cxArg->isForkJoinSlice())
+        return cxArg->asForkJoinSlice()->reportError(ParallelBailoutUnsupportedVM, report);
+
+    if (!cxArg->isJSContext())
+        return true;
+
+    JSContext *cx = cxArg->asJSContext();
     RootedValue val(cx, IdToValue(id));
     return js_ReportValueErrorFlags(cx, report, JSMSG_CANT_DELETE,
                                     JSDVG_IGNORE_STACK, val, NullPtr(),
@@ -4604,8 +4607,15 @@ JSObject::reportNotConfigurable(JSContext *cx, jsid id, unsigned report)
 }
 
 bool
-JSObject::reportNotExtensible(JSContext *cx, unsigned report)
+JSObject::reportNotExtensible(ThreadSafeContext *cxArg, unsigned report)
 {
+    if (cxArg->isForkJoinSlice())
+        return cxArg->asForkJoinSlice()->reportError(ParallelBailoutUnsupportedVM, report);
+
+    if (!cxArg->isJSContext())
+        return true;
+
+    JSContext *cx = cxArg->asJSContext();
     RootedValue val(cx, ObjectValue(*this));
     return js_ReportValueErrorFlags(cx, report, JSMSG_OBJECT_NOT_EXTENSIBLE,
                                     JSDVG_IGNORE_STACK, val, NullPtr(),
@@ -4827,16 +4837,11 @@ baseops::SetPropertyHelper(typename ExecutionModeTraits<mode>::ContextType cxArg
         }
 
         if (!extensible) {
-            /* Bail out of parallel execution if we are strict to throw. */
-            if (mode == ParallelExecution)
-                return !strict;
-
             /* Error in strict mode code, warn with extra warnings option, otherwise do nothing. */
-            JSContext *cx = cxArg->asJSContext();
             if (strict)
-                return obj->reportNotExtensible(cx);
-            if (cx->hasExtraWarningsOption())
-                return obj->reportNotExtensible(cx, JSREPORT_STRICT | JSREPORT_WARNING);
+                return obj->reportNotExtensible(cxArg);
+            if (mode == SequentialExecution && cxArg->asJSContext()->hasExtraWarningsOption())
+                return obj->reportNotExtensible(cxArg, JSREPORT_STRICT | JSREPORT_WARNING);
             return true;
         }
 
@@ -5381,7 +5386,7 @@ js_GetterOnlyPropertyStub(JSContext *cx, HandleObject obj, HandleId id, bool str
  * into other code.
  */
 
-void
+static void
 dumpValue(const Value &v)
 {
     if (v.isNull())

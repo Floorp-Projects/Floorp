@@ -1175,6 +1175,7 @@ struct DefaultHasher<AbstractFramePtr> {
 /*****************************************************************************/
 
 class InterpreterActivation;
+class ForkJoinActivation;
 
 namespace jit {
     class JitActivation;
@@ -1193,7 +1194,7 @@ class Activation
     // set).
     size_t savedFrameChain_;
 
-    enum Kind { Interpreter, Jit };
+    enum Kind { Interpreter, Jit, ForkJoin };
     Kind kind_;
 
     inline Activation(JSContext *cx, Kind kind_);
@@ -1216,6 +1217,9 @@ class Activation
     bool isJit() const {
         return kind_ == Jit;
     }
+    bool isForkJoin() const {
+        return kind_ == ForkJoin;
+    }
 
     InterpreterActivation *asInterpreter() const {
         JS_ASSERT(isInterpreter());
@@ -1224,6 +1228,10 @@ class Activation
     jit::JitActivation *asJit() const {
         JS_ASSERT(isJit());
         return (jit::JitActivation *)this;
+    }
+    ForkJoinActivation *asForkJoin() const {
+        JS_ASSERT(isForkJoin());
+        return (ForkJoinActivation *)this;
     }
 
     void saveFrameChain() {
@@ -1391,6 +1399,15 @@ class JitActivationIterator : public ActivationIterator
 };
 
 } // namespace jit
+
+class ForkJoinActivation : public Activation
+{
+    uint8_t *prevIonTop_;
+
+  public:
+    ForkJoinActivation(JSContext *cx);
+    ~ForkJoinActivation();
+};
 
 // Iterates over the frames of a single InterpreterActivation.
 class InterpreterFrameIterator

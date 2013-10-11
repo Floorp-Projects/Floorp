@@ -36,11 +36,11 @@ NS_DEFINE_NAMED_CID(MOZJSCOMPONENTLOADER_CID);
 NS_DEFINE_NAMED_CID(MOZ_JSSUBSCRIPTLOADER_CID);
 
 #define XPCONNECT_CIDENTRIES                                                  \
-  { &kNS_JS_ID_CID, false, NULL,  nsJSIDConstructor },                        \
-  { &kNS_XPCONNECT_CID, false, NULL,  nsIXPConnectConstructor },              \
-  { &kNS_SCRIPTERROR_CID, false, NULL, nsScriptErrorConstructor },            \
-  { &kMOZJSCOMPONENTLOADER_CID, false, NULL, mozJSComponentLoaderConstructor },\
-  { &kMOZ_JSSUBSCRIPTLOADER_CID, false, NULL, mozJSSubScriptLoaderConstructor },
+  { &kNS_JS_ID_CID, false, nullptr,  nsJSIDConstructor },                     \
+  { &kNS_XPCONNECT_CID, false, nullptr,  nsIXPConnectConstructor },           \
+  { &kNS_SCRIPTERROR_CID, false, nullptr, nsScriptErrorConstructor },         \
+  { &kMOZJSCOMPONENTLOADER_CID, false, nullptr, mozJSComponentLoaderConstructor },\
+  { &kMOZ_JSSUBSCRIPTLOADER_CID, false, nullptr, mozJSSubScriptLoaderConstructor },
 
 #define XPCONNECT_CONTRACTS                                                   \
   { XPC_ID_CONTRACTID, &kNS_JS_ID_CID },                                      \

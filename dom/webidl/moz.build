@@ -504,7 +504,7 @@ if CONFIG['MOZ_B2G_RIL']:
     WEBIDL_FILES += [
         'CFStateChangeEvent.webidl',
         'DataErrorEvent.webidl',
-        'IccCardLockErrorEvent.webidl',
+        'IccCardLockError.webidl',
         'MozCellBroadcast.webidl',
         'MozCellBroadcastEvent.webidl',
         'MozEmergencyCbModeEvent.webidl',

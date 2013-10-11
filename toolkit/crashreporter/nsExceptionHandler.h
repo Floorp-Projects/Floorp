@@ -82,11 +82,11 @@ void OOPInit();
 
 // Return true if a dump was found for |childPid|, and return the
 // path in |dump|.  The caller owns the last reference to |dump| if it
-// is non-NULL. The sequence parameter will be filled with an ordinal
+// is non-nullptr. The sequence parameter will be filled with an ordinal
 // indicating which remote process crashed first.
 bool TakeMinidumpForChild(uint32_t childPid,
                           nsIFile** dump,
-                          uint32_t* aSequence = NULL);
+                          uint32_t* aSequence = nullptr);
 
 #if defined(XP_WIN)
 typedef HANDLE ProcessHandle;

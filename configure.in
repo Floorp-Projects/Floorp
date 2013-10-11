@@ -3504,7 +3504,6 @@ for file in $MALLOC_HEADERS; do
   fi
 done
 
-MOZ_ALLOCATING_FUNCS="strndup posix_memalign memalign valloc"
 AC_CHECK_FUNCS(strndup posix_memalign memalign valloc)
 
 AC_CHECK_FUNCS(malloc_usable_size)
@@ -4015,7 +4014,6 @@ MOZ_WEBRTC=1
 MOZ_PEERCONNECTION=
 MOZ_SRTP=
 MOZ_WEBRTC_SIGNALING=
-MOZ_WEBRTC_IN_LIBXUL=
 MOZ_WEBRTC_ASSERT_ALWAYS=1
 MOZ_SCTP=
 MOZ_MEDIA_PLUGINS=
@@ -5192,9 +5190,6 @@ if test -n "$MOZ_WEBRTC"; then
 dnl enable once Signaling lands
     MOZ_WEBRTC_SIGNALING=1
     AC_DEFINE(MOZ_WEBRTC_SIGNALING)
-    if test "${OS_TARGET}" = "WINNT"; then
-        MOZ_WEBRTC_IN_LIBXUL=1
-    fi
 dnl enable once PeerConnection lands
     MOZ_PEERCONNECTION=1
     AC_DEFINE(MOZ_PEERCONNECTION)
@@ -5208,7 +5203,6 @@ AC_SUBST(MOZ_WEBRTC)
 AC_SUBST(MOZ_WEBRTC_LEAKING_TESTS)
 AC_SUBST(MOZ_WEBRTC_SIGNALING)
 AC_SUBST(MOZ_PEERCONNECTION)
-AC_SUBST(MOZ_WEBRTC_IN_LIBXUL)
 AC_SUBST(MOZ_WEBRTC_ASSERT_ALWAYS)
 AC_SUBST(MOZ_SCTP)
 AC_SUBST(MOZ_SRTP)
@@ -7153,7 +7147,7 @@ MOZ_ARG_ENABLE_BOOL(gczeal,
 [  --enable-gczeal         Enable zealous JavaScript GCing],
     JS_GC_ZEAL=1,
     JS_GC_ZEAL= )
-if test -n "$JS_GC_ZEAL"; then
+if test -n "$JS_GC_ZEAL" -o -n "$MOZ_DEBUG"; then
     AC_DEFINE(JS_GC_ZEAL)
 fi
 

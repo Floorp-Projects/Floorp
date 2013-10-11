@@ -115,7 +115,7 @@ wWinMain(HINSTANCE  hInstance, HINSTANCE  hPrevInstance,
               L"Click Ignore to continue running the Application.",
               lpszCmdLine);
     msg[size - 1] = L'\0';
-    return MessageBoxW(NULL, msg, L"NSGlue_Assertion",
+    return MessageBoxW(nullptr, msg, L"NSGlue_Assertion",
                        MB_ICONSTOP | MB_SYSTEMMODAL |
                        MB_ABORTRETRYIGNORE | MB_DEFBUTTON3);
 }

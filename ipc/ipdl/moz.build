@@ -9,6 +9,8 @@ if CONFIG['MOZ_IPDL_TESTS']:
 
 MODULE = 'ipdlgen'
 
+FAIL_ON_WARNINGS = True
+
 LIBXUL_LIBRARY = True
 
 LIBRARY_NAME = 'mozipdlgen_s'

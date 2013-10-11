@@ -24,6 +24,7 @@
 #include "nsITimer.h"
 #include "mozilla/Mutex.h"
 #include "DataChannelProtocol.h"
+#include "DataChannelListener.h"
 #ifdef SCTP_DTLS_SUPPORTED
 #include "mtransport/sigslot.h"
 #include "mtransport/transportflow.h"
@@ -90,29 +91,6 @@ public:
   size_t   mLength;
   char     *mData;
 };
-
-// Implemented by consumers of a Channel to receive messages.
-// Can't nest it in DataChannelConnection because C++ doesn't allow forward
-// refs to embedded classes
-class DataChannelListener {
-public:
-  virtual ~DataChannelListener() {}
-
-  // Called when a DOMString message is received.
-  virtual nsresult OnMessageAvailable(nsISupports *aContext,
-                                      const nsACString& message) = 0;
-
-  // Called when a binary message is received.
-  virtual nsresult OnBinaryMessageAvailable(nsISupports *aContext,
-                                            const nsACString& message) = 0;
-
-  // Called when the channel is connected
-  virtual nsresult OnChannelConnected(nsISupports *aContext) = 0;
-
-  // Called when the channel is closed
-  virtual nsresult OnChannelClosed(nsISupports *aContext) = 0;
-};
-
 
 // One per PeerConnection
 class DataChannelConnection: public nsITimerCallback

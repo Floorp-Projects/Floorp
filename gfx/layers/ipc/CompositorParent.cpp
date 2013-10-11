@@ -547,6 +547,7 @@ CompositorParent::Composite()
                   15 + (int)(TimeStamp::Now() - mExpectedComposeTime).ToMilliseconds());
   }
 #endif
+  profiler_tracing("Paint", "Composite", TRACING_INTERVAL_END);
 }
 
 void

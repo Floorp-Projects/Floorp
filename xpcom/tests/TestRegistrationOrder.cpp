@@ -111,7 +111,7 @@ bool TestContractFirst()
   nsCOMPtr<nsIComponentRegistrar> r;
   NS_GetComponentRegistrar(getter_AddRefs(r));
 
-  nsCID* cid = NULL;
+  nsCID* cid = nullptr;
   nsresult rv = r->ContractIDToCID("@mozilla.org/RegTestOrderC;1", &cid);
   if (NS_FAILED(rv)) {
     fail("RegTestOrderC: contract not registered");
@@ -175,7 +175,7 @@ int main(int argc, char** argv)
   XRE_AddManifestLocation(NS_COMPONENT_LOCATION,
                           nsCOMPtr<nsIFile>(GetRegDirectory(regPath, "extension", "extComponent.manifest")));
   XRE_AddJarManifestLocation(NS_COMPONENT_LOCATION,
-                          nsCOMPtr<nsIFile>(GetRegDirectory(regPath, "extension2.jar", NULL)));
+                          nsCOMPtr<nsIFile>(GetRegDirectory(regPath, "extension2.jar", nullptr)));
   ScopedXPCOM xpcom("RegistrationOrder");
   if (xpcom.failed())
     return 1;

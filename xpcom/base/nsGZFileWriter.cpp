@@ -46,7 +46,7 @@ nsGZFileWriter::Init(nsIFile* aFile)
   mGZFile = gzdopen(dup(fileno(file)), "wb");
   fclose(file);
 
-  // gzdopen returns NULL on error.
+  // gzdopen returns nullptr on error.
   NS_ENSURE_TRUE(mGZFile, NS_ERROR_FAILURE);
   mInitialized = true;
 

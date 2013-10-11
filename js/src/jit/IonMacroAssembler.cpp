@@ -902,11 +902,10 @@ MacroAssembler::compareStrings(JSOp op, Register left, Register right, Register 
 
 void
 MacroAssembler::checkInterruptFlagsPar(const Register &tempReg,
-                                            Label *fail)
+                                       Label *fail)
 {
     movePtr(ImmPtr(&GetIonContext()->runtime->interrupt), tempReg);
-    load32(Address(tempReg, 0), tempReg);
-    branchTest32(Assembler::NonZero, tempReg, tempReg, fail);
+    branch32(Assembler::NonZero, Address(tempReg, 0), Imm32(0), fail);
 }
 
 void
@@ -1312,56 +1311,7 @@ MacroAssembler::handleFailure(ExecutionMode executionMode)
         sps_->reenter(*this, InvalidReg);
 }
 
-void
-MacroAssembler::pushCalleeToken(Register callee, ExecutionMode mode)
-{
-    // Tag and push a callee, then clear the tag after pushing. This is needed
-    // if we dereference the callee pointer after pushing it as part of a
-    // frame.
-    tagCallee(callee, mode);
-    push(callee);
-    clearCalleeTag(callee, mode);
-}
-
-void
-MacroAssembler::PushCalleeToken(Register callee, ExecutionMode mode)
-{
-    tagCallee(callee, mode);
-    Push(callee);
-    clearCalleeTag(callee, mode);
-}
-
-void
-MacroAssembler::tagCallee(Register callee, ExecutionMode mode)
-{
-    switch (mode) {
-      case SequentialExecution:
-        // CalleeToken_Function is untagged, so we don't need to do anything.
-        return;
-      case ParallelExecution:
-        orPtr(Imm32(CalleeToken_ParallelFunction), callee);
-        return;
-      default:
-        MOZ_ASSUME_UNREACHABLE("No such execution mode");
-    }
-}
-
-void
-MacroAssembler::clearCalleeTag(Register callee, ExecutionMode mode)
-{
-    switch (mode) {
-      case SequentialExecution:
-        // CalleeToken_Function is untagged, so we don't need to do anything.
-        return;
-      case ParallelExecution:
-        andPtr(Imm32(~0x3), callee);
-        return;
-      default:
-        MOZ_ASSUME_UNREACHABLE("No such execution mode");
-    }
-}
-
-void printf0_(const char *output) {
+static void printf0_(const char *output) {
     printf("%s", output);
 }
 
@@ -1381,7 +1331,7 @@ MacroAssembler::printf(const char *output)
     PopRegsInMask(RegisterSet::Volatile());
 }
 
-void printf1_(const char *output, uintptr_t value) {
+static void printf1_(const char *output, uintptr_t value) {
     char *line = JS_sprintf_append(nullptr, output, value);
     printf("%s", line);
     js_free(line);

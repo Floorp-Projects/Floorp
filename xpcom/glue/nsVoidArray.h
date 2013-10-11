@@ -108,11 +108,11 @@ public:
   bool EnumerateBackwards(nsVoidArrayEnumFunc aFunc, void* aData);
 
   // Measures the size of the array's element storage, and if
-  // |aSizeOfElementIncludingThis| is non-NULL, measures the size of things
+  // |aSizeOfElementIncludingThis| is non-nullptr, measures the size of things
   // pointed to by elements.
   size_t SizeOfExcludingThis(
            nsVoidArraySizeOfElementIncludingThisFunc aSizeOfElementIncludingThis,
-           mozilla::MallocSizeOf aMallocSizeOf, void* aData = NULL) const;
+           mozilla::MallocSizeOf aMallocSizeOf, void* aData = nullptr) const;
 
 protected:
   bool GrowArrayBy(int32_t aGrowBy);

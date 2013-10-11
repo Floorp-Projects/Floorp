@@ -33,10 +33,10 @@ NS_DEFINE_NAMED_CID(NS_SAMPLE_CID);
 // Build a table of ClassIDs (CIDs) which are implemented by this module. CIDs
 // should be completely unique UUIDs.
 // each entry has the form { CID, service, factoryproc, constructorproc }
-// where factoryproc is usually NULL.
+// where factoryproc is usually nullptr.
 static const mozilla::Module::CIDEntry kSampleCIDs[] = {
-    { &kNS_SAMPLE_CID, false, NULL, nsSampleImplConstructor },
-    { NULL }
+    { &kNS_SAMPLE_CID, false, nullptr, nsSampleImplConstructor },
+    { nullptr }
 };
 
 // Build a table which maps contract IDs to CIDs.
@@ -45,7 +45,7 @@ static const mozilla::Module::CIDEntry kSampleCIDs[] = {
 // to modify or extend functionality.
 static const mozilla::Module::ContractIDEntry kSampleContracts[] = {
     { NS_SAMPLE_CONTRACTID, &kNS_SAMPLE_CID },
-    { NULL }
+    { nullptr }
 };
 
 // Category entries are category/key/value triples which can be used
@@ -55,7 +55,7 @@ static const mozilla::Module::ContractIDEntry kSampleContracts[] = {
 // @see nsICategoryManager for information on retrieving category data.
 static const mozilla::Module::CategoryEntry kSampleCategories[] = {
     { "my-category", "my-key", NS_SAMPLE_CONTRACTID },
-    { NULL }
+    { nullptr }
 };
 
 static const mozilla::Module kSampleModule = {

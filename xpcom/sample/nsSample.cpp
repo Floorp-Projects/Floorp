@@ -44,7 +44,7 @@ nsSampleImpl::~nsSampleImpl()
  * The _CI variant adds support for nsIClassInfo, which permits introspection
  * and interface flattening.
  */
-NS_IMPL_CLASSINFO(nsSampleImpl, NULL, 0, NS_SAMPLE_CID)
+NS_IMPL_CLASSINFO(nsSampleImpl, nullptr, 0, NS_SAMPLE_CID)
 NS_IMPL_ISUPPORTS1_CI(nsSampleImpl, nsISample)
 /**
  * Notice that in the protoype for this function, the NS_IMETHOD macro was
