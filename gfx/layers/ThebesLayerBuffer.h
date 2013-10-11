@@ -146,6 +146,9 @@ protected:
    * buffer at the other end, not 2D rotation!
    */
   nsIntPoint            mBufferRotation;
+  // When this is true it means that all pixels have moved inside the buffer.
+  // It's not possible to sync with another buffer without a full copy.
+  bool                  mDidSelfCopy;
 };
 
 /**
