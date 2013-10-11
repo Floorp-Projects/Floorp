@@ -15,7 +15,7 @@ Cu.import("resource:///modules/devtools/shared/event-emitter.js");
 
 var require = Cu.import("resource://gre/modules/devtools/Loader.jsm", {}).devtools.require;
 let Telemetry = require("devtools/shared/telemetry");
-let {TouchEventHandler} = require("devtools/shared/touch-events");
+let {TouchEventHandler} = require("devtools/touch-events");
 
 this.EXPORTED_SYMBOLS = ["ResponsiveUIManager"];
 

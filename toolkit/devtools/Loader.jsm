@@ -57,6 +57,7 @@ var BuiltinProvider = {
         "devtools/toolkit/webconsole": "resource://gre/modules/devtools/toolkit/webconsole",
         "devtools/app-actor-front": "resource://gre/modules/devtools/app-actor-front.js",
         "devtools/styleinspector/css-logic": "resource://gre/modules/devtools/styleinspector/css-logic",
+        "devtools/touch-events": "resource://gre/modules/devtools/touch-events",
         "devtools/client": "resource://gre/modules/devtools/client",
 
         "escodegen/escodegen": "resource://gre/modules/devtools/escodegen/escodegen",
@@ -98,6 +99,7 @@ var SrcdirProvider = {
     let webconsoleURI = this.fileURI(OS.Path.join(srcdir, "toolkit", "devtools", "webconsole"));
     let appActorURI = this.fileURI(OS.Path.join(srcdir, "toolkit", "devtools", "apps", "app-actor-front.js"));
     let cssLogicURI = this.fileURI(OS.Path.join(toolkitURI, "styleinspector", "css-logic"));
+    let touchEventsURI = this.fileURI(OS.Path.join(toolkitDir, "touch-events"));
     let clientURI = this.fileURI(OS.Path.join(srcdir, "toolkit", "devtools", "client"));
     let mainURI = this.fileURI(OS.Path.join(srcdir, "browser", "devtools", "main.js"));
     this.loader = new loader.Loader({
@@ -113,6 +115,7 @@ var SrcdirProvider = {
         "devtools/client": clientURI,
         "devtools": devtoolsURI,
         "devtools/styleinspector/css-logic": cssLogicURI,
+        "devtools/touch-events": touchEventsURI,
         "main": mainURI
       },
       globals: loaderGlobals
