@@ -157,6 +157,12 @@ static JS_INLINE void* js_calloc(size_t bytes)
     return calloc(bytes, 1);
 }
 
+static JS_INLINE void* js_calloc(size_t nmemb, size_t size)
+{
+    JS_OOM_POSSIBLY_FAIL();
+    return calloc(nmemb, size);
+}
+
 static JS_INLINE void* js_realloc(void* p, size_t bytes)
 {
     JS_OOM_POSSIBLY_FAIL();

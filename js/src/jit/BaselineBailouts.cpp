@@ -124,6 +124,8 @@ struct BaselineStackBuilder
 
     bool enlarge() {
         JS_ASSERT(buffer_ != NULL);
+        if (bufferTotal_ & mozilla::tl::MulOverflowMask<2>::value)
+            return false;
         size_t newSize = bufferTotal_ * 2;
         uint8_t *newBuffer = reinterpret_cast<uint8_t *>(js_calloc(newSize));
         if (!newBuffer)
