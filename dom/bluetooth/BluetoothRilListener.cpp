@@ -54,13 +54,6 @@ IccListener::NotifyStkSessionEnd()
 }
 
 NS_IMETHODIMP
-IccListener::NotifyIccCardLockError(const nsAString & lockType,
-                                    uint32_t retryCount)
-{
-  return NS_OK;
-}
-
-NS_IMETHODIMP
 IccListener::NotifyCardStateChanged()
 {
   return NS_OK;
