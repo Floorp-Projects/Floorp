@@ -11,7 +11,7 @@ interface nsIInputStream;
 interface nsIFile;
 interface nsICertificatePrincipal;
 
-[scriptable, uuid(e1c028bc-c478-11da-95a8-00e08161165f)]
+[scriptable, uuid(fad6f72f-13d8-4e26-9173-53007a4afe71)]
 interface nsIZipEntry : nsISupports
 {
     /**
@@ -51,6 +51,10 @@ interface nsIZipEntry : nsISupports
      * It is impossible for a file to be synthetic.
      */
     readonly attribute boolean          isSynthetic;
+    /**
+     * The UNIX style file permissions of this item.
+     */
+    readonly attribute unsigned long    permissions;
 };
 
 [scriptable, uuid(38d6d07a-8a58-4fe7-be8b-ef6472fa83ff)]
