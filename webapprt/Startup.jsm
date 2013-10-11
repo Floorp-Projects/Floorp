@@ -25,6 +25,7 @@ Cu.import("resource://gre/modules/osfile.jsm");
 // Initialize window-independent handling of webapps- notifications.
 Cu.import("resource://webapprt/modules/WebappsHandler.jsm");
 Cu.import("resource://webapprt/modules/WebappRT.jsm");
+Cu.import("resource://webapprt/modules/WebRTCHandler.jsm");
 
 const PROFILE_DIR = OS.Constants.Path.profileDir;
 

@@ -1,0 +1,17 @@
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this file,
+   - You can obtain one at http://mozilla.org/MPL/2.0/.  -->
+
+<!-- LOCALIZATION NOTE: These are localized strings for the getUserMedia dialog
+   - to ask permissions in the webapp runtime. -->
+
+<!ENTITY getUserMediaDialog.title                 "Media Sharing">
+<!ENTITY getUserMediaDialog.buttonlabelaccept     "Share">
+<!ENTITY getUserMediaDialog.buttonaccesskeyaccept "S">
+<!ENTITY getUserMediaDialog.buttonlabelcancel     "Cancel">
+<!ENTITY getUserMediaDialog.buttonaccesskeycancel "n">
+
+<!ENTITY getUserMediaDialog.video.label           "Select camera">
+<!ENTITY getUserMediaDialog.video.noVideo         "No video">
+<!ENTITY getUserMediaDialog.audio.label           "Select microphone">
+<!ENTITY getUserMediaDialog.audio.noAudio         "No audio">
