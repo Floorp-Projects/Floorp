@@ -394,5 +394,39 @@ AbstractFile.writeAtomic =
   return bytesWritten;
 };
 
+/**
+  * Remove an existing directory and its contents.
+  *
+  * @param {string} path The name of the directory.
+  * @param {*=} options Additional options.
+  *   - {bool} ignoreAbsent If |false|, throw an error if the directory doesn't
+  *     exist. |true| by default.
+  *   - {boolean} ignorePermissions If |true|, remove the file even when lacking write
+  *     permission.
+  *
+  * @throws {OS.File.Error} In case of I/O error, in particular if |path| is
+            not a directory.
+  */
+AbstractFile.removeDir = function(path, options = {}) {
+  let iterator = new OS.File.DirectoryIterator(path);
+  if (!iterator.exists() && options.ignoreAbsent) {
+    return;
+  }
+
+  try {
+    for (let entry in iterator) {
+      if (entry.isDir) {
+        OS.File.removeDir(entry.path, options);
+      } else {
+        OS.File.remove(entry.path, options);
+      }
+    }
+  } finally {
+    iterator.close();
+  }
+
+  OS.File.removeEmptyDir(path);
+};
+
    exports.OS.Shared.AbstractFile = AbstractFile;
 })(this);
