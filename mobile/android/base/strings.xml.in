@@ -19,6 +19,9 @@
 #includesubst @BOOKMARKSPATH@
 <resources>
   <string name="moz_app_displayname">@MOZ_APP_DISPLAYNAME@</string>
+  <string name="android_package_name">@ANDROID_PACKAGE_NAME@</string>
+  <string name="content_authority_db_browser">@ANDROID_PACKAGE_NAME@.db.browser</string>
+  <string name="moz_android_shared_account_type">@MOZ_ANDROID_SHARED_ACCOUNT_TYPE@</string>
 #include ../services/strings.xml.in
   <string name="no_space_to_start_error">&no_space_to_start_error;</string>
   <string name="error_loading_file">&error_loading_file;</string>
