@@ -22,6 +22,7 @@ class nsPIDOMWindow;
 namespace mozilla {
 namespace dom {
 class CameraPictureOptions;
+class CameraRecorderOptions;
 template<typename T> class Optional;
 }
 class ErrorResult;
@@ -84,8 +85,16 @@ public:
                    ErrorResult& aRv);
   already_AddRefed<nsICameraPreviewStateChange> GetOnPreviewStateChange() const;
   void SetOnPreviewStateChange(nsICameraPreviewStateChange* aOnStateChange);
-  void GetPreviewStreamVideoMode(JSContext* cx, JS::Handle<JS::Value> aOptions, nsICameraPreviewStreamCallback* onSuccess, const dom::Optional<nsICameraErrorCallback* >& onError, ErrorResult& aRv);
-  void StartRecording(JSContext* cx, JS::Handle<JS::Value> aOptions, nsDOMDeviceStorage& storageArea, const nsAString& filename, nsICameraStartRecordingCallback* onSuccess, const dom::Optional<nsICameraErrorCallback* >& onError, ErrorResult& aRv);
+  void GetPreviewStreamVideoMode(const dom::CameraRecorderOptions& aOptions,
+                                 nsICameraPreviewStreamCallback* onSuccess,
+                                 const dom::Optional<nsICameraErrorCallback* >& onError,
+                                 ErrorResult& aRv);
+  void StartRecording(const dom::CameraStartRecordingOptions& aOptions,
+                      nsDOMDeviceStorage& storageArea,
+                      const nsAString& filename,
+                      nsICameraStartRecordingCallback* onSuccess,
+                      const dom::Optional<nsICameraErrorCallback* >& onError,
+                      ErrorResult& aRv);
   void StopRecording(ErrorResult& aRv);
   void GetPreviewStream(JSContext* cx, JS::Handle<JS::Value> aOptions, nsICameraPreviewStreamCallback* onSuccess, const dom::Optional<nsICameraErrorCallback* >& onError, ErrorResult& aRv);
   void ResumePreview(ErrorResult& aRv);

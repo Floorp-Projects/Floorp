@@ -110,53 +110,6 @@ interface nsICameraCapabilities : nsISupports
     readonly attribute jsval        recorderProfiles;
 };
 
-/* These properties affect the video recording preview, e.g.
-      {
-         profile: "1080p",
-         rotation: 0
-      }
-
-   'profile' is one of the profiles returned by
-   nsICameraCapabilities.recorderProfiles'; if this profile is missing,
-   an arbitrary profile will be chosen.
-
-   'rotation' is the degrees clockwise to rotate the preview; if
-   this option is not supported, it will be ignored; if this option
-   is missing, the default is 0.
-*/
-dictionary CameraRecorderOptions
-{
-    DOMString profile;
-    long      rotation;
-};
-
-/* These properties affect the actual video recording, e.g.
-      {
-         rotation: 0,
-         maxFileSizeBytes: 1024 * 1024,
-         maxVideoLengthMs: 0
-      }
-
-   'rotation' is the degrees clockwise to rotate the recorded video; if
-   this options is not supported, it will be ignored; if this option is
-   missing, the default is 0.
-
-   'maxFileSizeBytes' is the maximum size in bytes to which the recorded
-   video file will be allowed to grow.
-
-   'maxVideoLengthMs' is the maximum length in milliseconds to which the
-   recorded video will be allowed to grow.
-
-   if either 'maxFileSizeBytes' or 'maxVideoLengthMs' is missing, zero,
-   or negative, that limit will be disabled.
-*/
-dictionary CameraStartRecordingOptions
-{
-    long      rotation;
-    long long maxFileSizeBytes;
-    long long maxVideoLengthMs;
-};
-
 [scriptable, function, uuid(0444a687-4bc9-462c-8246-5423f0fe46a4)]
 interface nsICameraPreviewStreamCallback : nsISupports
 {

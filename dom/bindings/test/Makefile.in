@@ -10,10 +10,7 @@ ifdef .PYMAKE
 .NOTPARALLEL:
 endif
 
-# Need this to find all our DOM source files.
-include $(topsrcdir)/dom/dom-config.mk
-
-# And need this for $(test_webidl_files) and $(preprocessed_test_webidl_files)
+# Need this for $(test_webidl_files)
 include ../webidlsrcs.mk
 
 # But the webidl actually lives in our parent dir
