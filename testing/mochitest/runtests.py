@@ -364,7 +364,7 @@ class MochitestUtilsMixin(object):
     testHost = "http://mochi.test:8888"
     testURL = ("/").join([testHost, self.TEST_PATH, options.testPath])
     if os.path.isfile(os.path.join(self.oldcwd, os.path.dirname(__file__), self.TEST_PATH, options.testPath)) and options.repeat > 0:
-       testURL = ("/").join([testHost, self.PLAIN_LOOP_PATH])
+       testURL = ("/").join([testHost, self.TEST_PATH, os.path.dirname(options.testPath)])
     if options.chrome or options.a11y:
        testURL = ("/").join([testHost, self.CHROME_PATH])
     elif options.browserChrome:
