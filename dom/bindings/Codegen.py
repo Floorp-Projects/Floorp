@@ -2703,8 +2703,7 @@ def getJSToNativeConversionInfo(type, descriptorProvider, failureCode=None,
     # A helper function for wrapping up the template body for
     # possibly-nullable objecty stuff
     def wrapObjectTemplate(templateBody, type, codeToSetNull, failureCode=None):
-        if isNullOrUndefined:
-            assert type.nullable()
+        if isNullOrUndefined and type.nullable():
             # Just ignore templateBody and set ourselves to null.
             # Note that we don't have to worry about default values
             # here either, since we already examined this value.
@@ -4988,15 +4987,6 @@ class CGMethodCall(CGThing):
                     CGWrapper(CGIndenter(CGGeneric(code)), pre="\n", post="\n"))
             return
 
-        # We don't handle [TreatUndefinedAs=Missing] arguments in overload
-        # resolution yet.
-        for (_, sigArgs) in signatures:
-            for arg in sigArgs:
-                if arg.treatUndefinedAs == "Missing":
-                    raise TypeError("No support for [TreatUndefinedAs=Missing] "
-                                    "handling in overload resolution yet: %s" %
-                                    arg.location)
-
         # Need to find the right overload
         maxArgCount = method.maxArgCount
         allowedArgCounts = method.allowedArgCounts
@@ -5086,22 +5076,30 @@ class CGMethodCall(CGThing):
                 else:
                     failureCode = None
                 type = distinguishingType(signature)
-                # The argument at index distinguishingIndex can't possibly
-                # be unset here, because we've already checked that argc is
-                # large enough that we can examine this argument.
+                # The argument at index distinguishingIndex can't possibly be
+                # unset here, because we've already checked that argc is large
+                # enough that we can examine this argument.  But note that we
+                # still want to claim that optional arguments are optional, in
+                # case undefined was passed in.
+                argIsOptional = (distinguishingArgument(signature).optional and
+                                 not distinguishingArgument(signature).defaultValue)
                 testCode = instantiateJSToNativeConversion(
                     getJSToNativeConversionInfo(type, descriptor,
                                                 failureCode=failureCode,
                                                 isDefinitelyObject=isDefinitelyObject,
                                                 isNullOrUndefined=isNullOrUndefined,
+                                                isOptional=argIsOptional,
                                                 sourceDescription=(argDesc % (distinguishingIndex + 1))),
                     {
                         "declName" : "arg%d" % distinguishingIndex,
                         "holderName" : ("arg%d" % distinguishingIndex) + "_holder",
                         "val" : distinguishingArg,
                         "mutableVal" : distinguishingArg,
-                        "obj" : "obj"
-                        })
+                        "obj" : "obj",
+                        "haveValue": "args.hasDefined(%d)" % distinguishingIndex
+                        },
+                    checkForValue=argIsOptional
+                    )
                 caseBody.append(CGIndenter(testCode, indent));
                 # If we got this far, we know we unwrapped to the right
                 # C++ type, so just do the call.  Start conversion with
@@ -5137,7 +5135,39 @@ class CGMethodCall(CGThing):
                                for t in distinguishingTypes)
                 return True
 
-            # First check for null or undefined.  That means looking for
+            def needsNullOrUndefinedCase(type):
+                """
+                Return true if the type needs a special isNullOrUndefined() case
+                """
+                return ((type.nullable() and
+                        hasConditionalConversion(type)) or
+                        type.isDictionary())
+
+            # First check for undefined and optional distinguishing arguments
+            # and output a special branch for that case.  Note that we don't
+            # use distinguishingArgument here because we actualy want to
+            # exclude variadic arguments.  Also note that we skip this check if
+            # we plan to output a isNullOrUndefined() special case for this
+            # argument anyway, since that will subsume our isUndefined() check.
+            # This is safe, because there can be at most one nullable
+            # distinguishing argument, so if we're it we'll definitely get
+            # picked up by the nullable handling.  Also, we can skip this check
+            # if the argument has an unconditional conversion later on.
+            undefSigs = [s for s in possibleSignatures if
+                         distinguishingIndex < len(s[1]) and
+                         s[1][distinguishingIndex].optional and
+                         hasConditionalConversion(s[1][distinguishingIndex].type) and
+                         not needsNullOrUndefinedCase(s[1][distinguishingIndex].type)]
+            # Can't have multiple signatures with an optional argument at the
+            # same index.
+            assert len(undefSigs) < 2
+            if len(undefSigs) > 0:
+                caseBody.append(CGGeneric("if (%s.isUndefined()) {" %
+                                          distinguishingArg))
+                tryCall(undefSigs[0], 2, isNullOrUndefined=True)
+                caseBody.append(CGGeneric("}"))
+
+            # Next, check for null or undefined.  That means looking for
             # nullable arguments at the distinguishing index and outputting a
             # separate branch for them.  But if the nullable argument has an
             # unconditional conversion, we don't need to do that.  The reason
@@ -5147,11 +5177,8 @@ class CGMethodCall(CGThing):
             # through to the unconditional conversion we have, if any, since
             # they will fail whatever the conditions on the input value are for
             # our other conversions.
-            nullOrUndefSigs = [
-                s for s in possibleSignatures
-                if ((distinguishingType(s).nullable() and
-                     hasConditionalConversion(distinguishingType(s))) or
-                    distinguishingType(s).isDictionary())]
+            nullOrUndefSigs = [s for s in possibleSignatures
+                               if needsNullOrUndefinedCase(distinguishingType(s))]
             # Can't have multiple nullable types here
             assert len(nullOrUndefSigs) < 2
             if len(nullOrUndefSigs) > 0:
