@@ -18,6 +18,7 @@
 #ifdef JS_ION_PERF
 # include "jit/PerfSpewer.h"
 #endif
+#include "jit/ParallelFunctions.h"
 #include "jit/VMFunctions.h"
 #include "vm/Shape.h"
 
@@ -3661,6 +3662,76 @@ SetElementIC::reset()
 }
 
 bool
+SetElementParIC::attachDenseElement(LockedJSContext &cx, IonScript *ion, JSObject *obj,
+                                    const Value &idval)
+{
+    MacroAssembler masm(cx);
+    DispatchStubPrepender attacher(*this);
+    if (!GenerateSetDenseElement(cx, masm, attacher, obj, idval,
+                                 object(), index(), value(),
+                                 tempToUnboxIndex(), temp()))
+    {
+        return false;
+    }
+
+    return linkAndAttachStub(cx, masm, attacher, ion, "parallel dense array");
+}
+
+bool
+SetElementParIC::attachTypedArrayElement(LockedJSContext &cx, IonScript *ion,
+                                         TypedArrayObject *tarr)
+{
+    MacroAssembler masm(cx);
+    DispatchStubPrepender attacher(*this);
+    if (!GenerateSetTypedArrayElement(cx, masm, attacher, tarr,
+                                      object(), index(), value(),
+                                      tempToUnboxIndex(), temp(), tempFloat()))
+    {
+        return false;
+    }
+
+    return linkAndAttachStub(cx, masm, attacher, ion, "parallel typed array");
+}
+
+ParallelResult
+SetElementParIC::update(ForkJoinSlice *slice, size_t cacheIndex, HandleObject obj,
+                        HandleValue idval, HandleValue value)
+{
+    IonScript *ion = GetTopIonJSScript(slice)->parallelIonScript();
+    SetElementParIC &cache = ion->getCache(cacheIndex).toSetElementPar();
+
+    // Avoid unnecessary locking if cannot attach stubs.
+    if (!cache.canAttachStub())
+        return SetElementPar(slice, obj, idval, value, cache.strict());
+
+    {
+        LockedJSContext cx(slice);
+
+        if (cache.canAttachStub()) {
+            bool alreadyStubbed;
+            if (!cache.hasOrAddStubbedShape(cx, obj->lastProperty(), &alreadyStubbed))
+                return TP_FATAL;
+            if (alreadyStubbed)
+                return SetElementPar(slice, obj, idval, value, cache.strict());
+
+            bool attachedStub = false;
+            if (IsDenseElementSetInlineable(obj, idval)) {
+                if (!cache.attachDenseElement(cx, ion, obj, idval))
+                    return TP_FATAL;
+                attachedStub = true;
+            }
+            if (!attachedStub && IsTypedArrayElementSetInlineable(obj, idval, value)) {
+                TypedArrayObject *tarr = &obj->as<TypedArrayObject>();
+                if (!cache.attachTypedArrayElement(cx, ion, tarr))
+                    return TP_FATAL;
+            }
+        }
+    }
+
+    return SetElementPar(slice, obj, idval, value, cache.strict());
+}
+
+bool
 GetElementParIC::attachReadSlot(LockedJSContext &cx, IonScript *ion, JSObject *obj,
                                 const Value &idval, PropertyName *name, JSObject *holder,
                                 Shape *shape)
@@ -3734,7 +3805,6 @@ GetElementParIC::update(ForkJoinSlice *slice, size_t cacheIndex, HandleObject ob
                 return TP_FATAL;
 
             bool attachedStub = false;
-
             if (cache.monitoredResult() &&
                 GetElementIC::canAttachGetProp(obj, idval, id))
             {

@@ -30,7 +30,8 @@ namespace jit {
     _(CallsiteClone)                                            \
     _(GetPropertyPar)                                           \
     _(GetElementPar)                                            \
-    _(SetPropertyPar)
+    _(SetPropertyPar)                                           \
+    _(SetElementPar)
 
 // Forward declarations of Cache kinds.
 #define FORWARD_DECLARE(kind) class kind##IC;
@@ -1165,6 +1166,68 @@ class SetPropertyParIC : public ParallelIonCache
 
     static ParallelResult update(ForkJoinSlice *slice, size_t cacheIndex, HandleObject obj,
                                  HandleValue value);
+};
+
+class SetElementParIC : public ParallelIonCache
+{
+  protected:
+    Register object_;
+    Register tempToUnboxIndex_;
+    Register temp_;
+    FloatRegister tempFloat_;
+    ValueOperand index_;
+    ConstantOrRegister value_;
+    bool strict_;
+
+  public:
+    SetElementParIC(Register object, Register tempToUnboxIndex, Register temp,
+                    FloatRegister tempFloat, ValueOperand index, ConstantOrRegister value,
+                    bool strict)
+      : object_(object),
+        tempToUnboxIndex_(tempToUnboxIndex),
+        temp_(temp),
+        tempFloat_(tempFloat),
+        index_(index),
+        value_(value),
+        strict_(strict)
+    {
+    }
+
+    CACHE_HEADER(SetElementPar)
+
+#ifdef JS_CPU_X86
+    // x86 lacks a general purpose scratch register for dispatch caches and
+    // must be given one manually.
+    void initializeAddCacheState(LInstruction *ins, AddCacheState *addState);
+#endif
+
+    Register object() const {
+        return object_;
+    }
+    Register tempToUnboxIndex() const {
+        return tempToUnboxIndex_;
+    }
+    Register temp() const {
+        return temp_;
+    }
+    FloatRegister tempFloat() const {
+        return tempFloat_;
+    }
+    ValueOperand index() const {
+        return index_;
+    }
+    ConstantOrRegister value() const {
+        return value_;
+    }
+    bool strict() const {
+        return strict_;
+    }
+
+    bool attachDenseElement(LockedJSContext &cx, IonScript *ion, JSObject *obj, const Value &idval);
+    bool attachTypedArrayElement(LockedJSContext &cx, IonScript *ion, TypedArrayObject *tarr);
+
+    static ParallelResult update(ForkJoinSlice *slice, size_t cacheIndex, HandleObject obj,
+                                 HandleValue idval, HandleValue value);
 };
 
 #undef CACHE_HEADER
