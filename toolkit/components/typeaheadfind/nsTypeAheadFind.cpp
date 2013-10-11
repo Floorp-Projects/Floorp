@@ -919,17 +919,15 @@ nsTypeAheadFind::Find(const nsAString& aSearchString, bool aLinksOnly,
   *aResult = FIND_NOTFOUND;
 
   nsCOMPtr<nsIPresShell> presShell (GetPresShell());
-  if (!presShell) {
+  if (!presShell) {    
     nsCOMPtr<nsIDocShell> ds (do_QueryReferent(mDocShell));
     NS_ENSURE_TRUE(ds, NS_ERROR_FAILURE);
 
     presShell = ds->GetPresShell();
-    NS_ENSURE_TRUE(presShell, NS_ERROR_FAILURE);
-    mPresShell = do_GetWeakReference(presShell);
-  }
-
+    mPresShell = do_GetWeakReference(presShell);    
+  }  
   nsCOMPtr<nsISelection> selection;
-  nsCOMPtr<nsISelectionController> selectionController =
+  nsCOMPtr<nsISelectionController> selectionController = 
     do_QueryReferent(mSelectionController);
   if (!selectionController) {
     GetSelection(presShell, getter_AddRefs(selectionController),

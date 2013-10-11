@@ -41,11 +41,7 @@ function nextTest() {
     testFindDisabled(url, nextTest);
   } else {
     // Make sure the find bar is re-enabled after disabled page is closed.
-    testFindEnabled("about:blank", function () {
-      EventUtils.synthesizeKey("VK_ESCAPE", { });
-      ok(gFindBar.hidden, "Find bar should now be hidden");
-      finish();
-    });
+    testFindEnabled("about:blank", finish);
   }
 }
 
