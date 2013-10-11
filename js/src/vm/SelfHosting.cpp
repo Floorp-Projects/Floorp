@@ -302,14 +302,14 @@ intrinsic_ForkJoin(JSContext *cx, unsigned argc, Value *vp)
 }
 
 /*
- * ForkJoinSlices(): Returns the number of parallel slices that will
- * be created by ForkJoin().
+ * ForkJoinWorkerNumWorkers(): Returns the number of workers in the fork join
+ * thread pool, including the main thread.
  */
 static bool
-intrinsic_ForkJoinSlices(JSContext *cx, unsigned argc, Value *vp)
+intrinsic_ForkJoinNumWorkers(JSContext *cx, unsigned argc, Value *vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
-    args.rval().setInt32(ForkJoinSlices(cx));
+    args.rval().setInt32(cx->runtime()->threadPool.numWorkers() + 1);
     return true;
 }
 
@@ -620,7 +620,7 @@ static const JSFunctionSpec intrinsic_functions[] = {
     JS_FN("IsStringIterator",        intrinsic_IsStringIterator,        1,0),
 
     JS_FN("ForkJoin",                intrinsic_ForkJoin,                2,0),
-    JS_FN("ForkJoinSlices",          intrinsic_ForkJoinSlices,          0,0),
+    JS_FN("ForkJoinNumWorkers",      intrinsic_ForkJoinNumWorkers,      0,0),
     JS_FN("NewDenseArray",           intrinsic_NewDenseArray,           1,0),
     JS_FN("ShouldForceSequential",   intrinsic_ShouldForceSequential,   0,0),
     JS_FN("ParallelTestsShouldPass", intrinsic_ParallelTestsShouldPass, 0,0),
