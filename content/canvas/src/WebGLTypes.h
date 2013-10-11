@@ -87,8 +87,6 @@ MOZ_BEGIN_ENUM_CLASS(WebGLImageDataStatus, int)
     InitializedImageData
 MOZ_END_ENUM_CLASS(WebGLImageDataStatus)
 
-namespace WebGLTexelConversions {
-
 /*
  * The formats that may participate, either as source or destination formats,
  * in WebGL texture conversions. This includes:
@@ -97,8 +95,7 @@ namespace WebGLTexelConversions {
  *  - additional source formats, depending on browser details, used when uploading
  *    textures from DOM elements. See gfxImageSurface::Format().
  */
-enum WebGLTexelFormat
-{
+MOZ_BEGIN_ENUM_CLASS(WebGLTexelFormat, int)
     // dummy error code returned by GetWebGLTexelFormat in error cases,
     // after assertion failure (so this never happens in debug builds)
     BadFormat,
@@ -128,9 +125,7 @@ enum WebGLTexelFormat
     RGBA5551,
     RGBA4444,
     RGBA32F // used for OES_texture_float extension
-};
-
-} // end namespace WebGLTexelConversions
+MOZ_END_ENUM_CLASS(WebGLTexelFormat)
 
 } // namespace mozilla
 
