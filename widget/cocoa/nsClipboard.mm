@@ -524,7 +524,8 @@ nsClipboard::PasteboardDictFromTransferable(nsITransferable* aTransferable)
         urlObject->GetData(urlTitle);
         urlTitle.Mid(urlTitle, newlinePos + 1, len - (newlinePos + 1));
 
-        NSString *nativeTitle = [[NSString alloc] initWithCharacters:urlTitle.get() length:urlTitle.Length()];
+        NSString *nativeTitle = [[NSString alloc] initWithCharacters:reinterpret_cast<const unichar*>(urlTitle.get())
+                                                              length:urlTitle.Length()];
         // be nice to Carbon apps, normalize the receiver's contents using Form C.
         [pasteboardOutputDict setObject:[nativeTitle precomposedStringWithCanonicalMapping] forKey:kCorePboardType_urln];
         // Also put the title out as 'urld', since some recipients will look for that.

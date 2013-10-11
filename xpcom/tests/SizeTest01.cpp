@@ -46,7 +46,7 @@ Test01_raw( nsIDOMNode* aDOMNode, nsString* aResult )
 			/*
 				This test is designed to be more like a typical large function where,
 				because you are working with several resources, you don't just return when
-				one of them is |NULL|.  Similarly: |Test01_nsCOMPtr00|, and |Test01_nsIPtr00|.
+				one of them is |nullptr|.  Similarly: |Test01_nsCOMPtr00|, and |Test01_nsIPtr00|.
 			*/
 
 		nsIDOMNode* node = aDOMNode;
@@ -64,7 +64,7 @@ Test01_raw_optimized( nsIDOMNode* aDOMNode, nsString* aResult )
 	{
 			/*
 				This test simulates smaller functions where you _do_ just return
-				|NULL| at the first sign of trouble.  Similarly: |Test01_nsCOMPtr01|,
+				|nullptr| at the first sign of trouble.  Similarly: |Test01_nsCOMPtr01|,
 				and |Test01_nsIPtr01|.
 			*/
 

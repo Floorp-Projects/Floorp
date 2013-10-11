@@ -384,7 +384,7 @@ CloneNonReflectorsWrite(JSContext *cx, JSStructuredCloneWriter *writer,
     return false;
 }
 
-const JSStructuredCloneCallbacks gForwarderStructuredCloneCallbacks = {
+static const JSStructuredCloneCallbacks gForwarderStructuredCloneCallbacks = {
     CloneNonReflectorsRead,
     CloneNonReflectorsWrite,
     nullptr
@@ -396,7 +396,7 @@ const JSStructuredCloneCallbacks gForwarderStructuredCloneCallbacks = {
  * to clone to, and that if val is an object is from the compartment we
  * clone from.
  */
-bool
+static bool
 CloneNonReflectors(JSContext *cx, MutableHandleValue val)
 {
     JSAutoStructuredCloneBuffer buffer;
@@ -596,7 +596,7 @@ static const JSClass SandboxClass = {
     XPCONNECT_GLOBAL_FLAGS_WITH_EXTRA_SLOTS(1),
     JS_PropertyStub,   JS_DeletePropertyStub, JS_PropertyStub, JS_StrictPropertyStub,
     sandbox_enumerate, sandbox_resolve, sandbox_convert,  sandbox_finalize,
-    NULL, NULL, NULL, NULL, TraceXPCGlobal
+    nullptr, nullptr, nullptr, nullptr, TraceXPCGlobal
 };
 
 static const JSFunctionSpec SandboxFunctions[] = {
@@ -1152,7 +1152,7 @@ static nsresult
 GetPrincipalOrSOP(JSContext *cx, HandleObject from, nsISupports **out)
 {
     MOZ_ASSERT(out);
-    *out = NULL;
+    *out = nullptr;
 
     nsXPConnect* xpc = nsXPConnect::XPConnect();
     nsCOMPtr<nsIXPConnectWrappedNative> wrapper;
@@ -1293,7 +1293,7 @@ GetObjPropFromOptions(JSContext *cx, HandleObject from, const char *name, JSObje
     NS_ENSURE_SUCCESS(rv, rv);
 
     if (!found) {
-        *prop = NULL;
+        *prop = nullptr;
         return NS_OK;
     }
 
@@ -1629,7 +1629,7 @@ xpc::EvalInSandbox(JSContext *cx, HandleObject sandboxArg, const nsAString& sour
     return NS_OK;
 }
 
-bool
+static bool
 NonCloningFunctionForwarder(JSContext *cx, unsigned argc, Value *vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
@@ -1648,7 +1648,7 @@ NonCloningFunctionForwarder(JSContext *cx, unsigned argc, Value *vp)
  * Forwards the call to the exported function. Clones all the non reflectors, ignores
  * the |this| argument.
  */
-bool
+static bool
 CloningFunctionForwarder(JSContext *cx, unsigned argc, Value *vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
@@ -1725,7 +1725,7 @@ xpc::SetSandboxMetadata(JSContext *cx, HandleObject sandbox, HandleValue metadat
     RootedValue metadata(cx);
 
     JSAutoCompartment ac(cx, sandbox);
-    if (!JS_StructuredClone(cx, metadataArg, metadata.address(), NULL, NULL))
+    if (!JS_StructuredClone(cx, metadataArg, metadata.address(), nullptr, nullptr))
         return NS_ERROR_UNEXPECTED;
 
     JS_SetReservedSlot(sandbox, XPCONNECT_SANDBOX_CLASS_METADATA_SLOT, metadata);

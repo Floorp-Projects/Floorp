@@ -32,7 +32,7 @@ NS_strspnp(const char *delims, const char *str);
  *               reset to the end of the found token + 1, or to the
  *               end-of-string if there are no more tokens.
  * @return       The token. If no token is found (the string is only
- *               delimiter characters), NULL is returned.
+ *               delimiter characters), nullptr is returned.
  */
 NS_COM_GLUE char*
 NS_strtok(const char *delims, char **str);

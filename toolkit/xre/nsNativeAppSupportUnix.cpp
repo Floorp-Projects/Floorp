@@ -148,7 +148,7 @@ nsNativeAppSupportUnix::Start(bool *aRetVal)
 #if (MOZ_WIDGET_GTK == 2)
   if (gtk_major_version < MIN_GTK_MAJOR_VERSION ||
       (gtk_major_version == MIN_GTK_MAJOR_VERSION && gtk_minor_version < MIN_GTK_MINOR_VERSION)) {
-    GtkWidget* versionErrDialog = gtk_message_dialog_new(NULL,
+    GtkWidget* versionErrDialog = gtk_message_dialog_new(nullptr,
                      GtkDialogFlags(GTK_DIALOG_MODAL |
                                     GTK_DIALOG_DESTROY_WITH_PARENT),
                      GTK_MESSAGE_ERROR,
@@ -202,7 +202,8 @@ nsNativeAppSupportUnix::Start(bool *aRetVal)
 
 #if defined(MOZ_X11) && (MOZ_WIDGET_GTK == 2)
   if (!gnome_program_get()) {
-    gnome_program_init("Gecko", "1.0", libgnomeui_module_info_get(), gArgc, gArgv, NULL);
+    gnome_program_init("Gecko", "1.0", libgnomeui_module_info_get(),
+                       gArgc, gArgv, nullptr);
   }
 #endif /* MOZ_X11 && (MOZ_WIDGET_GTK == 2) */
 
@@ -227,8 +228,8 @@ nsNativeAppSupportUnix::Start(bool *aRetVal)
     PR_FindFunctionSymbol(gnomeuiLib, "gnome_master_client");
 
   GnomeClient *client = gnome_master_client();
-  g_signal_connect(client, "save-yourself", G_CALLBACK(save_yourself_cb), NULL);
-  g_signal_connect(client, "die", G_CALLBACK(die_cb), NULL);
+  g_signal_connect(client, "save-yourself", G_CALLBACK(save_yourself_cb), nullptr);
+  g_signal_connect(client, "die", G_CALLBACK(die_cb), nullptr);
 
   // Set the correct/requested restart command in any case.
 

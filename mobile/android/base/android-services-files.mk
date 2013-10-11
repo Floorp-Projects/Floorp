@@ -368,17 +368,15 @@ SYNC_RES_VALUES_LARGE_V11 := \
   $(NULL)
 
 SYNC_RES_XML := \
-  $(NULL)
-
-SYNC_PP_RES_XML := \
-  res/xml/sync_syncadapter.xml \
-  res/xml/sync_options.xml \
-  res/xml/sync_authenticator.xml \
-  res/xml/fxaccount_tabs_syncadapter.xml \
-  res/xml/fxaccount_passwords_syncadapter.xml \
-  res/xml/fxaccount_history_syncadapter.xml \
-  res/xml/fxaccount_bookmarks_syncadapter.xml \
   res/xml/fxaccount_authenticator.xml \
+  res/xml/fxaccount_bookmarks_syncadapter.xml \
+  res/xml/fxaccount_history_syncadapter.xml \
+  res/xml/fxaccount_passwords_syncadapter.xml \
+  res/xml/fxaccount_tabs_syncadapter.xml \
+  res/xml/sync_authenticator.xml \
+  res/xml/sync_authenticator.xml \
+  res/xml/sync_options.xml \
+  res/xml/sync_syncadapter.xml \
   $(NULL)
 
 SYNC_THIRDPARTY_JAVA_FILES := \

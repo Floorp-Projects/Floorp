@@ -1752,7 +1752,7 @@ static nsresult
 ReportZoneStats(const JS::ZoneStats &zStats,
                 const xpc::ZoneStatsExtras &extras,
                 nsIMemoryReporterCallback *cb,
-                nsISupports *closure, size_t *gcTotalOut = NULL)
+                nsISupports *closure, size_t *gcTotalOut = nullptr)
 {
     const nsAutoCString& pathPrefix = extras.pathPrefix;
     size_t gcTotal = 0, sundriesGCHeap = 0, sundriesMallocHeap = 0;
@@ -1936,7 +1936,7 @@ ReportCompartmentStats(const JS::CompartmentStats &cStats,
                        const xpc::CompartmentStatsExtras &extras,
                        amIAddonManager *addonManager,
                        nsIMemoryReporterCallback *cb,
-                       nsISupports *closure, size_t *gcTotalOut = NULL)
+                       nsISupports *closure, size_t *gcTotalOut = nullptr)
 {
     static const nsDependentCString addonPrefix("explicit/add-ons/");
 
@@ -2819,7 +2819,8 @@ ReadSourceFromFilename(JSContext *cx, const char *filename, jschar **src, size_t
     }
 
     nsString decoded;
-    rv = nsScriptLoader::ConvertToUTF16(scriptChannel, buf, rawLen, EmptyString(), NULL, decoded);
+    rv = nsScriptLoader::ConvertToUTF16(scriptChannel, buf, rawLen, EmptyString(),
+                                        nullptr, decoded);
     NS_ENSURE_SUCCESS(rv, rv);
 
     // Copy to JS engine.
@@ -2837,7 +2838,7 @@ ReadSourceFromFilename(JSContext *cx, const char *filename, jschar **src, size_t
 // constructor.
 class XPCJSSourceHook: public js::SourceHook {
     bool load(JSContext *cx, const char *filename, jschar **src, size_t *length) {
-        *src = NULL;
+        *src = nullptr;
         *length = 0;
 
         if (!nsContentUtils::IsCallerChrome())

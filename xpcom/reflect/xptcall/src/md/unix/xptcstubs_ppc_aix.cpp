@@ -28,8 +28,8 @@ PrepareAndDispatch(nsXPTCStubBase* self, uint32_t methodIndex, uint32_t* args, u
 #define PARAM_GPR_COUNT         7  
 
     nsXPTCMiniVariant paramBuffer[PARAM_BUFFER_COUNT];
-    nsXPTCMiniVariant* dispatchParams = NULL;
-    const nsXPTMethodInfo* info = NULL;
+    nsXPTCMiniVariant* dispatchParams = nullptr;
+    const nsXPTMethodInfo* info = nullptr;
     uint8_t paramCount;
     uint8_t i;
     nsresult result = NS_ERROR_FAILURE;

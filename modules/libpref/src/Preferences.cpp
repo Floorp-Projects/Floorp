@@ -15,6 +15,7 @@
 
 #include "mozilla/Preferences.h"
 #include "nsAppDirectoryServiceDefs.h"
+#include "nsDataHashtable.h"
 #include "nsDirectoryServiceDefs.h"
 #include "nsICategoryManager.h"
 #include "nsCategoryManagerUtils.h"

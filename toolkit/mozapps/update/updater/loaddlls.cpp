@@ -36,7 +36,7 @@ struct AutoLoadSystemDependencies
     if (systemDirectory[systemDirLen - 1] != L'\\' && systemDirLen) {
       systemDirectory[systemDirLen] = L'\\';
       ++systemDirLen;
-      // No need to re-NULL terminate
+      // No need to re-null terminate
     }
 
     // For each known DLL ensure it is loaded from the system32 directory

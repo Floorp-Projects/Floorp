@@ -320,7 +320,7 @@ const Class js::NumericTypeClasses[ScalarTypeRepresentation::TYPE_MAX] = {
 };
 
 template <typename Domain, typename Input>
-bool
+static bool
 InRange(Input x)
 {
     return std::numeric_limits<Domain>::min() <= x &&
@@ -517,7 +517,7 @@ NumericTypeToString(JSContext *cx, unsigned int argc, Value *vp)
  * This function takes a reference to either ArrayType or StructType and
  * returns a JSObject which can be set as A.prototype.
  */
-JSObject *
+static JSObject *
 SetupAndGetPrototypeObjectForComplexTypeInstance(JSContext *cx,
                                                  HandleObject complexTypeGlobal)
 {

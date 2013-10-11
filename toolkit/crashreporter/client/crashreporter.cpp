@@ -34,7 +34,7 @@ string       gSettingsPath;
 int          gArgc;
 char**       gArgv;
 
-static auto_ptr<ofstream> gLogStream(NULL);
+static auto_ptr<ofstream> gLogStream(nullptr);
 static string             gDumpFile;
 static string             gExtraFile;
 
@@ -594,13 +594,13 @@ int WINAPI wWinMain( HINSTANCE, HINSTANCE, LPWSTR args, int )
   {
     HKEY hkApp;
     RegCreateKeyExW(HKEY_CURRENT_USER, L"Software\\Classes\\Applications", 0,
-                    NULL, REG_OPTION_NON_VOLATILE, KEY_SET_VALUE, NULL, &hkApp,
-                    NULL);
+                    nullptr, REG_OPTION_NON_VOLATILE, KEY_SET_VALUE, nullptr,
+                    &hkApp, nullptr);
     RegCloseKey(hkApp);
     if (RegCreateKeyExW(HKEY_CURRENT_USER,
                         L"Software\\Classes\\Applications\\crashreporter.exe",
-                        0, NULL, REG_OPTION_VOLATILE, KEY_SET_VALUE, NULL,
-                        &hkApp, NULL) == ERROR_SUCCESS) {
+                        0, nullptr, REG_OPTION_VOLATILE, KEY_SET_VALUE,
+                        nullptr, &hkApp, nullptr) == ERROR_SUCCESS) {
       RegSetValueExW(hkApp, L"IsHostApp", 0, REG_NONE, 0, 0);
       RegSetValueExW(hkApp, L"NoOpenWith", 0, REG_NONE, 0, 0);
       RegSetValueExW(hkApp, L"NoStartPage", 0, REG_NONE, 0, 0);

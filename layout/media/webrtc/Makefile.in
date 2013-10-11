@@ -3,7 +3,7 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 # shared libs for webrtc
-WEBRTC_LIBS = \
+SHARED_LIBRARY_LIBS = \
   $(call EXPAND_LIBNAME_PATH,common_video,$(DEPTH)/media/webrtc/trunk/webrtc/common_video/common_video_common_video) \
   $(call EXPAND_LIBNAME_PATH,common_audio,$(DEPTH)/media/webrtc/trunk/webrtc/common_audio/common_audio_common_audio) \
   $(call EXPAND_LIBNAME_PATH,video_capture_module,$(DEPTH)/media/webrtc/trunk/webrtc/modules/modules_video_capture_module) \
@@ -38,7 +38,7 @@ WEBRTC_LIBS = \
 
 # if we're on an intel arch, we want SSE2 optimizations
 ifneq (,$(INTEL_ARCHITECTURE))
-WEBRTC_LIBS += \
+SHARED_LIBRARY_LIBS += \
   $(call EXPAND_LIBNAME_PATH,video_processing_sse2,$(DEPTH)/media/webrtc/trunk/webrtc/modules/modules_video_processing_sse2) \
   $(call EXPAND_LIBNAME_PATH,audio_processing_sse2,$(DEPTH)/media/webrtc/trunk/webrtc/modules/modules_audio_processing_sse2) \
   $(call EXPAND_LIBNAME_PATH,common_audio_sse2,$(DEPTH)/media/webrtc/trunk/webrtc/common_audio/common_audio_common_audio_sse2) \
@@ -50,12 +50,12 @@ ifeq (Android,$(OS_TARGET))
 # NEON detection on WebRTC is Android only. If WebRTC supports Linux/arm etc,
 # we should remove OS check
 # extra ARM libs
-WEBRTC_LIBS += \
+SHARED_LIBRARY_LIBS += \
   $(call EXPAND_LIBNAME_PATH,cpu_features_android,$(DEPTH)/media/webrtc/trunk/webrtc/system_wrappers/source/system_wrappers_cpu_features_android) \
   $(NULL)
 # neon for ARM
 ifeq ($(BUILD_ARM_NEON),1)
-WEBRTC_LIBS += \
+SHARED_LIBRARY_LIBS += \
   $(call EXPAND_LIBNAME_PATH,common_audio_neon,$(DEPTH)/media/webrtc/trunk/webrtc/common_audio/common_audio_common_audio_neon) \
   $(call EXPAND_LIBNAME_PATH,audio_processing_neon,$(DEPTH)/media/webrtc/trunk/webrtc/modules/modules_audio_processing_neon) \
   $(NULL)

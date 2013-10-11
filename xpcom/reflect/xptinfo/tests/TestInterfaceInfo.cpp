@@ -71,7 +71,7 @@ int main (int argc, char **argv) {
 #endif
 
     // XXX: nsIServiceManager is no more; what do we test with?
-    if (info5 == NULL) {
+    if (info5 == nullptr) {
         fprintf(stderr, "\nNo nsIComponentManager; cannot continue.\n");
         return 1;
     }
