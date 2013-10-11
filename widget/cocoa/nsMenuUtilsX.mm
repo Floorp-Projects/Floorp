@@ -54,7 +54,8 @@ NSString* nsMenuUtilsX::GetTruncatedCocoaLabel(const nsString& itemLabel)
   // good API for doing that which works for all OS versions and architectures. For now
   // we'll do nothing for consistency and depend on good user interface design to limit
   // string lengths.
-  return [NSString stringWithCharacters:itemLabel.get() length:itemLabel.Length()];
+  return [NSString stringWithCharacters:reinterpret_cast<const unichar*>(itemLabel.get())
+                                 length:itemLabel.Length()];
 
   NS_OBJC_END_TRY_ABORT_BLOCK_NIL;
 }

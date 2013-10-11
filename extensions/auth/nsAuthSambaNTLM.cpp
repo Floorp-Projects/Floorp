@@ -215,8 +215,8 @@ nsAuthSambaNTLM::Init(const char *serviceName,
     static bool sTelemetrySent = false;
     if (!sTelemetrySent) {
         mozilla::Telemetry::Accumulate(
-            mozilla::Telemetry::NTLM_MODULE_USED,
-            serviceFlags | nsIAuthModule::REQ_PROXY_AUTH
+            mozilla::Telemetry::NTLM_MODULE_USED_2,
+            serviceFlags & nsIAuthModule::REQ_PROXY_AUTH
                 ? NTLM_MODULE_SAMBA_AUTH_PROXY
                 : NTLM_MODULE_SAMBA_AUTH_DIRECT);
         sTelemetrySent = true;

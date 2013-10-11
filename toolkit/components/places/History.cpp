@@ -84,7 +84,7 @@ struct VisitData {
   }
 
   VisitData(nsIURI* aURI,
-            nsIURI* aReferrer = NULL)
+            nsIURI* aReferrer = nullptr)
   : placeId(0)
   , visitId(0)
   , hidden(true)
@@ -787,7 +787,7 @@ private:
 bool
 CanAddURI(nsIURI* aURI,
           const nsCString& aGUID = EmptyCString(),
-          mozIVisitInfoCallback* aCallback = NULL)
+          mozIVisitInfoCallback* aCallback = nullptr)
 {
   nsNavHistory* navHistory = nsNavHistory::GetHistoryService();
   NS_ENSURE_TRUE(navHistory, false);
@@ -838,7 +838,7 @@ public:
    */
   static nsresult Start(mozIStorageConnection* aConnection,
                         nsTArray<VisitData>& aPlaces,
-                        mozIVisitInfoCallback* aCallback = NULL)
+                        mozIVisitInfoCallback* aCallback = nullptr)
   {
     MOZ_ASSERT(NS_IsMainThread(), "This should be called on the main thread");
     MOZ_ASSERT(aPlaces.Length() > 0, "Must pass a non-empty array!");
@@ -869,7 +869,7 @@ public:
     mozStorageTransaction transaction(mDBConn, false,
                                       mozIStorageConnection::TRANSACTION_IMMEDIATE);
 
-    VisitData* lastPlace = NULL;
+    VisitData* lastPlace = nullptr;
     for (nsTArray<VisitData>::size_type i = 0; i < mPlaces.Length(); i++) {
       VisitData& place = mPlaces.ElementAt(i);
       VisitData& referrer = mReferrers.ElementAt(i);
@@ -1872,7 +1872,7 @@ private:
  */
 void
 StoreAndNotifyEmbedVisit(VisitData& aPlace,
-                         mozIVisitInfoCallback* aCallback = NULL)
+                         mozIVisitInfoCallback* aCallback = nullptr)
 {
   MOZ_ASSERT(aPlace.transitionType == nsINavHistoryService::TRANSITION_EMBED,
              "Must only pass TRANSITION_EMBED visits to this!");
@@ -1930,7 +1930,7 @@ private:
 ////////////////////////////////////////////////////////////////////////////////
 //// History
 
-History* History::gService = NULL;
+History* History::gService = nullptr;
 
 History::History()
   : mShuttingDown(false)
@@ -2471,19 +2471,19 @@ History::RegisterVisitedCallback(nsIURI* aURI,
     // database now.
     nsresult rv = VisitedQuery::Start(aURI);
 
-    // In IPC builds, we are passed a NULL Link from
-    // ContentParent::RecvStartVisitedQuery.  Since we won't be adding a NULL
-    // entry to our list of observers, and the code after this point assumes
-    // that aLink is non-NULL, we will need to return now.
+    // In IPC builds, we are passed a nullptr Link from
+    // ContentParent::RecvStartVisitedQuery.  Since we won't be adding a
+    // nullptr entry to our list of observers, and the code after this point
+    // assumes that aLink is non-nullptr, we will need to return now.
     if (NS_FAILED(rv) || !aLink) {
       // Remove our array from the hashtable so we don't keep it around.
       mObservers.RemoveEntry(aURI);
       return rv;
     }
   }
-  // In IPC builds, we are passed a NULL Link from
+  // In IPC builds, we are passed a nullptr Link from
   // ContentParent::RecvStartVisitedQuery.  All of our code after this point
-  // assumes aLink is non-NULL, so we have to return now.
+  // assumes aLink is non-nullptr, so we have to return now.
   else if (!aLink) {
     NS_ASSERTION(XRE_GetProcessType() == GeckoProcessType_Default,
                  "We should only ever get a null Link in the default process!");

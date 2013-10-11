@@ -37,14 +37,14 @@ NS_IMETHODIMP
 GenericClassInfo::GetContractID(char** contractid)
 {
   NS_ERROR("GetContractID not implemented");
-  *contractid = NULL;
+  *contractid = nullptr;
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
 GenericClassInfo::GetClassDescription(char** description)
 {
-  *description = NULL;
+  *description = nullptr;
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
@@ -52,7 +52,7 @@ NS_IMETHODIMP
 GenericClassInfo::GetClassID(nsCID** classid)
 {
   NS_ERROR("GetClassID not implemented");
-  *classid = NULL;
+  *classid = nullptr;
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
