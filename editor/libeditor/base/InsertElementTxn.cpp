@@ -62,8 +62,7 @@ NS_IMETHODIMP InsertElementTxn::DoTransaction(void)
   { 
     nsCOMPtr<nsIContent>nodeAsContent = do_QueryInterface(mNode);
     nsCOMPtr<nsIContent>parentAsContent = do_QueryInterface(mParent);
-    nsString namestr;
-    mNode->GetNodeName(namestr);
+    nsString namestr = mNode->NodeName();
     char* nodename = ToNewCString(namestr);
     printf("%p Do Insert Element of %p <%s> into parent %p at offset %d\n", 
            static_cast<void*>(this),
