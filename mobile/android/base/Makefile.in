@@ -298,30 +298,19 @@ ifdef MOZ_ANDROID_ANR_REPORTER
 DEFINES += -DMOZ_ANDROID_ANR_REPORTER=1
 endif
 
-FENNEC_PP_JAVA_VIEW_FILES = \
-  GeckoButton.java \
-  GeckoImageButton.java \
-  GeckoImageView.java \
-  GeckoEditText.java \
-  GeckoFrameLayout.java \
-  GeckoLinearLayout.java \
-  GeckoRelativeLayout.java \
-  GeckoTextSwitcher.java \
-  GeckoTextView.java \
-  $(NULL)
-
-FENNEC_PP_JAVA_FILES = \
+FENNEC_PP_JAVA_FILES := \
   App.java \
   AppConstants.java \
+  widget/GeckoEditText.java \
+  widget/GeckoImageButton.java \
+  widget/GeckoImageView.java \
+  widget/GeckoLinearLayout.java \
+  widget/GeckoRelativeLayout.java \
+  widget/GeckoTextSwitcher.java \
+  widget/GeckoTextView.java \
   SysInfo.java \
   WebApp.java \
   WebApps.java \
-  $(NULL)
-
-FENNEC_PP_XML_FILES = \
-  res/xml/preferences.xml \
-  res/xml/preferences_customize.xml \
-  res/xml/searchable.xml \
   $(NULL)
 
 ifneq (,$(findstring -march=armv7,$(OS_CFLAGS)))
@@ -363,6 +352,8 @@ DEFINES += \
   -DCPU_ARCH=$(CPU_ARCH) \
   -DGRE_MILESTONE=$(GRE_MILESTONE) \
   -DMOZILLA_OFFICIAL=$(MOZILLA_OFFICIAL) \
+  -DMOZ_ANDROID_SHARED_ID="$(MOZ_ANDROID_SHARED_ID)" \
+  -DMOZ_ANDROID_SHARED_ACCOUNT_TYPE="$(MOZ_ANDROID_SHARED_ACCOUNT_TYPE)" \
   -DMOZ_APP_ABI=$(TARGET_XPCOM_ABI) \
   -DMOZ_APP_BASENAME=$(MOZ_APP_BASENAME) \
   -DMOZ_APP_BUILDID=$(MOZ_APP_BUILDID) \
@@ -395,13 +386,10 @@ GARBAGE += \
   classes.dex  \
   $(MOZGLUE_PP_JAVA_FILES) \
   $(FENNEC_PP_JAVA_FILES) \
-  $(FENNEC_PP_JAVA_VIEW_FILES) \
   $(SYNC_PP_JAVA_FILES) \
   gecko.ap_  \
   res/values/strings.xml \
   R.java \
-  $(FENNEC_PP_XML_FILES) \
-  $(SYNC_PP_RES_XML) \
   package-name.txt \
   fennec_ids.txt \
   Manifest.java \
@@ -413,49 +401,15 @@ GARBAGE += \
 
 GARBAGE_DIRS += classes db jars res sync services
 
-MOZ_ANDROID_SHARED_ID = "$(ANDROID_PACKAGE_NAME).sharedID"
-MOZ_ANDROID_SHARED_ACCOUNT_TYPE = "$(ANDROID_PACKAGE_NAME)_sync"
-MOZ_ANDROID_SHARED_FXACCOUNT_TYPE = "$(ANDROID_PACKAGE_NAME)_account"
-
 # Bug 567884 - Need a way to find appropriate icons during packaging
 ifeq ($(MOZ_APP_NAME),fennec)
 ICON_PATH = $(topsrcdir)/$(MOZ_BRANDING_DIRECTORY)/content/fennec_48x48.png
 ICON_PATH_HDPI = $(topsrcdir)/$(MOZ_BRANDING_DIRECTORY)/content/fennec_72x72.png
 ICON_PATH_XHDPI = $(topsrcdir)/$(MOZ_BRANDING_DIRECTORY)/content/fennec_96x96.png
 ICON_PATH_XXHDPI = $(topsrcdir)/$(MOZ_BRANDING_DIRECTORY)/content/fennec_144x144.png
-
-# we released these builds to the public with shared IDs and need to keep them
-ifeq (org.mozilla.firefox,$(ANDROID_PACKAGE_NAME))
-MOZ_ANDROID_SHARED_ID = "org.mozilla.firefox.sharedID"
-MOZ_ANDROID_SHARED_ACCOUNT_TYPE = "org.mozilla.firefox_sync"
-MOZ_ANDROID_SHARED_FXACCOUNT_TYPE = "org.mozilla.firefox_account"
-else ifeq (org.mozilla.firefox_beta,$(ANDROID_PACKAGE_NAME))
-MOZ_ANDROID_SHARED_ID = "org.mozilla.firefox.sharedID"
-MOZ_ANDROID_SHARED_ACCOUNT_TYPE = "org.mozilla.firefox_sync"
-MOZ_ANDROID_SHARED_FXACCOUNT_TYPE = "org.mozilla.firefox_account"
-else ifeq (org.mozilla.fennec_aurora,$(ANDROID_PACKAGE_NAME))
-MOZ_ANDROID_SHARED_ID = "org.mozilla.fennec.sharedID"
-MOZ_ANDROID_SHARED_ACCOUNT_TYPE = "org.mozilla.fennec_sync"
-MOZ_ANDROID_SHARED_FXACCOUNT_TYPE = "org.mozilla.fennec_account"
-else ifeq (org.mozilla.fennec,$(ANDROID_PACKAGE_NAME))
-MOZ_ANDROID_SHARED_ID = "org.mozilla.fennec.sharedID"
-MOZ_ANDROID_SHARED_ACCOUNT_TYPE = "org.mozilla.fennec_sync"
-MOZ_ANDROID_SHARED_FXACCOUNT_TYPE = "org.mozilla.fennec_account"
-endif
-
 else
 ICON_PATH = $(topsrcdir)/$(MOZ_BRANDING_DIRECTORY)/content/icon48.png
 ICON_PATH_HDPI = $(topsrcdir)/$(MOZ_BRANDING_DIRECTORY)/content/icon64.png
-endif
-
-ifdef MOZ_ANDROID_SHARED_ID
-DEFINES += -DMOZ_ANDROID_SHARED_ID="$(MOZ_ANDROID_SHARED_ID)"
-endif
-ifdef MOZ_ANDROID_SHARED_ACCOUNT_TYPE
-DEFINES += -DMOZ_ANDROID_SHARED_ACCOUNT_TYPE="$(MOZ_ANDROID_SHARED_ACCOUNT_TYPE)"
-endif
-ifdef MOZ_ANDROID_SHARED_FXACCOUNT_TYPE
-DEFINES += -DMOZ_ANDROID_SHARED_FXACCOUNT_TYPE="$(MOZ_ANDROID_SHARED_FXACCOUNT_TYPE)"
 endif
 
 RES_LAYOUT = \
@@ -612,11 +566,14 @@ RES_VALUES_V16 = \
   $(NULL)
 
 RES_XML = \
+  res/xml/preferences.xml \
+  res/xml/preferences_customize.xml \
   res/xml/preferences_display.xml \
   res/xml/preferences_search.xml \
   res/xml/preferences_privacy.xml \
   res/xml/preferences_vendor.xml \
   res/xml/preferences_devtools.xml \
+  res/xml/searchable.xml \
   $(SYNC_RES_XML) \
   $(NULL)
 
@@ -1253,7 +1210,6 @@ gecko-browser_JAVAFILES := \
   $(NULL)
 gecko-browser_PP_JAVAFILES := \
   $(FENNEC_PP_JAVA_FILES) \
-  $(FENNEC_PP_JAVA_VIEW_FILES) \
   $(SYNC_PP_JAVA_FILES) \
   R.java \
   $(NULL)
@@ -1279,7 +1235,6 @@ JAVA_JAR_TARGETS += gecko-util
 gecko-util_DEST := jars/gecko-util.jar
 gecko-util_JAVAFILES := \
   $(UTIL_JAVA_FILES) \
-  $(UTIL_PP_JAVA_FILES) \
   $(NULL)
 gecko-util_EXTRA_JARS := \
   jars/gecko-mozglue.jar \
@@ -1349,16 +1304,6 @@ GeneratedJNIWrappers.cpp: $(ANNOTATION_PROCESSOR_JAR_FILES)
 GeneratedJNIWrappers.cpp: $(ALL_JARS)
 	$(JAVA) -classpath $(JAVA_BOOTCLASSPATH):$(ANNOTATION_PROCESSOR_JAR_FILES) org.mozilla.gecko.annotationProcessors.AnnotationProcessor $(ALL_JARS)
 
-PP_RES_XML= \
-  $(SYNC_PP_RES_XML) \
-  $(FENNEC_PP_XML_FILES) \
-  $(NULL)
-
-# This is kinda awful; if any of the source files change, we remake them all.
-$(PP_RES_XML): $(patsubst res/%,$(srcdir)/resources/%.in,$(PP_RES_XML))
-	$(PYTHON) $(topsrcdir)/config/Preprocessor.py \
-             $(AUTOMATION_PPARGS) $(DEFINES) $(ACDEFINES) $(subst res/,$(srcdir)/resources/,$@).in > $@
-
 # AndroidManifest.xml includes these files, so they need to be marked as dependencies.
 SERVICES_MANIFEST_FRAGMENTS = $(wildcard $(topsrcdir)/mobile/android/services/manifests/*.in)
 
@@ -1372,6 +1317,7 @@ android-tgts = \
 
 android-preqs = \
   Makefile.in \
+  widget/GeckoView.java.frag \
   $(call mkdir_deps,$(sort $(dir $(MOZGLUE_PP_JAVA_FILES)))) \
   $(call mkdir_deps,$(sort $(dir $(FENNEC_PP_JAVA_FILES)))) \
   $(call mkdir_deps,$(sort $(dir $(SYNC_PP_JAVA_FILES)))) \
@@ -1381,11 +1327,6 @@ android-preqs = \
 $(android-tgts): % : %.in $(android-preqs)
 	$(PYTHON) $(topsrcdir)/config/Preprocessor.py \
              $(AUTOMATION_PPARGS) $(DEFINES) $(ACDEFINES) $< > $@
-
-# Replace @VIEWTYPE@ with different View names.
-$(FENNEC_PP_JAVA_VIEW_FILES): GeckoView.java.frag
-	@rm -f $@
-	cat $< | sed s,@VIEWTYPE@,$(patsubst Gecko%.java,%,$@),g >> $@ ; \
 
 res/drawable-mdpi/icon.png: $(ICON_PATH)
 	$(NSINSTALL) -D res/drawable-mdpi
@@ -1427,7 +1368,6 @@ all_resources = \
   $(MULTILOCALE_STRINGS_XML_FILES) \
   AndroidManifest.xml \
   $(RESOURCES) \
-  $(PP_RES_XML) \
   $(NULL)
 
 R.java: $(all_resources)
