@@ -98,4 +98,19 @@ partial interface AudioContext {
                                              optional unsigned long numberOfOutputChannels = 2);
 };
 
+enum AudioChannel {
+  "normal",
+  "content",
+  "notification",
+  "alarm",
+  "telephony",
+  "ringer",
+  "publicnotification",
+};
 
+// Mozilla extensions
+partial interface AudioContext {
+  // Read HTMLMediaElement.webidl for more information about this attribute.
+  [Pref="media.useAudioChannelService", SetterThrows]
+  attribute AudioChannel mozAudioChannelType;
+};

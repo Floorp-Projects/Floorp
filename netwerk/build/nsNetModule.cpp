@@ -42,11 +42,7 @@
 
 #include "nsNetCID.h"
 
-#if defined(XP_MACOSX)
-#if !defined(__LP64__)
-#define BUILD_APPLEFILE_DECODER 1
-#endif
-#else
+#ifndef XP_MACOSX
 #define BUILD_BINHEX_DECODER 1
 #endif
 
@@ -140,15 +136,6 @@ net_NewIncrementalDownload(nsISupports *, const nsIID &, void **);
     0x4896,                                          \
     {0x8a, 0xaf, 0xb1, 0x48, 0xbf, 0xce, 0x42, 0x80} \
 }
-
-///////////////////////////////////////////////////////////////////////////////
-
-#include "nsStreamConverterService.h"
-
-#ifdef BUILD_APPLEFILE_DECODER
-#include "nsAppleFileDecoder.h"
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsAppleFileDecoder)
-#endif
 
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -376,6 +363,7 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsAndroidNetworkLinkService)
 nsresult NS_NewFTPDirListingConv(nsFTPDirListingConv** result);
 #endif
 
+#include "nsStreamConverterService.h"
 #include "nsMultiMixedConv.h"
 #include "nsHTTPCompressConv.h"
 #include "mozTXTToHTMLConv.h"
@@ -721,9 +709,6 @@ NS_DEFINE_NAMED_CID(NS_MIMEINPUTSTREAM_CID);
 NS_DEFINE_NAMED_CID(NS_PROTOCOLPROXYSERVICE_CID);
 NS_DEFINE_NAMED_CID(NS_STREAMCONVERTERSERVICE_CID);
 NS_DEFINE_NAMED_CID(NS_DASHBOARD_CID);
-#ifdef BUILD_APPLEFILE_DECODER
-NS_DEFINE_NAMED_CID(NS_APPLEFILEDECODER_CID);
-#endif
 #ifdef NECKO_PROTOCOL_ftp
 NS_DEFINE_NAMED_CID(NS_FTPDIRLISTINGCONVERTER_CID);
 #endif
@@ -859,9 +844,6 @@ static const mozilla::Module::CIDEntry kNeckoCIDs[] = {
     { &kNS_PROTOCOLPROXYSERVICE_CID, true, nullptr, nsProtocolProxyServiceConstructor },
     { &kNS_STREAMCONVERTERSERVICE_CID, false, nullptr, CreateNewStreamConvServiceFactory },
     { &kNS_DASHBOARD_CID, false, nullptr, mozilla::net::DashboardConstructor },
-#ifdef BUILD_APPLEFILE_DECODER
-    { &kNS_APPLEFILEDECODER_CID, false, nullptr, nsAppleFileDecoderConstructor },
-#endif
 #ifdef NECKO_PROTOCOL_ftp
     { &kNS_FTPDIRLISTINGCONVERTER_CID, false, nullptr, CreateNewFTPDirListingConv },
 #endif
@@ -999,9 +981,6 @@ static const mozilla::Module::ContractIDEntry kNeckoContracts[] = {
     { NS_PROTOCOLPROXYSERVICE_CONTRACTID, &kNS_PROTOCOLPROXYSERVICE_CID },
     { NS_STREAMCONVERTERSERVICE_CONTRACTID, &kNS_STREAMCONVERTERSERVICE_CID },
     { NS_DASHBOARD_CONTRACTID, &kNS_DASHBOARD_CID },
-#ifdef BUILD_APPLEFILE_DECODER
-    { NS_IAPPLEFILEDECODER_CONTRACTID, &kNS_APPLEFILEDECODER_CID },
-#endif
 #ifdef NECKO_PROTOCOL_ftp
     { NS_ISTREAMCONVERTER_KEY FTP_TO_INDEX, &kNS_FTPDIRLISTINGCONVERTER_CID },
 #endif

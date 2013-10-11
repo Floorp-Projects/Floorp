@@ -29,10 +29,8 @@ libs:: $(FINAL_TARGET)/chrome/pdfjs.manifest $(FINAL_TARGET)/chrome/shumway.mani
 	  $(srcdir)/shumway \
           $(foreach exclude,$(exclude_files), -X $(srcdir)/shumway/$(exclude)) \
           $(FINAL_TARGET)/chrome
-	$(PYTHON) $(MOZILLA_DIR)/config/buildlist.py \
-	  $(FINAL_TARGET)/chrome.manifest "manifest chrome/pdfjs.manifest"
-	$(PYTHON) $(MOZILLA_DIR)/config/buildlist.py \
-	  $(FINAL_TARGET)/chrome.manifest "manifest chrome/shumway.manifest"
+	$(call py_action,buildlist,$(FINAL_TARGET)/chrome.manifest "manifest chrome/pdfjs.manifest")
+	$(call py_action,buildlist,$(FINAL_TARGET)/chrome.manifest "manifest chrome/shumway.manifest")
 
 ifdef MOZ_METRO
 $(DIST)/bin/metro/chrome/pdfjs.manifest: $(GLOBAL_DEPS)
@@ -43,6 +41,5 @@ libs:: $(DIST)/bin/metro/chrome/pdfjs.manifest
 	  $(srcdir)/pdfjs \
           $(foreach exclude,$(exclude_files), -X $(srcdir)/pdfjs/$(exclude)) \
           $(DIST)/bin/metro/chrome
-	$(PYTHON) $(MOZILLA_DIR)/config/buildlist.py \
-	  $(DIST)/bin/metro/chrome.manifest "manifest chrome/pdfjs.manifest"
+	$(call py_action,buildlist,$(DIST)/bin/metro/chrome.manifest "manifest chrome/pdfjs.manifest")
 endif

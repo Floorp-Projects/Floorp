@@ -26,6 +26,7 @@
 
 #include "mozilla/LinkedList.h"
 #include "mozilla/CheckedInt.h"
+#include "mozilla/Scoped.h"
 
 #ifdef XP_MACOSX
 #include "ForceDiscreteGPUHelperCGL.h"
@@ -82,8 +83,6 @@ template<typename> struct Nullable;
 namespace gfx {
 class SourceSurface;
 }
-
-using WebGLTexelConversions::WebGLTexelFormat;
 
 WebGLTexelFormat GetWebGLTexelFormat(GLenum format, GLenum type);
 
@@ -798,15 +797,17 @@ private:
 // -----------------------------------------------------------------------------
 // PROTECTED
 protected:
-    void SetDontKnowIfNeedFakeBlack() {
-        mFakeBlackStatus = DontKnowIfNeedFakeBlack;
+    void SetFakeBlackStatus(WebGLContextFakeBlackStatus x) {
+        mFakeBlackStatus = x;
     }
+    // Returns the current fake-black-status, except if it was Unknown,
+    // in which case this function resolves it first, so it never returns Unknown.
+    WebGLContextFakeBlackStatus ResolvedFakeBlackStatus();
 
-    bool NeedFakeBlack();
     void BindFakeBlackTextures();
     void UnbindFakeBlackTextures();
 
-    int WhatDoesVertexAttrib0Need();
+    WebGLVertexAttrib0Status WhatDoesVertexAttrib0Need();
     bool DoFakeVertexAttrib0(GLuint vertexCount);
     void UndoFakeVertexAttrib0();
     void InvalidateFakeVertexAttrib0();
@@ -1090,16 +1091,35 @@ protected:
     uint32_t mPixelStorePackAlignment, mPixelStoreUnpackAlignment, mPixelStoreColorspaceConversion;
     bool mPixelStoreFlipY, mPixelStorePremultiplyAlpha;
 
-    FakeBlackStatus mFakeBlackStatus;
+    WebGLContextFakeBlackStatus mFakeBlackStatus;
 
-    GLuint mBlackTexture2D, mBlackTextureCubeMap;
-    bool mBlackTexturesAreInitialized;
+    class FakeBlackTexture
+    {
+        gl::GLContext* mGL;
+        GLuint mGLName;
+
+    public:
+        FakeBlackTexture(gl::GLContext* gl, GLenum target, GLenum format);
+        ~FakeBlackTexture();
+        GLuint GLName() const { return mGLName; }
+    };
+
+    ScopedDeletePtr<FakeBlackTexture> mBlackOpaqueTexture2D,
+                                      mBlackOpaqueTextureCubeMap,
+                                      mBlackTransparentTexture2D,
+                                      mBlackTransparentTextureCubeMap;
+
+    void BindFakeBlackTexturesHelper(
+        GLenum target,
+        const nsTArray<WebGLRefPtr<WebGLTexture> >& boundTexturesArray,
+        ScopedDeletePtr<FakeBlackTexture> & opaqueTextureScopedPtr,
+        ScopedDeletePtr<FakeBlackTexture> & transparentTextureScopedPtr);
 
     GLfloat mVertexAttrib0Vector[4];
     GLfloat mFakeVertexAttrib0BufferObjectVector[4];
     size_t mFakeVertexAttrib0BufferObjectSize;
     GLuint mFakeVertexAttrib0BufferObject;
-    int mFakeVertexAttrib0BufferStatus;
+    WebGLVertexAttrib0Status mFakeVertexAttrib0BufferStatus;
 
     GLint mStencilRefFront, mStencilRefBack;
     GLuint mStencilValueMaskFront, mStencilValueMaskBack,
