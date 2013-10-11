@@ -15,13 +15,13 @@
 
 namespace js {
 
-namespace Probes {
+namespace probes {
 
 /*
  * Static probes
  *
  * The probe points defined in this file are scattered around the SpiderMonkey
- * source tree. The presence of Probes::someEvent() means that someEvent is
+ * source tree. The presence of probes::SomeEvent() means that someEvent is
  * about to happen or has happened. To the extent possible, probes should be
  * inserted in all paths associated with a given event, regardless of the
  * active runmode (interpreter/traceJIT/methodJIT/ionJIT).
@@ -57,37 +57,37 @@ extern const char anonymousName[];
  * to decide whether they can optimize in a way that would prevent probes from
  * firing.
  */
-bool callTrackingActive(JSContext *);
+bool CallTrackingActive(JSContext *);
 
 /*
  * Test whether anything is looking for JIT native code registration events.
  * This information will not be collected otherwise.
  */
-bool wantNativeAddressInfo(JSContext *);
+bool WantNativeAddressInfo(JSContext *);
 
 /* Entering a JS function */
-bool enterScript(JSContext *, JSScript *, JSFunction *, StackFrame *);
+bool EnterScript(JSContext *, JSScript *, JSFunction *, StackFrame *);
 
 /* About to leave a JS function */
-bool exitScript(JSContext *, JSScript *, JSFunction *, AbstractFramePtr);
-bool exitScript(JSContext *, JSScript *, JSFunction *, StackFrame *);
+bool ExitScript(JSContext *, JSScript *, JSFunction *, AbstractFramePtr);
+bool ExitScript(JSContext *, JSScript *, JSFunction *, StackFrame *);
 
 /* Executing a script */
-bool startExecution(JSScript *script);
+bool StartExecution(JSScript *script);
 
 /* Script has completed execution */
-bool stopExecution(JSScript *script);
+bool StopExecution(JSScript *script);
 
 /*
  * Object has been created. |obj| must exist (its class and size are read)
  */
-bool createObject(ExclusiveContext *cx, JSObject *obj);
+bool CreateObject(ExclusiveContext *cx, JSObject *obj);
 
 /*
  * Object is about to be finalized. |obj| must still exist (its class is
  * read)
  */
-bool finalizeObject(JSObject *obj);
+bool FinalizeObject(JSObject *obj);
 
 /* JIT code observation */
 
@@ -109,11 +109,11 @@ JITGranularityRequested(JSContext *cx);
  * (ICs are unregistered in a batch, so individual ICs are not registered.)
  */
 void
-discardExecutableRegion(void *start, size_t size);
+DiscardExecutableRegion(void *start, size_t size);
 
 /*
- * Internal: DTrace-specific functions to be called during Probes::enterScript
- * and Probes::exitScript. These will not be inlined, but the argument
+ * Internal: DTrace-specific functions to be called during probes::EnterScript
+ * and probes::ExitScript. These will not be inlined, but the argument
  * marshalling required for these probe points is expensive enough that it
  * shouldn't really matter.
  */
@@ -137,7 +137,7 @@ static const char *ObjectClassname(JSObject *obj) {
 #endif
 
 inline bool
-Probes::createObject(ExclusiveContext *cx, JSObject *obj)
+probes::CreateObject(ExclusiveContext *cx, JSObject *obj)
 {
     bool ok = true;
 
@@ -150,7 +150,7 @@ Probes::createObject(ExclusiveContext *cx, JSObject *obj)
 }
 
 inline bool
-Probes::finalizeObject(JSObject *obj)
+probes::FinalizeObject(JSObject *obj)
 {
     bool ok = true;
 

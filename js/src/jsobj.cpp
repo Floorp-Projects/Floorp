@@ -1309,7 +1309,7 @@ NewObject(ExclusiveContext *cx, const Class *clasp, types::TypeObject *type_, JS
 #endif
     }
 
-    Probes::createObject(cx, obj);
+    probes::CreateObject(cx, obj);
     return obj;
 }
 

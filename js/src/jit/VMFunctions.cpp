@@ -716,7 +716,7 @@ DebugEpilogue(JSContext *cx, BaselineFrame *frame, bool ok)
     if (frame->hasPushedSPSFrame()) {
         cx->runtime()->spsProfiler.exit(cx, frame->script(), frame->maybeFun());
         // Unset the pushedSPSFrame flag because DebugEpilogue may get called before
-        // Probes::exitScript in baseline during exception handling, and we don't
+        // probes::ExitScript in baseline during exception handling, and we don't
         // want to double-pop SPS frames.
         frame->unsetPushedSPSFrame();
     }
