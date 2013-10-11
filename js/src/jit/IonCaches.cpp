@@ -18,9 +18,11 @@
 #ifdef JS_ION_PERF
 # include "jit/PerfSpewer.h"
 #endif
+#include "jit/ParallelFunctions.h"
 #include "jit/VMFunctions.h"
 #include "vm/Shape.h"
 
+#include "jit/IonFrames-inl.h"
 #include "vm/Interpreter-inl.h"
 #include "vm/Shape-inl.h"
 
@@ -1224,7 +1226,7 @@ GetPropertyIC::tryAttachNative(JSContext *cx, IonScript *ion, HandleObject obj,
     switch (type) {
       case CanAttachReadSlot:
         GenerateReadSlot(cx, ion, masm, attacher, obj, holder,
-                            shape, object(), output());
+                         shape, object(), output());
         attachKind = idempotent() ? "idempotent reading"
                                     : "non idempotent reading";
         break;
@@ -1849,7 +1851,7 @@ GetPropertyParIC::attachTypedArrayLength(LockedJSContext &cx, IonScript *ion, JS
     return linkAndAttachStub(cx, masm, attacher, ion, "parallel typed array length");
 }
 
-ParallelResult
+bool
 GetPropertyParIC::update(ForkJoinSlice *slice, size_t cacheIndex,
                          HandleObject obj, MutableHandleValue vp)
 {
@@ -1861,11 +1863,11 @@ GetPropertyParIC::update(ForkJoinSlice *slice, size_t cacheIndex,
     // Grab the property early, as the pure path is fast anyways and doesn't
     // need a lock. If we can't do it purely, bail out of parallel execution.
     if (!GetPropertyPure(slice, obj, NameToId(cache.name()), vp.address()))
-        return TP_RETRY_SEQUENTIALLY;
+        return false;
 
     // Avoid unnecessary locking if cannot attach stubs.
     if (!cache.canAttachStub())
-        return TP_SUCCESS;
+        return true;
 
     {
         // Lock the context before mutating the cache. Ideally we'd like to do
@@ -1876,9 +1878,9 @@ GetPropertyParIC::update(ForkJoinSlice *slice, size_t cacheIndex,
         if (cache.canAttachStub()) {
             bool alreadyStubbed;
             if (!cache.hasOrAddStubbedShape(cx, obj->lastProperty(), &alreadyStubbed))
-                return TP_FATAL;
+                return slice->setPendingAbortFatal(ParallelBailoutFailedIC);
             if (alreadyStubbed)
-                return TP_SUCCESS;
+                return true;
 
             // See note about the stub limit in GetPropertyCache.
             bool attachedStub = false;
@@ -1893,13 +1895,13 @@ GetPropertyParIC::update(ForkJoinSlice *slice, size_t cacheIndex,
 
                 if (canCache == GetPropertyIC::CanAttachReadSlot) {
                     if (!cache.attachReadSlot(cx, ion, obj, holder, shape))
-                        return TP_FATAL;
+                        return slice->setPendingAbortFatal(ParallelBailoutFailedIC);
                     attachedStub = true;
                 }
 
                 if (!attachedStub && canCache == GetPropertyIC::CanAttachArrayLength) {
                     if (!cache.attachArrayLength(cx, ion, obj))
-                        return TP_FATAL;
+                        return slice->setPendingAbortFatal(ParallelBailoutFailedIC);
                     attachedStub = true;
                 }
             }
@@ -1909,13 +1911,13 @@ GetPropertyParIC::update(ForkJoinSlice *slice, size_t cacheIndex,
                 (cache.output().type() == MIRType_Value || cache.output().type() == MIRType_Int32))
             {
                 if (!cache.attachTypedArrayLength(cx, ion, obj))
-                    return TP_FATAL;
+                    return slice->setPendingAbortFatal(ParallelBailoutFailedIC);
                 attachedStub = true;
             }
         }
     }
 
-    return TP_SUCCESS;
+    return true;
 }
 
 void
@@ -1936,83 +1938,89 @@ IonCache::destroy()
 {
 }
 
-bool
-SetPropertyIC::attachNativeExisting(JSContext *cx, IonScript *ion, HandleObject obj,
-                                    HandleShape shape, bool checkTypeset)
+static void
+GenerateSetSlot(JSContext *cx, MacroAssembler &masm, IonCache::StubAttacher &attacher,
+                JSObject *obj, Shape *shape, Register object, ConstantOrRegister value,
+                bool needsTypeBarrier, bool checkTypeset)
 {
     JS_ASSERT(obj->isNative());
 
-    MacroAssembler masm(cx);
-    RepatchStubAppender attacher(*this);
-
     Label failures, barrierFailure;
     masm.branchPtr(Assembler::NotEqual,
-                   Address(object(), JSObject::offsetOfShape()),
+                   Address(object, JSObject::offsetOfShape()),
                    ImmGCPtr(obj->lastProperty()), &failures);
 
     // Guard that the incoming value is in the type set for the property
     // if a type barrier is required.
-    if (needsTypeBarrier()) {
+    if (needsTypeBarrier) {
         // We can't do anything that would change the HeapTypeSet, so
         // just guard that it's already there.
 
         // Obtain and guard on the TypeObject of the object.
-        types::TypeObject *type = obj->getType(cx);
+        types::TypeObject *type = obj->type();
         masm.branchPtr(Assembler::NotEqual,
-                       Address(object(), JSObject::offsetOfType()),
+                       Address(object, JSObject::offsetOfType()),
                        ImmGCPtr(type), &failures);
 
         if (checkTypeset) {
-            TypedOrValueRegister valReg = value().reg();
-            types::HeapTypeSet *propTypes = type->maybeGetProperty(NameToId(name()));
+            TypedOrValueRegister valReg = value.reg();
+            types::HeapTypeSet *propTypes = type->maybeGetProperty(shape->propid());
             JS_ASSERT(propTypes);
             JS_ASSERT(!propTypes->unknown());
 
-            Register scratchReg = object();
+            Register scratchReg = object;
             masm.push(scratchReg);
 
             masm.guardTypeSet(valReg, propTypes, scratchReg, &barrierFailure);
-            masm.pop(object());
+            masm.pop(object);
         }
     }
 
     if (obj->isFixedSlot(shape->slot())) {
-        Address addr(object(), JSObject::getFixedSlotOffset(shape->slot()));
+        Address addr(object, JSObject::getFixedSlotOffset(shape->slot()));
 
         if (cx->zone()->needsBarrier())
             masm.callPreBarrier(addr, MIRType_Value);
 
-        masm.storeConstantOrRegister(value(), addr);
+        masm.storeConstantOrRegister(value, addr);
     } else {
-        Register slotsReg = object();
-        masm.loadPtr(Address(object(), JSObject::offsetOfSlots()), slotsReg);
+        Register slotsReg = object;
+        masm.loadPtr(Address(object, JSObject::offsetOfSlots()), slotsReg);
 
         Address addr(slotsReg, obj->dynamicSlotIndex(shape->slot()) * sizeof(Value));
 
         if (cx->zone()->needsBarrier())
             masm.callPreBarrier(addr, MIRType_Value);
 
-        masm.storeConstantOrRegister(value(), addr);
+        masm.storeConstantOrRegister(value, addr);
     }
 
     attacher.jumpRejoin(masm);
 
     if (barrierFailure.used()) {
         masm.bind(&barrierFailure);
-        masm.pop(object());
+        masm.pop(object);
     }
 
     masm.bind(&failures);
     attacher.jumpNextStub(masm);
+}
 
+bool
+SetPropertyIC::attachSetSlot(JSContext *cx, IonScript *ion, HandleObject obj,
+                             HandleShape shape, bool checkTypeset)
+{
+    MacroAssembler masm(cx);
+    RepatchStubAppender attacher(*this);
+    GenerateSetSlot(cx, masm, attacher, obj, shape, object(), value(), needsTypeBarrier(),
+                    checkTypeset);
     return linkAndAttachStub(cx, masm, attacher, ion, "setting");
 }
 
 static bool
 IsCacheableSetPropCallNative(HandleObject obj, HandleObject holder, HandleShape shape)
 {
-    if (!obj->isNative())
-        return false;
+    JS_ASSERT(obj->isNative());
 
     if (!shape || !IsCacheableProtoChain(obj, holder))
         return false;
@@ -2023,11 +2031,9 @@ IsCacheableSetPropCallNative(HandleObject obj, HandleObject holder, HandleShape 
 }
 
 static bool
-IsCacheableSetPropCallPropertyOp(HandleObject obj, HandleObject holder,
-                                 HandleShape shape)
+IsCacheableSetPropCallPropertyOp(HandleObject obj, HandleObject holder, HandleShape shape)
 {
-    if (!obj->isNative())
-        return false;
+    JS_ASSERT(obj->isNative());
 
     if (!shape)
         return false;
@@ -2482,7 +2488,7 @@ SetPropertyIC::attachDOMProxyUnshadowed(JSContext *cx, IonScript *ion, HandleObj
 }
 
 bool
-SetPropertyIC::attachSetterCall(JSContext *cx, IonScript *ion,
+SetPropertyIC::attachCallSetter(JSContext *cx, IonScript *ion,
                                 HandleObject obj, HandleObject holder, HandleShape shape,
                                 void *returnAddr)
 {
@@ -2517,30 +2523,26 @@ SetPropertyIC::attachSetterCall(JSContext *cx, IonScript *ion,
     return linkAndAttachStub(cx, masm, attacher, ion, "setter call");
 }
 
-bool
-SetPropertyIC::attachNativeAdding(JSContext *cx, IonScript *ion, JSObject *obj,
-                                  HandleShape oldShape, HandleShape newShape,
-                                  HandleShape propShape)
+static void
+GenerateAddSlot(JSContext *cx, MacroAssembler &masm, IonCache::StubAttacher &attacher,
+                JSObject *obj, Shape *oldShape, Register object, ConstantOrRegister value)
 {
     JS_ASSERT(obj->isNative());
 
-    MacroAssembler masm(cx);
-    RepatchStubAppender attacher(*this);
-
     Label failures;
 
-    /* Guard the type of the object */
-    masm.branchPtr(Assembler::NotEqual, Address(object(), JSObject::offsetOfType()),
+    // Guard the type of the object
+    masm.branchPtr(Assembler::NotEqual, Address(object, JSObject::offsetOfType()),
                    ImmGCPtr(obj->type()), &failures);
 
-    /* Guard shapes along prototype chain. */
-    masm.branchTestObjShape(Assembler::NotEqual, object(), oldShape, &failures);
+    // Guard shapes along prototype chain.
+    masm.branchTestObjShape(Assembler::NotEqual, object, oldShape, &failures);
 
     Label protoFailures;
-    masm.push(object());    // save object reg because we clobber it
+    masm.push(object);    // save object reg because we clobber it
 
     JSObject *proto = obj->getProto();
-    Register protoReg = object();
+    Register protoReg = object;
     while (proto) {
         Shape *protoShape = proto->lastProperty();
 
@@ -2554,48 +2556,58 @@ SetPropertyIC::attachNativeAdding(JSContext *cx, IonScript *ion, JSObject *obj,
         proto = proto->getProto();
     }
 
-    masm.pop(object());     // restore object reg
+    masm.pop(object);     // restore object reg
 
-    /* Changing object shape.  Write the object's new shape. */
-    Address shapeAddr(object(), JSObject::offsetOfShape());
+    // Changing object shape.  Write the object's new shape.
+    Shape *newShape = obj->lastProperty();
+    Address shapeAddr(object, JSObject::offsetOfShape());
     if (cx->zone()->needsBarrier())
         masm.callPreBarrier(shapeAddr, MIRType_Shape);
     masm.storePtr(ImmGCPtr(newShape), shapeAddr);
 
-    /* Set the value on the object. */
-    if (obj->isFixedSlot(propShape->slot())) {
-        Address addr(object(), JSObject::getFixedSlotOffset(propShape->slot()));
-        masm.storeConstantOrRegister(value(), addr);
+    // Set the value on the object. Since this is an add, obj->lastProperty()
+    // must be the shape of the property we are adding.
+    if (obj->isFixedSlot(newShape->slot())) {
+        Address addr(object, JSObject::getFixedSlotOffset(newShape->slot()));
+        masm.storeConstantOrRegister(value, addr);
     } else {
-        Register slotsReg = object();
+        Register slotsReg = object;
 
-        masm.loadPtr(Address(object(), JSObject::offsetOfSlots()), slotsReg);
+        masm.loadPtr(Address(object, JSObject::offsetOfSlots()), slotsReg);
 
-        Address addr(slotsReg, obj->dynamicSlotIndex(propShape->slot()) * sizeof(Value));
-        masm.storeConstantOrRegister(value(), addr);
+        Address addr(slotsReg, obj->dynamicSlotIndex(newShape->slot()) * sizeof(Value));
+        masm.storeConstantOrRegister(value, addr);
     }
 
-    /* Success. */
+    // Success.
     attacher.jumpRejoin(masm);
 
-    /* Failure. */
+    // Failure.
     masm.bind(&protoFailures);
-    masm.pop(object());
+    masm.pop(object);
     masm.bind(&failures);
 
     attacher.jumpNextStub(masm);
+}
 
+bool
+SetPropertyIC::attachAddSlot(JSContext *cx, IonScript *ion, JSObject *obj, HandleShape oldShape)
+{
+    MacroAssembler masm(cx);
+    RepatchStubAppender attacher(*this);
+    GenerateAddSlot(cx, masm, attacher, obj, oldShape, object(), value());
     return linkAndAttachStub(cx, masm, attacher, ion, "adding");
 }
 
 static bool
-IsPropertySetInlineable(JSContext *cx, const SetPropertyIC &cache, HandleObject obj,
-                        HandleId id, MutableHandleShape pshape, bool *checkTypeset)
+IsPropertySetInlineable(HandleObject obj, HandleId id, MutableHandleShape pshape,
+                        ConstantOrRegister val, bool needsTypeBarrier, bool *checkTypeset)
 {
-    if (!obj->isNative())
-        return false;
+    JS_ASSERT(obj->isNative());
 
-    pshape.set(obj->nativeLookup(cx, id));
+    // Do a pure non-proto chain climbing lookup. See note in
+    // CanAttachNativeGetProp.
+    pshape.set(obj->nativeLookupPure(id));
 
     if (!pshape)
         return false;
@@ -2610,17 +2622,16 @@ IsPropertySetInlineable(JSContext *cx, const SetPropertyIC &cache, HandleObject 
         return false;
 
     bool shouldCheck = false;
-    types::TypeObject *type = obj->getType(cx);
-    if (cache.needsTypeBarrier() && !type->unknownProperties()) {
+    types::TypeObject *type = obj->type();
+    if (needsTypeBarrier && !type->unknownProperties()) {
         types::HeapTypeSet *propTypes = type->maybeGetProperty(id);
         if (!propTypes)
             return false;
         if (!propTypes->unknown()) {
             shouldCheck = true;
-            ConstantOrRegister val = cache.value();
             if (val.constant()) {
                 // If the input is a constant, then don't bother if the barrier will always fail.
-                if (!propTypes->hasType(types::GetValueType(cache.value().value())))
+                if (!propTypes->hasType(types::GetValueType(val.value())))
                     return false;
                 shouldCheck = false;
             } else {
@@ -2645,19 +2656,21 @@ IsPropertySetInlineable(JSContext *cx, const SetPropertyIC &cache, HandleObject 
 }
 
 static bool
-IsPropertyAddInlineable(JSContext *cx, HandleObject obj, HandleId id, uint32_t oldSlots,
-                        MutableHandleShape pShape)
+IsPropertyAddInlineable(HandleObject obj, HandleId id, uint32_t oldSlots, HandleShape oldShape)
 {
-    if (!obj->isNative())
+    JS_ASSERT(obj->isNative());
+
+    // If the shape of the object did not change, then this was not an add.
+    if (obj->lastProperty() == oldShape)
         return false;
 
-    // This is not a Add, the property exists.
-    if (pShape.get())
-        return false;
-
-    RootedShape shape(cx, obj->nativeLookup(cx, id));
+    Shape *shape = obj->nativeLookupPure(id);
     if (!shape || shape->inDictionary() || !shape->hasSlot() || !shape->hasDefaultSetter())
         return false;
+
+    // If we have a shape at this point and the object's shape changed, then
+    // the shape must be the one we just added.
+    JS_ASSERT(shape == obj->lastProperty());
 
     // If object has a non-default resolve hook, don't inline
     if (obj->getClass()->resolve != JS_ResolveStub)
@@ -2671,21 +2684,22 @@ IsPropertyAddInlineable(JSContext *cx, HandleObject obj, HandleId id, uint32_t o
     if (!obj->nonProxyIsExtensible() || !shape->writable())
         return false;
 
-    // walk up the object prototype chain and ensure that all prototypes
+    // Walk up the object prototype chain and ensure that all prototypes
     // are native, and that all prototypes have no getter or setter
     // defined on the property
     for (JSObject *proto = obj->getProto(); proto; proto = proto->getProto()) {
-        // if prototype is non-native, don't optimize
+        // If prototype is non-native, don't optimize
         if (!proto->isNative())
             return false;
 
-        // if prototype defines this property in a non-plain way, don't optimize
-        Shape *protoShape = proto->nativeLookup(cx, id);
+        // If prototype defines this property in a non-plain way, don't optimize
+        Shape *protoShape = proto->nativeLookupPure(id);
         if (protoShape && !protoShape->hasDefaultSetter())
             return false;
 
-        // Otherise, if there's no such property, watch out for a resolve hook that would need
-        // to be invoked and thus prevent inlining of property addition.
+        // Otherwise, if there's no such property, watch out for a resolve
+        // hook that would need to be invoked and thus prevent inlining of
+        // property addition.
         if (proto->getClass()->resolve != JS_ResolveStub)
              return false;
     }
@@ -2696,8 +2710,38 @@ IsPropertyAddInlineable(JSContext *cx, HandleObject obj, HandleId id, uint32_t o
     if (obj->numDynamicSlots() != oldSlots)
         return false;
 
-    pShape.set(shape);
     return true;
+}
+
+static SetPropertyIC::NativeSetPropCacheability
+CanAttachNativeSetProp(HandleObject obj, HandleId id, ConstantOrRegister val,
+                       bool needsTypeBarrier, MutableHandleObject holder,
+                       MutableHandleShape shape, bool *checkTypeset)
+{
+    if (!obj->isNative())
+        return SetPropertyIC::CanAttachNone;
+
+    // See if the property exists on the object.
+    if (IsPropertySetInlineable(obj, id, shape, val, needsTypeBarrier, checkTypeset))
+        return SetPropertyIC::CanAttachSetSlot;
+
+    // If we couldn't find the property on the object itself, do a full, but
+    // still pure lookup for setters.
+    if (!LookupPropertyPure(obj, id, holder.address(), shape.address()))
+        return SetPropertyIC::CanAttachNone;
+
+    // If the object doesn't have the property, we don't know if we can attach
+    // a stub to add the property until we do the VM call to add.
+    if (!shape)
+        return SetPropertyIC::MaybeCanAttachAddSlot;
+
+    if (IsCacheableSetPropCallPropertyOp(obj, holder, shape) ||
+        IsCacheableSetPropCallNative(obj, holder, shape))
+    {
+        return SetPropertyIC::CanAttachCallSetter;
+    }
+
+    return SetPropertyIC::CanAttachNone;
 }
 
 bool
@@ -2712,12 +2756,11 @@ SetPropertyIC::update(JSContext *cx, size_t cacheIndex, HandleObject obj,
     SetPropertyIC &cache = ion->getCache(cacheIndex).toSetProperty();
     RootedPropertyName name(cx, cache.name());
     RootedId id(cx, AtomToId(name));
-    RootedShape shape(cx);
-    RootedObject holder(cx);
 
     // Stop generating new stubs once we hit the stub count limit, see
     // GetPropertyCache.
     bool inlinable = cache.canAttachStub() && !obj->watched();
+    NativeSetPropCacheability canCache = CanAttachNone;
     bool addedSetterStub = false;
     if (inlinable) {
         if (!addedSetterStub && obj->is<ProxyObject>()) {
@@ -2745,24 +2788,29 @@ SetPropertyIC::update(JSContext *cx, size_t cacheIndex, HandleObject obj,
                 addedSetterStub = true;
             }
         }
+
+        // Make sure the object de-lazifies its type. We do this here so that
+        // the parallel IC can share code that assumes that native objects all
+        // have a type object.
+        if (obj->isNative() && !obj->getType(cx))
+            return false;
+
         RootedShape shape(cx);
+        RootedObject holder(cx);
         bool checkTypeset;
-        if (!addedSetterStub && IsPropertySetInlineable(cx, cache, obj, id, &shape, &checkTypeset)) {
-            if (!cache.attachNativeExisting(cx, ion, obj, shape, checkTypeset))
+        canCache = CanAttachNativeSetProp(obj, id, cache.value(), cache.needsTypeBarrier(),
+                                          &holder, &shape, &checkTypeset);
+
+        if (!addedSetterStub && canCache == CanAttachSetSlot) {
+            if (!cache.attachSetSlot(cx, ion, obj, shape, checkTypeset))
                 return false;
             addedSetterStub = true;
-        } else if (!addedSetterStub) {
-            RootedObject holder(cx);
-            if (!JSObject::lookupProperty(cx, obj, name, &holder, &shape))
-                return false;
+        }
 
-            if (IsCacheableSetPropCallPropertyOp(obj, holder, shape) ||
-                IsCacheableSetPropCallNative(obj, holder, shape))
-            {
-                if (!cache.attachSetterCall(cx, ion, obj, holder, shape, returnAddr))
-                    return false;
-                addedSetterStub = true;
-            }
+        if (!addedSetterStub && canCache == CanAttachCallSetter) {
+            if (!cache.attachCallSetter(cx, ion, obj, holder, shape, returnAddr))
+                return false;
+            addedSetterStub = true;
         }
     }
 
@@ -2774,12 +2822,11 @@ SetPropertyIC::update(JSContext *cx, size_t cacheIndex, HandleObject obj,
         return false;
 
     // The property did not exist before, now we can try to inline the property add.
-    if (inlinable && !addedSetterStub && !cache.needsTypeBarrier() &&
-        obj->lastProperty() != oldShape &&
-        IsPropertyAddInlineable(cx, obj, id, oldSlots, &shape))
+    if (!addedSetterStub && canCache == MaybeCanAttachAddSlot &&
+        !cache.needsTypeBarrier() &&
+        IsPropertyAddInlineable(obj, id, oldSlots, oldShape))
     {
-        RootedShape newShape(cx, obj->lastProperty());
-        if (!cache.attachNativeAdding(cx, ion, obj, oldShape, newShape, shape))
+        if (!cache.attachAddSlot(cx, ion, obj, oldShape))
             return false;
     }
 
@@ -2791,6 +2838,100 @@ SetPropertyIC::reset()
 {
     RepatchIonCache::reset();
     hasGenericProxyStub_ = false;
+}
+
+bool
+SetPropertyParIC::update(ForkJoinSlice *slice, size_t cacheIndex, HandleObject obj,
+                         HandleValue value)
+{
+    JS_ASSERT(slice->isThreadLocal(obj));
+
+    AutoFlushCache afc("SetPropertyParCache", slice->runtime()->ionRuntime());
+
+    IonScript *ion = GetTopIonJSScript(slice)->parallelIonScript();
+    SetPropertyParIC &cache = ion->getCache(cacheIndex).toSetPropertyPar();
+
+    RootedValue v(slice, value);
+    RootedId id(slice, AtomToId(cache.name()));
+
+    // Avoid unnecessary locking if cannot attach stubs.
+    if (!cache.canAttachStub()) {
+        return baseops::SetPropertyHelper<ParallelExecution>(slice, obj, obj, id, 0,
+                                                             &v, cache.strict());
+    }
+
+    SetPropertyIC::NativeSetPropCacheability canCache = SetPropertyIC::CanAttachNone;
+    bool attachedStub = false;
+
+    {
+        LockedJSContext cx(slice);
+
+        if (cache.canAttachStub()) {
+            bool alreadyStubbed;
+            if (!cache.hasOrAddStubbedShape(cx, obj->lastProperty(), &alreadyStubbed))
+                return slice->setPendingAbortFatal(ParallelBailoutFailedIC);
+            if (alreadyStubbed) {
+                return baseops::SetPropertyHelper<ParallelExecution>(slice, obj, obj, id, 0,
+                                                                     &v, cache.strict());
+            }
+
+            // If the object has a lazy type, we need to de-lazify it, but
+            // this is not safe in parallel.
+            if (obj->hasLazyType())
+                return false;
+
+            {
+                RootedShape shape(slice);
+                RootedObject holder(slice);
+                bool checkTypeset;
+                canCache = CanAttachNativeSetProp(obj, id, cache.value(), cache.needsTypeBarrier(),
+                                                  &holder, &shape, &checkTypeset);
+
+                if (canCache == SetPropertyIC::CanAttachSetSlot) {
+                    if (!cache.attachSetSlot(cx, ion, obj, shape, checkTypeset))
+                        return slice->setPendingAbortFatal(ParallelBailoutFailedIC);
+                    attachedStub = true;
+                }
+            }
+        }
+    }
+
+    uint32_t oldSlots = obj->numDynamicSlots();
+    RootedShape oldShape(slice, obj->lastProperty());
+
+    if (!baseops::SetPropertyHelper<ParallelExecution>(slice, obj, obj, id, 0, &v, cache.strict()))
+        return false;
+
+    if (!attachedStub && canCache == SetPropertyIC::MaybeCanAttachAddSlot &&
+        !cache.needsTypeBarrier() &&
+        IsPropertyAddInlineable(obj, id, oldSlots, oldShape))
+    {
+        LockedJSContext cx(slice);
+        if (cache.canAttachStub() && !cache.attachAddSlot(cx, ion, obj, oldShape))
+            return slice->setPendingAbortFatal(ParallelBailoutFailedIC);
+    }
+
+    return true;
+}
+
+bool
+SetPropertyParIC::attachSetSlot(LockedJSContext &cx, IonScript *ion, JSObject *obj, Shape *shape,
+                                  bool checkTypeset)
+{
+    MacroAssembler masm(cx);
+    DispatchStubPrepender attacher(*this);
+    GenerateSetSlot(cx, masm, attacher, obj, shape, object(), value(), needsTypeBarrier(),
+                    checkTypeset);
+    return linkAndAttachStub(cx, masm, attacher, ion, "parallel setting");
+}
+
+bool
+SetPropertyParIC::attachAddSlot(LockedJSContext &cx, IonScript *ion, JSObject *obj, Shape *oldShape)
+{
+    MacroAssembler masm(cx);
+    DispatchStubPrepender attacher(*this);
+    GenerateAddSlot(cx, masm, attacher, obj, oldShape, object(), value());
+    return linkAndAttachStub(cx, masm, attacher, ion, "parallel adding");
 }
 
 const size_t GetElementIC::MAX_FAILED_UPDATES = 16;
@@ -3240,7 +3381,7 @@ GetElementIC::reset()
 }
 
 static bool
-IsElementSetInlineable(HandleObject obj, HandleValue index)
+IsDenseElementSetInlineable(JSObject *obj, const Value &idval)
 {
     if (!obj->is<ArrayObject>())
         return false;
@@ -3248,7 +3389,7 @@ IsElementSetInlineable(HandleObject obj, HandleValue index)
     if (obj->watched())
         return false;
 
-    if (!index.isInt32())
+    if (!idval.isInt32())
         return false;
 
     // The object may have a setter definition,
@@ -3271,8 +3412,18 @@ IsElementSetInlineable(HandleObject obj, HandleValue index)
     return true;
 }
 
-bool
-SetElementIC::attachDenseElement(JSContext *cx, IonScript *ion, JSObject *obj, const Value &idval)
+static bool
+IsTypedArrayElementSetInlineable(JSObject *obj, const Value &idval, const Value &value)
+{
+    // Don't bother attaching stubs for assigning strings and objects.
+    return (obj->is<TypedArrayObject>() && idval.isInt32() &&
+            !value.isString() && !value.isObject());
+}
+
+static bool
+GenerateSetDenseElement(JSContext *cx, MacroAssembler &masm, IonCache::StubAttacher &attacher,
+                        JSObject *obj, const Value &idval, Register object, ValueOperand indexVal,
+                        ConstantOrRegister value, Register tempToUnboxIndex, Register temp)
 {
     JS_ASSERT(obj->isNative());
     JS_ASSERT(idval.isInt32());
@@ -3280,26 +3431,22 @@ SetElementIC::attachDenseElement(JSContext *cx, IonScript *ion, JSObject *obj, c
     Label failures;
     Label outOfBounds; // index >= capacity || index > initialized length
 
-    MacroAssembler masm(cx);
-    RepatchStubAppender attacher(*this);
-
     // Guard object is a dense array.
-    RootedShape shape(cx, obj->lastProperty());
+    Shape *shape = obj->lastProperty();
     if (!shape)
         return false;
-    masm.branchTestObjShape(Assembler::NotEqual, object(), shape, &failures);
+    masm.branchTestObjShape(Assembler::NotEqual, object, shape, &failures);
 
     // Ensure the index is an int32 value.
-    ValueOperand indexVal = index();
     masm.branchTestInt32(Assembler::NotEqual, indexVal, &failures);
 
     // Unbox the index.
-    Register index = masm.extractInt32(indexVal, tempToUnboxIndex());
+    Register index = masm.extractInt32(indexVal, tempToUnboxIndex);
 
     {
         // Load obj->elements.
-        Register elements = temp();
-        masm.loadPtr(Address(object(), JSObject::offsetOfElements()), elements);
+        Register elements = temp;
+        masm.loadPtr(Address(object, JSObject::offsetOfElements()), elements);
 
         // Compute the location of the element.
         BaseIndex target(elements, index, TimesEight);
@@ -3342,12 +3489,12 @@ SetElementIC::attachDenseElement(JSContext *cx, IonScript *ion, JSObject *obj, c
 
         // Call post barrier if necessary, and recalculate elements pointer if it got cobbered.
         Register postBarrierScratch = elements;
-        if (masm.maybeCallPostBarrier(object(), value(), postBarrierScratch))
-            masm.loadPtr(Address(object(), JSObject::offsetOfElements()), elements);
+        if (masm.maybeCallPostBarrier(object, value, postBarrierScratch))
+            masm.loadPtr(Address(object, JSObject::offsetOfElements()), elements);
 
         // Store the value.
         masm.bind(&storeElem);
-        masm.storeConstantOrRegister(value(), target);
+        masm.storeConstantOrRegister(value, target);
     }
     attacher.jumpRejoin(masm);
 
@@ -3355,6 +3502,21 @@ SetElementIC::attachDenseElement(JSContext *cx, IonScript *ion, JSObject *obj, c
     masm.bind(&outOfBounds);
     masm.bind(&failures);
     attacher.jumpNextStub(masm);
+
+    return true;
+}
+
+bool
+SetElementIC::attachDenseElement(JSContext *cx, IonScript *ion, JSObject *obj, const Value &idval)
+{
+    MacroAssembler masm(cx);
+    RepatchStubAppender attacher(*this);
+    if (!GenerateSetDenseElement(cx, masm, attacher, obj, idval,
+                                 object(), index(), value(),
+                                 tempToUnboxIndex(), temp()))
+    {
+        return false;
+    }
 
     setHasDenseStub();
     return linkAndAttachStub(cx, masm, attacher, ion, "dense array");
@@ -3443,14 +3605,6 @@ GenerateSetTypedArrayElement(JSContext *cx, MacroAssembler &masm, IonCache::Stub
     return true;
 }
 
-/* static */ bool
-SetElementIC::canAttachTypedArrayElement(JSObject *obj, const Value &idval, const Value &value)
-{
-    // Don't bother attaching stubs for assigning strings and objects.
-    return (obj->is<TypedArrayObject>() && idval.isInt32() &&
-            !value.isString() && !value.isObject());
-}
-
 bool
 SetElementIC::attachTypedArrayElement(JSContext *cx, IonScript *ion, TypedArrayObject *tarr)
 {
@@ -3475,12 +3629,12 @@ SetElementIC::update(JSContext *cx, size_t cacheIndex, HandleObject obj,
 
     bool attachedStub = false;
     if (cache.canAttachStub()) {
-        if (!cache.hasDenseStub() && IsElementSetInlineable(obj, idval)) {
+        if (!cache.hasDenseStub() && IsDenseElementSetInlineable(obj, idval)) {
             if (!cache.attachDenseElement(cx, ion, obj, idval))
                 return false;
             attachedStub = true;
         }
-        if (!attachedStub && canAttachTypedArrayElement(obj, idval, value)) {
+        if (!attachedStub && IsTypedArrayElementSetInlineable(obj, idval, value)) {
             TypedArrayObject *tarr = &obj->as<TypedArrayObject>();
             if (!cache.attachTypedArrayElement(cx, ion, tarr))
                 return false;
@@ -3497,6 +3651,76 @@ SetElementIC::reset()
 {
     RepatchIonCache::reset();
     hasDenseStub_ = false;
+}
+
+bool
+SetElementParIC::attachDenseElement(LockedJSContext &cx, IonScript *ion, JSObject *obj,
+                                    const Value &idval)
+{
+    MacroAssembler masm(cx);
+    DispatchStubPrepender attacher(*this);
+    if (!GenerateSetDenseElement(cx, masm, attacher, obj, idval,
+                                 object(), index(), value(),
+                                 tempToUnboxIndex(), temp()))
+    {
+        return false;
+    }
+
+    return linkAndAttachStub(cx, masm, attacher, ion, "parallel dense array");
+}
+
+bool
+SetElementParIC::attachTypedArrayElement(LockedJSContext &cx, IonScript *ion,
+                                         TypedArrayObject *tarr)
+{
+    MacroAssembler masm(cx);
+    DispatchStubPrepender attacher(*this);
+    if (!GenerateSetTypedArrayElement(cx, masm, attacher, tarr,
+                                      object(), index(), value(),
+                                      tempToUnboxIndex(), temp(), tempFloat()))
+    {
+        return false;
+    }
+
+    return linkAndAttachStub(cx, masm, attacher, ion, "parallel typed array");
+}
+
+bool
+SetElementParIC::update(ForkJoinSlice *slice, size_t cacheIndex, HandleObject obj,
+                        HandleValue idval, HandleValue value)
+{
+    IonScript *ion = GetTopIonJSScript(slice)->parallelIonScript();
+    SetElementParIC &cache = ion->getCache(cacheIndex).toSetElementPar();
+
+    // Avoid unnecessary locking if cannot attach stubs.
+    if (!cache.canAttachStub())
+        return SetElementPar(slice, obj, idval, value, cache.strict());
+
+    {
+        LockedJSContext cx(slice);
+
+        if (cache.canAttachStub()) {
+            bool alreadyStubbed;
+            if (!cache.hasOrAddStubbedShape(cx, obj->lastProperty(), &alreadyStubbed))
+                return slice->setPendingAbortFatal(ParallelBailoutFailedIC);
+            if (alreadyStubbed)
+                return SetElementPar(slice, obj, idval, value, cache.strict());
+
+            bool attachedStub = false;
+            if (IsDenseElementSetInlineable(obj, idval)) {
+                if (!cache.attachDenseElement(cx, ion, obj, idval))
+                    return slice->setPendingAbortFatal(ParallelBailoutFailedIC);
+                attachedStub = true;
+            }
+            if (!attachedStub && IsTypedArrayElementSetInlineable(obj, idval, value)) {
+                TypedArrayObject *tarr = &obj->as<TypedArrayObject>();
+                if (!cache.attachTypedArrayElement(cx, ion, tarr))
+                    return slice->setPendingAbortFatal(ParallelBailoutFailedIC);
+            }
+        }
+    }
+
+    return SetElementPar(slice, obj, idval, value, cache.strict());
 }
 
 bool
@@ -3540,7 +3764,7 @@ GetElementParIC::attachTypedArrayElement(LockedJSContext &cx, IonScript *ion,
     return linkAndAttachStub(cx, masm, attacher, ion, "parallel typed array");
 }
 
-ParallelResult
+bool
 GetElementParIC::update(ForkJoinSlice *slice, size_t cacheIndex, HandleObject obj,
                         HandleValue idval, MutableHandleValue vp)
 {
@@ -3552,11 +3776,11 @@ GetElementParIC::update(ForkJoinSlice *slice, size_t cacheIndex, HandleObject ob
     // Try to get the element early, as the pure path doesn't need a lock. If
     // we can't do it purely, bail out of parallel execution.
     if (!GetObjectElementOperationPure(slice, obj, idval, vp.address()))
-        return TP_RETRY_SEQUENTIALLY;
+        return false;
 
     // Avoid unnecessary locking if cannot attach stubs.
     if (!cache.canAttachStub())
-        return TP_SUCCESS;
+        return true;
 
     {
         LockedJSContext cx(slice);
@@ -3564,16 +3788,15 @@ GetElementParIC::update(ForkJoinSlice *slice, size_t cacheIndex, HandleObject ob
         if (cache.canAttachStub()) {
             bool alreadyStubbed;
             if (!cache.hasOrAddStubbedShape(cx, obj->lastProperty(), &alreadyStubbed))
-                return TP_FATAL;
+                return slice->setPendingAbortFatal(ParallelBailoutFailedIC);
             if (alreadyStubbed)
-                return TP_SUCCESS;
+                return true;
 
             jsid id;
             if (!ValueToIdPure(idval, &id))
-                return TP_FATAL;
+                return false;
 
             bool attachedStub = false;
-
             if (cache.monitoredResult() &&
                 GetElementIC::canAttachGetProp(obj, idval, id))
             {
@@ -3587,7 +3810,7 @@ GetElementParIC::update(ForkJoinSlice *slice, size_t cacheIndex, HandleObject ob
                 if (canCache == GetPropertyIC::CanAttachReadSlot)
                 {
                     if (!cache.attachReadSlot(cx, ion, obj, idval, name, holder, shape))
-                        return TP_FATAL;
+                        return slice->setPendingAbortFatal(ParallelBailoutFailedIC);
                     attachedStub = true;
                 }
             }
@@ -3595,20 +3818,20 @@ GetElementParIC::update(ForkJoinSlice *slice, size_t cacheIndex, HandleObject ob
                 GetElementIC::canAttachDenseElement(obj, idval))
             {
                 if (!cache.attachDenseElement(cx, ion, obj, idval))
-                    return TP_FATAL;
+                    return slice->setPendingAbortFatal(ParallelBailoutFailedIC);
                 attachedStub = true;
             }
             if (!attachedStub &&
                 GetElementIC::canAttachTypedArrayElement(obj, idval, cache.output()))
             {
                 if (!cache.attachTypedArrayElement(cx, ion, &obj->as<TypedArrayObject>(), idval))
-                    return TP_FATAL;
+                    return slice->setPendingAbortFatal(ParallelBailoutFailedIC);
                 attachedStub = true;
             }
         }
     }
 
-    return TP_SUCCESS;
+    return true;
 }
 
 bool

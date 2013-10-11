@@ -1,0 +1,62 @@
+<!DOCTYPE HTML>
+<title>WebGL test: `highp` support</title>
+<script src="/MochiKit/MochiKit.js"></script>
+<script src="/tests/SimpleTest/SimpleTest.js"></script>
+<link rel="stylesheet" href="/tests/SimpleTest/test.css">
+<script src="driver-info.js"></script>
+<script src="webgl-util.js"></script>
+<script id="shader-vs" type="x-shader/x-vertex">
+
+void main(void) {
+  gl_Position = vec4(vec3(0.0), 1.0);
+}
+
+</script>
+<script id="shader-fs" type="x-shader/x-fragment">
+
+precision highp float;
+
+void main(void) {
+  gl_FragColor = vec4(1.0, 1.0, 1.0, 1.0);
+}
+
+</script>
+<body>
+<canvas id="c"></canvas>
+<script>
+
+// Give ourselves a scope to return early from:
+(function() {
+  var gl = WebGLUtil.getWebGL('c');
+  if (!gl) {
+    todo(false, 'WebGL is unavailable.');
+    return;
+  }
+
+  // Catch actual WebGLUtil errors, not GL errors.
+  function errorFunc(str) {
+    ok(false, 'Error: ' + str);
+  }
+  WebGLUtil.setErrorFunc(errorFunc);
+
+  function checkGLError(func, info) {
+    var error = gl.getError();
+    var prefix = info ? ('[' + info + '] ') : ''
+    func(!error, prefix + 'gl.getError should be 0x0, was 0x' + error.toString(16) + '.');
+  }
+
+  var format = gl.getShaderPrecisionFormat(gl.FRAGMENT_SHADER, gl.HIGH_FLOAT);
+  var prog = WebGLUtil.createProgramByIds(gl, 'shader-vs', 'shader-fs');
+  checkGLError(ok);
+  
+  if (format) {
+    ok(prog, 'Frag shader with unconditional `precision highp float` should ' +
+             'link if `getShaderPrecisionFormat` gives a format for it.');
+  } else {
+    ok(!prog, 'Frag shader with unconditional `precision highp float` should ' +
+              'NOT link if `getShaderPrecisionFormat` gives NO format for it.');
+  }
+})();
+
+</script>
+

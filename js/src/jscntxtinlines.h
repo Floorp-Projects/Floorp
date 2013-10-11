@@ -557,10 +557,10 @@ JSNativeThreadSafeWrapper(JSContext *cx, unsigned argc, JS::Value *vp)
 }
 
 template <JSThreadSafeNative threadSafeNative>
-inline js::ParallelResult
+inline bool
 JSParallelNativeThreadSafeWrapper(js::ForkJoinSlice *slice, unsigned argc, JS::Value *vp)
 {
-    return threadSafeNative(slice, argc, vp) ? js::TP_SUCCESS : js::TP_FATAL;
+    return threadSafeNative(slice, argc, vp);
 }
 
 /* static */ inline JSContext *
