@@ -329,7 +329,7 @@ private:
   friend class nsFetchTelemetryData;
 };
 
-TelemetryImpl*  TelemetryImpl::sTelemetry = NULL;
+TelemetryImpl*  TelemetryImpl::sTelemetry = nullptr;
 
 size_t
 TelemetryImpl::SizeOfIncludingThisHelper(mozilla::MallocSizeOf aMallocSizeOf)
@@ -531,16 +531,16 @@ ReflectHistogramAndSamples(JSContext *cx, JS::Handle<JSObject*> obj, Histogram *
     return REFLECT_CORRUPT;
   }
 
-  if (!(JS_DefineProperty(cx, obj, "min", INT_TO_JSVAL(h->declared_min()), NULL, NULL, JSPROP_ENUMERATE)
-        && JS_DefineProperty(cx, obj, "max", INT_TO_JSVAL(h->declared_max()), NULL, NULL, JSPROP_ENUMERATE)
-        && JS_DefineProperty(cx, obj, "histogram_type", INT_TO_JSVAL(h->histogram_type()), NULL, NULL, JSPROP_ENUMERATE)
-        && JS_DefineProperty(cx, obj, "sum", DOUBLE_TO_JSVAL(ss.sum()), NULL, NULL, JSPROP_ENUMERATE))) {
+  if (!(JS_DefineProperty(cx, obj, "min", INT_TO_JSVAL(h->declared_min()), nullptr, nullptr, JSPROP_ENUMERATE)
+        && JS_DefineProperty(cx, obj, "max", INT_TO_JSVAL(h->declared_max()), nullptr, nullptr, JSPROP_ENUMERATE)
+        && JS_DefineProperty(cx, obj, "histogram_type", INT_TO_JSVAL(h->histogram_type()), nullptr, nullptr, JSPROP_ENUMERATE)
+        && JS_DefineProperty(cx, obj, "sum", DOUBLE_TO_JSVAL(ss.sum()), nullptr, nullptr, JSPROP_ENUMERATE))) {
     return REFLECT_FAILURE;
   }
 
   if (h->histogram_type() == Histogram::HISTOGRAM) {
-    if (!(JS_DefineProperty(cx, obj, "log_sum", DOUBLE_TO_JSVAL(ss.log_sum()), NULL, NULL, JSPROP_ENUMERATE)
-          && JS_DefineProperty(cx, obj, "log_sum_squares", DOUBLE_TO_JSVAL(ss.log_sum_squares()), NULL, NULL, JSPROP_ENUMERATE))) {
+    if (!(JS_DefineProperty(cx, obj, "log_sum", DOUBLE_TO_JSVAL(ss.log_sum()), nullptr, nullptr, JSPROP_ENUMERATE)
+          && JS_DefineProperty(cx, obj, "log_sum_squares", DOUBLE_TO_JSVAL(ss.log_sum_squares()), nullptr, nullptr, JSPROP_ENUMERATE))) {
       return REFLECT_FAILURE;
     }
   } else {
@@ -550,8 +550,8 @@ ReflectHistogramAndSamples(JSContext *cx, JS::Handle<JSObject*> obj, Histogram *
     // Cast to avoid implicit truncation warnings.
     uint32_t lo = static_cast<uint32_t>(sum_squares);
     uint32_t hi = static_cast<uint32_t>(sum_squares >> 32);
-    if (!(JS_DefineProperty(cx, obj, "sum_squares_lo", INT_TO_JSVAL(lo), NULL, NULL, JSPROP_ENUMERATE)
-          && JS_DefineProperty(cx, obj, "sum_squares_hi", INT_TO_JSVAL(hi), NULL, NULL, JSPROP_ENUMERATE))) {
+    if (!(JS_DefineProperty(cx, obj, "sum_squares_lo", INT_TO_JSVAL(lo), nullptr, nullptr, JSPROP_ENUMERATE)
+          && JS_DefineProperty(cx, obj, "sum_squares_hi", INT_TO_JSVAL(hi), nullptr, nullptr, JSPROP_ENUMERATE))) {
       return REFLECT_FAILURE;
     }
   }
@@ -563,7 +563,7 @@ ReflectHistogramAndSamples(JSContext *cx, JS::Handle<JSObject*> obj, Histogram *
   }
   if (!(FillRanges(cx, rarray, h)
         && JS_DefineProperty(cx, obj, "ranges", OBJECT_TO_JSVAL(rarray),
-                             NULL, NULL, JSPROP_ENUMERATE))) {
+                             nullptr, nullptr, JSPROP_ENUMERATE))) {
     return REFLECT_FAILURE;
   }
 
@@ -572,12 +572,12 @@ ReflectHistogramAndSamples(JSContext *cx, JS::Handle<JSObject*> obj, Histogram *
     return REFLECT_FAILURE;
   }
   if (!JS_DefineProperty(cx, obj, "counts", OBJECT_TO_JSVAL(counts_array),
-                         NULL, NULL, JSPROP_ENUMERATE)) {
+                         nullptr, nullptr, JSPROP_ENUMERATE)) {
     return REFLECT_FAILURE;
   }
   for (size_t i = 0; i < count; i++) {
     if (!JS_DefineElement(cx, counts_array, i, INT_TO_JSVAL(ss.counts(i)),
-                          NULL, NULL, JSPROP_ENUMERATE)) {
+                          nullptr, nullptr, JSPROP_ENUMERATE)) {
       return REFLECT_FAILURE;
     }
   }
@@ -1004,7 +1004,7 @@ TelemetryImpl::ReflectSQL(const SlowSQLEntryType *entry,
           && JS_DefineProperty(cx, obj,
                                sql.BeginReading(),
                                OBJECT_TO_JSVAL(arrayObj),
-                               NULL, NULL, JSPROP_ENUMERATE));
+                               nullptr, nullptr, JSPROP_ENUMERATE));
 }
 
 bool
@@ -1040,7 +1040,7 @@ TelemetryImpl::AddSQLInfo(JSContext *cx, JS::Handle<JSObject*> rootObj, bool mai
   return JS_DefineProperty(cx, rootObj,
                            mainThread ? "mainThread" : "otherThreads",
                            OBJECT_TO_JSVAL(statsObj),
-                           NULL, NULL, JSPROP_ENUMERATE);
+                           nullptr, nullptr, JSPROP_ENUMERATE);
 }
 
 nsresult
@@ -1323,7 +1323,7 @@ TelemetryImpl::GetHistogramSnapshots(JSContext *cx, JS::Value *ret)
       return NS_ERROR_FAILURE;
     case REFLECT_OK:
       if (!JS_DefineProperty(cx, root_obj, h->histogram_name().c_str(),
-                             OBJECT_TO_JSVAL(hobj), NULL, NULL, JSPROP_ENUMERATE)) {
+                             OBJECT_TO_JSVAL(hobj), nullptr, nullptr, JSPROP_ENUMERATE)) {
         return NS_ERROR_FAILURE;
       }
     }
@@ -1384,7 +1384,7 @@ TelemetryImpl::AddonHistogramReflector(AddonHistogramEntryType *entry,
     const nsACString &histogramName = entry->GetKey();
     if (!JS_DefineProperty(cx, obj,
                            PromiseFlatCString(histogramName).get(),
-                           OBJECT_TO_JSVAL(snapshot), NULL, NULL,
+                           OBJECT_TO_JSVAL(snapshot), nullptr, nullptr,
                            JSPROP_ENUMERATE)) {
       return false;
     }
@@ -1407,7 +1407,7 @@ TelemetryImpl::AddonReflector(AddonEntryType *entry,
   if (!(map->ReflectIntoJS(AddonHistogramReflector, cx, subobj)
         && JS_DefineProperty(cx, obj,
                              PromiseFlatCString(addonId).get(),
-                             OBJECT_TO_JSVAL(subobj), NULL, NULL,
+                             OBJECT_TO_JSVAL(subobj), nullptr, nullptr,
                              JSPROP_ENUMERATE))) {
     return false;
   }
@@ -1493,7 +1493,7 @@ TelemetryImpl::GetChromeHangs(JSContext *cx, JS::Value *ret)
   }
   bool ok = JS_DefineProperty(cx, fullReportObj, "durations",
                               OBJECT_TO_JSVAL(durationArray),
-                              NULL, NULL, JSPROP_ENUMERATE);
+                              nullptr, nullptr, JSPROP_ENUMERATE);
   if (!ok) {
     return NS_ERROR_FAILURE;
   }
@@ -1522,7 +1522,7 @@ CreateJSStackObject(JSContext *cx, const CombinedStacks &stacks) {
   }
   bool ok = JS_DefineProperty(cx, ret, "memoryMap",
                               OBJECT_TO_JSVAL(moduleArray),
-                              NULL, NULL, JSPROP_ENUMERATE);
+                              nullptr, nullptr, JSPROP_ENUMERATE);
   if (!ok) {
     return nullptr;
   }
@@ -1571,7 +1571,7 @@ CreateJSStackObject(JSContext *cx, const CombinedStacks &stacks) {
   }
   ok = JS_DefineProperty(cx, ret, "stacks",
                          OBJECT_TO_JSVAL(reportArray),
-                         NULL, NULL, JSPROP_ENUMERATE);
+                         nullptr, nullptr, JSPROP_ENUMERATE);
   if (!ok) {
     return nullptr;
   }
@@ -1788,7 +1788,7 @@ TelemetryImpl::GetRegisteredHistograms(JSContext *cx, JS::Value *ret)
 
     if (!(comment
           && JS_DefineProperty(cx, info, gHistograms[i].id(),
-                               STRING_TO_JSVAL(comment), NULL, NULL,
+                               STRING_TO_JSVAL(comment), nullptr, nullptr,
                                JSPROP_ENUMERATE))) {
       return NS_ERROR_FAILURE;
     }
@@ -1839,7 +1839,7 @@ TelemetryImpl::GetCanSend(bool *ret) {
 already_AddRefed<nsITelemetry>
 TelemetryImpl::CreateTelemetryInstance()
 {
-  NS_ABORT_IF_FALSE(sTelemetry == NULL, "CreateTelemetryInstance may only be called once, via GetService()");
+  NS_ABORT_IF_FALSE(sTelemetry == nullptr, "CreateTelemetryInstance may only be called once, via GetService()");
   sTelemetry = new TelemetryImpl();
   // AddRef for the local reference
   NS_ADDREF(sTelemetry);
@@ -1858,7 +1858,7 @@ void
 TelemetryImpl::StoreSlowSQL(const nsACString &sql, uint32_t delay,
                             SanitizedState state)
 {
-  AutoHashtable<SlowSQLEntryType> *slowSQLMap = NULL;
+  AutoHashtable<SlowSQLEntryType> *slowSQLMap = nullptr;
   if (state == Sanitized)
     slowSQLMap = &(sTelemetry->mSanitizedSQL);
   else
@@ -2066,22 +2066,22 @@ NS_GENERIC_FACTORY_SINGLETON_CONSTRUCTOR(nsITelemetry, TelemetryImpl::CreateTele
 NS_DEFINE_NAMED_CID(NS_TELEMETRY_CID);
 
 const Module::CIDEntry kTelemetryCIDs[] = {
-  { &kNS_TELEMETRY_CID, false, NULL, nsITelemetryConstructor },
-  { NULL }
+  { &kNS_TELEMETRY_CID, false, nullptr, nsITelemetryConstructor },
+  { nullptr }
 };
 
 const Module::ContractIDEntry kTelemetryContracts[] = {
   { "@mozilla.org/base/telemetry;1", &kNS_TELEMETRY_CID },
-  { NULL }
+  { nullptr }
 };
 
 const Module kTelemetryModule = {
   Module::kVersion,
   kTelemetryCIDs,
   kTelemetryContracts,
-  NULL,
-  NULL,
-  NULL,
+  nullptr,
+  nullptr,
+  nullptr,
   TelemetryImpl::ShutdownTelemetry
 };
 
@@ -2195,7 +2195,7 @@ CanRecord()
 base::Histogram*
 GetHistogramById(ID id)
 {
-  Histogram *h = NULL;
+  Histogram *h = nullptr;
   GetHistogramByEnumId(id, &h);
   return h;
 }

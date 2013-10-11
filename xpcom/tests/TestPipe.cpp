@@ -108,7 +108,7 @@ NS_IMETHODIMP_(void*) BackwardsAllocator::Alloc(size_t size)
   if (size != mSize)
   {
     NS_ERROR("umm, why would this be reached for this test?");
-    return NULL;
+    return nullptr;
   }
 
   uint32_t index = mIndex;
@@ -123,13 +123,13 @@ NS_IMETHODIMP_(void*) BackwardsAllocator::Alloc(size_t size)
   }
 
   NS_ERROR("shouldn't reach here in this test");
-  return NULL;
+  return nullptr;
 }
 
 NS_IMETHODIMP_(void*) BackwardsAllocator::Realloc(void* ptr, size_t newSize)
 {
   NS_ERROR("shouldn't reach here in this test");
-  return NULL;
+  return nullptr;
 }
 
 NS_IMETHODIMP_(void) BackwardsAllocator::Free(void* ptr)

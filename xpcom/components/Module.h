@@ -67,19 +67,19 @@ struct Module
 
   /**
    * An array of CIDs (class IDs) implemented by this module. The final entry
-   * should be { NULL }.
+   * should be { nullptr }.
    */
   const CIDEntry* mCIDs;
 
   /**
    * An array of mappings from contractid to CID. The final entry should
-   * be { NULL }.
+   * be { nullptr }.
    */
   const ContractIDEntry* mContractIDs;
 
   /**
    * An array of category manager entries. The final entry should be
-   * { NULL }.
+   * { nullptr }.
    */
   const CategoryEntry* mCategoryEntries;
 
@@ -87,8 +87,8 @@ struct Module
    * When the component manager tries to get the factory for a CID, it first
    * checks for this module-level getfactory callback. If this function is
    * not implemented, it checks the CIDEntry getfactory callback. If that is
-   * also NULL, a generic factory is generated using the CIDEntry constructor
-   * callback which must be non-NULL.
+   * also nullptr, a generic factory is generated using the CIDEntry
+   * constructor callback which must be non-nullptr.
    */
   GetFactoryProcPtr getFactoryProc;
 

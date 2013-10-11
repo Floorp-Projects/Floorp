@@ -617,7 +617,7 @@ DumpReport(nsIGZFileWriter *aWriter, bool aIsFirst,
   DUMP(aWriter, aIsFirst ? "[" : ",");
 
   // We only want to dump reports for this process.  If |aProcess| is
-  // non-NULL that means we've received it from another process in response
+  // non-nullptr that means we've received it from another process in response
   // to a "child-memory-reporter-request" event;  ignore such reports.
   if (!aProcess.IsEmpty()) {
     return NS_OK;

@@ -18,7 +18,7 @@ public:
     /*
      * Inform nsDebugImpl that we're in multiprocess mode.
      *
-     * If aDesc is not NULL, the string it points to must be
+     * If aDesc is not nullptr, the string it points to must be
      * statically-allocated (i.e., it must be a string literal).
      */
     static void SetMultiprocessMode(const char *aDesc);

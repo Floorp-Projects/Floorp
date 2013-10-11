@@ -234,7 +234,7 @@ IsPhiObservable(MPhi *phi, Observability observe)
 // Handles cases like:
 //    x is phi(a, x) --> a
 //    x is phi(a, a) --> a
-inline MDefinition *
+static inline MDefinition *
 IsPhiRedundant(MPhi *phi)
 {
     MDefinition *first = phi->operandIfRedundant();

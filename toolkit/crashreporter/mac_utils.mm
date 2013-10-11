@@ -32,9 +32,9 @@ void GetObjCExceptionInfo(void* inException, nsACString& outString)
   reasonBuffer[reasonLength] = '\0';
 
   outString.AssignLiteral("\nObj-C Exception data:\n");
-  AppendUTF16toUTF8(nameBuffer, outString);
+  AppendUTF16toUTF8(reinterpret_cast<const PRUnichar*>(nameBuffer), outString);
   outString.AppendLiteral(": ");
-  AppendUTF16toUTF8(reasonBuffer, outString);
+  AppendUTF16toUTF8(reinterpret_cast<const PRUnichar*>(reasonBuffer), outString);
 
   NS_Free(nameBuffer);
   NS_Free(reasonBuffer);
