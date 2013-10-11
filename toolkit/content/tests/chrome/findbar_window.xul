@@ -300,8 +300,7 @@
 
       var searchStr = "Link Test";
       enterStringIntoFindField(searchStr);
-      ok(gBrowser.contentWindow.getSelection() == searchStr,
-          "testQuickFindLink: failed to find sample link");
+      ok(gFindBar._foundLink, "testQuickFindLink: failed to find sample link");
     }
 
     function testQuickFindText() {
