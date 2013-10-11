@@ -60,7 +60,7 @@ class WebGLImageConverter
             case RGBA32F:
                 return 4;
             default:
-                NS_ABORT_IF_FALSE(false, "Unknown texel format. Coding mistake?");
+                MOZ_ASSERT(false, "Unknown texel format. Coding mistake?");
                 return 0;
         }
     }
@@ -134,7 +134,7 @@ class WebGLImageConverter
 
         // end of early return cases.
 
-        NS_ABORT_IF_FALSE(!mAlreadyRun, "converter should be run only once!");
+        MOZ_ASSERT(!mAlreadyRun, "converter should be run only once!");
         mAlreadyRun = true;
 
         // gather some compile-time meta-data about the formats at hand.
@@ -160,8 +160,8 @@ class WebGLImageConverter
         const size_t NumElementsPerSrcTexel = NumElementsPerTexelForFormat<SrcFormat>();
         const size_t NumElementsPerDstTexel = NumElementsPerTexelForFormat<DstFormat>();
         const size_t MaxElementsPerTexel = 4;
-        NS_ABORT_IF_FALSE(NumElementsPerSrcTexel <= MaxElementsPerTexel, "unhandled format");
-        NS_ABORT_IF_FALSE(NumElementsPerDstTexel <= MaxElementsPerTexel, "unhandled format");
+        MOZ_ASSERT(NumElementsPerSrcTexel <= MaxElementsPerTexel, "unhandled format");
+        MOZ_ASSERT(NumElementsPerDstTexel <= MaxElementsPerTexel, "unhandled format");
 
         // we assume that the strides are multiples of the sizeof of respective types.
         // this assumption will allow us to iterate over src and dst images using typed
@@ -169,9 +169,9 @@ class WebGLImageConverter
         // So this assumption allows us to write cleaner and safer code, but it might
         // not be true forever and if it eventually becomes wrong, we'll have to revert
         // to always iterating using uint8_t* pointers regardless of the types at hand.
-        NS_ABORT_IF_FALSE(mSrcStride % sizeof(SrcType) == 0 &&
-                          mDstStride % sizeof(DstType) == 0,
-                          "Unsupported: texture stride is not a multiple of sizeof(type)");
+        MOZ_ASSERT(mSrcStride % sizeof(SrcType) == 0 &&
+                   mDstStride % sizeof(DstType) == 0,
+                   "Unsupported: texture stride is not a multiple of sizeof(type)");
         const ptrdiff_t srcStrideInElements = mSrcStride / sizeof(SrcType);
         const ptrdiff_t dstStrideInElements = mDstStride / sizeof(DstType);
 
@@ -225,7 +225,7 @@ class WebGLImageConverter
             WEBGLIMAGECONVERTER_CASE_PREMULTIPLICATIONOP(Premultiply)
             WEBGLIMAGECONVERTER_CASE_PREMULTIPLICATIONOP(Unpremultiply)
             default:
-                NS_ABORT_IF_FALSE(false, "unhandled case. Coding mistake?");
+                MOZ_ASSERT(false, "unhandled case. Coding mistake?");
         }
 
         #undef WEBGLIMAGECONVERTER_CASE_PREMULTIPLICATIONOP
@@ -254,7 +254,7 @@ class WebGLImageConverter
             WEBGLIMAGECONVERTER_CASE_DSTFORMAT(RGBA4444)
             WEBGLIMAGECONVERTER_CASE_DSTFORMAT(RGBA32F)
             default:
-                NS_ABORT_IF_FALSE(false, "unhandled case. Coding mistake?");
+                MOZ_ASSERT(false, "unhandled case. Coding mistake?");
         }
 
         #undef WEBGLIMAGECONVERTER_CASE_DSTFORMAT
@@ -287,7 +287,7 @@ public:
             WEBGLIMAGECONVERTER_CASE_SRCFORMAT(RGBA4444)
             WEBGLIMAGECONVERTER_CASE_SRCFORMAT(RGBA32F)
             default:
-                NS_ABORT_IF_FALSE(false, "unhandled case. Coding mistake?");
+                MOZ_ASSERT(false, "unhandled case. Coding mistake?");
         }
 
         #undef WEBGLIMAGECONVERTER_CASE_SRCFORMAT
@@ -335,7 +335,7 @@ WebGLContext::ConvertImage(size_t width, size_t height, size_t srcStride, size_t
         // So the case we're handling here is when even though no format conversion is needed,
         // we still might have to flip vertically and/or to adjust to a different stride.
 
-        NS_ABORT_IF_FALSE(mPixelStoreFlipY || srcStride != dstStride, "Performance trap -- should handle this case earlier, to avoid memcpy");
+        MOZ_ASSERT(mPixelStoreFlipY || srcStride != dstStride, "Performance trap -- should handle this case earlier, to avoid memcpy");
 
         size_t row_size = width * dstTexelSize; // doesn't matter, src and dst formats agree
         const uint8_t* ptr = src;
