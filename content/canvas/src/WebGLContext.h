@@ -798,11 +798,13 @@ private:
 // -----------------------------------------------------------------------------
 // PROTECTED
 protected:
-    void SetDontKnowIfNeedFakeBlack() {
-        mFakeBlackStatus = DontKnowIfNeedFakeBlack;
+    void SetFakeBlackStatus(WebGLContextFakeBlackStatus x) {
+        mFakeBlackStatus = x;
     }
+    // Returns the current fake-black-status, except if it was Unknown,
+    // in which case this function resolves it first, so it never returns Unknown.
+    WebGLContextFakeBlackStatus ResolvedFakeBlackStatus();
 
-    bool NeedFakeBlack();
     void BindFakeBlackTextures();
     void UnbindFakeBlackTextures();
 
@@ -1090,7 +1092,7 @@ protected:
     uint32_t mPixelStorePackAlignment, mPixelStoreUnpackAlignment, mPixelStoreColorspaceConversion;
     bool mPixelStoreFlipY, mPixelStorePremultiplyAlpha;
 
-    FakeBlackStatus mFakeBlackStatus;
+    WebGLContextFakeBlackStatus mFakeBlackStatus;
 
     GLuint mBlackTexture2D, mBlackTextureCubeMap;
     bool mBlackTexturesAreInitialized;

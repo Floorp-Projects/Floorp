@@ -122,7 +122,7 @@ WebGLContext::WebGLContext()
     mShaderValidation = true;
 
     mBlackTexturesAreInitialized = false;
-    mFakeBlackStatus = DoNotNeedFakeBlack;
+    mFakeBlackStatus = WebGLContextFakeBlackStatus::Unknown;
 
     mVertexAttrib0Vector[0] = 0;
     mVertexAttrib0Vector[1] = 0;
