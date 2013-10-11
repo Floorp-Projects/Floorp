@@ -2796,6 +2796,7 @@ NSEvent* gLastDragMouseDownEvent = nil;
 
 #ifdef __LP64__
     mCancelSwipeAnimation = nil;
+    mCurrentSwipeDir = 0;
 #endif
 
     mTopLeftCornerMask = NULL;
@@ -4093,17 +4094,20 @@ NSEvent* gLastDragMouseDownEvent = nil;
                    delta:0.0];
 }
 
-// Support fluid swipe tracking on OS X 10.7 and higher.  We must be careful
-// to only invoke this support on a horizontal two-finger gesture that really
+// Support fluid swipe tracking on OS X 10.7 and higher. We must be careful
+// to only invoke this support on a two-finger gesture that really
 // is a swipe (and not a scroll) -- in other words, the app is responsible
-// for deciding which is which.  But once the decision is made, the OS tracks
+// for deciding which is which. But once the decision is made, the OS tracks
 // the swipe until it has finished, and decides whether or not it succeeded.
-// A swipe has the same functionality as the Back and Forward buttons.  For
-// now swipe animation is unsupported (e.g. no bounces).  This method is
-// partly based on Apple sample code available at
-// http://developer.apple.com/library/mac/#releasenotes/Cocoa/AppKit.html
+// A horizontal swipe has the same functionality as the Back and Forward
+// buttons.
+// This method is partly based on Apple sample code available at
+// developer.apple.com/library/mac/#releasenotes/Cocoa/AppKitOlderNotes.html
+// (under Fluid Swipe Tracking API).
 - (void)maybeTrackScrollEventAsSwipe:(NSEvent *)anEvent
-                      scrollOverflow:(double)overflow
+                     scrollOverflowX:(double)anOverflowX
+                     scrollOverflowY:(double)anOverflowY
+              viewPortIsOverscrolled:(BOOL)aViewPortIsOverscrolled
 {
   if (!nsCocoaFeatures::OnLionOrLater()) {
     return;
@@ -4118,6 +4122,12 @@ NSEvent* gLastDragMouseDownEvent = nil;
     return;
   }
 
+  // We should only track scroll events as swipe if the viewport is being
+  // overscrolled.
+  if (!aViewPortIsOverscrolled) {
+    return;
+  }
+
   // Verify that this is a scroll wheel event with proper phase to be tracked
   // by the OS.
   if ([anEvent type] != NSScrollWheel || [anEvent phase] == NSEventPhaseNone) {
@@ -4125,12 +4135,10 @@ NSEvent* gLastDragMouseDownEvent = nil;
   }
 
   // Only initiate tracking if the user has tried to scroll past the edge of
-  // the current page (as indicated by 'overflow' being non-zero).  Gecko only
-  // sets WidgetMouseScrollEvent.scrollOverflow when it's processing
-  // NS_MOUSE_PIXEL_SCROLL events (not NS_MOUSE_SCROLL events).
-  // WidgetMouseScrollEvent.scrollOverflow only indicates left or right overflow
-  // for horizontal NS_MOUSE_PIXEL_SCROLL events.
-  if (!overflow) {
+  // the current page (as indicated by 'anOverflowX' or 'anOverflowY' being
+  // non-zero). Gecko only sets WidgetMouseScrollEvent.scrollOverflow when it's
+  // processing NS_MOUSE_PIXEL_SCROLL events (not NS_MOUSE_SCROLL events).
+  if (anOverflowX == 0.0 && anOverflowY == 0.0) {
     return;
   }
 
@@ -4139,18 +4147,20 @@ NSEvent* gLastDragMouseDownEvent = nil;
     deltaX = [anEvent scrollingDeltaX];
     deltaY = [anEvent scrollingDeltaY];
   } else {
-    deltaX = [anEvent deltaX];
-    deltaY = [anEvent deltaY];
+    return;
   }
 
+  uint32_t vDirs = (uint32_t)nsIDOMSimpleGestureEvent::DIRECTION_DOWN |
+                   (uint32_t)nsIDOMSimpleGestureEvent::DIRECTION_UP;
   uint32_t direction = 0;
+
   // Only initiate horizontal tracking for events whose horizontal element is
   // at least eight times larger than its vertical element. This minimizes
   // performance problems with vertical scrolls (by minimizing the possibility
   // that they'll be misinterpreted as horizontal swipes), while still
   // tolerating a small vertical element to a true horizontal swipe.  The number
   // '8' was arrived at by trial and error.
-  if (overflow != 0.0 && deltaX != 0.0 &&
+  if (anOverflowX != 0.0 && deltaX != 0.0 &&
       fabsf(deltaX) > fabsf(deltaY) * 8) {
     // Only initiate horizontal tracking for gestures that have just begun --
     // otherwise a scroll to one side of the page can have a swipe tacked on
@@ -4164,9 +4174,34 @@ NSEvent* gLastDragMouseDownEvent = nil;
     } else {
       direction = (uint32_t)nsIDOMSimpleGestureEvent::DIRECTION_LEFT;
     }
+  }
+  // Only initiate vertical tracking for events whose vertical element is
+  // at least two times larger than its horizontal element. This minimizes
+  // performance problems. The number '2' was arrived at by trial and error.
+  else if (anOverflowY != 0.0 && deltaY != 0.0 &&
+           fabsf(deltaY) > fabsf(deltaX) * 2) {
+    if (deltaY < 0.0) {
+      direction = (uint32_t)nsIDOMSimpleGestureEvent::DIRECTION_DOWN;
+    } else {
+      direction = (uint32_t)nsIDOMSimpleGestureEvent::DIRECTION_UP;
+    }
+
+    if ((mCurrentSwipeDir & vDirs) && (mCurrentSwipeDir != direction)) {
+      // If a swipe is currently being tracked kill it -- it's been interrupted
+      // by another gesture event.
+      if (mCancelSwipeAnimation && *mCancelSwipeAnimation == NO) {
+        *mCancelSwipeAnimation = YES;
+        mCancelSwipeAnimation = nil;
+        [self sendSwipeEndEvent:anEvent allowedDirections:0];
+      }
+      return;
+    }
   } else {
     return;
   }
+
+  // Track the direction we're going in.
+  mCurrentSwipeDir = direction;
 
   // If a swipe is currently being tracked kill it -- it's been interrupted
   // by another gesture event.
@@ -4189,8 +4224,14 @@ NSEvent* gLastDragMouseDownEvent = nil;
     return;
   }
 
-  double min = (allowedDirections & nsIDOMSimpleGestureEvent::DIRECTION_RIGHT) ? -1 : 0;
-  double max = (allowedDirections & nsIDOMSimpleGestureEvent::DIRECTION_LEFT) ? 1 : 0;
+  CGFloat min = 0.0;
+  CGFloat max = 0.0;
+  if (!(direction & vDirs)) {
+    min = (allowedDirections & nsIDOMSimpleGestureEvent::DIRECTION_RIGHT) ?
+          -1.0 : 0.0;
+    max = (allowedDirections & nsIDOMSimpleGestureEvent::DIRECTION_LEFT) ?
+          1.0 : 0.0;
+  }
 
   __block BOOL animationCanceled = NO;
   __block BOOL geckoSwipeEventSent = NO;
@@ -4228,13 +4269,15 @@ NSEvent* gLastDragMouseDownEvent = nil;
     if (animationCanceled || !mGeckoChild || gestureAmount == 0.0) {
       *stop = YES;
       animationCanceled = YES;
-      if (gestureAmount == 0.0) {
+      if (gestureAmount == 0.0 ||
+          ((direction & vDirs) && (direction != mCurrentSwipeDir))) {
         if (mCancelSwipeAnimation)
           *mCancelSwipeAnimation = YES;
         mCancelSwipeAnimation = nil;
         [self sendSwipeEndEvent:anEvent
               allowedDirections:allowedDirectionsCopy];
       }
+      mCurrentSwipeDir = 0;
       return;
     }
 
@@ -4268,6 +4311,7 @@ NSEvent* gLastDragMouseDownEvent = nil;
 
     if (isComplete) {
       [self sendSwipeEndEvent:anEvent allowedDirections:allowedDirectionsCopy];
+      mCurrentSwipeDir = 0;
       mCancelSwipeAnimation = nil;
     }
   }];
@@ -4780,18 +4824,31 @@ static int32_t RoundUp(double aDouble)
                                            NPCocoaEventScrollWheel,
                                            &cocoaEvent);
 
-  mGeckoChild->DispatchWindowEvent(wheelEvent);
-  if (!mGeckoChild) {
-    return;
+#ifdef __LP64__
+  // Only dispatch this event if we're not currently tracking a scroll event as
+  // swipe.
+  if (!mCancelSwipeAnimation || *mCancelSwipeAnimation == YES) {
+#endif // #ifdef __LP64__
+    mGeckoChild->DispatchWindowEvent(wheelEvent);
+    if (!mGeckoChild) {
+      return;
+    }
+#ifdef __LP64__
+  } else {
+    // Manually set these members here since we didn't dispatch the event.
+    wheelEvent.overflowDeltaX = wheelEvent.deltaX;
+    wheelEvent.overflowDeltaY = wheelEvent.deltaY;
+    wheelEvent.mViewPortIsOverscrolled = true;
   }
 
-#ifdef __LP64__
-  // overflowDeltaX tells us when the user has tried to scroll past the edge
-  // of a page to the left or the right (in those cases it's non-zero).
-  if (wheelEvent.deltaMode == nsIDOMWheelEvent::DOM_DELTA_PIXEL &&
-      wheelEvent.deltaX != 0.0) {
+  // overflowDeltaX and overflowDeltaY tell us when the user has tried to
+  // scroll past the edge of a page (in those cases it's non-zero).
+  if ((wheelEvent.deltaMode == nsIDOMWheelEvent::DOM_DELTA_PIXEL) &&
+      (wheelEvent.deltaX != 0.0 || wheelEvent.deltaY != 0.0)) {
     [self maybeTrackScrollEventAsSwipe:theEvent
-                        scrollOverflow:wheelEvent.overflowDeltaX];
+                       scrollOverflowX:wheelEvent.overflowDeltaX
+                       scrollOverflowY:wheelEvent.overflowDeltaY
+                viewPortIsOverscrolled:wheelEvent.mViewPortIsOverscrolled];
   }
 #endif // #ifdef __LP64__
 
