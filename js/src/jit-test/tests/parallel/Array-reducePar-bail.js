@@ -15,7 +15,8 @@ function testReduce() {
     return r;
   }
 
-  var array = build(4096, function() { return 1; });
+  // We use a big array, to make sure that the test runs with 64 slices.
+  var array = build(8 * 4096, function() { return 1; });
   var seqResult = array.reduce(sum);
   var seqCounter = aCounter;
 

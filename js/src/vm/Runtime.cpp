@@ -383,6 +383,9 @@ JSRuntime::init(uint32_t maxbytes)
     js::TlsPerThreadData.set(&mainThread);
     mainThread.addToThreadList();
 
+    if (!threadPool.init())
+        return false;
+
     if (!js_InitGC(this, maxbytes))
         return false;
 
