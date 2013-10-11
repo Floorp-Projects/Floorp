@@ -16,6 +16,7 @@
 #include <time.h>
 #include <stdlib.h>
 #include <string.h>
+#include "mozilla/NullPtr.h"
 
 using std::string;
 using std::istream;
