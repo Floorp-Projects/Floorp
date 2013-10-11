@@ -16,11 +16,6 @@
 #define PREF_BDM_SHOWWHENSTARTING "browser.download.manager.showWhenStarting"
 #define PREF_BDM_FOCUSWHENSTARTING "browser.download.manager.focusWhenStarting"
 
-// This class only exists because nsDownload cannot inherit from nsITransfer
-// directly. The reason for this is that nsDownloadManager (incorrectly) keeps
-// an nsCOMArray of nsDownloads, and nsCOMArray is only intended for use with
-// abstract classes. Using a concrete class that multiply inherits from classes
-// deriving from nsISupports will throw ambiguous base class errors.
 class nsDownloadProxy : public nsITransfer
 {
 public:
