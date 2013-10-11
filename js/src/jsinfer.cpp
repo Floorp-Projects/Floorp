@@ -49,7 +49,7 @@ using mozilla::PodZero;
 
 static inline jsid
 id_prototype(JSContext *cx) {
-    return NameToId(cx->names().classPrototype);
+    return NameToId(cx->names().prototype);
 }
 
 static inline jsid

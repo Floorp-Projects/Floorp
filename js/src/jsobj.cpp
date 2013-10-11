@@ -1543,7 +1543,7 @@ JSObject*
 js::CreateThis(JSContext *cx, const Class *newclasp, HandleObject callee)
 {
     RootedValue protov(cx);
-    if (!JSObject::getProperty(cx, callee, callee, cx->names().classPrototype, &protov))
+    if (!JSObject::getProperty(cx, callee, callee, cx->names().prototype, &protov))
         return nullptr;
 
     JSObject *proto = protov.isObjectOrNull() ? protov.toObjectOrNull() : nullptr;
@@ -1608,7 +1608,7 @@ JSObject *
 js::CreateThisForFunction(JSContext *cx, HandleObject callee, bool newType)
 {
     RootedValue protov(cx);
-    if (!JSObject::getProperty(cx, callee, callee, cx->names().classPrototype, &protov))
+    if (!JSObject::getProperty(cx, callee, callee, cx->names().prototype, &protov))
         return nullptr;
     JSObject *proto;
     if (protov.isObject())
@@ -5268,12 +5268,12 @@ js_GetClassPrototype(ExclusiveContext *cx, JSProtoKey protoKey,
         RootedObject ctor(cx, &v.get().toObject());
         if (cx->isJSContext()) {
             if (!JSObject::getProperty(cx->asJSContext(),
-                                       ctor, ctor, cx->names().classPrototype, &v))
+                                       ctor, ctor, cx->names().prototype, &v))
             {
                 return false;
             }
         } else {
-            Shape *shape = ctor->nativeLookup(cx, cx->names().classPrototype);
+            Shape *shape = ctor->nativeLookup(cx, cx->names().prototype);
             if (!shape || !NativeGetPureInline(ctor, shape, v.address()))
                 return false;
         }

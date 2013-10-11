@@ -4584,11 +4584,11 @@ IonBuilder::createThisScripted(MDefinition *callee)
     //       and thus invalidation.
     MInstruction *getProto;
     if (!invalidatedIdempotentCache()) {
-        MGetPropertyCache *getPropCache = MGetPropertyCache::New(callee, cx->names().classPrototype);
+        MGetPropertyCache *getPropCache = MGetPropertyCache::New(callee, cx->names().prototype);
         getPropCache->setIdempotent();
         getProto = getPropCache;
     } else {
-        MCallGetProperty *callGetProp = MCallGetProperty::New(callee, cx->names().classPrototype);
+        MCallGetProperty *callGetProp = MCallGetProperty::New(callee, cx->names().prototype);
         callGetProp->setIdempotent();
         getProto = callGetProp;
     }
@@ -4610,7 +4610,7 @@ IonBuilder::getSingletonPrototype(JSFunction *target)
     if (targetType->unknownProperties())
         return nullptr;
 
-    jsid protoid = NameToId(cx->names().classPrototype);
+    jsid protoid = NameToId(cx->names().prototype);
     types::HeapTypeSetKey protoProperty = targetType->property(protoid);
 
     return protoProperty.singleton(constraints());
@@ -9395,7 +9395,7 @@ IonBuilder::jsop_instanceof()
             break;
 
         types::HeapTypeSetKey protoProperty =
-            rhsType->property(NameToId(cx->names().classPrototype));
+            rhsType->property(NameToId(cx->names().prototype));
         JSObject *protoObject = protoProperty.singleton(constraints());
         if (!protoObject)
             break;
