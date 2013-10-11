@@ -842,9 +842,27 @@ nsContextMenu.prototype = {
   openLinkInTab: function() {
     var doc = this.target.ownerDocument;
     urlSecurityCheck(this.linkURL, this._unremotePrincipal(doc.nodePrincipal));
+    var referrerURI = doc.documentURIObject;
+
+    // if the mixedContentChannel is present and the referring URI passes
+    // a same origin check with the target URI, we can preserve the users
+    // decision of disabling MCB on a page for it's child tabs.
+    var persistDisableMCBInChildTab = false;
+
+    if (this.browser.docShell.mixedContentChannel) {
+      const sm = Services.scriptSecurityManager;
+      try {
+        var targetURI = this.linkURI;
+        sm.checkSameOriginURI(referrerURI, targetURI, false);
+        persistDisableMCBInChildTab = true;
+      }
+      catch (e) { }
+    }
+
     openLinkIn(this.linkURL, "tab",
                { charset: doc.characterSet,
-                 referrerURI: doc.documentURIObject });
+                 referrerURI: referrerURI,
+                 disableMCB:  persistDisableMCBInChildTab});
   },
 
   // open URL in current tab
