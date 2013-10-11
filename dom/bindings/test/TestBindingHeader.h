@@ -641,6 +641,12 @@ public:
   void Overload12(const Nullable<bool>&);
   void Overload13(const Nullable<int32_t>&);
   void Overload13(bool);
+  void Overload14(const Optional<int32_t>&);
+  void Overload14(TestInterface&);
+  void Overload15(int32_t);
+  void Overload15(const Optional<NonNull<TestInterface> >&);
+  void Overload16(int32_t);
+  void Overload16(const Optional<TestInterface*>&);
 
   // Variadic handling
   void PassVariadicThirdArg(const nsAString&, int32_t,
