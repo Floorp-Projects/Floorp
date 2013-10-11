@@ -887,18 +887,20 @@ var AlertsHelper = {
     }
 
     let data = aMessage.data;
+    let details = data.details;
     let listener = {
       mm: aMessage.target,
       title: data.title,
       text: data.text,
-      manifestURL: data.manifestURL,
+      manifestURL: details.manifestURL,
       imageURL: data.imageURL
-    }
+    };
     this.registerAppListener(data.uid, listener);
 
     this.showNotification(data.imageURL, data.title, data.text,
-                          data.textClickable, null,
-                          data.uid, null, null, data.manifestURL);
+                          details.textClickable, null,
+                          data.uid, details.dir,
+                          details.lang, details.manifestURL);
   },
 }
 

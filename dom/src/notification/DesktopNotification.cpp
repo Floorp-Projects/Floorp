@@ -3,6 +3,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 #include "mozilla/dom/DesktopNotification.h"
 #include "mozilla/dom/DesktopNotificationBinding.h"
+#include "mozilla/dom/AppNotificationServiceOptionsBinding.h"
 #include "nsContentPermissionHelper.h"
 #include "nsXULAppAPI.h"
 #include "mozilla/dom/PBrowserChild.h"
@@ -91,11 +92,18 @@ DesktopNotification::PostDesktopNotification()
       nsCOMPtr<nsIAppsService> appsService = do_GetService("@mozilla.org/AppsService;1");
       nsString manifestUrl = EmptyString();
       appsService->GetManifestURLByLocalId(appId, manifestUrl);
+      mozilla::AutoSafeJSContext cx;
+      JS::RootedValue val(cx);
+      AppNotificationServiceOptions ops;
+      ops.mTextClickable = true;
+      ops.mManifestURL = manifestUrl;
+
+      if (!ops.ToObject(cx, JS::NullPtr(), &val)) {
+        return NS_ERROR_FAILURE;
+      }
+
       return appNotifier->ShowAppNotification(mIconURL, mTitle, mDescription,
-                                              true,
-                                              manifestUrl,
-                                              mObserver,
-                                              EmptyString());
+                                              mObserver, val);
     }
   }
 #endif
