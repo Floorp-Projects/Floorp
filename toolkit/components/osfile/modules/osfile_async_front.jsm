@@ -771,6 +771,11 @@ File.writeAtomic = function writeAtomic(path, buffer, options = {}) {
      options], [options, buffer]);
 };
 
+File.removeDir = function(path, options = {}) {
+  return Scheduler.post("removeDir",
+    [Type.path.toMsg(path), options], path);
+};
+
 /**
  * Information on a file, as returned by OS.File.stat or
  * OS.File.prototype.stat

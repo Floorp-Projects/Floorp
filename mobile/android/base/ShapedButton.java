@@ -4,6 +4,8 @@
 
 package org.mozilla.gecko;
 
+import org.mozilla.gecko.widget.GeckoImageButton;
+
 import android.content.Context;
 import android.content.res.Resources;
 import android.content.res.TypedArray;
