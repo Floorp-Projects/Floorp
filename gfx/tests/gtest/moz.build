@@ -21,6 +21,7 @@ GTEST_CPP_SOURCES += [
     'TestRegion.cpp',
     'TestColorNames.cpp',
     'TestTextures.cpp',
+    'TestBufferRotation.cpp',
 ]
 
 # Because of gkmedia on windows we wont find these

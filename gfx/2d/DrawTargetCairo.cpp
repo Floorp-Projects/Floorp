@@ -399,6 +399,7 @@ NeedIntermediateSurface(const Pattern& aPattern, const DrawOptions& aOptions)
 
 DrawTargetCairo::DrawTargetCairo()
   : mContext(nullptr)
+  , mLockedBits(nullptr)
 {
 }
 
@@ -408,6 +409,7 @@ DrawTargetCairo::~DrawTargetCairo()
   if (mSurface) {
     cairo_surface_destroy(mSurface);
   }
+  MOZ_ASSERT(!mLockedBits);
 }
 
 IntSize
@@ -431,6 +433,31 @@ DrawTargetCairo::Snapshot()
                                      CairoContentToGfxFormat(content),
                                      this);
   return mSnapshot;
+}
+
+bool
+DrawTargetCairo::LockBits(uint8_t** aData, IntSize* aSize,
+                          int32_t* aStride, SurfaceFormat* aFormat)
+{
+  if (cairo_surface_get_type(mSurface) == CAIRO_SURFACE_TYPE_IMAGE) {
+    WillChange();
+
+    mLockedBits = cairo_image_surface_get_data(mSurface);
+    *aData = mLockedBits;
+    *aSize = GetSize();
+    *aStride = cairo_image_surface_get_stride(mSurface);
+    *aFormat = GetFormat();
+    return true;
+  }
+
+  return false;
+}
+
+void
+DrawTargetCairo::ReleaseBits(uint8_t* aData)
+{
+  MOZ_ASSERT(mLockedBits == aData);
+  mLockedBits = nullptr;
 }
 
 void
@@ -1152,6 +1179,7 @@ void
 DrawTargetCairo::WillChange(const Path* aPath /* = nullptr */)
 {
   MarkSnapshotIndependent();
+  MOZ_ASSERT(!mLockedBits);
 }
 
 void
