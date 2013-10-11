@@ -829,8 +829,7 @@ html|*.urlbar-input:-moz-lwtheme::-moz-placeholder,
 }
 
 #urlbar-container {
-  -moz-box-orient: horizontal;
-  -moz-box-align: stretch;
+  -moz-box-align: center;
 }
 
 .urlbar-textbox-container {
