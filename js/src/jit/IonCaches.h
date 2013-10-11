@@ -29,7 +29,8 @@ namespace jit {
     _(Name)                                                     \
     _(CallsiteClone)                                            \
     _(GetPropertyPar)                                           \
-    _(GetElementPar)
+    _(GetElementPar)                                            \
+    _(SetPropertyPar)
 
 // Forward declarations of Cache kinds.
 #define FORWARD_DECLARE(kind) class kind##IC;
@@ -1112,6 +1113,58 @@ class GetElementParIC : public ParallelIonCache
     static ParallelResult update(ForkJoinSlice *slice, size_t cacheIndex, HandleObject obj, HandleValue idval,
                                  MutableHandleValue vp);
 
+};
+
+class SetPropertyParIC : public ParallelIonCache
+{
+  protected:
+    Register object_;
+    PropertyName *name_;
+    ConstantOrRegister value_;
+    bool strict_;
+    bool needsTypeBarrier_;
+
+  public:
+    SetPropertyParIC(Register object, PropertyName *name, ConstantOrRegister value,
+                     bool strict, bool needsTypeBarrier)
+      : object_(object),
+        name_(name),
+        value_(value),
+        strict_(strict),
+        needsTypeBarrier_(needsTypeBarrier)
+    {
+    }
+
+    CACHE_HEADER(SetPropertyPar)
+
+#ifdef JS_CPU_X86
+    // x86 lacks a general purpose scratch register for dispatch caches and
+    // must be given one manually.
+    void initializeAddCacheState(LInstruction *ins, AddCacheState *addState);
+#endif
+
+    Register object() const {
+        return object_;
+    }
+    PropertyName *name() const {
+        return name_;
+    }
+    ConstantOrRegister value() const {
+        return value_;
+    }
+    bool strict() const {
+        return strict_;
+    }
+    bool needsTypeBarrier() const {
+        return needsTypeBarrier_;
+    }
+
+    bool attachSetSlot(LockedJSContext &cx, IonScript *ion, JSObject *obj, Shape *shape,
+                       bool checkTypeset);
+    bool attachAddSlot(LockedJSContext &cx, IonScript *ion, JSObject *obj, Shape *oldShape);
+
+    static ParallelResult update(ForkJoinSlice *slice, size_t cacheIndex, HandleObject obj,
+                                 HandleValue value);
 };
 
 #undef CACHE_HEADER

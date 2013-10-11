@@ -160,6 +160,30 @@ jit::ExtendArrayPar(ForkJoinSlice *slice, JSObject *array, uint32_t length)
 }
 
 ParallelResult
+jit::SetPropertyPar(ForkJoinSlice *slice, HandleObject obj, HandlePropertyName name,
+                    HandleValue value, bool strict, jsbytecode *pc)
+{
+    JS_ASSERT(slice->isThreadLocal(obj));
+
+    if (*pc == JSOP_SETALIASEDVAR) {
+        // See comment in jit::SetProperty.
+        Shape *shape = obj->nativeLookupPure(name);
+        JS_ASSERT(shape && shape->hasSlot());
+        return obj->nativeSetSlotIfHasType(shape, value) ? TP_SUCCESS : TP_RETRY_SEQUENTIALLY;
+    }
+
+    // Fail early on hooks.
+    if (obj->getOps()->setProperty)
+        return TP_RETRY_SEQUENTIALLY;
+
+    RootedValue v(slice, value);
+    RootedId id(slice, NameToId(name));
+    if (!baseops::SetPropertyHelper<ParallelExecution>(slice, obj, obj, id, 0, &v, strict))
+        return TP_RETRY_SEQUENTIALLY;
+    return TP_SUCCESS;
+}
+
+ParallelResult
 jit::SetElementPar(ForkJoinSlice *slice, HandleObject obj, HandleValue index, HandleValue value,
                    bool strict)
 {
