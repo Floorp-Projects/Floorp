@@ -142,6 +142,7 @@ private:
     uint32_t     mCrc32;
     PRTime       mLastModTime;
     uint16_t     mCompression;
+    uint32_t     mPermissions;
     bool mIsDirectory; 
     bool mIsSynthetic;
 };
