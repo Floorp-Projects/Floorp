@@ -180,6 +180,13 @@ WebGLContext::GetExtension(JSContext *cx, const nsAString& aName, ErrorResult& r
         else if (CompareWebGLExtensionName(name, "MOZ_WEBGL_depth_texture")) {
             ext = WEBGL_depth_texture;
         }
+
+        if (ext != WebGLExtensionID_unknown_extension) {
+            GenerateWarning("getExtension('%s'): MOZ_ prefixed WebGL extension strings are deprecated. "
+                            "Support for them will be removed in the future. Use unprefixed extension strings. "
+                            "To get draft extensions, set the webgl.enable-draft-extensions preference.",
+                            name.get());
+        }
     }
 
     if (ext == WebGLExtensionID_unknown_extension) {
