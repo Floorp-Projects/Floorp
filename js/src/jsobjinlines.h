@@ -75,7 +75,7 @@ JSObject::deleteSpecial(JSContext *cx, js::HandleObject obj, js::HandleSpecialId
 inline void
 JSObject::finalize(js::FreeOp *fop)
 {
-    js::Probes::finalizeObject(this);
+    js::probes::FinalizeObject(this);
 
 #ifdef DEBUG
     JS_ASSERT(isTenured());
