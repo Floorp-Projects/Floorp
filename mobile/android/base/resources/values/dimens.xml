@@ -19,6 +19,13 @@
     <dimen name="favicon_size_large">32dp</dimen>
     <dimen name="favicon_bg">32dp</dimen>
     <dimen name="favicon_bg_radius">1dp</dimen>
+    <!-- Set the upper limit on the size of favicon that will be processed. Favicons larger than
+         this will be downscaled to this value. If you need to use larger Favicons (Due to a UI
+         redesign sometime after this is written) you should increase this value to the largest
+         commonly-used size of favicon and, performance permitting, fetch the remainder from the
+         database. The largest available size is always stored in the database, regardless of this
+         value.-->
+    <dimen name="favicon_largest_interesting_size">32dp</dimen>
 
     <!-- Page Row height -->
     <dimen name="page_row_height">64dp</dimen>
