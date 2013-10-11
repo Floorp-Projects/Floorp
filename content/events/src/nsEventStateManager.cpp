@@ -3189,6 +3189,9 @@ nsEventStateManager::PostHandleEvent(nsPresContext* aPresContext,
           nsIScrollableFrame* scrollTarget =
             ComputeScrollTarget(aTargetFrame, wheelEvent,
                                 COMPUTE_DEFAULT_ACTION_TARGET);
+          if (!scrollTarget) {
+            wheelEvent->mViewPortIsOverscrolled = true;
+          }
           wheelEvent->overflowDeltaX = wheelEvent->deltaX;
           wheelEvent->overflowDeltaY = wheelEvent->deltaY;
           WheelPrefs::GetInstance()->
