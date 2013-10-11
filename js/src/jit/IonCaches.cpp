@@ -3286,7 +3286,7 @@ GetElementIC::reset()
 }
 
 static bool
-IsElementSetInlineable(HandleObject obj, HandleValue index)
+IsDenseElementSetInlineable(JSObject *obj, const Value &idval)
 {
     if (!obj->is<ArrayObject>())
         return false;
@@ -3294,7 +3294,7 @@ IsElementSetInlineable(HandleObject obj, HandleValue index)
     if (obj->watched())
         return false;
 
-    if (!index.isInt32())
+    if (!idval.isInt32())
         return false;
 
     // The object may have a setter definition,
@@ -3317,8 +3317,18 @@ IsElementSetInlineable(HandleObject obj, HandleValue index)
     return true;
 }
 
-bool
-SetElementIC::attachDenseElement(JSContext *cx, IonScript *ion, JSObject *obj, const Value &idval)
+static bool
+IsTypedArrayElementSetInlineable(JSObject *obj, const Value &idval, const Value &value)
+{
+    // Don't bother attaching stubs for assigning strings and objects.
+    return (obj->is<TypedArrayObject>() && idval.isInt32() &&
+            !value.isString() && !value.isObject());
+}
+
+static bool
+GenerateSetDenseElement(JSContext *cx, MacroAssembler &masm, IonCache::StubAttacher &attacher,
+                        JSObject *obj, const Value &idval, Register object, ValueOperand indexVal,
+                        ConstantOrRegister value, Register tempToUnboxIndex, Register temp)
 {
     JS_ASSERT(obj->isNative());
     JS_ASSERT(idval.isInt32());
@@ -3326,26 +3336,22 @@ SetElementIC::attachDenseElement(JSContext *cx, IonScript *ion, JSObject *obj, c
     Label failures;
     Label outOfBounds; // index >= capacity || index > initialized length
 
-    MacroAssembler masm(cx);
-    RepatchStubAppender attacher(*this);
-
     // Guard object is a dense array.
-    RootedShape shape(cx, obj->lastProperty());
+    Shape *shape = obj->lastProperty();
     if (!shape)
         return false;
-    masm.branchTestObjShape(Assembler::NotEqual, object(), shape, &failures);
+    masm.branchTestObjShape(Assembler::NotEqual, object, shape, &failures);
 
     // Ensure the index is an int32 value.
-    ValueOperand indexVal = index();
     masm.branchTestInt32(Assembler::NotEqual, indexVal, &failures);
 
     // Unbox the index.
-    Register index = masm.extractInt32(indexVal, tempToUnboxIndex());
+    Register index = masm.extractInt32(indexVal, tempToUnboxIndex);
 
     {
         // Load obj->elements.
-        Register elements = temp();
-        masm.loadPtr(Address(object(), JSObject::offsetOfElements()), elements);
+        Register elements = temp;
+        masm.loadPtr(Address(object, JSObject::offsetOfElements()), elements);
 
         // Compute the location of the element.
         BaseIndex target(elements, index, TimesEight);
@@ -3388,12 +3394,12 @@ SetElementIC::attachDenseElement(JSContext *cx, IonScript *ion, JSObject *obj, c
 
         // Call post barrier if necessary, and recalculate elements pointer if it got cobbered.
         Register postBarrierScratch = elements;
-        if (masm.maybeCallPostBarrier(object(), value(), postBarrierScratch))
-            masm.loadPtr(Address(object(), JSObject::offsetOfElements()), elements);
+        if (masm.maybeCallPostBarrier(object, value, postBarrierScratch))
+            masm.loadPtr(Address(object, JSObject::offsetOfElements()), elements);
 
         // Store the value.
         masm.bind(&storeElem);
-        masm.storeConstantOrRegister(value(), target);
+        masm.storeConstantOrRegister(value, target);
     }
     attacher.jumpRejoin(masm);
 
@@ -3401,6 +3407,21 @@ SetElementIC::attachDenseElement(JSContext *cx, IonScript *ion, JSObject *obj, c
     masm.bind(&outOfBounds);
     masm.bind(&failures);
     attacher.jumpNextStub(masm);
+
+    return true;
+}
+
+bool
+SetElementIC::attachDenseElement(JSContext *cx, IonScript *ion, JSObject *obj, const Value &idval)
+{
+    MacroAssembler masm(cx);
+    RepatchStubAppender attacher(*this);
+    if (!GenerateSetDenseElement(cx, masm, attacher, obj, idval,
+                                 object(), index(), value(),
+                                 tempToUnboxIndex(), temp()))
+    {
+        return false;
+    }
 
     setHasDenseStub();
     return linkAndAttachStub(cx, masm, attacher, ion, "dense array");
@@ -3489,14 +3510,6 @@ GenerateSetTypedArrayElement(JSContext *cx, MacroAssembler &masm, IonCache::Stub
     return true;
 }
 
-/* static */ bool
-SetElementIC::canAttachTypedArrayElement(JSObject *obj, const Value &idval, const Value &value)
-{
-    // Don't bother attaching stubs for assigning strings and objects.
-    return (obj->is<TypedArrayObject>() && idval.isInt32() &&
-            !value.isString() && !value.isObject());
-}
-
 bool
 SetElementIC::attachTypedArrayElement(JSContext *cx, IonScript *ion, TypedArrayObject *tarr)
 {
@@ -3521,12 +3534,12 @@ SetElementIC::update(JSContext *cx, size_t cacheIndex, HandleObject obj,
 
     bool attachedStub = false;
     if (cache.canAttachStub()) {
-        if (!cache.hasDenseStub() && IsElementSetInlineable(obj, idval)) {
+        if (!cache.hasDenseStub() && IsDenseElementSetInlineable(obj, idval)) {
             if (!cache.attachDenseElement(cx, ion, obj, idval))
                 return false;
             attachedStub = true;
         }
-        if (!attachedStub && canAttachTypedArrayElement(obj, idval, value)) {
+        if (!attachedStub && IsTypedArrayElementSetInlineable(obj, idval, value)) {
             TypedArrayObject *tarr = &obj->as<TypedArrayObject>();
             if (!cache.attachTypedArrayElement(cx, ion, tarr))
                 return false;
