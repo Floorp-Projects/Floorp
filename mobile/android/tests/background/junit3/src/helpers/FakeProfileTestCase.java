@@ -9,6 +9,8 @@ import android.app.Activity;
 import android.content.Context;
 import android.test.ActivityInstrumentationTestCase2;
 
+import org.mozilla.gecko.background.common.TestUtils;
+
 public abstract class FakeProfileTestCase extends ActivityInstrumentationTestCase2<Activity> {
 
   protected Context context;
@@ -26,6 +28,9 @@ public abstract class FakeProfileTestCase extends ActivityInstrumentationTestCas
     context = getInstrumentation().getTargetContext();
     File cache = context.getCacheDir();
     fakeProfileDirectory = new File(cache.getAbsolutePath() + getCacheSuffix());
+    if (fakeProfileDirectory.exists()) {
+      TestUtils.deleteDirectoryRecursively(fakeProfileDirectory);
+    }
     if (!fakeProfileDirectory.mkdir()) {
       throw new IllegalStateException("Could not create temporary directory.");
     }
@@ -33,11 +38,7 @@ public abstract class FakeProfileTestCase extends ActivityInstrumentationTestCas
 
   @Override
   protected void tearDown() throws Exception {
-    // We don't check return values.
-    for (File child : fakeProfileDirectory.listFiles()) {
-      child.delete();
-    }
-    fakeProfileDirectory.delete();
+    TestUtils.deleteDirectoryRecursively(fakeProfileDirectory);
     super.tearDown();
   }
 }

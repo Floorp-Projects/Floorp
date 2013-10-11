@@ -6,7 +6,6 @@
 
 XPIDL_SOURCES += [
     'SimToolKit.idl',
-    'nsIDOMIccCardLockErrorEvent.idl',
     'nsIDOMIccInfo.idl',
     'nsIDOMIccManager.idl',
     'nsIIccProvider.idl',
