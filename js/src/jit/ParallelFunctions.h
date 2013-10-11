@@ -25,6 +25,8 @@ bool CheckInterruptPar(ForkJoinSlice *slice);
 JSObject *ExtendArrayPar(ForkJoinSlice *slice, JSObject *array, uint32_t length);
 
 // Set properties and elements on thread local objects.
+ParallelResult SetPropertyPar(ForkJoinSlice *slice, HandleObject obj, HandlePropertyName name,
+                              HandleValue value, bool strict, jsbytecode *pc);
 ParallelResult SetElementPar(ForkJoinSlice *slice, HandleObject obj, HandleValue index,
                              HandleValue value, bool strict);
 
