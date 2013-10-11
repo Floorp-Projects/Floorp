@@ -173,14 +173,8 @@ let AboutHomeListener = {
 };
 AboutHomeListener.init(this);
 
+
 var global = this;
-
-// Lazily load the finder code
-addMessageListener("Finder:Initialize", function () {
-  let {RemoteFinderListener} = Cu.import("resource://gre/modules/RemoteFinder.jsm", {});
-  new RemoteFinderListener(global);
-});
-
 
 let ClickEventHandler = {
   init: function init() {

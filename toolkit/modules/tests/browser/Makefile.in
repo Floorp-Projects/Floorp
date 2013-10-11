@@ -6,8 +6,8 @@
 MOCHITEST_BROWSER_FILES = \
   browser_DeferredTask.js \
   browser_Deprecated.js \
-  browser_Finder.js \
   browser_Geometry.js \
   browser_InlineSpellChecker.js \
   browser_Troubleshoot.js \
+  
   $(NULL)
