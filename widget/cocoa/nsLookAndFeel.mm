@@ -499,7 +499,7 @@ bool nsLookAndFeel::AllowOverlayScrollbarsOverlap()
 static void GetStringForNSString(const NSString *aSrc, nsAString& aDest)
 {
     aDest.SetLength([aSrc length]);
-    [aSrc getCharacters:aDest.BeginWriting()];
+    [aSrc getCharacters:reinterpret_cast<unichar*>(aDest.BeginWriting())];
 }
 
 bool

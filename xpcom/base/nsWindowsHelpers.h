@@ -16,7 +16,7 @@ public:
   typedef HKEY RawRef;
   static HKEY Void()
   {
-    return NULL;
+    return nullptr;
   }
 
   static void Release(RawRef aFD)
@@ -34,7 +34,7 @@ public:
   typedef SC_HANDLE RawRef;
   static SC_HANDLE Void()
   {
-    return NULL;
+    return nullptr;
   }
 
   static void Release(RawRef aFD)
@@ -51,7 +51,7 @@ class nsSimpleRef<HANDLE>
 protected:
   typedef HANDLE RawRef;
 
-  nsSimpleRef() : mRawRef(NULL)
+  nsSimpleRef() : mRawRef(nullptr)
   {
   }
 
@@ -61,7 +61,7 @@ protected:
 
   bool HaveResource() const
   {
-    return mRawRef != NULL && mRawRef != INVALID_HANDLE_VALUE;
+    return mRawRef != nullptr && mRawRef != INVALID_HANDLE_VALUE;
   }
 
 public:
@@ -72,7 +72,7 @@ public:
 
   static void Release(RawRef aRawRef)
   {
-    if (aRawRef != NULL && aRawRef != INVALID_HANDLE_VALUE) {
+    if (aRawRef != nullptr && aRawRef != INVALID_HANDLE_VALUE) {
       CloseHandle(aRawRef);
     }
   }
@@ -87,7 +87,7 @@ public:
   typedef HMODULE RawRef;
   static RawRef Void()
   {
-    return NULL;
+    return nullptr;
   }
 
   static void Release(RawRef aFD)
@@ -159,7 +159,7 @@ namespace
     if (systemDirLen && systemPath[systemDirLen - 1] != L'\\') {
       systemPath[systemDirLen] = L'\\';
       ++systemDirLen;
-      // No need to re-NULL terminate
+      // No need to re-nullptr terminate
     }
 
     size_t fileLen = wcslen(module);

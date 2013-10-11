@@ -96,7 +96,7 @@ pm_canMeasureSomething(JSContext* cx, unsigned argc, jsval* vp)
     return true;
 }
 
-const uint8_t PM_FATTRS = JSPROP_READONLY | JSPROP_PERMANENT;
+static const uint8_t PM_FATTRS = JSPROP_READONLY | JSPROP_PERMANENT;
 static const JSFunctionSpec pm_fns[] = {
     JS_FN("start",               pm_start,               0, PM_FATTRS),
     JS_FN("stop",                pm_stop,                0, PM_FATTRS),
@@ -105,7 +105,7 @@ static const JSFunctionSpec pm_fns[] = {
     JS_FS_END
 };
 
-const uint8_t PM_PATTRS =
+static const uint8_t PM_PATTRS =
     JSPROP_ENUMERATE | JSPROP_PERMANENT;
 
 #define GETTER(name)                            \
@@ -131,7 +131,7 @@ static const JSPropertySpec pm_props[] = {
 
 // If this were C++ these would be "static const" members.
 
-const uint8_t PM_CATTRS = JSPROP_ENUMERATE|JSPROP_READONLY|JSPROP_PERMANENT;
+static const uint8_t PM_CATTRS = JSPROP_ENUMERATE|JSPROP_READONLY|JSPROP_PERMANENT;
 
 #define CONSTANT(name) { #name, PerfMeasurement::name }
 

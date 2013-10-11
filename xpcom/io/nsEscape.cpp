@@ -128,8 +128,8 @@ char* nsEscape(const char * str, nsEscapeMask flags)
 //----------------------------------------------------------------------------------------
 {
     if(!str)
-        return NULL;
-    return nsEscapeCount(str, flags, NULL);
+        return nullptr;
+    return nsEscapeCount(str, flags, nullptr);
 }
 
 //----------------------------------------------------------------------------------------

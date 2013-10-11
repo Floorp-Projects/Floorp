@@ -3767,7 +3767,7 @@ JS_Enumerate(JSContext *cx, JSObject *objArg)
  * + native case here uses a JSShape *, but that iterates in reverse!
  * + so we make non-native match, by reverse-iterating after JS_Enumerating
  */
-const uint32_t JSSLOT_ITER_INDEX = 0;
+static const uint32_t JSSLOT_ITER_INDEX = 0;
 
 static void
 prop_iter_finalize(FreeOp *fop, JSObject *obj)

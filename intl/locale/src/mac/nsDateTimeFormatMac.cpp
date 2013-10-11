@@ -114,7 +114,7 @@ nsresult nsDateTimeFormatMac::FormatTMTime(nsILocale* locale,
     formatterLocale = CFLocaleCopyCurrent();
   } else {
     CFStringRef localeStr = CFStringCreateWithCharacters(nullptr,
-                                                         mLocale.get(),
+                                                         reinterpret_cast<const UniChar*>(mLocale.get()),
                                                          mLocale.Length());
     formatterLocale = CFLocaleCreate(nullptr, localeStr);
     CFRelease(localeStr);
@@ -221,7 +221,7 @@ nsresult nsDateTimeFormatMac::FormatTMTime(nsILocale* locale,
   nsAutoTArray<UniChar, 256> stringBuffer;
   if (stringBuffer.SetLength(stringLen + 1)) {
     CFStringGetCharacters(formattedDate, CFRangeMake(0, stringLen), stringBuffer.Elements());
-    stringOut.Assign(stringBuffer.Elements(), stringLen);
+    stringOut.Assign(reinterpret_cast<PRUnichar*>(stringBuffer.Elements()), stringLen);
   }
   
   CFRelease(formattedDate);

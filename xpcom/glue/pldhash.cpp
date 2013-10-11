@@ -160,7 +160,7 @@ static const PLDHashTableOps stub_ops = {
     PL_DHashMoveEntryStub,
     PL_DHashClearEntryStub,
     PL_DHashFinalizeStub,
-    NULL
+    nullptr
 };
 
 const PLDHashTableOps *
@@ -177,10 +177,10 @@ PL_NewDHashTable(const PLDHashTableOps *ops, void *data, uint32_t entrySize,
 
     table = (PLDHashTable *) malloc(sizeof *table);
     if (!table)
-        return NULL;
+        return nullptr;
     if (!PL_DHashTableInit(table, ops, data, entrySize, capacity)) {
         free(table);
-        return NULL;
+        return nullptr;
     }
     return table;
 }
@@ -334,13 +334,13 @@ PL_DHashTableFinish(PLDHashTable *table)
     PLDHashEntryHdr *entry;
 
 #ifdef DEBUG_XXXbrendan
-    static FILE *dumpfp = NULL;
+    static FILE *dumpfp = nullptr;
     if (!dumpfp) dumpfp = fopen("/tmp/pldhash.bigdump", "w");
     if (dumpfp) {
 #ifdef MOZILLA_CLIENT
         NS_TraceStack(1, dumpfp);
 #endif
-        PL_DHashTableDumpMeter(table, NULL, dumpfp);
+        PL_DHashTableDumpMeter(table, nullptr, dumpfp);
         fputc('\n', dumpfp);
     }
 #endif
@@ -408,7 +408,7 @@ SearchTable(PLDHashTable *table, const void *key, PLDHashNumber keyHash,
     sizeMask = (1u << sizeLog2) - 1;
 
     /* Save the first removed entry pointer so PL_DHASH_ADD can recycle it. */
-    firstRemoved = NULL;
+    firstRemoved = nullptr;
 
     for (;;) {
         if (MOZ_UNLIKELY(ENTRY_IS_REMOVED(entry))) {
@@ -437,7 +437,7 @@ SearchTable(PLDHashTable *table, const void *key, PLDHashNumber keyHash,
     }
 
     /* NOTREACHED */
-    return NULL;
+    return nullptr;
 }
 
 /*
@@ -495,7 +495,7 @@ FindFreeEntry(PLDHashTable *table, PLDHashNumber keyHash)
     }
 
     /* NOTREACHED */
-    return NULL;
+    return nullptr;
 }
 
 static bool
@@ -609,7 +609,7 @@ PL_DHashTableOperate(PLDHashTable *table, const void *key, PLDHashOperator op)
             if (!ChangeTable(table, deltaLog2) &&
                 table->entryCount + table->removedCount == size - 1) {
                 METER(table->stats.addFailures++);
-                entry = NULL;
+                entry = nullptr;
                 break;
             }
         }
@@ -631,7 +631,7 @@ PL_DHashTableOperate(PLDHashTable *table, const void *key, PLDHashOperator op)
                 !table->ops->initEntry(table, entry, key)) {
                 /* We haven't claimed entry yet; fail with null return. */
                 memset(entry + 1, 0, table->entrySize - sizeof *entry);
-                entry = NULL;
+                entry = nullptr;
                 break;
             }
             entry->keyHash = keyHash;
@@ -656,12 +656,12 @@ PL_DHashTableOperate(PLDHashTable *table, const void *key, PLDHashOperator op)
             }
         }
         METER(else table->stats.removeMisses++);
-        entry = NULL;
+        entry = nullptr;
         break;
 
       default:
         NS_NOTREACHED("0");
-        entry = NULL;
+        entry = nullptr;
     }
 
     DECREMENT_RECURSION_LEVEL(table);
@@ -773,7 +773,7 @@ size_t
 PL_DHashTableSizeOfExcludingThis(const PLDHashTable *table,
                                  PLDHashSizeOfEntryExcludingThisFun sizeOfEntryExcludingThis,
                                  MallocSizeOf mallocSizeOf,
-                                 void *arg /* = NULL */)
+                                 void *arg /* = nullptr */)
 {
     size_t n = 0;
     n += mallocSizeOf(table->entryStore);
@@ -790,7 +790,7 @@ size_t
 PL_DHashTableSizeOfIncludingThis(const PLDHashTable *table,
                                  PLDHashSizeOfEntryExcludingThisFun sizeOfEntryExcludingThis,
                                  MallocSizeOf mallocSizeOf,
-                                 void *arg /* = NULL */)
+                                 void *arg /* = nullptr */)
 {
     return mallocSizeOf(table) +
            PL_DHashTableSizeOfExcludingThis(table, sizeOfEntryExcludingThis,

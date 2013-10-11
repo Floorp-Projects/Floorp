@@ -61,9 +61,9 @@ InjectCrashRunnable::Run()
     return NS_OK;
   }
 
-  nsAutoHandle hThread(CreateRemoteThread(hProcess, NULL, 0,
+  nsAutoHandle hThread(CreateRemoteThread(hProcess, nullptr, 0,
                                           (LPTHREAD_START_ROUTINE) proc,
-                                          (void*) hRemotePipe, 0, NULL));
+                                          (void*) hRemotePipe, 0, nullptr));
   if (!hThread) {
     NS_WARNING("Unable to CreateRemoteThread");
 
