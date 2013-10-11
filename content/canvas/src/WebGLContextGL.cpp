@@ -191,31 +191,47 @@ WebGLContext::BindRenderbuffer(GLenum target, WebGLRenderbuffer *wrb)
 }
 
 void
-WebGLContext::BindTexture(GLenum target, WebGLTexture *tex)
+WebGLContext::BindTexture(GLenum target, WebGLTexture *newTex)
 {
     if (IsContextLost())
         return;
 
-    if (!ValidateObjectAllowDeletedOrNull("bindTexture", tex))
+     if (!ValidateObjectAllowDeletedOrNull("bindTexture", newTex))
         return;
 
     // silently ignore a deleted texture
-    if (tex && tex->IsDeleted())
+    if (newTex && newTex->IsDeleted())
         return;
 
+    WebGLRefPtr<WebGLTexture>* currentTexPtr = nullptr;
+
     if (target == LOCAL_GL_TEXTURE_2D) {
-        mBound2DTextures[mActiveTexture] = tex;
+        currentTexPtr = &mBound2DTextures[mActiveTexture];
     } else if (target == LOCAL_GL_TEXTURE_CUBE_MAP) {
-        mBoundCubeMapTextures[mActiveTexture] = tex;
+        currentTexPtr = &mBoundCubeMapTextures[mActiveTexture];
     } else {
         return ErrorInvalidEnumInfo("bindTexture: target", target);
     }
 
-    mFakeBlackStatus = WebGLContextFakeBlackStatus::Unknown;
+    WebGLTextureFakeBlackStatus currentTexFakeBlackStatus
+        = (*currentTexPtr)
+          ? (*currentTexPtr)->ResolvedFakeBlackStatus()
+          : WebGLTextureFakeBlackStatus::NotNeeded;
+    WebGLTextureFakeBlackStatus newTexFakeBlackStatus
+        = newTex
+          ? newTex->ResolvedFakeBlackStatus()
+          : WebGLTextureFakeBlackStatus::NotNeeded;
+
+    *currentTexPtr = newTex;
+
+    if (currentTexFakeBlackStatus != newTexFakeBlackStatus) {
+        SetFakeBlackStatus(WebGLContextFakeBlackStatus::Unknown);
+    }
+
     MakeContextCurrent();
 
-    if (tex)
-        tex->Bind(target);
+    if (newTex)
+        newTex->Bind(target);
     else
         gl->fBindTexture(target, 0 /* == texturename */);
 }
@@ -3835,10 +3851,8 @@ WebGLContext::TexImage2D_base(GLenum target, GLint level, GLenum internalformat,
             void *tempZeroData = calloc(1, bytesNeeded);
             if (!tempZeroData)
                 return ErrorOutOfMemory("texImage2D: could not allocate %d bytes (for zero fill)", bytesNeeded);
-
             error = CheckedTexImage2D(target, level, internalformat,
                                       width, height, border, format, type, tempZeroData);
-
             free(tempZeroData);
             imageInfoStatusIfSuccess = WebGLImageDataStatus::InitializedImageData;
         }
