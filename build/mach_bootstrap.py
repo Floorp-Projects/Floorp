@@ -108,6 +108,11 @@ CATEGORIES = {
         'short': 'Potpourri',
         'long': 'Potent potables and assorted snacks.',
         'priority': 10,
+    },
+    'disabled': {
+        'short': 'Disabled',
+        'long': 'These commands are unavailable for your current context, run "mach <command>" to see why.',
+        'priority': 0,
     }
 }
 
