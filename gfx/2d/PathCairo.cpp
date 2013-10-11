@@ -269,12 +269,12 @@ void
 PathCairo::AppendPathToBuilder(PathBuilderCairo *aBuilder, const Matrix *aTransform) const
 {
   if (aTransform) {
-    int i = 0;
+    size_t i = 0;
     while (i < mPathData.size()) {
       uint32_t pointCount = mPathData[i].header.length - 1;
       aBuilder->mPathData.push_back(mPathData[i]);
       i++;
-      for (int c = 0; c < pointCount; c++) {
+      for (uint32_t c = 0; c < pointCount; c++) {
         cairo_path_data_t data;
         Point newPoint = *aTransform * Point(mPathData[i].point.x, mPathData[i].point.y);
         data.point.x = newPoint.x;
@@ -284,7 +284,7 @@ PathCairo::AppendPathToBuilder(PathBuilderCairo *aBuilder, const Matrix *aTransf
       }
     }
   } else {
-    for (int i = 0; i < mPathData.size(); i++) {
+    for (size_t i = 0; i < mPathData.size(); i++) {
       aBuilder->mPathData.push_back(mPathData[i]);
     }
   }
