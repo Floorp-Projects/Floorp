@@ -1,0 +1,21 @@
+<!DOCTYPE HTML>
+<html>
+  <head>
+    <title>getUserMedia Test App</title>
+    <meta charset="utf-8">
+  </head>
+  <body>
+    <span id="msg"></span>
+    <script>
+      navigator.mozGetUserMedia({ video: true, audio: true },
+        function(localMediaStream) {
+          document.getElementById("msg").textContent = window.URL.createObjectURL(localMediaStream);
+        },
+
+        function(err) {
+          document.getElementById("msg").textContent = err;
+        });
+    </script>
+    <h1>getUserMedia Test App</h1>
+  </body>
+</html>

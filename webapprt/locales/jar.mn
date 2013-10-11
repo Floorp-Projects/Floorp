@@ -7,5 +7,6 @@
 % locale webapprt @AB_CD@ %locale/webapprt/
     locale/webapprt/webapp.dtd                     (%webapprt/webapp.dtd)
     locale/webapprt/webapp.properties              (%webapprt/webapp.properties)
+    locale/webapprt/getUserMediaDialog.dtd         (%webapprt/getUserMediaDialog.dtd)
 
 % locale branding @AB_CD@ resource://webappbranding/
