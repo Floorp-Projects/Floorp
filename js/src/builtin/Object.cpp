@@ -484,7 +484,7 @@ obj_lookupSetter(JSContext *cx, unsigned argc, Value *vp)
 #endif /* JS_OLD_GETTER_SETTER_METHODS */
 
 /* ES5 15.2.3.2. */
-bool
+static bool
 obj_getPrototypeOf(JSContext *cx, unsigned argc, Value *vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);

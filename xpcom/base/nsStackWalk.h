@@ -19,7 +19,7 @@ extern "C" {
 
 // aSP will be the best approximation possible of what the stack pointer will be
 // pointing to when the execution returns to executing that at that PC.
-// If no approximation can be made it will be NULL.
+// If no approximation can be made it will be nullptr.
 typedef void
 (* NS_WalkStackCallback)(void *aPC, void *aSP, void *aClosure);
 
@@ -38,7 +38,7 @@ typedef void
  *                     current thread. On Windows, this is a thread HANDLE.
  *                     It is currently not supported on any other platform.
  * @param aPlatformData Platform specific data that can help in walking the
- *                      stack, this should be NULL unless you really know
+ *                      stack, this should be nullptr unless you really know
  *                      what you're doing! This needs to be a pointer to a
  *                      CONTEXT on Windows and should not be passed on other
  *                      platforms.

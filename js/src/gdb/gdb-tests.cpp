@@ -20,7 +20,7 @@ const JSClass global_class = {
 };
 
 template<typename T>
-inline T *
+static inline T *
 checkPtr(T *ptr)
 {
   if (! ptr)
@@ -28,7 +28,7 @@ checkPtr(T *ptr)
   return ptr;
 }
 
-void
+static void
 checkBool(bool success)
 {
   if (! success)

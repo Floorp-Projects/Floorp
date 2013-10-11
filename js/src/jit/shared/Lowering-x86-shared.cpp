@@ -224,9 +224,9 @@ LIRGeneratorX86Shared::visitAsmJSUDiv(MAsmJSUDiv *div)
 bool
 LIRGeneratorX86Shared::lowerUMod(MInstruction *mod)
 {
-    LUDivOrMod *lir = new LUDivOrMod(useFixed(mod->getOperand(0), eax),
+    LUDivOrMod *lir = new LUDivOrMod(useFixedAtStart(mod->getOperand(0), eax),
                                      useRegister(mod->getOperand(1)),
-                                     LDefinition::BogusTemp());
+                                     tempFixed(eax));
     return defineFixed(lir, mod, LAllocation(AnyRegister(edx)));
 }
 

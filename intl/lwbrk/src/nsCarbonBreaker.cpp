@@ -32,7 +32,7 @@ NS_GetComplexLineBreaks(const PRUnichar* aText, uint32_t aLength,
                   position == 0 ? kUCTextBreakLeadingEdgeMask : 
                                   (kUCTextBreakLeadingEdgeMask | 
                                    kUCTextBreakIterateMask),
-                  aText, 
+                  reinterpret_cast<const UniChar*>(aText),
                   aLength, 
                   position, 
                   &offset);

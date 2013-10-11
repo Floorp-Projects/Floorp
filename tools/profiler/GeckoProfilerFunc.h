@@ -78,5 +78,8 @@ double mozilla_sampler_time(const mozilla::TimeStamp& aTime);
 /* Returns true if env var SPS_NEW is set to anything, else false. */
 extern bool sps_version2();
 
+void mozilla_sampler_tracing(const char* aCategory, const char* aInfo,
+                             TracingMetadata aMetaData);
+
 #endif
 

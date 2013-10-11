@@ -45,15 +45,15 @@ class NS_COM_GLUE nsTextFormatter {
   public:
 
     /*
-     * sprintf into a fixed size buffer. Guarantees that a NULL is at the end
-     * of the buffer. Returns the length of the written output, NOT including
-     * the NUL, or (uint32_t)-1 if an error occurs.
+     * sprintf into a fixed size buffer. Guarantees that the buffer is null
+     * terminated. Returns the length of the written output, NOT including the
+     * null terminator, or (uint32_t)-1 if an error occurs.
      */
     static uint32_t snprintf(PRUnichar *out, uint32_t outlen, const PRUnichar *fmt, ...);
 
     /*
      * sprintf into a nsMemory::Alloc'd buffer. Return a pointer to 
-     * buffer on success, NULL on failure. 
+     * buffer on success, nullptr on failure. 
      */
     static PRUnichar* smprintf(const PRUnichar *fmt, ...);
 

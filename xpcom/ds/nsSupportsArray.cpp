@@ -603,7 +603,7 @@ nsresult
 NS_NewISupportsArray(nsISupportsArray** aInstancePtrResult)
 {
   nsresult rv;
-  rv = nsSupportsArray::Create(NULL, NS_GET_IID(nsISupportsArray),
+  rv = nsSupportsArray::Create(nullptr, NS_GET_IID(nsISupportsArray),
                                (void**)aInstancePtrResult);
   return rv;
 }

@@ -902,11 +902,10 @@ MacroAssembler::compareStrings(JSOp op, Register left, Register right, Register 
 
 void
 MacroAssembler::checkInterruptFlagsPar(const Register &tempReg,
-                                            Label *fail)
+                                       Label *fail)
 {
     movePtr(ImmPtr(&GetIonContext()->runtime->interrupt), tempReg);
-    load32(Address(tempReg, 0), tempReg);
-    branchTest32(Assembler::NonZero, tempReg, tempReg, fail);
+    branch32(Assembler::NonZero, Address(tempReg, 0), Imm32(0), fail);
 }
 
 void
@@ -1361,7 +1360,7 @@ MacroAssembler::clearCalleeTag(Register callee, ExecutionMode mode)
     }
 }
 
-void printf0_(const char *output) {
+static void printf0_(const char *output) {
     printf("%s", output);
 }
 
@@ -1381,7 +1380,7 @@ MacroAssembler::printf(const char *output)
     PopRegsInMask(RegisterSet::Volatile());
 }
 
-void printf1_(const char *output, uintptr_t value) {
+static void printf1_(const char *output, uintptr_t value) {
     char *line = JS_sprintf_append(nullptr, output, value);
     printf("%s", line);
     js_free(line);

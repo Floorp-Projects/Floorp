@@ -324,11 +324,11 @@ public:
     virtual void newPropertyState(JSContext *cx, TypeSet *source) {}
 
     /*
-     * For constraints attached to the JSID_EMPTY type set on an object, mark a
-     * change in one of the object's dynamic property flags. If force is set,
-     * recompilation is always triggered.
+     * For constraints attached to the JSID_EMPTY type set on an object,
+     * indicate a change in one of the object's dynamic property flags or other
+     * state.
      */
-    virtual void newObjectState(JSContext *cx, TypeObject *object, bool force) {}
+    virtual void newObjectState(JSContext *cx, TypeObject *object) {}
 };
 
 /* Flags and other state stored in TypeSet::flags */
@@ -1256,13 +1256,16 @@ struct TypeObjectKey {
 
     bool unknownProperties();
     bool hasFlags(CompilerConstraintList *constraints, TypeObjectFlags flags);
-    void watchStateChange(CompilerConstraintList *constraints);
+    void watchStateChangeForInlinedCall(CompilerConstraintList *constraints);
+    void watchStateChangeForNewScriptTemplate(CompilerConstraintList *constraints);
+    void watchStateChangeForTypedArrayBuffer(CompilerConstraintList *constraints);
     HeapTypeSetKey property(jsid id);
 };
 
 class HeapTypeSetKey
 {
   public:
+    TypeObject *actualObject;
     HeapTypeSet *actualTypes;
 
     void freeze(CompilerConstraintList *constraints);

@@ -2167,7 +2167,7 @@ RemoveTruncatesOnOutput(MInstruction *truncated)
     }
 }
 
-void
+static void
 AdjustTruncatedInputs(MInstruction *truncated)
 {
     MBasicBlock *block = truncated->block();

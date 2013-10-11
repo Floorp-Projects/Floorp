@@ -1495,7 +1495,7 @@ Assembler::as_movt(Register dest, Imm16 imm, Condition c, Instruction *pos)
     return writeInst(0x03400000 | c | imm.encode() | RD(dest), (uint32_t*)pos);
 }
 
-const int mull_tag = 0x90;
+static const int mull_tag = 0x90;
 
 BufferOffset
 Assembler::as_genmul(Register dhi, Register dlo, Register rm, Register rn,

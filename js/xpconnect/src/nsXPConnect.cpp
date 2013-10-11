@@ -333,7 +333,7 @@ xpc_TryUnmarkWrappedGrayObject(nsISupports* aWrappedJS)
 /***************************************************************************/
 // nsIXPConnect interface methods...
 
-inline nsresult UnexpectedFailure(nsresult rv)
+static inline nsresult UnexpectedFailure(nsresult rv)
 {
     NS_ERROR("This is not supposed to fail!");
     return rv;
@@ -1442,7 +1442,7 @@ nsXPConnect::SetDebugModeWhenPossible(bool mode, bool allowSyncDisable)
 NS_IMETHODIMP
 nsXPConnect::GetTelemetryValue(JSContext *cx, jsval *rval)
 {
-    RootedObject obj(cx, JS_NewObject(cx, NULL, NULL, NULL));
+    RootedObject obj(cx, JS_NewObject(cx, nullptr, nullptr, nullptr));
     if (!obj)
         return NS_ERROR_OUT_OF_MEMORY;
 
@@ -1450,12 +1450,12 @@ nsXPConnect::GetTelemetryValue(JSContext *cx, jsval *rval)
 
     size_t i = JS_SetProtoCalled(cx);
     RootedValue v(cx, DOUBLE_TO_JSVAL(i));
-    if (!JS_DefineProperty(cx, obj, "setProto", v, NULL, NULL, attrs))
+    if (!JS_DefineProperty(cx, obj, "setProto", v, nullptr, nullptr, attrs))
         return NS_ERROR_OUT_OF_MEMORY;
 
     i = JS_GetCustomIteratorCount(cx);
     v = DOUBLE_TO_JSVAL(i);
-    if (!JS_DefineProperty(cx, obj, "customIter", v, NULL, NULL, attrs))
+    if (!JS_DefineProperty(cx, obj, "customIter", v, nullptr, nullptr, attrs))
         return NS_ERROR_OUT_OF_MEMORY;
 
     *rval = OBJECT_TO_JSVAL(obj);
@@ -1469,8 +1469,8 @@ nsXPConnect::NotifyDidPaint()
     return NS_OK;
 }
 
-const uint8_t HAS_PRINCIPALS_FLAG               = 1;
-const uint8_t HAS_ORIGIN_PRINCIPALS_FLAG        = 2;
+static const uint8_t HAS_PRINCIPALS_FLAG               = 1;
+static const uint8_t HAS_ORIGIN_PRINCIPALS_FLAG        = 2;
 
 static nsresult
 WriteScriptOrFunction(nsIObjectOutputStream *stream, JSContext *cx,

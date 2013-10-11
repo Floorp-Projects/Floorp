@@ -3504,7 +3504,6 @@ for file in $MALLOC_HEADERS; do
   fi
 done
 
-MOZ_ALLOCATING_FUNCS="strndup posix_memalign memalign valloc"
 AC_CHECK_FUNCS(strndup posix_memalign memalign valloc)
 
 AC_CHECK_FUNCS(malloc_usable_size)
@@ -7153,7 +7152,7 @@ MOZ_ARG_ENABLE_BOOL(gczeal,
 [  --enable-gczeal         Enable zealous JavaScript GCing],
     JS_GC_ZEAL=1,
     JS_GC_ZEAL= )
-if test -n "$JS_GC_ZEAL"; then
+if test -n "$JS_GC_ZEAL" -o -n "$MOZ_DEBUG"; then
     AC_DEFINE(JS_GC_ZEAL)
 fi
 

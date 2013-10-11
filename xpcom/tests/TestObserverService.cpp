@@ -15,7 +15,7 @@
 
 #include <stdio.h>
 
-static nsIObserverService *anObserverService = NULL;
+static nsIObserverService *anObserverService = nullptr;
 
 static void testResult( nsresult rv ) {
     if ( NS_SUCCEEDED( rv ) ) {

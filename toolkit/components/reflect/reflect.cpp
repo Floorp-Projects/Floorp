@@ -58,13 +58,13 @@ Module::Call(nsIXPConnectWrappedNative* wrapper,
 NS_DEFINE_NAMED_CID(JSREFLECT_CID);
 
 static const mozilla::Module::CIDEntry kReflectCIDs[] = {
-  { &kJSREFLECT_CID, false, NULL, mozilla::reflect::ModuleConstructor },
-  { NULL }
+  { &kJSREFLECT_CID, false, nullptr, mozilla::reflect::ModuleConstructor },
+  { nullptr }
 };
 
 static const mozilla::Module::ContractIDEntry kReflectContracts[] = {
   { JSREFLECT_CONTRACTID, &kJSREFLECT_CID },
-  { NULL }
+  { nullptr }
 };
 
 static const mozilla::Module kReflectModule = {
