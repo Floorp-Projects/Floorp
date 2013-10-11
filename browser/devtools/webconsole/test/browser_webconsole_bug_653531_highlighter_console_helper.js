@@ -103,7 +103,8 @@ function performWebConsoleTests(hud)
     is(inspector.selection.node.textContent, "bug653531",
        "node successfully updated");
 
-    executeSoon(finishTest);
+    gBrowser.removeCurrentTab();
+    finishTest();
   }
 }
 

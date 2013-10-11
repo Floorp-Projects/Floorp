@@ -34,10 +34,10 @@ void WebGLVertexArray::Delete() {
     }
 
     mBoundElementArrayBuffer = nullptr;
-    mAttribBuffers.Clear();
+    mAttribs.Clear();
 }
 
-bool WebGLVertexArray::EnsureAttribIndex(GLuint index, const char *info)
+bool WebGLVertexArray::EnsureAttrib(GLuint index, const char *info)
 {
     if (index >= GLuint(mContext->mGLMaxVertexAttribs)) {
         if (index == GLuint(-1)) {
@@ -49,15 +49,15 @@ bool WebGLVertexArray::EnsureAttribIndex(GLuint index, const char *info)
         }
         return false;
     }
-    else if (index >= mAttribBuffers.Length()) {
-        mAttribBuffers.SetLength(index + 1);
+    else if (index >= mAttribs.Length()) {
+        mAttribs.SetLength(index + 1);
     }
 
     return true;
 }
 
 NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE_2(WebGLVertexArray,
-  mAttribBuffers,
+  mAttribs,
   mBoundElementArrayBuffer)
 
 NS_IMPL_CYCLE_COLLECTION_ROOT_NATIVE(WebGLVertexArray, AddRef)

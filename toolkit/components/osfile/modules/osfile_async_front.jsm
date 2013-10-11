@@ -208,9 +208,16 @@ let Scheduler = {
         // Decode any serialized error
         if (error instanceof PromiseWorker.WorkerError) {
           throw OS.File.Error.fromMsg(error.data);
-        } else {
-          throw error;
         }
+        // Extract something meaningful from WorkerErrorEvent
+        if (typeof error == "object" && error && error.constructor.name == "WorkerErrorEvent") {
+          let message = error.message;
+          if (message == "uncaught exception: [object StopIteration]") {
+            throw StopIteration;
+          }
+          throw new Error(message, error.filename, error.lineno);
+        }
+        throw error;
       }
     );
   }
@@ -965,14 +972,11 @@ DirectoryIterator.prototype = {
     promise = promise.then(
       DirectoryIterator.Entry.fromMsg,
       function onReject(reason) {
-        // If the exception is |StopIteration| (which we may determine only
-        // from its message...) we need to stop the iteration.
-        if (!(reason instanceof WorkerErrorEvent && reason.message == "uncaught exception: [object StopIteration]")) {
-          // Any exception other than StopIteration should be propagated as such
-          throw reason;
+        if (reason == StopIteration) {
+          self.close();
+          throw StopIteration;
         }
-        self.close();
-        throw StopIteration;
+        throw reason;
       });
     return promise;
   },
