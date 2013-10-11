@@ -1,4 +1,3 @@
-#filter substitution
 <?xml version="1.0" encoding="utf-8"?>
 <!-- This Source Code Form is subject to the terms of the Mozilla Public
    - License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -18,7 +17,7 @@
 
     <PreferenceScreen android:title="@string/pref_category_customize" >
         <intent android:action="android.intent.action.VIEW"
-                android:targetPackage="@ANDROID_PACKAGE_NAME@"
+                android:targetPackage="@string/android_package_name"
                 android:targetClass="org.mozilla.gecko.GeckoPreferences" >
             <extra
                 android:name="resource"
@@ -28,7 +27,7 @@
 
     <PreferenceScreen android:title="@string/pref_category_display" >
         <intent android:action="android.intent.action.VIEW"
-                android:targetPackage="@ANDROID_PACKAGE_NAME@"
+                android:targetPackage="@string/android_package_name"
                 android:targetClass="org.mozilla.gecko.GeckoPreferences" >
             <extra
                 android:name="resource"
@@ -38,7 +37,7 @@
 
     <PreferenceScreen android:title="@string/pref_category_privacy_short" >
         <intent android:action="android.intent.action.VIEW"
-                android:targetPackage="@ANDROID_PACKAGE_NAME@"
+                android:targetPackage="@string/android_package_name"
                 android:targetClass="org.mozilla.gecko.GeckoPreferences" >
             <extra
                 android:name="resource"
@@ -48,7 +47,7 @@
 
     <PreferenceScreen android:title="@string/pref_category_vendor">
         <intent android:action="android.intent.action.VIEW"
-                android:targetPackage="@ANDROID_PACKAGE_NAME@"
+                android:targetPackage="@string/android_package_name"
                 android:targetClass="org.mozilla.gecko.GeckoPreferences" >
             <extra
                 android:name="resource"
@@ -57,7 +56,7 @@
     </PreferenceScreen>
     <PreferenceScreen android:title="@string/pref_category_devtools">
         <intent android:action="android.intent.action.VIEW"
-                android:targetPackage="@ANDROID_PACKAGE_NAME@"
+                android:targetPackage="@string/android_package_name"
                 android:targetClass="org.mozilla.gecko.GeckoPreferences" >
             <extra
                 android:name="resource"
