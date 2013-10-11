@@ -17,7 +17,11 @@ from time import localtime
 from MozZipFile import ZipFile
 from cStringIO import StringIO
 
-from utils import pushback_iter, lockFile
+from mozbuild.util import (
+    lock_file,
+    PushbackIter,
+)
+
 from Preprocessor import Preprocessor
 from mozbuild.action.buildlist import addEntriesToListFile
 if sys.platform == "win32":
@@ -172,7 +176,7 @@ class JarMaker(object):
     '''updateManifest replaces the % in the chrome registration entries
     with the given chrome base path, and updates the given manifest file.
     '''
-    lock = lockFile(manifestPath + '.lck')
+    lock = lock_file(manifestPath + '.lck')
     try:
       myregister = dict.fromkeys(map(lambda s: s.replace('%', chromebasepath),
                                      register.iterkeys()))
@@ -213,7 +217,7 @@ class JarMaker(object):
     pp = self.pp.clone()
     pp.out = StringIO()
     pp.do_include(infile)
-    lines = pushback_iter(pp.out.getvalue().splitlines())
+    lines = PushbackIter(pp.out.getvalue().splitlines())
     try:
       while True:
         l = lines.next()
@@ -250,8 +254,8 @@ class JarMaker(object):
     '''Internal method called by makeJar to actually process a section
     of a jar.mn file.
 
-    jarfile is the basename of the jarfile or the directory name for 
-    flat output, lines is a pushback_iterator of the lines of jar.mn,
+    jarfile is the basename of the jarfile or the directory name for
+    flat output, lines is a PushbackIter of the lines of jar.mn,
     the remaining options are carried over from makeJar.
     '''
 
