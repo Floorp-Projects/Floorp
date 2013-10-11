@@ -985,13 +985,6 @@ GLContextEGL::ResizeOffscreen(const gfxIntSize& aNewSize)
 	return ResizeScreenBuffer(aNewSize);
 }
 
-
-static GLContextEGL *
-GetGlobalContextEGL()
-{
-    return static_cast<GLContextEGL*>(GLContextProviderEGL::GetGlobalContext());
-}
-
 static GLenum
 GLFormatForImage(gfxImageFormat aFormat)
 {
@@ -1075,21 +1068,18 @@ public:
 
     virtual ~TextureImageEGL()
     {
-        GLContext *ctx = mGLContext;
-        if (ctx->IsDestroyed() || !ctx->IsOwningThreadCurrent()) {
-            ctx = ctx->GetSharedContext();
+        if (mGLContext->IsDestroyed() || !mGLContext->IsOwningThreadCurrent()) {
+            return;
         }
 
         // If we have a context, then we need to delete the texture;
         // if we don't have a context (either real or shared),
         // then they went away when the contex was deleted, because it
         // was the only one that had access to it.
-        if (ctx && !ctx->IsDestroyed()) {
-            ctx->MakeCurrent();
-            ctx->fDeleteTextures(1, &mTexture);
-            ReleaseTexImage();
-            DestroyEGLSurface();
-        }
+        mGLContext->MakeCurrent();
+        mGLContext->fDeleteTextures(1, &mTexture);
+        ReleaseTexImage();
+        DestroyEGLSurface();
     }
 
     bool UsingDirectTexture()
@@ -1418,8 +1408,6 @@ GLContextEGL::TileGenFunc(const nsIntSize& aSize,
   return teximage.forget();
 }
 
-static nsRefPtr<GLContext> gGlobalContext;
-
 static const EGLint kEGLConfigAttribsOffscreenPBuffer[] = {
     LOCAL_EGL_SURFACE_TYPE,    LOCAL_EGL_PBUFFER_BIT,
     LOCAL_EGL_RENDERABLE_TYPE, LOCAL_EGL_OPENGL_ES2_BIT,
@@ -1578,7 +1566,7 @@ GLContextProviderEGL::CreateForWindow(nsIWidget *aWidget)
         EGLSurface surface = sEGLLibrary.fGetCurrentSurface(LOCAL_EGL_DRAW);
         nsRefPtr<GLContextEGL> glContext =
             new GLContextEGL(caps,
-                             gGlobalContext, false,
+                             nullptr, false,
                              config, surface, eglContext);
 
         if (!glContext->Init())
@@ -1587,10 +1575,6 @@ GLContextProviderEGL::CreateForWindow(nsIWidget *aWidget)
         glContext->MakeCurrent();
         glContext->SetIsDoubleBuffered(doubleBuffered);
         glContext->SetPlatformContext(platformContext);
-
-        if (!gGlobalContext) {
-            gGlobalContext = glContext;
-        }
 
         return glContext.forget();
     }
@@ -1613,11 +1597,10 @@ GLContextProviderEGL::CreateForWindow(nsIWidget *aWidget)
         return nullptr;
     }
 
-    GLContextEGL* shareContext = GetGlobalContextEGL();
     SurfaceCaps caps = SurfaceCaps::Any();
     nsRefPtr<GLContextEGL> glContext =
         GLContextEGL::CreateGLContext(caps,
-                                      shareContext, false,
+                                      nullptr, false,
                                       config, surface);
 
     if (!glContext) {
@@ -1664,11 +1647,10 @@ GLContextEGL::CreateEGLPBufferOffscreenContext(const gfxIntSize& size)
         return nullptr;
     }
 
-    GLContextEGL* shareContext = GetGlobalContextEGL();
     SurfaceCaps dummyCaps = SurfaceCaps::Any();
     nsRefPtr<GLContextEGL> glContext =
         GLContextEGL::CreateGLContext(dummyCaps,
-                                      shareContext, true,
+                                      nullptr, true,
                                       config, surface);
     if (!glContext) {
         NS_WARNING("Failed to create GLContext from PBuffer");
@@ -1703,11 +1685,10 @@ GLContextEGL::CreateEGLPixmapOffscreenContext(const gfxIntSize& size)
     }
     MOZ_ASSERT(surface);
 
-    GLContextEGL* shareContext = GetGlobalContextEGL();
     SurfaceCaps dummyCaps = SurfaceCaps::Any();
     nsRefPtr<GLContextEGL> glContext =
         GLContextEGL::CreateGLContext(dummyCaps,
-                                      shareContext, true,
+                                      nullptr, true,
                                       config, surface);
     if (!glContext) {
         NS_WARNING("Failed to create GLContext from XSurface");
@@ -1744,9 +1725,6 @@ GLContextProviderEGL::CreateOffscreen(const gfxIntSize& size,
     if (!glContext)
         return nullptr;
 
-    if (flags & ContextFlagsGlobal)
-        return glContext.forget();
-
     if (!glContext->InitOffscreen(size, caps))
         return nullptr;
 
@@ -1780,7 +1758,6 @@ GLContextProviderEGL::GetGlobalContext(const ContextFlags)
 void
 GLContextProviderEGL::Shutdown()
 {
-    gGlobalContext = nullptr;
 }
 
 } /* namespace gl */
