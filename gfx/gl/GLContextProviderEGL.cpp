@@ -110,22 +110,12 @@ public:
 
 using namespace mozilla::gfx;
 
-#if defined(MOZ_WIDGET_GONK)
-static bool gUseBackingSurface = true;
-#else
-static bool gUseBackingSurface = false;
-#endif
-
 #ifdef MOZ_WIDGET_GONK
 extern nsIntRect gScreenBounds;
 #endif
 
-#define EGL_DISPLAY()        sEGLLibrary.Display()
-
 namespace mozilla {
 namespace gl {
-
-static GLLibraryEGL sEGLLibrary;
 
 #define ADD_ATTR_2(_array, _k, _v) do {         \
     (_array).AppendElement(_k);                 \
@@ -317,13 +307,6 @@ public:
                 }
 #endif
             }
-
-#ifdef MOZ_WIDGET_GONK
-        char propValue[PROPERTY_VALUE_MAX];
-        property_get("ro.build.version.sdk", propValue, "0");
-        if (atoi(propValue) < 15)
-            gUseBackingSurface = false;
-#endif
 
         bool current = MakeCurrent();
         if (!current) {
@@ -1045,24 +1028,15 @@ public:
             mUpdateFormat = gfxPlatform::GetPlatform()->OptimalFormatForContent(GetContentType());
         }
 
-        if (gUseBackingSurface) {
-            if (mUpdateFormat != gfxImageFormatARGB32) {
-                mTextureFormat = FORMAT_R8G8B8X8;
-            } else {
-                mTextureFormat = FORMAT_R8G8B8A8;
-            }
-            Resize(aSize);
+        if (mUpdateFormat == gfxImageFormatRGB16_565) {
+            mTextureFormat = FORMAT_R8G8B8X8;
+        } else if (mUpdateFormat == gfxImageFormatRGB24) {
+            // RGB24 means really RGBX for Thebes, which means we have to
+            // use the right shader and ignore the uninitialized alpha
+            // value.
+            mTextureFormat = FORMAT_B8G8R8X8;
         } else {
-            if (mUpdateFormat == gfxImageFormatRGB16_565) {
-                mTextureFormat = FORMAT_R8G8B8X8;
-            } else if (mUpdateFormat == gfxImageFormatRGB24) {
-                // RGB24 means really RGBX for Thebes, which means we have to
-                // use the right shader and ignore the uninitialized alpha
-                // value.
-                mTextureFormat = FORMAT_B8G8R8X8;
-            } else {
-                mTextureFormat = FORMAT_B8G8R8A8;
-            }
+            mTextureFormat = FORMAT_B8G8R8A8;
         }
     }
 
@@ -1082,21 +1056,12 @@ public:
         DestroyEGLSurface();
     }
 
-    bool UsingDirectTexture()
-    {
-        return !!mBackingSurface;
-    }
-
     virtual void GetUpdateRegion(nsIntRegion& aForRegion)
     {
         if (mTextureState != Valid) {
             // if the texture hasn't been initialized yet, force the
             // client to paint everything
             aForRegion = nsIntRect(nsIntPoint(0, 0), mSize);
-        }
-
-        if (UsingDirectTexture()) {
-            return;
         }
 
         // We can only draw a rectangle, not subregions due to
@@ -1120,11 +1085,6 @@ public:
             return nullptr;
         }
 
-        if (mBackingSurface) {
-            mUpdateSurface = mBackingSurface;
-            return mUpdateSurface;
-        }
-
         //printf_stderr("creating image surface %dx%d format %d\n", mUpdateRect.width, mUpdateRect.height, mUpdateFormat);
 
         mUpdateSurface =
@@ -1139,13 +1099,6 @@ public:
     virtual void EndUpdate()
     {
         NS_ASSERTION(!!mUpdateSurface, "EndUpdate() without BeginUpdate()?");
-
-        if (mBackingSurface && mUpdateSurface == mBackingSurface) {
-            mBackingSurface->SetDeviceOffset(gfxPoint(0, 0));
-            mTextureState = Valid;
-            mUpdateSurface = nullptr;
-            return;
-        }
 
         //printf_stderr("EndUpdate: slow path");
 
@@ -1260,25 +1213,16 @@ public:
             return;
 
         mGLContext->fBindTexture(LOCAL_GL_TEXTURE_2D, mTexture);
-    
-        // Try to generate a backin surface first if we have the ability
-        if (gUseBackingSurface) {
-            CreateBackingSurface(gfxIntSize(aSize.width, aSize.height));
-        }
 
-        if (!UsingDirectTexture()) {
-            // If we don't have a backing surface or failed to obtain one,
-            // use the GL Texture failsafe
-            mGLContext->fTexImage2D(LOCAL_GL_TEXTURE_2D,
-                                    0,
-                                    GLFormatForImage(mUpdateFormat),
-                                    aSize.width,
-                                    aSize.height,
-                                    0,
-                                    GLFormatForImage(mUpdateFormat),
-                                    GLTypeForImage(mUpdateFormat),
-                                    nullptr);
-        }
+        mGLContext->fTexImage2D(LOCAL_GL_TEXTURE_2D,
+                                0,
+                                GLFormatForImage(mUpdateFormat),
+                                aSize.width,
+                                aSize.height,
+                                0,
+                                GLFormatForImage(mUpdateFormat),
+                                GLTypeForImage(mUpdateFormat),
+                                nullptr);
 
         mTextureState = Allocated;
         mSize = aSize;
@@ -1318,12 +1262,6 @@ public:
         return true;
     }
 
-    virtual already_AddRefed<gfxASurface> GetBackingSurface()
-    {
-        nsRefPtr<gfxASurface> copy = mBackingSurface;
-        return copy.forget();
-    }
-
     virtual bool CreateEGLSurface(gfxASurface* aSurface)
     {
         return false;
@@ -1338,15 +1276,6 @@ public:
         mSurface = nullptr;
     }
 
-    virtual bool CreateBackingSurface(const gfxIntSize& aSize)
-    {
-        ReleaseTexImage();
-        DestroyEGLSurface();
-        mBackingSurface = nullptr;
-
-        return false;
-    }
-
 protected:
     typedef gfxImageFormat ImageFormat;
 
@@ -1354,8 +1283,6 @@ protected:
 
     nsIntRect mUpdateRect;
     ImageFormat mUpdateFormat;
-    bool mUsingDirectTexture;
-    nsRefPtr<gfxASurface> mBackingSurface;
     nsRefPtr<gfxASurface> mUpdateSurface;
     EGLImage mEGLImage;
     GLuint mTexture;
