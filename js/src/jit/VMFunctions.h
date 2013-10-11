@@ -27,8 +27,7 @@ enum DataType {
     Type_Pointer,
     Type_Object,
     Type_Value,
-    Type_Handle,
-    Type_ParallelResult
+    Type_Handle
 };
 
 struct PopValues
@@ -220,10 +219,8 @@ struct VMFunction
         // Check for valid failure/return type.
         JS_ASSERT_IF(outParam != Type_Void && executionMode == SequentialExecution,
                      returnType == Type_Bool);
-        JS_ASSERT_IF(executionMode == ParallelExecution, returnType == Type_ParallelResult);
         JS_ASSERT(returnType == Type_Bool ||
-                  returnType == Type_Object ||
-                  returnType == Type_ParallelResult);
+                  returnType == Type_Object);
     }
 
     VMFunction(const VMFunction &o) {
@@ -280,7 +277,6 @@ template <> struct TypeToDataType<Handle<StaticBlockObject *> > { static const D
 template <> struct TypeToDataType<HandleScript> { static const DataType result = Type_Handle; };
 template <> struct TypeToDataType<HandleValue> { static const DataType result = Type_Handle; };
 template <> struct TypeToDataType<MutableHandleValue> { static const DataType result = Type_Handle; };
-template <> struct TypeToDataType<ParallelResult> { static const DataType result = Type_ParallelResult; };
 
 // Convert argument types to properties of the argument known by the jit.
 template <class T> struct TypeToArgProperties {
@@ -395,8 +391,8 @@ template <> struct MatchContext<ForkJoinSlice *> {
 };
 template <> struct MatchContext<ThreadSafeContext *> {
     // ThreadSafeContext functions can be called from either mode, but for
-    // calling from parallel they need to be wrapped first to return a
-    // ParallelResult, so we default to SequentialExecution here.
+    // calling from parallel they should be wrapped first, so we default to
+    // SequentialExecution here.
     static const ExecutionMode execMode = SequentialExecution;
 };
 
@@ -556,12 +552,7 @@ class AutoDetectInvalidation
     bool disabled_;
 
   public:
-    AutoDetectInvalidation(JSContext *cx, Value *rval, IonScript *ionScript = nullptr)
-      : cx_(cx),
-        ionScript_(ionScript ? ionScript : GetTopIonJSScript(cx)->ionScript()),
-        rval_(rval),
-        disabled_(false)
-    { }
+    AutoDetectInvalidation(JSContext *cx, Value *rval, IonScript *ionScript = nullptr);
 
     void disable() {
         JS_ASSERT(!disabled_);

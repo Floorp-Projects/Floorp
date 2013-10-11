@@ -23,6 +23,7 @@
 #include "jsboolinlines.h"
 #include "jsscriptinlines.h"
 
+#include "jit/IonFrames-inl.h"
 #include "vm/Interpreter-inl.h"
 #include "vm/ScopeObject-inl.h"
 
