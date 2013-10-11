@@ -949,7 +949,7 @@ nsGonkCameraControl::StartRecordingImpl(StartRecordingTask* aStartRecording)
     return NS_ERROR_FAILURE;
   }
 
-  rv = SetupRecording(fd, aStartRecording->mOptions.rotation, aStartRecording->mOptions.maxFileSizeBytes, aStartRecording->mOptions.maxVideoLengthMs);
+  rv = SetupRecording(fd, aStartRecording->mOptions.mRotation, aStartRecording->mOptions.mMaxFileSizeBytes, aStartRecording->mOptions.mMaxVideoLengthMs);
   NS_ENSURE_SUCCESS(rv, rv);
 
   if (mRecorder->start() != OK) {
@@ -1125,7 +1125,8 @@ nsGonkCameraControl::SetupVideoMode(const nsAString& aProfile)
   mMediaProfiles = MediaProfiles::getInstance();
 
   nsAutoCString profile = NS_ConvertUTF16toUTF8(aProfile);
-  mRecorderProfile = GetGonkRecorderProfileManager().get()->Get(profile.get());
+  nsRefPtr<GonkRecorderProfileManager> mgr = GetGonkRecorderProfileManager();
+  mRecorderProfile = mgr->Get(profile.get());
   if (!mRecorderProfile) {
     DOM_CAMERA_LOGE("Recorder profile '%s' is not supported\n", profile.get());
     return NS_ERROR_INVALID_ARG;
@@ -1369,7 +1370,7 @@ nsGonkCameraControl::GetPreviewStreamVideoModeImpl(GetPreviewStreamVideoModeTask
   StopPreviewInternal(true /* forced */);
 
   // setup the video mode
-  nsresult rv = SetupVideoMode(aGetPreviewStreamVideoMode->mOptions.profile);
+  nsresult rv = SetupVideoMode(aGetPreviewStreamVideoMode->mOptions.mProfile);
   NS_ENSURE_SUCCESS(rv, rv);
   
   const RecorderVideoProfile* video = mRecorderProfile->GetVideoProfile();

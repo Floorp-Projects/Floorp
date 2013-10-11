@@ -125,3 +125,27 @@ MSVC_ENABLE_PGO = True
 
 LIBRARY_NAME = 'jsdombase_s'
 
+LOCAL_INCLUDES += [
+    '../battery',
+    '../bluetooth',
+    '../icc/src',
+    '../media',
+    '../network/src',
+    '../src/geolocation',
+    '../src/storage',
+    '../time',
+    '/content/base/src',
+    '/content/events/src',
+    '/content/html/document/src',
+    '/content/xbl/src',
+    '/content/xul/document/src',
+    '/layout/generic',
+    '/layout/style',
+    '/layout/xul/base/src',
+]
+
+if CONFIG['MOZ_B2G_RIL']:
+    LOCAL_INCLUDES += [
+        '../fmradio',
+        '../system/gonk',
+    ]
