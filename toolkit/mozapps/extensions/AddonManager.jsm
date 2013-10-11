@@ -396,6 +396,9 @@ var AddonManagerInternal = {
   providers: [],
   types: {},
   startupChanges: {},
+  // Store telemetry details per addon provider
+  telemetryDetails: {},
+
 
   // A read-only wrapper around the types dictionary
   typesProxy: Proxy.create({
@@ -457,6 +460,10 @@ var AddonManagerInternal = {
       return;
 
     this.recordTimestamp("AMI_startup_begin");
+
+    // clear this for xpcshell test restarts
+    for (let provider in this.telemetryDetails)
+      delete this.telemetryDetails[provider];
 
     let appChanged = undefined;
 
@@ -2192,12 +2199,20 @@ this.AddonManagerPrivate = {
     return this._simpleMeasures;
   },
 
+  getTelemetryDetails: function AMP_getTelemetryDetails() {
+    return AddonManagerInternal.telemetryDetails;
+  },
+
+  setTelemetryDetails: function AMP_setTelemetryDetails(aProvider, aDetails) {
+    AddonManagerInternal.telemetryDetails[aProvider] = aDetails;
+  },
+
   // Start a timer, record a simple measure of the time interval when
   // timer.done() is called
   simpleTimer: function(aName) {
     let startTime = Date.now();
     return {
-      done: () => AddonManagerPrivate.recordSimpleMeasure(aName, Date.now() - startTime)
+      done: () => this.recordSimpleMeasure(aName, Date.now() - startTime)
     };
   }
 };

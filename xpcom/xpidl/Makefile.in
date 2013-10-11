@@ -6,3 +6,6 @@ export::
 	$(call SUBMAKE,xpidl-parser,$(DEPTH)/xpcom/idl-parser)
 	$(call py_action,process_install_manifest,$(DIST)/idl $(DEPTH)/_build_manifests/install/dist_idl)
 	$(call SUBMAKE,xpidl,$(DEPTH)/config/makefiles/xpidl)
+
+clean clobber realclean clobber_all distclean::
+	$(call SUBMAKE,$@,$(DEPTH)/config/makefiles/xpidl)

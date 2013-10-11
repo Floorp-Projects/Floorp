@@ -6,6 +6,7 @@
 #include "WebGLContext.h"
 #include "WebGLTexture.h"
 #include "GLContext.h"
+#include "WebGLTexelConversions.h"
 #include "mozilla/dom/WebGLRenderingContextBinding.h"
 #include <algorithm>
 
@@ -27,7 +28,7 @@ WebGLTexture::WebGLTexture(WebGLContext *context)
     , mFacesCount(0)
     , mMaxLevelWithCustomImages(0)
     , mHaveGeneratedMipmap(false)
-    , mFakeBlackStatus(DoNotNeedFakeBlack)
+    , mFakeBlackStatus(WebGLTextureFakeBlackStatus::IncompleteTexture)
 {
     SetIsDOMBinding();
     mContext->MakeContextCurrent();
@@ -45,7 +46,7 @@ WebGLTexture::Delete() {
 
 int64_t
 WebGLTexture::ImageInfo::MemoryUsage() const {
-    if (!mIsDefined)
+    if (mImageDataStatus == WebGLImageDataStatus::NoImageData)
         return 0;
     int64_t texelSizeInBits = WebGLContext::GetBitsPerTexel(mFormat, mType);
     return int64_t(mWidth) * int64_t(mHeight) * texelSizeInBits / 8;
@@ -98,12 +99,6 @@ WebGLTexture::DoesTexture2DMipmapHaveAllLevelsConsistentlyDefined(GLenum texImag
 }
 
 void
-WebGLTexture::SetDontKnowIfNeedFakeBlack() {
-    mFakeBlackStatus = DontKnowIfNeedFakeBlack;
-    mContext->SetDontKnowIfNeedFakeBlack();
-}
-
-void
 WebGLTexture::Bind(GLenum aTarget) {
     // this function should only be called by bindTexture().
     // it assumes that the GL context is already current.
@@ -124,7 +119,7 @@ WebGLTexture::Bind(GLenum aTarget) {
     if (firstTimeThisTextureIsBound) {
         mFacesCount = (mTarget == LOCAL_GL_TEXTURE_2D) ? 1 : 6;
         EnsureMaxLevelWithCustomImagesAtLeast(0);
-        SetDontKnowIfNeedFakeBlack();
+        SetFakeBlackStatus(WebGLTextureFakeBlackStatus::Unknown);
 
         // thanks to the WebKit people for finding this out: GL_TEXTURE_WRAP_R is not
         // present in GLES 2, but is present in GL and it seems as if for cube maps
@@ -139,26 +134,26 @@ WebGLTexture::Bind(GLenum aTarget) {
 void
 WebGLTexture::SetImageInfo(GLenum aTarget, GLint aLevel,
                   GLsizei aWidth, GLsizei aHeight,
-                  GLenum aFormat, GLenum aType)
+                  GLenum aFormat, GLenum aType, WebGLImageDataStatus aStatus)
 {
     if ( (aTarget == LOCAL_GL_TEXTURE_2D) != (mTarget == LOCAL_GL_TEXTURE_2D) )
         return;
 
     EnsureMaxLevelWithCustomImagesAtLeast(aLevel);
 
-    ImageInfoAt(aTarget, aLevel) = ImageInfo(aWidth, aHeight, aFormat, aType);
+    ImageInfoAt(aTarget, aLevel) = ImageInfo(aWidth, aHeight, aFormat, aType, aStatus);
 
     if (aLevel > 0)
         SetCustomMipmap();
 
-    SetDontKnowIfNeedFakeBlack();
+    SetFakeBlackStatus(WebGLTextureFakeBlackStatus::Unknown);
 }
 
 void
 WebGLTexture::SetGeneratedMipmap() {
     if (!mHaveGeneratedMipmap) {
         mHaveGeneratedMipmap = true;
-        SetDontKnowIfNeedFakeBlack();
+        SetFakeBlackStatus(WebGLTextureFakeBlackStatus::Unknown);
     }
 }
 
@@ -244,128 +239,209 @@ WebGLTexture::IsMipmapCubeComplete() const {
     return true;
 }
 
-bool
-WebGLTexture::NeedFakeBlack() {
-    // handle this case first, it's the generic case
-    if (mFakeBlackStatus == DoNotNeedFakeBlack)
-        return false;
-
-    if (mFakeBlackStatus == DontKnowIfNeedFakeBlack) {
-        // Determine if the texture needs to be faked as a black texture.
-        // See 3.8.2 Shader Execution in the OpenGL ES 2.0.24 spec.
-
-        for (size_t face = 0; face < mFacesCount; ++face) {
-            if (!ImageInfoAtFace(face, 0).mIsDefined) {
-                // In case of undefined texture image, we don't print any message because this is a very common
-                // and often legitimate case, for example when doing asynchronous texture loading.
-                // An extreme case of this is the photowall google demo.
-                // Exiting early here allows us to avoid making noise on valid webgl code.
-                mFakeBlackStatus = DoNeedFakeBlack;
-                return true;
-            }
-        }
-
-        const char *msg_rendering_as_black
-            = "A texture is going to be rendered as if it were black, as per the OpenGL ES 2.0.24 spec section 3.8.2, "
-              "because it";
-
-        if (mTarget == LOCAL_GL_TEXTURE_2D)
-        {
-            if (DoesMinFilterRequireMipmap())
-            {
-                if (!IsMipmapTexture2DComplete()) {
-                    mContext->GenerateWarning
-                        ("%s is a 2D texture, with a minification filter requiring a mipmap, "
-                         "and is not mipmap complete (as defined in section 3.7.10).", msg_rendering_as_black);
-                    mFakeBlackStatus = DoNeedFakeBlack;
-                } else if (!ImageInfoAt(mTarget, 0).IsPowerOfTwo()) {
-                    mContext->GenerateWarning
-                        ("%s is a 2D texture, with a minification filter requiring a mipmap, "
-                         "and either its width or height is not a power of two.", msg_rendering_as_black);
-                    mFakeBlackStatus = DoNeedFakeBlack;
-                }
-            }
-            else // no mipmap required
-            {
-                if (!ImageInfoAt(mTarget, 0).IsPositive()) {
-                    mContext->GenerateWarning
-                        ("%s is a 2D texture and its width or height is equal to zero.",
-                         msg_rendering_as_black);
-                    mFakeBlackStatus = DoNeedFakeBlack;
-                } else if (!AreBothWrapModesClampToEdge() && !ImageInfoAt(mTarget, 0).IsPowerOfTwo()) {
-                    mContext->GenerateWarning
-                        ("%s is a 2D texture, with a minification filter not requiring a mipmap, "
-                         "with its width or height not a power of two, and with a wrap mode "
-                         "different from CLAMP_TO_EDGE.", msg_rendering_as_black);
-                    mFakeBlackStatus = DoNeedFakeBlack;
-                }
-            }
-        }
-        else // cube map
-        {
-            bool areAllLevel0ImagesPOT = true;
-            for (size_t face = 0; face < mFacesCount; ++face)
-                areAllLevel0ImagesPOT &= ImageInfoAtFace(face, 0).IsPowerOfTwo();
-
-            if (DoesMinFilterRequireMipmap())
-            {
-                if (!IsMipmapCubeComplete()) {
-                    mContext->GenerateWarning("%s is a cube map texture, with a minification filter requiring a mipmap, "
-                               "and is not mipmap cube complete (as defined in section 3.7.10).",
-                               msg_rendering_as_black);
-                    mFakeBlackStatus = DoNeedFakeBlack;
-                } else if (!areAllLevel0ImagesPOT) {
-                    mContext->GenerateWarning("%s is a cube map texture, with a minification filter requiring a mipmap, "
-                               "and either the width or the height of some level 0 image is not a power of two.",
-                               msg_rendering_as_black);
-                    mFakeBlackStatus = DoNeedFakeBlack;
-                }
-            }
-            else // no mipmap required
-            {
-                if (!IsCubeComplete()) {
-                    mContext->GenerateWarning("%s is a cube map texture, with a minification filter not requiring a mipmap, "
-                               "and is not cube complete (as defined in section 3.7.10).",
-                               msg_rendering_as_black);
-                    mFakeBlackStatus = DoNeedFakeBlack;
-                } else if (!AreBothWrapModesClampToEdge() && !areAllLevel0ImagesPOT) {
-                    mContext->GenerateWarning("%s is a cube map texture, with a minification filter not requiring a mipmap, "
-                               "with some level 0 image having width or height not a power of two, and with a wrap mode "
-                               "different from CLAMP_TO_EDGE.", msg_rendering_as_black);
-                    mFakeBlackStatus = DoNeedFakeBlack;
-                }
-            }
-        }
-
-        if (ImageInfoBase().mType == LOCAL_GL_FLOAT &&
-            !Context()->IsExtensionEnabled(WebGLContext::OES_texture_float_linear))
-        {
-            if (mMinFilter == LOCAL_GL_LINEAR ||
-                mMinFilter == LOCAL_GL_LINEAR_MIPMAP_LINEAR ||
-                mMinFilter == LOCAL_GL_LINEAR_MIPMAP_NEAREST ||
-                mMinFilter == LOCAL_GL_NEAREST_MIPMAP_LINEAR)
-            {
-                mContext->GenerateWarning("%s is a texture with a linear minification filter, "
-                                          "which is not compatible with gl.FLOAT by default. "
-                                          "Try enabling the OES_texture_float_linear extension if supported.", msg_rendering_as_black);
-                mFakeBlackStatus = DoNeedFakeBlack;
-            }
-            else if (mMagFilter == LOCAL_GL_LINEAR)
-            {
-                mContext->GenerateWarning("%s is a texture with a linear magnification filter, "
-                                          "which is not compatible with gl.FLOAT by default. "
-                                          "Try enabling the OES_texture_float_linear extension if supported.", msg_rendering_as_black);
-                mFakeBlackStatus = DoNeedFakeBlack;
-            }
-        }
-
-        // we have exhausted all cases where we do need fakeblack, so if the status is still unknown,
-        // that means that we do NOT need it.
-        if (mFakeBlackStatus == DontKnowIfNeedFakeBlack)
-            mFakeBlackStatus = DoNotNeedFakeBlack;
+WebGLTextureFakeBlackStatus
+WebGLTexture::ResolvedFakeBlackStatus() {
+    if (MOZ_LIKELY(mFakeBlackStatus != WebGLTextureFakeBlackStatus::Unknown)) {
+        return mFakeBlackStatus;
     }
 
-    return mFakeBlackStatus == DoNeedFakeBlack;
+    // Determine if the texture needs to be faked as a black texture.
+    // See 3.8.2 Shader Execution in the OpenGL ES 2.0.24 spec.
+
+    for (size_t face = 0; face < mFacesCount; ++face) {
+        if (ImageInfoAtFace(face, 0).mImageDataStatus == WebGLImageDataStatus::NoImageData) {
+            // In case of undefined texture image, we don't print any message because this is a very common
+            // and often legitimate case (asynchronous texture loading).
+            mFakeBlackStatus = WebGLTextureFakeBlackStatus::IncompleteTexture;
+            return mFakeBlackStatus;
+        }
+    }
+
+    const char *msg_rendering_as_black
+        = "A texture is going to be rendered as if it were black, as per the OpenGL ES 2.0.24 spec section 3.8.2, "
+          "because it";
+
+    if (mTarget == LOCAL_GL_TEXTURE_2D)
+    {
+        if (DoesMinFilterRequireMipmap())
+        {
+            if (!IsMipmapTexture2DComplete()) {
+                mContext->GenerateWarning
+                    ("%s is a 2D texture, with a minification filter requiring a mipmap, "
+                      "and is not mipmap complete (as defined in section 3.7.10).", msg_rendering_as_black);
+                mFakeBlackStatus = WebGLTextureFakeBlackStatus::IncompleteTexture;
+            } else if (!ImageInfoAt(mTarget, 0).IsPowerOfTwo()) {
+                mContext->GenerateWarning
+                    ("%s is a 2D texture, with a minification filter requiring a mipmap, "
+                      "and either its width or height is not a power of two.", msg_rendering_as_black);
+                mFakeBlackStatus = WebGLTextureFakeBlackStatus::IncompleteTexture;
+            }
+        }
+        else // no mipmap required
+        {
+            if (!ImageInfoAt(mTarget, 0).IsPositive()) {
+                mContext->GenerateWarning
+                    ("%s is a 2D texture and its width or height is equal to zero.",
+                      msg_rendering_as_black);
+                mFakeBlackStatus = WebGLTextureFakeBlackStatus::IncompleteTexture;
+            } else if (!AreBothWrapModesClampToEdge() && !ImageInfoAt(mTarget, 0).IsPowerOfTwo()) {
+                mContext->GenerateWarning
+                    ("%s is a 2D texture, with a minification filter not requiring a mipmap, "
+                      "with its width or height not a power of two, and with a wrap mode "
+                      "different from CLAMP_TO_EDGE.", msg_rendering_as_black);
+                mFakeBlackStatus = WebGLTextureFakeBlackStatus::IncompleteTexture;
+            }
+        }
+    }
+    else // cube map
+    {
+        bool areAllLevel0ImagesPOT = true;
+        for (size_t face = 0; face < mFacesCount; ++face)
+            areAllLevel0ImagesPOT &= ImageInfoAtFace(face, 0).IsPowerOfTwo();
+
+        if (DoesMinFilterRequireMipmap())
+        {
+            if (!IsMipmapCubeComplete()) {
+                mContext->GenerateWarning("%s is a cube map texture, with a minification filter requiring a mipmap, "
+                            "and is not mipmap cube complete (as defined in section 3.7.10).",
+                            msg_rendering_as_black);
+                mFakeBlackStatus = WebGLTextureFakeBlackStatus::IncompleteTexture;
+            } else if (!areAllLevel0ImagesPOT) {
+                mContext->GenerateWarning("%s is a cube map texture, with a minification filter requiring a mipmap, "
+                            "and either the width or the height of some level 0 image is not a power of two.",
+                            msg_rendering_as_black);
+                mFakeBlackStatus = WebGLTextureFakeBlackStatus::IncompleteTexture;
+            }
+        }
+        else // no mipmap required
+        {
+            if (!IsCubeComplete()) {
+                mContext->GenerateWarning("%s is a cube map texture, with a minification filter not requiring a mipmap, "
+                            "and is not cube complete (as defined in section 3.7.10).",
+                            msg_rendering_as_black);
+                mFakeBlackStatus = WebGLTextureFakeBlackStatus::IncompleteTexture;
+            } else if (!AreBothWrapModesClampToEdge() && !areAllLevel0ImagesPOT) {
+                mContext->GenerateWarning("%s is a cube map texture, with a minification filter not requiring a mipmap, "
+                            "with some level 0 image having width or height not a power of two, and with a wrap mode "
+                            "different from CLAMP_TO_EDGE.", msg_rendering_as_black);
+                mFakeBlackStatus = WebGLTextureFakeBlackStatus::IncompleteTexture;
+            }
+        }
+    }
+
+    if (ImageInfoBase().mType == LOCAL_GL_FLOAT &&
+        !Context()->IsExtensionEnabled(WebGLContext::OES_texture_float_linear))
+    {
+        if (mMinFilter == LOCAL_GL_LINEAR ||
+            mMinFilter == LOCAL_GL_LINEAR_MIPMAP_LINEAR ||
+            mMinFilter == LOCAL_GL_LINEAR_MIPMAP_NEAREST ||
+            mMinFilter == LOCAL_GL_NEAREST_MIPMAP_LINEAR)
+        {
+            mContext->GenerateWarning("%s is a texture with a linear minification filter, "
+                                      "which is not compatible with gl.FLOAT by default. "
+                                      "Try enabling the OES_texture_float_linear extension if supported.", msg_rendering_as_black);
+            mFakeBlackStatus = WebGLTextureFakeBlackStatus::IncompleteTexture;
+        }
+        else if (mMagFilter == LOCAL_GL_LINEAR)
+        {
+            mContext->GenerateWarning("%s is a texture with a linear magnification filter, "
+                                      "which is not compatible with gl.FLOAT by default. "
+                                      "Try enabling the OES_texture_float_linear extension if supported.", msg_rendering_as_black);
+            mFakeBlackStatus = WebGLTextureFakeBlackStatus::IncompleteTexture;
+        }
+    }
+
+    // We have exhausted all cases of incomplete textures, where we would need opaque black.
+    // We may still need transparent black in case of uninitialized image data.
+    bool hasUninitializedImageData = false;
+    for (size_t level = 0; level <= mMaxLevelWithCustomImages; ++level) {
+        for (size_t face = 0; face < mFacesCount; ++face) {
+            hasUninitializedImageData |= (ImageInfoAtFace(face, level).mImageDataStatus == WebGLImageDataStatus::UninitializedImageData);
+        }
+    }
+
+    if (hasUninitializedImageData) {
+        bool hasAnyInitializedImageData = false;
+        for (size_t level = 0; level <= mMaxLevelWithCustomImages; ++level) {
+            for (size_t face = 0; face < mFacesCount; ++face) {
+                if (ImageInfoAtFace(face, level).mImageDataStatus == WebGLImageDataStatus::InitializedImageData) {
+                    hasAnyInitializedImageData = true;
+                    break;
+                }
+            }
+            if (hasAnyInitializedImageData) {
+                break;
+            }
+        }
+
+        if (hasAnyInitializedImageData) {
+            // The texture contains some initialized image data, and some uninitialized image data.
+            // In this case, we have no choice but to initialize all image data now. Fortunately,
+            // in this case we know that we can't be dealing with a depth texture per WEBGL_depth_texture
+            // and ANGLE_depth_texture (which allow only one image per texture) so we can assume that
+            // glTexImage2D is able to upload data to images.
+            for (size_t level = 0; level <= mMaxLevelWithCustomImages; ++level) {
+                for (size_t face = 0; face < mFacesCount; ++face) {
+                    GLenum imageTarget = mTarget == LOCAL_GL_TEXTURE_2D
+                                         ? LOCAL_GL_TEXTURE_2D
+                                         : LOCAL_GL_TEXTURE_CUBE_MAP_POSITIVE_X + face;
+                    const ImageInfo& imageInfo = ImageInfoAt(imageTarget, level);
+                    if (imageInfo.mImageDataStatus == WebGLImageDataStatus::UninitializedImageData) {
+                        DoDeferredImageInitialization(imageTarget, level);
+                    }
+                }
+            }
+            mFakeBlackStatus = WebGLTextureFakeBlackStatus::NotNeeded;
+        } else {
+            // The texture only contains uninitialized image data. In this case,
+            // we can use a black texture for it.
+            mFakeBlackStatus = WebGLTextureFakeBlackStatus::UninitializedImageData;
+        }
+    }
+
+    // we have exhausted all cases where we do need fakeblack, so if the status is still unknown,
+    // that means that we do NOT need it.
+    if (mFakeBlackStatus == WebGLTextureFakeBlackStatus::Unknown) {
+        mFakeBlackStatus = WebGLTextureFakeBlackStatus::NotNeeded;
+    }
+
+    MOZ_ASSERT(mFakeBlackStatus != WebGLTextureFakeBlackStatus::Unknown);
+    return mFakeBlackStatus;
+}
+
+void
+WebGLTexture::DoDeferredImageInitialization(GLenum imageTarget, GLint level)
+{
+    const ImageInfo& imageInfo = ImageInfoAt(imageTarget, level);
+    MOZ_ASSERT(imageInfo.mImageDataStatus == WebGLImageDataStatus::UninitializedImageData);
+
+    mContext->MakeContextCurrent();
+    gl::ScopedBindTexture autoBindTex(mContext->gl, GLName(), mTarget);
+
+    WebGLTexelFormat texelformat = GetWebGLTexelFormat(imageInfo.mFormat, imageInfo.mType);
+    uint32_t texelsize = WebGLTexelConversions::TexelBytesForFormat(texelformat);
+    CheckedUint32 checked_byteLength
+        = WebGLContext::GetImageSize(
+                        imageInfo.mHeight,
+                        imageInfo.mWidth,
+                        texelsize,
+                        mContext->mPixelStoreUnpackAlignment);
+    MOZ_ASSERT(checked_byteLength.isValid()); // should have been checked earlier
+    void *zeros = calloc(1, checked_byteLength.value());
+    GLenum error
+        = mContext->CheckedTexImage2D(imageTarget, level, imageInfo.mFormat,
+                                      imageInfo.mWidth, imageInfo.mHeight,
+                                      0, imageInfo.mFormat, imageInfo.mType,
+                                      zeros);
+
+    free(zeros);
+    SetImageDataStatus(imageTarget, level, WebGLImageDataStatus::InitializedImageData);
+
+    if (error) {
+      // Should only be OUT_OF_MEMORY. Anyway, there's no good way to recover from this here.
+      MOZ_CRASH(); // errors on texture upload have been related to video memory exposure in the past.
+      return;
+    }
 }
 
 NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE_0(WebGLTexture)

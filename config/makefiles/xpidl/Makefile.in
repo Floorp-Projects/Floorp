@@ -57,6 +57,8 @@ xpidl_modules := @xpidl_modules@
 linked_xpt_files := $(addprefix $(idl_xpt_dir)/,$(addsuffix .xpt,$(xpidl_modules)))
 depends_files := $(foreach root,$(xpidl_modules),$(idl_deps_dir)/$(root).pp)
 
+GARBAGE += $(linked_xpt_files) $(depends_files)
+
 xpidl:: $(linked_xpt_files)
 
 $(linked_xpt_files): $(process_py) $(call mkdir_deps,$(idl_deps_dir) $(dist_include_dir) $(idl_xpt_dir))
