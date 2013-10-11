@@ -1107,26 +1107,6 @@ nsNSSComponent::SkipOcspOff()
   return NS_OK;
 }
 
-static void configureMD5(bool enabled)
-{
-  if (enabled) { // set flags
-    NSS_SetAlgorithmPolicy(SEC_OID_MD5,
-        NSS_USE_ALG_IN_CERT_SIGNATURE | NSS_USE_ALG_IN_CMS_SIGNATURE, 0);
-    NSS_SetAlgorithmPolicy(SEC_OID_PKCS1_MD5_WITH_RSA_ENCRYPTION,
-        NSS_USE_ALG_IN_CERT_SIGNATURE | NSS_USE_ALG_IN_CMS_SIGNATURE, 0);
-    NSS_SetAlgorithmPolicy(SEC_OID_PKCS5_PBE_WITH_MD5_AND_DES_CBC,
-        NSS_USE_ALG_IN_CERT_SIGNATURE | NSS_USE_ALG_IN_CMS_SIGNATURE, 0);
-  }
-  else { // clear flags
-    NSS_SetAlgorithmPolicy(SEC_OID_MD5,
-        0, NSS_USE_ALG_IN_CERT_SIGNATURE | NSS_USE_ALG_IN_CMS_SIGNATURE);
-    NSS_SetAlgorithmPolicy(SEC_OID_PKCS1_MD5_WITH_RSA_ENCRYPTION,
-        0, NSS_USE_ALG_IN_CERT_SIGNATURE | NSS_USE_ALG_IN_CMS_SIGNATURE);
-    NSS_SetAlgorithmPolicy(SEC_OID_PKCS5_PBE_WITH_MD5_AND_DES_CBC,
-        0, NSS_USE_ALG_IN_CERT_SIGNATURE | NSS_USE_ALG_IN_CMS_SIGNATURE);
-  }
-}
-
 nsresult
 nsNSSComponent::InitializeNSS(bool showWarningBox)
 {
@@ -1277,7 +1257,7 @@ nsNSSComponent::InitializeNSS(bool showWarningBox)
 
       bool md5Enabled = Preferences::GetBool("security.enable_md5_signatures",
                                              MD5_ENABLED_DEFAULT);
-      configureMD5(md5Enabled);
+      ConfigureMD5(md5Enabled);
 
       SSL_OptionSetDefault(SSL_ENABLE_SESSION_TICKETS, true);
 
@@ -1693,7 +1673,7 @@ nsNSSComponent::Observe(nsISupports *aSubject, const char *aTopic,
     } else if (prefName.Equals("security.enable_md5_signatures")) {
       bool md5Enabled = Preferences::GetBool("security.enable_md5_signatures",
                                              MD5_ENABLED_DEFAULT);
-      configureMD5(md5Enabled);
+      ConfigureMD5(md5Enabled);
       clearSessionCache = true;
     } else if (prefName.Equals("security.ssl.require_safe_negotiation")) {
       bool requireSafeNegotiation =
@@ -2016,6 +1996,26 @@ setPassword(PK11SlotInfo *slot, nsIInterfaceRequestor *ctx)
 
 namespace mozilla {
 namespace psm {
+
+void ConfigureMD5(bool enabled)
+{
+  if (enabled) { // set flags
+    NSS_SetAlgorithmPolicy(SEC_OID_MD5,
+        NSS_USE_ALG_IN_CERT_SIGNATURE | NSS_USE_ALG_IN_CMS_SIGNATURE, 0);
+    NSS_SetAlgorithmPolicy(SEC_OID_PKCS1_MD5_WITH_RSA_ENCRYPTION,
+        NSS_USE_ALG_IN_CERT_SIGNATURE | NSS_USE_ALG_IN_CMS_SIGNATURE, 0);
+    NSS_SetAlgorithmPolicy(SEC_OID_PKCS5_PBE_WITH_MD5_AND_DES_CBC,
+        NSS_USE_ALG_IN_CERT_SIGNATURE | NSS_USE_ALG_IN_CMS_SIGNATURE, 0);
+  }
+  else { // clear flags
+    NSS_SetAlgorithmPolicy(SEC_OID_MD5,
+        0, NSS_USE_ALG_IN_CERT_SIGNATURE | NSS_USE_ALG_IN_CMS_SIGNATURE);
+    NSS_SetAlgorithmPolicy(SEC_OID_PKCS1_MD5_WITH_RSA_ENCRYPTION,
+        0, NSS_USE_ALG_IN_CERT_SIGNATURE | NSS_USE_ALG_IN_CMS_SIGNATURE);
+    NSS_SetAlgorithmPolicy(SEC_OID_PKCS5_PBE_WITH_MD5_AND_DES_CBC,
+        0, NSS_USE_ALG_IN_CERT_SIGNATURE | NSS_USE_ALG_IN_CMS_SIGNATURE);
+  }
+}
 
 nsresult InitializeCipherSuite()
 {
