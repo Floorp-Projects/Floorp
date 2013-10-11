@@ -627,8 +627,8 @@ HandleParallelFailure(ResumeFromException *rfe)
 
     while (!iter.isEntry()) {
         if (iter.isScripted()) {
-            slice->bailoutRecord->setCause(ParallelBailoutFailedIC,
-                                           iter.script(), iter.script(), nullptr);
+            slice->bailoutRecord->updateCause(ParallelBailoutUnsupportedVM,
+                                              iter.script(), iter.script(), nullptr);
             break;
         }
         ++iter;

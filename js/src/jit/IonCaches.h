@@ -1055,8 +1055,8 @@ class GetPropertyParIC : public ParallelIonCache
     bool attachArrayLength(LockedJSContext &cx, IonScript *ion, JSObject *obj);
     bool attachTypedArrayLength(LockedJSContext &cx, IonScript *ion, JSObject *obj);
 
-    static ParallelResult update(ForkJoinSlice *slice, size_t cacheIndex, HandleObject obj,
-                                 MutableHandleValue vp);
+    static bool update(ForkJoinSlice *slice, size_t cacheIndex, HandleObject obj,
+                       MutableHandleValue vp);
 };
 
 class GetElementParIC : public ParallelIonCache
@@ -1111,8 +1111,8 @@ class GetElementParIC : public ParallelIonCache
     bool attachTypedArrayElement(LockedJSContext &cx, IonScript *ion, TypedArrayObject *tarr,
                                  const Value &idval);
 
-    static ParallelResult update(ForkJoinSlice *slice, size_t cacheIndex, HandleObject obj, HandleValue idval,
-                                 MutableHandleValue vp);
+    static bool update(ForkJoinSlice *slice, size_t cacheIndex, HandleObject obj, HandleValue idval,
+                       MutableHandleValue vp);
 
 };
 
@@ -1164,8 +1164,8 @@ class SetPropertyParIC : public ParallelIonCache
                        bool checkTypeset);
     bool attachAddSlot(LockedJSContext &cx, IonScript *ion, JSObject *obj, Shape *oldShape);
 
-    static ParallelResult update(ForkJoinSlice *slice, size_t cacheIndex, HandleObject obj,
-                                 HandleValue value);
+    static bool update(ForkJoinSlice *slice, size_t cacheIndex, HandleObject obj,
+                       HandleValue value);
 };
 
 class SetElementParIC : public ParallelIonCache
@@ -1226,8 +1226,8 @@ class SetElementParIC : public ParallelIonCache
     bool attachDenseElement(LockedJSContext &cx, IonScript *ion, JSObject *obj, const Value &idval);
     bool attachTypedArrayElement(LockedJSContext &cx, IonScript *ion, TypedArrayObject *tarr);
 
-    static ParallelResult update(ForkJoinSlice *slice, size_t cacheIndex, HandleObject obj,
-                                 HandleValue idval, HandleValue value);
+    static bool update(ForkJoinSlice *slice, size_t cacheIndex, HandleObject obj,
+                       HandleValue idval, HandleValue value);
 };
 
 #undef CACHE_HEADER

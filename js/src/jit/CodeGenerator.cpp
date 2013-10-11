@@ -154,7 +154,7 @@ CodeGenerator::~CodeGenerator()
 }
 
 typedef bool (*StringToNumberFn)(ThreadSafeContext *, JSString *, double *);
-typedef ParallelResult (*StringToNumberParFn)(ForkJoinSlice *, JSString *, double *);
+typedef bool (*StringToNumberParFn)(ForkJoinSlice *, JSString *, double *);
 static const VMFunctionsModal StringToNumberInfo = VMFunctionsModal(
     FunctionInfo<StringToNumberFn>(StringToNumber),
     FunctionInfo<StringToNumberParFn>(StringToNumberPar));
@@ -649,7 +649,7 @@ CodeGenerator::visitTypeObjectDispatch(LTypeObjectDispatch *lir)
 }
 
 typedef JSFlatString *(*IntToStringFn)(ThreadSafeContext *, int);
-typedef ParallelResult (*IntToStringParFn)(ForkJoinSlice *, int, MutableHandleString);
+typedef JSFlatString *(*IntToStringParFn)(ForkJoinSlice *, int);
 static const VMFunctionsModal IntToStringInfo = VMFunctionsModal(
     FunctionInfo<IntToStringFn>(Int32ToString<CanGC>),
     FunctionInfo<IntToStringParFn>(IntToStringPar));
@@ -676,7 +676,7 @@ CodeGenerator::visitIntToString(LIntToString *lir)
 }
 
 typedef JSString *(*DoubleToStringFn)(ThreadSafeContext *, double);
-typedef ParallelResult (*DoubleToStringParFn)(ForkJoinSlice *, double, MutableHandleString);
+typedef JSString *(*DoubleToStringParFn)(ForkJoinSlice *, double);
 static const VMFunctionsModal DoubleToStringInfo = VMFunctionsModal(
     FunctionInfo<DoubleToStringFn>(NumberToString<CanGC>),
     FunctionInfo<DoubleToStringParFn>(DoubleToStringPar));
@@ -3862,7 +3862,7 @@ CodeGenerator::visitModD(LModD *ins)
 }
 
 typedef bool (*BinaryFn)(JSContext *, MutableHandleValue, MutableHandleValue, Value *);
-typedef ParallelResult (*BinaryParFn)(ForkJoinSlice *, HandleValue, HandleValue, Value *);
+typedef bool (*BinaryParFn)(ForkJoinSlice *, HandleValue, HandleValue, Value *);
 
 static const VMFunction AddInfo = FunctionInfo<BinaryFn>(js::AddValues);
 static const VMFunction SubInfo = FunctionInfo<BinaryFn>(js::SubValues);
@@ -3904,7 +3904,7 @@ CodeGenerator::visitBinaryV(LBinaryV *lir)
 }
 
 typedef bool (*StringCompareFn)(JSContext *, HandleString, HandleString, bool *);
-typedef ParallelResult (*StringCompareParFn)(ForkJoinSlice *, HandleString, HandleString, bool *);
+typedef bool (*StringCompareParFn)(ForkJoinSlice *, HandleString, HandleString, bool *);
 static const VMFunctionsModal StringsEqualInfo = VMFunctionsModal(
     FunctionInfo<StringCompareFn>(jit::StringsEqual<true>),
     FunctionInfo<StringCompareParFn>(jit::StringsEqualPar));
@@ -3976,8 +3976,7 @@ CodeGenerator::visitCompareS(LCompareS *lir)
 }
 
 typedef bool (*CompareFn)(JSContext *, MutableHandleValue, MutableHandleValue, bool *);
-typedef ParallelResult (*CompareParFn)(ForkJoinSlice *, MutableHandleValue, MutableHandleValue,
-                                       bool *);
+typedef bool (*CompareParFn)(ForkJoinSlice *, MutableHandleValue, MutableHandleValue, bool *);
 static const VMFunctionsModal EqInfo = VMFunctionsModal(
     FunctionInfo<CompareFn>(jit::LooselyEqual<true>),
     FunctionInfo<CompareParFn>(jit::LooselyEqualPar));
@@ -4260,8 +4259,7 @@ CodeGenerator::visitEmulatesUndefinedAndBranch(LEmulatesUndefinedAndBranch *lir)
 }
 
 typedef JSString *(*ConcatStringsFn)(ThreadSafeContext *, HandleString, HandleString);
-typedef ParallelResult (*ConcatStringsParFn)(ForkJoinSlice *, HandleString, HandleString,
-                                             MutableHandleString);
+typedef JSString *(*ConcatStringsParFn)(ForkJoinSlice *, HandleString, HandleString);
 static const VMFunctionsModal ConcatStringsInfo = VMFunctionsModal(
     FunctionInfo<ConcatStringsFn>(ConcatStrings<CanGC>),
     FunctionInfo<ConcatStringsParFn>(ConcatStringsPar));
@@ -4853,8 +4851,7 @@ CodeGenerator::visitStoreElementHoleV(LStoreElementHoleV *lir)
 
 typedef bool (*SetObjectElementFn)(JSContext *, HandleObject, HandleValue, HandleValue,
                                    bool strict);
-typedef ParallelResult (*SetElementParFn)(ForkJoinSlice *, HandleObject, HandleValue,
-                                          HandleValue, bool);
+typedef bool (*SetElementParFn)(ForkJoinSlice *, HandleObject, HandleValue, HandleValue, bool);
 static const VMFunctionsModal SetObjectElementInfo = VMFunctionsModal(
     FunctionInfo<SetObjectElementFn>(SetObjectElement),
     FunctionInfo<SetElementParFn>(SetElementPar));
@@ -5461,9 +5458,8 @@ CodeGenerator::visitRunOncePrologue(LRunOncePrologue *lir)
 
 typedef JSObject *(*InitRestParameterFn)(JSContext *, uint32_t, Value *, HandleObject,
                                          HandleObject);
-typedef ParallelResult (*InitRestParameterParFn)(ForkJoinSlice *, uint32_t, Value *,
-                                                 HandleObject, HandleObject,
-                                                 MutableHandleObject);
+typedef JSObject *(*InitRestParameterParFn)(ForkJoinSlice *, uint32_t, Value *,
+                                            HandleObject, HandleObject);
 static const VMFunctionsModal InitRestParameterInfo = VMFunctionsModal(
     FunctionInfo<InitRestParameterFn>(InitRestParameter),
     FunctionInfo<InitRestParameterParFn>(InitRestParameterPar));
@@ -6129,8 +6125,7 @@ CodeGenerator::visitGetPropertyIC(OutOfLineUpdateCache *ool, DataPtr<GetProperty
     return true;
 }
 
-typedef ParallelResult (*GetPropertyParICFn)(ForkJoinSlice *, size_t, HandleObject,
-                                             MutableHandleValue);
+typedef bool (*GetPropertyParICFn)(ForkJoinSlice *, size_t, HandleObject, MutableHandleValue);
 const VMFunction GetPropertyParIC::UpdateInfo =
     FunctionInfo<GetPropertyParICFn>(GetPropertyParIC::update);
 
@@ -6266,8 +6261,7 @@ CodeGenerator::visitSetElementIC(OutOfLineUpdateCache *ool, DataPtr<SetElementIC
     return true;
 }
 
-typedef ParallelResult (*SetElementParICFn)(ForkJoinSlice *, size_t, HandleObject,
-                                            HandleValue, HandleValue);
+typedef bool (*SetElementParICFn)(ForkJoinSlice *, size_t, HandleObject, HandleValue, HandleValue);
 const VMFunction SetElementParIC::UpdateInfo =
     FunctionInfo<SetElementParICFn>(SetElementParIC::update);
 
@@ -6289,8 +6283,8 @@ CodeGenerator::visitSetElementParIC(OutOfLineUpdateCache *ool, DataPtr<SetElemen
     return true;
 }
 
-typedef ParallelResult (*GetElementParICFn)(ForkJoinSlice *, size_t, HandleObject,
-                                            HandleValue, MutableHandleValue);
+typedef bool (*GetElementParICFn)(ForkJoinSlice *, size_t, HandleObject, HandleValue,
+                                  MutableHandleValue);
 const VMFunction GetElementParIC::UpdateInfo =
     FunctionInfo<GetElementParICFn>(GetElementParIC::update);
 
@@ -6345,9 +6339,8 @@ CodeGenerator::visitBindNameIC(OutOfLineUpdateCache *ool, DataPtr<BindNameIC> &i
 
 typedef bool (*SetPropertyFn)(JSContext *, HandleObject,
                               HandlePropertyName, const HandleValue, bool, jsbytecode *);
-typedef ParallelResult (*SetPropertyParFn)(ForkJoinSlice *, HandleObject,
-                                           HandlePropertyName, const HandleValue, bool,
-                                           jsbytecode *);
+typedef bool (*SetPropertyParFn)(ForkJoinSlice *, HandleObject,
+                                 HandlePropertyName, const HandleValue, bool, jsbytecode *);
 static const VMFunctionsModal SetPropertyInfo = VMFunctionsModal(
     FunctionInfo<SetPropertyFn>(SetProperty),
     FunctionInfo<SetPropertyParFn>(SetPropertyPar));
@@ -6453,7 +6446,7 @@ CodeGenerator::visitSetPropertyIC(OutOfLineUpdateCache *ool, DataPtr<SetProperty
     return true;
 }
 
-typedef ParallelResult (*SetPropertyParICFn)(ForkJoinSlice *, size_t, HandleObject, HandleValue);
+typedef bool (*SetPropertyParICFn)(ForkJoinSlice *, size_t, HandleObject, HandleValue);
 const VMFunction SetPropertyParIC::UpdateInfo =
     FunctionInfo<SetPropertyParICFn>(SetPropertyParIC::update);
 
@@ -6485,7 +6478,7 @@ CodeGenerator::visitThrow(LThrow *lir)
 }
 
 typedef bool (*BitNotFn)(JSContext *, HandleValue, int *p);
-typedef ParallelResult (*BitNotParFn)(ForkJoinSlice *, HandleValue, int32_t *);
+typedef bool (*BitNotParFn)(ForkJoinSlice *, HandleValue, int32_t *);
 static const VMFunctionsModal BitNotInfo = VMFunctionsModal(
     FunctionInfo<BitNotFn>(BitNot),
     FunctionInfo<BitNotParFn>(BitNotPar));
@@ -6498,7 +6491,7 @@ CodeGenerator::visitBitNotV(LBitNotV *lir)
 }
 
 typedef bool (*BitopFn)(JSContext *, HandleValue, HandleValue, int *p);
-typedef ParallelResult (*BitopParFn)(ForkJoinSlice *, HandleValue, HandleValue, int32_t *);
+typedef bool (*BitopParFn)(ForkJoinSlice *, HandleValue, HandleValue, int32_t *);
 static const VMFunctionsModal BitAndInfo = VMFunctionsModal(
     FunctionInfo<BitopFn>(BitAnd),
     FunctionInfo<BitopParFn>(BitAndPar));
