@@ -158,7 +158,7 @@ WebGLFramebuffer::Attachment::IsComplete() const {
         MOZ_CRASH("Invalid WebGL attachment poin?");
     }
 
-    NS_ABORT(); // should never get there
+    MOZ_ASSERT(false); // should never get there
     return false;
 }
 
@@ -330,14 +330,14 @@ WebGLFramebuffer::GetAttachment(GLenum attachment) const {
         return mStencilAttachment;
 
     if (!CheckColorAttachementNumber(attachment, "getAttachment")) {
-        NS_ABORT();
+        MOZ_ASSERT(false);
         return mColorAttachments[0];
     }
 
     uint32_t colorAttachmentId = uint32_t(attachment - LOCAL_GL_COLOR_ATTACHMENT0);
 
     if (colorAttachmentId >= mColorAttachments.Length()) {
-        NS_ABORT();
+        MOZ_ASSERT(false);
         return mColorAttachments[0];
     }
 

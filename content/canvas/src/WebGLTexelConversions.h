@@ -128,7 +128,7 @@ inline size_t TexelBytesForFormat(int format) {
         case WebGLTexelConversions::RGBA32F:
             return 16;
         default:
-            NS_ABORT_IF_FALSE(false, "Unknown texel format. Coding mistake?");
+            MOZ_ASSERT(false, "Unknown texel format. Coding mistake?");
             return 0;
     }
 }
@@ -175,7 +175,7 @@ FORCE_INLINE void
 unpack(const SrcType* __restrict src,
        DstType* __restrict dst)
 {
-    NS_ABORT_IF_FALSE(false, "Unimplemented texture format conversion");
+    MOZ_ASSERT(false, "Unimplemented texture format conversion");
 }
 
 template<> FORCE_INLINE void
@@ -335,7 +335,7 @@ FORCE_INLINE void
 pack(const SrcType* __restrict src,
      DstType* __restrict dst)
 {
-    NS_ABORT_IF_FALSE(false, "Unimplemented texture format conversion");
+    MOZ_ASSERT(false, "Unimplemented texture format conversion");
 }
 
 template<> FORCE_INLINE void
@@ -658,7 +658,7 @@ pack<RA32F, Premultiply, float, float>(const float* __restrict src, float* __res
 template<typename SrcType, typename DstType> FORCE_INLINE void
 convertType(const SrcType* __restrict src, DstType* __restrict dst)
 {
-    NS_ABORT_IF_FALSE(false, "Unimplemented texture format conversion");
+    MOZ_ASSERT(false, "Unimplemented texture format conversion");
 }
 
 template<> FORCE_INLINE void

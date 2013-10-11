@@ -2157,7 +2157,7 @@ WebGLContext::LinkProgram(WebGLProgram *program)
                     shaderTypeName = "fragment";
                 } else {
                     // should have been validated earlier
-                    NS_ABORT();
+                    MOZ_ASSERT(false);
                     shaderTypeName = "<unknown>";
                 }
 
@@ -3666,7 +3666,7 @@ GLenum WebGLContext::CheckedTexImage2D(GLenum target,
                                        const GLvoid *data)
 {
     WebGLTexture *tex = activeBoundTextureForTarget(target);
-    NS_ABORT_IF_FALSE(tex != nullptr, "no texture bound");
+    MOZ_ASSERT(tex != nullptr, "no texture bound");
 
     bool sizeMayChange = true;
     
@@ -4162,7 +4162,7 @@ WebGLTexelFormat mozilla::GetWebGLTexelFormat(GLenum format, GLenum type)
             case LOCAL_GL_LUMINANCE_ALPHA:
                 return WebGLTexelConversions::RA8;
             default:
-                NS_ABORT_IF_FALSE(false, "Coding mistake?! Should never reach this point.");
+                MOZ_ASSERT(false, "Coding mistake?! Should never reach this point.");
                 return WebGLTexelConversions::BadFormat;
         }
     } else if (type == LOCAL_GL_FLOAT) {
@@ -4179,7 +4179,7 @@ WebGLTexelFormat mozilla::GetWebGLTexelFormat(GLenum format, GLenum type)
             case LOCAL_GL_LUMINANCE_ALPHA:
                 return WebGLTexelConversions::RA32F;
             default:
-                NS_ABORT_IF_FALSE(false, "Coding mistake?! Should never reach this point.");
+                MOZ_ASSERT(false, "Coding mistake?! Should never reach this point.");
                 return WebGLTexelConversions::BadFormat;
         }
     } else {
@@ -4191,7 +4191,7 @@ WebGLTexelFormat mozilla::GetWebGLTexelFormat(GLenum format, GLenum type)
             case LOCAL_GL_UNSIGNED_SHORT_5_6_5:
                 return WebGLTexelConversions::RGB565;
             default:
-                NS_ABORT_IF_FALSE(false, "Coding mistake?! Should never reach this point.");
+                MOZ_ASSERT(false, "Coding mistake?! Should never reach this point.");
                 return WebGLTexelConversions::BadFormat;
         }
     }

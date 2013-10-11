@@ -481,7 +481,7 @@ WebGLContext::CheckedBufferData(GLenum target,
     } else if (target == LOCAL_GL_ELEMENT_ARRAY_BUFFER) {
         boundBuffer = mBoundVertexArray->mBoundElementArrayBuffer;
     }
-    NS_ABORT_IF_FALSE(boundBuffer != nullptr, "no buffer bound for this target");
+    MOZ_ASSERT(boundBuffer != nullptr, "no buffer bound for this target");
 
     bool sizeChanges = uint32_t(size) != boundBuffer->ByteLength();
     if (sizeChanges) {

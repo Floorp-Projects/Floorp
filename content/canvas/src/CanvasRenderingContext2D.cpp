@@ -1042,7 +1042,7 @@ CanvasRenderingContext2D::Render(gfxContext *ctx, GraphicsFilter aFilter, uint32
   if (!(aFlags & RenderFlagPremultAlpha)) {
       nsRefPtr<gfxASurface> curSurface = ctx->CurrentSurface();
       nsRefPtr<gfxImageSurface> gis = curSurface->GetAsImageSurface();
-      NS_ABORT_IF_FALSE(gis, "If non-premult alpha, must be able to get image surface!");
+      MOZ_ASSERT(gis, "If non-premult alpha, must be able to get image surface!");
 
       gfxUtils::UnpremultiplyImageSurface(gis);
   }
@@ -3584,7 +3584,7 @@ CanvasRenderingContext2D::EnsureErrorTarget()
   }
 
   RefPtr<DrawTarget> errorTarget = gfxPlatform::GetPlatform()->CreateOffscreenCanvasDrawTarget(IntSize(1, 1), FORMAT_B8G8R8A8);
-  NS_ABORT_IF_FALSE(errorTarget, "Failed to allocate the error target!");
+  MOZ_ASSERT(errorTarget, "Failed to allocate the error target!");
 
   sErrorTarget = errorTarget;
   NS_ADDREF(sErrorTarget);
