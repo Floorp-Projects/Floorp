@@ -508,7 +508,7 @@ WebGLContext::CopyTexImage2D(GLenum target,
         return ErrorInvalidOperation("copyTexImage2D: a base internal format of DEPTH_COMPONENT or DEPTH_STENCIL isn't supported");
 
     if (mBoundFramebuffer)
-        if (!mBoundFramebuffer->CheckAndInitializeRenderbuffers())
+        if (!mBoundFramebuffer->CheckAndInitializeAttachments())
             return ErrorInvalidFramebufferOperation("copyTexImage2D: incomplete framebuffer");
 
     WebGLTexture *tex = activeBoundTextureForTarget(target);
@@ -537,12 +537,13 @@ WebGLContext::CopyTexImage2D(GLenum target,
         if (error) {
             GenerateWarning("copyTexImage2D generated error %s", ErrorName(error));
             return;
-        }          
+        }
     } else {
         CopyTexSubImage2D_base(target, level, internalformat, 0, 0, x, y, width, height, false);
     }
-    
-    tex->SetImageInfo(target, level, width, height, internalformat, type);
+
+    tex->SetImageInfo(target, level, width, height, internalformat, type,
+                      WebGLImageDataStatus::InitializedImageData);
 }
 
 void
@@ -617,7 +618,7 @@ WebGLContext::CopyTexSubImage2D(GLenum target,
         return ErrorInvalidOperation("copyTexSubImage2D: a base internal format of DEPTH_COMPONENT or DEPTH_STENCIL isn't supported");
 
     if (mBoundFramebuffer)
-        if (!mBoundFramebuffer->CheckAndInitializeRenderbuffers())
+        if (!mBoundFramebuffer->CheckAndInitializeAttachments())
             return ErrorInvalidFramebufferOperation("copyTexSubImage2D: incomplete framebuffer");
 
     return CopyTexSubImage2D_base(target, level, format, xoffset, yoffset, x, y, width, height, true);
@@ -2254,7 +2255,7 @@ WebGLContext::ReadPixels(GLint x, GLint y, GLsizei width,
 
     if (mBoundFramebuffer) {
         // prevent readback of arbitrary video memory through uninitialized renderbuffers!
-        if (!mBoundFramebuffer->CheckAndInitializeRenderbuffers())
+        if (!mBoundFramebuffer->CheckAndInitializeAttachments())
             return ErrorInvalidFramebufferOperation("readPixels: incomplete framebuffer");
     }
     // Now that the errors are out of the way, on to actually reading
@@ -2440,7 +2441,7 @@ WebGLContext::RenderbufferStorage(GLenum target, GLenum internalformat, GLsizei 
     mBoundRenderbuffer->SetInternalFormat(internalformat);
     mBoundRenderbuffer->SetInternalFormatForGL(internalformatForGL);
     mBoundRenderbuffer->setDimensions(width, height);
-    mBoundRenderbuffer->SetInitialized(false);
+    mBoundRenderbuffer->SetImageDataStatus(WebGLImageDataStatus::UninitializedImageData);
 }
 
 void
@@ -3303,7 +3304,8 @@ WebGLContext::CompressedTexImage2D(GLenum target, GLint level, GLenum internalfo
     }
 
     gl->fCompressedTexImage2D(target, level, internalformat, width, height, border, byteLength, view.Data());
-    tex->SetImageInfo(target, level, width, height, internalformat, LOCAL_GL_UNSIGNED_BYTE);
+    tex->SetImageInfo(target, level, width, height, internalformat, LOCAL_GL_UNSIGNED_BYTE,
+                      WebGLImageDataStatus::InitializedImageData);
 
     ReattachTextureToAnyFramebufferToWorkAroundBugs(tex, level);
 }
@@ -3710,6 +3712,8 @@ WebGLContext::TexImage2D_base(GLenum target, GLint level, GLenum internalformat,
 
     GLenum error = LOCAL_GL_NO_ERROR;
 
+    WebGLImageDataStatus imageInfoStatusIfSuccess = WebGLImageDataStatus::NoImageData;
+
     if (byteLength) {
         size_t srcStride = srcStrideOrZero ? srcStrideOrZero : checked_alignedRowSize.value();
 
@@ -3737,6 +3741,7 @@ WebGLContext::TexImage2D_base(GLenum target, GLint level, GLenum internalformat,
             error = CheckedTexImage2D(target, level, internalformat,
                                       width, height, border, format, type, convertedData);
         }
+        imageInfoStatusIfSuccess = WebGLImageDataStatus::InitializedImageData;
     } else {
         if (isDepthTexture && !gl->IsSupported(GLFeature::depth_texture)) {
             // There's only one way that we can we supporting depth textures without
@@ -3794,6 +3799,7 @@ WebGLContext::TexImage2D_base(GLenum target, GLint level, GLenum internalformat,
             if (!success) {
                 return ErrorOutOfMemory("texImage2D: sorry, ran out of ways to initialize a depth texture.");
             }
+            imageInfoStatusIfSuccess = WebGLImageDataStatus::InitializedImageData;
         } else {
             // We need some zero pages, because GL doesn't guarantee the
             // contents of a texture allocated with nullptr data.
@@ -3806,6 +3812,7 @@ WebGLContext::TexImage2D_base(GLenum target, GLint level, GLenum internalformat,
                                       width, height, border, format, type, tempZeroData);
 
             free(tempZeroData);
+            imageInfoStatusIfSuccess = WebGLImageDataStatus::InitializedImageData;
         }
     }
 
@@ -3814,7 +3821,12 @@ WebGLContext::TexImage2D_base(GLenum target, GLint level, GLenum internalformat,
         return;
     }
 
-    tex->SetImageInfo(target, level, width, height, format, type);
+    // in all of the code paths above, we should have either initialized data,
+    // or allocated data and left it uninitialized, but in any case we shouldn't
+    // have NoImageData at this point.
+    MOZ_ASSERT(imageInfoStatusIfSuccess != WebGLImageDataStatus::NoImageData);
+
+    tex->SetImageInfo(target, level, width, height, format, type, imageInfoStatusIfSuccess);
 
     ReattachTextureToAnyFramebufferToWorkAroundBugs(tex, level);
 }

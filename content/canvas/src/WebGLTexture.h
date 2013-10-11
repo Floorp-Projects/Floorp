@@ -66,28 +66,33 @@ protected:
 
 public:
 
-    class ImageInfo : public WebGLRectangleObject {
+    class ImageInfo
+        : public WebGLRectangleObject
+    {
     public:
         ImageInfo()
             : mFormat(0)
             , mType(0)
-            , mIsDefined(false)
+            , mImageDataStatus(WebGLImageDataStatus::NoImageData)
         {}
 
         ImageInfo(GLsizei width, GLsizei height,
-                  GLenum format, GLenum type)
+                  GLenum format, GLenum type, WebGLImageDataStatus status)
             : WebGLRectangleObject(width, height)
             , mFormat(format)
             , mType(type)
-            , mIsDefined(true)
-        {}
+            , mImageDataStatus(status)
+        {
+            // shouldn't use this constructor to construct a null ImageInfo
+            MOZ_ASSERT(status != WebGLImageDataStatus::NoImageData);
+        }
 
         bool operator==(const ImageInfo& a) const {
-            return mIsDefined == a.mIsDefined &&
-                   mWidth     == a.mWidth &&
-                   mHeight    == a.mHeight &&
-                   mFormat    == a.mFormat &&
-                   mType      == a.mType;
+            return mImageDataStatus == a.mImageDataStatus &&
+                   mWidth  == a.mWidth &&
+                   mHeight == a.mHeight &&
+                   mFormat == a.mFormat &&
+                   mType   == a.mType;
         }
         bool operator!=(const ImageInfo& a) const {
             return !(*this == a);
@@ -102,12 +107,15 @@ public:
             return is_pot_assuming_nonnegative(mWidth) &&
                    is_pot_assuming_nonnegative(mHeight); // negative sizes should never happen (caught in texImage2D...)
         }
+        bool HasUninitializedImageData() const {
+            return mImageDataStatus == WebGLImageDataStatus::UninitializedImageData;
+        }
         int64_t MemoryUsage() const;
         GLenum Format() const { return mFormat; }
         GLenum Type() const { return mType; }
     protected:
         GLenum mFormat, mType;
-        bool mIsDefined;
+        WebGLImageDataStatus mImageDataStatus;
 
         friend class WebGLTexture;
     };
@@ -149,12 +157,12 @@ public:
 
     bool HasImageInfoAt(GLenum imageTarget, GLint level) const {
         MOZ_ASSERT(imageTarget);
-        
+
         size_t face = FaceForTarget(imageTarget);
         CheckedUint32 checked_index = CheckedUint32(level) * mFacesCount + face;
         return checked_index.isValid() &&
                checked_index.value() < mImageInfos.Length() &&
-               ImageInfoAt(imageTarget, level).mIsDefined;
+               ImageInfoAt(imageTarget, level).mImageDataStatus != WebGLImageDataStatus::NoImageData;
     }
 
     ImageInfo& ImageInfoBase() {
@@ -166,6 +174,15 @@ public:
     }
 
     int64_t MemoryUsage() const;
+
+    void SetImageDataStatus(GLenum imageTarget, GLint level, WebGLImageDataStatus newStatus) {
+        MOZ_ASSERT(HasImageInfoAt(imageTarget, level));
+        ImageInfo& imageInfo = ImageInfoAt(imageTarget, level);
+        // there is no way to go from having image data to not having any
+        MOZ_ASSERT(newStatus != WebGLImageDataStatus::NoImageData ||
+                   imageInfo.mImageDataStatus == WebGLImageDataStatus::NoImageData);
+        imageInfo.mImageDataStatus = newStatus;
+    }
 
 protected:
 
@@ -203,7 +220,7 @@ public:
 
     void SetImageInfo(GLenum aTarget, GLint aLevel,
                       GLsizei aWidth, GLsizei aHeight,
-                      GLenum aFormat, GLenum aType);
+                      GLenum aFormat, GLenum aType, WebGLImageDataStatus aStatus);
 
     void SetMinFilter(GLenum aMinFilter) {
         mMinFilter = aMinFilter;
