@@ -909,7 +909,33 @@ EngineURL.prototype = {
     this.mozparams[aObj.name] = aObj;
   },
 
+  reevalMozParams: function(engine) {
+    for (let param of this.params) {
+      let mozparam = this.mozparams[param.name];
+      if (mozparam && mozparam.positionDependent) {
+        // the condition is a string in the form of "topN", extract N as int
+        let positionStr = mozparam.condition.slice("top".length);
+        let position = parseInt(positionStr, 10);
+        let engines;
+        try {
+          // This will throw if we're not initialized yet (which shouldn't happen), just 
+          // ignore and move on with the false Value (checking isInitialized also throws)
+          // XXX
+          engines = Services.search.getVisibleEngines({});
+        } catch (ex) {
+          LOG("reevalMozParams called before search service initialization!?");
+          break;
+        }
+        let index = engines.map((e) => e.wrappedJSObject).indexOf(engine.wrappedJSObject);
+        let isTopN = index > -1 && (index + 1) <= position;
+        param.value = isTopN ? mozparam.trueValue : mozparam.falseValue;
+      }
+    }
+  },
+
   getSubmission: function SRCH_EURL_getSubmission(aSearchTerms, aEngine, aPurpose) {
+    this.reevalMozParams(aEngine);
+
     var url = ParamSubstitution(this.template, aSearchTerms, aEngine);
     // Default to an empty string if the purpose is not provided so that default purpose params
     // (purpose="") work consistently rather than having to define "null" and "" purposes.
@@ -1647,7 +1673,8 @@ Engine.prototype = {
                  // We only support MozParams for default search engines
                  this._isDefault) {
         var value;
-        switch (param.getAttribute("condition")) {
+        let condition = param.getAttribute("condition");
+        switch (condition) {
           case "purpose":
             url.addParam(param.getAttribute("name"),
                          param.getAttribute("value"),
@@ -1677,6 +1704,17 @@ Engine.prototype = {
                                 "condition": "pref"});
             } catch (e) { }
             break;
+          default:
+            if (condition && condition.startsWith("top")) {
+              url.addParam(param.getAttribute("name"), param.getAttribute("falseValue"));
+              let mozparam = {"name": param.getAttribute("name"),
+                              "falseValue": param.getAttribute("falseValue"),
+                              "trueValue": param.getAttribute("trueValue"),
+                              "condition": condition,
+                              "positionDependent": true};
+              url._addMozParam(mozparam);
+            }
+          break;
         }
       }
     }
