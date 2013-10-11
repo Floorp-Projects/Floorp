@@ -1,0 +1,42 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=882541
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug 882541</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <script type="application/javascript">
+
+  /** Test for Bug 882541 **/
+  var div = document.createElement("div");
+  div.appendChild(document.createElement("span"));
+
+  var div2;
+
+  div2 = div.cloneNode();
+  is(div2.childNodes.length, 1, "cloneNode() should do a deep clone");
+
+  div2 = div.cloneNode(undefined);
+  is(div2.childNodes.length, 0, "cloneNode(undefined) should do a shallow clone");
+
+  div2 = document.importNode(div);
+  is(div2.childNodes.length, 1, "importNode(node) should do a deep import");
+
+  div2 = document.importNode(div, undefined);
+  is(div2.childNodes.length, 0, "cloneNode(undefined) should do a shallow import");
+
+  </script>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=882541">Mozilla Bug 882541</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+
+</div>
+<pre id="test">
+</pre>
+</body>
+</html>
