@@ -1,0 +1,11 @@
+<!DOCTYPE html>
+<body>
+  <style scoped>
+    p[data-test] { color: green; }
+  </style>
+  <p>Hello.</p>
+  <script>
+    document.body.offsetHeight;
+    document.querySelector("p").setAttribute("data-test", "");
+  </script>
+</body>

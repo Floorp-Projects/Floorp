@@ -223,17 +223,17 @@ struct IonLIRTraceData {
 enum ParallelBailoutCause {
     ParallelBailoutNone,
 
-    // compiler returned Method_Skipped
+    // Compiler returned Method_Skipped
     ParallelBailoutCompilationSkipped,
 
-    // compiler returned Method_CantCompile
+    // Compiler returned Method_CantCompile
     ParallelBailoutCompilationFailure,
 
-    // the periodic interrupt failed, which can mean that either
+    // The periodic interrupt failed, which can mean that either
     // another thread canceled, the user interrupted us, etc
     ParallelBailoutInterrupt,
 
-    // an IC update failed
+    // An IC update failed
     ParallelBailoutFailedIC,
 
     // Heap busy flag was set during interrupt
@@ -246,8 +246,8 @@ enum ParallelBailoutCause {
     ParallelBailoutOverRecursed,
     ParallelBailoutOutOfMemory,
     ParallelBailoutUnsupported,
+    ParallelBailoutUnsupportedVM,
     ParallelBailoutUnsupportedStringComparison,
-    ParallelBailoutUnsupportedSparseArray,
     ParallelBailoutRequestedGC,
     ParallelBailoutRequestedZoneGC,
 };
@@ -271,9 +271,13 @@ struct ParallelBailoutRecord {
     void init(JSContext *cx);
     void reset(JSContext *cx);
     void setCause(ParallelBailoutCause cause,
-                  JSScript *outermostScript,   // inliner (if applicable)
-                  JSScript *currentScript,     // inlinee (if applicable)
-                  jsbytecode *currentPc);
+                  JSScript *outermostScript = nullptr,   // inliner (if applicable)
+                  JSScript *currentScript = nullptr,     // inlinee (if applicable)
+                  jsbytecode *currentPc = nullptr);
+    void updateCause(ParallelBailoutCause cause,
+                     JSScript *outermostScript,
+                     JSScript *currentScript,
+                     jsbytecode *currentPc);
     void addTrace(JSScript *script,
                   jsbytecode *pc);
 };
@@ -314,6 +318,18 @@ class ForkJoinSlice : public ThreadSafeContext
     // parallel section.
     void requestGC(JS::gcreason::Reason reason);
     void requestZoneGC(JS::Zone *zone, JS::gcreason::Reason reason);
+
+    // Set the fatal flag for the next abort. Used to distinguish retry or
+    // fatal aborts from VM functions.
+    bool setPendingAbortFatal(ParallelBailoutCause cause);
+
+    // Reports an unsupported operation, returning false if we are reporting
+    // an error. Otherwise drop the warning on the floor.
+    bool reportError(ParallelBailoutCause cause, unsigned report) {
+        if (report & JSREPORT_ERROR)
+            return setPendingAbortFatal(cause);
+        return true;
+    }
 
     // During the parallel phase, this method should be invoked
     // periodically, for example on every backedge, similar to the

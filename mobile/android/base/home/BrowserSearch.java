@@ -216,8 +216,10 @@ public class BrowserSearch extends HomeFragment
 
         unregisterEventListener("SearchEngines:Data");
 
-        mView = null;
+        mList.setAdapter(null);
         mList = null;
+
+        mView = null;
         mSuggestionsOptInPrompt = null;
         mSuggestClient = null;
     }

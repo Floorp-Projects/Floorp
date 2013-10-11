@@ -2603,7 +2603,8 @@ LIRGenerator::visitGetPropertyCache(MGetPropertyCache *ins)
         return assignSafepoint(lir, ins);
     }
 
-    LGetPropertyCacheT *lir = newLGetPropertyCacheT(ins);
+    LGetPropertyCacheT *lir = new LGetPropertyCacheT(useRegister(ins->object()),
+                                                     tempForDispatchCache(ins->type()));
     if (!define(lir, ins))
         return false;
     return assignSafepoint(lir, ins);
@@ -2656,7 +2657,9 @@ LIRGenerator::visitGetElementCache(MGetElementCache *ins)
     }
 
     JS_ASSERT(ins->index()->type() == MIRType_Int32);
-    LGetElementCacheT *lir = newLGetElementCacheT(ins);
+    LGetElementCacheT *lir = new LGetElementCacheT(useRegister(ins->object()),
+                                                   useRegister(ins->index()),
+                                                   tempForDispatchCache(ins->type()));
     return define(lir, ins) && assignSafepoint(lir, ins);
 }
 
@@ -2758,7 +2761,7 @@ LIRGenerator::visitCallGetElement(MCallGetElement *ins)
 bool
 LIRGenerator::visitCallSetProperty(MCallSetProperty *ins)
 {
-    LInstruction *lir = new LCallSetProperty(useRegisterAtStart(ins->obj()));
+    LInstruction *lir = new LCallSetProperty(useRegisterAtStart(ins->object()));
     if (!useBoxAtStart(lir, LCallSetProperty::Value, ins->value()))
         return false;
     if (!add(lir, ins))
@@ -2789,17 +2792,18 @@ LIRGenerator::visitDeleteElement(MDeleteElement *ins)
 bool
 LIRGenerator::visitSetPropertyCache(MSetPropertyCache *ins)
 {
-    LUse obj = useRegisterAtStart(ins->obj());
-    LDefinition slots = tempCopy(ins->obj(), 0);
+    LUse obj = useRegisterAtStart(ins->object());
+    LDefinition slots = tempCopy(ins->object(), 0);
+    LDefinition dispatchTemp = tempForDispatchCache();
 
     LInstruction *lir;
     if (ins->value()->type() == MIRType_Value) {
-        lir = new LSetPropertyCacheV(obj, slots);
+        lir = new LSetPropertyCacheV(obj, slots, dispatchTemp);
         if (!useBox(lir, LSetPropertyCacheV::Value, ins->value()))
             return false;
     } else {
         LAllocation value = useRegisterOrConstant(ins->value());
-        lir = new LSetPropertyCacheT(obj, slots, value, ins->value()->type());
+        lir = new LSetPropertyCacheT(obj, slots, value, dispatchTemp, ins->value()->type());
     }
 
     if (!add(lir, ins))
