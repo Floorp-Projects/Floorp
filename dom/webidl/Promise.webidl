@@ -28,9 +28,9 @@ interface Promise {
   static Promise reject(any value);
 
   [Creator]
-  Promise then([TreatUndefinedAs=Missing] optional AnyCallback fulfillCallback,
-               [TreatUndefinedAs=Missing] optional AnyCallback rejectCallback);
+  Promise then(optional AnyCallback fulfillCallback,
+               optional AnyCallback rejectCallback);
 
   [Creator]
-  Promise catch([TreatUndefinedAs=Missing] optional AnyCallback rejectCallback);
+  Promise catch(optional AnyCallback rejectCallback);
 };
