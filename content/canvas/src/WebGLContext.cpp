@@ -121,8 +121,7 @@ WebGLContext::WebGLContext()
 
     mShaderValidation = true;
 
-    mBlackTexturesAreInitialized = false;
-    mFakeBlackStatus = DoNotNeedFakeBlack;
+    mFakeBlackStatus = WebGLContextFakeBlackStatus::NotNeeded;
 
     mVertexAttrib0Vector[0] = 0;
     mVertexAttrib0Vector[1] = 0;
@@ -134,7 +133,7 @@ WebGLContext::WebGLContext()
     mFakeVertexAttrib0BufferObjectVector[3] = 1;
     mFakeVertexAttrib0BufferObjectSize = 0;
     mFakeVertexAttrib0BufferObject = 0;
-    mFakeVertexAttrib0BufferStatus = VertexAttrib0Status::Default;
+    mFakeVertexAttrib0BufferStatus = WebGLVertexAttrib0Status::Default;
 
     // these are de default values, see 6.2 State tables in the OpenGL ES 2.0.25 spec
     mColorWriteMask[0] = 1;
@@ -264,11 +263,10 @@ WebGLContext::DestroyResourcesAndContext()
     while (!mQueries.isEmpty())
         mQueries.getLast()->DeleteOnce();
 
-    if (mBlackTexturesAreInitialized) {
-        gl->fDeleteTextures(1, &mBlackTexture2D);
-        gl->fDeleteTextures(1, &mBlackTextureCubeMap);
-        mBlackTexturesAreInitialized = false;
-    }
+    mBlackOpaqueTexture2D = nullptr;
+    mBlackOpaqueTextureCubeMap = nullptr;
+    mBlackTransparentTexture2D = nullptr;
+    mBlackTransparentTextureCubeMap = nullptr;
 
     if (mFakeVertexAttrib0BufferObject) {
         gl->fDeleteBuffers(1, &mFakeVertexAttrib0BufferObject);

@@ -48,7 +48,7 @@ WebGLRenderbuffer::WebGLRenderbuffer(WebGLContext *context)
     , mInternalFormat(0)
     , mInternalFormatForGL(0)
     , mHasEverBeenBound(false)
-    , mInitialized(false)
+    , mImageDataStatus(WebGLImageDataStatus::NoImageData)
 {
     SetIsDOMBinding();
     mContext->MakeContextCurrent();

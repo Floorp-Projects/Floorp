@@ -78,7 +78,8 @@ public:
             return mTexImageLevel;
         }
 
-        bool HasUninitializedRenderbuffer() const;
+        bool HasUninitializedImageData() const;
+        void SetImageDataStatus(WebGLImageDataStatus x);
 
         void Reset() {
             mTexturePtr = nullptr;
@@ -161,7 +162,7 @@ public:
     NS_INLINE_DECL_CYCLE_COLLECTING_NATIVE_REFCOUNTING(WebGLFramebuffer)
     NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_NATIVE_CLASS(WebGLFramebuffer)
 
-    bool CheckAndInitializeRenderbuffers();
+    bool CheckAndInitializeAttachments();
 
     bool CheckColorAttachementNumber(GLenum attachment, const char * functionName) const;
 

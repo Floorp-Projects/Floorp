@@ -37,30 +37,30 @@ class WebGLImageConverter
      * texels with typed pointers and this value will tell us by how much we need
      * to increment these pointers to advance to the next texel.
      */
-    template<int Format>
+    template<MOZ_ENUM_CLASS_INTEGER_TYPE(WebGLTexelFormat) Format>
     static size_t NumElementsPerTexelForFormat() {
         switch (Format) {
-            case R8:
-            case A8:
-            case R32F:
-            case A32F:
-            case RGBA5551:
-            case RGBA4444:
-            case RGB565:
+            case WebGLTexelFormat::R8:
+            case WebGLTexelFormat::A8:
+            case WebGLTexelFormat::R32F:
+            case WebGLTexelFormat::A32F:
+            case WebGLTexelFormat::RGBA5551:
+            case WebGLTexelFormat::RGBA4444:
+            case WebGLTexelFormat::RGB565:
                 return 1;
-            case RA8:
-            case RA32F:
+            case WebGLTexelFormat::RA8:
+            case WebGLTexelFormat::RA32F:
                 return 2;
-            case RGB8:
-            case RGB32F:
+            case WebGLTexelFormat::RGB8:
+            case WebGLTexelFormat::RGB32F:
                 return 3;
-            case RGBA8:
-            case BGRA8:
-            case BGRX8:
-            case RGBA32F:
+            case WebGLTexelFormat::RGBA8:
+            case WebGLTexelFormat::BGRA8:
+            case WebGLTexelFormat::BGRX8:
+            case WebGLTexelFormat::RGBA32F:
                 return 4;
             default:
-                NS_ABORT_IF_FALSE(false, "Unknown texel format. Coding mistake?");
+                MOZ_ASSERT(false, "Unknown texel format. Coding mistake?");
                 return 0;
         }
     }
@@ -73,9 +73,9 @@ class WebGLImageConverter
      * to return immediately in these cases to allow the compiler to avoid generating
      * useless code.
      */
-    template<WebGLTexelFormat SrcFormat,
-             WebGLTexelFormat DstFormat,
-             WebGLTexelPremultiplicationOp PremultiplicationOp>
+    template<MOZ_ENUM_CLASS_INTEGER_TYPE(WebGLTexelFormat) SrcFormat,
+             MOZ_ENUM_CLASS_INTEGER_TYPE(WebGLTexelFormat) DstFormat,
+             MOZ_ENUM_CLASS_INTEGER_TYPE(WebGLTexelPremultiplicationOp) PremultiplicationOp>
     void run()
     {
         // check for never-called cases. We early-return to allow the compiler
@@ -86,7 +86,7 @@ class WebGLImageConverter
         // must check that and abort in that case. See WebGLContext::ConvertImage.
 
         if (SrcFormat == DstFormat &&
-            PremultiplicationOp == NoPremultiplicationOp)
+            PremultiplicationOp == WebGLTexelPremultiplicationOp::None)
         {
             // Should have used a fast exit path earlier, rather than entering this function.
             // we explicitly return here to allow the compiler to avoid generating this code
@@ -98,11 +98,11 @@ class WebGLImageConverter
         // ImageData is always RGBA8. So all other SrcFormat will always satisfy DstFormat==SrcFormat,
         // so we can avoid compiling the code for all the unreachable paths.
         const bool CanSrcFormatComeFromDOMElementOrImageData
-            = SrcFormat == BGRA8 ||
-              SrcFormat == BGRX8 ||
-              SrcFormat == A8 ||
-              SrcFormat == RGB565 ||
-              SrcFormat == RGBA8;
+            = SrcFormat == WebGLTexelFormat::BGRA8 ||
+              SrcFormat == WebGLTexelFormat::BGRX8 ||
+              SrcFormat == WebGLTexelFormat::A8 ||
+              SrcFormat == WebGLTexelFormat::RGB565 ||
+              SrcFormat == WebGLTexelFormat::RGBA8;
         if (!CanSrcFormatComeFromDOMElementOrImageData &&
             SrcFormat != DstFormat)
         {
@@ -111,7 +111,7 @@ class WebGLImageConverter
 
         // Likewise, only textures uploaded from DOM elements or ImageData can possibly have to be unpremultiplied.
         if (!CanSrcFormatComeFromDOMElementOrImageData &&
-            PremultiplicationOp == Unpremultiply)
+            PremultiplicationOp == WebGLTexelPremultiplicationOp::Unpremultiply)
         {
             return;
         }
@@ -126,7 +126,7 @@ class WebGLImageConverter
             !HasColor(DstFormat))
         {
 
-            if (PremultiplicationOp != NoPremultiplicationOp)
+            if (PremultiplicationOp != WebGLTexelPremultiplicationOp::None)
             {
                 return;
             }
@@ -134,7 +134,7 @@ class WebGLImageConverter
 
         // end of early return cases.
 
-        NS_ABORT_IF_FALSE(!mAlreadyRun, "converter should be run only once!");
+        MOZ_ASSERT(!mAlreadyRun, "converter should be run only once!");
         mAlreadyRun = true;
 
         // gather some compile-time meta-data about the formats at hand.
@@ -146,9 +146,9 @@ class WebGLImageConverter
             typename DataTypeForFormat<DstFormat>::Type
             DstType;
 
-        const int IntermediateSrcFormat
+        const MOZ_ENUM_CLASS_INTEGER_TYPE(WebGLTexelFormat) IntermediateSrcFormat
             = IntermediateFormat<SrcFormat>::Value;
-        const int IntermediateDstFormat
+        const MOZ_ENUM_CLASS_INTEGER_TYPE(WebGLTexelFormat) IntermediateDstFormat
             = IntermediateFormat<DstFormat>::Value;
         typedef
             typename DataTypeForFormat<IntermediateSrcFormat>::Type
@@ -160,8 +160,8 @@ class WebGLImageConverter
         const size_t NumElementsPerSrcTexel = NumElementsPerTexelForFormat<SrcFormat>();
         const size_t NumElementsPerDstTexel = NumElementsPerTexelForFormat<DstFormat>();
         const size_t MaxElementsPerTexel = 4;
-        NS_ABORT_IF_FALSE(NumElementsPerSrcTexel <= MaxElementsPerTexel, "unhandled format");
-        NS_ABORT_IF_FALSE(NumElementsPerDstTexel <= MaxElementsPerTexel, "unhandled format");
+        MOZ_ASSERT(NumElementsPerSrcTexel <= MaxElementsPerTexel, "unhandled format");
+        MOZ_ASSERT(NumElementsPerDstTexel <= MaxElementsPerTexel, "unhandled format");
 
         // we assume that the strides are multiples of the sizeof of respective types.
         // this assumption will allow us to iterate over src and dst images using typed
@@ -169,9 +169,9 @@ class WebGLImageConverter
         // So this assumption allows us to write cleaner and safer code, but it might
         // not be true forever and if it eventually becomes wrong, we'll have to revert
         // to always iterating using uint8_t* pointers regardless of the types at hand.
-        NS_ABORT_IF_FALSE(mSrcStride % sizeof(SrcType) == 0 &&
-                          mDstStride % sizeof(DstType) == 0,
-                          "Unsupported: texture stride is not a multiple of sizeof(type)");
+        MOZ_ASSERT(mSrcStride % sizeof(SrcType) == 0 &&
+                   mDstStride % sizeof(DstType) == 0,
+                   "Unsupported: texture stride is not a multiple of sizeof(type)");
         const ptrdiff_t srcStrideInElements = mSrcStride / sizeof(SrcType);
         const ptrdiff_t dstStrideInElements = mDstStride / sizeof(DstType);
 
@@ -213,7 +213,8 @@ class WebGLImageConverter
         return;
     }
 
-    template<WebGLTexelFormat SrcFormat, WebGLTexelFormat DstFormat>
+    template<MOZ_ENUM_CLASS_INTEGER_TYPE(WebGLTexelFormat) SrcFormat,
+             MOZ_ENUM_CLASS_INTEGER_TYPE(WebGLTexelFormat) DstFormat>
     void run(WebGLTexelPremultiplicationOp premultiplicationOp)
     {
         #define WEBGLIMAGECONVERTER_CASE_PREMULTIPLICATIONOP(PremultiplicationOp) \
@@ -221,17 +222,17 @@ class WebGLImageConverter
                 return run<SrcFormat, DstFormat, PremultiplicationOp>();
 
         switch (premultiplicationOp) {
-            WEBGLIMAGECONVERTER_CASE_PREMULTIPLICATIONOP(NoPremultiplicationOp)
-            WEBGLIMAGECONVERTER_CASE_PREMULTIPLICATIONOP(Premultiply)
-            WEBGLIMAGECONVERTER_CASE_PREMULTIPLICATIONOP(Unpremultiply)
+            WEBGLIMAGECONVERTER_CASE_PREMULTIPLICATIONOP(WebGLTexelPremultiplicationOp::None)
+            WEBGLIMAGECONVERTER_CASE_PREMULTIPLICATIONOP(WebGLTexelPremultiplicationOp::Premultiply)
+            WEBGLIMAGECONVERTER_CASE_PREMULTIPLICATIONOP(WebGLTexelPremultiplicationOp::Unpremultiply)
             default:
-                NS_ABORT_IF_FALSE(false, "unhandled case. Coding mistake?");
+                MOZ_ASSERT(false, "unhandled case. Coding mistake?");
         }
 
         #undef WEBGLIMAGECONVERTER_CASE_PREMULTIPLICATIONOP
     }
 
-    template<WebGLTexelFormat SrcFormat>
+    template<MOZ_ENUM_CLASS_INTEGER_TYPE(WebGLTexelFormat) SrcFormat>
     void run(WebGLTexelFormat dstFormat,
              WebGLTexelPremultiplicationOp premultiplicationOp)
     {
@@ -240,21 +241,21 @@ class WebGLImageConverter
                 return run<SrcFormat, DstFormat>(premultiplicationOp);
 
         switch (dstFormat) {
-            WEBGLIMAGECONVERTER_CASE_DSTFORMAT(R8)
-            WEBGLIMAGECONVERTER_CASE_DSTFORMAT(A8)
-            WEBGLIMAGECONVERTER_CASE_DSTFORMAT(R32F)
-            WEBGLIMAGECONVERTER_CASE_DSTFORMAT(A32F)
-            WEBGLIMAGECONVERTER_CASE_DSTFORMAT(RA8)
-            WEBGLIMAGECONVERTER_CASE_DSTFORMAT(RA32F)
-            WEBGLIMAGECONVERTER_CASE_DSTFORMAT(RGB8)
-            WEBGLIMAGECONVERTER_CASE_DSTFORMAT(RGB565)
-            WEBGLIMAGECONVERTER_CASE_DSTFORMAT(RGB32F)
-            WEBGLIMAGECONVERTER_CASE_DSTFORMAT(RGBA8)
-            WEBGLIMAGECONVERTER_CASE_DSTFORMAT(RGBA5551)
-            WEBGLIMAGECONVERTER_CASE_DSTFORMAT(RGBA4444)
-            WEBGLIMAGECONVERTER_CASE_DSTFORMAT(RGBA32F)
+            WEBGLIMAGECONVERTER_CASE_DSTFORMAT(WebGLTexelFormat::R8)
+            WEBGLIMAGECONVERTER_CASE_DSTFORMAT(WebGLTexelFormat::A8)
+            WEBGLIMAGECONVERTER_CASE_DSTFORMAT(WebGLTexelFormat::R32F)
+            WEBGLIMAGECONVERTER_CASE_DSTFORMAT(WebGLTexelFormat::A32F)
+            WEBGLIMAGECONVERTER_CASE_DSTFORMAT(WebGLTexelFormat::RA8)
+            WEBGLIMAGECONVERTER_CASE_DSTFORMAT(WebGLTexelFormat::RA32F)
+            WEBGLIMAGECONVERTER_CASE_DSTFORMAT(WebGLTexelFormat::RGB8)
+            WEBGLIMAGECONVERTER_CASE_DSTFORMAT(WebGLTexelFormat::RGB565)
+            WEBGLIMAGECONVERTER_CASE_DSTFORMAT(WebGLTexelFormat::RGB32F)
+            WEBGLIMAGECONVERTER_CASE_DSTFORMAT(WebGLTexelFormat::RGBA8)
+            WEBGLIMAGECONVERTER_CASE_DSTFORMAT(WebGLTexelFormat::RGBA5551)
+            WEBGLIMAGECONVERTER_CASE_DSTFORMAT(WebGLTexelFormat::RGBA4444)
+            WEBGLIMAGECONVERTER_CASE_DSTFORMAT(WebGLTexelFormat::RGBA32F)
             default:
-                NS_ABORT_IF_FALSE(false, "unhandled case. Coding mistake?");
+                MOZ_ASSERT(false, "unhandled case. Coding mistake?");
         }
 
         #undef WEBGLIMAGECONVERTER_CASE_DSTFORMAT
@@ -271,23 +272,23 @@ public:
                 return run<SrcFormat>(dstFormat, premultiplicationOp);
 
         switch (srcFormat) {
-            WEBGLIMAGECONVERTER_CASE_SRCFORMAT(R8)
-            WEBGLIMAGECONVERTER_CASE_SRCFORMAT(A8)
-            WEBGLIMAGECONVERTER_CASE_SRCFORMAT(R32F)
-            WEBGLIMAGECONVERTER_CASE_SRCFORMAT(A32F)
-            WEBGLIMAGECONVERTER_CASE_SRCFORMAT(RA8)
-            WEBGLIMAGECONVERTER_CASE_SRCFORMAT(RA32F)
-            WEBGLIMAGECONVERTER_CASE_SRCFORMAT(RGB8)
-            WEBGLIMAGECONVERTER_CASE_SRCFORMAT(BGRX8) // source format only
-            WEBGLIMAGECONVERTER_CASE_SRCFORMAT(RGB565)
-            WEBGLIMAGECONVERTER_CASE_SRCFORMAT(RGB32F)
-            WEBGLIMAGECONVERTER_CASE_SRCFORMAT(RGBA8)
-            WEBGLIMAGECONVERTER_CASE_SRCFORMAT(BGRA8)
-            WEBGLIMAGECONVERTER_CASE_SRCFORMAT(RGBA5551)
-            WEBGLIMAGECONVERTER_CASE_SRCFORMAT(RGBA4444)
-            WEBGLIMAGECONVERTER_CASE_SRCFORMAT(RGBA32F)
+            WEBGLIMAGECONVERTER_CASE_SRCFORMAT(WebGLTexelFormat::R8)
+            WEBGLIMAGECONVERTER_CASE_SRCFORMAT(WebGLTexelFormat::A8)
+            WEBGLIMAGECONVERTER_CASE_SRCFORMAT(WebGLTexelFormat::R32F)
+            WEBGLIMAGECONVERTER_CASE_SRCFORMAT(WebGLTexelFormat::A32F)
+            WEBGLIMAGECONVERTER_CASE_SRCFORMAT(WebGLTexelFormat::RA8)
+            WEBGLIMAGECONVERTER_CASE_SRCFORMAT(WebGLTexelFormat::RA32F)
+            WEBGLIMAGECONVERTER_CASE_SRCFORMAT(WebGLTexelFormat::RGB8)
+            WEBGLIMAGECONVERTER_CASE_SRCFORMAT(WebGLTexelFormat::BGRX8) // source format only
+            WEBGLIMAGECONVERTER_CASE_SRCFORMAT(WebGLTexelFormat::RGB565)
+            WEBGLIMAGECONVERTER_CASE_SRCFORMAT(WebGLTexelFormat::RGB32F)
+            WEBGLIMAGECONVERTER_CASE_SRCFORMAT(WebGLTexelFormat::RGBA8)
+            WEBGLIMAGECONVERTER_CASE_SRCFORMAT(WebGLTexelFormat::BGRA8)
+            WEBGLIMAGECONVERTER_CASE_SRCFORMAT(WebGLTexelFormat::RGBA5551)
+            WEBGLIMAGECONVERTER_CASE_SRCFORMAT(WebGLTexelFormat::RGBA4444)
+            WEBGLIMAGECONVERTER_CASE_SRCFORMAT(WebGLTexelFormat::RGBA32F)
             default:
-                NS_ABORT_IF_FALSE(false, "unhandled case. Coding mistake?");
+                MOZ_ASSERT(false, "unhandled case. Coding mistake?");
         }
 
         #undef WEBGLIMAGECONVERTER_CASE_SRCFORMAT
@@ -335,7 +336,7 @@ WebGLContext::ConvertImage(size_t width, size_t height, size_t srcStride, size_t
         // So the case we're handling here is when even though no format conversion is needed,
         // we still might have to flip vertically and/or to adjust to a different stride.
 
-        NS_ABORT_IF_FALSE(mPixelStoreFlipY || srcStride != dstStride, "Performance trap -- should handle this case earlier, to avoid memcpy");
+        MOZ_ASSERT(mPixelStoreFlipY || srcStride != dstStride, "Performance trap -- should handle this case earlier, to avoid memcpy");
 
         size_t row_size = width * dstTexelSize; // doesn't matter, src and dst formats agree
         const uint8_t* ptr = src;
@@ -365,10 +366,10 @@ WebGLContext::ConvertImage(size_t width, size_t height, size_t srcStride, size_t
     WebGLImageConverter converter(width, height, src, dstStart, srcStride, signedDstStride);
 
     const WebGLTexelPremultiplicationOp premultiplicationOp
-        = FormatsRequireNoPremultiplicationOp     ? NoPremultiplicationOp
-        : (!srcPremultiplied && dstPremultiplied) ? Premultiply
-        : (srcPremultiplied && !dstPremultiplied) ? Unpremultiply
-                                                  : NoPremultiplicationOp;
+        = FormatsRequireNoPremultiplicationOp     ? WebGLTexelPremultiplicationOp::None
+        : (!srcPremultiplied && dstPremultiplied) ? WebGLTexelPremultiplicationOp::Premultiply
+        : (srcPremultiplied && !dstPremultiplied) ? WebGLTexelPremultiplicationOp::Unpremultiply
+                                                  : WebGLTexelPremultiplicationOp::None;
 
     converter.run(srcFormat, dstFormat, premultiplicationOp);
 
