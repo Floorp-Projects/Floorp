@@ -2,12 +2,12 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-import zipfile
-import time
-import binascii, struct
-import zlib
 import os
-from utils import lockFile
+import time
+import zipfile
+
+from mozbuild.util import lock_file
+
 
 class ZipFile(zipfile.ZipFile):
   """ Class with methods to open, read, write, close, list zip files.
@@ -19,7 +19,7 @@ class ZipFile(zipfile.ZipFile):
                lock = False):
     if lock:
       assert isinstance(file, basestring)
-      self.lockfile = lockFile(file + '.lck')
+      self.lockfile = lock_file(file + '.lck')
     else:
       self.lockfile = None
 
