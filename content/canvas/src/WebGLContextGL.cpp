@@ -2662,16 +2662,16 @@ WebGLContext::SurfaceFromElementResultToImageSurface(nsLayoutUtils::SurfaceFromE
 
     switch (surf->Format()) {
         case gfxImageFormatARGB32:
-            *format = WebGLTexelConversions::BGRA8; // careful, our ARGB means BGRA
+            *format = WebGLTexelFormat::BGRA8; // careful, our ARGB means BGRA
             break;
         case gfxImageFormatRGB24:
-            *format = WebGLTexelConversions::BGRX8; // careful, our RGB24 is not tightly packed. Whence BGRX8.
+            *format = WebGLTexelFormat::BGRX8; // careful, our RGB24 is not tightly packed. Whence BGRX8.
             break;
         case gfxImageFormatA8:
-            *format = WebGLTexelConversions::A8;
+            *format = WebGLTexelFormat::A8;
             break;
         case gfxImageFormatRGB16_565:
-            *format = WebGLTexelConversions::RGB565;
+            *format = WebGLTexelFormat::RGB565;
             break;
         default:
             NS_ASSERTION(false, "Unsupported image format. Unimplemented.");
@@ -3754,7 +3754,7 @@ WebGLContext::TexImage2D_base(GLenum target, GLint level, GLenum internalformat,
         return;
 
     WebGLTexelFormat dstFormat = GetWebGLTexelFormat(format, type);
-    WebGLTexelFormat actualSrcFormat = srcFormat == WebGLTexelConversions::Auto ? dstFormat : srcFormat;
+    WebGLTexelFormat actualSrcFormat = srcFormat == WebGLTexelFormat::Auto ? dstFormat : srcFormat;
 
     uint32_t srcTexelSize = WebGLTexelConversions::TexelBytesForFormat(actualSrcFormat);
 
@@ -3852,7 +3852,7 @@ WebGLContext::TexImage2D(GLenum target, GLint level,
                            pixels.IsNull() ? 0 : pixels.Value().Data(),
                            pixels.IsNull() ? 0 : pixels.Value().Length(),
                            pixels.IsNull() ? -1 : (int)JS_GetArrayBufferViewType(pixels.Value().Obj()),
-                           WebGLTexelConversions::Auto, false);
+                           WebGLTexelFormat::Auto, false);
 }
 
 void
@@ -3872,7 +3872,7 @@ WebGLContext::TexImage2D(GLenum target, GLint level,
     return TexImage2D_base(target, level, internalformat, pixels->Width(),
                            pixels->Height(), 4*pixels->Width(), 0,
                            format, type, arr.Data(), arr.Length(), -1,
-                           WebGLTexelConversions::RGBA8, false);
+                           WebGLTexelFormat::RGBA8, false);
 }
 
 
@@ -3918,7 +3918,7 @@ WebGLContext::TexSubImage2D_base(GLenum target, GLint level,
         return;
 
     WebGLTexelFormat dstFormat = GetWebGLTexelFormat(format, type);
-    WebGLTexelFormat actualSrcFormat = srcFormat == WebGLTexelConversions::Auto ? dstFormat : srcFormat;
+    WebGLTexelFormat actualSrcFormat = srcFormat == WebGLTexelFormat::Auto ? dstFormat : srcFormat;
 
     uint32_t srcTexelSize = WebGLTexelConversions::TexelBytesForFormat(actualSrcFormat);
 
@@ -4008,7 +4008,7 @@ WebGLContext::TexSubImage2D(GLenum target, GLint level,
                               width, height, 0, format, type,
                               pixels.Value().Data(), pixels.Value().Length(),
                               JS_GetArrayBufferViewType(pixels.Value().Obj()),
-                              WebGLTexelConversions::Auto, false);
+                              WebGLTexelFormat::Auto, false);
 }
 
 void
@@ -4029,7 +4029,7 @@ WebGLContext::TexSubImage2D(GLenum target, GLint level,
                               4*pixels->Width(), format, type,
                               arr.Data(), arr.Length(),
                               -1,
-                              WebGLTexelConversions::RGBA8, false);
+                              WebGLTexelFormat::RGBA8, false);
 }
 
 bool
@@ -4133,16 +4133,16 @@ WebGLTexelFormat mozilla::GetWebGLTexelFormat(GLenum format, GLenum type)
     if (format == LOCAL_GL_DEPTH_COMPONENT) {
         switch (type) {
             case LOCAL_GL_UNSIGNED_SHORT:
-                return WebGLTexelConversions::D16;
+                return WebGLTexelFormat::D16;
             case LOCAL_GL_UNSIGNED_INT:
-                return WebGLTexelConversions::D32;
+                return WebGLTexelFormat::D32;
             default:
                 MOZ_CRASH("Invalid WebGL texture format/type?");
         }
     } else if (format == LOCAL_GL_DEPTH_STENCIL) {
         switch (type) {
             case LOCAL_GL_UNSIGNED_INT_24_8_EXT:
-                return WebGLTexelConversions::D24S8;
+                return WebGLTexelFormat::D24S8;
             default:
                 MOZ_CRASH("Invalid WebGL texture format/type?");
         }
@@ -4152,47 +4152,47 @@ WebGLTexelFormat mozilla::GetWebGLTexelFormat(GLenum format, GLenum type)
     if (type == LOCAL_GL_UNSIGNED_BYTE) {
         switch (format) {
             case LOCAL_GL_RGBA:
-                return WebGLTexelConversions::RGBA8;
+                return WebGLTexelFormat::RGBA8;
             case LOCAL_GL_RGB:
-                return WebGLTexelConversions::RGB8;
+                return WebGLTexelFormat::RGB8;
             case LOCAL_GL_ALPHA:
-                return WebGLTexelConversions::A8;
+                return WebGLTexelFormat::A8;
             case LOCAL_GL_LUMINANCE:
-                return WebGLTexelConversions::R8;
+                return WebGLTexelFormat::R8;
             case LOCAL_GL_LUMINANCE_ALPHA:
-                return WebGLTexelConversions::RA8;
+                return WebGLTexelFormat::RA8;
             default:
                 MOZ_ASSERT(false, "Coding mistake?! Should never reach this point.");
-                return WebGLTexelConversions::BadFormat;
+                return WebGLTexelFormat::BadFormat;
         }
     } else if (type == LOCAL_GL_FLOAT) {
         // OES_texture_float
         switch (format) {
             case LOCAL_GL_RGBA:
-                return WebGLTexelConversions::RGBA32F;
+                return WebGLTexelFormat::RGBA32F;
             case LOCAL_GL_RGB:
-                return WebGLTexelConversions::RGB32F;
+                return WebGLTexelFormat::RGB32F;
             case LOCAL_GL_ALPHA:
-                return WebGLTexelConversions::A32F;
+                return WebGLTexelFormat::A32F;
             case LOCAL_GL_LUMINANCE:
-                return WebGLTexelConversions::R32F;
+                return WebGLTexelFormat::R32F;
             case LOCAL_GL_LUMINANCE_ALPHA:
-                return WebGLTexelConversions::RA32F;
+                return WebGLTexelFormat::RA32F;
             default:
                 MOZ_ASSERT(false, "Coding mistake?! Should never reach this point.");
-                return WebGLTexelConversions::BadFormat;
+                return WebGLTexelFormat::BadFormat;
         }
     } else {
         switch (type) {
             case LOCAL_GL_UNSIGNED_SHORT_4_4_4_4:
-                return WebGLTexelConversions::RGBA4444;
+                return WebGLTexelFormat::RGBA4444;
             case LOCAL_GL_UNSIGNED_SHORT_5_5_5_1:
-                return WebGLTexelConversions::RGBA5551;
+                return WebGLTexelFormat::RGBA5551;
             case LOCAL_GL_UNSIGNED_SHORT_5_6_5:
-                return WebGLTexelConversions::RGB565;
+                return WebGLTexelFormat::RGB565;
             default:
                 MOZ_ASSERT(false, "Coding mistake?! Should never reach this point.");
-                return WebGLTexelConversions::BadFormat;
+                return WebGLTexelFormat::BadFormat;
         }
     }
 }
