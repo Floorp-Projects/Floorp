@@ -381,8 +381,19 @@ CssLogic.prototype = {
    */
   forEachSheet: function CssLogic_forEachSheet(aCallback, aScope)
   {
-    for each (let sheet in this._sheets) {
-      sheet.forEach(aCallback, aScope);
+    for each (let sheets in this._sheets) {
+      for (let i = 0; i < sheets.length; i ++) {
+        // We take this as an opportunity to clean dead sheets
+        try {
+          let sheet = sheets[i];
+          sheet.domSheet; // If accessing domSheet raises an exception, then the
+          // style sheet is a dead object
+          aCallback.call(aScope, sheet, i, sheets);
+        } catch (e) {
+          sheets.splice(i, 1);
+          i --;
+        }
+      }
     }
   },
 
@@ -1008,8 +1019,8 @@ CssSheet.prototype = {
   get ruleCount()
   {
     return this._ruleCount > -1 ?
-        this._ruleCount :
-        this.domSheet.cssRules.length;
+      this._ruleCount :
+      this.domSheet.cssRules.length;
   },
 
   /**
@@ -1117,7 +1128,7 @@ CssSheet.prototype = {
   toString: function CssSheet_toString()
   {
     return "CssSheet[" + this.shortSource + "]";
-  },
+  }
 };
 
 /**
