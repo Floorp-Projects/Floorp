@@ -1464,6 +1464,10 @@ toolbarbutton.bookmark-item > menupopup {
   box-shadow: @focusRingShadow@;
 }
 
+#urlbar-container {
+  -moz-box-align: center;
+}
+
 #urlbar {
   -moz-padding-end: 4px;
   border-radius: @toolbarbuttonCornerRadius@;
