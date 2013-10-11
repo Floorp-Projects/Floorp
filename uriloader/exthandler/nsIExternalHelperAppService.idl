@@ -96,14 +96,16 @@ interface nsIHelperAppLauncher : nsICancelable
   readonly attribute AString suggestedFileName;
 
   /**
-   * Called when we want to just save the content to a particular file.
-   * NOTE: This will release the reference to the nsIHelperAppLauncherDialog.
-   * @param aNewFileLocation Location where the content should be saved
+   * Saves the final destination of the file. Does not actually perform the
+   * save.
+   * NOTE: This will release the reference to the
+   * nsIHelperAppLauncherDialog.
    */
   void saveToDisk(in nsIFile aNewFileLocation, in boolean aRememberThisPreference);
 
   /**
-   * Use aApplication to launch with this content.
+   * Remembers that aApplication should be used to launch this content. Does
+   * not actually launch the application.
    * NOTE: This will release the reference to the nsIHelperAppLauncherDialog.
    * @param aApplication nsIFile corresponding to the location of the application to use.
    * @param aRememberThisPreference TRUE if we should remember this choice.
@@ -124,12 +126,6 @@ interface nsIHelperAppLauncher : nsICancelable
    * listener receives the STATE_STOP notification).
    */
   void setWebProgressListener(in nsIWebProgressListener2 aWebProgressListener);
-
-  /**
-   * when the stand alone progress window actually closes, it calls this method
-   * so we can release any local state...
-   */
-  void closeProgressWindow();
 
   /**
    * The file we are saving to
