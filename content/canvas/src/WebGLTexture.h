@@ -196,6 +196,8 @@ public:
         imageInfo.mImageDataStatus = newStatus;
     }
 
+    void DoDeferredImageInitialization(GLenum imageTarget, GLint level);
+
 protected:
 
     GLenum mTarget;
