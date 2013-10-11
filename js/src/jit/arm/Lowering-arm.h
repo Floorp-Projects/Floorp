@@ -35,6 +35,12 @@ class LIRGeneratorARM : public LIRGeneratorShared
         return LDefinition::BogusTemp();
     }
 
+    // x64 has a scratch register, so no need for another temp for dispatch
+    // ICs.
+    LDefinition tempForDispatchCache(MIRType outputType = MIRType_None) {
+        return LDefinition::BogusTemp();
+    }
+
     void lowerUntypedPhiInput(MPhi *phi, uint32_t inputPosition, LBlock *block, size_t lirIndex);
     bool defineUntypedPhi(MPhi *phi, size_t lirIndex);
     bool lowerForShift(LInstructionHelper<1, 2, 0> *ins, MDefinition *mir, MDefinition *lhs,
@@ -68,8 +74,6 @@ class LIRGeneratorARM : public LIRGeneratorShared
     LTableSwitch *newLTableSwitch(const LAllocation &in, const LDefinition &inputCopy,
                                   MTableSwitch *ins);
     LTableSwitchV *newLTableSwitchV(MTableSwitch *ins);
-    LGetPropertyCacheT *newLGetPropertyCacheT(MGetPropertyCache *ins);
-    LGetElementCacheT *newLGetElementCacheT(MGetElementCache *ins);
 
   public:
     bool visitConstant(MConstant *ins);

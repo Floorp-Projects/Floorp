@@ -85,21 +85,24 @@ class IonFrameIterator
   private:
     mutable const SafepointIndex *cachedSafepointIndex_;
     const JitActivation *activation_;
+    ExecutionMode mode_;
 
     void dumpBaseline() const;
 
   public:
-    IonFrameIterator(uint8_t *top)
+    explicit IonFrameIterator(uint8_t *top, ExecutionMode mode)
       : current_(top),
         type_(IonFrame_Exit),
         returnAddressToFp_(nullptr),
         frameSize_(0),
         cachedSafepointIndex_(nullptr),
-        activation_(nullptr)
+        activation_(nullptr),
+        mode_(mode)
     { }
 
-    IonFrameIterator(const ActivationIterator &activations);
-    IonFrameIterator(IonJSFrameLayout *fp);
+    explicit IonFrameIterator(JSContext *cx);
+    explicit IonFrameIterator(const ActivationIterator &activations);
+    explicit IonFrameIterator(IonJSFrameLayout *fp, ExecutionMode mode);
 
     // Current frame information.
     FrameType type() const {
@@ -151,7 +154,6 @@ class IonFrameIterator
         return type_ == IonFrame_Entry;
     }
     bool isFunctionFrame() const;
-    bool isParallelFunctionFrame() const;
 
     bool isConstructing() const;
 
