@@ -557,14 +557,11 @@ ImplCycleCollectionTraverse(nsCycleCollectionTraversalCallback& aCallback,
                              aName, aFlags);
 }
 
-NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE_7(WebGLFramebuffer,
+NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE_4(WebGLFramebuffer,
   mColorAttachments,
-  mDepthAttachment.mTexturePtr,
-  mDepthAttachment.mRenderbufferPtr,
-  mStencilAttachment.mTexturePtr,
-  mStencilAttachment.mRenderbufferPtr,
-  mDepthStencilAttachment.mTexturePtr,
-  mDepthStencilAttachment.mRenderbufferPtr)
+  mDepthAttachment,
+  mStencilAttachment,
+  mDepthStencilAttachment)
 
 NS_IMPL_CYCLE_COLLECTION_ROOT_NATIVE(WebGLFramebuffer, AddRef)
 NS_IMPL_CYCLE_COLLECTION_UNROOT_NATIVE(WebGLFramebuffer, Release)
