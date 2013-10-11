@@ -434,13 +434,11 @@
 <deck flex="1" id="tab-view-deck">
 <vbox flex="1" id="browser-panel">
 
-  <toolbox id="navigator-toolbox"
-           defaultmode="icons" mode="icons">
+  <toolbox id="navigator-toolbox">
     <!-- Menu -->
     <toolbar type="menubar" id="toolbar-menubar" class="chromeclass-menubar" customizable="true"
              defaultset="menubar-items"
-             mode="icons" iconsize="small" defaulticonsize="small"
-             lockiconsize="true"
+             mode="icons" iconsize="small"
 #ifdef MENUBAR_CAN_AUTOHIDE
              toolbarname="&menubarCmd.label;"
              accesskey="&menubarCmd.accesskey;"
@@ -469,8 +467,8 @@
              class="toolbar-primary"
              fullscreentoolbar="true"
              customizable="true"
-             mode="icons" lockmode="true"
-             iconsize="small" defaulticonsize="small" lockiconsize="true"
+             mode="icons"
+             iconsize="small"
              aria-label="&tabsToolbar.label;"
              context="toolbar-context-menu"
              defaultset="tabbrowser-tabs,new-tab-button,alltabs-button,tabs-closebutton"
@@ -901,8 +899,7 @@
     <toolbarset id="customToolbars" context="toolbar-context-menu"/>
 
     <toolbar id="PersonalToolbar"
-             mode="icons" iconsize="small" defaulticonsize="small"
-             lockiconsize="true"
+             mode="icons" iconsize="small"
              class="chromeclass-directories"
              context="toolbar-context-menu"
              defaultset="personal-bookmarks"
