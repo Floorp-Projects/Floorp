@@ -2802,7 +2802,7 @@ QuotaManager::FindSynchronizedOp(const nsACString& aPattern,
   for (uint32_t index = 0; index < mSynchronizedOps.Length(); index++) {
     const nsAutoPtr<SynchronizedOp>& currentOp = mSynchronizedOps[index];
     if (PatternMatchesOrigin(aPattern, currentOp->mOriginOrPattern) &&
-        (!currentOp->mPersistenceType ||
+        (currentOp->mPersistenceType.IsNull() ||
          currentOp->mPersistenceType == aPersistenceType) &&
         (!currentOp->mId || currentOp->mId == aId)) {
       return currentOp;
@@ -3067,7 +3067,7 @@ QuotaManager::CollectOriginsForEviction(uint64_t aMinSizeToBeFreed,
   uint32_t index;
   for (index = 0; index < mSynchronizedOps.Length(); index++) {
     nsAutoPtr<SynchronizedOp>& op = mSynchronizedOps[index];
-    if (!op->mPersistenceType ||
+    if (op->mPersistenceType.IsNull() ||
         op->mPersistenceType.Value() == PERSISTENCE_TYPE_TEMPORARY) {
       if (op->mOriginOrPattern.IsPattern() &&
           !originCollection.ContainsPattern(op->mOriginOrPattern)) {
@@ -3078,7 +3078,7 @@ QuotaManager::CollectOriginsForEviction(uint64_t aMinSizeToBeFreed,
 
   for (index = 0; index < mSynchronizedOps.Length(); index++) {
     nsAutoPtr<SynchronizedOp>& op = mSynchronizedOps[index];
-    if (!op->mPersistenceType ||
+    if (op->mPersistenceType.IsNull() ||
         op->mPersistenceType.Value() == PERSISTENCE_TYPE_TEMPORARY) {
       if (op->mOriginOrPattern.IsOrigin() &&
           !originCollection.ContainsOrigin(op->mOriginOrPattern)) {
