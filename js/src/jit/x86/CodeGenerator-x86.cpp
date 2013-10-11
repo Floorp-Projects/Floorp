@@ -758,6 +758,18 @@ SetPropertyParIC::initializeAddCacheState(LInstruction *ins, AddCacheState *addS
         addState->dispatchScratch = ToRegister(ins->toSetPropertyCacheT()->tempForDispatchCache());
 }
 
+void
+SetElementParIC::initializeAddCacheState(LInstruction *ins, AddCacheState *addState)
+{
+    // We don't have an output register to reuse, but luckily SetElementCache
+    // already needs a temp.
+    JS_ASSERT(ins->isSetElementCacheV() || ins->isSetElementCacheT());
+    if (ins->isSetElementCacheV())
+        addState->dispatchScratch = ToRegister(ins->toSetElementCacheV()->temp());
+    else
+        addState->dispatchScratch = ToRegister(ins->toSetElementCacheT()->temp());
+}
+
 namespace js {
 namespace jit {
 
