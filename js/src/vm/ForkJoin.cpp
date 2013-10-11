@@ -1122,39 +1122,6 @@ js::ParallelDo::warmupExecution(bool stopIfComplete,
     return GreenLight;
 }
 
-class AutoEnterParallelSection
-{
-  private:
-    JSContext *cx_;
-    uint8_t *prevIonTop_;
-
-  public:
-    AutoEnterParallelSection(JSContext *cx)
-      : cx_(cx),
-        prevIonTop_(cx->mainThread().ionTop)
-    {
-        // Note: we do not allow GC during parallel sections.
-        // Moreover, we do not wish to worry about making
-        // write barriers thread-safe.  Therefore, we guarantee
-        // that there is no incremental GC in progress and force
-        // a minor GC to ensure no cross-generation pointers get
-        // created:
-
-        if (JS::IsIncrementalGCInProgress(cx->runtime())) {
-            JS::PrepareForIncrementalGC(cx->runtime());
-            JS::FinishIncrementalGC(cx->runtime(), JS::gcreason::API);
-        }
-
-        MinorGC(cx->runtime(), JS::gcreason::API);
-
-        cx->runtime()->gcHelperThread.waitBackgroundSweepEnd();
-    }
-
-    ~AutoEnterParallelSection() {
-        cx_->mainThread().ionTop = prevIonTop_;
-    }
-};
-
 js::ParallelDo::TrafficLight
 js::ParallelDo::parallelExecution(ExecutionStatus *status)
 {
@@ -1166,7 +1133,7 @@ js::ParallelDo::parallelExecution(ExecutionStatus *status)
     // functions such as ForkJoin().
     JS_ASSERT(ForkJoinSlice::Current() == nullptr);
 
-    AutoEnterParallelSection enter(cx_);
+    ForkJoinActivation activation(cx_);
 
     ThreadPool *threadPool = &cx_->runtime()->threadPool;
     uint32_t numSlices = ForkJoinSlices(cx_);
@@ -1264,7 +1231,7 @@ class ParallelIonInvoke
         IonCode *code = ion->method();
         jitcode_ = code->raw();
         enter_ = rt->ionRuntime()->enterIon();
-        calleeToken_ = CalleeToParallelToken(callee);
+        calleeToken_ = CalleeToToken(callee);
     }
 
     bool invoke(PerThreadData *perThread) {
