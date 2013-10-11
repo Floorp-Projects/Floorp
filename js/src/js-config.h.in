@@ -34,10 +34,6 @@
    useable.  See jscpucfg.h.  */
 #undef JS_HAVE_SYS_ISA_DEFS_H
 
-/* The configure script defines these if it doesn't #define
-   JS_HAVE_STDINT_H.  */
-#undef JS_BYTES_PER_WORD
-
 /* MOZILLA JSAPI version number components */
 #undef MOZJS_MAJOR_VERSION
 #undef MOZJS_MINOR_VERSION
