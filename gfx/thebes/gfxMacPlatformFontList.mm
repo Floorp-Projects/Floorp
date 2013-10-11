@@ -123,13 +123,13 @@ static NSFontManager *sFontManager;
 static void GetStringForNSString(const NSString *aSrc, nsAString& aDist)
 {
     aDist.SetLength([aSrc length]);
-    [aSrc getCharacters:aDist.BeginWriting()];
+    [aSrc getCharacters:reinterpret_cast<unichar*>(aDist.BeginWriting())];
 }
 
 static NSString* GetNSStringForString(const nsAString& aSrc)
 {
-    return [NSString stringWithCharacters:aSrc.BeginReading()
-                     length:aSrc.Length()];
+    return [NSString stringWithCharacters:reinterpret_cast<const unichar*>(aSrc.BeginReading())
+                                   length:aSrc.Length()];
 }
 
 #ifdef PR_LOGGING
@@ -887,7 +887,7 @@ gfxMacPlatformFontList::GlobalFontFallback(const uint32_t aCh,
             ::CFStringGetCharacters(familyName, ::CFRangeMake(0, len),
                                     buffer.Elements());
             buffer[len] = 0;
-            nsDependentString familyName(buffer.Elements(), len);
+            nsDependentString familyName(reinterpret_cast<PRUnichar*>(buffer.Elements()), len);
 
             bool needsBold;  // ignored in the system fallback case
 

@@ -36,7 +36,7 @@ X11Error(Display *display, XErrorEvent *event) {
     // temporary Display to request extension information.  This assumes on
     // the DISPLAY environment variable has been set and matches what was used
     // to open |display|.
-    Display *tmpDisplay = XOpenDisplay(NULL);
+    Display *tmpDisplay = XOpenDisplay(nullptr);
     if (tmpDisplay) {
       int nExts;
       char** extNames = XListExtensions(tmpDisplay, &nExts);

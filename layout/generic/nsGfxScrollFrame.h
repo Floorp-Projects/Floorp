@@ -520,9 +520,6 @@ public:
     return mInner.GetScrollbarBox(aVertical);
   }
 
-  virtual void ScrollbarActivityStarted() const MOZ_OVERRIDE;
-  virtual void ScrollbarActivityStopped() const MOZ_OVERRIDE;
-
   // nsIScrollableFrame
   virtual nsIFrame* GetScrolledFrame() const MOZ_OVERRIDE {
     return mInner.GetScrolledFrame();
@@ -812,9 +809,6 @@ public:
   virtual nsIFrame* GetScrollbarBox(bool aVertical) MOZ_OVERRIDE {
     return mInner.GetScrollbarBox(aVertical);
   }
-
-  virtual void ScrollbarActivityStarted() const MOZ_OVERRIDE;
-  virtual void ScrollbarActivityStopped() const MOZ_OVERRIDE;
 
   // nsIScrollableFrame
   virtual nsIFrame* GetScrolledFrame() const MOZ_OVERRIDE {

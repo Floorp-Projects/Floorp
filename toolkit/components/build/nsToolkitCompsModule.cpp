@@ -70,7 +70,7 @@ nsUrlClassifierDBServiceConstructor(nsISupports *aOuter, REFNSIID aIID,
     NS_ENSURE_NO_AGGREGATION(aOuter);
 
     nsUrlClassifierDBService *inst = nsUrlClassifierDBService::GetInstance(&rv);
-    if (NULL == inst) {
+    if (nullptr == inst) {
         return rv;
     }
     /* NS_ADDREF(inst); */
@@ -111,30 +111,30 @@ NS_DEFINE_NAMED_CID(NS_UPDATEPROCESSOR_CID);
 #endif
 
 static const mozilla::Module::CIDEntry kToolkitCIDs[] = {
-  { &kNS_TOOLKIT_APPSTARTUP_CID, false, NULL, nsAppStartupConstructor },
-  { &kNS_USERINFO_CID, false, NULL, nsUserInfoConstructor },
-  { &kNS_ALERTSSERVICE_CID, false, NULL, nsAlertsServiceConstructor },
+  { &kNS_TOOLKIT_APPSTARTUP_CID, false, nullptr, nsAppStartupConstructor },
+  { &kNS_USERINFO_CID, false, nullptr, nsUserInfoConstructor },
+  { &kNS_ALERTSSERVICE_CID, false, nullptr, nsAlertsServiceConstructor },
 #if defined(XP_WIN) && !defined(MOZ_DISABLE_PARENTAL_CONTROLS)
-  { &kNS_PARENTALCONTROLSSERVICE_CID, false, NULL, nsParentalControlsServiceWinConstructor },
+  { &kNS_PARENTALCONTROLSSERVICE_CID, false, nullptr, nsParentalControlsServiceWinConstructor },
 #endif
-  { &kNS_DOWNLOADMANAGER_CID, false, NULL, nsDownloadManagerConstructor },
-  { &kNS_DOWNLOADPLATFORM_CID, false, NULL, DownloadPlatformConstructor },
-  { &kNS_DOWNLOAD_CID, false, NULL, nsDownloadProxyConstructor },
-  { &kNS_FIND_SERVICE_CID, false, NULL, nsFindServiceConstructor },
-  { &kNS_TYPEAHEADFIND_CID, false, NULL, nsTypeAheadFindConstructor },
+  { &kNS_DOWNLOADMANAGER_CID, false, nullptr, nsDownloadManagerConstructor },
+  { &kNS_DOWNLOADPLATFORM_CID, false, nullptr, DownloadPlatformConstructor },
+  { &kNS_DOWNLOAD_CID, false, nullptr, nsDownloadProxyConstructor },
+  { &kNS_FIND_SERVICE_CID, false, nullptr, nsFindServiceConstructor },
+  { &kNS_TYPEAHEADFIND_CID, false, nullptr, nsTypeAheadFindConstructor },
 #ifdef MOZ_URL_CLASSIFIER
-  { &kNS_APPLICATION_REPUTATION_SERVICE_CID, false, NULL, ApplicationReputationServiceConstructor },
-  { &kNS_URLCLASSIFIERPREFIXSET_CID, false, NULL, nsUrlClassifierPrefixSetConstructor },
-  { &kNS_URLCLASSIFIERDBSERVICE_CID, false, NULL, nsUrlClassifierDBServiceConstructor },
-  { &kNS_URLCLASSIFIERSTREAMUPDATER_CID, false, NULL, nsUrlClassifierStreamUpdaterConstructor },
-  { &kNS_URLCLASSIFIERUTILS_CID, false, NULL, nsUrlClassifierUtilsConstructor },
+  { &kNS_APPLICATION_REPUTATION_SERVICE_CID, false, nullptr, ApplicationReputationServiceConstructor },
+  { &kNS_URLCLASSIFIERPREFIXSET_CID, false, nullptr, nsUrlClassifierPrefixSetConstructor },
+  { &kNS_URLCLASSIFIERDBSERVICE_CID, false, nullptr, nsUrlClassifierDBServiceConstructor },
+  { &kNS_URLCLASSIFIERSTREAMUPDATER_CID, false, nullptr, nsUrlClassifierStreamUpdaterConstructor },
+  { &kNS_URLCLASSIFIERUTILS_CID, false, nullptr, nsUrlClassifierUtilsConstructor },
 #endif
-  { &kNS_BROWSERSTATUSFILTER_CID, false, NULL, nsBrowserStatusFilterConstructor },
-  { &kNS_CHARSETMENU_CID, false, NULL, NS_NewCharsetMenu },
+  { &kNS_BROWSERSTATUSFILTER_CID, false, nullptr, nsBrowserStatusFilterConstructor },
+  { &kNS_CHARSETMENU_CID, false, nullptr, NS_NewCharsetMenu },
 #if defined(USE_MOZ_UPDATER)
-  { &kNS_UPDATEPROCESSOR_CID, false, NULL, nsUpdateProcessorConstructor },
+  { &kNS_UPDATEPROCESSOR_CID, false, nullptr, nsUpdateProcessorConstructor },
 #endif
-  { NULL }
+  { nullptr }
 };
 
 static const mozilla::Module::ContractIDEntry kToolkitContracts[] = {
@@ -162,7 +162,7 @@ static const mozilla::Module::ContractIDEntry kToolkitContracts[] = {
 #if defined(USE_MOZ_UPDATER)
   { NS_UPDATEPROCESSOR_CONTRACTID, &kNS_UPDATEPROCESSOR_CID },
 #endif
-  { NULL }
+  { nullptr }
 };
 
 static const mozilla::Module kToolkitModule = {

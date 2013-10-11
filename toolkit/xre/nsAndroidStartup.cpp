@@ -66,7 +66,7 @@ GeckoStart(void *data, const nsXREAppData *appData)
     char *arg = strtok(static_cast<char *>(data), " ");
     while (arg) {
         targs.AppendElement(arg);
-        arg = strtok(NULL, " ");
+        arg = strtok(nullptr, " ");
     }
     targs.AppendElement(static_cast<char *>(nullptr));
 

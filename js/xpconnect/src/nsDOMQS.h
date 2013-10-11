@@ -76,7 +76,7 @@ xpc_qsUnwrapThis<_interface>(JSContext *cx,                                   \
                               ProtoIDAndDepth<_interface>::PrototypeID,       \
                               ProtoIDAndDepth<_interface>::Depth,             \
                               pThisRef, pThisVal, &rv);                       \
-    *ppThis = NULL;  /* avoids uninitialized warnings in callers */           \
+    *ppThis = nullptr;  /* avoids uninitialized warnings in callers */        \
     if (failureFatal && !native)                                              \
         return xpc_qsThrow(cx, rv);                                           \
     *ppThis = static_cast<_interface*>(static_cast<_base*>(native));          \

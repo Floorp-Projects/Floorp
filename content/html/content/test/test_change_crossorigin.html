@@ -1,0 +1,89 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=696451
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug 696451</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <script type="application/javascript">
+
+  /** Test for Bug 696451 **/
+
+  SimpleTest.waitForExplicitFinish();
+
+  var img = new Image,
+      canvas = document.createElement("canvas"),
+      ctx = canvas.getContext("2d"),
+      src = "http://example.com/tests/content/html/content/test/image-allow-credentials.png",
+      imgDone = false,
+      imgNotAllowedToLoadDone = false;
+
+  img.src = src;
+  img.crossOrigin = "Anonymous";
+
+  img.addEventListener("load", function() {
+    canvas.width = img.width;
+    canvas.height = img.height;
+    ctx.drawImage( img, 0, 0 );
+    try {
+      canvas.toDataURL("image/png");
+      ok(true, "Image was refetched with setting crossOrigin.");
+    } catch (e) {
+      ok(false, "Image was not refetched after setting crossOrigin.");
+    }
+
+    imgDone = true;
+    if (imgDone && imgNotAllowedToLoadDone) {
+      SimpleTest.finish();
+    }
+  });
+
+  img.addEventListener("error", function (event) {
+    ok(false, "Should be able to load cross origin image with proper headers.");
+
+    imgDone = true;
+    if (imgDone && imgNotAllowedToLoadDone) {
+      SimpleTest.finish();
+    }
+  });
+
+  var imgNotAllowedToLoad = new Image;
+
+  imgNotAllowedToLoad.src = "http://example.com/tests/content/html/content/test/image.png";
+
+  imgNotAllowedToLoad.crossOrigin = "Anonymous";
+
+  imgNotAllowedToLoad.addEventListener("load", function() {
+      ok(false, "Image should not be allowed to load without " +
+                "allow-cross-origin-access headers.");
+
+      imgNotAllowedToLoadDone = true;
+      if (imgDone && imgNotAllowedToLoadDone) {
+        SimpleTest.finish();
+      }
+  });
+
+  imgNotAllowedToLoad.addEventListener("error", function() {
+      ok(true, "Image should not be allowed to load without " +
+               "allow-cross-origin-access headers.");
+      imgNotAllowedToLoadDone = true;
+      if (imgDone && imgNotAllowedToLoadDone) {
+        SimpleTest.finish();
+      }
+  });
+
+  </script>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=696451">Mozilla Bug 696451</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+
+</div>
+<pre id="test">
+</pre>
+</body>
+</html>

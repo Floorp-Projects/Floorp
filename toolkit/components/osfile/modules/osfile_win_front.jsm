@@ -756,6 +756,7 @@
 
      File.read = exports.OS.Shared.AbstractFile.read;
      File.writeAtomic = exports.OS.Shared.AbstractFile.writeAtomic;
+     File.removeDir = exports.OS.Shared.AbstractFile.removeDir;
 
      /**
       * Get the current directory by getCurrentDirectory.

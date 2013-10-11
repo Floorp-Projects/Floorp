@@ -165,11 +165,11 @@ public:
         (nsISupports* aElement, mozilla::MallocSizeOf aMallocSizeOf, void *aData);
 
     // Measures the size of the array's element storage, and if
-    // |aSizeOfElement| is non-NULL, measures the size of things pointed to by
-    // elements.
+    // |aSizeOfElement| is non-nullptr, measures the size of things pointed to
+    // by elements.
     size_t SizeOfExcludingThis(
              nsBaseArraySizeOfElementIncludingThisFunc aSizeOfElementIncludingThis,
-             mozilla::MallocSizeOf aMallocSizeOf, void* aData = NULL) const;
+             mozilla::MallocSizeOf aMallocSizeOf, void* aData = nullptr) const;
 
 private:
     
@@ -381,7 +381,7 @@ class nsCOMArray : public nsCOMArray_base
     
     size_t SizeOfExcludingThis(
              nsCOMArraySizeOfElementIncludingThisFunc aSizeOfElementIncludingThis, 
-             mozilla::MallocSizeOf aMallocSizeOf, void *aData = NULL) const {
+             mozilla::MallocSizeOf aMallocSizeOf, void *aData = nullptr) const {
         return nsCOMArray_base::SizeOfExcludingThis(
                  nsBaseArraySizeOfElementIncludingThisFunc(aSizeOfElementIncludingThis),
                  aMallocSizeOf, aData);

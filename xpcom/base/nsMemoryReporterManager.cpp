@@ -160,7 +160,7 @@ static nsresult GetKinfoProcSelf(KINFO_PROC* aProc)
     };
     u_int miblen = sizeof(mib) / sizeof(mib[0]);
     size_t size = sizeof(KINFO_PROC);
-    if (sysctl(mib, miblen, aProc, &size, NULL, 0))
+    if (sysctl(mib, miblen, aProc, &size, nullptr, 0))
         return NS_ERROR_FAILURE;
 
     return NS_OK;
@@ -204,7 +204,7 @@ static void XMappingIter(int64_t& vsize, int64_t& resident)
     resident = -1;
     int mapfd = open("/proc/self/xmap", O_RDONLY);
     struct stat st;
-    prxmap_t* prmapp = NULL;
+    prxmap_t* prmapp = nullptr;
     if (mapfd >= 0) {
         if (!fstat(mapfd, &st)) {
             int nmap = st.st_size / sizeof(prxmap_t);

@@ -204,7 +204,7 @@ nsGnomeVFSService::ShowURI(nsIURI *aURI)
   nsAutoCString spec;
   aURI->GetSpec(spec);
 
-  if (gnome_vfs_url_show_with_env(spec.get(), NULL) == GNOME_VFS_OK)
+  if (gnome_vfs_url_show_with_env(spec.get(), nullptr) == GNOME_VFS_OK)
     return NS_OK;
 
   return NS_ERROR_FAILURE;
@@ -216,7 +216,7 @@ nsGnomeVFSService::ShowURIForInput(const nsACString &aUri)
   char* spec = gnome_vfs_make_uri_from_input(PromiseFlatCString(aUri).get());
   nsresult rv = NS_ERROR_FAILURE;
 
-  if (gnome_vfs_url_show_with_env(spec, NULL) == GNOME_VFS_OK)
+  if (gnome_vfs_url_show_with_env(spec, nullptr) == GNOME_VFS_OK)
     rv = NS_OK;
 
   g_free(spec);

@@ -139,12 +139,12 @@ static void glxtest()
     fatal_error("glXGetProcAddress couldn't find required functions");
   }
   ///// Open a connection to the X server /////
-  Display *dpy = XOpenDisplay(NULL);
+  Display *dpy = XOpenDisplay(nullptr);
   if (!dpy)
     fatal_error("Unable to open a connection to the X server");
   
   ///// Check that the GLX extension is present /////
-  if (!glXQueryExtension(dpy, NULL, NULL))
+  if (!glXQueryExtension(dpy, nullptr, nullptr))
     fatal_error("GLX extension missing");
 
   XSetErrorHandler(x_error_handler);
@@ -174,7 +174,7 @@ static void glxtest()
                        CWBorderPixel | CWColormap, &swa);
 
   ///// Get a GL context and make it current //////
-  GLXContext context = glXCreateContext(dpy, vInfo, NULL, True);
+  GLXContext context = glXCreateContext(dpy, vInfo, nullptr, True);
   glXMakeCurrent(dpy, window, context);
 
   ///// Look for this symbol to determine texture_from_pixmap support /////
@@ -202,7 +202,7 @@ static void glxtest()
   ///// Clean up. Indeed, the parent process might fail to kill us (e.g. if it doesn't need to check GL info)
   ///// so we might be staying alive for longer than expected, so it's important to consume as little memory as
   ///// possible. Also we want to check that we're able to do that too without generating X errors.
-  glXMakeCurrent(dpy, None, NULL); // must release the GL context before destroying it
+  glXMakeCurrent(dpy, None, nullptr); // must release the GL context before destroying it
   glXDestroyContext(dpy, context);
   XDestroyWindow(dpy, window);
   XFreeColormap(dpy, swa.colormap);

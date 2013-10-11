@@ -6,6 +6,7 @@
 package org.mozilla.gecko;
 
 import org.mozilla.gecko.animation.Rotate3DAnimation;
+import org.mozilla.gecko.widget.GeckoTextSwitcher;
 
 import android.content.Context;
 import android.os.Build;

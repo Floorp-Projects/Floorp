@@ -566,7 +566,7 @@ static struct NumArgState* BuildArgArray(const PRUnichar *fmt,
 		if (c == '$') {
 		    if (i > 0) {
 			*rv = -1;
-			return NULL;
+			return nullptr;
 		    }
 		    number++;
 		    break;
@@ -575,7 +575,7 @@ static struct NumArgState* BuildArgArray(const PRUnichar *fmt,
                     /* non-numbered argument case */
 		    if (number > 0) {
 			*rv = -1;
-			return NULL;
+			return nullptr;
 		    }
 		    i = 1;
 		    break;
@@ -586,14 +586,14 @@ static struct NumArgState* BuildArgArray(const PRUnichar *fmt,
     }
 
     if (number == 0) {
-	return NULL;
+	return nullptr;
     }
     
     if (number > NAS_DEFAULT_NUM) {
 	nas = (struct NumArgState*)nsMemory::Alloc(number * sizeof(struct NumArgState));
 	if (!nas) {
 	    *rv = -1;
-	    return NULL;
+	    return nullptr;
 	}
     } else {
 	nas = nasArray;
@@ -750,7 +750,7 @@ static struct NumArgState* BuildArgArray(const PRUnichar *fmt,
 	if( nas != nasArray ) {
 	    PR_DELETE(nas);
         }
-	return NULL;
+	return nullptr;
     }
 
     cn = 0;
@@ -789,7 +789,7 @@ static struct NumArgState* BuildArgArray(const PRUnichar *fmt,
 		PR_DELETE( nas );
             }
 	    *rv = -1;
-	    return NULL;
+	    return nullptr;
 	}
 	cn++;
     }
@@ -823,7 +823,7 @@ static int dosprintf(SprintfState *ss, const PRUnichar *fmt, va_list ap)
 
     const PRUnichar *hexp;
     int rv, i;
-    struct NumArgState* nas = NULL;
+    struct NumArgState* nas = nullptr;
     struct NumArgState  nasArray[NAS_DEFAULT_NUM];
 
 
@@ -862,7 +862,7 @@ static int dosprintf(SprintfState *ss, const PRUnichar *fmt, va_list ap)
 	    continue;
 	}
 
-	if (nas != NULL) {
+	if (nas != nullptr) {
 	    /* the fmt contains the Numbered Arguments feature */
 	    i = 0;
 	    /* should imporve error check later */

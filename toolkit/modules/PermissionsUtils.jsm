@@ -37,7 +37,7 @@ function importPrefBranch(aPrefBranch, aPermission, aAction) {
 }
 
 
-let PermissionsUtils = {
+this.PermissionsUtils = {
   /**
    * Import permissions from perferences to the Permissions Manager. After being
    * imported, all processed permissions will be set to an empty string.

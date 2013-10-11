@@ -84,7 +84,7 @@ nsCommandLine::nsCommandLine() :
 }
 
 
-NS_IMPL_CLASSINFO(nsCommandLine, NULL, 0, NS_COMMANDLINE_CID)
+NS_IMPL_CLASSINFO(nsCommandLine, nullptr, 0, NS_COMMANDLINE_CID)
 NS_IMPL_ISUPPORTS2_CI(nsCommandLine,
                       nsICommandLine,
                       nsICommandLineRunner)
@@ -267,7 +267,7 @@ nsCommandLine::ResolveFile(const nsAString& aArgument, nsIFile* *aResult)
   NS_CopyUnicodeToNative(aArgument, path);
 
   CFURLRef newurl =
-    CFURLCreateFromFileSystemRepresentationRelativeToBase(NULL, (const UInt8*) path.get(),
+    CFURLCreateFromFileSystemRepresentationRelativeToBase(nullptr, (const UInt8*) path.get(),
                                                           path.Length(),
                                                           true, baseurl);
 
@@ -668,13 +668,13 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsCommandLine)
 NS_DEFINE_NAMED_CID(NS_COMMANDLINE_CID);
 
 static const mozilla::Module::CIDEntry kCommandLineCIDs[] = {
-  { &kNS_COMMANDLINE_CID, false, NULL, nsCommandLineConstructor },
-  { NULL }
+  { &kNS_COMMANDLINE_CID, false, nullptr, nsCommandLineConstructor },
+  { nullptr }
 };
 
 static const mozilla::Module::ContractIDEntry kCommandLineContracts[] = {
   { "@mozilla.org/toolkit/command-line;1", &kNS_COMMANDLINE_CID },
-  { NULL }
+  { nullptr }
 };
 
 static const mozilla::Module kCommandLineModule = {

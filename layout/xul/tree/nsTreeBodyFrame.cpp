@@ -4496,22 +4496,6 @@ nsTreeBodyFrame::PostScrollEvent()
 }
 
 void
-nsTreeBodyFrame::ScrollbarActivityStarted() const
-{
-  if (mScrollbarActivity) {
-    mScrollbarActivity->ActivityStarted();
-  }
-}
- 
-void
-nsTreeBodyFrame::ScrollbarActivityStopped() const
-{
-  if (mScrollbarActivity) {
-    mScrollbarActivity->ActivityStopped();
-  }
-}
- 
-void
 nsTreeBodyFrame::DetachImageListeners()
 {
   mCreatedListeners.Clear();

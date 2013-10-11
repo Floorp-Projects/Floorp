@@ -124,7 +124,8 @@ NSView* nsFilePicker::GetAccessoryView()
     bundle->GetStringFromName(NS_LITERAL_STRING("formatLabel").get(),
 			      getter_Copies(locaLabel));
     if (locaLabel) {
-      label = [NSString stringWithCharacters:locaLabel.get() length:locaLabel.Length()];
+      label = [NSString stringWithCharacters:reinterpret_cast<const unichar*>(locaLabel.get())
+                                      length:locaLabel.Length()];
     }
   }
 
@@ -148,11 +149,11 @@ NSView* nsFilePicker::GetAccessoryView()
     NSString *titleString;
     if (currentTitle.IsEmpty()) {
       const nsString& currentFilter = mFilters[i];
-      titleString = [[NSString alloc] initWithCharacters:currentFilter.get()
+      titleString = [[NSString alloc] initWithCharacters:reinterpret_cast<const unichar*>(currentFilter.get())
                                                   length:currentFilter.Length()];
     }
     else {
-      titleString = [[NSString alloc] initWithCharacters:currentTitle.get()
+      titleString = [[NSString alloc] initWithCharacters:reinterpret_cast<const unichar*>(currentTitle.get())
                                                   length:currentTitle.Length()];
     }
     [popupButton addItemWithTitle:titleString];
@@ -527,8 +528,8 @@ nsFilePicker::GetFilterList()
   // The extensions in filterWide are in the format "*.ext" but are expected
   // in the format "ext" by NSOpenPanel. So we need to filter some characters.
   NSMutableString* filterString = [[[NSMutableString alloc] initWithString:
-                                    [NSString stringWithCharacters:filterWide.get()
-				              length:filterWide.Length()]] autorelease];
+                                    [NSString stringWithCharacters:reinterpret_cast<const unichar*>(filterWide.get())
+                                                            length:filterWide.Length()]] autorelease];
   NSCharacterSet *set = [NSCharacterSet characterSetWithCharactersInString:@". *"];
   NSRange range = [filterString rangeOfCharacterFromSet:set];
   while (range.length) {
@@ -565,7 +566,8 @@ nsFilePicker::PanelDefaultDirectory()
   if (mDisplayDirectory) {
     nsAutoString pathStr;
     mDisplayDirectory->GetPath(pathStr);
-    directory = [[[NSString alloc] initWithCharacters:pathStr.get() length:pathStr.Length()] autorelease];
+    directory = [[[NSString alloc] initWithCharacters:reinterpret_cast<const unichar*>(pathStr.get())
+                                               length:pathStr.Length()] autorelease];
   }
   return directory;
 

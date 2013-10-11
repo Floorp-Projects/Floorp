@@ -259,6 +259,24 @@ var ContextCommands = {
     Appbar.onViewOnDesktop();
   },
 
+  // Checks for MS app store specific meta data, and if present opens
+  // the Windows Store to the appropriate app
+  openWindowsStoreLink: function cc_openWindowsStoreLink() {
+    let storeLink = this.getStoreLink();
+    if (storeLink) {
+      Browser.selectedBrowser.contentWindow.document.location = storeLink;
+    }
+  },
+
+  getStoreLink: function cc_getStoreLink() {
+    let metaData = Browser.selectedBrowser.contentWindow.document.getElementsByTagName("meta");
+    let msApplicationName = metaData.namedItem("msApplication-PackageFamilyName");
+    if (msApplicationName) {
+      return "ms-windows-store:PDP?PFN=" + msApplicationName.getAttribute("content");
+    }
+    return null;
+  },
+
   /*
    * Utilities
    */

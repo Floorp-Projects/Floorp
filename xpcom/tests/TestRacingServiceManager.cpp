@@ -231,14 +231,14 @@ CreateFactory(const mozilla::Module& module, const mozilla::Module::CIDEntry& en
 }
 
 static const mozilla::Module::CIDEntry kLocalCIDs[] = {
-    { &kFactoryCID1, false, CreateFactory, NULL },
-    { &kFactoryCID2, false, CreateFactory, NULL },
-    { NULL }
+    { &kFactoryCID1, false, CreateFactory, nullptr },
+    { &kFactoryCID2, false, CreateFactory, nullptr },
+    { nullptr }
 };
 
 static const mozilla::Module::ContractIDEntry kLocalContracts[] = {
     { FACTORY_CONTRACTID, &kFactoryCID2 },
-    { NULL }
+    { nullptr }
 };
 
 static const mozilla::Module kLocalModule = {
