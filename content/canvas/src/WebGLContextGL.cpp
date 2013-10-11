@@ -211,7 +211,7 @@ WebGLContext::BindTexture(GLenum target, WebGLTexture *tex)
         return ErrorInvalidEnumInfo("bindTexture: target", target);
     }
 
-    SetDontKnowIfNeedFakeBlack();
+    mFakeBlackStatus = WebGLContextFakeBlackStatus::Unknown;
     MakeContextCurrent();
 
     if (tex)
@@ -932,36 +932,36 @@ WebGLContext::UndoFakeVertexAttrib0()
     gl->fBindBuffer(LOCAL_GL_ARRAY_BUFFER, mBoundArrayBuffer ? mBoundArrayBuffer->GLName() : 0);
 }
 
-bool
-WebGLContext::NeedFakeBlack()
+WebGLContextFakeBlackStatus
+WebGLContext::ResolvedFakeBlackStatus()
 {
     // handle this case first, it's the generic case
-    if (mFakeBlackStatus == DoNotNeedFakeBlack)
-        return false;
+    if (MOZ_LIKELY(mFakeBlackStatus == WebGLContextFakeBlackStatus::NotNeeded))
+        return mFakeBlackStatus;
 
-    if (mFakeBlackStatus == DoNeedFakeBlack)
-        return true;
+    if (mFakeBlackStatus == WebGLContextFakeBlackStatus::Needed)
+        return mFakeBlackStatus;
 
     for (int32_t i = 0; i < mGLMaxTextureUnits; ++i) {
-        if ((mBound2DTextures[i] && mBound2DTextures[i]->NeedFakeBlack()) ||
-            (mBoundCubeMapTextures[i] && mBoundCubeMapTextures[i]->NeedFakeBlack()))
+        if ((mBound2DTextures[i] && mBound2DTextures[i]->ResolvedFakeBlackStatus() != WebGLTextureFakeBlackStatus::NotNeeded) ||
+            (mBoundCubeMapTextures[i] && mBoundCubeMapTextures[i]->ResolvedFakeBlackStatus() != WebGLTextureFakeBlackStatus::NotNeeded))
         {
-            mFakeBlackStatus = DoNeedFakeBlack;
-            return true;
+            mFakeBlackStatus = WebGLContextFakeBlackStatus::Needed;
+            return mFakeBlackStatus;
         }
     }
 
     // we have exhausted all cases where we do need fakeblack, so if the status is still unknown,
     // that means that we do NOT need it.
-    mFakeBlackStatus = DoNotNeedFakeBlack;
-    return false;
+    mFakeBlackStatus = WebGLContextFakeBlackStatus::NotNeeded;
+    return mFakeBlackStatus;
 }
 
 void
 WebGLContext::BindFakeBlackTextures()
 {
     // this is the generic case: try to return early
-    if (!NeedFakeBlack())
+    if (MOZ_LIKELY(ResolvedFakeBlackStatus() == WebGLContextFakeBlackStatus::NotNeeded))
         return;
 
     if (!mBlackTexturesAreInitialized) {
@@ -992,11 +992,18 @@ WebGLContext::BindFakeBlackTextures()
     }
 
     for (int32_t i = 0; i < mGLMaxTextureUnits; ++i) {
-        if (mBound2DTextures[i] && mBound2DTextures[i]->NeedFakeBlack()) {
+        WebGLTextureFakeBlackStatus s;
+        s = mBound2DTextures[i]
+            ? mBound2DTextures[i]->ResolvedFakeBlackStatus()
+            : WebGLTextureFakeBlackStatus::NotNeeded;
+        if (s != WebGLTextureFakeBlackStatus::NotNeeded) {
             gl->fActiveTexture(LOCAL_GL_TEXTURE0 + i);
             gl->fBindTexture(LOCAL_GL_TEXTURE_2D, mBlackTexture2D);
         }
-        if (mBoundCubeMapTextures[i] && mBoundCubeMapTextures[i]->NeedFakeBlack()) {
+        s = mBoundCubeMapTextures[i]
+            ? mBoundCubeMapTextures[i]->ResolvedFakeBlackStatus()
+            : WebGLTextureFakeBlackStatus::NotNeeded;
+        if (s != WebGLTextureFakeBlackStatus::NotNeeded) {
             gl->fActiveTexture(LOCAL_GL_TEXTURE0 + i);
             gl->fBindTexture(LOCAL_GL_TEXTURE_CUBE_MAP, mBlackTextureCubeMap);
         }
@@ -1007,15 +1014,15 @@ void
 WebGLContext::UnbindFakeBlackTextures()
 {
     // this is the generic case: try to return early
-    if (!NeedFakeBlack())
+    if (MOZ_LIKELY(ResolvedFakeBlackStatus() == WebGLContextFakeBlackStatus::NotNeeded))
         return;
 
     for (int32_t i = 0; i < mGLMaxTextureUnits; ++i) {
-        if (mBound2DTextures[i] && mBound2DTextures[i]->NeedFakeBlack()) {
+        if (mBound2DTextures[i] && mBound2DTextures[i]->ResolvedFakeBlackStatus() != WebGLTextureFakeBlackStatus::NotNeeded) {
             gl->fActiveTexture(LOCAL_GL_TEXTURE0 + i);
             gl->fBindTexture(LOCAL_GL_TEXTURE_2D, mBound2DTextures[i]->GLName());
         }
-        if (mBoundCubeMapTextures[i] && mBoundCubeMapTextures[i]->NeedFakeBlack()) {
+        if (mBoundCubeMapTextures[i] && mBoundCubeMapTextures[i]->ResolvedFakeBlackStatus() != WebGLTextureFakeBlackStatus::NotNeeded) {
             gl->fActiveTexture(LOCAL_GL_TEXTURE0 + i);
             gl->fBindTexture(LOCAL_GL_TEXTURE_CUBE_MAP, mBoundCubeMapTextures[i]->GLName());
         }
