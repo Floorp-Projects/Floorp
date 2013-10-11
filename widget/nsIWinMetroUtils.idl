@@ -12,7 +12,7 @@
  * implementation of this interface for non-Windows systems, for testing and
  * development purposes only.
  */
-[scriptable, uuid(fa6750a2-f0fe-411c-af23-1cd6d2fdeceb)]
+[scriptable, uuid(25524bde-8b30-4b49-8d67-7070c790aada)]
 interface nsIWinMetroUtils : nsISupports
 {
   /* return constants for the handPreference property */
@@ -49,7 +49,7 @@ interface nsIWinMetroUtils : nsISupports
   /**
    * Displays a native Windows 8 toast.
    */
-   void showNativeToast(in AString aTitle, in AString aMessage, in AString anImage);
+   void showNativeToast(in AString aTitle, in AString aMessage, in AString anImage, in AString aCookie);
 
   /**
    * Secondary tiles are a Windows 8 specific feature for pinning new tiles

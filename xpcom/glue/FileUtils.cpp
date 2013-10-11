@@ -251,7 +251,7 @@ static const uint32_t CPU_TYPE = CPU_TYPE_POWERPC64;
 #error Unsupported CPU type
 #endif
 
-#ifdef HAVE_64BIT_OS
+#ifdef __LP64__
 #undef LC_SEGMENT
 #define LC_SEGMENT LC_SEGMENT_64
 #undef MH_MAGIC
