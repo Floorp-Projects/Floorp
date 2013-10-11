@@ -26,6 +26,7 @@
 
 #include "mozilla/LinkedList.h"
 #include "mozilla/CheckedInt.h"
+#include "mozilla/Scoped.h"
 
 #ifdef XP_MACOSX
 #include "ForceDiscreteGPUHelperCGL.h"
@@ -1094,8 +1095,27 @@ protected:
 
     WebGLContextFakeBlackStatus mFakeBlackStatus;
 
-    GLuint mBlackOpaqueTexture2D, mBlackOpaqueTextureCubeMap, mBlackTransparentTexture2D, mBlackTransparentTextureCubeMap;
-    bool mBlackTexturesAreInitialized;
+    class FakeBlackTexture
+    {
+        gl::GLContext* mGL;
+        GLuint mGLName;
+
+    public:
+        FakeBlackTexture(gl::GLContext* gl, GLenum target, GLenum format);
+        ~FakeBlackTexture();
+        GLuint GLName() const { return mGLName; }
+    };
+
+    ScopedDeletePtr<FakeBlackTexture> mBlackOpaqueTexture2D,
+                                      mBlackOpaqueTextureCubeMap,
+                                      mBlackTransparentTexture2D,
+                                      mBlackTransparentTextureCubeMap;
+
+    void BindFakeBlackTexturesHelper(
+        GLenum target,
+        const nsTArray<WebGLRefPtr<WebGLTexture> >& boundTexturesArray,
+        ScopedDeletePtr<FakeBlackTexture> & opaqueTextureScopedPtr,
+        ScopedDeletePtr<FakeBlackTexture> & transparentTextureScopedPtr);
 
     GLfloat mVertexAttrib0Vector[4];
     GLfloat mFakeVertexAttrib0BufferObjectVector[4];
