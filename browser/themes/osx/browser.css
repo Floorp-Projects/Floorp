@@ -2508,8 +2508,7 @@ toolbarbutton.chevron > .toolbarbutton-menu-dropmarker {
 
 .tabbrowser-tab:not([pinned]):not([fadein]) {
   transition: min-width 200ms ease-out /* copied from browser/base/content/browser.css */,
-              max-width 230ms ease-out /* copied from browser/base/content/browser.css */,
-              opacity 50ms ease-out 80ms /* hide the tab for the last 100ms of the max-width transition */;
+              max-width 230ms ease-out /* copied from browser/base/content/browser.css */;
 }
 
 .tabbrowser-tab,
