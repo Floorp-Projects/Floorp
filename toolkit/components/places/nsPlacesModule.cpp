@@ -34,13 +34,13 @@ NS_DEFINE_NAMED_CID(NS_FAVICONSERVICE_CID);
 NS_DEFINE_NAMED_CID(NS_HISTORYSERVICE_CID);
 
 const mozilla::Module::CIDEntry kPlacesCIDs[] = {
-  { &kNS_NAVHISTORYSERVICE_CID, false, NULL, nsNavHistoryConstructor },
-  { &kNS_ANNOTATIONSERVICE_CID, false, NULL, nsAnnotationServiceConstructor },
-  { &kNS_ANNOPROTOCOLHANDLER_CID, false, NULL, nsAnnoProtocolHandlerConstructor },
-  { &kNS_NAVBOOKMARKSSERVICE_CID, false, NULL, nsNavBookmarksConstructor },
-  { &kNS_FAVICONSERVICE_CID, false, NULL, nsFaviconServiceConstructor },
-  { &kNS_HISTORYSERVICE_CID, false, NULL, HistoryConstructor },
-  { NULL }
+  { &kNS_NAVHISTORYSERVICE_CID, false, nullptr, nsNavHistoryConstructor },
+  { &kNS_ANNOTATIONSERVICE_CID, false, nullptr, nsAnnotationServiceConstructor },
+  { &kNS_ANNOPROTOCOLHANDLER_CID, false, nullptr, nsAnnoProtocolHandlerConstructor },
+  { &kNS_NAVBOOKMARKSSERVICE_CID, false, nullptr, nsNavBookmarksConstructor },
+  { &kNS_FAVICONSERVICE_CID, false, nullptr, nsFaviconServiceConstructor },
+  { &kNS_HISTORYSERVICE_CID, false, nullptr, HistoryConstructor },
+  { nullptr }
 };
 
 const mozilla::Module::ContractIDEntry kPlacesContracts[] = {
@@ -52,12 +52,12 @@ const mozilla::Module::ContractIDEntry kPlacesContracts[] = {
   { "@mozilla.org/embeddor.implemented/bookmark-charset-resolver;1", &kNS_NAVHISTORYSERVICE_CID },
   { NS_IHISTORY_CONTRACTID, &kNS_HISTORYSERVICE_CID },
   { NS_DOWNLOADHISTORY_CONTRACTID, &kNS_HISTORYSERVICE_CID },
-  { NULL }
+  { nullptr }
 };
 
 const mozilla::Module::CategoryEntry kPlacesCategories[] = {
   { "vacuum-participant", "Places", NS_NAVHISTORYSERVICE_CONTRACTID },
-  { NULL }
+  { nullptr }
 };
 
 const mozilla::Module kPlacesModule = {

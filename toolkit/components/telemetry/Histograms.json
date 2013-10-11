@@ -4088,10 +4088,10 @@
     "n_values": 3,
     "description": "A simple counter of daily mixed-content unblock operations and top documents loaded"
   },
-  "NTLM_MODULE_USED": {
+  "NTLM_MODULE_USED_2": {
     "kind": "enumerated",
     "n_values": 8,
-    "description": "The module used for the NTLM protocol (Windows_API, Kerberos, Samba_auth or Generic) and whether or not the authentication was used to connect to a proxy server. This data is collected only once per session (at first NTLM authentification)."
+    "description": "The module used for the NTLM protocol (Windows_API, Kerberos, Samba_auth or Generic) and whether or not the authentication was used to connect to a proxy server. This data is collected only once per session (at first NTLM authentification) ; fixed version."
   },
   "FX_THUMBNAILS_BG_QUEUE_SIZE_ON_CAPTURE": {
     "kind": "exponential",

@@ -55,7 +55,7 @@ printTrace(const char *prefix, struct IonLIRTraceData *cached)
             cached->blockIndex, cached->lirIndex, cached->execModeInt, cached->lirOpName);
 }
 
-struct IonLIRTraceData seqTraceData;
+static struct IonLIRTraceData seqTraceData;
 #endif
 
 void

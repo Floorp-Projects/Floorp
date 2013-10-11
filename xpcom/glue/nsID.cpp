@@ -97,7 +97,7 @@ char *nsID::ToString() const
 {
   char *res = (char*)NS_Alloc(NSID_LENGTH);
 
-  if (res != NULL) {
+  if (res != nullptr) {
     PR_snprintf(res, NSID_LENGTH, gIDFormat,
                 m0, (uint32_t) m1, (uint32_t) m2,
                 (uint32_t) m3[0], (uint32_t) m3[1], (uint32_t) m3[2],

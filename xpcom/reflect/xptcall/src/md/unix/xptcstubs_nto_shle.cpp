@@ -27,8 +27,8 @@ PrepareAndDispatch(nsXPTCStubBase* self, int methodIndex, uint32_t* data,
 	int intCount = 0;
 	int floatCount = 0;
     nsXPTCMiniVariant paramBuffer[PARAM_BUFFER_COUNT];
-    nsXPTCMiniVariant* dispatchParams = NULL;
-    nsIInterfaceInfo* iface_info = NULL;
+    nsXPTCMiniVariant* dispatchParams = nullptr;
+    nsIInterfaceInfo* iface_info = nullptr;
     const nsXPTMethodInfo* info;
     uint8_t paramCount;
 	uint8_t i;

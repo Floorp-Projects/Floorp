@@ -124,7 +124,7 @@ int main(int argc, char *argv[])
       ret = ProcessArgs(registrar, argc, argv);
   } // this scopes the nsCOMPtrs
   // no nsCOMPtrs are allowed to be alive when you call NS_ShutdownXPCOM
-  rv = NS_ShutdownXPCOM( NULL );
+  rv = NS_ShutdownXPCOM(nullptr);
   NS_ASSERTION(NS_SUCCEEDED(rv), "NS_ShutdownXPCOM failed");
   return ret;
 }

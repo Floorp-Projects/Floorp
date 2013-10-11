@@ -63,7 +63,7 @@ bool_toSource_impl(JSContext *cx, CallArgs args)
     return true;
 }
 
-bool
+static bool
 bool_toSource(JSContext *cx, unsigned argc, Value *vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
@@ -82,7 +82,7 @@ bool_toString_impl(JSContext *cx, CallArgs args)
     return true;
 }
 
-bool
+static bool
 bool_toString(JSContext *cx, unsigned argc, Value *vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
@@ -100,7 +100,7 @@ bool_valueOf_impl(JSContext *cx, CallArgs args)
     return true;
 }
 
-bool
+static bool
 bool_valueOf(JSContext *cx, unsigned argc, Value *vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);

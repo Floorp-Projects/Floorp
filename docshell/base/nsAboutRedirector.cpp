@@ -50,7 +50,8 @@ static RedirEntry kRedirMap[] = {
       nsIAboutModule::ALLOW_SCRIPT |
       nsIAboutModule::HIDE_FROM_ABOUTABOUT },
     { "compartments", "chrome://global/content/aboutCompartments.xhtml",
-      nsIAboutModule::ALLOW_SCRIPT },
+      nsIAboutModule::ALLOW_SCRIPT |
+      nsIAboutModule::HIDE_FROM_ABOUTABOUT },
     { "memory", "chrome://global/content/aboutMemory.xhtml",
       nsIAboutModule::ALLOW_SCRIPT },
     { "addons", "chrome://mozapps/content/extensions/extensions.xul",

@@ -264,7 +264,7 @@ xpc_qsThrowGetterSetterFailed(JSContext *cx, nsresult rv, JSObject *obj,
     RootedId memberId(cx, memberIdArg);
     const char *ifaceName;
     GetMemberInfo(obj, memberId, &ifaceName);
-    return ThrowCallFailed(cx, rv, ifaceName, memberId, NULL);
+    return ThrowCallFailed(cx, rv, ifaceName, memberId, nullptr);
 }
 
 bool
@@ -294,7 +294,7 @@ xpc_qsThrowMethodFailed(JSContext *cx, nsresult rv, jsval *vp)
     const char *ifaceName;
     RootedId memberId(cx);
     GetMethodInfo(cx, vp, &ifaceName, memberId.address());
-    return ThrowCallFailed(cx, rv, ifaceName, memberId, NULL);
+    return ThrowCallFailed(cx, rv, ifaceName, memberId, nullptr);
 }
 
 bool
@@ -347,7 +347,7 @@ xpc_qsThrowBadArg(JSContext *cx, nsresult rv, jsval *vp, unsigned paramnum)
     const char *ifaceName;
     RootedId memberId(cx);
     GetMethodInfo(cx, vp, &ifaceName, memberId.address());
-    ThrowBadArg(cx, rv, ifaceName, memberId, NULL, paramnum);
+    ThrowBadArg(cx, rv, ifaceName, memberId, nullptr, paramnum);
 }
 
 void
@@ -370,7 +370,7 @@ xpc_qsThrowBadSetterValue(JSContext *cx, nsresult rv,
     RootedId propId(cx, propIdArg);
     const char *ifaceName;
     GetMemberInfo(obj, propId, &ifaceName);
-    ThrowBadArg(cx, rv, ifaceName, propId, NULL, 0);
+    ThrowBadArg(cx, rv, ifaceName, propId, nullptr, 0);
 }
 
 void
@@ -399,7 +399,7 @@ xpc_qsGetterOnlyPropertyStub(JSContext *cx, HandleObject obj, HandleId id, bool 
     return JS_ReportErrorFlagsAndNumber(cx,
                                         JSREPORT_WARNING | JSREPORT_STRICT |
                                         JSREPORT_STRICT_MODE_ERROR,
-                                        js_GetErrorMessage, NULL,
+                                        js_GetErrorMessage, nullptr,
                                         JSMSG_GETTER_ONLY);
 }
 
@@ -409,7 +409,7 @@ xpc_qsGetterOnlyNativeStub(JSContext *cx, unsigned argc, jsval *vp)
     return JS_ReportErrorFlagsAndNumber(cx,
                                         JSREPORT_WARNING | JSREPORT_STRICT |
                                         JSREPORT_STRICT_MODE_ERROR,
-                                        js_GetErrorMessage, NULL,
+                                        js_GetErrorMessage, nullptr,
                                         JSMSG_GETTER_ONLY);
 }
 
@@ -496,7 +496,7 @@ getNative(nsISupports *idobj,
     return rv;
 }
 
-inline nsresult
+static inline nsresult
 getNativeFromWrapper(JSContext *cx,
                      XPCWrappedNative *wrapper,
                      const nsIID &iid,
@@ -766,7 +766,7 @@ xpc_qsJsvalToWcharStr(JSContext *cx, jsval v, jsval *pval, const PRUnichar **pst
     if (JSVAL_IS_STRING(v)) {
         str = JSVAL_TO_STRING(v);
     } else if (JSVAL_IS_VOID(v) || JSVAL_IS_NULL(v)) {
-        *pstr = NULL;
+        *pstr = nullptr;
         return true;
     } else {
         if (!(str = JS_ValueToString(cx, v)))
