@@ -75,7 +75,7 @@ function MarkupView(aInspector, aFrame, aControllerWindow) {
   this.undo = new UndoStack();
   this.undo.installController(aControllerWindow);
 
-  this._containers = new WeakMap();
+  this._containers = new Map();
 
   this._boundMutationObserver = this._mutationObserver.bind(this);
   this.walker.on("mutations", this._boundMutationObserver);
@@ -382,7 +382,6 @@ MarkupView.prototype = {
 
     return container;
   },
-
 
   /**
    * Mutation observer used for included nodes.
@@ -805,6 +804,9 @@ MarkupView.prototype = {
 
     delete this._elt;
 
+    for ([key, container] of this._containers) {
+      container.destroy();
+    }
     delete this._containers;
   },
 
@@ -945,7 +947,8 @@ function MarkupContainer(aMarkupView, aNode) {
   // Appending the editor element and attaching event listeners
   this.tagLine.appendChild(this.editor.elt);
 
-  this.elt.addEventListener("mousedown", this._onMouseDown.bind(this), false);
+  this._onMouseDown = this._onMouseDown.bind(this);
+  this.elt.addEventListener("mousedown", this._onMouseDown, false);
 }
 
 MarkupContainer.prototype = {
@@ -1164,6 +1167,29 @@ MarkupContainer.prototype = {
     if (focusable) {
       focusable.focus();
     }
+  },
+
+  /**
+   * Get rid of event listeners and references, when the container is no longer
+   * needed
+   */
+  destroy: function() {
+    // Recursively destroy children containers
+    let firstChild;
+    while (firstChild = this.children.firstChild) {
+      firstChild.container.destroy();
+      this.children.removeChild(firstChild);
+    }
+
+    // Remove event listeners
+    this.elt.removeEventListener("dblclick", this._onToggle, false);
+    this.elt.removeEventListener("mouseover", this._onMouseOver, false);
+    this.elt.removeEventListener("mouseout", this._onMouseOut, false);
+    this.elt.removeEventListener("mousedown", this._onMouseDown, false);
+    this.expander.removeEventListener("click", this._onToggle, false);
+
+    // Destroy my editor
+    this.editor.destroy();
   }
 };
 
@@ -1183,7 +1209,8 @@ function RootContainer(aMarkupView, aNode) {
 RootContainer.prototype = {
   hasChildren: true,
   expanded: true,
-  update: function() {}
+  update: function() {},
+  destroy: function() {}
 };
 
 /**
@@ -1194,6 +1221,10 @@ function GenericEditor(aContainer, aNode) {
   this.elt.className = "editor";
   this.elt.textContent = aNode.nodeName;
 }
+
+GenericEditor.prototype = {
+  destroy: function() {}
+};
 
 /**
  * Creates an editor for a DOCTYPE node.
@@ -1209,6 +1240,10 @@ function DoctypeEditor(aContainer, aNode) {
      (aNode.systemId ? ' "' + aNode.systemId + '"' : '') +
      '>';
 }
+
+DoctypeEditor.prototype = {
+  destroy: function() {}
+};
 
 /**
  * Creates a simple text editor node, used for TEXT and COMMENT
@@ -1284,7 +1319,9 @@ TextEditor.prototype = {
         }
       }).then(null, console.error);
     }
-  }
+  },
+
+  destroy: function() {}
 };
 
 /**
@@ -1591,7 +1628,9 @@ ElementEditor.prototype = {
         }
       });
     }).then(null, console.error);
-  }
+  },
+
+  destroy: function() {}
 };
 
 function nodeDocument(node) {

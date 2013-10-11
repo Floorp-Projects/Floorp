@@ -60,6 +60,7 @@ var BuiltinProvider = {
         "devtools/app-actor-front": "resource://gre/modules/devtools/app-actor-front.js",
         "devtools/styleinspector/css-logic": "resource://gre/modules/devtools/styleinspector/css-logic",
         "devtools/css-color": "resource://gre/modules/devtools/css-color",
+        "devtools/touch-events": "resource://gre/modules/devtools/touch-events",
         "devtools/client": "resource://gre/modules/devtools/client",
 
         "escodegen": "resource://gre/modules/devtools/escodegen",
@@ -102,6 +103,7 @@ var SrcdirProvider = {
     let appActorURI = this.fileURI(OS.Path.join(toolkitDir, "apps", "app-actor-front.js"));
     let cssLogicURI = this.fileURI(OS.Path.join(toolkitDir, "styleinspector", "css-logic"));
     let cssColorURI = this.fileURI(OS.Path.join(toolkitDir, "css-color"));
+    let touchEventsURI = this.fileURI(OS.Path.join(toolkitDir, "touch-events"));
     let clientURI = this.fileURI(OS.Path.join(toolkitDir, "client"));
     let escodegenURI = this.fileURI(OS.Path.join(toolkitDir, "escodegen"));
     let estraverseURI = this.fileURI(OS.Path.join(toolkitDir, "escodegen", "estraverse"));
@@ -118,7 +120,7 @@ var SrcdirProvider = {
         "devtools/toolkit/webconsole": webconsoleURI,
         "devtools/app-actor-front": appActorURI,
         "devtools/styleinspector/css-logic": cssLogicURI,
-        "devtools/css-color": cssColorURI,
+        "devtools/touch-events": touchEventsURI,
         "devtools/client": clientURI,
         "escodegen": escodegenURI,
         "estraverse": estraverseURI
