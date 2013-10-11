@@ -6,8 +6,11 @@
 
 #include "jit/BaselineIC.h"
 
+#include "mozilla/TemplateLib.h"
+
 #include "jsautooplen.h"
 #include "jslibmath.h"
+#include "jstypes.h"
 
 #include "builtin/Eval.h"
 #include "jit/BaselineHelpers.h"
@@ -4495,7 +4498,9 @@ ICGetElem_Arguments::Compiler::generateStubCode(MacroAssembler &masm)
 
     // In tempReg, calculate index of word containing bit: (idx >> logBitsPerWord)
     masm.movePtr(idxReg, tempReg);
-    masm.rshiftPtr(Imm32(JS_BITS_PER_WORD_LOG2), tempReg);
+    const uint32_t shift = mozilla::tl::FloorLog2<(sizeof(size_t) * JS_BITS_PER_BYTE)>::value;
+    JS_ASSERT(shift == 5 || shift == 6);
+    masm.rshiftPtr(Imm32(shift), tempReg);
     masm.loadPtr(BaseIndex(scratchReg, tempReg, ScaleFromElemWidth(sizeof(size_t))), scratchReg);
 
     // Don't bother testing specific bit, if any bit is set in the word, fail.
