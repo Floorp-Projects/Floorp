@@ -256,14 +256,14 @@ WebGLContext::BindTexture(GLenum target, WebGLTexture *newTex)
         return ErrorInvalidEnumInfo("bindTexture: target", target);
     }
 
-    WebGLTextureFakeBlackStatus currentTexFakeBlackStatus
-        = (*currentTexPtr)
-          ? (*currentTexPtr)->ResolvedFakeBlackStatus()
-          : WebGLTextureFakeBlackStatus::NotNeeded;
-    WebGLTextureFakeBlackStatus newTexFakeBlackStatus
-        = newTex
-          ? newTex->ResolvedFakeBlackStatus()
-          : WebGLTextureFakeBlackStatus::NotNeeded;
+    WebGLTextureFakeBlackStatus currentTexFakeBlackStatus = WebGLTextureFakeBlackStatus::NotNeeded;
+    if (*currentTexPtr) {
+        currentTexFakeBlackStatus = (*currentTexPtr)->ResolvedFakeBlackStatus();
+    }
+    WebGLTextureFakeBlackStatus newTexFakeBlackStatus = WebGLTextureFakeBlackStatus::NotNeeded;
+    if (newTex) {
+        newTexFakeBlackStatus = newTex->ResolvedFakeBlackStatus();
+    }
 
     *currentTexPtr = newTex;
 
