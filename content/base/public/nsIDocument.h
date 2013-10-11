@@ -2001,6 +2001,11 @@ public:
                                 mozilla::ErrorResult& rv) const;
   already_AddRefed<nsINode>
     ImportNode(nsINode& aNode, bool aDeep, mozilla::ErrorResult& rv) const;
+  already_AddRefed<nsINode>
+    ImportNode(nsINode& aNode, mozilla::ErrorResult& rv) const
+  {
+    return ImportNode(aNode, true, rv);
+  }
   nsINode* AdoptNode(nsINode& aNode, mozilla::ErrorResult& rv);
   already_AddRefed<nsDOMEvent> CreateEvent(const nsAString& aEventType,
                                            mozilla::ErrorResult& rv) const;
