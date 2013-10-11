@@ -678,12 +678,18 @@ class SetPropertyIC : public RepatchIonCache
         return hasGenericProxyStub_;
     }
 
-    bool attachNativeExisting(JSContext *cx, IonScript *ion, HandleObject obj,
-                              HandleShape shape, bool checkTypeset);
-    bool attachSetterCall(JSContext *cx, IonScript *ion, HandleObject obj,
+    enum NativeSetPropCacheability {
+        CanAttachNone,
+        CanAttachSetSlot,
+        MaybeCanAttachAddSlot,
+        CanAttachCallSetter
+    };
+
+    bool attachSetSlot(JSContext *cx, IonScript *ion, HandleObject obj, HandleShape shape,
+                       bool checkTypeset);
+    bool attachCallSetter(JSContext *cx, IonScript *ion, HandleObject obj,
                           HandleObject holder, HandleShape shape, void *returnAddr);
-    bool attachNativeAdding(JSContext *cx, IonScript *ion, JSObject *obj, HandleShape oldshape,
-                            HandleShape newshape, HandleShape propshape);
+    bool attachAddSlot(JSContext *cx, IonScript *ion, JSObject *obj, HandleShape oldShape);
     bool attachGenericProxy(JSContext *cx, IonScript *ion, void *returnAddr);
     bool attachDOMProxyShadowed(JSContext *cx, IonScript *ion, HandleObject obj,
                                 void *returnAddr);
@@ -772,7 +778,7 @@ class GetElementIC : public RepatchIonCache
 
     static bool
     update(JSContext *cx, size_t cacheIndex, HandleObject obj, HandleValue idval,
-                MutableHandleValue vp);
+           MutableHandleValue vp);
 
     void incFailedUpdates() {
         failedUpdates_++;
