@@ -65,17 +65,16 @@ AlertsService.prototype = {
   showAppNotification: function showAppNotification(aImageURL,
                                                     aTitle,
                                                     aText,
-                                                    aTextClickable,
-                                                    aManifestURL,
                                                     aAlertListener,
-                                                    aId) {
-    let uid = (aId == "") ? "app-notif-" + uuidGenerator.generateUUID() : aId;
+                                                    aDetails) {
+    let uid = (aDetails.id == "") ?
+          "app-notif-" + uuidGenerator.generateUUID() : aDetails.id;
 
     this._listeners[uid] = {
       observer: aAlertListener,
       title: aTitle,
       text: aText,
-      manifestURL: aManifestURL,
+      manifestURL: aDetails.manifestURL,
       imageURL: aImageURL
     };
 
@@ -83,9 +82,8 @@ AlertsService.prototype = {
       imageURL: aImageURL,
       title: aTitle,
       text: aText,
-      textClickable: aTextClickable,
-      manifestURL: aManifestURL,
-      uid: uid
+      uid: uid,
+      details: aDetails
     });
   },
 
