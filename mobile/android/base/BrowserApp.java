@@ -1333,13 +1333,12 @@ abstract public class BrowserApp extends GeckoApp
         int flags = LoadFaviconTask.FLAG_SCALE | ( (tab.isPrivate() || tab.getErrorType() != Tab.ErrorType.NONE) ? 0 : LoadFaviconTask.FLAG_PERSIST);
         int id = Favicons.loadFavicon(tab.getURL(), tab.getFaviconURL(), flags,
                         new OnFaviconLoadedListener() {
-
             @Override
             public void onFaviconLoaded(String pageUrl, Bitmap favicon) {
-                // Leave favicon UI untouched if we failed to load the image
-                // for some reason.
-                if (favicon == null)
-                    return;
+                // If we failed to load a favicon, we use the default favicon instead.
+                if (favicon == null) {
+                    favicon = Favicons.sDefaultFavicon;
+                }
 
                 // The tab might be pointing to another URL by the time the
                 // favicon is finally loaded, in which case we simply ignore it.
