@@ -4457,15 +4457,26 @@ IonCompartment::generateStringConcatStub(JSContext *cx, ExecutionMode mode)
     masm.computeEffectiveAddress(Address(output, JSShortString::offsetOfInlineStorage()), temp2);
     masm.storePtr(temp2, Address(output, JSShortString::offsetOfChars()));
 
-    // Copy lhs chars. Temp1 still holds the lhs length. Note that this
-    // advances temp2 to point to the next char.
-    masm.loadPtr(Address(lhs, JSString::offsetOfChars()), temp3);
-    CopyStringChars(masm, temp2, temp3, temp1, temp4);
+    {
+        // We use temp4 in this block, which in parallel execution also holds
+        // a live ForkJoinSlice pointer. If we are compiling for parallel
+        // execution, be sure to save and restore the ForkJoinSlice.
+        if (mode == ParallelExecution)
+            masm.push(temp4);
 
-    // Copy rhs chars.
-    masm.loadPtr(Address(rhs, JSString::offsetOfChars()), temp3);
-    masm.loadStringLength(rhs, temp1);
-    CopyStringChars(masm, temp2, temp3, temp1, temp4);
+        // Copy lhs chars. Temp1 still holds the lhs length. Note that this
+        // advances temp2 to point to the next char.
+        masm.loadPtr(Address(lhs, JSString::offsetOfChars()), temp3);
+        CopyStringChars(masm, temp2, temp3, temp1, temp4);
+
+        // Copy rhs chars.
+        masm.loadPtr(Address(rhs, JSString::offsetOfChars()), temp3);
+        masm.loadStringLength(rhs, temp1);
+        CopyStringChars(masm, temp2, temp3, temp1, temp4);
+
+        if (mode == ParallelExecution)
+            masm.pop(temp4);
+    }
 
     // Null-terminate.
     masm.store16(Imm32(0), Address(temp2, 0));
