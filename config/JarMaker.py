@@ -14,14 +14,12 @@ import errno
 import re
 import logging
 from time import localtime
-from optparse import OptionParser
 from MozZipFile import ZipFile
 from cStringIO import StringIO
-from datetime import datetime
 
 from utils import pushback_iter, lockFile
 from Preprocessor import Preprocessor
-from buildlist import addEntriesToListFile
+from mozbuild.action.buildlist import addEntriesToListFile
 if sys.platform == "win32":
   from ctypes import windll, WinError
   CreateHardLink = windll.kernel32.CreateHardLinkA
