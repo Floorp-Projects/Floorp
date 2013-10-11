@@ -3015,6 +3015,11 @@ public class BrowserProvider extends ContentProvider {
             values.remove(Favicons.PAGE_URL);
         }
 
+        // If no URL is provided, insert using the default one.
+        if (TextUtils.isEmpty(faviconUrl) && !TextUtils.isEmpty(pageUrl)) {
+            values.put(Favicons.URL, org.mozilla.gecko.favicons.Favicons.guessDefaultFaviconURL(pageUrl));
+        }
+
         long now = System.currentTimeMillis();
         values.put(Favicons.DATE_CREATED, now);
         values.put(Favicons.DATE_MODIFIED, now);
