@@ -3787,63 +3787,16 @@ WebGLContext::TexImage2D_base(GLenum target, GLint level, GLenum internalformat,
         }
         imageInfoStatusIfSuccess = WebGLImageDataStatus::InitializedImageData;
     } else {
-        if (isDepthTexture && !gl->IsSupported(GLFeature::depth_texture)) {
-            // There's only one way that we can we supporting depth textures without
-            // supporting the regular depth_texture feature set: that's
-            // with ANGLE_depth_texture.
-
-            // It should be impossible to get here without ANGLE_depth_texture support
-            MOZ_ASSERT(gl->IsExtensionSupported(GLContext::ANGLE_depth_texture));
-            // It should be impossible to get here with a target other than TEXTURE_2D,
-            // a nonzero level, or non-null data
-            MOZ_ASSERT(target == LOCAL_GL_TEXTURE_2D && level == 0 && data == nullptr);
-
-            // We start by calling texImage2D with null data, giving us an uninitialized texture,
-            // which is all it can give us in this case.
-            error = CheckedTexImage2D(LOCAL_GL_TEXTURE_2D, 0, internalformat, width, height,
-                                      border, format, type, nullptr);
-
-            // We then proceed to initializing the texture by assembling a FBO.
-            // We make it a color-less FBO, which isn't supported everywhere, but we should be
-            // fine because we only need this to be successful on ANGLE which is said to support
-            // that. Still, we want to gracefully handle failure in case the FBO is incomplete.
-
-            bool success = false;
-            GLuint fb = 0;
-
-            // dummy do {...} while to be able to break
-            do {
-                gl->fGenFramebuffers(1, &fb);
-                if (!fb)
-                    break;
-
-                ScopedBindFramebuffer autoBindFB(gl, fb);
-
-                gl->fFramebufferTexture2D(LOCAL_GL_FRAMEBUFFER,
-                                          LOCAL_GL_DEPTH_ATTACHMENT,
-                                          LOCAL_GL_TEXTURE_2D,
-                                          tex->GLName(),
-                                          0);
-                if (format == LOCAL_GL_DEPTH_STENCIL) {
-                    gl->fFramebufferTexture2D(LOCAL_GL_FRAMEBUFFER,
-                                              LOCAL_GL_STENCIL_ATTACHMENT,
-                                              LOCAL_GL_TEXTURE_2D,
-                                              tex->GLName(),
-                                              0);
-                }
-                if (gl->fCheckFramebufferStatus(LOCAL_GL_FRAMEBUFFER) != LOCAL_GL_FRAMEBUFFER_COMPLETE)
-                    break;
-
-                gl->ClearSafely();
-                success = true;
-            } while(false);
-
-            gl->fDeleteFramebuffers(1, &fb);
-
-            if (!success) {
-                return ErrorOutOfMemory("texImage2D: sorry, ran out of ways to initialize a depth texture.");
-            }
-            imageInfoStatusIfSuccess = WebGLImageDataStatus::InitializedImageData;
+        if (isDepthTexture) {
+            // When ANGLE_depth_texture is all we have, we cannot use texImage2D
+            // to upload anything to a depth texture. Fortunately, the WEBGL_depth_texture
+            // spec guarantees that there is no other image on this texture, and that
+            // texSubImage2D cannot be used on it. So we just do not initialize this
+            // image, and instead mark it as uninitialized so that a fake black texture
+            // will be sampled from instead.
+            error = CheckedTexImage2D(target, level, internalformat,
+                                      width, height, border, format, type, nullptr);
+            imageInfoStatusIfSuccess = WebGLImageDataStatus::UninitializedImageData;
         } else {
             // We need some zero pages, because GL doesn't guarantee the
             // contents of a texture allocated with nullptr data.
