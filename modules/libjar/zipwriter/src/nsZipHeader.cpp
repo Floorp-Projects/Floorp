@@ -127,6 +127,16 @@ NS_IMETHODIMP nsZipHeader::GetIsSynthetic(bool *aIsSynthetic)
     return NS_OK;
 }
 
+/* readonly attribute unsigned long permissions; */
+NS_IMETHODIMP nsZipHeader::GetPermissions(uint32_t *aPermissions)
+{
+    NS_ASSERTION(mInited, "Not initalised");
+
+    // Always give user read access at least, this matches nsIZipReader's behaviour
+    *aPermissions = ((mEAttr >> 16) & 0xfff | 0x100);
+    return NS_OK;
+}
+
 void nsZipHeader::Init(const nsACString & aPath, PRTime aDate, uint32_t aAttr,
                        uint32_t aOffset)
 {
