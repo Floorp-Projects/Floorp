@@ -1,8 +1,7 @@
-#filter substitution
 <?xml version="1.0" encoding="utf-8"?>
 <searchable xmlns:android="http://schemas.android.com/apk/res/android"
             android:label="@string/moz_app_displayname"
-            android:searchSuggestAuthority="@ANDROID_PACKAGE_NAME@.db.browser"
+            android:searchSuggestAuthority="@string/content_authority_db_browser"
             android:searchSuggestIntentAction="android.intent.action.SEARCH"
             android:searchSettingsDescription="@string/searchable_description"
             android:includeInGlobalSearch="true"/>

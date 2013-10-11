@@ -59,15 +59,19 @@ strings-xml-preqs =\
   $(if $(IS_LANGUAGE_REPACK),FORCE) \
   $(NULL)
 
+$(if $(MOZ_ANDROID_SHARED_ACCOUNT_TYPE),,$(error Missing MOZ_ANDROID_SHARED_ACCOUNT_TYPE))
+
 $(dir-strings-xml)/strings.xml: $(strings-xml-preqs)
 	$(NSINSTALL) -D $(dir-strings-xml)
 	$(TOUCH) $(call mkdir_deps,$(dir-strings-xml))
 	$(PYTHON) $(topsrcdir)/config/Preprocessor.py \
       $(DEFINES) \
+	  -DANDROID_PACKAGE_NAME=$(ANDROID_PACKAGE_NAME) \
+	  -DBOOKMARKSPATH="$(BOOKMARKSPATH)" \
 	  -DBRANDPATH="$(BRANDPATH)" \
+	  -DMOZ_ANDROID_SHARED_ACCOUNT_TYPE=$(MOZ_ANDROID_SHARED_ACCOUNT_TYPE) \
+	  -DMOZ_APP_DISPLAYNAME="@MOZ_APP_DISPLAYNAME@" \
 	  -DSTRINGSPATH="$(STRINGSPATH)" \
 	  -DSYNCSTRINGSPATH="$(SYNCSTRINGSPATH)" \
-	  -DBOOKMARKSPATH="$(BOOKMARKSPATH)" \
-	  -DMOZ_APP_DISPLAYNAME="@MOZ_APP_DISPLAYNAME@" \
       $< \
 	  > $@

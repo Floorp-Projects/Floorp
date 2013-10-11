@@ -35,7 +35,6 @@
 
 #include "image_operations.h"
 
-#include "nsAlgorithm.h"
 #include "base/stack_container.h"
 #include "convolver.h"
 #include "skia/SkColorPriv.h"
