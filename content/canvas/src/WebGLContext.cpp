@@ -121,8 +121,7 @@ WebGLContext::WebGLContext()
 
     mShaderValidation = true;
 
-    mBlackTexturesAreInitialized = false;
-    mFakeBlackStatus = WebGLContextFakeBlackStatus::Unknown;
+    mFakeBlackStatus = WebGLContextFakeBlackStatus::NotNeeded;
 
     mVertexAttrib0Vector[0] = 0;
     mVertexAttrib0Vector[1] = 0;
@@ -264,13 +263,10 @@ WebGLContext::DestroyResourcesAndContext()
     while (!mQueries.isEmpty())
         mQueries.getLast()->DeleteOnce();
 
-    if (mBlackTexturesAreInitialized) {
-        gl->fDeleteTextures(1, &mBlackOpaqueTexture2D);
-        gl->fDeleteTextures(1, &mBlackOpaqueTextureCubeMap);
-        gl->fDeleteTextures(1, &mBlackTransparentTexture2D);
-        gl->fDeleteTextures(1, &mBlackTransparentTextureCubeMap);
-        mBlackTexturesAreInitialized = false;
-    }
+    mBlackOpaqueTexture2D = nullptr;
+    mBlackOpaqueTextureCubeMap = nullptr;
+    mBlackTransparentTexture2D = nullptr;
+    mBlackTransparentTextureCubeMap = nullptr;
 
     if (mFakeVertexAttrib0BufferObject) {
         gl->fDeleteBuffers(1, &mFakeVertexAttrib0BufferObject);

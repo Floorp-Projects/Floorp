@@ -52,14 +52,57 @@ using namespace mozilla::gl;
 static bool BaseTypeAndSizeFromUniformType(GLenum uType, GLenum *baseType, GLint *unitSize);
 static GLenum InternalFormatForFormatAndType(GLenum format, GLenum type, bool isGLES2);
 
-//
-//  WebGL API
-//
-
 inline const WebGLRectangleObject *WebGLContext::FramebufferRectangleObject() const {
     return mBoundFramebuffer ? mBoundFramebuffer->RectangleObject()
                              : static_cast<const WebGLRectangleObject*>(this);
 }
+
+WebGLContext::FakeBlackTexture::FakeBlackTexture(GLContext *gl, GLenum target, GLenum format)
+    : mGL(gl)
+    , mGLName(0)
+{
+  MOZ_ASSERT(target == LOCAL_GL_TEXTURE_2D || target == LOCAL_GL_TEXTURE_CUBE_MAP);
+  MOZ_ASSERT(format == LOCAL_GL_RGB || format == LOCAL_GL_RGBA);
+
+  mGL->MakeCurrent();
+  GLuint formerBinding = 0;
+  gl->GetUIntegerv(target == LOCAL_GL_TEXTURE_2D
+                   ? LOCAL_GL_TEXTURE_BINDING_2D
+                   : LOCAL_GL_TEXTURE_BINDING_CUBE_MAP,
+                   &formerBinding);
+  gl->fGenTextures(1, &mGLName);
+  gl->fBindTexture(target, mGLName);
+
+  // we allocate our zeros on the heap, and we overallocate (16 bytes instead of 4)
+  // to minimize the risk of running into a driver bug in texImage2D, as it is
+  // a bit unusual maybe to create 1x1 textures, and the stack may not have the alignment
+  // that texImage2D expects.
+  void* zeros = calloc(1, 16);
+  if (target == LOCAL_GL_TEXTURE_2D) {
+      gl->fTexImage2D(target, 0, format, 1, 1,
+                      0, format, LOCAL_GL_UNSIGNED_BYTE, zeros);
+  } else {
+      for (GLuint i = 0; i < 6; ++i) {
+          gl->fTexImage2D(LOCAL_GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, format, 1, 1,
+                          0, format, LOCAL_GL_UNSIGNED_BYTE, zeros);
+      }
+  }
+  free(zeros);
+
+  gl->fBindTexture(target, formerBinding);
+}
+
+WebGLContext::FakeBlackTexture::~FakeBlackTexture()
+{
+  if (mGL) {
+      mGL->MakeCurrent();
+      mGL->fDeleteTextures(1, &mGLName);
+  }
+}
+
+//
+//  WebGL API
+//
 
 void
 WebGLContext::ActiveTexture(GLenum texture)
@@ -974,77 +1017,57 @@ WebGLContext::ResolvedFakeBlackStatus()
 }
 
 void
+WebGLContext::BindFakeBlackTexturesHelper(
+    GLenum target,
+    const nsTArray<WebGLRefPtr<WebGLTexture> > & boundTexturesArray,
+    ScopedDeletePtr<FakeBlackTexture> & opaqueTextureScopedPtr,
+    ScopedDeletePtr<FakeBlackTexture> & transparentTextureScopedPtr)
+{
+    for (int32_t i = 0; i < mGLMaxTextureUnits; ++i) {
+        if (!boundTexturesArray[i]) {
+            continue;
+        }
+
+        WebGLTextureFakeBlackStatus s = boundTexturesArray[i]->ResolvedFakeBlackStatus();
+        MOZ_ASSERT(s != WebGLTextureFakeBlackStatus::Unknown);
+
+        if (MOZ_LIKELY(s == WebGLTextureFakeBlackStatus::NotNeeded)) {
+            continue;
+        }
+
+        bool opaque = s == WebGLTextureFakeBlackStatus::IncompleteTexture;
+        ScopedDeletePtr<FakeBlackTexture>&
+            blackTexturePtr = opaque
+                              ? opaqueTextureScopedPtr
+                              : transparentTextureScopedPtr;
+
+        if (!blackTexturePtr) {
+            GLenum format = opaque ? LOCAL_GL_RGB : LOCAL_GL_RGBA;
+            blackTexturePtr
+                = new FakeBlackTexture(gl, target, format);
+        }
+
+        gl->fActiveTexture(LOCAL_GL_TEXTURE0 + i);
+        gl->fBindTexture(target,
+                         blackTexturePtr->GLName());
+    }
+}
+
+void
 WebGLContext::BindFakeBlackTextures()
 {
     // this is the generic case: try to return early
     if (MOZ_LIKELY(ResolvedFakeBlackStatus() == WebGLContextFakeBlackStatus::NotNeeded))
         return;
 
-    if (!mBlackTexturesAreInitialized) {
-        GLuint bound2DTex = 0;
-        GLuint boundCubeTex = 0;
-        gl->fGetIntegerv(LOCAL_GL_TEXTURE_BINDING_2D, (GLint*) &bound2DTex);
-        gl->fGetIntegerv(LOCAL_GL_TEXTURE_BINDING_CUBE_MAP, (GLint*) &boundCubeTex);
-
-        const uint8_t black_opaque[] = {0, 0, 0, 255};
-
-        gl->fGenTextures(1, &mBlackOpaqueTexture2D);
-        gl->fBindTexture(LOCAL_GL_TEXTURE_2D, mBlackOpaqueTexture2D);
-        gl->fTexImage2D(LOCAL_GL_TEXTURE_2D, 0, LOCAL_GL_RGBA, 1, 1,
-                        0, LOCAL_GL_RGBA, LOCAL_GL_UNSIGNED_BYTE, black_opaque);
-
-        gl->fGenTextures(1, &mBlackOpaqueTextureCubeMap);
-        gl->fBindTexture(LOCAL_GL_TEXTURE_CUBE_MAP, mBlackOpaqueTextureCubeMap);
-        for (GLuint i = 0; i < 6; ++i) {
-            gl->fTexImage2D(LOCAL_GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, LOCAL_GL_RGBA, 1, 1,
-                            0, LOCAL_GL_RGBA, LOCAL_GL_UNSIGNED_BYTE, black_opaque);
-        }
-
-        const uint8_t black_transparent[] = {0, 0, 0, 0};
-
-        gl->fGenTextures(1, &mBlackTransparentTexture2D);
-        gl->fBindTexture(LOCAL_GL_TEXTURE_2D, mBlackTransparentTexture2D);
-        gl->fTexImage2D(LOCAL_GL_TEXTURE_2D, 0, LOCAL_GL_RGBA, 1, 1,
-                        0, LOCAL_GL_RGBA, LOCAL_GL_UNSIGNED_BYTE, black_transparent);
-
-        gl->fGenTextures(1, &mBlackTransparentTextureCubeMap);
-        gl->fBindTexture(LOCAL_GL_TEXTURE_CUBE_MAP, mBlackTransparentTextureCubeMap);
-        for (GLuint i = 0; i < 6; ++i) {
-            gl->fTexImage2D(LOCAL_GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, LOCAL_GL_RGBA, 1, 1,
-                            0, LOCAL_GL_RGBA, LOCAL_GL_UNSIGNED_BYTE, black_transparent);
-        }
-        // Reset bound textures
-        gl->fBindTexture(LOCAL_GL_TEXTURE_2D, bound2DTex);
-        gl->fBindTexture(LOCAL_GL_TEXTURE_CUBE_MAP, boundCubeTex);
-
-        mBlackTexturesAreInitialized = true;
-    }
-
-    for (int32_t i = 0; i < mGLMaxTextureUnits; ++i) {
-        WebGLTextureFakeBlackStatus s;
-        s = mBound2DTextures[i]
-            ? mBound2DTextures[i]->ResolvedFakeBlackStatus()
-            : WebGLTextureFakeBlackStatus::NotNeeded;
-        MOZ_ASSERT(s != WebGLTextureFakeBlackStatus::Unknown);
-        if (s != WebGLTextureFakeBlackStatus::NotNeeded) {
-            gl->fActiveTexture(LOCAL_GL_TEXTURE0 + i);
-            gl->fBindTexture(LOCAL_GL_TEXTURE_2D,
-                             s == WebGLTextureFakeBlackStatus::IncompleteTexture
-                             ? mBlackOpaqueTexture2D
-                             : mBlackTransparentTexture2D);
-        }
-        s = mBoundCubeMapTextures[i]
-            ? mBoundCubeMapTextures[i]->ResolvedFakeBlackStatus()
-            : WebGLTextureFakeBlackStatus::NotNeeded;
-        MOZ_ASSERT(s != WebGLTextureFakeBlackStatus::Unknown);
-        if (s != WebGLTextureFakeBlackStatus::NotNeeded) {
-            gl->fActiveTexture(LOCAL_GL_TEXTURE0 + i);
-            gl->fBindTexture(LOCAL_GL_TEXTURE_CUBE_MAP,
-                             s == WebGLTextureFakeBlackStatus::IncompleteTexture
-                             ? mBlackOpaqueTextureCubeMap
-                             : mBlackTransparentTextureCubeMap);
-        }
-    }
+    BindFakeBlackTexturesHelper(LOCAL_GL_TEXTURE_2D,
+                                mBound2DTextures,
+                                mBlackOpaqueTexture2D,
+                                mBlackTransparentTexture2D);
+    BindFakeBlackTexturesHelper(LOCAL_GL_TEXTURE_CUBE_MAP,
+                                mBoundCubeMapTextures,
+                                mBlackOpaqueTextureCubeMap,
+                                mBlackTransparentTextureCubeMap);
 }
 
 void
