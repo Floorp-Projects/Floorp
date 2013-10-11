@@ -106,7 +106,11 @@ public class FaviconView extends ImageView {
      * space.
      */
     private void showBackground() {
-        int color = Favicons.getFaviconColor(mIconBitmap, mIconKey);
+        int color = Favicons.getFaviconColor(mIconKey);
+        if (color == -1) {
+            hideBackground();
+            return;
+        }
         color = Color.argb(70, Color.red(color), Color.green(color), Color.blue(color));
         final Drawable drawable = getResources().getDrawable(R.drawable.favicon_bg);
         drawable.setColorFilter(color, Mode.SRC_ATOP);
@@ -152,7 +156,7 @@ public class FaviconView extends ImageView {
         formatImage();
     }
 
-    private void showDefaultFavicon() {
+    public void showDefaultFavicon() {
         setImageResource(R.drawable.favicon);
         hideBackground();
     }
