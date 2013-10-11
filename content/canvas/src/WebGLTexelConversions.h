@@ -45,14 +45,13 @@
 
 namespace mozilla {
 
-namespace WebGLTexelConversions {
-
-enum WebGLTexelPremultiplicationOp
-{
-    NoPremultiplicationOp,
+MOZ_BEGIN_ENUM_CLASS(WebGLTexelPremultiplicationOp, int)
+    None,
     Premultiply,
     Unpremultiply
-};
+MOZ_END_ENUM_CLASS(WebGLTexelPremultiplicationOp)
+
+namespace WebGLTexelConversions {
 
 // remove this as soon as B2G and Windows use newer compilers
 #ifdef MOZ_HAVE_CXX11_STRONG_ENUMS
@@ -340,7 +339,10 @@ unpack<WebGLTexelFormat::A32F, float, float>(const float* __restrict src, float*
 // Pixel packing routines.
 //
 
-template<MOZ_ENUM_CLASS_INTEGER_TYPE(WebGLTexelFormat) Format, int PremultiplicationOp, typename SrcType, typename DstType>
+template<MOZ_ENUM_CLASS_INTEGER_TYPE(WebGLTexelFormat) Format,
+         MOZ_ENUM_CLASS_INTEGER_TYPE(WebGLTexelPremultiplicationOp) PremultiplicationOp,
+         typename SrcType,
+         typename DstType>
 FORCE_INLINE void
 pack(const SrcType* __restrict src,
      DstType* __restrict dst)
@@ -349,31 +351,31 @@ pack(const SrcType* __restrict src,
 }
 
 template<> FORCE_INLINE void
-pack<WebGLTexelFormat::A8, NoPremultiplicationOp, uint8_t, uint8_t>(const uint8_t* __restrict src, uint8_t* __restrict dst)
+pack<WebGLTexelFormat::A8, WebGLTexelPremultiplicationOp::None, uint8_t, uint8_t>(const uint8_t* __restrict src, uint8_t* __restrict dst)
 {
     dst[0] = src[3];
 }
 
 template<> FORCE_INLINE void
-pack<WebGLTexelFormat::A8, Premultiply, uint8_t, uint8_t>(const uint8_t* __restrict src, uint8_t* __restrict dst)
+pack<WebGLTexelFormat::A8, WebGLTexelPremultiplicationOp::Premultiply, uint8_t, uint8_t>(const uint8_t* __restrict src, uint8_t* __restrict dst)
 {
     dst[0] = src[3];
 }
 
 template<> FORCE_INLINE void
-pack<WebGLTexelFormat::A8, Unpremultiply, uint8_t, uint8_t>(const uint8_t* __restrict src, uint8_t* __restrict dst)
+pack<WebGLTexelFormat::A8, WebGLTexelPremultiplicationOp::Unpremultiply, uint8_t, uint8_t>(const uint8_t* __restrict src, uint8_t* __restrict dst)
 {
     dst[0] = src[3];
 }
 
 template<> FORCE_INLINE void
-pack<WebGLTexelFormat::R8, NoPremultiplicationOp, uint8_t, uint8_t>(const uint8_t* __restrict src, uint8_t* __restrict dst)
+pack<WebGLTexelFormat::R8, WebGLTexelPremultiplicationOp::None, uint8_t, uint8_t>(const uint8_t* __restrict src, uint8_t* __restrict dst)
 {
     dst[0] = src[0];
 }
 
 template<> FORCE_INLINE void
-pack<WebGLTexelFormat::R8, Premultiply, uint8_t, uint8_t>(const uint8_t* __restrict src, uint8_t* __restrict dst)
+pack<WebGLTexelFormat::R8, WebGLTexelPremultiplicationOp::Premultiply, uint8_t, uint8_t>(const uint8_t* __restrict src, uint8_t* __restrict dst)
 {
     float scaleFactor = src[3] / 255.0f;
     uint8_t srcR = static_cast<uint8_t>(src[0] * scaleFactor);
@@ -381,7 +383,7 @@ pack<WebGLTexelFormat::R8, Premultiply, uint8_t, uint8_t>(const uint8_t* __restr
 }
 
 template<> FORCE_INLINE void
-pack<WebGLTexelFormat::R8, Unpremultiply, uint8_t, uint8_t>(const uint8_t* __restrict src, uint8_t* __restrict dst)
+pack<WebGLTexelFormat::R8, WebGLTexelPremultiplicationOp::Unpremultiply, uint8_t, uint8_t>(const uint8_t* __restrict src, uint8_t* __restrict dst)
 {
     float scaleFactor = src[3] ? 255.0f / src[3] : 1.0f;
     uint8_t srcR = static_cast<uint8_t>(src[0] * scaleFactor);
@@ -389,14 +391,14 @@ pack<WebGLTexelFormat::R8, Unpremultiply, uint8_t, uint8_t>(const uint8_t* __res
 }
 
 template<> FORCE_INLINE void
-pack<WebGLTexelFormat::RA8, NoPremultiplicationOp, uint8_t, uint8_t>(const uint8_t* __restrict src, uint8_t* __restrict dst)
+pack<WebGLTexelFormat::RA8, WebGLTexelPremultiplicationOp::None, uint8_t, uint8_t>(const uint8_t* __restrict src, uint8_t* __restrict dst)
 {
     dst[0] = src[0];
     dst[1] = src[3];
 }
 
 template<> FORCE_INLINE void
-pack<WebGLTexelFormat::RA8, Premultiply, uint8_t, uint8_t>(const uint8_t* __restrict src, uint8_t* __restrict dst)
+pack<WebGLTexelFormat::RA8, WebGLTexelPremultiplicationOp::Premultiply, uint8_t, uint8_t>(const uint8_t* __restrict src, uint8_t* __restrict dst)
 {
     float scaleFactor = src[3] / 255.0f;
     uint8_t srcR = static_cast<uint8_t>(src[0] * scaleFactor);
@@ -406,7 +408,7 @@ pack<WebGLTexelFormat::RA8, Premultiply, uint8_t, uint8_t>(const uint8_t* __rest
 
 // FIXME: this routine is lossy and must be removed.
 template<> FORCE_INLINE void
-pack<WebGLTexelFormat::RA8, Unpremultiply, uint8_t, uint8_t>(const uint8_t* __restrict src, uint8_t* __restrict dst)
+pack<WebGLTexelFormat::RA8, WebGLTexelPremultiplicationOp::Unpremultiply, uint8_t, uint8_t>(const uint8_t* __restrict src, uint8_t* __restrict dst)
 {
     float scaleFactor = src[3] ? 255.0f / src[3] : 1.0f;
     uint8_t srcR = static_cast<uint8_t>(src[0] * scaleFactor);
@@ -415,7 +417,7 @@ pack<WebGLTexelFormat::RA8, Unpremultiply, uint8_t, uint8_t>(const uint8_t* __re
 }
 
 template<> FORCE_INLINE void
-pack<WebGLTexelFormat::RGB8, NoPremultiplicationOp, uint8_t, uint8_t>(const uint8_t* __restrict src, uint8_t* __restrict dst)
+pack<WebGLTexelFormat::RGB8, WebGLTexelPremultiplicationOp::None, uint8_t, uint8_t>(const uint8_t* __restrict src, uint8_t* __restrict dst)
 {
     dst[0] = src[0];
     dst[1] = src[1];
@@ -423,7 +425,7 @@ pack<WebGLTexelFormat::RGB8, NoPremultiplicationOp, uint8_t, uint8_t>(const uint
 }
 
 template<> FORCE_INLINE void
-pack<WebGLTexelFormat::RGB8, Premultiply, uint8_t, uint8_t>(const uint8_t* __restrict src, uint8_t* __restrict dst)
+pack<WebGLTexelFormat::RGB8, WebGLTexelPremultiplicationOp::Premultiply, uint8_t, uint8_t>(const uint8_t* __restrict src, uint8_t* __restrict dst)
 {
     float scaleFactor = src[3] / 255.0f;
     uint8_t srcR = static_cast<uint8_t>(src[0] * scaleFactor);
@@ -435,7 +437,7 @@ pack<WebGLTexelFormat::RGB8, Premultiply, uint8_t, uint8_t>(const uint8_t* __res
 }
 
 template<> FORCE_INLINE void
-pack<WebGLTexelFormat::RGB8, Unpremultiply, uint8_t, uint8_t>(const uint8_t* __restrict src, uint8_t* __restrict dst)
+pack<WebGLTexelFormat::RGB8, WebGLTexelPremultiplicationOp::Unpremultiply, uint8_t, uint8_t>(const uint8_t* __restrict src, uint8_t* __restrict dst)
 {
     float scaleFactor = src[3] ? 255.0f / src[3] : 1.0f;
     uint8_t srcR = static_cast<uint8_t>(src[0] * scaleFactor);
@@ -447,7 +449,7 @@ pack<WebGLTexelFormat::RGB8, Unpremultiply, uint8_t, uint8_t>(const uint8_t* __r
 }
 
 template<> FORCE_INLINE void
-pack<WebGLTexelFormat::RGBA8, NoPremultiplicationOp, uint8_t, uint8_t>(const uint8_t* __restrict src, uint8_t* __restrict dst)
+pack<WebGLTexelFormat::RGBA8, WebGLTexelPremultiplicationOp::None, uint8_t, uint8_t>(const uint8_t* __restrict src, uint8_t* __restrict dst)
 {
     dst[0] = src[0];
     dst[1] = src[1];
@@ -456,7 +458,7 @@ pack<WebGLTexelFormat::RGBA8, NoPremultiplicationOp, uint8_t, uint8_t>(const uin
 }
 
 template<> FORCE_INLINE void
-pack<WebGLTexelFormat::RGBA8, Premultiply, uint8_t, uint8_t>(const uint8_t* __restrict src, uint8_t* __restrict dst)
+pack<WebGLTexelFormat::RGBA8, WebGLTexelPremultiplicationOp::Premultiply, uint8_t, uint8_t>(const uint8_t* __restrict src, uint8_t* __restrict dst)
 {
     float scaleFactor = src[3] / 255.0f;
     uint8_t srcR = static_cast<uint8_t>(src[0] * scaleFactor);
@@ -470,7 +472,7 @@ pack<WebGLTexelFormat::RGBA8, Premultiply, uint8_t, uint8_t>(const uint8_t* __re
 
 // FIXME: this routine is lossy and must be removed.
 template<> FORCE_INLINE void
-pack<WebGLTexelFormat::RGBA8, Unpremultiply, uint8_t, uint8_t>(const uint8_t* __restrict src, uint8_t* __restrict dst)
+pack<WebGLTexelFormat::RGBA8, WebGLTexelPremultiplicationOp::Unpremultiply, uint8_t, uint8_t>(const uint8_t* __restrict src, uint8_t* __restrict dst)
 {
     float scaleFactor = src[3] ? 255.0f / src[3] : 1.0f;
     uint8_t srcR = static_cast<uint8_t>(src[0] * scaleFactor);
@@ -483,7 +485,7 @@ pack<WebGLTexelFormat::RGBA8, Unpremultiply, uint8_t, uint8_t>(const uint8_t* __
 }
 
 template<> FORCE_INLINE void
-pack<WebGLTexelFormat::RGBA4444, NoPremultiplicationOp, uint8_t, uint16_t>(const uint8_t* __restrict src, uint16_t* __restrict dst)
+pack<WebGLTexelFormat::RGBA4444, WebGLTexelPremultiplicationOp::None, uint8_t, uint16_t>(const uint8_t* __restrict src, uint16_t* __restrict dst)
 {
     *dst = ( ((src[0] & 0xF0) << 8)
            | ((src[1] & 0xF0) << 4)
@@ -492,7 +494,7 @@ pack<WebGLTexelFormat::RGBA4444, NoPremultiplicationOp, uint8_t, uint16_t>(const
 }
 
 template<> FORCE_INLINE void
-pack<WebGLTexelFormat::RGBA4444, Premultiply, uint8_t, uint16_t>(const uint8_t* __restrict src, uint16_t* __restrict dst)
+pack<WebGLTexelFormat::RGBA4444, WebGLTexelPremultiplicationOp::Premultiply, uint8_t, uint16_t>(const uint8_t* __restrict src, uint16_t* __restrict dst)
 {
     float scaleFactor = src[3] / 255.0f;
     uint8_t srcR = static_cast<uint8_t>(src[0] * scaleFactor);
@@ -506,7 +508,7 @@ pack<WebGLTexelFormat::RGBA4444, Premultiply, uint8_t, uint16_t>(const uint8_t* 
 
 // FIXME: this routine is lossy and must be removed.
 template<> FORCE_INLINE void
-pack<WebGLTexelFormat::RGBA4444, Unpremultiply, uint8_t, uint16_t>(const uint8_t* __restrict src, uint16_t* __restrict dst)
+pack<WebGLTexelFormat::RGBA4444, WebGLTexelPremultiplicationOp::Unpremultiply, uint8_t, uint16_t>(const uint8_t* __restrict src, uint16_t* __restrict dst)
 {
     float scaleFactor = src[3] ? 255.0f / src[3] : 1.0f;
     uint8_t srcR = static_cast<uint8_t>(src[0] * scaleFactor);
@@ -519,7 +521,7 @@ pack<WebGLTexelFormat::RGBA4444, Unpremultiply, uint8_t, uint16_t>(const uint8_t
 }
 
 template<> FORCE_INLINE void
-pack<WebGLTexelFormat::RGBA5551, NoPremultiplicationOp, uint8_t, uint16_t>(const uint8_t* __restrict src, uint16_t* __restrict dst)
+pack<WebGLTexelFormat::RGBA5551, WebGLTexelPremultiplicationOp::None, uint8_t, uint16_t>(const uint8_t* __restrict src, uint16_t* __restrict dst)
 {
     *dst = ( ((src[0] & 0xF8) << 8)
            | ((src[1] & 0xF8) << 3)
@@ -528,7 +530,7 @@ pack<WebGLTexelFormat::RGBA5551, NoPremultiplicationOp, uint8_t, uint16_t>(const
 }
 
 template<> FORCE_INLINE void
-pack<WebGLTexelFormat::RGBA5551, Premultiply, uint8_t, uint16_t>(const uint8_t* __restrict src, uint16_t* __restrict dst)
+pack<WebGLTexelFormat::RGBA5551, WebGLTexelPremultiplicationOp::Premultiply, uint8_t, uint16_t>(const uint8_t* __restrict src, uint16_t* __restrict dst)
 {
     float scaleFactor = src[3] / 255.0f;
     uint8_t srcR = static_cast<uint8_t>(src[0] * scaleFactor);
@@ -542,7 +544,7 @@ pack<WebGLTexelFormat::RGBA5551, Premultiply, uint8_t, uint16_t>(const uint8_t* 
 
 // FIXME: this routine is lossy and must be removed.
 template<> FORCE_INLINE void
-pack<WebGLTexelFormat::RGBA5551, Unpremultiply, uint8_t, uint16_t>(const uint8_t* __restrict src, uint16_t* __restrict dst)
+pack<WebGLTexelFormat::RGBA5551, WebGLTexelPremultiplicationOp::Unpremultiply, uint8_t, uint16_t>(const uint8_t* __restrict src, uint16_t* __restrict dst)
 {
     float scaleFactor = src[3] ? 255.0f / src[3] : 1.0f;
     uint8_t srcR = static_cast<uint8_t>(src[0] * scaleFactor);
@@ -555,7 +557,7 @@ pack<WebGLTexelFormat::RGBA5551, Unpremultiply, uint8_t, uint16_t>(const uint8_t
 }
 
 template<> FORCE_INLINE void
-pack<WebGLTexelFormat::RGB565, NoPremultiplicationOp, uint8_t, uint16_t>(const uint8_t* __restrict src, uint16_t* __restrict dst)
+pack<WebGLTexelFormat::RGB565, WebGLTexelPremultiplicationOp::None, uint8_t, uint16_t>(const uint8_t* __restrict src, uint16_t* __restrict dst)
 {
     *dst = ( ((src[0] & 0xF8) << 8)
            | ((src[1] & 0xFC) << 3)
@@ -563,7 +565,7 @@ pack<WebGLTexelFormat::RGB565, NoPremultiplicationOp, uint8_t, uint16_t>(const u
 }
 
 template<> FORCE_INLINE void
-pack<WebGLTexelFormat::RGB565, Premultiply, uint8_t, uint16_t>(const uint8_t* __restrict src, uint16_t* __restrict dst)
+pack<WebGLTexelFormat::RGB565, WebGLTexelPremultiplicationOp::Premultiply, uint8_t, uint16_t>(const uint8_t* __restrict src, uint16_t* __restrict dst)
 {
     float scaleFactor = src[3] / 255.0f;
     uint8_t srcR = static_cast<uint8_t>(src[0] * scaleFactor);
@@ -576,7 +578,7 @@ pack<WebGLTexelFormat::RGB565, Premultiply, uint8_t, uint16_t>(const uint8_t* __
 
 // FIXME: this routine is lossy and must be removed.
 template<> FORCE_INLINE void
-pack<WebGLTexelFormat::RGB565, Unpremultiply, uint8_t, uint16_t>(const uint8_t* __restrict src, uint16_t* __restrict dst)
+pack<WebGLTexelFormat::RGB565, WebGLTexelPremultiplicationOp::Unpremultiply, uint8_t, uint16_t>(const uint8_t* __restrict src, uint16_t* __restrict dst)
 {
     float scaleFactor = src[3] ? 255.0f / src[3] : 1.0f;
     uint8_t srcR = static_cast<uint8_t>(src[0] * scaleFactor);
@@ -588,7 +590,7 @@ pack<WebGLTexelFormat::RGB565, Unpremultiply, uint8_t, uint16_t>(const uint8_t* 
 }
 
 template<> FORCE_INLINE void
-pack<WebGLTexelFormat::RGB32F, NoPremultiplicationOp, float, float>(const float* __restrict src, float* __restrict dst)
+pack<WebGLTexelFormat::RGB32F, WebGLTexelPremultiplicationOp::None, float, float>(const float* __restrict src, float* __restrict dst)
 {
     dst[0] = src[0];
     dst[1] = src[1];
@@ -596,7 +598,7 @@ pack<WebGLTexelFormat::RGB32F, NoPremultiplicationOp, float, float>(const float*
 }
 
 template<> FORCE_INLINE void
-pack<WebGLTexelFormat::RGB32F, Premultiply, float, float>(const float* __restrict src, float* __restrict dst)
+pack<WebGLTexelFormat::RGB32F, WebGLTexelPremultiplicationOp::Premultiply, float, float>(const float* __restrict src, float* __restrict dst)
 {
     float scaleFactor = src[3];
     dst[0] = src[0] * scaleFactor;
@@ -605,7 +607,7 @@ pack<WebGLTexelFormat::RGB32F, Premultiply, float, float>(const float* __restric
 }
 
 template<> FORCE_INLINE void
-pack<WebGLTexelFormat::RGBA32F, NoPremultiplicationOp, float, float>(const float* __restrict src, float* __restrict dst)
+pack<WebGLTexelFormat::RGBA32F, WebGLTexelPremultiplicationOp::None, float, float>(const float* __restrict src, float* __restrict dst)
 {
     dst[0] = src[0];
     dst[1] = src[1];
@@ -614,7 +616,7 @@ pack<WebGLTexelFormat::RGBA32F, NoPremultiplicationOp, float, float>(const float
 }
 
 template<> FORCE_INLINE void
-pack<WebGLTexelFormat::RGBA32F, Premultiply, float, float>(const float* __restrict src, float* __restrict dst)
+pack<WebGLTexelFormat::RGBA32F, WebGLTexelPremultiplicationOp::Premultiply, float, float>(const float* __restrict src, float* __restrict dst)
 {
     float scaleFactor = src[3];
     dst[0] = src[0] * scaleFactor;
@@ -624,39 +626,39 @@ pack<WebGLTexelFormat::RGBA32F, Premultiply, float, float>(const float* __restri
 }
 
 template<> FORCE_INLINE void
-pack<WebGLTexelFormat::A32F, NoPremultiplicationOp, float, float>(const float* __restrict src, float* __restrict dst)
+pack<WebGLTexelFormat::A32F, WebGLTexelPremultiplicationOp::None, float, float>(const float* __restrict src, float* __restrict dst)
 {
     dst[0] = src[3];
 }
 
 template<> FORCE_INLINE void
-pack<WebGLTexelFormat::A32F, Premultiply, float, float>(const float* __restrict src, float* __restrict dst)
+pack<WebGLTexelFormat::A32F, WebGLTexelPremultiplicationOp::Premultiply, float, float>(const float* __restrict src, float* __restrict dst)
 {
     dst[0] = src[3];
 }
 
 template<> FORCE_INLINE void
-pack<WebGLTexelFormat::R32F, NoPremultiplicationOp, float, float>(const float* __restrict src, float* __restrict dst)
+pack<WebGLTexelFormat::R32F, WebGLTexelPremultiplicationOp::None, float, float>(const float* __restrict src, float* __restrict dst)
 {
     dst[0] = src[0];
 }
 
 template<> FORCE_INLINE void
-pack<WebGLTexelFormat::R32F, Premultiply, float, float>(const float* __restrict src, float* __restrict dst)
+pack<WebGLTexelFormat::R32F, WebGLTexelPremultiplicationOp::Premultiply, float, float>(const float* __restrict src, float* __restrict dst)
 {
     float scaleFactor = src[3];
     dst[0] = src[0] * scaleFactor;
 }
 
 template<> FORCE_INLINE void
-pack<WebGLTexelFormat::RA32F, NoPremultiplicationOp, float, float>(const float* __restrict src, float* __restrict dst)
+pack<WebGLTexelFormat::RA32F, WebGLTexelPremultiplicationOp::None, float, float>(const float* __restrict src, float* __restrict dst)
 {
     dst[0] = src[0];
     dst[1] = src[3];
 }
 
 template<> FORCE_INLINE void
-pack<WebGLTexelFormat::RA32F, Premultiply, float, float>(const float* __restrict src, float* __restrict dst)
+pack<WebGLTexelFormat::RA32F, WebGLTexelPremultiplicationOp::Premultiply, float, float>(const float* __restrict src, float* __restrict dst)
 {
     float scaleFactor = src[3];
     dst[0] = src[0] * scaleFactor;
