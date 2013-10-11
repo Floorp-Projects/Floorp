@@ -19,7 +19,45 @@ typedef bool WebGLboolean;
 
 namespace mozilla {
 
-enum FakeBlackStatus { DoNotNeedFakeBlack, DoNeedFakeBlack, DontKnowIfNeedFakeBlack };
+/*
+ * WebGLContextFakeBlackStatus and WebGLTextureFakeBlackStatus are enums to
+ * track what needs to use a dummy 1x1 black texture, which we refer to as a
+ * 'fake black' texture.
+ *
+ * There are generally two things that can cause us to use such 'fake black'
+ * textures:
+ *
+ *   (1) OpenGL ES rules on sampling incomplete textures specify that they
+ *       must be sampled as RGBA(0, 0, 0, 1) (opaque black). We have to implement these rules
+ *       ourselves, if only because we do not always run on OpenGL ES, and also
+ *       because this is dangerously close to the kind of case where we don't
+ *       want to trust the driver with corner cases of texture memory accesses.
+ *
+ *   (2) OpenGL has cases where a renderbuffer, or a texture image, can contain
+ *       uninitialized image data. See below the comment about WebGLImageDataStatus.
+ *       WebGL must never have access to uninitialized image data. The WebGL 1 spec,
+ *       section 4.1 'Resource Restrictions', specifies that in any such case, the
+ *       uninitialized image data must be exposed to WebGL as if it were filled
+ *       with zero bytes, which means it's either opaque or transparent black
+ *       depending on whether the image format has alpha.
+ *
+ * Why are there _two_ separate enums there, WebGLContextFakeBlackStatus
+ * and WebGLTextureFakeBlackStatus? That's because each texture must know the precise
+ * reason why it needs to be faked (incomplete texture vs. uninitialized image data),
+ * whereas the WebGL context can only know whether _any_ faking is currently needed at all.
+ */
+MOZ_BEGIN_ENUM_CLASS(WebGLContextFakeBlackStatus, int)
+  Unknown,
+  NotNeeded,
+  Needed
+MOZ_END_ENUM_CLASS(WebGLContextFakeBlackStatus)
+
+MOZ_BEGIN_ENUM_CLASS(WebGLTextureFakeBlackStatus, int)
+  Unknown,
+  NotNeeded,
+  IncompleteTexture,
+  UninitializedImageData
+MOZ_END_ENUM_CLASS(WebGLTextureFakeBlackStatus)
 
 struct VertexAttrib0Status {
     enum { Default, EmulatedUninitializedArray, EmulatedInitializedArray };

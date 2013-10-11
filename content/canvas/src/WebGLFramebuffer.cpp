@@ -51,11 +51,7 @@ WebGLFramebuffer::Attachment::HasAlpha() const {
         format = Texture()->ImageInfoAt(mTexImageTarget, mTexImageLevel).Format();
     else if (Renderbuffer())
         format = Renderbuffer()->InternalFormat();
-    return format == LOCAL_GL_RGBA ||
-           format == LOCAL_GL_LUMINANCE_ALPHA ||
-           format == LOCAL_GL_ALPHA ||
-           format == LOCAL_GL_RGBA4 ||
-           format == LOCAL_GL_RGB5_A1;
+    return FormatHasAlpha(format);
 }
 
 void

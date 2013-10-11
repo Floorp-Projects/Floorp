@@ -21,6 +21,15 @@ inline bool is_pot_assuming_nonnegative(GLsizei x)
     return x && (x & (x-1)) == 0;
 }
 
+inline bool FormatHasAlpha(GLenum format)
+{
+    return format == LOCAL_GL_RGBA ||
+           format == LOCAL_GL_LUMINANCE_ALPHA ||
+           format == LOCAL_GL_ALPHA ||
+           format == LOCAL_GL_RGBA4 ||
+           format == LOCAL_GL_RGB5_A1;
+}
+
 // NOTE: When this class is switched to new DOM bindings, update the (then-slow)
 // WrapObject calls in GetParameter and GetFramebufferAttachmentParameter.
 class WebGLTexture MOZ_FINAL
@@ -181,6 +190,9 @@ public:
         // there is no way to go from having image data to not having any
         MOZ_ASSERT(newStatus != WebGLImageDataStatus::NoImageData ||
                    imageInfo.mImageDataStatus == WebGLImageDataStatus::NoImageData);
+        if (imageInfo.mImageDataStatus != newStatus) {
+            SetFakeBlackStatus(WebGLTextureFakeBlackStatus::Unknown);
+        }
         imageInfo.mImageDataStatus = newStatus;
     }
 
@@ -193,7 +205,7 @@ protected:
     nsTArray<ImageInfo> mImageInfos;
 
     bool mHaveGeneratedMipmap;
-    FakeBlackStatus mFakeBlackStatus;
+    WebGLTextureFakeBlackStatus mFakeBlackStatus;
 
     void EnsureMaxLevelWithCustomImagesAtLeast(size_t aMaxLevelWithCustomImages) {
         mMaxLevelWithCustomImages = std::max(mMaxLevelWithCustomImages, aMaxLevelWithCustomImages);
@@ -214,8 +226,6 @@ protected:
 
 public:
 
-    void SetDontKnowIfNeedFakeBlack();
-
     void Bind(GLenum aTarget);
 
     void SetImageInfo(GLenum aTarget, GLint aLevel,
@@ -224,19 +234,19 @@ public:
 
     void SetMinFilter(GLenum aMinFilter) {
         mMinFilter = aMinFilter;
-        SetDontKnowIfNeedFakeBlack();
+        SetFakeBlackStatus(WebGLTextureFakeBlackStatus::Unknown);
     }
     void SetMagFilter(GLenum aMagFilter) {
         mMagFilter = aMagFilter;
-        SetDontKnowIfNeedFakeBlack();
+        SetFakeBlackStatus(WebGLTextureFakeBlackStatus::Unknown);
     }
     void SetWrapS(GLenum aWrapS) {
         mWrapS = aWrapS;
-        SetDontKnowIfNeedFakeBlack();
+        SetFakeBlackStatus(WebGLTextureFakeBlackStatus::Unknown);
     }
     void SetWrapT(GLenum aWrapT) {
         mWrapT = aWrapT;
-        SetDontKnowIfNeedFakeBlack();
+        SetFakeBlackStatus(WebGLTextureFakeBlackStatus::Unknown);
     }
     GLenum MinFilter() const { return mMinFilter; }
 
@@ -260,7 +270,13 @@ public:
 
     bool IsMipmapCubeComplete() const;
 
-    bool NeedFakeBlack();
+    void SetFakeBlackStatus(WebGLTextureFakeBlackStatus x) {
+        mFakeBlackStatus = x;
+        mContext->SetFakeBlackStatus(WebGLContextFakeBlackStatus::Unknown);
+    }
+    // Returns the current fake-black-status, except if it was Unknown,
+    // in which case this function resolves it first, so it never returns Unknown.
+    WebGLTextureFakeBlackStatus ResolvedFakeBlackStatus();
 };
 
 } // namespace mozilla
