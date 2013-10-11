@@ -265,8 +265,10 @@ WebGLContext::DestroyResourcesAndContext()
         mQueries.getLast()->DeleteOnce();
 
     if (mBlackTexturesAreInitialized) {
-        gl->fDeleteTextures(1, &mBlackTexture2D);
-        gl->fDeleteTextures(1, &mBlackTextureCubeMap);
+        gl->fDeleteTextures(1, &mBlackOpaqueTexture2D);
+        gl->fDeleteTextures(1, &mBlackOpaqueTextureCubeMap);
+        gl->fDeleteTextures(1, &mBlackTransparentTexture2D);
+        gl->fDeleteTextures(1, &mBlackTransparentTextureCubeMap);
         mBlackTexturesAreInitialized = false;
     }
 

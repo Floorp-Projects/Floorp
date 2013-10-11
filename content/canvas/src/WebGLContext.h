@@ -1094,7 +1094,7 @@ protected:
 
     WebGLContextFakeBlackStatus mFakeBlackStatus;
 
-    GLuint mBlackTexture2D, mBlackTextureCubeMap;
+    GLuint mBlackOpaqueTexture2D, mBlackOpaqueTextureCubeMap, mBlackTransparentTexture2D, mBlackTransparentTextureCubeMap;
     bool mBlackTexturesAreInitialized;
 
     GLfloat mVertexAttrib0Vector[4];
