@@ -6,6 +6,8 @@
 #ifndef WEBGLTYPES_H_
 #define WEBGLTYPES_H_
 
+#include "mozilla/TypedEnum.h"
+
 // Most WebIDL typedefs are identical to their OpenGL counterparts.
 #include "GLTypes.h"
 
@@ -22,6 +24,22 @@ enum FakeBlackStatus { DoNotNeedFakeBlack, DoNeedFakeBlack, DontKnowIfNeedFakeBl
 struct VertexAttrib0Status {
     enum { Default, EmulatedUninitializedArray, EmulatedInitializedArray };
 };
+
+/*
+ * Enum to track the status of image data (renderbuffer or texture image) presence
+ * and initialization.
+ *
+ * - NoImageData is the initial state before any image data is allocated.
+ * - InitializedImageData is the state after image data is allocated and initialized.
+ * - UninitializedImageData is an intermediate state where data is allocated but not
+ *   initialized. It is the state that renderbuffers are in after a renderbufferStorage call,
+ *   and it is the state that texture images are in after a texImage2D call with null data.
+ */
+MOZ_BEGIN_ENUM_CLASS(WebGLImageDataStatus, int)
+    NoImageData,
+    UninitializedImageData,
+    InitializedImageData
+MOZ_END_ENUM_CLASS(WebGLImageDataStatus)
 
 namespace WebGLTexelConversions {
 

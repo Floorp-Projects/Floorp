@@ -45,7 +45,7 @@ WebGLTexture::Delete() {
 
 int64_t
 WebGLTexture::ImageInfo::MemoryUsage() const {
-    if (!mIsDefined)
+    if (mImageDataStatus == WebGLImageDataStatus::NoImageData)
         return 0;
     int64_t texelSizeInBits = WebGLContext::GetBitsPerTexel(mFormat, mType);
     return int64_t(mWidth) * int64_t(mHeight) * texelSizeInBits / 8;
@@ -139,14 +139,14 @@ WebGLTexture::Bind(GLenum aTarget) {
 void
 WebGLTexture::SetImageInfo(GLenum aTarget, GLint aLevel,
                   GLsizei aWidth, GLsizei aHeight,
-                  GLenum aFormat, GLenum aType)
+                  GLenum aFormat, GLenum aType, WebGLImageDataStatus aStatus)
 {
     if ( (aTarget == LOCAL_GL_TEXTURE_2D) != (mTarget == LOCAL_GL_TEXTURE_2D) )
         return;
 
     EnsureMaxLevelWithCustomImagesAtLeast(aLevel);
 
-    ImageInfoAt(aTarget, aLevel) = ImageInfo(aWidth, aHeight, aFormat, aType);
+    ImageInfoAt(aTarget, aLevel) = ImageInfo(aWidth, aHeight, aFormat, aType, aStatus);
 
     if (aLevel > 0)
         SetCustomMipmap();
@@ -255,7 +255,7 @@ WebGLTexture::NeedFakeBlack() {
         // See 3.8.2 Shader Execution in the OpenGL ES 2.0.24 spec.
 
         for (size_t face = 0; face < mFacesCount; ++face) {
-            if (!ImageInfoAtFace(face, 0).mIsDefined) {
+            if (ImageInfoAtFace(face, 0).mImageDataStatus != WebGLImageDataStatus::InitializedImageData) {
                 // In case of undefined texture image, we don't print any message because this is a very common
                 // and often legitimate case, for example when doing asynchronous texture loading.
                 // An extreme case of this is the photowall google demo.
