@@ -31,7 +31,6 @@ simple_events = [
 #ifdef MOZ_B2G_RIL
     'CFStateChangeEvent',
     'DataErrorEvent',
-    'IccCardLockErrorEvent',
     'MozEmergencyCbModeEvent',
     'MozOtaStatusEvent',
     'MozWifiStatusChangeEvent',
