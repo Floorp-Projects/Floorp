@@ -81,7 +81,7 @@ nsSound::PlaySystemSound(const nsAString &aSoundAlias)
     return NS_OK;
   }
 
-  NSString *name = [NSString stringWithCharacters:aSoundAlias.BeginReading()
+  NSString *name = [NSString stringWithCharacters:reinterpret_cast<const unichar*>(aSoundAlias.BeginReading())
                                            length:aSoundAlias.Length()];
   NSSound *sound = [NSSound soundNamed:name];
   if (sound) {

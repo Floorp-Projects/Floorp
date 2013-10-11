@@ -569,15 +569,15 @@ typedef size_t
 
 /**
  * Measure the size of the table's entry storage, and if
- * |sizeOfEntryExcludingThis| is non-NULL, measure the size of things pointed
- * to by entries.  Doesn't measure |ops| because it's often shared between
- * tables, nor |data| because it's opaque.
+ * |sizeOfEntryExcludingThis| is non-nullptr, measure the size of things
+ * pointed to by entries.  Doesn't measure |ops| because it's often shared
+ * between tables, nor |data| because it's opaque.
  */
 NS_COM_GLUE size_t
 PL_DHashTableSizeOfExcludingThis(const PLDHashTable *table,
                                  PLDHashSizeOfEntryExcludingThisFun sizeOfEntryExcludingThis,
                                  mozilla::MallocSizeOf mallocSizeOf,
-                                 void *arg = NULL);
+                                 void *arg = nullptr);
 
 /**
  * Like PL_DHashTableSizeOfExcludingThis, but includes sizeof(*this).
@@ -586,7 +586,7 @@ NS_COM_GLUE size_t
 PL_DHashTableSizeOfIncludingThis(const PLDHashTable *table,
                                  PLDHashSizeOfEntryExcludingThisFun sizeOfEntryExcludingThis,
                                  mozilla::MallocSizeOf mallocSizeOf,
-                                 void *arg = NULL);
+                                 void *arg = nullptr);
 
 #ifdef DEBUG
 /**

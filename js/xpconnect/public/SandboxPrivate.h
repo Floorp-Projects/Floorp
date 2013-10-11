@@ -39,7 +39,7 @@ public:
 
     void ForgetGlobalObject()
     {
-        mGlobalJSObject = NULL;
+        mGlobalJSObject = nullptr;
     }
 private:
     nsCOMPtr<nsIPrincipal> mPrincipal;

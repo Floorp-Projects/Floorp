@@ -2552,7 +2552,7 @@ nsDownloadManager::ConfirmCancelDownloads(int32_t aCount,
 ////////////////////////////////////////////////////////////////////////////////
 //// nsDownload
 
-NS_IMPL_CLASSINFO(nsDownload, NULL, 0, NS_DOWNLOAD_CID)
+NS_IMPL_CLASSINFO(nsDownload, nullptr, 0, NS_DOWNLOAD_CID)
 NS_IMPL_ISUPPORTS4_CI(
     nsDownload
   , nsIDownload
@@ -2590,8 +2590,8 @@ NS_IMETHODIMP nsDownload::SetSha256Hash(const nsACString& aHash) {
 #ifdef MOZ_ENABLE_GIO
 static void gio_set_metadata_done(GObject *source_obj, GAsyncResult *res, gpointer user_data)
 {
-  GError *err = NULL;
-  g_file_set_attributes_finish(G_FILE(source_obj), res, NULL, &err);
+  GError *err = nullptr;
+  g_file_set_attributes_finish(G_FILE(source_obj), res, nullptr, &err);
   if (err) {
 #ifdef DEBUG
     NS_DebugBreak(NS_DEBUG_WARNING, "Set file metadata failed: ", err->message, __FILE__, __LINE__);
@@ -2733,7 +2733,7 @@ nsDownload::SetState(DownloadState aState)
             GtkRecentManager* manager = gtk_recent_manager_get_default();
 
             gchar* uri = g_filename_to_uri(NS_ConvertUTF16toUTF8(path).get(),
-                                           NULL, NULL);
+                                           nullptr, nullptr);
             if (uri) {
               gtk_recent_manager_add_item(manager, uri);
               g_free(uri);
@@ -2751,7 +2751,7 @@ nsDownload::SetState(DownloadState aState)
                                       file_info,
                                       G_FILE_QUERY_INFO_NONE,
                                       G_PRIORITY_DEFAULT,
-                                      NULL, gio_set_metadata_done, NULL);
+                                      nullptr, gio_set_metadata_done, nullptr);
           g_object_unref(file_info);
           g_object_unref(gio_file);
 #endif
@@ -2764,7 +2764,7 @@ nsDownload::SetState(DownloadState aState)
                                                  kCFStringEncodingUTF8);
         CFNotificationCenterRef center = ::CFNotificationCenterGetDistributedCenter();
         ::CFNotificationCenterPostNotification(center, CFSTR("com.apple.DownloadFileFinished"),
-                                               observedObject, NULL, TRUE);
+                                               observedObject, nullptr, TRUE);
         ::CFRelease(observedObject);
 #endif
 #ifdef MOZ_WIDGET_ANDROID

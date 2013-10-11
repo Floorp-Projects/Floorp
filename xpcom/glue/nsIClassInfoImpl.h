@@ -31,16 +31,16 @@
  *
  * Change this to
  *
- *   NS_IMPL_CLASSINFO(nsFooBar, NULL, 0, NS_FOOBAR_CID)
+ *   NS_IMPL_CLASSINFO(nsFooBar, nullptr, 0, NS_FOOBAR_CID)
  *   NS_IMPL_ISUPPORTS2_CI(nsFooBar, nsIFoo, nsIBar)
  *
  * If nsFooBar is threadsafe, change the 0 above to nsIClassInfo::THREADSAFE.
  * If it's a singleton, use nsIClassInfo::SINGLETON.  The full list of flags is
  * in nsIClassInfo.idl.
  *
- * The NULL parameter is there so you can pass a function for converting from
- * an XPCOM object to a scriptable helper.  Unless you're doing specialized JS
- * work, you can probably leave this as NULL.
+ * The nullptr parameter is there so you can pass a function for converting
+ * from an XPCOM object to a scriptable helper.  Unless you're doing
+ * specialized JS work, you can probably leave this as nullptr.
  *
  * This file also defines the NS_IMPL_QUERY_INTERFACE2_CI macro, which you can
  * use to replace NS_IMPL_QUERY_INTERFACE2, if you use that instead of
@@ -121,7 +121,7 @@ private:
     _cid,                                                               \
   };                                                                    \
   mozilla::AlignedStorage2<GenericClassInfo> k##_class##ClassInfoDataPlace;   \
-  nsIClassInfo* NS_CLASSINFO_NAME(_class) = NULL;
+  nsIClassInfo* NS_CLASSINFO_NAME(_class) = nullptr;
 
 #define NS_IMPL_QUERY_CLASSINFO(_class)                                       \
   if ( aIID.Equals(NS_GET_IID(nsIClassInfo)) ) {                              \

@@ -70,8 +70,8 @@ PathGetSiblingFilePath(LPWSTR destinationBuffer,
  * @param  updateInfoDir   The directory where update info is stored.
  * @param  forceSync       If true even if the ini file specifies async, the
  *                         process will wait for termination of PostUpdate.
- * @param  userToken       The user token to run as, if NULL the current user
- *                         will be used.
+ * @param  userToken       The user token to run as, if nullptr the current
+ *                         user will be used.
  * @return TRUE if there was no error starting the process.
  */
 BOOL
@@ -95,12 +95,12 @@ LaunchWinPostProcess(const WCHAR *installationDir,
   WCHAR exearg[MAX_PATH + 1];
   WCHAR exeasync[10];
   bool async = true;
-  if (!GetPrivateProfileStringW(L"PostUpdateWin", L"ExeRelPath", NULL, exefile,
-                                MAX_PATH + 1, inifile)) {
+  if (!GetPrivateProfileStringW(L"PostUpdateWin", L"ExeRelPath", nullptr,
+                                exefile, MAX_PATH + 1, inifile)) {
     return FALSE;
   }
 
-  if (!GetPrivateProfileStringW(L"PostUpdateWin", L"ExeArg", NULL, exearg,
+  if (!GetPrivateProfileStringW(L"PostUpdateWin", L"ExeArg", nullptr, exearg,
                                 MAX_PATH + 1, inifile)) {
     return FALSE;
   }
@@ -161,22 +161,22 @@ LaunchWinPostProcess(const WCHAR *installationDir,
     ok = CreateProcessAsUserW(userToken,
                               exefullpath,
                               cmdline,
-                              NULL,  // no special security attributes
-                              NULL,  // no special thread attributes
-                              false, // don't inherit filehandles
-                              0,     // No special process creation flags
-                              NULL,  // inherit my environment
+                              nullptr,  // no special security attributes
+                              nullptr,  // no special thread attributes
+                              false,    // don't inherit filehandles
+                              0,        // No special process creation flags
+                              nullptr,  // inherit my environment
                               workingDirectory,
                               &si,
                               &pi);
   } else {
     ok = CreateProcessW(exefullpath,
                         cmdline,
-                        NULL,  // no special security attributes
-                        NULL,  // no special thread attributes
-                        false, // don't inherit filehandles
-                        0,     // No special process creation flags
-                        NULL,  // inherit my environment
+                        nullptr,  // no special security attributes
+                        nullptr,  // no special thread attributes
+                        false,    // don't inherit filehandles
+                        0,        // No special process creation flags
+                        nullptr,  // inherit my environment
                         workingDirectory,
                         &si,
                         &pi);
@@ -203,7 +203,7 @@ BOOL
 StartServiceUpdate(LPCWSTR installDir)
 {
   // Get a handle to the local computer SCM database
-  SC_HANDLE manager = OpenSCManager(NULL, NULL,
+  SC_HANDLE manager = OpenSCManager(nullptr, nullptr,
                                     SC_MANAGER_ALL_ACCESS);
   if (!manager) {
     return FALSE;
@@ -237,9 +237,9 @@ StartServiceUpdate(LPCWSTR installDir)
           sizeof(cmdLine) / sizeof(cmdLine[0]) - 1);
   BOOL svcUpdateProcessStarted = CreateProcessW(maintserviceInstallerPath,
                                                 cmdLine,
-                                                NULL, NULL, FALSE,
+                                                nullptr, nullptr, FALSE,
                                                 0,
-                                                NULL, installDir, &si, &pi);
+                                                nullptr, installDir, &si, &pi);
   if (svcUpdateProcessStarted) {
     CloseHandle(pi.hProcess);
     CloseHandle(pi.hThread);
@@ -270,7 +270,7 @@ StartServiceCommand(int argc, LPCWSTR* argv)
   }
 
   // Get a handle to the SCM database.
-  SC_HANDLE serviceManager = OpenSCManager(NULL, NULL,
+  SC_HANDLE serviceManager = OpenSCManager(nullptr, nullptr,
                                            SC_MANAGER_CONNECT |
                                            SC_MANAGER_ENUMERATE_SERVICE);
   if (!serviceManager)  {
@@ -375,14 +375,14 @@ WriteStatusPending(LPCWSTR updateDirPath)
 
   const char pending[] = "pending";
   HANDLE statusFile = CreateFileW(updateStatusFilePath, GENERIC_WRITE, 0,
-                                  NULL, CREATE_ALWAYS, 0, NULL);
+                                  nullptr, CREATE_ALWAYS, 0, nullptr);
   if (statusFile == INVALID_HANDLE_VALUE) {
     return FALSE;
   }
 
   DWORD wrote;
   BOOL ok = WriteFile(statusFile, pending,
-                      sizeof(pending) - 1, &wrote, NULL);
+                      sizeof(pending) - 1, &wrote, nullptr);
   CloseHandle(statusFile);
   return ok && (wrote == sizeof(pending) - 1);
 }
@@ -403,7 +403,7 @@ WriteStatusFailure(LPCWSTR updateDirPath, int errorCode)
   }
 
   HANDLE statusFile = CreateFileW(updateStatusFilePath, GENERIC_WRITE, 0,
-                                  NULL, CREATE_ALWAYS, 0, NULL);
+                                  nullptr, CREATE_ALWAYS, 0, nullptr);
   if (statusFile == INVALID_HANDLE_VALUE) {
     return FALSE;
   }
@@ -413,7 +413,7 @@ WriteStatusFailure(LPCWSTR updateDirPath, int errorCode)
   DWORD toWrite = strlen(failure);
   DWORD wrote;
   BOOL ok = WriteFile(statusFile, failure,
-                      toWrite, &wrote, NULL);
+                      toWrite, &wrote, nullptr);
   CloseHandle(statusFile);
   return ok && wrote == toWrite;
 }
@@ -459,7 +459,7 @@ WaitForServiceStop(LPCWSTR serviceName, DWORD maxWaitSeconds)
   DWORD lastServiceState = 0x000000CF;
 
   // Get a handle to the SCM database.
-  SC_HANDLE serviceManager = OpenSCManager(NULL, NULL,
+  SC_HANDLE serviceManager = OpenSCManager(nullptr, nullptr,
                                            SC_MANAGER_CONNECT |
                                            SC_MANAGER_ENUMERATE_SERVICE);
   if (!serviceManager)  {
@@ -674,7 +674,7 @@ static BOOL
 GetDWORDValue(HKEY key, LPCWSTR valueName, DWORD &retValue)
 {
   DWORD regDWORDValueSize = sizeof(DWORD);
-  LONG retCode = RegQueryValueExW(key, valueName, 0, NULL,
+  LONG retCode = RegQueryValueExW(key, valueName, 0, nullptr,
                                   reinterpret_cast<LPBYTE>(&retValue),
                                   &regDWORDValueSize);
   return ERROR_SUCCESS == retCode;
@@ -736,7 +736,7 @@ IsUnpromptedElevation(BOOL &isUnpromptedElevation)
     }
     DWORD len = aCharLength * sizeof(WCHAR);
     memset(aIDBuffer, 0, len);
-    if (RegQueryValueExW(key, L"AppUserModelID", NULL, NULL,
+    if (RegQueryValueExW(key, L"AppUserModelID", nullptr, nullptr,
                          (LPBYTE)aIDBuffer, &len) != ERROR_SUCCESS || !len) {
       RegCloseKey(key);
       return false;
@@ -748,12 +748,12 @@ IsUnpromptedElevation(BOOL &isUnpromptedElevation)
   HRESULT
   LaunchDefaultMetroBrowser()
   {
-    CoInitialize(NULL);
+    CoInitialize(nullptr);
     HRESULT hr = E_FAIL;
     // The interface that allows us to activate the browser
     IApplicationActivationManager *activateMgr;
-    if (FAILED(hr = CoCreateInstance(CLSID_ApplicationActivationManager, NULL,
-                                     CLSCTX_LOCAL_SERVER,
+    if (FAILED(hr = CoCreateInstance(CLSID_ApplicationActivationManager,
+                                     nullptr, CLSCTX_LOCAL_SERVER,
                                      IID_IApplicationActivationManager,
                                      (void**)&activateMgr))) {
       CoUninitialize();
@@ -770,7 +770,7 @@ IsUnpromptedElevation(BOOL &isUnpromptedElevation)
 
     // Hand off focus rights to the out-of-process activation server. Without
     // this the metro interface won't launch.
-    CoAllowSetForegroundWindow(activateMgr, NULL);
+    CoAllowSetForegroundWindow(activateMgr, nullptr);
 
     // Launch default browser in Metro
     DWORD processID;

@@ -16,9 +16,9 @@ ProfilerMarkerPayload::ProfilerMarkerPayload(ProfilerBacktrace* aStack)
 ProfilerMarkerPayload::ProfilerMarkerPayload(const mozilla::TimeStamp& aStartTime,
                                              const mozilla::TimeStamp& aEndTime,
                                              ProfilerBacktrace* aStack)
-  : mStartTime(aStartTime),
-    mEndTime(aEndTime),
-    mStack(aStack)
+  : mStartTime(aStartTime)
+  , mEndTime(aEndTime)
+  , mStack(aStack)
 {}
 
 ProfilerMarkerPayload::~ProfilerMarkerPayload()
@@ -57,6 +57,37 @@ ProfilerMarkerPayload::prepareCommonProps<JSObjectBuilder>(
                                          const char* aMarkerType,
                                          JSObjectBuilder& b,
                                          JSObjectBuilder::ObjectHandle aObject);
+
+ProfilerMarkerTracing::ProfilerMarkerTracing(const char* aCategory, TracingMetadata aMetaData)
+  : mCategory(aCategory)
+  , mMetaData(aMetaData)
+{}
+
+template<typename Builder>
+typename Builder::Object
+ProfilerMarkerTracing::preparePayloadImp(Builder& b)
+{
+  typename Builder::RootedObject data(b.context(), b.CreateObject());
+  prepareCommonProps("tracing", b, data);
+
+  if (GetCategory()) {
+    b.DefineProperty(data, "category", GetCategory());
+  }
+  if (GetMetaData() != TRACING_DEFAULT) {
+    if (GetMetaData() == TRACING_INTERVAL_START) {
+      b.DefineProperty(data, "interval", "start");
+    } else if (GetMetaData() == TRACING_INTERVAL_END) {
+      b.DefineProperty(data, "interval", "end");
+    }
+  }
+
+  return data;
+}
+
+template JSCustomObjectBuilder::Object
+ProfilerMarkerTracing::preparePayloadImp<JSCustomObjectBuilder>(JSCustomObjectBuilder& b);
+template JSObjectBuilder::Object
+ProfilerMarkerTracing::preparePayloadImp<JSObjectBuilder>(JSObjectBuilder& b);
 
 ProfilerMarkerImagePayload::ProfilerMarkerImagePayload(gfxASurface *aImg)
   : mImg(aImg)

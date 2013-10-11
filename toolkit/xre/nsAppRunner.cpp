@@ -391,7 +391,7 @@ static void Output(bool isError, const char *fmt, ... )
                         wide_msg,
                         sizeof(wide_msg) / sizeof(wchar_t));
 
-    MessageBoxW(NULL, wide_msg, L"XULRunner", flags);
+    MessageBoxW(nullptr, wide_msg, L"XULRunner", flags);
     PR_smprintf_free(msg);
   }
 #else
@@ -1155,10 +1155,10 @@ ProfileServiceFactoryConstructor(const mozilla::Module& module, const mozilla::M
 NS_DEFINE_NAMED_CID(APPINFO_CID);
 
 static const mozilla::Module::CIDEntry kXRECIDs[] = {
-  { &kAPPINFO_CID, false, NULL, AppInfoConstructor },
-  { &kProfileServiceCID, false, ProfileServiceFactoryConstructor, NULL },
-  { &kNativeAppSupportCID, false, NULL, ScopedXPCOMStartup::CreateAppSupport },
-  { NULL }
+  { &kAPPINFO_CID, false, nullptr, AppInfoConstructor },
+  { &kProfileServiceCID, false, ProfileServiceFactoryConstructor, nullptr },
+  { &kNativeAppSupportCID, false, nullptr, ScopedXPCOMStartup::CreateAppSupport },
+  { nullptr }
 };
 
 static const mozilla::Module::ContractIDEntry kXREContracts[] = {
@@ -1169,7 +1169,7 @@ static const mozilla::Module::ContractIDEntry kXREContracts[] = {
 #endif
   { NS_PROFILESERVICE_CONTRACTID, &kProfileServiceCID },
   { NS_NATIVEAPPSUPPORT_CONTRACTID, &kNativeAppSupportCID },
-  { NULL }
+  { nullptr }
 };
 
 static const mozilla::Module kXREModule = {
@@ -1541,7 +1541,7 @@ char *createEnv()
   // copy the existing environment
   char *env = (char *)calloc(0x6000, sizeof(char));
   if (!env) {
-    return NULL;
+    return nullptr;
   }
 
   // walk along the environ string array of the C library and copy
@@ -2621,7 +2621,7 @@ static void MOZ_gdk_display_close(GdkDisplay *display)
   GtkSettings* settings =
     gtk_settings_get_for_screen(gdk_display_get_default_screen(display));
   gchar *theme_name;
-  g_object_get(settings, "gtk-theme-name", &theme_name, NULL);
+  g_object_get(settings, "gtk-theme-name", &theme_name, nullptr);
   if (theme_name) {
     theme_is_qt = strcmp(theme_name, "Qt") == 0;
     if (theme_is_qt)
@@ -2661,7 +2661,7 @@ static void MOZ_gdk_display_close(GdkDisplay *display)
   // Now that we have finished with GTK and Pango, we could unref fontmap,
   // which would allow us to call FcFini, but removing what is really
   // Pango's ref feels a bit evil.  Pango-1.22 will have support for
-  // pango_cairo_font_map_set_default(NULL), which would release the
+  // pango_cairo_font_map_set_default(nullptr), which would release the
   // reference on the old fontmap.
 
   // cairo_debug_reset_static_data() is prototyped through cairo.h included
@@ -2869,7 +2869,8 @@ XREMain::XRE_mainInit(bool* aExitFlag)
     OSVERSIONINFO vinfo;
     vinfo.dwOSVersionInfoSize = sizeof(vinfo);
     if (GetVersionEx(&vinfo) && vinfo.dwMajorVersion >= 6) {
-      CreateThread(NULL, 0, (LPTHREAD_START_ROUTINE)&InitDwriteBG, NULL, 0, NULL);
+      CreateThread(nullptr, 0, (LPTHREAD_START_ROUTINE)&InitDwriteBG,
+                   nullptr, 0, nullptr);
     }
   }
 #endif
@@ -3924,7 +3925,7 @@ XREMain::XRE_main(int argc, char* argv[], const nsXREAppData* aAppData)
   // This must be done before g_thread_init() is called.
   g_slice_set_config(G_SLICE_CONFIG_ALWAYS_MALLOC, 1);
 #endif
-  g_thread_init(NULL);
+  g_thread_init(nullptr);
 #endif
 
   // init

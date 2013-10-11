@@ -34,9 +34,9 @@ nsresult TestPermissions()
 
     // Security variables
     DWORD result;
-    PSID everyoneSID = NULL, adminSID = NULL;
-    PACL dirACL = NULL, fileACL = NULL;
-    PSECURITY_DESCRIPTOR dirSD = NULL, fileSD = NULL;
+    PSID everyoneSID = nullptr, adminSID = nullptr;
+    PACL dirACL = nullptr, fileACL = nullptr;
+    PSECURITY_DESCRIPTOR dirSD = nullptr, fileSD = nullptr;
     EXPLICIT_ACCESS ea[2];
     SID_IDENTIFIER_AUTHORITY SIDAuthWorld =
             SECURITY_WORLD_SID_AUTHORITY;
@@ -86,7 +86,7 @@ nsresult TestPermissions()
     ea[1].Trustee.ptstrName  = (LPTSTR) adminSID;
 
     // Create a new ACL that contains the new ACEs.
-    result = SetEntriesInAcl(2, ea, NULL, &dirACL);
+    result = SetEntriesInAcl(2, ea, nullptr, &dirACL);
     if (ERROR_SUCCESS != result) 
     {
         fail("NTFS Permissions: SetEntriesInAcl Error");
@@ -96,7 +96,7 @@ nsresult TestPermissions()
     // Initialize a security descriptor.  
     dirSD = (PSECURITY_DESCRIPTOR) LocalAlloc(LPTR, 
                              SECURITY_DESCRIPTOR_MIN_LENGTH); 
-    if (NULL == dirSD) 
+    if (nullptr == dirSD) 
     { 
         fail("NTFS Permissions: LocalAlloc Error");
         return NS_ERROR_FAILURE; 
@@ -128,8 +128,8 @@ nsresult TestPermissions()
         return NS_ERROR_FAILURE;
     }
 
-    GetFullPathNameW((LPCWSTR)L".\\NTFSPERMTEMP1", MAX_PATH, dir1Path, NULL);
-
+    GetFullPathNameW((LPCWSTR)L".\\NTFSPERMTEMP1", MAX_PATH, dir1Path,
+                     nullptr);
 
     rv = NS_NewLocalFile(nsEmbedString(dir1Path), false,
                          getter_AddRefs(tempDirectory1));
@@ -144,10 +144,10 @@ nsresult TestPermissions()
     tempFileHandle = CreateFileW(L".\\NTFSPERMTEMP1\\NTFSPerm.tmp", 
                             GENERIC_READ | GENERIC_WRITE,
                             0, 
-                            NULL, //default security
+                            nullptr, //default security
                             CREATE_ALWAYS,        
                             FILE_ATTRIBUTE_NORMAL,
-                            NULL);  
+                            nullptr);  
 
     if(tempFileHandle == INVALID_HANDLE_VALUE)
     {
@@ -158,7 +158,7 @@ nsresult TestPermissions()
     CloseHandle(tempFileHandle);
 
     GetFullPathNameW((LPCWSTR)L".\\NTFSPERMTEMP1\\NTFSPerm.tmp", 
-                        MAX_PATH, filePath, NULL);
+                        MAX_PATH, filePath, nullptr);
 
     rv = NS_NewLocalFile(nsEmbedString(filePath), false,
                          getter_AddRefs(tempFile));
@@ -172,7 +172,7 @@ nsresult TestPermissions()
     ea[0].grfAccessPermissions = GENERIC_ALL | STANDARD_RIGHTS_ALL;
 
     // Update the ACL to contain the new ACEs.
-    result = SetEntriesInAcl(2, ea, NULL, &dirACL);
+    result = SetEntriesInAcl(2, ea, nullptr, &dirACL);
     if (ERROR_SUCCESS != result) 
     {
         fail("NTFS Permissions: SetEntriesInAcl 2 Error");
@@ -193,8 +193,8 @@ nsresult TestPermissions()
         return NS_ERROR_FAILURE;
     }
 
-    GetFullPathNameW((LPCWSTR)L".\\NTFSPERMTEMP2", MAX_PATH, dir2Path, NULL);
-
+    GetFullPathNameW((LPCWSTR)L".\\NTFSPERMTEMP2", MAX_PATH, dir2Path,
+                     nullptr);
 
     rv = NS_NewLocalFile(nsEmbedString(dir2Path), false,
                          getter_AddRefs(tempDirectory2));
@@ -218,7 +218,8 @@ nsresult TestPermissions()
                                         SE_FILE_OBJECT,
                                         DACL_SECURITY_INFORMATION | 
                                         UNPROTECTED_DACL_SECURITY_INFORMATION,
-                                        NULL, NULL, &fileACL, NULL, &fileSD);
+                                        nullptr, nullptr, &fileACL, nullptr,
+                                        &fileSD);
     if (ERROR_SUCCESS != result) 
     {
         fail("NTFS Permissions: GetNamedSecurityDescriptor Error");

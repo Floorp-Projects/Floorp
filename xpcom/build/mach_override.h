@@ -68,7 +68,7 @@
 	@param	overrideFunctionAddress			->	Required address to the overriding
 												function.
 	@param	originalFunctionReentryIsland	<-	Optional pointer to pointer to the
-												reentry island. Can be NULL.
+												reentry island. Can be nullptr.
 	@result									<-	err_cannot_override if the original
 												function's implementation begins with
 												the 'mfctr' instruction.

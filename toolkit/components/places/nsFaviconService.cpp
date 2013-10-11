@@ -66,7 +66,7 @@ public:
 
 PLACES_FACTORY_SINGLETON_IMPLEMENTATION(nsFaviconService, gFaviconService)
 
-NS_IMPL_CLASSINFO(nsFaviconService, NULL, 0, NS_FAVICONSERVICE_CID)
+NS_IMPL_CLASSINFO(nsFaviconService, nullptr, 0, NS_FAVICONSERVICE_CID)
 NS_IMPL_ISUPPORTS3_CI(
   nsFaviconService
 , nsIFaviconService

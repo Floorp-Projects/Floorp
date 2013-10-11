@@ -1594,7 +1594,8 @@ NS_IMETHODIMP nsCocoaWindow::SetTitle(const nsAString& aTitle)
     return NS_OK;
 
   const nsString& strTitle = PromiseFlatString(aTitle);
-  NSString* title = [NSString stringWithCharacters:strTitle.get() length:strTitle.Length()];
+  NSString* title = [NSString stringWithCharacters:reinterpret_cast<const unichar*>(strTitle.get())
+                                            length:strTitle.Length()];
   [mWindow setTitle:title];
 
   return NS_OK;

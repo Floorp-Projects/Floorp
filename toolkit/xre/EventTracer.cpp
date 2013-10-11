@@ -69,7 +69,7 @@ using mozilla::FireAndWaitForTracerEvent;
 
 namespace {
 
-PRThread* sTracerThread = NULL;
+PRThread* sTracerThread = nullptr;
 bool sExit = false;
 
 struct TracerStartClosure {
@@ -100,12 +100,12 @@ void TracerThread(void *arg)
   PRIntervalTime interval = PR_MillisecondsToInterval(10);
 
   sExit = false;
-  FILE* log = NULL;
+  FILE* log = nullptr;
   char* envfile = PR_GetEnv("MOZ_INSTRUMENT_EVENT_LOOP_OUTPUT");
   if (envfile) {
     log = fopen(envfile, "w");
   }
-  if (log == NULL)
+  if (log == nullptr)
     log = stdout;
 
   char* thresholdenv = PR_GetEnv("MOZ_INSTRUMENT_EVENT_LOOP_THRESHOLD");
@@ -197,7 +197,7 @@ bool InitEventTracing(bool aLog)
                                   PR_GLOBAL_THREAD,
                                   PR_JOINABLE_THREAD,
                                   0);
-  return sTracerThread != NULL;
+  return sTracerThread != nullptr;
 }
 
 void ShutdownEventTracing()
@@ -211,7 +211,7 @@ void ShutdownEventTracing()
 
   if (sTracerThread)
     PR_JoinThread(sTracerThread);
-  sTracerThread = NULL;
+  sTracerThread = nullptr;
 
   // Allow the widget backend to clean up.
   CleanUpWidgetTracing();

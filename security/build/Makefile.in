@@ -12,8 +12,6 @@ endif
 
 default::
 
-include $(topsrcdir)/config/makefiles/functions.mk
-
 NSS_LIBS = \
   nss3 \
   nssutil3 \
