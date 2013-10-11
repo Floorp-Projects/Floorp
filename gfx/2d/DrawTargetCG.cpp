@@ -381,6 +381,83 @@ DrawTargetCG::CreateGradientStops(GradientStop *aStops, uint32_t aNumStops,
   return new GradientStopsCG(aStops, aNumStops, aExtendMode);
 }
 
+static void
+UpdateLinearParametersToIncludePoint(double *min_t, double *max_t,
+                                     CGPoint *start,
+                                     double dx, double dy,
+                                     double x, double y)
+{
+  /**
+   * Compute a parameter t such that a line perpendicular to the (dx,dy)
+   * vector, passing through (start->x + dx*t, start->y + dy*t), also
+   * passes through (x,y).
+   *
+   * Let px = x - start->x, py = y - start->y.
+   * t is given by
+   *   (px - dx*t)*dx + (py - dy*t)*dy = 0
+   *
+   * Solving for t we get
+   *   numerator = dx*px + dy*py
+   *   denominator = dx^2 + dy^2
+   *   t = numerator/denominator
+   *
+   * In CalculateRepeatingGradientParams we know the length of (dx,dy)
+   * is not zero. (This is checked in DrawLinearRepeatingGradient.)
+   */
+  double px = x - start->x;
+  double py = y - start->y;
+  double numerator = dx * px + dy * py;
+  double denominator = dx * dx + dy * dy;
+  double t = numerator / denominator;
+
+  if (*min_t > t) {
+    *min_t = t;
+  }
+  if (*max_t < t) {
+    *max_t = t;
+  }
+}
+
+/**
+ * Repeat the gradient line such that lines extended perpendicular to the
+ * gradient line at both start and end would completely enclose the drawing
+ * extents.
+ */
+static void
+CalculateRepeatingGradientParams(CGPoint *aStart, CGPoint *aEnd,
+                                 CGRect aExtents, int *aRepeatCount)
+{
+  double t_min = 0.;
+  double t_max = 0.;
+  double dx = aEnd->x - aStart->x;
+  double dy = aEnd->y - aStart->y;
+
+  double bounds_x1 = aExtents.origin.x;
+  double bounds_y1 = aExtents.origin.y;
+  double bounds_x2 = aExtents.origin.x + aExtents.size.width;
+  double bounds_y2 = aExtents.origin.y + aExtents.size.height;
+
+  UpdateLinearParametersToIncludePoint(&t_min, &t_max, aStart, dx, dy,
+                                       bounds_x1, bounds_y1);
+  UpdateLinearParametersToIncludePoint(&t_min, &t_max, aStart, dx, dy,
+                                       bounds_x2, bounds_y1);
+  UpdateLinearParametersToIncludePoint(&t_min, &t_max, aStart, dx, dy,
+                                       bounds_x2, bounds_y2);
+  UpdateLinearParametersToIncludePoint(&t_min, &t_max, aStart, dx, dy,
+                                       bounds_x1, bounds_y2);
+
+  // Move t_min and t_max to the nearest usable integer to try to avoid
+  // subtle variations due to numerical instability, especially accidentally
+  // cutting off a pixel. Extending the gradient repetitions is always safe.
+  t_min = floor (t_min);
+  t_max = ceil (t_max);
+  aEnd->x = aStart->x + dx * t_max;
+  aEnd->y = aStart->y + dy * t_max;
+  aStart->x = aStart->x + dx * t_min;
+  aStart->y = aStart->y + dy * t_min;
+
+  *aRepeatCount = t_max - t_min;
+}
 
 static void
 DrawLinearRepeatingGradient(CGContextRef cg, const LinearGradientPattern &aPattern, const CGRect &aExtents)
@@ -389,32 +466,12 @@ DrawLinearRepeatingGradient(CGContextRef cg, const LinearGradientPattern &aPatte
   CGPoint startPoint = { aPattern.mBegin.x, aPattern.mBegin.y };
   CGPoint endPoint = { aPattern.mEnd.x, aPattern.mEnd.y };
 
-  // extend the gradient line in multiples of the existing length in both
-  // directions until it crosses an edge of the extents box.
-  double xDiff = aPattern.mEnd.x - aPattern.mBegin.x;
-  double yDiff = aPattern.mEnd.y - aPattern.mBegin.y;
-
   int repeatCount = 1;
   // if we don't have a line then we can't extend it
-  if (xDiff || yDiff) {
-    while (startPoint.x > aExtents.origin.x
-           && startPoint.y > aExtents.origin.y
-           && startPoint.x < (aExtents.origin.x+aExtents.size.width)
-           && startPoint.y < (aExtents.origin.y+aExtents.size.height))
-    {
-      startPoint.x -= xDiff;
-      startPoint.y -= yDiff;
-      repeatCount++;
-    }
-    while (endPoint.x > aExtents.origin.x
-           && endPoint.y > aExtents.origin.y
-           && endPoint.x < (aExtents.origin.x+aExtents.size.width)
-           && endPoint.y < (aExtents.origin.y+aExtents.size.height))
-    {
-      endPoint.x += xDiff;
-      endPoint.y += yDiff;
-      repeatCount++;
-    }
+  if (aPattern.mEnd.x != aPattern.mBegin.x ||
+      aPattern.mEnd.y != aPattern.mBegin.y) {
+    CalculateRepeatingGradientParams(&startPoint, &endPoint, aExtents,
+                                     &repeatCount);
   }
 
   double scale = 1./repeatCount;
