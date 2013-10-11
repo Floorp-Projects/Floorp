@@ -21,6 +21,7 @@ extern PRLogModuleInfo* GetDataChannelLog();
 
 
 #include "nsDOMDataChannelDeclarations.h"
+#include "nsDOMDataChannel.h"
 #include "nsIDOMFile.h"
 #include "nsIDOMDataChannel.h"
 #include "nsIDOMMessageEvent.h"
@@ -36,6 +37,12 @@ extern PRLogModuleInfo* GetDataChannelLog();
 #include "nsDOMFile.h"
 
 #include "DataChannel.h"
+
+// Since we've moved the windows.h include down here, we have to explicitly
+// undef GetBinaryType, otherwise we'll get really odd conflicts
+#ifdef GetBinaryType
+#undef GetBinaryType
+#endif
 
 using namespace mozilla;
 using namespace mozilla::dom;
@@ -72,6 +79,13 @@ NS_IMPL_RELEASE_INHERITED(nsDOMDataChannel, nsDOMEventTargetHelper)
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION_INHERITED(nsDOMDataChannel)
   NS_INTERFACE_MAP_ENTRY(nsIDOMDataChannel)
 NS_INTERFACE_MAP_END_INHERITING(nsDOMEventTargetHelper)
+
+nsDOMDataChannel::nsDOMDataChannel(already_AddRefed<mozilla::DataChannel> aDataChannel)
+  : mDataChannel(aDataChannel)
+  , mBinaryType(DC_BINARY_TYPE_BLOB)
+{
+  SetIsDOMBinding();
+}
 
 nsresult
 nsDOMDataChannel::Init(nsPIDOMWindow* aDOMWindow)
