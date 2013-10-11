@@ -137,6 +137,7 @@ nsAppStartup::nsAppStartup() :
   mConsiderQuitStopper(0),
   mRunning(false),
   mShuttingDown(false),
+  mStartingUp(true),
   mAttemptingQuit(false),
   mRestart(false),
   mInterrupted(false),
@@ -513,6 +514,23 @@ NS_IMETHODIMP
 nsAppStartup::GetShuttingDown(bool *aResult)
 {
   *aResult = mShuttingDown;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsAppStartup::GetStartingUp(bool *aResult)
+{
+  *aResult = mStartingUp;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsAppStartup::DoneStartingUp()
+{
+  // This must be called once at most
+  MOZ_ASSERT(mStartingUp);
+
+  mStartingUp = false;
   return NS_OK;
 }
 
