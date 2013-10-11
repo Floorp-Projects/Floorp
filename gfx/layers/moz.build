@@ -25,6 +25,7 @@ EXPORTS += [
     'basic/BasicLayers.h',
     'basic/BasicLayersImpl.h',
     'basic/BasicThebesLayer.h',
+    'BufferUnrotate.cpp',
     'client/ClientCanvasLayer.h',
     'client/ClientContainerLayer.h',
     'client/ClientLayerManager.h',
