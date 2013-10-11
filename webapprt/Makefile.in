@@ -22,7 +22,7 @@ DEFINES += -DMOZILLA_OFFICIAL
 endif
 
 libs:: $(call mkdir_deps,$(FINAL_TARGET))
-	$(PYTHON) $(MOZILLA_DIR)/config/buildlist.py $(FINAL_TARGET)/chrome.manifest "resource webapprt ./"
+	$(call py_action,buildlist,$(FINAL_TARGET)/chrome.manifest "resource webapprt ./")
 
 GRE_MILESTONE := $(shell tail -n 1 $(topsrcdir)/config/milestone.txt 2>/dev/null || tail -1 $(topsrcdir)/config/milestone.txt)
 GRE_BUILDID := $(shell cat $(DEPTH)/config/buildid)
