@@ -172,8 +172,9 @@ def bootstrap(topsrcdir, mozilla_dir=None):
 
     def populate_context(context):
         context.state_dir = state_dir
+        context.topdir = topsrcdir
 
-    mach = mach.main.Mach(topsrcdir)
+    mach = mach.main.Mach(os.getcwd())
     mach.populate_context_handler = populate_context
 
     for category, meta in CATEGORIES.items():
