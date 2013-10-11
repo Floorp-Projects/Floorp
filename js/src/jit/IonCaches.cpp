@@ -2839,6 +2839,108 @@ SetPropertyIC::reset()
     hasGenericProxyStub_ = false;
 }
 
+ParallelResult
+SetPropertyParIC::update(ForkJoinSlice *slice, size_t cacheIndex, HandleObject obj,
+                         HandleValue value)
+{
+    JS_ASSERT(slice->isThreadLocal(obj));
+
+    AutoFlushCache afc("SetPropertyParCache", slice->runtime()->ionRuntime());
+
+    IonScript *ion = GetTopIonJSScript(slice)->parallelIonScript();
+    SetPropertyParIC &cache = ion->getCache(cacheIndex).toSetPropertyPar();
+
+    RootedValue v(slice, value);
+    RootedId id(slice, AtomToId(cache.name()));
+
+    // Avoid unnecessary locking if cannot attach stubs.
+    if (!cache.canAttachStub()) {
+        if (!baseops::SetPropertyHelper<ParallelExecution>(slice, obj, obj, id, 0,
+                                                           &v, cache.strict()))
+        {
+            return TP_RETRY_SEQUENTIALLY;
+        }
+        return TP_SUCCESS;
+    }
+
+    SetPropertyIC::NativeSetPropCacheability canCache = SetPropertyIC::CanAttachNone;
+    bool attachedStub = false;
+
+    {
+        LockedJSContext cx(slice);
+
+        if (cache.canAttachStub()) {
+            bool alreadyStubbed;
+            if (!cache.hasOrAddStubbedShape(cx, obj->lastProperty(), &alreadyStubbed))
+                return TP_FATAL;
+            if (alreadyStubbed) {
+                if (!baseops::SetPropertyHelper<ParallelExecution>(slice, obj, obj, id, 0,
+                                                                   &v, cache.strict()))
+                {
+                    return TP_RETRY_SEQUENTIALLY;
+                }
+                return TP_SUCCESS;
+            }
+
+            // If the object has a lazy type, we need to de-lazify it, but
+            // this is not safe in parallel.
+            if (obj->hasLazyType())
+                return TP_RETRY_SEQUENTIALLY;
+
+            {
+                RootedShape shape(slice);
+                RootedObject holder(slice);
+                bool checkTypeset;
+                canCache = CanAttachNativeSetProp(obj, id, cache.value(), cache.needsTypeBarrier(),
+                                                  &holder, &shape, &checkTypeset);
+
+                if (canCache == SetPropertyIC::CanAttachSetSlot) {
+                    if (!cache.attachSetSlot(cx, ion, obj, shape, checkTypeset))
+                        return TP_FATAL;
+                    attachedStub = true;
+                }
+            }
+        }
+    }
+
+    uint32_t oldSlots = obj->numDynamicSlots();
+    RootedShape oldShape(slice, obj->lastProperty());
+
+    if (!baseops::SetPropertyHelper<ParallelExecution>(slice, obj, obj, id, 0, &v, cache.strict()))
+        return TP_RETRY_SEQUENTIALLY;
+
+    if (!attachedStub && canCache == SetPropertyIC::MaybeCanAttachAddSlot &&
+        !cache.needsTypeBarrier() &&
+        IsPropertyAddInlineable(obj, id, oldSlots, oldShape))
+    {
+        LockedJSContext cx(slice);
+        if (cache.canAttachStub() && !cache.attachAddSlot(cx, ion, obj, oldShape))
+            return TP_FATAL;
+    }
+
+    return TP_SUCCESS;
+}
+
+bool
+SetPropertyParIC::attachSetSlot(LockedJSContext &cx, IonScript *ion, JSObject *obj, Shape *shape,
+                                  bool checkTypeset)
+{
+    MacroAssembler masm(cx);
+    DispatchStubPrepender attacher(*this);
+    GenerateSetSlot(cx, masm, attacher, obj, shape, object(), value(), needsTypeBarrier(),
+                    checkTypeset);
+    return linkAndAttachStub(cx, masm, attacher, ion, "parallel setting");
+}
+
+bool
+SetPropertyParIC::attachAddSlot(LockedJSContext &cx, IonScript *ion, JSObject *obj, Shape *oldShape)
+{
+    MacroAssembler masm(cx);
+    DispatchStubPrepender attacher(*this);
+    GenerateAddSlot(cx, masm, attacher, obj, oldShape, object(), value());
+    return linkAndAttachStub(cx, masm, attacher, ion, "parallel adding");
+}
+
 const size_t GetElementIC::MAX_FAILED_UPDATES = 16;
 
 /* static */ bool

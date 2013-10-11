@@ -312,6 +312,7 @@ class CodeGenerator : public CodeGeneratorSpecific
     bool visitGetPropertyIC(OutOfLineUpdateCache *ool, DataPtr<GetPropertyIC> &ic);
     bool visitGetPropertyParIC(OutOfLineUpdateCache *ool, DataPtr<GetPropertyParIC> &ic);
     bool visitSetPropertyIC(OutOfLineUpdateCache *ool, DataPtr<SetPropertyIC> &ic);
+    bool visitSetPropertyParIC(OutOfLineUpdateCache *ool, DataPtr<SetPropertyParIC> &ic);
     bool visitGetElementIC(OutOfLineUpdateCache *ool, DataPtr<GetElementIC> &ic);
     bool visitGetElementParIC(OutOfLineUpdateCache *ool, DataPtr<GetElementParIC> &ic);
     bool visitSetElementIC(OutOfLineUpdateCache *ool, DataPtr<SetElementIC> &ic);
@@ -336,6 +337,9 @@ class CodeGenerator : public CodeGeneratorSpecific
                              bool allowGetters);
     bool addGetElementCache(LInstruction *ins, Register obj, ConstantOrRegister index,
                             TypedOrValueRegister output, bool monitoredResult);
+    bool addSetPropertyCache(LInstruction *ins, RegisterSet liveRegs, Register objReg,
+                             PropertyName *name, ConstantOrRegister value, bool strict,
+                             bool needsTypeBarrier);
     bool checkForAbortPar(LInstruction *lir);
 
     bool generateBranchV(const ValueOperand &value, Label *ifTrue, Label *ifFalse, FloatRegister fr);
