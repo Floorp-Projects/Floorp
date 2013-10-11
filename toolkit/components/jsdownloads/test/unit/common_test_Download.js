@@ -209,6 +209,7 @@ add_task(function test_basic()
  * that the file is saved correctly.  When testing DownloadLegacySaver, the
  * download is executed using the nsIExternalHelperAppService component.
  */
+/*
 add_task(function test_basic_tryToKeepPartialData()
 {
   let download = yield promiseStartDownload_tryToKeepPartialData();
@@ -220,6 +221,7 @@ add_task(function test_basic_tryToKeepPartialData()
                               TEST_DATA_SHORT + TEST_DATA_SHORT);
   do_check_false(yield OS.File.exists(download.target.partFilePath));
 });
+*/
 
 /**
  * Checks the referrer for downloads.
@@ -381,6 +383,7 @@ add_task(function test_empty_progress()
  * Downloads a file with a "Content-Length" of 0 with the tryToKeepPartialData
  * property set, and ensures that the file is saved correctly.
  */
+/*
 add_task(function test_empty_progress_tryToKeepPartialData()
 {
   // Start a new download and configure it to keep partially downloaded data.
@@ -406,6 +409,7 @@ add_task(function test_empty_progress_tryToKeepPartialData()
   do_check_eq((yield OS.File.stat(download.target.path)).size, 0);
   do_check_false(yield OS.File.exists(download.target.partFilePath));
 });
+*/
 
 /**
  * Downloads an empty file with no "Content-Length" and checks the progress.
