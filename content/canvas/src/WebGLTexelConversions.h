@@ -34,14 +34,7 @@
 
 #include "WebGLTypes.h"
 #include <stdint.h>
-
-#if defined _MSC_VER
-#define FORCE_INLINE __forceinline
-#elif defined __GNUC__
-#define FORCE_INLINE __attribute__((always_inline)) inline
-#else
-#define FORCE_INLINE inline
-#endif
+#include "mozilla/Attributes.h"
 
 namespace mozilla {
 
@@ -142,7 +135,7 @@ inline size_t TexelBytesForFormat(WebGLTexelFormat format) {
     }
 }
 
-FORCE_INLINE bool HasAlpha(WebGLTexelFormat format) {
+MOZ_ALWAYS_INLINE bool HasAlpha(WebGLTexelFormat format) {
     return format == WebGLTexelFormat::A8 ||
            format == WebGLTexelFormat::A32F ||
            format == WebGLTexelFormat::RA8 ||
@@ -154,7 +147,7 @@ FORCE_INLINE bool HasAlpha(WebGLTexelFormat format) {
            format == WebGLTexelFormat::RGBA5551;
 }
 
-FORCE_INLINE bool HasColor(WebGLTexelFormat format) {
+MOZ_ALWAYS_INLINE bool HasColor(WebGLTexelFormat format) {
     return format == WebGLTexelFormat::R8 ||
            format == WebGLTexelFormat::R32F ||
            format == WebGLTexelFormat::RA8 ||
@@ -180,14 +173,14 @@ FORCE_INLINE bool HasColor(WebGLTexelFormat format) {
 // Pixel unpacking routines.
 
 template<MOZ_ENUM_CLASS_INTEGER_TYPE(WebGLTexelFormat) Format, typename SrcType, typename DstType>
-FORCE_INLINE void
+MOZ_ALWAYS_INLINE void
 unpack(const SrcType* __restrict src,
        DstType* __restrict dst)
 {
     MOZ_ASSERT(false, "Unimplemented texture format conversion");
 }
 
-template<> FORCE_INLINE void
+template<> MOZ_ALWAYS_INLINE void
 unpack<WebGLTexelFormat::RGBA8, uint8_t, uint8_t>(const uint8_t* __restrict src, uint8_t* __restrict dst)
 {
     dst[0] = src[0];
@@ -196,7 +189,7 @@ unpack<WebGLTexelFormat::RGBA8, uint8_t, uint8_t>(const uint8_t* __restrict src,
     dst[3] = src[3];
 }
 
-template<> FORCE_INLINE void
+template<> MOZ_ALWAYS_INLINE void
 unpack<WebGLTexelFormat::RGB8, uint8_t, uint8_t>(const uint8_t* __restrict src, uint8_t* __restrict dst)
 {
     dst[0] = src[0];
@@ -205,7 +198,7 @@ unpack<WebGLTexelFormat::RGB8, uint8_t, uint8_t>(const uint8_t* __restrict src, 
     dst[3] = 0xFF;
 }
 
-template<> FORCE_INLINE void
+template<> MOZ_ALWAYS_INLINE void
 unpack<WebGLTexelFormat::BGRA8, uint8_t, uint8_t>(const uint8_t* __restrict src, uint8_t* __restrict dst)
 {
     dst[0] = src[2];
@@ -214,7 +207,7 @@ unpack<WebGLTexelFormat::BGRA8, uint8_t, uint8_t>(const uint8_t* __restrict src,
     dst[3] = src[3];
 }
 
-template<> FORCE_INLINE void
+template<> MOZ_ALWAYS_INLINE void
 unpack<WebGLTexelFormat::BGRX8, uint8_t, uint8_t>(const uint8_t* __restrict src, uint8_t* __restrict dst)
 {
     dst[0] = src[2];
@@ -223,7 +216,7 @@ unpack<WebGLTexelFormat::BGRX8, uint8_t, uint8_t>(const uint8_t* __restrict src,
     dst[3] = 0xFF;
 }
 
-template<> FORCE_INLINE void
+template<> MOZ_ALWAYS_INLINE void
 unpack<WebGLTexelFormat::RGBA5551, uint16_t, uint8_t>(const uint16_t* __restrict src, uint8_t* __restrict dst)
 {
     uint16_t packedValue = src[0];
@@ -236,7 +229,7 @@ unpack<WebGLTexelFormat::RGBA5551, uint16_t, uint8_t>(const uint16_t* __restrict
     dst[3] = (packedValue & 0x1) ? 0xFF : 0;
 }
 
-template<> FORCE_INLINE void
+template<> MOZ_ALWAYS_INLINE void
 unpack<WebGLTexelFormat::RGBA4444, uint16_t, uint8_t>(const uint16_t* __restrict src, uint8_t* __restrict dst)
 {
     uint16_t packedValue = src[0];
@@ -250,7 +243,7 @@ unpack<WebGLTexelFormat::RGBA4444, uint16_t, uint8_t>(const uint16_t* __restrict
     dst[3] = (a << 4) | a;
 }
 
-template<> FORCE_INLINE void
+template<> MOZ_ALWAYS_INLINE void
 unpack<WebGLTexelFormat::RGB565, uint16_t, uint8_t>(const uint16_t* __restrict src, uint8_t* __restrict dst)
 {
     uint16_t packedValue = src[0];
@@ -263,7 +256,7 @@ unpack<WebGLTexelFormat::RGB565, uint16_t, uint8_t>(const uint16_t* __restrict s
     dst[3] = 0xFF;
 }
 
-template<> FORCE_INLINE void
+template<> MOZ_ALWAYS_INLINE void
 unpack<WebGLTexelFormat::R8, uint8_t, uint8_t>(const uint8_t* __restrict src, uint8_t* __restrict dst)
 {
     dst[0] = src[0];
@@ -272,7 +265,7 @@ unpack<WebGLTexelFormat::R8, uint8_t, uint8_t>(const uint8_t* __restrict src, ui
     dst[3] = 0xFF;
 }
 
-template<> FORCE_INLINE void
+template<> MOZ_ALWAYS_INLINE void
 unpack<WebGLTexelFormat::RA8, uint8_t, uint8_t>(const uint8_t* __restrict src, uint8_t* __restrict dst)
 {
     dst[0] = src[0];
@@ -281,7 +274,7 @@ unpack<WebGLTexelFormat::RA8, uint8_t, uint8_t>(const uint8_t* __restrict src, u
     dst[3] = src[1];
 }
 
-template<> FORCE_INLINE void
+template<> MOZ_ALWAYS_INLINE void
 unpack<WebGLTexelFormat::A8, uint8_t, uint8_t>(const uint8_t* __restrict src, uint8_t* __restrict dst)
 {
     dst[0] = 0;
@@ -290,7 +283,7 @@ unpack<WebGLTexelFormat::A8, uint8_t, uint8_t>(const uint8_t* __restrict src, ui
     dst[3] = src[0];
 }
 
-template<> FORCE_INLINE void
+template<> MOZ_ALWAYS_INLINE void
 unpack<WebGLTexelFormat::RGBA32F, float, float>(const float* __restrict src, float* __restrict dst)
 {
     dst[0] = src[0];
@@ -299,7 +292,7 @@ unpack<WebGLTexelFormat::RGBA32F, float, float>(const float* __restrict src, flo
     dst[3] = src[3];
 }
 
-template<> FORCE_INLINE void
+template<> MOZ_ALWAYS_INLINE void
 unpack<WebGLTexelFormat::RGB32F, float, float>(const float* __restrict src, float* __restrict dst)
 {
     dst[0] = src[0];
@@ -308,7 +301,7 @@ unpack<WebGLTexelFormat::RGB32F, float, float>(const float* __restrict src, floa
     dst[3] = 1.0f;
 }
 
-template<> FORCE_INLINE void
+template<> MOZ_ALWAYS_INLINE void
 unpack<WebGLTexelFormat::R32F, float, float>(const float* __restrict src, float* __restrict dst)
 {
     dst[0] = src[0];
@@ -317,7 +310,7 @@ unpack<WebGLTexelFormat::R32F, float, float>(const float* __restrict src, float*
     dst[3] = 1.0f;
 }
 
-template<> FORCE_INLINE void
+template<> MOZ_ALWAYS_INLINE void
 unpack<WebGLTexelFormat::RA32F, float, float>(const float* __restrict src, float* __restrict dst)
 {
     dst[0] = src[0];
@@ -326,7 +319,7 @@ unpack<WebGLTexelFormat::RA32F, float, float>(const float* __restrict src, float
     dst[3] = src[1];
 }
 
-template<> FORCE_INLINE void
+template<> MOZ_ALWAYS_INLINE void
 unpack<WebGLTexelFormat::A32F, float, float>(const float* __restrict src, float* __restrict dst)
 {
     dst[0] = 0;
@@ -343,38 +336,38 @@ template<MOZ_ENUM_CLASS_INTEGER_TYPE(WebGLTexelFormat) Format,
          MOZ_ENUM_CLASS_INTEGER_TYPE(WebGLTexelPremultiplicationOp) PremultiplicationOp,
          typename SrcType,
          typename DstType>
-FORCE_INLINE void
+MOZ_ALWAYS_INLINE void
 pack(const SrcType* __restrict src,
      DstType* __restrict dst)
 {
     MOZ_ASSERT(false, "Unimplemented texture format conversion");
 }
 
-template<> FORCE_INLINE void
+template<> MOZ_ALWAYS_INLINE void
 pack<WebGLTexelFormat::A8, WebGLTexelPremultiplicationOp::None, uint8_t, uint8_t>(const uint8_t* __restrict src, uint8_t* __restrict dst)
 {
     dst[0] = src[3];
 }
 
-template<> FORCE_INLINE void
+template<> MOZ_ALWAYS_INLINE void
 pack<WebGLTexelFormat::A8, WebGLTexelPremultiplicationOp::Premultiply, uint8_t, uint8_t>(const uint8_t* __restrict src, uint8_t* __restrict dst)
 {
     dst[0] = src[3];
 }
 
-template<> FORCE_INLINE void
+template<> MOZ_ALWAYS_INLINE void
 pack<WebGLTexelFormat::A8, WebGLTexelPremultiplicationOp::Unpremultiply, uint8_t, uint8_t>(const uint8_t* __restrict src, uint8_t* __restrict dst)
 {
     dst[0] = src[3];
 }
 
-template<> FORCE_INLINE void
+template<> MOZ_ALWAYS_INLINE void
 pack<WebGLTexelFormat::R8, WebGLTexelPremultiplicationOp::None, uint8_t, uint8_t>(const uint8_t* __restrict src, uint8_t* __restrict dst)
 {
     dst[0] = src[0];
 }
 
-template<> FORCE_INLINE void
+template<> MOZ_ALWAYS_INLINE void
 pack<WebGLTexelFormat::R8, WebGLTexelPremultiplicationOp::Premultiply, uint8_t, uint8_t>(const uint8_t* __restrict src, uint8_t* __restrict dst)
 {
     float scaleFactor = src[3] / 255.0f;
@@ -382,7 +375,7 @@ pack<WebGLTexelFormat::R8, WebGLTexelPremultiplicationOp::Premultiply, uint8_t, 
     dst[0] = srcR;
 }
 
-template<> FORCE_INLINE void
+template<> MOZ_ALWAYS_INLINE void
 pack<WebGLTexelFormat::R8, WebGLTexelPremultiplicationOp::Unpremultiply, uint8_t, uint8_t>(const uint8_t* __restrict src, uint8_t* __restrict dst)
 {
     float scaleFactor = src[3] ? 255.0f / src[3] : 1.0f;
@@ -390,14 +383,14 @@ pack<WebGLTexelFormat::R8, WebGLTexelPremultiplicationOp::Unpremultiply, uint8_t
     dst[0] = srcR;
 }
 
-template<> FORCE_INLINE void
+template<> MOZ_ALWAYS_INLINE void
 pack<WebGLTexelFormat::RA8, WebGLTexelPremultiplicationOp::None, uint8_t, uint8_t>(const uint8_t* __restrict src, uint8_t* __restrict dst)
 {
     dst[0] = src[0];
     dst[1] = src[3];
 }
 
-template<> FORCE_INLINE void
+template<> MOZ_ALWAYS_INLINE void
 pack<WebGLTexelFormat::RA8, WebGLTexelPremultiplicationOp::Premultiply, uint8_t, uint8_t>(const uint8_t* __restrict src, uint8_t* __restrict dst)
 {
     float scaleFactor = src[3] / 255.0f;
@@ -407,7 +400,7 @@ pack<WebGLTexelFormat::RA8, WebGLTexelPremultiplicationOp::Premultiply, uint8_t,
 }
 
 // FIXME: this routine is lossy and must be removed.
-template<> FORCE_INLINE void
+template<> MOZ_ALWAYS_INLINE void
 pack<WebGLTexelFormat::RA8, WebGLTexelPremultiplicationOp::Unpremultiply, uint8_t, uint8_t>(const uint8_t* __restrict src, uint8_t* __restrict dst)
 {
     float scaleFactor = src[3] ? 255.0f / src[3] : 1.0f;
@@ -416,7 +409,7 @@ pack<WebGLTexelFormat::RA8, WebGLTexelPremultiplicationOp::Unpremultiply, uint8_
     dst[1] = src[3];
 }
 
-template<> FORCE_INLINE void
+template<> MOZ_ALWAYS_INLINE void
 pack<WebGLTexelFormat::RGB8, WebGLTexelPremultiplicationOp::None, uint8_t, uint8_t>(const uint8_t* __restrict src, uint8_t* __restrict dst)
 {
     dst[0] = src[0];
@@ -424,7 +417,7 @@ pack<WebGLTexelFormat::RGB8, WebGLTexelPremultiplicationOp::None, uint8_t, uint8
     dst[2] = src[2];
 }
 
-template<> FORCE_INLINE void
+template<> MOZ_ALWAYS_INLINE void
 pack<WebGLTexelFormat::RGB8, WebGLTexelPremultiplicationOp::Premultiply, uint8_t, uint8_t>(const uint8_t* __restrict src, uint8_t* __restrict dst)
 {
     float scaleFactor = src[3] / 255.0f;
@@ -436,7 +429,7 @@ pack<WebGLTexelFormat::RGB8, WebGLTexelPremultiplicationOp::Premultiply, uint8_t
     dst[2] = srcB;
 }
 
-template<> FORCE_INLINE void
+template<> MOZ_ALWAYS_INLINE void
 pack<WebGLTexelFormat::RGB8, WebGLTexelPremultiplicationOp::Unpremultiply, uint8_t, uint8_t>(const uint8_t* __restrict src, uint8_t* __restrict dst)
 {
     float scaleFactor = src[3] ? 255.0f / src[3] : 1.0f;
@@ -448,7 +441,7 @@ pack<WebGLTexelFormat::RGB8, WebGLTexelPremultiplicationOp::Unpremultiply, uint8
     dst[2] = srcB;
 }
 
-template<> FORCE_INLINE void
+template<> MOZ_ALWAYS_INLINE void
 pack<WebGLTexelFormat::RGBA8, WebGLTexelPremultiplicationOp::None, uint8_t, uint8_t>(const uint8_t* __restrict src, uint8_t* __restrict dst)
 {
     dst[0] = src[0];
@@ -457,7 +450,7 @@ pack<WebGLTexelFormat::RGBA8, WebGLTexelPremultiplicationOp::None, uint8_t, uint
     dst[3] = src[3];
 }
 
-template<> FORCE_INLINE void
+template<> MOZ_ALWAYS_INLINE void
 pack<WebGLTexelFormat::RGBA8, WebGLTexelPremultiplicationOp::Premultiply, uint8_t, uint8_t>(const uint8_t* __restrict src, uint8_t* __restrict dst)
 {
     float scaleFactor = src[3] / 255.0f;
@@ -471,7 +464,7 @@ pack<WebGLTexelFormat::RGBA8, WebGLTexelPremultiplicationOp::Premultiply, uint8_
 }
 
 // FIXME: this routine is lossy and must be removed.
-template<> FORCE_INLINE void
+template<> MOZ_ALWAYS_INLINE void
 pack<WebGLTexelFormat::RGBA8, WebGLTexelPremultiplicationOp::Unpremultiply, uint8_t, uint8_t>(const uint8_t* __restrict src, uint8_t* __restrict dst)
 {
     float scaleFactor = src[3] ? 255.0f / src[3] : 1.0f;
@@ -484,7 +477,7 @@ pack<WebGLTexelFormat::RGBA8, WebGLTexelPremultiplicationOp::Unpremultiply, uint
     dst[3] = src[3];
 }
 
-template<> FORCE_INLINE void
+template<> MOZ_ALWAYS_INLINE void
 pack<WebGLTexelFormat::RGBA4444, WebGLTexelPremultiplicationOp::None, uint8_t, uint16_t>(const uint8_t* __restrict src, uint16_t* __restrict dst)
 {
     *dst = ( ((src[0] & 0xF0) << 8)
@@ -493,7 +486,7 @@ pack<WebGLTexelFormat::RGBA4444, WebGLTexelPremultiplicationOp::None, uint8_t, u
            | (src[3] >> 4) );
 }
 
-template<> FORCE_INLINE void
+template<> MOZ_ALWAYS_INLINE void
 pack<WebGLTexelFormat::RGBA4444, WebGLTexelPremultiplicationOp::Premultiply, uint8_t, uint16_t>(const uint8_t* __restrict src, uint16_t* __restrict dst)
 {
     float scaleFactor = src[3] / 255.0f;
@@ -507,7 +500,7 @@ pack<WebGLTexelFormat::RGBA4444, WebGLTexelPremultiplicationOp::Premultiply, uin
 }
 
 // FIXME: this routine is lossy and must be removed.
-template<> FORCE_INLINE void
+template<> MOZ_ALWAYS_INLINE void
 pack<WebGLTexelFormat::RGBA4444, WebGLTexelPremultiplicationOp::Unpremultiply, uint8_t, uint16_t>(const uint8_t* __restrict src, uint16_t* __restrict dst)
 {
     float scaleFactor = src[3] ? 255.0f / src[3] : 1.0f;
@@ -520,7 +513,7 @@ pack<WebGLTexelFormat::RGBA4444, WebGLTexelPremultiplicationOp::Unpremultiply, u
            | (src[3] >> 4));
 }
 
-template<> FORCE_INLINE void
+template<> MOZ_ALWAYS_INLINE void
 pack<WebGLTexelFormat::RGBA5551, WebGLTexelPremultiplicationOp::None, uint8_t, uint16_t>(const uint8_t* __restrict src, uint16_t* __restrict dst)
 {
     *dst = ( ((src[0] & 0xF8) << 8)
@@ -529,7 +522,7 @@ pack<WebGLTexelFormat::RGBA5551, WebGLTexelPremultiplicationOp::None, uint8_t, u
            | (src[3] >> 7));
 }
 
-template<> FORCE_INLINE void
+template<> MOZ_ALWAYS_INLINE void
 pack<WebGLTexelFormat::RGBA5551, WebGLTexelPremultiplicationOp::Premultiply, uint8_t, uint16_t>(const uint8_t* __restrict src, uint16_t* __restrict dst)
 {
     float scaleFactor = src[3] / 255.0f;
@@ -543,7 +536,7 @@ pack<WebGLTexelFormat::RGBA5551, WebGLTexelPremultiplicationOp::Premultiply, uin
 }
 
 // FIXME: this routine is lossy and must be removed.
-template<> FORCE_INLINE void
+template<> MOZ_ALWAYS_INLINE void
 pack<WebGLTexelFormat::RGBA5551, WebGLTexelPremultiplicationOp::Unpremultiply, uint8_t, uint16_t>(const uint8_t* __restrict src, uint16_t* __restrict dst)
 {
     float scaleFactor = src[3] ? 255.0f / src[3] : 1.0f;
@@ -556,7 +549,7 @@ pack<WebGLTexelFormat::RGBA5551, WebGLTexelPremultiplicationOp::Unpremultiply, u
            | (src[3] >> 7));
 }
 
-template<> FORCE_INLINE void
+template<> MOZ_ALWAYS_INLINE void
 pack<WebGLTexelFormat::RGB565, WebGLTexelPremultiplicationOp::None, uint8_t, uint16_t>(const uint8_t* __restrict src, uint16_t* __restrict dst)
 {
     *dst = ( ((src[0] & 0xF8) << 8)
@@ -564,7 +557,7 @@ pack<WebGLTexelFormat::RGB565, WebGLTexelPremultiplicationOp::None, uint8_t, uin
            | ((src[2] & 0xF8) >> 3));
 }
 
-template<> FORCE_INLINE void
+template<> MOZ_ALWAYS_INLINE void
 pack<WebGLTexelFormat::RGB565, WebGLTexelPremultiplicationOp::Premultiply, uint8_t, uint16_t>(const uint8_t* __restrict src, uint16_t* __restrict dst)
 {
     float scaleFactor = src[3] / 255.0f;
@@ -577,7 +570,7 @@ pack<WebGLTexelFormat::RGB565, WebGLTexelPremultiplicationOp::Premultiply, uint8
 }
 
 // FIXME: this routine is lossy and must be removed.
-template<> FORCE_INLINE void
+template<> MOZ_ALWAYS_INLINE void
 pack<WebGLTexelFormat::RGB565, WebGLTexelPremultiplicationOp::Unpremultiply, uint8_t, uint16_t>(const uint8_t* __restrict src, uint16_t* __restrict dst)
 {
     float scaleFactor = src[3] ? 255.0f / src[3] : 1.0f;
@@ -589,7 +582,7 @@ pack<WebGLTexelFormat::RGB565, WebGLTexelPremultiplicationOp::Unpremultiply, uin
            | ((srcB & 0xF8) >> 3));
 }
 
-template<> FORCE_INLINE void
+template<> MOZ_ALWAYS_INLINE void
 pack<WebGLTexelFormat::RGB32F, WebGLTexelPremultiplicationOp::None, float, float>(const float* __restrict src, float* __restrict dst)
 {
     dst[0] = src[0];
@@ -597,7 +590,7 @@ pack<WebGLTexelFormat::RGB32F, WebGLTexelPremultiplicationOp::None, float, float
     dst[2] = src[2];
 }
 
-template<> FORCE_INLINE void
+template<> MOZ_ALWAYS_INLINE void
 pack<WebGLTexelFormat::RGB32F, WebGLTexelPremultiplicationOp::Premultiply, float, float>(const float* __restrict src, float* __restrict dst)
 {
     float scaleFactor = src[3];
@@ -606,7 +599,7 @@ pack<WebGLTexelFormat::RGB32F, WebGLTexelPremultiplicationOp::Premultiply, float
     dst[2] = src[2] * scaleFactor;
 }
 
-template<> FORCE_INLINE void
+template<> MOZ_ALWAYS_INLINE void
 pack<WebGLTexelFormat::RGBA32F, WebGLTexelPremultiplicationOp::None, float, float>(const float* __restrict src, float* __restrict dst)
 {
     dst[0] = src[0];
@@ -615,7 +608,7 @@ pack<WebGLTexelFormat::RGBA32F, WebGLTexelPremultiplicationOp::None, float, floa
     dst[3] = src[3];
 }
 
-template<> FORCE_INLINE void
+template<> MOZ_ALWAYS_INLINE void
 pack<WebGLTexelFormat::RGBA32F, WebGLTexelPremultiplicationOp::Premultiply, float, float>(const float* __restrict src, float* __restrict dst)
 {
     float scaleFactor = src[3];
@@ -625,39 +618,39 @@ pack<WebGLTexelFormat::RGBA32F, WebGLTexelPremultiplicationOp::Premultiply, floa
     dst[3] = src[3];
 }
 
-template<> FORCE_INLINE void
+template<> MOZ_ALWAYS_INLINE void
 pack<WebGLTexelFormat::A32F, WebGLTexelPremultiplicationOp::None, float, float>(const float* __restrict src, float* __restrict dst)
 {
     dst[0] = src[3];
 }
 
-template<> FORCE_INLINE void
+template<> MOZ_ALWAYS_INLINE void
 pack<WebGLTexelFormat::A32F, WebGLTexelPremultiplicationOp::Premultiply, float, float>(const float* __restrict src, float* __restrict dst)
 {
     dst[0] = src[3];
 }
 
-template<> FORCE_INLINE void
+template<> MOZ_ALWAYS_INLINE void
 pack<WebGLTexelFormat::R32F, WebGLTexelPremultiplicationOp::None, float, float>(const float* __restrict src, float* __restrict dst)
 {
     dst[0] = src[0];
 }
 
-template<> FORCE_INLINE void
+template<> MOZ_ALWAYS_INLINE void
 pack<WebGLTexelFormat::R32F, WebGLTexelPremultiplicationOp::Premultiply, float, float>(const float* __restrict src, float* __restrict dst)
 {
     float scaleFactor = src[3];
     dst[0] = src[0] * scaleFactor;
 }
 
-template<> FORCE_INLINE void
+template<> MOZ_ALWAYS_INLINE void
 pack<WebGLTexelFormat::RA32F, WebGLTexelPremultiplicationOp::None, float, float>(const float* __restrict src, float* __restrict dst)
 {
     dst[0] = src[0];
     dst[1] = src[3];
 }
 
-template<> FORCE_INLINE void
+template<> MOZ_ALWAYS_INLINE void
 pack<WebGLTexelFormat::RA32F, WebGLTexelPremultiplicationOp::Premultiply, float, float>(const float* __restrict src, float* __restrict dst)
 {
     float scaleFactor = src[3];
@@ -667,13 +660,13 @@ pack<WebGLTexelFormat::RA32F, WebGLTexelPremultiplicationOp::Premultiply, float,
 
 /****** END CODE SHARED WITH WEBKIT ******/
 
-template<typename SrcType, typename DstType> FORCE_INLINE void
+template<typename SrcType, typename DstType> MOZ_ALWAYS_INLINE void
 convertType(const SrcType* __restrict src, DstType* __restrict dst)
 {
     MOZ_ASSERT(false, "Unimplemented texture format conversion");
 }
 
-template<> FORCE_INLINE void
+template<> MOZ_ALWAYS_INLINE void
 convertType<uint8_t, uint8_t>(const uint8_t* __restrict src, uint8_t* __restrict dst)
 {
     dst[0] = src[0];
@@ -682,7 +675,7 @@ convertType<uint8_t, uint8_t>(const uint8_t* __restrict src, uint8_t* __restrict
     dst[3] = src[3];
 }
 
-template<> FORCE_INLINE void
+template<> MOZ_ALWAYS_INLINE void
 convertType<float, float>(const float* __restrict src, float* __restrict dst)
 {
     dst[0] = src[0];
@@ -691,7 +684,7 @@ convertType<float, float>(const float* __restrict src, float* __restrict dst)
     dst[3] = src[3];
 }
 
-template<> FORCE_INLINE void
+template<> MOZ_ALWAYS_INLINE void
 convertType<uint8_t, float>(const uint8_t* __restrict src, float* __restrict dst)
 {
     const float scaleFactor = 1.f / 255.0f;
@@ -700,8 +693,6 @@ convertType<uint8_t, float>(const uint8_t* __restrict src, float* __restrict dst
     dst[2] = src[2] * scaleFactor;
     dst[3] = src[3] * scaleFactor;
 }
-
-#undef FORCE_INLINE
 
 } // end namespace WebGLTexelConversions
 
