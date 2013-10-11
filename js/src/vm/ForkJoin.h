@@ -30,18 +30,16 @@
 // to enable parallel execution.  At the top-level, it consists of a native
 // function (exposed as the ForkJoin intrinsic) that is used like so:
 //
-//     ForkJoin(func, feedback)
+//     ForkJoin(func, feedback, N)
 //
-// The intention of this statement is to start N copies of |func()|
-// running in parallel.  Each copy will then do 1/Nth of the total
-// work.  Here N is number of workers in the threadpool (see
-// ThreadPool.h---by default, N is the number of cores on the
-// computer).
+// The intention of this statement is to start |N| copies of |func()|
+// running in parallel.  Each copy will then do more or less 1/Nth of
+// the total work, depending on workstealing-based load balancing.
 //
-// Typically, each of the N slices will execute from a different
-// worker thread, but that is not something you should rely upon---if
-// we implement work-stealing, for example, then it could be that a
-// single worker thread winds up handling multiple slices.
+// Typically, each of the N slices runs in a different worker thread,
+// but that is not something you should rely upon---if work-stealing
+// is enabled it could be that a single worker thread winds up
+// handling multiple slices.
 //
 // The second argument, |feedback|, is an optional callback that will
 // receiver information about how execution proceeded.  This is
@@ -54,7 +52,7 @@
 //
 //     func(id, n, warmup)
 //
-// Here, |id| is the slice id. |n| is the total number of slices.  The
+// Here, |id| is the slice id. |n| is the total number of slices. The
 // parameter |warmup| is true for a *warmup or recovery phase*.
 // Warmup phases are discussed below in more detail, but the general
 // idea is that if |warmup| is true, |func| should only do a fixed
@@ -119,14 +117,8 @@
 //
 // During parallel execution, |slice.check()| must be periodically
 // invoked to check for the operation callback. This is automatically
-// done by the ion-generated code. If the operation callback is
-// necessary, |slice.check()| will arrange a rendezvous---that is, as
-// each active worker invokes |check()|, it will come to a halt until
-// everyone is blocked (Stop The World).  At this point, we perform
-// the callback on the main thread, and then resume execution.  If a
-// worker thread terminates before calling |check()|, that's fine too.
-// We assume that you do not do unbounded work without invoking
-// |check()|.
+// done by the Ion-generated code. If the operation callback is
+// necessary, |slice.check()| abort the parallel execution.
 //
 // Transitive compilation:
 //
@@ -188,16 +180,23 @@
 // we must block until inc. GC has completed and also to permit GC
 // during parallel exeution. But we're not there yet.
 //
+// Load balancing (work stealing):
+
+// The ForkJoin job is dynamically divided into a fixed number of slices,
+// and is submitted for parallel execution in the pool. When the number
+// of slices is big enough (typically greater than the number of workers
+// in the pool) -and the workload is unbalanced- each worker thread
+// will perform load balancing through work stealing. The number
+// of slices is computed by the self-hosted function |ComputeNumSlices|
+// and can be used to know how many slices will be executed by the
+// runtime for an array of the given size.
+//
 // Current Limitations:
 //
 // - The API does not support recursive or nested use.  That is, the
 //   JavaScript function given to |ForkJoin| should not itself invoke
 //   |ForkJoin()|. Instead, use the intrinsic |InParallelSection()| to
 //   check for recursive use and execute a sequential fallback.
-//
-// - No load balancing is performed between worker threads.  That means that
-//   the fork-join system is best suited for problems that can be slice into
-//   uniform bits.
 //
 ///////////////////////////////////////////////////////////////////////////
 
@@ -221,10 +220,6 @@ class ForkJoinActivation : public Activation
 class ForkJoinSlice;
 
 bool ForkJoin(JSContext *cx, CallArgs &args);
-
-// Returns the number of slices that a fork-join op will have when
-// executed.
-uint32_t ForkJoinSlices(JSContext *cx);
 
 struct IonLIRTraceData {
     uint32_t blockIndex;
@@ -306,11 +301,11 @@ struct ForkJoinShared;
 class ForkJoinSlice : public ThreadSafeContext
 {
   public:
-    // Which slice should you process? Ranges from 0 to |numSlices|.
-    const uint32_t sliceId;
+    // The slice that is being processed.
+    const uint16_t sliceId;
 
-    // How many slices are there in total?
-    const uint32_t numSlices;
+    // The worker that is doing the work.
+    const uint32_t workerId;
 
     // Bailout record used to record the reason this thread stopped executing
     ParallelBailoutRecord *const bailoutRecord;
@@ -318,9 +313,13 @@ class ForkJoinSlice : public ThreadSafeContext
 #ifdef DEBUG
     // Records the last instr. to execute on this thread.
     IonLIRTraceData traceData;
+
+    // The maximum worker and slice id.
+    uint16_t maxSliceId;
+    uint32_t maxWorkerId;
 #endif
 
-    ForkJoinSlice(PerThreadData *perThreadData, uint32_t sliceId, uint32_t numSlices,
+    ForkJoinSlice(PerThreadData *perThreadData, uint16_t sliceId, uint32_t workerId,
                   Allocator *allocator, ForkJoinShared *shared,
                   ParallelBailoutRecord *bailoutRecord);
 
@@ -380,7 +379,6 @@ class ForkJoinSlice : public ThreadSafeContext
     static bool initialize();
 
   private:
-    friend class AutoRendezvous;
     friend class AutoSetForkJoinSlice;
 
     // Initialized by initialize()
