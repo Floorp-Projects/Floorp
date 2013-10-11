@@ -1064,7 +1064,7 @@ class MacroAssembler : public MacroAssemblerSpecific
         storePtr(ImmPtr(nullptr), Address(temp, ProfileEntry::offsetOfStackAddress()));
 
         // Store 0 for PCIdx because that's what interpreter does.
-        // (See Probes::enterScript, which calls spsProfiler.enter, which pushes an entry
+        // (See probes::EnterScript, which calls spsProfiler.enter, which pushes an entry
         //  with 0 pcIdx).
         store32(Imm32(0), Address(temp, ProfileEntry::offsetOfPCIdx()));
 
