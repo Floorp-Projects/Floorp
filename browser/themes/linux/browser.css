@@ -15,7 +15,7 @@
 
 %define forwardTransitionLength 150ms
 %define conditionalForwardWithUrlbar window:not([chromehidden~="toolbar"]) #urlbar-container
-%define conditionalForwardWithUrlbarWidth 32
+%define conditionalForwardWithUrlbarWidth 26
 
 #menubar-items {
   -moz-box-orient: vertical; /* for flex hack */
