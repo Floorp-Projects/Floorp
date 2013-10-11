@@ -52,6 +52,8 @@ pref("security.ssl3.rsa_aes_128_sha", true);
 pref("security.ssl3.dhe_rsa_des_ede3_sha", true);
 pref("security.ssl3.dhe_dss_des_ede3_sha", true);
 pref("security.ssl3.rsa_seed_sha", true);
+pref("security.ssl3.ecdhe_ecdsa_aes_128_gcm_sha256", true);
+pref("security.ssl3.ecdhe_rsa_aes_128_gcm_sha256", true);
 
 pref("security.default_personal_cert",   "Ask Every Time");
 pref("security.remember_cert_checkbox_default_setting", true);
