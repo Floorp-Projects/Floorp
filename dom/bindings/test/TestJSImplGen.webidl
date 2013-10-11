@@ -506,6 +506,16 @@ interface TestJSImplInterface {
   void overload7(ByteString arg);
   void overload8(long arg);
   void overload8(TestJSImplInterface arg);
+  void overload9(long? arg);
+  void overload9(DOMString arg);
+  void overload10(long? arg);
+  void overload10(object arg);
+  void overload11(long arg);
+  void overload11(DOMString? arg);
+  void overload12(long arg);
+  void overload12(boolean? arg);
+  void overload13(long? arg);
+  void overload13(boolean arg);
 
   // Variadic handling
   void passVariadicThirdArg(DOMString arg1, long arg2, TestJSImplInterface... arg3);

@@ -5111,24 +5111,47 @@ class CGMethodCall(CGThing):
                         getPerSignatureCall(signature, distinguishingIndex + 1),
                         indent))
 
+            def hasConditionalConversion(type):
+                """
+                Return whether the argument conversion for this type will be
+                conditional on the type of incoming JS value.  For example, for
+                interface types the conversion is conditional on the incoming
+                value being isObject().
+
+                For the types for which this returns false, we do not have to
+                output extra isUndefined() or isNullOrUndefined() cases, because
+                null/undefined values will just fall through into our
+                unconditional conversion.
+                """
+                if type.isString() or type.isEnum():
+                    return False
+                if type.isBoolean():
+                    distinguishingTypes = (distinguishingType(s) for s in
+                                           possibleSignatures)
+                    return any(t.isString() or t.isEnum() or t.isNumeric()
+                               for t in distinguishingTypes)
+                if type.isNumeric():
+                    distinguishingTypes = (distinguishingType(s) for s in
+                                           possibleSignatures)
+                    return any(t.isString() or t.isEnum()
+                               for t in distinguishingTypes)
+                return True
+
             # First check for null or undefined.  That means looking for
             # nullable arguments at the distinguishing index and outputting a
-            # separate branch for them.  But if the nullable argument is a
-            # primitive, string, or enum, we don't need to do that.  The reason
+            # separate branch for them.  But if the nullable argument has an
+            # unconditional conversion, we don't need to do that.  The reason
             # for that is that at most one argument at the distinguishing index
             # is nullable (since two nullable arguments are not
-            # distinguishable), and all the argument types other than
-            # primitive/string/enum end up inside isObject() checks.  So if our
-            # nullable is a primitive/string/enum it's safe to not output the
-            # extra branch: we'll fall through to conversion for those types,
-            # which correctly handles null as needed, because isObject() will be
-            # false for null and undefined.
-            nullOrUndefSigs = [s for s in possibleSignatures
-                               if ((distinguishingType(s).nullable() and not
-                                    distinguishingType(s).isString() and not
-                                    distinguishingType(s).isEnum() and not
-                                   distinguishingType(s).isPrimitive()) or
-                                   distinguishingType(s).isDictionary())]
+            # distinguishable), and null/undefined values will always fall
+            # through to the unconditional conversion we have, if any, since
+            # they will fail whatever the conditions on the input value are for
+            # our other conversions.
+            nullOrUndefSigs = [
+                s for s in possibleSignatures
+                if ((distinguishingType(s).nullable() and
+                     hasConditionalConversion(distinguishingType(s))) or
+                    distinguishingType(s).isDictionary())]
             # Can't have multiple nullable types here
             assert len(nullOrUndefSigs) < 2
             if len(nullOrUndefSigs) > 0:

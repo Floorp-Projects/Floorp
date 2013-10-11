@@ -631,6 +631,16 @@ public:
   void Overload7(const nsCString&);
   void Overload8(int32_t);
   void Overload8(TestInterface&);
+  void Overload9(const Nullable<int32_t>&);
+  void Overload9(const nsAString&);
+  void Overload10(const Nullable<int32_t>&);
+  void Overload10(JSContext*, JS::Handle<JSObject*>);
+  void Overload11(int32_t);
+  void Overload11(const nsAString&);
+  void Overload12(int32_t);
+  void Overload12(const Nullable<bool>&);
+  void Overload13(const Nullable<int32_t>&);
+  void Overload13(bool);
 
   // Variadic handling
   void PassVariadicThirdArg(const nsAString&, int32_t,
