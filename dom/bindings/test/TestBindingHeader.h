@@ -161,9 +161,9 @@ public:
   void PassByte(int8_t);
   int8_t ReceiveByte();
   void PassOptionalByte(const Optional<int8_t>&);
-  void PassOptionalUndefinedMissingByte(const Optional<int8_t>&);
+  void PassOptionalByteBeforeRequired(const Optional<int8_t>&, int8_t);
   void PassOptionalByteWithDefault(int8_t);
-  void PassOptionalUndefinedMissingByteWithDefault(int8_t);
+  void PassOptionalByteWithDefaultBeforeRequired(int8_t, int8_t);
   void PassNullableByte(const Nullable<int8_t>&);
   void PassOptionalNullableByte(const Optional< Nullable<int8_t> >&);
   void PassVariadicByte(const Sequence<int8_t>&);
@@ -410,9 +410,7 @@ public:
   void PassString(const nsAString&);
   void PassNullableString(const nsAString&);
   void PassOptionalString(const Optional<nsAString>&);
-  void PassOptionalUndefinedMissingString(const Optional<nsAString>&);
   void PassOptionalStringWithDefaultValue(const nsAString&);
-  void PassOptionalUndefinedMissingStringWithDefaultValue(const nsAString&);
   void PassOptionalNullableString(const Optional<nsAString>&);
   void PassOptionalNullableStringWithDefaultValue(const nsAString&);
   void PassVariadicString(const Sequence<nsString>&);
