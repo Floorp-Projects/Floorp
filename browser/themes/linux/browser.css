@@ -485,10 +485,6 @@ menuitem:not([type]):not(.menuitem-tooltip):not(.menuitem-iconic-tooltip) {
 }
 
 /* Primary toolbar buttons */
-.toolbarbutton-1:not([type="menu-button"]) {
-  min-width: 0;
-}
-
 .toolbarbutton-1 > .toolbarbutton-icon {
   -moz-margin-end: 0;
 }
@@ -502,7 +498,6 @@ menuitem:not([type]):not(.menuitem-tooltip):not(.menuitem-iconic-tooltip) {
   padding: 5px !important;
 }
 
-/* 24px primary toolbar buttons */
 #forward-button[disabled] {
   transform: scale(0);
   opacity: 0;
