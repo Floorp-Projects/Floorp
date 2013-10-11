@@ -1032,16 +1032,25 @@ void HandshakeCallback(PRFileDesc* fd, void* client_data) {
   // is absent at handshake time we have a resumed session. Check this before
   // PreliminaryHandshakeDone() because that function also sets that flag.
   bool isResumedSession = !(infoObject->GetFirstServerHelloReceived());
-
   // Do the bookkeeping that needs to be done after the
   // server's ServerHello...ServerHelloDone have been processed, but that doesn't
   // need the handshake to be completed.
   PreliminaryHandshakeDone(fd);
 
-  // If the handshake completed, then we know the site is TLS tolerant (if this
-  // was a TLS connection).
-  nsSSLIOLayerHelpers& ioLayerHelpers = infoObject->SharedState().IOLayerHelpers();
-  ioLayerHelpers.rememberTolerantSite(infoObject);
+  nsSSLIOLayerHelpers& ioLayerHelpers
+    = infoObject->SharedState().IOLayerHelpers();
+
+  SSLVersionRange versions(infoObject->GetTLSVersionRange());
+
+  PR_LOG(gPIPNSSLog, PR_LOG_DEBUG,
+         ("[%p] HandshakeCallback: succeeded using TLS version range (0x%04x,0x%04x)\n",
+          fd, static_cast<unsigned int>(versions.min),
+              static_cast<unsigned int>(versions.max)));
+
+  // If the handshake completed, then we know the site is TLS tolerant
+  ioLayerHelpers.rememberTolerantAtVersion(infoObject->GetHostName(),
+                                           infoObject->GetPort(),
+                                           versions.max);
 
   PRBool siteSupportsSafeRenego;
   rv = SSL_HandshakeNegotiatedExtension(fd, ssl_renegotiation_info_xtn,
