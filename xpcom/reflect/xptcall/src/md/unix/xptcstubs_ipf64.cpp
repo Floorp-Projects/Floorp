@@ -25,7 +25,7 @@ PrepareAndDispatch(nsXPTCStubBase* self, uint32_t methodIndex,
 #define PARAM_BUFFER_COUNT     16
 
   nsXPTCMiniVariant paramBuffer[PARAM_BUFFER_COUNT];
-  nsXPTCMiniVariant* dispatchParams = NULL;
+  nsXPTCMiniVariant* dispatchParams = nullptr;
   const nsXPTMethodInfo* info;
   nsresult result = NS_ERROR_FAILURE;
   uint64_t* iargs = intargs;

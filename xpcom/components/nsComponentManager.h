@@ -211,9 +211,9 @@ public:
         { }
 
         KnownModule(mozilla::FileLocation &aFile)
-            : mModule(NULL)
+            : mModule(nullptr)
             , mFile(aFile)
-            , mLoader(NULL)
+            , mLoader(nullptr)
             , mLoaded(false)
             , mFailed(false)
         { }

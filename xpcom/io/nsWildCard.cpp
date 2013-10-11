@@ -168,7 +168,7 @@ _shexp_match(const T *str, const T *expr, bool case_insensitive, unsigned int le
  * or stop2 inside it. Return ABORTED if bracketed expression is unterminated.
  * Handle all escaping.
  * Return index in input string of first stop found, or ABORTED if not found.
- * If "dest" is non-NULL, copy counted characters to it and NUL terminate.
+ * If "dest" is non-nullptr, copy counted characters to it and null terminate.
  */
 template<class T>
 static int
@@ -219,7 +219,7 @@ _handle_union(const T *str, const T *expr, bool case_insensitive,
     T *e2;
 
     /* Find the closing parenthesis that ends this union in the expression */
-    cp = ::_scan_and_copy(expr, T(')'), T('\0'), static_cast<T*>(NULL));
+    cp = ::_scan_and_copy(expr, T(')'), T('\0'), static_cast<T*>(nullptr));
     if (cp == ABORTED || cp < 4) /* must be at least "(a|b" before ')' */
         return ABORTED;
     ++cp;                /* now index of char after closing parenthesis */
@@ -383,7 +383,7 @@ template<class T>
 static int
 ns_WildCardMatch(const T *str, const T *xp, bool case_insensitive)
 {
-    T *expr = NULL;
+    T *expr = nullptr;
     int x, ret = MATCH;
 
     if (!nsCharTraits<T>::find(xp, nsCharTraits<T>::length(xp), T('~')))
@@ -394,7 +394,7 @@ ns_WildCardMatch(const T *str, const T *xp, bool case_insensitive)
         return NOMATCH;
     memcpy(expr, xp, (nsCharTraits<T>::length(xp) + 1) * sizeof(T));
 
-    x = ::_scan_and_copy(expr, T('~'), T('\0'), static_cast<T*>(NULL));
+    x = ::_scan_and_copy(expr, T('~'), T('\0'), static_cast<T*>(nullptr));
     if (x != ABORTED && expr[x] == '~') {
         expr[x++] = '\0';
         ret = ::_shexp_match(str, &expr[x], case_insensitive, 0);

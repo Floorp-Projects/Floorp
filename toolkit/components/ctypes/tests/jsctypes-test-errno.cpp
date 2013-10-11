@@ -16,7 +16,7 @@
 #define FAIL \
 { \
   fprintf(stderr, "Assertion failed at line %i\n", __LINE__); \
-  (*(int*)NULL)++; \
+  (*(int*)nullptr)++; \
 }
 
 

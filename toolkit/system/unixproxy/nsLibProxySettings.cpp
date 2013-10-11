@@ -85,7 +85,7 @@ nsUnixSystemProxySettings::GetProxyForURI(const nsACString & aSpec,
   // but nsISystemProxySettings allows "PROXY http://proxy.foo.com:8080" as well.
 
   int c = 0;
-  while (proxyArray[c] != NULL) {
+  while (proxyArray[c] != nullptr) {
     if (!aResult.IsEmpty()) {
       aResult.AppendLiteral("; ");
     }
@@ -122,13 +122,13 @@ NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsUnixSystemProxySettings, Init)
 NS_DEFINE_NAMED_CID(NS_UNIXSYSTEMPROXYSERVICE_CID);
 
 static const mozilla::Module::CIDEntry kUnixProxyCIDs[] = {
-  { &kNS_UNIXSYSTEMPROXYSERVICE_CID, false, NULL, nsUnixSystemProxySettingsConstructor },
-  { NULL }
+  { &kNS_UNIXSYSTEMPROXYSERVICE_CID, false, nullptr, nsUnixSystemProxySettingsConstructor },
+  { nullptr }
 };
 
 static const mozilla::Module::ContractIDEntry kUnixProxyContracts[] = {
   { NS_SYSTEMPROXYSETTINGS_CONTRACTID, &kNS_UNIXSYSTEMPROXYSERVICE_CID },
-  { NULL }
+  { nullptr }
 };
 
 static const mozilla::Module kUnixProxyModule = {

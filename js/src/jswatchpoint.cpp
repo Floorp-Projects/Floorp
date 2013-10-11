@@ -50,35 +50,35 @@ class AutoEntryHolder {
 
 } /* anonymous namespace */
 
+/*
+ * Watchpoint contains a RelocatablePtrObject member, which is conceptually a
+ * heap-only class. It's preferable not to allocate these on the stack as they
+ * cause unnecessary adding and removal of store buffer entries, so
+ * WatchpointStackValue can be used instead.
+ */
+struct js::WatchpointStackValue {
+    JSWatchPointHandler handler;
+    HandleObject closure;
+    bool held;
+
+    WatchpointStackValue(JSWatchPointHandler handler, HandleObject closure, bool held)
+      : handler(handler), closure(closure), held(held) {}
+};
+
+inline js::Watchpoint::Watchpoint(const js::WatchpointStackValue& w)
+  : handler(w.handler), closure(w.closure), held(w.held) {}
+
+inline js::Watchpoint &js::Watchpoint::operator=(const js::WatchpointStackValue& w) {
+    handler = w.handler;
+    closure = w.closure;
+    held = w.held;
+    return *this;
+}
+
 bool
 WatchpointMap::init()
 {
     return map.init();
-}
-
-#ifdef JSGC_GENERATIONAL
-void
-Mark(JSTracer *trc, WatchKey *key, const char *name)
-{
-    MarkId(trc, &key->id, "WatchKey id");
-    MarkObject(trc, &key->object, "WatchKey id");
-}
-#endif
-
-static void
-WatchpointWriteBarrierPost(JSRuntime *rt, WatchpointMap::Map *map, const WatchKey &key,
-                           const Watchpoint &val)
-{
-#ifdef JSGC_GENERATIONAL
-    if ((JSID_IS_OBJECT(key.id) && IsInsideNursery(rt, JSID_TO_OBJECT(key.id))) ||
-        (JSID_IS_STRING(key.id) && IsInsideNursery(rt, JSID_TO_STRING(key.id))) ||
-        IsInsideNursery(rt, key.object) ||
-        IsInsideNursery(rt, val.closure))
-    {
-        typedef HashKeyRef<WatchpointMap::Map, WatchKey> WatchKeyRef;
-        rt->gcStoreBuffer.putGeneric(WatchKeyRef(map, key));
-    }
-#endif
 }
 
 bool
@@ -90,15 +90,16 @@ WatchpointMap::watch(JSContext *cx, HandleObject obj, HandleId id,
     if (!obj->setWatched(cx))
         return false;
 
-    Watchpoint w;
-    w.handler = handler;
-    w.closure = closure;
-    w.held = false;
+    WatchpointStackValue w(handler, closure, false);
     if (!map.put(WatchKey(obj, id), w)) {
         js_ReportOutOfMemory(cx);
         return false;
     }
-    WatchpointWriteBarrierPost(cx->runtime(), &map, WatchKey(obj, id), w);
+    /*
+     * For generational GC, we don't need to post-barrier writes to the
+     * hashtable here because we mark all watchpoints as part of root marking in
+     * markAll().
+     */
     return true;
 }
 
@@ -221,7 +222,7 @@ WatchpointMap::markAll(JSTracer *trc)
         MarkObject(trc, &entry.value.closure, "Watchpoint::closure");
 
         if (prior.object != key.object || prior.id != key.id)
-            e.rekeyFront(prior, key);
+            e.rekeyFront(key);
     }
 }
 
@@ -239,7 +240,7 @@ WatchpointMap::sweep()
 {
     for (Map::Enum e(map); !e.empty(); e.popFront()) {
         Map::Entry &entry = e.front();
-        RelocatablePtrObject obj(entry.key.object);
+        JSObject *obj(entry.key.object);
         if (IsObjectAboutToBeFinalized(&obj)) {
             JS_ASSERT(!entry.value.held);
             e.removeFront();

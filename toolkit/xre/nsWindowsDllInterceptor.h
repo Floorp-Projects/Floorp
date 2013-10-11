@@ -104,14 +104,14 @@ public:
 
       // I don't think this is actually necessary, but it can't hurt.
       FlushInstructionCache(GetCurrentProcess(),
-                            /* ignored */ NULL,
+                            /* ignored */ nullptr,
                             /* ignored */ 0);
     }
   }
 
   void Init(const char *modulename)
   {
-    mModule = LoadLibraryExA(modulename, NULL, 0);
+    mModule = LoadLibraryExA(modulename, nullptr, 0);
     if (!mModule) {
       //printf("LoadLibraryEx for '%s' failed\n", modulename);
       return;
@@ -194,7 +194,7 @@ public:
 
     // I think this routine is safe without this, but it can't hurt.
     FlushInstructionCache(GetCurrentProcess(),
-                          /* ignored */ NULL,
+                          /* ignored */ nullptr,
                           /* ignored */ 0);
 
     return true;
@@ -256,7 +256,7 @@ public:
     if (mModule)
       return;
 
-    mModule = LoadLibraryExA(modulename, NULL, 0);
+    mModule = LoadLibraryExA(modulename, nullptr, 0);
     if (!mModule) {
       //printf("LoadLibraryEx for '%s' failed\n", modulename);
       return;
@@ -268,7 +268,8 @@ public:
 
     mMaxHooks = nhooks + (hooksPerPage % nhooks);
 
-    mHookPage = (byteptr_t) VirtualAllocEx(GetCurrentProcess(), NULL, mMaxHooks * kHookSize,
+    mHookPage = (byteptr_t) VirtualAllocEx(GetCurrentProcess(), nullptr,
+             mMaxHooks * kHookSize,
              MEM_COMMIT | MEM_RESERVE,
              PAGE_EXECUTE_READWRITE);
 
@@ -327,7 +328,7 @@ protected:
                         intptr_t dest,
                         void **outTramp)
   {
-    *outTramp = NULL;
+    *outTramp = nullptr;
 
     byteptr_t tramp = FindTrampolineSpace();
     if (!tramp)
@@ -642,7 +643,7 @@ class WindowsDllInterceptor
 
 public:
   WindowsDllInterceptor()
-    : mModuleName(NULL)
+    : mModuleName(nullptr)
     , mNHooks(0)
   {}
 

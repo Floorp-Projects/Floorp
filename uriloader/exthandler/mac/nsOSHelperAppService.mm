@@ -132,7 +132,7 @@ NS_IMETHODIMP nsOSHelperAppService::GetApplicationDescription(const nsACString& 
               buffer.SetLength(bundleNameLength);
               ::CFStringGetCharacters(bundleName, CFRangeMake(0, bundleNameLength),
                                       buffer.Elements());
-              _retval.Assign(buffer.Elements(), bundleNameLength);
+              _retval.Assign(reinterpret_cast<PRUnichar*>(buffer.Elements()), bundleNameLength);
               rv = NS_OK;
             }
 
@@ -166,7 +166,7 @@ nsresult nsOSHelperAppService::GetFileTokenForPath(const PRUnichar * aPlatformAp
 
   CFURLRef pathAsCFURL;
   CFStringRef pathAsCFString = ::CFStringCreateWithCharacters(NULL,
-                                                              aPlatformAppPath,
+                                                              reinterpret_cast<const UniChar*>(aPlatformAppPath),
                                                               NS_strlen(aPlatformAppPath));
   if (!pathAsCFString)
     return NS_ERROR_OUT_OF_MEMORY;
@@ -481,7 +481,7 @@ nsOSHelperAppService::GetMIMEInfoFromOS(const nsACString& aMIMEType,
       ::CFStringGetCharacters(cfAppName, CFRangeMake(0, appNameLength),
                               buffer.Elements());
       nsAutoString appName;
-      appName.Assign(buffer.Elements(), appNameLength);
+      appName.Assign(reinterpret_cast<PRUnichar*>(buffer.Elements()), appNameLength);
       mimeInfoMac->SetDefaultDescription(appName);
       ::CFRelease(cfAppName);
     }
@@ -516,7 +516,7 @@ nsOSHelperAppService::GetMIMEInfoFromOS(const nsACString& aMIMEType,
         ::CFStringGetCharacters(cfTypeDesc, CFRangeMake(0, typeDescLength),
                                 buffer.Elements());
         nsAutoString typeDesc;
-        typeDesc.Assign(buffer.Elements(), typeDescLength);
+        typeDesc.Assign(reinterpret_cast<PRUnichar*>(buffer.Elements()), typeDescLength);
         mimeInfoMac->SetDescription(typeDesc);
       }
       if (cfTypeDesc) {

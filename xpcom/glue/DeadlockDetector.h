@@ -380,7 +380,7 @@ public:
      * CheckAcquisition This method is called after acquiring |aLast|,
      * but before trying to acquire |aProposed| from |aCallContext|.
      * It determines whether actually trying to acquire |aProposed|
-     * will create problems.  It is OK if |aLast| is NULL; this is
+     * will create problems.  It is OK if |aLast| is nullptr; this is
      * interpreted as |aProposed| being the thread's first acquisition
      * of its current chain.
      *

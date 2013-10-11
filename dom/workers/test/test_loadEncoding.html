@@ -1,0 +1,50 @@
+<!--
+  Any copyright is dedicated to the Public Domain.
+  http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Bug 484305 - Load workers as UTF-8</title>
+  <meta http-equiv="content-type" content="text/html; charset=KOI8-R">
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=484305">Bug 484305 - Load workers as UTF-8</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+
+</div>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+SimpleTest.waitForExplicitFinish();
+
+var canonical = String.fromCharCode(0x41F, 0x440, 0x438, 0x432, 0x435, 0x442);
+ok(document.inputEncoding === "KOI8-R", "Document encoding is KOI8-R");
+
+// Worker sends two strings, one with `canonical` encoded in KOI8-R and one as UTF-8.
+// Since Worker scripts should always be decoded using UTF-8, even if the owning document's charset is different, the UTF-8 decode should match, while KOI8-R should fail.
+var counter = 0;
+var worker = new Worker("loadEncoding_worker.js");
+worker.onmessage = function(e) {
+  if (e.data.encoding === "KOI8-R") {
+    ok(e.data.text !== canonical, "KOI8-R decoded text should not match");
+  } else if (e.data.encoding === "UTF-8") {
+    ok(e.data.text === canonical, "UTF-8 decoded text should match");
+  }
+  counter++;
+  if (counter === 2)
+    SimpleTest.finish();
+}
+
+worker.onerror = function(e) {
+  ok(false, "Worker error");
+  SimpleTest.finish();
+}
+</script>
+
+</pre>
+</body>
+</html>

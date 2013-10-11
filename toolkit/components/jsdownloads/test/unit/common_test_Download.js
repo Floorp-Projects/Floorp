@@ -540,6 +540,28 @@ add_task(function test_cancel_midway()
 });
 
 /**
+ * Cancels a download while keeping partially downloaded data, and verifies that
+ * both the target file and the ".part" file are deleted.
+ */
+add_task(function test_cancel_midway_tryToKeepPartialData()
+{
+  let download = yield promiseStartDownload_tryToKeepPartialData();
+
+  do_check_true(yield OS.File.exists(download.target.path));
+  do_check_true(yield OS.File.exists(download.target.partFilePath));
+
+  yield download.cancel();
+  yield download.removePartialData();
+
+  do_check_true(download.stopped);
+  do_check_true(download.canceled);
+  do_check_true(download.error === null);
+
+  do_check_false(yield OS.File.exists(download.target.path));
+  do_check_false(yield OS.File.exists(download.target.partFilePath));
+});
+
+/**
  * Cancels a download right after starting it.
  */
 add_task(function test_cancel_immediately()
@@ -1032,6 +1054,8 @@ add_task(function test_error_source()
     do_check_true(download.error !== null);
     do_check_true(download.error.becauseSourceFailed);
     do_check_false(download.error.becauseTargetFailed);
+
+    do_check_false(yield OS.File.exists(download.target.path));
   } finally {
     serverSocket.close();
   }

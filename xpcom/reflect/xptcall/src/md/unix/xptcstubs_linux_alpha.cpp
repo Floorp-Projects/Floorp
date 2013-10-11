@@ -20,7 +20,7 @@ PrepareAndDispatch(nsXPTCStubBase* self, uint32_t methodIndex, uint64_t* args)
     const uint8_t NUM_ARG_REGS = 6-1;        // -1 for "this" pointer
 
     nsXPTCMiniVariant paramBuffer[PARAM_BUFFER_COUNT];
-    nsXPTCMiniVariant* dispatchParams = NULL;
+    nsXPTCMiniVariant* dispatchParams = nullptr;
     const nsXPTMethodInfo* info;
     uint8_t paramCount;
     uint8_t i;

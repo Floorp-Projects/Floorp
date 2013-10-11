@@ -3009,10 +3009,19 @@ EmitDestructuringOpsHelper(ExclusiveContext *cx, BytecodeEmitter *bce, ParseNode
                 if (!EmitNumberOp(cx, pn3->pn_dval, bce))
                     return false;
             } else {
+                // The parser already checked for atoms representing indexes and
+                // used PNK_NUMBER instead, but also watch for ids which TI treats
+                // as indexes for simpliciation of downstream analysis.
                 JS_ASSERT(pn3->isKind(PNK_STRING) || pn3->isKind(PNK_NAME));
-                if (!EmitAtomOp(cx, pn3, JSOP_GETPROP, bce))
-                    return false;
-                doElemOp = false;
+                jsid id = NameToId(pn3->pn_atom->asPropertyName());
+                if (id != types::IdToTypeId(id)) {
+                    if (!EmitTree(cx, bce, pn3))
+                        return false;
+                } else {
+                    if (!EmitAtomOp(cx, pn3, JSOP_GETPROP, bce))
+                        return false;
+                    doElemOp = false;
+                }
             }
             pn3 = pn2->pn_right;
         }

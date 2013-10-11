@@ -16,39 +16,30 @@
 
 #include "nsAutoPtr.h"
 #include "nsCOMArray.h"
-#include "nsDataHashtable.h"
+#include "nsInterfaceHashtable.h"
 
 #include "nsXPCOM.h"
 
-class NS_NO_VTABLE nsCategoryListener {
-  protected:
-    // no virtual destructor (people shouldn't delete through an
-    // nsCategoryListener pointer)
-    ~nsCategoryListener() {}
-
+class NS_COM_GLUE nsCategoryObserver MOZ_FINAL : public nsIObserver
+{
   public:
-    virtual void EntryAdded(const nsCString& aValue) = 0;
-    virtual void EntryRemoved(const nsCString& aValue) = 0;
-    virtual void CategoryCleared() = 0;
-};
-
-class NS_COM_GLUE nsCategoryObserver MOZ_FINAL : public nsIObserver {
-  public:
-    nsCategoryObserver(const char* aCategory,
-                       nsCategoryListener* aCategoryListener);
+    nsCategoryObserver(const char* aCategory);
     ~nsCategoryObserver();
 
     void ListenerDied();
+    nsInterfaceHashtable<nsCStringHashKey, nsISupports>& GetHash()
+    {
+      return mHash;
+    }
 
     NS_DECL_ISUPPORTS
     NS_DECL_NSIOBSERVER
   private:
-    NS_HIDDEN_(void) RemoveObservers();
+    void RemoveObservers();
 
-    nsDataHashtable<nsCStringHashKey, nsCString> mHash;
-    nsCategoryListener*                          mListener;
-    nsCString                                    mCategory;
-    bool                                         mObserversRemoved;
+    nsInterfaceHashtable<nsCStringHashKey, nsISupports> mHash;
+    nsCString mCategory;
+    bool mObserversRemoved;
 };
 
 /**
@@ -59,59 +50,46 @@ class NS_COM_GLUE nsCategoryObserver MOZ_FINAL : public nsIObserver {
  * then get the name of the category.
  */
 template<class T>
-class nsCategoryCache MOZ_FINAL : protected nsCategoryListener {
+class nsCategoryCache MOZ_FINAL
+{
   public:
-    explicit nsCategoryCache(const char* aCategory);
-    ~nsCategoryCache() { if (mObserver) mObserver->ListenerDied(); }
+    explicit nsCategoryCache(const char* aCategory)
+      : mCategoryName(aCategory)
+    {
+    }
+    ~nsCategoryCache() {
+      if (mObserver)
+	mObserver->ListenerDied();
+    }
 
-    const nsCOMArray<T>& GetEntries() {
+    void GetEntries(nsCOMArray<T>& result) {
       // Lazy initialization, so that services in this category can't
       // cause reentrant getService (bug 386376)
       if (!mObserver)
-        mObserver = new nsCategoryObserver(mCategoryName.get(), this);
-      return mEntries;
-    }
-  protected:
-    virtual void EntryAdded(const nsCString& aValue);
-    virtual void EntryRemoved(const nsCString& aValue);
-    virtual void CategoryCleared();
-  private:
-    friend class CategoryObserver;
+        mObserver = new nsCategoryObserver(mCategoryName.get());
 
+      mObserver->GetHash().EnumerateRead(EntriesToArray, &result);
+    }
+
+  private:
     // Not to be implemented
     nsCategoryCache(const nsCategoryCache<T>&);
 
+    static PLDHashOperator EntriesToArray(const nsACString& key,
+					  nsISupports* entry, void* arg)
+    {
+      nsCOMArray<T>& entries = *static_cast<nsCOMArray<T>*>(arg);
+
+      nsCOMPtr<T> service = do_QueryInterface(entry);
+      if (service) {
+	entries.AppendObject(service);
+      }
+      return PL_DHASH_NEXT;
+    }
+
     nsCString mCategoryName;
-    nsCOMArray<T> mEntries;
     nsRefPtr<nsCategoryObserver> mObserver;
+
 };
-
-// -----------------------------------
-// Implementation
-
-template<class T>
-nsCategoryCache<T>::nsCategoryCache(const char* aCategory)
-: mCategoryName(aCategory)
-{
-}
-
-template<class T>
-void nsCategoryCache<T>::EntryAdded(const nsCString& aValue) {
-  nsCOMPtr<T> catEntry = do_GetService(aValue.get());
-  if (catEntry)
-    mEntries.AppendObject(catEntry);
-}
-
-template<class T>
-void nsCategoryCache<T>::EntryRemoved(const nsCString& aValue) {
-  nsCOMPtr<T> catEntry = do_GetService(aValue.get());
-  if (catEntry)
-    mEntries.RemoveObject(catEntry);
-}
-
-template<class T>
-void nsCategoryCache<T>::CategoryCleared() {
-  mEntries.Clear();
-}
 
 #endif

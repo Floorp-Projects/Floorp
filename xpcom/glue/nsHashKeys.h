@@ -352,7 +352,7 @@ class nsPtrHashKey : public PLDHashEntryHdr
 };
 
 /**
- * hashkey wrapper using T* KeyType that sets key to NULL upon
+ * hashkey wrapper using T* KeyType that sets key to nullptr upon
  * destruction. Relevant only in cases where a memory pointer-scanner
  * like valgrind might get confused about stale references.
  *

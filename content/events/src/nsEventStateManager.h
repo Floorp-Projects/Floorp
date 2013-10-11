@@ -46,7 +46,6 @@ class nsEventStateManager : public nsSupportsWeakReference,
                             public nsIObserver
 {
   friend class nsMouseWheelTransaction;
-  friend class nsScrollbarsForWheel;
 public:
 
   typedef mozilla::TimeStamp TimeStamp;
@@ -555,12 +554,6 @@ protected:
       (PREFER_ACTUAL_SCROLLABLE_TARGET_ALONG_Y_AXIS | START_FROM_PARENT)
   };
   nsIScrollableFrame* ComputeScrollTarget(nsIFrame* aTargetFrame,
-                                          mozilla::WheelEvent* aEvent,
-                                          ComputeScrollTargetOptions aOptions);
-
-  nsIScrollableFrame* ComputeScrollTarget(nsIFrame* aTargetFrame,
-                                          double aDirectionX,
-                                          double aDirectionY,
                                           mozilla::WheelEvent* aEvent,
                                           ComputeScrollTargetOptions aOptions);
 

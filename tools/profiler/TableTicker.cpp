@@ -7,7 +7,7 @@
 #include <stdio.h>
 #include <fstream>
 #include <sstream>
-#include "GeckoProfilerImpl.h"
+#include "GeckoProfiler.h"
 #include "SaveProfileTask.h"
 #include "ProfileEntry.h"
 #include "SyncProfile.h"

@@ -101,7 +101,7 @@ nsUserInfo::GetDomain(char **aDomain)
 
   const DWORD level = 100;
   LPBYTE info;
-  NET_API_STATUS status = NetWkstaGetInfo(NULL, level, &info);
+  NET_API_STATUS status = NetWkstaGetInfo(nullptr, level, &info);
   if (status == NERR_Success) {
     *aDomain =
       ToNewUTF8String(nsDependentString(reinterpret_cast<WKSTA_INFO_100 *>(info)->

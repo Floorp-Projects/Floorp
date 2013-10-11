@@ -81,7 +81,7 @@ private:
 NS_IMPL_ADDREF(nsStringInputStream)
 NS_IMPL_RELEASE(nsStringInputStream)
 
-NS_IMPL_CLASSINFO(nsStringInputStream, NULL, nsIClassInfo::THREADSAFE,
+NS_IMPL_CLASSINFO(nsStringInputStream, nullptr, nsIClassInfo::THREADSAFE,
                   NS_STRINGINPUTSTREAM_CID)
 NS_IMPL_QUERY_INTERFACE5_CI(nsStringInputStream,
                             nsIStringInputStream,

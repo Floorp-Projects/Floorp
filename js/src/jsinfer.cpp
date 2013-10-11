@@ -628,8 +628,11 @@ class TypeCompilerConstraint : public TypeConstraint
             cx->compartment()->types.addPendingRecompile(cx, compilation);
     }
 
-    void newObjectState(JSContext *cx, TypeObject *object, bool force) {
-        if (data.invalidateOnNewObjectState(object, force))
+    void newObjectState(JSContext *cx, TypeObject *object) {
+        // Note: Once the object has unknown properties, no more notifications
+        // will be sent on changes to its state, so always invalidate any
+        // associated compilations.
+        if (object->unknownProperties() || data.invalidateOnNewObjectState(object))
             cx->compartment()->types.addPendingRecompile(cx, compilation);
     }
 };
@@ -638,6 +641,9 @@ template <typename T>
 bool
 CompilerConstraintInstance<T>::generateTypeConstraint(JSContext *cx, RecompileInfo recompileInfo)
 {
+    if (property.actualObject->unknownProperties())
+        return false;
+
     if (!data.constraintHolds(cx, property, expected))
         return false;
 
@@ -700,6 +706,7 @@ TypeObjectKey::property(jsid id)
     if (!type)
         MOZ_CRASH();
     HeapTypeSetKey property;
+    property.actualObject = type;
     property.actualTypes = type->getProperty(cx, id);
     if (!property.actualTypes)
         MOZ_CRASH();
@@ -754,7 +761,7 @@ class ConstraintDataFreeze
 
     bool invalidateOnNewType(Type type) { return true; }
     bool invalidateOnNewPropertyState(TypeSet *property) { return false; }
-    bool invalidateOnNewObjectState(TypeObject *object, bool force) { return false; }
+    bool invalidateOnNewObjectState(TypeObject *object) { return false; }
 
     bool constraintHolds(JSContext *cx,
                          const HeapTypeSetKey &property, TemporaryTypeSet *expected)
@@ -919,33 +926,27 @@ namespace {
 class ConstraintDataFreezeObjectFlags
 {
   public:
-    // Object being queried.
-    TypeObjectKey *object;
-
     // Flags we are watching for on this object.
     TypeObjectFlags flags;
 
-    ConstraintDataFreezeObjectFlags(TypeObjectKey *object, TypeObjectFlags flags)
-      : object(object), flags(flags)
-    {}
+    ConstraintDataFreezeObjectFlags(TypeObjectFlags flags)
+      : flags(flags)
+    {
+        JS_ASSERT(flags);
+    }
 
     const char *kind() { return "freezeObjectFlags"; }
 
     bool invalidateOnNewType(Type type) { return false; }
     bool invalidateOnNewPropertyState(TypeSet *property) { return false; }
-    bool invalidateOnNewObjectState(TypeObject *object, bool force) {
-        return flags ? object->hasAnyFlags(flags) : force;
+    bool invalidateOnNewObjectState(TypeObject *object) {
+        return object->hasAnyFlags(flags);
     }
 
     bool constraintHolds(JSContext *cx,
                          const HeapTypeSetKey &property, TemporaryTypeSet *expected)
     {
-        // FIXME: There is not yet any way to test if constraints with no
-        // associated flags (i.e. those invalidated via |force|) still hold.
-        TypeObject *type = object->isSingleObject()
-                           ? object->asSingleObject()->type()
-                           : object->asTypeObject();
-        return !type->hasAnyFlags(flags);
+        return !invalidateOnNewObjectState(property.actualObject);
     }
 };
 
@@ -965,18 +966,11 @@ TypeObjectKey::hasFlags(CompilerConstraintList *constraints, TypeObjectFlags fla
         return true;
 
     HeapTypeSetKey objectProperty = property(JSID_EMPTY);
-    constraints->add(IonAlloc()->new_<CompilerConstraintInstance<ConstraintDataFreezeObjectFlags> >(objectProperty, ConstraintDataFreezeObjectFlags(this, flags)));
+    constraints->add(IonAlloc()->new_<CompilerConstraintInstance<ConstraintDataFreezeObjectFlags> >(objectProperty, ConstraintDataFreezeObjectFlags(flags)));
     return false;
 #else
     MOZ_CRASH();
 #endif
-}
-
-void
-TypeObjectKey::watchStateChange(CompilerConstraintList *constraints)
-{
-    HeapTypeSetKey objectProperty = property(JSID_EMPTY);
-    constraints->add(IonAlloc()->new_<CompilerConstraintInstance<ConstraintDataFreezeObjectFlags> >(objectProperty, ConstraintDataFreezeObjectFlags(this, 0)));
 }
 
 bool
@@ -1002,8 +996,114 @@ TemporaryTypeSet::hasObjectFlags(CompilerConstraintList *constraints, TypeObject
     return false;
 }
 
-static inline void
-ObjectStateChange(ExclusiveContext *cxArg, TypeObject *object, bool markingUnknown, bool force)
+namespace {
+
+// Constraint which triggers recompilation on any type change in an inlined
+// script. The freeze constraints added to stack type sets will only directly
+// invalidate the script containing those stack type sets. To invalidate code
+// for scripts into which the base script was inlined, ObjectStateChange is used.
+class ConstraintDataFreezeObjectForInlinedCall
+{
+  public:
+    ConstraintDataFreezeObjectForInlinedCall()
+    {}
+
+    const char *kind() { return "freezeObjectForInlinedCall"; }
+
+    bool invalidateOnNewType(Type type) { return false; }
+    bool invalidateOnNewPropertyState(TypeSet *property) { return false; }
+    bool invalidateOnNewObjectState(TypeObject *object) {
+        // We don't keep track of the exact dependencies the caller has on its
+        // inlined scripts' type sets, so always invalidate the caller.
+        return true;
+    }
+
+    bool constraintHolds(JSContext *cx,
+                         const HeapTypeSetKey &property, TemporaryTypeSet *expected)
+    {
+        return true;
+    }
+};
+
+// Constraint which triggers recompilation when the allocation kind of the
+// template object for a type's new script changes.
+class ConstraintDataFreezeObjectForNewScriptTemplate
+{
+    gc::AllocKind allocKind;
+
+  public:
+    ConstraintDataFreezeObjectForNewScriptTemplate(gc::AllocKind allocKind)
+      : allocKind(allocKind)
+    {}
+
+    const char *kind() { return "freezeObjectForNewScriptTemplate"; }
+
+    bool invalidateOnNewType(Type type) { return false; }
+    bool invalidateOnNewPropertyState(TypeSet *property) { return false; }
+    bool invalidateOnNewObjectState(TypeObject *object) {
+        return !object->hasNewScript() || object->newScript()->allocKind != allocKind;
+    }
+
+    bool constraintHolds(JSContext *cx,
+                         const HeapTypeSetKey &property, TemporaryTypeSet *expected)
+    {
+        return !invalidateOnNewObjectState(property.actualObject);
+    }
+};
+
+// Constraint which triggers recompilation when the underlying data pointer for
+// a typed array changes.
+class ConstraintDataFreezeObjectForTypedArrayBuffer
+{
+    void *viewData;
+
+  public:
+    ConstraintDataFreezeObjectForTypedArrayBuffer(void *viewData)
+      : viewData(viewData)
+    {}
+
+    const char *kind() { return "freezeObjectForTypedArrayBuffer"; }
+
+    bool invalidateOnNewType(Type type) { return false; }
+    bool invalidateOnNewPropertyState(TypeSet *property) { return false; }
+    bool invalidateOnNewObjectState(TypeObject *object) {
+        return object->singleton->as<TypedArrayObject>().viewData() != viewData;
+    }
+
+    bool constraintHolds(JSContext *cx,
+                         const HeapTypeSetKey &property, TemporaryTypeSet *expected)
+    {
+        return !invalidateOnNewObjectState(property.actualObject);
+    }
+};
+
+} /* anonymous namespace */
+
+void
+TypeObjectKey::watchStateChangeForInlinedCall(CompilerConstraintList *constraints)
+{
+    HeapTypeSetKey objectProperty = property(JSID_EMPTY);
+    constraints->add(IonAlloc()->new_<CompilerConstraintInstance<ConstraintDataFreezeObjectForInlinedCall> >(objectProperty, ConstraintDataFreezeObjectForInlinedCall()));
+}
+
+void
+TypeObjectKey::watchStateChangeForNewScriptTemplate(CompilerConstraintList *constraints)
+{
+    gc::AllocKind kind = asTypeObject()->newScript()->allocKind;
+    HeapTypeSetKey objectProperty = property(JSID_EMPTY);
+    constraints->add(IonAlloc()->new_<CompilerConstraintInstance<ConstraintDataFreezeObjectForNewScriptTemplate> >(objectProperty, ConstraintDataFreezeObjectForNewScriptTemplate(kind)));
+}
+
+void
+TypeObjectKey::watchStateChangeForTypedArrayBuffer(CompilerConstraintList *constraints)
+{
+    void *viewData = asSingleObject()->as<TypedArrayObject>().viewData();
+    HeapTypeSetKey objectProperty = property(JSID_EMPTY);
+    constraints->add(IonAlloc()->new_<CompilerConstraintInstance<ConstraintDataFreezeObjectForTypedArrayBuffer> >(objectProperty, ConstraintDataFreezeObjectForTypedArrayBuffer(viewData)));
+}
+
+static void
+ObjectStateChange(ExclusiveContext *cxArg, TypeObject *object, bool markingUnknown)
 {
     if (object->unknownProperties())
         return;
@@ -1019,7 +1119,7 @@ ObjectStateChange(ExclusiveContext *cxArg, TypeObject *object, bool markingUnkno
         if (JSContext *cx = cxArg->maybeJSContext()) {
             TypeConstraint *constraint = types->constraintList;
             while (constraint) {
-                constraint->newObjectState(cx, object, force);
+                constraint->newObjectState(cx, object);
                 constraint = constraint->next;
             }
         } else {
@@ -1048,7 +1148,7 @@ class ConstraintDataFreezeConfiguredProperty
     bool invalidateOnNewPropertyState(TypeSet *property) {
         return property->configuredProperty();
     }
-    bool invalidateOnNewObjectState(TypeObject *object, bool force) { return false; }
+    bool invalidateOnNewObjectState(TypeObject *object) { return false; }
 
     bool constraintHolds(JSContext *cx,
                          const HeapTypeSetKey &property, TemporaryTypeSet *expected)
@@ -1328,16 +1428,6 @@ TemporaryTypeSet::propertyNeedsBarrier(CompilerConstraintList *constraints, jsid
     return false;
 }
 
-/*
- * Force recompilation of any jitcode for the script, or of any other script
- * which this script was inlined into.
- */
-static inline void
-AddPendingRecompile(JSContext *cx, JSScript *script)
-{
-    cx->compartment()->types.addPendingRecompile(cx, script);
-}
-
 namespace {
 
 /*
@@ -1362,7 +1452,7 @@ class TypeConstraintFreezeStack : public TypeConstraint
          * Unlike TypeConstraintFreeze, triggering this constraint once does
          * not disable it on future changes to the type set.
          */
-        AddPendingRecompile(cx, script_);
+        cx->compartment()->types.addPendingRecompile(cx, script_);
     }
 };
 
@@ -1830,8 +1920,6 @@ void
 TypeCompartment::addPendingRecompile(JSContext *cx, JSScript *script)
 {
     JS_ASSERT(script);
-    if (!constrainedOutputs)
-        return;
 
 #ifdef JS_ION
     CancelOffThreadIonCompile(cx->compartment(), script);
@@ -1851,7 +1939,7 @@ TypeCompartment::addPendingRecompile(JSContext *cx, JSScript *script)
     // changes on the callee's script, so trigger these to force recompilation
     // of any such callers.
     if (script->function() && !script->function()->hasLazyType())
-        ObjectStateChange(cx, script->function()->type(), false, true);
+        ObjectStateChange(cx, script->function()->type(), false);
 }
 
 void
@@ -2455,7 +2543,7 @@ TypeObject::matchDefiniteProperties(HandleObject obj)
     return true;
 }
 
-inline void
+static inline void
 InlineAddTypeProperty(ExclusiveContext *cx, TypeObject *obj, jsid id, Type type)
 {
     JS_ASSERT(id == IdToTypeId(id));
@@ -2538,7 +2626,7 @@ TypeObject::markStateChange(ExclusiveContext *cxArg)
         if (JSContext *cx = cxArg->maybeJSContext()) {
             TypeConstraint *constraint = types->constraintList;
             while (constraint) {
-                constraint->newObjectState(cx, this, true);
+                constraint->newObjectState(cx, this);
                 constraint = constraint->next;
             }
         } else {
@@ -2565,7 +2653,7 @@ TypeObject::setFlags(ExclusiveContext *cx, TypeObjectFlags flags)
 
     InferSpew(ISpewOps, "%s: setFlags 0x%x", TypeObjectString(this), flags);
 
-    ObjectStateChange(cx, this, false, false);
+    ObjectStateChange(cx, this, false);
 }
 
 void
@@ -2581,7 +2669,7 @@ TypeObject::markUnknown(ExclusiveContext *cx)
 
     InferSpew(ISpewOps, "UnknownProperties: %s", TypeObjectString(this));
 
-    ObjectStateChange(cx, this, true, true);
+    ObjectStateChange(cx, this, true);
 
     /*
      * Existing constraints may have already been added to this object, which we need

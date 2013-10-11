@@ -1157,7 +1157,7 @@ GetDeviceName(int deviceMajor, int deviceMinor, nsACString &deviceName)
         char *p_dev = strstr(mountinfo_line,device_num);
     
         int i;
-        for(i = 0; i < kMountInfoDevPosition && p_dev != NULL; i++) {
+        for(i = 0; i < kMountInfoDevPosition && p_dev != nullptr; i++) {
             p_dev = strchr(p_dev,' ');
             if(p_dev)
               p_dev++;
@@ -2030,7 +2030,7 @@ static nsresult CFStringReftoUTF8(CFStringRef aInStrRef, nsACString& aOutStr)
   CFIndex usedBufLen, inStrLen = ::CFStringGetLength(aInStrRef);
   CFIndex charsConverted = ::CFStringGetBytes(aInStrRef, CFRangeMake(0, inStrLen),
                                               kCFStringEncodingUTF8, 0, false,
-                                              NULL, 0, &usedBufLen);
+                                              nullptr, 0, &usedBufLen);
   if (charsConverted == inStrLen) {
     // all characters converted, do the actual conversion
     aOutStr.SetLength(usedBufLen);
@@ -2094,7 +2094,7 @@ nsLocalFile::GetFSRef(FSRef *_retval)
 
   nsresult rv = NS_ERROR_FAILURE;
 
-  CFURLRef url = NULL;
+  CFURLRef url = nullptr;
   if (NS_SUCCEEDED(GetCFURL(&url))) {
     if (::CFURLGetFSRef(url, _retval)) {
       rv = NS_OK;
@@ -2224,7 +2224,7 @@ nsLocalFile::LaunchWithDoc(nsIFile *aDocToLoad, bool aLaunchInBackground)
   }
   thelaunchSpec.launchFlags = theLaunchFlags;
 
-  OSErr err = ::LSOpenFromRefSpec(&thelaunchSpec, NULL);
+  OSErr err = ::LSOpenFromRefSpec(&thelaunchSpec, nullptr);
   if (err != noErr)
     return MacErrorMapper(err);
 
@@ -2240,7 +2240,7 @@ nsLocalFile::OpenDocWithApp(nsIFile *aAppToOpenWith, bool aLaunchInBackground)
     return rv;
 
   if (!aAppToOpenWith) {
-    OSErr err = ::LSOpenFSRef(&docFSRef, NULL);
+    OSErr err = ::LSOpenFSRef(&docFSRef, nullptr);
     return MacErrorMapper(err);
   }
 
@@ -2272,7 +2272,7 @@ nsLocalFile::OpenDocWithApp(nsIFile *aAppToOpenWith, bool aLaunchInBackground)
   thelaunchSpec.itemRefs = &docFSRef;
   thelaunchSpec.launchFlags = theLaunchFlags;
 
-  OSErr err = ::LSOpenFromRefSpec(&thelaunchSpec, NULL);
+  OSErr err = ::LSOpenFromRefSpec(&thelaunchSpec, nullptr);
   if (err != noErr)
     return MacErrorMapper(err);
 
@@ -2336,7 +2336,7 @@ nsLocalFile::GetBundleIdentifier(nsACString& outBundleIdentifier)
 
   CFURLRef urlRef;
   if (NS_SUCCEEDED(GetCFURL(&urlRef))) {
-    CFBundleRef bundle = ::CFBundleCreate(NULL, urlRef);
+    CFBundleRef bundle = ::CFBundleCreate(nullptr, urlRef);
     if (bundle) {
       CFStringRef bundleIdentifier = ::CFBundleGetIdentifier(bundle);
       if (bundleIdentifier)

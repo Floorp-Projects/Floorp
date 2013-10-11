@@ -266,7 +266,7 @@ class ScopedMMap
 {
 public:
   ScopedMMap(const char *aFilePath)
-    : buf(NULL)
+    : buf(nullptr)
   {
     fd = open(aFilePath, O_RDONLY);
     if (fd < 0) {
@@ -277,7 +277,7 @@ public:
       return;
     }
     size = st.st_size;
-    buf = (char *)mmap(NULL, size, PROT_READ, MAP_PRIVATE, fd, 0);
+    buf = (char *)mmap(nullptr, size, PROT_READ, MAP_PRIVATE, fd, 0);
   }
   ~ScopedMMap()
   {
@@ -480,8 +480,8 @@ mozilla::ReadAheadFile(mozilla::pathstr_t aFilePath, const size_t aOffset,
     }
     return;
   }
-  HANDLE fd = CreateFileW(aFilePath, GENERIC_READ, FILE_SHARE_READ,
-                          NULL, OPEN_EXISTING, FILE_FLAG_SEQUENTIAL_SCAN, NULL);
+  HANDLE fd = CreateFileW(aFilePath, GENERIC_READ, FILE_SHARE_READ, nullptr,
+                          OPEN_EXISTING, FILE_FLAG_SEQUENTIAL_SCAN, nullptr);
   if (aOutFd) {
     *aOutFd = fd;
   }

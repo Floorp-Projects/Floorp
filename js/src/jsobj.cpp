@@ -2817,7 +2817,7 @@ JSObject::maybeDensifySparseElements(js::ExclusiveContext *cx, HandleObject obj)
     return ED_OK;
 }
 
-ObjectElements *
+static ObjectElements *
 AllocateElements(ThreadSafeContext *cx, JSObject *obj, uint32_t nelems)
 {
 #ifdef JSGC_GENERATIONAL
@@ -2828,7 +2828,7 @@ AllocateElements(ThreadSafeContext *cx, JSObject *obj, uint32_t nelems)
     return static_cast<js::ObjectElements *>(cx->malloc_(nelems * sizeof(HeapValue)));
 }
 
-ObjectElements *
+static ObjectElements *
 ReallocateElements(ThreadSafeContext *cx, JSObject *obj, ObjectElements *oldHeader,
                    uint32_t oldCount, uint32_t newCount)
 {
@@ -5381,7 +5381,7 @@ js_GetterOnlyPropertyStub(JSContext *cx, HandleObject obj, HandleId id, bool str
  * into other code.
  */
 
-void
+static void
 dumpValue(const Value &v)
 {
     if (v.isNull())

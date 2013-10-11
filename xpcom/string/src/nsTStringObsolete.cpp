@@ -569,7 +569,7 @@ void
 nsTString_CharT::AssignWithConversion( const incompatible_char_type* aData, int32_t aLength )
   {
       // for compatibility with the old string implementation, we need to allow
-      // for a NULL input buffer :-(
+      // for a nullptr input buffer :-(
     if (!aData)
       {
         Truncate();

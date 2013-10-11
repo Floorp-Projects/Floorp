@@ -1633,8 +1633,8 @@ nsNavHistoryContainerResultNode::ChangeTitles(nsIURI* aURI,
   NS_ENSURE_SUCCESS(rv, rv);
 
   // The recursive function will update the result's tree nodes, but only if we
-  // give it a non-null pointer.  So if there isn't a tree, just pass NULL so
-  // it doesn't bother trying to call the result.
+  // give it a non-null pointer.  So if there isn't a tree, just pass nullptr
+  // so it doesn't bother trying to call the result.
   nsNavHistoryResult* result = GetResult();
   NS_ENSURE_STATE(result);
 

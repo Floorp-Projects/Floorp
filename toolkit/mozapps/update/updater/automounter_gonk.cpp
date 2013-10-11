@@ -29,7 +29,7 @@
 const char *kGonkMountsPath = "/proc/mounts";
 const char *kGonkSystemPath = "/system";
 
-GonkAutoMounter::GonkAutoMounter() : mDevice(NULL), mAccess(Unknown)
+GonkAutoMounter::GonkAutoMounter() : mDevice(nullptr), mAccess(Unknown)
 {
   if (!RemountSystem(ReadWrite)) {
     LOGE("Could not remount %s as read-write.", kGonkSystemPath);
@@ -58,7 +58,7 @@ GonkAutoMounter::Reboot()
        kGonkSystemPath);
   LogFlush();
 
-  if (android_reboot(ANDROID_RB_RESTART, 0, NULL) != 0) {
+  if (android_reboot(ANDROID_RB_RESTART, 0, nullptr) != 0) {
     LOGE("Safe system reboot failed, attempting to force");
     LogFlush();
 
@@ -120,7 +120,7 @@ GonkAutoMounter::UpdateMountStatus()
 {
   FILE *mountsFile = NS_tfopen(kGonkMountsPath, "r");
 
-  if (mountsFile == NULL) {
+  if (mountsFile == nullptr) {
     LOGE("Error opening %s: %s", kGonkMountsPath, strerror(errno));
     return false;
   }
@@ -143,7 +143,7 @@ GonkAutoMounter::UpdateMountStatus()
 
   for (token = strtok_r(mountData, "\n", &tokenContext);
        token;
-       token = strtok_r(NULL, "\n", &tokenContext))
+       token = strtok_r(nullptr, "\n", &tokenContext))
   {
     if (ProcessMount(token)) {
       foundSystem = true;
@@ -188,7 +188,7 @@ GonkAutoMounter::ProcessMount(const char *mount)
   char *option, *optionContext;
   for (option = strtok_r(mountAccess, ",", &optionContext);
        option;
-       option = strtok_r(NULL, ",", &optionContext))
+       option = strtok_r(nullptr, ",", &optionContext))
   {
     if (strcmp("ro", option) == 0) {
       mAccess = ReadOnly;
@@ -211,7 +211,7 @@ GonkAutoMounter::MountSystem(unsigned long flags)
   }
 
   const char *readOnly = flags & MS_RDONLY ? "read-only" : "read-write";
-  int result = mount(mDevice, kGonkSystemPath, "none", flags, NULL);
+  int result = mount(mDevice, kGonkSystemPath, "none", flags, nullptr);
 
   if (result != 0) {
     LOGE("Error mounting %s as %s: %s", kGonkSystemPath, readOnly,

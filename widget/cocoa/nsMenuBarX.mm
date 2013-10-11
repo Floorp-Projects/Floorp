@@ -237,7 +237,8 @@ void nsMenuBarX::ObserveContentInserted(nsIDocument* aDocument,
 
 void nsMenuBarX::ForceUpdateNativeMenuAt(const nsAString& indexString)
 {
-  NSString* locationString = [NSString stringWithCharacters:indexString.BeginReading() length:indexString.Length()];
+  NSString* locationString = [NSString stringWithCharacters:reinterpret_cast<const unichar*>(indexString.BeginReading())
+                                                     length:indexString.Length()];
   NSArray* indexes = [locationString componentsSeparatedByString:@"|"];
   unsigned int indexCount = [indexes count];
   if (indexCount == 0)
@@ -505,7 +506,8 @@ NSMenuItem* nsMenuBarX::CreateNativeAppMenuItem(nsMenuX* inMenu, const nsAString
       nsAutoString keyChar(NS_LITERAL_STRING(" "));
       keyContent->GetAttr(kNameSpaceID_None, nsGkAtoms::key, keyChar);
       if (!keyChar.EqualsLiteral(" ")) {
-        keyEquiv = [[NSString stringWithCharacters:keyChar.get() length:keyChar.Length()] lowercaseString];
+        keyEquiv = [[NSString stringWithCharacters:reinterpret_cast<const unichar*>(keyChar.get())
+                                            length:keyChar.Length()] lowercaseString];
       }
       // now grab the key equivalent modifiers
       nsAutoString modifiersStr;
@@ -515,8 +517,9 @@ NSMenuItem* nsMenuBarX::CreateNativeAppMenuItem(nsMenuX* inMenu, const nsAString
     }
   }
   // get the label into NSString-form
-  NSString* labelString = [NSString stringWithCharacters:label.get() length:label.Length()];
-  
+  NSString* labelString = [NSString stringWithCharacters:reinterpret_cast<const unichar*>(label.get())
+                                                  length:label.Length()];
+
   if (!labelString)
     labelString = @"";
   if (!keyEquiv)

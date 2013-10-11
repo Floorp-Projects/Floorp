@@ -788,6 +788,12 @@ void mozilla_sampler_free_backtrace(ProfilerBacktrace* aBacktrace)
   delete aBacktrace;
 }
 
+void mozilla_sampler_tracing(const char* aCategory, const char* aInfo,
+                             TracingMetadata aMetaData)
+{
+  mozilla_sampler_add_marker(aInfo, new ProfilerMarkerTracing(aCategory, aMetaData));
+}
+
 // END externally visible functions
 ////////////////////////////////////////////////////////////////////////
 

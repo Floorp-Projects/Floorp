@@ -813,7 +813,7 @@ Java_org_mozilla_gecko_GeckoAppShell_getNextMessageFromQueue(JNIEnv* jenv, jclas
     }
 
     if (!jMessageQueueCls || !jNextMethod)
-        return NULL;
+        return nullptr;
 
     if (jMessagesField) {
         jobject msg = jenv->GetObjectField(queue, jMessagesField);
@@ -821,7 +821,7 @@ Java_org_mozilla_gecko_GeckoAppShell_getNextMessageFromQueue(JNIEnv* jenv, jclas
         // It turns out to be an order of magnitude more performant to do this extra check here and
         // block less vs. one fewer checks here and more blocking.
         if (!msg) {
-            return NULL;
+            return nullptr;
         }
     }
     return jenv->CallObjectMethod(queue, jNextMethod);
@@ -905,7 +905,7 @@ Java_org_mozilla_gecko_gfx_NativePanZoomController_destroy(JNIEnv* env, jobject 
         return;
     }
 
-    jobject oldRef = AndroidBridge::Bridge()->SetNativePanZoomController(NULL);
+    jobject oldRef = AndroidBridge::Bridge()->SetNativePanZoomController(nullptr);
     if (!oldRef) {
         MOZ_ASSERT(false, "Clearing a non-existent NPZC");
     } else {
@@ -966,7 +966,7 @@ Java_org_mozilla_gecko_ANRReporter_requestNativeStack(JNIEnv*, jclass)
     // Buffer one sample and let the profiler wait a long time
     profiler_start(100, 10000, NATIVE_STACK_FEATURES,
         sizeof(NATIVE_STACK_FEATURES) / sizeof(char*),
-        NULL, 0);
+        nullptr, 0);
     return JNI_TRUE;
 }
 
@@ -975,7 +975,7 @@ Java_org_mozilla_gecko_ANRReporter_getNativeStack(JNIEnv* jenv, jclass)
 {
     if (!profiler_is_active()) {
         // Maybe profiler support is disabled?
-        return NULL;
+        return nullptr;
     }
     char *profile = profiler_get_profile();
     while (profile && !strlen(profile)) {
@@ -983,7 +983,7 @@ Java_org_mozilla_gecko_ANRReporter_getNativeStack(JNIEnv* jenv, jclass)
         sched_yield();
         profile = profiler_get_profile();
     }
-    jstring result = NULL;
+    jstring result = nullptr;
     if (profile) {
         result = jenv->NewStringUTF(profile);
         free(profile);

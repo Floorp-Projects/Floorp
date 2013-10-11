@@ -128,7 +128,7 @@ const JSClass xpc::SafeJSContextGlobalClass = {
     XPCONNECT_GLOBAL_FLAGS,
     JS_PropertyStub, JS_DeletePropertyStub, JS_PropertyStub, JS_StrictPropertyStub,
     JS_EnumerateStub, SafeGlobalResolve, JS_ConvertStub, SafeFinalize,
-    NULL, NULL, NULL, NULL, TraceXPCGlobal
+    nullptr, nullptr, nullptr, nullptr, TraceXPCGlobal
 };
 
 JSContext*
