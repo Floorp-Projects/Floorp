@@ -788,6 +788,9 @@
           <richlistitem id="context-viewondesktop" type="view-on-desktop" onclick="ContextCommands.viewOnDesktop();">
             <label value="&appbarViewOnDesktop2.label;"/>
           </richlistitem>
+          <richlistitem id="context-msmetadata" type="ms-meta-data" onclick="ContextCommands.openWindowsStoreLink();">
+            <label value="&appbarMSMetaData2.label;"/>
+          </richlistitem>
         </richlistbox>
       </vbox>
     </box>

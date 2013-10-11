@@ -1065,10 +1065,10 @@ let RIL = {
    * @param on
    *        Boolean indicating whether the screen should be on or off.
    */
-  setScreenState: function setScreenState(on) {
+  setScreenState: function setScreenState(options) {
     Buf.newParcel(REQUEST_SCREEN_STATE);
     Buf.writeInt32(1);
-    Buf.writeInt32(on ? 1 : 0);
+    Buf.writeInt32(options.on ? 1 : 0);
     Buf.sendParcel();
   },
 
