@@ -6,6 +6,8 @@
 
 #include "jit/StupidAllocator.h"
 
+#include "jstypes.h"
+
 using namespace js;
 using namespace js::jit;
 
