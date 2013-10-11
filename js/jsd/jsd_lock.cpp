@@ -85,7 +85,7 @@ jsd_CreateLock()
 {
     JSDStaticLock* lock;
 
-    if( ! (lock = js_pod_calloc<JSDStaticLock>(1)) ||
+    if( ! (lock = js_pod_calloc<JSDStaticLock>()) ||
         ! (lock->lock = PR_NewLock()) )
     {
         if(lock)
