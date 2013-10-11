@@ -9,7 +9,6 @@ See the documentation for jar.mn on MDC for further details on the format.
 '''
 import sys
 import os
-import os.path
 import errno
 import re
 import logging
@@ -439,10 +438,11 @@ class JarMaker(object):
         if rv == 0:
           raise WinError()
 
-def main():
+def main(args=None):
+  args = args or sys.argv
   jm = JarMaker()
   p = jm.getCommandLineParser()
-  (options, args) = p.parse_args()
+  (options, args) = p.parse_args(args)
   jm.processIncludes(options.I)
   jm.outputFormat = options.f
   jm.sourcedirs = options.s
@@ -484,6 +484,3 @@ def main():
   else:
     infile,  = args
   jm.makeJar(infile, options.j)
-
-if __name__ == "__main__":
-  main()
