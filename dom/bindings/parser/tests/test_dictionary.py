@@ -178,6 +178,23 @@ def WebIDLTest(parser, harness):
             dictionary A {
             };
             interface X {
+              void doFoo(A arg1, optional long arg2, long arg3);
+            };
+        """)
+        results = parser.finish()
+    except:
+        threw = True
+
+    harness.ok(not threw,
+               "Dictionary arg followed by non-optional arg doesn't have to be optional")
+
+    parser = parser.reset()
+    threw = False
+    try:
+        parser.parse("""
+            dictionary A {
+            };
+            interface X {
               void doFoo((A or DOMString) arg1, optional long arg2);
             };
         """)
