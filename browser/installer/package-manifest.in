@@ -786,6 +786,7 @@ bin/libfreebl_32int64_3.so
 @BINPATH@/webapprt/modules/WebappRT.jsm
 @BINPATH@/webapprt/modules/WebappsHandler.jsm
 @BINPATH@/webapprt/modules/RemoteDebugger.jsm
+@BINPATH@/webapprt/modules/WebRTCHandler.jsm
 #endif
 
 #ifdef MOZ_METRO
