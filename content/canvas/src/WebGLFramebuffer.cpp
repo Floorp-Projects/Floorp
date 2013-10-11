@@ -67,8 +67,27 @@ WebGLFramebuffer::Attachment::SetTexImage(WebGLTexture *tex, GLenum target, GLin
 }
 
 bool
-WebGLFramebuffer::Attachment::HasUninitializedRenderbuffer() const {
-    return mRenderbufferPtr && !mRenderbufferPtr->Initialized();
+WebGLFramebuffer::Attachment::HasUninitializedImageData() const {
+    if (mRenderbufferPtr) {
+        return mRenderbufferPtr->HasUninitializedImageData();
+    } else if (mTexturePtr) {
+        if (!mTexturePtr->HasImageInfoAt(mTexImageTarget, mTexImageLevel))
+            return false;
+        return mTexturePtr->ImageInfoAt(mTexImageTarget, mTexImageLevel).HasUninitializedImageData();
+    } else {
+        return false;
+    }
+}
+
+void
+WebGLFramebuffer::Attachment::SetImageDataStatus(WebGLImageDataStatus newStatus) {
+    if (mRenderbufferPtr) {
+        mRenderbufferPtr->SetImageDataStatus(newStatus);
+    } else if (mTexturePtr) {
+        mTexturePtr->SetImageDataStatus(mTexImageTarget, mTexImageLevel, newStatus);
+    } else {
+        MOZ_ASSERT(false); // should not get here, worth crashing a debug build.
+    }
 }
 
 const WebGLRectangleObject*
@@ -368,7 +387,7 @@ WebGLFramebuffer::DetachRenderbuffer(const WebGLRenderbuffer *rb) {
 }
 
 bool
-WebGLFramebuffer::CheckAndInitializeRenderbuffers()
+WebGLFramebuffer::CheckAndInitializeAttachments()
 {
     MOZ_ASSERT(mContext->mBoundFramebuffer == this);
     // enforce WebGL section 6.5 which is WebGL-specific, hence OpenGL itself would not
@@ -387,16 +406,16 @@ WebGLFramebuffer::CheckAndInitializeRenderbuffers()
     size_t colorAttachmentCount = size_t(mColorAttachments.Length());
 
     {
-        bool hasUnitializedRenderbuffers = false;
+        bool hasUnitializedAttachments = false;
 
         for (size_t i = 0; i < colorAttachmentCount; i++) {
-            hasUnitializedRenderbuffers |= mColorAttachments[i].HasUninitializedRenderbuffer();
+            hasUnitializedAttachments |= mColorAttachments[i].HasUninitializedImageData();
         }
 
-        if (!hasUnitializedRenderbuffers &&
-            !mDepthAttachment.HasUninitializedRenderbuffer() &&
-            !mStencilAttachment.HasUninitializedRenderbuffer() &&
-            !mDepthStencilAttachment.HasUninitializedRenderbuffer())
+        if (!hasUnitializedAttachments &&
+            !mDepthAttachment.HasUninitializedImageData() &&
+            !mStencilAttachment.HasUninitializedImageData() &&
+            !mDepthStencilAttachment.HasUninitializedImageData())
         {
             return true;
         }
@@ -420,21 +439,21 @@ WebGLFramebuffer::CheckAndInitializeRenderbuffers()
 
     for (size_t i = 0; i < colorAttachmentCount; i++)
     {
-        colorAttachmentsMask[i] = mColorAttachments[i].HasUninitializedRenderbuffer();
+        colorAttachmentsMask[i] = mColorAttachments[i].HasUninitializedImageData();
 
         if (colorAttachmentsMask[i]) {
             mask |= LOCAL_GL_COLOR_BUFFER_BIT;
         }
     }
 
-    if (mDepthAttachment.HasUninitializedRenderbuffer() ||
-        mDepthStencilAttachment.HasUninitializedRenderbuffer())
+    if (mDepthAttachment.HasUninitializedImageData() ||
+        mDepthStencilAttachment.HasUninitializedImageData())
     {
         mask |= LOCAL_GL_DEPTH_BUFFER_BIT;
     }
 
-    if (mStencilAttachment.HasUninitializedRenderbuffer() ||
-        mDepthStencilAttachment.HasUninitializedRenderbuffer())
+    if (mStencilAttachment.HasUninitializedImageData() ||
+        mDepthStencilAttachment.HasUninitializedImageData())
     {
         mask |= LOCAL_GL_STENCIL_BUFFER_BIT;
     }
@@ -443,19 +462,16 @@ WebGLFramebuffer::CheckAndInitializeRenderbuffers()
 
     for (size_t i = 0; i < colorAttachmentCount; i++)
     {
-        if (colorAttachmentsMask[i]) {
-            mColorAttachments[i].Renderbuffer()->SetInitialized(true);
-        }
+        if (mColorAttachments[i].HasUninitializedImageData())
+            mColorAttachments[i].SetImageDataStatus(WebGLImageDataStatus::InitializedImageData);
     }
 
-    if (mDepthAttachment.HasUninitializedRenderbuffer())
-        mDepthAttachment.Renderbuffer()->SetInitialized(true);
-
-    if (mStencilAttachment.HasUninitializedRenderbuffer())
-        mStencilAttachment.Renderbuffer()->SetInitialized(true);
-
-    if (mDepthStencilAttachment.HasUninitializedRenderbuffer())
-        mDepthStencilAttachment.Renderbuffer()->SetInitialized(true);
+    if (mDepthAttachment.HasUninitializedImageData())
+        mDepthAttachment.SetImageDataStatus(WebGLImageDataStatus::InitializedImageData);
+    if (mStencilAttachment.HasUninitializedImageData())
+        mStencilAttachment.SetImageDataStatus(WebGLImageDataStatus::InitializedImageData);
+    if (mDepthStencilAttachment.HasUninitializedImageData())
+        mDepthStencilAttachment.SetImageDataStatus(WebGLImageDataStatus::InitializedImageData);
 
     return true;
 }
