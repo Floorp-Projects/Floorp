@@ -659,10 +659,6 @@ IonRuntime::generateVMWrapper(JSContext *cx, const VMFunction &f)
         masm.testb(eax, eax);
         masm.j(Assembler::Zero, masm.failureLabel(f.executionMode));
         break;
-      case Type_ParallelResult:
-        masm.branchPtr(Assembler::NotEqual, eax, Imm32(TP_SUCCESS),
-                       masm.failureLabel(f.executionMode));
-        break;
       default:
         MOZ_ASSUME_UNREACHABLE("unknown failure kind");
     }

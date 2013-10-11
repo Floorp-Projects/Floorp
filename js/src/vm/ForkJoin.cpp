@@ -100,11 +100,27 @@ ForkJoinSlice::requestZoneGC(JS::Zone *zone, JS::gcreason::Reason reason)
     MOZ_ASSUME_UNREACHABLE("Not THREADSAFE build");
 }
 
+bool
+ForkJoinSlice::setPendingAbortFatal(ParallelBailoutCause cause)
+{
+    MOZ_ASSUME_UNREACHABLE("Not THREADSAFE build");
+    return false;
+}
+
 void
 ParallelBailoutRecord::setCause(ParallelBailoutCause cause,
                                 JSScript *outermostScript,
                                 JSScript *currentScript,
                                 jsbytecode *currentPc)
+{
+    MOZ_ASSUME_UNREACHABLE("Not THREADSAFE build");
+}
+
+void
+js::ParallelBailoutRecord::updateCause(ParallelBailoutCause cause,
+                                       JSScript *outermostScript,
+                                       JSScript *currentScript,
+                                       jsbytecode *currentPc)
 {
     MOZ_ASSUME_UNREACHABLE("Not THREADSAFE build");
 }
@@ -387,6 +403,9 @@ class ForkJoinShared : public TaskExecutor, public Monitor
 
     // Requests that computation abort.
     void setAbortFlag(bool fatal);
+
+    // Set the fatal flag for the next abort.
+    void setPendingAbortFatal() { fatal_ = true; }
 
     JSRuntime *runtime() { return cx_->runtime(); }
     JS::Zone *zone() { return cx_->zone(); }
@@ -975,7 +994,7 @@ BailoutExplanation(ParallelBailoutCause cause)
       case ParallelBailoutInterrupt:
         return "interrupted";
       case ParallelBailoutFailedIC:
-        return "at runtime, the behavior changed, invalidating compiled code (IC update)";
+        return "failed to attach stub to IC";
       case ParallelBailoutHeapBusy:
         return "heap busy flag set during interrupt";
       case ParallelBailoutMainScriptNotPresent:
@@ -992,10 +1011,10 @@ BailoutExplanation(ParallelBailoutCause cause)
         return "out of memory";
       case ParallelBailoutUnsupported:
         return "unsupported";
+      case ParallelBailoutUnsupportedVM:
+        return "unsupported operation in VM call";
       case ParallelBailoutUnsupportedStringComparison:
         return "unsupported string comparison";
-      case ParallelBailoutUnsupportedSparseArray:
-        return "unsupported sparse array";
       case ParallelBailoutRequestedGC:
         return "requested GC";
       case ParallelBailoutRequestedZoneGC:
@@ -1438,8 +1457,7 @@ ForkJoinShared::executePortion(PerThreadData *perThread,
         // op and reaching this point.  In that case, we just fail
         // and fallback.
         Spew(SpewOps, "Down (Script no longer present)");
-        slice.bailoutRecord->setCause(ParallelBailoutMainScriptNotPresent,
-                                      nullptr, nullptr, nullptr);
+        slice.bailoutRecord->setCause(ParallelBailoutMainScriptNotPresent);
         setAbortFlag(false);
     } else {
         ParallelIonInvoke<3> fii(cx_->runtime(), callee, 3);
@@ -1479,8 +1497,7 @@ ForkJoinShared::check(ForkJoinSlice &slice)
             // AutoRendezvous autoRendezvous(slice);
             // if (!js_HandleExecutionInterrupt(cx_))
             //     return setAbortFlag(true);
-            slice.bailoutRecord->setCause(ParallelBailoutInterrupt,
-                                          nullptr, nullptr, nullptr);
+            slice.bailoutRecord->setCause(ParallelBailoutInterrupt);
             setAbortFlag(false);
             return false;
         }
@@ -1697,8 +1714,7 @@ void
 ForkJoinSlice::requestGC(JS::gcreason::Reason reason)
 {
     shared->requestGC(reason);
-    bailoutRecord->setCause(ParallelBailoutRequestedGC,
-                            nullptr, nullptr, nullptr);
+    bailoutRecord->setCause(ParallelBailoutRequestedGC);
     shared->setAbortFlag(false);
 }
 
@@ -1706,9 +1722,16 @@ void
 ForkJoinSlice::requestZoneGC(JS::Zone *zone, JS::gcreason::Reason reason)
 {
     shared->requestZoneGC(zone, reason);
-    bailoutRecord->setCause(ParallelBailoutRequestedZoneGC,
-                            nullptr, nullptr, nullptr);
+    bailoutRecord->setCause(ParallelBailoutRequestedZoneGC);
     shared->setAbortFlag(false);
+}
+
+bool
+ForkJoinSlice::setPendingAbortFatal(ParallelBailoutCause cause)
+{
+    shared->setPendingAbortFatal();
+    bailoutRecord->setCause(cause);
+    return false;
 }
 
 /////////////////////////////////////////////////////////////////////////////
@@ -1743,20 +1766,29 @@ js::ParallelBailoutRecord::setCause(ParallelBailoutCause cause,
                                     JSScript *currentScript,
                                     jsbytecode *currentPc)
 {
+    this->cause = cause;
+    updateCause(cause, outermostScript, currentScript, currentPc);
+}
+
+void
+js::ParallelBailoutRecord::updateCause(ParallelBailoutCause cause,
+                                       JSScript *outermostScript,
+                                       JSScript *currentScript,
+                                       jsbytecode *currentPc)
+{
     JS_ASSERT_IF(outermostScript, currentScript);
     JS_ASSERT_IF(outermostScript, outermostScript->hasParallelIonScript());
     JS_ASSERT_IF(currentScript, outermostScript);
     JS_ASSERT_IF(!currentScript, !currentPc);
 
-    this->cause = cause;
+    if (this->cause == ParallelBailoutNone)
+        this->cause = cause;
 
-    if (outermostScript) {
+    if (outermostScript)
         this->topScript = outermostScript;
-    }
 
-    if (currentScript) {
+    if (currentScript)
         addTrace(currentScript, currentPc);
-    }
 }
 
 void
