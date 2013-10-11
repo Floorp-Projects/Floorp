@@ -486,7 +486,7 @@ SetupAndGetPrototypeObjectForComplexTypeInstance(JSContext *cx,
     RootedValue complexTypePrototypePrototypeVal(cx);
 
     if (!JSObject::getProperty(cx, complexTypeGlobal, complexTypeGlobal,
-                               cx->names().classPrototype, &complexTypePrototypeVal))
+                               cx->names().prototype, &complexTypePrototypeVal))
         return nullptr;
 
     JS_ASSERT(complexTypePrototypeVal.isObject()); // immutable binding
@@ -495,7 +495,7 @@ SetupAndGetPrototypeObjectForComplexTypeInstance(JSContext *cx,
 
     if (!JSObject::getProperty(cx, complexTypePrototypeObj,
                                complexTypePrototypeObj,
-                               cx->names().classPrototype,
+                               cx->names().prototype,
                                &complexTypePrototypePrototypeVal))
         return nullptr;
 
@@ -1393,7 +1393,7 @@ SetupComplexHeirarchy(JSContext *cx, Handle<GlobalObject*> global, JSProtoKey pr
 
     RootedValue DataProtoVal(cx);
     if (!JSObject::getProperty(cx, DataObject, DataObject,
-                               cx->names().classPrototype, &DataProtoVal))
+                               cx->names().prototype, &DataProtoVal))
         return nullptr;
 
     RootedObject DataProto(cx, &DataProtoVal.toObject());
@@ -1443,7 +1443,7 @@ InitType(JSContext *cx, HandleObject globalObj)
 
     RootedValue protoVal(cx);
     if (!JSObject::getProperty(cx, ctor, ctor,
-                               cx->names().classPrototype, &protoVal))
+                               cx->names().prototype, &protoVal))
         return false;
 
     JS_ASSERT(protoVal.isObject());
@@ -1686,7 +1686,7 @@ BinaryBlock::createNull(JSContext *cx, HandleObject type, HandleValue owner)
 
     RootedValue protoVal(cx);
     if (!JSObject::getProperty(cx, type, type,
-                               cx->names().classPrototype, &protoVal))
+                               cx->names().prototype, &protoVal))
         return nullptr;
 
     RootedObject obj(cx,
