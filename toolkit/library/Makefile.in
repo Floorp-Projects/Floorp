@@ -693,6 +693,7 @@ ifdef LINK_GTEST
 COMPONENT_LIBS += \
   gtest \
   gfxtest \
+  ssltest \
   $(NULL)
 endif
 
