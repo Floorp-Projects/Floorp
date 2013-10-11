@@ -4,6 +4,7 @@
 
 #include "PCOMContentPermissionRequestChild.h"
 #include "mozilla/dom/Notification.h"
+#include "mozilla/dom/AppNotificationServiceOptionsBinding.h"
 #include "mozilla/dom/OwningNonNull.h"
 #include "mozilla/Preferences.h"
 #include "TabChild.h"
@@ -375,11 +376,22 @@ Notification::ShowInternal()
       nsCOMPtr<nsIAppsService> appsService = do_GetService("@mozilla.org/AppsService;1");
       nsString manifestUrl = EmptyString();
       appsService->GetManifestURLByLocalId(appId, manifestUrl);
+      mozilla::AutoSafeJSContext cx;
+      JS::RootedValue val(cx);
+      AppNotificationServiceOptions ops;
+      ops.mTextClickable = true;
+      ops.mManifestURL = manifestUrl;
+      ops.mId = alertName;
+      ops.mDir = DirectionToString(mDir);
+      ops.mLang = mLang;
+
+      if (!ops.ToObject(cx, JS::NullPtr(), &val)) {
+        NS_WARNING("Converting dict to object failed!");
+        return NS_ERROR_FAILURE;
+      }
+
       return appNotifier->ShowAppNotification(mIconUrl, mTitle, mBody,
-                                              true,
-                                              manifestUrl,
-                                              observer,
-                                              alertName);
+                                              observer, val);
     }
   }
 #endif
