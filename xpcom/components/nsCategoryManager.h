@@ -35,7 +35,7 @@ class CategoryLeaf : public nsDepCharHashKey
 public:
   CategoryLeaf(const char* aKey)
     : nsDepCharHashKey(aKey),
-      value(NULL) { }
+      value(nullptr) { }
   const char* value;
 };
 
@@ -114,7 +114,7 @@ public:
                         const char* aKey,
                         const char* aValue,
                         bool aReplace = true,
-                        char** aOldValue = NULL);
+                        char** aOldValue = nullptr);
 
   static nsresult Create(nsISupports* aOuter, REFNSIID aIID, void** aResult);
   void InitMemoryReporter();

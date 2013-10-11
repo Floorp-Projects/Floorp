@@ -18,14 +18,14 @@ _InstanceClass##Constructor(nsISupports *aOuter, REFNSIID aIID,               \
                                                                               \
     _InstanceClass * inst;                                                    \
                                                                               \
-    *aResult = NULL;                                                          \
-    if (NULL != aOuter) {                                                     \
+    *aResult = nullptr;                                                       \
+    if (nullptr != aOuter) {                                                  \
         rv = NS_ERROR_NO_AGGREGATION;                                         \
         return rv;                                                            \
     }                                                                         \
                                                                               \
     inst = new _InstanceClass();                                              \
-    if (NULL == inst) {                                                       \
+    if (nullptr == inst) {                                                    \
         rv = NS_ERROR_OUT_OF_MEMORY;                                          \
         return rv;                                                            \
     }                                                                         \
@@ -45,14 +45,14 @@ _InstanceClass##Constructor(nsISupports *aOuter, REFNSIID aIID,               \
                                                                               \
     _InstanceClass * inst;                                                    \
                                                                               \
-    *aResult = NULL;                                                          \
-    if (NULL != aOuter) {                                                     \
+    *aResult = nullptr;                                                       \
+    if (nullptr != aOuter) {                                                  \
         rv = NS_ERROR_NO_AGGREGATION;                                         \
         return rv;                                                            \
     }                                                                         \
                                                                               \
     inst = new _InstanceClass();                                              \
-    if (NULL == inst) {                                                       \
+    if (nullptr == inst) {                                                    \
         rv = NS_ERROR_OUT_OF_MEMORY;                                          \
         return rv;                                                            \
     }                                                                         \
@@ -77,14 +77,14 @@ _InstanceClass##Constructor(nsISupports *aOuter, REFNSIID aIID,               \
                                                                               \
     _InstanceClass * inst;                                                    \
                                                                               \
-    *aResult = NULL;                                                          \
-    if (NULL != aOuter) {                                                     \
+    *aResult = nullptr;                                                       \
+    if (nullptr != aOuter) {                                                  \
         rv = NS_ERROR_NO_AGGREGATION;                                         \
         return rv;                                                            \
     }                                                                         \
                                                                               \
     inst = already_AddRefed<_InstanceClass>(_GetterProc()).get();             \
-    if (NULL == inst) {                                                       \
+    if (nullptr == inst) {                                                    \
         rv = NS_ERROR_OUT_OF_MEMORY;                                          \
         return rv;                                                            \
     }                                                                         \

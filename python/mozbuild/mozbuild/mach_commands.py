@@ -923,15 +923,40 @@ class Documentation(MachCommandBase):
         description='Generate documentation for the tree.')
     @CommandArgument('--format', default='html',
         help='Documentation format to write.')
+    @CommandArgument('--api-docs', action='store_true',
+        help='If specified, we will generate api docs templates for in-tree '
+            'Python. This will likely create and/or modify files in '
+            'build/docs. It is meant to be run by build maintainers when new '
+            'Python modules are added to the tree.')
     @CommandArgument('outdir', default='<DEFAULT>', nargs='?',
         help='Where to write output.')
-    def build_docs(self, format=None, outdir=None):
+    def build_docs(self, format=None, api_docs=False, outdir=None):
         self._activate_virtualenv()
 
         self.virtualenv_manager.install_pip_package('mdn-sphinx-theme==0.3')
 
-        import sphinx
+        if api_docs:
+            import sphinx.apidoc
+            outdir = os.path.join(self.topsrcdir, 'build', 'docs', 'python')
 
+            base_args = [sys.argv[0], '--no-toc', '-o', outdir]
+
+            packages = [
+                ('python/codegen',),
+                ('python/mozbuild/mozbuild', 'test'),
+                ('python/mozbuild/mozpack', 'test'),
+                ('python/mozversioncontrol/mozversioncontrol',),
+            ]
+
+            for package in packages:
+                extra_args = [os.path.join(self.topsrcdir, package[0])]
+                extra_args.extend(package[1:])
+
+                sphinx.apidoc.main(base_args + extra_args)
+
+            return 0
+
+        import sphinx
         if outdir == '<DEFAULT>':
             outdir = os.path.join(self.topobjdir, 'docs', format)
 

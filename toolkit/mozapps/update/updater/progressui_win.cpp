@@ -47,7 +47,7 @@ static StringTable sUIStrings;
 static BOOL
 GetStringsFile(WCHAR filename[MAX_PATH])
 {
-  if (!GetModuleFileNameW(NULL, filename, MAX_PATH))
+  if (!GetModuleFileNameW(nullptr, filename, MAX_PATH))
     return FALSE;
  
   WCHAR *dot = wcsrchr(filename, '.');
@@ -115,7 +115,8 @@ InitDialog(HWND hDlg)
   SetWindowTextW(GetDlgItem(hDlg, IDC_INFO), szwInfo);
 
   // Set dialog icon
-  HICON hIcon = LoadIcon(GetModuleHandle(NULL), MAKEINTRESOURCE(IDI_DIALOG));
+  HICON hIcon = LoadIcon(GetModuleHandle(nullptr),
+                         MAKEINTRESOURCE(IDI_DIALOG));
   if (hIcon)
     SendMessage(hDlg, WM_SETICON, ICON_BIG, (LPARAM) hIcon);
 
@@ -171,7 +172,7 @@ InitDialog(HWND hDlg)
 
   CenterDialog(hDlg);  // make dialog appear in the center of the screen
 
-  SetTimer(hDlg, TIMER_ID, TIMER_INTERVAL, NULL);
+  SetTimer(hDlg, TIMER_ID, TIMER_INTERVAL, nullptr);
 }
 
 // Message handler for update dialog.
@@ -254,8 +255,8 @@ ShowProgressUI(bool indeterminate, bool initUIStrings)
   };
   InitCommonControlsEx(&icc);
 
-  DialogBox(GetModuleHandle(NULL),
-            MAKEINTRESOURCE(IDD_DIALOG), NULL,
+  DialogBox(GetModuleHandle(nullptr),
+            MAKEINTRESOURCE(IDD_DIALOG), nullptr,
             (DLGPROC) DialogProc);
 
   return 0;

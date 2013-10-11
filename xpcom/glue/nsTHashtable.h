@@ -254,8 +254,8 @@ public:
 
   /**
    * Measure the size of the table's entry storage, and if
-   * |sizeOfEntryExcludingThis| is non-NULL, measure the size of things pointed
-   * to by entries.
+   * |sizeOfEntryExcludingThis| is non-nullptr, measure the size of things
+   * pointed to by entries.
    * 
    * @param     sizeOfEntryExcludingThis the
    *            <code>SizeOfEntryExcludingThisFun</code> function to call
@@ -265,13 +265,14 @@ public:
    * @return    the summed size of all the entries
    */
   size_t SizeOfExcludingThis(SizeOfEntryExcludingThisFun sizeOfEntryExcludingThis,
-                             mozilla::MallocSizeOf mallocSizeOf, void *userArg = NULL) const
+                             mozilla::MallocSizeOf mallocSizeOf,
+                             void *userArg = nullptr) const
   {
     if (sizeOfEntryExcludingThis) {
       s_SizeOfArgs args = { sizeOfEntryExcludingThis, userArg };
       return PL_DHashTableSizeOfExcludingThis(&mTable, s_SizeOfStub, mallocSizeOf, &args);
     }
-    return PL_DHashTableSizeOfExcludingThis(&mTable, NULL, mallocSizeOf);
+    return PL_DHashTableSizeOfExcludingThis(&mTable, nullptr, mallocSizeOf);
   }
 
 #ifdef DEBUG

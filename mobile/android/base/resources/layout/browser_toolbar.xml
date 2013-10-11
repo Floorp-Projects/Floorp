@@ -56,13 +56,13 @@
                                     android:background="@drawable/shaped_button"
                                     android:visibility="gone"/>
 
-    <org.mozilla.gecko.GeckoImageView android:id="@+id/menu_icon"
-                                      style="@style/UrlBar.ImageButton"
-                                      android:layout_alignLeft="@id/menu"
-                                      android:layout_alignRight="@id/menu"
-                                      android:gravity="center_vertical"
-                                      android:src="@drawable/menu_level"
-                                      android:visibility="gone"/>
+    <org.mozilla.gecko.widget.GeckoImageView android:id="@+id/menu_icon"
+                                             style="@style/UrlBar.ImageButton"
+                                             android:layout_alignLeft="@id/menu"
+                                             android:layout_alignRight="@id/menu"
+                                             android:gravity="center_vertical"
+                                             android:src="@drawable/menu_level"
+                                             android:visibility="gone"/>
 
     <org.mozilla.gecko.ShapedButton android:id="@+id/tabs"
                                     style="@style/UrlBar.ImageButton"
@@ -153,19 +153,19 @@
                      android:contentDescription="@string/site_security"
                      android:visibility="gone"/>
 
-        <org.mozilla.gecko.GeckoTextView android:id="@+id/url_bar_title"
-                                         style="@style/UrlBar.Button"
-                                         android:layout_width="fill_parent"
-                                         android:layout_height="fill_parent"
-                                         android:layout_weight="1.0"
-                                         android:singleLine="true"
-                                         android:paddingRight="8dp"
-                                         android:textColor="@color/url_bar_title"
-                                         android:textColorHint="@color/url_bar_title_hint"
-                                         android:gravity="center_vertical|left"
-                                         android:hint="@string/url_bar_default_text"
-                                         android:layout_gravity="center_vertical"
-                                         gecko:autoUpdateTheme="false"/>
+        <org.mozilla.gecko.widget.GeckoTextView android:id="@+id/url_bar_title"
+                                                style="@style/UrlBar.Button"
+                                                android:layout_width="fill_parent"
+                                                android:layout_height="fill_parent"
+                                                android:layout_weight="1.0"
+                                                android:singleLine="true"
+                                                android:paddingRight="8dp"
+                                                android:textColor="@color/url_bar_title"
+                                                android:textColorHint="@color/url_bar_title_hint"
+                                                android:gravity="center_vertical|left"
+                                                android:hint="@string/url_bar_default_text"
+                                                android:layout_gravity="center_vertical"
+                                                gecko:autoUpdateTheme="false"/>
 
         <org.mozilla.gecko.PageActionLayout android:id="@+id/page_action_layout"
                                             android:layout_width="wrap_content"

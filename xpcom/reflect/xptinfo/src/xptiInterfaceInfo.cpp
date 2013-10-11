@@ -59,8 +59,8 @@ xptiInterfaceEntry::xptiInterfaceEntry(const char* name,
     , mMethodBaseIndex(0)
     , mConstantBaseIndex(0)
     , mTypelib(aTypelib)
-    , mParent(NULL)
-    , mInfo(NULL)
+    , mParent(nullptr)
+    , mInfo(nullptr)
     , mFlags(0)
 {
     memcpy(mName, name, nameLength);
@@ -191,7 +191,7 @@ xptiInterfaceEntry::GetMethodInfo(uint16_t index, const nsXPTMethodInfo** info)
                 mDescriptor->num_methods)
     {
         NS_ERROR("bad param");
-        *info = NULL;
+        *info = nullptr;
         return NS_ERROR_INVALID_ARG;
     }
 
@@ -245,7 +245,7 @@ xptiInterfaceEntry::GetConstant(uint16_t index, const nsXPTConstant** constant)
                 mDescriptor->num_constants)
     {
         NS_PRECONDITION(0, "bad param");
-        *constant = NULL;
+        *constant = nullptr;
         return NS_ERROR_INVALID_ARG;
     }
 

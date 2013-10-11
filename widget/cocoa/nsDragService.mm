@@ -374,7 +374,7 @@ nsDragService::GetData(nsITransferable* aTransferable, uint32_t aItemIndex)
       PRUnichar* clipboardDataPtr = (PRUnichar*)malloc(dataLength);
       if (!clipboardDataPtr)
         return NS_ERROR_OUT_OF_MEMORY;
-      [filePath getCharacters:clipboardDataPtr];
+      [filePath getCharacters:reinterpret_cast<unichar*>(clipboardDataPtr)];
       clipboardDataPtr[stringLength] = 0; // null terminate
 
       nsCOMPtr<nsIFile> file;

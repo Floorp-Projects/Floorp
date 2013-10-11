@@ -51,7 +51,7 @@ GenericModule::RegisterSelf(nsIComponentManager* aCompMgr,
 {
   nsCOMPtr<nsIComponentRegistrar> r = do_QueryInterface(aCompMgr);
   for (const Module::CIDEntry* e = mData->mCIDs; e->cid; ++e)
-    r->RegisterFactoryLocation(*e->cid, "", NULL, aLocation, aLoaderStr, aType);
+    r->RegisterFactoryLocation(*e->cid, "", nullptr, aLocation, aLoaderStr, aType);
 
   for (const Module::ContractIDEntry* e = mData->mContractIDs;
        e && e->contractid;

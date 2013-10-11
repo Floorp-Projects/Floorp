@@ -19,8 +19,8 @@
  * - 1: acquired
  * - < 0: error, resource has been released several times.
  */
-int *gFinalizerTestResources = NULL;
-char **gFinalizerTestNames = NULL;
+int *gFinalizerTestResources = nullptr;
+char **gFinalizerTestNames = nullptr;
 size_t gFinalizerTestSize;
 
 void
@@ -31,7 +31,7 @@ test_finalizer_start(size_t size)
   gFinalizerTestSize = size;
   for (size_t i = 0; i < size; ++i) {
     gFinalizerTestResources[i] = 0;
-    gFinalizerTestNames[i] = NULL;
+    gFinalizerTestNames[i] = nullptr;
   }
 }
 
@@ -197,21 +197,21 @@ test_finalizer_cmp_int32_ptr_t(int32_t *a, int32_t *b)
   return a==b;
 }
 
-// Resource type: NULL
+// Resource type: nullptr
 
 // Acquire resource i
 void*
 test_finalizer_acq_null_t(size_t i)
 {
   gFinalizerTestResources[0] = 1;//Always index 0
-  return NULL;
+  return nullptr;
 }
 
 // Release resource i
 void
 test_finalizer_rel_null_t(void *i)
 {
-  if (i != NULL) {
+  if (i != nullptr) {
     MOZ_CRASH("Assertion failed");
   }
   gFinalizerTestResources[0] --;
@@ -306,10 +306,10 @@ test_finalizer_cmp_struct_t(RECT a, RECT b)
   return a.top == b.top;
 }
 
-// Support for checking that we reject NULL finalizer
+// Support for checking that we reject nullptr finalizer
 afun* test_finalizer_rel_null_function()
 {
-  return NULL;
+  return nullptr;
 }
 
 void

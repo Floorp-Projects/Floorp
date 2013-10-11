@@ -671,7 +671,7 @@ nsAppStartup::Observe(nsISupports *aSubject,
 NS_IMETHODIMP
 nsAppStartup::GetStartupInfo(JSContext* aCx, JS::Value* aRetval)
 {
-  JS::Rooted<JSObject*> obj(aCx, JS_NewObject(aCx, NULL, NULL, NULL));
+  JS::Rooted<JSObject*> obj(aCx, JS_NewObject(aCx, nullptr, nullptr, nullptr));
   *aRetval = OBJECT_TO_JSVAL(obj);
 
   TimeStamp procTime = StartupTimeline::Get(StartupTimeline::PROCESS_CREATION);
@@ -712,7 +712,7 @@ nsAppStartup::GetStartupInfo(JSContext* aCx, JS::Value* aRetval)
           / PR_USEC_PER_MSEC;
         JS::Rooted<JSObject*> date(aCx, JS_NewDateObjectMsec(aCx, prStamp));
         JS_DefineProperty(aCx, obj, StartupTimeline::Describe(ev),
-          OBJECT_TO_JSVAL(date), NULL, NULL, JSPROP_ENUMERATE);
+          OBJECT_TO_JSVAL(date), nullptr, nullptr, JSPROP_ENUMERATE);
       } else {
         Telemetry::Accumulate(Telemetry::STARTUP_MEASUREMENT_ERRORS, ev);
       }

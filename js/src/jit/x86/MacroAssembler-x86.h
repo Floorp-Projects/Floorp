@@ -879,16 +879,22 @@ class MacroAssemblerX86 : public MacroAssemblerX86Shared
     void addConstantFloat32(float f, const FloatRegister &dest);
 
     void branchTruncateDouble(const FloatRegister &src, const Register &dest, Label *fail) {
-        const uint32_t IndefiniteIntegerValue = 0x80000000;
         cvttsd2si(src, dest);
-        cmpl(dest, Imm32(IndefiniteIntegerValue));
-        j(Assembler::Equal, fail);
+
+        // cvttsd2si returns 0x80000000 on failure. Test for it by
+        // subtracting 1 and testing overflow (this permits the use of a
+        // smaller immediate field).
+        cmpl(dest, Imm32(1));
+        j(Assembler::Overflow, fail);
     }
     void branchTruncateFloat32(const FloatRegister &src, const Register &dest, Label *fail) {
-        const uint32_t IndefiniteIntegerValue = 0x80000000;
         cvttss2si(src, dest);
-        cmpl(dest, Imm32(IndefiniteIntegerValue));
-        j(Assembler::Equal, fail);
+
+        // cvttss2si returns 0x80000000 on failure. Test for it by
+        // subtracting 1 and testing overflow (this permits the use of a
+        // smaller immediate field).
+        cmpl(dest, Imm32(1));
+        j(Assembler::Overflow, fail);
     }
 
     Condition testInt32Truthy(bool truthy, const ValueOperand &operand) {

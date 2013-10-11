@@ -1132,11 +1132,11 @@ const char* FooBarImpl::ImplName()
 NS_IMETHODIMP
 FooBarImpl::QueryInterface(REFNSIID aIID, void** aInstancePtr)
 {
-  if (NULL == aInstancePtr) {
+  if (nullptr == aInstancePtr) {
     return NS_ERROR_NULL_POINTER;
   }
 
-  *aInstancePtr = NULL;
+  *aInstancePtr = nullptr;
 
 
   if (aIID.Equals(NS_GET_IID(nsIFoo))) {
@@ -1303,11 +1303,11 @@ NS_IMETHODIMP FooBarImpl2::BarMethod2(int32_t i)
 NS_IMETHODIMP
 FooBarImpl2::QueryInterface(REFNSIID aIID, void** aInstancePtr)
 {
-  if (NULL == aInstancePtr) {
+  if (nullptr == aInstancePtr) {
     return NS_ERROR_NULL_POINTER;
   }
 
-  *aInstancePtr = NULL;
+  *aInstancePtr = nullptr;
 
 
   if (aIID.Equals(NS_GET_IID(nsIFoo))) {

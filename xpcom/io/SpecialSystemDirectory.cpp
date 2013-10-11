@@ -67,7 +67,7 @@ typedef HRESULT (WINAPI* nsGetKnownFolderPath)(GUID& rfid,
                                                HANDLE hToken,
                                                PWSTR *ppszPath);
 
-static nsGetKnownFolderPath gGetKnownFolderPath = NULL;
+static nsGetKnownFolderPath gGetKnownFolderPath = nullptr;
 #endif
 
 void StartupSpecialSystemDirectory()
@@ -91,8 +91,8 @@ static nsresult GetKnownFolder(GUID* guid, nsIFile** aFile)
     if (!guid || !gGetKnownFolderPath)
         return NS_ERROR_FAILURE;
 
-    PWSTR path = NULL;
-    gGetKnownFolderPath(*guid, 0, NULL, &path);
+    PWSTR path = nullptr;
+    gGetKnownFolderPath(*guid, 0, nullptr, &path);
 
     if (!path)
         return NS_ERROR_FAILURE;
@@ -110,7 +110,7 @@ GetWindowsFolder(int folder, nsIFile** aFile)
 {
     WCHAR path_orig[MAX_PATH + 3];
     WCHAR *path = path_orig+1;
-    HRESULT result = SHGetSpecialFolderPathW(NULL, path, folder, true);
+    HRESULT result = SHGetSpecialFolderPathW(nullptr, path, folder, true);
 
     if (!SUCCEEDED(result))
         return NS_ERROR_FAILURE;
@@ -130,9 +130,9 @@ __inline HRESULT
 SHLoadLibraryFromKnownFolder(REFKNOWNFOLDERID aFolderId, DWORD aMode,
                              REFIID riid, void **ppv)
 {
-    *ppv = NULL;
+    *ppv = nullptr;
     IShellLibrary *plib;
-    HRESULT hr = CoCreateInstance(CLSID_ShellLibrary, NULL,
+    HRESULT hr = CoCreateInstance(CLSID_ShellLibrary, nullptr,
                                   CLSCTX_INPROC_SERVER,
                                   IID_PPV_ARGS(&plib));
     if (SUCCEEDED(hr)) {
@@ -202,8 +202,8 @@ static nsresult GetRegWindowsAppDataFolder(bool aLocal, nsIFile** aFile)
 
     WCHAR path[MAX_PATH + 2];
     DWORD type, size;
-    res = RegQueryValueExW(key, (aLocal ? L"Local AppData" : L"AppData"), NULL,
-                           &type, (LPBYTE)&path, &size);
+    res = RegQueryValueExW(key, (aLocal ? L"Local AppData" : L"AppData"),
+                           nullptr, &type, (LPBYTE)&path, &size);
     ::RegCloseKey(key);
     // The call to RegQueryValueExW must succeed, the type must be REG_SZ, the
     // buffer size must not equal 0, and the buffer size be a multiple of 2.
@@ -287,14 +287,14 @@ xdg_user_dir_lookup (const char *type)
 
   home_dir = getenv ("HOME");
 
-  if (home_dir == NULL)
+  if (home_dir == nullptr)
     goto error;
 
   config_home = getenv ("XDG_CONFIG_HOME");
-  if (config_home == NULL || config_home[0] == 0)
+  if (config_home == nullptr || config_home[0] == 0)
     {
       config_file = (char*) malloc (strlen (home_dir) + strlen ("/.config/user-dirs.dirs") + 1);
-      if (config_file == NULL)
+      if (config_file == nullptr)
         goto error;
 
       strcpy (config_file, home_dir);
@@ -303,7 +303,7 @@ xdg_user_dir_lookup (const char *type)
   else
     {
       config_file = (char*) malloc (strlen (config_home) + strlen ("/user-dirs.dirs") + 1);
-      if (config_file == NULL)
+      if (config_file == nullptr)
         goto error;
 
       strcpy (config_file, config_home);
@@ -312,10 +312,10 @@ xdg_user_dir_lookup (const char *type)
 
   file = fopen (config_file, "r");
   free (config_file);
-  if (file == NULL)
+  if (file == nullptr)
     goto error;
 
-  user_dir = NULL;
+  user_dir = nullptr;
   while (fgets (buffer, sizeof (buffer), file))
     {
       /* Remove newline at end */
@@ -363,7 +363,7 @@ xdg_user_dir_lookup (const char *type)
       if (relative)
 	{
 	  user_dir = (char*) malloc (strlen (home_dir) + 1 + strlen (p) + 1);
-          if (user_dir == NULL)
+          if (user_dir == nullptr)
             goto error2;
 
 	  strcpy (user_dir, home_dir);
@@ -372,7 +372,7 @@ xdg_user_dir_lookup (const char *type)
       else
 	{
 	  user_dir = (char*) malloc (strlen (p) + 1);
-          if (user_dir == NULL)
+          if (user_dir == nullptr)
             goto error2;
 
 	  *user_dir = 0;
@@ -394,7 +394,7 @@ error2:
     return user_dir;
 
  error:
-  return NULL;
+  return nullptr;
 }
 
 static const char xdg_user_dirs[] =

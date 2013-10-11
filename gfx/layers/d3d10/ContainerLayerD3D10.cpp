@@ -4,11 +4,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "ContainerLayerD3D10.h"
-#include "nsAlgorithm.h"
-#include "gfxUtils.h"
-#include "nsRect.h"
 
-#include "../d3d9/Nv3DVUtils.h"
 #include "ThebesLayerD3D10.h"
 #include "ReadbackProcessor.h"
 

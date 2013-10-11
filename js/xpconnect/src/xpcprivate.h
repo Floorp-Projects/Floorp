@@ -3085,7 +3085,7 @@ class XPCJSContextStack
 {
 public:
     XPCJSContextStack()
-      : mSafeJSContext(NULL)
+      : mSafeJSContext(nullptr)
     { }
 
     virtual ~XPCJSContextStack();
@@ -3097,7 +3097,7 @@ public:
 
     JSContext *Peek()
     {
-        return mStack.IsEmpty() ? NULL : mStack[mStack.Length() - 1].cx;
+        return mStack.IsEmpty() ? nullptr : mStack[mStack.Length() - 1].cx;
     }
 
     JSContext *GetSafeJSContext();

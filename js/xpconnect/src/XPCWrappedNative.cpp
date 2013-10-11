@@ -835,10 +835,11 @@ XPCWrappedNative::Destroy()
     }
 
     /*
-     * The only time GetRuntime() will be NULL is if Destroy is called a second
-     * time on a wrapped native. Since we already unregistered the pointer the
-     * first time, there's no need to unregister again. Unregistration is safe
-     * the first time because mWrapper isn't used afterwards.
+     * The only time GetRuntime() will be nullptr is if Destroy is called a
+     * second time on a wrapped native. Since we already unregistered the
+     * pointer the first time, there's no need to unregister again.
+     * Unregistration is safe the first time because mWrapper isn't used
+     * afterwards.
      */
     if (XPCJSRuntime *rt = GetRuntime()) {
         if (IsIncrementalBarrierNeeded(rt->Runtime()))
@@ -1381,14 +1382,15 @@ XPCWrappedNative::ReparentWrapperIfFound(XPCWrappedNativeScope* aOldScope,
         // native, which is bad, because one of them will end up finalizing
         // a wrapped native it does not own. |cloneGuard| ensures that if we
         // exit before calling clearing |flat|'s private the private of
-        // |newobj| will be set to NULL. |flat| will go away soon, because
+        // |newobj| will be set to nullptr. |flat| will go away soon, because
         // we swap it with another object during the transplant and let that
         // object die.
         RootedObject propertyHolder(cx);
         {
             AutoClonePrivateGuard cloneGuard(cx, flat, newobj);
 
-            propertyHolder = JS_NewObjectWithGivenProto(cx, NULL, NULL, aNewParent);
+            propertyHolder = JS_NewObjectWithGivenProto(cx, nullptr, nullptr,
+                                                        aNewParent);
             if (!propertyHolder)
                 return NS_ERROR_OUT_OF_MEMORY;
             if (!JS_CopyPropertiesFrom(cx, propertyHolder, flat))
@@ -1934,7 +1936,7 @@ XPCWrappedNative::GetSameCompartmentSecurityWrapper(JSContext *cx)
     JSCompartment *cxCompartment = js::GetContextCompartment(cx);
     MOZ_ASSERT(cxCompartment == js::GetObjectCompartment(flat));
     if (xpc::AccessCheck::isChrome(cxCompartment)) {
-        MOZ_ASSERT(wrapper == NULL);
+        MOZ_ASSERT(wrapper == nullptr);
         return flat;
     }
 
@@ -1947,11 +1949,11 @@ XPCWrappedNative::GetSameCompartmentSecurityWrapper(JSContext *cx)
     if (NeedsSOW() && xpc::AllowXBLScope(js::GetContextCompartment(cx))) {
         wrapper = xpc::WrapperFactory::WrapSOWObject(cx, flat);
         if (!wrapper)
-            return NULL;
+            return nullptr;
     } else if (xpc::WrapperFactory::IsComponentsObject(flat)) {
         wrapper = xpc::WrapperFactory::WrapComponentsObject(cx, flat);
         if (!wrapper)
-            return NULL;
+            return nullptr;
     }
 
     // If we made a wrapper, cache it and return it.
@@ -2889,12 +2891,6 @@ XPCWrappedNative::HasNativeMember(HandleId name)
     XPCNativeMember *member = nullptr;
     uint16_t ignored;
     return GetSet()->FindMember(name, &member, &ignored) && !!member;
-}
-
-inline nsresult UnexpectedFailure(nsresult rv)
-{
-    NS_ERROR("This is not supposed to fail!");
-    return rv;
 }
 
 /* void finishInitForWrappedGlobal (); */

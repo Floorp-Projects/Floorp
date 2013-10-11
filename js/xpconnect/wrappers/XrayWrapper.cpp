@@ -380,7 +380,7 @@ XrayTraits::getExpandoObjectInternal(JSContext *cx, HandleObject target,
     RootedObject exclusiveGlobal(cx, exclusiveGlobalArg);
     JSAutoCompartment ac(cx, target);
     if (!JS_WrapObject(cx, exclusiveGlobal.address()))
-        return NULL;
+        return nullptr;
 
     // Iterate through the chain, looking for a same-origin object.
     RootedObject head(cx, getExpandoChain(target));
@@ -458,7 +458,7 @@ XrayTraits::ensureExpandoObject(JSContext *cx, HandleObject wrapper,
         RootedObject consumerGlobal(cx, js::GetGlobalForObjectCrossCompartment(wrapper));
         bool isSandbox = !strcmp(js::GetObjectJSClass(consumerGlobal)->name, "Sandbox");
         if (!JS_WrapObject(cx, consumerGlobal.address()))
-            return NULL;
+            return nullptr;
         expandoObject = attachExpandoObject(cx, target, ObjectPrincipal(wrapper),
                                             isSandbox ? (HandleObject)consumerGlobal : NullPtr());
     }
@@ -697,7 +697,7 @@ XPCWrappedNativeXrayTraits::resolveNativeProperty(JSContext *cx, HandleObject wr
 {
     MOZ_ASSERT(js::GetObjectJSClass(holder) == &HolderClass);
 
-    desc.object().set(NULL);
+    desc.object().set(nullptr);
 
     // This will do verification and the method lookup for us.
     RootedObject target(cx, getTargetObject(wrapper));
@@ -728,8 +728,8 @@ XPCWrappedNativeXrayTraits::resolveNativeProperty(JSContext *cx, HandleObject wr
 
     desc.object().set(holder);
     desc.setAttributes(JSPROP_ENUMERATE);
-    desc.setGetter(NULL);
-    desc.setSetter(NULL);
+    desc.setGetter(nullptr);
+    desc.setSetter(nullptr);
     desc.setShortId(0);
     desc.value().set(JSVAL_VOID);
 
@@ -801,7 +801,7 @@ XrayTraits::resolveOwnProperty(JSContext *cx, Wrapper &jsWrapper,
                                HandleObject wrapper, HandleObject holder, HandleId id,
                                MutableHandle<JSPropertyDescriptor> desc, unsigned flags)
 {
-    desc.object().set(NULL);
+    desc.object().set(nullptr);
     RootedObject target(cx, getTargetObject(wrapper));
     RootedObject expando(cx, getExpandoObject(cx, target, wrapper));
 
@@ -969,7 +969,7 @@ XPCWrappedNativeXrayTraits::createHolder(JSContext *cx, JSObject *wrapper)
     if (!holder)
         return nullptr;
 
-    js::SetReservedSlot(holder, JSSLOT_RESOLVING, PrivateValue(NULL));
+    js::SetReservedSlot(holder, JSSLOT_RESOLVING, PrivateValue(nullptr));
     return holder;
 }
 
@@ -1330,7 +1330,7 @@ bool
 XrayWrapper<Base, Traits>::preventExtensions(JSContext *cx, HandleObject wrapper)
 {
     // See above.
-    JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_CANT_CHANGE_EXTENSIBILITY);
+    JS_ReportErrorNumber(cx, js_GetErrorMessage, nullptr, JSMSG_CANT_CHANGE_EXTENSIBILITY);
     return false;
 }
 
@@ -1343,7 +1343,7 @@ XrayWrapper<Base, Traits>::getPropertyDescriptor(JSContext *cx, HandleObject wra
     assertEnteredPolicy(cx, wrapper, id);
     RootedObject holder(cx, Traits::singleton.ensureHolder(cx, wrapper));
     if (Traits::isResolving(cx, holder, id)) {
-        desc.object().set(NULL);
+        desc.object().set(nullptr);
         return true;
     }
 
@@ -1361,7 +1361,7 @@ XrayWrapper<Base, Traits>::getPropertyDescriptor(JSContext *cx, HandleObject wra
         desc.object().set(wrapper);
         desc.setAttributes(JSPROP_ENUMERATE|JSPROP_SHARED);
         desc.setGetter(wrappedJSObject_getter);
-        desc.setSetter(NULL);
+        desc.setSetter(nullptr);
         desc.setShortId(0);
         desc.value().set(JSVAL_VOID);
         return true;
@@ -1436,8 +1436,8 @@ XrayWrapper<Base, Traits>::getPropertyDescriptor(JSContext *cx, HandleObject wra
 
         desc.object().set(wrapper);
         desc.setAttributes(0);
-        desc.setGetter(NULL);
-        desc.setSetter(NULL);
+        desc.setGetter(nullptr);
+        desc.setSetter(nullptr);
         desc.setShortId(0);
         desc.value().setObject(*JS_GetFunctionObject(toString));
     }
@@ -1490,7 +1490,7 @@ XrayWrapper<Base, Traits>::getOwnPropertyDescriptor(JSContext *cx, HandleObject 
     assertEnteredPolicy(cx, wrapper, id);
     RootedObject holder(cx, Traits::singleton.ensureHolder(cx, wrapper));
     if (Traits::isResolving(cx, holder, id)) {
-        desc.object().set(NULL);
+        desc.object().set(nullptr);
         return true;
     }
 

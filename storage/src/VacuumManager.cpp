@@ -364,8 +364,8 @@ VacuumManager::Observe(nsISupports *aSubject,
   if (strcmp(aTopic, OBSERVER_TOPIC_IDLE_DAILY) == 0) {
     // Try to run vacuum on all registered entries.  Will stop at the first
     // successful one.
-    const nsCOMArray<mozIStorageVacuumParticipant> &entries =
-      mParticipants.GetEntries();
+    nsCOMArray<mozIStorageVacuumParticipant> entries;
+    mParticipants.GetEntries(entries);
     // If there are more entries than what a month can contain, we could end up
     // skipping some, since we run daily.  So we use a starting index.
     static const char* kPrefName = PREF_VACUUM_BRANCH "index";

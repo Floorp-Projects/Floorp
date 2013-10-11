@@ -133,7 +133,7 @@ static void nsObjCExceptionAbort()
   // We need to raise a mach-o signal here, the Mozilla crash reporter on
   // Mac OS X does not respond to POSIX signals. Raising mach-o signals directly
   // is tricky so we do it by just derefing a null pointer.
-  int* foo = NULL;
+  int* foo = nullptr;
   *foo = 1;
 }
 

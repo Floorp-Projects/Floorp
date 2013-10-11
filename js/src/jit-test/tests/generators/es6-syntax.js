@@ -32,7 +32,3 @@ assertSyntaxError("for yield (var i in o) {}");
 
 // Expression bodies.
 assertSyntaxError("function* f() yield 7");
-
-// Asm.js.
-load(libdir + "asm.js");
-assertAsmDirectiveFail("function* f() { 'use asm'; function g() { return 0; } return g; })()")

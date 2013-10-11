@@ -194,7 +194,7 @@ NS_IMPL_SETTER_STR(_class::Set##_postfix, _member)
  */
 #if defined(DEBUG)
 #define NS_VERIFY_THREADSAFE_INTERFACE(_iface)                                \
- if (NULL != (_iface)) {                                                      \
+ if (nullptr != (_iface)) {                                                   \
    nsISupports* tmp;                                                          \
    static NS_DEFINE_IID(kIsThreadsafeIID, NS_ISTHREADSAFE_IID);               \
    NS_PRECONDITION((NS_OK == _iface->QueryInterface(kIsThreadsafeIID,         \

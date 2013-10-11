@@ -533,7 +533,7 @@ struct MessageWindow {
             //  the same thread.
             BOOL desRes = DestroyWindow( mHandle );
             if ( FALSE != desRes ) {
-                mHandle = NULL;
+                mHandle = nullptr;
             }
             else {
                 retval = NS_ERROR_FAILURE;
@@ -858,7 +858,7 @@ static nsCString uTypeDesc( UINT uType ) {
 static nsCString hszValue( DWORD instance, HSZ hsz ) {
     // Extract string from HSZ.
     nsCString result("[");
-    DWORD len = DdeQueryString( instance, hsz, NULL, NULL, CP_WINANSI );
+    DWORD len = DdeQueryString( instance, hsz, nullptr, nullptr, CP_WINANSI );
     if ( len ) {
         char buffer[ 256 ];
         DdeQueryString( instance, hsz, buffer, sizeof buffer, CP_WINANSI );
@@ -1211,7 +1211,7 @@ void nsNativeAppSupportWin::ParseDDEArg( const WCHAR* args, int index, nsString&
 
 // Utility to parse out argument from a DDE item string.
 void nsNativeAppSupportWin::ParseDDEArg( HSZ args, int index, nsString& aString) {
-    DWORD argLen = DdeQueryStringW( mInstance, args, NULL, 0, CP_WINUNICODE );
+    DWORD argLen = DdeQueryStringW( mInstance, args, nullptr, 0, CP_WINUNICODE );
     // there wasn't any string, so return empty string
     if ( !argLen ) return;
     nsAutoString temp;

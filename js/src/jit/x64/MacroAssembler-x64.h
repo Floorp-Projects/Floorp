@@ -1040,12 +1040,14 @@ class MacroAssemblerX64 : public MacroAssemblerX86Shared
     void loadConstantFloat32(float f, const FloatRegister &dest);
 
     void branchTruncateDouble(const FloatRegister &src, const Register &dest, Label *fail) {
-        const uint64_t IndefiniteIntegerValue = 0x8000000000000000;
-        JS_ASSERT(dest != ScratchReg);
         cvttsd2sq(src, dest);
-        movq(ImmWord(IndefiniteIntegerValue), ScratchReg);
-        cmpq(dest, ScratchReg);
-        j(Assembler::Equal, fail);
+
+        // cvttsd2sq returns 0x8000000000000000 on failure. Test for it by
+        // subtracting 1 and testing overflow (this avoids the need to
+        // materialize that value in a register).
+        cmpq(dest, Imm32(1));
+        j(Assembler::Overflow, fail);
+
         movl(dest, dest); // Zero upper 32-bits.
     }
 
@@ -1057,14 +1059,11 @@ class MacroAssemblerX64 : public MacroAssemblerX86Shared
         testl(operand.valueReg(), operand.valueReg());
         j(truthy ? NonZero : Zero, label);
     }
-    // This returns the tag in ScratchReg.
     Condition testStringTruthy(bool truthy, const ValueOperand &value) {
         unboxString(value, ScratchReg);
 
         Operand lengthAndFlags(ScratchReg, JSString::offsetOfLengthAndFlags());
-        movq(lengthAndFlags, ScratchReg);
-        shrq(Imm32(JSString::LENGTH_SHIFT), ScratchReg);
-        testq(ScratchReg, ScratchReg);
+        testq(lengthAndFlags, Imm32(-1 << JSString::LENGTH_SHIFT));
         return truthy ? Assembler::NonZero : Assembler::Zero;
     }
 

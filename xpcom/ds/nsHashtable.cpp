@@ -119,7 +119,7 @@ nsHashKey::Write(nsIObjectOutputStream* aStream) const
 }
 
 nsHashtable::nsHashtable(uint32_t aInitSize, bool threadSafe)
-  : mLock(NULL), mEnumerating(false)
+  : mLock(nullptr), mEnumerating(false)
 {
     MOZ_COUNT_CTOR(nsHashtable);
 
@@ -134,10 +134,10 @@ nsHashtable::nsHashtable(uint32_t aInitSize, bool threadSafe)
     
     if (threadSafe) {
         mLock = PR_NewLock();
-        if (mLock == NULL) {
+        if (mLock == nullptr) {
             // Cannot create a lock. If running on a multiprocessing system
             // we are sure to die.
-            PR_ASSERT(mLock != NULL);
+            PR_ASSERT(mLock != nullptr);
         }
     }
 }
@@ -171,7 +171,7 @@ bool nsHashtable::Exists(nsHashKey *aKey)
 
 void *nsHashtable::Put(nsHashKey *aKey, void *aData)
 {
-    void *res =  NULL;
+    void *res =  nullptr;
 
     if (!mHashtable.ops) return nullptr;
     
@@ -299,7 +299,7 @@ hashEnumerateRemove(PLDHashTable*, PLDHashEntryHdr* hdr, uint32_t i, void *arg)
 }
 
 void nsHashtable::Reset() {
-    Reset(NULL);
+    Reset(nullptr);
 }
 
 void nsHashtable::Reset(nsHashtableEnumFunc destroyFunc, void* aClosure)
@@ -531,8 +531,8 @@ nsCStringKey::Clone() const
 
     uint32_t len = mStrLen * sizeof(char);
     char* str = (char*)nsMemory::Alloc(len + sizeof(char));
-    if (str == NULL)
-        return NULL;
+    if (str == nullptr)
+        return nullptr;
     memcpy(str, mStr, len);
     str[len] = 0;
     return new nsCStringKey(str, mStrLen, OWN);
@@ -654,8 +654,8 @@ nsStringKey::Clone() const
 
     uint32_t len = (mStrLen+1) * sizeof(PRUnichar);
     PRUnichar* str = (PRUnichar*)nsMemory::Alloc(len);
-    if (str == NULL)
-        return NULL;
+    if (str == nullptr)
+        return nullptr;
     memcpy(str, mStr, len);
     return new nsStringKey(str, mStrLen, OWN);
 }

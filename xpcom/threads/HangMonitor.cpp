@@ -59,7 +59,7 @@ volatile PRIntervalTime gTimestamp = PR_INTERVAL_NO_WAIT;
 
 #ifdef REPORT_CHROME_HANGS
 // Main thread ID used in reporting chrome hangs under Windows
-static HANDLE winMainThreadHandle = NULL;
+static HANDLE winMainThreadHandle = nullptr;
 
 // Default timeout for reporting chrome hangs to Telemetry (5 seconds)
 static const int32_t DEFAULT_CHROME_HANG_INTERVAL = 5;
@@ -232,11 +232,11 @@ Startup()
   MOZ_ASSERT(!gMonitor, "Hang monitor already initialized");
   gMonitor = new Monitor("HangMonitor");
 
-  Preferences::RegisterCallback(PrefChanged, kHangMonitorPrefName, NULL);
-  PrefChanged(NULL, NULL);
+  Preferences::RegisterCallback(PrefChanged, kHangMonitorPrefName, nullptr);
+  PrefChanged(nullptr, nullptr);
 
 #ifdef REPORT_CHROME_HANGS
-  Preferences::RegisterCallback(PrefChanged, kTelemetryPrefName, NULL);
+  Preferences::RegisterCallback(PrefChanged, kTelemetryPrefName, nullptr);
   winMainThreadHandle =
     OpenThread(THREAD_ALL_ACCESS, FALSE, GetCurrentThreadId());
   if (!winMainThreadHandle)
@@ -251,7 +251,7 @@ Startup()
 
   gThread = PR_CreateThread(PR_USER_THREAD,
                             ThreadMain,
-                            NULL, PR_PRIORITY_LOW, PR_GLOBAL_THREAD,
+                            nullptr, PR_PRIORITY_LOW, PR_GLOBAL_THREAD,
                             PR_JOINABLE_THREAD, 0);
 }
 
@@ -272,11 +272,11 @@ Shutdown()
   // thread creation could theoretically fail
   if (gThread) {
     PR_JoinThread(gThread);
-    gThread = NULL;
+    gThread = nullptr;
   }
 
   delete gMonitor;
-  gMonitor = NULL;
+  gMonitor = nullptr;
 }
 
 static bool
@@ -289,11 +289,11 @@ IsUIMessageWaiting()
   #define NS_WM_IMELAST  WM_IME_KEYUP
   BOOL haveUIMessageWaiting = FALSE;
   MSG msg;
-  haveUIMessageWaiting |= ::PeekMessageW(&msg, NULL, WM_KEYFIRST, 
+  haveUIMessageWaiting |= ::PeekMessageW(&msg, nullptr, WM_KEYFIRST, 
                                          WM_IME_KEYLAST, PM_NOREMOVE);
-  haveUIMessageWaiting |= ::PeekMessageW(&msg, NULL, NS_WM_IMEFIRST,
+  haveUIMessageWaiting |= ::PeekMessageW(&msg, nullptr, NS_WM_IMEFIRST,
                                          NS_WM_IMELAST, PM_NOREMOVE);
-  haveUIMessageWaiting |= ::PeekMessageW(&msg, NULL, WM_MOUSEFIRST,
+  haveUIMessageWaiting |= ::PeekMessageW(&msg, nullptr, WM_MOUSEFIRST,
                                          WM_MOUSELAST, PM_NOREMOVE);
   return haveUIMessageWaiting;
 #endif

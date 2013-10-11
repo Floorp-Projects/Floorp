@@ -96,7 +96,7 @@ public:
   /**
    * Used by other components in the places directory such as the annotation
    * service to get a reference to this history object. Returns a pointer to
-   * the service if it exists. Otherwise creates one. Returns NULL on error.
+   * the service if it exists. Otherwise creates one. Returns nullptr on error.
    */
   static nsNavHistory* GetHistoryService()
   {
@@ -114,7 +114,7 @@ public:
    * const version of this history object.
    *
    * @return A pointer to a const version of the service if it exists,
-   *         NULL otherwise.
+   *         nullptr otherwise.
    */
   static const nsNavHistory* GetConstHistoryService()
   {
@@ -447,7 +447,7 @@ protected:
   /**
    * Loads all of the preferences that we use into member variables.
    *
-   * @note If mPrefBranch is NULL, this does nothing.
+   * @note If mPrefBranch is nullptr, this does nothing.
    */
   void LoadPrefs();
 

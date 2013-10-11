@@ -204,10 +204,10 @@ nsresult ProbeManager::StartSession(nsTArray<nsRefPtr<Probe>> &aProbes)
                      /*GuidCount:      Number of probes*/,
                      probes
                      /*TraceGuidReg:   Probes registration*/,
-                     NULL
-                     /*MofImagePath:   Must be NULL, says MSDN*/,
-                     NULL
-                     /*MofResourceName:Must be NULL, says MSDN*/,
+                     nullptr
+                     /*MofImagePath:   Must be nullptr, says MSDN*/,
+                     nullptr
+                     /*MofResourceName:Must be nullptr, says MSDN*/,
                      &mRegistrationHandle
                      /*RegistrationHandle: Handler.
                       used only for unregistration*/

@@ -196,7 +196,7 @@ AlignBytes(T bytes, U alignment)
     return bytes + ComputeByteAlignment(bytes, alignment);
 }
 
-JS_ALWAYS_INLINE static size_t
+static JS_ALWAYS_INLINE size_t
 UnsignedPtrDiff(const void *bigger, const void *smaller)
 {
     return size_t(bigger) - size_t(smaller);

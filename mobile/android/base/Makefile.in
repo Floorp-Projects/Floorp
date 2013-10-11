@@ -298,21 +298,16 @@ ifdef MOZ_ANDROID_ANR_REPORTER
 DEFINES += -DMOZ_ANDROID_ANR_REPORTER=1
 endif
 
-FENNEC_PP_JAVA_VIEW_FILES = \
-  GeckoButton.java \
-  GeckoImageButton.java \
-  GeckoImageView.java \
-  GeckoEditText.java \
-  GeckoFrameLayout.java \
-  GeckoLinearLayout.java \
-  GeckoRelativeLayout.java \
-  GeckoTextSwitcher.java \
-  GeckoTextView.java \
-  $(NULL)
-
-FENNEC_PP_JAVA_FILES = \
+FENNEC_PP_JAVA_FILES := \
   App.java \
   AppConstants.java \
+  widget/GeckoEditText.java \
+  widget/GeckoImageButton.java \
+  widget/GeckoImageView.java \
+  widget/GeckoLinearLayout.java \
+  widget/GeckoRelativeLayout.java \
+  widget/GeckoTextSwitcher.java \
+  widget/GeckoTextView.java \
   SysInfo.java \
   WebApp.java \
   WebApps.java \
@@ -395,7 +390,6 @@ GARBAGE += \
   classes.dex  \
   $(MOZGLUE_PP_JAVA_FILES) \
   $(FENNEC_PP_JAVA_FILES) \
-  $(FENNEC_PP_JAVA_VIEW_FILES) \
   $(SYNC_PP_JAVA_FILES) \
   gecko.ap_  \
   res/values/strings.xml \
@@ -1245,7 +1239,6 @@ gecko-browser_JAVAFILES := \
   $(NULL)
 gecko-browser_PP_JAVAFILES := \
   $(FENNEC_PP_JAVA_FILES) \
-  $(FENNEC_PP_JAVA_VIEW_FILES) \
   $(SYNC_PP_JAVA_FILES) \
   R.java \
   $(NULL)
@@ -1271,7 +1264,6 @@ JAVA_JAR_TARGETS += gecko-util
 gecko-util_DEST := jars/gecko-util.jar
 gecko-util_JAVAFILES := \
   $(UTIL_JAVA_FILES) \
-  $(UTIL_PP_JAVA_FILES) \
   $(NULL)
 gecko-util_EXTRA_JARS := \
   jars/gecko-mozglue.jar \
@@ -1364,6 +1356,7 @@ android-tgts = \
 
 android-preqs = \
   Makefile.in \
+  widget/GeckoView.java.frag \
   $(call mkdir_deps,$(sort $(dir $(MOZGLUE_PP_JAVA_FILES)))) \
   $(call mkdir_deps,$(sort $(dir $(FENNEC_PP_JAVA_FILES)))) \
   $(call mkdir_deps,$(sort $(dir $(SYNC_PP_JAVA_FILES)))) \
@@ -1373,11 +1366,6 @@ android-preqs = \
 $(android-tgts): % : %.in $(android-preqs)
 	$(PYTHON) $(topsrcdir)/config/Preprocessor.py \
              $(AUTOMATION_PPARGS) $(DEFINES) $(ACDEFINES) $< > $@
-
-# Replace @VIEWTYPE@ with different View names.
-$(FENNEC_PP_JAVA_VIEW_FILES): GeckoView.java.frag
-	@rm -f $@
-	cat $< | sed s,@VIEWTYPE@,$(patsubst Gecko%.java,%,$@),g >> $@ ; \
 
 res/drawable-mdpi/icon.png: $(ICON_PATH)
 	$(NSINSTALL) -D res/drawable-mdpi

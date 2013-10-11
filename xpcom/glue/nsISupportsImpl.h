@@ -43,7 +43,7 @@ ToSupports(nsISupports* p)
 inline nsISupports*
 ToCanonicalSupports(nsISupports* p)
 {
-    return NULL;
+    return nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -82,7 +82,7 @@ struct nsPurpleBufferEntry {
 
   nsCycleCollectingAutoRefCnt *mRefCnt;
 
-  nsCycleCollectionParticipant *mParticipant; // NULL for nsISupports
+  nsCycleCollectionParticipant *mParticipant; // nullptr for nsISupports
 };
 
 #define NS_NUMBER_OF_FLAGS_IN_REFCNT 2

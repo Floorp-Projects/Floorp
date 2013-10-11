@@ -184,7 +184,7 @@ struct already_AddRefed
     operator already_AddRefed<U>()
     {
       U* tmp = mRawPtr;
-      mRawPtr = NULL;
+      mRawPtr = nullptr;
       return already_AddRefed<U>(tmp);
     }
 

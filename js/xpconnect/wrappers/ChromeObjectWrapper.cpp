@@ -69,7 +69,7 @@ ChromeObjectWrapper::getPropertyDescriptor(JSContext *cx,
 {
     assertEnteredPolicy(cx, wrapper, id);
     // First, try a lookup on the base wrapper if permitted.
-    desc.object().set(NULL);
+    desc.object().set(nullptr);
     if (AllowedByBase(cx, wrapper, id, Wrapper::GET) &&
         !ChromeObjectWrapperBase::getPropertyDescriptor(cx, wrapper, id,
                                                         desc, flags)) {
@@ -80,7 +80,7 @@ ChromeObjectWrapper::getPropertyDescriptor(JSContext *cx,
     // prefer the one we'll get via the prototype chain in the content
     // compartment.
     if (desc.object() && PropIsFromStandardPrototype(cx, desc))
-        desc.object().set(NULL);
+        desc.object().set(nullptr);
 
     // If we found something or have no proto, we're done.
     RootedObject wrapperProto(cx);
