@@ -59,9 +59,17 @@ MOZ_BEGIN_ENUM_CLASS(WebGLTextureFakeBlackStatus, int)
   UninitializedImageData
 MOZ_END_ENUM_CLASS(WebGLTextureFakeBlackStatus)
 
-struct VertexAttrib0Status {
-    enum { Default, EmulatedUninitializedArray, EmulatedInitializedArray };
-};
+/*
+ * Implementing WebGL (or OpenGL ES 2.0) on top of desktop OpenGL requires
+ * emulating the vertex attrib 0 array when it's not enabled. Indeed,
+ * OpenGL ES 2.0 allows drawing without vertex attrib 0 array enabled, but
+ * desktop OpenGL does not allow that.
+ */
+MOZ_BEGIN_ENUM_CLASS(WebGLVertexAttrib0Status, int)
+    Default, // default status - no emulation needed
+    EmulatedUninitializedArray, // need an artificial attrib 0 array, but contents may be left uninitialized
+    EmulatedInitializedArray // need an artificial attrib 0 array, and contents must be initialized
+MOZ_END_ENUM_CLASS(WebGLVertexAttrib0Status)
 
 /*
  * Enum to track the status of image data (renderbuffer or texture image) presence

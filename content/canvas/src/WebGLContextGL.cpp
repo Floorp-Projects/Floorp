@@ -869,7 +869,7 @@ WebGLContext::DepthRange(GLfloat zNear, GLfloat zFar)
     gl->fDepthRange(zNear, zFar);
 }
 
-int
+WebGLVertexAttrib0Status
 WebGLContext::WhatDoesVertexAttrib0Need()
 {
   // here we may assume that mCurrentProgram != null
@@ -880,21 +880,21 @@ WebGLContext::WhatDoesVertexAttrib0Need()
         mBoundVertexArray->mAttribBuffers[0].enabled &&
         !mCurrentProgram->IsAttribInUse(0))
     {
-        return VertexAttrib0Status::EmulatedUninitializedArray;
+        return WebGLVertexAttrib0Status::EmulatedUninitializedArray;
     }
 #endif
 
-    return (gl->IsGLES2() || mBoundVertexArray->mAttribBuffers[0].enabled) ? VertexAttrib0Status::Default
-         : mCurrentProgram->IsAttribInUse(0)            ? VertexAttrib0Status::EmulatedInitializedArray
-                                                        : VertexAttrib0Status::EmulatedUninitializedArray;
+    return (gl->IsGLES2() || mBoundVertexArray->mAttribBuffers[0].enabled) ? WebGLVertexAttrib0Status::Default
+         : mCurrentProgram->IsAttribInUse(0) ? WebGLVertexAttrib0Status::EmulatedInitializedArray
+                                             : WebGLVertexAttrib0Status::EmulatedUninitializedArray;
 }
 
 bool
 WebGLContext::DoFakeVertexAttrib0(GLuint vertexCount)
 {
-    int whatDoesAttrib0Need = WhatDoesVertexAttrib0Need();
+    WebGLVertexAttrib0Status whatDoesAttrib0Need = WhatDoesVertexAttrib0Need();
 
-    if (whatDoesAttrib0Need == VertexAttrib0Status::Default)
+    if (whatDoesAttrib0Need == WebGLVertexAttrib0Status::Default)
         return true;
 
     if (!mAlreadyWarnedAboutFakeVertexAttrib0) {
@@ -924,8 +924,8 @@ WebGLContext::DoFakeVertexAttrib0(GLuint vertexCount)
     // we don't need it to be, then consider it OK
     bool vertexAttrib0BufferStatusOK =
         mFakeVertexAttrib0BufferStatus == whatDoesAttrib0Need ||
-        (mFakeVertexAttrib0BufferStatus == VertexAttrib0Status::EmulatedInitializedArray &&
-         whatDoesAttrib0Need == VertexAttrib0Status::EmulatedUninitializedArray);
+        (mFakeVertexAttrib0BufferStatus == WebGLVertexAttrib0Status::EmulatedInitializedArray &&
+         whatDoesAttrib0Need == WebGLVertexAttrib0Status::EmulatedUninitializedArray);
 
     if (!vertexAttrib0BufferStatusOK ||
         mFakeVertexAttrib0BufferObjectSize < dataSize ||
@@ -946,7 +946,7 @@ WebGLContext::DoFakeVertexAttrib0(GLuint vertexCount)
         GLenum error = LOCAL_GL_NO_ERROR;
         UpdateWebGLErrorAndClearGLError();
 
-        if (mFakeVertexAttrib0BufferStatus == VertexAttrib0Status::EmulatedInitializedArray) {
+        if (mFakeVertexAttrib0BufferStatus == WebGLVertexAttrib0Status::EmulatedInitializedArray) {
             nsAutoArrayPtr<GLfloat> array(new GLfloat[4 * vertexCount]);
             for(size_t i = 0; i < vertexCount; ++i) {
                 array[4 * i + 0] = mVertexAttrib0Vector[0];
@@ -979,9 +979,9 @@ WebGLContext::DoFakeVertexAttrib0(GLuint vertexCount)
 void
 WebGLContext::UndoFakeVertexAttrib0()
 {
-    int whatDoesAttrib0Need = WhatDoesVertexAttrib0Need();
+    WebGLVertexAttrib0Status whatDoesAttrib0Need = WhatDoesVertexAttrib0Need();
 
-    if (whatDoesAttrib0Need == VertexAttrib0Status::Default)
+    if (whatDoesAttrib0Need == WebGLVertexAttrib0Status::Default)
         return;
 
     gl->fBindBuffer(LOCAL_GL_ARRAY_BUFFER, mBoundVertexArray->mAttribBuffers[0].buf ? mBoundVertexArray->mAttribBuffers[0].buf->GLName() : 0);

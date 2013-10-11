@@ -809,7 +809,7 @@ protected:
     void BindFakeBlackTextures();
     void UnbindFakeBlackTextures();
 
-    int WhatDoesVertexAttrib0Need();
+    WebGLVertexAttrib0Status WhatDoesVertexAttrib0Need();
     bool DoFakeVertexAttrib0(GLuint vertexCount);
     void UndoFakeVertexAttrib0();
     void InvalidateFakeVertexAttrib0();
@@ -1121,7 +1121,7 @@ protected:
     GLfloat mFakeVertexAttrib0BufferObjectVector[4];
     size_t mFakeVertexAttrib0BufferObjectSize;
     GLuint mFakeVertexAttrib0BufferObject;
-    int mFakeVertexAttrib0BufferStatus;
+    WebGLVertexAttrib0Status mFakeVertexAttrib0BufferStatus;
 
     GLint mStencilRefFront, mStencilRefBack;
     GLuint mStencilValueMaskFront, mStencilValueMaskBack,
