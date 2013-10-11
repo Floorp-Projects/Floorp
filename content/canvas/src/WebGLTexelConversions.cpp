@@ -37,27 +37,27 @@ class WebGLImageConverter
      * texels with typed pointers and this value will tell us by how much we need
      * to increment these pointers to advance to the next texel.
      */
-    template<int Format>
+    template<MOZ_ENUM_CLASS_INTEGER_TYPE(WebGLTexelFormat) Format>
     static size_t NumElementsPerTexelForFormat() {
         switch (Format) {
-            case R8:
-            case A8:
-            case R32F:
-            case A32F:
-            case RGBA5551:
-            case RGBA4444:
-            case RGB565:
+            case WebGLTexelFormat::R8:
+            case WebGLTexelFormat::A8:
+            case WebGLTexelFormat::R32F:
+            case WebGLTexelFormat::A32F:
+            case WebGLTexelFormat::RGBA5551:
+            case WebGLTexelFormat::RGBA4444:
+            case WebGLTexelFormat::RGB565:
                 return 1;
-            case RA8:
-            case RA32F:
+            case WebGLTexelFormat::RA8:
+            case WebGLTexelFormat::RA32F:
                 return 2;
-            case RGB8:
-            case RGB32F:
+            case WebGLTexelFormat::RGB8:
+            case WebGLTexelFormat::RGB32F:
                 return 3;
-            case RGBA8:
-            case BGRA8:
-            case BGRX8:
-            case RGBA32F:
+            case WebGLTexelFormat::RGBA8:
+            case WebGLTexelFormat::BGRA8:
+            case WebGLTexelFormat::BGRX8:
+            case WebGLTexelFormat::RGBA32F:
                 return 4;
             default:
                 MOZ_ASSERT(false, "Unknown texel format. Coding mistake?");
@@ -73,8 +73,8 @@ class WebGLImageConverter
      * to return immediately in these cases to allow the compiler to avoid generating
      * useless code.
      */
-    template<WebGLTexelFormat SrcFormat,
-             WebGLTexelFormat DstFormat,
+    template<MOZ_ENUM_CLASS_INTEGER_TYPE(WebGLTexelFormat) SrcFormat,
+             MOZ_ENUM_CLASS_INTEGER_TYPE(WebGLTexelFormat) DstFormat,
              WebGLTexelPremultiplicationOp PremultiplicationOp>
     void run()
     {
@@ -98,11 +98,11 @@ class WebGLImageConverter
         // ImageData is always RGBA8. So all other SrcFormat will always satisfy DstFormat==SrcFormat,
         // so we can avoid compiling the code for all the unreachable paths.
         const bool CanSrcFormatComeFromDOMElementOrImageData
-            = SrcFormat == BGRA8 ||
-              SrcFormat == BGRX8 ||
-              SrcFormat == A8 ||
-              SrcFormat == RGB565 ||
-              SrcFormat == RGBA8;
+            = SrcFormat == WebGLTexelFormat::BGRA8 ||
+              SrcFormat == WebGLTexelFormat::BGRX8 ||
+              SrcFormat == WebGLTexelFormat::A8 ||
+              SrcFormat == WebGLTexelFormat::RGB565 ||
+              SrcFormat == WebGLTexelFormat::RGBA8;
         if (!CanSrcFormatComeFromDOMElementOrImageData &&
             SrcFormat != DstFormat)
         {
@@ -146,9 +146,9 @@ class WebGLImageConverter
             typename DataTypeForFormat<DstFormat>::Type
             DstType;
 
-        const int IntermediateSrcFormat
+        const MOZ_ENUM_CLASS_INTEGER_TYPE(WebGLTexelFormat) IntermediateSrcFormat
             = IntermediateFormat<SrcFormat>::Value;
-        const int IntermediateDstFormat
+        const MOZ_ENUM_CLASS_INTEGER_TYPE(WebGLTexelFormat) IntermediateDstFormat
             = IntermediateFormat<DstFormat>::Value;
         typedef
             typename DataTypeForFormat<IntermediateSrcFormat>::Type
@@ -213,7 +213,8 @@ class WebGLImageConverter
         return;
     }
 
-    template<WebGLTexelFormat SrcFormat, WebGLTexelFormat DstFormat>
+    template<MOZ_ENUM_CLASS_INTEGER_TYPE(WebGLTexelFormat) SrcFormat,
+             MOZ_ENUM_CLASS_INTEGER_TYPE(WebGLTexelFormat) DstFormat>
     void run(WebGLTexelPremultiplicationOp premultiplicationOp)
     {
         #define WEBGLIMAGECONVERTER_CASE_PREMULTIPLICATIONOP(PremultiplicationOp) \
@@ -231,7 +232,7 @@ class WebGLImageConverter
         #undef WEBGLIMAGECONVERTER_CASE_PREMULTIPLICATIONOP
     }
 
-    template<WebGLTexelFormat SrcFormat>
+    template<MOZ_ENUM_CLASS_INTEGER_TYPE(WebGLTexelFormat) SrcFormat>
     void run(WebGLTexelFormat dstFormat,
              WebGLTexelPremultiplicationOp premultiplicationOp)
     {
@@ -240,19 +241,19 @@ class WebGLImageConverter
                 return run<SrcFormat, DstFormat>(premultiplicationOp);
 
         switch (dstFormat) {
-            WEBGLIMAGECONVERTER_CASE_DSTFORMAT(R8)
-            WEBGLIMAGECONVERTER_CASE_DSTFORMAT(A8)
-            WEBGLIMAGECONVERTER_CASE_DSTFORMAT(R32F)
-            WEBGLIMAGECONVERTER_CASE_DSTFORMAT(A32F)
-            WEBGLIMAGECONVERTER_CASE_DSTFORMAT(RA8)
-            WEBGLIMAGECONVERTER_CASE_DSTFORMAT(RA32F)
-            WEBGLIMAGECONVERTER_CASE_DSTFORMAT(RGB8)
-            WEBGLIMAGECONVERTER_CASE_DSTFORMAT(RGB565)
-            WEBGLIMAGECONVERTER_CASE_DSTFORMAT(RGB32F)
-            WEBGLIMAGECONVERTER_CASE_DSTFORMAT(RGBA8)
-            WEBGLIMAGECONVERTER_CASE_DSTFORMAT(RGBA5551)
-            WEBGLIMAGECONVERTER_CASE_DSTFORMAT(RGBA4444)
-            WEBGLIMAGECONVERTER_CASE_DSTFORMAT(RGBA32F)
+            WEBGLIMAGECONVERTER_CASE_DSTFORMAT(WebGLTexelFormat::R8)
+            WEBGLIMAGECONVERTER_CASE_DSTFORMAT(WebGLTexelFormat::A8)
+            WEBGLIMAGECONVERTER_CASE_DSTFORMAT(WebGLTexelFormat::R32F)
+            WEBGLIMAGECONVERTER_CASE_DSTFORMAT(WebGLTexelFormat::A32F)
+            WEBGLIMAGECONVERTER_CASE_DSTFORMAT(WebGLTexelFormat::RA8)
+            WEBGLIMAGECONVERTER_CASE_DSTFORMAT(WebGLTexelFormat::RA32F)
+            WEBGLIMAGECONVERTER_CASE_DSTFORMAT(WebGLTexelFormat::RGB8)
+            WEBGLIMAGECONVERTER_CASE_DSTFORMAT(WebGLTexelFormat::RGB565)
+            WEBGLIMAGECONVERTER_CASE_DSTFORMAT(WebGLTexelFormat::RGB32F)
+            WEBGLIMAGECONVERTER_CASE_DSTFORMAT(WebGLTexelFormat::RGBA8)
+            WEBGLIMAGECONVERTER_CASE_DSTFORMAT(WebGLTexelFormat::RGBA5551)
+            WEBGLIMAGECONVERTER_CASE_DSTFORMAT(WebGLTexelFormat::RGBA4444)
+            WEBGLIMAGECONVERTER_CASE_DSTFORMAT(WebGLTexelFormat::RGBA32F)
             default:
                 MOZ_ASSERT(false, "unhandled case. Coding mistake?");
         }
@@ -271,21 +272,21 @@ public:
                 return run<SrcFormat>(dstFormat, premultiplicationOp);
 
         switch (srcFormat) {
-            WEBGLIMAGECONVERTER_CASE_SRCFORMAT(R8)
-            WEBGLIMAGECONVERTER_CASE_SRCFORMAT(A8)
-            WEBGLIMAGECONVERTER_CASE_SRCFORMAT(R32F)
-            WEBGLIMAGECONVERTER_CASE_SRCFORMAT(A32F)
-            WEBGLIMAGECONVERTER_CASE_SRCFORMAT(RA8)
-            WEBGLIMAGECONVERTER_CASE_SRCFORMAT(RA32F)
-            WEBGLIMAGECONVERTER_CASE_SRCFORMAT(RGB8)
-            WEBGLIMAGECONVERTER_CASE_SRCFORMAT(BGRX8) // source format only
-            WEBGLIMAGECONVERTER_CASE_SRCFORMAT(RGB565)
-            WEBGLIMAGECONVERTER_CASE_SRCFORMAT(RGB32F)
-            WEBGLIMAGECONVERTER_CASE_SRCFORMAT(RGBA8)
-            WEBGLIMAGECONVERTER_CASE_SRCFORMAT(BGRA8)
-            WEBGLIMAGECONVERTER_CASE_SRCFORMAT(RGBA5551)
-            WEBGLIMAGECONVERTER_CASE_SRCFORMAT(RGBA4444)
-            WEBGLIMAGECONVERTER_CASE_SRCFORMAT(RGBA32F)
+            WEBGLIMAGECONVERTER_CASE_SRCFORMAT(WebGLTexelFormat::R8)
+            WEBGLIMAGECONVERTER_CASE_SRCFORMAT(WebGLTexelFormat::A8)
+            WEBGLIMAGECONVERTER_CASE_SRCFORMAT(WebGLTexelFormat::R32F)
+            WEBGLIMAGECONVERTER_CASE_SRCFORMAT(WebGLTexelFormat::A32F)
+            WEBGLIMAGECONVERTER_CASE_SRCFORMAT(WebGLTexelFormat::RA8)
+            WEBGLIMAGECONVERTER_CASE_SRCFORMAT(WebGLTexelFormat::RA32F)
+            WEBGLIMAGECONVERTER_CASE_SRCFORMAT(WebGLTexelFormat::RGB8)
+            WEBGLIMAGECONVERTER_CASE_SRCFORMAT(WebGLTexelFormat::BGRX8) // source format only
+            WEBGLIMAGECONVERTER_CASE_SRCFORMAT(WebGLTexelFormat::RGB565)
+            WEBGLIMAGECONVERTER_CASE_SRCFORMAT(WebGLTexelFormat::RGB32F)
+            WEBGLIMAGECONVERTER_CASE_SRCFORMAT(WebGLTexelFormat::RGBA8)
+            WEBGLIMAGECONVERTER_CASE_SRCFORMAT(WebGLTexelFormat::BGRA8)
+            WEBGLIMAGECONVERTER_CASE_SRCFORMAT(WebGLTexelFormat::RGBA5551)
+            WEBGLIMAGECONVERTER_CASE_SRCFORMAT(WebGLTexelFormat::RGBA4444)
+            WEBGLIMAGECONVERTER_CASE_SRCFORMAT(WebGLTexelFormat::RGBA32F)
             default:
                 MOZ_ASSERT(false, "unhandled case. Coding mistake?");
         }

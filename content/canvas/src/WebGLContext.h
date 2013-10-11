@@ -84,8 +84,6 @@ namespace gfx {
 class SourceSurface;
 }
 
-using WebGLTexelConversions::WebGLTexelFormat;
-
 WebGLTexelFormat GetWebGLTexelFormat(GLenum format, GLenum type);
 
 struct WebGLContextOptions {
