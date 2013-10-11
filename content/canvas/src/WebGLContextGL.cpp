@@ -970,20 +970,33 @@ WebGLContext::BindFakeBlackTextures()
         gl->fGetIntegerv(LOCAL_GL_TEXTURE_BINDING_2D, (GLint*) &bound2DTex);
         gl->fGetIntegerv(LOCAL_GL_TEXTURE_BINDING_CUBE_MAP, (GLint*) &boundCubeTex);
 
-        const uint8_t black[] = {0, 0, 0, 255};
+        const uint8_t black_opaque[] = {0, 0, 0, 255};
 
-        gl->fGenTextures(1, &mBlackTexture2D);
-        gl->fBindTexture(LOCAL_GL_TEXTURE_2D, mBlackTexture2D);
+        gl->fGenTextures(1, &mBlackOpaqueTexture2D);
+        gl->fBindTexture(LOCAL_GL_TEXTURE_2D, mBlackOpaqueTexture2D);
         gl->fTexImage2D(LOCAL_GL_TEXTURE_2D, 0, LOCAL_GL_RGBA, 1, 1,
-                        0, LOCAL_GL_RGBA, LOCAL_GL_UNSIGNED_BYTE, &black);
+                        0, LOCAL_GL_RGBA, LOCAL_GL_UNSIGNED_BYTE, black_opaque);
 
-        gl->fGenTextures(1, &mBlackTextureCubeMap);
-        gl->fBindTexture(LOCAL_GL_TEXTURE_CUBE_MAP, mBlackTextureCubeMap);
+        gl->fGenTextures(1, &mBlackOpaqueTextureCubeMap);
+        gl->fBindTexture(LOCAL_GL_TEXTURE_CUBE_MAP, mBlackOpaqueTextureCubeMap);
         for (GLuint i = 0; i < 6; ++i) {
             gl->fTexImage2D(LOCAL_GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, LOCAL_GL_RGBA, 1, 1,
-                            0, LOCAL_GL_RGBA, LOCAL_GL_UNSIGNED_BYTE, &black);
+                            0, LOCAL_GL_RGBA, LOCAL_GL_UNSIGNED_BYTE, black_opaque);
         }
 
+        const uint8_t black_transparent[] = {0, 0, 0, 0};
+
+        gl->fGenTextures(1, &mBlackTransparentTexture2D);
+        gl->fBindTexture(LOCAL_GL_TEXTURE_2D, mBlackTransparentTexture2D);
+        gl->fTexImage2D(LOCAL_GL_TEXTURE_2D, 0, LOCAL_GL_RGBA, 1, 1,
+                        0, LOCAL_GL_RGBA, LOCAL_GL_UNSIGNED_BYTE, black_transparent);
+
+        gl->fGenTextures(1, &mBlackTransparentTextureCubeMap);
+        gl->fBindTexture(LOCAL_GL_TEXTURE_CUBE_MAP, mBlackTransparentTextureCubeMap);
+        for (GLuint i = 0; i < 6; ++i) {
+            gl->fTexImage2D(LOCAL_GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, LOCAL_GL_RGBA, 1, 1,
+                            0, LOCAL_GL_RGBA, LOCAL_GL_UNSIGNED_BYTE, black_transparent);
+        }
         // Reset bound textures
         gl->fBindTexture(LOCAL_GL_TEXTURE_2D, bound2DTex);
         gl->fBindTexture(LOCAL_GL_TEXTURE_CUBE_MAP, boundCubeTex);
@@ -996,16 +1009,24 @@ WebGLContext::BindFakeBlackTextures()
         s = mBound2DTextures[i]
             ? mBound2DTextures[i]->ResolvedFakeBlackStatus()
             : WebGLTextureFakeBlackStatus::NotNeeded;
+        MOZ_ASSERT(s != WebGLTextureFakeBlackStatus::Unknown);
         if (s != WebGLTextureFakeBlackStatus::NotNeeded) {
             gl->fActiveTexture(LOCAL_GL_TEXTURE0 + i);
-            gl->fBindTexture(LOCAL_GL_TEXTURE_2D, mBlackTexture2D);
+            gl->fBindTexture(LOCAL_GL_TEXTURE_2D,
+                             s == WebGLTextureFakeBlackStatus::IncompleteTexture
+                             ? mBlackOpaqueTexture2D
+                             : mBlackTransparentTexture2D);
         }
         s = mBoundCubeMapTextures[i]
             ? mBoundCubeMapTextures[i]->ResolvedFakeBlackStatus()
             : WebGLTextureFakeBlackStatus::NotNeeded;
+        MOZ_ASSERT(s != WebGLTextureFakeBlackStatus::Unknown);
         if (s != WebGLTextureFakeBlackStatus::NotNeeded) {
             gl->fActiveTexture(LOCAL_GL_TEXTURE0 + i);
-            gl->fBindTexture(LOCAL_GL_TEXTURE_CUBE_MAP, mBlackTextureCubeMap);
+            gl->fBindTexture(LOCAL_GL_TEXTURE_CUBE_MAP,
+                             s == WebGLTextureFakeBlackStatus::IncompleteTexture
+                             ? mBlackOpaqueTextureCubeMap
+                             : mBlackTransparentTextureCubeMap);
         }
     }
 }
