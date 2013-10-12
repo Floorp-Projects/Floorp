@@ -145,6 +145,7 @@ class CommandAction(argparse.Action):
         # arguments corresponding to command names. This has the side-effect
         # that argparse renders it nicely.
         r = self._mach_registrar
+        disabled_commands = []
 
         cats = [(k, v[2]) for k, v in r.categories.items()]
         sorted_cats = sorted(cats, key=itemgetter(1), reverse=True)
@@ -169,6 +170,9 @@ class CommandAction(argparse.Action):
                             is_filtered = True
                             break
                     if is_filtered:
+                        description = handler.description
+                        disabled_command = {'command': command, 'description': description}
+                        disabled_commands.append(disabled_command)
                         continue
 
                 if group is None:
@@ -177,6 +181,13 @@ class CommandAction(argparse.Action):
 
                 description = handler.description
                 group.add_argument(command, help=description,
+                    action='store_true')
+
+        if disabled_commands:
+            title, description, _priority = r.categories['disabled']
+            group = parser.add_argument_group(title, description)
+            for c in disabled_commands:
+                group.add_argument(c['command'], help=c['description'],
                     action='store_true')
 
         parser.print_help()

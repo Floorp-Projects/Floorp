@@ -19,6 +19,7 @@ EXPORTS.mozilla.dom += [
     'CallbackObject.h',
     'DOMJSClass.h',
     'DOMJSProxyHandler.h',
+    'DOMString.h',
     'Date.h',
     'Errors.msg',
     'Exceptions.h',

@@ -23,6 +23,13 @@ public:
    * if there is no such box.
    */
   virtual nsIFrame* GetScrollbarBox(bool aVertical) = 0;
+
+  /**
+   * Show or hide scrollbars on 2 fingers touch.
+   * Subclasses should call their ScrollbarActivity's corresponding methods.
+   */
+  virtual void ScrollbarActivityStarted() const = 0;
+  virtual void ScrollbarActivityStopped() const = 0;
 };
 
 #endif

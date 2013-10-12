@@ -200,7 +200,7 @@ class TestMozbuildObject(unittest.TestCase):
 
             context = MockMachContext()
             context.cwd = topobjdir
-            context.topdir = topobjdir
+            context.topdir = topsrcdir
             context.settings = None
             context.log_manager = None
 

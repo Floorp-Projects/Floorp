@@ -465,6 +465,9 @@ protected:
   void PostScrollEvent();
   void FireScrollEvent();
 
+  virtual void ScrollbarActivityStarted() const MOZ_OVERRIDE;
+  virtual void ScrollbarActivityStopped() const MOZ_OVERRIDE;
+
   /**
    * Clear the pointer to this frame for all nsTreeImageListeners that were
    * created by this frame.
