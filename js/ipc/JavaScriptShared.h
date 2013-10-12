@@ -91,7 +91,7 @@ class JavaScriptShared
     bool Wrap(JSContext *cx, JS::HandleObject aObj, InfallibleTArray<CpowEntry> *outCpows);
 
   protected:
-    bool toVariant(JSContext *cx, jsval from, JSVariant *to);
+    bool toVariant(JSContext *cx, JS::HandleValue from, JSVariant *to);
     bool toValue(JSContext *cx, const JSVariant &from, JS::MutableHandleValue to);
     bool fromDescriptor(JSContext *cx, JS::Handle<JSPropertyDescriptor> desc, PPropertyDescriptor *out);
     bool toDescriptor(JSContext *cx, const PPropertyDescriptor &in,

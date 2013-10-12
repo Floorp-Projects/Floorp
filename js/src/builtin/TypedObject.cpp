@@ -319,46 +319,6 @@ const Class js::NumericTypeClasses[ScalarTypeRepresentation::TYPE_MAX] = {
     JS_FOR_EACH_SCALAR_TYPE_REPR(BINARYDATA_NUMERIC_CLASSES)
 };
 
-template <typename Domain, typename Input>
-static bool
-InRange(Input x)
-{
-    return std::numeric_limits<Domain>::min() <= x &&
-           x <= std::numeric_limits<Domain>::max();
-}
-
-template <>
-bool
-InRange<float, int>(int x)
-{
-    return -std::numeric_limits<float>::max() <= x &&
-           x <= std::numeric_limits<float>::max();
-}
-
-template <>
-bool
-InRange<double, int>(int x)
-{
-    return -std::numeric_limits<double>::max() <= x &&
-           x <= std::numeric_limits<double>::max();
-}
-
-template <>
-bool
-InRange<float, double>(double x)
-{
-    return -std::numeric_limits<float>::max() <= x &&
-           x <= std::numeric_limits<float>::max();
-}
-
-template <>
-bool
-InRange<double, double>(double x)
-{
-    return -std::numeric_limits<double>::max() <= x &&
-           x <= std::numeric_limits<double>::max();
-}
-
 #define BINARYDATA_TYPE_TO_CLASS(constant_, type_, name_)                     \
     template <>                                                               \
     const Class *                                                             \
