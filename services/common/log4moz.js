@@ -1,10 +1,9 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
-
 "use strict";
 
-this.EXPORTED_SYMBOLS = ["Log"];
+this.EXPORTED_SYMBOLS = ['Log4Moz'];
 
 const {classes: Cc, interfaces: Ci, results: Cr, utils: Cu} = Components;
 
@@ -21,7 +20,7 @@ XPCOMUtils.defineLazyModuleGetter(this, "OS",
 XPCOMUtils.defineLazyModuleGetter(this, "Task",
                                   "resource://gre/modules/Task.jsm");
 
-this.Log = {
+this.Log4Moz = {
   Level: {
     Fatal:  70,
     Error:  60,
@@ -54,13 +53,13 @@ this.Log = {
   },
 
   get repository() {
-    delete Log.repository;
-    Log.repository = new LoggerRepository();
-    return Log.repository;
+    delete Log4Moz.repository;
+    Log4Moz.repository = new LoggerRepository();
+    return Log4Moz.repository;
   },
   set repository(value) {
-    delete Log.repository;
-    Log.repository = value;
+    delete Log4Moz.repository;
+    Log4Moz.repository = value;
   },
 
   LogMessage: LogMessage,
@@ -80,9 +79,9 @@ this.Log = {
   BoundedFileAppender: BoundedFileAppender,
 
   // Logging helper:
-  // let logger = Log.repository.getLogger("foo");
-  // logger.info(Log.enumerateInterfaces(someObject).join(","));
-  enumerateInterfaces: function Log_enumerateInterfaces(aObject) {
+  // let logger = Log4Moz.repository.getLogger("foo");
+  // logger.info(Log4Moz.enumerateInterfaces(someObject).join(","));
+  enumerateInterfaces: function Log4Moz_enumerateInterfaces(aObject) {
     let interfaces = [];
 
     for (i in Ci) {
@@ -97,9 +96,9 @@ this.Log = {
   },
 
   // Logging helper:
-  // let logger = Log.repository.getLogger("foo");
-  // logger.info(Log.enumerateProperties(someObject).join(","));
-  enumerateProperties: function Log_enumerateProps(aObject,
+  // let logger = Log4Moz.repository.getLogger("foo");
+  // logger.info(Log4Moz.enumerateProperties(someObject).join(","));
+  enumerateProperties: function Log4Moz_enumerateProps(aObject,
                                                        aExcludeComplexTypes) {
     let properties = [];
 
@@ -137,8 +136,8 @@ function LogMessage(loggerName, level, message, params) {
 }
 LogMessage.prototype = {
   get levelDesc() {
-    if (this.level in Log.Level.Desc)
-      return Log.Level.Desc[this.level];
+    if (this.level in Log4Moz.Level.Desc)
+      return Log4Moz.Level.Desc[this.level];
     return "UNKNOWN";
   },
 
@@ -159,7 +158,7 @@ LogMessage.prototype = {
 
 function Logger(name, repository) {
   if (!repository)
-    repository = Log.repository;
+    repository = Log4Moz.repository;
   this._name = name;
   this.children = [];
   this.ownAppenders = [];
@@ -177,8 +176,8 @@ Logger.prototype = {
       return this._level;
     if (this.parent)
       return this.parent.level;
-    dump("Log warning: root logger configuration error: no level defined\n");
-    return Log.Level.All;
+    dump("log4moz warning: root logger configuration error: no level defined\n");
+    return Log4Moz.Level.All;
   },
   set level(level) {
     this._level = level;
@@ -259,8 +258,8 @@ Logger.prototype = {
     }
 
     let level = params._level || this.level;
-    if ((typeof level == "string") && level in Log.Level.Numbers) {
-      level = Log.Level.Numbers[level];
+    if ((typeof level == "string") && level in Log4Moz.Level.Numbers) {
+      level = Log4Moz.Level.Numbers[level];
     }
 
     params.action = action;
@@ -287,25 +286,25 @@ Logger.prototype = {
   },
 
   fatal: function (string, params) {
-    this.log(Log.Level.Fatal, string, params);
+    this.log(Log4Moz.Level.Fatal, string, params);
   },
   error: function (string, params) {
-    this.log(Log.Level.Error, string, params);
+    this.log(Log4Moz.Level.Error, string, params);
   },
   warn: function (string, params) {
-    this.log(Log.Level.Warn, string, params);
+    this.log(Log4Moz.Level.Warn, string, params);
   },
   info: function (string, params) {
-    this.log(Log.Level.Info, string, params);
+    this.log(Log4Moz.Level.Info, string, params);
   },
   config: function (string, params) {
-    this.log(Log.Level.Config, string, params);
+    this.log(Log4Moz.Level.Config, string, params);
   },
   debug: function (string, params) {
-    this.log(Log.Level.Debug, string, params);
+    this.log(Log4Moz.Level.Debug, string, params);
   },
   trace: function (string, params) {
-    this.log(Log.Level.Trace, string, params);
+    this.log(Log4Moz.Level.Trace, string, params);
   }
 };
 
@@ -322,7 +321,7 @@ LoggerRepository.prototype = {
   get rootLogger() {
     if (!this._rootLogger) {
       this._rootLogger = new Logger("root", this);
-      this._rootLogger.level = Log.Level.All;
+      this._rootLogger.level = Log4Moz.Level.All;
     }
     return this._rootLogger;
   },
@@ -437,7 +436,7 @@ function Appender(formatter) {
   this._formatter = formatter? formatter : new BasicFormatter();
 }
 Appender.prototype = {
-  level: Log.Level.All,
+  level: Log4Moz.Level.All,
 
   append: function App_append(message) {
     if (message) {
@@ -481,7 +480,7 @@ ConsoleAppender.prototype = {
   __proto__: Appender.prototype,
 
   doAppend: function CApp_doAppend(message) {
-    if (message.level > Log.Level.Warn) {
+    if (message.level > Log4Moz.Level.Warn) {
       Cu.reportError(message);
       return;
     }
