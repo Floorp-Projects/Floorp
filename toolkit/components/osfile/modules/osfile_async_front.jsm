@@ -99,47 +99,9 @@ if (!("localProfileDir" in OS.Constants.Path)) {
 }
 
 /**
- * A global constant used as a default refs parameter value when cloning.
- */
-const noRefs = [];
-
-/**
  * Return a shallow clone of the enumerable properties of an object.
- *
- * Utility used whenever normalizing options requires making (shallow)
- * changes to an option object. The copy ensures that we do not modify
- * a client-provided object by accident.
- *
- * Note: to reference and not copy specific fields, provide an optional
- * |refs| argument containing their names.
- *
- * @param {JSON} object Options to be cloned.
- * @param {Array} refs An optional array of field names to be passed by
- * reference instead of copying.
  */
-let clone = function clone(object, refs = noRefs) {
-  let result = {};
-  // Make a reference between result[key] and object[key].
-  let refer = function refer(result, key, object) {
-    Object.defineProperty(result, key, {
-        enumerable: true,
-        get: function() {
-            return object[key];
-        },
-        set: function(value) {
-            object[key] = value;
-        }
-    });
-  };
-  for (let k in object) {
-    if (refs.indexOf(k) < 0) {
-      result[k] = object[k];
-    } else {
-      refer(result, k, object);
-    }
-  }
-  return result;
-};
+let clone = SharedAll.clone;
 
 let worker = new PromiseWorker(
   "resource://gre/modules/osfile/osfile_async_worker.js", LOG);
@@ -421,9 +383,8 @@ File.prototype = {
     // If |buffer| is a typed array and there is no |bytes| options, we
     // need to extract the |byteLength| now, as it will be lost by
     // communication
-    if (isTypedArray(buffer) && (!options || !("bytes" in options))) {
-      // Preserve the reference to |outExecutionDuration| option if it is
-      // passed.
+    if (isTypedArray(buffer) && !("bytes" in options)) {
+      // Preserve reference to option |outExecutionDuration|, if it is passed.
       options = clone(options, ["outExecutionDuration"]);
       options.bytes = buffer.byteLength;
     }
@@ -459,9 +420,8 @@ File.prototype = {
     // If |buffer| is a typed array and there is no |bytes| options,
     // we need to extract the |byteLength| now, as it will be lost
     // by communication
-    if (isTypedArray(buffer) && (!options || !("bytes" in options))) {
-      // Preserve the reference to |outExecutionDuration| option if it is
-      // passed.
+    if (isTypedArray(buffer)) {
+      // Preserve reference to option |outExecutionDuration|, if it is passed.
       options = clone(options, ["outExecutionDuration"]);
       options.bytes = buffer.byteLength;
     }
@@ -482,13 +442,14 @@ File.prototype = {
    * @param {number=} bytes If unspecified, read all the remaining bytes from
    * this file. If specified, read |bytes| bytes, or less if the file does not
    * contain that many bytes.
+   * @param {JSON} options
    * @return {promise}
    * @resolves {Uint8Array} An array containing the bytes read.
    */
-  read: function read(nbytes) {
+  read: function read(nbytes, options = {}) {
     let promise = Scheduler.post("File_prototype_read",
       [this._fdmsg,
-       nbytes]);
+       nbytes, options]);
     return promise.then(
       function onSuccess(data) {
         return new Uint8Array(data.buffer, data.byteOffset, data.byteLength);
@@ -693,6 +654,11 @@ File.makeDir = function makeDir(path, options) {
  * @param {number=} bytes Optionally, an upper bound to the number of bytes
  * to read.
  * @param {JSON} options Additional options.
+ * - {boolean} sequential A flag that triggers a population of the page cache
+ * with data from a file so that subsequent reads from that file would not
+ * block on disk I/O. If |true| or unspecified, inform the system that the
+ * contents of the file will be read in order. Otherwise, make no such
+ * assumption. |true| by default.
  *
  * @resolves {Uint8Array} A buffer holding the bytes
  * read from the file.
