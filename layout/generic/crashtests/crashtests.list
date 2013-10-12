@@ -18,7 +18,7 @@ load 307979-1.html
 load 309322-1.html
 load 309322-2.html
 load 309322-3.html
-load 309322-4.html
+skip load 309322-4.html # Bug 859424
 load 310556-1.xhtml
 load 321224.xul
 load 322780-1.xul
