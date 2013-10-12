@@ -10,7 +10,7 @@ let FRAME_SCRIPT = "chrome://marionette/content/marionette-listener.js";
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
-Cu.import("resource://gre/modules/Log.js");
+Cu.import("resource://gre/modules/services-common/Log.js");
 let logger = Log.repository.getLogger("Marionette");
 
 //list of OOP frames that has the frame script loaded
