@@ -1230,7 +1230,7 @@ nsXPCWrappedJSClass::CallMethod(nsXPCWrappedJS* wrapper, uint16_t methodIndex,
                                 xpcObjectHelper helper(newThis);
                                 bool ok =
                                   XPCConvert::NativeInterface2JSObject(
-                                      v.address(), nullptr, helper, nullptr,
+                                      &v, nullptr, helper, nullptr,
                                       nullptr, false, nullptr);
                                 if (!ok) {
                                     goto pre_call_clean_up;
@@ -1317,19 +1317,19 @@ nsXPCWrappedJSClass::CallMethod(nsXPCWrappedJS* wrapper, uint16_t methodIndex,
             }
 
             if (isArray) {
-                if (!XPCConvert::NativeArray2JS(val.address(),
+                if (!XPCConvert::NativeArray2JS(&val,
                                                 (const void**)&pv->val,
                                                 datum_type, &param_iid,
                                                 array_count, nullptr))
                     goto pre_call_clean_up;
             } else if (isSizedString) {
-                if (!XPCConvert::NativeStringWithSize2JS(val.address(),
+                if (!XPCConvert::NativeStringWithSize2JS(&val,
                                                          (const void*)&pv->val,
                                                          datum_type,
                                                          array_count, nullptr))
                     goto pre_call_clean_up;
             } else {
-                if (!XPCConvert::NativeData2JS(val.address(), &pv->val, type,
+                if (!XPCConvert::NativeData2JS(&val, &pv->val, type,
                                                &param_iid, nullptr))
                     goto pre_call_clean_up;
             }
