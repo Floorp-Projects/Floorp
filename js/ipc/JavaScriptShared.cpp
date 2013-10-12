@@ -152,7 +152,7 @@ JavaScriptShared::convertGeckoStringToId(JSContext *cx, const nsString &from, JS
 }
 
 bool
-JavaScriptShared::toVariant(JSContext *cx, jsval from, JSVariant *to)
+JavaScriptShared::toVariant(JSContext *cx, JS::HandleValue from, JSVariant *to)
 {
     switch (JS_TypeOfValue(cx, from)) {
       case JSTYPE_VOID:

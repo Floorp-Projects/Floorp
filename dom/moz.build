@@ -7,11 +7,11 @@
 interfaces = [
     'base',
     'canvas',
+    'contacts',
     'core',
     'html',
     'events',
     'devicestorage',
-    'contacts',
     'settings',
     'stylesheets',
     'sidebar',
