@@ -984,20 +984,24 @@ static bool
 GenerateCallGetter(JSContext *cx, IonScript *ion, MacroAssembler &masm,
                    IonCache::StubAttacher &attacher, JSObject *obj, PropertyName *name,
                    JSObject *holder, HandleShape shape, RegisterSet &liveRegs, Register object,
-                   TypedOrValueRegister output, void *returnAddr)
+                   TypedOrValueRegister output, void *returnAddr, Label *failures = NULL)
 {
     JS_ASSERT(obj->isNative());
     JS_ASSERT(output.hasValue());
-    // Initial shape check.
+
+    // Use the passed in label if there was one. Otherwise, we'll have to make our own.
     Label stubFailure;
+    failures = failures ? failures : &stubFailure;
+
+    // Initial shape check.
     masm.branchPtr(Assembler::NotEqual, Address(object, JSObject::offsetOfShape()),
-                   ImmGCPtr(obj->lastProperty()), &stubFailure);
+                   ImmGCPtr(obj->lastProperty()), failures);
 
     Register scratchReg = output.valueReg().scratchReg();
 
     // Note: this may clobber the object register if it's used as scratch.
     if (obj != holder)
-        GeneratePrototypeGuards(cx, ion, masm, obj, holder, object, scratchReg, &stubFailure);
+        GeneratePrototypeGuards(cx, ion, masm, obj, holder, object, scratchReg, failures);
 
     // Guard on the holder's shape.
     Register holderReg = scratchReg;
@@ -1005,7 +1009,7 @@ GenerateCallGetter(JSContext *cx, IonScript *ion, MacroAssembler &masm,
     masm.branchPtr(Assembler::NotEqual,
                    Address(holderReg, JSObject::offsetOfShape()),
                    ImmGCPtr(holder->lastProperty()),
-                   &stubFailure);
+                   failures);
 
     // Now we're good to go to invoke the native call.
     if (!EmitGetterCall(cx, masm, attacher, obj, holder, shape, liveRegs, object,
@@ -1016,7 +1020,7 @@ GenerateCallGetter(JSContext *cx, IonScript *ion, MacroAssembler &masm,
     attacher.jumpRejoin(masm);
 
     // Jump to next stub.
-    masm.bind(&stubFailure);
+    masm.bind(failures);
     attacher.jumpNextStub(masm);
 
     return true;
@@ -2965,7 +2969,8 @@ GetElementIC::canAttachGetProp(JSObject *obj, const Value &idval, jsid id)
 
 bool
 GetElementIC::attachGetProp(JSContext *cx, IonScript *ion, HandleObject obj,
-                            const Value &idval, HandlePropertyName name)
+                            const Value &idval, HandlePropertyName name,
+                            void *returnAddr)
 {
     JS_ASSERT(index().reg().hasValue());
 
@@ -2973,9 +2978,14 @@ GetElementIC::attachGetProp(JSContext *cx, IonScript *ion, HandleObject obj,
     RootedShape shape(cx);
 
     GetPropertyIC::NativeGetPropCacheability canCache =
-        CanAttachNativeGetProp(cx, *this, obj, name, &holder, &shape);
+        CanAttachNativeGetProp(cx, *this, obj, name, &holder, &shape,
+                               /* skipArrayLen =*/true);
 
-    if (canCache != GetPropertyIC::CanAttachReadSlot) {
+    bool cacheable = canCache == GetPropertyIC::CanAttachReadSlot ||
+                     (canCache == GetPropertyIC::CanAttachCallGetter &&
+                      output().hasValue());
+
+    if (!cacheable) {
         IonSpew(IonSpew_InlineCaches, "GETELEM uncacheable property");
         return true;
     }
@@ -2990,8 +3000,19 @@ GetElementIC::attachGetProp(JSContext *cx, IonScript *ion, HandleObject obj,
     masm.branchTestValue(Assembler::NotEqual, val, idval, &failures);
 
     RepatchStubAppender attacher(*this);
-    GenerateReadSlot(cx, ion, masm, attacher, obj, holder, shape, object(), output(),
-                     &failures);
+    if (canCache == GetPropertyIC::CanAttachReadSlot) {
+        GenerateReadSlot(cx, ion, masm, attacher, obj, holder, shape, object(), output(),
+                         &failures);
+    } else {
+        JS_ASSERT(canCache == GetPropertyIC::CanAttachCallGetter);
+        // Set the frame for bailout safety of the OOL call.
+        masm.setFramePushed(ion->frameSize());
+        if (!GenerateCallGetter(cx, ion, masm, attacher, obj, name, holder, shape, liveRegs_,
+                                object(), output(), returnAddr, &failures))
+        {
+            return false;
+        }
+    }
 
     return linkAndAttachStub(cx, masm, attacher, ion, "property");
 }
@@ -3316,7 +3337,8 @@ bool
 GetElementIC::update(JSContext *cx, size_t cacheIndex, HandleObject obj,
                      HandleValue idval, MutableHandleValue res)
 {
-    IonScript *ion = GetTopIonJSScript(cx)->ionScript();
+    void *returnAddr;
+    IonScript *ion = GetTopIonJSScript(cx, &returnAddr)->ionScript();
     GetElementIC &cache = ion->getCache(cacheIndex).toGetElement();
     RootedScript script(cx);
     jsbytecode *pc;
@@ -3353,7 +3375,7 @@ GetElementIC::update(JSContext *cx, size_t cacheIndex, HandleObject obj,
         }
         if (!attachedStub && cache.monitoredResult() && canAttachGetProp(obj, idval, id)) {
             RootedPropertyName name(cx, JSID_TO_ATOM(id)->asPropertyName());
-            if (!cache.attachGetProp(cx, ion, obj, idval, name))
+            if (!cache.attachGetProp(cx, ion, obj, idval, name, returnAddr))
                 return false;
             attachedStub = true;
         }
