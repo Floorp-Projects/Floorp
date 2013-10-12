@@ -147,11 +147,11 @@ ArchiveRequest::ReaderReady(nsTArray<nsCOMPtr<nsIDOMFile> >& aFileList,
       break;
 
     case GetFile:
-      rv = GetFileResult(cx, result.address(), aFileList);
+      rv = GetFileResult(cx, &result, aFileList);
       break;
 
       case GetFiles:
-        rv = GetFilesResult(cx, result.address(), aFileList);
+        rv = GetFilesResult(cx, &result, aFileList);
         break;
   }
 
@@ -208,7 +208,7 @@ ArchiveRequest::GetFilenamesResult(JSContext* aCx,
 
 nsresult
 ArchiveRequest::GetFileResult(JSContext* aCx,
-                              JS::Value* aValue,
+                              JS::MutableHandle<JS::Value> aValue,
                               nsTArray<nsCOMPtr<nsIDOMFile> >& aFileList)
 {
   for (uint32_t i = 0; i < aFileList.Length(); ++i) {
@@ -230,7 +230,7 @@ ArchiveRequest::GetFileResult(JSContext* aCx,
 
 nsresult
 ArchiveRequest::GetFilesResult(JSContext* aCx,
-                               JS::Value* aValue,
+                               JS::MutableHandle<JS::Value> aValue,
                                nsTArray<nsCOMPtr<nsIDOMFile> >& aFileList)
 {
   JS::Rooted<JSObject*> array(aCx, JS_NewArrayObject(aCx, aFileList.Length(), nullptr));
@@ -245,13 +245,13 @@ ArchiveRequest::GetFilesResult(JSContext* aCx,
     JS::Rooted<JSObject*> global(aCx, JS::CurrentGlobalOrNull(aCx));
     nsresult rv = nsContentUtils::WrapNative(aCx, global, file,
                                              &NS_GET_IID(nsIDOMFile),
-                                             value.address());
+                                             &value);
     if (NS_FAILED(rv) || !JS_SetElement(aCx, array, i, &value)) {
       return NS_ERROR_FAILURE;
     }
   }
 
-  aValue->setObject(*array);
+  aValue.setObject(*array);
   return NS_OK;
 }
 

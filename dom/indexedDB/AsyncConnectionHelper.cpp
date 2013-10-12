@@ -125,7 +125,7 @@ HelperBase::WrapNative(JSContext* aCx,
   NS_ASSERTION(global, "This should never be null!");
 
   nsresult rv =
-    nsContentUtils::WrapNative(aCx, global, aNative, aResult.address());
+    nsContentUtils::WrapNative(aCx, global, aNative, aResult);
   NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
 
   return NS_OK;
