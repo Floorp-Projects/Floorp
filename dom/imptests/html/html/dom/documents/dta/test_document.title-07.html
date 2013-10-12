@@ -12,7 +12,7 @@ function checkDoc(title, expectedtitle, normalizedtitle) {
 }
 checkDoc("", "", "")
 checkDoc(null, "null", "null")
-checkDoc(undefined, "undefined", "undefined")
+checkDoc(undefined, "", "")
 checkDoc("foo  bar baz", "foo  bar baz", "foo bar baz")
 checkDoc("foo\t\tbar baz", "foo\t\tbar baz", "foo bar baz")
 checkDoc("foo\n\nbar baz", "foo\n\nbar baz", "foo bar baz")
