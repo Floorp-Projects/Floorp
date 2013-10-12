@@ -23,8 +23,6 @@ codereview.chromium.org: did not receive HSTS header
 crowdcurity.com: did not receive HSTS header
 crypto.is: did not receive HSTS header
 csawctf.poly.edu: did not receive HSTS header
-cupcake.io: max-age too low: 3153600
-cupcake.is: max-age too low: 3153600
 cybozu.com: did not receive HSTS header
 dl.google.com: did not receive HSTS header
 docs.google.com: did not receive HSTS header
@@ -57,10 +55,12 @@ logentries.com: did not receive HSTS header
 lumi.do: [Exception... "Component returned failure code: 0x80004005 (NS_ERROR_FAILURE) [nsISiteSecurityService.processHeader]"  nsresult: "0x80004005 (NS_ERROR_FAILURE)"  location: "JS frame :: /builds/slave/m-cen-l64-hsts-000000000000000/getHSTSPreloadList.js :: processStsHeader :: line 124"  data: no]
 mail.google.com: did not receive HSTS header
 market.android.com: did not receive HSTS header
+medium.com: max-age too low: 2592000
 my.alfresco.com: did not receive HSTS header
 mydigipass.com: did not receive HSTS header
 neonisi.com: could not connect to host
 openshift.redhat.com: did not receive HSTS header
+oraprodmv.corp.google.com: could not connect to host
 oraprodsso.corp.google.com: could not connect to host
 ottospora.nl: could not connect to host
 packagist.org: max-age too low: 2592000
@@ -88,7 +88,6 @@ sunshinepress.org: could not connect to host
 surfeasy.com: did not receive HSTS header
 talk.google.com: did not receive HSTS header
 talkgadget.google.com: did not receive HSTS header
-tent.io: max-age too low: 3153600
 torproject.org: did not receive HSTS header
 translate.google.com: did not receive HSTS header
 translate.googleapis.com: did not receive HSTS header
