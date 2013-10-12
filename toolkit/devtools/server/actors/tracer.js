@@ -276,18 +276,28 @@ TraceActor.prototype = {
    * Called by the engine when a frame is exited. Sends an unsolicited packet to
    * the client carrying requested trace information.
    *
-   * @param aValue object
+   * @param aCompletion object
    *        The debugger completion value for the frame.
    */
-  onExitFrame: function(aValue) {
+  onExitFrame: function(aCompletion) {
     let packet = {
       from: this.actorID,
       type: "exitedFrame",
-      sequence: this._sequence++
+      sequence: this._sequence++,
     };
 
+    if (!aCompletion) {
+      packet.why = "terminated";
+    } else if (aCompletion.hasOwnProperty("return")) {
+      packet.why = "return";
+    } else if (aCompletion.hasOwnProperty("yield")) {
+      packet.why = "yield";
+    } else {
+      packet.why = "throw";
+    }
+
     this._handleEvent(TraceTypes.Events.exitFrame, packet, {
-      value: aValue,
+      value: aCompletion,
       startTime: this._startTime
     });
 
