@@ -593,6 +593,7 @@ js::ExecuteKernel(JSContext *cx, HandleScript script, JSObject &scopeChainArg, c
 #ifdef DEBUG
     if (thisv.isObject()) {
         RootedObject thisObj(cx, &thisv.toObject());
+        AutoSuppressGC nogc(cx);
         JS_ASSERT(GetOuterObject(cx, thisObj) == thisObj);
     }
 #endif
