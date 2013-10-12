@@ -467,6 +467,13 @@ ThreadActor.prototype = {
     return this._sources;
   },
 
+  get youngestFrame() {
+    if (!this.state == "paused") {
+      return null;
+    }
+    return this.dbg.getNewestFrame();
+  },
+
   _prettyPrintWorker: null,
   get prettyPrintWorker() {
     if (!this._prettyPrintWorker) {
@@ -1179,10 +1186,6 @@ ThreadActor.prototype = {
                message: "cannot access the environment of this frame." };
     }
 
-    // We'll clobber the youngest frame if the eval causes a pause, so
-    // save our frame now to be restored after eval returns.
-    // XXX: or we could just start using dbg.getNewestFrame() now that it
-    // works as expected.
     let youngest = this.youngestFrame;
 
     // Put ourselves back in the running state and inform the client.
@@ -1738,10 +1741,6 @@ ThreadActor.prototype = {
 
     this._state = "paused";
 
-    // Save the pause frame (if any) as the youngest frame for
-    // stack viewing.
-    this.youngestFrame = aFrame;
-
     // Create the actor pool that will hold the pause actor and its
     // children.
     dbg_assert(!this._pausePool, "No pause pool should exist yet");
@@ -1783,7 +1782,6 @@ ThreadActor.prototype = {
 
     this._pausePool = null;
     this._pauseActor = null;
-    this.youngestFrame = null;
 
     return { from: this.actorID, type: "resumed" };
   },
@@ -4024,7 +4022,7 @@ function getOffsetColumn(aOffset, aScript) {
  *          Returns an object of the form { url, line, column }
  */
 function getFrameLocation(aFrame) {
-  if (!aFrame.script) {
+  if (!aFrame || !aFrame.script) {
     return { url: null, line: null, column: null };
   }
   return {
