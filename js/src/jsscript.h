@@ -1183,7 +1183,7 @@ class LazyScript : public gc::BarrieredCell<LazyScript>
     uint32_t version_ : 8;
 
     uint32_t numFreeVariables_ : 24;
-    uint32_t numInnerFunctions_ : 24;
+    uint32_t numInnerFunctions_ : 23;
 
     uint32_t generatorKindBits_:2;
 
@@ -1194,6 +1194,7 @@ class LazyScript : public gc::BarrieredCell<LazyScript>
     uint32_t directlyInsideEval_:1;
     uint32_t usesArgumentsAndApply_:1;
     uint32_t hasBeenCloned_:1;
+    uint32_t treatAsRunOnce_:1;
 
     // Source location for the script.
     uint32_t begin_;
@@ -1308,6 +1309,13 @@ class LazyScript : public gc::BarrieredCell<LazyScript>
     }
     void setHasBeenCloned() {
         hasBeenCloned_ = true;
+    }
+
+    bool treatAsRunOnce() const {
+        return treatAsRunOnce_;
+    }
+    void setTreatAsRunOnce() {
+        treatAsRunOnce_ = true;
     }
 
     ScriptSource *source() const {

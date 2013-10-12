@@ -7,9 +7,8 @@ from __future__ import unicode_literals
 
 class CommandContext(object):
     """Holds run-time state so it can easily be passed to command providers."""
-    def __init__(self, topdir=None, cwd=None, settings=None, log_manager=None,
+    def __init__(self, cwd=None, settings=None, log_manager=None,
         commands=None):
-        self.topdir = topdir
         self.cwd = cwd
         self.settings = settings
         self.log_manager = log_manager

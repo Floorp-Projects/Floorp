@@ -122,25 +122,6 @@ StoreBuffer::MonoTypeBuffer<T>::mark(JSTracer *trc)
     }
 }
 
-namespace js {
-namespace gc {
-class AccumulateEdgesTracer : public JSTracer
-{
-    EdgeSet *edges;
-
-    static void tracer(JSTracer *jstrc, void **thingp, JSGCTraceKind kind) {
-        AccumulateEdgesTracer *trc = static_cast<AccumulateEdgesTracer *>(jstrc);
-        trc->edges->put(thingp);
-    }
-
-  public:
-    AccumulateEdgesTracer(JSRuntime *rt, EdgeSet *edgesArg) : edges(edgesArg) {
-        JS_TracerInit(this, rt, AccumulateEdgesTracer::tracer);
-    }
-};
-} /* namespace gc */
-} /* namespace js */
-
 /*** RelocatableMonoTypeBuffer ***/
 
 template <typename T>

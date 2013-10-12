@@ -20,12 +20,6 @@ include $(topsrcdir)/config/makefiles/makeutils.mk
 # Separate items of contention
 tgt-gendir = .deps/generated_$(AB_CD)
 
-jar-maker = \
-  $(firstword \
-    $(wildcard $(MOZILLA_DIR)/config/JarMaker.py) \
-    $(topsrcdir)/config/JarMaker.py \
-  )
-
 GENERATED_DIRS += .deps
 
 ifdef LOCALE_MERGEDIR
@@ -130,18 +124,17 @@ search-preqs =\
   $(call mkdir_deps,$(FINAL_TARGET)/chrome) \
   $(search-jar) \
   $(search-dir-deps) \
-  $(jar-maker) \
   $(if $(IS_LANGUAGE_REPACK),FORCE) \
   $(GLOBAL_DEPS) \
   $(NULL)
 
 .PHONY: searchplugins
 searchplugins: $(search-preqs)
-	$(PYTHON) $(jar-maker) \
+	$(call py_action,jar_maker,\
           $(QUIET) -j $(FINAL_TARGET)/chrome \
           -s $(topsrcdir)/$(relativesrcdir)/en-US/searchplugins \
           -s $(LOCALE_SRCDIR)/searchplugins \
-          $(MAKE_JARS_FLAGS) $(search-jar)
+          $(MAKE_JARS_FLAGS) $(search-jar))
 	$(TOUCH) $@
 
 include $(topsrcdir)/config/rules.mk
