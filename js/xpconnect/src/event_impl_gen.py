@@ -315,7 +315,7 @@ def writeAttributeGetter(fd, classname, a):
         fd.write("{\n")
         fd.write("  JS::Rooted<JS::Value> retVal(aCx, JS::NullValue());\n");
         fd.write("  nsresult rv = NS_ERROR_UNEXPECTED;\n")
-        fd.write("  if (m%s && !XPCVariant::VariantDataToJS(m%s, &rv, retVal.address())) {\n" % (firstCap(a.name), firstCap(a.name)))
+        fd.write("  if (m%s && !XPCVariant::VariantDataToJS(m%s, &rv, &retVal)) {\n" % (firstCap(a.name), firstCap(a.name)))
         fd.write("    aRv.Throw(NS_ERROR_FAILURE);\n")
         fd.write("  }\n")
         fd.write("  return retVal;\n");
