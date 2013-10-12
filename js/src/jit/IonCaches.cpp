@@ -836,6 +836,7 @@ EmitGetterCall(JSContext *cx, MacroAssembler &masm,
                Register scratchReg, TypedOrValueRegister output,
                void *returnAddr)
 {
+    JS_ASSERT(output.hasValue());
     // saveLive()
     masm.PushRegsInMask(liveRegs);
 
@@ -982,12 +983,12 @@ GenerateCallGetter(JSContext *cx, IonScript *ion, MacroAssembler &masm,
                    TypedOrValueRegister output, void *returnAddr)
 {
     JS_ASSERT(obj->isNative());
+    JS_ASSERT(output.hasValue());
     // Initial shape check.
     Label stubFailure;
     masm.branchPtr(Assembler::NotEqual, Address(object, JSObject::offsetOfShape()),
                    ImmGCPtr(obj->lastProperty()), &stubFailure);
 
-    JS_ASSERT(output.hasValue());
     Register scratchReg = output.valueReg().scratchReg();
 
     // Note: this may clobber the object register if it's used as scratch.
@@ -1116,7 +1117,8 @@ template <class GetPropCache>
 static GetPropertyIC::NativeGetPropCacheability
 CanAttachNativeGetProp(typename GetPropCache::Context cx, const GetPropCache &cache,
                        HandleObject obj, HandlePropertyName name,
-                       MutableHandleObject holder, MutableHandleShape shape)
+                       MutableHandleObject holder, MutableHandleShape shape,
+                       bool skipArrayLen = false)
 {
     if (!obj || !obj->isNative())
         return GetPropertyIC::CanAttachNone;
@@ -1142,7 +1144,10 @@ CanAttachNativeGetProp(typename GetPropCache::Context cx, const GetPropCache &ca
         return GetPropertyIC::CanAttachReadSlot;
     }
 
-    if (cx->names().length == name && cache.allowArrayLength(cx, obj) &&
+    // |length| is a non-configurable getter property on ArrayObjects. Any time this
+    // check would have passed, we can install a getter stub instead. Allow people to
+    // make that decision themselves with skipArrayLen
+    if (!skipArrayLen && cx->names().length == name && cache.allowArrayLength(cx, obj) &&
         IsCacheableArrayLength(cx, obj, name, cache.output()))
     {
         // The array length property is non-configurable, which means both that
@@ -1152,6 +1157,9 @@ CanAttachNativeGetProp(typename GetPropCache::Context cx, const GetPropCache &ca
         return GetPropertyIC::CanAttachArrayLength;
     }
 
+    // IonBuilder guarantees that it's impossible to generate a GetPropertyIC with
+    // allowGetters() true and cache.output().hasValue() false. If this isn't true,
+    // we will quickly assert during stub generation.
     if (cache.allowGetters() &&
         (IsCacheableGetPropCallNative(obj, holder, shape) ||
          IsCacheableGetPropCallPropertyOp(obj, holder, shape)))
@@ -1414,16 +1422,21 @@ GetPropertyIC::tryAttachDOMProxyUnshadowed(JSContext *cx, IonScript *ion, Handle
     JS_ASSERT(canAttachStub());
     JS_ASSERT(!*emitted);
     JS_ASSERT(IsCacheableDOMProxy(obj));
-    JS_ASSERT(output().hasValue());
 
     RootedObject checkObj(cx, obj->getTaggedProto().toObjectOrNull());
     RootedObject holder(cx);
     RootedShape shape(cx);
 
     NativeGetPropCacheability canCache =
-        CanAttachNativeGetProp(cx, *this, checkObj, name, &holder, &shape);
+        CanAttachNativeGetProp(cx, *this, checkObj, name, &holder, &shape,
+                               /* skipArrayLen = */true);
+    JS_ASSERT(canCache != CanAttachArrayLength);
 
     if (canCache == CanAttachNone)
+        return true;
+
+    // Make sure we observe our invariants if we're gonna deoptimize.
+    if (!holder && (idempotent() || !output().hasValue()))
         return true;
 
     *emitted = true;
@@ -1475,7 +1488,8 @@ GetPropertyIC::tryAttachDOMProxyUnshadowed(JSContext *cx, IonScript *ion, Handle
             // EmitGetterCall() expects |obj| to be the object the property is
             // on to do some checks. Since we actually looked at checkObj, and
             // no extra guards will be generated, we can just pass that instead.
-            JS_ASSERT_IF(canCache != CanAttachCallGetter, canCache == CanAttachArrayLength);
+            JS_ASSERT(canCache == CanAttachCallGetter);
+            JS_ASSERT(!idempotent());
             if (!EmitGetterCall(cx, masm, attacher, checkObj, holder, shape, liveRegs_,
                                 object(), scratchReg, output(), returnAddr))
             {
@@ -1485,6 +1499,7 @@ GetPropertyIC::tryAttachDOMProxyUnshadowed(JSContext *cx, IonScript *ion, Handle
     } else {
         // Property was not found on the prototype chain. Deoptimize down to
         // proxy get call
+        JS_ASSERT(!idempotent());
         if (!EmitCallProxyGet(cx, masm, attacher, name, liveRegs_, object(), output(),
                               returnAddr))
         {
@@ -1508,9 +1523,6 @@ GetPropertyIC::tryAttachProxy(JSContext *cx, IonScript *ion, HandleObject obj,
     JS_ASSERT(!*emitted);
 
     if (!obj->is<ProxyObject>())
-        return true;
-
-    if (!output().hasValue())
         return true;
 
     // Skim off DOM proxies.
@@ -1554,6 +1566,9 @@ GetPropertyIC::tryAttachGenericProxy(JSContext *cx, IonScript *ion, HandleObject
     JS_ASSERT(obj->is<ProxyObject>());
 
     if (hasGenericProxyStub())
+        return true;
+
+    if (idempotent() || !output().hasValue())
         return true;
 
     *emitted = true;
