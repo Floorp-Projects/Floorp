@@ -34,6 +34,7 @@
 #endif
 
 #include "nsBrowserStatusFilter.h"
+#include "mozilla/FinalizationWitnessService.h"
 
 /////////////////////////////////////////////////////////////////////////////
 
@@ -85,6 +86,7 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsBrowserStatusFilter)
 #if defined(USE_MOZ_UPDATER)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsUpdateProcessor)
 #endif
+NS_GENERIC_FACTORY_CONSTRUCTOR(FinalizationWitnessService)
 
 NS_DEFINE_NAMED_CID(NS_TOOLKIT_APPSTARTUP_CID);
 NS_DEFINE_NAMED_CID(NS_USERINFO_CID);
@@ -109,6 +111,7 @@ NS_DEFINE_NAMED_CID(NS_CHARSETMENU_CID);
 #if defined(USE_MOZ_UPDATER)
 NS_DEFINE_NAMED_CID(NS_UPDATEPROCESSOR_CID);
 #endif
+NS_DEFINE_NAMED_CID(FINALIZATIONWITNESSSERVICE_CID);
 
 static const mozilla::Module::CIDEntry kToolkitCIDs[] = {
   { &kNS_TOOLKIT_APPSTARTUP_CID, false, nullptr, nsAppStartupConstructor },
@@ -134,6 +137,7 @@ static const mozilla::Module::CIDEntry kToolkitCIDs[] = {
 #if defined(USE_MOZ_UPDATER)
   { &kNS_UPDATEPROCESSOR_CID, false, nullptr, nsUpdateProcessorConstructor },
 #endif
+  { &kFINALIZATIONWITNESSSERVICE_CID, false, NULL, FinalizationWitnessServiceConstructor },
   { nullptr }
 };
 
@@ -162,6 +166,7 @@ static const mozilla::Module::ContractIDEntry kToolkitContracts[] = {
 #if defined(USE_MOZ_UPDATER)
   { NS_UPDATEPROCESSOR_CONTRACTID, &kNS_UPDATEPROCESSOR_CID },
 #endif
+  { FINALIZATIONWITNESSSERVICE_CONTRACTID, &kFINALIZATIONWITNESSSERVICE_CID },
   { nullptr }
 };
 
