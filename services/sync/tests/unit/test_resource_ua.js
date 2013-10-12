@@ -24,7 +24,7 @@ function uaHandler(f) {
 }
 
 function run_test() {
-  Log.repository.rootLogger.addAppender(new Log.DumpAppender());
+  Log4Moz.repository.rootLogger.addAppender(new Log4Moz.DumpAppender());
   meta_global = new ServerWBO('global');
   server = httpd_setup({
     "/1.1/johndoe/info/collections": uaHandler(collectionsHelper.handler),

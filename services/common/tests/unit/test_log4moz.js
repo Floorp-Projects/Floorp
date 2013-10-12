@@ -1,12 +1,10 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
-const {utils: Cu} = Components;
-
 Cu.import("resource://gre/modules/NetUtil.jsm");
 Cu.import("resource://gre/modules/osfile.jsm");
 
-Cu.import("resource://gre/modules/Log.jsm");
+Cu.import("resource://services-common/log4moz.js");
 
 let testFormatter = {
   format: function format(message) {
@@ -17,11 +15,11 @@ let testFormatter = {
 };
 
 function MockAppender(formatter) {
-  Log.Appender.call(this, formatter);
+  Log4Moz.Appender.call(this, formatter);
   this.messages = [];
 }
 MockAppender.prototype = {
-  __proto__: Log.Appender.prototype,
+  __proto__: Log4Moz.Appender.prototype,
 
   doAppend: function DApp_doAppend(message) {
     this.messages.push(message);
@@ -33,11 +31,11 @@ function run_test() {
 }
 
 add_test(function test_Logger() {
-  let log = Log.repository.getLogger("test.logger");
-  let appender = new MockAppender(new Log.BasicFormatter());
+  let log = Log4Moz.repository.getLogger("test.logger");
+  let appender = new MockAppender(new Log4Moz.BasicFormatter());
 
-  log.level = Log.Level.Debug;
-  appender.level = Log.Level.Info;
+  log.level = Log4Moz.Level.Debug;
+  appender.level = Log4Moz.Level.Info;
   log.addAppender(appender);
   log.info("info test");
   log.debug("this should be logged but not appended.");
@@ -52,19 +50,19 @@ add_test(function test_Logger() {
 
 add_test(function test_Logger_parent() {
   // Check whether parenting is correct
-  let grandparentLog = Log.repository.getLogger("grandparent");
-  let childLog = Log.repository.getLogger("grandparent.parent.child");
+  let grandparentLog = Log4Moz.repository.getLogger("grandparent");
+  let childLog = Log4Moz.repository.getLogger("grandparent.parent.child");
   do_check_eq(childLog.parent.name, "grandparent");
 
-  let parentLog = Log.repository.getLogger("grandparent.parent");
+  let parentLog = Log4Moz.repository.getLogger("grandparent.parent");
   do_check_eq(childLog.parent.name, "grandparent.parent");
 
   // Check that appends are exactly in scope
-  let gpAppender = new MockAppender(new Log.BasicFormatter());
-  gpAppender.level = Log.Level.Info;
+  let gpAppender = new MockAppender(new Log4Moz.BasicFormatter());
+  gpAppender.level = Log4Moz.Level.Info;
   grandparentLog.addAppender(gpAppender);
   childLog.info("child info test");
-  Log.repository.rootLogger.info("this shouldn't show up in gpAppender");
+  Log4Moz.repository.rootLogger.info("this shouldn't show up in gpAppender");
 
   do_check_eq(gpAppender.messages.length, 1);
   do_check_true(gpAppender.messages[0].indexOf("child info test") > 0);
@@ -98,17 +96,17 @@ function checkObjects(expected, actual) {
 }
 
 add_test(function test_StructuredLogCommands() {
-  let appender = new MockAppender(new Log.StructuredFormatter());
-  let logger = Log.repository.getLogger("test.StructuredOutput");
+  let appender = new MockAppender(new Log4Moz.StructuredFormatter());
+  let logger = Log4Moz.repository.getLogger("test.StructuredOutput");
   logger.addAppender(appender);
-  logger.level = Log.Level.Info;
+  logger.level = Log4Moz.Level.Info;
 
   logger.logStructured("test_message", {_message: "message string one"});
   logger.logStructured("test_message", {_message: "message string two",
                                         _level: "ERROR",
-                                        source_file: "test_Log.js"});
+                                        source_file: "test_log4moz.js"});
   logger.logStructured("test_message");
-  logger.logStructured("test_message", {source_file: "test_Log.js",
+  logger.logStructured("test_message", {source_file: "test_log4moz.js",
                                         message_position: 4});
 
   let messageOne = {"_time": /\d+/,
@@ -122,7 +120,7 @@ add_test(function test_StructuredLogCommands() {
                     "_level": "ERROR",
                     "_message": "message string two",
                     "action": "test_message",
-                    "source_file": "test_Log.js"};
+                    "source_file": "test_log4moz.js"};
 
   let messageThree = {"_time": /\d+/,
                       "_namespace": "test.StructuredOutput",
@@ -133,7 +131,7 @@ add_test(function test_StructuredLogCommands() {
                      "_namespace": "test.StructuredOutput",
                      "_level": "INFO",
                      "action": "test_message",
-                     "source_file": "test_Log.js",
+                     "source_file": "test_log4moz.js",
                      "message_position": 4};
 
   checkObjects(messageOne, JSON.parse(appender.messages[0]));
@@ -163,15 +161,15 @@ add_test(function test_StructuredLogCommands() {
 
   // Logging with unstructured interface should produce the same messages
   // as the structured interface for these cases.
-  let appender = new MockAppender(new Log.StructuredFormatter());
-  let logger = Log.repository.getLogger("test.StructuredOutput1");
+  let appender = new MockAppender(new Log4Moz.StructuredFormatter());
+  let logger = Log4Moz.repository.getLogger("test.StructuredOutput1");
   messageOne._namespace = "test.StructuredOutput1";
   messageTwo._namespace = "test.StructuredOutput1";
   logger.addAppender(appender);
-  logger.level = Log.Level.All;
+  logger.level = Log4Moz.Level.All;
   logger.info("message string one", {action: "test_message"});
   logger.error("message string two", {action: "test_message",
-                                      source_file: "test_Log.js"});
+                                      source_file: "test_log4moz.js"});
 
   checkObjects(messageOne, JSON.parse(appender.messages[0]));
   checkObjects(messageTwo, JSON.parse(appender.messages[1]));
@@ -180,12 +178,12 @@ add_test(function test_StructuredLogCommands() {
 });
 
 add_test(function test_StorageStreamAppender() {
-  let appender = new Log.StorageStreamAppender(testFormatter);
+  let appender = new Log4Moz.StorageStreamAppender(testFormatter);
   do_check_eq(appender.getInputStream(), null);
 
   // Log to the storage stream and verify the log was written and can be
   // read back.
-  let logger = Log.repository.getLogger("test.StorageStreamAppender");
+  let logger = Log4Moz.repository.getLogger("test.StorageStreamAppender");
   logger.addAppender(appender);
   logger.info("OHAI");
   let inputStream = appender.getInputStream();
@@ -220,11 +218,11 @@ function fileContents(path) {
 
 add_task(function test_FileAppender() {
   // This directory does not exist yet
-  let dir = OS.Path.join(do_get_profile().path, "test_Log");
+  let dir = OS.Path.join(do_get_profile().path, "test_log4moz");
   do_check_false(yield OS.File.exists(dir));
   let path = OS.Path.join(dir, "test_FileAppender");
-  let appender = new Log.FileAppender(path, testFormatter);
-  let logger = Log.repository.getLogger("test.FileAppender");
+  let appender = new Log4Moz.FileAppender(path, testFormatter);
+  let logger = Log4Moz.repository.getLogger("test.FileAppender");
   logger.addAppender(appender);
 
   // Logging to a file that can't be created won't do harm.
@@ -273,11 +271,11 @@ add_task(function test_FileAppender() {
 });
 
 add_task(function test_BoundedFileAppender() {
-  let dir = OS.Path.join(do_get_profile().path, "test_Log");
+  let dir = OS.Path.join(do_get_profile().path, "test_log4moz");
   let path = OS.Path.join(dir, "test_BoundedFileAppender");
   // This appender will hold about two lines at a time.
-  let appender = new Log.BoundedFileAppender(path, testFormatter, 40);
-  let logger = Log.repository.getLogger("test.BoundedFileAppender");
+  let appender = new Log4Moz.BoundedFileAppender(path, testFormatter, 40);
+  let logger = Log4Moz.repository.getLogger("test.BoundedFileAppender");
   logger.addAppender(appender);
 
   logger.info("ONE");
