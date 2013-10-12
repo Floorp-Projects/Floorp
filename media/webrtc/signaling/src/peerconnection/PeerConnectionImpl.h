@@ -61,6 +61,7 @@ namespace dom {
 class RTCConfiguration;
 class MediaConstraintsInternal;
 class MediaStreamTrack;
+class RTCStatsReportInternal;
 
 #ifdef USE_FAKE_PCOBSERVER
 typedef test::AFakePCObserver PeerConnectionObserver;
@@ -475,6 +476,17 @@ private:
 
   // ICE callbacks run on the right thread.
   nsresult IceStateChange_m(mozilla::dom::PCImplIceState aState);
+
+#ifdef MOZILLA_INTERNAL_API
+  // Fills in an RTCStatsReportInternal. Must be run on STS.
+  void GetStats_s(uint32_t trackId,
+                  DOMHighResTimeStamp now);
+
+  // Sends an RTCStatsReport to JS. Must run on main thread.
+  void OnStatsReport_m(uint32_t trackId,
+                       nsresult result,
+                       nsAutoPtr<mozilla::dom::RTCStatsReportInternal> report);
+#endif
 
   // Timecard used to measure processing time. This should be the first class
   // attribute so that we accurately measure the time required to instantiate
