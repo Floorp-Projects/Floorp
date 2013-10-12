@@ -289,7 +289,7 @@ To see more help for a specific command, run:
             sys.stderr = orig_stderr
 
     def _run(self, argv):
-        context = CommandContext(topdir=self.cwd, cwd=self.cwd,
+        context = CommandContext(cwd=self.cwd,
             settings=self.settings, log_manager=self.log_manager,
             commands=Registrar)
 

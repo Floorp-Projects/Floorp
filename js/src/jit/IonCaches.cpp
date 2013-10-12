@@ -2731,8 +2731,10 @@ CanAttachNativeSetProp(HandleObject obj, HandleId id, ConstantOrRegister val,
         return SetPropertyIC::CanAttachNone;
 
     // If the object doesn't have the property, we don't know if we can attach
-    // a stub to add the property until we do the VM call to add.
-    if (!shape)
+    // a stub to add the property until we do the VM call to add. If the
+    // property exists as a data property on the prototype, we should add
+    // a new, shadowing property.
+    if (!shape || (obj != holder && shape->hasDefaultSetter() && shape->hasSlot()))
         return SetPropertyIC::MaybeCanAttachAddSlot;
 
     if (IsCacheableSetPropCallPropertyOp(obj, holder, shape) ||
