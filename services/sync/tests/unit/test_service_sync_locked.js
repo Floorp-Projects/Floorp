@@ -16,7 +16,7 @@ function run_test() {
     return old;
   }
 
-  Log.repository.rootLogger.addAppender(new Log.DumpAppender());
+  Log4Moz.repository.rootLogger.addAppender(new Log4Moz.DumpAppender());
 
   augmentLogger(Service._log);
 

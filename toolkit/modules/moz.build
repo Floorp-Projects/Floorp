@@ -17,7 +17,6 @@ EXTRA_JS_MODULES += [
     'Http.jsm',
     'InlineSpellChecker.jsm',
     'LoadContextInfo.jsm',
-    'Log.jsm',
     'NewTabUtils.jsm',
     'PageMenu.jsm',
     'PermissionsUtils.jsm',
