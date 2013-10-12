@@ -3252,7 +3252,7 @@ proxy_createFunction(JSContext *cx, unsigned argc, Value *vp)
     RootedObject call(cx, ValueToCallable(cx, vp[3], argc - 2));
     if (!call)
         return false;
-    JSObject *construct = nullptr;
+    RootedObject construct(cx, nullptr);
     if (argc > 2) {
         construct = ValueToCallable(cx, vp[4], argc - 3);
         if (!construct)
