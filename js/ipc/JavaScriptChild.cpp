@@ -132,9 +132,9 @@ JavaScriptChild::fail(JSContext *cx, ReturnStatus *rs)
         return true;
     }
 
-    if (!toVariant(cx, exn, &rs->get_ReturnException().exn()))
-        return true;
-
+    // If this fails, we still don't want to exit. Just return an invalid
+    // exception.
+    (void) toVariant(cx, exn, &rs->get_ReturnException().exn());
     return true;
 }
 
@@ -377,7 +377,7 @@ JavaScriptChild::AnswerGet(const ObjectId &objId, const ObjectId &receiverId, co
     if (!convertGeckoStringToId(cx, id, &internedId))
         return fail(cx, rs);
 
-    JS::Rooted<JS::Value> val(cx);
+    JS::RootedValue val(cx);
     if (!JS_ForwardGetPropertyTo(cx, obj, internedId, receiver, &val))
         return fail(cx, rs);
 
@@ -537,7 +537,7 @@ JavaScriptChild::AnswerCall(const ObjectId &objId, const nsTArray<JSParam> &argv
     // treat this as the outparam never having been set.
     for (size_t i = 0; i < vals.length(); i++) {
         JSVariant variant;
-        if (!toVariant(cx, vals[i], &variant))
+        if (!toVariant(cx, vals.handleAt(i), &variant))
             return fail(cx, rs);
         outparams->ReplaceElementAt(i, JSParam(variant));
     }
