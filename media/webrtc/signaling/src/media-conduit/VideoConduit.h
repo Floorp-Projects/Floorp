@@ -160,6 +160,20 @@ public:
     return mSendingHeight;
   }
 
+  unsigned int SendingMaxFs() {
+    if(mCurSendCodecConfig) {
+      return mCurSendCodecConfig->mMaxFrameSize;
+    }
+    return 0;
+  }
+
+  unsigned int SendingMaxFr() {
+    if(mCurSendCodecConfig) {
+      return mCurSendCodecConfig->mMaxFrameRate;
+    }
+    return 0;
+  }
+
   WebrtcVideoConduit():
                       mVideoEngine(nullptr),
                       mTransport(nullptr),
