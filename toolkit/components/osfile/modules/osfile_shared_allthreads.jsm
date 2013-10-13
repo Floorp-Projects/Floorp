@@ -34,6 +34,7 @@ if (typeof Components != "undefined") {
 
 let EXPORTED_SYMBOLS = [
   "LOG",
+  "clone",
   "Config",
   "Constants",
   "Type",
@@ -161,6 +162,46 @@ let LOG = function (...args) {
 };
 
 exports.LOG = LOG;
+
+/**
+ * Return a shallow clone of the enumerable properties of an object.
+ *
+ * Utility used whenever normalizing options requires making (shallow)
+ * changes to an option object. The copy ensures that we do not modify
+ * a client-provided object by accident.
+ *
+ * Note: to reference and not copy specific fields, provide an optional
+ * |refs| argument containing their names.
+ *
+ * @param {JSON} object Options to be cloned.
+ * @param {Array} refs An optional array of field names to be passed by
+ * reference instead of copying.
+ */
+let clone = function (object, refs = []) {
+  let result = {};
+  // Make a reference between result[key] and object[key].
+  let refer = function refer(result, key, object) {
+    Object.defineProperty(result, key, {
+      enumerable: true,
+      get: function() {
+        return object[key];
+      },
+      set: function(value) {
+        object[key] = value;
+      }
+    });
+  };
+  for (let k in object) {
+    if (refs.indexOf(k) < 0) {
+      result[k] = object[k];
+    } else {
+      refer(result, k, object);
+    }
+  }
+  return result;
+};
+
+exports.clone = clone;
 
 ///////////////////// Abstractions above js-ctypes
 
@@ -974,6 +1015,7 @@ exports.OS = {
   Constants: exports.Constants,
   Shared: {
     LOG: LOG,
+    clone: clone,
     Type: Type,
     HollowStructure: HollowStructure,
     Error: OSError,
@@ -1015,4 +1057,3 @@ if (typeof Components != "undefined") {
     this[symbol] = exports[symbol];
   }
 }
-

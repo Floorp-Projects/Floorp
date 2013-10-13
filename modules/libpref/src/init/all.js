@@ -230,6 +230,8 @@ pref("media.navigator.video.default_width",640);
 pref("media.navigator.video.default_height",480);
 pref("media.navigator.video.default_fps",30);
 pref("media.navigator.video.default_minfps",10);
+pref("media.navigator.video.max_fs", 0); // unrestricted
+pref("media.navigator.video.max_fr", 0); // unrestricted
 pref("media.peerconnection.enabled", true);
 pref("media.navigator.permission.disabled", false);
 pref("media.peerconnection.default_iceservers", "[{\"url\": \"stun:23.21.150.121\"}]");
@@ -4464,3 +4466,6 @@ pref("urlclassifier.malware_table", "goog-malware-shavar");
 pref("urlclassifier.phish_table", "goog-phish-shavar");
 pref("urlclassifier.download_block_table", "goog-badbinurl-shavar");
 pref("urlclassifier.download_allow_table", "goog-downloadwhite-digest256");
+
+// Turn off Spatial navigation by default.
+pref("snav.enabled", false);

@@ -94,6 +94,13 @@
       * @throws {OS.File.Error} In case of I/O error.
       */
      File.prototype._read = function _read(buffer, nbytes, options) {
+      // Populate the page cache with data from a file so the subsequent reads
+      // from that file will not block on disk I/O.
+       if (typeof(UnixFile.posix_fadvise) === 'function' &&
+           (options.sequential || !("sequential" in options))) {
+         UnixFile.posix_fadvise(this.fd, 0, nbytes,
+          OS.Constants.libc.POSIX_FADV_SEQUENTIAL);
+       }
        return throw_on_negative("read",
          UnixFile.read(this.fd, buffer, nbytes)
        );

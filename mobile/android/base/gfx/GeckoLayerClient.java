@@ -416,7 +416,7 @@ public class GeckoLayerClient implements LayerView.Listener, PanZoomTarget
     /* This is invoked by JNI on the gecko thread */
     DisplayPortMetrics getDisplayPort(boolean pageSizeUpdate, boolean isBrowserContentDisplayed, int tabId, ImmutableViewportMetrics metrics) {
         Tabs tabs = Tabs.getInstance();
-        if (tabs.isSelectedTab(tabs.getTab(tabId)) && isBrowserContentDisplayed) {
+        if (isBrowserContentDisplayed && tabs.isSelectedTabId(tabId)) {
             // for foreground tabs, send the viewport update unless the document
             // displayed is different from the content document. In that case, just
             // calculate the display port.

@@ -466,9 +466,11 @@ static void StartSignalHandler(int signal, siginfo_t* info, void* context) {
   char thread[256];
 
   // TODO support selecting features from profiler.options
-  const char* features[2] = {NULL, NULL};
+  const char* features[3] = {NULL, NULL, NULL};
   uint32_t featureCount = 0;
   features[0] = "leaf";
+  featureCount++;
+  features[1] = "js";
   featureCount++;
   const char* threadFeature = "threads";
 
