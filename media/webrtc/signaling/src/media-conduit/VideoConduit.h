@@ -152,6 +152,13 @@ public:
 
   virtual int DeliverFrame(unsigned char*,int, uint32_t , int64_t);
 
+  unsigned short SendingWidth() {
+    return mSendingWidth;
+  }
+
+  unsigned short SendingHeight() {
+    return mSendingHeight;
+  }
 
   WebrtcVideoConduit():
                       mVideoEngine(nullptr),
