@@ -30,6 +30,7 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedList;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 
@@ -61,7 +62,7 @@ public class LoadFaviconTask extends UiAsyncTask<Void, Void, Bitmap> {
 
     // Assuming square favicons, judging by width only is acceptable.
     protected int mTargetWidth;
-    private final AtomicReference<LoadFaviconTask> mChainee = new AtomicReference<LoadFaviconTask>(null);
+    private LinkedList<LoadFaviconTask> mChainees;
     private boolean mIsChaining;
 
     static AndroidHttpClient sHttpClient = AndroidHttpClient.newInstance(GeckoAppShell.getGeckoInterface().getDefaultUAString());
@@ -256,17 +257,15 @@ public class LoadFaviconTask extends UiAsyncTask<Void, Void, Bitmap> {
             if (existingTask != null && !existingTask.isCancelled()) {
                 existingTask.chainTasks(this);
                 mIsChaining = true;
+
+                // If we are chaining, we want to keep the first task started to do this job as the one
+                // in the hashmap so subsequent tasks will add themselves to its chaining list.
+                return null;
             }
 
-            // Replace the element in the map with the end of the chain, so a subsequent redundant
-            // request created during the lifetime of this one will also get the result sent down -
-            // without the need to chaining calls to chainTasks.
+            // We do not want to update the hashmap if the task has chained - other tasks need to
+            // chain onto the same parent task.
             loadsInFlight.put(mFaviconUrl, this);
-        }
-
-        if (mIsChaining) {
-            // If we're chaining, abort.
-            return null;
         }
 
         if (isCancelled()) {
@@ -316,8 +315,29 @@ public class LoadFaviconTask extends UiAsyncTask<Void, Void, Bitmap> {
         // Put what we got in the memcache.
         Favicons.putFaviconInMemCache(mFaviconUrl, image);
 
-        // Process the result - scale for the listener, chain if required.
+        // Process the result, scale for the listener, etc.
         processResult(image);
+
+        synchronized (loadsInFlight) {
+            // Prevent any other tasks from chaining on this one.
+            loadsInFlight.remove(mFaviconUrl);
+        }
+
+        // Since any update to mChainees is done while holding the loadsInFlight lock, once we reach
+        // this point no further updates to that list can possibly take place (As far as other tasks
+        // are concerned, there is no longer a task to chain from. The above block will have waited
+        // for any tasks that were adding themselves to the list before reaching this point.)
+
+        // As such, I believe we're safe to do the following without holding the lock.
+        // This is nice - we do not want to take the lock unless we have to anyway, and chaining rarely
+        // actually happens outside of the strange situations unit tests create.
+
+        // Share the result with all chained tasks.
+        if (mChainees != null) {
+            for (LoadFaviconTask t : mChainees) {
+                t.processResult(image);
+            }
+        }
     }
 
     private void processResult(Bitmap image) {
@@ -331,31 +351,6 @@ public class LoadFaviconTask extends UiAsyncTask<Void, Void, Bitmap> {
         }
 
         Favicons.dispatchResult(mPageUrl, mFaviconUrl, scaled, mListener);
-
-        // Take a snapshot of the chainee reference.
-        final LoadFaviconTask chainee = mChainee.get();
-
-        if (chainee != null) {
-            // Propagate the result along the chain.
-            // Note that we don't pass the scaled image -- the chainee might not want
-            // the same size that this task's listener does.
-            chainee.processResult(image);
-            mChainee.set(null);
-            return;
-        }
-
-        // If we find we had no chainee set, enter the monitor (Which is required to update the
-        // mChainee reference) and check again. If we're still lacking a chainee, remove the
-        // reference from loadsInFlight. Deals with chain growth racing with this call.
-        synchronized(loadsInFlight) {
-            if (mChainee.get() == null) {
-                loadsInFlight.remove(mFaviconUrl);
-                return;
-            }
-        }
-
-        // Another element was added to the chain while we weren't looking...
-        mChainee.get().processResult(image);
     }
 
     @Override
@@ -363,9 +358,14 @@ public class LoadFaviconTask extends UiAsyncTask<Void, Void, Bitmap> {
         Favicons.removeLoadTask(mId);
 
         synchronized(loadsInFlight) {
-            if (mChainee.get() == null) {
+            // Only remove from the hashmap if the task there is the one that's being canceled.
+            // Cancellation of a task that would have chained is not interesting to the hashmap.
+            final LoadFaviconTask primary = loadsInFlight.get(mFaviconUrl);
+            if (primary == this) {
                 loadsInFlight.remove(mFaviconUrl);
+                return;
             }
+            primary.mChainees.remove(this);
         }
 
         // Note that we don't call the listener callback if the
@@ -376,18 +376,16 @@ public class LoadFaviconTask extends UiAsyncTask<Void, Void, Bitmap> {
      * When the result of this job is ready, also notify the chainee of the result.
      * Used for aggregating concurrent requests for the same Favicon into a single actual request.
      * (Don't want to download a hundred instances of Google's Favicon at once, for example).
+     * The loadsInFlight lock must be held when calling this function.
      *
      * @param aChainee LoadFaviconTask
      */
     private void chainTasks(LoadFaviconTask aChainee) {
-        // Atomically update mChainee if it's null.
-        if (mChainee.compareAndSet(null, aChainee)) {
-            return;
+        if (mChainees == null) {
+            mChainees = new LinkedList<LoadFaviconTask>();
         }
 
-        // chainResults is only called within a synchronized block on loadsInFlight - so the value
-        // can't have changed since the CAS above.
-        mChainee.get().chainTasks(aChainee);
+        mChainees.add(aChainee);
     }
 
     int getId() {
