@@ -28,6 +28,7 @@ SHARED_LIBRARY_LIBS = \
   ../jsdownloads/src/$(LIB_PREFIX)jsdownloads_s.$(LIB_SUFFIX) \
   ../protobuf/$(LIB_PREFIX)protobuf_s.$(LIB_SUFFIX) \
   ../intl/$(LIB_PREFIX)intl_s.$(LIB_SUFFIX) \
+  ../finalizationwitness/$(LIB_PREFIX)finalizationwitness_s.$(LIB_SUFFIX) \
   $(NULL)
 
 ifndef MOZ_DISABLE_PARENTAL_CONTROLS
