@@ -365,7 +365,13 @@ public class LoadFaviconTask extends UiAsyncTask<Void, Void, Bitmap> {
                 loadsInFlight.remove(mFaviconUrl);
                 return;
             }
-            primary.mChainees.remove(this);
+            if (primary == null) {
+                // This shouldn't happen.
+                return;
+            }
+            if (primary.mChainees != null) {
+              primary.mChainees.remove(this);
+            }
         }
 
         // Note that we don't call the listener callback if the
