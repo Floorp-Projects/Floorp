@@ -141,8 +141,7 @@
                      android:layout_marginLeft="8dip"
                      android:paddingLeft="4dip"
                      android:paddingRight="4dip"
-                     android:layout_gravity="center_vertical"
-                     android:src="@drawable/favicon"/>
+                     android:layout_gravity="center_vertical"/>
 
         <ImageButton android:id="@+id/site_security"
                      style="@style/UrlBar.ImageButton"

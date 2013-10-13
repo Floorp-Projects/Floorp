@@ -49,37 +49,47 @@ var headers = [
 ];
 var i, request;
 
-// Try setting headers in unprivileged context
-request = new XMLHttpRequest();
-request.open("GET", window.location.href);
-for (i = 0; i < headers.length; i++)
-  request.setRequestHeader(headers[i], "test" + i);
+function  startTest() {
+  // Try setting headers in unprivileged context
+  request = new XMLHttpRequest();
+  request.open("GET", window.location.href);
+  for (i = 0; i < headers.length; i++)
+    request.setRequestHeader(headers[i], "test" + i);
 
-// Read out headers
-var channel = SpecialPowers.wrap(request).channel.QueryInterface(SpecialPowers.Ci.nsIHttpChannel);
-for (i = 0; i < headers.length; i++) {
-  // Retrieving Content-Length will throw an exception
-  var value = null;
-  try {
-    value = channel.getRequestHeader(headers[i]);
+  // Read out headers
+  var channel = SpecialPowers.wrap(request).channel.QueryInterface(SpecialPowers.Ci.nsIHttpChannel);
+  for (i = 0; i < headers.length; i++) {
+    // Retrieving Content-Length will throw an exception
+    var value = null;
+    try {
+      value = channel.getRequestHeader(headers[i]);
+    }
+    catch(e) {}
+
+    isnot(value, "test" + i, "Setting " + headers[i] + " header in unprivileged context");
   }
-  catch(e) {}
 
-  isnot(value, "test" + i, "Setting " + headers[i] + " header in unprivileged context");
+  // Try setting headers in privileged context
+  request = new XMLHttpRequest({mozAnon: false, mozSystem: true});
+  request.open("GET", window.location.href);
+  for (i = 0; i < headers.length; i++)
+    request.setRequestHeader(headers[i], "test" + i);
+
+  // Read out headers
+  var channel = SpecialPowers.wrap(request).channel.QueryInterface(SpecialPowers.Ci.nsIHttpChannel);
+  for (i = 0; i < headers.length; i++) {
+    var value = channel.getRequestHeader(headers[i]);
+    is(value, "test" + i, "Setting " + headers[i] + " header in privileged context");
+  }
+
+  SimpleTest.finish();
 }
 
-// Try setting headers in privileged context
-request = SpecialPowers.createSystemXHR();
-request.open("GET", window.location.href);
-for (i = 0; i < headers.length; i++)
-  request.setRequestHeader(headers[i], "test" + i);
+SimpleTest.waitForExplicitFinish();
 
-// Read out headers
-var channel = request.channel.QueryInterface(SpecialPowers.Ci.nsIHttpChannel);
-for (i = 0; i < headers.length; i++) {
-  var value = channel.getRequestHeader(headers[i]);
-  is(value, "test" + i, "Setting " + headers[i] + " header in privileged context");
-}
+addLoadEvent(function() {
+   SpecialPowers.pushPermissions([{'type': 'systemXHR', 'allow': true, 'context': document}], startTest);
+});
 </script>
 </pre>
 </body>
