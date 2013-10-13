@@ -1146,6 +1146,8 @@ gsmsdp_set_video_media_attributes (uint32_t media_type, void *cc_sdp_p, uint16_t
 {
     uint16_t a_inst;
     void *sdp_p = ((cc_sdp_t*)cc_sdp_p)->src_sdp;
+    int max_fs = 0;
+    int max_fr = 0;
 
     switch (media_type) {
         case RTP_H263:
@@ -1182,6 +1184,29 @@ gsmsdp_set_video_media_attributes (uint32_t media_type, void *cc_sdp_p, uint16_t
                                                SIPSDP_ATTR_ENCNAME_VP8);
             (void) sdp_attr_set_rtpmap_clockrate(sdp_p, level, 0, a_inst,
                                              RTPMAP_VIDEO_CLOCKRATE);
+
+            /* TODO: Get max_fs & max_fr from device configuration (Bug 881935) */
+            if (max_fs || max_fr) {
+                if (sdp_add_new_attr(sdp_p, level, 0, SDP_ATTR_FMTP, &a_inst)
+                    != SDP_SUCCESS) {
+                    GSM_ERR_MSG("Failed to add attribute");
+                    return;
+                }
+
+                (void) sdp_attr_set_fmtp_payload_type(sdp_p, level, 0, a_inst,
+                                                      payload_number);
+
+                if (max_fs) {
+                    (void) sdp_attr_set_fmtp_max_fs(sdp_p, level, 0, a_inst,
+                                                    max_fs);
+                }
+
+                if (max_fr) {
+                    (void) sdp_attr_set_fmtp_max_fr(sdp_p, level, 0, a_inst,
+                                                    max_fr);
+                }
+            }
+
             break;
         }
     GSM_DEBUG("gsmsdp_set_video_media_attributes- populate attribs %d", payload_number );
