@@ -51,7 +51,7 @@ function createDoc() {
 function xhrDoc(idx) {
   return function() {
     // Defy same-origin restrictions!
-    var xhr = SpecialPowers.createSystemXHR();
+    var xhr = new XMLHttpRequest({mozAnon: false, mozSystem: true});
     xhr.open("GET", docSources[idx], false);
     xhr.send();
     return xhr.responseXML;
@@ -87,6 +87,10 @@ function doTest(idx) {
 }
 
 addLoadEvent(function() {
+   SpecialPowers.pushPermissions([{'type': 'systemXHR', 'allow': true, 'context': document}], startTest);
+});
+
+function startTest() {
   // sanity check
   isnot("", null, "Shouldn't be equal!");
 
@@ -104,7 +108,7 @@ addLoadEvent(function() {
   xhr.abort();
                      
   SimpleTest.finish();
-});
+};
 
 
 

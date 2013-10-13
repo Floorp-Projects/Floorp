@@ -3,9 +3,19 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+DEPTH           = ../../..
+topsrcdir       = @top_srcdir@
+srcdir          = @srcdir@
+VPATH           = @srcdir@
+relativesrcdir  = testing/mochitest/roboextender
+TESTPATH        = $(topsrcdir)/mobile/android/base/tests/roboextender
+
+include $(DEPTH)/config/autoconf.mk
+
 _TEST_FILES = \
   bootstrap.js \
   install.rdf \
+  chrome.manifest \
   $(NULL)
 
 TEST_EXTENSIONS_DIR = $(DEPTH)/_tests/testing/mochitest/extensions
@@ -15,4 +25,6 @@ include $(topsrcdir)/config/rules.mk
 libs:: $(_TEST_FILES)
 	$(MKDIR) -p $(TEST_EXTENSIONS_DIR)/roboextender@mozilla.org
 	$(INSTALL) $(foreach f,$^,"$f") $(TEST_EXTENSIONS_DIR)/roboextender@mozilla.org/
-	
+	$(MKDIR) -p $(TEST_EXTENSIONS_DIR)/roboextender@mozilla.org/base
+	$(MKDIR) -p $(TESTPATH)
+	-cp $(TESTPATH)/* $(TEST_EXTENSIONS_DIR)/roboextender@mozilla.org/base
