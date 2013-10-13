@@ -33,7 +33,7 @@ public class testHistory extends AboutHomeTest {
         openAboutHomeTab(AboutHomeTabs.MOST_RECENT);
 
         final ListView hList = findListViewWithTag("most_recent");
-        mAsserter.is(waitForListToLoad(hList), true, "list is properly loaded");
+        mAsserter.is(waitForNonEmptyListToLoad(hList), true, "list is properly loaded");
 
         // Click on the history item and wait for the page to load
         // wait for the history list to be populated
