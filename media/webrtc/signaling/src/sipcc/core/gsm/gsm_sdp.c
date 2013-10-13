@@ -1185,7 +1185,9 @@ gsmsdp_set_video_media_attributes (uint32_t media_type, void *cc_sdp_p, uint16_t
             (void) sdp_attr_set_rtpmap_clockrate(sdp_p, level, 0, a_inst,
                                              RTPMAP_VIDEO_CLOCKRATE);
 
-            /* TODO: Get max_fs & max_fr from device configuration (Bug 881935) */
+            max_fs = config_get_video_max_fs((rtp_ptype) media_type);
+            max_fr = config_get_video_max_fr((rtp_ptype) media_type);
+
             if (max_fs || max_fr) {
                 if (sdp_add_new_attr(sdp_p, level, 0, SDP_ATTR_FMTP, &a_inst)
                     != SDP_SUCCESS) {
@@ -3441,23 +3443,19 @@ gsmsdp_negotiate_codec (fsmdef_dcb_t *dcb_p, cc_sdp_t *sdp_p,
 
                     /* This should ultimately use RFC 6236 a=imageattr
                        if present */
-                    switch (codec) {
-                        case RTP_VP8:
-                            payload_info->video.width = 640;
-                            payload_info->video.height = 480;
-                        break;
-                        case RTP_I420:
-                            payload_info->video.width = 176;
-                            payload_info->video.height = 144;
-                        break;
-                        default:
-                            GSM_DEBUG(DEB_L_C_F_PREFIX"codec=%d not setting "
-                                "codec parameters (not implemented)\n",
-                                DEB_L_C_F_PREFIX_ARGS(GSM, dcb_p->line,
-                                dcb_p->call_id, fname), codec);
-                            payload_info->video.width = -1;
-                            payload_info->video.height = -1;
-                    }
+
+                    payload_info->video.width = 0;
+                    payload_info->video.height = 0;
+
+                    /* Set maximum frame size */
+                    payload_info->video.max_fs = 0;
+                    sdp_attr_get_fmtp_max_fs(sdp_p->dest_sdp, level, 0, 1,
+                                             &payload_info->video.max_fs);
+
+                    /* Set maximum frame rate */
+                    payload_info->video.max_fr = 0;
+                    sdp_attr_get_fmtp_max_fr(sdp_p->dest_sdp, level, 0, 1,
+                                             &payload_info->video.max_fr);
                 } /* end video */
 
                 GSM_DEBUG(DEB_L_C_F_PREFIX"codec= %d",
