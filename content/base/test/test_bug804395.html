@@ -19,7 +19,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=804395
 <script type="application/javascript">
 
 function test200() {
-  var xhr = SpecialPowers.createSystemXHR();
+  var xhr = new XMLHttpRequest({mozAnon: false, mozSystem: true});
   xhr.open('GET', 'jar:http://example.org/tests/content/base/test/file_bug804395.jar!/foo.bar', true);
   xhr.onreadystatechange = function() {
     if (xhr.readyState == 4) {
@@ -31,7 +31,7 @@ function test200() {
 }
 
 function test404() {
-  var xhr = SpecialPowers.createSystemXHR();
+  var xhr = new XMLHttpRequest({mozAnon: false, mozSystem: true});
   xhr.open('GET', 'jar:http://example.org/tests/content/base/test/file_bug804395.jar!/foo.do_not_exist', true);
   xhr.onreadystatechange = function() {
     if (xhr.readyState == 4) {
@@ -43,7 +43,7 @@ function test404() {
 }
 
 function test0() {
-  var xhr = SpecialPowers.createSystemXHR();
+  var xhr = new XMLHttpRequest({mozAnon: false, mozSystem: true});
   xhr.open('GET', 'jar:http://example.org/tests/content/base/test/file_bug804395.jar!/foo.bar', true);
   ok(xhr.status == 0, "Not Sent request must have status 0");
   runTests();
@@ -61,9 +61,11 @@ function runTests() {
 }
 
 /** Test for Bug 804395 **/
-runTests();
 SimpleTest.waitForExplicitFinish();
 
+addLoadEvent(function() {
+   SpecialPowers.pushPermissions([{'type': 'systemXHR', 'allow': true, 'context': document}], runTests);
+});
 </script>
 </pre>
 </body>

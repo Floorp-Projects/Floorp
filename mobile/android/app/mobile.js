@@ -787,3 +787,5 @@ pref("general.useragent.override.youtube.com", "Android; Tablet;#Android; Mobile
 // When true, phone number linkification is enabled.
 pref("browser.ui.linkify.phone", false);
 
+// Enables/disables Spatial Navigation
+pref("snav.enabled", true);

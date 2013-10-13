@@ -44,7 +44,7 @@ public class testBookmarklets extends AboutHomeTest {
         openAboutHomeTab(AboutHomeTabs.BOOKMARKS);
 
         ListView bookmarks = findListViewWithTag("bookmarks");
-        mAsserter.is(waitForListToLoad(bookmarks), true, "list is properly loaded");
+        mAsserter.is(waitForNonEmptyListToLoad(bookmarks), true, "list is properly loaded");
 
         int width = mDriver.getGeckoWidth();
         int height = mDriver.getGeckoHeight();

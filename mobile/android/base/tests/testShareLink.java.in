@@ -72,7 +72,7 @@ public class testShareLink extends AboutHomeTest {
         openAboutHomeTab(AboutHomeTabs.BOOKMARKS);
 
         ListView bookmarksList = findListViewWithTag("bookmarks");
-        mAsserter.is(waitForListToLoad(bookmarksList), true, "list is properly loaded");
+        mAsserter.is(waitForNonEmptyListToLoad(bookmarksList), true, "list is properly loaded");
 
         View bookmarksItem = bookmarksList.getChildAt(bookmarksList.getHeaderViewsCount());
         mSolo.clickLongOnView(bookmarksItem);
@@ -101,7 +101,7 @@ public class testShareLink extends AboutHomeTest {
         mActions.drag(width / 2, width / 2, height - 10, height / 2);
 
         ListView topSitesList = findListViewWithTag("top_sites");
-        mAsserter.is(waitForListToLoad(topSitesList), true, "list is properly loaded");
+        mAsserter.is(waitForNonEmptyListToLoad(topSitesList), true, "list is properly loaded");
         View mostVisitedItem = topSitesList.getChildAt(topSitesList.getHeaderViewsCount());
         mSolo.clickLongOnView(mostVisitedItem);
         verifySharePopup(shareOptions,"top_sites");
@@ -110,7 +110,7 @@ public class testShareLink extends AboutHomeTest {
         openAboutHomeTab(AboutHomeTabs.MOST_RECENT);
 
         ListView mostRecentList = findListViewWithTag("most_recent");
-        mAsserter.is(waitForListToLoad(mostRecentList), true, "list is properly loaded");
+        mAsserter.is(waitForNonEmptyListToLoad(mostRecentList), true, "list is properly loaded");
 
         // Getting second child after header views because the first is the "Today" label
         View mostRecentItem = mostRecentList.getChildAt(mostRecentList.getHeaderViewsCount() + 1);

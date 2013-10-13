@@ -685,6 +685,11 @@ SourcesView.prototype = Heritage.extend(WidgetMethods, {
     }
     // The container is not empty and an actual item was selected.
     DebuggerView.setEditorLocation(sourceItem.value);
+
+    // Set window title.
+    let script = sourceItem.value.split(" -> ").pop();
+    document.title = L10N.getFormatStr("DebuggerWindowScriptTitle", script);
+
     this.maybeShowBlackBoxMessage();
   },
 

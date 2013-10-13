@@ -1178,10 +1178,6 @@ SpecialPowersAPI.prototype = {
     this._getMUDV(window).stopEmulatingMedium();
   },
 
-  createSystemXHR: function() {
-    return this.wrap(Cc["@mozilla.org/xmlextras/xmlhttprequest;1"].createInstance(Ci.nsIXMLHttpRequest));
-  },
-
   snapshotWindowWithOptions: function (win, rect, bgcolor, options) {
     var el = this.window.get().document.createElementNS("http://www.w3.org/1999/xhtml", "canvas");
     if (rect === undefined) {

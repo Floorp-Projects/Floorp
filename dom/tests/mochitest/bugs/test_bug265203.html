@@ -41,6 +41,10 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=265203
 
 /** Test for Bug 265203 **/
 
+// Turn off spatial navigation because it hijacks VK_RIGHT and VK_LEFT keydown
+// events
+SpecialPowers.setBoolPref("snav.enabled", false);
+
 var gTestStarted = false;
 var expectedResult = [ null, 0, null ];
 var nextTest;

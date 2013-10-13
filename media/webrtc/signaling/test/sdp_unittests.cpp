@@ -190,6 +190,41 @@ class SdpTest : public ::testing::Test {
       return inst_num;
     }
 
+    u16 AddNewFmtpMaxFs(int level, u32 max_fs) {
+      u16 inst_num = 0;
+      EXPECT_EQ(sdp_add_new_attr(sdp_ptr_, level, 0, SDP_ATTR_FMTP,
+                                 &inst_num), SDP_SUCCESS);
+      EXPECT_EQ(sdp_attr_set_fmtp_payload_type(sdp_ptr_, level, 0, inst_num,
+                                               120), SDP_SUCCESS);
+      EXPECT_EQ(sdp_attr_set_fmtp_max_fs(sdp_ptr_, level, 0, inst_num, max_fs),
+                                         SDP_SUCCESS);
+      return inst_num;
+    }
+
+    u16 AddNewFmtpMaxFr(int level, u32 max_fr) {
+      u16 inst_num = 0;
+      EXPECT_EQ(sdp_add_new_attr(sdp_ptr_, level, 0, SDP_ATTR_FMTP,
+                                 &inst_num), SDP_SUCCESS);
+      EXPECT_EQ(sdp_attr_set_fmtp_payload_type(sdp_ptr_, level, 0, inst_num,
+                                               120), SDP_SUCCESS);
+      EXPECT_EQ(sdp_attr_set_fmtp_max_fr(sdp_ptr_, level, 0, inst_num, max_fr),
+                                         SDP_SUCCESS);
+      return inst_num;
+    }
+
+     u16 AddNewFmtpMaxFsFr(int level, u32 max_fs, u32 max_fr) {
+      u16 inst_num = 0;
+      EXPECT_EQ(sdp_add_new_attr(sdp_ptr_, level, 0, SDP_ATTR_FMTP,
+                                 &inst_num), SDP_SUCCESS);
+      EXPECT_EQ(sdp_attr_set_fmtp_payload_type(sdp_ptr_, level, 0, inst_num,
+                                               120), SDP_SUCCESS);
+      EXPECT_EQ(sdp_attr_set_fmtp_max_fs(sdp_ptr_, level, 0, inst_num, max_fs),
+                                         SDP_SUCCESS);
+      EXPECT_EQ(sdp_attr_set_fmtp_max_fr(sdp_ptr_, level, 0, inst_num, max_fr),
+                                         SDP_SUCCESS);
+      return inst_num;
+    }
+
   protected:
     int final_level_;
     void *config_p_;
@@ -687,6 +722,45 @@ TEST_F(SdpTest, parseRtcpFbAllPayloads) {
     ASSERT_EQ(sdp_attr_get_rtcp_fb_ack(sdp_ptr_, 1, i, 1),
               SDP_RTCP_FB_ACK_RPSI);
   }
+}
+
+TEST_F(SdpTest, parseFmtpMaxFs) {
+  u32 val = 0;
+  ParseSdp(kVideoSdp + "a=fmtp:120 max-fs=300;max-fr=30\r\n");
+  ASSERT_EQ(sdp_attr_get_fmtp_max_fs(sdp_ptr_, 1, 0, 1, &val), SDP_SUCCESS);
+  ASSERT_EQ(val, 300);
+}
+
+TEST_F(SdpTest, parseFmtpMaxFr) {
+  u32 val = 0;
+  ParseSdp(kVideoSdp + "a=fmtp:120 max-fs=300;max-fr=30\r\n");
+  ASSERT_EQ(sdp_attr_get_fmtp_max_fr(sdp_ptr_, 1, 0, 1, &val), SDP_SUCCESS);
+  ASSERT_EQ(val, 30);
+}
+
+TEST_F(SdpTest, addFmtpMaxFs) {
+  InitLocalSdp();
+  int level = AddNewMedia(SDP_MEDIA_VIDEO);
+  AddNewFmtpMaxFs(level, 300);
+  std::string body = SerializeSdp();
+  ASSERT_NE(body.find("a=fmtp:120 max-fs=300\r\n"), std::string::npos);
+}
+
+TEST_F(SdpTest, addFmtpMaxFr) {
+  InitLocalSdp();
+  int level = AddNewMedia(SDP_MEDIA_VIDEO);
+  AddNewFmtpMaxFr(level, 30);
+  std::string body = SerializeSdp();
+  ASSERT_NE(body.find("a=fmtp:120 max-fr=30\r\n"), std::string::npos);
+}
+
+TEST_F(SdpTest, addFmtpMaxFsFr) {
+  InitLocalSdp();
+  int level = AddNewMedia(SDP_MEDIA_VIDEO);
+  AddNewFmtpMaxFsFr(level, 300, 30);
+  std::string body = SerializeSdp();
+  ASSERT_NE(body.find("a=fmtp:120 max-fs=300;max-fr=30\r\n"),
+            std::string::npos);
 }
 
 } // End namespace test.

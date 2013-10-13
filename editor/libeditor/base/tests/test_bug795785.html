@@ -23,7 +23,13 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=795785
 
 <script class="testbody" type="application/javascript">
 
+
 SimpleTest.waitForExplicitFinish();
+
+// Turn off spatial navigation because it hijacks arrow key events and VK_RETURN
+// events.
+SpecialPowers.setBoolPref("snav.enabled", false);
+
 SimpleTest.waitForFocus(runTests);
 
 var textarea = document.getElementById("textarea");

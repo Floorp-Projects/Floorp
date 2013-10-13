@@ -1,0 +1,28 @@
+# -*- Mode: python; c-basic-offset: 4; indent-tabs-mode: nil; tab-width: 40 -*-
+# vim: set filetype=python:
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+MODULE = 'finalizationwitness'
+
+CPP_SOURCES += [
+  'FinalizationWitnessService.cpp',
+]
+
+XPIDL_SOURCES += [
+  'nsIFinalizationWitnessService.idl',
+]
+
+XPIDL_MODULE = 'toolkit_finalizationwitness'
+
+EXPORTS.mozilla += [
+    'FinalizationWitnessService.h',
+]
+
+LOCAL_INCLUDES += [
+    '/js/xpconnect/loader',
+]
+
+LIBRARY_NAME = 'finalizationwitness_s'
+LIBXUL_LIBRARY = True

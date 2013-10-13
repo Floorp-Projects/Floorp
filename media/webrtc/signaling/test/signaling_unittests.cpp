@@ -26,6 +26,9 @@
 #include "PeerConnectionCtx.h"
 #include "runnable_utils.h"
 #include "nsServiceManagerUtils.h"
+#include "mozilla/Services.h"
+#include "nsIPrefService.h"
+#include "nsIPrefBranch.h"
 #include "nsNetUtil.h"
 #include "nsIIOService.h"
 #include "nsIDNSService.h"
@@ -114,6 +117,7 @@ enum sdpTestFlags
   SHOULD_REJECT_AUDIO   = (1<<3),
   SHOULD_OMIT_AUDIO     = (1<<4),
   DONT_CHECK_AUDIO      = (1<<5),
+  SHOULD_CHECK_AUDIO    = (1<<6),
 
   SHOULD_SEND_VIDEO     = (1<<8),
   SHOULD_RECV_VIDEO     = (1<<9),
@@ -121,6 +125,7 @@ enum sdpTestFlags
   SHOULD_REJECT_VIDEO   = (1<<11),
   SHOULD_OMIT_VIDEO     = (1<<12),
   DONT_CHECK_VIDEO      = (1<<13),
+  SHOULD_CHECK_VIDEO    = (1<<14),
 
   SHOULD_INCLUDE_DATA   = (1 << 16),
   DONT_CHECK_DATA       = (1 << 17),
@@ -128,14 +133,17 @@ enum sdpTestFlags
   SHOULD_SENDRECV_AUDIO = SHOULD_SEND_AUDIO | SHOULD_RECV_AUDIO,
   SHOULD_SENDRECV_VIDEO = SHOULD_SEND_VIDEO | SHOULD_RECV_VIDEO,
   SHOULD_SENDRECV_AV = SHOULD_SENDRECV_AUDIO | SHOULD_SENDRECV_VIDEO,
+  SHOULD_CHECK_AV = SHOULD_CHECK_AUDIO | SHOULD_CHECK_VIDEO,
 
   AUDIO_FLAGS = SHOULD_SEND_AUDIO | SHOULD_RECV_AUDIO
                 | SHOULD_INACTIVE_AUDIO | SHOULD_REJECT_AUDIO
-                | DONT_CHECK_AUDIO | SHOULD_OMIT_AUDIO,
+                | DONT_CHECK_AUDIO | SHOULD_OMIT_AUDIO
+                | SHOULD_CHECK_AUDIO,
 
   VIDEO_FLAGS = SHOULD_SEND_VIDEO | SHOULD_RECV_VIDEO
                 | SHOULD_INACTIVE_VIDEO | SHOULD_REJECT_VIDEO
                 | DONT_CHECK_VIDEO | SHOULD_OMIT_VIDEO
+                | SHOULD_CHECK_VIDEO
 };
 
 enum offerAnswerFlags
@@ -1151,6 +1159,12 @@ private:
       case 0:
             ASSERT_EQ(sdp.find("a=rtpmap:109 opus/48000"), std::string::npos);
         break;
+      case SHOULD_CHECK_AUDIO:
+            ASSERT_NE(sdp.find("a=rtpmap:109 opus/48000"), std::string::npos);
+            if (offer) {
+              ASSERT_NE(sdp.find("a=rtpmap:0 PCMU/8000"), std::string::npos);
+            }
+        break;
       case SHOULD_SEND_AUDIO:
             ASSERT_NE(sdp.find("a=rtpmap:109 opus/48000"), std::string::npos);
             ASSERT_NE(sdp.find(" 0-15\r\na=sendonly"), std::string::npos);
@@ -1192,6 +1206,9 @@ private:
     switch(flags & VIDEO_FLAGS) {
       case 0:
             ASSERT_EQ(sdp.find("a=rtpmap:120 VP8/90000"), std::string::npos);
+        break;
+      case SHOULD_CHECK_VIDEO:
+            ASSERT_NE(sdp.find("a=rtpmap:120 VP8/90000"), std::string::npos);
         break;
       case SHOULD_SEND_VIDEO:
             ASSERT_NE(sdp.find("a=rtpmap:120 VP8/90000\r\na=sendonly"),
@@ -1540,6 +1557,50 @@ public:
         kBogusSrflxAddress, kBogusSrflxPort);
   }
 
+  // Check max-fs and max-fr in SDP
+  void CheckMaxFsFrSdp(const std::string sdp,
+                       int format,
+                       int max_fs,
+                       int max_fr) {
+    ParsedSDP sdpWrapper(sdp);
+    std::stringstream ss;
+    ss << "a=fmtp:" << format;
+    std::vector<std::string> lines = sdpWrapper.GetLines(ss.str());
+
+    // Both max-fs and max-fr not exist
+    if (lines.empty()) {
+      ASSERT_EQ(max_fs, 0);
+      ASSERT_EQ(max_fr, 0);
+      return;
+    }
+
+    // At most one instance allowed for each format
+    ASSERT_EQ(lines.size(), 1U);
+
+    std::string line = lines.front();
+
+    // Make sure that max-fs doesn't exist
+    if (max_fs == 0) {
+      ASSERT_EQ(line.find("max-fs="), std::string::npos);
+    }
+    // Check max-fs value
+    if (max_fs > 0) {
+      std::stringstream ss;
+      ss << "max-fs=" << max_fs;
+      ASSERT_NE(line.find(ss.str()), std::string::npos);
+    }
+    // Make sure that max-fr doesn't exist
+    if (max_fr == 0) {
+      ASSERT_EQ(line.find("max-fr="), std::string::npos);
+    }
+    // Check max-fr value
+    if (max_fr > 0) {
+      std::stringstream ss;
+      ss << "max-fr=" << max_fr;
+      ASSERT_NE(line.find(ss.str()), std::string::npos);
+    }
+  }
+
  protected:
   bool init_;
   ScopedDeletePtr<SignalingAgent> a1_;  // Canonically "caller"
@@ -1547,6 +1608,17 @@ public:
   bool wait_for_gather_;
   std::string stun_addr_;
   uint16_t stun_port_;
+};
+
+class FsFrPrefClearer {
+  public:
+    FsFrPrefClearer(nsCOMPtr<nsIPrefBranch> prefs): mPrefs(prefs) {}
+    ~FsFrPrefClearer() {
+      mPrefs->ClearUserPref("media.navigator.video.max_fs");
+      mPrefs->ClearUserPref("media.navigator.video.max_fr");
+    }
+  private:
+    nsCOMPtr<nsIPrefBranch> mPrefs;
 };
 
 TEST_F(SignalingTest, JustInit)
@@ -3326,6 +3398,167 @@ TEST_F(SignalingTest, hugeSdp)
   a2_->SetRemote(TestObserver::OFFER, offer, true);
   ASSERT_GE(a2_->getRemoteDescription().length(), 4096U);
   a2_->CreateAnswer(constraints, offer, OFFER_AV);
+}
+
+// Test max_fs and max_fr prefs have proper impact on SDP offer
+TEST_F(SignalingTest, MaxFsFrInOffer)
+{
+  EnsureInit();
+
+  sipcc::MediaConstraints constraints;
+
+  nsCOMPtr<nsIPrefBranch> prefs = do_GetService(NS_PREFSERVICE_CONTRACTID);
+  ASSERT_TRUE(prefs);
+  FsFrPrefClearer prefClearer(prefs);
+
+  prefs->SetIntPref("media.navigator.video.max_fs", 300);
+  prefs->SetIntPref("media.navigator.video.max_fr", 30);
+
+  a1_->CreateOffer(constraints, OFFER_AV, SHOULD_CHECK_AV);
+
+  // Verify that SDP contains correct max-fs and max-fr
+  CheckMaxFsFrSdp(a1_->offer(), 120, 300, 30);
+}
+
+// Test max_fs and max_fr prefs have proper impact on SDP answer
+TEST_F(SignalingTest, MaxFsFrInAnswer)
+{
+  EnsureInit();
+
+  sipcc::MediaConstraints constraints;
+
+  nsCOMPtr<nsIPrefBranch> prefs = do_GetService(NS_PREFSERVICE_CONTRACTID);
+  ASSERT_TRUE(prefs);
+  FsFrPrefClearer prefClearer(prefs);
+
+  // We don't want max_fs and max_fr prefs impact SDP at this moment
+  prefs->SetIntPref("media.navigator.video.max_fs", 0);
+  prefs->SetIntPref("media.navigator.video.max_fr", 0);
+
+  a1_->CreateOffer(constraints, OFFER_AV, SHOULD_CHECK_AV);
+
+  // SDP should not contain max-fs and max-fr here
+  CheckMaxFsFrSdp(a1_->offer(), 120, 0, 0);
+
+  a2_->SetRemote(TestObserver::OFFER, a1_->offer());
+
+  prefs->SetIntPref("media.navigator.video.max_fs", 600);
+  prefs->SetIntPref("media.navigator.video.max_fr", 60);
+
+  a2_->CreateAnswer(constraints, a1_->offer(), OFFER_AV | ANSWER_AV);
+
+  // Verify that SDP contains correct max-fs and max-fr
+  CheckMaxFsFrSdp(a2_->answer(), 120, 600, 60);
+}
+
+// Test SDP offer has proper impact on callee's codec configuration
+TEST_F(SignalingTest, MaxFsFrCalleeCodec)
+{
+  EnsureInit();
+
+  sipcc::MediaConstraints constraints;
+
+  nsCOMPtr<nsIPrefBranch> prefs = do_GetService(NS_PREFSERVICE_CONTRACTID);
+  ASSERT_TRUE(prefs);
+  FsFrPrefClearer prefClearer(prefs);
+
+  // We don't want max_fs and max_fr prefs impact SDP at this moment
+  prefs->SetIntPref("media.navigator.video.max_fs", 0);
+  prefs->SetIntPref("media.navigator.video.max_fr", 0);
+
+  a1_->CreateOffer(constraints, OFFER_AV, SHOULD_CHECK_AV);
+
+  ParsedSDP sdpWrapper(a1_->offer());
+
+  sdpWrapper.ReplaceLine("a=rtpmap:120",
+    "a=rtpmap:120 VP8/90000\r\na=fmtp:120 max-fs=300;max-fr=30\r\n");
+
+  std::cout << "Modified SDP " << std::endl
+            << indent(sdpWrapper.getSdp()) << std::endl;
+
+  // Double confirm that SDP offer contains correct max-fs and max-fr
+  CheckMaxFsFrSdp(sdpWrapper.getSdp(), 120, 300, 30);
+
+  a1_->SetLocal(TestObserver::OFFER, sdpWrapper.getSdp());
+  a2_->SetRemote(TestObserver::OFFER, sdpWrapper.getSdp());
+
+  a2_->CreateAnswer(constraints, sdpWrapper.getSdp(), OFFER_AV | ANSWER_AV);
+
+  // SDP should not contain max-fs and max-fr here
+  CheckMaxFsFrSdp(a2_->answer(), 120, 0, 0);
+
+  a2_->SetLocal(TestObserver::ANSWER, a2_->answer());
+  a1_->SetRemote(TestObserver::ANSWER, a2_->answer());
+
+  ASSERT_TRUE_WAIT(a1_->IceCompleted() == true, kDefaultTimeout);
+  ASSERT_TRUE_WAIT(a2_->IceCompleted() == true, kDefaultTimeout);
+
+  // Checking callee's video sending configuration does respect max-fs and
+  // max-fr in SDP offer.
+  mozilla::RefPtr<mozilla::MediaPipeline> pipeline =
+    a2_->GetMediaPipeline(1, 0, 1);
+  ASSERT_TRUE(pipeline);
+  mozilla::MediaSessionConduit *conduit = pipeline->Conduit();
+  ASSERT_TRUE(conduit);
+  ASSERT_EQ(conduit->type(), mozilla::MediaSessionConduit::VIDEO);
+  mozilla::VideoSessionConduit *video_conduit =
+    static_cast<mozilla::VideoSessionConduit*>(conduit);
+
+  ASSERT_EQ(video_conduit->SendingMaxFs(), (unsigned short) 300);
+  ASSERT_EQ(video_conduit->SendingMaxFr(), (unsigned short) 30);
+}
+
+// Test SDP answer has proper impact on caller's codec configuration
+TEST_F(SignalingTest, MaxFsFrCallerCodec)
+{
+  EnsureInit();
+
+  sipcc::MediaConstraints constraints;
+
+  nsCOMPtr<nsIPrefBranch> prefs = do_GetService(NS_PREFSERVICE_CONTRACTID);
+  ASSERT_TRUE(prefs);
+  FsFrPrefClearer prefClearer(prefs);
+
+  // We don't want max_fs and max_fr prefs impact SDP at this moment
+  prefs->SetIntPref("media.navigator.video.max_fs", 0);
+  prefs->SetIntPref("media.navigator.video.max_fr", 0);
+
+  a1_->CreateOffer(constraints, OFFER_AV, SHOULD_CHECK_AV);
+  a1_->SetLocal(TestObserver::OFFER, a1_->offer());
+  a2_->SetRemote(TestObserver::OFFER, a1_->offer());
+
+  a2_->CreateAnswer(constraints, a1_->offer(), OFFER_AV | ANSWER_AV);
+
+  ParsedSDP sdpWrapper(a2_->answer());
+
+  sdpWrapper.ReplaceLine("a=rtpmap:120",
+    "a=rtpmap:120 VP8/90000\r\na=fmtp:120 max-fs=600;max-fr=60\r\n");
+
+  std::cout << "Modified SDP " << std::endl
+            << indent(sdpWrapper.getSdp()) << std::endl;
+
+  // Double confirm that SDP answer contains correct max-fs and max-fr
+  CheckMaxFsFrSdp(sdpWrapper.getSdp(), 120, 600, 60);
+
+  a2_->SetLocal(TestObserver::ANSWER, sdpWrapper.getSdp());
+  a1_->SetRemote(TestObserver::ANSWER, sdpWrapper.getSdp());
+
+  ASSERT_TRUE_WAIT(a1_->IceCompleted() == true, kDefaultTimeout);
+  ASSERT_TRUE_WAIT(a2_->IceCompleted() == true, kDefaultTimeout);
+
+  // Checking caller's video sending configuration does respect max-fs and
+  // max-fr in SDP answer.
+  mozilla::RefPtr<mozilla::MediaPipeline> pipeline =
+    a1_->GetMediaPipeline(1, 0, 1);
+  ASSERT_TRUE(pipeline);
+  mozilla::MediaSessionConduit *conduit = pipeline->Conduit();
+  ASSERT_TRUE(conduit);
+  ASSERT_EQ(conduit->type(), mozilla::MediaSessionConduit::VIDEO);
+  mozilla::VideoSessionConduit *video_conduit =
+    static_cast<mozilla::VideoSessionConduit*>(conduit);
+
+  ASSERT_EQ(video_conduit->SendingMaxFs(), (unsigned short) 600);
+  ASSERT_EQ(video_conduit->SendingMaxFr(), (unsigned short) 60);
 }
 
 } // End namespace test.
