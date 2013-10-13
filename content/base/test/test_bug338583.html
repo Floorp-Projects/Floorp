@@ -89,9 +89,6 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=338583
       e.target.hits['fn_other_event_name']++;
   }
 
-  var domBranch;
-  var oldPrefVal;
-
   var gEventSourceObj1 = null, gEventSourceObj1_e, gEventSourceObj1_f;
   var gEventSourceObj2 = null;
   var gEventSourceObj3_a = null, gEventSourceObj3_b = null,
@@ -250,6 +247,12 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=338583
   }
 
   function doTest3_b(test_id) {
+    // currently no support yet for local files for b2g/Android mochitest, see bug 838726
+    if (navigator.appVersion.indexOf("Android") != -1 || SpecialPowers.Services.appinfo.name == "B2G") {
+      setTestHasFinished(test_id);
+      return;
+    }
+
     var xhr = new XMLHttpRequest;
     xhr.open("GET", "/dynamic/getMyDirectory.sjs", false);
     xhr.send();
@@ -462,7 +465,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=338583
   function doTest5_c(test_id)
   {
     // credentials using the auth cache and cookies
-    var xhr = SpecialPowers.createSystemXHR();
+    var xhr = new XMLHttpRequest({mozAnon: false, mozSystem: true});
     xhr.withCredentials = true;
     // also, test mixed mode UI
     xhr.open("GET", "https://example.com/tests/content/base/test/file_restrictedEventSource.sjs?test=user1_xhr", true, "user 1", "password 1");
@@ -491,7 +494,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=338583
 
   function doTest5_d(test_id)
   {
-    var xhr = SpecialPowers.createSystemXHR();
+    var xhr = new XMLHttpRequest({mozAnon: false, mozSystem: true});
     xhr.withCredentials = true;
     xhr.open("GET", "https://example.com/tests/content/base/test/file_restrictedEventSource.sjs?test=user2_xhr", true, "user 2", "password 2");
     xhr.send();
@@ -519,7 +522,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=338583
   function doTest5_e(test_id)
   {
     // credentials using the auth cache and cookies
-    var xhr = SpecialPowers.createSystemXHR();
+    var xhr = new XMLHttpRequest({mozAnon: false, mozSystem: true});
     xhr.withCredentials = true;
     xhr.open("GET", "http://example.org/tests/content/base/test/file_restrictedEventSource.sjs?test=user1_xhr", true, "user 1", "password 1");
     xhr.send();
@@ -547,7 +550,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=338583
 
   function doTest5_f(test_id)
   {
-    var xhr = SpecialPowers.createSystemXHR();
+    var xhr = new XMLHttpRequest({mozAnon: false, mozSystem: true});
     xhr.withCredentials = true;
     xhr.open("GET", "http://example.org/tests/content/base/test/file_restrictedEventSource.sjs?test=user2_xhr", true, "user 2", "password 2");
     xhr.send();
@@ -614,7 +617,6 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=338583
          gEventSourceObj7.msg_received[1] == "delayed1" &&
          gEventSourceObj7.msg_received[2] == "delayed2", "Test 7 failed");
 
-      SpecialPowers.setBoolPref("dom.server-events.enabled", oldPrefVal);
       document.getElementById('waitSpan').innerHTML = '';
       setTestHasFinished(test_id);
     }, parseInt(8000*stress_factor));
@@ -623,13 +625,11 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=338583
   function doTest()
   {
     // Allow all cookies, then run the actual test
-    SpecialPowers.pushPrefEnv({"set": [["network.cookie.cookieBehavior", 0]]}, doTestCallback);
+    SpecialPowers.pushPrefEnv({"set": [["network.cookie.cookieBehavior", 0], ["dom.server-events.enabled", true]]}, function() { SpecialPowers.pushPermissions([{'type': 'systemXHR', 'allow': true, 'context': document}], doTestCallback);});
   }
-  
+
   function doTestCallback()
   {
-    oldPrefVal = SpecialPowers.getBoolPref("dom.server-events.enabled");
-    SpecialPowers.setBoolPref("dom.server-events.enabled", true);
 
     // we get a good stress_factor by testing 10 setTimeouts and some float
     // arithmetic taking my machine as stress_factor==1 (time=589)

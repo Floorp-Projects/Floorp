@@ -98,7 +98,7 @@ abstract class AboutHomeTest extends BaseTest {
     protected View getDisplayedBookmark(String url) {
         openAboutHomeTab(AboutHomeTabs.BOOKMARKS);
         ListView bookmarksTabList = findListViewWithTag("bookmarks");
-        waitForListToLoad(bookmarksTabList);
+        waitForNonEmptyListToLoad(bookmarksTabList);
         ListAdapter adapter = bookmarksTabList.getAdapter();
         if (adapter != null) {
             for (int i = 0; i < adapter.getCount(); i++ ) {
@@ -127,11 +127,13 @@ abstract class AboutHomeTest extends BaseTest {
     }
 
     /**
-     * Waits for the given ListView to have a non-empty adapter.
+     * Waits for the given ListView to have a non-empty adapter and be populated
+     * with a minimum number of items.
      *
-     * This method will return false if the given ListView or its adapter are null.
+     * This method will return false if the given ListView or its adapter is null,
+     * or if the ListView does not have the minimum number of items.
      */
-    protected boolean waitForListToLoad(final ListView listView) {
+    protected boolean waitForListToLoad(final ListView listView, final int minSize) {
         Condition listWaitCondition = new Condition() {
             @Override
             public boolean isSatisfied() {
@@ -144,10 +146,14 @@ abstract class AboutHomeTest extends BaseTest {
                     return false;
                 }
 
-                return (adapter.getCount() > 0);
+                return (listView.getCount() - listView.getHeaderViewsCount() >= minSize);
             }
         };
         return waitForCondition(listWaitCondition, MAX_WAIT_MS);
+    }
+
+    protected boolean waitForNonEmptyListToLoad(final ListView listView) {
+        return waitForListToLoad(listView, 1);
     }
 
     /**

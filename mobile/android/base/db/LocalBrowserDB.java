@@ -696,33 +696,30 @@ public class LocalBrowserDB implements BrowserDB.BrowserDBIface {
                   new String[] { String.valueOf(id) });
     }
 
+    /**
+     * Get the favicon from the database, if any, associated with the given favicon URL. (That is,
+     * the URL of the actual favicon image, not the URL of the page with which the favicon is associated.)
+     * @param cr The ContentResolver to use.
+     * @param faviconURL The URL of the favicon to fetch from the database.
+     * @return The decoded Bitmap from the database, if any. null if none is stored.
+     */
     @Override
-    public Bitmap getFaviconForUrl(ContentResolver cr, String uri) {
-        final byte[] b = getFaviconBytesForUrl(cr, uri);
-        if (b == null) {
-            return null;
-        }
-
-        return BitmapUtils.decodeByteArray(b);
-    }
-
-    @Override
-    public byte[] getFaviconBytesForUrl(ContentResolver cr, String uri) {
+    public Bitmap getFaviconForUrl(ContentResolver cr, String faviconURL) {
         Cursor c = null;
         byte[] b = null;
 
         try {
-            c = cr.query(mCombinedUriWithProfile,
-                         new String[] { Combined.FAVICON },
-                         Combined.URL + " = ?",
-                         new String[] { uri },
+            c = cr.query(mFaviconsUriWithProfile,
+                         new String[] { Favicons.DATA },
+                         Favicons.URL + " = ?",
+                         new String[] { faviconURL },
                          null);
 
             if (!c.moveToFirst()) {
                 return null;
             }
 
-            final int faviconIndex = c.getColumnIndexOrThrow(Combined.FAVICON);
+            final int faviconIndex = c.getColumnIndexOrThrow(Favicons.DATA);
             b = c.getBlob(faviconIndex);
         } finally {
             if (c != null) {
@@ -730,7 +727,11 @@ public class LocalBrowserDB implements BrowserDB.BrowserDBIface {
             }
         }
 
-        return b;
+        if (b == null) {
+            return null;
+        }
+
+        return BitmapUtils.decodeByteArray(b);
     }
 
     @Override
@@ -752,28 +753,6 @@ public class LocalBrowserDB implements BrowserDB.BrowserDBIface {
         }
 
         return null;
-    }
-
-    @Override
-    public Cursor getFaviconsForUrls(ContentResolver cr, List<String> urls) {
-        StringBuilder selection = new StringBuilder();
-        selection.append(Favicons.URL + " IN (");
-
-        for (int i = 0; i < urls.size(); i++) {
-            final String url = urls.get(i);
-
-            if (i > 0)
-                selection.append(", ");
-
-            DatabaseUtils.appendEscapedSQLString(selection, url);
-        }
-
-        selection.append(")");
-
-        return cr.query(mCombinedUriWithProfile,
-                        new String[] { Combined.URL, Combined.FAVICON },
-                        selection.toString(),
-                        null, null);
     }
 
     @Override

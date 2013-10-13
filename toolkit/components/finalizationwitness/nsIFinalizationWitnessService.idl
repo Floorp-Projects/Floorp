@@ -1,0 +1,35 @@
+/* -*- Mode: c++; c-basic-offset: 2; indent-tabs-mode: nil; tab-width: 40 -*- */
+/* vim: set ts=2 et sw=2 tw=40: */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+
+
+[scriptable, uuid(15686f9d-483e-4361-98cd-37f1e8f1e61d)]
+interface nsIFinalizationWitnessService: nsISupports
+{
+  /**
+   * Create a new Finalization Witness.
+   *
+   * A finalization witness is an object whose sole role is to
+   * broadcast when it is garbage-collected. Once the witness is
+   * created, call method its method |forget()| to prevent the
+   * broadcast.
+   *
+   * @param aTopic The topic that the witness will broadcast using
+   *               Services.obs.
+   * @param aString The string that the witness will broadcast.
+   * @return An object with a single method |forget()|.
+   */
+  [implicit_jscontext]
+  jsval make(in string aTopic, in wstring aString);
+};
+
+%{ C++
+
+#define FINALIZATIONWITNESSSERVICE_CID {0x15686f9d,0x483e,0x4361,{0x98,0xcd,0x37,0xf1,0xe8,0xf1,0xe6,0x1d}}
+#define FINALIZATIONWITNESSSERVICE_CONTRACTID "@mozilla.org/toolkit/finalizationwitness;1"
+
+%}

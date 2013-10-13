@@ -447,6 +447,14 @@
                     /*buf*/   Types.void_t.out_ptr,
                     /*nbytes*/Types.size_t);
 
+       UnixFile.posix_fadvise =
+         declareFFI("posix_fadvise", ctypes.default_abi,
+                    /*return*/ Types.int,
+                    /*fd*/     Types.fd,
+                    /*offset*/ Types.off_t,
+                    /*len*/    Types.off_t,
+                    /*advise*/ Types.int);
+
        if (OS.Constants.libc._DARWIN_FEATURE_64_BIT_INODE) {
          // Special case for MacOS X 10.5+
          // Symbol name "readdir" still exists but is used for a
