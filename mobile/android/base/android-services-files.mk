@@ -374,7 +374,6 @@ SYNC_RES_XML := \
   res/xml/fxaccount_passwords_syncadapter.xml \
   res/xml/fxaccount_tabs_syncadapter.xml \
   res/xml/sync_authenticator.xml \
-  res/xml/sync_authenticator.xml \
   res/xml/sync_options.xml \
   res/xml/sync_syncadapter.xml \
   $(NULL)
