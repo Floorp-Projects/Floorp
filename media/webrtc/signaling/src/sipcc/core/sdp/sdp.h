@@ -405,6 +405,7 @@ typedef enum {
     SDP_USE_IN_BAND_FEC,
     SDP_MAX_CODED_AUDIO_BW,
     SDP_CBR,
+    SDP_MAX_FR,
     SDP_MAX_FMTP_PARAM,
     SDP_FMTP_PARAM_UNKNOWN
 } sdp_fmtp_codec_param_e;
@@ -680,6 +681,7 @@ typedef struct sdp_fmtp {
 
     u32                       max_mbps;
     u32                       max_fs;
+    u32                       max_fr;
     u32                       max_cpb;
     u32                       max_dpb;
     u32                       max_br;
@@ -1518,6 +1520,12 @@ extern sdp_result_e sdp_attr_set_fmtp_max_fs (void *sdp_ptr,
 				              u16 inst_num,
 					      u32 max_fs);
 
+extern sdp_result_e sdp_attr_set_fmtp_max_fr (void *sdp_ptr,
+                                              u16 level,
+                                              u8 cap_num,
+                                              u16 inst_num,
+                                              u32 max_fr);
+
 extern sdp_result_e sdp_attr_set_fmtp_max_cpb (void *sdp_ptr,
 					      u16 level,
 				              u8 cap_num,
@@ -1693,6 +1701,8 @@ extern sdp_result_e sdp_attr_get_fmtp_max_rcmd_nalu_size (void *sdp_ptr,
 extern sdp_result_e sdp_attr_get_fmtp_max_mbps (void *sdp_ptr, u16 level,
                                          u8 cap_num, u16 inst_num, u32 *val);
 extern sdp_result_e sdp_attr_get_fmtp_max_fs (void *sdp_ptr, u16 level,
+                                       u8 cap_num, u16 inst_num, u32 *val);
+extern sdp_result_e sdp_attr_get_fmtp_max_fr (void *sdp_ptr, u16 level,
                                        u8 cap_num, u16 inst_num, u32 *val);
 extern sdp_result_e sdp_attr_get_fmtp_max_cpb (void *sdp_ptr, u16 level,
                                         u8 cap_num, u16 inst_num, u32 *val);

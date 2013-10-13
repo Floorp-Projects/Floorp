@@ -16,6 +16,9 @@
 #include "AndroidJNIWrapper.h"
 #endif
 
+#include <algorithm>
+#include <math.h>
+
 namespace mozilla {
 
 static const char* logTag ="WebrtcVideoSessionConduit";
@@ -616,6 +619,71 @@ WebrtcVideoConduit::SelectSendResolution(unsigned short width,
 {
   // XXX This will do bandwidth-resolution adaptation as well - bug 877954
 
+  // Limit resolution to max-fs while keeping same aspect ratio as the
+  // incoming image.
+  if (mCurSendCodecConfig && mCurSendCodecConfig->mMaxFrameSize)
+  {
+    unsigned int cur_fs, max_width, max_height, mb_width, mb_height, mb_max;
+
+    mb_width = (width + 15) >> 4;
+    mb_height = (height + 15) >> 4;
+
+    cur_fs = mb_width * mb_height;
+
+    // Limit resolution to max_fs, but don't scale up.
+    if (cur_fs > mCurSendCodecConfig->mMaxFrameSize)
+    {
+      double scale_ratio;
+
+      scale_ratio = sqrt((double) mCurSendCodecConfig->mMaxFrameSize /
+                         (double) cur_fs);
+
+      mb_width = mb_width * scale_ratio;
+      mb_height = mb_height * scale_ratio;
+
+      // Adjust mb_width and mb_height if they were truncated to zero.
+      if (mb_width == 0) {
+        mb_width = 1;
+        mb_height = std::min(mb_height, mCurSendCodecConfig->mMaxFrameSize);
+      }
+      if (mb_height == 0) {
+        mb_height = 1;
+        mb_width = std::min(mb_width, mCurSendCodecConfig->mMaxFrameSize);
+      }
+    }
+
+    // Limit width/height seperately to limit effect of extreme aspect ratios.
+    mb_max = (unsigned) sqrt(8 * (double) mCurSendCodecConfig->mMaxFrameSize);
+
+    max_width = 16 * std::min(mb_width, mb_max);
+    max_height = 16 * std::min(mb_height, mb_max);
+
+    if (width * max_height > max_width * height)
+    {
+      if (width > max_width)
+      {
+        // Due to the value is truncated to integer here and forced to even
+        // value later, adding 1 to improve accuracy.
+        height = max_width * height / width + 1;
+        width = max_width;
+      }
+    }
+    else
+    {
+      if (height > max_height)
+      {
+        // Due to the value is truncated to integer here and forced to even
+        // value later, adding 1 to improve accuracy.
+        width = max_height * width / height + 1;
+        height = max_height;
+      }
+    }
+
+    // Favor even multiples of pixels for width and height.
+    width = std::max(width & ~1, 2);
+    height = std::max(height & ~1, 2);
+  }
+
   // Adapt to getUserMedia resolution changes
   // check if we need to reconfigure the sending resolution
   if (mSendingWidth != width || mSendingHeight != height)
@@ -850,6 +918,10 @@ WebrtcVideoConduit::CodecConfigToWebRTCCodec(const VideoCodecConfig* codecInfo,
 {
   cinst.plType  = codecInfo->mType;
   // leave width/height alone; they'll be overridden on the first frame
+  if (codecInfo->mMaxFrameRate > 0)
+  {
+    cinst.maxFramerate = codecInfo->mMaxFrameRate;
+  }
   cinst.minBitrate = 200;
   cinst.startBitrate = 300;
   cinst.maxBitrate = 2000;
@@ -892,8 +964,10 @@ WebrtcVideoConduit::CheckCodecsForMatch(const VideoCodecConfig* curCodecConfig,
     return false;
   }
 
-  if(curCodecConfig->mType   == codecInfo->mType &&
-     curCodecConfig->mName.compare(codecInfo->mName) == 0)
+  if(curCodecConfig->mType  == codecInfo->mType &&
+     curCodecConfig->mName.compare(codecInfo->mName) == 0 &&
+     curCodecConfig->mMaxFrameSize == codecInfo->mMaxFrameSize &&
+     curCodecConfig->mMaxFrameRate == codecInfo->mMaxFrameRate)
   {
     return true;
   }
@@ -947,6 +1021,8 @@ WebrtcVideoConduit::DumpCodecDB() const
   {
     CSFLogDebug(logTag,"Payload Name: %s", mRecvCodecList[i]->mName.c_str());
     CSFLogDebug(logTag,"Payload Type: %d", mRecvCodecList[i]->mType);
+    CSFLogDebug(logTag,"Payload Max Frame Size: %d", mRecvCodecList[i]->mMaxFrameSize);
+    CSFLogDebug(logTag,"Payload Max Frame Rate: %d", mRecvCodecList[i]->mMaxFrameRate);
   }
 }
 
