@@ -78,11 +78,6 @@ function starttest(){
   // Test a DOMWindowUtils method and property
   is(SpecialPowers.DOMWindowUtils.getClassName(window), "Proxy");
   is(SpecialPowers.DOMWindowUtils.docCharsetIsForced, false);
-
-  //Run the createSystemXHR method
-  var xhr = SpecialPowers.createSystemXHR();
-  ok(xhr, "createSystemXHR should not return null");
-  is(xhr.readyState, XMLHttpRequest.UNSENT, "createSystemXHR should create an unsent XMLHttpRequest object");
   
   // QueryInterface and getPrivilegedProps tests
   is(SpecialPowers.can_QI(SpecialPowers), false);
@@ -99,7 +94,7 @@ function starttest(){
 
   // Try some basic stuff with XHR.
   var xhr2 = SpecialPowers.Cc["@mozilla.org/xmlextras/xmlhttprequest;1"].createInstance(SpecialPowers.Ci.nsIXMLHttpRequest);
-  is(xhr.readyState, XMLHttpRequest.UNSENT, "Should be able to get props off privileged objects");
+  is(xhr2.readyState, XMLHttpRequest.UNSENT, "Should be able to get props off privileged objects");
   var testURI = SpecialPowers.Cc['@mozilla.org/network/standard-url;1']
                                               .createInstance(SpecialPowers.Ci.nsIURI);
   testURI.spec = "http://www.foobar.org/";
