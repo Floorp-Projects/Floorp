@@ -57,12 +57,28 @@ struct VideoCodecConfig
   int mType;
   std::string mName;
   uint32_t mRtcpFbTypes;
+  unsigned int mMaxFrameSize;
+  unsigned int mMaxFrameRate;
 
   VideoCodecConfig(int type,
                    std::string name,
                    int rtcpFbTypes): mType(type),
                                      mName(name),
-                                     mRtcpFbTypes(rtcpFbTypes)
+                                     mRtcpFbTypes(rtcpFbTypes),
+                                     mMaxFrameSize(0),
+                                     mMaxFrameRate(0)
+  {
+  }
+
+  VideoCodecConfig(int type,
+                   std::string name,
+                   int rtcpFbTypes,
+                   unsigned int max_fs,
+                   unsigned int max_fr): mType(type),
+                                         mName(name),
+                                         mRtcpFbTypes(rtcpFbTypes),
+                                         mMaxFrameSize(max_fs),
+                                         mMaxFrameRate(max_fr)
   {
   }
 

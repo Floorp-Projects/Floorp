@@ -11,6 +11,11 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=291082
 <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
 <script type="application/javascript">
   /** Test for Bug 291082 **/
+
+
+  // Turn off Spatial Navigation because it hijacks arrow keydown events.
+  SpecialPowers.setBoolPref("snav.enabled", false);
+
   SimpleTest.waitForExplicitFinish();
 
   function preventDefault(event) {
