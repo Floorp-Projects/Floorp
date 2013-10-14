@@ -120,7 +120,7 @@ public:
 
   virtual nsresult HandleKeyPressEvent(nsIDOMKeyEvent* aKeyEvent);
 
-  virtual already_AddRefed<nsIDOMEventTarget> GetDOMEventTarget();
+  virtual already_AddRefed<mozilla::dom::EventTarget> GetDOMEventTarget();
 
   virtual nsresult BeginIMEComposition();
   virtual nsresult UpdateIMEComposition(const nsAString &aCompositionString,
