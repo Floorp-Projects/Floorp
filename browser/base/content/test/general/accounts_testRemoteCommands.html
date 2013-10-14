@@ -2,7 +2,7 @@
   <head>
     <meta charset="utf-8">
 
-<script>
+<script type="text/javascript;version=1.8">
 
 function init() {
   window.addEventListener("message", function process(e) {doTest(e)}, false);
@@ -15,15 +15,7 @@ function checkStatusValue(payload, expectedValue) {
   return payload.status == expectedValue;
 }
 
-var tests = [
-{
-  info: "Check account creation",
-  event: "create",
-  payloadType: "message",
-  validateResponse: function(payload) {
-    return checkStatusValue(payload, "create");
-  },
-},
+let tests = [
 {
   info: "Check account verification",
   event: "verified",
@@ -42,18 +34,18 @@ var tests = [
 },
 ];
 
-var currentTest = -1;
+let currentTest = -1;
 function doTest(evt) {
   if (evt) {
     if (currentTest < 0 || !evt.data.content)
       return; // not yet testing
 
-    var test = tests[currentTest];
+    let test = tests[currentTest];
     if (evt.data.type != test.payloadType)
       return; // skip unrequested events
 
-    var error = JSON.stringify(evt.data.content);
-    var pass = false;
+    let error = JSON.stringify(evt.data.content);
+    let pass = false;
     try {
       pass = test.validateResponse(evt.data.content)
     } catch (e) {}
@@ -67,17 +59,17 @@ function doTest(evt) {
 }
 
 function reportResult(info, pass, error) {
-  var data = {type: "testResult", info: info, pass: pass, error: error};
+  let data = {type: "testResult", info: info, pass: pass, error: error};
   window.parent.postMessage(data, "*");
 }
 
 function reportFinished(cmd) {
-  var data = {type: "testsComplete", count: tests.length};
+  let data = {type: "testsComplete", count: tests.length};
   window.parent.postMessage(data, "*");
 }
 
 function sendToBrowser(type) {
-  var event = new CustomEvent("FirefoxAccountsCommand", {detail: {command: type}, bubbles: true});
+  let event = new CustomEvent("FirefoxAccountsCommand", {detail: {command: type, data: {}}, bubbles: true});
   document.dispatchEvent(event);
 }
 
