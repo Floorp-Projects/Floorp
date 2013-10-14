@@ -20,6 +20,7 @@
 #include "runnable_utils.h"
 #include "cpr_socket.h"
 #include "debug-psipcc-types.h"
+#include "prcvar.h"
 
 #include "mozilla/Telemetry.h"
 
@@ -230,7 +231,7 @@ nsresult PeerConnectionCtx::Initialize() {
   mDevice = mCCM->getActiveDevice();
   mCCM->addCCObserver(this);
   NS_ENSURE_TRUE(mDevice.get(), NS_ERROR_FAILURE);
-  ChangeSipccState(PeerConnectionImpl::kStarting);
+  ChangeSipccState(mozilla::dom::PCImplSipccState::Starting);
 
   // Now that everything is set up, we let the CCApp thread
   // know that it's okay to start processing messages.
@@ -265,7 +266,7 @@ void PeerConnectionCtx::onDeviceEvent(ccapi_device_event_e aDeviceEvent,
   cc_service_state_t state = aInfo->getServiceState();
   // We are keeping this in a local var to avoid a data race
   // with ChangeSipccState in the debug message and compound if below
-  PeerConnectionImpl::SipccState currentSipccState = mSipccState;
+  mozilla::dom::PCImplSipccState currentSipccState = mSipccState;
 
   switch (aDeviceEvent) {
     case CCAPI_DEVICE_EV_STATE:
@@ -273,9 +274,9 @@ void PeerConnectionCtx::onDeviceEvent(ccapi_device_event_e aDeviceEvent,
 
       if (CC_STATE_INS == state) {
         // SIPCC is up
-        if (PeerConnectionImpl::kStarting == currentSipccState ||
-            PeerConnectionImpl::kIdle == currentSipccState) {
-          ChangeSipccState(PeerConnectionImpl::kStarted);
+        if (mozilla::dom::PCImplSipccState::Starting == currentSipccState ||
+            mozilla::dom::PCImplSipccState::Idle == currentSipccState) {
+          ChangeSipccState(mozilla::dom::PCImplSipccState::Started);
         } else {
           CSFLogError(logTag, "%s PeerConnection already started", __FUNCTION__);
         }
@@ -322,7 +323,7 @@ static void onCallEvent_m(nsAutoPtr<std::string> peerconnection,
   if (!pc.impl())  // This must be an event on a dead PC. Ignore
     return;
   CSFLogDebug(logTag, "Calling PC");
-  pc.impl()->onCallEvent(aCallEvent, aInfo);
+  pc.impl()->onCallEvent(OnCallEventArgs(aCallEvent, aInfo));
 }
 
 }  // namespace sipcc

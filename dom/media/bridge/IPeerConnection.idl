@@ -24,45 +24,12 @@ interface IPeerConnectionManager : nsISupports
  *
  * See media/webrtc/signaling/include/PeerConnectionImpl.h
  */
-[scriptable, uuid(896dc16a-05d6-45e4-bdbf-aba57123ed3e)]
+[scriptable, uuid(d7dfe148-0416-446b-a128-66a7c71ae8d3)]
 interface IPeerConnectionObserver : nsISupports
 {
-  /* Constants */
-  const long kReadyState = 0x1;
-  const long kIceState = 0x2;
-  const long kSdpState = 0x3;
-  const long kSipccState = 0x4;
-  const long kSignalingState = 0x5;
-
-  /* JSEP callbacks */
-  void onCreateOfferSuccess(in string offer);
-  void onCreateOfferError(in unsigned long name, in string message);
-  void onCreateAnswerSuccess(in string answer);
-  void onCreateAnswerError(in unsigned long name, in string message);
-  void onSetLocalDescriptionSuccess();
-  void onSetRemoteDescriptionSuccess();
-  void onSetLocalDescriptionError(in unsigned long name, in string message);
-  void onSetRemoteDescriptionError(in unsigned long name, in string message);
-  void onAddIceCandidateSuccess();
-  void onAddIceCandidateError(in unsigned long name, in string message);
-  void onIceCandidate(in unsigned short level, in string mid, in string candidate);
-
-  /* Data channel callbacks */
-  void notifyDataChannel(in nsIDOMDataChannel channel);
-  void notifyConnection();
-  void notifyClosedConnection();
-
-  /* Notification of one of several types of state changed */
-  void onStateChange(in unsigned long state);
-
-  /* Changes to MediaStreams */
-  void onAddStream(in nsIDOMMediaStream stream);
-  void onRemoveStream();
-  void onAddTrack();
-  void onRemoveTrack();
 };
 
-[scriptable, uuid(930dce8b-7c5e-4393-b8c0-cb3a928f68bd)]
+[scriptable, uuid(c9c31639-1a49-4533-8429-f6a348c4d8c3)]
 interface IPeerConnection : nsISupports
 {
   const unsigned long kHintAudio = 0x00000001;
@@ -86,15 +53,6 @@ interface IPeerConnection : nsISupports
   const long kClosing = 3;
   const long kClosed = 4;
 
-  /* RTCSignalingState from WebRTC spec */
-  const long kSignalingInvalid            = 0;
-  const long kSignalingStable             = 1;
-  const long kSignalingHaveLocalOffer     = 2;
-  const long kSignalingHaveRemoteOffer    = 3;
-  const long kSignalingHaveLocalPranswer  = 4;
-  const long kSignalingHaveRemotePranswer = 5;
-  const long kSignalingClosed             = 6;
-
   /* for 'type' in DataChannelInit dictionary */
   const unsigned short kDataChannelReliable = 0;
   const unsigned short kDataChannelPartialReliableRexmit = 1;
@@ -112,50 +70,4 @@ interface IPeerConnection : nsISupports
   const unsigned long kIncompatibleMediaStreamTrack     = 8;
   const unsigned long kInternalError                    = 9;
   const unsigned long kMaxErrorType                     = 9; // Same as final error
-
-  /* Must be called first. Observer events will be dispatched on the thread provided */
-  [implicit_jscontext] void initialize(in IPeerConnectionObserver observer, in nsIDOMWindow window,
-                  [optional] in jsval iceServers,
-                  [optional] in nsIThread thread);
-
-  /* JSEP calls */
-  [implicit_jscontext] void createOffer(in jsval constraints);
-  [implicit_jscontext] void createAnswer(in jsval constraints);
-  void setLocalDescription(in long action, in string sdp);
-  void setRemoteDescription(in long action, in string sdp);
-
-  /* Adds the stream created by GetUserMedia */
-  void addStream(in nsIDOMMediaStream stream);
-  void removeStream(in nsIDOMMediaStream stream);
-  void closeStreams();
-
-  [implicit_jscontext] readonly attribute jsval localStreams; // MediaStream[]
-  [implicit_jscontext] readonly attribute jsval remoteStreams; // MediaStream[]
-
-  /* As the ICE candidates roll in this one should be called each time
-   * in order to keep the candidate list up-to-date for the next SDP-related
-   * call PeerConnectionImpl does not parse ICE candidates, just sticks them
-   * into the SDP.
-   */
-  void addIceCandidate(in string candidate, in string mid, in unsigned short level);
-
-  /* Puts the SIPCC engine back to 'kIdle', shuts down threads, deletes state */
-  void close();
-
-  /* Attributes */
-  readonly attribute string localDescription;
-  readonly attribute string remoteDescription;
-
-  readonly attribute unsigned long iceState;
-  readonly attribute unsigned long readyState;
-  readonly attribute unsigned long signalingState;
-  readonly attribute unsigned long sipccState;
-
-  /* Data channels */
-  nsIDOMDataChannel createDataChannel(in ACString label, in ACString protocol,
-    in unsigned short type, in boolean outOfOrderAllowed,
-    in unsigned short maxTime, in unsigned short maxNum,
-    in boolean externalNegotiated, in unsigned short stream);
-  void connectDataConnection(in unsigned short localport,
-    in unsigned short remoteport, in unsigned short numstreams);
 };
