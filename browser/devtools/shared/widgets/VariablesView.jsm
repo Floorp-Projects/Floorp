@@ -108,7 +108,9 @@ VariablesView.prototype = {
    */
   set rawObject(aObject) {
     this.empty();
-    this.addScope().addItem().populate(aObject, { sorted: true });
+    this.addScope()
+        .addItem("", { enumerable: true })
+        .populate(aObject, { sorted: true });
   },
 
   /**
