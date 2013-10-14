@@ -162,8 +162,11 @@ nsEventListenerService::GetListenerInfoFor(nsIDOMEventTarget* aEventTarget,
   *aCount = 0;
   *aOutArray = nullptr;
   nsCOMArray<nsIEventListenerInfo> listenerInfos;
-  nsEventListenerManager* elm =
-    aEventTarget->GetListenerManager(false);
+
+  nsCOMPtr<EventTarget> eventTarget = do_QueryInterface(aEventTarget);
+  NS_ENSURE_TRUE(eventTarget, NS_ERROR_NO_INTERFACE);
+
+  nsEventListenerManager* elm = eventTarget->GetExistingListenerManager();
   if (elm) {
     elm->GetListenerInfo(&listenerInfos);
   }
@@ -221,7 +224,10 @@ nsEventListenerService::HasListenersFor(nsIDOMEventTarget* aEventTarget,
                                         const nsAString& aType,
                                         bool* aRetVal)
 {
-  nsEventListenerManager* elm = aEventTarget->GetListenerManager(false);
+  nsCOMPtr<EventTarget> eventTarget = do_QueryInterface(aEventTarget);
+  NS_ENSURE_TRUE(eventTarget, NS_ERROR_NO_INTERFACE);
+
+  nsEventListenerManager* elm = eventTarget->GetExistingListenerManager();
   *aRetVal = elm && elm->HasListenersFor(aType);
   return NS_OK;
 }
@@ -235,7 +241,10 @@ nsEventListenerService::AddSystemEventListener(nsIDOMEventTarget *aTarget,
   NS_PRECONDITION(aTarget, "Missing target");
   NS_PRECONDITION(aListener, "Missing listener");
 
-  nsEventListenerManager* manager = aTarget->GetListenerManager(true);
+  nsCOMPtr<EventTarget> eventTarget = do_QueryInterface(aTarget);
+  NS_ENSURE_TRUE(eventTarget, NS_ERROR_NO_INTERFACE);
+
+  nsEventListenerManager* manager = eventTarget->GetOrCreateListenerManager();
   NS_ENSURE_STATE(manager);
 
   EventListenerFlags flags =
@@ -254,7 +263,10 @@ nsEventListenerService::RemoveSystemEventListener(nsIDOMEventTarget *aTarget,
   NS_PRECONDITION(aTarget, "Missing target");
   NS_PRECONDITION(aListener, "Missing listener");
 
-  nsEventListenerManager* manager = aTarget->GetListenerManager(false);
+  nsCOMPtr<EventTarget> eventTarget = do_QueryInterface(aTarget);
+  NS_ENSURE_TRUE(eventTarget, NS_ERROR_NO_INTERFACE);
+
+  nsEventListenerManager* manager = eventTarget->GetExistingListenerManager();
   if (manager) {
     EventListenerFlags flags =
       aUseCapture ? TrustedEventsAtSystemGroupCapture() :
@@ -273,7 +285,11 @@ nsEventListenerService::AddListenerForAllEvents(nsIDOMEventTarget* aTarget,
                                                 bool aSystemEventGroup)
 {
   NS_ENSURE_STATE(aTarget && aListener);
-  nsEventListenerManager* manager = aTarget->GetListenerManager(true);
+
+  nsCOMPtr<EventTarget> eventTarget = do_QueryInterface(aTarget);
+  NS_ENSURE_TRUE(eventTarget, NS_ERROR_NO_INTERFACE);
+
+  nsEventListenerManager* manager = eventTarget->GetOrCreateListenerManager();
   NS_ENSURE_STATE(manager);
   manager->AddListenerForAllEvents(aListener, aUseCapture, aWantsUntrusted,
                                aSystemEventGroup);
@@ -287,7 +303,11 @@ nsEventListenerService::RemoveListenerForAllEvents(nsIDOMEventTarget* aTarget,
                                                    bool aSystemEventGroup)
 {
   NS_ENSURE_STATE(aTarget && aListener);
-  nsEventListenerManager* manager = aTarget->GetListenerManager(false);
+
+  nsCOMPtr<EventTarget> eventTarget = do_QueryInterface(aTarget);
+  NS_ENSURE_TRUE(eventTarget, NS_ERROR_NO_INTERFACE);
+
+  nsEventListenerManager* manager = eventTarget->GetExistingListenerManager();
   if (manager) {
     manager->RemoveListenerForAllEvents(aListener, aUseCapture, aSystemEventGroup);
   }
