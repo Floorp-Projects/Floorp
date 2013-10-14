@@ -1333,7 +1333,7 @@ GlobalObject::initDataObject(JSContext *cx, Handle<GlobalObject *> global)
                                        DataCtor, DataProto))
         return false;
 
-    global->setReservedSlot(JSProto_Data, ObjectValue(*DataCtor));
+    global->setConstructor(JSProto_Data, ObjectValue(*DataCtor));
     return true;
 }
 
@@ -1358,7 +1358,7 @@ GlobalObject::initTypeObject(JSContext *cx, Handle<GlobalObject *> global)
                                        TypeCtor, TypeProto))
         return false;
 
-    global->setReservedSlot(JSProto_Type, ObjectValue(*TypeCtor));
+    global->setConstructor(JSProto_Type, ObjectValue(*TypeCtor));
     return true;
 }
 
@@ -1369,7 +1369,7 @@ GlobalObject::initArrayTypeObject(JSContext *cx, Handle<GlobalObject *> global)
         global->createConstructor(cx, ArrayType::construct,
                                   cx->names().ArrayType, 2));
 
-    global->setReservedSlot(JSProto_ArrayTypeObject, ObjectValue(*ctor));
+    global->setConstructor(JSProto_ArrayTypeObject, ObjectValue(*ctor));
     return true;
 }
 
