@@ -163,7 +163,7 @@ FilePicker.prototype = {
 
   show: function() {
     if (this._domWin) {
-      PromptUtils.fireDialogEvent(this._domWin, "DOMWillOpenModalDialog");
+      this.fireDialogEvent(this._domWin, "DOMWillOpenModalDialog");
       let winUtils = this._domWin.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIDOMWindowUtils);
       winUtils.enterModalState();
     }
@@ -175,6 +175,12 @@ FilePicker.prototype = {
     while (this._promptActive)
       thread.processNextEvent(true);
     delete this._promptActive;
+
+    if (this._domWin) {
+      let winUtils = this._domWin.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIDOMWindowUtils);
+      winUtils.leaveModalState();
+      this.fireDialogEvent(this._domWin, "DOMModalDialogClosed");
+    }
 
     if (this._filePath)
       return Ci.nsIFilePicker.returnOK;
@@ -243,6 +249,20 @@ FilePicker.prototype = {
         return mapFunction(this.mFiles[this.mIndex++]);
       }
     };
+  },
+
+  fireDialogEvent: function(aDomWin, aEventName) {
+    // accessing the document object can throw if this window no longer exists. See bug 789888.
+    try {
+      if (!aDomWin.document)
+        return;
+      let event = aDomWin.document.createEvent("Events");
+      event.initEvent(aEventName, true, true);
+      let winUtils = aDomWin.QueryInterface(Ci.nsIInterfaceRequestor)
+                           .getInterface(Ci.nsIDOMWindowUtils);
+      winUtils.dispatchEventToChromeOnly(aDomWin, event);
+    } catch(ex) {
+    }
   },
 
   classID: Components.ID("{18a4e042-7c7c-424b-a583-354e68553a7f}"),
