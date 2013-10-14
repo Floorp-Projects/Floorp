@@ -75,6 +75,31 @@ let wrapper = {
     );
   },
 
+  /**
+   * onSessionStatus sends the currently signed in user's credentials
+   * to the jelly.
+   */
+  onSessionStatus: function () {
+    log("Received: 'session_status'.");
+
+    fxAccounts.getSignedInUser().then(
+      (accountData) => this.injectData("message", { status: "session_status", data: accountData }),
+      (err) => this.injectData("message", { status: "error", error: err })
+    );
+  },
+
+  /**
+   * onSignOut handler erases the current user's session from the fxaccounts service
+   */
+  onSignOut: function () {
+    log("Received: 'sign_out'.");
+
+    fxAccounts.signOut().then(
+      () => this.injectData("message", { status: "sign_out" }),
+      (err) => this.injectData("message", { status: "error", error: err })
+    );
+  },
+
   handleRemoteCommand: function (evt) {
     log('command: ' + evt.detail.command);
     let data = evt.detail.data;
@@ -85,6 +110,12 @@ let wrapper = {
         break;
       case "verified":
         this.onVerified(data);
+        break;
+      case "session_status":
+        this.onSessionStatus(data);
+        break;
+      case "sign_out":
+        this.onSignOut(data);
         break;
       default:
         log("Unexpected remote command received: " + evt.detail.command + ". Ignoring command.");
