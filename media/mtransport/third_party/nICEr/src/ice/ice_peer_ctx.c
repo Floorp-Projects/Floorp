@@ -163,18 +163,18 @@ static int nr_ice_peer_ctx_parse_stream_attributes_int(nr_ice_peer_ctx *pctx, nr
     for(i=0;i<attr_ct;i++){
       if(!strncmp(attrs[i],"ice-",4)){
         if(r=nr_ice_peer_ctx_parse_media_stream_attribute(pctx,pstream,attrs[i])) {
-          r_log(LOG_ICE,LOG_ERR,"ICE(%s): peer (%s) specified bogus ICE attribute",pctx->ctx->label,pctx->label);
+          r_log(LOG_ICE,LOG_WARNING,"ICE(%s): peer (%s) specified bogus ICE attribute",pctx->ctx->label,pctx->label);
           continue;
         }
       }
       else if (!strncmp(attrs[i],"candidate",9)){
         if(r=nr_ice_ctx_parse_candidate(pctx,pstream,attrs[i])) {
-          r_log(LOG_ICE,LOG_ERR,"ICE(%s): peer (%s) specified bogus candidate",pctx->ctx->label,pctx->label);
+          r_log(LOG_ICE,LOG_WARNING,"ICE(%s): peer (%s) specified bogus candidate",pctx->ctx->label,pctx->label);
           continue;
         }
       }
       else {
-        r_log(LOG_ICE,LOG_ERR,"ICE(%s): peer (%s) specified bogus attribute",pctx->ctx->label,pctx->label);
+        r_log(LOG_ICE,LOG_WARNING,"ICE(%s): peer (%s) specified bogus attribute",pctx->ctx->label,pctx->label);
       }
     }
 
@@ -206,16 +206,16 @@ static int nr_ice_ctx_parse_candidate(nr_ice_peer_ctx *pctx, nr_ice_media_stream
     }
 
     if(!comp){
-      r_log(LOG_ICE,LOG_ERR,"Peer answered with more components than we offered");
+      r_log(LOG_ICE,LOG_WARNING,"Peer answered with more components than we offered");
       ABORT(R_BAD_DATA);
     }
 
     if (comp->state == NR_ICE_COMPONENT_DISABLED) {
-      r_log(LOG_ICE,LOG_ERR,"Peer offered candidates for disabled remote component");
+      r_log(LOG_ICE,LOG_WARNING,"Peer offered candidates for disabled remote component");
       ABORT(R_BAD_DATA);
     }
     if (comp->local_component->state == NR_ICE_COMPONENT_DISABLED) {
-      r_log(LOG_ICE,LOG_ERR,"Peer offered candidates for disabled local component");
+      r_log(LOG_ICE,LOG_WARNING,"Peer offered candidates for disabled local component");
       ABORT(R_BAD_DATA);
     }
 
@@ -246,7 +246,7 @@ int nr_ice_peer_ctx_find_pstream(nr_ice_peer_ctx *pctx, nr_ice_media_stream *str
        pstream = STAILQ_NEXT(pstream, entry);
      }
      if (!pstream) {
-       r_log(LOG_ICE,LOG_ERR,"ICE(%s): peer (%s) has no stream matching stream %s",pctx->ctx->label,pctx->label,stream->label);
+       r_log(LOG_ICE,LOG_WARNING,"ICE(%s): peer (%s) has no stream matching stream %s",pctx->ctx->label,pctx->label,stream->label);
        ABORT(R_NOT_FOUND);
      }
 
@@ -263,7 +263,7 @@ int nr_ice_peer_ctx_parse_trickle_candidate(nr_ice_peer_ctx *pctx, nr_ice_media_
     int r,_status;
     int needs_pairing = 0;
 
-    r_log(LOG_ICE,LOG_ERR,"ICE(%s): peer (%s) parsing trickle ICE candidate %s",pctx->ctx->label,pctx->label,candidate);
+    r_log(LOG_ICE,LOG_DEBUG,"ICE(%s): peer (%s) parsing trickle ICE candidate %s",pctx->ctx->label,pctx->label,candidate);
     r = nr_ice_peer_ctx_find_pstream(pctx, stream, &pstream);
     if (r)
       ABORT(r);
@@ -329,10 +329,10 @@ int nr_ice_peer_ctx_pair_candidates(nr_ice_peer_ctx *pctx)
     int r,_status;
 
 
-    r_log(LOG_ICE,LOG_ERR,"ICE(%s): peer (%s) pairing candidates",pctx->ctx->label,pctx->label);
+    r_log(LOG_ICE,LOG_DEBUG,"ICE(%s): peer (%s) pairing candidates",pctx->ctx->label,pctx->label);
 
     if(STAILQ_EMPTY(&pctx->peer_streams)) {
-        r_log(LOG_ICE,LOG_ERR,"ICE(%s): peer (%s) received no media stream attribributes",pctx->ctx->label,pctx->label);
+        r_log(LOG_ICE,LOG_ERR,"ICE(%s): peer (%s) received no media stream attributes",pctx->ctx->label,pctx->label);
         ABORT(R_FAILED);
     }
 
@@ -481,6 +481,10 @@ int nr_ice_peer_ctx_start_checks2(nr_ice_peer_ctx *pctx, int allow_non_first)
     }
 
     if (!stream) {
+      /*
+         We fail above if we aren't doing trickle, and this is not all that
+         unusual in the trickle case.
+       */
       r_log(LOG_ICE,LOG_NOTICE,"ICE(%s): peer (%s) no streams with non-empty check lists",pctx->ctx->label,pctx->label);
     }
     else if (stream->ice_state == NR_ICE_MEDIA_STREAM_CHECKS_FROZEN) {
