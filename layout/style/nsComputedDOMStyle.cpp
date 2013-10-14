@@ -274,7 +274,7 @@ nsComputedDOMStyle::GetStyleContextForElement(Element* aElement,
   // set.  Using the pres shell from the content also means that any
   // content that's actually *in* a document will get the style from the
   // correct document.
-  nsIPresShell *presShell = GetPresShellForContent(aElement);
+  nsCOMPtr<nsIPresShell> presShell = GetPresShellForContent(aElement);
   if (!presShell) {
     presShell = aPresShell;
     if (!presShell)
