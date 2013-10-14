@@ -13,7 +13,6 @@
 #include "mozilla/dom/UnionTypes.h"
 #include "mozilla/ErrorResult.h"
 #include "nsCOMPtr.h"
-#include "nsGenericHTMLElement.h"
 #include "nsWrapperCache.h"
 
 // Forward declare this before we include TestCodeGenBinding.h, because that header relies on including

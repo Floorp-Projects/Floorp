@@ -238,7 +238,6 @@ class Descriptor(DescriptorProvider):
                 headerDefault = self.nativeType
                 headerDefault = headerDefault.replace("::", "/") + ".h"
         self.headerFile = desc.get('headerFile', headerDefault)
-        self.headerIsDefault = self.headerFile == headerDefault
         if self.jsImplParent == self.nativeType:
             self.jsImplParentHeader = self.headerFile
         else:
@@ -357,17 +356,12 @@ class Descriptor(DescriptorProvider):
                                 (self.interface.identifier.name, self.nativeOwnership))
         self.customTrace = desc.get('customTrace', self.nativeOwnership == 'worker')
         self.customFinalize = desc.get('customFinalize', self.nativeOwnership == 'worker')
-        self.customWrapperManagement = desc.get('customWrapperManagement', False)
         if desc.get('wantsQI', None) != None:
             self._wantsQI = desc.get('wantsQI', None)
         self.wrapperCache = (not self.interface.isCallback() and
                              (self.nativeOwnership == 'worker' or
                               (self.nativeOwnership != 'owned' and
                                desc.get('wrapperCache', True))))
-        if self.customWrapperManagement and not self.wrapperCache:
-            raise TypeError("Descriptor for %s has customWrapperManagement "
-                            "but is not wrapperCached." %
-                            (self.interface.identifier.name))
 
         def make_name(name):
             return name + "_workers" if self.workers else name

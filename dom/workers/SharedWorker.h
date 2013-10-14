@@ -28,7 +28,7 @@ class SharedWorker MOZ_FINAL : public nsDOMEventTargetHelper
   typedef mozilla::ErrorResult ErrorResult;
   typedef mozilla::dom::GlobalObject GlobalObject;
 
-  nsRefPtr<WorkerPrivate> mWorkerPrivate;
+  WorkerPrivate* mWorkerPrivate;
   nsRefPtr<MessagePort> mMessagePort;
   nsTArray<nsCOMPtr<nsIDOMEvent>> mSuspendedEvents;
   uint64_t mSerial;
@@ -83,8 +83,7 @@ public:
 
 private:
   // This class can only be created from the RuntimeService.
-  SharedWorker(nsPIDOMWindow* aWindow,
-               WorkerPrivate* aWorkerPrivate);
+  SharedWorker(nsPIDOMWindow* aWindow, WorkerPrivate* aWorkerPrivate);
 
   // This class is reference-counted and will be destroyed from Release().
   ~SharedWorker();
