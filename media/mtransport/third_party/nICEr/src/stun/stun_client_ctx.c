@@ -285,7 +285,7 @@ static int nr_stun_client_send_request(nr_stun_client_ctx *ctx)
     if (ctx->state != NR_STUN_CLIENT_STATE_RUNNING)
         ABORT(R_NOT_PERMITTED);
 
-    r_log(NR_LOG_STUN,LOG_DEBUG,"STUN-CLIENT(%s): Sending(my_addr=%s,peer_addr=%s)",ctx->label,ctx->my_addr.as_string,ctx->peer_addr.as_string);
+    r_log(NR_LOG_STUN,LOG_DEBUG,"STUN-CLIENT(%s): Sending check request (my_addr=%s,peer_addr=%s)",ctx->label,ctx->my_addr.as_string,ctx->peer_addr.as_string);
 
     if (ctx->request == 0) {
         switch (ctx->mode) {
@@ -435,7 +435,7 @@ int nr_stun_client_process_response(nr_stun_client_ctx *ctx, UCHAR *msg, int len
     if (ctx->state != NR_STUN_CLIENT_STATE_RUNNING)
       ABORT(R_REJECTED);
 
-    r_log(NR_LOG_STUN,LOG_DEBUG,"STUN-CLIENT(%s): Received(my_addr=%s,peer_addr=%s)",ctx->label,ctx->my_addr.as_string,peer_addr->as_string);
+    r_log(NR_LOG_STUN,LOG_DEBUG,"STUN-CLIENT(%s): Received check response (my_addr=%s,peer_addr=%s)",ctx->label,ctx->my_addr.as_string,peer_addr->as_string);
 
     snprintf(string, sizeof(string)-1, "STUN-CLIENT(%s): Received ", ctx->label);
     r_dump(NR_LOG_STUN, LOG_DEBUG, string, (char*)msg, len);
@@ -518,19 +518,19 @@ int nr_stun_client_process_response(nr_stun_client_ctx *ctx, UCHAR *msg, int len
         ABORT(r);
 
     if ((r=nr_stun_decode_message(ctx->response, nr_stun_client_get_password, password))) {
-        r_log(NR_LOG_STUN,LOG_DEBUG,"STUN-CLIENT(%s): error decoding message",ctx->label);
+        r_log(NR_LOG_STUN,LOG_DEBUG,"STUN-CLIENT(%s): error decoding response",ctx->label);
         ABORT(r);
     }
 
     /* This will return an error if request and response don't match,
        which is how we reject responses that match other contexts. */
     if ((r=nr_stun_receive_message(ctx->request, ctx->response))) {
-        r_log(NR_LOG_STUN,LOG_DEBUG,"STUN-CLIENT(%s): error receiving message",ctx->label);
+        r_log(NR_LOG_STUN,LOG_DEBUG,"STUN-CLIENT(%s): error receiving response",ctx->label);
         ABORT(r);
     }
 
     r_log(NR_LOG_STUN,LOG_DEBUG,
-          "STUN-CLIENT(%s): successfully received message; processing",ctx->label);
+          "STUN-CLIENT(%s): successfully received response; processing",ctx->label);
 
 /* TODO: !nn! currently using password!=0 to mean that auth is required,
  * TODO: !nn! but we should probably pass that in explicitly via the
