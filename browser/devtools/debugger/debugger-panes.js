@@ -50,7 +50,6 @@ SourcesView.prototype = Heritage.extend(WidgetMethods, {
     this._cmPopup = document.getElementById("sourceEditorContextMenu");
     this._cbPanel = document.getElementById("conditional-breakpoint-panel");
     this._cbTextbox = document.getElementById("conditional-breakpoint-panel-textbox");
-    this._editorDeck = document.getElementById("editor-deck");
     this._stopBlackBoxButton = document.getElementById("black-boxed-message-button");
     this._prettyPrintButton = document.getElementById("pretty-print");
 
@@ -401,9 +400,11 @@ SourcesView.prototype = Heritage.extend(WidgetMethods, {
       return;
     }
 
-    let { source } = this.selectedItem.attachment;
-    let prettyPrinted = DebuggerController.SourceScripts.prettyPrint(source);
-    prettyPrinted.then(resetEditor, printError);
+    DebuggerView.showProgressBar();
+    const { source } = this.selectedItem.attachment;
+    DebuggerController.SourceScripts.prettyPrint(source)
+      .then(resetEditor, printError)
+      .then(DebuggerView.showEditor);
   },
 
   /**
@@ -694,7 +695,7 @@ SourcesView.prototype = Heritage.extend(WidgetMethods, {
     let script = sourceItem.value.split(" -> ").pop();
     document.title = L10N.getFormatStr("DebuggerWindowScriptTitle", script);
 
-    this.maybeShowBlackBoxMessage();
+    DebuggerView.maybeShowBlackBoxMessage();
     this._updatePrettyPrintButtonState();
   },
 
@@ -709,16 +710,6 @@ SourcesView.prototype = Heritage.extend(WidgetMethods, {
     } else {
       this._prettyPrintButton.removeAttribute("disabled");
     }
-  },
-
-  /**
-   * Show or hide the black box message vs. source editor depending on if the
-   * selected source is black boxed or not.
-   */
-  maybeShowBlackBoxMessage: function() {
-    let sourceForm = this.selectedItem.attachment.source;
-    let sourceClient = DebuggerController.activeThread.source(sourceForm);
-    this._editorDeck.selectedIndex = sourceClient.isBlackBoxed ? 1 : 0;
   },
 
   /**
