@@ -2678,29 +2678,23 @@ nsDocument::InitCSP(nsIChannel* aChannel)
   }
 
   // While we are supporting both CSP 1.0 and the x- headers, the 1.0 headers
-  // can coexist with x- headers.  If both exist, they're both enforced, but
-  // there's a warning posted in the web console that the x-headers are going
-  // away.
+  // take priority.  If both are present, the x-* headers are ignored.
 
   // ----- if there's a full-strength CSP header, apply it.
-  if (!cspOldHeaderValue.IsEmpty()) {
+  if (!cspHeaderValue.IsEmpty()) {
+    rv = AppendCSPFromHeader(csp, cspHeaderValue, selfURI, false, true);
+    NS_ENSURE_SUCCESS(rv, rv);
+  } else if (!cspOldHeaderValue.IsEmpty()) {
     rv = AppendCSPFromHeader(csp, cspOldHeaderValue, selfURI, false, false);
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
-  if (!cspHeaderValue.IsEmpty()) {
-    rv = AppendCSPFromHeader(csp, cspHeaderValue, selfURI, false, true);
-    NS_ENSURE_SUCCESS(rv, rv);
-  }
-
   // ----- if there's a report-only CSP header, apply it.
-  if (!cspOldROHeaderValue.IsEmpty()) {
-    rv = AppendCSPFromHeader(csp, cspOldROHeaderValue, selfURI, true, false);
-    NS_ENSURE_SUCCESS(rv, rv);
-  }
-
   if (!cspROHeaderValue.IsEmpty()) {
     rv = AppendCSPFromHeader(csp, cspROHeaderValue, selfURI, true, true);
+    NS_ENSURE_SUCCESS(rv, rv);
+  } else if (!cspOldROHeaderValue.IsEmpty()) {
+    rv = AppendCSPFromHeader(csp, cspOldROHeaderValue, selfURI, true, false);
     NS_ENSURE_SUCCESS(rv, rv);
   }
 

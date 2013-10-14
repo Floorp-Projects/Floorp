@@ -25,8 +25,6 @@
 namespace js {
 namespace gc {
 
-class AccumulateEdgesTracer;
-
 /*
  * BufferableRef represents an abstract reference for use in the generational
  * GC's remembered set. Entries in the store buffer that cannot be represented

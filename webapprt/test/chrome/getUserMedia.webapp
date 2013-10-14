@@ -1,0 +1,5 @@
+{
+  "name": "getUserMedia Test App",
+  "description": "an app for testing getUserMedia",
+  "launch_path": "/webapprtChrome/webapprt/test/chrome/getUserMedia.html"
+}

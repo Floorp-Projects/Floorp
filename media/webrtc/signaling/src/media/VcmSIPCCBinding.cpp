@@ -24,6 +24,10 @@
 #include "cpr_stdlib.h"
 #include "cpr_string.h"
 #include "mozilla/SyncRunnable.h"
+#include "mozilla/Services.h"
+#include "nsServiceManagerUtils.h"
+#include "nsIPrefService.h"
+#include "nsIPrefBranch.h"
 
 #include <stdlib.h>
 #include <stdio.h>
@@ -70,6 +74,7 @@ int VcmSIPCCBinding::gAudioCodecMask = 0;
 int VcmSIPCCBinding::gVideoCodecMask = 0;
 nsIThread *VcmSIPCCBinding::gMainThread = NULL;
 nsIEventTarget *VcmSIPCCBinding::gSTSThread = NULL;
+nsCOMPtr<nsIPrefBranch> VcmSIPCCBinding::gBranch = NULL;
 
 static mozilla::RefPtr<TransportFlow> vcmCreateTransportFlow(
     sipcc::PeerConnectionImpl *pc,
@@ -102,6 +107,12 @@ VcmSIPCCBinding::VcmSIPCCBinding ()
 {
     delete gSelf;//delete is NULL safe, so I don't need to check if it's NULL
     gSelf = this;
+  nsresult rv;
+
+  nsCOMPtr<nsIPrefService> prefs = do_GetService("@mozilla.org/preferences-service;1", &rv);
+  if (NS_SUCCEEDED(rv)) {
+    gBranch = do_QueryInterface(prefs);
+  }
 }
 
 class VcmIceOpaque : public NrIceOpaque {
@@ -133,6 +144,8 @@ VcmSIPCCBinding::~VcmSIPCCBinding ()
       gSTSThread,
       WrapRunnable(this, &VcmSIPCCBinding::disconnect_all),
       true);
+
+  gBranch = NULL;
 }
 
 void VcmSIPCCBinding::CandidateReady(NrIceMediaStream* stream,
@@ -233,6 +246,11 @@ void VcmSIPCCBinding::connectCandidateSignal(
 {
   stream->SignalCandidate.connect(gSelf,
                                   &VcmSIPCCBinding::CandidateReady);
+}
+
+nsCOMPtr<nsIPrefBranch> VcmSIPCCBinding::getPrefBranch()
+{
+  return gBranch;
 }
 
 /* static */
@@ -2249,7 +2267,9 @@ static int vcmTxStartICE_m(cc_mcapid_t mcap_id,
     config_raw = new mozilla::VideoCodecConfig(
       payload->remote_rtp_pt,
       ccsdpCodecName(payload->codec_type),
-      payload->video.rtcp_fb_types);
+      payload->video.rtcp_fb_types,
+      payload->video.max_fs,
+      payload->video.max_fr);
 
     // Take possession of this pointer
     mozilla::ScopedDeletePtr<mozilla::VideoCodecConfig> config(config_raw);
@@ -3049,6 +3069,50 @@ int vcmDisableRtcpComponent(const char *peerconnection, int level) {
       WrapRunnableNMRet(&vcmDisableRtcpComponent_m,
                         peerconnection,
                         level,
+                        &ret));
+  return ret;
+}
+
+static short vcmGetVideoMaxFs_m(uint16_t codec,
+                                int32_t *max_fs) {
+  nsCOMPtr<nsIPrefBranch> branch = VcmSIPCCBinding::getPrefBranch();
+  if (branch && NS_SUCCEEDED(branch->GetIntPref("media.navigator.video.max_fs",
+                                                max_fs))) {
+    return 0;
+  }
+  return VCM_ERROR;
+}
+
+short vcmGetVideoMaxFs(uint16_t codec,
+                       int32_t *max_fs) {
+  short ret;
+
+  mozilla::SyncRunnable::DispatchToThread(VcmSIPCCBinding::getMainThread(),
+      WrapRunnableNMRet(&vcmGetVideoMaxFs_m,
+                        codec,
+                        max_fs,
+                        &ret));
+  return ret;
+}
+
+static short vcmGetVideoMaxFr_m(uint16_t codec,
+                                int32_t *max_fr) {
+  nsCOMPtr<nsIPrefBranch> branch = VcmSIPCCBinding::getPrefBranch();
+  if (branch && NS_SUCCEEDED(branch->GetIntPref("media.navigator.video.max_fr",
+                                                max_fr))) {
+    return 0;
+  }
+  return VCM_ERROR;
+}
+
+short vcmGetVideoMaxFr(uint16_t codec,
+                       int32_t *max_fr) {
+  short ret;
+
+  mozilla::SyncRunnable::DispatchToThread(VcmSIPCCBinding::getMainThread(),
+      WrapRunnableNMRet(&vcmGetVideoMaxFr_m,
+                        codec,
+                        max_fr,
                         &ret));
   return ret;
 }

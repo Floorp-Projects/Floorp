@@ -21,12 +21,21 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=426308
 
 const SJS_URL = "http://example.org:80/tests/content/base/test/bug426308-redirect.sjs";
 
-var req = SpecialPowers.createSystemXHR();
-req.open("GET", SJS_URL + "?" + window.location.href, false);
-req.send(null);
+function startTest() {
+  var req = new XMLHttpRequest({mozAnon: false, mozSystem: true});
+  req.open("GET", SJS_URL + "?" + window.location.href, false);
+  req.send(null);
 
-is(req.status, 200, "Redirect did not happen");
+  is(req.status, 200, "Redirect did not happen");
 
+  SimpleTest.finish();
+}
+
+SimpleTest.waitForExplicitFinish();
+
+addLoadEvent(function() {
+   SpecialPowers.pushPermissions([{'type': 'systemXHR', 'allow': true, 'context': document}], startTest);
+});
 </script>
 </pre>
 </body>

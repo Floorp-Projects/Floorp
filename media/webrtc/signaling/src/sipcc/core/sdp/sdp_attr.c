@@ -1222,7 +1222,7 @@ sdp_result_e sdp_parse_attr_fmtp (sdp_t *sdp_p, sdp_attr_t *attr_p,
 	    if (result1 != SDP_SUCCESS) {
 	        fmtp_ptr = sdp_getnextstrtok(fmtp_ptr, tmp, sizeof(tmp), " \t", &result1);
 	        if (result1 != SDP_SUCCESS) {
-                    sdp_attr_fmtp_no_value(sdp_p, "max_fs");
+                    sdp_attr_fmtp_no_value(sdp_p, "max-fs");
 		    SDP_FREE(temp_ptr);
                     return SDP_INVALID_PARAMETER;
 		}
@@ -1234,7 +1234,7 @@ sdp_result_e sdp_parse_attr_fmtp (sdp_t *sdp_p, sdp_attr_t *attr_p,
             strtoul_result = strtoul(tok, &strtoul_end, 10);
 
             if (errno || tok == strtoul_end || strtoul_result == 0 || strtoul_result > UINT_MAX) {
-                sdp_attr_fmtp_invalid_value(sdp_p, "max_fs", tok);
+                sdp_attr_fmtp_invalid_value(sdp_p, "max-fs", tok);
                 SDP_FREE(temp_ptr);
                 return SDP_INVALID_PARAMETER;
 	    }
@@ -1692,7 +1692,32 @@ sdp_result_e sdp_parse_attr_fmtp (sdp_t *sdp_p, sdp_attr_t *attr_p,
     	    fmtp_p->fmtp_format = SDP_FMTP_CODEC_INFO;
     	    fmtp_p->cbr = (u16) strtoul_result;
     	    codec_info_found = TRUE;
-
+        } else if (cpr_strncasecmp(tmp,sdp_fmtp_codec_param[49].name,
+                                   sdp_fmtp_codec_param[49].strlen) == 0) {
+            fmtp_ptr = sdp_getnextstrtok(fmtp_ptr, tmp, sizeof(tmp), "; \t",
+                                         &result1);
+            if (result1 != SDP_SUCCESS) {
+                fmtp_ptr = sdp_getnextstrtok(fmtp_ptr, tmp, sizeof(tmp),
+                                             " \t", &result1);
+                if (result1 != SDP_SUCCESS) {
+                    sdp_attr_fmtp_no_value(sdp_p, "max-fr");
+                    SDP_FREE(temp_ptr);
+                    return SDP_INVALID_PARAMETER;
+                }
+            }
+            tok = tmp;
+            tok++;
+            errno = 0;
+            strtoul_result = strtoul(tok, &strtoul_end, 10);
+            if (errno || tok == strtoul_end || strtoul_result == 0 ||
+                strtoul_result > UINT_MAX) {
+                sdp_attr_fmtp_invalid_value(sdp_p, "max-fr", tok);
+                SDP_FREE(temp_ptr);
+                return SDP_INVALID_PARAMETER;
+            }
+            fmtp_p->fmtp_format = SDP_FMTP_CODEC_INFO;
+            fmtp_p->max_fr = (u32) strtoul_result;
+            codec_info_found = TRUE;
         } else if (fmtp_ptr != NULL && *fmtp_ptr == '\n') {
             temp=PL_strtok_r(tmp, ";", &strtok_state);
             if (temp) {
@@ -1998,6 +2023,8 @@ sdp_result_e sdp_build_attr_fmtp (sdp_t *sdp_p, sdp_attr_t *attr_p, flex_string 
         "max-mbps", fmtp_p->max_mbps)
 
       FMTP_BUILD_UNSIGNED(fmtp_p->max_fs > 0, "max-fs", fmtp_p->max_fs)
+
+      FMTP_BUILD_UNSIGNED(fmtp_p->max_fr > 0, "max-fr", fmtp_p->max_fr)
 
       FMTP_BUILD_UNSIGNED(fmtp_p->max_cpb > 0, "max-cpb", fmtp_p->max_cpb)
 
