@@ -989,18 +989,11 @@ BluetoothHfpManager::Connect(const nsAString& aDeviceAddress,
     return;
   }
 
-  mNeedsUpdatingSdpRecords = true;
-  mIsHandsfree = !IS_HEADSET(aController->GetCod());
-
   nsString uuid;
-  if (mIsHandsfree) {
-    BluetoothUuidHelper::GetString(BluetoothServiceClass::HANDSFREE, uuid);
-  } else {
-    BluetoothUuidHelper::GetString(BluetoothServiceClass::HEADSET, uuid);
-  }
+  BluetoothUuidHelper::GetString(BluetoothServiceClass::HANDSFREE, uuid);
 
   if (NS_FAILED(bs->GetServiceChannel(aDeviceAddress, uuid, this))) {
-    aController->OnConnect(NS_LITERAL_STRING(ERR_SERVICE_CHANNEL_NOT_FOUND));
+    aController->OnConnect(NS_LITERAL_STRING(ERR_NO_AVAILABLE_RESOURCE));
     return;
   }
 
@@ -1509,25 +1502,9 @@ BluetoothHfpManager::OnSocketDisconnect(BluetoothSocket* aSocket)
 void
 BluetoothHfpManager::OnUpdateSdpRecords(const nsAString& aDeviceAddress)
 {
-  MOZ_ASSERT(NS_IsMainThread());
-  MOZ_ASSERT(!aDeviceAddress.IsEmpty());
-  MOZ_ASSERT(mRunnable);
-
-  BluetoothService* bs = BluetoothService::Get();
-  NS_ENSURE_TRUE_VOID(bs);
-
-  nsString uuid;
-  if (mIsHandsfree) {
-    BluetoothUuidHelper::GetString(BluetoothServiceClass::HANDSFREE, uuid);
-  } else {
-    BluetoothUuidHelper::GetString(BluetoothServiceClass::HEADSET, uuid);
-  }
-
-  // Since we have updated SDP records of the target device, we should
-  // try to get the channel of target service again.
-  if (NS_FAILED(bs->GetServiceChannel(aDeviceAddress, uuid, this))) {
-    OnConnect(NS_LITERAL_STRING(ERR_SERVICE_CHANNEL_NOT_FOUND));
-  }
+  // UpdateSdpRecord() is not called so this callback function should not
+  // be invoked.
+  MOZ_ASSUME_UNREACHABLE("UpdateSdpRecords() should be called somewhere");
 }
 
 void
@@ -1541,14 +1518,17 @@ BluetoothHfpManager::OnGetServiceChannel(const nsAString& aDeviceAddress,
   BluetoothService* bs = BluetoothService::Get();
   NS_ENSURE_TRUE_VOID(bs);
 
-  BluetoothValue v;
-
   if (aChannel < 0) {
-    if (mNeedsUpdatingSdpRecords) {
-      mNeedsUpdatingSdpRecords = false;
-      bs->UpdateSdpRecords(aDeviceAddress, this);
-    } else {
+    // If we can't find Handsfree server channel number on the remote device,
+    // try to create HSP connection instead.
+    nsString hspUuid;
+    BluetoothUuidHelper::GetString(BluetoothServiceClass::HEADSET, hspUuid);
+
+    if (aServiceUuid.Equals(hspUuid)) {
       OnConnect(NS_LITERAL_STRING(ERR_SERVICE_CHANNEL_NOT_FOUND));
+    } else if (NS_FAILED(bs->GetServiceChannel(aDeviceAddress,
+                                               hspUuid, this))) {
+      OnConnect(NS_LITERAL_STRING(ERR_NO_AVAILABLE_RESOURCE));
     }
 
     return;
