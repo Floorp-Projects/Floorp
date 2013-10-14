@@ -6,7 +6,6 @@
 #include "mozilla/Assertions.h"         // for MOZ_ASSERT, etc
 #include "mozilla/Preferences.h"        // for Preferences
 #include "mozilla/dom/Element.h"        // for Element
-#include "mozilla/dom/EventTarget.h"    // for EventTarget
 #include "nsAString.h"
 #include "nsCaret.h"                    // for nsCaret
 #include "nsDebug.h"                    // for NS_ENSURE_TRUE, etc
@@ -56,7 +55,6 @@
 class nsPresContext;
 
 using namespace mozilla;
-using mozilla::dom::EventTarget;
 
 nsEditorEventListener::nsEditorEventListener() :
   mEditor(nullptr), mCommitText(false),
@@ -105,11 +103,11 @@ nsEditorEventListener::InstallToEditor()
 {
   NS_PRECONDITION(mEditor, "The caller must set mEditor");
 
-  nsCOMPtr<EventTarget> piTarget = mEditor->GetDOMEventTarget();
+  nsCOMPtr<nsIDOMEventTarget> piTarget = mEditor->GetDOMEventTarget();
   NS_ENSURE_TRUE(piTarget, NS_ERROR_FAILURE);
 
   // register the event listeners with the listener manager
-  nsEventListenerManager* elmP = piTarget->GetOrCreateListenerManager();
+  nsEventListenerManager* elmP = piTarget->GetListenerManager(true);
   NS_ENSURE_STATE(elmP);
 
 #ifdef HANDLE_NATIVE_TEXT_DIRECTION_SWITCH
@@ -183,12 +181,13 @@ nsEditorEventListener::Disconnect()
 void
 nsEditorEventListener::UninstallFromEditor()
 {
-  nsCOMPtr<EventTarget> piTarget = mEditor->GetDOMEventTarget();
+  nsCOMPtr<nsIDOMEventTarget> piTarget = mEditor->GetDOMEventTarget();
   if (!piTarget) {
     return;
   }
 
-  nsEventListenerManager* elmP = piTarget->GetOrCreateListenerManager();
+  nsEventListenerManager* elmP =
+    piTarget->GetListenerManager(true);
   if (!elmP) {
     return;
   }

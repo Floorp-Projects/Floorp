@@ -20,7 +20,6 @@
 #include "mozilla/dom/BindingDeclarations.h"
 #include "nsCycleCollectionParticipant.h"
 #include "nsDataHashtable.h"
-#include "nsDOMEventTargetHelper.h"
 #include "nsEventQueue.h"
 #include "nsHashKeys.h"
 #include "nsString.h"
@@ -29,6 +28,7 @@
 #include "nsTPriorityQueue.h"
 #include "StructuredCloneTags.h"
 
+#include "EventTarget.h"
 #include "Queue.h"
 #include "WorkerFeature.h"
 
@@ -234,7 +234,7 @@ public:
 };
 
 template <class Derived>
-class WorkerPrivateParent : public nsDOMEventTargetHelper
+class WorkerPrivateParent : public EventTarget
 {
   class SynchronizeAndResumeRunnable;
 
@@ -300,12 +300,11 @@ protected:
   mozilla::CondVar mMemoryReportCondVar;
 
 private:
+  JSObject* mJSObject;
   WorkerPrivate* mParent;
   nsString mScriptURL;
   nsString mSharedWorkerName;
   LocationInfo mLocationInfo;
-  // The lifetime of these objects within LoadInfo is managed explicitly;
-  // they do not need to be cycle collected.
   LoadInfo mLoadInfo;
 
   // Only used for top level workers.
@@ -325,17 +324,17 @@ private:
   uint64_t mBusyCount;
   uint64_t mMessagePortSerial;
   Status mParentStatus;
-  bool mRooted;
+  bool mJSObjectRooted;
   bool mParentSuspended;
   bool mIsChromeWorker;
   bool mMainThreadObjectsForgotten;
   bool mIsSharedWorker;
 
 protected:
-  WorkerPrivateParent(JSContext* aCx, WorkerPrivate* aParent,
-                      const nsAString& aScriptURL, bool aIsChromeWorker,
-                      bool aIsSharedWorker, const nsAString& aSharedWorkerName,
-                      LoadInfo& aLoadInfo);
+  WorkerPrivateParent(JSContext* aCx, JS::HandleObject aObject,
+                      WorkerPrivate* aParent, const nsAString& aScriptURL,
+                      bool aIsChromeWorker, bool aIsSharedWorker,
+                      const nsAString& aSharedWorkerName, LoadInfo& aLoadInfo);
 
   ~WorkerPrivateParent();
 
@@ -357,21 +356,12 @@ private:
     return NotifyPrivate(aCx, Terminating);
   }
 
-  void
+  bool
   PostMessageInternal(JSContext* aCx, JS::Handle<JS::Value> aMessage,
-                      const Optional<Sequence<JS::Value> >& aTransferable,
-                      bool aToMessagePort, uint64_t aMessagePortSerial,
-                      ErrorResult& aRv);
+                      JS::Handle<JS::Value> aTransferable,
+                      bool aToMessagePort, uint64_t aMessagePortSerial);
 
 public:
-
-  virtual JSObject*
-  WrapObject(JSContext* aCx, JS::Handle<JSObject*> aScope) MOZ_OVERRIDE;
-
-  NS_DECL_ISUPPORTS_INHERITED
-  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS_INHERITED(WorkerPrivateParent,
-                                                         nsDOMEventTargetHelper)
-
   // May be called on any thread...
   bool
   Start();
@@ -405,20 +395,23 @@ public:
   SynchronizeAndResume(JSContext* aCx, nsPIDOMWindow* aWindow,
                        nsIScriptContext* aScriptContext);
 
-  void
-  _finalize(JSFreeOp* aFop);
+  virtual void
+  _trace(JSTracer* aTrc) MOZ_OVERRIDE;
+
+  virtual void
+  _finalize(JSFreeOp* aFop) MOZ_OVERRIDE;
 
   void
   Finish(JSContext* aCx)
   {
-    Root(false);
+    RootJSObject(aCx, false);
   }
 
   bool
   Terminate(JSContext* aCx)
   {
     AssertIsOnParentThread();
-    Root(false);
+    RootJSObject(aCx, false);
     return TerminatePrivate(aCx);
   }
 
@@ -428,25 +421,24 @@ public:
   bool
   ModifyBusyCount(JSContext* aCx, bool aIncrease);
 
-  void
-  Root(bool aRoot);
+  bool
+  RootJSObject(JSContext* aCx, bool aRoot);
 
   void
   ForgetMainThreadObjects(nsTArray<nsCOMPtr<nsISupports> >& aDoomed);
 
-  void
+  bool
   PostMessage(JSContext* aCx, JS::Handle<JS::Value> aMessage,
-              const Optional<Sequence<JS::Value> >& aTransferable,
-              ErrorResult& aRv)
+              JS::Handle<JS::Value> aTransferable)
   {
-    PostMessageInternal(aCx, aMessage, aTransferable, false, 0, aRv);
+    return PostMessageInternal(aCx, aMessage, aTransferable, false, 0);
   }
 
   void
   PostMessageToMessagePort(JSContext* aCx,
                            uint64_t aMessagePortSerial,
                            JS::Handle<JS::Value> aMessage,
-                           const Optional<Sequence<JS::Value> >& aTransferable,
+                           const Optional<Sequence<JS::Value > >& aTransferable,
                            ErrorResult& aRv);
 
   bool
@@ -543,6 +535,12 @@ public:
   {
     AssertIsOnMainThread();
     return mLoadInfo.mScriptContext;
+  }
+
+  JSObject*
+  GetJSObject() const
+  {
+    return mJSObject;
   }
 
   const nsString&
@@ -708,8 +706,8 @@ public:
   void
   StealHostObjectURIs(nsTArray<nsCString>& aArray);
 
-  IMPL_EVENT_HANDLER(message)
-  IMPL_EVENT_HANDLER(error)
+  virtual JSObject*
+  WrapObject(JSContext* aCx, JS::HandleObject aScope) MOZ_OVERRIDE;
 
 #ifdef DEBUG
   void
@@ -793,22 +791,14 @@ class WorkerPrivate : public WorkerPrivateParent<WorkerPrivate>
   nsCOMPtr<nsIThread> mThread;
 #endif
 
-protected:
+public:
   ~WorkerPrivate();
 
-public:
   static already_AddRefed<WorkerPrivate>
-  Constructor(const GlobalObject& aGlobal, const nsAString& aScriptURL,
-              ErrorResult& aRv);
-
-  static already_AddRefed<WorkerPrivate>
-  Constructor(const GlobalObject& aGlobal, const nsAString& aScriptURL,
-              bool aIsChromeWorker, bool aIsSharedWorker,
-              const nsAString& aSharedWorkerName,
-              LoadInfo* aLoadInfo, ErrorResult& aRv);
-
-  static bool
-  WorkerAvailable(JSContext* /* unused */, JSObject* /* unused */);
+  Create(JSContext* aCx, JS::HandleObject aObject, WorkerPrivate* aParent,
+         const nsAString& aScriptURL, bool aIsChromeWorker,
+         bool aIsSharedWorker, const nsAString& aSharedWorkerName,
+         LoadInfo* aLoadInfo = nullptr);
 
   static nsresult
   GetLoadInfo(JSContext* aCx, nsPIDOMWindow* aWindow, WorkerPrivate* aParent,
@@ -1028,10 +1018,10 @@ public:
   GetMessagePort(uint64_t aMessagePortSerial);
 
 private:
-  WorkerPrivate(JSContext* aCx, WorkerPrivate* aParent,
-                const nsAString& aScriptURL, bool aIsChromeWorker,
-                bool aIsSharedWorker, const nsAString& aSharedWorkerName,
-                LoadInfo& aLoadInfo);
+  WorkerPrivate(JSContext* aCx, JS::HandleObject aObject,
+                WorkerPrivate* aParent, const nsAString& aScriptURL,
+                bool aIsChromeWorker, bool aIsSharedWorker,
+                const nsAString& aSharedWorkerName, LoadInfo& aLoadInfo);
 
   bool
   Dispatch(WorkerRunnable* aEvent, EventQueue* aQueue);
@@ -1110,30 +1100,8 @@ private:
                               uint64_t aMessagePortSerial);
 };
 
-// This class is only used to trick the DOM bindings.  We never create
-// instances of it, and static_casting to it is fine since it doesn't add
-// anything to WorkerPrivate.
-class ChromeWorkerPrivate : public WorkerPrivate
-{
-public:
-  static already_AddRefed<ChromeWorkerPrivate>
-  Constructor(const GlobalObject& aGlobal, const nsAString& aScriptURL,
-              ErrorResult& rv);
-
-  static bool
-  WorkerAvailable(JSContext* /* unused */, JSObject* /* unused */);
-
-private:
-  ChromeWorkerPrivate() MOZ_DELETE;
-  ChromeWorkerPrivate(const ChromeWorkerPrivate& aRHS) MOZ_DELETE;
-  ChromeWorkerPrivate& operator =(const ChromeWorkerPrivate& aRHS) MOZ_DELETE;
-};
-
 WorkerPrivate*
 GetWorkerPrivateFromContext(JSContext* aCx);
-
-WorkerPrivate*
-GetCurrentThreadWorkerPrivate();
 
 bool
 IsCurrentThreadRunningChromeWorker();

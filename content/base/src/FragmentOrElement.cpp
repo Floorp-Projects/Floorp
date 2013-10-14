@@ -1225,7 +1225,7 @@ FragmentOrElement::MarkNodeChildren(nsINode* aNode)
     JS::ExposeObjectToActiveJS(o);
   }
 
-  nsEventListenerManager* elm = aNode->GetExistingListenerManager();
+  nsEventListenerManager* elm = aNode->GetListenerManager(false);
   if (elm) {
     elm->MarkForCC();
   }
