@@ -11,6 +11,9 @@ Cu.import("resource://gre/modules/WspPduHelper.jsm", WSP);
 let WBXML = {};
 Cu.import("resource://gre/modules/WbxmlPduHelper.jsm", WBXML);
 
+Cu.import("resource://services-crypto/utils.js");
+Cu.import("resource://services-common/utils.js");
+
 // set to true to see debug messages
 let DEBUG = WBXML.DEBUG_ALL | false;
 
@@ -80,6 +83,128 @@ this.PduHelper = {
     }
     return msg;
 
+  }
+};
+
+/**
+ * SEC type values
+ *
+ * @see WAP-183-ProvCont-20010724-A, clause 5.3
+ */
+const AUTH_SEC_TYPE = (function () {
+  let names = {};
+  function add(name, number) {
+    names[number] = name;
+  }
+
+  add("NETWPIN",      0);
+  add("USERPIN",      1);
+  add("USERNETWPIN",  2);
+  add("USERPINMAC",   3);
+
+  return names;
+})();
+
+this.Authenticator = {
+  /**
+   * Format IMSI string into GSM format
+   *
+   * @param imsi
+   *        IMSI string
+   *
+   * @return IMSI in GSM format as string object
+   */
+  formatImsi: function formatImsi(imsi) {
+    let parityByte = ((imsi.length & 1) ? 9 : 1);
+
+    // Make sure length of IMSI is 15 digits.
+    // @see GSM 11.11, clause 10.2.2
+    let i = 0;
+    for (i = 15 - imsi.length; i > 0; i--) {
+      imsi += "F";
+    }
+
+    // char-by-char atoi
+    let imsiValue = [];
+    imsiValue.push(parityByte);
+    for (i = 0; i < imsi.length; i++) {
+      imsiValue.push(parseInt(imsi.substr(i, 1), 10));
+    }
+
+    // encoded IMSI
+    let imsiEncoded = "";
+    for (i = 0; i < imsiValue.length; i += 2) {
+      imsiEncoded += String.fromCharCode(imsiValue[i] | (imsiValue[i+1] << 4));
+    }
+
+    return imsiEncoded;
+  },
+
+  /**
+   * Perform HMAC check
+   *
+   * @param wbxml
+   *        Uint8 typed array of raw WBXML data.
+   * @param key
+   *        key string for HMAC check.
+   * @param mac
+   *        Expected MAC value.
+   *
+   * @return true for valid, false for invalid.
+   */
+  isValid: function isValid(wbxml, key, mac) {
+    let hasher = CryptoUtils.makeHMACHasher(Ci.nsICryptoHMAC.SHA1,
+                                            CryptoUtils.makeHMACKey(key));
+    hasher.update(wbxml, wbxml.length);
+    let result = CommonUtils.bytesAsHex(hasher.finish(false)).toUpperCase();
+    return mac == result;
+  },
+
+  /**
+   * Perform HMAC authentication.
+   *
+   * @param wbxml
+   *        Uint8 typed array of raw WBXML data.
+   * @param sec
+   *        Security method for HMAC check.
+   * @param mac
+   *        Expected MAC value.
+   * @param getNetworkPin
+   *        Callback function for getting network pin.
+   *
+   * @return true for valid, false for invalid.
+   */
+  check: function check_hmac(wbxml, sec, mac, getNetworkPin) {
+    // No security set.
+    if (sec == null || !mac) {
+      return null;
+    }
+
+    let authInfo = {
+      pass: false,
+      checked: false,
+      sec: AUTH_SEC_TYPE[sec],
+      mac: mac.toUpperCase(),
+      dataLength: wbxml.length,
+      data: wbxml
+    };
+
+    switch (authInfo.sec) {
+      case "NETWPIN":
+        let key = getNetworkPin();
+        authInfo.pass = this.isValid(wbxml, key, authInfo.mac);
+        authInfo.checked = true;
+        return authInfo;
+
+      case "USERPIN":
+      case "USERPINMAC":
+        // We can't check without USER PIN
+        return authInfo;
+
+      case "USERNETWPIN":
+      default:
+        return null;
+    }
   }
 };
 
@@ -347,4 +472,6 @@ if (DEBUG) {
 this.EXPORTED_SYMBOLS = [
   // Parser
   "PduHelper",
+  // HMAC Authenticator
+  "Authenticator",
 ];
