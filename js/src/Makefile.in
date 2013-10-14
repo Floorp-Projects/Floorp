@@ -241,8 +241,6 @@ ifdef ENABLE_INTL_API
 ifndef MOZ_NATIVE_ICU
 
 ifeq ($(OS_ARCH),WINNT)
-  # Parallel gmake is buggy on Windows
-  ICU_GMAKE_OPTIONS="-j1"
   # Library names: On Windows, ICU uses modified library names for static
   # and debug libraries.
   ifdef MOZ_DEBUG
@@ -252,13 +250,20 @@ ifeq ($(OS_ARCH),WINNT)
                      cp -p intl/icu/lib/s$(libname)$(ICU_LIB_SUFFIX).lib intl/icu/lib/$(libname).lib;)
 endif
 
+ifdef .PYMAKE
+ICU_MAKE = $(GMAKE)
+else
+ICU_MAKE = $(MAKE)
+endif
+
 # - ICU requires GNU make according to its readme.html. pymake can't be used
 #   because it doesn't support order only dependencies.
 # - Force ICU to use the standard suffix for object files because expandlibs
 #   will discard all files with a non-standard suffix (bug 857450).
 # - Options for genrb: -k strict parsing; -R omit collation tailoring rules.
 buildicu:
-	$(GMAKE) $(ICU_GMAKE_OPTIONS) -C intl/icu STATIC_O=$(OBJ_SUFFIX) GENRBOPTS='-k -R'
+# ICU's build system is full of races, so force non-parallel build.
+	+$(ICU_MAKE) -j1 -C intl/icu STATIC_O=$(OBJ_SUFFIX) GENRBOPTS='-k -R'
 	$(ICU_LIB_RENAME)
 
 distclean clean::
