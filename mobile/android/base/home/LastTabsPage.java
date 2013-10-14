@@ -246,7 +246,7 @@ public class LastTabsPage extends HomeFragment {
 
     private static class LastTabsAdapter extends CursorAdapter {
         public LastTabsAdapter(Context context) {
-            super(context, null);
+            super(context, null, 0);
         }
 
         @Override
