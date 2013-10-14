@@ -247,16 +247,16 @@ static void nr_turn_stun_ctx_cb(NR_SOCKET s, int how, void *arg)
       /* TODO(ekr@rtfm.com): Add alternate-server (Mozilla bug 857688) */
       if (ctx->stun->error_code == 401 || ctx->stun->error_code == 438) {
         if (ctx->retry_ct > 0) {
-          r_log(NR_LOG_TURN, LOG_ERR, "TURN(%s): Exceeded the number of retries", ctx->tctx->label);
+          r_log(NR_LOG_TURN, LOG_WARNING, "TURN(%s): Exceeded the number of retries", ctx->tctx->label);
           ABORT(R_FAILED);
         }
 
         if (!ctx->stun->nonce) {
-          r_log(NR_LOG_TURN, LOG_ERR, "TURN(%s): 401 but no nonce", ctx->tctx->label);
+          r_log(NR_LOG_TURN, LOG_WARNING, "TURN(%s): 401 but no nonce", ctx->tctx->label);
           ABORT(R_FAILED);
         }
         if (!ctx->stun->realm) {
-          r_log(NR_LOG_TURN, LOG_ERR, "TURN(%s): 401 but no realm", ctx->tctx->label);
+          r_log(NR_LOG_TURN, LOG_WARNING, "TURN(%s): 401 but no realm", ctx->tctx->label);
           ABORT(R_FAILED);
         }
 
@@ -371,7 +371,7 @@ int nr_turn_client_cancel(nr_turn_client_ctx *ctx)
     return 0;
 
   if (ctx->label)
-    r_log(NR_LOG_TURN, LOG_ERR, "TURN(%s): cancelling", ctx->label);
+    r_log(NR_LOG_TURN, LOG_INFO, "TURN(%s): cancelling", ctx->label);
 
   /* Setting these values to 0 isn't strictly necessary, but
      it protects us in case we double cancel and for
@@ -412,7 +412,7 @@ static int nr_turn_client_failed(nr_turn_client_ctx *ctx)
       ctx->state == NR_TURN_CLIENT_STATE_CANCELLED)
     return(0);
 
-  r_log(NR_LOG_TURN, LOG_ERR, "TURN(%s) failed", ctx->label);
+  r_log(NR_LOG_TURN, LOG_WARNING, "TURN(%s) failed", ctx->label);
   nr_turn_client_cancel(ctx);
   ctx->state = NR_TURN_CLIENT_STATE_FAILED;
   if (ctx->finished_cb) {
@@ -501,7 +501,7 @@ static void nr_turn_client_error_cb(NR_SOCKET s, int how, void *arg)
 {
   nr_turn_stun_ctx *ctx = (nr_turn_stun_ctx *)arg;
 
-  r_log(NR_LOG_TURN, LOG_ERR, "TURN(%s): mode %d, %s",
+  r_log(NR_LOG_TURN, LOG_WARNING, "TURN(%s): mode %d, %s",
         ctx->tctx->label, ctx->mode, __FUNCTION__);
 
   nr_turn_client_failed(ctx->tctx);
@@ -714,7 +714,7 @@ int nr_turn_client_send_indication(nr_turn_client_ctx *ctx,
   if ((r=nr_socket_sendto(ctx->sock,
                           ind->buffer, ind->length, flags,
                           &ctx->turn_server_addr))) {
-    r_log(NR_LOG_TURN, LOG_ERR, "TURN(%s): Failed sending send indication",
+    r_log(NR_LOG_TURN, LOG_WARNING, "TURN(%s): Failed sending send indication",
           ctx->label);
     ABORT(r);
   }
@@ -739,7 +739,7 @@ int nr_turn_client_parse_data_indication(nr_turn_client_ctx *ctx,
 
   if (nr_transport_addr_cmp(&ctx->turn_server_addr, source_addr,
                             NR_TRANSPORT_ADDR_CMP_MODE_ALL)) {
-    r_log(NR_LOG_TURN, LOG_DEBUG,
+    r_log(NR_LOG_TURN, LOG_WARNING,
           "TURN(%s): Indication from unexpected source addr %s (expected %s)",
           ctx->label, source_addr->as_string, ctx->turn_server_addr.as_string);
     ABORT(R_REJECTED);
@@ -759,7 +759,7 @@ int nr_turn_client_parse_data_indication(nr_turn_client_ctx *ctx,
   if ((r=nr_turn_permission_find(ctx, &attr->u.xor_mapped_address.unmasked,
                                  &perm))) {
     if (r == R_NOT_FOUND) {
-      r_log(NR_LOG_TURN, LOG_INFO,
+      r_log(NR_LOG_TURN, LOG_WARNING,
             "TURN(%s): Indication from peer addr %s with no permission",
             ctx->label, attr->u.xor_mapped_address.unmasked.as_string);
     }

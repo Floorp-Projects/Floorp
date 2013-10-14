@@ -169,7 +169,7 @@ stun_grab_addrs(char *name, int addrcount, struct ifa_msghdr *ifam, nr_local_add
     strlcpy(ifr.ifr_name, name, sizeof(ifr.ifr_name));
 
     if ((s = socket(ifr.ifr_addr.sa_family, SOCK_DGRAM, 0)) < 0) {
-      r_log(NR_LOG_STUN, LOG_WARNING, "unable to obtain addresses from socket");
+      r_log(NR_LOG_STUN, LOG_ERR, "unable to obtain addresses from socket");
       ABORT(R_FAILED);
     }
 
