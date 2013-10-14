@@ -44,6 +44,11 @@
       <toolbarbutton id="appMenuRestoreLastSession" tabindex="0"
                      label="&appMenuHistory.restoreSession.label;"
                      command="Browser:RestoreLastSession"/>
+      <menuseparator id="PanelUI-recentlyClosedTabs-separator"/>
+      <vbox id="PanelUI-recentlyClosedTabs"/>
+      <menuseparator id="PanelUI-recentlyClosedWindows-separator"/>
+      <vbox id="PanelUI-recentlyClosedWindows"/>
+      <menuseparator id="PanelUI-historyItems-separator"/>
       <vbox id="PanelUI-historyItems"/>
       <label value="&appMenuHistory.showAll.label;"
              id="PanelUI-historyMore"
