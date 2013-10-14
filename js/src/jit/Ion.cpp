@@ -1596,9 +1596,7 @@ IonCompile(JSContext *cx, JSScript *script,
     AutoFlushCache afc("IonCompile", cx->runtime()->ionRuntime());
 
     AutoTempAllocatorRooter root(cx, temp);
-    types::CompilerConstraintList *constraints = types::NewCompilerConstraintList();
-    if (!constraints)
-        return AbortReason_Alloc;
+    types::CompilerConstraintList *constraints = alloc->new_<types::CompilerConstraintList>();
 
     IonBuilder *builder = alloc->new_<IonBuilder>(cx, temp, graph, constraints,
                                                   &inspector, info, baselineFrame);
@@ -2340,8 +2338,7 @@ jit::Invalidate(types::TypeCompartment &types, FreeOp *fop,
     size_t numInvalidations = 0;
     for (size_t i = 0; i < invalid.length(); i++) {
         const types::CompilerOutput &co = *invalid[i].compilerOutput(types);
-        if (!co.isValid())
-            continue;
+        JS_ASSERT(co.isValid());
 
         CancelOffThreadIonCompile(co.script()->compartment(), co.script());
 
@@ -2371,9 +2368,7 @@ jit::Invalidate(types::TypeCompartment &types, FreeOp *fop,
     // until its last invalidated frame is destroyed.
     for (size_t i = 0; i < invalid.length(); i++) {
         types::CompilerOutput &co = *invalid[i].compilerOutput(types);
-        if (!co.isValid())
-            continue;
-
+        JS_ASSERT(co.isValid());
         ExecutionMode executionMode = co.mode();
         JSScript *script = co.script();
         IonScript *ionScript = co.ion();
