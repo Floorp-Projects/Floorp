@@ -46,7 +46,7 @@ nsCoreUtils::HasClickListener(nsIContent *aContent)
 {
   NS_ENSURE_TRUE(aContent, false);
   nsEventListenerManager* listenerManager =
-    aContent->GetListenerManager(false);
+    aContent->GetExistingListenerManager();
 
   return listenerManager &&
     (listenerManager->HasListenersFor(nsGkAtoms::onclick) ||
