@@ -401,7 +401,12 @@ class IDLObjectWithIdentifier(IDLObject):
                 if isDictionaryMember:
                     raise WebIDLError("[TreatUndefinedAs] is not allowed for "
                                       "dictionary members", [self.location])
-                if value == 'Null':
+                if value == 'Missing':
+                    if not isOptional:
+                        raise WebIDLError("[TreatUndefinedAs=Missing] is only "
+                                          "allowed on optional arguments",
+                                          [self.location])
+                elif value == 'Null':
                     if not self.type.isDOMString():
                         raise WebIDLError("[TreatUndefinedAs=Null] is only "
                                           "allowed on arguments or "
@@ -421,8 +426,8 @@ class IDLObjectWithIdentifier(IDLObject):
                                           [self.location])
                 else:
                     raise WebIDLError("[TreatUndefinedAs] must take the "
-                                      "identifiers EmptyString or Null",
-                                      [self.location])
+                                      "identifiers EmptyString or Null or "
+                                      "Missing", [self.location])
                 self.treatUndefinedAs = value
             else:
                 unhandledAttrs.append(attr)
