@@ -315,7 +315,7 @@ AudioManager::Observe(nsISupports* aSubject,
       return NS_OK;
     }
     nsDependentJSString keyStr;
-    if (!keyStr.init(cx, jsKey) || keyStr.EqualsLiteral("audio.volume.bt_sco")) {
+    if (!keyStr.init(cx, jsKey) || !keyStr.EqualsLiteral("audio.volume.bt_sco")) {
       return NS_OK;
     }
 
