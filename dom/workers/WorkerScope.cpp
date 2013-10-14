@@ -23,7 +23,6 @@
 #include "mozilla/dom/XMLHttpRequestBinding.h"
 #include "mozilla/dom/XMLHttpRequestUploadBinding.h"
 #include "mozilla/dom/URLBinding.h"
-#include "mozilla/dom/WorkerBinding.h"
 #include "mozilla/dom/WorkerLocationBinding.h"
 #include "mozilla/dom/WorkerNavigatorBinding.h"
 #include "mozilla/OSFileConstants.h"
@@ -45,6 +44,7 @@
 #include "Navigator.h"
 #include "Principal.h"
 #include "ScriptLoader.h"
+#include "Worker.h"
 #include "WorkerPrivate.h"
 #include "XMLHttpRequest.h"
 
@@ -1451,10 +1451,16 @@ CreateGlobalScope(JSContext* aCx)
     return nullptr;
   }
 
+  JS::Rooted<JSObject*> workerProto(aCx,
+    worker::InitClass(aCx, global, eventTargetProto, false));
+  if (!workerProto) {
+    return nullptr;
+  }
+
   if (worker->IsChromeWorker()) {
-    if (!DefineChromeWorkerFunctions(aCx, global) ||
-        !DefineOSFileConstants(aCx, global) ||
-        !ChromeWorkerBinding::GetConstructorObject(aCx, global)) {
+    if (!chromeworker::InitClass(aCx, global, workerProto, false) ||
+        !DefineChromeWorkerFunctions(aCx, global) ||
+        !DefineOSFileConstants(aCx, global)) {
       return nullptr;
     }
   }
@@ -1475,7 +1481,6 @@ CreateGlobalScope(JSContext* aCx)
       !XMLHttpRequestBinding_workers::GetConstructorObject(aCx, global) ||
       !XMLHttpRequestUploadBinding_workers::GetConstructorObject(aCx, global) ||
       !URLBinding_workers::GetConstructorObject(aCx, global) ||
-      !WorkerBinding::GetConstructorObject(aCx, global) ||
       !WorkerLocationBinding_workers::GetConstructorObject(aCx, global) ||
       !WorkerNavigatorBinding_workers::GetConstructorObject(aCx, global)) {
     return nullptr;
@@ -1488,13 +1493,6 @@ CreateGlobalScope(JSContext* aCx)
   JS_FireOnNewGlobalObject(aCx, global);
 
   return global;
-}
-
-bool
-GetterOnlyJSNative(JSContext* aCx, unsigned aArgc, JS::Value* aVp)
-{
-  JS_ReportErrorNumber(aCx, js_GetErrorMessage, nullptr, JSMSG_GETTER_ONLY);
-  return false;
 }
 
 END_WORKERS_NAMESPACE

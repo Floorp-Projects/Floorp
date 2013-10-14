@@ -44,12 +44,6 @@ public:
   NS_DECL_CYCLE_COLLECTION_SKIPPABLE_SCRIPT_HOLDER_CLASS(nsDOMEventTargetHelper)
 
   NS_DECL_NSIDOMEVENTTARGET
-
-  virtual nsEventListenerManager*
-  GetExistingListenerManager() const MOZ_OVERRIDE;
-  virtual nsEventListenerManager*
-  GetOrCreateListenerManager() MOZ_OVERRIDE;
-
   using mozilla::dom::EventTarget::RemoveEventListener;
   virtual void AddEventListener(const nsAString& aType,
                                 mozilla::dom::EventListener* aListener,
@@ -225,11 +219,8 @@ NS_DEFINE_STATIC_IID_ACCESSOR(nsDOMEventTargetHelper,
   virtual nsresult DispatchDOMEvent(mozilla::WidgetEvent* aEvent, nsIDOMEvent* aDOMEvent, nsPresContext* aPresContext, nsEventStatus* aEventStatus) { \
     return _to DispatchDOMEvent(aEvent, aDOMEvent, aPresContext, aEventStatus); \
   } \
-  virtual nsEventListenerManager * GetOrCreateListenerManager() { \
-    return _to GetOrCreateListenerManager(); \
-  } \
-  virtual nsEventListenerManager * GetExistingListenerManager() const { \
-    return _to GetExistingListenerManager(); \
+  virtual nsEventListenerManager * GetListenerManager(bool aMayCreate) { \
+    return _to GetListenerManager(aMayCreate); \
   } \
   virtual nsIScriptContext * GetContextForEventHandlers(nsresult *aRv) { \
     return _to GetContextForEventHandlers(aRv); \
@@ -241,14 +232,6 @@ NS_DEFINE_STATIC_IID_ACCESSOR(nsDOMEventTargetHelper,
 #define NS_REALLY_FORWARD_NSIDOMEVENTTARGET(_class) \
   using _class::AddEventListener;                   \
   using _class::RemoveEventListener;                \
-  NS_FORWARD_NSIDOMEVENTTARGET(_class::)            \
-  virtual nsEventListenerManager*                   \
-  GetOrCreateListenerManager() {                    \
-    return _class::GetOrCreateListenerManager();    \
-  }                                                 \
-  virtual nsEventListenerManager*                   \
-  GetExistingListenerManager() const {              \
-    return _class::GetExistingListenerManager();    \
-  }
+  NS_FORWARD_NSIDOMEVENTTARGET(_class::)
 
 #endif // nsDOMEventTargetHelper_h_
