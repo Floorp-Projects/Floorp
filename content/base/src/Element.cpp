@@ -1810,7 +1810,7 @@ Element::GetEventListenerManagerForAttr(nsIAtom* aAttrName,
                                         bool* aDefer)
 {
   *aDefer = true;
-  return GetListenerManager(true);
+  return GetOrCreateListenerManager();
 }
 
 Element::nsAttrInfo
