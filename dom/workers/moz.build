@@ -9,6 +9,10 @@ TEST_DIRS += ['test']
 MODULE = 'dom'
 
 # Public stuff.
+EXPORTS.mozilla.dom += [
+    'WorkerPrivate.h',
+]
+
 EXPORTS.mozilla.dom.workers += [
     'Workers.h',
 ]
@@ -47,7 +51,6 @@ CPP_SOURCES += [
     'ScriptLoader.cpp',
     'SharedWorker.cpp',
     'URL.cpp',
-    'Worker.cpp',
     'WorkerMessagePort.cpp',
     'WorkerPrivate.cpp',
     'WorkerScope.cpp',
