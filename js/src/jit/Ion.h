@@ -363,8 +363,8 @@ void FinishOffThreadBuilder(IonBuilder *builder);
 static inline bool
 IsIonEnabled(JSContext *cx)
 {
-    return cx->hasOption(JSOPTION_ION) &&
-        cx->hasOption(JSOPTION_BASELINE) &&
+    return cx->options().ion() &&
+        cx->options().baseline() &&
         cx->typeInferenceEnabled();
 }
 
