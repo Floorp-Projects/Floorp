@@ -1,0 +1,223 @@
+#filter substitution
+package @ANDROID_PACKAGE_NAME@.tests;
+
+import @ANDROID_PACKAGE_NAME@.*;
+
+import com.jayway.android.robotium.solo.Condition;
+
+import android.content.ContentResolver;
+import android.content.ContentValues;
+import android.content.ContentUris;
+import android.database.Cursor;
+import android.net.Uri;
+import android.view.View;
+import android.widget.ListAdapter;
+import android.widget.ListView;
+import android.widget.TextView;
+
+import java.lang.reflect.Method;
+import java.util.ArrayList;
+import java.util.Arrays;
+
+public class testBookmarksPage extends AboutHomeTest {
+    private static String BOOKMARK_URL;
+    private static String DESKTOP_BOOKMARK_URL;
+
+    @Override
+    protected int getTestType() {
+        return TEST_MOCHITEST;
+    }
+
+    public void testBookmarksPage() {
+        BOOKMARK_URL = getAbsoluteUrl(StringHelper.ROBOCOP_BLANK_PAGE_01_URL);
+        DESKTOP_BOOKMARK_URL = getAbsoluteUrl(StringHelper.ROBOCOP_BLANK_PAGE_02_URL);
+
+        setUpDesktopBookmarks();
+        checkBookmarkList();
+        checkBookmarkContextMenu();
+    }
+
+    private void checkBookmarkList() {
+        // Check that the default bookmarks are displayed
+        for (String url:StringHelper.DEFAULT_BOOKMARKS_URLS) {
+            mAsserter.ok(isBookmarkDisplayed(url), "Checking that default bookmark: " + url + " is displayed in the bookmarks list", url + " is displayed as a bookmark");
+        }
+        mAsserter.ok(isBookmarkDisplayed(BOOKMARK_URL), "Checking that added bookmark: " + BOOKMARK_URL + " is displayed in the bookmarks list", BOOKMARK_URL + " is displayed as a bookmark");
+
+        waitForText(StringHelper.DESKTOP_FOLDER_LABEL);
+        clickOnBookmarkFolder(StringHelper.DESKTOP_FOLDER_LABEL);
+        waitForText(StringHelper.TOOLBAR_FOLDER_LABEL);
+
+        // Verify the number of folders displayed in the Desktop Bookmarks folder is correct
+        ListView desktopFolderContent = findListViewWithTag("bookmarks");
+        ListAdapter adapter = desktopFolderContent.getAdapter();
+        if (mDevice.type.equals("tablet")) { // On tablets it's 4 folders and 1 view for top padding
+            mAsserter.is(adapter.getCount(), 5, "Checking that the correct number of folders is displayed in the Desktop Bookmarks folder");
+        } else { // On phones it's just the 4 folders
+            mAsserter.is(adapter.getCount(), 4, "Checking that the correct number of folders is displayed in the Desktop Bookmarks folder");
+        }
+
+        clickOnBookmarkFolder(StringHelper.TOOLBAR_FOLDER_LABEL);
+
+        // Go up in the bookmark folder hierarchy
+        clickOnBookmarkFolder(StringHelper.TOOLBAR_FOLDER_LABEL);
+        mAsserter.ok(waitForText(StringHelper.BOOKMARKS_MENU_FOLDER_LABEL), "Going up in the folder hierarchy", "We are back in the Desktop Bookmarks folder");
+
+        clickOnBookmarkFolder(StringHelper.DESKTOP_FOLDER_LABEL);
+        mAsserter.ok(waitForText(StringHelper.DESKTOP_FOLDER_LABEL), "Going up in the folder hierarchy", "We are back in the main Bookmarks List View");
+
+        clickOnBookmarkFolder(StringHelper.DESKTOP_FOLDER_LABEL);
+        clickOnBookmarkFolder(StringHelper.TOOLBAR_FOLDER_LABEL);
+        mAsserter.ok(isBookmarkDisplayed(DESKTOP_BOOKMARK_URL), "Checking that added bookmark: " + DESKTOP_BOOKMARK_URL + " is displayed in the bookmarks list", DESKTOP_BOOKMARK_URL + " is displayed as a bookmark");
+
+        // Open the bookmark from a bookmark folder hierarchy
+        loadBookmark(DESKTOP_BOOKMARK_URL);
+        waitForText(StringHelper.ROBOCOP_BLANK_PAGE_02_TITLE);
+        verifyPageTitle(StringHelper.ROBOCOP_BLANK_PAGE_02_TITLE);
+        openAboutHomeTab(AboutHomeTabs.BOOKMARKS);
+
+        // Check that folders don't have a context menu
+        boolean success = waitForCondition(new Condition() {
+            @Override
+            public boolean isSatisfied() {
+                View desktopFolder = getBookmarkFolderView(StringHelper.DESKTOP_FOLDER_LABEL);
+                if (desktopFolder != null) {
+                     mSolo.clickLongOnView(desktopFolder);
+                    return true;
+                }
+                return false;
+            }
+        }, MAX_WAIT_MS);
+        mAsserter.ok(success, "Trying to long click on the Desktop Bookmarks","Desktop Bookmarks folder could not be long clicked");
+        mAsserter.ok(!waitForText("Share"), "Folders do not have context menus", "The context menu was not opened");
+
+        // Even if no context menu is opened long clicking a folder still opens it. We need to close it.
+        clickOnBookmarkFolder(StringHelper.DESKTOP_FOLDER_LABEL);
+    }
+
+    private void checkBookmarkContextMenu() {
+        // Open default bookmarks in a new tab and a new private tab since the url is substituted with "Switch to tab" after opening the link
+        openBookmarkContextMenu(StringHelper.DEFAULT_BOOKMARKS_URLS[1]);
+
+        // Test that the options are all displayed
+        for (String contextMenuOption:StringHelper.BOOKMARK_CONTEXT_MENU_ITEMS) {
+            mAsserter.ok(mSolo.searchText(contextMenuOption), "Checking that the context menu option is present", contextMenuOption + " is present");
+        }
+
+        // Test that "Open in New Tab" works
+        final Element tabCount = mDriver.findElement(getActivity(), "tabs_counter");
+        final int tabCountInt = Integer.parseInt(tabCount.getText());
+        Actions.EventExpecter tabEventExpecter = mActions.expectGeckoEvent("Tab:Added");
+        mSolo.clickOnText(StringHelper.BOOKMARK_CONTEXT_MENU_ITEMS[0]);
+        tabEventExpecter.blockForEvent();
+        tabEventExpecter.unregisterListener();
+
+        // Test that "Open in Private Tab" works
+        openBookmarkContextMenu(StringHelper.DEFAULT_BOOKMARKS_URLS[2]);
+        tabEventExpecter = mActions.expectGeckoEvent("Tab:Added");
+        mSolo.clickOnText(StringHelper.BOOKMARK_CONTEXT_MENU_ITEMS[1]);
+        tabEventExpecter.blockForEvent();
+        tabEventExpecter.unregisterListener();
+
+        // Test that "Share" works
+        openBookmarkContextMenu(BOOKMARK_URL);
+        mSolo.clickOnText(StringHelper.BOOKMARK_CONTEXT_MENU_ITEMS[2]);
+        mAsserter.ok(waitForText("Share via"), "Checking to see if the share menu has been opened","The share menu has been opened");
+        mActions.sendSpecialKey(Actions.SpecialKey.BACK);
+        waitForText(StringHelper.ROBOCOP_BLANK_PAGE_01_TITLE);
+
+        // Test that "Edit" works
+        String[] editedBookmarkValues = {"New bookmark title", "www.NewBookmark.url", "newBookmarkKeyword"};
+        editBookmark(BOOKMARK_URL,editedBookmarkValues);
+        checkBookmarkEdit(editedBookmarkValues[1],editedBookmarkValues);
+
+        // Test that "Remove" works
+        openBookmarkContextMenu(editedBookmarkValues[1]);
+        mSolo.clickOnText(StringHelper.BOOKMARK_CONTEXT_MENU_ITEMS[4]);
+        waitForText("Bookmark removed");
+        mAsserter.ok(!mDatabaseHelper.isBookmark(editedBookmarkValues[1]), "Checking that the bookmark was removed", "The bookmark was removed");
+    }
+
+    private void clickOnBookmarkFolder(final String folderName) {
+        boolean success = waitForCondition(new Condition() {
+            @Override
+            public boolean isSatisfied() {
+                View bookmarksFolder = getBookmarkFolderView(folderName);
+                if (bookmarksFolder != null) {
+                    mSolo.clickOnView(bookmarksFolder);
+                    return true;
+                }
+                return false;
+            }
+        }, MAX_WAIT_MS);
+        mAsserter.ok(success, "Trying to click on the " + folderName + " folder","The " + folderName + " folder was clicked");
+    }
+
+    private View getBookmarkFolderView(String folderName) {
+        ListView bookmarksTabList = findListViewWithTag("bookmarks");
+        ListAdapter adapter = bookmarksTabList.getAdapter();
+        if (adapter != null) {
+            for (int i = 0; i < adapter.getCount(); i++ ) {
+                View bookmarkView = bookmarksTabList.getChildAt(i);
+                if (bookmarkView instanceof TextView) {
+                    TextView folderTextView = (TextView) bookmarkView;
+                    if (folderTextView.getText().equals(folderName)) {
+                        return bookmarkView;
+                    }
+                }
+            }
+        }
+        return null;
+    }
+
+    // Add a bookmark in the Desktop folder so we can check the folder navigation in the bookmarks page
+    private void setUpDesktopBookmarks() {
+        // Get the folder id of the StringHelper.DESKTOP_FOLDER_LABEL folder
+        Long desktopFolderId = mDatabaseHelper.getFolderIdFromGuid("toolbar");
+
+        // Generate a Guid for the bookmark
+        String generatedGuid = null;
+        try {
+            ClassLoader classLoader = getActivity().getClassLoader();
+            Class syncUtilityClass = classLoader.loadClass("org.mozilla.gecko.sync.Utils");
+            Method generateGuid = syncUtilityClass.getMethod("generateGuid", (Class[]) null);
+            generatedGuid = (String)generateGuid.invoke(null);
+        } catch (Exception e) {
+            mAsserter.dumpLog("Exception in setUpDesktopBookmarks" + e);
+        }
+        mAsserter.ok((generatedGuid != null), "Generating a random Guid for the bookmark", "We could not generate a Guid for the bookmark");
+
+        // Insert the bookmark
+        ContentResolver resolver = getActivity().getContentResolver();
+        Uri bookmarksUri = mDatabaseHelper.buildUri(DatabaseHelper.BrowserDataType.BOOKMARKS);
+        ContentValues values = new ContentValues();
+        values.put("title", StringHelper.ROBOCOP_BLANK_PAGE_02_TITLE);
+        values.put("url", DESKTOP_BOOKMARK_URL);
+        values.put("parent", desktopFolderId);
+        long now = System.currentTimeMillis();
+        values.put("modified", now);
+        values.put("type", 1);
+        values.put("guid", generatedGuid);
+        values.put("position", 10);
+        values.put("created", now);
+        int updated = resolver.update(bookmarksUri,
+                                      values,
+                                      "url = ?",
+                                      new String[] { DESKTOP_BOOKMARK_URL });
+        if (updated == 0) {
+            Uri uri = resolver.insert(bookmarksUri, values);
+            mAsserter.ok(true, "Inserted at: ", uri.toString());
+        } else {
+            mAsserter.ok(false, "Failed to insert the Desktop bookmark", "Something went wrong");
+        }
+
+        // Add a mobile bookmark
+        mDatabaseHelper.addOrUpdateMobileBookmark(StringHelper.ROBOCOP_BLANK_PAGE_01_TITLE, BOOKMARK_URL);
+    }
+
+    @Override
+    public void tearDown() throws Exception {
+        mDatabaseHelper.deleteBookmark(DESKTOP_BOOKMARK_URL);
+        super.tearDown();
+    }
+}
