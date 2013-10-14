@@ -118,13 +118,13 @@ GetPrefsFor(nsEventStructType aEventStructType)
 static bool
 HasMouseListener(nsIContent* aContent)
 {
-  if (nsEventListenerManager* elm = aContent->GetExistingListenerManager()) {
-    return elm->HasListenersFor(nsGkAtoms::onclick) ||
-           elm->HasListenersFor(nsGkAtoms::onmousedown) ||
-           elm->HasListenersFor(nsGkAtoms::onmouseup);
+  nsEventListenerManager* elm = aContent->GetListenerManager(false);
+  if (!elm) {
+    return false;
   }
-
-  return false;
+  return elm->HasListenersFor(nsGkAtoms::onclick) ||
+         elm->HasListenersFor(nsGkAtoms::onmousedown) ||
+         elm->HasListenersFor(nsGkAtoms::onmouseup);
 }
 
 static bool

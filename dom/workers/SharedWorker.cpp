@@ -16,6 +16,7 @@
 
 #include "MessagePort.h"
 #include "RuntimeService.h"
+#include "Worker.h"
 #include "WorkerPrivate.h"
 
 using mozilla::dom::Optional;
@@ -66,6 +67,9 @@ SharedWorker::Constructor(const GlobalObject& aGlobal, JSContext* aCx,
 {
   AssertIsOnMainThread();
 
+  nsCOMPtr<nsPIDOMWindow> window = do_QueryInterface(aGlobal.GetAsSupports());
+  MOZ_ASSERT(window);
+
   RuntimeService* rts = RuntimeService::GetOrCreateService();
   if (!rts) {
     aRv = NS_ERROR_NOT_AVAILABLE;
@@ -78,7 +82,7 @@ SharedWorker::Constructor(const GlobalObject& aGlobal, JSContext* aCx,
   }
 
   nsRefPtr<SharedWorker> sharedWorker;
-  nsresult rv = rts->CreateSharedWorker(aGlobal, aScriptURL, name,
+  nsresult rv = rts->CreateSharedWorker(aCx, window, aScriptURL, name,
                                         getter_AddRefs(sharedWorker));
   if (NS_FAILED(rv)) {
     aRv = rv;
