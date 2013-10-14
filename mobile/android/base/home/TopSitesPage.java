@@ -504,7 +504,7 @@ public class TopSitesPage extends HomeFragment {
 
     private class VisitedAdapter extends CursorAdapter {
         public VisitedAdapter(Context context, Cursor cursor) {
-            super(context, cursor);
+            super(context, cursor, 0);
         }
 
         @Override
@@ -537,7 +537,7 @@ public class TopSitesPage extends HomeFragment {
         private Map<String, Thumbnail> mThumbnails;
 
         public TopSitesGridAdapter(Context context, Cursor cursor) {
-            super(context, cursor);
+            super(context, cursor, 0);
         }
 
         @Override
