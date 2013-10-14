@@ -123,7 +123,7 @@ let AboutReader = function(doc, win) {
   this._updateToggleButton();
 
   // Track status of reader toolbar list button
-  this._readingListCount = 0;
+  this._readingListCount = -1;
   this._updateListButton();
   this._requestReadingListCount();
 
@@ -214,8 +214,14 @@ AboutReader.prototype = {
       case "Reader:ListCountUpdated":  {
         let count = parseInt(aData);
         if (this._readingListCount != count) {
+          let isInitialStateChange = (this._readingListCount == -1);
           this._readingListCount = count;
           this._updateListButton();
+
+          // Display the toolbar when all its initial component states are known
+          if (isInitialStateChange) {
+            this._setToolbarVisibility(true);
+          }
         }
         break;
       }
@@ -324,7 +330,7 @@ AboutReader.prototype = {
   },
 
   _onList: function Reader_onList() {
-    if (!this._article || this._readingListCount == 0)
+    if (!this._article || this._readingListCount < 1)
       return;
 
     gChromeWin.sendMessageToJava({ type: "Reader:GoToReadingList" });
@@ -453,6 +459,10 @@ AboutReader.prototype = {
       win.history.back();
 
     if (!this._toolbarEnabled)
+      return;
+
+    // Don't allow visible toolbar until banner state is known
+    if (this._readingListCount == -1)
       return;
 
     if (this._getToolbarVisibility() === visible)
