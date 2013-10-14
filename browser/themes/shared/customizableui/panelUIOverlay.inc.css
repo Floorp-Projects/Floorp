@@ -59,8 +59,7 @@
   box-shadow: none;
 }
 
-#PanelUI-contents,
-.panel-mainview:not([panelid="PanelUI-popup"]) {
+#PanelUI-contents {
   padding: .5em 0;
 }
 
