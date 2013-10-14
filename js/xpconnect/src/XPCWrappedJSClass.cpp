@@ -244,13 +244,12 @@ nsXPCWrappedJSClass::CallQueryInterfaceOnJSObject(JSContext* cx,
         // is not an exception that is ever worth reporting, but we don't want
         // to eat all exceptions either.
 
-        uint32_t oldOpts =
-          JS_SetOptions(cx, JS_GetOptions(cx) | JSOPTION_DONT_REPORT_UNCAUGHT);
-
-        jsval args[1] = {OBJECT_TO_JSVAL(id)};
-        success = JS_CallFunctionValue(cx, jsobj, fun, 1, args, retval.address());
-
-        JS_SetOptions(cx, oldOpts);
+        {
+            AutoSaveContextOptions asco(cx);
+            ContextOptionsRef(cx).setDontReportUncaught(true);
+            jsval args[1] = {OBJECT_TO_JSVAL(id)};
+            success = JS_CallFunctionValue(cx, jsobj, fun, 1, args, retval.address());
+        }
 
         if (!success && JS_IsExceptionPending(cx)) {
             RootedValue jsexception(cx, NullValue());
@@ -285,7 +284,7 @@ nsXPCWrappedJSClass::CallQueryInterfaceOnJSObject(JSContext* cx,
             }
 
             // Don't report if reporting was disabled by someone else.
-            if (!(oldOpts & JSOPTION_DONT_REPORT_UNCAUGHT))
+            if (!ContextOptionsRef(cx).dontReportUncaught())
                 JS_ReportPendingException(cx);
         } else if (!success) {
             NS_WARNING("QI hook ran OOMed - this is probably a bug!");
@@ -1418,12 +1417,10 @@ pre_call_clean_up:
         success = JS_SetProperty(cx, obj, name, rval);
     } else {
         if (!JSVAL_IS_PRIMITIVE(fval)) {
-            uint32_t oldOpts = JS_GetOptions(cx);
-            JS_SetOptions(cx, oldOpts | JSOPTION_DONT_REPORT_UNCAUGHT);
+            AutoSaveContextOptions asco(cx);
+            ContextOptionsRef(cx).setDontReportUncaught(true);
 
             success = JS_CallFunctionValue(cx, thisObj, fval, argc, argv, rval.address());
-
-            JS_SetOptions(cx, oldOpts);
         } else {
             // The property was not an object so can't be a function.
             // Let's build and 'throw' an exception.
