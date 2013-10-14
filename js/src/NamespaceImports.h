@@ -38,6 +38,11 @@ template <typename T> class AutoVectorRooter;
 template<typename K, typename V> class AutoHashMapRooter;
 template<typename T> class AutoHashSetRooter;
 
+class JS_PUBLIC_API(ContextOptions);
+class JS_PUBLIC_API(AutoSaveContextOptions);
+
+JS_PUBLIC_API(ContextOptions &) ContextOptionsRef(JSContext *cx);
+
 }
 
 // Do the importing.
