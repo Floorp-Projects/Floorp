@@ -27,7 +27,7 @@ import java.util.ArrayList;
  * The purpose of this class is to collect all the logically connected methods that deal with about:home
  * To use any of these methods in your test make sure it extends AboutHomeTest instead of BaseTest
  */
-abstract class AboutHomeTest extends BaseTest {
+abstract class AboutHomeTest extends PixelTest {
     protected enum AboutHomeTabs {HISTORY, MOST_RECENT, TABS_FROM_LAST_TIME, TOP_SITES, BOOKMARKS, READING_LIST};
     private ArrayList<String> aboutHomeTabs = new ArrayList<String>() {{
                   add("TOP_SITES");
@@ -280,12 +280,15 @@ abstract class AboutHomeTest extends BaseTest {
     protected void openAboutHomeTab(AboutHomeTabs tab) {
         focusUrlBar();
         ViewPager pager = (ViewPager)mSolo.getView(ViewPager.class, 0);
+        final int currentTabIndex = pager.getCurrentItem();
+        int tabOffset;
 
         // Handle tablets by just clicking the visible tab title.
         if (mDevice.type.equals("tablet")) {
-            // Just click for tablets, since all the titles are visible.
             if (AboutHomeTabs.MOST_RECENT == tab || AboutHomeTabs.TABS_FROM_LAST_TIME == tab) {
-                mSolo.clickOnText(AboutHomeTabs.HISTORY.toString());
+                tabOffset = aboutHomeTabs.indexOf(AboutHomeTabs.HISTORY.toString()) - currentTabIndex;
+                swipeAboutHome(tabOffset);
+                waitForAboutHomeTab(aboutHomeTabs.indexOf(StringHelper.HISTORY_LABEL));
                 TabWidget tabwidget = (TabWidget)mSolo.getView(TabWidget.class, 0);
 
                 switch (tab) {
@@ -308,8 +311,7 @@ abstract class AboutHomeTest extends BaseTest {
         }
 
         // Handle phones (non-tablets).
-        final int currentTabIndex = pager.getCurrentItem();
-        int tabOffset = aboutHomeTabs.indexOf(tab.toString()) - currentTabIndex;
+        tabOffset = aboutHomeTabs.indexOf(tab.toString()) - currentTabIndex;
         switch (tab) {
             case TOP_SITES : {
                 swipeAboutHome(tabOffset);
