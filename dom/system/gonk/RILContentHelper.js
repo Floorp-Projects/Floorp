@@ -852,10 +852,6 @@ RILContentHelper.prototype = {
   },
 
   sendMMI: function sendMMI(window, mmi) {
-    // We need to save the global window to get the proper MMIError
-    // constructor once we get the reply from the parent process.
-    this._window = window;
-
     debug("Sending MMI " + mmi);
     if (!window) {
       throw Components.Exception("Can't get window object",
@@ -863,6 +859,10 @@ RILContentHelper.prototype = {
     }
     let request = Services.DOMRequest.createRequest(window);
     let requestId = this.getRequestId(request);
+    // We need to save the global window to get the proper MMIError
+    // constructor once we get the reply from the parent process.
+    this._windowsMap[requestId] = window;
+
     cpmm.sendAsyncMessage("RIL:SendMMI", {
       clientId: 0,
       data: {
@@ -1834,6 +1834,8 @@ RILContentHelper.prototype = {
   handleSendCancelMMI: function handleSendCancelMMI(message) {
     debug("handleSendCancelMMI " + JSON.stringify(message));
     let request = this.takeRequest(message.requestId);
+    let requestWindow = this._windowsMap[message.requestId];
+    delete this._windowsMap[message.requestId];
     if (!request) {
       return;
     }
@@ -1868,10 +1870,10 @@ RILContentHelper.prototype = {
       let mmiResult = new DOMMMIResult(result);
       Services.DOMRequest.fireSuccess(request, mmiResult);
     } else {
-      let mmiError = new this._window.DOMMMIError(result.serviceCode,
-                                                  message.errorMsg,
-                                                  null,
-                                                  result.additionalInformation);
+      let mmiError = new requestWindow.DOMMMIError(result.serviceCode,
+                                                   message.errorMsg,
+                                                   null,
+                                                   result.additionalInformation);
       Services.DOMRequest.fireDetailedError(request, mmiError);
     }
   },
