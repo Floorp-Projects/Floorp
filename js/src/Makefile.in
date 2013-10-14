@@ -245,8 +245,6 @@ LOCAL_INCLUDES += \
 ifdef ENABLE_INTL_API
 
 ifeq ($(OS_ARCH),WINNT)
-  # Parallel gmake is buggy on Windows
-  ICU_GMAKE_OPTIONS="-j1"
   # Library names: On Windows, ICU uses modified library names for static
   # and debug libraries.
   ifdef MOZ_DEBUG
@@ -254,6 +252,12 @@ ifeq ($(OS_ARCH),WINNT)
   endif
   ICU_LIB_RENAME = $(foreach libname,$(ICU_LIB_NAMES),\
                      cp -p intl/icu/lib/s$(libname)$(ICU_LIB_SUFFIX).lib intl/icu/lib/$(libname).lib;)
+endif
+
+ifdef .PYMAKE
+ICU_MAKE = $(GMAKE)
+else
+ICU_MAKE = $(MAKE)
 endif
 
 # - Build ICU as part of the "export" target, so things get built
@@ -264,7 +268,8 @@ endif
 #   will discard all files with a non-standard suffix (bug 857450).
 # - Options for genrb: -k strict parsing; -R omit collation tailoring rules.
 export::
-	$(GMAKE) $(ICU_GMAKE_OPTIONS) -C intl/icu STATIC_O=$(OBJ_SUFFIX) GENRBOPTS='-k -R'
+# ICU's build system is full of races, so force non-parallel build.
+	+$(ICU_MAKE) -j1 -C intl/icu STATIC_O=$(OBJ_SUFFIX) GENRBOPTS='-k -R'
 	$(ICU_LIB_RENAME)
 
 distclean clean::
