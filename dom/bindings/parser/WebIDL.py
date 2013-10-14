@@ -401,7 +401,12 @@ class IDLObjectWithIdentifier(IDLObject):
                 if isDictionaryMember:
                     raise WebIDLError("[TreatUndefinedAs] is not allowed for "
                                       "dictionary members", [self.location])
-                if value == 'Null':
+                if value == 'Missing':
+                    if not isOptional:
+                        raise WebIDLError("[TreatUndefinedAs=Missing] is only "
+                                          "allowed on optional arguments",
+                                          [self.location])
+                elif value == 'Null':
                     if not self.type.isDOMString():
                         raise WebIDLError("[TreatUndefinedAs=Null] is only "
                                           "allowed on arguments or "
@@ -421,8 +426,8 @@ class IDLObjectWithIdentifier(IDLObject):
                                           [self.location])
                 else:
                     raise WebIDLError("[TreatUndefinedAs] must take the "
-                                      "identifiers EmptyString or Null",
-                                      [self.location])
+                                      "identifiers EmptyString or Null or "
+                                      "Missing", [self.location])
                 self.treatUndefinedAs = value
             else:
                 unhandledAttrs.append(attr)
@@ -3138,12 +3143,15 @@ class IDLMethod(IDLInterfaceMember, IDLScope):
 
     def finish(self, scope):
         for overload in self._overloads:
+            inOptionalArguments = False
             variadicArgument = None
 
             arguments = overload.arguments
             for (idx, argument) in enumerate(arguments):
-                if not argument.isComplete():
-                    argument.complete(scope)
+                if argument.isComplete():
+                    continue
+
+                argument.complete(scope)
                 assert argument.type.isComplete()
 
                 if (argument.type.isDictionary() or
@@ -3153,7 +3161,7 @@ class IDLMethod(IDLInterfaceMember, IDLScope):
                     # end of the list or followed by optional arguments must be
                     # optional.
                     if (not argument.optional and
-                        all(arg.optional for arg in arguments[idx+1:])):
+                        (idx == len(arguments) - 1 or arguments[idx+1].optional)):
                         raise WebIDLError("Dictionary argument or union "
                                           "argument containing a dictionary "
                                           "not followed by a required argument "
@@ -3171,6 +3179,13 @@ class IDLMethod(IDLInterfaceMember, IDLScope):
                 if variadicArgument:
                     raise WebIDLError("Variadic argument is not last argument",
                                       [variadicArgument.location])
+                # Once we see an optional argument, there can't be any non-optional
+                # arguments.
+                if inOptionalArguments and not argument.optional:
+                    raise WebIDLError("Non-optional argument after optional "
+                                      "arguments",
+                                      [argument.location])
+                inOptionalArguments = argument.optional
                 if argument.variadic:
                     variadicArgument = argument
 
@@ -3215,7 +3230,7 @@ class IDLMethod(IDLInterfaceMember, IDLScope):
         return [overload for overload in self._overloads if
                 len(overload.arguments) == argc or
                 (len(overload.arguments) > argc and
-                 all(arg.optional for arg in overload.arguments[argc:])) or
+                 overload.arguments[argc].optional) or
                 (len(overload.arguments) < argc and
                  len(overload.arguments) > 0 and
                  overload.arguments[-1].variadic)]
@@ -4044,6 +4059,21 @@ class Parser(Tokenizer):
             if not returnType.isDOMString():
                 raise WebIDLError("stringifier must have DOMString return type",
                                   [self.getLocation(p, 2)])
+
+        inOptionalArguments = False
+        variadicArgument = False
+        for argument in arguments:
+            # Only the last argument can be variadic
+            if variadicArgument:
+                raise WebIDLError("Only the last argument can be variadic",
+                                  [variadicArgument.location])
+            # Once we see an optional argument, there can't be any non-optional
+            # arguments.
+            if inOptionalArguments and not argument.optional:
+                raise WebIDLError("Cannot have a non-optional argument following an optional argument",
+                                  [argument.location])
+            inOptionalArguments = argument.optional
+            variadicArgument = argument if argument.variadic else None
 
         # identifier might be None.  This is only permitted for special methods.
         if not identifier:

@@ -428,7 +428,7 @@ CheckTypeInference(JSContext *cx, const JSClass *clasp, nsIPrincipal *principal)
         return;
 
     // Finally, do the damn assert.
-    MOZ_ASSERT(JS_GetOptions(cx) & JSOPTION_TYPE_INFERENCE);
+    MOZ_ASSERT(ContextOptionsRef(cx).typeInference());
 }
 #else
 #define CheckTypeInference(cx, clasp, principal) {}

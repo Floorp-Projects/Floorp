@@ -172,7 +172,7 @@ File(JSContext *cx, unsigned argc, Value *vp)
     }
 
     nsXPConnect* xpc = nsXPConnect::XPConnect();
-    JSObject* glob = JS::CurrentGlobalOrNull(cx);
+    JSObject* glob = CurrentGlobalOrNull(cx);
 
     nsCOMPtr<nsIXPConnectJSObjectHolder> holder;
     rv = xpc->WrapNativeToJSVal(cx, glob, native, nullptr,
@@ -207,7 +207,7 @@ Blob(JSContext *cx, unsigned argc, Value *vp)
     }
 
     nsXPConnect* xpc = nsXPConnect::XPConnect();
-    JSObject* glob = JS::CurrentGlobalOrNull(cx);
+    JSObject* glob = CurrentGlobalOrNull(cx);
 
     nsCOMPtr<nsIXPConnectJSObjectHolder> holder;
     rv = xpc->WrapNativeToJSVal(cx, glob, native, nullptr,
@@ -526,7 +526,7 @@ mozJSComponentLoader::LoadModule(FileLocation &aFile)
 
 nsresult
 mozJSComponentLoader::FindTargetObject(JSContext* aCx,
-                                       JS::MutableHandleObject aTargetObject)
+                                       MutableHandleObject aTargetObject)
 {
     aTargetObject.set(nullptr);
 
@@ -632,8 +632,8 @@ mozJSComponentLoader::PrepareObjectForLocation(JSCLContextHelper& aCx,
         rv = NS_NewBackstagePass(getter_AddRefs(backstagePass));
         NS_ENSURE_SUCCESS(rv, nullptr);
 
-        JS::CompartmentOptions options;
-        options.setZone(JS::SystemZone)
+        CompartmentOptions options;
+        options.setZone(SystemZone)
                .setVersion(JSVERSION_LATEST);
         rv = xpc->InitClassesWithNewWrappedGlobal(aCx,
                                                   static_cast<nsIGlobalObject *>(backstagePass),
@@ -695,7 +695,7 @@ mozJSComponentLoader::PrepareObjectForLocation(JSCLContextHelper& aCx,
         NS_ENSURE_TRUE(locationObj, nullptr);
 
         if (!JS_DefineProperty(aCx, obj, "__LOCATION__",
-                               JS::ObjectValue(*locationObj),
+                               ObjectValue(*locationObj),
                                nullptr, nullptr, 0)) {
             return nullptr;
         }
@@ -723,7 +723,7 @@ mozJSComponentLoader::ObjectForLocation(nsIFile *aComponentFile,
                                         JSObject **aObject,
                                         char **aLocation,
                                         bool aPropagateExceptions,
-                                        JS::MutableHandleValue aException)
+                                        MutableHandleValue aException)
 {
     JSCLContextHelper cx(mContext);
 
@@ -781,39 +781,36 @@ mozJSComponentLoader::ObjectForLocation(nsIFile *aComponentFile,
         // If aPropagateExceptions is true, then our caller wants us to propagate
         // any exceptions out to our caller. Ensure that the engine doesn't
         // eagerly report the exception.
-        uint32_t oldopts = JS_GetOptions(cx);
+        AutoSaveContextOptions asco(cx);
         if (aPropagateExceptions)
-            JS_SetOptions(cx, oldopts | JSOPTION_DONT_REPORT_UNCAUGHT);
+            ContextOptionsRef(cx).setDontReportUncaught(true);
 
-        JS::CompileOptions options(cx);
+        CompileOptions options(cx);
         options.setPrincipals(nsJSPrincipals::get(mSystemPrincipal))
                .setNoScriptRval(mReuseLoaderGlobal ? false : true)
                .setVersion(JSVERSION_LATEST)
                .setFileAndLine(nativePath.get(), 1)
                .setSourcePolicy(mReuseLoaderGlobal ?
-                                JS::CompileOptions::NO_SOURCE :
-                                JS::CompileOptions::LAZY_SOURCE);
+                                CompileOptions::NO_SOURCE :
+                                CompileOptions::LAZY_SOURCE);
 
         if (realFile) {
 #ifdef HAVE_PR_MEMMAP
             int64_t fileSize;
             rv = aComponentFile->GetFileSize(&fileSize);
             if (NS_FAILED(rv)) {
-                JS_SetOptions(cx, oldopts);
                 return rv;
             }
 
             int64_t maxSize = UINT32_MAX;
             if (fileSize > maxSize) {
                 NS_ERROR("file too large");
-                JS_SetOptions(cx, oldopts);
                 return NS_ERROR_FAILURE;
             }
 
             PRFileDesc *fileHandle;
             rv = aComponentFile->OpenNSPRFileDesc(PR_RDONLY, 0, &fileHandle);
             if (NS_FAILED(rv)) {
-                JS_SetOptions(cx, oldopts);
                 return NS_ERROR_FILE_NOT_FOUND;
             }
 
@@ -824,7 +821,6 @@ mozJSComponentLoader::ObjectForLocation(nsIFile *aComponentFile,
                                               PR_PROT_READONLY);
             if (!map) {
                 NS_ERROR("Failed to create file map");
-                JS_SetOptions(cx, oldopts);
                 return NS_ERROR_FAILURE;
             }
 
@@ -836,15 +832,14 @@ mozJSComponentLoader::ObjectForLocation(nsIFile *aComponentFile,
             char *buf = static_cast<char*>(PR_MemMap(map, 0, fileSize32));
             if (!buf) {
                 NS_WARNING("Failed to map file");
-                JS_SetOptions(cx, oldopts);
                 return NS_ERROR_FAILURE;
             }
 
             if (!mReuseLoaderGlobal) {
-                script = JS::Compile(cx, obj, options, buf,
+                script = Compile(cx, obj, options, buf,
                                      fileSize32);
             } else {
-                function = JS::CompileFunction(cx, obj, options,
+                function = CompileFunction(cx, obj, options,
                                                nullptr, 0, nullptr,
                                                buf, fileSize32);
             }
@@ -861,7 +856,6 @@ mozJSComponentLoader::ObjectForLocation(nsIFile *aComponentFile,
             FILE *fileHandle;
             rv = aComponentFile->OpenANSIFileDesc("r", &fileHandle);
             if (NS_FAILED(rv)) {
-                JS_SetOptions(cx, oldopts);
                 return NS_ERROR_FILE_NOT_FOUND;
             }
 
@@ -872,31 +866,28 @@ mozJSComponentLoader::ObjectForLocation(nsIFile *aComponentFile,
             rv = aComponentFile->GetFileSize(&len);
             if (NS_FAILED(rv) || len < 0) {
                 NS_WARNING("Failed to get file size");
-                JS_SetOptions(cx, oldopts);
                 return NS_ERROR_FAILURE;
             }
 
             char *buf = (char *) malloc(len * sizeof(char));
             if (!buf) {
-                JS_SetOptions(cx, oldopts);
                 return NS_ERROR_FAILURE;
             }
 
             size_t rlen = fread(buf, 1, len, fileHandle);
             if (rlen != (uint64_t)len) {
                 free(buf);
-                JS_SetOptions(cx, oldopts);
                 NS_WARNING("Failed to read file");
                 return NS_ERROR_FAILURE;
             }
 
             if (!mReuseLoaderGlobal) {
-                script = JS::Compile(cx, obj, options, buf,
+                script = Compile(cx, obj, options, buf,
                                      fileSize32);
             } else {
-                function = JS::CompileFunction(cx, obj, options,
-                                               nullptr, 0, nullptr,
-                                               buf, fileSize32);
+                function = CompileFunction(cx, obj, options,
+                                           nullptr, 0, nullptr,
+                                           buf, fileSize32);
             }
 
             free(buf);
@@ -937,16 +928,15 @@ mozJSComponentLoader::ObjectForLocation(nsIFile *aComponentFile,
             buf[len] = '\0';
 
             if (!mReuseLoaderGlobal) {
-                script = JS::Compile(cx, obj, options, buf, bytesRead);
+                script = Compile(cx, obj, options, buf, bytesRead);
             } else {
-                function = JS::CompileFunction(cx, obj, options,
+                function = CompileFunction(cx, obj, options,
                                                nullptr, 0, nullptr,
                                                buf, bytesRead);
             }
         }
         // Propagate the exception, if one exists. Also, don't leave the stale
         // exception on this context.
-        JS_SetOptions(cx, oldopts);
         if (!script && !function && aPropagateExceptions) {
             JS_GetPendingException(cx, aException);
             JS_ClearPendingException(cx);
@@ -987,17 +977,19 @@ mozJSComponentLoader::ObjectForLocation(nsIFile *aComponentFile,
     }
 
     mThisObjects.Put(tableScript, obj);
-
-    uint32_t oldopts = JS_GetOptions(cx);
-    JS_SetOptions(cx, oldopts | (aPropagateExceptions ? JSOPTION_DONT_REPORT_UNCAUGHT : 0));
     bool ok = false;
-    if (script) {
-        ok = JS_ExecuteScriptVersion(cx, obj, script, nullptr, JSVERSION_LATEST);
-    } else {
-        jsval rval;
-        ok = JS_CallFunction(cx, obj, function, 0, nullptr, &rval);
-    }
-    JS_SetOptions(cx, oldopts);
+
+    {
+        AutoSaveContextOptions asco(cx);
+        if (aPropagateExceptions)
+            ContextOptionsRef(cx).setDontReportUncaught(true);
+        if (script) {
+            ok = JS_ExecuteScriptVersion(cx, obj, script, NULL, JSVERSION_LATEST);
+        } else {
+            jsval rval;
+            ok = JS_CallFunction(cx, obj, function, 0, nullptr, &rval);
+        }
+     }
 
     if (!ok) {
         if (aPropagateExceptions) {
@@ -1063,10 +1055,10 @@ mozJSComponentLoader::UnloadModules()
 
 NS_IMETHODIMP
 mozJSComponentLoader::Import(const nsACString& registryLocation,
-                             const JS::Value& targetValArg,
+                             const Value& targetValArg,
                              JSContext* cx,
                              uint8_t optionalArgc,
-                             JS::Value* retval)
+                             Value* retval)
 {
     MOZ_ASSERT(nsContentUtils::IsCallerChrome());
 
@@ -1112,7 +1104,7 @@ mozJSComponentLoader::Import(const nsACString& registryLocation,
             return NS_ERROR_FAILURE;
         }
 
-        *retval = JS::ObjectValue(*global);
+        *retval = ObjectValue(*global);
     }
     return rv;
 }
@@ -1139,9 +1131,9 @@ mozJSComponentLoader::ImportInto(const nsACString & aLocation,
 
 nsresult
 mozJSComponentLoader::ImportInto(const nsACString &aLocation,
-                                 JS::HandleObject targetObj,
+                                 HandleObject targetObj,
                                  JSContext *callercx,
-                                 JS::MutableHandleObject vp)
+                                 MutableHandleObject vp)
 {
     vp.set(nullptr);
 
