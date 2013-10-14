@@ -315,6 +315,17 @@ this.OutputGenerator = {
       return output;
     },
 
+    label: function label(aAccessible, aRoleStr, aStates, aFlags, aContext) {
+      if (aContext.isNestedControl ||
+          aContext.accessible == Utils.getEmbeddedControl(aAccessible)) {
+        // If we are on a nested control, or a nesting label,
+        // we don't need the context.
+        return [];
+      }
+
+      return this.objectOutputFunctions.defaultFunc.apply(this, arguments);
+    },
+
     entry: function entry(aAccessible, aRoleStr, aStates, aFlags) {
       let output = [];
       let desc = this._getLocalizedStates(aStates);
