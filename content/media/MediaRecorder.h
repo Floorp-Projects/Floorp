@@ -75,7 +75,8 @@ public:
   static already_AddRefed<MediaRecorder>
   Constructor(const GlobalObject& aGlobal,
               DOMMediaStream& aStream, ErrorResult& aRv);
-
+  // Handle user can't exit problem when they close the tab during recording.
+  virtual void DisconnectFromOwner() MOZ_OVERRIDE;
   // EventHandler
   IMPL_EVENT_HANDLER(dataavailable)
   IMPL_EVENT_HANDLER(error)
