@@ -121,11 +121,6 @@ public:
     return mStateData.mReadyState;
   }
 
-  void Open(const nsACString& aMethod, const nsAString& aUrl, ErrorResult& aRv)
-  {
-    Open(aMethod, aUrl, true, Optional<nsAString>(),
-         Optional<nsAString>(), aRv);
-  }
   void
   Open(const nsACString& aMethod, const nsAString& aUrl, bool aAsync,
        const Optional<nsAString>& aUser, const Optional<nsAString>& aPassword,

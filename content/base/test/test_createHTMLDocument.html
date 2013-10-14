@@ -27,15 +27,11 @@ function checkDoc(title, expectedtitle, normalizedtitle) {
   is(doc.doctype.internalSubset, null, "internalSubset should be null!");
   isElement(doc.documentElement, "html");
   isElement(doc.documentElement.firstChild, "head");
-  if (title !== undefined) {
-    is(doc.documentElement.firstChild.childNodes.length, 1);
-    isElement(doc.documentElement.firstChild.firstChild, "title");
-    // Doesn't always work out in WebKit.
-    ok(doc.documentElement.firstChild.firstChild.firstChild, "Need a text node.");
-    is(doc.documentElement.firstChild.firstChild.firstChild.data, expectedtitle);
-  } else {
-    is(doc.documentElement.firstChild.childNodes.length, 0);
-  }
+  is(doc.documentElement.firstChild.childNodes.length, 1);
+  isElement(doc.documentElement.firstChild.firstChild, "title");
+  // Doesn't always work out in WebKit.
+  ok(doc.documentElement.firstChild.firstChild.firstChild, "Need a text node.");
+  is(doc.documentElement.firstChild.firstChild.firstChild.data, expectedtitle);
   isElement(doc.documentElement.lastChild, "body");
   is(doc.documentElement.lastChild.childNodes.length, 0);
   ((!title || title.indexOf("\f") === -1) ? is : todo_is)
@@ -45,7 +41,7 @@ function checkDoc(title, expectedtitle, normalizedtitle) {
 }
 checkDoc("", "", "");
 checkDoc(null, "null", "null");
-checkDoc(undefined, "", "");
+checkDoc(undefined, "undefined", "undefined");
 checkDoc("foo  bar baz", "foo  bar baz", "foo bar baz");
 checkDoc("foo\t\tbar baz", "foo\t\tbar baz", "foo bar baz");
 checkDoc("foo\n\nbar baz", "foo\n\nbar baz", "foo bar baz");
