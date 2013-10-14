@@ -118,6 +118,7 @@ function cleanup() {
   Services.obs.removeObserver(tab_DESTROYING, DESTROYING);
   Services.obs.removeObserver(tab_SHOWN, SHOWN);
   Services.obs.removeObserver(tab_HIDDEN, HIDDEN);
+  Services.obs.removeObserver(tab_STARTUP, STARTUP);
 
   gBrowser.tabContainer.removeEventListener("TabSelect", tabSelect);
   gBrowser.removeCurrentTab();
