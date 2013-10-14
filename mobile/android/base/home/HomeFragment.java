@@ -153,7 +153,7 @@ abstract class HomeFragment extends Fragment {
             if (item.getItemId() == R.id.home_open_private_tab)
                 flags |= Tabs.LOADURL_PRIVATE;
 
-            final String url = (info.inReadingList ? ReaderModeUtils.getAboutReaderForUrl(info.url, true) : info.url);
+            final String url = (info.inReadingList ? ReaderModeUtils.getAboutReaderForUrl(info.url) : info.url);
             Tabs.getInstance().loadUrl(url, flags);
             Toast.makeText(context, R.string.new_tab_opened, Toast.LENGTH_SHORT).show();
             return true;
@@ -166,7 +166,7 @@ abstract class HomeFragment extends Fragment {
         }
 
         if (itemId == R.id.home_open_in_reader) {
-            final String url = ReaderModeUtils.getAboutReaderForUrl(info.url, true);
+            final String url = ReaderModeUtils.getAboutReaderForUrl(info.url);
             Tabs.getInstance().loadUrl(url, Tabs.LOADURL_NONE);
             return true;
         }
