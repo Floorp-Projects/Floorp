@@ -2151,7 +2151,7 @@ CodeGenerator::visitApplyArgsGeneric(LApplyArgsGeneric *apply)
     ExecutionMode executionMode = gen->info().executionMode();
     if (apply->hasSingleTarget()) {
         JSFunction *target = apply->getSingleTarget();
-        if (!CanIonCompile(target, executionMode)) {
+        if (target->isNative()) {
             if (!emitCallInvokeFunction(apply, copyreg))
                 return false;
             emitPopArguments(apply, copyreg);

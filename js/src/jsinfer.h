@@ -177,8 +177,7 @@ namespace types {
 
 class TypeCompartment;
 class TypeSet;
-
-struct TypeObjectKey;
+class TypeObjectKey;
 
 /*
  * Information about a single concrete type. We pack this into a single word,
@@ -542,6 +541,10 @@ class TypeSet
 
     /* Mark this type set as representing a configured property. */
     inline void setConfiguredProperty(ExclusiveContext *cx);
+
+    /* Get a list of all types in this set. */
+    typedef Vector<Type, 1, SystemAllocPolicy> TypeList;
+    bool enumerateTypes(TypeList *list);
 
     /*
      * Iterate through the objects in this set. getObjectCount overapproximates
@@ -1219,8 +1222,9 @@ typedef HashMap<AllocationSiteKey,ReadBarriered<TypeObject>,AllocationSiteKey,Sy
 
 class HeapTypeSetKey;
 
-/* Type set entry for either a JSObject with singleton type or a non-singleton TypeObject. */
-struct TypeObjectKey {
+// Type set entry for either a JSObject with singleton type or a non-singleton TypeObject.
+struct TypeObjectKey
+{
     static intptr_t keyBits(TypeObjectKey *obj) { return (intptr_t) obj; }
     static TypeObjectKey *getKey(TypeObjectKey *obj) { return obj; }
 
@@ -1259,14 +1263,40 @@ struct TypeObjectKey {
     void watchStateChangeForInlinedCall(CompilerConstraintList *constraints);
     void watchStateChangeForNewScriptTemplate(CompilerConstraintList *constraints);
     void watchStateChangeForTypedArrayBuffer(CompilerConstraintList *constraints);
-    HeapTypeSetKey property(jsid id);
+    HeapTypeSetKey property(jsid id, JSContext *maybecx = NULL);
+
+    TypeObject *maybeType();
 };
 
+// Representation of a heap type property which may or may not be instantiated.
+// Heap properties for singleton types are instantiated lazily as they are used
+// by the compiler, but this is only done on the main thread. If we are
+// compiling off thread and use a property which has not yet been instantiated,
+// it will be treated as empty and non-configured and will be instantiated when
+// rejoining to the main thread. If it is in fact not empty, the compilation
+// will fail; to avoid this, we try to instantiate singleton property types
+// during generation of baseline caches.
 class HeapTypeSetKey
 {
+    friend class TypeObjectKey;
+
+    // Object and property being accessed.
+    TypeObjectKey *object_;
+    jsid id_;
+
+    // If instantiated, the underlying heap type set.
+    HeapTypeSet *maybeTypes_;
+
   public:
-    TypeObject *actualObject;
-    HeapTypeSet *actualTypes;
+    HeapTypeSetKey()
+      : object_(NULL), id_(JSID_EMPTY), maybeTypes_(NULL)
+    {}
+
+    TypeObjectKey *object() const { return object_; }
+    jsid id() const { return id_; }
+    HeapTypeSet *maybeTypes() const { return maybeTypes_; }
+
+    bool instantiate(JSContext *cx);
 
     void freeze(CompilerConstraintList *constraints);
     JSValueType knownTypeTag(CompilerConstraintList *constraints);
