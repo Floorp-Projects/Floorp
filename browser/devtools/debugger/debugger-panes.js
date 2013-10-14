@@ -383,6 +383,10 @@ SourcesView.prototype = Heritage.extend(WidgetMethods, {
    * Pretty print the selected source.
    */
   prettyPrint: function() {
+    if (this._prettyPrintButton.hasAttribute("disabled")) {
+      return;
+    }
+
     const resetEditor = ([{ url }]) => {
       // Only set the text when the source is still selected.
       if (url == this.selectedValue) {
@@ -691,6 +695,20 @@ SourcesView.prototype = Heritage.extend(WidgetMethods, {
     document.title = L10N.getFormatStr("DebuggerWindowScriptTitle", script);
 
     this.maybeShowBlackBoxMessage();
+    this._updatePrettyPrintButtonState();
+  },
+
+  /**
+   * Enable or disable the pretty print button depending on whether the selected
+   * source is black boxed or not.
+   */
+  _updatePrettyPrintButtonState: function() {
+    const { source } = this.selectedItem.attachment;
+    if (gThreadClient.source(source).isBlackBoxed) {
+      this._prettyPrintButton.setAttribute("disabled", true);
+    } else {
+      this._prettyPrintButton.removeAttribute("disabled");
+    }
   },
 
   /**
@@ -715,8 +733,23 @@ SourcesView.prototype = Heritage.extend(WidgetMethods, {
    * The check listener for the sources container.
    */
   _onSourceCheck: function({ detail: { checked }, target }) {
-    let item = this.getItemForElement(target);
-    DebuggerController.SourceScripts.blackBox(item.attachment.source, !checked);
+    const shouldBlackBox = !checked;
+
+    // Be optimistic that the (un-)black boxing will succeed and enable/disable
+    // the pretty print button immediately. Then, once we actually get the
+    // results from the server, make sure that it is in the correct state again
+    // by calling `_updatePrettyPrintButtonState`.
+
+    if (shouldBlackBox) {
+      this._prettyPrintButton.setAttribute("disabled", true);
+    } else {
+      this._prettyPrintButton.removeAttribute("disabled");
+    }
+
+    const { source } = this.getItemForElement(target).attachment;
+    DebuggerController.SourceScripts.blackBox(source, shouldBlackBox)
+      .then(this._updatePrettyPrintButtonState,
+            this._updatePrettyPrintButtonState);
   },
 
   /**
