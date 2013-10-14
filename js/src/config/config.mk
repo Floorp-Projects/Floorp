@@ -64,6 +64,10 @@ check-variable = $(if $(filter-out 0 1,$(words $($(x))z)),$(error Spaces are not
 
 $(foreach x,$(CHECK_VARS),$(check-variable))
 
+ifndef INCLUDED_FUNCTIONS_MK
+include $(topsrcdir)/config/makefiles/functions.mk
+endif
+
 RM = rm -f
 
 # LIBXUL_DIST is not defined under js/src, thus we make it mean DIST there.
@@ -348,7 +352,6 @@ DEFINES += -DSTATIC_EXPORTABLE_JS_API
 endif
 endif
 
-# Flags passed to JarMaker.py
 MAKE_JARS_FLAGS = \
 	-t $(topsrcdir) \
 	-f $(MOZ_CHROME_FILE_FORMAT) \

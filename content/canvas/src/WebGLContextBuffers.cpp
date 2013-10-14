@@ -383,8 +383,8 @@ WebGLContext::DeleteBuffer(WebGLBuffer *buffer)
     }
 
     for (int32_t i = 0; i < mGLMaxVertexAttribs; i++) {
-        if (mBoundVertexArray->mAttribBuffers[i].buf == buffer)
-            mBoundVertexArray->mAttribBuffers[i].buf = nullptr;
+        if (mBoundVertexArray->HasAttrib(i) && mBoundVertexArray->mAttribs[i].buf == buffer)
+            mBoundVertexArray->mAttribs[i].buf = nullptr;
     }
 
     buffer->RequestDelete();
@@ -481,7 +481,7 @@ WebGLContext::CheckedBufferData(GLenum target,
     } else if (target == LOCAL_GL_ELEMENT_ARRAY_BUFFER) {
         boundBuffer = mBoundVertexArray->mBoundElementArrayBuffer;
     }
-    NS_ABORT_IF_FALSE(boundBuffer != nullptr, "no buffer bound for this target");
+    MOZ_ASSERT(boundBuffer != nullptr, "no buffer bound for this target");
 
     bool sizeChanges = uint32_t(size) != boundBuffer->ByteLength();
     if (sizeChanges) {

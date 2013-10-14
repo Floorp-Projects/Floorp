@@ -23,6 +23,7 @@ from mozbuild.base import (
     MozbuildObject,
     MozconfigFindException,
     MozconfigLoadException,
+    ObjdirMismatchException,
 )
 
 
@@ -834,10 +835,7 @@ class Makefiles(MachCommandBase):
                     yield os.path.join(root, f)
 
 @CommandProvider
-class MachDebug(object):
-    def __init__(self, context):
-        self.context = context
-
+class MachDebug(MachCommandBase):
     @Command('environment', category='build-dev',
         description='Show info about the mach and build environment.')
     @CommandArgument('--verbose', '-v', action='store_true',
@@ -847,13 +845,22 @@ class MachDebug(object):
         print('platform:\n\t%s' % platform.platform())
         print('python version:\n\t%s' % sys.version)
         print('python prefix:\n\t%s' % sys.prefix)
-        print('mach cwd:\n\t%s' % self.context.cwd)
+        print('mach cwd:\n\t%s' % self._mach_context.cwd)
         print('os cwd:\n\t%s' % os.getcwd())
-        print('mach directory:\n\t%s' % self.context.topdir)
-        print('state directory:\n\t%s' % self.context.state_dir)
+        print('mach directory:\n\t%s' % self._mach_context.topdir)
+        print('state directory:\n\t%s' % self._mach_context.state_dir)
 
-        mb = MozbuildObject(self.context.topdir, self.context.settings,
-            self.context.log_manager)
+        try:
+            mb = MozbuildObject.from_environment(cwd=self._mach_context.cwd)
+        except ObjdirMismatchException as e:
+            print('Ambiguous object directory detected. We detected that '
+                'both %s and %s could be object directories. This is '
+                'typically caused by having a mozconfig pointing to a '
+                'different object directory from the current working '
+                'directory. To solve this problem, ensure you do not have a '
+                'default mozconfig in searched paths.' % (e.objdir1,
+                    e.objdir2))
+            return 1
 
         mozconfig = None
 

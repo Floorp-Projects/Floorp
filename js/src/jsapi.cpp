@@ -616,6 +616,45 @@ JS_IsBuiltinFunctionConstructor(JSFunction *fun)
 enum InitState { Uninitialized, Running, ShutDown };
 static InitState jsInitState = Uninitialized;
 
+#ifdef DEBUG
+static void
+CheckMessageNumbering()
+{
+    // Assert that the numbers associated with the error names in js.msg are
+    // monotonically increasing.  It's not a compile-time check, but it's
+    // better than nothing.
+    int errorNumber = 0;
+# define MSG_DEF(name, number, count, exception, format)                      \
+    JS_ASSERT(name == errorNumber++);
+# include "js.msg"
+# undef MSG_DEF
+}
+
+static unsigned
+MessageParameterCount(const char *format)
+{
+    unsigned numfmtspecs = 0;
+    for (const char *fmt = format; *fmt != '\0'; fmt++) {
+        if (*fmt == '{' && isdigit(fmt[1]))
+            ++numfmtspecs;
+    }
+    return numfmtspecs;
+}
+
+static void
+CheckMessageParameterCounts()
+{
+    // Assert that each message format has the correct number of braced
+    // parameters.
+# define MSG_DEF(name, number, count, exception, format)                      \
+    JS_BEGIN_MACRO                                                            \
+        JS_ASSERT(MessageParameterCount(format) == count);                    \
+    JS_END_MACRO;
+# include "js.msg"
+# undef MSG_DEF
+}
+#endif /* DEBUG */
+
 JS_PUBLIC_API(bool)
 JS_Init(void)
 {
@@ -626,29 +665,9 @@ JS_Init(void)
                "how do we have live runtimes before JS_Init?");
 
 #ifdef DEBUG
-    // Assert that the numbers associated with the error names in js.msg are
-    // monotonically increasing.  It's not a compile-time check, but it's
-    // better than nothing.
-    int errorNumber = 0;
-#define MSG_DEF(name, number, count, exception, format)                       \
-    JS_ASSERT(name == errorNumber++);
-#include "js.msg"
-#undef MSG_DEF
-
-    // Assert that each message format has the correct number of braced
-    // parameters.
-#define MSG_DEF(name, number, count, exception, format)                       \
-    JS_BEGIN_MACRO                                                            \
-        unsigned numfmtspecs = 0;                                             \
-        for (const char *fmt = format; *fmt != '\0'; fmt++) {                 \
-            if (*fmt == '{' && isdigit(fmt[1]))                               \
-                ++numfmtspecs;                                                \
-        }                                                                     \
-        JS_ASSERT(count == numfmtspecs);                                      \
-    JS_END_MACRO;
-#include "js.msg"
-#undef MSG_DEF
-#endif /* DEBUG */
+    CheckMessageNumbering();
+    CheckMessageParameterCounts();
+#endif
 
     using js::TlsPerThreadData;
     if (!TlsPerThreadData.initialized() && !TlsPerThreadData.init())

@@ -694,7 +694,9 @@ nsresult nsGeolocationService::Init()
 #endif
 
 #ifdef MOZ_WIDGET_COCOA
-  mProvider = new CoreLocationLocationProvider();
+  if (Preferences::GetBool("geo.provider.use_corelocation", false)) {
+    mProvider = new CoreLocationLocationProvider();
+  }
 #endif
 
   // Override platform-specific providers with the default (network)

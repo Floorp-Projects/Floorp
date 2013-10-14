@@ -24,6 +24,10 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=843725
  * various key events while it is in various states.
  **/
 SimpleTest.waitForExplicitFinish();
+
+// Turn off Spatial Navigation because it hijacks arrow keydown events:
+SpecialPowers.setBoolPref("snav.enabled", false);
+
 SimpleTest.waitForFocus(function() {
   test();
   SimpleTest.finish();

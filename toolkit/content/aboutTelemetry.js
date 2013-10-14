@@ -523,19 +523,48 @@ let Histogram = {
   }
 };
 
+/*
+ * Helper function to render JS objects with white space between top level elements
+ * so that they look better in the browser
+ * @param   aObject JavaScript object or array to render
+ * @return  String
+ */
+function RenderObject(aObject) {
+  let output = "";
+  if (Array.isArray(aObject)) {
+    if (aObject.length == 0) {
+      return "[]";
+    }
+    output = "[" + JSON.stringify(aObject[0]);
+    for (let i = 1; i < aObject.length; i++) {
+      output += ", " + JSON.stringify(aObject[i]);
+    }
+    return output + "]";
+  }
+  let keys = Object.keys(aObject);
+  if (keys.length == 0) {
+    return "{}";
+  }
+  output = "{\"" + keys[0] + "\":\u00A0" + JSON.stringify(aObject[keys[0]]);
+  for (let i = 1; i < keys.length; i++) {
+    output += ", \"" + keys[i] + "\":\u00A0" + JSON.stringify(aObject[keys[i]]);
+  }
+  return output + "}";
+};
+
 let KeyValueTable = {
-
-  keysHeader: bundle.GetStringFromName("keysHeader"),
-
-  valuesHeader: bundle.GetStringFromName("valuesHeader"),
-
   /**
-   * Fill out a 2-column table with keys and values
+   * Returns a 2-column table with keys and values
+   * @param aMeasurements Each key in this JS object is rendered as a row in
+   *                      the table with its corresponding value
+   * @param aKeysLabel    Column header for the keys column
+   * @param aValuesLabel  Column header for the values column
    */
-  render: function KeyValueTable_render(aTableID, aMeasurements) {
-    let table = document.getElementById(aTableID);
-    this.renderHeader(table);
+  render: function KeyValueTable_render(aMeasurements, aKeysLabel, aValuesLabel) {
+    let table = document.createElement("table");
+    this.renderHeader(table, aKeysLabel, aValuesLabel);
     this.renderBody(table, aMeasurements);
+    return table;
   },
 
   /**
@@ -543,15 +572,17 @@ let KeyValueTable = {
    * Tabs & newlines added to cells to make it easier to copy-paste.
    *
    * @param aTable Table element
+   * @param aKeysLabel    Column header for the keys column
+   * @param aValuesLabel  Column header for the values column
    */
-  renderHeader: function KeyValueTable_renderHeader(aTable) {
+  renderHeader: function KeyValueTable_renderHeader(aTable, aKeysLabel, aValuesLabel) {
     let headerRow = document.createElement("tr");
     aTable.appendChild(headerRow);
 
     let keysColumn = document.createElement("th");
-    keysColumn.appendChild(document.createTextNode(this.keysHeader + "\t"));
+    keysColumn.appendChild(document.createTextNode(aKeysLabel + "\t"));
     let valuesColumn = document.createElement("th");
-    valuesColumn.appendChild(document.createTextNode(this.valuesHeader + "\n"));
+    valuesColumn.appendChild(document.createTextNode(aValuesLabel + "\n"));
 
     headerRow.appendChild(keysColumn);
     headerRow.appendChild(valuesColumn);
@@ -567,7 +598,7 @@ let KeyValueTable = {
   renderBody: function KeyValueTable_renderBody(aTable, aMeasurements) {
     for (let [key, value] of Iterator(aMeasurements)) {
       if (typeof value == "object") {
-        value = JSON.stringify(value);
+        value = RenderObject(value);
       }
 
       let newRow = document.createElement("tr");
@@ -580,6 +611,28 @@ let KeyValueTable = {
       let valueField = document.createElement("td");
       valueField.appendChild(document.createTextNode(value + "\n"));
       newRow.appendChild(valueField);
+    }
+  }
+};
+
+let AddonDetails = {
+  tableIDTitle: bundle.GetStringFromName("addonTableID"),
+  tableDetailsTitle: bundle.GetStringFromName("addonTableDetails"),
+
+  /**
+   * Render the addon details section as a series of headers followed by key/value tables
+   * @param aSections Object containing the details sections to render
+   */
+  render: function AddonDetails_render(aSections) {
+    let addonSection = document.getElementById("addon-details");
+    for (let provider in aSections) {
+      let providerSection = document.createElement("h2");
+      let titleText = bundle.formatStringFromName("addonProvider", [provider], 1);
+      providerSection.appendChild(document.createTextNode(titleText));
+      addonSection.appendChild(providerSection);
+      addonSection.appendChild(
+        KeyValueTable.render(aSections[provider],
+                             this.tableIDTitle, this.tableDetailsTitle));
     }
   }
 };
@@ -813,10 +866,15 @@ function sortStartupMilestones(aSimpleMeasurements) {
 function displayPingData() {
   let ping = TelemetryPing.getPayload();
 
+  let keysHeader = bundle.GetStringFromName("keysHeader");
+  let valuesHeader = bundle.GetStringFromName("valuesHeader");
+
   // Show simple measurements
   let simpleMeasurements = sortStartupMilestones(ping.simpleMeasurements);
   if (Object.keys(simpleMeasurements).length) {
-    KeyValueTable.render("simple-measurements-table", simpleMeasurements);
+    let simpleSection = document.getElementById("simple-measurements");
+    simpleSection.appendChild(KeyValueTable.render(simpleMeasurements,
+                                                   keysHeader, valuesHeader));
   } else {
     showEmptySectionMessage("simple-measurements-section");
   }
@@ -825,9 +883,18 @@ function displayPingData() {
 
   // Show basic system info gathered
   if (Object.keys(ping.info).length) {
-    KeyValueTable.render("system-info-table", ping.info);
+    let infoSection = document.getElementById("system-info");
+    infoSection.appendChild(KeyValueTable.render(ping.info,
+                                                 keysHeader, valuesHeader));
   } else {
     showEmptySectionMessage("system-info-section");
+  }
+
+  let addonDetails = ping.addonDetails;
+  if (Object.keys(addonDetails).length) {
+    AddonDetails.render(addonDetails);
+  } else {
+    showEmptySectionMessage("addon-details-section");
   }
 }
 

@@ -60,6 +60,7 @@ user_pref("extensions.installDistroAddons", false);
 
 user_pref("geo.wifi.uri", "http://%(server)s/tests/dom/tests/mochitest/geolocation/network_geolocation.sjs");
 user_pref("geo.wifi.testing", true);
+user_pref("geo.wifi.logging.enabled", true);
 user_pref("geo.ignore.location_filter", true);
 
 user_pref("camino.warn_when_closing", false); // Camino-only, harmless to others

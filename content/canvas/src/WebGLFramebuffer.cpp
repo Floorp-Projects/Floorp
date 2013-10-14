@@ -51,11 +51,7 @@ WebGLFramebuffer::Attachment::HasAlpha() const {
         format = Texture()->ImageInfoAt(mTexImageTarget, mTexImageLevel).Format();
     else if (Renderbuffer())
         format = Renderbuffer()->InternalFormat();
-    return format == LOCAL_GL_RGBA ||
-           format == LOCAL_GL_LUMINANCE_ALPHA ||
-           format == LOCAL_GL_ALPHA ||
-           format == LOCAL_GL_RGBA4 ||
-           format == LOCAL_GL_RGB5_A1;
+    return FormatHasAlpha(format);
 }
 
 void
@@ -67,8 +63,27 @@ WebGLFramebuffer::Attachment::SetTexImage(WebGLTexture *tex, GLenum target, GLin
 }
 
 bool
-WebGLFramebuffer::Attachment::HasUninitializedRenderbuffer() const {
-    return mRenderbufferPtr && !mRenderbufferPtr->Initialized();
+WebGLFramebuffer::Attachment::HasUninitializedImageData() const {
+    if (mRenderbufferPtr) {
+        return mRenderbufferPtr->HasUninitializedImageData();
+    } else if (mTexturePtr) {
+        if (!mTexturePtr->HasImageInfoAt(mTexImageTarget, mTexImageLevel))
+            return false;
+        return mTexturePtr->ImageInfoAt(mTexImageTarget, mTexImageLevel).HasUninitializedImageData();
+    } else {
+        return false;
+    }
+}
+
+void
+WebGLFramebuffer::Attachment::SetImageDataStatus(WebGLImageDataStatus newStatus) {
+    if (mRenderbufferPtr) {
+        mRenderbufferPtr->SetImageDataStatus(newStatus);
+    } else if (mTexturePtr) {
+        mTexturePtr->SetImageDataStatus(mTexImageTarget, mTexImageLevel, newStatus);
+    } else {
+        MOZ_ASSERT(false); // should not get here, worth crashing a debug build.
+    }
 }
 
 const WebGLRectangleObject*
@@ -143,7 +158,7 @@ WebGLFramebuffer::Attachment::IsComplete() const {
         MOZ_CRASH("Invalid WebGL attachment poin?");
     }
 
-    NS_ABORT(); // should never get there
+    MOZ_ASSERT(false); // should never get there
     return false;
 }
 
@@ -315,14 +330,14 @@ WebGLFramebuffer::GetAttachment(GLenum attachment) const {
         return mStencilAttachment;
 
     if (!CheckColorAttachementNumber(attachment, "getAttachment")) {
-        NS_ABORT();
+        MOZ_ASSERT(false);
         return mColorAttachments[0];
     }
 
     uint32_t colorAttachmentId = uint32_t(attachment - LOCAL_GL_COLOR_ATTACHMENT0);
 
     if (colorAttachmentId >= mColorAttachments.Length()) {
-        NS_ABORT();
+        MOZ_ASSERT(false);
         return mColorAttachments[0];
     }
 
@@ -368,7 +383,7 @@ WebGLFramebuffer::DetachRenderbuffer(const WebGLRenderbuffer *rb) {
 }
 
 bool
-WebGLFramebuffer::CheckAndInitializeRenderbuffers()
+WebGLFramebuffer::CheckAndInitializeAttachments()
 {
     MOZ_ASSERT(mContext->mBoundFramebuffer == this);
     // enforce WebGL section 6.5 which is WebGL-specific, hence OpenGL itself would not
@@ -387,16 +402,16 @@ WebGLFramebuffer::CheckAndInitializeRenderbuffers()
     size_t colorAttachmentCount = size_t(mColorAttachments.Length());
 
     {
-        bool hasUnitializedRenderbuffers = false;
+        bool hasUnitializedAttachments = false;
 
         for (size_t i = 0; i < colorAttachmentCount; i++) {
-            hasUnitializedRenderbuffers |= mColorAttachments[i].HasUninitializedRenderbuffer();
+            hasUnitializedAttachments |= mColorAttachments[i].HasUninitializedImageData();
         }
 
-        if (!hasUnitializedRenderbuffers &&
-            !mDepthAttachment.HasUninitializedRenderbuffer() &&
-            !mStencilAttachment.HasUninitializedRenderbuffer() &&
-            !mDepthStencilAttachment.HasUninitializedRenderbuffer())
+        if (!hasUnitializedAttachments &&
+            !mDepthAttachment.HasUninitializedImageData() &&
+            !mStencilAttachment.HasUninitializedImageData() &&
+            !mDepthStencilAttachment.HasUninitializedImageData())
         {
             return true;
         }
@@ -420,21 +435,21 @@ WebGLFramebuffer::CheckAndInitializeRenderbuffers()
 
     for (size_t i = 0; i < colorAttachmentCount; i++)
     {
-        colorAttachmentsMask[i] = mColorAttachments[i].HasUninitializedRenderbuffer();
+        colorAttachmentsMask[i] = mColorAttachments[i].HasUninitializedImageData();
 
         if (colorAttachmentsMask[i]) {
             mask |= LOCAL_GL_COLOR_BUFFER_BIT;
         }
     }
 
-    if (mDepthAttachment.HasUninitializedRenderbuffer() ||
-        mDepthStencilAttachment.HasUninitializedRenderbuffer())
+    if (mDepthAttachment.HasUninitializedImageData() ||
+        mDepthStencilAttachment.HasUninitializedImageData())
     {
         mask |= LOCAL_GL_DEPTH_BUFFER_BIT;
     }
 
-    if (mStencilAttachment.HasUninitializedRenderbuffer() ||
-        mDepthStencilAttachment.HasUninitializedRenderbuffer())
+    if (mStencilAttachment.HasUninitializedImageData() ||
+        mDepthStencilAttachment.HasUninitializedImageData())
     {
         mask |= LOCAL_GL_STENCIL_BUFFER_BIT;
     }
@@ -443,19 +458,16 @@ WebGLFramebuffer::CheckAndInitializeRenderbuffers()
 
     for (size_t i = 0; i < colorAttachmentCount; i++)
     {
-        if (colorAttachmentsMask[i]) {
-            mColorAttachments[i].Renderbuffer()->SetInitialized(true);
-        }
+        if (mColorAttachments[i].HasUninitializedImageData())
+            mColorAttachments[i].SetImageDataStatus(WebGLImageDataStatus::InitializedImageData);
     }
 
-    if (mDepthAttachment.HasUninitializedRenderbuffer())
-        mDepthAttachment.Renderbuffer()->SetInitialized(true);
-
-    if (mStencilAttachment.HasUninitializedRenderbuffer())
-        mStencilAttachment.Renderbuffer()->SetInitialized(true);
-
-    if (mDepthStencilAttachment.HasUninitializedRenderbuffer())
-        mDepthStencilAttachment.Renderbuffer()->SetInitialized(true);
+    if (mDepthAttachment.HasUninitializedImageData())
+        mDepthAttachment.SetImageDataStatus(WebGLImageDataStatus::InitializedImageData);
+    if (mStencilAttachment.HasUninitializedImageData())
+        mStencilAttachment.SetImageDataStatus(WebGLImageDataStatus::InitializedImageData);
+    if (mDepthStencilAttachment.HasUninitializedImageData())
+        mDepthStencilAttachment.SetImageDataStatus(WebGLImageDataStatus::InitializedImageData);
 
     return true;
 }
@@ -545,14 +557,11 @@ ImplCycleCollectionTraverse(nsCycleCollectionTraversalCallback& aCallback,
                              aName, aFlags);
 }
 
-NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE_7(WebGLFramebuffer,
+NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE_4(WebGLFramebuffer,
   mColorAttachments,
-  mDepthAttachment.mTexturePtr,
-  mDepthAttachment.mRenderbufferPtr,
-  mStencilAttachment.mTexturePtr,
-  mStencilAttachment.mRenderbufferPtr,
-  mDepthStencilAttachment.mTexturePtr,
-  mDepthStencilAttachment.mRenderbufferPtr)
+  mDepthAttachment,
+  mStencilAttachment,
+  mDepthStencilAttachment)
 
 NS_IMPL_CYCLE_COLLECTION_ROOT_NATIVE(WebGLFramebuffer, AddRef)
 NS_IMPL_CYCLE_COLLECTION_UNROOT_NATIVE(WebGLFramebuffer, Release)
