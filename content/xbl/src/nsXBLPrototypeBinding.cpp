@@ -998,34 +998,8 @@ nsXBLPrototypeBinding::Read(nsIObjectInputStream* aStream,
     previousHandler = handler;
   } while (1);
 
-  if (mBinding) {
-    while (true) {
-      XBLBindingSerializeDetails type;
-      rv = aStream->Read8(&type);
-      NS_ENSURE_SUCCESS(rv, rv);
-
-      if (type != XBLBinding_Serialize_Attribute) {
-        break;
-      }
-
-      int32_t attrNamespace;
-      rv = ReadNamespace(aStream, attrNamespace);
-      NS_ENSURE_SUCCESS(rv, rv);
-
-      nsAutoString attrName, attrValue;
-      rv = aStream->ReadString(attrName);
-      NS_ENSURE_SUCCESS(rv, rv);
-
-      rv = aStream->ReadString(attrValue);
-      NS_ENSURE_SUCCESS(rv, rv);
-
-      nsCOMPtr<nsIAtom> atomName = do_GetAtom(attrName);
-      mBinding->SetAttr(attrNamespace, atomName, attrValue, false);
-    }
-  }
-
   // Finally, read in the resources.
-  while (true) {
+  do {
     XBLBindingSerializeDetails type;
     rv = aStream->Read8(&type);
     NS_ENSURE_SUCCESS(rv, rv);
@@ -1042,7 +1016,7 @@ nsXBLPrototypeBinding::Read(nsIObjectInputStream* aStream,
 
     AddResource(type == XBLBinding_Serialize_Stylesheet ? nsGkAtoms::stylesheet :
                                                           nsGkAtoms::image, src);
-  }
+  } while (1);
 
   if (isFirstBinding) {
     aDocInfo->SetFirstPrototypeBinding(this);
@@ -1147,30 +1121,6 @@ nsXBLPrototypeBinding::Write(nsIObjectOutputStream* aStream)
     NS_ENSURE_SUCCESS(rv, rv);
 
     handler = handler->GetNextHandler();
-  }
-
-  aStream->Write8(XBLBinding_Serialize_NoMoreItems);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  if (mBinding) {
-    uint32_t attributes = mBinding->GetAttrCount();
-    nsAutoString attrValue;
-    for (uint32_t i = 0; i < attributes; ++i) {
-      const nsAttrName* attr = mBinding->GetAttrNameAt(i);
-      nsDependentAtomString attrName = attr->Atom();
-      mBinding->GetAttr(attr->NamespaceID(), attr->Atom(), attrValue);
-      rv = aStream->Write8(XBLBinding_Serialize_Attribute);
-      NS_ENSURE_SUCCESS(rv, rv);
-
-      rv = WriteNamespace(aStream, attr->NamespaceID());
-      NS_ENSURE_SUCCESS(rv, rv);
-
-      rv = aStream->WriteWStringZ(attrName.get());
-      NS_ENSURE_SUCCESS(rv, rv);
-
-      rv = aStream->WriteWStringZ(attrValue.get());
-      NS_ENSURE_SUCCESS(rv, rv);
-    }
   }
 
   aStream->Write8(XBLBinding_Serialize_NoMoreItems);

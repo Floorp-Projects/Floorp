@@ -81,6 +81,11 @@ public:
     return !Equals(aOtherNullable);
   }
 
+  operator bool() const
+  {
+    return !mIsNull;
+  }
+
   // Make it possible to use a const Nullable of an array type with other
   // array types.
   template<typename U>
