@@ -659,7 +659,7 @@
                 if (results && results.matchCount > 0 &&
                     !results.errorDescription && results.defaultIndex != -1)
                 {
-                  val = this.getSessionValueAt(name, results.defaultIndex);
+                  val = results.getValueAt(results.defaultIndex);
                   this.setTextValue(val);
                   this.mDefaultMatchFilled = true;
                   this.mNeedToFinish = false;
@@ -865,10 +865,32 @@
 
             case KeyEvent.DOM_VK_BACK_SPACE:
               if (!aEvent.ctrlKey && !aEvent.altKey && !aEvent.shiftKey &&
+                  this.selectionStart == this.currentSearchString.length &&
+                  this.selectionEnd == this.value.length &&
                   this.mDefaultMatchFilled) {
-                  this.mDefaultMatchFilled = false;
-                this.value = this.currentSearchString.substring(0, this.selectionStart);
+                this.mDefaultMatchFilled = false;
+                this.value = this.currentSearchString;
               }
+
+              if (!/Mac/.test(navigator.platform))
+                break;
+            case KeyEvent.DOM_VK_DELETE:
+              if (/Mac/.test(navigator.platform) && !aEvent.shiftKey)
+                break;
+
+              if (this.mMenuOpen && this.popup.selectedIndex != -1) {
+                var obj = this.convertIndexToSession(this.popup.selectedIndex);
+                if (obj) {
+                  var result = this.mLastResults[obj.session];
+                  if (!result.errorDescription) {
+                    var count = result.matchCount;
+                    result.removeValueAt(obj.index, true);
+                    this.view.updateResults(this.popup.selectedIndex, result.matchCount - count);
+                    killEvent = true;
+                  }
+                }
+              }
+              break;
           }
           
           if (killEvent) {
@@ -1202,7 +1224,7 @@
                 var result = this.mTextbox.mLastResults[name];
                 switch (aCol.id) {
                   case "treecolAutoCompleteValue":
-                    return result.errorDescription || result.getValueAt(aRow);
+                    return result.errorDescription || result.getLabelAt(aRow);
                   case "treecolAutoCompleteComment":
                     if (!result.errorDescription)
                       return result.getCommentAt(aRow);
@@ -1243,11 +1265,26 @@
           {
             return "";
           },
+
+          getImageSrc: function(aRow, aCol)
+          {
+            if (aCol.id == "treecolAutoCompleteValue") {
+              for (var name in this.mTextbox.mSessions) {
+                if (aRow < this.mTextbox.mLastRows[name]) {
+                  var result = this.mTextbox.mLastResults[name];
+                  if (result.errorDescription)
+                    return "";
+                  return result.getImageAt(aRow);
+                }
+                aRow -= this.mTextbox.mLastRows[name];
+              }
+            }
+            return "";
+          },
           
           getParentIndex: function(aRowIndex) { },
           hasNextSibling: function(aRowIndex, aAfterIndex) { },
           getLevel: function(aIndex) {},
-          getImageSrc: function(aRow, aCol) {},
           getProgressMode: function(aRow, aCol) {},
           getCellValue: function(aRow, aCol) {},
           isContainer: function(aIndex) {},

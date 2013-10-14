@@ -433,14 +433,14 @@ JSContext::setPendingException(js::Value v) {
 inline void
 JSContext::setDefaultCompartmentObject(JSObject *obj)
 {
-    JS_ASSERT(!hasOption(JSOPTION_NO_DEFAULT_COMPARTMENT_OBJECT));
+    JS_ASSERT(!options().noDefaultCompartmentObject());
     defaultCompartmentObject_ = obj;
 }
 
 inline void
 JSContext::setDefaultCompartmentObjectIfUnset(JSObject *obj)
 {
-    if (!hasOption(JSOPTION_NO_DEFAULT_COMPARTMENT_OBJECT) &&
+    if (!options().noDefaultCompartmentObject() &&
         !defaultCompartmentObject_)
     {
         setDefaultCompartmentObject(obj);

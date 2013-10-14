@@ -94,6 +94,7 @@ function cleanup() {
   Services.obs.removeObserver(obs_DESTROYING, DESTROYING);
   Services.obs.removeObserver(obs_BEFORE_DESTROYED, BEFORE_DESTROYED);
   Services.obs.removeObserver(obs_DESTROYED, DESTROYED);
+  Services.obs.removeObserver(obs_STARTUP, STARTUP);
 
   gBrowser.removeCurrentTab();
   finish();

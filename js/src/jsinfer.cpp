@@ -1471,7 +1471,7 @@ void
 TypeZone::init(JSContext *cx)
 {
     if (!cx ||
-        !cx->hasOption(JSOPTION_TYPE_INFERENCE) ||
+        !cx->options().typeInference() ||
         !cx->runtime()->jitSupportsFloatingPoint)
     {
         return;
