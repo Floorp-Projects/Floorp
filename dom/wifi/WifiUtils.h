@@ -86,6 +86,9 @@ public:
 class WpaSupplicantImpl
 {
 public:
+  // Suppress warning from nsAutoPtr
+  virtual ~WpaSupplicantImpl() {}
+
   virtual int32_t
   do_wifi_wait_for_event(const char *iface, char *buf, size_t len) = 0; // ICS != JB
 
@@ -117,9 +120,13 @@ class WpaSupplicant MOZ_FINAL
 public:
   WpaSupplicant();
 
-  void WaitForEvent(nsAString& aEvent);
+  // Use nsCString as the type of aInterface to guarantee it's
+  // null-terminated so that we can pass it to c API without
+  // conversion
+  void WaitForEvent(nsAString& aEvent, const nsCString& aInterface);
   bool ExecuteCommand(CommandOptions aOptions,
-                      mozilla::dom::WifiResultOptions& result);
+                      mozilla::dom::WifiResultOptions& result,
+                      const nsCString& aInterface);
 
 private:
   nsAutoPtr<WpaSupplicantImpl> mImpl;
