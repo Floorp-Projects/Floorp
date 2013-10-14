@@ -8996,18 +8996,18 @@ MIRType DenseNativeElementType(types::CompilerConstraintList *constraints, MDefi
 bool PropertyReadNeedsTypeBarrier(JSContext *cx, JSContext *propertycx,
                                   types::CompilerConstraintList *constraints,
                                   types::TypeObjectKey *object, PropertyName *name,
-                                  types::TemporaryTypeSet *observed, bool updateObserved);
+                                  types::StackTypeSet *observed, bool updateObserved);
 bool PropertyReadNeedsTypeBarrier(JSContext *cx, JSContext *propertycx,
                                   types::CompilerConstraintList *constraints,
                                   MDefinition *obj, PropertyName *name,
-                                  types::TemporaryTypeSet *observed);
+                                  types::StackTypeSet *observed);
 bool PropertyReadOnPrototypeNeedsTypeBarrier(JSContext *cx, types::CompilerConstraintList *constraints,
                                              MDefinition *obj, PropertyName *name,
                                              types::TemporaryTypeSet *observed);
 bool PropertyReadIsIdempotent(types::CompilerConstraintList *constraints,
                               MDefinition *obj, PropertyName *name);
-bool AddObjectsForPropertyRead(MDefinition *obj, PropertyName *name,
-                               types::TemporaryTypeSet *observed);
+bool AddObjectsForPropertyRead(JSContext *cx, MDefinition *obj, PropertyName *name,
+                               types::StackTypeSet *observed);
 bool PropertyWriteNeedsTypeBarrier(types::CompilerConstraintList *constraints,
                                    MBasicBlock *current, MDefinition **pobj,
                                    PropertyName *name, MDefinition **pvalue,
