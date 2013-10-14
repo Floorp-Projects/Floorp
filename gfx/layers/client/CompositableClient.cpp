@@ -207,12 +207,6 @@ CompositableClient::CreateBufferTextureClient(gfx::SurfaceFormat aFormat,
   return result.forget();
 }
 
-TemporaryRef<BufferTextureClient>
-CompositableClient::CreateBufferTextureClient(gfx::SurfaceFormat aFormat)
-{
-  return CreateBufferTextureClient(aFormat, TEXTURE_FLAGS_DEFAULT);
-}
-
 bool
 CompositableClient::AddTextureClient(TextureClient* aClient)
 {
