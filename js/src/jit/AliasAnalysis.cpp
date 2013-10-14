@@ -73,9 +73,13 @@ BlockMightReach(MBasicBlock *src, MBasicBlock *dest)
         switch (src->numSuccessors()) {
           case 0:
             return false;
-          case 1:
-            src = src->getSuccessor(0);
+          case 1: {
+            MBasicBlock *successor = src->getSuccessor(0);
+            if (successor->id() <= src->id())
+                return true; // Don't iloop.
+            src = successor;
             break;
+          }
           default:
             return true;
         }
