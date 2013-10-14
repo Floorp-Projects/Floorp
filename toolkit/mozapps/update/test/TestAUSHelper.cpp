@@ -52,7 +52,6 @@
 # define LOG_S "%s"
 #endif
 
-#include "mozilla/NullPtr.h"
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
@@ -82,7 +81,7 @@ WriteMsg(const NS_tchar *path, const char *status)
 
   fprintf(outFP, "%s\n", status);
   fclose(outFP);
-  outFP = nullptr;
+  outFP = NULL;
 }
 
 static bool
@@ -119,7 +118,7 @@ CheckMsg(const NS_tchar *path, const char *expected)
   rb = mbuf;
 
   fclose(inFP);
-  inFP = nullptr;
+  inFP = NULL;
   return strcmp(rb, expected) == 0;
 }
 
@@ -143,21 +142,21 @@ VerifyCertificateTrustForFile(LPCWSTR filePath)
   WINTRUST_DATA trustData;
   ZeroMemory(&trustData, sizeof(trustData));
   trustData.cbStruct = sizeof(trustData);
-  trustData.pPolicyCallbackData = nullptr;
-  trustData.pSIPClientData = nullptr;
+  trustData.pPolicyCallbackData = NULL;
+  trustData.pSIPClientData = NULL;
   trustData.dwUIChoice = WTD_UI_NONE;
   trustData.fdwRevocationChecks = WTD_REVOKE_NONE; 
   trustData.dwUnionChoice = WTD_CHOICE_FILE;
   trustData.dwStateAction = 0;
-  trustData.hWVTStateData = nullptr;
-  trustData.pwszURLReference = nullptr;
+  trustData.hWVTStateData = NULL;
+  trustData.pwszURLReference = NULL;
   // no UI
   trustData.dwUIContext = 0;
   trustData.pFile = &fileToCheck;
 
   GUID policyGUID = WINTRUST_ACTION_GENERIC_VERIFY_V2;
   // Check if the file is signed by something that is trusted.
-  return WinVerifyTrust(nullptr, &policyGUID, &trustData);
+  return WinVerifyTrust(NULL, &policyGUID, &trustData);
 }
 
 #endif
@@ -314,7 +313,7 @@ int NS_main(int argc, NS_tchar **argv)
 
   // File in use test helper section
   if (!NS_tstrcmp(argv[4], NS_T("-s"))) {
-    NS_tchar *cwd = NS_tgetcwd(nullptr, 0);
+    NS_tchar *cwd = NS_tgetcwd(NULL, 0);
     NS_tchar inFilePath[MAXPATHLEN];
     NS_tsnprintf(inFilePath, sizeof(inFilePath)/sizeof(inFilePath[0]),
                  NS_T("%s/%s"), cwd, argv[2]);
@@ -328,7 +327,7 @@ int NS_main(int argc, NS_tchar **argv)
     if (argc == 7) {
       hFile = CreateFileW(argv[6],
                           DELETE | GENERIC_WRITE, 0,
-                          nullptr, OPEN_EXISTING, 0, nullptr);
+                          NULL, OPEN_EXISTING, 0, NULL);
       if (hFile == INVALID_HANDLE_VALUE) {
         WriteMsg(outFilePath, "error_locking");
         return 1;
@@ -364,7 +363,7 @@ int NS_main(int argc, NS_tchar **argv)
   }
 
   fclose(logFP);
-  logFP = nullptr;
+  logFP = NULL;
 
   return 0;
 } 
