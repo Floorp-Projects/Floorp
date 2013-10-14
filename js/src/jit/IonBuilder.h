@@ -197,7 +197,7 @@ class IonBuilder : public MIRGenerator
         static CFGState IfElse(jsbytecode *trueEnd, jsbytecode *falseEnd, MBasicBlock *ifFalse);
         static CFGState AndOr(jsbytecode *join, MBasicBlock *joinStart);
         static CFGState TableSwitch(jsbytecode *exitpc, MTableSwitch *ins);
-        static CFGState CondSwitch(jsbytecode *exitpc, jsbytecode *defaultTarget);
+        static CFGState CondSwitch(IonBuilder *builder, jsbytecode *exitpc, jsbytecode *defaultTarget);
         static CFGState Label(jsbytecode *exitpc);
         static CFGState Try(jsbytecode *exitpc, MBasicBlock *successor);
     };
@@ -531,7 +531,6 @@ class IonBuilder : public MIRGenerator
                                    BoolVector &choiceSet);
 
     // Native inlining helpers.
-    types::StackTypeSet *getOriginalInlineReturnTypeSet();
     types::TemporaryTypeSet *getInlineReturnTypeSet();
     MIRType getInlineReturnType();
 
@@ -645,7 +644,6 @@ class IonBuilder : public MIRGenerator
                             JSObject *foundProto, PropertyName *name);
 
     types::TemporaryTypeSet *bytecodeTypes(jsbytecode *pc);
-    types::TemporaryTypeSet *cloneTypeSet(types::StackTypeSet *types);
 
     // Use one of the below methods for updating the current block, rather than
     // updating |current| directly. setCurrent() should only be used in cases
@@ -716,6 +714,9 @@ class IonBuilder : public MIRGenerator
     BytecodeAnalysis &analysis() {
         return analysis_;
     }
+
+    types::TemporaryTypeSet *thisTypes, *argTypes, *typeArray;
+    uint32_t typeArrayHint;
 
     GSNCache gsn;
 
