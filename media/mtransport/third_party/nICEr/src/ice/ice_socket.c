@@ -62,7 +62,7 @@ static void nr_ice_socket_readable_cb(NR_SOCKET s, int how, void *cb_arg)
     NR_ASYNC_WAIT(s,how,nr_ice_socket_readable_cb,cb_arg);
 
     if(r=nr_socket_recvfrom(sock->sock,buf,sizeof(buf),&len_s,0,&addr)){
-      r_log(LOG_ICE,LOG_ERR,"ICE(%s): Error reading from socket",sock->ctx->label);
+      r_log(LOG_ICE,LOG_WARNING,"ICE(%s): Error reading from socket",sock->ctx->label);
       return;
     }
 
@@ -134,7 +134,7 @@ static void nr_ice_socket_readable_cb(NR_SOCKET s, int how, void *cb_arg)
 
                 if (processed_indication) {
                   /* Don't allow recursively wrapped indications */
-                  r_log(LOG_ICE, LOG_ERR,
+                  r_log(LOG_ICE, LOG_WARNING,
                         "ICE(%s): discarding recursively wrapped indication",
                         sock->ctx->label);
                   break;
@@ -173,7 +173,7 @@ static void nr_ice_socket_readable_cb(NR_SOCKET s, int how, void *cb_arg)
         if (nr_ice_ctx_is_known_id(sock->ctx,((nr_stun_message_header*)buf)->id.octet))
             r_log(LOG_ICE,LOG_DEBUG,"ICE(%s): Message is a retransmit",sock->ctx->label);
         else
-            r_log(LOG_ICE,LOG_DEBUG,"ICE(%s): Message does not correspond to any registered stun ctx",sock->ctx->label);
+            r_log(LOG_ICE,LOG_NOTICE,"ICE(%s): Message does not correspond to any registered stun ctx",sock->ctx->label);
       }
     }
     else{

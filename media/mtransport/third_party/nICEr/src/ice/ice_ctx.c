@@ -314,19 +314,19 @@ int nr_ice_ctx_create(char *label, UINT4 flags, nr_ice_ctx **ctxp)
     /* Get the STUN servers */
     if(r=NR_reg_get_child_count(NR_ICE_REG_STUN_SRV_PRFX,
       (unsigned int *)&ctx->stun_server_ct)||ctx->stun_server_ct==0) {
-      r_log(LOG_ICE,LOG_NOTICE,"No STUN servers specified");
+      r_log(LOG_ICE,LOG_WARNING,"ICE(%s): No STUN servers specified", ctx->label);
       ctx->stun_server_ct=0;
     }
 
     /* 255 is the max for our priority algorithm */
     if(ctx->stun_server_ct>255){
-      r_log(LOG_ICE,LOG_WARNING,"Too many STUN servers specified: max=255");
+      r_log(LOG_ICE,LOG_WARNING,"ICE(%s): Too many STUN servers specified: max=255", ctx->label);
       ctx->stun_server_ct=255;
     }
 
     if(ctx->stun_server_ct>0){
       if(r=nr_ice_fetch_stun_servers(ctx->stun_server_ct,&ctx->stun_servers)){
-        r_log(LOG_ICE,LOG_ERR,"Couldn't load STUN servers from registry");
+        r_log(LOG_ICE,LOG_ERR,"ICE(%s): Couldn't load STUN servers from registry", ctx->label);
         ctx->stun_server_ct=0;
         ABORT(r);
       }
@@ -336,7 +336,7 @@ int nr_ice_ctx_create(char *label, UINT4 flags, nr_ice_ctx **ctxp)
     /* Get the TURN servers */
     if(r=NR_reg_get_child_count(NR_ICE_REG_TURN_SRV_PRFX,
       (unsigned int *)&ctx->turn_server_ct)||ctx->turn_server_ct==0) {
-      r_log(LOG_ICE,LOG_NOTICE,"No TURN servers specified");
+      r_log(LOG_ICE,LOG_NOTICE,"ICE(%s): No TURN servers specified", ctx->label);
       ctx->turn_server_ct=0;
     }
 #else
@@ -348,7 +348,7 @@ int nr_ice_ctx_create(char *label, UINT4 flags, nr_ice_ctx **ctxp)
 
     /* 255 is the max for our priority algorithm */
     if((ctx->stun_server_ct+ctx->turn_server_ct)>255){
-      r_log(LOG_ICE,LOG_WARNING,"Too many STUN/TURN servers specified: max=255");
+      r_log(LOG_ICE,LOG_WARNING,"ICE(%s): Too many STUN/TURN servers specified: max=255", ctx->label);
       ctx->turn_server_ct=255-ctx->stun_server_ct;
     }
 
@@ -356,7 +356,7 @@ int nr_ice_ctx_create(char *label, UINT4 flags, nr_ice_ctx **ctxp)
     if(ctx->turn_server_ct>0){
       if(r=nr_ice_fetch_turn_servers(ctx->turn_server_ct,&ctx->turn_servers)){
         ctx->turn_server_ct=0;
-        r_log(LOG_ICE,LOG_ERR,"Couldn't load TURN servers from registry");
+        r_log(LOG_ICE,LOG_ERR,"ICE(%s): Couldn't load TURN servers from registry", ctx->label);
         ABORT(r);
       }
     }
@@ -664,7 +664,7 @@ int nr_ice_ctx_deliver_packet(nr_ice_ctx *ctx, nr_ice_component *comp, nr_transp
     }
 
     if(!pctx)
-      r_log(LOG_ICE,LOG_INFO,"ICE(%s): Packet received from %s which doesn't match any known peer",ctx->label,source_addr->as_string);
+      r_log(LOG_ICE,LOG_WARNING,"ICE(%s): Packet received from %s which doesn't match any known peer",ctx->label,source_addr->as_string);
 
     return(0);
   }
