@@ -185,7 +185,8 @@ public:
       if (!MayHaveListenerManager() && !aCd.MayHaveNewListenerManager()) {
         return NS_OK;
       }
-      mManager = mTarget->GetExistingListenerManager();
+      mManager =
+        static_cast<nsEventListenerManager*>(mTarget->GetListenerManager(false));
     }
     if (mManager) {
       NS_ASSERTION(aVisitor.mEvent->currentTarget == nullptr,
