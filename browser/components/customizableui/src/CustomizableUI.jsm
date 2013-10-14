@@ -22,6 +22,10 @@ XPCOMUtils.defineLazyGetter(this, "gWidgetsBundle", function() {
   const kUrl = "chrome://browser/locale/customizableui/customizableWidgets.properties";
   return Services.strings.createBundle(kUrl);
 });
+XPCOMUtils.defineLazyGetter(this, "gPlatformKeys", function() {
+  const kUrl = "chrome://global-platform/locale/platformKeys.properties";
+  return Services.strings.createBundle(kUrl);
+});
 XPCOMUtils.defineLazyServiceGetter(this, "gELS",
   "@mozilla.org/eventlistenerservice;1", "nsIEventListenerService");
 
@@ -932,12 +936,18 @@ let CustomizableUIInternal = {
       node.setAttribute("removable", aWidget.removable);
       node.setAttribute("overflows", aWidget.overflows);
       node.setAttribute("label", this.getLocalizedProperty(aWidget, "label"));
-      node.setAttribute("tooltiptext", this.getLocalizedProperty(aWidget, "tooltiptext"));
-      //XXXunf Need to hook this up to a <key> element or something.
-      let shortcut = this.getLocalizedProperty(aWidget, "shortcut", null, "none");
-      if (shortcut != "none") {
-        node.setAttribute("acceltext", shortcut);
+      let additionalTooltipArguments = [];
+      if (aWidget.shortcutId) {
+        let keyEl = aDocument.getElementById(aWidget.shortcutId);
+        if (keyEl) {
+          additionalTooltipArguments.push(this.createShortcutString(keyEl));
+        } else {
+          ERROR("Key element with id '" + aWidget.shortcutId + "' for widget '" + aWidget.id +
+                "' not found!");
+        }
       }
+      let tooltip = this.getLocalizedProperty(aWidget, "tooltiptext", additionalTooltipArguments);
+      node.setAttribute("tooltiptext", tooltip);
       node.setAttribute("class", "toolbarbutton-1 chromeclass-toolbar-additional");
 
       let commandHandler = this.handleWidgetCommand.bind(this, aWidget, node);
@@ -1013,6 +1023,51 @@ let CustomizableUIInternal = {
       }
     }
     return def;
+  },
+
+  // From devtools/shared/helpers.js:
+  createShortcutString: function(aElemKey) {
+    let elemString = "";
+    let elemMod = aElemKey.getAttribute("modifiers");
+
+    if (elemMod.match("accel")) {
+      if (Services.appinfo.OS == "Darwin") {
+        elemString += gPlatformKeys.GetStringFromName("VK_META") +
+          gPlatformKeys.GetStringFromName("MODIFIER_SEPARATOR");
+      } else {
+        elemString += gPlatformKeys.GetStringFromName("VK_CONTROL") +
+          gPlatformKeys.GetStringFromName("MODIFIER_SEPARATOR");
+      }
+    }
+    if (elemMod.match("access")) {
+      if (Services.appinfo.OS == "Darwin") {
+        elemString += gPlatformKeys.GetStringFromName("VK_CONTROL") +
+          gPlatformKeys.GetStringFromName("MODIFIER_SEPARATOR");
+      } else {
+        elemString += gPlatformKeys.GetStringFromName("VK_ALT") +
+          gPlatformKeys.GetStringFromName("MODIFIER_SEPARATOR");
+      }
+    }
+    if (elemMod.match("shift")) {
+      elemString += gPlatformKeys.GetStringFromName("VK_SHIFT") +
+        gPlatformKeys.GetStringFromName("MODIFIER_SEPARATOR");
+    }
+    if (elemMod.match("alt")) {
+      elemString += gPlatformKeys.GetStringFromName("VK_ALT") +
+        gPlatformKeys.GetStringFromName("MODIFIER_SEPARATOR");
+    }
+    if (elemMod.match("ctrl") || elemMod.match("control")) {
+      elemString += gPlatformKeys.GetStringFromName("VK_CONTROL") +
+        gPlatformKeys.GetStringFromName("MODIFIER_SEPARATOR");
+    }
+    if (elemMod.match("meta")) {
+      elemString += gPlatformKeys.GetStringFromName("VK_META") +
+        gPlatformKeys.GetStringFromName("MODIFIER_SEPARATOR");
+    }
+
+    return elemString +
+      (aElemKey.getAttribute("keycode").replace(/^.*VK_/, "") ||
+       aElemKey.getAttribute("key")).toUpperCase();
   },
 
   handleWidgetCommand: function(aWidget, aNode, aEvent) {
@@ -1593,7 +1648,7 @@ let CustomizableUIInternal = {
       removable: false,
       overflows: true,
       defaultArea: null,
-      shortcut: null,
+      shortcutId: null,
       tooltiptext: null,
       showInPrivateBrowsing: true,
     };
@@ -1616,7 +1671,7 @@ let CustomizableUIInternal = {
       widget[prop] = aData[prop];
     }
 
-    const kOptStringProps = ["label", "tooltiptext", "shortcut"];
+    const kOptStringProps = ["label", "tooltiptext", "shortcutId"];
     for (let prop of kOptStringProps) {
       if (typeof aData[prop] == "string") {
         widget[prop] = aData[prop];

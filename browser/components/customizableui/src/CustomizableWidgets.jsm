@@ -42,6 +42,7 @@ const CustomizableWidgets = [{
     id: "history-panelmenu",
     type: "view",
     viewId: "PanelUI-history",
+    shortcutId: "key_gotoHistory",
     removable: true,
     defaultArea: CustomizableUI.AREA_PANEL,
     onViewShowing: function(aEvent) {
@@ -124,6 +125,7 @@ const CustomizableWidgets = [{
   }, {
     id: "privatebrowsing-button",
     removable: true,
+    shortcutId: "key_privatebrowsing",
     defaultArea: CustomizableUI.AREA_PANEL,
     onCommand: function(e) {
       if (e.target && e.target.ownerDocument && e.target.ownerDocument.defaultView) {
@@ -136,6 +138,7 @@ const CustomizableWidgets = [{
   }, {
     id: "save-page-button",
     removable: true,
+    shortcutId: "key_savePage",
     defaultArea: CustomizableUI.AREA_PANEL,
     onCommand: function(aEvent) {
       let win = aEvent.target &&
@@ -148,6 +151,7 @@ const CustomizableWidgets = [{
   }, {
     id: "find-button",
     removable: true,
+    shortcutId: "key_find",
     defaultArea: CustomizableUI.AREA_PANEL,
     onCommand: function(aEvent) {
       let win = aEvent.target &&
@@ -160,6 +164,7 @@ const CustomizableWidgets = [{
   }, {
     id: "open-file-button",
     removable: true,
+    shortcutId: "openFileKb",
     defaultArea: CustomizableUI.AREA_PANEL,
     onCommand: function(aEvent) {
       let win = aEvent.target
@@ -174,6 +179,7 @@ const CustomizableWidgets = [{
     type: "view",
     viewId: "PanelUI-developer",
     removable: true,
+    shortcutId: "key_devToolboxMenuItem",
     defaultArea: CustomizableUI.AREA_PANEL,
     onViewShowing: function(aEvent) {
       // Populate the subview with whatever menuitems are in the developer
@@ -232,6 +238,7 @@ const CustomizableWidgets = [{
   }, {
     id: "add-ons-button",
     removable: true,
+    shortcutId: "key_openAddons",
     defaultArea: CustomizableUI.AREA_PANEL,
     onCommand: function(aEvent) {
       let win = aEvent.target &&
