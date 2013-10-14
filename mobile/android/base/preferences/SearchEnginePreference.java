@@ -197,7 +197,9 @@ public class SearchEnginePreference extends Preference {
         if (mPromptIcon == null && mIconBitmap != null) {
             mPromptIcon = new BitmapDrawable(mFaviconView.getBitmap());
         }
-        builder.setIcon(mPromptIcon);
+
+        // Icons are hidden until Bug 926711 is fixed.
+        //builder.setIcon(mPromptIcon);
 
         // We have to construct the dialog itself on the UI thread.
         ThreadUtils.postToUiThread(new Runnable() {
