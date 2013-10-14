@@ -282,13 +282,6 @@ public:
   uint16_t ReadyState();
 
   // request
-  void Open(const nsACString& aMethod, const nsAString& aUrl, ErrorResult& aRv)
-  {
-    Open(aMethod, aUrl, true,
-         mozilla::dom::Optional<nsAString>(),
-         mozilla::dom::Optional<nsAString>(),
-         aRv);
-  }
   void Open(const nsACString& aMethod, const nsAString& aUrl, bool aAsync,
             const mozilla::dom::Optional<nsAString>& aUser,
             const mozilla::dom::Optional<nsAString>& aPassword,
