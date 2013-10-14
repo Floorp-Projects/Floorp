@@ -91,15 +91,6 @@ ShouldNurseryAllocate(const Nursery &nursery, AllocKind kind, InitialHeap heap)
 }
 #endif
 
-inline bool
-IsInsideNursery(JSRuntime *rt, const void *thing)
-{
-#ifdef JSGC_GENERATIONAL
-    return rt->gcNursery.isInside(thing);
-#endif
-    return false;
-}
-
 inline JSGCTraceKind
 GetGCThingTraceKind(const void *thing)
 {

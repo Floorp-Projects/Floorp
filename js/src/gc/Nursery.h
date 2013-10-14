@@ -66,7 +66,7 @@ class Nursery
 
     template <typename T>
     JS_ALWAYS_INLINE bool isInside(const T *p) const {
-        return uintptr_t(p) >= start() && uintptr_t(p) < heapEnd();
+        return gc::IsInsideNursery((JS::shadow::Runtime *)runtime_, p);
     }
 
     /*
