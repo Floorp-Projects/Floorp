@@ -4,7 +4,7 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-[Constructor(DOMString type, optional StyleSheetChangeEventInit eventInitDict), HeaderFile="GeneratedEventClasses.h"]
+[ChromeOnly, Constructor(DOMString type, optional StyleSheetChangeEventInit eventInitDict), HeaderFile="GeneratedEventClasses.h"]
 interface StyleSheetChangeEvent : Event
 {
   readonly attribute CSSStyleSheet? stylesheet;
