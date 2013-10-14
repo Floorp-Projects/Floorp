@@ -69,6 +69,13 @@ void MediaOmxReader::ReleaseMediaResources()
   }
 }
 
+void MediaOmxReader::ReleaseDecoder()
+{
+  if (mOmxDecoder.get()) {
+    mOmxDecoder->ReleaseDecoder();
+  }
+}
+
 nsresult MediaOmxReader::ReadMetadata(MediaInfo* aInfo,
                                       MetadataTags** aTags)
 {
