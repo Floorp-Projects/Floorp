@@ -181,7 +181,9 @@ public:
   bool SetVideoFormat();
   bool SetAudioFormat();
 
-  void NotifyDataArrived(const char* aBuffer, uint32_t aLength, int64_t aOffset);
+  void ReleaseDecoder();
+
+  bool NotifyDataArrived(const char* aBuffer, uint32_t aLength, int64_t aOffset);
 
   void GetDuration(int64_t *durationUs) {
     *durationUs = mDurationUs;
