@@ -3,7 +3,6 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
-
 /*
  * A base class implementing nsIObjectLoadingContent for use by
  * various content nodes that want to provide plugin/document/image
@@ -1380,6 +1379,7 @@ nsObjectLoadingContent::UpdateObjectParameters(bool aJavaURI)
 
   nsresult rv;
   nsAutoCString newMime;
+  nsAutoString typeAttr;
   nsCOMPtr<nsIURI> newURI;
   nsCOMPtr<nsIURI> newBaseURI;
   ObjectType newType;
@@ -1406,10 +1406,11 @@ nsObjectLoadingContent::UpdateObjectParameters(bool aJavaURI)
     newMime.AssignLiteral("application/x-java-vm");
     isJava = true;
   } else {
-    nsAutoString typeAttr;
-    thisContent->GetAttr(kNameSpaceID_None, nsGkAtoms::type, typeAttr);
-    if (!typeAttr.IsEmpty()) {
-      CopyUTF16toUTF8(typeAttr, newMime);
+    nsAutoString rawTypeAttr;
+    thisContent->GetAttr(kNameSpaceID_None, nsGkAtoms::type, rawTypeAttr);
+    if (!rawTypeAttr.IsEmpty()) {
+      typeAttr = rawTypeAttr;
+      CopyUTF16toUTF8(rawTypeAttr, newMime);
       isJava = nsPluginHost::IsJavaMIMEType(newMime.get());
     }
   }
@@ -1646,19 +1647,23 @@ nsObjectLoadingContent::UpdateObjectParameters(bool aJavaURI)
     //
     // In order of preference:
     //
-    // 1) Use our type hint if it matches a plugin
-    // 2) If we have eAllowPluginSkipChannel, use the uri file extension if
+    // 1) Perform typemustmatch check.
+    //    If check is sucessful use type without further checks.
+    //    If check is unsuccessful set stateInvalid to true
+    // 2) Use our type hint if it matches a plugin
+    // 3) If we have eAllowPluginSkipChannel, use the uri file extension if
     //    it matches a plugin
-    // 3) If the channel returns a binary stream type:
-    //    3a) If we have a type non-null non-document type hint, use that
-    //    3b) If the uri file extension matches a plugin type, use that
-    // 4) Use the channel type
-    //
-    //    XXX(johns): HTML5's "typesmustmatch" attribute would need to be
-    //                honored here if implemented
+    // 4) If the channel returns a binary stream type:
+    //    4a) If we have a type non-null non-document type hint, use that
+    //    4b) If the uri file extension matches a plugin type, use that
+    // 5) Use the channel type
 
     bool overrideChannelType = false;
-    if (typeHint == eType_Plugin) {
+    if (thisContent->HasAttr(kNameSpaceID_None, nsGkAtoms::typemustmatch)) {
+      if (!typeAttr.LowerCaseEqualsASCII(channelType.get())) {
+        stateInvalid = true;
+      }
+    } else if (typeHint == eType_Plugin) {
       LOG(("OBJLC [%p]: Using plugin type hint in favor of any channel type",
            this));
       overrideChannelType = true;
