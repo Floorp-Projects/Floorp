@@ -35,6 +35,7 @@ namespace mozilla {
 namespace ipc {
   class RilConsumer;
   class UnixSocketRawData;
+  class KeyStore;
 }
 
 namespace dom {
@@ -70,6 +71,7 @@ private:
   nsresult InitNetd(JSContext *cx);
 #endif
   nsresult InitWifi(JSContext *cx);
+  nsresult InitKeyStore(JSContext *cx);
 
 #ifdef MOZ_WIDGET_GONK
   nsCOMPtr<nsIWorkerHolder> mNetdWorker;
@@ -77,6 +79,7 @@ private:
   nsCOMPtr<nsIWorkerHolder> mWifiWorker;
 
   nsTArray<nsRefPtr<ipc::RilConsumer> > mRilConsumers;
+  nsRefPtr<ipc::KeyStore> mKeyStore;
 
   bool mShutdown;
 };

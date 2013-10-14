@@ -97,7 +97,7 @@ endif
 endif #}
 
 ifneq ($(strip $(MOZ_B2G_RIL)$(MOZ_B2G_BT)),) #{
-STATIC_LIBS += mozipcunixsocket_s
+STATIC_LIBS += mozipcunixsocket_s mozkeystore_s
 endif #}
 
 ifeq (gonk,$(MOZ_WIDGET_TOOLKIT))

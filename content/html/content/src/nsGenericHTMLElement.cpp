@@ -842,7 +842,7 @@ nsGenericHTMLElement::GetEventListenerManagerForAttr(nsIAtom* aAttrName,
     if ((win = document->GetInnerWindow())) {
       nsCOMPtr<EventTarget> piTarget(do_QueryInterface(win));
 
-      return piTarget->GetOrCreateListenerManager();
+      return piTarget->GetListenerManager(true);
     }
 
     return nullptr;
@@ -1009,7 +1009,8 @@ nsGenericHTMLElement::UnsetAttr(int32_t aNameSpaceID, nsIAtom* aAttribute,
       UnsetFlags(NODE_HAS_ACCESSKEY);
     }
     else if (IsEventAttributeName(aAttribute)) {
-      if (nsEventListenerManager* manager = GetExistingListenerManager()) {
+      nsEventListenerManager* manager = GetListenerManager(false);
+      if (manager) {
         manager->RemoveEventHandler(aAttribute, EmptyString());
       }
     }
