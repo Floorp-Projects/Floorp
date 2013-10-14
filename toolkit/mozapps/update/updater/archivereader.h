@@ -7,7 +7,6 @@
 #ifndef ArchiveReader_h__
 #define ArchiveReader_h__
 
-#include "mozilla/NullPtr.h"
 #include <stdio.h>
 #include "mar.h"
 
@@ -21,7 +20,7 @@
 class ArchiveReader
 {
 public:
-  ArchiveReader() : mArchive(nullptr) {}
+  ArchiveReader() : mArchive(NULL) {}
   ~ArchiveReader() { Close(); }
 
   int Open(const NS_tchar *path);
