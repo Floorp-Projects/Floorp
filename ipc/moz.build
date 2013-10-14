@@ -18,7 +18,7 @@ if CONFIG['MOZ_B2G_BT']:
     DIRS += ['dbus']
 
 if CONFIG['MOZ_B2G_RIL'] or CONFIG['MOZ_B2G_BT']:
-    DIRS += ['unixsocket']
+    DIRS += ['unixsocket', 'keystore']
 
 if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'gonk':
     DIRS += ['netd']
