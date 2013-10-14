@@ -163,20 +163,21 @@ VisualPresenter.prototype = {
 
   pivotChanged: function VisualPresenter_pivotChanged(aContext, aReason) {
     this._displayedAccessibles.set(aContext.accessible.document.window,
-                                   { accessible: aContext.accessible,
+                                   { accessible: aContext.accessibleForBounds,
                                      startOffset: aContext.startOffset,
                                      endOffset: aContext.endOffset });
 
-    if (!aContext.accessible)
+    if (!aContext.accessibleForBounds)
       return {type: this.type, details: {method: 'hideBounds'}};
 
     try {
-      aContext.accessible.scrollTo(
+      aContext.accessibleForBounds.scrollTo(
         Ci.nsIAccessibleScrollType.SCROLL_TYPE_ANYWHERE);
 
       let bounds = (aContext.startOffset === -1 && aContext.endOffset === -1) ?
-                   aContext.bounds : Utils.getTextBounds(aContext.accessible,
-                                     aContext.startOffset, aContext.endOffset);
+            aContext.bounds : Utils.getTextBounds(aContext.accessibleForBounds,
+                                                  aContext.startOffset,
+                                                  aContext.endOffset);
 
       return {
         type: this.type,
