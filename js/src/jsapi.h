@@ -1542,6 +1542,196 @@ JS_SetOptions(JSContext *cx, uint32_t options);
 extern JS_PUBLIC_API(uint32_t)
 JS_ToggleOptions(JSContext *cx, uint32_t options);
 
+namespace JS {
+
+class JS_PUBLIC_API(ContextOptions) {
+  public:
+    ContextOptions()
+      : extraWarnings_(false),
+        werror_(false),
+        varObjFix_(false),
+        privateIsNSISupports_(false),
+        compileAndGo_(false),
+        dontReportUncaught_(false),
+        noDefaultCompartmentObject_(false),
+        noScriptRval_(false),
+        baseline_(false),
+        typeInference_(false),
+        strictMode_(false),
+        ion_(false),
+        asmJS_(false)
+    {
+    }
+
+    bool extraWarnings() const { return extraWarnings_; }
+    ContextOptions &setExtraWarnings(bool flag) {
+        extraWarnings_ = flag;
+        return *this;
+    }
+    ContextOptions &toggleExtraWarnings() {
+        extraWarnings_ = !extraWarnings_;
+        return *this;
+    }
+
+    bool werror() const { return werror_; }
+    ContextOptions &setWerror(bool flag) {
+        werror_ = flag;
+        return *this;
+    }
+    ContextOptions &toggleWerror() {
+        werror_ = !werror_;
+        return *this;
+    }
+
+    bool varObjFix() const { return varObjFix_; }
+    ContextOptions &setVarObjFix(bool flag) {
+        varObjFix_ = flag;
+        return *this;
+    }
+    ContextOptions &toggleVarObjFix() {
+        varObjFix_ = !varObjFix_;
+        return *this;
+    }
+
+    bool privateIsNSISupports() const { return privateIsNSISupports_; }
+    ContextOptions &setPrivateIsNSISupports(bool flag) {
+        privateIsNSISupports_ = flag;
+        return *this;
+    }
+    ContextOptions &togglePrivateIsNSISupports() {
+        privateIsNSISupports_ = !privateIsNSISupports_;
+        return *this;
+    }
+
+    bool compileAndGo() const { return compileAndGo_; }
+    ContextOptions &setCompileAndGo(bool flag) {
+        compileAndGo_ = flag;
+        return *this;
+    }
+    ContextOptions &toggleCompileAndGo() {
+        compileAndGo_ = !compileAndGo_;
+        return *this;
+    }
+
+    bool dontReportUncaught() const { return dontReportUncaught_; }
+    ContextOptions &setDontReportUncaught(bool flag) {
+        dontReportUncaught_ = flag;
+        return *this;
+    }
+    ContextOptions &toggleDontReportUncaught() {
+        dontReportUncaught_ = !dontReportUncaught_;
+        return *this;
+    }
+
+    bool noDefaultCompartmentObject() const { return noDefaultCompartmentObject_; }
+    ContextOptions &setNoDefaultCompartmentObject(bool flag) {
+        noDefaultCompartmentObject_ = flag;
+        return *this;
+    }
+    ContextOptions &toggleNoDefaultCompartmentObject() {
+        noDefaultCompartmentObject_ = !noDefaultCompartmentObject_;
+        return *this;
+    }
+
+    bool noScriptRval() const { return noScriptRval_; }
+    ContextOptions &setNoScriptRval(bool flag) {
+        noScriptRval_ = flag;
+        return *this;
+    }
+    ContextOptions &toggleNoScriptRval() {
+        noScriptRval_ = !noScriptRval_;
+        return *this;
+    }
+
+    bool baseline() const { return baseline_; }
+    ContextOptions &setBaseline(bool flag) {
+        baseline_ = flag;
+        return *this;
+    }
+    ContextOptions &toggleBaseline() {
+        baseline_ = !baseline_;
+        return *this;
+    }
+
+    bool typeInference() const { return typeInference_; }
+    ContextOptions &setTypeInference(bool flag) {
+        typeInference_ = flag;
+        return *this;
+    }
+    ContextOptions &toggleTypeInference() {
+        typeInference_ = !typeInference_;
+        return *this;
+    }
+
+    bool strictMode() const { return strictMode_; }
+    ContextOptions &setStrictMode(bool flag) {
+        strictMode_ = flag;
+        return *this;
+    }
+    ContextOptions &toggleStrictMode() {
+        strictMode_ = !strictMode_;
+        return *this;
+    }
+
+    bool ion() const { return ion_; }
+    ContextOptions &setIon(bool flag) {
+        ion_ = flag;
+        return *this;
+    }
+    ContextOptions &toggleIon() {
+        ion_ = !ion_;
+        return *this;
+    }
+
+    bool asmJS() const { return asmJS_; }
+    ContextOptions &setAsmJS(bool flag) {
+        asmJS_ = flag;
+        return *this;
+    }
+    ContextOptions &toggleAsmJS() {
+        asmJS_ = !asmJS_;
+        return *this;
+    }
+
+  private:
+    bool extraWarnings_ : 1;
+    bool werror_ : 1;
+    bool varObjFix_ : 1;
+    bool privateIsNSISupports_ : 1;
+    bool compileAndGo_ : 1;
+    bool dontReportUncaught_ : 1;
+    bool noDefaultCompartmentObject_ : 1;
+    bool noScriptRval_ : 1;
+    bool baseline_ : 1;
+    bool typeInference_ : 1;
+    bool strictMode_ : 1;
+    bool ion_ : 1;
+    bool asmJS_ : 1;
+};
+
+JS_PUBLIC_API(ContextOptions &)
+ContextOptionsRef(JSContext *cx);
+
+class JS_PUBLIC_API(AutoSaveContextOptions) {
+  public:
+    AutoSaveContextOptions(JSContext *cx)
+      : cx_(cx),
+        oldOptions_(ContextOptionsRef(cx_))
+    {
+    }
+
+    ~AutoSaveContextOptions()
+    {
+        ContextOptionsRef(cx_) = oldOptions_;
+    }
+
+  private:
+    JSContext *cx_;
+    JS::ContextOptions oldOptions_;
+};
+
+} /* namespace JS */
+
 extern JS_PUBLIC_API(void)
 JS_SetJitHardening(JSRuntime *rt, bool enabled);
 
