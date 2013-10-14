@@ -54,10 +54,18 @@ const R_HOST       = new RegExp ("\\*|(((\\*\\.)?" + R_HOSTCHAR.source +
 // port            = ":" ( 1*DIGIT / "*" )
 const R_PORT       = new RegExp ("(\\:([0-9]+|\\*))", 'i');
 
-// host-source     = [ scheme "://" ] host [ port ]
-const R_HOSTSRC    = new RegExp ("^((" + R_SCHEME.source + "\\:\\/\\/)?("
-                                       +   R_HOST.source + ")"
-                                       +   R_PORT.source + "?)$", 'i');
+// path
+const R_PATH       = new RegExp("(\\/(([a-zA-Z0-9\\-\\_]+)\\/?)*)", 'i');
+
+// file
+const R_FILE       = new RegExp("(\\/([a-zA-Z0-9\\-\\_]+)\\.([a-zA-Z]+))", 'i');
+
+// host-source     = [ scheme "://" ] host [ port path file ]
+const R_HOSTSRC    = new RegExp ("^((((" + R_SCHEME.source + "\\:\\/\\/)?("
+                                         + R_HOST.source + ")"
+                                         + R_PORT.source + "?)"
+                                         + R_PATH.source + "?)"
+                                         + R_FILE.source + "?)$", 'i');
 
 // ext-host-source = host-source "/" *( <VCHAR except ";" and ","> )
 //                 ; ext-host-source is reserved for future use.
@@ -1345,6 +1353,11 @@ CSPSource.fromString = function(aStr, aCSPRep, self, enforceSelfChecks) {
     // Host regex gets scheme, so remove scheme from aStr. Add 3 for '://'
     if (schemeMatch)
       hostMatch = R_HOSTSRC.exec(aStr.substring(schemeMatch[0].length + 3));
+
+    // Bug 916054: in CSP 1.0, source-expressions that are paths should have
+    // the path after the origin ignored and only the origin enforced.
+    hostMatch[0] = hostMatch[0].replace(R_FILE, "");
+    hostMatch[0] = hostMatch[0].replace(R_PATH, "");
 
     var portMatch = R_PORT.exec(hostMatch);
 
