@@ -17,7 +17,6 @@ simple_events = [
     'PopStateEvent',
     'HashChangeEvent',
     'CloseEvent',
-    'MozContactChangeEvent',
     'DeviceOrientationEvent',
     'MozApplicationEvent',
     'SmartCardEvent',

@@ -36,7 +36,6 @@
  "content/base/test/test_websocket_hello.html": "",
  "content/base/test/test_x-frame-options.html": "",
  "content/base/test/test_xhr_abort_after_load.html": "",
- "content/base/test/test_xhr_forbidden_headers.html": "",
  "content/base/test/test_xhr_progressevents.html": "",
  "content/base/test/websocket_hybi/test_receive-arraybuffer.html": "",
  "content/base/test/websocket_hybi/test_receive-blob.html": "",

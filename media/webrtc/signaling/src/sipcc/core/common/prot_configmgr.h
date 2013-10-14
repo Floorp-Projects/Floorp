@@ -292,5 +292,7 @@ int sip_minimum_config_check(void);
 void config_set_codec_table(int codec_mask);
 int sip_config_get_keepalive_expires();
 rtp_ptype sip_config_preferred_codec(void);
+uint32_t config_get_video_max_fs(const rtp_ptype codec);
+uint32_t config_get_video_max_fr(const rtp_ptype codec);
 
 #endif /* PROT_CONFIGMGR_H_ */

@@ -1,0 +1,78 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=698437
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug 698437</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="application/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <script type="application/javascript">
+
+  /** Test for Bug 698437 **/
+
+  SimpleTest.waitForExplicitFinish();
+
+  function Test() {
+    if (!SpecialPowers.getBoolPref("snav.enabled")) {
+      todo(false, "Enable spatial navigiation on this platform.");
+      SimpleTest.finish();
+      return;
+    }
+
+    var center = document.getElementById("center");
+    var right = document.getElementById("right");
+    var left = document.getElementById("left");
+    var top = document.getElementById("top");
+    var bottom = document.getElementById("bottom");
+
+    console.log(top);
+    console.log(bottom);
+    console.log(center);
+    console.log(left);
+    console.log(right);
+
+    center.focus();
+    is(center.id, document.activeElement.id, "How did we call focus on center and it did" +
+                                             " not become the active element?");
+
+    synthesizeKey("VK_UP", { });
+    is(top.id, document.activeElement.id,
+       "Spatial navigation up key is not handled correctly.");
+
+    center.focus();
+    synthesizeKey("VK_DOWN", { });
+    is(bottom.id, document.activeElement.id,
+       "Spatial navigation down key is not handled correctly.");
+
+    center.focus();
+    synthesizeKey("VK_RIGHT", { });
+    is(right.id, document.activeElement.id,
+       "Spatial navigation right key is not handled correctly.");
+
+    center.focus();
+    synthesizeKey("VK_LEFT", { });
+    is(left.id, document.activeElement.id,
+       "Spatial navigation left key is not handled correctly.");
+
+    SimpleTest.finish();
+  }
+
+  </script>
+</head>
+<body onload="Test();">
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=698437">Mozilla Bug 698437</a>
+<p id="display"></p>
+<div id="content">
+  <p> This is a <a id="top" href="#">really</a> long sentence </p>
+  <p> <a id="left" href="#">This</a> is a
+      <a id="center" href="#">really</a> long
+      <a id="right" href="#">sentence</a> </p>
+  <p> This is a <a id="bottom" href="#">really</a> long sentence </p>
+</div>
+<pre id="test">
+</pre>
+</body>
+</html>

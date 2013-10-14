@@ -152,6 +152,27 @@ public:
 
   virtual int DeliverFrame(unsigned char*,int, uint32_t , int64_t);
 
+  unsigned short SendingWidth() {
+    return mSendingWidth;
+  }
+
+  unsigned short SendingHeight() {
+    return mSendingHeight;
+  }
+
+  unsigned int SendingMaxFs() {
+    if(mCurSendCodecConfig) {
+      return mCurSendCodecConfig->mMaxFrameSize;
+    }
+    return 0;
+  }
+
+  unsigned int SendingMaxFr() {
+    if(mCurSendCodecConfig) {
+      return mCurSendCodecConfig->mMaxFrameRate;
+    }
+    return 0;
+  }
 
   WebrtcVideoConduit():
                       mVideoEngine(nullptr),

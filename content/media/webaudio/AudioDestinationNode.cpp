@@ -14,7 +14,9 @@
 #include "OfflineAudioCompletionEvent.h"
 #include "nsIInterfaceRequestorUtils.h"
 #include "nsIDocShell.h"
-#include "nsIDocument.h"
+#include "nsIPermissionManager.h"
+#include "nsIScriptObjectPrincipal.h"
+#include "nsServiceManagerUtils.h"
 
 namespace mozilla {
 namespace dom {
@@ -244,6 +246,7 @@ AudioDestinationNode::AudioDestinationNode(AudioContext* aContext,
               ChannelCountMode::Explicit,
               ChannelInterpretation::Speakers)
   , mFramesToProduce(aLength)
+  , mAudioChannel(AudioChannel::Normal)
 {
   MediaStreamGraph* graph = aIsOffline ?
                             MediaStreamGraph::CreateNonRealtimeInstance() :
@@ -256,10 +259,6 @@ AudioDestinationNode::AudioDestinationNode(AudioContext* aContext,
   mStream = graph->CreateAudioNodeStream(engine, MediaStreamGraph::EXTERNAL_STREAM);
 
   if (!aIsOffline && UseAudioChannelService()) {
-    mAudioChannelAgent = new AudioChannelAgent();
-    mAudioChannelAgent->InitWithWeakCallback(nsIAudioChannelAgent::AUDIO_AGENT_CHANNEL_NORMAL,
-                                             this);
-
     nsCOMPtr<nsIDOMEventTarget> target = do_QueryInterface(GetOwner());
     if (target) {
       target->AddSystemEventListener(NS_LITERAL_STRING("visibilitychange"), this,
@@ -267,16 +266,7 @@ AudioDestinationNode::AudioDestinationNode(AudioContext* aContext,
                                      /* wantsUntrusted = */ false);
     }
 
-    nsCOMPtr<nsIDocShell> docshell = do_GetInterface(GetOwner());
-    if (docshell) {
-      bool isActive = false;
-      docshell->GetIsActive(&isActive);
-      mAudioChannelAgent->SetVisibilityState(isActive);
-    }
-
-    int32_t state = 0;
-    mAudioChannelAgent->StartPlaying(&state);
-    SetCanPlay(state == AudioChannelState::AUDIO_CHANNEL_STATE_NORMAL);
+    CreateAudioChannelAgent();
   }
 }
 
@@ -391,5 +381,117 @@ AudioDestinationNode::CanPlayChanged(int32_t aCanPlay)
   return NS_OK;
 }
 
+AudioChannel
+AudioDestinationNode::MozAudioChannelType() const
+{
+  return mAudioChannel;
 }
+
+void
+AudioDestinationNode::SetMozAudioChannelType(AudioChannel aValue, ErrorResult& aRv)
+{
+  if (Context()->IsOffline()) {
+    aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
+    return;
+  }
+
+  if (aValue != mAudioChannel &&
+      CheckAudioChannelPermissions(aValue)) {
+    mAudioChannel = aValue;
+
+    if (mAudioChannelAgent) {
+      CreateAudioChannelAgent();
+    }
+  }
+}
+
+bool
+AudioDestinationNode::CheckAudioChannelPermissions(AudioChannel aValue)
+{
+  if (!Preferences::GetBool("media.useAudioChannelService")) {
+    return true;
+  }
+
+  // Only normal channel doesn't need permission.
+  if (aValue == AudioChannel::Normal) {
+    return true;
+  }
+
+  nsCOMPtr<nsIPermissionManager> permissionManager =
+    do_GetService(NS_PERMISSIONMANAGER_CONTRACTID);
+  if (!permissionManager) {
+    return false;
+  }
+
+  nsCOMPtr<nsIScriptObjectPrincipal> sop = do_QueryInterface(GetOwner());
+  NS_ASSERTION(sop, "Window didn't QI to nsIScriptObjectPrincipal!");
+  nsCOMPtr<nsIPrincipal> principal = sop->GetPrincipal();
+
+  uint32_t perm = nsIPermissionManager::UNKNOWN_ACTION;
+
+  nsCString channel;
+  channel.AssignASCII(AudioChannelValues::strings[uint32_t(aValue)].value,
+                      AudioChannelValues::strings[uint32_t(aValue)].length);
+  permissionManager->TestExactPermissionFromPrincipal(principal,
+    nsCString(NS_LITERAL_CSTRING("audio-channel-") + channel).get(),
+    &perm);
+
+  return perm == nsIPermissionManager::ALLOW_ACTION;
+}
+
+void
+AudioDestinationNode::CreateAudioChannelAgent()
+{
+  if (mAudioChannelAgent) {
+    mAudioChannelAgent->StopPlaying();
+  }
+
+  AudioChannelType type = AUDIO_CHANNEL_NORMAL;
+  switch(mAudioChannel) {
+    case AudioChannel::Normal:
+      type = AUDIO_CHANNEL_NORMAL;
+      break;
+
+    case AudioChannel::Content:
+      type = AUDIO_CHANNEL_CONTENT;
+      break;
+
+    case AudioChannel::Notification:
+      type = AUDIO_CHANNEL_NOTIFICATION;
+      break;
+
+    case AudioChannel::Alarm:
+      type = AUDIO_CHANNEL_ALARM;
+      break;
+
+    case AudioChannel::Telephony:
+      type = AUDIO_CHANNEL_TELEPHONY;
+      break;
+
+    case AudioChannel::Ringer:
+      type = AUDIO_CHANNEL_RINGER;
+      break;
+
+    case AudioChannel::Publicnotification:
+      type = AUDIO_CHANNEL_PUBLICNOTIFICATION;
+      break;
+
+  }
+
+  mAudioChannelAgent = new AudioChannelAgent();
+  mAudioChannelAgent->InitWithWeakCallback(type, this);
+
+  nsCOMPtr<nsIDocShell> docshell = do_GetInterface(GetOwner());
+  if (docshell) {
+    bool isActive = false;
+    docshell->GetIsActive(&isActive);
+    mAudioChannelAgent->SetVisibilityState(isActive);
+  }
+
+  int32_t state = 0;
+  mAudioChannelAgent->StartPlaying(&state);
+  SetCanPlay(state == AudioChannelState::AUDIO_CHANNEL_STATE_NORMAL);
+}
+}
+
 }

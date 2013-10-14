@@ -196,7 +196,8 @@ WebGLContext::EnableVertexAttribArray(GLuint index)
     InvalidateBufferFetching();
 
     gl->fEnableVertexAttribArray(index);
-    mBoundVertexArray->mAttribBuffers[index].enabled = true;
+    MOZ_ASSERT(mBoundVertexArray->HasAttrib(index)); // should have been validated earlier
+    mBoundVertexArray->mAttribs[index].enabled = true;
 }
 
 void
@@ -214,7 +215,8 @@ WebGLContext::DisableVertexAttribArray(GLuint index)
     if (index || gl->IsGLES2())
         gl->fDisableVertexAttribArray(index);
 
-    mBoundVertexArray->mAttribBuffers[index].enabled = false;
+    MOZ_ASSERT(mBoundVertexArray->HasAttrib(index)); // should have been validated earlier
+    mBoundVertexArray->mAttribs[index].enabled = false;
 }
 
 
@@ -225,7 +227,7 @@ WebGLContext::GetVertexAttrib(JSContext* cx, GLuint index, GLenum pname,
     if (IsContextLost())
         return JS::NullValue();
 
-    if (!mBoundVertexArray->EnsureAttribIndex(index, "getVertexAttrib"))
+    if (!ValidateAttribIndex(index, "getVertexAttrib"))
         return JS::NullValue();
 
     MakeContextCurrent();
@@ -233,12 +235,12 @@ WebGLContext::GetVertexAttrib(JSContext* cx, GLuint index, GLenum pname,
     switch (pname) {
         case LOCAL_GL_VERTEX_ATTRIB_ARRAY_BUFFER_BINDING:
         {
-            return WebGLObjectAsJSValue(cx, mBoundVertexArray->mAttribBuffers[index].buf.get(), rv);
+            return WebGLObjectAsJSValue(cx, mBoundVertexArray->mAttribs[index].buf.get(), rv);
         }
 
         case LOCAL_GL_VERTEX_ATTRIB_ARRAY_STRIDE:
         {
-            return JS::Int32Value(mBoundVertexArray->mAttribBuffers[index].stride);
+            return JS::Int32Value(mBoundVertexArray->mAttribs[index].stride);
         }
 
         case LOCAL_GL_VERTEX_ATTRIB_ARRAY_SIZE:
@@ -246,7 +248,7 @@ WebGLContext::GetVertexAttrib(JSContext* cx, GLuint index, GLenum pname,
             if (!ValidateAttribIndex(index, "getVertexAttrib"))
                 return JS::NullValue();
 
-            if (!mBoundVertexArray->mAttribBuffers[index].enabled)
+            if (!mBoundVertexArray->mAttribs[index].enabled)
                 return JS::Int32Value(4);
 
             // Don't break; fall through.
@@ -265,7 +267,7 @@ WebGLContext::GetVertexAttrib(JSContext* cx, GLuint index, GLenum pname,
         {
             if (IsExtensionEnabled(ANGLE_instanced_arrays))
             {
-                return JS::Int32Value(mBoundVertexArray->mAttribBuffers[index].divisor);
+                return JS::Int32Value(mBoundVertexArray->mAttribs[index].divisor);
             }
             break;
         }
@@ -290,12 +292,12 @@ WebGLContext::GetVertexAttrib(JSContext* cx, GLuint index, GLenum pname,
 
         case LOCAL_GL_VERTEX_ATTRIB_ARRAY_ENABLED:
         {
-            return JS::BooleanValue(mBoundVertexArray->mAttribBuffers[index].enabled);
+            return JS::BooleanValue(mBoundVertexArray->mAttribs[index].enabled);
         }
 
         case LOCAL_GL_VERTEX_ATTRIB_ARRAY_NORMALIZED:
         {
-            return JS::BooleanValue(mBoundVertexArray->mAttribBuffers[index].normalized);
+            return JS::BooleanValue(mBoundVertexArray->mAttribs[index].normalized);
         }
 
         default:
@@ -321,7 +323,7 @@ WebGLContext::GetVertexAttribOffset(GLuint index, GLenum pname)
         return 0;
     }
 
-    return mBoundVertexArray->mAttribBuffers[index].byteOffset;
+    return mBoundVertexArray->mAttribs[index].byteOffset;
 }
 
 void
@@ -356,7 +358,7 @@ WebGLContext::VertexAttribPointer(GLuint index, GLint size, GLenum type,
     // requiredAlignment should always be a power of two.
     GLsizei requiredAlignmentMask = requiredAlignment - 1;
 
-    if ( !mBoundVertexArray->EnsureAttribIndex(index, "vertexAttribPointer") ) {
+    if (!ValidateAttribIndex(index, "vertexAttribPointer")) {
         return;
     }
 
@@ -387,7 +389,7 @@ WebGLContext::VertexAttribPointer(GLuint index, GLint size, GLenum type,
      return ErrorInvalidOperation("vertexAttribPointer: type must match bound VBO type: %d != %d", type, mBoundArrayBuffer->GLType());
      */
 
-    WebGLVertexAttribData &vd = mBoundVertexArray->mAttribBuffers[index];
+    WebGLVertexAttribData &vd = mBoundVertexArray->mAttribs[index];
 
     vd.buf = mBoundArrayBuffer;
     vd.stride = stride;
@@ -409,11 +411,11 @@ WebGLContext::VertexAttribDivisor(GLuint index, GLuint divisor)
     if (IsContextLost())
         return;
 
-    if ( !mBoundVertexArray->EnsureAttribIndex(index, "vertexAttribDivisor") ) {
+    if (!ValidateAttribIndex(index, "vertexAttribDivisor")) {
         return;
     }
 
-    WebGLVertexAttribData& vd = mBoundVertexArray->mAttribBuffers[index];
+    WebGLVertexAttribData& vd = mBoundVertexArray->mAttribs[index];
     vd.divisor = divisor;
 
     InvalidateBufferFetching();
@@ -498,7 +500,7 @@ bool WebGLContext::DrawArrays_check(GLint first, GLsizei count, GLsizei primcoun
     MakeContextCurrent();
 
     if (mBoundFramebuffer) {
-        if (!mBoundFramebuffer->CheckAndInitializeRenderbuffers()) {
+        if (!mBoundFramebuffer->CheckAndInitializeAttachments()) {
             ErrorInvalidFramebufferOperation("%s: incomplete framebuffer", info);
             return false;
         }
@@ -655,7 +657,7 @@ WebGLContext::DrawElements_check(GLsizei count, GLenum type, WebGLintptr byteOff
     MakeContextCurrent();
 
     if (mBoundFramebuffer) {
-        if (!mBoundFramebuffer->CheckAndInitializeRenderbuffers()) {
+        if (!mBoundFramebuffer->CheckAndInitializeAttachments()) {
             ErrorInvalidFramebufferOperation("%s: incomplete framebuffer", info);
             return false;
         }
@@ -756,10 +758,10 @@ WebGLContext::ValidateBufferFetching(const char *info)
     bool hasPerVertex = false;
     uint32_t maxVertices = UINT32_MAX;
     uint32_t maxInstances = UINT32_MAX;
-    uint32_t attribs = mBoundVertexArray->mAttribBuffers.Length();
+    uint32_t attribs = mBoundVertexArray->mAttribs.Length();
 
     for (uint32_t i = 0; i < attribs; ++i) {
-        const WebGLVertexAttribData& vd = mBoundVertexArray->mAttribBuffers[i];
+        const WebGLVertexAttribData& vd = mBoundVertexArray->mAttribs[i];
 
         // If the attrib array isn't enabled, there's nothing to check;
         // it's a static value.
