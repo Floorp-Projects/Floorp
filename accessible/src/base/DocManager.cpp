@@ -329,7 +329,7 @@ DocManager::AddListeners(nsIDocument* aDocument,
 {
   nsPIDOMWindow* window = aDocument->GetWindow();
   EventTarget* target = window->GetChromeEventHandler();
-  nsEventListenerManager* elm = target->GetListenerManager(true);
+  nsEventListenerManager* elm = target->GetOrCreateListenerManager();
   elm->AddEventListenerByType(this, NS_LITERAL_STRING("pagehide"),
                               dom::TrustedEventsAtCapture());
 
@@ -359,7 +359,7 @@ DocManager::RemoveListeners(nsIDocument* aDocument)
   if (!target)
     return;
 
-  nsEventListenerManager* elm = target->GetListenerManager(true);
+  nsEventListenerManager* elm = target->GetOrCreateListenerManager();
   elm->RemoveEventListenerByType(this, NS_LITERAL_STRING("pagehide"),
                                  dom::TrustedEventsAtCapture());
 

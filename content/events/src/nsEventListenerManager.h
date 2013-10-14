@@ -560,7 +560,8 @@ NS_AddSystemEventListener(mozilla::dom::EventTarget* aTarget,
                           bool aUseCapture,
                           bool aWantsUntrusted)
 {
-  nsEventListenerManager* listenerManager = aTarget->GetListenerManager(true);
+  nsEventListenerManager* listenerManager =
+    aTarget->GetOrCreateListenerManager();
   NS_ENSURE_STATE(listenerManager);
   mozilla::dom::EventListenerFlags flags;
   flags.mInSystemGroup = true;

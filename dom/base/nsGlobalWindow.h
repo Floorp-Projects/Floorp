@@ -371,6 +371,13 @@ public:
 
   // nsIDOMEventTarget
   NS_DECL_NSIDOMEVENTTARGET
+
+  virtual nsEventListenerManager*
+  GetExistingListenerManager() const MOZ_OVERRIDE;
+
+  virtual nsEventListenerManager*
+  GetOrCreateListenerManager() MOZ_OVERRIDE;
+
   using mozilla::dom::EventTarget::RemoveEventListener;
   virtual void AddEventListener(const nsAString& aType,
                                 mozilla::dom::EventListener* aListener,
@@ -552,7 +559,7 @@ public:
     return static_cast<nsGlobalWindow *>(GetOuterWindow());
   }
 
-  nsGlobalWindow *GetCurrentInnerWindowInternal()
+  nsGlobalWindow *GetCurrentInnerWindowInternal() const
   {
     return static_cast<nsGlobalWindow *>(mInnerWindow);
   }
@@ -708,13 +715,13 @@ public:
 #define EVENT(name_, id_, type_, struct_)                                     \
   mozilla::dom::EventHandlerNonNull* GetOn##name_()                           \
   {                                                                           \
-    nsEventListenerManager *elm = GetListenerManager(false);                  \
+    nsEventListenerManager *elm = GetExistingListenerManager();               \
     return elm ? elm->GetEventHandler(nsGkAtoms::on##name_, EmptyString())    \
                : nullptr;                                                     \
   }                                                                           \
   void SetOn##name_(mozilla::dom::EventHandlerNonNull* handler)               \
   {                                                                           \
-    nsEventListenerManager *elm = GetListenerManager(true);                   \
+    nsEventListenerManager *elm = GetOrCreateListenerManager();               \
     if (elm) {                                                                \
       elm->SetEventHandler(nsGkAtoms::on##name_, EmptyString(), handler);     \
     }                                                                         \
@@ -722,12 +729,12 @@ public:
 #define ERROR_EVENT(name_, id_, type_, struct_)                               \
   mozilla::dom::OnErrorEventHandlerNonNull* GetOn##name_()                    \
   {                                                                           \
-    nsEventListenerManager *elm = GetListenerManager(false);                  \
+    nsEventListenerManager *elm = GetExistingListenerManager();               \
     return elm ? elm->GetOnErrorEventHandler() : nullptr;                     \
   }                                                                           \
   void SetOn##name_(mozilla::dom::OnErrorEventHandlerNonNull* handler)        \
   {                                                                           \
-    nsEventListenerManager *elm = GetListenerManager(true);                   \
+    nsEventListenerManager *elm = GetOrCreateListenerManager();               \
     if (elm) {                                                                \
       elm->SetEventHandler(handler);                                          \
     }                                                                         \
@@ -735,12 +742,12 @@ public:
 #define BEFOREUNLOAD_EVENT(name_, id_, type_, struct_)                        \
   mozilla::dom::BeforeUnloadEventHandlerNonNull* GetOn##name_()               \
   {                                                                           \
-    nsEventListenerManager *elm = GetListenerManager(false);                  \
+    nsEventListenerManager *elm = GetExistingListenerManager();               \
     return elm ? elm->GetOnBeforeUnloadEventHandler() : nullptr;              \
   }                                                                           \
   void SetOn##name_(mozilla::dom::BeforeUnloadEventHandlerNonNull* handler)   \
   {                                                                           \
-    nsEventListenerManager *elm = GetListenerManager(true);                   \
+    nsEventListenerManager *elm = GetOrCreateListenerManager();               \
     if (elm) {                                                                \
       elm->SetEventHandler(handler);                                          \
     }                                                                         \
