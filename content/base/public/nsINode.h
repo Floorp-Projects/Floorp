@@ -800,12 +800,6 @@ public:
    * See nsIDOMEventTarget
    */
   NS_DECL_NSIDOMEVENTTARGET
-
-  virtual nsEventListenerManager*
-  GetExistingListenerManager() const MOZ_OVERRIDE;
-  virtual nsEventListenerManager*
-  GetOrCreateListenerManager() MOZ_OVERRIDE;
-
   using mozilla::dom::EventTarget::RemoveEventListener;
   using nsIDOMEventTarget::AddEventListener;
   virtual void AddEventListener(const nsAString& aType,

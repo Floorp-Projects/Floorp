@@ -141,6 +141,9 @@
 // Drag and drop
 #include "nsIDOMDataTransfer.h"
 
+// Workers
+#include "mozilla/dom/workers/Workers.h"
+
 #include "nsIDOMFile.h"
 #include "nsDOMBlobBuilder.h" // nsDOMMultipartFile
 
@@ -191,6 +194,7 @@
 
 using namespace mozilla;
 using namespace mozilla::dom;
+using mozilla::dom::workers::ResolveWorkerClasses;
 
 static NS_DEFINE_CID(kDOMSOF_CID, NS_DOM_SCRIPT_OBJECT_FACTORY_CID);
 
@@ -3598,6 +3602,16 @@ nsWindowSH::NewResolve(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
     }
     *objp = obj;
 
+    return NS_OK;
+  }
+
+  // Handle resolving if id refers to a name resolved by DOM worker code.
+  JS::RootedObject tmp(cx, NULL);
+  if (!ResolveWorkerClasses(cx, obj, id, flags, &tmp)) {
+    return NS_ERROR_FAILURE;
+  }
+  if (tmp) {
+    *objp = tmp;
     return NS_OK;
   }
 
