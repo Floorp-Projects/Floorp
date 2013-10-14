@@ -713,13 +713,22 @@ nsEventStatus AsyncPanZoomController::OnLongPress(const TapGestureInput& aEvent)
 
 nsEventStatus AsyncPanZoomController::OnSingleTapUp(const TapGestureInput& aEvent) {
   APZC_LOG("%p got a single-tap-up in state %d\n", this, mState);
+  nsRefPtr<GeckoContentController> controller = GetGeckoContentController();
+  if (controller && mAllowZoom) {
+    ReentrantMonitorAutoEnter lock(mMonitor);
+
+    CSSPoint point = WidgetSpaceToCompensatedViewportSpace(aEvent.mPoint, mFrameMetrics.mZoom);
+    controller->HandleSingleTap(gfx::RoundedToInt(point));
+    return nsEventStatus_eConsumeNoDefault;
+  }
   return nsEventStatus_eIgnore;
 }
 
 nsEventStatus AsyncPanZoomController::OnSingleTapConfirmed(const TapGestureInput& aEvent) {
   APZC_LOG("%p got a single-tap-confirmed in state %d\n", this, mState);
   nsRefPtr<GeckoContentController> controller = GetGeckoContentController();
-  if (controller) {
+  // If zooming is disabled, we handle this in OnSingleTapUp
+  if (controller && mAllowZoom) {
     ReentrantMonitorAutoEnter lock(mMonitor);
 
     CSSPoint point = WidgetSpaceToCompensatedViewportSpace(aEvent.mPoint, mFrameMetrics.mZoom);
