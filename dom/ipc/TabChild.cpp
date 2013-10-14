@@ -1202,7 +1202,7 @@ TabChild::~TabChild()
     mGlobal = nullptr;
 
     if (mTabChildGlobal) {
-      nsEventListenerManager* elm = mTabChildGlobal->GetListenerManager(false);
+      nsEventListenerManager* elm = mTabChildGlobal->GetExistingListenerManager();
       if (elm) {
         elm->Disconnect();
       }
