@@ -2371,7 +2371,9 @@ jit::Invalidate(types::TypeCompartment &types, FreeOp *fop,
     // until its last invalidated frame is destroyed.
     for (size_t i = 0; i < invalid.length(); i++) {
         types::CompilerOutput &co = *invalid[i].compilerOutput(types);
-        JS_ASSERT(co.isValid());
+        if (!co.isValid())
+            continue;
+
         ExecutionMode executionMode = co.mode();
         JSScript *script = co.script();
         IonScript *ionScript = co.ion();
