@@ -1584,10 +1584,10 @@ nsPlaintextEditor::SelectEntireDocument(nsISelection *aSelection)
   return NS_OK;
 }
 
-already_AddRefed<mozilla::dom::EventTarget>
+already_AddRefed<nsIDOMEventTarget>
 nsPlaintextEditor::GetDOMEventTarget()
 {
-  nsCOMPtr<mozilla::dom::EventTarget> copy = mEventTarget;
+  nsCOMPtr<nsIDOMEventTarget> copy = mEventTarget;
   return copy.forget();
 }
 

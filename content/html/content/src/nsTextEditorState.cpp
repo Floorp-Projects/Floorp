@@ -1562,7 +1562,8 @@ nsTextEditorState::UnbindFromFrame(nsTextControlFrame* aFrame)
     mTextListener->SetFrame(nullptr);
 
     nsCOMPtr<EventTarget> target = do_QueryInterface(mTextCtrlElement);
-    nsEventListenerManager* manager = target->GetExistingListenerManager();
+    nsEventListenerManager* manager =
+      target->GetListenerManager(false);
     if (manager) {
       manager->RemoveEventListenerByType(mTextListener,
         NS_LITERAL_STRING("keydown"),
@@ -1969,7 +1970,7 @@ nsTextEditorState::InitializeKeyboardEventListeners()
 {
   //register key listeners
   nsCOMPtr<EventTarget> target = do_QueryInterface(mTextCtrlElement);
-  nsEventListenerManager* manager = target->GetOrCreateListenerManager();
+  nsEventListenerManager* manager = target->GetListenerManager(true);
   if (manager) {
     manager->AddEventListenerByType(mTextListener,
                                     NS_LITERAL_STRING("keydown"),
