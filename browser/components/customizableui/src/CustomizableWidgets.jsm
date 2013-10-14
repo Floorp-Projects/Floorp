@@ -12,6 +12,8 @@ Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "PlacesUtils",
   "resource://gre/modules/PlacesUtils.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "RecentlyClosedTabsAndWindowsMenuUtils",
+  "resource:///modules/sessionstore/RecentlyClosedTabsAndWindowsMenuUtils.jsm");
 XPCOMUtils.defineLazyServiceGetter(this, "CharsetManager",
                                    "@mozilla.org/charset-converter-manager;1",
                                    "nsICharsetConverterManager");
@@ -95,6 +97,26 @@ const CustomizableWidgets = [{
           LOG("History view is being shown!");
         },
       });
+
+      let recentlyClosedTabs = doc.getElementById("PanelUI-recentlyClosedTabs");
+      while (recentlyClosedTabs.firstChild) {
+        recentlyClosedTabs.removeChild(recentlyClosedTabs.firstChild);
+      }
+
+      let recentlyClosedWindows = doc.getElementById("PanelUI-recentlyClosedWindows");
+      while (recentlyClosedWindows.firstChild) {
+        recentlyClosedWindows.removeChild(recentlyClosedWindows.firstChild);
+      }
+
+      let tabsFragment = RecentlyClosedTabsAndWindowsMenuUtils.getTabsFragment(doc.defaultView, "toolbarbutton");
+      let separator = doc.getElementById("PanelUI-recentlyClosedTabs-separator");
+      separator.hidden = !tabsFragment.childElementCount;
+      recentlyClosedTabs.appendChild(tabsFragment);
+
+      let windowsFragment = RecentlyClosedTabsAndWindowsMenuUtils.getWindowsFragment(doc.defaultView, "toolbarbutton");
+      separator = doc.getElementById("PanelUI-recentlyClosedWindows-separator");
+      separator.hidden = !windowsFragment.childElementCount;
+      recentlyClosedWindows.appendChild(windowsFragment);
     },
     onViewHiding: function(aEvent) {
       LOG("History view is being hidden!");
