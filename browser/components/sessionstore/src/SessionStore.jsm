@@ -140,7 +140,7 @@ function debug(aMsg) {
 
 this.SessionStore = {
   get promiseInitialized() {
-    return SessionStoreInternal.promiseInitialized;
+    return SessionStoreInternal.promiseInitialized.promise;
   },
 
   get canRestoreLastSession() {
@@ -152,7 +152,7 @@ this.SessionStore = {
   },
 
   init: function ss_init(aWindow) {
-    SessionStoreInternal.init(aWindow);
+    return SessionStoreInternal.init(aWindow);
   },
 
   getBrowserState: function ss_getBrowserState() {
@@ -330,7 +330,7 @@ let SessionStoreInternal = {
   _deferredInitialState: null,
 
   // A promise resolved once initialization is complete
-  _deferredInitialized: Promise.defer(),
+  _promiseInitialization: Promise.defer(),
 
   // Whether session has been initialized
   _sessionInitialized: false,
@@ -343,7 +343,7 @@ let SessionStoreInternal = {
    * A promise fulfilled once initialization is complete.
    */
   get promiseInitialized() {
-    return this._deferredInitialized.promise;
+    return this._promiseInitialization;
   },
 
   /* ........ Public Getters .............. */
@@ -358,44 +358,31 @@ let SessionStoreInternal = {
     this._lastSessionState = null;
   },
 
+  /* ........ Global Event Handlers .............. */
+
   /**
-   * Initialize the sessionstore service.
+   * Initialize the component
    */
-  init: function (aWindow) {
-    if (this._initialized) {
-      throw new Error("SessionStore.init() must only be called once!");
+  initService: function ssi_initService() {
+    if (this._sessionInitialized) {
+      return;
     }
-
-    if (!aWindow) {
-      throw new Error("SessionStore.init() must be called with a valid window.");
-    }
-
     TelemetryTimestamps.add("sessionRestoreInitialized");
     OBSERVING.forEach(function(aTopic) {
       Services.obs.addObserver(this, aTopic, true);
     }, this);
 
     this._initPrefs();
-    this._initialized = true;
+
     this._disabledForMultiProcess = this._prefBranch.getBoolPref("tabs.remote");
 
     // this pref is only read at startup, so no need to observe it
     this._sessionhistory_max_entries =
       this._prefBranch.getIntPref("sessionhistory.max_entries");
 
-    // Wait until nsISessionStartup has finished reading the session data.
-    gSessionStartup.onceInitialized.then(() => {
-      // Parse session data and start restoring.
-      this.initSession();
-
-      // Start tracking the given (initial) browser window.
-      if (!aWindow.closed) {
-        this.onLoad(aWindow);
-      }
-
-      // Let everyone know we're done.
-      this._deferredInitialized.resolve();
-    });
+    gSessionStartup.onceInitialized.then(
+      this.initSession.bind(this)
+    );
   },
 
   initSession: function ssi_initSession() {
@@ -485,6 +472,7 @@ let SessionStoreInternal = {
     this._performUpgradeBackup();
 
     this._sessionInitialized = true;
+    this._promiseInitialization.resolve();
   },
 
   /**
@@ -558,18 +546,35 @@ let SessionStoreInternal = {
   },
 
   /**
+   * Start tracking a window.
+   *
+   * This function also initializes the component if it is not
+   * initialized yet.
+   */
+  init: function ssi_init(aWindow) {
+    if (!aWindow) {
+      throw new Error("init() must be called with a valid window.");
+    }
+
+    let self = this;
+    this.initService();
+    return this._promiseInitialization.promise.then(
+      function onSuccess() {
+        if (!aWindow.closed) {
+          self.onLoad(aWindow);
+        }
+      }
+    );
+  },
+
+  /**
    * Called on application shutdown, after notifications:
    * quit-application-granted, quit-application
    */
   _uninit: function ssi_uninit() {
-    if (!this._initialized) {
-      throw new Error("SessionStore is not initialized.");
-    }
-
     // save all data for session resuming
-    if (this._sessionInitialized) {
+    if (this._sessionInitialized)
       this.saveState(true);
-    }
 
     // clear out priority queue in case it's still holding refs
     TabRestoreQueue.reset();

@@ -17,6 +17,7 @@ function resetSocial() {
 }
 
 let createdWindows = [];
+let ss = Cc["@mozilla.org/browser/sessionstore;1"].getService(Ci.nsISessionStore);
 
 function openWindowAndWaitForInit(callback) {
   // this notification tells us SocialUI.init() has been run...
@@ -26,7 +27,12 @@ function openWindowAndWaitForInit(callback) {
   Services.obs.addObserver(function providerSet(subject, topic, data) {
     Services.obs.removeObserver(providerSet, topic);
     info(topic + " observer was notified - continuing test");
-    executeSoon(() => callback(w));
+    // We need to wait for the SessionStore as well, since
+    // SocialUI.init() is also waiting on it.
+    ss.init(w).then(function () {
+      executeSoon(function() {callback(w);});
+    });
+
   }, topic, false);
 }
 
