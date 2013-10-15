@@ -414,6 +414,24 @@ toolbarbutton.panel-multiview-anchor {
   border-bottom-left-radius: 2px;
 }
 
+#widget-overflow > .panel-arrowcontainer > .panel-arrowcontent {
+  padding: 0;
+}
+
+#widget-overflow-scroller {
+  max-height: 30em;
+  overflow-y: auto;
+  overflow-x: hidden;
+  margin-top: 10px;
+  margin-bottom: 10px;
+}
+
+#widget-overflow-list {
+  width: @menuPanelWidth@;
+  padding-left: 10px;
+  padding-right: 10px;
+}
+
 #widget-overflow-list > .overflowedItem {
   width: 100%;
   max-width: @menuPanelWidth@;
