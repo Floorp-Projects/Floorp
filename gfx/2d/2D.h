@@ -639,6 +639,19 @@ public:
                            const IntPoint &aDestination) = 0;
 
   /*
+   * Same as CopySurface, except uses itself as the source.
+   *
+   * Some backends may be able to optimize this better
+   * than just taking a snapshot and using CopySurface.
+   */
+  virtual void CopyRect(const IntRect &aSourceRect,
+                        const IntPoint &aDestination)
+  {
+    RefPtr<SourceSurface> source = Snapshot();
+    CopySurface(source, aSourceRect, aDestination);
+  }
+
+  /*
    * Fill a rectangle on the DrawTarget with a certain source pattern.
    *
    * aRect Rectangle that forms the mask of this filling operation
