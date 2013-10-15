@@ -598,14 +598,8 @@ BasicLayerManager::EndTransactionInternal(DrawThebesLayerCallback aCallback,
 
   if (mTarget && mRoot && !(aFlags & END_NO_IMMEDIATE_REDRAW)) {
     nsIntRect clipRect;
-    if (HasShadowManager()) {
-      // If this has a shadow manager, the clip extents of mTarget are meaningless.
-      // So instead just use the root layer's visible region bounds.
-      const nsIntRect& bounds = mRoot->GetVisibleRegion().GetBounds();
-      gfxRect deviceRect =
-          mTarget->UserToDevice(gfxRect(bounds.x, bounds.y, bounds.width, bounds.height));
-      clipRect = ToOutsideIntRect(deviceRect);
-    } else {
+
+    {
       gfxContextMatrixAutoSaveRestore save(mTarget);
       mTarget->SetMatrix(gfxMatrix());
       clipRect = ToOutsideIntRect(mTarget->GetClipExtents());
@@ -854,14 +848,6 @@ BasicLayerManager::PaintSelfOrChildren(PaintLayerContext& aPaintContext,
 {
   BasicImplData* data = ToData(aPaintContext.mLayer);
 
-  if (aPaintContext.mLayer->GetFirstChild() &&
-      aPaintContext.mLayer->GetMaskLayer() &&
-      HasShadowManager()) {
-    // 'paint' the mask so that it gets sent to the shadow layer tree
-    static_cast<BasicImplData*>(aPaintContext.mLayer->GetMaskLayer()->ImplData())
-      ->Paint(nullptr, nullptr);
-  }
-
   /* Only paint ourself, or our children - This optimization relies on this! */
   Layer* child = aPaintContext.mLayer->GetFirstChild();
   if (!child) {
@@ -910,7 +896,7 @@ BasicLayerManager::FlushGroup(PaintLayerContext& aPaintContext, bool aNeedsClipT
     BasicContainerLayer* container = static_cast<BasicContainerLayer*>(aPaintContext.mLayer);
     AutoSetOperator setOperator(aPaintContext.mTarget, container->GetOperator());
     PaintWithMask(aPaintContext.mTarget, aPaintContext.mLayer->GetEffectiveOpacity(),
-                  HasShadowManager() ? nullptr : aPaintContext.mLayer->GetMaskLayer());
+                  aPaintContext.mLayer->GetMaskLayer());
   }
 }
 

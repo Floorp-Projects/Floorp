@@ -100,10 +100,6 @@ BasicThebesLayer::PaintThebes(gfxContext* aContext,
   if (aReadback && UsedForReadback()) {
     aReadback->GetThebesLayerUpdates(this, &readbackUpdates);
   }
-  //TODO: This is going to copy back pixels that we might end up
-  // drawing over anyway. It would be nice if we could avoid
-  // this duplication.
-  mContentClient->SyncFrontBufferToBackBuffer();
 
   bool canUseOpaqueSurface = CanUseOpaqueSurface();
   ContentType contentType =
