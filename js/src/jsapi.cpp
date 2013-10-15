@@ -1553,6 +1553,7 @@ JS_ResolveStandardClass(JSContext *cx, HandleObject obj, HandleId id, bool *reso
     AssertHeapIsIdle(cx);
     CHECK_REQUEST(cx);
     assertSameCompartment(cx, obj, id);
+    JS_ASSERT(obj->is<GlobalObject>());
     *resolved = false;
 
     rt = cx->runtime();
@@ -1622,11 +1623,10 @@ JS_ResolveStandardClass(JSContext *cx, HandleObject obj, HandleId id, bool *reso
          * If this standard class is anonymous, then we don't want to resolve
          * by name.
          */
-        JS_ASSERT(obj->is<GlobalObject>());
         if (stdnm->clasp->flags & JSCLASS_IS_ANONYMOUS)
             return true;
 
-        if (IsStandardClassResolved(obj, stdnm->clasp))
+        if (obj->as<GlobalObject>().isStandardClassResolved(stdnm->clasp))
             return true;
 
         if (!stdnm->init(cx, obj))
@@ -1642,6 +1642,7 @@ JS_EnumerateStandardClasses(JSContext *cx, HandleObject obj)
     AssertHeapIsIdle(cx);
     CHECK_REQUEST(cx);
     assertSameCompartment(cx, obj);
+    MOZ_ASSERT(obj->is<GlobalObject>());
 
     /*
      * Check whether we need to bind 'undefined' and define it if so.
@@ -1659,7 +1660,7 @@ JS_EnumerateStandardClasses(JSContext *cx, HandleObject obj)
     /* Initialize any classes that have not been initialized yet. */
     for (unsigned i = 0; standard_class_atoms[i].init; i++) {
         const JSStdName &stdnm = standard_class_atoms[i];
-        if (!js::IsStandardClassResolved(obj, stdnm.clasp)) {
+        if (!obj->as<GlobalObject>().isStandardClassResolved(stdnm.clasp)) {
             if (!stdnm.init(cx, obj))
                 return false;
         }

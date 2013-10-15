@@ -3,7 +3,7 @@
 # You can obtain one at http://mozilla.org/MPL/2.0/.
 
 from marionette_test import MarionetteTestCase
-from errors import JavascriptException, MarionetteException, ScriptTimeoutException
+from marionette import JavascriptException, MarionetteException, ScriptTimeoutException
 
 class SimpletestSanityTest(MarionetteTestCase):
 

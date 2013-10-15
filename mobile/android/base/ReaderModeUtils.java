@@ -62,13 +62,12 @@ public class ReaderModeUtils {
         return urlFromAboutReader.equals(currentUrl);
     }
 
-    public static String getAboutReaderForUrl(String url, boolean inReadingList) {
-        return getAboutReaderForUrl(url, -1, inReadingList);
+    public static String getAboutReaderForUrl(String url) {
+        return getAboutReaderForUrl(url, -1);
     }
 
-    public static String getAboutReaderForUrl(String url, int tabId, boolean inReadingList) {
-        String aboutReaderUrl = "about:reader?url=" + Uri.encode(url) +
-                                "&readingList=" + (inReadingList ? 1 : 0);
+    public static String getAboutReaderForUrl(String url, int tabId) {
+        String aboutReaderUrl = "about:reader?url=" + Uri.encode(url);
 
         if (tabId >= 0)
             aboutReaderUrl += "&tabId=" + tabId;

@@ -211,17 +211,10 @@ static const cc_media_cap_table_t *gsmsdp_get_media_capability (fsmdef_dcb_t *dc
  * Process a single constraint for one media capablity
  */
 void gsmsdp_process_cap_constraint(cc_media_cap_t *cap,
-                                   const char *constraint) {
-  /* Check constraint string for values "TRUE" or "FALSE"
-     (currently set in PeerConnectionImpl.cpp, with only
-     two possible hardcoded values).
-     TODO -- The values that constraints can take are
-     fairly narrow and enumerated; they should probably
-     use an enumeration rather than a string. See bug 811360.
-  */
-  if (constraint[0] == 'F') {
+                                   cc_boolean constraint) {
+  if (!constraint) {
     cap->support_direction &= ~SDP_DIRECTION_FLAG_RECV;
-  } else if (constraint[0] == 'T') {
+  } else {
     cap->support_direction |= SDP_DIRECTION_FLAG_RECV;
     cap->enabled = TRUE;
   }
@@ -233,23 +226,18 @@ void gsmsdp_process_cap_constraint(cc_media_cap_t *cap,
  */
 void gsmsdp_process_cap_constraints(fsmdef_dcb_t *dcb,
                                     cc_media_constraints_t* constraints) {
-  int i = 0;
-
-  for (i=0; i<constraints->constraint_count; i++) {
-    if (strcmp(constraints_table[OfferToReceiveAudio].name,
-               constraints->constraints[i]->name) == 0) {
-      gsmsdp_process_cap_constraint(&dcb->media_cap_tbl->cap[CC_AUDIO_1],
-                                    constraints->constraints[i]->value);
-    } else if (strcmp(constraints_table[OfferToReceiveVideo].name,
-               constraints->constraints[i]->name) == 0) {
-      gsmsdp_process_cap_constraint(&dcb->media_cap_tbl->cap[CC_VIDEO_1],
-                                    constraints->constraints[i]->value);
-    } else if (strcmp(constraints_table[MozDontOfferDataChannel].name,
-               constraints->constraints[i]->name) == 0) {
-      /* Hack to suppress data channel */
-      if (constraints->constraints[i]->value[0] == 'T') {
-        dcb->media_cap_tbl->cap[CC_DATACHANNEL_1].enabled = FALSE;
-      }
+  if (constraints->offer_to_receive_audio.was_passed) {
+    gsmsdp_process_cap_constraint(&dcb->media_cap_tbl->cap[CC_AUDIO_1],
+                                  constraints->offer_to_receive_audio.value);
+  }
+  if (constraints->offer_to_receive_video.was_passed) {
+    gsmsdp_process_cap_constraint(&dcb->media_cap_tbl->cap[CC_VIDEO_1],
+                                  constraints->offer_to_receive_video.value);
+  }
+  if (constraints->moz_dont_offer_datachannel.was_passed) {
+    /* Hack to suppress data channel */
+    if (constraints->moz_dont_offer_datachannel.value) {
+      dcb->media_cap_tbl->cap[CC_DATACHANNEL_1].enabled = FALSE;
     }
   }
 }

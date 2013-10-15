@@ -76,6 +76,8 @@ LOCAL_INCLUDES += -I$(topsrcdir)/js/xpconnect/src \
   -I$(topsrcdir)/content/canvas/src \
   -I$(topsrcdir)/content/html/content/src \
   -I$(topsrcdir)/media/webrtc/signaling/src/peerconnection \
+  -I$(topsrcdir)/media/webrtc/signaling/src/common/time_profiling \
+  -I$(topsrcdir)/media/mtransport \
   -I$(topsrcdir)/dom/base \
   -I$(topsrcdir)/dom/battery \
   -I$(topsrcdir)/dom/indexedDB \

@@ -211,8 +211,8 @@ int nr_ice_peer_peer_rflx_candidate_create(nr_ice_ctx *ctx,char *label, nr_ice_c
     cand->stream=comp->stream;
 
 
-    r_log(LOG_ICE,LOG_DEBUG,"ICE(%s): creating candidate %s with type %d",
-      ctx->label,label,ctype);
+    r_log(LOG_ICE,LOG_DEBUG,"ICE(%s)/CAND(%s): creating candidate with type %s",
+      ctx->label,label,nr_ctype_name(ctype));
 
     if(r=nr_transport_addr_copy(&cand->base,addr))
       ABORT(r);
@@ -663,7 +663,7 @@ static void nr_ice_srvrflx_stun_finished_cb(NR_SOCKET sock, int how, void *cb_ar
     int _status;
     nr_ice_candidate *cand=cb_arg;
 
-    r_log(LOG_ICE,LOG_DEBUG,"ICE(%s): %s for %s",cand->ctx->label,__FUNCTION__,cand->label);
+    r_log(LOG_ICE,LOG_DEBUG,"ICE(%s)/CAND(%s): %s",cand->ctx->label,cand->label,__FUNCTION__);
 
     /* Deregister to suppress duplicates */
     if(cand->u.srvrflx.stun_handle){ /* This test because we might have failed before CB registered */
@@ -716,7 +716,7 @@ static void nr_ice_turn_allocated_cb(NR_SOCKET s, int how, void *cb_arg)
                                relay_addr.as_string,")",NULL))
           ABORT(r);
 
-        r_log(LOG_ICE,LOG_DEBUG,"ICE(%s): Switching from TURN (%s) to RELAY (%s)",cand->u.relayed.turn->label,cand->label,label);
+        r_log(LOG_ICE,LOG_DEBUG,"TURN-CLIENT(%s)/CAND(%s): Switching from TURN to RELAY (%s)",cand->u.relayed.turn->label,cand->label,label);
 
         /* Copy the relayed address into the candidate addr and
            into the candidate base. Note that we need to keep the
@@ -726,7 +726,7 @@ static void nr_ice_turn_allocated_cb(NR_SOCKET s, int how, void *cb_arg)
         if (r=nr_transport_addr_copy_keep_ifname(&cand->base, &relay_addr))  /* Need to keep interface for priority calculation */
           ABORT(r);
 
-        r_log(LOG_ICE,LOG_DEBUG,"ICE-CANDIDATE(%s): base=%s, candidate=%s", cand->label, cand->base.as_string, cand->addr.as_string);
+        r_log(LOG_ICE,LOG_DEBUG,"ICE(%s)/CAND(%s): new relay base=%s addr=%s", cand->ctx->label, cand->label, cand->base.as_string, cand->addr.as_string);
 
         RFREE(cand->label);
         cand->label=label;

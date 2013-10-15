@@ -1557,7 +1557,7 @@ js_NewGenerator(JSContext *cx, const FrameRegs &stackRegs)
         RootedObject fun(cx, stackfp->fun());
         // FIXME: This would be faster if we could avoid doing a lookup to get
         // the prototype for the instance.  Bug 906600.
-        if (!JSObject::getProperty(cx, fun, fun, cx->names().classPrototype, &pval))
+        if (!JSObject::getProperty(cx, fun, fun, cx->names().prototype, &pval))
             return nullptr;
         JSObject *proto = pval.isObject() ? &pval.toObject() : nullptr;
         if (!proto) {
@@ -1949,8 +1949,8 @@ GlobalObject::initIteratorClasses(JSContext *cx, Handle<GlobalObject *> global)
             return false;
 
         global->setSlot(STAR_GENERATOR_OBJECT_PROTO, ObjectValue(*genObjectProto));
-        global->setSlot(JSProto_GeneratorFunction, ObjectValue(*genFunction));
-        global->setSlot(JSProto_GeneratorFunction + JSProto_LIMIT, ObjectValue(*genFunctionProto));
+        global->setConstructor(JSProto_GeneratorFunction, ObjectValue(*genFunction));
+        global->setPrototype(JSProto_GeneratorFunction, ObjectValue(*genFunctionProto));
     }
 
     if (global->getPrototype(JSProto_StopIteration).isUndefined()) {
@@ -1962,7 +1962,7 @@ GlobalObject::initIteratorClasses(JSContext *cx, Handle<GlobalObject *> global)
         if (!DefineConstructorAndPrototype(cx, global, JSProto_StopIteration, proto, proto))
             return false;
 
-        MarkStandardClassInitializedNoProto(global, &StopIterationObject::class_);
+        global->markStandardClassInitializedNoProto(&StopIterationObject::class_);
     }
 
     return true;

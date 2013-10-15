@@ -6,7 +6,7 @@
 #ifndef MOZILLA_SVGMOTIONSMILANIMATIONFUNCTION_H_
 #define MOZILLA_SVGMOTIONSMILANIMATIONFUNCTION_H_
 
-#include "gfxPath.h"  // for gfxFlattenedPath
+#include "gfxPath.h"  // for gfxPath
 #include "nsAutoPtr.h"
 #include "nsSMILAnimationFunction.h"
 #include "nsTArray.h"
@@ -78,7 +78,7 @@ protected:
   void     RebuildPathAndVerticesFromMpathElem(dom::SVGMPathElement* aMpathElem);
   void     RebuildPathAndVerticesFromPathAttr();
   void     RebuildPathAndVerticesFromBasicAttrs(const nsIContent* aContextElem);
-  bool     GenerateValuesForPathAndPoints(gfxFlattenedPath* aPath,
+  bool     GenerateValuesForPathAndPoints(gfxPath* aPath,
                                           bool aIsKeyPoints,
                                           nsTArray<double>& aPointDistances,
                                           nsTArray<nsSMILValue>& aResult);
@@ -90,8 +90,8 @@ protected:
   RotateType                 mRotateType;  // auto, auto-reverse, or explicit.
   float                      mRotateAngle; // the angle value, if explicit.
 
-  PathSourceType             mPathSourceType; // source of our gfxFlattenedPath.
-  nsRefPtr<gfxFlattenedPath> mPath;           // representation of motion path.
+  PathSourceType             mPathSourceType; // source of our gfxPath.
+  nsRefPtr<gfxPath> mPath;           // representation of motion path.
   nsTArray<double>           mPathVertices; // distances of vertices along path.
 
   bool                       mIsPathStale;

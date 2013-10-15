@@ -657,17 +657,13 @@ ThebesLayerBuffer::BeginPaint(ThebesLayer* aLayer, ContentType aContentType,
           nsIntPoint dest = mBufferRect.TopLeft() - destBufferRect.TopLeft();
           if (IsAzureBuffer()) {
             MOZ_ASSERT(mDTBuffer);
-            RefPtr<SourceSurface> source = mDTBuffer->Snapshot();
-            mDTBuffer->CopySurface(source,
-                                   IntRect(srcRect.x, srcRect.y, srcRect.width, srcRect.height),
-                                   IntPoint(dest.x, dest.y));
+            mDTBuffer->CopyRect(IntRect(srcRect.x, srcRect.y, srcRect.width, srcRect.height),
+                                IntPoint(dest.x, dest.y));
             if (mode == Layer::SURFACE_COMPONENT_ALPHA) {
               EnsureBufferOnWhite();
               MOZ_ASSERT(mDTBufferOnWhite);
-              RefPtr<SourceSurface> sourceOnWhite = mDTBufferOnWhite->Snapshot();
-              mDTBufferOnWhite->CopySurface(sourceOnWhite,
-                                            IntRect(srcRect.x, srcRect.y, srcRect.width, srcRect.height),
-                                            IntPoint(dest.x, dest.y));
+              mDTBufferOnWhite->CopyRect(IntRect(srcRect.x, srcRect.y, srcRect.width, srcRect.height),
+                                         IntPoint(dest.x, dest.y));
             }
           } else {
             MOZ_ASSERT(mBuffer);

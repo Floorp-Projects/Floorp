@@ -27,6 +27,26 @@ class PeerConnectionCtxShutdown;
 
 namespace sipcc {
 
+using namespace mozilla;
+
+// Unit-test helper, because cc_media_constraints_t is hard to forward-declare
+
+class MediaConstraintsExternal {
+public:
+  MediaConstraintsExternal(cc_media_constraints_t *aConstraints)
+  : mConstraints(aConstraints) {}
+  cc_media_constraints_t *mConstraints;
+};
+
+class OnCallEventArgs {
+public:
+  OnCallEventArgs(ccapi_call_event_e aCallEvent, CSF::CC_CallInfoPtr aInfo)
+  : mCallEvent(aCallEvent), mInfo(aInfo) {}
+
+  ccapi_call_event_e mCallEvent;
+  CSF::CC_CallInfoPtr mInfo;
+};
+
 // A class to hold some of the singleton objects we need:
 // * The global PeerConnectionImpl table and its associated lock.
 // * Currently SIPCC only allows a single stack instance to exist in a process
@@ -48,7 +68,7 @@ class PeerConnectionCtx : public CSF::CC_Observer {
   // Create a SIPCC Call
   CSF::CC_CallPtr createCall();
 
-  PeerConnectionImpl::SipccState sipcc_state() { return mSipccState; }
+  mozilla::dom::PCImplSipccState sipcc_state() { return mSipccState; }
 
   // Make these classes friend so that they can access mPeerconnections.
   friend class PeerConnectionImpl;
@@ -58,7 +78,7 @@ class PeerConnectionCtx : public CSF::CC_Observer {
   // We could make these available only via accessors but it's too much trouble.
   std::map<const std::string, PeerConnectionImpl *> mPeerConnections;
 
-  PeerConnectionCtx() :  mSipccState(PeerConnectionImpl::kIdle),
+  PeerConnectionCtx() :  mSipccState(mozilla::dom::PCImplSipccState::Idle),
                          mCCM(NULL), mDevice(NULL) {}
   // This is a singleton, so don't copy construct it, etc.
   PeerConnectionCtx(const PeerConnectionCtx& other) MOZ_DELETE;
@@ -68,7 +88,7 @@ class PeerConnectionCtx : public CSF::CC_Observer {
   nsresult Initialize();
   nsresult Cleanup();
 
-  void ChangeSipccState(PeerConnectionImpl::SipccState aState) {
+  void ChangeSipccState(mozilla::dom::PCImplSipccState aState) {
     mSipccState = aState;
   }
 
@@ -76,7 +96,7 @@ class PeerConnectionCtx : public CSF::CC_Observer {
   int mConnectionCounter;
 
   // SIPCC objects
-  PeerConnectionImpl::SipccState mSipccState;  // TODO(ekr@rtfm.com): refactor this out? What does it do?
+  mozilla::dom::PCImplSipccState mSipccState;  // TODO(ekr@rtfm.com): refactor this out? What does it do?
   CSF::CallControlManagerPtr mCCM;
   CSF::CC_DevicePtr mDevice;
 

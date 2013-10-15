@@ -48,6 +48,7 @@ const ROLE_TABLE = Ci.nsIAccessibleRole.ROLE_TABLE;
 const ROLE_INTERNAL_FRAME = Ci.nsIAccessibleRole.ROLE_INTERNAL_FRAME;
 const ROLE_PARAGRAPH = Ci.nsIAccessibleRole.ROLE_PARAGRAPH;
 const ROLE_SECTION = Ci.nsIAccessibleRole.ROLE_SECTION;
+const ROLE_LABEL = Ci.nsIAccessibleRole.ROLE_LABEL;
 
 this.EXPORTED_SYMBOLS = ['TraversalRules'];
 
@@ -57,8 +58,12 @@ Cu.import('resource://gre/modules/XPCOMUtils.jsm');
 let gSkipEmptyImages = new PrefCache('accessibility.accessfu.skip_empty_images');
 
 function BaseTraversalRule(aRoles, aMatchFunc) {
+  this._explicitMatchRoles = new Set(aRoles);
   this._matchRoles = aRoles;
-  this._matchFunc = aMatchFunc;
+  if (aRoles.indexOf(ROLE_LABEL) < 0) {
+    this._matchRoles.push(ROLE_LABEL);
+  }
+  this._matchFunc = aMatchFunc || function (acc) { return FILTER_MATCH; };
 }
 
 BaseTraversalRule.prototype = {
@@ -73,15 +78,25 @@ BaseTraversalRule.prototype = {
 
     match: function BaseTraversalRule_match(aAccessible)
     {
-      if (aAccessible.role == ROLE_INTERNAL_FRAME) {
+      let role = aAccessible.role;
+      if (role == ROLE_INTERNAL_FRAME) {
         return (Utils.getMessageManager(aAccessible.DOMNode)) ?
           FILTER_MATCH  | FILTER_IGNORE_SUBTREE : FILTER_IGNORE;
       }
 
-      if (this._matchFunc)
-        return this._matchFunc(aAccessible);
+      let matchResult = this._explicitMatchRoles.has(role) ?
+          this._matchFunc(aAccessible) : FILTER_IGNORE;
 
-      return FILTER_MATCH;
+      // If we are on a label that nests a checkbox/radio we should land on it.
+      // It is a bigger touch target, and it reduces clutter.
+      if (role == ROLE_LABEL && !(matchResult & FILTER_IGNORE_SUBTREE)) {
+        let control = Utils.getEmbeddedControl(aAccessible);
+        if (control && this._explicitMatchRoles.has(control.role)) {
+          matchResult = this._matchFunc(control) | FILTER_IGNORE_SUBTREE;
+        }
+      }
+
+      return matchResult;
     },
 
     QueryInterface: XPCOMUtils.generateQI([Ci.nsIAccessibleTraversalRule])

@@ -33,6 +33,7 @@ let AboutReader = function(doc, win) {
   Services.obs.addObserver(this, "Reader:Remove", false);
   Services.obs.addObserver(this, "Reader:ListCountReturn", false);
   Services.obs.addObserver(this, "Reader:ListCountUpdated", false);
+  Services.obs.addObserver(this, "Reader:ListStatusReturn", false);
 
   this._article = null;
 
@@ -119,11 +120,12 @@ let AboutReader = function(doc, win) {
   dump("Decoding query arguments");
   let queryArgs = this._decodeQueryString(win.location.href);
 
-  this._isReadingListItem = (queryArgs.readingList == "1");
+  // Track status of reader toolbar add/remove toggle button
+  this._isReadingListItem = -1;
   this._updateToggleButton();
 
   // Track status of reader toolbar list button
-  this._readingListCount = 0;
+  this._readingListCount = -1;
   this._updateListButton();
   this._requestReadingListCount();
 
@@ -192,8 +194,8 @@ AboutReader.prototype = {
       case "Reader:Add": {
         let args = JSON.parse(aData);
         if (args.url == this._article.url) {
-          if (!this._isReadingListItem) {
-            this._isReadingListItem = true;
+          if (this._isReadingListItem != 1) {
+            this._isReadingListItem = 1;
             this._updateToggleButton();
           }
         }
@@ -202,8 +204,8 @@ AboutReader.prototype = {
 
       case "Reader:Remove": {
         if (aData == this._article.url) {
-          if (this._isReadingListItem) {
-            this._isReadingListItem = false;
+          if (this._isReadingListItem != 0) {
+            this._isReadingListItem = 0;
             this._updateToggleButton();
           }
         }
@@ -211,11 +213,39 @@ AboutReader.prototype = {
       }
 
       case "Reader:ListCountReturn":
-      case "Reader:ListCountUpdated":  {
+      case "Reader:ListCountUpdated": {
         let count = parseInt(aData);
         if (this._readingListCount != count) {
+          let isInitialStateChange = (this._readingListCount == -1);
           this._readingListCount = count;
           this._updateListButton();
+
+          // Display the toolbar when all its initial component states are known
+          if (isInitialStateChange) {
+            this._setToolbarVisibility(true);
+          }
+
+          // Initial readinglist count is requested before any page is displayed
+          if (this._article) {
+            this._requestReadingListStatus();
+          }
+        }
+        break;
+      }
+
+      case "Reader:ListStatusReturn": {
+        let args = JSON.parse(aData);
+        if (args.url == this._article.url) {
+          if (this._isReadingListItem != args.inReadingList) {
+            let isInitialStateChange = (this._isReadingListItem == -1);
+            this._isReadingListItem = args.inReadingList;
+            this._updateToggleButton();
+
+            // Display the toolbar when all its initial component states are known
+            if (isInitialStateChange) {
+              this._setToolbarVisibility(true);
+            }
+          }
         }
         break;
       }
@@ -257,6 +287,7 @@ AboutReader.prototype = {
         Services.obs.removeObserver(this, "Reader:Remove");
         Services.obs.removeObserver(this, "Reader:ListCountReturn");
         Services.obs.removeObserver(this, "Reader:ListCountUpdated");
+        Services.obs.removeObserver(this, "Reader:ListStatusReturn");
         break;
     }
   },
@@ -264,7 +295,7 @@ AboutReader.prototype = {
   _updateToggleButton: function Reader_updateToggleButton() {
     let classes = this._doc.getElementById("toggle-button").classList;
 
-    if (this._isReadingListItem) {
+    if (this._isReadingListItem == 1) {
       classes.add("on");
     } else {
       classes.remove("on");
@@ -285,14 +316,21 @@ AboutReader.prototype = {
     gChromeWin.sendMessageToJava({ type: "Reader:ListCountRequest" });
   },
 
+  _requestReadingListStatus: function Reader_requestReadingListStatus() {
+    gChromeWin.sendMessageToJava({
+      type: "Reader:ListStatusRequest",
+      url: this._article.url
+    });
+  },
+
   _onReaderToggle: function Reader_onToggle() {
     if (!this._article)
       return;
 
-    this._isReadingListItem = !this._isReadingListItem;
+    this._isReadingListItem = (this._isReadingListItem == 1) ? 0 : 1;
     this._updateToggleButton();
 
-    if (this._isReadingListItem) {
+    if (this._isReadingListItem == 1) {
       gChromeWin.Reader.storeArticleInCache(this._article, function(success) {
         dump("Reader:Add (in reader) success=" + success);
 
@@ -324,7 +362,7 @@ AboutReader.prototype = {
   },
 
   _onList: function Reader_onList() {
-    if (!this._article || this._readingListCount == 0)
+    if (!this._article || this._readingListCount < 1)
       return;
 
     gChromeWin.sendMessageToJava({ type: "Reader:GoToReadingList" });
@@ -453,6 +491,10 @@ AboutReader.prototype = {
       win.history.back();
 
     if (!this._toolbarEnabled)
+      return;
+
+    // Don't allow visible toolbar until banner state is known
+    if (this._readingListCount == -1 || this._isReadingListItem == -1)
       return;
 
     if (this._getToolbarVisibility() === visible)
@@ -622,6 +664,7 @@ AboutReader.prototype = {
     this._maybeSetTextDirection(article);
 
     this._contentElement.style.display = "block";
+    this._requestReadingListStatus();
 
     this._toolbarEnabled = true;
     this._setToolbarVisibility(true);

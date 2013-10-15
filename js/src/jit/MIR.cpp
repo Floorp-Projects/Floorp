@@ -2780,12 +2780,12 @@ PropertyReadNeedsTypeBarrier(JSContext *cx, types::CompilerConstraintList *const
     // which are accounted for by type information, i.e. native data properties
     // and elements.
 
-    if (object->unknownProperties())
+    if (object->unknownProperties() || observed->empty())
         return true;
 
     jsid id = name ? NameToId(name) : JSID_VOID;
     types::HeapTypeSetKey property = object->property(id);
-    if (!TypeSetIncludes(observed, MIRType_Value, property.actualTypes))
+    if (property.maybeTypes() && !TypeSetIncludes(observed, MIRType_Value, property.maybeTypes()))
         return true;
 
     // Type information for singleton objects is not required to reflect the
@@ -2807,7 +2807,8 @@ PropertyReadNeedsTypeBarrier(JSContext *cx, types::CompilerConstraintList *const
 }
 
 bool
-jit::PropertyReadNeedsTypeBarrier(JSContext *cx, types::CompilerConstraintList *constraints,
+jit::PropertyReadNeedsTypeBarrier(JSContext *cx, JSContext *propertycx,
+                                  types::CompilerConstraintList *constraints,
                                   types::TypeObjectKey *object, PropertyName *name,
                                   types::StackTypeSet *observed, bool updateObserved)
 {
@@ -2820,11 +2821,18 @@ jit::PropertyReadNeedsTypeBarrier(JSContext *cx, types::CompilerConstraintList *
             if (!obj->isNative())
                 break;
 
-            Value v;
-            if (HasDataProperty(cx, obj, NameToId(name), &v)) {
-                if (v.isUndefined())
-                    break;
-                observed->addType(cx, types::GetValueType(v));
+            types::TypeObjectKey *typeObj = types::TypeObjectKey::get(obj);
+            if (!typeObj->unknownProperties()) {
+                types::HeapTypeSetKey property = typeObj->property(NameToId(name), propertycx);
+                if (property.maybeTypes()) {
+                    types::TypeSet::TypeList types;
+                    if (!property.maybeTypes()->enumerateTypes(&types))
+                        return false;
+                    if (types.length()) {
+                        observed->addType(cx, types[0]);
+                        break;
+                    }
+                }
             }
 
             obj = obj->getProto();
@@ -2835,7 +2843,8 @@ jit::PropertyReadNeedsTypeBarrier(JSContext *cx, types::CompilerConstraintList *
 }
 
 bool
-jit::PropertyReadNeedsTypeBarrier(JSContext *cx, types::CompilerConstraintList *constraints,
+jit::PropertyReadNeedsTypeBarrier(JSContext *cx, JSContext *propertycx,
+                                  types::CompilerConstraintList *constraints,
                                   MDefinition *obj, PropertyName *name,
                                   types::StackTypeSet *observed)
 {
@@ -2850,7 +2859,7 @@ jit::PropertyReadNeedsTypeBarrier(JSContext *cx, types::CompilerConstraintList *
     for (size_t i = 0; i < types->getObjectCount(); i++) {
         types::TypeObjectKey *object = types->getObject(i);
         if (object) {
-            if (PropertyReadNeedsTypeBarrier(cx, constraints, object, name,
+            if (PropertyReadNeedsTypeBarrier(cx, propertycx, constraints, object, name,
                                              observed, updateObserved))
             {
                 return true;
@@ -2983,7 +2992,10 @@ TryAddTypeBarrierForWrite(types::CompilerConstraintList *constraints,
 
         jsid id = name ? NameToId(name) : JSID_VOID;
         types::HeapTypeSetKey property = object->property(id);
-        if (TypeSetIncludes(property.actualTypes, (*pvalue)->type(), (*pvalue)->resultTypeSet()))
+        if (!property.maybeTypes())
+            return false;
+
+        if (TypeSetIncludes(property.maybeTypes(), (*pvalue)->type(), (*pvalue)->resultTypeSet()))
             return false;
 
         // This freeze is not required for correctness, but ensures that we
@@ -2994,8 +3006,8 @@ TryAddTypeBarrierForWrite(types::CompilerConstraintList *constraints,
         if (aggregateProperty.empty()) {
             aggregateProperty.construct(property);
         } else {
-            if (!aggregateProperty.ref().actualTypes->isSubset(property.actualTypes) ||
-                !property.actualTypes->isSubset(aggregateProperty.ref().actualTypes))
+            if (!aggregateProperty.ref().maybeTypes()->isSubset(property.maybeTypes()) ||
+                !property.maybeTypes()->isSubset(aggregateProperty.ref().maybeTypes()))
             {
                 return false;
             }
@@ -3030,7 +3042,7 @@ TryAddTypeBarrierForWrite(types::CompilerConstraintList *constraints,
         return false;
 
     types::TemporaryTypeSet *types =
-        aggregateProperty.ref().actualTypes->clone(GetIonContext()->temp->lifoAlloc());
+        aggregateProperty.ref().maybeTypes()->clone(GetIonContext()->temp->lifoAlloc());
     if (!types)
         return false;
 
@@ -3085,7 +3097,7 @@ jit::PropertyWriteNeedsTypeBarrier(types::CompilerConstraintList *constraints,
 
         jsid id = name ? NameToId(name) : JSID_VOID;
         types::HeapTypeSetKey property = object->property(id);
-        if (!TypeSetIncludes(property.actualTypes, (*pvalue)->type(), (*pvalue)->resultTypeSet())) {
+        if (!TypeSetIncludes(property.maybeTypes(), (*pvalue)->type(), (*pvalue)->resultTypeSet())) {
             // Either pobj or pvalue needs to be modified to filter out the
             // types which the value could have but are not in the property,
             // or a VM call is required. A VM call is always required if pobj
@@ -3117,10 +3129,10 @@ jit::PropertyWriteNeedsTypeBarrier(types::CompilerConstraintList *constraints,
 
         jsid id = name ? NameToId(name) : JSID_VOID;
         types::HeapTypeSetKey property = object->property(id);
-        if (TypeSetIncludes(property.actualTypes, (*pvalue)->type(), (*pvalue)->resultTypeSet()))
+        if (TypeSetIncludes(property.maybeTypes(), (*pvalue)->type(), (*pvalue)->resultTypeSet()))
             continue;
 
-        if (!property.actualTypes->empty() || excluded)
+        if ((property.maybeTypes() && !property.maybeTypes()->empty()) || excluded)
             return true;
         excluded = object->isTypeObject() ? object->asTypeObject() : object->asSingleObject()->getType(GetIonContext()->cx);
     }
