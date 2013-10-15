@@ -1928,14 +1928,14 @@ RadioInterface.prototype = {
   setTimezoneByNitz: function setTimezoneByNitz(message) {
     // To set the sytem timezone. Note that we need to convert the time zone
     // value to a UTC repesentation string in the format of "UTC(+/-)hh:mm".
-    // Ex, time zone -480 is "UTC-08:00"; time zone 630 is "UTC+10:30".
+    // Ex, time zone -480 is "UTC+08:00"; time zone 630 is "UTC-10:30".
     //
     // We can unapply the DST correction if we want the raw time zone offset:
     // message.networkTimeZoneInMinutes -= message.networkDSTInMinutes;
     if (message.networkTimeZoneInMinutes != (new Date()).getTimezoneOffset()) {
       let absTimeZoneInMinutes = Math.abs(message.networkTimeZoneInMinutes);
       let timeZoneStr = "UTC";
-      timeZoneStr += (message.networkTimeZoneInMinutes >= 0 ? "+" : "-");
+      timeZoneStr += (message.networkTimeZoneInMinutes > 0 ? "-" : "+");
       timeZoneStr += ("0" + Math.floor(absTimeZoneInMinutes / 60)).slice(-2);
       timeZoneStr += ":";
       timeZoneStr += ("0" + absTimeZoneInMinutes % 60).slice(-2);
