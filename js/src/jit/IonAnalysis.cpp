@@ -1922,7 +1922,7 @@ AnalyzePoppedThis(JSContext *cx, types::TypeObject *type,
         // Don't use GetAtomId here, we need to watch for SETPROP on
         // integer properties and bail out. We can't mark the aggregate
         // JSID_VOID type property as being in a definite slot.
-        if (setprop->name() == cx->names().classPrototype ||
+        if (setprop->name() == cx->names().prototype ||
             setprop->name() == cx->names().proto ||
             setprop->name() == cx->names().constructor)
         {

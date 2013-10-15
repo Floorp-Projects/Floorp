@@ -115,6 +115,7 @@ endif
 
 DEFINES += \
   -DUSE_FAKE_MEDIA_STREAMS \
+  -DUSE_FAKE_PCOBSERVER \
   -DNR_SOCKET_IS_VOID_PTR \
   -DHAVE_STRDUP \
   $(NULL)
@@ -155,6 +156,7 @@ LOCAL_INCLUDES += \
  -I$(topsrcdir)/media/mtransport/third_party/nrappkit/src/plugin \
  -I$(topsrcdir)/media/mtransport/third_party/nrappkit/src/event \
  -I$(topsrcdir)/xpcom/base/ \
+ -I$(DEPTH)/dom/bindings/ \
  $(NULL)
 
 ifneq (,$(filter Darwin DragonFly FreeBSD NetBSD OpenBSD,$(OS_TARGET)))

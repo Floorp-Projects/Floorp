@@ -310,6 +310,7 @@ WebrtcAudioConduit::ConfigureSendMediaCodec(const AudioCodecConfig* codecConfig)
     return kMediaConduitUnknownError;
   }
 
+#ifdef MOZILLA_INTERNAL_API
   // TEMPORARY - see bug 694814 comment 2
   nsresult rv;
   nsCOMPtr<nsIPrefService> prefs = do_GetService("@mozilla.org/preferences-service;1", &rv);
@@ -331,6 +332,7 @@ WebrtcAudioConduit::ConfigureSendMediaCodec(const AudioCodecConfig* codecConfig)
       branch->GetIntPref("media.peerconnection.capture_delay", &mCaptureDelay);
     }
   }
+#endif
 
   if (0 != (error = mPtrVoEProcessing->SetEcStatus(mEchoOn, mEchoCancel))) {
     CSFLogError(logTag,"%s Error setting EVStatus: %d ",__FUNCTION__, error);

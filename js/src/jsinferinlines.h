@@ -422,16 +422,19 @@ TrackPropertyTypes(ExclusiveContext *cx, JSObject *obj, jsid id)
 inline void
 EnsureTrackPropertyTypes(JSContext *cx, JSObject *obj, jsid id)
 {
-    JS_ASSERT(!obj->hasLazyType());
-
-    if (!cx->typeInferenceEnabled() || obj->type()->unknownProperties())
+    if (!cx->typeInferenceEnabled())
         return;
 
     id = IdToTypeId(id);
 
     if (obj->hasSingletonType()) {
         AutoEnterAnalysis enter(cx);
-        obj->type()->getProperty(cx, id);
+        if (obj->hasLazyType() && !obj->getType(cx)) {
+            cx->compartment()->types.setPendingNukeTypes(cx);
+            return;
+        }
+        if (!obj->type()->unknownProperties())
+            obj->type()->getProperty(cx, id);
     }
 
     JS_ASSERT(obj->type()->unknownProperties() || TrackPropertyTypes(cx, obj, id));
