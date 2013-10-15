@@ -82,6 +82,19 @@ public final class BitmapUtils {
             return;
         }
 
+        if(data.startsWith("-moz-icon://")) {
+            Uri imageUri = Uri.parse(data);
+            String resource = imageUri.getSchemeSpecificPart();
+            resource = resource.substring(resource.lastIndexOf('/') + 1);
+
+            try {
+                Drawable d = context.getPackageManager().getApplicationIcon(resource);
+                loader.onBitmapFound(d);
+            } catch(Exception ex) { }
+
+            return;
+        }
+
         if(data.startsWith("drawable://")) {
             Uri imageUri = Uri.parse(data);
             int id = getResource(imageUri, R.drawable.ic_status_logo);
