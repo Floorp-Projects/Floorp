@@ -129,6 +129,25 @@ GetCairoSurfaceSize(cairo_surface_t* surface, IntSize& size)
 }
 
 static bool
+SupportsSelfCopy(cairo_surface_t* surface)
+{
+  switch (cairo_surface_get_type(surface))
+  {
+#ifdef CAIRO_HAS_QUARTZ_SURFACE
+    case CAIRO_SURFACE_TYPE_QUARTZ:
+      return true;
+#endif
+#ifdef CAIRO_HAS_WIN32_SURFACE
+    case CAIRO_SURFACE_TYPE_WIN32:
+    case CAIRO_SURFACE_TYPE_WIN32_PRINTING:
+      return true;
+#endif
+    default:
+      return false;
+  }
+}
+
+static bool
 PatternIsCompatible(const Pattern& aPattern)
 {
   switch (aPattern.GetType())
@@ -637,6 +656,23 @@ DrawTargetCairo::FillRect(const Rect &aRect,
 }
 
 void
+DrawTargetCairo::CopySurfaceInternal(cairo_surface_t* aSurface,
+                                     const IntRect &aSource,
+                                     const IntPoint &aDest)
+{
+  cairo_identity_matrix(mContext);
+
+  cairo_set_source_surface(mContext, aSurface, aDest.x - aSource.x, aDest.y - aSource.y);
+  cairo_set_operator(mContext, CAIRO_OPERATOR_SOURCE);
+  cairo_set_antialias(mContext, CAIRO_ANTIALIAS_NONE);
+
+  cairo_reset_clip(mContext);
+  cairo_new_path(mContext);
+  cairo_rectangle(mContext, aDest.x, aDest.y, aSource.width, aSource.height);
+  cairo_fill(mContext);
+}
+
+void
 DrawTargetCairo::CopySurface(SourceSurface *aSurface,
                              const IntRect &aSource,
                              const IntPoint &aDest)
@@ -651,16 +687,40 @@ DrawTargetCairo::CopySurface(SourceSurface *aSurface,
 
   cairo_surface_t* surf = static_cast<SourceSurfaceCairo*>(aSurface)->GetSurface();
 
-  cairo_identity_matrix(mContext);
+  CopySurfaceInternal(surf, aSource, aDest);
+}
 
-  cairo_set_source_surface(mContext, surf, aDest.x - aSource.x, aDest.y - aSource.y);
-  cairo_set_operator(mContext, CAIRO_OPERATOR_SOURCE);
-  cairo_set_antialias(mContext, CAIRO_ANTIALIAS_NONE);
+void
+DrawTargetCairo::CopyRect(const IntRect &aSource,
+                          const IntPoint &aDest)
+{
+  AutoPrepareForDrawing prep(this, mContext);
 
-  cairo_reset_clip(mContext);
-  cairo_new_path(mContext);
-  cairo_rectangle(mContext, aDest.x, aDest.y, aSource.width, aSource.height);
-  cairo_fill(mContext);
+  IntRect source = aSource;
+  cairo_surface_t* surf = mSurface;
+
+  if (!SupportsSelfCopy(mSurface) &&
+      aDest.y >= aSource.y &&
+      aDest.y < aSource.YMost()) {
+    cairo_surface_t* similar = cairo_surface_create_similar(mSurface,
+                                                            GfxFormatToCairoContent(GetFormat()),
+                                                            aSource.width, aSource.height);
+    cairo_t* ctx = cairo_create(similar);
+    cairo_set_operator(ctx, CAIRO_OPERATOR_SOURCE);
+    cairo_set_source_surface(ctx, surf, -aSource.x, -aSource.y);
+    cairo_paint(ctx);
+    cairo_destroy(ctx);
+
+    source.x = 0;
+    source.y = 0;
+    surf = similar;
+  }
+
+  CopySurfaceInternal(surf, source, aDest);
+
+  if (surf != mSurface) {
+    cairo_surface_destroy(surf);
+  }
 }
 
 void
