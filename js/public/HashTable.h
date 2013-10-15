@@ -520,7 +520,7 @@ struct PointerHasher
         JS_ASSERT(!JS::IsPoisonedPtr(l));
         size_t word = reinterpret_cast<size_t>(l) >> zeroBits;
         JS_STATIC_ASSERT(sizeof(HashNumber) == 4);
-#if JS_BYTES_PER_WORD == 4
+#if JS_BITS_PER_WORD == 32
         return HashNumber(word);
 #else
         JS_STATIC_ASSERT(sizeof word == 8);
