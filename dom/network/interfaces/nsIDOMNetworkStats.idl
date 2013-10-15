@@ -4,6 +4,8 @@
 
 #include "nsISupports.idl"
 
+interface nsIDOMMozNetworkStatsInterface;
+
 [scriptable, builtinclass, uuid(3b16fe17-5583-483a-b486-b64a3243221c)]
 interface nsIDOMMozNetworkStatsData : nsISupports
 {
@@ -12,7 +14,7 @@ interface nsIDOMMozNetworkStatsData : nsISupports
   readonly attribute jsval           date;      // Date.
 };
 
-[scriptable, builtinclass, uuid(6613ea55-b99c-44f9-91bf-d07da10b9b74)]
+[scriptable, builtinclass, uuid(b6fc4b14-628d-4c99-bf4e-e4ed56916cbe)]
 interface nsIDOMMozNetworkStats : nsISupports
 {
   /**
@@ -22,13 +24,12 @@ interface nsIDOMMozNetworkStats : nsISupports
   readonly attribute DOMString    manifestURL;
 
   /**
-   * Can be 'mobile', 'wifi' or null.
-   * If null, stats for both mobile and wifi are returned.
+   * Network the returned data belongs to.
    */
-  readonly attribute DOMString    connectionType;
+  readonly attribute nsIDOMMozNetworkStatsInterface network;
 
   /**
-   * Stats for connectionType
+   * Stats for a network.
    */
   readonly attribute jsval        data;      // array of NetworkStatsData.
                                              // one element per day.
