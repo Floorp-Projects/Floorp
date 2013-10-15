@@ -1274,6 +1274,8 @@ void
 jit::AssertGraphCoherency(MIRGraph &graph)
 {
 #ifdef DEBUG
+    if (!js_IonOptions.assertGraphConsistency)
+        return;
     AssertBasicGraphCoherency(graph);
     AssertReversePostOrder(graph);
 #endif
@@ -1287,6 +1289,8 @@ jit::AssertExtendedGraphCoherency(MIRGraph &graph)
     // are split)
 
 #ifdef DEBUG
+    if (!js_IonOptions.assertGraphConsistency)
+        return;
     AssertGraphCoherency(graph);
 
     uint32_t idx = 0;
