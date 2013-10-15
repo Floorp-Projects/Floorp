@@ -538,20 +538,20 @@ FT2FontEntry::GetFontTable(uint32_t aTableTag)
 }
 
 void
-FT2FontEntry::SizeOfExcludingThis(MallocSizeOf aMallocSizeOf,
-                                  FontListSizes*    aSizes) const
+FT2FontEntry::AddSizeOfExcludingThis(MallocSizeOf aMallocSizeOf,
+                                     FontListSizes* aSizes) const
 {
-    gfxFontEntry::SizeOfExcludingThis(aMallocSizeOf, aSizes);
+    gfxFontEntry::AddSizeOfExcludingThis(aMallocSizeOf, aSizes);
     aSizes->mFontListSize +=
         mFilename.SizeOfExcludingThisIfUnshared(aMallocSizeOf);
 }
 
 void
-FT2FontEntry::SizeOfIncludingThis(MallocSizeOf aMallocSizeOf,
-                                  FontListSizes*    aSizes) const
+FT2FontEntry::AddSizeOfIncludingThis(MallocSizeOf aMallocSizeOf,
+                                     FontListSizes* aSizes) const
 {
     aSizes->mFontListSize += aMallocSizeOf(this);
-    SizeOfExcludingThis(aMallocSizeOf, aSizes);
+    AddSizeOfExcludingThis(aMallocSizeOf, aSizes);
 }
 
 /*
