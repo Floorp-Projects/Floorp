@@ -124,6 +124,13 @@ toolbarpaletteitem[mousedown] > toolbarbutton > .toolbarbutton-icon {
 }
 
 /* Override the toolkit styling for items being dragged over. */
+toolbarpaletteitem[place="toolbar"] {
+  border-left-width: 0;
+  border-right-width: 0;
+  margin-right: 0;
+  margin-left: 0;
+}
+
 toolbarpaletteitem[dragover] {
   border-left-color: transparent;
   border-right-color: transparent;
