@@ -292,7 +292,7 @@ ElementManager.prototype = {
       }
       else {
         let id = this.addToKnownElements(found);
-        on_success(id, command_id);
+        on_success({'ELEMENT':id}, command_id);
       }
       return;
     } else {

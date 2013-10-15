@@ -1093,7 +1093,7 @@ class Marionette(object):
         if id:
             kwargs['element'] = id
         response = self._send_message('findElement', 'value', **kwargs)
-        element = HTMLElement(self, response)
+        element = HTMLElement(self, response['ELEMENT'])
         return element
 
     def find_elements(self, method, target, id=None):
