@@ -74,12 +74,6 @@ CanIonCompile(JSScript *script, ExecutionMode cmode)
 }
 
 static inline bool
-CanIonCompile(JSFunction *fun, ExecutionMode cmode)
-{
-    return fun->isInterpreted() && CanIonCompile(fun->nonLazyScript(), cmode);
-}
-
-static inline bool
 CompilingOffThread(JSScript *script, ExecutionMode cmode)
 {
     switch (cmode) {

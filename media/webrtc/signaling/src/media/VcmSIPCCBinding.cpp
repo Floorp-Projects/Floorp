@@ -15,6 +15,7 @@
 #include "VcmSIPCCBinding.h"
 #include "csf_common.h"
 #include "PeerConnectionImpl.h"
+#include "PeerConnectionMedia.h"
 #include "nsThreadUtils.h"
 #include "transportflow.h"
 #include "transportlayer.h"
@@ -67,6 +68,7 @@ typedef enum {
 
 /* static */
 
+using namespace mozilla;
 using namespace CSF;
 
 VcmSIPCCBinding * VcmSIPCCBinding::gSelf = NULL;

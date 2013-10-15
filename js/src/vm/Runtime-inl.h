@@ -53,7 +53,7 @@ NewObjectCache::newObjectFromHit(JSContext *cx, EntryIndex entry_, js::gc::Initi
     JSObject *obj = js_NewGCObject<NoGC>(cx, entry->kind, heap);
     if (obj) {
         copyCachedToObject(obj, templateObj, entry->kind);
-        Probes::createObject(cx, obj);
+        probes::CreateObject(cx, obj);
         return obj;
     }
 

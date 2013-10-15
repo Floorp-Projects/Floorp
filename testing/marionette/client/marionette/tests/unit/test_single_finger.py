@@ -4,7 +4,7 @@
 
 from marionette_test import MarionetteTestCase
 from marionette import Actions
-from errors import MarionetteException
+from marionette import MarionetteException
 #add this directory to the path
 import os
 import sys

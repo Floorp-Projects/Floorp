@@ -690,6 +690,16 @@ class IonBuilder : public MIRGenerator
         return callerBuilder_ != nullptr;
     }
 
+    JSContext *context() {
+        // JSContexts are only available to IonBuilder when running on the main
+        // thread, which after bug 785905 will only occur when doing eager
+        // analyses with no available baseline information. Until this bug is
+        // completed, both the |cx| member and |context()| may be used.
+        if (info().executionMode() == DefinitePropertiesAnalysis)
+            return cx;
+        return NULL;
+    }
+
   private:
     bool init();
 

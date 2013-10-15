@@ -36,10 +36,13 @@
 #include "runnable_utils.h"
 #include "PeerConnectionCtx.h"
 #include "PeerConnectionImpl.h"
+#include "PeerConnectionMedia.h"
 #include "nsPIDOMWindow.h"
 #include "nsDOMDataChannelDeclarations.h"
+#include "dtlsidentity.h"
 
 #ifdef MOZILLA_INTERNAL_API
+#include "nsDOMDataChannel.h"
 #include "mozilla/TimeStamp.h"
 #include "mozilla/Telemetry.h"
 #include "nsDOMJSUtils.h"
@@ -48,7 +51,11 @@
 #include "nsPrintfCString.h"
 #include "nsURLHelper.h"
 #include "nsNetUtil.h"
+#include "nsIDOMDataChannel.h"
 #include "mozilla/dom/RTCConfigurationBinding.h"
+#include "mozilla/dom/RTCPeerConnectionBinding.h"
+#include "mozilla/dom/PeerConnectionImplBinding.h"
+#include "mozilla/dom/DataChannelBinding.h"
 #include "MediaStreamList.h"
 #include "nsIScriptGlobalObject.h"
 #include "jsapi.h"
@@ -59,14 +66,19 @@
 #include "MediaSegment.h"
 #endif
 
+#ifdef USE_FAKE_PCOBSERVER
+#include "FakePCObserver.h"
+#else
+#include "mozilla/dom/PeerConnectionObserverBinding.h"
+#endif
+#include "mozilla/dom/PeerConnectionObserverEnumsBinding.h"
+
 #define ICE_PARSING "In RTCConfiguration passed to RTCPeerConnection constructor"
 
 using namespace mozilla;
 using namespace mozilla::dom;
 
-namespace mozilla {
-  class DataChannel;
-}
+typedef PCObserverString ObString;
 
 class nsIDOMDataChannel;
 
@@ -85,49 +97,88 @@ PRLogModuleInfo *signalingLogInfo() {
 
 namespace sipcc {
 
-void MediaConstraints::setBooleanConstraint(const std::string& constraint, bool enabled, bool mandatory) {
+// Convert constraints to C structures
 
-  ConstraintInfo booleanconstraint;
-  booleanconstraint.mandatory = mandatory;
+#ifdef MOZILLA_INTERNAL_API
+static void
+Apply(const Optional<bool> &aSrc, cc_boolean_constraint_t *aDst,
+      bool mandatory = false) {
+  if (aSrc.WasPassed() && (mandatory || !aDst->was_passed)) {
+    aDst->was_passed = true;
+    aDst->value = aSrc.Value();
+    aDst->mandatory = mandatory;
+  }
+}
+#endif
 
-  if (enabled)
-    booleanconstraint.value = "TRUE";
-  else
-    booleanconstraint.value = "FALSE";
-
-  mConstraints[constraint] = booleanconstraint;
+static cc_media_constraints_t*
+ConvertConstraints(const MediaConstraintsInternal& aSrc) {
+  cc_media_constraints_t* c = (cc_media_constraints_t*)
+      cpr_malloc(sizeof(cc_media_constraints_t));
+  NS_ENSURE_TRUE(c,c);
+  memset(c, 0, sizeof(cc_media_constraints_t));
+#ifdef MOZILLA_INTERNAL_API
+  Apply(aSrc.mMandatory.mOfferToReceiveAudio, &c->offer_to_receive_audio, true);
+  Apply(aSrc.mMandatory.mOfferToReceiveVideo, &c->offer_to_receive_video, true);
+  Apply(aSrc.mMandatory.mMozDontOfferDataChannel, &c->moz_dont_offer_datachannel,
+        true);
+  if (aSrc.mOptional.WasPassed()) {
+    const Sequence<MediaConstraintSet> &array = aSrc.mOptional.Value();
+    for (uint32_t i = 0; i < array.Length(); i++) {
+      Apply(array[i].mOfferToReceiveAudio, &c->offer_to_receive_audio);
+      Apply(array[i].mOfferToReceiveVideo, &c->offer_to_receive_video);
+      Apply(array[i].mMozDontOfferDataChannel, &c->moz_dont_offer_datachannel);
+    }
+  }
+#endif
+  return c;
 }
 
-void MediaConstraints::buildArray(cc_media_constraints_t** constraintarray) {
-
-  if (0 == mConstraints.size())
-    return;
-
-  short i = 0;
-  std::string tmpStr;
-  *constraintarray = (cc_media_constraints_t*) cpr_malloc(sizeof(cc_media_constraints_t));
-  int tmpStrAllocLength;
-
-  (*constraintarray)->constraints = (cc_media_constraint_t**) cpr_malloc(mConstraints.size() * sizeof(cc_media_constraint_t));
-
-  for (constraints_map::iterator it = mConstraints.begin();
-          it != mConstraints.end(); ++it) {
-    (*constraintarray)->constraints[i] = (cc_media_constraint_t*) cpr_malloc(sizeof(cc_media_constraint_t));
-
-    tmpStr = it->first;
-    tmpStrAllocLength = tmpStr.size() + 1;
-    (*constraintarray)->constraints[i]->name = (char*) cpr_malloc(tmpStrAllocLength);
-    sstrncpy((*constraintarray)->constraints[i]->name, tmpStr.c_str(), tmpStrAllocLength);
-
-    tmpStr = it->second.value;
-    tmpStrAllocLength = tmpStr.size() + 1;
-    (*constraintarray)->constraints[i]->value = (char*) cpr_malloc(tmpStrAllocLength);
-    sstrncpy((*constraintarray)->constraints[i]->value, tmpStr.c_str(), tmpStrAllocLength);
-
-    (*constraintarray)->constraints[i]->mandatory = it->second.mandatory;
-    i++;
+// Getting exceptions back down from PCObserver is generally not harmful.
+namespace {
+class JSErrorResult : public ErrorResult
+{
+public:
+  ~JSErrorResult()
+  {
+#ifdef MOZILLA_INTERNAL_API
+    WouldReportJSException();
+    if (IsJSException()) {
+      MOZ_ASSERT(NS_IsMainThread());
+      AutoJSContext cx;
+      Optional<JS::Handle<JS::Value> > value(cx);
+      StealJSException(cx, &value.Value());
+    }
+#endif
   }
-  (*constraintarray)->constraint_count = i;
+};
+
+// The WrapRunnable() macros copy passed-in args and passes them to the function
+// later on the other thread. ErrorResult cannot be passed like this because it
+// disallows copy-semantics.
+//
+// This WrappableJSErrorResult hack solves this by not actually copying the
+// ErrorResult, but creating a new one instead, which works because we don't
+// care about the result.
+//
+// Since this is for JS-calls, these can only be dispatched to the main thread.
+
+class WrappableJSErrorResult {
+public:
+  WrappableJSErrorResult() : isCopy(false) {}
+  WrappableJSErrorResult(WrappableJSErrorResult &other) : mRv(), isCopy(true) {}
+  ~WrappableJSErrorResult() {
+    if (isCopy) {
+#ifdef MOZILLA_INTERNAL_API
+      MOZ_ASSERT(NS_IsMainThread());
+#endif
+    }
+  }
+  operator JSErrorResult &() { return mRv; }
+private:
+  JSErrorResult mRv;
+  bool isCopy;
+};
 }
 
 class PeerConnectionObserverDispatch : public nsRunnable {
@@ -135,7 +186,7 @@ class PeerConnectionObserverDispatch : public nsRunnable {
 public:
   PeerConnectionObserverDispatch(CSF::CC_CallInfoPtr aInfo,
                                  nsRefPtr<PeerConnectionImpl> aPC,
-                                 IPeerConnectionObserver* aObserver)
+                                 PeerConnectionObserver* aObserver)
       : mPC(aPC),
         mObserver(aObserver),
         mCode(static_cast<PeerConnectionImpl::Error>(aInfo->getStatusCode())),
@@ -166,9 +217,9 @@ public:
   {
   public:
     TracksAvailableCallback(DOMMediaStream::TrackTypeHints aTrackTypeHints,
-                            nsCOMPtr<IPeerConnectionObserver> aObserver)
-      : DOMMediaStream::OnTracksAvailableCallback(aTrackTypeHints),
-        mObserver(aObserver) {}
+                            nsRefPtr<PeerConnectionObserver> aObserver)
+    : DOMMediaStream::OnTracksAvailableCallback(aTrackTypeHints)
+    , mObserver(aObserver) {}
 
     virtual void NotifyTracksAvailable(DOMMediaStream* aStream) MOZ_OVERRIDE
     {
@@ -181,10 +232,14 @@ public:
       CSFLogInfo(logTag, "Returning success for OnAddStream()");
       // We are running on main thread here so we shouldn't have a race
       // on this callback
-      mObserver->OnAddStream(aStream);
+      JSErrorResult rv;
+      mObserver->OnAddStream(*aStream, rv);
+      if (rv.Failed()) {
+        CSFLogError(logTag, ": OnAddStream() failed! Error: %d", rv.ErrorCode());
+      }
     }
-
-    nsCOMPtr<IPeerConnectionObserver> mObserver;
+  private:
+    nsRefPtr<PeerConnectionObserver> mObserver;
   };
 #endif
 
@@ -220,29 +275,30 @@ public:
      */
 
     if (mFsmState >= FSMDEF_S_STABLE && mFsmState <= FSMDEF_S_CLOSED) {
-      int offset = FSMDEF_S_STABLE - PeerConnectionImpl::kSignalingStable;
-      mPC->SetSignalingState_m(
-        static_cast<PeerConnectionImpl::SignalingState>(mFsmState - offset));
+      int offset = FSMDEF_S_STABLE - int(PCImplSignalingState::SignalingStable);
+      mPC->SetSignalingState_m(static_cast<PCImplSignalingState>(mFsmState - offset));
     } else {
       CSFLogError(logTag, ": **** UNHANDLED SIGNALING STATE : %d (%s)",
                   mFsmState, mFsmStateStr.c_str());
     }
 
+    JSErrorResult rv;
+
     switch (mCallState) {
       case CREATEOFFERSUCCESS:
-        mObserver->OnCreateOfferSuccess(mSdpStr.c_str());
+        mObserver->OnCreateOfferSuccess(ObString(mSdpStr.c_str()), rv);
         break;
 
       case CREATEANSWERSUCCESS:
-        mObserver->OnCreateAnswerSuccess(mSdpStr.c_str());
+        mObserver->OnCreateAnswerSuccess(ObString(mSdpStr.c_str()), rv);
         break;
 
       case CREATEOFFERERROR:
-        mObserver->OnCreateOfferError(mCode, mReason.c_str());
+        mObserver->OnCreateOfferError(mCode, ObString(mReason.c_str()), rv);
         break;
 
       case CREATEANSWERERROR:
-        mObserver->OnCreateAnswerError(mCode, mReason.c_str());
+        mObserver->OnCreateAnswerError(mCode, ObString(mReason.c_str()), rv);
         break;
 
       case SETLOCALDESCSUCCESS:
@@ -252,7 +308,7 @@ public:
         // warnings. The WebRTC spec does not currently have a mechanism for
         // providing non-fatal warnings.
         mPC->ClearSdpParseErrorMessages();
-        mObserver->OnSetLocalDescriptionSuccess();
+        mObserver->OnSetLocalDescriptionSuccess(rv);
         break;
 
       case SETREMOTEDESCSUCCESS:
@@ -262,26 +318,28 @@ public:
         // warnings. The WebRTC spec does not currently have a mechanism for
         // providing non-fatal warnings.
         mPC->ClearSdpParseErrorMessages();
-        mObserver->OnSetRemoteDescriptionSuccess();
+        mObserver->OnSetRemoteDescriptionSuccess(rv);
 #ifdef MOZILLA_INTERNAL_API
         mPC->startCallTelem();
 #endif
         break;
 
       case SETLOCALDESCERROR:
-        mObserver->OnSetLocalDescriptionError(mCode, mReason.c_str());
+        mObserver->OnSetLocalDescriptionError(mCode,
+                                              ObString(mReason.c_str()), rv);
         break;
 
       case SETREMOTEDESCERROR:
-        mObserver->OnSetRemoteDescriptionError(mCode, mReason.c_str());
+        mObserver->OnSetRemoteDescriptionError(mCode,
+                                               ObString(mReason.c_str()), rv);
         break;
 
       case ADDICECANDIDATE:
-        mObserver->OnAddIceCandidateSuccess();
+        mObserver->OnAddIceCandidateSuccess(rv);
         break;
 
       case ADDICECANDIDATEERROR:
-        mObserver->OnAddIceCandidateError(mCode, mReason.c_str());
+        mObserver->OnAddIceCandidateError(mCode, ObString(mReason.c_str()), rv);
         break;
 
       case FOUNDICECANDIDATE:
@@ -316,11 +374,9 @@ public:
 
             std::string candidate = mCandidateStr.substr(end_of_mid + 1);
 
-
-            mObserver->OnIceCandidate(
-                level_long & 0xffff,
-                mid.c_str(),
-                candidate.c_str());
+            mObserver->OnIceCandidate(level_long & 0xffff,
+                                      ObString(mid.c_str()),
+                                      ObString(candidate.c_str()), rv);
         }
         break;
       case REMOTESTREAMADD:
@@ -342,7 +398,7 @@ public:
 
             stream->OnTracksAvailable(tracksAvailableCallback);
 #else
-            mObserver->OnAddStream(stream);
+            mObserver->OnAddStream(stream, rv);
 #endif
           }
           break;
@@ -357,13 +413,12 @@ public:
                     mCallState, mStateStr.c_str());
         break;
     }
-
     return NS_OK;
   }
 
 private:
   nsRefPtr<PeerConnectionImpl> mPC;
-  nsCOMPtr<IPeerConnectionObserver> mObserver;
+  nsRefPtr<PeerConnectionObserver> mObserver;
   PeerConnectionImpl::Error mCode;
   std::string mReason;
   std::string mSdpStr;
@@ -375,17 +430,28 @@ private:
   nsRefPtr<RemoteSourceStreamInfo> mRemoteStream;
 };
 
-NS_IMPL_ISUPPORTS1(PeerConnectionImpl, IPeerConnection)
+NS_IMPL_ISUPPORTS0(PeerConnectionImpl)
 
-PeerConnectionImpl::PeerConnectionImpl()
+#ifdef MOZILLA_INTERNAL_API
+JSObject*
+PeerConnectionImpl::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aScope)
+{
+  return PeerConnectionImplBinding::Wrap(aCx, aScope, this);
+}
+#endif
+
+struct PeerConnectionImpl::Internal {
+  CSF::CC_CallPtr mCall;
+};
+
+PeerConnectionImpl::PeerConnectionImpl(const GlobalObject* aGlobal)
 : mTimeCard(PR_LOG_TEST(signalingLogInfo(),PR_LOG_ERROR) ?
             create_timecard() : nullptr)
-  , mCall(NULL)
-  , mReadyState(kNew)
-  , mSignalingState(kSignalingStable)
-  , mIceState(kIceGathering)
-  , mPCObserver(NULL)
-  , mWindow(NULL)
+  , mInternal(new Internal())
+  , mReadyState(PCImplReadyState::New)
+  , mSignalingState(PCImplSignalingState::SignalingStable)
+  , mIceState(PCImplIceState::IceGathering)
+  , mWindow(nullptr)
   , mIdentity(NULL)
   , mSTSThread(NULL)
   , mMedia(NULL)
@@ -396,7 +462,11 @@ PeerConnectionImpl::PeerConnectionImpl()
 {
 #ifdef MOZILLA_INTERNAL_API
   MOZ_ASSERT(NS_IsMainThread());
+  if (aGlobal) {
+    mWindow = do_QueryInterface(aGlobal->GetAsSupports());
+  }
 #endif
+  MOZ_ASSERT(mInternal);
   CSFLogInfo(logTag, "%s: PeerConnectionImpl constructor for %s",
              __FUNCTION__, mHandle.c_str());
   STAMP_TIMECARD(mTimeCard, "Constructor Completed");
@@ -434,12 +504,6 @@ PeerConnectionImpl::~PeerConnectionImpl()
   // probably want to shut it down more aggressively to save memory.  We
   // could shut down here when there are no uses.  It might be more optimal
   // to release off a timer (and XPCOM Shutdown) to avoid churn
-
-  /* We should release mPCObserver on the main thread, but also prevent a double free.
-  nsCOMPtr<nsIThread> mainThread;
-  NS_GetMainThread(getter_AddRefs(mainThread));
-  NS_ProxyRelease(mainThread, mPCObserver);
-  */
 }
 
 already_AddRefed<DOMMediaStream>
@@ -494,32 +558,21 @@ PeerConnectionImpl::CreateRemoteSourceStreamInfo(nsRefPtr<RemoteSourceStreamInfo
  *                   { url:"turn:turn.example.org?transport=udp",
  *                     username: "jib", credential:"mypass"} ] }
  *
- * This function converts an already-validated jsval that looks like the above
- * into an IceConfiguration object.
+ * This function converts that into an internal IceConfiguration object.
  */
 nsresult
-PeerConnectionImpl::ConvertRTCConfiguration(const JS::Value& aSrc,
-                                            IceConfiguration *aDst,
-                                            JSContext* aCx)
+PeerConnectionImpl::ConvertRTCConfiguration(const RTCConfiguration& aSrc,
+                                            IceConfiguration *aDst)
 {
 #ifdef MOZILLA_INTERNAL_API
-  if (!aSrc.isObject()) {
-    return NS_ERROR_FAILURE;
+  if (!aSrc.mIceServers.WasPassed()) {
+    return NS_OK;
   }
-  JSAutoCompartment ac(aCx, &aSrc.toObject());
-  RTCConfiguration config;
-  JS::Rooted<JS::Value> src(aCx, aSrc);
-  if (!(config.Init(aCx, src) && config.mIceServers.WasPassed())) {
-    return NS_ERROR_FAILURE;
-  }
-  for (uint32_t i = 0; i < config.mIceServers.Value().Length(); i++) {
-    RTCIceServer& server = config.mIceServers.Value()[i];
-    if (!server.mUrl.WasPassed()) {
-      return NS_ERROR_FAILURE;
-    }
+  for (uint32_t i = 0; i < aSrc.mIceServers.Value().Length(); i++) {
+    const RTCIceServer& server = aSrc.mIceServers.Value()[i];
+    NS_ENSURE_TRUE(server.mUrl.WasPassed(), NS_ERROR_UNEXPECTED);
     nsRefPtr<nsIURI> url;
-    nsresult rv;
-    rv = NS_NewURI(getter_AddRefs(url), server.mUrl.Value());
+    nsresult rv = NS_NewURI(getter_AddRefs(url), server.mUrl.Value());
     NS_ENSURE_SUCCESS(rv, rv);
     bool isStun = false, isStuns = false, isTurn = false, isTurns = false;
     url->SchemeIs("stun", &isStun);
@@ -584,22 +637,11 @@ PeerConnectionImpl::ConvertRTCConfiguration(const JS::Value& aSrc,
 }
 
 NS_IMETHODIMP
-PeerConnectionImpl::Initialize(IPeerConnectionObserver* aObserver,
-                               nsIDOMWindow* aWindow,
-                               const JS::Value &aRTCConfiguration,
-                               nsIThread* aThread,
-                               JSContext* aCx)
-{
-  return Initialize(aObserver, aWindow, nullptr, &aRTCConfiguration, aThread, aCx);
-}
-
-nsresult
-PeerConnectionImpl::Initialize(IPeerConnectionObserver* aObserver,
+PeerConnectionImpl::Initialize(PeerConnectionObserver& aObserver,
                                nsIDOMWindow* aWindow,
                                const IceConfiguration* aConfiguration,
-                               const JS::Value* aRTCConfiguration,
-                               nsIThread* aThread,
-                               JSContext* aCx)
+                               const RTCConfiguration* aRTCConfiguration,
+                               nsISupports* aThread)
 {
   nsresult res;
 
@@ -608,11 +650,10 @@ PeerConnectionImpl::Initialize(IPeerConnectionObserver* aObserver,
 #ifdef MOZILLA_INTERNAL_API
   MOZ_ASSERT(NS_IsMainThread());
 #endif
-  MOZ_ASSERT(aObserver);
   MOZ_ASSERT(aThread);
-  mThread = aThread;
+  mThread = do_QueryInterface(aThread);
 
-  mPCObserver = do_GetWeakReference(aObserver);
+  mPCObserver.Init(&aObserver);
 
   // Find the STS thread
 
@@ -660,15 +701,15 @@ PeerConnectionImpl::Initialize(IPeerConnectionObserver* aObserver,
   MOZ_ASSERT(pcctx);
   STAMP_TIMECARD(mTimeCard, "Done Initializing PC Ctx");
 
-  mCall = pcctx->createCall();
-  if(!mCall.get()) {
+  mInternal->mCall = pcctx->createCall();
+  if (!mInternal->mCall.get()) {
     CSFLogError(logTag, "%s: Couldn't Create Call Object", __FUNCTION__);
     return NS_ERROR_FAILURE;
   }
 
   IceConfiguration converted;
   if (aRTCConfiguration) {
-    res = ConvertRTCConfiguration(*aRTCConfiguration, &converted, aCx);
+    res = ConvertRTCConfiguration(*aRTCConfiguration, &converted);
     if (NS_FAILED(res)) {
       CSFLogError(logTag, "%s: Invalid RTCConfiguration", __FUNCTION__);
       return res;
@@ -692,7 +733,7 @@ PeerConnectionImpl::Initialize(IPeerConnectionObserver* aObserver,
   }
 
   // Store under mHandle
-  mCall->setPeerConnection(mHandle);
+  mInternal->mCall->setPeerConnection(mHandle);
   PeerConnectionCtx::GetInstance()->mPeerConnections[mHandle] = this;
 
   STAMP_TIMECARD(mTimeCard, "Generating DTLS Identity");
@@ -729,6 +770,12 @@ PeerConnectionImpl::Initialize(IPeerConnectionObserver* aObserver,
   }
 
   return NS_OK;
+}
+
+mozilla::RefPtr<DtlsIdentity> const
+PeerConnectionImpl::GetIdentity() {
+  PC_AUTO_ENTER_API_CALL_NO_CHECK();
+  return mIdentity;
 }
 
 nsresult
@@ -829,16 +876,38 @@ PeerConnectionImpl::InitializeDataChannel(int track_id,
   return NS_ERROR_FAILURE;
 }
 
-NS_IMETHODIMP
-PeerConnectionImpl::CreateDataChannel(const nsACString& aLabel,
-                                      const nsACString& aProtocol,
+already_AddRefed<nsDOMDataChannel>
+PeerConnectionImpl::CreateDataChannel(const nsAString& aLabel,
+                                      const nsAString& aProtocol,
                                       uint16_t aType,
                                       bool outOfOrderAllowed,
                                       uint16_t aMaxTime,
                                       uint16_t aMaxNum,
                                       bool aExternalNegotiated,
                                       uint16_t aStream,
-                                      nsIDOMDataChannel** aRetval)
+                                      ErrorResult &rv)
+{
+#ifdef MOZILLA_INTERNAL_API
+  nsRefPtr<nsDOMDataChannel> result;
+  rv = CreateDataChannel(aLabel, aProtocol, aType, outOfOrderAllowed,
+                         aMaxTime, aMaxNum, aExternalNegotiated,
+                         aStream, getter_AddRefs(result));
+  return result.forget();
+#else
+  return nullptr;
+#endif
+}
+
+NS_IMETHODIMP
+PeerConnectionImpl::CreateDataChannel(const nsAString& aLabel,
+                                      const nsAString& aProtocol,
+                                      uint16_t aType,
+                                      bool outOfOrderAllowed,
+                                      uint16_t aMaxTime,
+                                      uint16_t aMaxNum,
+                                      bool aExternalNegotiated,
+                                      uint16_t aStream,
+                                      nsDOMDataChannel** aRetval)
 {
   PC_AUTO_ENTER_API_CALL_NO_CHECK();
   MOZ_ASSERT(aRetval);
@@ -853,7 +922,8 @@ PeerConnectionImpl::CreateDataChannel(const nsACString& aLabel,
     return rv;
   }
   dataChannel = mDataConnection->Open(
-    aLabel, aProtocol, theType, !outOfOrderAllowed,
+    NS_ConvertUTF16toUTF8(aLabel), NS_ConvertUTF16toUTF8(aProtocol), theType,
+    !outOfOrderAllowed,
     aType == mozilla::DataChannelConnection::PARTIAL_RELIABLE_REXMIT ? aMaxNum :
     (aType == mozilla::DataChannelConnection::PARTIAL_RELIABLE_TIMED ? aMaxTime : 0),
     nullptr, nullptr, aExternalNegotiated, aStream
@@ -864,14 +934,17 @@ PeerConnectionImpl::CreateDataChannel(const nsACString& aLabel,
 
   if (!mHaveDataStream) {
     // XXX stream_id of 0 might confuse things...
-    mCall->addStream(0, 2, DATA);
+    mInternal->mCall->addStream(0, 2, DATA);
     mHaveDataStream = true;
   }
-
-  return NS_NewDOMDataChannel(dataChannel.forget(), mWindow, aRetval);
-#else
-  return NS_OK;
+  nsIDOMDataChannel *retval;
+  rv = NS_NewDOMDataChannel(dataChannel.forget(), mWindow, &retval);
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+  *aRetval = static_cast<nsDOMDataChannel*>(retval);
 #endif
+  return NS_OK;
 }
 
 void
@@ -882,13 +955,15 @@ PeerConnectionImpl::NotifyConnection()
   CSFLogDebug(logTag, "%s", __FUNCTION__);
 
 #ifdef MOZILLA_INTERNAL_API
-  nsCOMPtr<IPeerConnectionObserver> pco = do_QueryReferent(mPCObserver);
+  nsRefPtr<PeerConnectionObserver> pco = mPCObserver.MayGet();
   if (!pco) {
     return;
   }
+  WrappableJSErrorResult rv;
   RUN_ON_THREAD(mThread,
                 WrapRunnable(pco,
-                             &IPeerConnectionObserver::NotifyConnection),
+                             &PeerConnectionObserver::NotifyConnection,
+                             rv, static_cast<JSCompartment*>(nullptr)),
                 NS_DISPATCH_NORMAL);
 #endif
 }
@@ -901,12 +976,14 @@ PeerConnectionImpl::NotifyClosedConnection()
   CSFLogDebug(logTag, "%s", __FUNCTION__);
 
 #ifdef MOZILLA_INTERNAL_API
-  nsCOMPtr<IPeerConnectionObserver> pco = do_QueryReferent(mPCObserver);
+  nsRefPtr<PeerConnectionObserver> pco = mPCObserver.MayGet();
   if (!pco) {
     return;
   }
+  WrappableJSErrorResult rv;
   RUN_ON_THREAD(mThread,
-    WrapRunnable(pco, &IPeerConnectionObserver::NotifyClosedConnection),
+    WrapRunnable(pco, &PeerConnectionObserver::NotifyClosedConnection,
+                 rv, static_cast<JSCompartment*>(nullptr)),
     NS_DISPATCH_NORMAL);
 #endif
 }
@@ -915,11 +992,12 @@ PeerConnectionImpl::NotifyClosedConnection()
 #ifdef MOZILLA_INTERNAL_API
 // Not a member function so that we don't need to keep the PC live.
 static void NotifyDataChannel_m(nsRefPtr<nsIDOMDataChannel> aChannel,
-                                nsCOMPtr<IPeerConnectionObserver> aObserver)
+                                nsRefPtr<PeerConnectionObserver> aObserver)
 {
   MOZ_ASSERT(NS_IsMainThread());
-
-  aObserver->NotifyDataChannel(aChannel);
+  JSErrorResult rv;
+  nsRefPtr<nsDOMDataChannel> channel = static_cast<nsDOMDataChannel*>(&*aChannel);
+  aObserver->NotifyDataChannel(*channel, rv);
   NS_DataChannelAppReady(aChannel);
 }
 #endif
@@ -938,7 +1016,7 @@ PeerConnectionImpl::NotifyDataChannel(already_AddRefed<mozilla::DataChannel> aCh
                                      getter_AddRefs(domchannel));
   NS_ENSURE_SUCCESS_VOID(rv);
 
-  nsCOMPtr<IPeerConnectionObserver> pco = do_QueryReferent(mPCObserver);
+  nsRefPtr<PeerConnectionObserver> pco = mPCObserver.MayGet();
   if (!pco) {
     return;
   }
@@ -951,116 +1029,15 @@ PeerConnectionImpl::NotifyDataChannel(already_AddRefed<mozilla::DataChannel> aCh
 #endif
 }
 
-/**
- * Constraints look like this:
- *
- * {
- *   mandatory: {"OfferToReceiveAudio": true, "OfferToReceiveVideo": true },
- *   optional: [{"VoiceActivityDetection": true}, {"FooBar": 10}]
- * }
- *
- * Optional constraints are ordered, and hence in an array. This function
- * converts a jsval that looks like the above into a MediaConstraints object.
- */
-nsresult
-PeerConnectionImpl::ConvertConstraints(
-  const JS::Value& aConstraints, MediaConstraints* aObj, JSContext* aCx)
-{
-  JS::Rooted<JS::Value> mandatory(aCx), optional(aCx);
-  JS::Rooted<JSObject*> constraints(aCx, &aConstraints.toObject());
-
-  // Mandatory constraints.  Note that we only care if the constraint array exists
-  if (!JS_GetProperty(aCx, constraints, "mandatory", &mandatory)) {
-    return NS_ERROR_FAILURE;
-  }
-  if (!mandatory.isNullOrUndefined()) {
-    if (!mandatory.isObject()) {
-      return NS_ERROR_FAILURE;
-    }
-
-    JS::Rooted<JSObject*> opts(aCx, &mandatory.toObject());
-    JS::AutoIdArray mandatoryOpts(aCx, JS_Enumerate(aCx, opts));
-
-    // Iterate over each property.
-    for (size_t i = 0; i < mandatoryOpts.length(); i++) {
-      JS::Rooted<JS::Value> option(aCx), optionName(aCx);
-      if (!JS_GetPropertyById(aCx, opts, mandatoryOpts[i], &option) ||
-          !JS_IdToValue(aCx, mandatoryOpts[i], optionName.address()) ||
-          // We only support boolean constraints for now.
-          !option.isBoolean()) {
-        return NS_ERROR_FAILURE;
-      }
-      JSString* optionNameString = JS_ValueToString(aCx, optionName);
-      if (!optionNameString) {
-        return NS_ERROR_OUT_OF_MEMORY;
-      }
-      NS_ConvertUTF16toUTF8 stringVal(JS_GetStringCharsZ(aCx, optionNameString));
-      aObj->setBooleanConstraint(stringVal.get(), JSVAL_TO_BOOLEAN(option), true);
-    }
-  }
-
-  // Optional constraints.
-  if (!JS_GetProperty(aCx, constraints, "optional", &optional)) {
-    return NS_ERROR_FAILURE;
-  }
-  if (!optional.isNullOrUndefined()) {
-    if (!optional.isObject()) {
-      return NS_ERROR_FAILURE;
-    }
-
-    JS::Rooted<JSObject*> array(aCx, &optional.toObject());
-    uint32_t length;
-    if (!JS_GetArrayLength(aCx, array, &length)) {
-      return NS_ERROR_FAILURE;
-    }
-    for (uint32_t i = 0; i < length; i++) {
-      JS::Rooted<JS::Value> element(aCx);
-      if (!JS_GetElement(aCx, array, i, &element) ||
-          !element.isObject()) {
-        return NS_ERROR_FAILURE;
-      }
-      JS::Rooted<JSObject*> opts(aCx, &element.toObject());
-      JS::AutoIdArray optionalOpts(aCx, JS_Enumerate(aCx, opts));
-      // Expect one property per entry.
-      if (optionalOpts.length() != 1) {
-        return NS_ERROR_FAILURE;
-      }
-      JS::Rooted<JS::Value> option(aCx), optionName(aCx);
-      if (!JS_GetPropertyById(aCx, opts, optionalOpts[0], &option) ||
-          !JS_IdToValue(aCx, optionalOpts[0], optionName.address())) {
-        return NS_ERROR_FAILURE;
-      }
-      // Ignore constraints other than boolean, as that's all we support.
-      if (option.isBoolean()) {
-        JSString* optionNameString = JS_ValueToString(aCx, optionName);
-        if (!optionNameString) {
-          return NS_ERROR_OUT_OF_MEMORY;
-        }
-        NS_ConvertUTF16toUTF8 stringVal(JS_GetStringCharsZ(aCx, optionNameString));
-        aObj->setBooleanConstraint(stringVal.get(), JSVAL_TO_BOOLEAN(option), false);
-      }
-    }
-  }
-  return NS_OK;
-}
-
 NS_IMETHODIMP
-PeerConnectionImpl::CreateOffer(const JS::Value& aConstraints, JSContext* aCx)
+PeerConnectionImpl::CreateOffer(const MediaConstraintsInternal& aConstraints)
 {
-  PC_AUTO_ENTER_API_CALL(true);
-
-  MediaConstraints cs;
-  nsresult rv = ConvertConstraints(aConstraints, &cs, aCx);
-  if (rv != NS_OK) {
-    return rv;
-  }
-
-  return CreateOffer(cs);
+  return CreateOffer(MediaConstraintsExternal(ConvertConstraints(aConstraints)));
 }
 
 // Used by unit tests and the IDL CreateOffer.
 NS_IMETHODIMP
-PeerConnectionImpl::CreateOffer(MediaConstraints& constraints)
+PeerConnectionImpl::CreateOffer(const MediaConstraintsExternal& aConstraints)
 {
   PC_AUTO_ENTER_API_CALL(true);
 
@@ -1068,29 +1045,19 @@ PeerConnectionImpl::CreateOffer(MediaConstraints& constraints)
   mTimeCard = nullptr;
   STAMP_TIMECARD(tc, "Create Offer");
 
-  cc_media_constraints_t* cc_constraints = nullptr;
-  constraints.buildArray(&cc_constraints);
-
-  mCall->createOffer(cc_constraints, tc);
+  NS_ENSURE_TRUE(aConstraints.mConstraints, NS_ERROR_UNEXPECTED);
+  mInternal->mCall->createOffer(aConstraints.mConstraints, tc);
   return NS_OK;
 }
 
 NS_IMETHODIMP
-PeerConnectionImpl::CreateAnswer(const JS::Value& aConstraints, JSContext* aCx)
+PeerConnectionImpl::CreateAnswer(const MediaConstraintsInternal& aConstraints)
 {
-  PC_AUTO_ENTER_API_CALL(true);
-
-  MediaConstraints cs;
-  nsresult rv = ConvertConstraints(aConstraints, &cs, aCx);
-  if (rv != NS_OK) {
-    return rv;
-  }
-
-  return CreateAnswer(cs);
+  return CreateAnswer(MediaConstraintsExternal(ConvertConstraints(aConstraints)));
 }
 
 NS_IMETHODIMP
-PeerConnectionImpl::CreateAnswer(MediaConstraints& constraints)
+PeerConnectionImpl::CreateAnswer(const MediaConstraintsExternal& aConstraints)
 {
   PC_AUTO_ENTER_API_CALL(true);
 
@@ -1098,10 +1065,8 @@ PeerConnectionImpl::CreateAnswer(MediaConstraints& constraints)
   mTimeCard = nullptr;
   STAMP_TIMECARD(tc, "Create Answer");
 
-  cc_media_constraints_t* cc_constraints = nullptr;
-  constraints.buildArray(&cc_constraints);
-
-  mCall->createAnswer(cc_constraints, tc);
+  NS_ENSURE_TRUE(aConstraints.mConstraints, NS_ERROR_UNEXPECTED);
+  mInternal->mCall->createAnswer(aConstraints.mConstraints, tc);
   return NS_OK;
 }
 
@@ -1120,8 +1085,8 @@ PeerConnectionImpl::SetLocalDescription(int32_t aAction, const char* aSDP)
   STAMP_TIMECARD(tc, "Set Local Description");
 
   mLocalRequestedSDP = aSDP;
-  mCall->setLocalDescription((cc_jsep_action_t)aAction,
-                             mLocalRequestedSDP, tc);
+  mInternal->mCall->setLocalDescription((cc_jsep_action_t)aAction,
+                                        mLocalRequestedSDP, tc);
   return NS_OK;
 }
 
@@ -1140,8 +1105,8 @@ PeerConnectionImpl::SetRemoteDescription(int32_t action, const char* aSDP)
   STAMP_TIMECARD(tc, "Set Remote Description");
 
   mRemoteRequestedSDP = aSDP;
-  mCall->setRemoteDescription((cc_jsep_action_t)action,
-                              mRemoteRequestedSDP, tc);
+  mInternal->mCall->setRemoteDescription((cc_jsep_action_t)action,
+                                         mRemoteRequestedSDP, tc);
   return NS_OK;
 }
 
@@ -1153,7 +1118,7 @@ PeerConnectionImpl::AddIceCandidate(const char* aCandidate, const char* aMid, un
   mTimeCard = nullptr;
   STAMP_TIMECARD(tc, "Add Ice Candidate");
 
-  mCall->addICECandidate(aCandidate, aMid, aLevel, tc);
+  mInternal->mCall->addICECandidate(aCandidate, aMid, aLevel, tc);
   return NS_OK;
 }
 
@@ -1161,27 +1126,21 @@ NS_IMETHODIMP
 PeerConnectionImpl::CloseStreams() {
   PC_AUTO_ENTER_API_CALL(false);
 
-  if (mReadyState != PeerConnectionImpl::kClosed)  {
-    ChangeReadyState(PeerConnectionImpl::kClosing);
+  if (mReadyState != PCImplReadyState::Closed)  {
+    ChangeReadyState(PCImplReadyState::Closing);
   }
 
   CSFLogInfo(logTag, "%s: Ending associated call", __FUNCTION__);
 
-  mCall->endCall();
+  mInternal->mCall->endCall();
   return NS_OK;
 }
 
 NS_IMETHODIMP
-PeerConnectionImpl::AddStream(nsIDOMMediaStream* aMediaStream) {
+PeerConnectionImpl::AddStream(DOMMediaStream& aMediaStream) {
   PC_AUTO_ENTER_API_CALL(true);
 
-  if (!aMediaStream) {
-    CSFLogError(logTag, "%s: Attempt to add null stream",__FUNCTION__);
-    return NS_ERROR_FAILURE;
-  }
-
-  DOMMediaStream* stream = static_cast<DOMMediaStream*>(aMediaStream);
-  uint32_t hints = stream->GetHintContents();
+  uint32_t hints = aMediaStream.GetHintContents();
 
   // XXX Remove this check once addStream has an error callback
   // available and/or we have plumbing to handle multiple
@@ -1204,18 +1163,18 @@ PeerConnectionImpl::AddStream(nsIDOMMediaStream* aMediaStream) {
   }
 
   uint32_t stream_id;
-  nsresult res = mMedia->AddStream(aMediaStream, &stream_id);
+  nsresult res = mMedia->AddStream(&aMediaStream, &stream_id);
   if (NS_FAILED(res))
     return res;
 
   // TODO(ekr@rtfm.com): these integers should be the track IDs
   if (hints & DOMMediaStream::HINT_CONTENTS_AUDIO) {
-    mCall->addStream(stream_id, 0, AUDIO);
+    mInternal->mCall->addStream(stream_id, 0, AUDIO);
     mNumAudioStreams++;
   }
 
   if (hints & DOMMediaStream::HINT_CONTENTS_VIDEO) {
-    mCall->addStream(stream_id, 1, VIDEO);
+    mInternal->mCall->addStream(stream_id, 1, VIDEO);
     mNumVideoStreams++;
   }
 
@@ -1223,26 +1182,25 @@ PeerConnectionImpl::AddStream(nsIDOMMediaStream* aMediaStream) {
 }
 
 NS_IMETHODIMP
-PeerConnectionImpl::RemoveStream(nsIDOMMediaStream* aMediaStream) {
+PeerConnectionImpl::RemoveStream(DOMMediaStream& aMediaStream) {
   PC_AUTO_ENTER_API_CALL(true);
 
   uint32_t stream_id;
-  nsresult res = mMedia->RemoveStream(aMediaStream, &stream_id);
+  nsresult res = mMedia->RemoveStream(&aMediaStream, &stream_id);
 
   if (NS_FAILED(res))
     return res;
 
-  DOMMediaStream* stream = static_cast<DOMMediaStream*>(aMediaStream);
-  uint32_t hints = stream->GetHintContents();
+  uint32_t hints = aMediaStream.GetHintContents();
 
   if (hints & DOMMediaStream::HINT_CONTENTS_AUDIO) {
-    mCall->removeStream(stream_id, 0, AUDIO);
+    mInternal->mCall->removeStream(stream_id, 0, AUDIO);
     MOZ_ASSERT(mNumAudioStreams > 0);
     mNumAudioStreams--;
   }
 
   if (hints & DOMMediaStream::HINT_CONTENTS_VIDEO) {
-    mCall->removeStream(stream_id, 1, VIDEO);
+    mInternal->mCall->removeStream(stream_id, 1, VIDEO);
     MOZ_ASSERT(mNumVideoStreams > 0);
     mNumVideoStreams--;
   }
@@ -1314,7 +1272,7 @@ PeerConnectionImpl::GetRemoteDescription(char** aSDP)
 }
 
 NS_IMETHODIMP
-PeerConnectionImpl::GetReadyState(uint32_t* aState)
+PeerConnectionImpl::ReadyState(PCImplReadyState* aState)
 {
   PC_AUTO_ENTER_API_CALL_NO_CHECK();
   MOZ_ASSERT(aState);
@@ -1324,7 +1282,7 @@ PeerConnectionImpl::GetReadyState(uint32_t* aState)
 }
 
 NS_IMETHODIMP
-PeerConnectionImpl::GetSignalingState(uint32_t* aState)
+PeerConnectionImpl::SignalingState(PCImplSignalingState* aState)
 {
   PC_AUTO_ENTER_API_CALL_NO_CHECK();
   MOZ_ASSERT(aState);
@@ -1334,18 +1292,24 @@ PeerConnectionImpl::GetSignalingState(uint32_t* aState)
 }
 
 NS_IMETHODIMP
-PeerConnectionImpl::GetSipccState(uint32_t* aState)
+PeerConnectionImpl::SipccState(PCImplSipccState* aState)
 {
   PC_AUTO_ENTER_API_CALL_NO_CHECK();
   MOZ_ASSERT(aState);
 
   PeerConnectionCtx* pcctx = PeerConnectionCtx::GetInstance();
-  *aState = pcctx ? pcctx->sipcc_state() : kIdle;
+  // Avoid B2G error: operands to ?: have different types
+  // 'mozilla::dom::PCImplSipccState' and 'mozilla::dom::PCImplSipccState::Enum'
+  if (pcctx) {
+    *aState = pcctx->sipcc_state();
+  } else {
+    *aState = PCImplSipccState::Idle;
+  }
   return NS_OK;
 }
 
 NS_IMETHODIMP
-PeerConnectionImpl::GetIceState(uint32_t* aState)
+PeerConnectionImpl::IceState(PCImplIceState* aState)
 {
   PC_AUTO_ENTER_API_CALL_NO_CHECK();
   MOZ_ASSERT(aState);
@@ -1358,9 +1322,10 @@ nsresult
 PeerConnectionImpl::CheckApiState(bool assert_ice_ready) const
 {
   PC_AUTO_ENTER_API_CALL_NO_CHECK();
-  MOZ_ASSERT(mTrickle || !assert_ice_ready || (mIceState != kIceGathering));
+  MOZ_ASSERT(mTrickle || !assert_ice_ready ||
+             (mIceState != PCImplIceState::IceGathering));
 
-  if (mReadyState == kClosed)
+  if (mReadyState == PCImplReadyState::Closed)
     return NS_ERROR_FAILURE;
   if (!mMedia)
     return NS_ERROR_FAILURE;
@@ -1382,10 +1347,16 @@ PeerConnectionImpl::CloseInt()
 {
   PC_AUTO_ENTER_API_CALL_NO_CHECK();
 
-  if (mCall) {
+  // Clear raw pointer to observer since PeerConnection.js does not guarantee
+  // the observer's existence past Close().
+  //
+  // Any outstanding runnables hold RefPtr<> references to observer.
+  mPCObserver.Close();
+
+  if (mInternal->mCall) {
     CSFLogInfo(logTag, "%s: Closing PeerConnectionImpl %s; "
                "ending call", __FUNCTION__, mHandle.c_str());
-    mCall->endCall();
+    mInternal->mCall->endCall();
   }
 #ifdef MOZILLA_INTERNAL_API
   if (mDataConnection) {
@@ -1438,9 +1409,11 @@ PeerConnectionImpl::virtualDestroyNSSReference()
 #endif
 
 void
-PeerConnectionImpl::onCallEvent(ccapi_call_event_e aCallEvent,
-                                CSF::CC_CallInfoPtr aInfo)
+PeerConnectionImpl::onCallEvent(const OnCallEventArgs& args)
 {
+  const ccapi_call_event_e &aCallEvent = args.mCallEvent;
+  const CSF::CC_CallInfoPtr &aInfo = args.mInfo;
+
   PC_AUTO_ENTER_API_CALL_NO_CHECK();
   MOZ_ASSERT(aInfo.get());
 
@@ -1472,13 +1445,13 @@ PeerConnectionImpl::onCallEvent(ccapi_call_event_e aCallEvent,
 
     case CONNECTED:
       CSFLogDebug(logTag, "Setting PeerConnnection state to kActive");
-      ChangeReadyState(kActive);
+      ChangeReadyState(PCImplReadyState::Active);
       break;
     default:
       break;
   }
 
-  nsCOMPtr<IPeerConnectionObserver> pco = do_QueryReferent(mPCObserver);
+  nsRefPtr<PeerConnectionObserver> pco = mPCObserver.MayGet();
   if (!pco) {
     return;
   }
@@ -1495,26 +1468,27 @@ PeerConnectionImpl::onCallEvent(ccapi_call_event_e aCallEvent,
 }
 
 void
-PeerConnectionImpl::ChangeReadyState(PeerConnectionImpl::ReadyState aReadyState)
+PeerConnectionImpl::ChangeReadyState(PCImplReadyState aReadyState)
 {
   PC_AUTO_ENTER_API_CALL_NO_CHECK();
   mReadyState = aReadyState;
 
-  // Note that we are passing an nsRefPtr<IPeerConnectionObserver> which
-  // keeps the observer live.
-  nsCOMPtr<IPeerConnectionObserver> pco = do_QueryReferent(mPCObserver);
+  // Note that we are passing an nsRefPtr which keeps the observer live.
+  nsRefPtr<PeerConnectionObserver> pco = mPCObserver.MayGet();
   if (!pco) {
     return;
   }
-  RUN_ON_THREAD(mThread, WrapRunnable(pco,
-                                      &IPeerConnectionObserver::OnStateChange,
-                                      // static_cast needed to work around old Android NDK r5c compiler
-                                      static_cast<int>(IPeerConnectionObserver::kReadyState)),
-    NS_DISPATCH_NORMAL);
+  WrappableJSErrorResult rv;
+  RUN_ON_THREAD(mThread,
+                WrapRunnable(pco,
+                             &PeerConnectionObserver::OnStateChange,
+                             PCObserverStateType::ReadyState,
+                             rv, static_cast<JSCompartment*>(nullptr)),
+                NS_DISPATCH_NORMAL);
 }
 
 void
-PeerConnectionImpl::SetSignalingState_m(SignalingState aSignalingState)
+PeerConnectionImpl::SetSignalingState_m(PCImplSignalingState aSignalingState)
 {
   PC_AUTO_ENTER_API_CALL_NO_CHECK();
   if (mSignalingState == aSignalingState) {
@@ -1522,11 +1496,13 @@ PeerConnectionImpl::SetSignalingState_m(SignalingState aSignalingState)
   }
 
   mSignalingState = aSignalingState;
-  nsCOMPtr<IPeerConnectionObserver> pco = do_QueryReferent(mPCObserver);
+  nsRefPtr<PeerConnectionObserver> pco = mPCObserver.MayGet();
   if (!pco) {
     return;
   }
-  pco->OnStateChange(IPeerConnectionObserver::kSignalingState);
+  JSErrorResult rv;
+  pco->OnStateChange(PCObserverStateType::SignalingState, rv);
+  MOZ_ASSERT(!rv.Failed());
 }
 
 PeerConnectionWrapper::PeerConnectionWrapper(const std::string& handle)
@@ -1562,7 +1538,7 @@ PeerConnectionImpl::IceGatheringCompleted(NrIceCtx *aCtx)
   RUN_ON_THREAD(mThread,
                 WrapRunnable(pc,
                              &PeerConnectionImpl::IceStateChange_m,
-                             kIceWaiting),
+                             PCImplIceState::IceWaiting),
                 NS_DISPATCH_NORMAL);
 }
 
@@ -1575,7 +1551,7 @@ PeerConnectionImpl::IceCompleted(NrIceCtx *aCtx)
   RUN_ON_THREAD(mThread,
                 WrapRunnable(pc,
                              &PeerConnectionImpl::IceStateChange_m,
-                             kIceConnected),
+                             PCImplIceState::IceConnected),
                 NS_DISPATCH_NORMAL);
 }
 
@@ -1588,12 +1564,12 @@ PeerConnectionImpl::IceFailed(NrIceCtx *aCtx)
   RUN_ON_THREAD(mThread,
                 WrapRunnable(pc,
                              &PeerConnectionImpl::IceStateChange_m,
-                             kIceFailed),
+                             PCImplIceState::IceFailed),
                 NS_DISPATCH_NORMAL);
 }
 
 nsresult
-PeerConnectionImpl::IceStateChange_m(IceState aState)
+PeerConnectionImpl::IceStateChange_m(PCImplIceState aState)
 {
   PC_AUTO_ENTER_API_CALL(false);
 
@@ -1602,32 +1578,33 @@ PeerConnectionImpl::IceStateChange_m(IceState aState)
   mIceState = aState;
 
   switch (mIceState) {
-    case kIceGathering:
+    case PCImplIceState::IceGathering:
       STAMP_TIMECARD(mTimeCard, "Ice state: gathering");
       break;
-    case kIceWaiting:
+    case PCImplIceState::IceWaiting:
       STAMP_TIMECARD(mTimeCard, "Ice state: waiting");
       break;
-    case kIceChecking:
+    case PCImplIceState::IceChecking:
       STAMP_TIMECARD(mTimeCard, "Ice state: checking");
       break;
-    case kIceConnected:
+    case PCImplIceState::IceConnected:
       STAMP_TIMECARD(mTimeCard, "Ice state: connected");
       break;
-    case kIceFailed:
+    case PCImplIceState::IceFailed:
       STAMP_TIMECARD(mTimeCard, "Ice state: failed");
       break;
   }
 
-  nsCOMPtr<IPeerConnectionObserver> pco = do_QueryReferent(mPCObserver);
+  nsRefPtr<PeerConnectionObserver> pco = mPCObserver.MayGet();
   if (!pco) {
     return NS_OK;
   }
+  WrappableJSErrorResult rv;
   RUN_ON_THREAD(mThread,
                 WrapRunnable(pco,
-                             &IPeerConnectionObserver::OnStateChange,
-                             // static_cast required to work around old C++ compiler on Android NDK r5c
-                             static_cast<int>(IPeerConnectionObserver::kIceState)),
+                             &PeerConnectionObserver::OnStateChange,
+                             PCObserverStateType::IceState,
+                             rv, static_cast<JSCompartment*>(nullptr)),
                 NS_DISPATCH_NORMAL);
   return NS_OK;
 }
@@ -1675,50 +1652,33 @@ PeerConnectionImpl::startCallTelem() {
 }
 #endif
 
-#ifdef MOZILLA_INTERNAL_API
-static nsresult
-GetStreams(JSContext* cx, PeerConnectionImpl* peerConnection,
-           MediaStreamList::StreamType type, JS::Value* streams)
-{
-  nsRefPtr<MediaStreamList> list(new MediaStreamList(peerConnection, type));
-
-  nsCOMPtr<nsIScriptGlobalObject> global =
-    do_QueryInterface(peerConnection->GetWindow());
-  JS::Rooted<JSObject*> scope(cx, global->GetGlobalJSObject());
-  if (!scope) {
-    streams->setNull();
-    return NS_ERROR_FAILURE;
-  }
-
-  JSAutoCompartment ac(cx, scope);
-  JSObject* obj = list->WrapObject(cx, scope);
-  if (!obj) {
-    streams->setNull();
-    return NS_ERROR_FAILURE;
-  }
-
-  streams->setObject(*obj);
-  return NS_OK;
-}
-#endif
-
 NS_IMETHODIMP
-PeerConnectionImpl::GetLocalStreams(JSContext* cx, JS::Value* streams)
+PeerConnectionImpl::GetLocalStreams(nsTArray<nsRefPtr<mozilla::DOMMediaStream > >& result)
 {
   PC_AUTO_ENTER_API_CALL_NO_CHECK();
 #ifdef MOZILLA_INTERNAL_API
-  return GetStreams(cx, this, MediaStreamList::Local, streams);
+  for(uint32_t i=0; i < media()->LocalStreamsLength(); i++) {
+    LocalSourceStreamInfo *info = media()->GetLocalStream(i);
+    NS_ENSURE_TRUE(info, NS_ERROR_UNEXPECTED);
+    result.AppendElement(info->GetMediaStream());
+  }
+  return NS_OK;
 #else
   return NS_ERROR_FAILURE;
 #endif
 }
 
 NS_IMETHODIMP
-PeerConnectionImpl::GetRemoteStreams(JSContext* cx, JS::Value* streams)
+PeerConnectionImpl::GetRemoteStreams(nsTArray<nsRefPtr<mozilla::DOMMediaStream > >& result)
 {
   PC_AUTO_ENTER_API_CALL_NO_CHECK();
 #ifdef MOZILLA_INTERNAL_API
-  return GetStreams(cx, this, MediaStreamList::Remote, streams);
+  for(uint32_t i=0; i < media()->RemoteStreamsLength(); i++) {
+    RemoteSourceStreamInfo *info = media()->GetRemoteStream(i);
+    NS_ENSURE_TRUE(info, NS_ERROR_UNEXPECTED);
+    result.AppendElement(info->GetMediaStream());
+  }
+  return NS_OK;
 #else
   return NS_ERROR_FAILURE;
 #endif

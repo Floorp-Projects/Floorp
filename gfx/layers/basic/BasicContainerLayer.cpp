@@ -115,6 +115,20 @@ BasicContainerLayer::ChildrenPartitionVisibleRegion(const nsIntRect& aInRect)
   return covered.Contains(rect);
 }
 
+void
+BasicContainerLayer::Validate(LayerManager::DrawThebesLayerCallback aCallback,
+                              void* aCallbackData)
+{
+  for (Layer* l = mFirstChild; l; l = l->GetNextSibling()) {
+    BasicImplData* data = ToData(l);
+    data->Validate(aCallback, aCallbackData);
+    if (l->GetMaskLayer()) {
+      data = ToData(l->GetMaskLayer());
+      data->Validate(aCallback, aCallbackData);
+    }
+  }
+}
+
 already_AddRefed<ContainerLayer>
 BasicLayerManager::CreateContainerLayer()
 {

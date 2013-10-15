@@ -345,6 +345,10 @@
                     image="chrome://browser/skin/devtools/blackBoxMessageEye.png"
                     command="unBlackBoxCommand"/>
           </vbox>
+          <vbox id="source-progress-container" align="center" pack="center">
+            <progressmeter id="source-progress"
+                           mode="undetermined"/>
+          </vbox>
         </deck>
         <splitter class="devtools-side-splitter"/>
         <tabbox id="instruments-pane"

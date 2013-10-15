@@ -56,6 +56,12 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=876475
         },{
           accOrElmOrID: "textarea",
           expected: [["txtarea", "Here lies treasure."], ["Here lies treasure.", "txtarea"]]
+        },{
+          accOrElmOrID: "textentry",
+          expected: [["entry", "Mario", "First name:"], ["First name:", "Mario", "entry"]]
+        },{
+          accOrElmOrID: "range",
+          expected: [["slider", "3", "Points:"], ["Points:", "3", "slider"]]
         }];
 
         // Test all possible braille order preference values.
@@ -109,6 +115,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=876475
       <textarea id="textarea" cols="80" rows="5">
         Here lies treasure.
       </textarea>
+      <label>First name: <input id="textentry" value="Mario"></label>
+      <label>Points: <input id="range" type="range" name="points" min="1" max="10" value="3"></label>
    </div>
   </body>
 </html>

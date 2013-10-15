@@ -3265,10 +3265,22 @@ CanvasRenderingContext2D::DrawWindow(nsIDOMWindow* window, double x,
   double sh = matrix._22 * h;
   nsRefPtr<gfxContext> thebes;
   nsRefPtr<gfxASurface> drawSurf;
+  RefPtr<DrawTarget> drawDT;
   if (gfxPlatform::GetPlatform()->SupportsAzureContentForDrawTarget(mTarget)) {
     thebes = new gfxContext(mTarget);
     thebes->SetMatrix(gfxMatrix(matrix._11, matrix._12, matrix._21,
                                 matrix._22, matrix._31, matrix._32));
+  } else if (gfxPlatform::GetPlatform()->SupportsAzureContent()) {
+    drawDT =
+      gfxPlatform::GetPlatform()->CreateOffscreenContentDrawTarget(IntSize(ceil(sw), ceil(sh)),
+                                                                   FORMAT_B8G8R8A8);
+    if (!drawDT) {
+      error.Throw(NS_ERROR_FAILURE);
+      return;
+    }
+
+    thebes = new gfxContext(drawDT);
+    thebes->Scale(matrix._11, matrix._22);
   } else {
     drawSurf =
       gfxPlatform::GetPlatform()->CreateOffscreenSurface(gfxIntSize(ceil(sw), ceil(sh)),
@@ -3278,32 +3290,44 @@ CanvasRenderingContext2D::DrawWindow(nsIDOMWindow* window, double x,
       return;
     }
 
-    drawSurf->SetDeviceOffset(gfxPoint(-floor(x), -floor(y)));
     thebes = new gfxContext(drawSurf);
-    thebes->Translate(gfxPoint(floor(x), floor(y)));
     thebes->Scale(matrix._11, matrix._22);
   }
 
   nsCOMPtr<nsIPresShell> shell = presContext->PresShell();
   unused << shell->RenderDocument(r, renderDocFlags, backgroundColor, thebes);
-  if (drawSurf) {
-    gfxIntSize size = drawSurf->GetSize();
+  if (drawSurf || drawDT) {
+    RefPtr<SourceSurface> source;
 
-    drawSurf->SetDeviceOffset(gfxPoint(0, 0));
-    nsRefPtr<gfxImageSurface> img = drawSurf->GetAsReadableARGB32ImageSurface();
-    if (!img || !img->Data()) {
-      error.Throw(NS_ERROR_FAILURE);
-      return;
+    if (drawSurf) {
+      gfxIntSize size = drawSurf->GetSize();
+
+      drawSurf->SetDeviceOffset(gfxPoint(0, 0));
+      nsRefPtr<gfxImageSurface> img = drawSurf->GetAsReadableARGB32ImageSurface();
+      if (!img || !img->Data()) {
+        error.Throw(NS_ERROR_FAILURE);
+        return;
+      }
+
+      source =
+        mTarget->CreateSourceSurfaceFromData(img->Data(),
+                                             IntSize(size.width, size.height),
+                                             img->Stride(),
+                                             FORMAT_B8G8R8A8);
+    } else {
+      RefPtr<SourceSurface> snapshot = drawDT->Snapshot();
+      RefPtr<DataSourceSurface> data = snapshot->GetDataSurface();
+
+      source =
+        mTarget->CreateSourceSurfaceFromData(data->GetData(),
+                                             data->GetSize(),
+                                             data->Stride(),
+                                             data->GetFormat());
     }
 
-    RefPtr<SourceSurface> data =
-      mTarget->CreateSourceSurfaceFromData(img->Data(),
-                                           IntSize(size.width, size.height),
-                                           img->Stride(),
-                                           FORMAT_B8G8R8A8);
     mgfx::Rect destRect(0, 0, w, h);
     mgfx::Rect sourceRect(0, 0, sw, sh);
-    mTarget->DrawSurface(data, destRect, sourceRect,
+    mTarget->DrawSurface(source, destRect, sourceRect,
                          DrawSurfaceOptions(mgfx::FILTER_POINT),
                          DrawOptions(1.0f, OP_SOURCE, AA_NONE));
     mTarget->Flush();

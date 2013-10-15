@@ -49,7 +49,7 @@ using mozilla::PodZero;
 
 static inline jsid
 id_prototype(JSContext *cx) {
-    return NameToId(cx->names().classPrototype);
+    return NameToId(cx->names().prototype);
 }
 
 static inline jsid
@@ -336,6 +336,39 @@ TypeSet::isSubset(TypeSet *other)
     return true;
 }
 
+bool
+TypeSet::enumerateTypes(TypeList *list)
+{
+    /* If any type is possible, there's no need to worry about specifics. */
+    if (flags & TYPE_FLAG_UNKNOWN)
+        return list->append(Type::UnknownType());
+
+    /* Enqueue type set members stored as bits. */
+    for (TypeFlags flag = 1; flag < TYPE_FLAG_ANYOBJECT; flag <<= 1) {
+        if (flags & flag) {
+            Type type = Type::PrimitiveType(TypeFlagPrimitive(flag));
+            if (!list->append(type))
+                return false;
+        }
+    }
+
+    /* If any object is possible, skip specifics. */
+    if (flags & TYPE_FLAG_ANYOBJECT)
+        return list->append(Type::AnyObjectType());
+
+    /* Enqueue specific object types. */
+    unsigned count = getObjectCount();
+    for (unsigned i = 0; i < count; i++) {
+        TypeObjectKey *object = getObject(i);
+        if (object) {
+            if (!list->append(Type::ObjectType(object)))
+                return false;
+        }
+    }
+
+    return true;
+}
+
 inline void
 TypeSet::addTypesToConstraint(JSContext *cx, TypeConstraint *constraint)
 {
@@ -343,38 +376,9 @@ TypeSet::addTypesToConstraint(JSContext *cx, TypeConstraint *constraint)
      * Build all types in the set into a vector before triggering the
      * constraint, as doing so may modify this type set.
      */
-    Vector<Type> types(cx);
-
-    /* If any type is possible, there's no need to worry about specifics. */
-    if (flags & TYPE_FLAG_UNKNOWN) {
-        if (!types.append(Type::UnknownType()))
-            cx->compartment()->types.setPendingNukeTypes(cx);
-    } else {
-        /* Enqueue type set members stored as bits. */
-        for (TypeFlags flag = 1; flag < TYPE_FLAG_ANYOBJECT; flag <<= 1) {
-            if (flags & flag) {
-                Type type = Type::PrimitiveType(TypeFlagPrimitive(flag));
-                if (!types.append(type))
-                    cx->compartment()->types.setPendingNukeTypes(cx);
-            }
-        }
-
-        /* If any object is possible, skip specifics. */
-        if (flags & TYPE_FLAG_ANYOBJECT) {
-            if (!types.append(Type::AnyObjectType()))
-                cx->compartment()->types.setPendingNukeTypes(cx);
-        } else {
-            /* Enqueue specific object types. */
-            unsigned count = getObjectCount();
-            for (unsigned i = 0; i < count; i++) {
-                TypeObjectKey *object = getObject(i);
-                if (object) {
-                    if (!types.append(Type::ObjectType(object)))
-                        cx->compartment()->types.setPendingNukeTypes(cx);
-                }
-            }
-        }
-    }
+    TypeList types;
+    if (!enumerateTypes(&types))
+        cx->compartment()->types.setPendingNukeTypes(cx);
 
     for (unsigned i = 0; i < types.length(); i++)
         constraint->newType(cx, this, types[i]);
@@ -566,10 +570,8 @@ class types::CompilerConstraint
 
     CompilerConstraint(const HeapTypeSetKey &property)
       : property(property),
-        expected(property.actualTypes->clone(IonAlloc()))
-    {
-        // Note: CompilerConstraintList::add watches for OOM under clone().
-    }
+        expected(property.maybeTypes() ? property.maybeTypes()->clone(IonAlloc()) : NULL)
+    {}
 
     // Generate the type constraint recording the assumption made by this
     // compilation. Returns true if the assumption originally made still holds.
@@ -580,7 +582,7 @@ void
 CompilerConstraintList::add(CompilerConstraint *constraint)
 {
 #ifdef JS_ION
-    if (!constraint || !constraint->expected || !constraints.append(constraint))
+    if (!constraint || !constraints.append(constraint))
         setFailed();
 #else
     MOZ_CRASH();
@@ -641,14 +643,17 @@ template <typename T>
 bool
 CompilerConstraintInstance<T>::generateTypeConstraint(JSContext *cx, RecompileInfo recompileInfo)
 {
-    if (property.actualObject->unknownProperties())
+    if (property.object()->unknownProperties())
+        return false;
+
+    if (!property.instantiate(cx))
         return false;
 
     if (!data.constraintHolds(cx, property, expected))
         return false;
 
-    property.actualTypes->add(cx, cx->typeLifoAlloc().new_<TypeCompilerConstraint<T> >(recompileInfo, data),
-                              /* callExisting = */ false);
+    property.maybeTypes()->add(cx, cx->typeLifoAlloc().new_<TypeCompilerConstraint<T> >(recompileInfo, data),
+                               /* callExisting = */ false);
     return true;
 }
 
@@ -683,37 +688,62 @@ TypeObjectKey::newScript()
     return nullptr;
 }
 
+TypeObject *
+TypeObjectKey::maybeType()
+{
+    if (isTypeObject())
+        return asTypeObject();
+    if (asSingleObject()->hasLazyType())
+        return NULL;
+    return asSingleObject()->type();
+}
+
 bool
 TypeObjectKey::unknownProperties()
 {
-#ifdef JS_ION
-    JSContext *cx = jit::GetIonContext()->cx;
-    TypeObject *type = isSingleObject() ? asSingleObject()->getType(cx) : asTypeObject();
-    if (!type)
-        MOZ_CRASH();
-    return type->unknownProperties();
-#else
-    MOZ_CRASH();
-#endif
+    if (TypeObject *type = maybeType())
+        return type->unknownProperties();
+    return false;
 }
 
 HeapTypeSetKey
-TypeObjectKey::property(jsid id)
+TypeObjectKey::property(jsid id, JSContext *maybecx /* = NULL */)
 {
-#ifdef JS_ION
-    JSContext *cx = jit::GetIonContext()->cx;
-    TypeObject *type = isSingleObject() ? asSingleObject()->getType(cx) : asTypeObject();
-    if (!type)
-        MOZ_CRASH();
+    JS_ASSERT(!unknownProperties());
+
     HeapTypeSetKey property;
-    property.actualObject = type;
-    property.actualTypes = type->getProperty(cx, id);
-    if (!property.actualTypes)
-        MOZ_CRASH();
+    property.object_ = this;
+    property.id_ = id;
+    if (TypeObject *type = maybeType())
+        property.maybeTypes_ = type->maybeGetProperty(id);
+
+#ifdef JS_ION
+    // If we are accessing a lazily defined property which actually exists in
+    // the VM and has not been instantiated yet, instantiate it now if we are
+    // on the main thread and able to do so.
+    if (maybecx && !property.maybeTypes() && !JSID_IS_VOID(id) && !JSID_IS_EMPTY(id)) {
+        JS_ASSERT(CurrentThreadCanAccessRuntime(maybecx->runtime()));
+        JSObject *singleton = isSingleObject() ? asSingleObject() : asTypeObject()->singleton;
+        if (singleton && singleton->isNative() && singleton->nativeLookupPure(id)) {
+            EnsureTrackPropertyTypes(maybecx, singleton, id);
+            if (TypeObject *type = maybeType())
+                property.maybeTypes_ = type->maybeGetProperty(id);
+        }
+    }
+#endif // JS_ION
+
     return property;
-#else
-    MOZ_CRASH();
-#endif
+}
+
+bool
+HeapTypeSetKey::instantiate(JSContext *cx)
+{
+    if (maybeTypes())
+        return true;
+    if (object()->isSingleObject() && !object()->asSingleObject()->getType(cx))
+        return false;
+    maybeTypes_ = object()->maybeType()->getProperty(cx, id());
+    return maybeTypes_ != NULL;
 }
 
 bool
@@ -738,12 +768,17 @@ types::FinishCompilation(JSContext *cx, JSScript *script, ExecutionMode executio
 
     *precompileInfo = RecompileInfo(index);
 
+    bool succeeded = true;
+
     for (size_t i = 0; i < constraints->length(); i++) {
         CompilerConstraint *constraint = constraints->get(i);
-        if (!constraint->generateTypeConstraint(cx, *precompileInfo)) {
-            types.constrainedOutputs->back().invalidate();
-            return false;
-        }
+        if (!constraint->generateTypeConstraint(cx, *precompileInfo))
+            succeeded = false;
+    }
+
+    if (!succeeded) {
+        types.constrainedOutputs->back().invalidate();
+        return false;
     }
 
     return true;
@@ -766,7 +801,9 @@ class ConstraintDataFreeze
     bool constraintHolds(JSContext *cx,
                          const HeapTypeSetKey &property, TemporaryTypeSet *expected)
     {
-        return property.actualTypes->isSubset(expected);
+        return expected
+               ? property.maybeTypes()->isSubset(expected)
+               : property.maybeTypes()->empty();
     }
 };
 
@@ -842,13 +879,15 @@ TemporaryTypeSet::mightBeType(JSValueType type)
 JSValueType
 HeapTypeSetKey::knownTypeTag(CompilerConstraintList *constraints)
 {
-    if (actualTypes->unknown())
+    TypeSet *types = maybeTypes();
+
+    if (!types || types->unknown())
         return JSVAL_TYPE_UNKNOWN;
 
-    TypeFlags flags = actualTypes->baseFlags() & ~TYPE_FLAG_ANYOBJECT;
+    TypeFlags flags = types->baseFlags() & ~TYPE_FLAG_ANYOBJECT;
     JSValueType type;
 
-    if (actualTypes->unknownObject() || actualTypes->getObjectCount())
+    if (types->unknownObject() || types->getObjectCount())
         type = flags ? JSVAL_TYPE_UNKNOWN : JSVAL_TYPE_OBJECT;
     else
         type = GetValueTypeFromTypeFlags(flags);
@@ -863,7 +902,7 @@ HeapTypeSetKey::knownTypeTag(CompilerConstraintList *constraints)
      * that the exact tag is unknown, as it will stay unknown as more types are
      * added to the set.
      */
-    JS_ASSERT_IF(actualTypes->empty(), type == JSVAL_TYPE_UNKNOWN);
+    JS_ASSERT_IF(types->empty(), type == JSVAL_TYPE_UNKNOWN);
 
     return type;
 }
@@ -871,7 +910,7 @@ HeapTypeSetKey::knownTypeTag(CompilerConstraintList *constraints)
 bool
 HeapTypeSetKey::notEmpty(CompilerConstraintList *constraints)
 {
-    if (!actualTypes->empty())
+    if (maybeTypes() && !maybeTypes()->empty())
         return true;
     freeze(constraints);
     return false;
@@ -880,7 +919,11 @@ HeapTypeSetKey::notEmpty(CompilerConstraintList *constraints)
 bool
 HeapTypeSetKey::knownSubset(CompilerConstraintList *constraints, const HeapTypeSetKey &other)
 {
-    if (!actualTypes->isSubset(other.actualTypes))
+    if (!maybeTypes() || maybeTypes()->empty()) {
+        freeze(constraints);
+        return true;
+    }
+    if (!other.maybeTypes() || !maybeTypes()->isSubset(other.maybeTypes()))
         return false;
     freeze(constraints);
     return true;
@@ -898,10 +941,12 @@ TemporaryTypeSet::getSingleton()
 JSObject *
 HeapTypeSetKey::singleton(CompilerConstraintList *constraints)
 {
-    if (actualTypes->baseFlags() != 0 || actualTypes->getObjectCount() != 1)
+    TypeSet *types = maybeTypes();
+
+    if (!types || types->baseFlags() != 0 || types->getObjectCount() != 1)
         return nullptr;
 
-    JSObject *obj = actualTypes->getSingleObject(0);
+    JSObject *obj = types->getSingleObject(0);
 
     if (obj)
         freeze(constraints);
@@ -912,9 +957,12 @@ HeapTypeSetKey::singleton(CompilerConstraintList *constraints)
 bool
 HeapTypeSetKey::needsBarrier(CompilerConstraintList *constraints)
 {
-    bool result = actualTypes->unknownObject()
-               || actualTypes->getObjectCount() > 0
-               || actualTypes->hasAnyFlag(TYPE_FLAG_STRING);
+    TypeSet *types = maybeTypes();
+    if (!types)
+        return false;
+    bool result = types->unknownObject()
+               || types->getObjectCount() > 0
+               || types->hasAnyFlag(TYPE_FLAG_STRING);
     if (!result)
         freeze(constraints);
     return result;
@@ -946,7 +994,7 @@ class ConstraintDataFreezeObjectFlags
     bool constraintHolds(JSContext *cx,
                          const HeapTypeSetKey &property, TemporaryTypeSet *expected)
     {
-        return !invalidateOnNewObjectState(property.actualObject);
+        return !invalidateOnNewObjectState(property.object()->maybeType());
     }
 };
 
@@ -955,22 +1003,16 @@ class ConstraintDataFreezeObjectFlags
 bool
 TypeObjectKey::hasFlags(CompilerConstraintList *constraints, TypeObjectFlags flags)
 {
-#ifdef JS_ION
     JS_ASSERT(flags);
 
-    JSContext *cx = jit::GetIonContext()->cx;
-    TypeObject *type = isSingleObject() ? asSingleObject()->getType(cx) : asTypeObject();
-    if (!type)
-        MOZ_CRASH();
-    if (type->hasAnyFlags(flags))
-        return true;
+    if (TypeObject *type = maybeType()) {
+        if (type->hasAnyFlags(flags))
+            return true;
+    }
 
     HeapTypeSetKey objectProperty = property(JSID_EMPTY);
     constraints->add(IonAlloc()->new_<CompilerConstraintInstance<ConstraintDataFreezeObjectFlags> >(objectProperty, ConstraintDataFreezeObjectFlags(flags)));
     return false;
-#else
-    MOZ_CRASH();
-#endif
 }
 
 bool
@@ -1047,7 +1089,7 @@ class ConstraintDataFreezeObjectForNewScriptTemplate
     bool constraintHolds(JSContext *cx,
                          const HeapTypeSetKey &property, TemporaryTypeSet *expected)
     {
-        return !invalidateOnNewObjectState(property.actualObject);
+        return !invalidateOnNewObjectState(property.object()->maybeType());
     }
 };
 
@@ -1073,7 +1115,7 @@ class ConstraintDataFreezeObjectForTypedArrayBuffer
     bool constraintHolds(JSContext *cx,
                          const HeapTypeSetKey &property, TemporaryTypeSet *expected)
     {
-        return !invalidateOnNewObjectState(property.actualObject);
+        return !invalidateOnNewObjectState(property.object()->maybeType());
     }
 };
 
@@ -1170,7 +1212,7 @@ class ConstraintDataFreezeConfiguredProperty
             }
         }
 
-        return !property.actualTypes->configuredProperty();
+        return !property.maybeTypes()->configuredProperty();
     }
 };
 
@@ -1179,7 +1221,7 @@ class ConstraintDataFreezeConfiguredProperty
 bool
 HeapTypeSetKey::configured(CompilerConstraintList *constraints, TypeObjectKey *type)
 {
-    if (actualTypes->configuredProperty())
+    if (maybeTypes() && maybeTypes()->configuredProperty())
         return true;
 
     constraints->add(IonAlloc()->new_<CompilerConstraintInstance<ConstraintDataFreezeConfiguredProperty> >(*this, ConstraintDataFreezeConfiguredProperty(type)));
@@ -1255,7 +1297,8 @@ TemporaryTypeSet::convertDoubleElements(CompilerConstraintList *constraints)
         // double in their element types (as the conversion may render the type
         // information incorrect), nor for non-array objects (as their elements
         // may point to emptyObjectElements, which cannot be converted).
-        if (!property.actualTypes->hasType(Type::DoubleType()) ||
+        if (!property.maybeTypes() ||
+            !property.maybeTypes()->hasType(Type::DoubleType()) ||
             type->clasp() != &ArrayObject::class_)
         {
             dontConvert = true;
@@ -1763,15 +1806,9 @@ bool
 types::ArrayPrototypeHasIndexedProperty(CompilerConstraintList *constraints,
                                         HandleScript script)
 {
-#ifdef JS_ION
-    JSObject *proto = script->global().getOrCreateArrayPrototype(jit::GetIonContext()->cx);
-    if (!proto)
-        return true;
-
-    return PrototypeHasIndexedProperty(constraints, proto);
-#else
-    MOZ_CRASH();
-#endif
+    if (JSObject *proto = script->global().maybeGetArrayPrototype())
+        return PrototypeHasIndexedProperty(constraints, proto);
+    return true;
 }
 
 bool

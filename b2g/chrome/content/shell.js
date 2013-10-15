@@ -529,6 +529,14 @@ var shell = {
     content.dispatchEvent(event);
   },
 
+  sendCustomEvent: function shell_sendCustomEvent(type, details) {
+    let content = getContentWindow();
+    let event = content.document.createEvent('CustomEvent');
+    let payload = details ? ObjectWrapper.wrap(details, content) : {};
+    event.initCustomEvent(type, true, true, payload);
+    content.dispatchEvent(event);
+  },
+
   sendChromeEvent: function shell_sendChromeEvent(details) {
     if (!this.isHomeLoaded) {
       if (!('pendingChromeEvents' in this)) {
@@ -545,8 +553,7 @@ var shell = {
 
   openAppForSystemMessage: function shell_openAppForSystemMessage(msg) {
     let origin = Services.io.newURI(msg.manifest, null, null).prePath;
-    this.sendChromeEvent({
-      type: 'open-app',
+    let payload = {
       url: msg.uri,
       manifestURL: msg.manifest,
       isActivity: (msg.type == 'activity'),
@@ -555,7 +562,11 @@ var shell = {
       target: msg.target,
       expectingSystemMessage: true,
       extra: msg.extra
-    });
+    }
+    this.sendCustomEvent('open-app', payload);
+    // XXX Remove once the gaia part of bug 924032 has landed.
+    payload.type = 'open-app';
+    this.sendChromeEvent(payload);
   },
 
   receiveMessage: function shell_receiveMessage(message) {
@@ -947,12 +958,21 @@ var WebappsHelper = {
             return;
 
           let manifest = new ManifestHelper(aManifest, json.origin);
-          shell.sendChromeEvent({
-            "type": "webapps-launch",
-            "timestamp": json.timestamp,
-            "url": manifest.fullLaunchPath(json.startPoint),
-            "manifestURL": json.manifestURL
-          });
+          let payload = {
+            __exposedProps__: {
+              timestamp: "r",
+              url: "r",
+              manifestURL: "r"
+            },
+            timestamp: json.timestamp,
+            url: manifest.fullLaunchPath(json.startPoint),
+            manifestURL: json.manifestURL
+          }
+          shell.sendEvent(getContentWindow(), "webapps-launch", payload);
+          // XXX Remove once the gaia side of bug 924032 lands.
+          payload.type = "webapps-launch";
+          delete payload.__exposedProps__;
+          shell.sendChromeEvent(payload);
         });
         break;
       case "webapps-ask-install":
@@ -964,10 +984,14 @@ var WebappsHelper = {
         });
         break;
       case "webapps-close":
-        shell.sendChromeEvent({
-          "type": "webapps-close",
-          "manifestURL": json.manifestURL
-        });
+        shell.sendEvent(shell.getContentWindow(), "webapps-close",
+          {
+            __exposedProps__: { "manifestURL": "r" },
+            "manifestURL": json.manifestURL
+          });
+        // XXX Remove once the gaia side of bug 924032 lands.
+        shell.sendChromeEvent({ type: "webapps-close",
+                                "manifestURL": json.manifestURL });
         break;
     }
   }

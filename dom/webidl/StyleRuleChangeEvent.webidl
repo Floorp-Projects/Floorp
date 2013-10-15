@@ -5,7 +5,7 @@
  */
 interface CSSRule;
 
-[Constructor(DOMString type, optional StyleRuleChangeEventInit eventInitDict), HeaderFile="GeneratedEventClasses.h"]
+[ChromeOnly, Constructor(DOMString type, optional StyleRuleChangeEventInit eventInitDict), HeaderFile="GeneratedEventClasses.h"]
 interface StyleRuleChangeEvent : Event
 {
   readonly attribute CSSStyleSheet? stylesheet;

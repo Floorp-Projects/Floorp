@@ -100,7 +100,7 @@ TopSitesView.prototype = Util.extend(Object.create(View.prototype), {
       case "pin":
         let pinIndices = [];
         Array.forEach(selectedTiles, function(aNode) {
-          pinIndices.push( Array.indexOf(aNode.control.children, aNode) );
+          pinIndices.push( Array.indexOf(aNode.control.items, aNode) );
           aNode.contextActions.delete('pin');
           aNode.contextActions.add('unpin');
         });
@@ -153,7 +153,6 @@ TopSitesView.prototype = Util.extend(Object.create(View.prototype), {
         // flush, recreate all
       this.isUpdating = true;
       // destroy and recreate all item nodes, skip calling arrangeItems
-      grid.clearAll(true);
       this.populateGrid();
     }
   },
@@ -165,14 +164,18 @@ TopSitesView.prototype = Util.extend(Object.create(View.prototype), {
       let filepath = PageThumbsStorage.getFilePathForURL(aSite.url);
       if (yield OS.File.exists(filepath)) {
         aSite.backgroundImage = 'url("'+PageThumbs.getThumbnailURL(aSite.url)+'")';
-        aTileNode.setAttribute("customImage", aSite.backgroundImage);
-        if (aTileNode.refresh) {
-          aTileNode.refresh()
+        if ('backgroundImage' in aTileNode) {
+          aTileNode.backgroundImage = aSite.backgroundImage;
+        } else {
+          aTileNode.setAttribute("customImage", aSite.backgroundImage);
         }
       }
     });
 
     aSite.applyToTileNode(aTileNode);
+    if (aTileNode.refresh) {
+      aTileNode.refresh();
+    }
     if (aArrangeGrid) {
       this._set.arrangeItems();
     }
@@ -182,24 +185,19 @@ TopSitesView.prototype = Util.extend(Object.create(View.prototype), {
     this.isUpdating = true;
 
     let sites = TopSites.getSites();
-    let length = Math.min(sites.length, this._topSitesMax || Infinity);
-    let tileset = this._set;
-
-    // if we're updating with a collection that is smaller than previous
-    // remove any extra tiles
-    while (tileset.children.length > length) {
-      tileset.removeChild(tileset.children[tileset.children.length -1]);
+    if (this._topSitesMax) {
+      sites = sites.slice(0, this._topSitesMax);
     }
+    let tileset = this._set;
+    tileset.clearAll(true);
 
-    for (let idx=0; idx < length; idx++) {
-      let isNew = !tileset.children[idx],
-          site = sites[idx];
-      let item = isNew ? tileset.createItemElement(site.title, site.url) : tileset.children[idx];
+    for (let site of sites) {
+      // call to private _createItemElement is a temp measure
+      // we'll eventually just request the next slot
+      let item = tileset._createItemElement(site.title, site.url);
 
       this.updateTile(item, site);
-      if (isNew) {
-        tileset.appendChild(item);
-      }
+      tileset.appendChild(item);
     }
     tileset.arrangeItems();
     this.isUpdating = false;

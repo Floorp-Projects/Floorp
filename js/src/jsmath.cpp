@@ -1495,7 +1495,7 @@ js_InitMathClass(JSContext *cx, HandleObject obj)
     if (!JS_DefineConstDoubles(cx, Math, math_constants))
         return nullptr;
 
-    MarkStandardClassInitializedNoProto(obj, &MathClass);
+    obj->as<GlobalObject>().markStandardClassInitializedNoProto(&MathClass);
 
     return Math;
 }
