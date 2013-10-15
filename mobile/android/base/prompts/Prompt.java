@@ -317,9 +317,9 @@ public class Prompt implements OnClickListener, OnCancelListener, OnItemClickLis
      *
      * @param builder
      *        the alert builder currently building this dialog.
-     * @return
-     *        returns true if the inputs were added successfully. They may fail
-     *        if the requested input is incompatible with this Android version
+     * @return 
+     *         return true if the inputs were added successfully. This may fail
+     *         if the requested input is compatible with this Android verison
      */
     private boolean addInputs(AlertDialog.Builder builder) {
         int length = mInputs == null ? 0 : mInputs.length;
@@ -328,19 +328,28 @@ public class Prompt implements OnClickListener, OnCancelListener, OnItemClickLis
         }
 
         try {
+            View root = null;
+            boolean scrollable = false; // If any of the innuts are scrollable, we won't wrap this in a ScrollView
+
             if (length == 1) {
-                ScrollView view = new ScrollView(mContext);
-                view.addView(mInputs[0].getView(mContext));
-                builder.setView(applyInputStyle(view));
+                root = mInputs[0].getView(mContext);
+                scrollable |= mInputs[0].getScrollable();
             } else if (length > 1) {
                 LinearLayout linearLayout = new LinearLayout(mContext);
                 linearLayout.setOrientation(LinearLayout.VERTICAL);
                 for (int i = 0; i < length; i++) {
                     View content = mInputs[i].getView(mContext);
                     linearLayout.addView(content);
+                    scrollable |= mInputs[i].getScrollable();
                 }
+                root = linearLayout;
+            }
+
+            if (scrollable) {
+                builder.setView(applyInputStyle(root));
+            } else {
                 ScrollView view = new ScrollView(mContext);
-                view.addView(linearLayout);
+                view.addView(root);
                 builder.setView(applyInputStyle(view));
             }
         } catch(Exception ex) {
