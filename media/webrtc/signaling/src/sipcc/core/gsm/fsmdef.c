@@ -1107,17 +1107,9 @@ fsmdef_set_per_media_local_hold_sdp (fsmdef_dcb_t *dcb)
  */
 void
 fsmdef_free_constraints(cc_media_constraints_t *constraints) {
-    int i;
-
     if (!constraints) {
        return;
     }
-
-    for (i = 0; i < constraints->constraint_count; i++) {
-        cpr_free(constraints->constraints[i]->name);
-        cpr_free(constraints->constraints[i]->value);
-    }
-    cpr_free(constraints->constraints);
     cpr_free(constraints);
 }
 

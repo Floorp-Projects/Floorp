@@ -95,7 +95,8 @@ var Downloads = {
         smallIcon: URI_GENERIC_ICON_DOWNLOAD,
         text: aMessage,
         ongoing: false,
-        cookie: aDownload.guid
+        cookie: aDownload.guid,
+        when: aDownload.startTime
     };
 
     if (aOptions && aOptions.icon) {
