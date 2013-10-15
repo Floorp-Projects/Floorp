@@ -42,6 +42,9 @@ html|applet:not([height]), html|applet[height=""] {
 .mainBox {
   width: inherit;
   height: inherit;
+  /* Initialize the overlay with visibility:hidden to prevent flickering if
+   * the plugin is too small to show the overlay */
+  visibility: hidden;
   overflow: hidden;
   direction: ltr;
   unicode-bidi: embed;
