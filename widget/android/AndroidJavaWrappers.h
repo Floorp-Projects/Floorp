@@ -588,6 +588,7 @@ public:
     int Height() { return mHeight; }
     nsTouchEvent MakeTouchEvent(nsIWidget* widget);
     MultiTouchInput MakeMultiTouchInput(nsIWidget* widget);
+    nsMouseEvent MakeMouseEvent(nsIWidget* widget);
     void UnionRect(nsIntRect const& aRect);
     nsIObserver *Observer() { return mObserver; }
 
