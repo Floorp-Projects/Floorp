@@ -164,43 +164,72 @@ public class Prompt implements OnClickListener, OnCancelListener, OnItemClickLis
         mInputs = inputs;
     }
 
+    /* Adds to a result value from the lists that can be shown in dialogs.
+     *  Will set the selected value(s) to the button attribute of the
+     *  object that's passed in. If this is a multi-select dialog, can set
+     *  the button attribute to an array.
+     */
+    private void addListResult(final JSONObject result, int which) {
+        try {
+            if (mSelected != null) {
+                JSONArray selected = new JSONArray();
+                for (int i = 0; i < mSelected.length; i++) {
+                    selected.put(mSelected[i]);
+                }
+                result.put("button", selected);
+            } else {
+                result.put("button", which);
+            }
+        } catch(JSONException ex) { }
+    }
+
+    /* Adds to a result value from the inputs that can be shown in dialogs.
+     * Each input will set its own value in the result.
+     */
+    private void addInputValues(final JSONObject result) {
+        try {
+            if (mInputs != null) {
+                for (int i = 0; i < mInputs.length; i++) {
+                    result.put(mInputs[i].getId(), mInputs[i].getValue());
+                }
+            }
+        } catch(JSONException ex) { }
+    }
+
+    /* Adds the selected button to a result. This should only be called if there
+     * are no lists shown on the dialog, since they also write their results to the button
+     * attribute.
+     */
+    private void addButtonResult(final JSONObject result, int which) {
+        int button = -1;
+        switch(which) {
+            case DialogInterface.BUTTON_POSITIVE : button = 0; break;
+            case DialogInterface.BUTTON_NEUTRAL  : button = 1; break;
+            case DialogInterface.BUTTON_NEGATIVE : button = 2; break;
+        }
+        try {
+            result.put("button", button);
+        } catch(JSONException ex) { }
+    }
+
     @Override
-    public void onClick(DialogInterface aDialog, int aWhich) {
+    public void onClick(DialogInterface dialog, int which) {
         ThreadUtils.assertOnUiThread();
         JSONObject ret = new JSONObject();
         try {
-            int button = -1;
             ListView list = mDialog.getListView();
             if (list != null || mSelected != null) {
-                button = aWhich;
-                if (mSelected != null) {
-                    JSONArray selected = new JSONArray();
-                    for (int i = 0; i < mSelected.length; i++) {
-                        selected.put(mSelected[i]);
-                    }
-                    ret.put("button", selected);
-                } else {
-                    ret.put("button", button);
-                }
+                addListResult(ret, which);
             } else {
-                switch(aWhich) {
-                    case DialogInterface.BUTTON_POSITIVE : button = 0; break;
-                    case DialogInterface.BUTTON_NEUTRAL  : button = 1; break;
-                    case DialogInterface.BUTTON_NEGATIVE : button = 2; break;
-                }
-                ret.put("button", button);
+                addButtonResult(ret, which);
             }
-            if (mInputs != null) {
-                for (int i = 0; i < mInputs.length; i++) {
-                    ret.put(mInputs[i].getId(), mInputs[i].getValue());
-                }
-            }
+            addInputValues(ret);
         } catch(Exception ex) {
             Log.i(LOGTAG, "Error building return: " + ex);
         }
 
-        if (mDialog != null) {
-            mDialog.dismiss();
+        if (dialog != null) {
+            dialog.dismiss();
         }
 
         finishDialog(ret);
@@ -318,32 +347,50 @@ public class Prompt implements OnClickListener, OnCancelListener, OnItemClickLis
             Log.e(LOGTAG, "Error showing prompt inputs", ex);
             // We cannot display these input widgets with this sdk version,
             // do not display any dialog and finish the prompt now.
-            try {
-                finishDialog(new JSONObject("{\"button\": -1}"));
-            } catch(JSONException e) { }
-
+            cancelDialog();
             return false;
         }
 
         return true;
     }
 
+    /* AdapterView.OnItemClickListener
+     * Called when a list item is clicked
+     */
     @Override
     public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
         ThreadUtils.assertOnUiThread();
         mSelected[position] = !mSelected[position];
     }
 
+    /* @DialogInterface.OnCancelListener
+     * Called when the user hits back to cancel a dialog. The dialog will close itself when this
+     * ends. Setup the correct return values here.
+     *
+     * @param aDialog
+     *          A dialog interface for the dialog that's being closed.
+     */
     @Override
     public void onCancel(DialogInterface aDialog) {
         ThreadUtils.assertOnUiThread();
+        cancelDialog();
+    }
+
+    /* Called in situations where we want to cancel the dialog . This can happen if the user hits back,
+     *  or if the dialog can't be created because of invalid JSON.
+     */
+    private void cancelDialog() {
         JSONObject ret = new JSONObject();
         try {
             ret.put("button", -1);
         } catch(Exception ex) { }
+        addInputValues(ret);
         finishDialog(ret);
     }
 
+    /* Called any time we're closing the dialog to cleanup and notify listeners that the dialog
+     * is closing.
+     */
     public void finishDialog(JSONObject aReturn) {
         mInputs = null;
         mButtons = null;
@@ -366,10 +413,12 @@ public class Prompt implements OnClickListener, OnCancelListener, OnItemClickLis
         mGuid = null;
     }
 
+    /* Handles parsing the initial JSON sent to show dialogs
+     */
     private void processMessage(JSONObject geckoObject) {
-        String title = getSafeString(geckoObject, "title");
-        String text = getSafeString(geckoObject, "text");
-        mGuid = getSafeString(geckoObject, "guid");
+        String title = geckoObject.optString("title");
+        String text = geckoObject.optString("text");
+        mGuid = geckoObject.optString("guid");
 
         mButtons = getStringArray(geckoObject, "buttons");
 
@@ -387,35 +436,11 @@ public class Prompt implements OnClickListener, OnCancelListener, OnItemClickLis
         show(title, text, menuitems, multiple);
     }
 
-    private static String getSafeString(JSONObject json, String key) {
-        try {
-            return json.getString(key);
-        } catch (Exception e) {
-            return "";
-        }
-    }
-
     private static JSONArray getSafeArray(JSONObject json, String key) {
         try {
             return json.getJSONArray(key);
         } catch (Exception e) {
             return new JSONArray();
-        }
-    }
-
-    private static boolean getSafeBool(JSONObject json, String key) {
-        try {
-            return json.getBoolean(key);
-        } catch (Exception e) {
-            return false;
-        }
-    }
-
-    private static int getSafeInt(JSONObject json, String key ) {
-        try {
-            return json.getInt(key);
-        } catch (Exception e) {
-            return 0;
         }
     }
 
@@ -470,12 +495,12 @@ public class Prompt implements OnClickListener, OnCancelListener, OnItemClickLis
         public Drawable icon;
 
         PromptListItem(JSONObject aObject) {
-            label = getSafeString(aObject, "label");
-            isGroup = getSafeBool(aObject, "isGroup");
-            inGroup = getSafeBool(aObject, "inGroup");
-            disabled = getSafeBool(aObject, "disabled");
-            id = getSafeInt(aObject, "id");
-            isParent = getSafeBool(aObject, "isParent");
+            label = aObject.optString("label");
+            isGroup = aObject.optBoolean("isGroup");
+            inGroup = aObject.optBoolean("inGroup");
+            disabled = aObject.optBoolean("disabled");
+            id = aObject.optInt("id");
+            isParent = aObject.optBoolean("isParent");
         }
 
         public PromptListItem(String aLabel) {
