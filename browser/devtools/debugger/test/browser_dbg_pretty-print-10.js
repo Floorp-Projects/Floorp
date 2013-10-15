@@ -2,7 +2,8 @@
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
 /**
- * Make sure that clicking the pretty print button prettifies the source.
+ * Make sure that we disable the pretty print button for black boxed sources,
+ * and that clicking it doesn't do anything.
  */
 
 const TAB_URL = EXAMPLE_URL + "doc_pretty-print.html";
@@ -21,15 +22,10 @@ function test() {
 
     waitForSourceShown(gPanel, "code_ugly.js")
       .then(testSourceIsUgly)
-      .then(() => {
-        const finished = waitForSourceShown(gPanel, "code_ugly.js");
-        clickPrettyPrintButton();
-        testProgressBarShown();
-        return finished;
-      })
-      .then(testSourceIsPretty)
-      .then(testEditorShown)
-      .then(testSourceIsStillPretty)
+      .then(blackBoxSource)
+      .then(waitForThreadEvents.bind(null, gPanel, "blackboxchange"))
+      .then(clickPrettyPrintButton)
+      .then(testSourceIsStillUgly)
       .then(() => closeDebuggerAndFinish(gPanel))
       .then(null, aError => {
         ok(false, "Got an error: " + DevToolsUtils.safeErrorString(aError));
@@ -42,38 +38,23 @@ function testSourceIsUgly() {
      "The source shouldn't be pretty printed yet.");
 }
 
+function blackBoxSource() {
+  const checkbox = gDebugger.document.querySelector(
+    ".selected .side-menu-widget-item-checkbox");
+  checkbox.click();
+}
+
 function clickPrettyPrintButton() {
   EventUtils.sendMouseEvent({ type: "click" },
                             gDebugger.document.getElementById("pretty-print"),
                             gDebugger);
 }
 
-function testProgressBarShown() {
-  const deck = gDebugger.document.getElementById("editor-deck");
-  is(deck.selectedIndex, 2, "The progress bar should be shown");
-}
-
-function testSourceIsPretty() {
-  ok(gEditor.getText().contains("\n    "),
-     "The source should be pretty printed.")
-}
-
-function testEditorShown() {
-  const deck = gDebugger.document.getElementById("editor-deck");
-  is(deck.selectedIndex, 0, "The editor should be shown");
-}
-
-function testSourceIsStillPretty() {
-  const deferred = promise.defer();
-
+function testSourceIsStillUgly() {
   const { source } = gSources.selectedItem.attachment;
-  gDebugger.DebuggerController.SourceScripts.getText(source).then(([, text]) => {
-    ok(text.contains("\n    "),
-       "Subsequent calls to getText return the pretty printed source.");
-    deferred.resolve();
+  return gDebugger.DebuggerController.SourceScripts.getText(source).then(([, text]) => {
+    ok(!text.contains("\n    "));
   });
-
-  return deferred.promise;
 }
 
 registerCleanupFunction(function() {

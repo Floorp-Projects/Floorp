@@ -114,6 +114,12 @@ let DebuggerView = {
     this._instrumentsPane = document.getElementById("instruments-pane");
     this._instrumentsPaneToggleButton = document.getElementById("instruments-pane-toggle");
 
+    this.showEditor = this.showEditor.bind(this);
+    this.showBlackBoxMessage = this.showBlackBoxMessage.bind(this);
+    this.showProgressBar = this.showProgressBar.bind(this);
+    this.maybeShowBlackBoxMessage = this.maybeShowBlackBoxMessage.bind(this);
+    this._editorDeck = document.getElementById("editor-deck");
+
     this._onTabSelect = this._onInstrumentsPaneTabSelect.bind(this);
     this._instrumentsPane.tabpanels.addEventListener("select", this._onTabSelect);
 
@@ -219,6 +225,40 @@ let DebuggerView = {
       window.emit(EVENTS.EDITOR_UNLOADED, this.editor);
       aCallback();
     });
+  },
+
+  /**
+   * Display the source editor.
+   */
+  showEditor: function() {
+    this._editorDeck.selectedIndex = 0;
+  },
+
+  /**
+   * Display the black box message.
+   */
+  showBlackBoxMessage: function() {
+    this._editorDeck.selectedIndex = 1;
+  },
+
+  /**
+   * Display the progress bar.
+   */
+  showProgressBar: function() {
+    this._editorDeck.selectedIndex = 2;
+  },
+
+  /**
+   * Show or hide the black box message vs. source editor depending on if the
+   * selected source is black boxed or not.
+   */
+  maybeShowBlackBoxMessage: function() {
+    let { source } = DebuggerView.Sources.selectedItem.attachment;
+    if (gThreadClient.source(source).isBlackBoxed) {
+      this.showBlackBoxMessage();
+    } else {
+      this.showEditor();
+    }
   },
 
   /**
@@ -522,6 +562,7 @@ let DebuggerView = {
   _instrumentsPaneToggleButton: null,
   _collapsePaneString: "",
   _expandPaneString: "",
+  _editorDeck: null,
 };
 
 /**
