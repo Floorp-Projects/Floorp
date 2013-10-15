@@ -4197,6 +4197,7 @@ if test -n "$ENABLE_INTL_API" -a -z "$MOZ_NATIVE_ICU"; then
     ICU_CPPFLAGS="$ICU_CPPFLAGS -DUCONFIG_NO_REGULAR_EXPRESSIONS"
     ICU_CPPFLAGS="$ICU_CPPFLAGS -DUCONFIG_NO_BREAK_ITERATION"
 
+    ICU_SRCDIR=""
     # Set OS dependent options for ICU
     case "$OS_TARGET" in
         Darwin)
@@ -4207,6 +4208,7 @@ if test -n "$ENABLE_INTL_API" -a -z "$MOZ_NATIVE_ICU"; then
             ;;
         WINNT)
             ICU_TARGET=MSYS/MSVC
+            ICU_SRCDIR="--srcdir=$(cd $srcdir/../../intl/icu/source; pwd -W)"
             ;;
         DragonFly|FreeBSD|NetBSD|OpenBSD)
             ICU_TARGET=BSD
@@ -4240,6 +4242,8 @@ if test -n "$ENABLE_INTL_API" -a -z "$MOZ_NATIVE_ICU"; then
             $ICU_BUILD_OPTS \
             $ICU_TARGET \
             $ICU_LINK_OPTS \
+dnl Shell quoting is fun.
+            ${ICU_SRCDIR+"$ICU_SRCDIR"} \
             --enable-extras=no --enable-icuio=no  --enable-layout=no \
             --enable-tests=no --enable-samples=no || exit 1
      ])
