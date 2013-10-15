@@ -40,28 +40,25 @@ public:
   nsresult GetFileDescPtr(PRFileDesc** aFilePtr);
   nsresult SetFileDescPtr(PRFileDesc* aFilePtr);
 
-  nsresult GetHandshakePending(bool *aHandshakePending);
-  nsresult SetHandshakePending(bool aHandshakePending);
+  bool IsHandshakePending() const { return mHandshakePending; }
+  void SetHandshakeNotPending() { mHandshakePending = false; }
 
   void GetPreviousCert(nsIX509Cert** _result);
   
   void SetHasCleartextPhase(bool aHasCleartextPhase);
   bool GetHasCleartextPhase();
   
-  void SetHandshakeInProgress(bool aIsIn);
-  bool GetHandshakeInProgress() { return mHandshakeInProgress; }
-  void SetFirstServerHelloReceived() { mFirstServerHelloReceived = true; }
-  bool GetFirstServerHelloReceived() { return mFirstServerHelloReceived; }
-  bool HandshakeTimeout();
-
-  void SetAllowTLSIntoleranceTimeout(bool aAllow);
-
   PRStatus CloseSocketAndDestroy(
                 const nsNSSShutDownPreventionLock & proofOfLock);
   
   void SetNegotiatedNPN(const char *value, uint32_t length);
   void SetHandshakeCompleted(bool aResumedSession);
   void NoteTimeUntilReady();
+
+  // Note that this is only valid *during* a handshake; at the end of the handshake,
+  // it gets reset back to false.
+  void SetFullHandshake() { mIsFullHandshake = true; }
+  bool IsFullHandshake() const { return mIsFullHandshake; }
 
   bool GetJoined() { return mJoined; }
   void SetSentClientCert() { mSentClientCert = true; }
@@ -129,8 +126,6 @@ private:
   bool mTLSEnabled;
   bool mHandshakePending;
   bool mHasCleartextPhase;
-  bool mHandshakeInProgress;
-  bool mAllowTLSIntoleranceTimeout;
   bool mRememberClientAuthCertificate;
   bool mPreliminaryHandshakeDone; // after false start items are complete
   PRIntervalTime mHandshakeStartTime;
@@ -140,6 +135,7 @@ private:
 
   nsCString mNegotiatedNPN;
   bool      mNPNCompleted;
+  bool      mIsFullHandshake;
   bool      mHandshakeCompleted;
   bool      mJoined;
   bool      mSentClientCert;
