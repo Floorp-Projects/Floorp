@@ -1454,6 +1454,19 @@ enum ParseReportKind
 
 enum FunctionSyntaxKind { Expression, Statement, Arrow };
 
+static inline ParseNode *
+FunctionArgsList(ParseNode *fn, unsigned *numFormals)
+{
+    JS_ASSERT(fn->isKind(PNK_FUNCTION));
+    ParseNode *argsBody = fn->pn_body;
+    JS_ASSERT(argsBody->isKind(PNK_ARGSBODY));
+    *numFormals = argsBody->pn_count;
+    if (*numFormals > 0 && argsBody->last()->isKind(PNK_STATEMENTLIST))
+        (*numFormals)--;
+    JS_ASSERT(argsBody->isArity(PN_LIST));
+    return argsBody->pn_head;
+}
+
 } /* namespace frontend */
 } /* namespace js */
 

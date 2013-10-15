@@ -5,6 +5,7 @@
 
 /* JS shell. */
 
+#include "mozilla/Atomics.h"
 #include "mozilla/DebugOnly.h"
 #include "mozilla/GuardObjects.h"
 #include "mozilla/PodOperations.h"
@@ -12,8 +13,10 @@
 
 #ifdef XP_WIN
 # include <direct.h>
+# include <process.h>
 #endif
 #include <errno.h>
+#include <fcntl.h>
 #if defined(XP_OS2) || defined(XP_WIN)
 # include <io.h>     /* for isatty() */
 #endif
@@ -23,8 +26,11 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <sys/stat.h>
+#include <sys/types.h>
 #ifdef XP_UNIX
-# include <sys/types.h>
+# include <sys/mman.h>
+# include <sys/stat.h>
 # include <sys/wait.h>
 # include <unistd.h>
 #endif
@@ -123,6 +129,9 @@ static bool enableBaseline = true;
 static bool enableAsmJS = true;
 
 static bool printTiming = false;
+static const char *jsCacheDir = NULL;
+static const char *jsCacheAsmJSPath = NULL;
+mozilla::Atomic<int32_t> jsCacheOpened(false);
 
 static bool
 SetTimeoutValue(JSContext *cx, double t);
@@ -3568,6 +3577,156 @@ System(JSContext *cx, unsigned argc, jsval *vp)
     return true;
 }
 
+static int sArgc;
+static char **sArgv;
+
+class AutoCStringVector
+{
+    Vector<char *> argv_;
+  public:
+    AutoCStringVector(JSContext *cx) : argv_(cx) {}
+    ~AutoCStringVector() {
+        for (size_t i = 0; i < argv_.length(); i++)
+            js_free(argv_[i]);
+    }
+    bool append(char *arg) {
+        if (!argv_.append(arg)) {
+            js_free(arg);
+            return false;
+        }
+        return true;
+    }
+    char* const* get() const {
+        return argv_.begin();
+    }
+    size_t length() const {
+        return argv_.length();
+    }
+    char *operator[](size_t i) const {
+        return argv_[i];
+    }
+    void replace(size_t i, char *arg) {
+        js_free(argv_[i]);
+        argv_[i] = arg;
+    }
+    char *back() const {
+        return argv_.back();
+    }
+    void replaceBack(char *arg) {
+        js_free(argv_.back());
+        argv_.back() = arg;
+    }
+};
+
+#if defined(XP_WIN)
+static bool
+EscapeForShell(AutoCStringVector &argv)
+{
+    // Windows will break arguments in argv by various spaces, so we wrap each
+    // argument in quotes and escape quotes within. Even with quotes, \ will be
+    // treated like an escape character, so inflate each \ to \\.
+
+    for (size_t i = 0; i < argv.length(); i++) {
+        if (!argv[i])
+            continue;
+
+        size_t newLen = 3;  // quotes before and after and null-terminator
+        for (char *p = argv[i]; *p; p++) {
+            newLen++;
+            if (*p == '\"' || *p == '\\')
+                newLen++;
+        }
+
+        char *escaped = (char *)js_malloc(newLen);
+        if (!escaped)
+            return false;
+
+        char *src = argv[i];
+        char *dst = escaped;
+        *dst++ = '\"';
+        while (*src) {
+            if (*src == '\"' || *src == '\\')
+                *dst++ = '\\';
+            *dst++ = *src++;
+        }
+        *dst++ = '\"';
+        *dst++ = '\0';
+        JS_ASSERT(escaped + newLen == dst);
+
+        argv.replace(i, escaped);
+    }
+    return true;
+}
+#endif
+
+static bool
+NestedShell(JSContext *cx, unsigned argc, jsval *vp)
+{
+    CallArgs args = CallArgsFromVp(argc, vp);
+
+    AutoCStringVector argv(cx);
+
+    // The first argument to the shell is its path, which we assume is our own
+    // argv[0].
+    if (sArgc < 1) {
+        JS_ReportErrorNumber(cx, my_GetErrorMessage, NULL, JSSMSG_NESTED_FAIL);
+        return false;
+    }
+    if (!argv.append(strdup(sArgv[0])))
+        return false;
+
+    // The arguments to nestedShell are stringified and append to argv.
+    RootedString str(cx);
+    for (unsigned i = 0; i < args.length(); i++) {
+        str = JS_ValueToString(cx, args[i]);
+        if (!str || !argv.append(JS_EncodeString(cx, str)))
+            return false;
+
+        // As a special case, if the caller passes "--js-cache", replace that
+        // with "--js-cache=$(jsCacheDir)"
+        if (!strcmp(argv.back(), "--js-cache")) {
+            char *newArg = JS_smprintf("--js-cache=%s", jsCacheDir);
+            if (!newArg)
+                return false;
+            argv.replaceBack(newArg);
+        }
+    }
+
+    // execv assumes argv is null-terminated
+    if (!argv.append(nullptr))
+        return false;
+
+    int status = 0;
+#if defined(XP_WIN)
+    if (!EscapeForShell(argv))
+        return false;
+    status = _spawnv(_P_WAIT, sArgv[0], argv.get());
+#else
+    pid_t pid = fork();
+    switch (pid) {
+      case -1:
+        JS_ReportErrorNumber(cx, my_GetErrorMessage, NULL, JSSMSG_NESTED_FAIL);
+        return false;
+      case 0:
+        (void)execv(sArgv[0], argv.get());
+        exit(-1);
+      default: {
+        while (waitpid(pid, &status, 0) < 0 && errno == EINTR)
+            continue;
+        break;
+      }
+    }
+#endif
+
+    if (status != 0) {
+        JS_ReportErrorNumber(cx, my_GetErrorMessage, NULL, JSSMSG_NESTED_FAIL);
+        return false;
+    }
+
+    args.rval().setUndefined();
+    return true;
+}
+
 static bool
 DecompileFunctionSomehow(JSContext *cx, unsigned argc, Value *vp,
                          JSString *(*decompiler)(JSContext *, JSFunction *, unsigned))
@@ -3909,6 +4068,14 @@ WithSourceHook(JSContext *cx, unsigned argc, jsval *vp)
     return result;
 }
 
+static bool
+IsCachingEnabled(JSContext *cx, unsigned argc, Value *vp)
+{
+    CallArgs args = CallArgsFromVp(argc, vp);
+    args.rval().setBoolean(jsCacheAsmJSPath != NULL);
+    return true;
+}
+
 static const JSFunctionSpecWithHelp shell_functions[] = {
     JS_FN_HELP("version", Version, 0, 0,
 "version([number])",
@@ -4223,6 +4390,10 @@ static const JSFunctionSpecWithHelp shell_functions[] = {
 "  Return a new object obj for which typeof obj === \"undefined\", obj == null\n"
 "  and obj == undefined (and vice versa for !=), and ToBoolean(obj) === false.\n"),
 
+    JS_FN_HELP("isCachingEnabled", IsCachingEnabled, 0, 0,
+"isCachingEnabled()",
+"  Return whether --js-cache was set."),
+
     JS_FS_HELP_END
 };
 
@@ -4256,6 +4427,14 @@ static const JSFunctionSpecWithHelp fuzzing_unsafe_functions[] = {
     JS_FN_HELP("system", System, 1, 0,
 "system(command)",
 "  Execute command on the current host, returning result code."),
+
+    JS_FN_HELP("nestedShell", NestedShell, 0, 0,
+"nestedShell(shellArgs...)",
+"  Execute the given code in a new JS shell process, passing this nested shell\n"
+"  the arguments passed to nestedShell. argv[0] of the nested shell will be argv[0]\n"
+"  of the current shell (which is assumed to be the actual path to the shell.\n"
+"  arguments[0] (of the call to nestedShell) will be argv[1], arguments[1] will\n"
+"  be argv[2], etc."),
 
     JS_FN_HELP("trap", Trap, 3, 0,
 "trap([fun, [pc,]] exp)",
@@ -4895,6 +5074,239 @@ InstanceClassHasProtoAtDepth(HandleObject protoObject, uint32_t protoID, uint32_
     return true;
 }
 
+class ScopedFileDesc
+{
+    intptr_t fd_;
+  public:
+    enum LockType { READ_LOCK, WRITE_LOCK };
+    ScopedFileDesc(int fd, LockType lockType)
+      : fd_(fd)
+    {
+        if (fd == -1)
+            return;
+        if (!jsCacheOpened.compareExchange(false, true)) {
+            close(fd_);
+            fd_ = -1;
+            return;
+        }
+    }
+    ~ScopedFileDesc() {
+        if (fd_ == -1)
+            return;
+        JS_ASSERT(jsCacheOpened == true);
+        jsCacheOpened = false;
+        close(fd_);
+    }
+    operator intptr_t() const {
+        return fd_;
+    }
+    intptr_t forget() {
+        intptr_t ret = fd_;
+        fd_ = -1;
+        return ret;
+    }
+};
+
+// To guard against corrupted cache files generated by previous crashes, write
+// asmJSCacheCookie to the first uint32_t of the file only after the file is
+// fully serialized and flushed to disk.
+static const uint32_t asmJSCacheCookie = 0xabbadaba;
+
+static bool
+ShellOpenAsmJSCacheEntryForRead(HandleObject global, size_t *serializedSizeOut,
+                                const uint8_t **memoryOut, intptr_t *handleOut)
+{
+    if (!jsCacheAsmJSPath)
+        return false;
+
+    ScopedFileDesc fd(open(jsCacheAsmJSPath, O_RDWR), ScopedFileDesc::READ_LOCK);
+    if (fd == -1)
+        return false;
+
+    // Get the size and make sure we can dereference at least one uint32_t.
+    off_t off = lseek(fd, 0, SEEK_END);
+    if (off == -1 || off < (off_t)sizeof(uint32_t))
+        return false;
+
+    // Map the file into memory.
+    void *memory;
+#ifdef XP_WIN
+    HANDLE fdOsHandle = (HANDLE)_get_osfhandle(fd);
+    HANDLE fileMapping = CreateFileMapping(fdOsHandle, NULL, PAGE_READWRITE, 0, 0, NULL);
+    if (!fileMapping)
+        return false;
+
+    memory = MapViewOfFile(fileMapping, FILE_MAP_READ, 0, 0, 0);
+    CloseHandle(fileMapping);
+    if (!memory)
+        return false;
+#else
+    memory = mmap(NULL, off, PROT_READ, MAP_SHARED, fd, 0);
+    if (memory == MAP_FAILED)
+        return false;
+#endif
+
+    // Perform check described by asmJSCacheCookie comment.
+    if (*(uint32_t *)memory != asmJSCacheCookie) {
+#ifdef XP_WIN
+        UnmapViewOfFile(memory);
+#else
+        munmap(memory, off);
+#endif
+        return false;
+    }
+
+    // The embedding added the cookie so strip it off of the buffer returned to
+    // the JS engine.
+    *serializedSizeOut = off - sizeof(uint32_t);
+    *memoryOut = (uint8_t *)memory + sizeof(uint32_t);
+    *handleOut = fd.forget();
+    return true;
+}
+
+static void
+ShellCloseAsmJSCacheEntryForRead(HandleObject global, size_t serializedSize, const uint8_t *memory,
+                                 intptr_t handle)
+{
+    // Undo the cookie adjustment done when opening the file.
+    memory -= sizeof(uint32_t);
+    serializedSize += sizeof(uint32_t);
+
+    // Release the memory mapping and file.
+#ifdef XP_WIN
+    UnmapViewOfFile(const_cast<uint8_t*>(memory));
+#else
+    munmap(const_cast<uint8_t*>(memory), serializedSize);
+#endif
+
+    JS_ASSERT(jsCacheOpened == true);
+    jsCacheOpened = false;
+    close(handle);
+}
+
+static bool
+ShellOpenAsmJSCacheEntryForWrite(HandleObject global, size_t serializedSize,
+                                 uint8_t **memoryOut, intptr_t *handleOut)
+{
+    if (!jsCacheAsmJSPath)
+        return false;
+
+    // Create the cache directory if it doesn't already exist.
+    struct stat dirStat;
+    if (stat(jsCacheDir, &dirStat) == 0) {
+        if (!(dirStat.st_mode & S_IFDIR))
+            return false;
+    } else {
+#ifdef XP_WIN
+        if (mkdir(jsCacheDir) != 0)
+            return false;
+#else
+        if (mkdir(jsCacheDir, 0777) != 0)
+            return false;
+#endif
+    }
+
+    ScopedFileDesc fd(open(jsCacheAsmJSPath, O_CREAT|O_RDWR, 0660), ScopedFileDesc::WRITE_LOCK);
+    if (fd == -1)
+        return false;
+
+    // Include extra space for the asmJSCacheCookie.
+    serializedSize += sizeof(uint32_t);
+
+    // Resize the file to the appropriate size after zeroing their contents.
+#ifdef XP_WIN
+    if (chsize(fd, 0))
+        return false;
+    if (chsize(fd, serializedSize))
+        return false;
+#else
+    if (ftruncate(fd, 0))
+        return false;
+    if (ftruncate(fd, serializedSize))
+        return false;
+#endif
+
+    // Map the file into memory.
+    void *memory;
+#ifdef XP_WIN
+    HANDLE fdOsHandle = (HANDLE)_get_osfhandle(fd);
+    HANDLE fileMapping = CreateFileMapping(fdOsHandle, NULL, PAGE_READWRITE, 0, 0, NULL);
+    if (!fileMapping)
+        return false;
+
+    memory = MapViewOfFile(fileMapping, FILE_MAP_WRITE, 0, 0, 0);
+    CloseHandle(fileMapping);
+    if (!memory)
+        return false;
+#else
+    memory = mmap(NULL, serializedSize, PROT_WRITE, MAP_SHARED, fd, 0);
+    if (memory == MAP_FAILED)
+        return false;
+#endif
+
+    // The embedding added the cookie so strip it off of the buffer returned to
+    // the JS engine. The asmJSCacheCookie will be written on close, below.
+    JS_ASSERT(*(uint32_t *)memory == 0);
+    *memoryOut = (uint8_t *)memory + sizeof(uint32_t);
+    *handleOut = fd.forget();
+    return true;
+}
+
+static void
+ShellCloseAsmJSCacheEntryForWrite(HandleObject global, size_t serializedSize, uint8_t *memory,
+                                  intptr_t handle)
+{
+    // Undo the cookie adjustment done when opening the file.
+    memory -= sizeof(uint32_t);
+    serializedSize += sizeof(uint32_t);
+
+    // Write the magic cookie value after flushing the entire cache entry.
+#ifdef XP_WIN
+    FlushViewOfFile(memory, serializedSize);
+    FlushFileBuffers(HANDLE(_get_osfhandle(handle)));
+#else
+    msync(memory, serializedSize, MS_SYNC);
+#endif
+
+    JS_ASSERT(*(uint32_t *)memory == 0);
+    *(uint32_t *)memory = asmJSCacheCookie;
+
+    // Free the memory mapping and file.
+#ifdef XP_WIN
+    UnmapViewOfFile(const_cast<uint8_t*>(memory));
+#else
+    munmap(memory, serializedSize);
+#endif
+
+    JS_ASSERT(jsCacheOpened == true);
+    jsCacheOpened = false;
+    close(handle);
+}
+
+static bool
+ShellBuildId(mozilla::Vector<char> *buildId)
+{
+    // The browser embeds the date into the buildid and the buildid is embedded
+    // in the binary, so every 'make' necessarily builds a new firefox binary.
+    // Fortunately, the actual firefox executable is tiny -- all the code is in
+    // libxul.so and other shared modules -- so this isn't a big deal. No so
+    // for the statically-linked JS shell. To avoid recompmiling js.cpp and
+    // re-linking 'js' on every 'make', we use a constant buildid and rely on
+    // the shell user to manually clear the cache (deleting the dir passed to
+    // --js-cache) between cache-breaking updates. Note: jit_tests.py does this
+    // on every run).
+    const char buildid[] = "JS-shell";
+    return buildId->append(buildid, sizeof(buildid));
+}
+
+static JS::AsmJSCacheOps asmJSCacheOps = {
+    ShellOpenAsmJSCacheEntryForRead,
+    ShellCloseAsmJSCacheEntryForRead,
+    ShellOpenAsmJSCacheEntryForWrite,
+    ShellCloseAsmJSCacheEntryForWrite,
+    ShellBuildId
+};
+
 /*
  * Avoid a reentrancy hazard.
  *
@@ -5067,6 +5479,13 @@ ProcessArgs(JSContext *cx, JSObject *obj_, OptionParser *op)
     if (op->getBoolOption('d')) {
         JS_SetRuntimeDebugMode(JS_GetRuntime(cx), true);
         JS_SetDebugMode(cx, true);
+    }
+
+    jsCacheDir = op->getStringOption("js-cache");
+    if (jsCacheDir) {
+        if (op->getBoolOption("js-cache-per-process"))
+            jsCacheDir = JS_smprintf("%s/%u", jsCacheDir, (unsigned)getpid());
+        jsCacheAsmJSPath = JS_smprintf("%s/asmjs.cache", jsCacheDir);
     }
 
     if (op->getBoolOption('b'))
@@ -5301,6 +5720,13 @@ Shell(JSContext *cx, OptionParser *op, char **envp)
     if (enableDisassemblyDumps)
         JS_DumpCompartmentPCCounts(cx);
 
+    if (op->getBoolOption("js-cache-per-process")) {
+        if (jsCacheAsmJSPath)
+            unlink(jsCacheAsmJSPath);
+        if (jsCacheDir)
+            rmdir(jsCacheDir);
+    }
+
     return result;
 }
 
@@ -5340,6 +5766,9 @@ DummyPreserveWrapperCallback(JSContext *cx, JSObject *obj)
 int
 main(int argc, char **argv, char **envp)
 {
+    sArgc = argc;
+    sArgv = argv;
+
     int stackDummy;
     JSRuntime *rt;
     JSContext *cx;
@@ -5403,6 +5832,14 @@ main(int argc, char **argv, char **envp)
         || !op.addBoolOption('a', "always-mjit", "No-op (still used by fuzzers)")
         || !op.addBoolOption('D', "dump-bytecode", "Dump bytecode with exec count for all scripts")
         || !op.addBoolOption('b', "print-timing", "Print sub-ms runtime for each file that's run")
+        || !op.addStringOption('\0', "js-cache", "[path]",
+                               "Enable the JS cache by specifying the path of the directory to use "
+                               "to hold cache files")
+        || !op.addBoolOption('\0', "js-cache-per-process",
+                               "Generate a separate cache sub-directory for this process inside "
+                               "the cache directory specified by --js-cache. This cache directory "
+                               "will be removed when the js shell exits. This is useful for running "
+                               "tests in parallel.")
 #ifdef DEBUG
         || !op.addBoolOption('O', "print-alloc", "Print the number of allocations at exit")
 #endif
@@ -5525,6 +5962,7 @@ main(int argc, char **argv, char **envp)
     JS_SetTrustedPrincipals(rt, &shellTrustedPrincipals);
     JS_SetSecurityCallbacks(rt, &securityCallbacks);
     JS_SetOperationCallback(rt, ShellOperationCallback);
+    JS::SetAsmJSCacheOps(rt, &asmJSCacheOps);
 
     JS_SetNativeStackQuota(rt, gMaxStackSize);
 

@@ -283,6 +283,12 @@ struct ParseContext : public GenericParseContext
     //
     bool atBodyLevel() { return !topStmt; }
 
+    // True if this is the ParseContext for the body of a function created by
+    // the Function constructor.
+    bool isFunctionConstructorBody() const {
+        return sc->isFunctionBox() && staticLevel == 0;
+    }
+
     inline bool useAsmOrInsideUseAsm() const {
         return sc->isFunctionBox() && sc->asFunctionBox()->useAsmOrInsideUseAsm();
     }
@@ -630,6 +636,15 @@ class Parser : private AutoGCRooter, public StrictModeGetter
     TokenPos pos() const { return tokenStream.currentToken().pos; }
 
     bool asmJS(Node list);
+
+  public:
+    // This function may only be called from within Parser::asmJS before
+    // parsing any tokens. It returns the canonical offset to be used as the
+    // start of the asm.js module. We use the offset in the char buffer
+    // immediately after the "use asm" processing directive statement (which
+    // includes any semicolons or newlines that end the statement).
+    uint32_t offsetOfCurrentAsmJSModule() const { return tokenStream.currentToken().pos.end; }
+  private:
 
     friend class CompExprTransplanter;
     friend class GenexpGuard<ParseHandler>;
