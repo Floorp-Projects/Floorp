@@ -53,7 +53,6 @@
         '../../../ipc/chromium/src',
         '../../../ipc/chromium/src/base/third_party/nspr',
         '../../../xpcom/base',
-        '$(DEPTH)/dist/include',
         '../../../dom/base',
         '../../../content/media',
         '../../../media/mtransport',
@@ -286,7 +285,6 @@
         '../../../dom/base',
         '../trunk/third_party/libsrtp/srtp/include',
         '../trunk/third_party/libsrtp/srtp/crypto/include',
-        '$(DEPTH)/dist/include',
         # Danger: this is to include config.h. This could be bad.
         '../trunk/third_party/libsrtp/config',
       ],
