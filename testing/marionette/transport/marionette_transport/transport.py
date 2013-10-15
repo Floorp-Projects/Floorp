@@ -6,10 +6,8 @@ import errno
 import json
 import socket
 
-from errors import InvalidResponseException, ErrorCodes
 
-
-class MarionetteClient(object):
+class MarionetteTransport(object):
     """ The Marionette socket client.  This speaks the same protocol
         as the remote debugger inside Gecko, in which messages are
         always preceded by the message length and a colon, e.g.,
@@ -18,6 +16,7 @@ class MarionetteClient(object):
     """
 
     max_packet_length = 4096
+    connection_lost_msg = "Connection to Marionette server is lost. Check gecko.log (desktop firefox) or logcat (b2g) for errors."
 
     def __init__(self, addr, port):
         self.addr = addr
@@ -53,9 +52,7 @@ class MarionetteClient(object):
             response += self._recv_n_bytes(int(length) + 1 + len(length) - 10)
             return json.loads(response)
         else:
-            raise InvalidResponseException("Could not communicate with Marionette server. "
-                                           "Is the Gecko process still running?",
-                                           status=ErrorCodes.INVALID_RESPONSE)
+            raise IOError(self.connection_lost_msg)
 
     def connect(self, timeout=360.0):
         """ Connect to the server and process the hello message we expect
@@ -94,7 +91,7 @@ class MarionetteClient(object):
                 self.sock.send(packet)
             except IOError as e:
                 if e.errno == errno.EPIPE:
-                    raise IOError("%s: Connection to Marionette server is lost. Check gecko.log (desktop firefox) or logcat (b2g) for errors." % str(e))
+                    raise IOError("%s: %s" % (str(e)), self.connection_lost_msg)
                 else:
                     raise e
 
