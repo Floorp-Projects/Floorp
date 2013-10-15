@@ -123,7 +123,7 @@ class gfxPatternDrawable : public gfxDrawable {
 public:
     gfxPatternDrawable(gfxPattern* aPattern,
                        const gfxIntSize aSize);
-    virtual ~gfxPatternDrawable() {}
+    virtual ~gfxPatternDrawable();
 
     virtual bool Draw(gfxContext* aContext,
                         const gfxRect& aFillRect,
