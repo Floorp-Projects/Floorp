@@ -242,10 +242,6 @@ WEBIDL_FILES = [
     'PaintRequestList.webidl',
     'PannerNode.webidl',
     'ParentNode.webidl',
-    'PeerConnectionImpl.webidl',
-    'PeerConnectionImplEnums.webidl',
-    'PeerConnectionObserver.webidl',
-    'PeerConnectionObserverEnums.webidl',
     'Performance.webidl',
     'PerformanceNavigation.webidl',
     'PerformanceTiming.webidl',
@@ -444,6 +440,10 @@ if CONFIG['MOZ_WEBRTC']:
     WEBIDL_FILES += [
         'DataChannel.webidl',
         'MediaStreamList.webidl',
+        'PeerConnectionImpl.webidl',
+        'PeerConnectionImplEnums.webidl',
+        'PeerConnectionObserver.webidl',
+        'PeerConnectionObserverEnums.webidl',
     ]
 
 if CONFIG['MOZ_WEBSPEECH']:
