@@ -141,7 +141,8 @@ function startListeners() {
   addMessageListenerId("Marionette:getElementText", getElementText);
   addMessageListenerId("Marionette:getElementTagName", getElementTagName);
   addMessageListenerId("Marionette:isElementDisplayed", isElementDisplayed);
-  addMessageListenerId("Marionette:getElementValueOfCssProperty", getElementValueOfCssProperty)
+  addMessageListenerId("Marionette:getElementValueOfCssProperty", getElementValueOfCssProperty);
+  addMessageListenerId("Marionette:submitElement", submitElement);
   addMessageListenerId("Marionette:getElementSize", getElementSize);
   addMessageListenerId("Marionette:isElementEnabled", isElementEnabled);
   addMessageListenerId("Marionette:isElementSelected", isElementSelected);
@@ -217,6 +218,7 @@ function deleteSession(msg) {
   removeMessageListenerId("Marionette:getElementTagName", getElementTagName);
   removeMessageListenerId("Marionette:isElementDisplayed", isElementDisplayed);
   removeMessageListenerId("Marionette:getElementValueOfCssProperty", getElementValueOfCssProperty);
+  removeMessageListenerId("Marionette:submitElement", submitElement);
   removeMessageListenerId("Marionette:getElementSize", getElementSize);
   removeMessageListenerId("Marionette:isElementEnabled", isElementEnabled);
   removeMessageListenerId("Marionette:isElementSelected", isElementSelected);
@@ -1402,6 +1404,32 @@ function getElementValueOfCssProperty(msg){
     let el = elementManager.getKnownElement(msg.json.id, curFrame);
     sendResponse({value: curFrame.document.defaultView.getComputedStyle(el, null).getPropertyValue(propertyName)},
                  command_id);
+  }
+  catch (e) {
+    sendError(e.message, e.code, e.stack, command_id);
+  }
+}
+
+/**
+  * Submit a form on a content page by either using form or element in a form
+  * @param object msg
+  *               'json' JSON object containing 'id' member of the element
+  */
+function submitElement (msg) {
+  let command_id = msg.json.command_id;
+  try {
+    let el = elementManager.getKnownElement(msg.json.id, curFrame);
+    while (el.parentNode != null && el.tagName.toLowerCase() != 'form') {
+      el = el.parentNode;
+    }
+    if (el.tagName && el.tagName.toLowerCase() == 'form') {
+      el.submit();
+      sendOk(command_id);
+    }
+    else {
+      sendError("Element is not a form element or in a form", 7, null, command_id);
+    }
+
   }
   catch (e) {
     sendError(e.message, e.code, e.stack, command_id);
