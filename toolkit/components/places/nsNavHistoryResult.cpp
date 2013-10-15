@@ -61,8 +61,8 @@
 #define END_RESULT_BATCH_AND_REFRESH_CONTENTS() \
   PR_BEGIN_MACRO \
   nsNavHistoryResult* result = GetResult(); \
-  NS_ENSURE_STATE(result); \
-  if (result->mBatchInProgress) { \
+  NS_WARN_IF_FALSE(result, "Working with a non-live-updating Places container"); \
+  if (result && result->mBatchInProgress) { \
     result->EndBatch(); \
   } \
   PR_END_MACRO
