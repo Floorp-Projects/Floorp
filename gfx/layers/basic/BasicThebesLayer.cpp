@@ -90,25 +90,11 @@ BasicThebesLayer::PaintThebes(gfxContext* aContext,
   NS_ASSERTION(BasicManager()->InDrawing(),
                "Can only draw in drawing phase");
 
-  if (!mContentClient) {
-    // we pass a null pointer for the Forwarder argument, which means
-    // this will not have a ContentHost on the other side.
-    mContentClient = new ContentClientBasic(nullptr, BasicManager());
-  }
-
   nsTArray<ReadbackProcessor::Update> readbackUpdates;
   if (aReadback && UsedForReadback()) {
     aReadback->GetThebesLayerUpdates(this, &readbackUpdates);
   }
-  //TODO: This is going to copy back pixels that we might end up
-  // drawing over anyway. It would be nice if we could avoid
-  // this duplication.
-  mContentClient->SyncFrontBufferToBackBuffer();
 
-  bool canUseOpaqueSurface = CanUseOpaqueSurface();
-  ContentType contentType =
-    canUseOpaqueSurface ? GFX_CONTENT_COLOR :
-                          GFX_CONTENT_COLOR_ALPHA;
   float opacity = GetEffectiveOpacity();
   gfxContext::GraphicsOperator mixBlendMode = GetEffectiveMixBlendMode();
 
@@ -162,54 +148,6 @@ BasicThebesLayer::PaintThebes(gfxContext* aContext,
     return;
   }
 
-  {
-    uint32_t flags = 0;
-#ifndef MOZ_WIDGET_ANDROID
-    if (BasicManager()->CompositorMightResample()) {
-      flags |= ThebesLayerBuffer::PAINT_WILL_RESAMPLE;
-    }
-    if (!(flags & ThebesLayerBuffer::PAINT_WILL_RESAMPLE)) {
-      if (MayResample()) {
-        flags |= ThebesLayerBuffer::PAINT_WILL_RESAMPLE;
-      }
-    }
-#endif
-    if (mDrawAtomically) {
-      flags |= ThebesLayerBuffer::PAINT_NO_ROTATION;
-    }
-    PaintState state =
-      mContentClient->BeginPaintBuffer(this, contentType, flags);
-    mValidRegion.Sub(mValidRegion, state.mRegionToInvalidate);
-
-    if (state.mContext) {
-      // The area that became invalid and is visible needs to be repainted
-      // (this could be the whole visible area if our buffer switched
-      // from RGB to RGBA, because we might need to repaint with
-      // subpixel AA)
-      state.mRegionToInvalidate.And(state.mRegionToInvalidate,
-                                    GetEffectiveVisibleRegion());
-      nsIntRegion extendedDrawRegion = state.mRegionToDraw;
-      SetAntialiasingFlags(this, state.mContext);
-
-      RenderTraceInvalidateStart(this, "FFFF00", state.mRegionToDraw.GetBounds());
-
-      PaintBuffer(state.mContext,
-                  state.mRegionToDraw, extendedDrawRegion, state.mRegionToInvalidate,
-                  state.mDidSelfCopy,
-                  aCallback, aCallbackData);
-      MOZ_LAYERS_LOG_IF_SHADOWABLE(this, ("Layer::Mutated(%p) PaintThebes", this));
-      Mutated();
-
-      RenderTraceInvalidateEnd(this, "FFFF00");
-    } else {
-      // It's possible that state.mRegionToInvalidate is nonempty here,
-      // if we are shrinking the valid region to nothing. So use mRegionToDraw
-      // instead.
-      NS_WARN_IF_FALSE(state.mRegionToDraw.IsEmpty(),
-                       "No context when we have something to draw, resource exhaustion?");
-    }
-  }
-
   if (BasicManager()->IsTransactionIncomplete())
     return;
 
@@ -243,6 +181,72 @@ BasicThebesLayer::PaintThebes(gfxContext* aContext,
       mContentClient->DrawTo(this, ctx, 1.0, maskSurface, maskTransform);
       update.mLayer->GetSink()->EndUpdate(ctx, update.mUpdateRect + offset);
     }
+  }
+}
+
+void
+BasicThebesLayer::Validate(LayerManager::DrawThebesLayerCallback aCallback,
+                           void* aCallbackData)
+{
+  if (!mContentClient) {
+    // we pass a null pointer for the Forwarder argument, which means
+    // this will not have a ContentHost on the other side.
+    mContentClient = new ContentClientBasic(nullptr, BasicManager());
+  }
+
+  if (!BasicManager()->IsRetained()) {
+    return;
+  }
+
+  bool canUseOpaqueSurface = CanUseOpaqueSurface();
+  ContentType contentType =
+    canUseOpaqueSurface ? GFX_CONTENT_COLOR :
+                          GFX_CONTENT_COLOR_ALPHA;
+
+  uint32_t flags = 0;
+#ifndef MOZ_WIDGET_ANDROID
+  if (BasicManager()->CompositorMightResample()) {
+    flags |= ThebesLayerBuffer::PAINT_WILL_RESAMPLE;
+  }
+  if (!(flags & ThebesLayerBuffer::PAINT_WILL_RESAMPLE)) {
+    if (MayResample()) {
+      flags |= ThebesLayerBuffer::PAINT_WILL_RESAMPLE;
+    }
+  }
+#endif
+  if (mDrawAtomically) {
+    flags |= ThebesLayerBuffer::PAINT_NO_ROTATION;
+  }
+  PaintState state =
+    mContentClient->BeginPaintBuffer(this, contentType, flags);
+  mValidRegion.Sub(mValidRegion, state.mRegionToInvalidate);
+
+  if (state.mContext) {
+    // The area that became invalid and is visible needs to be repainted
+    // (this could be the whole visible area if our buffer switched
+    // from RGB to RGBA, because we might need to repaint with
+    // subpixel AA)
+    state.mRegionToInvalidate.And(state.mRegionToInvalidate,
+                                  GetEffectiveVisibleRegion());
+    nsIntRegion extendedDrawRegion = state.mRegionToDraw;
+    SetAntialiasingFlags(this, state.mContext);
+
+    RenderTraceInvalidateStart(this, "FFFF00", state.mRegionToDraw.GetBounds());
+
+    PaintBuffer(state.mContext,
+                state.mRegionToDraw, extendedDrawRegion, state.mRegionToInvalidate,
+                state.mDidSelfCopy,
+                aCallback, aCallbackData);
+    MOZ_LAYERS_LOG_IF_SHADOWABLE(this, ("Layer::Mutated(%p) PaintThebes", this));
+    Mutated();
+
+    RenderTraceInvalidateEnd(this, "FFFF00");
+  } else {
+    // It's possible that state.mRegionToInvalidate is nonempty here,
+    // if we are shrinking the valid region to nothing. So use mRegionToDraw
+    // instead.
+    NS_WARN_IF_FALSE(state.mRegionToDraw.IsEmpty(),
+                     "No context when we have something to draw, resource exhaustion?");
   }
 }
 

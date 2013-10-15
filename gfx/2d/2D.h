@@ -448,6 +448,11 @@ public:
    * mutable.
    */
   virtual FillRule GetFillRule() const = 0;
+
+  virtual Float ComputeLength() { return 0; }
+
+  virtual Point ComputePointAtLength(Float aLength,
+                                     Point* aTangent) { return Point(); }
 };
 
 /* The PathBuilder class allows path creation. Once finish is called on the
@@ -637,6 +642,19 @@ public:
   virtual void CopySurface(SourceSurface *aSurface,
                            const IntRect &aSourceRect,
                            const IntPoint &aDestination) = 0;
+
+  /*
+   * Same as CopySurface, except uses itself as the source.
+   *
+   * Some backends may be able to optimize this better
+   * than just taking a snapshot and using CopySurface.
+   */
+  virtual void CopyRect(const IntRect &aSourceRect,
+                        const IntPoint &aDestination)
+  {
+    RefPtr<SourceSurface> source = Snapshot();
+    CopySurface(source, aSourceRect, aDestination);
+  }
 
   /*
    * Fill a rectangle on the DrawTarget with a certain source pattern.
