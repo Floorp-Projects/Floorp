@@ -10,6 +10,7 @@ import os
 import sys
 import json
 import which
+import socket
 
 from mozbuild.base import (
     MozbuildObject,
@@ -89,7 +90,7 @@ class TalosRunner(MozbuildObject):
                 'python': self.python_interp,
                 'virtualenv': [self.python_interp, self.virtualenv_script]
             },
-            'title': os.uname()[1].lower().split('.')[0],
+            'title': socket.gethostname(),
             'default_actions': [
                 'clone-talos',
                 'create-virtualenv',
