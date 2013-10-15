@@ -1,7 +1,7 @@
 load(libdir + "asm.js");
 
 var body =
-"   'use asm';\
+'   "use asm";\
     var i8=new global.Int8Array(buffer);\
     function g(i,j,k) {\
         i=i|0;\
@@ -18,7 +18,7 @@ var body =
         i8[i] = f;\
         return (a+b+c+d+e+f)|0;\
     }\
-    return g;";
+    return g;';
 
 var buf=new ArrayBuffer(4096);
 var g = asmLink(asmCompile('global','foreign','buffer',body), this, null, buf);
@@ -26,7 +26,7 @@ assertEq(g(1,2,3), 46);
 assertEq(new Int8Array(buf)[1], 7);
 
 var body =
-"   'use asm';\
+'   "use asm";\
     var i8=new global.Int8Array(buffer);\
     function g(i,j,k) {\
         i=i|0;\
@@ -43,7 +43,7 @@ var body =
         i8[i] = e;\
         return (a+b+c+d+e+f)|0;\
     }\
-    return g;";
+    return g;';
 
 var buf=new ArrayBuffer(4096);
 var g = asmLink(asmCompile('global','foreign','buffer',body), this, null, buf);
@@ -51,7 +51,7 @@ assertEq(g(1,2,3), 46);
 assertEq(new Int8Array(buf)[1], 9);
 
 var body =
-"   'use asm';\
+'   "use asm";\
     var i8=new global.Int8Array(buffer);\
     function g(i,j,k) {\
         i=i|0;\
@@ -69,7 +69,7 @@ var body =
         i8[i] = g;\
         return (a+b+c+d+e+f+g)|0;\
     }\
-    return g;";
+    return g;';
 
 var buf=new ArrayBuffer(4096);
 var g = asmLink(asmCompile('global','foreign','buffer',body), this, null, buf);
