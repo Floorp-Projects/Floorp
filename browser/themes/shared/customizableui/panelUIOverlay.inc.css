@@ -212,7 +212,7 @@ toolbarpaletteitem[place="palette"] > toolbaritem > toolbarbutton {
 #PanelUI-customize,
 #PanelUI-quit {
   margin: -1px 0 0;
-  padding: 10px;
+  padding: 10px 0;
   -moz-appearance: none;
   box-shadow: none;
   background-image: none;
@@ -221,7 +221,7 @@ toolbarpaletteitem[place="palette"] > toolbaritem > toolbarbutton {
   border-radius: 0;
   transition: background-color;
   -moz-box-orient: vertical;
-  flex: auto;
+  flex: 1 1 33.33%;
 }
 :-moz-any(#PanelUI-help, #PanelUI-customize, #PanelUI-quit) > .toolbarbutton-icon {
   margin: 0 0 3px;
