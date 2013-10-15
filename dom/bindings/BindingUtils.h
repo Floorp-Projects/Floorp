@@ -2005,7 +2005,7 @@ const T& NonNullHelper(const OwningNonNull<T>& aArg)
 // Reparent the wrapper of aObj to whatever its native now thinks its
 // parent should be.
 nsresult
-ReparentWrapper(JSContext* aCx, JS::HandleObject aObj);
+ReparentWrapper(JSContext* aCx, JS::Handle<JSObject*> aObj);
 
 /**
  * Used to implement the hasInstance hook of an interface object.

@@ -320,7 +320,7 @@ enum {
   TOSTRING_NAME_RESERVED_SLOT = 1
 };
 
-bool
+static bool
 InterfaceObjectToString(JSContext* cx, unsigned argc, JS::Value *vp)
 {
   JS::CallArgs args = JS::CallArgsFromVp(argc, vp);
@@ -334,7 +334,7 @@ InterfaceObjectToString(JSContext* cx, unsigned argc, JS::Value *vp)
 
   JS::Value v = js::GetFunctionNativeReserved(callee,
                                               TOSTRING_CLASS_RESERVED_SLOT);
-  const JSClass* clasp = static_cast<const JSClass*>(JSVAL_TO_PRIVATE(v));
+  const JSClass* clasp = static_cast<const JSClass*>(v.toPrivate());
 
   v = js::GetFunctionNativeReserved(callee, TOSTRING_NAME_RESERVED_SLOT);
   JSString* jsname = static_cast<JSString*>(JSVAL_TO_STRING(v));
@@ -684,7 +684,7 @@ NativeInterface2JSObjectAndThrowIfFailed(JSContext* aCx,
   nsWrapperCache *cache = aHelper.GetWrapperCache();
 
   if (cache && cache->IsDOMBinding()) {
-      JS::RootedObject obj(aCx, cache->GetWrapper());
+      JS::Rooted<JSObject*> obj(aCx, cache->GetWrapper());
       if (!obj) {
           obj = cache->WrapObject(aCx, aScope);
       }
@@ -759,7 +759,7 @@ XPCOMObjectToJsval(JSContext* cx, JS::Handle<JSObject*> scope,
   }
 
 #ifdef DEBUG
-  JSObject* jsobj = JSVAL_TO_OBJECT(*rval);
+  JSObject* jsobj = rval.toObjectOrNull();
   if (jsobj && !js::GetObjectParent(jsobj))
     NS_ASSERTION(js::GetObjectClass(jsobj)->flags & JSCLASS_IS_GLOBAL,
                  "Why did we recreate this wrapper?");
@@ -810,8 +810,7 @@ QueryInterface(JSContext* cx, unsigned argc, JS::Value* vp)
     return Throw(cx, NS_ERROR_XPC_NOT_ENOUGH_ARGS);
   }
 
-  JS::Value* argv = JS_ARGV(cx, vp);
-  if (!argv[0].isObject()) {
+  if (!args[0].isObject()) {
     return Throw(cx, NS_ERROR_XPC_BAD_CONVERT_JS);
   }
 
@@ -1649,10 +1648,10 @@ private:
 };
 
 nsresult
-ReparentWrapper(JSContext* aCx, JS::HandleObject aObjArg)
+ReparentWrapper(JSContext* aCx, JS::Handle<JSObject*> aObjArg)
 {
   // aObj is assigned to below, so needs to be re-rooted.
-  JS::RootedObject aObj(aCx, aObjArg);
+  JS::Rooted<JSObject*> aObj(aCx, aObjArg);
   const DOMClass* domClass = GetDOMClass(aObj);
 
   JS::Rooted<JSObject*> oldParent(aCx, JS_GetParent(aObj));
