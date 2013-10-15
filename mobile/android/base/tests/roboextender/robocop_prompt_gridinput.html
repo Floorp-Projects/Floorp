@@ -1,0 +1,51 @@
+<html>
+  <head>
+    <title>IconGrid test page</title>
+    <meta name="viewport" content="initial-scale=1.0"/>
+    <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"></script>
+    <script type="application/javascript">
+Components.utils.import("resource://gre/modules/XPCOMUtils.jsm");
+Components.utils.import("resource://gre/modules/Services.jsm");
+Components.utils.import("resource://gre/modules/Prompt.jsm");
+
+function start() {
+  var test = location.hash.substring(1);
+  window[test]();
+}
+
+function test1() {
+  var p = new Prompt({
+    title: "Prompt 1",
+    buttons: [
+      "OK"
+    ],
+  }).addIconGrid({
+    items: [
+      { iconUri: "drawable://alert_app", name: "Icon 1", selected: true },
+      { iconUri: "drawable://alert_download", name: "Icon 2" },
+      { iconUri: "drawable://alert_addon", name: "Icon 3" },
+      { iconUri: "drawable://alert_addon", name: "Icon 4" },
+      { iconUri: "drawable://alert_addon", name: "Icon 5" },
+      { iconUri: "drawable://alert_addon", name: "Icon 6" },
+      { iconUri: "drawable://alert_addon", name: "Icon 7" },
+      { iconUri: "drawable://alert_addon", name: "Icon 8" },
+      { iconUri: "drawable://alert_addon", name: "Icon 9" },
+      { iconUri: "drawable://alert_addon", name: "Icon 10" },
+      { iconUri: "drawable://alert_addon", name: "Icon 11" },
+    ]
+  });
+  p.show(function(data) {
+    sendResult(data.icongrid0 == 10, "Got result " + data.icongrid0);
+  });
+}
+
+function sendResult(pass, message) {
+  setTimeout(function() {
+    alert((pass ? "PASS " : "FAIL ") + message);
+  }, 1000);
+}
+    </script>
+  </head>
+  <body onload="start();">
+  </body>
+</html>
