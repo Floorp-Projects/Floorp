@@ -14,10 +14,11 @@ if (typeof Components != "undefined") {
 }
 (function(exports) {
 
-exports.OS = require("resource://gre/modules/osfile/osfile_shared_allthreads.jsm").OS;
+let SharedAll =
+  require("resource://gre/modules/osfile/osfile_shared_allthreads.jsm");
 
-let LOG = exports.OS.Shared.LOG.bind(OS.Shared, "Shared front-end");
-let clone = exports.OS.Shared.clone;
+let LOG = SharedAll.LOG.bind(SharedAll, "Shared front-end");
+let clone = SharedAll.clone;
 
 /**
  * Code shared by implementations of File.
@@ -89,7 +90,7 @@ AbstractFile.prototype = {
         break;
       }
       pos += chunkSize;
-      ptr = exports.OS.Shared.offsetBy(ptr, chunkSize);
+      ptr = SharedAll.offsetBy(ptr, chunkSize);
     }
 
     return pos;
@@ -121,7 +122,7 @@ AbstractFile.prototype = {
     while (pos < bytes) {
       let chunkSize = this._write(ptr, bytes - pos, options);
       pos += chunkSize;
-      ptr = exports.OS.Shared.offsetBy(ptr, chunkSize);
+      ptr = SharedAll.offsetBy(ptr, chunkSize);
     }
     return pos;
   }
@@ -150,13 +151,13 @@ AbstractFile.normalizeToPointer = function normalizeToPointer(candidate, bytes) 
     if (candidate.isNull()) {
       throw new TypeError("Expecting a non-null pointer");
     }
-    ptr = exports.OS.Shared.Type.uint8_t.out_ptr.cast(candidate);
+    ptr = SharedAll.Type.uint8_t.out_ptr.cast(candidate);
     if (bytes == null) {
       throw new TypeError("C pointer missing bytes indication.");
     }
-  } else if (exports.OS.Shared.isTypedArray(candidate)) {
+  } else if (SharedAll.isTypedArray(candidate)) {
     // Typed Array
-    ptr = exports.OS.Shared.Type.uint8_t.out_ptr.implementation(candidate.buffer);
+    ptr = SharedAll.Type.uint8_t.out_ptr.implementation(candidate.buffer);
     if (bytes == null) {
       bytes = candidate.byteLength;
     } else if (candidate.byteLength < bytes) {
@@ -430,5 +431,8 @@ AbstractFile.removeDir = function(path, options = {}) {
   OS.File.removeEmptyDir(path);
 };
 
-   exports.OS.Shared.AbstractFile = AbstractFile;
+if (!exports.OS.Shared) {
+  exports.OS.Shared = {};
+}
+exports.OS.Shared.AbstractFile = AbstractFile;
 })(this);

@@ -61,6 +61,9 @@ let maketest = function(prefix, test) {
         utils.info("Complete");
       }, function catch_uncaught_errors(err) {
         utils.fail("Uncaught error " + err);
+        if (err && typeof err == "object" && "message" in err) {
+          utils.fail("(" + err.message + ")");
+        }
         if (err && typeof err == "object" && "stack" in err) {
           utils.fail("at " + err.stack);
         }
@@ -924,12 +927,9 @@ let test_duration = maketest("duration", function duration(test) {
     test.ok(copyOptions.outExecutionDuration >= backupDuration, "duration has increased 3");
     OS.File.remove(pathDest);
 
-    OS.Shared.TEST = true;
-
     // Testing an operation that doesn't take arguments at all
     let file = yield OS.File.open(pathSource);
     yield file.stat();
     yield file.close();
-    Services.prefs.setBoolPref("toolkit.osfile.log", false);
   });
 });

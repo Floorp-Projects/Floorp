@@ -1026,11 +1026,6 @@ exports.OS = {
     offsetBy: offsetBy
   }
 };
-if (exports.Constants.Win) {
-  exports.OS.Win = {};
-} else {
-  exports.OS.Unix = {};
-}
 
 Object.defineProperty(exports.OS.Shared, "DEBUG", {
   get: function() {
