@@ -14,7 +14,7 @@
 
 #include "updatelogging.h"
 
-UpdateLog::UpdateLog() : logFP(nullptr)
+UpdateLog::UpdateLog() : logFP(NULL)
 {
 }
 
@@ -45,7 +45,7 @@ void UpdateLog::Finish()
     return;
 
   fclose(logFP);
-  logFP = nullptr;
+  logFP = NULL;
 }
 
 void UpdateLog::Flush()
