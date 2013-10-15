@@ -26,11 +26,7 @@
 #ifdef XP_WIN
                        label="&quitApplicationCmdWin.label;"
 #else
-#ifdef XP_MACOSX
-                       label="&quitApplicationCmdMac.label;"
-#else
                        label="&quitApplicationCmd.label;"
-#endif
 #endif
                        command="cmd_quitApplication"/>
       </footer>
