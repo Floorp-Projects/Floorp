@@ -25,7 +25,9 @@
 #include "nsIThreadManager.h"
 #include "mozilla/dom/mobilemessage/PSms.h"
 #include "gfxImageSurface.h"
+#include "gfxPlatform.h"
 #include "gfxContext.h"
+#include "mozilla/gfx/2D.h"
 #include "gfxUtils.h"
 #include "nsPresContext.h"
 #include "nsIDocShell.h"
@@ -44,6 +46,7 @@
 #endif
 
 using namespace mozilla;
+using namespace mozilla::gfx;
 
 NS_IMPL_ISUPPORTS0(nsFilePickerCallback)
 
@@ -1848,7 +1851,20 @@ nsresult AndroidBridge::CaptureThumbnail(nsIDOMWindow *window, int32_t bufW, int
         ALOG_BRIDGE("Error creating gfxImageSurface");
         return NS_ERROR_FAILURE;
     }
-    nsRefPtr<gfxContext> context = new gfxContext(surf);
+
+    nsRefPtr<gfxContext> context;
+    if (gfxPlatform::GetPlatform()->SupportsAzureContentForType(BACKEND_CAIRO)) {
+        RefPtr<DrawTarget> dt =
+            gfxPlatform::GetPlatform()->CreateDrawTargetForSurface(surf, IntSize(bufW, bufH));
+
+        if (!dt) {
+            ALOG_BRIDGE("Error creating DrawTarget");
+            return NS_ERROR_FAILURE;
+        }
+        context = new gfxContext(dt);
+    } else {
+        context = new gfxContext(surf);
+    }
     gfxPoint pt(0, 0);
     context->Translate(pt);
     context->Scale(scale * bufW / srcW, scale * bufH / srcH);
