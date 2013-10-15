@@ -2553,8 +2553,9 @@ toolbarbutton.chevron > .toolbarbutton-menu-dropmarker {
 }
 
 /*
- * Draw the bottom border of the tabstrip:
+ * Draw the bottom border of the tabstrip when core doesn't do it for us:
  */
+#main-window[sizemode="fullscreen"] #TabsToolbar::after,
 #main-window:not([tabsintitlebar]) #TabsToolbar::after,
 #TabsToolbar:-moz-lwtheme::after {
   content: '';
