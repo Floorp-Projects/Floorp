@@ -98,7 +98,7 @@ PromiseWorker.prototype = {
      * @param {Error} error Some JS error.
      */
     worker.onerror = function onerror(error) {
-      self._log("Received uncaught error from worker", error.message, error.filename, error.lineno);
+      self._log("Received uncaught error from worker", error.message);
       error.preventDefault();
       let {deferred} = self._queue.pop();
       deferred.reject(error);
