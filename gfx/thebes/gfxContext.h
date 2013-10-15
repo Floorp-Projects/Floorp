@@ -646,11 +646,6 @@ public:
     gfxRect GetUserStrokeExtent();
 
     /**
-     ** Obtaining a "flattened" path - path converted to all line segments
-     **/
-    already_AddRefed<gfxFlattenedPath> GetFlattenedPath();
-
-    /**
      ** Flags
      **/
 

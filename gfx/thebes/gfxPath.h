@@ -25,26 +25,11 @@ class gfxPath {
 protected:
     gfxPath(cairo_path_t* aPath);
 
+    void EnsureFlattenedPath();
+
 public:
     virtual ~gfxPath();
-
-protected:
-    cairo_path_t* mPath;
-};
-
-/**
- * Specialization of a path that only contains linear pieces. Can be created
- * from the existing path of a gfxContext.
- */
-class gfxFlattenedPath : public gfxPath {
-    friend class gfxContext;
-
-protected:
-    gfxFlattenedPath(cairo_path_t* aPath);
-
-public:
-    virtual ~gfxFlattenedPath();
-
+    
     /**
      * Returns calculated total length of path
      */
@@ -59,6 +44,10 @@ public:
      */
     gfxPoint FindPoint(gfxPoint aOffset,
                        gfxFloat* aAngle = nullptr);
+
+protected:
+    cairo_path_t* mPath;
+    cairo_path_t* mFlattenedPath;
 };
 
 #endif
