@@ -32,7 +32,7 @@ struct TranslationParams {  // Simple translation
   float mY;
 };
 struct PathPointParams {  // Point along a path
-  gfxFlattenedPath* mPath; // NOTE: Refcounted; need to AddRef/Release.
+  gfxPath* mPath; // NOTE: Refcounted; need to AddRef/Release.
   float mDistToPoint; // Distance from path start to the point on the path that
                       // we're interested in.
 };
@@ -70,7 +70,7 @@ struct MotionSegment
   }
 
   // Constructor for a point on a path (NOTE: AddRef's)
-  MotionSegment(gfxFlattenedPath* aPath, float aDistToPoint,
+  MotionSegment(gfxPath* aPath, float aDistToPoint,
                 RotateType aRotateType, float aRotateAngle)
     : mRotateType(aRotateType), mRotateAngle(aRotateAngle),
       mSegmentType(eSegmentType_PathPoint)
@@ -228,7 +228,7 @@ SVGMotionSMILType::IsEqual(const nsSMILValue& aLeft,
 
 // Helper method for Add & CreateMatrix
 inline static void
-GetAngleAndPointAtDistance(gfxFlattenedPath* aPath, float aDistance,
+GetAngleAndPointAtDistance(gfxPath* aPath, float aDistance,
                            RotateType aRotateType,
                            gfxFloat& aRotateAngle, // in & out-param.
                            gfxPoint& aPoint)       // out-param.
@@ -287,7 +287,7 @@ SVGMotionSMILType::Add(nsSMILValue& aDest, const nsSMILValue& aValueToAdd,
                     "unexpected angle mismatch");
   NS_ABORT_IF_FALSE(srcParams.mPath == dstParams.mPath,
                     "unexpected path mismatch");
-  gfxFlattenedPath* path = srcParams.mPath;
+  gfxPath* path = srcParams.mPath;
 
   // Use destination to get our rotate angle.
   gfxFloat rotateAngle = dstSeg.mRotateAngle;
@@ -411,7 +411,7 @@ SVGMotionSMILType::Interpolate(const nsSMILValue& aStartVal,
   // NOTE: path & angle should match between start & end (since presumably
   // start & end came from the same <animateMotion> element), unless start is
   // empty. (as it would be for pure 'to' animation)
-  gfxFlattenedPath* path = endParams.mPath;
+  gfxPath* path = endParams.mPath;
   RotateType rotateType  = endSeg.mRotateType;
   float rotateAngle      = endSeg.mRotateAngle;
 
@@ -471,7 +471,7 @@ SVGMotionSMILType::CreateMatrix(const nsSMILValue& aSMILVal)
 }
 
 /* static */ nsSMILValue
-SVGMotionSMILType::ConstructSMILValue(gfxFlattenedPath* aPath,
+SVGMotionSMILType::ConstructSMILValue(gfxPath* aPath,
                                       float aDist,
                                       RotateType aRotateType,
                                       float aRotateAngle)
