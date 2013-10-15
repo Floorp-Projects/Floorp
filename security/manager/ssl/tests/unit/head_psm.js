@@ -15,6 +15,22 @@ let { ctypes } = Cu.import("resource://gre/modules/ctypes.jsm");
 
 let gIsWindows = ("@mozilla.org/windows-registry-key;1" in Cc);
 
+const SEC_ERROR_BASE = Ci.nsINSSErrorsService.NSS_SEC_ERROR_BASE;
+
+// Sort in numerical order
+const SEC_ERROR_REVOKED_CERTIFICATE                     = SEC_ERROR_BASE +  12;
+const SEC_ERROR_BAD_DATABASE                            = SEC_ERROR_BASE +  18;
+const SEC_ERROR_OCSP_MALFORMED_REQUEST                  = SEC_ERROR_BASE + 120;
+const SEC_ERROR_OCSP_SERVER_ERROR                       = SEC_ERROR_BASE + 121;
+const SEC_ERROR_OCSP_TRY_SERVER_LATER                   = SEC_ERROR_BASE + 122;
+const SEC_ERROR_OCSP_REQUEST_NEEDS_SIG                  = SEC_ERROR_BASE + 123;
+const SEC_ERROR_OCSP_UNAUTHORIZED_REQUEST               = SEC_ERROR_BASE + 124;
+const SEC_ERROR_OCSP_UNKNOWN_CERT                       = SEC_ERROR_BASE + 126;
+const SEC_ERROR_OCSP_MALFORMED_RESPONSE                 = SEC_ERROR_BASE + 129;
+const SEC_ERROR_OCSP_UNAUTHORIZED_RESPONSE              = SEC_ERROR_BASE + 130;
+const SEC_ERROR_OCSP_OLD_RESPONSE                       = SEC_ERROR_BASE + 132;
+const SEC_ERROR_OCSP_INVALID_SIGNING_CERT               = SEC_ERROR_BASE + 144;
+
 function readFile(file) {
   let fstream = Cc["@mozilla.org/network/file-input-stream;1"]
                   .createInstance(Ci.nsIFileInputStream);
@@ -30,10 +46,9 @@ function addCertFromFile(certdb, filename, trustString) {
   certdb.addCert(der, trustString, null);
 }
 
-function getXPCOMStatusFromNSS(offset) {
+function getXPCOMStatusFromNSS(statusNSS) {
   let nssErrorsService = Cc["@mozilla.org/nss_errors_service;1"]
                            .getService(Ci.nsINSSErrorsService);
-  let statusNSS = Ci.nsINSSErrorsService.NSS_SEC_ERROR_BASE + offset;
   return nssErrorsService.getXPCOMFromNSSError(statusNSS);
 }
 
