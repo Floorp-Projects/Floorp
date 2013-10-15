@@ -133,7 +133,7 @@ NS_IMETHODIMP nsZipHeader::GetPermissions(uint32_t *aPermissions)
     NS_ASSERTION(mInited, "Not initalised");
 
     // Always give user read access at least, this matches nsIZipReader's behaviour
-    *aPermissions = ((mEAttr >> 16) & 0xfff | 0x100);
+    *aPermissions = ((mEAttr >> 16) & 0xfff) | 0x100;
     return NS_OK;
 }
 

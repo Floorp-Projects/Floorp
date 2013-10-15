@@ -528,7 +528,7 @@ public:
         mFileList.AppendElement(domFile);
         mFileListLength = mFileList.Length();
         if (mCanceled) {
-          NS_ASSERTION(!mInput, "This is bad - how did this happen?");
+          MOZ_ASSERT(!mInput, "This is bad - how did this happen?");
           // There's no point dispatching to the main thread (that doesn't
           // guarantee that we'll be destroyed there).
           return NS_OK;
