@@ -198,4 +198,9 @@ interface nsISessionStore : nsISupports
    * @param aName is the name of the attribute to save/restore for all tabbrowser tabs.
    */
   void persistTabAttribute(in AString aName);
+
+  /**
+   * Initialize the service
+   */
+  jsval init(in nsIDOMWindow aWindow);
 };
