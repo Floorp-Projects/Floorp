@@ -581,22 +581,32 @@ BasicLayerManager::EndTransactionInternal(DrawThebesLayerCallback aCallback,
   NS_ASSERTION(InConstruction(), "Should be in construction phase");
   mPhase = PHASE_DRAWING;
 
-  Layer* aLayer = GetRoot();
-  RenderTraceLayers(aLayer, "FF00");
+  RenderTraceLayers(mRoot, "FF00");
 
   mTransactionIncomplete = false;
 
-  if (aFlags & END_NO_COMPOSITE) {
-    if (!mDummyTarget) {
-      // XXX: We should really just set mTarget to null and make sure we can handle that further down the call chain
-      // Creating this temporary surface can be expensive on some platforms (d2d in particular), so cache it between paints.
-      nsRefPtr<gfxASurface> surf = gfxPlatform::GetPlatform()->CreateOffscreenSurface(gfxIntSize(1, 1), GFX_CONTENT_COLOR);
-      mDummyTarget = new gfxContext(surf);
+  if (mRoot) {
+    // Need to do this before we call ApplyDoubleBuffering,
+    // which depends on correct effective transforms
+    mSnapEffectiveTransforms =
+      mTarget ? !(mTarget->GetFlags() & gfxContext::FLAG_DISABLE_SNAPPING) : true;
+    mRoot->ComputeEffectiveTransforms(mTarget ? gfx3DMatrix::From2D(mTarget->CurrentMatrix()) : gfx3DMatrix());
+
+    ToData(mRoot)->Validate(aCallback, aCallbackData);
+    if (mRoot->GetMaskLayer()) {
+      ToData(mRoot->GetMaskLayer())->Validate(aCallback, aCallbackData);
     }
-    mTarget = mDummyTarget;
+
+    if (aFlags & END_NO_COMPOSITE) {
+      // Apply pending tree updates before recomputing effective
+      // properties.
+      mRoot->ApplyPendingUpdatesToSubtree();
+    }
   }
 
-  if (mTarget && mRoot && !(aFlags & END_NO_IMMEDIATE_REDRAW)) {
+  if (mTarget && mRoot &&
+      !(aFlags & END_NO_IMMEDIATE_REDRAW) &&
+      !(aFlags & END_NO_COMPOSITE)) {
     nsIntRect clipRect;
 
     {
@@ -604,18 +614,6 @@ BasicLayerManager::EndTransactionInternal(DrawThebesLayerCallback aCallback,
       mTarget->SetMatrix(gfxMatrix());
       clipRect = ToOutsideIntRect(mTarget->GetClipExtents());
     }
-
-    if (aFlags & END_NO_COMPOSITE) {
-      // Apply pending tree updates before recomputing effective
-      // properties.
-      aLayer->ApplyPendingUpdatesToSubtree();
-    }
-
-    // Need to do this before we call ApplyDoubleBuffering,
-    // which depends on correct effective transforms
-    mSnapEffectiveTransforms =
-      !(mTarget->GetFlags() & gfxContext::FLAG_DISABLE_SNAPPING);
-    mRoot->ComputeEffectiveTransforms(gfx3DMatrix::From2D(mTarget->CurrentMatrix()));
 
     if (IsRetained()) {
       nsIntRegion region;
@@ -625,22 +623,12 @@ BasicLayerManager::EndTransactionInternal(DrawThebesLayerCallback aCallback,
       }
     }
 
-    if (aFlags & END_NO_COMPOSITE) {
-      if (IsRetained()) {
-        // Clip the destination out so that we don't draw to it, and
-        // only end up validating ThebesLayers.
-        mTarget->Clip(gfxRect(0, 0, 0, 0));
-        PaintLayer(mTarget, mRoot, aCallback, aCallbackData, nullptr);
-      }
-      // If we're not retained, then don't composite means do nothing at all.
-    } else {
-      PaintLayer(mTarget, mRoot, aCallback, aCallbackData, nullptr);
-      if (mWidget) {
-        FlashWidgetUpdateArea(mTarget);
-      }
-      RenderDebugOverlay();
-      LayerManager::PostPresent();
+    PaintLayer(mTarget, mRoot, aCallback, aCallbackData, nullptr);
+    if (mWidget) {
+      FlashWidgetUpdateArea(mTarget);
     }
+    RenderDebugOverlay();
+    LayerManager::PostPresent();
 
     if (!mTransactionIncomplete) {
       // Clear out target if we have a complete transaction.
