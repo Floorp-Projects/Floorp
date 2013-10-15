@@ -186,10 +186,10 @@ int nr_ice_component_initialize(struct nr_ice_ctx_ *ctx,nr_ice_component *compon
     int j;
     char label[256];
 
-    r_log(LOG_ICE,LOG_DEBUG,"ICE(%s): initializing component with id %d",ctx->label,component->component_id);
+    r_log(LOG_ICE,LOG_DEBUG,"ICE(%s)/COMP(%d): initializing component",ctx->label,component->component_id);
 
     if(addr_ct==0){
-      r_log(LOG_ICE,LOG_ERR,"ICE(%s): no local addresses available",ctx->label);
+      r_log(LOG_ICE,LOG_ERR,"ICE(%s)/COMP(%d): no local addresses available",ctx->label, component->component_id);
       ABORT(R_NOT_FOUND);
     }
 
@@ -377,7 +377,7 @@ int nr_ice_component_maybe_prune_candidate(nr_ice_ctx *ctx, nr_ice_component *co
     }
 
     if (tmp) {
-      r_log(LOG_ICE,LOG_DEBUG,"ICE(%s): Removing redundant candidate %s",
+      r_log(LOG_ICE,LOG_DEBUG,"ICE(%s)/CAND(%s): Removing redundant candidate",
             ctx->label,tmp->label);
 
       TAILQ_REMOVE(&comp->candidates,tmp,entry_comp);
@@ -403,7 +403,7 @@ static int nr_ice_component_process_incoming_check(nr_ice_component *comp, nr_tr
     nr_ice_cand_pair *found_invalid=0;
     int r=0,_status;
 
-    r_log(LOG_ICE,LOG_DEBUG,"ICE-PEER(%s)/STREAM(%s)(%d): received request from %s",comp->stream->pctx->label,comp->stream->label,comp->component_id,req->src_addr.as_string);
+    r_log(LOG_ICE,LOG_DEBUG,"ICE-PEER(%s)/STREAM(%s)/COMP(%d): received request from %s",comp->stream->pctx->label,comp->stream->label,comp->component_id,req->src_addr.as_string);
 
     if (comp->state == NR_ICE_COMPONENT_DISABLED)
       ABORT(R_REJECTED);
@@ -477,7 +477,7 @@ static int nr_ice_component_process_incoming_check(nr_ice_component *comp, nr_tr
       }
 
       if (local_addr_matched && remote_addr_matched){
-        r_log(LOG_ICE,LOG_DEBUG,"ICE-PEER(%s): Found a matching pair: %s",comp->stream->pctx->label,pair->as_string);
+        r_log(LOG_ICE,LOG_DEBUG,"ICE-PEER(%s)/CAND_PAIR(%s): Found a matching pair for received check: %s",comp->stream->pctx->label,pair->codeword,pair->as_string);
         break; /* OK, this is a known pair */
       }
 
@@ -543,12 +543,12 @@ static int nr_ice_component_process_incoming_check(nr_ice_component *comp, nr_tr
         if(found_invalid->state == NR_ICE_PAIR_STATE_FAILED){
           pair=found_invalid;
 
-          r_log(LOG_ICE,LOG_WARNING,"ICE-PEER(%s): received STUN check on invalid pair %s: resurrecting",comp->stream->pctx->label,pair->as_string);
+          r_log(LOG_ICE,LOG_WARNING,"ICE-PEER(%s)/CAND-PAIR(%s): received STUN check on invalid pair, resurrecting: %s",comp->stream->pctx->label,pair->codeword,pair->as_string);
           nr_ice_candidate_pair_set_state(pair->pctx,pair,NR_ICE_PAIR_STATE_WAITING);
         }
         else{
           /* This shouldn't happen */
-          r_log(LOG_ICE,LOG_ERR,"ICE-PEER(%s): received STUN check on invalid pair %s but not in FAILED state",comp->stream->pctx->label,pair->as_string);
+          r_log(LOG_ICE,LOG_ERR,"ICE-PEER(%s)/CAND-PAIR(%s): received STUN check on invalid pair that was not in state FAILED; this should not happen: %s",comp->stream->pctx->label,pair->codeword,pair->as_string);
           *error=500;
           ABORT(R_BAD_DATA);
         }
@@ -556,9 +556,10 @@ static int nr_ice_component_process_incoming_check(nr_ice_component *comp, nr_tr
     }
 
     /* OK, we've got a pair to work with. Turn it on */
+    assert(pair);
     if(nr_stun_message_has_attribute(sreq,NR_STUN_ATTR_USE_CANDIDATE,0)){
       if(comp->stream->pctx->controlling){
-        r_log(LOG_ICE,LOG_ERR,"ICE-PEER(%s): Peer sent USE-CANDIDATE but is controlled",comp->stream->pctx->label);
+        r_log(LOG_ICE,LOG_ERR,"ICE-PEER(%s)/CAND_PAIR(%s): Peer sent USE-CANDIDATE but is controlled",comp->stream->pctx->label, pair->codeword);
       }
       else{
         /* If this is the first time we've noticed this is nominated...*/
@@ -574,7 +575,6 @@ static int nr_ice_component_process_incoming_check(nr_ice_component *comp, nr_tr
         }
       }
     }
-    assert(pair != 0);
 
     if(r=nr_ice_candidate_pair_do_triggered_check(comp->stream->pctx,pair)) {
       *error=(r==R_NO_MEMORY)?500:400;
@@ -620,16 +620,16 @@ int nr_ice_component_service_pre_answer_requests(nr_ice_peer_ctx *pctx, nr_ice_c
     if (serviced)
       *serviced = 0;
 
-    r_log(LOG_ICE,LOG_DEBUG,"ICE-PEER(%s)/STREAM(%s)/comp(%d): looking for pre-answer requests",pctx->label,comp->stream->label,comp->component_id);
+    r_log(LOG_ICE,LOG_DEBUG,"ICE-PEER(%s)/STREAM(%s)/COMP(%d): looking for pre-answer requests",pctx->label,comp->stream->label,comp->component_id);
 
     STAILQ_FOREACH_SAFE(r1, &comp->pre_answer_reqs, entry, r2) {
       if (!strcmp(r1->username, username)) {
         int error = 0;
 
-        r_log(LOG_ICE,LOG_DEBUG,"ICE-PEER(%s)/STREAM(%s)/comp(%d): found pre-answer request",pctx->label,comp->stream->label,comp->component_id);
+        r_log(LOG_ICE,LOG_DEBUG,"ICE-PEER(%s)/STREAM(%s)/COMP(%d): found pre-answer request",pctx->label,comp->stream->label,comp->component_id);
         r = nr_ice_component_process_incoming_check(pcomp, &r1->local_addr, &r1->req, &error);
         if (r) {
-          r_log(LOG_ICE,LOG_INFO,"ICE-PEER(%s)/STREAM(%s)/comp(%d): error processing pre-answer request. Would have returned %d",pctx->label,comp->stream->label,comp->component_id, error);
+          r_log(LOG_ICE,LOG_INFO,"ICE-PEER(%s)/STREAM(%s)/COMP(%d): error processing pre-answer request. Would have returned %d",pctx->label,comp->stream->label,comp->component_id, error);
         }
         (*serviced)++;
         STAILQ_REMOVE(&comp->pre_answer_reqs,r1,nr_ice_pre_answer_request_, entry);
@@ -650,7 +650,7 @@ int nr_ice_component_pair_candidate(nr_ice_peer_ctx *pctx, nr_ice_component *pco
     char codeword[5];
 
     nr_ice_compute_codeword(lcand->label,strlen(lcand->label),codeword);
-    r_log(LOG_ICE,LOG_DEBUG,"Pairing local candidate %s:%s",codeword,lcand->label);
+    r_log(LOG_ICE,LOG_DEBUG,"ICE-PEER(%s)/CAND(%s): Pairing local candidate %s",pctx->label,codeword,lcand->label);
 
     switch(lcand->type){
       case HOST:
@@ -686,7 +686,7 @@ int nr_ice_component_pair_candidate(nr_ice_peer_ctx *pctx, nr_ice_component *pco
           assert (pcand->state == NR_ICE_CAND_PEER_CANDIDATE_PAIRED);
 
         nr_ice_compute_codeword(pcand->label,strlen(pcand->label),codeword);
-        r_log(LOG_ICE,LOG_DEBUG,"Pairing with peer candidate %s:%s",codeword,pcand->label);
+        r_log(LOG_ICE,LOG_DEBUG,"ICE-PEER(%s)/CAND(%s): Pairing with peer candidate %s", pctx->label, codeword, pcand->label);
 
         if(r=nr_ice_candidate_pair_create(pctx,lcand,pcand,&pair))
           ABORT(r);
@@ -765,7 +765,7 @@ static int nr_ice_component_stun_server_default_cb(void *cb_arg,nr_stun_server_c
     int r, _status;
     nr_ice_component *comp = (nr_ice_component *)cb_arg;
     nr_ice_pre_answer_request *par = 0;
-    r_log(LOG_ICE,LOG_DEBUG,"ICE(%s)/STREAM(%s)/comp(%d): Received STUN request pre-answer from %s",
+    r_log(LOG_ICE,LOG_DEBUG,"ICE(%s)/STREAM(%s)/COMP(%d): Received STUN request pre-answer from %s",
           comp->ctx->label, comp->stream->label, comp->component_id, req->src_addr.as_string);
 
     if (r=nr_ice_pre_answer_request_create(sock, req, &par))
@@ -792,16 +792,16 @@ int nr_ice_component_nominated_pair(nr_ice_component *comp, nr_ice_cand_pair *pa
     if(comp->nominated){
       if(comp->nominated->priority > pair->priority)
         return(0);
-      r_log(LOG_ICE,LOG_DEBUG,"ICE-PEER(%s)/STREAM(%s)/comp(%d): replacing pair %s with pair %s",comp->stream->pctx->label,comp->stream->label,comp->component_id,comp->nominated->as_string,pair->as_string);
+      r_log(LOG_ICE,LOG_DEBUG,"ICE-PEER(%s)/STREAM(%s)/COMP(%d)/CAND-PAIR(%s): replacing pair %s with CAND-PAIR(%s)",comp->stream->pctx->label,comp->stream->label,comp->component_id,comp->nominated->codeword,comp->nominated->as_string,pair->codeword);
     }
 
     /* Set the new nominated pair */
-    r_log(LOG_ICE,LOG_DEBUG,"ICE-PEER(%s)/STREAM(%s)/comp(%d): nominated pair is %s (0x%p)",comp->stream->pctx->label,comp->stream->label,comp->component_id,pair->as_string,pair);
+    r_log(LOG_ICE,LOG_DEBUG,"ICE-PEER(%s)/STREAM(%s)/COMP(%d)/CAND-PAIR(%s): nominated pair is %s",comp->stream->pctx->label,comp->stream->label,comp->component_id,pair->codeword,pair->as_string);
     comp->state=NR_ICE_COMPONENT_NOMINATED;
     comp->nominated=pair;
     comp->active=pair;
 
-    r_log(LOG_ICE,LOG_DEBUG,"ICE-PEER(%s)/STREAM(%s)/comp(%d): cancelling all pairs but %s (0x%p)",comp->stream->pctx->label,comp->stream->label,comp->component_id,pair->as_string,pair);
+    r_log(LOG_ICE,LOG_DEBUG,"ICE-PEER(%s)/STREAM(%s)/COMP(%d)/CAND-PAIR(%s): cancelling all pairs but %s",comp->stream->pctx->label,comp->stream->label,comp->component_id,pair->codeword,pair->as_string);
 
     /* Cancel checks in WAITING and FROZEN per ICE S 8.1.2 */
     p2=TAILQ_FIRST(&comp->stream->check_list);
@@ -810,7 +810,7 @@ int nr_ice_component_nominated_pair(nr_ice_component *comp, nr_ice_cand_pair *pa
          (p2->remote->component->component_id == comp->component_id) &&
          ((p2->state == NR_ICE_PAIR_STATE_FROZEN) ||
 	  (p2->state == NR_ICE_PAIR_STATE_WAITING))) {
-        r_log(LOG_ICE,LOG_DEBUG,"ICE-PEER(%s)/STREAM(%s)/comp(%d): cancelling pair %s (0x%p)",comp->stream->pctx->label,comp->stream->label,comp->component_id,p2->as_string,p2);
+        r_log(LOG_ICE,LOG_DEBUG,"ICE-PEER(%s)/STREAM(%s)/COMP(%d)/CAND-PAIR(%s): cancelling FROZEN/WAITING pair %s because CAND-PAIR(%s) was nominated.",comp->stream->pctx->label,comp->stream->label,comp->component_id,p2->codeword,p2->as_string,pair->codeword);
 
         if(r=nr_ice_candidate_pair_cancel(pair->pctx,p2))
           ABORT(r);
@@ -818,7 +818,7 @@ int nr_ice_component_nominated_pair(nr_ice_component *comp, nr_ice_cand_pair *pa
 
       p2=TAILQ_NEXT(p2,entry);
     }
-    r_log(LOG_ICE,LOG_DEBUG,"ICE-PEER(%s)/STREAM(%s)/comp(%d): cancelling done",comp->stream->pctx->label,comp->stream->label,comp->component_id);
+    r_log(LOG_ICE,LOG_DEBUG,"ICE-PEER(%s)/STREAM(%s)/COMP(%d): cancelling done",comp->stream->pctx->label,comp->stream->label,comp->component_id);
 
     if(r=nr_ice_media_stream_component_nominated(comp->stream,comp))
       ABORT(r);

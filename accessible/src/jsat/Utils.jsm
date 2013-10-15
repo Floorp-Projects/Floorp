@@ -14,6 +14,8 @@ const ROLE_CELL = Ci.nsIAccessibleRole.ROLE_CELL;
 const ROLE_COLUMNHEADER = Ci.nsIAccessibleRole.ROLE_COLUMNHEADER;
 const ROLE_ROWHEADER = Ci.nsIAccessibleRole.ROLE_ROWHEADER;
 
+const RELATION_LABEL_FOR = Ci.nsIAccessibleRelation.RELATION_LABEL_FOR;
+
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, 'Services',
   'resource://gre/modules/Services.jsm');
@@ -291,6 +293,20 @@ this.Utils = {
 
     // Looking up a role that would match a landmark.
     return this.matchAttributeValue(roles, landmarks);
+  },
+
+  getEmbeddedControl: function getEmbeddedControl(aLabel) {
+    if (aLabel) {
+      let relation = aLabel.getRelationByType(RELATION_LABEL_FOR);
+      for (let i = 0; i < relation.targetsCount; i++) {
+        let target = relation.getTarget(i);
+        if (target.parent === aLabel) {
+          return target;
+        }
+      }
+    }
+
+    return null;
   }
 };
 
@@ -425,11 +441,18 @@ this.Logger = {
 /**
  * PivotContext: An object that generates and caches context information
  * for a given accessible and its relationship with another accessible.
+ *
+ * If the given accessible is a label for a nested control, then this
+ * context will represent the nested control instead of the label.
+ * With the exception of bounds calculation, which will use the containing
+ * label. In this case the |accessible| field would be the embedded control,
+ * and the |accessibleForBounds| field would be the label.
  */
 this.PivotContext = function PivotContext(aAccessible, aOldAccessible,
   aStartOffset, aEndOffset, aIgnoreAncestry = false,
   aIncludeInvisible = false) {
   this._accessible = aAccessible;
+  this._nestedControl = Utils.getEmbeddedControl(aAccessible);
   this._oldAccessible =
     this._isDefunct(aOldAccessible) ? null : aOldAccessible;
   this.startOffset = aStartOffset;
@@ -440,11 +463,21 @@ this.PivotContext = function PivotContext(aAccessible, aOldAccessible,
 
 PivotContext.prototype = {
   get accessible() {
-    return this._accessible;
+    // If the current pivot accessible has a nested control,
+    // make this context use it publicly.
+    return this._nestedControl || this._accessible;
   },
 
   get oldAccessible() {
     return this._oldAccessible;
+  },
+
+  get isNestedControl() {
+    return !!this._nestedControl;
+  },
+
+  get accessibleForBounds() {
+    return this._accessible;
   },
 
   get textAndAdjustedOffsets() {
@@ -521,7 +554,7 @@ PivotContext.prototype = {
   get currentAncestry() {
     if (!this._currentAncestry) {
       this._currentAncestry = this._ignoreAncestry ? [] :
-        this._getAncestry(this._accessible);
+        this._getAncestry(this.accessible);
     }
     return this._currentAncestry;
   },
@@ -582,7 +615,7 @@ PivotContext.prototype = {
    * traversal should stop.
    */
   subtreeGenerator: function subtreeGenerator(aPreorder, aStop) {
-    return this._traverse(this._accessible, aPreorder, aStop);
+    return this._traverse(this.accessible, aPreorder, aStop);
   },
 
   getCellInfo: function getCellInfo(aAccessible) {
@@ -677,7 +710,7 @@ PivotContext.prototype = {
 
   get bounds() {
     if (!this._bounds) {
-      this._bounds = Utils.getBounds(this._accessible);
+      this._bounds = Utils.getBounds(this.accessibleForBounds);
     }
 
     return this._bounds.clone();
