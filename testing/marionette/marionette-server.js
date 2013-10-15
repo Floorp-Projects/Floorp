@@ -1697,6 +1697,22 @@ MarionetteServerConnection.prototype = {
   },
 
   /**
+   * Submit a form on a content page by either using form or element in a form
+   * @param object aRequest
+   *               'id' member holds the reference id to
+   *               the element that will be checked
+  */
+  submitElement: function MDA_submitElement(aRequest) {
+    let command_id = this.command_id = this.getCommandId();
+    if (this.context == "chrome") {
+      this.sendError("Command 'submitElement' is not available in chrome context", 500, null, this.command_id);
+    }
+    else {
+      this.sendAsync("submitElement", {id: aRequest.parameters.id}, command_id);
+    }
+  },
+
+  /**
    * Check if element is enabled
    *
    * @param object aRequest
@@ -2237,6 +2253,7 @@ MarionetteServerConnection.prototype.requestTypes = {
   "getElementTagName": MarionetteServerConnection.prototype.getElementTagName,
   "isElementDisplayed": MarionetteServerConnection.prototype.isElementDisplayed,
   "getElementValueOfCssProperty": MarionetteServerConnection.prototype.getElementValueOfCssProperty,
+  "submitElement": MarionetteServerConnection.prototype.submitElement,
   "getElementSize": MarionetteServerConnection.prototype.getElementSize,
   "isElementEnabled": MarionetteServerConnection.prototype.isElementEnabled,
   "isElementSelected": MarionetteServerConnection.prototype.isElementSelected,
