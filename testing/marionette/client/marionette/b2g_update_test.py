@@ -12,20 +12,20 @@ import types
 import weakref
 
 from b2ginstance import B2GInstance
-from client import MarionetteClient
 from errors import InvalidResponseException
 from marionette import Marionette
 from marionette_test import MarionetteTestCase
+from marionette_transport import MarionetteTransport
 from runtests import MarionetteTestRunner, cli
 
-class B2GUpdateMarionetteClient(MarionetteClient):
+class B2GUpdateMarionetteClient(MarionetteTransport):
     RETRY_TIMEOUT   = 5
     CONNECT_TIMEOUT = 30
     SEND_TIMEOUT    = 60 * 5
     MAX_RETRIES     = 24
 
     def __init__(self, addr, port, runner):
-        MarionetteClient.__init__(self, addr, port)
+        super(B2GUpdateMarionetteClient, self).__init__(addr, port)
         self.runner = runner
 
     def connect(self):
@@ -36,7 +36,7 @@ class B2GUpdateMarionetteClient(MarionetteClient):
         """
         for i in range(self.MAX_RETRIES):
             try:
-                MarionetteClient.connect(self, timeout=self.CONNECT_TIMEOUT)
+                MarionetteTransport.connect(self, timeout=self.CONNECT_TIMEOUT)
                 break
             except:
                 if i == self.MAX_RETRIES - 1:
