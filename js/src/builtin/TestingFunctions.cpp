@@ -1082,6 +1082,15 @@ SetJitCompilerOption(JSContext *cx, unsigned argc, jsval *vp)
     return true;
 }
 
+static bool
+SetIonAssertGraphCoherency(JSContext *cx, unsigned argc, jsval *vp)
+{
+    CallArgs args = CallArgsFromVp(argc, vp);
+    jit::js_IonOptions.assertGraphConsistency = ToBoolean(args.get(0));
+    args.rval().setUndefined();
+    return true;
+}
+
 static const JSFunctionSpecWithHelp TestingFunctions[] = {
     JS_FN_HELP("gc", ::GC, 0, 0,
 "gc([obj] | 'compartment')",
@@ -1246,6 +1255,12 @@ static const JSFunctionSpecWithHelp TestingFunctions[] = {
 "  Returns whether the given value is a function containing \"use asm\" that has been\n"
 "  validated according to the asm.js spec."),
 
+    JS_FN_HELP("isAsmJSModuleLoadedFromCache", IsAsmJSModuleLoadedFromCache, 1, 0,
+"isAsmJSModule(fn)",
+"  Return whether the given asm.js module function has been loaded directly\n"
+"  from the cache. This function throws an error if fn is not a validated asm.js\n"
+"  module."),
+
     JS_FN_HELP("isAsmJSFunction", IsAsmJSFunction, 1, 0,
 "isAsmJSFunction(fn)",
 "  Returns whether the given value is a nested function in an asm.js module that has been\n"
@@ -1274,6 +1289,12 @@ static const JSFunctionSpecWithHelp TestingFunctions[] = {
     JS_FN_HELP("setJitCompilerOption", SetJitCompilerOption, 2, 0,
 "setCompilerOption(<option>, <number>)",
 "  Set a compiler option indexed in JSCompileOption enum to a number.\n"),
+
+    JS_FN_HELP("setIonAssertGraphCoherency", SetIonAssertGraphCoherency, 1, 0,
+"setIonAssertGraphCoherency(bool)",
+"  Set whether Ion should perform graph consistency (DEBUG-only) assertions. These assertions\n"
+"  are valuable and should be generally enabled, however they can be very expensive for large\n"
+"  (asm.js) programs."),
 
     JS_FS_HELP_END
 };

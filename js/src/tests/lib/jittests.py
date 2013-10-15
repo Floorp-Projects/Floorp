@@ -28,6 +28,7 @@ JS_DIR = os.path.dirname(os.path.dirname(TESTS_LIB_DIR))
 TOP_SRC_DIR = os.path.dirname(os.path.dirname(JS_DIR))
 TEST_DIR = os.path.join(JS_DIR, 'jit-test', 'tests')
 LIB_DIR = os.path.join(JS_DIR, 'jit-test', 'lib') + os.path.sep
+JS_CACHE_DIR = os.path.join(JS_DIR, 'jit-test', '.js-cache')
 ECMA6_DIR = posixpath.join(JS_DIR, 'tests', 'ecma_6')
 
 # Backported from Python 3.1 posixpath.py
