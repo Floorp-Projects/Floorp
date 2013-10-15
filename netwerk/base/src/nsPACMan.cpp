@@ -14,6 +14,9 @@
 #include "nsNetUtil.h"
 #include "nsIAsyncVerifyRedirectCallback.h"
 #include "nsISystemProxySettings.h"
+#ifdef MOZ_NUWA_PROCESS
+#include "ipc/Nuwa.h"
+#endif
 
 //-----------------------------------------------------------------------------
 using namespace mozilla;
@@ -674,6 +677,13 @@ nsPACMan::NamePACThread()
 {
   NS_ABORT_IF_FALSE(!NS_IsMainThread(), "wrong thread");
   PR_SetCurrentThreadName("Proxy Resolution");
+#ifdef MOZ_NUWA_PROCESS
+  if (IsNuwaProcess()) {
+    NS_ASSERTION(NuwaMarkCurrentThread != nullptr,
+                 "NuwaMarkCurrentThread is undefined!");
+    NuwaMarkCurrentThread(nullptr, nullptr);
+  }
+#endif
 }
 
 nsresult
