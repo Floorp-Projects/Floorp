@@ -414,6 +414,8 @@ const PanelUI = {
                                      " -- " + e.stack);
         sbWidth.value = 0;
       }
+      // Minimum width of 10 so that we have enough padding:
+      sbWidth.value = Math.max(sbWidth.value, 10);
       deferred.resolve(sbWidth.value);
       iframe.remove();
     });
