@@ -107,7 +107,6 @@ panelview:not([mainview]) .toolbarbutton-text,
 
 #edit-controls@inAnyPanel@ > toolbarbutton > .toolbarbutton-icon,
 #zoom-controls@inAnyPanel@ > toolbarbutton > .toolbarbutton-icon {
-  -moz-margin-end: 0;
   min-width: 0;
   min-height: 0;
   margin: 0;
