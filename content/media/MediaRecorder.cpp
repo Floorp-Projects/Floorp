@@ -236,16 +236,6 @@ public:
     return mEncodedBufferCache->ExtractBlob(mimeType);
   }
 
-  void RemoveStream()
-  {
-    MOZ_ASSERT(NS_IsMainThread());
-
-    if (mEncoder)
-    {
-      mTrackUnionStream->RemoveListener(mEncoder);
-    }
-  }
-
 private:
 
   // Pull encoded meida data from MediaEncoder and put into EncodedBufferCache.
@@ -364,16 +354,6 @@ MediaRecorder::GetMimeType(nsString &aMimeType)
 {
   MutexAutoLock lock(mMutex);
   aMimeType = mMimeType;
-}
-
-void
-MediaRecorder::DisconnectFromOwner()
-{
-  nsDOMEventTargetHelper::DisconnectFromOwner();
-  if (mSession && mState != RecordingState::Inactive)
-  {
-    mSession->RemoveStream();
-  }
 }
 
 void
