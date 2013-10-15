@@ -5303,7 +5303,7 @@ IonBuilder::jsop_eval(uint32_t argc)
             }
         }
 
-        MInstruction *filterArguments = MFilterArguments::New(string);
+        MInstruction *filterArguments = MFilterArgumentsOrEval::New(string);
         current->add(filterArguments);
 
         MInstruction *ins = MCallDirectEval::New(scopeChain, string, thisValue, pc);
