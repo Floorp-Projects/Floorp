@@ -221,7 +221,7 @@ MSG_DEF(JSMSG_CANT_DECODE_PRINCIPALS, 167, 0, JSEXN_INTERNALERR, "can't decode J
 MSG_DEF(JSMSG_CANT_SEAL_OBJECT,       168, 1, JSEXN_ERR, "can't seal {0} objects")
 MSG_DEF(JSMSG_TOO_MANY_CATCH_VARS,    169, 0, JSEXN_SYNTAXERR, "too many catch variables")
 MSG_DEF(JSMSG_NEGATIVE_REPETITION_COUNT, 170, 0, JSEXN_RANGEERR, "repeat count must be non-negative")
-MSG_DEF(JSMSG_UNUSED171,              171, 0, JSEXN_NONE, "")
+MSG_DEF(JSMSG_INVALID_FOR_OF_INIT,    171, 0, JSEXN_SYNTAXERR, "for-of loop variable declaration may not have an initializer")
 MSG_DEF(JSMSG_UNUSED172,              172, 0, JSEXN_NONE, "")
 MSG_DEF(JSMSG_UNUSED173,              173, 0, JSEXN_NONE, "")
 MSG_DEF(JSMSG_UNUSED174,              174, 0, JSEXN_NONE, "")
