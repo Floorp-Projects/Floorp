@@ -1305,20 +1305,20 @@ class LGetDynamicName : public LCallInstructionHelper<BOX_PIECES, 2, 3>
     }
 };
 
-class LFilterArguments : public LCallInstructionHelper<0, 1, 2>
+class LFilterArgumentsOrEval : public LCallInstructionHelper<0, 1, 2>
 {
   public:
-    LIR_HEADER(FilterArguments)
+    LIR_HEADER(FilterArgumentsOrEval)
 
-    LFilterArguments(const LAllocation &string, const LDefinition &temp1, const LDefinition &temp2)
+    LFilterArgumentsOrEval(const LAllocation &string, const LDefinition &temp1, const LDefinition &temp2)
     {
         setOperand(0, string);
         setTemp(0, temp1);
         setTemp(1, temp2);
     }
 
-    MFilterArguments *mir() const {
-        return mir_->toFilterArguments();
+    MFilterArgumentsOrEval *mir() const {
+        return mir_->toFilterArgumentsOrEval();
     }
 
     const LAllocation *getString() {

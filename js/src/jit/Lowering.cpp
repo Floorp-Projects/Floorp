@@ -542,14 +542,14 @@ LIRGenerator::visitGetDynamicName(MGetDynamicName *ins)
 }
 
 bool
-LIRGenerator::visitFilterArguments(MFilterArguments *ins)
+LIRGenerator::visitFilterArgumentsOrEval(MFilterArgumentsOrEval *ins)
 {
     MDefinition *string = ins->getString();
     JS_ASSERT(string->type() == MIRType_String);
 
-    LFilterArguments *lir = new LFilterArguments(useFixed(string, CallTempReg0),
-                                                 tempFixed(CallTempReg1),
-                                                 tempFixed(CallTempReg2));
+    LFilterArgumentsOrEval *lir = new LFilterArgumentsOrEval(useFixed(string, CallTempReg0),
+                                                             tempFixed(CallTempReg1),
+                                                             tempFixed(CallTempReg2));
 
     return assignSnapshot(lir) && add(lir, ins) && assignSafepoint(lir, ins);
 }
