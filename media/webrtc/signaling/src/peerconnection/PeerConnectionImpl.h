@@ -12,21 +12,15 @@
 
 #include "prlock.h"
 #include "mozilla/RefPtr.h"
-#include "nsWeakPtr.h"
-#include "nsIWeakReferenceUtils.h" // for the definition of nsWeakPtr
-#include "IPeerConnection.h"
+#include "sigslot.h"
+#include "nricectx.h"
+#include "nricemediastream.h"
 #include "nsComponentManagerUtils.h"
 #include "nsPIDOMWindow.h"
+#include "nsIThread.h"
 
-#include "dtlsidentity.h"
-
-#include "peer_connection_types.h"
-#include "CallControlManager.h"
-#include "CC_Device.h"
-#include "CC_Call.h"
-#include "CC_Observer.h"
-#include "MediaPipeline.h"
-#include "PeerConnectionMedia.h"
+#include "mozilla/ErrorResult.h"
+#include "mozilla/dom/PeerConnectionImplEnumsBinding.h"
 
 #ifdef MOZILLA_INTERNAL_API
 #include "mozilla/TimeStamp.h"
@@ -34,11 +28,48 @@
 #include "VideoUtils.h"
 #include "VideoSegment.h"
 #include "nsNSSShutDown.h"
-#else
-namespace mozilla {
-  class DataChannel;
-}
 #endif
+
+namespace test {
+#ifdef USE_FAKE_PCOBSERVER
+class AFakePCObserver;
+#endif
+}
+
+#ifdef USE_FAKE_MEDIA_STREAMS
+class Fake_DOMMediaStream;
+#endif
+
+class nsIDOMMediaStream;
+class nsDOMDataChannel;
+
+namespace mozilla {
+class DataChannel;
+class DtlsIdentity;
+class NrIceCtx;
+class NrIceMediaStream;
+class NrIceStunServer;
+class NrIceTurnServer;
+
+#ifdef USE_FAKE_MEDIA_STREAMS
+typedef Fake_DOMMediaStream DOMMediaStream;
+#else
+class DOMMediaStream;
+#endif
+
+namespace dom {
+class RTCConfiguration;
+class MediaConstraintsInternal;
+
+#ifdef USE_FAKE_PCOBSERVER
+typedef test::AFakePCObserver PeerConnectionObserver;
+typedef const char *PCObserverString;
+#else
+class PeerConnectionObserver;
+typedef NS_ConvertUTF8toUTF16 PCObserverString;
+#endif
+}
+}
 
 #if defined(__cplusplus) && __cplusplus >= 201103L
 typedef struct Timecard Timecard;
@@ -46,29 +77,35 @@ typedef struct Timecard Timecard;
 #include "timecard.h"
 #endif
 
-using namespace mozilla;
+// To preserve blame, convert nsresult to ErrorResult with wrappers. These macros
+// help declare wrappers w/function being wrapped when there are no differences.
+
+#define NS_IMETHODIMP_TO_ERRORRESULT(func, rv, ...) \
+NS_IMETHODIMP func(__VA_ARGS__);                    \
+void func (__VA_ARGS__, rv)
+
+#define NS_IMETHODIMP_TO_ERRORRESULT_RETREF(resulttype, func, rv, ...) \
+NS_IMETHODIMP func(__VA_ARGS__, resulttype **result);                  \
+already_AddRefed<resulttype> func (__VA_ARGS__, rv)
 
 namespace sipcc {
 
+using mozilla::dom::PeerConnectionObserver;
+using mozilla::dom::RTCConfiguration;
+using mozilla::dom::MediaConstraintsInternal;
+using mozilla::DOMMediaStream;
+using mozilla::NrIceCtx;
+using mozilla::NrIceMediaStream;
+using mozilla::DtlsIdentity;
+using mozilla::ErrorResult;
+using mozilla::NrIceStunServer;
+using mozilla::NrIceTurnServer;
+
 class PeerConnectionWrapper;
-
-struct ConstraintInfo
-{
-  std::string  value;
-  bool         mandatory;
-};
-typedef std::map<std::string, ConstraintInfo> constraints_map;
-
-class MediaConstraints
-{
-public:
-  void setBooleanConstraint(const std::string& constraint, bool enabled, bool mandatory);
-
-  void buildArray(cc_media_constraints_t** constraintarray);
-
-private:
-  constraints_map  mConstraints;
-};
+class PeerConnectionMedia;
+class RemoteSourceStreamInfo;
+class MediaConstraintsExternal;
+class OnCallEventArgs;
 
 class IceConfiguration
 {
@@ -106,8 +143,6 @@ private:
   std::vector<NrIceTurnServer> mTurnServers;
 };
 
-class PeerConnectionWrapper;
-
 // Enter an API call and check that the state is OK,
 // the PC isn't closed, etc.
 #define PC_AUTO_ENTER_API_CALL(assert_ice_ready) \
@@ -118,52 +153,18 @@ class PeerConnectionWrapper;
     } while(0)
 #define PC_AUTO_ENTER_API_CALL_NO_CHECK() CheckThread()
 
-
-class PeerConnectionImpl MOZ_FINAL : public IPeerConnection,
+class PeerConnectionImpl MOZ_FINAL : public nsISupports,
 #ifdef MOZILLA_INTERNAL_API
                                      public mozilla::DataChannelConnection::DataConnectionListener,
                                      public nsNSSShutDownObject,
 #endif
                                      public sigslot::has_slots<>
 {
+  class Internal; // Avoid exposing c includes to bindings
+
 public:
-  PeerConnectionImpl();
-  ~PeerConnectionImpl();
-
-  enum ReadyState {
-    kNew,
-    kNegotiating,
-    kActive,
-    kClosing,
-    kClosed
-  };
-
-  /* Must match constants in IPeerConnection.idl */
-  /* Must also be int the same order as in fsmdef_states.h */
-  enum SignalingState {
-    kSignalingInvalid            = 0,
-    kSignalingStable             = 1,
-    kSignalingHaveLocalOffer     = 2,
-    kSignalingHaveRemoteOffer    = 3,
-    kSignalingHaveLocalPranswer  = 4,
-    kSignalingHaveRemotePranswer = 5,
-    kSignalingClosed             = 6
-  };
-
-  enum SipccState {
-    kIdle,
-    kStarting,
-    kStarted
-  };
-
-  // TODO(ekr@rtfm.com): make this conform to the specifications
-  enum IceState {
-    kIceGathering,
-    kIceWaiting,
-    kIceChecking,
-    kIceConnected,
-    kIceFailed
-  };
+  PeerConnectionImpl(const mozilla::dom::GlobalObject* aGlobal = nullptr);
+  virtual ~PeerConnectionImpl();
 
   enum Error {
     kNoError                          = 0,
@@ -179,23 +180,23 @@ public:
   };
 
   NS_DECL_THREADSAFE_ISUPPORTS
-  NS_DECL_IPEERCONNECTION
 
+#ifdef MOZILLA_INTERNAL_API
+  virtual JSObject* WrapObject(JSContext* cx, JS::Handle<JSObject*> scope);
+#endif
+
+  static already_AddRefed<PeerConnectionImpl>
+      Constructor(const mozilla::dom::GlobalObject& aGlobal, ErrorResult& rv);
   static PeerConnectionImpl* CreatePeerConnection();
-  static nsresult ConvertRTCConfiguration(const JS::Value& aSrc,
-    IceConfiguration *aDst, JSContext* aCx);
-  static nsresult ConvertConstraints(
-    const JS::Value& aConstraints, MediaConstraints* aObj, JSContext* aCx);
+  static nsresult ConvertRTCConfiguration(const RTCConfiguration& aSrc,
+                                          IceConfiguration *aDst);
   static already_AddRefed<DOMMediaStream> MakeMediaStream(nsPIDOMWindow* aWindow,
                                                           uint32_t aHint);
 
   nsresult CreateRemoteSourceStreamInfo(nsRefPtr<RemoteSourceStreamInfo>* aInfo);
 
   // Implementation of the only observer we need
-  virtual void onCallEvent(
-    ccapi_call_event_e aCallEvent,
-    CSF::CC_CallInfoPtr aInfo
-  );
+  void onCallEvent(const OnCallEventArgs &args);
 
   // DataConnection observers
   void NotifyConnection();
@@ -233,10 +234,7 @@ public:
   }
 
   // Get the DTLS identity
-  mozilla::RefPtr<DtlsIdentity> const GetIdentity() {
-    PC_AUTO_ENTER_API_CALL_NO_CHECK();
-    return mIdentity;
-  }
+  mozilla::RefPtr<DtlsIdentity> const GetIdentity();
 
   // Create a fake media stream
   nsresult CreateFakeMediaStream(uint32_t hint, nsIDOMMediaStream** retval);
@@ -246,21 +244,170 @@ public:
     return mWindow;
   }
 
-  // Initialize PeerConnection from an IceConfiguration object.
-  nsresult Initialize(IPeerConnectionObserver* aObserver,
+  // Initialize PeerConnection from an IceConfiguration object (unit-tests)
+  nsresult Initialize(PeerConnectionObserver& aObserver,
                       nsIDOMWindow* aWindow,
                       const IceConfiguration& aConfiguration,
                       nsIThread* aThread) {
-    return Initialize(aObserver, aWindow, &aConfiguration, nullptr, aThread, nullptr);
+    return Initialize(aObserver, aWindow, &aConfiguration, nullptr, aThread);
   }
 
-  // Validate constraints and construct a MediaConstraints object
-  // from a JS::Value.
-  NS_IMETHODIMP CreateOffer(MediaConstraints& aConstraints);
-  NS_IMETHODIMP CreateAnswer(MediaConstraints& aConstraints);
+  // Initialize PeerConnection from an RTCConfiguration object (JS entrypoint)
+  void Initialize(PeerConnectionObserver& aObserver,
+                  nsIDOMWindow* aWindow,
+                  const RTCConfiguration& aConfiguration,
+                  nsISupports* aThread,
+                  ErrorResult &rv)
+  {
+    nsresult r = Initialize(aObserver, aWindow, nullptr, &aConfiguration, aThread);
+    if (NS_FAILED(r)) {
+      rv.Throw(r);
+    }
+  }
+
+  NS_IMETHODIMP_TO_ERRORRESULT(CreateOffer, ErrorResult &rv,
+                               const MediaConstraintsInternal& aConstraints)
+  {
+    rv = CreateOffer(aConstraints);
+  }
+
+  NS_IMETHODIMP_TO_ERRORRESULT(CreateAnswer, ErrorResult &rv,
+                               const MediaConstraintsInternal& aConstraints)
+  {
+    rv = CreateAnswer(aConstraints);
+  }
+
+  NS_IMETHODIMP CreateOffer(const MediaConstraintsExternal& aConstraints);
+  NS_IMETHODIMP CreateAnswer(const MediaConstraintsExternal& aConstraints);
+
+  NS_IMETHODIMP SetLocalDescription (int32_t aAction, const char* aSDP);
+  void SetLocalDescription (int32_t aAction, const nsAString& aSDP, ErrorResult &rv)
+  {
+    rv = SetLocalDescription(aAction, NS_ConvertUTF16toUTF8(aSDP).get());
+  }
+
+  NS_IMETHODIMP SetRemoteDescription (int32_t aAction, const char* aSDP);
+  void SetRemoteDescription (int32_t aAction, const nsAString& aSDP, ErrorResult &rv)
+  {
+    rv = SetRemoteDescription(aAction, NS_ConvertUTF16toUTF8(aSDP).get());
+  }
+
+  NS_IMETHODIMP AddIceCandidate(const char* aCandidate, const char* aMid,
+                                unsigned short aLevel);
+  void AddIceCandidate(const nsAString& aCandidate, const nsAString& aMid,
+                       unsigned short aLevel, ErrorResult &rv)
+  {
+    rv = AddIceCandidate(NS_ConvertUTF16toUTF8(aCandidate).get(),
+                         NS_ConvertUTF16toUTF8(aMid).get(), aLevel);
+  }
+
+  NS_IMETHODIMP CloseStreams();
+  void CloseStreams(ErrorResult &rv)
+  {
+    rv = CloseStreams();
+  }
+
+  NS_IMETHODIMP_TO_ERRORRESULT(AddStream, ErrorResult &rv,
+                               DOMMediaStream& aMediaStream)
+  {
+    rv = AddStream(aMediaStream);
+  }
+
+  NS_IMETHODIMP_TO_ERRORRESULT(RemoveStream, ErrorResult &rv,
+                               DOMMediaStream& aMediaStream)
+  {
+    rv = RemoveStream(aMediaStream);
+  }
+
+  NS_IMETHODIMP GetLocalDescription(char** aSDP);
+  void GetLocalDescription(nsAString& aSDP)
+  {
+    char *tmp;
+    GetLocalDescription(&tmp);
+    aSDP.AssignASCII(tmp);
+    delete tmp;
+  }
+
+  NS_IMETHODIMP GetRemoteDescription(char** aSDP);
+  void GetRemoteDescription(nsAString& aSDP)
+  {
+    char *tmp;
+    GetRemoteDescription(&tmp);
+    aSDP.AssignASCII(tmp);
+    delete tmp;
+  }
+
+  NS_IMETHODIMP ReadyState(mozilla::dom::PCImplReadyState* aState);
+  mozilla::dom::PCImplReadyState ReadyState()
+  {
+    mozilla::dom::PCImplReadyState state;
+    ReadyState(&state);
+    return state;
+  }
+
+  NS_IMETHODIMP SignalingState(mozilla::dom::PCImplSignalingState* aState);
+  mozilla::dom::PCImplSignalingState SignalingState()
+  {
+    mozilla::dom::PCImplSignalingState state;
+    SignalingState(&state);
+    return state;
+  }
+
+  NS_IMETHODIMP SipccState(mozilla::dom::PCImplSipccState* aState);
+  mozilla::dom::PCImplSipccState SipccState()
+  {
+    mozilla::dom::PCImplSipccState state;
+    SipccState(&state);
+    return state;
+  }
+
+  NS_IMETHODIMP IceState(mozilla::dom::PCImplIceState* aState);
+  mozilla::dom::PCImplIceState IceState()
+  {
+    mozilla::dom::PCImplIceState state;
+    IceState(&state);
+    return state;
+  }
+
+  NS_IMETHODIMP Close();
+  void Close(ErrorResult &rv)
+  {
+    rv = Close();
+  }
 
   nsresult InitializeDataChannel(int track_id, uint16_t aLocalport,
                                  uint16_t aRemoteport, uint16_t aNumstreams);
+
+  NS_IMETHODIMP_TO_ERRORRESULT(ConnectDataConnection, ErrorResult &rv,
+                               uint16_t aLocalport,
+                               uint16_t aRemoteport,
+                               uint16_t aNumstreams)
+  {
+    rv = ConnectDataConnection(aLocalport, aRemoteport, aNumstreams);
+  }
+
+  NS_IMETHODIMP_TO_ERRORRESULT_RETREF(nsDOMDataChannel,
+                                      CreateDataChannel, ErrorResult &rv,
+                                      const nsAString& aLabel,
+                                      const nsAString& aProtocol,
+                                      uint16_t aType,
+                                      bool outOfOrderAllowed,
+                                      uint16_t aMaxTime,
+                                      uint16_t aMaxNum,
+                                      bool aExternalNegotiated,
+                                      uint16_t aStream);
+
+  NS_IMETHODIMP_TO_ERRORRESULT(GetLocalStreams, ErrorResult &rv,
+                               nsTArray<nsRefPtr<DOMMediaStream > >& result)
+  {
+    rv = GetLocalStreams(result);
+  }
+
+  NS_IMETHODIMP_TO_ERRORRESULT(GetRemoteStreams, ErrorResult &rv,
+                               nsTArray<nsRefPtr<DOMMediaStream > >& result)
+  {
+    rv = GetRemoteStreams(result);
+  }
 
   // Called whenever something is unrecognized by the parser
   // May be called more than once and does not necessarily mean
@@ -275,7 +422,7 @@ public:
   const std::vector<std::string> &GetSdpParseErrors();
 
   // Sets the RTC Signaling State
-  void SetSignalingState_m(SignalingState aSignalingState);
+  void SetSignalingState_m(mozilla::dom::PCImplSignalingState aSignalingState);
 
 #ifdef MOZILLA_INTERNAL_API
   // initialize telemetry for when calls start
@@ -285,18 +432,16 @@ public:
 private:
   PeerConnectionImpl(const PeerConnectionImpl&rhs);
   PeerConnectionImpl& operator=(PeerConnectionImpl);
-  nsresult Initialize(IPeerConnectionObserver* aObserver,
-                      nsIDOMWindow* aWindow,
-                      const IceConfiguration* aConfiguration,
-                      const JS::Value* aRTCConfiguration,
-                      nsIThread* aThread,
-                      JSContext* aCx);
-  NS_IMETHODIMP CreateOfferInt(MediaConstraints& constraints);
-  NS_IMETHODIMP CreateAnswerInt(MediaConstraints& constraints);
+  NS_IMETHODIMP Initialize(PeerConnectionObserver& aObserver,
+                           nsIDOMWindow* aWindow,
+                           const IceConfiguration* aConfiguration,
+                           const RTCConfiguration* aRTCConfiguration,
+                           nsISupports* aThread);
+
   NS_IMETHODIMP EnsureDataConnection(uint16_t aNumstreams);
 
   nsresult CloseInt();
-  void ChangeReadyState(ReadyState aReadyState);
+  void ChangeReadyState(mozilla::dom::PCImplReadyState aReadyState);
   nsresult CheckApiState(bool assert_ice_ready) const;
   void CheckThread() const {
     NS_ABORT_IF_FALSE(CheckThreadInt(), "Wrong thread");
@@ -321,7 +466,7 @@ private:
   void ShutdownMedia();
 
   // ICE callbacks run on the right thread.
-  nsresult IceStateChange_m(IceState aState);
+  nsresult IceStateChange_m(mozilla::dom::PCImplIceState aState);
 
   // Timecard used to measure processing time. This should be the first class
   // attribute so that we accurately measure the time required to instantiate
@@ -329,17 +474,38 @@ private:
   Timecard *mTimeCard;
 
   // The call
-  CSF::CC_CallPtr mCall;
-  ReadyState mReadyState;
-  SignalingState mSignalingState;
+  mozilla::ScopedDeletePtr<Internal> mInternal;
+  mozilla::dom::PCImplReadyState mReadyState;
+  mozilla::dom::PCImplSignalingState mSignalingState;
 
   // ICE State
-  IceState mIceState;
+  mozilla::dom::PCImplIceState mIceState;
 
   nsCOMPtr<nsIThread> mThread;
-  // Weak pointer to IPeerConnectionObserver
-  // This is only safe to use on the main thread
-  nsWeakPtr mPCObserver;
+  // We hold a raw pointer to PeerConnectionObserver (no WeakRefs to concretes!)
+  // which is an invariant guaranteed to exist between Initialize() and Close().
+  // We explicitly clear it in Close(). We wrap it in a helper, to encourage
+  // testing against nullptr before use. Use in Runnables requires wrapping
+  // access in RefPtr<> since they may execute after close. This is only safe
+  // to use on the main thread
+  //
+  // TODO: Remove if we ever properly wire PeerConnection for cycle-collection.
+  class WeakReminder
+  {
+  public:
+    WeakReminder() : mObserver(nullptr) {}
+    void Init(PeerConnectionObserver *aObserver) {
+      mObserver = aObserver;
+    }
+    void Close() {
+      mObserver = nullptr;
+    }
+    PeerConnectionObserver *MayGet() {
+      return mObserver;
+    }
+  private:
+    PeerConnectionObserver *mObserver;
+  } mPCObserver;
   nsCOMPtr<nsPIDOMWindow> mWindow;
 
   // The SDP sent in from JS - here for debugging.
@@ -409,4 +575,6 @@ class PeerConnectionWrapper
 
 }  // end sipcc namespace
 
+#undef NS_IMETHODIMP_TO_ERRORRESULT
+#undef NS_IMETHODIMP_TO_ERRORRESULT_RETREF
 #endif  // _PEER_CONNECTION_IMPL_H_

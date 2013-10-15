@@ -1309,7 +1309,7 @@ NewObject(ExclusiveContext *cx, const Class *clasp, types::TypeObject *type_, JS
 #endif
     }
 
-    Probes::createObject(cx, obj);
+    probes::CreateObject(cx, obj);
     return obj;
 }
 
@@ -1543,7 +1543,7 @@ JSObject*
 js::CreateThis(JSContext *cx, const Class *newclasp, HandleObject callee)
 {
     RootedValue protov(cx);
-    if (!JSObject::getProperty(cx, callee, callee, cx->names().classPrototype, &protov))
+    if (!JSObject::getProperty(cx, callee, callee, cx->names().prototype, &protov))
         return nullptr;
 
     JSObject *proto = protov.isObjectOrNull() ? protov.toObjectOrNull() : nullptr;
@@ -1608,7 +1608,7 @@ JSObject *
 js::CreateThisForFunction(JSContext *cx, HandleObject callee, bool newType)
 {
     RootedValue protov(cx);
-    if (!JSObject::getProperty(cx, callee, callee, cx->names().classPrototype, &protov))
+    if (!JSObject::getProperty(cx, callee, callee, cx->names().prototype, &protov))
         return nullptr;
     JSObject *proto;
     if (protov.isObject())
@@ -2186,8 +2186,9 @@ DefineStandardSlot(JSContext *cx, HandleObject obj, JSProtoKey key, JSAtom *atom
         JS_ASSERT(obj->isNative());
 
         if (!obj->nativeLookup(cx, id)) {
-            uint32_t slot = 2 * JSProto_LIMIT + key;
-            obj->setReservedSlot(slot, v);
+            obj->as<GlobalObject>().setConstructorPropertySlot(key, v);
+
+            uint32_t slot = GlobalObject::constructorPropertySlot(key);
             if (!JSObject::addProperty(cx, obj, id, JS_PropertyStub, JS_StrictPropertyStub, slot, attrs, 0, 0))
                 return false;
             AddTypePropertyId(cx, obj, id, v);
@@ -2209,8 +2210,8 @@ SetClassObject(JSObject *obj, JSProtoKey key, JSObject *cobj, JSObject *proto)
     if (!obj->is<GlobalObject>())
         return;
 
-    obj->setReservedSlot(key, ObjectOrNullValue(cobj));
-    obj->setReservedSlot(JSProto_LIMIT + key, ObjectOrNullValue(proto));
+    obj->as<GlobalObject>().setConstructor(key, ObjectOrNullValue(cobj));
+    obj->as<GlobalObject>().setPrototype(key, ObjectOrNullValue(proto));
 }
 
 static void
@@ -2220,8 +2221,8 @@ ClearClassObject(JSObject *obj, JSProtoKey key)
     if (!obj->is<GlobalObject>())
         return;
 
-    obj->setSlot(key, UndefinedValue());
-    obj->setSlot(JSProto_LIMIT + key, UndefinedValue());
+    obj->as<GlobalObject>().setConstructor(key, UndefinedValue());
+    obj->as<GlobalObject>().setPrototype(key, UndefinedValue());
 }
 
 JSObject *
@@ -2359,37 +2360,6 @@ bad:
     if (cached)
         ClearClassObject(obj, key);
     return nullptr;
-}
-
-/*
- * Lazy standard classes need a way to indicate if they have been initialized.
- * Otherwise, when we delete them, we might accidentally recreate them via a
- * lazy initialization. We use the presence of a ctor or proto in the
- * global object's slot to indicate that they've been constructed, but this only
- * works for classes which have a proto and ctor. Classes which don't have one
- * can call MarkStandardClassInitializedNoProto(), and we can always check
- * whether a class is initialized by calling IsStandardClassResolved().
- */
-bool
-js::IsStandardClassResolved(JSObject *obj, const js::Class *clasp)
-{
-    JSProtoKey key = JSCLASS_CACHED_PROTO_KEY(clasp);
-
-    /* If the constructor is undefined, then it hasn't been initialized. */
-    return (obj->getReservedSlot(key) != UndefinedValue());
-}
-
-void
-js::MarkStandardClassInitializedNoProto(JSObject *obj, const js::Class *clasp)
-{
-    JSProtoKey key = JSCLASS_CACHED_PROTO_KEY(clasp);
-
-    /*
-     * We use True so that it's obvious what we're doing (instead of, say,
-     * Null, which might be miscontrued as an error in setting Undefined).
-     */
-    if (obj->getReservedSlot(key) == UndefinedValue())
-        obj->setSlot(key, BooleanValue(true));
 }
 
 JSObject *
@@ -3044,13 +3014,9 @@ js::SetClassAndProto(JSContext *cx, HandleObject obj,
 bool
 js_GetClassObject(ExclusiveContext *cxArg, JSObject *obj, JSProtoKey key, MutableHandleObject objp)
 {
-    RootedObject global(cxArg, &obj->global());
-    if (!global->is<GlobalObject>()) {
-        objp.set(nullptr);
-        return true;
-    }
+    Rooted<GlobalObject*> global(cxArg, &obj->global());
 
-    Value v = global->getReservedSlot(key);
+    Value v = global->getConstructor(key);
     if (v.isObject()) {
         objp.set(&v.toObject());
         return true;
@@ -3074,7 +3040,7 @@ js_GetClassObject(ExclusiveContext *cxArg, JSObject *obj, JSProtoKey key, Mutabl
     if (ClassInitializerOp init = lazy_prototype_init[key]) {
         if (!init(cx, global))
             return false;
-        v = global->getReservedSlot(key);
+        v = global->getConstructor(key);
         if (v.isObject())
             cobj = &v.toObject();
     }
@@ -3097,8 +3063,8 @@ js_IdentifyClassPrototype(JSObject *obj)
     //
     // Note that standard class objects are cached in the range [0, JSProto_LIMIT),
     // and the prototypes are cached in [JSProto_LIMIT, 2*JSProto_LIMIT).
-    JSObject &global = obj->global();
-    Value v = global.getReservedSlot(JSProto_LIMIT + key);
+    GlobalObject &global = obj->global();
+    Value v = global.getPrototype(key);
     if (v.isObject() && obj == &v.toObject())
         return key;
 
@@ -5239,7 +5205,7 @@ js::GetClassPrototypePure(GlobalObject *global, JSProtoKey protoKey)
     JS_ASSERT(protoKey < JSProto_LIMIT);
 
     if (protoKey != JSProto_Null) {
-        const Value &v = global->getReservedSlot(JSProto_LIMIT + protoKey);
+        const Value &v = global->getPrototype(protoKey);
         if (v.isObject())
             return &v.toObject();
     }
@@ -5268,12 +5234,12 @@ js_GetClassPrototype(ExclusiveContext *cx, JSProtoKey protoKey,
         RootedObject ctor(cx, &v.get().toObject());
         if (cx->isJSContext()) {
             if (!JSObject::getProperty(cx->asJSContext(),
-                                       ctor, ctor, cx->names().classPrototype, &v))
+                                       ctor, ctor, cx->names().prototype, &v))
             {
                 return false;
             }
         } else {
-            Shape *shape = ctor->nativeLookup(cx, cx->names().classPrototype);
+            Shape *shape = ctor->nativeLookup(cx, cx->names().prototype);
             if (!shape || !NativeGetPureInline(ctor, shape, v.address()))
                 return false;
         }

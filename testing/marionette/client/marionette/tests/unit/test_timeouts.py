@@ -5,7 +5,7 @@
 import os
 from marionette_test import MarionetteTestCase
 from marionette import HTMLElement
-from errors import NoSuchElementException, JavascriptException, MarionetteException, ScriptTimeoutException
+from marionette import NoSuchElementException, JavascriptException, MarionetteException, ScriptTimeoutException
 
 class TestTimeouts(MarionetteTestCase):
     def test_pagetimeout_notdefinetimeout_pass(self):

@@ -139,6 +139,56 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=753984
           accOrElmOrID: 'tab2',
           expected: [['tab list', 'tab 2 of 2', 'Advanced'],
             ['Advanced', 'tab 2 of 2', 'tab list']]
+        },
+
+        {
+          // Landing on this label should mimic landing on the checkbox.
+          accOrElmOrID: "label1",
+          expected: [['not checked check button', 'Orange'],
+                     ['Orange', 'not checked check button']]
+        },
+        {
+          // Here we get a top-level view of the form.
+          accOrElmOrID: "form1",
+          expected: [['label', 'not checked check button', 'Orange', 'Orange',
+                      'not checked check button', 'Blue', 'label', 'Blue'],
+                     ['Orange', 'not checked check button', 'Orange', 'label',
+                      'Blue', 'not checked check button', 'Blue', 'label']]
+        },
+        {
+          // This is a non-nesting label.
+          accOrElmOrID: "label2",
+          expected: [['label', 'Blue'], ['Blue', 'label']]
+        },
+        {
+          // This is a distinct control.
+          accOrElmOrID: "input2",
+          expected: [['not checked check button', 'Blue'],
+                     ['Blue', 'not checked check button']]
+        },
+        {
+          // This is a nested control.
+          accOrElmOrID: "input1",
+          expected: [['not checked check button', 'Orange'],
+                     ['Orange', 'not checked check button']]
+        },
+        {
+          // Landing on this label should mimic landing on the entry.
+          accOrElmOrID: "label3",
+          expected: [['entry', 'Joe', 'First name:'],
+                     ['First name:', 'Joe', 'entry']]
+        },
+        {
+          // This is a nested control with a value.
+          accOrElmOrID: "input3",
+          expected: [['entry', 'Joe', 'First name:'],
+                     ['First name:', 'Joe', 'entry']]
+        },
+        {
+          // This is a nested control with a value.
+          accOrElmOrID: "input4",
+          expected: [['slider', '3', 'Points:'],
+                     ['Points:', '3', 'slider']]
         }];
 
         // Test all possible utterance order preference values.
@@ -218,6 +268,14 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=753984
         <a id="tab1" href="#" role="tab" aria-selected="true">Account</a>
         <a id="tab2" href="#" role="tab" aria-selected="false">Advanced</a>
       </div>
+      <form id="form1">
+        <label id="label1"><input id="input1" type="checkbox">Orange</label>
+        <input id="input2" type="checkbox"><label id="label2" for="input2">Blue</label>
+      </form>
+      <label id="label3">First name: <input id="input3" value="Joe"></label>
+      <label id="label4">Points:
+        <input id="input4" type="range" name="points" min="1" max="10" value="3">
+      </label>
     </div>
   </body>
 </html>

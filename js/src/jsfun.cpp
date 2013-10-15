@@ -165,7 +165,7 @@ fun_enumerate(JSContext *cx, HandleObject obj)
     bool found;
 
     if (!obj->isBoundFunction()) {
-        id = NameToId(cx->names().classPrototype);
+        id = NameToId(cx->names().prototype);
         if (!JSObject::hasProperty(cx, obj, id, &found, 0))
             return false;
     }
@@ -224,7 +224,7 @@ ResolveInterpretedFunctionPrototype(JSContext *cx, HandleObject obj)
     // Per ES5 15.3.5.2 a user-defined function's .prototype property is
     // initially non-configurable, non-enumerable, and writable.
     RootedValue protoVal(cx, ObjectValue(*proto));
-    if (!JSObject::defineProperty(cx, obj, cx->names().classPrototype,
+    if (!JSObject::defineProperty(cx, obj, cx->names().prototype,
                                   protoVal, JS_PropertyStub, JS_StrictPropertyStub,
                                   JSPROP_PERMANENT))
     {
@@ -256,7 +256,7 @@ js::fun_resolve(JSContext *cx, HandleObject obj, HandleId id, unsigned flags,
 
     RootedFunction fun(cx, &obj->as<JSFunction>());
 
-    if (JSID_IS_ATOM(id, cx->names().classPrototype)) {
+    if (JSID_IS_ATOM(id, cx->names().prototype)) {
         /*
          * Built-in functions do not have a .prototype property per ECMA-262,
          * or (Object.prototype, Function.prototype, etc.) have that property
@@ -474,7 +474,7 @@ fun_hasInstance(JSContext *cx, HandleObject objArg, MutableHandleValue v, bool *
         obj = obj->as<JSFunction>().getBoundFunctionTarget();
 
     RootedValue pval(cx);
-    if (!JSObject::getProperty(cx, obj, obj, cx->names().classPrototype, &pval))
+    if (!JSObject::getProperty(cx, obj, obj, cx->names().prototype, &pval))
         return false;
 
     if (pval.isPrimitive()) {
