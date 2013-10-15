@@ -564,9 +564,6 @@ var shell = {
       extra: msg.extra
     }
     this.sendCustomEvent('open-app', payload);
-    // XXX Remove once the gaia part of bug 924032 has landed.
-    payload.type = 'open-app';
-    this.sendChromeEvent(payload);
   },
 
   receiveMessage: function shell_receiveMessage(message) {
@@ -969,10 +966,6 @@ var WebappsHelper = {
             manifestURL: json.manifestURL
           }
           shell.sendEvent(getContentWindow(), "webapps-launch", payload);
-          // XXX Remove once the gaia side of bug 924032 lands.
-          payload.type = "webapps-launch";
-          delete payload.__exposedProps__;
-          shell.sendChromeEvent(payload);
         });
         break;
       case "webapps-ask-install":
@@ -989,9 +982,6 @@ var WebappsHelper = {
             __exposedProps__: { "manifestURL": "r" },
             "manifestURL": json.manifestURL
           });
-        // XXX Remove once the gaia side of bug 924032 lands.
-        shell.sendChromeEvent({ type: "webapps-close",
-                                "manifestURL": json.manifestURL });
         break;
     }
   }
