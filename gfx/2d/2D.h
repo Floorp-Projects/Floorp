@@ -448,6 +448,11 @@ public:
    * mutable.
    */
   virtual FillRule GetFillRule() const = 0;
+
+  virtual Float ComputeLength() { return 0; }
+
+  virtual Point ComputePointAtLength(Float aLength,
+                                     Point* aTangent) { return Point(); }
 };
 
 /* The PathBuilder class allows path creation. Once finish is called on the

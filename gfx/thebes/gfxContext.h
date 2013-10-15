@@ -131,12 +131,12 @@ public:
     /**
      * Copies the current path and returns the copy.
      */
-    already_AddRefed<gfxPath> CopyPath() const;
+    already_AddRefed<gfxPath> CopyPath();
 
     /**
      * Appends the given path to the current path.
      */
-    void AppendPath(gfxPath* path);
+    void SetPath(gfxPath* path);
 
     /**
      * Moves the pen to a new point without drawing a line.
@@ -881,8 +881,7 @@ public:
     void Restore()
     {
         if (mPath) {
-            mContext->NewPath();
-            mContext->AppendPath(mPath);
+            mContext->SetPath(mPath);
             mPath = nullptr;
         }
     }
