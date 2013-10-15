@@ -45,8 +45,6 @@ class StringHelper {
         "Add to Home Screen"
     };
 
-    public static final String[] BOOKMARK_CONTEXT_MENU_ITEMS = {"Open in New Tab", "Open in Private Tab", "Share", "Edit", "Remove", "Add to Home Screen"};
-
     // Robocop page urls
     // Note: please use getAbsoluteUrl(String url) on each robocop url to get the correct url
     public static final String ROBOCOP_BIG_LINK_URL = "/robocop/robocop_big_link.html";
