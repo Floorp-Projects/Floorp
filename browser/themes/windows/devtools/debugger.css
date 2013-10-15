@@ -64,6 +64,10 @@
   display: none;
 }
 
+#sources .side-menu-widget-item.selected > .side-menu-widget-item-checkbox:not([checked]) ~ .side-menu-widget-item-arrow {
+  background-image: none;
+}
+
 /* Black box message and source progress meter */
 
 #black-boxed-message,
