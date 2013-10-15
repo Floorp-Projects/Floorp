@@ -79,6 +79,7 @@ MOCHITEST_FILES := \
   test_offlineDestinationChannelCountMore.html \
   test_oscillatorNode.html \
   test_oscillatorNodeStart.html \
+  test_oscillatorTypeChange.html \
   test_pannerNode.html \
   test_pannerNodeAbove.html \
   test_pannerNodeChannelCount.html \

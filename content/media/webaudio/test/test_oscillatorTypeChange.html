@@ -1,0 +1,58 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test OscillatorNode type change after it has started and triangle phase</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="webaudio.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+SimpleTest.waitForExplicitFinish();
+
+const bufferSize = 1024;
+
+function startTest() {
+  var ctx = new AudioContext();
+
+  var oscillator1 = ctx.createOscillator();
+  oscillator1.connect(ctx.destination);
+  oscillator1.start(0);
+
+  // Assuming the above Web Audio operations have already scheduled an event
+  // to run in stable state and start the graph thread, schedule a subsequent
+  // event to change the type of oscillator1.
+  SimpleTest.executeSoon(function() {
+    oscillator1.type = "triangle";
+
+    // Another triangle wave with -1 gain should cancel the first.  This is
+    // starting at the same time as the type change, assuming that the phase
+    // is reset on type change.  A negative frequency should achieve the same
+    // as the -1 gain but for bug 916285.
+    var oscillator2 = ctx.createOscillator();
+    oscillator2.type = "triangle";
+    oscillator2.start(0);
+
+    var processor = ctx.createScriptProcessor(bufferSize, 1, 0);
+    oscillator1.connect(processor);
+    var gain = ctx.createGain();
+    gain.gain.value = -1;
+    gain.connect(processor);
+    oscillator2.connect(gain);
+
+    processor.onaudioprocess = function(e) {
+      compareBuffers(e.inputBuffer.getChannelData(0),
+                     new Float32Array(bufferSize));
+      e.target.onaudioprocess = null;
+      SimpleTest.finish();
+    }
+  });
+};
+
+startTest();
+</script>
+</pre>
+</body>
+</html>
