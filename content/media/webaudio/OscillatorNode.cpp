@@ -84,16 +84,13 @@ public:
     , mDetune(0.f)
     , mType(OscillatorType::Sine)
     , mPhase(0.)
-    , mFinalFrequency(0.0)
-    , mNumberOfHarmonics(0)
-    , mSignalPeriod(0.0)
-    , mAmplitudeAtZero(0.0)
-    , mPhaseIncrement(0.0)
-    , mSquare(0.0)
-    , mTriangle(0.0)
-    , mSaw(0.0)
-    , mPhaseWrap(0.0)
-    , mRecomputeFrequency(true)
+    // mSquare, mTriangle, and mSaw are not used for default type "sine".
+    // They are initialized if and when switching to the OscillatorTypes that
+    // use them.
+    // mFinalFrequency, mNumberOfHarmonics, mSignalPeriod, mAmplitudeAtZero,
+    // mPhaseIncrement, and mPhaseWrap are initialized in
+    // UpdateParametersIfNeeded() when mRecomputeParameters is set.
+    , mRecomputeParameters(true)
     , mCustomLength(0)
   {
   }
@@ -115,7 +112,7 @@ public:
                             const AudioParamTimeline& aValue,
                             TrackRate aSampleRate) MOZ_OVERRIDE
   {
-    mRecomputeFrequency = true;
+    mRecomputeParameters = true;
     switch (aIndex) {
     case FREQUENCY:
       MOZ_ASSERT(mSource && mDestination);
@@ -153,6 +150,7 @@ public:
           mCustomLength = 0;
           mCustom = nullptr;
           mPeriodicWave = nullptr;
+          mRecomputeParameters = true;
         }
         // Update BLIT integrators with the new initial conditions.
         switch (mType) {
@@ -222,7 +220,7 @@ public:
     return mType == OscillatorType::Square || mType == OscillatorType::Triangle;
   }
 
-  void UpdateFrequencyIfNeeded(TrackTicks ticks, size_t count)
+  void UpdateParametersIfNeeded(TrackTicks ticks, size_t count)
   {
     double frequency, detune;
 
@@ -231,7 +229,7 @@ public:
 
     // Shortcut if frequency-related AudioParam are not automated, and we
     // already have computed the frequency information and related parameters.
-    if (simpleFrequency && simpleDetune && !mRecomputeFrequency) {
+    if (simpleFrequency && simpleDetune && !mRecomputeParameters) {
       return;
     }
 
@@ -247,7 +245,7 @@ public:
     }
 
     mFinalFrequency = frequency * pow(2., detune / 1200.);
-    mRecomputeFrequency = false;
+    mRecomputeParameters = false;
 
     // When using bipolar BLIT, we divide the signal period by two, because we
     // are using two BLIT out of phase.
@@ -322,7 +320,7 @@ public:
   void ComputeSine(float * aOutput, TrackTicks ticks, uint32_t aStart, uint32_t aEnd)
   {
     for (uint32_t i = aStart; i < aEnd; ++i) {
-      UpdateFrequencyIfNeeded(ticks, i);
+      UpdateParametersIfNeeded(ticks, i);
 
       aOutput[i] = sin(mPhase);
 
@@ -333,7 +331,7 @@ public:
   void ComputeSquare(float * aOutput, TrackTicks ticks, uint32_t aStart, uint32_t aEnd)
   {
     for (uint32_t i = aStart; i < aEnd; ++i) {
-      UpdateFrequencyIfNeeded(ticks, i);
+      UpdateParametersIfNeeded(ticks, i);
       // Integration to get us a square. It turns out we can have a
       // pure integrator here.
       mSquare += BipolarBLIT();
@@ -348,7 +346,7 @@ public:
   {
     float dcoffset;
     for (uint32_t i = aStart; i < aEnd; ++i) {
-      UpdateFrequencyIfNeeded(ticks, i);
+      UpdateParametersIfNeeded(ticks, i);
       // DC offset so the Saw does not ramp up to infinity when integrating.
       dcoffset = mFinalFrequency / mSource->SampleRate();
       // Integrate and offset so we get mAmplitudeAtZero sawtooth. We have a
@@ -364,7 +362,7 @@ public:
   void ComputeTriangle(float * aOutput, TrackTicks ticks, uint32_t aStart, uint32_t aEnd)
   {
     for (uint32_t i = aStart; i < aEnd; ++i) {
-      UpdateFrequencyIfNeeded(ticks, i);
+      UpdateParametersIfNeeded(ticks, i);
       // Integrate to get a square
       mSquare += BipolarBLIT();
       // Leaky integrate to get a triangle. We get too much dc offset if we don't
@@ -394,7 +392,7 @@ public:
     float rate = 1.0 / mSource->SampleRate();
 
     for (uint32_t i = aStart; i < aEnd; ++i) {
-      UpdateFrequencyIfNeeded(ticks, i);
+      UpdateParametersIfNeeded(ticks, i);
       mPeriodicWave->waveDataForFundamentalFrequency(mFinalFrequency,
                                                      lowerWaveData,
                                                      higherWaveData,
@@ -498,7 +496,7 @@ public:
   float mTriangle;
   float mSaw;
   float mPhaseWrap;
-  bool mRecomputeFrequency;
+  bool mRecomputeParameters;
   nsRefPtr<ThreadSharedFloatArrayBufferList> mCustom;
   uint32_t mCustomLength;
   nsAutoPtr<WebCore::PeriodicWave> mPeriodicWave;
