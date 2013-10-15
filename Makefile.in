@@ -243,5 +243,8 @@ ifdef MOZ_PSEUDO_DERECURSE
 js/xpconnect/src/export: dom/bindings/export
 accessible/src/xpcom/export: xpcom/xpidl/export
 js/src/export: mfbt/export
+ifdef ENABLE_CLANG_PLUGIN
+js/src/export config/export: build/clang-plugin/export
+endif
 endif
 endif
