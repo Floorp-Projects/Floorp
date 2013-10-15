@@ -1400,15 +1400,6 @@ class JitActivationIterator : public ActivationIterator
 
 } // namespace jit
 
-class ForkJoinActivation : public Activation
-{
-    uint8_t *prevIonTop_;
-
-  public:
-    ForkJoinActivation(JSContext *cx);
-    ~ForkJoinActivation();
-};
-
 // Iterates over the frames of a single InterpreterActivation.
 class InterpreterFrameIterator
 {

@@ -9,6 +9,8 @@
 
 #include "jscntxt.h"
 
+#include "gc/GCInternals.h"
+
 #include "jit/Ion.h"
 
 ///////////////////////////////////////////////////////////////////////////
@@ -198,6 +200,21 @@
 ///////////////////////////////////////////////////////////////////////////
 
 namespace js {
+
+class ForkJoinActivation : public Activation
+{
+    uint8_t *prevIonTop_;
+
+    // We ensure that incremental GC be finished before we enter into a fork
+    // join section, but the runtime/zone might still be marked as needing
+    // barriers due to being in the middle of verifying barriers. Pause
+    // verification during the fork join section.
+    gc::AutoStopVerifyingBarriers av_;
+
+  public:
+    ForkJoinActivation(JSContext *cx);
+    ~ForkJoinActivation();
+};
 
 class ForkJoinSlice;
 
