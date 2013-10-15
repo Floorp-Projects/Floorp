@@ -61,7 +61,7 @@ AppValidator.prototype._fetchManifest = function (manifestURL) {
     deferred.resolve(null);
     return deferred.promise;
   }
-  req.channel.loadFlags |= Ci.nsIRequest.INHIBIT_CACHING;
+  req.channel.loadFlags |= Ci.nsIRequest.LOAD_BYPASS_CACHE | Ci.nsIRequest.INHIBIT_CACHING;
   req.onload = (function () {
     let manifest = null;
     try {
