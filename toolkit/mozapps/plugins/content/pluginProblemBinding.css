@@ -26,9 +26,6 @@ object:-moz-handler-playpreview,
 object:-moz-handler-vulnerable-updatable,
 object:-moz-handler-vulnerable-no-update {
     display: inline-block;
-    /* Initialize the overlay with visibility:hidden to prevent flickering if
-     * the plugin is too small to show the overlay */
-    visibility: hidden;
     overflow: hidden;
     opacity: 1 !important;
     -moz-binding: url('chrome://mozapps/content/plugins/pluginProblem.xml#pluginProblem') !important;
