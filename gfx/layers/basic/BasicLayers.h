@@ -186,7 +186,6 @@ protected:
   nsRefPtr<gfxContext> mDefaultTarget;
   // The context to draw into.
   nsRefPtr<gfxContext> mTarget;
-  nsRefPtr<gfxContext> mDummyTarget;
   // Image factory we use.
   nsRefPtr<ImageFactory> mFactory;
 
