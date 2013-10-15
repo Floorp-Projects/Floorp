@@ -2,7 +2,8 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this file,
 # You can obtain one at http://mozilla.org/MPL/2.0/.
 
-__all__ = ['check_for_crashes']
+__all__ = ['check_for_crashes',
+           'check_for_java_exception']
 
 import glob
 import mozlog
@@ -17,6 +18,7 @@ import zipfile
 
 from mozfile import extract_zip
 from mozfile import is_url
+
 
 def check_for_crashes(dump_directory, symbols_path,
                       stackwalk_binary=None,
@@ -152,3 +154,44 @@ def check_for_crashes(dump_directory, symbols_path,
             shutil.rmtree(symbols_path)
 
     return True
+
+
+def check_for_java_exception(logcat):
+    """
+    Print a summary of a fatal Java exception, if present in the provided
+    logcat output.
+
+    Example:
+    PROCESS-CRASH | java-exception | java.lang.NullPointerException at org.mozilla.gecko.GeckoApp$21.run(GeckoApp.java:1833)
+
+    `logcat` should be a list of strings.
+
+    Returns True if a fatal Java exception was found, False otherwise.
+    """
+    found_exception = False
+
+    for i, line in enumerate(logcat):
+        # Logs will be of form:
+        #
+        # 01-30 20:15:41.937 E/GeckoAppShell( 1703): >>> REPORTING UNCAUGHT EXCEPTION FROM THREAD 9 ("GeckoBackgroundThread")
+        # 01-30 20:15:41.937 E/GeckoAppShell( 1703): java.lang.NullPointerException
+        # 01-30 20:15:41.937 E/GeckoAppShell( 1703): 	at org.mozilla.gecko.GeckoApp$21.run(GeckoApp.java:1833)
+        # 01-30 20:15:41.937 E/GeckoAppShell( 1703): 	at android.os.Handler.handleCallback(Handler.java:587)
+        if "REPORTING UNCAUGHT EXCEPTION" in line or "FATAL EXCEPTION" in line:
+            # Strip away the date, time, logcat tag and pid from the next two lines and
+            # concatenate the remainder to form a concise summary of the exception.
+            found_exception = True
+            if len(logcat) >= i + 3:
+                logre = re.compile(r".*\): \t?(.*)")
+                m = logre.search(logcat[i+1])
+                if m and m.group(1):
+                    exception_type = m.group(1)
+                m = logre.search(logcat[i+2])
+                if m and m.group(1):
+                    exception_location = m.group(1)
+                print "PROCESS-CRASH | java-exception | %s %s" % (exception_type, exception_location)
+            else:
+                print "Automation Error: Logcat is truncated!"
+            break
+
+    return found_exception

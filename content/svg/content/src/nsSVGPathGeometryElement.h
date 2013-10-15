@@ -8,7 +8,7 @@
 
 #include "SVGGraphicsElement.h"
 
-class gfxFlattenedPath;
+class gfxPath;
 struct gfxMatrix;
 template <class E> class nsTArray;
 
@@ -52,7 +52,7 @@ public:
   virtual bool IsMarkable();
   virtual void GetMarkPoints(nsTArray<nsSVGMark> *aMarks);
   virtual void ConstructPath(gfxContext *aCtx) = 0;
-  virtual already_AddRefed<gfxFlattenedPath> GetFlattenedPath(const gfxMatrix &aMatrix);
+  virtual already_AddRefed<gfxPath> GetPath(const gfxMatrix &aMatrix);
 };
 
 #endif

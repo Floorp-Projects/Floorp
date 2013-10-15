@@ -52,8 +52,8 @@ nsSVGPathGeometryElement::GetMarkPoints(nsTArray<nsSVGMark> *aMarks)
 {
 }
 
-already_AddRefed<gfxFlattenedPath>
-nsSVGPathGeometryElement::GetFlattenedPath(const gfxMatrix &aMatrix)
+already_AddRefed<gfxPath>
+nsSVGPathGeometryElement::GetPath(const gfxMatrix &aMatrix)
 {
   return nullptr;
 }

@@ -64,6 +64,9 @@ public:
                            void* aCallbackData,
                            ReadbackProcessor* aReadback);
 
+  virtual void Validate(LayerManager::DrawThebesLayerCallback aCallback,
+                        void* aCallbackData) MOZ_OVERRIDE;
+
   virtual void ClearCachedResources()
   {
     if (mContentClient) {

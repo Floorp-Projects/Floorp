@@ -64,14 +64,20 @@
   display: none;
 }
 
-/* Black box message */
+/* Black box message and source progress meter */
 
-#black-boxed-message {
+#black-boxed-message,
+#source-progress-container {
   background: url(background-noise-toolbar.png) rgb(61,69,76);
   /* Prevent the container deck from aquiring the height from this message. */
   min-height: 1px;
   padding: 25vh 0;
   color: white;
+}
+
+#source-progress {
+  min-height: 2em;
+  min-width: 40em;
 }
 
 #black-boxed-message-label,

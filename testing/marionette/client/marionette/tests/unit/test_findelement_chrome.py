@@ -5,7 +5,7 @@
 from marionette_test import MarionetteTestCase
 from marionette import HTMLElement
 from by import By
-from errors import NoSuchElementException
+from marionette import NoSuchElementException
 
 
 class TestElementsChrome(MarionetteTestCase):

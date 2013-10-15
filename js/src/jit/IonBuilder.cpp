@@ -271,6 +271,13 @@ IonBuilder::canInlineTarget(JSFunction *target, bool constructing)
         return false;
     }
 
+    // Allow constructing lazy scripts when performing the definite properties
+    // analysis, as baseline has not been used to warm the caller up yet.
+    if (target->isInterpretedLazy() && info().executionMode() == DefinitePropertiesAnalysis) {
+        if (!target->getOrCreateScript(cx))
+            return false;
+    }
+
     if (!target->hasScript()) {
         IonSpew(IonSpew_Inlining, "Cannot inline due to lack of Non-Lazy script");
         return false;
@@ -4584,11 +4591,11 @@ IonBuilder::createThisScripted(MDefinition *callee)
     //       and thus invalidation.
     MInstruction *getProto;
     if (!invalidatedIdempotentCache()) {
-        MGetPropertyCache *getPropCache = MGetPropertyCache::New(callee, cx->names().classPrototype);
+        MGetPropertyCache *getPropCache = MGetPropertyCache::New(callee, cx->names().prototype);
         getPropCache->setIdempotent();
         getProto = getPropCache;
     } else {
-        MCallGetProperty *callGetProp = MCallGetProperty::New(callee, cx->names().classPrototype);
+        MCallGetProperty *callGetProp = MCallGetProperty::New(callee, cx->names().prototype);
         callGetProp->setIdempotent();
         getProto = callGetProp;
     }
@@ -4610,7 +4617,7 @@ IonBuilder::getSingletonPrototype(JSFunction *target)
     if (targetType->unknownProperties())
         return nullptr;
 
-    jsid protoid = NameToId(cx->names().classPrototype);
+    jsid protoid = NameToId(cx->names().prototype);
     types::HeapTypeSetKey protoProperty = targetType->property(protoid);
 
     return protoProperty.singleton(constraints());
@@ -5447,7 +5454,7 @@ IonBuilder::jsop_initelem_array()
             needStub = true;
     } else if (!initializer->unknownProperties()) {
         types::HeapTypeSetKey elemTypes = initializer->property(JSID_VOID);
-        if (!TypeSetIncludes(elemTypes.actualTypes, value->type(), value->resultTypeSet())) {
+        if (!TypeSetIncludes(elemTypes.maybeTypes(), value->type(), value->resultTypeSet())) {
             elemTypes.freeze(constraints());
             needStub = true;
         }
@@ -5994,7 +6001,7 @@ IonBuilder::testSingletonProperty(JSObject *obj, JSObject *singleton,
         if (objType->unknownProperties())
             return true;
 
-        types::HeapTypeSetKey property = objType->property(idRoot);
+        types::HeapTypeSetKey property = objType->property(NameToId(name), context());
         if (obj != holder) {
             if (property.notEmpty(constraints()))
                 return true;
@@ -6076,7 +6083,7 @@ IonBuilder::testSingletonPropertyTypes(MDefinition *obj, JSObject *singleton,
 
             if (object->unknownProperties())
                 return true;
-            types::HeapTypeSetKey property = object->property(NameToId(name));
+            types::HeapTypeSetKey property = object->property(NameToId(name), context());
             if (property.notEmpty(constraints()))
                 return true;
 
@@ -6213,7 +6220,7 @@ IonBuilder::getStaticName(JSObject *staticObject, PropertyName *name, bool *psuc
     types::TypeObjectKey *staticType = types::TypeObjectKey::get(staticObject);
     Maybe<types::HeapTypeSetKey> propertyTypes;
     if (!staticType->unknownProperties()) {
-        propertyTypes.construct(staticType->property(id));
+        propertyTypes.construct(staticType->property(id, context()));
         if (propertyTypes.ref().configured(constraints(), staticType)) {
             // The property has been reconfigured as non-configurable, non-enumerable
             // or non-writable.
@@ -6223,7 +6230,7 @@ IonBuilder::getStaticName(JSObject *staticObject, PropertyName *name, bool *psuc
     }
 
     types::StackTypeSet *baseTypes = types::TypeScript::BytecodeTypes(script(), pc);
-    bool barrier = PropertyReadNeedsTypeBarrier(cx, constraints(), staticType,
+    bool barrier = PropertyReadNeedsTypeBarrier(cx, context(), constraints(), staticType,
                                                 name, baseTypes, /* updateObserved = */ true);
     types::TemporaryTypeSet *types = cloneTypeSet(baseTypes);
 
@@ -6266,6 +6273,9 @@ IonBuilder::getStaticName(JSObject *staticObject, PropertyName *name, bool *psuc
 bool
 jit::TypeSetIncludes(types::TypeSet *types, MIRType input, types::TypeSet *inputTypes)
 {
+    if (!types)
+        return inputTypes && inputTypes->empty();
+
     switch (input) {
       case MIRType_Undefined:
       case MIRType_Null:
@@ -6324,7 +6334,7 @@ IonBuilder::setStaticName(JSObject *staticObject, PropertyName *name)
         return jsop_setprop(name);
     }
 
-    if (!TypeSetIncludes(propertyTypes.actualTypes, value->type(), value->resultTypeSet()))
+    if (!TypeSetIncludes(propertyTypes.maybeTypes(), value->type(), value->resultTypeSet()))
         return jsop_setprop(name);
 
     current->pop();
@@ -6733,7 +6743,7 @@ IonBuilder::getElemTryCache(bool *emitted, MDefinition *obj, MDefinition *index)
     // Emit GetElementCache.
 
     types::StackTypeSet *baseTypes = types::TypeScript::BytecodeTypes(script(), pc);
-    bool barrier = PropertyReadNeedsTypeBarrier(cx, constraints(), obj, nullptr, baseTypes);
+    bool barrier = PropertyReadNeedsTypeBarrier(cx, context(), constraints(), obj, nullptr, baseTypes);
     types::TemporaryTypeSet *types = cloneTypeSet(baseTypes);
 
     // Always add a barrier if the index might be a string, so that the cache
@@ -6782,7 +6792,7 @@ IonBuilder::jsop_getelem_dense(MDefinition *obj, MDefinition *index)
             return false;
     }
 
-    bool barrier = PropertyReadNeedsTypeBarrier(cx, constraints(), obj, nullptr, baseTypes);
+    bool barrier = PropertyReadNeedsTypeBarrier(cx, context(), constraints(), obj, nullptr, baseTypes);
     types::TemporaryTypeSet *types = cloneTypeSet(baseTypes);
 
     bool needsHoleCheck = !ElementAccessIsPacked(constraints(), obj);
@@ -7576,7 +7586,8 @@ IonBuilder::getDefiniteSlot(types::TemporaryTypeSet *types, PropertyName *name,
     jsid id = NameToId(name);
 
     *property = type->property(id);
-    return property->actualTypes->definiteProperty() &&
+    return property->maybeTypes() &&
+           property->maybeTypes()->definiteProperty() &&
            !property->configured(constraints(), type);
 }
 
@@ -7615,7 +7626,7 @@ TestTypeHasOwnProperty(types::TypeObjectKey *typeObj, PropertyName *name, bool &
 {
     cont = true;
     types::HeapTypeSetKey propSet = typeObj->property(NameToId(name));
-    if (!propSet.actualTypes->empty())
+    if (propSet.maybeTypes() && !propSet.maybeTypes()->empty())
         cont = false;
     // Note: Callers must explicitly freeze the property type set later on if optimizing.
     return true;
@@ -8032,7 +8043,7 @@ IonBuilder::jsop_getprop(PropertyName *name)
         return emitted;
 
     types::StackTypeSet *baseTypes = types::TypeScript::BytecodeTypes(script(), pc);
-    bool barrier = PropertyReadNeedsTypeBarrier(cx, constraints(),
+    bool barrier = PropertyReadNeedsTypeBarrier(cx, context(), constraints(),
                                                 current->peek(-1), name, baseTypes);
     types::TemporaryTypeSet *types = cloneTypeSet(baseTypes);
 
@@ -8042,13 +8053,14 @@ IonBuilder::jsop_getprop(PropertyName *name)
 
     // Except when loading constants above, always use a call if we are doing
     // the definite properties analysis and not actually emitting code, to
-    // simplify later analysis.
-    if (info().executionMode() == DefinitePropertiesAnalysis) {
+    // simplify later analysis. Also skip deeper analysis if there are no known
+    // types for this operation, as it will always invalidate when executing.
+    if (info().executionMode() == DefinitePropertiesAnalysis || baseTypes->empty()) {
         MDefinition *obj = current->pop();
         MCallGetProperty *call = MCallGetProperty::New(obj, name);
         current->add(call);
         current->push(call);
-        return resumeAfter(call);
+        return resumeAfter(call) && pushTypeBarrier(call, types, true);
     }
 
     // Try to emit loads from known binary data blocks
@@ -8268,7 +8280,7 @@ IonBuilder::getPropTryDefiniteSlot(bool *emitted, PropertyName *name,
         useObj = guard;
     }
 
-    MLoadFixedSlot *fixed = MLoadFixedSlot::New(useObj, property.actualTypes->definiteSlot());
+    MLoadFixedSlot *fixed = MLoadFixedSlot::New(useObj, property.maybeTypes()->definiteSlot());
     if (!barrier)
         fixed->setResultType(MIRTypeFromValueType(types->getKnownTypeTag()));
 
@@ -8748,7 +8760,7 @@ IonBuilder::setPropTryDefiniteSlot(bool *emitted, MDefinition *obj,
     if (!getDefiniteSlot(obj->resultTypeSet(), name, &property))
         return true;
 
-    MStoreFixedSlot *fixed = MStoreFixedSlot::New(obj, property.actualTypes->definiteSlot(), value);
+    MStoreFixedSlot *fixed = MStoreFixedSlot::New(obj, property.maybeTypes()->definiteSlot(), value);
     current->add(fixed);
     current->push(value);
 
@@ -9395,7 +9407,7 @@ IonBuilder::jsop_instanceof()
             break;
 
         types::HeapTypeSetKey protoProperty =
-            rhsType->property(NameToId(cx->names().classPrototype));
+            rhsType->property(NameToId(cx->names().prototype));
         JSObject *protoObject = protoProperty.singleton(constraints());
         if (!protoObject)
             break;

@@ -332,6 +332,8 @@ INNER_BACKGROUND_TESTS_PACKAGE=echo
 ifeq ($(MOZ_BUILD_APP),mobile/android)
 UPLOAD_EXTRA_FILES += robocop.apk
 UPLOAD_EXTRA_FILES += fennec_ids.txt
+UPLOAD_EXTRA_FILES += geckoview_library/geckoview_library.zip
+UPLOAD_EXTRA_FILES += geckoview_library/geckoview_assets.zip
 
 # Robocop/Robotium tests, Android Background tests, and Fennec need to
 # be signed with the same key, which means release signing them all.

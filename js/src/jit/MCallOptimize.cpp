@@ -221,7 +221,7 @@ IonBuilder::inlineArray(CallInfo &callInfo)
 
             for (uint32_t i = 0; i < initLength; i++) {
                 MDefinition *value = callInfo.getArg(i);
-                if (!TypeSetIncludes(elemTypes.actualTypes, value->type(), value->resultTypeSet())) {
+                if (!TypeSetIncludes(elemTypes.maybeTypes(), value->type(), value->resultTypeSet())) {
                     elemTypes.freeze(constraints());
                     return InliningStatus_NotInlined;
                 }
@@ -332,7 +332,7 @@ IonBuilder::inlineArrayPopShift(CallInfo &callInfo, MArrayPopShift::Mode mode)
     bool needsHoleCheck = thisTypes->hasObjectFlags(constraints(), types::OBJECT_FLAG_NON_PACKED);
     bool maybeUndefined = returnTypes->hasType(types::Type::UndefinedType());
 
-    bool barrier = PropertyReadNeedsTypeBarrier(cx, constraints(),
+    bool barrier = PropertyReadNeedsTypeBarrier(cx, context(), constraints(),
                                                 callInfo.thisArg(), nullptr, returnTypes);
     if (barrier)
         returnType = MIRType_Value;

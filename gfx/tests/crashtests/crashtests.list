@@ -38,7 +38,7 @@ load 393822-1.html
 load 394384-1.html
 load 394246-1.html
 load 394246-2.html
-load 394751.xhtml
+skip-if(Android&&AndroidVersion<15) load 394751.xhtml # bug 922976
 load 395335-1.xhtml
 load 395458-1.html
 load 396321-1.svg

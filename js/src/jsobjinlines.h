@@ -75,7 +75,7 @@ JSObject::deleteSpecial(JSContext *cx, js::HandleObject obj, js::HandleSpecialId
 inline void
 JSObject::finalize(js::FreeOp *fop)
 {
-    js::Probes::finalizeObject(this);
+    js::probes::FinalizeObject(this);
 
 #ifdef DEBUG
     JS_ASSERT(isTenured());
@@ -936,15 +936,15 @@ DefineConstructorAndPrototype(JSContext *cx, Handle<GlobalObject*> global,
     JS_ASSERT(!global->nativeLookup(cx, id));
 
     /* Set these first in case AddTypePropertyId looks for this class. */
-    global->setSlot(key, ObjectValue(*ctor));
-    global->setSlot(key + JSProto_LIMIT, ObjectValue(*proto));
-    global->setSlot(key + JSProto_LIMIT * 2, ObjectValue(*ctor));
+    global->setConstructor(key, ObjectValue(*ctor));
+    global->setPrototype(key, ObjectValue(*proto));
+    global->setConstructorPropertySlot(key, ObjectValue(*ctor));
 
     types::AddTypePropertyId(cx, global, id, ObjectValue(*ctor));
-    if (!global->addDataProperty(cx, id, key + JSProto_LIMIT * 2, 0)) {
-        global->setSlot(key, UndefinedValue());
-        global->setSlot(key + JSProto_LIMIT, UndefinedValue());
-        global->setSlot(key + JSProto_LIMIT * 2, UndefinedValue());
+    if (!global->addDataProperty(cx, id, GlobalObject::constructorPropertySlot(key), 0)) {
+        global->setConstructor(key, UndefinedValue());
+        global->setPrototype(key, UndefinedValue());
+        global->setConstructorPropertySlot(key, UndefinedValue());
         return false;
     }
 

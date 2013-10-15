@@ -575,16 +575,16 @@ typedef enum {
   TYPE_MAX
 } cc_media_type_t;
 
+typedef struct {
+  cc_boolean was_passed;
+  cc_boolean value;
+  cc_boolean mandatory;
+} cc_boolean_constraint_t;
 
 typedef struct {
-  char        *name;
-  char        *value;
-  cc_boolean   mandatory;
-} cc_media_constraint_t;
-
-typedef struct {
-  cc_media_constraint_t**  constraints;
-  cc_uint16_t              constraint_count;
+  cc_boolean_constraint_t offer_to_receive_audio;
+  cc_boolean_constraint_t offer_to_receive_video;
+  cc_boolean_constraint_t moz_dont_offer_datachannel;
 } cc_media_constraints_t;
 
 #endif /* _CC_CONSTANTS_H_ */

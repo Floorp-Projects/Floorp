@@ -14,7 +14,9 @@
 
 #include "nspr.h"
 #include "nss.h"
+#include "ssl.h"
 
+#include "nsThreadUtils.h"
 #include "FakeMediaStreams.h"
 #include "FakeMediaStreamsImpl.h"
 #include "PeerConnectionImpl.h"

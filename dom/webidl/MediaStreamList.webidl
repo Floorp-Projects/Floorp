@@ -4,7 +4,7 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-[NoInterfaceObject]
+[ChromeOnly]
 interface MediaStreamList {
   getter MediaStream? (unsigned long index);
   readonly attribute unsigned long length;

@@ -492,8 +492,8 @@ SVGPathData::ConstructPath(gfxContext *aCtx) const
   MAYBE_APPROXIMATE_ZERO_LENGTH_SUBPATH_SQUARE_CAPS;
 }
 
-already_AddRefed<gfxFlattenedPath>
-SVGPathData::ToFlattenedPath(const gfxMatrix& aMatrix) const
+already_AddRefed<gfxPath>
+SVGPathData::ToPath(const gfxMatrix& aMatrix) const
 {
   nsRefPtr<gfxContext> tmpCtx =
     new gfxContext(gfxPlatform::GetPlatform()->ScreenReferenceSurface());
@@ -502,7 +502,7 @@ SVGPathData::ToFlattenedPath(const gfxMatrix& aMatrix) const
   ConstructPath(tmpCtx);
   tmpCtx->IdentityMatrix();
 
-  return tmpCtx->GetFlattenedPath();
+  return tmpCtx->CopyPath();
 }
 
 static double
