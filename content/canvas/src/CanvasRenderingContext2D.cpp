@@ -2559,7 +2559,7 @@ CanvasRenderingContext2D::DrawOrMeasureText(const nsAString& aRawText,
   GetAppUnitsValues(&processor.mAppUnitsPerDevPixel, nullptr);
   processor.mPt = gfxPoint(aX, aY);
   processor.mThebes =
-    new gfxContext(gfxPlatform::GetPlatform()->ScreenReferenceSurface());
+    new gfxContext(gfxPlatform::GetPlatform()->ScreenReferenceDrawTarget());
 
   // If we don't have a target then we don't have a transform. A target won't
   // be needed in the case where we're measuring the text size. This allows
