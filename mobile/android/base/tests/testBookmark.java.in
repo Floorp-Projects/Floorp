@@ -58,10 +58,12 @@ public class testBookmark extends AboutHomeTest {
         boolean bookmarked = waitForTest(new BooleanTest() {
             @Override
             public boolean test() {
-              return mDatabaseHelper.isBookmark(BOOKMARK_URL);
+                return (isBookmarked) ?
+                    mDatabaseHelper.isBookmark(BOOKMARK_URL) :
+                    !mDatabaseHelper.isBookmark(BOOKMARK_URL);
             }
         }, WAIT_FOR_BOOKMARKED_TIMEOUT);
-        mAsserter.is(bookmarked, isBookmarked, BOOKMARK_URL + " was " + (bookmarked ? "added as a bookmark" : "removed from bookmarks"));
+        mAsserter.is(bookmarked, true, BOOKMARK_URL + " was " + (isBookmarked ? "added as a bookmark" : "removed from bookmarks"));
     }
 
     private void setUpBookmark() {
