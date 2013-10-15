@@ -157,11 +157,13 @@ HwcComposer2D::PrepareLayerList(Layer* aLayer,
         return true;
     }
 
-    float opacity = aLayer->GetEffectiveOpacity();
-    if (opacity < 1) {
+    uint8_t opacity = std::min(0xFF, (int)(aLayer->GetEffectiveOpacity() * 256.0));
+#if ANDROID_VERSION < 18
+    if (opacity < 0xFF) {
         LOGD("%s Layer has planar semitransparency which is unsupported", aLayer->Name());
         return false;
     }
+#endif
 
     nsIntRect clip;
     if (!HwcUtils::CalculateClipRect(aParentTransform * aGLWorldTransform,
@@ -276,7 +278,7 @@ HwcComposer2D::PrepareLayerList(Layer* aLayer,
 
     hwcLayer.acquireFenceFd = -1;
     hwcLayer.releaseFenceFd = -1;
-    hwcLayer.planeAlpha = 0xFF; // Until plane alpha is enabled
+    hwcLayer.planeAlpha = opacity;
 #else
     hwcLayer.compositionType = HwcUtils::HWC_USE_COPYBIT;
 #endif
