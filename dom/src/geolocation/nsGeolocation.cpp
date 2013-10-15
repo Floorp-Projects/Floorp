@@ -225,23 +225,6 @@ private:
   nsRefPtr<Geolocation> mLocator;
 };
 
-class RequestRestartTimerEvent : public nsRunnable
-{
-public:
-  RequestRestartTimerEvent(nsGeolocationRequest* aRequest)
-    : mRequest(aRequest)
-  {
-  }
-
-  NS_IMETHOD Run() {
-    mRequest->SetTimeoutTimer();
-    return NS_OK;
-  }
-
-private:
-  nsRefPtr<nsGeolocationRequest> mRequest;
-};
-
 ////////////////////////////////////////////////////
 // PositionError
 ////////////////////////////////////////////////////
@@ -636,14 +619,12 @@ NS_IMPL_RELEASE(nsGeolocationService)
 
 static bool sGeoEnabled = true;
 static bool sGeoInitPending = true;
-static bool sGeoIgnoreLocationFilter = false;
 static int32_t sProviderTimeout = 6000; // Time, in milliseconds, to wait for the location provider to spin up.
 
 nsresult nsGeolocationService::Init()
 {
   Preferences::AddIntVarCache(&sProviderTimeout, "geo.timeout", sProviderTimeout);
   Preferences::AddBoolVarCache(&sGeoEnabled, "geo.enabled", sGeoEnabled);
-  Preferences::AddBoolVarCache(&sGeoIgnoreLocationFilter, "geo.ignore.location_filter", sGeoIgnoreLocationFilter);
 
   if (!sGeoEnabled) {
     return NS_ERROR_FAILURE;
