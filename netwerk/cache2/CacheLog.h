@@ -5,7 +5,13 @@
 #ifndef CacheLog__h__
 #define CacheLog__h__
 
+#if defined(MOZ_LOGGING)
 #define FORCE_PR_LOG
+#endif
+
+#if defined(PR_LOG)
+#error "If nsCache.h #included it must come before any files that #include prlog.h"
+#endif
 
 #include "prlog.h"
 
