@@ -1525,6 +1525,12 @@ public class GeckoAppShell
            Gecko resets the locale to en-US by calling this function with an empty string.
            This affects GeckoPreferences activity in multi-locale builds.
 
+        N.B., if this code ever becomes live again, you need to hook it up to locale
+        recording in BrowserHealthRecorder: we track the current app and OS locales
+        as part of the recorded environment.
+
+        See similar note in GeckoApp.java for the startup path.
+
         //We're not using this, not need to save it (see bug 635342)
         SharedPreferences settings =
             getContext().getPreferences(Activity.MODE_PRIVATE);
