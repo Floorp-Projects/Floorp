@@ -275,25 +275,31 @@ gfxContext::ClosePath()
   }
 }
 
-already_AddRefed<gfxPath> gfxContext::CopyPath() const
+already_AddRefed<gfxPath> gfxContext::CopyPath()
 {
+  nsRefPtr<gfxPath> path;
   if (mCairo) {
-    nsRefPtr<gfxPath> path = new gfxPath(cairo_copy_path(mCairo));
-    return path.forget();
+    path = new gfxPath(cairo_copy_path(mCairo));
   } else {
-    // XXX - This is not yet supported for Azure.
-    return nullptr;
+    EnsurePath();
+    path = new gfxPath(mPath);
   }
+  return path.forget();
 }
 
-void gfxContext::AppendPath(gfxPath* path)
+void gfxContext::SetPath(gfxPath* path)
 {
   if (mCairo) {
+    cairo_new_path(mCairo);
     if (path->mPath->status == CAIRO_STATUS_SUCCESS && path->mPath->num_data != 0)
         cairo_append_path(mCairo, path->mPath);
   } else {
-    // XXX - This is not yet supported for Azure.
-    return;
+    MOZ_ASSERT(path->mMoz2DPath, "Can't mix cairo and azure paths!");
+    MOZ_ASSERT(path->mMoz2DPath->GetBackendType() == mDT->GetType());
+    mPath = path->mMoz2DPath;
+    mPathBuilder = nullptr;
+    mPathIsRect = false;
+    mTransformChanged = false;
   }
 }
 
