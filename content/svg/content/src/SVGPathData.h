@@ -17,7 +17,7 @@
 #include <string.h>
 
 class gfxContext;
-class gfxFlattenedPath;
+class gfxPath;
 class nsSVGPathDataParserToInternal; // IWYU pragma: keep
 
 struct gfxMatrix;
@@ -150,8 +150,8 @@ public:
    */
   bool GetDistancesFromOriginToEndsOfVisibleSegments(nsTArray<double> *aArray) const;
 
-  already_AddRefed<gfxFlattenedPath>
-  ToFlattenedPath(const gfxMatrix& aMatrix) const;
+  already_AddRefed<gfxPath>
+  ToPath(const gfxMatrix& aMatrix) const;
 
   void ConstructPath(gfxContext *aCtx) const;
 

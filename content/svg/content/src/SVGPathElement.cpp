@@ -53,7 +53,7 @@ SVGPathElement::PathLength()
 float
 SVGPathElement::GetTotalLength(ErrorResult& rv)
 {
-  nsRefPtr<gfxFlattenedPath> flat = GetFlattenedPath(gfxMatrix());
+  nsRefPtr<gfxPath> flat = GetPath(gfxMatrix());
 
   if (!flat) {
     rv.Throw(NS_ERROR_FAILURE);
@@ -66,7 +66,7 @@ SVGPathElement::GetTotalLength(ErrorResult& rv)
 already_AddRefed<nsISVGPoint>
 SVGPathElement::GetPointAtLength(float distance, ErrorResult& rv)
 {
-  nsRefPtr<gfxFlattenedPath> flat = GetFlattenedPath(gfxMatrix());
+  nsRefPtr<gfxPath> flat = GetPath(gfxMatrix());
   if (!flat) {
     rv.Throw(NS_ERROR_FAILURE);
     return nullptr;
@@ -292,10 +292,10 @@ SVGPathElement::IsAttributeMapped(const nsIAtom* name) const
     SVGPathElementBase::IsAttributeMapped(name);
 }
 
-already_AddRefed<gfxFlattenedPath>
-SVGPathElement::GetFlattenedPath(const gfxMatrix &aMatrix)
+already_AddRefed<gfxPath>
+SVGPathElement::GetPath(const gfxMatrix &aMatrix)
 {
-  return mD.GetAnimValue().ToFlattenedPath(aMatrix);
+  return mD.GetAnimValue().ToPath(aMatrix);
 }
 
 //----------------------------------------------------------------------
@@ -341,7 +341,7 @@ SVGPathElement::GetPathLengthScale(PathLengthScaleForType aFor)
         // we need to take that into account.
         matrix = PrependLocalTransformsTo(matrix);
       }
-      nsRefPtr<gfxFlattenedPath> path = GetFlattenedPath(matrix);
+      nsRefPtr<gfxPath> path = GetPath(matrix);
       if (path) {
         return path->GetLength() / authorsPathLengthEstimate;
       }
