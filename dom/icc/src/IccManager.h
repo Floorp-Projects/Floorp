@@ -37,6 +37,10 @@ public:
   void Shutdown();
 
 private:
+  // TODO: Bug 814637 - WebIccManager API: support multiple sim cards
+  // The private member, mClient, will be moved to other proper place for
+  // supporting multiple sim cards.
+  uint32_t mClientId;
   nsCOMPtr<nsIIccProvider> mProvider;
   nsRefPtr<Listener> mListener;
 };
