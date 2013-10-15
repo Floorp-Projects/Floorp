@@ -42,6 +42,7 @@ ManifestEditor.prototype = {
 
     let editor = this.editor = new VariablesView(variablesContainer);
 
+    editor.onlyEnumVisible = true;
     editor.eval = this._onEval;
     editor.switch = this._onSwitch;
     editor.delete = this._onDelete;
