@@ -773,40 +773,6 @@ gfxMacPlatformFontList::GetStandardFamilyName(const nsAString& aFontName, nsAStr
         return true;
     }
 
-    // Gecko 1.8 used Quickdraw font api's which produce a slightly different set of "family"
-    // names.  Try to resolve based on these names, in case this is stored in an old profile
-    // 1.8: "Futura", "Futura Condensed" ==> 1.9: "Futura"
-
-    // convert the name to a Pascal-style Str255 to try as Quickdraw name
-    Str255 qdname;
-    NS_ConvertUTF16toUTF8 utf8name(aFontName);
-    qdname[0] = std::max<size_t>(255, strlen(utf8name.get()));
-    memcpy(&qdname[1], utf8name.get(), qdname[0]);
-
-    // look up the Quickdraw name
-    ATSFontFamilyRef atsFamily = ::ATSFontFamilyFindFromQuickDrawName(qdname);
-    if (atsFamily == (ATSFontFamilyRef)kInvalidFontFamily) {
-        return false;
-    }
-
-    // if we found a family, get its ATS name
-    CFStringRef cfName;
-    OSStatus status = ::ATSFontFamilyGetName(atsFamily, kATSOptionFlagsDefault, &cfName);
-    if (status != noErr) {
-        return false;
-    }
-
-    // then use this to locate the family entry and retrieve its localized name
-    nsAutoString familyName;
-    GetStringForNSString((const NSString*)cfName, familyName);
-    ::CFRelease(cfName);
-
-    family = FindFamily(familyName);
-    if (family) {
-        family->LocalizedName(aFamilyName);
-        return true;
-    }
-
     return false;
 }
 
