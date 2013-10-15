@@ -6811,7 +6811,7 @@ PostMessageReadStructuredClone(JSContext* cx,
         if (NS_SUCCEEDED(nsContentUtils::WrapNative(cx, global, supports,
                                                     &val,
                                                     getter_AddRefs(wrapper)))) {
-          return JSVAL_TO_OBJECT(val);
+          return val.toObjectOrNull();
         }
       }
     }
