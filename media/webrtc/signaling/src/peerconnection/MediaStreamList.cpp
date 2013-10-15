@@ -10,6 +10,7 @@
 #endif
 #include "nsIScriptGlobalObject.h"
 #include "PeerConnectionImpl.h"
+#include "PeerConnectionMedia.h"
 
 namespace mozilla {
 namespace dom {

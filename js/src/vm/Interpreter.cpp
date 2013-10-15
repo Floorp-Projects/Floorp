@@ -606,10 +606,10 @@ js::ExecuteKernel(JSContext *cx, HandleScript script, JSObject &scopeChainArg, c
 
     TypeScript::SetThis(cx, script, thisv);
 
-    Probes::startExecution(script);
+    probes::StartExecution(script);
     ExecuteState state(cx, script, thisv, scopeChainArg, type, evalInFrame, result);
     bool ok = RunScript(cx, state);
-    Probes::stopExecution(script);
+    probes::StopExecution(script);
 
     return ok;
 }
@@ -1335,7 +1335,7 @@ Interpret(JSContext *cx, RunState &state)
          * fail if cx->isExceptionPending() is true.
          */
         if (cx->isExceptionPending()) {
-            Probes::enterScript(cx, script, script->function(), regs.fp());
+            probes::EnterScript(cx, script, script->function(), regs.fp());
             goto error;
         }
     }
@@ -1347,7 +1347,7 @@ Interpret(JSContext *cx, RunState &state)
         if (!entryFrame->prologue(cx))
             goto error;
     } else {
-        Probes::enterScript(cx, script, script->function(), entryFrame);
+        probes::EnterScript(cx, script, script->function(), entryFrame);
     }
     if (cx->compartment()->debugMode()) {
         JSTrapStatus status = ScriptDebugPrologue(cx, entryFrame);
@@ -1623,7 +1623,7 @@ BEGIN_CASE(JSOP_STOP)
         if (!regs.fp()->isYielding())
             regs.fp()->epilogue(cx);
         else
-            Probes::exitScript(cx, script, script->function(), regs.fp());
+            probes::ExitScript(cx, script, script->function(), regs.fp());
 
 #if defined(JS_ION)
   jit_return_pop_frame:
@@ -3401,7 +3401,7 @@ default:
     if (!regs.fp()->isYielding())
         regs.fp()->epilogue(cx);
     else
-        Probes::exitScript(cx, script, script->function(), regs.fp());
+        probes::ExitScript(cx, script, script->function(), regs.fp());
 
     gc::MaybeVerifyBarriers(cx, true);
 

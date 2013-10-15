@@ -173,6 +173,11 @@ function activateCurrent(aMessage) {
     if (aAccessible.actionCount > 0) {
       aAccessible.doAction(0);
     } else {
+      let control = Utils.getEmbeddedControl(aAccessible);
+      if (control && control.actionCount > 0) {
+        control.doAction(0);
+      }
+
       // XXX Some mobile widget sets do not expose actions properly
       // (via ARIA roles, etc.), so we need to generate a click.
       // Could possibly be made simpler in the future. Maybe core

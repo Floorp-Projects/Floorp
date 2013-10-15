@@ -3293,7 +3293,7 @@ static const JSFunctionSpec static_methods[] = {
 JS_FRIEND_API(JSObject *)
 js_InitProxyClass(JSContext *cx, HandleObject obj)
 {
-    Rooted<GlobalObject*> global(cx);
+    Rooted<GlobalObject*> global(cx, &obj->as<GlobalObject>());
     RootedFunction ctor(cx);
     ctor = global->createConstructor(cx, proxy, cx->names().Proxy, 2);
     if (!ctor)
@@ -3306,6 +3306,6 @@ js_InitProxyClass(JSContext *cx, HandleObject obj)
         return nullptr;
     }
 
-    MarkStandardClassInitializedNoProto(obj, &ProxyObject::uncallableClass_);
+    global->markStandardClassInitializedNoProto(&ProxyObject::uncallableClass_);
     return ctor;
 }
