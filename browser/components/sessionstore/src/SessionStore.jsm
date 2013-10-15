@@ -352,7 +352,7 @@ let SessionStoreInternal = {
 
   /* ........ Public Getters .............. */
   get canRestoreLastSession() {
-    return this._lastSessionState;
+    return !!this._lastSessionState;
   },
 
   set canRestoreLastSession(val) {
@@ -3715,9 +3715,9 @@ let SessionStoreInternal = {
    * @param aTab the which has been restored
    */
   _sendTabRestoredNotification: function ssi_sendTabRestoredNotification(aTab) {
-      let event = aTab.ownerDocument.createEvent("Events");
-      event.initEvent("SSTabRestored", true, false);
-      aTab.dispatchEvent(event);
+    let event = aTab.ownerDocument.createEvent("Events");
+    event.initEvent("SSTabRestored", true, false);
+    aTab.dispatchEvent(event);
   },
 
   /**
@@ -4248,7 +4248,7 @@ let TabState = {
       }
 
       if (disallow.length > 0) {
-	tabData.disallow = disallow.join(",");
+        tabData.disallow = disallow.join(",");
       }
 
       // Save text and scroll data.
@@ -4395,9 +4395,9 @@ let TabState = {
     if (!options || !options.omitDocShellCapabilities) {
       let disallow = DocShellCapabilities.collect(browser.docShell);
       if (disallow.length > 0)
-	tabData.disallow = disallow.join(",");
+        tabData.disallow = disallow.join(",");
       else if (tabData.disallow)
-	delete tabData.disallow;
+        delete tabData.disallow;
     }
 
     // Save tab attributes.
@@ -4604,5 +4604,3 @@ let TabState = {
     return "";
   }
 };
-
-
