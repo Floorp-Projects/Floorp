@@ -671,10 +671,10 @@ gfxDWriteFont::MeasureGlyphWidth(uint16_t aGlyph)
 }
 
 void
-gfxDWriteFont::SizeOfExcludingThis(MallocSizeOf aMallocSizeOf,
-                                   FontCacheSizes*   aSizes) const
+gfxDWriteFont::AddSizeOfExcludingThis(MallocSizeOf aMallocSizeOf,
+                                      FontCacheSizes* aSizes) const
 {
-    gfxFont::SizeOfExcludingThis(aMallocSizeOf, aSizes);
+    gfxFont::AddSizeOfExcludingThis(aMallocSizeOf, aSizes);
     aSizes->mFontInstances += aMallocSizeOf(mMetrics);
     if (mGlyphWidths) {
         aSizes->mFontInstances +=
@@ -683,11 +683,11 @@ gfxDWriteFont::SizeOfExcludingThis(MallocSizeOf aMallocSizeOf,
 }
 
 void
-gfxDWriteFont::SizeOfIncludingThis(MallocSizeOf aMallocSizeOf,
-                                   FontCacheSizes*   aSizes) const
+gfxDWriteFont::AddSizeOfIncludingThis(MallocSizeOf aMallocSizeOf,
+                                      FontCacheSizes* aSizes) const
 {
     aSizes->mFontInstances += aMallocSizeOf(this);
-    SizeOfExcludingThis(aMallocSizeOf, aSizes);
+    AddSizeOfExcludingThis(aMallocSizeOf, aSizes);
 }
 
 TemporaryRef<ScaledFont>

@@ -426,11 +426,11 @@ MacOSFontEntry::HasFontTable(uint32_t aTableTag)
 }
 
 void
-MacOSFontEntry::SizeOfIncludingThis(MallocSizeOf aMallocSizeOf,
-                                    FontListSizes*    aSizes) const
+MacOSFontEntry::AddSizeOfIncludingThis(MallocSizeOf aMallocSizeOf,
+                                       FontListSizes* aSizes) const
 {
     aSizes->mFontListSize += aMallocSizeOf(this);
-    SizeOfExcludingThis(aMallocSizeOf, aSizes);
+    AddSizeOfExcludingThis(aMallocSizeOf, aSizes);
 }
 
 /* gfxMacFontFamily */
