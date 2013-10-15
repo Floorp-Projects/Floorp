@@ -9,17 +9,13 @@
 
 #include "TestHarness.h"
 
-// Work around the fact that the nsWeakPtr, used by AudioChannelService.h, is
-// not exposed to consumers outside the internal API.
-#include "nsIWeakReference.h"
-typedef nsCOMPtr<nsIWeakReference> nsWeakPtr;
-
+#include "nsWeakReference.h"
 #include "AudioChannelService.h"
 #include "AudioChannelAgent.h"
 
 #define TEST_ENSURE_BASE(_test, _msg)       \
   PR_BEGIN_MACRO                            \
-    if (!(_test)) {                           \
+    if (!(_test)) {                         \
       fail(_msg);                           \
       return NS_ERROR_FAILURE;              \
     } else {                                \
@@ -29,7 +25,8 @@ typedef nsCOMPtr<nsIWeakReference> nsWeakPtr;
 
 using namespace mozilla::dom;
 
-class Agent : public nsIAudioChannelAgentCallback
+class Agent : public nsIAudioChannelAgentCallback,
+              public nsSupportsWeakReference
 {
 public:
   NS_DECL_ISUPPORTS
@@ -43,11 +40,16 @@ public:
     mAgent = do_CreateInstance("@mozilla.org/audiochannelagent;1");
   }
 
-  virtual ~Agent() {}
+  virtual ~Agent()
+  {
+    if (mRegistered) {
+      StopPlaying();
+    }
+  }
 
   nsresult Init()
   {
-    nsresult rv = mAgent->Init(mType, this);
+    nsresult rv = mAgent->InitWithWeakCallback(mType, this);
     NS_ENSURE_SUCCESS(rv, rv);
 
     return mAgent->SetVisibilityState(false);
@@ -55,8 +57,9 @@ public:
 
   nsresult StartPlaying(AudioChannelState *_ret)
   {
-    if (mRegistered)
+    if (mRegistered) {
       StopPlaying();
+    }
 
     nsresult rv = mAgent->StartPlaying((int32_t *)_ret);
     mRegistered = true;
@@ -112,19 +115,20 @@ public:
     return NS_OK;
   }
 
-  nsCOMPtr<AudioChannelAgent> mAgent;
+  nsRefPtr<AudioChannelAgent> mAgent;
   AudioChannelType mType;
   bool mWaitCallback;
   bool mRegistered;
   AudioChannelState mCanPlay;
 };
 
-NS_IMPL_ISUPPORTS1(Agent, nsIAudioChannelAgentCallback)
+NS_IMPL_ISUPPORTS2(Agent, nsIAudioChannelAgentCallback,
+                   nsISupportsWeakReference)
 
 nsresult
 TestDoubleStartPlaying()
 {
-  nsCOMPtr<Agent> agent = new Agent(AUDIO_CHANNEL_NORMAL);
+  nsRefPtr<Agent> agent = new Agent(AUDIO_CHANNEL_NORMAL);
 
   nsresult rv = agent->Init();
   NS_ENSURE_SUCCESS(rv, rv);
@@ -137,14 +141,13 @@ TestDoubleStartPlaying()
   TEST_ENSURE_BASE(NS_FAILED(rv),
     "Test0: StartPlaying calling twice must return error");
 
-  agent->mAgent->StopPlaying();
   return NS_OK;
 }
 
 nsresult
 TestOneNormalChannel()
 {
-  nsCOMPtr<Agent> agent = new Agent(AUDIO_CHANNEL_NORMAL);
+  nsRefPtr<Agent> agent = new Agent(AUDIO_CHANNEL_NORMAL);
   nsresult rv = agent->Init();
   NS_ENSURE_SUCCESS(rv, rv);
 
@@ -162,18 +165,17 @@ TestOneNormalChannel()
   TEST_ENSURE_BASE(playable == AUDIO_CHANNEL_STATE_NORMAL,
     "Test1: A normal channel visible agent must be playable");
 
-  agent->StopPlaying();
   return rv;
 }
 
 nsresult
 TestTwoNormalChannels()
 {
-  nsCOMPtr<Agent> agent1 = new Agent(AUDIO_CHANNEL_NORMAL);
+  nsRefPtr<Agent> agent1 = new Agent(AUDIO_CHANNEL_NORMAL);
   nsresult rv = agent1->Init();
   NS_ENSURE_SUCCESS(rv, rv);
 
-  nsCOMPtr<Agent> agent2 = new Agent(AUDIO_CHANNEL_NORMAL);
+  nsRefPtr<Agent> agent2 = new Agent(AUDIO_CHANNEL_NORMAL);
   rv = agent2->Init();
   NS_ENSURE_SUCCESS(rv, rv);
 
@@ -204,19 +206,17 @@ TestTwoNormalChannels()
   TEST_ENSURE_BASE(playable == AUDIO_CHANNEL_STATE_NORMAL,
     "Test2: A normal channel visible agent2 must be playable");
 
-  agent1->StopPlaying();
-  agent2->StopPlaying();
   return rv;
 }
 
 nsresult
 TestContentChannels()
 {
-  nsCOMPtr<Agent> agent1 = new Agent(AUDIO_CHANNEL_CONTENT);
+  nsRefPtr<Agent> agent1 = new Agent(AUDIO_CHANNEL_CONTENT);
   nsresult rv = agent1->Init();
   NS_ENSURE_SUCCESS(rv, rv);
 
-  nsCOMPtr<Agent> agent2 = new Agent(AUDIO_CHANNEL_CONTENT);
+  nsRefPtr<Agent> agent2 = new Agent(AUDIO_CHANNEL_CONTENT);
   rv = agent2->Init();
   NS_ENSURE_SUCCESS(rv, rv);
 
@@ -291,23 +291,21 @@ TestContentChannels()
     "Test3: A content channel unvisible agent2 must be playable "
     "from background state");
 
-  agent1->StopPlaying();
-  agent2->StopPlaying();
   return rv;
 }
 
 nsresult
 TestFadedState()
 {
-  nsCOMPtr<Agent> normalAgent = new Agent(AUDIO_CHANNEL_NORMAL);
+  nsRefPtr<Agent> normalAgent = new Agent(AUDIO_CHANNEL_NORMAL);
   nsresult rv = normalAgent->Init();
   NS_ENSURE_SUCCESS(rv, rv);
 
-  nsCOMPtr<Agent> contentAgent = new Agent(AUDIO_CHANNEL_CONTENT);
+  nsRefPtr<Agent> contentAgent = new Agent(AUDIO_CHANNEL_CONTENT);
   rv = contentAgent->Init();
   NS_ENSURE_SUCCESS(rv, rv);
 
-  nsCOMPtr<Agent> notificationAgent = new Agent(AUDIO_CHANNEL_NOTIFICATION);
+  nsRefPtr<Agent> notificationAgent = new Agent(AUDIO_CHANNEL_NOTIFICATION);
   rv = notificationAgent->Init();
   NS_ENSURE_SUCCESS(rv, rv);
 
@@ -372,39 +370,37 @@ TestFadedState()
   rv = contentAgent->SetVisibilityState(true);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  normalAgent->StopPlaying();
-  contentAgent->StopPlaying();
   return rv;
 }
 
 nsresult
 TestPriorities()
 {
-  nsCOMPtr<Agent> normalAgent = new Agent(AUDIO_CHANNEL_NORMAL);
+  nsRefPtr<Agent> normalAgent = new Agent(AUDIO_CHANNEL_NORMAL);
   nsresult rv = normalAgent->Init();
   NS_ENSURE_SUCCESS(rv, rv);
 
-  nsCOMPtr<Agent> contentAgent = new Agent(AUDIO_CHANNEL_CONTENT);
+  nsRefPtr<Agent> contentAgent = new Agent(AUDIO_CHANNEL_CONTENT);
   rv = contentAgent->Init();
   NS_ENSURE_SUCCESS(rv, rv);
 
-  nsCOMPtr<Agent> notificationAgent = new Agent(AUDIO_CHANNEL_NOTIFICATION);
+  nsRefPtr<Agent> notificationAgent = new Agent(AUDIO_CHANNEL_NOTIFICATION);
   rv = notificationAgent->Init();
   NS_ENSURE_SUCCESS(rv, rv);
 
-  nsCOMPtr<Agent> alarmAgent = new Agent(AUDIO_CHANNEL_ALARM);
+  nsRefPtr<Agent> alarmAgent = new Agent(AUDIO_CHANNEL_ALARM);
   rv = alarmAgent->Init();
   NS_ENSURE_SUCCESS(rv, rv);
 
-  nsCOMPtr<Agent> telephonyAgent = new Agent(AUDIO_CHANNEL_TELEPHONY);
+  nsRefPtr<Agent> telephonyAgent = new Agent(AUDIO_CHANNEL_TELEPHONY);
   rv = telephonyAgent->Init();
   NS_ENSURE_SUCCESS(rv, rv);
 
-  nsCOMPtr<Agent> ringerAgent = new Agent(AUDIO_CHANNEL_RINGER);
+  nsRefPtr<Agent> ringerAgent = new Agent(AUDIO_CHANNEL_RINGER);
   rv = ringerAgent->Init();
   NS_ENSURE_SUCCESS(rv, rv);
 
-  nsCOMPtr<Agent> pNotificationAgent =
+  nsRefPtr<Agent> pNotificationAgent =
     new Agent(AUDIO_CHANNEL_PUBLICNOTIFICATION);
   rv = pNotificationAgent->Init();
   NS_ENSURE_SUCCESS(rv, rv);
@@ -531,38 +527,39 @@ TestPriorities()
   TEST_ENSURE_BASE(playable == AUDIO_CHANNEL_STATE_NORMAL,
     "Test5: A pNotification channel visible agent must be playable");
 
-  normalAgent->StopPlaying();
-  contentAgent->StopPlaying();
-  alarmAgent->StopPlaying();
-  telephonyAgent->StopPlaying();
-  ringerAgent->StopPlaying();
-  pNotificationAgent->StopPlaying();
   return rv;
 }
 
 int main(int argc, char** argv)
 {
   ScopedXPCOM xpcom("AudioChannelService");
-  if (xpcom.failed())
+  if (xpcom.failed()) {
     return 1;
+  }
 
-  if (NS_FAILED(TestDoubleStartPlaying()))
+  if (NS_FAILED(TestDoubleStartPlaying())) {
     return 1;
+  }
 
-  if (NS_FAILED(TestOneNormalChannel()))
+  if (NS_FAILED(TestOneNormalChannel())) {
     return 1;
+  }
 
-  if (NS_FAILED(TestTwoNormalChannels()))
+  if (NS_FAILED(TestTwoNormalChannels())) {
     return 1;
+  }
 
-  if (NS_FAILED(TestContentChannels()))
+  if (NS_FAILED(TestContentChannels())) {
     return 1;
+  }
 
-  if (NS_FAILED(TestFadedState()))
+  if (NS_FAILED(TestFadedState())) {
     return 1;
+  }
 
-  if (NS_FAILED(TestPriorities()))
+  if (NS_FAILED(TestPriorities())) {
     return 1;
+  }
 
   return 0;
 }
