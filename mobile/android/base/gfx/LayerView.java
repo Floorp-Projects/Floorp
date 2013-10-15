@@ -135,8 +135,8 @@ public class LayerView extends FrameLayout {
 
         float size = event.getSize();
         DisplayMetrics displaymetrics = getContext().getResources().getDisplayMetrics();
-        size = size*Math.min(displaymetrics.heightPixels, displaymetrics.widthPixels);
-        return new Point((int)size,(int)size);
+        size = size * Math.min(displaymetrics.heightPixels, displaymetrics.widthPixels);
+        return new Point((int)size, (int)size);
     }
 
     public void geckoConnected() {
