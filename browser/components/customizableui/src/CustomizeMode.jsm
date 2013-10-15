@@ -796,12 +796,12 @@ CustomizeMode.prototype = {
     let dragOverItem, dragValue;
     if (targetNode == targetArea.customizationTarget) {
       dragOverItem = targetNode.lastChild;
-      dragValue = "end";
+      dragValue = "after";
     } else {
       let position = Array.indexOf(targetParent.children, targetNode);
       if (position == -1) {
         dragOverItem = targetParent.lastChild;
-        dragValue = "end";
+        dragValue = "after";
       } else {
         dragOverItem = targetParent.children[position];
         // Check if the aDraggedItem is hovered past the first half of dragOverItem
