@@ -218,6 +218,7 @@ class FloatRegisters
     static const uint32_t AllocatableMask = AllMask & ~NonAllocatableMask;
 };
 
+uint32_t GetARMFlags();
 bool hasMOVWT();
 bool hasVFPv3();
 bool hasVFP();

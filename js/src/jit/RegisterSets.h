@@ -805,6 +805,7 @@ class AsmJSHeapAccess
     JS_STATIC_ASSERT(AnyRegister::Total < UINT8_MAX);
 
   public:
+    AsmJSHeapAccess() {}
 #if defined(JS_CPU_X86) || defined(JS_CPU_X64)
     // If 'cmp' equals 'offset' or if it is not supplied then the
     // cmpDelta_ is zero indicating that there is no length to patch.

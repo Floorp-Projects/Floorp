@@ -6,7 +6,7 @@ const ASM_OK_STRING = "successfully compiled asm.js code";
 const ASM_TYPE_FAIL_STRING = "asm.js type error:";
 const ASM_DIRECTIVE_FAIL_STRING = "\"use asm\" is only meaningful in the Directive Prologue of a function body";
 
-const USE_ASM = "'use asm';";
+const USE_ASM = '"use asm";';
 const HEAP_IMPORTS = "const i8=new glob.Int8Array(b);var u8=new glob.Uint8Array(b);"+
                      "const i16=new glob.Int16Array(b);var u16=new glob.Uint16Array(b);"+
                      "const i32=new glob.Int32Array(b);var u32=new glob.Uint32Array(b);"+
@@ -17,6 +17,28 @@ function asmCompile()
 {
     var f = Function.apply(null, arguments);
     assertEq(!isAsmJSCompilationAvailable() || isAsmJSModule(f), true);
+    return f;
+}
+
+function asmCompileCached()
+{
+    if (!isAsmJSCompilationAvailable())
+        return Function.apply(null, arguments);
+
+    if (!isCachingEnabled()) {
+        var f = Function.apply(null, arguments);
+        assertEq(isAsmJSModule(f), true);
+        return f;
+    }
+
+    var quotedArgs = [];
+    for (var i = 0; i < arguments.length; i++)
+        quotedArgs.push("'" + arguments[i] + "'");
+    var code = "var f = new Function(" + quotedArgs.join(',') + ");assertEq(isAsmJSModule(f), true);";
+    nestedShell("--js-cache", "--execute=" + code);
+
+    var f = Function.apply(null, arguments);
+    assertEq(isAsmJSModuleLoadedFromCache(f), true);
     return f;
 }
 

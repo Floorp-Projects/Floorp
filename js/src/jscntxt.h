@@ -274,6 +274,7 @@ struct ThreadSafeContext : ContextFriendFields,
     // Accessors for immutable runtime data.
     JSAtomState &names() { return runtime_->atomState; }
     StaticStrings &staticStrings() { return runtime_->staticStrings; }
+    const JS::AsmJSCacheOps &asmJSCacheOps() { return runtime_->asmJSCacheOps; }
     PropertyName *emptyString() { return runtime_->emptyString; }
     FreeOp *defaultFreeOp() { return runtime_->defaultFreeOp(); }
     bool useHelperThreads() { return runtime_->useHelperThreads(); }
