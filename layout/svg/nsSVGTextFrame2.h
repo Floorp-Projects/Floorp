@@ -18,7 +18,7 @@ class nsDisplaySVGText;
 class nsRenderingContext;
 class nsSVGTextFrame2;
 class nsTextFrame;
-class gfxFlattenedPath;
+class gfxPath;
 
 typedef nsSVGDisplayContainerFrame nsSVGTextFrame2Base;
 
@@ -517,7 +517,7 @@ private:
 
   // Methods to get information for a <textPath> frame.
   nsIFrame* GetTextPathPathFrame(nsIFrame* aTextPathFrame);
-  already_AddRefed<gfxFlattenedPath> GetFlattenedTextPath(nsIFrame* aTextPathFrame);
+  already_AddRefed<gfxPath> GetTextPath(nsIFrame* aTextPathFrame);
   gfxFloat GetOffsetScale(nsIFrame* aTextPathFrame);
   gfxFloat GetStartOffset(nsIFrame* aTextPathFrame);
 
