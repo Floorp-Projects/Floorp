@@ -461,7 +461,7 @@ public:
           nsRefPtr<nsEventStateManager> esm =
             aVisitor.mPresContext->EventStateManager();
           esm->DispatchLegacyMouseScrollEvents(frame,
-                 static_cast<WheelEvent*>(aVisitor.mEvent),
+                 static_cast<WidgetWheelEvent*>(aVisitor.mEvent),
                  &aVisitor.mEventStatus);
         }
       }
