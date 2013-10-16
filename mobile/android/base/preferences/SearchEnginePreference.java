@@ -132,7 +132,8 @@ public class SearchEnginePreference extends Preference {
     }
 
     /**
-     * Set if this object's UI should show that this is the default engine.
+     * Set if this object's UI should show that this is the default engine. To ensure proper ordering,
+     * this method should only be called after this Preference is added to the PreferenceCategory.
      * @param isDefault Flag indicating if this represents the default engine.
      */
     public void setIsDefaultEngine(boolean isDefault) {

@@ -281,7 +281,7 @@ public class BrowserSearch extends HomeFragment
         registerForContextMenu(mList);
         registerEventListener("SearchEngines:Data");
 
-        GeckoAppShell.sendEventToGecko(GeckoEvent.createBroadcastEvent("SearchEngines:Get", null));
+        GeckoAppShell.sendEventToGecko(GeckoEvent.createBroadcastEvent("SearchEngines:GetVisible", null));
     }
 
     @Override
