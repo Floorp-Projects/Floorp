@@ -6,7 +6,7 @@
 MOZILLA_INTERNAL_API = 1
 include $(topsrcdir)/config/rules.mk
 
-ABS_SRCDIR := $(call core_abspath,$(srcdir))
+ABS_SRCDIR := $(abspath $(srcdir))
 ifeq ($(OS_ARCH),WINNT)
 
 check::
