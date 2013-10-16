@@ -1018,7 +1018,7 @@ js::GetTestingFunctions(JSContext *cx)
     if (!obj)
         return nullptr;
 
-    if (!DefineTestingFunctions(cx, obj))
+    if (!DefineTestingFunctions(cx, obj, false))
         return nullptr;
 
     return obj;
