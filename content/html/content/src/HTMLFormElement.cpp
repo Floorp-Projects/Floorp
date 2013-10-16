@@ -1646,17 +1646,18 @@ HTMLFormElement::IsDefaultSubmitElement(const nsIFormControl* aControl) const
 }
 
 bool
-HTMLFormElement::HasSingleTextControl() const
+HTMLFormElement::ImplicitSubmissionIsDisabled() const
 {
   // Input text controls are always in the elements list.
-  uint32_t numTextControlsFound = 0;
+  uint32_t numDisablingControlsFound = 0;
   uint32_t length = mControls->mElements.Length();
-  for (uint32_t i = 0; i < length && numTextControlsFound < 2; ++i) {
-    if (mControls->mElements[i]->IsSingleLineTextControl(false)) {
-      numTextControlsFound++;
+  for (uint32_t i = 0; i < length && numDisablingControlsFound < 2; ++i) {
+    if (mControls->mElements[i]->IsSingleLineTextControl(false) ||
+        mControls->mElements[i]->GetType() == NS_FORM_INPUT_NUMBER) {
+      numDisablingControlsFound++;
     }
   }
-  return numTextControlsFound == 1;
+  return numDisablingControlsFound > 1;
 }
 
 NS_IMETHODIMP
