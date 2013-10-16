@@ -211,16 +211,25 @@ IsPhiObservable(MPhi *phi, Observability observe)
         break;
     }
 
-    // If the Phi is of the |this| value, it must always be observable.
     uint32_t slot = phi->slot();
     CompileInfo &info = phi->block()->info();
-    if (info.fun() && slot == info.thisSlot())
+    JSFunction *fun = info.fun();
+
+    // If the Phi is of the |this| value, it must always be observable.
+    if (fun && slot == info.thisSlot())
+        return true;
+
+    // If the function is heavyweight, and the Phi is of the |scopeChain|
+    // value, and the function may need an arguments object, then make sure
+    // to preserve the scope chain, because it may be needed to construct the
+    // arguments object during bailout.
+    if (fun && fun->isHeavyweight() && info.hasArguments() && slot == info.scopeChainSlot())
         return true;
 
     // If the Phi is one of the formal argument, and we are using an argument
     // object in the function. The phi might be observable after a bailout.
     // For inlined frames this is not needed, as they are captured in the inlineResumePoint.
-    if (info.fun() && info.hasArguments()) {
+    if (fun && info.hasArguments()) {
         uint32_t first = info.firstArgSlot();
         if (first <= slot && slot - first < info.nargs()) {
             // If arguments obj aliases formals, then the arg slots will never be used.
