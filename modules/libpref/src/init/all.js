@@ -105,6 +105,9 @@ pref("dom.workers.sharedWorkers.enabled", true);
 // Whether nonzero values can be returned from performance.timing.*
 pref("dom.enable_performance", true);
 
+// Whether resource timing will be gathered and returned by performance.GetEntries*
+pref("dom.enable_resource_timing", false);
+
 // Whether the Gamepad API is enabled
 pref("dom.gamepad.enabled", true);
 #ifdef RELEASE_BUILD

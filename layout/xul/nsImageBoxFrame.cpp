@@ -236,7 +236,7 @@ nsImageBoxFrame::UpdateImage()
                                             mContent->NodePrincipal())) {
       nsContentUtils::LoadImage(uri, doc, mContent->NodePrincipal(),
                                 doc->GetDocumentURI(), mListener, mLoadFlags,
-                                getter_AddRefs(mImageRequest));
+                                EmptyString(), getter_AddRefs(mImageRequest));
 
       if (mImageRequest) {
         nsLayoutUtils::RegisterImageRequestIfAnimated(presContext,

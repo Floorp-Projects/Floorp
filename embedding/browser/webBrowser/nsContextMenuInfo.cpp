@@ -310,7 +310,7 @@ nsContextMenuInfo::GetBackgroundImageRequestInternal(nsIDOMNode *aDOMNode, imgRe
 
           return il->LoadImage(bgUri, nullptr, nullptr, principal, nullptr,
                                nullptr, nullptr, nsIRequest::LOAD_NORMAL,
-                               nullptr, channelPolicy, aRequest);
+                               nullptr, channelPolicy, EmptyString(), aRequest);
         }
       }
 
