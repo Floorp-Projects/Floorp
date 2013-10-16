@@ -1554,17 +1554,19 @@ GetPropertyIC::tryAttachProxy(JSContext *cx, IonScript *ion, HandleObject obj,
 
 static void
 GenerateProxyClassGuards(MacroAssembler &masm, Register object, Register scratchReg,
-                         Label *failures, Label *success)
+                         Label *failures)
 {
+    Label success;
     // Ensure that the incoming object has one of the magic class pointers, i.e,
     // that it is one of an ObjectProxy, FunctionProxy, or OuterWindowProxy.
     // This is equivalent to obj->is<ProxyObject>().
     masm.branchTestObjClass(Assembler::Equal, object, scratchReg,
-                            CallableProxyClassPtr, success);
+                            CallableProxyClassPtr, &success);
     masm.branchTestObjClass(Assembler::Equal, object, scratchReg,
-                            UncallableProxyClassPtr, success);
+                            UncallableProxyClassPtr, &success);
     masm.branchTestObjClass(Assembler::NotEqual, object, scratchReg,
                             OuterWindowProxyClassPtr, failures);
+    masm.bind(&success);
 }
 
 bool
@@ -1592,9 +1594,7 @@ GetPropertyIC::tryAttachGenericProxy(JSContext *cx, IonScript *ion, HandleObject
 
     masm.setFramePushed(ion->frameSize());
 
-    Label proxySuccess;
-    GenerateProxyClassGuards(masm, object(), scratchReg, &failures, &proxySuccess);
-    masm.bind(&proxySuccess);
+    GenerateProxyClassGuards(masm, object(), scratchReg, &failures);
 
     // Ensure that the incoming object is not a DOM proxy, so that we can get to
     // the specialized stubs
@@ -2179,12 +2179,12 @@ SetPropertyIC::attachGenericProxy(JSContext *cx, IonScript *ion, void *returnAdd
         Register scratch = regSet.takeGeneral();
         masm.push(scratch);
 
-        GenerateProxyClassGuards(masm, object(), scratch, &proxyFailures, &proxySuccess);
+        GenerateProxyClassGuards(masm, object(), scratch, &proxyFailures);
 
         // Remove the DOM proxies. They'll take care of themselves so this stub doesn't
-        // catch too much.
-        masm.branchTestProxyHandlerFamily(Assembler::Equal, object(), scratch,
-                                          GetDOMProxyHandlerFamily(), &proxyFailures);
+        // catch too much. The failure case is actually Equal. Fall through to the failure code.
+        masm.branchTestProxyHandlerFamily(Assembler::NotEqual, object(), scratch,
+                                          GetDOMProxyHandlerFamily(), &proxySuccess);
 
         masm.bind(&proxyFailures);
         masm.pop(scratch);
