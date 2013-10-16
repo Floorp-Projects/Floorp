@@ -6389,12 +6389,6 @@ JS_PreventExtensions(JSContext *cx, JS::HandleObject obj)
     return JSObject::preventExtensions(cx, obj);
 }
 
-JS_PUBLIC_API(void)
-JS::SetAsmJSCacheOps(JSRuntime *rt, const JS::AsmJSCacheOps *ops)
-{
-    rt->asmJSCacheOps = *ops;
-}
-
 char *
 JSAutoByteString::encodeLatin1(ExclusiveContext *cx, JSString *str)
 {

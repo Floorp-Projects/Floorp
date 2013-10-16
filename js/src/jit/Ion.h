@@ -82,13 +82,6 @@ struct IonOptions
     // Default: false
     bool checkRangeAnalysis;
 
-    // Whether to perform expensive graph-consistency DEBUG-only assertions.
-    // It can be useful to disable this to reduce DEBUG-compile time of large
-    // asm.js programs.
-    //
-    // Default: true
-    bool assertGraphConsistency;
-
     // Toggles whether Unreachable Code Elimination is performed.
     //
     // Default: true
@@ -220,7 +213,6 @@ struct IonOptions
         edgeCaseAnalysis(true),
         rangeAnalysis(true),
         checkRangeAnalysis(false),
-        assertGraphConsistency(true),
         uce(true),
         eaa(true),
 #ifdef CHECK_OSIPOINT_REGISTERS
