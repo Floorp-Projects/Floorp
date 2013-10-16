@@ -4,8 +4,6 @@
 
 #include "nsISupports.idl"
 
-interface nsINetworkInterface;
-
 [scriptable, function, uuid(5f821529-1d80-4ab5-a933-4e1b3585b6bc)]
 interface nsINetworkStatsServiceProxyCallback : nsISupports
 {
@@ -16,20 +14,20 @@ interface nsINetworkStatsServiceProxyCallback : nsISupports
   void notify(in boolean aResult, in jsval aMessage);
 };
 
-[scriptable, uuid(facef032-3fd9-4509-a396-83d94c1a11ae)]
+[scriptable, uuid(8fbd115d-f590-474c-96dc-e2b6803ca975)]
 interface nsINetworkStatsServiceProxy : nsISupports
 {
   /*
    * An interface used to record per-app traffic data.
    * @param aAppId app id
-   * @param aNetworkInterface network
+   * @param aConnectionType network connection type (0 for wifi, 1 for mobile)
    * @param aTimeStamp time stamp
    * @param aRxBytes received data amount
    * @param aTxBytes transmitted data amount
    * @param aCallback an optional callback
    */
   void saveAppStats(in unsigned long aAppId,
-                    in nsINetworkInterface aNetwork,
+                    in long aConnectionType,
                     in unsigned long long aTimeStamp,
                     in unsigned long long aRxBytes,
                     in unsigned long long aTxBytes,
