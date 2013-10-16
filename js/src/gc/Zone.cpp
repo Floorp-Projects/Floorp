@@ -127,14 +127,7 @@ Zone::setGCMaxMallocBytes(size_t value)
 void
 Zone::onTooMuchMalloc()
 {
-    if (TriggerZoneGC(this, gcreason::TOO_MUCH_MALLOC)) {
-        /*
-         * Set gcMallocBytes to stop updateMallocCounter() calling this method
-         * again before the counter is reset by GC.
-         */
-        gcMallocBytes = PTRDIFF_MAX;
-    }
-
+    TriggerZoneGC(this, gcreason::TOO_MUCH_MALLOC);
 }
 
 void
