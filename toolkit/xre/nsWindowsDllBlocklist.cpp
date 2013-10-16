@@ -131,6 +131,9 @@ static DllBlockInfo sWindowsDllBlocklist[] = {
   { "opnx.dll", MAKE_VERSION(1, 3, 334, 9) },
   { "prnx.dll", MAKE_VERSION(1, 3, 334, 9) },
 
+  // bug 925459, bitguard crashes
+  { "bitguard.dll", MAKE_VERSION(2, 6, 1694, 24) },
+
   { NULL, 0 }
 };
 
