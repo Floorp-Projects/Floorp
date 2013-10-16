@@ -120,9 +120,11 @@ if ("JS_RECORD_RESULTS" in environment) {
   print("var captured = [];");
   for (var i in captured) {
     var s = "captured[" + i + "] = ";
-    if (captured[i] instanceof Error)
+    if (captured[i] instanceof Error) {
       print(s + captured[i].toSource() + ";");
-    else
-      print(s + "new Uint8Array(" + [...captured[i]].toSource() + ");");
+    } else {
+      data = [ c.charCodeAt(0) for (c of captured[i].clonebuffer.split('')) ];
+      print(s + "serialize(0); captured[" + i + "].clonebuffer = String.fromCharCode(" + data.join(", ") + ");");
+    }
   }
 }
