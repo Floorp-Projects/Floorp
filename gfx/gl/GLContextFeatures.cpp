@@ -250,6 +250,15 @@ static const FeatureInfo sFeatureInfoArr[] = {
         }
     },
     {
+        "sRGB",
+        300, // OpenGL version
+        300, // OpenGL ES version
+        {
+            GLContext::EXT_sRGB,
+            GLContext::Extensions_End
+        }
+    },
+    {
         "standard_derivatives",
         200, // OpenGL version
         300, // OpenGL ES version
@@ -386,6 +395,14 @@ GLContext::InitFeatures()
                 break;
             }
         }
+    }
+
+    // Bug 843668: Work around limitation of the feature system.
+    // For sRGB support under OpenGL to match OpenGL ES spec, check for both
+    // EXT_texture_sRGB and EXT_framebuffer_sRGB is required.
+    if (IsExtensionSupported(EXT_texture_sRGB) &&
+        (IsExtensionSupported(ARB_framebuffer_sRGB) || IsExtensionSupported(EXT_framebuffer_sRGB))) {
+        mAvailableFeatures[GLFeature::sRGB] = true;
     }
 }
 

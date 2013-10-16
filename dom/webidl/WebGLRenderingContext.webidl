@@ -831,6 +831,15 @@ interface WebGLExtensionTextureFilterAnisotropic
 };
 
 [NoInterfaceObject]
+interface WebGLExtensionSRGB
+{
+    const GLenum SRGB_EXT                                  = 0x8C40;
+    const GLenum SRGB_ALPHA_EXT                            = 0x8C42;
+    const GLenum SRGB8_ALPHA8_EXT                          = 0x8C43;
+    const GLenum FRAMEBUFFER_ATTACHMENT_COLOR_ENCODING_EXT = 0x8210;
+};
+
+[NoInterfaceObject]
 interface WebGLExtensionStandardDerivatives {
     const GLenum FRAGMENT_SHADER_DERIVATIVE_HINT_OES = 0x8B8B;
 };
