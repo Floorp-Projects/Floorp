@@ -568,7 +568,7 @@
           this.hidden = true;
 
           this.browser.finder.focusContent();
-          this.browser.finder.removeSelection();
+          this.browser.finder.enableSelection();
           this._findField.blur();
 
           this._cancelTimers();

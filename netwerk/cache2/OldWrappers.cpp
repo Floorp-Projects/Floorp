@@ -1,9 +1,9 @@
 // Stuff to link the old imp to the new api - will go away!
 
+#include "CacheLog.h"
 #include "OldWrappers.h"
 #include "CacheStorage.h"
 #include "CacheStorageService.h"
-#include "CacheLog.h"
 #include "LoadContextInfo.h"
 
 #include "nsIURI.h"

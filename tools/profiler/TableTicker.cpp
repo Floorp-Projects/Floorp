@@ -429,27 +429,6 @@ void StackWalkCallback(void* aPC, void* aSP, void* aClosure)
 
 void TableTicker::doNativeBacktrace(ThreadProfile &aProfile, TickSample* aSample)
 {
-#ifdef XP_WIN
-  /* For the purpose of SPS it is currently too expensive to call NS_StackWalk()
-     on itself on Windows. For each call to NS_StackWalk(), we currently have to
-     use another thread to suspend the calling thread, obtain its context, and
-     walk its stack. We shouldn't do that every time we need a thread to obtain
-     its own backtrace in SPS.*/
-  if (aSample->isSamplingCurrentThread) {
-    void* ptrs[100];
-    USHORT count = RtlCaptureStackBackTrace(0, 100, ptrs, nullptr);
-    aProfile.addTag(ProfileEntry('s', "(root)"));
-    if (count) {
-      USHORT i = count;
-      do {
-        --i;
-        aProfile.addTag(ProfileEntry('l', ptrs[i]));
-      } while (i != 0);
-    }
-    return;
-  }
-#endif
-
 #ifndef XP_MACOSX
   uintptr_t thread = GetThreadHandle(aSample->threadProfile->GetPlatformData());
   MOZ_ASSERT(thread);
@@ -480,6 +459,11 @@ void TableTicker::doNativeBacktrace(ThreadProfile &aProfile, TickSample* aSample
 #else
   void *platformData = nullptr;
 #ifdef XP_WIN
+  if (aSample->isSamplingCurrentThread) {
+    // In this case we want NS_StackWalk to know that it's walking the
+    // current thread's stack, so we pass 0 as the thread handle.
+    thread = 0;
+  }
   platformData = aSample->context;
 #endif // XP_WIN
 

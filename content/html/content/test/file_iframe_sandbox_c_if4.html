@@ -5,7 +5,6 @@
   <title>Test for Bug 341604</title>
   <script type="text/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
-
 </head>
 <script type="text/javascript">
   function ok(result, desc) {
@@ -13,9 +12,10 @@
   }
 
   function doStuff() {
-    // try to open a new window via target="_blank", window.open(), and showModalDialog()
+    // try to open a new window via target="_blank", target="BC341604", window.open(), and showModalDialog()
     // the window we try to open closes itself once it opens
     sendMouseEvent({type:'click'}, 'target_blank');
+    sendMouseEvent({type:'click'}, 'target_BC341604');
 
     var threw = false;
     try {
@@ -23,7 +23,7 @@
     } catch (error) {
       threw = true;
     }
-    
+
     ok(threw, "window.open threw a JS exception and was not allowed");
 
     threw = false;
@@ -32,7 +32,7 @@
     } catch(error) {
       threw = true;
     }
-    
+
     ok(threw, "window.showModalDialog threw a JS exception and was not allowed");
   }
 </script>
@@ -40,5 +40,6 @@
   I am sandboxed but with "allow-scripts allow-same-origin"
 
   <a href="file_iframe_sandbox_open_window_fail.html" target="_blank" id="target_blank">open window</a>
+  <a href="file_iframe_sandbox_open_window_fail.html" target="BC341604" id="target_BC341604">open window</a>
 </body>
 </html>

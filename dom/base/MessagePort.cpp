@@ -139,7 +139,7 @@ PostMessageReadStructuredClone(JSContext* cx,
       JS::Rooted<JSObject*> global(cx, JS::CurrentGlobalOrNull(cx));
       if (global) {
         JS::Rooted<JSObject*> obj(cx, port->WrapObject(cx, global));
-        if (JS_WrapObject(cx, obj.address())) {
+        if (JS_WrapObject(cx, &obj)) {
           port->BindToOwner(scInfo->mPort->GetOwner());
           return obj;
         }

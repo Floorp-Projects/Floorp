@@ -18,7 +18,7 @@ function test() {
 var a = [1, 2, 3];
 var s = '';
 for (var x of a)
-  for (var i=0 of 'y')
+  for (var i of 'y')
     s += '' + foo()
 } test();
 
@@ -26,7 +26,7 @@ ignoreComments = [];
 
 function bug909276() {
 var actual = '';
-for (var next = 0 of ignoreComments) {
+for (var next of ignoreComments) {
   actual += a;
   for (var b in x) {
     actual += b.eval("args = [-0, NaN, -1/0]; this.f(-0, NaN, -1/0);");

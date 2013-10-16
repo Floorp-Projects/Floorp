@@ -8,7 +8,7 @@
 </head>
 <script type="application/javascript">
 function doTest() {
-  window.parent.parent.postMessage("test attempted", "*");
+  window.parent.parent.postMessage({type: "attempted"}, "*");
   sendMouseEvent({type:'click'}, 'anchor');
 }
 </script>

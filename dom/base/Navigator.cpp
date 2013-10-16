@@ -1554,7 +1554,7 @@ Navigator::DoNewResolve(JSContext* aCx, JS::Handle<JSObject*> aObject,
       }
     }
 
-    if (!JS_WrapObject(aCx, domObject.address())) {
+    if (!JS_WrapObject(aCx, &domObject)) {
       return false;
     }
 

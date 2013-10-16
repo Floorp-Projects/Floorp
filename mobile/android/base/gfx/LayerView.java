@@ -21,12 +21,14 @@ import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.PixelFormat;
+import android.graphics.Point;
 import android.graphics.PointF;
 import android.graphics.Rect;
 import android.graphics.SurfaceTexture;
 import android.os.Build;
 import android.os.Handler;
 import android.util.AttributeSet;
+import android.util.DisplayMetrics;
 import android.util.Log;
 import android.view.KeyEvent;
 import android.view.MotionEvent;
@@ -125,6 +127,18 @@ public class LayerView extends FrameLayout {
         GeckoAccessibility.setDelegate(this);
     }
 
+    private Point getEventRadius(MotionEvent event) {
+        if (Build.VERSION.SDK_INT >= 9) {
+            return new Point((int)event.getToolMajor()/2,
+                             (int)event.getToolMinor()/2);
+        }
+
+        float size = event.getSize();
+        DisplayMetrics displaymetrics = getContext().getResources().getDisplayMetrics();
+        size = size * Math.min(displaymetrics.heightPixels, displaymetrics.widthPixels);
+        return new Point((int)size, (int)size);
+    }
+
     public void geckoConnected() {
         // See if we want to force 16-bit colour before doing anything
         PrefsHelper.getPref("gfx.android.rgb16.force", new PrefsHelper.PrefHandlerBase() {
@@ -157,8 +171,10 @@ public class LayerView extends FrameLayout {
                 }
 
                 if (mInitialTouchPoint != null && action == MotionEvent.ACTION_MOVE) {
+                    Point p = getEventRadius(event);
+
                     if (PointUtils.subtract(point, mInitialTouchPoint).length() <
-                        PanZoomController.PAN_THRESHOLD) {
+                        Math.max(PanZoomController.CLICK_THRESHOLD, Math.min(Math.min(p.x, p.y), PanZoomController.PAN_THRESHOLD))) {
                         // Don't send the touchmove event if if the users finger hasn't moved far.
                         // Necessary for Google Maps to work correctly. See bug 771099.
                         return true;
