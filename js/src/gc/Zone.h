@@ -272,8 +272,10 @@ struct Zone : public JS::shadow::Zone,
          * Note: this code may be run from worker threads.  We
          * tolerate any thread races when updating gcMallocBytes.
          */
-        gcMallocBytes -= ptrdiff_t(nbytes);
-        if (JS_UNLIKELY(isTooMuchMalloc()))
+        ptrdiff_t oldCount = gcMallocBytes;
+        ptrdiff_t newCount = oldCount - ptrdiff_t(nbytes);
+        gcMallocBytes = newCount;
+        if (JS_UNLIKELY(newCount <= 0 && oldCount > 0))
             onTooMuchMalloc();
     }
 
