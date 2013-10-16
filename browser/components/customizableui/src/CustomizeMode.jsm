@@ -795,7 +795,9 @@ CustomizeMode.prototype = {
     // the target.
     let dragOverItem, dragValue;
     if (targetNode == targetArea.customizationTarget) {
-      dragOverItem = targetNode.lastChild;
+      // We'll assume if the user is dragging directly over the target, that
+      // they're attempting to append a child to that target.
+      dragOverItem = targetNode.lastChild || targetNode;
       dragValue = "after";
     } else {
       let position = Array.indexOf(targetParent.children, targetNode);
@@ -835,7 +837,9 @@ CustomizeMode.prototype = {
     }
 
     if (dragOverItem != this._dragOverItem || dragValue != dragOverItem.getAttribute("dragover")) {
-      this._setDragActive(dragOverItem, dragValue, draggedItemId);
+      if (dragOverItem != targetArea.customizationTarget) {
+        this._setDragActive(dragOverItem, dragValue, draggedItemId);
+      }
       this._dragOverItem = dragOverItem;
     }
 

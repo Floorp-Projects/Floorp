@@ -31,7 +31,7 @@ let gTests = [
       let btn = document.getElementById(kButtonId);
       btn.setAttribute("removable", "false");
       gLazyArea.customizationTarget = gLazyArea;
-      CustomizableUI.registerToolbar(gLazyArea);
+      CustomizableUI.registerToolbarNode(gLazyArea, []);
       assertAreaPlacements(kLazyAreaId, [], "Placements should no longer include widget.");
       is(btn.parentNode.id, gNavBar.customizationTarget.id,
          "Button shouldn't actually have moved as it's not removable");
