@@ -1,0 +1,55 @@
+        <service
+            android:exported="true"
+            android:name="org.mozilla.gecko.fxa.authenticator.FxAccountAuthenticatorService" >
+            <intent-filter >
+                <action android:name="android.accounts.AccountAuthenticator" />
+            </intent-filter>
+
+            <meta-data
+                android:name="android.accounts.AccountAuthenticator"
+                android:resource="@xml/fxaccount_authenticator" />
+        </service>
+        <service
+            android:exported="false"
+            android:name="org.mozilla.gecko.fxa.sync.FxAccountBookmarksSyncService" >
+            <intent-filter >
+                <action android:name="android.content.SyncAdapter" />
+            </intent-filter>
+
+            <meta-data
+                android:name="android.content.SyncAdapter"
+                android:resource="@xml/fxaccount_bookmarks_syncadapter" />
+        </service>
+        <service
+            android:exported="false"
+            android:name="org.mozilla.gecko.fxa.sync.FxAccountHistorySyncService" >
+            <intent-filter >
+                <action android:name="android.content.SyncAdapter" />
+            </intent-filter>
+
+            <meta-data
+                android:name="android.content.SyncAdapter"
+                android:resource="@xml/fxaccount_history_syncadapter" />
+        </service>
+        <service
+            android:exported="false"
+            android:name="org.mozilla.gecko.fxa.sync.FxAccountPasswordsSyncService" >
+            <intent-filter >
+                <action android:name="android.content.SyncAdapter" />
+            </intent-filter>
+
+            <meta-data
+                android:name="android.content.SyncAdapter"
+                android:resource="@xml/fxaccount_passwords_syncadapter" />
+        </service>
+        <service
+            android:exported="false"
+            android:name="org.mozilla.gecko.fxa.sync.FxAccountTabsSyncService" >
+            <intent-filter >
+                <action android:name="android.content.SyncAdapter" />
+            </intent-filter>
+
+            <meta-data
+                android:name="android.content.SyncAdapter"
+                android:resource="@xml/fxaccount_tabs_syncadapter" />
+        </service>
