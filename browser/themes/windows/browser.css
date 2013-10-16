@@ -117,6 +117,14 @@
     background: linear-gradient(to top, @toolbarShadowColor@ 2px, transparent 2px),
                 linear-gradient(rgba(50%,50%,50%,0), InactiveCaption 85%);
   }
+
+  #main-window[tabsintitlebar][sizemode="normal"] #titlebar-content:-moz-lwtheme {
+    /* Render a window top border: */
+    background-image: linear-gradient(to bottom,
+          ThreeDLightShadow 0, ThreeDLightShadow 1px,
+          ThreeDHighlight 1px, ThreeDHighlight 2px,
+          ActiveBorder 2px, ActiveBorder 4px, transparent 4px);
+  }
 }
 
 #nav-bar {
