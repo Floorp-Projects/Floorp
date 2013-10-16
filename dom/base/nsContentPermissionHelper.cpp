@@ -8,6 +8,7 @@
 #include "nsIDOMElement.h"
 #include "nsIPrincipal.h"
 #include "mozilla/dom/Element.h"
+#include "mozilla/dom/TabParent.h"
 #include "mozilla/unused.h"
 #include "nsComponentManagerUtils.h"
 
@@ -105,6 +106,12 @@ nsContentPermissionRequestProxy::Cancel()
     return NS_ERROR_FAILURE;
   }
 
+  // Don't send out the delete message when the managing protocol (PBrowser) is
+  // being destroyed and PContentPermissionRequest will soon be.
+  if (mParent->IsBeingDestroyed()) {
+    return NS_ERROR_FAILURE;
+  }
+
   unused << ContentPermissionRequestParent::Send__delete__(mParent, false);
   mParent = nullptr;
   return NS_OK;
@@ -116,6 +123,13 @@ nsContentPermissionRequestProxy::Allow()
   if (mParent == nullptr) {
     return NS_ERROR_FAILURE;
   }
+
+  // Don't send out the delete message when the managing protocol (PBrowser) is
+  // being destroyed and PContentPermissionRequest will soon be.
+  if (mParent->IsBeingDestroyed()) {
+    return NS_ERROR_FAILURE;
+  }
+
   unused << ContentPermissionRequestParent::Send__delete__(mParent, true);
   mParent = nullptr;
   return NS_OK;
@@ -159,6 +173,15 @@ ContentPermissionRequestParent::ActorDestroy(ActorDestroyReason why)
   if (mProxy) {
     mProxy->OnParentDestroyed();
   }
+}
+
+bool
+ContentPermissionRequestParent::IsBeingDestroyed()
+{
+  // When TabParent::Destroy() is called, we are being destroyed. It's unsafe
+  // to send out any message now.
+  TabParent* tabParent = static_cast<TabParent*>(Manager());
+  return tabParent->IsDestroyed();
 }
 
 } // namespace dom
