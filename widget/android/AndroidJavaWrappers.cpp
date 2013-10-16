@@ -872,9 +872,9 @@ AndroidGeckoEvent::MakeMouseEvent(nsIWidget* widget)
     // through the AsyncPanZoomController), and the Points() array has points
     // in CSS pixels, which we need to convert to LayoutDevice pixels.
     const nsIntPoint& offset = widget->WidgetToScreenOffset();
-    CSSToLayoutDeviceScale scale = widget->GetDefaultScale();
-    event.refPoint = LayoutDeviceIntPoint((Points()[0].x * scale.scale) - offset.x,
-                                          (Points()[0].y * scale.scale) - offset.y);
+    float scale = (float)widget->GetDefaultScale();
+    event.refPoint = LayoutDeviceIntPoint((Points()[0].x * scale) - offset.x,
+                                          (Points()[0].y * scale) - offset.y);
 
     return event;
 }
