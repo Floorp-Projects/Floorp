@@ -2,19 +2,21 @@
 <html>
 <head>
 <style type="text/css">
-#a {
+#separator, #parent {
  height: 20px;
  background-color: green;
- margin-bottom: 30px;
 }
-#b {
- background-color: blue;
- height: 20px;
+#spacer {
+ height: 30px;
 }
 </style>
 </head>
 <body>
-<div id="a"></div>
-<div id="b"></div>
+<div id="separator"></div>
+<div id="spacer"></div>
+<div id="parent">
+ <div id="first-child"></div>
+ <div id="last-child"></div>
+</div>
 </body>
 </html>

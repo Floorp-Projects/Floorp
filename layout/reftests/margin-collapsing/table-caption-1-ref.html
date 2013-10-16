@@ -2,24 +2,30 @@
 <html>
 <head>
 <style type="text/css">
-.separator {
+#block1, #block2 {
  height: 20px;
  background-color: green;
- margin-bottom: 30px;
+}
+#table {
+ width: 100px;
+ margin-right: auto;
 }
 #caption {
- width: 100px;
  height: 20px;
  background-color: blue;
- margin-bottom: 30px;
+}
+.spacer {
+ height: 30px;
 }
 </style>
 </head>
 <body>
-<div class="separator"></div>
-<div>
+<div id="block1"></div>
+<div class="spacer"></div>
+<div id="table">
  <div id="caption"></div>
 </div>
-<div class="separator"></div>
+<div class="spacer"></div>
+<div id="block2"></div>
 </body>
 </html>
