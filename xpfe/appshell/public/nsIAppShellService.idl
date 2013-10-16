@@ -17,7 +17,7 @@ interface nsIAppShell;
 #include "js/TypeDecls.h"
 %}
 
-[scriptable, uuid(5c19ab54-67bf-46d0-ac5b-21abd9050c3b)]
+[scriptable, uuid(3927a495-575a-4a12-b9ab-6b948f76ec1f)]
 interface nsIAppShellService : nsISupports
 {
   /**
@@ -44,7 +44,13 @@ interface nsIAppShellService : nsISupports
                                     in long aInitialWidth,
                                     in long aInitialHeight);
 
-  nsIWebNavigation createWindowlessBrowser();
+  /**
+   * This is the constructor for creating an invisible DocShell.
+   * It is used to simulate DOM windows without an actual physical
+   * representation.
+   * @param aIsChrome Set true if you want to use it for chrome content.
+   */
+  nsIWebNavigation createWindowlessBrowser([optional] in bool aIsChrome);
 
   [noscript]
   void createHiddenWindow();
