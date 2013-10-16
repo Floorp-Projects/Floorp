@@ -2453,13 +2453,14 @@ class CastableObjectUnwrapper():
                 CGGeneric(self.substitution["codeOnFailure"])).define()
 
     def __str__(self):
+        codeOnFailure = self.substitution["codeOnFailure"] % {'securityError': 'rv == NS_ERROR_XPC_SECURITY_MANAGER_VETO'}
         return string.Template(
 """{
   nsresult rv = UnwrapObject<${protoID}, ${type}>(cx, ${source}, ${target});
   if (NS_FAILED(rv)) {
 ${codeOnFailure}
   }
-}""").substitute(self.substitution)
+}""").substitute(self.substitution, codeOnFailure=codeOnFailure)
 
 class FailureFatalCastableObjectUnwrapper(CastableObjectUnwrapper):
     """
@@ -5453,7 +5454,8 @@ class CGAbstractBindingMethod(CGAbstractStaticMethod):
                 else:
                     ensureCondition = "!args.thisv().isObject()"
                     getThisObj = "&args.thisv().toObject()"
-                ensureThisObj = CGIfWrapper(CGGeneric(self.unwrapFailureCode),
+                unwrapFailureCode = self.unwrapFailureCode % {'securityError': 'false'}
+                ensureThisObj = CGIfWrapper(CGGeneric(unwrapFailureCode),
                                             ensureCondition)
             else:
                 ensureThisObj = None
@@ -5520,7 +5522,7 @@ class CGGenericMethod(CGAbstractBindingMethod):
         args = [Argument('JSContext*', 'cx'), Argument('unsigned', 'argc'),
                 Argument('JS::Value*', 'vp')]
         unwrapFailureCode = (
-            'return ThrowInvalidThis(cx, args, MSG_METHOD_THIS_DOES_NOT_IMPLEMENT_INTERFACE, \"%s\");' %
+            'return ThrowInvalidThis(cx, args, GetInvalidThisErrorForMethod(%%(securityError)s), "%s");' %
             descriptor.interface.identifier.name)
         CGAbstractBindingMethod.__init__(self, descriptor, 'genericMethod',
                                          args,
@@ -5720,7 +5722,7 @@ class CGGenericGetter(CGAbstractBindingMethod):
         else:
             name = "genericGetter"
             unwrapFailureCode = (
-                'return ThrowInvalidThis(cx, args, MSG_GETTER_THIS_DOES_NOT_IMPLEMENT_INTERFACE, "%s");' %
+                'return ThrowInvalidThis(cx, args, GetInvalidThisErrorForGetter(%%(securityError)s), "%s");' %
                 descriptor.interface.identifier.name)
         CGAbstractBindingMethod.__init__(self, descriptor, name, args,
                                          unwrapFailureCode)
@@ -5800,7 +5802,7 @@ class CGGenericSetter(CGAbstractBindingMethod):
         else:
             name = "genericSetter"
             unwrapFailureCode = (
-                'return ThrowInvalidThis(cx, args, MSG_SETTER_THIS_DOES_NOT_IMPLEMENT_INTERFACE, "%s");' %
+                'return ThrowInvalidThis(cx, args, GetInvalidThisErrorForSetter(%%(securityError)s), "%s");' %
                 descriptor.interface.identifier.name)
 
         CGAbstractBindingMethod.__init__(self, descriptor, name, args,
