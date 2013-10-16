@@ -295,7 +295,7 @@ let CustomizableUIInternal = {
     this.endBatchUpdate(true);
   },
 
-  registerToolbar: function(aToolbar, aIsOverlayed) {
+  registerToolbarNode: function(aToolbar, aExistingChildren) {
     let area = aToolbar.id;
     if (gBuildAreas.has(area) && gBuildAreas.get(area).has(aToolbar)) {
       return;
@@ -320,10 +320,10 @@ let CustomizableUIInternal = {
       placements = gPlacements.get(area);
     }
 
-    // If the number of children of this toolbar exceeds the length of the
-    // placements, then an add-on probably overlayed the toolbar, so we mark
-    // it dirty.
-    if (aIsOverlayed) {
+    // Check that the current children and the current placements match. If
+    // not, mark it as dirty:
+    if (aExistingChildren.length != placements.length ||
+        aExistingChildren.every((id, i) => id == placements[i])) {
       gDirtyAreaCache.add(area);
     }
 
@@ -2001,9 +2001,8 @@ this.CustomizableUI = {
   registerArea: function(aName, aProperties) {
     CustomizableUIInternal.registerArea(aName, aProperties);
   },
-  //XXXunf registerToolbarNode / registerToolbarInstance ?
-  registerToolbar: function(aToolbar, aIsOverlayed) {
-    CustomizableUIInternal.registerToolbar(aToolbar, aIsOverlayed);
+  registerToolbarNode: function(aToolbar, aExistingChildren) {
+    CustomizableUIInternal.registerToolbarNode(aToolbar, aExistingChildren);
   },
   registerMenuPanel: function(aPanel) {
     CustomizableUIInternal.registerMenuPanel(aPanel);
