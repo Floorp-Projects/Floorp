@@ -315,7 +315,7 @@ public class BrowserSearch extends HomeFragment
 
     @Override
     protected void load() {
-        getLoaderManager().initLoader(LOADER_ID_SEARCH, null, mCursorLoaderCallbacks);
+        SearchLoader.init(getLoaderManager(), LOADER_ID_SEARCH, mCursorLoaderCallbacks, mSearchTerm, false);
     }
 
     private void handleAutocomplete(String searchTerm, Cursor c) {
