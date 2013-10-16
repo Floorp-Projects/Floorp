@@ -2225,12 +2225,6 @@ RasterImage::RequestDecodeCore(RequestDecodeType aDecodeType)
   if (mDecoded)
     return NS_OK;
 
-  // If we don't have any bytes to flush to the decoder, we can't do anything.
-  // mBytesDecoded can be bigger than mSourceData.Length() if we're not storing
-  // the source data.
-  if (mBytesDecoded > mSourceData.Length())
-    return NS_OK;
-
   // mFinishing protects against the case when we enter RequestDecode from
   // ShutdownDecoder -- in that case, we're done with the decode, we're just
   // not quite ready to admit it.  See bug 744309.
@@ -2267,6 +2261,12 @@ RasterImage::RequestDecodeCore(RequestDecodeType aDecodeType)
   }
 
   MutexAutoLock lock(mDecodingMutex);
+
+  // If we don't have any bytes to flush to the decoder, we can't do anything.
+  // mBytesDecoded can be bigger than mSourceData.Length() if we're not storing
+  // the source data.
+  if (mBytesDecoded > mSourceData.Length())
+    return NS_OK;
 
   // If the image is waiting for decode work to be notified, go ahead and do that.
   if (mDecodeRequest &&
