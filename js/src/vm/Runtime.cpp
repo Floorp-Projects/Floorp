@@ -724,10 +724,8 @@ void
 JSRuntime::updateMallocCounter(JS::Zone *zone, size_t nbytes)
 {
     /* We tolerate any thread races when updating gcMallocBytes. */
-    ptrdiff_t oldCount = gcMallocBytes;
-    ptrdiff_t newCount = oldCount - ptrdiff_t(nbytes);
-    gcMallocBytes = newCount;
-    if (JS_UNLIKELY(newCount <= 0 && oldCount > 0))
+    gcMallocBytes -= ptrdiff_t(nbytes);
+    if (JS_UNLIKELY(gcMallocBytes <= 0))
         onTooMuchMalloc();
     else if (zone)
         zone->updateMallocCounter(nbytes);
@@ -736,8 +734,16 @@ JSRuntime::updateMallocCounter(JS::Zone *zone, size_t nbytes)
 JS_FRIEND_API(void)
 JSRuntime::onTooMuchMalloc()
 {
-    if (CurrentThreadCanAccessRuntime(this))
-        TriggerGC(this, JS::gcreason::TOO_MUCH_MALLOC);
+    if (!CurrentThreadCanAccessRuntime(this))
+        return;
+
+    if (TriggerGC(this, JS::gcreason::TOO_MUCH_MALLOC)) {
+        /*
+         * Set gcMallocBytes to stop updateMallocCounter() calling this method
+         * again before the counter is reset by GC.
+         */
+        gcMallocBytes = PTRDIFF_MAX;
+    }
 }
 
 JS_FRIEND_API(void *)
