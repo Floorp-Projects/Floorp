@@ -147,8 +147,6 @@ private:
   int mNetworkSelectionMode;
   bool mReceiveVgsFlag;
   bool mDialingRequestProcessed;
-  bool mIsHandsfree;
-  bool mNeedsUpdatingSdpRecords;
   nsString mDeviceAddress;
   nsString mMsisdn;
   nsString mOperatorName;
