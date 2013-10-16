@@ -27,23 +27,27 @@ function createDummyXULButton(id, label) {
   return btn;
 }
 
+let gAddedToolbars = new Set();
+
 function createToolbarWithPlacements(id, placements) {
+  gAddedToolbars.add(id);
   let tb = document.createElementNS(kNSXUL, "toolbar");
   tb.id = id;
   tb.setAttribute("customizable", "true");
-  document.getElementById("customToolbars").appendChild(tb);
   CustomizableUI.registerArea(id, {
     type: CustomizableUI.TYPE_TOOLBAR,
     defaultPlacements: placements
   });
+  gNavToolbox.appendChild(tb);
 }
 
 function removeCustomToolbars() {
-  let customToolbarSet = document.getElementById("customToolbars");
-  while (customToolbarSet.lastChild) {
-    CustomizableUI.unregisterArea(customToolbarSet.lastChild.id);
-    customToolbarSet.lastChild.remove();
+  CustomizableUI.reset();
+  for (let toolbarId of gAddedToolbars) {
+    CustomizableUI.unregisterArea(toolbarId);
+    document.getElementById(toolbarId).remove();
   }
+  gAddedToolbars.clear();
 }
 
 function resetCustomization() {
@@ -101,6 +105,9 @@ function simulateItemDrag(toDrag, target) {
 }
 
 function endCustomizing() {
+  if (document.documentElement.getAttribute("customizing") != "true") {
+    return true;
+  }
   let deferredEndCustomizing = Promise.defer();
   function onCustomizationEnds() {
     window.gNavToolbox.removeEventListener("aftercustomization", onCustomizationEnds);
