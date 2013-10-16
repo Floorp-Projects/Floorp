@@ -197,3 +197,16 @@ function referencesVia(from, edge, to) {
         print(e);
     return false;
 }
+
+// Note that AsmJS ArrayBuffers have a minimum size, currently 4096 bytes. If a
+// smaller size is given, a regular ArrayBuffer will be returned instead.
+function AsmJSArrayBuffer(size) {
+    var ab = new ArrayBuffer(size);
+    (new Function('global', 'foreign', 'buffer', '' +
+'        "use asm";' +
+'        var i32 = new global.Int32Array(buffer);' +
+'        function g() {};' +
+'        return g;' +
+''))(this,null,ab);
+    return ab;
+}
