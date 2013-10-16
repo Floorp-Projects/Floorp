@@ -16,7 +16,6 @@ if (typeof Components != "undefined") {
 #ifdef XP_WIN
   importScripts(
     "resource://gre/modules/workers/require.js",
-    "resource://gre/modules/osfile/osfile_win_allthreads.jsm",
     "resource://gre/modules/osfile/osfile_win_back.jsm",
     "resource://gre/modules/osfile/osfile_shared_front.jsm",
     "resource://gre/modules/osfile/osfile_win_front.jsm"
@@ -24,7 +23,6 @@ if (typeof Components != "undefined") {
 #else
   importScripts(
     "resource://gre/modules/workers/require.js",
-    "resource://gre/modules/osfile/osfile_unix_allthreads.jsm",
     "resource://gre/modules/osfile/osfile_unix_back.jsm",
     "resource://gre/modules/osfile/osfile_shared_front.jsm",
     "resource://gre/modules/osfile/osfile_unix_front.jsm"
