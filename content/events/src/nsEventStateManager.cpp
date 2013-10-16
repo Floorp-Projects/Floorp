@@ -494,7 +494,7 @@ nsMouseWheelTransaction::OnEvent(WidgetEvent* aEvent)
           OutOfTime(sMouseMoved, GetIgnoreMoveDelayTime())) {
         // Terminate the current mousewheel transaction if the mouse moved more
         // than ignoremovedelay milliseconds ago
-        MayEndTransaction();
+        EndTransaction();
       }
       return;
     case NS_MOUSE_MOVE:
@@ -505,7 +505,7 @@ nsMouseWheelTransaction::OnEvent(WidgetEvent* aEvent)
         nsIntPoint pt = GetScreenPoint(static_cast<WidgetGUIEvent*>(aEvent));
         nsIntRect r = sTargetFrame->GetScreenRectExternal();
         if (!r.Contains(pt)) {
-          MayEndTransaction();
+          EndTransaction();
           return;
         }
 
