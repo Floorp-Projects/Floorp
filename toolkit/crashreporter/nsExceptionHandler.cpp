@@ -8,6 +8,7 @@
 #include "mozilla/dom/CrashReporterChild.h"
 #include "mozilla/Services.h"
 #include "nsIObserverService.h"
+#include "mozilla/unused.h"
 #include "mozilla/Util.h"
 
 #include "nsThreadUtils.h"
@@ -453,8 +454,7 @@ bool MinidumpCallback(
                       O_WRONLY | O_CREAT | O_TRUNC,
                       0600);
     if (fd != -1) {
-      ssize_t ignored = sys_write(fd, minidumpPath, my_strlen(minidumpPath));
-      (void)ignored;
+      unused << sys_write(fd, minidumpPath, my_strlen(minidumpPath));
       sys_close(fd);
     }
 #endif
@@ -507,8 +507,7 @@ bool MinidumpCallback(
                       O_WRONLY | O_CREAT | O_TRUNC,
                       0600);
     if (fd != -1) {
-      ssize_t ignored = sys_write(fd, crashTimeString, crashTimeStringLen);
-      (void)ignored;
+      unused << sys_write(fd, crashTimeString, crashTimeStringLen);
       sys_close(fd);
     }
 #endif
@@ -676,27 +675,27 @@ bool MinidumpCallback(
     // need to clobber this, as libcurl might load NSS,
     // and we want it to load the system NSS.
     unsetenv("LD_LIBRARY_PATH");
-    (void) execl(crashReporterPath,
-                 crashReporterPath, minidumpPath, (char*)0);
+    unused << execl(crashReporterPath,
+                    crashReporterPath, minidumpPath, (char*)0);
 #else
     // Invoke the reportCrash activity using am
     if (androidUserSerial) {
-      (void) execlp("/system/bin/am",
-                    "/system/bin/am",
-                    "start",
-                    "--user", androidUserSerial,
-                    "-a", "org.mozilla.gecko.reportCrash",
-                    "-n", crashReporterPath,
-                    "--es", "minidumpPath", minidumpPath,
-                    (char*)0);
+      unused << execlp("/system/bin/am",
+                       "/system/bin/am",
+                       "start",
+                       "--user", androidUserSerial,
+                       "-a", "org.mozilla.gecko.reportCrash",
+                       "-n", crashReporterPath,
+                       "--es", "minidumpPath", minidumpPath,
+                       (char*)0);
     } else {
-      (void) execlp("/system/bin/am",
-                    "/system/bin/am",
-                    "start",
-                    "-a", "org.mozilla.gecko.reportCrash",
-                    "-n", crashReporterPath,
-                    "--es", "minidumpPath", minidumpPath,
-                    (char*)0);
+      unused << execlp("/system/bin/am",
+                       "/system/bin/am",
+                       "start",
+                       "-a", "org.mozilla.gecko.reportCrash",
+                       "-n", crashReporterPath,
+                       "--es", "minidumpPath", minidumpPath,
+                       (char*)0);
     }
 #endif
     _exit(1);
