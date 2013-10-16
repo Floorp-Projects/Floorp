@@ -823,10 +823,8 @@ let CustomizableUIInternal = {
     let nodeType = aId.match(/spring|spacer|separator/)[0];
     // If the ID we were passed isn't a generated one, generate one now:
     if (nodeType == aId) {
-      // Due to timers resolution Date.now() can be the same for
-      // elements created in small timeframes.  So ids are
-      // differentiated through a unique count suffix.
-      return kSpecialWidgetPfx + aId + Date.now() + (++gNewElementCount);
+      // Ids are differentiated through a unique count suffix.
+      return kSpecialWidgetPfx + aId + (++gNewElementCount);
     }
     return aId;
   },
@@ -1401,6 +1399,7 @@ let CustomizableUIInternal = {
 
     gSeenWidgets = new Set(gSavedState.seen || []);
     gDirtyAreaCache = new Set(gSavedState.dirtyAreaCache || []);
+    gNewElementCount = gSavedState.newElementCount || 0;
   },
 
   restoreStateForArea: function(aArea, aLegacyState) {
@@ -1463,7 +1462,8 @@ let CustomizableUIInternal = {
     }
     let state = { placements: gPlacements,
                   seen: gSeenWidgets,
-                  dirtyAreaCache: gDirtyAreaCache };
+                  dirtyAreaCache: gDirtyAreaCache,
+                  newElementCount: gNewElementCount };
 
     LOG("Saving state.");
     let serialized = JSON.stringify(state, this.serializerHelper);
