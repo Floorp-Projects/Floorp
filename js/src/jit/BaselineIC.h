@@ -1796,76 +1796,58 @@ class ICNewArray_Fallback : public ICFallbackStub
 {
     friend class ICStubSpace;
 
-    HeapPtrObject templateObject_;
-
-    ICNewArray_Fallback(IonCode *stubCode, JSObject *templateObject)
-      : ICFallbackStub(ICStub::NewArray_Fallback, stubCode), templateObject_(templateObject)
+    ICNewArray_Fallback(IonCode *stubCode)
+      : ICFallbackStub(ICStub::NewArray_Fallback, stubCode)
     {}
 
   public:
-    static inline ICNewArray_Fallback *New(ICStubSpace *space, IonCode *code,
-                                           JSObject *templateObject) {
+    static inline ICNewArray_Fallback *New(ICStubSpace *space, IonCode *code) {
         if (!code)
             return nullptr;
-        return space->allocate<ICNewArray_Fallback>(code, templateObject);
+        return space->allocate<ICNewArray_Fallback>(code);
     }
 
     class Compiler : public ICStubCompiler {
-        RootedObject templateObject;
         bool generateStubCode(MacroAssembler &masm);
 
       public:
-        Compiler(JSContext *cx, JSObject *templateObject)
-          : ICStubCompiler(cx, ICStub::NewArray_Fallback),
-            templateObject(cx, templateObject)
+        Compiler(JSContext *cx)
+          : ICStubCompiler(cx, ICStub::NewArray_Fallback)
         {}
 
         ICStub *getStub(ICStubSpace *space) {
-            return ICNewArray_Fallback::New(space, getStubCode(), templateObject);
+            return ICNewArray_Fallback::New(space, getStubCode());
         }
     };
-
-    HeapPtrObject &templateObject() {
-        return templateObject_;
-    }
 };
 
 class ICNewObject_Fallback : public ICFallbackStub
 {
     friend class ICStubSpace;
 
-    HeapPtrObject templateObject_;
-
-    ICNewObject_Fallback(IonCode *stubCode, JSObject *templateObject)
-      : ICFallbackStub(ICStub::NewObject_Fallback, stubCode), templateObject_(templateObject)
+    ICNewObject_Fallback(IonCode *stubCode)
+      : ICFallbackStub(ICStub::NewObject_Fallback, stubCode)
     {}
 
   public:
-    static inline ICNewObject_Fallback *New(ICStubSpace *space, IonCode *code,
-                                            JSObject *templateObject) {
+    static inline ICNewObject_Fallback *New(ICStubSpace *space, IonCode *code) {
         if (!code)
             return nullptr;
-        return space->allocate<ICNewObject_Fallback>(code, templateObject);
+        return space->allocate<ICNewObject_Fallback>(code);
     }
 
     class Compiler : public ICStubCompiler {
-        RootedObject templateObject;
         bool generateStubCode(MacroAssembler &masm);
 
       public:
-        Compiler(JSContext *cx, JSObject *templateObject)
-          : ICStubCompiler(cx, ICStub::NewObject_Fallback),
-            templateObject(cx, templateObject)
+        Compiler(JSContext *cx)
+          : ICStubCompiler(cx, ICStub::NewObject_Fallback)
         {}
 
         ICStub *getStub(ICStubSpace *space) {
-            return ICNewObject_Fallback::New(space, getStubCode(), templateObject);
+            return ICNewObject_Fallback::New(space, getStubCode());
         }
     };
-
-    HeapPtrObject &templateObject() {
-        return templateObject_;
-    }
 };
 
 // Compare
@@ -5222,30 +5204,23 @@ class ICCall_Scripted : public ICMonitoredStub
 
   protected:
     HeapPtrScript calleeScript_;
-    HeapPtrObject templateObject_;
     uint32_t pcOffset_;
 
-    ICCall_Scripted(IonCode *stubCode, ICStub *firstMonitorStub,
-                    HandleScript calleeScript, HandleObject templateObject,
+    ICCall_Scripted(IonCode *stubCode, ICStub *firstMonitorStub, HandleScript calleeScript,
                     uint32_t pcOffset);
 
   public:
     static inline ICCall_Scripted *New(
-            ICStubSpace *space, IonCode *code, ICStub *firstMonitorStub,
-            HandleScript calleeScript, HandleObject templateObject,
+            ICStubSpace *space, IonCode *code, ICStub *firstMonitorStub, HandleScript calleeScript,
             uint32_t pcOffset)
     {
         if (!code)
             return nullptr;
-        return space->allocate<ICCall_Scripted>(code, firstMonitorStub,
-                                                calleeScript, templateObject, pcOffset);
+        return space->allocate<ICCall_Scripted>(code, firstMonitorStub, calleeScript, pcOffset);
     }
 
     HeapPtrScript &calleeScript() {
         return calleeScript_;
-    }
-    HeapPtrObject &templateObject() {
-        return templateObject_;
     }
 
     static size_t offsetOfCalleeScript() {
@@ -5288,7 +5263,6 @@ class ICCallScriptedCompiler : public ICCallStubCompiler {
     ICStub *firstMonitorStub_;
     bool isConstructing_;
     RootedScript calleeScript_;
-    RootedObject templateObject_;
     uint32_t pcOffset_;
     bool generateStubCode(MacroAssembler &masm);
 
@@ -5297,14 +5271,12 @@ class ICCallScriptedCompiler : public ICCallStubCompiler {
     }
 
   public:
-    ICCallScriptedCompiler(JSContext *cx, ICStub *firstMonitorStub,
-                           HandleScript calleeScript, HandleObject templateObject,
-                           bool isConstructing, uint32_t pcOffset)
+    ICCallScriptedCompiler(JSContext *cx, ICStub *firstMonitorStub, HandleScript calleeScript,
+                            bool isConstructing, uint32_t pcOffset)
       : ICCallStubCompiler(cx, ICStub::Call_Scripted),
         firstMonitorStub_(firstMonitorStub),
         isConstructing_(isConstructing),
         calleeScript_(cx, calleeScript),
-        templateObject_(cx, templateObject),
         pcOffset_(pcOffset)
     { }
 
@@ -5314,14 +5286,12 @@ class ICCallScriptedCompiler : public ICCallStubCompiler {
         firstMonitorStub_(firstMonitorStub),
         isConstructing_(isConstructing),
         calleeScript_(cx, nullptr),
-        templateObject_(cx, nullptr),
         pcOffset_(pcOffset)
     { }
 
     ICStub *getStub(ICStubSpace *space) {
         if (calleeScript_) {
-            return ICCall_Scripted::New(space, getStubCode(), firstMonitorStub_,
-                                        calleeScript_, templateObject_,
+            return ICCall_Scripted::New(space, getStubCode(), firstMonitorStub_, calleeScript_,
                                         pcOffset_);
         }
         return ICCall_AnyScripted::New(space, getStubCode(), firstMonitorStub_, pcOffset_);
@@ -5334,29 +5304,22 @@ class ICCall_Native : public ICMonitoredStub
 
   protected:
     HeapPtrFunction callee_;
-    HeapPtrObject templateObject_;
     uint32_t pcOffset_;
 
-    ICCall_Native(IonCode *stubCode, ICStub *firstMonitorStub,
-                  HandleFunction callee, HandleObject templateObject,
+    ICCall_Native(IonCode *stubCode, ICStub *firstMonitorStub, HandleFunction callee,
                   uint32_t pcOffset);
 
   public:
     static inline ICCall_Native *New(ICStubSpace *space, IonCode *code, ICStub *firstMonitorStub,
-                                     HandleFunction callee, HandleObject templateObject,
-                                     uint32_t pcOffset)
+                                     HandleFunction callee, uint32_t pcOffset)
     {
         if (!code)
             return nullptr;
-        return space->allocate<ICCall_Native>(code, firstMonitorStub,
-                                              callee, templateObject, pcOffset);
+        return space->allocate<ICCall_Native>(code, firstMonitorStub, callee, pcOffset);
     }
 
     HeapPtrFunction &callee() {
         return callee_;
-    }
-    HeapPtrObject &templateObject() {
-        return templateObject_;
     }
 
     static size_t offsetOfCallee() {
@@ -5372,7 +5335,6 @@ class ICCall_Native : public ICMonitoredStub
         ICStub *firstMonitorStub_;
         bool isConstructing_;
         RootedFunction callee_;
-        RootedObject templateObject_;
         uint32_t pcOffset_;
         bool generateStubCode(MacroAssembler &masm);
 
@@ -5381,20 +5343,17 @@ class ICCall_Native : public ICMonitoredStub
         }
 
       public:
-        Compiler(JSContext *cx, ICStub *firstMonitorStub,
-                 HandleFunction callee, HandleObject templateObject,
+        Compiler(JSContext *cx, ICStub *firstMonitorStub, HandleFunction callee,
                  bool isConstructing, uint32_t pcOffset)
           : ICCallStubCompiler(cx, ICStub::Call_Native),
             firstMonitorStub_(firstMonitorStub),
             isConstructing_(isConstructing),
             callee_(cx, callee),
-            templateObject_(cx, templateObject),
             pcOffset_(pcOffset)
         { }
 
         ICStub *getStub(ICStubSpace *space) {
-            return ICCall_Native::New(space, getStubCode(), firstMonitorStub_,
-                                      callee_, templateObject_, pcOffset_);
+            return ICCall_Native::New(space, getStubCode(), firstMonitorStub_, callee_, pcOffset_);
         }
     };
 };

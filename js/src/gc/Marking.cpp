@@ -1140,7 +1140,7 @@ ScanTypeObject(GCMarker *gcmarker, types::TypeObject *type)
         switch (type->addendum->kind) {
           case types::TypeObjectAddendum::NewScript:
             PushMarkStack(gcmarker, type->newScript()->fun);
-            PushMarkStack(gcmarker, type->newScript()->templateObject);
+            PushMarkStack(gcmarker, type->newScript()->shape.get());
             break;
 
           case types::TypeObjectAddendum::TypedObject:
@@ -1173,7 +1173,7 @@ gc::MarkChildren(JSTracer *trc, types::TypeObject *type)
         switch (type->addendum->kind) {
           case types::TypeObjectAddendum::NewScript:
             MarkObject(trc, &type->newScript()->fun, "type_new_function");
-            MarkObject(trc, &type->newScript()->templateObject, "type_new_template");
+            MarkShape(trc, &type->newScript()->shape, "type_new_shape");
             break;
 
           case types::TypeObjectAddendum::TypedObject:

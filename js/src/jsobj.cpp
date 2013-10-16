@@ -1562,19 +1562,15 @@ CreateThisForFunctionWithType(JSContext *cx, HandleTypeObject type, JSObject *pa
          * which reflects any properties that will definitely be added to the
          * object before it is read from.
          */
-        RootedObject templateObject(cx, type->newScript()->templateObject);
-        JS_ASSERT(templateObject->type() == type);
-
-        RootedObject res(cx, CopyInitializerObject(cx, templateObject, newKind));
+        gc::AllocKind kind = type->newScript()->allocKind;
+        RootedObject res(cx, NewObjectWithType(cx, type, parent, kind, newKind));
         if (!res)
             return nullptr;
-        if (newKind == SingletonObject) {
-            Rooted<TaggedProto> proto(cx, templateObject->getProto());
-            if (!res->splicePrototype(cx, &JSObject::class_, proto))
-                return NULL;
-        } else {
-            res->setType(type);
-        }
+        RootedObject metadata(cx, res->getMetadata());
+        RootedShape shape(cx, type->newScript()->shape);
+        JS_ALWAYS_TRUE(JSObject::setLastProperty(cx, res, shape));
+        if (metadata && !JSObject::setMetadata(cx, res, metadata))
+            return nullptr;
         return res;
     }
 
@@ -1584,7 +1580,7 @@ CreateThisForFunctionWithType(JSContext *cx, HandleTypeObject type, JSObject *pa
 
 JSObject *
 js::CreateThisForFunctionWithProto(JSContext *cx, HandleObject callee, JSObject *proto,
-                                   NewObjectKind newKind /* = GenericObject */)
+                                  NewObjectKind newKind /* = GenericObject */)
 {
     RootedObject res(cx);
 
@@ -2528,8 +2524,7 @@ JSObject::growSlots(ThreadSafeContext *cx, HandleObject obj, uint32_t oldCount, 
      * objects are constructed.
      */
     if (!obj->hasLazyType() && !oldCount && obj->type()->hasNewScript()) {
-        JSObject *oldTemplate = obj->type()->newScript()->templateObject;
-        gc::AllocKind kind = gc::GetGCObjectFixedSlotsKind(oldTemplate->numFixedSlots());
+        gc::AllocKind kind = obj->type()->newScript()->allocKind;
         uint32_t newScriptSlots = gc::GetGCKindSlots(kind);
         if (newScriptSlots == obj->numFixedSlots() &&
             gc::TryIncrementAllocKind(&kind) &&
@@ -2539,12 +2534,13 @@ JSObject::growSlots(ThreadSafeContext *cx, HandleObject obj, uint32_t oldCount, 
             AutoEnterAnalysis enter(ncx);
 
             Rooted<TypeObject*> typeObj(cx, obj->type());
-            RootedShape shape(cx, oldTemplate->lastProperty());
+            RootedShape shape(cx, typeObj->newScript()->shape);
             JSObject *reshapedObj = NewReshapedObject(ncx, typeObj, obj->getParent(), kind, shape);
             if (!reshapedObj)
                 return false;
 
-            typeObj->newScript()->templateObject = reshapedObj;
+            typeObj->newScript()->allocKind = kind;
+            typeObj->newScript()->shape = reshapedObj->lastProperty();
             typeObj->markStateChange(ncx);
         }
     }

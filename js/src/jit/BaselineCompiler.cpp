@@ -1393,12 +1393,7 @@ BaselineCompiler::emit_JSOP_NEWARRAY()
     masm.move32(Imm32(length), R0.scratchReg());
     masm.movePtr(ImmGCPtr(type), R1.scratchReg());
 
-    JSObject *templateObject = NewDenseUnallocatedArray(cx, length);
-    if (!templateObject)
-        return false;
-    templateObject->setType(type);
-
-    ICNewArray_Fallback::Compiler stubCompiler(cx, templateObject);
+    ICNewArray_Fallback::Compiler stubCompiler(cx);
     if (!emitOpIC(stubCompiler.getStub(&stubSpace_)))
         return false;
 
@@ -1450,7 +1445,10 @@ BaselineCompiler::emit_JSOP_NEWOBJECT()
             return false;
     }
 
-    ICNewObject_Fallback::Compiler stubCompiler(cx, templateObject);
+    // Pass base object in R0.
+    masm.movePtr(ImmGCPtr(templateObject), R0.scratchReg());
+
+    ICNewObject_Fallback::Compiler stubCompiler(cx);
     if (!emitOpIC(stubCompiler.getStub(&stubSpace_)))
         return false;
 
@@ -1476,12 +1474,7 @@ BaselineCompiler::emit_JSOP_NEWINIT()
         masm.move32(Imm32(0), R0.scratchReg());
         masm.movePtr(ImmGCPtr(type), R1.scratchReg());
 
-        JSObject *templateObject = NewDenseUnallocatedArray(cx, 0);
-        if (!templateObject)
-            return false;
-        templateObject->setType(type);
-
-        ICNewArray_Fallback::Compiler stubCompiler(cx, templateObject);
+        ICNewArray_Fallback::Compiler stubCompiler(cx);
         if (!emitOpIC(stubCompiler.getStub(&stubSpace_)))
             return false;
     } else {
@@ -1499,7 +1492,10 @@ BaselineCompiler::emit_JSOP_NEWINIT()
                 return false;
         }
 
-        ICNewObject_Fallback::Compiler stubCompiler(cx, templateObject);
+        // Pass base object in R0.
+        masm.movePtr(ImmGCPtr(templateObject), R0.scratchReg());
+
+        ICNewObject_Fallback::Compiler stubCompiler(cx);
         if (!emitOpIC(stubCompiler.getStub(&stubSpace_)))
             return false;
     }
