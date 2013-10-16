@@ -75,8 +75,9 @@ def InvokeClWithDependencyGeneration(cmdline):
             # We can't handle pathes with spaces properly in mddepend.pl, but
             # we can assume that anything in a path with spaces is a system
             # header and throw it away.
+            dep = normcase(dep)
             if ' ' not in dep:
-                rule.add_dependencies([normcase(dep)])
+                rule.add_dependencies([dep])
         else:
             sys.stdout.write(line) # Make sure we preserve the relevant output
                                    # from cl
