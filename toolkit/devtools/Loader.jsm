@@ -120,6 +120,7 @@ var SrcdirProvider = {
         "devtools/toolkit/webconsole": webconsoleURI,
         "devtools/app-actor-front": appActorURI,
         "devtools/styleinspector/css-logic": cssLogicURI,
+        "devtools/css-color": cssColorURI,
         "devtools/touch-events": touchEventsURI,
         "devtools/client": clientURI,
         "escodegen": escodegenURI,
