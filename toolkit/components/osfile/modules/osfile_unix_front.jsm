@@ -824,6 +824,7 @@
 
      File.read = exports.OS.Shared.AbstractFile.read;
      File.writeAtomic = exports.OS.Shared.AbstractFile.writeAtomic;
+     File.openUnique = exports.OS.Shared.AbstractFile.openUnique;
      File.removeDir = exports.OS.Shared.AbstractFile.removeDir;
 
      /**
