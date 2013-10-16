@@ -395,6 +395,9 @@ nsAppShellService::CreateWindowlessBrowser(bool aIsChrome, nsIWebNavigation **aR
 
   nsISupports *isstub = NS_ISUPPORTS_CAST(nsIWebBrowserChrome2*, stub);
   nsRefPtr<nsIWebNavigation> result = new WindowlessBrowserStub(browser, isstub);
+  nsCOMPtr<nsIDocShell> docshell = do_GetInterface(result);
+  docshell->SetInvisible(true);
+
   result.forget(aResult);
   return NS_OK;
 }

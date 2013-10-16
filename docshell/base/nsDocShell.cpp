@@ -765,6 +765,7 @@ nsDocShell::nsDocShell():
     mInEnsureScriptEnv(false),
 #endif
     mAffectPrivateSessionLifetime(true),
+    mInvisible(false),
     mDefaultLoadFlags(nsIRequest::LOAD_NORMAL),
     mFrameType(eFrameTypeRegular),
     mOwnOrContainingAppId(nsIScriptSecurityManager::UNKNOWN_APP_ID),
@@ -12800,4 +12801,16 @@ nsDocShell::HasUnloadedParent()
         currentTreeItem.swap(parentTreeItem);
     }
     return false;
+}
+
+bool
+nsDocShell::IsInvisible()
+{
+    return mInvisible;
+}
+
+void
+nsDocShell::SetInvisible(bool aInvisible)
+{
+    mInvisible = aInvisible;
 }
