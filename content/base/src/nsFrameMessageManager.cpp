@@ -230,14 +230,13 @@ mozilla::dom::ipc::UnpackClonedMessageDataForChild(const ClonedMessageData& aDat
 }
 
 bool
-SameProcessCpowHolder::ToObject(JSContext* aCx, JSObject** aObjp)
+SameProcessCpowHolder::ToObject(JSContext* aCx, JS::MutableHandleObject aObjp)
 {
-  *aObjp = mObj;
-
   if (!mObj) {
     return true;
   }
 
+  aObjp.set(mObj);
   return JS_WrapObject(aCx, aObjp);
 }
 
@@ -838,7 +837,7 @@ nsFrameMessageManager::ReceiveMessage(nsISupports* aTarget,
 
         JS::RootedObject cpows(ctx);
         if (aCpows) {
-          if (!aCpows->ToObject(ctx, cpows.address())) {
+          if (!aCpows->ToObject(ctx, &cpows)) {
             return NS_ERROR_UNEXPECTED;
           }
         }

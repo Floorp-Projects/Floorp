@@ -152,8 +152,8 @@ nsXBLProtoImplProperty::InstallMember(JSContext *aCx,
     // them on the class object.
     JSAutoCompartment ac2(aCx, aTargetClassObject);
     nsDependentString name(mName);
-    if (!JS_WrapObject(aCx, getter.address()) ||
-        !JS_WrapObject(aCx, setter.address()) ||
+    if (!JS_WrapObject(aCx, &getter) ||
+        !JS_WrapObject(aCx, &setter) ||
         !::JS_DefineUCProperty(aCx, aTargetClassObject,
                                static_cast<const jschar*>(mName),
                                name.Length(), JSVAL_VOID,

@@ -29,7 +29,7 @@ class CpowIdHolder : public CpowHolder
     {
     }
 
-    bool ToObject(JSContext *cx, JSObject **objp);
+    bool ToObject(JSContext *cx, JS::MutableHandleObject objp);
 
   private:
     JavaScriptShared *js_;
@@ -87,7 +87,7 @@ class JavaScriptShared
     static const uint32_t OBJECT_EXTRA_BITS  = 1;
     static const uint32_t OBJECT_IS_CALLABLE = (1 << 0);
 
-    bool Unwrap(JSContext *cx, const InfallibleTArray<CpowEntry> &aCpows, JSObject **objp);
+    bool Unwrap(JSContext *cx, const InfallibleTArray<CpowEntry> &aCpows, JS::MutableHandleObject objp);
     bool Wrap(JSContext *cx, JS::HandleObject aObj, InfallibleTArray<CpowEntry> *outCpows);
 
   protected:
