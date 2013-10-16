@@ -1930,29 +1930,31 @@ TriggerOperationCallback(JSRuntime *rt, JS::gcreason::Reason reason)
     rt->triggerOperationCallback(JSRuntime::TriggerCallbackMainThread);
 }
 
-void
+bool
 js::TriggerGC(JSRuntime *rt, JS::gcreason::Reason reason)
 {
     /* Wait till end of parallel section to trigger GC. */
     if (InParallelSection()) {
         ForkJoinSlice::Current()->requestGC(reason);
-        return;
+        return true;
     }
 
     /* Don't trigger GCs when allocating under the operation callback lock. */
     if (rt->currentThreadOwnsOperationCallbackLock())
-        return;
+        return false;
 
     JS_ASSERT(CurrentThreadCanAccessRuntime(rt));
 
-    if (rt->isHeapBusy())
-        return;
+    /* GC is already running. */
+    if (rt->isHeapCollecting())
+        return true;
 
     JS::PrepareForFullGC(rt);
     TriggerOperationCallback(rt, reason);
+    return true;
 }
 
-void
+bool
 js::TriggerZoneGC(Zone *zone, JS::gcreason::Reason reason)
 {
     /*
@@ -1961,35 +1963,37 @@ js::TriggerZoneGC(Zone *zone, JS::gcreason::Reason reason)
      */
     if (InParallelSection()) {
         ForkJoinSlice::Current()->requestZoneGC(zone, reason);
-        return;
+        return true;
     }
 
     /* Zones in use by a thread with an exclusive context can't be collected. */
     if (zone->usedByExclusiveThread)
-        return;
+        return false;
 
     JSRuntime *rt = zone->runtimeFromMainThread();
 
     /* Don't trigger GCs when allocating under the operation callback lock. */
     if (rt->currentThreadOwnsOperationCallbackLock())
-        return;
+        return false;
 
-    if (rt->isHeapBusy())
-        return;
+    /* GC is already running. */
+    if (rt->isHeapCollecting())
+        return true;
 
     if (rt->gcZeal() == ZealAllocValue) {
         TriggerGC(rt, reason);
-        return;
+        return true;
     }
 
     if (rt->isAtomsZone(zone)) {
         /* We can't do a zone GC of the atoms compartment. */
         TriggerGC(rt, reason);
-        return;
+        return true;
     }
 
     PrepareZoneForGC(zone);
     TriggerOperationCallback(rt, reason);
+    return true;
 }
 
 void
