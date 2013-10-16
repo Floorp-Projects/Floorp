@@ -191,7 +191,7 @@
                          xbl:inherits="accesskey=matchcaseaccesskey"/>
       <xul:label anonid="match-case-status" class="findbar-find-fast"/>
       <xul:toolbarbutton anonid="find-closebutton"
-                         class="findbar-closebutton"
+                         class="findbar-closebutton close-icon"
                          tooltiptext="&findCloseButton.tooltip;"
                          oncommand="close();"/>
     </xul:hbox>
