@@ -38,7 +38,7 @@ public class MockDatabaseEnvironment extends DatabaseEnvironment {
     }
   }
 
-  public MockDatabaseEnvironment mockInit(String appVersion) {
+  public MockDatabaseEnvironment mockInit(String version) {
     profileCreation = 1234;
     cpuCount        = 2;
     memoryMB        = 512;
@@ -55,21 +55,13 @@ public class MockDatabaseEnvironment extends DatabaseEnvironment {
     vendor          = "";
     appName         = "";
     appID           = "";
-    this.appVersion = appVersion;
+    appVersion      = version;
     appBuildID      = "";
     platformVersion = "";
     platformBuildID = "";
     os              = "";
     xpcomabi        = "";
     updateChannel   = "";
-
-    // v2 fields.
-    distribution  = "";
-    appLocale     = "";
-    osLocale      = "";
-    acceptLangSet = 0;
-
-    version       = Environment.CURRENT_VERSION;
 
     return this;
   }
