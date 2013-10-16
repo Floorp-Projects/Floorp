@@ -7,7 +7,6 @@ NO_JS_MANIFEST = 1
 MOZ_CHROME_FILE_FORMAT = flat
 DIST_FILES = \
   install.rdf \
-  chrome.manifest \
   $(NULL)
 
 XPI_NAME=specialpowers
@@ -18,10 +17,6 @@ USE_EXTENSION_MANIFEST=1
 TEST_EXTENSIONS_DIR = $(DEPTH)/testing/specialpowers
 
 include $(topsrcdir)/config/rules.mk
-
-# JarMaker creates a chrome.manifest already, so the one from the source
-# directory is not copied if it's not forced to be.
-$(FINAL_TARGET)/chrome.manifest: FORCE
 
 libs-preqs = \
   $(call mkdir_deps,$(TEST_EXTENSIONS_DIR)) \
