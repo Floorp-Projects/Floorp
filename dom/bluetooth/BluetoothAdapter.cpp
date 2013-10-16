@@ -67,9 +67,9 @@ public:
     MOZ_ASSERT(aReq && aAdapterPtr);
   }
 
-  virtual bool ParseSuccessfulReply(JS::Value* aValue)
+  virtual bool ParseSuccessfulReply(JS::MutableHandle<JS::Value> aValue)
   {
-    *aValue = JSVAL_VOID;
+    aValue.setUndefined();
 
     const BluetoothValue& v = mReply->get_BluetoothReplySuccess().value();
     if (v.type() != BluetoothValue::TArrayOfBluetoothNamedValue) {
@@ -113,7 +113,7 @@ public:
       return false;
     }
 
-    aValue->setObject(*JsDevices);
+    aValue.setObject(*JsDevices);
     return true;
   }
 
@@ -136,9 +136,9 @@ public:
     MOZ_ASSERT(aReq);
   }
 
-  virtual bool ParseSuccessfulReply(JS::Value* aValue)
+  virtual bool ParseSuccessfulReply(JS::MutableHandle<JS::Value> aValue)
   {
-    *aValue = JSVAL_VOID;
+    aValue.setUndefined();
 
     const BluetoothValue& v = mReply->get_BluetoothReplySuccess().value();
     if (v.type() != BluetoothValue::Tbool) {
@@ -147,7 +147,7 @@ public:
       return false;
     }
 
-    aValue->setBoolean(v.get_bool());
+    aValue.setBoolean(v.get_bool());
     return true;
   }
 
