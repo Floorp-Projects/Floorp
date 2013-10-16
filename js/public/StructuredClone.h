@@ -48,7 +48,9 @@ typedef bool (*WriteStructuredCloneOp)(JSContext *cx, JSStructuredCloneWriter *w
 // with error set to one of the JS_SCERR_* values.
 typedef void (*StructuredCloneErrorOp)(JSContext *cx, uint32_t errorid);
 
-// The maximum supported structured-clone serialization format version.
+// The maximum supported structured-clone serialization format version. Note
+// that this does not need to be bumped for Transferable-only changes, since
+// they are never saved to persistent storage.
 #define JS_STRUCTURED_CLONE_VERSION 2
 
 struct JSStructuredCloneCallbacks {
