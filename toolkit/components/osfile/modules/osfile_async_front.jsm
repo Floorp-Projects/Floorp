@@ -508,6 +508,35 @@ File.open = function open(path, mode, options) {
 };
 
 /**
+ * Creates and opens a file with a unique name. By default, generate a random HEX number and use it to create a unique new file name.
+ *
+ * @param {string} path The path to the file.
+ * @param {*=} options Additional options for file opening. This
+ * implementation interprets the following fields:
+ *
+ * - {number} humanReadable If |true|, create a new filename appending a decimal number. ie: filename-1.ext, filename-2.ext.
+ *  If |false| use HEX numbers ie: filename-A65BC0.ext
+ * - {number} maxReadableNumber Used to limit the amount of tries after a failed
+ *  file creation. Default is 20.
+ *
+ * @return {Object} contains A file object{file} and the path{path}.
+ * @throws {OS.File.Error} If the file could not be opened.
+ */
+File.openUnique = function openUnique(path, options) {
+  return Scheduler.post(
+      "openUnique", [Type.path.toMsg(path), options],
+      path
+    ).then(
+    function onSuccess(msg) {
+      return {
+        path: msg.path,
+        file: new File(msg.file)
+      };
+    }
+  );
+};
+
+/**
  * Get the information on the file.
  *
  * @return {promise}
