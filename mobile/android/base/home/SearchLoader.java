@@ -46,6 +46,12 @@ class SearchLoader {
         return args;
     }
 
+    public static void init(LoaderManager manager, int loaderId,
+                               LoaderCallbacks<Cursor> callbacks, String searchTerm, boolean performEmptySearch) {
+        Bundle args = createArgs(searchTerm, performEmptySearch);
+        manager.initLoader(loaderId, args, callbacks);
+    }
+
     public static void restart(LoaderManager manager, int loaderId,
                                LoaderCallbacks<Cursor> callbacks, String searchTerm) {
         restart(manager, loaderId, callbacks, searchTerm, true);
