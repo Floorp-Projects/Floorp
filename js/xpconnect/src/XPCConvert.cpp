@@ -841,7 +841,7 @@ XPCConvert::NativeInterface2JSObject(jsval* d,
                     return false;
             }
 
-            if (allowNativeWrapper && !JS_WrapObject(cx, flat.address()))
+            if (allowNativeWrapper && !JS_WrapObject(cx, &flat))
                 return false;
 
             return CreateHolderIfNeeded(flat, d, dest);
@@ -856,7 +856,7 @@ XPCConvert::NativeInterface2JSObject(jsval* d,
     // the appropriate wrappers in place.
     RootedObject cpow(cx, UnwrapNativeCPOW(aHelper.Object()));
     if (cpow) {
-        if (!JS_WrapObject(cx, cpow.address()))
+        if (!JS_WrapObject(cx, &cpow))
             return false;
         *d = JS::ObjectValue(*cpow);
         return true;
@@ -931,7 +931,7 @@ XPCConvert::NativeInterface2JSObject(jsval* d,
     // The call to wrap here handles both cross-compartment and same-compartment
     // security wrappers.
     RootedObject original(cx, flat);
-    if (!JS_WrapObject(cx, flat.address()))
+    if (!JS_WrapObject(cx, &flat))
         return false;
 
     *d = OBJECT_TO_JSVAL(flat);

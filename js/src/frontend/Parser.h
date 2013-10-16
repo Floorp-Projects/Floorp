@@ -578,8 +578,8 @@ class Parser : private AutoGCRooter, public StrictModeGetter
     bool finishFunctionDefinition(Node pn, FunctionBox *funbox, Node prelude, Node body);
     bool addFreeVariablesFromLazyFunction(JSFunction *fun, ParseContext<ParseHandler> *pc);
 
-    bool isValidForStatementLHS(Node pn1, JSVersion version,
-                                bool forDecl, bool forEach, bool forOf);
+    bool isValidForStatementLHS(Node pn1, JSVersion version, bool forDecl, bool forEach,
+                                ParseNodeKind headKind);
     bool checkAndMarkAsIncOperand(Node kid, TokenKind tt, bool preorder);
     bool checkStrictAssignment(Node lhs, AssignmentFlavor flavor);
     bool checkStrictBinding(PropertyName *name, Node pn);

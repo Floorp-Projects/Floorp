@@ -689,7 +689,7 @@ NativeInterface2JSObjectAndThrowIfFailed(JSContext* aCx,
           obj = cache->WrapObject(aCx, aScope);
       }
 
-      if (obj && aAllowNativeWrapper && !JS_WrapObject(aCx, obj.address())) {
+      if (obj && aAllowNativeWrapper && !JS_WrapObject(aCx, &obj)) {
         return false;
       }
 

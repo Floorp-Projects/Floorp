@@ -26,20 +26,26 @@ window.addEventListener("message", receiveMessage, false);
 var testPassesReceived = 0;
 
 function receiveMessage(event) {
-  // this message is part of if_10's test
-  if (event.data.test == 'if_10') {
-    doIf10TestPart2();
-  } else if (event.data == "test attempted") {
-    testAttempted();
-  } else {
-    ok_wrapper(event.data.ok, event.data.desc, event.data.addToAttempted);
+  switch (event.data.type) {
+    case "attempted":
+      testAttempted();
+      break;
+    case "ok":
+      ok_wrapper(event.data.ok, event.data.desc, event.data.addToAttempted);
+      break;
+    case "if_10":
+      doIf10TestPart2();
+      break;
+    default:
+      // allow for old style message
+      if (event.data.ok != undefined) {
+        ok_wrapper(event.data.ok, event.data.desc, event.data.addToAttempted);
+      }
   }
 }
 
 // Open windows for tests to attempt to navigate later.
 var windowsToClose = new Array();
-windowsToClose.push(window.open("about:blank", "window_to_navigate"));
-windowsToClose.push(window.open("about:blank", "window_to_navigate2"));
 
 var attemptedTests = 0;
 var passedTests = 0;
@@ -75,9 +81,7 @@ function finish() {
     finishCalled = true;
     is(passedTests, totalTestsToPass, "There are " + totalTestsToPass + " navigation tests that should pass");
 
-    for (var i = 0; i < windowsToClose.length; i++) {
-      windowsToClose[i].close();
-    }
+    closeWindows();
 
     SimpleTest.finish();
   }
@@ -86,9 +90,13 @@ function finish() {
 function checkTestsFinished() {
   // If our own finish() has not been called, probably failed due to a timeout, so close remaining windows.
   if (!finishCalled) {
-    for (var i = 0; i < windowsToClose.length; i++) {
-      windowsToClose[i].close();
-    }
+    closeWindows();
+  }
+}
+
+function closeWindows() {
+  for (var i = 0; i < windowsToClose.length; i++) {
+    windowsToClose[i].close();
   }
 }
 

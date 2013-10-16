@@ -29,7 +29,6 @@
 #include "unicode/unum.h"
 #include "unicode/ustring.h"
 #endif
-#include "unicode/utypes.h"
 #include "vm/DateTime.h"
 #include "vm/GlobalObject.h"
 #include "vm/Interpreter.h"
@@ -963,7 +962,9 @@ intl_CompareStrings(JSContext *cx, UCollator *coll, HandleString str1, HandleStr
     if (!chars2)
         return false;
 
-    UCollationResult uresult = ucol_strcoll(coll, chars1, length1, chars2, length2);
+    UCollationResult uresult = ucol_strcoll(coll, JSCharToUChar(chars1),
+                                            length1, JSCharToUChar(chars2),
+                                            length2);
 
     int32_t res;
     switch (uresult) {
@@ -1305,7 +1306,7 @@ NewUNumberFormat(JSContext *cx, HandleObject numberFormat)
         currency = value.toString();
         MOZ_ASSERT(currency->length() == 3, "IsWellFormedCurrencyCode permits only length-3 strings");
         // uCurrency remains owned by currency.
-        uCurrency = JS_GetStringCharsZ(cx, currency);
+        uCurrency = JSCharToUChar(JS_GetStringCharsZ(cx, currency));
         if (!uCurrency)
             return nullptr;
 
@@ -1412,13 +1413,14 @@ intl_FormatNumber(JSContext *cx, UNumberFormat *nf, double x, MutableHandleValue
     if (!chars.resize(INITIAL_STRING_BUFFER_SIZE))
         return false;
     UErrorCode status = U_ZERO_ERROR;
-    int size = unum_formatDouble(nf, x, chars.begin(), INITIAL_STRING_BUFFER_SIZE, nullptr,
-                                 &status);
+    int size = unum_formatDouble(nf, x, JSCharToUChar(chars.begin()),
+                                 INITIAL_STRING_BUFFER_SIZE, nullptr, &status);
     if (status == U_BUFFER_OVERFLOW_ERROR) {
         if (!chars.resize(size))
             return false;
         status = U_ZERO_ERROR;
-        unum_formatDouble(nf, x, chars.begin(), size, nullptr, &status);
+        unum_formatDouble(nf, x, JSCharToUChar(chars.begin()),
+                          size, nullptr, &status);
     }
     if (U_FAILURE(status)) {
         JS_ReportErrorNumber(cx, js_GetErrorMessage, nullptr, JSMSG_INTERNAL_INTL_ERROR);
@@ -1779,7 +1781,7 @@ js::intl_patternForSkeleton(JSContext *cx, unsigned argc, Value *vp)
     if (!skeleton)
         return false;
     SkipRoot skip(cx, &skeleton);
-    uint32_t skeletonLen = u_strlen(skeleton);
+    uint32_t skeletonLen = u_strlen(JSCharToUChar(skeleton));
 
     UErrorCode status = U_ZERO_ERROR;
     UDateTimePatternGenerator *gen = udatpg_open(icuLocale(locale.ptr()), &status);
@@ -1789,7 +1791,8 @@ js::intl_patternForSkeleton(JSContext *cx, unsigned argc, Value *vp)
     }
     ScopedICUObject<UDateTimePatternGenerator> toClose(gen, udatpg_close);
 
-    int32_t size = udatpg_getBestPattern(gen, skeleton, skeletonLen, nullptr, 0, &status);
+    int32_t size = udatpg_getBestPattern(gen, JSCharToUChar(skeleton),
+                                         skeletonLen, nullptr, 0, &status);
     if (U_FAILURE(status) && status != U_BUFFER_OVERFLOW_ERROR) {
         JS_ReportErrorNumber(cx, js_GetErrorMessage, nullptr, JSMSG_INTERNAL_INTL_ERROR);
         return false;
@@ -1799,13 +1802,14 @@ js::intl_patternForSkeleton(JSContext *cx, unsigned argc, Value *vp)
         return false;
     pattern[size] = '\0';
     status = U_ZERO_ERROR;
-    udatpg_getBestPattern(gen, skeleton, skeletonLen, pattern, size, &status);
+    udatpg_getBestPattern(gen, JSCharToUChar(skeleton),
+                          skeletonLen, pattern, size, &status);
     if (U_FAILURE(status)) {
         JS_ReportErrorNumber(cx, js_GetErrorMessage, nullptr, JSMSG_INTERNAL_INTL_ERROR);
         return false;
     }
 
-    RootedString str(cx, JS_NewUCStringCopyZ(cx, pattern));
+    RootedString str(cx, JS_NewUCStringCopyZ(cx, reinterpret_cast<jschar*>(pattern.get())));
     if (!str)
         return false;
     args.rval().setString(str);
@@ -1853,7 +1857,7 @@ NewUDateFormat(JSContext *cx, HandleObject dateTimeFormat)
         if (!JSObject::getProperty(cx, internals, internals, cx->names().timeZone, &value))
             return nullptr;
         if (!value.isUndefined()) {
-            uTimeZone = JS_GetStringCharsZ(cx, value.toString());
+            uTimeZone = JSCharToUChar(JS_GetStringCharsZ(cx, value.toString()));
             if (!uTimeZone)
                 return nullptr;
             uTimeZoneLength = u_strlen(uTimeZone);
@@ -1861,7 +1865,7 @@ NewUDateFormat(JSContext *cx, HandleObject dateTimeFormat)
     }
     if (!JSObject::getProperty(cx, internals, internals, cx->names().pattern, &value))
         return nullptr;
-    uPattern = JS_GetStringCharsZ(cx, value.toString());
+    uPattern = JSCharToUChar(JS_GetStringCharsZ(cx, value.toString()));
     if (!uPattern)
         return nullptr;
     uPatternLength = u_strlen(uPattern);
@@ -1900,12 +1904,12 @@ intl_FormatDateTime(JSContext *cx, UDateFormat *df, double x, MutableHandleValue
     if (!chars.resize(INITIAL_STRING_BUFFER_SIZE))
         return false;
     UErrorCode status = U_ZERO_ERROR;
-    int size = udat_format(df, x, chars.begin(), INITIAL_STRING_BUFFER_SIZE, nullptr, &status);
+    int size = udat_format(df, x, JSCharToUChar(chars.begin()), INITIAL_STRING_BUFFER_SIZE, nullptr, &status);
     if (status == U_BUFFER_OVERFLOW_ERROR) {
         if (!chars.resize(size))
             return false;
         status = U_ZERO_ERROR;
-        udat_format(df, x, chars.begin(), size, nullptr, &status);
+        udat_format(df, x, JSCharToUChar(chars.begin()), size, nullptr, &status);
     }
     if (U_FAILURE(status)) {
         JS_ReportErrorNumber(cx, js_GetErrorMessage, nullptr, JSMSG_INTERNAL_INTL_ERROR);

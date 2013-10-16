@@ -56,6 +56,7 @@ _SERV_FILES = 	\
 		android.json \
 		androidx86.json \
 		b2g.json \
+		b2g-desktop.json \
 		b2g_start_script.js \
 		root-ev-tester.crl \
 		intermediate-ev-tester.crl \

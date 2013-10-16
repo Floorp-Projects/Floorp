@@ -1,0 +1,24 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug 766282</title>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<script>
+  function doStuff() {
+    window.opener.parent.postMessage({ok: false, desc:  "Sandboxed top-level navigation browsing context flag NOT copied to new auxiliary browsing context."}, "*");
+
+    // Check that when no browsing context returned by "target='_top'", a new browsing context isn't opened by mistake.
+    try {
+      window.opener.parent.opener.parent.postMessage({ok: false, desc:  "An attempt at top navigation without 'allow-top-navigation' should not have opened a new browsing context."}, "*");
+    } catch (error) {
+    }
+
+    self.close();
+  }
+</script>
+<body onLoad="doStuff()">
+FAIL
+</body>
+</html>
