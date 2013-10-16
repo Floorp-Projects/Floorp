@@ -307,6 +307,9 @@ class Range : public TempObject {
         assertInvariants();
     }
 
+    // Construct a range from the given MDefinition. This differs from the
+    // MDefinition's range() method in that it describes the range of values
+    // *after* any bailout checks.
     Range(const MDefinition *def);
 
     static Range *NewInt32Range(int32_t l, int32_t h) {

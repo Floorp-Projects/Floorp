@@ -838,17 +838,17 @@ MPhi::computeRange()
         if (isOSRLikeValue(getOperand(i)))
             continue;
 
-        Range *input = getOperand(i)->range();
+        // Peek at the pre-bailout range so we can take a short-cut; if any of
+        // the operands has an unknown range, this phi has an unknown range.
+        if (!getOperand(i)->range())
+            return;
 
-        if (!input) {
-            range = nullptr;
-            break;
-        }
+        Range input(getOperand(i));
 
         if (range)
-            range->unionWith(input);
+            range->unionWith(&input);
         else
-            range = new Range(*input);
+            range = new Range(input);
     }
 
     setRange(range);
@@ -859,7 +859,8 @@ MBeta::computeRange()
 {
     bool emptyRange = false;
 
-    Range *range = Range::intersect(getOperand(0)->range(), comparison_, &emptyRange);
+    Range opRange(getOperand(0));
+    Range *range = Range::intersect(&opRange, comparison_, &emptyRange);
     if (emptyRange) {
         IonSpew(IonSpew_Range, "Marking block for inst %d unexitable", id());
         block()->setEarlyAbort();
@@ -2156,7 +2157,7 @@ static void
 RemoveTruncatesOnOutput(MInstruction *truncated)
 {
     JS_ASSERT(truncated->type() == MIRType_Int32);
-    JS_ASSERT_IF(truncated->range(), truncated->range()->isInt32());
+    JS_ASSERT(Range(truncated).isInt32());
 
     for (MUseDefIterator use(truncated); use; use++) {
         MDefinition *def = use.def();
@@ -2226,7 +2227,9 @@ RangeAnalysis::truncate()
             }
 
             // Set truncated flag if range analysis ensure that it has no
-            // rounding errors and no fractional part.
+            // rounding errors and no fractional part. Note that we can't use
+            // the MDefinition Range constructor, because we need to know if
+            // the value will have rounding errors before any bailout checks.
             const Range *r = iter->range();
             bool canHaveRoundingErrors = !r || r->canHaveRoundingErrors();
 
@@ -2299,25 +2302,27 @@ RangeAnalysis::truncate()
 void
 MInArray::collectRangeInfo()
 {
-    needsNegativeIntCheck_ = !index()->range() || !index()->range()->isFiniteNonNegative();
+    Range indexRange(index());
+    needsNegativeIntCheck_ = !indexRange.isFiniteNonNegative();
 }
 
 void
 MLoadElementHole::collectRangeInfo()
 {
-    needsNegativeIntCheck_ = !index()->range() || !index()->range()->isFiniteNonNegative();
+    Range indexRange(index());
+    needsNegativeIntCheck_ = !indexRange.isFiniteNonNegative();
 }
 
 void
 MMod::collectRangeInfo()
 {
-    canBeNegativeDividend_ = !lhs()->range() || !lhs()->range()->isFiniteNonNegative();
+    Range lhsRange(lhs());
+    canBeNegativeDividend_ = !lhsRange.isFiniteNonNegative();
 }
 
 void
 MBoundsCheckLower::collectRangeInfo()
 {
-    fallible_ = !index()->range() ||
-                !index()->range()->hasInt32LowerBound() ||
-                index()->range()->lower() < minimum_;
+    Range indexRange(index());
+    fallible_ = !indexRange.hasInt32LowerBound() || indexRange.lower() < minimum_;
 }
