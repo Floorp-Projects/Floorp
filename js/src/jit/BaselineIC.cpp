@@ -29,7 +29,6 @@
 #include "jit/IonFrames-inl.h"
 #include "vm/Interpreter-inl.h"
 #include "vm/ScopeObject-inl.h"
-#include "vm/StringObject-inl.h"
 
 namespace js {
 namespace jit {
@@ -184,15 +183,11 @@ ICStub::trace(JSTracer *trc)
       case ICStub::Call_Scripted: {
         ICCall_Scripted *callStub = toCall_Scripted();
         MarkScript(trc, &callStub->calleeScript(), "baseline-callscripted-callee");
-        if (callStub->templateObject())
-            MarkObject(trc, &callStub->templateObject(), "baseline-callscripted-template");
         break;
       }
       case ICStub::Call_Native: {
         ICCall_Native *callStub = toCall_Native();
         MarkObject(trc, &callStub->callee(), "baseline-callnative-callee");
-        if (callStub->templateObject())
-            MarkObject(trc, &callStub->templateObject(), "baseline-callnative-template");
         break;
       }
       case ICStub::GetElem_NativeSlot: {
@@ -404,16 +399,6 @@ ICStub::trace(JSTracer *trc)
         MarkObject(trc, &callStub->holder(), "baseline-setpropcallnative-stub-holder");
         MarkShape(trc, &callStub->holderShape(), "baseline-setpropcallnative-stub-holdershape");
         MarkObject(trc, &callStub->setter(), "baseline-setpropcallnative-stub-setter");
-        break;
-      }
-      case ICStub::NewArray_Fallback: {
-        ICNewArray_Fallback *stub = toNewArray_Fallback();
-        MarkObject(trc, &stub->templateObject(), "baseline-newarray-template");
-        break;
-      }
-      case ICStub::NewObject_Fallback: {
-        ICNewObject_Fallback *stub = toNewObject_Fallback();
-        MarkObject(trc, &stub->templateObject(), "baseline-newobject-template");
         break;
       }
       default:
@@ -1698,11 +1683,11 @@ ICNewArray_Fallback::Compiler::generateStubCode(MacroAssembler &masm)
 //
 
 static bool
-DoNewObject(JSContext *cx, ICNewObject_Fallback *stub, MutableHandleValue res)
+DoNewObject(JSContext *cx, ICNewObject_Fallback *stub, HandleObject templateObject,
+            MutableHandleValue res)
 {
     FallbackICSpew(cx, stub, "NewObject");
 
-    RootedObject templateObject(cx, stub->templateObject());
     JSObject *obj = NewInitObject(cx, templateObject);
     if (!obj)
         return false;
@@ -1711,7 +1696,8 @@ DoNewObject(JSContext *cx, ICNewObject_Fallback *stub, MutableHandleValue res)
     return true;
 }
 
-typedef bool(*DoNewObjectFn)(JSContext *, ICNewObject_Fallback *, MutableHandleValue);
+typedef bool(*DoNewObjectFn)(JSContext *, ICNewObject_Fallback *, HandleObject,
+                             MutableHandleValue);
 static const VMFunction DoNewObjectInfo = FunctionInfo<DoNewObjectFn>(DoNewObject);
 
 bool
@@ -1719,6 +1705,7 @@ ICNewObject_Fallback::Compiler::generateStubCode(MacroAssembler &masm)
 {
     EmitRestoreTailCallReg(masm);
 
+    masm.push(R0.scratchReg()); // template
     masm.push(BaselineStubReg); // stub.
 
     return tailCallVM(DoNewObjectInfo, masm);
@@ -7430,51 +7417,6 @@ TryAttachFunApplyStub(JSContext *cx, ICCall_Fallback *stub, HandleScript script,
 }
 
 static bool
-GetTemplateObjectForNative(JSContext *cx, HandleScript script, jsbytecode *pc,
-                           Native native, const CallArgs &args, MutableHandleObject res)
-{
-    // Check for natives to which template objects can be attached. This is
-    // done to provide templates to Ion for inlining these natives later on.
-
-    if (native == js_Array) {
-        size_t count = 0;
-        if (args.hasDefined(1))
-            count = args.length();
-        else if (args.hasDefined(0) && args[0].isInt32() && args[0].toInt32() > 0)
-            count = args[0].toInt32();
-        res.set(NewDenseUnallocatedArray(cx, count, nullptr, TenuredObject));
-        if (!res)
-            return false;
-
-        types::TypeObject *type = types::TypeScript::InitObject(cx, script, pc, JSProto_Array);
-        if (!type)
-            return false;
-        res->setType(type);
-        return true;
-    }
-
-    if (native == js::array_concat) {
-        if (args.thisv().isObject() && args.thisv().toObject().is<ArrayObject>()) {
-            res.set(NewDenseEmptyArray(cx, args.thisv().toObject().getProto(), TenuredObject));
-            if (!res)
-                return false;
-            res->setType(args.thisv().toObject().type());
-            return true;
-        }
-    }
-
-    if (native == js_String) {
-        RootedString emptyString(cx, cx->runtime()->emptyString);
-        res.set(StringObject::create(cx, emptyString, TenuredObject));
-        if (!res)
-            return false;
-        return true;
-    }
-
-    return true;
-}
-
-static bool
 TryAttachCallStub(JSContext *cx, ICCall_Fallback *stub, HandleScript script, jsbytecode *pc,
                   JSOp op, uint32_t argc, Value *vp, bool constructing, bool useNewType)
 {
@@ -7546,23 +7488,12 @@ TryAttachCallStub(JSContext *cx, ICCall_Fallback *stub, HandleScript script, jsb
         if (IsIonEnabled(cx))
             types::EnsureTrackPropertyTypes(cx, fun, NameToId(cx->names().prototype));
 
-        // Remember the template object associated with any script being called
-        // as a constructor, for later use during Ion compilation.
-        RootedObject templateObject(cx);
-        if (constructing) {
-            if (!fun->hasLazyType() && fun->type()->hasNewScript())
-                templateObject = fun->type()->newScript()->templateObject;
-            else
-                templateObject = CreateThisForFunction(cx, fun, /* newType = */ false);
-        }
-
         IonSpew(IonSpew_BaselineIC,
                 "  Generating Call_Scripted stub (fun=%p, %s:%d, cons=%s)",
                 fun.get(), fun->nonLazyScript()->filename(), fun->nonLazyScript()->lineno,
                 constructing ? "yes" : "no");
         ICCallScriptedCompiler compiler(cx, stub->fallbackMonitorStub()->firstMonitorStub(),
-                                        calleeScript, templateObject,
-                                        constructing, pc - script->code);
+                                        calleeScript, constructing, pc - script->code);
         ICStub *newStub = compiler.getStub(compiler.getStubSpace(script));
         if (!newStub)
             return false;
@@ -7572,12 +7503,12 @@ TryAttachCallStub(JSContext *cx, ICCall_Fallback *stub, HandleScript script, jsb
     }
 
     if (fun->isNative() && (!constructing || (constructing && fun->isNativeConstructor()))) {
-        // Generalized native call stubs are not here yet!
+        // Generalied native call stubs are not here yet!
         JS_ASSERT(!stub->nativeStubsAreGeneralized());
 
         // Check for JSOP_FUNAPPLY
         if (op == JSOP_FUNAPPLY) {
-            if (fun->native() == js_fun_apply)
+            if (fun->maybeNative() == js_fun_apply)
                 return TryAttachFunApplyStub(cx, stub, script, pc, thisv, argc, vp + 2);
 
             // Don't try to attach a "regular" optimized call stubs for FUNAPPLY ops,
@@ -7591,15 +7522,10 @@ TryAttachCallStub(JSContext *cx, ICCall_Fallback *stub, HandleScript script, jsb
             return true;
         }
 
-        CallArgs args = CallArgsFromVp(argc, vp);
-        RootedObject templateObject(cx);
-        if (!GetTemplateObjectForNative(cx, script, pc, fun->native(), args, &templateObject))
-            return false;
-
         IonSpew(IonSpew_BaselineIC, "  Generating Call_Native stub (fun=%p, cons=%s)",
                 fun.get(), constructing ? "yes" : "no");
         ICCall_Native::Compiler compiler(cx, stub->fallbackMonitorStub()->firstMonitorStub(),
-                                         fun, templateObject, constructing, pc - script->code);
+                                         fun, constructing, pc - script->code);
         ICStub *newStub = compiler.getStub(compiler.getStubSpace(script));
         if (!newStub)
             return false;
@@ -9403,20 +9329,16 @@ ICSetPropCallSetter::ICSetPropCallSetter(Kind kind, IonCode *stubCode, HandleSha
 }
 
 ICCall_Scripted::ICCall_Scripted(IonCode *stubCode, ICStub *firstMonitorStub,
-                                 HandleScript calleeScript, HandleObject templateObject,
-                                 uint32_t pcOffset)
+                                 HandleScript calleeScript, uint32_t pcOffset)
   : ICMonitoredStub(ICStub::Call_Scripted, stubCode, firstMonitorStub),
     calleeScript_(calleeScript),
-    templateObject_(templateObject),
     pcOffset_(pcOffset)
 { }
 
-ICCall_Native::ICCall_Native(IonCode *stubCode, ICStub *firstMonitorStub,
-                             HandleFunction callee, HandleObject templateObject,
+ICCall_Native::ICCall_Native(IonCode *stubCode, ICStub *firstMonitorStub, HandleFunction callee,
                              uint32_t pcOffset)
   : ICMonitoredStub(ICStub::Call_Native, stubCode, firstMonitorStub),
     callee_(callee),
-    templateObject_(templateObject),
     pcOffset_(pcOffset)
 { }
 
