@@ -820,14 +820,15 @@ struct TypeNewScript : public TypeObjectAddendum
 
     HeapPtrFunction fun;
 
-    /* Allocation kind to use for newly constructed objects. */
-    gc::AllocKind allocKind;
-
     /*
-     * Shape to use for newly constructed objects. Reflects all definite
-     * properties the object will have.
+     * Template object to use for newly constructed objects. Reflects all
+     * definite properties the object will have and the allocation kind to use
+     * for the object. The allocation kind --- and template object itself ---
+     * is subject to change if objects allocated with this type are given
+     * dynamic slots later on due to new properties being added after the
+     * constructor function finishes.
      */
-    HeapPtrShape  shape;
+    HeapPtrObject templateObject;
 
     /*
      * Order in which properties become initialized. We need this in case a
