@@ -12,7 +12,7 @@
 namespace js {
 
 bool
-DefineTestingFunctions(JSContext *cx, HandleObject obj, bool fuzzingSafe);
+DefineTestingFunctions(JSContext *cx, HandleObject obj);
 
 bool
 testingFunc_inParallelSection(JSContext *cx, unsigned argc, Value *vp);
