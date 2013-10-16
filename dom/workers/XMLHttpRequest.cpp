@@ -1502,7 +1502,10 @@ XMLHttpRequest::Constructor(const GlobalObject& aGlobal,
   nsRefPtr<XMLHttpRequest> xhr = new XMLHttpRequest(workerPrivate);
 
   if (workerPrivate->XHRParamsAllowed()) {
-    xhr->mMozAnon = aParams.mMozAnon;
+    if (aParams.mMozSystem)
+      xhr->mMozAnon = true;
+    else
+      xhr->mMozAnon = aParams.mMozAnon;
     xhr->mMozSystem = aParams.mMozSystem;
   }
 
