@@ -14,6 +14,7 @@ import org.mozilla.gecko.home.HomePager.OnUrlOpenListener;
 import android.content.Context;
 import android.content.res.TypedArray;
 import android.database.Cursor;
+import android.graphics.Rect;
 import android.text.TextUtils;
 import android.util.AttributeSet;
 import android.view.ContextMenu.ContextMenuInfo;
@@ -63,6 +64,11 @@ public class TopSitesGridView extends GridView {
     // Context menu info.
     private TopSitesGridContextMenuInfo mContextMenuInfo;
 
+    // Whether we're handling focus changes or not. This is used
+    // to avoid infinite re-layouts when using this GridView as
+    // a ListView header view (see bug 918044).
+    private boolean mIsHandlingFocusChange;
+
     public TopSitesGridView(Context context) {
         this(context, null);
     }
@@ -81,6 +87,8 @@ public class TopSitesGridView extends GridView {
         mHorizontalSpacing = a.getDimensionPixelOffset(R.styleable.TopSitesGridView_android_horizontalSpacing, 0x00);
         mVerticalSpacing = a.getDimensionPixelOffset(R.styleable.TopSitesGridView_android_verticalSpacing, 0x00);
         a.recycle();
+
+        mIsHandlingFocusChange = false;
     }
 
     /**
@@ -128,6 +136,20 @@ public class TopSitesGridView extends GridView {
 
         mUrlOpenListener = null;
         mPinSiteListener = null;
+    }
+
+    @Override
+    protected void onFocusChanged(boolean gainFocus, int direction, Rect previouslyFocusedRect) {
+        mIsHandlingFocusChange = true;
+        super.onFocusChanged(gainFocus, direction, previouslyFocusedRect);
+        mIsHandlingFocusChange = false;
+    }
+
+    @Override
+    public void requestLayout() {
+        if (!mIsHandlingFocusChange) {
+            super.requestLayout();
+        }
     }
 
     /**
