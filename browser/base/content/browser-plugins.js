@@ -313,7 +313,7 @@ var gPluginHandler = {
         break;
     }
 
-    // Hide the in-content UI if it's too big. The crashed plugin handler already did this.
+    // Show the in-content UI if it's not too big. The crashed plugin handler already did this.
     if (eventType != "PluginCrashed" && eventType != "PluginRemoved") {
       let overlay = this.getPluginUI(plugin, "main");
       if (overlay != null) {
@@ -989,12 +989,12 @@ var gPluginHandler = {
       if (this.isTooSmall(plugin, overlay)) {
         // Hide the overlay's contents. Use visibility style, so that it doesn't
         // collapse down to 0x0.
-        overlay.style.visibility = "hidden";
         isShowing = false;
       }
     }
 
     if (isShowing) {
+      overlay.style.visibility = "visible";
       // If a previous plugin on the page was too small and resulted in adding a
       // notification bar, then remove it because this plugin instance it big
       // enough to serve as in-content notification.

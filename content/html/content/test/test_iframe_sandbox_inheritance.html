@@ -18,32 +18,63 @@ Implement HTML5 sandbox attribute for IFRAMEs - inheritance tests
 // Bug 901876 raised.
 SimpleTest.expectAssertions(1);
 SimpleTest.waitForExplicitFinish();
-  
+
 // A postMessage handler that is used by sandboxed iframes without
 // 'allow-same-origin' to communicate pass/fail back to this main page.
 // It expects to be called with an object like {ok: true/false, desc:
 // <description of the test> which it then forwards to ok().
 window.addEventListener("message", receiveMessage, false);
 
-var completedTests = 0;
-var passedTests = 0;
-
-function receiveMessage(event)
-{
-  ok_wrapper(event.data.ok, event.data.desc);
+function receiveMessage(event) {
+  switch (event.data.type) {
+    case "attempted":
+      testAttempted();
+      break;
+    case "ok":
+      ok_wrapper(event.data.ok, event.data.desc, event.data.addToAttempted);
+      break;
+    default:
+      // allow for old style message
+      if (event.data.ok != undefined) {
+        ok_wrapper(event.data.ok, event.data.desc, event.data.addToAttempted);
+      }
+  }
 }
 
-function ok_wrapper(result, desc) {
+var attemptedTests = 0;
+var passedTests = 0;
+var totalTestsToPass = 15;
+var totalTestsToAttempt = 19;
+
+function ok_wrapper(result, desc, addToAttempted = true) {
   ok(result, desc);
 
-  completedTests++;
-
   if (result) {
-	  passedTests++;
-  } 
+    passedTests++;
+  }
 
-  if (completedTests == 13) {
-    is(passedTests, completedTests, "there should be " + completedTests + " passed inheritance tests");
+  if (addToAttempted) {
+    testAttempted();
+  }
+}
+
+// Added so that tests that don't register unless they fail,
+// can at least notify that they've attempted to run.
+function testAttempted() {
+  attemptedTests++;
+  if (attemptedTests == totalTestsToAttempt) {
+    // Make sure all tests have had a chance to complete.
+    setTimeout(function() {finish();}, 1000);
+  }
+}
+
+var finishCalled = false;
+
+function finish() {
+  if (!finishCalled) {
+    finishCalled = true;
+    is(passedTests, totalTestsToPass, "There are " + totalTestsToPass + " inheritance tests that should pass");
+
     SimpleTest.finish();
   }
 }
@@ -53,18 +84,20 @@ function doTest() {
   // 1) an iframe with no sandbox attribute inside an iframe that has sandbox = ""
   // should not be able to execute scripts (cannot ever loosen permissions)
   // (done by file_iframe_sandbox_a_if2.html contained within file_iframe_sandbox_a_if1.html)
+  testAttempted();
 
   // fails if bad
   // 2) an iframe with sandbox = "allow-scripts" inside an iframe that has sandbox = ""
   // should not be able to execute scripts (cannot ever loosen permissions)
   // (done by file_iframe_sandbox_a_if2.html contained within file_iframe_sandbox_a_if1.html)
+  testAttempted();
 
-  // fails if bad
+  // passes if good and fails if bad
   // 3) an iframe with no sandbox attribute inside an iframe that has sandbox = "allow-scripts"
   // should not be same origin with the top window
   // (done by file_iframe_sandbox_a_if4.html contained within file_iframe_sandbox_a_if3.html)
 
-  // fails if bad
+  // passes if good and fails if bad
   // 4) an iframe with no sandbox attribute inside an iframe that has sandbox = "allow-scripts"
   // should not be same origin with its parent
   // (done by file_iframe_sandbox_a_if4.html contained within file_iframe_sandbox_a_if3.html)
@@ -88,6 +121,7 @@ function doTest() {
   // 8) an iframe with sandbox="" inside an iframe that has allow-scripts should not be able
   // to execute scripts
   // (done by file_iframe_sandbox_a_if2.html contained within file_iframe_sandbox_a_if3.html)
+  testAttempted();
 
   // passes if good
   // 9) make sure that changing the sandbox flags on an iframe (if_8) doesn't affect
@@ -137,6 +171,7 @@ function doTest() {
   // 17) An <object> inside an <iframe> sandboxed with 'allow-same-origin'
   // should not be able to run scripts.
   // Done by iframe "if_no_scripts" using a data: load.
+  testAttempted();
 
   // passes if good
   // 18) An <object> inside an <iframe> sandboxed with 'allow-scripts allow-same-origin'
@@ -166,3 +201,5 @@ addLoadEvent(doTest);
 <iframe sandbox="allow-same-origin" id="if_19" src="data:text/html,<iframe%20data='data:text/html,<script>parent.parent.ok_wrapper(true, &quot;an object inside an iframe sandboxed with allow-scripts allow-same-origin should be able to run scripts and call functions in the parent of the iframe&quot;)</script>'></object>" height="10" width="10"></iframe>
 <iframe sandbox="allow-scripts" id="if_17" src="file_iframe_sandbox_a_if17.html" height="10" width="10"></iframe>
 </div>
+</body>
+</html>

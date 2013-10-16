@@ -1,0 +1,21 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug 766282</title>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <script type="text/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
+</head>
+
+<script type="application/javascript">
+  function doTest() {
+    sendMouseEvent({type:'click'}, 'anchor');
+  }
+</script>
+
+<body onload="doTest()">
+  I am sandboxed with at least 'allow-scripts allow-popups allow-top-navigation'
+
+  <a href="file_iframe_sandbox_window_top_navigation_pass.html" target='_top' id='anchor'>
+</body>
+</html>

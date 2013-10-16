@@ -136,7 +136,7 @@ class ParallelSafetyVisitor : public MInstructionVisitor
     UNSAFE_OP(Bail)
     UNSAFE_OP(AssertFloat32)
     UNSAFE_OP(GetDynamicName)
-    UNSAFE_OP(FilterArguments)
+    UNSAFE_OP(FilterArgumentsOrEval)
     UNSAFE_OP(CallDirectEval)
     SAFE_OP(BitNot)
     UNSAFE_OP(TypeOf)

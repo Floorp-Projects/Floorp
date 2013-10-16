@@ -208,7 +208,7 @@ UnwindIteratorForUncatchableException(JSContext *cx, JSObject *obj);
 bool
 IteratorConstructor(JSContext *cx, unsigned argc, Value *vp);
 
-}
+} /* namespace js */
 
 extern bool
 js_SuppressDeletedProperty(JSContext *cx, js::HandleObject obj, jsid id);
@@ -265,14 +265,7 @@ class ForOfIterator
   public:
     ForOfIterator(JSContext *cx) : cx(cx), iterator(cx) { }
 
-    bool init(HandleValue iterable) {
-        RootedValue iterv(cx, iterable);
-        if (!ValueToIterator(cx, JSITER_FOR_OF, &iterv))
-            return false;
-        iterator = &iterv.get().toObject();
-        return true;
-    }
-
+    bool init(HandleValue iterable);
     bool next(MutableHandleValue val, bool *done);
 };
 

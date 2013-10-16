@@ -21,25 +21,11 @@
         'resampler/include',
         'signal_processing/include',
       ],
-      'target_conditions': [
-        ['build_with_mozilla==1', {
-          'include_dirs': [
-            '$(DEPTH)/dist/include',
-          ],
-        }],
-      ],
       'direct_dependent_settings': {
         'include_dirs': [
           'resampler/include',
           'signal_processing/include',
           'vad/include',
-        ],
-        'conditions': [
-          ['build_with_mozilla==1', {
-            'include_dirs': [
-              '$(DEPTH)/dist/include',
-            ],
-          }],
         ],
       },
       'sources': [

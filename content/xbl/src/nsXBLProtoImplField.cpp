@@ -371,7 +371,7 @@ nsXBLProtoImplField::InstallAccessors(JSContext* aCx,
   // Now, re-enter the class object's scope, wrap the getters/setters, and define
   // them there.
   JSAutoCompartment ac2(aCx, aTargetClassObject);
-  if (!JS_WrapObject(aCx, get.address()) || !JS_WrapObject(aCx, set.address()) ||
+  if (!JS_WrapObject(aCx, &get) || !JS_WrapObject(aCx, &set) ||
       !JS_WrapId(aCx, id.address()))
   {
     return NS_ERROR_OUT_OF_MEMORY;
@@ -424,7 +424,7 @@ nsXBLProtoImplField::InstallField(nsIScriptContext* aContext,
   JSAutoCompartment ac(cx, scopeObject);
 
   JS::Rooted<JSObject*> wrappedNode(cx, aBoundNode);
-  if (!JS_WrapObject(cx, wrappedNode.address()))
+  if (!JS_WrapObject(cx, &wrappedNode))
       return NS_ERROR_OUT_OF_MEMORY;
 
   JS::Rooted<JS::Value> result(cx);

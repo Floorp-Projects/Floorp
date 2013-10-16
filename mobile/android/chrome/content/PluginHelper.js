@@ -185,6 +185,7 @@ var PluginHelper = {
           // There's a large enough visible overlay that we don't need to show
           // the doorhanger.
           aTab.shouldShowPluginDoorhanger = false;
+          overlay.style.visibility = "visible";
         }
 
         // Add click to play listener to the overlay
@@ -199,6 +200,20 @@ var PluginHelper = {
 
           NativeWindow.doorhanger.hide("ask-to-play-plugins", tab.id);
         }, true);
+
+        // Add handlers for over- and underflow in case the plugin gets resized
+        plugin.addEventListener("overflow", function(event) {
+          overlay.style.visibility = "hidden";
+          PluginHelper.delayAndShowDoorHanger(aTab);
+        });
+        plugin.addEventListener("underflow", function(event) {
+          // This is also triggered if only one dimension underflows,
+          // the other dimension might still overflow
+          if (!PluginHelper.isTooSmall(plugin, overlay)) {
+            overlay.style.visibility = "visible";
+          }
+        });
+
         break;
       }
 
@@ -257,6 +272,7 @@ var PluginHelper = {
         let learnMoreUrl = Services.urlFormatter.formatURLPref("app.support.baseURL");
         learnMoreUrl += "why-cant-firefox-mobile-play-flash-on-my-device";
         learnMoreLink.href = learnMoreUrl;
+        overlay.style.visibility = "visible";
         break;
       }
     }
