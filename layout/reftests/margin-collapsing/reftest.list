@@ -1,9 +1,14 @@
 # Test Suite for CSS 2.1, 8.3.1 Collapsing margins - See Bug 477462
 # Based on CSS 2.1: http://www.w3.org/TR/2011/REC-CSS2-20110607/
-# and its Errata, Last revised: $Date: 2013-07-22 09:54:24 $
+# and its Errata, Last revised: $Date: 2013-09-09 17:40:16 $
+# The structure of this manifest is intended to resemble the structure of
+# the prose that defines collapsing margins. As a result, there are several
+# sections where inline-block-, block-, and other- series are combined.
+# E.g. the first section is about horizontal margins and includes both
+# inline- and block series.
 # "Horizontal margins never collapse."
-# The norefs for these tests depict margins that incorrectly collapsed.
 # Horizontal margins of inline boxes do not collapse.
+# The norefs for these tests depict margins that incorrectly collapsed.
 == inline-horizontal-1.html inline-horizontal-1-ref.html
 != inline-horizontal-1.html inline-horizontal-1-noref.html
 == inline-horizontal-2.html inline-horizontal-2-ref.html
@@ -284,11 +289,9 @@ skip-if(B2G) == block-sibling-2-dyn.html block-sibling-2-ref.html # bug 773482
 == block-first-child-8c-dyn.html block-first-child-8-ref.html
 # "The bottom margin of an in-flow block box with a 'height' of 'auto'
 #  collapses with its last in-flow block-level child's bottom margin"
-# The auto-height-last-child series tests cases where the bottom margin
-# of a box collapses with the bottom margin of its parent element.
-# The parent elements height is 'auto'.
-# This series is more extensive than the non-sibling series, because
-# various combinations of positive and negative margins are tested.
+# Note: The block-auto-height-last-child series automatically covers
+# all cases where 'min-height' is '0' and 'max-height' is 'none' as
+# these are the default values of those properties.
 == block-auto-height-last-child-1a.html block-auto-height-last-child-1-ref.html
 == block-auto-height-last-child-1b.html block-auto-height-last-child-1-ref.html
 == block-auto-height-last-child-1c.html block-auto-height-last-child-1-ref.html
@@ -313,7 +316,8 @@ skip-if(B2G) == block-sibling-2-dyn.html block-sibling-2-ref.html # bug 773482
 == block-auto-height-last-child-8a-dyn.html block-auto-height-last-child-8-ref.html
 == block-auto-height-last-child-8b-dyn.html block-auto-height-last-child-8-ref.html
 == block-auto-height-last-child-8c-dyn.html block-auto-height-last-child-8-ref.html
-# The last-child series is an older variant of the auto-height-last-child tests.
+# The last-child series is an older variant of the
+# block-auto-height-last-child tests.
 == block-last-child-1a.html block-last-child-1-ref.html
 == block-last-child-1b.html block-last-child-1-ref.html
 == block-last-child-1c.html block-last-child-1-ref.html
@@ -329,6 +333,37 @@ skip-if(B2G) == block-sibling-2-dyn.html block-sibling-2-ref.html # bug 773482
 == block-last-child-4b.html block-last-child-4-ref.html
 == block-last-child-4c.html block-last-child-4-ref.html
 == block-last-child-4d.html block-last-child-4-ref.html
+# There's also the older block-zero-min-height series which explicitly
+# adds min-height: 0; to boxes with height: auto;
+# This should have no effect on margin-collapsing.
+== block-zero-min-height-1a.html block-zero-min-height-1-ref.html
+== block-zero-min-height-1b.html block-zero-min-height-1-ref.html
+== block-zero-min-height-1c.html block-zero-min-height-1-ref.html
+== block-zero-min-height-1d.html block-zero-min-height-1-ref.html
+== block-zero-min-height-1e.html block-zero-min-height-1-ref.html
+== block-zero-min-height-1f.html block-zero-min-height-1-ref.html
+!= block-zero-min-height-1a.html block-zero-min-height-1-noref.html
+!= block-zero-min-height-1b.html block-zero-min-height-1-noref.html
+!= block-zero-min-height-1c.html block-zero-min-height-1-noref.html
+!= block-zero-min-height-1d.html block-zero-min-height-1-noref.html
+!= block-zero-min-height-1e.html block-zero-min-height-1-noref.html
+!= block-zero-min-height-1f.html block-zero-min-height-1-noref.html
+== block-zero-min-height-2a.html block-zero-min-height-2ab-ref.html
+== block-zero-min-height-2b.html block-zero-min-height-2ab-ref.html
+== block-zero-min-height-2c.html block-zero-min-height-2c-ref.html
+== block-zero-min-height-2d.html block-zero-min-height-2de-ref.html
+== block-zero-min-height-2e.html block-zero-min-height-2de-ref.html
+== block-zero-min-height-2f.html block-zero-min-height-2f-ref.html
+!= block-zero-min-height-2a.html block-zero-min-height-2-noref.html
+!= block-zero-min-height-2b.html block-zero-min-height-2-noref.html
+!= block-zero-min-height-2c.html block-zero-min-height-2-noref.html
+!= block-zero-min-height-2d.html block-zero-min-height-2-noref.html
+!= block-zero-min-height-2e.html block-zero-min-height-2-noref.html
+!= block-zero-min-height-2f.html block-zero-min-height-2-noref.html
+== block-zero-min-height-3a.html block-zero-min-height-3-ref.html
+== block-zero-min-height-3b.html block-zero-min-height-3-ref.html
+== block-zero-min-height-3c.html block-zero-min-height-3-ref.html
+== block-zero-min-height-3d.html block-zero-min-height-3-ref.html
 # If a parent box's height is 'auto' and its 'min-height' is non-zero,
 # then its bottom margin collapses with its last-child's bottom margin.
 # This is true even if the two margins do not actually touch each other,
@@ -466,19 +501,41 @@ fails == block-max-height-last-child-9a-dyn.html block-max-height-last-child-9-r
 == block-fix-height-last-child-4f-dyn.html block-fix-height-last-child-4-ref.html
 == block-fix-height-last-child-4g-dyn.html block-fix-height-last-child-4-ref.html
 == block-fix-height-last-child-4h-dyn.html block-fix-height-last-child-4-ref.html
-# Basic tests for margins of floats and block siblings/descendants.
-== block-float-1a.html block-float-1a-ref.html
-== block-float-1a.html block-float-1a-ref2.html
-!= block-float-1a.html block-float-1a-noref.html
-== block-float-1b.html block-float-1b-ref.html
-== block-float-1b.html block-float-1b-ref2.html
-!= block-float-1b.html block-float-1b-noref.html
-== block-float-2a.html block-float-2a-ref.html
-!= block-float-2a.html block-float-2a-noref.html
-== block-float-2b.html block-float-2b-ref.html
-!= block-float-2b.html block-float-2b-noref.html
-# Basic tests for margins of boxes, that have the overflow property applied
-# (hence forming block formatting contexts) and their block siblings/descendants.
+# "Two margins are adjoining if and only if:" [...]
+# "both belong to vertically-adjacent box edges,
+#  i.e. form one of the following pairs:" [...]
+# "top and bottom margins of a box that does not establish a new block
+#  formatting context and that has zero computed 'min-height', zero or
+#  'auto' computed 'height', and no in-flow children"
+# Note that "if the top and bottom margins of a box are adjoining, then it is
+# possible for margins to collapse through it."
+# I.e. a parent's top and bottom margin are still considered adjoining if
+# they collapse through their in-flow children's margins.
+== block-no-content-1a.html block-no-content-1-ref.html
+== block-no-content-1b.html block-no-content-1-ref.html
+== block-no-content-1c.html block-no-content-1-ref.html
+== block-no-content-2a.html block-no-content-2-ref.html
+== block-no-content-2b.html block-no-content-2-ref.html
+== block-no-content-2c.html block-no-content-2-ref.html
+== block-no-content-2d.html block-no-content-2-ref.html
+== block-no-content-3.html block-no-content-3-ref.html
+== block-no-content-4.html block-no-content-4-ref.html
+# These tests are similar to the no-content ones, except that some boxes
+# have height: 0; declared on them.
+== block-zero-height-1a.html block-zero-height-1a-ref.html
+== block-zero-height-1b.html block-zero-height-1b-ref.html
+== block-zero-height-2a.html block-zero-height-2a-ref.html
+== block-zero-height-2b.html block-zero-height-2b-ref.html
+== block-zero-height-2c.html block-zero-height-2c-ref.html
+== block-zero-height-3a.html block-zero-height-3-ref.html
+== block-zero-height-3b.html block-zero-height-3-ref.html
+== block-zero-height-3c.html block-zero-height-3-ref.html
+# "Margins of elements that establish new block formatting contexts ([...])
+#  do not collapse with their in-flow children."
+# The margins of a block formatting context can collapse with margins of
+# in-flow sibling boxes, but not with margins of their in-flow children.
+# Elements that establish a block formatting context are:
+# * "elements with 'overflow' other than 'visible'"
 == block-overflow-1.html block-overflow-1-ref.html
 == block-overflow-1.html block-overflow-1-ref2.html
 == block-overflow-2.html block-overflow-2-ref.html
@@ -495,7 +552,22 @@ skip-if(B2G) == block-overflow-4.html block-overflow-4-ref2.html
 == block-overflow-5c.html block-overflow-5c-ref2.html
 == block-overflow-5d.html block-overflow-5-ref.html
 == block-overflow-5d.html block-overflow-5-ref2.html
-# The margins of a table wrapper box collapse, if it is a block-level box.
+# * 'fieldset' elements, per HTML5 (Candidate Recommendation 6 August 2013):
+# §10.3.13 (The fieldset and legend elements): "The fieldset element is
+# expected to establish a new block formatting context."
+== fieldset-sibling-1a.html fieldset-sibling-1-ref.html
+== fieldset-sibling-1b.html fieldset-sibling-1-ref.html
+== fieldset-sibling-1c.html fieldset-sibling-1-ref.html
+== fieldset-sibling-2a.html fieldset-sibling-2-ref1.html
+== fieldset-sibling-2b.html fieldset-sibling-2-ref1.html
+== fieldset-sibling-2c.html fieldset-sibling-2-ref1.html
+== fieldset-sibling-2a.html fieldset-sibling-2-ref2.html
+== fieldset-sibling-2b.html fieldset-sibling-2-ref2.html
+== fieldset-sibling-2c.html fieldset-sibling-2-ref2.html
+== fieldset-child-1.html fieldset-child-1-ref.html
+# * Tables, per CSS 2.1 §17.4 (Tables in the visual formatting model):
+# "The table wrapper box establishes a block formatting context."
+# "The table wrapper box is a 'block' box if the table is block-level [...]"
 == table-sibling-1a.html table-sibling-1-ref.html
 != table-sibling-1a.html table-sibling-1-noref.html
 == table-sibling-1b.html table-sibling-1-ref.html
@@ -522,6 +594,9 @@ skip-if(B2G) == table-sibling-2c-dyn.html table-sibling-2-ref.html # bug 773482
 != table-sibling-2c-dyn.html table-sibling-2-noref2.html
 skip-if(B2G) == table-sibling-3-dyn.html table-sibling-3-ref.html # bug 773482
 != table-sibling-3-dyn.html table-sibling-3-noref.html
+# * table-caption boxes, per CSS 2.1 §9.4.1 (Block formatting contexts):
+# "[...] block containers (such as [...] table-captions) [...]
+#  establish new block formatting contexts for their contents."
 # The margins of a table-caption do not collapse with the margins
 # of the table wrapper box. They can collapse with the margins of other
 # table-captions, though, if they share the same caption-side.
@@ -548,23 +623,7 @@ fails == caption-sibling-1c-dyn.html caption-sibling-1-ref.html # Bug 144517
 != caption-sibling-1c-dyn.html caption-sibling-1-noref2.html
 fails == caption-sibling-2-dyn.html caption-sibling-2-ref.html # Bug 144517
 != caption-sibling-2-dyn.html caption-sibling-2-noref.html
-# The fieldset element is expected to establish a block formatting context.
-# Its margins can collapse with margins of siblings, but not with descendants'.
-== fieldset-sibling-1a.html fieldset-sibling-1-ref.html
-== fieldset-sibling-1b.html fieldset-sibling-1-ref.html
-== fieldset-sibling-1c.html fieldset-sibling-1-ref.html
-== fieldset-sibling-2a.html fieldset-sibling-2-ref1.html
-== fieldset-sibling-2b.html fieldset-sibling-2-ref1.html
-== fieldset-sibling-2c.html fieldset-sibling-2-ref1.html
-== fieldset-sibling-2a.html fieldset-sibling-2-ref2.html
-== fieldset-sibling-2b.html fieldset-sibling-2-ref2.html
-== fieldset-sibling-2c.html fieldset-sibling-2-ref2.html
-== fieldset-child-1.html fieldset-child-1-ref.html
-# "Margins of absolutely positioned boxes do not collapse
-#  (not even with their in-flow children)."
-== block-abs-pos-1.html block-abs-pos-1-ref.html
-== block-abs-pos-2.html block-abs-pos-2-ref.html
-== block-abs-pos-2.html block-abs-pos-2-ref2.html
+# * inline-block boxes
 # "Margins of inline-block boxes do not collapse
 #  (not even with their in-flow children)."
 == inline-block-sibling-1a.html inline-block-sibling-1-ref.html
@@ -575,27 +634,25 @@ fails == caption-sibling-2-dyn.html caption-sibling-2-ref.html # Bug 144517
 == inline-block-child-1.html inline-block-child-1-ref.html
 == inline-block-child-2.html inline-block-child-2-ref.html
 != inline-block-child-2.html inline-block-child-2-noref.html
-# "If the top and bottom margins of a box are adjoining,
-#  then it is possible for margins to collapse through it."
-== block-no-content-1a.html block-no-content-1-ref.html
-== block-no-content-1b.html block-no-content-1-ref.html
-== block-no-content-1c.html block-no-content-1-ref.html
-== block-no-content-2a.html block-no-content-2-ref.html
-== block-no-content-2b.html block-no-content-2-ref.html
-== block-no-content-2c.html block-no-content-2-ref.html
-== block-no-content-2d.html block-no-content-2-ref.html
-== block-no-content-3.html block-no-content-3-ref.html
-== block-no-content-4.html block-no-content-4-ref.html
-# These tests are similar to the no-content ones, except that some boxes
-# have height: 0; declared on them.
-== block-zero-height-1a.html block-zero-height-1a-ref.html
-== block-zero-height-1b.html block-zero-height-1b-ref.html
-== block-zero-height-2a.html block-zero-height-2a-ref.html
-== block-zero-height-2b.html block-zero-height-2b-ref.html
-== block-zero-height-2c.html block-zero-height-2c-ref.html
-== block-zero-height-3a.html block-zero-height-3-ref.html
-== block-zero-height-3b.html block-zero-height-3-ref.html
-== block-zero-height-3c.html block-zero-height-3-ref.html
+# * absolutely positioned elements
+# "Margins of absolutely positioned boxes do not collapse
+#  (not even with their in-flow children)."
+== block-abs-pos-1.html block-abs-pos-1-ref.html
+== block-abs-pos-2.html block-abs-pos-2-ref.html
+== block-abs-pos-2.html block-abs-pos-2-ref2.html
+# * Floats
+# "Margins between a floated box and any other box do not collapse
+#  (not even between a float and its in-flow children)."
+== block-float-1a.html block-float-1a-ref.html
+== block-float-1a.html block-float-1a-ref2.html
+!= block-float-1a.html block-float-1a-noref.html
+== block-float-1b.html block-float-1b-ref.html
+== block-float-1b.html block-float-1b-ref2.html
+!= block-float-1b.html block-float-1b-noref.html
+== block-float-2a.html block-float-2a-ref.html
+!= block-float-2a.html block-float-2a-noref.html
+== block-float-2b.html block-float-2b-ref.html
+!= block-float-2b.html block-float-2b-noref.html
 # Tests for various cases where clearance is applied and collapsing is
 # prevented or only allows for certain margins.
 fails == block-clear-1a.html block-clear-1a-ref.html # Bug 451791
@@ -683,36 +740,6 @@ fails == block-clear-7g-left.html block-clear-7efgh-left-ref2.html # Bug 493380
 == block-html-body-1.html block-html-body-1-ref.html
 == block-html-body-1.html block-html-body-1-ref2.html
 != block-html-body-1.html block-html-body-1-noref.html
-# These are additional tests where min-height is explicitly set to '0',
-# which should have no influence on the collapsing of margins.
-== block-zero-min-height-1a.html block-zero-min-height-1-ref.html
-== block-zero-min-height-1b.html block-zero-min-height-1-ref.html
-== block-zero-min-height-1c.html block-zero-min-height-1-ref.html
-== block-zero-min-height-1d.html block-zero-min-height-1-ref.html
-== block-zero-min-height-1e.html block-zero-min-height-1-ref.html
-== block-zero-min-height-1f.html block-zero-min-height-1-ref.html
-!= block-zero-min-height-1a.html block-zero-min-height-1-noref.html
-!= block-zero-min-height-1b.html block-zero-min-height-1-noref.html
-!= block-zero-min-height-1c.html block-zero-min-height-1-noref.html
-!= block-zero-min-height-1d.html block-zero-min-height-1-noref.html
-!= block-zero-min-height-1e.html block-zero-min-height-1-noref.html
-!= block-zero-min-height-1f.html block-zero-min-height-1-noref.html
-== block-zero-min-height-2a.html block-zero-min-height-2ab-ref.html
-== block-zero-min-height-2b.html block-zero-min-height-2ab-ref.html
-== block-zero-min-height-2c.html block-zero-min-height-2c-ref.html
-== block-zero-min-height-2d.html block-zero-min-height-2de-ref.html
-== block-zero-min-height-2e.html block-zero-min-height-2de-ref.html
-== block-zero-min-height-2f.html block-zero-min-height-2f-ref.html
-!= block-zero-min-height-2a.html block-zero-min-height-2-noref.html
-!= block-zero-min-height-2b.html block-zero-min-height-2-noref.html
-!= block-zero-min-height-2c.html block-zero-min-height-2-noref.html
-!= block-zero-min-height-2d.html block-zero-min-height-2-noref.html
-!= block-zero-min-height-2e.html block-zero-min-height-2-noref.html
-!= block-zero-min-height-2f.html block-zero-min-height-2-noref.html
-== block-zero-min-height-3a.html block-zero-min-height-3-ref.html
-== block-zero-min-height-3b.html block-zero-min-height-3-ref.html
-== block-zero-min-height-3c.html block-zero-min-height-3-ref.html
-== block-zero-min-height-3d.html block-zero-min-height-3-ref.html
 # Other tests.
 == block-percent-1.html block-percent-1-ref.html
 == dynamic-add-text-1.html dynamic-add-text-1-ref.html # Bug 467321
