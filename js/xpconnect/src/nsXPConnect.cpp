@@ -257,8 +257,7 @@ xpc::SystemErrorReporter(JSContext *cx, const char *message, JSErrorReport *rep)
     }
 
     if (nsContentUtils::DOMWindowDumpEnabled()) {
-        fprintf(stderr, "System JS : %s %s:%d\n"
-                "                     %s\n",
+        fprintf(stderr, "System JS : %s %s:%d - %s\n",
                 JSREPORT_IS_WARNING(rep->flags) ? "WARNING" : "ERROR",
                 rep->filename, rep->lineno,
                 message ? message : "<no message>");
