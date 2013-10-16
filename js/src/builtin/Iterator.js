@@ -8,20 +8,13 @@ function IteratorIdentity() {
 
 var LegacyIteratorWrapperMap = new std_WeakMap();
 
-function IteratorResult(value, done) {
-    var result = std_Object_create(null);
-    result.value = value;
-    result.done = done;
-    return result;
-}
-
 function LegacyIteratorNext(arg) {
     var iter = callFunction(std_WeakMap_get, LegacyIteratorWrapperMap, this);
     try {
-        return IteratorResult(iter.next(arg), false);
+        return { value: iter.next(arg), done: false };
     } catch (e) {
         if (e instanceof std_StopIteration)
-            return IteratorResult(undefined, true);
+            return { value: undefined, done: true };
         throw e;
     }
 }
@@ -29,10 +22,10 @@ function LegacyIteratorNext(arg) {
 function LegacyIteratorThrow(exn) {
     var iter = callFunction(std_WeakMap_get, LegacyIteratorWrapperMap, this);
     try {
-        return IteratorResult(iter.throw(exn), false);
+        return { value: iter.throw(exn), done: false };
     } catch (e) {
         if (e instanceof std_StopIteration)
-            return IteratorResult(undefined, true);
+            return { value: undefined, done: true };
         throw e;
     }
 }
