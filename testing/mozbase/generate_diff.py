@@ -120,16 +120,18 @@ def generate_packages_txt():
     http://mxr.mozilla.org/mozilla-central/source/build/virtualenv/packages.txt
     """
 
-    prefix = 'testing/mozbase/' # relative path from topsrcdir
+    # relative path from topsrcdir
+    prefix = 'testing/mozbase/'
 
     # gather the packages
     packages = setup_development.mozbase_packages
 
     # write them in the appropriate format
     path = os.path.join(here, 'packages.txt')
-    with file(path, 'w') as f:
-        for package in sorted(packages):
-            f.write("%s.pth:%s%s\n" % (package, prefix, package))
+    packages_manifest = [("%s.pth:%s%s\n" % (package, prefix, package))
+                         for package in sorted(packages)]
+    with open(path, 'wb') as f:
+        f.writelines(packages_manifest)
 
 ### version-related functions
 

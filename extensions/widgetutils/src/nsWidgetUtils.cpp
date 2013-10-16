@@ -234,7 +234,7 @@ nsWidgetUtils::MouseMove(nsIDOMEvent* aDOMEvent)
       return NS_OK;
 
   nsEventStatus status;
-  WheelEvent wheelEvent(true, NS_WHEEL_WHEEL, mWidget);
+  WidgetWheelEvent wheelEvent(true, NS_WHEEL_WHEEL, mWidget);
   wheelEvent.deltaMode = nsIDOMWheelEvent::DOM_DELTA_LINE;
   wheelEvent.deltaX = wheelEvent.lineOrPageDeltaX = dx;
   wheelEvent.deltaY = wheelEvent.lineOrPageDeltaY = dy;

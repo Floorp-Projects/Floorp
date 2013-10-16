@@ -25,7 +25,7 @@ abstract class MultiTypeCursorAdapter extends CursorAdapter {
     abstract public void bindView(View view, Context context, int position);
 
     public MultiTypeCursorAdapter(Context context, Cursor cursor, int[] viewTypes, int[] layouts) {
-        super(context, cursor);
+        super(context, cursor, 0);
 
         if (viewTypes.length != layouts.length) {
             throw new IllegalStateException("The view types and the layouts should be of same size");

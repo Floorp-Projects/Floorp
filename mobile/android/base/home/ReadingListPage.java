@@ -198,7 +198,7 @@ public class ReadingListPage extends HomeFragment {
      */
     private class ReadingListAdapter extends CursorAdapter {
         public ReadingListAdapter(Context context, Cursor cursor) {
-            super(context, cursor);
+            super(context, cursor, 0);
         }
 
         @Override

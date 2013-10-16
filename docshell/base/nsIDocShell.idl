@@ -43,7 +43,7 @@ interface nsIReflowObserver;
 
 typedef unsigned long nsLoadFlags;
 
-[scriptable, builtinclass, uuid(4ca172c3-67bf-4e6d-89a3-cbfb929c370d)]
+[scriptable, builtinclass, uuid(4c8cd9da-4e93-42ed-9901-3781e90458d9)]
 interface nsIDocShell : nsIDocShellTreeItem
 {
   /**
@@ -597,40 +597,12 @@ interface nsIDocShell : nsIDocShellTreeItem
   void createAboutBlankContentViewer(in nsIPrincipal aPrincipal);
 
   /**
-   * The charset attribute allows the user to view, hint, and set which
-   * converter is used to read the document's data.
+   * Upon getting, returns the canonical encoding label of the document
+   * currently loaded into this docshell.
    *
-   * <P>Inside Mozilla all text is encoded as Unicode. By standardizing  
-   * on Unicode every piece of code that handles characters no longer 
-   * needs to: 
-   *
-   *     Have access to a character encoding parameter.
-   *     Ask is the data stateful?
-   *     Ask is the data single byte?
-   *     Ask is the data multi-byte?
-   *     If multi-byte: have access to a routine that can
-   *         determine how many bytes in the current character.
-   *
-   * When the document is read in a converter is used to convert 
-   * the document's data to Unicode.
-   *
-   * The charset attribute provides the ability to:
-   *
-   *   See what converter was used when inputting the documents
-   *   data.
-   *
-   *   Override the character set for documents where the specified 
-   *   fallback, or auto-detected character set is incorrect
-   *
-   * Get/sets the encoding (converter) used to read the 
-   * document. Get returns the encoding used. Set forces 
-   * (overrides) the encoding. After forcing the charset the 
-   * embedding application will need to cause the data to be 
-   * reparsed in order to update the DOM / display.
-   *
-   * A force also sets the fallback encoding for this frame.
+   * Upon setting, sets forcedCharset for compatibility with legacy callers.
    */
-  attribute string charset;
+  attribute ACString charset;
 
   /**
    * Called when the user chose an encoding override from the character
@@ -640,23 +612,21 @@ interface nsIDocShell : nsIDocShellTreeItem
   void gatherCharsetMenuTelemetry();
 
   /**
-   * The charset forced by the user. When the charset attribute is set this
-   * attribute is set to the same value.
-   *
-   * XXX Could this be replaced by a boolean?
+   * The charset forced by the user.
    */
   attribute ACString forcedCharset;
 
   /**
    * In a child docshell, this is the charset of the parent docshell
    */
-  attribute ACString parentCharset;
-
-  /*
-   * In a child docshell, this is the source of parentCharset
-   * @see nsCharsetSource.h
-   */
-  attribute int32_t parentCharsetSource;
+  [noscript, notxpcom, nostdcall] void setParentCharset(
+    in ACString parentCharset,
+    in int32_t parentCharsetSource,
+    in nsIPrincipal parentCharsetPrincipal);
+  [noscript, notxpcom, nostdcall] void getParentCharset(
+    out ACString parentCharset,
+    out int32_t parentCharsetSource,
+    out nsIPrincipal parentCharsetPrincipal);
 
   /**
    * Add an observer to the list of parties to be notified when this docshell's
@@ -922,4 +892,12 @@ interface nsIDocShell : nsIDocShellTreeItem
     */
   boolean isCommandEnabled(in string command);
   void doCommand(in string command);
+
+  /**
+   * Invisible DocShell are dummy construct to simulate DOM windows
+   * without any actual visual representation. They have to be marked
+   * at construction time, to avoid any painting activity.
+   */
+  [noscript, notxpcom] bool IsInvisible();
+  [noscript, notxpcom] void SetInvisible(in bool aIsInvisibleDochsell);
 };

@@ -11,6 +11,7 @@
 #include "mozilla/PodOperations.h"
 
 #include "jsinfer.h"
+#include "jstypes.h"
 
 #include "gc/Heap.h"
 #include "jit/IonTypes.h"

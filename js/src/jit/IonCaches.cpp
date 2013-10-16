@@ -7,8 +7,10 @@
 #include "jit/IonCaches.h"
 
 #include "mozilla/DebugOnly.h"
+#include "mozilla/TemplateLib.h"
 
 #include "jsproxy.h"
+#include "jstypes.h"
 
 #include "builtin/TypeRepresentation.h"
 #include "jit/Ion.h"
@@ -30,6 +32,7 @@ using namespace js;
 using namespace js::jit;
 
 using mozilla::DebugOnly;
+using mozilla::tl::FloorLog2;
 
 void
 CodeLocationJump::repoint(IonCode *code, MacroAssembler *masm)
@@ -3276,7 +3279,9 @@ GetElementIC::attachArgumentsElement(JSContext *cx, IonScript *ion, JSObject *ob
     masm.loadPtr(Address(tmpReg, offsetof(ArgumentsData, deletedBits)), tmpReg);
 
     // In tempReg, calculate index of word containing bit: (idx >> logBitsPerWord)
-    masm.rshiftPtr(Imm32(JS_BITS_PER_WORD_LOG2), indexReg);
+    const uint32_t shift = FloorLog2<(sizeof(size_t) * JS_BITS_PER_BYTE)>::value;
+    JS_ASSERT(shift == 5 || shift == 6);
+    masm.rshiftPtr(Imm32(shift), indexReg);
     masm.loadPtr(BaseIndex(tmpReg, indexReg, ScaleFromElemWidth(sizeof(size_t))), tmpReg);
 
     // Don't bother testing specific bit, if any bit is set in the word, fail.

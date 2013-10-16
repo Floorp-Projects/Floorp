@@ -1,13 +1,13 @@
 // Test that we can optimize stuff like line.target.x without
 // creating an intermediate object.
 
-if (!this.hasOwnProperty("Type"))
+if (!this.hasOwnProperty("TypedObject"))
   quit();
 
-var PointType = new StructType({x: float64,
-                                y: float64});
-var LineType = new StructType({source: PointType,
-                               target: PointType});
+var PointType = new TypedObject.StructType({x: TypedObject.float64,
+                                            y: TypedObject.float64});
+var LineType = new TypedObject.StructType({source: PointType,
+                                           target: PointType});
 
 function manhattenDistance(line) {
   return (Math.abs(line.target.x - line.source.x) +
