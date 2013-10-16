@@ -61,6 +61,16 @@ var properties2 = {
   tel: [{type: ["work"], value: shortNumber, carrier: "testCarrier"}]
 };
 
+var number3 = {
+  international1: "0041557932012345",
+  international2: "+557932012345"
+};
+
+var properties3 = {
+  name: "Testname2",
+  tel: [{value: number3.international2}]
+};
+
 var req;
 var index = 0;
 var createResult1;
@@ -224,6 +234,41 @@ var steps = [
     req = mozContacts.find(options);
     req.onsuccess = function () {
       ok(req.result.length == 0, "Found exactly 1 contact.");
+      next();
+    };
+    req.onerror = onFailure;
+  },
+  function () {
+    ok(true, "Deleting database");
+    req = mozContacts.clear();
+    req.onsuccess = function () {
+      ok(true, "Deleted the database");
+      next();
+    }
+    req.onerror = onFailure;
+  },
+  function () {
+    ok(true, "Adding a new contact with country code");
+    createResult1 = new mozContact();
+    createResult1.init(properties3);
+    req = navigator.mozContacts.save(createResult1);
+    req.onsuccess = function () {
+      ok(createResult1.id, "The contact now has an ID.");
+      sample_id1 = createResult1.id;
+      next();
+    };
+    req.onerror = onFailure;
+  },
+  function () {
+    ok(true, "Searching for international number with prefix");
+    var options = {filterBy: ["tel"],
+                   filterOp: "match",
+                   filterValue: number3.international1};
+    req = mozContacts.find(options);
+    req.onsuccess = function () {
+      ok(req.result.length == 1, "Found exactly 1 contact.");
+      findResult1 = req.result[0];
+      ok(findResult1.id == sample_id1, "Same ID");
       next();
     };
     req.onerror = onFailure;

@@ -1062,6 +1062,23 @@ ContactDB.prototype = {
               substringResult[event.target.result[i].id] = event.target.result[i];
             }
           }.bind(this);
+        } else if (normalized[0] !== "+") {
+          // We might have an international prefix like '00'
+          let parsed = PhoneNumberUtils.parse(normalized);
+          if (parsed && parsed.internationalNumber &&
+              parsed.nationalNumber  &&
+              parsed.nationalNumber !== normalized &&
+              parsed.internationalNumber !== normalized) {
+            if (DEBUG) debug("Search with " + parsed.internationalNumber);
+            let prefixRequest = index.mozGetAll(parsed.internationalNumber, limit);
+
+            prefixRequest.onsuccess = function (event) {
+              if (DEBUG) debug("Request successful. Record count: " + event.target.result.length);
+              for (let i in event.target.result) {
+                substringResult[event.target.result[i].id] = event.target.result[i];
+              }
+            }.bind(this);
+          }
         }
 
         request = index.mozGetAll(normalized, limit);
