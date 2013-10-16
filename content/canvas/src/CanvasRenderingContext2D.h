@@ -333,6 +333,12 @@ public:
   void SetMozDash(JSContext* cx, const JS::Value& mozDash,
                   mozilla::ErrorResult& error);
 
+  void SetLineDash(const mozilla::dom::AutoSequence<double>& mSegments);
+  void GetLineDash(nsTArray<double>& mSegments) const;
+
+  void SetLineDashOffset(double mOffset);
+  double LineDashOffset() const;
+
   double MozDashOffset()
   {
     return CurrentState().dashOffset;
@@ -841,6 +847,10 @@ protected:
   nsAutoTArray<ContextState, 3> mStyleStack;
 
   inline ContextState& CurrentState() {
+    return mStyleStack[mStyleStack.Length() - 1];
+  }
+
+  inline const ContextState& CurrentState() const {
     return mStyleStack[mStyleStack.Length() - 1];
   }
 
