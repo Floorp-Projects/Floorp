@@ -372,6 +372,14 @@ Range::intersect(const Range *lhs, const Range *rhs, bool *emptyRange)
     bool newFractional = lhs->canHaveFractionalPart_ && rhs->canHaveFractionalPart_;
     uint16_t newExponent = Min(lhs->max_exponent_, rhs->max_exponent_);
 
+    // NaN is a special value which is neither greater than infinity or less than
+    // negative infinity. When we intersect two ranges like [?, 0] and [0, ?], we
+    // can end up thinking we have both a lower and upper bound, even though NaN
+    // is still possible. In this case, just be conservative, since any case where
+    // we can have NaN is not especially interesting.
+    if (newHasInt32LowerBound && newHasInt32UpperBound && newExponent == IncludesInfinityAndNaN)
+        return nullptr;
+
     // If one of the ranges has a fractional part and the other doesn't, it's
     // possible that we will have computed a newExponent that's more precise
     // than our newLower and newUpper. This is unusual, so we handle it here
