@@ -19,4 +19,4 @@
 <!ENTITY errorTimeout "Error: connection timeout.">
 <!ENTITY errorRefused "Error: connection refused.">
 <!ENTITY errorUnexpected "Unexpected error.">
-<!ENTITY help "Firefox Developer Tools can debug remote devices (Firefox for Android and Firefox OS, for example). Make sure that you have turned on the 'Remote debugging' option in the remote device. See the <a target='_' href='https://developer.mozilla.org/docs/Tools/Debugger#Remote_Debugging'>documentation</a> for more.">
+<!ENTITY help2 "Firefox Developer Tools can debug remote devices (Firefox for Android and Firefox OS, for example). Make sure that you have turned on the 'Remote debugging' option in the remote device. See the <a target='_' href='https://developer.mozilla.org/docs/Tools/Remote_Debugging'>documentation</a> for more.">

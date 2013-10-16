@@ -1283,13 +1283,13 @@ CssRuleView.prototype = {
   {
     // Ignore refreshes during editing or when no element is selected.
     if (this.isEditing || !this._elementStyle) {
-      return promise.resolve(null);
+      return;
     }
 
     this._clearRules();
 
     // Repopulate the element style.
-    return this._populate();
+    this._populate();
   },
 
   _populate: function() {

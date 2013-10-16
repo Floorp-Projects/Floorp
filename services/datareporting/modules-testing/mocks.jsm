@@ -8,12 +8,12 @@ this.EXPORTED_SYMBOLS = ["MockPolicyListener"];
 
 const {utils: Cu} = Components;
 
-Cu.import("resource://services-common/log4moz.js");
+Cu.import("resource://gre/modules/Log.jsm");
 
 
 this.MockPolicyListener = function MockPolicyListener() {
-  this._log = Log4Moz.repository.getLogger("Services.DataReporting.Testing.MockPolicyListener");
-  this._log.level = Log4Moz.Level["Debug"];
+  this._log = Log.repository.getLogger("Services.DataReporting.Testing.MockPolicyListener");
+  this._log.level = Log.Level["Debug"];
 
   this.requestDataUploadCount = 0;
   this.lastDataRequest = null;

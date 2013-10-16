@@ -14,7 +14,7 @@ this.EXPORTED_SYMBOLS = [
 const {classes: Cc, interfaces: Ci, utils: Cu, results: Cr} = Components;
 
 Cu.import("resource://gre/modules/Preferences.jsm");
-Cu.import("resource://services-common/log4moz.js");
+Cu.import("resource://gre/modules/Log.jsm");
 Cu.import("resource://services-common/rest.js");
 Cu.import("resource://services-common/utils.js");
 
@@ -114,8 +114,8 @@ TokenServerClientServerError.prototype.constructor =
  *    at fault (e.g. differentiating a 503 from a 401).
  */
 this.TokenServerClient = function TokenServerClient() {
-  this._log = Log4Moz.repository.getLogger("Common.TokenServerClient");
-  this._log.level = Log4Moz.Level[Prefs.get("logger.level")];
+  this._log = Log.repository.getLogger("Common.TokenServerClient");
+  this._log.level = Log.Level[Prefs.get("logger.level")];
 }
 TokenServerClient.prototype = {
   /**

@@ -458,6 +458,13 @@ class MozbuildObject(ProcessExecutionMixin):
         return fn(**params)
 
     def _make_path(self, force_pymake=False):
+        if self._is_windows() and not force_pymake:
+            # Use mozmake if it's available.
+            try:
+                return [which.which('mozmake')]
+            except which.WhichError:
+                pass
+
         if self._is_windows() or force_pymake:
             make_py = os.path.join(self.topsrcdir, 'build', 'pymake',
                 'make.py').replace(os.sep, '/')

@@ -17,9 +17,5 @@ export MOZILLA_OFFICIAL=1
 
 export MOZ_TELEMETRY_REPORTING=1
 
-if test -z "${_PYMAKE}"; then
-  mk_add_options MOZ_MAKE_FLAGS=-j1
-fi
-
 # Package js shell.
 export MOZ_PACKAGE_JSSHELL=1
