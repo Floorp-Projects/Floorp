@@ -1138,6 +1138,29 @@
         ]]></body>
       </method>
 
+      <!--
+        - This handler may cancel a request to focus content by returning |false|
+        - explicitly.
+        -->
+      <method name="shouldFocusContent">
+        <body><![CDATA[
+          const fm = Components.classes["@mozilla.org/focus-manager;1"]
+                               .getService(Components.interfaces.nsIFocusManager);
+          if (fm.focusedWindow != window)
+            return false;
+
+          let focusedElement = fm.focusedElement;
+          if (!focusedElement)
+            return false;
+
+          let bindingParent = document.getBindingParent(focusedElement);
+          if (bindingParent != this && bindingParent != this._findField)
+            return false;
+
+          return true;
+        ]]></body>
+      </method>
+
     </implementation>
 
     <handlers>

@@ -116,14 +116,22 @@ Finder.prototype = {
   },
 
   focusContent: function() {
-    let fastFind = this._fastFind;
+    // Allow Finder listeners to cancel focusing the content.
+    for (let l of this._listeners) {
+      if (!l.shouldFocusContent())
+        return;
+    }
 
+    let fastFind = this._fastFind;
+    const fm = Cc["@mozilla.org/focus-manager;1"].getService(Ci.nsIFocusManager);
     try {
-      // Try to find the best possible match that should receive focus.
+      // Try to find the best possible match that should receive focus and
+      // block scrolling on focus since find already scrolls. Further
+      // scrolling is due to user action, so don't override this.
       if (fastFind.foundLink) {
-        fastFind.foundLink.focus();
+        fm.setFocus(fastFind.foundLink, fm.FLAG_NOSCROLL);
       } else if (fastFind.foundEditable) {
-        fastFind.foundEditable.focus();
+        fm.setFocus(fastFind.foundEditable, fm.FLAG_NOSCROLL);
         fastFind.collapseSelection();
       } else {
         this._getWindow().focus()
