@@ -129,10 +129,6 @@ DEFAULT_GMAKE_FLAGS += NSPR_LIB_DIR=$(NSPR_LIB_DIR)
 DEFAULT_GMAKE_FLAGS += MOZILLA_CLIENT=1
 DEFAULT_GMAKE_FLAGS += NO_MDUPDATE=1
 DEFAULT_GMAKE_FLAGS += NSS_ENABLE_ECC=1
-DEFAULT_GMAKE_FLAGS += NSINSTALL="$(NSINSTALL)"
-ifeq ($(OS_ARCH),WINNT)
-DEFAULT_GMAKE_FLAGS += INSTALL="$(NSINSTALL) -t"
-endif
 ifeq ($(OS_ARCH)_$(GNU_CC),WINNT_1)
 DEFAULT_GMAKE_FLAGS += OS_DLLFLAGS="-static-libgcc"
 endif
@@ -147,14 +143,16 @@ endif
 ifdef NSS_DISABLE_DBM 
 DEFAULT_GMAKE_FLAGS += NSS_DISABLE_DBM=1
 endif
-ABS_topsrcdir   := $(shell cd $(topsrcdir); pwd)
 ifeq ($(HOST_OS_ARCH),WINNT)
-ifdef .PYMAKE
 ABS_topsrcdir   := $(shell cd $(topsrcdir); pwd -W)
-endif
+else
+ABS_topsrcdir   := $(shell cd $(topsrcdir); pwd)
 endif
 # Hack to force NSS build system to use "normal" object directories
-DEFAULT_GMAKE_FLAGS += BUILD='$(MOZ_BUILD_ROOT)/security/$$(subst $(ABS_topsrcdir)/security/,,$$(CURDIR))'
+DEFAULT_GMAKE_FLAGS += ABS_topsrcdir='$(ABS_topsrcdir)'
+# ABS_topsrcdir can't be expanded here because msys path mangling likes to break
+# paths in that case.
+DEFAULT_GMAKE_FLAGS += BUILD='$(MOZ_BUILD_ROOT)/security/$$(subst $$(ABS_topsrcdir)/security/,,$$(CURDIR))'
 DEFAULT_GMAKE_FLAGS += BUILD_TREE='$$(BUILD)' OBJDIR='$$(BUILD)' DEPENDENCIES='$$(BUILD)/.deps' SINGLE_SHLIB_DIR='$$(BUILD)'
 DEFAULT_GMAKE_FLAGS += SOURCE_XP_DIR=$(ABS_DIST)
 ifndef MOZ_DEBUG
@@ -450,6 +448,16 @@ libs-nss/lib/freebl: $(DIST)/lib/$(IMPORT_PREFIX)nssutil3$(IMPORT_SUFFIX) $(NSPR
 $(addprefix libs-,$(NSS_STATIC_DIRS)): DEFAULT_GMAKE_FLAGS += SHARED_LIBRARY= IMPORT_LIBRARY=
 endif # MOZ_FOLD_LIBS
 
+ifeq ($(NSINSTALL_PY),$(NSINSTALL))
+DEFAULT_GMAKE_FLAGS += PYTHON='$(PYTHON)'
+DEFAULT_GMAKE_FLAGS += NSINSTALL_PY='$(call core_abspath,$(topsrcdir)/config/nsinstall.py)'
+DEFAULT_GMAKE_FLAGS += NSINSTALL='$$(PYTHON) $$(NSINSTALL_PY)'
+else
+DEFAULT_GMAKE_FLAGS += NSINSTALL='$(NSINSTALL)'
+endif
+ifeq ($(OS_ARCH),WINNT)
+DEFAULT_GMAKE_FLAGS += INSTALL='$$(NSINSTALL) -t'
+endif
 DEFAULT_GMAKE_FLAGS += $(EXTRA_GMAKE_FLAGS)
 
 $(addprefix libs-,$(NSS_DIRS)): libs-%:

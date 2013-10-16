@@ -43,7 +43,6 @@
 #endif
 #include "prlog.h"
 
-#include <Carbon/Carbon.h>
 #include <algorithm>
 
 #import <AppKit/AppKit.h>
@@ -646,12 +645,15 @@ gfxSingleFaceMacFontFamily::ReadOtherFamilyNames(gfxPlatformFontList *aPlatformF
 #pragma mark-
 
 gfxMacPlatformFontList::gfxMacPlatformFontList() :
-    gfxPlatformFontList(false), mATSGeneration(uint32_t(kATSGenerationInitial)),
+    gfxPlatformFontList(false),
     mDefaultFont(nullptr)
 {
-    ::ATSFontNotificationSubscribe(ATSNotification,
-                                   kATSFontNotifyOptionDefault,
-                                   (void*)this, nullptr);
+    ::CFNotificationCenterAddObserver(::CFNotificationCenterGetLocalCenter(),
+                                      this,
+                                      RegisteredFontsChangedNotificationCallback,
+                                      kCTFontManagerRegisteredFontsChangedNotification,
+                                      0,
+                                      CFNotificationSuspensionBehaviorDeliverImmediately);
 
     // cache this in a static variable so that MacOSFontFamily objects
     // don't have to repeatedly look it up
@@ -670,18 +672,7 @@ gfxMacPlatformFontList::InitFontList()
 {
     nsAutoreleasePool localPool;
 
-    ATSGeneration currentGeneration = ::ATSGetGeneration();
-
-    // need to ignore notifications after adding each font
-    if (mATSGeneration == currentGeneration)
-        return NS_OK;
-
     Telemetry::AutoTimer<Telemetry::MAC_INITFONTLIST_TOTAL> timer;
-
-    mATSGeneration = currentGeneration;
-#ifdef PR_LOGGING
-    LOG_FONTLIST(("(fontlist) updating to generation: %d", mATSGeneration));
-#endif
 
     // reset font lists
     gfxPlatformFontList::InitFontList();
@@ -777,11 +768,18 @@ gfxMacPlatformFontList::GetStandardFamilyName(const nsAString& aFontName, nsAStr
 }
 
 void
-gfxMacPlatformFontList::ATSNotification(ATSFontNotificationInfoRef aInfo,
-                                        void* aUserArg)
+gfxMacPlatformFontList::RegisteredFontsChangedNotificationCallback(CFNotificationCenterRef center,
+                                                                   void *observer,
+                                                                   CFStringRef name,
+                                                                   const void *object,
+                                                                   CFDictionaryRef userInfo)
 {
+    if (!::CFEqual(name, kCTFontManagerRegisteredFontsChangedNotification)) {
+        return;
+    }
+
     // xxx - should be carefully pruning the list of fonts, not rebuilding it from scratch
-    static_cast<gfxMacPlatformFontList*>(aUserArg)->UpdateFontList();
+    static_cast<gfxMacPlatformFontList*>(observer)->UpdateFontList();
 
     // modify a preference that will trigger reflow everywhere
     static const char kPrefName[] = "font.internaluseonly.changed";

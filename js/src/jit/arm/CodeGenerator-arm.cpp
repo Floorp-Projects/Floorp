@@ -907,7 +907,7 @@ CodeGeneratorARM::visitShiftI(LShiftI *ins)
             } else {
                 // x >>> 0 can overflow.
                 masm.ma_mov(lhs, dest);
-                if (ins->mir()->toUrsh()->canOverflow()) {
+                if (ins->mir()->toUrsh()->fallible()) {
                     masm.ma_cmp(dest, Imm32(0));
                     if (!bailoutIf(Assembler::LessThan, ins->snapshot()))
                         return false;
@@ -932,7 +932,7 @@ CodeGeneratorARM::visitShiftI(LShiftI *ins)
             break;
           case JSOP_URSH:
             masm.ma_lsr(dest, lhs, dest);
-            if (ins->mir()->toUrsh()->canOverflow()) {
+            if (ins->mir()->toUrsh()->fallible()) {
                 // x >>> 0 can overflow.
                 masm.ma_cmp(dest, Imm32(0));
                 if (!bailoutIf(Assembler::LessThan, ins->snapshot()))

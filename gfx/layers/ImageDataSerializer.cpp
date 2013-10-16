@@ -16,6 +16,8 @@
 namespace mozilla {
 namespace layers {
 
+using namespace gfx;
+
 // The Data is layed out as follows:
 //
 //  +-------------------+   -++ --+   <-- ImageDataSerializerBase::mData pointer
@@ -36,11 +38,11 @@ struct SurfaceBufferInfo
 {
   uint32_t width;
   uint32_t height;
-  gfx::SurfaceFormat format;
+  SurfaceFormat format;
 
   static uint32_t GetOffset()
   {
-    return gfx::GetAlignedStride<16>(sizeof(SurfaceBufferInfo));
+    return GetAlignedStride<16>(sizeof(SurfaceBufferInfo));
   }
 };
 } // anonymous namespace
@@ -53,8 +55,8 @@ GetBufferInfo(uint8_t* aBuffer)
 
 
 void
-ImageDataSerializer::InitializeBufferInfo(gfx::IntSize aSize,
-                                          gfx::SurfaceFormat aFormat)
+ImageDataSerializer::InitializeBufferInfo(IntSize aSize,
+                                          SurfaceFormat aFormat)
 {
   SurfaceBufferInfo* info = GetBufferInfo(mData);
   info->width = aSize.width;
@@ -63,18 +65,18 @@ ImageDataSerializer::InitializeBufferInfo(gfx::IntSize aSize,
 }
 
 static inline uint32_t
-ComputeStride(gfx::SurfaceFormat aFormat, uint32_t aWidth)
+ComputeStride(SurfaceFormat aFormat, uint32_t aWidth)
 {
-  return gfx::GetAlignedStride<4>(gfx::BytesPerPixel(aFormat) * aWidth);
+  return GetAlignedStride<4>(BytesPerPixel(aFormat) * aWidth);
 }
 
 uint32_t
-ImageDataSerializer::ComputeMinBufferSize(gfx::IntSize aSize,
-                                          gfx::SurfaceFormat aFormat)
+ImageDataSerializer::ComputeMinBufferSize(IntSize aSize,
+                                          SurfaceFormat aFormat)
 {
   uint32_t bufsize = aSize.height * ComputeStride(aFormat, aSize.width);
   return SurfaceBufferInfo::GetOffset()
-       + gfx::GetAlignedStride<16>(bufsize);
+       + GetAlignedStride<16>(bufsize);
 }
 
 bool
@@ -91,15 +93,23 @@ ImageDataSerializerBase::GetData()
   return mData + SurfaceBufferInfo::GetOffset();
 }
 
-gfx::IntSize
+uint32_t
+ImageDataSerializerBase::GetStride() const
+{
+  MOZ_ASSERT(IsValid());
+  SurfaceBufferInfo* info = GetBufferInfo(mData);
+  return ComputeStride(GetFormat(), info->width);
+}
+
+IntSize
 ImageDataSerializerBase::GetSize() const
 {
   MOZ_ASSERT(IsValid());
   SurfaceBufferInfo* info = GetBufferInfo(mData);
-  return gfx::IntSize(info->width, info->height);
+  return IntSize(info->width, info->height);
 }
 
-gfx::SurfaceFormat
+SurfaceFormat
 ImageDataSerializerBase::GetFormat() const
 {
   MOZ_ASSERT(IsValid());
@@ -110,25 +120,31 @@ TemporaryRef<gfxImageSurface>
 ImageDataSerializerBase::GetAsThebesSurface()
 {
   MOZ_ASSERT(IsValid());
-  SurfaceBufferInfo* info = GetBufferInfo(mData);
-  uint32_t stride = ComputeStride(GetFormat(), info->width);
-  gfxIntSize size(info->width, info->height);
-  RefPtr<gfxImageSurface> surf =
-    new gfxImageSurface(GetData(), size, stride,
-                        gfx::SurfaceFormatToImageFormat(GetFormat()));
-  return surf.forget();
+  IntSize size = GetSize();
+  return new gfxImageSurface(GetData(),
+                             gfxIntSize(size.width, size.height),
+                             GetStride(),
+                             SurfaceFormatToImageFormat(GetFormat()));
 }
 
-TemporaryRef<gfx::DataSourceSurface>
+TemporaryRef<DrawTarget>
+ImageDataSerializerBase::GetAsDrawTarget()
+{
+  MOZ_ASSERT(IsValid());
+  return gfxPlatform::GetPlatform()->CreateDrawTargetForData(GetData(),
+                                                             GetSize(),
+                                                             GetStride(),
+                                                             GetFormat());
+}
+
+TemporaryRef<DataSourceSurface>
 ImageDataSerializerBase::GetAsSurface()
 {
   MOZ_ASSERT(IsValid());
-  SurfaceBufferInfo* info = GetBufferInfo(mData);
-  gfx::IntSize size(info->width, info->height);
-  uint32_t stride = ComputeStride(GetFormat(), info->width);
-  RefPtr<gfx::DataSourceSurface> surf =
-    gfx::Factory::CreateWrappingDataSourceSurface(GetData(), stride, size, GetFormat());
-  return surf.forget();
+  return Factory::CreateWrappingDataSourceSurface(GetData(),
+                                                  GetStride(),
+                                                  GetSize(),
+                                                  GetFormat());
 }
 
 } // namespace layers

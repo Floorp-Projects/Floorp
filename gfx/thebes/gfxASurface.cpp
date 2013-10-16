@@ -10,6 +10,7 @@
 #include "mozilla/Attributes.h"
 #include "mozilla/MemoryReporting.h"
 #include "nsTraceRefcnt.h"
+#include "mozilla/gfx/2D.h"
 
 #include "gfxASurface.h"
 #include "gfxContext.h"
@@ -52,6 +53,7 @@
 #include "nsIClipboardHelper.h"
 
 using namespace mozilla;
+using namespace mozilla::gfx;
 
 static cairo_user_data_key_t gfxasurface_pointer_key;
 
@@ -359,10 +361,17 @@ gfxASurface::CopyToARGB32ImageSurface()
     nsRefPtr<gfxImageSurface> imgSurface =
         new gfxImageSurface(size, gfxImageFormatARGB32);
 
-    gfxContext ctx(imgSurface);
-    ctx.SetOperator(gfxContext::OPERATOR_SOURCE);
-    ctx.SetSource(this);
-    ctx.Paint();
+    if (gfxPlatform::GetPlatform()->SupportsAzureContent()) {
+        RefPtr<DrawTarget> dt = gfxPlatform::GetPlatform()->CreateDrawTargetForSurface(imgSurface, IntSize(size.width, size.height));
+        RefPtr<SourceSurface> source = gfxPlatform::GetPlatform()->GetSourceSurfaceForSurface(dt, this);
+
+        dt->CopySurface(source, IntRect(0, 0, size.width, size.height), IntPoint());
+    } else {
+        gfxContext ctx(imgSurface);
+        ctx.SetOperator(gfxContext::OPERATOR_SOURCE);
+        ctx.SetSource(this);
+        ctx.Paint();
+    }
 
     return imgSurface.forget();
 }
