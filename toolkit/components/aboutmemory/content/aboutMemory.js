@@ -126,48 +126,6 @@ function onUnload()
 
 //---------------------------------------------------------------------------
 
-/**
- * Iterates over each reporter.
- *
- * @param aHandleReport
- *        The function that's called for each non-skipped report.
- */
-function processMemoryReporters(aHandleReport)
-{
-  let handleReport = function(aProcess, aUnsafePath, aKind, aUnits,
-                              aAmount, aDescription) {
-    aHandleReport(aProcess, aUnsafePath, aKind, aUnits, aAmount,
-                  aDescription, /* presence = */ undefined);
-  }
-
-  let e = gMgr.enumerateReporters();
-  while (e.hasMoreElements()) {
-    let mr = e.getNext().QueryInterface(Ci.nsIMemoryReporter);
-    mr.collectReports(handleReport, null);
-  }
-}
-
-/**
- * Iterates over each report.
- *
- * @param aReports
- *        Array of reports, read from a file or the clipboard.
- * @param aHandleReport
- *        The function that's called for each report.
- */
-function processMemoryReportsFromFile(aReports, aHandleReport)
-{
-  // Process each memory reporter with aHandleReport.
-
-  for (let i = 0; i < aReports.length; i++) {
-    let r = aReports[i];
-    aHandleReport(r.process, r.path, r.kind, r.units, r.amount,
-                  r.description, r._presence);
-  }
-}
-
-//---------------------------------------------------------------------------
-
 // The <div> holding everything but the header and footer (if they're present).
 // It's what is updated each time the page changes.
 let gMain;
@@ -450,6 +408,20 @@ function updateAboutMemoryFromReporters()
   updateMainAndFooter("", SHOW_FOOTER);
 
   try {
+    let processMemoryReporters = function(aHandleReport) {
+      let handleReport = function(aProcess, aUnsafePath, aKind, aUnits,
+                                  aAmount, aDescription) {
+        aHandleReport(aProcess, aUnsafePath, aKind, aUnits, aAmount,
+                      aDescription, /* presence = */ undefined);
+      }
+
+      let e = gMgr.enumerateReporters();
+      while (e.hasMoreElements()) {
+        let mr = e.getNext().QueryInterface(Ci.nsIMemoryReporter);
+        mr.collectReports(handleReport, null);
+      }
+    }
+
     // Process the reports from the memory reporters.
     appendAboutMemoryMain(processMemoryReporters, gMgr.hasMozMallocUsableSize);
 
@@ -480,10 +452,16 @@ function updateAboutMemoryFromJSONObject(aObj)
                 "missing 'hasMozMallocUsableSize' property");
     assertInput(aObj.reports && aObj.reports instanceof Array,
                 "missing or non-array 'reports' property");
-    let process = function(aHandleReport) {
-      processMemoryReportsFromFile(aObj.reports, aHandleReport);
+
+    let processMemoryReportsFromFile = function(aHandleReport) {
+      for (let i = 0; i < aObj.reports.length; i++) {
+        let r = aObj.reports[i];
+        aHandleReport(r.process, r.path, r.kind, r.units, r.amount,
+                      r.description, r._presence);
+      }
     }
-    appendAboutMemoryMain(process, aObj.hasMozMallocUsableSize);
+    appendAboutMemoryMain(processMemoryReportsFromFile,
+                          aObj.hasMozMallocUsableSize);
   } catch (ex) {
     handleException(ex);
   }
@@ -839,71 +817,6 @@ function PColl()
  */
 function appendAboutMemoryMain(aProcessReports, aHasMozMallocUsableSize)
 {
-  let pcollsByProcess = getPCollsByProcess(aProcessReports);
-
-  // Sort the processes.
-  let processes = Object.keys(pcollsByProcess);
-  processes.sort(function(aProcessA, aProcessB) {
-    assert(aProcessA != aProcessB,
-           "Elements of Object.keys() should be unique, but " +
-           "saw duplicate '" + aProcessA + "' elem.");
-
-    // Always put the main process first.
-    if (aProcessA == gUnnamedProcessStr) {
-      return -1;
-    }
-    if (aProcessB == gUnnamedProcessStr) {
-      return 1;
-    }
-
-    // Then sort by resident size.
-    let nodeA = pcollsByProcess[aProcessA]._degenerates['resident'];
-    let nodeB = pcollsByProcess[aProcessB]._degenerates['resident'];
-    let residentA = nodeA ? nodeA._amount : -1;
-    let residentB = nodeB ? nodeB._amount : -1;
-
-    if (residentA > residentB) {
-      return -1;
-    }
-    if (residentA < residentB) {
-      return 1;
-    }
-
-    // Then sort by process name.
-    if (aProcessA < aProcessB) {
-      return -1;
-    }
-    if (aProcessA > aProcessB) {
-      return 1;
-    }
-
-    return 0;
-  });
-
-  // Generate output for each process.
-  for (let i = 0; i < processes.length; i++) {
-    let process = processes[i];
-    let section = appendElement(gMain, 'div', 'section');
-
-    appendProcessAboutMemoryElements(section, i, process,
-                                     pcollsByProcess[process]._trees,
-                                     pcollsByProcess[process]._degenerates,
-                                     pcollsByProcess[process]._heapTotal,
-                                     aHasMozMallocUsableSize);
-  }
-}
-
-/**
- * This function reads all the memory reports, and puts that data in structures
- * that will be used to generate the page.
- *
- * @param aProcessReports
- *        Function that extracts the memory reports from the reporters or from
- *        file.
- * @return The table of PColls by process.
- */
-function getPCollsByProcess(aProcessReports)
-{
   let pcollsByProcess = {};
 
   // This regexp matches sentences and sentence fragments, i.e. strings that
@@ -1010,7 +923,56 @@ function getPCollsByProcess(aProcessReports)
 
   aProcessReports(handleReport);
 
-  return pcollsByProcess;
+  // Sort the processes.
+  let processes = Object.keys(pcollsByProcess);
+  processes.sort(function(aProcessA, aProcessB) {
+    assert(aProcessA != aProcessB,
+           "Elements of Object.keys() should be unique, but " +
+           "saw duplicate '" + aProcessA + "' elem.");
+
+    // Always put the main process first.
+    if (aProcessA == gUnnamedProcessStr) {
+      return -1;
+    }
+    if (aProcessB == gUnnamedProcessStr) {
+      return 1;
+    }
+
+    // Then sort by resident size.
+    let nodeA = pcollsByProcess[aProcessA]._degenerates['resident'];
+    let nodeB = pcollsByProcess[aProcessB]._degenerates['resident'];
+    let residentA = nodeA ? nodeA._amount : -1;
+    let residentB = nodeB ? nodeB._amount : -1;
+
+    if (residentA > residentB) {
+      return -1;
+    }
+    if (residentA < residentB) {
+      return 1;
+    }
+
+    // Then sort by process name.
+    if (aProcessA < aProcessB) {
+      return -1;
+    }
+    if (aProcessA > aProcessB) {
+      return 1;
+    }
+
+    return 0;
+  });
+
+  // Generate output for each process.
+  for (let i = 0; i < processes.length; i++) {
+    let process = processes[i];
+    let section = appendElement(gMain, 'div', 'section');
+
+    appendProcessAboutMemoryElements(section, i, process,
+                                     pcollsByProcess[process]._trees,
+                                     pcollsByProcess[process]._degenerates,
+                                     pcollsByProcess[process]._heapTotal,
+                                     aHasMozMallocUsableSize);
+  }
 }
 
 //---------------------------------------------------------------------------
