@@ -316,7 +316,7 @@ nsMenuItemIconX::LoadIcon(nsIURI* aIconURI)
   // not exposed to web content
   nsresult rv = loader->LoadImage(aIconURI, nullptr, nullptr, nullptr, loadGroup, this,
                                    nullptr, nsIRequest::LOAD_NORMAL, nullptr,
-                                   nullptr, getter_AddRefs(mIconRequest));
+                                   nullptr, EmptyString(), getter_AddRefs(mIconRequest));
   if (NS_FAILED(rv)) return rv;
 
   // We need to request the icon be decoded (bug 573583, bug 705516).

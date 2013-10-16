@@ -241,7 +241,8 @@ OSXNotificationCenter::ShowAlertNotification(const nsAString & aImageUrl, const 
       if (imageUri) {
         nsresult rv = il->LoadImage(imageUri, nullptr, nullptr, aPrincipal, nullptr,
                                     this, nullptr, nsIRequest::LOAD_NORMAL, nullptr,
-                                    nullptr, getter_AddRefs(osxni->mIconRequest));
+                                    nullptr, EmptyString(),
+                                    getter_AddRefs(osxni->mIconRequest));
         if (NS_SUCCEEDED(rv)) {
           // Set a timer for six seconds. If we don't have an icon by the time this
           // goes off then we go ahead without an icon.

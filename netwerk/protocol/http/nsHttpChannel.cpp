@@ -62,6 +62,8 @@
 #include "nsIStreamConverterService.h"
 #include "nsISiteSecurityService.h"
 #include "nsCRT.h"
+#include "nsPIDOMWindow.h"
+#include "nsPerformance.h"
 #include "CacheObserver.h"
 #include "mozilla/Telemetry.h"
 
@@ -4774,6 +4776,66 @@ nsHttpChannel::GetAsyncOpen(TimeStamp* _retval) {
     return NS_OK;
 }
 
+/**
+ * @return the number of redirects. There is no check for cross-domain
+ * redirects. This check must be done by the consumers.
+ */
+NS_IMETHODIMP
+nsHttpChannel::GetRedirectCount(uint16_t *aRedirectCount)
+{
+    *aRedirectCount = mRedirectCount;
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsHttpChannel::SetRedirectCount(uint16_t aRedirectCount)
+{
+    mRedirectCount = aRedirectCount;
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsHttpChannel::GetRedirectStart(TimeStamp* _retval)
+{
+    *_retval = mRedirectStartTimeStamp;
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsHttpChannel::SetRedirectStart(TimeStamp aRedirectStart)
+{
+    mRedirectStartTimeStamp = aRedirectStart;
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsHttpChannel::GetRedirectEnd(TimeStamp* _retval)
+{
+    *_retval = mRedirectEndTimeStamp;
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsHttpChannel::SetRedirectEnd(TimeStamp aRedirectEnd)
+{
+    mRedirectEndTimeStamp = aRedirectEnd;
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsHttpChannel::GetAllRedirectsSameOrigin(bool *aAllRedirectsSameOrigin)
+{
+    *aAllRedirectsSameOrigin = mAllRedirectsSameOrigin;
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsHttpChannel::SetAllRedirectsSameOrigin(bool aAllRedirectsSameOrigin)
+{
+    mAllRedirectsSameOrigin = aAllRedirectsSameOrigin;
+    return NS_OK;
+}
+
 NS_IMETHODIMP
 nsHttpChannel::GetDomainLookupStart(TimeStamp* _retval) {
     if (mDNSPrefetch && mDNSPrefetch->TimingsValid())
@@ -4853,6 +4915,20 @@ nsHttpChannel::GetCacheReadEnd(TimeStamp* _retval) {
     return NS_OK;
 }
 
+NS_IMETHODIMP
+nsHttpChannel::GetInitiatorType(nsAString & aInitiatorType)
+{
+    aInitiatorType = mInitiatorType;
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsHttpChannel::SetInitiatorType(const nsAString & aInitiatorType)
+{
+    mInitiatorType = aInitiatorType;
+    return NS_OK;
+}
+
 #define IMPL_TIMING_ATTR(name)                                 \
 NS_IMETHODIMP                                                  \
 nsHttpChannel::Get##name##Time(PRTime* _retval) {              \
@@ -4878,6 +4954,8 @@ IMPL_TIMING_ATTR(ResponseStart)
 IMPL_TIMING_ATTR(ResponseEnd)
 IMPL_TIMING_ATTR(CacheReadStart)
 IMPL_TIMING_ATTR(CacheReadEnd)
+IMPL_TIMING_ATTR(RedirectStart)
+IMPL_TIMING_ATTR(RedirectEnd)
 
 #undef IMPL_TIMING_ATTR
 
@@ -5238,6 +5316,12 @@ nsHttpChannel::OnStopRequest(nsIRequest *request, nsISupports *ctxt, nsresult st
         if (writeAccess) {
             FinalizeCacheEntry();
         }
+    }
+
+    // Register entry to the Performance resource timing
+    nsPerformance* documentPerformance = GetPerformance();
+    if (documentPerformance) {
+        documentPerformance->AddEntry(this, this);
     }
 
     if (mListener) {
@@ -6216,6 +6300,46 @@ nsHttpChannel::SetNotificationCallbacks(nsIInterfaceRequestor *aCallbacks)
         UpdateAggregateCallbacks();
     }
     return rv;
+}
+
+nsPerformance*
+nsHttpChannel::GetPerformance()
+{
+    // If performance timing is disabled, there is no need for the nsPerformance
+    // object anymore.
+    if (!mTimingEnabled) {
+        return nullptr;
+    }
+    nsCOMPtr<nsILoadContext> loadContext;
+    NS_QueryNotificationCallbacks(this, loadContext);
+    if (!loadContext) {
+        return nullptr;
+    }
+    nsCOMPtr<nsIDOMWindow> domWindow;
+    loadContext->GetAssociatedWindow(getter_AddRefs(domWindow));
+    if (!domWindow) {
+        return nullptr;
+    }
+    nsCOMPtr<nsPIDOMWindow> pDomWindow = do_QueryInterface(domWindow);
+    if (!pDomWindow) {
+        return nullptr;
+    }
+    if (!pDomWindow->IsInnerWindow()) {
+        pDomWindow = pDomWindow->GetCurrentInnerWindow();
+        if (!pDomWindow) {
+            return nullptr;
+        }
+    }
+
+    nsPerformance* docPerformance = pDomWindow->GetPerformance();
+    if (!docPerformance) {
+      return nullptr;
+    }
+    // iframes should be added to the parent's entries list.
+    if (mLoadFlags & LOAD_DOCUMENT_URI) {
+      return docPerformance->GetParentPerformance();
+    }
+    return docPerformance;
 }
 
 void

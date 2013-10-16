@@ -1562,6 +1562,7 @@ NS_IMETHODIMP imgLoader::LoadImageXPCOM(nsIURI *aURI,
                                 aLoadFlags,
                                 aCacheKey,
                                 aPolicy,
+                                EmptyString(),
                                 &proxy);
     *_retval = proxy;
     return result;
@@ -1581,6 +1582,7 @@ nsresult imgLoader::LoadImage(nsIURI *aURI,
 			      nsLoadFlags aLoadFlags,
 			      nsISupports *aCacheKey,
 			      nsIChannelPolicy *aPolicy,
+			      const nsAString& initiatorType,
 			      imgRequestProxy **_retval)
 {
 	VerifyCacheSizes();
@@ -1717,6 +1719,12 @@ nsresult imgLoader::LoadImage(nsIURI *aURI,
     newChannel->GetLoadGroup(getter_AddRefs(channelLoadGroup));
     request->Init(aURI, aURI, channelLoadGroup, newChannel, entry, aCX,
                   aLoadingPrincipal, corsmode);
+
+    // Add the initiator type for this image load
+    nsCOMPtr<nsITimedChannel> timedChannel = do_QueryInterface(newChannel);
+    if (timedChannel) {
+      timedChannel->SetInitiatorType(initiatorType);
+    }
 
     // Pass the inner window ID of the loading document, if possible.
     nsCOMPtr<nsIDocument> doc = do_QueryInterface(aCX);

@@ -17,6 +17,7 @@
 #include "nsCOMPtr.h"
 #include "nsAutoPtr.h"
 #include "nsThreadUtils.h"
+#include "mozilla/TimeStamp.h"
 
 #include "imgRequest.h"
 

@@ -12,12 +12,15 @@ class TimeStamp;
 native TimeStamp(mozilla::TimeStamp);
 
 // All properties return zero if the value is not available
-[scriptable, uuid(c259b593-a9bf-4d08-8149-ef89e1977dc4)]
+[scriptable, uuid(E94AB245-B40D-4154-8B7F-B6E0F2461031)]
 interface nsITimedChannel : nsISupports {
   // Set this attribute to true to enable collection of timing data.
   // channelCreationTime will be available even with this attribute set to
   // false.
   attribute boolean timingEnabled;
+
+  // The number of redirects
+  attribute uint16_t redirectCount;
 
   [noscript] readonly attribute TimeStamp channelCreation;
   [noscript] readonly attribute TimeStamp asyncOpen;
@@ -31,6 +34,17 @@ interface nsITimedChannel : nsISupports {
   [noscript] readonly attribute TimeStamp requestStart;
   [noscript] readonly attribute TimeStamp responseStart;
   [noscript] readonly attribute TimeStamp responseEnd;
+
+  // The redirect attributes timings must be writeble, se we can transfer
+  // the data from one channel to the redirected channel.
+  [noscript] attribute TimeStamp redirectStart;
+  [noscript] attribute TimeStamp redirectEnd;
+
+  // The initiator type
+  [noscript] attribute AString initiatorType;
+
+  // This flag should be set to false only if a cross-domain redirect occurred
+  [noscript] attribute boolean allRedirectsSameOrigin;
 
   // The following are only set if the document is (partially) read from the
   // cache
@@ -49,4 +63,6 @@ interface nsITimedChannel : nsISupports {
   readonly attribute PRTime responseEndTime;
   readonly attribute PRTime cacheReadStartTime;
   readonly attribute PRTime cacheReadEndTime;
+  readonly attribute PRTime redirectStartTime;
+  readonly attribute PRTime redirectEndTime;
 };

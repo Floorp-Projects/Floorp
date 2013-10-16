@@ -30,6 +30,7 @@ class nsICacheEntryDescriptor;
 class nsICancelable;
 class nsIHttpChannelAuthProvider;
 class nsInputStreamPump;
+class nsPerformance;
 
 namespace mozilla { namespace net {
 
@@ -420,6 +421,7 @@ private:
 
 protected:
     virtual void DoNotifyListenerCleanup();
+    nsPerformance* GetPerformance();
 
 private: // cache telemetry
     bool mDidReval;
