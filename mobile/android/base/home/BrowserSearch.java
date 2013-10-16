@@ -140,7 +140,13 @@ public class BrowserSearch extends HomeFragment
     }
 
     public static BrowserSearch newInstance() {
-        return new BrowserSearch();
+        BrowserSearch browserSearch = new BrowserSearch();
+
+        final Bundle args = new Bundle();
+        args.putBoolean(HomePager.CAN_LOAD_ARG, true);
+        browserSearch.setArguments(args);
+
+        return browserSearch;
     }
 
     public BrowserSearch() {
