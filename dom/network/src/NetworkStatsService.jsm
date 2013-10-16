@@ -268,12 +268,13 @@ this.NetworkStatsService = {
       debug("getstats for network " + network.id + " of type " + network.type);
       debug("appId: " + appId + " from manifestURL: " + manifestURL);
 
-      self._db.find(function onStatsFound(aError, aResult) {
-        mm.sendAsyncMessage("NetworkStats:Get:Return",
-                            { id: msg.id, error: aError, result: aResult });
-      }, network, start, end, appId, manifestURL);
-
-    });
+      this.updateCachedAppStats(function onAppStatsUpdated(aResult, aMessage) {
+        self._db.find(function onStatsFound(aError, aResult) {
+          mm.sendAsyncMessage("NetworkStats:Get:Return",
+                              { id: msg.id, error: aError, result: aResult });
+        }, network, start, end, appId, manifestURL);
+      });
+    }.bind(this));
   },
 
   clearInterfaceStats: function clearInterfaceStats(mm, msg) {
@@ -561,6 +562,10 @@ this.NetworkStatsService = {
     let stats = Object.keys(this.cachedAppStats);
     if (stats.length == 0) {
       // |cachedAppStats| is empty, no need to update.
+      if (aCallback) {
+        aCallback(true, "no need to update");
+      }
+
       return;
     }
 
