@@ -7,17 +7,10 @@
 MODULE = 'xpcom'
 
 if CONFIG['OS_ARCH'] == 'Darwin':
-    if CONFIG['OS_TEST'].find('86') != -1:
-        if CONFIG['OS_TEST'] == 'x86_64':
-            CPP_SOURCES += [
-                'xptcinvoke_x86_64_unix.cpp',
-                'xptcstubs_x86_64_darwin.cpp',
-            ]
-        else:
-            CPP_SOURCES += [
-                'xptcinvoke_gcc_x86_unix.cpp',
-                'xptcstubs_gcc_x86_unix.cpp',
-            ]
+    CPP_SOURCES += [
+        'xptcinvoke_darwin.cpp',
+        'xptcstubs_darwin.cpp',
+    ]
 
 if CONFIG['OS_ARCH'] in ('NetBSD', 'OpenBSD', 'GNU'):
     if CONFIG['CPU_ARCH'] == 'x86':
@@ -209,12 +202,6 @@ if CONFIG['OS_ARCH'] == 'OpenBSD' and CONFIG['OS_TEST'] == 'powerpc':
     CPP_SOURCES += [
         'xptcinvoke_ppc_openbsd.cpp',
         'xptcstubs_ppc_openbsd.cpp',
-    ]
-
-if CONFIG['OS_ARCH'] == 'Darwin' and CONFIG['TARGET_CPU'] == 'powerpc':
-    CPP_SOURCES += [
-        'xptcinvoke_ppc_rhapsody.cpp',
-        'xptcstubs_ppc_rhapsody.cpp',
     ]
 
 if CONFIG['OS_ARCH'] == 'Linux' and CONFIG['OS_TEST'].find('sparc') != -1:
