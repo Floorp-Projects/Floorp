@@ -1,7 +1,7 @@
 /* Any copyright is dedicated to the Public Domain.
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 
-Cu.import("resource://services-common/log4moz.js");
+Cu.import("resource://gre/modules/Log.jsm");
 Cu.import("resource://services-common/observers.js");
 Cu.import("resource://services-sync/identity.js");
 Cu.import("resource://services-sync/resource.js");
@@ -153,8 +153,8 @@ Observers.add("weave:service:quota:remaining",
               function (subject) { quotaValue = subject; });
 
 function run_test() {
-  logger = Log4Moz.repository.getLogger('Test');
-  Log4Moz.repository.rootLogger.addAppender(new Log4Moz.DumpAppender());
+  logger = Log.repository.getLogger('Test');
+  Log.repository.rootLogger.addAppender(new Log.DumpAppender());
 
   Svc.Prefs.set("network.numRetries", 1); // speed up test
   run_next_test();

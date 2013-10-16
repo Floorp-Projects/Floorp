@@ -172,8 +172,8 @@ add_test(function test_keymanager() {
 });
 
 add_test(function test_collections_manager() {
-  let log = Log4Moz.repository.getLogger("Test");
-  Log4Moz.repository.rootLogger.addAppender(new Log4Moz.DumpAppender());
+  let log = Log.repository.getLogger("Test");
+  Log.repository.rootLogger.addAppender(new Log.DumpAppender());
 
   let identity = new IdentityManager();
 

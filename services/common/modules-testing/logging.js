@@ -11,7 +11,7 @@ this.EXPORTED_SYMBOLS = [
 
 const {utils: Cu} = Components;
 
-Cu.import("resource://services-common/log4moz.js");
+Cu.import("resource://gre/modules/Log.jsm");
 
 this.initTestLogging = function initTestLogging(level) {
   function LogStats() {
@@ -19,7 +19,7 @@ this.initTestLogging = function initTestLogging(level) {
   }
   LogStats.prototype = {
     format: function format(message) {
-      if (message.level == Log4Moz.Level.Error) {
+      if (message.level == Log.Level.Error) {
         this.errorsLogged += 1;
       }
 
@@ -27,20 +27,20 @@ this.initTestLogging = function initTestLogging(level) {
         message.message + "\n";
     }
   };
-  LogStats.prototype.__proto__ = new Log4Moz.Formatter();
+  LogStats.prototype.__proto__ = new Log.Formatter();
 
-  let log = Log4Moz.repository.rootLogger;
+  let log = Log.repository.rootLogger;
   let logStats = new LogStats();
-  let appender = new Log4Moz.DumpAppender(logStats);
+  let appender = new Log.DumpAppender(logStats);
 
   if (typeof(level) == "undefined") {
     level = "Debug";
   }
-  getTestLogger().level = Log4Moz.Level[level];
-  Log4Moz.repository.getLogger("Services").level = Log4Moz.Level[level];
+  getTestLogger().level = Log.Level[level];
+  Log.repository.getLogger("Services").level = Log.Level[level];
 
-  log.level = Log4Moz.Level.Trace;
-  appender.level = Log4Moz.Level.Trace;
+  log.level = Log.Level.Trace;
+  appender.level = Log.Level.Trace;
   // Overwrite any other appenders (e.g. from previous incarnations)
   log.ownAppenders = [appender];
   log.updateAppenders();
@@ -49,6 +49,6 @@ this.initTestLogging = function initTestLogging(level) {
 }
 
 this.getTestLogger = function getTestLogger(component) {
-  return Log4Moz.repository.getLogger("Testing");
+  return Log.repository.getLogger("Testing");
 }
 

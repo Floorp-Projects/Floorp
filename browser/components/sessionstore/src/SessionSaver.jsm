@@ -202,20 +202,18 @@ let SessionSaverInternal = {
       }
     }
 
-#ifndef XP_MACOSX
-    // Don't save invalid states.
-    // Looks like we currently have private windows, only.
-    if (state.windows.length == 0) {
-      stopWatchCancel("COLLECT_DATA_MS", "COLLECT_DATA_LONGEST_OP_MS");
-      return;
-    }
-#endif
-
     // Remove private windows from the list of closed windows.
     for (let i = state._closedWindows.length - 1; i >= 0; i--) {
       if (state._closedWindows[i].isPrivate) {
         state._closedWindows.splice(i, 1);
       }
+    }
+
+    // Make sure that we keep the previous session if we started with a single
+    // private window and no non-private windows have been opened, yet.
+    if (state.deferredInitialState) {
+      state.windows = state.deferredInitialState.windows || [];
+      delete state.deferredInitialState;
     }
 
 #ifndef XP_MACOSX

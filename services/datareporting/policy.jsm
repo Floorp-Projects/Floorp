@@ -27,7 +27,7 @@ const {classes: Cc, interfaces: Ci, utils: Cu} = Components;
 #endif
 
 Cu.import("resource://gre/modules/Promise.jsm");
-Cu.import("resource://services-common/log4moz.js");
+Cu.import("resource://gre/modules/Log.jsm");
 Cu.import("resource://services-common/utils.js");
 
 const MILLISECONDS_PER_DAY = 24 * 60 * 60 * 1000;
@@ -263,8 +263,8 @@ this.DataSubmissionRequest.prototype = Object.freeze({
  *        events.
  */
 this.DataReportingPolicy = function (prefs, healthReportPrefs, listener) {
-  this._log = Log4Moz.repository.getLogger("Services.DataReporting.Policy");
-  this._log.level = Log4Moz.Level["Debug"];
+  this._log = Log.repository.getLogger("Services.DataReporting.Policy");
+  this._log.level = Log.Level["Debug"];
 
   for (let handler of this.REQUIRED_LISTENERS) {
     if (!listener[handler]) {

@@ -1,7 +1,7 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
-Cu.import("resource://services-common/log4moz.js");
+Cu.import("resource://gre/modules/Log.jsm");
 Cu.import("resource://services-sync/constants.js");
 Cu.import("resource://services-sync/service.js");
 Cu.import("resource://services-sync/policies.js");
@@ -23,8 +23,8 @@ function login_handling(handler) {
 }
 
 function run_test() {
-  let logger = Log4Moz.repository.rootLogger;
-  Log4Moz.repository.rootLogger.addAppender(new Log4Moz.DumpAppender());
+  let logger = Log.repository.rootLogger;
+  Log.repository.rootLogger.addAppender(new Log.DumpAppender());
 
   run_next_test();
 }

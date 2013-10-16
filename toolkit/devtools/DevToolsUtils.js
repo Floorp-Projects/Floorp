@@ -134,3 +134,35 @@ this.yieldingEach = function yieldingEach(aArray, aFn) {
 
   return deferred.promise;
 }
+
+
+/**
+ * Like XPCOMUtils.defineLazyGetter, but with a |this| sensitive getter that
+ * allows the lazy getter to be defined on a prototype and work correctly with
+ * instances.
+ *
+ * @param Object aObject
+ *        The prototype object to define the lazy getter on.
+ * @param String aKey
+ *        The key to define the lazy getter on.
+ * @param Function aCallback
+ *        The callback that will be called to determine the value. Will be
+ *        called with the |this| value of the current instance.
+ */
+this.defineLazyPrototypeGetter =
+function defineLazyPrototypeGetter(aObject, aKey, aCallback) {
+  Object.defineProperty(aObject, aKey, {
+    configurable: true,
+    get: function() {
+      const value = aCallback.call(this);
+
+      Object.defineProperty(this, aKey, {
+        configurable: true,
+        writable: true,
+        value: value
+      });
+
+      return value;
+    }
+  });
+}
