@@ -1152,6 +1152,7 @@ this.GECKO_ICC_SERVICES = {
     ADN: 2,
     FDN: 3,
     PLMNSEL: 7,
+    MSISDN: 9,
     CBMI: 14,
     SPN: 17,
     SDN: 18,
@@ -1161,6 +1162,7 @@ this.GECKO_ICC_SERVICES = {
     BDN: 31,
     PNN: 51,
     OPL: 52,
+    MDN: 53,
     SPDI: 56
   },
   usim: {
@@ -1170,10 +1172,12 @@ this.GECKO_ICC_SERVICES = {
     CBMI: 15,
     CBMIR: 16,
     SPN: 19,
+    MSISDN: 21,
     DATA_DOWNLOAD_SMS_PP: 28,
     DATA_DOWNLOAD_SMS_CB: 29,
     PNN: 45,
     OPL: 46,
+    MDN: 47,
     SPDI: 51
   },
   ruim: {

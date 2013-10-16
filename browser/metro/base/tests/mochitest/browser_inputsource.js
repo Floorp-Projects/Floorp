@@ -32,44 +32,28 @@ function testState(aState) {
   }
 }
 
-function sendMouseMoves() {
-  let utils = window.QueryInterface(Components.interfaces.nsIInterfaceRequestor)
-                      .getInterface(Components.interfaces.nsIDOMWindowUtils);
-  for (let deg = 0; deg < 180; deg++) {
-    let coord = Math.sin((deg * Math.PI)/180) * 750;
-    utils.sendMouseEventToWindow("mousemove", coord, coord, 2, 1, 0, true,
-                                  1, Ci.nsIDOMMouseEvent.MOZ_SOURCE_MOUSE);
-  }
+function notifyPrecise()
+{
+  Services.obs.notifyObservers(null, "metro_precise_input", null);
 }
 
-function sendTouchStart() {
-  EventUtils.synthesizeTouchAtPoint(100, 100, { type: "touchstart" }, window);
-}
-
-function sendTouchMove() {
-  EventUtils.synthesizeTouchAtPoint(100, 100, { type: "touchmove" }, window);
-}
-
-function sendTouchEnd() {
-  EventUtils.synthesizeTouchAtPoint(100, 100, { type: "touchend" }, window);
+function notifyImprecise()
+{
+  Services.obs.notifyObservers(null, "metro_imprecise_input", null);
 }
 
 gTests.push({
   desc: "precise/imprecise input switcher",
   setUp: setUp,
   run: function () {
-    sendMouseMoves();
+    notifyPrecise();
     testState("precise");
-    sendTouchStart();
+    notifyImprecise();
     testState("imprecise");
-    sendMouseMoves();
-    testState("imprecise");
-    sendTouchMove();
-    testState("imprecise");
-    sendTouchEnd();
-    testState("imprecise");
-    sendMouseMoves();
+    notifyPrecise();
     testState("precise");
+    notifyImprecise();
+    testState("imprecise");
   }
 });
 

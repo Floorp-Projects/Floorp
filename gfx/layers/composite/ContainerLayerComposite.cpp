@@ -198,7 +198,13 @@ ContainerRender(ContainerT* aContainer,
       continue;
     }
 
-    layerToRender->RenderLayer(childOffset, clipRect);
+    if (layerToRender->HasLayerBeenComposited()) {
+      // Composer2D will compose this layer so skip GPU composition
+      // this time & reset composition flag for next composition phase
+      layerToRender->SetLayerComposited(false);
+    } else {
+      layerToRender->RenderLayer(childOffset, clipRect);
+    }
     // invariant: our GL context should be current here, I don't think we can
     // assert it though
   }
