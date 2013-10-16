@@ -230,6 +230,7 @@ RangeAnalysis::addBetaNodes()
             break;
           case JSOP_EQ:
             comp.set(floor(bound), ceil(bound), true, exponent);
+            break;
           default:
             continue; // well, for neq we could have
                       // [-\inf, bound-1] U [bound+1, \inf] but we only use contiguous ranges.
