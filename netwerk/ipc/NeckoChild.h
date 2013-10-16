@@ -50,6 +50,8 @@ protected:
   virtual PRemoteOpenFileChild* AllocPRemoteOpenFileChild(const URIParams&,
                                                           const OptionalURIParams&);
   virtual bool DeallocPRemoteOpenFileChild(PRemoteOpenFileChild*);
+  virtual PRtspControllerChild* AllocPRtspControllerChild();
+  virtual bool DeallocPRtspControllerChild(PRtspControllerChild*);
 };
 
 /**

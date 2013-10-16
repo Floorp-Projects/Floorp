@@ -18,6 +18,9 @@ public interface PanZoomController {
     // between the touch-down and touch-up of a click). In units of density-independent pixels.
     public static final float PAN_THRESHOLD = 1/16f * GeckoAppShell.getDpi();
 
+    // Threshold for sending touch move events to content
+    public static final float CLICK_THRESHOLD = 1/50f * GeckoAppShell.getDpi();
+
     static class Factory {
         static PanZoomController create(PanZoomTarget target, View view, EventDispatcher dispatcher) {
             return new JavaPanZoomController(target, view, dispatcher);

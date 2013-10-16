@@ -8,8 +8,9 @@ class MediaOmxStateMachine : public MediaDecoderStateMachine
 {
 public:
   MediaOmxStateMachine(MediaDecoder *aDecoder,
-                       MediaDecoderReader *aReader)
-    : MediaDecoderStateMachine(aDecoder, aReader) { }
+                       MediaDecoderReader *aReader,
+                       bool aRealTime = false)
+    : MediaDecoderStateMachine(aDecoder, aReader, aRealTime) { }
 
 protected:
   // Due to a bug in the OMX.qcom.video.decoder.mpeg4 decoder, we can't own too
