@@ -29,7 +29,10 @@ using mozilla::IsInfinite;
 using mozilla::IsFinite;
 using mozilla::IsNaN;
 using mozilla::IsNegative;
+using mozilla::NegativeInfinity;
+using mozilla::PositiveInfinity;
 using mozilla::Swap;
+using JS::GenericNaN;
 
 // This algorithm is based on the paper "Eliminating Range Checks Using
 // Static Single Assignment Form" by Gough and Klaren.
@@ -142,22 +145,19 @@ RangeAnalysis::addBetaNodes()
             continue;
 
         MCompare *compare = test->getOperand(0)->toCompare();
-
-        // TODO: support unsigned comparisons
-        if (compare->compareType() == MCompare::Compare_UInt32)
-            continue;
-
         MDefinition *left = compare->getOperand(0);
         MDefinition *right = compare->getOperand(1);
         double bound;
-        int16_t exponent = Range::IncludesInfinity;
+        double conservativeLower = NegativeInfinity();
+        double conservativeUpper = PositiveInfinity();
         MDefinition *val = nullptr;
 
         JSOp jsop = compare->jsop();
 
         if (branch_dir == FALSE_BRANCH) {
             jsop = analyze::NegateCompareOp(jsop);
-            exponent = Range::IncludesInfinityAndNaN;
+            conservativeLower = GenericNaN();
+            conservativeUpper = GenericNaN();
         }
 
         if (left->isConstant() && left->toConstant()->value().isNumber()) {
@@ -197,15 +197,10 @@ RangeAnalysis::addBetaNodes()
         // val is the other operand.
         JS_ASSERT(val);
 
-        // If we can't convert this bound to an int32_t, it won't be as easy to
-        // create interesting Ranges with.
-        if (!IsFinite(bound) || bound < INT32_MIN || bound > INT32_MAX)
-            continue;
-
         Range comp;
         switch (jsop) {
           case JSOP_LE:
-            comp.set(Range::NoInt32LowerBound, ceil(bound), true, exponent);
+            comp.setDouble(conservativeLower, bound);
             break;
           case JSOP_LT:
             // For integers, if x < c, the upper bound of x is c-1.
@@ -214,10 +209,10 @@ RangeAnalysis::addBetaNodes()
                 if (DoubleIsInt32(bound, &intbound) && SafeSub(intbound, 1, &intbound))
                     bound = intbound;
             }
-            comp.set(Range::NoInt32LowerBound, ceil(bound), true, exponent);
+            comp.setDouble(conservativeLower, bound);
             break;
           case JSOP_GE:
-            comp.set(floor(bound), Range::NoInt32UpperBound, true, exponent);
+            comp.setDouble(bound, conservativeUpper);
             break;
           case JSOP_GT:
             // For integers, if x > c, the lower bound of x is c+1.
@@ -226,10 +221,10 @@ RangeAnalysis::addBetaNodes()
                 if (DoubleIsInt32(bound, &intbound) && SafeAdd(intbound, 1, &intbound))
                     bound = intbound;
             }
-            comp.set(floor(bound), Range::NoInt32UpperBound, true, exponent);
+            comp.setDouble(bound, conservativeUpper);
             break;
           case JSOP_EQ:
-            comp.set(floor(bound), ceil(bound), true, exponent);
+            comp.setDouble(bound, bound);
             break;
           default:
             continue; // well, for neq we could have
@@ -377,6 +372,26 @@ Range::intersect(const Range *lhs, const Range *rhs, bool *emptyRange)
     bool newFractional = lhs->canHaveFractionalPart_ && rhs->canHaveFractionalPart_;
     uint16_t newExponent = Min(lhs->max_exponent_, rhs->max_exponent_);
 
+    // If one of the ranges has a fractional part and the other doesn't, it's
+    // possible that we will have computed a newExponent that's more precise
+    // than our newLower and newUpper. This is unusual, so we handle it here
+    // instead of in optimize().
+    //
+    // For example, when the floating-point range has an actual maximum value
+    // of 1.5, it may have a range like [0,2] and the max_exponent may be zero.
+    // When intersecting such a range with an integer range, the fractional part
+    // of the range is dropped, but the max exponent of 0 remains valid.
+    if (lhs->canHaveFractionalPart_ != rhs->canHaveFractionalPart_ &&
+        newExponent < MaxInt32Exponent)
+    {
+        // pow(2, newExponent+1)-1 to compute the maximum value for newExponent.
+        int32_t limit = (uint32_t(1) << (newExponent + 1)) - 1;
+        if (limit != INT32_MIN) {
+            newUpper = Min(newUpper, limit);
+            newLower = Max(newLower, -limit);
+        }
+    }
+
     return new Range(newLower, newHasInt32LowerBound, newUpper, newHasInt32UpperBound,
                      newFractional, newExponent);
 }
@@ -445,6 +460,57 @@ Range::Range(const MDefinition *def)
         lower_ = INT32_MIN;
 
     assertInvariants();
+}
+
+static uint16_t
+ExponentImpliedByDouble(double d)
+{
+    // Handle the special values.
+    if (IsNaN(d))
+        return Range::IncludesInfinityAndNaN;
+    if (IsInfinite(d))
+        return Range::IncludesInfinity;
+
+    // Otherwise take the exponent part and clamp it at zero, since the Range
+    // class doesn't track fractional ranges.
+    return uint16_t(Max(int_fast16_t(0), ExponentComponent(d)));
+}
+
+void
+Range::setDouble(double l, double h)
+{
+    // Infer lower_, upper_, hasInt32LowerBound_, and hasInt32UpperBound_.
+    if (l >= INT32_MIN && l <= INT32_MAX) {
+        lower_ = int32_t(floor(l));
+        hasInt32LowerBound_ = true;
+    } else {
+        lower_ = INT32_MIN;
+        hasInt32LowerBound_ = false;
+    }
+    if (h >= INT32_MIN && h <= INT32_MAX) {
+        upper_ = int32_t(ceil(h));
+        hasInt32UpperBound_ = true;
+    } else {
+        upper_ = INT32_MAX;
+        hasInt32UpperBound_ = false;
+    }
+
+    // Infer max_exponent_.
+    uint16_t lExp = ExponentImpliedByDouble(l);
+    uint16_t hExp = ExponentImpliedByDouble(h);
+    max_exponent_ = Max(lExp, hExp);
+
+    // Infer the canHaveFractionalPart_ field. We can have a fractional part
+    // if the range crosses through the neighborhood of zero. We won't have a
+    // fractional value if the value is always beyond the point at which
+    // double precision can't represent fractional values.
+    uint16_t minExp = Min(lExp, hExp);
+    bool includesNegative = IsNaN(l) || l < 0;
+    bool includesPositive = IsNaN(h) || h > 0;
+    bool crossesZero = includesNegative && includesPositive;
+    canHaveFractionalPart_ = crossesZero || minExp < MaxTruncatableExponent;
+
+    optimize();
 }
 
 static inline bool
@@ -901,68 +967,9 @@ MBeta::computeRange()
 void
 MConstant::computeRange()
 {
-    if (type() == MIRType_Int32) {
-        setRange(Range::NewSingleValueRange(value().toInt32()));
-        return;
-    }
-
-    if (type() != MIRType_Double)
-        return;
-
-    double d = value().toDouble();
-
-    // NaN is not handled by range analysis.
-    if (IsNaN(d))
-        return;
-
-    // Beyond-int32 values are used to set both lower and upper to the range boundaries.
-    if (IsInfinite(d)) {
-        if (IsNegative(d))
-            setRange(Range::NewDoubleRange(Range::NoInt32LowerBound,
-                                           Range::NoInt32LowerBound,
-                                           Range::IncludesInfinity));
-        else
-            setRange(Range::NewDoubleRange(Range::NoInt32UpperBound,
-                                           Range::NoInt32UpperBound,
-                                           Range::IncludesInfinity));
-        return;
-    }
-
-    // Extract the exponent, to approximate it with the range analysis.
-    int exp = ExponentComponent(d);
-    if (exp < 0) {
-        // This double only has a fractional part.
-        if (IsNegative(d))
-            setRange(Range::NewDoubleRange(-1, 0));
-        else
-            setRange(Range::NewDoubleRange(0, 1));
-    } else if (exp < Range::MaxTruncatableExponent) {
-        // Extract the integral part.
-        int64_t integral = ToInt64(d);
-        // Extract the fractional part.
-        double rest = d - (double) integral;
-        // Estimate the smallest integral boundaries.
-        //   Safe double comparisons, because there is no precision loss.
-        int64_t l = integral - ((rest < 0) ? 1 : 0);
-        int64_t h = integral + ((rest > 0) ? 1 : 0);
-        // If we adjusted into a new exponent range, adjust exp accordingly.
-        if ((rest < 0 && (l == INT64_MIN || IsPowerOfTwo(Abs(l)))) ||
-            (rest > 0 && (h == INT64_MIN || IsPowerOfTwo(Abs(h)))))
-        {
-            ++exp;
-        }
-        setRange(new Range(l, h, (rest != 0), exp));
-    } else {
-        // This double has a precision loss. This also mean that it cannot
-        // encode any values with fractional parts.
-        if (IsNegative(d))
-            setRange(Range::NewDoubleRange(Range::NoInt32LowerBound,
-                                           Range::NoInt32LowerBound,
-                                           exp));
-        else
-            setRange(Range::NewDoubleRange(Range::NoInt32UpperBound,
-                                           Range::NoInt32UpperBound,
-                                           exp));
+    if (value().isNumber()) {
+        double d = value().toNumber();
+        setRange(Range::NewDoubleRange(d, d));
     }
 }
 
