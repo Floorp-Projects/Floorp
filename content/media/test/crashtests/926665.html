@@ -1,0 +1,26 @@
+<html>
+<head>
+<meta charset="UTF-8">
+<script style="display: none;" id="fuzz1" type="text/javascript;version=1.7">
+
+function boom()
+{
+    var mediaSource = new window.MediaSource();
+    var mediaSourceURL = URL.createObjectURL(mediaSource);
+    var v1 = document.createElement('video');
+    v1.src = mediaSourceURL;
+    mediaSource.addEventListener("sourceopen", function (e) {
+        var v2 = document.createElement('video');
+        v2.src = mediaSourceURL;
+        setTimeout(function () {
+            v2.src = "data:text/plain,1";
+            v1.src = "data:text/plain,2";
+        }, 0);
+    });
+}
+
+</script>
+</head>
+
+<body onload="boom();"></body>
+</html>
