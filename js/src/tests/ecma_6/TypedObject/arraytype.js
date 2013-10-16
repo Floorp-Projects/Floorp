@@ -1,4 +1,4 @@
-// |reftest| skip-if(!this.hasOwnProperty("Type"))
+// |reftest| skip-if(!this.hasOwnProperty("TypedObject"))
 var BUGNUMBER = 578700;
 var summary = 'TypedObjects ArrayType implementation';
 
@@ -12,6 +12,11 @@ function assertThrows(f) {
     if (!ok)
         throw new TypeError("Assertion failed: " + f + " did not throw as expected");
 }
+
+var ArrayType = TypedObject.ArrayType;
+var uint8 = TypedObject.uint8;
+var float32 = TypedObject.float32;
+var uint32 = TypedObject.uint32;
 
 function runTests() {
     print(BUGNUMBER + ": " + summary);
@@ -106,16 +111,7 @@ function runTests() {
     for (var i = 0; i < c.length; i++)
         assertEq(c[i], 3);
 
-    assertThrows(function() c.update([3.14, 4.52, 5]));
-    //assertThrows(function() c.update([3000, 0, 1, 1, 1, 1, 1, 1, 1, 1]));
-
     assertThrows(function() Vec3.prototype.fill.call(c, 2));
-
-    var updatingPos = new Vec3();
-    updatingPos.update([5, 3, 1]);
-    assertEq(updatingPos[0], 5);
-    assertEq(updatingPos[1], 3);
-    assertEq(updatingPos[2], 1);
 
     var d = A.repeat(10);
     for (var i = 0; i < d.length; i++)
@@ -136,15 +132,6 @@ function runTests() {
     assertThrows(function() ma.subarray(2.14));
     assertThrows(function() ma.subarray({}));
     assertThrows(function() ma.subarray(2, []));
-
-    // check similarity even though mb's ArrayType
-    // is not script accessible
-    var Similar = new ArrayType(uint32, 3);
-    var sim = new Similar();
-    sim.update(mb);
-    assertEq(sim[0], 3);
-    assertEq(sim[1], 4);
-    assertEq(sim[2], 5);
 
     var range = ma.subarray(0, 3);
     assertEq(range.length, 3);
@@ -181,12 +168,17 @@ function runTests() {
     assertEq(indexPropDesc.enumerable, true);
     assertEq(indexPropDesc.writable, true);
 
-
     var lengthPropDesc = Object.getOwnPropertyDescriptor(as, 'length');
     assertEq(typeof lengthPropDesc == "undefined", false);
     assertEq(lengthPropDesc.configurable, false);
     assertEq(lengthPropDesc.enumerable, false);
     assertEq(lengthPropDesc.writable, false);
+
+    var counter = 0;
+    for (var nm in as) {
+      assertEq(+nm, counter++);
+    }
+    assertEq(counter, as.length);
 
     assertThrows(function() Object.defineProperty(o, "foo", { value: "bar" }));
 

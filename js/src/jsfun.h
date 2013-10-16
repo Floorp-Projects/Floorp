@@ -13,6 +13,7 @@
 
 #include "jsobj.h"
 #include "jsscript.h"
+#include "jstypes.h"
 
 namespace js {
 class FunctionExtended;

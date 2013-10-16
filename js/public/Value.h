@@ -15,6 +15,8 @@
 
 #include <limits> /* for std::numeric_limits */
 
+#include "jstypes.h"
+
 #include "js/Anchor.h"
 #include "js/RootingAPI.h"
 #include "js/Utility.h"

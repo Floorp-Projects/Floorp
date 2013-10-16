@@ -20,7 +20,7 @@ import org.mozilla.gecko.gfx.BitmapUtils;
 import org.mozilla.gecko.home.HomeListView.HomeContextMenuInfo;
 import org.mozilla.gecko.home.HomePager.OnUrlOpenListener;
 import org.mozilla.gecko.home.PinSiteDialog.OnSiteSelectedListener;
-import org.mozilla.gecko.home.TopSitesGridView.OnPinSiteListener;
+import org.mozilla.gecko.home.TopSitesGridView.OnEditPinnedSiteListener;
 import org.mozilla.gecko.home.TopSitesGridView.TopSitesGridContextMenuInfo;
 import org.mozilla.gecko.util.ThreadUtils;
 
@@ -100,8 +100,8 @@ public class TopSitesPage extends HomeFragment {
     // Callback for thumbnail loader
     private ThumbnailsLoaderCallbacks mThumbnailsLoaderCallbacks;
 
-    // Listener for pinning sites
-    private PinSiteListener mPinSiteListener;
+    // Listener for editing pinned sites.
+    private EditPinnedSiteListener mEditPinnedSiteListener;
 
     // On URL open listener
     private OnUrlOpenListener mUrlOpenListener;
@@ -155,7 +155,7 @@ public class TopSitesPage extends HomeFragment {
 
     @Override
     public void onViewCreated(View view, Bundle savedInstanceState) {
-        mPinSiteListener = new PinSiteListener();
+        mEditPinnedSiteListener = new EditPinnedSiteListener();
 
         mList.setTag(HomePager.LIST_TAG_TOP_SITES);
         mList.setHeaderDividersEnabled(false);
@@ -186,7 +186,7 @@ public class TopSitesPage extends HomeFragment {
         });
 
         mGrid.setOnUrlOpenListener(mUrlOpenListener);
-        mGrid.setOnPinSiteListener(mPinSiteListener);
+        mGrid.setOnEditPinnedSiteListener(mEditPinnedSiteListener);
 
         registerForContextMenu(mList);
         registerForContextMenu(mGrid);
@@ -338,7 +338,7 @@ public class TopSitesPage extends HomeFragment {
         }
 
         if (itemId == R.id.top_sites_edit) {
-            mPinSiteListener.onPinSite(info.position);
+            mEditPinnedSiteListener.onEditPinnedSite(info.position);
             return true;
         }
 
@@ -371,10 +371,10 @@ public class TopSitesPage extends HomeFragment {
     }
 
     /**
-     * Listener for pinning sites.
+     * Listener for editing pinned sites.
      */
-    private class PinSiteListener implements OnPinSiteListener,
-                                             OnSiteSelectedListener {
+    private class EditPinnedSiteListener implements OnEditPinnedSiteListener,
+                                                    OnSiteSelectedListener {
         // Tag for the PinSiteDialog fragment.
         private static final String TAG_PIN_SITE = "pin_site";
 
@@ -382,7 +382,7 @@ public class TopSitesPage extends HomeFragment {
         private int mPosition;
 
         @Override
-        public void onPinSite(int position) {
+        public void onEditPinnedSite(int position) {
             mPosition = position;
 
             final FragmentManager manager = getActivity().getSupportFragmentManager();
@@ -485,7 +485,7 @@ public class TopSitesPage extends HomeFragment {
 
     private class VisitedAdapter extends CursorAdapter {
         public VisitedAdapter(Context context, Cursor cursor) {
-            super(context, cursor);
+            super(context, cursor, 0);
         }
 
         @Override
@@ -518,7 +518,7 @@ public class TopSitesPage extends HomeFragment {
         private Map<String, Bitmap> mThumbnails;
 
         public TopSitesGridAdapter(Context context, Cursor cursor) {
-            super(context, cursor);
+            super(context, cursor, 0);
         }
 
         @Override

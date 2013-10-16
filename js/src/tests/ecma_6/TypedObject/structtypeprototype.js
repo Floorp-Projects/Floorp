@@ -1,7 +1,18 @@
-// |reftest| skip-if(!this.hasOwnProperty("Type"))
+// |reftest| skip-if(!this.hasOwnProperty("TypedObject"))
 var BUGNUMBER = 578700;
 var summary = 'TypedObjects StructType prototype chains';
 
+var ArrayType = TypedObject.ArrayType;
+var StructType = TypedObject.StructType;
+var uint8 = TypedObject.uint8;
+var uint16 = TypedObject.uint16;
+var uint32 = TypedObject.uint32;
+var uint8Clamped = TypedObject.uint8Clamped;
+var int8 = TypedObject.int8;
+var int16 = TypedObject.int16;
+var int32 = TypedObject.int32;
+var float32 = TypedObject.float32;
+var float64 = TypedObject.float64;
 
 function runTests() {
   var RgbColor1 = new StructType({r: uint8, g: uint8, b: uint8});
@@ -9,8 +20,9 @@ function runTests() {
   var Fade1 = new StructType({from: RgbColor1, to: RgbColor1});
   var Fade2 = new StructType({from: RgbColor2, to: RgbColor2});
 
-  // Available on all objects
-  Data.prototype.sub = function(c) {
+  // Available on all struct types (even though it would only make
+  // sense on a RgbColor1 or RgbColor2 instance)
+  StructType.prototype.prototype.sub = function(c) {
     this.r -= c;
     this.g -= c;
     this.b -= c;

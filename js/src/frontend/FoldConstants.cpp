@@ -17,6 +17,7 @@
 
 #include "jscntxtinlines.h"
 #include "jsinferinlines.h"
+#include "jsobjinlines.h"
 
 using namespace js;
 using namespace js::frontend;

@@ -14,7 +14,8 @@ if (this.Components) {
 
   importScripts("resource://gre/modules/osfile.jsm");
 
-  let LOG = exports.OS.Shared.LOG.bind(exports.OS.Shared.LOG, "Agent");
+  let SharedAll = require("resource://gre/modules/osfile/osfile_shared_allthreads.jsm");
+  let LOG = SharedAll.LOG.bind(SharedAll, "Agent");
 
  /**
   * Communications with the controller.
@@ -216,12 +217,12 @@ if (this.Components) {
   let Agent = {
    // Update worker's OS.Shared.DEBUG flag message from controller.
    SET_DEBUG: function SET_DEBUG (aDEBUG) {
-     exports.OS.Shared.DEBUG = aDEBUG;
+     SharedAll.Config.DEBUG = aDEBUG;
    },
    // Return worker's current OS.Shared.DEBUG value to controller.
    // Note: This is used for testing purposes.
    GET_DEBUG: function GET_DEBUG () {
-     return exports.OS.Shared.DEBUG;
+     return SharedAll.Config.DEBUG;
    },
    // Report file descriptors leaks.
    System_shutdown: function System_shutdown () {
@@ -269,6 +270,20 @@ if (this.Components) {
        // to report leaks when debugging.
        path: filePath
      });
+   },
+   openUnique: function openUnique(path, options) {
+     let filePath = Type.path.fromMsg(path);
+     let openedFile = OS.Shared.AbstractFile.openUnique(filePath, options);
+     let resourceId = OpenedFiles.add(openedFile.file, {
+       // Adding path information to keep track of opened files
+       // to report leaks when debugging.
+       path: openedFile.path
+     });
+
+     return {
+       path: openedFile.path,
+       file: resourceId
+     };
    },
    read: function read(path, bytes, options) {
      let data = File.read(Type.path.fromMsg(path), bytes, options);

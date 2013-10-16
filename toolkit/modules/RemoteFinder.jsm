@@ -114,6 +114,12 @@ RemoteFinderListener.prototype = {
     this._global.sendAsyncMessage("Finder:Result", data);
   },
 
+  //XXXmikedeboer-20131016: implement |shouldFocusContent| here to mitigate
+  //                        issues like bug 921338 and bug 921308.
+  shouldFocusContent: function () {
+    return true;
+  },
+
   receiveMessage: function (aMessage) {
     let data = aMessage.data;
 

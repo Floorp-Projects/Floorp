@@ -4206,13 +4206,6 @@ NSEvent* gLastDragMouseDownEvent = nil;
   // Track the direction we're going in.
   mCurrentSwipeDir = direction;
 
-  // If a swipe is currently being tracked kill it -- it's been interrupted
-  // by another gesture event.
-  if (mCancelSwipeAnimation && *mCancelSwipeAnimation == NO) {
-    *mCancelSwipeAnimation = YES;
-    mCancelSwipeAnimation = nil;
-  }
-
   uint32_t allowedDirections = 0;
   // We're ready to start the animation. Tell Gecko about it, and at the same
   // time ask it if it really wants to start an animation for this event.
@@ -4225,6 +4218,13 @@ NSEvent* gLastDragMouseDownEvent = nil;
 
   if (!shouldStartSwipe) {
     return;
+  }
+
+  // If a swipe is currently being tracked kill it -- it's been interrupted
+  // by another gesture event.
+  if (mCancelSwipeAnimation && *mCancelSwipeAnimation == NO) {
+    *mCancelSwipeAnimation = YES;
+    mCancelSwipeAnimation = nil;
   }
 
   CGFloat min = 0.0;
