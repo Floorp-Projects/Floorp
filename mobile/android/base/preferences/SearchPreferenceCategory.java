@@ -41,7 +41,7 @@ public class SearchPreferenceCategory extends PreferenceCategory implements Geck
         super.onAttachedToActivity();
 
         // Ensures default engine remains at top of list.
-        setOrderingAsAdded(false);
+        setOrderingAsAdded(true);
 
         // Request list of search engines from Gecko.
         GeckoAppShell.registerEventListener("SearchEngines:Data", this);
@@ -51,17 +51,14 @@ public class SearchPreferenceCategory extends PreferenceCategory implements Geck
     @Override
     public void handleMessage(String event, final JSONObject data) {
         if (event.equals("SearchEngines:Data")) {
-            // Parse engines array from JSON. The first element in the array is the default engine.
+            // We are no longer interested in this event from Gecko, as we do not request it again with
+            // this instance.
+            GeckoAppShell.unregisterEventListener("SearchEngines:Data", this);
+
+            // Parse engines array from JSON.
             JSONArray engines;
-            JSONObject defaultEngine;
-            final String defaultEngineName;
             try {
                 engines = data.getJSONArray("searchEngines");
-                if (engines.length() == 0) {
-                    return;
-                }
-                defaultEngine = engines.getJSONObject(0);
-                defaultEngineName = defaultEngine.getString("name");
             } catch (JSONException e) {
                 Log.e(LOGTAG, "Unable to decode search engine data from Gecko.", e);
                 return;
@@ -75,14 +72,6 @@ public class SearchPreferenceCategory extends PreferenceCategory implements Geck
 
                     SearchEnginePreference enginePreference = new SearchEnginePreference(getContext(), this);
                     enginePreference.setSearchEngineFromJSON(engineJSON);
-                    if (engineName.equals(defaultEngineName)) {
-                        // We set this here, not in setSearchEngineFromJSON, because it allows us to
-                        // keep a reference  to the default engine to use when the AlertDialog
-                        // callbacks are used.
-                        enginePreference.setIsDefaultEngine(true);
-                        mDefaultEngineReference = enginePreference;
-                    }
-
                     enginePreference.setOnPreferenceClickListener(new OnPreferenceClickListener() {
                         @Override
                         public boolean onPreferenceClick(Preference preference) {
@@ -94,15 +83,20 @@ public class SearchPreferenceCategory extends PreferenceCategory implements Geck
                     });
 
                     addPreference(enginePreference);
+
+                    // The first element in the array is the default engine.
+                    if (i == 0) {
+                        // We set this here, not in setSearchEngineFromJSON, because it allows us to
+                        // keep a reference  to the default engine to use when the AlertDialog
+                        // callbacks are used.
+                        enginePreference.setIsDefaultEngine(true);
+                        mDefaultEngineReference = enginePreference;
+                    }
                 } catch (JSONException e) {
                     Log.e(LOGTAG, "JSONException parsing engine at index " + i, e);
                 }
             }
         }
-
-        // We are no longer interested in this event from Gecko, as we do not request it again with
-        // this instance.
-        GeckoAppShell.unregisterEventListener("SearchEngines:Data", this);
     }
 
     /**
