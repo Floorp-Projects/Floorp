@@ -21,6 +21,7 @@ Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource:///modules/devtools/ViewHelpers.jsm");
 Cu.import("resource:///modules/devtools/shared/event-emitter.js");
+Cu.import("resource://gre/modules/devtools/DevToolsUtils.jsm");
 
 XPCOMUtils.defineLazyModuleGetter(this, "devtools",
   "resource://gre/modules/devtools/Loader.jsm");
@@ -108,7 +109,9 @@ VariablesView.prototype = {
    */
   set rawObject(aObject) {
     this.empty();
-    this.addScope().addItem().populate(aObject, { sorted: true });
+    this.addScope()
+        .addItem("", { enumerable: true })
+        .populate(aObject, { sorted: true });
   },
 
   /**
@@ -1120,14 +1123,6 @@ function Scope(aView, aName, aFlags = {}) {
   this.contextMenuId = aView.contextMenuId;
   this.separatorStr = aView.separatorStr;
 
-  // Creating maps and arrays thousands of times for variables or properties
-  // with a large number of children fills up a lot of memory. Make sure
-  // these are instantiated only if needed.
-  XPCOMUtils.defineLazyGetter(this, "_store", () => new Map());
-  XPCOMUtils.defineLazyGetter(this, "_enumItems", () => []);
-  XPCOMUtils.defineLazyGetter(this, "_nonEnumItems", () => []);
-  XPCOMUtils.defineLazyGetter(this, "_batchItems", () => []);
-
   this._init(aName.trim(), aFlags);
 }
 
@@ -1649,7 +1644,8 @@ Scope.prototype = {
    * The click listener for this scope's title.
    */
   _onClick: function(e) {
-    if (e.target == this._inputNode ||
+    if (e.button != 0 ||
+        e.target == this._inputNode ||
         e.target == this._editNode ||
         e.target == this._deleteNode) {
       return;
@@ -2035,6 +2031,14 @@ Scope.prototype = {
   _nonenum: null,
   _throbber: null
 };
+
+// Creating maps and arrays thousands of times for variables or properties
+// with a large number of children fills up a lot of memory. Make sure
+// these are instantiated only if needed.
+DevToolsUtils.defineLazyPrototypeGetter(Scope.prototype, "_store", Map);
+DevToolsUtils.defineLazyPrototypeGetter(Scope.prototype, "_enumItems", Array);
+DevToolsUtils.defineLazyPrototypeGetter(Scope.prototype, "_nonEnumItems", Array);
+DevToolsUtils.defineLazyPrototypeGetter(Scope.prototype, "_batchItems", Array);
 
 /**
  * A Variable is a Scope holding Property instances.
@@ -2776,6 +2780,10 @@ Variable.prototype = Heritage.extend(Scope.prototype, {
    * The click listener for the edit button.
    */
   _onEdit: function(e) {
+    if (e.button != 0) {
+      return;
+    }
+
     e.preventDefault();
     e.stopPropagation();
     this._activateValueInput();
@@ -2785,6 +2793,10 @@ Variable.prototype = Heritage.extend(Scope.prototype, {
    * The click listener for the delete button.
    */
   _onDelete: function(e) {
+    if ("button" in e && e.button != 0) {
+      return;
+    }
+
     e.preventDefault();
     e.stopPropagation();
 

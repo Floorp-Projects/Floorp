@@ -35,7 +35,10 @@
     winUtils.loadSheet(newThemeUrl, winUtils.AUTHOR_SHEET);
 
     // Floating scrollbars à la osx
-    if (!window.matchMedia("(-moz-overlay-scrollbars)").matches) {
+    let hiddenDOMWindow = Cc["@mozilla.org/appshell/appShellService;1"]
+                 .getService(Ci.nsIAppShellService)
+                 .hiddenDOMWindow;
+    if (!hiddenDOMWindow.matchMedia("(-moz-overlay-scrollbars)").matches) {
       let scrollbarsUrl = Services.io.newURI(
         DEVTOOLS_SKIN_URL + "floating-scrollbars-light.css", null, null);
 

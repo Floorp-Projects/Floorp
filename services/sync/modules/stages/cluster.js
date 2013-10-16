@@ -6,7 +6,7 @@ this.EXPORTED_SYMBOLS = ["ClusterManager"];
 
 const {utils: Cu} = Components;
 
-Cu.import("resource://services-common/log4moz.js");
+Cu.import("resource://gre/modules/Log.jsm");
 Cu.import("resource://services-sync/constants.js");
 Cu.import("resource://services-sync/policies.js");
 Cu.import("resource://services-sync/util.js");
@@ -15,8 +15,8 @@ Cu.import("resource://services-sync/util.js");
  * Contains code for managing the Sync cluster we are in.
  */
 this.ClusterManager = function ClusterManager(service) {
-  this._log = Log4Moz.repository.getLogger("Sync.Service");
-  this._log.level = Log4Moz.Level[Svc.Prefs.get("log.logger.service.main")];
+  this._log = Log.repository.getLogger("Sync.Service");
+  this._log.level = Log.Level[Svc.Prefs.get("log.logger.service.main")];
 
   this.service = service;
 }

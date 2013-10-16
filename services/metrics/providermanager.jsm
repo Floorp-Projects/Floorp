@@ -14,7 +14,7 @@ Cu.import("resource://gre/modules/services/metrics/dataprovider.jsm");
 
 Cu.import("resource://gre/modules/Promise.jsm");
 Cu.import("resource://gre/modules/Task.jsm");
-Cu.import("resource://services-common/log4moz.js");
+Cu.import("resource://gre/modules/Log.jsm");
 Cu.import("resource://services-common/utils.js");
 
 
@@ -25,7 +25,7 @@ Cu.import("resource://services-common/utils.js");
  * provides APIs for bulk collection of data.
  */
 this.ProviderManager = function (storage) {
-  this._log = Log4Moz.repository.getLogger("Services.Metrics.ProviderManager");
+  this._log = Log.repository.getLogger("Services.Metrics.ProviderManager");
 
   this._providers = new Map();
   this._storage = storage;

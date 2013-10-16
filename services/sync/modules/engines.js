@@ -13,7 +13,7 @@ this.EXPORTED_SYMBOLS = [
 const {classes: Cc, interfaces: Ci, results: Cr, utils: Cu} = Components;
 
 Cu.import("resource://services-common/async.js");
-Cu.import("resource://services-common/log4moz.js");
+Cu.import("resource://gre/modules/Log.jsm");
 Cu.import("resource://services-common/observers.js");
 Cu.import("resource://services-common/utils.js");
 Cu.import("resource://services-sync/constants.js");
@@ -42,9 +42,9 @@ this.Tracker = function Tracker(name, engine) {
   this.name = this.file = name.toLowerCase();
   this.engine = engine;
 
-  this._log = Log4Moz.repository.getLogger("Sync.Tracker." + name);
+  this._log = Log.repository.getLogger("Sync.Tracker." + name);
   let level = Svc.Prefs.get("log.logger.engine." + this.name, "Debug");
-  this._log.level = Log4Moz.Level[level];
+  this._log.level = Log.Level[level];
 
   this._score = 0;
   this._ignored = [];
@@ -197,9 +197,9 @@ this.Store = function Store(name, engine) {
   this.name = name.toLowerCase();
   this.engine = engine;
 
-  this._log = Log4Moz.repository.getLogger("Sync.Store." + name);
+  this._log = Log.repository.getLogger("Sync.Store." + name);
   let level = Svc.Prefs.get("log.logger.engine." + this.name, "Debug");
-  this._log.level = Log4Moz.Level[level];
+  this._log.level = Log.Level[level];
 
   XPCOMUtils.defineLazyGetter(this, "_timer", function() {
     return Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
@@ -383,8 +383,8 @@ this.EngineManager = function EngineManager(service) {
   this.service = service;
 
   this._engines = {};
-  this._log = Log4Moz.repository.getLogger("Sync.EngineManager");
-  this._log.level = Log4Moz.Level[Svc.Prefs.get(
+  this._log = Log.repository.getLogger("Sync.EngineManager");
+  this._log.level = Log.Level[Svc.Prefs.get(
     "log.logger.service.engines", "Debug")];
 }
 EngineManager.prototype = {
@@ -476,9 +476,9 @@ this.Engine = function Engine(name, service) {
   this.service = service;
 
   this._notify = Utils.notify("weave:engine:");
-  this._log = Log4Moz.repository.getLogger("Sync.Engine." + this.Name);
+  this._log = Log.repository.getLogger("Sync.Engine." + this.Name);
   let level = Svc.Prefs.get("log.logger.engine." + this.name, "Debug");
-  this._log.level = Log4Moz.Level[level];
+  this._log.level = Log.Level[level];
 
   this._tracker; // initialize tracker to load previously changed IDs
   this._log.debug("Engine initialized");
@@ -1056,7 +1056,7 @@ SyncEngine.prototype = {
    *         Truthy if incoming record should be applied. False if not.
    */
   _reconcile: function _reconcile(item) {
-    if (this._log.level <= Log4Moz.Level.Trace) {
+    if (this._log.level <= Log.Level.Trace) {
       this._log.trace("Incoming: " + item);
     }
 
@@ -1273,7 +1273,7 @@ SyncEngine.prototype = {
       for each (let id in modifiedIDs) {
         try {
           let out = this._createRecord(id);
-          if (this._log.level <= Log4Moz.Level.Trace)
+          if (this._log.level <= Log.Level.Trace)
             this._log.trace("Outgoing: " + out);
 
           out.encrypt(this.service.collectionKeys.keyForCollection(this.name));

@@ -12,8 +12,8 @@ function run_test() {
   Service.serverURL  = "http://weave.server/";
 
   initTestLogging("Trace");
-  Log4Moz.repository.getLogger("Sync.SendCredentialsController").level = Log4Moz.Level.Trace;
-  Log4Moz.repository.getLogger("Sync.SyncScheduler").level = Log4Moz.Level.Trace;
+  Log.repository.getLogger("Sync.SendCredentialsController").level = Log.Level.Trace;
+  Log.repository.getLogger("Sync.SyncScheduler").level = Log.Level.Trace;
   run_next_test();
 }
 

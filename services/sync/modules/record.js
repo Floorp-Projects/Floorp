@@ -18,7 +18,7 @@ const Cu = Components.utils;
 const CRYPTO_COLLECTION = "crypto";
 const KEYS_WBO = "keys";
 
-Cu.import("resource://services-common/log4moz.js");
+Cu.import("resource://gre/modules/Log.jsm");
 Cu.import("resource://services-sync/constants.js");
 Cu.import("resource://services-sync/keys.js");
 Cu.import("resource://services-sync/resource.js");
@@ -111,7 +111,7 @@ Utils.deferGetSet(WBORecord, "data", ["id", "modified", "sortindex", "payload"])
 this.RecordManager = function RecordManager(service) {
   this.service = service;
 
-  this._log = Log4Moz.repository.getLogger(this._logName);
+  this._log = Log.repository.getLogger(this._logName);
   this._records = {};
 }
 RecordManager.prototype = {
@@ -281,7 +281,7 @@ this.CollectionKeyManager = function CollectionKeyManager() {
   this._collections = {};
   this._default = null;
 
-  this._log = Log4Moz.repository.getLogger("Sync.CollectionKeyManager");
+  this._log = Log.repository.getLogger("Sync.CollectionKeyManager");
 }
 
 // TODO: persist this locally as an Identity. Bug 610913.

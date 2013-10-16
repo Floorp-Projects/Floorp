@@ -167,9 +167,9 @@ function test_onItemMoved() {
 function run_test() {
   initTestLogging("Trace");
 
-  Log4Moz.repository.getLogger("Sync.Engine.Bookmarks").level = Log4Moz.Level.Trace;
-  Log4Moz.repository.getLogger("Sync.Store.Bookmarks").level = Log4Moz.Level.Trace;
-  Log4Moz.repository.getLogger("Sync.Tracker.Bookmarks").level = Log4Moz.Level.Trace;
+  Log.repository.getLogger("Sync.Engine.Bookmarks").level = Log.Level.Trace;
+  Log.repository.getLogger("Sync.Store.Bookmarks").level = Log.Level.Trace;
+  Log.repository.getLogger("Sync.Tracker.Bookmarks").level = Log.Level.Trace;
 
   test_tracking();
   test_onItemChanged();

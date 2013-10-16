@@ -9,7 +9,7 @@ let identity = new IdentityManager();
 
 function run_test() {
   initTestLogging("Trace");
-  Log4Moz.repository.getLogger("Sync.Identity").level = Log4Moz.Level.Trace;
+  Log.repository.getLogger("Sync.Identity").level = Log.Level.Trace;
 
   run_next_test();
 }

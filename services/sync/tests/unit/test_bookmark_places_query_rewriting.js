@@ -11,8 +11,8 @@ let store = engine._store;
 
 function run_test() {
   initTestLogging("Trace");
-  Log4Moz.repository.getLogger("Sync.Engine.Bookmarks").level = Log4Moz.Level.Trace;
-  Log4Moz.repository.getLogger("Sync.Store.Bookmarks").level = Log4Moz.Level.Trace;
+  Log.repository.getLogger("Sync.Engine.Bookmarks").level = Log.Level.Trace;
+  Log.repository.getLogger("Sync.Store.Bookmarks").level = Log.Level.Trace;
 
   let tagRecord = new BookmarkQuery("bookmarks", "abcdefabcdef");
   let uri = "place:folder=499&type=7&queryType=1";
