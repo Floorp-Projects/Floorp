@@ -121,7 +121,7 @@ nsXBLProtoImplMethod::InstallMember(JSContext* aCx,
     // Then, enter the content compartment, wrap the method pointer, and define
     // the wrapped version on the class object.
     JSAutoCompartment ac2(aCx, aTargetClassObject);
-    if (!JS_WrapObject(aCx, method.address()))
+    if (!JS_WrapObject(aCx, &method))
       return NS_ERROR_OUT_OF_MEMORY;
 
     JS::Rooted<JS::Value> value(aCx, JS::ObjectValue(*method));
@@ -327,7 +327,7 @@ nsXBLProtoImplAnonymousMethod::Execute(nsIContent* aBoundElement)
   NS_ENSURE_TRUE(scopeObject, NS_ERROR_OUT_OF_MEMORY);
 
   JSAutoCompartment ac(cx, scopeObject);
-  if (!JS_WrapObject(cx, thisObject.address()))
+  if (!JS_WrapObject(cx, &thisObject))
       return NS_ERROR_OUT_OF_MEMORY;
 
   // Clone the function object, using thisObject as the parent so "this" is in

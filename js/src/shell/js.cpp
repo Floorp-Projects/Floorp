@@ -3734,7 +3734,7 @@ NewGlobal(JSContext *cx, unsigned argc, jsval *vp)
     options.setVersion(JSVERSION_LATEST);
 
     CallArgs args = CallArgsFromVp(argc, vp);
-    if (argc == 1 && args[0].isObject()) {
+    if (args.length() == 1 && args[0].isObject()) {
         RootedObject opts(cx, &args[0].toObject());
         RootedValue v(cx);
 
@@ -3753,10 +3753,10 @@ NewGlobal(JSContext *cx, unsigned argc, jsval *vp)
     if (!global)
         return false;
 
-    if (!JS_WrapObject(cx, global.address()))
+    if (!JS_WrapObject(cx, &global))
         return false;
 
-    JS_SET_RVAL(cx, vp, OBJECT_TO_JSVAL(global));
+    args.rval().setObject(*global);
     return true;
 }
 

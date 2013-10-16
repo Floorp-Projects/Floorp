@@ -1136,17 +1136,13 @@ JS_GetCompartmentPrivate(JSCompartment *compartment)
 }
 
 JS_PUBLIC_API(bool)
-JS_WrapObject(JSContext *cx, JSObject **objp)
+JS_WrapObject(JSContext *cx, MutableHandleObject objp)
 {
     AssertHeapIsIdle(cx);
     CHECK_REQUEST(cx);
-    RootedObject obj(cx, *objp);
-    if (obj)
-        JS::ExposeGCThingToActiveJS(obj, JSTRACE_OBJECT);
-    if (!cx->compartment()->wrap(cx, &obj))
-        return false;
-    *objp = obj;
-    return true;
+    if (objp)
+        JS::ExposeGCThingToActiveJS(objp, JSTRACE_OBJECT);
+    return cx->compartment()->wrap(cx, objp);
 }
 
 JS_PUBLIC_API(bool)
@@ -1258,7 +1254,7 @@ JS_TransplantObject(JSContext *cx, HandleObject origobj, HandleObject target)
     if (origobj->compartment() != destination) {
         RootedObject newIdentityWrapper(cx, newIdentity);
         AutoCompartment ac(cx, origobj);
-        if (!JS_WrapObject(cx, newIdentityWrapper.address()))
+        if (!JS_WrapObject(cx, &newIdentityWrapper))
             MOZ_CRASH();
         JS_ASSERT(Wrapper::wrappedObject(newIdentityWrapper) == newIdentity);
         if (!JSObject::swap(cx, origobj, newIdentityWrapper))
@@ -1349,7 +1345,7 @@ js_TransplantObjectWithWrapper(JSContext *cx,
 
         // Turn origwrapper into a CCW to the new object.
         RootedObject wrapperGuts(cx, targetobj);
-        if (!JS_WrapObject(cx, wrapperGuts.address()))
+        if (!JS_WrapObject(cx, &wrapperGuts))
             MOZ_CRASH();
         JS_ASSERT(Wrapper::wrappedObject(wrapperGuts) == targetobj);
         if (!JSObject::swap(cx, origwrapper, wrapperGuts))

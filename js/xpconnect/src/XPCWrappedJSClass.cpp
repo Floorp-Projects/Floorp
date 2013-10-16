@@ -1236,7 +1236,7 @@ nsXPCWrappedJSClass::CallMethod(nsXPCWrappedJS* wrapper, uint16_t methodIndex,
                                     goto pre_call_clean_up;
                                 }
                                 thisObj = JSVAL_TO_OBJECT(v);
-                                if (!JS_WrapObject(cx, thisObj.address()))
+                                if (!JS_WrapObject(cx, &thisObj))
                                     goto pre_call_clean_up;
                             }
                         }

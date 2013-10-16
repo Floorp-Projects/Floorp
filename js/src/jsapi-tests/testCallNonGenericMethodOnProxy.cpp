@@ -77,7 +77,7 @@ BEGIN_TEST(test_CallNonGenericMethodOnProxy)
     CHECK_SAME(rval, Int32Value(42));
 
     JS::RootedObject wrappedCustomA(cx, customA);
-    CHECK(JS_WrapObject(cx, wrappedCustomA.address()));
+    CHECK(JS_WrapObject(cx, &wrappedCustomA));
 
     JS::RootedValue rval2(cx);
     CHECK(JS_CallFunction(cx, wrappedCustomA, customMethodB, 0, nullptr, rval2.address()));
