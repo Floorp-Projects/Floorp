@@ -87,7 +87,7 @@ NSS_EXTRA_DLLS += freebl_64int_3
 NSS_EXTRA_DLLS += freebl_64fpu_3
 endif
 
-ABS_DIST := $(call core_abspath,$(DIST))
+ABS_DIST := $(abspath $(DIST))
 ifeq ($(HOST_OS_ARCH),WINNT)
 ifdef CYGDRIVE_MOUNT
 ABS_DIST := $(shell cygpath -w $(ABS_DIST) | sed -e 's|\\|/|g')
@@ -288,7 +288,7 @@ export::
 	cp -Rp $(topsrcdir)/security/coreconf $(NSS_SRCDIR)/security
 	cp -Rp $(topsrcdir)/security/dbm $(NSS_SRCDIR)/security
 	cp -Rp $(topsrcdir)/dbm $(NSS_SRCDIR)
-	(cd $(NSS_SRCDIR) && patch -p1 < $(call core_abspath,$(MOZ_NSS_PATCH)))
+	(cd $(NSS_SRCDIR) && patch -p1 < $(abspath $(MOZ_NSS_PATCH)))
 else
 NSS_SRCDIR = $(topsrcdir)
 endif
@@ -450,7 +450,7 @@ endif # MOZ_FOLD_LIBS
 
 ifeq ($(NSINSTALL_PY),$(NSINSTALL))
 DEFAULT_GMAKE_FLAGS += PYTHON='$(PYTHON)'
-DEFAULT_GMAKE_FLAGS += NSINSTALL_PY='$(call core_abspath,$(topsrcdir)/config/nsinstall.py)'
+DEFAULT_GMAKE_FLAGS += NSINSTALL_PY='$(abspath $(topsrcdir)/config/nsinstall.py)'
 DEFAULT_GMAKE_FLAGS += NSINSTALL='$$(PYTHON) $$(NSINSTALL_PY)'
 else
 DEFAULT_GMAKE_FLAGS += NSINSTALL='$(NSINSTALL)'
