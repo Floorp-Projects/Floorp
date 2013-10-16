@@ -2855,6 +2855,41 @@ CanvasRenderingContext2D::SetMozDashOffset(double mozDashOffset)
   }
 }
 
+void
+CanvasRenderingContext2D::SetLineDash(const mozilla::dom::AutoSequence<double>& mSegments) {
+  FallibleTArray<mozilla::gfx::Float>& dash = CurrentState().dash;
+  dash.Clear();
+
+  for(mozilla::dom::AutoSequence<double>::index_type x = 0; x < mSegments.Length(); x++) {
+    dash.AppendElement(mSegments[x]);
+  }
+  if(mSegments.Length()%2) { // If the number of elements is odd, concatenate again
+    for(mozilla::dom::AutoSequence<double>::index_type x = 0; x < mSegments.Length(); x++) {
+      dash.AppendElement(mSegments[x]);
+    }
+  }
+}
+
+void
+CanvasRenderingContext2D::GetLineDash(nsTArray<double>& mSegments) const {
+  const FallibleTArray<mozilla::gfx::Float>& dash = CurrentState().dash;
+  mSegments.Clear();
+
+  for(FallibleTArray<mozilla::gfx::Float>::index_type x = 0; x < dash.Length(); x++) {
+    mSegments.AppendElement(dash[x]);
+  }
+}
+
+void
+CanvasRenderingContext2D::SetLineDashOffset(double mOffset) {
+  CurrentState().dashOffset = mOffset;
+}
+
+double
+CanvasRenderingContext2D::LineDashOffset() const {
+  return CurrentState().dashOffset;
+}
+
 bool
 CanvasRenderingContext2D::IsPointInPath(double x, double y, const CanvasWindingRule& winding)
 {
