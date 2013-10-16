@@ -22,6 +22,7 @@
 #include "nsDebug.h"                    // for NS_ASSERTION, NS_WARNING, etc
 #include "nsTraceRefcnt.h"              // for MOZ_COUNT_CTOR, etc
 #include "ImageContainer.h"             // for PlanarYCbCrImage, etc
+#include "mozilla/gfx/2D.h"
 
 #ifdef MOZ_ANDROID_OMTC
 #  include "gfxReusableImageSurfaceWrapper.h"
@@ -32,6 +33,7 @@
 #endif
 
 using namespace mozilla::gl;
+using namespace mozilla::gfx;
 
 namespace mozilla {
 namespace layers {
@@ -259,15 +261,23 @@ BufferTextureClient::UpdateSurface(gfxASurface* aSurface)
     return false;
   }
 
-  RefPtr<gfxImageSurface> surf = serializer.GetAsThebesSurface();
-  if (!surf) {
-    return false;
+  if (gfxPlatform::GetPlatform()->SupportsAzureContent()) {
+    RefPtr<DrawTarget> dt = serializer.GetAsDrawTarget();
+    RefPtr<SourceSurface> source = gfxPlatform::GetPlatform()->GetSourceSurfaceForSurface(dt, aSurface);
+
+    dt->CopySurface(source, IntRect(IntPoint(), serializer.GetSize()), IntPoint());
+  } else {
+    RefPtr<gfxImageSurface> surf = serializer.GetAsThebesSurface();
+    if (!surf) {
+      return false;
+    }
+
+    nsRefPtr<gfxContext> tmpCtx = new gfxContext(surf.get());
+    tmpCtx->SetOperator(gfxContext::OPERATOR_SOURCE);
+    tmpCtx->DrawSurface(aSurface, gfxSize(serializer.GetSize().width,
+                                          serializer.GetSize().height));
   }
 
-  nsRefPtr<gfxContext> tmpCtx = new gfxContext(surf.get());
-  tmpCtx->SetOperator(gfxContext::OPERATOR_SOURCE);
-  tmpCtx->DrawSurface(aSurface, gfxSize(serializer.GetSize().width,
-                                        serializer.GetSize().height));
 
   if (TextureRequiresLocking(mFlags) && !ImplementsLocking()) {
     // We don't have support for proper locking yet, so we'll
