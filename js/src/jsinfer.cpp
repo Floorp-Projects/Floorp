@@ -1067,15 +1067,15 @@ class ConstraintDataFreezeObjectForInlinedCall
     }
 };
 
-// Constraint which triggers recompilation when the allocation kind of the
-// template object for a type's new script changes.
+// Constraint which triggers recompilation when the template object for a
+// type's new script changes.
 class ConstraintDataFreezeObjectForNewScriptTemplate
 {
-    gc::AllocKind allocKind;
+    JSObject *templateObject;
 
   public:
-    ConstraintDataFreezeObjectForNewScriptTemplate(gc::AllocKind allocKind)
-      : allocKind(allocKind)
+    ConstraintDataFreezeObjectForNewScriptTemplate(JSObject *templateObject)
+      : templateObject(templateObject)
     {}
 
     const char *kind() { return "freezeObjectForNewScriptTemplate"; }
@@ -1083,7 +1083,7 @@ class ConstraintDataFreezeObjectForNewScriptTemplate
     bool invalidateOnNewType(Type type) { return false; }
     bool invalidateOnNewPropertyState(TypeSet *property) { return false; }
     bool invalidateOnNewObjectState(TypeObject *object) {
-        return !object->hasNewScript() || object->newScript()->allocKind != allocKind;
+        return !object->hasNewScript() || object->newScript()->templateObject != templateObject;
     }
 
     bool constraintHolds(JSContext *cx,
@@ -1131,9 +1131,9 @@ TypeObjectKey::watchStateChangeForInlinedCall(CompilerConstraintList *constraint
 void
 TypeObjectKey::watchStateChangeForNewScriptTemplate(CompilerConstraintList *constraints)
 {
-    gc::AllocKind kind = asTypeObject()->newScript()->allocKind;
+    JSObject *templateObject = asTypeObject()->newScript()->templateObject;
     HeapTypeSetKey objectProperty = property(JSID_EMPTY);
-    constraints->add(IonAlloc()->new_<CompilerConstraintInstance<ConstraintDataFreezeObjectForNewScriptTemplate> >(objectProperty, ConstraintDataFreezeObjectForNewScriptTemplate(kind)));
+    constraints->add(IonAlloc()->new_<CompilerConstraintInstance<ConstraintDataFreezeObjectForNewScriptTemplate> >(objectProperty, ConstraintDataFreezeObjectForNewScriptTemplate(templateObject)));
 }
 
 void
@@ -3130,8 +3130,7 @@ CheckNewScriptProperties(JSContext *cx, TypeObject *type, JSFunction *fun)
     }
 
     newScript->fun = fun;
-    newScript->allocKind = kind;
-    newScript->shape = baseobj->lastProperty();
+    newScript->templateObject = baseobj;
 
     newScript->initializerList = (TypeNewScript::Initializer *)
         ((char *) newScript + sizeof(TypeNewScript));
