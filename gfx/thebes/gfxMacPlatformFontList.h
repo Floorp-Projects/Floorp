@@ -6,6 +6,8 @@
 #ifndef gfxMacPlatformFontList_H_
 #define gfxMacPlatformFontList_H_
 
+#include <CoreFoundation/CoreFoundation.h>
+
 #include "mozilla/MemoryReporting.h"
 #include "nsDataHashtable.h"
 #include "nsRefPtrHashtable.h"
@@ -13,8 +15,6 @@
 #include "gfxPlatformFontList.h"
 #include "gfxPlatform.h"
 #include "gfxPlatformMac.h"
-
-#include <Carbon/Carbon.h>
 
 #include "nsUnicharUtils.h"
 #include "nsTArray.h"
@@ -101,7 +101,11 @@ private:
     // special case font faces treated as font families (set via prefs)
     void InitSingleFaceList();
 
-    static void ATSNotification(ATSFontNotificationInfoRef aInfo, void* aUserArg);
+    static void RegisteredFontsChangedNotificationCallback(CFNotificationCenterRef center,
+                                                           void *observer,
+                                                           CFStringRef name,
+                                                           const void *object,
+                                                           CFDictionaryRef userInfo);
 
     // search fonts system-wide for a given character, null otherwise
     virtual gfxFontEntry* GlobalFontFallback(const uint32_t aCh,
@@ -111,9 +115,6 @@ private:
                                              gfxFontFamily** aMatchedFamily);
 
     virtual bool UsesSystemFallback() { return true; }
-
-    // keep track of ATS generation to prevent unneeded updates when loading downloaded fonts
-    uint32_t mATSGeneration;
 
     enum {
         kATSGenerationInitial = -1
