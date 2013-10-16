@@ -2802,6 +2802,7 @@ PropertyReadNeedsTypeBarrier(JSContext *cx, types::CompilerConstraintList *const
     if (name && object->singleton() && object->singleton()->isNative()) {
         Shape *shape = object->singleton()->nativeLookup(cx, name);
         if (shape &&
+            shape->hasSlot() &&
             shape->hasDefaultGetter() &&
             object->singleton()->nativeGetSlot(shape->slot()).isUndefined())
         {
