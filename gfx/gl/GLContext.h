@@ -99,7 +99,6 @@ namespace GLFeature {
         packed_depth_stencil,
         query_objects,
         robustness,
-        sRGB,
         standard_derivatives,
         texture_float,
         texture_float_linear,
@@ -396,10 +395,6 @@ public:
         EXT_transform_feedback,
         NV_transform_feedback,
         ANGLE_depth_texture,
-        EXT_sRGB,
-        EXT_texture_sRGB,
-        ARB_framebuffer_sRGB,
-        EXT_framebuffer_sRGB,
         KHR_debug,
         Extensions_Max,
         Extensions_End

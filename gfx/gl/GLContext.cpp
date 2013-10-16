@@ -116,10 +116,6 @@ static const char *sExtensionNames[] = {
     "GL_EXT_transform_feedback",
     "GL_NV_transform_feedback",
     "GL_ANGLE_depth_texture",
-    "GL_EXT_sRGB",
-    "GL_EXT_texture_sRGB",
-    "GL_ARB_framebuffer_sRGB",
-    "GL_EXT_framebuffer_sRGB",
     "GL_KHR_debug",
     nullptr
 };
