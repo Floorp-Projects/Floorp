@@ -15,6 +15,7 @@ import org.mozilla.gecko.util.StringUtils;
 import android.content.Context;
 import android.content.res.TypedArray;
 import android.database.Cursor;
+import android.graphics.Rect;
 import android.text.TextUtils;
 import android.util.AttributeSet;
 import android.view.ContextMenu.ContextMenuInfo;
@@ -32,9 +33,9 @@ import java.util.EnumSet;
 public class TopSitesGridView extends GridView {
     private static final String LOGTAG = "GeckoTopSitesGridView";
 
-    // Listener for pinning sites.
-    public static interface OnPinSiteListener {
-        public void onPinSite(int position);
+    // Listener for editing pinned sites.
+    public static interface OnEditPinnedSiteListener {
+        public void onEditPinnedSite(int position);
     }
 
     // Max number of top sites that needs to be shown.
@@ -58,11 +59,16 @@ public class TopSitesGridView extends GridView {
     // On URL open listener.
     private OnUrlOpenListener mUrlOpenListener;
 
-    // Pin site listener.
-    private OnPinSiteListener mPinSiteListener;
+    // Edit pinned site listener.
+    private OnEditPinnedSiteListener mEditPinnedSiteListener;
 
     // Context menu info.
     private TopSitesGridContextMenuInfo mContextMenuInfo;
+
+    // Whether we're handling focus changes or not. This is used
+    // to avoid infinite re-layouts when using this GridView as
+    // a ListView header view (see bug 918044).
+    private boolean mIsHandlingFocusChange;
 
     public TopSitesGridView(Context context) {
         this(context, null);
@@ -82,6 +88,8 @@ public class TopSitesGridView extends GridView {
         mHorizontalSpacing = a.getDimensionPixelOffset(R.styleable.TopSitesGridView_android_horizontalSpacing, 0x00);
         mVerticalSpacing = a.getDimensionPixelOffset(R.styleable.TopSitesGridView_android_verticalSpacing, 0x00);
         a.recycle();
+
+        mIsHandlingFocusChange = false;
     }
 
     /**
@@ -106,8 +114,8 @@ public class TopSitesGridView extends GridView {
                         mUrlOpenListener.onUrlOpen(url, EnumSet.noneOf(OnUrlOpenListener.Flags.class));
                     }
                 } else {
-                    if (mPinSiteListener != null) {
-                        mPinSiteListener.onPinSite(position);
+                    if (mEditPinnedSiteListener != null) {
+                        mEditPinnedSiteListener.onEditPinnedSite(position);
                     }
                 }
             }
@@ -128,7 +136,21 @@ public class TopSitesGridView extends GridView {
         super.onDetachedFromWindow();
 
         mUrlOpenListener = null;
-        mPinSiteListener = null;
+        mEditPinnedSiteListener = null;
+    }
+
+    @Override
+    protected void onFocusChanged(boolean gainFocus, int direction, Rect previouslyFocusedRect) {
+        mIsHandlingFocusChange = true;
+        super.onFocusChanged(gainFocus, direction, previouslyFocusedRect);
+        mIsHandlingFocusChange = false;
+    }
+
+    @Override
+    public void requestLayout() {
+        if (!mIsHandlingFocusChange) {
+            super.requestLayout();
+        }
     }
 
     /**
@@ -207,12 +229,12 @@ public class TopSitesGridView extends GridView {
     }
 
     /**
-     * Set a pin site listener to be used by this view.
+     * Set an edit pinned site listener to be used by this view.
      *
-     * @param listener A pin site listener for this view.
+     * @param listener An edit pinned site listener for this view.
      */
-    public void setOnPinSiteListener(OnPinSiteListener listener) {
-        mPinSiteListener = listener;
+    public void setOnEditPinnedSiteListener(final OnEditPinnedSiteListener listener) {
+        mEditPinnedSiteListener = listener;
     }
 
     /**

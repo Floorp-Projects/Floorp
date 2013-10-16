@@ -29,24 +29,21 @@ Cu.import("resource://gre/modules/osfile/osfile_shared_allthreads.jsm", SharedAl
 Cu.import("resource://gre/modules/Deprecated.jsm", this);
 
 // Boilerplate, to simplify the transition to require()
-let OS = SharedAll.OS;
-
-let LOG = OS.Shared.LOG.bind(OS.Shared, "Controller");
-
-let isTypedArray = OS.Shared.isTypedArray;
+let LOG = SharedAll.LOG.bind(SharedAll, "Controller");
+let isTypedArray = SharedAll.isTypedArray;
 
 // The constructor for file errors.
-let OSError;
-if (OS.Constants.Win) {
-  Cu.import("resource://gre/modules/osfile/osfile_win_allthreads.jsm", this);
-  OSError = OS.Shared.Win.Error;
-} else if (OS.Constants.libc) {
-  Cu.import("resource://gre/modules/osfile/osfile_unix_allthreads.jsm", this);
-  OSError = OS.Shared.Unix.Error;
+let SysAll = {};
+if (SharedAll.Constants.Win) {
+  Cu.import("resource://gre/modules/osfile/osfile_win_allthreads.jsm", SysAll);
+} else if (SharedAll.Constants.libc) {
+  Cu.import("resource://gre/modules/osfile/osfile_unix_allthreads.jsm", SysAll);
 } else {
   throw new Error("I am neither under Windows nor under a Posix system");
 }
-let Type = OS.Shared.Type;
+let OSError = SysAll.Error;
+let Type = SysAll.Type;
+
 let Path = {};
 Cu.import("resource://gre/modules/osfile/ospath.jsm", Path);
 
@@ -60,18 +57,16 @@ Cu.import("resource://gre/modules/Services.jsm", this);
 
 Cu.import("resource://gre/modules/AsyncShutdown.jsm", this);
 
-LOG("Checking profileDir", OS.Constants.Path);
-
 // If profileDir is not available, osfile.jsm has been imported before the
 // profile is setup. In this case, make this a lazy getter.
-if (!("profileDir" in OS.Constants.Path)) {
-  Object.defineProperty(OS.Constants.Path, "profileDir", {
+if (!("profileDir" in SharedAll.Constants.Path)) {
+  Object.defineProperty(SharedAll.Constants.Path, "profileDir", {
     get: function() {
       let path = undefined;
       try {
         path = Services.dirsvc.get("ProfD", Ci.nsIFile).path;
-        delete OS.Constants.Path.profileDir;
-        OS.Constants.Path.profileDir = path;
+        delete SharedAll.Constants.Path.profileDir;
+        SharedAll.Constants.Path.profileDir = path;
       } catch (ex) {
         // Ignore errors: profileDir is still not available
       }
@@ -82,14 +77,14 @@ if (!("profileDir" in OS.Constants.Path)) {
 
 LOG("Checking localProfileDir");
 
-if (!("localProfileDir" in OS.Constants.Path)) {
-  Object.defineProperty(OS.Constants.Path, "localProfileDir", {
+if (!("localProfileDir" in SharedAll.Constants.Path)) {
+  Object.defineProperty(SharedAll.Constants.Path, "localProfileDir", {
     get: function() {
       let path = undefined;
       try {
         path = Services.dirsvc.get("ProfLD", Ci.nsIFile).path;
-        delete OS.Constants.Path.localProfileDir;
-        OS.Constants.Path.localProfileDir = path;
+        delete SharedAll.Constants.Path.localProfileDir;
+        SharedAll.Constants.Path.localProfileDir = path;
       } catch (ex) {
         // Ignore errors: localProfileDir is still not available
       }
@@ -123,7 +118,7 @@ let Scheduler = {
   latestPromise: Promise.resolve("OS.File scheduler hasn't been launched yet"),
 
   post: function post(...args) {
-    if (!this.launched && OS.Shared.DEBUG) {
+    if (!this.launched && SharedAll.Config.DEBUG) {
       // If we have delayed sending SET_DEBUG, do it now.
       worker.post("SET_DEBUG", [true]);
     }
@@ -212,23 +207,23 @@ let readDebugPref = function readDebugPref(prefName, oldPref = false) {
  */
 Services.prefs.addObserver(PREF_OSFILE_LOG,
   function prefObserver(aSubject, aTopic, aData) {
-    OS.Shared.DEBUG = readDebugPref(PREF_OSFILE_LOG, OS.Shared.DEBUG);
+    SharedAll.Config.DEBUG = readDebugPref(PREF_OSFILE_LOG, SharedAll.Config.DEBUG);
     if (Scheduler.launched) {
       // Don't start the worker just to set this preference.
-      Scheduler.post("SET_DEBUG", [OS.Shared.DEBUG]);
+      Scheduler.post("SET_DEBUG", [SharedAll.Config.DEBUG]);
     }
   }, false);
-OS.Shared.DEBUG = readDebugPref(PREF_OSFILE_LOG, false);
+SharedAll.Config.DEBUG = readDebugPref(PREF_OSFILE_LOG, false);
 
 Services.prefs.addObserver(PREF_OSFILE_LOG_REDIRECT,
   function prefObserver(aSubject, aTopic, aData) {
-    OS.Shared.TEST = readDebugPref(PREF_OSFILE_LOG_REDIRECT, OS.Shared.TEST);
+    SharedAll.Config.TEST = readDebugPref(PREF_OSFILE_LOG_REDIRECT, OS.Shared.TEST);
   }, false);
-OS.Shared.TEST = readDebugPref(PREF_OSFILE_LOG_REDIRECT, false);
+SharedAll.Config.TEST = readDebugPref(PREF_OSFILE_LOG_REDIRECT, false);
 
 // Update worker's DEBUG flag if it's true.
 // Don't start the worker just for this, though.
-if (OS.Shared.DEBUG && Scheduler.launched) {
+if (SharedAll.Config.DEBUG && Scheduler.launched) {
   Scheduler.post("SET_DEBUG", [true]);
 }
 
@@ -508,6 +503,35 @@ File.open = function open(path, mode, options) {
 };
 
 /**
+ * Creates and opens a file with a unique name. By default, generate a random HEX number and use it to create a unique new file name.
+ *
+ * @param {string} path The path to the file.
+ * @param {*=} options Additional options for file opening. This
+ * implementation interprets the following fields:
+ *
+ * - {number} humanReadable If |true|, create a new filename appending a decimal number. ie: filename-1.ext, filename-2.ext.
+ *  If |false| use HEX numbers ie: filename-A65BC0.ext
+ * - {number} maxReadableNumber Used to limit the amount of tries after a failed
+ *  file creation. Default is 20.
+ *
+ * @return {Object} contains A file object{file} and the path{path}.
+ * @throws {OS.File.Error} If the file could not be opened.
+ */
+File.openUnique = function openUnique(path, options) {
+  return Scheduler.post(
+      "openUnique", [Type.path.toMsg(path), options],
+      path
+    ).then(
+    function onSuccess(msg) {
+      return {
+        path: msg.path,
+        file: new File(msg.file)
+      };
+    }
+  );
+};
+
+/**
  * Get the information on the file.
  *
  * @return {promise}
@@ -769,13 +793,7 @@ File.Info = function Info(value) {
   }
   Object.defineProperty(this, "_deprecatedCreationDate", {value: value["creationDate"]});
 };
-if (OS.Constants.Win) {
-  File.Info.prototype = Object.create(OS.Shared.Win.AbstractInfo.prototype);
-} else if (OS.Constants.libc) {
-  File.Info.prototype = Object.create(OS.Shared.Unix.AbstractInfo.prototype);
-} else {
-  throw new Error("I am neither under Windows nor under a Posix system");
-}
+File.Info.prototype = SysAll.AbstractInfo.prototype;
 
 // Deprecated
 Object.defineProperty(File.Info.prototype, "creationDate", {
@@ -971,26 +989,35 @@ DirectoryIterator.prototype = {
 DirectoryIterator.Entry = function Entry(value) {
   return value;
 };
-if (OS.Constants.Win) {
-  DirectoryIterator.Entry.prototype = Object.create(OS.Shared.Win.AbstractEntry.prototype);
-} else if (OS.Constants.libc) {
-  DirectoryIterator.Entry.prototype = Object.create(OS.Shared.Unix.AbstractEntry.prototype);
-} else {
-  throw new Error("I am neither under Windows nor under a Posix system");
-}
+DirectoryIterator.Entry.prototype = Object.create(SysAll.AbstractEntry.prototype);
 
 DirectoryIterator.Entry.fromMsg = function fromMsg(value) {
   return new DirectoryIterator.Entry(value);
 };
 
 // Constants
-Object.defineProperty(File, "POS_START", {value: OS.Shared.POS_START});
-Object.defineProperty(File, "POS_CURRENT", {value: OS.Shared.POS_CURRENT});
-Object.defineProperty(File, "POS_END", {value: OS.Shared.POS_END});
+File.POS_START = SysAll.POS_START;
+File.POS_CURRENT = SysAll.POS_CURRENT;
+File.POS_END = SysAll.POS_END;
 
+// Exports
+File.Error = OSError;
+File.DirectoryIterator = DirectoryIterator;
+
+this.OS = {};
 OS.File = File;
-OS.File.Error = OSError;
-OS.File.DirectoryIterator = DirectoryIterator;
+OS.Constants = SharedAll.Constants;
+OS.Shared = {
+  LOG: SharedAll.LOG,
+  Type: SysAll.Type,
+  get DEBUG() {
+    return SharedAll.Config.DEBUG;
+  },
+  set DEBUG(x) {
+    return SharedAll.Config.DEBUG = x;
+  }
+};
+Object.freeze(OS.Shared);
 OS.Path = Path;
 
 

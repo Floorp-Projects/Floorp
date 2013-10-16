@@ -66,8 +66,14 @@
   display: none;
 }
 
-#sources .side-menu-widget-item.selected > .side-menu-widget-item-checkbox:not([checked]) ~ .side-menu-widget-item-arrow {
+#sources .side-menu-widget-item.selected > .side-menu-widget-item-checkbox:not([checked]) ~ .side-menu-widget-item-arrow:-moz-locale-dir(ltr) {
   background-image: none;
+  box-shadow: inset -1px 0 0 #222426;
+}
+
+#sources .side-menu-widget-item.selected > .side-menu-widget-item-checkbox:not([checked]) ~ .side-menu-widget-item-arrow:-moz-locale-dir(rtl) {
+  background-image: none;
+  box-shadow: inset 1px 0 0 #222426;
 }
 
 /* Black box message and source progress meter */
