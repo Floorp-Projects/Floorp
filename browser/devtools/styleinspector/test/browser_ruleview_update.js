@@ -7,6 +7,7 @@ let doc;
 let inspector;
 let ruleView;
 let testElement;
+let rule;
 
 function startTest(aInspector, aRuleView)
 {
@@ -29,9 +30,7 @@ function startTest(aInspector, aRuleView)
   testElement.setAttribute("style", elementStyle);
 
   inspector.selection.setNode(testElement);
-  inspector.once("inspector-updated", () => {
-    testRuleChanges();
-  }, true);
+  inspector.once("rule-view-refreshed", testRuleChanges);
 }
 
 function testRuleChanges()
@@ -43,25 +42,29 @@ function testRuleChanges()
   is(selectors[2].textContent.indexOf(".testclass"), 0, "Third item is class rule.");
 
   // Change the id and refresh.
+  inspector.once("rule-view-refreshed", testRuleChange1);
   testElement.setAttribute("id", "differentid");
-  promiseDone(ruleView.nodeChanged().then(() => {
-    let selectors = ruleView.doc.querySelectorAll(".ruleview-selector");
-    is(selectors.length, 2, "Two rules visible.");
-    is(selectors[0].textContent.indexOf("element"), 0, "First item is inline style.");
-    is(selectors[1].textContent.indexOf(".testclass"), 0, "Second item is class rule.");
+}
 
-    testElement.setAttribute("id", "testid");
-    return ruleView.nodeChanged();
-  }).then(() => {
-    // Put the id back.
-    let selectors = ruleView.doc.querySelectorAll(".ruleview-selector");
-    is(selectors.length, 3, "Three rules visible.");
-    is(selectors[0].textContent.indexOf("element"), 0, "First item is inline style.");
-    is(selectors[1].textContent.indexOf("#testid"), 0, "Second item is id rule.");
-    is(selectors[2].textContent.indexOf(".testclass"), 0, "Third item is class rule.");
+function testRuleChange1()
+{
+  let selectors = ruleView.doc.querySelectorAll(".ruleview-selector");
+  is(selectors.length, 2, "Two rules visible.");
+  is(selectors[0].textContent.indexOf("element"), 0, "First item is inline style.");
+  is(selectors[1].textContent.indexOf(".testclass"), 0, "Second item is class rule.");
 
-    testPropertyChanges();
-  }));
+  inspector.once("rule-view-refreshed", testRuleChange2);
+  testElement.setAttribute("id", "testid");
+}
+function testRuleChange2()
+{
+  let selectors = ruleView.doc.querySelectorAll(".ruleview-selector");
+  is(selectors.length, 3, "Three rules visible.");
+  is(selectors[0].textContent.indexOf("element"), 0, "First item is inline style.");
+  is(selectors[1].textContent.indexOf("#testid"), 0, "Second item is id rule.");
+  is(selectors[2].textContent.indexOf(".testclass"), 0, "Third item is class rule.");
+
+  testPropertyChanges();
 }
 
 function validateTextProp(aProp, aEnabled, aName, aValue, aDesc)
@@ -77,65 +80,86 @@ function validateTextProp(aProp, aEnabled, aName, aValue, aDesc)
 
 function testPropertyChanges()
 {
-  // Add a second margin-top value, just to make things interesting.
-  let rule = ruleView._elementStyle.rules[0];
+  rule = ruleView._elementStyle.rules[0];
   let ruleEditor = ruleView._elementStyle.rules[0].editor;
+  inspector.once("rule-view-refreshed", testPropertyChange0);
+
+  // Add a second margin-top value, just to make things interesting.
   ruleEditor.addProperty("margin-top", "5px", "");
-  promiseDone(expectRuleChange(rule).then(() => {
-    // Set the element style back to a 1px margin-top.
-    testElement.setAttribute("style", "margin-top: 1px; padding-top: 5px");
-    return ruleView.nodeChanged();
-  }).then(() => {
-    is(rule.editor.element.querySelectorAll(".ruleview-property").length, 3, "Correct number of properties");
-    validateTextProp(rule.textProps[0], true, "margin-top", "1px", "First margin property re-enabled");
-    validateTextProp(rule.textProps[2], false, "margin-top", "5px", "Second margin property disabled");
+}
 
-    // Now set it back to 5px, the 5px value should be re-enabled.
-    testElement.setAttribute("style", "margin-top: 5px; padding-top: 5px;");
-    return ruleView.nodeChanged();
+function testPropertyChange0()
+{
+  validateTextProp(rule.textProps[0], false, "margin-top", "1px", "Original margin property active");
 
-  }).then(() => {
-    is(rule.editor.element.querySelectorAll(".ruleview-property").length, 3, "Correct number of properties");
-    validateTextProp(rule.textProps[0], false, "margin-top", "1px", "First margin property re-enabled");
-    validateTextProp(rule.textProps[2], true, "margin-top", "5px", "Second margin property disabled");
+  inspector.once("rule-view-refreshed", testPropertyChange1);
+  testElement.setAttribute("style", "margin-top: 1px; padding-top: 5px");
+}
+function testPropertyChange1()
+{
+  is(rule.editor.element.querySelectorAll(".ruleview-property").length, 3, "Correct number of properties");
+  validateTextProp(rule.textProps[0], true, "margin-top", "1px", "First margin property re-enabled");
+  validateTextProp(rule.textProps[2], false, "margin-top", "5px", "Second margin property disabled");
 
-    // Set the margin property to a value that doesn't exist in the editor.
-    // Should reuse the currently-enabled element (the second one.)
-    testElement.setAttribute("style", "margin-top: 15px; padding-top: 5px;");
-    return ruleView.nodeChanged();
-  }).then(() => {
-    is(rule.editor.element.querySelectorAll(".ruleview-property").length, 3, "Correct number of properties");
-    validateTextProp(rule.textProps[0], false, "margin-top", "1px", "First margin property re-enabled");
-    validateTextProp(rule.textProps[2], true, "margin-top", "15px", "Second margin property disabled");
+  inspector.once("rule-view-refreshed", testPropertyChange2);
 
-    // Remove the padding-top attribute.  Should disable the padding property but not remove it.
-    testElement.setAttribute("style", "margin-top: 5px;");
-    return ruleView.nodeChanged();
-  }).then(() => {
-    is(rule.editor.element.querySelectorAll(".ruleview-property").length, 3, "Correct number of properties");
-    validateTextProp(rule.textProps[1], false, "padding-top", "5px", "Padding property disabled");
+  // Now set it back to 5px, the 5px value should be re-enabled.
+  testElement.setAttribute("style", "margin-top: 5px; padding-top: 5px;");
+}
+function testPropertyChange2()
+{
+  is(rule.editor.element.querySelectorAll(".ruleview-property").length, 3, "Correct number of properties");
+  validateTextProp(rule.textProps[0], false, "margin-top", "1px", "First margin property re-enabled");
+  validateTextProp(rule.textProps[2], true, "margin-top", "5px", "Second margin property disabled");
 
-    // Put the padding-top attribute back in, should re-enable the padding property.
-    testElement.setAttribute("style", "margin-top: 5px; padding-top: 25px");
-    return ruleView.nodeChanged();
-  }).then(() => {
-    is(rule.editor.element.querySelectorAll(".ruleview-property").length, 3, "Correct number of properties");
-    validateTextProp(rule.textProps[1], true, "padding-top", "25px", "Padding property enabled");
+  inspector.once("rule-view-refreshed", testPropertyChange3);
 
-    // Add an entirely new property.
-    testElement.setAttribute("style", "margin-top: 5px; padding-top: 25px; padding-left: 20px;");
-    return ruleView.nodeChanged();
-  }).then(() => {
-    is(rule.editor.element.querySelectorAll(".ruleview-property").length, 4, "Added a property");
-    validateTextProp(rule.textProps[3], true, "padding-left", "20px", "Padding property enabled");
+  // Set the margin property to a value that doesn't exist in the editor.
+  // Should reuse the currently-enabled element (the second one.)
+  testElement.setAttribute("style", "margin-top: 15px; padding-top: 5px;");
+}
+function testPropertyChange3()
+{
+  is(rule.editor.element.querySelectorAll(".ruleview-property").length, 3, "Correct number of properties");
+  validateTextProp(rule.textProps[0], false, "margin-top", "1px", "First margin property re-enabled");
+  validateTextProp(rule.textProps[2], true, "margin-top", "15px", "Second margin property disabled");
 
-    finishTest();
-  }));
+  inspector.once("rule-view-refreshed", testPropertyChange4);
+
+  // Remove the padding-top attribute.  Should disable the padding property but not remove it.
+  testElement.setAttribute("style", "margin-top: 5px;");
+}
+function testPropertyChange4()
+{
+  is(rule.editor.element.querySelectorAll(".ruleview-property").length, 3, "Correct number of properties");
+  validateTextProp(rule.textProps[1], false, "padding-top", "5px", "Padding property disabled");
+
+  inspector.once("rule-view-refreshed", testPropertyChange5);
+
+  // Put the padding-top attribute back in, should re-enable the padding property.
+  testElement.setAttribute("style", "margin-top: 5px; padding-top: 25px");
+}
+function testPropertyChange5()
+{
+  is(rule.editor.element.querySelectorAll(".ruleview-property").length, 3, "Correct number of properties");
+  validateTextProp(rule.textProps[1], true, "padding-top", "25px", "Padding property enabled");
+
+  inspector.once("rule-view-refreshed", testPropertyChange6);
+
+  // Add an entirely new property
+  testElement.setAttribute("style", "margin-top: 5px; padding-top: 25px; padding-left: 20px;");
+}
+function testPropertyChange6()
+{
+  is(rule.editor.element.querySelectorAll(".ruleview-property").length, 4, "Added a property");
+  validateTextProp(rule.textProps[3], true, "padding-left", "20px", "Padding property enabled");
+
+  finishTest();
 }
 
 function finishTest()
 {
-  inspector = ruleView = null;
+  inspector = ruleView = rule = null;
   doc = null;
   gBrowser.removeCurrentTab();
   finish();

@@ -19,7 +19,7 @@ this.ServerSocket = CC("@mozilla.org/network/server-socket;1",
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/FileUtils.jsm");
-Cu.import("resource://gre/modules/services-common/log4moz.js");
+Cu.import("resource://gre/modules/Log.jsm");
 
 let loader = Cc["@mozilla.org/moz/jssubscript-loader;1"]
                .getService(Ci.mozIJSSubScriptLoader);
@@ -29,13 +29,13 @@ function MarionetteComponent() {
   this.observerService = Services.obs;
 
   // set up the logger
-  this.logger = Log4Moz.repository.getLogger("Marionette");
-  this.logger.level = Log4Moz.Level["Trace"];
+  this.logger = Log.repository.getLogger("Marionette");
+  this.logger.level = Log.Level["Trace"];
   let logf = FileUtils.getFile('ProfD', ['marionette.log']);
 
   let dumper = false;
-  let formatter = new Log4Moz.BasicFormatter();
-  this.logger.addAppender(new Log4Moz.BoundedFileAppender(logf.path, formatter));
+  let formatter = new Log.BasicFormatter();
+  this.logger.addAppender(new Log.BoundedFileAppender(logf.path, formatter));
 #ifdef DEBUG
   dumper = true;
 #endif
@@ -43,7 +43,7 @@ function MarionetteComponent() {
   dumper = true;
 #endif
   if (dumper) {
-    this.logger.addAppender(new Log4Moz.DumpAppender(formatter));
+    this.logger.addAppender(new Log.DumpAppender(formatter));
   }
   this.logger.info("MarionetteComponent loaded");
 }
@@ -93,6 +93,12 @@ MarionetteComponent.prototype = {
         if (enabledPref) {
           this.enabled = true;
           this.logger.info("marionette enabled via build flag and pref");
+
+          // We want to suppress the modal dialog that's shown
+          // when starting up in safe-mode to enable testing.
+          if (Services.appinfo.inSafeMode) {
+            this.observerService.addObserver(this, "domwindowopened", false);
+          }
         }
         else {
           this.logger.info("marionette not enabled via pref");
@@ -105,11 +111,29 @@ MarionetteComponent.prototype = {
         this.observerService.addObserver(this, "xpcom-shutdown", false);
         this.init();
         break;
+      case "domwindowopened":
+        this.observerService.removeObserver(this, aTopic);
+        this._suppressSafeModeDialog(aSubject);
+        break;
       case "xpcom-shutdown":
         this.observerService.removeObserver(this, "xpcom-shutdown");
         this.uninit();
         break;
     }
+  },
+
+  _suppressSafeModeDialog: function mc_suppressSafeModeDialog(aWindow) {
+    // Wait for the modal dialog to finish loading.
+    aWindow.addEventListener("load", function onLoad() {
+      aWindow.removeEventListener("load", onLoad);
+
+      if (aWindow.document.getElementById("safeModeDialog")) {
+        aWindow.setTimeout(() => {
+          // Accept the dialog to start in safe-mode.
+          aWindow.document.documentElement.getButton("accept").click();
+        });
+      }
+    });
   },
 
   init: function mc_init() {

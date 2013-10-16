@@ -2,15 +2,15 @@
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
 Cu.import("resource://gre/modules/NetUtil.jsm");
-Cu.import("resource://services-common/log4moz.js");
+Cu.import("resource://gre/modules/Log.jsm");
 Cu.import("resource://services-common/rest.js");
 Cu.import("resource://services-common/utils.js");
 
 //DEBUG = true;
 
 function run_test() {
-  Log4Moz.repository.getLogger("Services.Common.RESTRequest").level =
-    Log4Moz.Level.Trace;
+  Log.repository.getLogger("Services.Common.RESTRequest").level =
+    Log.Level.Trace;
   initTestLogging("Trace");
 
   run_next_test();

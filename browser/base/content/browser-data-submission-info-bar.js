@@ -19,9 +19,9 @@ let gDataNotificationInfoBar = {
   },
 
   get _log() {
-    let log4moz = Cu.import("resource://services-common/log4moz.js", {}).Log4Moz;
+    let Log = Cu.import("resource://gre/modules/Log.jsm", {}).Log;
     delete this._log;
-    return this._log = log4moz.repository.getLogger("Services.DataReporting.InfoBar");
+    return this._log = Log.repository.getLogger("Services.DataReporting.InfoBar");
   },
 
   init: function() {

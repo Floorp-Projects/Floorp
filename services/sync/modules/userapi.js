@@ -10,7 +10,7 @@ this.EXPORTED_SYMBOLS = [
 
 const {utils: Cu} = Components;
 
-Cu.import("resource://services-common/log4moz.js");
+Cu.import("resource://gre/modules/Log.jsm");
 Cu.import("resource://services-common/rest.js");
 Cu.import("resource://services-common/utils.js");
 Cu.import("resource://services-sync/identity.js");
@@ -24,8 +24,8 @@ Cu.import("resource://services-sync/util.js");
  * Instances are constructed with the base URI of the service.
  */
 this.UserAPI10Client = function UserAPI10Client(baseURI) {
-  this._log = Log4Moz.repository.getLogger("Sync.UserAPI");
-  this._log.level = Log4Moz.Level[Svc.Prefs.get("log.logger.userapi")];
+  this._log = Log.repository.getLogger("Sync.UserAPI");
+  this._log.level = Log.Level[Svc.Prefs.get("log.logger.userapi")];
 
   this.baseURI = baseURI;
 }

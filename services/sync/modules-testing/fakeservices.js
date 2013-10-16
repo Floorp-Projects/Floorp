@@ -16,7 +16,7 @@ const {utils: Cu} = Components;
 Cu.import("resource://services-sync/record.js");
 Cu.import("resource://services-sync/util.js");
 
-let btoa = Cu.import("resource://services-common/log4moz.js").btoa;
+let btoa = Cu.import("resource://gre/modules/Log.jsm").btoa;
 
 this.FakeFilesystemService = function FakeFilesystemService(contents) {
   this.fakeContents = contents;

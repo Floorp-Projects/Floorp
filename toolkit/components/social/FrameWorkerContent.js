@@ -137,8 +137,10 @@ FrameWorker.prototype = {
     // Our importScripts function needs to 'eval' the script code from inside
     // a function, but using eval() directly means functions in the script
     // don't end up in the global scope.
-    sandbox._evalInSandbox = function(s) {
-      Cu.evalInSandbox(s, sandbox);
+    sandbox._evalInSandbox = function(s, url) {
+      let baseURI = Services.io.newURI(workerWindow.location.href, null, null);
+      Cu.evalInSandbox(s, sandbox, "1.8",
+                       Services.io.newURI(url, null, baseURI).spec, 1);
     };
 
     // and we delegate ononline and onoffline events to the worker.
