@@ -14,6 +14,10 @@
     <base href="chrome://browser/content/devtools/app-manager/"></base>
     <title>&projects.title;</title>
     <link rel="stylesheet" href="chrome://browser/skin/devtools/app-manager/projects.css" type="text/css"/>
+    <script type="application/javascript;version=1.8" src="utils.js"></script>
+    <script type="application/javascript;version=1.8" src="projects.js"></script>
+    <script type="application/javascript;version=1.8" src="template.js"></script>
+    <script type="application/javascript;version=1.8" src="manifest-editor.js"></script>
   </head>
 
   <body onload="UI.onload()">
@@ -25,7 +29,7 @@
       <div id="new-packaged-project" onclick="UI.addPackaged()" title="&projects.addPackagedTooltip;">&projects.addPackaged;</div>
       <div id="new-hosted-project">&projects.addHosted;
         <form onsubmit="UI.addHosted(); return false;" id="new-hosted-project-wrapper">
-          <input value="" id="url-input" type="url" required="true" pattern="https?://.+" placeholder="&projects.hostedManifestPlaceHolder2;" size="50" />
+          <input value="" id="url-input" type="url" required="true" pattern="(https?|chrome)://.+" placeholder="&projects.hostedManifestPlaceHolder2;" size="50" />
           <div onclick="UI.addHosted()" id="new-hosted-project-click" title="&projects.addHostedTooltip;"></div>
           <input type="submit" hidden="true"></input>
         </form>
@@ -40,7 +44,7 @@
     <img class="project-item-icon" template='{"type":"attribute","path":"icon","name":"src"}' />
     <div class="project-item-meta">
       <div class="button-remove" onclick="UI.remove(this.dataset.location, event)" template='{"type":"attribute","path":"location","name":"data-location"}' title="&projects.removeAppFromList;"></div>
-      <strong template='{"type":"textContent","path":"name"}'></strong>
+      <strong template='{"type":"textContent","path":"manifest.name"}'></strong>
       <span class="project-item-type" template='{"type":"textContent","path":"type"}'></span>
       <p class="project-item-description" template='{"type":"textContent","path":"manifest.description"}'></p>
       <div template='{"type":"attribute","path":"validationStatus","name":"status"}'>
@@ -56,9 +60,9 @@
     <div class="project-details" template='{"type":"attribute","path":"validationStatus","name":"status"}'>
       <div class="project-header">
         <img class="project-icon" template='{"type":"attribute","path":"icon","name":"src"}'/>
-        <div class="project-details">
+        <div class="project-metadata">
           <div class="project-title">
-            <h1 template='{"type":"textContent","path":"name"}'></h1>
+            <h1 template='{"type":"textContent","path":"manifest.name"}'></h1>
             <div class="project-status" template='{"type":"attribute","path":"validationStatus","name":"status"}'>
               <p class="project-validation" template='{"type":"textContent","path":"validationStatus"}'></p>
               <p class="project-type" template='{"type":"textContent","path":"type"}'></p>
@@ -76,11 +80,9 @@
       <div class="project-errors" template='{"type":"textContent","path":"errors"}'></div>
       <div class="project-warnings" template='{"type":"textContent","path":"warnings"}'></div>
     </div>
+    <div class="manifest-editor">
+      <h2>&projects.manifestEditor;</h2>
+    </div>
   </div>
   </template>
-
-
-  <script type="application/javascript;version=1.8" src="utils.js"></script>
-  <script type="application/javascript;version=1.8" src="projects.js"></script>
-  <script type="application/javascript;version=1.8" src="template.js"></script>
 </html>

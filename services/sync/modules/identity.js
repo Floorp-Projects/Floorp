@@ -10,7 +10,7 @@ const {classes: Cc, interfaces: Ci, utils: Cu, results: Cr} = Components;
 
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://services-sync/constants.js");
-Cu.import("resource://services-common/log4moz.js");
+Cu.import("resource://gre/modules/Log.jsm");
 Cu.import("resource://services-sync/util.js");
 
 // Lazy import to prevent unnecessary load on startup.
@@ -57,8 +57,8 @@ for (let symbol of ["BulkKeyBundle", "SyncKeyBundle"]) {
  * and any other function that involves the built-in functionality.
  */
 this.IdentityManager = function IdentityManager() {
-  this._log = Log4Moz.repository.getLogger("Sync.Identity");
-  this._log.Level = Log4Moz.Level[Svc.Prefs.get("log.logger.identity")];
+  this._log = Log.repository.getLogger("Sync.Identity");
+  this._log.Level = Log.Level[Svc.Prefs.get("log.logger.identity")];
 
   this._basicPassword = null;
   this._basicPasswordAllowLookup = true;

@@ -14,9 +14,9 @@ startupManager();
 
 function run_test() {
   initTestLogging("Trace");
-  Log4Moz.repository.getLogger("Sync.AddonsReconciler").level = Log4Moz.Level.Trace;
-  Log4Moz.repository.getLogger("Sync.AddonsReconciler").level =
-    Log4Moz.Level.Trace;
+  Log.repository.getLogger("Sync.AddonsReconciler").level = Log.Level.Trace;
+  Log.repository.getLogger("Sync.AddonsReconciler").level =
+    Log.Level.Trace;
 
   Svc.Prefs.set("engine.addons", true);
   Service.engineManager.register(AddonsEngine);

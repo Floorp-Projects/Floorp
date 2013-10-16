@@ -20,7 +20,7 @@ this.EXPORTED_SYMBOLS = [
 
 Cu.import("resource://testing-common/httpd.js");
 Cu.import("resource://services-common/async.js");
-Cu.import("resource://services-common/log4moz.js");
+Cu.import("resource://gre/modules/Log.jsm");
 Cu.import("resource://services-common/utils.js");
 
 const STORAGE_HTTP_LOGGER = "Services.Common.Test.Server";
@@ -74,7 +74,7 @@ this.ServerBSO = function ServerBSO(id, payload, modified) {
     throw new Error("BSO ID is invalid: " + id);
   }
 
-  this._log = Log4Moz.repository.getLogger(STORAGE_HTTP_LOGGER);
+  this._log = Log.repository.getLogger(STORAGE_HTTP_LOGGER);
 
   this.id = id;
   if (!payload) {
@@ -287,7 +287,7 @@ this.StorageServerCollection =
   CommonUtils.ensureMillisecondsTimestamp(timestamp);
   this._timestamp = timestamp;
 
-  this._log = Log4Moz.repository.getLogger(STORAGE_HTTP_LOGGER);
+  this._log = Log.repository.getLogger(STORAGE_HTTP_LOGGER);
 }
 StorageServerCollection.prototype = {
   BATCH_MAX_COUNT: 100,         // # of records.
@@ -872,7 +872,7 @@ this.StorageServer = function StorageServer(callback) {
   this.started      = false;
   this.users        = {};
   this.requestCount = 0;
-  this._log         = Log4Moz.repository.getLogger(STORAGE_HTTP_LOGGER);
+  this._log         = Log.repository.getLogger(STORAGE_HTTP_LOGGER);
 
   // Install our own default handler. This allows us to mess around with the
   // whole URL space.

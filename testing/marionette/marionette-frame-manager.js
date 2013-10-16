@@ -10,8 +10,8 @@ let FRAME_SCRIPT = "chrome://marionette/content/marionette-listener.js";
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
-Cu.import("resource://gre/modules/services-common/log4moz.js");
-let logger = Log4Moz.repository.getLogger("Marionette");
+Cu.import("resource://gre/modules/Log.jsm");
+let logger = Log.repository.getLogger("Marionette");
 
 //list of OOP frames that has the frame script loaded
 let remoteFrames = [];

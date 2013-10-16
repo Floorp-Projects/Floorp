@@ -51,9 +51,9 @@ let errorHandler = Service.errorHandler;
 function run_test() {
   initTestLogging("Trace");
 
-  Log4Moz.repository.getLogger("Sync.Service").level = Log4Moz.Level.Trace;
-  Log4Moz.repository.getLogger("Sync.SyncScheduler").level = Log4Moz.Level.Trace;
-  Log4Moz.repository.getLogger("Sync.ErrorHandler").level = Log4Moz.Level.Trace;
+  Log.repository.getLogger("Sync.Service").level = Log.Level.Trace;
+  Log.repository.getLogger("Sync.SyncScheduler").level = Log.Level.Trace;
+  Log.repository.getLogger("Sync.ErrorHandler").level = Log.Level.Trace;
 
   run_next_test();
 }
@@ -1583,7 +1583,7 @@ add_test(function test_sync_engine_generic_fail() {
     Svc.Obs.notify("weave:engine:sync:error", "", "catapult");
   };
 
-  let log = Log4Moz.repository.getLogger("Sync.ErrorHandler");
+  let log = Log.repository.getLogger("Sync.ErrorHandler");
   Svc.Prefs.set("log.appender.file.logOnError", true);
 
   do_check_eq(Status.engines["catapult"], undefined);
@@ -1623,7 +1623,7 @@ add_test(function test_logs_on_sync_error_despite_shouldReportError() {
   _("Ensure that an error is still logged when weave:service:sync:error " +
     "is notified, despite shouldReportError returning false.");
 
-  let log = Log4Moz.repository.getLogger("Sync.ErrorHandler");
+  let log = Log.repository.getLogger("Sync.ErrorHandler");
   Svc.Prefs.set("log.appender.file.logOnError", true);
   log.info("TESTING");
 
@@ -1651,7 +1651,7 @@ add_test(function test_logs_on_login_error_despite_shouldReportError() {
   _("Ensure that an error is still logged when weave:service:login:error " +
     "is notified, despite shouldReportError returning false.");
 
-  let log = Log4Moz.repository.getLogger("Sync.ErrorHandler");
+  let log = Log.repository.getLogger("Sync.ErrorHandler");
   Svc.Prefs.set("log.appender.file.logOnError", true);
   log.info("TESTING");
 
@@ -1687,7 +1687,7 @@ add_test(function test_engine_applyFailed() {
     Svc.Obs.notify("weave:engine:sync:applied", {newFailed:1}, "catapult");
   };
 
-  let log = Log4Moz.repository.getLogger("Sync.ErrorHandler");
+  let log = Log.repository.getLogger("Sync.ErrorHandler");
   Svc.Prefs.set("log.appender.file.logOnError", true);
 
   Svc.Obs.add("weave:service:reset-file-log", function onResetFileLog() {

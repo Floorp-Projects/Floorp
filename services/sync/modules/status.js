@@ -10,12 +10,12 @@ const Cr = Components.results;
 const Cu = Components.utils;
 
 Cu.import("resource://services-sync/constants.js");
-Cu.import("resource://services-common/log4moz.js");
+Cu.import("resource://gre/modules/Log.jsm");
 Cu.import("resource://services-sync/identity.js");
 Cu.import("resource://gre/modules/Services.jsm");
 
 this.Status = {
-  _log: Log4Moz.repository.getLogger("Sync.Status"),
+  _log: Log.repository.getLogger("Sync.Status"),
   _authManager: new IdentityManager(),
   ready: false,
 
@@ -114,7 +114,7 @@ this.Status = {
     } catch (ex) {
       // Use default.
     }
-    this._log.level = Log4Moz.Level[logLevel];
+    this._log.level = Log.Level[logLevel];
 
     this._log.info("Resetting Status.");
     this.service = STATUS_OK;
