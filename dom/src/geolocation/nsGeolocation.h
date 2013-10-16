@@ -85,8 +85,8 @@ public:
   // create, or reinitalize the callback timer
   void     SetDisconnectTimer();
 
-  // Update the accuracy and notify the provider if changed
-  void     UpdateAccuracy(bool aForceHigh = false);
+  // request higher accuracy, if possible
+  void     SetHigherAccuracy(bool aEnable);
   bool     HighAccuracyRequested();
 
 private:
