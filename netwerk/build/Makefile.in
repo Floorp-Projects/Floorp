@@ -18,6 +18,10 @@ SHARED_LIBRARY_LIBS = \
   ../ipc/$(LIB_PREFIX)neckoipc_s.$(LIB_SUFFIX) \
   $(NULL)
 
+ifdef MOZ_RTSP
+SHARED_LIBRARY_LIBS += ../protocol/rtsp/$(LIB_PREFIX)nkrtsp_s.$(LIB_SUFFIX)
+endif
+
 ifdef MOZ_SRTP
 SHARED_LIBRARY_LIBS += \
   ../srtp/src/$(LIB_PREFIX)nksrtp_s.$(LIB_SUFFIX) \
@@ -99,6 +103,10 @@ SHARED_LIBRARY_LIBS += \
   $(NULL)
 LOCAL_INCLUDES += -I$(srcdir)/../wifi
 
+endif
+
+ifdef MOZ_RTSP
+    LOCAL_INCLUDES += -I$(srcdir)/../protocol/rtsp
 endif
 
 include $(topsrcdir)/config/rules.mk

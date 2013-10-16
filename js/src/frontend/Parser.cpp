@@ -3832,17 +3832,19 @@ Parser<ParseHandler>::matchInOrOf(bool *isForOfp)
 template <>
 bool
 Parser<FullParseHandler>::isValidForStatementLHS(ParseNode *pn1, JSVersion version,
-                                                 bool isForDecl, bool isForEach, bool isForOf)
+                                                 bool isForDecl, bool isForEach,
+                                                 ParseNodeKind headKind)
 {
     if (isForDecl) {
         if (pn1->pn_count > 1)
             return false;
         if (pn1->isOp(JSOP_DEFCONST))
             return false;
+
 #if JS_HAS_DESTRUCTURING
         // In JS 1.7 only, for (var [K, V] in EXPR) has a special meaning.
         // Hence all other destructuring decls are banned there.
-        if (version == JSVERSION_1_7 && !isForEach && !isForOf) {
+        if (version == JSVERSION_1_7 && !isForEach && headKind == PNK_FORIN) {
             ParseNode *lhs = pn1->pn_head;
             if (lhs->isKind(PNK_ASSIGN))
                 lhs = lhs->pn_left;
@@ -3868,7 +3870,7 @@ Parser<FullParseHandler>::isValidForStatementLHS(ParseNode *pn1, JSVersion versi
       case PNK_OBJECT:
         // In JS 1.7 only, for ([K, V] in EXPR) has a special meaning.
         // Hence all other destructuring left-hand sides are banned there.
-        if (version == JSVERSION_1_7 && !isForEach && !isForOf)
+        if (version == JSVERSION_1_7 && !isForEach && headKind == PNK_FORIN)
             return pn1->isKind(PNK_ARRAY) && pn1->pn_count == 2;
         return true;
 #endif
@@ -3982,9 +3984,14 @@ Parser<FullParseHandler>::forStatement()
      */
     StmtInfoPC letStmt(context); /* used if blockObj != nullptr. */
     ParseNode *pn2, *pn3;      /* forHead->pn_kid2 and pn_kid3. */
-    bool isForOf;
-    bool isForInOrOf = pn1 && matchInOrOf(&isForOf);
-    if (isForInOrOf) {
+    ParseNodeKind headKind = PNK_FORHEAD;
+    if (pn1) {
+        bool isForOf;
+        if (matchInOrOf(&isForOf))
+            headKind = isForOf ? PNK_FOROF : PNK_FORIN;
+    }
+
+    if (headKind == PNK_FOROF || headKind == PNK_FORIN) {
         /*
          * Parse the rest of the for/in or for/of head.
          *
@@ -3993,17 +4000,20 @@ Parser<FullParseHandler>::forStatement()
          * that receives the enumeration value each iteration, and pn3 is the
          * rhs of 'in'.
          */
-        forStmt.type = isForOf ? STMT_FOR_OF_LOOP : STMT_FOR_IN_LOOP;
-
-        /* Set iflags and rule out invalid combinations. */
-        if (isForOf && isForEach) {
-            report(ParseError, false, null(), JSMSG_BAD_FOR_EACH_LOOP);
-            return null();
+        if (headKind == PNK_FOROF) {
+            forStmt.type = STMT_FOR_OF_LOOP;
+            forStmt.type = (headKind == PNK_FOROF) ? STMT_FOR_OF_LOOP : STMT_FOR_IN_LOOP;
+            if (isForEach) {
+                report(ParseError, false, null(), JSMSG_BAD_FOR_EACH_LOOP);
+                return null();
+            }
+        } else {
+            forStmt.type = STMT_FOR_IN_LOOP;
+            iflags |= JSITER_ENUMERATE;
         }
-        iflags |= (isForOf ? JSITER_FOR_OF : JSITER_ENUMERATE);
 
         /* Check that the left side of the 'in' or 'of' is valid. */
-        if (!isValidForStatementLHS(pn1, versionNumber(), isForDecl, isForEach, isForOf)) {
+        if (!isValidForStatementLHS(pn1, versionNumber(), isForDecl, isForEach, headKind)) {
             report(ParseError, false, pn1, JSMSG_BAD_FOR_LEFTSIDE);
             return null();
         }
@@ -4029,12 +4039,14 @@ Parser<FullParseHandler>::forStatement()
                  * 'const' to hoist the initializer or the entire decl out of
                  * the loop head.
                  */
-#if JS_HAS_BLOCK_SCOPE
+                if (headKind == PNK_FOROF) {
+                    report(ParseError, false, pn2, JSMSG_INVALID_FOR_OF_INIT);
+                    return null();
+                }
                 if (blockObj) {
                     report(ParseError, false, pn2, JSMSG_INVALID_FOR_IN_INIT);
                     return null();
                 }
-#endif /* JS_HAS_BLOCK_SCOPE */
 
                 hoistedVar = pn1;
 
@@ -4113,7 +4125,7 @@ Parser<FullParseHandler>::forStatement()
                  * Destructuring for-in requires [key, value] enumeration
                  * in JS1.7.
                  */
-                if (!isForEach && !isForOf)
+                if (!isForEach && headKind == PNK_FORIN)
                     iflags |= JSITER_FOREACH | JSITER_KEYVALUE;
             }
             break;
@@ -4126,6 +4138,8 @@ Parser<FullParseHandler>::forStatement()
             reportWithOffset(ParseError, false, begin, JSMSG_BAD_FOR_EACH_LOOP);
             return null();
         }
+
+        headKind = PNK_FORHEAD;
 
         if (blockObj) {
             /*
@@ -4165,7 +4179,7 @@ Parser<FullParseHandler>::forStatement()
     MUST_MATCH_TOKEN(TOK_RP, JSMSG_PAREN_AFTER_FOR_CTRL);
 
     TokenPos headPos(begin, pos().end);
-    ParseNode *forHead = handler.newForHead(isForInOrOf, pn1, pn2, pn3, headPos);
+    ParseNode *forHead = handler.newForHead(headKind, pn1, pn2, pn3, headPos);
     if (!forHead)
         return null();
 
@@ -5933,13 +5947,15 @@ Parser<FullParseHandler>::comprehensionTail(ParseNode *kid, unsigned blockid, bo
             report(ParseError, false, null(), JSMSG_IN_AFTER_FOR_NAME);
             return null();
         }
+        ParseNodeKind headKind = PNK_FORIN;
         if (isForOf) {
             if (pn2->pn_iflags != JSITER_ENUMERATE) {
                 JS_ASSERT(pn2->pn_iflags == (JSITER_FOREACH | JSITER_ENUMERATE));
                 report(ParseError, false, null(), JSMSG_BAD_FOR_EACH_LOOP);
                 return null();
             }
-            pn2->pn_iflags = JSITER_FOR_OF;
+            pn2->pn_iflags = 0;
+            headKind = PNK_FOROF;
         }
 
         ParseNode *pn4 = expr();
@@ -5972,6 +5988,7 @@ Parser<FullParseHandler>::comprehensionTail(ParseNode *kid, unsigned blockid, bo
 
                 JS_ASSERT(pn2->isOp(JSOP_ITER));
                 JS_ASSERT(pn2->pn_iflags & JSITER_ENUMERATE);
+                JS_ASSERT(headKind == PNK_FORIN);
                 pn2->pn_iflags |= JSITER_FOREACH | JSITER_KEYVALUE;
             }
             break;
@@ -6003,7 +6020,7 @@ Parser<FullParseHandler>::comprehensionTail(ParseNode *kid, unsigned blockid, bo
         if (!pn3)
             return null();
 
-        pn2->pn_left = handler.newTernary(PNK_FORIN, vars, pn3, pn4);
+        pn2->pn_left = handler.newTernary(headKind, vars, pn3, pn4);
         if (!pn2->pn_left)
             return null();
         *pnp = pn2;

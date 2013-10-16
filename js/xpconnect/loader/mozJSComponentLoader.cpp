@@ -1099,7 +1099,7 @@ mozJSComponentLoader::Import(const nsACString& registryLocation,
     nsresult rv = ImportInto(registryLocation, targetObject, cx, &global);
 
     if (global) {
-        if (!JS_WrapObject(cx, global.address())) {
+        if (!JS_WrapObject(cx, &global)) {
             NS_ERROR("can't wrap return value");
             return NS_ERROR_FAILURE;
         }

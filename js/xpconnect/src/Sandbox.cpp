@@ -280,7 +280,7 @@ ExportFunction(JSContext *cx, unsigned argc, jsval *vp)
         // The function forwarder will live in the target compartment. Since
         // this function will be referenced from its private slot, to avoid a
         // GC hazard, we must wrap it to the same compartment.
-        if (!JS_WrapObject(cx, funObj.address()))
+        if (!JS_WrapObject(cx, &funObj))
             return false;
 
         RootedId id(cx);
@@ -348,7 +348,8 @@ CloneNonReflectorsRead(JSContext *cx, JSStructuredCloneReader *reader, uint32_t 
             MOZ_ASSERT(reflector, "No object pointer?");
             MOZ_ASSERT(IsReflector(reflector), "Object pointer must be a reflector!");
 
-            JS_WrapObject(cx, reflector.address());
+            if (!JS_WrapObject(cx, &reflector))
+                return nullptr;
             JS_ASSERT(WrapperFactory::IsXrayWrapper(reflector) ||
                       IsReflector(reflector));
 
@@ -1006,7 +1007,7 @@ xpc::CreateSandboxObject(JSContext *cx, jsval *vp, nsISupports *prinOrSop, Sandb
         JSAutoCompartment ac(cx, sandbox);
 
         if (options.proto) {
-            bool ok = JS_WrapObject(cx, options.proto.address());
+            bool ok = JS_WrapObject(cx, &options.proto);
             if (!ok)
                 return NS_ERROR_XPC_UNEXPECTED;
 

@@ -26,10 +26,18 @@ window.addEventListener("message", receiveMessage, false);
 var testPassesReceived = 0;
 
 function receiveMessage(event) {
-  if (event.data == "test attempted") {
-    testAttempted();
-  } else {
-    ok_wrapper(event.data.ok, event.data.desc, event.data.addToAttempted);
+  switch (event.data.type) {
+    case "attempted":
+      testAttempted();
+      break;
+    case "ok":
+      ok_wrapper(event.data.ok, event.data.desc, event.data.addToAttempted);
+      break;
+    default:
+      // allow for old style message
+      if (event.data.ok != undefined) {
+        ok_wrapper(event.data.ok, event.data.desc, event.data.addToAttempted);
+      }
   }
 }
 
@@ -37,11 +45,12 @@ function receiveMessage(event) {
 var windowsToClose = new Array();
 windowsToClose.push(window.open("about:blank", "window_to_navigate"));
 windowsToClose.push(window.open("about:blank", "window_to_navigate2"));
+var iframesWithWindowsToClose = new Array();
 
 var attemptedTests = 0;
 var passedTests = 0;
-var totalTestsToPass = 10;
-var totalTestsToAttempt = 13;
+var totalTestsToPass = 12;
+var totalTestsToAttempt = 15;
 
 function ok_wrapper(result, desc, addToAttempted = true) {
   ok(result, desc);
@@ -168,6 +177,19 @@ function doTest() {
   // file_iframe_sandbox_e_if15.html contains file_iframe_sandbox_e_if16.html, which
   // attempts to navigate top by name using window.open().
   window.open("file_iframe_sandbox_e_if15.html");
+
+  // passes if good
+  // 27) iframe with sandbox='allow-scripts allow-popups' should be able to
+  // navigate a window, that it has opened, using it's name.
+  // file_iframe_sandbox_d_if23.html in if_23 opens a window and then attempts
+  // to navigate it using it's name in the target of an anchor.
+  iframesWithWindowsToClose.push("if_23");
+
+  // passes if good, fails if bad
+  // 28) iframe with sandbox='allow-scripts allow-popups' should be able to
+  // navigate a window, that it has opened, using window.open(..., "<name>").
+  // file_iframe_sandbox_d_if23.html in if_23 opens a window and then attempts
+  // to navigate it using it's name in the target of window.open().
 }
 
 addLoadEvent(doTest);
@@ -182,6 +204,7 @@ addLoadEvent(doTest);
 <iframe sandbox="allow-scripts" id="if_18" src="file_iframe_sandbox_d_if18.html" height="10" width="10"></iframe>
 <iframe sandbox="allow-scripts" id="if_19" src="file_iframe_sandbox_d_if19.html" height="10" width="10"></iframe>
 <iframe id="if_21" name="if_parent2" src="file_iframe_sandbox_d_if21.html" height="10" width="10"></iframe>
+<iframe sandbox="allow-scripts allow-popups" id="if_23" src="file_iframe_sandbox_d_if23.html" height="10" width="10"></iframe>
 </div>
 </body>
 </html>

@@ -379,7 +379,7 @@ XrayTraits::getExpandoObjectInternal(JSContext *cx, HandleObject target,
     // work needs to happen there.
     RootedObject exclusiveGlobal(cx, exclusiveGlobalArg);
     JSAutoCompartment ac(cx, target);
-    if (!JS_WrapObject(cx, exclusiveGlobal.address()))
+    if (!JS_WrapObject(cx, &exclusiveGlobal))
         return nullptr;
 
     // Iterate through the chain, looking for a same-origin object.
@@ -457,7 +457,7 @@ XrayTraits::ensureExpandoObject(JSContext *cx, HandleObject wrapper,
         // compartment.
         RootedObject consumerGlobal(cx, js::GetGlobalForObjectCrossCompartment(wrapper));
         bool isSandbox = !strcmp(js::GetObjectJSClass(consumerGlobal)->name, "Sandbox");
-        if (!JS_WrapObject(cx, consumerGlobal.address()))
+        if (!JS_WrapObject(cx, &consumerGlobal))
             return nullptr;
         expandoObject = attachExpandoObject(cx, target, ObjectPrincipal(wrapper),
                                             isSandbox ? (HandleObject)consumerGlobal : NullPtr());
@@ -476,7 +476,7 @@ XrayTraits::cloneExpandoChain(JSContext *cx, HandleObject dst, HandleObject src)
         RootedObject exclusive(cx, JS_GetReservedSlot(oldHead,
                                                       JSSLOT_EXPANDO_EXCLUSIVE_GLOBAL)
                                                      .toObjectOrNull());
-        if (!JS_WrapObject(cx, exclusive.address()))
+        if (!JS_WrapObject(cx, &exclusive))
             return false;
         JSObject *newHead = attachExpandoObject(cx, dst, GetExpandoObjectPrincipal(oldHead),
                                                 exclusive);

@@ -74,6 +74,7 @@ CPP_SOURCES += [
     'nsURLHelper.cpp',
     'nsURLParsers.cpp',
     'nsUnicharStreamLoader.cpp',
+    'StreamingProtocolService.cpp',
 ]
 
 if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'os2':

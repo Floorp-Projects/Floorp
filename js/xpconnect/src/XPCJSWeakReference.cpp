@@ -85,7 +85,7 @@ xpcJSWeakReference::Get(JSContext* aCx, JS::Value* aRetval)
     // xpcconvert. However, because we're doing this directly
     // through the native call context, we need to call
     // JS_WrapObject().
-    if (!JS_WrapObject(aCx, obj.address())) {
+    if (!JS_WrapObject(aCx, &obj)) {
         return NS_ERROR_FAILURE;
     }
 
