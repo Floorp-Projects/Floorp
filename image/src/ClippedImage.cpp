@@ -235,11 +235,21 @@ ClippedImage::GetFrameInternal(const nsIntSize& aViewportSize,
                                                   aFlags)) {
     // Create a surface to draw into.
     mozilla::RefPtr<mozilla::gfx::DrawTarget> target;
-    target = gfxPlatform::GetPlatform()->
-      CreateOffscreenCanvasDrawTarget(gfx::IntSize(mClip.width, mClip.height),
-                                      gfx::FORMAT_B8G8R8A8);
-    nsRefPtr<gfxASurface> surface = gfxPlatform::GetPlatform()->
-      GetThebesSurfaceForDrawTarget(target);
+    nsRefPtr<gfxContext> ctx;
+
+    if (gfxPlatform::GetPlatform()->SupportsAzureContent()) {
+      target = gfxPlatform::GetPlatform()->
+        CreateOffscreenContentDrawTarget(gfx::IntSize(mClip.width, mClip.height),
+                                        gfx::FORMAT_B8G8R8A8);
+      ctx = new gfxContext(target);
+    } else {
+      target = gfxPlatform::GetPlatform()->
+        CreateOffscreenCanvasDrawTarget(gfx::IntSize(mClip.width, mClip.height),
+                                        gfx::FORMAT_B8G8R8A8);
+      nsRefPtr<gfxASurface> surface = gfxPlatform::GetPlatform()->
+        GetThebesSurfaceForDrawTarget(target);
+      ctx = new gfxContext(surface);
+    }
 
     // Create our callback.
     nsRefPtr<gfxDrawingCallback> drawTileCallback =
@@ -248,7 +258,6 @@ ClippedImage::GetFrameInternal(const nsIntSize& aViewportSize,
       new gfxCallbackDrawable(drawTileCallback, mClip.Size());
 
     // Actually draw. The callback will end up invoking DrawSingleTile.
-    nsRefPtr<gfxContext> ctx = new gfxContext(surface);
     gfxRect imageRect(0, 0, mClip.width, mClip.height);
     gfxUtils::DrawPixelSnapped(ctx, drawable, gfxMatrix(),
                                imageRect, imageRect, imageRect, imageRect,
