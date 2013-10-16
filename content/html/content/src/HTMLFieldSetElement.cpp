@@ -217,12 +217,47 @@ HTMLFieldSetElement::AddElement(nsGenericHTMLFormElement* aElement)
 {
   mDependentElements.AppendElement(aElement);
 
+  // If the element that we are adding aElement is a fieldset, then all the
+  // invalid elements in aElement are also invalid elements of this.
+  HTMLFieldSetElement* fieldSet = FromContent(aElement);
+  if (fieldSet) {
+    if (fieldSet->mInvalidElementsCount > 0) {
+      // The order we call UpdateValidity and adjust mInvalidElementsCount is
+      // important. We need to first call UpdateValidity in case
+      // mInvalidElementsCount was 0 before the call and will be incremented to
+      // 1 and so we need to change state to invalid. After that is done, we
+      // are free to increment mInvalidElementsCount to the correct amount.
+      UpdateValidity(false);
+      mInvalidElementsCount += fieldSet->mInvalidElementsCount - 1;
+    }
+    return;
+  }
+
   // We need to update the validity of the fieldset.
   nsCOMPtr<nsIConstraintValidation> cvElmt = do_QueryObject(aElement);
   if (cvElmt &&
       cvElmt->IsCandidateForConstraintValidation() && !cvElmt->IsValid()) {
     UpdateValidity(false);
   }
+
+#if DEBUG
+  int32_t debugInvalidElementsCount = 0;
+  for (uint32_t i = 0; i < mDependentElements.Length(); i++) {
+    HTMLFieldSetElement* fieldSet = FromContent(mDependentElements[i]);
+    if (fieldSet) {
+      debugInvalidElementsCount += fieldSet->mInvalidElementsCount;
+      continue;
+    }
+    nsCOMPtr<nsIConstraintValidation>
+      cvElmt = do_QueryObject(mDependentElements[i]);
+    if (cvElmt &&
+        cvElmt->IsCandidateForConstraintValidation() &&
+        !(cvElmt->IsValid())) {
+      debugInvalidElementsCount += 1;
+    }
+  }
+  MOZ_ASSERT(debugInvalidElementsCount == mInvalidElementsCount);
+#endif
 }
 
 void
@@ -230,12 +265,46 @@ HTMLFieldSetElement::RemoveElement(nsGenericHTMLFormElement* aElement)
 {
   mDependentElements.RemoveElement(aElement);
 
+  // If the element that we are removing aElement is a fieldset, then all the
+  // invalid elements in aElement are also removed from this.
+  HTMLFieldSetElement* fieldSet = FromContent(aElement);
+  if (fieldSet) {
+    if (fieldSet->mInvalidElementsCount > 0) {
+      // The order we update mInvalidElementsCount and call UpdateValidity is
+      // important. We need to first decrement mInvalidElementsCount and then
+      // call UpdateValidity, in case mInvalidElementsCount hits 0 in the call
+      // of UpdateValidity and we have to change state to valid.
+      mInvalidElementsCount -= fieldSet->mInvalidElementsCount - 1;
+      UpdateValidity(true);
+    }
+    return;
+  }
+
   // We need to update the validity of the fieldset.
   nsCOMPtr<nsIConstraintValidation> cvElmt = do_QueryObject(aElement);
   if (cvElmt &&
       cvElmt->IsCandidateForConstraintValidation() && !cvElmt->IsValid()) {
     UpdateValidity(true);
   }
+
+#if DEBUG
+  int32_t debugInvalidElementsCount = 0;
+  for (uint32_t i = 0; i < mDependentElements.Length(); i++) {
+    HTMLFieldSetElement* fieldSet = FromContent(mDependentElements[i]);
+    if (fieldSet) {
+      debugInvalidElementsCount += fieldSet->mInvalidElementsCount;
+      continue;
+    }
+    nsCOMPtr<nsIConstraintValidation>
+      cvElmt = do_QueryObject(mDependentElements[i]);
+    if (cvElmt &&
+        cvElmt->IsCandidateForConstraintValidation() &&
+        !(cvElmt->IsValid())) {
+      debugInvalidElementsCount += 1;
+    }
+  }
+  MOZ_ASSERT(debugInvalidElementsCount == mInvalidElementsCount);
+#endif
 }
 
 void
