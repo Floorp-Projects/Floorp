@@ -2027,8 +2027,8 @@ class LBitOpI : public LInstructionHelper<1, 2, 0>
     { }
 
     const char *extraName() const {
-        if (bitop() == JSOP_URSH && mir_->toUrsh()->canOverflow())
-            return "UrshCanOverflow";
+        if (bitop() == JSOP_URSH && mir_->toUrsh()->bailoutsDisabled())
+            return "ursh:BailoutsDisabled";
         return js_CodeName[op_];
     }
 

@@ -1191,6 +1191,11 @@ DrawTargetCG::CopySurface(SourceSurface *aSurface,
     CGRect flippedRect = CGRectMake(aDestination.x, -(aDestination.y + aSourceRect.height),
                                     aSourceRect.width, aSourceRect.height);
 
+    // Quartz seems to copy A8 surfaces incorrectly if we don't initialize them
+    // to transparent first.
+    if (mFormat == FORMAT_A8) {
+      CGContextClearRect(mCg, flippedRect);
+    }
     CGContextDrawImage(mCg, flippedRect, image);
 
     CGContextRestoreGState(mCg);

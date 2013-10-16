@@ -1,8 +1,4 @@
 # Pymake needs Windows-style paths. Use cmd.exe to hack around this.
 mk_export_correct_style() {
-  if test -n "${_PYMAKE}"; then
-    mk_add_options "export $1=$(cmd.exe //c echo %$1%)"
-  else
-    mk_add_options "export $1=$(eval echo \$$1)"
-  fi
+  mk_add_options "export $1=$(cmd.exe //c echo %$1%)"
 }

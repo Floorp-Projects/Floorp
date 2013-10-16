@@ -7,10 +7,6 @@ ac_add_options --enable-application=xulrunner
 ac_add_options --enable-jemalloc
 ac_add_options --disable-tests
 
-if test -z "${_PYMAKE}"; then
-  mk_add_options MOZ_MAKE_FLAGS=-j1
-fi
-
 if test "$PROCESSOR_ARCHITECTURE" = "AMD64" -o "$PROCESSOR_ARCHITEW6432" = "AMD64"; then
   . $topsrcdir/build/win32/mozconfig.vs2010-win64
 else

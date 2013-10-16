@@ -1122,8 +1122,8 @@ static size_t
 ComputeTriggerBytes(Zone *zone, size_t lastBytes, size_t maxBytes, JSGCInvocationKind gckind)
 {
     size_t base = gckind == GC_SHRINK ? lastBytes : Max(lastBytes, zone->runtimeFromMainThread()->gcAllocationThreshold);
-    float trigger = float(base) * zone->gcHeapGrowthFactor;
-    return size_t(Min(float(maxBytes), trigger));
+    double trigger = double(base) * zone->gcHeapGrowthFactor;
+    return size_t(Min(double(maxBytes), trigger));
 }
 
 void
