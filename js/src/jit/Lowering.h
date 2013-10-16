@@ -115,7 +115,7 @@ class LIRGenerator : public LIRGeneratorSpecific
     bool visitBail(MBail *bail);
     bool visitAssertFloat32(MAssertFloat32 *ins);
     bool visitGetDynamicName(MGetDynamicName *ins);
-    bool visitFilterArguments(MFilterArguments *ins);
+    bool visitFilterArgumentsOrEval(MFilterArgumentsOrEval *ins);
     bool visitCallDirectEval(MCallDirectEval *ins);
     bool visitTest(MTest *test);
     bool visitFunctionDispatch(MFunctionDispatch *ins);

@@ -186,6 +186,10 @@
     "content/html/content/test/test_iframe_sandbox_navigation2.html":"Crash, bug 904659",
     "content/html/content/test/test_iframe_sandbox_navigation.html":"Crash, bug 904659",
 
+    "content/html/content/test/test_iframe_sandbox_popups.html":"multiple concurrent window.open()s fail on B2G",
+    "content/html/content/test/test_iframe_sandbox_popups_inheritance.html":"multiple concurrent window.open()s fail on B2G",
+    "content/html/content/test/test_iframe_sandbox_modal.html":"modal tests fail on B2G",
+
     "content/html/content/test/test_iframe_sandbox_plugins.html":"plugins not supported",
     "content/html/content/test/test_object_plugin_nav.html":"plugins not supported",
     "content/html/document/test/test_bug741266.html":"needs control of popup window size",

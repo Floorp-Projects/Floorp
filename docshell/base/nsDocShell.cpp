@@ -3190,62 +3190,11 @@ nsDocShell::FindItemWithName(const PRUnichar * aName,
         // DoFindItemWithName only returns active items and we don't check if
         // the item is active for the special cases.
         if (foundItem) {
-
-            // If our document is sandboxed, we need to do some extra checks.
-            uint32_t sandboxFlags = 0;
-
-            nsCOMPtr<nsIDocument> doc = do_GetInterface(aOriginalRequestor);
-
-            if (doc) {
-                sandboxFlags = doc->GetSandboxFlags();
+            if (IsSandboxedFrom(foundItem, aOriginalRequestor)) {
+                return NS_ERROR_DOM_INVALID_ACCESS_ERR;
+            } else {
+                foundItem.swap(*_retval);
             }
-
-            if (sandboxFlags) {
-                nsCOMPtr<nsIDocShellTreeItem> root;
-                GetSameTypeRootTreeItem(getter_AddRefs(root));
-
-                // Is the found item not a top level browsing context and not ourself ?
-                nsCOMPtr<nsIDocShellTreeItem> selfAsItem = static_cast<nsIDocShellTreeItem *>(this);
-                if (foundItem != root && foundItem != selfAsItem) {
-                    // Are we an ancestor of the foundItem ?
-                    bool isAncestor = false;
-
-                    nsCOMPtr<nsIDocShellTreeItem> parentAsItem;
-                    foundItem->GetSameTypeParent(getter_AddRefs(parentAsItem));
-                    while (parentAsItem) {
-                        if (parentAsItem == selfAsItem) {
-                            isAncestor = true;
-                            break;
-                        }
-                        nsCOMPtr<nsIDocShellTreeItem> tmp = parentAsItem;
-                        tmp->GetSameTypeParent(getter_AddRefs(parentAsItem));
-                    }
-
-                    if (!isAncestor) {
-                        // No, we are not an ancestor and our document is
-                        // sandboxed, we can't allow this.
-                        foundItem = nullptr;
-                    }
-                } else {
-                    // Top level browsing context - is it an ancestor of ours ?
-                    nsCOMPtr<nsIDocShellTreeItem> tmp;
-                    GetSameTypeParent(getter_AddRefs(tmp));
-
-                    while (tmp) {
-                        if (tmp && tmp == foundItem) {
-                            // This is an ancestor, and we are sandboxed.
-                            // Unless allow-top-navigation is set, we can't allow this.
-                            if (sandboxFlags & SANDBOXED_TOPLEVEL_NAVIGATION) {
-                                foundItem = nullptr;
-                            }
-                            break;
-                        }
-                        tmp->GetParent(getter_AddRefs(tmp));
-                    }
-                }
-            }
-
-            foundItem.swap(*_retval);
         }
         return NS_OK;
     }
@@ -3316,6 +3265,70 @@ nsDocShell::DoFindItemWithName(const PRUnichar* aName,
     }
 
     return NS_OK;
+}
+
+/* static */
+bool
+nsDocShell::IsSandboxedFrom(nsIDocShellTreeItem* aTargetItem,
+                            nsIDocShellTreeItem* aAccessingItem)
+{
+    // aAccessingItem cannot be sandboxed from itself.
+    if (SameCOMIdentity(aTargetItem, aAccessingItem)) {
+        return false;
+    }
+
+    uint32_t sandboxFlags = 0;
+
+    nsCOMPtr<nsIDocument> doc = do_GetInterface(aAccessingItem);
+    if (doc) {
+        sandboxFlags = doc->GetSandboxFlags();
+    }
+
+    // If no flags, aAccessingItem is not sandboxed at all.
+    if (!sandboxFlags) {
+        return false;
+    }
+
+    // If aTargetItem has an ancestor, it is not top level.
+    nsCOMPtr<nsIDocShellTreeItem> ancestorOfTarget;
+    aTargetItem->GetSameTypeParent(getter_AddRefs(ancestorOfTarget));
+    if (ancestorOfTarget) {
+        do {
+            // aAccessingItem is not sandboxed if it is an ancestor of target.
+            if (SameCOMIdentity(aAccessingItem, ancestorOfTarget)) {
+                return false;
+            }
+            nsCOMPtr<nsIDocShellTreeItem> tempTreeItem;
+            ancestorOfTarget->GetSameTypeParent(getter_AddRefs(tempTreeItem));
+            tempTreeItem.swap(ancestorOfTarget);
+        } while (ancestorOfTarget);
+
+        // Otherwise, aAccessingItem is sandboxed from aTargetItem.
+        return true;
+    }
+
+    // aTargetItem is top level, is aAccessingItem the "one permitted sandboxed
+    // navigator", i.e. did aAccessingItem open aTargetItem?
+    nsCOMPtr<nsIDocShell> targetDocShell = do_QueryInterface(aTargetItem);
+    nsCOMPtr<nsIDocShell> permittedNavigator;
+    targetDocShell->
+        GetOnePermittedSandboxedNavigator(getter_AddRefs(permittedNavigator));
+    if (SameCOMIdentity(aAccessingItem, permittedNavigator)) {
+        return false;
+    }
+
+    // If SANDBOXED_TOPLEVEL_NAVIGATION flag is not on, aAccessingItem is
+    // not sandboxed from its top.
+    if (!(sandboxFlags & SANDBOXED_TOPLEVEL_NAVIGATION)) {
+        nsCOMPtr<nsIDocShellTreeItem> rootTreeItem;
+        aAccessingItem->GetSameTypeRootTreeItem(getter_AddRefs(rootTreeItem));
+        if (SameCOMIdentity(aTargetItem, rootTreeItem)) {
+            return false;
+        }
+    }
+
+    // Otherwise, aAccessingItem is sandboxed from aTargetItem.
+    return true;
 }
 
 NS_IMETHODIMP
@@ -5055,6 +5068,8 @@ nsDocShell::Destroy()
 
     SetTreeOwner(nullptr);
 
+    mOnePermittedSandboxedNavigator = nullptr;
+
     // required to break ref cycle
     mSecurityUI = nullptr;
 
@@ -5400,6 +5415,31 @@ NS_IMETHODIMP
 nsDocShell::GetSandboxFlags(uint32_t  *aSandboxFlags)
 {
     *aSandboxFlags = mSandboxFlags;
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsDocShell::SetOnePermittedSandboxedNavigator(nsIDocShell* aSandboxedNavigator)
+{
+    if (mOnePermittedSandboxedNavigator) {
+        NS_ERROR("One Permitted Sandboxed Navigator should only be set once.");
+        return NS_OK;
+    }
+
+    mOnePermittedSandboxedNavigator = do_GetWeakReference(aSandboxedNavigator);
+    NS_ASSERTION(mOnePermittedSandboxedNavigator,
+             "One Permitted Sandboxed Navigator must support weak references.");
+
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsDocShell::GetOnePermittedSandboxedNavigator(nsIDocShell** aSandboxedNavigator)
+{
+    NS_ENSURE_ARG_POINTER(aSandboxedNavigator);
+    nsCOMPtr<nsIDocShell> permittedNavigator =
+        do_QueryReferent(mOnePermittedSandboxedNavigator);
+    NS_IF_ADDREF(*aSandboxedNavigator = permittedNavigator);
     return NS_OK;
 }
 
@@ -8719,8 +8759,10 @@ nsDocShell::InternalLoad(nsIURI * aURI,
     if (aWindowTarget && *aWindowTarget) {
         // Locate the target DocShell.
         nsCOMPtr<nsIDocShellTreeItem> targetItem;
-        FindItemWithName(aWindowTarget, nullptr, this,
-                         getter_AddRefs(targetItem));
+        if (FindItemWithName(aWindowTarget, nullptr, this,
+               getter_AddRefs(targetItem)) == NS_ERROR_DOM_INVALID_ACCESS_ERR) {
+            return NS_ERROR_DOM_INVALID_ACCESS_ERR;
+        }
 
         targetDocShell = do_QueryInterface(targetItem);
         // If the targetDocShell doesn't exist, then this is a new docShell
@@ -8847,19 +8889,17 @@ nsDocShell::InternalLoad(nsIURI * aURI,
         
         bool isNewWindow = false;
         if (!targetDocShell) {
-            // If the docshell's document is sandboxed and was trying to
-            // navigate/load a frame it wasn't allowed to access, the
-            // FindItemWithName above will have returned null for the target
-            // item - we don't want to actually open a new window in this case
-            // though. Check if we are sandboxed and bail out here if so.
+            // If the docshell's document is sandboxed, only open a new window
+            // if the document's SANDBOXED_AUXILLARY_NAVIGATION flag is not set.
+            // (i.e. if allow-popups is specified)
             NS_ENSURE_TRUE(mContentViewer, NS_ERROR_FAILURE);
             nsIDocument* doc = mContentViewer->GetDocument();
             uint32_t sandboxFlags = 0;
 
             if (doc) {
                 sandboxFlags = doc->GetSandboxFlags();
-                if (sandboxFlags & SANDBOXED_NAVIGATION) {
-                    return NS_ERROR_FAILURE;
+                if (sandboxFlags & SANDBOXED_AUXILIARY_NAVIGATION) {
+                    return NS_ERROR_DOM_INVALID_ACCESS_ERR;
                 }
             }
 

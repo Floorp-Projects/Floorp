@@ -1,0 +1,121 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=766282
+implement allow-popups directive for iframe sandbox
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Tests for Bug 766282</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+
+<script>
+
+SimpleTest.waitForExplicitFinish();
+
+// A postMessage handler that is used by sandboxed iframes without
+// 'allow-same-origin' to communicate pass/fail back to this main page.
+window.addEventListener("message", receiveMessage, false);
+
+function receiveMessage(event) {
+  switch (event.data.type) {
+    case "attempted":
+      testAttempted();
+      break;
+    case "ok":
+      ok_wrapper(event.data.ok, event.data.desc, event.data.addToAttempted);
+      break;
+    default:
+      // allow for old style message
+      if (event.data.ok != undefined) {
+        ok_wrapper(event.data.ok, event.data.desc, event.data.addToAttempted);
+      }
+  }
+}
+
+var attemptedTests = 0;
+var passedTests = 0;
+var totalTestsToPass = 5;
+var totalTestsToAttempt = 5;
+
+function ok_wrapper(result, desc, addToAttempted = true) {
+  ok(result, desc);
+
+  if (result) {
+    passedTests++;
+  }
+
+  if (addToAttempted) {
+    testAttempted();
+  }
+}
+
+// Added so that tests that don't register unless they fail,
+// can at least notify that they've attempted to run.
+function testAttempted() {
+  attemptedTests++;
+  if (attemptedTests == totalTestsToAttempt) {
+    // Make sure all tests have had a chance to complete.
+    setTimeout(function() {finish();}, 1000);
+  }
+}
+
+var finishCalled = false;
+
+function finish() {
+  if (!finishCalled) {
+    finishCalled = true;
+    is(passedTests, totalTestsToPass, "There are " + totalTestsToPass + " modal tests that should pass");
+
+    SimpleTest.finish();
+  }
+}
+
+function doTest() {
+  // passes if good and fails if bad
+  // 1) A window opened from inside an iframe that has sandbox = "allow-scripts allow-popups
+  // allow-same-origin" should not have its origin sandbox flag set and be able to access
+  // document.cookie. (Done by file_iframe_sandbox_k_if5.html opened from
+  // file_iframe_sandbox_j_if1.html) using showModalDialog.)
+
+  // passes if good
+  // 2) A window opened from inside an iframe that has sandbox = "allow-scripts allow-popups
+  // allow-top-navigation" should not have its top-level navigation sandbox flag set and be able to
+  // navigate top. (Done by file_iframe_sandbox_k_if5.html (and if6) opened from
+  // file_iframe_sandbox_j_if1.html) using showModalDialog.)
+
+  // passes if good
+  // 3) A window opened from inside an iframe that has sandbox = "allow-scripts allow-popups
+  // all-forms" should not have its forms sandbox flag set and be able to submit forms.
+  // (Done by file_iframe_sandbox_k_if7.html opened from
+  // file_iframe_sandbox_j_if1.html) using showModalDialog.)
+
+  // passes if good
+  // 4) Make sure that the sandbox flags copied to a new browsing context are taken from the
+  // current active document not the browsing context (iframe / docShell).
+  // This is done by removing allow-same-origin and calling doSubOpens from file_iframe_sandbox_j_if2.html,
+  // which opens file_iframe_sandbox_k_if9.html using showModalDialog.
+  var if_2 = document.getElementById('if_2');
+  if_2.sandbox = 'allow-scripts allow-popups';
+  if_2.contentWindow.doSubOpens();
+
+  // passes if good
+  // 5) Test that a sandboxed iframe with "allow-popups" can open a new window using window.ShowModalDialog.
+  // This is done via file_iframe_sandbox_j_if3.html which is sandboxed with "allow-popups allow-scripts
+  // allow-same-origin". The window it attempts to open calls window.opener.ok(true, ...) and
+  // file_iframe_j_if3.html has an ok() function that calls window.parent.ok_wrapper.
+}
+
+addLoadEvent(doTest);
+</script>
+
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=766282">Mozilla Bug 766282</a> - implement allow-popups directive for iframe sandbox
+<p id="display"></p>
+<div id="content">
+<iframe sandbox="allow-scripts allow-popups allow-same-origin allow-forms allow-top-navigation" id="if_1" src="file_iframe_sandbox_j_if1.html" height="10" width="10"></iframe>
+<iframe sandbox="allow-scripts allow-popups allow-same-origin" id="if_2" src="file_iframe_sandbox_j_if2.html" height="10" width="10"></iframe>
+<iframe sandbox="allow-popups allow-same-origin allow-scripts" id="if_3" src="file_iframe_sandbox_j_if3.html" height="10" width="10"></iframe>
+</div>

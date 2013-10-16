@@ -681,8 +681,6 @@ assertError("for each (const [x,y,z] in foo);", SyntaxError);
 
 assertStmt("for (var {a:x,b:y,c:z} = 22 in foo);", forInStmt(varDecl([{ id: axbycz, init: lit(22) }]), ident("foo"), emptyStmt));
 assertStmt("for (var [x,y,z] = 22 in foo);", forInStmt(varDecl([{ id: xyz, init: lit(22) }]), ident("foo"), emptyStmt));
-assertStmt("for (var {a:x,b:y,c:z} = 22 of foo);", forOfStmt(varDecl([{ id: axbycz, init: lit(22) }]), ident("foo"), emptyStmt));
-assertStmt("for (var [x,y,z] = 22 of foo);", forOfStmt(varDecl([{ id: xyz, init: lit(22) }]), ident("foo"), emptyStmt));
 assertStmt("for each (var {a:x,b:y,c:z} = 22 in foo);", forEachInStmt(varDecl([{ id: axbycz, init: lit(22) }]), ident("foo"), emptyStmt));
 assertStmt("for each (var [x,y,z] = 22 in foo);", forEachInStmt(varDecl([{ id: xyz, init: lit(22) }]), ident("foo"), emptyStmt));
 assertError("for (x = 22 in foo);", SyntaxError);

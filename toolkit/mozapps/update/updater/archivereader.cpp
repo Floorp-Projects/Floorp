@@ -27,8 +27,8 @@
 
 static int inbuf_size  = 262144;
 static int outbuf_size = 262144;
-static char *inbuf  = NULL;
-static char *outbuf = NULL;
+static char *inbuf  = nullptr;
+static char *outbuf = nullptr;
 
 #ifdef XP_WIN
 #include "resource.h"
@@ -46,7 +46,7 @@ static char *outbuf = NULL;
 BOOL
 LoadFileInResource(int name, int type, const uint8_t *&data, uint32_t& size)
 {
-  HMODULE handle = GetModuleHandle(NULL);
+  HMODULE handle = GetModuleHandle(nullptr);
   if (!handle) {
     return FALSE;
   }
@@ -84,7 +84,7 @@ int
 VerifyLoadedCert(MarFile *archive, int name, int type)
 {
   uint32_t size = 0;
-  const uint8_t *data = NULL;
+  const uint8_t *data = nullptr;
   if (!LoadFileInResource(name, type, data, size) || !data || !size) {
     return CERT_LOAD_ERROR;
   }
@@ -183,7 +183,7 @@ ArchiveReader::VerifyProductInformation(const char *MARChannelID,
         rv = OK;
         break;
       }
-      channel = strtok(NULL, delimiter);
+      channel = strtok(nullptr, delimiter);
     }
   }
 
@@ -253,17 +253,17 @@ ArchiveReader::Close()
 {
   if (mArchive) {
     mar_close(mArchive);
-    mArchive = NULL;
+    mArchive = nullptr;
   }
 
   if (inbuf) {
     free(inbuf);
-    inbuf = NULL;
+    inbuf = nullptr;
   }
 
   if (outbuf) {
     free(outbuf);
-    outbuf = NULL;
+    outbuf = nullptr;
   }
 }
 

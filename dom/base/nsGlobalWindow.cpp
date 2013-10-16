@@ -4005,8 +4005,8 @@ nsGlobalWindow::SetOpener(nsIDOMWindow* aOpener)
     JS::Rooted<JSObject*> thisObj(cx, mJSObject);
     NS_ENSURE_STATE(mJSObject);
 
-    if (!JS_WrapObject(cx, otherObj.address()) ||
-        !JS_WrapObject(cx, thisObj.address()) ||
+    if (!JS_WrapObject(cx, &otherObj) ||
+        !JS_WrapObject(cx, &thisObj) ||
         !JS_DefineProperty(cx, thisObj, "opener", JS::ObjectValue(*otherObj),
                            JS_PropertyStub, JS_StrictPropertyStub,
                            JSPROP_ENUMERATE)) {
@@ -6822,7 +6822,7 @@ PostMessageReadStructuredClone(JSContext* cx,
       JS::Rooted<JSObject*> global(cx, JS::CurrentGlobalOrNull(cx));
       if (global) {
         JS::Rooted<JSObject*> obj(cx, port->WrapObject(cx, global));
-        if (JS_WrapObject(cx, obj.address())) {
+        if (JS_WrapObject(cx, &obj)) {
           port->BindToOwner(scInfo->window);
           return obj;
         }
