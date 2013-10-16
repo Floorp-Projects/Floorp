@@ -10,7 +10,7 @@
 <script>
   function doTest() {
     // Try to navigate top using its name (e_if7).  We should not be able to do this as allow-top-navigation is not specified.
-    window.top.opener.postMessage("test attempted", "*");
+    window.top.opener.postMessage({type: "attempted"}, "*");
     sendMouseEvent({type:'click'}, 'navigate_top');
   }
 </script>

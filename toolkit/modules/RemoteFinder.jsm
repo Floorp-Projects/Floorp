@@ -66,6 +66,10 @@ RemoteFinder.prototype = {
                                                     word: aWord });
   },
 
+  enableSelection: function () {
+    this._browser.messageManager.sendAsyncMessage("Finder:EnableSelection");
+  },
+
   removeSelection: function () {
     this._browser.messageManager.sendAsyncMessage("Finder:RemoveSelection");
   },
@@ -98,6 +102,7 @@ RemoteFinderListener.prototype = {
     "Finder:FastFind",
     "Finder:FindAgain",
     "Finder:Highlight",
+    "Finder:EnableSelection",
     "Finder:RemoveSelection",
     "Finder:FocusContent",
     "Finder:KeyPress"

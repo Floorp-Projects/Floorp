@@ -1,0 +1,36 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug 766282</title>
+  <script type="text/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+
+<script type="text/javascript">
+  function doSubOpens() {
+    // Open a new window via target="_blank", target="BC766282_if9" and window.open().
+    sendMouseEvent({type:'click'}, 'target_blank_if9');
+    sendMouseEvent({type:'click'}, 'target_BC766282_if9');
+
+    window.open("file_iframe_sandbox_k_if9.html");
+
+    sendMouseEvent({type:'click'}, 'target_if1');
+  }
+
+  window.doSubOpens = doSubOpens;
+</script>
+
+<body>
+  I am sandboxed but with "allow-scripts allow-popups allow-same-origin".
+  After my initial load, "allow-same-origin" is removed and then I open file_iframe_sandbox_k_if9.html
+  in 3 different ways, which attemps to call a function in my parent.
+  This should succeed since the new sandbox flags shouldn't have taken affect on me until I'm reloaded.
+  <a href="file_iframe_sandbox_k_if9.html" target="_blank" id="target_blank_if9">open window</a>
+  <a href="file_iframe_sandbox_k_if9.html" target="BC766282_if9" id="target_BC766282_if9">open window</a>
+
+  Now navigate to file_iframe_sandbox_k_if1.html to do tests for a sandbox opening a window
+  when only "allow-scripts allow-popups" are specified.
+  <a href="file_iframe_sandbox_k_if1.html" id="target_if1">navigate to if1</a>
+</body>
+</html>

@@ -10,7 +10,7 @@
 <script type="application/javascript">
 function doTest() {
   document.getElementById('anchor').href = "file_iframe_sandbox_top_navigation_fail.html" + location.search;
-  window.top.opener.postMessage("test attempted", "*");
+  window.top.opener.postMessage({type: "attempted"}, "*");
   sendMouseEvent({type:'click'}, 'anchor');
 }
 </script>

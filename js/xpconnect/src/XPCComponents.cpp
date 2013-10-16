@@ -2982,29 +2982,32 @@ nsXPCComponents_Utils::GetGlobalForObject(const Value& object,
                                           JSContext *cx,
                                           Value *retval)
 {
-  // First argument must be an object.
-  if (JSVAL_IS_PRIMITIVE(object))
-    return NS_ERROR_XPC_BAD_CONVERT_JS;
+    // First argument must be an object.
+    if (JSVAL_IS_PRIMITIVE(object))
+        return NS_ERROR_XPC_BAD_CONVERT_JS;
 
-  // Wrappers are parented to their the global in their home compartment. But
-  // when getting the global for a cross-compartment wrapper, we really want
-  // a wrapper for the foreign global. So we need to unwrap before getting the
-  // parent, enter the compartment for the duration of the call, and wrap the
-  // result.
-  Rooted<JSObject*> obj(cx, JSVAL_TO_OBJECT(object));
-  obj = js::UncheckedUnwrap(obj);
-  {
-    JSAutoCompartment ac(cx, obj);
-    obj = JS_GetGlobalForObject(cx, obj);
-  }
-  JS_WrapObject(cx, obj.address());
-  *retval = OBJECT_TO_JSVAL(obj);
+    // Wrappers are parented to their the global in their home compartment. But
+    // when getting the global for a cross-compartment wrapper, we really want
+    // a wrapper for the foreign global. So we need to unwrap before getting the
+    // parent, enter the compartment for the duration of the call, and wrap the
+    // result.
+    Rooted<JSObject*> obj(cx, JSVAL_TO_OBJECT(object));
+    obj = js::UncheckedUnwrap(obj);
+    {
+        JSAutoCompartment ac(cx, obj);
+        obj = JS_GetGlobalForObject(cx, obj);
+    }
 
-  // Outerize if necessary.
-  if (JSObjectOp outerize = js::GetObjectClass(obj)->ext.outerObject)
+    if (!JS_WrapObject(cx, &obj))
+        return NS_ERROR_FAILURE;
+
+    *retval = OBJECT_TO_JSVAL(obj);
+
+    // Outerize if necessary.
+    if (JSObjectOp outerize = js::GetObjectClass(obj)->ext.outerObject)
       *retval = OBJECT_TO_JSVAL(outerize(cx, obj));
 
-  return NS_OK;
+    return NS_OK;
 }
 
 /* jsval createObjectIn(in jsval vobj); */
@@ -3027,7 +3030,7 @@ nsXPCComponents_Utils::CreateObjectIn(const Value &vobj, JSContext *cx, Value *r
             return NS_ERROR_FAILURE;
     }
 
-    if (!JS_WrapObject(cx, obj.address()))
+    if (!JS_WrapObject(cx, &obj))
         return NS_ERROR_FAILURE;
 
     *rval = ObjectValue(*obj);
@@ -3054,7 +3057,7 @@ nsXPCComponents_Utils::CreateArrayIn(const Value &vobj, JSContext *cx, Value *rv
             return NS_ERROR_FAILURE;
     }
 
-    if (!JS_WrapObject(cx, obj.address()))
+    if (!JS_WrapObject(cx, &obj))
         return NS_ERROR_FAILURE;
 
     *rval = ObjectValue(*obj);
@@ -3081,8 +3084,9 @@ nsXPCComponents_Utils::CreateDateIn(const Value &vobj, int64_t msec, JSContext *
             return NS_ERROR_FAILURE;
     }
 
-    if (!JS_WrapObject(cx, obj.address()))
+    if (!JS_WrapObject(cx, &obj))
         return NS_ERROR_FAILURE;
+
     *rval = ObjectValue(*obj);
     return NS_OK;
 }

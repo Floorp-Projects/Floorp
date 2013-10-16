@@ -117,7 +117,7 @@ class CodeGenerator : public CodeGeneratorSpecific
     bool visitApplyArgsGeneric(LApplyArgsGeneric *apply);
     bool visitBail(LBail *lir);
     bool visitGetDynamicName(LGetDynamicName *lir);
-    bool visitFilterArguments(LFilterArguments *lir);
+    bool visitFilterArgumentsOrEval(LFilterArgumentsOrEval *lir);
     bool visitCallDirectEval(LCallDirectEval *lir);
     bool visitDoubleToInt32(LDoubleToInt32 *lir);
     bool visitFloat32ToInt32(LFloat32ToInt32 *lir);

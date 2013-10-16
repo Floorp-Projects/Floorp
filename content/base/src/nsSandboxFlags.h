@@ -13,8 +13,11 @@
 
 /**
  * This flag prevents content from navigating browsing contexts other than
- * the sandboxed browsing context itself (or browsing contexts further
- * nested inside it), and the top-level browsing context.
+ * itself, browsing contexts nested inside it, the top-level browsing context
+ * and browsing contexts that it has opened.
+ * As it is always on for sandboxed browsing contexts, it is used implicitly
+ * within the code by checking that the overall flags are non-zero.
+ * It is only uesd directly when the sandbox flags are initially set up.
  */
 const unsigned long SANDBOXED_NAVIGATION  = 0x1;
 
@@ -65,4 +68,11 @@ const unsigned long SANDBOXED_POINTER_LOCK = 0x80;
  * This flag blocks the document from changing document.domain.
  */
 const unsigned long SANDBOXED_DOMAIN = 0x100;
+
+/**
+ * This flag prevents content from creating new auxiliary browsing contexts,
+ * e.g. using the target attribute, the window.open() method, or the
+ * showModalDialog() method.
+ */
+const unsigned long SANDBOXED_AUXILIARY_NAVIGATION = 0x200;
 #endif
