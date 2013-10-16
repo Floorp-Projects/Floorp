@@ -1062,10 +1062,10 @@ MAbs::computeRange()
         return;
 
     Range other(getOperand(0));
-    setRange(Range::abs(&other));
-
+    Range *next = Range::abs(&other);
     if (implicitTruncate_)
-        range()->wrapAroundToInt32();
+        next->wrapAroundToInt32();
+    setRange(next);
 }
 
 void
@@ -1087,10 +1087,9 @@ MAdd::computeRange()
     Range left(getOperand(0));
     Range right(getOperand(1));
     Range *next = Range::add(&left, &right);
-    setRange(next);
-
     if (isTruncated())
-        range()->wrapAroundToInt32();
+        next->wrapAroundToInt32();
+    setRange(next);
 }
 
 void
@@ -1101,10 +1100,9 @@ MSub::computeRange()
     Range left(getOperand(0));
     Range right(getOperand(1));
     Range *next = Range::sub(&left, &right);
-    setRange(next);
-
     if (isTruncated())
-        range()->wrapAroundToInt32();
+        next->wrapAroundToInt32();
+    setRange(next);
 }
 
 void
@@ -1116,11 +1114,11 @@ MMul::computeRange()
     Range right(getOperand(1));
     if (canBeNegativeZero())
         canBeNegativeZero_ = Range::negativeZeroMul(&left, &right);
-    setRange(Range::mul(&left, &right));
-
+    Range *next = Range::mul(&left, &right);
     // Truncated multiplications could overflow in both directions
     if (isTruncated())
-        range()->wrapAroundToInt32();
+        next->wrapAroundToInt32();
+    setRange(next);
 }
 
 void
