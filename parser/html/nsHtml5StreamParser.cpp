@@ -799,8 +799,13 @@ nsHtml5StreamParser::WriteStreamBytes(const uint8_t* aFromSegment,
                                       uint32_t* aWriteCount)
 {
   NS_ASSERTION(IsParserThread(), "Wrong thread!");
-  // mLastBuffer always points to a buffer of the size
+  // mLastBuffer should always point to a buffer of the size
   // NS_HTML5_STREAM_PARSER_READ_BUFFER_SIZE.
+  if (!mLastBuffer) {
+    NS_WARNING("mLastBuffer should not be null!");
+    MarkAsBroken();
+    return NS_ERROR_NULL_POINTER;
+  }
   if (mLastBuffer->getEnd() == NS_HTML5_STREAM_PARSER_READ_BUFFER_SIZE) {
     nsRefPtr<nsHtml5OwningUTF16Buffer> newBuf =
       nsHtml5OwningUTF16Buffer::FalliblyCreate(
