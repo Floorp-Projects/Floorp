@@ -321,7 +321,7 @@ public class BrowserSearch extends HomeFragment
 
     @Override
     protected void load() {
-        SearchLoader.init(getLoaderManager(), LOADER_ID_SEARCH, mCursorLoaderCallbacks, mSearchTerm, false);
+        SearchLoader.init(getLoaderManager(), LOADER_ID_SEARCH, mCursorLoaderCallbacks, mSearchTerm);
     }
 
     private void handleAutocomplete(String searchTerm, Cursor c) {
@@ -612,7 +612,7 @@ public class BrowserSearch extends HomeFragment
             mAdapter.notifyDataSetChanged();
 
             // Restart loaders with the new search term
-            SearchLoader.restart(getLoaderManager(), LOADER_ID_SEARCH, mCursorLoaderCallbacks, mSearchTerm, false);
+            SearchLoader.restart(getLoaderManager(), LOADER_ID_SEARCH, mCursorLoaderCallbacks, mSearchTerm);
             filterSuggestions();
         }
     }
