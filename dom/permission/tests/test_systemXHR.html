@@ -17,7 +17,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=815105
 <script type="application/javascript;version=1.8" src="file_framework.js"></script>
 <script type="application/javascript;version=1.8">
 function verifier(success, failure) {
-  var xhr = new XMLHttpRequest({mozSystem: true});
+  var xhr = new XMLHttpRequest({mozAnon: true, mozSystem: true});
   if (xhr.mozSystem === true) {
     success("systemXHR");
   } else {

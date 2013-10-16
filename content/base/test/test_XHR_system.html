@@ -26,7 +26,7 @@ tests.push(function test_cross_origin() {
 
   is(window.location.hostname, "mochi.test", "correct origin");
 
-  let xhr = new XMLHttpRequest({mozSystem: true});
+  let xhr = new XMLHttpRequest({mozAnon: true, mozSystem: true});
   is(xhr.mozSystem, true, ".mozSystem == true");
   xhr.open("GET", CROSSSITE_URL);
   xhr.onload = function onload() {
@@ -45,7 +45,7 @@ tests.push(function test_cross_origin() {
 tests.push(function test_file_uri() {
   // System XHR is not permitted to access file:/// URIs.
 
-  let xhr = new XMLHttpRequest({mozSystem: true});
+  let xhr = new XMLHttpRequest({mozAnon: true, mozSystem: true});
   is(xhr.mozSystem, true, ".mozSystem == true");
   xhr.open("GET", PROTECTED_URL);
   let error;
@@ -64,7 +64,7 @@ tests.push(function test_file_uri() {
 tests.push(function test_redirect_to_file_uri() {
   // System XHR won't load file:/// URIs even if an HTTP resource redirects there.
 
-  let xhr = new XMLHttpRequest({mozSystem: true});
+  let xhr = new XMLHttpRequest({mozAnon: true, mozSystem: true});
   is(xhr.mozSystem, true, ".mozSystem == true");
   xhr.open("GET", REDIRECT_URL);
   xhr.onload = function onload() {

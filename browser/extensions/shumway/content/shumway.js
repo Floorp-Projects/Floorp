@@ -37092,7 +37092,7 @@ var BinaryFileReader = function binaryFileReader() {
       },
       readAsync: function (ondata, onerror, onopen, oncomplete, onhttpstatus) {
         var xhr = new XMLHttpRequest({
-            mozSystem: true
+            mozAnon: true, mozSystem: true
           });
         var url = this.url;
         xhr.open(this.method || 'GET', url, true);
