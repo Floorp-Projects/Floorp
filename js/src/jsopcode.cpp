@@ -42,6 +42,7 @@
 #include "jscntxtinlines.h"
 #include "jscompartmentinlines.h"
 #include "jsinferinlines.h"
+#include "jsobjinlines.h"
 #include "jsscriptinlines.h"
 
 using namespace js;
