@@ -24,7 +24,7 @@ function percentEncode(aString)
  *          parameters: the responseText and the XHR object.
  *  onError, a function handle to call when an error occcurs, it takes three
  *          parameters: the error, the responseText and the XHR object.
- *  logger, an object that implements the debug and log methods (e.g. log4moz).
+ *  logger, an object that implements the debug and log methods (e.g. log.jsm).
  *
  * Headers or post data are given as an array of arrays, for each each inner
  * array the first value is the key and the second is the value, e.g.

@@ -833,6 +833,53 @@ AndroidGeckoEvent::MakeMultiTouchInput(nsIWidget* widget)
     return event;
 }
 
+WidgetMouseEvent
+AndroidGeckoEvent::MakeMouseEvent(nsIWidget* widget)
+{
+    uint32_t msg = NS_EVENT_NULL;
+    if (Points().Length() > 0) {
+        switch (Action()) {
+            case AndroidMotionEvent::ACTION_HOVER_MOVE:
+                msg = NS_MOUSE_MOVE;
+                break;
+            case AndroidMotionEvent::ACTION_HOVER_ENTER:
+                msg = NS_MOUSEENTER;
+                break;
+            case AndroidMotionEvent::ACTION_HOVER_EXIT:
+                msg = NS_MOUSELEAVE;
+                break;
+            default:
+                break;
+        }
+    }
+
+    WidgetMouseEvent event(true, msg, widget,
+                           WidgetMouseEvent::eReal, WidgetMouseEvent::eNormal);
+
+    if (msg == NS_EVENT_NULL) {
+        // unknown type, or no point data. abort
+        return event;
+    }
+
+    // XXX can we synthesize different buttons?
+    event.button = WidgetMouseEvent::eLeftButton;
+    if (msg != NS_MOUSE_MOVE) {
+        event.clickCount = 1;
+    }
+    event.modifiers = 0;
+    event.time = Time();
+
+    // We are dispatching this event directly into Gecko (as opposed to going
+    // through the AsyncPanZoomController), and the Points() array has points
+    // in CSS pixels, which we need to convert to LayoutDevice pixels.
+    const nsIntPoint& offset = widget->WidgetToScreenOffset();
+    CSSToLayoutDeviceScale scale = widget->GetDefaultScale();
+    event.refPoint = LayoutDeviceIntPoint((Points()[0].x * scale.scale) - offset.x,
+                                          (Points()[0].y * scale.scale) - offset.y);
+
+    return event;
+}
+
 void
 AndroidPoint::Init(JNIEnv *jenv, jobject jobj)
 {

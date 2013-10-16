@@ -231,6 +231,7 @@ strong {
 #lense > div {
   display: flex;
   flex-grow: 1;
+  flex-direction: column;
 }
 
 
@@ -240,8 +241,13 @@ strong {
 .project-details {
   background-color: rgb(225, 225, 225);
   padding: 10px;
-  flex-grow: 1;
   line-height: 160%;
+  display: flex;
+  flex-direction: column;
+}
+
+.project-metadata {
+  flex-grow: 1;
 }
 
 .project-status {
@@ -438,3 +444,44 @@ strong {
   padding-left: 16px;
   font-weight: bold;
 }
+
+
+/********* MANIFEST EDITOR ***********/
+
+.manifest-editor {
+  display: flex;
+  flex-direction: column;
+  flex-grow: 1;
+  background-color: #E1E1E1;
+}
+
+.manifest-editor > h2 {
+  font-size: 18px;
+  margin: 1em 30px;
+}
+
+.variables-view {
+  flex-grow: 1;
+  border: 0;
+  border-top: 5px solid #C9C9C9;
+}
+
+/* Bug 925921: Remove when the manifest editor is always on */
+
+.manifest-editor {
+  display: none;
+}
+
+.project-details {
+  flex-grow: 1;
+}
+
+#lense[manifest-editable] .manifest-editor {
+  display: flex;
+}
+
+#lense[manifest-editable] .project-details {
+  flex-grow: 0;
+}
+
+/* End blocks to remove */

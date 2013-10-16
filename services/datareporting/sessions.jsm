@@ -16,7 +16,7 @@ const {classes: Cc, interfaces: Ci, utils: Cu} = Components;
 
 Cu.import("resource://gre/modules/Preferences.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
-Cu.import("resource://services-common/log4moz.js");
+Cu.import("resource://gre/modules/Log.jsm");
 Cu.import("resource://services-common/utils.js");
 
 
@@ -69,7 +69,7 @@ this.SessionRecorder = function (branch) {
     throw new Error("branch argument must end with '.': " + branch);
   }
 
-  this._log = Log4Moz.repository.getLogger("Services.DataReporting.SessionRecorder");
+  this._log = Log.repository.getLogger("Services.DataReporting.SessionRecorder");
 
   this._prefs = new Preferences(branch);
   this._lastActivityWasInactive = false;

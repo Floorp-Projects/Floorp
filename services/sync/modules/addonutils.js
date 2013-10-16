@@ -9,7 +9,7 @@ this.EXPORTED_SYMBOLS = ["AddonUtils"];
 const {interfaces: Ci, utils: Cu} = Components;
 
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
-Cu.import("resource://services-common/log4moz.js");
+Cu.import("resource://gre/modules/Log.jsm");
 Cu.import("resource://services-sync/util.js");
 
 XPCOMUtils.defineLazyModuleGetter(this, "AddonManager",
@@ -18,8 +18,8 @@ XPCOMUtils.defineLazyModuleGetter(this, "AddonRepository",
   "resource://gre/modules/AddonRepository.jsm");
 
 function AddonUtilsInternal() {
-  this._log = Log4Moz.repository.getLogger("Sync.AddonUtils");
-  this._log.Level = Log4Moz.Level[Svc.Prefs.get("log.logger.addonutils")];
+  this._log = Log.repository.getLogger("Sync.AddonUtils");
+  this._log.Level = Log.Level[Svc.Prefs.get("log.logger.addonutils")];
 }
 AddonUtilsInternal.prototype = {
   /**

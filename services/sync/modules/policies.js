@@ -9,7 +9,7 @@ this.EXPORTED_SYMBOLS = [
 
 const {classes: Cc, interfaces: Ci, utils: Cu, results: Cr} = Components;
 
-Cu.import("resource://services-common/log4moz.js");
+Cu.import("resource://gre/modules/Log.jsm");
 Cu.import("resource://services-sync/constants.js");
 Cu.import("resource://services-sync/engines.js");
 Cu.import("resource://services-sync/status.js");
@@ -20,7 +20,7 @@ this.SyncScheduler = function SyncScheduler(service) {
   this.init();
 }
 SyncScheduler.prototype = {
-  _log: Log4Moz.repository.getLogger("Sync.SyncScheduler"),
+  _log: Log.repository.getLogger("Sync.SyncScheduler"),
 
   _fatalLoginStatus: [LOGIN_FAILED_NO_USERNAME,
                       LOGIN_FAILED_NO_PASSWORD,
@@ -67,7 +67,7 @@ SyncScheduler.prototype = {
   set numClients(value) Svc.Prefs.set("numClients", value),
 
   init: function init() {
-    this._log.level = Log4Moz.Level[Svc.Prefs.get("log.logger.service.main")];
+    this._log.level = Log.Level[Svc.Prefs.get("log.logger.service.main")];
     this.setDefaults();
     Svc.Obs.add("weave:engine:score:updated", this);
     Svc.Obs.add("network:offline-status-changed", this);
@@ -500,24 +500,24 @@ ErrorHandler.prototype = {
   },
 
   initLogs: function initLogs() {
-    this._log = Log4Moz.repository.getLogger("Sync.ErrorHandler");
-    this._log.level = Log4Moz.Level[Svc.Prefs.get("log.logger.service.main")];
+    this._log = Log.repository.getLogger("Sync.ErrorHandler");
+    this._log.level = Log.Level[Svc.Prefs.get("log.logger.service.main")];
     this._cleaningUpFileLogs = false;
 
-    let root = Log4Moz.repository.getLogger("Sync");
-    root.level = Log4Moz.Level[Svc.Prefs.get("log.rootLogger")];
+    let root = Log.repository.getLogger("Sync");
+    root.level = Log.Level[Svc.Prefs.get("log.rootLogger")];
 
-    let formatter = new Log4Moz.BasicFormatter();
-    let capp = new Log4Moz.ConsoleAppender(formatter);
-    capp.level = Log4Moz.Level[Svc.Prefs.get("log.appender.console")];
+    let formatter = new Log.BasicFormatter();
+    let capp = new Log.ConsoleAppender(formatter);
+    capp.level = Log.Level[Svc.Prefs.get("log.appender.console")];
     root.addAppender(capp);
 
-    let dapp = new Log4Moz.DumpAppender(formatter);
-    dapp.level = Log4Moz.Level[Svc.Prefs.get("log.appender.dump")];
+    let dapp = new Log.DumpAppender(formatter);
+    dapp.level = Log.Level[Svc.Prefs.get("log.appender.dump")];
     root.addAppender(dapp);
 
-    let fapp = this._logAppender = new Log4Moz.StorageStreamAppender(formatter);
-    fapp.level = Log4Moz.Level[Svc.Prefs.get("log.appender.file.level")];
+    let fapp = this._logAppender = new Log.StorageStreamAppender(formatter);
+    fapp.level = Log.Level[Svc.Prefs.get("log.appender.file.level")];
     root.addAppender(fapp);
   },
 
