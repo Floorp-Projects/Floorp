@@ -262,6 +262,18 @@ FunctionName(ParseNode *fn)
 }
 
 static inline ParseNode *
+FunctionArgsList(ParseNode *fn, unsigned *numFormals)
+{
+    JS_ASSERT(fn->isKind(PNK_FUNCTION));
+    ParseNode *argsBody = fn->pn_body;
+    JS_ASSERT(argsBody->isKind(PNK_ARGSBODY));
+    *numFormals = argsBody->pn_count;
+    if (*numFormals > 0 && argsBody->last()->isKind(PNK_STATEMENTLIST))
+        (*numFormals)--;
+    return ListHead(argsBody);
+}
+
+static inline ParseNode *
 FunctionStatementList(ParseNode *fn)
 {
     JS_ASSERT(fn->pn_body->isKind(PNK_ARGSBODY));
@@ -1309,7 +1321,12 @@ class MOZ_STACK_CLASS ModuleCompiler
             return false;
         }
 
-        module_ = cx_->new_<AsmJSModule>(parser_.ss, parser_.offsetOfCurrentAsmJSModule());
+        // The record offset in the char buffer officially begins the char
+        // after the "use asm" processing directive statement (including any
+        // semicolon).
+        uint32_t charsBegin = parser_.tokenStream.currentToken().pos.end;
+
+        module_ = cx_->new_<AsmJSModule>(parser_.ss, charsBegin);
         if (!module_)
             return false;
 
@@ -6382,14 +6399,9 @@ FinishModule(ModuleCompiler &m,
 
 static bool
 CheckModule(ExclusiveContext *cx, AsmJSParser &parser, ParseNode *stmtList,
-            ScopedJSDeletePtr<AsmJSModule> *moduleOut,
+            ScopedJSDeletePtr<AsmJSModule> *module,
             ScopedJSFreePtr<char> *compilationTimeReport)
 {
-    if (!LookupAsmJSModuleInCache(cx, parser, moduleOut, compilationTimeReport))
-        return false;
-    if (*moduleOut)
-        return true;
-
     ModuleCompiler m(cx, parser);
     if (!m.init())
         return false;
@@ -6432,16 +6444,13 @@ CheckModule(ExclusiveContext *cx, AsmJSParser &parser, ParseNode *stmtList,
     if (tk != TOK_EOF && tk != TOK_RC)
         return m.fail(nullptr, "top-level export (return) must be the last statement");
 
-    ScopedJSDeletePtr<AsmJSModule> module;
     AsmJSStaticLinkData linkData(cx);
-    if (!FinishModule(m, &module, &linkData))
+    if (!FinishModule(m, module, &linkData))
         return false;
 
-    StoreAsmJSModuleInCache(parser, *module, linkData, cx);
-    module->staticallyLink(linkData, cx);
+    (*module)->staticallyLink(linkData, cx);
 
     m.buildCompilationTimeReport(compilationTimeReport);
-    *moduleOut = module.forget();
     return true;
 }
 

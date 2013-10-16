@@ -27,11 +27,6 @@ IsAsmJSModuleNative(JSNative native);
 extern bool
 IsAsmJSModule(JSContext *cx, unsigned argc, JS::Value *vp);
 
-// Return whether the given value is a function containing "use asm" that was
-// loaded directly from the cache (and hence was validated previously).
-extern bool
-IsAsmJSModuleLoadedFromCache(JSContext *cx, unsigned argc, Value *vp);
-
 // Return whether the given value is a nested function in an asm.js module that
 // has been both compile- and link-time validated.
 extern bool
@@ -55,14 +50,6 @@ IsAsmJSFunction(JSContext *cx, unsigned argc, Value *vp)
 
 inline bool
 IsAsmJSModule(JSContext *cx, unsigned argc, Value *vp)
-{
-    CallArgs args = CallArgsFromVp(argc, vp);
-    args.rval().set(BooleanValue(false));
-    return true;
-}
-
-inline bool
-IsAsmJSModuleLoadedFromCache(JSContext *cx, unsigned argc, Value *vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
     args.rval().set(BooleanValue(false));
