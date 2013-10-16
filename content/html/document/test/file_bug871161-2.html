@@ -1,0 +1,14 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Page without declared charset</title>
+<script>
+function done() {
+  window.opener.postMessage(document.characterSet, "*");
+}
+</script>
+</head>
+<body onload="done();">
+</body>
+</html>
+
