@@ -1845,14 +1845,25 @@ RangeAnalysis::addRangeAssertions()
         for (MInstructionIterator iter(block->begin()); iter != block->end(); iter++) {
             MInstruction *ins = *iter;
 
-            if (ins->type() == MIRType_None)
+            // Perform range checking for all numeric and numeric-like types.
+            if (!IsNumberType(ins->type()) &&
+                ins->type() != MIRType_Boolean &&
+                ins->type() != MIRType_Value)
+            {
+                continue;
+            }
+
+            Range r(ins);
+
+            // Don't insert assertions if there's nothing interesting to assert.
+            if (r.isUnknown() || (ins->type() == MIRType_Int32 && r.isUnknownInt32()))
                 continue;
 
-            Range *r = ins->range();
-            if (!r)
+            // Range-checking PassArgs breaks stuff.
+            if (ins->isPassArg())
                 continue;
 
-            MAssertRange *guard = MAssertRange::New(ins, new Range(*r));
+            MAssertRange *guard = MAssertRange::New(ins, new Range(r));
 
             // The code that removes beta nodes assumes that it can find them
             // in a contiguous run at the top of each block. Don't insert

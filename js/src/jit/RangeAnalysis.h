@@ -359,6 +359,17 @@ class Range : public TempObject {
 
     static bool negativeZeroMul(const Range *lhs, const Range *rhs);
 
+    bool isUnknownInt32() const {
+        return isInt32() && lower() == INT32_MIN && upper() == INT32_MAX;
+    }
+
+    bool isUnknown() const {
+        return !hasInt32LowerBound_ &&
+               !hasInt32UpperBound_ &&
+               canHaveFractionalPart_ &&
+               max_exponent_ == IncludesInfinityAndNaN;
+    }
+
     bool hasInt32LowerBound() const {
         return hasInt32LowerBound_;
     }
