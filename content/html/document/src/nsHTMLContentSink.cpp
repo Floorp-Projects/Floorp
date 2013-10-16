@@ -1134,47 +1134,8 @@ HTMLContentSink::FlushTags()
 NS_IMETHODIMP
 HTMLContentSink::SetDocumentCharset(nsACString& aCharset)
 {
-  if (mDocShell) {
-    // the following logic to get muCV is copied from
-    // nsHTMLDocument::StartDocumentLoad
-    // We need to call muCV->SetPrevDocCharacterSet here in case
-    // the charset is detected by parser DetectMetaTag
-    nsCOMPtr<nsIMarkupDocumentViewer> muCV;
-    nsCOMPtr<nsIContentViewer> cv;
-    mDocShell->GetContentViewer(getter_AddRefs(cv));
-    if (cv) {
-       muCV = do_QueryInterface(cv);
-    } else {
-      // in this block of code, if we get an error result, we return
-      // it but if we get a null pointer, that's perfectly legal for
-      // parent and parentContentViewer
-
-      NS_ENSURE_TRUE(mDocShell, NS_ERROR_FAILURE);
-
-      nsCOMPtr<nsIDocShellTreeItem> parentAsItem;
-      mDocShell->GetSameTypeParent(getter_AddRefs(parentAsItem));
-
-      nsCOMPtr<nsIDocShell> parent(do_QueryInterface(parentAsItem));
-      if (parent) {
-        nsCOMPtr<nsIContentViewer> parentContentViewer;
-        nsresult rv =
-          parent->GetContentViewer(getter_AddRefs(parentContentViewer));
-        if (NS_SUCCEEDED(rv) && parentContentViewer) {
-          muCV = do_QueryInterface(parentContentViewer);
-        }
-      }
-    }
-
-    if (muCV) {
-      muCV->SetPrevDocCharacterSet(aCharset);
-    }
-  }
-
-  if (mDocument) {
-    mDocument->SetDocumentCharacterSet(aCharset);
-  }
-
-  return NS_OK;
+  MOZ_ASSUME_UNREACHABLE("<meta charset> case doesn't occur with about:blank");
+  return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 nsISupports *
