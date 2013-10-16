@@ -2631,6 +2631,39 @@ BluetoothDBusService::IsConnected(const uint16_t aServiceUuid)
   return profile->IsConnected();
 }
 
+void
+BluetoothDBusService::AnswerWaitingCall(BluetoothReplyRunnable* aRunnable)
+{
+  MOZ_ASSERT(NS_IsMainThread());
+
+  BluetoothHfpManager* hfp = BluetoothHfpManager::Get();
+  hfp->AnswerWaitingCall();
+
+  DispatchBluetoothReply(aRunnable, BluetoothValue(true), EmptyString());
+}
+
+void
+BluetoothDBusService::IgnoreWaitingCall(BluetoothReplyRunnable* aRunnable)
+{
+  MOZ_ASSERT(NS_IsMainThread());
+
+  BluetoothHfpManager* hfp = BluetoothHfpManager::Get();
+  hfp->IgnoreWaitingCall();
+
+  DispatchBluetoothReply(aRunnable, BluetoothValue(true), EmptyString());
+}
+
+void
+BluetoothDBusService::ToggleCalls(BluetoothReplyRunnable* aRunnable)
+{
+  MOZ_ASSERT(NS_IsMainThread());
+
+  BluetoothHfpManager* hfp = BluetoothHfpManager::Get();
+  hfp->ToggleCalls();
+
+  DispatchBluetoothReply(aRunnable, BluetoothValue(true), EmptyString());
+}
+
 class OnUpdateSdpRecordsRunnable : public nsRunnable
 {
 public:

@@ -1494,6 +1494,42 @@ BluetoothHfpManager::UpdateSecondNumber(const nsAString& aNumber)
 }
 
 void
+BluetoothHfpManager::AnswerWaitingCall()
+{
+  MOZ_ASSERT(NS_IsMainThread());
+  MOZ_ASSERT(mPhoneType == PhoneType::CDMA);
+
+  // Pick up second call. First call is held now.
+  mCdmaSecondCall.mState = nsITelephonyProvider::CALL_STATE_CONNECTED;
+  UpdateCIND(CINDType::CALLSETUP, CallSetupState::NO_CALLSETUP, true);
+
+  sCINDItems[CINDType::CALLHELD].value = CallHeldState::ONHOLD_ACTIVE;
+  SendCommand("+CIEV: ", CINDType::CALLHELD);
+}
+
+void
+BluetoothHfpManager::IgnoreWaitingCall()
+{
+  MOZ_ASSERT(NS_IsMainThread());
+  MOZ_ASSERT(mPhoneType == PhoneType::CDMA);
+
+  mCdmaSecondCall.Reset();
+  UpdateCIND(CINDType::CALLSETUP, CallSetupState::NO_CALLSETUP, true);
+}
+
+void
+BluetoothHfpManager::ToggleCalls()
+{
+  MOZ_ASSERT(NS_IsMainThread());
+  MOZ_ASSERT(mPhoneType == PhoneType::CDMA);
+
+  // Toggle acitve and held calls
+  mCdmaSecondCall.mState = (mCdmaSecondCall.IsActive()) ?
+                             nsITelephonyProvider::CALL_STATE_HELD :
+                             nsITelephonyProvider::CALL_STATE_CONNECTED;
+}
+
+void
 BluetoothHfpManager::OnSocketConnectSuccess(BluetoothSocket* aSocket)
 {
   MOZ_ASSERT(aSocket);

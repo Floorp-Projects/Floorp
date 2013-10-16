@@ -123,6 +123,9 @@ public:
 
   // CDMA-specific functions
   void UpdateSecondNumber(const nsAString& aNumber);
+  void AnswerWaitingCall();
+  void IgnoreWaitingCall();
+  void ToggleCalls();
 
 private:
   class CloseScoTask;
