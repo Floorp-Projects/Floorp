@@ -7,6 +7,8 @@
 #ifndef READSTRINGS_H__
 #define READSTRINGS_H__
 
+#include "mozilla/NullPtr.h"
+
 #define MAX_TEXT_LEN 600
 
 #ifdef XP_WIN
@@ -38,6 +40,6 @@ int ReadStrings(const NS_tchar *path,
                 const char *keyList,
                 unsigned int numStrings,
                 char results[][MAX_TEXT_LEN],
-                const char *section = NULL);
+                const char *section = nullptr);
 
 #endif  // READSTRINGS_H__

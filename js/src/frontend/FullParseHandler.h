@@ -332,10 +332,10 @@ class FullParseHandler
         return pn;
     }
 
-    ParseNode *newForHead(bool isForInOrOf, ParseNode *pn1, ParseNode *pn2, ParseNode *pn3,
+    ParseNode *newForHead(ParseNodeKind kind, ParseNode *pn1, ParseNode *pn2, ParseNode *pn3,
                           const TokenPos &pos)
     {
-        ParseNodeKind kind = isForInOrOf ? PNK_FORIN : PNK_FORHEAD;
+        JS_ASSERT(kind == PNK_FORIN || kind == PNK_FOROF || kind == PNK_FORHEAD);
         return new_<TernaryNode>(kind, JSOP_NOP, pn1, pn2, pn3, pos);
     }
 

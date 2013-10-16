@@ -9,8 +9,6 @@
 #ifndef mozilla_Char16_h
 #define mozilla_Char16_h
 
-#include "mozilla/Assertions.h"
-
 /*
  * C11 and C++11 introduce a char16_t type and support for UTF-16 string and
  * character literals. C++11's char16_t is a distinct builtin type. C11's

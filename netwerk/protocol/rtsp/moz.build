@@ -1,0 +1,49 @@
+# vim: set filetype=python:
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+XPIDL_MODULE = 'necko_rtsp'
+
+MODULE = 'necko'
+
+EXPORTS.mozilla.net += [
+    'RtspChannel.h',
+    'RtspHandler.h',
+    'controller/RtspController.h',
+    'controller/RtspControllerChild.h',
+    'controller/RtspControllerParent.h',
+    'controller/RtspMetaData.h',
+    'rtsp/RTSPSource.h',
+]
+
+CPP_SOURCES += [
+    'RtspChannel.cpp',
+    'RtspHandler.cpp',
+    'controller/RtspController.cpp',
+    'controller/RtspControllerChild.cpp',
+    'controller/RtspControllerParent.cpp',
+    'controller/RtspMetaData.cpp',
+    'rtsp/AAMRAssembler.cpp',
+    'rtsp/AAVCAssembler.cpp',
+    'rtsp/AH263Assembler.cpp',
+    'rtsp/AMPEG4AudioAssembler.cpp',
+    'rtsp/AMPEG4ElementaryAssembler.cpp',
+    'rtsp/APacketSource.cpp',
+    'rtsp/ARTPAssembler.cpp',
+    'rtsp/ARTPConnection.cpp',
+    'rtsp/ARTPSource.cpp',
+    'rtsp/ARTPWriter.cpp',
+    'rtsp/ARTSPConnection.cpp',
+    'rtsp/ARawAudioAssembler.cpp',
+    'rtsp/ASessionDescription.cpp',
+    'rtsp/RTSPSource.cpp',
+]
+
+FAIL_ON_WARNINGS = True
+
+LIBXUL_LIBRARY = True
+
+MSVC_ENABLE_PGO = True
+
+LIBRARY_NAME = 'nkrtsp_s'

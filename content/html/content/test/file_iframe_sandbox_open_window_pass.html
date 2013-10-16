@@ -1,0 +1,25 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug 766282</title>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+
+<body onLoad="doStuff()">
+  I should be opened by a sandboxed iframe via any method when "allow-popups" is specified.
+</body>
+</html>
+
+<script>
+  function doStuff() {
+    // Check that the browsing context's (window's) name is as expected.
+    var expectedName = location.search.substring(1);
+    if (expectedName == window.name) {
+      window.opener.ok(true, "sandboxed documents should be able to open windows when \"allow-popups\" is specified");
+    } else {
+      window.opener.ok(false, "window opened with \"allow-popups\", but expected name was " + expectedName + " and actual was " + window.name);
+    }
+    self.close();
+  }
+</script>

@@ -2514,11 +2514,37 @@ nsHttpChannel::OpenCacheEntry(bool usingSSL)
     NS_ENSURE_SUCCESS(rv, rv);
 
     nsRefPtr<LoadContextInfo> info = GetLoadContextInfo(this);
-
     nsCOMPtr<nsICacheStorage> cacheStorage;
+    nsCOMPtr<nsIURI> openURI;
+    if (!mFallbackKey.IsEmpty() && mFallbackChannel) {
+        // This is a fallback channel, open fallback URI instead
+        rv = NS_NewURI(getter_AddRefs(openURI), mFallbackKey);
+        NS_ENSURE_SUCCESS(rv, rv);
+    }
+    else {
+        openURI = mURI;
+    }
+
+    uint32_t cacheEntryOpenFlags;
+    bool offline = gIOService->IsOffline();
+    if (offline || (mLoadFlags & INHIBIT_CACHING)) {
+        if (BYPASS_LOCAL_CACHE(mLoadFlags) && !offline) {
+            goto bypassCacheEntryOpen;
+        }
+        cacheEntryOpenFlags = nsICacheStorage::OPEN_READONLY;
+        mCacheEntryIsReadOnly = true;
+    }
+    else if (BYPASS_LOCAL_CACHE(mLoadFlags) && !mApplicationCache) {
+        cacheEntryOpenFlags = nsICacheStorage::OPEN_TRUNCATE;
+    }
+    else {
+        cacheEntryOpenFlags = nsICacheStorage::OPEN_NORMALLY;
+    }
+
     if (mApplicationCache) {
-        rv = cacheStorageService->AppCacheStorage(info, mApplicationCache,
-                                                  getter_AddRefs(cacheStorage));
+        rv = cacheStorageService->AppCacheStorage(info, 
+            mApplicationCache,
+            getter_AddRefs(cacheStorage));
     }
     else if (mLoadFlags & INHIBIT_PERSISTENT_CACHING) {
         rv = cacheStorageService->MemoryCacheStorage(info, // ? choose app cache as well...
@@ -2531,12 +2557,6 @@ nsHttpChannel::OpenCacheEntry(bool usingSSL)
     }
     NS_ENSURE_SUCCESS(rv, rv);
 
-    uint32_t cacheEntryOpenFlags;
-    if (BYPASS_LOCAL_CACHE(mLoadFlags) && !mApplicationCache)
-        cacheEntryOpenFlags = nsICacheStorage::OPEN_TRUNCATE;
-    else
-        cacheEntryOpenFlags = nsICacheStorage::OPEN_NORMALLY;
-
     if (mLoadAsBlocking || mLoadUnblocked ||
         (mLoadFlags & LOAD_INITIAL_DOCUMENT_URI)) {
         cacheEntryOpenFlags |= nsICacheStorage::OPEN_PRIORITY;
@@ -2547,16 +2567,6 @@ nsHttpChannel::OpenCacheEntry(bool usingSSL)
     if (mLoadFlags & LOAD_BYPASS_LOCAL_CACHE_IF_BUSY)
         cacheEntryOpenFlags |= nsICacheStorage::OPEN_BYPASS_IF_BUSY;
 
-    nsCOMPtr<nsIURI> openURI;
-    if (!mFallbackKey.IsEmpty() && mFallbackChannel) {
-        // This is a fallback channel, open fallback URI instead
-        rv = NS_NewURI(getter_AddRefs(openURI), mFallbackKey);
-        NS_ENSURE_SUCCESS(rv, rv);
-    }
-    else {
-        openURI = mURI;
-    }
-
     rv = cacheStorage->AsyncOpenURI(
         openURI, mPostID ? nsPrintfCString("%d", mPostID) : EmptyCString(),
         cacheEntryOpenFlags, this);
@@ -2564,6 +2574,7 @@ nsHttpChannel::OpenCacheEntry(bool usingSSL)
 
     waitFlags.Keep(WAIT_FOR_CACHE_ENTRY);
 
+bypassCacheEntryOpen:
     if (!mApplicationCacheForWrite)
         return NS_OK;
 
@@ -2572,7 +2583,6 @@ nsHttpChannel::OpenCacheEntry(bool usingSSL)
     // make sure we're not abusing this function
     NS_PRECONDITION(!mOfflineCacheEntry, "cache entry already open");
 
-    bool offline = gIOService->IsOffline();
     if (offline) {
         // only put things in the offline cache while online
         return NS_OK;
@@ -3005,7 +3015,7 @@ nsHttpChannel::OnCacheEntryAvailableInternal(nsICacheEntry *entry,
         rv = OnNormalCacheEntryAvailable(entry, aNew, status);
     }
 
-    if (NS_FAILED(rv) && mLoadFlags & LOAD_ONLY_FROM_CACHE) {
+    if (NS_FAILED(rv) && (mLoadFlags & LOAD_ONLY_FROM_CACHE)) {
         // If we have a fallback URI (and we're not already
         // falling back), process the fallback asynchronously.
         if (!mFallbackChannel && !mFallbackKey.IsEmpty()) {
@@ -3031,18 +3041,10 @@ nsHttpChannel::OnNormalCacheEntryAvailable(nsICacheEntry *aEntry,
 {
     mCacheEntriesToWaitFor &= ~WAIT_FOR_CACHE_ENTRY;
 
-    if (aNew) {
-      bool offline = gIOService->IsOffline();
-      if ((mLoadFlags & INHIBIT_CACHING) && !offline) {
-          // Don't allow caching in this case, just throw the entry away
-          return NS_OK;
-      }
-
-      if ((mLoadFlags & LOAD_ONLY_FROM_CACHE)) {
-          // if this channel is only allowed to pull from the cache, then
-          // we must fail if we were unable to open a cache entry for read.
-          return NS_ERROR_DOCUMENT_NOT_CACHED;
-      }
+    if ((mLoadFlags & LOAD_ONLY_FROM_CACHE) && (NS_FAILED(aEntryStatus) || aNew)) {
+        // if this channel is only allowed to pull from the cache, then
+        // we must fail if we were unable to open a cache entry for read.
+        return NS_ERROR_DOCUMENT_NOT_CACHED;
     }
 
     if (NS_SUCCEEDED(aEntryStatus)) {
