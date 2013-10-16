@@ -38,6 +38,14 @@ class SearchLoader {
         }
     }
 
+    private static Bundle createArgs(String searchTerm, boolean performEmptySearch) {
+        Bundle args = new Bundle();
+        args.putString(SearchLoader.KEY_SEARCH_TERM, searchTerm);
+        args.putBoolean(SearchLoader.KEY_PERFORM_EMPTY_SEARCH, performEmptySearch);
+
+        return args;
+    }
+
     public static void restart(LoaderManager manager, int loaderId,
                                LoaderCallbacks<Cursor> callbacks, String searchTerm) {
         restart(manager, loaderId, callbacks, searchTerm, true);
@@ -45,10 +53,8 @@ class SearchLoader {
 
     public static void restart(LoaderManager manager, int loaderId,
                                LoaderCallbacks<Cursor> callbacks, String searchTerm, boolean performEmptySearch) {
-        Bundle bundle = new Bundle();
-        bundle.putString(SearchLoader.KEY_SEARCH_TERM, searchTerm);
-        bundle.putBoolean(SearchLoader.KEY_PERFORM_EMPTY_SEARCH, performEmptySearch);
-        manager.restartLoader(loaderId, bundle, callbacks);
+        Bundle args = createArgs(searchTerm, performEmptySearch);
+        manager.restartLoader(loaderId, args, callbacks);
     }
 
     public static class SearchCursorLoader extends SimpleCursorLoader {
