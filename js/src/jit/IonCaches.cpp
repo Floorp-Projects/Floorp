@@ -3466,14 +3466,17 @@ IsTypedArrayElementSetInlineable(JSObject *obj, const Value &idval, const Value 
 
 static bool
 GenerateSetDenseElement(JSContext *cx, MacroAssembler &masm, IonCache::StubAttacher &attacher,
-                        JSObject *obj, const Value &idval, Register object, ValueOperand indexVal,
-                        ConstantOrRegister value, Register tempToUnboxIndex, Register temp)
+                        JSObject *obj, const Value &idval, bool guardHoles, Register object,
+                        ValueOperand indexVal, ConstantOrRegister value, Register tempToUnboxIndex,
+                        Register temp)
 {
     JS_ASSERT(obj->isNative());
     JS_ASSERT(idval.isInt32());
 
     Label failures;
-    Label outOfBounds; // index >= capacity || index > initialized length
+    Label outOfBounds; // index represents a known hole, or an illegal append
+
+    Label markElem, postBarrier; // used if TI protects us from worrying about holes.
 
     // Guard object is a dense array.
     Shape *shape = obj->lastProperty();
@@ -3495,49 +3498,58 @@ GenerateSetDenseElement(JSContext *cx, MacroAssembler &masm, IonCache::StubAttac
         // Compute the location of the element.
         BaseIndex target(elements, index, TimesEight);
 
-        // Guard that we can increase the initialized length.
-        Address capacity(elements, ObjectElements::offsetOfCapacity());
-        masm.branch32(Assembler::BelowOrEqual, capacity, index, &outOfBounds);
+        // If TI cannot help us deal with HOLES by preventing indexed properties
+        // on the prototype chain, we have to be very careful to check for ourselves
+        // to avoid stomping on what should be a setter call. Start by only allowing things
+        // within the initialized length.
+        if (guardHoles) {
+            Address initLength(elements, ObjectElements::offsetOfInitializedLength());
+            masm.branch32(Assembler::BelowOrEqual, initLength, index, &outOfBounds);
+        } else {
+            // Guard that we can increase the initialized length.
+            Address capacity(elements, ObjectElements::offsetOfCapacity());
+            masm.branch32(Assembler::BelowOrEqual, capacity, index, &outOfBounds);
 
-        // Guard on the initialized length.
-        Address initLength(elements, ObjectElements::offsetOfInitializedLength());
-        masm.branch32(Assembler::Below, initLength, index, &outOfBounds);
+            // Guard on the initialized length.
+            Address initLength(elements, ObjectElements::offsetOfInitializedLength());
+            masm.branch32(Assembler::Below, initLength, index, &outOfBounds);
 
-        // if (initLength == index)
-        Label markElem, postBarrier;
-        masm.branch32(Assembler::NotEqual, initLength, index, &markElem);
-        {
-            // Increase initialize length.
-            Int32Key newLength(index);
-            masm.bumpKey(&newLength, 1);
-            masm.storeKey(newLength, initLength);
+            // if (initLength == index)
+            masm.branch32(Assembler::NotEqual, initLength, index, &markElem);
+            {
+                // Increase initialize length.
+                Int32Key newLength(index);
+                masm.bumpKey(&newLength, 1);
+                masm.storeKey(newLength, initLength);
 
-            // Increase length if needed.
-            Label bumpedLength;
-            Address length(elements, ObjectElements::offsetOfLength());
-            masm.branch32(Assembler::AboveOrEqual, length, index, &bumpedLength);
-            masm.storeKey(newLength, length);
-            masm.bind(&bumpedLength);
+                // Increase length if needed.
+                Label bumpedLength;
+                Address length(elements, ObjectElements::offsetOfLength());
+                masm.branch32(Assembler::AboveOrEqual, length, index, &bumpedLength);
+                masm.storeKey(newLength, length);
+                masm.bind(&bumpedLength);
 
-            // Restore the index.
-            masm.bumpKey(&newLength, -1);
-            masm.jump(&postBarrier);
-        }
-        // else
-        {
-            // Mark old element.
+                // Restore the index.
+                masm.bumpKey(&newLength, -1);
+                masm.jump(&postBarrier);
+            }
+            // else
             masm.bind(&markElem);
-            if (cx->zone()->needsBarrier())
-                masm.callPreBarrier(target, MIRType_Value);
         }
 
-        // Call post barrier if necessary, and recalculate elements pointer if it got cobbered.
-        masm.bind(&postBarrier);
+        if (cx->zone()->needsBarrier())
+            masm.callPreBarrier(target, MIRType_Value);
+
+        // Call post barrier if necessary, and recalculate elements pointer if it got clobbered.
+        if (!guardHoles)
+            masm.bind(&postBarrier);
         Register postBarrierScratch = elements;
         if (masm.maybeCallPostBarrier(object, value, postBarrierScratch))
             masm.loadPtr(Address(object, JSObject::offsetOfElements()), elements);
 
         // Store the value.
+        if (guardHoles)
+            masm.branchTestMagic(Assembler::Equal, target, &failures);
         masm.storeConstantOrRegister(value, target);
     }
     attacher.jumpRejoin(masm);
@@ -3556,14 +3568,18 @@ SetElementIC::attachDenseElement(JSContext *cx, IonScript *ion, JSObject *obj, c
     MacroAssembler masm(cx);
     RepatchStubAppender attacher(*this);
     if (!GenerateSetDenseElement(cx, masm, attacher, obj, idval,
-                                 object(), index(), value(),
-                                 tempToUnboxIndex(), temp()))
+                                 guardHoles(), object(), index(),
+                                 value(), tempToUnboxIndex(),
+                                 temp()))
     {
         return false;
     }
 
     setHasDenseStub();
-    return linkAndAttachStub(cx, masm, attacher, ion, "dense array");
+    const char *message = guardHoles()            ?
+                            "dense array (holes)" :
+                            "dense array";
+    return linkAndAttachStub(cx, masm, attacher, ion, message);
 }
 
 static bool
@@ -3704,13 +3720,18 @@ SetElementParIC::attachDenseElement(LockedJSContext &cx, IonScript *ion, JSObjec
     MacroAssembler masm(cx);
     DispatchStubPrepender attacher(*this);
     if (!GenerateSetDenseElement(cx, masm, attacher, obj, idval,
-                                 object(), index(), value(),
-                                 tempToUnboxIndex(), temp()))
+                                 guardHoles(), object(), index(),
+                                 value(), tempToUnboxIndex(),
+                                 temp()))
     {
         return false;
     }
 
-    return linkAndAttachStub(cx, masm, attacher, ion, "parallel dense array");
+    const char *message = guardHoles()                     ?
+                            "parallel dense array (holes)" :
+                            "parallel dense array";
+
+    return linkAndAttachStub(cx, masm, attacher, ion, message);
 }
 
 bool
