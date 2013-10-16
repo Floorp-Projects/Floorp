@@ -16,6 +16,7 @@
 #include "jit/MIRGraph.h"
 
 #include "jsinferinlines.h"
+#include "jsobjinlines.h"
 
 #include "jit/shared/Lowering-shared-inl.h"
 

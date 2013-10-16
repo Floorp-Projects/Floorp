@@ -116,14 +116,22 @@ Finder.prototype = {
   },
 
   focusContent: function() {
-    let fastFind = this._fastFind;
+    // Allow Finder listeners to cancel focusing the content.
+    for (let l of this._listeners) {
+      if (!l.shouldFocusContent())
+        return;
+    }
 
+    let fastFind = this._fastFind;
+    const fm = Cc["@mozilla.org/focus-manager;1"].getService(Ci.nsIFocusManager);
     try {
-      // Try to find the best possible match that should receive focus.
+      // Try to find the best possible match that should receive focus and
+      // block scrolling on focus since find already scrolls. Further
+      // scrolling is due to user action, so don't override this.
       if (fastFind.foundLink) {
-        fastFind.foundLink.focus();
+        fm.setFocus(fastFind.foundLink, fm.FLAG_NOSCROLL);
       } else if (fastFind.foundEditable) {
-        fastFind.foundEditable.focus();
+        fm.setFocus(fastFind.foundEditable, fm.FLAG_NOSCROLL);
         fastFind.collapseSelection();
       } else {
         this._getWindow().focus()
@@ -136,8 +144,18 @@ Finder.prototype = {
 
     switch (aEvent.keyCode) {
       case Ci.nsIDOMKeyEvent.DOM_VK_RETURN:
-        if (this._fastFind.foundLink) // Todo: Handle ctrl click.
-          this._fastFind.foundLink.click();
+        if (this._fastFind.foundLink) {
+          let view = this._fastFind.foundLink.ownerDocument.defaultView;
+          this._fastFind.foundLink.dispatchEvent(new view.MouseEvent("click", {
+            view: view,
+            cancelable: true,
+            bubbles: true,
+            ctrlKey: aEvent.ctrlKey,
+            altKey: aEvent.altKey,
+            shiftKey: aEvent.shiftKey,
+            metaKey: aEvent.metaKey
+          }));
+        }
         break;
       case Ci.nsIDOMKeyEvent.DOM_VK_TAB:
         let direction = Services.focus.MOVEFOCUS_FORWARD;

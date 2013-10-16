@@ -765,6 +765,7 @@ nsDocShell::nsDocShell():
     mInEnsureScriptEnv(false),
 #endif
     mAffectPrivateSessionLifetime(true),
+    mInvisible(false),
     mDefaultLoadFlags(nsIRequest::LOAD_NORMAL),
     mFrameType(eFrameTypeRegular),
     mOwnOrContainingAppId(nsIScriptSecurityManager::UNKNOWN_APP_ID),
@@ -1858,20 +1859,15 @@ nsDocShell::SetCurrentURI(nsIURI *aURI, nsIRequest *aRequest,
 }
 
 NS_IMETHODIMP
-nsDocShell::GetCharset(char** aCharset)
+nsDocShell::GetCharset(nsACString& aCharset)
 {
-    NS_ENSURE_ARG_POINTER(aCharset);
-    *aCharset = nullptr; 
+    aCharset.Truncate();
 
     nsIPresShell* presShell = GetPresShell();
     NS_ENSURE_TRUE(presShell, NS_ERROR_FAILURE);
     nsIDocument *doc = presShell->GetDocument();
     NS_ENSURE_TRUE(doc, NS_ERROR_FAILURE);
-    *aCharset = ToNewCString(doc->GetDocumentCharacterSet());
-    if (!*aCharset) {
-        return NS_ERROR_OUT_OF_MEMORY;
-    }
-
+    aCharset = doc->GetDocumentCharacterSet();
     return NS_OK;
 }
 
@@ -1900,7 +1896,6 @@ nsDocShell::GatherCharsetMenuTelemetry()
   int32_t charsetSource = doc->GetDocumentCharacterSetSource();
   switch (charsetSource) {
     case kCharsetFromWeakDocTypeDefault:
-    case kCharsetFromUserDefault:
     case kCharsetFromDocTypeDefault:
     case kCharsetFromCache:
     case kCharsetFromParentFrame:
@@ -1944,23 +1939,10 @@ nsDocShell::GatherCharsetMenuTelemetry()
 }
 
 NS_IMETHODIMP
-nsDocShell::SetCharset(const char* aCharset)
+nsDocShell::SetCharset(const nsACString& aCharset)
 {
-    // set the default charset
-    nsCOMPtr<nsIContentViewer> viewer;
-    GetContentViewer(getter_AddRefs(viewer));
-    if (viewer) {
-      nsCOMPtr<nsIMarkupDocumentViewer> muDV(do_QueryInterface(viewer));
-      if (muDV) {
-        nsCString charset(aCharset);
-        NS_ENSURE_SUCCESS(muDV->SetDefaultCharacterSet(charset),
-                          NS_ERROR_FAILURE);
-      }
-    }
-
     // set the charset override
-    nsCString charset(aCharset);
-    SetForcedCharset(charset);
+    SetForcedCharset(aCharset);
 
     return NS_OK;
 }
@@ -1977,28 +1959,24 @@ NS_IMETHODIMP nsDocShell::GetForcedCharset(nsACString& aResult)
   return NS_OK;
 }
 
-NS_IMETHODIMP nsDocShell::SetParentCharset(const nsACString& aCharset)
+void
+nsDocShell::SetParentCharset(const nsACString& aCharset,
+                             int32_t aCharsetSource,
+                             nsIPrincipal* aPrincipal)
 {
   mParentCharset = aCharset;
-  return NS_OK;
-}
-
-NS_IMETHODIMP nsDocShell::GetParentCharset(nsACString& aResult)
-{
-  aResult = mParentCharset;
-  return NS_OK;
-}
-
-NS_IMETHODIMP nsDocShell::SetParentCharsetSource(int32_t aCharsetSource)
-{
   mParentCharsetSource = aCharsetSource;
-  return NS_OK;
+  mParentCharsetPrincipal = aPrincipal;
 }
 
-NS_IMETHODIMP nsDocShell::GetParentCharsetSource(int32_t * aParentCharsetSource)
+void
+nsDocShell::GetParentCharset(nsACString& aCharset,
+                             int32_t* aCharsetSource,
+                             nsIPrincipal** aPrincipal)
 {
-  *aParentCharsetSource = mParentCharsetSource;
-  return NS_OK;
+  aCharset = mParentCharset;
+  *aCharsetSource = mParentCharsetSource;
+  NS_IF_ADDREF(*aPrincipal = mParentCharsetPrincipal);
 }
 
 NS_IMETHODIMP
@@ -3571,7 +3549,6 @@ nsDocShell::AddChild(nsIDocShellTreeItem * aChild)
     nsIDocument* doc = mContentViewer->GetDocument();
     if (!doc)
         return NS_OK;
-    const nsACString &parentCS = doc->GetDocumentCharacterSet();
 
     bool isWyciwyg = false;
 
@@ -3586,17 +3563,12 @@ nsDocShell::AddChild(nsIDocShellTreeItem * aChild)
         // the actual source charset, which is what we're trying to
         // expose here.
 
-        // set the child's parentCharset
-        res = childAsDocShell->SetParentCharset(parentCS);
-        if (NS_FAILED(res))
-            return NS_OK;
-
+        const nsACString &parentCS = doc->GetDocumentCharacterSet();
         int32_t charsetSource = doc->GetDocumentCharacterSetSource();
-
         // set the child's parentCharset
-        res = childAsDocShell->SetParentCharsetSource(charsetSource);
-        if (NS_FAILED(res))
-            return NS_OK;
+        childAsDocShell->SetParentCharset(parentCS,
+                                          charsetSource,
+                                          doc->NodePrincipal());
     }
 
     // printf("### 1 >>> Adding child. Parent CS = %s. ItemType = %d.\n", NS_LossyConvertUTF16toASCII(parentCS).get(), mItemType);
@@ -8297,11 +8269,9 @@ nsDocShell::SetupNewViewer(nsIContentViewer * aNewViewer)
                       NS_ERROR_FAILURE);
     nsCOMPtr<nsIDocShell> parent(do_QueryInterface(parentAsItem));
 
-    nsAutoCString defaultCharset;
     nsAutoCString forceCharset;
     nsAutoCString hintCharset;
     int32_t hintCharsetSource;
-    nsAutoCString prevDocCharset;
     int32_t minFontSize;
     float textZoom;
     float pageZoom;
@@ -8340,9 +8310,6 @@ nsDocShell::SetupNewViewer(nsIContentViewer * aNewViewer)
             newMUDV = do_QueryInterface(aNewViewer,&rv);
             if (newMUDV) {
                 NS_ENSURE_SUCCESS(oldMUDV->
-                                  GetDefaultCharacterSet(defaultCharset),
-                                  NS_ERROR_FAILURE);
-                NS_ENSURE_SUCCESS(oldMUDV->
                                   GetForceCharacterSet(forceCharset),
                                   NS_ERROR_FAILURE);
                 NS_ENSURE_SUCCESS(oldMUDV->
@@ -8362,9 +8329,6 @@ nsDocShell::SetupNewViewer(nsIContentViewer * aNewViewer)
                                   NS_ERROR_FAILURE);
                 NS_ENSURE_SUCCESS(oldMUDV->
                                   GetAuthorStyleDisabled(&styleDisabled),
-                                  NS_ERROR_FAILURE);
-                NS_ENSURE_SUCCESS(oldMUDV->
-                                  GetPrevDocCharacterSet(prevDocCharset),
                                   NS_ERROR_FAILURE);
             }
         }
@@ -8420,16 +8384,12 @@ nsDocShell::SetupNewViewer(nsIContentViewer * aNewViewer)
     // If we have old state to copy, set the old state onto the new content
     // viewer
     if (newMUDV) {
-        NS_ENSURE_SUCCESS(newMUDV->SetDefaultCharacterSet(defaultCharset),
-                          NS_ERROR_FAILURE);
         NS_ENSURE_SUCCESS(newMUDV->SetForceCharacterSet(forceCharset),
                           NS_ERROR_FAILURE);
         NS_ENSURE_SUCCESS(newMUDV->SetHintCharacterSet(hintCharset),
                           NS_ERROR_FAILURE);
         NS_ENSURE_SUCCESS(newMUDV->
                           SetHintCharacterSetSource(hintCharsetSource),
-                          NS_ERROR_FAILURE);
-        NS_ENSURE_SUCCESS(newMUDV->SetPrevDocCharacterSet(prevDocCharset),
                           NS_ERROR_FAILURE);
         NS_ENSURE_SUCCESS(newMUDV->SetMinFontSize(minFontSize),
                           NS_ERROR_FAILURE);
@@ -12800,4 +12760,16 @@ nsDocShell::HasUnloadedParent()
         currentTreeItem.swap(parentTreeItem);
     }
     return false;
+}
+
+bool
+nsDocShell::IsInvisible()
+{
+    return mInvisible;
+}
+
+void
+nsDocShell::SetInvisible(bool aInvisible)
+{
+    mInvisible = aInvisible;
 }

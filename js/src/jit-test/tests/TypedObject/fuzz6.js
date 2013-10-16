@@ -1,6 +1,6 @@
 // |jit-test| error:TypeError
 
-if (!this.hasOwnProperty("Type"))
+if (!this.hasOwnProperty("TypedObject"))
   throw new TypeError();
 
-new StructType(RegExp);
+new TypedObject.StructType(RegExp);

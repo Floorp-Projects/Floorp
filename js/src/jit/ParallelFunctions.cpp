@@ -566,7 +566,7 @@ jit::InitRestParameterPar(ForkJoinSlice *slice, uint32_t length, Value *rest,
             res->ensureDenseElementsPreservePackedFlag(slice, 0, length);
         if (edr != JSObject::ED_OK)
             return nullptr;
-        res->initDenseElements(0, rest, length);
+        res->initDenseElementsUnbarriered(0, rest, length);
         res->as<ArrayObject>().setLengthInt32(length);
     }
 

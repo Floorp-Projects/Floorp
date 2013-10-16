@@ -141,7 +141,8 @@ public class SearchEnginePreference extends Preference implements View.OnLongCli
     }
 
     /**
-     * Set if this object's UI should show that this is the default engine.
+     * Set if this object's UI should show that this is the default engine. To ensure proper ordering,
+     * this method should only be called after this Preference is added to the PreferenceCategory.
      * @param isDefault Flag indicating if this represents the default engine.
      */
     public void setIsDefaultEngine(boolean isDefault) {
@@ -206,7 +207,9 @@ public class SearchEnginePreference extends Preference implements View.OnLongCli
         if (mPromptIcon == null && mIconBitmap != null) {
             mPromptIcon = new BitmapDrawable(mFaviconView.getBitmap());
         }
-        builder.setIcon(mPromptIcon);
+
+        // Icons are hidden until Bug 926711 is fixed.
+        //builder.setIcon(mPromptIcon);
 
         // We have to construct the dialog itself on the UI thread.
         ThreadUtils.postToUiThread(new Runnable() {

@@ -117,6 +117,12 @@ js::CloneFunctionAtCallsite(JSContext *cx, HandleFunction fun, HandleScript scri
     JS_ASSERT(!fun->nonLazyScript()->enclosingStaticScope());
     JS_ASSERT(types::UseNewTypeForClone(fun));
 
+    /*
+     * If we start allocating function objects in the nursery, then the callsite
+     * clone table will need a postbarrier.
+     */
+    JS_ASSERT(fun->isTenured());
+
     typedef CallsiteCloneKey Key;
     typedef CallsiteCloneTable Table;
 
