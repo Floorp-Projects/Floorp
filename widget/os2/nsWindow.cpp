@@ -3317,7 +3317,7 @@ bool nsWindow::DispatchActivationEvent(uint32_t aEventType)
 
 bool nsWindow::DispatchScrollEvent(ULONG msg, MPARAM mp1, MPARAM mp2)
 {
-  WheelEvent wheelEvent(true, NS_WHEEL_WHEEL, this);
+  WidgetWheelEvent wheelEvent(true, NS_WHEEL_WHEEL, this);
   InitEvent(wheelEvent);
 
   wheelEvent.InitBasicModifiers(isKeyDown(VK_CTRL),
