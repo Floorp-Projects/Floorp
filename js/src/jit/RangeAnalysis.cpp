@@ -436,6 +436,14 @@ Range::Range(const MDefinition *def)
         }
     }
 
+    // As a special case, MUrsh is permitted to claim a result type of
+    // MIRType_Int32 while actually returning values in [0,UINT32_MAX] without
+    // bailouts. If range analysis hasn't ruled out values in
+    // (INT32_MAX,UINT32_MAX], set the range to be conservatively correct for
+    // use as either a uint32 or an int32.
+    if (!hasInt32UpperBound() && def->isUrsh() && def->toUrsh()->bailoutsDisabled())
+        lower_ = INT32_MIN;
+
     assertInvariants();
 }
 
@@ -1072,8 +1080,6 @@ MUrsh::computeRange()
     }
 
     JS_ASSERT(range()->lower() >= 0);
-    if (type() == MIRType_Int32 && !range()->hasInt32UpperBound())
-        range()->extendUInt32ToInt32Min();
 }
 
 void
