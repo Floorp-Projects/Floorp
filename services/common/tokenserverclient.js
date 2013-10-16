@@ -326,7 +326,7 @@ TokenServerClient.prototype = {
         error.message = "Malformed request.";
         error.cause = "malformed-request";
       } else if (response.status == 401) {
-        error.message("Authentication failed.");
+        error.message = "Authentication failed.";
         error.cause = "invalid-credentials";
       }
 
