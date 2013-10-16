@@ -122,6 +122,14 @@ Prompt.prototype = {
     });
   },
 
+  addIconGrid: function(aOptions) {
+    return this._addInput({
+      type: "icongrid",
+      items: aOptions.items,
+      id: aOptions.id
+    });
+  },
+
   show: function(callback) {
     this.callback = callback;
     log("Sending message");

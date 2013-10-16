@@ -7,5 +7,6 @@
 
     <integer name="number_of_top_sites">6</integer>
     <integer name="number_of_top_sites_cols">2</integer>
+    <integer name="max_icon_grid_columns">4</integer>
 
 </resources>
