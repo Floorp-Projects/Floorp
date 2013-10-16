@@ -1895,3 +1895,86 @@ add_test(function test_reading_ad_and_parsing_mcc_mnc() {
 
   run_next_test();
 });
+
+add_test(function test_reading_optional_efs() {
+  let worker = newUint8Worker();
+  let record = worker.ICCRecordHelper;
+  let gsmPdu = worker.GsmPDUHelper;
+  let ril    = worker.RIL;
+  let buf    = worker.Buf;
+  let io     = worker.ICCIOHelper;
+
+  function buildSST(supportedEf) {
+    let sst = [];
+    let len = supportedEf.length;
+    for (let i = 0; i < len; i++) {
+      let index, bitmask, iccService;
+      if (ril.appType === CARD_APPTYPE_SIM) {
+        iccService = GECKO_ICC_SERVICES.sim[supportedEf[i]];
+        iccService -= 1;
+        index = Math.floor(iccService / 4);
+        bitmask = 2 << ((iccService % 4) << 1);
+      } else if (ril.appType === CARD_APPTYPE_USIM){
+        iccService = GECKO_ICC_SERVICES.usim[supportedEf[i]];
+        iccService -= 1;
+        index = Math.floor(iccService / 8);
+        bitmask = 1 << ((iccService % 8) << 0);
+      }
+
+      if (sst) {
+        sst[index] |= bitmask;
+      }
+    }
+    return sst;
+  }
+
+  ril.updateCellBroadcastConfig = function fakeUpdateCellBroadcastConfig() {
+    // Ignore updateCellBroadcastConfig after reading SST
+  };
+
+  function do_test(sst, supportedEf) {
+    // Clone supportedEf to local array for testing
+    let testEf = supportedEf.slice(0);
+
+    record.readMSISDN = function fakeReadMSISDN() {
+      testEf.splice(testEf.indexOf("MSISDN"), 1);
+    };
+
+    record.readMBDN = function fakeReadMBDN() {
+      testEf.splice(testEf.indexOf("MDN"), 1);
+    };
+
+    io.loadTransparentEF = function fakeLoadTransparentEF(options) {
+      // Write data size
+      buf.writeInt32(sst.length * 2);
+
+      // Write data
+      for (let i = 0; i < sst.length; i++) {
+         gsmPdu.writeHexOctet(sst[i] || 0);
+      }
+
+      // Write string delimiter
+      buf.writeStringDelimiter(sst.length * 2);
+
+      if (options.callback) {
+        options.callback(options);
+      }
+
+      if (testEf.length !== 0) {
+        do_print("Un-handled EF: " + JSON.stringify(testEf));
+        do_check_true(false);
+      }
+    };
+
+    record.readSST();
+  }
+
+  // TODO: Add all necessary optional EFs eventually
+  let supportedEf = ["MSISDN", "MDN"];
+  ril.appType = CARD_APPTYPE_SIM;
+  do_test(buildSST(supportedEf), supportedEf);
+  ril.appType = CARD_APPTYPE_USIM;
+  do_test(buildSST(supportedEf), supportedEf);
+
+  run_next_test();
+});

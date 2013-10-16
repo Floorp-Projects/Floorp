@@ -260,7 +260,7 @@ struct DeltaValues
   {
   }
 
-  explicit DeltaValues(WheelEvent* aEvent) :
+  explicit DeltaValues(WidgetWheelEvent* aEvent) :
     deltaX(aEvent->deltaX), deltaY(aEvent->deltaY)
   {
   }
@@ -277,7 +277,7 @@ class nsScrollbarsForWheel {
 public:
   static void PrepareToScrollText(nsEventStateManager* aESM,
                                   nsIFrame* aTargetFrame,
-                                  WheelEvent* aEvent);
+                                  WidgetWheelEvent* aEvent);
   static void SetActiveScrollTarget(nsIScrollableFrame* aScrollTarget);
   // Hide all scrollbars (both mActiveOwner's and mActivatedScrollTargets')
   static void MayInactivate();
@@ -301,7 +301,7 @@ protected:
   static void TemporarilyActivateAllPossibleScrollTargets(
                                   nsEventStateManager* aESM,
                                   nsIFrame* aTargetFrame,
-                                  WheelEvent* aEvent);
+                                  WidgetWheelEvent* aEvent);
   static void DeactivateAllTemporarilyActivatedScrollTargets();
 };
 
@@ -323,10 +323,10 @@ class nsMouseWheelTransaction {
 public:
   static nsIFrame* GetTargetFrame() { return sTargetFrame; }
   static void BeginTransaction(nsIFrame* aTargetFrame,
-                               WheelEvent* aEvent);
+                               WidgetWheelEvent* aEvent);
   // Be careful, UpdateTransaction may fire a DOM event, therefore, the target
   // frame might be destroyed in the event handler.
-  static bool UpdateTransaction(WheelEvent* aEvent);
+  static bool UpdateTransaction(WidgetWheelEvent* aEvent);
   static void MayEndTransaction();
   static void EndTransaction();
   static void OnEvent(WidgetEvent* aEvent);
@@ -335,7 +335,7 @@ public:
 
   static void OwnScrollbars(bool aOwn);
 
-  static DeltaValues AccelerateWheelDelta(WheelEvent* aEvent,
+  static DeltaValues AccelerateWheelDelta(WidgetWheelEvent* aEvent,
                                           bool aAllowScrollSpeedOverride);
 
   enum {
@@ -349,7 +349,7 @@ protected:
   static uint32_t GetIgnoreMoveDelayTime();
   static int32_t GetAccelerationStart();
   static int32_t GetAccelerationFactor();
-  static DeltaValues OverrideSystemScrollSpeed(WheelEvent* aEvent);
+  static DeltaValues OverrideSystemScrollSpeed(WidgetWheelEvent* aEvent);
   static double ComputeAcceleratedWheelDelta(double aDelta, int32_t aFactor);
   static bool OutOfTime(uint32_t aBaseTime, uint32_t aThreshold);
 
@@ -407,7 +407,7 @@ nsMouseWheelTransaction::OwnScrollbars(bool aOwn)
 
 void
 nsMouseWheelTransaction::BeginTransaction(nsIFrame* aTargetFrame,
-                                          WheelEvent* aEvent)
+                                          WidgetWheelEvent* aEvent)
 {
   NS_ASSERTION(!sTargetFrame, "previous transaction is not finished!");
   MOZ_ASSERT(aEvent->message == NS_WHEEL_WHEEL,
@@ -422,7 +422,7 @@ nsMouseWheelTransaction::BeginTransaction(nsIFrame* aTargetFrame,
 }
 
 bool
-nsMouseWheelTransaction::UpdateTransaction(WheelEvent* aEvent)
+nsMouseWheelTransaction::UpdateTransaction(WidgetWheelEvent* aEvent)
 {
   nsIScrollableFrame* sf = GetTargetFrame()->GetScrollTargetFrame();
   NS_ENSURE_TRUE(sf, false);
@@ -494,7 +494,7 @@ nsMouseWheelTransaction::OnEvent(WidgetEvent* aEvent)
           OutOfTime(sMouseMoved, GetIgnoreMoveDelayTime())) {
         // Terminate the current mousewheel transaction if the mouse moved more
         // than ignoremovedelay milliseconds ago
-        MayEndTransaction();
+        EndTransaction();
       }
       return;
     case NS_MOUSE_MOVE:
@@ -505,7 +505,7 @@ nsMouseWheelTransaction::OnEvent(WidgetEvent* aEvent)
         nsIntPoint pt = GetScreenPoint(static_cast<WidgetGUIEvent*>(aEvent));
         nsIntRect r = sTargetFrame->GetScreenRectExternal();
         if (!r.Contains(pt)) {
-          MayEndTransaction();
+          EndTransaction();
           return;
         }
 
@@ -623,7 +623,7 @@ nsMouseWheelTransaction::GetIgnoreMoveDelayTime()
 }
 
 DeltaValues
-nsMouseWheelTransaction::AccelerateWheelDelta(WheelEvent* aEvent,
+nsMouseWheelTransaction::AccelerateWheelDelta(WidgetWheelEvent* aEvent,
                                               bool aAllowScrollSpeedOverride)
 {
   DeltaValues result(aEvent);
@@ -674,7 +674,7 @@ nsMouseWheelTransaction::GetAccelerationFactor()
 }
 
 DeltaValues
-nsMouseWheelTransaction::OverrideSystemScrollSpeed(WheelEvent* aEvent)
+nsMouseWheelTransaction::OverrideSystemScrollSpeed(WidgetWheelEvent* aEvent)
 {
   MOZ_ASSERT(sTargetFrame, "We don't have mouse scrolling transaction");
   MOZ_ASSERT(aEvent->deltaMode == nsIDOMWheelEvent::DOM_DELTA_LINE);
@@ -713,7 +713,7 @@ void
 nsScrollbarsForWheel::PrepareToScrollText(
                                   nsEventStateManager* aESM,
                                   nsIFrame* aTargetFrame,
-                                  WheelEvent* aEvent)
+                                  WidgetWheelEvent* aEvent)
 {
   if (aEvent->message == NS_WHEEL_START) {
     nsMouseWheelTransaction::OwnScrollbars(false);
@@ -791,7 +791,7 @@ void
 nsScrollbarsForWheel::TemporarilyActivateAllPossibleScrollTargets(
                                                nsEventStateManager* aESM,
                                                nsIFrame* aTargetFrame,
-                                               WheelEvent* aEvent)
+                                               WidgetWheelEvent* aEvent)
 {
   for (size_t i = 0; i < kNumberOfTargets; i++) {
     const DeltaValues *dir = &directions[i];
@@ -1193,7 +1193,7 @@ nsEventStateManager::PreHandleEvent(nsPresContext* aPresContext,
         break;
       }
 
-      WheelEvent* wheelEvent = static_cast<WheelEvent*>(aEvent);
+      WidgetWheelEvent* wheelEvent = static_cast<WidgetWheelEvent*>(aEvent);
       WheelPrefs::GetInstance()->ApplyUserPrefsToDelta(wheelEvent);
 
       // If we won't dispatch a DOM event for this event, nothing to do anymore.
@@ -1613,7 +1613,7 @@ nsEventStateManager::DispatchCrossProcessEvent(WidgetEvent* aEvent,
     return remote->SendRealKeyEvent(*keyEvent);
   }
   case NS_WHEEL_EVENT: {
-    WheelEvent* wheelEvent = static_cast<WheelEvent*>(aEvent);
+    WidgetWheelEvent* wheelEvent = static_cast<WidgetWheelEvent*>(aEvent);
     return remote->SendMouseWheelEvent(*wheelEvent);
   }
   case NS_TOUCH_EVENT: {
@@ -2555,7 +2555,7 @@ GetParentFrameToScroll(nsIFrame* aFrame)
 
 void
 nsEventStateManager::DispatchLegacyMouseScrollEvents(nsIFrame* aTargetFrame,
-                                                     WheelEvent* aEvent,
+                                                     WidgetWheelEvent* aEvent,
                                                      nsEventStatus* aStatus)
 {
   MOZ_ASSERT(aEvent);
@@ -2680,7 +2680,7 @@ nsEventStateManager::DispatchLegacyMouseScrollEvents(nsIFrame* aTargetFrame,
 
 void
 nsEventStateManager::SendLineScrollEvent(nsIFrame* aTargetFrame,
-                                         WheelEvent* aEvent,
+                                         WidgetWheelEvent* aEvent,
                                          nsEventStatus* aStatus,
                                          int32_t aDelta,
                                          DeltaDirection aDeltaDirection)
@@ -2715,7 +2715,7 @@ nsEventStateManager::SendLineScrollEvent(nsIFrame* aTargetFrame,
 
 void
 nsEventStateManager::SendPixelScrollEvent(nsIFrame* aTargetFrame,
-                                          WheelEvent* aEvent,
+                                          WidgetWheelEvent* aEvent,
                                           nsEventStatus* aStatus,
                                           int32_t aPixelDelta,
                                           DeltaDirection aDeltaDirection)
@@ -2751,7 +2751,7 @@ nsEventStateManager::SendPixelScrollEvent(nsIFrame* aTargetFrame,
 
 nsIScrollableFrame*
 nsEventStateManager::ComputeScrollTarget(nsIFrame* aTargetFrame,
-                                         WheelEvent* aEvent,
+                                         WidgetWheelEvent* aEvent,
                                          ComputeScrollTargetOptions aOptions)
 {
   return ComputeScrollTarget(aTargetFrame, aEvent->deltaX, aEvent->deltaY,
@@ -2765,7 +2765,7 @@ nsIScrollableFrame*
 nsEventStateManager::ComputeScrollTarget(nsIFrame* aTargetFrame,
                                          double aDirectionX,
                                          double aDirectionY,
-                                         WheelEvent* aEvent,
+                                         WidgetWheelEvent* aEvent,
                                          ComputeScrollTargetOptions aOptions)
 {
   if (aOptions & PREFER_MOUSE_WHEEL_TRANSACTION) {
@@ -2852,7 +2852,7 @@ nsEventStateManager::ComputeScrollTarget(nsIFrame* aTargetFrame,
 
 nsSize
 nsEventStateManager::GetScrollAmount(nsPresContext* aPresContext,
-                                     WheelEvent* aEvent,
+                                     WidgetWheelEvent* aEvent,
                                      nsIScrollableFrame* aScrollableFrame)
 {
   MOZ_ASSERT(aPresContext);
@@ -2883,7 +2883,7 @@ nsEventStateManager::GetScrollAmount(nsPresContext* aPresContext,
 
 void
 nsEventStateManager::DoScrollText(nsIScrollableFrame* aScrollableFrame,
-                                  WheelEvent* aEvent)
+                                  WidgetWheelEvent* aEvent)
 {
   MOZ_ASSERT(aScrollableFrame);
   MOZ_ASSERT(aEvent);
@@ -2970,20 +2970,20 @@ nsEventStateManager::DoScrollText(nsIScrollableFrame* aScrollableFrame,
 
   nsIScrollableFrame::ScrollMode mode;
   switch (aEvent->scrollType) {
-    case WheelEvent::SCROLL_DEFAULT:
+    case WidgetWheelEvent::SCROLL_DEFAULT:
       if (isDeltaModePixel) {
         mode = nsIScrollableFrame::NORMAL;
       } else {
         mode = nsIScrollableFrame::SMOOTH;
       }
       break;
-    case WheelEvent::SCROLL_SYNCHRONOUSLY:
+    case WidgetWheelEvent::SCROLL_SYNCHRONOUSLY:
       mode = nsIScrollableFrame::INSTANT;
       break;
-    case WheelEvent::SCROLL_ASYNCHRONOUSELY:
+    case WidgetWheelEvent::SCROLL_ASYNCHRONOUSELY:
       mode = nsIScrollableFrame::NORMAL;
       break;
-    case WheelEvent::SCROLL_SMOOTHLY:
+    case WidgetWheelEvent::SCROLL_SMOOTHLY:
       mode = nsIScrollableFrame::SMOOTH;
       break;
     default:
@@ -3407,7 +3407,7 @@ nsEventStateManager::PostHandleEvent(nsPresContext* aPresContext,
         break;
       }
 
-      WheelEvent* wheelEvent = static_cast<WheelEvent*>(aEvent);
+      WidgetWheelEvent* wheelEvent = static_cast<WidgetWheelEvent*>(aEvent);
       switch (WheelPrefs::GetInstance()->ComputeActionFor(wheelEvent)) {
         case WheelPrefs::ACTION_SCROLL: {
           // For scrolling of default action, we should honor the mouse wheel
@@ -3426,7 +3426,13 @@ nsEventStateManager::PostHandleEvent(nsPresContext* aPresContext,
 
           nsScrollbarsForWheel::SetActiveScrollTarget(scrollTarget);
 
-          if (!scrollTarget) {
+          nsIFrame* rootScrollFrame = !aTargetFrame ? nullptr :
+            aTargetFrame->PresContext()->PresShell()->GetRootScrollFrame();
+          nsIScrollableFrame* rootScrollableFrame = nullptr;
+          if (rootScrollFrame) {
+            rootScrollableFrame = do_QueryFrame(rootScrollFrame);
+          }
+          if (!scrollTarget || scrollTarget == rootScrollableFrame) {
             wheelEvent->mViewPortIsOverscrolled = true;
           }
           wheelEvent->overflowDeltaX = wheelEvent->deltaX;
@@ -5353,7 +5359,7 @@ void
 nsEventStateManager::DeltaAccumulator::InitLineOrPageDelta(
                                          nsIFrame* aTargetFrame,
                                          nsEventStateManager* aESM,
-                                         WheelEvent* aEvent)
+                                         WidgetWheelEvent* aEvent)
 {
   MOZ_ASSERT(aESM);
   MOZ_ASSERT(aEvent);
@@ -5456,7 +5462,7 @@ nsEventStateManager::DeltaAccumulator::Reset()
 
 nsIntPoint
 nsEventStateManager::DeltaAccumulator::ComputeScrollAmountForDefaultAction(
-                       WheelEvent* aEvent,
+                       WidgetWheelEvent* aEvent,
                        const nsIntSize& aScrollAmountInDevPixels)
 {
   MOZ_ASSERT(aEvent);
@@ -5540,7 +5546,7 @@ nsEventStateManager::WheelPrefs::Reset()
 }
 
 nsEventStateManager::WheelPrefs::Index
-nsEventStateManager::WheelPrefs::GetIndexFor(WheelEvent* aEvent)
+nsEventStateManager::WheelPrefs::GetIndexFor(WidgetWheelEvent* aEvent)
 {
   if (!aEvent) {
     return INDEX_DEFAULT;
@@ -5651,7 +5657,7 @@ nsEventStateManager::WheelPrefs::Init(
 }
 
 void
-nsEventStateManager::WheelPrefs::ApplyUserPrefsToDelta(WheelEvent* aEvent)
+nsEventStateManager::WheelPrefs::ApplyUserPrefsToDelta(WidgetWheelEvent* aEvent)
 {
   Index index = GetIndexFor(aEvent);
   Init(index);
@@ -5678,7 +5684,7 @@ nsEventStateManager::WheelPrefs::ApplyUserPrefsToDelta(WheelEvent* aEvent)
 
 void
 nsEventStateManager::WheelPrefs::CancelApplyingUserPrefsFromOverflowDelta(
-                                                   WheelEvent* aEvent)
+                                                   WidgetWheelEvent* aEvent)
 {
   Index index = GetIndexFor(aEvent);
   Init(index);
@@ -5698,7 +5704,7 @@ nsEventStateManager::WheelPrefs::CancelApplyingUserPrefsFromOverflowDelta(
 }
 
 nsEventStateManager::WheelPrefs::Action
-nsEventStateManager::WheelPrefs::ComputeActionFor(WheelEvent* aEvent)
+nsEventStateManager::WheelPrefs::ComputeActionFor(WidgetWheelEvent* aEvent)
 {
   Index index = GetIndexFor(aEvent);
   Init(index);
@@ -5724,7 +5730,7 @@ nsEventStateManager::WheelPrefs::ComputeActionFor(WheelEvent* aEvent)
 
 bool
 nsEventStateManager::WheelPrefs::NeedToComputeLineOrPageDelta(
-                                   WheelEvent* aEvent)
+                                   WidgetWheelEvent* aEvent)
 {
   Index index = GetIndexFor(aEvent);
   Init(index);
@@ -5735,7 +5741,7 @@ nsEventStateManager::WheelPrefs::NeedToComputeLineOrPageDelta(
 
 bool
 nsEventStateManager::WheelPrefs::IsOverOnePageScrollAllowedX(
-                                   WheelEvent* aEvent)
+                                   WidgetWheelEvent* aEvent)
 {
   Index index = GetIndexFor(aEvent);
   Init(index);
@@ -5745,7 +5751,7 @@ nsEventStateManager::WheelPrefs::IsOverOnePageScrollAllowedX(
 
 bool
 nsEventStateManager::WheelPrefs::IsOverOnePageScrollAllowedY(
-                                   WheelEvent* aEvent)
+                                   WidgetWheelEvent* aEvent)
 {
   Index index = GetIndexFor(aEvent);
   Init(index);

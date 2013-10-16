@@ -1,4 +1,4 @@
-// |reftest| skip-if(!this.hasOwnProperty("Type"))
+// |reftest| skip-if(!this.hasOwnProperty("TypedObject"))
 var BUGNUMBER = 578700;
 var summary = 'TypedObjects memory check';
 
@@ -6,6 +6,19 @@ function spin() {
     for (var i = 0; i < 10000; i++)
         ;
 }
+
+var ArrayType = TypedObject.ArrayType;
+var StructType = TypedObject.StructType;
+var uint8 = TypedObject.uint8;
+var uint16 = TypedObject.uint16;
+var uint32 = TypedObject.uint32;
+var uint8Clamped = TypedObject.uint8Clamped;
+var int8 = TypedObject.int8;
+var int16 = TypedObject.int16;
+var int32 = TypedObject.int32;
+var float32 = TypedObject.float32;
+var float64 = TypedObject.float64;
+
 
 function runTests() {
     print(BUGNUMBER + ": " + summary);
@@ -49,7 +62,9 @@ function runTests() {
     gc();
     spin();
     assertEq(middleBand['r'] == 0 && middleBand['g'] == 0 && middleBand['b'] == 0, true);
-    middleBand.update({'r': 255, 'g': 207, 'b': 142});
+    middleBand.r = 255;
+    middleBand.g = 207;
+    middleBand.b = 142;
     assertEq(middleBand['r'] == 255 && middleBand['g'] == 207 && middleBand['b'] == 142, true);
 
     var scopedType = function() {

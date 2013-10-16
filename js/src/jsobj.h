@@ -667,7 +667,24 @@ class JSObject : public js::ObjectImpl
     void initDenseElements(uint32_t dstStart, const js::Value *src, uint32_t count) {
         JS_ASSERT(dstStart + count <= getDenseCapacity());
         memcpy(&elements[dstStart], src, count * sizeof(js::HeapSlot));
-        DenseRangeWriteBarrierPost(runtimeFromAnyThread(), this, dstStart, count);
+        DenseRangeWriteBarrierPost(runtimeFromMainThread(), this, dstStart, count);
+    }
+
+    void initDenseElementsUnbarriered(uint32_t dstStart, const js::Value *src, uint32_t count) {
+        /*
+         * For use by parallel threads, which since they cannot see nursery
+         * things do not require a barrier.
+         */
+        JS_ASSERT(dstStart + count <= getDenseCapacity());
+#if defined(DEBUG) && defined(JSGC_GENERATIONAL)
+        JS::shadow::Runtime *rt = JS::shadow::Runtime::asShadowRuntime(runtimeFromAnyThread());
+        for (uint32_t index = 0; index < count; ++index) {
+            const JS::Value& value = src[index];
+            if (value.isMarkable())
+                JS_ASSERT(js::gc::IsInsideNursery(rt, value.toGCThing()));
+        }
+#endif
+        memcpy(&elements[dstStart], src, count * sizeof(js::HeapSlot));
     }
 
     void moveDenseElements(uint32_t dstStart, uint32_t srcStart, uint32_t count) {
