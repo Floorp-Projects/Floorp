@@ -1509,7 +1509,6 @@ nsGlobalWindow::FreeInnerObjects()
   }
 
   // Remove our reference to the document and the document principal.
-  mDoc = nullptr;
   mFocusedNode = nullptr;
 
   if (mApplicationCache) {
@@ -8911,6 +8910,9 @@ NS_IMPL_REMOVE_SYSTEM_EVENT_LISTENER(nsGlobalWindow)
 NS_IMETHODIMP
 nsGlobalWindow::DispatchEvent(nsIDOMEvent* aEvent, bool* aRetVal)
 {
+  MOZ_ASSERT(!IsInnerWindow() || IsCurrentInnerWindow(),
+             "We should only fire events on the current inner window.");
+
   FORWARD_TO_INNER(DispatchEvent, (aEvent, aRetVal), NS_OK);
 
   if (!mDoc) {
@@ -9040,10 +9042,7 @@ nsIScriptContext*
 nsGlobalWindow::GetContextForEventHandlers(nsresult* aRv)
 {
   *aRv = NS_ERROR_UNEXPECTED;
-  if (IsInnerWindow()) {
-    nsPIDOMWindow* outer = GetOuterWindow();
-    NS_ENSURE_TRUE(outer && outer->GetCurrentInnerWindow() == this, nullptr);
-  }
+  NS_ENSURE_TRUE(!IsInnerWindow() || IsCurrentInnerWindow(), nullptr);
 
   nsIScriptContext* scx;
   if ((scx = GetContext())) {
@@ -10699,7 +10698,7 @@ nsGlobalWindow::Observe(nsISupports* aSubject, const char* aTopic,
       // need to fire only one idle event while the window is frozen.
       mNotifyIdleObserversIdleOnThaw = true;
       mNotifyIdleObserversActiveOnThaw = false;
-    } else if (mOuterWindow && mOuterWindow->GetCurrentInnerWindow() == this) {
+    } else if (IsCurrentInnerWindow()) {
       HandleIdleActiveEvent();
     }
     return NS_OK;
@@ -10710,13 +10709,17 @@ nsGlobalWindow::Observe(nsISupports* aSubject, const char* aTopic,
     if (IsFrozen()) {
       mNotifyIdleObserversActiveOnThaw = true;
       mNotifyIdleObserversIdleOnThaw = false;
-    } else if (mOuterWindow && mOuterWindow->GetCurrentInnerWindow() == this) {
+    } else if (IsCurrentInnerWindow()) {
       ScheduleActiveTimerCallback();
     }
     return NS_OK;
   }
 
-  if (IsInnerWindow() && !nsCRT::strcmp(aTopic, "dom-storage2-changed")) {
+  if (!nsCRT::strcmp(aTopic, "dom-storage2-changed")) {
+    if (!IsInnerWindow() || !IsCurrentInnerWindow()) {
+      return NS_OK;
+    }
+
     nsIPrincipal *principal;
     nsresult rv;
 
