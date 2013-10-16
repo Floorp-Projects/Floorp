@@ -26,6 +26,8 @@
 #include "nsICookieService.h"
 #include "nsIStreamConverterService.h"
 #include "nsCRT.h"
+#include "nsContentUtils.h"
+#include "nsIScriptSecurityManager.h"
 #include "nsIObserverService.h"
 
 #include <algorithm>
@@ -59,10 +61,12 @@ HttpBaseChannel::HttpBaseChannel()
   , mLoadAsBlocking(false)
   , mLoadUnblocked(false)
   , mResponseTimeoutEnabled(true)
+  , mAllRedirectsSameOrigin(true)
   , mSuspendCount(0)
   , mProxyResolveFlags(0)
   , mContentDispositionHint(UINT32_MAX)
   , mHttpHandler(gHttpHandler)
+  , mRedirectCount(0)
 {
   LOG(("Creating HttpBaseChannel @%x\n", this));
 
@@ -1906,12 +1910,45 @@ HttpBaseChannel::SetupReplacementChannel(nsIURI       *newURI,
   if (bag)
     mPropertyHash.EnumerateRead(CopyProperties, bag.get());
 
-  // transfer timed channel enabled status
-  nsCOMPtr<nsITimedChannel> timed(do_QueryInterface(newChannel));
-  if (timed)
-    timed->SetTimingEnabled(mTimingEnabled);
+  // Transfer the timing data (if we are dealing with an nsITimedChannel).
+  nsCOMPtr<nsITimedChannel> newTimedChannel(do_QueryInterface(newChannel));
+  nsCOMPtr<nsITimedChannel> oldTimedChannel(
+      do_QueryInterface(static_cast<nsIHttpChannel*>(this)));
+  if (oldTimedChannel && newTimedChannel) {
+    newTimedChannel->SetTimingEnabled(mTimingEnabled);
+    newTimedChannel->SetRedirectCount(mRedirectCount + 1);
+
+    // If the RedirectStart is null, we will use the AsyncOpen value of the
+    // previous channel (this is the first redirect in the redirects chain).
+    if (mRedirectStartTimeStamp.IsNull()) {
+      TimeStamp asyncOpen;
+      oldTimedChannel->GetAsyncOpen(&asyncOpen);
+      newTimedChannel->SetRedirectStart(asyncOpen);
+    }
+    else {
+      newTimedChannel->SetRedirectStart(mRedirectStartTimeStamp);
+    }
+
+    // The RedirectEnd timestamp is equal to the previous channel response end.
+    TimeStamp prevResponseEnd;
+    oldTimedChannel->GetResponseEnd(&prevResponseEnd);
+    newTimedChannel->SetRedirectEnd(prevResponseEnd);
+
+    // Check whether or not this was a cross-domain redirect.
+    newTimedChannel->SetAllRedirectsSameOrigin(
+        mAllRedirectsSameOrigin && SameOriginWithOriginalUri(newURI));
+  }
 
   return NS_OK;
+}
+
+// Redirect Tracking
+bool
+HttpBaseChannel::SameOriginWithOriginalUri(nsIURI *aURI)
+{
+  nsIScriptSecurityManager* ssm = nsContentUtils::GetSecurityManager();
+  nsresult rv = ssm->CheckSameOriginURI(aURI, mOriginalURI, false);
+  return (NS_SUCCEEDED(rv));
 }
 
 //------------------------------------------------------------------------------

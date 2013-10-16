@@ -9274,6 +9274,7 @@ nsDocument::MaybePreLoadImage(nsIURI* uri, const nsAString &aCrossOriginAttr)
                               mDocumentURI, // uri of document used as referrer
                               nullptr,       // no observer
                               loadFlags,
+                              NS_LITERAL_STRING("img"),
                               getter_AddRefs(request));
 
   // Pin image-reference to avoid evicting it from the img-cache before

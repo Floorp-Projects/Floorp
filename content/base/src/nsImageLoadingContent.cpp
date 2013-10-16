@@ -822,12 +822,16 @@ nsImageLoadingContent::LoadImage(nsIURI* aNewURI,
 
   // Not blocked. Do the load.
   nsRefPtr<imgRequestProxy>& req = PrepareNextRequest();
+  nsCOMPtr<nsIContent> content =
+      do_QueryInterface(static_cast<nsIImageLoadingContent*>(this));
   nsresult rv;
   rv = nsContentUtils::LoadImage(aNewURI, aDocument,
                                  aDocument->NodePrincipal(),
                                  aDocument->GetDocumentURI(),
                                  this, loadFlags,
+                                 content->LocalName(),
                                  getter_AddRefs(req));
+
   if (NS_SUCCEEDED(rv)) {
     TrackImage(req);
     ResetAnimationIfNeeded();

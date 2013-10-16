@@ -4,6 +4,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "nsDOMNavigationTiming.h"
+#include "nsPerformance.h"
 #include "nsCOMPtr.h"
 #include "nsContentUtils.h"
 #include "nsIScriptSecurityManager.h"
@@ -24,11 +25,7 @@ void
 nsDOMNavigationTiming::Clear()
 {
   mNavigationType = mozilla::dom::PerformanceNavigation::TYPE_RESERVED;
-  mNavigationStart = 0;
-  mFetchStart = 0;
-  mRedirectStart = 0;
-  mRedirectEnd = 0;
-  mRedirectCount = 0;
+  mNavigationStartHighRes = 0;
   mBeforeUnloadStart = 0;
   mUnloadStart = 0;
   mUnloadEnd = 0;
@@ -39,7 +36,6 @@ nsDOMNavigationTiming::Clear()
   mDOMContentLoadedEventStart = 0;
   mDOMContentLoadedEventEnd = 0;
   mDOMComplete = 0;
-  mRedirectCheck = NOT_CHECKED;
 
   mLoadEventStartSet = false;
   mLoadEventEndSet = false;
@@ -57,17 +53,7 @@ nsDOMNavigationTiming::TimeStampToDOM(mozilla::TimeStamp aStamp) const
     return 0;
   }
   mozilla::TimeDuration duration = aStamp - mNavigationStartTimeStamp;
-  return mNavigationStart + static_cast<int32_t>(duration.ToMilliseconds());
-}
-
-DOMTimeMilliSec
-nsDOMNavigationTiming::TimeStampToDOMOrFetchStart(mozilla::TimeStamp aStamp) const
-{
-  if (!aStamp.IsNull()) {
-    return TimeStampToDOM(aStamp);
-  } else {
-    return GetFetchStart();
-  }
+  return GetNavigationStart() + static_cast<int64_t>(duration.ToMilliseconds());
 }
 
 DOMTimeMilliSec nsDOMNavigationTiming::DurationFromStart(){
@@ -77,34 +63,17 @@ DOMTimeMilliSec nsDOMNavigationTiming::DurationFromStart(){
 void
 nsDOMNavigationTiming::NotifyNavigationStart()
 {
-  mNavigationStart = PR_Now() / PR_USEC_PER_MSEC;
+  mNavigationStartHighRes = (double)PR_Now() / PR_USEC_PER_MSEC;
   mNavigationStartTimeStamp = mozilla::TimeStamp::Now();
 }
 
 void
 nsDOMNavigationTiming::NotifyFetchStart(nsIURI* aURI, nsDOMPerformanceNavigationType aNavigationType)
 {
-  mFetchStart = DurationFromStart();
   mNavigationType = aNavigationType;
   // At the unload event time we don't really know the loading uri.
   // Need it for later check for unload timing access.
   mLoadedURI = aURI;
-}
-
-void
-nsDOMNavigationTiming::NotifyRedirect(nsIURI* aOldURI, nsIURI* aNewURI)
-{
-  if (mRedirects.Count() == 0) {
-    mRedirectStart = mFetchStart;
-  }
-  mFetchStart = DurationFromStart();
-  mRedirectEnd = mFetchStart;
-
-  // At the unload event time we don't really know the loading uri.
-  // Need it for later check for unload timing access.
-  mLoadedURI = aNewURI;
-
-  mRedirects.AppendObject(aOldURI);
 }
 
 void
@@ -148,32 +117,6 @@ nsDOMNavigationTiming::NotifyLoadEventEnd()
     mLoadEventEnd = DurationFromStart();
     mLoadEventEndSet = true;
   }
-}
-
-bool
-nsDOMNavigationTiming::ReportRedirects()
-{
-  if (mRedirectCheck == NOT_CHECKED) {
-    mRedirectCount = mRedirects.Count();
-    if (mRedirects.Count() == 0) {
-      mRedirectCheck = NO_REDIRECTS;
-    } else {
-      mRedirectCheck = CHECK_PASSED;
-      nsIScriptSecurityManager* ssm = nsContentUtils::GetSecurityManager();
-      for (int i = mRedirects.Count() - 1; i >= 0; --i) {
-        nsIURI * curr = mRedirects[i];
-        nsresult rv = ssm->CheckSameOriginURI(curr, mLoadedURI, false);
-        if (!NS_SUCCEEDED(rv)) {
-          mRedirectCheck = CHECK_FAILED;
-          mRedirectCount = 0;
-          break;
-        }
-      }
-      // All we need to know is in mRedirectCheck now. Clear history.
-      mRedirects.Clear();
-    }
-  }
-  return mRedirectCheck == CHECK_PASSED;
 }
 
 void
@@ -234,33 +177,6 @@ nsDOMNavigationTiming::NotifyDOMContentLoadedEnd(nsIURI* aURI)
     mDOMContentLoadedEventEnd = DurationFromStart();
     mDOMContentLoadedEventEndSet = true;
   }
-}
-
-uint16_t
-nsDOMNavigationTiming::GetRedirectCount()
-{
-  if (ReportRedirects()) {
-    return mRedirectCount;
-  }
-  return 0;
-}
-
-DOMTimeMilliSec
-nsDOMNavigationTiming::GetRedirectStart()
-{
-  if (ReportRedirects()) {
-    return mRedirectStart;
-  }
-  return 0;
-}
-
-DOMTimeMilliSec
-nsDOMNavigationTiming::GetRedirectEnd()
-{
-  if (ReportRedirects()) {
-    return mRedirectEnd;
-  }
-  return 0;
 }
 
 DOMTimeMilliSec

@@ -2199,6 +2199,7 @@ nsTreeBodyFrame::GetImage(int32_t aRowIndex, nsTreeColumn* aCol, bool aUseContex
                                                 doc->GetDocumentURI(),
                                                 imgNotificationObserver,
                                                 nsIRequest::LOAD_NORMAL,
+                                                EmptyString(),
                                                 getter_AddRefs(imageRequest));
         NS_ENSURE_SUCCESS(rv, rv);
                                   

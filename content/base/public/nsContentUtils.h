@@ -654,6 +654,7 @@ public:
                             nsIURI* aReferrer,
                             imgINotificationObserver* aObserver,
                             int32_t aLoadFlags,
+                            const nsAString& initiatorType,
                             imgRequestProxy** aRequest);
 
   /**
@@ -1847,6 +1848,14 @@ public:
     return sIsPerformanceTimingEnabled;
   }
   
+  /*
+   * Returns true if the performance timing APIs are enabled.
+   */
+  static bool IsResourceTimingEnabled()
+  {
+    return sIsResourceTimingEnabled;
+  }
+
   /**
    * Returns true if the doc tree branch which contains aDoc contains any
    * plugins which we don't control event dispatch for, i.e. do any plugins
@@ -2221,6 +2230,7 @@ private:
   static uint32_t sHandlingInputTimeout;
   static bool sIsIdleObserverAPIEnabled;
   static bool sIsPerformanceTimingEnabled;
+  static bool sIsResourceTimingEnabled;
 
   static nsHtml5StringParser* sHTMLFragmentParser;
   static nsIParser* sXMLFragmentParser;

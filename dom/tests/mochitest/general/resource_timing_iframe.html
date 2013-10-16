@@ -1,0 +1,48 @@
+<!--
+  Any copyright is dedicated to the Public Domain.
+  http://creativecommons.org/publicdomain/zero/1.0/
+-->
+
+<!--
+  This file is a sub-test file for the Resource Timing and Performance Timeline
+  APIs.
+  These tests are focused on the iframe corner case.
+  The first step is to check that the image from this document was added as
+  an entry to this window.performance object.
+  The second step is to check that this iframe was not added as an entry to its
+  own window.performance object.
+  As a final step, we do a double checking: no ifrmes were added as entries
+  to this window.performance object.
+-->
+
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug 822480 -  Add in the Resource Timing API</title>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<script>
+function doTest() {
+  window.parent.ok(!!window.performance.getEntriesByName(
+    "http://example.com/tests/image/test/mochitest/damon.jpg").length,
+    "http://example.com/tests/image/test/mochitest/damon.jpg should be a valid entry name");
+  window.parent.ok(!window.performance.getEntriesByName(
+    "http://mochi.test:8888/tests/dom/tests/mochitest/general/resource_timing_iframe.html").length,
+    "This iframe should NOT contain itself as an entry");
+
+  // Check that there are no iframes added as entries
+  for (var i = 0 ; i < window.performance.getEntries().length ; i++) {
+    var entry = window.performance.getEntries()[i];
+    if (entry.initiatorType === "subdocument") {
+      ok(false, "unexpected iframe " + entry.name);
+    }
+  }
+
+  window.parent.iframeTestsCompleted();
+}
+</script>
+<body onLoad="doTest()">
+  <img src="http://example.com/tests/image/test/mochitest/damon.jpg"/>
+</body>
+</html>

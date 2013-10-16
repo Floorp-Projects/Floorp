@@ -11,6 +11,7 @@
  */
 
 typedef double DOMHighResTimeStamp;
+typedef sequence <PerformanceEntry> PerformanceEntryList;
 
 interface Performance {
   DOMHighResTimeStamp now();
@@ -21,4 +22,18 @@ interface Performance {
   readonly attribute PerformanceNavigation navigation;
 
   jsonifier;
+};
+
+// http://www.w3c-test.org/webperf/specs/PerformanceTimeline/#sec-window.performance-attribute
+partial interface Performance {
+  PerformanceEntryList getEntries();
+  PerformanceEntryList getEntriesByType(DOMString entryType);
+  PerformanceEntryList getEntriesByName(DOMString name, optional DOMString
+    entryType);
+};
+
+// http://w3c-test.org/webperf/specs/ResourceTiming/#extensions-performance-interface
+partial interface Performance {
+  void clearResourceTimings();
+  void setResourceTimingBufferSize(unsigned long maxSize);
 };
