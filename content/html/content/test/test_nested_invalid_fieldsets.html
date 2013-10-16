@@ -1,0 +1,47 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=914029
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug 914029</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <script type="application/javascript">
+
+  /** Test for Bug 914029 **/
+
+  var innerFieldset = document.createElement("fieldset");
+  var outerFieldset = document.createElement("fieldset");
+  var textarea = document.createElement("textarea");
+  textarea.setAttribute("required", "");
+  innerFieldset.appendChild(textarea);
+  outerFieldset.appendChild(innerFieldset);
+  SpecialPowers.forceGC();
+  ok(true, "This page did not crash - dynamically added nested invalid fieldsets" +
+           " work correctly.");
+  var innerFieldset = document.createElement("fieldset");
+  var outerFieldset = document.createElement("fieldset");
+  var textarea = document.createElement("textarea");
+  var textarea2 = document.createElement("textarea");
+  textarea.setAttribute("required", "");
+  innerFieldset.appendChild(textarea);
+  innerFieldset.appendChild(textarea2);
+  outerFieldset.appendChild(innerFieldset);
+  SpecialPowers.forceGC();
+  ok(true, "This page did not crash - dynamically added nested invalid fieldsets" +
+           " work correctly.");
+
+  </script>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=914029">Mozilla Bug 914029</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+
+</div>
+<pre id="test">
+</pre>
+</body>
+</html>

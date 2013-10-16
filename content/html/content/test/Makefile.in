@@ -390,6 +390,7 @@ MOCHITEST_FILES = \
 		test_bug893537.html \
 		file_bug893537.html \
 		test_input_files_not_nsIFile.html \
+		test_nested_invalid_fieldsets.html \
 		$(NULL)
 
 MOCHITEST_CHROME_FILES = \
