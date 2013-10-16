@@ -40,7 +40,6 @@ SYNC_JAVA_FILES := \
   background/db/Tab.java \
   background/healthreport/Environment.java \
   background/healthreport/EnvironmentBuilder.java \
-  background/healthreport/EnvironmentV1.java \
   background/healthreport/HealthReportBroadcastReceiver.java \
   background/healthreport/HealthReportBroadcastService.java \
   background/healthreport/HealthReportDatabases.java \

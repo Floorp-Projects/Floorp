@@ -117,7 +117,6 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 import java.util.regex.Matcher;
@@ -1292,16 +1291,7 @@ abstract public class GeckoApp
                 final String profilePath = getProfile().getDir().getAbsolutePath();
                 final EventDispatcher dispatcher = GeckoAppShell.getEventDispatcher();
                 Log.i(LOGTAG, "Creating BrowserHealthRecorder.");
-                final String osLocale = Locale.getDefault().toString();
-                Log.d(LOGTAG, "Locale is " + osLocale);
-
-                // Replace the duplicate `osLocale` argument when we support switchable
-                // application locales.
-                mHealthRecorder = new BrowserHealthRecorder(GeckoApp.this,
-                                                            profilePath,
-                                                            dispatcher,
-                                                            osLocale,
-                                                            osLocale,    // Placeholder.
+                mHealthRecorder = new BrowserHealthRecorder(GeckoApp.this, profilePath, dispatcher,
                                                             previousSession);
             }
         });
@@ -1565,15 +1555,8 @@ abstract public class GeckoApp
                 GeckoPreferences.broadcastHealthReportUploadPref(context);
 
                 /*
-                XXXX see Bug 635342.
-                We want to disable this code if possible.  It is about 145ms in runtime.
-
-                If this code ever becomes live again, you'll need to chain the
-                new locale into BrowserHealthRecorder correctly. See
-                GeckoAppShell.setSelectedLocale.
-                We pass the OS locale into the BHR constructor: we need to grab
-                that *before* we modify the current locale!
-
+                  XXXX see bug 635342
+                   We want to disable this code if possible.  It is about 145ms in runtime
                 SharedPreferences settings = getPreferences(Activity.MODE_PRIVATE);
                 String localeCode = settings.getString(getPackageName() + ".locale", "");
                 if (localeCode != null && localeCode.length() > 0)

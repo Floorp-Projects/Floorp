@@ -5311,10 +5311,7 @@ var FormAssistant = {
  * -- and reflect them back to Java.
  */
 let HealthReportStatusListener = {
-  PREF_ACCEPT_LANG: "intl.accept_languages",
-  PREF_BLOCKLIST_ENABLED: "extensions.blocklist.enabled",
-
-  PREF_TELEMETRY_ENABLED:
+  TELEMETRY_PREF: 
 #ifdef MOZ_TELEMETRY_REPORTING
     // Telemetry pref differs based on build.
 #ifdef MOZ_TELEMETRY_ON_BY_DEFAULT
@@ -5333,21 +5330,18 @@ let HealthReportStatusListener = {
       console.log("Failed to initialize add-on status listener. FHR cannot report add-on state. " + ex);
     }
 
-    console.log("Adding HealthReport:RequestSnapshot observer.");
-    Services.obs.addObserver(this, "HealthReport:RequestSnapshot", false);
-    Services.prefs.addObserver(this.PREF_ACCEPT_LANG, this, false);
-    Services.prefs.addObserver(this.PREF_BLOCKLIST_ENABLED, this, false);
-    if (this.PREF_TELEMETRY_ENABLED) {
-      Services.prefs.addObserver(this.PREF_TELEMETRY_ENABLED, this, false);
+    Services.obs.addObserver(this, "Addons:FetchAll", false);
+    Services.prefs.addObserver("extensions.blocklist.enabled", this, false);
+    if (this.TELEMETRY_PREF) {
+      Services.prefs.addObserver(this.TELEMETRY_PREF, this, false);
     }
   },
 
   uninit: function () {
-    Services.obs.removeObserver(this, "HealthReport:RequestSnapshot");
-    Services.prefs.removeObserver(this.PREF_ACCEPT_LANG, this);
-    Services.prefs.removeObserver(this.PREF_BLOCKLIST_ENABLED, this);
-    if (this.PREF_TELEMETRY_ENABLED) {
-      Services.prefs.removeObserver(this.PREF_TELEMETRY_ENABLED, this);
+    Services.obs.removeObserver(this, "Addons:FetchAll");
+    Services.prefs.removeObserver("extensions.blocklist.enabled", this);
+    if (this.TELEMETRY_PREF) {
+      Services.prefs.removeObserver(this.TELEMETRY_PREF, this);
     }
 
     AddonManager.removeAddonListener(this);
@@ -5355,30 +5349,11 @@ let HealthReportStatusListener = {
 
   observe: function (aSubject, aTopic, aData) {
     switch (aTopic) {
-      case "HealthReport:RequestSnapshot":
-        HealthReportStatusListener.sendSnapshotToJava();
+      case "Addons:FetchAll":
+        HealthReportStatusListener.sendAllAddonsToJava();
         break;
       case "nsPref:changed":
-        let response = {
-          type: "Pref:Change",
-          pref: aData,
-          isUserSet: Services.prefs.prefHasUserValue(aData),
-        };
-
-        switch (aData) {
-          case this.PREF_ACCEPT_LANG:
-            response.value = Services.prefs.getCharPref(aData);
-            break;
-          case this.PREF_TELEMETRY_ENABLED:
-          case this.PREF_BLOCKLIST_ENABLED:
-            response.value = Services.prefs.getBoolPref(aData);
-            break;
-          default:
-            console.log("Unexpected pref in HealthReportStatusListener: " + aData);
-            return;
-        }
-
-        sendMessageToJava(response);
+        sendMessageToJava({ type: "Pref:Change", pref: aData, value: Services.prefs.getBoolPref(aData) });
         break;
     }
   },
@@ -5460,9 +5435,9 @@ let HealthReportStatusListener = {
     this.notifyJava(aAddon);
   },
 
-  sendSnapshotToJava: function () {
+  sendAllAddonsToJava: function () {
     AddonManager.getAllAddons(function (aAddons) {
-        let jsonA = {};
+        let json = {};
         if (aAddons) {
           for (let i = 0; i < aAddons.length; ++i) {
             let addon = aAddons[i];
@@ -5471,43 +5446,14 @@ let HealthReportStatusListener = {
               if (HealthReportStatusListener._shouldIgnore(addon)) {
                 addonJSON.ignore = true;
               }
-              jsonA[addon.id] = addonJSON;
+              json[addon.id] = addonJSON;
             } catch (e) {
               // Just skip this add-on.
             }
           }
         }
-
-        // Now add prefs.
-        let jsonP = {};
-        for (let pref of [this.PREF_BLOCKLIST_ENABLED, this.PREF_TELEMETRY_ENABLED]) {
-          if (!pref) {
-            // This will be the case for PREF_TELEMETRY_ENABLED in developer builds.
-            continue;
-          }
-          jsonP[pref] = {
-            pref: pref,
-            value: Services.prefs.getBoolPref(pref),
-            isUserSet: Services.prefs.prefHasUserValue(pref),
-          };
-        }
-        for (let pref of [this.PREF_ACCEPT_LANG]) {
-          jsonP[pref] = {
-            pref: pref,
-            value: Services.prefs.getCharPref(pref),
-            isUserSet: Services.prefs.prefHasUserValue(pref),
-          };
-        }
-
-        console.log("Sending snapshot message.");
-        sendMessageToJava({
-          type: "HealthReport:Snapshot",
-          json: {
-            addons: jsonA,
-            prefs: jsonP,
-          },
-        });
-      }.bind(this));
+        sendMessageToJava({ type: "Addons:All", json: json });
+      });
   },
 };
 
