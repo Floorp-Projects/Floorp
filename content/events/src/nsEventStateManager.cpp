@@ -3426,7 +3426,13 @@ nsEventStateManager::PostHandleEvent(nsPresContext* aPresContext,
 
           nsScrollbarsForWheel::SetActiveScrollTarget(scrollTarget);
 
-          if (!scrollTarget) {
+          nsIFrame* rootScrollFrame = !aTargetFrame ? nullptr :
+            aTargetFrame->PresContext()->PresShell()->GetRootScrollFrame();
+          nsIScrollableFrame* rootScrollableFrame = nullptr;
+          if (rootScrollFrame) {
+            rootScrollableFrame = do_QueryFrame(rootScrollFrame);
+          }
+          if (!scrollTarget || scrollTarget == rootScrollableFrame) {
             wheelEvent->mViewPortIsOverscrolled = true;
           }
           wheelEvent->overflowDeltaX = wheelEvent->deltaX;
