@@ -2706,6 +2706,7 @@ LIRGenerator::visitAssertRange(MAssertRange *ins)
     LInstruction *lir = nullptr;
 
     switch (input->type()) {
+      case MIRType_Boolean:
       case MIRType_Int32:
         lir = new LAssertRangeI(useRegisterAtStart(input));
         break;

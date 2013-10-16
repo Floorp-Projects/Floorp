@@ -17,6 +17,7 @@ EXTRA_JS_MODULES = [
     'DocumentUtils.jsm',
     'Messenger.jsm',
     'PrivacyLevel.jsm',
+    'RecentlyClosedTabsAndWindowsMenuUtils.jsm',
     'SessionCookies.jsm',
     'SessionHistory.jsm',
     'SessionMigration.jsm',

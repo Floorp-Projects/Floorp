@@ -64,7 +64,7 @@ function addVisit() {
 
 function run_test() {
   initTestLogging("Trace");
-  Log4Moz.repository.getLogger("Sync.Tracker.History").level = Log4Moz.Level.Trace;
+  Log.repository.getLogger("Sync.Tracker.History").level = Log.Level.Trace;
   run_next_test();
 }
 

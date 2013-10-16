@@ -100,19 +100,26 @@ function test() {
     ok(!testScope.expanded,
       "The testScope should remember it is collapsed after it is reshown.");
 
+    EventUtils.sendMouseEvent({ type: "mousedown", button: 1 },
+      testScope.target.querySelector(".title"),
+      aPanel.panelWin);
+
+    ok(!testScope.expanded,
+      "Clicking the testScope title with the right mouse button should't expand it.");
+
     EventUtils.sendMouseEvent({ type: "mousedown" },
       testScope.target.querySelector(".title"),
       aPanel.panelWin);
 
     ok(testScope.expanded,
-      "Clicking the testScope tilte should expand it.");
+      "Clicking the testScope title should expand it.");
 
     EventUtils.sendMouseEvent({ type: "mousedown" },
       testScope.target.querySelector(".title"),
       aPanel.panelWin);
 
     ok(!testScope.expanded,
-      "Clicking again the testScope tilte should collapse it.");
+      "Clicking again the testScope title should collapse it.");
 
     closeDebuggerAndFinish(aPanel);
   });
