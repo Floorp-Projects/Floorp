@@ -359,6 +359,10 @@ class MDefinition : public MNode
         return trackedPc_;
     }
 
+    // Return the range of this value, *before* any bailout checks. Contrast
+    // this with the type() method, and the Range constructor which takes an
+    // MDefinition*, which describe the value *after* any bailout checks.
+    //
     // Warning: Range analysis is removing the bit-operations such as '| 0' at
     // the end of the transformations. Using this function to analyse any
     // operands after the truncate phase of the range analysis will lead to
@@ -438,6 +442,12 @@ class MDefinition : public MNode
     MIR_FLAG_LIST(FLAG_ACCESSOR)
 #undef FLAG_ACCESSOR
 
+    // Return the type of this value. This may be speculative, and enforced
+    // dynamically with the use of bailout checks. If all the bailout checks
+    // pass, the value will have this type.
+    //
+    // Unless this is an MUrsh, which, as a special case, may return a value
+    // in (INT32_MAX,UINT32_MAX] even when its type() is MIRType_Int32.
     MIRType type() const {
         return resultType_;
     }
@@ -548,7 +558,8 @@ class MDefinition : public MNode
     bool is##opcode() const {                                               \
         return op() == Op_##opcode;                                         \
     }                                                                       \
-    inline M##opcode *to##opcode();
+    inline M##opcode *to##opcode();                                         \
+    inline const M##opcode *to##opcode() const;
     MIR_OPCODE_LIST(OPCODE_CASTS)
 #   undef OPCODE_CASTS
 
@@ -3232,11 +3243,11 @@ class MRsh : public MShiftInstruction
 
 class MUrsh : public MShiftInstruction
 {
-    bool canOverflow_;
+    bool bailoutsDisabled_;
 
     MUrsh(MDefinition *left, MDefinition *right)
       : MShiftInstruction(left, right),
-        canOverflow_(true)
+        bailoutsDisabled_(false)
     { }
 
   public:
@@ -3254,11 +3265,11 @@ class MUrsh : public MShiftInstruction
 
     void infer(BaselineInspector *inspector, jsbytecode *pc);
 
-    bool canOverflow();
-
-    bool fallible() {
-        return canOverflow();
+    bool bailoutsDisabled() const {
+        return bailoutsDisabled_;
     }
+
+    bool fallible();
 
     void computeRange();
 };
@@ -8936,6 +8947,11 @@ class MAsmJSCheckOverRecursed : public MNullaryInstruction
     {                                                                       \
         JS_ASSERT(is##opcode());                                            \
         return static_cast<M##opcode *>(this);                              \
+    }                                                                       \
+    const M##opcode *MDefinition::to##opcode() const                        \
+    {                                                                       \
+        JS_ASSERT(is##opcode());                                            \
+        return static_cast<const M##opcode *>(this);                        \
     }
 MIR_OPCODE_LIST(OPCODE_CASTS)
 #undef OPCODE_CASTS

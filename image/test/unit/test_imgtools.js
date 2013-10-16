@@ -289,7 +289,7 @@ encodedBytes = streamToArray(istream);
 refName = "image3ico32x32.png";
 refFile = do_get_file(refName);
 istream = getFileInputStream(refFile);
-do_check_eq(istream.available(), 2281);
+do_check_eq(istream.available(), 2285);
 referenceBytes = streamToArray(istream);
 
 // compare the encoder's output to the reference file.

@@ -10,8 +10,4 @@ ac_add_options --enable-application=xulrunner
 ac_add_options --enable-jemalloc
 ac_add_options --disable-tests
 
-if test -z "${_PYMAKE}"; then
-  mk_add_options MOZ_MAKE_FLAGS=-j1
-fi
-
 . "$topsrcdir/xulrunner/config/mozconfigs/common.override"
