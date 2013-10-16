@@ -2442,8 +2442,13 @@ var DesktopUserAgent = {
 
   _getWindowForRequest: function ua_getWindowForRequest(aRequest) {
     let loadContext = this._getRequestLoadContext(aRequest);
-    if (loadContext)
-      return loadContext.associatedWindow;
+    if (loadContext) {
+      try {
+        return loadContext.associatedWindow;
+      } catch (e) {
+        // loadContext.associatedWindow can throw when there's no window
+      }
+    }
     return null;
   },
 
