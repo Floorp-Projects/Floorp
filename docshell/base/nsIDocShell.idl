@@ -43,7 +43,7 @@ interface nsIReflowObserver;
 
 typedef unsigned long nsLoadFlags;
 
-[scriptable, builtinclass, uuid(4ca172c3-67bf-4e6d-89a3-cbfb929c370d)]
+[scriptable, builtinclass, uuid(c0bb3b19-5448-4f4d-9366-cbcd4d7cdb96)]
 interface nsIDocShell : nsIDocShellTreeItem
 {
   /**
@@ -922,4 +922,12 @@ interface nsIDocShell : nsIDocShellTreeItem
     */
   boolean isCommandEnabled(in string command);
   void doCommand(in string command);
+
+  /**
+   * Invisible DocShell are dummy construct to simulate DOM windows
+   * without any actual visual representation. They have to be marked
+   * at construction time, to avoid any painting activity.
+   */
+  [noscript, notxpcom] bool IsInvisible();
+  [noscript, notxpcom] void SetInvisible(in bool aIsInvisibleDochsell);
 };

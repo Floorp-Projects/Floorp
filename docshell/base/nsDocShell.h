@@ -846,6 +846,7 @@ protected:
     bool                       mInEnsureScriptEnv;
 #endif
     bool                       mAffectPrivateSessionLifetime;
+    bool                       mInvisible;
     uint64_t                   mHistoryID;
     uint32_t                   mDefaultLoadFlags;
 
