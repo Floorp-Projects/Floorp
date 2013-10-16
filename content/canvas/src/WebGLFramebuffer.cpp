@@ -132,7 +132,9 @@ WebGLFramebuffer::Attachment::IsComplete() const {
                     format == LOCAL_GL_LUMINANCE ||
                     format == LOCAL_GL_LUMINANCE_ALPHA ||
                     format == LOCAL_GL_RGB ||
-                    format == LOCAL_GL_RGBA);
+                    format == LOCAL_GL_RGBA ||
+                    format == LOCAL_GL_SRGB_EXT ||
+                    format == LOCAL_GL_SRGB_ALPHA_EXT);
         }
         MOZ_CRASH("Invalid WebGL attachment poin?");
     }
@@ -153,7 +155,8 @@ WebGLFramebuffer::Attachment::IsComplete() const {
                  mAttachmentPoint < GLenum(LOCAL_GL_COLOR_ATTACHMENT0 + WebGLContext::sMaxColorAttachments)) {
             return (format == LOCAL_GL_RGB565 ||
                     format == LOCAL_GL_RGB5_A1 ||
-                    format == LOCAL_GL_RGBA4);
+                    format == LOCAL_GL_RGBA4 ||
+                    format == LOCAL_GL_SRGB8_ALPHA8_EXT);
         }
         MOZ_CRASH("Invalid WebGL attachment poin?");
     }
