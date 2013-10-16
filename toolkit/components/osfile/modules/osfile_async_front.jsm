@@ -382,8 +382,10 @@ File.prototype = {
   readTo: function readTo(buffer, options = {}) {
     // If |buffer| is a typed array and there is no |bytes| options, we
     // need to extract the |byteLength| now, as it will be lost by
-    // communication
-    if (isTypedArray(buffer) && !("bytes" in options)) {
+    // communication.
+    // Options might be a nullish value, so better check for that before using
+    // the |in| operator.
+    if (isTypedArray(buffer) && !(options && "bytes" in options)) {
       // Preserve reference to option |outExecutionDuration|, if it is passed.
       options = clone(options, ["outExecutionDuration"]);
       options.bytes = buffer.byteLength;
@@ -419,8 +421,10 @@ File.prototype = {
   write: function write(buffer, options = {}) {
     // If |buffer| is a typed array and there is no |bytes| options,
     // we need to extract the |byteLength| now, as it will be lost
-    // by communication
-    if (isTypedArray(buffer)) {
+    // by communication.
+    // Options might be a nullish value, so better check for that before using
+    // the |in| operator.
+    if (isTypedArray(buffer) && !(options && "bytes" in options)) {
       // Preserve reference to option |outExecutionDuration|, if it is passed.
       options = clone(options, ["outExecutionDuration"]);
       options.bytes = buffer.byteLength;

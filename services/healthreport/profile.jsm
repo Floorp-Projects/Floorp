@@ -25,7 +25,7 @@ const REQUIRED_UINT32_TYPE = {type: "TYPE_UINT32"};
 Cu.import("resource://gre/modules/Promise.jsm");
 Cu.import("resource://gre/modules/osfile.jsm")
 Cu.import("resource://gre/modules/Task.jsm");
-Cu.import("resource://services-common/log4moz.js");
+Cu.import("resource://gre/modules/Log.jsm");
 Cu.import("resource://services-common/utils.js");
 
 // Profile creation time access.

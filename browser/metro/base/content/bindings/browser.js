@@ -548,6 +548,7 @@ let DOMEvents =  {
 DOMEvents.init();
 
 let ContentScroll =  {
+  // The most recent offset set by APZC for the root scroll frame
   _scrollOffset: { x: 0, y: 0 },
 
   init: function() {
@@ -617,9 +618,13 @@ let ContentScroll =  {
 
         // Set the scroll offset for this element if specified
         if (json.scrollX >= 0 || json.scrollY >= 0) {
-          this.setScrollOffsetForElement(element, json.scrollX, json.scrollY)
-          if (json.id == 1)
+          this.setScrollOffsetForElement(element, json.scrollX, json.scrollY);
+          if (element == content.document.documentElement) {
+            // scrollTo can make some small adjustments to the offset before
+            // actually scrolling the document.  To ensure that _scrollOffset
+            // actually matches the offset stored in the window, re-query it.
             this._scrollOffset = this.getScrollOffset(content);
+          }
         }
 
         // Set displayport. We want to set this after setting the scroll offset, because
@@ -690,6 +695,9 @@ let ContentScroll =  {
 
       if (target == content.document) {
         if (this._scrollOffset.x == scrollOffset.x && this._scrollOffset.y == scrollOffset.y) {
+          // Don't send a scroll message back to APZC if it's the same as the
+          // last one set by APZC.  We use this to avoid sending APZC back an
+          // event that it originally triggered.
           return;
         }
         this._scrollOffset = scrollOffset;

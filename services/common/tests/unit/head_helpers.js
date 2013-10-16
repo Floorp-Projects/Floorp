@@ -2,13 +2,13 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-Cu.import("resource://services-common/log4moz.js");
+Cu.import("resource://gre/modules/Log.jsm");
 Cu.import("resource://services-common/utils.js");
 Cu.import("resource://testing-common/httpd.js");
 Cu.import("resource://testing-common/services-common/logging.js");
 
-let btoa = Cu.import("resource://services-common/log4moz.js").btoa;
-let atob = Cu.import("resource://services-common/log4moz.js").atob;
+let btoa = Cu.import("resource://gre/modules/Log.jsm").btoa;
+let atob = Cu.import("resource://gre/modules/Log.jsm").atob;
 
 function do_check_empty(obj) {
   do_check_attribute_count(obj, 0);

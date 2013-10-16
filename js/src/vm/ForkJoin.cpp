@@ -409,6 +409,7 @@ class ForkJoinShared : public TaskExecutor, public Monitor
 
     JSRuntime *runtime() { return cx_->runtime(); }
     JS::Zone *zone() { return cx_->zone(); }
+    JSCompartment *compartment() { return cx_->compartment(); }
 
     JSContext *acquireContext() { PR_Lock(cxLock_); return cx_; }
     void releaseContext() { PR_Unlock(cxLock_); }
@@ -1689,6 +1690,13 @@ ForkJoinSlice::ForkJoinSlice(PerThreadData *perThreadData,
      * trigger GCs and is otherwise not thread-safe to access.
      */
     zone_ = shared->zone();
+
+    /*
+     * Unsafely set the compartment. This is used to get read-only access to
+     * shared tables.
+     */
+    compartment_ = shared->compartment();
+
     allocator_ = allocator;
 }
 
