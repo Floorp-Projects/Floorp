@@ -54,6 +54,18 @@
 
 #define APZC_LOG(...)
 // #define APZC_LOG(...) printf_stderr("APZC: " __VA_ARGS__)
+#define APZC_LOG_FM(fm, prefix, ...) \
+  APZC_LOG(prefix ":" \
+           " i=(%ld %lld) cb=(%d %d %d %d) dp=(%.3f %.3f %.3f %.3f) v=(%.3f %.3f %.3f %.3f) " \
+           "s=(%.3f %.3f) sr=(%.3f %.3f %.3f %.3f) z=(%.3f %.3f %.3f %.3f)\n", \
+           __VA_ARGS__, \
+           fm.mPresShellId, fm.mScrollId, \
+           fm.mCompositionBounds.x, fm.mCompositionBounds.y, fm.mCompositionBounds.width, fm.mCompositionBounds.height, \
+           fm.mDisplayPort.x, fm.mDisplayPort.y, fm.mDisplayPort.width, fm.mDisplayPort.height, \
+           fm.mViewport.x, fm.mViewport.y, fm.mViewport.width, fm.mViewport.height, \
+           fm.mScrollOffset.x, fm.mScrollOffset.y, \
+           fm.mScrollableRect.x, fm.mScrollableRect.y, fm.mScrollableRect.width, fm.mScrollableRect.height, \
+           fm.mDevPixelsPerCSSPixel.scale, fm.mResolution.scale, fm.mCumulativeResolution.scale, fm.mZoom.scale); \
 
 using namespace mozilla::css;
 
@@ -1144,6 +1156,8 @@ void AsyncPanZoomController::RequestContentRepaint() {
   // for the purposes of content calling window.scrollTo().
   nsRefPtr<GeckoContentController> controller = GetGeckoContentController();
   if (controller) {
+    APZC_LOG_FM(mFrameMetrics, "%p requesting content repaint", this);
+
     mPaintThrottler.PostTask(
       FROM_HERE,
       NewRunnableMethod(controller.get(),
@@ -1284,7 +1298,7 @@ void AsyncPanZoomController::NotifyLayersUpdated(const FrameMetrics& aLayerMetri
 
   bool isDefault = mFrameMetrics.IsDefault();
   mFrameMetrics.mMayHaveTouchListeners = aLayerMetrics.mMayHaveTouchListeners;
-  APZC_LOG("%p got a NotifyLayersUpdated with isDefault=%d aIsFirstPaint=%d\n", this, isDefault, aIsFirstPaint);
+  APZC_LOG_FM(aLayerMetrics, "%p got a NotifyLayersUpdated with aIsFirstPaint=%d", this, aIsFirstPaint);
 
   mPaintThrottler.TaskComplete(GetFrameTime());
   bool needContentRepaint = false;

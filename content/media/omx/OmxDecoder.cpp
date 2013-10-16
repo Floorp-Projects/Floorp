@@ -317,35 +317,12 @@ static sp<IOMX> GetOMX()
   return sOMX;
 }
 
-bool OmxDecoder::Init() {
+bool OmxDecoder::Init(sp<MediaExtractor>& extractor) {
 #ifdef PR_LOGGING
   if (!gOmxDecoderLog) {
     gOmxDecoderLog = PR_NewLogModule("OmxDecoder");
   }
 #endif
-
-  //register sniffers, if they are not registered in this process.
-  DataSource::RegisterDefaultSniffers();
-
-  sp<DataSource> dataSource = new MediaStreamSource(mResource, mDecoder);
-  if (dataSource->initCheck()) {
-    NS_WARNING("Initializing DataSource for OMX decoder failed");
-    return false;
-  }
-
-  mResource->SetReadMode(MediaCacheStream::MODE_METADATA);
-
-  sp<MediaExtractor> extractor = MediaExtractor::Create(dataSource);
-  if (extractor == nullptr) {
-    NS_WARNING("Could not create MediaExtractor");
-    return false;
-  }
-
-  const char* extractorMime;
-  sp<MetaData> meta = extractor->getMetaData();
-  if (meta->findCString(kKeyMIMEType, &extractorMime) && !strcasecmp(extractorMime, AUDIO_MP3)) {
-    mIsMp3 = true;
-  }
 
   ssize_t audioTrackIndex = -1;
   ssize_t videoTrackIndex = -1;

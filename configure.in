@@ -212,6 +212,7 @@ if test -n "$gonkdir" ; then
         MOZ_B2G_CAMERA=1
         MOZ_OMX_DECODER=1
         AC_SUBST(MOZ_OMX_DECODER)
+        MOZ_RTSP=1
         ;;
     18)
         GONK_INCLUDES="-I$gonkdir/frameworks/native/include -I$gonkdir/frameworks/av/include -I$gonkdir/frameworks/av/include/media -I$gonkdir/frameworks/av/include/camera -I$gonkdir/frameworks/native/include/media/openmax -I$gonkdir/frameworks/av/media/libstagefright/include"
@@ -7254,6 +7255,14 @@ if test -n "$MOZ_B2G_FM"; then
     AC_DEFINE(MOZ_B2G_FM)
 fi
 AC_SUBST(MOZ_B2G_FM)
+
+dnl ========================================================
+dnl = Enable Rtsp Protocol for B2G (Gonk usually)
+dnl ========================================================
+if test -n "$MOZ_RTSP"; then
+    AC_DEFINE(MOZ_RTSP)
+fi
+AC_SUBST(MOZ_RTSP)
 
 dnl ========================================================
 dnl = Enable Bluetooth Interface for B2G (Gonk usually)
