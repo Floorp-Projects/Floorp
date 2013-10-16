@@ -11,6 +11,7 @@ import subprocess
 
 from automation import Automation
 from devicemanager import NetworkTools, DMError
+import mozcrash
 
 # signatures for logcat messages that we don't care about much
 fennecLogcatFilters = [ "The character encoding of the HTML document was not declared",
@@ -86,36 +87,6 @@ class RemoteAutomation(Automation):
 
         return status
 
-    def checkForJavaException(self, logcat):
-        found_exception = False
-        for i, line in enumerate(logcat):
-            if "REPORTING UNCAUGHT EXCEPTION" in line or "FATAL EXCEPTION" in line:
-                # Strip away the date, time, logcat tag and pid from the next two lines and
-                # concatenate the remainder to form a concise summary of the exception. 
-                #
-                # For example:
-                #
-                # 01-30 20:15:41.937 E/GeckoAppShell( 1703): >>> REPORTING UNCAUGHT EXCEPTION FROM THREAD 9 ("GeckoBackgroundThread")
-                # 01-30 20:15:41.937 E/GeckoAppShell( 1703): java.lang.NullPointerException
-                # 01-30 20:15:41.937 E/GeckoAppShell( 1703): 	at org.mozilla.gecko.GeckoApp$21.run(GeckoApp.java:1833)
-                # 01-30 20:15:41.937 E/GeckoAppShell( 1703): 	at android.os.Handler.handleCallback(Handler.java:587)
-                # 01-30 20:15:41.937 E/GeckoAppShell( 1703): 	at android.os.Handler.dispatchMessage(Handler.java:92)
-                # 01-30 20:15:41.937 E/GeckoAppShell( 1703): 	at android.os.Looper.loop(Looper.java:123)
-                # 01-30 20:15:41.937 E/GeckoAppShell( 1703): 	at org.mozilla.gecko.util.GeckoBackgroundThread.run(GeckoBackgroundThread.java:31)
-                #
-                #   -> java.lang.NullPointerException at org.mozilla.gecko.GeckoApp$21.run(GeckoApp.java:1833)
-                found_exception = True
-                logre = re.compile(r".*\): \t?(.*)")
-                m = logre.search(logcat[i+1])
-                if m and m.group(1):
-                    top_frame = m.group(1)
-                m = logre.search(logcat[i+2])
-                if m and m.group(1):
-                    top_frame = top_frame + m.group(1)
-                print "PROCESS-CRASH | java-exception | %s" % top_frame
-                break
-        return found_exception
-
     def deleteANRs(self):
         # delete ANR traces.txt file; usually need root permissions
         traces = "/data/anr/traces.txt"
@@ -144,7 +115,7 @@ class RemoteAutomation(Automation):
         self.checkForANRs()
 
         logcat = self._devicemanager.getLogcat(filterOutRegexps=fennecLogcatFilters)
-        javaException = self.checkForJavaException(logcat)
+        javaException = mozcrash.check_for_java_exception(logcat)
         if javaException:
             return True
 

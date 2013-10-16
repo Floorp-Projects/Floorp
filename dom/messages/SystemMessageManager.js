@@ -136,6 +136,7 @@ SystemMessageManager.prototype = {
     dispatchers[aType] = { handler: aHandler, messages: [], isHandling: false };
 
     // Ask for the list of currently pending messages.
+    this.addMessageListeners("SystemMessageManager:GetPendingMessages:Return");
     cpmm.sendAsyncMessage("SystemMessageManager:GetPendingMessages",
                           { type: aType,
                             uri: this._uri,
@@ -214,6 +215,8 @@ SystemMessageManager.prototype = {
                               manifest: this._manifest,
                               uri: this._uri,
                               msgID: msg.msgID });
+    } else if (aMessage.name == "SystemMessageManager:GetPendingMessages:Return") {
+      this.removeMessageListeners(aMessage.name);
     }
 
     let messages = (aMessage.name == "SystemMessageManager:Message")
@@ -248,8 +251,7 @@ SystemMessageManager.prototype = {
   // nsIDOMGlobalPropertyInitializer implementation.
   init: function sysMessMgr_init(aWindow) {
     debug("init");
-    this.initDOMRequestHelper(aWindow, ["SystemMessageManager:Message",
-                              "SystemMessageManager:GetPendingMessages:Return"]);
+    this.initDOMRequestHelper(aWindow, ["SystemMessageManager:Message"]);
 
     let principal = aWindow.document.nodePrincipal;
     this._isInBrowserElement = principal.isInBrowserElement;

@@ -2125,15 +2125,6 @@ else
   AC_MSG_RESULT(no)
 fi
 
-MOZ_SIZE_OF_TYPE(JS_BYTES_PER_WORD, void*, 4 8)
-if test "$moz_cv_size_of_JS_BYTES_PER_WORD" -eq "4"; then
-  AC_DEFINE(JS_BITS_PER_WORD_LOG2, 5)
-elif test "$moz_cv_size_of_JS_BYTES_PER_WORD" -eq "8"; then
-  AC_DEFINE(JS_BITS_PER_WORD_LOG2, 6)
-else
-  AC_MSG_ERROR([Unexpected JS_BYTES_PER_WORD])
-fi
-
 MOZ_CHECK_HEADERS(endian.h)
 if test "$ac_cv_header_endian_h" = yes; then
     AC_DEFINE(JS_HAVE_ENDIAN_H)

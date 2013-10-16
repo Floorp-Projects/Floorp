@@ -1,4 +1,5 @@
-// |reftest| skip-if(!this.hasOwnProperty("Type"))
+// |reftest| skip-if(!this.hasOwnProperty("TypedObject"))
+
 var BUGNUMBER = 578700;
 var summary = 'Binary Data class diagram';
 
@@ -26,44 +27,29 @@ function assertThrows(f) {
 }
 
 function runTests() {
-    print(BUGNUMBER + ": " + summary);
+  print(BUGNUMBER + ": " + summary);
 
-    assertEq(Data.__proto__, Function.prototype);
-    assertEq(Data.prototype.__proto__, Object.prototype);
-    assertEq(Data.prototype.constructor, Data);
-    assertEq(typeof Data.prototype.update === "function", true);
+  var ArrayType = TypedObject.ArrayType;
+  var StructType = TypedObject.StructType;
 
-    assertEq(Type.__proto__, Function.prototype);
-    assertEq(Type.prototype, Data);
+  assertEq(ArrayType instanceof Function, true);
+  assertEq(ArrayType.prototype instanceof Function, true);
 
-    assertEq(ArrayType.__proto__, Type);
-    assertEq(ArrayType.prototype.__proto__, Type.prototype);
-    assertEq(typeof ArrayType.prototype.repeat === "function", true);
+  assertEq(ArrayType.__proto__, Function.__proto__);
+  assertEq(ArrayType.prototype.__proto__, Function.__proto__);
 
-    assertEq(ArrayType.prototype.prototype.__proto__, Data.prototype);
+  assertEq(StructType instanceof Function, true);
+  assertEq(StructType.prototype instanceof Function, true);
 
-    assertEq(StructType.__proto__, Type);
-    assertEq(StructType.prototype.__proto__, Type.prototype);
-    assertEq(StructType.prototype.prototype.__proto__, Data.prototype);
+  assertEq(Object.getPrototypeOf(StructType),
+           Object.getPrototypeOf(Function));
+  assertEq(Object.getPrototypeOf(StructType.prototype),
+           Object.getPrototypeOf(Function));
 
-    // Change global 'Type' and see if things stay sane.
-    Type = function() {
-        return 42;
-    }
+  if (typeof reportCompare === "function")
+    reportCompare(true, true);
 
-    Data = function() {
-        return 43;
-    }
-
-    assertNotEq(ArrayType.prototype.__proto__, Type.prototype);
-    assertNotEq(ArrayType.prototype.prototype.__proto__, Data.prototype);
-
-    assertNotEq(StructType.prototype.__proto__, Type.prototype);
-    assertNotEq(StructType.prototype.prototype.__proto__, Data.prototype);
-
-    if (typeof reportCompare === "function")
-        reportCompare(true, true);
-    print("Tests complete");
+  print("Tests complete");
 }
 
 runTests();

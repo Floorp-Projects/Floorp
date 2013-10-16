@@ -652,12 +652,12 @@ bool TabParent::SendRealMouseEvent(WidgetMouseEvent& event)
   return PBrowserParent::SendRealMouseEvent(e);
 }
 
-bool TabParent::SendMouseWheelEvent(WheelEvent& event)
+bool TabParent::SendMouseWheelEvent(WidgetWheelEvent& event)
 {
   if (mIsDestroyed) {
     return false;
   }
-  WheelEvent e(event);
+  WidgetWheelEvent e(event);
   MaybeForwardEventToRenderFrame(event, &e);
   if (!MapEventCoordinatesForChildProcess(&e)) {
     return false;

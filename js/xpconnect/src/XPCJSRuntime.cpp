@@ -3325,7 +3325,7 @@ XPCJSRuntime::GetJunkScope()
 {
     if (!mJunkScope) {
         AutoSafeJSContext cx;
-        SandboxOptions options(cx);
+        SandboxOptions options;
         options.sandboxName.AssignASCII("XPConnect Junk Compartment");
         RootedValue v(cx);
         nsresult rv = CreateSandboxObject(cx, v.address(),

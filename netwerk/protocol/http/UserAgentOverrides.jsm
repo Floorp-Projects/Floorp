@@ -56,7 +56,8 @@ this.UserAgentOverrides = {
   },
 
   addComplexOverride: function uao_addComplexOverride(callback) {
-    gOverrideFunctions.push(callback);
+    // Add to front of array so complex overrides have precedence
+    gOverrideFunctions.unshift(callback);
   },
 
   getOverrideForURI: function uao_getOverrideForURI(aURI) {

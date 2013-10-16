@@ -229,9 +229,9 @@ interface CanvasDrawingStyles {
            attribute double miterLimit; // (default 10)
 
   // dashed lines
-// NOT IMPLEMENTED    [LenientFloat] void setLineDash(sequence<double> segments); // default empty
-// NOT IMPLEMENTED    sequence<double> getLineDash();
-// NOT IMPLEMENTED             [LenientFloat] attribute double lineDashOffset;
+    [LenientFloat] void setLineDash(sequence<double> segments); // default empty
+    sequence<double> getLineDash();
+    [LenientFloat] attribute double lineDashOffset;
 
   // text
            [SetterThrows]
