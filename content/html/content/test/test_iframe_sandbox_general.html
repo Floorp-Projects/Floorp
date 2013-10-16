@@ -6,17 +6,15 @@ Implement HTML5 sandbox attribute for IFRAMEs - general tests
 -->
 <head>
   <meta charset="utf-8">
-  <title>Test for Bug 341604</title>
+  <title>Tests for Bug 341604 and Bug 766282</title>
   <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
   <script type="text/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
 </head>
 <script type="application/javascript">
-
-SimpleTest.expectAssertions(1);
-
 /** Test for Bug 341604 - Implement HTML5 sandbox attribute for IFRAMEs - general tests **/
 
+SimpleTest.expectAssertions(0, 1);
 SimpleTest.waitForExplicitFinish();
 
 // a postMessage handler that is used by sandboxed iframes without
@@ -43,7 +41,7 @@ function ok_wrapper(result, desc) {
   }
 
   if (completedTests == 23) {
-    is(passedTests, 23, "There are 23 general tests that should pass");
+    is(passedTests, completedTests, "There are " + completedTests + " general tests that should pass");
     SimpleTest.finish();
   }
 }
@@ -80,7 +78,7 @@ function doTest() {
   // fails if bad
   // 8) test that script in an event listener (img onerror) cannot run in an iframe sandboxed without "allow-scripts"
   // (done in file_iframe_sandbox_c_if2.html which has sandbox='')
-  
+
   // fails if bad
   // 9) test that script in an javascript:url cannot run in an iframe sandboxed without "allow-scripts"
   // (done in file_iframe_sandbox_c_if_5.html which has sandbox='allow-same-origin')
@@ -121,39 +119,39 @@ function doTest() {
   // this is done via file_iframe_sandbox_c_if4.html which is sandboxed with "allow-scripts" and "allow-same-origin"
   // the window it attempts to open calls window.opener.ok(false, ...) and file_iframe_c_if4.html has an ok()
   // function that calls window.parent.ok_wrapper
-  
+
   // passes twice if good
   // 17) test that a sandboxed iframe can access same-origin documents and run scripts when its sandbox attribute
-  // is separated with two spaces 
+  // is separated with two spaces
   // done via file_iframe_sandbox_c_if6.html which is sandboxed with "  allow-scripts  allow-same-origin  "
-  
+
   // passes twice if good
   // 18) test that a sandboxed iframe can access same-origin documents and run scripts when its sandbox attribute
   // is separated with tabs
   // done via file_iframe_sandbox_c_if6.html which is sandboxed with "&#x09;allow-scripts&#x09;allow-same-origin&#x09;"
-  
+
   // passes twice if good
   // 19) test that a sandboxed iframe can access same-origin documents and run scripts when its sandbox attribute
   // is separated with line feeds
   // done via file_iframe_sandbox_c_if6.html which is sandboxed with "&#x0a;allow-scripts&#x0a;allow-same-origin&#x0a;"
-  
+
   // passes twice if good
   // 20) test that a sandboxed iframe can access same-origin documents and run scripts when its sandbox attribute
   // is separated with form feeds
   // done via file_iframe_sandbox_c_if6.html which is sandboxed with "&#x0c;allow-scripts&#x0c;allow-same-origin&#x0c;"
-  
+
   // passes twice if good
   // 21) test that a sandboxed iframe can access same-origin documents and run scripts when its sandbox attribute
   // is separated with carriage returns
   // done via file_iframe_sandbox_c_if6.html which is sandboxed with "&#x0d;allow-scripts&#x0d;allow-same-origin&#x0d;"
 
   // fails if bad
-  // 22) test that an iframe with sandbox="" does NOT have script in a src attribute created by a javascript: 
+  // 22) test that an iframe with sandbox="" does NOT have script in a src attribute created by a javascript:
   // URL executed
   // done by this page, see if_7
 
   // passes if good
-  // 23) test that an iframe with sandbox="allow-scripts" DOES have script in a src attribute created by a javascript: 
+  // 23) test that an iframe with sandbox="allow-scripts" DOES have script in a src attribute created by a javascript:
   // URL executed
   // done by this page, see if_8
 
@@ -172,8 +170,15 @@ function doTest() {
   // done via file_iframe_sandbox_c_if7.html, which has sandbox='allow-scripts'
 
   // passes if good or fails if bad
-  // 26) test that an sandboxed document without 'allow-same-origin' can access indexedDB
+  // 27) test that an sandboxed document with 'allow-same-origin' can access indexedDB
   // done via file_iframe_sandbox_c_if8.html, which has sandbox='allow-scripts allow-same-origin'
+
+  // fails if bad
+  // 28) Test that a sandboxed iframe can't open a new window using the target.attribute for a
+  // non-existing browsing context (BC341604).
+  // This is done via file_iframe_sandbox_c_if4.html which is sandboxed with "allow-scripts" and "allow-same-origin"
+  // the window it attempts to open calls window.opener.ok(false, ...) and file_iframe_c_if4.html has an ok()
+  // function that calls window.parent.ok_wrapper.
 }
 
 addLoadEvent(doTest);

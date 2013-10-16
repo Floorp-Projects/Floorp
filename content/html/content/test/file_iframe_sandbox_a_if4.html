@@ -12,11 +12,13 @@ function doStuff() {
   try {
     window.parent.ok_wrapper(false, "a document contained within a sandboxed document without 'allow-same-origin' should NOT be same domain with its parent");
   } catch(e) {
+    window.parent.parent.postMessage({type: "ok", ok: true, desc: "a document contained within a sandboxed document without 'allow-same-origin' should NOT be same domain with its parent"}, "*");
   }
 
   try {
     window.parent.parent.ok_wrapper(false, "a document contained within a sandboxed document without 'allow-same-origin' should NOT be same domain with the top level");
   } catch(e) {
+    window.parent.parent.postMessage({type: "ok", ok: true, desc: "a document contained within a sandboxed document without 'allow-same-origin' should NOT be same domain with the top level"}, "*");
   }
 }
 </script>

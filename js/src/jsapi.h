@@ -1757,7 +1757,7 @@ extern JS_PUBLIC_API(void *)
 JS_GetCompartmentPrivate(JSCompartment *compartment);
 
 extern JS_PUBLIC_API(bool)
-JS_WrapObject(JSContext *cx, JSObject **objp);
+JS_WrapObject(JSContext *cx, JS::MutableHandleObject objp);
 
 extern JS_PUBLIC_API(bool)
 JS_WrapValue(JSContext *cx, jsval *vp);

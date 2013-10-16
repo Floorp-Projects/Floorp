@@ -25,8 +25,6 @@
         'include',
         '../interface',
         '<(webrtc_root)/common_video/libyuv/include',
-# added for mozilla for use_system_libjpeg
-        '$(DIST)/include',
       ],
       'sources': [
         'device_info_impl.cc',

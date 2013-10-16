@@ -1075,7 +1075,7 @@ GetNPObjectWrapper(JSContext *cx, JSObject *aObj, bool wrapResult = true)
   JS::Rooted<JSObject*> obj(cx, aObj);
   while (obj && (obj = js::CheckedUnwrap(obj))) {
     if (JS_GetClass(obj) == &sNPObjectJSWrapperClass) {
-      if (wrapResult && !JS_WrapObject(cx, obj.address())) {
+      if (wrapResult && !JS_WrapObject(cx, &obj)) {
         return NULL;
       }
       return obj;
@@ -1730,7 +1730,7 @@ nsNPObjWrapper::GetNewOrUsed(NPP npp, JSContext *cx, NPObject *npobj)
     // npobj is one of our own, return its existing JSObject.
 
     JS::Rooted<JSObject*> obj(cx, ((nsJSObjWrapper *)npobj)->mJSObj);
-    if (!JS_WrapObject(cx, obj.address())) {
+    if (!JS_WrapObject(cx, &obj)) {
       return NULL;
     }
     return obj;
@@ -1767,7 +1767,7 @@ nsNPObjWrapper::GetNewOrUsed(NPP npp, JSContext *cx, NPObject *npobj)
     // Found a live NPObject wrapper. It may not be in the same compartment
     // as cx, so we need to wrap it before returning it.
     JS::Rooted<JSObject*> obj(cx, entry->mJSObj);
-    if (!JS_WrapObject(cx, obj.address())) {
+    if (!JS_WrapObject(cx, &obj)) {
       return NULL;
     }
     return obj;

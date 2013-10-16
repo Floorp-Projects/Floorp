@@ -455,6 +455,43 @@ class AutoSetForkJoinSlice
 } // namespace js
 
 ///////////////////////////////////////////////////////////////////////////
+// ForkJoinActivation
+//
+// Takes care of tidying up GC before we enter a fork join section. Also
+// pauses the barrier verifier, as we cannot enter fork join with the runtime
+// or the zone needing barriers.
+
+ForkJoinActivation::ForkJoinActivation(JSContext *cx)
+  : Activation(cx, ForkJoin),
+    prevIonTop_(cx->mainThread().ionTop),
+    av_(cx->runtime(), false)
+{
+    // Note: we do not allow GC during parallel sections.
+    // Moreover, we do not wish to worry about making
+    // write barriers thread-safe.  Therefore, we guarantee
+    // that there is no incremental GC in progress and force
+    // a minor GC to ensure no cross-generation pointers get
+    // created:
+
+    if (JS::IsIncrementalGCInProgress(cx->runtime())) {
+        JS::PrepareForIncrementalGC(cx->runtime());
+        JS::FinishIncrementalGC(cx->runtime(), JS::gcreason::API);
+    }
+
+    MinorGC(cx->runtime(), JS::gcreason::API);
+
+    cx->runtime()->gcHelperThread.waitBackgroundSweepEnd();
+
+    JS_ASSERT(!cx->runtime()->needsBarrier());
+    JS_ASSERT(!cx->zone()->needsBarrier());
+}
+
+ForkJoinActivation::~ForkJoinActivation()
+{
+    cx_->mainThread().ionTop = prevIonTop_;
+}
+
+///////////////////////////////////////////////////////////////////////////
 // js::ForkJoin() and ParallelDo class
 //
 // These are the top-level objects that manage the parallel execution.

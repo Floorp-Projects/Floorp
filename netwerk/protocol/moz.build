@@ -17,3 +17,9 @@ PARALLEL_DIRS += [
     'websocket',
     'wyciwyg',
 ]
+
+if CONFIG['MOZ_RTSP']:
+    PARALLEL_DIRS += [
+        'rtsp',
+    ]
+

@@ -53,7 +53,6 @@
 #include <algorithm>
 
 #ifdef MOZ_WIDGET_GONK
-#include "nsINetworkManager.h"
 #include "nsINetworkStatsServiceProxy.h"
 #endif
 
@@ -967,7 +966,6 @@ WebSocketChannel::WebSocketChannel() :
   mCountRecv(0),
   mCountSent(0),
   mAppId(0),
-  mConnectionType(NETWORK_NO_TYPE),
   mIsInBrowser(false)
 {
   NS_ABORT_IF_FALSE(NS_IsMainThread(), "not main thread");
@@ -1082,9 +1080,9 @@ WebSocketChannel::BeginOpen()
     NS_GetAppInfo(localChannel, &mAppId, &mIsInBrowser);
   }
 
-  // obtain active connection type
+  // obtain active network
   if (mAppId != NECKO_NO_APP_ID) {
-    GetConnectionType(&mConnectionType);
+    GetActiveNetwork();
   }
 
   rv = localChannel->AsyncOpen(this, mHttpChannel);
@@ -3274,7 +3272,7 @@ WebSocketChannel::OnDataAvailable(nsIRequest *aRequest,
 }
 
 nsresult
-WebSocketChannel::GetConnectionType(int32_t *type)
+WebSocketChannel::GetActiveNetwork()
 {
 #ifdef MOZ_WIDGET_GONK
   MOZ_ASSERT(NS_IsMainThread());
@@ -3283,15 +3281,11 @@ WebSocketChannel::GetConnectionType(int32_t *type)
   nsCOMPtr<nsINetworkManager> networkManager = do_GetService("@mozilla.org/network/manager;1", &result);
 
   if (NS_FAILED(result) || !networkManager) {
-    *type = NETWORK_NO_TYPE;
+    mActiveNetwork = nullptr;
+    return NS_ERROR_UNEXPECTED;
   }
 
-  nsCOMPtr<nsINetworkInterface> networkInterface;
-  result = networkManager->GetActive(getter_AddRefs(networkInterface));
-
-  if (networkInterface) {
-    result = networkInterface->GetType(type);
-  }
+  result = networkManager->GetActive(getter_AddRefs(mActiveNetwork));
 
   return NS_OK;
 #else
@@ -3303,9 +3297,8 @@ nsresult
 WebSocketChannel::SaveNetworkStats(bool enforce)
 {
 #ifdef MOZ_WIDGET_GONK
-  // Check if the connection type and app id are valid.
-  if(mConnectionType == NETWORK_NO_TYPE ||
-     mAppId == NECKO_NO_APP_ID) {
+  // Check if the active network and app id are valid.
+  if(!mActiveNetwork || mAppId == NECKO_NO_APP_ID) {
     return NS_OK;
   }
 
@@ -3329,7 +3322,7 @@ WebSocketChannel::SaveNetworkStats(bool enforce)
     return rv;
   }
 
-  mNetworkStatsServiceProxy->SaveAppStats(mAppId, mConnectionType, PR_Now() / 1000,
+  mNetworkStatsServiceProxy->SaveAppStats(mAppId, mActiveNetwork, PR_Now() / 1000,
                                           mCountRecv, mCountSent, nullptr);
 
   // Reset the counters after saving.

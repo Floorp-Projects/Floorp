@@ -17,6 +17,7 @@ include protocol PTCPServerSocket;
 include protocol PRemoteOpenFile;
 include protocol PBlob; //FIXME: bug #792908
 
+include protocol PRtspController;
 include URIParams;
 include InputStreamParams;
 include NeckoChannelParams;
@@ -40,6 +41,7 @@ sync protocol PNecko
   manages PTCPSocket;
   manages PTCPServerSocket;
   manages PRemoteOpenFile;
+  manages PRtspController;
 
 parent:
   __delete__();
@@ -58,6 +60,7 @@ parent:
 
   HTMLDNSPrefetch(nsString hostname, uint16_t flags);
   CancelHTMLDNSPrefetch(nsString hostname, uint16_t flags, nsresult reason);
+  PRtspController();
 
 both:
   PTCPSocket();
