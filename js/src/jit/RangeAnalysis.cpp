@@ -400,22 +400,43 @@ Range::Range(const MDefinition *def)
   : symbolicLower_(nullptr),
     symbolicUpper_(nullptr)
 {
-    const Range *other = def->range();
-    if (!other) {
-        if (def->type() == MIRType_Int32)
+    if (const Range *other = def->range()) {
+        // The instruction has range information; use it.
+        *this = *other;
+
+        // Simulate the effect of converting the value to its type.
+        switch (def->type()) {
+          case MIRType_Int32:
+            wrapAroundToInt32();
+            break;
+          case MIRType_Boolean:
+            wrapAroundToBoolean();
+            break;
+          case MIRType_None:
+            MOZ_ASSUME_UNREACHABLE("Asking for the range of an instruction with no value");
+          default:
+            break;
+        }
+    } else {
+        // Otherwise just use type information. We can trust the type here
+        // because we don't care what value the instruction actually produces,
+        // but what value we might get after we get past the bailouts.
+        switch (def->type()) {
+          case MIRType_Int32:
             setInt32(JSVAL_INT_MIN, JSVAL_INT_MAX);
-        else if (def->type() == MIRType_Boolean)
+            break;
+          case MIRType_Boolean:
             setInt32(0, 1);
-        else
+            break;
+          case MIRType_None:
+            MOZ_ASSUME_UNREACHABLE("Asking for the range of an instruction with no value");
+          default:
             setUnknown();
-        symbolicLower_ = symbolicUpper_ = nullptr;
-        return;
+            break;
+        }
     }
 
-    JS_ASSERT_IF(def->type() == MIRType_Boolean, other->isBoolean());
-
-    *this = *other;
-    symbolicLower_ = symbolicUpper_ = nullptr;
+    assertInvariants();
 }
 
 static inline bool
