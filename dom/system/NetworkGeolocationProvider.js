@@ -73,9 +73,6 @@ function WifiGeoPositionProvider() {
   this.timer = null;
   this.hasSeenWiFi = false;
   this.started = false;
-  // this is only used when logging is enabled, to debug interactions with the
-  // geolocation service
-  this.highAccuracy = false;
 }
 
 WifiGeoPositionProvider.prototype = {
@@ -135,12 +132,10 @@ WifiGeoPositionProvider.prototype = {
   },
 
   setHighAccuracy: function(enable) {
-    this.highAccuracy = enable;
-    LOG("setting highAccuracy to " + (this.highAccuracy?"TRUE":"FALSE"));
   },
 
   onChange: function(accessPoints) {
-    LOG("onChange called, highAccuracy = " + (this.highAccuracy?"TRUE":"FALSE"));
+    LOG("onChange called");
     this.hasSeenWiFi = true;
 
     let url = Services.urlFormatter.formatURLPref("geo.wifi.uri");
