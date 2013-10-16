@@ -557,7 +557,7 @@ JavaScriptParent::unwrap(JSContext *cx, ObjectId objId)
 {
     RootedObject obj(cx, findObject(objId));
     if (obj) {
-        if (!JS_WrapObject(cx, obj.address()))
+        if (!JS_WrapObject(cx, &obj))
             return nullptr;
         return obj;
     }
