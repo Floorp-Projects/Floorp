@@ -2279,7 +2279,6 @@ function OverflowableToolbar(aToolbarNode) {
 
 OverflowableToolbar.prototype = {
   _initialized: false,
-  _forceOnOverflow: false,
 
   observe: function(aSubject, aTopic, aData) {
     if (aTopic == "browser-delayed-startup-finished" &&
@@ -2314,7 +2313,7 @@ OverflowableToolbar.prototype = {
     this._initialized = true;
 
     // The 'overflow' event may have been fired before init was called.
-    if (this._forceOnOverflow) {
+    if (this._target.scrollLeftMax > 0) {
       this._onOverflow();
     }
   },
@@ -2347,8 +2346,6 @@ OverflowableToolbar.prototype = {
         if (aEvent.detail > 0) {
           if (this._initialized) {
             this._onOverflow();
-          } else {
-            this._forceOnOverflow = true;
           }
         }
         break;
@@ -2392,7 +2389,7 @@ OverflowableToolbar.prototype = {
 
     let child = this._target.lastChild;
 
-    while (child && this._target.clientWidth < this._target.scrollWidth) {
+    while (child && this._target.scrollLeftMax > 0) {
       let prevChild = child.previousSibling;
 
       if (child.getAttribute("overflows") != "false") {
