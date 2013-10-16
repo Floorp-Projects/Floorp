@@ -5,6 +5,7 @@
 # These files are managed in the android-sync repo. Do not modify directly, or your changes will be lost.
 SYNC_PP_JAVA_FILES := \
   background/common/GlobalConstants.java \
+  fxa/FxAccountConstants.java \
   sync/SyncConstants.java \
   background/announcements/AnnouncementsConstants.java \
   background/healthreport/HealthReportConstants.java \
@@ -58,6 +59,26 @@ SYNC_JAVA_FILES := \
   background/healthreport/upload/ObsoleteDocumentTracker.java \
   background/healthreport/upload/SubmissionClient.java \
   background/healthreport/upload/SubmissionPolicy.java \
+  browserid/ASNUtils.java \
+  browserid/BrowserIDKeyPair.java \
+  browserid/DSACryptoImplementation.java \
+  browserid/JSONWebTokenUtils.java \
+  browserid/MockMyIDTokenFactory.java \
+  browserid/RSACryptoImplementation.java \
+  browserid/SigningPrivateKey.java \
+  browserid/verifier/BrowserIDRemoteVerifierClient.java \
+  browserid/verifier/BrowserIDVerifierClient.java \
+  browserid/verifier/BrowserIDVerifierDelegate.java \
+  browserid/verifier/BrowserIDVerifierException.java \
+  browserid/VerifyingPublicKey.java \
+  fxa/authenticator/FxAccountAuthenticator.java \
+  fxa/authenticator/FxAccountAuthenticatorService.java \
+  fxa/sync/FxAccountBookmarksSyncService.java \
+  fxa/sync/FxAccountHistorySyncService.java \
+  fxa/sync/FxAccountPasswordsSyncService.java \
+  fxa/sync/FxAccountSyncAdapter.java \
+  fxa/sync/FxAccountSyncService.java \
+  fxa/sync/FxAccountTabsSyncService.java \
   sync/AlreadySyncingException.java \
   sync/CollectionKeys.java \
   sync/CommandProcessor.java \
@@ -299,6 +320,10 @@ SYNC_JAVA_FILES := \
   sync/UnexpectedJSONException.java \
   sync/UnknownSynchronizerConfigurationVersionException.java \
   sync/Utils.java \
+  tokenserver/TokenServerClient.java \
+  tokenserver/TokenServerClientDelegate.java \
+  tokenserver/TokenServerException.java \
+  tokenserver/TokenServerToken.java \
   $(NULL)
 
 SYNC_RES_DRAWABLE := \
@@ -343,9 +368,14 @@ SYNC_RES_VALUES_LARGE_V11 := \
   $(NULL)
 
 SYNC_RES_XML := \
+  res/xml/fxaccount_authenticator.xml \
+  res/xml/fxaccount_bookmarks_syncadapter.xml \
+  res/xml/fxaccount_history_syncadapter.xml \
+  res/xml/fxaccount_passwords_syncadapter.xml \
+  res/xml/fxaccount_tabs_syncadapter.xml \
   res/xml/sync_authenticator.xml \
-  res/xml/sync_syncadapter.xml \
   res/xml/sync_options.xml \
+  res/xml/sync_syncadapter.xml \
   $(NULL)
 
 SYNC_THIRDPARTY_JAVA_FILES := \
