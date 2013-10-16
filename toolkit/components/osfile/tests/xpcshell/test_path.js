@@ -145,6 +145,10 @@ function run_test()
 
   do_print("Testing the presence of ospath.jsm");
   let Scope = {};
-  Components.utils.import("resource://gre/modules/osfile/ospath.jsm", Scope);
+  try {
+    Components.utils.import("resource://gre/modules/osfile/ospath.jsm", Scope);
+  } catch (ex) {
+    // Can't load ospath
+  }
   do_check_true(!!Scope.basename);
 }
