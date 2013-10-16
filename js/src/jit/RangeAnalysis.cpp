@@ -760,7 +760,7 @@ Range::min(const Range *lhs, const Range *rhs)
 {
     // If either operand is NaN, the result is NaN.
     if (lhs->canBeNaN() || rhs->canBeNaN())
-        return new Range();
+        return nullptr;
 
     return new Range(Min(lhs->lower_, rhs->lower_),
                      lhs->hasInt32LowerBound_ && rhs->hasInt32LowerBound_,
@@ -775,7 +775,7 @@ Range::max(const Range *lhs, const Range *rhs)
 {
     // If either operand is NaN, the result is NaN.
     if (lhs->canBeNaN() || rhs->canBeNaN())
-        return new Range();
+        return nullptr;
 
     return new Range(Max(lhs->lower_, rhs->lower_),
                      lhs->hasInt32LowerBound_ || rhs->hasInt32LowerBound_,
