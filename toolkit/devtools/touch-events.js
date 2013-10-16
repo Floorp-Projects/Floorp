@@ -60,7 +60,7 @@ function TouchEventHandler (window) {
       // The gaia system window use an hybrid system even on the device which is
       // a mix of mouse/touch events. So let's not cancel *all* mouse events
       // if it is the current target.
-      let content = evt.target.ownerDocument.defaultView;
+      let content = this.getContent(evt.target);
       let isSystemWindow = content.location.toString().indexOf("system.gaiamobile.org") != -1;
 
       let eventTarget = this.target;
@@ -138,7 +138,7 @@ function TouchEventHandler (window) {
       }
     },
     fireMouseEvent: function teh_fireMouseEvent(type, evt)  {
-      let content = evt.target.ownerDocument.defaultView;
+      let content = this.getContent(evt.target);
       var utils = content.QueryInterface(Ci.nsIInterfaceRequestor)
                          .getInterface(Ci.nsIDOMWindowUtils);
       utils.sendMouseEvent(type, evt.clientX, evt.clientY, 0, 1, 0, true);
@@ -150,7 +150,7 @@ function TouchEventHandler (window) {
                          0, x, y, x, y, false, false, false, false,
                          0, null);
 
-      let content = target.ownerDocument.defaultView;
+      let content = this.getContent(target);
       let timeout = content.setTimeout((function contextMenu() {
         target.dispatchEvent(evt);
         this.cancelClick = true;
@@ -160,7 +160,7 @@ function TouchEventHandler (window) {
     },
     sendTouchEvent: function teh_sendTouchEvent(evt, target, name) {
       let document = target.ownerDocument;
-      let content = document.defaultView;
+      let content = this.getContent(target);
 
       let touchEvent = document.createEvent('touchevent');
       let point = document.createTouch(content, target, 0,
@@ -176,6 +176,16 @@ function TouchEventHandler (window) {
                                 touches, targetTouches, changedTouches);
       target.dispatchEvent(touchEvent);
       return touchEvent;
+    },
+    getContent: function teh_getContent(target) {
+      let win = target.ownerDocument.defaultView;
+      let docShell = win.QueryInterface(Ci.nsIInterfaceRequestor)
+                    .getInterface(Ci.nsIWebNavigation)
+                    .QueryInterface(Ci.nsIDocShellTreeItem);
+      let topDocShell = docShell.sameTypeRootTreeItem;
+      topDocShell.QueryInterface(Ci.nsIDocShell);
+      let top = topDocShell.contentViewer.DOMDocument.defaultView;
+      return top;
     }
   };
 

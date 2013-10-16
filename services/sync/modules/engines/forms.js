@@ -14,7 +14,7 @@ Cu.import("resource://services-sync/record.js");
 Cu.import("resource://services-common/async.js");
 Cu.import("resource://services-sync/util.js");
 Cu.import("resource://services-sync/constants.js");
-Cu.import("resource://services-common/log4moz.js");
+Cu.import("resource://gre/modules/Log.jsm");
 
 const FORMS_TTL = 5184000; // 60 days
 
@@ -31,7 +31,7 @@ Utils.deferGetSet(FormRec, "cleartext", ["name", "value"]);
 
 
 let FormWrapper = {
-  _log: Log4Moz.repository.getLogger("Sync.Engine.Forms"),
+  _log: Log.repository.getLogger("Sync.Engine.Forms"),
 
   _getEntryCols: ["fieldname", "value"],
   _guidCols:     ["guid"],

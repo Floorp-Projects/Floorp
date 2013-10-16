@@ -1,7 +1,7 @@
 /* Any copyright is dedicated to the Public Domain.
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 
-Cu.import("resource://services-common/log4moz.js");
+Cu.import("resource://gre/modules/Log.jsm");
 Cu.import("resource://services-sync/constants.js");
 Cu.import("resource://services-sync/keys.js");
 Cu.import("resource://services-sync/record.js");
@@ -35,8 +35,8 @@ function run_test() {
   let keyBundle = Service.identity.syncKeyBundle;
 
   try {
-    let log = Log4Moz.repository.getLogger("Test");
-    Log4Moz.repository.rootLogger.addAppender(new Log4Moz.DumpAppender());
+    let log = Log.repository.getLogger("Test");
+    Log.repository.rootLogger.addAppender(new Log.DumpAppender());
 
     log.info("Setting up server and authenticator");
 

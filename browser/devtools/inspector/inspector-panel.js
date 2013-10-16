@@ -744,6 +744,15 @@ InspectorPanel.prototype = {
   },
 
   /**
+  * Trigger a high-priority layout change for things that need to be
+  * updated immediately
+  */
+  immediateLayoutChange: function Inspector_immediateLayoutChange()
+  {
+    this.emit("layout-change");
+  },
+
+  /**
    * Schedule a low-priority change event for things like paint
    * and resize.
    */

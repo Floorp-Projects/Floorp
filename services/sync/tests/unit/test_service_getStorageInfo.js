@@ -12,8 +12,8 @@ let collections = {steam:  65.11328,
                    diesel: 2.25488281};
 
 function run_test() {
-  Log4Moz.repository.getLogger("Sync.Service").level = Log4Moz.Level.Trace;
-  Log4Moz.repository.getLogger("Sync.StorageRequest").level = Log4Moz.Level.Trace;
+  Log.repository.getLogger("Sync.Service").level = Log.Level.Trace;
+  Log.repository.getLogger("Sync.StorageRequest").level = Log.Level.Trace;
   initTestLogging();
 
   setBasicCredentials("johndoe", "ilovejane");

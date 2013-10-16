@@ -1,7 +1,7 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
-Cu.import("resource://services-common/log4moz.js");
+Cu.import("resource://gre/modules/Log.jsm");
 Cu.import("resource://services-sync/record.js");
 Cu.import("resource://services-sync/engines.js");
 Cu.import("resource://services-sync/engines/bookmarks.js");
@@ -70,8 +70,8 @@ function makeLivemark(p, mintGUID) {
 
 function run_test() {
   initTestLogging("Trace");
-  Log4Moz.repository.getLogger("Sync.Engine.Bookmarks").level = Log4Moz.Level.Trace;
-  Log4Moz.repository.getLogger("Sync.Store.Bookmarks").level  = Log4Moz.Level.Trace;
+  Log.repository.getLogger("Sync.Engine.Bookmarks").level = Log.Level.Trace;
+  Log.repository.getLogger("Sync.Store.Bookmarks").level  = Log.Level.Trace;
 
   run_next_test();
 }

@@ -20,7 +20,6 @@ import android.widget.TextView;
 
 import java.lang.reflect.Method;
 import java.util.ArrayList;
-import java.util.Arrays;
 
 /**
  * This class is an extension of BaseTest that helps with interaction with about:home
@@ -28,7 +27,7 @@ import java.util.Arrays;
  * The purpose of this class is to collect all the logically connected methods that deal with about:home
  * To use any of these methods in your test make sure it extends AboutHomeTest instead of BaseTest
  */
-abstract class AboutHomeTest extends BaseTest {
+abstract class AboutHomeTest extends PixelTest {
     protected enum AboutHomeTabs {HISTORY, MOST_RECENT, TABS_FROM_LAST_TIME, TOP_SITES, BOOKMARKS, READING_LIST};
     private ArrayList<String> aboutHomeTabs = new ArrayList<String>() {{
                   add("TOP_SITES");
@@ -98,10 +97,6 @@ abstract class AboutHomeTest extends BaseTest {
     // @return the View associated with bookmark for the provided url or null if the link is not bookmarked
     protected View getDisplayedBookmark(String url) {
         openAboutHomeTab(AboutHomeTabs.BOOKMARKS);
-        if (!mDevice.type.equals("tablet")) {
-            toggleVKB(); // dismiss the keyboard to make sure this works on small screen devices
-        }
-        getInstrumentation().waitForIdleSync();
         ListView bookmarksTabList = findListViewWithTag("bookmarks");
         waitForNonEmptyListToLoad(bookmarksTabList);
         ListAdapter adapter = bookmarksTabList.getAdapter();
@@ -182,30 +177,59 @@ abstract class AboutHomeTest extends BaseTest {
     }
 
    /**
-    * @param1 a String with the original url
-    * @param2 a String array with the new values for all fields
+    * FIXME: rewrite this to work with fig when rewriting the testBookmarksTab test
+    * This method will edit the bookmark with index = bookmarkIndex from the list of bookmarks
+    * For the field index:
+    *     fieldIndex = 1 - the Bookmark name
+    *     fieldIndex = 2 - the Bookmark url
+    *     fieldIndex = 3 - the Bookmark keyword
     */
-    protected void editBookmark(String originalUrl, String[] newValues) {
-        openBookmarkContextMenu(originalUrl);
+    protected void editBookmark(int bookmarkIndex, int fieldIndex, String addedText, ListView list) {
+
+        // Open the Edit Bookmark context menu
+        View child;
+        mSolo.clickOnText("Bookmarks");
+        child = list.getChildAt(bookmarkIndex);
+        mAsserter.ok(child != null, "edit item can be retrieved", child != null ? child.toString() : "null!");
+        waitForText("Switch to tab");
+        mSolo.clickLongOnView(child);
+        waitForText("Share");
         mSolo.clickOnText("Edit");
         waitForText("Edit Bookmark");
-        for (String value:newValues) {
-            mSolo.clearEditText(Arrays.asList(newValues).indexOf(value));
-            mSolo.clickOnEditText(Arrays.asList(newValues).indexOf(value));
-            mActions.sendKeys(value);
-        }
-        mSolo.clickOnButton("OK");
+
+        // Clear the Field
+        mSolo.clearEditText(fieldIndex);
+
+        // Enter the new text
+        mSolo.clickOnEditText(fieldIndex);
+        mActions.sendKeys(addedText);
+        mSolo.clickOnText("OK");
         waitForText("Bookmark updated");
     }
 
-    protected void checkBookmarkEdit(String bookmarkUrl, String[] values) {
-        openBookmarkContextMenu(bookmarkUrl);
+    // FIXME: rewrite this to work with fig when rewriting the testBookmarksTab test
+    protected boolean checkBookmarkEdit(int bookmarkIndex, String addedText, ListView list) {
+        // Open the Edit Bookmark context menu
+        View child;
+        mSolo.clickOnText("Bookmarks");
+        child = list.getChildAt(bookmarkIndex);
+        mAsserter.ok(child != null, "check item can be retrieved", child != null ? child.toString() : "null!");
+        waitForText("Switch to tab");
+        mSolo.clickLongOnView(child);
+        waitForText("Share");
         mSolo.clickOnText("Edit");
-        for (String value:values) {
-            mAsserter.ok(mSolo.searchText(value), "Checking that the value is correct", "The value = " + value + " is correct");
+        waitForText("Edit Bookmark");
+
+        // Check if the new text was added
+        if (mSolo.searchText(addedText)) {
+            clickOnButton("Cancel");
+            waitForText("about:home");
+            return true;
+        } else {
+            clickOnButton("Cancel");
+            waitForText("about:home");
+            return false;
         }
-        clickOnButton("Cancel");
-        waitForText("BOOKMARKS");
     }
 
     // A wait in order for the about:home tab to be rendered after drag/tab selection
@@ -256,12 +280,15 @@ abstract class AboutHomeTest extends BaseTest {
     protected void openAboutHomeTab(AboutHomeTabs tab) {
         focusUrlBar();
         ViewPager pager = (ViewPager)mSolo.getView(ViewPager.class, 0);
+        final int currentTabIndex = pager.getCurrentItem();
+        int tabOffset;
 
         // Handle tablets by just clicking the visible tab title.
         if (mDevice.type.equals("tablet")) {
-            // Just click for tablets, since all the titles are visible.
             if (AboutHomeTabs.MOST_RECENT == tab || AboutHomeTabs.TABS_FROM_LAST_TIME == tab) {
-                mSolo.clickOnText(AboutHomeTabs.HISTORY.toString());
+                tabOffset = aboutHomeTabs.indexOf(AboutHomeTabs.HISTORY.toString()) - currentTabIndex;
+                swipeAboutHome(tabOffset);
+                waitForAboutHomeTab(aboutHomeTabs.indexOf(StringHelper.HISTORY_LABEL));
                 TabWidget tabwidget = (TabWidget)mSolo.getView(TabWidget.class, 0);
 
                 switch (tab) {
@@ -284,8 +311,7 @@ abstract class AboutHomeTest extends BaseTest {
         }
 
         // Handle phones (non-tablets).
-        final int currentTabIndex = pager.getCurrentItem();
-        int tabOffset = aboutHomeTabs.indexOf(tab.toString()) - currentTabIndex;
+        tabOffset = aboutHomeTabs.indexOf(tab.toString()) - currentTabIndex;
         switch (tab) {
             case TOP_SITES : {
                 swipeAboutHome(tabOffset);
