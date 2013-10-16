@@ -7424,7 +7424,7 @@ PresShell::GetCurrentItemAndPositionForElement(nsIDOMElement *aCurrentEl,
 bool
 PresShell::ShouldIgnoreInvalidation()
 {
-  return mPaintingSuppressed || !mIsActive;
+  return mPaintingSuppressed || !mIsActive || mIsNeverPainting;
 }
 
 void
