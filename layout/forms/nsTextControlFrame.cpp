@@ -100,7 +100,7 @@ private:
 
 nsTextControlFrame::nsTextControlFrame(nsIPresShell* aShell, nsStyleContext* aContext)
   : nsContainerFrame(aContext)
-  , mUseEditor(false)
+  , mEditorHasBeenInitialized(false)
   , mIsProcessing(false)
 #ifdef DEBUG
   , mInEditorInitialization(false)
@@ -253,9 +253,7 @@ nsTextControlFrame::EnsureEditorInitialized()
   // never get used.  So, now this method is being called lazily only
   // when we actually need an editor.
 
-  // Check if this method has been called already.
-  // If so, just return early.
-  if (mUseEditor)
+  if (mEditorHasBeenInitialized)
     return NS_OK;
 
   nsIDocument* doc = mContent->GetCurrentDoc();
@@ -308,9 +306,9 @@ nsTextControlFrame::EnsureEditorInitialized()
     NS_ENSURE_SUCCESS(rv, rv);
     NS_ENSURE_STATE(weakFrame.IsAlive());
 
-    // Turn on mUseEditor so that subsequent calls will use the
+    // Set mEditorHasBeenInitialized so that subsequent calls will use the
     // editor.
-    mUseEditor = true;
+    mEditorHasBeenInitialized = true;
 
     // Set the selection to the beginning of the text field.
     if (weakFrame.IsAlive()) {
@@ -1138,7 +1136,7 @@ nsTextControlFrame::AttributeChanged(int32_t         aNameSpaceID,
     return NS_OK;
   }
 
-  if (!mUseEditor && nsGkAtoms::value == aAttribute) {
+  if (!mEditorHasBeenInitialized && nsGkAtoms::value == aAttribute) {
     UpdateValueDisplay(true);
     return NS_OK;
   }
@@ -1280,7 +1278,7 @@ nsTextControlFrame::UpdateValueDisplay(bool aNotify,
   nsIContent* rootNode = txtCtrl->GetRootEditorNode();
 
   NS_PRECONDITION(rootNode, "Must have a div content\n");
-  NS_PRECONDITION(!mUseEditor,
+  NS_PRECONDITION(!mEditorHasBeenInitialized,
                   "Do not call this after editor has been initialized");
   NS_ASSERTION(!mUsePlaceholder || txtCtrl->GetPlaceholderNode(),
                "A placeholder div must exist");
