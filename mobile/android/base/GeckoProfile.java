@@ -313,8 +313,13 @@ public final class GeckoProfile {
     }
 
     public synchronized File getDir() {
+        forceCreate();
+        return mDir;
+    }
+
+    public synchronized GeckoProfile forceCreate() {
         if (mDir != null) {
-            return mDir;
+            return this;
         }
 
         try {
@@ -330,7 +335,7 @@ public final class GeckoProfile {
         } catch (IOException ioe) {
             Log.e(LOGTAG, "Error getting profile dir", ioe);
         }
-        return mDir;
+        return this;
     }
 
     public File getFile(String aFile) {
