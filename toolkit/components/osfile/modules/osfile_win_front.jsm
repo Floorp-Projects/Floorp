@@ -19,18 +19,19 @@
   (function(exports) {
      "use strict";
 
-     exports.OS = require("resource://gre/modules/osfile/osfile_shared_allthreads.jsm").OS;
-     let Path = require("resource://gre/modules/osfile/ospath.jsm");
 
       // exports.OS.Win is created by osfile_win_back.jsm
      if (exports.OS && exports.OS.File) {
         return; // Avoid double-initialization
      }
 
+     let SharedAll = require("resource://gre/modules/osfile/osfile_shared_allthreads.jsm");
+     let Path = require("resource://gre/modules/osfile/ospath.jsm");
+     let SysAll = require("resource://gre/modules/osfile/osfile_win_allthreads.jsm");
      exports.OS.Win.File._init();
      let Const = exports.OS.Constants.Win;
      let WinFile = exports.OS.Win.File;
-     let LOG = OS.Shared.LOG.bind(OS.Shared, "Win front-end");
+     let Type = WinFile.Type;
 
      // Mutable thread-global data
      // In the Windows implementation, methods |read| and |write|
@@ -47,7 +48,7 @@
      let gBytesWrittenPtr = gBytesWritten.address();
 
      // Same story for GetFileInformationByHandle
-     let gFileInfo = new OS.Shared.Type.FILE_INFORMATION.implementation();
+     let gFileInfo = new Type.FILE_INFORMATION.implementation();
      let gFileInfoPtr = gFileInfo.address();
 
      /**
@@ -388,7 +389,7 @@
        let result = WinFile.CreateDirectory(path, security);
        if (result ||
            options.ignoreExisting &&
-           ctypes.winLastError == OS.Constants.Win.ERROR_ALREADY_EXISTS) {
+           ctypes.winLastError == Const.ERROR_ALREADY_EXISTS) {
         return;
        }
        throw new File.Error("makeDir");
@@ -465,7 +466,7 @@
      /**
       * A global value used to receive data during time conversions.
       */
-     let gSystemTime = new OS.Shared.Type.SystemTime.implementation();
+     let gSystemTime = new Type.SystemTime.implementation();
      let gSystemTimePtr = gSystemTime.address();
 
      /**
@@ -514,7 +515,7 @@
 
        // Pre-open the first item.
        this._first = true;
-       this._findData = new OS.Shared.Type.FindData.implementation();
+       this._findData = new Type.FindData.implementation();
        this._findDataPtr = this._findData.address();
        this._handle = WinFile.FindFirstFile(this._pattern, this._findDataPtr);
        if (this._handle == Const.INVALID_HANDLE_VALUE) {
@@ -523,12 +524,12 @@
          this._findDataPtr = null;
          if (error == Const.ERROR_FILE_NOT_FOUND) {
            // Directory is empty, let's behave as if it were closed
-           LOG("Directory is empty");
+           SharedAll.LOG("Directory is empty");
            this._closed = true;
            this._exists = true;
          } else if (error == Const.ERROR_PATH_NOT_FOUND) {
            // Directory does not exist, let's throw if we attempt to walk it
-           LOG("Directory does not exist");
+           SharedAll.LOG("Directory does not exist");
            this._closed = true;
            this._exists = false;
          } else {
@@ -650,11 +651,11 @@
 
        let path = Path.join(this._parent, name);
 
-       exports.OS.Shared.Win.AbstractEntry.call(this, isDir, isSymLink, name,
-                                                winCreationDate, winLastWriteDate,
-                                                winLastAccessDate, path);
+       SysAll.AbstractEntry.call(this, isDir, isSymLink, name,
+         winCreationDate, winLastWriteDate,
+         winLastAccessDate, path);
      };
-     File.DirectoryIterator.Entry.prototype = Object.create(exports.OS.Shared.Win.AbstractEntry.prototype);
+     File.DirectoryIterator.Entry.prototype = Object.create(SysAll.AbstractEntry.prototype);
 
      /**
       * Return a version of an instance of
@@ -695,13 +696,13 @@
        let lastWriteDate = FILETIME_to_Date(stat.ftLastWriteTime);
 
        let value = ctypes.UInt64.join(stat.nFileSizeHigh, stat.nFileSizeLow);
-       let size = exports.OS.Shared.Type.uint64_t.importFromC(value);
+       let size = Type.uint64_t.importFromC(value);
 
-       exports.OS.Shared.Win.AbstractInfo.call(this, isDir, isSymLink, size,
-                                               winBirthDate, lastAccessDate,
-                                               lastWriteDate);
+       SysAll.AbstractInfo.call(this, isDir, isSymLink, size,
+         winBirthDate, lastAccessDate,
+         lastWriteDate);
      };
-     File.Info.prototype = Object.create(exports.OS.Shared.Win.AbstractInfo.prototype);
+     File.Info.prototype = Object.create(SysAll.AbstractInfo.prototype);
 
      /**
       * Return a version of an instance of File.Info that can be sent
@@ -744,53 +745,54 @@
      // All of the following is required to ensure that File.stat
      // also works on directories.
      const FILE_STAT_MODE = {
-       read:true
+       read: true
      };
      const FILE_STAT_OPTIONS = {
        // Directories can be opened neither for reading(!) nor for writing
        winAccess: 0,
        // Directories can only be opened with backup semantics(!)
-       winFlags: OS.Constants.Win.FILE_FLAG_BACKUP_SEMANTICS,
-       winDisposition: OS.Constants.Win.OPEN_EXISTING
+       winFlags: Const.FILE_FLAG_BACKUP_SEMANTICS,
+       winDisposition: Const.OPEN_EXISTING
      };
 
      File.read = exports.OS.Shared.AbstractFile.read;
      File.writeAtomic = exports.OS.Shared.AbstractFile.writeAtomic;
+     File.openUnique = exports.OS.Shared.AbstractFile.openUnique;
      File.removeDir = exports.OS.Shared.AbstractFile.removeDir;
 
      /**
       * Get the current directory by getCurrentDirectory.
       */
      File.getCurrentDirectory = function getCurrentDirectory() {
-           // This function is more complicated than one could hope.
-           //
-           // This is due to two facts:
-           // - the maximal length of a path under Windows is not completely
-           //  specified (there is a constant MAX_PATH, but it is quite possible
-           //  to create paths that are much larger, see bug 744413);
-           // - if we attempt to call |GetCurrentDirectory| with a buffer that
-           //  is too short, it returns the length of the current directory, but
-           //  this length might be insufficient by the time we can call again
-           //  the function with a larger buffer, in the (unlikely byt possible)
-           //  case in which the process changes directory to a directory with
-           //  a longer name between both calls.
-           let buffer_size = 4096;
-           while (true) {
-             let array = new (ctypes.ArrayType(ctypes.jschar, buffer_size))();
+       // This function is more complicated than one could hope.
+       //
+       // This is due to two facts:
+       // - the maximal length of a path under Windows is not completely
+       //  specified (there is a constant MAX_PATH, but it is quite possible
+       //  to create paths that are much larger, see bug 744413);
+       // - if we attempt to call |GetCurrentDirectory| with a buffer that
+       //  is too short, it returns the length of the current directory, but
+       //  this length might be insufficient by the time we can call again
+       //  the function with a larger buffer, in the (unlikely but possible)
+       //  case in which the process changes directory to a directory with
+       //  a longer name between both calls.
+       //
+       let buffer_size = 4096;
+       while (true) {
+         let array = new (ctypes.ArrayType(ctypes.jschar, buffer_size))();
          let expected_size = throw_on_zero("getCurrentDirectory",
-               WinFile.GetCurrentDirectory(buffer_size, array)
-             );
-             if (expected_size <= buffer_size) {
-               return array.readString();
-             }
-             // At this point, we are in a case in which our buffer was not
-             // large enough to hold the name of the current directory.
-             // Consequently
-
-             // Note that, even in crazy scenarios, the loop will eventually
-             // converge, as the length of the paths cannot increase infinitely.
-             buffer_size = expected_size;
-           }
+           WinFile.GetCurrentDirectory(buffer_size, array)
+         );
+         if (expected_size <= buffer_size) {
+           return array.readString();
+         }
+         // At this point, we are in a case in which our buffer was not
+         // large enough to hold the name of the current directory.
+         // Consequently, we need to increase the size of the buffer.
+         // Note that, even in crazy scenarios, the loop will eventually
+         // converge, as the length of the paths cannot increase infinitely.
+         buffer_size = expected_size + 1 /* to store \0 */;
+       }
      };
 
      /**
@@ -816,7 +818,7 @@
 
      // Utility functions, used for error-handling
      function error_or_file(maybe) {
-       if (maybe == exports.OS.Constants.Win.INVALID_HANDLE_VALUE) {
+       if (maybe == Const.INVALID_HANDLE_VALUE) {
          throw new File.Error("open");
        }
        return new File(maybe);
@@ -841,13 +843,12 @@
      }
 
      File.Win = exports.OS.Win.File;
-     File.Error = exports.OS.Shared.Win.Error;
+     File.Error = SysAll.Error;
      exports.OS.File = File;
+     exports.OS.Shared.Type = Type;
 
-     exports.OS.Path = exports.Path;
-
-     Object.defineProperty(File, "POS_START", { value: OS.Shared.POS_START });
-     Object.defineProperty(File, "POS_CURRENT", { value: OS.Shared.POS_CURRENT });
-     Object.defineProperty(File, "POS_END", { value: OS.Shared.POS_END });
+     Object.defineProperty(File, "POS_START", { value: SysAll.POS_START });
+     Object.defineProperty(File, "POS_CURRENT", { value: SysAll.POS_CURRENT });
+     Object.defineProperty(File, "POS_END", { value: SysAll.POS_END });
    })(this);
 }
