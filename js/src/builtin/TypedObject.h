@@ -13,6 +13,13 @@
 
 namespace js {
 
+/*
+ * This object exists in order to encapsulate the typed object types
+ * somewhat, rather than sticking them all into the global object.
+ * Eventually it will go away and become a module.
+ */
+extern const Class TypedObjectClass;
+
 // Slots common to all type descriptors:
 enum TypeCommonSlots {
     // Canonical type representation of this type (see TypeRepresentation.h).
@@ -47,10 +54,6 @@ enum BlockCommonSlots {
     BLOCK_RESERVED_SLOTS
 };
 
-extern const Class DataClass;
-
-extern const Class TypeClass;
-
 template <ScalarTypeRepresentation::Type type, typename T>
 class NumericType
 {
@@ -62,6 +65,11 @@ class NumericType
     static bool call(JSContext *cx, unsigned argc, Value *vp);
 };
 
+/*
+ * These are the classes of the scalar type descriptors, like `uint8`,
+ * `uint16` etc. Each of these classes has exactly one instance that
+ * is pre-created.
+ */
 extern const Class NumericTypeClasses[ScalarTypeRepresentation::TYPE_MAX];
 
 /*
@@ -73,12 +81,26 @@ class ArrayType : public JSObject
   public:
     static const Class class_;
 
+    // Properties and methods to be installed on ArrayType.prototype,
+    // and hence inherited by all array type objects:
+    static const JSPropertySpec typeObjectProperties[];
+    static const JSFunctionSpec typeObjectMethods[];
+
+    // Properties and methods to be installed on ArrayType.prototype.prototype,
+    // and hence inherited by all array *typed* objects:
+    static const JSPropertySpec typedObjectProperties[];
+    static const JSFunctionSpec typedObjectMethods[];
+
+    // This is the function that gets called when the user
+    // does `new ArrayType(elem)`. It produces an array type object.
+    static bool construct(JSContext *cx, unsigned argc, Value *vp);
+
     static JSObject *create(JSContext *cx, HandleObject arrayTypeGlobal,
                             HandleObject elementType, size_t length);
-    static bool construct(JSContext *cx, unsigned int argc, jsval *vp);
-    static bool repeat(JSContext *cx, unsigned int argc, jsval *vp);
+    static bool repeat(JSContext *cx, unsigned argc, Value *vp);
+    static bool subarray(JSContext *cx, unsigned argc, Value *vp);
 
-    static bool toSource(JSContext *cx, unsigned int argc, jsval *vp);
+    static bool toSource(JSContext *cx, unsigned argc, Value *vp);
 
     static JSObject *elementType(JSContext *cx, HandleObject obj);
 };
@@ -101,13 +123,25 @@ class StructType : public JSObject
   public:
     static const Class class_;
 
-    static bool toSource(JSContext *cx, unsigned int argc, jsval *vp);
+    // Properties and methods to be installed on StructType.prototype,
+    // and hence inherited by all struct type objects:
+    static const JSPropertySpec typeObjectProperties[];
+    static const JSFunctionSpec typeObjectMethods[];
+
+    // Properties and methods to be installed on StructType.prototype.prototype,
+    // and hence inherited by all struct *typed* objects:
+    static const JSPropertySpec typedObjectProperties[];
+    static const JSFunctionSpec typedObjectMethods[];
+
+    // This is the function that gets called when the user
+    // does `new StructType(...)`. It produces a struct type object.
+    static bool construct(JSContext *cx, unsigned argc, Value *vp);
+
+    static bool toSource(JSContext *cx, unsigned argc, Value *vp);
 
     static bool convertAndCopyTo(JSContext *cx,
                                  StructTypeRepresentation *typeRepr,
                                  HandleValue from, uint8_t *mem);
-
-    static bool construct(JSContext *cx, unsigned int argc, jsval *vp);
 };
 
 /* Binary data objects and handles */
@@ -213,7 +247,7 @@ class BinaryBlock
                                    HandleObject owner, size_t offset);
 
     // user-accessible constructor (`new TypeDescriptor(...)`)
-    static bool construct(JSContext *cx, unsigned int argc, jsval *vp);
+    static bool construct(JSContext *cx, unsigned argc, Value *vp);
 };
 
 

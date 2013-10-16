@@ -18,6 +18,7 @@
 #endif
 #include "jsobj.h"
 #include "jsopcode.h"
+#include "jstypes.h"
 
 #include "gc/Barrier.h"
 #include "gc/Rooting.h"

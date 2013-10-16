@@ -1,7 +1,7 @@
 // |jit-test| error:RangeError;
 
-if (!this.hasOwnProperty("Type"))
+if (!this.hasOwnProperty("TypedObject"))
   throw new RangeError();
 
 this.__proto__ =  Proxy.create({});
-new StructType;
+new TypedObject.StructType;

@@ -10995,10 +10995,8 @@ let ICCRecordHelper = {
   fetchICCRecords: function fetchICCRecords() {
     this.readICCID();
     RIL.getIMSI();
-    this.readMSISDN();
     this.readAD();
     this.readSST();
-    this.readMBDN();
   },
 
   /**
@@ -11143,12 +11141,26 @@ let ICCRecordHelper = {
         debug("SST: " + str);
       }
 
+      if (ICCUtilsHelper.isICCServiceAvailable("MSISDN")) {
+        if (DEBUG) debug("MSISDN: MSISDN is available");
+        this.readMSISDN();
+      } else {
+        if (DEBUG) debug("MSISDN: MSISDN service is not available");
+      }
+
       // Fetch SPN and PLMN list, if some of them are available.
       if (ICCUtilsHelper.isICCServiceAvailable("SPN")) {
         if (DEBUG) debug("SPN: SPN is available");
         this.readSPN();
       } else {
         if (DEBUG) debug("SPN: SPN service is not available");
+      }
+
+      if (ICCUtilsHelper.isICCServiceAvailable("MDN")) {
+        if (DEBUG) debug("MDN: MDN available.");
+        this.readMBDN();
+      } else {
+        if (DEBUG) debug("MDN: MDN service is not available");
       }
 
       if (ICCUtilsHelper.isICCServiceAvailable("SPDI")) {

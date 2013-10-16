@@ -43,7 +43,7 @@ using nsIntRect;
 using nsIntSize;
 using mozilla::WidgetKeyboardEvent;
 using mozilla::WidgetMouseEvent;
-using mozilla::WheelEvent;
+using mozilla::WidgetWheelEvent;
 using nsRect;
 using mozilla::WidgetSelectionEvent;
 using mozilla::WidgetTextEvent;
@@ -367,7 +367,7 @@ child:
 
     RealMouseEvent(WidgetMouseEvent event);
     RealKeyEvent(WidgetKeyboardEvent event);
-    MouseWheelEvent(WheelEvent event);
+    MouseWheelEvent(WidgetWheelEvent event);
     RealTouchEvent(WidgetTouchEvent event);
     // We use a separate message for touchmove events only to apply
     // compression to them.
