@@ -144,8 +144,18 @@ Finder.prototype = {
 
     switch (aEvent.keyCode) {
       case Ci.nsIDOMKeyEvent.DOM_VK_RETURN:
-        if (this._fastFind.foundLink) // Todo: Handle ctrl click.
-          this._fastFind.foundLink.click();
+        if (this._fastFind.foundLink) {
+          let view = this._fastFind.foundLink.ownerDocument.defaultView;
+          this._fastFind.foundLink.dispatchEvent(new view.MouseEvent("click", {
+            view: view,
+            cancelable: true,
+            bubbles: true,
+            ctrlKey: aEvent.ctrlKey,
+            altKey: aEvent.altKey,
+            shiftKey: aEvent.shiftKey,
+            metaKey: aEvent.metaKey
+          }));
+        }
         break;
       case Ci.nsIDOMKeyEvent.DOM_VK_TAB:
         let direction = Services.focus.MOVEFOCUS_FORWARD;
