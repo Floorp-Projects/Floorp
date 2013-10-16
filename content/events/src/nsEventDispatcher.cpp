@@ -719,7 +719,7 @@ nsEventDispatcher::CreateEvent(mozilla::dom::EventTarget* aOwner,
                                        static_cast<WidgetInputEvent*>(aEvent));
     case NS_WHEEL_EVENT:
       return NS_NewDOMWheelEvent(aDOMEvent, aOwner, aPresContext,
-                                 static_cast<WheelEvent*>(aEvent));
+                                 static_cast<WidgetWheelEvent*>(aEvent));
     case NS_DRAG_EVENT:
       return NS_NewDOMDragEvent(aDOMEvent, aOwner, aPresContext,
                                 static_cast<WidgetDragEvent*>(aEvent));
