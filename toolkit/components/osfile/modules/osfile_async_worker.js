@@ -270,6 +270,20 @@ if (this.Components) {
        path: filePath
      });
    },
+   openUnique: function openUnique(path, options) {
+     let filePath = Type.path.fromMsg(path);
+     let openedFile = OS.Shared.AbstractFile.openUnique(filePath, options);
+     let resourceId = OpenedFiles.add(openedFile.file, {
+       // Adding path information to keep track of opened files
+       // to report leaks when debugging.
+       path: openedFile.path
+     });
+
+     return {
+       path: openedFile.path,
+       file: resourceId
+     };
+   },
    read: function read(path, bytes, options) {
      let data = File.read(Type.path.fromMsg(path), bytes, options);
      return new Transfer({buffer: data.buffer, byteOffset: data.byteOffset, byteLength: data.byteLength}, [data.buffer]);
