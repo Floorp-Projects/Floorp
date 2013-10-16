@@ -387,8 +387,7 @@ class Type
         Signed,
         Unsigned,
         Intish,
-        Void,
-        Unknown
+        Void
     };
 
   private:
@@ -414,7 +413,7 @@ class Type
     }
 
     bool isIntish() const {
-        return isInt() || which_ == Intish || which_ == Unknown;
+        return isInt() || which_ == Intish;
     }
 
     bool isDouble() const {
@@ -422,7 +421,7 @@ class Type
     }
 
     bool isDoublish() const {
-        return isDouble() || which_ == Doublish || which_ == Unknown;
+        return isDouble() || which_ == Doublish;
     }
 
     bool isVoid() const {
@@ -449,7 +448,6 @@ class Type
           case Intish:
             return MIRType_Int32;
           case Void:
-          case Unknown:
             return MIRType_None;
         }
         MOZ_ASSUME_UNREACHABLE("Invalid Type");
@@ -465,7 +463,6 @@ class Type
           case Unsigned:  return "unsigned";
           case Intish:    return "intish";
           case Void:      return "void";
-          case Unknown:   return "unknown";
         }
         MOZ_ASSUME_UNREACHABLE("Invalid Type");
     }
@@ -3947,14 +3944,14 @@ CheckCoerceToInt(FunctionCompiler &f, ParseNode *expr, MDefinition **def, Type *
     if (!CheckExpr(f, operand, &operandDef, &operandType))
         return false;
 
-    if (operandType.isDouble()) {
+    if (operandType.isDoublish()) {
         *def = f.unary<MTruncateToInt32>(operandDef);
         *type = Type::Signed;
         return true;
     }
 
     if (!operandType.isIntish())
-        return f.failf(operand, "%s is not a subtype of double or intish", operandType.toChars());
+        return f.failf(operand, "%s is not a subtype of doublish or intish", operandType.toChars());
 
     *def = operandDef;
     *type = Type::Signed;
