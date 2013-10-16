@@ -24,7 +24,7 @@ HTMLUnknownElement::WrapNode(JSContext *aCx, JS::Handle<JSObject*> aScope)
     JS::Rooted<JSObject*> prototype(aCx);
     document->GetCustomPrototype(LocalName(), &prototype);
     if (prototype) {
-      NS_ENSURE_TRUE(JS_WrapObject(aCx, prototype.address()), nullptr);
+      NS_ENSURE_TRUE(JS_WrapObject(aCx, &prototype), nullptr);
       NS_ENSURE_TRUE(JS_SetPrototype(aCx, obj, prototype), nullptr);
     }
   }

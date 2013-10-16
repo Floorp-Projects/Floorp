@@ -45,8 +45,8 @@ public:
     // use CGFontRef API to get direct access to system font data
     virtual hb_blob_t *GetFontTable(uint32_t aTag) MOZ_OVERRIDE;
 
-    virtual void SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf,
-                                     FontListSizes*    aSizes) const;
+    virtual void AddSizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf,
+                                        FontListSizes* aSizes) const;
 
     nsresult ReadCMAP();
 

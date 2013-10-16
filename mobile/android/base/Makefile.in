@@ -132,6 +132,7 @@ FENNEC_JAVA_FILES = \
   prompts/Prompt.java \
   prompts/PromptInput.java \
   prompts/PromptService.java \
+  prompts/IconGridInput.java \
   Restarter.java \
   sqlite/ByteBufferInputStream.java \
   sqlite/MatrixBlobCursor.java \
@@ -447,6 +448,8 @@ RES_LAYOUT = \
   res/layout/home_banner.xml \
   res/layout/home_suggestion_prompt.xml \
   res/layout/home_top_sites_page.xml \
+  res/layout/icon_grid.xml \
+  res/layout/icon_grid_item.xml \
   res/layout/web_app.xml \
   res/layout/launch_app_list.xml \
   res/layout/launch_app_listitem.xml \
@@ -613,6 +616,8 @@ RES_DRAWABLE_MDPI = \
   res/drawable-mdpi/bookmark_folder_closed.png \
   res/drawable-mdpi/bookmark_folder_opened.png \
   res/drawable-mdpi/desktop_notification.png \
+  res/drawable-mdpi/grid_icon_bg_activated.9.png \
+  res/drawable-mdpi/grid_icon_bg_focused.9.png \
   res/drawable-mdpi/home_tab_menu_strip.9.png \
   res/drawable-mdpi/ic_menu_addons_filler.png \
   res/drawable-mdpi/ic_menu_bookmark_add.png \
@@ -718,6 +723,8 @@ RES_DRAWABLE_HDPI = \
   res/drawable-hdpi/folder.png \
   res/drawable-hdpi/home_bg.png \
   res/drawable-hdpi/home_star.png \
+  res/drawable-hdpi/grid_icon_bg_activated.9.png \
+  res/drawable-hdpi/grid_icon_bg_focused.9.png \
   res/drawable-hdpi/abouthome_thumbnail.png \
   res/drawable-hdpi/alert_addon.png \
   res/drawable-hdpi/alert_app.png \
@@ -830,6 +837,8 @@ RES_DRAWABLE_XHDPI = \
   res/drawable-xhdpi/alert_mic_camera.png \
   res/drawable-xhdpi/arrow_popup_bg.9.png \
   res/drawable-xhdpi/home_tab_menu_strip.9.png \
+  res/drawable-xhdpi/grid_icon_bg_activated.9.png \
+  res/drawable-xhdpi/grid_icon_bg_focused.9.png \
   res/drawable-xhdpi/ic_menu_addons_filler.png \
   res/drawable-xhdpi/ic_menu_bookmark_add.png \
   res/drawable-xhdpi/ic_menu_bookmark_remove.png \
@@ -1079,6 +1088,7 @@ RES_DRAWABLE += \
   res/drawable/url_bar_bg.xml                         \
   res/drawable/url_bar_entry.xml                      \
   res/drawable/url_bar_nav_button.xml                 \
+  res/drawable/icon_grid_item_bg.xml                  \
   res/drawable/url_bar_right_edge.xml                 \
   res/drawable/bookmark_folder.xml                    \
   res/drawable/divider_horizontal.xml                 \

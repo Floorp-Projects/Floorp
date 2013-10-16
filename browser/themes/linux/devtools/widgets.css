@@ -575,7 +575,7 @@
 .variable-or-property[non-configurable] > tooltip > label[value=configurable],
 .variable-or-property[non-writable] > tooltip > label[value=writable],
 .variable-or-property[non-extensible] > tooltip > label[value=extensible] {
-  color: #800;
+  color: #f44;
   text-decoration: line-through;
 }
 

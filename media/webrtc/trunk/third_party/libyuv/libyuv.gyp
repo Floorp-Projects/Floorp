@@ -27,13 +27,6 @@
               '-ljpeg',
             ],
           },
-          'conditions': [
-            ['build_with_mozilla==1', {
-              'include_dirs': [
-                '$(DEPTH)/dist/include',
-              ],
-            }],
-          ],
         }],
       ],
       'defines': [
@@ -55,16 +48,6 @@
           'defines': [
             'YUV_DISABLE_ASM',
           ],
-        }],
-        ['build_with_mozilla==1', {
-          'include_dirs': [
-            '$(DEPTH)/dist/include',
-          ],
-          'direct_dependent_settings': {
-            'include_dirs': [
-              '$(DEPTH)/dist/include',
-            ],
-          },
         }],
       ],
       'sources': [
