@@ -1,0 +1,363 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8"/>
+<link rel="stylesheet" href="../../resources/js-test-style.css"/>
+<script src="../../resources/js-test-pre.js"></script>
+<script src="../resources/webgl-test.js"></script>
+<script src="../resources/webgl-test-utils.js"></script>
+</head>
+<body>
+<div id="description"></div>
+<div id="console"></div>
+<canvas id="canvas" width="16" height="16" style="width: 50px; height: 50px; border: 1px solid black;"></canvas>
+
+<!-- Shaders to test output -->
+<script id="vertexShader" type="x-shader/x-vertex">
+attribute vec4 aPosition;
+void main() {
+  gl_Position = aPosition;
+}
+</script>
+
+<script id="fragmentShader" type="x-shader/x-fragment">
+precision mediump float;
+uniform float uColor;
+void main() {
+  gl_FragColor = vec4(uColor, uColor, uColor, 1);
+}
+</script>
+
+<script>
+"use strict";
+
+var wtu = WebGLTestUtils;
+var canvas;
+var gl;
+var ext = null;
+
+function getExtension() {
+  ext = gl.getExtension("EXT_sRGB");
+}
+
+function listsExtension() {
+  var supported = gl.getSupportedExtensions();
+  return (supported.indexOf("EXT_sRGB") >= 0);
+}
+
+function readLocation(x, y) {
+  var pixel = new Uint8Array(1 * 1 * 4);
+  var px = Math.floor(x * canvas.drawingBufferWidth);
+  var py = Math.floor(y * canvas.drawingBufferHeight);
+  gl.readPixels(px, py, 1, 1, gl.RGBA, gl.UNSIGNED_BYTE, pixel);
+  return pixel;
+}
+
+function toVec3String(val) {
+  if (typeof(val) == 'number') {
+    return toVec3String([val, val, val]);
+  }
+  return '[' + val[0] + ', ' + val[1] + ', ' + val[2] + ']';
+}
+
+var e = 2; // Amount of variance to allow in result pixels - may need to be tweaked higher
+
+function expectResult(target, successMessage, failureMessage) {
+  var anyDiffer = false;
+  var source = readLocation(0.5, 0.5);
+  for (var m = 0; m < 3; m++) {
+    if (Math.abs(source[m] - target) > e) {
+      anyDiffer = true;
+      testFailed(failureMessage + "; should be " + toVec3String(target) + ", was " + toVec3String(source));
+      break;
+    }
+  }
+
+  if (!anyDiffer) {
+    testPassed(successMessage);
+  }
+}
+
+function createGreysRGBTexture(gl, color) {
+  var numPixels = gl.drawingBufferWidth * gl.drawingBufferHeight;
+  var size = numPixels * 3;
+  var buf = new Uint8Array(size);
+  for (var ii = 0; ii < numPixels; ++ii) {
+    var off = ii * 3;
+    buf[off + 0] = color;
+    buf[off + 1] = color;
+    buf[off + 2] = color;
+  }
+
+  var tex = gl.createTexture();
+  gl.bindTexture(gl.TEXTURE_2D, tex);
+  gl.texImage2D(gl.TEXTURE_2D,
+                0,
+                ext.SRGB_EXT,
+                gl.drawingBufferWidth,
+                gl.drawingBufferHeight,
+                0,
+                ext.SRGB_EXT,
+                gl.UNSIGNED_BYTE,
+                buf);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+  return tex;
+}
+
+function testValidFormat(fn, internalFormat, formatName) {
+  fn(internalFormat);
+  glErrorShouldBe(gl, gl.NO_ERROR, "was able to create type " + formatName);
+}
+
+function testInvalidFormat(fn, internalFormat, formatName) {
+  fn(internalFormat);
+  var err = gl.getError();
+  if (err == gl.NO_ERROR) {
+    testFailed("should NOT be able to create type " + formatName);
+  } else if (err == gl.INVALID_OPERATION) {
+    testFailed("should return gl.INVALID_ENUM for type " + formatName);
+  } else if (err == gl.INVALID_ENUM) {
+    testPassed("not able to create invalid format: " + formatName);
+  }
+}
+
+var textureFormatFixture = {
+  desc: "Checking texture formats",
+  create: function(format) {
+    var tex = gl.createTexture();
+    gl.bindTexture(gl.TEXTURE_2D, tex);
+    gl.texImage2D(gl.TEXTURE_2D,
+                  0,                      // level
+                  format,                 // internalFormat
+                  gl.drawingBufferWidth,  // width
+                  gl.drawingBufferHeight, // height
+                  0,                      // border
+                  format,                 // format
+                  gl.UNSIGNED_BYTE,       // type
+                  null);                  // data
+  },
+  tests: [
+    {
+      desc: "Checking valid formats",
+      fn: testValidFormat,
+      formats: [ 'SRGB_EXT', 'SRGB_ALPHA_EXT' ]
+    },
+    {
+      desc: "Checking invalid formats",
+      fn: testInvalidFormat,
+      formats: [ 'SRGB8_ALPHA8_EXT' ]
+    }
+  ]
+};
+
+var renderbufferFormatFixture = {
+  desc: "Checking renderbuffer formats",
+  create: function(format) {
+    var rbo = gl.createRenderbuffer();
+    gl.bindRenderbuffer(gl.RENDERBUFFER, rbo);
+    gl.renderbufferStorage(gl.RENDERBUFFER,
+                           format,
+                           gl.drawingBufferWidth,
+                           gl.drawingBufferHeight);
+  },
+  tests: [
+    {
+      desc: "Checking valid formats",
+      fn: testValidFormat,
+      formats: [ 'SRGB8_ALPHA8_EXT' ]
+    },
+    {
+      desc: "Checking invalid formats",
+      fn: testInvalidFormat,
+      formats: [ 'SRGB_EXT', 'SRGB_ALPHA_EXT' ]
+    }
+  ]
+};
+
+
+description("Test sRGB texture support");
+
+debug("");
+debug("Canvas.getContext");
+
+canvas = document.getElementById("canvas");
+gl = wtu.create3DContext(canvas);
+if (!gl) {
+  testFailed("context does not exist");
+} else {
+  testPassed("context exists");
+
+  debug("");
+  debug("Checking sRGB texture support");
+
+  // Query the extension and store globally so shouldBe can access it
+  ext = gl.getExtension("EXT_sRGB");
+
+  if (!ext) {
+    testPassed("No EXT_sRGB support -- this is legal");
+
+    runSupportedTest(false);
+  } else {
+    testPassed("Successfully enabled EXT_sRGB extension");
+
+    runSupportedTest(true);
+
+    gl.viewport(0, 0, gl.drawingBufferWidth, gl.drawingBufferHeight);
+
+    runFormatTest(textureFormatFixture);
+    runFormatTest(renderbufferFormatFixture);
+    runTextureReadConversionTest();
+    runFramebufferTextureConversionTest();
+    runFramebufferRenderbufferConversionTest();
+  }
+}
+
+function runSupportedTest(extensionEnabled) {
+  if (listsExtension()) {
+    if (extensionEnabled) {
+      testPassed("EXT_sRGB listed as supported and getExtension succeeded");
+    } else {
+      testFailed("EXT_sRGB listed as supported but getExtension failed");
+    }
+  } else {
+    if (extensionEnabled) {
+      testFailed("EXT_sRGB not listed as supported but getExtension succeeded");
+    } else {
+      testPassed("EXT_sRGB not listed as supported and getExtension failed -- this is legal");
+    }
+  }
+}
+
+function runFormatTest(fixture) {
+  debug("");
+  debug(fixture.desc);
+
+  for (var tt = 0; tt < fixture.tests.length; ++tt) {
+    var test = fixture.tests[tt];
+    debug(test.desc);
+
+    for (var ii = 0; ii < test.formats.length; ++ii) {
+      var formatName = test.formats[ii];
+      test.fn(fixture.create, ext[formatName], "ext." + formatName);
+    }
+
+    if (tt != fixture.tests.length - 1)
+      debug("");
+  }
+}
+
+function runTextureReadConversionTest() {
+  debug("");
+  debug("Test the conversion of colors from sRGB to linear on texture read");
+
+  // Draw
+  var conversions = [
+    [   0,   0 ],
+    [  63,  13 ],
+    [ 127,  54 ],
+    [ 191, 133 ],
+    [ 255, 255 ]
+  ];
+
+  var program = wtu.setupTexturedQuad(gl);
+  gl.uniform1i(gl.getUniformLocation(program, "tex2d"), 0);
+
+  for (var ii = 0; ii < conversions.length; ii++) {
+    var tex = createGreysRGBTexture(gl, conversions[ii][0]);
+    wtu.drawQuad(gl);
+    expectResult(conversions[ii][1],
+                 "sRGB texture read returned correct data",
+                 "sRGB texture read returned incorrect data");
+  }
+}
+
+function runFramebufferTextureConversionTest() {
+  debug("");
+  debug("Test the conversion of colors from linear to sRGB on framebuffer (texture) write");
+
+  var program = wtu.setupProgram(gl, ['vertexShader', 'fragmentShader'], ['aPosition'], [0]);
+  var tex = createGreysRGBTexture(gl, 0);
+  var fbo = gl.createFramebuffer();
+  gl.bindFramebuffer(gl.FRAMEBUFFER, fbo);
+  gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, tex, 0);
+  glErrorShouldBe(gl, gl.NO_ERROR);
+
+  shouldBe('gl.getFramebufferAttachmentParameter(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, ext.FRAMEBUFFER_ATTACHMENT_COLOR_ENCODING_EXT)', 'ext.SRGB_EXT');
+  shouldBe("gl.checkFramebufferStatus(gl.FRAMEBUFFER)", "gl.FRAMEBUFFER_COMPLETE");
+
+  // Draw
+  var conversions = [
+    [   0,   0 ],
+    [  13,  63 ],
+    [  54, 127 ],
+    [ 133, 191 ],
+    [ 255, 255 ]
+  ];
+
+  wtu.setupUnitQuad(gl, 0);
+
+  for (var ii = 0; ii < conversions.length; ii++) {
+    gl.uniform1f(gl.getUniformLocation(program, "uColor"), conversions[ii][0]/255.0);
+    wtu.drawQuad(gl, [0, 0, 0, 0]);
+    expectResult(conversions[ii][1],
+                 "framebuffer (texture) read returned correct data",
+                 "framebuffer (texture) read returned incorrect data");
+  }
+
+  gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+}
+
+function runFramebufferRenderbufferConversionTest() {
+  debug("");
+  debug("Test the conversion of colors from linear to sRGB on framebuffer (renderbuffer) write");
+
+  function createsRGBFramebuffer(gl, width, height) {
+    var rbo = gl.createRenderbuffer();
+    gl.bindRenderbuffer(gl.RENDERBUFFER, rbo);
+    gl.renderbufferStorage(gl.RENDERBUFFER, ext.SRGB8_ALPHA8_EXT, width, height);
+    glErrorShouldBe(gl, gl.NO_ERROR);
+
+    var fbo = gl.createFramebuffer();
+    gl.bindFramebuffer(gl.FRAMEBUFFER, fbo);
+    gl.framebufferRenderbuffer(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0,
+                               gl.RENDERBUFFER, rbo);
+    glErrorShouldBe(gl, gl.NO_ERROR);
+
+    shouldBe('gl.getFramebufferAttachmentParameter(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, ext.FRAMEBUFFER_ATTACHMENT_COLOR_ENCODING_EXT)', 'ext.SRGB_EXT');
+    shouldBe("gl.checkFramebufferStatus(gl.FRAMEBUFFER)", "gl.FRAMEBUFFER_COMPLETE");
+
+    return fbo;
+  }
+
+  // Draw
+  var conversions = [
+    [   0,   0 ],
+    [  13,  63 ],
+    [  54, 127 ],
+    [ 133, 191 ],
+    [ 255, 255 ]
+  ];
+
+  var program = wtu.setupProgram(gl, ['vertexShader', 'fragmentShader'], ['aPosition'], [0]);
+  wtu.setupUnitQuad(gl, 0);
+  var fbo = createsRGBFramebuffer(gl, 4, 4);
+
+  for (var ii = 0; ii < conversions.length; ii++) {
+    gl.uniform1f(gl.getUniformLocation(program, "uColor"), conversions[ii][0]/255.0);
+    wtu.drawQuad(gl, [0, 0, 0, 0]);
+    expectResult(conversions[ii][1],
+                 "framebuffer (renderbuffer) read returned the correct data",
+                 "framebuffer (renderbuffer) read returned incorrect data");
+  }
+}
+
+debug("");
+var successfullyParsed = true;
+</script>
+<script>finishTest();</script>
+
+</body>
+</html>
