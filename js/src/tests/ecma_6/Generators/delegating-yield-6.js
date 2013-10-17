@@ -15,13 +15,20 @@ function collect_results(iter) {
 
 function Iter(val, count) {
     function next() {
+        log += 'n';
         return {
             get done() { log += "d"; return count-- == 0; },
             get value() { log += "v"; return val; }
         }
     }
 
+    function iterator() {
+        log += 'i';
+        return this;
+    }
+
     this.next = next;
+    this[std_iterator] = iterator;
 }
 
 function* delegate(iter) { return yield* iter; }
@@ -37,13 +44,13 @@ outer.next();
 outer.next();
 outer.next();
 
-assertEq(log, "ddddddv");
+assertEq(log, "indndndndndndv");
 
 // Outer's dead, man.  Outer's dead.
 assertThrowsInstanceOf(outer.next.bind(outer), TypeError);
 
 // No more checking the iterator.
-assertEq(log, "ddddddv");
+assertEq(log, "indndndndndndv");
 
 if (typeof reportCompare == "function")
     reportCompare(true, true);

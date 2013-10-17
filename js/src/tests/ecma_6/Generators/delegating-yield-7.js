@@ -2,10 +2,15 @@
 
 function results(results) {
     var i = 0;
+    function iterator() {
+        return this;
+    }
     function next() {
         return results[i++];
     }
-    return { next: next }
+    var ret = { next: next }
+    ret[std_iterator] = iterator;
+    return ret;
 }
 
 function* yield_results(expected) {
