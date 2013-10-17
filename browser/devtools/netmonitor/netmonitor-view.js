@@ -1537,6 +1537,7 @@ NetworkDetailsView.prototype = {
       }));
     this._json = new VariablesView($("#response-content-json"),
       Heritage.extend(GENERIC_VARIABLES_VIEW_SETTINGS, {
+        onlyEnumVisible: true,
         searchPlaceholder: L10N.getStr("jsonFilterText")
       }));
     VariablesViewController.attach(this._json);
@@ -1874,7 +1875,7 @@ NetworkDetailsView.prototype = {
         let sanitizedJSON = aString.replace(jsonpRegex, "");
         let callbackPadding = aString.match(jsonpRegex);
 
-        // Make sure this is an valid JSON object first. If so, nicely display
+        // Make sure this is a valid JSON object first. If so, nicely display
         // the parsing results in a variables view. Otherwise, simply show
         // the contents as plain text.
         try {
