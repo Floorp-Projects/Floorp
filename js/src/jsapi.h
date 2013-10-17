@@ -4426,9 +4426,7 @@ JS_SetParallelIonCompilationEnabled(JSContext *cx, bool enabled);
 
 #define JIT_COMPILER_OPTIONS(Register)                             \
   Register(BASELINE_USECOUNT_TRIGGER, "baseline.usecount.trigger") \
-  Register(ION_USECOUNT_TRIGGER, "ion.usecount.trigger")           \
-  Register(ION_ENABLE, "ion.enable")                               \
-  Register(BASELINE_ENABLE, "baseline.enable")
+  Register(ION_USECOUNT_TRIGGER, "ion.usecount.trigger")
 
 typedef enum JSJitCompilerOption {
 #define JIT_COMPILER_DECLARE(key, str) \
