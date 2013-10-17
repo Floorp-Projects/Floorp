@@ -1376,6 +1376,19 @@ MMod::fallible()
     return !isTruncated();
 }
 
+void
+MMathFunction::trySpecializeFloat32()
+{
+    if (!input()->canProduceFloat32() || !CheckUsesAreFloat32Consumers(this)) {
+        if (input()->type() == MIRType_Float32)
+            ConvertDefinitionToDouble<0>(input(), this);
+        return;
+    }
+
+    setResultType(MIRType_Float32);
+    setPolicyType(MIRType_Float32);
+}
+
 bool
 MAdd::fallible()
 {
