@@ -564,6 +564,35 @@ wasapi_get_min_latency(cubeb * ctx, cubeb_stream_params params, uint32_t * laten
   return CUBEB_OK;
 }
 
+int
+wasapi_get_preferred_sample_rate(cubeb * ctx, uint32_t * rate)
+{
+  HRESULT hr;
+  IAudioClient * client;
+  WAVEFORMATEX * mix_format;
+
+  hr = ctx->device->Activate(__uuidof(IAudioClient),
+                             CLSCTX_INPROC_SERVER,
+                             NULL, (void **)&client);
+
+  if (FAILED(hr)) {
+    return CUBEB_ERROR;
+  }
+
+  hr = client->GetMixFormat(&mix_format);
+
+  if (FAILED(hr)) {
+    SafeRelease(client);
+    return CUBEB_ERROR;
+  }
+
+  *rate = mix_format->nSamplesPerSec;
+
+  CoTaskMemFree(mix_format);
+  SafeRelease(client);
+
+  return CUBEB_OK;
+}
 
 void wasapi_stream_destroy(cubeb_stream * stm);
 
@@ -928,6 +957,7 @@ cubeb_ops const wasapi_ops = {
   /*.get_backend_id =*/ wasapi_get_backend_id,
   /*.get_max_channel_count =*/ wasapi_get_max_channel_count,
   /*.get_min_latency =*/ wasapi_get_min_latency,
+  /*.get_preferred_sample_rate =*/ wasapi_get_preferred_sample_rate,
   /*.destroy =*/ wasapi_destroy,
   /*.stream_init =*/ wasapi_stream_init,
   /*.stream_destroy =*/ wasapi_stream_destroy,

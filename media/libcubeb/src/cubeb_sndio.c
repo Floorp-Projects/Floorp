@@ -259,6 +259,15 @@ sndio_get_max_channel_count(cubeb * ctx, uint32_t * max_channels)
 }
 
 static int
+sndio_get_preferred_sample_rate(cubeb * ctx, uint32_t * rate)
+{
+  // XXX Not yet implemented.
+  *rate = 44100;
+
+  return CUBEB_OK;
+}
+
+static int
 sndio_get_min_latency(cubeb * ctx, cubeb_stream_params params, uint32_t * latency_ms)
 {
   // XXX Not yet implemented.
@@ -337,6 +346,7 @@ static struct cubeb_ops const sndio_ops = {
   .get_backend_id = sndio_get_backend_id,
   .get_max_channel_count = sndio_get_max_channel_count,
   .get_min_latency = sndio_get_min_latency,
+  .get_preferred_sample_rate = sndio_get_preferred_sample_rate,
   .destroy = sndio_destroy,
   .stream_init = sndio_stream_init,
   .stream_destroy = sndio_stream_destroy,
