@@ -11,6 +11,7 @@
 #include "nsAutoPtr.h"
 #include "nsCOMPtr.h"
 #include "Latency.h"
+#include "mozilla/StaticMutex.h"
 
 namespace soundtouch {
 class SoundTouch;
@@ -116,6 +117,10 @@ public:
   // Returns the maximum number of channels supported by the audio hardware.
   static int MaxNumberOfChannels();
 
+  // Returns the samplerate the systems prefer, because it is the
+  // samplerate the hardware/mixer supports.
+  static int PreferredSampleRate();
+
   // Initialize the audio stream. aNumChannels is the number of audio
   // channels (1 for mono, 2 for stereo, etc) and aRate is the sample rate
   // (22050Hz, 44100Hz, etc).
@@ -183,6 +188,11 @@ public:
   virtual nsresult SetPreservesPitch(bool aPreservesPitch);
 
 protected:
+  // This mutex protects the mPreferedSamplerate member below.
+  static StaticMutex mMutex;
+  // Prefered samplerate, in Hz (characteristic of the
+  // hardware/mixer/platform/API used).
+  static uint32_t mPreferredSampleRate;
   // Input rate in Hz (characteristic of the media being played)
   int mInRate;
   // Output rate in Hz (characteristic of the playback rate)
