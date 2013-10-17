@@ -195,7 +195,7 @@
       <menuitem id="sync-setup-appmenu"
                 label="&syncSetup.label;"
                 observes="sync-setup-state"
-                oncommand="gSyncUI.openSetup()"/>
+                oncommand="gSyncUI.openAccountsPage()"/>
       <menuitem id="sync-syncnowitem-appmenu"
                 label="&syncSyncNowItem.label;"
                 observes="sync-syncnow-state"
