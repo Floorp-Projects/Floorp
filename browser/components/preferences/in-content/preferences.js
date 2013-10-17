@@ -12,11 +12,13 @@ const Cr = Components.results;
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
 
+addEventListener("DOMContentLoaded", function onLoad() {
+  removeEventListener("DOMContentLoaded", onLoad);
+  init_all();
+});
+
 function init_all() {
   document.documentElement.instantApply = true;
-  window.history.replaceState("landing", document.title);
-  window.addEventListener("popstate", onStatePopped, true);
-  updateCommands();
   gMainPane.init();
   gPrivacyPane.init();
   gAdvancedPane.init();
@@ -27,12 +29,32 @@ function init_all() {
   var initFinished = document.createEvent("Event");
   initFinished.initEvent("Initialized", true, true);
   document.dispatchEvent(initFinished);
+
+  let categories = document.getElementById("categories");
+  categories.addEventListener("select", event => gotoPref(event.target.value));
+  window.addEventListener("popstate", event => selectCategory(event.state));
+
+  if (history.length > 1 && history.state) {
+    updateCommands();
+    selectCategory(history.state);
+  } else {
+    history.replaceState("paneGeneral", document.title);
+  }
+}
+
+function selectCategory(name) {
+  let categories = document.getElementById("categories");
+  let item = categories.querySelector(".category[value=" + name + "]");
+  categories.selectedItem = item;
 }
 
 function gotoPref(page) {
-  search(page, "data-category");
-  window.history.pushState(page, document.title);
+  if (history.state != page) {
+    window.history.pushState(page, document.title);
+  }
+
   updateCommands();
+  search(page, "data-category");
 }
  
 function cmd_back() {
@@ -41,11 +63,6 @@ function cmd_back() {
  
 function cmd_forward() {
   window.history.forward();
-}
-
-function onStatePopped(aEvent) {
-  updateCommands();
-  search(aEvent.state, "data-category");
 }
 
 function updateCommands() {
