@@ -2092,9 +2092,9 @@ jit::AnalyzeNewScriptProperties(JSContext *cx, JSFunction *fun,
 
     AutoTempAllocatorRooter root(cx, &temp);
 
-    types::CompilerConstraintList constraints;
+    types::CompilerConstraintList *constraints = types::NewCompilerConstraintList();
     BaselineInspector inspector(cx, fun->nonLazyScript());
-    IonBuilder builder(cx, &temp, &graph, &constraints,
+    IonBuilder builder(cx, &temp, &graph, constraints,
                        &inspector, &info, /* baselineFrame = */ nullptr);
 
     if (!builder.build()) {

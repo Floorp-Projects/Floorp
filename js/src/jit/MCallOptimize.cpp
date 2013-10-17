@@ -156,16 +156,10 @@ IonBuilder::inlineNativeCall(CallInfo &callInfo, JSNative native)
     return InliningStatus_NotInlined;
 }
 
-types::StackTypeSet *
-IonBuilder::getOriginalInlineReturnTypeSet()
-{
-    return types::TypeScript::BytecodeTypes(script(), pc);
-}
-
 types::TemporaryTypeSet *
 IonBuilder::getInlineReturnTypeSet()
 {
-    return cloneTypeSet(getOriginalInlineReturnTypeSet());
+    return bytecodeTypes(pc);
 }
 
 MIRType
@@ -328,7 +322,7 @@ IonBuilder::inlineArrayPopShift(CallInfo &callInfo, MArrayPopShift::Mode mode)
 
     callInfo.unwrapArgs();
 
-    types::StackTypeSet *returnTypes = getOriginalInlineReturnTypeSet();
+    types::TemporaryTypeSet *returnTypes = getInlineReturnTypeSet();
     bool needsHoleCheck = thisTypes->hasObjectFlags(constraints(), types::OBJECT_FLAG_NON_PACKED);
     bool maybeUndefined = returnTypes->hasType(types::Type::UndefinedType());
 
@@ -346,7 +340,7 @@ IonBuilder::inlineArrayPopShift(CallInfo &callInfo, MArrayPopShift::Mode mode)
     if (!resumeAfter(ins))
         return InliningStatus_Error;
 
-    if (!pushTypeBarrier(ins, cloneTypeSet(returnTypes), barrier))
+    if (!pushTypeBarrier(ins, returnTypes, barrier))
         return InliningStatus_Error;
 
     return InliningStatus_Inlined;

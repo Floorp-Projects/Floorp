@@ -355,6 +355,9 @@ bool
 GetProperty(JSContext *cx, HandleValue value, HandlePropertyName name, MutableHandleValue vp);
 
 bool
+CallProperty(JSContext *cx, HandleValue value, HandlePropertyName name, MutableHandleValue vp);
+
+bool
 GetScopeName(JSContext *cx, HandleObject obj, HandlePropertyName name, MutableHandleValue vp);
 
 bool
