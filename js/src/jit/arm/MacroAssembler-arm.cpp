@@ -2859,10 +2859,10 @@ MacroAssemblerARMCompat::loadValue(Address src, ValueOperand val)
 void
 MacroAssemblerARMCompat::tagValue(JSValueType type, Register payload, ValueOperand dest)
 {
-    JS_ASSERT(payload != dest.typeReg());
-    ma_mov(ImmType(type), dest.typeReg());
+    JS_ASSERT(dest.typeReg() != dest.payloadReg());
     if (payload != dest.payloadReg())
         ma_mov(payload, dest.payloadReg());
+    ma_mov(ImmType(type), dest.typeReg());
 }
 
 void
