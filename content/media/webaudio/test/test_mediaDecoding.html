@@ -105,63 +105,91 @@ function createWaveFileData(audioBuffer) {
 </script>
 <script class="testbody" type="text/javascript">
 
+SimpleTest.waitForExplicitFinish();
+
+var cx = new AudioContext();
+
 // fuzzTolerance and fuzzToleranceMobile are used to determine fuzziness
 // thresholds.  They're needed to make sure that we can deal with neglibible
 // differences in the binary buffer caused as a result of resampling the
 // audio.  fuzzToleranceMobile is typically larger on mobile platforms since
 // we do fixed-point resampling as opposed to floating-point resampling on
 // those platforms.
-var tests = [
-  // A normal ogg file, 44.1khz
+var files = [
+  // An ogg file, 44.1khz, mono
   {
-    url: "ting.ogg",
+    url: "ting-44.1k-1ch.ogg",
     valid: true,
-    expected: "ting-expected.wav",
-    expectedMono: "ting-mono-expected.wav",
-    numberOfChannels: 2,
-    duration: 0.6936,
-    length: 33294,
-    fuzzTolerance: 38,
-    fuzzToleranceMobile: 15906
+    expected: "ting-44.1k-1ch.wav",
+    numberOfChannels: 1,
+    frames: 30592,
+    sampleRate: 44100,
+    duration: 0.693,
+    fuzzTolerance: 5,
+    fuzzToleranceMobile: 1284
   },
-  // An ogg file with two different channels, 44.1khz
+  // An ogg file, 44.1khz, stereo
   {
-    url: "ting-dualchannel44.1.ogg",
+    url: "ting-44.1k-2ch.ogg",
     valid: true,
-    expected: "ting-dualchannel44.1-expected.wav",
-    expectedMono: "ting-mono-dualchannel44.1-expected.wav",
+    expected: "ting-44.1k-2ch.wav",
     numberOfChannels: 2,
-    duration: 0.6932,
-    length: 33274,
-    fuzzTolerance: 39,
-    fuzzToleranceMobile: 16798
+    frames: 30592,
+    sampleRate: 44100,
+    duration: 0.693,
+    fuzzTolerance: 6,
+    fuzzToleranceMobile: 2544
   },
-  // An ogg file with two different channels, 48khz
+  // An ogg file, 48khz, mono
   {
-    url: "ting-dualchannel48.ogg",
+    url: "ting-48k-1ch.ogg",
     valid: true,
-    expected: "ting-dualchannel48-expected.wav",
-    expectedMono: "ting-mono-dualchannel48-expected.wav",
-    numberOfChannels: 2,
-    duration: 0.6373,
-    length: 30592,
-    fuzzTolerance: 9,
-    fuzzToleranceMobile: 8000
+    expected: "ting-48k-1ch.wav",
+    numberOfChannels: 1,
+    frames: 33297,
+    sampleRate: 48000,
+    duration: 0.693,
+    fuzzTolerance: 7,
+    fuzzToleranceMobile: 7070
   },
-  // An ogg file which needs to be resampled
+  // An ogg file, 48khz, stereo
   {
-    url: "small-shot.ogg",
+    url: "ting-48k-2ch.ogg",
     valid: true,
-    expected: "small-shot-expected.wav",
-    expectedMono: "small-shot-mono-expected.wav",
+    expected: "ting-48k-2ch.wav",
     numberOfChannels: 2,
-    duration: 0.2760,
-    length: 13248,
-    fuzzTolerance: 76,
-    fuzzToleranceMobile: 14844
+    frames: 33297,
+    sampleRate: 48000,
+    duration: 0.693,
+    fuzzTolerance: 12,
+    fuzzToleranceMobile: 13982
   },
-  // A wave file
-  //{ url: "24bit-44khz.wav", valid: true, expected: "24bit-44khz-expected.wav" },
+  // Make sure decoding a wave file results in the same buffer (for both the
+  // resampling and non-resampling cases)
+  {
+    url: "ting-44.1k-1ch.wav",
+    valid: true,
+    expected: "ting-44.1k-1ch.wav",
+    numberOfChannels: 1,
+    frames: 30592,
+    sampleRate: 44100,
+    duration: 0.693,
+    fuzzTolerance: 0,
+    fuzzToleranceMobile: 0
+  },
+  {
+    url: "ting-48k-1ch.wav",
+    valid: true,
+    expected: "ting-48k-1ch.wav",
+    numberOfChannels: 1,
+    frames: 33297,
+    sampleRate: 48000,
+    duration: 0.693,
+    fuzzTolerance: 0,
+    fuzzToleranceMobile: 0
+  },
+  //  // A wave file
+  //  //{ url: "24bit-44khz.wav", valid: true, expected: "24bit-44khz-expected.wav" },
   // A non-audio file
   { url: "invalid.txt", valid: false },
   // A webm file with no audio
@@ -171,24 +199,12 @@ var tests = [
     url: "audio.ogv",
     valid: true,
     expected: "audio-expected.wav",
-    expectedMono: "audio-mono-expected.wav",
     numberOfChannels: 2,
+    sampleRate: 44100,
+    frames: 47680,
     duration: 1.0807,
-    length: 51872,
-    fuzzTolerance: 91427,
-    fuzzToleranceMobile: 119684
-  },
-  // Make sure decoding a wave file results in the same buffer
-  {
-    url: "audio-expected.wav",
-    valid: true,
-    expected: "audio-expected.wav",
-    expectedMono: "audio-mono-expected-2.wav",
-    numberOfChannels: 2,
-    duration: 1.0807,
-    length: 51872,
-    fuzzTolerance: 0,
-    fuzzToleranceMobile: 0
+    fuzzTolerance: 106,
+    fuzzToleranceMobile: 3482
   }
 ];
 
@@ -198,7 +214,7 @@ function fuzzyMemcmp(buf1, buf2, fuzz) {
   var difference = 0;
   is(buf1.length, buf2.length, "same length");
   for (var i = 0; i < buf1.length; ++i) {
-    if (buf1[i] != buf2[i]) {
+    if (Math.abs(buf1[i] - buf2[i])) {
       ++difference;
     }
   }
@@ -216,17 +232,20 @@ function getFuzzTolerance(test) {
 }
 
 function checkAudioBuffer(buffer, test, callback, monoTest) {
-  is(buffer.numberOfChannels, monoTest ? 1 : test.numberOfChannels, "Correct number of channels");
-  ok(Math.abs(buffer.duration - test.duration) < 1e-4, "Correct duration");
-  if (Math.abs(buffer.duration - test.duration) >= 1e-4) {
+  is(buffer.numberOfChannels, test.numberOfChannels, "Correct number of channels");
+  ok(Math.abs(buffer.duration - test.duration) < 1e-3, "Correct duration");
+  if (Math.abs(buffer.duration - test.duration) >= 1e-3) {
     ok(false, "got: " + buffer.duration  + ", expected: " + test.duration);
   }
   is(buffer.sampleRate, cx.sampleRate, "Correct sample rate");
-  is(buffer.length, test.length, "Correct length");
+  // Take into account the resampling when checking the size
+  var SRCRate = test.sampleRate / cx.sampleRate;
+  ok(Math.abs(buffer.length * SRCRate - test.frames) < test.frames * 0.01, "Correct length");
 
   var wave = createWaveFileData(buffer);
+
   var getExpected = new XMLHttpRequest();
-  getExpected.open("GET", monoTest ? test.expectedMono : test.expected, true);
+  getExpected.open("GET", test.expected, true);
   getExpected.responseType = "arraybuffer";
   getExpected.onload = function() {
     ok(fuzzyMemcmp(wave, new Uint8Array(getExpected.response), getFuzzTolerance(test)), "Received expected decoded data");
@@ -248,12 +267,7 @@ function runTest(test, callback) {
       checkAudioBuffer(result, test, function() {
         result = cx.createBuffer(xhr.response, false);
         checkAudioBuffer(result, test, function() {
-          if ("expectedMono" in test) {
-            result = cx.createBuffer(xhr.response, true);
-            checkAudioBuffer(result, test, callback, true);
-          } else {
             callback();
-          }
         }, false);
       }, false);
     }, function onFailure() {
@@ -267,16 +281,12 @@ function runTest(test, callback) {
 }
 
 function runNextTest() {
-  if (tests.length) {
-    runTest(tests.shift(), runNextTest);
+  if (files.length) {
+    runTest(files.shift(), runNextTest);
   } else {
     SimpleTest.finish();
   }
 }
-
-SimpleTest.waitForExplicitFinish();
-
-var cx = new AudioContext();
 
 // Run some simple tests first
 function callbackShouldNeverRun() {
@@ -298,7 +308,7 @@ expectTypeError(function() {
   cx.decodeAudioData(new Uint8Array(100), callbackShouldNeverRun, callbackShouldNeverRun);
 });
 
-if (cx.sampleRate == 48000) {
+if (cx.sampleRate >= 44100) {
   // Now, let's get real!
   runNextTest();
 } else {
