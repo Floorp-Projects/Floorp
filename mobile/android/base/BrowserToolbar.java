@@ -410,6 +410,7 @@ public class BrowserToolbar extends GeckoRelativeLayout
                 }
 
                 if (keyCode == KeyEvent.KEYCODE_BACK) {
+                    // Drop the virtual keyboard.
                     clearFocus();
                     return true;
                 }
