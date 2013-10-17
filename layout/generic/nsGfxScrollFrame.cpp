@@ -2332,6 +2332,13 @@ nsGfxScrollFrameInner::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
     ScrollLayerWrapper wrapper(mOuter, mScrolledFrame);
 
     if (usingDisplayport) {
+      DisplayListClipState::AutoSaveRestore clipState(aBuilder);
+      nsRect clip = mScrollPort + aBuilder->ToReferenceFrame(mOuter);
+      if (mClipAllDescendants) {
+        clipState.ClipContentDescendants(clip);
+      } else {
+        clipState.ClipContainingBlockDescendants(clip);
+      }
       // Once a displayport is set, assume that scrolling needs to be fast
       // so create a layer with all the content inside. The compositor
       // process will be able to scroll the content asynchronously.
