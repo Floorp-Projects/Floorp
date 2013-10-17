@@ -61,29 +61,30 @@ var c4 = {
 };
 
 var c5 = {
-  nickname: "empty"
+  familyName: [],
+  givenName: [],
 };
 
 var c6 = {
-  name: "e",
+  name: ["e"],
   familyName: ["e","e","e"],
   givenName: ["e","e","e"],
 };
 
 var c7 = {
-  name: "e",
+  name: ["e"],
   familyName: ["e","e","e"],
   givenName: ["e","e","e"],
 };
 
 var c8 = {
-  name: "e",
+  name: ["e"],
   familyName: ["e","e","e"],
   givenName: ["e","e","e"],
 };
 
 var adr1 = {
-  type: "work",
+  type: ["work"],
   streetAddress: "street 1",
   locality: "locality 1",
   region: "region 1",
@@ -92,7 +93,7 @@ var adr1 = {
 };
 
 var adr2 = {
-  type: "home, fax",
+  type: ["home, fax"],
   streetAddress: "street2",
   locality: "locality2",
   region: "region2",
@@ -104,34 +105,34 @@ var properties1 = {
   name: ["Test1 TestFamilyName", "Test2 Wagner"],
   familyName: ["TestFamilyName","Wagner"],
   givenName: ["Test1","Test2"],
-  nickname: "nicktest",
+  nickname: ["nicktest"],
   tel: [{type: ["work"], value: "123456", carrier: "testCarrier"} , {type: ["home", "fax"], value: "+55 (31) 9876-3456"}, {type: ["home"], value: "+49 451 491934"}],
-  adr: adr1,
+  adr: [adr1],
   email: [{type: ["work"], value: "x@y.com"}],
 };
 
 var properties2 = {
   name: ["dummyHonorificPrefix dummyGivenName dummyFamilyName dummyHonorificSuffix", "dummyHonorificPrefix2"],
-  familyName: "dummyFamilyName",
-  givenName: "dummyGivenName",
+  familyName: ["dummyFamilyName"],
+  givenName: ["dummyGivenName"],
   honorificPrefix: ["dummyHonorificPrefix","dummyHonorificPrefix2"],
-  honorificSuffix: "dummyHonorificSuffix",
-  additionalName: "dummyadditionalName",
-  nickname: "dummyNickname",
+  honorificSuffix: ["dummyHonorificSuffix"],
+  additionalName: ["dummyadditionalName"],
+  nickname: ["dummyNickname"],
   tel: [{type: ["test"], value: "7932012345", carrier: "myCarrier", pref: 1},{type: ["home", "custom"], value: "7932012346", pref: 0}],
   email: [{type: ["test"], value: "a@b.c"}, {value: "b@c.d", pref: 1}],
   adr: [adr1, adr2],
   impp: [{type: ["aim"], value:"im1", pref: 1}, {value: "im2"}],
   org: ["org1", "org2"],
   jobTitle: ["boss", "superboss"],
-  note: "test note",
+  note: ["test note"],
   category: ["cat1", "cat2"],
   url: [{type: ["work", "work2"], value: "www.1.com", pref: 1}, {value:"www2.com"}],
   bday: new Date("1980, 12, 01"),
   anniversary: new Date("2000, 12, 01"),
   sex: "male",
   genderIdentity: "test",
-  key: "ERPJ394GJJWEVJ0349GJ09W3H4FG0WFW80VHW3408GH30WGH348G3H"
+  key: ["ERPJ394GJJWEVJ0349GJ09W3H4FG0WFW80VHW3408GH30WGH348G3H"]
 };
 
 var sample_id1;
@@ -166,20 +167,39 @@ function checkStr(str1, str2, msg) {
     ok(false, "Expected both strings to be either present or absent");
     return;
   }
+  if (!str1 || str1 == "null") {
+    str1 = null;
+  }
+  if (!str2 || str2 == "null") {
+    str2 = null;
+  }
   is(str1, str2, msg);
 }
 
 function checkStrArray(str1, str2, msg) {
-  // comparing /[null(,null)+]/ and undefined should pass
-  function nonNull(e) {
-    return e != null;
+  function normalize_falsy(v) {
+    if (!v || v == "null" || v == "undefined") {
+      return "";
+    }
+    return v;
   }
-  if ((Array.isArray(str1) && str1.filter(nonNull).length == 0 && str2 == undefined)
-     ||(Array.isArray(str2) && str2.filter(nonNull).length == 0 && str1 == undefined)) {
-    ok(true, msg);
-  } else if (str1) {
-    is(JSON.stringify(typeof str1 == "string" ? [str1] : str1), JSON.stringify(typeof str2 == "string" ? [str2] : str2), msg);
+  function optArray(val) {
+    return Array.isArray(val) ? val : [val];
   }
+  str1 = optArray(str1).map(normalize_falsy).filter(v => v != "");
+  str2 = optArray(str2).map(normalize_falsy).filter(v => v != "");
+  ise(JSON.stringify(str1), JSON.stringify(str2), msg);
+}
+
+function checkPref(pref1, pref2) {
+  // If on Android treat one preference as 0 and the other as undefined as matching
+  if (isAndroid) {
+    if ((!pref1 && pref2 == undefined) || (pref1 == undefined && !pref2)) {
+      pref1 = false;
+      pref2 = false;
+    }
+  }
+  ise(!!pref1, !!pref2, "Same pref");
 }
 
 function checkAddress(adr1, adr2) {
@@ -188,23 +208,12 @@ function checkAddress(adr1, adr2) {
     return;
   }
   checkStrArray(adr1.type, adr2.type, "Same type");
-  checkStrArray(adr1.streetAddress, adr2.streetAddress, "Same streetAddress");
-  checkStrArray(adr1.locality, adr2.locality, "Same locality");
-  checkStrArray(adr1.region, adr2.region, "Same region");
-  checkStrArray(adr1.postalCode, adr2.postalCode, "Same postalCode");
-  checkStrArray(adr1.countryName, adr2.countryName, "Same countryName");
+  checkStr(adr1.streetAddress, adr2.streetAddress, "Same streetAddress");
+  checkStr(adr1.locality, adr2.locality, "Same locality");
+  checkStr(adr1.region, adr2.region, "Same region");
+  checkStr(adr1.postalCode, adr2.postalCode, "Same postalCode");
+  checkStr(adr1.countryName, adr2.countryName, "Same countryName");
   checkPref(adr1.pref, adr2.pref);
-}
-
-function checkTel(tel1, tel2) {
-  if (tel1 ^ tel2) {
-    ok(false, "Expected both tels to be either present or absent");
-    return;
-  }
-  checkStrArray(tel1.type, tel2.type, "Same type");
-  checkStrArray(tel1.value, tel2.value, "Same value");
-  checkStrArray(tel1.carrier, tel2.carrier, "Same carrier");
-  checkPref(tel1.pref, tel2.pref);
 }
 
 function checkField(field1, field2) {
@@ -213,19 +222,17 @@ function checkField(field1, field2) {
     return;
   }
   checkStrArray(field1.type, field2.type, "Same type");
-  checkStrArray(field1.value, field2.value, "Same value");
+  checkStr(field1.value, field2.value, "Same value");
   checkPref(field1.pref, field2.pref);
 }
 
-function checkPref(pref1, pref2) {
-  // If on Android treat one preference as 0 and the other as undefined as matching
-  if (isAndroid) {
-    if ((pref1 == 0 && pref2 == undefined) || (pref1 == undefined && pref2 == 0)) {
-      pref1 = 0;
-      pref2 = 0;
-    }
+function checkTel(tel1, tel2) {
+  if (tel1 ^ tel2) {
+    ok(false, "Expected both tels to be either present or absent");
+    return;
   }
-  is(pref1, pref2, "Same pref");
+  checkField(tel1, tel2);
+  checkStr(tel1.carrier, tel2.carrier, "Same carrier");
 }
 
 function checkCategory(category1, category2) {
@@ -239,21 +246,42 @@ function checkCategory(category1, category2) {
 }
 
 function removeAndroidDefaultCategory(category) {
-  if (category == undefined) {
-    return;
+  if (!category) {
+    return category;
   }
 
-  for (var i = 0; i < category.length; i++) {
+  var result = [];
+
+  for (var i of category) {
     // Some devices may return the full group name (prefixed with "System Group: ")
-    if (category[i] == "My Contacts" || category[i] == "System Group: My Contacts") {
-      category.splice(i, 1);
+    if (i != "My Contacts" && i != "System Group: My Contacts") {
+      result.push(i);
     }
   }
 
-  return category;
+  return result;
+}
+
+function checkArrayField(array1, array2, func, msg) {
+  if (!!array1 ^ !!array2) {
+    ok(false, "Expected both arrays to be either present or absent");
+    return;
+  }
+  if (!array1 && !array2)  {
+    ok(true, msg);
+    return;
+  }
+  ise(array1.length, array2.length, "Same length");
+  for (var i = 0; i < array1.length; ++i) {
+    func(array1[i], array2[i], msg);
+  }
 }
 
 function checkContacts(contact1, contact2) {
+  if (!!contact1 ^ !!contact2) {
+    ok(false, "Expected both contacts to be either present or absent");
+    return;
+  }
   checkStrArray(contact1.name, contact2.name, "Same name");
   checkStrArray(contact1.honorificPrefix, contact2.honorificPrefix, "Same honorificPrefix");
   checkStrArray(contact1.givenName, contact2.givenName, "Same givenName");
@@ -271,27 +299,21 @@ function checkContacts(contact1, contact2) {
   checkStr(contact1.genderIdentity, contact2.genderIdentity, "Same genderIdentity");
   checkStrArray(contact1.key, contact2.key, "Same key");
 
-  for (var i in contact1.email) {
-    checkField(contact1.email[i], contact2.email[i]);
-  }
-  for (var i in contact1.adr) {
-    checkAddress(contact1.adr[i], contact2.adr[i]);
-  }
-  for (var i in contact1.tel) {
-    checkTel(contact1.tel[i], contact2.tel[i]);
-  }
-  for (var i in contact1.url) {
-    checkField(contact1.url[i], contact2.url[i]);
-  }
-  for (var i in contact1.impp) {
-    checkField(contact1.impp[i], contact2.impp[i]);
-  }
+  checkArrayField(contact1.adr, contact2.adr, checkAddress, "Same adr");
+  checkArrayField(contact1.tel, contact2.tel, checkTel, "Same tel");
+  checkArrayField(contact1.email, contact2.email, checkField, "Same email");
+  checkArrayField(contact1.url, contact2.url, checkField, "Same url");
+  checkArrayField(contact1.impp, contact2.impp, checkField, "Same impp");
 }
 
 var req;
 var index = 0;
 
 var initialRev;
+
+var defaultOptions = {
+  sortBy: "givenName",
+};
 
 function checkRevision(revision, msg, then) {
   var revReq = mozContacts.getRevision();
@@ -319,8 +341,6 @@ function checkCount(count, msg, then) {
 }
 
 var mozContacts = window.navigator.mozContacts;
-ok(mozContacts, "mozContacts exists");
-ok("mozContact" in window, "mozContact exists");
 var steps = [
   function() {
     req = mozContacts.getRevision();
@@ -354,7 +374,7 @@ var steps = [
   },
   function () {
     ok(true, "Retrieving all contacts");
-    req = mozContacts.find({});
+    req = mozContacts.find(defaultOptions);
     req.onsuccess = function () {
       is(req.result.length, 0, "Empty database.");
       checkRevision(1, "Revision was not incremented on find", next);
@@ -363,8 +383,7 @@ var steps = [
   },
   function () {
     ok(true, "Adding empty contact");
-    createResult1 = new mozContact();
-    createResult1.init({});
+    createResult1 = new mozContact({});
     req = navigator.mozContacts.save(createResult1);
     req.onsuccess = function () {
       ok(createResult1.id, "The contact now has an ID.");
@@ -377,7 +396,7 @@ var steps = [
   },
   function () {
     ok(true, "Retrieving all contacts");
-    req = mozContacts.find({});
+    req = mozContacts.find(defaultOptions);
     req.onsuccess = function () {
       is(req.result.length, 1, "One contact.");
       findResult1 = req.result[0];
@@ -389,7 +408,7 @@ var steps = [
     ok(true, "Deleting empty contact");
     req = navigator.mozContacts.remove(findResult1);
     req.onsuccess = function () {
-      var req2 = mozContacts.find({});
+      var req2 = mozContacts.find(defaultOptions);
       req2.onsuccess = function () {
         is(req2.result.length, 0, "Empty Database.");
         clearTemps();
@@ -401,8 +420,7 @@ var steps = [
   },
   function () {
     ok(true, "Adding a new contact1");
-    createResult1 = new mozContact();
-    createResult1.init(properties1);
+    createResult1 = new mozContact(properties1);
 
     mozContacts.oncontactchange = function(event) {
       is(event.contactID, createResult1.id, "Same contactID");
@@ -487,8 +505,7 @@ var steps = [
        is(event.contactID, createResult2.id, "Same contactID");
        is(event.reason, "create", "Same reason");
      }
-    createResult2 = new mozContact();
-    createResult2.init({name: "newName"});
+    createResult2 = new mozContact({name: ["newName"]});
     req = navigator.mozContacts.save(createResult2);
     req.onsuccess = function () {
       ok(createResult2.id, "The contact now has an ID.");
@@ -573,8 +590,7 @@ var steps = [
   },
   function () {
     ok(true, "Adding a new contact with properties1");
-    createResult1 = new mozContact();
-    createResult1.init(properties1);
+    createResult1 = new mozContact(properties1);
     mozContacts.oncontactchange = null;
     req = navigator.mozContacts.save(createResult1);
     req.onsuccess = function () {
@@ -788,14 +804,16 @@ var steps = [
   },
   function () {
     ok(true, "Retrieving all contacts");
-    req = mozContacts.find({});
+    req = mozContacts.find(defaultOptions);
     req.onsuccess = function() {
       is(req.result.length, 1, "Found exactly 1 contact.");
       findResult1 = req.result[0];
       ok(findResult1.id == sample_id1, "Same ID");
       checkContacts(createResult1, findResult1);
-      ok(findResult1.updated, "Has updated field");
-      ok(findResult1.published, "Has published field");
+      if (!isAndroid) {
+        ok(findResult1.updated, "Has updated field");
+        ok(findResult1.published, "Has published field");
+      }
       next();
     }
     req.onerror = onFailure;
@@ -808,7 +826,7 @@ var steps = [
       findResult1.impp = properties1.impp = [{value:"phil impp"}];
       req = navigator.mozContacts.save(findResult1);
       req.onsuccess = function () {
-        var req2 = mozContacts.find({});
+        var req2 = mozContacts.find(defaultOptions);
         req2.onsuccess = function() {
           is(req2.result.length, 1, "Found exactly 1 contact.");
           findResult2 = req2.result[0];
@@ -872,7 +890,7 @@ var steps = [
       findResult1.impp = properties1.impp = [{value: "phil impp"}];
       req = mozContacts.save(findResult1);
       req.onsuccess = function () {
-        var req2 = mozContacts.find({});
+        var req2 = mozContacts.find(defaultOptions);
         req2.onsuccess = function () {
           is(req2.result.length, 1, "Found exactly 1 contact.");
           findResult1 = req2.result[0];
@@ -937,9 +955,8 @@ var steps = [
       SpecialPowers.executeSoon(next);
     } else {
       findResult1.email = [{value: properties1.nickname}];
-      findResult1.nickname = "TEST";
-      var newContact = new mozContact();
-      newContact.init(findResult1);
+      findResult1.nickname = ["TEST"];
+      var newContact = new mozContact(findResult1);
       req = mozContacts.save(newContact);
       req.onsuccess = function () {
         var options = {filterBy: ["email", "givenName"],
@@ -961,7 +978,7 @@ var steps = [
     ok(true, "Deleting contact" + findResult1);
     req = mozContacts.remove(findResult1);
     req.onsuccess = function () {
-      var req2 = mozContacts.find({});
+      var req2 = mozContacts.find(defaultOptions);
       req2.onsuccess = function () {
         is(req2.result.length, 1, "One contact left.");
         findResult1 = req2.result[0];
@@ -982,8 +999,7 @@ var steps = [
   },
   function () {
     ok(true, "Adding a new contact");
-    createResult1 = new mozContact();
-    createResult1.init(properties1);
+    createResult1 = new mozContact(properties1);
     req = mozContacts.save(createResult1)
     req.onsuccess = function () {
       ok(createResult1.id, "The contact now has an ID.");
@@ -994,8 +1010,7 @@ var steps = [
   },
   function () {
     ok(true, "Adding a new contact2");
-    createResult2 = new mozContact();
-    createResult2.init(properties2);
+    createResult2 = new mozContact(properties2);
     req = mozContacts.save(createResult2);
     req.onsuccess = function () {
       ok(createResult2.id, "The contact now has an ID.");
@@ -1006,10 +1021,10 @@ var steps = [
   },
   function () {
     ok(true, "Retrieving all contacts");
-    req = mozContacts.find({sortBy: 'FamilyName',})
+    req = mozContacts.find({sortBy: "familyName"});
     req.onsuccess = function () {
       is(req.result.length, 2, "Found exactly 2 contact.");
-      checkContacts(properties2, req.result[1]);
+      checkContacts(req.result[1], properties1);
       next();
     }
     req.onerror = onFailure;
@@ -1086,16 +1101,14 @@ var steps = [
   function () {
     ok(true, "Adding 20 contacts");
     for (var i=0; i<19; i++) {
-      createResult1 = new mozContact();
-      createResult1.init(properties1);
+      createResult1 = new mozContact(properties1);
       req = mozContacts.save(createResult1);
       req.onsuccess = function () {
         ok(createResult1.id, "The contact now has an ID.");
       };
       req.onerror = onFailure;
     };
-    createResult1 = new mozContact();
-    createResult1.init(properties1);
+    createResult1 = new mozContact(properties1);
     req = mozContacts.save(createResult1);
     req.onsuccess = function () {
       ok(createResult1.id, "The contact now has an ID.");
@@ -1106,7 +1119,7 @@ var steps = [
   },
   function () {
     ok(true, "Retrieving all contacts");
-    req = mozContacts.find({});
+    req = mozContacts.find(defaultOptions);
     req.onsuccess = function () {
       is(req.result.length, 20, "20 Entries.");
       next();
@@ -1152,11 +1165,10 @@ var steps = [
     ok(true, "Retrieving all contacts3");
     var options = {filterBy: ["givenName", "tel", "email"],
                    filterOp: "startsWith",
-                   filterValue: properties1.givenName[0].substring(0, 4),
-                   filterLimit: 15 };
+                   filterValue: properties1.givenName[0].substring(0, 4)};
     req = mozContacts.find(options);
     req.onsuccess = function () {
-      is(req.result.length, 15, "15 Entries.");
+      is(req.result.length, 20, "20 Entries.");
       checkContacts(createResult1, req.result[10]);
       next();
     }
@@ -1173,8 +1185,7 @@ var steps = [
   },
   function () {
     ok(true, "Testing clone contact");
-    createResult1 = new mozContact();
-    createResult1.init(properties1);
+    createResult1 = new mozContact(properties1);
     req = mozContacts.save(createResult1);
     req.onsuccess = function () {
       ok(createResult1.id, "The contact now has an ID.");
@@ -1187,14 +1198,14 @@ var steps = [
     ok(true, "Testing clone contact2");
     var cloned = new mozContact(createResult1);
     ok(cloned.id != createResult1.id, "Cloned contact has new ID");
-    cloned.email = {value: "new email!"};
-    cloned.givenName = "Tom";
+    cloned.email = [{value: "new email!"}];
+    cloned.givenName = ["Tom"];
     req = mozContacts.save(cloned);
     req.onsuccess = function () {
       ok(cloned.id, "The contact now has an ID.");
-      ok(cloned.email[0].value == "new email!", "Same Email");
-      ok(createResult1.email != cloned.email, "Clone has different email");
-      ok(cloned.givenName == "Tom", "New Name");
+      is(cloned.email[0].value, "new email!", "Same Email");
+      isnot(createResult1.email[0].value, cloned.email[0].value, "Clone has different email");
+      is(cloned.givenName, "Tom", "New Name");
       next();
     }
     req.onerror = onFailure;
@@ -1204,7 +1215,7 @@ var steps = [
     var options = {filterBy: ["givenName"],
                    filterOp: "startsWith",
                    filterValue: properties2.givenName[0].substring(0, 4)};
-    req = mozContacts.find({});
+    req = mozContacts.find(defaultOptions);
     req.onsuccess = function () {
       is(req.result.length, 2, "2 Entries.");
       next();
@@ -1213,11 +1224,14 @@ var steps = [
   },
   function () {
     ok(true, "Search with redundant fields should only return 1 contact");
-    createResult1 = new mozContact();
-    createResult1.init({name: "XXX", givenName: "XXX", email: [{value: "XXX"}], tel: {value: "XXX"}});
+    createResult1 = new mozContact({name: ["XXX"],
+                                    givenName: ["XXX"],
+                                    email: [{value: "XXX"}],
+                                    tel: [{value: "XXX"}]
+                                   });
     req = mozContacts.save(createResult1);
     req.onsuccess = function() {
-      var options = {filterBy: [],
+      var options = {filterBy: ["givenName", "familyName"],
                      filterOp: "equals",
                      filterValue: "XXX"};
       var req2 = mozContacts.find(options);
@@ -1240,8 +1254,7 @@ var steps = [
   },
   function () {
     ok(true, "Test sorting");
-    createResult1 = new mozContact();
-    createResult1.init(c3);
+    createResult1 = new mozContact(c3);
     req = navigator.mozContacts.save(createResult1);
     req.onsuccess = function () {
       ok(createResult1.id, "The contact now has an ID.");
@@ -1252,8 +1265,7 @@ var steps = [
   },
   function () {
     ok(true, "Test sorting");
-    createResult1 = new mozContact();
-    createResult1.init(c2);
+    createResult1 = new mozContact(c2);
     req = navigator.mozContacts.save(createResult1);
     req.onsuccess = function () {
       ok(createResult1.id, "The contact now has an ID.");
@@ -1264,8 +1276,7 @@ var steps = [
   },
   function () {
     ok(true, "Test sorting");
-    createResult1 = new mozContact();
-    createResult1.init(c4);
+    createResult1 = new mozContact(c4);
     req = navigator.mozContacts.save(createResult1);
     req.onsuccess = function () {
       ok(createResult1.id, "The contact now has an ID.");
@@ -1276,8 +1287,7 @@ var steps = [
   },
   function () {
     ok(true, "Test sorting");
-    createResult1 = new mozContact();
-    createResult1.init(c1);
+    createResult1 = new mozContact(c1);
     req = navigator.mozContacts.save(createResult1);
     req.onsuccess = function () {
       ok(createResult1.id, "The contact now has an ID.");
@@ -1318,8 +1328,7 @@ var steps = [
   },
   function () {
     ok(true, "Test sorting");
-    createResult1 = new mozContact();
-    createResult1.init(c5);
+    createResult1 = new mozContact(c5);
     req = navigator.mozContacts.save(createResult1);
     req.onsuccess = function () {
       ok(createResult1.id, "The contact now has an ID.");
@@ -1346,17 +1355,16 @@ var steps = [
   },
   function () {
     ok(true, "Don't allow to add custom fields");
-    createResult1 = new mozContact();
-    createResult1.init({givenName: "customTest", yyy: "XXX"});
+    createResult1 = new mozContact({givenName: ["customTest"], yyy: "XXX"});
     req = mozContacts.save(createResult1);
     req.onsuccess = function() {
-      var options = {filterBy: [],
+      var options = {filterBy: ["givenName"],
                      filterOp: "equals",
                      filterValue: "customTest"};
       var req2 = mozContacts.find(options);
       req2.onsuccess = function() {
         is(req2.result.length, 1, "1 Entry");
-        checkStrArray(req2.result.givenName, "customTest", "same name");
+        checkStrArray(req2.result[0].givenName, ["customTest"], "same name");
         ok(req2.result.yyy === undefined, "custom property undefined");
         next();
       }
@@ -1375,8 +1383,7 @@ var steps = [
   },
   function () {
     ok(true, "Test sorting");
-    createResult1 = new mozContact();
-    createResult1.init(c7);
+    createResult1 = new mozContact(c7);
     req = navigator.mozContacts.save(createResult1);
     req.onsuccess = function () {
       ok(createResult1.id, "The contact now has an ID.");
@@ -1387,8 +1394,7 @@ var steps = [
   },
   function () {
     ok(true, "Test sorting");
-    createResult1 = new mozContact();
-    createResult1.init(c6);
+    createResult1 = new mozContact(c6);
     req = navigator.mozContacts.save(createResult1);
     req.onsuccess = function () {
       ok(createResult1.id, "The contact now has an ID.");
@@ -1399,8 +1405,7 @@ var steps = [
   },
   function () {
     ok(true, "Test sorting");
-    createResult1 = new mozContact();
-    createResult1.init(c8);
+    createResult1 = new mozContact(c8);
     req = navigator.mozContacts.save(createResult1);
     req.onsuccess = function () {
       ok(createResult1.id, "The contact now has an ID.");
@@ -1430,7 +1435,7 @@ var steps = [
   },
   function () {
     ok(true, "Deleting database");
-    req = mozContacts.clear()
+    req = mozContacts.clear();
     req.onsuccess = function () {
       ok(true, "Deleted the database");
       next();
@@ -1439,8 +1444,7 @@ var steps = [
   },
   function () {
     ok(true, "Adding a new contact with properties2");
-    createResult2 = new mozContact();
-    createResult2.init(properties2);
+    createResult2 = new mozContact(properties2);
     req = mozContacts.save(createResult2);
     req.onsuccess = function () {
       ok(createResult2.id, "The contact now has an ID.");
@@ -1485,9 +1489,8 @@ var steps = [
     req.onerror = onFailure;
   },
   function () {
-    ok(true, "Adding empty contact");
-    createResult1 = new mozContact();
-    createResult1.init({name: "5", givenName: "5"});
+    ok(true, "Adding contact for category search");
+    createResult1 = new mozContact({name: ["5"], givenName: ["5"]});
     req = navigator.mozContacts.save(createResult1);
     req.onsuccess = function () {
       ok(createResult1.id, "The contact now has an ID.");
@@ -1522,20 +1525,10 @@ var steps = [
     ok(true, "Adding contact with invalid data");
     var input = document.createElement("input");
     var obj = {
-        name: [1, 2],
-        familyName: 3,
-        givenName: 4,
         honorificPrefix: [],
-        honorificSuffix: {foo: "bar"},
-        additionalName: 7,
-        nickname: [8, 9],
-        org: [10, 11],
-        jobTitle: [12, 13],
-        note: 14,
-        category: [15, 16],
+        honorificSuffix: [{foo: "bar"}],
         sex: 17,
         genderIdentity: 18,
-        key: 4,
         email: input,
         adr: input,
         tel: input,
@@ -1553,12 +1546,12 @@ var steps = [
         }
       }
     })());
-    createResult1 = new mozContact();
-    createResult1.init(obj);
+    createResult1 = new mozContact(obj);
     req = mozContacts.save(createResult1);
     req.onsuccess = function () {
       checkContacts(createResult1, {
-        honorificPrefix: "string",
+        honorificPrefix: ["string"],
+        honorificSuffix: ["[object Object]"],
         sex: "17",
         genderIdentity: "18"
       });
@@ -1567,8 +1560,7 @@ var steps = [
   },
   function () {
     ok(true, "Adding contact with no number but carrier");
-    createResult1 = new mozContact();
-    createResult1.init({ tel: [{type: ["home"], carrier: "myCarrier"} ] });
+    createResult1 = new mozContact({ tel: [{type: ["home"], carrier: "myCarrier"} ] });
     req = navigator.mozContacts.save(createResult1);
     req.onsuccess = function () {
       ok(createResult1.id, "The contact now has an ID.");
@@ -1578,8 +1570,7 @@ var steps = [
   },
   function () {
     ok(true, "Adding contact with email but no value");
-    createResult1 = new mozContact();
-    createResult1.init({ email: [{type: ["home"]}] });
+    createResult1 = new mozContact({ email: [{type: ["home"]}] });
     req = navigator.mozContacts.save(createResult1);
     req.onsuccess = function () {
       ok(createResult1.id, "The contact now has an ID.");
@@ -1589,8 +1580,7 @@ var steps = [
   },
   function () {
     ok(true, "Testing numbersOnly search 1");
-    createResult1 = new mozContact();
-    createResult1.init({ name: ["aaaaaaaaa"], givenName: ["aaaaaaaaa"], tel: [{ value: "1234567890"}]});
+    createResult1 = new mozContact({ name: ["aaaaaaaaa"], givenName: ["aaaaaaaaa"], tel: [{ value: "1234567890"}]});
     req = navigator.mozContacts.save(createResult1);
     req.onsuccess = function () {
       ok(createResult1.id, "The contact now has an ID.");
@@ -1670,17 +1660,10 @@ var steps = [
   },
   function() {
     ok(true, "Test setting array properties to scalar values")
-    const DOMStrings = ["name","honorificPrefix","givenName","additionalName",
-                        "familyName", "honorificSuffix","nickname","category",
-                        "org","jobTitle","note"];
     const FIELDS = ["email","url","adr","tel","impp"];
     createResult1 = new mozContact();
-    for (var prop of DOMStrings) {
-      createResult1[prop] = "foo";
-      ok(Array.isArray(createResult1[prop]), prop + " is array");
-    }
     for (var prop of FIELDS) {
-      createResult1[prop] = {type: "foo"};
+      createResult1[prop] = {type: ["foo"]};
       ok(Array.isArray(createResult1[prop]), prop + " is array");
     }
     next();
