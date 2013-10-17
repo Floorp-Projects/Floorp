@@ -27,7 +27,7 @@
       <field name="controller">null</field>
 
       <!-- collection of child items excluding empty tiles -->
-      <property name="items" readonly="true" onget="return this.querySelectorAll('richgriditem');"/>
+      <property name="items" readonly="true" onget="return this.querySelectorAll('richgriditem[value]');"/>
       <property name="itemCount" readonly="true" onget="return this.items.length;"/>
 
       <!-- nsIDOMXULMultiSelectControlElement (not fully implemented) -->
@@ -96,7 +96,7 @@
         <parameter name="aEvent"/>
         <body>
           <![CDATA[
-            if(!this.isBound)
+            if (!this.isBound)
               return;
 
             if ("single" == this.getAttribute("seltype")) {
@@ -116,7 +116,7 @@
         <parameter name="aEvent"/>
         <body>
           <![CDATA[
-            if(!this.isBound || this.suppressOnSelect)
+            if (!this.isBound || this.suppressOnSelect)
               return;
             // we'll republish this as a selectionchange event on the grid
             aEvent.stopPropagation();
@@ -175,7 +175,7 @@
       <property name="selectedItems">
         <getter>
           <![CDATA[
-            return this.querySelectorAll("richgriditem[selected]");
+            return this.querySelectorAll("richgriditem[value][selected]");
           ]]>
         </getter>
       </property>
@@ -204,24 +204,101 @@
         <parameter name="aSkipArrange"/>
         <body>
           <![CDATA[
-            let addition = this._createItemElement(aLabel, aValue);
-            this.appendChild(addition);
+            let item = this.nextSlot();
+            item.setAttribute("value", aValue);
+            item.setAttribute("label", aLabel);
+
             if (!aSkipArrange)
               this.arrangeItems();
-            return addition;
+            return item;
           ]]>
         </body>
       </method>
+
+      <method name="_slotValues">
+        <body><![CDATA[
+          return Array.map(this.children, (cnode) => cnode.getAttribute("value"));
+        ]]></body>
+      </method>
+
+      <property name="minSlots" readonly="true"
+                onget="return this.getAttribute('minSlots') || 3;"/>
 
       <method name="clearAll">
         <parameter name="aSkipArrange"/>
         <body>
           <![CDATA[
-            while (this.firstChild) {
-              this.removeChild(this.firstChild);
+            const ELEMENT_NODE_TYPE = Components.interfaces.nsIDOMNode.ELEMENT_NODE;
+            let slotCount = this.minSlots;
+            let childIndex = 0;
+            let child = this.firstChild;
+            while (child) {
+              // remove excess elements and non-element nodes
+              if (child.nodeType !== ELEMENT_NODE_TYPE || childIndex+1 > slotCount) {
+                let orphanNode = child;
+                child = orphanNode.nextSibling;
+                this.removeChild(orphanNode);
+                continue;
+              }
+              if (child.hasAttribute("value")) {
+                this._releaseSlot(child);
+              }
+              child = child.nextSibling;
+              childIndex++;
             }
+            // create our quota of item slots
+            for (let count = this.childElementCount; count < slotCount; count++) {
+              this.appendChild( this._createItemElement() );
+            }
+
             if (!aSkipArrange)
               this.arrangeItems();
+          ]]>
+        </body>
+      </method>
+
+      <method name="_slotAt">
+        <parameter name="anIndex"/>
+        <body>
+          <![CDATA[
+            // backfill with new slots as necessary
+            let count = Math.max(1+anIndex, this.minSlots) - this.childElementCount;
+            for (; count > 0; count--) {
+              this.appendChild( this._createItemElement() );
+            }
+            return this.children[anIndex];
+          ]]>
+        </body>
+      </method>
+
+      <method name="nextSlot">
+        <body>
+          <![CDATA[
+            if (!this.itemCount) {
+              return this._slotAt(0);
+            }
+            let lastItem = this.items[this.itemCount-1];
+            let nextIndex = 1 + Array.indexOf(this.children, lastItem);
+            return this._slotAt(nextIndex);
+          ]]>
+        </body>
+      </method>
+
+      <method name="_releaseSlot">
+        <parameter name="anItem"/>
+        <body>
+          <![CDATA[
+            // Flush out data and state attributes so we can recycle this slot/element
+            let exclude = { value: 1, tiletype: 1 };
+            let attrNames = [attr.name for (attr of anItem.attributes)];
+            for (let attrName of attrNames) {
+              if (!(attrName in exclude))
+                anItem.removeAttribute(attrName);
+            }
+            // clear out inline styles
+            anItem.removeAttribute("style");
+            // finally clear the value, which should apply the richgrid-empty-item binding
+            anItem.removeAttribute("value");
           ]]>
         </body>
       </method>
@@ -233,19 +310,30 @@
         <parameter name="aSkipArrange"/>
         <body>
           <![CDATA[
+            anIndex = Math.min(this.itemCount, anIndex);
+            let insertedItem;
             let existing = this.getItemAtIndex(anIndex);
-            let addition = this._createItemElement(aLabel, aValue);
             if (existing) {
-              this.insertBefore(addition, existing);
-            } else {
-              this.appendChild(addition);
+              // use an empty slot if we have one, otherwise insert it
+              let childIndex = Array.indexOf(this.children, existing);
+              if (childIndex > 0 && !this.children[childIndex-1].hasAttribute("value")) {
+                insertedItem = this.children[childIndex-1];
+              } else {
+                insertedItem = this.insertBefore(this._createItemElement(),existing);
+              }
             }
+            if (!insertedItem) {
+              insertedItem = this._slotAt(anIndex);
+            }
+            insertedItem.setAttribute("value", aValue);
+            insertedItem.setAttribute("label", aLabel);
             if (!aSkipArrange)
               this.arrangeItems();
-            return addition;
+            return insertedItem;
           ]]>
         </body>
       </method>
+
       <method name="removeItemAt">
         <parameter name="anIndex"/>
         <parameter name="aSkipArrange"/>
@@ -266,7 +354,13 @@
           <![CDATA[
             if (!aItem || Array.indexOf(this.items, aItem) < 0)
               return null;
+
             let removal = this.removeChild(aItem);
+            // replace the slot if necessary
+            if (this.childElementCount < this.minSlots) {
+              this.nextSlot();
+            }
+
             if (removal && !aSkipArrange)
                 this.arrangeItems();
 
@@ -422,6 +516,7 @@
       <field name="_scheduledArrangeItemsTimerId">null</field>
       <field name="_scheduledArrangeItemsTries">0</field>
       <field name="_maxArrangeItemsRetries">5</field>
+
       <method name="_scheduleArrangeItems">
         <parameter name="aTime"/>
         <body>
@@ -453,6 +548,7 @@
 
             let itemDims = this._itemSize;
             let containerDims = this._containerSize;
+            let slotsCount = this.childElementCount;
 
             // reset the flags
             if (this._scheduledArrangeItemsTimerId) {
@@ -468,25 +564,25 @@
 
             if (this.hasAttribute("vertical")) {
               this._columnCount = Math.floor(containerDims.width / itemDims.width) || 1;
-              this._rowCount = Math.floor(this.itemCount / this._columnCount);
+              this._rowCount = Math.floor(slotsCount / this._columnCount);
             } else {
-              // We favor overflowing horizontally, not vertically (rows then colums)
-              // rows attribute = max rows
-              let maxRowCount = Math.min(this.getAttribute("rows") || Infinity, Math.floor(containerDims.height / itemDims.height));
-              this._rowCount = Math.min(this.itemCount, maxRowCount);
+              // rows attribute is fixed number of rows
+              let maxRows = Math.floor(containerDims.height / itemDims.height);
+              this._rowCount = this.getAttribute("rows") ?
+                                  // fit indicated rows when possible
+                                  Math.min(maxRows, this.getAttribute("rows")) :
+                                  // at least 1 row
+                                  Math.min(maxRows, slotsCount) || 1;
 
-              // columns attribute = min cols
-              this._columnCount = this.itemCount ?
-                    Math.max(
-                        // at least 1 column when there are items
-                        this.getAttribute("columns") || 1,
-                        Math.ceil(this.itemCount / this._rowCount)
-                    ) : this.getAttribute("columns") || 0;
+              // columns attribute is min number of cols
+              this._columnCount = Math.ceil(slotsCount / this._rowCount) || 1;
+              if (this.getAttribute("columns")) {
+                this._columnCount = Math.max(this._columnCount, this.getAttribute("columns"));
+              }
             }
 
             // width is typically auto, cap max columns by truncating items collection
             // or, setting max-width style property with overflow hidden
-            // '0' is an invalid value, just leave the property unset when 0 columns
             if (this._columnCount) {
               gridStyle.MozColumnCount = this._columnCount;
             }
@@ -521,6 +617,12 @@
       <field name="_xslideHandler"/>
       <constructor>
         <![CDATA[
+          // create our quota of item slots
+          for (let count = this.childElementCount, slotCount = this.minSlots;
+              count < slotCount; count++) {
+            this.appendChild( this._createItemElement() );
+          }
+
           if (this.controller && this.controller.gridBoundCallback != undefined)
             this.controller.gridBoundCallback();
 
@@ -605,6 +707,7 @@
           ]]>
         </body>
       </method>
+
       <method name="_isIndexInBounds">
         <parameter name="anIndex"/>
         <body>
@@ -626,7 +729,7 @@
             if (aLabel) {
               item.setAttribute("label", aLabel);
             }
-            if(this.hasAttribute("tiletype")) {
+            if (this.hasAttribute("tiletype")) {
               item.setAttribute("tiletype", this.getAttribute("tiletype"));
             }
             return item;
@@ -704,6 +807,7 @@
           aItem.setAttribute("bending", true);
         ]]></body>
       </method>
+
       <method name="unbendItem">
         <parameter name="aItem"/>
         <body><![CDATA[
@@ -749,7 +853,7 @@
           let state = event.crossSlidingState;
           let thresholds = this._xslideHandler.thresholds;
           let transformValue;
-          switch(state) {
+          switch (state) {
             case "cancelled":
               this.unbendItem(event.target);
               event.target.removeAttribute('crosssliding');
@@ -844,7 +948,7 @@
         <body>
           <![CDATA[
             // Prevent an exception in case binding is not done yet.
-            if(!this.isBound)
+            if (!this.isBound)
               return;
 
             // Seed the binding properties from bound-node attribute values
@@ -914,7 +1018,7 @@
 
       <method name="refreshBackgroundImage">
         <body><![CDATA[
-          if(!this.isBound)
+          if (!this.isBound)
             return;
           if (this.backgroundImage) {
             this._top.style.removeProperty("background-image");
@@ -927,7 +1031,7 @@
       <property name="contextActions">
         <getter>
           <![CDATA[
-            if(!this._contextActions) {
+            if (!this._contextActions) {
               this._contextActions = new Set();
               let actionSet = this._contextActions;
               let actions = this.getAttribute("data-contextactions");
@@ -959,12 +1063,18 @@
           // fires for right-click, long-click and (keyboard) contextmenu input
           // toggle the selected state of tiles in a grid
           let gridParent = this.control;
-          if(!this.isBound || !gridParent)
+          if (!this.isBound || !gridParent)
             return;
           gridParent.handleItemContextMenu(this, event);
         ]]>
       </handler>
     </handlers>
+  </binding>
+
+  <binding id="richgrid-empty-item">
+    <content>
+      <html:div anonid="anon-tile" class="tile-content"></html:div>
+    </content>
   </binding>
 
 </bindings>

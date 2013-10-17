@@ -13,11 +13,11 @@ import android.content.SharedPreferences;
 import android.util.Log;
 
 import org.mozilla.gecko.AppConstants;
+import org.mozilla.gecko.Distribution;
+import org.mozilla.gecko.Distribution.DistributionDescriptor;
 import org.mozilla.gecko.GeckoApp;
 import org.mozilla.gecko.GeckoAppShell;
 import org.mozilla.gecko.GeckoEvent;
-import org.mozilla.gecko.PrefsHelper;
-import org.mozilla.gecko.PrefsHelper.PrefHandler;
 
 import org.mozilla.gecko.background.healthreport.EnvironmentBuilder;
 import org.mozilla.gecko.background.healthreport.HealthReportDatabaseStorage;
@@ -38,6 +38,7 @@ import java.io.FileOutputStream;
 import java.io.OutputStreamWriter;
 import java.nio.charset.Charset;
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.Scanner;
 import java.util.concurrent.atomic.AtomicBoolean;
 
@@ -50,8 +51,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
  * Keep an instance of this class around.
  *
  * Tell it when an environment attribute has changed: call {@link
- * #onBlocklistPrefChanged(boolean)} or {@link
- * #onTelemetryPrefChanged(boolean)}, followed by {@link
+ * #onAppLocaleChanged(String)} followed by {@link
  * #onEnvironmentChanged()}.
  *
  * Use it to record events: {@link #recordSearch(String, String)}.
@@ -60,8 +60,9 @@ import java.util.concurrent.atomic.AtomicBoolean;
  */
 public class BrowserHealthRecorder implements GeckoEventListener {
     private static final String LOG_TAG = "GeckoHealthRec";
+    private static final String PREF_ACCEPT_LANG = "intl.accept_languages";
     private static final String PREF_BLOCKLIST_ENABLED = "extensions.blocklist.enabled";
-    private static final String EVENT_ADDONS_ALL = "Addons:All";
+    private static final String EVENT_SNAPSHOT = "HealthReport:Snapshot";
     private static final String EVENT_ADDONS_CHANGE = "Addons:Change";
     private static final String EVENT_ADDONS_UNINSTALLING = "Addons:Uninstalling";
     private static final String EVENT_PREF_CHANGE = "Pref:Change";
@@ -242,8 +243,15 @@ public class BrowserHealthRecorder implements GeckoEventListener {
 
     /**
      * This constructor does IO. Run it on a background thread.
+     *
+     * appLocale can be null, which indicates that it will be provided later.
      */
-    public BrowserHealthRecorder(final Context context, final String profilePath, final EventDispatcher dispatcher, SessionInformation previousSession) {
+    public BrowserHealthRecorder(final Context context,
+                                 final String profilePath,
+                                 final EventDispatcher dispatcher,
+                                 final String osLocale,
+                                 final String appLocale,
+                                 SessionInformation previousSession) {
         Log.d(LOG_TAG, "Initializing. Dispatcher is " + dispatcher);
         this.dispatcher = dispatcher;
         this.previousSession = previousSession;
@@ -263,9 +271,12 @@ public class BrowserHealthRecorder implements GeckoEventListener {
             this.client = null;
         }
 
+        // Note that the PIC is not necessarily fully initialized at this point:
+        // we haven't set the app locale. This must be done before an environment
+        // is recorded.
         this.profileCache = new ProfileInformationCache(profilePath);
         try {
-            this.initialize(context, profilePath);
+            this.initialize(context, profilePath, osLocale, appLocale);
         } catch (Exception e) {
             Log.e(LOG_TAG, "Exception initializing.", e);
         }
@@ -299,7 +310,7 @@ public class BrowserHealthRecorder implements GeckoEventListener {
     }
 
     private void unregisterEventListeners() {
-        this.dispatcher.unregisterEventListener(EVENT_ADDONS_ALL, this);
+        this.dispatcher.unregisterEventListener(EVENT_SNAPSHOT, this);
         this.dispatcher.unregisterEventListener(EVENT_ADDONS_CHANGE, this);
         this.dispatcher.unregisterEventListener(EVENT_ADDONS_UNINSTALLING, this);
         this.dispatcher.unregisterEventListener(EVENT_PREF_CHANGE, this);
@@ -307,14 +318,9 @@ public class BrowserHealthRecorder implements GeckoEventListener {
         this.dispatcher.unregisterEventListener(EVENT_SEARCH, this);
     }
 
-    public void onBlocklistPrefChanged(boolean to) {
+    public void onAppLocaleChanged(String to) {
         this.profileCache.beginInitialization();
-        this.profileCache.setBlocklistEnabled(to);
-    }
-
-    public void onTelemetryPrefChanged(boolean to) {
-        this.profileCache.beginInitialization();
-        this.profileCache.setTelemetryEnabled(to);
+        this.profileCache.setAppLocale(to);
     }
 
     public void onAddonChanged(String id, JSONObject json) {
@@ -340,8 +346,7 @@ public class BrowserHealthRecorder implements GeckoEventListener {
      * environment, such that a new environment should be computed and prepared
      * for use in future events.
      *
-     * Invoke this method after calls that mutate the environment, such as
-     * {@link #onBlocklistPrefChanged(boolean)}.
+     * Invoke this method after calls that mutate the environment.
      *
      * If this change resulted in a transition between two environments, {@link
      * #onEnvironmentTransition(int, int)} will be invoked on the background
@@ -491,14 +496,36 @@ public class BrowserHealthRecorder implements GeckoEventListener {
         return time;
     }
 
-    private void handlePrefValue(final String pref, final boolean value) {
-        Log.d(LOG_TAG, "Incorporating environment: " + pref + " = " + value);
-        if (AppConstants.TELEMETRY_PREF_NAME.equals(pref)) {
-            profileCache.setTelemetryEnabled(value);
+    private void onPrefMessage(final String pref, final JSONObject message) {
+        Log.d(LOG_TAG, "Incorporating environment: " + pref);
+        if (PREF_ACCEPT_LANG.equals(pref)) {
+            // We only record whether this is user-set.
+            try {
+                this.profileCache.beginInitialization();
+                this.profileCache.setAcceptLangUserSet(message.getBoolean("isUserSet"));
+            } catch (JSONException ex) {
+                Log.w(LOG_TAG, "Unexpected JSONException fetching isUserSet for " + pref);
+            }
             return;
         }
-        if (PREF_BLOCKLIST_ENABLED.equals(pref)) {
-            profileCache.setBlocklistEnabled(value);
+
+        // (We only handle boolean prefs right now.)
+        try {
+            boolean value = message.getBoolean("value");
+
+            if (AppConstants.TELEMETRY_PREF_NAME.equals(pref)) {
+                this.profileCache.beginInitialization();
+                this.profileCache.setTelemetryEnabled(value);
+                return;
+            }
+
+            if (PREF_BLOCKLIST_ENABLED.equals(pref)) {
+                this.profileCache.beginInitialization();
+                this.profileCache.setBlocklistEnabled(value);
+                return;
+            }
+        } catch (JSONException ex) {
+            Log.w(LOG_TAG, "Unexpected JSONException fetching boolean value for " + pref);
             return;
         }
         Log.w(LOG_TAG, "Unexpected pref: " + pref);
@@ -571,7 +598,9 @@ public class BrowserHealthRecorder implements GeckoEventListener {
      * Add provider-specific initialization in this method.
      */
     private synchronized void initialize(final Context context,
-                                         final String profilePath)
+                                         final String profilePath,
+                                         final String osLocale,
+                                         final String appLocale)
         throws java.io.IOException {
 
         Log.d(LOG_TAG, "Initializing profile cache.");
@@ -579,6 +608,9 @@ public class BrowserHealthRecorder implements GeckoEventListener {
 
         // If we can restore state from last time, great.
         if (this.profileCache.restoreUnlessInitialized()) {
+            this.profileCache.updateLocales(osLocale, appLocale);
+            this.profileCache.completeInitialization();
+
             Log.d(LOG_TAG, "Successfully restored state. Initializing storage.");
             initializeStorage();
             return;
@@ -587,31 +619,24 @@ public class BrowserHealthRecorder implements GeckoEventListener {
         // Otherwise, let's initialize it from scratch.
         this.profileCache.beginInitialization();
         this.profileCache.setProfileCreationTime(getAndPersistProfileInitTime(context, profilePath));
+        this.profileCache.setOSLocale(osLocale);
+        this.profileCache.setAppLocale(appLocale);
 
-        final BrowserHealthRecorder self = this;
-
-        PrefHandler handler = new PrefsHelper.PrefHandlerBase() {
+        // Because the distribution lookup can take some time, do it at the end of
+        // our background startup work, along with the Gecko snapshot fetch.
+        final GeckoEventListener self = this;
+        ThreadUtils.postToBackgroundThread(new Runnable() {
             @Override
-            public void prefValue(String pref, boolean value) {
-                handlePrefValue(pref, value);
+            public void run() {
+                final DistributionDescriptor desc = new Distribution(context).getDescriptor();
+                if (desc != null && desc.valid) {
+                    profileCache.setDistributionString(desc.id, desc.version);
+                }
+                Log.d(LOG_TAG, "Requesting all add-ons and FHR prefs from Gecko.");
+                dispatcher.registerEventListener(EVENT_SNAPSHOT, self);
+                GeckoAppShell.sendEventToGecko(GeckoEvent.createBroadcastEvent("HealthReport:RequestSnapshot", null));
             }
-
-            @Override
-            public void finish() {
-                Log.d(LOG_TAG, "Requesting all add-ons from Gecko.");
-                dispatcher.registerEventListener(EVENT_ADDONS_ALL, self);
-                GeckoAppShell.sendEventToGecko(GeckoEvent.createBroadcastEvent("Addons:FetchAll", null));
-                // Wait for the broadcast event which completes our initialization.
-            }
-        };
-
-        // Oh, singletons.
-        PrefsHelper.getPrefs(new String[] {
-                                 AppConstants.TELEMETRY_PREF_NAME,
-                                 PREF_BLOCKLIST_ENABLED
-                             },
-                             handler);
-        Log.d(LOG_TAG, "Requested prefs.");
+        });
     }
 
     /**
@@ -638,12 +663,22 @@ public class BrowserHealthRecorder implements GeckoEventListener {
     @Override
     public void handleMessage(String event, JSONObject message) {
         try {
-            if (EVENT_ADDONS_ALL.equals(event)) {
-                Log.d(LOG_TAG, "Got all add-ons.");
+            if (EVENT_SNAPSHOT.equals(event)) {
+                Log.d(LOG_TAG, "Got all add-ons and prefs.");
                 try {
-                    JSONObject addons = message.getJSONObject("json");
+                    JSONObject json = message.getJSONObject("json");
+                    JSONObject addons = json.getJSONObject("addons");
                     Log.i(LOG_TAG, "Persisting " + addons.length() + " add-ons.");
                     profileCache.setJSONForAddons(addons);
+
+                    JSONObject prefs = json.getJSONObject("prefs");
+                    Log.i(LOG_TAG, "Persisting prefs.");
+                    Iterator<?> keys = prefs.keys();
+                    while (keys.hasNext()) {
+                        String pref = (String) keys.next();
+                        this.onPrefMessage(pref, prefs.getJSONObject(pref));
+                    }
+
                     profileCache.completeInitialization();
                 } catch (java.io.IOException e) {
                     Log.e(LOG_TAG, "Error completing profile cache initialization.", e);
@@ -675,7 +710,7 @@ public class BrowserHealthRecorder implements GeckoEventListener {
             if (EVENT_PREF_CHANGE.equals(event)) {
                 final String pref = message.getString("pref");
                 Log.d(LOG_TAG, "Pref changed: " + pref);
-                handlePrefValue(pref, message.getBoolean("value"));
+                this.onPrefMessage(pref, message);
                 this.onEnvironmentChanged();
                 return;
             }

@@ -20,16 +20,6 @@ JAVAFILES = \
   WifiConfiguration.java \
   $(NULL)
 
-ANDROID_RESFILES = \
-  res/drawable/icon.png \
-  res/drawable/ateamlogo.png \
-  res/drawable/ic_stat_first.png \
-  res/drawable/ic_stat_neterror.png \
-  res/drawable/ic_stat_warning.png \
-  res/layout/main.xml \
-  res/values/strings.xml \
-  $(NULL)
-
 ANDROID_EXTRA_JARS = \
   $(srcdir)/network-libs/commons-net-2.0.jar \
   $(srcdir)/network-libs/jmdns.jar \

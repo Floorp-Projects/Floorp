@@ -158,6 +158,9 @@ TopSitesView.prototype = Util.extend(Object.create(View.prototype), {
   },
 
   updateTile: function(aTileNode, aSite, aArrangeGrid) {
+    if (!(aSite && aSite.url)) {
+      throw new Error("Invalid Site object passed to TopSitesView updateTile");
+    }
     this._updateFavicon(aTileNode, Util.makeURI(aSite.url));
 
     Task.spawn(function() {
@@ -192,14 +195,11 @@ TopSitesView.prototype = Util.extend(Object.create(View.prototype), {
     tileset.clearAll(true);
 
     for (let site of sites) {
-      // call to private _createItemElement is a temp measure
-      // we'll eventually just request the next slot
-      let item = tileset._createItemElement(site.title, site.url);
-
-      this.updateTile(item, site);
-      tileset.appendChild(item);
+      let slot = tileset.nextSlot();
+      this.updateTile(slot, site);
     }
     tileset.arrangeItems();
+    tileset.removeAttribute("fade");
     this.isUpdating = false;
   },
 
@@ -244,7 +244,7 @@ TopSitesView.prototype = Util.extend(Object.create(View.prototype), {
 
   // nsIObservers
   observe: function (aSubject, aTopic, aState) {
-    switch(aTopic) {
+    switch (aTopic) {
       case "Metro:RefreshTopsiteThumbnail":
         this.forceReloadOfThumbnail(aState);
         break;
@@ -269,7 +269,8 @@ TopSitesView.prototype = Util.extend(Object.create(View.prototype), {
   },
 
   onClearHistory: function() {
-    this._set.clearAll();
+    if ('clearAll' in this._set)
+      this._set.clearAll();
   },
 
   onPageChanged: function(aURI, aWhat, aValue) {

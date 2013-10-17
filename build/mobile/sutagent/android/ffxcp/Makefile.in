@@ -11,14 +11,6 @@ JAVAFILES = \
   FileCursor.java \
   $(NULL)
 
-ANDROID_RESFILES = \
-  res/drawable-hdpi/icon.png \
-  res/drawable-ldpi/icon.png \
-  res/drawable-mdpi/icon.png \
-  res/layout/main.xml \
-  res/values/strings.xml \
-  $(NULL)
-
 include $(topsrcdir)/config/rules.mk
 
 tools:: $(ANDROID_APK_NAME).apk
