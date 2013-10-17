@@ -6056,15 +6056,17 @@ CodeGenerator::addSetPropertyCache(LInstruction *ins, RegisterSet liveRegs, Regi
 bool
 CodeGenerator::addSetElementCache(LInstruction *ins, Register obj, Register unboxIndex,
                                   Register temp, FloatRegister tempFloat, ValueOperand index,
-                                  ConstantOrRegister value, bool strict)
+                                  ConstantOrRegister value, bool strict, bool guardHoles)
 {
     switch (gen->info().executionMode()) {
       case SequentialExecution: {
-        SetElementIC cache(obj, unboxIndex, temp, tempFloat, index, value, strict);
+        SetElementIC cache(obj, unboxIndex, temp, tempFloat, index, value, strict,
+                           guardHoles);
         return addCache(ins, allocateCache(cache));
       }
       case ParallelExecution: {
-        SetElementParIC cache(obj, unboxIndex, temp, tempFloat, index, value, strict);
+        SetElementParIC cache(obj, unboxIndex, temp, tempFloat, index, value, strict,
+                              guardHoles);
         return addCache(ins, allocateCache(cache));
       }
       default:
@@ -6218,7 +6220,7 @@ CodeGenerator::visitSetElementCacheV(LSetElementCacheV *ins)
     ConstantOrRegister value = TypedOrValueRegister(ToValue(ins, LSetElementCacheV::Value));
 
     return addSetElementCache(ins, obj, unboxIndex, temp, tempFloat, index, value,
-                              ins->mir()->strict());
+                              ins->mir()->strict(), ins->mir()->guardHoles());
 }
 
 bool
@@ -6237,7 +6239,7 @@ CodeGenerator::visitSetElementCacheT(LSetElementCacheT *ins)
         value = TypedOrValueRegister(ins->mir()->value()->type(), ToAnyRegister(tmp));
 
     return addSetElementCache(ins, obj, unboxIndex, temp, tempFloat, index, value,
-                              ins->mir()->strict());
+                              ins->mir()->strict(), ins->mir()->guardHoles());
 }
 
 typedef bool (*SetElementICFn)(JSContext *, size_t, HandleObject, HandleValue, HandleValue);

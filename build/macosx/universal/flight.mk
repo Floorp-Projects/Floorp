@@ -19,14 +19,12 @@ topsrcdir = $(TOPSRCDIR)
 DEPTH = $(OBJDIR)
 include $(OBJDIR)/config/autoconf.mk
 
-core_abspath = $(if $(filter /%,$(1)),$(1),$(CURDIR)/$(1))
-
 DIST = $(OBJDIR)/dist
 
 postflight_all:
 	mkdir -p $(DIST_UNI)/$(MOZ_PKG_APPNAME)
 	rm -f $(DIST_ARCH_2)/universal
-	ln -s $(call core_abspath,$(DIST_UNI)) $(DIST_ARCH_2)/universal
+	ln -s $(abspath $(DIST_UNI)) $(DIST_ARCH_2)/universal
 # Stage a package for buildsymbols to be happy. Doing so in OBJDIR_ARCH_1
 # actually does a universal staging with both OBJDIR_ARCH_1 and OBJDIR_ARCH_2.
 	$(MAKE) -C $(OBJDIR_ARCH_1)/$(MOZ_BUILD_APP)/installer \

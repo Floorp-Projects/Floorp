@@ -8,12 +8,12 @@ include $(topsrcdir)/config/config.mk
 # http://code.google.com/p/android/issues/detail?id=3639
 AB_rCD = $(if $(filter he, $(AB_CD)),iw,$(if $(filter id, $(AB_CD)),in,$(subst -,-r,$(AB_CD))))
 
-SYNCSTRINGSPATH = $(call core_abspath,$(call MERGE_FILE,sync_strings.dtd))
-STRINGSPATH = $(call core_abspath,$(call MERGE_FILE,android_strings.dtd))
+SYNCSTRINGSPATH = $(abspath $(call MERGE_FILE,sync_strings.dtd))
+STRINGSPATH = $(abspath $(call MERGE_FILE,android_strings.dtd))
 ifeq (,$(XPI_NAME))
-BRANDPATH = $(call core_abspath,$(DEPTH)/dist/bin/chrome/$(AB_CD)/locale/branding/brand.dtd)
+BRANDPATH = $(abspath $(DEPTH)/dist/bin/chrome/$(AB_CD)/locale/branding/brand.dtd)
 else
-BRANDPATH = $(call core_abspath,$(DIST)/xpi-stage/$(XPI_NAME)/chrome/$(AB_CD)/locale/branding/brand.dtd)
+BRANDPATH = $(abspath $(DIST)/xpi-stage/$(XPI_NAME)/chrome/$(AB_CD)/locale/branding/brand.dtd)
 endif
 $(warnIfEmpty,AB_CD) # todo: $(errorIfEmpty )
 
@@ -32,7 +32,7 @@ chrome-%::
 	@$(MAKE) $(dir-res-values)-$(AB_rCD)/strings.xml AB_CD=$*
 
 # setup the path to bookmarks.inc. copied and tweaked version of MERGE_FILE from config/config.mk
-MOBILE_LOCALE_SRCDIR = $(if $(filter en-US,$(AB_CD)),$(topsrcdir)/mobile/locales/en-US,$(call core_realpath,$(L10NBASEDIR))/$(AB_CD)/mobile)
+MOBILE_LOCALE_SRCDIR = $(if $(filter en-US,$(AB_CD)),$(topsrcdir)/mobile/locales/en-US,$(or $(realpath $(L10NBASEDIR)),$(abspath $(L10NBASEDIR)))/$(AB_CD)/mobile)
 
 ifdef LOCALE_MERGEDIR
 BOOKMARKSPATH = $(firstword \
@@ -40,7 +40,7 @@ BOOKMARKSPATH = $(firstword \
   $(wildcard $(MOBILE_LOCALE_SRCDIR)/profile/bookmarks.inc ) \
   $(topsrcdir)/mobile/locales/en-US/profile/bookmarks.inc )
 else
-BOOKMARKSPATH = $(call core_abspath,$(MOBILE_LOCALE_SRCDIR)/profile/bookmarks.inc)
+BOOKMARKSPATH = $(abspath $(MOBILE_LOCALE_SRCDIR)/profile/bookmarks.inc)
 endif
 
 # Determine the ../res/values[-*]/ path

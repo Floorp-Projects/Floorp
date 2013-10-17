@@ -16,7 +16,7 @@ $(error Do not include functions.mk twice!)
 endif
 INCLUDED_FUNCTIONS_MK = 1
 
-core_abspath = $(if $(findstring :,$(1)),$(1),$(if $(filter /%,$(1)),$(1),$(CURDIR)/$(1)))
-core_realpath = $(if $(realpath $(1)),$(realpath $(1)),$(call core_abspath,$(1)))
+core_abspath = $(error core_abspath is unsupported, use $$(abspath) instead)
+core_realpath = $(error core_realpath is unsupported)
 
-core_winabspath = $(firstword $(subst /, ,$(call core_abspath,$(1)))):$(subst $(space),,$(patsubst %,\\%,$(wordlist 2,$(words $(subst /, ,$(call core_abspath,$(1)))), $(strip $(subst /, ,$(call core_abspath,$(1)))))))
+core_winabspath = $(error core_winabspath is unsupported)

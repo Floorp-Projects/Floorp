@@ -7,8 +7,9 @@ ifndef .PYMAKE
 ifeq (,$(MAKE_VERSION))
 $(error GNU Make is required)
 endif
-ifeq (,$(filter-out 3.78 3.79,$(MAKE_VERSION)))
-$(error GNU Make 3.80 or higher is required)
+make_min_ver := 3.81
+ifneq ($(make_min_ver),$(firstword $(sort $(make_min_ver) $(MAKE_VERSION))))
+$(error GNU Make $(make_min_ver) or higher is required)
 endif
 endif
 

@@ -7232,8 +7232,14 @@ IonBuilder::setElemTryCache(bool *emitted, MDefinition *object,
         return true;
     }
 
+    // We can avoid worrying about holes in the IC if we know a priori we are safe
+    // from them. If TI can guard that there are no indexed properties on the prototype
+    // chain, we know that we anen't missing any setters by overwriting the hole with
+    // another value.
+    bool guardHoles = ElementAccessHasExtraIndexedProperty(constraints(), object);
+
     // Emit SetElementCache.
-    MInstruction *ins = MSetElementCache::New(object, index, value, script()->strict);
+    MInstruction *ins = MSetElementCache::New(object, index, value, script()->strict, guardHoles);
     current->add(ins);
     current->push(value);
 

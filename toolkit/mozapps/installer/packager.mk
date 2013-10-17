@@ -100,8 +100,8 @@ endif # MOZ_NATIVE_NSPR
 MAKE_JSSHELL  = $(ZIP) -9j $(PKG_JSSHELL) $(JSSHELL_BINS)
 endif # LIBXUL_SDK
 
-_ABS_DIST = $(call core_abspath,$(DIST))
-JARLOG_DIR = $(call core_abspath,$(DEPTH)/jarlog/)
+_ABS_DIST = $(abspath $(DIST))
+JARLOG_DIR = $(abspath $(DEPTH)/jarlog/)
 JARLOG_FILE_AB_CD = $(JARLOG_DIR)/$(AB_CD).log
 
 TAR_CREATE_FLAGS := --exclude=.mkdir.done $(TAR_CREATE_FLAGS)
@@ -324,7 +324,7 @@ ABI_DIR = armeabi
 endif
 endif
 
-GECKO_APP_AP_PATH = $(call core_abspath,$(DEPTH)/mobile/android/base)
+GECKO_APP_AP_PATH = $(abspath $(DEPTH)/mobile/android/base)
 
 ifdef ENABLE_TESTS
 INNER_ROBOCOP_PACKAGE=echo
@@ -346,12 +346,12 @@ RELEASE_SIGN_ANDROID_APK = \
   $(ZIPALIGN) -f -v 4 $(2)-unaligned.apk $(2) && \
   $(RM) $(2)-unaligned.apk
 
-ROBOCOP_PATH = $(call core_abspath,$(_ABS_DIST)/../build/mobile/robocop)
+ROBOCOP_PATH = $(abspath $(_ABS_DIST)/../build/mobile/robocop)
 INNER_ROBOCOP_PACKAGE= \
   $(NSINSTALL) $(GECKO_APP_AP_PATH)/fennec_ids.txt $(_ABS_DIST) && \
   $(call RELEASE_SIGN_ANDROID_APK,$(ROBOCOP_PATH)/robocop-debug-unsigned-unaligned.apk,$(_ABS_DIST)/robocop.apk)
 
-BACKGROUND_TESTS_PATH = $(call core_abspath,$(_ABS_DIST)/../mobile/android/tests/background/junit3)
+BACKGROUND_TESTS_PATH = $(abspath $(_ABS_DIST)/../mobile/android/tests/background/junit3)
 INNER_BACKGROUND_TESTS_PACKAGE= \
   $(call RELEASE_SIGN_ANDROID_APK,$(BACKGROUND_TESTS_PATH)/background-debug-unsigned-unaligned.apk,$(_ABS_DIST)/background.apk)
 endif

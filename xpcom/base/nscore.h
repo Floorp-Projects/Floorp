@@ -325,18 +325,6 @@ typedef unsigned long nsrefcnt;
 typedef uint32_t nsrefcnt;
 #endif
 
-/* ------------------------------------------------------------------------ */
-/* Casting macros for hiding C++ features from older compilers */
-
-#ifndef __PRUNICHAR__
-#define __PRUNICHAR__
-  #if defined(WIN32)
-    typedef wchar_t PRUnichar;
-  #else
-    typedef uint16_t PRUnichar;
-  #endif
-#endif
-
 /*
  * Use these macros to do 64bit safe pointer conversions.
  */

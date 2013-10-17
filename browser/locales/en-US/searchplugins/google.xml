@@ -25,6 +25,7 @@
 #endif
   <MozParam name="channel" condition="purpose" purpose="contextmenu" value="rcs"/>
   <MozParam name="channel" condition="purpose" purpose="keyword" value="fflb"/>
+  <MozParam name="channel" condition="purpose" purpose="searchbar" value="sb"/>
   <MozParam name="channel" condition="purpose" purpose="homepage" value="np"/>
   <MozParam name="source" condition="purpose" purpose="homepage" value="hp"/>
 </Url>

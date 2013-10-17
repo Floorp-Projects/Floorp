@@ -119,6 +119,9 @@ richgrid {
 }
 
 richgriditem {
+  -moz-binding: url("chrome://browser/content/bindings/grid.xml#richgrid-empty-item");
+}
+richgriditem[value] {
   -moz-binding: url("chrome://browser/content/bindings/grid.xml#richgrid-item");
 }
 
