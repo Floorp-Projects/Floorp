@@ -21,6 +21,8 @@ INCLUDED_RULES_MK = 1
 # present. If they are, this is a violation of the separation of
 # responsibility between Makefile.in and mozbuild files.
 _MOZBUILD_EXTERNAL_VARIABLES := \
+  ANDROID_GENERATED_RESFILES \
+  ANDROID_RESFILES \
   CMMSRCS \
   CPP_UNIT_TESTS \
   DIRS \

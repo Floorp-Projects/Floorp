@@ -17,6 +17,9 @@
       <richgrid id="grid_layout" seltype="single" flex="1">
       </richgrid>
   </vbox>
+  <vbox>
+      <richgrid id="slots_grid" seltype="single" minSlots="6" flex="1"/>
+  </vbox>
   <vbox style="height:600px">
     <hbox>
       <richgrid id="clearGrid" seltype="single" flex="1" rows="2">
@@ -26,7 +29,7 @@
       </richgrid>
     </hbox>
     <hbox>
-      <richgrid id="emptyGrid" seltype="single" flex="1" rows="2">
+      <richgrid id="emptyGrid" seltype="single" flex="1" rows="2" minSlots="6">
       </richgrid>
     </hbox>
     <hbox>

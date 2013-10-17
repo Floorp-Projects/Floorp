@@ -1,0 +1,28 @@
+# -*- Mode: python; c-basic-offset: 4; indent-tabs-mode: nil; tab-width: 40 -*-
+# vim: set filetype=python:
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+ANDROID_RESFILES += [
+    'resources/drawable-mdpi/desktop.png',
+    'resources/drawable-mdpi/mobile.png',
+    'resources/drawable/pin_background.xml',
+    'resources/layout/sync_account.xml',
+    'resources/layout/sync_list_item.xml',
+    'resources/layout/sync_redirect_to_setup.xml',
+    'resources/layout/sync_send_tab.xml',
+    'resources/layout/sync_setup.xml',
+    'resources/layout/sync_setup_failure.xml',
+    'resources/layout/sync_setup_jpake_waiting.xml',
+    'resources/layout/sync_setup_nointernet.xml',
+    'resources/layout/sync_setup_pair.xml',
+    'resources/layout/sync_setup_success.xml',
+    'resources/layout/sync_setup_webview.xml',
+    'resources/values-large-v11/sync_styles.xml',
+    'resources/values-v11/sync_styles.xml',
+    'resources/values/sync_styles.xml',
+    'resources/xml/sync_authenticator.xml',
+    'resources/xml/sync_options.xml',
+    'resources/xml/sync_syncadapter.xml',
+]
