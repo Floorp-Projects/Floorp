@@ -274,9 +274,6 @@ browser.jar:
         skin/classic/browser/sync-desktopIcon.png
         skin/classic/browser/sync-mobileIcon.png
         skin/classic/browser/sync-notification-24.png
-        skin/classic/browser/syncSetup.css
-        skin/classic/browser/syncCommon.css
-        skin/classic/browser/syncQuota.css
         skin/classic/browser/syncProgress.css
 #endif
 
@@ -549,9 +546,6 @@ browser.jar:
         skin/classic/aero/browser/sync-desktopIcon.png
         skin/classic/aero/browser/sync-mobileIcon.png
         skin/classic/aero/browser/sync-notification-24.png
-        skin/classic/aero/browser/syncSetup.css
-        skin/classic/aero/browser/syncCommon.css
-        skin/classic/aero/browser/syncQuota.css
         skin/classic/aero/browser/syncProgress.css
 #endif
 #endif

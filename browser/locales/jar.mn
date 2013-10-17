@@ -6,6 +6,7 @@
 
 @AB_CD@.jar:
 % locale browser @AB_CD@ %locale/browser/
+    locale/browser/aboutAccounts.dtd               (%chrome/browser/aboutAccounts.dtd)
     locale/browser/aboutCertError.dtd              (%chrome/browser/aboutCertError.dtd)
     locale/browser/aboutDialog.dtd                 (%chrome/browser/aboutDialog.dtd)
     locale/browser/aboutPrivateBrowsing.dtd        (%chrome/browser/aboutPrivateBrowsing.dtd)
@@ -114,12 +115,6 @@
     locale/browser/preferences/tabs.dtd               (%chrome/browser/preferences/tabs.dtd)
 #ifdef MOZ_SERVICES_SYNC
     locale/browser/syncBrand.dtd                (%chrome/browser/syncBrand.dtd)
-    locale/browser/syncSetup.dtd                (%chrome/browser/syncSetup.dtd)
-    locale/browser/syncSetup.properties         (%chrome/browser/syncSetup.properties)
-    locale/browser/syncGenericChange.properties         (%chrome/browser/syncGenericChange.properties)
-    locale/browser/syncKey.dtd                  (%chrome/browser/syncKey.dtd)
-    locale/browser/syncQuota.dtd                (%chrome/browser/syncQuota.dtd)
-    locale/browser/syncQuota.properties         (%chrome/browser/syncQuota.properties)
 #endif
 % locale browser-region @AB_CD@ %locale/browser-region/
     locale/browser-region/region.properties        (%chrome/browser-region/region.properties)

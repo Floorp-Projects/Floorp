@@ -8,20 +8,7 @@
 <!ENTITY weaveDesc.label            "&syncBrand.fullName.label; lets you access your history, bookmarks, passwords and open tabs across all your devices.">
 
 <!-- The page shown when logged in... -->
-
-<!-- Login error feedback -->
-<!ENTITY updatePass.label             "Update">
-<!ENTITY resetPass.label              "Reset">
-
-<!-- Manage Account -->
-<!ENTITY manageAccount.label          "Manage Account">
-<!ENTITY manageAccount.accesskey      "n">
-<!ENTITY viewQuota.label              "View Quota">
-<!ENTITY changePassword2.label        "Change Password…">
-<!ENTITY myRecoveryKey.label          "My Recovery Key">
-<!ENTITY resetSync2.label             "Reset Sync…">
-
-<!ENTITY pairDevice.label             "Pair a Device">
+<!ENTITY accountsLink.label         "Manage Account">
 
 <!ENTITY syncMy.label               "Sync My">
 <!ENTITY engine.bookmarks.label     "Bookmarks">
@@ -40,7 +27,6 @@
 <!-- Device Settings -->
 <!ENTITY syncDeviceName.label       "Device Name:">
 <!ENTITY syncDeviceName.accesskey   "c">
-<!ENTITY unlinkDevice.label           "Unlink This Device">
 
 <!-- Footer stuff -->
 <!ENTITY prefs.tosLink.label        "Terms of Service">
