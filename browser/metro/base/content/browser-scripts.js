@@ -37,9 +37,6 @@ XPCOMUtils.defineLazyModuleGetter(this, "NewTabUtils",
 XPCOMUtils.defineLazyModuleGetter(this, "Promise",
                                   "resource://gre/modules/commonjs/sdk/core/promise.js");
 
-XPCOMUtils.defineLazyModuleGetter(this, "ShumwayUtils",
-                                  "resource://shumway/ShumwayUtils.jsm");
-
 XPCOMUtils.defineLazyModuleGetter(this, "Task",
                                   "resource://gre/modules/Task.jsm");
 
