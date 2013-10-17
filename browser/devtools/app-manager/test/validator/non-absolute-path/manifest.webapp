@@ -1,0 +1,7 @@
+{
+  "name": "non-absolute path",
+  "icons": {
+    "128": "/icon.png"
+  },
+  "launch_path": "non-absolute.html"
+}
