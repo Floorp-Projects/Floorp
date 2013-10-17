@@ -18,14 +18,13 @@
 
 'use strict';
 
-var EXPORTED_SYMBOLS = ['FlashStreamConverter1', 'FlashStreamConverter2'];
+var EXPORTED_SYMBOLS = ['ShumwayStreamConverter', 'ShumwayStreamOverlayConverter'];
 
 const Cc = Components.classes;
 const Ci = Components.interfaces;
 const Cr = Components.results;
 const Cu = Components.utils;
 
-// True only if this is the version of pdf.js that is included with firefox.
 const SHUMWAY_CONTENT_TYPE = 'application/x-shockwave-flash';
 const EXPECTED_PLAYPREVIEW_URI_PREFIX = 'data:application/x-moz-playpreview;,' +
                                         SHUMWAY_CONTENT_TYPE;
@@ -66,7 +65,7 @@ function getStringPref(pref, def) {
 }
 
 function log(aMsg) {
-  let msg = 'FlashStreamConverter.js: ' + (aMsg.join ? aMsg.join('') : aMsg);
+  let msg = 'ShumwayStreamConverter.js: ' + (aMsg.join ? aMsg.join('') : aMsg);
   Services.console.logStringMessage(msg);
   dump(msg + '\n');
 }
@@ -636,10 +635,10 @@ function initExternalCom(wrappedWindow, wrappedObject, targetDocument) {
   };
 }
 
-function FlashStreamConverterBase() {
+function ShumwayStreamConverterBase() {
 }
 
-FlashStreamConverterBase.prototype = {
+ShumwayStreamConverterBase.prototype = {
   QueryInterface: XPCOMUtils.generateQI([
       Ci.nsISupports,
       Ci.nsIStreamConverter,
@@ -852,22 +851,22 @@ function copyProperties(obj, template) {
   }
 }
 
-function FlashStreamConverter1() {}
-FlashStreamConverter1.prototype = new FlashStreamConverterBase();
-copyProperties(FlashStreamConverter1.prototype, {
+function ShumwayStreamConverter() {}
+ShumwayStreamConverter.prototype = new ShumwayStreamConverterBase();
+copyProperties(ShumwayStreamConverter.prototype, {
   classID: Components.ID('{4c6030f7-e20a-264f-5b0e-ada3a9e97384}'),
   classDescription: 'Shumway Content Converter Component',
   contractID: '@mozilla.org/streamconv;1?from=application/x-shockwave-flash&to=*/*'
 });
 
-function FlashStreamConverter2() {}
-FlashStreamConverter2.prototype = new FlashStreamConverterBase();
-copyProperties(FlashStreamConverter2.prototype, {
+function ShumwayStreamOverlayConverter() {}
+ShumwayStreamOverlayConverter.prototype = new ShumwayStreamConverterBase();
+copyProperties(ShumwayStreamOverlayConverter.prototype, {
   classID: Components.ID('{4c6030f7-e20a-264f-5f9b-ada3a9e97384}'),
   classDescription: 'Shumway PlayPreview Component',
   contractID: '@mozilla.org/streamconv;1?from=application/x-moz-playpreview&to=*/*'
 });
-FlashStreamConverter2.prototype.isValidRequest =
+ShumwayStreamOverlayConverter.prototype.isValidRequest =
   (function(aCtxt) {
     try {
       var request = aCtxt;
@@ -878,9 +877,6 @@ FlashStreamConverter2.prototype.isValidRequest =
       return false;
     }
   });
-FlashStreamConverter2.prototype.getUrlHint = function (requestUrl) {
+ShumwayStreamOverlayConverter.prototype.getUrlHint = function (requestUrl) {
   return '';
 };
-
-var NSGetFactory1 = XPCOMUtils.generateNSGetFactory([FlashStreamConverter1]);
-var NSGetFactory2 = XPCOMUtils.generateNSGetFactory([FlashStreamConverter2]);
