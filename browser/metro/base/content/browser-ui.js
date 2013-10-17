@@ -112,7 +112,6 @@ var BrowserUI = {
     NewTabUtils.init();
     SettingsCharm.init();
     NavButtonSlider.init();
-    ShumwayUtils.init();
 
     // We can delay some initialization until after startup.  We wait until
     // the first page is shown, then dispatch a UIReadyDelayed event.
