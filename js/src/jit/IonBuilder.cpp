@@ -7209,6 +7209,9 @@ IonBuilder::setElemTryCache(bool *emitted, MDefinition *object,
     // another value.
     bool guardHoles = ElementAccessHasExtraIndexedProperty(constraints(), object);
 
+    if (NeedsPostBarrier(info(), value))
+        current->add(MPostWriteBarrier::New(object, value));
+
     // Emit SetElementCache.
     MInstruction *ins = MSetElementCache::New(object, index, value, script()->strict, guardHoles);
     current->add(ins);

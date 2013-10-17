@@ -3479,7 +3479,7 @@ GenerateSetDenseElement(JSContext *cx, MacroAssembler &masm, IonCache::StubAttac
     Label failures;
     Label outOfBounds; // index represents a known hole, or an illegal append
 
-    Label markElem, postBarrier; // used if TI protects us from worrying about holes.
+    Label markElem, storeElement; // used if TI protects us from worrying about holes.
 
     // Guard object is a dense array.
     Shape *shape = obj->lastProperty();
@@ -3534,7 +3534,7 @@ GenerateSetDenseElement(JSContext *cx, MacroAssembler &masm, IonCache::StubAttac
 
                 // Restore the index.
                 masm.bumpKey(&newLength, -1);
-                masm.jump(&postBarrier);
+                masm.jump(&storeElement);
             }
             // else
             masm.bind(&markElem);
@@ -3543,16 +3543,11 @@ GenerateSetDenseElement(JSContext *cx, MacroAssembler &masm, IonCache::StubAttac
         if (cx->zone()->needsBarrier())
             masm.callPreBarrier(target, MIRType_Value);
 
-        // Call post barrier if necessary, and recalculate elements pointer if it got clobbered.
-        if (!guardHoles)
-            masm.bind(&postBarrier);
-        Register postBarrierScratch = elements;
-        if (masm.maybeCallPostBarrier(object, value, postBarrierScratch))
-            masm.loadPtr(Address(object, JSObject::offsetOfElements()), elements);
-
         // Store the value.
         if (guardHoles)
             masm.branchTestMagic(Assembler::Equal, target, &failures);
+        else
+            masm.bind(&storeElement);
         masm.storeConstantOrRegister(value, target);
     }
     attacher.jumpRejoin(masm);
