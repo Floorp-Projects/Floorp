@@ -98,18 +98,18 @@ TextureInfo ImageClientSingle::GetTextureInfo() const
 }
 
 void
-ImageClientSingle::FlushImage()
+ImageClientSingle::FlushAllImages(bool aExceptFront)
 {
-  if (mFrontBuffer) {
+  if (!aExceptFront && mFrontBuffer) {
     RemoveTextureClient(mFrontBuffer);
     mFrontBuffer = nullptr;
   }
 }
 
 void
-ImageClientBuffered::FlushImage()
+ImageClientBuffered::FlushAllImages(bool aExceptFront)
 {
-  if (mFrontBuffer) {
+  if (!aExceptFront && mFrontBuffer) {
     RemoveTextureClient(mFrontBuffer);
     mFrontBuffer = nullptr;
   }
