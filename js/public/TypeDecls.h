@@ -50,7 +50,11 @@ struct jsid;
 typedef ptrdiff_t jsid;
 #endif
 
-typedef char16_t jschar;
+#ifdef WIN32
+typedef wchar_t  jschar;
+#else
+typedef uint16_t jschar;
+#endif
 
 namespace JS {
 

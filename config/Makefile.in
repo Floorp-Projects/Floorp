@@ -128,7 +128,7 @@ GARBAGE += \
 ifndef CROSS_COMPILE
 ifdef USE_ELF_DYNSTR_GC
 elf-dynstr-gc: elf-dynstr-gc.c $(GLOBAL_DEPS) $(call mkdir_deps,$(MDDEPDIR))
-	$(CC) $(COMPILE_CFLAGS) $(GLIB_CFLAGS) -DELFDYNSTRGC_BUILD -o $@ $< $(LDFLAGS) $(GLIB_LIBS)
+	$(CC) $(COMPILE_CFLAGS) $(GLIB_CFLAGS) -o $@ $< $(LDFLAGS) $(GLIB_LIBS)
 endif
 endif
 
