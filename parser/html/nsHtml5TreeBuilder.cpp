@@ -3262,6 +3262,19 @@ nsHtml5TreeBuilder::resetTheInsertionMode()
       }
     }
     if (nsHtml5Atoms::select == name) {
+      int32_t ancestorIndex = i;
+      while (ancestorIndex > 0) {
+        nsHtml5StackNode* ancestor = stack[ancestorIndex--];
+        if (kNameSpaceID_XHTML == ancestor->ns) {
+          if (nsHtml5Atoms::template_ == ancestor->name) {
+            break;
+          }
+          if (nsHtml5Atoms::table == ancestor->name) {
+            mode = NS_HTML5TREE_BUILDER_IN_SELECT_IN_TABLE;
+            return;
+          }
+        }
+      }
       mode = NS_HTML5TREE_BUILDER_IN_SELECT;
       return;
     } else if (nsHtml5Atoms::td == name || nsHtml5Atoms::th == name) {
