@@ -199,7 +199,6 @@ TopSitesView.prototype = Util.extend(Object.create(View.prototype), {
       this.updateTile(slot, site);
     }
     tileset.arrangeItems();
-    tileset.removeAttribute("fade");
     this.isUpdating = false;
   },
 
@@ -299,6 +298,7 @@ let TopSitesStartView = {
       let topsitesVbox = document.getElementById("start-topsites");
       topsitesVbox.setAttribute("hidden", "true");
     }
+    this._grid.removeAttribute("fade");
   },
 
   uninit: function uninit() {
