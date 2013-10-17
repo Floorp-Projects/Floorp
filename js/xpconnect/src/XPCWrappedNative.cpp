@@ -1463,18 +1463,10 @@ XPCWrappedNative::ReparentWrapperIfFound(XPCWrappedNativeScope* aOldScope,
         if (ww) {
             RootedObject newwrapper(cx);
             MOZ_ASSERT(wrapper->NeedsSOW(), "weird wrapper wrapper");
-            newwrapper = xpc::WrapperFactory::WrapSOWObject(cx, newobj);
-            if (!newwrapper)
-                MOZ_CRASH();
 
-            // Ok, now we do the special object-plus-wrapper transplant.
-            ww = xpc::TransplantObjectWithWrapper(cx, flat, ww, newobj,
-                                                  newwrapper);
-            if (!ww)
-                MOZ_CRASH();
+            // Oops. We don't support transplanting objects with SOWs anymore.
+            MOZ_CRASH();
 
-            flat = newobj;
-            wrapper->SetWrapper(ww);
         } else {
             flat = xpc::TransplantObject(cx, flat, newobj);
             if (!flat)
