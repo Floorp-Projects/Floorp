@@ -68,9 +68,9 @@ NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE_2(nsPluginArray,
                                         mPlugins)
 
 void
-nsPluginArray::GetPlugins(nsTArray<nsRefPtr<nsPluginElement> >& aPlugins)
+nsPluginArray::GetMimeTypes(nsTArray<nsRefPtr<nsMimeType> >& aMimeTypes)
 {
-  aPlugins.Clear();
+  aMimeTypes.Clear();
 
   if (!AllowPlugins()) {
     return;
@@ -80,7 +80,10 @@ nsPluginArray::GetPlugins(nsTArray<nsRefPtr<nsPluginElement> >& aPlugins)
     EnsurePlugins();
   }
 
-  aPlugins = mPlugins;
+  for (uint32_t i = 0; i < mPlugins.Length(); ++i) {
+    nsPluginElement *plugin = mPlugins[i];
+    aMimeTypes.AppendElements(plugin->MimeTypes());
+  }
 }
 
 nsPluginElement*
