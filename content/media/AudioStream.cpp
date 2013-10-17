@@ -44,6 +44,9 @@ static uint32_t gCubebLatency;
 static bool gCubebLatencyPrefSet;
 static const uint32_t CUBEB_NORMAL_LATENCY_MS = 100;
 
+StaticMutex AudioStream::mMutex;
+uint32_t AudioStream::mPreferredSampleRate = 0;
+
 /**
  * When MOZ_DUMP_AUDIO is set in the environment (to anything),
  * we'll drop a series of files in the current working directory named
@@ -439,6 +442,23 @@ int AudioStream::MaxNumberOfChannels()
   }
 
   return static_cast<int>(maxNumberOfChannels);
+}
+
+int AudioStream::PreferredSampleRate()
+{
+  StaticMutexAutoLock lock(AudioStream::mMutex);
+  // Get the preferred samplerate for this platform, or fallback to something
+  // sensible if we fail. We cache the value, because this might be accessed
+  // often, and the complexity of the function call below depends on the
+  // backend used.
+  const int fallbackSampleRate = 44100;
+  if (mPreferredSampleRate == 0) {
+    if (cubeb_get_preferred_sample_rate(GetCubebContext(), &mPreferredSampleRate) != CUBEB_OK) {
+      mPreferredSampleRate = fallbackSampleRate;
+    }
+  }
+
+  return mPreferredSampleRate;
 }
 
 static void SetUint16LE(uint8_t* aDest, uint16_t aValue)
