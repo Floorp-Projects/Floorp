@@ -9,11 +9,7 @@ dir-tests    := $(DEPTH)/$(mobile-tests)
 ANDROID_APK_NAME := robocop-debug
 
 ANDROID_EXTRA_JARS += \
-  $(srcdir)/robotium-solo-4.2.jar \
-  $(NULL)
-
-ANDROID_RESFILES = \
-  res/values/strings.xml \
+  $(srcdir)/robotium-solo-4.3.jar \
   $(NULL)
 
 ANDROID_ASSETS_DIR := $(TESTPATH)/assets

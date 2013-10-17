@@ -505,7 +505,7 @@ abstract public class BrowserApp extends GeckoApp
         registerEventListener("Updater:Launch");
         registerEventListener("Reader:GoToReadingList");
 
-        Distribution.init(this, getPackageResourcePath());
+        Distribution.init(this);
         JavaAddonManager.getInstance().init(getApplicationContext());
         mSharedPreferencesHelper = new SharedPreferencesHelper(getApplicationContext());
         mOrderedBroadcastHelper = new OrderedBroadcastHelper(getApplicationContext());
