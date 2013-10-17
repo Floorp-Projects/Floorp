@@ -104,9 +104,3 @@
 .theme-fg-contrast { /* To be used for text on theme-bg-contrast */
   color: black;
 }
-
-.ruleview-colorswatch,
-.computedview-colorswatch,
-.markupview-colorswatch {
-  box-shadow: 0 0 0 1px #EFEFEF;
-}
