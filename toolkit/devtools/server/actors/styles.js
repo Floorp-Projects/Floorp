@@ -232,7 +232,6 @@ var PageStyleActor = protocol.ActorClass({
         rule: rule,
         sourceText: this.getSelectorSource(selectorInfo, node.rawNode),
         selector: selectorInfo.selector.text,
-        name: selectorInfo.property,
         value: selectorInfo.value,
         status: selectorInfo.status
       });
@@ -244,7 +243,7 @@ var PageStyleActor = protocol.ActorClass({
       matched: matched,
       rules: [...rules],
       sheets: [...sheets],
-    };
+    }
   }, {
     request: {
       node: Arg(0, "domnode"),

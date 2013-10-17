@@ -11,8 +11,7 @@ let {CssLogic} = require("devtools/styleinspector/css-logic");
 let {ELEMENT_STYLE} = require("devtools/server/actors/styles");
 let promise = require("sdk/core/promise");
 let {EventEmitter} = require("devtools/shared/event-emitter");
-
-const {OutputParser} = require("devtools/output-parser");
+let {colorUtils} = require("devtools/css-color");
 
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/PluralForm.jsm");
@@ -134,8 +133,6 @@ function CssHtmlTree(aStyleInspector, aPageStyle)
   this.styleInspector = aStyleInspector;
   this.pageStyle = aPageStyle;
   this.propertyViews = [];
-
-  this._outputParser = new OutputParser();
 
   let chromeReg = Cc["@mozilla.org/chrome/chrome-registry;1"].
     getService(Ci.nsIXULChromeRegistry);
@@ -616,8 +613,6 @@ CssHtmlTree.prototype = {
   {
     delete this.viewedElement;
 
-    delete this._outputParser;
-
     // Remove event listeners
     this.includeBrowserStylesCheckbox.removeEventListener("command",
       this.includeBrowserStylesChanged);
@@ -681,7 +676,7 @@ PropertyInfo.prototype = {
   get value() {
     if (this.tree._computed) {
       let value = this.tree._computed[this.name].value;
-      return value;
+      return colorUtils.processCSSString(value);
     }
   }
 };
@@ -877,6 +872,7 @@ PropertyView.prototype = {
     // it will be reachable via TABing
     this.valueNode.setAttribute("tabindex", "");
     this.valueNode.setAttribute("dir", "ltr");
+    this.valueNode.textContent = this.valueNode.title = this.value;
     // Make it hand over the focus to the container
     this.valueNode.addEventListener("click", this.onFocus, false);
     this.element.appendChild(this.valueNode);
@@ -918,16 +914,7 @@ PropertyView.prototype = {
     }
 
     this.tree.numVisibleProperties++;
-
-    let outputParser = this.tree._outputParser;
-    let frag = outputParser.parseCssProperty(this.propertyInfo.name,
-      this.propertyInfo.value,
-      {
-        colorSwatchClass: "computedview-colorswatch"
-      });
-    this.valueNode.innerHTML = "";
-    this.valueNode.appendChild(frag);
-
+    this.valueNode.textContent = this.valueNode.title = this.propertyInfo.value;
     this.refreshMatchedSelectors();
   },
 
@@ -1127,18 +1114,8 @@ SelectorView.prototype = {
 
   get value()
   {
-    return this.selectorInfo.value;
-  },
-
-  get outputFragment()
-  {
-    let outputParser = this.tree._outputParser;
-    let frag = outputParser.parseCssProperty(
-      this.selectorInfo.name,
-      this.selectorInfo.value, {
-      colorSwatchClass: "computedview-colorswatch"
-    });
-    return frag;
+    let val = this.selectorInfo.value;
+    return colorUtils.processCSSString(val);
   },
 
   maybeOpenStyleEditor: function(aEvent)
