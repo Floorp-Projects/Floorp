@@ -13,6 +13,8 @@ import android.content.SharedPreferences;
 import android.util.Log;
 
 import org.mozilla.gecko.AppConstants;
+import org.mozilla.gecko.Distribution;
+import org.mozilla.gecko.Distribution.DistributionDescriptor;
 import org.mozilla.gecko.GeckoApp;
 import org.mozilla.gecko.GeckoAppShell;
 import org.mozilla.gecko.GeckoEvent;
@@ -619,9 +621,21 @@ public class BrowserHealthRecorder implements GeckoEventListener {
         this.profileCache.setOSLocale(osLocale);
         this.profileCache.setAppLocale(appLocale);
 
-        Log.d(LOG_TAG, "Requesting all add-ons and FHR prefs from Gecko.");
-        dispatcher.registerEventListener(EVENT_SNAPSHOT, this);
-        GeckoAppShell.sendEventToGecko(GeckoEvent.createBroadcastEvent("HealthReport:RequestSnapshot", null));
+        // Because the distribution lookup can take some time, do it at the end of
+        // our background startup work, along with the Gecko snapshot fetch.
+        final GeckoEventListener self = this;
+        ThreadUtils.postToBackgroundThread(new Runnable() {
+            @Override
+            public void run() {
+                final DistributionDescriptor desc = new Distribution(context).getDescriptor();
+                if (desc != null && desc.valid) {
+                    profileCache.setDistributionString(desc.id, desc.version);
+                }
+                Log.d(LOG_TAG, "Requesting all add-ons and FHR prefs from Gecko.");
+                dispatcher.registerEventListener(EVENT_SNAPSHOT, self);
+                GeckoAppShell.sendEventToGecko(GeckoEvent.createBroadcastEvent("HealthReport:RequestSnapshot", null));
+            }
+        });
     }
 
     /**
