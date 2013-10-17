@@ -8,7 +8,6 @@
 #include "mozilla/ErrorResult.h"
 #include <stdint.h>
 #include "nsCOMPtr.h"
-#include "nsIDOMGamepad.h"
 #include "nsIVariant.h"
 #include "nsString.h"
 #include "nsTArray.h"
@@ -33,8 +32,8 @@ struct GamepadButton
   GamepadButton(): pressed(false), value(0.0) {}
 };
 
-class Gamepad : public nsIDOMGamepad
-              , public nsWrapperCache
+class Gamepad : public nsISupports,
+                public nsWrapperCache
 {
 public:
   Gamepad(nsISupports* aParent,
