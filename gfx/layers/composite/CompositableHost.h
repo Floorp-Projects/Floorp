@@ -72,6 +72,7 @@ public:
     MOZ_COUNT_DTOR(CompositableBackendSpecificData);
   }
   virtual void SetCompositor(Compositor* aCompositor) {}
+  virtual void ClearData() {}
 };
 
 /**
