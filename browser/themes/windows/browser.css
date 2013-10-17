@@ -620,7 +620,7 @@ menuitem.bookmark-item {
   transition: none;
 }
 
-#back-button[disabled] > .toolbarbutton-icon {
+#main-window:not([customizing]) #back-button[disabled] > .toolbarbutton-icon {
   box-shadow: 0 0 0 1px hsla(210,54%,20%,.55),
               0 1px 0 hsla(210,54%,20%,.65) !important;
   transition: none;
