@@ -8,8 +8,8 @@ this.EXPORTED_SYMBOLS = ["BrowserIDManager"];
 
 const {classes: Cc, interfaces: Ci, utils: Cu, results: Cr} = Components;
 
+Cu.import("resource://gre/modules/Log.jsm");
 Cu.import("resource://services-common/async.js");
-Cu.import("resource://services-common/log4moz.js");
 Cu.import("resource://services-common/tokenserverclient.js");
 Cu.import("resource://services-crypto/utils.js");
 Cu.import("resource://services-sync/identity.js");
@@ -24,8 +24,8 @@ Cu.import("resource://services-sync/util.js");
 this.BrowserIDManager = function BrowserIDManager(fxaService, tokenServerClient) {
   this._fxaService = fxaService;
   this._tokenServerClient = tokenServerClient;
-  this._log = Log4Moz.repository.getLogger("Sync.Identity");
-  this._log.Level = Log4Moz.Level[Svc.Prefs.get("log.logger.identity")];
+  this._log = Log.repository.getLogger("Sync.Identity");
+  this._log.Level = Log.Level[Svc.Prefs.get("log.logger.identity")];
 
 };
 
