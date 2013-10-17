@@ -9,14 +9,14 @@
 //----------------------------------------------------------------------
 // Global functions and data [declaration]
 
-static const uint16_t g_MacGreekMappingTable[] = {
-#include "macgreek.uf"
-};
-
 nsresult
 nsUnicodeToMacGreekConstructor(nsISupports *aOuter, REFNSIID aIID,
                                void **aResult) 
 {
+  static const uint16_t g_MacGreekMappingTable[] = {
+#include "macgreek.uf"
+  };
+
   return CreateTableEncoder(u1ByteCharset,
                             (uMappingTable*) &g_MacGreekMappingTable, 1,
                             aOuter, aIID, aResult);

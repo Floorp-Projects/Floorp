@@ -12,11 +12,7 @@ EXPORTS += [
 ]
 
 CPP_SOURCES += [
-    'nsJapaneseToUnicode.cpp',
-    'nsUnicodeToEUCJP.cpp',
-    'nsUnicodeToISO2022JP.cpp',
-    'nsUnicodeToJISx0201.cpp',
-    'nsUnicodeToSJIS.cpp',
+    'UnifiedUCVJA.cpp',
 ]
 
 LIBRARY_NAME = 'ucvja_s'
