@@ -2342,12 +2342,6 @@ public:
                  XPCNativeInterface* Interface,
                  XPCWrappedNative** wrapper);
 
-    static nsresult
-    Morph(JS::HandleObject existingJSObject,
-          XPCNativeInterface* Interface,
-          nsWrapperCache *cache,
-          XPCWrappedNative** resultWrapper);
-
 public:
     static nsresult
     GetUsedOnly(nsISupports* Object,
