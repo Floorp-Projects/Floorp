@@ -1,0 +1,20 @@
+<html>
+<body>
+<script>
+var img = document.createElement("img");
+img.id = "img-ori";
+img.src = "mixed-bmp-png.ico";
+document.body.appendChild(img);
+
+img = document.createElement("img");
+img.id = "img-res32";
+img.src = "mixed-bmp-png.ico#-moz-resolution=32,32";
+document.body.appendChild(img);
+
+img = document.createElement("img");
+img.id = "img-res48";
+img.src = "mixed-bmp-png.ico#-moz-resolution=48,48";
+document.body.appendChild(img);
+</script>
+</body>
+</html>
