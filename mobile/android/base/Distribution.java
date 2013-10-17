@@ -33,6 +33,8 @@ import java.util.zip.ZipFile;
 public final class Distribution {
     private static final String LOGTAG = "GeckoDistribution";
 
+    private static final String DEFAULT_PREFS = GeckoApp.PREFS_NAME;
+
     private static final int STATE_UNKNOWN = 0;
     private static final int STATE_NONE = 1;
     private static final int STATE_SET = 2;
@@ -85,12 +87,12 @@ public final class Distribution {
      *
      * @param packagePath where to look for the distribution directory.
      */
-    public static void init(final Context context, final String packagePath) {
+    public static void init(final Context context, final String packagePath, final String prefsPath) {
         // Read/write preferences and files on the background thread.
         ThreadUtils.postToBackgroundThread(new Runnable() {
             @Override
             public void run() {
-                Distribution dist = new Distribution(context, packagePath);
+                Distribution dist = new Distribution(context, packagePath, prefsPath);
                 boolean distributionSet = dist.doInit();
                 if (distributionSet) {
                     GeckoAppShell.sendEventToGecko(GeckoEvent.createBroadcastEvent("Distribution:Set", ""));
@@ -104,7 +106,7 @@ public final class Distribution {
      * package path.
      */
     public static void init(final Context context) {
-        Distribution.init(context, context.getPackageResourcePath());
+        Distribution.init(context, context.getPackageResourcePath(), DEFAULT_PREFS);
     }
 
     /**
@@ -116,8 +118,9 @@ public final class Distribution {
         return dist.getBookmarks();
     }
 
-    private final String packagePath;
     private final Context context;
+    private final String packagePath;
+    private final String prefsBranch;
 
     private int state = STATE_UNKNOWN;
     private File distributionDir = null;
@@ -125,13 +128,14 @@ public final class Distribution {
     /**
      * @param packagePath where to look for the distribution directory.
      */
-    public Distribution(final Context context, final String packagePath) {
+    public Distribution(final Context context, final String packagePath, final String prefsBranch) {
         this.context = context;
         this.packagePath = packagePath;
+        this.prefsBranch = prefsBranch;
     }
 
     public Distribution(final Context context) {
-        this(context, context.getPackageResourcePath());
+        this(context, context.getPackageResourcePath(), DEFAULT_PREFS);
     }
 
     /**
@@ -142,7 +146,7 @@ public final class Distribution {
     private boolean doInit() {
         // Bail if we've already tried to initialize the distribution, and
         // there wasn't one.
-        SharedPreferences settings = context.getSharedPreferences(GeckoApp.PREFS_NAME, Activity.MODE_PRIVATE);
+        SharedPreferences settings = context.getSharedPreferences(prefsBranch, Activity.MODE_PRIVATE);
         String keyName = context.getPackageName() + ".distribution_state";
         this.state = settings.getInt(keyName, STATE_UNKNOWN);
         if (this.state == STATE_NONE) {

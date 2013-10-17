@@ -4,6 +4,7 @@ package @ANDROID_PACKAGE_NAME@.tests;
 import @ANDROID_PACKAGE_NAME@.*;
 
 import android.app.Activity;
+import android.content.Context;
 import android.content.SharedPreferences;
 import java.io.File;
 import java.io.FileOutputStream;
@@ -103,11 +104,10 @@ public class testDistribution extends ContentProviderTest {
             // Call Distribution.init with the mock package.
             ClassLoader classLoader = mActivity.getClassLoader();
             Class distributionClass = classLoader.loadClass("org.mozilla.gecko.Distribution");
-            Class contextClass = classLoader.loadClass("android.content.Context");
-            Method init = distributionClass.getMethod("init", contextClass, String.class);
+            Method init = distributionClass.getMethod("init", Context.class, String.class, String.class);
 
             Actions.EventExpecter distributionSetExpecter = mActions.expectGeckoEvent("Distribution:Set:OK");
-            init.invoke(null, mActivity, aPackagePath);
+            init.invoke(null, mActivity, aPackagePath, "prefs-" + System.currentTimeMillis());
             distributionSetExpecter.blockForEvent();
             distributionSetExpecter.unregisterListener();
         } catch (Exception e) {
