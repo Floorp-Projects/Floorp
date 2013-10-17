@@ -60,6 +60,7 @@ class DOMMediaStream;
 namespace dom {
 class RTCConfiguration;
 class MediaConstraintsInternal;
+class MediaStreamTrack;
 
 #ifdef USE_FAKE_PCOBSERVER
 typedef test::AFakePCObserver PeerConnectionObserver;
@@ -292,6 +293,12 @@ public:
     rv = SetRemoteDescription(aAction, NS_ConvertUTF16toUTF8(aSDP).get());
   }
 
+  NS_IMETHODIMP_TO_ERRORRESULT(GetStats, ErrorResult &rv,
+                               mozilla::dom::MediaStreamTrack *aSelector)
+  {
+    rv = GetStats(aSelector);
+  }
+
   NS_IMETHODIMP AddIceCandidate(const char* aCandidate, const char* aMid,
                                 unsigned short aLevel);
   void AddIceCandidate(const nsAString& aCandidate, const nsAString& aMid,
@@ -460,6 +467,7 @@ private:
 
 #ifdef MOZILLA_INTERNAL_API
   void virtualDestroyNSSReference() MOZ_FINAL;
+  nsresult GetTimeSinceEpoch(DOMHighResTimeStamp *result);
 #endif
 
   // Shut down media - called on main thread only
