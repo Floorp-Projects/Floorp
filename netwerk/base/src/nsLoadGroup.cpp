@@ -22,6 +22,7 @@
 #include "nsIInterfaceRequestor.h"
 #include "nsIRequestObserver.h"
 #include "CacheObserver.h"
+#include "MainThreadUtils.h"
 
 using namespace mozilla;
 using namespace mozilla::net;
@@ -224,6 +225,8 @@ AppendRequestsToArray(PLDHashTable *table, PLDHashEntryHdr *hdr,
 NS_IMETHODIMP
 nsLoadGroup::Cancel(nsresult status)
 {
+    MOZ_ASSERT(NS_IsMainThread());
+
     NS_ASSERTION(NS_FAILED(status), "shouldn't cancel with a success code");
     nsresult rv;
     uint32_t count = mRequests.entryCount;
