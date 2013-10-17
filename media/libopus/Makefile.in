@@ -8,7 +8,6 @@ DEFINES += \
   -DOPUS_BUILD \
   -DOPUS_VERSION='"v1.1-beta-23-gf2446c2-mozilla"' \
   -DUSE_ALLOCA \
-  -Drestrict= \
   $(NULL)
 
 ifneq ($(filter $(OS_ARCH),Linux Darwin DragonFly FreeBSD NetBSD OpenBSD),)
