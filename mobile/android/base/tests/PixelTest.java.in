@@ -57,6 +57,7 @@ abstract class PixelTest extends BaseTest {
         }
         tabEventExpecter.blockForEvent();
         contentEventExpecter.blockForEvent();
+        waitForText(StringHelper.TITLE_PLACE_HOLDER);
         loadAndPaint(url);
         tabEventExpecter.unregisterListener();
         contentEventExpecter.unregisterListener();
