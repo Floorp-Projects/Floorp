@@ -92,6 +92,10 @@ class AudioClock
 class AudioStream
 {
 public:
+  enum LatencyRequest {
+    HighLatency,
+    LowLatency
+  };
   AudioStream();
 
   virtual ~AudioStream();
@@ -116,7 +120,8 @@ public:
   // channels (1 for mono, 2 for stereo, etc) and aRate is the sample rate
   // (22050Hz, 44100Hz, etc).
   virtual nsresult Init(int32_t aNumChannels, int32_t aRate,
-                        const dom::AudioChannelType aAudioStreamType) = 0;
+                        const dom::AudioChannelType aAudioStreamType,
+                        LatencyRequest aLatencyRequest) = 0;
 
   // Closes the stream. All future use of the stream is an error.
   virtual void Shutdown() = 0;
