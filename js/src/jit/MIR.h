@@ -3597,7 +3597,7 @@ class MRandom : public MNullaryInstruction
 
 class MMathFunction
   : public MUnaryInstruction,
-    public DoublePolicy<0>
+    public FloatingPointPolicy<0>
 {
   public:
     enum Function {
@@ -3634,6 +3634,7 @@ class MMathFunction
       : MUnaryInstruction(input), function_(function), cache_(cache)
     {
         setResultType(MIRType_Double);
+        setPolicyType(MIRType_Double);
         setMovable();
     }
 
@@ -3672,6 +3673,13 @@ class MMathFunction
     void printOpcode(FILE *fp) const;
 
     static const char *FunctionName(Function function);
+
+    bool isFloat32Commutative() const {
+        return function_ == Log || function_ == Sin || function_ == Cos
+               || function_ == Exp || function_ == Tan || function_ == ATan
+               || function_ == ASin || function_ == ACos;
+    }
+    void trySpecializeFloat32();
 };
 
 class MAdd : public MBinaryArithInstruction
