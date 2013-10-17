@@ -85,7 +85,7 @@ audiounit_output_callback(void * user_ptr, AudioUnitRenderActionFlags * flags,
   got = stm->data_callback(stm, stm->user_ptr, buf, nframes);
   pthread_mutex_lock(&stm->mutex);
   if (got < 0) {
-    // XXX handle this case.
+    /* XXX handle this case. */
     assert(false);
     pthread_mutex_unlock(&stm->mutex);
     return noErr;
@@ -130,6 +130,65 @@ audiounit_get_backend_id(cubeb * ctx)
   return "audiounit";
 }
 
+static int
+audiounit_get_output_device_id(AudioDeviceID * device_id)
+{
+  UInt32 size;
+  OSStatus r;
+  AudioObjectPropertyAddress output_device_address = {
+    kAudioHardwarePropertyDefaultOutputDevice,
+    kAudioObjectPropertyScopeGlobal,
+    kAudioObjectPropertyElementMaster
+  };
+
+  size = sizeof(device_id);
+
+  r = AudioObjectGetPropertyData(kAudioObjectSystemObject,
+                                 &output_device_address,
+                                 0,
+                                 0,
+                                 &size,
+                                 &device_id);
+  if (r != noErr) {
+    return CUBEB_ERROR;
+  }
+
+  return CUBEB_OK;
+}
+
+/* Get the acceptable buffer size (in frames) that this device can work with. */
+static int
+audiounit_get_acceptable_latency_range(AudioValueRange * latency_range)
+{
+  UInt32 size;
+  OSStatus r;
+  AudioDeviceID output_device_id;
+  AudioObjectPropertyAddress output_device_buffer_size_range = {
+    kAudioDevicePropertyBufferFrameSizeRange,
+    kAudioDevicePropertyScopeOutput,
+    kAudioObjectPropertyElementMaster
+  };
+
+  if (audiounit_get_output_device_id(&output_device_id) != CUBEB_OK) {
+    return CUBEB_ERROR;
+  }
+
+  /* Get the buffer size range this device supports */
+  size = sizeof(*latency_range);
+
+  r = AudioObjectGetPropertyData(output_device_id,
+                                 &output_device_buffer_size_range,
+                                 0,
+                                 NULL,
+                                 &size,
+                                 latency_range);
+  if (r != noErr) {
+    return CUBEB_ERROR;
+  }
+
+  return CUBEB_OK;
+}
+
 
 int
 audiounit_get_max_channel_count(cubeb * ctx, uint32_t * max_channels)
@@ -151,17 +210,7 @@ audiounit_get_max_channel_count(cubeb * ctx, uint32_t * max_channels)
 
   assert(ctx && max_channels);
 
-  /* Get the output device. */
-  size = sizeof(output_device_id);
-
-  r = AudioObjectGetPropertyData(kAudioObjectSystemObject,
-                                 &output_device_address,
-                                 0,
-                                 0,
-                                 &size,
-                                 &output_device_id);
-
-  if (r != noErr) {
+  if (audiounit_get_output_device_id(&output_device_id) != CUBEB_OK) {
     return CUBEB_ERROR;
   }
 
@@ -178,6 +227,20 @@ audiounit_get_max_channel_count(cubeb * ctx, uint32_t * max_channels)
   }
 
   *max_channels = stream_format.mChannelsPerFrame;
+
+  return CUBEB_OK;
+}
+
+static int
+audiounit_get_min_latency(cubeb * ctx, cubeb_stream_params params, uint32_t * latency_ms)
+{
+  AudioValueRange latency_range;
+
+  if (audiounit_get_acceptable_latency_range(&latency_range) != CUBEB_OK) {
+    return CUBEB_ERROR;
+  }
+
+  *latency_ms = latency_range.mMinimum * 1000 / params.rate;
 
   return CUBEB_OK;
 }
@@ -209,17 +272,8 @@ audiounit_stream_init(cubeb * context, cubeb_stream ** stream, char const * stre
   unsigned int buffer_size;
   OSStatus r;
   UInt32 size;
-  AudioObjectPropertyAddress output_device_address = {
-    kAudioHardwarePropertyDefaultOutputDevice,
-    kAudioObjectPropertyScopeGlobal,
-    kAudioObjectPropertyElementMaster
-  };
-  AudioObjectPropertyAddress output_device_buffer_size_range = {
-    kAudioDevicePropertyBufferFrameSizeRange,
-    kAudioObjectPropertyScopeOutput,
-    kAudioObjectPropertyElementMaster
-  };
   AudioDeviceID output_device_id;
+  AudioValueRange latency_range;
 
 
   assert(context);
@@ -311,39 +365,17 @@ audiounit_stream_init(cubeb * context, cubeb_stream ** stream, char const * stre
 
   buffer_size = latency / 1000.0 * ss.mSampleRate;
 
-  size = sizeof(output_device_id);
-  /* Get the default output device id. */
-  r = AudioObjectGetPropertyData(kAudioObjectSystemObject,
-                                 &output_device_address,
-                                 0,
-                                 0,
-                                 &size,
-                                 &output_device_id);
-
-  if (r != 0) {
+  /* Get the range of latency this particular device can work with, and clamp
+   * the requested latency to this acceptable range. */
+  if (audiounit_get_acceptable_latency_range(&latency_range) != CUBEB_OK) {
     audiounit_stream_destroy(stm);
     return CUBEB_ERROR;
   }
 
-  /* Get the buffer size range this device supports and clamp the supplied
-   * latency to an acceptable value */
-  AudioValueRange buffer_size_range;
-  size = sizeof(buffer_size_range);
-
-  r = AudioObjectGetPropertyData(output_device_id,
-                                 &output_device_buffer_size_range,
-                                 0,
-                                 NULL,
-                                 &size,
-                                 &buffer_size_range);
-  if (r != 0) {
-    audiounit_stream_destroy(stm);
-    return CUBEB_ERROR;
-  }
-  if (buffer_size < (unsigned int) buffer_size_range.mMinimum) {
-    buffer_size = (unsigned int) buffer_size_range.mMinimum;
-  } else if (buffer_size > (unsigned int) buffer_size_range.mMaximum) {
-    buffer_size = (unsigned int) buffer_size_range.mMaximum;
+  if (buffer_size < (unsigned int) latency_range.mMinimum) {
+    buffer_size = (unsigned int) latency_range.mMinimum;
+  } else if (buffer_size > (unsigned int) latency_range.mMaximum) {
+    buffer_size = (unsigned int) latency_range.mMaximum;
   }
 
   /* Set the maximum number of frame that the render callback will ask for,
@@ -501,7 +533,7 @@ audiounit_stream_get_latency(cubeb_stream * stm, uint32_t * latency)
       return CUBEB_ERROR;
     }
 
-    // This part is fixed and depend on the stream parameter and the hardware.
+    /* This part is fixed and depend on the stream parameter and the hardware. */
     stm->hw_latency_frames =
       (uint32_t)(unit_latency_sec * stm->sample_spec.mSampleRate)
       + device_latency_frames
@@ -518,6 +550,7 @@ static struct cubeb_ops const audiounit_ops = {
   .init = audiounit_init,
   .get_backend_id = audiounit_get_backend_id,
   .get_max_channel_count = audiounit_get_max_channel_count,
+  .get_min_latency = audiounit_get_min_latency,
   .destroy = audiounit_destroy,
   .stream_init = audiounit_stream_init,
   .stream_destroy = audiounit_stream_destroy,

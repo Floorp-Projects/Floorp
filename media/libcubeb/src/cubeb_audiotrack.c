@@ -290,6 +290,24 @@ audiotrack_get_max_channel_count(cubeb * ctx, uint32_t * max_channels)
   return CUBEB_OK;
 }
 
+static int
+audiotrack_get_min_latency(cubeb * ctx, cubeb_stream_params params, uint32_t * latency_ms)
+{
+  /* We always use the lowest latency possible when using this backend (see
+   * audiotrack_stream_init), so this value is not going to be used. */
+  int rv;
+
+  rv = audiotrack_get_min_frame_count(ctx, &params, latency_ms);
+  if (rv != CUBEB_OK) {
+    return CUBEB_ERROR;
+  }
+
+  /* Convert to milliseconds. */
+  *latency_ms = *latency_ms * 1000 / params.rate;
+
+  return CUBEB_OK;
+}
+
 void
 audiotrack_destroy(cubeb * context)
 {
@@ -443,6 +461,7 @@ static struct cubeb_ops const audiotrack_ops = {
   .init = audiotrack_init,
   .get_backend_id = audiotrack_get_backend_id,
   .get_max_channel_count = audiotrack_get_max_channel_count,
+  .get_min_latency = audiotrack_get_min_latency,
   .destroy = audiotrack_destroy,
   .stream_init = audiotrack_stream_init,
   .stream_destroy = audiotrack_stream_destroy,
