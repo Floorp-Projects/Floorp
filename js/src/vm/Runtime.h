@@ -675,7 +675,7 @@ class MarkingValidator;
 typedef Vector<JS::Zone *, 4, SystemAllocPolicy> ZoneVector;
 
 class AutoLockForExclusiveAccess;
-class AutoPauseWorkersForGC;
+class AutoPauseWorkersForTracing;
 class ThreadDataIter;
 
 void RecomputeStackLimit(JSRuntime *rt, StackKind kind);
@@ -789,7 +789,7 @@ struct JSRuntime : public JS::shadow::Runtime,
     size_t numExclusiveThreads;
 
     friend class js::AutoLockForExclusiveAccess;
-    friend class js::AutoPauseWorkersForGC;
+    friend class js::AutoPauseWorkersForTracing;
     friend class js::ThreadDataIter;
 
   public:
