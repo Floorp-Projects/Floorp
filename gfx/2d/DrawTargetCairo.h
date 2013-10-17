@@ -161,7 +161,8 @@ private: // methods
   void DrawPattern(const Pattern& aPattern,
                    const StrokeOptions& aStrokeOptions,
                    const DrawOptions& aOptions,
-                   DrawPatternType aDrawType);
+                   DrawPatternType aDrawType,
+                   bool aPathBoundsClip = false);
 
   void CopySurfaceInternal(cairo_surface_t* aSurface,
                            const IntRect& aSource,
