@@ -41,6 +41,8 @@ PRLogModuleInfo* gAudioStreamLog = nullptr;
 static Mutex* gAudioPrefsLock = nullptr;
 static double gVolumeScale;
 static uint32_t gCubebLatency;
+static bool gCubebLatencyPrefSet;
+static const uint32_t CUBEB_NORMAL_LATENCY_MS = 100;
 
 /**
  * When MOZ_DUMP_AUDIO is set in the environment (to anything),
@@ -65,9 +67,10 @@ static int PrefChanged(const char* aPref, void* aClosure)
     // Arbitrary default stream latency of 100ms.  The higher this
     // value, the longer stream volume changes will take to become
     // audible.
-    uint32_t value = Preferences::GetUint(aPref, 100);
+    gCubebLatencyPrefSet = Preferences::HasUserValue(aPref);
+    uint32_t value = Preferences::GetUint(aPref, CUBEB_NORMAL_LATENCY_MS);
     MutexAutoLock lock(*gAudioPrefsLock);
-    gCubebLatency = std::min<uint32_t>(std::max<uint32_t>(value, 20), 1000);
+    gCubebLatency = std::min<uint32_t>(std::max<uint32_t>(value, 1), 1000);
   }
   return 0;
 }
@@ -96,6 +99,12 @@ static uint32_t GetCubebLatency()
 {
   MutexAutoLock lock(*gAudioPrefsLock);
   return gCubebLatency;
+}
+
+static bool CubebLatencyPrefSet()
+{
+  MutexAutoLock lock(*gAudioPrefsLock);
+  return gCubebLatencyPrefSet;
 }
 #endif
 
@@ -311,7 +320,8 @@ class BufferedAudioStream : public AudioStream
   ~BufferedAudioStream();
 
   nsresult Init(int32_t aNumChannels, int32_t aRate,
-                const dom::AudioChannelType aAudioChannelType);
+                const dom::AudioChannelType aAudioChannelType,
+                AudioStream::LatencyRequest aLatencyRequest);
   void Shutdown();
   nsresult Write(const AudioDataValue* aBuf, uint32_t aFrames);
   uint32_t Available();
@@ -526,7 +536,8 @@ BufferedAudioStream::EnsureTimeStretcherInitialized()
 
 nsresult
 BufferedAudioStream::Init(int32_t aNumChannels, int32_t aRate,
-                            const dom::AudioChannelType aAudioChannelType)
+                          const dom::AudioChannelType aAudioChannelType,
+                          AudioStream::LatencyRequest aLatencyRequest)
 {
   cubeb* cubebContext = GetCubebContext();
 
@@ -562,10 +573,22 @@ BufferedAudioStream::Init(int32_t aNumChannels, int32_t aRate,
 
   mAudioClock.Init();
 
+  // If the latency pref is set, use it. Otherwise, if this stream is intended
+  // for low latency playback, try to get the lowest latency possible.
+  // Otherwise, for normal streams, use 100ms.
+  uint32_t latency;
+  if (aLatencyRequest == AudioStream::LowLatency && !CubebLatencyPrefSet()) {
+    if (cubeb_get_min_latency(cubebContext, params, &latency) != CUBEB_OK) {
+      latency = GetCubebLatency();
+    }
+  } else {
+    latency = GetCubebLatency();
+  }
+
   {
     cubeb_stream* stream;
     if (cubeb_stream_init(cubebContext, &stream, "BufferedAudioStream", params,
-                          GetCubebLatency(), DataCallback_S, StateCallback_S, this) == CUBEB_OK) {
+                          latency, DataCallback_S, StateCallback_S, this) == CUBEB_OK) {
       mCubebStream.own(stream);
     }
   }
