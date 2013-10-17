@@ -2417,12 +2417,6 @@ Parser<ParseHandler>::functionStmt()
     GeneratorKind generatorKind = NotGenerator;
     TokenKind tt = tokenStream.getToken();
 
-    if (tt == TOK_MUL) {
-        tokenStream.tell(&start);
-        tt = tokenStream.getToken();
-        generatorKind = StarGenerator;
-    }
-
     if (tt == TOK_NAME) {
         name = tokenStream.currentName();
     } else if (tt == TOK_YIELD) {
@@ -2454,12 +2448,6 @@ Parser<ParseHandler>::functionExpr()
 
     GeneratorKind generatorKind = NotGenerator;
     TokenKind tt = tokenStream.getToken();
-
-    if (tt == TOK_MUL) {
-        tokenStream.tell(&start);
-        tt = tokenStream.getToken();
-        generatorKind = StarGenerator;
-    }
 
     RootedPropertyName name(context);
     if (tt == TOK_NAME) {
@@ -4572,6 +4560,7 @@ Parser<ParseHandler>::yieldExpression()
     switch (pc->generatorKind()) {
       case StarGenerator:
       {
+        MOZ_ASSUME_UNREACHABLE("star generator parsing should be disabled!");
         JS_ASSERT(pc->sc->isFunctionBox());
 
         pc->lastYieldOffset = begin;

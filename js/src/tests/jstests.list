@@ -39,6 +39,13 @@ skip script test262/ch10/10.4/10.4.3/10.4.3-1-106.js # bug 603201
 skip script test262/intl402/ch10/10.1/10.1.1_13.js # bug 853704
 skip script test262/intl402/ch10/10.1/10.1.1_19_c.js # bug 853704
 
+# These test function* and yield* syntax, which we've disabled in this branch
+# because it's not fully implemented yet.
+skip script ecma_6/Generators/objects.js
+skip script ecma_6/Generators/runtime.js
+skip script ecma_6/Generators/syntax.js
+skip script ecma_6/Generators/iteration.js
+
 #######################################################################
 # Tests disabled due to jstest limitations wrt imported test262 tests #
 #######################################################################

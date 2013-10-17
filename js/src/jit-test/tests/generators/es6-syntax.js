@@ -18,11 +18,13 @@ function assertSyntaxError(str) {
 }
 
 // Destructuring binding.
+if (false) { // function* disabled on this branch
 assertSyntaxError("function* f(x = yield) {}");
 assertSyntaxError("function* f(x = yield 17) {}");
 assertSyntaxError("function* f([yield]) {}");
 assertSyntaxError("function* f({ yield }) {}");
 assertSyntaxError("function* f(...yield) {}");
+}
 
 // For each.
 assertSyntaxError("for yield");
@@ -31,8 +33,12 @@ assertSyntaxError("for yield (x of y) {}");
 assertSyntaxError("for yield (var i in o) {}");
 
 // Expression bodies.
+if (false) { // function* disabled on this branch
 assertSyntaxError("function* f() yield 7");
+}
 
 // Asm.js.
 load(libdir + "asm.js");
-assertAsmDirectiveFail("function* f() { 'use asm'; function g() { return 0; } return g; })()")
+if (false) { // function* disabled on this branch
+assertAsmDirectiveFail("function* f() { 'use asm'; function g() { return 0; } return g; })()");
+}
