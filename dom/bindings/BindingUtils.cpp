@@ -1756,20 +1756,9 @@ ReparentWrapper(JSContext* aCx, JS::HandleObject aObjArg)
   if (ww != aObj) {
     MOZ_ASSERT(cache->HasSystemOnlyWrapper());
 
-    JS::RootedObject newwrapper(aCx,
-      xpc::WrapperFactory::WrapSOWObject(aCx, newobj));
-    if (!newwrapper) {
-      MOZ_CRASH();
-    }
+    // Oops. We don't support transplanting objects with SOWs anymore.
+    MOZ_CRASH();
 
-    // Ok, now we do the special object-plus-wrapper transplant.
-    ww = xpc::TransplantObjectWithWrapper(aCx, aObj, ww, newobj, newwrapper);
-    if (!ww) {
-      MOZ_CRASH();
-    }
-
-    aObj = newobj;
-    SetSystemOnlyWrapperSlot(aObj, JS::ObjectValue(*ww));
   } else {
     aObj = xpc::TransplantObject(aCx, aObj, newobj);
     if (!aObj) {
