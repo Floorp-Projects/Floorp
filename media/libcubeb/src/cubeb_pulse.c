@@ -383,6 +383,15 @@ pulse_get_max_channel_count(cubeb * ctx, uint32_t * max_channels)
   return CUBEB_OK;
 }
 
+static int
+pulse_get_min_latency(cubeb * ctx, cubeb_stream_params params, uint32_t latency)
+{
+  // According to PulseAudio developers, this is a safe minimum.
+  *latency = 40;
+
+  return CUBEB_OK;
+}
+
 static void
 pulse_destroy(cubeb * ctx)
 {
@@ -592,6 +601,7 @@ static struct cubeb_ops const pulse_ops = {
   .init = pulse_init,
   .get_backend_id = pulse_get_backend_id,
   .get_max_channel_count = pulse_get_max_channel_count,
+  .get_min_latency = pulse_get_min_latency,
   .destroy = pulse_destroy,
   .stream_init = pulse_stream_init,
   .stream_destroy = pulse_stream_destroy,
