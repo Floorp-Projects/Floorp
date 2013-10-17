@@ -566,14 +566,15 @@ template<typename T, size_t N, class AP, class TV>
 MOZ_ALWAYS_INLINE
 VectorBase<T, N, AP, TV>::VectorBase(AP ap)
   : AP(ap),
-    mBegin(static_cast<T*>(storage.addr())),
     mLength(0),
     mCapacity(sInlineCapacity)
 #ifdef DEBUG
   , mReserved(sInlineCapacity),
     entered(false)
 #endif
-{}
+{
+  mBegin = static_cast<T*>(storage.addr());
+}
 
 /* Move constructor. */
 template<typename T, size_t N, class AllocPolicy, class TV>
