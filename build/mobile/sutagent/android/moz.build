@@ -6,3 +6,12 @@
 
 MODULE = 'sutAgentAndroid'
 
+ANDROID_RESFILES = [
+    'res/drawable/ateamlogo.png',
+    'res/drawable/ic_stat_first.png',
+    'res/drawable/ic_stat_neterror.png',
+    'res/drawable/ic_stat_warning.png',
+    'res/drawable/icon.png',
+    'res/layout/main.xml',
+    'res/values/strings.xml',
+]
