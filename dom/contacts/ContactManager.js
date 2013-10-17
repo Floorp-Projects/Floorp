@@ -29,9 +29,9 @@ XPCOMUtils.defineLazyServiceGetter(this, "cpmm",
 
 const CONTACTS_SENDMORE_MINIMUM = 5;
 
-function ContactAddress() { }
+function ContactAddressImpl() { }
 
-ContactAddress.prototype = {
+ContactAddressImpl.prototype = {
   // This function is meant to be called via bindings code for type checking,
   // don't call it directly. Instead, create a content object and call initialize
   // on that.
@@ -74,9 +74,9 @@ ContactAddress.prototype = {
   QueryInterface: XPCOMUtils.generateQI([Ci.nsISupports]),
 };
 
-function ContactField() { }
+function ContactFieldImpl() { }
 
-ContactField.prototype = {
+ContactFieldImpl.prototype = {
   // This function is meant to be called via bindings code for type checking,
   // don't call it directly. Instead, create a content object and call initialize
   // on that.
@@ -107,9 +107,9 @@ ContactField.prototype = {
   QueryInterface: XPCOMUtils.generateQI([Ci.nsISupports]),
 };
 
-function ContactTelField() { }
+function ContactTelFieldImpl() { }
 
-ContactTelField.prototype = {
+ContactTelFieldImpl.prototype = {
   // This function is meant to be called via bindings code for type checking,
   // don't call it directly. Instead, create a content object and call initialize
   // on that.
@@ -144,10 +144,6 @@ ContactTelField.prototype = {
 };
 
 function validateArrayField(data, createCb) {
-  function isVanillaObj(aObj) {
-    return Object.prototype.toString.call(aObj) == "[object Object]";
-  }
-
   // We use an array-like Proxy to validate data set by content, since we don't
   // have WebIDL arrays yet. See bug 851726.
 
@@ -184,9 +180,7 @@ function validateArrayField(data, createCb) {
     data = Array.isArray(data) ? data : [data];
     let filtered = [];
     for (let obj of data) {
-      if (isVanillaObj(obj)) {
-        filtered.push(createCb(obj));
-      }
+      filtered.push(createCb(obj));
     }
     if (filtered.length === 0) {
       return undefined;
@@ -214,64 +208,69 @@ Contact.prototype = {
   // we return these objects (e.g. from a find call), the values in the array
   // will be COW's, and content cannot see the properties.
   set email(aEmail) {
-    this._email = validateArrayField(aEmail, function(email) {
-      let obj = new this._window.ContactField();
-      obj.initialize(email.type, email.value, email.pref);
-      return obj;
-    }.bind(this));
+    this._email = aEmail;
   },
 
   get email() {
+    this._email = validateArrayField(this._email, function(email) {
+      let obj = this._window.ContactField._create(this._window, new ContactFieldImpl());
+      obj.initialize(email.type, email.value, email.pref);
+      return obj;
+    }.bind(this));
     return this._email;
   },
 
   set adr(aAdr) {
-    this._adr = validateArrayField(aAdr, function(adr) {
-      let obj = new this._window.ContactAddress();
+    this._adr = aAdr;
+  },
+
+  get adr() {
+    this._adr = validateArrayField(this._adr, function(adr) {
+      let obj = this._window.ContactAddress._create(this._window, new ContactAddressImpl());
       obj.initialize(adr.type, adr.streetAddress, adr.locality,
                      adr.region, adr.postalCode, adr.countryName,
                      adr.pref);
       return obj;
     }.bind(this));
-  },
-
-  get adr() {
     return this._adr;
   },
 
   set tel(aTel) {
-    this._tel = validateArrayField(aTel, function(tel) {
-      let obj = new this._window.ContactTelField();
-      obj.initialize(tel.type, tel.value, tel.carrier, tel.pref);
-      return obj;
-    }.bind(this));
+    this._tel = aTel;
   },
 
   get tel() {
+    this._tel = validateArrayField(this._tel, function(tel) {
+      let obj = this._window.ContactTelField._create(this._window, new ContactTelFieldImpl());
+      obj.initialize(tel.type, tel.value, tel.carrier, tel.pref);
+      return obj;
+    }.bind(this));
     return this._tel;
   },
 
   set impp(aImpp) {
-    this._impp = validateArrayField(aImpp, function(impp) {
-      let obj = new this._window.ContactField();
-      obj.initialize(impp.type, impp.value, impp.pref);
-      return obj;
-    }.bind(this));
+    this._impp = aImpp;
   },
 
   get impp() {
+    this._impp = validateArrayField(this._impp, function(impp) {
+      let obj = this._window.ContactField._create(this._window, new ContactFieldImpl());
+      obj.initialize(impp.type, impp.value, impp.pref);
+      return obj;
+    }.bind(this));
     return this._impp;
   },
 
   set url(aUrl) {
-    this._url = validateArrayField(aUrl, function(url) {
-      let obj = new this._window.ContactField();
-      obj.initialize(url.type, url.value, url.pref);
-      return obj;
-    }.bind(this));
+    this._url = aUrl;
   },
 
   get url() {
+    this._url = validateArrayField(this._url, function(url) {
+      let obj = this._window.ContactField._create(this._window, new ContactFieldImpl());
+      obj.initialize(url.type, url.value, url.pref);
+      return obj;
+    }.bind(this));
     return this._url;
   },
 
@@ -617,7 +616,7 @@ ContactManager.prototype = {
         newContact.properties[prop] = [];
         for (let i of aContact[prop]) {
           if (i) {
-            let json = ContactAddress.prototype.toJSON.apply(i, [true]);
+            let json = ContactAddressImpl.prototype.toJSON.apply(i, [true]);
             newContact.properties[prop].push(json);
           }
         }
@@ -629,7 +628,7 @@ ContactManager.prototype = {
         newContact.properties[prop] = [];
         for (let i of aContact[prop]) {
           if (i) {
-            let json = ContactField.prototype.toJSON.apply(i, [true]);
+            let json = ContactFieldImpl.prototype.toJSON.apply(i, [true]);
             newContact.properties[prop].push(json);
           }
         }
@@ -641,7 +640,7 @@ ContactManager.prototype = {
         newContact.properties[prop] = [];
         for (let i of aContact[prop]) {
           if (i) {
-            let json = ContactTelField.prototype.toJSON.apply(i, [true]);
+            let json = ContactTelFieldImpl.prototype.toJSON.apply(i, [true]);
             newContact.properties[prop].push(json);
           }
         }
@@ -822,5 +821,5 @@ ContactManager.prototype = {
 };
 
 this.NSGetFactory = XPCOMUtils.generateNSGetFactory([
-  Contact, ContactManager, ContactAddress, ContactField, ContactTelField
+  Contact, ContactManager, ContactFieldImpl, ContactAddressImpl, ContactTelFieldImpl
 ]);
