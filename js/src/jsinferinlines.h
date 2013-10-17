@@ -1439,7 +1439,7 @@ TypeNewScript::writeBarrierPre(TypeNewScript *newScript)
     JS::Zone *zone = newScript->fun->zoneFromAnyThread();
     if (zone->needsBarrier()) {
         MarkObject(zone->barrierTracer(), &newScript->fun, "write barrier");
-        MarkShape(zone->barrierTracer(), &newScript->shape, "write barrier");
+        MarkObject(zone->barrierTracer(), &newScript->templateObject, "write barrier");
     }
 #endif
 }

@@ -110,6 +110,9 @@ class BaselineInspector
     bool hasSeenAccessedGetter(jsbytecode *pc);
     bool hasSeenDoubleResult(jsbytecode *pc);
     bool hasSeenNonStringIterNext(jsbytecode *pc);
+
+    JSObject *getTemplateObject(jsbytecode *pc);
+    JSObject *getTemplateObjectForNative(jsbytecode *pc, Native native);
 };
 
 } // namespace jit
