@@ -17,12 +17,16 @@
  * Boston, MA 02111-1307, USA.
  */
 
+#if defined(ATK_DISABLE_SINGLE_INCLUDES) && !defined (__ATK_H_INSIDE__) && !defined (ATK_COMPILATION)
+#error "Only <atk/atk.h> can be included directly."
+#endif
+
 #ifndef __ATK_RELATION_TYPE_H__
 #define __ATK_RELATION_TYPE_H__
 
-#ifdef __cplusplus
-extern "C" {
-#endif /* __cplusplus */
+#include <glib.h>
+
+G_BEGIN_DECLS
 
 /**
  *AtkRelationType:
@@ -37,7 +41,7 @@ extern "C" {
  *  AtkObject in a sequential way, (for instance text-flow).
  *@ATK_RELATION_FLOWS_FROM: Indicates that the object has content that flows logically from
  *  another AtkObject in a sequential way, (for instance text-flow).
- *@ATK_RELATION_SUBWINDOW_OF: Indicates a subwindow attached to a component but otherwise has no connection in  the UI hierarchy to that component.
+ *@ATK_RELATION_SUBWINDOW_OF: Indicates a subwindow attached to a component but otherwise has no connection in  the UI heirarchy to that component.
  *@ATK_RELATION_EMBEDS: Indicates that the object visually embeds 
  *  another object's content, i.e. this object's content flows around 
  *  another's content.
@@ -47,6 +51,7 @@ extern "C" {
  *@ATK_RELATION_PARENT_WINDOW_OF: Indicates that an object is a parent window of another object.
  *@ATK_RELATION_DESCRIBED_BY: Indicates that another object provides descriptive information about this object; more verbose than ATK_RELATION_LABELLED_BY.
  *@ATK_RELATION_DESCRIPTION_FOR: Indicates that an object provides descriptive information about another object; more verbose than ATK_RELATION_LABEL_FOR.
+ *@ATK_RELATION_NODE_PARENT_OF: Indicates an object is a cell in a treetable and is expanded to display other cells in the same column.
  *@ATK_RELATION_LAST_DEFINED: Not used, this value indicates the end of the enumeration.
  * 
  *Describes the type of the relation
@@ -69,11 +74,10 @@ typedef enum
   ATK_RELATION_PARENT_WINDOW_OF, 
   ATK_RELATION_DESCRIBED_BY,
   ATK_RELATION_DESCRIPTION_FOR,
+  ATK_RELATION_NODE_PARENT_OF,
   ATK_RELATION_LAST_DEFINED
 } AtkRelationType;
 
-#ifdef __cplusplus
-}
-#endif /* __cplusplus */
+G_END_DECLS
 
 #endif /* __ATK_RELATION_TYPE_H__ */
