@@ -38,10 +38,49 @@ public class testDistribution extends ContentProviderTest {
         return TEST_MOCHITEST;
     }
 
+    /**
+     * This is a hack.
+     *
+     * Startup results in us writing prefs -- we fetch the Distribution, which
+     * caches its state. Our tests try to wipe those prefs, but apparently
+     * sometimes race with startup, which leads to us not getting one of our
+     * expected messages. The test fails.
+     *
+     * This hack waits for any existing background tasks -- such as the one that
+     * writes prefs -- to finish before we begin the test.
+     */
+    private void waitForBackgroundHappiness() {
+        try {
+            ClassLoader classLoader = mActivity.getClassLoader();
+            Class threadUtilsClass = classLoader.loadClass("org.mozilla.gecko.util.ThreadUtils");
+            Method postToBackgroundThread = threadUtilsClass.getMethod("postToBackgroundThread", Runnable.class);
+            final Object signal = new Object();
+            final Runnable done = new Runnable() {
+                @Override
+                public void run() {
+                    synchronized (signal) {
+                        signal.notify();
+                    }
+                }
+            };
+            synchronized (signal) {
+                postToBackgroundThread.invoke(null, done);
+                signal.wait();
+            }
+        } catch (Exception e) {
+            mAsserter.ok(false, "Exception waiting on background thread.", e.toString());
+        }
+        mAsserter.dumpLog("Background task completed. Proceeding.");
+    }
+
     public void testDistribution() {
         mActivity = getActivity();
 
         String mockPackagePath = getMockPackagePath();
+
+        // Wait for any startup-related background distribution shenanigans to
+        // finish. This reduces the chance of us racing with startup pref writes.
+        waitForBackgroundHappiness();
 
         // Pre-clear distribution pref, run basic preferences and en-US localized preferences Tests
         clearDistributionPref();
@@ -268,6 +307,7 @@ public class testDistribution extends ContentProviderTest {
 
     // Clears the distribution pref to return distribution state to STATE_UNKNOWN
     private void clearDistributionPref() {
+        mAsserter.dumpLog("Clearing distribution pref.");
         SharedPreferences settings = mActivity.getSharedPreferences("GeckoApp", Activity.MODE_PRIVATE);
         String keyName = mActivity.getPackageName() + ".distribution_state";
         settings.edit().remove(keyName).commit();
