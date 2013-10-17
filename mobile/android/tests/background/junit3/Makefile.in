@@ -21,7 +21,6 @@ include $(srcdir)/android-services-files.mk
 
 # BACKGROUND_TESTS_{JAVA,RES}_FILES are defined in android-services-files.mk.
 JAVAFILES := $(BACKGROUND_TESTS_JAVA_FILES)
-ANDROID_RESFILES := $(BACKGROUND_TESTS_RES_FILES)
 
 # The test APK needs to know the contents of the target APK while not
 # being linked against them.  This is a best effort to avoid getting

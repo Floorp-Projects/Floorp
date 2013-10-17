@@ -67,7 +67,7 @@ gTests.push({
 
     ok(!item, "Item not in grid");
     ok(!gStartView._pinHelper.isPinned(uriFromIndex(2)), "Item unpinned");
-    ok(gStartView._set.itemCount === gStartView._limit, "Grid repopulated");
+    is(gStartView._set.itemCount, gStartView._limit, "Grid repopulated");
 
     // --------- unpin multiple items
 
@@ -124,7 +124,7 @@ gTests.push({
     item = gStartView._set.getItemsByUrl(uriFromIndex(2))[0];
 
     ok(!item, "Item not in grid");
-    ok(HistoryTestHelper._nodes[uriFromIndex(2)], "Item not deleted yet");
+    ok(HistoryTestHelper._nodes[uriFromIndex(2)], "Item not actually deleted yet");
     ok(!restoreButton.hidden, "Restore button is visible.");
     ok(gStartView._set.itemCount === gStartView._limit, "Grid repopulated");
 
@@ -150,8 +150,12 @@ gTests.push({
     ok(!deleteButton.hidden, "Delete button is visible.");
 
     let promise = waitForCondition(() => !restoreButton.hidden);
+    let populateGridSpy = spyOnMethod(gStartView, "populateGrid");
+
     EventUtils.synthesizeMouse(deleteButton, 10, 10, {}, window);
     yield promise;
+
+    is(populateGridSpy.callCount, 1, "populateGrid was called in response to the deleting a tile");
 
     item = gStartView._set.getItemsByUrl(uriFromIndex(2))[0];
 
@@ -163,11 +167,14 @@ gTests.push({
     Elements.contextappbar.dismiss();
     yield promise;
 
+    is(populateGridSpy.callCount, 1, "populateGrid not called when a removed item is actually deleted");
+    populateGridSpy.restore();
+
     item = gStartView._set.getItemsByUrl(uriFromIndex(2))[0];
 
     ok(!item, "Item not in grid");
     ok(!HistoryTestHelper._nodes[uriFromIndex(2)], "Item RIP");
-    ok(gStartView._set.itemCount === gStartView._limit, "Grid repopulated");
+    is(gStartView._set.itemCount, gStartView._limit, "Grid repopulated");
 
     // --------- delete multiple items and restore
 

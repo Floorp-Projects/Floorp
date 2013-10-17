@@ -95,6 +95,7 @@ HistoryView.prototype = Util.extend(Object.create(View.prototype), {
 
     rootNode.containerOpen = false;
     this._set.arrangeItems();
+    this._set.removeAttribute("fade");
     if (this._inBatch > 0)
       this._inBatch--;
   },
@@ -129,6 +130,9 @@ HistoryView.prototype = Util.extend(Object.create(View.prototype), {
   doActionOnSelectedTiles: function bv_doActionOnSelectedTiles(aActionName, aEvent) {
     let tileGroup = this._set;
     let selectedTiles = tileGroup.selectedItems;
+
+    // just arrange the grid once at the end of any action handling
+    this._inBatch = true;
 
     switch (aActionName){
       case "delete":
@@ -182,9 +186,11 @@ HistoryView.prototype = Util.extend(Object.create(View.prototype), {
         break;
 
       default:
+        this._inBatch = false;
         return;
     }
 
+    this._inBatch = false;
     // Send refresh event so all view are in sync.
     this._sendNeedsRefresh();
   },
@@ -254,7 +260,8 @@ HistoryView.prototype = Util.extend(Object.create(View.prototype), {
   },
 
   onClearHistory: function() {
-    this._set.clearAll();
+    if ('clearAll' in this._set)
+      this._set.clearAll();
   },
 
   onPageChanged: function(aURI, aWhat, aValue) {
@@ -264,7 +271,7 @@ HistoryView.prototype = Util.extend(Object.create(View.prototype), {
         let currIcon = item.getAttribute("iconURI");
         if (currIcon != aValue) {
           item.setAttribute("iconURI", aValue);
-          if("refresh" in item)
+          if ("refresh" in item)
             item.refresh();
         }
       }
