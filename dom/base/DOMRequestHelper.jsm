@@ -159,6 +159,12 @@ DOMRequestIpcHelper.prototype = {
   },
 
   destroyDOMRequestHelper: function() {
+    if (this._destroyed) {
+      return;
+    }
+
+    this._destroyed = true;
+
     Services.obs.removeObserver(this, "inner-window-destroyed");
 
     if (this._listeners) {
@@ -172,6 +178,11 @@ DOMRequestIpcHelper.prototype = {
     this._listeners = null;
     this._requests = null;
     this._window = null;
+
+    // Objects inheriting from DOMRequestIPCHelper may have an uninit function.
+    if (this.uninit) {
+      this.uninit();
+    }
   },
 
   observe: function(aSubject, aTopic, aData) {
