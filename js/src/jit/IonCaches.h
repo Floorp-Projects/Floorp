@@ -808,13 +808,14 @@ class SetElementIC : public RepatchIonCache
     ValueOperand index_;
     ConstantOrRegister value_;
     bool strict_;
+    bool guardHoles_;
 
     bool hasDenseStub_ : 1;
 
   public:
     SetElementIC(Register object, Register tempToUnboxIndex, Register temp,
                  FloatRegister tempFloat, ValueOperand index, ConstantOrRegister value,
-                 bool strict)
+                 bool strict, bool guardHoles)
       : object_(object),
         tempToUnboxIndex_(tempToUnboxIndex),
         temp_(temp),
@@ -822,6 +823,7 @@ class SetElementIC : public RepatchIonCache
         index_(index),
         value_(value),
         strict_(strict),
+        guardHoles_(guardHoles),
         hasDenseStub_(false)
     {
     }
@@ -850,6 +852,9 @@ class SetElementIC : public RepatchIonCache
     }
     bool strict() const {
         return strict_;
+    }
+    bool guardHoles() const {
+        return guardHoles_;
     }
 
     bool hasDenseStub() const {
@@ -1182,18 +1187,20 @@ class SetElementParIC : public ParallelIonCache
     ValueOperand index_;
     ConstantOrRegister value_;
     bool strict_;
+    bool guardHoles_;
 
   public:
     SetElementParIC(Register object, Register tempToUnboxIndex, Register temp,
                     FloatRegister tempFloat, ValueOperand index, ConstantOrRegister value,
-                    bool strict)
+                    bool strict, bool guardHoles)
       : object_(object),
         tempToUnboxIndex_(tempToUnboxIndex),
         temp_(temp),
         tempFloat_(tempFloat),
         index_(index),
         value_(value),
-        strict_(strict)
+        strict_(strict),
+        guardHoles_(guardHoles)
     {
     }
 
@@ -1225,6 +1232,9 @@ class SetElementParIC : public ParallelIonCache
     }
     bool strict() const {
         return strict_;
+    }
+    bool guardHoles() const {
+        return guardHoles_;
     }
 
     bool attachDenseElement(LockedJSContext &cx, IonScript *ion, JSObject *obj, const Value &idval);

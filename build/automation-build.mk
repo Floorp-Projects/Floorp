@@ -8,7 +8,7 @@ browser_path := \"$(browser_path)\"
 
 _PROFILE_DIR = $(TARGET_DEPTH)/_profile/pgo
 
-ABSOLUTE_TOPSRCDIR = $(call core_abspath,$(MOZILLA_DIR))
+ABSOLUTE_TOPSRCDIR = $(abspath $(MOZILLA_DIR))
 _CERTS_SRC_DIR = $(ABSOLUTE_TOPSRCDIR)/build/pgo/certs
 
 AUTOMATION_PPARGS = 	\
