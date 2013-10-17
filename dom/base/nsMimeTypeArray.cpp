@@ -203,14 +203,7 @@ nsMimeTypeArray::EnsureMimeTypes()
     return;
   }
 
-  nsTArray<nsRefPtr<nsPluginElement> > plugins;
-  pluginArray->GetPlugins(plugins);
-
-  for (uint32_t i = 0; i < plugins.Length(); ++i) {
-    nsPluginElement *plugin = plugins[i];
-
-    mMimeTypes.AppendElements(plugin->MimeTypes());
-  }
+  pluginArray->GetMimeTypes(mMimeTypes);
 
   mPluginMimeTypeCount = mMimeTypes.Length();
 }
