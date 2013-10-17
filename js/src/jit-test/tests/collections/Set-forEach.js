@@ -21,7 +21,7 @@ var iterator = initialSet[std_iterator]();
 var count = 0;
 for (var v of testSet) {
     assertEq(initialSet.has(v), true);
-    assertIteratorResult(iterator.next(), v, false);
+    assertIteratorNext(iterator, v);
     count++;
 }
 

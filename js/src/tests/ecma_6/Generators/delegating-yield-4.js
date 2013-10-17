@@ -7,12 +7,12 @@ var inner = g(20);
 var outer1 = delegate(inner);
 var outer2 = delegate(inner);
 
-assertIteratorResult(outer1.next(), 0, false);
-assertIteratorResult(outer2.next(), 1, false);
-assertIteratorResult(inner.next(), 2, false);
-assertIteratorResult(outer1.next(), 3, false);
-assertIteratorResult(outer2.next(), 4, false);
-assertIteratorResult(inner.next(), 5, false);
+assertIteratorNext(outer1, 0);
+assertIteratorNext(outer2, 1);
+assertIteratorNext(inner, 2);
+assertIteratorNext(outer1, 3);
+assertIteratorNext(outer2, 4);
+assertIteratorNext(inner, 5);
 
 if (typeof reportCompare == "function")
     reportCompare(true, true);

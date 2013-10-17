@@ -19,3 +19,15 @@ if (typeof assertIteratorResult === 'undefined') {
         assertDeepEq(result.done, done);
     }
 }
+
+if (typeof assertIteratorNext === 'undefined') {
+    var assertIteratorNext = function assertIteratorNext(iter, value) {
+        assertIteratorResult(iter.next(), value, false);
+    }
+}
+
+if (typeof assertIteratorDone === 'undefined') {
+    var assertIteratorDone = function assertIteratorDone(iter, value) {
+        assertIteratorResult(iter.next(), value, true);
+    }
+}
