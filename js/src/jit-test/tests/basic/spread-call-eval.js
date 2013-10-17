@@ -24,7 +24,7 @@ try {             // line0 + 1
 }
 
 // other iterable objects
-assertEq(eval(...["a + b"].iterator()), 11);
+assertEq(eval(...["a + b"][std_iterator]()), 11);
 assertEq(eval(...Set(["a + b"])), 11);
 let itr = {};
 itr[std_iterator] = function() {
