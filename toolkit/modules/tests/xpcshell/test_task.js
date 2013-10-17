@@ -145,7 +145,7 @@ add_test(function test_spawn_function_taskresult()
 add_test(function test_yielded_undefined()
 {
   Task.spawn(function () {
-    yield;
+    yield undefined;
     throw new Task.Result("We continued correctly.");
   }).then(function (result) {
     do_check_eq("We continued correctly.", result);
@@ -169,12 +169,12 @@ add_test(function test_yielded_primitive()
 
 add_test(function test_star_normal()
 {
-  Task.spawn(function* () {
+  Task.spawn(function () {
     let result = yield Promise.resolve("Value");
     for (let i = 0; i < 3; i++) {
       result += yield promiseResolvedLater("!");
     }
-    return "Task result: " + result;
+    throw new Task.Result("Task result: " + result);
   }).then(function (result) {
     do_check_eq("Task result: Value!!!", result);
     run_next_test();
@@ -185,7 +185,7 @@ add_test(function test_star_normal()
 
 add_test(function test_star_exceptions()
 {
-  Task.spawn(function* () {
+  Task.spawn(function () {
     try {
       yield Promise.reject("Rejection result by promise.");
       do_throw("Exception expected because the promise was rejected.");
@@ -204,9 +204,9 @@ add_test(function test_star_exceptions()
 
 add_test(function test_star_recursion()
 {
-  function* task_fibonacci(n) {
-    return n < 2 ? n : (yield task_fibonacci(n - 1)) +
-                       (yield task_fibonacci(n - 2));
+  function task_fibonacci(n) {
+    throw new Task.Result(n < 2 ? n : (yield task_fibonacci(n - 1)) +
+                                      (yield task_fibonacci(n - 2)));
   };
 
   Task.spawn(task_fibonacci(6)).then(function (result) {
@@ -219,10 +219,10 @@ add_test(function test_star_recursion()
 
 add_test(function test_mixed_legacy_and_star()
 {
-  Task.spawn(function* () {
-    return yield (function() {
+  Task.spawn(function () {
+    throw new Task.Result(yield (function() {
       throw new Task.Result(yield 5);
-    })();
+    })());
   }).then(function (result) {
     do_check_eq(5, result);
     run_next_test();
