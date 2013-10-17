@@ -30,9 +30,11 @@ libs::
 # Bookmarks
 
 # Pick up desktop's bookmarks.inc file
+ifdef LOCALE_MERGEDIR
+vpath book%.inc $(LOCALE_MERGEDIR)/browser/profile
+endif
 vpath book%.inc $(LOCALE_SRCDIR)/profile
 ifdef LOCALE_MERGEDIR
-vpath book%.inc $(LOCALE_SRCDIR)/profile
 vpath book%.inc @top_srcdir@/$(relativesrcdir)/en-US/profile
 endif
 
