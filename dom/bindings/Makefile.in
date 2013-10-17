@@ -101,10 +101,12 @@ LOCAL_INCLUDES += \
   $(NULL)
 endif
 
+ABS_DIST := $(abspath $(DIST))
+
 EXTRA_EXPORT_MDDEPEND_FILES := $(addsuffix .pp,$(binding_dependency_trackers))
 
 EXPORTS_GENERATED_FILES := $(exported_binding_headers) $(exported_generated_events_headers)
-EXPORTS_GENERATED_DEST := $(DIST)/include/$(binding_include_path)
+EXPORTS_GENERATED_DEST := $(ABS_DIST)/include/$(binding_include_path)
 EXPORTS_GENERATED_TARGET := export
 INSTALL_TARGETS += EXPORTS_GENERATED
 
@@ -118,7 +120,7 @@ globalgen_headers_FILES := \
   UnionConversions.h \
   UnionTypes.h \
   $(NULL)
-globalgen_headers_DEST = $(DIST)/include/mozilla/dom
+globalgen_headers_DEST = $(ABS_DIST)/include/mozilla/dom
 globalgen_headers_TARGET := export
 INSTALL_TARGETS += globalgen_headers
 

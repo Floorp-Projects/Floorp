@@ -76,8 +76,9 @@ def InvokeClWithDependencyGeneration(cmdline):
             # We can't handle pathes with spaces properly in mddepend.pl, but
             # we can assume that anything in a path with spaces is a system
             # header and throw it away.
+            dep = normcase(dep)
             if ' ' not in dep:
-                rule.add_dependencies([normcase(dep)])
+                rule.add_dependencies([dep])
         else:
             # Make sure we preserve the relevant output from cl. mozprocess
             # swallows the newline delimiter, so we need to re-add it.
