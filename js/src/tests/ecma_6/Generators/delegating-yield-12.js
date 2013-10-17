@@ -30,18 +30,18 @@ function IterableWrapper(iterable) {
 function* delegate(iter) { return yield* iter; }
 
 var iter = delegate(IterableWrapper([1, 2, 3]));
-assertIteratorResult(1, false, iter.next());
-assertIteratorResult(2, false, iter.next());
-assertIteratorResult(3, false, iter.next());
-assertIteratorResult(undefined, true, iter.next());
+assertIteratorResult(iter.next(), 1, false);
+assertIteratorResult(iter.next(), 2, false);
+assertIteratorResult(iter.next(), 3, false);
+assertIteratorResult(iter.next(), undefined, true);
 
 assertEq(log, 'innnn');
 
 iter = delegate([1, 2, 3]);
-assertIteratorResult(1, false, iter.next());
-assertIteratorResult(2, false, iter.next());
-assertIteratorResult(3, false, iter.next());
-assertIteratorResult(undefined, true, iter.next());
+assertIteratorResult(iter.next(), 1, false);
+assertIteratorResult(iter.next(), 2, false);
+assertIteratorResult(iter.next(), 3, false);
+assertIteratorResult(iter.next(), undefined, true);
 
 assertEq(log, 'innnn');
 
