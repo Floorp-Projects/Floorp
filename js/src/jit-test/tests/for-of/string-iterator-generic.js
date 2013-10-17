@@ -1,12 +1,13 @@
 // String.prototype.iterator is generic.
 
 load(libdir + "asserts.js");
+load(libdir + "iteration.js");
 
 function test(obj) {
-    var it = Array.prototype.iterator.call(obj);
+    var it = String.prototype[std_iterator].call(obj);
     for (var i = 0; i < (obj.length >>> 0); i++)
-        assertEq(it.next(), obj[i]);
-    assertThrowsValue(function () { it.next(); }, StopIteration);
+        assertIteratorResult(it.next(), obj[i], false);
+    assertIteratorResult(it.next(), undefined, true);
 }
 
 test({length: 0});

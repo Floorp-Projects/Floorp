@@ -1,9 +1,10 @@
 // An array iterator for a proxy calls the traps in a predictable order.
 
 load(libdir + "asserts.js");
+load(libdir + "iteration.js");
 
 var s = '';
-var it = Array.prototype.iterator.call(Proxy.create({
+var it = Array.prototype[std_iterator].call(Proxy.create({
     get: function (recipient, name) {
         if (name == 'length') {
             s += 'L';
@@ -15,9 +16,9 @@ var it = Array.prototype.iterator.call(Proxy.create({
     }
 }));
 
-assertEq(it.next(), "0");
+assertIteratorResult(it.next(), "0", false);
 s += ' ';
-assertEq(it.next(), "1");
+assertIteratorResult(it.next(), "1", false);
 s += ' ';
-assertThrowsValue(function () { it.next(); }, StopIteration);
+assertIteratorResult(it.next(), undefined, true);
 assertEq(s, "L0 L1 L");

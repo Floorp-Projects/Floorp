@@ -3427,8 +3427,7 @@ const JSFunctionSpec ArrayBufferObject::jsfuncs[] = {
 #ifndef RELEASE_BUILD
 # define IMPL_TYPED_ARRAY_STATICS(_typedArray)                                     \
 const JSFunctionSpec _typedArray##Object::jsfuncs[] = {                            \
-    JS_SELF_HOSTED_FN("@@iterator", "ArrayIterator", 0, 0),                        \
-    JS_FN("iterator", JS_ArrayIterator, 0, 0),                                     \
+    JS_SELF_HOSTED_FN("@@iterator", "ArrayValues", 0, 0),                          \
     JS_FN("subarray", _typedArray##Object::fun_subarray, 2, JSFUN_GENERIC_NATIVE), \
     JS_FN("set", _typedArray##Object::fun_set, 2, JSFUN_GENERIC_NATIVE),           \
     JS_FN("move", _typedArray##Object::fun_move, 3, JSFUN_GENERIC_NATIVE),         \
@@ -3437,8 +3436,7 @@ const JSFunctionSpec _typedArray##Object::jsfuncs[] = {                         
 #else
 # define IMPL_TYPED_ARRAY_STATICS(_typedArray)                                     \
 const JSFunctionSpec _typedArray##Object::jsfuncs[] = {                            \
-    JS_SELF_HOSTED_FN("@@iterator", "ArrayIterator", 0, 0),                        \
-    JS_FN("iterator", JS_ArrayIterator, 0, 0),                                     \
+    JS_SELF_HOSTED_FN("@@iterator", "ArrayValues", 0, 0),                          \
     JS_FN("subarray", _typedArray##Object::fun_subarray, 2, JSFUN_GENERIC_NATIVE), \
     JS_FN("set", _typedArray##Object::fun_set, 2, JSFUN_GENERIC_NATIVE),           \
     JS_FS_END                                                                      \
