@@ -16,6 +16,7 @@ struct cubeb_ops {
   int (* get_min_latency)(cubeb * context,
                           cubeb_stream_params params,
                           uint32_t * latency_ms);
+  int (* get_preferred_sample_rate)(cubeb * context, uint32_t * rate);
   void (* destroy)(cubeb * context);
   int (* stream_init)(cubeb * context, cubeb_stream ** stream, char const * stream_name,
                       cubeb_stream_params stream_params, unsigned int latency,

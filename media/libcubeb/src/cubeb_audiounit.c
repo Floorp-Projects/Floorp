@@ -141,14 +141,14 @@ audiounit_get_output_device_id(AudioDeviceID * device_id)
     kAudioObjectPropertyElementMaster
   };
 
-  size = sizeof(device_id);
+  size = sizeof(*device_id);
 
   r = AudioObjectGetPropertyData(kAudioObjectSystemObject,
                                  &output_device_address,
                                  0,
-                                 0,
+                                 NULL,
                                  &size,
-                                 &device_id);
+                                 device_id);
   if (r != noErr) {
     return CUBEB_ERROR;
   }
@@ -197,11 +197,6 @@ audiounit_get_max_channel_count(cubeb * ctx, uint32_t * max_channels)
   OSStatus r;
   AudioDeviceID output_device_id;
   AudioStreamBasicDescription stream_format;
-  AudioObjectPropertyAddress output_device_address = {
-    kAudioHardwarePropertyDefaultOutputDevice,
-    kAudioObjectPropertyScopeGlobal,
-    kAudioObjectPropertyElementMaster
-  };
   AudioObjectPropertyAddress stream_format_address = {
     kAudioDevicePropertyStreamFormat,
     kAudioDevicePropertyScopeOutput,
@@ -244,6 +239,41 @@ audiounit_get_min_latency(cubeb * ctx, cubeb_stream_params params, uint32_t * la
 
   return CUBEB_OK;
 }
+
+static int
+audiounit_get_preferred_sample_rate(cubeb * ctx, uint32_t * rate)
+{
+  UInt32 size;
+  OSStatus r;
+  Float64 fsamplerate;
+  AudioDeviceID output_device_id;
+  AudioObjectPropertyAddress samplerate_address = {
+    kAudioDevicePropertyNominalSampleRate,
+    kAudioObjectPropertyScopeGlobal,
+    kAudioObjectPropertyElementMaster
+  };
+
+  if (audiounit_get_output_device_id(&output_device_id) != CUBEB_OK) {
+    return CUBEB_ERROR;
+  }
+
+  size = sizeof(fsamplerate);
+  r = AudioObjectGetPropertyData(output_device_id,
+                                 &samplerate_address,
+                                 0,
+                                 NULL,
+                                 &size,
+                                 &fsamplerate);
+
+  if (r != noErr) {
+    return CUBEB_ERROR;
+  }
+
+  *rate = (uint32_t)fsamplerate;
+
+  return CUBEB_OK;
+}
+
 
 static void
 audiounit_destroy(cubeb * ctx)
@@ -467,12 +497,6 @@ audiounit_stream_get_latency(cubeb_stream * stm, uint32_t * latency)
     double unit_latency_sec;
     AudioDeviceID output_device_id;
     OSStatus r;
-
-    AudioObjectPropertyAddress output_device_address = {
-      kAudioHardwarePropertyDefaultOutputDevice,
-      kAudioObjectPropertyScopeGlobal,
-      kAudioObjectPropertyElementMaster
-    };
     AudioObjectPropertyAddress latency_address = {
       kAudioDevicePropertyLatency,
       kAudioDevicePropertyScopeOutput,
@@ -484,14 +508,8 @@ audiounit_stream_get_latency(cubeb_stream * stm, uint32_t * latency)
       kAudioObjectPropertyElementMaster
     };
 
+    r = audiounit_get_output_device_id(&output_device_id);
 
-    size = sizeof(output_device_id);
-    r = AudioObjectGetPropertyData(kAudioObjectSystemObject,
-                                   &output_device_address,
-                                   0,
-                                   0,
-                                   &size,
-                                   &output_device_id);
     if (r != noErr) {
       pthread_mutex_unlock(&stm->mutex);
       return CUBEB_ERROR;
@@ -551,6 +569,7 @@ static struct cubeb_ops const audiounit_ops = {
   .get_backend_id = audiounit_get_backend_id,
   .get_max_channel_count = audiounit_get_max_channel_count,
   .get_min_latency = audiounit_get_min_latency,
+  .get_preferred_sample_rate = audiounit_get_preferred_sample_rate,
   .destroy = audiounit_destroy,
   .stream_init = audiounit_stream_init,
   .stream_destroy = audiounit_stream_destroy,
