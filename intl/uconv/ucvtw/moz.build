@@ -11,11 +11,7 @@ EXPORTS += [
 ]
 
 CPP_SOURCES += [
-    'nsBIG5HKSCSToUnicode.cpp',
-    'nsBIG5ToUnicode.cpp',
-    'nsUnicodeToBIG5.cpp',
-    'nsUnicodeToBIG5HKSCS.cpp',
-    'nsUnicodeToHKSCS.cpp',
+    'UnifiedUCVTW.cpp',
 ]
 
 LIBRARY_NAME = 'ucvtw_s'

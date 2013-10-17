@@ -23,10 +23,6 @@
 //----------------------------------------------------------------------
 // Global functions and data [declaration]
 
-static const uint16_t g_utMappingTable[] = {
-#include "cp850.ut"
-};
-
 //----------------------------------------------------------------------
 // Class nsCP850ToUnicode [implementation]
 
@@ -34,6 +30,10 @@ nsresult
 nsCP850ToUnicodeConstructor(nsISupports* aOuter, REFNSIID aIID,
                             void **aResult) 
 {
+  static const uint16_t g_utMappingTable[] = {
+#include "cp850.ut"
+  };
+
   return CreateOneByteDecoder((uMappingTable*) &g_utMappingTable,
                               aOuter, aIID, aResult);
 }
