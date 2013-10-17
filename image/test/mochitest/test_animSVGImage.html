@@ -54,7 +54,7 @@ function takeReferenceSnapshot() {
      "reference div should disappear when it becomes display:none");
 }
 
-function myOnStopFrame(aRequest) {
+function myOnStopFrame() {
   gOnStopFrameCounter++;
   ok(true, "myOnStopFrame called");
   let currentSnapshot = snapshotWindow(window, false);
@@ -64,7 +64,8 @@ function myOnStopFrame(aRequest) {
              "at call #" + gOnStopFrameCounter + " to onStopFrame");
     cleanUpAndFinish();
   }
-  setTimeout(function() { myOnStopFrame(0, 0); }, 1000);
+  else
+    setTimeout(myOnStopFrame, 1);
 }
 
 function failTest() {
@@ -80,8 +81,6 @@ function cleanUpAndFinish() {
   if (gIsTestFinished) {
     return;
   }
-  let imgLoadingContent = gImg.QueryInterface(Ci.nsIImageLoadingContent);
-  imgLoadingContent.removeObserver(gMyDecoderObserver);
   SimpleTest.finish();
   gIsTestFinished = true;
 }
@@ -89,18 +88,11 @@ function cleanUpAndFinish() {
 function main() {
   takeReferenceSnapshot();
 
-  // Create, customize & attach decoder observer
-  observer = new ImageDecoderObserverStub();
-  observer.frameComplete = myOnStopFrame;
-  gMyDecoderObserver =
-    Cc["@mozilla.org/image/tools;1"].getService(Ci.imgITools)
-      .createScriptedObserver(observer);
-  let imgLoadingContent = gImg.QueryInterface(Ci.nsIImageLoadingContent);
-  imgLoadingContent.addObserver(gMyDecoderObserver);
-
   // We want to test the cold loading behavior, so clear cache in case an
   // earlier test got our image in there already.
   clearImageCache();
+
+  setTimeout(myOnStopFrame, 1);
 
   // kick off image-loading! myOnStopFrame handles the rest.
   gImg.setAttribute("src", "lime-anim-100x100.svg");

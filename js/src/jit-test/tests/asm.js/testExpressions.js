@@ -253,8 +253,8 @@ assertEq(f(-1,false), 0);
 assertEq(f(-5,false), 1);
 
 assertAsmTypeFail('glob','imp','b', USE_ASM + HEAP_IMPORTS + "function f() { return (i32[0]+1)|0 } return f");
-assertAsmTypeFail('glob','imp','b', USE_ASM + HEAP_IMPORTS + "function f() { return +(f64[0] + 1.0); } return f");
 new Float64Array(BUF_64KB)[0] = 2.3;
+assertEq(asmLink(asmCompile('glob','imp','b', USE_ASM + HEAP_IMPORTS + "function f() { return +(f64[0] + 2.0) } return f"), this, null, BUF_64KB)(), 2.3+2);
 assertEq(asmLink(asmCompile('glob','imp','b', USE_ASM + HEAP_IMPORTS + "function f() { return +(f64[0] - 2.0) } return f"), this, null, BUF_64KB)(), 2.3-2);
 assertEq(asmLink(asmCompile('glob','imp','b', USE_ASM + HEAP_IMPORTS + "function f() { return +(f64[0] * 2.0) } return f"), this, null, BUF_64KB)(), 2.3*2);
 assertEq(asmLink(asmCompile('glob','imp','b', USE_ASM + HEAP_IMPORTS + "function f() { return +(f64[0] / 2.0) } return f"), this, null, BUF_64KB)(), 2.3/2);
