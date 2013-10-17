@@ -165,3 +165,12 @@ body {
   cursor: pointer;
   float: right;
 }
+
+.computedview-colorswatch {
+  display: inline-block;
+  border-radius: 50%;
+  width: 1em;
+  height: 1em;
+  vertical-align: text-top;
+  -moz-margin-end: 5px;
+}
