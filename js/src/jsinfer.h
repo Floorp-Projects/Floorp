@@ -513,9 +513,7 @@ class TypeSet
     TypeFlags baseFlags() const { return flags & TYPE_FLAG_BASE_MASK; }
     bool unknown() const { return !!(flags & TYPE_FLAG_UNKNOWN); }
     bool unknownObject() const { return !!(flags & (TYPE_FLAG_UNKNOWN | TYPE_FLAG_ANYOBJECT)); }
-
     bool empty() const { return !baseFlags() && !baseObjectCount(); }
-    bool noConstraints() const { return constraintList == nullptr; }
 
     bool hasAnyFlag(TypeFlags flags) const {
         JS_ASSERT((flags & TYPE_FLAG_BASE_MASK) == flags);
@@ -533,6 +531,9 @@ class TypeSet
 
     /* Join two type sets into a new set. The result should not be modified further. */
     static TemporaryTypeSet *unionSets(TypeSet *a, TypeSet *b, LifoAlloc *alloc);
+
+    /* Add a type to this set using the specified allocator. */
+    inline bool addType(Type type, LifoAlloc *alloc, bool *padded = NULL);
 
     /*
      * Add a type to this set, calling any constraint handlers if this is a new
@@ -576,6 +577,9 @@ class TypeSet
         return flags & TYPE_FLAG_HEAP_SET;
     }
 
+    /* Whether any values in this set might have the specified type. */
+    bool mightBeType(JSValueType type);
+
     /*
      * Get whether this type set is known to be a subset of other.
      * This variant doesn't freeze constraints. That variant is called knownSubset
@@ -591,11 +595,9 @@ class TypeSet
     inline StackTypeSet *toStackSet();
     inline HeapTypeSet *toHeapSet();
 
-    /*
-     * Clone a type set into an arbitrary allocator. The result should not be
-     * modified further.
-     */
+    // Clone a type set into an arbitrary allocator.
     TemporaryTypeSet *clone(LifoAlloc *alloc) const;
+    bool clone(LifoAlloc *alloc, TemporaryTypeSet *result) const;
 
   protected:
     uint32_t baseObjectCount() const {
@@ -620,6 +622,9 @@ class HeapTypeSet : public TypeSet
 
 class CompilerConstraintList;
 
+CompilerConstraintList *
+NewCompilerConstraintList();
+
 class TemporaryTypeSet : public TypeSet
 {
   public:
@@ -632,9 +637,6 @@ class TemporaryTypeSet : public TypeSet
         JS_ASSERT(!isStackSet() && !isHeapSet());
     }
 
-    /* Add an object to this set using the specified allocator. */
-    bool addObject(TypeObjectKey *key, LifoAlloc *alloc);
-
     /*
      * Constraints for JIT compilation.
      *
@@ -646,9 +648,6 @@ class TemporaryTypeSet : public TypeSet
 
     /* Get any type tag which all values in this set must have. */
     JSValueType getKnownTypeTag();
-
-    /* Whether any values in this set might have the specified type. */
-    bool mightBeType(JSValueType type);
 
     bool isMagicArguments() { return getKnownTypeTag() == JSVAL_TYPE_MAGIC; }
 
@@ -1158,7 +1157,7 @@ class TypeScript
 
   public:
     /* Array of type type sets for variables and JOF_TYPESET ops. */
-    TypeSet *typeArray() const { return (TypeSet *) (uintptr_t(this) + sizeof(TypeScript)); }
+    StackTypeSet *typeArray() const { return (StackTypeSet *) (uintptr_t(this) + sizeof(TypeScript)); }
 
     static inline unsigned NumTypeSets(JSScript *script);
 
@@ -1168,8 +1167,9 @@ class TypeScript
     /* Get the type set for values observed at an opcode. */
     static inline StackTypeSet *BytecodeTypes(JSScript *script, jsbytecode *pc);
 
-    /* Get the default 'new' object for a given standard class, per the script's global. */
-    static inline TypeObject *StandardType(JSContext *cx, JSProtoKey kind);
+    template <typename TYPESET>
+    static inline TYPESET *BytecodeTypes(JSScript *script, jsbytecode *pc,
+                                         uint32_t *hint, TYPESET *typeArray);
 
     /* Get a type object for an allocation site in this script. */
     static inline TypeObject *InitObject(JSContext *cx, JSScript *script, jsbytecode *pc,
@@ -1196,7 +1196,16 @@ class TypeScript
     static inline void SetArgument(JSContext *cx, JSScript *script, unsigned arg,
                                    const js::Value &value);
 
-    static void AddFreezeConstraints(JSContext *cx, JSScript *script);
+    /*
+     * Freeze all the stack type sets in a script, for a compilation. Returns
+     * copies of the type sets which will be checked against the actual ones
+     * under FinishCompilation, to detect any type changes.
+     */
+    static bool FreezeTypeSets(CompilerConstraintList *constraints, JSScript *script,
+                               TemporaryTypeSet **pThisTypes,
+                               TemporaryTypeSet **pArgTypes,
+                               TemporaryTypeSet **pBytecodeTypes);
+
     static void Purge(JSContext *cx, HandleScript script);
 
     static void Sweep(FreeOp *fop, JSScript *script);
@@ -1210,6 +1219,15 @@ class TypeScript
     void printTypes(JSContext *cx, HandleScript script) const;
 #endif
 };
+
+class RecompileInfo;
+
+// Allocate a CompilerOutput for a finished compilation and generate the type
+// constraints for the compilation. Returns whether the type constraints
+// still hold.
+bool
+FinishCompilation(JSContext *cx, JSScript *script, ExecutionMode executionMode,
+                  CompilerConstraintList *constraints, RecompileInfo *precompileInfo);
 
 struct ArrayTableKey;
 typedef HashMap<ArrayTableKey,ReadBarriered<TypeObject>,ArrayTableKey,SystemAllocPolicy> ArrayTypeTable;

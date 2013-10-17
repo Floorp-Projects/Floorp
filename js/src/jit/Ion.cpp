@@ -1489,6 +1489,7 @@ AttachFinishedCompilations(JSContext *cx)
     if (!ion || !cx->runtime()->workerThreadState)
         return;
 
+    types::AutoEnterAnalysis enterTypes(cx);
     AutoLockWorkerThreadState lock(*cx->runtime()->workerThreadState);
 
     OffThreadCompilationVector &compilations = ion->finishedOffThreadCompilations();
@@ -1506,8 +1507,6 @@ AttachFinishedCompilations(JSContext *cx)
             // was constructed off thread, the assembler has not been rooted
             // previously, though any GC activity would discard the builder.
             codegen->masm.constructRoot(cx);
-
-            types::AutoEnterAnalysis enterTypes(cx);
 
             bool success;
             {
@@ -1597,7 +1596,9 @@ IonCompile(JSContext *cx, JSScript *script,
     AutoFlushCache afc("IonCompile", cx->runtime()->ionRuntime());
 
     AutoTempAllocatorRooter root(cx, temp);
-    types::CompilerConstraintList *constraints = alloc->new_<types::CompilerConstraintList>();
+    types::CompilerConstraintList *constraints = types::NewCompilerConstraintList();
+    if (!constraints)
+        return AbortReason_Alloc;
 
     IonBuilder *builder = alloc->new_<IonBuilder>(cx, temp, graph, constraints,
                                                   &inspector, info, baselineFrame);
@@ -2339,7 +2340,8 @@ jit::Invalidate(types::TypeCompartment &types, FreeOp *fop,
     size_t numInvalidations = 0;
     for (size_t i = 0; i < invalid.length(); i++) {
         const types::CompilerOutput &co = *invalid[i].compilerOutput(types);
-        JS_ASSERT(co.isValid());
+        if (!co.isValid())
+            continue;
 
         CancelOffThreadIonCompile(co.script()->compartment(), co.script());
 
@@ -2369,7 +2371,9 @@ jit::Invalidate(types::TypeCompartment &types, FreeOp *fop,
     // until its last invalidated frame is destroyed.
     for (size_t i = 0; i < invalid.length(); i++) {
         types::CompilerOutput &co = *invalid[i].compilerOutput(types);
-        JS_ASSERT(co.isValid());
+        if (!co.isValid())
+            continue;
+
         ExecutionMode executionMode = co.mode();
         JSScript *script = co.script();
         IonScript *ionScript = co.ion();
