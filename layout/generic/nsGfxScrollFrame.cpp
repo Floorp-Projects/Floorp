@@ -3771,9 +3771,15 @@ nsGfxScrollFrameInner::UpdateOverflow()
       GetScrollPosition() != nsPoint()) {
     // If there are scrollbars, or we're not at the beginning of the pane,
     // the scroll position may change. In this case, mark the frame as
-    // needing reflow.
+    // needing reflow. Don't use NS_FRAME_IS_DIRTY as dirty as that means
+    // we have to reflow the frame and all its descendants, and we don't
+    // have to do that here. Only this frame needs to be reflowed.
     mOuter->PresContext()->PresShell()->FrameNeedsReflow(
-      mOuter, nsIPresShell::eResize, NS_FRAME_IS_DIRTY);
+      mOuter, nsIPresShell::eResize, NS_FRAME_HAS_DIRTY_CHILDREN);
+    // Ensure that next time nsHTMLScrollFrame::Reflow runs, we don't skip
+    // updating the scrollbars. (Because the overflow area of the scrolled
+    // frame has probably just been updated, Reflow won't see it change.)
+    mSkippedScrollbarLayout = true;
     return false;  // reflowing will update overflow
   }
   return mOuter->nsContainerFrame::UpdateOverflow();
