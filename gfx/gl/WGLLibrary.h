@@ -20,7 +20,6 @@ public:
         mWindowDC(0),
         mWindowGLContext(0),
         mWindowPixelFormat (0),
-        mUseDoubleBufferedWindows(false),
         mLibType(OPENGL_LIB)     
     {}
 
@@ -78,7 +77,6 @@ public:
     HDC GetWindowDC() const {return mWindowDC; }
     HGLRC GetWindowGLContext() const {return mWindowGLContext; }
     int GetWindowPixelFormat() const { return mWindowPixelFormat; }
-    bool UseDoubleBufferedWindows() const { return mUseDoubleBufferedWindows; }
     LibraryType GetLibraryType() const { return mLibType; }
     static LibraryType SelectLibrary(const ContextFlags& aFlags);
     
@@ -91,7 +89,6 @@ private:
     HDC mWindowDC;
     HGLRC mWindowGLContext;
     int mWindowPixelFormat;
-    bool mUseDoubleBufferedWindows;
     LibraryType mLibType;
 
 };
