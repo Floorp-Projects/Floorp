@@ -115,6 +115,9 @@ var BrowserUI = {
     SettingsCharm.init();
     NavButtonSlider.init();
     SelectionHelperUI.init();
+#ifdef NIGHTLY_BUILD
+    ShumwayUtils.init();
+#endif
 
     // We can delay some initialization until after startup.  We wait until
     // the first page is shown, then dispatch a UIReadyDelayed event.
