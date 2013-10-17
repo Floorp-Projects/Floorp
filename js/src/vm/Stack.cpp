@@ -428,6 +428,9 @@ StackFrame::markValues(JSTracer *trc, Value *sp)
         // Mark callee, |this| and arguments.
         unsigned argc = Max(numActualArgs(), numFormalArgs());
         gc::MarkValueRootRange(trc, argc + 2, argv_ - 2, "fp argv");
+    } else {
+        // Mark callee and |this|
+        gc::MarkValueRootRange(trc, 2, ((Value *)this) - 2, "stack callee and this");
     }
 }
 
