@@ -93,6 +93,7 @@ RemoteTabsView.prototype = Util.extend(Object.create(View.prototype), {
     }
     this.setUIAccessVisible(show);
     this._set.arrangeItems();
+    this._set.removeAttribute("fade");
   },
 
   destruct: function destruct() {

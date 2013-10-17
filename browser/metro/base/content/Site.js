@@ -9,7 +9,7 @@
  * link parameter/model object expected to have a .url property, and optionally .title
  */
 function Site(aLink) {
-  if(!aLink.url) {
+  if (!aLink.url) {
     throw Cr.NS_ERROR_INVALID_ARG;
   }
   this._link = aLink;
@@ -64,7 +64,7 @@ Site.prototype = {
       }
     }
     // is binding already applied?
-    if (aNode.refresh) {
+    if ('refresh' in aNode) {
       // just update it
       aNode.refresh();
     } else {

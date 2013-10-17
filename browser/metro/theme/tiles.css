@@ -275,6 +275,26 @@ richgriditem[bending] > .tile-content {
   transform-origin: center center;
 }
 
+/* Empty/unused tiles */
+richgriditem:not([value]) {
+  visibility: hidden;
+}
+richgriditem[tiletype="thumbnail"]:not([value]) {
+  visibility: visible;
+}
+richgriditem:not([value]) > .tile-content {
+  padding: 10px 14px;
+}
+richgriditem[tiletype="thumbnail"]:not([value]) > .tile-content {
+  box-shadow: 0px 0px 0px 1px rgba(0, 0, 0, 0.05);
+  background-image: url("chrome://browser/skin/images/firefox-watermark.png");
+  background-origin: content-box;
+  background-repeat: no-repeat;
+  background-color: rgba(255,255,255, 0.2);
+  background-position: center center;
+  background-size: @grid_row_height@;
+}
+
 /* Snapped-view variation
    We use the compact, single-column grid treatment for <=320px */
 

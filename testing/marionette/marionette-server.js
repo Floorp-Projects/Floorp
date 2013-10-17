@@ -844,7 +844,7 @@ MarionetteServerConnection.prototype = {
       aRequest.newSandbox = true;
     }
     if (this.context == "chrome") {
-      if (aRequest.async) {
+      if (aRequest.parameters.async) {
         this.executeWithCallback(aRequest, aRequest.parameters.async);
       }
       else {
