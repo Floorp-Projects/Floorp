@@ -23,7 +23,4 @@ public:
   CSPService();
   virtual ~CSPService();
   static bool sCSPEnabled;
-private:
-  // Maps origins to app status.
-  nsDataHashtable<nsCStringHashKey, uint16_t> mAppStatusCache;
 };
