@@ -15,7 +15,6 @@ EXTRA_JS_MODULES += [
     'SitePermissions.jsm',
     'Social.jsm',
     'TabCrashReporter.jsm',
-    'UITour.jsm',
     'offlineAppCache.jsm',
     'openLocationLastURL.jsm',
     'webappsUI.jsm',
