@@ -1,11 +1,7 @@
 /* -*- Mode: Java; c-basic-offset: 4; tab-width: 20; indent-tabs-mode: nil; -*-
- * ***** BEGIN LICENSE BLOCK *****
- *
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
- * You can obtain one at http://mozilla.org/MPL/2.0/.
- *
- * ***** END LICENSE BLOCK ***** */
+ * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 package org.mozilla.gecko;
 
@@ -19,14 +15,12 @@ import android.content.Context;
 import android.content.SharedPreferences;
 import android.util.Log;
 
-import java.io.BufferedReader;
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.io.OutputStream;
+import java.util.Scanner;
 import java.util.Enumeration;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
@@ -39,87 +33,149 @@ public final class Distribution {
     private static final int STATE_SET = 2;
 
     /**
-     * Initializes distribution if it hasn't already been initalized.
+     * Initializes distribution if it hasn't already been initalized. Sends
+     * messages to Gecko as appropriate.
      *
-     * @param packagePath specifies where to look for the distribution directory.
+     * @param packagePath where to look for the distribution directory.
      */
     public static void init(final Context context, final String packagePath) {
         // Read/write preferences and files on the background thread.
         ThreadUtils.postToBackgroundThread(new Runnable() {
             @Override
             public void run() {
-                // Bail if we've already initialized the distribution.
-                SharedPreferences settings = context.getSharedPreferences(GeckoApp.PREFS_NAME, Activity.MODE_PRIVATE);
-                String keyName = context.getPackageName() + ".distribution_state";
-                int state = settings.getInt(keyName, STATE_UNKNOWN);
-                if (state == STATE_NONE) {
-                    return;
-                }
-
-                // Send a message to Gecko if we've set a distribution.
-                if (state == STATE_SET) {
-                    GeckoAppShell.sendEventToGecko(GeckoEvent.createBroadcastEvent("Distribution:Set", ""));
-                    return;
-                }
-
-                boolean distributionSet = false;
-                try {
-                    // First, try copying distribution files out of the APK.
-                    distributionSet = copyFiles(context, packagePath);
-                } catch (IOException e) {
-                    Log.e(LOGTAG, "Error copying distribution files", e);
-                }
-
-                if (!distributionSet) {
-                    // If there aren't any distribution files in the APK, look in the /system directory.
-                    File distDir = new File("/system/" + context.getPackageName() + "/distribution");
-                    if (distDir.exists()) {
-                        distributionSet = true;
-                    }
-                }
-
+                Distribution dist = new Distribution(context, packagePath);
+                boolean distributionSet = dist.doInit();
                 if (distributionSet) {
                     GeckoAppShell.sendEventToGecko(GeckoEvent.createBroadcastEvent("Distribution:Set", ""));
-                    settings.edit().putInt(keyName, STATE_SET).commit();
-                } else {
-                    settings.edit().putInt(keyName, STATE_NONE).commit();
                 }
             }
         });
     }
 
     /**
+     * Use <code>Context.getPackageResourcePath</code> to find an implicit
+     * package path.
+     */
+    public static void init(final Context context) {
+        Distribution.init(context, context.getPackageResourcePath());
+    }
+
+    /**
+     * Returns parsed contents of bookmarks.json.
+     * This method should only be called from a background thread.
+     */
+    public static JSONArray getBookmarks(final Context context) {
+        Distribution dist = new Distribution(context);
+        return dist.getBookmarks();
+    }
+
+    private final String packagePath;
+    private final Context context;
+
+    private int state = STATE_UNKNOWN;
+    private File distributionDir = null;
+
+    /**
+     * @param packagePath where to look for the distribution directory.
+     */
+    public Distribution(final Context context, final String packagePath) {
+        this.context = context;
+        this.packagePath = packagePath;
+    }
+
+    public Distribution(final Context context) {
+        this(context, context.getPackageResourcePath());
+    }
+
+    /**
+     * Don't call from the main thread.
+     *
+     * @return true if we've set a distribution.
+     */
+    private boolean doInit() {
+        // Bail if we've already tried to initialize the distribution, and
+        // there wasn't one.
+        SharedPreferences settings = context.getSharedPreferences(GeckoApp.PREFS_NAME, Activity.MODE_PRIVATE);
+        String keyName = context.getPackageName() + ".distribution_state";
+        this.state = settings.getInt(keyName, STATE_UNKNOWN);
+        if (this.state == STATE_NONE) {
+            return false;
+        }
+
+        // We've done the work once; don't do it again.
+        if (this.state == STATE_SET) {
+            // Note that we don't compute the distribution directory.
+            // Call `ensureDistributionDir` if you need it.
+            return true;
+        }
+
+        boolean distributionSet = false;
+        try {
+            // First, try copying distribution files out of the APK.
+            distributionSet = copyFiles();
+            if (distributionSet) {
+                // We always copy to the data dir, and we only copy files from
+                // a 'distribution' subdirectory. Track our dist dir now that
+                // we know it.
+                this.distributionDir = new File(getDataDir(), "distribution/");
+            }
+        } catch (IOException e) {
+            Log.e(LOGTAG, "Error copying distribution files", e);
+        }
+
+        if (!distributionSet) {
+            // If there aren't any distribution files in the APK, look in the /system directory.
+            File distDir = getSystemDistributionDir();
+            if (distDir.exists()) {
+                distributionSet = true;
+                this.distributionDir = distDir;
+            }
+        }
+
+        this.state = distributionSet ? STATE_SET : STATE_NONE;
+        settings.edit().putInt(keyName, this.state).commit();
+        return distributionSet;
+    }
+
+    /**
      * Copies the /distribution folder out of the APK and into the app's data directory.
      * Returns true if distribution files were found and copied.
      */
-    private static boolean copyFiles(Context context, String packagePath) throws IOException {
+    private boolean copyFiles() throws IOException {
         File applicationPackage = new File(packagePath);
         ZipFile zip = new ZipFile(applicationPackage);
 
         boolean distributionSet = false;
         Enumeration<? extends ZipEntry> zipEntries = zip.entries();
+
+        byte[] buffer = new byte[1024];
         while (zipEntries.hasMoreElements()) {
             ZipEntry fileEntry = zipEntries.nextElement();
             String name = fileEntry.getName();
 
-            if (!name.startsWith("distribution/"))
+            if (!name.startsWith("distribution/")) {
                 continue;
+            }
 
             distributionSet = true;
 
-            File dataDir = new File(context.getApplicationInfo().dataDir);
-            File outFile = new File(dataDir, name);
-
+            File outFile = new File(getDataDir(), name);
             File dir = outFile.getParentFile();
-            if (!dir.exists())
-                dir.mkdirs();
+
+            if (!dir.exists()) {
+                if (!dir.mkdirs()) {
+                    Log.e(LOGTAG, "Unable to create directories: " + dir.getAbsolutePath());
+                    continue;
+                }
+            }
 
             InputStream fileStream = zip.getInputStream(fileEntry);
             OutputStream outStream = new FileOutputStream(outFile);
 
-            int b;
-            while ((b = fileStream.read()) != -1)
-                outStream.write(b);
+            int count;
+            while ((count = fileStream.read(buffer)) != -1) {
+                outStream.write(buffer, 0, count);
+            }
 
             fileStream.close();
             outStream.close();
@@ -132,77 +188,77 @@ public final class Distribution {
     }
 
     /**
-     * Returns parsed contents of bookmarks.json.
-     * This method should only be called from a background thread.
+     * After calling this method, either <code>distributionDir</code>
+     * will be set, or there is no distribution in use.
+     *
+     * Only call after init.
      */
-    public static JSONArray getBookmarks(Context context) {
-        SharedPreferences settings = context.getSharedPreferences(GeckoApp.PREFS_NAME, Activity.MODE_PRIVATE);
-        String keyName = context.getPackageName() + ".distribution_state";
-        int state = settings.getInt(keyName, STATE_UNKNOWN);
-        if (state == STATE_NONE) {
+    private File ensureDistributionDir() {
+        if (this.distributionDir != null) {
+            return this.distributionDir;
+        }
+
+        if (this.state != STATE_SET) {
             return null;
         }
 
-        ZipFile zip = null;
-        InputStream inputStream = null;
+        // After init, we know that either we've copied a distribution out of
+        // the APK, or it exists in /system/.
+        // Look in each location in turn.
+        // (This could be optimized by caching the path in shared prefs.)
+        File copied = new File(getDataDir(), "distribution/");
+        if (copied.exists()) {
+            return this.distributionDir = copied;
+        }
+        File system = getSystemDistributionDir();
+        if (system.exists()) {
+            return this.distributionDir = system;
+        }
+        return null;
+    }
+
+    public JSONArray getBookmarks() {
+        if (this.state == STATE_UNKNOWN) {
+            this.doInit();
+        }
+
+        File dist = ensureDistributionDir();
+        if (dist == null) {
+            return null;
+        }
+
+        File bookmarks = new File(dist, "bookmarks.json");
+        if (!bookmarks.exists()) {
+            return null;
+        }
+
+        // Shortcut to slurp a file without messing around with streams.
         try {
-            if (state == STATE_UNKNOWN) {
-                // If the distribution hasn't been set yet, first look for bookmarks.json in the APK.
-                File applicationPackage = new File(context.getPackageResourcePath());
-                zip = new ZipFile(applicationPackage);
-                ZipEntry zipEntry = zip.getEntry("distribution/bookmarks.json");
-                if (zipEntry != null) {
-                    inputStream = zip.getInputStream(zipEntry);
-                } else {
-                    // If there's no bookmarks.json in the APK, but there is a preferences.json,
-                    // don't create any distribution bookmarks.
-                    zipEntry = zip.getEntry("distribution/preferences.json");
-                    if (zipEntry != null) {
-                        return null;
-                    }
-                    // Otherwise, look for bookmarks.json in the /system directory.
-                    File systemFile = new File("/system/" + context.getPackageName() + "/distribution/bookmarks.json");
-                    if (!systemFile.exists()) {
-                        return null;
-                    }
-                    inputStream = new FileInputStream(systemFile);
+            Scanner scanner = null;
+            try {
+                scanner = new Scanner(bookmarks, "UTF-8");
+                final String contents = scanner.useDelimiter("\\A").next();
+                return new JSONArray(contents);
+            } finally {
+                if (scanner != null) {
+                    scanner.close();
                 }
-            } else {
-                // Otherwise, first look for the distribution in the data directory.
-                File distDir = new File(context.getApplicationInfo().dataDir, "distribution");
-                if (!distDir.exists()) {
-                    // If that doesn't exist, then we must be using a distribution from the system directory.
-                    distDir = new File("/system/" + context.getPackageName() + "/distribution");
-                }
-
-                File file = new File(distDir, "bookmarks.json");
-                inputStream = new FileInputStream(file);
             }
 
-            // Convert input stream to JSONArray
-            BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream));
-            StringBuilder stringBuilder = new StringBuilder();
-            String s;
-            while ((s = reader.readLine()) != null) {
-                stringBuilder.append(s);
-            }
-            return new JSONArray(stringBuilder.toString());
         } catch (IOException e) {
             Log.e(LOGTAG, "Error getting bookmarks", e);
         } catch (JSONException e) {
             Log.e(LOGTAG, "Error parsing bookmarks.json", e);
-        } finally {
-            try {
-                if (zip != null) {
-                    zip.close();
-                }
-                if (inputStream != null) {
-                    inputStream.close();
-                }
-            } catch (IOException e) {
-                Log.e(LOGTAG, "Error closing streams", e);
-            } 
         }
+
         return null;
+    }
+
+    private String getDataDir() {
+        return context.getApplicationInfo().dataDir;
+    }
+
+    private File getSystemDistributionDir() {
+        return new File("/system/" + context.getPackageName() + "/distribution");
     }
 }
