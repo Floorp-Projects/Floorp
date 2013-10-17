@@ -1,5 +1,5 @@
 test-pref(layout.css.sticky.enabled,false) fuzzy-if(Android&&AndroidVersion>=15,6,406) == pref-1.html pref-1-disabled-ref.html
-test-pref(layout.css.sticky.enabled,true) == pref-1.html pref-1-enabled-ref.html
+test-pref(layout.css.sticky.enabled,true) fuzzy-if(Android&&AndroidVersion>=15,6,406) == pref-1.html pref-1-enabled-ref.html
 default-preferences pref(layout.css.sticky.enabled,true)
 
 == top-1.html top-1-ref.html
@@ -47,5 +47,5 @@ fails == inline-3.html inline-3-ref.html # bug 916302
 fails == column-contain-1a.html column-contain-1-ref.html
 == column-contain-1b.html column-contain-1-ref.html
 == block-in-inline-1.html block-in-inline-1-ref.html
-fuzzy-if(Android,4,19) == block-in-inline-2.html block-in-inline-2-ref.html
-fuzzy-if(Android,4,13) fuzzy-if(OSX==10.8,1,11) == block-in-inline-3.html block-in-inline-3-ref.html
+fuzzy-if(Android,8,1533) == block-in-inline-2.html block-in-inline-2-ref.html
+fuzzy-if(Android,8,306) fuzzy-if(OSX==10.8,1,11) == block-in-inline-3.html block-in-inline-3-ref.html
