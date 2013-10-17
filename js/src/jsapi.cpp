@@ -1024,6 +1024,14 @@ JS_SetOptions(JSContext *cx, uint32_t options)
 }
 
 JS_PUBLIC_API(uint32_t)
+JS_ResetOptions(JSContext *cx, uint32_t options)
+{
+    unsigned oldopts = cx->options();
+    unsigned newopts = oldopts & ~options;
+    return SetOptionsCommon(cx, newopts);
+}
+
+JS_PUBLIC_API(uint32_t)
 JS_ToggleOptions(JSContext *cx, uint32_t options)
 {
     unsigned oldopts = GetOptionsCommon(cx);
@@ -6085,7 +6093,24 @@ JS_SetGlobalJitCompilerOption(JSContext *cx, JSJitCompilerOption opt, uint32_t v
         if (value == 0)
             jit::js_IonOptions.setEagerCompilation();
         break;
-
+      case JSJITCOMPILER_ION_ENABLE:
+        if (value == 1) {
+            JS_SetOptions(cx, JSOPTION_BASELINE | JSOPTION_ION);
+            IonSpew(js::jit::IonSpew_Scripts, "Enable ion");
+        } else if (value == 0) {
+            JS_ResetOptions(cx, JSOPTION_BASELINE | JSOPTION_ION);
+            IonSpew(js::jit::IonSpew_Scripts, "Disable ion");
+        }
+        break;
+      case JSJITCOMPILER_BASELINE_ENABLE:
+        if (value == 1) {
+            JS_SetOptions(cx, JSOPTION_BASELINE);
+            IonSpew(js::jit::IonSpew_BaselineScripts, "Enable baseline");
+        } else if (value == 0) {
+            JS_ResetOptions(cx, JSOPTION_BASELINE);
+            IonSpew(js::jit::IonSpew_BaselineScripts, "Disable baseline");
+        }
+        break;
       default:
         break;
     }
