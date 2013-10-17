@@ -345,7 +345,6 @@ class IonBuilder : public MIRGenerator
     MInstruction *addBoundsCheck(MDefinition *index, MDefinition *length);
     MInstruction *addShapeGuard(MDefinition *obj, Shape *const shape, BailoutKind bailoutKind);
 
-    JSObject *getNewArrayTemplateObject(uint32_t count);
     MDefinition *convertShiftToMaskForStaticTypedArray(MDefinition *id,
                                                        ArrayBufferView::ViewType viewType);
 
@@ -493,7 +492,7 @@ class IonBuilder : public MIRGenerator
     bool jsop_delprop(PropertyName *name);
     bool jsop_delelem();
     bool jsop_newarray(uint32_t count);
-    bool jsop_newobject(JSObject *baseObj);
+    bool jsop_newobject();
     bool jsop_initelem();
     bool jsop_initelem_array();
     bool jsop_initelem_getter_setter();
