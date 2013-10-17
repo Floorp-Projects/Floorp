@@ -10,6 +10,4 @@
 
 #include "js/RequiredDefines.h"
 
-#include "mozilla/Char16.h"
-
 #endif /* js_confdefs_h */
