@@ -4428,6 +4428,11 @@ pref("mms.debugging.enabled", false);
 // the target element?
 pref("ui.touch_activation.delay_ms", 100);
 
+// If the user has clicked an element, how long do we keep the
+// :active state before it is cleared by the mouse sequences
+// fired after a touchstart/touchend.
+pref("ui.touch_activation.duration_ms", 100);
+
 // nsMemoryInfoDumper can watch a fifo in the temp directory and take various
 // actions when the fifo is written to.  Disable this in general.
 pref("memory_info_dumper.watch_fifo", false);
