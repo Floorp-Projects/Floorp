@@ -22,5 +22,6 @@ INCLUDES	+= \
 		-I$(srcdir)/../../html/content/src \
 		-I$(srcdir)/../../../js/xpconnect/src \
 		-I$(srcdir)/../../../dom/base \
+		-I$(srcdir)/../../../image/src \
 		-I$(topsrcdir)/content/xul/content/src \
 		$(NULL)
