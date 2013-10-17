@@ -208,6 +208,19 @@ audiounit_stream_init(cubeb * context, cubeb_stream ** stream, char const * stre
   AURenderCallbackStruct input;
   unsigned int buffer_size;
   OSStatus r;
+  UInt32 size;
+  AudioObjectPropertyAddress output_device_address = {
+    kAudioHardwarePropertyDefaultOutputDevice,
+    kAudioObjectPropertyScopeGlobal,
+    kAudioObjectPropertyElementMaster
+  };
+  AudioObjectPropertyAddress output_device_buffer_size_range = {
+    kAudioDevicePropertyBufferFrameSizeRange,
+    kAudioObjectPropertyScopeOutput,
+    kAudioObjectPropertyElementMaster
+  };
+  AudioDeviceID output_device_id;
+
 
   assert(context);
   *stream = NULL;
@@ -296,18 +309,58 @@ audiounit_stream_init(cubeb * context, cubeb_stream ** stream, char const * stre
     return CUBEB_ERROR;
   }
 
+  buffer_size = latency / 1000.0 * ss.mSampleRate;
+
+  size = sizeof(output_device_id);
+  /* Get the default output device id. */
+  r = AudioObjectGetPropertyData(kAudioObjectSystemObject,
+                                 &output_device_address,
+                                 0,
+                                 0,
+                                 &size,
+                                 &output_device_id);
+
+  if (r != 0) {
+    audiounit_stream_destroy(stm);
+    return CUBEB_ERROR;
+  }
+
+  /* Get the buffer size range this device supports and clamp the supplied
+   * latency to an acceptable value */
+  AudioValueRange buffer_size_range;
+  size = sizeof(buffer_size_range);
+
+  r = AudioObjectGetPropertyData(output_device_id,
+                                 &output_device_buffer_size_range,
+                                 0,
+                                 NULL,
+                                 &size,
+                                 &buffer_size_range);
+  if (r != 0) {
+    audiounit_stream_destroy(stm);
+    return CUBEB_ERROR;
+  }
+  if (buffer_size < (unsigned int) buffer_size_range.mMinimum) {
+    buffer_size = (unsigned int) buffer_size_range.mMinimum;
+  } else if (buffer_size > (unsigned int) buffer_size_range.mMaximum) {
+    buffer_size = (unsigned int) buffer_size_range.mMaximum;
+  }
+
+  /* Set the maximum number of frame that the render callback will ask for,
+   * effectively setting the latency of the stream. This is process-wide. */
+  r = AudioUnitSetProperty(stm->unit, kAudioDevicePropertyBufferFrameSize,
+                           kAudioUnitScope_Output, 0, &buffer_size, sizeof(buffer_size));
+  if (r != 0) {
+    audiounit_stream_destroy(stm);
+    return CUBEB_ERROR;
+  }
+
   r = AudioUnitSetProperty(stm->unit, kAudioUnitProperty_StreamFormat, kAudioUnitScope_Input,
                            0, &ss, sizeof(ss));
   if (r != 0) {
     audiounit_stream_destroy(stm);
     return CUBEB_ERROR;
   }
-
-  buffer_size = ss.mSampleRate / 1000.0 * latency * ss.mBytesPerFrame / NBUFS;
-  if (buffer_size % ss.mBytesPerFrame != 0) {
-    buffer_size += ss.mBytesPerFrame - (buffer_size % ss.mBytesPerFrame);
-  }
-  assert(buffer_size % ss.mBytesPerFrame == 0);
 
   r = AudioUnitInitialize(stm->unit);
   if (r != 0) {
@@ -435,7 +488,7 @@ audiounit_stream_get_latency(cubeb_stream * stm, uint32_t * latency)
       pthread_mutex_unlock(&stm->mutex);
       return CUBEB_ERROR;
     }
-    
+
     size = sizeof(device_safety_offset);
     r = AudioObjectGetPropertyData(output_device_id,
                                    &safety_offset_address,
