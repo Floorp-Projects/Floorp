@@ -87,9 +87,9 @@ View.prototype = {
       // get the rgb value that represents this color at given opacity over a white matte
       let tintColor = ColorUtils.addRgbColors(matteColor, ColorUtils.createDecimalColorWord(r,g,b,alpha));
       aItem.setAttribute("tintColor", ColorUtils.convertDecimalToRgbColor(tintColor));
-
-      if (aItem.refresh) {
-        aItem.refresh();
+      // when bound, use the setter to propogate the color change through the tile
+      if ('color' in aItem) {
+        aItem.color = background;
       }
     };
     let failureAction = function() {};
