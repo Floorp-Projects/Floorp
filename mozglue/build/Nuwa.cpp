@@ -101,7 +101,7 @@ struct LibcAllocator: public std::allocator<T>
   allocate(typename std::allocator<T>::size_type n,
            const void * = 0)
   {
-    return reinterpret_cast<T *>(mMallocImpl(n));
+    return reinterpret_cast<T *>(mMallocImpl(sizeof(T) * n));
   }
 
   inline void
