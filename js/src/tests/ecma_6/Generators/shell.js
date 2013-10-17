@@ -20,3 +20,9 @@ function assertIteratorResult(result, value, done) {
     assertDeepEq(result.value, value);
     assertEq(result.done, done);
 }
+function assertIteratorNext(iter, value) {
+    assertIteratorResult(iter.next(), value, false);
+}
+function assertIteratorDone(iter, value) {
+    assertIteratorResult(iter.next(), value, true);
+}

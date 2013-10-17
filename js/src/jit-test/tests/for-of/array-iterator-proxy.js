@@ -16,9 +16,9 @@ var it = Array.prototype[std_iterator].call(Proxy.create({
     }
 }));
 
-assertIteratorResult(it.next(), "0", false);
+assertIteratorNext(it, "0");
 s += ' ';
-assertIteratorResult(it.next(), "1", false);
+assertIteratorNext(it, "1");
 s += ' ';
-assertIteratorResult(it.next(), undefined, true);
+assertIteratorDone(it, undefined);
 assertEq(s, "L0 L1 L");

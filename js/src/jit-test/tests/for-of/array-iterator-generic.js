@@ -7,8 +7,8 @@ load(libdir + "iteration.js");
 function test(obj) {
     var it = Array.prototype[std_iterator].call(obj);
     for (var i = 0; i < (obj.length >>> 0); i++)
-        assertIteratorResult(it.next(), obj[i], false);
-    assertIteratorResult(it.next(), undefined, true);
+        assertIteratorNext(it, obj[i]);
+    assertIteratorDone(it, undefined);
 }
 
 test({length: 0});
