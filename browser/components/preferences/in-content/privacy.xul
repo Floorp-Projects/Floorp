@@ -65,11 +65,6 @@
 
 </preferences>
 
-<hbox class="heading" data-category="panePrivacy" hidden="true">
-  <image class="preference-icon" type="privacy"/>
-  <html:h1>&panePrivacy.title;</html:h1>
-</hbox>
-
 <!-- Tracking -->
 <groupbox id="trackingGroup" data-category="panePrivacy" hidden="true" align="start">
   <caption label="&tracking.label;"/>
