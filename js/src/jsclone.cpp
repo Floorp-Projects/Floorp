@@ -46,6 +46,7 @@ using namespace js;
 using mozilla::IsNaN;
 using mozilla::LittleEndian;
 using mozilla::NativeEndian;
+using JS::CanonicalizeNaN;
 
 enum StructuredDataType {
     /* Structured data types provided by the engine */
@@ -246,16 +247,6 @@ SCInput::replacePair(uint32_t tag, uint32_t data)
     return replace(PairToUInt64(tag, data));
 }
 
-/*
- * The purpose of this never-inlined function is to avoid a strange g++ build
- * error on OS X 10.5 (see bug 624080).  :-(
- */
-static JS_NEVER_INLINE double
-CanonicalizeNan(double d)
-{
-    return JS_CANONICALIZE_NAN(d);
-}
-
 bool
 SCInput::readDouble(double *p)
 {
@@ -265,7 +256,7 @@ SCInput::readDouble(double *p)
     } pun;
     if (!read(&pun.u))
         return false;
-    *p = CanonicalizeNan(pun.d);
+    *p = CanonicalizeNaN(pun.d);
     return true;
 }
 
@@ -380,7 +371,7 @@ ReinterpretPairAsDouble(uint32_t tag, uint32_t data)
 bool
 SCOutput::writeDouble(double d)
 {
-    return write(ReinterpretDoubleAsUInt64(CanonicalizeNan(d)));
+    return write(ReinterpretDoubleAsUInt64(CanonicalizeNaN(d)));
 }
 
 template <typename T>

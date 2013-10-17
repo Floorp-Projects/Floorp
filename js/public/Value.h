@@ -802,21 +802,30 @@ JSVAL_EXTRACT_NON_DOUBLE_TYPE_IMPL(jsval_layout l)
 
 #endif  /* JS_BITS_PER_WORD */
 
-static inline double
-JS_CANONICALIZE_NAN(double d)
-{
-    if (MOZ_UNLIKELY(d != d)) {
-        jsval_layout l;
-        l.asBits = 0x7FF8000000000000LL;
-        return l.asDouble;
-    }
-    return d;
-}
-
 static inline jsval_layout JSVAL_TO_IMPL(JS::Value v);
 static inline JS::Value IMPL_TO_JSVAL(jsval_layout l);
 
 namespace JS {
+
+/**
+ * Returns a generic quiet NaN value, with all payload bits set to zero.
+ *
+ * Among other properties, this NaN's bit pattern conforms to JS::Value's
+ * bit pattern restrictions.
+ */
+static MOZ_ALWAYS_INLINE double
+GenericNaN()
+{
+    return mozilla::SpecificNaN(0, 0x8000000000000ULL);
+}
+
+static inline double
+CanonicalizeNaN(double d)
+{
+    if (MOZ_UNLIKELY(mozilla::IsNaN(d)))
+        return GenericNaN();
+    return d;
+}
 
 /*
  * JS::Value is the interface for a single JavaScript Engine value.  A few
