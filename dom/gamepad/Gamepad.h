@@ -6,6 +6,7 @@
 #define mozilla_dom_gamepad_Gamepad_h
 
 #include "mozilla/ErrorResult.h"
+#include "mozilla/dom/GamepadButton.h"
 #include <stdint.h>
 #include "nsCOMPtr.h"
 #include "nsIVariant.h"
@@ -20,16 +21,6 @@ enum GamepadMappingType
 {
   NoMapping = 0,
   StandardMapping = 1
-};
-
-// TODO: fix the spec to expose both pressed and value:
-// https://www.w3.org/Bugs/Public/show_bug.cgi?id=21388
-struct GamepadButton
-{
-  bool pressed;
-  double value;
-
-  GamepadButton(): pressed(false), value(0.0) {}
 };
 
 class Gamepad : public nsISupports,
@@ -119,8 +110,11 @@ protected:
   bool mConnected;
 
   // Current state of buttons, axes.
-  nsTArray<GamepadButton> mButtons;
+  nsTArray<nsRefPtr<GamepadButton>> mButtons;
   nsTArray<double> mAxes;
+
+  // Cached variant array.
+  nsCOMPtr<nsIVariant> mButtonsVariant;
 };
 
 } // namespace dom
