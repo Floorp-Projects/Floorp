@@ -343,7 +343,7 @@ class CodeGenerator : public CodeGeneratorSpecific
                              bool needsTypeBarrier);
     bool addSetElementCache(LInstruction *ins, Register obj, Register unboxIndex, Register temp,
                             FloatRegister tempFloat, ValueOperand index, ConstantOrRegister value,
-                            bool strict);
+                            bool strict, bool guardHoles);
     bool checkForAbortPar(LInstruction *lir);
 
     bool generateBranchV(const ValueOperand &value, Label *ifTrue, Label *ifFalse, FloatRegister fr);

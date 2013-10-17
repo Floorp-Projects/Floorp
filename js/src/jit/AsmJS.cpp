@@ -387,8 +387,7 @@ class Type
         Signed,
         Unsigned,
         Intish,
-        Void,
-        Unknown
+        Void
     };
 
   private:
@@ -414,7 +413,7 @@ class Type
     }
 
     bool isIntish() const {
-        return isInt() || which_ == Intish || which_ == Unknown;
+        return isInt() || which_ == Intish;
     }
 
     bool isDouble() const {
@@ -422,7 +421,7 @@ class Type
     }
 
     bool isDoublish() const {
-        return isDouble() || which_ == Doublish || which_ == Unknown;
+        return isDouble() || which_ == Doublish;
     }
 
     bool isVoid() const {
@@ -449,7 +448,6 @@ class Type
           case Intish:
             return MIRType_Int32;
           case Void:
-          case Unknown:
             return MIRType_None;
         }
         MOZ_ASSUME_UNREACHABLE("Invalid Type");
@@ -465,7 +463,6 @@ class Type
           case Unsigned:  return "unsigned";
           case Intish:    return "intish";
           case Void:      return "void";
-          case Unknown:   return "unknown";
         }
         MOZ_ASSUME_UNREACHABLE("Invalid Type");
     }
@@ -3947,14 +3944,14 @@ CheckCoerceToInt(FunctionCompiler &f, ParseNode *expr, MDefinition **def, Type *
     if (!CheckExpr(f, operand, &operandDef, &operandType))
         return false;
 
-    if (operandType.isDouble()) {
+    if (operandType.isDoublish()) {
         *def = f.unary<MTruncateToInt32>(operandDef);
         *type = Type::Signed;
         return true;
     }
 
     if (!operandType.isIntish())
-        return f.failf(operand, "%s is not a subtype of double or intish", operandType.toChars());
+        return f.failf(operand, "%s is not a subtype of doublish or intish", operandType.toChars());
 
     *def = operandDef;
     *type = Type::Signed;
@@ -4160,28 +4157,19 @@ CheckAddOrSub(FunctionCompiler &f, ParseNode *expr, MDefinition **def, Type *typ
     if (numAddOrSub > (1<<20))
         return f.fail(expr, "too many + or - without intervening coercion");
 
-    if (expr->isKind(PNK_ADD)) {
-        if (lhsType.isInt() && rhsType.isInt()) {
-            *def = f.binary<MAdd>(lhsDef, rhsDef, MIRType_Int32);
-            *type = Type::Intish;
-        } else if (lhsType.isDouble() && rhsType.isDouble()) {
-            *def = f.binary<MAdd>(lhsDef, rhsDef, MIRType_Double);
-            *type = Type::Double;
-        } else {
-            return f.failf(expr, "operands to + must both be int or double, got %s and %s",
-                           lhsType.toChars(), rhsType.toChars());
-        }
+    if (lhsType.isInt() && rhsType.isInt()) {
+        *def = expr->isKind(PNK_ADD)
+               ? f.binary<MAdd>(lhsDef, rhsDef, MIRType_Int32)
+               : f.binary<MSub>(lhsDef, rhsDef, MIRType_Int32);
+        *type = Type::Intish;
+    } else if (lhsType.isDoublish() && rhsType.isDoublish()) {
+        *def = expr->isKind(PNK_ADD)
+               ? f.binary<MAdd>(lhsDef, rhsDef, MIRType_Double)
+               : f.binary<MSub>(lhsDef, rhsDef, MIRType_Double);
+        *type = Type::Double;
     } else {
-        if (lhsType.isInt() && rhsType.isInt()) {
-            *def = f.binary<MSub>(lhsDef, rhsDef, MIRType_Int32);
-            *type = Type::Intish;
-        } else if (lhsType.isDoublish() && rhsType.isDoublish()) {
-            *def = f.binary<MSub>(lhsDef, rhsDef, MIRType_Double);
-            *type = Type::Double;
-        } else {
-            return f.failf(expr, "operands to - must both be int or doublish, got %s and %s",
-                           lhsType.toChars(), rhsType.toChars());
-        }
+        return f.failf(expr, "operands to +/- must both be int or doublish, got %s and %s",
+                       lhsType.toChars(), rhsType.toChars());
     }
 
     if (numAddOrSubOut)

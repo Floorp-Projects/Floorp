@@ -7135,10 +7135,13 @@ class MSetElementCache
     public MixPolicy<ObjectPolicy<0>, BoxPolicy<1> >
 {
     bool strict_;
+    bool guardHoles_;
 
-    MSetElementCache(MDefinition *obj, MDefinition *index, MDefinition *value, bool strict)
+    MSetElementCache(MDefinition *obj, MDefinition *index, MDefinition *value, bool strict,
+                     bool guardHoles)
       : MSetElementInstruction(obj, index, value),
-        strict_(strict)
+        strict_(strict),
+        guardHoles_(guardHoles)
     {
     }
 
@@ -7146,12 +7149,15 @@ class MSetElementCache
     INSTRUCTION_HEADER(SetElementCache);
 
     static MSetElementCache *New(MDefinition *obj, MDefinition *index, MDefinition *value,
-                                 bool strict) {
-        return new MSetElementCache(obj, index, value, strict);
+                                 bool strict, bool guardHoles) {
+        return new MSetElementCache(obj, index, value, strict, guardHoles);
     }
 
     bool strict() const {
         return strict_;
+    }
+    bool guardHoles() const {
+        return guardHoles_;
     }
 
     TypePolicy *typePolicy() {
