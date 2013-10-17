@@ -9,17 +9,17 @@
 //----------------------------------------------------------------------
 // Global functions and data [declaration]
 
-static const uint16_t g_ufMappingTable[] = {
-/* "adobeeuro.uf" was generated like this:
- * % echo '0xA4    0x20AC  #    EURO CURRENCY SIGN' | ./umaptable -uf >adobeeuro.uf
- */
-#include "adobeeuro.uf"
-};
-
 nsresult
 nsUnicodeToAdobeEuroConstructor(nsISupports *aOuter, REFNSIID aIID,
                                 void **aResult) 
 {
+  static const uint16_t g_ufMappingTable[] = {
+  /* "adobeeuro.uf" was generated like this:
+   * % echo '0xA4    0x20AC  #    EURO CURRENCY SIGN' | ./umaptable -uf >adobeeuro.uf
+   */
+#include "adobeeuro.uf"
+  };
+
   return CreateTableEncoder(u1ByteCharset,
                             (uMappingTable*) &g_ufMappingTable, 1,
                             aOuter, aIID, aResult);

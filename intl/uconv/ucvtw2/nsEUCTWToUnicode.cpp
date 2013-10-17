@@ -9,39 +9,6 @@
 
 //----------------------------------------------------------------------
 // Global functions and data [declaration]
-static const uScanClassID g_EUCTWScanClassIDs [] = {
-  u1ByteCharset,
-  u2BytesGRCharset,
-  u2BytesGRPrefix8EA2Charset,
-  u2BytesGRPrefix8EA3Charset,
-  u2BytesGRPrefix8EA4Charset,
-  u2BytesGRPrefix8EA5Charset,
-  u2BytesGRPrefix8EA6Charset,
-  u2BytesGRPrefix8EA7Charset
-};
-
-static const uint16_t *g_EUCTWMappingTableSet [] ={
-  g_ASCIIMappingTable,
-  g_utCNS1MappingTable,
-  g_utCNS2MappingTable,
-  g_utCNS3MappingTable,
-  g_utCNS4MappingTable,
-  g_utCNS5MappingTable,
-  g_utCNS6MappingTable,
-  g_utCNS7MappingTable
-};
-
-static const uRange g_EUCTWRanges[] = {
-  { 0x00, 0x7E },
-  { 0xA1, 0xFE },
-  { 0x8E, 0x8E },
-  { 0x8E, 0x8E },
-  { 0x8E, 0x8E },
-  { 0x8E, 0x8E },
-  { 0x8E, 0x8E },
-  { 0x8E, 0x8E }
-};
-
 
 //----------------------------------------------------------------------
 // Class nsEUCTWToUnicode [implementation]
@@ -50,6 +17,39 @@ nsresult
 nsEUCTWToUnicodeConstructor(nsISupports *aOuter, REFNSIID aIID,
                                 void **aResult)
 {
+  static const uScanClassID g_EUCTWScanClassIDs [] = {
+    u1ByteCharset,
+    u2BytesGRCharset,
+    u2BytesGRPrefix8EA2Charset,
+    u2BytesGRPrefix8EA3Charset,
+    u2BytesGRPrefix8EA4Charset,
+    u2BytesGRPrefix8EA5Charset,
+    u2BytesGRPrefix8EA6Charset,
+    u2BytesGRPrefix8EA7Charset
+  };
+
+  static const uint16_t *g_EUCTWMappingTableSet [] ={
+    g_ASCIIMappingTable,
+    g_utCNS1MappingTable,
+    g_utCNS2MappingTable,
+    g_utCNS3MappingTable,
+    g_utCNS4MappingTable,
+    g_utCNS5MappingTable,
+    g_utCNS6MappingTable,
+    g_utCNS7MappingTable
+  };
+
+  static const uRange g_EUCTWRanges[] = {
+    { 0x00, 0x7E },
+    { 0xA1, 0xFE },
+    { 0x8E, 0x8E },
+    { 0x8E, 0x8E },
+    { 0x8E, 0x8E },
+    { 0x8E, 0x8E },
+    { 0x8E, 0x8E },
+    { 0x8E, 0x8E }
+  };
+
   return CreateMultiTableDecoder(8, 
                                  (const uRange*) &g_EUCTWRanges,
                                  (uScanClassID*) &g_EUCTWScanClassIDs,
