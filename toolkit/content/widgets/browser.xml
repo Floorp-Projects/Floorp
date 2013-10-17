@@ -685,8 +685,14 @@
                       Components.classes["@mozilla.org/browser/shistory;1"]
                                 .createInstance(Components.interfaces.nsISHistory);
               // enable global history if we weren't told otherwise
-              if (!this.hasAttribute("disableglobalhistory"))
-                this.docShell.useGlobalHistory = true;
+              if (!this.hasAttribute("disableglobalhistory") && !this.isRemoteBrowser) {
+                try {
+                  this.docShell.useGlobalHistory = true;
+                } catch(ex) {
+                  // This can occur if the Places database is locked
+                  Components.utils.reportError("Error enabling browser global history: " + ex);
+                }
+              }
             }
           }
           catch (e) {
