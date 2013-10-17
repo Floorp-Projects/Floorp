@@ -51,13 +51,13 @@ var number2 = {
 };
 
 var properties1 = {
-  name: "Testname1",
+  name: ["Testname1"],
   tel: [{type: ["work"], value: number1.local, carrier: "testCarrier"} , {type: ["home", "fax"], value: number2.local}],
 };
 
 var shortNumber = "888";
 var properties2 = {
-  name: "Testname2",
+  name: ["Testname2"],
   tel: [{type: ["work"], value: shortNumber, carrier: "testCarrier"}]
 };
 
@@ -67,7 +67,7 @@ var number3 = {
 };
 
 var properties3 = {
-  name: "Testname2",
+  name: ["Testname2"],
   tel: [{value: number3.international2}]
 };
 
@@ -91,8 +91,7 @@ var steps = [
   },
   function () {
     ok(true, "Adding a new contact1");
-    createResult1 = new mozContact();
-    createResult1.init(properties1);
+    createResult1 = new mozContact(properties1);
     req = navigator.mozContacts.save(createResult1);
     req.onsuccess = function () {
       ok(createResult1.id, "The contact now has an ID.");
@@ -103,8 +102,7 @@ var steps = [
   },
   function () {
     ok(true, "Adding a new contact2");
-    var createResult2 = new mozContact();
-    createResult2.init(properties2);
+    var createResult2 = new mozContact(properties2);
     req = navigator.mozContacts.save(createResult2);
     req.onsuccess = function () {
       ok(createResult2.id, "The contact now has an ID.");
@@ -249,8 +247,7 @@ var steps = [
   },
   function () {
     ok(true, "Adding a new contact with country code");
-    createResult1 = new mozContact();
-    createResult1.init(properties3);
+    createResult1 = new mozContact(properties3);
     req = navigator.mozContacts.save(createResult1);
     req.onsuccess = function () {
       ok(createResult1.id, "The contact now has an ID.");

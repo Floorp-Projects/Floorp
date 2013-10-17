@@ -497,7 +497,7 @@ interface nsIDOMMozIccManager : nsIDOMEventTarget
    *        PIN2 is only required for 'fdn'.
    */
   nsIDOMDOMRequest updateContact(in DOMString contactType,
-                                 in nsIDOMContact contact,
+                                 in nsISupports contact,
                                  [optional] in DOMString pin2);
 
   // End of UICC Phonebook Interfaces.

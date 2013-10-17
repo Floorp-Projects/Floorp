@@ -15,19 +15,19 @@ function testReadContacts(type) {
 
     is(Array.isArray(contacts), true);
 
-    is(contacts[0].name, "Mozilla");
+    is(contacts[0].name[0], "Mozilla");
     is(contacts[0].tel[0].value, "15555218201");
     is(contacts[0].id, "890141032111185107201");
 
-    is(contacts[1].name, "Saßê黃");
+    is(contacts[1].name[0], "Saßê黃");
     is(contacts[1].tel[0].value, "15555218202");
     is(contacts[1].id, "890141032111185107202");
 
-    is(contacts[2].name, "Fire 火");
+    is(contacts[2].name[0], "Fire 火");
     is(contacts[2].tel[0].value, "15555218203");
     is(contacts[2].id, "890141032111185107203");
 
-    is(contacts[3].name, "Huang 黃");
+    is(contacts[3].name[0], "Huang 黃");
     is(contacts[3].tel[0].value, "15555218204");
     is(contacts[3].id, "890141032111185107204");
 
@@ -41,10 +41,8 @@ function testReadContacts(type) {
 };
 
 function testAddContact(type, pin2) {
-  let contact = new mozContact();
-
-  contact.init({
-    name: "add",
+  let contact = new mozContact({
+    name: ["add"],
     tel: [{value: "0912345678"}],
     email:[]
   });
@@ -62,7 +60,7 @@ function testAddContact(type, pin2) {
       // There are 4 SIM contacts which are harded in emulator
       is(contacts.length, 5);
 
-      is(contacts[4].name, "add");
+      is(contacts[4].name[0], "add");
       is(contacts[4].tel[0].value, "0912345678");
 
       runNextTest();
