@@ -43,7 +43,7 @@ function supportSystemMessages() {
 }
 
 // Minimum delay between two progress events while downloading, in ms.
-const MIN_PROGRESS_EVENT_DELAY = 1000;
+const MIN_PROGRESS_EVENT_DELAY = 1500;
 
 const WEBAPP_RUNTIME = Services.appinfo.ID == "webapprt@mozilla.org";
 
@@ -945,8 +945,6 @@ this.DOMApplicationRegistry = {
   addMessageListener: function(aMsgNames, aApp, aMm) {
     aMsgNames.forEach(function (aMsgName) {
       let man = aApp && aApp.manifestURL;
-      debug("Adding messageListener for: " + aMsgName + "App: " +
-            man);
       if (!(aMsgName in this.children)) {
         this.children[aMsgName] = [];
       }
@@ -966,8 +964,8 @@ this.DOMApplicationRegistry = {
         });
 
         // If it wasn't registered before, let's update its state
-        if ((aMsgName === 'Webapps:PackageEvent') ||
-            (aMsgName === 'Webapps:OfflineCache')) {
+        if ((aMsgName === 'Webapps:FireEvent') ||
+            (aMsgName === 'Webapps:UpdateState')) {
           if (man) {
             let app = this.getAppByManifestURL(aApp.manifestURL);
             if (app && ((aApp.installState !== app.installState) ||
@@ -1124,9 +1122,9 @@ this.DOMApplicationRegistry = {
   // Webapps:Install:Return:OK
   // Webapps:Uninstall:Return:OK
   // Webapps:Uninstall:Broadcast:Return:OK
-  // Webapps:OfflineCache
+  // Webapps:FireEvent
   // Webapps:checkForUpdate:Return:OK
-  // Webapps:PackageEvent
+  // Webapps:UpdateState
   broadcastMessage: function broadcastMessage(aMsgName, aContent) {
     if (!(aMsgName in this.children)) {
       return;
@@ -1140,7 +1138,7 @@ this.DOMApplicationRegistry = {
     return FileUtils.getDir(DIRECTORY_NAME, ["webapps", aId], true, true);
   },
 
-  _writeFile: function ss_writeFile(aFile, aData, aCallbak) {
+  _writeFile: function _writeFile(aFile, aData, aCallback) {
     debug("Saving " + aFile.path);
     // Initialize the file output stream.
     let ostream = FileUtils.openSafeFileOutputStream(aFile);
@@ -1153,8 +1151,9 @@ this.DOMApplicationRegistry = {
     // Asynchronously copy the data to the file.
     let istream = converter.convertToInputStream(aData);
     NetUtil.asyncCopy(istream, ostream, function(rc) {
-      if (aCallbak)
-        aCallbak();
+      if (aCallback) {
+        aCallback();
+      }
     });
   },
 
@@ -1216,22 +1215,15 @@ this.DOMApplicationRegistry = {
     let app = this.webapps[download.appId];
 
     if (download.cacheUpdate) {
-      // Cancel hosted app download.
-      app.isCanceling = true;
       try {
         download.cacheUpdate.cancel();
       } catch (e) {
-        delete app.isCanceling;
         debug (e);
       }
     } else if (download.channel) {
-      // Cancel packaged app download.
-      app.isCanceling = true;
       try {
         download.channel.cancel(Cr.NS_BINDING_ABORTED);
-      } catch(e) {
-        delete app.isCanceling;
-      }
+      } catch(e) { }
     } else {
       return;
     }
@@ -1241,11 +1233,19 @@ this.DOMApplicationRegistry = {
     app.installState = download.previousState;
     app.downloading = false;
     this._saveApps((function() {
-      this.broadcastMessage("Webapps:PackageEvent",
-                             { type: "canceled",
-                               manifestURL:  app.manifestURL,
-                               app: app,
-                               error: error });
+      this.broadcastMessage("Webapps:UpdateState", {
+        app: {
+          progress: 0,
+          installState: download.previousState,
+          downloading: false
+        },
+        error: error,
+        manifestURL: app.manifestURL,
+      })
+      this.broadcastMessage("Webapps:FireEvent", {
+        eventType: "downloaderror",
+        manifestURL: app.manifestURL
+      });
     }).bind(this));
     AppDownloadManager.remove(aManifestURL);
   },
@@ -1267,11 +1267,14 @@ this.DOMApplicationRegistry = {
     // If the caller is trying to start a download but we have nothing to
     // download, send an error.
     if (!app.downloadAvailable) {
-      this.broadcastMessage("Webapps:PackageEvent",
-                            { type: "canceled",
-                              manifestURL: app.manifestURL,
-                              app: app,
-                              error: "NO_DOWNLOAD_AVAILABLE" });
+      this.broadcastMessage("Webapps:UpdateState", {
+        error: "NO_DOWNLOAD_AVAILABLE",
+        manifestURL: app.manifestURL
+      });
+      this.broadcastMessage("Webapps:FireEvent", {
+        eventType: "downloaderror",
+        manifestURL: app.manifestURL
+      });
       return;
     }
 
@@ -1303,16 +1306,21 @@ this.DOMApplicationRegistry = {
           debug("appcache found");
           this.startOfflineCacheDownload(manifest, app, null, isUpdate);
         } else {
-          // hosted app with no appcache, nothing to do, but we fire a
-          // downloaded event
+          // Hosted app with no appcache, nothing to do, but we fire a
+          // downloaded event.
           debug("No appcache found, sending 'downloaded' for " + aManifestURL);
           app.downloadAvailable = false;
-          DOMApplicationRegistry.broadcastMessage("Webapps:PackageEvent",
-                                                  { type: "downloaded",
-                                                    manifestURL: aManifestURL,
-                                                    app: app,
-                                                    manifest: jsonManifest });
-          DOMApplicationRegistry._saveApps();
+          DOMApplicationRegistry._saveApps(function() {
+            DOMApplicationRegistry.broadcastMessage("Webapps:UpdateState", {
+              app: app,
+              manifest: jsonManifest,
+              manifestURL: aManifestURL
+            });
+            DOMApplicationRegistry.broadcastMessage("Webapps:FireEvent", {
+              eventType: "downloadsuccess",
+              manifestURL: aManifestURL
+            });
+          });
         }
       }).bind(this));
 
@@ -1321,7 +1329,8 @@ this.DOMApplicationRegistry = {
 
     this._loadJSONAsync(file, (function(aJSON) {
       if (!aJSON) {
-        debug("startDownload: No update manifest found at " + file.path + " " + aManifestURL);
+        debug("startDownload: No update manifest found at " + file.path + " " +
+              aManifestURL);
         return;
       }
 
@@ -1350,11 +1359,14 @@ this.DOMApplicationRegistry = {
           app.readyToApplyDownload = true;
           app.updateTime = Date.now();
           DOMApplicationRegistry._saveApps(function() {
-            debug("About to fire Webapps:PackageEvent");
-            DOMApplicationRegistry.broadcastMessage("Webapps:PackageEvent",
-                                                    { type: "downloaded",
-                                                      manifestURL: aManifestURL,
-                                                      app: app });
+            DOMApplicationRegistry.broadcastMessage("Webapps:UpdateState", {
+              app: app,
+              manifestURL: aManifestURL
+            });
+            DOMApplicationRegistry.broadcastMessage("Webapps:FireEvent", {
+              eventType: "downloadsuccess",
+              manifestURL: aManifestURL
+            });
             if (app.installState == "pending") {
               // We restarted a failed download, apply it automatically.
               DOMApplicationRegistry.applyDownload(aManifestURL);
@@ -1442,11 +1454,15 @@ this.DOMApplicationRegistry = {
           }
           this.updateDataStore(this.webapps[id].localId, app.origin,
                                app.manifestURL, aData);
-          this.broadcastMessage("Webapps:PackageEvent",
-                                { type: "applied",
-                                  manifestURL: app.manifestURL,
-                                  app: app,
-                                  manifest: aData });
+          this.broadcastMessage("Webapps:UpdateState", {
+            app: app,
+            manifest: aData,
+            manifestURL: app.manifestURL
+          });
+          this.broadcastMessage("Webapps:FireEvent", {
+            eventType: "downloadapplied",
+            manifestURL: app.manifestURL
+          });
         }).bind(this));
       }).bind(this));
     }).bind(this));
@@ -1475,6 +1491,14 @@ this.DOMApplicationRegistry = {
     aApp.downloading = true;
     aApp.progress = 0;
     DOMApplicationRegistry._saveApps((function() {
+      DOMApplicationRegistry.broadcastMessage("Webapps:UpdateState", {
+        app: {
+          downloading: true,
+          installState: aApp.installState,
+          progress: 0
+        },
+        manifestURL: aApp.manifestURL
+      });
       let cacheUpdate = aProfileDir
         ? updateSvc.scheduleCustomProfileUpdate(appcacheURI, docURI, aProfileDir)
         : updateSvc.scheduleAppUpdate(appcacheURI, docURI, aApp.localId, false);
@@ -1598,16 +1622,17 @@ this.DOMApplicationRegistry = {
       // event.
       app.downloadAvailable = true;
       app.downloadSize = manifest.size;
-      aData.event = "downloadavailable";
-      aData.app = {
-        downloadAvailable: true,
-        downloadSize: manifest.size,
-        updateManifest: aManifest
-      }
+      app.updateManifest = aManifest;
       DOMApplicationRegistry._saveApps(function() {
-        DOMApplicationRegistry.broadcastMessage("Webapps:CheckForUpdate:Return:OK",
-                                                aData);
-        delete aData.app.updateManifest;
+        DOMApplicationRegistry.broadcastMessage("Webapps:UpdateState", {
+          app: app,
+          manifestURL: app.manifestURL
+        });
+        DOMApplicationRegistry.broadcastMessage("Webapps:FireEvent", {
+          eventType: "downloadavailable",
+          manifestURL: app.manifestURL,
+          requestID: aData.requestID
+        });
       });
     }
 
@@ -1662,10 +1687,17 @@ this.DOMApplicationRegistry = {
       this.webapps[id] = app;
       this._saveApps(function() {
         let reg = DOMApplicationRegistry;
-        aData.app = app;
         if (!manifest.appcache_path) {
-          aData.event = "downloadapplied";
-          reg.broadcastMessage("Webapps:CheckForUpdate:Return:OK", aData);
+          reg.broadcastMessage("Webapps:UpdateState", {
+            app: app,
+            manifest: app.manifest,
+            manifestURL: app.manifestURL
+          });
+          reg.broadcastMessage("Webapps:FireEvent", {
+            eventType: "downloadapplied",
+            manifestURL: app.manifestURL,
+            requestID: aData.requestID
+          });
         } else {
           // Check if the appcache is updatable, and send "downloadavailable" or
           // "downloadapplied".
@@ -1673,14 +1705,24 @@ this.DOMApplicationRegistry = {
             observe: function(aSubject, aTopic, aObsData) {
               debug("updateHostedApp: updateSvc.checkForUpdate return for " +
                     app.manifestURL + " - event is " + aTopic);
-              aData.event =
+              let eventType =
                 aTopic == "offline-cache-update-available" ? "downloadavailable"
                                                            : "downloadapplied";
-              aData.app.downloadAvailable = (aData.event == "downloadavailable");
-              reg._saveApps();
-              reg.broadcastMessage("Webapps:CheckForUpdate:Return:OK", aData);
+              app.downloadAvailable = (eventType == "downloadavailable");
+              reg._saveApps(function() {
+                reg.broadcastMessage("Webapps:UpdateState", {
+                  app: app,
+                  manifest: app.manifest,
+                  manifestURL: app.manifestURL
+                });
+                reg.broadcastMessage("Webapps:FireEvent", {
+                  eventType: eventType,
+                  manifestURL: app.manifestURL,
+                  requestID: aData.requestID
+                });
+              });
             }
-          }
+          };
           debug("updateHostedApp: updateSvc.checkForUpdate for " +
                 manifest.fullAppcachePath());
           updateSvc.checkForUpdate(Services.io.newURI(manifest.fullAppcachePath(), null, null),
@@ -1715,8 +1757,8 @@ this.DOMApplicationRegistry = {
     let onlyCheckAppCache = false;
 
 #ifdef MOZ_WIDGET_GONK
-      let appDir = FileUtils.getDir("coreAppsDir", ["webapps"], false);
-      onlyCheckAppCache = (app.basePath == appDir.path);
+    let appDir = FileUtils.getDir("coreAppsDir", ["webapps"], false);
+    onlyCheckAppCache = (app.basePath == appDir.path);
 #endif
 
     if (onlyCheckAppCache) {
@@ -1744,19 +1786,24 @@ this.DOMApplicationRegistry = {
             debug("onlyCheckAppCache updateSvc.checkForUpdate return for " +
                   app.manifestURL + " - event is " + aTopic);
             if (aTopic == "offline-cache-update-available") {
-              aData.event = "downloadavailable";
               app.downloadAvailable = true;
-              aData.app = app;
               this._saveApps(function() {
-                DOMApplicationRegistry.broadcastMessage(
-                  "Webapps:CheckForUpdate:Return:OK", aData);
+                DOMApplicationRegistry.broadcastMessage("Webapps:UpdateState", {
+                  app: app,
+                  manifestURL: app.manifestURL
+                });
+                DOMApplicationRegistry.broadcastMessage("Webapps:FireEvent", {
+                  eventType: "downloadavailable",
+                  manifestURL: app.manifestURL,
+                  requestID: aData.requestID
+                });
               });
             } else {
               aData.error = "NOT_UPDATABLE";
               aMm.sendAsyncMessage("Webapps:CheckForUpdate:Return:KO", aData);
             }
           }
-        }
+        };
         let helper = new ManifestHelper(manifest);
         debug("onlyCheckAppCache - launch updateSvc.checkForUpdate for " +
               helper.fullAppcachePath());
@@ -1806,15 +1853,21 @@ this.DOMApplicationRegistry = {
             if (oldHash != hash) {
               updatePackagedApp.call(this, manifest);
             } else {
-              // Like if we got a 304, just send a 'downloadapplied'
-              // or downloadavailable event.
-              aData.event = app.downloadAvailable ? "downloadavailable"
-                                                  : "downloadapplied";
-              aData.app = {
-                lastCheckedUpdate: app.lastCheckedUpdate
-              }
-              aMm.sendAsyncMessage("Webapps:CheckForUpdate:Return:OK", aData);
-              this._saveApps();
+              this._saveApps(function() {
+                // Like if we got a 304, just send a 'downloadapplied'
+                // or downloadavailable event.
+                let eventType = app.downloadAvailable ? "downloadavailable"
+                                                      : "downloadapplied";
+                aMm.sendAsyncMessage("Webapps:UpdateState", {
+                  app: app,
+                  manifestURL: app.manifestURL
+                });
+                aMm.sendAsyncMessage("Webapps:FireEvent", {
+                  eventType: eventType,
+                  manifestURL: app.manifestURL,
+                  requestID: aData.requestID
+                });
+              });
             }
           } else {
             // Update only the appcache if the manifest has not changed
@@ -1826,16 +1879,22 @@ this.DOMApplicationRegistry = {
       } else if (xhr.status == 304) {
         // The manifest has not changed.
         if (isPackage) {
-          // If the app is a packaged app, we just send a 'downloadapplied'
-          // or downloadavailable event.
           app.lastCheckedUpdate = Date.now();
-          aData.event = app.downloadAvailable ? "downloadavailable"
-                                              : "downloadapplied";
-          aData.app = {
-            lastCheckedUpdate: app.lastCheckedUpdate
-          }
-          aMm.sendAsyncMessage("Webapps:CheckForUpdate:Return:OK", aData);
-          this._saveApps();
+          this._saveApps(function() {
+            // If the app is a packaged app, we just send a 'downloadapplied'
+            // or downloadavailable event.
+            let eventType = app.downloadAvailable ? "downloadavailable"
+                                                  : "downloadapplied";
+            aMm.sendAsyncMessage("Webapps:UpdateState", {
+              app: app,
+              manifestURL: app.manifestURL
+            });
+            aMm.sendAsyncMessage("Webapps:FireEvent", {
+              eventType: eventType,
+              manifestURL: app.manifestURL,
+              requestID: aData.requestID
+            });
+          });
         } else {
           // For hosted apps, even if the manifest has not changed, we check
           // for offline cache updates.
@@ -2146,21 +2205,25 @@ this.DOMApplicationRegistry = {
 
           if (supportUseCurrentProfile()) {
             // Update the permissions for this app.
-            PermissionsInstaller.installPermissions({ manifest: aManifest,
-                                                      origin: appObject.origin,
-                                                      manifestURL: appObject.manifestURL },
-                                                    true);
+            PermissionsInstaller.installPermissions({
+              manifest: aManifest,
+              origin: appObject.origin,
+              manifestURL: appObject.manifestURL
+            }, true);
           }
 
           this.updateDataStore(this.webapps[aId].localId, appObject.origin,
                                appObject.manifestURL, aManifest);
 
-          debug("About to fire Webapps:PackageEvent 'installed'");
-          this.broadcastMessage("Webapps:PackageEvent",
-                                { type: "installed",
-                                  manifestURL: appObject.manifestURL,
-                                  app: app,
-                                  manifest: aManifest });
+          this.broadcastMessage("Webapps:UpdateState", {
+            app: app,
+            manifest: aManifest,
+            manifestURL: appObject.manifestURL
+          });
+          this.broadcastMessage("Webapps:FireEvent", {
+            eventType: ["downloadsuccess", "downloadapplied"],
+            manifestURL: appObject.manifestURL
+          });
           if (installSuccessCallback) {
             installSuccessCallback(aManifest, zipFile.path);
           }
@@ -2426,14 +2489,6 @@ this.DOMApplicationRegistry = {
         dir.remove(true);
       } catch (e) { }
 
-      // We avoid notifying the error to the DOM side if the app download
-      // was cancelled via cancelDownload, which already sends its own
-      // notification.
-      if (app.isCanceling) {
-        delete app.isCanceling;
-        return;
-      }
-
       let download = AppDownloadManager.get(aApp.manifestURL);
       app.downloading = false;
 
@@ -2449,20 +2504,31 @@ this.DOMApplicationRegistry = {
         delete app.staged;
       }
 
-      self.broadcastMessage("Webapps:PackageEvent",
-                            { type: "error",
-                              manifestURL:  aApp.manifestURL,
-                              error: aError,
-                              app: app });
-      self._saveApps();
+      self._saveApps(function() {
+        self.broadcastMessage("Webapps:UpdateState", {
+          app: app,
+          error: aError,
+          manifestURL: aApp.manifestURL
+        });
+        self.broadcastMessage("Webapps:FireEvent", {
+          eventType: "downloaderror",
+          manifestURL:  aApp.manifestURL
+        });
+      });
       AppDownloadManager.remove(aApp.manifestURL);
     }
 
-    function sendProgressEvent() {
-      self.broadcastMessage("Webapps:PackageEvent",
-                            { type: "progress",
-                              manifestURL: aApp.manifestURL,
-                              app: app });
+    function sendProgressEvent(aProgress) {
+      self.broadcastMessage("Webapps:UpdateState", {
+        app: {
+          progress: aProgress
+        },
+        manifestURL: aApp.manifestURL
+      });
+      self.broadcastMessage("Webapps:FireEvent", {
+        eventType: "progress",
+        manifestURL: aApp.manifestURL
+      });
     }
 
     // aStoreId must be a string of the form
@@ -2548,7 +2614,7 @@ this.DOMApplicationRegistry = {
           let now = Date.now();
           if (now - lastProgressTime > MIN_PROGRESS_EVENT_DELAY) {
             debug("onProgress: " + aProgress + "/" + aProgressMax);
-            sendProgressEvent();
+            sendProgressEvent(aProgress);
             lastProgressTime = now;
             self._saveApps();
           }
@@ -2646,16 +2712,17 @@ this.DOMApplicationRegistry = {
                              OS.Path.join(dirPath, "update.webapp"));
               }
 
-              self.broadcastMessage("Webapps:PackageEvent", {
-                                      type: "downloaded",
-                                      manifestURL: aApp.manifestURL,
-                                      app: app });
-              self.broadcastMessage("Webapps:PackageEvent", {
-                                      type: "applied",
-                                      manifestURL: aApp.manifestURL,
-                                      app: app });
               // Save the updated registry, and cleanup the tmp directory.
-              self._saveApps();
+              self._saveApps(function() {
+                self.broadcastMessage("Webapps:UpdateState", {
+                  app: app,
+                  manifestURL: aApp.manifestURL
+                });
+                self.broadcastMessage("Webapps:FireEvent", {
+                  manifestURL: aApp.manifestURL,
+                  eventType: ["downloadsuccess", "downloadapplied"]
+                });
+              });
               let file = FileUtils.getFile("TmpD", ["webapps", id], false);
               if (file && file.exists()) {
                 file.remove(true);
@@ -2907,7 +2974,7 @@ this.DOMApplicationRegistry = {
       requestChannel.asyncOpen(listener, null);
 
       // send a first progress event to correctly set the DOM object's properties
-      sendProgressEvent();
+      sendProgressEvent(0);
     };
 
     let checkDownloadSize = function (freeBytes) {
@@ -3305,7 +3372,7 @@ let AppcacheObserver = function(aApp) {
   this.app = aApp;
   this.startStatus = aApp.installState;
   this.lastProgressTime = 0;
-  // send a first progress event to correctly set the DOM object's properties
+  // Send a first progress event to correctly set the DOM object's properties.
   this._sendProgressEvent();
 };
 
@@ -3313,10 +3380,14 @@ AppcacheObserver.prototype = {
   // nsIOfflineCacheUpdateObserver implementation
   _sendProgressEvent: function() {
     let app = this.app;
-    DOMApplicationRegistry.broadcastMessage("Webapps:OfflineCache",
-                                            { manifest: app.manifestURL,
-                                              installState: app.installState,
-                                              progress: app.progress });
+    DOMApplicationRegistry.broadcastMessage("Webapps:UpdateState", {
+      app: app,
+      manifestURL: app.manifestURL
+    });
+    DOMApplicationRegistry.broadcastMessage("Webapps:FireEvent", {
+      eventType: "progress",
+      manifestURL: app.manifestURL
+    });
   },
 
   updateStateChanged: function appObs_Update(aUpdate, aState) {
@@ -3328,31 +3399,41 @@ AppcacheObserver.prototype = {
     var self = this;
     let setStatus = function appObs_setStatus(aStatus, aProgress) {
       debug("Offlinecache setStatus to " + aStatus + " with progress " +
-          aProgress + " for " + app.origin);
+            aProgress + " for " + app.origin);
       mustSave = (app.installState != aStatus);
+
       app.installState = aStatus;
       app.progress = aProgress;
-      if (aStatus == "installed") {
-        app.updateTime = Date.now();
-        app.downloading = false;
-        app.downloadAvailable = false;
+      if (aStatus != "installed") {
+        self._sendProgressEvent();
+        return;
       }
-      self._sendProgressEvent();
+
+      app.updateTime = Date.now();
+      app.downloading = false;
+      app.downloadAvailable = false;
+      DOMApplicationRegistry.broadcastMessage("Webapps:UpdateState", {
+        app: app,
+        manifestURL: app.manifestURL
+      });
+      DOMApplicationRegistry.broadcastMessage("Webapps:FireEvent", {
+        eventType: ["downloadsuccess", "downloadapplied"],
+        manifestURL: app.manifestURL
+      });
     }
 
     let setError = function appObs_setError(aError) {
       debug("Offlinecache setError to " + aError);
-      // If we are canceling the download, we already send a DOWNLOAD_CANCELED
-      // error.
-      if (!app.isCanceling) {
-        DOMApplicationRegistry.broadcastMessage("Webapps:OfflineCache",
-                                                { manifest: app.manifestURL,
-                                                  error: aError });
-      } else {
-        delete app.isCanceling;
-      }
-
       app.downloading = false;
+      DOMApplicationRegistry.broadcastMessage("Webapps:UpdateState", {
+        app: app,
+        manifestURL: app.manifestURL
+      });
+      DOMApplicationRegistry.broadcastMessage("Webapps:FireEvent", {
+        error: aError,
+        eventType: "downloaderror",
+        manifestURL: app.manifestURL
+      });
       mustSave = true;
     }
 
@@ -3369,9 +3450,9 @@ AppcacheObserver.prototype = {
         setStatus("installed", aUpdate.byteProgress);
         break;
       case Ci.nsIOfflineCacheUpdateObserver.STATE_DOWNLOADING:
-      case Ci.nsIOfflineCacheUpdateObserver.STATE_ITEMSTARTED:
         setStatus(this.startStatus, aUpdate.byteProgress);
         break;
+      case Ci.nsIOfflineCacheUpdateObserver.STATE_ITEMSTARTED:
       case Ci.nsIOfflineCacheUpdateObserver.STATE_ITEMPROGRESS:
         let now = Date.now();
         if (now - this.lastProgressTime > MIN_PROGRESS_EVENT_DELAY) {
