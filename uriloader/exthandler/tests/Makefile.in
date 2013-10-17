@@ -13,7 +13,7 @@ LIBS +=		\
 include $(topsrcdir)/config/rules.mk
 
 ifdef MOZ_WIDGET_GTK
-export PERSONAL_MAILCAP=$(call core_abspath,$(srcdir))/mailcap
+export PERSONAL_MAILCAP=$(abspath $(srcdir))/mailcap
 endif
 
 # need the executable for running the xpcshell unit tests

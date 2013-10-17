@@ -6,65 +6,57 @@
 
 interface nsIDOMDOMRequest;
 
-/**
- * Represents a data interface for which the manager is recording statistics.
- */
-[scriptable, uuid(f540615b-d803-43ff-8200-2a9d145a5645)]
-interface nsIDOMMozNetworkStatsInterface : nsISupports
+dictionary NetworkStatsOptions
 {
-  readonly attribute long type;
-
   /**
-   * Id value is '0' for wifi or the iccid for mobile (SIM).
+   * Connection type used to filter which network stats will be returned:
+   * 'mobile', 'wifi' or null.
+   * If null, stats for both mobile and wifi are returned.
+   *
+   * Manifest URL used to retrieve network stats per app.
+   * If null, system stats (regardless of the app) are returned.
    */
-  readonly attribute DOMString id;
+  DOMString connectionType;
+  DOMString manifestURL;
+  jsval start;              // date
+  jsval end;                // date
 };
 
-[scriptable,  uuid(5fbdcae6-a2cd-47b3-929f-83ac75bd4881)]
+[scriptable,  uuid(87529a6c-aef6-11e1-a595-4f034275cfa6)]
 interface nsIDOMMozNetworkStatsManager : nsISupports
 {
   /**
-   * Constants for known interface types.
-   */
-  const long WIFI = 0;
-  const long MOBILE = 1;
-
-  /**
-   * Find samples between two dates start and end, both included.
+   * Query network statistics.
    *
-   * If manifestURL is provided, per-app usage is retrieved,
-   * otherwise the target will be system usage.
+   * If options.connectionType is not provided, return statistics for all known
+   * network interfaces.
    *
-   * If success, the request result will be an nsIDOMMozNetworkStats object.
+   * If options.manifestURL is not provided, return statistics regardless of the app.
+   *
+   * If successful, the request result will be an nsIDOMMozNetworkStats object.
+   *
+   * If network stats are not available for some dates, then rxBytes &
+   * txBytes are undefined for those dates.
    */
-  nsIDOMDOMRequest getSamples(in nsIDOMMozNetworkStatsInterface network,
-                              in jsval start,
-                              in jsval end,
-                              [optional] in DOMString manifestURL);
+  nsIDOMDOMRequest               getNetworkStats(in jsval options);
 
   /**
-   * Remove all stats related with the provided network from DB.
+   * Return available connection types.
    */
-  nsIDOMDOMRequest clearStats(in nsIDOMMozNetworkStatsInterface network);
+  readonly attribute jsval       connectionTypes; // array of DOMStrings.
 
   /**
-   * Remove all stats in the database.
+   * Clear all stats from DB.
    */
-  nsIDOMDOMRequest clearAllStats();
+  nsIDOMDOMRequest               clearAllData();
 
   /**
-   * Return currently available networks.
+   * Time in seconds between samples stored in database.
    */
-  readonly attribute jsval availableNetworks; // array of nsIDOMMozNetworkStatsInterface.
+  readonly attribute long        sampleRate;
 
   /**
-   * Minimum time in milliseconds between samples stored in the database.
+   * Maximum number of samples stored in the database per connection type.
    */
-  readonly attribute long sampleRate;
-
-  /**
-   * Time in milliseconds recorded by the API until present time. All samples
-   * older than maxStorageAge from now are deleted.
-   */
-  readonly attribute long long maxStorageAge;
+  readonly attribute long        maxStorageSamples;
 };

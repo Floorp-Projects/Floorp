@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html class="reftest-wait">
+<head>
+    <meta charset="UTF-8">
+    <script>
+        function start() {
+            var doc = document.getElementsByTagName("iframe")[0].contentDocument;
+            var vid = doc.getElementsByTagName("video")[0];
+
+            function runnable() {
+                // The doc.write forces us to recreate doc's body.
+                doc.write("Hello, world");
+                doc.body.appendChild(vid);
+                document.documentElement.removeAttribute("class");
+            }
+
+            doc.open();
+            setTimeout(runnable, 0);
+        }
+    </script>
+</head>
+<body onload='start()'>
+    <iframe src="data:text/html,<meta charset=UTF-8><body><video src=http://localhost:8080/ controls=true loop=true autoplay=true autobuffer=false></video>"></iframe>
+</body>
+</html>

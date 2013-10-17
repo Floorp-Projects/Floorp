@@ -101,7 +101,6 @@ public class RedirOutputThread extends Thread
                 }
             catch (IOException e)
                 {
-//                Toast.makeText(SUTAgentAndroid.me.getApplicationContext(), e.getMessage(), Toast.LENGTH_LONG).show();
                 e.printStackTrace();
                 }
             }

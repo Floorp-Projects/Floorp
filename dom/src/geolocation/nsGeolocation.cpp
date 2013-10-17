@@ -77,7 +77,7 @@ class nsGeolocationRequest
   void Shutdown();
 
   void SendLocation(nsIDOMGeoPosition* location);
-  bool WantsHighAccuracy() {return !mShutdown && mOptions && mOptions->mEnableHighAccuracy;}
+  bool WantsHighAccuracy() {return mOptions && mOptions->mEnableHighAccuracy;}
   void SetTimeoutTimer();
   nsIPrincipal* GetPrincipal();
 
@@ -445,7 +445,7 @@ nsGeolocationRequest::Allow()
       maximumAge = mOptions->mMaximumAge;
     }
   }
-  gs->UpdateAccuracy(WantsHighAccuracy());
+  gs->SetHigherAccuracy(mOptions && mOptions->mEnableHighAccuracy);
 
   bool canUseCache = lastPosition && maximumAge > 0 &&
     (PRTime(PR_Now() / PR_USEC_PER_MSEC) - maximumAge <=
@@ -585,12 +585,12 @@ nsGeolocationRequest::Shutdown()
     mTimeoutTimer = nullptr;
   }
 
-  // If there are no other high accuracy requests, the geolocation service will
-  // notify the provider to switch to the default accuracy.
+  // This should happen last, to ensure that this request isn't taken into consideration
+  // when deciding whether existing requests still require high accuracy.
   if (mOptions && mOptions->mEnableHighAccuracy) {
     nsRefPtr<nsGeolocationService> gs = nsGeolocationService::GetGeolocationService();
     if (gs) {
-      gs->UpdateAccuracy();
+      gs->SetHigherAccuracy(false);
     }
   }
 }
@@ -901,9 +901,9 @@ nsGeolocationService::HighAccuracyRequested()
 }
 
 void
-nsGeolocationService::UpdateAccuracy(bool aForceHigh)
+nsGeolocationService::SetHigherAccuracy(bool aEnable)
 {
-  bool highRequired = aForceHigh || HighAccuracyRequested();
+  bool highRequired = aEnable || HighAccuracyRequested();
 
   if (XRE_GetProcessType() == GeckoProcessType_Content) {
     ContentChild* cpc = ContentChild::GetSingleton();
@@ -1061,7 +1061,6 @@ Geolocation::Shutdown()
 
   if (mService) {
     mService->RemoveLocator(this);
-    mService->UpdateAccuracy();
   }
 
   mService = nullptr;
