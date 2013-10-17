@@ -104,6 +104,7 @@ JS_IterateCompartments(JSRuntime *rt, void *data,
 {
     JS_ASSERT(!rt->isHeapBusy());
 
+    AutoPauseWorkersForTracing pause(rt);
     AutoTraceSession session(rt);
 
     for (CompartmentsIter c(rt); !c.done(); c.next())
