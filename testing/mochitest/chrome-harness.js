@@ -287,7 +287,9 @@ function extractJarToTmp(jar) {
     var targetDir = buildRelativePath(dirs.getNext(), tmpdir, filepath);
     // parseInt is used because octal escape sequences cause deprecation warnings
     // in strict mode (which is turned on in debug builds)
-    targetDir.create(Components.interfaces.nsIFile.DIRECTORY_TYPE, parseInt("0777", 8));
+    if (!targetDir.exists()) {
+      targetDir.create(Components.interfaces.nsIFile.DIRECTORY_TYPE, parseInt("0777", 8));
+    }
   }
 
   //now do the files
@@ -300,6 +302,41 @@ function extractJarToTmp(jar) {
     }
   }
   return tmpdir;
+}
+
+/*
+ * Take a relative path from the current mochitest file
+ * and returns the absolute path for the given test data file.
+ */
+function getTestFilePath(path) {
+  if (path[0] == "/") {
+    throw new Error("getTestFilePath only accepts relative path");
+  }
+  // Get the chrome/jar uri for the current mochitest file
+  // gTestPath being defined by the test harness in browser-chrome tests
+  // or window is being used for mochitest-browser
+  var baseURI = typeof(gTestPath) == "string" ? gTestPath : window.location.href;
+  var parentURI = getResolvedURI(getRootDirectory(baseURI));
+  var file;
+  if (parentURI.JARFile) {
+    // If it's a jar/zip, we have to extract it first
+    file = extractJarToTmp(parentURI);
+  } else {
+    // Otherwise, we can directly cast it to a file URI
+    var fileHandler = Components.classes["@mozilla.org/network/protocol;1?name=file"].
+                      getService(Components.interfaces.nsIFileProtocolHandler);
+    file = fileHandler.getFileFromURLSpec(parentURI.spec);
+  }
+  // Then walk by the given relative path
+  path.split("/")
+      .forEach(function (p) {
+        if (p == "..") {
+          file = file.parent;
+        } else if (p != ".") {
+          file.append(p);
+        }
+      });
+  return file.path;
 }
 
 /*
