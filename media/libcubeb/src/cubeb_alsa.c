@@ -929,6 +929,16 @@ alsa_get_max_channel_count(cubeb * ctx, uint32_t * max_channels)
   return CUBEB_OK;
 }
 
+static int
+alsa_get_min_latency(cubeb * ctx, cubeb_stream_params params, uint32_t * latency_ms)
+{
+  /* This is found to be an acceptable minimum, even on a super low-end
+  * machine. */
+  *latency_ms = 40;
+
+  return CUBEB_OK;
+}
+
 
 static int
 alsa_stream_start(cubeb_stream * stm)
@@ -1028,6 +1038,7 @@ static struct cubeb_ops const alsa_ops = {
   .init = alsa_init,
   .get_backend_id = alsa_get_backend_id,
   .get_max_channel_count = alsa_get_max_channel_count,
+  .get_min_latency = alsa_get_min_latency,
   .destroy = alsa_destroy,
   .stream_init = alsa_stream_init,
   .stream_destroy = alsa_stream_destroy,
