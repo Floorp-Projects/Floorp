@@ -248,9 +248,6 @@ browser.jar:
   skin/classic/browser/sync-desktopIcon.png
   skin/classic/browser/sync-mobileIcon.png
   skin/classic/browser/sync-notification-24.png
-  skin/classic/browser/syncSetup.css
-  skin/classic/browser/syncCommon.css
-  skin/classic/browser/syncQuota.css
   skin/classic/browser/syncProgress.css
 #endif
   skin/classic/browser/notification-pluginNormal.png  (../shared/plugins/notification-pluginNormal.png)
