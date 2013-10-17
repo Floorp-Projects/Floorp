@@ -14,9 +14,6 @@
  * character literals. C++11's char16_t is a distinct builtin type. C11's
  * char16_t is a typedef for uint_least16_t. Technically, char16_t is a 16-bit
  * code unit of a Unicode code point, not a "character".
- *
- * For now, Char16.h only supports C++ because we don't want mix different C
- * and C++ definitions of char16_t in the same code base.
  */
 
 #ifdef _MSC_VER
@@ -39,9 +36,25 @@
     * typedef from wchar_t.
     */
 #  define MOZ_CHAR16_IS_NOT_WCHAR
+#elif !defined(__cplusplus)
+#  if defined(WIN32)
+#    include <yvals.h>
+     typedef wchar_t char16_t;
+#  else
+     /**
+      * We can't use the stdint.h uint16_t type here because including
+      * stdint.h will break building some of our C libraries, such as
+      * sqlite.
+      */
+     typedef unsigned short char16_t;
+#  endif
 #else
 #  error "Char16.h requires C++11 (or something like it) for UTF-16 support."
 #endif
+
+/* This is a temporary hack until bug 927728 is fixed. */
+#define __PRUNICHAR__
+typedef char16_t PRUnichar;
 
 /*
  * Macro arguments used in concatenation or stringification won't be expanded.
@@ -53,9 +66,12 @@
  */
 #define MOZ_UTF16(s) MOZ_UTF16_HELPER(s)
 
+#if defined(__cplusplus) && \
+    (__cplusplus >= 201103L || defined(__GXX_EXPERIMENTAL_CXX0X__))
 static_assert(sizeof(char16_t) == 2, "Is char16_t type 16 bits?");
 static_assert(char16_t(-1) > char16_t(0), "Is char16_t type unsigned?");
 static_assert(sizeof(MOZ_UTF16('A')) == 2, "Is char literal 16 bits?");
 static_assert(sizeof(MOZ_UTF16("")[0]) == 2, "Is string char 16 bits?");
+#endif
 
 #endif /* mozilla_Char16_h */
