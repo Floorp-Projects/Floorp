@@ -65,21 +65,11 @@ notification[type="critical"] {
   -moz-appearance: none;
   padding: 0;
   margin: 0 2px;
-  list-style-image: url("chrome://global/skin/icons/close.png");
   border: none;
-  -moz-image-region: rect(0, 16px, 16px, 0);
 }
 
 .messageCloseButton > .toolbarbutton-text {
   display: none;
-}
-
-.messageCloseButton:hover {
-  -moz-image-region: rect(0, 32px, 16px, 16px);
-}
-
-.messageCloseButton:hover:active {
-  -moz-image-region: rect(0, 48px, 16px, 32px);
 }
 
 .messageCloseButton:-moz-focusring > .toolbarbutton-icon {
@@ -89,19 +79,6 @@ notification[type="critical"] {
 }
 
 @media (min-resolution: 2dppx) {
-  .messageCloseButton {
-    list-style-image: url("chrome://global/skin/icons/close@2x.png");
-    -moz-image-region: rect(0, 32px, 32px, 0);
-  }
-
-  .messageCloseButton:hover {
-    -moz-image-region: rect(0, 64px, 32px, 32px);
-  }
-
-  .messageCloseButton:hover:active {
-    -moz-image-region: rect(0, 96px, 32px, 64px);
-  }
-
   .messageCloseButton > .toolbarbutton-icon {
     width: 16px;
   }
