@@ -41,6 +41,7 @@ SYNC_JAVA_FILES := \
   background/db/Tab.java \
   background/healthreport/Environment.java \
   background/healthreport/EnvironmentBuilder.java \
+  background/healthreport/EnvironmentV1.java \
   background/healthreport/HealthReportDatabases.java \
   background/healthreport/HealthReportDatabaseStorage.java \
   background/healthreport/HealthReportGenerator.java \
