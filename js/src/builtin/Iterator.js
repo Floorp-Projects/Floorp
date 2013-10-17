@@ -84,7 +84,3 @@ function LegacyIteratorShim() {
 function LegacyGeneratorIteratorShim() {
     return NewLegacyIterator(ToObject(this), LegacyGeneratorIterator);
 }
-
-function ArrayIterator() {
-    return NewLegacyIterator(callFunction(std_Array_iterator, this), LegacyIterator);
-}

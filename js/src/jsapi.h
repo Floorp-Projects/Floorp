@@ -3194,15 +3194,6 @@ JS_NewPropertyIterator(JSContext *cx, JSObject *obj);
 extern JS_PUBLIC_API(bool)
 JS_NextProperty(JSContext *cx, JSObject *iterobj, jsid *idp);
 
-/*
- * A JSNative that creates and returns a new iterator that iterates over the
- * elements of |this|, up to |this.length|, in index order. This can be used to
- * make any array-like object iterable. Just give the object an obj.iterator()
- * method using this JSNative as the implementation.
- */
-extern JS_PUBLIC_API(bool)
-JS_ArrayIterator(JSContext *cx, unsigned argc, jsval *vp);
-
 extern JS_PUBLIC_API(bool)
 JS_CheckAccess(JSContext *cx, JSObject *obj, jsid id, JSAccessMode mode,
                jsval *vp, unsigned *attrsp);

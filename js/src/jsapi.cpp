@@ -3847,22 +3847,6 @@ JS_NextProperty(JSContext *cx, JSObject *iterobjArg, jsid *idp)
     return true;
 }
 
-JS_PUBLIC_API(bool)
-JS_ArrayIterator(JSContext *cx, unsigned argc, jsval *vp)
-{
-    CallArgs args = CallArgsFromVp(argc, vp);
-    Rooted<Value> target(cx, args.thisv());
-    AssertHeapIsIdle(cx);
-    assertSameCompartment(cx, target);
-    CHECK_REQUEST(cx);
-
-    JSObject *iterobj = ElementIteratorObject::create(cx, target);
-    if (!iterobj)
-        return false;
-    vp->setObject(*iterobj);
-    return true;
-}
-
 JS_PUBLIC_API(jsval)
 JS_GetReservedSlot(JSObject *obj, uint32_t index)
 {
