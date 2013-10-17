@@ -5,7 +5,7 @@ load(libdir + "iteration.js");
 
 var arr = [0, 1, 2];
 var it = arr[std_iterator]();
-assertIteratorResult(it.next(), 0, false);
-assertIteratorResult(it.next(), 1, false);
+assertIteratorNext(it, 0);
+assertIteratorNext(it, 1);
 arr.length = 1;
-assertIteratorResult(it.next(), undefined, true);
+assertIteratorDone(it, undefined);
