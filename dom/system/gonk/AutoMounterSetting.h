@@ -22,6 +22,13 @@ public:
   virtual ~AutoMounterSetting();
 
   static void CheckVolumeSettings(const nsACString& aVolumeName);
+
+  int32_t GetStatus() { return mStatus; }
+  void SetStatus(int32_t aStatus);
+  const char *StatusStr(int32_t aStatus);
+
+private:
+  int32_t mStatus;
 };
 
 }   // namespace system
