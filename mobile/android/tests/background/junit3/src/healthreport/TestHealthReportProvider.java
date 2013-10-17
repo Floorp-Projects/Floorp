@@ -146,7 +146,7 @@ public class TestHealthReportProvider extends DBProviderTestCase<HealthReportPro
     Cursor envCursor = resolver.query(envURI, null, null, null, null);
     try {
       assertTrue(envCursor.moveToFirst());
-      envHash = envCursor.getString(1);
+      envHash = envCursor.getString(2);      // id, version, hash, ...
     } finally {
       envCursor.close();
     }
@@ -249,6 +249,13 @@ public class TestHealthReportProvider extends DBProviderTestCase<HealthReportPro
     v.put("os", "");
     v.put("xpcomabi", "");
     v.put("updateChannel", "");
+
+    // v2.
+    v.put("distribution", "");
+    v.put("osLocale", "en_us");
+    v.put("appLocale", "en_us");
+    v.put("acceptLangSet", 0);
+
     return v;
   }
 }
