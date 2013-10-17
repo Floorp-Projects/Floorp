@@ -36,10 +36,16 @@ ifdef MOZ_METRO
 $(DIST)/bin/metro/chrome/pdfjs.manifest: $(GLOBAL_DEPS)
 	printf "manifest pdfjs/chrome.manifest" > $@
 
-libs:: $(DIST)/bin/metro/chrome/pdfjs.manifest
+$(DIST)/bin/metro/chrome/shumway.manifest: $(GLOBAL_DEPS)
+	printf "manifest shumway/chrome.manifest" > $@
+
+libs:: $(DIST)/bin/metro/chrome/pdfjs.manifest $(DIST)/bin/metro/chrome/shumway.manifest
 	$(PYTHON) $(topsrcdir)/config/nsinstall.py \
 	  $(srcdir)/pdfjs \
           $(foreach exclude,$(exclude_files), -X $(srcdir)/pdfjs/$(exclude)) \
+	  $(srcdir)/shumway \
+          $(foreach exclude,$(exclude_files), -X $(srcdir)/shumway/$(exclude)) \
           $(DIST)/bin/metro/chrome
 	$(call py_action,buildlist,$(DIST)/bin/metro/chrome.manifest "manifest chrome/pdfjs.manifest")
+	$(call py_action,buildlist,$(DIST)/bin/metro/chrome.manifest "manifest chrome/shumway.manifest")
 endif
