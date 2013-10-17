@@ -10,6 +10,7 @@
 callback RTCSessionDescriptionCallback = void (mozRTCSessionDescription sdp);
 callback RTCPeerConnectionErrorCallback = void (DOMString errorInformation);
 callback VoidFunction = void ();
+callback RTCStatsCallback = void (RTCStatsReport report);
 
 enum RTCSignalingState {
     "stable",
@@ -119,6 +120,10 @@ interface mozRTCPeerConnection : EventTarget  {
   attribute EventHandler onaddstream;
   attribute EventHandler onremovestream;
   attribute EventHandler oniceconnectionstatechange;
+
+  void getStats (MediaStreamTrack? selector,
+                 RTCStatsCallback successCallback,
+                 RTCPeerConnectionErrorCallback failureCallback);
 };
 
 // Mozilla extensions.
