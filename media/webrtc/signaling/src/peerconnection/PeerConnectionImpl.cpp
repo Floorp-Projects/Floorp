@@ -2,7 +2,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include <string>
 #include <cstdlib>
 #include <cerrno>
 
@@ -42,6 +41,7 @@
 #include "dtlsidentity.h"
 
 #ifdef MOZILLA_INTERNAL_API
+#include "nsPerformance.h"
 #include "nsDOMDataChannel.h"
 #include "mozilla/TimeStamp.h"
 #include "mozilla/Telemetry.h"
@@ -1107,6 +1107,27 @@ PeerConnectionImpl::SetRemoteDescription(int32_t action, const char* aSDP)
   mRemoteRequestedSDP = aSDP;
   mInternal->mCall->setRemoteDescription((cc_jsep_action_t)action,
                                          mRemoteRequestedSDP, tc);
+  return NS_OK;
+}
+
+// WebRTC uses highres time relative to the UNIX epoch (Jan 1, 1970, UTC).
+
+#ifdef MOZILLA_INTERNAL_API
+nsresult
+PeerConnectionImpl::GetTimeSinceEpoch(DOMHighResTimeStamp *result) {
+  MOZ_ASSERT(NS_IsMainThread());
+  nsPerformance *perf = mWindow->GetPerformance();
+  NS_ENSURE_TRUE(perf && perf->Timing(), NS_ERROR_UNEXPECTED);
+  *result = perf->Now() + perf->Timing()->NavigationStart();
+  return NS_OK;
+}
+#endif
+
+NS_IMETHODIMP
+PeerConnectionImpl::GetStats(mozilla::dom::MediaStreamTrack *aSelector) {
+  PC_AUTO_ENTER_API_CALL(true);
+
+  // TODO: Insert dispatch to STS here.
   return NS_OK;
 }
 
