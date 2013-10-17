@@ -13,7 +13,7 @@ ifndef JAVA_CLASSPATH
 endif
 
 # DEBUG_JARSIGNER always debug signs.
-DEBUG_JARSIGNER=$(PYTHON) $(call core_abspath,$(topsrcdir)/mobile/android/debug_sign_tool.py) \
+DEBUG_JARSIGNER=$(PYTHON) $(abspath $(topsrcdir)/mobile/android/debug_sign_tool.py) \
   --keytool=$(KEYTOOL) \
   --jarsigner=$(JARSIGNER) \
   $(NULL)

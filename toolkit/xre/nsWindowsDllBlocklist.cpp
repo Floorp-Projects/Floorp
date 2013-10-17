@@ -135,6 +135,9 @@ static DllBlockInfo sWindowsDllBlocklist[] = {
   // shutdown, bug 831285 and 918399.
   { "beid35cardlayer.dll", MAKE_VERSION(3, 5, 6, 6968) },
 
+  // bug 925459, bitguard crashes
+  { "bitguard.dll", MAKE_VERSION(2, 6, 1694, 24) },
+
   { nullptr, 0 }
 };
 

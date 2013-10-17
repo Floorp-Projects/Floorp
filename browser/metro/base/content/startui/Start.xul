@@ -48,7 +48,17 @@
         <html:div class="meta-section-title narrow-title" onclick="StartUI.onNarrowTitleClick('start-topsites')">
           &narrowTopSitesHeader.label;
         </html:div>
-        <richgrid id="start-topsites-grid" observes="bcast_windowState" set-name="topSites" rows="3" columns="3" tiletype="thumbnail" seltype="multiple" flex="1"/>
+        <richgrid id="start-topsites-grid" observes="bcast_windowState" set-name="topSites" rows="3" columns="3" tiletype="thumbnail" seltype="multiple" minSlots="8" fade="true" flex="1">
+          <richgriditem/>
+          <richgriditem/>
+          <richgriditem/>
+          <richgriditem/>
+          <richgriditem/>
+          <richgriditem/>
+          <richgriditem/>
+          <richgriditem/>
+          <richgriditem/>
+        </richgrid>
       </vbox>
 
       <vbox id="start-bookmarks" class="meta-section">
@@ -56,7 +66,10 @@
         <html:div class="meta-section-title narrow-title" onclick="StartUI.onNarrowTitleClick('start-bookmarks')">
           &narrowBookmarksHeader.label;
         </html:div>
-        <richgrid id="start-bookmarks-grid" observes="bcast_windowState" set-name="bookmarks" seltype="multiple" flex="1"/>
+        <richgrid id="start-bookmarks-grid" observes="bcast_windowState" set-name="bookmarks" seltype="multiple" fade="true" flex="1" minSlots="2">
+          <richgriditem/>
+          <richgriditem/>
+        </richgrid>
       </vbox>
 
       <vbox id="start-history" class="meta-section">
@@ -64,7 +77,11 @@
         <html:div class="meta-section-title narrow-title" onclick="StartUI.onNarrowTitleClick('start-history')">
           &narrowRecentHistoryHeader.label;
         </html:div>
-        <richgrid id="start-history-grid" observes="bcast_windowState" set-name="recentHistory" seltype="multiple" flex="1"/>
+        <richgrid id="start-history-grid" observes="bcast_windowState" set-name="recentHistory" seltype="multiple" fade="true" flex="1">
+          <richgriditem/>
+          <richgriditem/>
+          <richgriditem/>
+        </richgrid>
       </vbox>
 
 #ifdef MOZ_SERVICES_SYNC
@@ -73,7 +90,12 @@
         <html:div id="snappedRemoteTabsLabel" class="meta-section-title narrow-title" onclick="StartUI.onNarrowTitleClick('start-remotetabs')">
           &narrowRemoteTabsHeader.label;
         </html:div>
-        <richgrid id="start-remotetabs-grid" observes="bcast_windowState" set-name="remoteTabs" seltype="multiple" flex="1"/>
+        <richgrid id="start-remotetabs-grid" observes="bcast_windowState" set-name="remoteTabs" seltype="multiple" fade="true" flex="1">
+          <richgriditem/>
+          <richgriditem/>
+          <richgriditem/>
+        </richgrid>
+
       </vbox>
 #endif
   </hbox>

@@ -39,7 +39,7 @@ else
 getnativepath = $(1)
 endif
 
-abs_srcdir = $(call core_abspath,$(srcdir))
+abs_srcdir = $(abspath $(srcdir))
 
 regOrderDir="$(call getnativepath,$(abs_srcdir)/regorder)";
 

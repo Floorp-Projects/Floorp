@@ -4076,11 +4076,13 @@ elif test "$OS_ARCH" != "WINNT" -a "$OS_ARCH" != "OS2"; then
   AC_DEFINE(XP_UNIX)
 fi
 
-AC_ARG_ENABLE(threadsafe,
-    [  --enable-threadsafe     Enable support for multiple threads.],
-    [if test "x$enableval" = "xyes"; then
-        AC_DEFINE(JS_THREADSAFE)
-    fi],)
+JS_THREADSAFE=1
+MOZ_ARG_DISABLE_BOOL(threadsafe,
+[  --disable-threadsafe Disable support for multiple threads.],
+    JS_THREADSAFE= )
+if test -n "$JS_THREADSAFE"; then
+    AC_DEFINE(JS_THREADSAFE)
+fi
 
 if test "$MOZ_DEBUG"; then
     AC_DEFINE(MOZ_REFLOW_PERF)

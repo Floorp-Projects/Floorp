@@ -73,11 +73,11 @@ BookmarksView.prototype = Util.extend(Object.create(View.prototype), {
   },
 
   _getItemForBookmarkId: function bv__getItemForBookmark(aBookmarkId) {
-    return this._set.querySelector("richgriditem[bookmarkId='" + aBookmarkId + "']");
+    return this._set.querySelector("richgriditem[anonid='" + aBookmarkId + "']");
   },
 
   _getBookmarkIdForItem: function bv__getBookmarkForItem(aItem) {
-    return +aItem.getAttribute("bookmarkId");
+    return +aItem.getAttribute("anonid");
   },
 
   _updateItemWithAttrs: function dv__updateItemWithAttrs(anItem, aAttrs) {
@@ -142,6 +142,7 @@ BookmarksView.prototype = Util.extend(Object.create(View.prototype), {
         this._set.removeItemAt(this._set.itemCount - 1, true);
     }
     this._set.arrangeItems();
+    this._set.removeAttribute("fade");
     this._inBatch = false;
     rootNode.containerOpen = false;
   },
@@ -154,7 +155,8 @@ BookmarksView.prototype = Util.extend(Object.create(View.prototype), {
   },
 
   clearBookmarks: function bv_clearBookmarks() {
-    this._set.clearAll();
+    if ('clearAll' in this._set)
+      this._set.clearAll();
   },
 
   addBookmark: function bv_addBookmark(aBookmarkId, aPos) {
@@ -162,7 +164,7 @@ BookmarksView.prototype = Util.extend(Object.create(View.prototype), {
     let uri = this._bookmarkService.getBookmarkURI(aBookmarkId);
     let title = this._bookmarkService.getItemTitle(aBookmarkId) || uri.spec;
     let item = this._set.insertItemAt(aPos || index, title, uri.spec, this._inBatch);
-    item.setAttribute("bookmarkId", aBookmarkId);
+    item.setAttribute("anonid", aBookmarkId);
     this._setContextActions(item);
     this._updateFavicon(item, uri);
   },
@@ -198,6 +200,7 @@ BookmarksView.prototype = Util.extend(Object.create(View.prototype), {
     let uri = this._bookmarkService.getBookmarkURI(aBookmarkId);
     let title = this._bookmarkService.getItemTitle(aBookmarkId) || uri.spec;
 
+    item.setAttribute("anonid", aBookmarkId);
     item.setAttribute("value", uri.spec);
     item.setAttribute("label", title);
 

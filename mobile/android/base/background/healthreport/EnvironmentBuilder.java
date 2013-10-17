@@ -58,7 +58,13 @@ public class EnvironmentBuilder {
   public static interface ProfileInformationProvider {
     public boolean isBlocklistEnabled();
     public boolean isTelemetryEnabled();
+    public boolean isAcceptLangUserSet();
     public long getProfileCreationTime();
+
+    public String getDistributionString();
+    public String getOSLocale();
+    public String getAppLocale();
+
     public JSONObject getAddonsJSON();
   }
 
@@ -124,6 +130,12 @@ public class EnvironmentBuilder {
     }
 
     e.addons = addons;
+
+    // v2 environment fields.
+    e.distribution = info.getDistributionString();
+    e.osLocale = info.getOSLocale();
+    e.appLocale = info.getAppLocale();
+    e.acceptLangSet = info.isAcceptLangUserSet() ? 1 : 0;
   }
 
   /**

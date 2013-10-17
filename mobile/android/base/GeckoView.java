@@ -55,6 +55,7 @@ public class GeckoView extends LayerView
 
             Clipboard.init(context);
             HardwareUtils.init(context);
+            GeckoNetworkManager.getInstance().init(context);
 
             GeckoLoader.loadMozGlue();
             BrowserDB.setEnableContentProviders(false);
@@ -75,7 +76,7 @@ public class GeckoView extends LayerView
         ThreadUtils.setUiThread(Thread.currentThread(), new Handler());
         initializeView(GeckoAppShell.getEventDispatcher());
 
-        GeckoProfile profile = GeckoProfile.get(context);
+        GeckoProfile profile = GeckoProfile.get(context).forceCreate();
         BrowserDB.initialize(profile.getName());
 
         if (GeckoThread.checkAndSetLaunchState(GeckoThread.LaunchState.Launching, GeckoThread.LaunchState.Launched)) {

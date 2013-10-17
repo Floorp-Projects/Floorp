@@ -73,12 +73,6 @@ getSiteKey(const nsACString & hostName, uint16_t port,
   key.AppendInt(port);
 }
 
-void
-getSiteKey(const nsNSSSocketInfo & socketInfo, /*out*/ nsCSubstring & key)
-{
-  getSiteKey(socketInfo.GetHostName(), socketInfo.GetPort(), key);
-}
-
 /* SSM_UserCertChoice: enum for cert choice info */
 typedef enum {ASK, AUTO} SSM_UserCertChoice;
 
@@ -1205,13 +1199,13 @@ nsSSLIOLayerPoll(PRFileDesc * fd, int16_t in_flags, int16_t *out_flags)
 }
 
 nsSSLIOLayerHelpers::nsSSLIOLayerHelpers()
-: mutex("nsSSLIOLayerHelpers.mutex")
-, mRenegoUnrestrictedSites(nullptr)
+: mRenegoUnrestrictedSites(nullptr)
 , mTreatUnsafeNegotiationAsBroken(false)
 , mWarnLevelMissingRFC5746(1)
 , mTLSIntoleranceInfo(16)
 , mFalseStartRequireNPN(true)
 , mFalseStartRequireForwardSecrecy(false)
+, mutex("nsSSLIOLayerHelpers.mutex")
 {
 }
 
