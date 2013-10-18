@@ -33,12 +33,24 @@ NS_INTERFACE_MAP_BEGIN(nsDOMKeyboardEvent)
   NS_INTERFACE_MAP_ENTRY(nsIDOMKeyEvent)
 NS_INTERFACE_MAP_END_INHERITING(nsDOMUIEvent)
 
+bool
+nsDOMKeyboardEvent::AltKey()
+{
+  return mEvent->AsKeyboardEvent()->IsAlt();
+}
+
 NS_IMETHODIMP
 nsDOMKeyboardEvent::GetAltKey(bool* aIsDown)
 {
   NS_ENSURE_ARG_POINTER(aIsDown);
   *aIsDown = AltKey();
   return NS_OK;
+}
+
+bool
+nsDOMKeyboardEvent::CtrlKey()
+{
+  return mEvent->AsKeyboardEvent()->IsControl();
 }
 
 NS_IMETHODIMP
@@ -49,12 +61,24 @@ nsDOMKeyboardEvent::GetCtrlKey(bool* aIsDown)
   return NS_OK;
 }
 
+bool
+nsDOMKeyboardEvent::ShiftKey()
+{
+  return mEvent->AsKeyboardEvent()->IsShift();
+}
+
 NS_IMETHODIMP
 nsDOMKeyboardEvent::GetShiftKey(bool* aIsDown)
 {
   NS_ENSURE_ARG_POINTER(aIsDown);
   *aIsDown = ShiftKey();
   return NS_OK;
+}
+
+bool
+nsDOMKeyboardEvent::MetaKey()
+{
+  return mEvent->AsKeyboardEvent()->IsMeta();
 }
 
 NS_IMETHODIMP

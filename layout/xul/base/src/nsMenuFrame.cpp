@@ -1248,12 +1248,12 @@ nsMenuFrame::CreateMenuCommandEvent(WidgetGUIEvent* aEvent, bool aFlipChecked)
                               nsContentUtils::IsCallerChrome();
 
   bool shift = false, control = false, alt = false, meta = false;
-  if (aEvent && (aEvent->eventStructType == NS_MOUSE_EVENT ||
-                 aEvent->eventStructType == NS_KEY_EVENT)) {
-    shift = static_cast<WidgetInputEvent*>(aEvent)->IsShift();
-    control = static_cast<WidgetInputEvent*>(aEvent)->IsControl();
-    alt = static_cast<WidgetInputEvent*>(aEvent)->IsAlt();
-    meta = static_cast<WidgetInputEvent*>(aEvent)->IsMeta();
+  WidgetInputEvent* inputEvent = aEvent ? aEvent->AsInputEvent() : nullptr;
+  if (inputEvent) {
+    shift = inputEvent->IsShift();
+    control = inputEvent->IsControl();
+    alt = inputEvent->IsAlt();
+    meta = inputEvent->IsMeta();
   }
 
   // Because the command event is firing asynchronously, a flag is needed to

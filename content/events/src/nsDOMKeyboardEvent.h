@@ -10,7 +10,6 @@
 #include "nsDOMUIEvent.h"
 #include "mozilla/EventForwards.h"
 #include "mozilla/dom/KeyboardEventBinding.h"
-#include "mozilla/BasicEvents.h"
 
 class nsDOMKeyboardEvent : public nsDOMUIEvent,
                            public nsIDOMKeyEvent
@@ -34,25 +33,10 @@ public:
     return mozilla::dom::KeyboardEventBinding::Wrap(aCx, aScope, this);
   }
 
-  bool AltKey()
-  {
-    return static_cast<mozilla::WidgetInputEvent*>(mEvent)->IsAlt();
-  }
-
-  bool CtrlKey()
-  {
-    return static_cast<mozilla::WidgetInputEvent*>(mEvent)->IsControl();
-  }
-
-  bool ShiftKey()
-  {
-    return static_cast<mozilla::WidgetInputEvent*>(mEvent)->IsShift();
-  }
-
-  bool MetaKey()
-  {
-    return static_cast<mozilla::WidgetInputEvent*>(mEvent)->IsMeta();
-  }
+  bool AltKey();
+  bool CtrlKey();
+  bool ShiftKey();
+  bool MetaKey();
 
   bool GetModifierState(const nsAString& aKey)
   {
