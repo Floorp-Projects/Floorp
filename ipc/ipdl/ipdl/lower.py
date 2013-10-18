@@ -1842,14 +1842,15 @@ class _ComputeTypeDeps(TypeVisitor):
 types that need forward declaration; (ii) types that need a |using|
 stmt.  Some types generate both kinds.'''
 
-    def __init__(self, fortype):
+    def __init__(self, fortype, unqualifiedTypedefs=False):
         ipdl.type.TypeVisitor.__init__(self)
         self.usingTypedefs = [ ]
         self.forwardDeclStmts = [ ]
         self.fortype = fortype
+        self.unqualifiedTypedefs = unqualifiedTypedefs
 
     def maybeTypedef(self, fqname, name):
-        if fqname != name:
+        if fqname != name or self.unqualifiedTypedefs:
             self.usingTypedefs.append(Typedef(Type(fqname), name))
         
     def visitBuiltinCxxType(self, t):
