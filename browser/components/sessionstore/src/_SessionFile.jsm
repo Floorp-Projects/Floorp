@@ -227,6 +227,14 @@ let SessionFileInternal = {
       return Promise.reject(new Error("_SessionFile is closed"));
     }
     let refObj = {};
+
+    let isFinalWrite = false;
+    if (Services.startup.shuttingDown) {
+      // If shutdown has started, we will want to stop receiving
+      // write instructions.
+      isFinalWrite = this._isClosed = true;
+    }
+
     return this._latestWrite = TaskUtils.spawn(function task() {
       TelemetryStopwatch.start("FX_SESSION_RESTORE_WRITE_FILE_LONGEST_OP_MS", refObj);
 
@@ -243,15 +251,10 @@ let SessionFileInternal = {
         Cu.reportError("Could not write session state file " + this.path
                        + ": " + ex);
       }
-      // At this stage, we are done writing. If shutdown has started,
-      // we will want to stop receiving write instructions.
-      if (Services.startup.shuttingDown) {
-        this._isClosed = true;
+
+      if (isFinalWrite) {
+        Services.obs.notifyObservers(null, "sessionstore-final-state-write-complete", "");
       }
-      // In rare cases, we may already have other writes pending,
-      // which we need to flush before shutdown proceeds. AsyncShutdown
-      // uses _latestWrite to determine what needs to be flushed during
-      // shutdown.
     }.bind(this));
   },
 
