@@ -69,6 +69,7 @@
 #include "JavaScriptChild.h"
 #include "APZCCallbackHelper.h"
 #include "nsILoadContext.h"
+#include "ipc/nsGUIEventIPC.h"
 
 #define BROWSER_ELEMENT_CHILD_SCRIPT \
     NS_LITERAL_STRING("chrome://global/content/BrowserElementChild.js")

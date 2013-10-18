@@ -14,6 +14,7 @@
 #include "mozilla/ipc/InputStreamUtils.h"
 #include "mozilla/ipc/URIUtils.h"
 #include "mozilla/net/ChannelEventQueue.h"
+#include "SerializedLoadContext.h"
 
 using namespace mozilla::ipc;
 

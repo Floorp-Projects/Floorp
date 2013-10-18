@@ -15,6 +15,7 @@
 #include "base/compiler_specific.h"
 #include "mozilla/ipc/InputStreamUtils.h"
 #include "mozilla/ipc/URIUtils.h"
+#include "SerializedLoadContext.h"
 
 using namespace mozilla::ipc;
 
