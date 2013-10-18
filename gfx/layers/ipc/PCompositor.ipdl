@@ -8,7 +8,6 @@
 include LayersSurfaces;
 include protocol PGrallocBuffer;
 include protocol PLayerTransaction;
-include "mozilla/layers/CompositorTypes.h";
 include "mozilla/GfxMessageUtils.h";
 
 using struct mozilla::null_t from "ipc/IPCMessageUtils.h";

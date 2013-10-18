@@ -6,7 +6,6 @@ include protocol PNecko;
 include protocol PBrowser;
 include URIParams;
 
-include "SerializedLoadContext.h";
 
 using class IPC::SerializedLoadContext from "SerializedLoadContext.h";
 

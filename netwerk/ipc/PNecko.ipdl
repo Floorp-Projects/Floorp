@@ -22,7 +22,6 @@ include URIParams;
 include InputStreamParams;
 include NeckoChannelParams;
 
-include "SerializedLoadContext.h";
 
 using class IPC::SerializedLoadContext from "SerializedLoadContext.h";
 

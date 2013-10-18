@@ -6,7 +6,6 @@
 
 include protocol PBrowser;
 
-include "mozilla/layout/RenderFrameUtils.h";
 
 using mozilla::layout::ScrollingBehavior from "mozilla/layout/RenderFrameUtils.h";
 

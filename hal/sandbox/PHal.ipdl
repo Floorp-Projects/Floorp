@@ -6,11 +6,6 @@
 
 include protocol PContent;
 include protocol PBrowser;
-include "prtime.h";
-include "mozilla/HalSensor.h";
-include "mozilla/HalTypes.h";
-include "mozilla/dom/ScreenOrientation.h";
-include "nsRect.h";
 
 using mozilla::dom::ScreenOrientation from "mozilla/dom/ScreenOrientation.h";
 using mozilla::hal::FlashMode from "mozilla/HalTypes.h";

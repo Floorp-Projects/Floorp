@@ -7,7 +7,6 @@
 
 include URIParams;
 include InputStreamParams;
-include "mozilla/net/PHttpChannelParams.h";
 
 using struct mozilla::void_t from "ipc/IPCMessageUtils.h";
 using RequestHeaderTuples from "mozilla/net/PHttpChannelParams.h";
