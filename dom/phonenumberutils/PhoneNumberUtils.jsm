@@ -44,7 +44,8 @@ this.PhoneNumberUtils = {
 
 #ifdef MOZ_B2G_RIL
     // Get network mcc
-    let voice = mobileConnection.voiceConnectionInfo;
+    // TODO: Bug 926740 - PhoneNumberUtils for multisim
+    let voice = mobileConnection.getVoiceConnectionInfo(0);
     if (voice && voice.network && voice.network.mcc) {
       mcc = voice.network.mcc;
     }

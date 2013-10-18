@@ -6,7 +6,6 @@
 #include "nsAppShell.h"
 
 #include "base/basictypes.h"
-#include "nspr/prtypes.h"
 #include "base/message_loop.h"
 #include "base/task.h"
 #include "mozilla/Hal.h"

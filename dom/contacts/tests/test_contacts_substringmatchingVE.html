@@ -73,8 +73,7 @@ var steps = [
   },
   function () {
     ok(true, "Adding contact");
-    createResult1 = new mozContact();
-    createResult1.init(prop);
+    createResult1 = new mozContact(prop);
     req = navigator.mozContacts.save(createResult1);
     req.onsuccess = function () {
       ok(createResult1.id, "The contact now has an ID.");
@@ -112,8 +111,7 @@ var steps = [
   },
   function () {
     ok(true, "Adding contact");
-    createResult1 = new mozContact();
-    createResult1.init(prop2);
+    createResult1 = new mozContact(prop2);
     req = navigator.mozContacts.save(createResult1);
     req.onsuccess = function () {
       ok(createResult1.id, "The contact now has an ID.");
