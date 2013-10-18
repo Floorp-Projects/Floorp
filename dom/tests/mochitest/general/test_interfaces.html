@@ -100,7 +100,7 @@ var interfaceNamesInGlobalScope =
     {name: "BluetoothStatusChangedEvent", b2g: true},
     {name: "BoxObject", xbl: true},
     {name: "BrowserFeedWriter", desktop: true},
-    {name: "CallEvent", b2g: true},
+    {name: "CallEvent", b2g: true, pref: "dom.telephony.enabled"},
     "CameraCapabilities",
     "CameraControl",
     "CameraManager",
@@ -109,7 +109,7 @@ var interfaceNamesInGlobalScope =
     "CanvasRenderingContext2D",
     "CaretPosition",
     "CDATASection",
-    {name: "CFStateChangeEvent", b2g: true},
+    {name: "CFStateChangeEvent", b2g: true, pref: "dom.mobileconnection.enabled"},
     "ChannelMergerNode",
     "ChannelSplitterNode",
     "CharacterData",
@@ -147,7 +147,7 @@ var interfaceNamesInGlobalScope =
     "CustomEvent",
     "DataChannel",
     "DataContainerEvent",
-    {name: "DataErrorEvent", b2g: true},
+    {name: "DataErrorEvent", b2g: true, pref: "dom.mobileconnection.enabled"},
     {name: "DataStore", b2g: true, release: false},
     {name: "DataStoreChangeEvent", b2g: true, release: false},
     {name: "DataStoreCursor", b2g: true, release: false},
@@ -277,7 +277,7 @@ var interfaceNamesInGlobalScope =
     "HTMLUListElement",
     "HTMLUnknownElement",
     "HTMLVideoElement",
-    {name: "IccCardLockError", b2g: true},
+    {name: "IccCardLockError", b2g: true, pref: "dom.icc.enabled"},
     "IDBCursor",
     "IDBCursorWithValue",
     "IDBDatabase",
@@ -317,24 +317,24 @@ var interfaceNamesInGlobalScope =
     "MouseScrollEvent",
     {name: "MozActivity", b2g: true},
     "MozApplicationEvent",
-    {name: "MozCellBroadcast", b2g: true},
-    {name: "MozCellBroadcastEvent", b2g: true},
+    {name: "MozCellBroadcast", b2g: true, pref: "dom.cellbroadcast.enabled"},
+    {name: "MozCellBroadcastEvent", b2g: true, pref: "dom.cellbroadcast.enabled"},
     "MozConnection",
     "mozContact",
     "MozContactChangeEvent",
     "MozCSSKeyframeRule",
     "MozCSSKeyframesRule",
-    {name: "MozEmergencyCbModeEvent", b2g: true},
-    {name: "MozIccManager", b2g: true},
+    {name: "MozEmergencyCbModeEvent", b2g: true, pref: "dom.mobileconnection.enabled"},
+    {name: "MozIccManager", b2g: true, pref: "dom.icc.enabled"},
     {name: "MozInputContext", b2g: true},
     {name: "MozInputMethodManager", b2g: true},
     "MozMmsEvent",
     "MozMmsMessage",
-    {name: "MozMobileConnection", b2g: true},
+    {name: "MozMobileConnection", b2g: true, pref: "dom.mobileconnection.enabled"},
     "MozMobileMessageManager",
     "MozMobileMessageThread",
     "MozNamedAttrMap",
-    {name: "MozOtaStatusEvent", b2g: true},
+    {name: "MozOtaStatusEvent", b2g: true, pref: "dom.mobileconnection.enabled"},
     "MozPowerManager",
     "mozRTCIceCandidate",
     "mozRTCPeerConnection",
@@ -344,10 +344,10 @@ var interfaceNamesInGlobalScope =
     "MozSmsFilter",
     "MozSmsMessage",
     "MozSmsSegmentInfo",
-    {name: "MozStkCommandEvent", b2g: true},
+    {name: "MozStkCommandEvent", b2g: true, pref: "dom.icc.enabled"},
     {name: "MozTimeManager", b2g: true},
-    {name: "MozVoicemail", b2g: true},
-    {name: "MozVoicemailEvent", b2g: true},
+    {name: "MozVoicemail", b2g: true, pref: "dom.voicemail.enabled"},
+    {name: "MozVoicemailEvent", b2g: true, pref: "dom.voicemail.enabled"},
     "MozWakeLock",
     {name: "MozWifiConnectionInfoEvent", b2g: true},
     {name: "MozWifiStatusChangeEvent", b2g: true},
@@ -390,6 +390,7 @@ var interfaceNamesInGlobalScope =
     "RGBColor",
     "RTCDataChannelEvent",
     "RTCPeerConnectionIceEvent",
+    "RTCStatsReport",
     "Screen",
     "ScriptProcessorNode",
     "ScrollAreaEvent",
@@ -530,9 +531,9 @@ var interfaceNamesInGlobalScope =
     "SVGViewElement",
     "SVGZoomAndPan",
     "SVGZoomEvent",
-    {name: "Telephony", b2g: true},
-    {name: "TelephonyCall", b2g: true},
-    {name: "TelephonyCallGroup", b2g: true},
+    {name: "Telephony", b2g: true, pref: "dom.telephony.enabled"},
+    {name: "TelephonyCall", b2g: true, pref: "dom.telephony.enabled"},
+    {name: "TelephonyCallGroup", b2g: true, pref: "dom.telephony.enabled"},
     "Text",
     "TextDecoder",
     "TextEncoder",
@@ -554,7 +555,7 @@ var interfaceNamesInGlobalScope =
     "URL",
     {name: "UserDataHandler", xbl: true},
     "UserProximityEvent",
-    {name: "USSDReceivedEvent", b2g: true},
+    {name: "USSDReceivedEvent", b2g: true, pref: "dom.mobileconnection.enabled"},
     "ValidityState",
     "VideoStreamTrack",
     "WaveShaperNode",
@@ -600,6 +601,7 @@ var interfaceNamesInGlobalScope =
 // IMPORTANT: Do not change this list without review from a DOM peer!
 
 function createInterfaceMap(isXBLScope) {
+  var prefs = SpecialPowers.Services.prefs;
   var version = SpecialPowers.Cc["@mozilla.org/xre/app-info;1"].getService(SpecialPowers.Ci.nsIXULAppInfo).version;
   var isNightly = version.endsWith("a1");
   var isRelease = !version.contains("a");
@@ -617,7 +619,8 @@ function createInterfaceMap(isXBLScope) {
                  (entry.xbl === !isXBLScope) ||
                  (entry.desktop === !isDesktop) ||
                  (entry.b2g === !isB2G) ||
-                 (entry.release === !isRelease)) {
+                 (entry.release === !isRelease) ||
+                 (entry.pref && !prefs.getBoolPref(entry.pref))) {
         interfaceMap[entry.name] = false;
       } else {
         interfaceMap[entry.name] = shouldExpect;

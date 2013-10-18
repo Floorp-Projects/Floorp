@@ -41,6 +41,11 @@
 /** Test for computation of values in property database **/
 
 var gBadComputed = {
+  // The CSS parser will accept these weird URLs. However, we'll fail to
+  // resolve them when computing style, so we'll fall back to the initial
+  // value ("none").
+  "filter": [ "url('feed:javascript:5')", "blur(3px) url('feed:javascript:5') grayscale(50%)" ],
+
   // These values are treated as auto.
   "page-break-after": [ "avoid" ],
   "page-break-before": [ "avoid" ],

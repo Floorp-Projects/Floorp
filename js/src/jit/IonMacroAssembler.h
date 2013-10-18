@@ -679,14 +679,6 @@ class MacroAssembler : public MacroAssemblerSpecific
         bind(&done);
     }
 
-    /*
-     * Call the post barrier if necessary when writing value to a slot or
-     * element of object.
-     *
-     * Returns whether the maybeScratch register was used.
-     */
-    bool maybeCallPostBarrier(Register object, ConstantOrRegister value, Register maybeScratch);
-
     void branchNurseryPtr(Condition cond, const Address &ptr1, const ImmMaybeNurseryPtr &ptr2,
                           Label *label);
     void moveNurseryPtr(const ImmMaybeNurseryPtr &ptr, const Register &reg);

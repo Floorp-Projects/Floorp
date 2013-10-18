@@ -45,6 +45,7 @@ CSPService::CSPService()
 
 CSPService::~CSPService()
 {
+  mAppStatusCache.Clear();
 }
 
 NS_IMPL_ISUPPORTS2(CSPService, nsIContentPolicy, nsIChannelEventSink)
@@ -104,6 +105,55 @@ CSPService::ShouldLoad(uint32_t aContentType,
     aContentType == nsIContentPolicy::TYPE_DOCUMENT) {
     return NS_OK;
   }
+
+  // ----- THIS IS A TEMPORARY FAST PATH FOR CERTIFIED APPS. -----
+  // ----- PLEASE REMOVE ONCE bug 925004 LANDS.              -----
+
+  // Cache the app status for this origin.
+  uint16_t status = nsIPrincipal::APP_STATUS_NOT_INSTALLED;
+  nsAutoCString contentOrigin;
+  aContentLocation->GetPrePath(contentOrigin);
+  if (aRequestPrincipal && !mAppStatusCache.Get(contentOrigin, &status)) {
+    aRequestPrincipal->GetAppStatus(&status);
+    mAppStatusCache.Put(contentOrigin, status);
+  }
+
+  if (status == nsIPrincipal::APP_STATUS_CERTIFIED) {
+    // The CSP for certified apps is :
+    // "default-src *; script-src 'self'; object-src 'none'; style-src 'self'"
+    // That means we can optimize for this case by:
+    // - loading only same origin scripts and stylesheets.
+    // - never loading objects.
+    // - accepting everything else.
+
+    switch (aContentType) {
+      case nsIContentPolicy::TYPE_SCRIPT:
+      case nsIContentPolicy::TYPE_STYLESHEET:
+        {
+          nsAutoCString sourceOrigin;
+          aRequestOrigin->GetPrePath(sourceOrigin);
+          if (!sourceOrigin.Equals(contentOrigin)) {
+            *aDecision = nsIContentPolicy::REJECT_SERVER;
+          }
+        }
+        break;
+
+      case nsIContentPolicy::TYPE_OBJECT:
+        *aDecision = nsIContentPolicy::REJECT_SERVER;
+        break;
+
+      default:
+        *aDecision = nsIContentPolicy::ACCEPT;
+    }
+
+    // Only cache and return if we are successful. If not, we want the error
+    // to be reported, and thus fallback to the slow path.
+    if (*aDecision == nsIContentPolicy::ACCEPT) {
+      return NS_OK;
+    }
+  }
+
+  // ----- END OF TEMPORARY FAST PATH FOR CERTIFIED APPS. -----
 
   // find the principal of the document that initiated this request and see
   // if it has a CSP policy object

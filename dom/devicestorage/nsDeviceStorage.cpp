@@ -1368,17 +1368,14 @@ InterfaceToJsval(nsPIDOMWindow* aWindow,
     return JSVAL_NULL;
   }
 
-  JS::RootedObject scopeObj(cx, sgo->GetGlobalJSObject());
+  JS::Rooted<JSObject*> scopeObj(cx, sgo->GetGlobalJSObject());
   NS_ENSURE_TRUE(scopeObj, JSVAL_NULL);
   JSAutoCompartment ac(cx, scopeObj);
 
 
   JS::Rooted<JS::Value> someJsVal(cx);
-  nsresult rv = nsContentUtils::WrapNative(cx,
-                                           scopeObj,
-                                           aObject,
-                                           aIID,
-                                           someJsVal.address());
+  nsresult rv =
+    nsContentUtils::WrapNative(cx, scopeObj, aObject, aIID, &someJsVal);
   if (NS_FAILED(rv)) {
     return JSVAL_NULL;
   }
@@ -1437,7 +1434,7 @@ JS::Value StringToJsval(nsPIDOMWindow* aWindow, nsAString& aString)
     return JSVAL_NULL;
   }
 
-  JS::Value result = JSVAL_NULL;
+  JS::Rooted<JS::Value> result(cx);
   if (!xpc::StringToJsval(cx, aString, &result)) {
     return JSVAL_NULL;
   }

@@ -503,6 +503,13 @@ SetTimezone(const nsCString& aTimezoneSpec)
   PROXY_IF_SANDBOXED(SetTimezone(aTimezoneSpec));
 }
 
+int32_t
+GetTimezoneOffset()
+{
+  AssertMainThread();
+  RETURN_PROXY_IF_SANDBOXED(GetTimezoneOffset(), 0);
+}
+
 nsCString
 GetTimezone()
 {

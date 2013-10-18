@@ -1059,7 +1059,7 @@ void MediaDecoderStateMachine::AudioLoop()
     // circumstances, so we take care to drop the decoder monitor while
     // initializing.
     nsAutoPtr<AudioStream> audioStream(AudioStream::AllocateStream());
-    audioStream->Init(channels, rate, audioChannelType);
+    audioStream->Init(channels, rate, audioChannelType, AudioStream::HighLatency);
     audioStream->SetVolume(volume);
     if (audioStream->SetPreservesPitch(preservesPitch) != NS_OK) {
       NS_WARNING("Setting the pitch preservation failed at AudioLoop start.");

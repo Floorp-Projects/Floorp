@@ -572,7 +572,7 @@ CreateThis(JSContext *cx, HandleObject callee, MutableHandleValue rval)
             JSScript *script = fun->getOrCreateScript(cx);
             if (!script || !script->ensureHasTypes(cx))
                 return false;
-            JSObject *thisObj = CreateThisForFunction(cx, callee, false);
+            JSObject *thisObj = CreateThisForFunction(cx, callee, GenericObject);
             if (!thisObj)
                 return false;
             rval.set(ObjectValue(*thisObj));

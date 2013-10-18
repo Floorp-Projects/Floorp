@@ -1408,8 +1408,10 @@ XrayWrapper<Base, Traits>::getPropertyDescriptor(JSContext *cx, HandleObject wra
     // we're set up (above) to cache (on the holder) anything that comes out of
     // resolveNativeProperty, which we don't want for something dynamic like
     // named access. So we just handle it separately here.
-    nsGlobalWindow *win;
-    if (!desc.object() && Traits::Type == XrayForWrappedNative && JSID_IS_STRING(id) &&
+    nsGlobalWindow *win = nullptr;
+    if (!desc.object() &&
+        (Traits::Type == XrayForWrappedNative) &&
+        JSID_IS_STRING(id) &&
         (win = static_cast<nsGlobalWindow*>(As<nsPIDOMWindow>(wrapper))))
     {
         nsDependentJSString name(id);
