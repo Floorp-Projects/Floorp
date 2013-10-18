@@ -86,16 +86,19 @@ class GonkNativeWindow: public GonkConsumerBase
     //
     // If waitForFence is true, and the acquired BufferItem has a valid fence object,
     // acquireBuffer will wait on the fence with no timeout before returning.
+#if ANDROID_VERSION >= 18
     status_t acquireBuffer(BufferItem *item, bool waitForFence = true);
-
+#endif
     // Returns an acquired buffer to the queue, allowing it to be reused. Since
     // only a fixed number of buffers may be acquired at a time, old buffers
     // must be released by calling releaseBuffer to ensure new buffers can be
     // acquired by acquireBuffer. Once a BufferItem is released, the caller must
     // not access any members of the BufferItem, and should immediately remove
     // all of its references to the BufferItem itself.
+#if ANDROID_VERSION >= 18
     status_t releaseBuffer(const BufferItem &item,
             const sp<Fence>& releaseFence = Fence::NO_FENCE);
+#endif
 
     sp<IGraphicBufferProducer> getProducerInterface() const { return getBufferQueue(); }
 

@@ -47,7 +47,7 @@ void GonkNativeWindow::setName(const String8& name) {
     mName = name;
     mBufferQueue->setConsumerName(name);
 }
-
+#if ANDROID_VERSION >= 18
 status_t GonkNativeWindow::acquireBuffer(BufferItem *item, bool waitForFence) {
     status_t err;
 
@@ -92,6 +92,7 @@ status_t GonkNativeWindow::releaseBuffer(const BufferItem &item,
     }
     return err;
 }
+#endif
 
 status_t GonkNativeWindow::setDefaultBufferSize(uint32_t w, uint32_t h) {
     Mutex::Autolock _l(mMutex);

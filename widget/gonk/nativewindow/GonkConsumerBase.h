@@ -78,7 +78,11 @@ public:
 
     // setFrameAvailableListener sets the listener object that will be notified
     // when a new frame becomes available.
+#if ANDROID_VERSION == 17
+    void setFrameAvailableListener(const sp<FrameAvailableListener>& listener);
+#else
     void setFrameAvailableListener(const wp<FrameAvailableListener>& listener);
+#endif
 
 private:
     GonkConsumerBase(const GonkConsumerBase&);
@@ -210,7 +214,11 @@ protected:
     // mFrameAvailableListener is the listener object that will be called when a
     // new frame becomes available. If it is not NULL it will be called from
     // queueBuffer.
+#if ANDROID_VERSION == 17
+    sp<FrameAvailableListener> mFrameAvailableListener;
+#else
     wp<FrameAvailableListener> mFrameAvailableListener;
+#endif
 
     // The GonkConsumerBase has-a GonkBufferQueue and is responsible for creating this object
     // if none is supplied
