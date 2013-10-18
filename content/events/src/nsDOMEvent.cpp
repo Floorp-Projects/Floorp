@@ -143,8 +143,7 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsDOMEvent)
       case NS_MOUSE_SCROLL_EVENT:
       case NS_WHEEL_EVENT:
       case NS_SIMPLE_GESTURE_EVENT:
-        static_cast<WidgetMouseEventBase*>(tmp->mEvent)->relatedTarget =
-          nullptr;
+        tmp->mEvent->AsMouseEventBase()->relatedTarget = nullptr;
         break;
       case NS_DRAG_EVENT: {
         WidgetDragEvent* dragEvent = tmp->mEvent->AsDragEvent();
@@ -182,8 +181,7 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(nsDOMEvent)
       case NS_WHEEL_EVENT:
       case NS_SIMPLE_GESTURE_EVENT:
         NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(cb, "mEvent->relatedTarget");
-        cb.NoteXPCOMChild(
-          static_cast<WidgetMouseEventBase*>(tmp->mEvent)->relatedTarget);
+        cb.NoteXPCOMChild(tmp->mEvent->AsMouseEventBase()->relatedTarget);
         break;
       case NS_DRAG_EVENT: {
         WidgetDragEvent* dragEvent = tmp->mEvent->AsDragEvent();

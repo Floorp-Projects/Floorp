@@ -9,7 +9,7 @@
 #include "nsIDOMMouseEvent.h"
 #include "nsDOMUIEvent.h"
 #include "mozilla/dom/MouseEventBinding.h"
-#include "mozilla/MouseEvents.h"
+#include "mozilla/BasicEvents.h"
 
 class nsDOMMouseEvent : public nsDOMUIEvent,
                         public nsIDOMMouseEvent
@@ -17,7 +17,7 @@ class nsDOMMouseEvent : public nsDOMUIEvent,
 public:
   nsDOMMouseEvent(mozilla::dom::EventTarget* aOwner,
                   nsPresContext* aPresContext,
-                  mozilla::WidgetInputEvent* aEvent);
+                  mozilla::WidgetMouseEventBase* aEvent);
 
   NS_DECL_ISUPPORTS_INHERITED
 
@@ -92,14 +92,8 @@ public:
   {
     return GetMovementPoint().y;
   }
-  float MozPressure() const
-  {
-    return static_cast<mozilla::WidgetMouseEventBase*>(mEvent)->pressure;
-  }
-  uint16_t MozInputSource() const
-  {
-    return static_cast<mozilla::WidgetMouseEventBase*>(mEvent)->inputSource;
-  }
+  float MozPressure() const;
+  uint16_t MozInputSource() const;
   void InitNSMouseEvent(const nsAString & aType, bool aCanBubble, bool aCancelable,
                         nsIDOMWindow *aView, int32_t aDetail, int32_t aScreenX,
                         int32_t aScreenY, int32_t aClientX, int32_t aClientY,

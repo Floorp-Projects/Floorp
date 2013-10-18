@@ -709,7 +709,7 @@ nsEventDispatcher::CreateEvent(mozilla::dom::EventTarget* aOwner,
                                        aEvent->AsCompositionEvent());
     case NS_MOUSE_EVENT:
       return NS_NewDOMMouseEvent(aDOMEvent, aOwner, aPresContext,
-                                 static_cast<WidgetInputEvent*>(aEvent));
+                                 aEvent->AsMouseEvent());
     case NS_FOCUS_EVENT:
       return NS_NewDOMFocusEvent(aDOMEvent, aOwner, aPresContext,
                                  aEvent->AsFocusEvent());
