@@ -1081,6 +1081,7 @@ toolbarbutton.bookmark-item > menupopup {
   #main-window:not([customizing]) .toolbarbutton-1[disabled="true"] > .toolbarbutton-menu-dropmarker,
   #main-window:not([customizing]) .toolbarbutton-1[disabled="true"] > .toolbarbutton-menubutton-dropmarker,
   .toolbarbutton-1:not(:hover):-moz-window-inactive > .toolbarbutton-icon,
+  .toolbarbutton-1:not(:hover):-moz-window-inactive > .toolbarbutton-text,
   .toolbarbutton-1:not(:hover):-moz-window-inactive > .toolbarbutton-badge-container > .toolbarbutton-icon,
   #restore-button:not(:hover):-moz-window-inactive > .toolbarbutton-icon,
   .toolbarbutton-1:not(:hover):-moz-window-inactive > .toolbarbutton-menu-dropmarker,
@@ -1408,6 +1409,15 @@ toolbarbutton.bookmark-item > menupopup {
 #zoom-in-button:-moz-locale-dir(ltr) {
   border-top-left-radius: 0;
   border-bottom-left-radius: 0;
+}
+
+#zoom-controls[customizableui-areatype="toolbar"] > #zoom-reset-button {
+  margin: 0;
+}
+
+#zoom-controls[customizableui-areatype="toolbar"] > #zoom-reset-button > .toolbarbutton-text {
+  margin-top: 0;
+  padding-top: 8px;
 }
 
 /* sync button */

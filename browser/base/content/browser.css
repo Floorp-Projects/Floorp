@@ -208,6 +208,10 @@ toolbarpaletteitem > #personal-bookmarks > #bookmarks-toolbar-placeholder,
   display: -moz-box;
 }
 
+#zoom-controls[customizableui-areatype="toolbar"]:not(.overflowedItem) > #zoom-reset-button > .toolbarbutton-text {
+  display: -moz-box;
+}
+
 #wrapper-urlbar-container > #urlbar-container > #urlbar-wrapper > #urlbar > toolbarbutton,
 #urlbar-reload-button:not([displaystop]) + #urlbar-stop-button,
 #urlbar-reload-button[displaystop] {
