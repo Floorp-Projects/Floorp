@@ -792,7 +792,7 @@ TypeObjectKey::clasp()
 TaggedProto
 TypeObjectKey::proto()
 {
-    return isTypeObject() ? asTypeObject()->proto : asSingleObject()->getProto();
+    return isTypeObject() ? TaggedProto(asTypeObject()->proto) : asSingleObject()->getTaggedProto();
 }
 
 JSObject *
