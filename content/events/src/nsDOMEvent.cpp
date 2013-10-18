@@ -724,8 +724,7 @@ nsDOMEvent::DuplicatePrivateData()
     }
     case NS_ANIMATION_EVENT:
     {
-      InternalAnimationEvent* oldAnimationEvent =
-        static_cast<InternalAnimationEvent*>(mEvent);
+      InternalAnimationEvent* oldAnimationEvent = mEvent->AsAnimationEvent();
       InternalAnimationEvent* animationEvent =
         new InternalAnimationEvent(false, msg,
                                    oldAnimationEvent->animationName,
