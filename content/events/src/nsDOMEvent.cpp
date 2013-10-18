@@ -660,8 +660,7 @@ nsDOMEvent::DuplicatePrivateData()
     }
     case NS_COMMAND_EVENT:
     {
-      WidgetCommandEvent* oldCommandEvent =
-        static_cast<WidgetCommandEvent*>(mEvent);
+      WidgetCommandEvent* oldCommandEvent = mEvent->AsCommandEvent();
       WidgetCommandEvent* commandEvent =
         new WidgetCommandEvent(false, mEvent->userType,
                                oldCommandEvent->command, nullptr);
