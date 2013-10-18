@@ -57,13 +57,22 @@ load_gstreamer()
   if (major == GST_VERSION_MAJOR && minor == GST_VERSION_MINOR) {
     gstreamerLib = RTLD_DEFAULT;
   } else {
+#ifdef __OpenBSD__
+    gstreamerLib = dlopen("libgstreamer-0.10.so", RTLD_NOW | RTLD_LOCAL);
+#else
     gstreamerLib = dlopen("libgstreamer-0.10.so.0", RTLD_NOW | RTLD_LOCAL);
+#endif
   }
 
   void *handles[] = {
     gstreamerLib,
+#ifdef __OpenBSD__
+    dlopen("libgstapp-0.10.so", RTLD_NOW | RTLD_LOCAL),
+    dlopen("libgstvideo-0.10.so", RTLD_NOW | RTLD_LOCAL)
+#else
     dlopen("libgstapp-0.10.so.0", RTLD_NOW | RTLD_LOCAL),
     dlopen("libgstvideo-0.10.so.0", RTLD_NOW | RTLD_LOCAL)
+#endif
   };
 
   for (size_t i = 0; i < sizeof(handles) / sizeof(handles[0]); i++) {
