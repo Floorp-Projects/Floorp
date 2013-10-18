@@ -1304,10 +1304,11 @@ GetPropertyIC::tryAttachTypedArrayLength(JSContext *cx, IonScript *ion, HandleOb
     return linkAndAttachStub(cx, masm, attacher, ion, "typed array length");
 }
 
+
 static bool
 EmitCallProxyGet(JSContext *cx, MacroAssembler &masm, IonCache::StubAttacher &attacher,
                  PropertyName *name, RegisterSet liveRegs, Register object,
-                 TypedOrValueRegister output, void *returnAddr)
+                 TypedOrValueRegister output, jsbytecode *pc, void *returnAddr)
 {
     JS_ASSERT(output.hasValue());
     // saveLive()
@@ -1328,6 +1329,9 @@ EmitCallProxyGet(JSContext *cx, MacroAssembler &masm, IonCache::StubAttacher &at
     Register scratch         = regSet.takeGeneral();
 
     DebugOnly<uint32_t> initialStack = masm.framePushed();
+    void *getFunction = JSOp(*pc) == JSOP_CALLPROP                      ?
+                            JS_FUNC_TO_DATA_PTR(void *, Proxy::callProp) :
+                            JS_FUNC_TO_DATA_PTR(void *, Proxy::get);
 
     // Push stubCode for marking.
     attacher.pushStubCodePointer(masm);
@@ -1359,7 +1363,7 @@ EmitCallProxyGet(JSContext *cx, MacroAssembler &masm, IonCache::StubAttacher &at
     masm.passABIArg(argProxyReg);
     masm.passABIArg(argIdReg);
     masm.passABIArg(argVpReg);
-    masm.callWithABI(JS_FUNC_TO_DATA_PTR(void *, Proxy::get));
+    masm.callWithABI(getFunction);
 
     // Test for failure.
     masm.branchIfFalseBool(ReturnReg, masm.exceptionLabel());
@@ -1414,8 +1418,11 @@ GetPropertyIC::tryAttachDOMProxyShadowed(JSContext *cx, IonScript *ion,
     GenerateDOMProxyChecks(cx, masm, obj, name(), object(), &failures,
                            /*skipExpandoCheck=*/true);
 
-    if (!EmitCallProxyGet(cx, masm, attacher, name(), liveRegs_, object(), output(), returnAddr))
+    if (!EmitCallProxyGet(cx, masm, attacher, name(), liveRegs_, object(), output(),
+                          pc(), returnAddr))
+    {
         return false;
+    }
 
     // Success.
     attacher.jumpRejoin(masm);
@@ -1514,7 +1521,7 @@ GetPropertyIC::tryAttachDOMProxyUnshadowed(JSContext *cx, IonScript *ion, Handle
         // proxy get call
         JS_ASSERT(!idempotent());
         if (!EmitCallProxyGet(cx, masm, attacher, name, liveRegs_, object(), output(),
-                              returnAddr))
+                              pc(), returnAddr))
         {
             return false;
         }
@@ -1603,8 +1610,11 @@ GetPropertyIC::tryAttachGenericProxy(JSContext *cx, IonScript *ion, HandleObject
     masm.branchTestProxyHandlerFamily(Assembler::Equal, object(), scratchReg,
                                       GetDOMProxyHandlerFamily(), &failures);
 
-    if (!EmitCallProxyGet(cx, masm, attacher, name, liveRegs_, object(), output(), returnAddr))
+    if (!EmitCallProxyGet(cx, masm, attacher, name, liveRegs_, object(), output(),
+                          pc(), returnAddr))
+    {
         return false;
+    }
 
     attacher.jumpRejoin(masm);
 

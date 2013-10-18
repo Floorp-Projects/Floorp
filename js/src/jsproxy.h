@@ -275,6 +275,10 @@ class Proxy
     static bool defaultValue(JSContext *cx, HandleObject obj, JSType hint, MutableHandleValue vp);
     static bool getPrototypeOf(JSContext *cx, HandleObject proxy, MutableHandleObject protop);
 
+    /* IC entry path for handling __noSuchMethod__ on access. */
+    static bool callProp(JSContext *cx, HandleObject proxy, HandleObject reveiver, HandleId id,
+                         MutableHandleValue vp);
+
     static JSObject * const LazyProto;
 };
 
