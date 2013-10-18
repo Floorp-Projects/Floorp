@@ -2287,16 +2287,13 @@ Element::PostHandleEventForLinks(nsEventChainPostVisitor& aVisitor)
 
   case NS_KEY_PRESS:
     {
-      if (aVisitor.mEvent->eventStructType == NS_KEY_EVENT) {
-        WidgetKeyboardEvent* keyEvent =
-          static_cast<WidgetKeyboardEvent*>(aVisitor.mEvent);
-        if (keyEvent->keyCode == NS_VK_RETURN) {
-          nsEventStatus status = nsEventStatus_eIgnore;
-          rv = DispatchClickEvent(aVisitor.mPresContext, keyEvent, this,
-                                  false, nullptr, &status);
-          if (NS_SUCCEEDED(rv)) {
-            aVisitor.mEventStatus = nsEventStatus_eConsumeNoDefault;
-          }
+      WidgetKeyboardEvent* keyEvent = aVisitor.mEvent->AsKeyboardEvent();
+      if (keyEvent && keyEvent->keyCode == NS_VK_RETURN) {
+        nsEventStatus status = nsEventStatus_eIgnore;
+        rv = DispatchClickEvent(aVisitor.mPresContext, keyEvent, this,
+                                false, nullptr, &status);
+        if (NS_SUCCEEDED(rv)) {
+          aVisitor.mEventStatus = nsEventStatus_eConsumeNoDefault;
         }
       }
     }
