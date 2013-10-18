@@ -1455,33 +1455,6 @@ XPCWrappedNativeXrayTraits::construct(JSContext *cx, HandleObject wrapper,
 }
 
 bool
-DOMXrayTraits::resolveNativeProperty(JSContext *cx, HandleObject wrapper,
-                                     HandleObject holder, HandleId id,
-                                     MutableHandle<JSPropertyDescriptor> desc)
-{
-    bool unused;
-    RootedObject obj(cx, getTargetObject(wrapper));
-    if (!XrayResolveNativeProperty(cx, wrapper, obj, id, desc, unused))
-        return false;
-
-    if (!desc.object() &&
-        id == nsXPConnect::GetRuntimeInstance()->GetStringID(XPCJSRuntime::IDX_TO_STRING))
-    {
-
-        JSFunction *toString = JS_NewFunction(cx, XrayToString, 0, 0, wrapper, "toString");
-        if (!toString)
-            return false;
-
-        FillPropertyDescriptor(desc, wrapper, 0,
-                               ObjectValue(*JS_GetFunctionObject(toString)));
-    }
-
-    MOZ_ASSERT(!desc.object() || desc.object() == wrapper, "What did we resolve this on?");
-
-    return true;
-}
-
-bool
 DOMXrayTraits::resolveOwnProperty(JSContext *cx, const Wrapper &jsWrapper, HandleObject wrapper,
                                   HandleObject holder, HandleId id,
                                   MutableHandle<JSPropertyDescriptor> desc)
@@ -1534,6 +1507,33 @@ DOMXrayTraits::resolveOwnProperty(JSContext *cx, const Wrapper &jsWrapper, Handl
     return JS_DefinePropertyById(cx, holder, id, desc.value(), desc.attributes(),
                                  desc.getter(), desc.setter()) &&
            JS_GetPropertyDescriptorById(cx, holder, id, desc);
+}
+
+bool
+DOMXrayTraits::resolveNativeProperty(JSContext *cx, HandleObject wrapper,
+                                     HandleObject holder, HandleId id,
+                                     MutableHandle<JSPropertyDescriptor> desc)
+{
+    bool unused;
+    RootedObject obj(cx, getTargetObject(wrapper));
+    if (!XrayResolveNativeProperty(cx, wrapper, obj, id, desc, unused))
+        return false;
+
+    if (!desc.object() &&
+        id == nsXPConnect::GetRuntimeInstance()->GetStringID(XPCJSRuntime::IDX_TO_STRING))
+    {
+
+        JSFunction *toString = JS_NewFunction(cx, XrayToString, 0, 0, wrapper, "toString");
+        if (!toString)
+            return false;
+
+        FillPropertyDescriptor(desc, wrapper, 0,
+                               ObjectValue(*JS_GetFunctionObject(toString)));
+    }
+
+    MOZ_ASSERT(!desc.object() || desc.object() == wrapper, "What did we resolve this on?");
+
+    return true;
 }
 
 bool
@@ -1770,43 +1770,6 @@ XrayToString(JSContext *cx, unsigned argc, Value *vp)
     args.rval().setString(str);
     return true;
 }
-
-#ifdef DEBUG
-
-static void
-DEBUG_CheckXBLCallable(JSContext *cx, JSObject *obj)
-{
-    // In general, we shouldn't have cross-compartment wrappers here, because
-    // we should be running in an XBL scope, and the content prototype should
-    // contain wrappers to functions defined in the XBL scope. But if the node
-    // has been adopted into another compartment, those prototypes will now point
-    // to a different XBL scope (which is ok).
-    MOZ_ASSERT_IF(js::IsCrossCompartmentWrapper(obj),
-                  xpc::IsContentXBLScope(js::GetObjectCompartment(js::UncheckedUnwrap(obj))));
-    MOZ_ASSERT(JS::IsCallable(obj));
-}
-
-static void
-DEBUG_CheckXBLLookup(JSContext *cx, JSPropertyDescriptor *desc)
-{
-    if (!desc->obj)
-        return;
-    if (!desc->value.isUndefined()) {
-        MOZ_ASSERT(desc->value.isObject());
-        DEBUG_CheckXBLCallable(cx, &desc->value.toObject());
-    }
-    if (desc->getter) {
-        MOZ_ASSERT(desc->attrs & JSPROP_GETTER);
-        DEBUG_CheckXBLCallable(cx, JS_FUNC_TO_DATA_PTR(JSObject *, desc->getter));
-    }
-    if (desc->setter) {
-        MOZ_ASSERT(desc->attrs & JSPROP_SETTER);
-        DEBUG_CheckXBLCallable(cx, JS_FUNC_TO_DATA_PTR(JSObject *, desc->setter));
-    }
-}
-#else
-#define DEBUG_CheckXBLLookup(a, b) {}
-#endif
 
 template <typename Base, typename Traits>
 bool
