@@ -12,7 +12,6 @@ include URIParams;
 include protocol PBlob; //FIXME: bug #792908
 
 include "mozilla/net/NeckoMessageUtils.h";
-include "prio.h";
 
 using RequestHeaderTuples from "mozilla/net/PHttpChannelParams.h";
 using class nsHttpHeaderArray from "nsHttpHeaderArray.h";
