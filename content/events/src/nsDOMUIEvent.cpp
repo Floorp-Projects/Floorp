@@ -51,8 +51,7 @@ nsDOMUIEvent::nsDOMUIEvent(mozilla::dom::EventTarget* aOwner,
 
     case NS_SCROLLPORT_EVENT:
     {
-      InternalScrollPortEvent* scrollEvent =
-        static_cast<InternalScrollPortEvent*>(mEvent);
+      InternalScrollPortEvent* scrollEvent = mEvent->AsScrollPortEvent();
       mDetail = (int32_t)scrollEvent->orient;
       break;
     }
