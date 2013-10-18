@@ -129,6 +129,23 @@ interface BluetoothAdapter : EventTarget {
   [Creator, Throws]
   DOMRequest isScoConnected();
 
+  /**
+   * Additional HFP methods to handle CDMA network.
+   *
+   * In GSM network we observe call operations from RIL call state changes;
+   * however in CDMA network RIL call states do not change under some call
+   * operations, so we need these additional methods to be informed of these
+   * operations from dialer.
+   *
+   * For more information please refer to bug 912005 and 925638.
+   */
+  [Creator, Throws]
+  DOMRequest answerWaitingCall();
+  [Creator, Throws]
+  DOMRequest ignoreWaitingCall();
+  [Creator, Throws]
+  DOMRequest toggleCalls();
+
   // AVRCP 1.3 methods
   [Creator,Throws]
   DOMRequest sendMediaMetaData(optional MediaMetaData mediaMetaData);
