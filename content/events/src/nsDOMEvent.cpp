@@ -599,7 +599,7 @@ nsDOMEvent::DuplicatePrivateData()
     case NS_MOUSE_SCROLL_EVENT:
     {
       WidgetMouseScrollEvent* oldMouseScrollEvent =
-        static_cast<WidgetMouseScrollEvent*>(mEvent);
+        mEvent->AsMouseScrollEvent();
       WidgetMouseScrollEvent* mouseScrollEvent =
         new WidgetMouseScrollEvent(false, msg, nullptr);
       mouseScrollEvent->AssignMouseScrollEventData(*oldMouseScrollEvent, true);
