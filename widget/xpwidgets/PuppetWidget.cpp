@@ -285,7 +285,7 @@ PuppetWidget::DispatchEvent(WidgetGUIEvent* event, nsEventStatus& aStatus)
       return NS_OK;
     break;
   case NS_SELECTION_EVENT:
-    mIMELastReceivedSeqno = static_cast<WidgetSelectionEvent*>(event)->seqno;
+    mIMELastReceivedSeqno = event->AsSelectionEvent()->seqno;
     if (mIMELastReceivedSeqno < mIMELastBlurSeqno)
       return NS_OK;
     break;
