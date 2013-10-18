@@ -941,16 +941,6 @@ GetNativePropertyHooks(JSContext *cx, JS::Handle<JSObject*> obj,
   return ifaceAndProtoJSClass->mNativeHooks;
 }
 
-// Try to resolve a property as an unforgeable property from the given
-// NativeProperties, if it's there.  nativeProperties is allowed to be null (in
-// which case we of course won't resolve anything).
-static bool
-XrayResolveUnforgeableProperty(JSContext* cx, JS::Handle<JSObject*> wrapper,
-                               JS::Handle<JSObject*> obj, JS::Handle<jsid> id,
-                               JS::MutableHandle<JSPropertyDescriptor> desc,
-                               bool& cacheOnHolder,
-                               const NativeProperties* nativeProperties);
-
 static bool
 XrayResolveNativeProperty(JSContext* cx, JS::Handle<JSObject*> wrapper,
                           const NativePropertyHooks* nativePropertyHooks,
@@ -958,58 +948,6 @@ XrayResolveNativeProperty(JSContext* cx, JS::Handle<JSObject*> wrapper,
                           JS::Handle<jsid> id,
                           JS::MutableHandle<JSPropertyDescriptor> desc,
                           bool& cacheOnHolder);
-
-bool
-XrayResolveOwnProperty(JSContext* cx, JS::Handle<JSObject*> wrapper,
-                       JS::Handle<JSObject*> obj, JS::Handle<jsid> id,
-                       JS::MutableHandle<JSPropertyDescriptor> desc,
-                       bool& cacheOnHolder)
-{
-  cacheOnHolder = false;
-
-  DOMObjectType type;
-  bool isGlobal;
-  const NativePropertyHooks *nativePropertyHooks =
-    GetNativePropertyHooks(cx, obj, type, isGlobal);
-
-  if (type != eInstance || (isGlobal && GlobalPropertiesAreOwn())) {
-    // For prototype objects and interface objects, just return their
-    // normal set of properties. For global objects the WebIDL properties live
-    // on the instance objects, so resolve those here too.
-    if (!XrayResolveNativeProperty(cx, wrapper, nativePropertyHooks, type,
-                                   obj, id, desc, cacheOnHolder)) {
-      return false;
-    }
-
-    // For non-global non-instance Xrays there are no other properties, so
-    // return here for them whether we resolved the property or not.
-    if (!isGlobal || desc.object()) {
-      cacheOnHolder = true;
-      return true;
-    }
-  }
-
-  // Check for unforgeable properties before doing mResolveOwnProperty weirdness
-  const NativePropertiesHolder& nativeProperties =
-    nativePropertyHooks->mNativeProperties;
-  if (!XrayResolveUnforgeableProperty(cx, wrapper, obj, id, desc, cacheOnHolder,
-                                      nativeProperties.regular)) {
-    return false;
-  }
-  if (desc.object()) {
-    return true;
-  }
-  if (!XrayResolveUnforgeableProperty(cx, wrapper, obj, id, desc, cacheOnHolder,
-                                      nativeProperties.chromeOnly)) {
-    return false;
-  }
-  if (desc.object()) {
-    return true;
-  }
-
-  return !nativePropertyHooks->mResolveOwnProperty ||
-         nativePropertyHooks->mResolveOwnProperty(cx, wrapper, obj, id, desc);
-}
 
 static bool
 XrayResolveAttribute(JSContext* cx, JS::Handle<JSObject*> wrapper,
@@ -1113,6 +1051,9 @@ XrayResolveMethod(JSContext* cx, JS::Handle<JSObject*> wrapper,
   return true;
 }
 
+// Try to resolve a property as an unforgeable property from the given
+// NativeProperties, if it's there.  nativeProperties is allowed to be null (in
+// which case we of course won't resolve anything).
 /* static */ bool
 XrayResolveUnforgeableProperty(JSContext* cx, JS::Handle<JSObject*> wrapper,
                                JS::Handle<JSObject*> obj, JS::Handle<jsid> id,
@@ -1262,6 +1203,97 @@ ResolvePrototypeOrConstructor(JSContext* cx, JS::Handle<JSObject*> wrapper,
     desc.value().set(JS::ObjectValue(*protoOrIface));
   }
   return JS_WrapPropertyDescriptor(cx, desc);
+}
+
+#ifdef DEBUG
+
+static void
+DEBUG_CheckXBLCallable(JSContext *cx, JSObject *obj)
+{
+    // In general, we shouldn't have cross-compartment wrappers here, because
+    // we should be running in an XBL scope, and the content prototype should
+    // contain wrappers to functions defined in the XBL scope. But if the node
+    // has been adopted into another compartment, those prototypes will now point
+    // to a different XBL scope (which is ok).
+    MOZ_ASSERT_IF(js::IsCrossCompartmentWrapper(obj),
+                  xpc::IsContentXBLScope(js::GetObjectCompartment(js::UncheckedUnwrap(obj))));
+    MOZ_ASSERT(JS::IsCallable(obj));
+}
+
+void
+DEBUG_CheckXBLLookup(JSContext *cx, JSPropertyDescriptor *desc)
+{
+    if (!desc->obj)
+        return;
+    if (!desc->value.isUndefined()) {
+        MOZ_ASSERT(desc->value.isObject());
+        DEBUG_CheckXBLCallable(cx, &desc->value.toObject());
+    }
+    if (desc->getter) {
+        MOZ_ASSERT(desc->attrs & JSPROP_GETTER);
+        DEBUG_CheckXBLCallable(cx, JS_FUNC_TO_DATA_PTR(JSObject *, desc->getter));
+    }
+    if (desc->setter) {
+        MOZ_ASSERT(desc->attrs & JSPROP_SETTER);
+        DEBUG_CheckXBLCallable(cx, JS_FUNC_TO_DATA_PTR(JSObject *, desc->setter));
+    }
+}
+#else
+#define DEBUG_CheckXBLLookup(a, b) {}
+#endif
+
+bool
+XrayResolveOwnProperty(JSContext* cx, JS::Handle<JSObject*> wrapper,
+                       JS::Handle<JSObject*> obj, JS::Handle<jsid> id,
+                       JS::MutableHandle<JSPropertyDescriptor> desc,
+                       bool& cacheOnHolder)
+{
+  cacheOnHolder = false;
+
+  DOMObjectType type;
+  bool isGlobal;
+  const NativePropertyHooks *nativePropertyHooks =
+    GetNativePropertyHooks(cx, obj, type, isGlobal);
+
+  if (type != eInstance || (isGlobal && GlobalPropertiesAreOwn())) {
+    // For prototype objects and interface objects, just return their
+    // normal set of properties. For global objects the WebIDL properties live
+    // on the instance objects, so resolve those here too.
+    if (!XrayResolveNativeProperty(cx, wrapper, nativePropertyHooks, type,
+                                   obj, id, desc, cacheOnHolder)) {
+      return false;
+    }
+
+    // For non-global non-instance Xrays there are no other properties, so
+    // return here for them whether we resolved the property or not.
+    if (!isGlobal || desc.object()) {
+      cacheOnHolder = true;
+      return true;
+    }
+  }
+
+  {
+    // Check for unforgeable properties before doing mResolveOwnProperty weirdness
+    const NativePropertiesHolder& nativeProperties =
+      nativePropertyHooks->mNativeProperties;
+    if (!XrayResolveUnforgeableProperty(cx, wrapper, obj, id, desc, cacheOnHolder,
+                                        nativeProperties.regular)) {
+      return false;
+    }
+    if (desc.object()) {
+      return true;
+    }
+    if (!XrayResolveUnforgeableProperty(cx, wrapper, obj, id, desc, cacheOnHolder,
+                                        nativeProperties.chromeOnly)) {
+      return false;
+    }
+    if (desc.object()) {
+      return true;
+    }
+  }
+
+  return !nativePropertyHooks->mResolveOwnProperty ||
+         nativePropertyHooks->mResolveOwnProperty(cx, wrapper, obj, id, desc);
 }
 
 /* static */ bool
