@@ -2168,9 +2168,9 @@ Element::PreHandleEventForLinks(nsEventChainPreVisitor& aVisitor)
   case NS_MOUSE_ENTER_SYNTH:
     aVisitor.mEventStatus = nsEventStatus_eConsumeNoDefault;
     // FALL THROUGH
-  case NS_FOCUS_CONTENT:
-    if (aVisitor.mEvent->eventStructType != NS_FOCUS_EVENT ||
-        !static_cast<InternalFocusEvent*>(aVisitor.mEvent)->isRefocus) {
+  case NS_FOCUS_CONTENT: {
+    InternalFocusEvent* focusEvent = aVisitor.mEvent->AsFocusEvent();
+    if (!focusEvent || !focusEvent->isRefocus) {
       nsAutoString target;
       GetLinkTarget(target);
       nsContentUtils::TriggerLink(this, aVisitor.mPresContext, absURI, target,
@@ -2179,7 +2179,7 @@ Element::PreHandleEventForLinks(nsEventChainPreVisitor& aVisitor)
       aVisitor.mEvent->mFlags.mMultipleActionsPrevented = true;
     }
     break;
-
+  }
   case NS_MOUSE_EXIT_SYNTH:
     aVisitor.mEventStatus = nsEventStatus_eConsumeNoDefault;
     // FALL THROUGH
