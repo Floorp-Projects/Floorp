@@ -986,6 +986,7 @@ types::FinishCompilation(JSContext *cx, JSScript *script, ExecutionMode executio
 
     if (!succeeded || types.constrainedOutputs->back().pendingInvalidation()) {
         types.constrainedOutputs->back().invalidate();
+        script->resetUseCount();
         return false;
     }
 
