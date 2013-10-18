@@ -142,7 +142,7 @@ class XPCShellRunner(MozbuildObject):
             'debugger': debugger,
             'debuggerArgs': debuggerArgs,
             'debuggerInteractive': debuggerInteractive,
-            'on_message': (lambda obj, msg: xpcshell.log.info(msg)) \
+            'on_message': (lambda obj, msg: xpcshell.log.info(msg.decode('utf-8', 'replace'))) \
                             if test_path is not None else None,
         }
 

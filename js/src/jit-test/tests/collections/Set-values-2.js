@@ -7,11 +7,11 @@ var data = [1, 2, 3, 4];
 var s = Set(data);
 
 var ki = s.keys();
-assertIteratorResult(ki.next(), 1, false);
-assertIteratorResult(ki.next(), 2, false);
-assertIteratorResult(ki.next(), 3, false);
-assertIteratorResult(ki.next(), 4, false);
-assertIteratorResult(ki.next(), undefined, true);
+assertIteratorNext(ki, 1);
+assertIteratorNext(ki, 2);
+assertIteratorNext(ki, 3);
+assertIteratorNext(ki, 4);
+assertIteratorDone(ki, undefined);
 
 assertEq([...s.keys()].toSource(), data.toSource());
 assertEq([...s.values()].toSource(), data.toSource());

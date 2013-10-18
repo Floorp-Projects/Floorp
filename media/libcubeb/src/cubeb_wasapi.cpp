@@ -40,6 +40,12 @@ ms_to_hns(uint32_t ms)
   return ms * 10000;
 }
 
+uint32_t
+hns_to_ms(uint32_t hns)
+{
+  return hns / 10000;
+}
+
 double
 hns_to_s(uint32_t hns)
 {
@@ -530,6 +536,63 @@ wasapi_get_max_channel_count(cubeb * ctx, uint32_t * max_channels)
   return CUBEB_OK;
 }
 
+int
+wasapi_get_min_latency(cubeb * ctx, cubeb_stream_params params, uint32_t * latency_ms)
+{
+  HRESULT hr;
+  IAudioClient * client;
+  REFERENCE_TIME default_period;
+
+  hr = ctx->device->Activate(__uuidof(IAudioClient),
+                             CLSCTX_INPROC_SERVER,
+                             NULL, (void **)&client);
+
+  if (FAILED(hr)) {
+    return CUBEB_ERROR;
+  }
+
+  /* The second parameter is for exclusive mode, that we don't use. */
+  hr= client->GetDevicePeriod(&default_period, NULL);
+
+  /* According to the docs, the best latency we can achieve is by synchronizing
+   * the stream and the engine.
+   * http://msdn.microsoft.com/en-us/library/windows/desktop/dd370871%28v=vs.85%29.aspx */
+  *latency_ms = hns_to_ms(default_period);
+
+  SafeRelease(client);
+
+  return CUBEB_OK;
+}
+
+int
+wasapi_get_preferred_sample_rate(cubeb * ctx, uint32_t * rate)
+{
+  HRESULT hr;
+  IAudioClient * client;
+  WAVEFORMATEX * mix_format;
+
+  hr = ctx->device->Activate(__uuidof(IAudioClient),
+                             CLSCTX_INPROC_SERVER,
+                             NULL, (void **)&client);
+
+  if (FAILED(hr)) {
+    return CUBEB_ERROR;
+  }
+
+  hr = client->GetMixFormat(&mix_format);
+
+  if (FAILED(hr)) {
+    SafeRelease(client);
+    return CUBEB_ERROR;
+  }
+
+  *rate = mix_format->nSamplesPerSec;
+
+  CoTaskMemFree(mix_format);
+  SafeRelease(client);
+
+  return CUBEB_OK;
+}
 
 void wasapi_stream_destroy(cubeb_stream * stm);
 
@@ -892,7 +955,9 @@ int wasapi_stream_get_latency(cubeb_stream * stm, uint32_t * latency)
 cubeb_ops const wasapi_ops = {
   /*.init =*/ wasapi_init,
   /*.get_backend_id =*/ wasapi_get_backend_id,
-  /*.get_max_channel_count*/ wasapi_get_max_channel_count,
+  /*.get_max_channel_count =*/ wasapi_get_max_channel_count,
+  /*.get_min_latency =*/ wasapi_get_min_latency,
+  /*.get_preferred_sample_rate =*/ wasapi_get_preferred_sample_rate,
   /*.destroy =*/ wasapi_destroy,
   /*.stream_init =*/ wasapi_stream_init,
   /*.stream_destroy =*/ wasapi_stream_destroy,

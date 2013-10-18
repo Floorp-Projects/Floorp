@@ -4,7 +4,7 @@ load(libdir + "iteration.js");
 
 var s = Set();
 var it = s[std_iterator]();
-assertIteratorResult(it.next(), undefined, true);  // close the iterator
+assertIteratorDone(it, undefined);  // close the iterator
 s.clear();
 s.add("a");
-assertIteratorResult(it.next(), undefined, true);
+assertIteratorDone(it, undefined);

@@ -4170,7 +4170,7 @@ var BrowserEventHandler = {
       if (this._scrollableElement != null) {
         // Discard if it's the top-level scrollable, we let Java handle this
         let doc = BrowserApp.selectedBrowser.contentDocument;
-        if (this._scrollableElement != doc.documentElement)
+        if (this._scrollableElement != doc.body && this._scrollableElement != doc.documentElement)
           sendMessageToJava({ type: "Panning:Override" });
       }
     }
@@ -4257,6 +4257,7 @@ var BrowserEventHandler = {
 
           let doc = BrowserApp.selectedBrowser.contentDocument;
           if (this._scrollableElement == null ||
+              this._scrollableElement == doc.body ||
               this._scrollableElement == doc.documentElement) {
             sendMessageToJava({ type: "Panning:CancelOverride" });
             return;
@@ -4627,14 +4628,15 @@ var BrowserEventHandler = {
     let scrollable = false;
     while (elem) {
       /* Element is scrollable if its scroll-size exceeds its client size, and:
-       * - It has overflow 'auto' or 'scroll', or
-       * - It's a textarea or HTML node, or
+       * - It has overflow 'auto' or 'scroll'
+       * - It's a textarea
+       * - It's an HTML/BODY node
        * - It's a select element showing multiple rows
        */
       if (checkElem) {
         if ((elem.scrollTopMax > 0 || elem.scrollLeftMax > 0) &&
             (this._hasScrollableOverflow(elem) ||
-             elem.mozMatchesSelector("html, textarea")) ||
+             elem.mozMatchesSelector("html, body, textarea")) ||
             (elem instanceof HTMLSelectElement && (elem.size > 1 || elem.multiple))) {
           scrollable = true;
           break;

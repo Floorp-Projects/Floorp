@@ -841,89 +841,17 @@ const Class PropertyIteratorObject::class_ = {
     }
 };
 
-static const uint32_t CLOSED_INDEX = UINT32_MAX;
+enum {
+    ArrayIteratorSlotIteratedObject,
+    ArrayIteratorSlotNextIndex,
+    ArrayIteratorSlotItemKind,
+    ArrayIteratorSlotCount
+};
 
-JSObject *
-ElementIteratorObject::create(JSContext *cx, Handle<Value> target)
-{
-    RootedObject proto(cx, cx->global()->getOrCreateElementIteratorPrototype(cx));
-    if (!proto)
-        return nullptr;
-    RootedObject iterobj(cx, NewObjectWithGivenProto(cx, &class_, proto, cx->global()));
-    if (iterobj) {
-        iterobj->setReservedSlot(TargetSlot, target);
-        iterobj->setReservedSlot(IndexSlot, Int32Value(0));
-    }
-    return iterobj;
-}
-
-static bool
-IsElementIterator(HandleValue v)
-{
-    return v.isObject() && v.toObject().is<ElementIteratorObject>();
-}
-
-bool
-ElementIteratorObject::next(JSContext *cx, unsigned argc, Value *vp)
-{
-    CallArgs args = CallArgsFromVp(argc, vp);
-    return CallNonGenericMethod(cx, IsElementIterator, next_impl, args);
-}
-
-bool
-ElementIteratorObject::next_impl(JSContext *cx, CallArgs args)
-{
-    RootedObject iterobj(cx, &args.thisv().toObject());
-    uint32_t i, length;
-    RootedValue target(cx, iterobj->getReservedSlot(TargetSlot));
-    RootedObject obj(cx);
-
-    // Get target.length.
-    if (target.isString()) {
-        length = uint32_t(target.toString()->length());
-    } else {
-        obj = ToObjectFromStack(cx, target);
-        if (!obj)
-            goto close;
-        if (!GetLengthProperty(cx, obj, &length))
-            goto close;
-    }
-
-    // Check target.length.
-    i = uint32_t(iterobj->getReservedSlot(IndexSlot).toInt32());
-    if (i >= length) {
-        js_ThrowStopIteration(cx);
-        goto close;
-    }
-
-    // Get target[i].
-    JS_ASSERT(i + 1 > i);
-    if (target.isString()) {
-        JSString *c = cx->runtime()->staticStrings.getUnitStringForElement(cx, target.toString(), i);
-        if (!c)
-            goto close;
-        args.rval().setString(c);
-    } else {
-        if (!JSObject::getElement(cx, obj, obj, i, args.rval()))
-            goto close;
-    }
-
-    // On success, bump the index.
-    iterobj->setReservedSlot(IndexSlot, Int32Value(int32_t(i + 1)));
-    return true;
-
-  close:
-    // Close the iterator. The TargetSlot will never be used again, so don't keep a
-    // reference to it.
-    iterobj->setReservedSlot(TargetSlot, UndefinedValue());
-    iterobj->setReservedSlot(IndexSlot, Int32Value(int32_t(CLOSED_INDEX)));
-    return false;
-}
-
-const Class ElementIteratorObject::class_ = {
+const Class ArrayIteratorObject::class_ = {
     "Array Iterator",
     JSCLASS_IMPLEMENTS_BARRIERS |
-    JSCLASS_HAS_RESERVED_SLOTS(ElementIteratorObject::NumSlots),
+    JSCLASS_HAS_RESERVED_SLOTS(ArrayIteratorSlotCount),
     JS_PropertyStub,         /* addProperty */
     JS_DeletePropertyStub,   /* delProperty */
     JS_PropertyStub,         /* getProperty */
@@ -934,9 +862,9 @@ const Class ElementIteratorObject::class_ = {
     nullptr                  /* finalize    */
 };
 
-const JSFunctionSpec ElementIteratorObject::methods[] = {
-    JS_SELF_HOSTED_FN("@@iterator", "LegacyIteratorShim", 0, 0),
-    JS_FN("next", next, 0, 0),
+static const JSFunctionSpec array_iterator_methods[] = {
+    JS_SELF_HOSTED_FN("@@iterator", "ArrayIteratorIdentity", 0, 0),
+    JS_SELF_HOSTED_FN("next", "ArrayIteratorNext", 0, 0),
     JS_FS_END
 };
 
@@ -1917,12 +1845,12 @@ GlobalObject::initIteratorClasses(JSContext *cx, Handle<GlobalObject *> global)
     }
 
     RootedObject proto(cx);
-    if (global->getSlot(ELEMENT_ITERATOR_PROTO).isUndefined()) {
-        const Class *cls = &ElementIteratorObject::class_;
+    if (global->getSlot(ARRAY_ITERATOR_PROTO).isUndefined()) {
+        const Class *cls = &ArrayIteratorObject::class_;
         proto = global->createBlankPrototypeInheriting(cx, cls, *iteratorProto);
-        if (!proto || !DefinePropertiesAndBrand(cx, proto, nullptr, ElementIteratorObject::methods))
+        if (!proto || !DefinePropertiesAndBrand(cx, proto, nullptr, array_iterator_methods))
             return false;
-        global->setReservedSlot(ELEMENT_ITERATOR_PROTO, ObjectValue(*proto));
+        global->setReservedSlot(ARRAY_ITERATOR_PROTO, ObjectValue(*proto));
     }
 
     if (global->getSlot(LEGACY_GENERATOR_OBJECT_PROTO).isUndefined()) {

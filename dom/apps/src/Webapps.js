@@ -347,27 +347,24 @@ WebappsApplication.prototype = {
     this._downloadError = null;
 
     this.initDOMRequestHelper(aWindow, [
-      "Webapps:OfflineCache",
-      "Webapps:CheckForUpdate:Return:OK",
       "Webapps:CheckForUpdate:Return:KO",
-      "Webapps:PackageEvent",
       "Webapps:Connect:Return:OK",
       "Webapps:Connect:Return:KO",
-      "Webapps:GetConnections:Return:OK"
+      "Webapps:FireEvent",
+      "Webapps:GetConnections:Return:OK",
+      "Webapps:UpdateState"
     ]);
 
-    cpmm.sendAsyncMessage("Webapps:RegisterForMessages",
-                          {
-                            messages: ["Webapps:OfflineCache",
-                                       "Webapps:PackageEvent",
-                                       "Webapps:CheckForUpdate:Return:OK"],
-                            app: {
-                              id: this.id,
-                              manifestURL: this.manifestURL,
-                              installState: this.installState,
-                              downloading: this.downloading
-                            }
-                          });
+    cpmm.sendAsyncMessage("Webapps:RegisterForMessages", {
+      messages: ["Webapps:FireEvent",
+                 "Webapps:UpdateState"],
+      app: {
+        id: this.id,
+        manifestURL: this.manifestURL,
+        installState: this.installState,
+        downloading: this.downloading
+      }
+    });
   },
 
   get manifest() {
@@ -378,8 +375,10 @@ WebappsApplication.prototype = {
   },
 
   get updateManifest() {
-    return this.updateManifest = this._updateManifest ? ObjectWrapper.wrap(this._updateManifest, this._window)
-                                                      : null;
+    return this.updateManifest =
+      this._updateManifest ? ObjectWrapper.wrap(this._updateManifest,
+                                                this._window)
+                           : null;
   },
 
   set onprogress(aCallback) {
@@ -512,18 +511,42 @@ WebappsApplication.prototype = {
 
   uninit: function() {
     this._onprogress = null;
-    cpmm.sendAsyncMessage("Webapps:UnregisterForMessages",
-                          ["Webapps:OfflineCache",
-                           "Webapps:PackageEvent",
-                           "Webapps:CheckForUpdate:Return:OK"]);
+    cpmm.sendAsyncMessage("Webapps:UnregisterForMessages", [
+      "Webapps:FireEvent",
+      "Webapps:PackageEvent"
+    ]);
 
     manifestCache.evict(this.manifestURL, this.innerWindowID);
   },
 
-  _fireEvent: function(aName, aHandler) {
-    if (aHandler) {
-      let event = new this._window.MozApplicationEvent(aName, { application: this });
-      aHandler.handleEvent(event);
+  _fireEvent: function(aName) {
+    let handler = this["_on" + aName];
+    if (handler) {
+      let event = new this._window.MozApplicationEvent(aName, {
+        application: this
+      });
+      try {
+        handler.handleEvent(event);
+      } catch (ex) {
+        dump("Event handler expection " + ex + "\n");
+      }
+    }
+  },
+
+  _updateState: function(aMsg) {
+    if (aMsg.app) {
+      for (let prop in aMsg.app) {
+        this[prop] = aMsg.app[prop];
+      }
+    }
+
+    if (aMsg.error) {
+      this._downloadError = aMsg.error;
+    }
+
+    if (aMsg.manifest) {
+      this._manifest = aMsg.manifest;
+      manifestCache.evict(this.manifestURL, this.innerWindowID);
     }
   },
 
@@ -540,10 +563,11 @@ WebappsApplication.prototype = {
 
     // ondownload* callbacks should be triggered on all app instances
     if ((msg.oid != this._id || !req) &&
-        aMessage.name !== "Webapps:OfflineCache" &&
-        aMessage.name !== "Webapps:PackageEvent" &&
-        aMessage.name !== "Webapps:CheckForUpdate:Return:OK")
+        aMessage.name !== "Webapps:FireEvent" &&
+        aMessage.name !== "Webapps:UpdateState") {
       return;
+    }
+
     switch (aMessage.name) {
       case "Webapps:Launch:Return:KO":
         this.removeMessageListeners(["Webapps:Launch:Return:OK",
@@ -558,108 +582,36 @@ WebappsApplication.prototype = {
       case "Webapps:CheckForUpdate:Return:KO":
         Services.DOMRequest.fireError(req, msg.error);
         break;
-      case "Webapps:CheckForUpdate:Return:OK":
-        if (msg.manifestURL != this.manifestURL)
-          return;
-
-        manifestCache.evict(this.manifestURL, this.innerWindowID);
-
-        let hiddenProps = ["manifest", "updateManifest"];
-        let updatableProps = ["installOrigin", "installTime", "installState",
-            "lastUpdateCheck", "updateTime", "progress", "downloadAvailable",
-            "downloading", "readyToApplyDownload", "downloadSize"];
-        // Props that we don't update: origin, receipts, manifestURL, removable.
-
-        updatableProps.forEach(function(prop) {
-          if (msg.app[prop]) {
-            this[prop] = msg.app[prop];
-          }
-        }, this);
-
-        hiddenProps.forEach(function(prop) {
-          if (msg.app[prop]) {
-            this["_" + prop] = msg.app[prop];
-          }
-        }, this);
-
-        if (msg.event == "downloadapplied") {
-          this._fireEvent("downloadapplied", this._ondownloadapplied);
-        } else if (msg.event == "downloadavailable") {
-          this._fireEvent("downloadavailable", this._ondownloadavailable);
+      case "Webapps:FireEvent":
+        if (msg.manifestURL != this.manifestURL) {
+           return;
         }
+
+        // The parent might ask childs to trigger more than one event in one
+        // shot, so in order to avoid needless IPC we allow an array for the
+        // 'eventType' IPC message field.
+        if (!Array.isArray(msg.eventType)) {
+          msg.eventType = [msg.eventType];
+        }
+
+        msg.eventType.forEach((aEventType) => {
+          if ("_on" + aEventType in this) {
+            this._fireEvent(aEventType);
+          } else {
+            dump("Unsupported event type " + aEventType + "\n");
+          }
+        });
 
         if (req) {
           Services.DOMRequest.fireSuccess(req, this.manifestURL);
         }
         break;
-      case "Webapps:OfflineCache":
-        if (msg.manifest != this.manifestURL)
+      case "Webapps:UpdateState":
+        if (msg.manifestURL != this.manifestURL) {
           return;
-
-        if ("installState" in msg) {
-          this.installState = msg.installState;
-          this.progress = msg.progress;
-          if (this.installState == "installed") {
-            this._downloadError = null;
-            this.downloading = false;
-            this.downloadAvailable = false;
-            this._fireEvent("downloadsuccess", this._ondownloadsuccess);
-            this._fireEvent("downloadapplied", this._ondownloadapplied);
-          } else {
-            this.downloading = true;
-            this._fireEvent("downloadprogress", this._onprogress);
-          }
-        } else if (msg.error) {
-          this._downloadError = msg.error;
-          this.downloading = false;
-          this._fireEvent("downloaderror", this._ondownloaderror);
         }
-        break;
-      case "Webapps:PackageEvent":
-        if (msg.manifestURL != this.manifestURL)
-          return;
 
-        // Set app values according to parent process results.
-        let app = msg.app;
-        this.downloading = app.downloading;
-        this.downloadAvailable = app.downloadAvailable;
-        this.downloadSize = app.downloadSize || 0;
-        this.installState = app.installState;
-        this.progress = app.progress || msg.progress || 0;
-        this.readyToApplyDownload = app.readyToApplyDownload;
-        this.updateTime = app.updateTime;
-        this.origin = app.origin;
-
-        switch(msg.type) {
-          case "error":
-          case "canceled":
-            this._downloadError = msg.error;
-            this._fireEvent("downloaderror", this._ondownloaderror);
-            break;
-          case "progress":
-            this._fireEvent("downloadprogress", this._onprogress);
-            break;
-          case "installed":
-            manifestCache.evict(this.manifestURL, this.innerWindowID);
-            this._manifest = msg.manifest;
-            this._fireEvent("downloadsuccess", this._ondownloadsuccess);
-            this._fireEvent("downloadapplied", this._ondownloadapplied);
-            break;
-          case "downloaded":
-            // We don't update the packaged apps manifests until they
-            // are installed or until the update is unstaged.
-            if (msg.manifest) {
-              manifestCache.evict(this.manifestURL, this.innerWindowID);
-              this._manifest = msg.manifest;
-            }
-            this._fireEvent("downloadsuccess", this._ondownloadsuccess);
-            break;
-          case "applied":
-            manifestCache.evict(this.manifestURL, this.innerWindowID);
-            this._manifest = msg.manifest;
-            this._fireEvent("downloadapplied", this._ondownloadapplied);
-            break;
-        }
+        this._updateState(msg);
         break;
       case "Webapps:ClearBrowserData:Return":
         this.removeMessageListeners(aMessage.name);
@@ -667,10 +619,10 @@ WebappsApplication.prototype = {
         break;
       case "Webapps:Connect:Return:OK":
         let messagePorts = [];
-        msg.messagePortIDs.forEach(function(aPortID) {
+        msg.messagePortIDs.forEach((aPortID) => {
           let port = new this._window.MozInterAppMessagePort(aPortID);
           messagePorts.push(port);
-        }, this);
+        });
         req.resolve(messagePorts);
         break;
       case "Webapps:Connect:Return:KO":
@@ -678,13 +630,13 @@ WebappsApplication.prototype = {
         break;
       case "Webapps:GetConnections:Return:OK":
         let connections = [];
-        msg.connections.forEach(function(aConnection) {
+        msg.connections.forEach((aConnection) => {
           let connection =
             new this._window.MozInterAppConnection(aConnection.keyword,
                                                    aConnection.pubAppManifestURL,
                                                    aConnection.subAppManifestURL);
           connections.push(connection);
-        }, this);
+        });
         req.resolve(connections);
         break;
     }

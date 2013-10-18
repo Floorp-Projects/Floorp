@@ -45,11 +45,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=914618
     checkThrows(new iwin.Function('nac.toString();'));
     checkThrows(new iwin.Function('nac.textContent;'));
 
-    // Try adopting the NAC into another scope using a different XBL binding.
-    // The <constructor> in file_nac.xhtml will call SimpleTest.finish().
-    var ifr2 = document.createElement('iframe');
-    document.body.appendChild(ifr2);
-    ifr2.contentWindow.location = 'file_nac.xhtml';
+    SimpleTest.finish();
   }
 
   ]]>

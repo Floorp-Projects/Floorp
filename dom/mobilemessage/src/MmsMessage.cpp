@@ -517,7 +517,7 @@ MmsMessage::GetAttachments(JSContext* aCx, JS::Value* aAttachments)
                                              global,
                                              attachment.content,
                                              &NS_GET_IID(nsIDOMBlob),
-                                             tmpJsVal.address());
+                                             &tmpJsVal);
     NS_ENSURE_SUCCESS(rv, rv);
 
     if (!JS_DefineProperty(aCx, attachmentObj, "content", tmpJsVal,

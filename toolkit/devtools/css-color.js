@@ -28,6 +28,14 @@ const REGEX_HSL_3_TUPLE  = /^\bhsl\(([\d.]+),\s*([\d.]+%),\s*([\d.]+%)\)$/i;
  */
 const REGEX_ALL_COLORS = /#[0-9a-fA-F]{3}\b|#[0-9a-fA-F]{6}\b|hsl\(.*?\)|hsla\(.*?\)|rgba?\(.*?\)|\b[a-zA-Z-]+\b/g;
 
+const SPECIALVALUES = new Set([
+  "currentcolor",
+  "initial",
+  "inherit",
+  "transparent",
+  "unset"
+]);
+
 let {Services} = Cu.import("resource://gre/modules/Services.jsm", {});
 
 /**
@@ -89,7 +97,7 @@ CssColor.prototype = {
   authored: null,
 
   get hasAlpha() {
-    if (!this.valid || this.transparent) {
+    if (!this.valid) {
       return false;
     }
     return this._getRGBATuple().a !== 1;
@@ -99,12 +107,21 @@ CssColor.prototype = {
     return this._validateColor(this.authored);
   },
 
+  /**
+   * Return true for all transparent values e.g. rgba(0, 0, 0, 0).
+   */
   get transparent() {
     try {
       let tuple = this._getRGBATuple();
-      return tuple === "transparent";
+      return !(tuple.r || tuple.g || tuple.b || tuple.a);
     } catch(e) {
       return false;
+    }
+  },
+
+  get specialValue() {
+    if (SPECIALVALUES.has(this.authored)) {
+      return this.authored;
     }
   },
 
@@ -112,15 +129,13 @@ CssColor.prototype = {
     if (!this.valid) {
       return "";
     }
-    if (this.authored === "transparent") {
-      return "transparent";
+    if (this.specialValue) {
+      return this.specialValue;
     }
+
     try {
       let tuple = this._getRGBATuple();
 
-      if (tuple === "transparent") {
-        return "transparent";
-      }
       if (tuple.a !== 1) {
         return this.rgb;
       }
@@ -135,11 +150,11 @@ CssColor.prototype = {
     if (!this.valid) {
       return "";
     }
+    if (this.specialValue) {
+      return this.specialValue;
+    }
     if (this.hasAlpha) {
       return this.rgba;
-    }
-    if (this.transparent) {
-      return "transparent";
     }
 
     let hex = this.longHex;
@@ -155,11 +170,11 @@ CssColor.prototype = {
     if (!this.valid) {
       return "";
     }
+    if (this.specialValue) {
+      return this.specialValue;
+    }
     if (this.hasAlpha) {
       return this.rgba;
-    }
-    if (this.transparent) {
-      return "transparent";
     }
     return this.rgb.replace(/\brgb\((\d{1,3}),\s*(\d{1,3}),\s*(\d{1,3})\)/gi, function(_, r, g, b) {
       return "#" + ((1 << 24) + (r << 16) + (g << 8) + (b << 0)).toString(16).substr(-6).toUpperCase();
@@ -170,8 +185,8 @@ CssColor.prototype = {
     if (!this.valid) {
       return "";
     }
-    if (this.transparent) {
-      return "transparent";
+    if (this.specialValue) {
+      return this.specialValue;
     }
     if (!this.hasAlpha) {
       if (this.authored.startsWith("rgb(")) {
@@ -188,8 +203,8 @@ CssColor.prototype = {
     if (!this.valid) {
       return "";
     }
-    if (this.transparent) {
-      return "transparent";
+    if (this.specialValue) {
+      return this.specialValue;
     }
     if (this.authored.startsWith("rgba(")) {
       // The color is valid and begins with rgba(. Return the authored value.
@@ -206,8 +221,8 @@ CssColor.prototype = {
     if (!this.valid) {
       return "";
     }
-    if (this.transparent) {
-      return "transparent";
+    if (this.specialValue) {
+      return this.specialValue;
     }
     if (this.authored.startsWith("hsl(")) {
       // The color is valid and begins with hsl(. Return the authored value.
@@ -223,8 +238,8 @@ CssColor.prototype = {
     if (!this.valid) {
       return "";
     }
-    if (this.transparent) {
-      return "transparent";
+    if (this.specialValue) {
+      return this.specialValue;
     }
     if (this.authored.startsWith("hsla(")) {
       // The color is valid and begins with hsla(. Return the authored value.
@@ -290,7 +305,7 @@ CssColor.prototype = {
     let computed = win.getComputedStyle(span).color;
 
     if (computed === "transparent") {
-      return "transparent";
+      return {r: 0, g: 0, b: 0, a: 0};
     }
 
     let rgba = computed.match(REGEX_RGBA_4_TUPLE);

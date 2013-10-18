@@ -1,9 +1,9 @@
-// Array.prototype.iterator applied to undefined or null does not throw (until .next is called).
+// Array.prototype.iterator applied to undefined or null throws directly.
 
 load(libdir + "asserts.js");
-for (var v of [undefined, null]) {
-    var it = Array.prototype.iterator.call(v);
+load(libdir + "iteration.js");
 
-    // This will throw because the iterator is trying to get v.length.
-    assertThrowsInstanceOf(function () { it.next(); }, TypeError);
+for (var v of [undefined, null]) {
+    // ES6 draft 2013-09-05 section 22.1.5.1.
+    assertThrowsInstanceOf(function () { Array.prototype[std_iterator].call(v); }, TypeError);
 }

@@ -15,7 +15,7 @@ function test(constructor) {
     assertEq(desc.writable, true);
 
     assertEq(proto[std_iterator](), proto);
-    assertIteratorResult(proto.next(), undefined, true);
+    assertIteratorDone(proto, undefined);
 }
 
 //test(Array);

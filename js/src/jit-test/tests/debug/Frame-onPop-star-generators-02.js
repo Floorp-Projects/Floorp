@@ -16,4 +16,4 @@ g.eval("var it = g();");
 assertEq(gw.evalInGlobal("it.next();"), null);
 
 dbg.enabled = false;
-assertIteratorResult(g.it.next(), 1, false);
+assertIteratorNext(g.it, 1);

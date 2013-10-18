@@ -82,10 +82,11 @@ class CommonTestCase(unittest.TestCase):
     match_re = None
     failureException = AssertionError
 
-    def __init__(self, methodName):
+    def __init__(self, methodName, **kwargs):
         unittest.TestCase.__init__(self, methodName)
         self.loglines = []
         self.duration = 0
+        self.expected = kwargs.pop('expected', 'pass')
 
     def _addSkip(self, result, reason):
         addSkip = getattr(result, 'addSkip', None)
@@ -129,7 +130,14 @@ class CommonTestCase(unittest.TestCase):
                 result.addError(self, sys.exc_info())
             else:
                 try:
-                    testMethod()
+                    if self.expected == 'fail':
+                        try:
+                            testMethod()
+                        except Exception:
+                            raise _ExpectedFailure(sys.exc_info())
+                        raise _UnexpectedSuccess
+                    else:
+                        testMethod()
                 except self.failureException:
                     result.addFailure(self, sys.exc_info())
                 except KeyboardInterrupt:
@@ -351,7 +359,7 @@ class MarionetteJSTestCase(CommonTestCase):
         CommonTestCase.__init__(self, methodName)
 
     @classmethod
-    def add_tests_to_suite(cls, mod_name, filepath, suite, testloader, marionette, testvars):
+    def add_tests_to_suite(cls, mod_name, filepath, suite, testloader, marionette, testvars, **kwargs):
         suite.addTest(cls(weakref.ref(marionette), jsFile=filepath))
 
     def runTest(self):
