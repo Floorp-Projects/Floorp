@@ -743,7 +743,7 @@ nsEventDispatcher::CreateEvent(mozilla::dom::EventTarget* aOwner,
                static_cast<WidgetSimpleGestureEvent*>(aEvent));
     case NS_TOUCH_EVENT:
       return NS_NewDOMTouchEvent(aDOMEvent, aOwner, aPresContext,
-                                 static_cast<WidgetTouchEvent*>(aEvent));
+                                 aEvent->AsTouchEvent());
     case NS_TRANSITION_EVENT:
       return NS_NewDOMTransitionEvent(aDOMEvent, aOwner, aPresContext,
                                       aEvent->AsTransitionEvent());

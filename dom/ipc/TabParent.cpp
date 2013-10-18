@@ -626,10 +626,10 @@ TabParent::MapEventCoordinatesForChildProcess(
     aEvent->refPoint = aOffset;
   } else {
     aEvent->refPoint = LayoutDeviceIntPoint();
-    WidgetTouchEvent* touchEvent = static_cast<WidgetTouchEvent*>(aEvent);
     // Then offset all the touch points by that distance, to put them
     // in the space where top-left is 0,0.
-    const nsTArray< nsRefPtr<Touch> >& touches = touchEvent->touches;
+    const nsTArray< nsRefPtr<Touch> >& touches =
+      aEvent->AsTouchEvent()->touches;
     for (uint32_t i = 0; i < touches.Length(); ++i) {
       Touch* touch = touches[i];
       if (touch) {
@@ -741,7 +741,7 @@ TabParent::TryCapture(const WidgetGUIEvent& aEvent)
     return false;
   }
 
-  WidgetTouchEvent event(static_cast<const WidgetTouchEvent&>(aEvent));
+  WidgetTouchEvent event(*aEvent.AsTouchEvent());
 
   bool isTouchPointUp = (event.message == NS_TOUCH_END ||
                          event.message == NS_TOUCH_CANCEL);
