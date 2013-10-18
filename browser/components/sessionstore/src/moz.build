@@ -25,6 +25,7 @@ EXTRA_JS_MODULES = [
     'SessionStorage.jsm',
     'SessionWorker.js',
     'TabStateCache.jsm',
+    'TextAndScrollData.jsm',
     'XPathGenerator.jsm',
     '_SessionFile.jsm',
 ]
