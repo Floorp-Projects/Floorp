@@ -107,8 +107,8 @@ nsDOMTouchEvent::InitTouchEvent(const nsAString& aType,
     return;
   }
 
-  static_cast<WidgetInputEvent*>(mEvent)->
-    InitBasicModifiers(aCtrlKey, aAltKey, aShiftKey, aMetaKey);
+  mEvent->AsInputEvent()->InitBasicModifiers(aCtrlKey, aAltKey,
+                                             aShiftKey, aMetaKey);
   mTouches = aTouches;
   mTargetTouches = aTargetTouches;
   mChangedTouches = aChangedTouches;
@@ -211,6 +211,30 @@ nsDOMTouchEvent::PrefEnabled()
     nsContentUtils::InitializeTouchEventTable();
   }
   return prefValue;
+}
+
+bool
+nsDOMTouchEvent::AltKey()
+{
+  return mEvent->AsTouchEvent()->IsAlt();
+}
+
+bool
+nsDOMTouchEvent::MetaKey()
+{
+  return mEvent->AsTouchEvent()->IsMeta();
+}
+
+bool
+nsDOMTouchEvent::CtrlKey()
+{
+  return mEvent->AsTouchEvent()->IsControl();
+}
+
+bool
+nsDOMTouchEvent::ShiftKey()
+{
+  return mEvent->AsTouchEvent()->IsShift();
 }
 
 nsresult

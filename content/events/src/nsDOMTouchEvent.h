@@ -8,8 +8,9 @@
 #include "nsDOMUIEvent.h"
 #include "nsTArray.h"
 #include "mozilla/Attributes.h"
-#include "mozilla/TouchEvents.h"
+#include "mozilla/EventForwards.h"
 #include "nsJSEnvironment.h"
+#include "mozilla/dom/Touch.h"
 #include "mozilla/dom/TouchEventBinding.h"
 #include "nsWrapperCache.h"
 
@@ -98,25 +99,10 @@ public:
   nsDOMTouchList* TargetTouches();
   nsDOMTouchList* ChangedTouches();
 
-  bool AltKey()
-  {
-    return static_cast<mozilla::WidgetInputEvent*>(mEvent)->IsAlt();
-  }
-
-  bool MetaKey()
-  {
-    return static_cast<mozilla::WidgetInputEvent*>(mEvent)->IsMeta();
-  }
-
-  bool CtrlKey()
-  {
-    return static_cast<mozilla::WidgetInputEvent*>(mEvent)->IsControl();
-  }
-
-  bool ShiftKey()
-  {
-    return static_cast<mozilla::WidgetInputEvent*>(mEvent)->IsShift();
-  }
+  bool AltKey();
+  bool MetaKey();
+  bool CtrlKey();
+  bool ShiftKey();
 
   void InitTouchEvent(const nsAString& aType,
                       bool aCanBubble,
