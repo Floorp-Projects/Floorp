@@ -704,6 +704,9 @@ var gPluginHandler = {
       else if (pluginInfo.blocklistState != Ci.nsIBlocklistService.STATE_NOT_BLOCKED) {
         url = Services.blocklist.getPluginBlocklistURL(pluginInfo.pluginTag);
       }
+      else {
+        url = Services.urlFormatter.formatURLPref("plugins.clickToActivateInfo.url");
+      }
       pluginInfo.detailsLink = url;
 
       centerActions.push(pluginInfo);
