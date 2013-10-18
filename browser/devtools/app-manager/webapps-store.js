@@ -258,6 +258,10 @@ WebappsStore.prototype = {
           proxifiedApp.iconURL = res.url;
         }
       });
+
+      // This app may have been running while being installed, so check the list
+      // of running apps again to get the right answer.
+      this._getRunningApps();
     });
   },
 
