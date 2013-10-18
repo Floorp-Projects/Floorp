@@ -26,6 +26,7 @@ const kMozSettingsChangedObserverTopic   = "mozsettings-changed";
 
 const MAX_RETRIES_ON_AUTHENTICATION_FAILURE = 2;
 const MAX_SUPPLICANT_LOOP_ITERATIONS = 4;
+const MAX_RETRIES_ON_DHCP_FAILURE = 2;
 
 // Settings DB path for wifi
 const SETTINGS_WIFI_ENABLED            = "wifi.enabled";
@@ -558,6 +559,21 @@ var WifiManager = (function() {
       }
       netUtil.runDhcp(manager.ifname, function(data) {
         dhcpInfo = data.info;
+        if (!dhcpInfo) {
+          if (++manager.dhcpFailuresCount >= MAX_RETRIES_ON_DHCP_FAILURE) {
+            manager.dhcpFailuresCount = 0;
+            notify("disconnected", {ssid: manager.connectionInfo.ssid});
+            return;
+          }
+          // NB: We have to call disconnect first. Otherwise, we only reauth with
+          // the existing AP and don't retrigger DHCP.
+          manager.disconnect(function() {
+            manager.reassociate(function(){});
+          });
+          return;
+        }
+
+        manager.dhcpFailuresCount = 0;
         notify("networkconnected", data);
       });
     });
@@ -789,6 +805,7 @@ var WifiManager = (function() {
   manager.connectionInfo = { ssid: null, bssid: null, id: -1 };
   manager.authenticationFailuresCount = 0;
   manager.loopDetectionCount = 0;
+  manager.dhcpFailuresCount = 0;
 
   var waitForDriverReadyTimer = null;
   function cancelWaitForDriverReadyTimer() {
@@ -1823,34 +1840,31 @@ function WifiWorker() {
   };
 
   WifiManager.onnetworkconnected = function() {
-    if (this.info) {
-      WifiNetworkInterface.state =
-        Ci.nsINetworkInterface.NETWORK_STATE_CONNECTED;
-      WifiNetworkInterface.ip = this.info.ipaddr_str;
-      WifiNetworkInterface.netmask = this.info.mask_str;
-      WifiNetworkInterface.broadcast = this.info.broadcast_str;
-      WifiNetworkInterface.gateway = this.info.gateway_str;
-      WifiNetworkInterface.dns1 = this.info.dns1_str;
-      WifiNetworkInterface.dns2 = this.info.dns2_str;
-      Services.obs.notifyObservers(WifiNetworkInterface,
-                                   kNetworkInterfaceStateChangedTopic,
-                                   null);
-
-      self.ipAddress = this.info.ipaddr_str;
-
-      // We start the connection information timer when we associate, but
-      // don't have our IP address until here. Make sure that we fire a new
-      // connectionInformation event with the IP address the next time the
-      // timer fires.
-      self._lastConnectionInfo = null;
-      self._fireEvent("onconnect", { network: netToDOM(self.currentNetwork) });
-    } else {
-      // NB: We have to call disconnect first. Otherwise, we only reauth with
-      // the existing AP and don't retrigger DHCP.
-      WifiManager.disconnect(function() {
-        WifiManager.reassociate(function(){});
-      });
+    if (!this.info) {
+      debug("Network information is invalid.");
+      return;
     }
+
+    WifiNetworkInterface.state =
+      Ci.nsINetworkInterface.NETWORK_STATE_CONNECTED;
+    WifiNetworkInterface.ip = this.info.ipaddr_str;
+    WifiNetworkInterface.netmask = this.info.mask_str;
+    WifiNetworkInterface.broadcast = this.info.broadcast_str;
+    WifiNetworkInterface.gateway = this.info.gateway_str;
+    WifiNetworkInterface.dns1 = this.info.dns1_str;
+    WifiNetworkInterface.dns2 = this.info.dns2_str;
+    Services.obs.notifyObservers(WifiNetworkInterface,
+                                 kNetworkInterfaceStateChangedTopic,
+                                 null);
+
+    self.ipAddress = this.info.ipaddr_str;
+
+    // We start the connection information timer when we associate, but
+    // don't have our IP address until here. Make sure that we fire a new
+    // connectionInformation event with the IP address the next time the
+    // timer fires.
+    self._lastConnectionInfo = null;
+    self._fireEvent("onconnect", { network: netToDOM(self.currentNetwork) });
   };
 
   WifiManager.onscanresultsavailable = function() {
