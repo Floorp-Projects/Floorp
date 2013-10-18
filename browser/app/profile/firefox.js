@@ -233,6 +233,12 @@ pref("xpinstall.whitelist.add.180", "marketplace.firefox.com");
 
 pref("lightweightThemes.update.enabled", true);
 
+// UI tour experience.
+pref("browser.uitour.enabled", true);
+pref("browser.uitour.themeOrigin", "https://addons.mozilla.org/%LOCALE%/firefox/themes/");
+pref("browser.uitour.pinnedTabUrl", "https://support.mozilla.org/%LOCALE%/kb/pinned-tabs-keep-favorite-websites-open");
+pref("browser.uitour.whitelist.add.260", "www.mozilla.org,support.mozilla.org");
+
 pref("keyword.enabled", true);
 
 pref("general.useragent.locale", "@AB_CD@");
@@ -659,6 +665,8 @@ pref("plugins.update.url", "https://www.mozilla.org/%LOCALE%/plugincheck/");
 pref("plugins.update.notifyUser", false);
 
 pref("plugins.click_to_play", true);
+
+pref("plugins.clickToActivateInfo.url", "https://support.mozilla.org/1/firefox/%VERSION%/%OS%/%LOCALE%/clicktoplay");
 
 // let all plugins except Flash default to click-to-play
 pref("plugin.default.state", 1);
