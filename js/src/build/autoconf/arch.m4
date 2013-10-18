@@ -162,9 +162,6 @@ no)
 esac
 
 case "$MOZ_ALIGN" in
-toolchain-default|"")
-    align_flag=""
-    ;;
 no)
     align_flag="-mno-unaligned-access"
     ;;
