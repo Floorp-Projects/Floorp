@@ -384,8 +384,8 @@ toolbarbutton.panel-multiview-anchor {
   display: none;
 }
 
-#zoom-controls[customizableui-areatype="toolbar"]:not(.overflowedItem) > #zoom-reset-button {
-  display: none;
+#zoom-controls[customizableui-areatype="toolbar"] > #zoom-reset-button > .toolbarbutton-text {
+  min-width: 4em;
 }
 
 #zoom-controls@inAnyPanel@ > #zoom-reset-button {
