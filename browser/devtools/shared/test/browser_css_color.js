@@ -43,6 +43,7 @@ function testColorUtils() {
     let color = new colorUtils.CssColor(authored);
 
     // Check all values.
+    info("Checking values for " + authored);
     is(color.name, name, "color.name === name");
     is(color.hex, hex, "color.hex === hex");
     is(color.hsl, hsl, "color.hsl === hsl");
@@ -291,14 +292,18 @@ function getTestData() {
     {authored: "whitesmoke", name: "whitesmoke", hex: "#F5F5F5", hsl: "hsl(0, 0%, 96%)", rgb: "rgb(245, 245, 245)"},
     {authored: "yellow", name: "yellow", hex: "#FF0", hsl: "hsl(60, 100%, 50%)", rgb: "rgb(255, 255, 0)"},
     {authored: "yellowgreen", name: "yellowgreen", hex: "#9ACD32", hsl: "hsl(79.742, 61%, 50%)", rgb: "rgb(154, 205, 50)"},
-    {authored: "transparent", name: "transparent", hex: "transparent", hsl: "transparent", rgb: "transparent"},
-    {authored: "rgba(0, 0, 0, 0)", name: "transparent", hex: "transparent", hsl: "transparent", rgb: "transparent"},
-    {authored: "hsla(0, 0%, 0%, 0)", name: "transparent", hex: "transparent", hsl: "transparent", rgb: "transparent"},
+    {authored: "rgba(0, 0, 0, 0)", name: "rgba(0, 0, 0, 0)", hex: "rgba(0, 0, 0, 0)", hsl: "hsla(0, 0%, 0%, 0)", rgb: "rgba(0, 0, 0, 0)"},
+    {authored: "hsla(0, 0%, 0%, 0)", name: "rgba(0, 0, 0, 0)", hex: "rgba(0, 0, 0, 0)", hsl: "hsla(0, 0%, 0%, 0)", rgb: "rgba(0, 0, 0, 0)"},
     {authored: "rgba(50, 60, 70, 0.5)", name: "rgba(50, 60, 70, 0.5)", hex: "rgba(50, 60, 70, 0.5)", hsl: "hsla(210, 17%, 24%, 0.5)", rgb: "rgba(50, 60, 70, 0.5)"},
     {authored: "rgba(0, 0, 0, 0.3)", name: "rgba(0, 0, 0, 0.3)", hex: "rgba(0, 0, 0, 0.3)", hsl: "hsla(0, 0%, 0%, 0.3)", rgb: "rgba(0, 0, 0, 0.3)"},
     {authored: "rgba(255, 255, 255, 0.6)", name: "rgba(255, 255, 255, 0.6)", hex: "rgba(255, 255, 255, 0.6)", hsl: "hsla(0, 0%, 100%, 0.6)", rgb: "rgba(255, 255, 255, 0.6)"},
     {authored: "rgba(127, 89, 45, 1)", name: "#7F592D", hex: "#7F592D", hsl: "hsl(32.195, 48%, 34%)", rgb: "rgb(127, 89, 45)"},
     {authored: "hsla(19.304, 56%, 40%, 1)", name: "#9F512C", hex: "#9F512C", hsl: "hsl(19.304, 57%, 40%)", rgb: "rgb(159, 81, 44)"},
-    {authored: "invalidColor", name: "", hex: "", hsl: "", rgb: ""}
+    {authored: "currentcolor", name: "currentcolor", hex: "currentcolor", hsl: "currentcolor", rgb: "currentcolor"},
+    {authored: "inherit", name: "inherit", hex: "inherit", hsl: "inherit", rgb: "inherit"},
+    {authored: "initial", name: "initial", hex: "initial", hsl: "initial", rgb: "initial"},
+    {authored: "invalidColor", name: "", hex: "", hsl: "", rgb: ""},
+    {authored: "transparent", name: "transparent", hex: "transparent", hsl: "transparent", rgb: "transparent"},
+    {authored: "unset", name: "unset", hex: "unset", hsl: "unset", rgb: "unset"}
   ];
 }
