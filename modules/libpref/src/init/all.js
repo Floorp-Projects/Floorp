@@ -4281,6 +4281,7 @@ pref("dom.sms.enabled", false);
 // 7-bit default alphabet.
 pref("dom.sms.strict7BitEncoding", false);
 pref("dom.sms.requestStatusReport", true);
+pref("dom.mms.requestStatusReport", true);
 
 // WebContacts
 pref("dom.mozContacts.enabled", false);
@@ -4397,7 +4398,7 @@ pref("dom.browserElement.maxScreenshotDelayMS", 2000);
 // Whether we should show the placeholder when the element is focused but empty.
 pref("dom.placeholder.show_on_focus", true);
 
-// UAProfile settings
+// MMS UA Profile settings
 pref("wap.UAProf.url", "");
 pref("wap.UAProf.tagname", "x-wap-profile");
 
@@ -4457,6 +4458,18 @@ pref("dom.datastore.enabled", false);
 
 // Telephony API
 pref("dom.telephony.enabled", false);
+
+// Cell Broadcast API
+pref("dom.cellbroadcast.enabled", false);
+
+// ICC API
+pref("dom.icc.enabled", false);
+
+// Mobile Connection API
+pref("dom.mobileconnection.enabled", false);
+
+// Voice Mail API
+pref("dom.voicemail.enabled", false);
 
 // DOM Inter-App Communication API.
 pref("dom.inter-app-communication-api.enabled", false);

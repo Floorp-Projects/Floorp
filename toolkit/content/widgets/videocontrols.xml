@@ -956,7 +956,7 @@
                 },
 
                 startFade : function (element, fadeIn, immediate) {
-                    if (element.className == "controlBar" && fadeIn) {
+                    if (element.classList.contains("controlBar") && fadeIn) {
                         // Bug 493523, the scrubber doesn't call valueChanged while hidden,
                         // so our dependent state (eg, timestamp in the thumb) will be stale.
                         // As a workaround, update it manually when it first becomes unhidden.
@@ -975,11 +975,11 @@
                         // when we remove the attribute.
                         element.clientTop;
                         element.removeAttribute("fadeout");
-                        if (element.className == "controlBar")
+                        if (element.classList.contains("controlBar"))
                             this.controlsSpacer.removeAttribute("hideCursor");
                     } else {
                         element.setAttribute("fadeout", true);
-                        if (element.className == "controlBar" && !this.hasError() &&
+                        if (element.classList.contains("controlBar") && !this.hasError() &&
                             document.mozFullScreenElement == this.video)
                             this.controlsSpacer.setAttribute("hideCursor", true);
 

@@ -76,6 +76,9 @@ CompositableHost::RemoveTextureHost(uint64_t aTextureID)
     }
     it = it->GetNextSibling();
   }
+  if (!mFirstTexture && mBackendData) {
+    mBackendData->ClearData();
+  }
 }
 
 TextureHost*
