@@ -591,7 +591,7 @@ nsDOMEvent::DuplicatePrivateData()
       WidgetCompositionEvent* compositionEvent =
         new WidgetCompositionEvent(false, msg, nullptr);
       WidgetCompositionEvent* oldCompositionEvent =
-        static_cast<WidgetCompositionEvent*>(mEvent);
+        mEvent->AsCompositionEvent();
       compositionEvent->AssignCompositionEventData(*oldCompositionEvent, true);
       newEvent = compositionEvent;
       break;

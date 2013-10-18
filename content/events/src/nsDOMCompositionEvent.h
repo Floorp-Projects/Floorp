@@ -10,7 +10,7 @@
 #include "nsDOMUIEvent.h"
 #include "nsIDOMCompositionEvent.h"
 #include "mozilla/dom/CompositionEventBinding.h"
-#include "mozilla/TextEvents.h"
+#include "mozilla/EventForwards.h"
 
 class nsDOMCompositionEvent : public nsDOMUIEvent,
                               public nsIDOMCompositionEvent

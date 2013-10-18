@@ -275,7 +275,7 @@ PuppetWidget::DispatchEvent(WidgetGUIEvent* event, nsEventStatus& aStatus)
   }
   switch (event->eventStructType) {
   case NS_COMPOSITION_EVENT:
-    mIMELastReceivedSeqno = static_cast<WidgetCompositionEvent*>(event)->seqno;
+    mIMELastReceivedSeqno = event->AsCompositionEvent()->seqno;
     if (mIMELastReceivedSeqno < mIMELastBlurSeqno)
       return NS_OK;
     break;
