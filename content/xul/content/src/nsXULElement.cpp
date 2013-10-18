@@ -1190,8 +1190,7 @@ nsXULElement::PreHandleEvent(nsEventChainPreVisitor& aVisitor)
                     }
                 }
 
-                WidgetInputEvent* orig =
-                    static_cast<WidgetInputEvent*>(aVisitor.mEvent);
+                WidgetInputEvent* orig = aVisitor.mEvent->AsInputEvent();
                 nsContentUtils::DispatchXULCommand(
                   commandContent,
                   aVisitor.mEvent->mFlags.mIsTrusted,

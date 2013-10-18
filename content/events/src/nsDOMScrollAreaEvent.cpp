@@ -21,16 +21,6 @@ nsDOMScrollAreaEvent::nsDOMScrollAreaEvent(mozilla::dom::EventTarget* aOwner,
   mClientArea.SetLayoutRect(aEvent ? aEvent->mArea : nsRect());
 }
 
-nsDOMScrollAreaEvent::~nsDOMScrollAreaEvent()
-{
-  if (mEventIsInternal && mEvent) {
-    if (mEvent->eventStructType == NS_SCROLLAREA_EVENT) {
-      delete static_cast<InternalScrollAreaEvent*>(mEvent);
-      mEvent = nullptr;
-    }
-  }
-}
-
 NS_IMPL_ADDREF_INHERITED(nsDOMScrollAreaEvent, nsDOMUIEvent)
 NS_IMPL_RELEASE_INHERITED(nsDOMScrollAreaEvent, nsDOMUIEvent)
 

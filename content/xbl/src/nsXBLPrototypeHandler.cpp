@@ -910,9 +910,8 @@ bool
 nsXBLPrototypeHandler::ModifiersMatchMask(nsIDOMUIEvent* aEvent,
                                           bool aIgnoreShiftKey)
 {
-  WidgetEvent* event = aEvent->GetInternalNSEvent();
-  NS_ENSURE_TRUE(event && event->IsInputDerivedEvent(), false);
-  WidgetInputEvent* inputEvent = static_cast<WidgetInputEvent*>(event);
+  WidgetInputEvent* inputEvent = aEvent->GetInternalNSEvent()->AsInputEvent();
+  NS_ENSURE_TRUE(inputEvent, false);
 
   if (mKeyMask & cMetaMask) {
     if (inputEvent->IsMeta() != ((mKeyMask & cMeta) != 0)) {
