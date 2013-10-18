@@ -123,6 +123,8 @@ XPCOMUtils.defineLazyModuleGetter(this, "SessionCookies",
   "resource:///modules/sessionstore/SessionCookies.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "SessionHistory",
   "resource:///modules/sessionstore/SessionHistory.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "TextAndScrollData",
+  "resource:///modules/sessionstore/TextAndScrollData.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "_SessionFile",
   "resource:///modules/sessionstore/_SessionFile.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "TabStateCache",
@@ -2988,74 +2990,9 @@ let SessionStoreInternal = {
       return;
     }
 
-    // always call this before injecting content into a document!
-    function hasExpectedURL(aDocument, aURL)
-      !aURL || aURL.replace(/#.*/, "") == aDocument.location.href.replace(/#.*/, "");
-
-    function restoreTextDataAndScrolling(aContent, aData, aPrefix) {
-      if (aData.formdata && hasExpectedURL(aContent.document, aData.url)) {
-        let formdata = aData.formdata;
-
-        // handle backwards compatibility
-        // this is a migration from pre-firefox 15. cf. bug 742051
-        if (!("xpath" in formdata || "id" in formdata)) {
-          formdata = { xpath: {}, id: {} };
-
-          for each (let [key, value] in Iterator(aData.formdata)) {
-            if (key.charAt(0) == "#") {
-              formdata.id[key.slice(1)] = value;
-            } else {
-              formdata.xpath[key] = value;
-            }
-          }
-        }
-
-        // for about:sessionrestore we saved the field as JSON to avoid
-        // nested instances causing humongous sessionstore.js files.
-        // cf. bug 467409
-        if ((aData.url == "about:sessionrestore" || aData.url == "about:welcomeback") &&
-            "sessionData" in formdata.id &&
-            typeof formdata.id["sessionData"] == "object") {
-          formdata.id["sessionData"] =
-            JSON.stringify(formdata.id["sessionData"]);
-        }
-
-        // update the formdata
-        aData.formdata = formdata;
-        // merge the formdata
-        DocumentUtils.mergeFormData(aContent.document, formdata);
-      }
-
-      if (aData.innerHTML) {
-        aWindow.setTimeout(function() {
-          if (aContent.document.designMode == "on" &&
-              hasExpectedURL(aContent.document, aData.url) &&
-              aContent.document.body) {
-            aContent.document.body.innerHTML = aData.innerHTML;
-          }
-        }, 0);
-      }
-      var match;
-      if (aData.scroll && (match = /(\d+),(\d+)/.exec(aData.scroll)) != null) {
-        aContent.scrollTo(match[1], match[2]);
-      }
-      for (var i = 0; i < aContent.frames.length; i++) {
-        if (aData.children && aData.children[i] &&
-          hasExpectedURL(aContent.document, aData.url)) {
-          restoreTextDataAndScrolling(aContent.frames[i], aData.children[i], aPrefix + i + "|");
-        }
-      }
-    }
-
-    // don't restore text data and scrolling state if the user has navigated
-    // away before the loading completed (except for in-page navigation)
-    if (hasExpectedURL(aEvent.originalTarget, aBrowser.__SS_restore_data.url)) {
-      var content = aEvent.originalTarget.defaultView;
-      restoreTextDataAndScrolling(content, aBrowser.__SS_restore_data, "");
-    }
-
     let frameList = this.getFramesToRestore(aBrowser);
     PageStyle.restore(aBrowser.docShell, frameList, aBrowser.__SS_restore_pageStyle);
+    TextAndScrollData.restore(frameList);
 
     // notify the tabbrowser that this document has been completely restored
     this._sendTabRestoredNotification(aBrowser.__SS_restore_tab);
@@ -4567,79 +4504,11 @@ let TabState = {
       tabData.pageStyle = selectedPageStyle;
     }
 
-    this._updateTextAndScrollDataForFrame(window, browser.contentWindow,
-                                          tabData.entries[tabIndex],
-                                          includePrivateData,
-                                          !!tabData.pinned);
-    if (browser.currentURI.spec == "about:config") {
-      tabData.entries[tabIndex].formdata = {
-        id: {
-          "textbox": browser.contentDocument.getElementById("textbox").value
-        },
-        xpath: {}
-      };
-    }
+    TextAndScrollData.updateFrame(tabData.entries[tabIndex],
+                                  browser.contentWindow,
+                                  !!tabData.pinned,
+                                  {includePrivateData: includePrivateData});
 
     return true;
-  },
-
-  /**
-   * Go through all subframes and store all form data, the current
-   * scroll positions and innerHTML content of WYSIWYG editors.
-   *
-   * @param window
-   *        Window reference
-   * @param content
-   *        frame reference
-   * @param data
-   *        part of a tabData object to add the information to
-   * @param includePrivateData
-   *        always return privacy sensitive data (use with care)
-   * @param isPinned
-   *        the tab is pinned and should be treated differently for privacy
-   */
-  _updateTextAndScrollDataForFrame:
-    function (window, content, data, includePrivateData, isPinned) {
-
-    for (let i = 0; i < content.frames.length; i++) {
-      if (data.children && data.children[i])
-        this._updateTextAndScrollDataForFrame(window, content.frames[i],
-                                              data.children[i],
-                                              includePrivateData, isPinned);
-    }
-    let href = (content.parent || content).document.location.href;
-    let isHttps = makeURI(href).schemeIs("https");
-    let topURL = content.top.document.location.href;
-    let isAboutSR = topURL == "about:sessionrestore" || topURL == "about:welcomeback";
-    if (includePrivateData || isAboutSR ||
-        PrivacyLevel.canSave({isHttps: isHttps, isPinned: isPinned})) {
-      let formData = DocumentUtils.getFormData(content.document);
-
-      // We want to avoid saving data for about:sessionrestore as a string.
-      // Since it's stored in the form as stringified JSON, stringifying further
-      // causes an explosion of escape characters. cf. bug 467409
-      if (formData && isAboutSR) {
-        formData.id["sessionData"] = JSON.parse(formData.id["sessionData"]);
-      }
-
-      if (Object.keys(formData.id).length ||
-          Object.keys(formData.xpath).length) {
-        data.formdata = formData;
-      } else if (data.formdata) {
-        delete data.formdata;
-      }
-
-      // designMode is undefined e.g. for XUL documents (as about:config)
-      if ((content.document.designMode || "") == "on" && content.document.body)
-        data.innerHTML = content.document.body.innerHTML;
-    }
-
-    // get scroll position from nsIDOMWindowUtils, since it allows avoiding a
-    // flush of layout
-    let domWindowUtils = content.QueryInterface(Ci.nsIInterfaceRequestor)
-                                .getInterface(Ci.nsIDOMWindowUtils);
-    let scrollX = {}, scrollY = {};
-    domWindowUtils.getScrollXY(false, scrollX, scrollY);
-    data.scroll = scrollX.value + "," + scrollY.value;
   },
 };
