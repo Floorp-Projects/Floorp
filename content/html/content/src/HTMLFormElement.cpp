@@ -686,16 +686,14 @@ HTMLFormElement::BuildSubmission(nsFormSubmission** aFormSubmission,
   // Get the originating frame (failure is non-fatal)
   nsGenericHTMLElement* originatingElement = nullptr;
   if (aEvent) {
-    if (NS_FORM_EVENT == aEvent->eventStructType) {
-      nsIContent* originator =
-        static_cast<InternalFormEvent*>(aEvent)->originator;
+    InternalFormEvent* formEvent = aEvent->AsFormEvent();
+    if (formEvent) {
+      nsIContent* originator = formEvent->originator;
       if (originator) {
         if (!originator->IsHTML()) {
           return NS_ERROR_UNEXPECTED;
         }
-        originatingElement =
-          static_cast<nsGenericHTMLElement*>(
-            static_cast<InternalFormEvent*>(aEvent)->originator);
+        originatingElement = static_cast<nsGenericHTMLElement*>(originator);
       }
     }
   }
