@@ -1619,8 +1619,7 @@ nsEventStateManager::DispatchCrossProcessEvent(WidgetEvent* aEvent,
     // Let the child process synthesize a mouse event if needed, and
     // ensure we don't synthesize one in this process.
     *aStatus = nsEventStatus_eConsumeNoDefault;
-    WidgetTouchEvent* touchEvent = static_cast<WidgetTouchEvent*>(aEvent);
-    return remote->SendRealTouchEvent(*touchEvent);
+    return remote->SendRealTouchEvent(*aEvent->AsTouchEvent());
   }
   default: {
     MOZ_CRASH("Attempt to send non-whitelisted event?");
@@ -1736,8 +1735,8 @@ nsEventStateManager::HandleCrossProcessEvent(WidgetEvent* aEvent,
     //
     // This loop is similar to the one used in
     // PresShell::DispatchTouchEvent().
-    WidgetTouchEvent* touchEvent = static_cast<WidgetTouchEvent*>(aEvent);
-    const nsTArray< nsRefPtr<Touch> >& touches = touchEvent->touches;
+    const nsTArray< nsRefPtr<Touch> >& touches =
+      aEvent->AsTouchEvent()->touches;
     for (uint32_t i = 0; i < touches.Length(); ++i) {
       Touch* touch = touches[i];
       // NB: the |mChanged| check is an optimization, subprocesses can
