@@ -19,7 +19,7 @@
         <box flex="1"/>
         <image class="panel-arrow" side="top"/>
       </box>
-      <box class="panel-arrowcontent" flex="1">
+      <box class="panel-arrowcontent" side="top" flex="1">
         <hbox id="customization-panelHolder"/>
         <box class="panel-inner-arrowcontentfooter" hidden="true"/>
       </box>
