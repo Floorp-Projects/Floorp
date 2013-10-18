@@ -32,14 +32,15 @@ NS_IMPL_ADDREF_INHERITED(nsDOMClipboardEvent, nsDOMEvent)
 NS_IMPL_RELEASE_INHERITED(nsDOMClipboardEvent, nsDOMEvent)
 
 nsresult
-nsDOMClipboardEvent::InitClipboardEvent(const nsAString & aType, bool aCanBubble, bool aCancelable,
-                                        nsIDOMDataTransfer* clipboardData)
+nsDOMClipboardEvent::InitClipboardEvent(const nsAString& aType,
+                                        bool aCanBubble,
+                                        bool aCancelable,
+                                        nsIDOMDataTransfer* aClipboardData)
 {
   nsresult rv = nsDOMEvent::InitEvent(aType, aCanBubble, aCancelable);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  InternalClipboardEvent* event = static_cast<InternalClipboardEvent*>(mEvent);
-  event->clipboardData = clipboardData;
+  mEvent->AsClipboardEvent()->clipboardData = aClipboardData;
 
   return NS_OK;
 }
@@ -57,8 +58,7 @@ nsDOMClipboardEvent::Constructor(const mozilla::dom::GlobalObject& aGlobal,
 
   nsRefPtr<nsDOMDataTransfer> clipboardData;
   if (e->mEventIsInternal) {
-    InternalClipboardEvent* event =
-      static_cast<InternalClipboardEvent*>(e->mEvent);
+    InternalClipboardEvent* event = e->mEvent->AsClipboardEvent();
     if (event) {
       // Always create a clipboardData for the copy event. If this is changed to
       // support other types of events, make sure that read/write privileges are
@@ -84,7 +84,7 @@ nsDOMClipboardEvent::GetClipboardData(nsIDOMDataTransfer** aClipboardData)
 nsIDOMDataTransfer*
 nsDOMClipboardEvent::GetClipboardData()
 {
-  InternalClipboardEvent* event = static_cast<InternalClipboardEvent*>(mEvent);
+  InternalClipboardEvent* event = mEvent->AsClipboardEvent();
 
   if (!event->clipboardData) {
     if (mEventIsInternal) {
