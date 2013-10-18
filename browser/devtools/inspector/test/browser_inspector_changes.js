@@ -16,18 +16,6 @@ function test() {
     openInspector(runInspectorTests);
   }
 
-
-  function getInspectorComputedProp(aName)
-  {
-    let computedview = inspector.sidebar.getWindowForTab("computedview").computedview.view;
-    for each (let view in computedview.propertyViews) {
-      if (view.name == aName) {
-        return view;
-      }
-    }
-    return null;
-  }
-
   function getInspectorRuleProp(aName)
   {
     let ruleview = inspector.sidebar.getWindowForTab("ruleview").ruleview.view;
@@ -64,8 +52,8 @@ function test() {
     let computedview = inspector.sidebar.getWindowForTab("computedview").computedview;
     ok(computedview, "Style Panel has a cssHtmlTree");
 
-    let propView = getInspectorComputedProp("font-size");
-    is(propView.value, "10px", "Style inspector should be showing the correct font size.");
+    let fontSize = getComputedPropertyValue("font-size");
+    is(fontSize, "10px", "Style inspector should be showing the correct font size.");
 
     testDiv.style.cssText = "font-size: 15px; color: red;";
 
@@ -77,11 +65,11 @@ function test() {
 
   function computedStylePanelAfterChange()
   {
-    let propView = getInspectorComputedProp("font-size");
-    is(propView.value, "15px", "Style inspector should be showing the new font size.");
+    let fontSize = getComputedPropertyValue("font-size");
+    is(fontSize, "15px", "Style inspector should be showing the new font size.");
 
-    let propView = getInspectorComputedProp("color");
-    is(propView.value, "#F00", "Style inspector should be showing the new color.");
+    let color = getComputedPropertyValue("color");
+    is(color, "#F00", "Style inspector should be showing the new color.");
 
     computedStylePanelNotActive();
   }
@@ -101,14 +89,14 @@ function test() {
 
   function computedStylePanelAfterSwitch()
   {
-    let propView = getInspectorComputedProp("font-size");
-    is(propView.value, "20px", "Style inspector should be showing the new font size.");
+    let fontSize = getComputedPropertyValue("font-size");
+    is(fontSize, "20px", "Style inspector should be showing the new font size.");
 
-    let propView = getInspectorComputedProp("color");
-    is(propView.value, "#00F", "Style inspector should be showing the new color.");
+    let color = getComputedPropertyValue("color");
+    is(color, "#00F", "Style inspector should be showing the new color.");
 
-    let propView = getInspectorComputedProp("text-align");
-    is(propView.value, "center", "Style inspector should be showing the new text align.");
+    let textAlign = getComputedPropertyValue("text-align");
+    is(textAlign, "center", "Style inspector should be showing the new text align.");
 
     rulePanelTests();
   }
@@ -137,7 +125,7 @@ function test() {
     is(propView.value, "right", "Style inspector should be showing the new text align.");
 
     let propView = getInspectorRuleProp("color");
-    is(propView.value, "#FAFAD2", "Style inspector should be showing the new color.")
+    is(propView.value, "lightgoldenrodyellow", "Style inspector should be showing the new color.")
 
     let propView = getInspectorRuleProp("font-size");
     is(propView.value, "3em", "Style inspector should be showing the new font size.");
