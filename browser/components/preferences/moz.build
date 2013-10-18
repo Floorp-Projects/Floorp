@@ -5,4 +5,8 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 PARALLEL_DIRS += ['in-content']
-TEST_DIRS += ['tests']
+
+BROWSER_CHROME_MANIFESTS += [
+    'in-content/tests/browser.ini',
+    'tests/browser.ini',
+]
