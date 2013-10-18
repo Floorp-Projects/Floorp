@@ -56,20 +56,6 @@ LPCTSTR UACHelper::PrivsToDisable[] = {
 };
 
 /**
- * Determines if the OS is vista or later
- *
- * @return TRUE if the OS is vista or later.
- */
-BOOL
-UACHelper::IsVistaOrLater()
-{
-  // Check if we are running Vista or later.
-  OSVERSIONINFO osInfo;
-  osInfo.dwOSVersionInfoSize = sizeof(OSVERSIONINFO);
-  return GetVersionEx(&osInfo) && osInfo.dwMajorVersion >= 6;
-}
-
-/**
  * Opens a user token for the given session ID
  *
  * @param  sessionID  The session ID for the token to obtain
