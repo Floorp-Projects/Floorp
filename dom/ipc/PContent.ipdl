@@ -30,9 +30,6 @@ include PTabContext;
 include URIParams;
 include ProtocolTypes;
 
-include "mozilla/layout/RenderFrameUtils.h";
-include "gfxPoint.h";
-
 using GeoPosition from "nsGeoPositionIPCSerialiser.h";
 
 using struct ChromePackage from "mozilla/chrome/RegistryMessageUtils.h";
