@@ -4076,9 +4076,10 @@ EndSweepPhase(JSRuntime *rt, JSGCInvocationKind gckind, bool lastGC)
 namespace {
 
 /* ...while this class is to be used only for garbage collection. */
-class AutoGCSession : AutoTraceSession
+class AutoGCSession
 {
     AutoPauseWorkersForTracing pause;
+    AutoTraceSession session;
 
   public:
     explicit AutoGCSession(JSRuntime *rt);
@@ -4105,8 +4106,8 @@ AutoTraceSession::~AutoTraceSession()
 }
 
 AutoGCSession::AutoGCSession(JSRuntime *rt)
-  : AutoTraceSession(rt, MajorCollecting),
-    pause(rt)
+  : pause(rt),
+    session(rt, MajorCollecting)
 {
     runtime->gcIsNeeded = false;
     runtime->gcInterFrameGC = true;
