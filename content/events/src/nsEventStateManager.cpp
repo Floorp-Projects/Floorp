@@ -1145,8 +1145,7 @@ nsEventStateManager::PreHandleEvent(nsPresContext* aPresContext,
 
   case NS_KEY_PRESS:
     {
-
-      WidgetKeyboardEvent* keyEvent = static_cast<WidgetKeyboardEvent*>(aEvent);
+      WidgetKeyboardEvent* keyEvent = aEvent->AsKeyboardEvent();
 
       int32_t modifierMask = 0;
       if (keyEvent->IsShift())
@@ -1608,8 +1607,7 @@ nsEventStateManager::DispatchCrossProcessEvent(WidgetEvent* aEvent,
     return remote->SendRealMouseEvent(*mouseEvent);
   }
   case NS_KEY_EVENT: {
-    WidgetKeyboardEvent* keyEvent = static_cast<WidgetKeyboardEvent*>(aEvent);
-    return remote->SendRealKeyEvent(*keyEvent);
+    return remote->SendRealKeyEvent(*aEvent->AsKeyboardEvent());
   }
   case NS_WHEEL_EVENT: {
     WidgetWheelEvent* wheelEvent = static_cast<WidgetWheelEvent*>(aEvent);
@@ -3640,7 +3638,7 @@ nsEventStateManager::PostHandleEvent(nsPresContext* aPresContext,
 
   case NS_KEY_PRESS:
     if (nsEventStatus_eConsumeNoDefault != *aStatus) {
-      WidgetKeyboardEvent* keyEvent = static_cast<WidgetKeyboardEvent*>(aEvent);
+      WidgetKeyboardEvent* keyEvent = aEvent->AsKeyboardEvent();
       //This is to prevent keyboard scrolling while alt modifier in use.
       if (!keyEvent->IsAlt()) {
         switch(keyEvent->keyCode) {

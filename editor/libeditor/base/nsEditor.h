@@ -7,7 +7,6 @@
 #define __editor_h__
 
 #include "mozilla/Assertions.h"         // for MOZ_ASSERT, etc.
-#include "mozilla/EventForwards.h"      // for WidgetKeyboardEvent
 #include "mozilla/TypedEnum.h"          // for MOZ_BEGIN_ENUM_CLASS, etc.
 #include "nsAutoPtr.h"                  // for nsRefPtr
 #include "nsCOMArray.h"                 // for nsCOMArray
@@ -404,8 +403,6 @@ protected:
    * Return true if spellchecking should be enabled for this editor.
    */
   bool GetDesiredSpellCheckState();
-
-  mozilla::WidgetKeyboardEvent* GetNativeKeyEvent(nsIDOMKeyEvent* aDOMKeyEvent);
 
   bool CanEnableSpellCheck()
   {

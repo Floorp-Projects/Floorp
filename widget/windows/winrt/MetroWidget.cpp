@@ -633,7 +633,7 @@ bool
 MetroWidget::DispatchKeyboardEvent(WidgetGUIEvent* aEvent)
 {
   MOZ_ASSERT(aEvent);
-  WidgetKeyboardEvent* oldKeyEvent = static_cast<WidgetKeyboardEvent*>(aEvent);
+  WidgetKeyboardEvent* oldKeyEvent = aEvent->AsKeyboardEvent();
   WidgetKeyboardEvent* keyEvent =
     new WidgetKeyboardEvent(oldKeyEvent->mFlags.mIsTrusted,
                             oldKeyEvent->message, oldKeyEvent->widget);

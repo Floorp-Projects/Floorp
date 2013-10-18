@@ -197,9 +197,8 @@ nsMenuBarListener::KeyPress(nsIDOMEvent* aKeyEvent)
 
       bool hasAccessKeyCandidates = charCode != 0;
       if (!hasAccessKeyCandidates) {
-        WidgetEvent* nativeEvent = nsContentUtils::GetNativeEvent(aKeyEvent);
         WidgetKeyboardEvent* nativeKeyEvent =
-          static_cast<WidgetKeyboardEvent*>(nativeEvent);
+          aKeyEvent->GetInternalNSEvent()->AsKeyboardEvent();
         if (nativeKeyEvent) {
           nsAutoTArray<uint32_t, 10> keys;
           nsContentUtils::GetAccessKeyCandidates(nativeKeyEvent, keys);

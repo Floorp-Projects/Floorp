@@ -600,11 +600,12 @@ protected:
     nsDelayedKeyEvent(mozilla::WidgetKeyboardEvent* aEvent) :
       nsDelayedInputEvent()
     {
-      mEvent = new mozilla::WidgetKeyboardEvent(aEvent->mFlags.mIsTrusted,
-                                                aEvent->message,
-                                                aEvent->widget);
-      static_cast<mozilla::WidgetKeyboardEvent*>(mEvent)->
-        AssignKeyEventData(*aEvent, false);
+      mozilla::WidgetKeyboardEvent* keyEvent =
+        new mozilla::WidgetKeyboardEvent(aEvent->mFlags.mIsTrusted,
+                                         aEvent->message,
+                                         aEvent->widget);
+      keyEvent->AssignKeyEventData(*aEvent, false);
+      mEvent = keyEvent;
     }
   };
 

@@ -79,7 +79,7 @@ NS_IMETHODIMP
 nsDOMKeyboardEvent::GetKey(nsAString& aKeyName)
 {
   if (!mEventIsInternal) {
-    static_cast<WidgetKeyboardEvent*>(mEvent)->GetDOMKeyName(aKeyName);
+    mEvent->AsKeyboardEvent()->GetDOMKeyName(aKeyName);
   }
   return NS_OK;
 }
@@ -100,7 +100,7 @@ nsDOMKeyboardEvent::CharCode()
   case NS_KEY_DOWN:
     return 0;
   case NS_KEY_PRESS:
-    return static_cast<WidgetKeyboardEvent*>(mEvent)->charCode;
+    return mEvent->AsKeyboardEvent()->charCode;
   }
   return 0;
 }
@@ -120,7 +120,7 @@ nsDOMKeyboardEvent::KeyCode()
   case NS_KEY_UP:
   case NS_KEY_PRESS:
   case NS_KEY_DOWN:
-    return static_cast<WidgetKeyboardEvent*>(mEvent)->keyCode;
+    return mEvent->AsKeyboardEvent()->keyCode;
   }
   return 0;
 }
@@ -136,7 +136,7 @@ nsDOMKeyboardEvent::Which()
       //Special case for 4xp bug 62878.  Try to make value of which
       //more closely mirror the values that 4.x gave for RETURN and BACKSPACE
       {
-        uint32_t keyCode = static_cast<WidgetKeyboardEvent*>(mEvent)->keyCode;
+        uint32_t keyCode = mEvent->AsKeyboardEvent()->keyCode;
         if (keyCode == NS_VK_RETURN || keyCode == NS_VK_BACK) {
           return keyCode;
         }
@@ -156,6 +156,12 @@ nsDOMKeyboardEvent::GetLocation(uint32_t* aLocation)
   return NS_OK;
 }
 
+uint32_t
+nsDOMKeyboardEvent::Location()
+{
+  return mEvent->AsKeyboardEvent()->location;
+}
+
 NS_IMETHODIMP
 nsDOMKeyboardEvent::InitKeyEvent(const nsAString& aType, bool aCanBubble, bool aCancelable,
                                  nsIDOMWindow* aView, bool aCtrlKey, bool aAltKey,
@@ -165,7 +171,7 @@ nsDOMKeyboardEvent::InitKeyEvent(const nsAString& aType, bool aCanBubble, bool a
   nsresult rv = nsDOMUIEvent::InitUIEvent(aType, aCanBubble, aCancelable, aView, 0);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  WidgetKeyboardEvent* keyEvent = static_cast<WidgetKeyboardEvent*>(mEvent);
+  WidgetKeyboardEvent* keyEvent = mEvent->AsKeyboardEvent();
   keyEvent->InitBasicModifiers(aCtrlKey, aAltKey, aShiftKey, aMetaKey);
   keyEvent->keyCode = aKeyCode;
   keyEvent->charCode = aCharCode;

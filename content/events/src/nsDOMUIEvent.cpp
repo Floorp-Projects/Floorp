@@ -344,16 +344,12 @@ nsDOMUIEvent::GetIsChar(bool* aIsChar)
 bool
 nsDOMUIEvent::IsChar() const
 {
-  switch (mEvent->eventStructType)
-  {
-    case NS_KEY_EVENT:
-      return static_cast<WidgetKeyboardEvent*>(mEvent)->isChar;
-    case NS_TEXT_EVENT:
-      return static_cast<WidgetTextEvent*>(mEvent)->isChar;
-    default:
-      return false;
+  WidgetKeyboardEvent* keyEvent = mEvent->AsKeyboardEvent();
+  if (keyEvent) {
+    return keyEvent->isChar;
   }
-  MOZ_CRASH("Switch handles all cases.");
+  WidgetTextEvent* textEvent = mEvent->AsTextEvent();
+  return textEvent ? textEvent->isChar : false;
 }
 
 NS_IMETHODIMP

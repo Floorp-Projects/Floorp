@@ -1369,13 +1369,6 @@ public:
   static const nsDependentString GetLocalizedEllipsis();
 
   /**
-   * The routine GetNativeEvent returns the result of
-   * aDOMEvent->GetInternalNSEvent().
-   * XXX Is this necessary?
-   */
-  static mozilla::WidgetEvent* GetNativeEvent(nsIDOMEvent* aDOMEvent);
-
-  /**
    * Get the candidates for accelkeys for aDOMKeyEvent.
    *
    * @param aDOMKeyEvent [in] the key event for accelkey handling.
