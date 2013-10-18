@@ -149,59 +149,27 @@ function basicNotification() {
       }
     }
   };
-  this.addOptions = function(options) {
-    for (let [name, value] in Iterator(options))
-      self.options[name] = value;
-  }
 }
+
+basicNotification.prototype.addOptions = function(options) {
+  for (let [name, value] in Iterator(options))
+    this.options[name] = value;
+};
 
 function errorNotification() {
   var self = this;
-  this.browser = gBrowser.selectedBrowser;
-  this.id = "test-notification-" + gTestIndex;
-  this.message = "This is popup notification " + this.id + " from test " + gTestIndex;
-  this.anchorID = null;
-  this.mainAction = {
-    label: "Main Action",
-    accessKey: "M",
-    callback: function () {
-      self.mainActionClicked = true;
-      throw new Error("Oops!");
-    }
+  this.mainAction.callback = function () {
+    self.mainActionClicked = true;
+    throw new Error("Oops!");
   };
-  this.secondaryActions = [
-    {
-      label: "Secondary Action",
-      accessKey: "S",
-      callback: function () {
-        self.secondaryActionClicked = true;
-        throw new Error("Oops!");
-      }
-    }
-  ];
-  this.options = {
-    eventCallback: function (eventName) {
-      switch (eventName) {
-        case "dismissed":
-          self.dismissalCallbackTriggered = true;
-          break;
-        case "showing":
-          self.showingCallbackTriggered = true;
-          break;
-        case "shown":
-          self.shownCallbackTriggered = true;
-          break;
-        case "removed":
-          self.removedCallbackTriggered = true;
-          break;
-      }
-    }
+  this.secondaryActions[0].callback = function () {
+    self.secondaryActionClicked = true;
+    throw new Error("Oops!");
   };
-  this.addOptions = function(options) {
-    for (let [name, value] in Iterator(options))
-      self.options[name] = value;
-  }
 }
+
+errorNotification.prototype = new basicNotification();
+errorNotification.prototype.constructor = errorNotification;
 
 var wrongBrowserNotificationObject = new basicNotification();
 var wrongBrowserNotification;
