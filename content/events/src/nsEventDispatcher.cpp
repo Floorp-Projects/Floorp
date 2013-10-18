@@ -705,9 +705,8 @@ nsEventDispatcher::CreateEvent(mozilla::dom::EventTarget* aOwner,
       return NS_NewDOMKeyboardEvent(aDOMEvent, aOwner, aPresContext,
                                     aEvent->AsKeyboardEvent());
     case NS_COMPOSITION_EVENT:
-      return NS_NewDOMCompositionEvent(
-        aDOMEvent, aOwner,
-        aPresContext, static_cast<WidgetCompositionEvent*>(aEvent));
+      return NS_NewDOMCompositionEvent(aDOMEvent, aOwner, aPresContext,
+                                       aEvent->AsCompositionEvent());
     case NS_MOUSE_EVENT:
       return NS_NewDOMMouseEvent(aDOMEvent, aOwner, aPresContext,
                                  static_cast<WidgetInputEvent*>(aEvent));

@@ -31,7 +31,7 @@ nsDOMCompositionEvent::nsDOMCompositionEvent(mozilla::dom::EventTarget* aOwner,
     mEvent->mFlags.mCancelable = false;
   }
 
-  mData = static_cast<WidgetCompositionEvent*>(mEvent)->data;
+  mData = mEvent->AsCompositionEvent()->data;
   // TODO: Native event should have locale information.
 }
 
