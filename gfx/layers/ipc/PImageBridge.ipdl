@@ -9,7 +9,6 @@ include protocol PGrallocBuffer;
 include protocol PCompositable;
 include ProtocolTypes;
 
-include "mozilla/layers/CompositorTypes.h";
 include "mozilla/GfxMessageUtils.h";
 
 using struct mozilla::layers::TextureInfo from "mozilla/layers/CompositorTypes.h";

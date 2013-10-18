@@ -5,7 +5,6 @@
 
 include protocol PPluginInstance;
 
-include "mozilla/plugins/PluginMessageUtils.h";
 
 using mozilla::plugins::Buffer from "mozilla/plugins/PluginMessageUtils.h";
 using NPError from "npapi.h";

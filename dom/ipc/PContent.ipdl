@@ -30,13 +30,7 @@ include PTabContext;
 include URIParams;
 include ProtocolTypes;
 
-include "mozilla/chrome/RegistryMessageUtils.h";
-include "mozilla/dom/PermissionMessageUtils.h";
-include "mozilla/dom/TabMessageUtils.h";
-include "mozilla/HalTypes.h";
 include "mozilla/layout/RenderFrameUtils.h";
-include "mozilla/net/NeckoMessageUtils.h";
-include "nsGeoPositionIPCSerialiser.h";
 include "gfxPoint.h";
 
 using GeoPosition from "nsGeoPositionIPCSerialiser.h";
