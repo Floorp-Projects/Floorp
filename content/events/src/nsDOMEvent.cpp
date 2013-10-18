@@ -146,11 +146,12 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsDOMEvent)
         static_cast<WidgetMouseEventBase*>(tmp->mEvent)->relatedTarget =
           nullptr;
         break;
-      case NS_DRAG_EVENT:
-        static_cast<WidgetDragEvent*>(tmp->mEvent)->dataTransfer = nullptr;
-        static_cast<WidgetMouseEventBase*>(tmp->mEvent)->relatedTarget =
-          nullptr;
+      case NS_DRAG_EVENT: {
+        WidgetDragEvent* dragEvent = tmp->mEvent->AsDragEvent();
+        dragEvent->dataTransfer = nullptr;
+        dragEvent->relatedTarget = nullptr;
         break;
+      }
       case NS_CLIPBOARD_EVENT:
         tmp->mEvent->AsClipboardEvent()->clipboardData = nullptr;
         break;
@@ -184,14 +185,14 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(nsDOMEvent)
         cb.NoteXPCOMChild(
           static_cast<WidgetMouseEventBase*>(tmp->mEvent)->relatedTarget);
         break;
-      case NS_DRAG_EVENT:
+      case NS_DRAG_EVENT: {
+        WidgetDragEvent* dragEvent = tmp->mEvent->AsDragEvent();
         NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(cb, "mEvent->dataTransfer");
-        cb.NoteXPCOMChild(
-          static_cast<WidgetDragEvent*>(tmp->mEvent)->dataTransfer);
+        cb.NoteXPCOMChild(dragEvent->dataTransfer);
         NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(cb, "mEvent->relatedTarget");
-        cb.NoteXPCOMChild(
-          static_cast<WidgetMouseEventBase*>(tmp->mEvent)->relatedTarget);
+        cb.NoteXPCOMChild(dragEvent->relatedTarget);
         break;
+      }
       case NS_CLIPBOARD_EVENT:
         NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(cb, "mEvent->clipboardData");
         cb.NoteXPCOMChild(tmp->mEvent->AsClipboardEvent()->clipboardData);
@@ -553,7 +554,7 @@ nsDOMEvent::DuplicatePrivateData()
     }
     case NS_DRAG_EVENT:
     {
-      WidgetDragEvent* oldDragEvent = static_cast<WidgetDragEvent*>(mEvent);
+      WidgetDragEvent* oldDragEvent = mEvent->AsDragEvent();
       WidgetDragEvent* dragEvent = new WidgetDragEvent(false, msg, nullptr);
       dragEvent->AssignDragEventData(*oldDragEvent, true);
       newEvent = dragEvent;

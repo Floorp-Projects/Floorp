@@ -2554,7 +2554,7 @@ nsTreeBodyFrame::GetCursor(const nsPoint& aPoint,
 static uint32_t GetDropEffect(WidgetGUIEvent* aEvent)
 {
   NS_ASSERTION(aEvent->eventStructType == NS_DRAG_EVENT, "wrong event type");
-  WidgetDragEvent* dragEvent = static_cast<WidgetDragEvent*>(aEvent);
+  WidgetDragEvent* dragEvent = aEvent->AsDragEvent();
   nsContentUtils::SetDataTransferInEvent(dragEvent);
 
   uint32_t action = 0;
@@ -2700,9 +2700,9 @@ nsTreeBodyFrame::HandleEvent(nsPresContext* aPresContext,
 
         // The dataTransfer was initialized by the call to GetDropEffect above.
         bool canDropAtNewLocation = false;
-        WidgetDragEvent* dragEvent = static_cast<WidgetDragEvent*>(aEvent);
         mView->CanDrop(mSlots->mDropRow, mSlots->mDropOrient,
-                       dragEvent->dataTransfer, &canDropAtNewLocation);
+                       aEvent->AsDragEvent()->dataTransfer,
+                       &canDropAtNewLocation);
 
         if (canDropAtNewLocation) {
           // Invalidate row at the new location.
@@ -2732,7 +2732,7 @@ nsTreeBodyFrame::HandleEvent(nsPresContext* aPresContext,
     }
 
     NS_ASSERTION(aEvent->eventStructType == NS_DRAG_EVENT, "wrong event type");
-    WidgetDragEvent* dragEvent = static_cast<WidgetDragEvent*>(aEvent);
+    WidgetDragEvent* dragEvent = aEvent->AsDragEvent();
     nsContentUtils::SetDataTransferInEvent(dragEvent);
 
     mView->Drop(mSlots->mDropRow, mSlots->mDropOrient, dragEvent->dataTransfer);
