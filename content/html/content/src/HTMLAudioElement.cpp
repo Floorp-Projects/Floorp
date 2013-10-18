@@ -17,22 +17,17 @@
 #include "AudioSampleFormat.h"
 #include "AudioChannelCommon.h"
 #include <algorithm>
-#include "mozilla/Preferences.h"
 #include "nsComponentManagerUtils.h"
 #include "nsIHttpChannel.h"
 #include "mozilla/dom/TimeRanges.h"
 #include "AudioStream.h"
 
-static bool
-IsAudioAPIEnabled()
-{
-  return mozilla::Preferences::GetBool("media.audio_data.enabled", true);
-}
-
 NS_IMPL_NS_NEW_HTML_ELEMENT(Audio)
 
 namespace mozilla {
 namespace dom {
+
+extern bool IsAudioAPIEnabled();
 
 NS_IMPL_ISUPPORTS_INHERITED4(HTMLAudioElement, HTMLMediaElement,
                              nsIDOMHTMLMediaElement, nsIDOMHTMLAudioElement,

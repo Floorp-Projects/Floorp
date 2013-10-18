@@ -12,9 +12,6 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=490705
 <body>
 <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=490705">Mozilla Bug 490705</a>
 
-<!-- mute audio, since there is no need to hear the sound for these tests -->
-<audio id="a1" preload="metadata" controls></audio>
-
 <pre id="test">
 <script class="testbody" type="text/javascript">
 var testFile = "bug495794.ogg";
@@ -84,7 +81,12 @@ function audioEnded() {
 }
 
 function initTest() {
-  var a1 = document.getElementById('a1');
+  var a1 = document.createElement("audio");
+  a1.id = "a1";
+  a1.preload = "metadata";
+  a1.controls = true;
+  document.body.appendChild(a1);
+
   a1.addEventListener("ended", audioEnded, false);
   a1.addEventListener("loadedmetadata", loadedMetadata, false);
   a1.addEventListener("MozAudioAvailable", audioAvailable, false);
@@ -94,7 +96,7 @@ function initTest() {
 }
 
 window.addEventListener("load", function(e) {
-  initTest();
+  SpecialPowers.pushPrefEnv({"set": [["media.audio_data.enabled", true]]}, initTest);
 }, false);
 
 SimpleTest.waitForExplicitFinish();
