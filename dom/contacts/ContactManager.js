@@ -394,12 +394,6 @@ ContactManager.prototype = {
   },
 
   _convertContact: function(aContact) {
-    if (aContact.properties.bday) {
-      aContact.properties.bday = new Date(aContact.properties.bday);
-    }
-    if (aContact.properties.anniversary) {
-      aContact.properties.anniversary = new Date(aContact.properties.anniversary);
-    }
     let newContact = new this._window.mozContact(aContact.properties);
     newContact.setMetadata(aContact.id, aContact.published, aContact.updated);
     return newContact;

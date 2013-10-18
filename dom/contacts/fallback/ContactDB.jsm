@@ -20,12 +20,22 @@ Cu.import("resource://gre/modules/IndexedDBHelper.jsm");
 Cu.import("resource://gre/modules/PhoneNumberUtils.jsm");
 
 const DB_NAME = "contacts";
-const DB_VERSION = 15;
+const DB_VERSION = 16;
 const STORE_NAME = "contacts";
 const SAVED_GETALL_STORE_NAME = "getallcache";
 const CHUNK_SIZE = 20;
 const REVISION_STORE = "revision";
 const REVISION_KEY = "revision";
+
+function optionalDate(aValue) {
+  if (aValue) {
+    if (!(aValue instanceof Date)) {
+      return new Date(aValue);
+    }
+    return aValue;
+  }
+  return undefined;
+}
 
 function exportContact(aRecord) {
   if (aRecord) {
@@ -573,6 +583,32 @@ ContactDB.prototype = {
                     }
                   }
                 }
+              }
+            }
+            if (changed) {
+              cursor.update(cursor.value);
+            }
+            cursor.continue();
+          } else {
+           next();
+          }
+        };
+      },
+      function upgrade15to16() {
+        if (DEBUG) debug("Fix Date properties");
+        if (!objectStore) {
+         objectStore = aTransaction.objectStore(STORE_NAME);
+        }
+        const DATE_PROPERTIES = ["bday", "anniversary"];
+        objectStore.openCursor().onsuccess = function(event) {
+          let cursor = event.target.result;
+          let changed = false;
+          if (cursor) {
+            let props = cursor.value.properties;
+            for (let prop of DATE_PROPERTIES) {
+              if (props[prop] && !(props[prop] instanceof Date)) {
+                cursor.value.properties[prop] = new Date(props[prop]);
+                changed = true;
               }
             }
             if (changed) {
