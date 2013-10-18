@@ -4078,8 +4078,9 @@ fi
 
 JS_THREADSAFE=1
 MOZ_ARG_DISABLE_BOOL(threadsafe,
-[  --disable-threadsafe Disable support for multiple threads.],
-    JS_THREADSAFE= )
+[  --disable-threadsafe    Disable support for multiple threads.],
+    JS_THREADSAFE= ,
+    JS_THREADSAFE=1 )
 if test -n "$JS_THREADSAFE"; then
     AC_DEFINE(JS_THREADSAFE)
 fi
