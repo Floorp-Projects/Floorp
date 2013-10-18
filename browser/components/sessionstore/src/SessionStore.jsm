@@ -111,6 +111,8 @@ XPCOMUtils.defineLazyModuleGetter(this, "DocumentUtils",
   "resource:///modules/sessionstore/DocumentUtils.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "Messenger",
   "resource:///modules/sessionstore/Messenger.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "PageStyle",
+  "resource:///modules/sessionstore/PageStyle.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "PrivacyLevel",
   "resource:///modules/sessionstore/PrivacyLevel.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "SessionSaver",
@@ -2990,7 +2992,6 @@ let SessionStoreInternal = {
     function hasExpectedURL(aDocument, aURL)
       !aURL || aURL.replace(/#.*/, "") == aDocument.location.href.replace(/#.*/, "");
 
-    let selectedPageStyle = aBrowser.__SS_restore_pageStyle;
     function restoreTextDataAndScrolling(aContent, aData, aPrefix) {
       if (aData.formdata && hasExpectedURL(aContent.document, aData.url)) {
         let formdata = aData.formdata;
@@ -3038,9 +3039,6 @@ let SessionStoreInternal = {
       if (aData.scroll && (match = /(\d+),(\d+)/.exec(aData.scroll)) != null) {
         aContent.scrollTo(match[1], match[2]);
       }
-      Array.forEach(aContent.document.styleSheets, function(aSS) {
-        aSS.disabled = aSS.title && aSS.title != selectedPageStyle;
-      });
       for (var i = 0; i < aContent.frames.length; i++) {
         if (aData.children && aData.children[i] &&
           hasExpectedURL(aContent.document, aData.url)) {
@@ -3054,8 +3052,10 @@ let SessionStoreInternal = {
     if (hasExpectedURL(aEvent.originalTarget, aBrowser.__SS_restore_data.url)) {
       var content = aEvent.originalTarget.defaultView;
       restoreTextDataAndScrolling(content, aBrowser.__SS_restore_data, "");
-      aBrowser.markupDocumentViewer.authorStyleDisabled = selectedPageStyle == "_nostyle";
     }
+
+    let frameList = this.getFramesToRestore(aBrowser);
+    PageStyle.restore(aBrowser.docShell, frameList, aBrowser.__SS_restore_pageStyle);
 
     // notify the tabbrowser that this document has been completely restored
     this._sendTabRestoredNotification(aBrowser.__SS_restore_tab);
@@ -4556,12 +4556,10 @@ let TabState = {
       return false;
     }
 
-    let selectedPageStyle = browser.markupDocumentViewer.authorStyleDisabled ? "_nostyle" :
-                            this._getSelectedPageStyle(browser.contentWindow);
-    if (selectedPageStyle)
+    let selectedPageStyle = PageStyle.collect(browser.docShell);
+    if (selectedPageStyle) {
       tabData.pageStyle = selectedPageStyle;
-    else if (tabData.pageStyle)
-      delete tabData.pageStyle;
+    }
 
     this._updateTextAndScrollDataForFrame(window, browser.contentWindow,
                                           tabData.entries[tabIndex],
@@ -4638,26 +4636,4 @@ let TabState = {
     domWindowUtils.getScrollXY(false, scrollX, scrollY);
     data.scroll = scrollX.value + "," + scrollY.value;
   },
-
-  /**
-   * determine the title of the currently enabled style sheet (if any)
-   * and recurse through the frameset if necessary
-   * @param   content is a frame reference
-   * @returns the title style sheet determined to be enabled (empty string if none)
-   */
-  _getSelectedPageStyle: function (content) {
-    const forScreen = /(?:^|,)\s*(?:all|screen)\s*(?:,|$)/i;
-    for (let i = 0; i < content.document.styleSheets.length; i++) {
-      let ss = content.document.styleSheets[i];
-      let media = ss.media.mediaText;
-      if (!ss.disabled && ss.title && (!media || forScreen.test(media)))
-        return ss.title
-    }
-    for (let i = 0; i < content.frames.length; i++) {
-      let selectedPageStyle = this._getSelectedPageStyle(content.frames[i]);
-      if (selectedPageStyle)
-        return selectedPageStyle;
-    }
-    return "";
-  }
 };
