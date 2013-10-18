@@ -68,6 +68,10 @@ const CustomizableWidgets = [{
       PlacesUtils.history.QueryInterface(Ci.nsPIPlacesDatabase)
                          .asyncExecuteLegacyQueries([query], 1, options, {
         handleResult: function (aResultSet) {
+          let onHistoryVisit = function (aUri, aEvent, aItem) {
+            doc.defaultView.openUILink(aUri, aEvent);
+            CustomizableUI.hidePanelForNode(aItem);
+          };
           let fragment = doc.createDocumentFragment();
           for (let row, i = 0; (row = aResultSet.getNextRow()); i++) {
             try {
@@ -78,9 +82,11 @@ const CustomizableWidgets = [{
               let item = doc.createElementNS(kNSXUL, "toolbarbutton");
               item.setAttribute("label", title || uri);
               item.setAttribute("tabindex", "0");
-              item.addEventListener("command", function(aEvent) {
-                doc.defaultView.openUILink(uri, aEvent);
-                CustomizableUI.hidePanelForNode(item);
+              item.addEventListener("command", function (aEvent) {
+                onHistoryVisit(uri, aEvent, item);
+              });
+              item.addEventListener("click", function (aEvent) {
+                onHistoryVisit(uri, aEvent, item);
               });
               if (icon)
                 item.setAttribute("image", "moz-anno:favicon:" + icon);
