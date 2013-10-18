@@ -51,7 +51,7 @@ TextComposition::DispatchEvent(WidgetGUIEvent* aEvent,
                                nsDispatchingCallback* aCallBack)
 {
   if (aEvent->message == NS_COMPOSITION_UPDATE) {
-    mLastData = static_cast<WidgetCompositionEvent*>(aEvent)->data;
+    mLastData = aEvent->AsCompositionEvent()->data;
   }
 
   nsEventDispatcher::Dispatch(mNode, mPresContext,
