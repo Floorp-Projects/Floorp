@@ -1463,18 +1463,10 @@ XPCWrappedNative::ReparentWrapperIfFound(XPCWrappedNativeScope* aOldScope,
         if (ww) {
             RootedObject newwrapper(cx);
             MOZ_ASSERT(wrapper->NeedsSOW(), "weird wrapper wrapper");
-            newwrapper = xpc::WrapperFactory::WrapSOWObject(cx, newobj);
-            if (!newwrapper)
-                MOZ_CRASH();
 
-            // Ok, now we do the special object-plus-wrapper transplant.
-            ww = xpc::TransplantObjectWithWrapper(cx, flat, ww, newobj,
-                                                  newwrapper);
-            if (!ww)
-                MOZ_CRASH();
+            // Oops. We don't support transplanting objects with SOWs anymore.
+            MOZ_CRASH();
 
-            flat = newobj;
-            wrapper->SetWrapper(ww);
         } else {
             flat = xpc::TransplantObject(cx, flat, newobj);
             if (!flat)
@@ -2326,7 +2318,7 @@ CallMethodHelper::GatherAndConvertResults()
 
         nsresult err;
         if (isArray) {
-            if (!XPCConvert::NativeArray2JS(v.address(), (const void**)&dp->val,
+            if (!XPCConvert::NativeArray2JS(&v, (const void**)&dp->val,
                                             datum_type, &param_iid,
                                             array_count, &err)) {
                 // XXX need exception scheme for arrays to indicate bad element
@@ -2334,7 +2326,7 @@ CallMethodHelper::GatherAndConvertResults()
                 return false;
             }
         } else if (isSizedString) {
-            if (!XPCConvert::NativeStringWithSize2JS(v.address(),
+            if (!XPCConvert::NativeStringWithSize2JS(&v,
                                                      (const void*)&dp->val,
                                                      datum_type,
                                                      array_count, &err)) {
@@ -2342,7 +2334,7 @@ CallMethodHelper::GatherAndConvertResults()
                 return false;
             }
         } else {
-            if (!XPCConvert::NativeData2JS(v.address(), &dp->val, datum_type,
+            if (!XPCConvert::NativeData2JS(&v, &dp->val, datum_type,
                                            &param_iid, &err)) {
                 ThrowBadParam(err, i, mCallContext);
                 return false;
@@ -2405,7 +2397,7 @@ CallMethodHelper::QueryInterfaceFastPath() const
     RootedValue v(mCallContext, NullValue());
     nsresult err;
     bool success =
-        XPCConvert::NativeData2JS(v.address(), &qiresult,
+        XPCConvert::NativeData2JS(&v, &qiresult,
                                   nsXPTType::T_INTERFACE_IS,
                                   iid, &err);
     NS_IF_RELEASE(qiresult);

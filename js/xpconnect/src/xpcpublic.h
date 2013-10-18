@@ -38,11 +38,6 @@ namespace xpc {
 JSObject *
 TransplantObject(JSContext *cx, JS::HandleObject origobj, JS::HandleObject target);
 
-JSObject *
-TransplantObjectWithWrapper(JSContext *cx,
-                            JS::HandleObject origobj, JS::HandleObject origwrapper,
-                            JS::HandleObject targetobj, JS::HandleObject targetwrapper);
-
 // Return a raw XBL scope object corresponding to contentScope, which must
 // be an object whose global is a DOM window.
 //
@@ -107,7 +102,7 @@ extern bool
 xpc_OkToHandOutWrapper(nsWrapperCache *cache);
 
 inline JSObject*
-xpc_FastGetCachedWrapper(nsWrapperCache *cache, JSObject *scope, jsval *vp)
+xpc_FastGetCachedWrapper(nsWrapperCache *cache, JSObject *scope, JS::MutableHandleValue vp)
 {
     if (cache) {
         JSObject* wrapper = cache->GetWrapper();
@@ -115,7 +110,7 @@ xpc_FastGetCachedWrapper(nsWrapperCache *cache, JSObject *scope, jsval *vp)
             js::GetObjectCompartment(wrapper) == js::GetObjectCompartment(scope) &&
             (cache->IsDOMBinding() ? !cache->HasSystemOnlyWrapper() :
                                      xpc_OkToHandOutWrapper(cache))) {
-            *vp = OBJECT_TO_JSVAL(wrapper);
+            vp.setObject(*wrapper);
             return wrapper;
         }
     }
@@ -179,12 +174,12 @@ public:
     // Convert the given stringbuffer/length pair to a jsval
     static MOZ_ALWAYS_INLINE bool
     StringBufferToJSVal(JSContext* cx, nsStringBuffer* buf, uint32_t length,
-                        JS::Value* rval, bool* sharedBuffer)
+                        JS::MutableHandleValue rval, bool* sharedBuffer)
     {
         if (buf == sCachedBuffer &&
             JS::GetGCThingZone(sCachedString) == js::GetContextZone(cx))
         {
-            *rval = JS::StringValue(sCachedString);
+            rval.set(JS::StringValue(sCachedString));
             *sharedBuffer = false;
             return true;
         }
@@ -195,7 +190,7 @@ public:
         if (!str) {
             return false;
         }
-        *rval = JS::StringValue(str);
+        rval.setString(str);
         sCachedString = str;
         sCachedBuffer = buf;
         *sharedBuffer = true;
@@ -225,26 +220,26 @@ NS_EXPORT_(bool) Base64Decode(JSContext *cx, JS::Value val, JS::Value *out);
  * Note, the ownership of the string buffer may be moved from str to rval.
  * If that happens, str will point to an empty string after this call.
  */
-bool NonVoidStringToJsval(JSContext *cx, nsAString &str, JS::Value *rval);
-inline bool StringToJsval(JSContext *cx, nsAString &str, JS::Value *rval)
+bool NonVoidStringToJsval(JSContext *cx, nsAString &str, JS::MutableHandleValue rval);
+inline bool StringToJsval(JSContext *cx, nsAString &str, JS::MutableHandleValue rval)
 {
     // From the T_DOMSTRING case in XPCConvert::NativeData2JS.
     if (str.IsVoid()) {
-        *rval = JSVAL_NULL;
+        rval.setNull();
         return true;
     }
     return NonVoidStringToJsval(cx, str, rval);
 }
 
 inline bool
-NonVoidStringToJsval(JSContext* cx, const nsAString& str, JS::Value *rval)
+NonVoidStringToJsval(JSContext* cx, const nsAString& str, JS::MutableHandleValue rval)
 {
     nsString mutableCopy(str);
     return NonVoidStringToJsval(cx, mutableCopy, rval);
 }
 
 inline bool
-StringToJsval(JSContext* cx, const nsAString& str, JS::Value *rval)
+StringToJsval(JSContext* cx, const nsAString& str, JS::MutableHandleValue rval)
 {
     nsString mutableCopy(str);
     return StringToJsval(cx, mutableCopy, rval);
@@ -255,7 +250,7 @@ StringToJsval(JSContext* cx, const nsAString& str, JS::Value *rval)
  */
 MOZ_ALWAYS_INLINE
 bool NonVoidStringToJsval(JSContext* cx, mozilla::dom::DOMString& str,
-                          JS::Value *rval)
+                          JS::MutableHandleValue rval)
 {
     if (!str.HasStringBuffer()) {
         // It's an actual XPCOM string
@@ -264,7 +259,7 @@ bool NonVoidStringToJsval(JSContext* cx, mozilla::dom::DOMString& str,
 
     uint32_t length = str.StringBufferLength();
     if (length == 0) {
-        *rval = JS_GetEmptyStringValue(cx);
+        rval.set(JS_GetEmptyStringValue(cx));
         return true;
     }
 
@@ -283,10 +278,10 @@ bool NonVoidStringToJsval(JSContext* cx, mozilla::dom::DOMString& str,
 
 MOZ_ALWAYS_INLINE
 bool StringToJsval(JSContext* cx, mozilla::dom::DOMString& str,
-                   JS::Value *rval)
+                   JS::MutableHandleValue rval)
 {
     if (str.IsNull()) {
-        *rval = JS::NullValue();
+        rval.setNull();
         return true;
     }
     return NonVoidStringToJsval(cx, str, rval);

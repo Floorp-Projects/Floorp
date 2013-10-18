@@ -552,7 +552,7 @@ NativeInterface2JSObject(HandleObject aScope,
                          nsWrapperCache *aCache,
                          const nsIID * aIID,
                          bool aAllowWrapping,
-                         jsval *aVal,
+                         MutableHandleValue aVal,
                          nsIXPConnectJSObjectHolder **aHolder)
 {
     AutoJSContext cx;
@@ -564,7 +564,7 @@ NativeInterface2JSObject(HandleObject aScope,
                                               nullptr, aAllowWrapping, &rv))
         return rv;
 
-    MOZ_ASSERT(aAllowWrapping || !xpc::WrapperFactory::IsXrayWrapper(JSVAL_TO_OBJECT(*aVal)),
+    MOZ_ASSERT(aAllowWrapping || !xpc::WrapperFactory::IsXrayWrapper(&aVal.toObject()),
                "Shouldn't be returning a xray wrapper here");
 
     return NS_OK;
@@ -586,7 +586,7 @@ nsXPConnect::WrapNative(JSContext * aJSContext,
     RootedObject aScope(aJSContext, aScopeArg);
     RootedValue v(aJSContext);
     return NativeInterface2JSObject(aScope, aCOMObj, nullptr, &aIID,
-                                    false, v.address(), aHolder);
+                                    false, &v, aHolder);
 }
 
 /* void wrapNativeToJSVal (in JSContextPtr aJSContext, in JSObjectPtr aScope, in nsISupports aCOMObj, in nsIIDPtr aIID, out jsval aVal, out nsIXPConnectJSObjectHolder aHolder); */
@@ -609,8 +609,11 @@ nsXPConnect::WrapNativeToJSVal(JSContext * aJSContext,
 
     RootedObject aScope(aJSContext, aScopeArg);
 
-    return NativeInterface2JSObject(aScope, aCOMObj, aCache, aIID,
-                                    aAllowWrapping, aVal, aHolder);
+    RootedValue rval(aJSContext);
+    nsresult rv = NativeInterface2JSObject(aScope, aCOMObj, aCache, aIID,
+                                           aAllowWrapping, &rval, aHolder);
+    *aVal = rval;
+    return rv;
 }
 
 /* void wrapJS (in JSContextPtr aJSContext, in JSObjectPtr aJSObj, in nsIIDRef aIID, [iid_is (aIID), retval] out nsQIResult result); */
@@ -1099,13 +1102,15 @@ nsXPConnect::VariantToJS(JSContext* ctx, JSObject* scopeArg, nsIVariant* value,
     MOZ_ASSERT(js::IsObjectInContextCompartment(scope, ctx));
 
     nsresult rv = NS_OK;
-    if (!XPCVariant::VariantDataToJS(value, &rv, _retval)) {
+    RootedValue rval(ctx);
+    if (!XPCVariant::VariantDataToJS(value, &rv, &rval)) {
         if (NS_FAILED(rv))
             return rv;
 
         return NS_ERROR_FAILURE;
     }
 
+    *_retval = rval;
     return NS_OK;
 }
 
@@ -1368,7 +1373,8 @@ Base64Encode(JSContext *cx, JS::Value val, JS::Value *out)
     MOZ_ASSERT(out);
 
     JS::RootedValue root(cx, val);
-    xpc_qsACString encodedString(cx, root, root.address(), xpc_qsACString::eNull,
+    xpc_qsACString encodedString(cx, root, &root, false,
+                                 xpc_qsACString::eNull,
                                  xpc_qsACString::eStringify);
     if (!encodedString.IsValid())
         return false;
@@ -1394,7 +1400,8 @@ Base64Decode(JSContext *cx, JS::Value val, JS::Value *out)
     MOZ_ASSERT(out);
 
     JS::RootedValue root(cx, val);
-    xpc_qsACString encodedString(cx, root, root.address(), xpc_qsACString::eNull,
+    xpc_qsACString encodedString(cx, root, &root, false,
+                                 xpc_qsACString::eNull,
                                  xpc_qsACString::eNull);
     if (!encodedString.IsValid())
         return false;

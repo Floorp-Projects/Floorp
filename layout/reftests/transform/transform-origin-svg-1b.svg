@@ -1,0 +1,7 @@
+<svg xmlns='http://www.w3.org/2000/svg'>
+<g transform="translate(30,30)">
+  <rect x='10' y='10' width='100' height='100' fill='lime'
+        style="transform:rotate(90deg); transform-origin:10px 110px;
+               -webkit-transform:rotate(90deg); -webkit-transform-origin:10px 110px;"/>
+</g>
+</svg>

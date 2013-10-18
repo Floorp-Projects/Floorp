@@ -115,6 +115,8 @@ speex_resampler_strerror
 cubeb_destroy
 cubeb_init
 cubeb_get_max_channel_count
+cubeb_get_min_latency
+cubeb_get_preferred_sample_rate
 cubeb_stream_destroy
 cubeb_stream_get_position
 cubeb_stream_init

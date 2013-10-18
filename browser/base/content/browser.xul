@@ -22,6 +22,7 @@
 <window id="main-window"
         xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
         xmlns:svg="http://www.w3.org/2000/svg"
+        xmlns:html="http://www.w3.org/1999/xhtml"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         onload="gBrowserInit.onLoad()" onunload="gBrowserInit.onUnload()" onclose="return WindowIsClosing();"
         title="&mainWindow.title;@PRE_RELEASE_SUFFIX@"
@@ -182,6 +183,22 @@
 #endif
       </hbox>
     </panel>
+
+    <!-- UI tour experience -->
+    <panel id="UITourTooltip"
+           type="arrow"
+           hidden="true"
+           consumeoutsideclicks="false"
+           noautofocus="true"
+           align="start"
+           orient="vertical"
+           role="alert">
+      <label id="UITourTooltipTitle" flex="1"/>
+      <description id="UITourTooltipDescription" flex="1"/>
+    </panel>
+    <html:div id="UITourHighlightContainer" style="position:relative">
+      <html:div id="UITourHighlight"></html:div>
+    </html:div>
 
     <panel id="socialActivatedNotification"
            type="arrow"
@@ -1028,7 +1045,7 @@
 
     <splitter id="sidebar-splitter" class="chromeclass-extrachrome sidebar-splitter" hidden="true"/>
     <vbox id="appcontent" flex="1">
-      <tabbrowser id="content" disablehistory="true"
+      <tabbrowser id="content"
                   flex="1" contenttooltip="aHTMLTooltip"
                   tabcontainer="tabbrowser-tabs"
                   contentcontextmenu="contentAreaContextMenu"

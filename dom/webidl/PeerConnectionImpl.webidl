@@ -34,6 +34,10 @@ interface PeerConnectionImpl  {
   [Throws]
   void setRemoteDescription(long action, DOMString sdp);
 
+  /* Stats call */
+  [Throws]
+  void getStats(MediaStreamTrack? selector);
+
   /* Adds the stream created by GetUserMedia */
   [Throws]
   void addStream(MediaStream stream);

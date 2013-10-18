@@ -341,53 +341,6 @@ MacroAssembler::PopRegsInMaskIgnore(RegisterSet set, RegisterSet ignore)
     JS_ASSERT(diffG == 0);
 }
 
-bool MacroAssembler::maybeCallPostBarrier(Register object, ConstantOrRegister value,
-                                          Register maybeScratch) {
-    bool usedMaybeScratch = false;
-
-#ifdef JSGC_GENERATIONAL
-    JSRuntime *runtime = GetIonContext()->runtime;
-    if (value.constant()) {
-        JS_ASSERT_IF(value.value().isGCThing(),
-                     !gc::IsInsideNursery(runtime, value.value().toGCThing()));
-        return false;
-    }
-
-    TypedOrValueRegister valReg = value.reg();
-    if (valReg.hasTyped() && valReg.type() != MIRType_Object)
-        return false;
-
-    Label done;
-    Label tenured;
-    branchPtr(Assembler::Below, object, ImmWord(runtime->gcNurseryStart_), &tenured);
-    branchPtr(Assembler::Below, object, ImmWord(runtime->gcNurseryEnd_), &done);
-
-    bind(&tenured);
-    if (valReg.hasValue()) {
-        branchTestObject(Assembler::NotEqual, valReg.valueReg(), &done);
-        extractObject(valReg, maybeScratch);
-        usedMaybeScratch = true;
-    }
-    Register valObj = valReg.hasValue() ? maybeScratch : valReg.typedReg().gpr();
-    branchPtr(Assembler::Below, valObj, ImmWord(runtime->gcNurseryStart_), &done);
-    branchPtr(Assembler::AboveOrEqual, valObj, ImmWord(runtime->gcNurseryEnd_), &done);
-
-    GeneralRegisterSet saveRegs = GeneralRegisterSet::Volatile();
-    PushRegsInMask(saveRegs);
-    Register callScratch = saveRegs.getAny();
-    setupUnalignedABICall(2, callScratch);
-    movePtr(ImmPtr(runtime), callScratch);
-    passABIArg(callScratch);
-    passABIArg(object);
-    callWithABI(JS_FUNC_TO_DATA_PTR(void *, PostWriteBarrier));
-    PopRegsInMask(saveRegs);
-
-    bind(&done);
-#endif
-
-    return usedMaybeScratch;
-}
-
 void
 MacroAssembler::branchNurseryPtr(Condition cond, const Address &ptr1, const ImmMaybeNurseryPtr &ptr2,
                                  Label *label)

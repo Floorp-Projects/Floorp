@@ -59,6 +59,7 @@ GDBFragment *GDBFragment::allFragments = nullptr;
 int
 main (int argc, const char **argv)
 {
+    if (!JS_Init()) return 1;
     JSRuntime *runtime = checkPtr(JS_NewRuntime(1024 * 1024, JS_USE_HELPER_THREADS));
     JS_SetGCParameter(runtime, JSGC_MAX_BYTES, 0xffffffff);
     JS_SetNativeStackQuota(runtime, 5000000);

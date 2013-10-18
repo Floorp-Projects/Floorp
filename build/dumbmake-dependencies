@@ -29,9 +29,9 @@ toolkit/library
   editor
   parser
   js/src
-    js/xpconnect
-      js/xpconnect/loader
     mfbt
+  js/xpconnect
+    js/xpconnect/loader
   view
   caps
   xpfe/appshell

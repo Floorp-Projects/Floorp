@@ -186,6 +186,8 @@ SandboxImport(JSContext *cx, unsigned argc, Value *vp)
 static bool
 CreateXMLHttpRequest(JSContext *cx, unsigned argc, jsval *vp)
 {
+    CallArgs args = CallArgsFromVp(argc, vp);
+
     nsIScriptSecurityManager *ssm = XPCWrapper::GetSecurityManager();
     if (!ssm)
         return false;
@@ -206,7 +208,7 @@ CreateXMLHttpRequest(JSContext *cx, unsigned argc, jsval *vp)
     if (NS_FAILED(rv))
         return false;
 
-    rv = nsContentUtils::WrapNative(cx, global, xhr, vp);
+    rv = nsContentUtils::WrapNative(cx, global, xhr, args.rval());
     if (NS_FAILED(rv))
         return false;
 

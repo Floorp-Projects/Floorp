@@ -9,7 +9,7 @@ var iterator_fn = Set.prototype[std_iterator];
 assertThrowsInstanceOf(function () { iterator_fn.call({}); }, TypeError);
 assertThrowsInstanceOf(function () { iterator_fn.call(Map()); }, TypeError);
 var setw = g.eval("Set(['x', 'y'])");
-assertIteratorResult(iterator_fn.call(setw).next(), "x", false);
+assertIteratorNext(iterator_fn.call(setw), "x");
 
 var next_fn = Set()[std_iterator]().next;
 assertThrowsInstanceOf(function () { next_fn.call({}); }, TypeError);

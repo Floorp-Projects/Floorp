@@ -2340,6 +2340,26 @@ class LMathFunctionD : public LCallInstructionHelper<1, 1, 1>
     }
 };
 
+class LMathFunctionF : public LCallInstructionHelper<1, 1, 1>
+{
+  public:
+    LIR_HEADER(MathFunctionF)
+    LMathFunctionF(const LAllocation &input, const LDefinition &temp) {
+        setOperand(0, input);
+        setTemp(0, temp);
+    }
+
+    const LDefinition *temp() {
+        return getTemp(0);
+    }
+    MMathFunction *mir() const {
+        return mir_->toMathFunction();
+    }
+    const char *extraName() const {
+        return MMathFunction::FunctionName(mir()->function());
+    }
+};
+
 // Adds two integers, returning an integer value.
 class LAddI : public LBinaryMath<0>
 {

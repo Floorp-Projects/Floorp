@@ -9,8 +9,8 @@ def add_libdir_to_path():
     from os.path import dirname, exists, join, realpath
     js_src_dir = dirname(dirname(realpath(sys.argv[0])))
     assert exists(join(js_src_dir,'jsapi.h'))
-    sys.path.append(join(js_src_dir, 'lib'))
-    sys.path.append(join(js_src_dir, 'tests', 'lib'))
+    sys.path.insert(0, join(js_src_dir, 'lib'))
+    sys.path.insert(0, join(js_src_dir, 'tests', 'lib'))
 
 add_libdir_to_path()
 
