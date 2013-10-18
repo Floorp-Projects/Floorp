@@ -3,8 +3,6 @@ include protocol PTestActorPunningPunned;
 include protocol PTestActorPunningSub;
 include "mozilla/_ipdltest/IPDLUnitTestUtils.h";
 
-using mozilla::_ipdltest::Bad;
-
 namespace mozilla {
 namespace _ipdltest {
 
