@@ -21,6 +21,7 @@ EXPORTS_mozilla_FILES += \
   Char16.h \
   CheckedInt.h \
   Compiler.h \
+  Compression.h \
   Constants.h \
   DebugOnly.h \
   decimal/Decimal.h \
