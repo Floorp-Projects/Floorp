@@ -39,7 +39,7 @@ nsDOMFocusEvent::GetRelatedTarget(nsIDOMEventTarget** aRelatedTarget)
 mozilla::dom::EventTarget*
 nsDOMFocusEvent::GetRelatedTarget()
 {
-  return static_cast<InternalFocusEvent*>(mEvent)->relatedTarget;
+  return mEvent->AsFocusEvent()->relatedTarget;
 }
 
 nsresult
@@ -52,7 +52,7 @@ nsDOMFocusEvent::InitFocusEvent(const nsAString& aType,
 {
   nsresult rv = nsDOMUIEvent::InitUIEvent(aType, aCanBubble, aCancelable, aView, aDetail);
   NS_ENSURE_SUCCESS(rv, rv);
-  static_cast<InternalFocusEvent*>(mEvent)->relatedTarget = aRelatedTarget;
+  mEvent->AsFocusEvent()->relatedTarget = aRelatedTarget;
   return NS_OK;
 }
 
