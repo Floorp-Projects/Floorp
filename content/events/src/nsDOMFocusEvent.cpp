@@ -27,14 +27,6 @@ nsDOMFocusEvent::nsDOMFocusEvent(mozilla::dom::EventTarget* aOwner,
   }
 }
 
-nsDOMFocusEvent::~nsDOMFocusEvent()
-{
-  if (mEventIsInternal && mEvent) {
-    delete static_cast<InternalFocusEvent*>(mEvent);
-    mEvent = nullptr;
-  }
-}
-
 /* readonly attribute nsIDOMEventTarget relatedTarget; */
 NS_IMETHODIMP
 nsDOMFocusEvent::GetRelatedTarget(nsIDOMEventTarget** aRelatedTarget)
