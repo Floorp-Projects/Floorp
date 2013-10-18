@@ -623,8 +623,7 @@ nsDOMEvent::DuplicatePrivateData()
     }
     case NS_SCROLLPORT_EVENT:
     {
-      InternalScrollPortEvent* oldScrollPortEvent =
-        static_cast<InternalScrollPortEvent*>(mEvent);
+      InternalScrollPortEvent* oldScrollPortEvent = mEvent->AsScrollPortEvent();
       InternalScrollPortEvent* scrollPortEvent =
         new InternalScrollPortEvent(false, msg, nullptr);
       scrollPortEvent->AssignScrollPortEventData(*oldScrollPortEvent, true);
