@@ -649,8 +649,8 @@ public class ContactService implements GeckoEventListener {
 
             // Add the raw contact ID and the properties to the contact
             contact.put("id", String.valueOf(rawContactId));
-            contact.put("updated", "0000T00:00:00.000Z");
-            contact.put("published", "0000T00:00:00.000Z");
+            contact.put("updated", null);
+            contact.put("published", null);
             contact.put("properties", contactProperties);
         } catch (JSONException e) {
             throw new IllegalArgumentException(e);
