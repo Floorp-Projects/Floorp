@@ -142,6 +142,7 @@ BookmarksView.prototype = Util.extend(Object.create(View.prototype), {
         this._set.removeItemAt(this._set.itemCount - 1, true);
     }
     this._set.arrangeItems();
+    this._set.removeAttribute("fade");
     this._inBatch = false;
     rootNode.containerOpen = false;
   },
@@ -307,8 +308,7 @@ let BookmarksStartView = {
   init: function init() {
     this._view = new BookmarksView(this._grid, StartUI.maxResultsPerSection, Bookmarks.metroRoot, true);
     this._view.getBookmarks();
-    this._grid.removeAttribute("fade");
-},
+  },
 
   uninit: function uninit() {
     if (this._view) {
