@@ -5,4 +5,7 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 DIRS += ['public', 'src']
-TEST_DIRS += ['tests']
+
+XPCSHELL_TESTS_MANIFESTS += [
+    'tests/unit/xpcshell.ini',
+]
