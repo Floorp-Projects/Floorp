@@ -3481,9 +3481,9 @@ nsEventStateManager::PostHandleEvent(nsPresContext* aPresContext,
 
   case NS_GESTURENOTIFY_EVENT_START:
     {
-      if (nsEventStatus_eConsumeNoDefault != *aStatus)
-        DecideGestureEvent(static_cast<WidgetGestureNotifyEvent*>(aEvent),
-                           mCurrentTarget);
+      if (nsEventStatus_eConsumeNoDefault != *aStatus) {
+        DecideGestureEvent(aEvent->AsGestureNotifyEvent(), mCurrentTarget);
+      }
     }
     break;
 
