@@ -26,6 +26,11 @@ namespace mozilla {
 class InternalScriptErrorEvent : public WidgetEvent
 {
 public:
+  virtual InternalScriptErrorEvent* AsScriptErrorEvent() MOZ_OVERRIDE
+  {
+    return this;
+  }
+
   InternalScriptErrorEvent(bool aIsTrusted, uint32_t aMessage) :
     WidgetEvent(aIsTrusted, aMessage, NS_SCRIPT_ERROR_EVENT),
     lineNr(0), errorMsg(nullptr), fileName(nullptr)
@@ -58,6 +63,11 @@ public:
 class InternalScrollPortEvent : public WidgetGUIEvent
 {
 public:
+  virtual InternalScrollPortEvent* AsScrollPortEvent() MOZ_OVERRIDE
+  {
+    return this;
+  }
+
   enum orientType
   {
     vertical   = 0,
@@ -90,6 +100,11 @@ public:
 class InternalScrollAreaEvent : public WidgetGUIEvent
 {
 public:
+  virtual InternalScrollAreaEvent* AsScrollAreaEvent() MOZ_OVERRIDE
+  {
+    return this;
+  }
+
   InternalScrollAreaEvent(bool aIsTrusted, uint32_t aMessage,
                           nsIWidget* aWidget) :
     WidgetGUIEvent(aIsTrusted, aMessage, aWidget, NS_SCROLLAREA_EVENT)
@@ -117,6 +132,8 @@ public:
 class InternalFormEvent : public WidgetEvent
 {
 public:
+  virtual InternalFormEvent* AsFormEvent() MOZ_OVERRIDE { return this; }
+
   InternalFormEvent(bool aIsTrusted, uint32_t aMessage) :
     WidgetEvent(aIsTrusted, aMessage, NS_FORM_EVENT),
     originator(nullptr)
@@ -140,6 +157,11 @@ public:
 class InternalClipboardEvent : public WidgetEvent
 {
 public:
+  virtual InternalClipboardEvent* AsClipboardEvent() MOZ_OVERRIDE
+  {
+    return this;
+  }
+
   InternalClipboardEvent(bool aIsTrusted, uint32_t aMessage) :
     WidgetEvent(aIsTrusted, aMessage, NS_CLIPBOARD_EVENT)
   {
@@ -163,6 +185,8 @@ public:
 class InternalFocusEvent : public InternalUIEvent
 {
 public:
+  virtual InternalFocusEvent* AsFocusEvent() MOZ_OVERRIDE { return this; }
+
   InternalFocusEvent(bool aIsTrusted, uint32_t aMessage) :
     InternalUIEvent(aIsTrusted, aMessage, NS_FOCUS_EVENT, 0),
     fromRaise(false), isRefocus(false)
@@ -192,6 +216,11 @@ public:
 class InternalTransitionEvent : public WidgetEvent
 {
 public:
+  virtual InternalTransitionEvent* AsTransitionEvent() MOZ_OVERRIDE
+  {
+    return this;
+  }
+
   InternalTransitionEvent(bool aIsTrusted, uint32_t aMessage,
                           const nsAString& aPropertyName, float aElapsedTime,
                           const nsAString& aPseudoElement) :
@@ -222,6 +251,11 @@ public:
 class InternalAnimationEvent : public WidgetEvent
 {
 public:
+  virtual InternalAnimationEvent* AsAnimationEvent() MOZ_OVERRIDE
+  {
+    return this;
+  }
+
   InternalAnimationEvent(bool aIsTrusted, uint32_t aMessage,
                          const nsAString& aAnimationName, float aElapsedTime,
                          const nsAString& aPseudoElement) :

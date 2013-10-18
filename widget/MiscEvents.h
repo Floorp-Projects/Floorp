@@ -22,6 +22,11 @@ namespace mozilla {
 class WidgetContentCommandEvent : public WidgetGUIEvent
 {
 public:
+  virtual WidgetContentCommandEvent* AsContentCommandEvent() MOZ_OVERRIDE
+  {
+    return this;
+  }
+
   WidgetContentCommandEvent(bool aIsTrusted, uint32_t aMessage,
                             nsIWidget* aWidget,
                             bool aOnlyEnabledCheck = false) :
@@ -72,6 +77,8 @@ public:
 class WidgetCommandEvent : public WidgetGUIEvent
 {
 public:
+  virtual WidgetCommandEvent* AsCommandEvent() MOZ_OVERRIDE { return this; }
+
   WidgetCommandEvent(bool aIsTrusted, nsIAtom* aEventType,
                      nsIAtom* aCommand, nsIWidget* aWidget) :
     WidgetGUIEvent(aIsTrusted, NS_USER_DEFINED_EVENT, aWidget,
@@ -102,6 +109,8 @@ public:
 class WidgetPluginEvent : public WidgetGUIEvent
 {
 public:
+  virtual WidgetPluginEvent* AsPluginEvent() MOZ_OVERRIDE { return this; }
+
   WidgetPluginEvent(bool aIsTrusted, uint32_t aMessage, nsIWidget* aWidget) :
     WidgetGUIEvent(aIsTrusted, aMessage, aWidget, NS_PLUGIN_EVENT),
     retargetToFocusedDocument(false)
