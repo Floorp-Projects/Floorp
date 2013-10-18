@@ -274,8 +274,7 @@ def p_IncludeStmt(p):
     p[0] = inc
 
 def p_UsingStmt(p):
-    """UsingStmt : USING CxxType
-                 | USING CxxType FROM STRING
+    """UsingStmt : USING CxxType FROM STRING
                  | USING CLASS CxxType FROM STRING
                  | USING STRUCT CxxType FROM STRING"""
     if 6 == len(p):
