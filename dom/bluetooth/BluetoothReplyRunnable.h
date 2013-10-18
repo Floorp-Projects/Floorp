@@ -37,7 +37,7 @@ public:
 protected:
   virtual ~BluetoothReplyRunnable();
 
-  virtual bool ParseSuccessfulReply(JS::Value* aValue) = 0;
+  virtual bool ParseSuccessfulReply(JS::MutableHandle<JS::Value> aValue) = 0;
 
   // This is an autoptr so we don't have to bring the ipdl include into the
   // header. We assume we'll only be running this once and it should die on
@@ -45,7 +45,7 @@ protected:
   nsAutoPtr<BluetoothReply> mReply;
 
 private:
-  nsresult FireReply(const JS::Value& aVal);
+  nsresult FireReply(JS::Handle<JS::Value> aVal);
   nsresult FireErrorString();
 
   nsCOMPtr<nsIDOMDOMRequest> mDOMRequest;
@@ -59,9 +59,9 @@ public:
  ~BluetoothVoidReplyRunnable();
 
 protected:
-  virtual bool ParseSuccessfulReply(JS::Value* aValue) MOZ_OVERRIDE
+  virtual bool ParseSuccessfulReply(JS::MutableHandle<JS::Value> aValue) MOZ_OVERRIDE
   {
-    *aValue = JSVAL_VOID;
+    aValue.setUndefined();
     return true;
   }
 };

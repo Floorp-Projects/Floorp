@@ -8,6 +8,8 @@
 
 #include "nsContentUtils.h"
 
+using namespace JS;
+
 xpcJSWeakReference::xpcJSWeakReference()
 {
 }
@@ -69,10 +71,13 @@ xpcJSWeakReference::Get(JSContext* aCx, JS::Value* aRetval)
     if (!wrappedObj) {
         // We have a generic XPCOM object that supports weak references here.
         // Wrap it and pass it out.
-        JS::Rooted<JSObject*> global(aCx, JS::CurrentGlobalOrNull(aCx));
-        return nsContentUtils::WrapNative(aCx, global,
-                                          supports, &NS_GET_IID(nsISupports),
-                                          aRetval);
+        RootedObject global(aCx, CurrentGlobalOrNull(aCx));
+        RootedValue rval(aCx);
+        nsresult rv = nsContentUtils::WrapNative(aCx, global,
+                                                 supports, &NS_GET_IID(nsISupports),
+                                                 &rval);
+        *aRetval = rval;
+        return rv;
     }
 
     JS::RootedObject obj(aCx, wrappedObj->GetJSObject());

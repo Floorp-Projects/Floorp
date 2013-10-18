@@ -5,9 +5,9 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 ANDROID_RESFILES += [
-    'resources/drawable-mdpi/desktop.png',
-    'resources/drawable-mdpi/mobile.png',
-    'resources/drawable/pin_background.xml',
+    'resources/drawable-mdpi/sync_desktop.png',
+    'resources/drawable-mdpi/sync_mobile.png',
+    'resources/drawable/sync_pin_background.xml',
     'resources/layout/sync_account.xml',
     'resources/layout/sync_list_item.xml',
     'resources/layout/sync_redirect_to_setup.xml',

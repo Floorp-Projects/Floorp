@@ -22,7 +22,7 @@ var count = 0;
 for (var [k, v] of testMap) {
     assertEq(initialMap.has(k), true);
     assertEq(initialMap.get(k), testMap.get(k));
-    assertIteratorResult(iterator.next(), [k, testMap.get(k)], false);
+    assertIteratorNext(iterator, [k, testMap.get(k)]);
     count++;
 }
 

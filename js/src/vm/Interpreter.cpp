@@ -3447,6 +3447,24 @@ js::GetProperty(JSContext *cx, HandleValue v, HandlePropertyName name, MutableHa
 }
 
 bool
+js::CallProperty(JSContext *cx, HandleValue v, HandlePropertyName name, MutableHandleValue vp)
+{
+    if (!GetProperty(cx, v, name, vp))
+        return false;
+
+#if JS_HAS_NO_SUCH_METHOD
+    if (JS_UNLIKELY(vp.isPrimitive()) && v.isObject())
+    {
+        RootedObject obj(cx, &v.toObject());
+        if (!OnUnknownMethod(cx, obj, StringValue(name), vp))
+            return false;
+    }
+#endif
+
+    return true;
+}
+
+bool
 js::GetScopeName(JSContext *cx, HandleObject scopeChain, HandlePropertyName name, MutableHandleValue vp)
 {
     RootedShape shape(cx);

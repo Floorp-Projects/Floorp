@@ -78,6 +78,13 @@ const ContentPanning = {
       return;
     }
 
+    let start = Date.now();
+    let thread = Services.tm.currentThread;
+    while (this._delayEvents && (Date.now() - start) < this._activeDurationMs) {
+      thread.processNextEvent(true);
+    }
+    this._delayEvents = false;
+
     switch (evt.type) {
       case 'mousedown':
       case 'touchstart':
@@ -229,6 +236,16 @@ const ContentPanning = {
         // We prevent end events to avoid sending a focus event. See bug 889717.
         evt.preventDefault();
       }
+    } else if (this.target && click && !this.panning) {
+      this.notify(this._activationTimer);
+
+      this._delayEvents = true;
+      let start = Date.now();
+      let thread = Services.tm.currentThread;
+      while (this._delayEvents && (Date.now() - start) < this._activeDurationMs) {
+        thread.processNextEvent(true);
+      }
+      this._delayEvents = false;
     }
 
     this._finishPanning();
@@ -465,6 +482,12 @@ const ContentPanning = {
     let delay = Services.prefs.getIntPref('ui.touch_activation.delay_ms');
     delete this._activationDelayMs;
     return this._activationDelayMs = delay;
+  },
+
+  get _activeDurationMs() {
+    let duration = Services.prefs.getIntPref('ui.touch_activation.duration_ms');
+    delete this._activeDurationMs;
+    return this._activeDurationMs = duration;
   },
 
   _resetActive: function cp_resetActive() {

@@ -5,13 +5,13 @@ load(libdir + "iteration.js");
 var m = Map();
 var it = m[std_iterator]();
 m.clear();
-assertIteratorResult(it.next(), undefined, true);
+assertIteratorDone(it, undefined);
 
 m = Map([["a", 1], ["b", 2], ["c", 3], ["d", 4]]);
 it = m[std_iterator]();
-assertIteratorResult(it.next(), ["a", 1], false);
+assertIteratorNext(it, ["a", 1]);
 m.clear();
-assertIteratorResult(it.next(), undefined, true);
+assertIteratorDone(it, undefined);
 
 var log = "";
 m = Map([["a", 1], ["b", 2], ["c", 3], ["d", 4]]);

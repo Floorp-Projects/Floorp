@@ -22,6 +22,10 @@ interface PeerConnectionObserver
   void onAddIceCandidateError(unsigned long name, DOMString message);
   void onIceCandidate(unsigned short level, DOMString mid, DOMString candidate);
 
+  /* Stats callbacks */
+  void onGetStatsSuccess(optional RTCStatsReportInternal report);
+  void onGetStatsError(unsigned long name, DOMString message);
+
   /* Data channel callbacks */
   void notifyDataChannel(DataChannel channel);
   void notifyConnection();

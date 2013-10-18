@@ -467,6 +467,73 @@ function ArrayFindIndex(predicate/*, thisArg*/) {
     return -1;
 }
 
+#define ARRAY_ITERATOR_SLOT_ITERATED_OBJECT 0
+#define ARRAY_ITERATOR_SLOT_NEXT_INDEX 1
+#define ARRAY_ITERATOR_SLOT_ITEM_KIND 2
+
+#define ITEM_KIND_VALUE 0
+#define ITEM_KIND_KEY_AND_VALUE 1
+#define ITEM_KIND_KEY 2
+
+// ES6 draft specification, section 22.1.5.1, version 2013-09-05.
+function CreateArrayIterator(obj, kind) {
+    var iteratedObject = ToObject(obj);
+    var iterator = NewArrayIterator();
+    UnsafeSetReservedSlot(iterator, ARRAY_ITERATOR_SLOT_ITERATED_OBJECT, iteratedObject);
+    UnsafeSetReservedSlot(iterator, ARRAY_ITERATOR_SLOT_NEXT_INDEX, 0);
+    UnsafeSetReservedSlot(iterator, ARRAY_ITERATOR_SLOT_ITEM_KIND, kind);
+    return iterator;
+}
+
+function ArrayIteratorIdentity() {
+    return this;
+}
+
+function ArrayIteratorNext() {
+    // FIXME: ArrayIterator prototype should not pass this test.  Bug 924059.
+    if (!IsObject(this) || !IsArrayIterator(this))
+        ThrowError(JSMSG_INCOMPATIBLE_METHOD, "ArrayIterator", "next", ToString(this));
+
+    var a = UnsafeGetReservedSlot(this, ARRAY_ITERATOR_SLOT_ITERATED_OBJECT);
+    var index = UnsafeGetReservedSlot(this, ARRAY_ITERATOR_SLOT_NEXT_INDEX);
+    var itemKind = UnsafeGetReservedSlot(this, ARRAY_ITERATOR_SLOT_ITEM_KIND);
+
+    // FIXME: This should be ToLength, which clamps at 2**53.  Bug 924058.
+    if (index >= TO_UINT32(a.length)) {
+        // When the above is changed to ToLength, use +1/0 here instead
+        // of MAX_UINT32.
+        UnsafeSetReservedSlot(this, ARRAY_ITERATOR_SLOT_NEXT_INDEX, 0xffffffff);
+        return { value: undefined, done: true };
+    }
+
+    UnsafeSetReservedSlot(this, ARRAY_ITERATOR_SLOT_NEXT_INDEX, index + 1);
+
+    if (itemKind === ITEM_KIND_VALUE)
+        return { value: a[index], done: false };
+
+    if (itemKind === ITEM_KIND_KEY_AND_VALUE) {
+        var pair = NewDenseArray(2);
+        pair[0] = index;
+        pair[1] = a[index];
+        return { value: pair, done : false };
+    }
+
+    assert(itemKind === ITEM_KIND_KEY, itemKind);
+    return { value: index, done: false };
+}
+
+function ArrayValues() {
+    return CreateArrayIterator(this, ITEM_KIND_VALUE);
+}
+
+function ArrayEntries() {
+    return CreateArrayIterator(this, ITEM_KIND_KEY_AND_VALUE);
+}
+
+function ArrayKeys() {
+    return CreateArrayIterator(this, ITEM_KIND_KEY);
+}
+
 #ifdef ENABLE_PARALLEL_JS
 
 /*

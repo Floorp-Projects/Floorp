@@ -847,7 +847,7 @@ static JS_ALWAYS_INLINE jsval
 JS_NumberValue(double d)
 {
     int32_t i;
-    d = JS_CANONICALIZE_NAN(d);
+    d = JS::CanonicalizeNaN(d);
     if (mozilla::DoubleIsInt32(d, &i))
         return INT_TO_JSVAL(i);
     return DOUBLE_TO_JSVAL(d);
@@ -1767,13 +1767,6 @@ JS_WrapId(JSContext *cx, jsid *idp);
 
 extern JS_PUBLIC_API(JSObject *)
 JS_TransplantObject(JSContext *cx, JS::Handle<JSObject*> origobj, JS::Handle<JSObject*> target);
-
-extern JS_FRIEND_API(JSObject *)
-js_TransplantObjectWithWrapper(JSContext *cx,
-                               JS::Handle<JSObject*> origobj,
-                               JS::Handle<JSObject*> origwrapper,
-                               JS::Handle<JSObject*> targetobj,
-                               JS::Handle<JSObject*> targetwrapper);
 
 extern JS_PUBLIC_API(bool)
 JS_RefreshCrossCompartmentWrappers(JSContext *cx, JSObject *ob);
@@ -3200,15 +3193,6 @@ JS_NewPropertyIterator(JSContext *cx, JSObject *obj);
  */
 extern JS_PUBLIC_API(bool)
 JS_NextProperty(JSContext *cx, JSObject *iterobj, jsid *idp);
-
-/*
- * A JSNative that creates and returns a new iterator that iterates over the
- * elements of |this|, up to |this.length|, in index order. This can be used to
- * make any array-like object iterable. Just give the object an obj.iterator()
- * method using this JSNative as the implementation.
- */
-extern JS_PUBLIC_API(bool)
-JS_ArrayIterator(JSContext *cx, unsigned argc, jsval *vp);
 
 extern JS_PUBLIC_API(bool)
 JS_CheckAccess(JSContext *cx, JSObject *obj, jsid id, JSAccessMode mode,

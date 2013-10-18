@@ -228,7 +228,7 @@ Key::DecodeJSValInternal(const unsigned char*& aPos, const unsigned char* aEnd,
   else if (*aPos - aTypeOffset == eString) {
     nsString key;
     DecodeString(aPos, aEnd, key);
-    if (!xpc::StringToJsval(aCx, key, aVal.address())) {
+    if (!xpc::StringToJsval(aCx, key, aVal)) {
       return NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR;
     }
   }
