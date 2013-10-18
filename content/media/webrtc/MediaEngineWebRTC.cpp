@@ -29,6 +29,10 @@ GetUserMediaLog()
 
 #include "MediaEngineWebRTC.h"
 #include "ImageContainer.h"
+#include "nsIComponentRegistrar.h"
+#include "MediaEngineTabVideoSource.h"
+#include "nsITabSource.h"
+
 #ifdef MOZ_WIDGET_ANDROID
 #include "AndroidBridge.h"
 #endif
@@ -37,6 +41,23 @@ GetUserMediaLog()
 #define LOG(args) PR_LOG(GetUserMediaLog(), PR_LOG_DEBUG, args)
 
 namespace mozilla {
+#ifndef MOZ_B2G_CAMERA
+MediaEngineWebRTC::MediaEngineWebRTC()
+  : mMutex("mozilla::MediaEngineWebRTC")
+  , mVideoEngine(nullptr)
+  , mVoiceEngine(nullptr)
+  , mVideoEngineInit(false)
+  , mAudioEngineInit(false)
+  , mHasTabVideoSource(false)
+{
+  nsCOMPtr<nsIComponentRegistrar> compMgr;
+  NS_GetComponentRegistrar(getter_AddRefs(compMgr));
+  if (compMgr) {
+    compMgr->IsContractIDRegistered(NS_TABSOURCESERVICE_CONTRACTID, &mHasTabVideoSource);
+  }
+}
+#endif
+
 
 void
 MediaEngineWebRTC::EnumerateVideoDevices(nsTArray<nsRefPtr<MediaEngineVideoSource> >* aVSources)
@@ -99,6 +120,9 @@ MediaEngineWebRTC::EnumerateVideoDevices(nsTArray<nsRefPtr<MediaEngineVideoSourc
     return;
   }
 #endif
+
+  if (mHasTabVideoSource)
+    aVSources->AppendElement(new MediaEngineTabVideoSource());
 
   if (!mVideoEngine) {
     if (!(mVideoEngine = webrtc::VideoEngine::Create())) {
