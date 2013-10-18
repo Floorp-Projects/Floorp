@@ -44,8 +44,7 @@ nsDOMUIEvent::nsDOMUIEvent(mozilla::dom::EventTarget* aOwner,
   {
     case NS_UI_EVENT:
     {
-      InternalUIEvent *event = static_cast<InternalUIEvent*>(mEvent);
-      mDetail = event->detail;
+      mDetail = mEvent->AsUIEvent()->detail;
       break;
     }
 
