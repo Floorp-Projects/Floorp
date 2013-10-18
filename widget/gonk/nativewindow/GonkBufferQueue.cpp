@@ -480,10 +480,12 @@ status_t GonkBufferQueue::queueBuffer(int buf,
 
     input.deflate(&timestamp, &crop, &scalingMode, &transform, &fence);
 
+#if ANDROID_VERSION >= 18
     if (fence == NULL) {
         ST_LOGE("queueBuffer: fence is NULL");
         return BAD_VALUE;
     }
+#endif
 
     ST_LOGV("queueBuffer: slot=%d time=%#llx crop=[%d,%d,%d,%d] tr=%#x "
             "scale=%s",
@@ -583,7 +585,12 @@ status_t GonkBufferQueue::queueBuffer(int buf,
     return NO_ERROR;
 }
 
+#if ANDROID_VERSION == 17
+void GonkBufferQueue::cancelBuffer(int buf, sp<Fence> fence) {
+#else
 void GonkBufferQueue::cancelBuffer(int buf, const sp<Fence>& fence) {
+#endif
+
     ST_LOGV("cancelBuffer: slot=%d", buf);
     Mutex::Autolock lock(mMutex);
 
@@ -601,9 +608,11 @@ void GonkBufferQueue::cancelBuffer(int buf, const sp<Fence>& fence) {
         ST_LOGE("cancelBuffer: slot %d is not owned by the client (state=%d)",
                 buf, mSlots[buf].mBufferState);
         return;
+#if ANDROID_VERSION >= 18
     } else if (fence == NULL) {
         ST_LOGE("cancelBuffer: fence is NULL");
         return;
+#endif
     }
     mSlots[buf].mBufferState = BufferSlot::FREE;
     mSlots[buf].mFrameNumber = 0;
@@ -872,7 +881,11 @@ status_t GonkBufferQueue::acquireBuffer(BufferItem *buffer) {
 status_t GonkBufferQueue::releaseBuffer(int buf, const sp<Fence>& fence) {
     Mutex::Autolock _l(mMutex);
 
+#if ANDROID_VERSION == 17
+    if (buf == INVALID_BUFFER_SLOT) {
+#else
     if (buf == INVALID_BUFFER_SLOT || fence == NULL) {
+#endif
         return BAD_VALUE;
     }
 

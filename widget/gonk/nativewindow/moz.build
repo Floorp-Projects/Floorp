@@ -21,7 +21,7 @@ EXPORTS += [
     'GonkNativeWindowClient.h',
 ]
 
-if CONFIG['ANDROID_VERSION'] == '18':
+if CONFIG['ANDROID_VERSION'] in ('17', '18'):
     EXPORTS += [
         'GonkBufferQueue.h',
         'GonkConsumerBase.h',
@@ -35,7 +35,7 @@ elif CONFIG['ANDROID_VERSION'] == '15':
     ]
 
 if CONFIG['MOZ_B2G_CAMERA'] or CONFIG['MOZ_OMX_DECODER']:
-    if CONFIG['ANDROID_VERSION'] == '18':
+    if CONFIG['ANDROID_VERSION'] in ('17', '18'):
         CPP_SOURCES += [
             'GonkBufferQueue.cpp',
             'GonkConsumerBase.cpp',
