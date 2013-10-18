@@ -176,19 +176,21 @@ WebappsActor.prototype = {
         // Needed to evict manifest cache on content side
         // (has to be dispatched first, otherwise other messages like
         // Install:Return:OK are going to use old manifest version)
-        reg.broadcastMessage("Webapps:PackageEvent",
-                             { type: "installed",
-                               manifestURL: aApp.manifestURL,
-                               app: aApp,
-                               manifest: manifest
-                             });
-
+        reg.broadcastMessage("Webapps:UpdateState", {
+          app: aApp,
+          manifest: manifest,
+          manifestURL: aApp.manifestURL
+        });
+        reg.broadcastMessage("Webapps:FireEvent", {
+          eventType: ["downloadsuccess", "downloadapplied"],
+          manifestURL: aApp.manifestURL
+        });
         reg.broadcastMessage("Webapps:AddApp", { id: aId, app: aApp });
-        reg.broadcastMessage("Webapps:Install:Return:OK",
-                             { app: aApp,
-                               oid: "foo",
-                               requestID: "bar"
-                             });
+        reg.broadcastMessage("Webapps:Install:Return:OK", {
+          app: aApp,
+          oid: "foo",
+          requestID: "bar"
+        });
 
         Services.obs.notifyObservers(null, "webapps-installed",
           JSON.stringify({ manifestURL: aApp.manifestURL }));

@@ -3597,7 +3597,7 @@ class MRandom : public MNullaryInstruction
 
 class MMathFunction
   : public MUnaryInstruction,
-    public DoublePolicy<0>
+    public FloatingPointPolicy<0>
 {
   public:
     enum Function {
@@ -3634,6 +3634,7 @@ class MMathFunction
       : MUnaryInstruction(input), function_(function), cache_(cache)
     {
         setResultType(MIRType_Double);
+        setPolicyType(MIRType_Double);
         setMovable();
     }
 
@@ -3672,6 +3673,13 @@ class MMathFunction
     void printOpcode(FILE *fp) const;
 
     static const char *FunctionName(Function function);
+
+    bool isFloat32Commutative() const {
+        return function_ == Log || function_ == Sin || function_ == Cos
+               || function_ == Exp || function_ == Tan || function_ == ATan
+               || function_ == ASin || function_ == ACos;
+    }
+    void trySpecializeFloat32();
 };
 
 class MAdd : public MBinaryArithInstruction
@@ -7173,10 +7181,12 @@ class MCallGetProperty
 {
     CompilerRootPropertyName name_;
     bool idempotent_;
+    bool callprop_;
 
-    MCallGetProperty(MDefinition *value, PropertyName *name)
+    MCallGetProperty(MDefinition *value, PropertyName *name, bool callprop)
       : MUnaryInstruction(value), name_(name),
-        idempotent_(false)
+        idempotent_(false),
+        callprop_(callprop)
     {
         setResultType(MIRType_Value);
     }
@@ -7184,14 +7194,17 @@ class MCallGetProperty
   public:
     INSTRUCTION_HEADER(CallGetProperty)
 
-    static MCallGetProperty *New(MDefinition *value, PropertyName *name) {
-        return new MCallGetProperty(value, name);
+    static MCallGetProperty *New(MDefinition *value, PropertyName *name, bool callprop) {
+        return new MCallGetProperty(value, name, callprop);
     }
     MDefinition *value() const {
         return getOperand(0);
     }
     PropertyName *name() const {
         return name_;
+    }
+    bool callprop() const {
+        return callprop_;
     }
     TypePolicy *typePolicy() {
         return this;
@@ -9005,18 +9018,18 @@ MIRType DenseNativeElementType(types::CompilerConstraintList *constraints, MDefi
 bool PropertyReadNeedsTypeBarrier(JSContext *cx, JSContext *propertycx,
                                   types::CompilerConstraintList *constraints,
                                   types::TypeObjectKey *object, PropertyName *name,
-                                  types::StackTypeSet *observed, bool updateObserved);
+                                  types::TemporaryTypeSet *observed, bool updateObserved);
 bool PropertyReadNeedsTypeBarrier(JSContext *cx, JSContext *propertycx,
                                   types::CompilerConstraintList *constraints,
                                   MDefinition *obj, PropertyName *name,
-                                  types::StackTypeSet *observed);
+                                  types::TemporaryTypeSet *observed);
 bool PropertyReadOnPrototypeNeedsTypeBarrier(JSContext *cx, types::CompilerConstraintList *constraints,
                                              MDefinition *obj, PropertyName *name,
                                              types::TemporaryTypeSet *observed);
 bool PropertyReadIsIdempotent(types::CompilerConstraintList *constraints,
                               MDefinition *obj, PropertyName *name);
-bool AddObjectsForPropertyRead(JSContext *cx, MDefinition *obj, PropertyName *name,
-                               types::StackTypeSet *observed);
+bool AddObjectsForPropertyRead(MDefinition *obj, PropertyName *name,
+                               types::TemporaryTypeSet *observed);
 bool PropertyWriteNeedsTypeBarrier(types::CompilerConstraintList *constraints,
                                    MBasicBlock *current, MDefinition **pobj,
                                    PropertyName *name, MDefinition **pvalue,

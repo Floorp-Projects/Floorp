@@ -474,24 +474,6 @@ class OrderedHashTable
                 *ep = &entry;
             }
         }
-
-        /*
-         * Change the key of the front entry without calling Ops::hash on the
-         * entry's current key. The caller must ensure that k has the same hash
-         * code that the current key had when it was inserted.
-         */
-        void rekeyFrontWithSameHashCode(const Key &k) {
-            MOZ_ASSERT(valid());
-#ifdef DEBUG
-            // Assert that k falls in the same hash bucket as the old key.
-            HashNumber h = Ops::hash(k) >> ht.hashShift;
-            Data *e = ht.hashTable[h];
-            while (e && e != &ht.data[i])
-                e = e->chain;
-            MOZ_ASSERT(e == &ht.data[i]);
-#endif
-            Ops::setKey(ht.data[i].element, k);
-        }
     };
 
     Range all() { return Range(*this); }
@@ -1101,23 +1083,9 @@ MarkKey(Range &r, const HashableValue &key, JSTracer *trc)
     HashableValue newKey = key.mark(trc);
 
     if (newKey.get() != key.get()) {
-        if (newKey.get().isString()) {
-            // GC moved a string. The key stored in the OrderedHashTable must
-            // be updated to point to the string's new location, but rekeyFront
-            // would not work because it would access the string's old
-            // location.
-            //
-            // So as a specially gruesome hack, overwrite the key in place.
-            // FIXME bug 769504.
-            r.rekeyFrontWithSameHashCode(newKey);
-        } else {
-            // GC moved an object. It must be rekeyed, and rekeying is safe
-            // because the old key's hash() method is still safe to call (it
-            // does not access the object's old location).
-
-            JS_ASSERT(newKey.get().isObject());
-            r.rekeyFront(newKey);
-        }
+        // The hash function only uses the bits of the Value, so it is safe to
+        // rekey even when the object or string has been modified by the GC.
+        r.rekeyFront(newKey);
     }
 }
 
@@ -1195,9 +1163,12 @@ MapObject::construct(JSContext *cx, unsigned argc, Value *vp)
                 return false;
             if (done)
                 break;
-            // FIXME: We're supposed to throw if pairVal isn't an object.  Bug
-            // 918341.
-            pairObj = ToObject(cx, pairVal);
+            if (!pairVal.isObject()) {
+                JS_ReportErrorNumber(cx, js_GetErrorMessage, nullptr, JSMSG_INVALID_MAP_ITERABLE);
+                return false;
+            }
+
+            pairObj = &pairVal.toObject();
             if (!pairObj)
                 return false;
 

@@ -188,6 +188,25 @@ char const * cubeb_get_backend_id(cubeb * context);
     @retval CUBEB_ERROR */
 int cubeb_get_max_channel_count(cubeb * context, uint32_t * max_channels);
 
+/** Get the minimal latency value, in milliseconds, that is guaranteed to work
+    when creating a stream for the specified sample rate. This is platform and
+    backend dependant.
+    @param context
+    @param params On some backends, the minimum achievable latency depends on
+                  the characteristics of the stream.
+    @param latency The latency value, in ms, to pass to cubeb_stream_init.
+    @retval CUBEB_ERROR_INVALID_PARAMETER
+    @retval CUBEB_OK */
+int cubeb_get_min_latency(cubeb * context, cubeb_stream_params params, uint32_t * latency_ms);
+
+/** Get the preferred sample rate for this backend: this is hardware and platform
+   dependant, and can avoid resampling, and/or trigger fastpaths.
+   @param context
+   @param samplerate The samplerate (in Hz) the current configuration prefers.
+   @return CUBEB_ERROR_INVALID_PARAMETER
+   @return CUBEB_OK */
+int cubeb_get_preferred_sample_rate(cubeb * context, uint32_t * rate);
+
 /** Destroy an application context.
     @param context */
 void cubeb_destroy(cubeb * context);

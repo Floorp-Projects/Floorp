@@ -12,6 +12,7 @@
 #include "nsIDOMEventListener.h"
 #include "nsIAudioChannelAgent.h"
 #include "AudioChannelCommon.h"
+#include "nsWeakReference.h"
 
 namespace mozilla {
 namespace dom {
@@ -21,6 +22,7 @@ class AudioContext;
 class AudioDestinationNode : public AudioNode
                            , public nsIDOMEventListener
                            , public nsIAudioChannelAgentCallback
+                           , public nsSupportsWeakReference
 {
 public:
   // This node type knows what MediaStreamGraph to use based on

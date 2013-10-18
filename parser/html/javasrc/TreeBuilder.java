@@ -4325,7 +4325,19 @@ public abstract class TreeBuilder<T> implements TokenHandler,
                 }
             }
             if ("select" == name) {
-                // TODO: Fragment case. Add error reporting.
+                int ancestorIndex = i;
+                while (ancestorIndex > 0) {
+                    StackNode<T> ancestor = stack[ancestorIndex--];
+                    if ("http://www.w3.org/1999/xhtml" == ancestor.ns) {
+                        if ("template" == ancestor.name) {
+                            break;
+                        }
+                        if ("table" == ancestor.name) {
+                            mode = IN_SELECT_IN_TABLE;
+                            return;
+                        }
+                    }
+                }
                 mode = IN_SELECT;
                 return;
             } else if ("td" == name || "th" == name) {

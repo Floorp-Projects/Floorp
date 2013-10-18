@@ -1378,7 +1378,7 @@ CreateThisForFunctionWithProto(JSContext *cx, js::HandleObject callee, JSObject 
 
 // Specialized call for constructing |this| with a known function callee.
 extern JSObject *
-CreateThisForFunction(JSContext *cx, js::HandleObject callee, bool newType);
+CreateThisForFunction(JSContext *cx, js::HandleObject callee, NewObjectKind newKind);
 
 // Generic call for constructing |this|.
 extern JSObject *

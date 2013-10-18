@@ -15,6 +15,6 @@ function* gen() {
     yield '2';
 }
 var iter = gen();
-assertIteratorResult(iter.next(), '1', false);
+assertIteratorNext(iter, '1');
 assertEq(iter.next(), '!');
 assertThrowsInstanceOf(iter.next.bind(iter), TypeError);

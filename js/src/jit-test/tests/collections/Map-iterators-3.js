@@ -4,7 +4,7 @@ load(libdir + "iteration.js");
 
 var m = Map();
 var it = m[std_iterator]();
-assertIteratorResult(it.next(), undefined, true);  // close the iterator
+assertIteratorDone(it, undefined);  // close the iterator
 m.clear();
 m.set("a", 1);
-assertIteratorResult(it.next(), undefined, true);  // iterator still closed
+assertIteratorDone(it, undefined);  // iterator still closed

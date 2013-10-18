@@ -166,7 +166,7 @@ nsXBLProtoImpl::InitTargetObjects(nsXBLPrototypeBinding* aBinding,
     dom::XULElementBinding::GetConstructorObject(cx, global, defineOnGlobal);
   }
 
-  rv = nsContentUtils::WrapNative(cx, global, aBoundElement, v.address(),
+  rv = nsContentUtils::WrapNative(cx, global, aBoundElement, &v,
                                   getter_AddRefs(wrapper));
   NS_ENSURE_SUCCESS(rv, rv);
 
