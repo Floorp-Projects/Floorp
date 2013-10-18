@@ -477,10 +477,10 @@ nsRangeFrame::GetValueAtEventPoint(WidgetGUIEvent* aEvent)
 
   LayoutDeviceIntPoint absPoint;
   if (aEvent->eventStructType == NS_TOUCH_EVENT) {
-    MOZ_ASSERT(static_cast<WidgetTouchEvent*>(aEvent)->touches.Length() == 1,
+    MOZ_ASSERT(aEvent->AsTouchEvent()->touches.Length() == 1,
                "Unexpected number of touches");
     absPoint = LayoutDeviceIntPoint::FromUntyped(
-      static_cast<WidgetTouchEvent*>(aEvent)->touches[0]->mRefPoint);
+      aEvent->AsTouchEvent()->touches[0]->mRefPoint);
   } else {
     absPoint = aEvent->refPoint;
   }

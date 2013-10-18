@@ -732,7 +732,7 @@ nsDOMEvent::DuplicatePrivateData()
     }
     case NS_TOUCH_EVENT:
     {
-      WidgetTouchEvent* oldTouchEvent = static_cast<WidgetTouchEvent*>(mEvent);
+      WidgetTouchEvent* oldTouchEvent = mEvent->AsTouchEvent();
       WidgetTouchEvent* touchEvent = new WidgetTouchEvent(false, oldTouchEvent);
       touchEvent->AssignTouchEventData(*oldTouchEvent, true);
       newEvent = touchEvent;

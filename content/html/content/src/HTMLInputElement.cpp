@@ -3808,9 +3808,7 @@ HTMLInputElement::PostHandleEventForRangeThumb(nsEventChainPostVisitor& aVisitor
           CancelRangeThumbDrag();
         }
       } else {
-        WidgetTouchEvent* touchEvent =
-          static_cast<WidgetTouchEvent*>(aVisitor.mEvent);
-        if (touchEvent->touches.Length() == 1) {
+        if (aVisitor.mEvent->AsTouchEvent()->touches.Length() == 1) {
           StartRangeThumbDrag(inputEvent);
         } else if (mIsDraggingRange) {
           CancelRangeThumbDrag();
