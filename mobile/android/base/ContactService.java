@@ -665,6 +665,10 @@ public class ContactService implements GeckoEventListener {
         return contact;
     }
 
+    private boolean bool(int integer) {
+        return integer != 0 ? true : false;
+    }
+
     private void getGenericDataAsJSONObject(Cursor cursor, JSONArray array, final String dataColumn,
                                             final String typeColumn, final String typeLabelColumn,
                                             final HashMap<String, Integer> typeMap) throws JSONException {
@@ -702,7 +706,7 @@ public class ContactService implements GeckoEventListener {
             object.put("value", value);
             types.put(type);
             object.put("type", types);
-            object.put("pref", cursor.getInt(cursor.getColumnIndex(Data.IS_SUPER_PRIMARY)));
+            object.put("pref", bool(cursor.getInt(cursor.getColumnIndex(Data.IS_SUPER_PRIMARY))));
 
             array.put(object);
         }
@@ -745,7 +749,7 @@ public class ContactService implements GeckoEventListener {
             types.put(type);
             phone.put("type", types);
             phone.put("carrier", cursor.getString(cursor.getColumnIndex(CARRIER_COLUMN)));
-            phone.put("pref", cursor.getInt(cursor.getColumnIndex(Phone.IS_SUPER_PRIMARY)));
+            phone.put("pref", bool(cursor.getInt(cursor.getColumnIndex(Phone.IS_SUPER_PRIMARY))));
 
             phones.put(phone);
         }
@@ -798,7 +802,7 @@ public class ContactService implements GeckoEventListener {
             address.put("postalCode", postalCode);
             types.put(type);
             address.put("type", types);
-            address.put("pref", cursor.getInt(cursor.getColumnIndex(StructuredPostal.IS_SUPER_PRIMARY)));
+            address.put("pref", bool(cursor.getInt(cursor.getColumnIndex(StructuredPostal.IS_SUPER_PRIMARY))));
 
             addresses.put(address);
         }
@@ -1239,7 +1243,7 @@ public class ContactService implements GeckoEventListener {
         }
 
         if (address.has("pref")) {
-            contentValues.put(Data.IS_SUPER_PRIMARY, address.getInt("pref"));
+            contentValues.put(Data.IS_SUPER_PRIMARY, address.getBoolean("pref") ? 1 : 0);
         }
 
         return contentValues;
@@ -1263,7 +1267,7 @@ public class ContactService implements GeckoEventListener {
                     final int typeConstant = getPhoneType(type);
 
                     contentValues = createContentValues(Phone.CONTENT_ITEM_TYPE, phone.optString("value"),
-                                                        typeConstant, type, phone.optInt("pref"));
+                                                        typeConstant, type, phone.optBoolean("pref"));
                     if (phone.has("carrier")) {
                         contentValues.put(CARRIER_COLUMN, phone.optString("carrier"));
                     }
@@ -1271,7 +1275,7 @@ public class ContactService implements GeckoEventListener {
                 }
             } else {
                 contentValues = createContentValues(Phone.CONTENT_ITEM_TYPE, phone.optString("value"),
-                                                    -1, null, phone.optInt("pref"));
+                                                    -1, null, phone.optBoolean("pref"));
                 if (phone.has("carrier")) {
                     contentValues.put(CARRIER_COLUMN, phone.optString("carrier"));
                 }
@@ -1299,12 +1303,12 @@ public class ContactService implements GeckoEventListener {
                     newContactValues.add(createContentValues(Email.CONTENT_ITEM_TYPE,
                                                              email.optString("value"),
                                                              typeConstant, type,
-                                                             email.optInt("pref")));
+                                                             email.optBoolean("pref")));
                 }
             } else {
                 newContactValues.add(createContentValues(Email.CONTENT_ITEM_TYPE,
                                                          email.optString("value"),
-                                                         -1, null, email.optInt("pref")));
+                                                         -1, null, email.optBoolean("pref")));
             }
         }
     }
@@ -1349,12 +1353,12 @@ public class ContactService implements GeckoEventListener {
                     newContactValues.add(createContentValues(Website.CONTENT_ITEM_TYPE,
                                                              website.optString("value"),
                                                              typeConstant, type,
-                                                             website.optInt("pref")));
+                                                             website.optBoolean("pref")));
                 }
             } else {
                 newContactValues.add(createContentValues(Website.CONTENT_ITEM_TYPE,
                                                          website.optString("value"),
-                                                         -1, null, website.optInt("pref")));
+                                                         -1, null, website.optBoolean("pref")));
             }
         }
     }
@@ -1378,12 +1382,12 @@ public class ContactService implements GeckoEventListener {
                     newContactValues.add(createContentValues(Im.CONTENT_ITEM_TYPE,
                                                              im.optString("value"),
                                                              typeConstant, type,
-                                                             im.optInt("pref")));
+                                                             im.optBoolean("pref")));
                 }
             } else {
                 newContactValues.add(createContentValues(Im.CONTENT_ITEM_TYPE,
                                                          im.optString("value"),
-                                                         -1, null, im.optInt("pref")));
+                                                         -1, null, im.optBoolean("pref")));
             }
         }
     }
@@ -1463,11 +1467,11 @@ public class ContactService implements GeckoEventListener {
     }
 
     private ContentValues createContentValues(final String mimeType, final String value, final int typeConstant,
-                                              final String type, final int preferredValue) {
+                                              final String type, final boolean preferredValue) {
         ContentValues contentValues = new ContentValues();
         contentValues.put(Data.MIMETYPE, mimeType);
         contentValues.put(Data.DATA1, value);
-        contentValues.put(Data.IS_SUPER_PRIMARY, preferredValue);
+        contentValues.put(Data.IS_SUPER_PRIMARY, preferredValue ? 1 : 0);
 
         if (type != null) {
             contentValues.put(Data.DATA2, typeConstant);
