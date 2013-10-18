@@ -12,6 +12,7 @@
 #include "sdp_base64.h"
 #include "mozilla/Assertions.h"
 #include "CSFLog.h"
+#include "DataChannelProtocol.h"
 
 static const char* logTag = "sdp_attr";
 
@@ -2123,6 +2124,7 @@ sdp_result_e sdp_parse_attr_sctpmap(sdp_t *sdp_p, sdp_attr_t *attr_p,
 {
     sdp_result_e result = SDP_SUCCESS;
     char tmp[SDP_MAX_STRING_LEN];
+    u32 streams;
 
     /* Find the payload type number. */
     attr_p->attr.sctpmap.port = (u16)sdp_getnextnumtok(ptr, &ptr,
@@ -2145,8 +2147,7 @@ sdp_result_e sdp_parse_attr_sctpmap(sdp_t *sdp_p, sdp_attr_t *attr_p,
     sstrncpy(attr_p->attr.sctpmap.protocol, tmp,
         sizeof (attr_p->attr.sctpmap.protocol));
 
-    attr_p->attr.sctpmap.streams = (u16) sdp_getnextnumtok(ptr, &ptr, " \t",
-        &result);
+    streams = sdp_getnextnumtok(ptr, &ptr, " \t", &result);
     if (result != SDP_SUCCESS) {
         sdp_parse_error(sdp_p->peerconnection,
             "%s Warning: No sctpmap streams specified.",
@@ -2154,6 +2155,14 @@ sdp_result_e sdp_parse_attr_sctpmap(sdp_t *sdp_p, sdp_attr_t *attr_p,
         sdp_p->conf_p->num_invalid_param++;
         return SDP_INVALID_PARAMETER;
     }
+
+    /* streams value should be kept in the range 1..MAX_NUM_STREAMS */
+    if (streams < 1) {
+        streams = 1;
+    } else if (streams > MAX_NUM_STREAMS) {
+        streams = MAX_NUM_STREAMS;
+    }
+    attr_p->attr.sctpmap.streams = streams;
 
     return SDP_SUCCESS;
 }
