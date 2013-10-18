@@ -20,8 +20,8 @@ if (typeof PDFJS === 'undefined') {
   (typeof window !== 'undefined' ? window : this).PDFJS = {};
 }
 
-PDFJS.version = '0.8.558';
-PDFJS.build = 'ea50c07';
+PDFJS.version = '0.8.629';
+PDFJS.build = 'b16b3be';
 
 (function pdfjsWrapper() {
   // Use strict in our context only - users might not want it
@@ -4170,22 +4170,16 @@ var PDFDocument = (function PDFDocumentClosure() {
       return shadow(this, 'documentInfo', docInfo);
     },
     get fingerprint() {
-      var xref = this.xref, fileID;
+      var xref = this.xref, hash, fileID = '';
+
       if (xref.trailer.has('ID')) {
-        fileID = '';
-        var id = xref.trailer.get('ID')[0];
-        id.split('').forEach(function(el) {
-          fileID += Number(el.charCodeAt(0)).toString(16);
-        });
+        hash = stringToBytes(xref.trailer.get('ID')[0]);
       } else {
-        // If we got no fileID, then we generate one,
-        // from the first 100 bytes of PDF
-        var data = this.stream.bytes.subarray(0, 100);
-        var hash = calculateMD5(data, 0, data.length);
-        fileID = '';
-        for (var i = 0, length = hash.length; i < length; i++) {
-          fileID += Number(hash[i]).toString(16);
-        }
+        hash = calculateMD5(this.stream.bytes.subarray(0, 100), 0, 100);
+      }
+
+      for (var i = 0, n = hash.length; i < n; i++) {
+        fileID += hash[i].toString(16);
       }
 
       return shadow(this, 'fingerprint', fileID);
@@ -12573,6 +12567,11 @@ var ColorSpace = (function ColorSpaceClosure() {
         return this.singletons.rgb;
       case 'DeviceCmykCS':
         return this.singletons.cmyk;
+      case 'CalGrayCS':
+        var whitePoint = IR[1].WhitePoint;
+        var blackPoint = IR[1].BlackPoint;
+        var gamma = IR[1].Gamma;
+        return new CalGrayCS(whitePoint, blackPoint, gamma);
       case 'PatternCS':
         var basePatternCS = IR[1];
         if (basePatternCS)
@@ -12648,7 +12647,8 @@ var ColorSpace = (function ColorSpaceClosure() {
         case 'CMYK':
           return 'DeviceCmykCS';
         case 'CalGray':
-          return 'DeviceGrayCS';
+          var params = cs[1].getAll();
+          return ['CalGrayCS', params];
         case 'CalRGB':
           return 'DeviceRgbCS';
         case 'ICCBased':
@@ -13069,6 +13069,113 @@ var DeviceCmykCS = (function DeviceCmykCSClosure() {
 })();
 
 //
+// CalGrayCS: Based on "PDF Reference, Sixth Ed", p.245
+//
+var CalGrayCS = (function CalGrayCSClosure() {
+  function CalGrayCS(whitePoint, blackPoint, gamma) {
+    this.name = 'CalGray';
+    this.numComps = 3;
+    this.defaultColor = new Float32Array([0, 0, 0]);
+
+    if (!whitePoint) {
+      error('WhitePoint missing - required for color space CalGray');
+    }
+    blackPoint = blackPoint || [0, 0, 0];
+    gamma = gamma || 1;
+
+    // Translate arguments to spec variables.
+    this.XW = whitePoint[0];
+    this.YW = whitePoint[1];
+    this.ZW = whitePoint[2];
+
+    this.XB = blackPoint[0];
+    this.YB = blackPoint[1];
+    this.ZB = blackPoint[2];
+
+    this.G = gamma;
+
+    // Validate variables as per spec.
+    if (this.XW < 0 || this.ZW < 0 || this.YW !== 1) {
+      error('Invalid WhitePoint components for ' + this.name +
+            ', no fallback available');
+    }
+
+    if (this.XB < 0 || this.YB < 0 || this.ZB < 0) {
+      info('Invalid BlackPoint for ' + this.name + ', falling back to default');
+      this.XB = this.YB = this.ZB = 0;
+    }
+
+    if (this.XB !== 0 || this.YB !== 0 || this.ZB !== 0) {
+      TODO(this.name + ', BlackPoint: XB: ' + this.XB + ', YB: ' + this.YB +
+           ', ZB: ' + this.ZB + ', only default values are supported.');
+    }
+
+    if (this.G < 1) {
+      info('Invalid Gamma: ' + this.G + ' for ' + this.name +
+           ', falling back to default');
+      this.G = 1;
+    }
+  }
+
+  CalGrayCS.prototype = {
+    getRgb: function CalGrayCS_getRgb(src, srcOffset) {
+      var rgb = new Uint8Array(3);
+      this.getRgbItem(src, srcOffset, rgb, 0);
+      return rgb;
+    },
+    getRgbItem: function CalGrayCS_getRgbItem(src, srcOffset,
+                                              dest, destOffset) {
+      // A represents a gray component of a calibrated gray space.
+      // A <---> AG in the spec
+      var A = src[srcOffset];
+      var AG = Math.pow(A, this.G);
+
+      // Computes intermediate variables M, L, N as per spec.
+      // Except if other than default BlackPoint values are used.
+      var M = this.XW * AG;
+      var L = this.YW * AG;
+      var N = this.ZW * AG;
+
+      // Decode XYZ, as per spec.
+      var X = M;
+      var Y = L;
+      var Z = N;
+
+      // http://www.poynton.com/notes/colour_and_gamma/ColorFAQ.html, Ch 4.
+      // This yields values in range [0, 100].
+      var Lstar = Math.max(116 * Math.pow(Y, 1 / 3) - 16, 0);
+
+      // Convert values to rgb range [0, 255].
+      dest[destOffset] = Lstar * 255 / 100;
+      dest[destOffset + 1] = Lstar * 255 / 100;
+      dest[destOffset + 2] = Lstar * 255 / 100;
+    },
+    getRgbBuffer: function CalGrayCS_getRgbBuffer(src, srcOffset, count,
+                                                  dest, destOffset, bits) {
+      // TODO: This part is copied from DeviceGray. Make this utility function.
+      var scale = 255 / ((1 << bits) - 1);
+      var j = srcOffset, q = destOffset;
+      for (var i = 0; i < count; ++i) {
+        var c = (scale * src[j++]) | 0;
+        dest[q++] = c;
+        dest[q++] = c;
+        dest[q++] = c;
+      }
+    },
+    getOutputLength: function CalGrayCS_getOutputLength(inputLength) {
+      return inputLength * 3;
+    },
+    isPassthrough: ColorSpace.prototype.isPassthrough,
+    createRgbBuffer: ColorSpace.prototype.createRgbBuffer,
+    isDefaultDecode: function CalGrayCS_isDefaultDecode(decodeMap) {
+      return ColorSpace.isDefaultDecode(decodeMap, this.numComps);
+    },
+    usesZeroToOneRange: true
+  };
+  return CalGrayCS;
+})();
+
+//
 // LabCS: Based on "PDF Reference, Sixth Ed", p.250
 //
 var LabCS = (function LabCSClosure() {
@@ -13208,6 +13315,7 @@ var LabCS = (function LabCSClosure() {
   };
   return LabCS;
 })();
+
 
 
 var ARCFourCipher = (function ARCFourCipherClosure() {
@@ -20951,18 +21059,22 @@ var CFFFont = (function CFFFontClosure() {
       var unassignedUnicodeItems = [];
       var inverseEncoding = [];
       var gidStart = 0;
-      // Even though the CFF font may not actually be a CID font is could have
-      // CID information in the font descriptor.
-      if (this.properties.cidSystemInfo) {
-        // According to section 9.7.4.2 if the font is actually a CID font then
-        // we should use the charset to map CIDs to GIDs. If it is not actually
-        // a CID font then CIDs can be mapped directly to GIDs.
+      // According to section 9.7.4.2 CIDFontType0C glyph selection should be
+      // handled differently.
+      if (this.properties.subtype === 'CIDFontType0C') {
         if (this.cff.isCIDFont) {
+          // If the font is actually a CID font then we should use the charset
+          // to map CIDs to GIDs.
           inverseEncoding = charsets;
         } else {
-          for (var i = 0, ii = charsets.length; i < charsets.length; i++) {
+          // If it is NOT actually a CID font then CIDs should be mapped
+          // directly to GIDs.
+          inverseEncoding = [];
+          for (var i = 0, ii = cff.charStrings.count; i < ii; i++) {
             inverseEncoding.push(i);
           }
+          // Use the identity map for charsets as well.
+          charsets = inverseEncoding;
         }
       } else {
         for (var charcode in encoding) {
@@ -35872,6 +35984,19 @@ var JpxImage = (function JpxImageClosure() {
       }
       return ll;
     };
+    Transform.prototype.expand = function expand(buffer, bufferPadding, step) {
+        // Section F.3.7 extending... using max extension of 4
+        var i1 = bufferPadding - 1, j1 = bufferPadding + 1;
+        var i2 = bufferPadding + step - 2, j2 = bufferPadding + step;
+        buffer[i1--] = buffer[j1++];
+        buffer[j2++] = buffer[i2--];
+        buffer[i1--] = buffer[j1++];
+        buffer[j2++] = buffer[i2--];
+        buffer[i1--] = buffer[j1++];
+        buffer[j2++] = buffer[i2--];
+        buffer[i1--] = buffer[j1++];
+        buffer[j2++] = buffer[i2--];
+    };
     Transform.prototype.iterate = function Transform_iterate(ll, hl, lh, hh,
                                                             u0, v0) {
       var llWidth = ll.width, llHeight = ll.height, llItems = ll.items;
@@ -35925,18 +36050,7 @@ var JpxImage = (function JpxImageClosure() {
         for (var u = 0; u < width; u++, k++, l++)
           buffer[l] = items[k];
 
-        // Section F.3.7 extending... using max extension of 4
-        var i1 = bufferPadding - 1, j1 = bufferPadding + 1;
-        var i2 = bufferPadding + width - 2, j2 = bufferPadding + width;
-        buffer[i1--] = buffer[j1++];
-        buffer[j2++] = buffer[i2--];
-        buffer[i1--] = buffer[j1++];
-        buffer[j2++] = buffer[i2--];
-        buffer[i1--] = buffer[j1++];
-        buffer[j2++] = buffer[i2--];
-        buffer[i1--] = buffer[j1++];
-        buffer[j2++] = buffer[i2--];
-
+        this.expand(buffer, bufferPadding, width);
         this.filter(buffer, bufferPadding, width, u0, bufferOut);
 
         k = v * width;
@@ -35960,18 +36074,7 @@ var JpxImage = (function JpxImageClosure() {
         for (var v = 0; v < height; v++, k += width, l++)
           buffer[l] = items[k];
 
-        // Section F.3.7 extending... using max extension of 4
-        var i1 = bufferPadding - 1, j1 = bufferPadding + 1;
-        var i2 = bufferPadding + height - 2, j2 = bufferPadding + height;
-        buffer[i1--] = buffer[j1++];
-        buffer[j2++] = buffer[i2--];
-        buffer[i1--] = buffer[j1++];
-        buffer[j2++] = buffer[i2--];
-        buffer[i1--] = buffer[j1++];
-        buffer[j2++] = buffer[i2--];
-        buffer[i1--] = buffer[j1++];
-        buffer[j2++] = buffer[i2--];
-
+        this.expand(buffer, bufferPadding, height);
         this.filter(buffer, bufferPadding, height, v0, bufferOut);
 
         k = u;
@@ -36624,10 +36727,6 @@ var Jbig2Image = (function Jbig2ImageClosure() {
 
     var decoder = decodingContext.decoder;
     var contextCache = decodingContext.contextCache;
-
-    if (transposed)
-      error('JBIG2 error: transposed is not supported');
-
     var stripT = -decodeInteger(contextCache, 'IADT', decoder); // 6.4.6
     var firstS = 0;
     var i = 0;
@@ -36662,28 +36761,60 @@ var Jbig2Image = (function Jbig2ImageClosure() {
         }
         var offsetT = t - ((referenceCorner & 1) ? 0 : symbolHeight);
         var offsetS = currentS - ((referenceCorner & 2) ? symbolWidth : 0);
-        for (var t2 = 0; t2 < symbolHeight; t2++) {
-          var row = bitmap[offsetT + t2];
-          if (!row) continue;
-          var symbolRow = symbolBitmap[t2];
-          switch (combinationOperator) {
-            case 0: // OR
-              for (var s2 = 0; s2 < symbolWidth; s2++)
-                row[offsetS + s2] |= symbolRow[s2];
-              break;
-            case 2: // XOR
-              for (var s2 = 0; s2 < symbolWidth; s2++)
-                row[offsetS + s2] ^= symbolRow[s2];
-              break;
-            default:
-              error('JBIG2 error: operator ' + combinationOperator +
-                    ' is not supported');
+        if (transposed) {
+          // Place Symbol Bitmap from T1,S1  
+          for (var s2 = 0; s2 < symbolHeight; s2++) {
+            var row = bitmap[offsetS + s2];
+            if (!row) {
+              continue;
+            }
+            var symbolRow = symbolBitmap[s2];
+            // To ignore Parts of Symbol bitmap which goes
+            // outside bitmap region
+            var maxWidth = Math.min(width - offsetT, symbolWidth);
+            switch (combinationOperator) {
+              case 0: // OR
+                for (var t2 = 0; t2 < maxWidth; t2++) {
+                  row[offsetT + t2] |= symbolRow[t2];
+                }
+                break;
+              case 2: // XOR
+                for (var t2 = 0; t2 < maxWidth; t2++) {
+                  row[offsetT + t2] ^= symbolRow[t2];
+                }
+                break;
+              default:
+                error('JBIG2 error: operator ' + combinationOperator +
+                      ' is not supported');
+            }
           }
+          currentS += symbolHeight - 1;
+        } else {
+          for (var t2 = 0; t2 < symbolHeight; t2++) {
+            var row = bitmap[offsetT + t2];
+            if (!row) {
+              continue;
+            }
+            var symbolRow = symbolBitmap[t2];
+            switch (combinationOperator) {
+              case 0: // OR
+                for (var s2 = 0; s2 < symbolWidth; s2++) {
+                  row[offsetS + s2] |= symbolRow[s2];
+                }
+                break;
+              case 2: // XOR
+                for (var s2 = 0; s2 < symbolWidth; s2++) {
+                  row[offsetS + s2] ^= symbolRow[s2];
+                }
+                break;
+              default:
+                error('JBIG2 error: operator ' + combinationOperator +
+                      ' is not supported');
+            }
+          }
+          currentS += symbolWidth - 1;
         }
-
-        currentS += symbolWidth - 1;
         i++;
-
         var deltaS = decodeInteger(contextCache, 'IADS', decoder); // 6.4.8
         if (deltaS === null)
           break; // OOB
