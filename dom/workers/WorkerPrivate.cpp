@@ -50,7 +50,6 @@
 #include "nsNetUtil.h"
 #include "nsProxyRelease.h"
 #include "nsSandboxFlags.h"
-#include "nsThreadUtils.h"
 #include "xpcpublic.h"
 
 #ifdef ANDROID
@@ -1442,33 +1441,6 @@ public:
   }
 };
 
-class SynchronizeAndResumeRunnable : public nsRunnable
-{
-protected:
-  WorkerPrivate* mWorkerPrivate;
-  nsCOMPtr<nsIScriptContext> mCx;
-
-public:
-  SynchronizeAndResumeRunnable(WorkerPrivate* aWorkerPrivate,
-                               nsIScriptContext* aCx)
-  : mWorkerPrivate(aWorkerPrivate), mCx(aCx)
-  {
-    NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
-  }
-
-  NS_IMETHOD Run()
-  {
-    NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
-
-    AutoPushJSContext cx(mCx ? mCx->GetNativeContext() :
-                         nsContentUtils::GetSafeJSContext());
-    JSAutoRequest ar(cx);
-    mWorkerPrivate->Resume(cx);
-
-    return NS_OK;
-  }
-};
-
 class WorkerJSRuntimeStats : public JS::RuntimeStats
 {
   const nsACString& mRtPath;
@@ -1750,6 +1722,58 @@ WorkerRunnable::NotifyScriptExecutedIfNeeded() const
   }
 }
 
+template <class Derived>
+class WorkerPrivateParent<Derived>::SynchronizeAndResumeRunnable
+  : public nsRunnable
+{
+  friend class WorkerPrivateParent<Derived>;
+  friend class nsRevocableEventPtr<SynchronizeAndResumeRunnable>;
+
+  WorkerPrivate* mWorkerPrivate;
+  nsCOMPtr<nsPIDOMWindow> mWindow;
+  nsCOMPtr<nsIScriptContext> mScriptContext;
+
+  SynchronizeAndResumeRunnable(WorkerPrivate* aWorkerPrivate,
+                               nsPIDOMWindow* aWindow,
+                               nsIScriptContext* aScriptContext)
+  : mWorkerPrivate(aWorkerPrivate), mWindow(aWindow),
+    mScriptContext(aScriptContext)
+  {
+    AssertIsOnMainThread();
+    MOZ_ASSERT(aWorkerPrivate);
+    MOZ_ASSERT(aWindow);
+    MOZ_ASSERT(!aWorkerPrivate->GetParent());
+  }
+
+  NS_IMETHOD
+  Run()
+  {
+    AssertIsOnMainThread();
+
+    if (mWorkerPrivate) {
+      AutoPushJSContext cx(mScriptContext ?
+                           mScriptContext->GetNativeContext() :
+                           nsContentUtils::GetSafeJSContext());
+
+      mWorkerPrivate->Resume(cx);
+    }
+
+    return NS_OK;
+  }
+
+  void
+  Revoke()
+  {
+    AssertIsOnMainThread();
+    MOZ_ASSERT(mWorkerPrivate);
+    MOZ_ASSERT(mWindow);
+
+    mWorkerPrivate = nullptr;
+    mWindow = nullptr;
+    mScriptContext = nullptr;
+  }
+};
+
 struct WorkerPrivate::TimeoutInfo
 {
   TimeoutInfo()
@@ -2022,6 +2046,10 @@ WorkerPrivateParent<Derived>::NotifyPrivate(JSContext* aCx, Status aStatus)
     return true;
   }
 
+  // Only top-level workers should have a synchronize runnable.
+  MOZ_ASSERT_IF(mSynchronizeRunnable.get(), !GetParent());
+  mSynchronizeRunnable.Revoke();
+
   NS_ASSERTION(aStatus != Terminating || mQueuedRunnables.IsEmpty(),
                "Shouldn't have anything queued!");
 
@@ -2072,6 +2100,10 @@ WorkerPrivateParent<Derived>::Resume(JSContext* aCx)
     }
   }
 
+  // Only top-level workers should have a synchronize runnable.
+  MOZ_ASSERT_IF(mSynchronizeRunnable.get(), !GetParent());
+  mSynchronizeRunnable.Revoke();
+
   // Execute queued runnables before waking up the worker, otherwise the worker
   // could post new messages before we run those that have been queued.
   if (!mQueuedRunnables.IsEmpty()) {
@@ -2093,9 +2125,12 @@ WorkerPrivateParent<Derived>::Resume(JSContext* aCx)
 
 template <class Derived>
 bool
-WorkerPrivateParent<Derived>::SynchronizeAndResume(nsIScriptContext* aCx)
+WorkerPrivateParent<Derived>::SynchronizeAndResume(
+                                               JSContext* aCx,
+                                               nsPIDOMWindow* aWindow,
+                                               nsIScriptContext* aScriptContext)
 {
-  AssertIsOnParentThread();
+  AssertIsOnMainThread();
   NS_ASSERTION(mParentSuspended, "Not yet suspended!");
 
   // NB: There may be pending unqueued messages.  If we resume here we will
@@ -2105,8 +2140,15 @@ WorkerPrivateParent<Derived>::SynchronizeAndResume(nsIScriptContext* aCx)
   // the messages.
 
   nsRefPtr<SynchronizeAndResumeRunnable> runnable =
-    new SynchronizeAndResumeRunnable(ParentAsWorkerPrivate(), aCx);
-  return NS_SUCCEEDED(NS_DispatchToCurrentThread(runnable));
+    new SynchronizeAndResumeRunnable(ParentAsWorkerPrivate(), aWindow,
+                                     aScriptContext);
+  if (NS_FAILED(NS_DispatchToCurrentThread(runnable))) {
+    JS_ReportError(aCx, "Failed to dispatch to current thread!");
+    return false;
+  }
+
+  mSynchronizeRunnable = runnable;
+  return true;
 }
 
 template <class Derived>
