@@ -40,7 +40,6 @@ include "nsGeoPositionIPCSerialiser.h";
 include "gfxPoint.h";
 
 using GeoPosition;
-using PrefTuple;
 
 using ChromePackage;
 using ResourceMapping;
@@ -52,7 +51,6 @@ using mozilla::null_t;
 using mozilla::void_t;
 using mozilla::dom::AudioChannelType;
 using mozilla::dom::AudioChannelState;
-using mozilla::dom::BlobConstructorParams;
 using mozilla::dom::NativeThreadId;
 using mozilla::hal::ProcessPriority;
 using gfxIntSize;

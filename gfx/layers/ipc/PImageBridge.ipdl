@@ -12,7 +12,6 @@ include ProtocolTypes;
 include "mozilla/layers/CompositorTypes.h";
 include "mozilla/GfxMessageUtils.h";
 
-using ImageHandle;
 using mozilla::layers::TextureInfo;
 
 namespace mozilla {
