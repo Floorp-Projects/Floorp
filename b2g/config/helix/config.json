@@ -20,7 +20,6 @@
     "env": {
         "VARIANT": "user",
         "MOZILLA_OFFICIAL": "1",
-        "B2GUPDATER": "1",
         "ANDROIDFS_DIR": "{workdir}/helix-ics"
     },
     "b2g_manifest": "helix.xml",
