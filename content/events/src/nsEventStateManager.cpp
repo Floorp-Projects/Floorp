@@ -1209,66 +1209,63 @@ nsEventStateManager::PreHandleEvent(nsPresContext* aPresContext,
     }
     break;
   case NS_QUERY_SELECTED_TEXT:
-    DoQuerySelectedText(static_cast<WidgetQueryContentEvent*>(aEvent));
+    DoQuerySelectedText(aEvent->AsQueryContentEvent());
     break;
   case NS_QUERY_TEXT_CONTENT:
     {
       if (RemoteQueryContentEvent(aEvent))
         break;
       nsContentEventHandler handler(mPresContext);
-      handler.OnQueryTextContent(static_cast<WidgetQueryContentEvent*>(aEvent));
+      handler.OnQueryTextContent(aEvent->AsQueryContentEvent());
     }
     break;
   case NS_QUERY_CARET_RECT:
     {
       // XXX remote event
       nsContentEventHandler handler(mPresContext);
-      handler.OnQueryCaretRect(static_cast<WidgetQueryContentEvent*>(aEvent));
+      handler.OnQueryCaretRect(aEvent->AsQueryContentEvent());
     }
     break;
   case NS_QUERY_TEXT_RECT:
     {
       // XXX remote event
       nsContentEventHandler handler(mPresContext);
-      handler.OnQueryTextRect(static_cast<WidgetQueryContentEvent*>(aEvent));
+      handler.OnQueryTextRect(aEvent->AsQueryContentEvent());
     }
     break;
   case NS_QUERY_EDITOR_RECT:
     {
       // XXX remote event
       nsContentEventHandler handler(mPresContext);
-      handler.OnQueryEditorRect(static_cast<WidgetQueryContentEvent*>(aEvent));
+      handler.OnQueryEditorRect(aEvent->AsQueryContentEvent());
     }
     break;
   case NS_QUERY_CONTENT_STATE:
     {
       // XXX remote event
       nsContentEventHandler handler(mPresContext);
-      handler.OnQueryContentState(static_cast<WidgetQueryContentEvent*>(aEvent));
+      handler.OnQueryContentState(aEvent->AsQueryContentEvent());
     }
     break;
   case NS_QUERY_SELECTION_AS_TRANSFERABLE:
     {
       // XXX remote event
       nsContentEventHandler handler(mPresContext);
-      handler.OnQuerySelectionAsTransferable(
-        static_cast<WidgetQueryContentEvent*>(aEvent));
+      handler.OnQuerySelectionAsTransferable(aEvent->AsQueryContentEvent());
     }
     break;
   case NS_QUERY_CHARACTER_AT_POINT:
     {
       // XXX remote event
       nsContentEventHandler handler(mPresContext);
-      handler.OnQueryCharacterAtPoint(
-        static_cast<WidgetQueryContentEvent*>(aEvent));
+      handler.OnQueryCharacterAtPoint(aEvent->AsQueryContentEvent());
     }
     break;
   case NS_QUERY_DOM_WIDGET_HITTEST:
     {
       // XXX remote event
       nsContentEventHandler handler(mPresContext);
-      handler.OnQueryDOMWidgetHittest(
-        static_cast<WidgetQueryContentEvent*>(aEvent));
+      handler.OnQueryDOMWidgetHittest(aEvent->AsQueryContentEvent());
     }
     break;
   case NS_SELECTION_SET:
@@ -3703,8 +3700,7 @@ nsEventStateManager::PostHandleEvent(nsPresContext* aPresContext,
 bool
 nsEventStateManager::RemoteQueryContentEvent(WidgetEvent* aEvent)
 {
-  WidgetQueryContentEvent *queryEvent =
-      static_cast<WidgetQueryContentEvent*>(aEvent);
+  WidgetQueryContentEvent* queryEvent = aEvent->AsQueryContentEvent();
   if (!IsTargetCrossProcess(queryEvent)) {
     return false;
   }
