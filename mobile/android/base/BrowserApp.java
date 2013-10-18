@@ -167,6 +167,12 @@ abstract public class BrowserApp extends GeckoApp
 
     private BrowserHealthReporter mBrowserHealthReporter;
 
+    // The animator used to toggle HomePager visibility has a race where if the HomePager is shown
+    // (starting the animation), the HomePager is hidden, and the HomePager animation completes,
+    // both the web content and the HomePager will be hidden. This flag is used to prevent the
+    // race by determining if the web content should be hidden at the animation's end.
+    private boolean mHideWebContentOnAnimationEnd = false;
+
     private SiteIdentityPopup mSiteIdentityPopup;
 
     public SiteIdentityPopup getSiteIdentityPopup() {
@@ -1546,7 +1552,38 @@ abstract public class BrowserApp extends GeckoApp
             final ViewStub homePagerStub = (ViewStub) findViewById(R.id.home_pager_stub);
             mHomePager = (HomePager) homePagerStub.inflate();
         }
+
         mHomePager.show(getSupportFragmentManager(), page, animator);
+
+        // Hide the web content so it cannot be focused by screen readers.
+        hideWebContentOnPropertyAnimationEnd(animator);
+    }
+
+    private void hideWebContentOnPropertyAnimationEnd(final PropertyAnimator animator) {
+        if (animator == null) {
+            hideWebContent();
+            return;
+        }
+
+        animator.addPropertyAnimationListener(new PropertyAnimator.PropertyAnimationListener() {
+            @Override
+            public void onPropertyAnimationStart() {
+                mHideWebContentOnAnimationEnd = true;
+            }
+
+            @Override
+            public void onPropertyAnimationEnd() {
+                if (mHideWebContentOnAnimationEnd) {
+                    hideWebContent();
+                }
+            }
+        });
+    }
+
+    private void hideWebContent() {
+        // The view is set to INVISIBLE, rather than GONE, to avoid
+        // the additional requestLayout() call.
+        mLayerView.setVisibility(View.INVISIBLE);
     }
 
     private void animateHideHomePager() {
@@ -1566,6 +1603,12 @@ abstract public class BrowserApp extends GeckoApp
         if (tab != null && isAboutHome(tab)) {
             return;
         }
+
+        // Prevent race in hiding web content - see declaration for more info.
+        mHideWebContentOnAnimationEnd = false;
+
+        // Display the previously hidden web content (which prevented screen reader access).
+        mLayerView.setVisibility(View.VISIBLE);
 
         // FIXME: do animation if animate is true
         if (mHomePager != null) {
