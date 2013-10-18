@@ -59,6 +59,8 @@ let heartbeatCallback = function () {}; // Called by the simpletest methods.
 let originalOnError;
 //timer for doc changes
 let checkTimer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
+//timer for readystate
+let readyStateTimer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
 // Send move events about this often
 let EVENT_INTERVAL = 30; // milliseconds
 // For assigning unique ids to all touches
@@ -164,13 +166,29 @@ function startListeners() {
 }
 
 /**
+ * Used during newSession and restart, called to set up the modal dialog listener in b2g
+ */
+function waitForReady() {
+  if (content.document.readyState == 'complete') {
+    readyStateTimer.cancel();
+    content.addEventListener("mozbrowsershowmodalprompt", modalHandler, false);
+    content.addEventListener("unload", waitForReady, false);
+  }
+  else {
+    readyStateTimer.initWithCallback(waitForReady, 100, Ci.nsITimer.TYPE_ONE_SHOT);
+  }
+}
+
+/**
  * Called when we start a new session. It registers the
  * current environment, and resets all values
  */
 function newSession(msg) {
   isB2G = msg.json.B2G;
   resetValues();
-  content.addEventListener("mozbrowsershowmodalprompt", modalHandler, false);
+  if (isB2G) {
+    readyStateTimer.initWithCallback(waitForReady, 100, Ci.nsITimer.TYPE_ONE_SHOT);
+  }
 }
  
 /**
@@ -188,7 +206,9 @@ function sleepSession(msg) {
  */
 function restart(msg) {
   removeMessageListener("Marionette:restart", restart);
-  content.addEventListener("mozbrowsershowmodalprompt", modalHandler, false);
+  if (isB2G) {
+    readyStateTimer.initWithCallback(waitForReady, 100, Ci.nsITimer.TYPE_ONE_SHOT);
+  }
   registerSelf();
 }
 
@@ -237,7 +257,9 @@ function deleteSession(msg) {
   removeMessageListenerId("Marionette:getAllCookies", getAllCookies);
   removeMessageListenerId("Marionette:deleteAllCookies", deleteAllCookies);
   removeMessageListenerId("Marionette:deleteCookie", deleteCookie);
-  content.removeEventListener("mozbrowsershowmodalprompt", modalHandler, false);
+  if (isB2G) {
+    content.removeEventListener("mozbrowsershowmodalprompt", modalHandler, false);
+  }
   this.elementManager.reset();
   // reset frame to the top-most frame
   curFrame = content;

@@ -353,18 +353,12 @@ public:
     , mAudioEngineInit(false)
     , mCameraManager(aCameraManager)
     , mWindowId(aWindowId)
+    , mHasTabVideoSource(false)
   {
     AsyncLatencyLogger::Get(true)->AddRef();
   }
 #else
-  MediaEngineWebRTC()
-    : mMutex("mozilla::MediaEngineWebRTC")
-    , mVideoEngine(nullptr)
-    , mVoiceEngine(nullptr)
-    , mVideoEngineInit(false)
-    , mAudioEngineInit(false)
-  {
-  }
+  MediaEngineWebRTC();
 #endif
   ~MediaEngineWebRTC() {
     Shutdown();
@@ -390,6 +384,7 @@ private:
   // Need this to avoid unneccesary WebRTC calls while enumerating.
   bool mVideoEngineInit;
   bool mAudioEngineInit;
+  bool mHasTabVideoSource;
 
   // Store devices we've already seen in a hashtable for quick return.
   // Maps UUID to MediaEngineSource (one set for audio, one for video).

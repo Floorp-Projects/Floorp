@@ -166,6 +166,12 @@ abstract public class BrowserApp extends GeckoApp
 
     private BrowserHealthReporter mBrowserHealthReporter;
 
+    // The animator used to toggle HomePager visibility has a race where if the HomePager is shown
+    // (starting the animation), the HomePager is hidden, and the HomePager animation completes,
+    // both the web content and the HomePager will be hidden. This flag is used to prevent the
+    // race by determining if the web content should be hidden at the animation's end.
+    private boolean mHideWebContentOnAnimationEnd = false;
+
     private SiteIdentityPopup mSiteIdentityPopup;
 
     public SiteIdentityPopup getSiteIdentityPopup() {
@@ -1573,7 +1579,38 @@ abstract public class BrowserApp extends GeckoApp
             final ViewStub homePagerStub = (ViewStub) findViewById(R.id.home_pager_stub);
             mHomePager = (HomePager) homePagerStub.inflate();
         }
+
         mHomePager.show(getSupportFragmentManager(), page, animator);
+
+        // Hide the web content so it cannot be focused by screen readers.
+        hideWebContentOnPropertyAnimationEnd(animator);
+    }
+
+    private void hideWebContentOnPropertyAnimationEnd(final PropertyAnimator animator) {
+        if (animator == null) {
+            hideWebContent();
+            return;
+        }
+
+        animator.addPropertyAnimationListener(new PropertyAnimator.PropertyAnimationListener() {
+            @Override
+            public void onPropertyAnimationStart() {
+                mHideWebContentOnAnimationEnd = true;
+            }
+
+            @Override
+            public void onPropertyAnimationEnd() {
+                if (mHideWebContentOnAnimationEnd) {
+                    hideWebContent();
+                }
+            }
+        });
+    }
+
+    private void hideWebContent() {
+        // The view is set to INVISIBLE, rather than GONE, to avoid
+        // the additional requestLayout() call.
+        mLayerView.setVisibility(View.INVISIBLE);
     }
 
     private void hideHomePager() {
@@ -1585,6 +1622,12 @@ abstract public class BrowserApp extends GeckoApp
         if (tab != null && isAboutHome(tab)) {
             return;
         }
+
+        // Prevent race in hiding web content - see declaration for more info.
+        mHideWebContentOnAnimationEnd = false;
+
+        // Display the previously hidden web content (which prevented screen reader access).
+        mLayerView.setVisibility(View.VISIBLE);
 
         if (mHomePager != null) {
             mHomePager.hide();
@@ -1776,13 +1819,14 @@ abstract public class BrowserApp extends GeckoApp
         // Set attribute for the menu item in cache, if available
         if (mAddonMenuItemsCache != null && !mAddonMenuItemsCache.isEmpty()) {
             for (MenuItemInfo item : mAddonMenuItemsCache) {
-                 if (item.id == id) {
-                     item.checkable = options.optBoolean("checkable", item.checkable);
-                     item.checked = options.optBoolean("checked", item.checked);
-                     item.enabled = options.optBoolean("enabled", item.enabled);
-                     item.visible = options.optBoolean("visible", item.visible);
-                     break;
-                 }
+                if (item.id == id) {
+                    item.label = options.optString("name", item.label);
+                    item.checkable = options.optBoolean("checkable", item.checkable);
+                    item.checked = options.optBoolean("checked", item.checked);
+                    item.enabled = options.optBoolean("enabled", item.enabled);
+                    item.visible = options.optBoolean("visible", item.visible);
+                    break;
+                }
             }
         }
 
@@ -1791,6 +1835,7 @@ abstract public class BrowserApp extends GeckoApp
 
         MenuItem menuItem = mMenu.findItem(id);
         if (menuItem != null) {
+            menuItem.setTitle(options.optString("name", menuItem.getTitle().toString()));
             menuItem.setCheckable(options.optBoolean("checkable", menuItem.isCheckable()));
             menuItem.setChecked(options.optBoolean("checked", menuItem.isChecked()));
             menuItem.setEnabled(options.optBoolean("enabled", menuItem.isEnabled()));

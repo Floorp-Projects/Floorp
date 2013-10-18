@@ -30,9 +30,8 @@ this.webappsUI = {
     Services.obs.addObserver(this, "webapps-launch", false);
     Services.obs.addObserver(this, "webapps-uninstall", false);
     cpmm.addMessageListener("Webapps:Install:Return:OK", this);
-    cpmm.addMessageListener("Webapps:OfflineCache", this);
     cpmm.addMessageListener("Webapps:Install:Return:KO", this);
-    cpmm.addMessageListener("Webapps:PackageEvent", this);
+    cpmm.addMessageListener("Webapps:UpdateState", this);
   },
 
   uninit: function webappsUI_uninit() {
@@ -40,9 +39,8 @@ this.webappsUI = {
     Services.obs.removeObserver(this, "webapps-launch");
     Services.obs.removeObserver(this, "webapps-uninstall");
     cpmm.removeMessageListener("Webapps:Install:Return:OK", this);
-    cpmm.removeMessageListener("Webapps:OfflineCache", this);
     cpmm.removeMessageListener("Webapps:Install:Return:KO", this);
-    cpmm.removeMessageListener("Webapps:PackageEvent", this);
+    cpmm.removeMessageListener("Webapps:UpdateState", this);
   },
 
   receiveMessage: function(aMessage) {
@@ -56,10 +54,10 @@ this.webappsUI = {
       return;
     }
 
-    if (aMessage.name == "Webapps:OfflineCache") {
+    if (aMessage.name == "Webapps:UpdateState") {
       if (data.error) {
         this.installations[manifestURL].reject(data.error);
-      } else if (data.installState == "installed") {
+      } else if (data.app.installState == "installed") {
         this.installations[manifestURL].resolve();
       }
     } else if (aMessage.name == "Webapps:Install:Return:OK" &&
@@ -70,12 +68,6 @@ this.webappsUI = {
       }
     } else if (aMessage.name == "Webapps:Install:Return:KO") {
       this.installations[manifestURL].reject(data.error);
-    } else if (aMessage.name == "Webapps:PackageEvent") {
-      if (data.type == "installed") {
-        this.installations[manifestURL].resolve();
-      } else if (data.type == "error") {
-        this.installations[manifestURL].reject(data.error);
-      }
     }
   },
 

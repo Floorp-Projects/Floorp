@@ -123,7 +123,7 @@ PostMessageReadStructuredClone(JSContext* cx,
         JS::Rooted<JS::Value> val(cx);
         nsCOMPtr<nsIXPConnectJSObjectHolder> wrapper;
         if (NS_SUCCEEDED(nsContentUtils::WrapNative(cx, global, supports,
-                                                    val.address(),
+                                                    &val,
                                                     getter_AddRefs(wrapper)))) {
           return JSVAL_TO_OBJECT(val);
         }

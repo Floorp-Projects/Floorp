@@ -3390,8 +3390,16 @@ Tab.prototype = {
           this.browser.addEventListener("pagehide", listener, true);
         }
 
-        if (docURI.startsWith("about:reader"))
-          new AboutReader(this.browser.contentDocument, this.browser.contentWindow);
+        if (docURI.startsWith("about:reader")) {
+          // During browser restart / recovery, duplicate "DOMContentLoaded" messages are received here
+          // For the visible tab ... where more than one tab is being reloaded, the inital "DOMContentLoaded"
+          // Message can be received before the document body is available ... so we avoid instantiating an
+          // AboutReader object, expecting that an eventual valid message will follow.
+          let contentDocument = this.browser.contentDocument;
+          if (contentDocument.body) {
+            new AboutReader(contentDocument, this.browser.contentWindow);
+          }
+        }
 
         break;
       }
@@ -4170,7 +4178,7 @@ var BrowserEventHandler = {
       if (this._scrollableElement != null) {
         // Discard if it's the top-level scrollable, we let Java handle this
         let doc = BrowserApp.selectedBrowser.contentDocument;
-        if (this._scrollableElement != doc.documentElement)
+        if (this._scrollableElement != doc.body && this._scrollableElement != doc.documentElement)
           sendMessageToJava({ type: "Panning:Override" });
       }
     }
@@ -4257,6 +4265,7 @@ var BrowserEventHandler = {
 
           let doc = BrowserApp.selectedBrowser.contentDocument;
           if (this._scrollableElement == null ||
+              this._scrollableElement == doc.body ||
               this._scrollableElement == doc.documentElement) {
             sendMessageToJava({ type: "Panning:CancelOverride" });
             return;
@@ -4296,10 +4305,11 @@ var BrowserEventHandler = {
             this._sendMouseEvent("mousedown", element, x, y);
             this._sendMouseEvent("mouseup",   element, x, y);
 
-            // See if its a input element
-            if ((element instanceof HTMLInputElement && element.mozIsTextField(false)) ||
-                (element instanceof HTMLTextAreaElement))
-               SelectionHandler.attachCaret(element);
+            // See if its an input element, and it isn't disabled
+            if (!element.disabled &&
+                ((element instanceof HTMLInputElement && element.mozIsTextField(false)) ||
+                (element instanceof HTMLTextAreaElement)))
+              SelectionHandler.attachCaret(element);
 
             // scrollToFocusedInput does its own checks to find out if an element should be zoomed into
             BrowserApp.scrollToFocusedInput(BrowserApp.selectedBrowser);
@@ -4627,14 +4637,15 @@ var BrowserEventHandler = {
     let scrollable = false;
     while (elem) {
       /* Element is scrollable if its scroll-size exceeds its client size, and:
-       * - It has overflow 'auto' or 'scroll', or
-       * - It's a textarea or HTML node, or
+       * - It has overflow 'auto' or 'scroll'
+       * - It's a textarea
+       * - It's an HTML/BODY node
        * - It's a select element showing multiple rows
        */
       if (checkElem) {
         if ((elem.scrollTopMax > 0 || elem.scrollLeftMax > 0) &&
             (this._hasScrollableOverflow(elem) ||
-             elem.mozMatchesSelector("html, textarea")) ||
+             elem.mozMatchesSelector("html, body, textarea")) ||
             (elem instanceof HTMLSelectElement && (elem.size > 1 || elem.multiple))) {
           scrollable = true;
           break;
@@ -5724,8 +5735,11 @@ var ViewportHandler = {
   },
 
   updateMetadata: function updateMetadata(tab, aInitialLoad) {
-    let metadata = this.getViewportMetadata(tab.browser.contentWindow);
-    tab.updateViewportMetadata(metadata, aInitialLoad);
+    let contentWindow = tab.browser.contentWindow;
+    if (contentWindow.document.documentElement) {
+      let metadata = this.getViewportMetadata(contentWindow);
+      tab.updateViewportMetadata(metadata, aInitialLoad);
+    }
   },
 
   /**

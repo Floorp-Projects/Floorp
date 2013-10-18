@@ -65,7 +65,7 @@ public:
   }
 
   virtual bool
-  ParseSuccessfulReply(JS::Value* aValue) MOZ_OVERRIDE
+  ParseSuccessfulReply(JS::MutableHandle<JS::Value> aValue) MOZ_OVERRIDE
   {
     MOZ_CRASH("This should never be called!");
   }
@@ -226,6 +226,12 @@ BluetoothParent::RecvPBluetoothRequestConstructor(
       return actor->DoRequest(aRequest.get_DisconnectScoRequest());
     case Request::TIsScoConnectedRequest:
       return actor->DoRequest(aRequest.get_IsScoConnectedRequest());
+    case Request::TAnswerWaitingCallRequest:
+      return actor->DoRequest(aRequest.get_AnswerWaitingCallRequest());
+    case Request::TIgnoreWaitingCallRequest:
+      return actor->DoRequest(aRequest.get_IgnoreWaitingCallRequest());
+    case Request::TToggleCallsRequest:
+      return actor->DoRequest(aRequest.get_ToggleCallsRequest());
     case Request::TSendMetaDataRequest:
       return actor->DoRequest(aRequest.get_SendMetaDataRequest());
     case Request::TSendPlayStatusRequest:
@@ -572,6 +578,39 @@ BluetoothRequestParent::DoRequest(const IsScoConnectedRequest& aRequest)
   MOZ_ASSERT(mRequestType == Request::TIsScoConnectedRequest);
 
   mService->IsScoConnected(mReplyRunnable.get());
+  return true;
+}
+
+bool
+BluetoothRequestParent::DoRequest(const AnswerWaitingCallRequest& aRequest)
+{
+  MOZ_ASSERT(mService);
+  MOZ_ASSERT(mRequestType == Request::TAnswerWaitingCallRequest);
+
+  mService->AnswerWaitingCall(mReplyRunnable.get());
+
+  return true;
+}
+
+bool
+BluetoothRequestParent::DoRequest(const IgnoreWaitingCallRequest& aRequest)
+{
+  MOZ_ASSERT(mService);
+  MOZ_ASSERT(mRequestType == Request::TAnswerWaitingCallRequest);
+
+  mService->IgnoreWaitingCall(mReplyRunnable.get());
+
+  return true;
+}
+
+bool
+BluetoothRequestParent::DoRequest(const ToggleCallsRequest& aRequest)
+{
+  MOZ_ASSERT(mService);
+  MOZ_ASSERT(mRequestType == Request::TAnswerWaitingCallRequest);
+
+  mService->ToggleCalls(mReplyRunnable.get());
+
   return true;
 }
 

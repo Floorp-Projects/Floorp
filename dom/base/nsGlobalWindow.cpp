@@ -3632,8 +3632,11 @@ nsGlobalWindow::GetScriptableContent(JSContext* aCx, JS::Value* aVal)
     JS::Rooted<JSObject*> global(aCx, JS::CurrentGlobalOrNull(aCx));
     if (content && global) {
       nsCOMPtr<nsIXPConnectJSObjectHolder> wrapper;
-      return nsContentUtils::WrapNative(aCx, global, content, aVal,
-                                        getter_AddRefs(wrapper));
+      JS::Rooted<JS::Value> rval(aCx);
+      nsresult rv = nsContentUtils::WrapNative(aCx, global, content, &rval,
+                                               getter_AddRefs(wrapper));
+      *aVal = rval;
+      return rv;
     }
     return NS_ERROR_FAILURE;
   }
@@ -6806,9 +6809,9 @@ PostMessageReadStructuredClone(JSContext* cx,
         JS::Rooted<JS::Value> val(cx);
         nsCOMPtr<nsIXPConnectJSObjectHolder> wrapper;
         if (NS_SUCCEEDED(nsContentUtils::WrapNative(cx, global, supports,
-                                                    val.address(),
+                                                    &val,
                                                     getter_AddRefs(wrapper)))) {
-          return JSVAL_TO_OBJECT(val);
+          return val.toObjectOrNull();
         }
       }
     }

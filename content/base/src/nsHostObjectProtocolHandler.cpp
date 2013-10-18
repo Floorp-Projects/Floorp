@@ -49,7 +49,15 @@ void
 nsHostObjectProtocolHandler::RemoveDataEntry(const nsACString& aUri)
 {
   if (gDataTable) {
-    gDataTable->Remove(aUri);
+    nsCString uriIgnoringRef;
+    int32_t hashPos = aUri.FindChar('#');
+    if (hashPos < 0) {
+      uriIgnoringRef = aUri;
+    }
+    else {
+      uriIgnoringRef = StringHead(aUri, hashPos);
+    }
+    gDataTable->Remove(uriIgnoringRef);
     if (gDataTable->Count() == 0) {
       delete gDataTable;
       gDataTable = nullptr;
@@ -80,6 +88,27 @@ nsHostObjectProtocolHandler::GenerateURIString(const nsACString &aScheme,
   return NS_OK;
 }
 
+static DataInfo*
+GetDataInfo(const nsACString& aUri)
+{
+  if (!gDataTable) {
+    return nullptr;
+  }
+
+  DataInfo* res;
+  nsCString uriIgnoringRef;
+  int32_t hashPos = aUri.FindChar('#');
+  if (hashPos < 0) {
+    uriIgnoringRef = aUri;
+  }
+  else {
+    uriIgnoringRef = StringHead(aUri, hashPos);
+  }
+  gDataTable->Get(uriIgnoringRef, &res);
+  
+  return res;
+}
+
 nsIPrincipal*
 nsHostObjectProtocolHandler::GetDataEntryPrincipal(const nsACString& aUri)
 {
@@ -87,8 +116,8 @@ nsHostObjectProtocolHandler::GetDataEntryPrincipal(const nsACString& aUri)
     return nullptr;
   }
 
-  DataInfo* res;
-  gDataTable->Get(aUri, &res);
+  DataInfo* res = GetDataInfo(aUri);
+
   if (!res) {
     return nullptr;
   }
@@ -112,18 +141,6 @@ nsHostObjectProtocolHandler::Traverse(const nsACString& aUri,
 
   NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(aCallback, "HostObjectProtocolHandler DataInfo.mObject");
   aCallback.NoteXPCOMChild(res->mObject);
-}
-
-static DataInfo*
-GetDataInfo(const nsACString& aUri)
-{
-  if (!gDataTable) {
-    return nullptr;
-  }
-
-  DataInfo* res;
-  gDataTable->Get(aUri, &res);
-  return res;
 }
 
 static nsISupports*

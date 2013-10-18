@@ -170,12 +170,31 @@
  * Furthermore, it will prevent the compiler from inlining the function because
  * inlining currently breaks the blacklisting mechanism of AddressSanitizer.
  */
-#if defined(MOZ_ASAN)
-#  define MOZ_ASAN_BLACKLIST MOZ_NEVER_INLINE __attribute__((no_address_safety_analysis))
-# else
-#  define MOZ_ASAN_BLACKLIST
+#if defined(__has_feature)
+#  if __has_feature(address_sanitizer)
+#    define MOZ_ASAN_BLACKLIST MOZ_NEVER_INLINE __attribute__((no_sanitize_address))
+#  else
+#    define MOZ_ASAN_BLACKLIST /* nothing */
+#  endif
+#else
+#  define MOZ_ASAN_BLACKLIST /* nothing */
 #endif
 
+/*
+ * MOZ_TSAN_BLACKLIST is a macro to tell ThreadSanitizer (a compile-time
+ * instrumentation shipped with Clang) to not instrument the annotated function.
+ * Furthermore, it will prevent the compiler from inlining the function because
+ * inlining currently breaks the blacklisting mechanism of ThreadSanitizer.
+ */
+#if defined(__has_feature)
+#  if __has_feature(thread_sanitizer)
+#    define MOZ_TSAN_BLACKLIST MOZ_NEVER_INLINE __attribute__((no_sanitize_thread))
+#  else
+#    define MOZ_TSAN_BLACKLIST /* nothing */
+#  endif
+#else
+#  define MOZ_TSAN_BLACKLIST /* nothing */
+#endif
 
 #ifdef __cplusplus
 

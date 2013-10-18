@@ -1376,6 +1376,19 @@ MMod::fallible()
     return !isTruncated();
 }
 
+void
+MMathFunction::trySpecializeFloat32()
+{
+    if (!input()->canProduceFloat32() || !CheckUsesAreFloat32Consumers(this)) {
+        if (input()->type() == MIRType_Float32)
+            ConvertDefinitionToDouble<0>(input(), this);
+        return;
+    }
+
+    setResultType(MIRType_Float32);
+    setPolicyType(MIRType_Float32);
+}
+
 bool
 MAdd::fallible()
 {
@@ -2571,7 +2584,7 @@ InlinePropertyTable::buildTypeSetForFunction(JSFunction *func) const
         return nullptr;
     for (size_t i = 0; i < numEntries(); i++) {
         if (entries_[i]->func == func) {
-            if (!types->addObject(types::Type::ObjectType(entries_[i]->typeObj).objectKey(), alloc))
+            if (!types->addType(types::Type::ObjectType(entries_[i]->typeObj), alloc))
                 return nullptr;
         }
     }
@@ -2818,11 +2831,11 @@ bool
 jit::PropertyReadNeedsTypeBarrier(JSContext *cx, JSContext *propertycx,
                                   types::CompilerConstraintList *constraints,
                                   types::TypeObjectKey *object, PropertyName *name,
-                                  types::StackTypeSet *observed, bool updateObserved)
+                                  types::TemporaryTypeSet *observed, bool updateObserved)
 {
     // If this access has never executed, try to add types to the observed set
     // according to any property which exists on the object or its prototype.
-    if (updateObserved && observed->empty() && observed->noConstraints() && name) {
+    if (updateObserved && observed->empty() && name) {
         JSObject *obj = object->singleton() ? object->singleton() : object->proto().toObjectOrNull();
 
         while (obj) {
@@ -2837,7 +2850,8 @@ jit::PropertyReadNeedsTypeBarrier(JSContext *cx, JSContext *propertycx,
                     if (!property.maybeTypes()->enumerateTypes(&types))
                         return false;
                     if (types.length()) {
-                        observed->addType(cx, types[0]);
+                        if (!observed->addType(types[0], GetIonContext()->temp->lifoAlloc()))
+                            return false;
                         break;
                     }
                 }
@@ -2854,7 +2868,7 @@ bool
 jit::PropertyReadNeedsTypeBarrier(JSContext *cx, JSContext *propertycx,
                                   types::CompilerConstraintList *constraints,
                                   MDefinition *obj, PropertyName *name,
-                                  types::StackTypeSet *observed)
+                                  types::TemporaryTypeSet *observed)
 {
     if (observed->unknown())
         return false;
@@ -2931,45 +2945,39 @@ jit::PropertyReadIsIdempotent(types::CompilerConstraintList *constraints,
 }
 
 bool
-jit::AddObjectsForPropertyRead(JSContext *cx, MDefinition *obj, PropertyName *name,
-                               types::StackTypeSet *observed)
+jit::AddObjectsForPropertyRead(MDefinition *obj, PropertyName *name,
+                               types::TemporaryTypeSet *observed)
 {
     // Add objects to observed which *could* be observed by reading name from obj,
     // to hopefully avoid unnecessary type barriers and code invalidations.
 
-    JS_ASSERT(observed->noConstraints());
+    LifoAlloc *alloc = GetIonContext()->temp->lifoAlloc();
 
     types::TemporaryTypeSet *types = obj->resultTypeSet();
-    if (!types || types->unknownObject()) {
-        observed->addType(cx, types::Type::AnyObjectType());
-        return true;
-    }
+    if (!types || types->unknownObject())
+        return observed->addType(types::Type::AnyObjectType(), alloc);
 
     for (size_t i = 0; i < types->getObjectCount(); i++) {
-        types::TypeObject *object;
-        if (!types->getTypeOrSingleObject(cx, i, &object))
-            return false;
-
+        types::TypeObjectKey *object = types->getObject(i);
         if (!object)
             continue;
 
-        if (object->unknownProperties()) {
-            observed->addType(cx, types::Type::AnyObjectType());
-            return true;
-        }
+        if (object->unknownProperties())
+            return observed->addType(types::Type::AnyObjectType(), alloc);
 
         jsid id = name ? NameToId(name) : JSID_VOID;
-        types::HeapTypeSet *property = object->getProperty(cx, id);
-        if (property->unknownObject()) {
-            observed->addType(cx, types::Type::AnyObjectType());
-            return true;
-        }
+        types::HeapTypeSetKey property = object->property(id);
+        types::HeapTypeSet *types = property.maybeTypes();
+        if (!types)
+            continue;
 
-        for (size_t i = 0; i < property->getObjectCount(); i++) {
-            if (types::TypeObject *object = property->getTypeObject(i))
-                observed->addType(cx, types::Type::ObjectType(object));
-            else if (JSObject *object = property->getSingleObject(i))
-                observed->addType(cx, types::Type::ObjectType(object));
+        if (types->unknownObject())
+            return observed->addType(types::Type::AnyObjectType(), alloc);
+
+        for (size_t i = 0; i < types->getObjectCount(); i++) {
+            types::TypeObjectKey *object = types->getObject(i);
+            if (object && !observed->addType(types::Type::ObjectType(object), alloc))
+                return false;
         }
     }
 

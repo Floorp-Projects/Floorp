@@ -136,6 +136,88 @@ function refuseAddFunctionCall() {
 }
 test(refuseAddFunctionCall);
 
+function acceptTrigo() {
+    var res = Math.cos(f32[0]);
+    f32[0] = res;
+    assertFloat32(res, true);
+
+    var res = Math.sin(f32[0]);
+    f32[0] = res;
+    assertFloat32(res, true);
+
+    var res = Math.tan(f32[0]);
+    f32[0] = res;
+    assertFloat32(res, true);
+
+    var res = Math.acos(f32[0]);
+    f32[0] = res;
+    assertFloat32(res, true);
+
+    var res = Math.asin(f32[0]);
+    f32[0] = res;
+    assertFloat32(res, true);
+
+    res = Math.atan(f32[0]);
+    f32[0] = res;
+    assertFloat32(res, true);
+}
+test(acceptTrigo);
+
+function refuseMath() {
+    var res = Math.log10(f32[0]);
+    f32[0] = res;
+    assertFloat32(res, false);
+
+    res = Math.log2(f32[0]);
+    f32[0] = res;
+    assertFloat32(res, false);
+
+    res = Math.log1p(f32[0]);
+    f32[0] = res;
+    assertFloat32(res, false);
+
+    res = Math.expm1(f32[0]);
+    f32[0] = res;
+    assertFloat32(res, false);
+
+    res = Math.cosh(f32[0]);
+    f32[0] = res;
+    assertFloat32(res, false);
+
+    res = Math.sinh(f32[0]);
+    f32[0] = res;
+    assertFloat32(res, false);
+
+    res = Math.tanh(f32[0]);
+    f32[0] = res;
+    assertFloat32(res, false);
+
+    res = Math.acosh(f32[0]);
+    f32[0] = res;
+    assertFloat32(res, false);
+
+    res = Math.asinh(f32[0]);
+    f32[0] = res;
+    assertFloat32(res, false);
+
+    res = Math.atanh(f32[0]);
+    f32[0] = res;
+    assertFloat32(res, false);
+
+    res = Math.cbrt(f32[0]);
+    f32[0] = res;
+    assertFloat32(res, false);
+
+    res = Math.sign(f32[0]);
+    f32[0] = res;
+    assertFloat32(res, false);
+
+    res = Math.trunc(f32[0]);
+    f32[0] = res;
+    assertFloat32(res, false);
+}
+test(refuseMath);
+
 function refuseLoop() {
     var res = f32[0],
         n = 10;
