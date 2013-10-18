@@ -1248,7 +1248,6 @@ SearchCountMeasurement2.prototype = Object.freeze({
 });
 
 function SearchCountMeasurement3() {
-  this.nameMappings = null;
   SearchCountMeasurementBase.call(this);
 }
 
@@ -1261,32 +1260,14 @@ SearchCountMeasurement3.prototype = Object.freeze({
     return Services.search.getEngines();
   },
 
-  _initialize: function () {
-    this.nameMappings = {};
-    let engines = this.getEngines();
-    for (let engine of engines) {
-      let name = engine.name;
-      if (!name) {
-        // This is something we'd like to know, but we can't track it unless we
-        // rejig how recordSearchInHealthReport is implemented.
-        continue;
-      }
-
-      let id = engine.identifier;
-      if (!id) {
-        continue;
-      }
-
-      // TODO: again, we need to rejig this to avoid name collisions.
-      this.nameMappings[name] = id;
+  getEngineID: function (engine) {
+    if (!engine) {
+      return "other";
     }
-  },
-
-  getEngineID: function (engineName) {
-    if (!this.nameMappings) {
-      this._initialize();
+    if (engine.identifier) {
+      return engine.identifier;
     }
-    return this.nameMappings[engineName] || "other-" + engineName;
+    return "other-" + engine.name;
   },
 });
 
@@ -1320,9 +1301,7 @@ this.SearchesProvider.prototype = Object.freeze({
    * Record that a search occurred.
    *
    * @param engine
-   *        (string) The search engine used. If the search engine is unknown,
-   *        the search will be attributed to "other-$engine"; otherwise, its
-   *        identifier will be used.
+   *        (nsISearchEngine) The search engine used.
    * @param source
    *        (string) Where the search was initiated from. Must be one of the
    *        SearchCountMeasurement2.SOURCES values.
