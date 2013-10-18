@@ -4216,7 +4216,8 @@ let TabState = {
     }
 
     let promise = Task.spawn(function task() {
-      // Collected session history data asynchronously.
+      // Collect session history data asynchronously. Also collects
+      // text and scroll data.
       let history = yield Messenger.send(tab, "SessionStore:collectSessionHistory");
 
       // Collected session storage data asynchronously.
@@ -4250,9 +4251,6 @@ let TabState = {
       if (pageStyle) {
         tabData.pageStyle = pageStyle;
       }
-
-      // Save text and scroll data.
-      this._updateTextAndScrollDataForTab(tab, tabData);
 
       // If we're still the latest async collection for the given tab and
       // the cache hasn't been filled by collect() in the meantime, let's
