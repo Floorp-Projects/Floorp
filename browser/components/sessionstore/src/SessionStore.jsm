@@ -4259,7 +4259,9 @@ let TabState = {
 
       // Apply collected data.
       tabData.entries = history.entries;
-      tabData.index = history.index;
+      if ("index" in history) {
+        tabData.index = history.index;
+      }
 
       if (Object.keys(storage).length) {
         tabData.storage = storage;
