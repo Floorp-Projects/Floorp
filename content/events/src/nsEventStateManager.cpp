@@ -1294,13 +1294,12 @@ nsEventStateManager::PreHandleEvent(nsPresContext* aPresContext,
   case NS_CONTENT_COMMAND_REDO:
   case NS_CONTENT_COMMAND_PASTE_TRANSFERABLE:
     {
-      DoContentCommandEvent(static_cast<WidgetContentCommandEvent*>(aEvent));
+      DoContentCommandEvent(aEvent->AsContentCommandEvent());
     }
     break;
   case NS_CONTENT_COMMAND_SCROLL:
     {
-      DoContentCommandScrollEvent(
-        static_cast<WidgetContentCommandEvent*>(aEvent));
+      DoContentCommandScrollEvent(aEvent->AsContentCommandEvent());
     }
     break;
   case NS_TEXT_TEXT:
