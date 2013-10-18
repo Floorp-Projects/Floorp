@@ -461,7 +461,7 @@ VariablesViewController.prototype = {
     scope.expanded = true;
     scope.locked = true;
 
-    let variable = scope.addItem();
+    let variable = scope.addItem("", { enumerable: true });
     let expanded;
 
     if (aOptions.objectActor) {

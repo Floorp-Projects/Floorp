@@ -143,6 +143,8 @@ parent:
     SetTimezone(nsCString aTimezoneSpec);
     sync GetTimezone()
       returns (nsCString aTimezoneSpec);
+    sync GetTimezoneOffset()
+      returns (int32_t aTimezoneOffset);
     EnableSystemClockChangeNotifications();
     DisableSystemClockChangeNotifications();
     EnableSystemTimezoneChangeNotifications();
