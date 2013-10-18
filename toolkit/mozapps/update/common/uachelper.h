@@ -8,7 +8,6 @@
 class UACHelper
 {
 public:
-  static BOOL IsVistaOrLater();
   static HANDLE OpenUserToken(DWORD sessionID);
   static HANDLE OpenLinkedToken(HANDLE token);
   static BOOL DisablePrivileges(HANDLE token);
