@@ -692,7 +692,7 @@ nsEventDispatcher::CreateEvent(mozilla::dom::EventTarget* aOwner,
     switch(aEvent->eventStructType) {
     case NS_MUTATION_EVENT:
       return NS_NewDOMMutationEvent(aDOMEvent, aOwner, aPresContext,
-               static_cast<InternalMutationEvent*>(aEvent));
+                                    aEvent->AsMutationEvent());
     case NS_GUI_EVENT:
     case NS_SCROLLPORT_EVENT:
     case NS_UI_EVENT:
