@@ -11,7 +11,7 @@ include protocol PPluginStream;
 include protocol PStreamNotify;
 include protocol PPluginSurface;
 
-include "ipc/nsGUIEventIPC.h";
+include "mozilla/GfxMessageUtils.h";
 
 using NPError from "npapi.h";
 using struct mozilla::plugins::NPRemoteWindow from "mozilla/plugins/PluginMessageUtils.h";
