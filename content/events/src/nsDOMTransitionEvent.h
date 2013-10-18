@@ -19,7 +19,6 @@ public:
   nsDOMTransitionEvent(mozilla::dom::EventTarget* aOwner,
                        nsPresContext *aPresContext,
                        mozilla::InternalTransitionEvent* aEvent);
-  ~nsDOMTransitionEvent();
 
   NS_DECL_ISUPPORTS_INHERITED
   NS_FORWARD_TO_NSDOMEVENT

@@ -23,14 +23,6 @@ nsDOMCommandEvent::nsDOMCommandEvent(mozilla::dom::EventTarget* aOwner,
   }
 }
 
-nsDOMCommandEvent::~nsDOMCommandEvent()
-{
-  if (mEventIsInternal && mEvent->eventStructType == NS_COMMAND_EVENT) {
-    delete static_cast<WidgetCommandEvent*>(mEvent);
-    mEvent = nullptr;
-  }
-}
-
 NS_INTERFACE_MAP_BEGIN(nsDOMCommandEvent)
   NS_INTERFACE_MAP_ENTRY(nsIDOMCommandEvent)
 NS_INTERFACE_MAP_END_INHERITING(nsDOMEvent)

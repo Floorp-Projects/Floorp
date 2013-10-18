@@ -19,7 +19,6 @@ public:
   nsDOMCompositionEvent(mozilla::dom::EventTarget* aOwner,
                         nsPresContext* aPresContext,
                         mozilla::WidgetCompositionEvent* aEvent);
-  virtual ~nsDOMCompositionEvent();
 
   NS_DECL_ISUPPORTS_INHERITED
   NS_FORWARD_TO_NSDOMUIEVENT

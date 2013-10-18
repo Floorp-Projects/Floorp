@@ -30,14 +30,6 @@ nsDOMSimpleGestureEvent::nsDOMSimpleGestureEvent(mozilla::dom::EventTarget* aOwn
   }
 }
 
-nsDOMSimpleGestureEvent::~nsDOMSimpleGestureEvent()
-{
-  if (mEventIsInternal) {
-    delete static_cast<WidgetSimpleGestureEvent*>(mEvent);
-    mEvent = nullptr;
-  }
-}
-
 NS_IMPL_ADDREF_INHERITED(nsDOMSimpleGestureEvent, nsDOMUIEvent)
 NS_IMPL_RELEASE_INHERITED(nsDOMSimpleGestureEvent, nsDOMUIEvent)
 

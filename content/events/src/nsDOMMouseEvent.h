@@ -18,7 +18,6 @@ public:
   nsDOMMouseEvent(mozilla::dom::EventTarget* aOwner,
                   nsPresContext* aPresContext,
                   mozilla::WidgetInputEvent* aEvent);
-  virtual ~nsDOMMouseEvent();
 
   NS_DECL_ISUPPORTS_INHERITED
 

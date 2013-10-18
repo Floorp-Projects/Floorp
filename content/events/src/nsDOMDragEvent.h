@@ -18,7 +18,6 @@ public:
   nsDOMDragEvent(mozilla::dom::EventTarget* aOwner,
                  nsPresContext* aPresContext,
                  mozilla::WidgetInputEvent* aEvent);
-  virtual ~nsDOMDragEvent();
 
   NS_DECL_ISUPPORTS_INHERITED
 

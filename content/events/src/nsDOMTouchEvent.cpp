@@ -71,14 +71,6 @@ nsDOMTouchEvent::nsDOMTouchEvent(mozilla::dom::EventTarget* aOwner,
   }
 }
 
-nsDOMTouchEvent::~nsDOMTouchEvent()
-{
-  if (mEventIsInternal && mEvent) {
-    delete static_cast<WidgetTouchEvent*>(mEvent);
-    mEvent = nullptr;
-  }
-}
-
 NS_IMPL_CYCLE_COLLECTION_INHERITED_3(nsDOMTouchEvent, nsDOMUIEvent,
                                      mTouches,
                                      mTargetTouches,

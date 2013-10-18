@@ -26,14 +26,6 @@ nsDOMTransitionEvent::nsDOMTransitionEvent(mozilla::dom::EventTarget* aOwner,
   }
 }
 
-nsDOMTransitionEvent::~nsDOMTransitionEvent()
-{
-  if (mEventIsInternal) {
-    delete TransitionEvent();
-    mEvent = nullptr;
-  }
-}
-
 NS_INTERFACE_MAP_BEGIN(nsDOMTransitionEvent)
   NS_INTERFACE_MAP_ENTRY(nsIDOMTransitionEvent)
 NS_INTERFACE_MAP_END_INHERITING(nsDOMEvent)

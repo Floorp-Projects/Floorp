@@ -20,16 +20,6 @@ nsDOMMutationEvent::nsDOMMutationEvent(mozilla::dom::EventTarget* aOwner,
   mEventIsInternal = (aEvent == nullptr);
 }
 
-nsDOMMutationEvent::~nsDOMMutationEvent()
-{
-  if (mEventIsInternal) {
-    InternalMutationEvent* mutation =
-      static_cast<InternalMutationEvent*>(mEvent);
-    delete mutation;
-    mEvent = nullptr;
-  }
-}
-
 NS_INTERFACE_MAP_BEGIN(nsDOMMutationEvent)
   NS_INTERFACE_MAP_ENTRY(nsIDOMMutationEvent)
 NS_INTERFACE_MAP_END_INHERITING(nsDOMEvent)

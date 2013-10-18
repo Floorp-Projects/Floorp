@@ -31,22 +31,6 @@ nsDOMMouseScrollEvent::nsDOMMouseScrollEvent(mozilla::dom::EventTarget* aOwner,
   }
 }
 
-nsDOMMouseScrollEvent::~nsDOMMouseScrollEvent()
-{
-  if (mEventIsInternal && mEvent) {
-    switch (mEvent->eventStructType)
-    {
-      case NS_MOUSE_SCROLL_EVENT:
-        delete static_cast<WidgetMouseScrollEvent*>(mEvent);
-        break;
-      default:
-        delete mEvent;
-        break;
-    }
-    mEvent = nullptr;
-  }
-}
-
 NS_IMPL_ADDREF_INHERITED(nsDOMMouseScrollEvent, nsDOMMouseEvent)
 NS_IMPL_RELEASE_INHERITED(nsDOMMouseScrollEvent, nsDOMMouseEvent)
 

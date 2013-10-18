@@ -26,14 +26,6 @@ nsDOMAnimationEvent::nsDOMAnimationEvent(mozilla::dom::EventTarget* aOwner,
   }
 }
 
-nsDOMAnimationEvent::~nsDOMAnimationEvent()
-{
-  if (mEventIsInternal) {
-    delete AnimationEvent();
-    mEvent = nullptr;
-  }
-}
-
 NS_INTERFACE_MAP_BEGIN(nsDOMAnimationEvent)
   NS_INTERFACE_MAP_ENTRY(nsIDOMAnimationEvent)
 NS_INTERFACE_MAP_END_INHERITING(nsDOMEvent)

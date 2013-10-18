@@ -29,15 +29,6 @@ nsDOMDragEvent::nsDOMDragEvent(mozilla::dom::EventTarget* aOwner,
   }
 }
 
-nsDOMDragEvent::~nsDOMDragEvent()
-{
-  if (mEventIsInternal) {
-    if (mEvent->eventStructType == NS_DRAG_EVENT)
-      delete static_cast<WidgetDragEvent*>(mEvent);
-    mEvent = nullptr;
-  }
-}
-
 NS_IMPL_ADDREF_INHERITED(nsDOMDragEvent, nsDOMMouseEvent)
 NS_IMPL_RELEASE_INHERITED(nsDOMDragEvent, nsDOMMouseEvent)
 
