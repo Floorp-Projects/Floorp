@@ -483,7 +483,7 @@
           
           // null parameter below specifies HTML response for search
           var submission = this.currentEngine.getSubmission(aData, null, "searchbar");
-          BrowserSearch.recordSearchInHealthReport(this.currentEngine.name, "searchbar");
+          BrowserSearch.recordSearchInHealthReport(this.currentEngine, "searchbar");
           openUILinkIn(submission.uri.spec, aWhere, null, submission.postData);
         ]]></body>
       </method>
