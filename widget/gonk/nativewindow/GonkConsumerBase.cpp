@@ -102,7 +102,11 @@ void GonkConsumerBase::onFrameAvailable() {
     sp<FrameAvailableListener> listener;
     { // scope for the lock
         Mutex::Autolock lock(mMutex);
+#if ANDROID_VERSION == 17
+        listener = mFrameAvailableListener;
+#else
         listener = mFrameAvailableListener.promote();
+#endif
     }
 
     if (listener != NULL) {
@@ -151,7 +155,11 @@ void GonkConsumerBase::abandonLocked() {
 }
 
 void GonkConsumerBase::setFrameAvailableListener(
+#if ANDROID_VERSION == 17
+        const sp<FrameAvailableListener>& listener) {
+#else
         const wp<FrameAvailableListener>& listener) {
+#endif
     CB_LOGV("setFrameAvailableListener");
     Mutex::Autolock lock(mMutex);
     mFrameAvailableListener = listener;
