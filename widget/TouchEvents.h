@@ -31,6 +31,11 @@ namespace mozilla {
 class WidgetGestureNotifyEvent : public WidgetGUIEvent
 {
 public:
+  virtual WidgetGestureNotifyEvent* AsGestureNotifyEvent() MOZ_OVERRIDE
+  {
+    return this;
+  }
+
   WidgetGestureNotifyEvent(bool aIsTrusted, uint32_t aMessage,
                            nsIWidget *aWidget) :
     WidgetGUIEvent(aIsTrusted, aMessage, aWidget, NS_GESTURENOTIFY_EVENT),
@@ -67,6 +72,11 @@ public:
 class WidgetSimpleGestureEvent : public WidgetMouseEventBase
 {
 public:
+  virtual WidgetSimpleGestureEvent* AsSimpleGestureEvent() MOZ_OVERRIDE
+  {
+    return this;
+  }
+
   WidgetSimpleGestureEvent(bool aIsTrusted, uint32_t aMessage,
                            nsIWidget* aWidget, uint32_t aDirection,
                            double aDelta) :
@@ -114,6 +124,8 @@ public:
 class WidgetTouchEvent : public WidgetInputEvent
 {
 public:
+  virtual WidgetTouchEvent* AsTouchEvent() MOZ_OVERRIDE { return this; }
+
   WidgetTouchEvent()
   {
   }
@@ -134,7 +146,7 @@ public:
     MOZ_COUNT_CTOR(WidgetTouchEvent);
   }
 
-  ~WidgetTouchEvent()
+  virtual ~WidgetTouchEvent()
   {
     MOZ_COUNT_DTOR(WidgetTouchEvent);
   }

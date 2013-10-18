@@ -17,8 +17,7 @@ class nsDOMDragEvent : public nsDOMMouseEvent,
 public:
   nsDOMDragEvent(mozilla::dom::EventTarget* aOwner,
                  nsPresContext* aPresContext,
-                 mozilla::WidgetInputEvent* aEvent);
-  virtual ~nsDOMDragEvent();
+                 mozilla::WidgetDragEvent* aEvent);
 
   NS_DECL_ISUPPORTS_INHERITED
 

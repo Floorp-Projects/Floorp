@@ -361,10 +361,9 @@ nsXBLWindowKeyHandler::WalkHandlers(nsIDOMKeyEvent* aKeyEvent, nsIAtom* aEventTy
     }
 
     WidgetKeyboardEvent* keyEvent =
-      static_cast<WidgetKeyboardEvent*>(aKeyEvent->GetInternalNSEvent());
-    MOZ_ASSERT(keyEvent->eventStructType == NS_KEY_EVENT,
+      aKeyEvent->GetInternalNSEvent()->AsKeyboardEvent();
+    MOZ_ASSERT(keyEvent,
                "DOM key event's internal event must be WidgetKeyboardEvent");
-
     bool handled = false;
     switch (keyEvent->message) {
       case NS_KEY_PRESS:

@@ -7,7 +7,6 @@
 #ifndef nsCUPSShim_h___
 #define nsCUPSShim_h___
 
-#include "prtypes.h"
 
 /* Various CUPS data types. We don't #include cups headers to avoid
  * requiring CUPS to be installed on the build host (and to avoid having
