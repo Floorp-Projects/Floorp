@@ -5,7 +5,6 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include <string.h>
-#include "prtypes.h"
 #include "prmem.h"
 #include "prprf.h"
 #include "plstr.h"
