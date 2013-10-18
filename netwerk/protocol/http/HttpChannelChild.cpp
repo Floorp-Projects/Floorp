@@ -21,6 +21,7 @@
 #include "mozilla/ipc/InputStreamUtils.h"
 #include "mozilla/ipc/URIUtils.h"
 #include "mozilla/net/DNS.h"
+#include "SerializedLoadContext.h"
 
 using namespace mozilla::dom;
 using namespace mozilla::ipc;
