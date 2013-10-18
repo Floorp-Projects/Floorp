@@ -139,7 +139,7 @@ function testProcessCSSString() {
 }
 
 function finishUp() {
-  Services = colorUtils.CssColor = Loader = null;
+  Services = colorUtils = Loader = null;
   gBrowser.removeCurrentTab();
   finish();
 }
