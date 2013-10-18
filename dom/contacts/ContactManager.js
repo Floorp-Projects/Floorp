@@ -179,8 +179,8 @@ function validateArrayField(data, createCb) {
   if (data) {
     data = Array.isArray(data) ? data : [data];
     let filtered = [];
-    for (let obj of data) {
-      filtered.push(createCb(obj));
+    for (let i = 0, n = data.length; i < n; ++i) {
+      filtered.push(createCb(data[i]));
     }
     if (filtered.length === 0) {
       return undefined;
