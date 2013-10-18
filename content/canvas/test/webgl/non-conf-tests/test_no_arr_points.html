@@ -115,23 +115,29 @@ void main(void) {
 
     checkGLError(ok, info);
 
+    var elemTestFunc = todo; // We fail on most implementations.
+    if (DriverInfo.getDriver() == DriverInfo.DRIVER.ANGLE) {
+      // ANGLE seems to work fine.
+      elemTestFunc = ok;
+    }
+
     // Now for drawElements:
     gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, gl.createBuffer());
     gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, indexArr, gl.STATIC_DRAW);
 
     gl.clear(gl.COLOR_BUFFER_BIT);
     gl.drawElements(gl.POINTS, 1, indexType, 0);
-    todo(!isScreenBlack(), '[' + info + '] drawElements[0] should color pixels.');
+    elemTestFunc(!isScreenBlack(), '[' + info + '] drawElements[0] should color pixels.');
 
     gl.clear(gl.COLOR_BUFFER_BIT);
     gl.drawElements(gl.POINTS, 1, indexType, 1*indexStride);
-    todo(!isScreenBlack(), '[' + info + '] drawElements[1] should color pixels.');
+    elemTestFunc(!isScreenBlack(), '[' + info + '] drawElements[1] should color pixels.');
 
     gl.clear(gl.COLOR_BUFFER_BIT);
     gl.drawElements(gl.POINTS, 1, indexType, 2*indexStride);
-    todo(!isScreenBlack(), '[' + info + '] drawElements[huge offset] should color pixels.');
+    elemTestFunc(!isScreenBlack(), '[' + info + '] drawElements[huge offset] should color pixels.');
 
-    checkGLError(todo, info);
+    checkGLError(elemTestFunc, info);
   }
 
   // Begin drawing
