@@ -712,8 +712,7 @@ nsDOMEvent::DuplicatePrivateData()
     }
     case NS_TRANSITION_EVENT:
     {
-      InternalTransitionEvent* oldTransitionEvent =
-        static_cast<InternalTransitionEvent*>(mEvent);
+      InternalTransitionEvent* oldTransitionEvent = mEvent->AsTransitionEvent();
       InternalTransitionEvent* transitionEvent =
          new InternalTransitionEvent(false, msg,
                                      oldTransitionEvent->propertyName,
