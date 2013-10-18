@@ -700,7 +700,7 @@ nsEventDispatcher::CreateEvent(mozilla::dom::EventTarget* aOwner,
                               static_cast<WidgetGUIEvent*>(aEvent));
     case NS_SCROLLAREA_EVENT:
       return NS_NewDOMScrollAreaEvent(aDOMEvent, aOwner, aPresContext,
-               static_cast<InternalScrollAreaEvent*>(aEvent));
+                                      aEvent->AsScrollAreaEvent());
     case NS_KEY_EVENT:
       return NS_NewDOMKeyboardEvent(aDOMEvent, aOwner, aPresContext,
                                     static_cast<WidgetKeyboardEvent*>(aEvent));
