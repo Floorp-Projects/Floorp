@@ -71,7 +71,7 @@ XPCStringConvert::ReadableToJSVal(JSContext *cx,
     if (buf) {
         JS::RootedValue val(cx);
         bool shared;
-        bool ok = StringBufferToJSVal(cx, buf, length, val.address(), &shared);
+        bool ok = StringBufferToJSVal(cx, buf, length, &val, &shared);
         if (!ok) {
             return JS::NullValue();
         }

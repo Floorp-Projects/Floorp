@@ -4281,6 +4281,7 @@ pref("dom.sms.enabled", false);
 // 7-bit default alphabet.
 pref("dom.sms.strict7BitEncoding", false);
 pref("dom.sms.requestStatusReport", true);
+pref("dom.mms.requestStatusReport", true);
 
 // WebContacts
 pref("dom.mozContacts.enabled", false);
@@ -4397,7 +4398,7 @@ pref("dom.browserElement.maxScreenshotDelayMS", 2000);
 // Whether we should show the placeholder when the element is focused but empty.
 pref("dom.placeholder.show_on_focus", true);
 
-// UAProfile settings
+// MMS UA Profile settings
 pref("wap.UAProf.url", "");
 pref("wap.UAProf.tagname", "x-wap-profile");
 
@@ -4428,6 +4429,11 @@ pref("mms.debugging.enabled", false);
 // the target element?
 pref("ui.touch_activation.delay_ms", 100);
 
+// If the user has clicked an element, how long do we keep the
+// :active state before it is cleared by the mouse sequences
+// fired after a touchstart/touchend.
+pref("ui.touch_activation.duration_ms", 100);
+
 // nsMemoryInfoDumper can watch a fifo in the temp directory and take various
 // actions when the fifo is written to.  Disable this in general.
 pref("memory_info_dumper.watch_fifo", false);
@@ -4452,6 +4458,18 @@ pref("dom.datastore.enabled", false);
 
 // Telephony API
 pref("dom.telephony.enabled", false);
+
+// Cell Broadcast API
+pref("dom.cellbroadcast.enabled", false);
+
+// ICC API
+pref("dom.icc.enabled", false);
+
+// Mobile Connection API
+pref("dom.mobileconnection.enabled", false);
+
+// Voice Mail API
+pref("dom.voicemail.enabled", false);
 
 // DOM Inter-App Communication API.
 pref("dom.inter-app-communication-api.enabled", false);

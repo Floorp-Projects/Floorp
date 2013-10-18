@@ -2,7 +2,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include <string>
 #include <cstdlib>
 #include <cerrno>
 
@@ -42,6 +41,7 @@
 #include "dtlsidentity.h"
 
 #ifdef MOZILLA_INTERNAL_API
+#include "nsPerformance.h"
 #include "nsDOMDataChannel.h"
 #include "mozilla/TimeStamp.h"
 #include "mozilla/Telemetry.h"
@@ -53,10 +53,12 @@
 #include "nsNetUtil.h"
 #include "nsIDOMDataChannel.h"
 #include "mozilla/dom/RTCConfigurationBinding.h"
+#include "mozilla/dom/RTCStatsReportBinding.h"
 #include "mozilla/dom/RTCPeerConnectionBinding.h"
 #include "mozilla/dom/PeerConnectionImplBinding.h"
 #include "mozilla/dom/DataChannelBinding.h"
 #include "MediaStreamList.h"
+#include "MediaStreamTrack.h"
 #include "nsIScriptGlobalObject.h"
 #include "jsapi.h"
 #include "DOMMediaStream.h"
@@ -1110,6 +1112,40 @@ PeerConnectionImpl::SetRemoteDescription(int32_t action, const char* aSDP)
   return NS_OK;
 }
 
+// WebRTC uses highres time relative to the UNIX epoch (Jan 1, 1970, UTC).
+
+#ifdef MOZILLA_INTERNAL_API
+nsresult
+PeerConnectionImpl::GetTimeSinceEpoch(DOMHighResTimeStamp *result) {
+  MOZ_ASSERT(NS_IsMainThread());
+  nsPerformance *perf = mWindow->GetPerformance();
+  NS_ENSURE_TRUE(perf && perf->Timing(), NS_ERROR_UNEXPECTED);
+  *result = perf->Now() + perf->Timing()->NavigationStart();
+  return NS_OK;
+}
+#endif
+
+NS_IMETHODIMP
+PeerConnectionImpl::GetStats(mozilla::dom::MediaStreamTrack *aSelector) {
+  PC_AUTO_ENTER_API_CALL(true);
+
+#ifdef MOZILLA_INTERNAL_API
+  uint32_t track = aSelector ? aSelector->GetTrackID() : 0;
+  DOMHighResTimeStamp now;
+  nsresult rv = GetTimeSinceEpoch(&now);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsRefPtr<PeerConnectionImpl> pc(this);
+  RUN_ON_THREAD(mSTSThread,
+                WrapRunnable(pc,
+                             &PeerConnectionImpl::GetStats_s,
+                             track,
+                             now),
+                NS_DISPATCH_NORMAL);
+#endif
+  return NS_OK;
+}
+
 NS_IMETHODIMP
 PeerConnectionImpl::AddIceCandidate(const char* aCandidate, const char* aMid, unsigned short aLevel) {
   PC_AUTO_ENTER_API_CALL(true);
@@ -1608,6 +1644,48 @@ PeerConnectionImpl::IceStateChange_m(PCImplIceState aState)
                 NS_DISPATCH_NORMAL);
   return NS_OK;
 }
+
+#ifdef MOZILLA_INTERNAL_API
+void PeerConnectionImpl::GetStats_s(
+    uint32_t trackId,
+    DOMHighResTimeStamp now) {
+
+  nsresult result = NS_OK;
+  nsAutoPtr<RTCStatsReportInternal> report(new RTCStatsReportInternal);
+  if (!report) {
+    result = NS_ERROR_FAILURE;
+  }
+  nsRefPtr<PeerConnectionImpl> pc(this);
+  RUN_ON_THREAD(mThread,
+                WrapRunnable(pc,
+                             &PeerConnectionImpl::OnStatsReport_m,
+                             trackId,
+                             result,
+                             report),
+                NS_DISPATCH_NORMAL);
+}
+
+void PeerConnectionImpl::OnStatsReport_m(
+    uint32_t trackId,
+    nsresult result,
+    nsAutoPtr<mozilla::dom::RTCStatsReportInternal> report) {
+  PeerConnectionObserver* pco = mPCObserver.MayGet();
+  if (pco) {
+    JSErrorResult rv;
+    if (NS_SUCCEEDED(result)) {
+      pco->OnGetStatsSuccess(*report, rv);
+    } else {
+      pco->OnGetStatsError(kInternalError,
+                           ObString("Failed to fetch statistics"),
+                           rv);
+    }
+
+    if (rv.Failed()) {
+      CSFLogError(logTag, "Error firing stats observer callback");
+    }
+  }
+}
+#endif
 
 void
 PeerConnectionImpl::IceStreamReady(NrIceMediaStream *aStream)

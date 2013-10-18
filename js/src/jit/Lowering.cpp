@@ -1214,11 +1214,18 @@ LIRGenerator::visitRandom(MRandom *ins)
 bool
 LIRGenerator::visitMathFunction(MMathFunction *ins)
 {
-    JS_ASSERT(ins->type() == MIRType_Double);
-    JS_ASSERT(ins->input()->type() == MIRType_Double);
+    JS_ASSERT(IsFloatingPointType(ins->type()));
+    JS_ASSERT_IF(ins->type() == MIRType_Double, ins->input()->type() == MIRType_Double);
+    JS_ASSERT_IF(ins->type() == MIRType_Float32, ins->input()->type() == MIRType_Float32);
 
-    // Note: useRegisterAtStart is safe here, the temp is not a FP register.
-    LMathFunctionD *lir = new LMathFunctionD(useRegisterAtStart(ins->input()),
+    if (ins->type() == MIRType_Double) {
+        // Note: useRegisterAtStart is safe here, the temp is not a FP register.
+        LMathFunctionD *lir = new LMathFunctionD(useRegisterAtStart(ins->input()),
+                                                 tempFixed(CallTempReg0));
+        return defineReturn(lir, ins);
+    }
+
+    LMathFunctionF *lir = new LMathFunctionF(useRegisterAtStart(ins->input()),
                                              tempFixed(CallTempReg0));
     return defineReturn(lir, ins);
 }

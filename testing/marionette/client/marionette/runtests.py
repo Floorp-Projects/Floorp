@@ -524,7 +524,7 @@ class MarionetteTestRunner(object):
             self.marionette.instance = None
         del self.marionette
 
-    def run_test(self, test):
+    def run_test(self, test, expected='pass'):
         if not self.httpd:
             print "starting httpd"
             self.start_httpd()
@@ -584,13 +584,14 @@ class MarionetteTestRunner(object):
             if self.shuffle:
                 random.shuffle(target_tests)
             for i in target_tests:
-                self.run_test(i["path"])
+                self.run_test(i["path"], i["expected"])
                 if self.marionette.check_for_crash():
                     return
             return
 
         self.logger.info('TEST-START %s' % os.path.basename(test))
 
+        self.test_kwargs['expected'] = expected
         for handler in self.test_handlers:
             if handler.match(os.path.basename(test)):
                 handler.add_tests_to_suite(mod_name,

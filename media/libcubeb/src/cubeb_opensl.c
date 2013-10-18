@@ -223,6 +223,91 @@ opensl_get_max_channel_count(cubeb * ctx, uint32_t * max_channels)
   return CUBEB_OK;
 }
 
+static int
+opensl_get_min_latency(cubeb * ctx, cubeb_stream_params params, uint32_t * latency_ms)
+{
+  /* https://android.googlesource.com/platform/ndk.git/+/master/docs/opensles/index.html
+   * We don't want to deal with JNI here (and we don't have Java on b2g anyways),
+   * so we just dlopen the library and get the two symbols we need. */
+
+  int rv;
+  void * libmedia;
+  uint32_t (*get_primary_output_samplingrate)(void);
+  size_t (*get_primary_output_frame_count)(void);
+  uint32_t primary_sampling_rate;
+  size_t primary_buffer_size;
+
+  libmedia = dlopen("libmedia.so", RTLD_LAZY);
+  if (!libmedia) {
+    return CUBEB_ERROR;
+  }
+
+  /* uint32_t AudioSystem::getPrimaryOutputSamplingRate(void) */
+  get_primary_output_samplingrate =
+    dlsym(libmedia, "_ZN7android11AudioSystem28getPrimaryOutputSamplingRateEv");
+  if (!get_primary_output_samplingrate) {
+    dlclose(libmedia);
+    return CUBEB_ERROR;
+  }
+
+  /* size_t AudioSystem::getPrimaryOutputFrameCount(void) */
+  get_primary_output_frame_count =
+    dlsym(libmedia, "_ZN7android11AudioSystem26getPrimaryOutputFrameCountEv");
+  if (!get_primary_output_frame_count) {
+    dlclose(libmedia);
+    return CUBEB_ERROR;
+  }
+
+  primary_sampling_rate = get_primary_output_samplingrate();
+  primary_buffer_size = get_primary_output_frame_count();
+
+  /* To get a fast track in Android's mixer, we need to be at the native
+   * samplerate, which is device dependant. Some devices might be able to
+   * resample when playing a fast track, but it's pretty rare. */
+  if (primary_sampling_rate != params.rate) {
+    /* If we don't know what to use, let's say 4 * 20ms buffers will do. */
+    *latency_ms = NBUFS * 20;
+  } else {
+    *latency_ms = NBUFS * primary_buffer_size / (primary_sampling_rate / 1000);
+  }
+
+  dlclose(libmedia);
+
+  return CUBEB_OK;
+}
+
+static int
+opensl_get_preferred_sample_rate(cubeb * ctx, uint32_t * rate)
+{
+  /* https://android.googlesource.com/platform/ndk.git/+/master/docs/opensles/index.html
+   * We don't want to deal with JNI here (and we don't have Java on b2g anyways,
+   * so we just dlopen the library and get the two symbols we need. */
+  int rv;
+  void * libmedia;
+  uint32_t (*get_primary_output_samplingrate)();
+  uint32_t primary_sampling_rate;
+
+  libmedia = dlopen("libmedia.so", RTLD_LAZY);
+  if (!libmedia) {
+    return CUBEB_ERROR;
+  }
+
+  /* uint32_t AudioSystem::getPrimaryOutputSamplingRate(void) */
+  get_primary_output_samplingrate =
+    dlsym(libmedia, "_ZN7android11AudioSystem28getPrimaryOutputSamplingRateEv");
+  if (!get_primary_output_samplingrate) {
+    dlclose(libmedia);
+    return CUBEB_ERROR;
+  }
+
+  *rate = get_primary_output_samplingrate();
+
+  dlclose(libmedia);
+
+  return CUBEB_OK;
+}
+
+
 static void
 opensl_destroy(cubeb * ctx)
 {
@@ -288,7 +373,10 @@ opensl_stream_init(cubeb * ctx, cubeb_stream ** stream, char const * stream_name
   stm->framesize = stream_params.channels * sizeof(int16_t);
   stm->bytespersec = stream_params.rate * stm->framesize;
   stm->queuebuf_len = (stm->bytespersec * latency) / (1000 * NBUFS);
-  stm->queuebuf_len += stm->framesize - (stm->queuebuf_len % stm->framesize);
+  // round up to the next multiple of stm->framesize, if needed.
+  if (stm->queuebuf_len % stm->framesize) {
+    stm->queuebuf_len += stm->framesize - (stm->queuebuf_len % stm->framesize);
+  }
   int i;
   for (i = 0; i < NBUFS; i++) {
     stm->queuebuf[i] = malloc(stm->queuebuf_len);
@@ -425,6 +513,8 @@ static struct cubeb_ops const opensl_ops = {
   .init = opensl_init,
   .get_backend_id = opensl_get_backend_id,
   .get_max_channel_count = opensl_get_max_channel_count,
+  .get_min_latency = opensl_get_min_latency,
+  .get_preferred_sample_rate = opensl_get_preferred_sample_rate,
   .destroy = opensl_destroy,
   .stream_init = opensl_stream_init,
   .stream_destroy = opensl_stream_destroy,

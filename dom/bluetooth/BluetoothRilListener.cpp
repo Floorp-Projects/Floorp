@@ -214,6 +214,9 @@ TelephonyListener::SupplementaryServiceNotification(int32_t aCallIndex,
 NS_IMETHODIMP
 TelephonyListener::NotifyCdmaCallWaiting(const nsAString& aNumber)
 {
+  BluetoothHfpManager* hfp = BluetoothHfpManager::Get();
+  hfp->UpdateSecondNumber(aNumber);
+
   return NS_OK;
 }
 

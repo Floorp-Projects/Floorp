@@ -960,7 +960,7 @@ protected:
 };
 
 // Returns ideal audio rate for processing
-inline TrackRate IdealAudioRate() { return 48000; }
+inline TrackRate IdealAudioRate() { return AudioStream::PreferredSampleRate(); }
 
 /**
  * Initially, at least, we will have a singleton MediaStreamGraph per

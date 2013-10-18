@@ -45,6 +45,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=780847
 
   <div id="t8" contenteditable="true" class="target" hidden></div>
 
+  <div id="t9" class="target" ontouchend="x=1" hidden></div>
+
 </div>
 <pre id="test">
 <script type="application/javascript">
@@ -202,6 +204,15 @@ function test3() {
     inputSource: SpecialPowers.Ci.nsIDOMMouseEvent.MOZ_SOURCE_TOUCH
   });
   setShowing("t8", false);
+
+  // Check that elements are touchable
+  setShowing("t9", true);
+  var rect = document.getElementById("t9").getBoundingClientRect();
+  testMouseClick("t9", rect.left + 1, rect.top + 1, "t9", "div enabled with mouse input");
+  testMouseClick("t9", rect.left + 1, rect.top + 1, "t9", "div enabled with touch input", {
+    inputSource: SpecialPowers.Ci.nsIDOMMouseEvent.MOZ_SOURCE_TOUCH
+  });
+  setShowing("t9", false);
 
   // Not yet tested:
   // -- visited link weight
