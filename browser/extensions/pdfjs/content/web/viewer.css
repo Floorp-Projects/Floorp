@@ -20,6 +20,8 @@
 
 html {
   height: 100%;
+  /* Font size is needed to make the activity bar the corect size. */
+  font-size: 10px;
 }
 
 body {
@@ -80,7 +82,16 @@ select {
   display: none;
 }
 
-#viewerContainer.presentationControls {
+:-moz-full-screen .textLayer > div {
+  cursor: none;
+}
+
+:fullscreen .textLayer > div {
+  cursor: none;
+}
+
+#viewerContainer.presentationControls,
+#viewerContainer.presentationControls .textLayer > div {
   cursor: default;
 }
 
@@ -113,6 +124,7 @@ html[dir='rtl'] .innerCenter {
 #outerContainer {
   width: 100%;
   height: 100%;
+  position: relative;
 }
 
 #sidebarContainer {
@@ -328,6 +340,7 @@ html[dir='rtl'] .secondaryToolbar {
   max-width: 200px;
   max-height: 400px;
   overflow-y: auto;
+  margin-bottom: -4px;
 }
 
 .doorHanger,
@@ -803,19 +816,24 @@ html[dir="rtl"] .secondaryToolbarButton.print::before {
   content: url(images/toolbarButton-download.png);
 }
 
-.toolbarButton.bookmark {
+.toolbarButton.bookmark,
+.secondaryToolbarButton.bookmark {
   -moz-box-sizing: border-box;
   box-sizing: border-box;
-  margin-top: 3px;
   padding-top: 4px;
+  text-decoration: none;
+}
+.secondaryToolbarButton.bookmark {
+  padding-top: 5px;
 }
 
-#viewBookmark[href='#'] {
+.bookmark[href='#'] {
   opacity: .5;
   pointer-events: none;
 }
 
-.toolbarButton.bookmark::before {
+.toolbarButton.bookmark::before,
+.secondaryToolbarButton.bookmark::before {
   content: url(images/toolbarButton-bookmark.png);
 }
 
@@ -852,9 +870,11 @@ html[dir="rtl"] .secondaryToolbarButton {
   padding-right: 24px;
   text-align: right;
 }
-
-#secondaryToolbarButtonContainer :last-child {
-  margin-bottom: 0;
+html[dir="ltr"] .secondaryToolbarButton.bookmark {
+  padding-left: 27px;
+}
+html[dir="rtl"] .secondaryToolbarButton.bookmark {
+  padding-right: 27px;
 }
 
 html[dir="ltr"] .secondaryToolbarButton > span {
@@ -971,6 +991,11 @@ html[dir='rtl'] .verticalToolbarSeparator {
 
 .thumbnail {
   float: left;
+  margin-bottom: 5px;
+}
+
+#thumbnailView > a:last-of-type > .thumbnail {
+  margin-bottom: 10px;
 }
 
 .thumbnail:not([data-loaded]) {
