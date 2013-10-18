@@ -12,30 +12,34 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=686137
 <body>
 <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=686137">Mozilla Bug 686137</a>
 
-<audio id="a1" controls muted preload="metadata"></audio>
-
 <pre id="test">
 <script class="testbody" type="text/javascript">
-var testFile = "bug495794.ogg";
-var a1 = document.getElementById('a1');
+
+SpecialPowers.pushPrefEnv({"set": [["media.audio_data.enabled", true]]}, function () {
+  var a1 = document.createElement("audio");
+  a1.controls = true;
+  a1.muted = true;
+  a1.preload = "metadata";
+  a1.addEventListener("loadedmetadata", metaDataLoaded, false);
+  a1.src = "bug495794.ogg";
+  a1.load();
+});
+SimpleTest.waitForExplicitFinish();
 
 function audioAvailable(event) {
+  var a1 = event.target;
   a1.removeEventListener("MozAudioAvailable", audioAvailable);
   is( event.frameBuffer.length, 9001, "event.frameBuffer.length should be 9001.");
   is( event.frameBuffer.length, a1.mozFrameBufferLength, "event.frameBuffer.length should be " + a1.mozFrameBufferLength + ".");
   SimpleTest.finish();
 }
 
-function metaDataLoaded(){
+function metaDataLoaded(event){
+  var a1 = event.target;
   a1.addEventListener("MozAudioAvailable", audioAvailable, false);
   a1.mozFrameBufferLength = 9001;
   a1.play();
 }
-
-a1.addEventListener("loadedmetadata", metaDataLoaded, false);
-a1.src = testFile;
-a1.load();
-SimpleTest.waitForExplicitFinish();
 
 </script>
 </pre>

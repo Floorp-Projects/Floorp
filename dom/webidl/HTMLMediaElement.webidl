@@ -114,11 +114,11 @@ partial interface HTMLMediaElement {
   // used within MozAudioAvailable events to be changed.  The new size must
   // be between 512 and 16384.  The default size, for a  media element with
   // audio is (mozChannels * 1024).
-  [GetterThrows]
+  [Pref="media.audio_data.enabled", GetterThrows]
   readonly attribute unsigned long mozChannels;
-  [GetterThrows]
+  [Pref="media.audio_data.enabled", GetterThrows]
   readonly attribute unsigned long mozSampleRate;
-  [Throws]
+  [Pref="media.audio_data.enabled", Throws]
            attribute unsigned long mozFrameBufferLength;
 
   // Mozilla extension: return embedded metadata from the stream as a
