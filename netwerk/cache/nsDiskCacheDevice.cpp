@@ -23,7 +23,6 @@
 // XXX add necessary include file for ftruncate (or equivalent)
 #endif
 
-#include "prtypes.h"
 #include "prthread.h"
 #include "prbit.h"
 
