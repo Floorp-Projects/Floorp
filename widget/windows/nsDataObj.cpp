@@ -25,7 +25,6 @@
 #include "nsNetUtil.h"
 #include "nsXPCOMStrings.h"
 #include "nscore.h"
-#include "prtypes.h"
 #include "nsDirectoryServiceDefs.h"
 #include "nsITimer.h"
 #include "nsThreadUtils.h"

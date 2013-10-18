@@ -7,7 +7,6 @@
 #include "mozSwipeGesture.h"
 #include <QTouchEvent>
 #include <QGraphicsWidget>
-#include <prtypes.h>
 #include <nsIDOMSimpleGestureEvent.h>
 #include <math.h>
 
