@@ -28,6 +28,7 @@
 #include "nsIAppsService.h"
 #include "nsEscape.h"
 #include "RemoteOpenFileParent.h"
+#include "SerializedLoadContext.h"
 
 using mozilla::dom::ContentParent;
 using mozilla::dom::TabParent;

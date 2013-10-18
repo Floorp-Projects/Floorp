@@ -11,6 +11,7 @@
 #include "nsCookieService.h"
 #include "nsNetUtil.h"
 #include "nsPrintfCString.h"
+#include "SerializedLoadContext.h"
 
 using namespace mozilla::ipc;
 using mozilla::dom::PContentParent;

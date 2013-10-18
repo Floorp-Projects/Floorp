@@ -13,6 +13,7 @@
 #include "mozilla/plugins/ScopedMethodFactory.h"
 #include "mozilla/plugins/PluginProcessParent.h"
 #include "mozilla/plugins/PPluginModuleParent.h"
+#include "mozilla/plugins/PluginMessageUtils.h"
 #include "npapi.h"
 #include "npfunctions.h"
 #include "nsAutoPtr.h"

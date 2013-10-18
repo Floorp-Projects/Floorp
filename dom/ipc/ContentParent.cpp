@@ -91,6 +91,7 @@
 #include "URIUtils.h"
 #include "nsIWebBrowserChrome.h"
 #include "nsIDocShell.h"
+#include "mozilla/net/NeckoMessageUtils.h"
 
 #if defined(ANDROID) || defined(LINUX)
 #include "nsSystemInfo.h"
