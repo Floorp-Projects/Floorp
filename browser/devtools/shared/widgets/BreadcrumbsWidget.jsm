@@ -136,12 +136,11 @@ BreadcrumbsWidget.prototype = {
 
     // Repeated calls to ensureElementIsVisible would interfere with each other
     // and may sometimes result in incorrect scroll positions.
-    this.window.clearTimeout(this._ensureVisibleTimeout);
-    this._ensureVisibleTimeout = this.window.setTimeout(() => {
+    setNamedTimeout("breadcrumb-select", ENSURE_SELECTION_VISIBLE_DELAY, () => {
       if (this._selectedItem) {
         this._list.ensureElementIsVisible(this._selectedItem);
       }
-    }, ENSURE_SELECTION_VISIBLE_DELAY);
+    });
   },
 
   /**
@@ -172,8 +171,7 @@ BreadcrumbsWidget.prototype = {
   document: null,
   _parent: null,
   _list: null,
-  _selectedItem: null,
-  _ensureVisibleTimeout: null
+  _selectedItem: null
 };
 
 /**
