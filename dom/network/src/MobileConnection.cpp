@@ -83,6 +83,9 @@ MobileConnection::MobileConnection()
   mProvider = do_GetService(NS_RILCONTENTHELPER_CONTRACTID);
   mWindow = nullptr;
 
+  // TODO: Bug 814629 - WebMobileConnection API: support multiple sim cards
+  mClientId = 0;
+
   // Not being able to acquire the provider isn't fatal since we check
   // for it explicitly below.
   if (!mProvider) {
@@ -101,7 +104,7 @@ MobileConnection::Init(nsPIDOMWindow* aWindow)
 
   if (!CheckPermission("mobilenetwork") &&
       CheckPermission("mobileconnection")) {
-    DebugOnly<nsresult> rv = mProvider->RegisterMobileConnectionMsg(mListener);
+    DebugOnly<nsresult> rv = mProvider->RegisterMobileConnectionMsg(mClientId, mListener);
     NS_WARN_IF_FALSE(NS_SUCCEEDED(rv),
                      "Failed registering mobile connection messages with provider");
 
@@ -114,7 +117,7 @@ MobileConnection::Shutdown()
 {
   if (mProvider && mListener) {
     mListener->Disconnect();
-    mProvider->UnregisterMobileConnectionMsg(mListener);
+    mProvider->UnregisterMobileConnectionMsg(mClientId, mListener);
     mProvider = nullptr;
     mListener = nullptr;
   }
@@ -173,7 +176,7 @@ MobileConnection::GetVoice(nsIDOMMozMobileConnectionInfo** voice)
   if (!mProvider || !CheckPermission("mobileconnection")) {
     return NS_OK;
   }
-  return mProvider->GetVoiceConnectionInfo(voice);
+  return mProvider->GetVoiceConnectionInfo(mClientId, voice);
 }
 
 NS_IMETHODIMP
@@ -184,7 +187,7 @@ MobileConnection::GetData(nsIDOMMozMobileConnectionInfo** data)
   if (!mProvider || !CheckPermission("mobileconnection")) {
     return NS_OK;
   }
-  return mProvider->GetDataConnectionInfo(data);
+  return mProvider->GetDataConnectionInfo(mClientId, data);
 }
 
 NS_IMETHODIMP
@@ -195,7 +198,7 @@ MobileConnection::GetNetworkSelectionMode(nsAString& networkSelectionMode)
   if (!mProvider || !CheckPermission("mobileconnection")) {
      return NS_OK;
   }
-  return mProvider->GetNetworkSelectionMode(networkSelectionMode);
+  return mProvider->GetNetworkSelectionMode(mClientId, networkSelectionMode);
 }
 
 NS_IMETHODIMP
@@ -211,7 +214,7 @@ MobileConnection::GetNetworks(nsIDOMDOMRequest** request)
     return NS_ERROR_FAILURE;
   }
 
-  return mProvider->GetNetworks(GetOwner(), request);
+  return mProvider->GetNetworks(mClientId, GetOwner(), request);
 }
 
 NS_IMETHODIMP
@@ -227,7 +230,7 @@ MobileConnection::SelectNetwork(nsIDOMMozMobileNetworkInfo* network, nsIDOMDOMRe
     return NS_ERROR_FAILURE;
   }
 
-  return mProvider->SelectNetwork(GetOwner(), network, request);
+  return mProvider->SelectNetwork(mClientId, GetOwner(), network, request);
 }
 
 NS_IMETHODIMP
@@ -243,7 +246,7 @@ MobileConnection::SelectNetworkAutomatically(nsIDOMDOMRequest** request)
     return NS_ERROR_FAILURE;
   }
 
-  return mProvider->SelectNetworkAutomatically(GetOwner(), request);
+  return mProvider->SelectNetworkAutomatically(mClientId, GetOwner(), request);
 }
 
 NS_IMETHODIMP
@@ -259,7 +262,7 @@ MobileConnection::SetRoamingPreference(const nsAString& aMode, nsIDOMDOMRequest*
     return NS_ERROR_FAILURE;
   }
 
-  return mProvider->SetRoamingPreference(GetOwner(), aMode, aDomRequest);
+  return mProvider->SetRoamingPreference(mClientId, GetOwner(), aMode, aDomRequest);
 }
 
 NS_IMETHODIMP
@@ -275,7 +278,7 @@ MobileConnection::GetRoamingPreference(nsIDOMDOMRequest** aDomRequest)
     return NS_ERROR_FAILURE;
   }
 
-  return mProvider->GetRoamingPreference(GetOwner(), aDomRequest);
+  return mProvider->GetRoamingPreference(mClientId, GetOwner(), aDomRequest);
 }
 
 NS_IMETHODIMP
@@ -291,7 +294,7 @@ MobileConnection::SetVoicePrivacyMode(bool aEnabled, nsIDOMDOMRequest** aDomRequ
     return NS_ERROR_FAILURE;
   }
 
-  return mProvider->SetVoicePrivacyMode(GetOwner(), aEnabled, aDomRequest);
+  return mProvider->SetVoicePrivacyMode(mClientId, GetOwner(), aEnabled, aDomRequest);
 }
 
 NS_IMETHODIMP
@@ -307,7 +310,7 @@ MobileConnection::GetVoicePrivacyMode(nsIDOMDOMRequest** aDomRequest)
     return NS_ERROR_FAILURE;
   }
 
-  return mProvider->GetVoicePrivacyMode(GetOwner(), aDomRequest);
+  return mProvider->GetVoicePrivacyMode(mClientId, GetOwner(), aDomRequest);
 }
 
 NS_IMETHODIMP
@@ -322,7 +325,7 @@ MobileConnection::SendMMI(const nsAString& aMMIString,
     return NS_ERROR_FAILURE;
   }
 
-  return mProvider->SendMMI(GetOwner(), aMMIString, aRequest);
+  return mProvider->SendMMI(mClientId, GetOwner(), aMMIString, aRequest);
 }
 
 NS_IMETHODIMP
@@ -336,7 +339,7 @@ MobileConnection::CancelMMI(nsIDOMDOMRequest** aRequest)
     return NS_ERROR_FAILURE;
   }
 
-  return mProvider->CancelMMI(GetOwner(), aRequest);
+  return mProvider->CancelMMI(mClientId, GetOwner(),aRequest);
 }
 
 NS_IMETHODIMP
@@ -353,7 +356,7 @@ MobileConnection::GetCallForwardingOption(uint16_t aReason,
     return NS_ERROR_FAILURE;
   }
 
-  return mProvider->GetCallForwardingOption(GetOwner(), aReason, aRequest);
+  return mProvider->GetCallForwardingOption(mClientId, GetOwner(), aReason, aRequest);
 }
 
 NS_IMETHODIMP
@@ -370,7 +373,7 @@ MobileConnection::SetCallForwardingOption(nsIDOMMozMobileCFInfo* aCFInfo,
     return NS_ERROR_FAILURE;
   }
 
-  return mProvider->SetCallForwardingOption(GetOwner(), aCFInfo, aRequest);
+  return mProvider->SetCallForwardingOption(mClientId, GetOwner(), aCFInfo, aRequest);
 }
 
 NS_IMETHODIMP
@@ -387,7 +390,7 @@ MobileConnection::GetCallBarringOption(const JS::Value& aOption,
     return NS_ERROR_FAILURE;
   }
 
-  return mProvider->GetCallBarringOption(GetOwner(), aOption, aRequest);
+  return mProvider->GetCallBarringOption(mClientId, GetOwner(), aOption, aRequest);
 }
 
 NS_IMETHODIMP
@@ -404,7 +407,7 @@ MobileConnection::SetCallBarringOption(const JS::Value& aOption,
     return NS_ERROR_FAILURE;
   }
 
-  return mProvider->SetCallBarringOption(GetOwner(), aOption, aRequest);
+  return mProvider->SetCallBarringOption(mClientId, GetOwner(), aOption, aRequest);
 }
 
 NS_IMETHODIMP
@@ -421,7 +424,7 @@ MobileConnection::ChangeCallBarringPassword(const JS::Value& aInfo,
     return NS_ERROR_FAILURE;
   }
 
-  return mProvider->ChangeCallBarringPassword(GetOwner(), aInfo, aRequest);
+  return mProvider->ChangeCallBarringPassword(mClientId, GetOwner(), aInfo, aRequest);
 }
 
 NS_IMETHODIMP
@@ -437,7 +440,7 @@ MobileConnection::GetCallWaitingOption(nsIDOMDOMRequest** aRequest)
     return NS_ERROR_FAILURE;
   }
 
-  return mProvider->GetCallWaitingOption(GetOwner(), aRequest);
+  return mProvider->GetCallWaitingOption(mClientId, GetOwner(), aRequest);
 }
 
 NS_IMETHODIMP
@@ -454,7 +457,7 @@ MobileConnection::SetCallWaitingOption(bool aEnabled,
     return NS_ERROR_FAILURE;
   }
 
-  return mProvider->SetCallWaitingOption(GetOwner(), aEnabled, aRequest);
+  return mProvider->SetCallWaitingOption(mClientId, GetOwner(), aEnabled, aRequest);
 }
 
 NS_IMETHODIMP
@@ -470,7 +473,7 @@ MobileConnection::GetCallingLineIdRestriction(nsIDOMDOMRequest** aRequest)
     return NS_ERROR_FAILURE;
   }
 
-  return mProvider->GetCallingLineIdRestriction(GetOwner(), aRequest);
+  return mProvider->GetCallingLineIdRestriction(mClientId, GetOwner(), aRequest);
 }
 
 NS_IMETHODIMP
@@ -487,7 +490,7 @@ MobileConnection::SetCallingLineIdRestriction(unsigned short aClirMode,
     return NS_ERROR_FAILURE;
   }
 
-  return mProvider->SetCallingLineIdRestriction(GetOwner(), aClirMode, aRequest);
+  return mProvider->SetCallingLineIdRestriction(mClientId, GetOwner(), aClirMode, aRequest);
 }
 
 NS_IMETHODIMP
@@ -503,7 +506,7 @@ MobileConnection::ExitEmergencyCbMode(nsIDOMDOMRequest** aRequest)
     return NS_ERROR_FAILURE;
   }
 
-  return mProvider->ExitEmergencyCbMode(GetOwner(), aRequest);
+  return mProvider->ExitEmergencyCbMode(mClientId, GetOwner(), aRequest);
 }
 
 // nsIMobileConnectionListener
