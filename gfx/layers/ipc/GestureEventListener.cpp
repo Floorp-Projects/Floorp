@@ -194,8 +194,7 @@ nsEventStatus GestureEventListener::HandleInputEvent(const InputData& aEvent)
     // This gets called if there's a touch that has to bail for weird reasons
     // like pinching and then moving away from the window that the pinch was
     // started in without letting go of the screen.
-    HandlePinchGestureEvent(event, true);
-    break;
+    return HandlePinchGestureEvent(event, true);
   }
 
   return HandlePinchGestureEvent(event, false);
@@ -257,9 +256,19 @@ nsEventStatus GestureEventListener::HandlePinchGestureEvent(const MultiTouchInpu
   } else if (mState == GESTURE_PINCH) {
     PinchGestureInput pinchEvent(PinchGestureInput::PINCHGESTURE_END,
                                  aEvent.mTime,
-                                 mTouches[0].mScreenPoint,
-                                 1.0f,
-                                 1.0f);
+                                 ScreenPoint(),  // may change below
+                                 1.0f,           // may change below
+                                 1.0f);          // may change below
+
+    if (mTouches.Length() > 0) {
+      // Pinch is changing to pan. APZC will start a pan at mFocusPoint
+      // (which isn't really a focus point in this case...).
+      pinchEvent.mFocusPoint = mTouches[0].mScreenPoint;
+    } else {
+      // Pinch is ending, no pan to follow. APZC will check for the spans
+      // being negative.
+      pinchEvent.mCurrentSpan = pinchEvent.mPreviousSpan = -1.0f;
+    }
 
     mAsyncPanZoomController->HandleInputEvent(pinchEvent);
 
