@@ -152,7 +152,7 @@ dictionary ContactFindOptions : ContactFindSortOptions {
   DOMString      filterValue;  // e.g. "Tom"
   DOMString      filterOp;     // e.g. "startsWith"
   any            filterBy;     // e.g. ["givenName", "nickname"]
-  unsigned long  filterLimit;
+  unsigned long  filterLimit = 0;
 };
 
 [NoInterfaceObject, NavigatorProperty="mozContacts",
