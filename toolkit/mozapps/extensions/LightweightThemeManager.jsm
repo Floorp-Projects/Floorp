@@ -139,6 +139,13 @@ this.LightweightThemeManager = {
     AddonManagerPrivate.callAddonListeners("onUninstalled", wrapper);
   },
 
+  temporarilyToggleTheme: function LightweightThemeManager_temporarilyToggleTheme(aShouldEnable) {
+    if (aShouldEnable)
+      _notifyWindows(this.currentTheme);
+    else
+      _notifyWindows(null);
+  },
+
   previewTheme: function LightweightThemeManager_previewTheme(aData) {
     if (!aData)
       return;
