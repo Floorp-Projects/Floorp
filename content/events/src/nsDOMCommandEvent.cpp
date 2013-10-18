@@ -33,7 +33,7 @@ NS_IMPL_RELEASE_INHERITED(nsDOMCommandEvent, nsDOMEvent)
 NS_IMETHODIMP
 nsDOMCommandEvent::GetCommand(nsAString& aCommand)
 {
-  nsIAtom* command = static_cast<WidgetCommandEvent*>(mEvent)->command;
+  nsIAtom* command = mEvent->AsCommandEvent()->command;
   if (command) {
     command->ToString(aCommand);
   } else {
@@ -51,7 +51,7 @@ nsDOMCommandEvent::InitCommandEvent(const nsAString& aTypeArg,
   nsresult rv = nsDOMEvent::InitEvent(aTypeArg, aCanBubbleArg, aCancelableArg);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  static_cast<WidgetCommandEvent*>(mEvent)->command = do_GetAtom(aCommand);
+  mEvent->AsCommandEvent()->command = do_GetAtom(aCommand);
   return NS_OK;
 }
 
