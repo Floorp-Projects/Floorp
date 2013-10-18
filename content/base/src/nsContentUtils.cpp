@@ -4557,13 +4557,6 @@ nsContentUtils::GetLocalizedEllipsis()
   return nsDependentString(sBuf);
 }
 
-//static
-WidgetEvent*
-nsContentUtils::GetNativeEvent(nsIDOMEvent* aDOMEvent)
-{
-  return aDOMEvent ? aDOMEvent->GetInternalNSEvent() : nullptr;
-}
-
 static bool
 HasASCIIDigit(const nsTArray<nsShortcutCandidate>& aCandidates)
 {
@@ -4604,7 +4597,7 @@ nsContentUtils::GetAccelKeyCandidates(nsIDOMKeyEvent* aDOMKeyEvent,
     return;
 
   WidgetKeyboardEvent* nativeKeyEvent =
-    static_cast<WidgetKeyboardEvent*>(GetNativeEvent(aDOMKeyEvent));
+    aDOMKeyEvent->GetInternalNSEvent()->AsKeyboardEvent();
   if (nativeKeyEvent) {
     NS_ASSERTION(nativeKeyEvent->eventStructType == NS_KEY_EVENT,
                  "wrong type of native event");

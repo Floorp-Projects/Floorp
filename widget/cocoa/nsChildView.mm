@@ -1602,10 +1602,12 @@ NS_IMETHODIMP nsChildView::DispatchEvent(WidgetGUIEvent* event,
                  event->HasKeyEventMessage()),
     "Any key events should not be fired during IME composing");
 
-  if (event->mFlags.mIsSynthesizedForTests && event->HasKeyEventMessage()) {
-    WidgetKeyboardEvent* keyEvent = static_cast<WidgetKeyboardEvent*>(event);
-    nsresult rv = mTextInputHandler->AttachNativeKeyEvent(*keyEvent);
-    NS_ENSURE_SUCCESS(rv, rv);
+  if (event->mFlags.mIsSynthesizedForTests) {
+    WidgetKeyboardEvent* keyEvent = event->AsKeyboardEvent();
+    if (keyEvent) {
+      nsresult rv = mTextInputHandler->AttachNativeKeyEvent(*keyEvent);
+      NS_ENSURE_SUCCESS(rv, rv);
+    }
   }
 
   aStatus = nsEventStatus_eIgnore;
@@ -4963,8 +4965,7 @@ static int32_t RoundUp(double aDouble)
   outGeckoEvent->refPoint = LayoutDeviceIntPoint::FromUntyped(
     mGeckoChild->CocoaPointsToDevPixels(localPoint));
 
-  WidgetMouseEventBase* mouseEvent =
-    static_cast<WidgetMouseEventBase*>(outGeckoEvent);
+  WidgetMouseEventBase* mouseEvent = outGeckoEvent->AsMouseEventBase();
   mouseEvent->buttons = 0;
   NSUInteger mouseButtons = [NSEvent pressedMouseButtons];
 

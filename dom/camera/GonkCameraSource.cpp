@@ -130,7 +130,7 @@ static int32_t getColorFormat(const char* colorFormat) {
     if (!strcmp(colorFormat, "OMX_TI_COLOR_FormatYUV420PackedSemiPlanar")) {
        return OMX_TI_COLOR_FormatYUV420PackedSemiPlanar;
     }
-#if defined(MOZ_WIDGET_GONK) && ANDROID_VERSION >= 18
+#if defined(MOZ_WIDGET_GONK) && ANDROID_VERSION >= 17
     if (!strcmp(colorFormat, CameraParameters::PIXEL_FORMAT_ANDROID_OPAQUE)) {
         return OMX_COLOR_FormatAndroidOpaque;
     }
@@ -542,7 +542,7 @@ status_t GonkCameraSource::start(MetaData *meta) {
         if (meta->findInt64(kKeyTime, &startTimeUs)) {
             mStartTimeUs = startTimeUs;
         }
-#if defined(MOZ_WIDGET_GONK) && ANDROID_VERSION >= 18
+#if defined(MOZ_WIDGET_GONK) && ANDROID_VERSION >= 17
         int32_t nBuffers;
         if (meta->findInt32(kKeyNumBuffers, &nBuffers)) {
             CHECK_GT(nBuffers, 0);
