@@ -13,8 +13,8 @@ import org.mozilla.gecko.R;
 import org.mozilla.gecko.Tab;
 import org.mozilla.gecko.Tabs;
 import org.mozilla.gecko.db.BrowserDB.URLColumns;
-import org.mozilla.gecko.gfx.BitmapUtils;
 import org.mozilla.gecko.home.HomePager.OnUrlOpenListener;
+import org.mozilla.gecko.home.SearchEngine;
 import org.mozilla.gecko.home.SearchLoader.SearchCursorLoader;
 import org.mozilla.gecko.util.GeckoEventListener;
 import org.mozilla.gecko.util.StringUtils;
@@ -132,7 +132,7 @@ public class BrowserSearch extends HomeFragment
     private View mSuggestionsOptInPrompt;
 
     public interface OnSearchListener {
-        public void onSearch(String engineId, String text);
+        public void onSearch(SearchEngine engine, String text);
     }
 
     public interface OnEditSuggestionListener {
@@ -393,7 +393,7 @@ public class BrowserSearch extends HomeFragment
     }
 
     private void setSuggestions(ArrayList<String> suggestions) {
-        mSearchEngines.get(0).suggestions = suggestions;
+        mSearchEngines.get(0).setSuggestions(suggestions);
         mAdapter.notifyDataSetChanged();
     }
 
@@ -417,14 +417,11 @@ public class BrowserSearch extends HomeFragment
             ArrayList<SearchEngine> searchEngines = new ArrayList<SearchEngine>();
             for (int i = 0; i < engines.length(); i++) {
                 final JSONObject engineJSON = engines.getJSONObject(i);
-                final String name = engineJSON.getString("name");
-                final String identifier = engineJSON.getString("identifier");
-                final String iconURI = engineJSON.getString("iconURI");
-                final Bitmap icon = BitmapUtils.getBitmapFromDataURI(iconURI);
+                final SearchEngine engine = new SearchEngine(engineJSON);
 
-                if (name.equals(suggestEngine) && suggestTemplate != null) {
-                    // Suggest engine should be at the front of the list
-                    searchEngines.add(0, new SearchEngine(name, identifier, icon));
+                if (engine.name.equals(suggestEngine) && suggestTemplate != null) {
+                    // Suggest engine should be at the front of the list.
+                    searchEngines.add(0, engine);
 
                     // The only time Tabs.getInstance().getSelectedTab() should
                     // be null is when we're restoring after a crash. We should
@@ -441,7 +438,7 @@ public class BrowserSearch extends HomeFragment
                                 SUGGESTION_TIMEOUT, SUGGESTION_MAX);
                     }
                 } else {
-                    searchEngines.add(new SearchEngine(name, identifier, icon));
+                    searchEngines.add(engine);
                 }
             }
 
@@ -713,7 +710,7 @@ public class BrowserSearch extends HomeFragment
             // row contains multiple items, clicking the row will do nothing.
             final int index = getEngineIndex(position);
             if (index != -1) {
-                return mSearchEngines.get(index).suggestions.isEmpty();
+                return !mSearchEngines.get(index).hasSuggestions();
             }
 
             return true;
@@ -744,7 +741,7 @@ public class BrowserSearch extends HomeFragment
                 row.setSearchTerm(mSearchTerm);
 
                 final SearchEngine engine = mSearchEngines.get(getEngineIndex(position));
-                final boolean animate = (mAnimateSuggestions && engine.suggestions.size() > 0);
+                final boolean animate = (mAnimateSuggestions && engine.hasSuggestions());
                 row.updateFromSearchEngine(engine, animate);
                 if (animate) {
                     // Only animate suggestions the first time they are shown
