@@ -18,7 +18,6 @@ public:
   nsDOMClipboardEvent(mozilla::dom::EventTarget* aOwner,
                       nsPresContext* aPresContext,
                       mozilla::InternalClipboardEvent* aEvent);
-  virtual ~nsDOMClipboardEvent();
 
   NS_DECL_ISUPPORTS_INHERITED
 

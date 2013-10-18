@@ -19,7 +19,6 @@ public:
   nsDOMKeyboardEvent(mozilla::dom::EventTarget* aOwner,
                      nsPresContext* aPresContext,
                      mozilla::WidgetKeyboardEvent* aEvent);
-  virtual ~nsDOMKeyboardEvent();
 
   NS_DECL_ISUPPORTS_INHERITED
 

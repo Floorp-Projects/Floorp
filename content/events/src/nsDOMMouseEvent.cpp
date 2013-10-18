@@ -46,22 +46,6 @@ nsDOMMouseEvent::nsDOMMouseEvent(mozilla::dom::EventTarget* aOwner,
   }
 }
 
-nsDOMMouseEvent::~nsDOMMouseEvent()
-{
-  if (mEventIsInternal && mEvent) {
-    switch (mEvent->eventStructType)
-    {
-      case NS_MOUSE_EVENT:
-        delete static_cast<WidgetMouseEvent*>(mEvent);
-        break;
-      default:
-        delete mEvent;
-        break;
-    }
-    mEvent = nullptr;
-  }
-}
-
 NS_IMPL_ADDREF_INHERITED(nsDOMMouseEvent, nsDOMUIEvent)
 NS_IMPL_RELEASE_INHERITED(nsDOMMouseEvent, nsDOMUIEvent)
 

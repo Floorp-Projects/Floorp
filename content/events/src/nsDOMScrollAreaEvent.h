@@ -23,7 +23,6 @@ public:
   nsDOMScrollAreaEvent(mozilla::dom::EventTarget* aOwner,
                        nsPresContext *aPresContext,
                        mozilla::InternalScrollAreaEvent* aEvent);
-  virtual ~nsDOMScrollAreaEvent();
 
   NS_DECL_ISUPPORTS_INHERITED
 

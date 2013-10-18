@@ -24,14 +24,6 @@ nsDOMClipboardEvent::nsDOMClipboardEvent(mozilla::dom::EventTarget* aOwner,
   }
 }
 
-nsDOMClipboardEvent::~nsDOMClipboardEvent()
-{
-  if (mEventIsInternal && mEvent->eventStructType == NS_CLIPBOARD_EVENT) {
-    delete static_cast<InternalClipboardEvent*>(mEvent);
-    mEvent = nullptr;
-  }
-}
-
 NS_INTERFACE_MAP_BEGIN(nsDOMClipboardEvent)
   NS_INTERFACE_MAP_ENTRY(nsIDOMClipboardEvent)
 NS_INTERFACE_MAP_END_INHERITING(nsDOMEvent)

@@ -26,14 +26,6 @@ nsDOMKeyboardEvent::nsDOMKeyboardEvent(mozilla::dom::EventTarget* aOwner,
   }
 }
 
-nsDOMKeyboardEvent::~nsDOMKeyboardEvent()
-{
-  if (mEventIsInternal) {
-    delete static_cast<WidgetKeyboardEvent*>(mEvent);
-    mEvent = nullptr;
-  }
-}
-
 NS_IMPL_ADDREF_INHERITED(nsDOMKeyboardEvent, nsDOMUIEvent)
 NS_IMPL_RELEASE_INHERITED(nsDOMKeyboardEvent, nsDOMUIEvent)
 
