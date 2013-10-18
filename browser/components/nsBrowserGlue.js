@@ -469,6 +469,7 @@ BrowserGlue.prototype = {
     PdfJs.init();
     webrtcUI.init();
     AboutHome.init();
+    SessionStore.init();
 
     if (Services.prefs.getBoolPref("browser.tabs.remote"))
       ContentClick.init();
@@ -609,7 +610,6 @@ BrowserGlue.prototype = {
     }
 #endif
 
-    SessionStore.init(aWindow);
     this._trackSlowStartup();
 
     // Offer to reset a user's profile if it hasn't been used for 60 days.
