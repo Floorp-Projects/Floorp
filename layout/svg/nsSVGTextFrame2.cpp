@@ -3687,13 +3687,15 @@ nsSVGTextFrame2::ReflowSVG()
     nsSVGEffects::UpdateEffects(this);
   }
 
+  // Now unset the various reflow bits. Do this before calling
+  // FinishAndStoreOverflow since FinishAndStoreOverflow can require glyph
+  // positions (to resolve transform-origin).
+  mState &= ~(NS_FRAME_FIRST_REFLOW | NS_FRAME_IS_DIRTY |
+              NS_FRAME_HAS_DIRTY_CHILDREN);
+
   nsRect overflow = nsRect(nsPoint(0,0), mRect.Size());
   nsOverflowAreas overflowAreas(overflow, overflow);
   FinishAndStoreOverflow(overflowAreas, mRect.Size());
-
-  // Now unset the various reflow bits:
-  mState &= ~(NS_FRAME_FIRST_REFLOW | NS_FRAME_IS_DIRTY |
-              NS_FRAME_HAS_DIRTY_CHILDREN);
 
   // XXX nsSVGContainerFrame::ReflowSVG only looks at its nsISVGChildFrame
   // children, and calls ConsiderChildOverflow on them.  Does it matter
@@ -3729,9 +3731,22 @@ nsSVGTextFrame2::GetBBoxContribution(const gfxMatrix &aToBBoxUserspace,
 {
   NS_ASSERTION(GetFirstPrincipalChild(), "must have a child frame");
 
+  SVGBBox bbox;
+  nsIFrame* kid = GetFirstPrincipalChild();
+  if (kid && NS_SUBTREE_DIRTY(kid)) {
+    // Return an empty bbox if our kid's subtree is dirty. This may be called
+    // in that situation, e.g. when we're building a display list after an
+    // interrupted reflow. This can also be called during reflow before we've
+    // been reflowed, e.g. if an earlier sibling is calling FinishAndStoreOverflow and
+    // needs our parent's perspective matrix, which depends on the SVG bbox
+    // contribution of this frame. In the latter situation, when all siblings have
+    // been reflowed, the parent will compute its perspective and rerun
+    // FinishAndStoreOverflow for all its children.
+    return bbox;
+  }
+
   UpdateGlyphPositioning();
 
-  SVGBBox bbox;
   nsPresContext* presContext = PresContext();
 
   TextRenderedRunIterator it(this);

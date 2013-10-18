@@ -22,8 +22,7 @@
     ],
     "env": {
         "VARIANT": "user",
-        "MOZILLA_OFFICIAL": "1",
-        "B2GUPDATER": "1"
+        "MOZILLA_OFFICIAL": "1"
     },
     "gecko_l10n_root": "http://hg.mozilla.org/l10n-central",
     "gaia": {

@@ -127,6 +127,31 @@ HasMouseListener(nsIContent* aContent)
          elm->HasListenersFor(nsGkAtoms::onmouseup);
 }
 
+static bool gTouchEventsRegistered = false;
+static int32_t gTouchEventsEnabled = 0;
+
+static bool
+HasTouchListener(nsIContent* aContent)
+{
+  nsEventListenerManager* elm = aContent->GetListenerManager(false);
+  if (!elm) {
+    return false;
+  }
+
+  if (!gTouchEventsRegistered) {
+    Preferences::AddIntVarCache(&gTouchEventsEnabled,
+      "dom.w3c_touch_events.enabled", gTouchEventsEnabled);
+    gTouchEventsRegistered = true;
+  }
+
+  if (!gTouchEventsEnabled) {
+    return false;
+  }
+
+  return elm->HasListenersFor(nsGkAtoms::ontouchstart) ||
+         elm->HasListenersFor(nsGkAtoms::ontouchend);
+}
+
 static bool
 IsElementClickable(nsIFrame* aFrame, nsIAtom* stopAt = nullptr)
 {
@@ -138,7 +163,7 @@ IsElementClickable(nsIFrame* aFrame, nsIAtom* stopAt = nullptr)
     if (content->IsHTML() && stopAt && tag == stopAt) {
       break;
     }
-    if (HasMouseListener(content)) {
+    if (HasTouchListener(content) || HasMouseListener(content)) {
       return true;
     }
     if (content->IsHTML()) {

@@ -88,6 +88,8 @@ namespace system {
 
 class AutoMounter;
 
+static void SetAutoMounterStatus(int32_t aStatus);
+
 /***************************************************************************/
 
 inline const char* SwitchStateStr(const SwitchEvent& aEvent)
@@ -376,6 +378,7 @@ AutoMounter::UpdateState()
   LOG("UpdateState: umsAvail:%d umsEnabled:%d mode:%d usbCablePluggedIn:%d tryToShare:%d",
       umsAvail, umsEnabled, mMode, usbCablePluggedIn, tryToShare);
 
+  bool filesOpen = false;
   VolumeArray::index_type volIndex;
   VolumeArray::size_type  numVolumes = VolumeManager::NumVolumes();
   for (volIndex = 0; volIndex < numVolumes; volIndex++) {
@@ -437,6 +440,7 @@ AutoMounter::UpdateState()
               PostDelayedTask(FROM_HERE,
                               NewRunnableMethod(this, &AutoMounter::UpdateState),
                               5000);
+            filesOpen = true;
             break;
           }
 
@@ -481,6 +485,14 @@ AutoMounter::UpdateState()
       }
     }
   }
+
+  int32_t status = AUTOMOUNTER_STATUS_DISABLED;
+  if (filesOpen) {
+    status = AUTOMOUNTER_STATUS_FILES_OPEN;
+  } else if (enabled) {
+    status = AUTOMOUNTER_STATUS_ENABLED;
+  }
+  SetAutoMounterStatus(status);
 }
 
 /***************************************************************************/
@@ -595,7 +607,7 @@ InitVolumeConfig()
     return;
   }
   while(fgets(line, sizeof(line), fp)) {
-    char *delim = " \t\n";
+    const char *delim = " \t\n";
     n++;
 
     if (line[0] == '#')
@@ -642,6 +654,24 @@ InitAutoMounter()
   // start it here and have it send events to the AutoMounter running
   // on the IO Thread.
   sUsbCableObserver = new UsbCableObserver();
+}
+
+int32_t
+GetAutoMounterStatus()
+{
+  if (sAutoMounterSetting) {
+    return sAutoMounterSetting->GetStatus();
+  }
+  return AUTOMOUNTER_STATUS_DISABLED;
+}
+
+//static
+void
+SetAutoMounterStatus(int32_t aStatus)
+{
+  if (sAutoMounterSetting) {
+    sAutoMounterSetting->SetStatus(aStatus);
+  }
 }
 
 void

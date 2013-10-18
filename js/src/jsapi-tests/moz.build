@@ -44,6 +44,7 @@ CPP_SOURCES += [
     'testLookup.cpp',
     'testLooselyEqual.cpp',
     'testNewObject.cpp',
+    'testNullRoot.cpp',
     'testOOM.cpp',
     'testObjectEmulatingUndefined.cpp',
     'testOps.cpp',

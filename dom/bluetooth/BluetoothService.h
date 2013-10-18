@@ -267,6 +267,15 @@ public:
   IsScoConnected(BluetoothReplyRunnable* aRunnable) = 0;
 
   virtual void
+  AnswerWaitingCall(BluetoothReplyRunnable* aRunnable) = 0;
+
+  virtual void
+  IgnoreWaitingCall(BluetoothReplyRunnable* aRunnable) = 0;
+
+  virtual void
+  ToggleCalls(BluetoothReplyRunnable* aRunnable) = 0;
+
+  virtual void
   SendMetaData(const nsAString& aTitle,
                const nsAString& aArtist,
                const nsAString& aAlbum,

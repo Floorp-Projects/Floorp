@@ -65,7 +65,7 @@ public:
   /**
    * Synchronously remove all the textures used by the image client.
    */
-  virtual void FlushImage() {}
+  virtual void FlushAllImages(bool aExceptFront) {}
 
 protected:
   ImageClient(CompositableForwarder* aFwd, CompositableType aType);
@@ -100,7 +100,7 @@ public:
   virtual already_AddRefed<Image> CreateImage(const uint32_t *aFormats,
                                               uint32_t aNumFormats) MOZ_OVERRIDE;
 
-  virtual void FlushImage() MOZ_OVERRIDE;
+  virtual void FlushAllImages(bool aExceptFront) MOZ_OVERRIDE;
 
 protected:
   RefPtr<TextureClient> mFrontBuffer;
@@ -123,7 +123,7 @@ public:
 
   virtual void OnDetach() MOZ_OVERRIDE;
 
-  virtual void FlushImage() MOZ_OVERRIDE;
+  virtual void FlushAllImages(bool aExceptFront) MOZ_OVERRIDE;
 
 protected:
   RefPtr<TextureClient> mBackBuffer;

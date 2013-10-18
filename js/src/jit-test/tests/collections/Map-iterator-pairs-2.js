@@ -8,6 +8,6 @@ var a = iter.next(), b = iter.next();
 assertIteratorResult(a, ['a', 1], false);
 assertIteratorResult(b, ['b', 2], false);
 assertEq(a.value !== b.value, true);
-var a1 = map[std_iterator]().next();
-assertIteratorResult(a1, ['a', 1], false);
+var a1 = map[std_iterator]();
+assertIteratorNext(a1, ['a', 1]);
 assertEq(a.value !== a1.value, true);

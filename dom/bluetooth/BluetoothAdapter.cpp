@@ -67,9 +67,9 @@ public:
     MOZ_ASSERT(aReq && aAdapterPtr);
   }
 
-  virtual bool ParseSuccessfulReply(JS::Value* aValue)
+  virtual bool ParseSuccessfulReply(JS::MutableHandle<JS::Value> aValue)
   {
-    *aValue = JSVAL_VOID;
+    aValue.setUndefined();
 
     const BluetoothValue& v = mReply->get_BluetoothReplySuccess().value();
     if (v.type() != BluetoothValue::TArrayOfBluetoothNamedValue) {
@@ -113,7 +113,7 @@ public:
       return false;
     }
 
-    aValue->setObject(*JsDevices);
+    aValue.setObject(*JsDevices);
     return true;
   }
 
@@ -136,9 +136,9 @@ public:
     MOZ_ASSERT(aReq);
   }
 
-  virtual bool ParseSuccessfulReply(JS::Value* aValue)
+  virtual bool ParseSuccessfulReply(JS::MutableHandle<JS::Value> aValue)
   {
-    *aValue = JSVAL_VOID;
+    aValue.setUndefined();
 
     const BluetoothValue& v = mReply->get_BluetoothReplySuccess().value();
     if (v.type() != BluetoothValue::Tbool) {
@@ -147,7 +147,7 @@ public:
       return false;
     }
 
-    aValue->setBoolean(v.get_bool());
+    aValue.setBoolean(v.get_bool());
     return true;
   }
 
@@ -874,6 +874,75 @@ BluetoothAdapter::IsScoConnected(ErrorResult& aRv)
     return nullptr;
   }
   bs->IsScoConnected(results);
+
+  return request.forget();
+}
+
+already_AddRefed<DOMRequest>
+BluetoothAdapter::AnswerWaitingCall(ErrorResult& aRv)
+{
+  nsCOMPtr<nsPIDOMWindow> win = GetOwner();
+  if (!win) {
+    aRv.Throw(NS_ERROR_FAILURE);
+    return nullptr;
+  }
+
+  nsRefPtr<DOMRequest> request = new DOMRequest(win);
+  nsRefPtr<BluetoothVoidReplyRunnable> results =
+    new BluetoothVoidReplyRunnable(request);
+
+  BluetoothService* bs = BluetoothService::Get();
+  if (!bs) {
+    aRv.Throw(NS_ERROR_FAILURE);
+    return nullptr;
+  }
+  bs->AnswerWaitingCall(results);
+
+  return request.forget();
+}
+
+already_AddRefed<DOMRequest>
+BluetoothAdapter::IgnoreWaitingCall(ErrorResult& aRv)
+{
+  nsCOMPtr<nsPIDOMWindow> win = GetOwner();
+  if (!win) {
+    aRv.Throw(NS_ERROR_FAILURE);
+    return nullptr;
+  }
+
+  nsRefPtr<DOMRequest> request = new DOMRequest(win);
+  nsRefPtr<BluetoothVoidReplyRunnable> results =
+    new BluetoothVoidReplyRunnable(request);
+
+  BluetoothService* bs = BluetoothService::Get();
+  if (!bs) {
+    aRv.Throw(NS_ERROR_FAILURE);
+    return nullptr;
+  }
+  bs->IgnoreWaitingCall(results);
+
+  return request.forget();
+}
+
+already_AddRefed<DOMRequest>
+BluetoothAdapter::ToggleCalls(ErrorResult& aRv)
+{
+  nsCOMPtr<nsPIDOMWindow> win = GetOwner();
+  if (!win) {
+    aRv.Throw(NS_ERROR_FAILURE);
+    return nullptr;
+  }
+
+  nsRefPtr<DOMRequest> request = new DOMRequest(win);
+  nsRefPtr<BluetoothVoidReplyRunnable> results =
+    new BluetoothVoidReplyRunnable(request);
+
+  BluetoothService* bs = BluetoothService::Get();
+  if (!bs) {
+    aRv.Throw(NS_ERROR_FAILURE);
+    return nullptr;
+  }
+  bs->ToggleCalls(results);
 
   return request.forget();
 }

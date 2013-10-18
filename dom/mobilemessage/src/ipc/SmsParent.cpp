@@ -62,7 +62,7 @@ MmsAttachmentDataToJSObject(JSContext* aContext,
                                            global,
                                            blob,
                                            &NS_GET_IID(nsIDOMBlob),
-                                           content.address());
+                                           &content);
   NS_ENSURE_SUCCESS(rv, nullptr);
   if (!JS_DefineProperty(aContext, obj, "content", content,
                          nullptr, nullptr, 0)) {

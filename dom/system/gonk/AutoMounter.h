@@ -17,6 +17,11 @@ namespace system {
 #define AUTOMOUNTER_ENABLE                  1
 #define AUTOMOUNTER_DISABLE_WHEN_UNPLUGGED  2
 
+// Automounter statuses
+#define AUTOMOUNTER_STATUS_DISABLED         0
+#define AUTOMOUNTER_STATUS_ENABLED          1
+#define AUTOMOUNTER_STATUS_FILES_OPEN       2
+
 /**
  * Initialize the automounter. This causes some of the phone's
  * directories to show up on the host when the phone is plugged
@@ -37,6 +42,12 @@ InitAutoMounter();
  */
 void
 SetAutoMounterMode(int32_t aMode);
+
+/**
+ * Reports the status of the automounter.
+ */
+int32_t
+GetAutoMounterStatus();
 
 /**
  * Sets the sharing mode of an individual volume.

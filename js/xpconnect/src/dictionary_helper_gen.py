@@ -309,9 +309,9 @@ def write_getter(a, iface, fd):
         fd.write("    aDict.%s = (float) d;\n" % a.name)
     elif realtype.count("nsAString"):
         if a.nullable:
-            fd.write("    xpc_qsDOMString d(aCx, v, v.address(), xpc_qsDOMString::eNull, xpc_qsDOMString::eNull);\n")
+            fd.write("    xpc_qsDOMString d(aCx, v, &v, false, xpc_qsDOMString::eNull, xpc_qsDOMString::eNull);\n")
         else:
-            fd.write("    xpc_qsDOMString d(aCx, v, v.address(), xpc_qsDOMString::eStringify, xpc_qsDOMString::eStringify);\n")
+            fd.write("    xpc_qsDOMString d(aCx, v, &v, false, xpc_qsDOMString::eStringify, xpc_qsDOMString::eStringify);\n")
         fd.write("    NS_ENSURE_STATE(d.IsValid());\n")
         fd.write("    aDict.%s = d;\n" % a.name)
     elif realtype.count("nsIVariant"):
@@ -321,7 +321,7 @@ def write_getter(a, iface, fd):
     elif realtype.endswith('*'):
         fd.write("    %s d;\n" % realtype)
         fd.write("    xpc_qsSelfRef ref;\n")
-        fd.write("    nsresult rv = xpc_qsUnwrapArg<%s>(aCx, v, &d, &ref.ptr, v.address());\n" % realtype.strip('* '))
+        fd.write("    nsresult rv = xpc_qsUnwrapArg<%s>(aCx, v, &d, &ref.ptr, &v);\n" % realtype.strip('* '))
         fd.write("    NS_ENSURE_SUCCESS(rv, rv);\n")
         fd.write("    aDict.%s = d;\n" % a.name)
     elif not realtype.count("JS::Value"):

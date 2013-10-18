@@ -9,8 +9,6 @@ function test(obj, name) {
     assertEq(iter.toString(), "[object " + obj.constructor.name + " Iterator]");
 }
 
-// FIXME: Until arrays are converted to use the new iteration protocol,
-// toString on this iterator doesn't work.  Bug 919948.
-// test([]);
+test([]);
 test(new Map);
 test(new Set);

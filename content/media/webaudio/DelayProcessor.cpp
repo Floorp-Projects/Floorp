@@ -50,13 +50,13 @@ DelayProcessor::Process(const double *aPerFrameDelays,
       MOZ_ASSERT(readPosition >= 0.0, "Why are we reading before the beginning of the buffer?");
 
       // Here is a the reason why readIndex1 and readIndex will never be out
-      // of bounds.  The maximum value for bufferLength is 180 * 48000 (see
-      // AudioContext::CreateDelay).  The maximum value for mCurrentDelay is
-      // 180.0, so initially readPosition cannot be more than bufferLength +
-      // a fraction less than 1.  Then we take care of that case by
-      // subtracting bufferLength from it if needed.  So, if
-      // |bufferLength-readPosition<1.0|, readIndex1 will end up being zero.
-      // If |1.0<=bufferLength-readPosition<2.0|, readIndex1 will be
+      // of bounds.  The maximum value for bufferLength is
+      // 180 * AudioContext.samplerate (see AudioContext::CreateDelay).  The
+      // maximum value for mCurrentDelay is 180.0, so initially readPosition
+      // cannot be more than bufferLength + a fraction less than 1.  Then we
+      // take care of that case by subtracting bufferLength from it if needed.
+      // So, if |bufferLength-readPosition<1.0|, readIndex1 will end up being
+      // zero.  If |1.0<=bufferLength-readPosition<2.0|, readIndex1 will be
       // bufferLength-1 and readIndex2 will be 0.
       int readIndex1 = int(readPosition);
       int readIndex2 = (readIndex1 + 1) % bufferLength;

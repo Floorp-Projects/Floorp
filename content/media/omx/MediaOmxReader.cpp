@@ -345,6 +345,10 @@ nsresult MediaOmxReader::Seek(int64_t aTarget, int64_t aStartTime, int64_t aEndT
 {
   NS_ASSERTION(mDecoder->OnDecodeThread(), "Should be on decode thread.");
 
+  VideoFrameContainer* container = mDecoder->GetVideoFrameContainer();
+  if (container && container->GetImageContainer()) {
+    container->GetImageContainer()->ClearAllImagesExceptFront();
+  }
   mVideoQueue.Reset();
   mAudioQueue.Reset();
 

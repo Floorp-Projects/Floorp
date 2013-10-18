@@ -4308,6 +4308,8 @@ NS_INTERFACE_MAP_END_INHERITING(HttpBaseChannel)
 NS_IMETHODIMP
 nsHttpChannel::Cancel(nsresult status)
 {
+    MOZ_ASSERT(NS_IsMainThread());
+
     LOG(("nsHttpChannel::Cancel [this=%p status=%x]\n", this, status));
     if (mCanceled) {
         LOG(("  ignoring; already canceled\n"));

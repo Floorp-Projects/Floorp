@@ -966,7 +966,7 @@ nsXMLHttpRequest::GetResponse(JSContext* aCx, ErrorResult& aRv)
     if (aRv.Failed()) {
       return JSVAL_NULL;
     }
-    JS::Value result;
+    JS::Rooted<JS::Value> result(aCx);
     if (!xpc::StringToJsval(aCx, str, &result)) {
       aRv.Throw(NS_ERROR_OUT_OF_MEMORY);
       return JSVAL_NULL;
@@ -1014,7 +1014,7 @@ nsXMLHttpRequest::GetResponse(JSContext* aCx, ErrorResult& aRv)
 
     JS::Rooted<JS::Value> result(aCx, JSVAL_NULL);
     JS::Rooted<JSObject*> scope(aCx, JS::CurrentGlobalOrNull(aCx));
-    aRv = nsContentUtils::WrapNative(aCx, scope, mResponseBlob, result.address(),
+    aRv = nsContentUtils::WrapNative(aCx, scope, mResponseBlob, &result,
                                      nullptr, true);
     return result;
   }
@@ -1026,7 +1026,7 @@ nsXMLHttpRequest::GetResponse(JSContext* aCx, ErrorResult& aRv)
 
     JS::Rooted<JSObject*> scope(aCx, JS::CurrentGlobalOrNull(aCx));
     JS::Rooted<JS::Value> result(aCx, JSVAL_NULL);
-    aRv = nsContentUtils::WrapNative(aCx, scope, mResponseXML, result.address(),
+    aRv = nsContentUtils::WrapNative(aCx, scope, mResponseXML, &result,
                                      nullptr, true);
     return result;
   }
@@ -3659,7 +3659,7 @@ nsXMLHttpRequest::GetInterface(JSContext* aCx, nsIJSID* aIID, ErrorResult& aRv)
   JS::Rooted<JSObject*> wrapper(aCx, GetWrapper());
   JSAutoCompartment ac(aCx, wrapper);
   JS::Rooted<JSObject*> global(aCx, JS_GetGlobalForObject(aCx, wrapper));
-  aRv = nsContentUtils::WrapNative(aCx, global, result, iid, v.address());
+  aRv = nsContentUtils::WrapNative(aCx, global, result, iid, &v);
   return aRv.Failed() ? JSVAL_NULL : v;
 }
 

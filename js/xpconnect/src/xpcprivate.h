@@ -2817,7 +2817,7 @@ public:
      * @param pErr [out] relevant error code, if any.
      */
 
-    static bool NativeData2JS(jsval* d,
+    static bool NativeData2JS(JS::MutableHandleValue d,
                               const void* s, const nsXPTType& type,
                               const nsID* iid, nsresult* pErr);
 
@@ -2841,7 +2841,7 @@ public:
      * @param src_is_identity optional performance hint. Set to true only
      *                        if src is the identity pointer.
      */
-    static bool NativeInterface2JSObject(jsval* d,
+    static bool NativeInterface2JSObject(JS::MutableHandleValue d,
                                          nsIXPConnectJSObjectHolder** dest,
                                          xpcObjectHelper& aHelper,
                                          const nsID* iid,
@@ -2869,7 +2869,7 @@ public:
      * @param scope the default scope to put on the new JSObjects' parent chain
      * @param pErr [out] relevant error code, if any.
      */
-    static bool NativeArray2JS(jsval* d, const void** s,
+    static bool NativeArray2JS(JS::MutableHandleValue d, const void** s,
                                const nsXPTType& type, const nsID* iid,
                                uint32_t count, nsresult* pErr);
 
@@ -2883,7 +2883,7 @@ public:
                                     const nsXPTType& type,
                                     nsresult* pErr);
 
-    static bool NativeStringWithSize2JS(jsval* d, const void* s,
+    static bool NativeStringWithSize2JS(JS::MutableHandleValue d, const void* s,
                                         const nsXPTType& type,
                                         uint32_t count,
                                         nsresult* pErr);
@@ -3502,7 +3502,7 @@ public:
      * @param pJSVal [out] the resulting jsval.
      */
     static bool VariantDataToJS(nsIVariant* variant,
-                                nsresult* pErr, jsval* pJSVal);
+                                nsresult* pErr, JS::MutableHandleValue pJSVal);
 
     bool IsPurple()
     {
