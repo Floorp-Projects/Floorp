@@ -3501,7 +3501,7 @@ nsEventStateManager::PostHandleEvent(nsPresContext* aPresContext,
       nsCOMPtr<nsIDOMDataTransfer> initialDataTransfer;
       dragSession->GetDataTransfer(getter_AddRefs(initialDataTransfer));
 
-      WidgetDragEvent *dragEvent = static_cast<WidgetDragEvent*>(aEvent);
+      WidgetDragEvent *dragEvent = aEvent->AsDragEvent();
 
       // collect any changes to moz cursor settings stored in the event's
       // data transfer.
