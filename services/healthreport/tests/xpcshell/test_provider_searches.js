@@ -21,10 +21,6 @@ function MockSearchCountMeasurement() {
 }
 MockSearchCountMeasurement.prototype = {
   __proto__: bsp.SearchCountMeasurement3.prototype,
-
-  getEngines: function () {
-    return DEFAULT_ENGINES;
-  },
 };
 
 function MockSearchesProvider() {
@@ -59,16 +55,16 @@ add_task(function test_record() {
     if (engine.identifier == "yahoo") {
       continue;
     }
-    yield provider.recordSearch(engine.name, "abouthome");
-    yield provider.recordSearch(engine.name, "contextmenu");
-    yield provider.recordSearch(engine.name, "searchbar");
-    yield provider.recordSearch(engine.name, "urlbar");
+    yield provider.recordSearch(engine, "abouthome");
+    yield provider.recordSearch(engine, "contextmenu");
+    yield provider.recordSearch(engine, "searchbar");
+    yield provider.recordSearch(engine, "urlbar");
   }
 
   // Invalid sources should throw.
   let errored = false;
   try {
-    yield provider.recordSearch(DEFAULT_ENGINES[0].name, "bad source");
+    yield provider.recordSearch(DEFAULT_ENGINES[0], "bad source");
   } catch (ex) {
     errored = true;
   } finally {
@@ -98,7 +94,7 @@ add_task(function test_record() {
 
   // Also, check that our non-default engine contributed, with a computed
   // identifier.
-  let identifier = "other-Not Default";
+  let identifier = "notdef";
   for (let source of ["abouthome", "contextmenu", "searchbar", "urlbar"]) {
     let field = identifier + "." + source;
     do_check_true(day.has(field));

@@ -165,11 +165,12 @@ let AboutHome = {
           Cu.reportError(ex);
           break;
         }
+        let engine = Services.search.currentEngine;
 #ifdef MOZ_SERVICES_HEALTHREPORT
-        window.BrowserSearch.recordSearchInHealthReport(data.engineName, "abouthome");
+        window.BrowserSearch.recordSearchInHealthReport(engine, "abouthome");
 #endif
         // Trigger a search through nsISearchEngine.getSubmission()
-        let submission = Services.search.currentEngine.getSubmission(data.searchTerms, null, "homepage");
+        let submission = engine.getSubmission(data.searchTerms, null, "homepage");
         window.loadURI(submission.uri.spec, null, submission.postData);
         break;
     }

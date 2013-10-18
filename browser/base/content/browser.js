@@ -3081,8 +3081,7 @@ const BrowserSearch = {
    * FHR records only search counts and nothing pertaining to the search itself.
    *
    * @param engine
-   *        (string) The name of the engine used to perform the search. This
-   *        is typically nsISearchEngine.name.
+   *        (nsISearchEngine) The engine handling the search.
    * @param source
    *        (string) Where the search originated from. See the FHR
    *        SearchesProvider for allowed values.
