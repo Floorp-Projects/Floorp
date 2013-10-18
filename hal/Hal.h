@@ -260,6 +260,12 @@ void SetTimezone(const nsCString& aTimezoneSpec);
 nsCString GetTimezone();
 
 /**
+ * Get timezone offset
+ * returns the timezone offset relative to UTC in minutes (DST effect included)
+ */
+int32_t GetTimezoneOffset();
+
+/**
  * Register observer for system clock changed notification.
  * @param aObserver The observer that should be added.
  */

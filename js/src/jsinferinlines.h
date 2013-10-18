@@ -588,8 +588,7 @@ TypeScript::NumTypeSets(JSScript *script)
 /* static */ inline StackTypeSet *
 TypeScript::ThisTypes(JSScript *script)
 {
-    TypeSet *types = script->types->typeArray() + script->nTypeSets + js::analyze::ThisSlot();
-    return types->toStackSet();
+    return script->types->typeArray() + script->nTypeSets + js::analyze::ThisSlot();
 }
 
 /*
@@ -602,29 +601,28 @@ TypeScript::ThisTypes(JSScript *script)
 TypeScript::ArgTypes(JSScript *script, unsigned i)
 {
     JS_ASSERT(i < script->function()->nargs);
-    TypeSet *types = script->types->typeArray() + script->nTypeSets + js::analyze::ArgSlot(i);
-    return types->toStackSet();
+    return script->types->typeArray() + script->nTypeSets + js::analyze::ArgSlot(i);
 }
 
-/* static */ inline StackTypeSet *
-TypeScript::BytecodeTypes(JSScript *script, jsbytecode *pc)
+template <typename TYPESET>
+/* static */ inline TYPESET *
+TypeScript::BytecodeTypes(JSScript *script, jsbytecode *pc, uint32_t *hint, TYPESET *typeArray)
 {
     JS_ASSERT(js_CodeSpec[*pc].format & JOF_TYPESET);
     JS_ASSERT(script->types && script->types->bytecodeMap);
     uint32_t *bytecodeMap = script->types->bytecodeMap;
-    uint32_t *hint = bytecodeMap + script->nTypeSets;
     uint32_t offset = pc - script->code;
     JS_ASSERT(offset < script->length);
 
     // See if this pc is the next typeset opcode after the last one looked up.
     if (bytecodeMap[*hint + 1] == offset && (*hint + 1) < script->nTypeSets) {
         (*hint)++;
-        return script->types->typeArray()->toStackSet() + *hint;
+        return typeArray + *hint;
     }
 
     // See if this pc is the same as the last one looked up.
     if (bytecodeMap[*hint] == offset)
-        return script->types->typeArray()->toStackSet() + *hint;
+        return typeArray + *hint;
 
     // Fall back to a binary search.
     size_t bottom = 0;
@@ -646,16 +644,15 @@ TypeScript::BytecodeTypes(JSScript *script, jsbytecode *pc)
     JS_ASSERT(bytecodeMap[mid] == offset || mid == top);
 
     *hint = mid;
-    return script->types->typeArray()->toStackSet() + *hint;
+    return typeArray + *hint;
 }
 
-/* static */ inline TypeObject *
-TypeScript::StandardType(JSContext *cx, JSProtoKey key)
+/* static */ inline StackTypeSet *
+TypeScript::BytecodeTypes(JSScript *script, jsbytecode *pc)
 {
-    RootedObject proto(cx);
-    if (!js_GetClassPrototype(cx, key, &proto, nullptr))
-        return nullptr;
-    return cx->getNewType(GetClassForProtoKey(key), proto.get());
+    JS_ASSERT(CurrentThreadCanAccessRuntime(script->runtimeFromMainThread()));
+    uint32_t *hint = script->types->bytecodeMap + script->nTypeSets;
+    return BytecodeTypes(script, pc, hint, script->types->typeArray());
 }
 
 struct AllocationSiteKey : public DefaultHasher<AllocationSiteKey> {
@@ -1109,61 +1106,65 @@ TypeSet::clearObjects()
     objectSet = nullptr;
 }
 
-inline void
-TypeSet::addType(ExclusiveContext *cxArg, Type type)
+bool
+TypeSet::addType(Type type, LifoAlloc *alloc, bool *padded)
 {
-    JS_ASSERT(cxArg->compartment()->activeAnalysis);
-
-    // Temporary type sets use a separate LifoAlloc for storage.
-    JS_ASSERT_IF(!type.isUnknown() && !type.isAnyObject() && type.isObject(),
-                 isStackSet() || isHeapSet());
+    JS_ASSERT_IF(padded, !*padded);
 
     if (unknown())
-        return;
+        return true;
 
     if (type.isUnknown()) {
         flags |= TYPE_FLAG_BASE_MASK;
         clearObjects();
         JS_ASSERT(unknown());
-    } else if (type.isPrimitive()) {
+        if (padded)
+            *padded = true;
+        return true;
+    }
+
+    if (type.isPrimitive()) {
         TypeFlags flag = PrimitiveTypeFlag(type.primitive());
         if (flags & flag)
-            return;
+            return true;
 
         /* If we add float to a type set it is also considered to contain int. */
         if (flag == TYPE_FLAG_DOUBLE)
             flag |= TYPE_FLAG_INT32;
 
         flags |= flag;
-    } else {
-        if (flags & TYPE_FLAG_ANYOBJECT)
-            return;
-        if (type.isAnyObject())
-            goto unknownObject;
+        if (padded)
+            *padded = true;
+        return true;
+    }
 
+    if (flags & TYPE_FLAG_ANYOBJECT)
+        return true;
+    if (type.isAnyObject())
+        goto unknownObject;
+
+    {
         uint32_t objectCount = baseObjectCount();
         TypeObjectKey *object = type.objectKey();
         TypeObjectKey **pentry = HashSetInsert<TypeObjectKey *,TypeObjectKey,TypeObjectKey>
-                                     (cxArg->typeLifoAlloc(), objectSet, objectCount, object);
-        if (!pentry) {
-            cxArg->compartment()->types.setPendingNukeTypes(cxArg);
-            return;
-        }
+                                     (*alloc, objectSet, objectCount, object);
+        if (!pentry)
+            return false;
         if (*pentry)
-            return;
+            return true;
         *pentry = object;
 
         setBaseObjectCount(objectCount);
 
         if (objectCount == TYPE_FLAG_OBJECT_COUNT_LIMIT)
             goto unknownObject;
+    }
 
-        if (type.isTypeObject()) {
-            TypeObject *nobject = type.typeObject();
-            JS_ASSERT(!nobject->singleton);
-            if (nobject->unknownProperties())
-                goto unknownObject;
-        }
+    if (type.isTypeObject()) {
+        TypeObject *nobject = type.typeObject();
+        JS_ASSERT(!nobject->singleton);
+        if (nobject->unknownProperties())
+            goto unknownObject;
     }
 
     if (false) {
@@ -1172,6 +1173,27 @@ TypeSet::addType(ExclusiveContext *cxArg, Type type)
         flags |= TYPE_FLAG_ANYOBJECT;
         clearObjects();
     }
+
+    if (padded)
+        *padded = true;
+    return true;
+}
+
+inline void
+TypeSet::addType(ExclusiveContext *cxArg, Type type)
+{
+    JS_ASSERT(cxArg->compartment()->activeAnalysis);
+
+    // Temporary type sets use a separate LifoAlloc for storage.
+    JS_ASSERT(isStackSet() || isHeapSet());
+
+    bool added = false;
+    if (!addType(type, &cxArg->typeLifoAlloc(), &added)) {
+        cxArg->compartment()->types.setPendingNukeTypes(cxArg);
+        return;
+    }
+    if (!added)
+        return;
 
     InferSpew(ISpewOps, "addType: %sT%p%s %s",
               InferSpewColor(this), this, InferSpewColorReset(),
@@ -1417,58 +1439,10 @@ TypeNewScript::writeBarrierPre(TypeNewScript *newScript)
     JS::Zone *zone = newScript->fun->zoneFromAnyThread();
     if (zone->needsBarrier()) {
         MarkObject(zone->barrierTracer(), &newScript->fun, "write barrier");
-        MarkShape(zone->barrierTracer(), &newScript->shape, "write barrier");
+        MarkObject(zone->barrierTracer(), &newScript->templateObject, "write barrier");
     }
 #endif
 }
-
-// Allocate a CompilerOutput for a finished compilation and generate the type
-// constraints for the compilation. Returns whether the type constraints
-// still hold.
-bool
-FinishCompilation(JSContext *cx, JSScript *script, ExecutionMode executionMode,
-                  CompilerConstraintList *constraints, RecompileInfo *precompileInfo);
-
-class CompilerConstraint;
-class CompilerConstraintList
-{
-#ifdef JS_ION
-    // Generated constraints.
-    Vector<CompilerConstraint *, 0, jit::IonAllocPolicy> constraints;
-#endif
-
-    // OOM during generation of some constraint.
-    bool failed_;
-
-  public:
-    CompilerConstraintList()
-      : failed_(false)
-    {}
-
-    void add(CompilerConstraint *constraint);
-
-    size_t length() {
-#ifdef JS_ION
-        return constraints.length();
-#else
-        MOZ_CRASH();
-#endif
-    }
-    CompilerConstraint *get(size_t i) {
-#ifdef JS_ION
-        return constraints[i];
-#else
-        MOZ_CRASH();
-#endif
-    }
-
-    bool failed() {
-        return failed_;
-    }
-    void setFailed() {
-        failed_ = true;
-    }
-};
 
 } } /* namespace js::types */
 

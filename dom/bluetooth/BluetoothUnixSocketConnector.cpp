@@ -27,11 +27,12 @@
 #include <errno.h>
 
 #include <sys/socket.h>
+#ifdef MOZ_B2G_BT_BLUEZ
 #include <bluetooth/bluetooth.h>
 #include <bluetooth/l2cap.h>
 #include <bluetooth/rfcomm.h>
 #include <bluetooth/sco.h>
-
+#endif
 #include "BluetoothUnixSocketConnector.h"
 #include "nsThreadUtils.h"
 
@@ -43,6 +44,7 @@ static const int L2CAP_SO_SNDBUF = 400 * 1024;  // 400 KB send buffer
 static const int L2CAP_SO_RCVBUF = 400 * 1024;  // 400 KB receive buffer
 static const int L2CAP_MAX_MTU = 65000;
 
+#ifdef MOZ_B2G_BT_BLUEZ
 static
 int get_bdaddr(const char *str, bdaddr_t *ba)
 {
@@ -62,6 +64,8 @@ void get_bdaddr_as_string(const bdaddr_t *ba, char *str) {
             b[5], b[4], b[3], b[2], b[1], b[0]);
 }
 
+#endif
+
 BluetoothUnixSocketConnector::BluetoothUnixSocketConnector(
   BluetoothSocketType aType,
   int aChannel,
@@ -76,6 +80,7 @@ BluetoothUnixSocketConnector::BluetoothUnixSocketConnector(
 bool
 BluetoothUnixSocketConnector::SetUp(int aFd)
 {
+#ifdef MOZ_B2G_BT_BLUEZ
   int lm = 0;
   int sndbuf, rcvbuf;
 
@@ -157,7 +162,7 @@ BluetoothUnixSocketConnector::SetUp(int aFd)
       }
     }
   }
-
+#endif
   return true;
 }
 
@@ -167,6 +172,7 @@ BluetoothUnixSocketConnector::Create()
   MOZ_ASSERT(!NS_IsMainThread());
   int fd = -1;
 
+#ifdef MOZ_B2G_BT_BLUEZ
   switch (mType) {
   case BluetoothSocketType::RFCOMM:
     fd = socket(PF_BLUETOOTH, SOCK_STREAM, BTPROTO_RFCOMM);
@@ -193,7 +199,7 @@ BluetoothUnixSocketConnector::Create()
     BT_WARNING("Could not set up socket!");
     return -1;
   }
-
+#endif
   return fd;
 }
 
@@ -203,6 +209,7 @@ BluetoothUnixSocketConnector::CreateAddr(bool aIsServer,
                                          sockaddr_any& aAddr,
                                          const char* aAddress)
 {
+#ifdef MOZ_B2G_BT_BLUEZ
   // Set to BDADDR_ANY, if it's not a server, we'll reset.
   bdaddr_t bd_address_obj = {{0, 0, 0, 0, 0, 0}};
 
@@ -242,6 +249,7 @@ BluetoothUnixSocketConnector::CreateAddr(bool aIsServer,
     BT_WARNING("Socket type unknown!");
     return false;
   }
+#endif
   return true;
 }
 
@@ -249,6 +257,7 @@ void
 BluetoothUnixSocketConnector::GetSocketAddr(const sockaddr_any& aAddr,
                                             nsAString& aAddrStr)
 {
+#ifdef MOZ_B2G_BT_BLUEZ
   char addr[18];
   switch (mType) {
   case BluetoothSocketType::RFCOMM:
@@ -265,4 +274,5 @@ BluetoothUnixSocketConnector::GetSocketAddr(const sockaddr_any& aAddr,
     MOZ_CRASH("Socket should be either RFCOMM or SCO!");
   }
   aAddrStr.AssignASCII(addr);
+#endif
 }

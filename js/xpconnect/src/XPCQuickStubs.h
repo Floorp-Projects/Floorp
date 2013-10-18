@@ -142,16 +142,16 @@ xpc_qsGetterOnlyNativeStub(JSContext *cx, unsigned argc, jsval *vp);
 /* Functions for converting values between COM and JS. */
 
 inline bool
-xpc_qsInt64ToJsval(JSContext *cx, int64_t i, jsval *rv)
+xpc_qsInt64ToJsval(JSContext *cx, int64_t i, JS::MutableHandleValue rv)
 {
-    *rv = JS_NumberValue(static_cast<double>(i));
+    rv.setNumber(static_cast<double>(i));
     return true;
 }
 
 inline bool
-xpc_qsUint64ToJsval(JSContext *cx, uint64_t u, jsval *rv)
+xpc_qsUint64ToJsval(JSContext *cx, uint64_t u, JS::MutableHandleValue rv)
 {
-    *rv = JS_NumberValue(static_cast<double>(u));
+    rv.setNumber(static_cast<double>(u));
     return true;
 }
 
@@ -235,7 +235,9 @@ protected:
      * when |v| is JSVAL_IS_NULL and JSVAL_IS_VOID respectively.
      */
     template<class traits>
-    JSString* InitOrStringify(JSContext* cx, jsval v, jsval* pval,
+    JSString* InitOrStringify(JSContext* cx, jsval v,
+                              JS::MutableHandleValue pval,
+                              bool notpassed,
                               StringificationBehavior nullBehavior,
                               StringificationBehavior undefinedBehavior) {
         JSString *s;
@@ -252,8 +254,8 @@ protected:
             // If pval is null, that means the argument was optional and
             // not passed; turn those into void strings if they're
             // supposed to be stringified.
-            if (behavior != eStringify || !pval) {
-                // Here behavior == eStringify implies !pval, so both eNull and
+            if (behavior != eStringify || notpassed) {
+                // Here behavior == eStringify implies notpassed, so both eNull and
                 // eStringify should end up with void strings.
                 (new(mBuf) implementation_type(traits::sEmptyBuffer, uint32_t(0)))->
                     SetIsVoid(behavior != eEmpty);
@@ -266,7 +268,7 @@ protected:
                 mValid = false;
                 return nullptr;
             }
-            *pval = STRING_TO_JSVAL(s);  // Root the new string.
+            pval.setString(s);  // Root the new string.
         }
 
         return s;
@@ -290,7 +292,8 @@ protected:
 class xpc_qsDOMString : public xpc_qsBasicString<nsAString, nsDependentString>
 {
 public:
-    xpc_qsDOMString(JSContext *cx, jsval v, jsval *pval,
+    xpc_qsDOMString(JSContext *cx, JS::HandleValue v,
+                    JS::MutableHandleValue pval, bool notpassed,
                     StringificationBehavior nullBehavior,
                     StringificationBehavior undefinedBehavior);
 };
@@ -302,8 +305,9 @@ public:
 class xpc_qsAString : public xpc_qsDOMString
 {
 public:
-    xpc_qsAString(JSContext *cx, jsval v, jsval *pval)
-        : xpc_qsDOMString(cx, v, pval, eNull, eNull)
+    xpc_qsAString(JSContext *cx, JS::HandleValue v,
+                  JS::MutableHandleValue pval, bool notpassed)
+        : xpc_qsDOMString(cx, v, pval, notpassed, eNull, eNull)
     {}
 };
 
@@ -314,9 +318,10 @@ public:
 class xpc_qsACString : public xpc_qsBasicString<nsACString, nsCString>
 {
 public:
-    xpc_qsACString(JSContext *cx, jsval v, jsval *pval,
-                   StringificationBehavior nullBehavior = eNull,
-                   StringificationBehavior undefinedBehavior = eNull);
+    xpc_qsACString(JSContext *cx, JS::HandleValue v,
+                   JS::MutableHandleValue pval, bool notpassed,
+                   StringificationBehavior nullBehavior,
+                   StringificationBehavior undefinedBehavior);
 };
 
 /**
@@ -326,7 +331,8 @@ class xpc_qsAUTF8String :
   public xpc_qsBasicString<nsACString, NS_ConvertUTF16toUTF8>
 {
 public:
-  xpc_qsAUTF8String(JSContext* cx, jsval v, jsval *pval);
+  xpc_qsAUTF8String(JSContext* cx, JS::HandleValue v,
+                    JS::MutableHandleValue pval, bool notpassed);
 };
 
 struct xpc_qsSelfRef
@@ -353,7 +359,7 @@ bool
 xpc_qsJsvalToCharStr(JSContext *cx, jsval v, JSAutoByteString *bytes);
 
 bool
-xpc_qsJsvalToWcharStr(JSContext *cx, jsval v, jsval *pval, const PRUnichar **pstr);
+xpc_qsJsvalToWcharStr(JSContext *cx, jsval v, JS::MutableHandleValue pval, const PRUnichar **pstr);
 
 
 /** Convert an nsString to JSString, returning true on success. This will sometimes modify |str| to be empty. */
@@ -375,7 +381,7 @@ castNative(JSContext *cx,
            const nsIID &iid,
            void **ppThis,
            nsISupports **ppThisRef,
-           jsval *vp);
+           JS::MutableHandleValue vp);
 
 /**
  * Search @a obj and its prototype chain for an XPCOM object that implements
@@ -399,7 +405,7 @@ xpc_qsUnwrapThis(JSContext *cx,
                  JS::HandleObject obj,
                  T **ppThis,
                  nsISupports **pThisRef,
-                 jsval *pThisVal,
+                 JS::MutableHandleValue pThisVal,
                  bool failureFatal = true)
 {
     XPCWrappedNative *wrapper;
@@ -425,7 +431,7 @@ castNativeFromWrapper(JSContext *cx,
                       uint32_t protoID,
                       int32_t protoDepth,
                       nsISupports **pRef,
-                      jsval *pVal,
+                      JS::MutableHandleValue pVal,
                       nsresult *rv);
 
 bool
@@ -433,7 +439,7 @@ xpc_qsUnwrapThisFromCcxImpl(XPCCallContext &ccx,
                             const nsIID &iid,
                             void **ppThis,
                             nsISupports **pThisRef,
-                            jsval *vp);
+                            JS::MutableHandleValue vp);
 
 /**
  * Alternate implementation of xpc_qsUnwrapThis using information already
@@ -444,7 +450,7 @@ inline bool
 xpc_qsUnwrapThisFromCcx(XPCCallContext &ccx,
                         T **ppThis,
                         nsISupports **pThisRef,
-                        jsval *pThisVal)
+                        JS::MutableHandleValue pThisVal)
 {
     return xpc_qsUnwrapThisFromCcxImpl(ccx,
                                        NS_GET_TEMPLATE_IID(T),
@@ -472,14 +478,14 @@ xpc_qsUnwrapObj(jsval v, nsISupports **ppArgRef, nsresult *rv)
 }
 
 nsresult
-xpc_qsUnwrapArgImpl(JSContext *cx, jsval v, const nsIID &iid, void **ppArg,
-                    nsISupports **ppArgRef, jsval *vp);
+xpc_qsUnwrapArgImpl(JSContext *cx, JS::HandleValue v, const nsIID &iid, void **ppArg,
+                    nsISupports **ppArgRef, JS::MutableHandleValue vp);
 
 /** Convert a jsval to an XPCOM pointer. */
 template <class Interface, class StrongRefType>
 inline nsresult
-xpc_qsUnwrapArg(JSContext *cx, jsval v, Interface **ppArg,
-                StrongRefType **ppArgRef, jsval *vp)
+xpc_qsUnwrapArg(JSContext *cx, JS::HandleValue v, Interface **ppArg,
+                StrongRefType **ppArgRef, JS::MutableHandleValue vp)
 {
     nsISupports* argRef = *ppArgRef;
     nsresult rv = xpc_qsUnwrapArgImpl(cx, v, NS_GET_TEMPLATE_IID(Interface),
@@ -496,7 +502,7 @@ castNativeArgFromWrapper(JSContext *cx,
                          uint32_t protoID,
                          int32_t protoDepth,
                          nsISupports **pArgRef,
-                         jsval *vp,
+                         JS::MutableHandleValue vp,
                          nsresult *rv)
 {
     JSObject *src = xpc_qsUnwrapObj(v, pArgRef, rv);
@@ -533,7 +539,7 @@ xpc_qsXPCOMObjectToJsval(JSContext *aCx,
                          qsObjectHelper &aHelper,
                          const nsIID *iid,
                          XPCNativeInterface **iface,
-                         jsval *rval);
+                         JS::MutableHandleValue rval);
 
 /**
  * Convert a variant to jsval. Return true on success.
@@ -541,7 +547,7 @@ xpc_qsXPCOMObjectToJsval(JSContext *aCx,
 bool
 xpc_qsVariantToJsval(JSContext *cx,
                      nsIVariant *p,
-                     jsval *rval);
+                     JS::MutableHandleValue rval);
 
 #ifdef DEBUG
 void

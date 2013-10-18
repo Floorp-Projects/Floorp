@@ -405,7 +405,7 @@ struct MainThreadWorkerStructuredCloneCallbacks
         JS::Rooted<JSObject*> global(aCx, JS::CurrentGlobalOrNull(aCx));
         nsresult rv = nsContentUtils::WrapNative(aCx, global, file,
                                                  &NS_GET_IID(nsIDOMFile),
-                                                 wrappedFile.address());
+                                                 &wrappedFile);
         if (NS_FAILED(rv)) {
           Error(aCx, nsIDOMDOMException::DATA_CLONE_ERR);
           return nullptr;
@@ -439,7 +439,7 @@ struct MainThreadWorkerStructuredCloneCallbacks
         JS::Rooted<JSObject*> global(aCx, JS::CurrentGlobalOrNull(aCx));
         nsresult rv = nsContentUtils::WrapNative(aCx, global, blob,
                                                  &NS_GET_IID(nsIDOMBlob),
-                                                 wrappedBlob.address());
+                                                 &wrappedBlob);
         if (NS_FAILED(rv)) {
           Error(aCx, nsIDOMDOMException::DATA_CLONE_ERR);
           return nullptr;

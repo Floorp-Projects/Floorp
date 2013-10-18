@@ -667,25 +667,6 @@ TransplantObject(JSContext *cx, JS::HandleObject origobj, JS::HandleObject targe
     return newIdentity;
 }
 
-JSObject *
-TransplantObjectWithWrapper(JSContext *cx,
-                            HandleObject origobj, HandleObject origwrapper,
-                            HandleObject targetobj, HandleObject targetwrapper)
-{
-    RootedObject oldWaiver(cx, WrapperFactory::GetXrayWaiver(origobj));
-    RootedObject newSameCompartmentWrapper(cx,
-      js_TransplantObjectWithWrapper(cx, origobj, origwrapper, targetobj,
-                                     targetwrapper));
-    if (!newSameCompartmentWrapper || !oldWaiver)
-        return newSameCompartmentWrapper;
-
-    RootedObject newIdentity(cx, Wrapper::wrappedObject(newSameCompartmentWrapper));
-    MOZ_ASSERT(!js::IsWrapper(newIdentity));
-    if (!FixWaiverAfterTransplant(cx, oldWaiver, newIdentity))
-        return nullptr;
-    return newSameCompartmentWrapper;
-}
-
 nsIGlobalObject *
 GetNativeForGlobal(JSObject *obj)
 {

@@ -14,12 +14,14 @@ const PC_OBS_CONTRACT = "@mozilla.org/dom/peerconnectionobserver;1";
 const PC_ICE_CONTRACT = "@mozilla.org/dom/rtcicecandidate;1";
 const PC_SESSION_CONTRACT = "@mozilla.org/dom/rtcsessiondescription;1";
 const PC_MANAGER_CONTRACT = "@mozilla.org/dom/peerconnectionmanager;1";
+const PC_STATS_CONTRACT = "@mozilla.org/dom/rtcstatsreport;1";
 
-const PC_CID = Components.ID("{9878b414-afaa-4176-a887-1e02b3b047c2}");
+const PC_CID = Components.ID("{fc684a5c-c729-42c7-aa82-3c10dc4398f3}");
 const PC_OBS_CID = Components.ID("{1d44a18e-4545-4ff3-863d-6dbd6234a583}");
 const PC_ICE_CID = Components.ID("{02b9970c-433d-4cc2-923d-f7028ac66073}");
 const PC_SESSION_CID = Components.ID("{1775081b-b62d-4954-8ffe-a067bbf508a7}");
 const PC_MANAGER_CID = Components.ID("{7293e901-2be3-4c02-b4bd-cbef6fc24f78}");
+const PC_STATS_CID = Components.ID("{7fe6e18b-0da3-4056-bf3b-440ef3809e06}");
 
 // Global list of PeerConnection objects, so they can be cleaned up when
 // a page is torn down. (Maps inner window ID to an array of PC objects).
@@ -152,6 +154,46 @@ RTCSessionDescription.prototype = {
   }
 };
 
+function RTCStatsReport(win, report) {
+  this._win = win;
+  this.report = report;
+}
+RTCStatsReport.prototype = {
+  classDescription: "RTCStatsReport",
+  classID: PC_STATS_CID,
+  contractID: PC_STATS_CONTRACT,
+  QueryInterface: XPCOMUtils.generateQI([Ci.nsISupports,
+                                         Ci.nsIDOMGlobalPropertyInitializer]),
+
+  forEach: function(cb, thisArg) {
+    for (var key in this.report) {
+      if (this.report.hasOwnProperty(key)) {
+        cb.call(thisArg || this, this.get(key), key, this.report);
+      }
+    }
+  },
+
+  get: function(key) {
+    function publify(win, obj) {
+      let props = {};
+      for (let k in obj) {
+        props[k] = {enumerable:true, configurable:true, writable:true, value:obj[k]};
+      }
+      let pubobj = Cu.createObjectIn(win);
+      Object.defineProperties(pubobj, props);
+      Cu.makeObjectPropsNormal(pubobj);
+      return pubobj;
+    }
+
+    // Return a content object rather than a wrapped chrome one.
+    return publify(this._win, this.report[key]);
+  },
+
+  has: function(key) {
+    return this.report[key] !== undefined;
+  }
+};
+
 function RTCPeerConnection() {
   this._queue = [];
 
@@ -163,6 +205,8 @@ function RTCPeerConnection() {
   this._onCreateOfferFailure = null;
   this._onCreateAnswerSuccess = null;
   this._onCreateAnswerFailure = null;
+  this._onGetStatsSuccess = null;
+  this._onGetStatsFailure = null;
 
   this._pendingType = null;
   this._localType = null;
@@ -739,6 +783,21 @@ RTCPeerConnection.prototype = {
     return state;
   },
 
+  getStats: function(selector, onSuccess, onError) {
+    this._onGetStatsSuccess = onSuccess;
+    this._onGetStatsFailure = onError;
+
+    this._queueOrRun({
+      func: this._getStats,
+      args: [selector],
+      wait: true
+    });
+  },
+
+  _getStats: function(selector) {
+    this._getPC().getStats(selector);
+  },
+
   createDataChannel: function(label, dict) {
     this._checkClosed();
     if (dict == undefined) {
@@ -1071,6 +1130,38 @@ PeerConnectionObserver.prototype = {
     }
   },
 
+  onGetStatsSuccess: function(dict) {
+    function appendStats(stats, report) {
+      if (stats) {
+        stats.forEach(function(stat) {
+          report[stat.id] = stat;
+        });
+      }
+    }
+
+    let report = {};
+    appendStats(dict.rtpStreamStats, report);
+    appendStats(dict.inboundRTPStreamStats, report);
+    appendStats(dict.outboundRTPStreamStats, report);
+    appendStats(dict.mediaStreamTrackStats, report);
+    appendStats(dict.mediaStreamStats, report);
+    appendStats(dict.transportStats, report);
+    appendStats(dict.iceComponentStats, report);
+    appendStats(dict.iceCandidateStats, report);
+    appendStats(dict.codecStats, report);
+
+    this.callCB(this._dompc._onGetStatsSuccess,
+                this._dompc._win.RTCStatsReport._create(this._dompc._win,
+                                                        new RTCStatsReport(this._dompc._win,
+                                                                           report)));
+    this._dompc._executeNext();
+  },
+
+  onGetStatsError: function(code, message) {
+    this.callCB(this._dompc._onGetStatsFailure, new RTCError(code, message));
+    this._dompc._executeNext();
+  },
+
   onAddStream: function(stream) {
     this.dispatchEvent(new this._dompc._win.MediaStreamEvent("addstream",
                                                              { stream: stream }));
@@ -1106,5 +1197,5 @@ PeerConnectionObserver.prototype = {
 
 this.NSGetFactory = XPCOMUtils.generateNSGetFactory(
   [GlobalPCList, RTCIceCandidate, RTCSessionDescription, RTCPeerConnection,
-   PeerConnectionObserver]
+   RTCStatsReport, PeerConnectionObserver]
 );

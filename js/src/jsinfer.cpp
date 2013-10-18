@@ -316,6 +316,18 @@ TemporaryTypeSet::TemporaryTypeSet(Type type)
 }
 
 bool
+TypeSet::mightBeType(JSValueType type)
+{
+    if (unknown())
+        return true;
+
+    if (type == JSVAL_TYPE_OBJECT)
+        return unknownObject() || baseObjectCount() != 0;
+
+    return baseFlags() & PrimitiveTypeFlag(type);
+}
+
+bool
 TypeSet::isSubset(TypeSet *other)
 {
     if ((baseFlags() & other->baseFlags()) != baseFlags())
@@ -457,9 +469,11 @@ TypeSet::print()
     }
 }
 
-TemporaryTypeSet *
-TypeSet::clone(LifoAlloc *alloc) const
+bool
+TypeSet::clone(LifoAlloc *alloc, TemporaryTypeSet *result) const
 {
+    JS_ASSERT(result->empty());
+
     unsigned objectCount = baseObjectCount();
     unsigned capacity = (objectCount >= 2) ? HashSetCapacity(objectCount) : 0;
 
@@ -467,38 +481,23 @@ TypeSet::clone(LifoAlloc *alloc) const
     if (capacity) {
         newSet = alloc->newArray<TypeObjectKey*>(capacity);
         if (!newSet)
-            return nullptr;
+            return false;
         PodCopy(newSet, objectSet, capacity);
     }
 
     uint32_t newFlags = flags & ~(TYPE_FLAG_STACK_SET | TYPE_FLAG_HEAP_SET);
-    TemporaryTypeSet *res = alloc->new_<TemporaryTypeSet>(newFlags, capacity ? newSet : objectSet);
-    if (!res)
-        return nullptr;
 
-    return res;
+    new(result) TemporaryTypeSet(newFlags, capacity ? newSet : objectSet);
+    return true;
 }
 
-bool
-TemporaryTypeSet::addObject(TypeObjectKey *key, LifoAlloc *alloc)
+TemporaryTypeSet *
+TypeSet::clone(LifoAlloc *alloc) const
 {
-    uint32_t objectCount = baseObjectCount();
-    TypeObjectKey **pentry = HashSetInsert<TypeObjectKey *,TypeObjectKey,TypeObjectKey>
-                                 (*alloc, objectSet, objectCount, key);
-    if (!pentry)
-        return false;
-    if (*pentry)
-        return true;
-    *pentry = key;
-
-    setBaseObjectCount(objectCount);
-
-    if (objectCount == TYPE_FLAG_OBJECT_COUNT_LIMIT) {
-        flags |= TYPE_FLAG_ANYOBJECT;
-        clearObjects();
-    }
-
-    return true;
+    TemporaryTypeSet *res = alloc->new_<TemporaryTypeSet>();
+    if (!res || !clone(alloc, res))
+        return nullptr;
+    return res;
 }
 
 /* static */ TemporaryTypeSet *
@@ -512,12 +511,12 @@ TypeSet::unionSets(TypeSet *a, TypeSet *b, LifoAlloc *alloc)
     if (!res->unknownObject()) {
         for (size_t i = 0; i < a->getObjectCount() && !res->unknownObject(); i++) {
             TypeObjectKey *key = a->getObject(i);
-            if (key && !res->addObject(key, alloc))
+            if (key && !res->addType(Type::ObjectType(key), alloc))
                 return nullptr;
         }
         for (size_t i = 0; i < b->getObjectCount() && !res->unknownObject(); i++) {
             TypeObjectKey *key = b->getObject(i);
-            if (key && !res->addObject(key, alloc))
+            if (key && !res->addType(Type::ObjectType(key), alloc))
                 return nullptr;
         }
     }
@@ -555,9 +554,11 @@ static LifoAlloc *IonAlloc() {
 #endif
 }
 
+namespace {
+
 // Superclass of all constraints generated during Ion compilation. These may
 // be allocated off the main thread, using the current Ion context's allocator.
-class types::CompilerConstraint
+class CompilerConstraint
 {
   public:
     // Property being queried by the compiler.
@@ -578,15 +579,138 @@ class types::CompilerConstraint
     virtual bool generateTypeConstraint(JSContext *cx, RecompileInfo recompileInfo) = 0;
 };
 
-void
-CompilerConstraintList::add(CompilerConstraint *constraint)
+} // anonymous namespace
+
+class types::CompilerConstraintList
 {
+  public:
+    struct FrozenScript
+    {
+        JSScript *script;
+        TemporaryTypeSet *thisTypes;
+        TemporaryTypeSet *argTypes;
+        TemporaryTypeSet *bytecodeTypes;
+    };
+
+  private:
+
 #ifdef JS_ION
-    if (!constraint || !constraints.append(constraint))
-        setFailed();
-#else
-    MOZ_CRASH();
+    // Constraints generated on heap properties.
+    Vector<CompilerConstraint *, 0, jit::IonAllocPolicy> constraints;
+
+    // Scripts whose stack type sets were frozen for the compilation.
+    Vector<FrozenScript, 1, jit::IonAllocPolicy> frozenScripts;
 #endif
+
+    // OOM during generation of some constraint.
+    bool failed_;
+
+  public:
+    CompilerConstraintList()
+      : failed_(false)
+    {}
+
+    void add(CompilerConstraint *constraint) {
+#ifdef JS_ION
+        if (!constraint || !constraints.append(constraint))
+            setFailed();
+#else
+        MOZ_CRASH();
+#endif
+    }
+
+    void freezeScript(JSScript *script,
+                      TemporaryTypeSet *thisTypes,
+                      TemporaryTypeSet *argTypes,
+                      TemporaryTypeSet *bytecodeTypes)
+    {
+#ifdef JS_ION
+        FrozenScript entry;
+        entry.script = script;
+        entry.thisTypes = thisTypes;
+        entry.argTypes = argTypes;
+        entry.bytecodeTypes = bytecodeTypes;
+        if (!frozenScripts.append(entry))
+            setFailed();
+#else
+        MOZ_CRASH();
+#endif
+    }
+
+    size_t length() {
+#ifdef JS_ION
+        return constraints.length();
+#else
+        MOZ_CRASH();
+#endif
+    }
+
+    CompilerConstraint *get(size_t i) {
+#ifdef JS_ION
+        return constraints[i];
+#else
+        MOZ_CRASH();
+#endif
+    }
+
+    size_t numFrozenScripts() {
+#ifdef JS_ION
+        return frozenScripts.length();
+#else
+        MOZ_CRASH();
+#endif
+    }
+
+    const FrozenScript &frozenScript(size_t i) {
+#ifdef JS_ION
+        return frozenScripts[i];
+#else
+        MOZ_CRASH();
+#endif
+    }
+
+    bool failed() {
+        return failed_;
+    }
+    void setFailed() {
+        failed_ = true;
+    }
+};
+
+CompilerConstraintList *
+types::NewCompilerConstraintList()
+{
+    return IonAlloc()->new_<CompilerConstraintList>();
+}
+
+/* static */ bool
+TypeScript::FreezeTypeSets(CompilerConstraintList *constraints, JSScript *script,
+                           TemporaryTypeSet **pThisTypes,
+                           TemporaryTypeSet **pArgTypes,
+                           TemporaryTypeSet **pBytecodeTypes)
+{
+    LifoAlloc *alloc = IonAlloc();
+    StackTypeSet *existing = script->types->typeArray();
+
+    size_t count = NumTypeSets(script);
+    TemporaryTypeSet *types = alloc->newArrayUninitialized<TemporaryTypeSet>(count);
+    if (!types)
+        return false;
+    PodZero(types, count);
+
+    for (size_t i = 0; i < count; i++) {
+        if (!existing[i].clone(alloc, &types[i]))
+            return false;
+    }
+
+    *pThisTypes = types + (ThisTypes(script) - existing);
+    *pArgTypes = (script->function() && script->function()->nargs)
+                 ? (types + (ArgTypes(script, 0) - existing))
+                 : NULL;
+    *pBytecodeTypes = types;
+
+    constraints->freezeScript(script, *pThisTypes, *pArgTypes, *pBytecodeTypes);
+    return true;
 }
 
 namespace {
@@ -746,6 +870,61 @@ HeapTypeSetKey::instantiate(JSContext *cx)
     return maybeTypes_ != NULL;
 }
 
+static bool
+CheckFrozenTypeSet(JSContext *cx, TemporaryTypeSet *frozen, StackTypeSet *actual)
+{
+    // Return whether the types frozen for a script during compilation are
+    // still valid. Also check for any new types added to the frozen set during
+    // compilation, and add them to the actual stack type sets. These new types
+    // indicate places where the compiler relaxed its possible inputs to be
+    // more tolerant of potential new types.
+
+    if (!actual->isSubset(frozen))
+        return false;
+
+    if (!frozen->isSubset(actual)) {
+        TypeSet::TypeList list;
+        frozen->enumerateTypes(&list);
+
+        for (size_t i = 0; i < list.length(); i++) {
+            // Note: On OOM this will preserve the type set's contents.
+            actual->addType(cx, list[i]);
+        }
+    }
+
+    return true;
+}
+
+namespace {
+
+/*
+ * As for TypeConstraintFreeze, but describes an implicit freeze constraint
+ * added for stack types within a script. Applies to all compilations of the
+ * script, not just a single one.
+ */
+class TypeConstraintFreezeStack : public TypeConstraint
+{
+    JSScript *script_;
+
+  public:
+    TypeConstraintFreezeStack(JSScript *script)
+        : script_(script)
+    {}
+
+    const char *kind() { return "freezeStack"; }
+
+    void newType(JSContext *cx, TypeSet *source, Type type)
+    {
+        /*
+         * Unlike TypeConstraintFreeze, triggering this constraint once does
+         * not disable it on future changes to the type set.
+         */
+        cx->compartment()->types.addPendingRecompile(cx, script_);
+    }
+};
+
+} /* anonymous namespace */
+
 bool
 types::FinishCompilation(JSContext *cx, JSScript *script, ExecutionMode executionMode,
                          CompilerConstraintList *constraints, RecompileInfo *precompileInfo)
@@ -776,7 +955,36 @@ types::FinishCompilation(JSContext *cx, JSScript *script, ExecutionMode executio
             succeeded = false;
     }
 
-    if (!succeeded) {
+    for (size_t i = 0; i < constraints->numFrozenScripts(); i++) {
+        const CompilerConstraintList::FrozenScript &entry = constraints->frozenScript(i);
+        JS_ASSERT(entry.script->types);
+
+        if (!CheckFrozenTypeSet(cx, entry.thisTypes, types::TypeScript::ThisTypes(entry.script)))
+            succeeded = false;
+        unsigned nargs = entry.script->function() ? entry.script->function()->nargs : 0;
+        for (size_t i = 0; i < nargs; i++) {
+            if (!CheckFrozenTypeSet(cx, &entry.argTypes[i], types::TypeScript::ArgTypes(entry.script, i)))
+                succeeded = false;
+        }
+        for (size_t i = 0; i < entry.script->nTypeSets; i++) {
+            if (!CheckFrozenTypeSet(cx, &entry.bytecodeTypes[i], &entry.script->types->typeArray()[i]))
+                succeeded = false;
+        }
+
+        // If necessary, add constraints to trigger invalidation on the script
+        // after any future changes to the stack type sets.
+        if (entry.script->hasFreezeConstraints)
+            continue;
+        entry.script->hasFreezeConstraints = true;
+
+        size_t count = TypeScript::NumTypeSets(entry.script);
+
+        StackTypeSet *array = entry.script->types->typeArray();
+        for (size_t i = 0; i < count; i++)
+            array[i].add(cx, cx->typeLifoAlloc().new_<TypeConstraintFreezeStack>(entry.script), false);
+    }
+
+    if (!succeeded || types.constrainedOutputs->back().pendingInvalidation()) {
         types.constrainedOutputs->back().invalidate();
         return false;
     }
@@ -862,18 +1070,6 @@ TemporaryTypeSet::getKnownTypeTag()
     JS_ASSERT_IF(empty, type == JSVAL_TYPE_UNKNOWN);
 
     return type;
-}
-
-bool
-TemporaryTypeSet::mightBeType(JSValueType type)
-{
-    if (unknown())
-        return true;
-
-    if (type == JSVAL_TYPE_OBJECT)
-        return unknownObject() || baseObjectCount() != 0;
-
-    return baseFlags() & PrimitiveTypeFlag(type);
 }
 
 JSValueType
@@ -1067,15 +1263,15 @@ class ConstraintDataFreezeObjectForInlinedCall
     }
 };
 
-// Constraint which triggers recompilation when the allocation kind of the
-// template object for a type's new script changes.
+// Constraint which triggers recompilation when the template object for a
+// type's new script changes.
 class ConstraintDataFreezeObjectForNewScriptTemplate
 {
-    gc::AllocKind allocKind;
+    JSObject *templateObject;
 
   public:
-    ConstraintDataFreezeObjectForNewScriptTemplate(gc::AllocKind allocKind)
-      : allocKind(allocKind)
+    ConstraintDataFreezeObjectForNewScriptTemplate(JSObject *templateObject)
+      : templateObject(templateObject)
     {}
 
     const char *kind() { return "freezeObjectForNewScriptTemplate"; }
@@ -1083,7 +1279,7 @@ class ConstraintDataFreezeObjectForNewScriptTemplate
     bool invalidateOnNewType(Type type) { return false; }
     bool invalidateOnNewPropertyState(TypeSet *property) { return false; }
     bool invalidateOnNewObjectState(TypeObject *object) {
-        return !object->hasNewScript() || object->newScript()->allocKind != allocKind;
+        return !object->hasNewScript() || object->newScript()->templateObject != templateObject;
     }
 
     bool constraintHolds(JSContext *cx,
@@ -1131,9 +1327,9 @@ TypeObjectKey::watchStateChangeForInlinedCall(CompilerConstraintList *constraint
 void
 TypeObjectKey::watchStateChangeForNewScriptTemplate(CompilerConstraintList *constraints)
 {
-    gc::AllocKind kind = asTypeObject()->newScript()->allocKind;
+    JSObject *templateObject = asTypeObject()->newScript()->templateObject;
     HeapTypeSetKey objectProperty = property(JSID_EMPTY);
-    constraints->add(IonAlloc()->new_<CompilerConstraintInstance<ConstraintDataFreezeObjectForNewScriptTemplate> >(objectProperty, ConstraintDataFreezeObjectForNewScriptTemplate(kind)));
+    constraints->add(IonAlloc()->new_<CompilerConstraintInstance<ConstraintDataFreezeObjectForNewScriptTemplate> >(objectProperty, ConstraintDataFreezeObjectForNewScriptTemplate(templateObject)));
 }
 
 void
@@ -1470,36 +1666,6 @@ TemporaryTypeSet::propertyNeedsBarrier(CompilerConstraintList *constraints, jsid
 
     return false;
 }
-
-namespace {
-
-/*
- * As for TypeConstraintFreeze, but describes an implicit freeze constraint
- * added for stack types within a script. Applies to all compilations of the
- * script, not just a single one.
- */
-class TypeConstraintFreezeStack : public TypeConstraint
-{
-    JSScript *script_;
-
-  public:
-    TypeConstraintFreezeStack(JSScript *script)
-        : script_(script)
-    {}
-
-    const char *kind() { return "freezeStack"; }
-
-    void newType(JSContext *cx, TypeSet *source, Type type)
-    {
-        /*
-         * Unlike TypeConstraintFreeze, triggering this constraint once does
-         * not disable it on future changes to the type set.
-         */
-        cx->compartment()->types.addPendingRecompile(cx, script_);
-    }
-};
-
-} /* anonymous namespace */
 
 /////////////////////////////////////////////////////////////////////
 // TypeCompartment
@@ -3099,7 +3265,7 @@ CheckNewScriptProperties(JSContext *cx, TypeObject *type, JSFunction *fun)
      */
     Rooted<TypeObject *> rootedType(cx, type);
     RootedShape shape(cx, baseobj->lastProperty());
-    baseobj = NewReshapedObject(cx, rootedType, baseobj->getParent(), kind, shape);
+    baseobj = NewReshapedObject(cx, rootedType, baseobj->getParent(), kind, shape, MaybeSingletonObject);
     if (!baseobj ||
         !type->addDefiniteProperties(cx, baseobj) ||
         !initializerList.append(done))
@@ -3130,8 +3296,7 @@ CheckNewScriptProperties(JSContext *cx, TypeObject *type, JSFunction *fun)
     }
 
     newScript->fun = fun;
-    newScript->allocKind = kind;
-    newScript->shape = baseobj->lastProperty();
+    newScript->templateObject = baseobj;
 
     newScript->initializerList = (TypeNewScript::Initializer *)
         ((char *) newScript + sizeof(TypeNewScript));
@@ -4063,40 +4228,6 @@ TypeScript::destroy()
     js_free(this);
 }
 
-/* static */ void
-TypeScript::AddFreezeConstraints(JSContext *cx, JSScript *script)
-{
-    if (script->hasFreezeConstraints)
-        return;
-    script->hasFreezeConstraints = true;
-
-    /*
-     * Adding freeze constraints to a script ensures that code for the script
-     * will be recompiled any time any type set for stack values in the script
-     * change: these type sets are implicitly frozen during compilation.
-     *
-     * To ensure this occurs, we don't need to add freeze constraints to the
-     * type sets for every stack value, but rather only the input type sets
-     * to analysis of the stack in a script. The contents of the stack sets
-     * are completely determined by these input sets and by any dynamic types
-     * in the script (for which TypeDynamicResult will trigger recompilation).
-     *
-     * Add freeze constraints to each input type set, which includes sets for
-     * all arguments, locals, and monitored type sets in the script. This
-     * includes all type sets in the TypeScript except the script's return
-     * value types.
-     */
-
-    size_t count = TypeScript::NumTypeSets(script);
-
-    TypeSet *array = script->types->typeArray();
-    for (size_t i = 0; i < count; i++) {
-        TypeSet *types = &array[i];
-        JS_ASSERT(types->isStackSet());
-        types->add(cx, cx->typeLifoAlloc().new_<TypeConstraintFreezeStack>(script), false);
-    }
-}
-
 void
 Zone::addSizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf, size_t *typePool)
 {
@@ -4274,7 +4405,7 @@ TypeScript::printTypes(JSContext *cx, HandleScript script) const
         PrintBytecode(cx, script, pc);
 
         if (js_CodeSpec[*pc].format & JOF_TYPESET) {
-            TypeSet *types = TypeScript::BytecodeTypes(script, pc);
+            StackTypeSet *types = TypeScript::BytecodeTypes(script, pc);
             fprintf(stderr, "  typeset %u:", unsigned(types - typeArray()));
             types->print();
             fprintf(stderr, "\n");

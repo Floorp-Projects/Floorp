@@ -3,9 +3,26 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 
+var std_iterator = (function() {
+    try {
+        for (var _ of new Proxy({}, { get: function(_, name) { throw name; } }))
+            break;
+    } catch (name) {
+        return name;
+    }
+    throw 'wat';
+})();
+
 function assertFalse(a) { assertEq(a, false) }
 function assertTrue(a) { assertEq(a, true) }
 function assertNotEq(found, not_expected) { assertFalse(found === expected) }
-function assertIteratorResult(value, done, result) {
-    assertDeepEq(result, { value: value, done: done });
+function assertIteratorResult(result, value, done) {
+    assertDeepEq(result.value, value);
+    assertEq(result.done, done);
+}
+function assertIteratorNext(iter, value) {
+    assertIteratorResult(iter.next(), value, false);
+}
+function assertIteratorDone(iter, value) {
+    assertIteratorResult(iter.next(), value, true);
 }

@@ -212,6 +212,14 @@ GetTimezone()
   return timezone;
 }
 
+int32_t
+GetTimezoneOffset()
+{
+  int32_t timezoneOffset;
+  Hal()->SendGetTimezoneOffset(&timezoneOffset);
+  return timezoneOffset;
+}
+
 void
 EnableSystemClockChangeNotifications()
 {
@@ -681,6 +689,16 @@ public:
       return false;
     }
     *aTimezoneSpec = hal::GetTimezone();
+    return true;
+  }
+
+  virtual bool
+  RecvGetTimezoneOffset(int32_t *aTimezoneOffset) MOZ_OVERRIDE
+  {
+    if (!AssertAppProcessPermission(this, "time")) {
+      return false;
+    }
+    *aTimezoneOffset = hal::GetTimezoneOffset();
     return true;
   }
 
