@@ -49,14 +49,18 @@ enum KeyNameIndex
  * All header files should include this header instead of *Events.h.
  */
 
-// BasicEvents.h
 namespace mozilla {
-struct EventFlags;
 
-class WidgetEvent;
-class WidgetGUIEvent;
-class WidgetInputEvent;
-class InternalUIEvent;
+#define NS_EVENT_CLASS(aPrefix, aName) class aPrefix##aName;
+#define NS_ROOT_EVENT_CLASS(aPrefix, aName) NS_EVENT_CLASS(aPrefix, aName)
+
+#include "mozilla/EventClassList.h"
+
+#undef NS_EVENT_CLASS
+#undef NS_ROOT_EVENT_CLASS
+
+// BasicEvents.h
+struct EventFlags;
 
 // TextEvents.h
 struct AlternativeCharCode;
@@ -65,41 +69,6 @@ struct TextRange;
 
 typedef TextRange* TextRangeArray;
 
-class WidgetKeyboardEvent;
-class WidgetTextEvent;
-class WidgetCompositionEvent;
-class WidgetQueryContentEvent;
-class WidgetSelectionEvent;
-
-// MouseEvents.h
-class WidgetMouseEventBase;
-class WidgetMouseEvent;
-class WidgetDragEvent;
-class WidgetMouseScrollEvent;
-class WidgetWheelEvent;
-
-// TouchEvents.h
-class WidgetGestureNotifyEvent;
-class WidgetSimpleGestureEvent;
-class WidgetTouchEvent;
-
-// ContentEvents.h
-class InternalScriptErrorEvent;
-class InternalScrollPortEvent;
-class InternalScrollAreaEvent;
-class InternalFormEvent;
-class InternalClipboardEvent;
-class InternalFocusEvent;
-class InternalTransitionEvent;
-class InternalAnimationEvent;
-
-// MiscEvents.h
-class WidgetCommandEvent;
-class WidgetContentCommandEvent;
-class WidgetPluginEvent;
-
-// MutationEvent.h (content/events/public)
-class InternalMutationEvent;
 } // namespace mozilla
 
 #endif // mozilla_EventForwards_h__
