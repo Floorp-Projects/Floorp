@@ -715,7 +715,7 @@ nsEventDispatcher::CreateEvent(mozilla::dom::EventTarget* aOwner,
                                  aEvent->AsFocusEvent());
     case NS_MOUSE_SCROLL_EVENT:
       return NS_NewDOMMouseScrollEvent(aDOMEvent, aOwner, aPresContext,
-                                       static_cast<WidgetInputEvent*>(aEvent));
+                                       aEvent->AsMouseScrollEvent());
     case NS_WHEEL_EVENT:
       return NS_NewDOMWheelEvent(aDOMEvent, aOwner, aPresContext,
                                  static_cast<WidgetWheelEvent*>(aEvent));
