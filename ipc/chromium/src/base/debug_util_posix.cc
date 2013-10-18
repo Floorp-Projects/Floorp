@@ -50,6 +50,9 @@
 #define KP_FLAGS kp_flags
 #elif defined(OS_FREEBSD)
 #define KP_FLAGS ki_flag
+#elif defined(OS_OPENBSD) && !defined(_P_TRACED)
+#define KP_FLAGS p_psflags
+#define P_TRACED PS_TRACED
 #else
 #define KP_FLAGS p_flag
 #endif
