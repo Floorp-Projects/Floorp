@@ -116,7 +116,7 @@
     <item name="android:layout_gravity">center</item>
     <item name="android:layout_marginBottom">5dp</item>
     <item name="android:gravity">center</item>
-    <item name="android:background">@drawable/pin_background</item>
+    <item name="android:background">@drawable/sync_pin_background</item>
     <item name="android:textColor">#000</item>
     <item name="android:textSize">35sp</item>
     <item name="android:text">@string/sync_pin_default</item>
