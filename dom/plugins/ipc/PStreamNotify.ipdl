@@ -6,7 +6,6 @@
 
 include protocol PPluginInstance;
 
-include "npapi.h";
 
 using NPReason from "npapi.h";
 

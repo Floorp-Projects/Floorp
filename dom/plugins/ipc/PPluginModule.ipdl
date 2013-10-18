@@ -8,9 +8,6 @@ include protocol PPluginInstance;
 include protocol PPluginScriptableObject;
 include protocol PCrashReporter;
 
-include "npapi.h";
-include "mozilla/plugins/PluginMessageUtils.h";
-include "mozilla/dom/TabMessageUtils.h";
 
 using NPError from "npapi.h";
 using NPNVariable from "npapi.h";

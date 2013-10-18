@@ -1,5 +1,3 @@
-include "foo.h";
-
 using foo from "foo.h";
 using bar::baz from "foo.h";
 

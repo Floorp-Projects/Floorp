@@ -4,9 +4,6 @@
 
 include protocol PGrallocBuffer;
 
-include "gfxipc/ShadowLayerUtils.h";
-include "mozilla/gfx/Types.h";
-include "nsRegion.h";
 
 using gfxIntSize from "nsSize.h";
 using struct gfxPoint from "gfxPoint.h";
