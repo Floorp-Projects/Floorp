@@ -1,4 +1,3 @@
-if (!getBuildConfiguration()['generational-gc']) {
 let a = [];
 a.length = 30;
 
@@ -17,4 +16,3 @@ let h = function() new h(...a) + 1;
 check(f);
 check(g);
 check(h);
-}

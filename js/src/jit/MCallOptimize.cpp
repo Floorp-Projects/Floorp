@@ -1399,6 +1399,9 @@ IonBuilder::inlineUnsafeSetReservedSlot(CallInfo &callInfo)
     current->add(store);
     current->push(store);
 
+    if (NeedsPostBarrier(info(), callInfo.getArg(2)))
+        current->add(MPostWriteBarrier::New(callInfo.thisArg(), callInfo.getArg(2)));
+
     return InliningStatus_Inlined;
 }
 
