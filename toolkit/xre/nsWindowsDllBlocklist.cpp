@@ -20,6 +20,7 @@
 
 #include "nsWindowsDllInterceptor.h"
 #include "mozilla/WindowsVersion.h"
+#include "nsWindowsHelpers.h"
 
 using namespace mozilla;
 
@@ -244,22 +245,20 @@ public:
   explicit ReentrancySentinel(const char* dllName)
   {
     DWORD currentThreadId = GetCurrentThreadId();
-    EnterCriticalSection(&sLock);
+    AutoCriticalSection lock(&sLock);
     mPreviousDllName = (*sThreadMap)[currentThreadId];
 
     // If there is a DLL currently being loaded and it has the same name
     // as the current attempt, we're re-entering.
     mReentered = mPreviousDllName && !stricmp(mPreviousDllName, dllName);
     (*sThreadMap)[currentThreadId] = dllName;
-    LeaveCriticalSection(&sLock);
   }
     
   ~ReentrancySentinel()
   {
     DWORD currentThreadId = GetCurrentThreadId();
-    EnterCriticalSection(&sLock);
+    AutoCriticalSection lock(&sLock);
     (*sThreadMap)[currentThreadId] = mPreviousDllName;
-    LeaveCriticalSection(&sLock);
   }
 
   bool BailOut() const
@@ -316,10 +315,9 @@ DllBlockSet* DllBlockSet::gFirst;
 void
 DllBlockSet::Add(const char* name, unsigned long long version)
 {
-  EnterCriticalSection(&sLock);
+  AutoCriticalSection lock(&sLock);
   for (DllBlockSet* b = gFirst; b; b = b->mNext) {
     if (0 == strcmp(b->mName, name) && b->mVersion == version) {
-      LeaveCriticalSection(&sLock);
       return;
     }
   }
@@ -327,13 +325,12 @@ DllBlockSet::Add(const char* name, unsigned long long version)
   DllBlockSet* n = new DllBlockSet(name, version);
   n->mNext = gFirst;
   gFirst = n;
-  LeaveCriticalSection(&sLock);
 }
 
 void
 DllBlockSet::Write(HANDLE file)
 {
-  EnterCriticalSection(&sLock);
+  AutoCriticalSection lock(&sLock);
   DWORD nBytes;
 
   // Because this method is called after a crash occurs, and uses heap memory,
@@ -362,8 +359,6 @@ DllBlockSet::Write(HANDLE file)
     }
   }
   __except (EXCEPTION_EXECUTE_HANDLER) { }
-
-  LeaveCriticalSection(&sLock);
 }
 
 static
