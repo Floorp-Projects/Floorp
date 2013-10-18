@@ -2940,6 +2940,43 @@ let SessionStoreInternal = {
   },
 
   /**
+   * Accumulates a list of frames that need to be restored for the
+   * given browser element. A frame is only restored if its current
+   * URL matches the one saved in the session data. Each frame to be
+   * restored is returned along with its associated session data.
+   *
+   * @param browser the browser being restored
+   * @return an array of [frame, data] pairs
+   */
+  getFramesToRestore: function (browser) {
+    function hasExpectedURL(aDocument, aURL) {
+      return !aURL || aURL.replace(/#.*/, "") == aDocument.location.href.replace(/#.*/, "");
+    }
+
+    let frameList = [];
+
+    function enumerateFrame(content, data) {
+      // Skip the frame if the user has navigated away before loading
+      // finished.
+      if (!hasExpectedURL(content.document, data.url)) {
+        return;
+      }
+
+      frameList.push([content, data]);
+
+      for (let i = 0; i < content.frames.length; i++) {
+        if (data.children && data.children[i]) {
+          enumerateFrame(content.frames[i], data.children[i]);
+        }
+      }
+    }
+
+    enumerateFrame(browser.contentWindow, browser.__SS_restore_data);
+
+    return frameList;
+  },
+
+  /**
    * Restore properties to a loaded document
    */
   restoreDocument: function ssi_restoreDocument(aWindow, aBrowser, aEvent) {
