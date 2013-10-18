@@ -1270,8 +1270,7 @@ nsEventStateManager::PreHandleEvent(nsPresContext* aPresContext,
     break;
   case NS_SELECTION_SET:
     {
-      WidgetSelectionEvent *selectionEvent =
-          static_cast<WidgetSelectionEvent*>(aEvent);
+      WidgetSelectionEvent* selectionEvent = aEvent->AsSelectionEvent();
       if (IsTargetCrossProcess(selectionEvent)) {
         // Will not be handled locally, remote the event
         if (GetCrossProcessTarget()->SendSelectionEvent(*selectionEvent))
@@ -1279,7 +1278,7 @@ nsEventStateManager::PreHandleEvent(nsPresContext* aPresContext,
         break;
       }
       nsContentEventHandler handler(mPresContext);
-      handler.OnSelectionEvent(static_cast<WidgetSelectionEvent*>(aEvent));
+      handler.OnSelectionEvent(selectionEvent);
     }
     break;
   case NS_CONTENT_COMMAND_CUT:
