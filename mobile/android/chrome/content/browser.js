@@ -3390,8 +3390,16 @@ Tab.prototype = {
           this.browser.addEventListener("pagehide", listener, true);
         }
 
-        if (docURI.startsWith("about:reader"))
-          new AboutReader(this.browser.contentDocument, this.browser.contentWindow);
+        if (docURI.startsWith("about:reader")) {
+          // During browser restart / recovery, duplicate "DOMContentLoaded" messages are received here
+          // For the visible tab ... where more than one tab is being reloaded, the inital "DOMContentLoaded"
+          // Message can be received before the document body is available ... so we avoid instantiating an
+          // AboutReader object, expecting that an eventual valid message will follow.
+          let contentDocument = this.browser.contentDocument;
+          if (contentDocument.body) {
+            new AboutReader(contentDocument, this.browser.contentWindow);
+          }
+        }
 
         break;
       }
