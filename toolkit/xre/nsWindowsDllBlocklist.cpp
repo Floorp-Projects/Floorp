@@ -134,6 +134,10 @@ static DllBlockInfo sWindowsDllBlocklist[] = {
   // bug 925459, bitguard crashes
   { "bitguard.dll", MAKE_VERSION(2, 6, 1694, 24) },
 
+  // bug 812683 - crashes in Windows library when Asus Gamer OSD is installed
+  // Software is discontinued/unsupported
+  { "atkdx11disp.dll", ALL_VERSIONS },
+
   { NULL, 0 }
 };
 
