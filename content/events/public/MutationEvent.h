@@ -16,6 +16,8 @@ namespace mozilla {
 class InternalMutationEvent : public WidgetEvent
 {
 public:
+  virtual InternalMutationEvent* AsMutationEvent() MOZ_OVERRIDE { return this; }
+
   InternalMutationEvent(bool aIsTrusted, uint32_t aMessage) :
     WidgetEvent(aIsTrusted, aMessage, NS_MUTATION_EVENT),
     mAttrChange(0)
