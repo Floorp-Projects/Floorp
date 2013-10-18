@@ -52,7 +52,8 @@ DOMRequestIpcHelper.prototype = {
    * queryInterface method and adds at least one weak listener to the Message
    * Manager MUST implement Ci.nsISupportsWeakReference.
    */
-  QueryInterface: XPCOMUtils.generateQI([Ci.nsISupportsWeakReference]),
+  QueryInterface: XPCOMUtils.generateQI([Ci.nsISupportsWeakReference,
+                                         Ci.nsIObserver]),
 
    /**
    *  'aMessages' is expected to be an array of either:
