@@ -740,7 +740,7 @@ nsEventDispatcher::CreateEvent(mozilla::dom::EventTarget* aOwner,
                                    aEvent->AsCommandEvent());
     case NS_SIMPLE_GESTURE_EVENT:
       return NS_NewDOMSimpleGestureEvent(aDOMEvent, aOwner, aPresContext,
-               static_cast<WidgetSimpleGestureEvent*>(aEvent));
+                                         aEvent->AsSimpleGestureEvent());
     case NS_TOUCH_EVENT:
       return NS_NewDOMTouchEvent(aDOMEvent, aOwner, aPresContext,
                                  aEvent->AsTouchEvent());
