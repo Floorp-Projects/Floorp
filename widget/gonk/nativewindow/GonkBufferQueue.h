@@ -19,7 +19,11 @@
 #define NATIVEWINDOW_GONKBUFFERQUEUE_H
 
 #include <gui/IGraphicBufferAlloc.h>
+#if ANDROID_VERSION == 17
+#include <gui/ISurfaceTexture.h>
+#else
 #include <gui/IGraphicBufferProducer.h>
+#endif
 
 #include <ui/Fence.h>
 #include <ui/GraphicBuffer.h>
@@ -30,10 +34,18 @@
 
 #include "mozilla/layers/LayersSurfaces.h"
 
+#if ANDROID_VERSION == 17
+#define IGraphicBufferProducer ISurfaceTexture
+#endif
+
 namespace android {
 // ----------------------------------------------------------------------------
 
+#if ANDROID_VERSION == 17
+class GonkBufferQueue : public BnSurfaceTexture {
+#else
 class GonkBufferQueue : public BnGraphicBufferProducer {
+#endif
     typedef mozilla::layers::SurfaceDescriptor SurfaceDescriptor;
 
 public:
@@ -171,6 +183,13 @@ public:
     //
     // In both cases, the producer will need to call requestBuffer to get a
     // GraphicBuffer handle for the returned slot.
+#if ANDROID_VERSION == 17
+    virtual status_t dequeueBuffer(int *buf, sp<Fence>& fence,
+            uint32_t width, uint32_t height, uint32_t format, uint32_t usage) {
+        return dequeueBuffer(buf, &fence, width, height, format, usage);
+    }
+#endif
+
     virtual status_t dequeueBuffer(int *buf, sp<Fence>* fence,
             uint32_t width, uint32_t height, uint32_t format, uint32_t usage);
 
@@ -197,7 +216,11 @@ public:
     //
     // The buffer will not be overwritten until the fence signals.  The fence
     // will usually be the one obtained from dequeueBuffer.
+#if ANDROID_VERSION == 17
+    virtual void cancelBuffer(int buf, sp<Fence> fence);
+#else
     virtual void cancelBuffer(int buf, const sp<Fence>& fence);
+#endif
 
     // setSynchronousMode sets whether dequeueBuffer is synchronous or
     // asynchronous. In synchronous mode, dequeueBuffer blocks until
