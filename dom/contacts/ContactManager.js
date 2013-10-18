@@ -180,10 +180,7 @@ function validateArrayField(data, createCb) {
     data = Array.isArray(data) ? data : [data];
     let filtered = [];
     for (let i = 0, n = data.length; i < n; ++i) {
-      let obj = data[i];
-      if (obj && isVanillaObj(obj)) {
-        filtered.push(createCb(obj));
-      }
+      filtered.push(createCb(data[i]));
     }
     if (filtered.length === 0) {
       return undefined;
