@@ -3510,9 +3510,7 @@ HTMLInputElement::PostHandleEvent(nsEventChainPostVisitor& aVisitor)
         {
           // For backwards compat, trigger checks/radios/buttons with
           // space or enter (bug 25300)
-          WidgetKeyboardEvent* keyEvent =
-            static_cast<WidgetKeyboardEvent*>(aVisitor.mEvent);
-
+          WidgetKeyboardEvent* keyEvent = aVisitor.mEvent->AsKeyboardEvent();
           if ((aVisitor.mEvent->message == NS_KEY_PRESS &&
                keyEvent->keyCode == NS_VK_RETURN) ||
               (aVisitor.mEvent->message == NS_KEY_UP &&
@@ -3848,8 +3846,7 @@ HTMLInputElement::PostHandleEventForRangeThumb(nsEventChainPostVisitor& aVisitor
 
     case NS_KEY_PRESS:
       if (mIsDraggingRange &&
-          static_cast<WidgetKeyboardEvent*>(aVisitor.mEvent)->keyCode ==
-            NS_VK_ESCAPE) {
+          aVisitor.mEvent->AsKeyboardEvent()->keyCode == NS_VK_ESCAPE) {
         CancelRangeThumbDrag();
       }
       break;

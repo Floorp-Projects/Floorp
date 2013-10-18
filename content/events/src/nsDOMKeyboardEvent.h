@@ -10,7 +10,7 @@
 #include "nsDOMUIEvent.h"
 #include "mozilla/EventForwards.h"
 #include "mozilla/dom/KeyboardEventBinding.h"
-#include "mozilla/TextEvents.h"
+#include "mozilla/BasicEvents.h"
 
 class nsDOMKeyboardEvent : public nsDOMUIEvent,
                            public nsIDOMKeyEvent
@@ -62,11 +62,7 @@ public:
   uint32_t CharCode();
   uint32_t KeyCode();
   virtual uint32_t Which() MOZ_OVERRIDE;
-
-  uint32_t Location()
-  {
-    return static_cast<mozilla::WidgetKeyboardEvent*>(mEvent)->location;
-  }
+  uint32_t Location();
 
   void InitKeyEvent(const nsAString& aType, bool aCanBubble, bool aCancelable,
                     nsIDOMWindow* aView, bool aCtrlKey, bool aAltKey,

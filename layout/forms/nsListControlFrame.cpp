@@ -2079,10 +2079,9 @@ nsListControlFrame::KeyDown(nsIDOMEvent* aKeyEvent)
   // the key navigation of list control even if preventDefault() is called.
 
   const WidgetKeyboardEvent* keyEvent =
-    static_cast<WidgetKeyboardEvent*>(aKeyEvent->GetInternalNSEvent());
-  MOZ_ASSERT(keyEvent, "DOM event must have internal event");
-  MOZ_ASSERT(keyEvent->eventStructType == NS_KEY_EVENT,
-    "The keydown event's internal event struct must be WidgetKeyboardEvent");
+    aKeyEvent->GetInternalNSEvent()->AsKeyboardEvent();
+  MOZ_ASSERT(keyEvent,
+    "DOM event must have WidgetKeyboardEvent for its internal event");
 
   if (keyEvent->IsAlt()) {
     if (keyEvent->keyCode == NS_VK_UP || keyEvent->keyCode == NS_VK_DOWN) {
@@ -2220,10 +2219,9 @@ nsListControlFrame::KeyPress(nsIDOMEvent* aKeyEvent)
   }
 
   const WidgetKeyboardEvent* keyEvent =
-    static_cast<WidgetKeyboardEvent*>(aKeyEvent->GetInternalNSEvent());
-  MOZ_ASSERT(keyEvent, "DOM event must have internal event");
-  MOZ_ASSERT(keyEvent->eventStructType == NS_KEY_EVENT,
-    "The keydown event's internal event struct must be WidgetKeyboardEvent");
+    aKeyEvent->GetInternalNSEvent()->AsKeyboardEvent();
+  MOZ_ASSERT(keyEvent,
+    "DOM event must have WidgetKeyboardEvent for its internal event");
 
   // Select option with this as the first character
   // XXX Not I18N compliant
