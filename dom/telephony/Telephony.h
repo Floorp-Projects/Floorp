@@ -106,8 +106,6 @@ public:
   static already_AddRefed<Telephony>
   Create(nsPIDOMWindow* aOwner, ErrorResult& aRv);
 
-  static bool CheckPermission(nsPIDOMWindow* aOwner);
-
   void
   AddCall(TelephonyCall* aCall)
   {
