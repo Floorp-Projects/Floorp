@@ -4195,10 +4195,6 @@ static const JSFunctionSpecWithHelp shell_functions[] = {
 "dissrc([fun])",
 "  Disassemble functions with source lines."),
 
-    JS_FN_HELP("dumpHeap", DumpHeap, 0, 0,
-"dumpHeap([fileName[, start[, toFind[, maxDepth[, toIgnore]]]]])",
-"  Interface to JS_DumpHeap with output sent to file."),
-
     JS_FN_HELP("dumpObject", DumpObject, 1, 0,
 "dumpObject()",
 "  Dump an internal representation of an object."),
@@ -4405,6 +4401,10 @@ static const JSFunctionSpecWithHelp fuzzing_unsafe_functions[] = {
 "getSelfHostedValue()",
 "  Get a self-hosted value by its name. Note that these values don't get \n"
 "  cached, so repeatedly getting the same value creates multiple distinct clones."),
+
+    JS_FN_HELP("dumpHeap", DumpHeap, 0, 0,
+"dumpHeap([fileName[, start[, toFind[, maxDepth[, toIgnore]]]]])",
+"  Interface to JS_DumpHeap with output sent to file."),
 
     JS_FN_HELP("parent", Parent, 1, 0,
 "parent(obj)",
