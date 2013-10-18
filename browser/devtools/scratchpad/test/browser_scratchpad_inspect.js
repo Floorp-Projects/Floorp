@@ -28,9 +28,9 @@ function runTests()
 
     let found = false;
 
-    outer: for (let scope in sidebar.variablesView) {
-      for (let [, obj] in scope) {
-        for (let [, prop] in obj) {
+    outer: for (let scope of sidebar.variablesView) {
+      for (let [, obj] of scope) {
+        for (let [, prop] of obj) {
           if (prop.name == "a" && prop.value == "foobarBug636725") {
             found = true;
             break outer;

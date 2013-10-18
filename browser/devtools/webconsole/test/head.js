@@ -447,7 +447,7 @@ function findVariableViewProperties(aView, aRules, aOptions)
 
   function finder(aRules, aVar, aPromises)
   {
-    for (let [id, prop] in aVar) {
+    for (let [id, prop] of aVar) {
       for (let rule of aRules) {
         let matcher = matchVariablesViewProperty(prop, rule, aOptions);
         aPromises.push(matcher.then(onMatch.bind(null, prop, rule)));
