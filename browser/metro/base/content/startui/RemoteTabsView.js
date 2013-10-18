@@ -93,6 +93,7 @@ RemoteTabsView.prototype = Util.extend(Object.create(View.prototype), {
     }
     this.setUIAccessVisible(show);
     this._set.arrangeItems();
+    this._set.removeAttribute("fade");
   },
 
   destruct: function destruct() {
@@ -115,8 +116,7 @@ let RemoteTabsStartView = {
     let vbox = document.getElementById("start-remotetabs");
     let uiList = [vbox];
     this._view = new RemoteTabsView(this._grid, uiList);
-    this._grid.removeAttribute("fade");
-},
+  },
 
   uninit: function uninit() {
     if (this._view) {
