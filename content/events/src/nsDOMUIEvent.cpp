@@ -44,15 +44,13 @@ nsDOMUIEvent::nsDOMUIEvent(mozilla::dom::EventTarget* aOwner,
   {
     case NS_UI_EVENT:
     {
-      InternalUIEvent *event = static_cast<InternalUIEvent*>(mEvent);
-      mDetail = event->detail;
+      mDetail = mEvent->AsUIEvent()->detail;
       break;
     }
 
     case NS_SCROLLPORT_EVENT:
     {
-      InternalScrollPortEvent* scrollEvent =
-        static_cast<InternalScrollPortEvent*>(mEvent);
+      InternalScrollPortEvent* scrollEvent = mEvent->AsScrollPortEvent();
       mDetail = (int32_t)scrollEvent->orient;
       break;
     }
@@ -345,16 +343,12 @@ nsDOMUIEvent::GetIsChar(bool* aIsChar)
 bool
 nsDOMUIEvent::IsChar() const
 {
-  switch (mEvent->eventStructType)
-  {
-    case NS_KEY_EVENT:
-      return static_cast<WidgetKeyboardEvent*>(mEvent)->isChar;
-    case NS_TEXT_EVENT:
-      return static_cast<WidgetTextEvent*>(mEvent)->isChar;
-    default:
-      return false;
+  WidgetKeyboardEvent* keyEvent = mEvent->AsKeyboardEvent();
+  if (keyEvent) {
+    return keyEvent->isChar;
   }
-  MOZ_CRASH("Switch handles all cases.");
+  WidgetTextEvent* textEvent = mEvent->AsTextEvent();
+  return textEvent ? textEvent->isChar : false;
 }
 
 NS_IMETHODIMP
@@ -462,10 +456,8 @@ nsDOMUIEvent::ComputeModifierState(const nsAString& aModifiersList)
 bool
 nsDOMUIEvent::GetModifierStateInternal(const nsAString& aKey)
 {
-  if (!mEvent->IsInputDerivedEvent()) {
-    MOZ_CRASH("mEvent must be WidgetInputEvent or derived class");
-  }
-  WidgetInputEvent* inputEvent = static_cast<WidgetInputEvent*>(mEvent);
+  WidgetInputEvent* inputEvent = mEvent->AsInputEvent();
+  MOZ_ASSERT(inputEvent, "mEvent must be WidgetInputEvent or derived class");
   if (aKey.EqualsLiteral(NS_DOM_KEYNAME_SHIFT)) {
     return inputEvent->IsShift();
   }

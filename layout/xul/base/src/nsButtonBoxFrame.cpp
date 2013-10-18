@@ -55,55 +55,58 @@ nsButtonBoxFrame::HandleEvent(nsPresContext* aPresContext,
   }
 
   switch (aEvent->message) {
-    case NS_KEY_DOWN:
-      if (NS_KEY_EVENT == aEvent->eventStructType) {
-        WidgetKeyboardEvent* keyEvent =
-          static_cast<WidgetKeyboardEvent*>(aEvent);
-        if (NS_VK_SPACE == keyEvent->keyCode) {
-          nsEventStateManager *esm = aPresContext->EventStateManager();
-          // :hover:active state
-          esm->SetContentState(mContent, NS_EVENT_STATE_HOVER);
-          esm->SetContentState(mContent, NS_EVENT_STATE_ACTIVE);
-        }
+    case NS_KEY_DOWN: {
+      WidgetKeyboardEvent* keyEvent = aEvent->AsKeyboardEvent();
+      if (!keyEvent) {
+        break;
+      }
+      if (NS_VK_SPACE == keyEvent->keyCode) {
+        nsEventStateManager* esm = aPresContext->EventStateManager();
+        // :hover:active state
+        esm->SetContentState(mContent, NS_EVENT_STATE_HOVER);
+        esm->SetContentState(mContent, NS_EVENT_STATE_ACTIVE);
       }
       break;
+    }
 
-// On mac, Return fires the defualt button, not the focused one.
+// On mac, Return fires the default button, not the focused one.
 #ifndef XP_MACOSX
-    case NS_KEY_PRESS:
-      if (NS_KEY_EVENT == aEvent->eventStructType) {
-        WidgetKeyboardEvent* keyEvent =
-          static_cast<WidgetKeyboardEvent*>(aEvent);
-        if (NS_VK_RETURN == keyEvent->keyCode) {
-          nsCOMPtr<nsIDOMXULButtonElement> buttonEl(do_QueryInterface(mContent));
-          if (buttonEl) {
-            MouseClicked(aPresContext, aEvent);
-            *aEventStatus = nsEventStatus_eConsumeNoDefault;
-          }
+    case NS_KEY_PRESS: {
+      WidgetKeyboardEvent* keyEvent = aEvent->AsKeyboardEvent();
+      if (!keyEvent) {
+        break;
+      }
+      if (NS_VK_RETURN == keyEvent->keyCode) {
+        nsCOMPtr<nsIDOMXULButtonElement> buttonEl(do_QueryInterface(mContent));
+        if (buttonEl) {
+          MouseClicked(aPresContext, aEvent);
+          *aEventStatus = nsEventStatus_eConsumeNoDefault;
         }
       }
       break;
+    }
 #endif
 
-    case NS_KEY_UP:
-      if (NS_KEY_EVENT == aEvent->eventStructType) {
-        WidgetKeyboardEvent* keyEvent =
-          static_cast<WidgetKeyboardEvent*>(aEvent);
-        if (NS_VK_SPACE == keyEvent->keyCode) {
-          // only activate on keyup if we're already in the :hover:active state
-          NS_ASSERTION(mContent->IsElement(), "How do we have a non-element?");
-          nsEventStates buttonState = mContent->AsElement()->State();
-          if (buttonState.HasAllStates(NS_EVENT_STATE_ACTIVE |
-                                       NS_EVENT_STATE_HOVER)) {
-            // return to normal state
-            nsEventStateManager *esm = aPresContext->EventStateManager();
-            esm->SetContentState(nullptr, NS_EVENT_STATE_ACTIVE);
-            esm->SetContentState(nullptr, NS_EVENT_STATE_HOVER);
-            MouseClicked(aPresContext, aEvent);
-          }
+    case NS_KEY_UP: {
+      WidgetKeyboardEvent* keyEvent = aEvent->AsKeyboardEvent();
+      if (!keyEvent) {
+        break;
+      }
+      if (NS_VK_SPACE == keyEvent->keyCode) {
+        // only activate on keyup if we're already in the :hover:active state
+        NS_ASSERTION(mContent->IsElement(), "How do we have a non-element?");
+        nsEventStates buttonState = mContent->AsElement()->State();
+        if (buttonState.HasAllStates(NS_EVENT_STATE_ACTIVE |
+                                     NS_EVENT_STATE_HOVER)) {
+          // return to normal state
+          nsEventStateManager *esm = aPresContext->EventStateManager();
+          esm->SetContentState(nullptr, NS_EVENT_STATE_ACTIVE);
+          esm->SetContentState(nullptr, NS_EVENT_STATE_HOVER);
+          MouseClicked(aPresContext, aEvent);
         }
       }
       break;
+    }
 
     case NS_MOUSE_CLICK:
       if (aEvent->IsLeftClickEvent()) {
@@ -129,10 +132,11 @@ nsButtonBoxFrame::DoMouseClick(WidgetGUIEvent* aEvent, bool aTrustEvent)
   bool isAlt = false;
   bool isMeta = false;
   if(aEvent) {
-    isShift = static_cast<WidgetInputEvent*>(aEvent)->IsShift();
-    isControl = static_cast<WidgetInputEvent*>(aEvent)->IsControl();
-    isAlt = static_cast<WidgetInputEvent*>(aEvent)->IsAlt();
-    isMeta = static_cast<WidgetInputEvent*>(aEvent)->IsMeta();
+    WidgetInputEvent* inputEvent = aEvent->AsInputEvent();
+    isShift = inputEvent->IsShift();
+    isControl = inputEvent->IsControl();
+    isAlt = inputEvent->IsAlt();
+    isMeta = inputEvent->IsMeta();
   }
 
   // Have the content handle the event, propagating it according to normal DOM rules.
