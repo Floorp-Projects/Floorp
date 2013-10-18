@@ -4288,6 +4288,8 @@ let TabState = {
       // Collect docShell capabilities asynchronously.
       let disallow = yield Messenger.send(tab, "SessionStore:collectDocShellCapabilities");
 
+      let pageStyle = yield Messenger.send(tab, "SessionStore:collectPageStyle");
+
       // Collect basic tab data, without session history and storage.
       let options = {omitSessionHistory: true,
                      omitSessionStorage: true,
@@ -4306,6 +4308,10 @@ let TabState = {
 
       if (disallow.length > 0) {
         tabData.disallow = disallow.join(",");
+      }
+
+      if (pageStyle) {
+        tabData.pageStyle = pageStyle;
       }
 
       // Save text and scroll data.
