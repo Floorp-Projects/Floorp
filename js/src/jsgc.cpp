@@ -4076,10 +4076,7 @@ EndSweepPhase(JSRuntime *rt, JSGCInvocationKind gckind, bool lastGC)
 namespace {
 
 /* ...while this class is to be used only for garbage collection. */
-class AutoGCSession : AutoTraceSession
-{
-    AutoPauseWorkersForTracing pause;
-
+class AutoGCSession : AutoTraceSession {
   public:
     explicit AutoGCSession(JSRuntime *rt);
     ~AutoGCSession();
@@ -4090,7 +4087,8 @@ class AutoGCSession : AutoTraceSession
 /* Start a new heap session. */
 AutoTraceSession::AutoTraceSession(JSRuntime *rt, js::HeapState heapState)
   : runtime(rt),
-    prevState(rt->heapState)
+    prevState(rt->heapState),
+    pause(rt)
 {
     JS_ASSERT(!rt->noGCOrAllocationCheck);
     JS_ASSERT(!rt->isHeapBusy());
@@ -4105,8 +4103,7 @@ AutoTraceSession::~AutoTraceSession()
 }
 
 AutoGCSession::AutoGCSession(JSRuntime *rt)
-  : AutoTraceSession(rt, MajorCollecting),
-    pause(rt)
+  : AutoTraceSession(rt, MajorCollecting)
 {
     runtime->gcIsNeeded = false;
     runtime->gcInterFrameGC = true;
@@ -4791,7 +4788,6 @@ AutoFinishGC::AutoFinishGC(JSRuntime *rt)
 
 AutoPrepareForTracing::AutoPrepareForTracing(JSRuntime *rt)
   : finish(rt),
-    pause(rt),
     session(rt),
     copy(rt)
 {

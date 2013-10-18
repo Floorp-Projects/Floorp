@@ -927,8 +927,7 @@ WorkerThread::threadLoop()
     }
 }
 
-AutoPauseWorkersForTracing::AutoPauseWorkersForTracing(JSRuntime *rt
-                                                       MOZ_GUARD_OBJECT_NOTIFIER_PARAM_IN_IMPL)
+AutoPauseWorkersForGC::AutoPauseWorkersForGC(JSRuntime *rt MOZ_GUARD_OBJECT_NOTIFIER_PARAM_IN_IMPL)
   : runtime(rt), needsUnpause(false), oldExclusiveThreadsPaused(rt->exclusiveThreadsPaused)
 {
     MOZ_GUARD_OBJECT_NOTIFIER_INIT;
@@ -946,7 +945,7 @@ AutoPauseWorkersForTracing::AutoPauseWorkersForTracing(JSRuntime *rt
 
     AutoLockWorkerThreadState lock(state);
 
-    // Tolerate reentrant use of AutoPauseWorkersForTracing.
+    // Tolerate reentrant use of AutoPauseWorkersForGC.
     if (state.shouldPause) {
         JS_ASSERT(state.numPaused == state.numThreads);
         return;
@@ -962,7 +961,7 @@ AutoPauseWorkersForTracing::AutoPauseWorkersForTracing(JSRuntime *rt
     }
 }
 
-AutoPauseWorkersForTracing::~AutoPauseWorkersForTracing()
+AutoPauseWorkersForGC::~AutoPauseWorkersForGC()
 {
     runtime->exclusiveThreadsPaused = oldExclusiveThreadsPaused;
 
@@ -987,7 +986,7 @@ AutoPauseCurrentWorkerThread::AutoPauseCurrentWorkerThread(ExclusiveContext *cx
     // If the current thread is a worker thread, treat it as paused while
     // the caller is waiting for another worker thread to complete. Otherwise
     // we will not wake up and mark this as paused due to the loop in
-    // AutoPauseWorkersForTracing.
+    // AutoPauseWorkersForGC.
     if (cx->workerThread()) {
         WorkerThreadState &state = *cx->workerThreadState();
         JS_ASSERT(state.isLocked());
@@ -1087,13 +1086,12 @@ ScriptSource::getOffThreadCompressionChars(ExclusiveContext *cx)
     return nullptr;
 }
 
-AutoPauseWorkersForTracing::AutoPauseWorkersForTracing(JSRuntime *rt
-                                                       MOZ_GUARD_OBJECT_NOTIFIER_PARAM_IN_IMPL)
+AutoPauseWorkersForGC::AutoPauseWorkersForGC(JSRuntime *rt MOZ_GUARD_OBJECT_NOTIFIER_PARAM_IN_IMPL)
 {
     MOZ_GUARD_OBJECT_NOTIFIER_INIT;
 }
 
-AutoPauseWorkersForTracing::~AutoPauseWorkersForTracing()
+AutoPauseWorkersForGC::~AutoPauseWorkersForGC()
 {
 }
 
