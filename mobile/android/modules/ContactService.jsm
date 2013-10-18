@@ -64,7 +64,15 @@ let ContactService = {
       debug("observe: subject: " + aSubject + " topic: " + aTopic + " data: " + aData);
     }
 
-    let message = JSON.parse(aData);
+    let message = JSON.parse(aData, function date_reviver(k, v) {
+      // The Java service sends dates as strings, so convert them to Dates before
+      // sending them back to the child.
+      if (v != null && v != "null" &&
+          ["updated", "published", "anniversary", "bday"].indexOf(k) != -1) {
+        return new Date(v);
+      }
+      return v;
+    });
     let requestID = message.requestID;
 
     // The return message topic is the same as the current topic, but without the "Android:" prefix

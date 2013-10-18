@@ -10,7 +10,6 @@
 #include "nsDOMUIEvent.h"
 #include "mozilla/EventForwards.h"
 #include "mozilla/dom/KeyboardEventBinding.h"
-#include "mozilla/TextEvents.h"
 
 class nsDOMKeyboardEvent : public nsDOMUIEvent,
                            public nsIDOMKeyEvent
@@ -19,7 +18,6 @@ public:
   nsDOMKeyboardEvent(mozilla::dom::EventTarget* aOwner,
                      nsPresContext* aPresContext,
                      mozilla::WidgetKeyboardEvent* aEvent);
-  virtual ~nsDOMKeyboardEvent();
 
   NS_DECL_ISUPPORTS_INHERITED
 
@@ -35,25 +33,10 @@ public:
     return mozilla::dom::KeyboardEventBinding::Wrap(aCx, aScope, this);
   }
 
-  bool AltKey()
-  {
-    return static_cast<mozilla::WidgetInputEvent*>(mEvent)->IsAlt();
-  }
-
-  bool CtrlKey()
-  {
-    return static_cast<mozilla::WidgetInputEvent*>(mEvent)->IsControl();
-  }
-
-  bool ShiftKey()
-  {
-    return static_cast<mozilla::WidgetInputEvent*>(mEvent)->IsShift();
-  }
-
-  bool MetaKey()
-  {
-    return static_cast<mozilla::WidgetInputEvent*>(mEvent)->IsMeta();
-  }
+  bool AltKey();
+  bool CtrlKey();
+  bool ShiftKey();
+  bool MetaKey();
 
   bool GetModifierState(const nsAString& aKey)
   {
@@ -63,11 +46,7 @@ public:
   uint32_t CharCode();
   uint32_t KeyCode();
   virtual uint32_t Which() MOZ_OVERRIDE;
-
-  uint32_t Location()
-  {
-    return static_cast<mozilla::WidgetKeyboardEvent*>(mEvent)->location;
-  }
+  uint32_t Location();
 
   void InitKeyEvent(const nsAString& aType, bool aCanBubble, bool aCancelable,
                     nsIDOMWindow* aView, bool aCtrlKey, bool aAltKey,

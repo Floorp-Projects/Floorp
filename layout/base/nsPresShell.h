@@ -570,6 +570,11 @@ protected:
     nsDelayedInputEvent()
     : nsDelayedEvent(), mEvent(nullptr) {}
 
+    virtual ~nsDelayedInputEvent()
+    {
+      delete mEvent;
+    }
+
     mozilla::WidgetInputEvent* mEvent;
   };
 
@@ -587,11 +592,6 @@ protected:
       static_cast<mozilla::WidgetMouseEvent*>(mEvent)->
         AssignMouseEventData(*aEvent, false);
     }
-
-    virtual ~nsDelayedMouseEvent()
-    {
-      delete static_cast<mozilla::WidgetMouseEvent*>(mEvent);
-    }
   };
 
   class nsDelayedKeyEvent : public nsDelayedInputEvent
@@ -600,16 +600,12 @@ protected:
     nsDelayedKeyEvent(mozilla::WidgetKeyboardEvent* aEvent) :
       nsDelayedInputEvent()
     {
-      mEvent = new mozilla::WidgetKeyboardEvent(aEvent->mFlags.mIsTrusted,
-                                                aEvent->message,
-                                                aEvent->widget);
-      static_cast<mozilla::WidgetKeyboardEvent*>(mEvent)->
-        AssignKeyEventData(*aEvent, false);
-    }
-
-    virtual ~nsDelayedKeyEvent()
-    {
-      delete static_cast<mozilla::WidgetKeyboardEvent*>(mEvent);
+      mozilla::WidgetKeyboardEvent* keyEvent =
+        new mozilla::WidgetKeyboardEvent(aEvent->mFlags.mIsTrusted,
+                                         aEvent->message,
+                                         aEvent->widget);
+      keyEvent->AssignKeyEventData(*aEvent, false);
+      mEvent = keyEvent;
     }
   };
 

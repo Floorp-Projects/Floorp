@@ -34,12 +34,24 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION_INHERITED(nsDOMXULCommandEvent)
   NS_INTERFACE_MAP_ENTRY(nsIDOMXULCommandEvent)
 NS_INTERFACE_MAP_END_INHERITING(nsDOMUIEvent)
 
+bool
+nsDOMXULCommandEvent::AltKey()
+{
+  return mEvent->AsInputEvent()->IsAlt();
+}
+
 NS_IMETHODIMP
 nsDOMXULCommandEvent::GetAltKey(bool* aIsDown)
 {
   NS_ENSURE_ARG_POINTER(aIsDown);
   *aIsDown = AltKey();
   return NS_OK;
+}
+
+bool
+nsDOMXULCommandEvent::CtrlKey()
+{
+  return mEvent->AsInputEvent()->IsControl();
 }
 
 NS_IMETHODIMP
@@ -50,12 +62,24 @@ nsDOMXULCommandEvent::GetCtrlKey(bool* aIsDown)
   return NS_OK;
 }
 
+bool
+nsDOMXULCommandEvent::ShiftKey()
+{
+  return mEvent->AsInputEvent()->IsShift();
+}
+
 NS_IMETHODIMP
 nsDOMXULCommandEvent::GetShiftKey(bool* aIsDown)
 {
   NS_ENSURE_ARG_POINTER(aIsDown);
   *aIsDown = ShiftKey();
   return NS_OK;
+}
+
+bool
+nsDOMXULCommandEvent::MetaKey()
+{
+  return mEvent->AsInputEvent()->IsMeta();
 }
 
 NS_IMETHODIMP
@@ -87,7 +111,8 @@ nsDOMXULCommandEvent::InitCommandEvent(const nsAString& aType,
                                           aView, aDetail);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  Event()->InitBasicModifiers(aCtrlKey, aAltKey, aShiftKey, aMetaKey);
+  mEvent->AsInputEvent()->InitBasicModifiers(aCtrlKey, aAltKey,
+                                             aShiftKey, aMetaKey);
   mSourceEvent = aSourceEvent;
 
   return NS_OK;

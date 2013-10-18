@@ -7,7 +7,6 @@
 #ifndef nsSOCKSIOLayer_h__
 #define nsSOCKSIOLayer_h__
 
-#include "prtypes.h"
 #include "prio.h"
 #include "nscore.h"
 
