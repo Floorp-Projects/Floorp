@@ -1807,8 +1807,17 @@ RuntimeService::ResumeWorkersForWindow(nsIScriptContext* aCx,
   GetWorkersForWindow(aWindow, workers);
 
   if (!workers.IsEmpty()) {
+    nsCOMPtr<nsIScriptGlobalObject> sgo = do_QueryInterface(aWindow);
+    MOZ_ASSERT(sgo);
+
+    nsIScriptContext* scx = sgo->GetContext();
+
+    AutoPushJSContext cx(scx ?
+                         scx->GetNativeContext() :
+                         nsContentUtils::GetSafeJSContext());
+
     for (uint32_t index = 0; index < workers.Length(); index++) {
-      if (!workers[index]->SynchronizeAndResume(aCx)) {
+      if (!workers[index]->SynchronizeAndResume(cx, aWindow, scx)) {
         NS_WARNING("Failed to cancel worker!");
       }
     }
