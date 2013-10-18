@@ -526,7 +526,7 @@ nsDOMEvent::DuplicatePrivateData()
     }
     case NS_INPUT_EVENT:
     {
-      WidgetInputEvent* oldInputEvent = static_cast<WidgetInputEvent*>(mEvent);
+      WidgetInputEvent* oldInputEvent = mEvent->AsInputEvent();
       WidgetInputEvent* inputEvent = new WidgetInputEvent(false, msg, nullptr);
       inputEvent->AssignInputEventData(*oldInputEvent, true);
       newEvent = inputEvent;

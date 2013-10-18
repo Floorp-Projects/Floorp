@@ -2585,8 +2585,7 @@ nsFrame::HandlePress(nsPresContext* aPresContext,
   //weaaak. only the editor can display frame selection not just text and images
   isEditor = isEditor == nsISelectionDisplay::DISPLAY_ALL;
 
-  WidgetInputEvent* keyEvent = static_cast<WidgetInputEvent*>(aEvent);
-  if (!keyEvent->IsAlt()) {
+  if (!aEvent->AsInputEvent()->IsAlt()) {
     for (nsIContent* content = mContent; content;
          content = content->GetParent()) {
       if (nsContentUtils::ContentIsDraggable(content) &&

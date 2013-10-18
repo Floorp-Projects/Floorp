@@ -122,7 +122,7 @@ nsDOMMouseEvent::InitMouseEvent(const nsAString& aType,
     case NS_WHEEL_EVENT:
     case NS_DRAG_EVENT:
     case NS_SIMPLE_GESTURE_EVENT:
-      static_cast<WidgetInputEvent*>(mEvent)->modifiers = modifiers;
+      mEvent->AsInputEvent()->modifiers = modifiers;
       return NS_OK;
     default:
       MOZ_CRASH("There is no space to store the modifiers");
@@ -354,12 +354,24 @@ nsDOMMouseEvent::ClientY()
                                      mClientPoint).y;
 }
 
+bool
+nsDOMMouseEvent::AltKey()
+{
+  return mEvent->AsInputEvent()->IsAlt();
+}
+
 NS_IMETHODIMP
 nsDOMMouseEvent::GetAltKey(bool* aIsDown)
 {
   NS_ENSURE_ARG_POINTER(aIsDown);
   *aIsDown = AltKey();
   return NS_OK;
+}
+
+bool
+nsDOMMouseEvent::CtrlKey()
+{
+  return mEvent->AsInputEvent()->IsControl();
 }
 
 NS_IMETHODIMP
@@ -370,12 +382,24 @@ nsDOMMouseEvent::GetCtrlKey(bool* aIsDown)
   return NS_OK;
 }
 
+bool
+nsDOMMouseEvent::ShiftKey()
+{
+  return mEvent->AsInputEvent()->IsShift();
+}
+
 NS_IMETHODIMP
 nsDOMMouseEvent::GetShiftKey(bool* aIsDown)
 {
   NS_ENSURE_ARG_POINTER(aIsDown);
   *aIsDown = ShiftKey();
   return NS_OK;
+}
+
+bool
+nsDOMMouseEvent::MetaKey()
+{
+  return mEvent->AsInputEvent()->IsMeta();
 }
 
 NS_IMETHODIMP

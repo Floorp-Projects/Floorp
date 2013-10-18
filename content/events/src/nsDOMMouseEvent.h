@@ -9,7 +9,7 @@
 #include "nsIDOMMouseEvent.h"
 #include "nsDOMUIEvent.h"
 #include "mozilla/dom/MouseEventBinding.h"
-#include "mozilla/BasicEvents.h"
+#include "mozilla/EventForwards.h"
 
 class nsDOMMouseEvent : public nsDOMUIEvent,
                         public nsIDOMMouseEvent
@@ -43,22 +43,10 @@ public:
   int32_t ScreenY();
   int32_t ClientX();
   int32_t ClientY();
-  bool CtrlKey()
-  {
-    return static_cast<mozilla::WidgetInputEvent*>(mEvent)->IsControl();
-  }
-  bool ShiftKey()
-  {
-    return static_cast<mozilla::WidgetInputEvent*>(mEvent)->IsShift();
-  }
-  bool AltKey()
-  {
-    return static_cast<mozilla::WidgetInputEvent*>(mEvent)->IsAlt();
-  }
-  bool MetaKey()
-  {
-    return static_cast<mozilla::WidgetInputEvent*>(mEvent)->IsMeta();
-  }
+  bool CtrlKey();
+  bool ShiftKey();
+  bool AltKey();
+  bool MetaKey();
   uint16_t Button();
   uint16_t Buttons();
   already_AddRefed<mozilla::dom::EventTarget> GetRelatedTarget();
