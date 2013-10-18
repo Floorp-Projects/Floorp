@@ -159,7 +159,7 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsDOMEvent)
           nullptr;
         break;
       case NS_FOCUS_EVENT:
-        static_cast<InternalFocusEvent*>(tmp->mEvent)->relatedTarget = nullptr;
+        tmp->mEvent->AsFocusEvent()->relatedTarget = nullptr;
         break;
       default:
         break;
@@ -204,8 +204,7 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(nsDOMEvent)
         break;
       case NS_FOCUS_EVENT:
         NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(cb, "mEvent->relatedTarget");
-        cb.NoteXPCOMChild(
-          static_cast<InternalFocusEvent*>(tmp->mEvent)->relatedTarget);
+        cb.NoteXPCOMChild(tmp->mEvent->AsFocusEvent()->relatedTarget);
         break;
       default:
         break;
@@ -657,8 +656,7 @@ nsDOMEvent::DuplicatePrivateData()
     case NS_FOCUS_EVENT:
     {
       InternalFocusEvent* newFocusEvent = new InternalFocusEvent(false, msg);
-      InternalFocusEvent* oldFocusEvent =
-        static_cast<InternalFocusEvent*>(mEvent);
+      InternalFocusEvent* oldFocusEvent = mEvent->AsFocusEvent();
       newFocusEvent->AssignFocusEventData(*oldFocusEvent, true);
       newEvent = newFocusEvent;
       break;
