@@ -256,7 +256,6 @@ MediaEngineTabVideoSource::Draw() {
   cairoData.mSurface = surf;
   cairoData.mSize = size;
 
-  ImageFormat cairoFormat = CAIRO_SURFACE;
   nsRefPtr<layers::CairoImage> image = new layers::CairoImage();
 
   image->SetData(cairoData);
