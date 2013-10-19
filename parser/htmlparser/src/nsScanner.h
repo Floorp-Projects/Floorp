@@ -22,7 +22,6 @@
 #include "nsCOMPtr.h"
 #include "nsString.h"
 #include "nsIParser.h"
-#include "prtypes.h"
 #include "nsIUnicodeDecoder.h"
 #include "nsScannerString.h"
 

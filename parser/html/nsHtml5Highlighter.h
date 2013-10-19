@@ -4,7 +4,6 @@
 #ifndef nsHtml5Highlighter_h
 #define nsHtml5Highlighter_h
 
-#include "prtypes.h"
 #include "nsCOMPtr.h"
 #include "nsHtml5TreeOperation.h"
 #include "nsHtml5UTF16Buffer.h"
