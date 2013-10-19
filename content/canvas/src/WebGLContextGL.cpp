@@ -806,14 +806,14 @@ WebGLContext::WhatDoesVertexAttrib0Need()
     // work around Mac OSX crash, see bug 631420
 #ifdef XP_MACOSX
     if (gl->WorkAroundDriverBugs() &&
-        mBoundVertexArray->mAttribBuffers[0].enabled &&
+        mBoundVertexArray->IsAttribArrayEnabled(0) &&
         !mCurrentProgram->IsAttribInUse(0))
     {
         return VertexAttrib0Status::EmulatedUninitializedArray;
     }
 #endif
 
-    return (gl->IsGLES2() || mBoundVertexArray->mAttribBuffers[0].enabled) ? VertexAttrib0Status::Default
+    return (gl->IsGLES2() || mBoundVertexArray->IsAttribArrayEnabled(0)) ? VertexAttrib0Status::Default
          : mCurrentProgram->IsAttribInUse(0)            ? VertexAttrib0Status::EmulatedInitializedArray
                                                         : VertexAttrib0Status::EmulatedUninitializedArray;
 }
@@ -913,13 +913,18 @@ WebGLContext::UndoFakeVertexAttrib0()
     if (whatDoesAttrib0Need == VertexAttrib0Status::Default)
         return;
 
-    gl->fBindBuffer(LOCAL_GL_ARRAY_BUFFER, mBoundVertexArray->mAttribBuffers[0].buf ? mBoundVertexArray->mAttribBuffers[0].buf->GLName() : 0);
-    gl->fVertexAttribPointer(0,
-                             mBoundVertexArray->mAttribBuffers[0].size,
-                             mBoundVertexArray->mAttribBuffers[0].type,
-                             mBoundVertexArray->mAttribBuffers[0].normalized,
-                             mBoundVertexArray->mAttribBuffers[0].stride,
-                             reinterpret_cast<const GLvoid *>(mBoundVertexArray->mAttribBuffers[0].byteOffset));
+    if (mBoundVertexArray->HasAttrib(0) && mBoundVertexArray->mAttribs[0].buf) {
+        const WebGLVertexAttribData& attrib0 = mBoundVertexArray->mAttribs[0];
+        gl->fBindBuffer(LOCAL_GL_ARRAY_BUFFER, attrib0.buf->GLName());
+        gl->fVertexAttribPointer(0,
+                                 attrib0.size,
+                                 attrib0.type,
+                                 attrib0.normalized,
+                                 attrib0.stride,
+                                 reinterpret_cast<const GLvoid *>(attrib0.byteOffset));
+    } else {
+        gl->fBindBuffer(LOCAL_GL_ARRAY_BUFFER, 0);
+    }
 
     gl->fBindBuffer(LOCAL_GL_ARRAY_BUFFER, mBoundArrayBuffer ? mBoundArrayBuffer->GLName() : 0);
 }
@@ -1935,7 +1940,7 @@ WebGLContext::IsTexture(WebGLTexture *tex)
 // Try to bind an attribute that is an array to location 0:
 bool WebGLContext::BindArrayAttribToLocation0(WebGLProgram *program)
 {
-    if (mBoundVertexArray->mAttribBuffers[0].enabled) {
+    if (mBoundVertexArray->IsAttribArrayEnabled(0)) {
         return false;
     }
 
@@ -1946,7 +1951,7 @@ bool WebGLContext::BindArrayAttribToLocation0(WebGLProgram *program)
          itr != program->mActiveAttribMap.end();
          itr++) {
         int32_t index = itr->first;
-        if (mBoundVertexArray->mAttribBuffers[index].enabled &&
+        if (mBoundVertexArray->IsAttribArrayEnabled(index) &&
             index < leastArrayLocation)
         {
             leastArrayLocation = index;
@@ -2288,7 +2293,7 @@ WebGLContext::ReadPixels(GLint x, GLint y, GLsizei width,
         // now, same computation as above to find the size of the intermediate buffer to allocate for the subrect
         // no need to check again for integer overflow here, since we already know the sizes aren't greater than before
         uint32_t subrect_plainRowSize = subrect_width * bytesPerPixel;
-	// There are checks above to ensure that this doesn't overflow.
+    // There are checks above to ensure that this doesn't overflow.
         uint32_t subrect_alignedRowSize = 
             RoundedToNextMultipleOf(subrect_plainRowSize, mPixelStorePackAlignment).value();
         uint32_t subrect_byteLength = (subrect_height-1)*subrect_alignedRowSize + subrect_plainRowSize;

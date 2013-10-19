@@ -383,8 +383,8 @@ WebGLContext::DeleteBuffer(WebGLBuffer *buffer)
     }
 
     for (int32_t i = 0; i < mGLMaxVertexAttribs; i++) {
-        if (mBoundVertexArray->mAttribBuffers[i].buf == buffer)
-            mBoundVertexArray->mAttribBuffers[i].buf = nullptr;
+        if (mBoundVertexArray->HasAttrib(i) && mBoundVertexArray->mAttribs[i].buf == buffer)
+            mBoundVertexArray->mAttribs[i].buf = nullptr;
     }
 
     buffer->RequestDelete();
