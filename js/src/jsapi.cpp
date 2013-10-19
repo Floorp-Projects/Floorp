@@ -261,11 +261,11 @@ JS_ConvertArgumentsVA(JSContext *cx, unsigned argc, jsval *argv, const char *for
                 return false;
             break;
           case 'd':
-            if (!JS_ValueToNumber(cx, *sp, va_arg(ap, double *)))
+            if (!ToNumber(cx, arg, va_arg(ap, double *)))
                 return false;
             break;
           case 'I':
-            if (!JS_ValueToNumber(cx, *sp, &d))
+            if (!ToNumber(cx, arg, &d))
                 return false;
             *va_arg(ap, double *) = ToInteger(d);
             break;
@@ -356,7 +356,7 @@ JS_ConvertValue(JSContext *cx, HandleValue value, JSType type, MutableHandleValu
             vp.setString(str);
         break;
       case JSTYPE_NUMBER:
-        ok = JS_ValueToNumber(cx, value, &d);
+        ok = ToNumber(cx, value, &d);
         if (ok)
             vp.setDouble(d);
         break;
@@ -427,13 +427,6 @@ JS_ValueToSource(JSContext *cx, jsval valueArg)
     CHECK_REQUEST(cx);
     assertSameCompartment(cx, value);
     return ValueToSource(cx, value);
-}
-
-JS_PUBLIC_API(bool)
-JS_ValueToNumber(JSContext *cx, jsval valueArg, double *dp)
-{
-    RootedValue value(cx, valueArg);
-    return JS::ToNumber(cx, value, dp);
 }
 
 JS_PUBLIC_API(bool)

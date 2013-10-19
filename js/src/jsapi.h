@@ -1041,9 +1041,6 @@ JS_ValueToString(JSContext *cx, jsval v);
 extern JS_PUBLIC_API(JSString *)
 JS_ValueToSource(JSContext *cx, jsval v);
 
-extern JS_PUBLIC_API(bool)
-JS_ValueToNumber(JSContext *cx, jsval v, double *dp);
-
 namespace js {
 /*
  * DO NOT CALL THIS.  Use JS::ToNumber

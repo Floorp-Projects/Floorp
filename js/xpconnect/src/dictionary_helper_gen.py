@@ -302,10 +302,10 @@ def write_getter(a, iface, fd):
     elif realtype.count("int64_t"):
         fd.write("    NS_ENSURE_STATE(JS::ToInt64(aCx, v, &aDict.%s));\n" % a.name)
     elif realtype.count("double"):
-        fd.write("    NS_ENSURE_STATE(JS_ValueToNumber(aCx, v, &aDict.%s));\n" % a.name)
+        fd.write("    NS_ENSURE_STATE(JS::ToNumber(aCx, v, &aDict.%s));\n" % a.name)
     elif realtype.count("float"):
         fd.write("    double d;\n")
-        fd.write("    NS_ENSURE_STATE(JS_ValueToNumber(aCx, v, &d));")
+        fd.write("    NS_ENSURE_STATE(JS::ToNumber(aCx, v, &d));")
         fd.write("    aDict.%s = (float) d;\n" % a.name)
     elif realtype.count("nsAString"):
         if a.nullable:
