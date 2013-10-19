@@ -155,6 +155,26 @@ var steps = [
     );
   },
   function() {
+    ok(true, "== TEST == Install certified app");
+    let appId = "test-certified-id";
+    let url = SimpleTest.getTestFileURL("data/app-certified.zip");
+    installTestApp(url, appId,
+      function (aResponse, aApp) {
+        ok(true, "Installed");
+        is(aResponse.appId, appId, "Got same app id");
+        if ("error" in aResponse) {
+          ok(false, "Error: " + aResponse.error);
+        }
+        if ("message" in aResponse) {
+          ok(false, "Error message: " + aResponse.message);
+        }
+        ok(!("error" in aResponse), "app installed without any error");
+        is(aApp.manifest.name, "Certified app", "app name is correct");
+        next();
+      }
+    );
+  },
+  function() {
     ok(true, "all done!\n");
     mm.sendAsyncMessage("cleanup");
     SpecialPowers.popPrefEnv(finish);
