@@ -14,7 +14,6 @@
     </resources>
     <implementation implements="nsIAccessibleProvider">
       <field name="_initialChildCount">0</field>
-      <field name="overflowedDuringConstruction">null</field>
 
       <property name="accessibleType" readonly="true">
         <getter>
@@ -23,10 +22,6 @@
       </property>
 
       <constructor><![CDATA[
-          // Add an early overflow event listener that will mark if the
-          // toolbar overflowed during construction.
-          this.addEventListener("overflow", this);
-
           // Stash the initial child count so that later, after overlays are
           // loaded, we can report to CustomizableUI's registerToolbar function
           // whether or not we've been overlayed by comparing child counts.
@@ -69,19 +64,6 @@
           // when the constructor fired, then we were overlayed.
           let isOverlayed = this._initialChildCount != this.childElementCount;
           CustomizableUI.registerToolbar(this, isOverlayed);
-        ]]></body>
-      </method>
-
-      <method name="handleEvent">
-        <parameter name="aEvent"/>
-        <body><![CDATA[
-          if (aEvent.type == "overflow" && aEvent.detail > 0) {
-            if (this.overflowable && this.overflowable.initialized) {
-              this.overflowable.onOverflow(aEvent);
-            } else {
-              this.overflowedDuringConstruction = aEvent;
-            }
-          }
         ]]></body>
       </method>
 
