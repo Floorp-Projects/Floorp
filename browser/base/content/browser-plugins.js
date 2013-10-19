@@ -804,6 +804,10 @@ var gPluginHandler = {
       // so the pluginHost.getPermissionStringForType call is protected
       if (gPluginHandler.canActivatePlugin(plugin) &&
           aPluginInfo.permissionString == pluginHost.getPermissionStringForType(plugin.actualType)) {
+        let overlay = this.getPluginUI(plugin, "main");
+        if (overlay) {
+          overlay.removeEventListener("click", gPluginHandler._overlayClickListener, true);
+        }
         plugin.playPlugin();
       }
     }
