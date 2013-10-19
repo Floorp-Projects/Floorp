@@ -39,7 +39,6 @@
 #include "nsRect.h"                     // for nsIntRect
 #include "nsServiceManagerUtils.h"      // for do_GetService
 #include "nsString.h"                   // for nsString, nsAutoCString, etc
-#include "prtypes.h"                    // for PR_INT32_MAX
 
 #if MOZ_ANDROID_OMTC
 #include "TexturePoolOGL.h"

@@ -6,7 +6,6 @@
 #ifndef GFX_UNISCRIBESHAPER_H
 #define GFX_UNISCRIBESHAPER_H
 
-#include "prtypes.h"
 #include "gfxTypes.h"
 #include "gfxGDIFont.h"
 
