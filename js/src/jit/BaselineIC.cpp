@@ -7454,7 +7454,9 @@ GetTemplateObjectForNative(JSContext *cx, HandleScript script, jsbytecode *pc,
     }
 
     if (native == js::array_concat) {
-        if (args.thisv().isObject() && args.thisv().toObject().is<ArrayObject>()) {
+        if (args.thisv().isObject() && args.thisv().toObject().is<ArrayObject>() &&
+            !args.thisv().toObject().hasSingletonType())
+        {
             res.set(NewDenseEmptyArray(cx, args.thisv().toObject().getProto(), TenuredObject));
             if (!res)
                 return false;
