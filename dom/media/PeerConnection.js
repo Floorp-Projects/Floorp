@@ -891,7 +891,6 @@ RTCError.prototype = {
 // This is a separate object because we don't want to expose it to DOM.
 function PeerConnectionObserver() {
   this._dompc = null;
-  this._guard = new WeakReferent(this);
 }
 PeerConnectionObserver.prototype = {
   classDescription: "PeerConnectionObserver",
@@ -1193,21 +1192,7 @@ PeerConnectionObserver.prototype = {
 
   getSupportedConstraints: function(dict) {
     return dict;
-  },
-
-  get weakReferent() {
-    return this._guard;
   }
-};
-
-// A PeerConnectionObserver member that c++ can do weak references on
-
-function WeakReferent(parent) {
-  this._parent = parent; // prevents parent from going away without us
-}
-WeakReferent.prototype = {
-  QueryInterface: XPCOMUtils.generateQI([Ci.nsISupports,
-                                         Ci.nsISupportsWeakReference]),
 };
 
 this.NSGetFactory = XPCOMUtils.generateNSGetFactory(
