@@ -22,7 +22,6 @@
 #ifndef rdfutil_h__
 #define rdfutil_h__
 
-#include "prtypes.h"
 
 class nsACString;
 class nsCString;
