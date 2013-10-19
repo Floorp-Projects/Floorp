@@ -44,10 +44,8 @@
 
 #if defined(MOZ_B2G_BT)
 # if defined(MOZ_BLUETOOTH_GONK)
-#ifdef MOZ_B2G_BT_BLUEZ
+#ifndef MOZ_B2G_BT_BLUEDROID
 #include "BluetoothGonkService.h"
-#else
-#include "BluetoothServiceBluedroid.h"
 #endif
 # elif defined(MOZ_BLUETOOTH_DBUS)
 #  include "BluetoothDBusService.h"
@@ -308,9 +306,7 @@ BluetoothService::Create()
 #endif
 
 #if defined(MOZ_BLUETOOTH_GONK)
-#ifdef MOZ_B2G_BT_BLUEDROID
-  return new BluetoothServiceBluedroid();
-#else
+#ifndef MOZ_B2G_BT_BLUEDROID
   return new BluetoothGonkService();
 #endif
 #elif defined(MOZ_BLUETOOTH_DBUS)
