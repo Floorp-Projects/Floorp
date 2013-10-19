@@ -86,10 +86,10 @@ ia2Accessible::get_relation(long aRelationIndex,
 
   long relIdx = 0;
   for (unsigned int idx = 0; idx < ArrayLength(sRelationTypesForIA2); idx++) {
-    uint32_t relType = sRelationTypesForIA2[idx];
-    Relation rel = acc->RelationByType(relType);
+    RelationType relationType = sRelationTypesForIA2[idx];
+    Relation rel = acc->RelationByType(relationType);
     nsRefPtr<ia2AccessibleRelation> ia2Relation =
-      new ia2AccessibleRelation(relType, &rel);
+      new ia2AccessibleRelation(relationType, &rel);
     if (ia2Relation->HasTargets()) {
       if (relIdx == aRelationIndex) {
         ia2Relation.forget(aRelation);
@@ -122,10 +122,10 @@ ia2Accessible::get_relations(long aMaxRelations,
 
   for (unsigned int idx = 0; idx < ArrayLength(sRelationTypesForIA2) &&
        *aNRelations < aMaxRelations; idx++) {
-    uint32_t relType = sRelationTypesForIA2[idx];
-    Relation rel = acc->RelationByType(relType);
+    RelationType relationType = sRelationTypesForIA2[idx];
+    Relation rel = acc->RelationByType(relationType);
     nsRefPtr<ia2AccessibleRelation> ia2Rel =
-      new ia2AccessibleRelation(relType, &rel);
+      new ia2AccessibleRelation(relationType, &rel);
     if (ia2Rel->HasTargets()) {
       ia2Rel.forget(aRelation + (*aNRelations));
       (*aNRelations)++;

@@ -385,7 +385,7 @@ XULGroupboxAccessible::NativeName(nsString& aName)
 {
   // XXX: we use the first related accessible only.
   Accessible* label =
-    RelationByType(nsIAccessibleRelation::RELATION_LABELLED_BY).Next();
+    RelationByType(RelationType::LABELLED_BY).Next();
   if (label)
     return label->Name(aName);
 
@@ -393,10 +393,10 @@ XULGroupboxAccessible::NativeName(nsString& aName)
 }
 
 Relation
-XULGroupboxAccessible::RelationByType(uint32_t aType)
+XULGroupboxAccessible::RelationByType(RelationType aType)
 {
   Relation rel = AccessibleWrap::RelationByType(aType);
-  if (aType != nsIAccessibleRelation::RELATION_LABELLED_BY)
+  if (aType != RelationType::LABELLED_BY)
     return rel;
 
   // The label for xul:groupbox is generated from xul:label that is
@@ -407,8 +407,7 @@ XULGroupboxAccessible::RelationByType(uint32_t aType)
     Accessible* childAcc = GetChildAt(childIdx);
     if (childAcc->Role() == roles::LABEL) {
       // Ensure that it's our label
-      Relation reverseRel =
-        childAcc->RelationByType(nsIAccessibleRelation::RELATION_LABEL_FOR);
+      Relation reverseRel = childAcc->RelationByType(RelationType::LABEL_FOR);
       Accessible* testGroupbox = nullptr;
       while ((testGroupbox = reverseRel.Next()))
         if (testGroupbox == this) {
