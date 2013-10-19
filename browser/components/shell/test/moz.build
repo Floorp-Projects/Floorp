@@ -4,4 +4,9 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-TEST_DIRS += ['tests']
+MODULE = 'test_browser_shell'
+
+XPCSHELL_TESTS_MANIFESTS += ['unit/xpcshell.ini']
+
+BROWSER_CHROME_MANIFESTS += ['browser.ini']
+
