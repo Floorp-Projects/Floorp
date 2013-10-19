@@ -1975,6 +1975,15 @@ void nsCocoaWindow::SetWindowAnimationType(nsIWidget::WindowAnimationType aType)
   mAnimationType = aType;
 }
 
+NS_IMETHODIMP nsCocoaWindow::SetNonClientMargins(nsIntMargin &margins)
+{
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
+
+  SetDrawsInTitlebar(margins.top == 0);
+
+  NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
+}
+
 NS_IMETHODIMP nsCocoaWindow::SetWindowTitlebarColor(nscolor aColor, bool aActive)
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
