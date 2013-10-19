@@ -308,6 +308,7 @@ MOCHITEST_BROWSER_FILES = \
                  page_style_sample.html \
                  plugin_add_dynamically.html \
                  plugin_alternate_content.html \
+                 plugin_big.html \
                  plugin_both.html \
                  plugin_both2.html \
                  plugin_bug744745.html \
@@ -369,6 +370,7 @@ ifdef MOZ_CRASHREPORTER
 MOCHITEST_BROWSER_FILES += \
   browser_pluginCrashCommentAndURL.js \
   pluginCrashCommentAndURL.html \
+  browser_CTP_crashreporting.js \
   $(NULL)
 endif
 
