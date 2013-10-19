@@ -236,8 +236,8 @@ public class MostRecentPage extends HomeFragment {
 
         @Override
         public Cursor swapCursor(Cursor cursor) {
-            Cursor oldCursor = super.swapCursor(cursor);
             loadMostRecentSections(cursor);
+            Cursor oldCursor = super.swapCursor(cursor);
             return oldCursor;
         }
 
@@ -309,12 +309,12 @@ public class MostRecentPage extends HomeFragment {
         }
 
         private void loadMostRecentSections(Cursor c) {
+            // Clear any history sections that may have been loaded before.
+            mMostRecentSections.clear();
+
             if (c == null || !c.moveToFirst()) {
                 return;
             }
-
-            // Clear any history sections that may have been loaded before.
-            mMostRecentSections.clear();
 
             final Date now = new Date();
             now.setHours(0);
@@ -358,5 +358,5 @@ public class MostRecentPage extends HomeFragment {
         public void onLoaderReset(Loader<Cursor> loader) {
             mAdapter.swapCursor(null);
         }
-   }
+    }
 }
