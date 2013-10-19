@@ -766,7 +766,7 @@ WebGLContext::ValidateUniformSetter(const char* name, WebGLUniformLocation *loca
 
 bool WebGLContext::ValidateAttribIndex(GLuint index, const char *info)
 {
-    return mBoundVertexArray->EnsureAttribIndex(index, info);
+    return mBoundVertexArray->EnsureAttrib(index, info);
 }
 
 bool WebGLContext::ValidateStencilParamsForDrawCall()
@@ -998,7 +998,7 @@ WebGLContext::InitAndValidateGL()
     }
 
     mDefaultVertexArray = new WebGLVertexArray(this);
-    mDefaultVertexArray->mAttribBuffers.SetLength(mGLMaxVertexAttribs);
+    mDefaultVertexArray->mAttribs.SetLength(mGLMaxVertexAttribs);
     mBoundVertexArray = mDefaultVertexArray;
 
     return true;
