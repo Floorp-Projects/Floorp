@@ -50,7 +50,7 @@ public:
 
   virtual Accessible* GetChildAt(uint32_t aIndex);
   virtual uint32_t ChildCount() const;
-  virtual Relation RelationByType(uint32_t aType);
+  virtual Relation RelationByType(RelationType aType) MOZ_OVERRIDE;
 
   // SelectAccessible
   virtual already_AddRefed<nsIArray> SelectedItems();
@@ -163,7 +163,7 @@ public:
   virtual uint64_t NativeState();
   virtual uint64_t NativeInteractiveState() const;
   virtual int32_t IndexInParent() const;
-  virtual Relation RelationByType(uint32_t aType);
+  virtual Relation RelationByType(RelationType aType) MOZ_OVERRIDE;
   virtual Accessible* FocusedChild();
 
   // ActionAccessible

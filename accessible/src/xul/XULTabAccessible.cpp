@@ -108,10 +108,10 @@ XULTabAccessible::NativeInteractiveState() const
 
 // nsIAccessible
 Relation
-XULTabAccessible::RelationByType(uint32_t aType)
+XULTabAccessible::RelationByType(RelationType aType)
 {
   Relation rel = AccessibleWrap::RelationByType(aType);
-  if (aType != nsIAccessibleRelation::RELATION_LABEL_FOR)
+  if (aType != RelationType::LABEL_FOR)
     return rel;
 
   // Expose 'LABEL_FOR' relation on tab accessible for tabpanel accessible.
@@ -195,10 +195,10 @@ XULTabpanelAccessible::NativeRole()
 }
 
 Relation
-XULTabpanelAccessible::RelationByType(uint32_t aType)
+XULTabpanelAccessible::RelationByType(RelationType aType)
 {
   Relation rel = AccessibleWrap::RelationByType(aType);
-  if (aType != nsIAccessibleRelation::RELATION_LABELLED_BY)
+  if (aType != RelationType::LABELLED_BY)
     return rel;
 
   // Expose 'LABELLED_BY' relation on tabpanel accessible for tab accessible.
