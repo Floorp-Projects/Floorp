@@ -1419,10 +1419,10 @@ nsDOMClassInfo::GetArrayIndexFromId(JSContext *cx, JS::Handle<jsid> id, bool *aI
   if (JSID_IS_INT(id)) {
       i = JSID_TO_INT(id);
   } else {
-      jsval idval;
+      JS::RootedValue idval(cx);
       double array_index;
-      if (!::JS_IdToValue(cx, id, &idval) ||
-          !::JS_ValueToNumber(cx, idval, &array_index) ||
+      if (!::JS_IdToValue(cx, id, idval.address()) ||
+          !JS::ToNumber(cx, idval, &array_index) ||
           !::JS_DoubleIsInt32(array_index, &i)) {
         return -1;
       }
