@@ -23,6 +23,7 @@
 #include "jit/MIRGraph.h"
 
 #include "vm/ArgumentsObject.h"
+#include "vm/RegExpStatics.h"
 
 #include "jsinferinlines.h"
 #include "jsobjinlines.h"
@@ -8873,7 +8874,31 @@ IonBuilder::jsop_regexp(RegExpObject *reobj)
     if (!prototype)
         return false;
 
-    MRegExp *regexp = MRegExp::New(reobj, prototype);
+    JS_ASSERT(&reobj->JSObject::global() == &script()->global());
+
+    // JS semantics require regular expression literals to create different
+    // objects every time they execute. We only need to do this cloning if the
+    // script could actually observe the effect of such cloning, for instance
+    // by getting or setting properties on it.
+    //
+    // First, make sure the regex is one we can safely optimize. Lowering can
+    // then check if this regex object only flows into known natives and can
+    // avoid cloning in this case.
+
+    bool mustClone = true;
+    types::TypeObjectKey *typeObj = types::TypeObjectKey::get(&script()->global());
+    if (!typeObj->hasFlags(constraints(), types::OBJECT_FLAG_REGEXP_FLAGS_SET)) {
+        RegExpStatics *res = script()->global().getRegExpStatics();
+
+        DebugOnly<uint32_t> origFlags = reobj->getFlags();
+        DebugOnly<uint32_t> staticsFlags = res->getFlags();
+        JS_ASSERT((origFlags & staticsFlags) == staticsFlags);
+
+        if (!reobj->global() && !reobj->sticky())
+            mustClone = false;
+    }
+
+    MRegExp *regexp = MRegExp::New(reobj, prototype, mustClone);
     current->add(regexp);
     current->push(regexp);
 
@@ -8883,6 +8908,7 @@ IonBuilder::jsop_regexp(RegExpObject *reobj)
     // That would be incorrect for global/sticky, because lastIndex could be wrong.
     // Therefore setting the lastIndex to 0. That is faster than removing the movable flag.
     if (reobj->sticky() || reobj->global()) {
+        JS_ASSERT(mustClone);
         MConstant *zero = MConstant::New(Int32Value(0));
         current->add(zero);
 
