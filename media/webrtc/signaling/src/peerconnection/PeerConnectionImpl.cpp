@@ -655,7 +655,7 @@ PeerConnectionImpl::Initialize(PeerConnectionObserver& aObserver,
   MOZ_ASSERT(aThread);
   mThread = do_QueryInterface(aThread);
 
-  mPCObserver.Init(&aObserver);
+  mPCObserver.Set(&aObserver);
 
   // Find the STS thread
 
@@ -1383,12 +1383,6 @@ PeerConnectionImpl::CloseInt()
 {
   PC_AUTO_ENTER_API_CALL_NO_CHECK();
 
-  // Clear raw pointer to observer since PeerConnection.js does not guarantee
-  // the observer's existence past Close().
-  //
-  // Any outstanding runnables hold RefPtr<> references to observer.
-  mPCObserver.Close();
-
   if (mInternal->mCall) {
     CSFLogInfo(logTag, "%s: Closing PeerConnectionImpl %s; "
                "ending call", __FUNCTION__, mHandle.c_str());
@@ -1762,5 +1756,30 @@ PeerConnectionImpl::GetRemoteStreams(nsTArray<nsRefPtr<mozilla::DOMMediaStream >
 #endif
 }
 
+// WeakConcretePtr gets around WeakPtr not working on concrete types by using
+// the attribute getWeakReferent, a member that supports weak refs, as a guard.
+
+void
+PeerConnectionImpl::WeakConcretePtr::Set(PeerConnectionObserver *aObserver) {
+  mObserver = aObserver;
+#ifdef MOZILLA_INTERNAL_API
+  MOZ_ASSERT(NS_IsMainThread());
+  JSErrorResult rv;
+  nsCOMPtr<nsISupports> tmp = aObserver->GetWeakReferent(rv);
+  MOZ_ASSERT(!rv.Failed());
+  mWeakPtr = do_GetWeakReference(tmp);
+#else
+  mWeakPtr = do_GetWeakReference(aObserver);
+#endif
+}
+
+PeerConnectionObserver *
+PeerConnectionImpl::WeakConcretePtr::MayGet() {
+#ifdef MOZILLA_INTERNAL_API
+  MOZ_ASSERT(NS_IsMainThread());
+#endif
+  nsCOMPtr<nsISupports> guard = do_QueryReferent(mWeakPtr);
+  return (!guard) ? nullptr : mObserver;
+}
 
 }  // end sipcc namespace
