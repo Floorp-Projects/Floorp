@@ -65,10 +65,10 @@ HTMLLabelAccessible::NativeName(nsString& aName)
 }
 
 Relation
-HTMLLabelAccessible::RelationByType(uint32_t aType)
+HTMLLabelAccessible::RelationByType(RelationType aType)
 {
   Relation rel = AccessibleWrap::RelationByType(aType);
-  if (aType == nsIAccessibleRelation::RELATION_LABEL_FOR) {
+  if (aType == RelationType::LABEL_FOR) {
     nsRefPtr<dom::HTMLLabelElement> label = dom::HTMLLabelElement::FromContent(mContent);
     rel.AppendTarget(mDoc, label->GetControl());
   }
@@ -89,10 +89,10 @@ HTMLLabelAccessible::NativeRole()
 NS_IMPL_ISUPPORTS_INHERITED0(HTMLOutputAccessible, HyperTextAccessible)
 
 Relation
-HTMLOutputAccessible::RelationByType(uint32_t aType)
+HTMLOutputAccessible::RelationByType(RelationType aType)
 {
   Relation rel = AccessibleWrap::RelationByType(aType);
-  if (aType == nsIAccessibleRelation::RELATION_CONTROLLED_BY)
+  if (aType == RelationType::CONTROLLED_BY)
     rel.AppendIter(new IDRefsIterator(mDoc, mContent, nsGkAtoms::_for));
 
   return rel;
