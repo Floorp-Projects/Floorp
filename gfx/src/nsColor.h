@@ -10,7 +10,6 @@
 #include <stdint.h>                     // for uint8_t, uint32_t
 #include "gfxCore.h"                    // for NS_GFX_
 #include "nscore.h"                     // for nsAString
-#include "prtypes.h"                    // for PR_BEGIN_MACRO, etc
 
 class nsAString;
 class nsString;

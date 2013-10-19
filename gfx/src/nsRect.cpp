@@ -7,7 +7,6 @@
 #include "mozilla/gfx/Types.h"          // for NS_SIDE_BOTTOM, etc
 #include "nsDeviceContext.h"            // for nsDeviceContext
 #include "nsString.h"               // for nsAutoString, etc
-#include "prtypes.h"                    // for PR_STATIC_ASSERT
 #include "nsMargin.h"                   // for nsMargin
 
 // the mozilla::css::Side sequence must match the nsMargin nscoord sequence
