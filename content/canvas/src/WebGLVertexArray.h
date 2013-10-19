@@ -40,7 +40,13 @@ public:
         return Context();
     }
 
-    bool EnsureAttribIndex(WebGLuint index, const char *info);
+    bool EnsureAttrib(GLuint index, const char *info);
+    bool HasAttrib(GLuint index) {
+        return index < mAttribs.Length();
+    }
+    bool IsAttribArrayEnabled(GLuint index) {
+        return HasAttrib(index) && mAttribs[index].enabled;
+    }
 
     virtual JSObject* WrapObject(JSContext *cx,
                                  JS::Handle<JSObject*> scope) MOZ_OVERRIDE;
@@ -51,7 +57,7 @@ public:
     WebGLuint mGLName;
     bool mHasEverBeenBound;
 
-    nsTArray<WebGLVertexAttribData> mAttribBuffers;
+    nsTArray<WebGLVertexAttribData> mAttribs;
     WebGLRefPtr<WebGLBuffer> mBoundElementArrayBuffer;
 
     friend class WebGLContext;

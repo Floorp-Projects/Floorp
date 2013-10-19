@@ -79,9 +79,9 @@ WebGLProgram::UpdateInfo()
         mUniformInfoMap->Init();
         for (size_t i = 0; i < mAttachedShaders.Length(); i++) {
             for (size_t j = 0; j < mAttachedShaders[i]->mUniforms.Length(); j++) {
-	        const WebGLMappedIdentifier& uniform = mAttachedShaders[i]->mUniforms[j];
-	        const WebGLUniformInfo& info = mAttachedShaders[i]->mUniformInfos[j];
-	        mUniformInfoMap->Put(uniform.mapped, info);
+            const WebGLMappedIdentifier& uniform = mAttachedShaders[i]->mUniforms[j];
+            const WebGLUniformInfo& info = mAttachedShaders[i]->mUniformInfos[j];
+            mUniformInfoMap->Put(uniform.mapped, info);
             }
         }
     }
@@ -113,9 +113,9 @@ WebGLContext::ValidateBuffers(uint32_t *maxAllowedCount, const char *info)
     }
 
     uint32_t maxAllowed = UINT32_MAX;
-    uint32_t attribs = mBoundVertexArray->mAttribBuffers.Length();
+    uint32_t attribs = mBoundVertexArray->mAttribs.Length();
     for (uint32_t i = 0; i < attribs; ++i) {
-        const WebGLVertexAttribData& vd = mBoundVertexArray->mAttribBuffers[i];
+        const WebGLVertexAttribData& vd = mBoundVertexArray->mAttribs[i];
 
         // If the attrib array isn't enabled, there's nothing to check;
         // it's a static value.
@@ -860,7 +860,7 @@ WebGLContext::ValidateUniformSetter(const char* name, WebGLUniformLocation *loca
 
 bool WebGLContext::ValidateAttribIndex(WebGLuint index, const char *info)
 {
-    return mBoundVertexArray->EnsureAttribIndex(index, info);
+    return mBoundVertexArray->EnsureAttrib(index, info);
 }
 
 bool WebGLContext::ValidateStencilParamsForDrawCall()
@@ -1095,7 +1095,7 @@ WebGLContext::InitAndValidateGL()
     }
 
     mDefaultVertexArray = new WebGLVertexArray(this);
-    mDefaultVertexArray->mAttribBuffers.SetLength(mGLMaxVertexAttribs);
+    mDefaultVertexArray->mAttribs.SetLength(mGLMaxVertexAttribs);
     mBoundVertexArray = mDefaultVertexArray;
 
     if (IsWebGL2()) {
