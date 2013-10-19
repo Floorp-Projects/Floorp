@@ -9,7 +9,6 @@
 #ifndef nsHtml5NamedCharactersAccel_h
 #define nsHtml5NamedCharactersAccel_h
 
-#include "prtypes.h"
 #include "jArray.h"
 #include "nscore.h"
 #include "nsDebug.h"
