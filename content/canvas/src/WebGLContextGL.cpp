@@ -958,8 +958,8 @@ WebGLContext::DeleteBuffer(WebGLBuffer *buf)
                    static_cast<WebGLBuffer*>(nullptr));
 
     for (int32_t i = 0; i < mGLMaxVertexAttribs; i++) {
-        if (mBoundVertexArray->mAttribBuffers[i].buf == buf)
-            mBoundVertexArray->mAttribBuffers[i].buf = nullptr;
+        if (mBoundVertexArray->HasAttrib(i) && mBoundVertexArray->mAttribs[i].buf == buf)
+            mBoundVertexArray->mAttribs[i].buf = nullptr;
     }
 
     buf->RequestDelete();
@@ -1122,7 +1122,8 @@ WebGLContext::DisableVertexAttribArray(WebGLuint index)
     if (index || gl->IsGLES2())
         gl->fDisableVertexAttribArray(index);
 
-    mBoundVertexArray->mAttribBuffers[index].enabled = false;
+    MOZ_ASSERT(mBoundVertexArray->HasAttrib(index)); // should have been validated earlier
+    mBoundVertexArray->mAttribs[index].enabled = false;
 }
 
 int
@@ -1133,14 +1134,14 @@ WebGLContext::WhatDoesVertexAttrib0Need()
     // work around Mac OSX crash, see bug 631420
 #ifdef XP_MACOSX
     if (gl->WorkAroundDriverBugs() &&
-        mBoundVertexArray->mAttribBuffers[0].enabled &&
+        mBoundVertexArray->IsAttribArrayEnabled(0) &&
         !mCurrentProgram->IsAttribInUse(0))
     {
         return VertexAttrib0Status::EmulatedUninitializedArray;
     }
 #endif
 
-    return (gl->IsGLES2() || mBoundVertexArray->mAttribBuffers[0].enabled) ? VertexAttrib0Status::Default
+    return (gl->IsGLES2() || mBoundVertexArray->IsAttribArrayEnabled(0)) ? VertexAttrib0Status::Default
          : mCurrentProgram->IsAttribInUse(0)            ? VertexAttrib0Status::EmulatedInitializedArray
                                                         : VertexAttrib0Status::EmulatedUninitializedArray;
 }
@@ -1240,13 +1241,18 @@ WebGLContext::UndoFakeVertexAttrib0()
     if (whatDoesAttrib0Need == VertexAttrib0Status::Default)
         return;
 
-    gl->fBindBuffer(LOCAL_GL_ARRAY_BUFFER, mBoundVertexArray->mAttribBuffers[0].buf ? mBoundVertexArray->mAttribBuffers[0].buf->GLName() : 0);
-    gl->fVertexAttribPointer(0,
-                             mBoundVertexArray->mAttribBuffers[0].size,
-                             mBoundVertexArray->mAttribBuffers[0].type,
-                             mBoundVertexArray->mAttribBuffers[0].normalized,
-                             mBoundVertexArray->mAttribBuffers[0].stride,
-                             reinterpret_cast<const GLvoid *>(mBoundVertexArray->mAttribBuffers[0].byteOffset));
+    if (mBoundVertexArray->HasAttrib(0) && mBoundVertexArray->mAttribs[0].buf) {
+        const WebGLVertexAttribData& attrib0 = mBoundVertexArray->mAttribs[0];
+        gl->fBindBuffer(LOCAL_GL_ARRAY_BUFFER, attrib0.buf->GLName());
+        gl->fVertexAttribPointer(0,
+                                 attrib0.size,
+                                 attrib0.type,
+                                 attrib0.normalized,
+                                 attrib0.stride,
+                                 reinterpret_cast<const GLvoid *>(attrib0.byteOffset));
+    } else {
+        gl->fBindBuffer(LOCAL_GL_ARRAY_BUFFER, 0);
+    }
 
     gl->fBindBuffer(LOCAL_GL_ARRAY_BUFFER, mBoundArrayBuffer ? mBoundArrayBuffer->GLName() : 0);
 }
@@ -1400,7 +1406,8 @@ WebGLContext::EnableVertexAttribArray(WebGLuint index)
     InvalidateCachedMinInUseAttribArrayLength();
 
     gl->fEnableVertexAttribArray(index);
-    mBoundVertexArray->mAttribBuffers[index].enabled = true;
+    MOZ_ASSERT(mBoundVertexArray->HasAttrib(index)); // should have been validated earlier
+    mBoundVertexArray->mAttribs[index].enabled = true;
 }
 
 void
@@ -2671,7 +2678,7 @@ WebGLContext::GetVertexAttrib(JSContext* cx, WebGLuint index, WebGLenum pname,
     if (!IsContextStable())
         return JS::NullValue();
 
-    if (!mBoundVertexArray->EnsureAttribIndex(index, "getVertexAttrib"))
+    if (!ValidateAttribIndex(index, "getVertexAttrib"))
         return JS::NullValue();
 
     MakeContextCurrent();
@@ -2679,18 +2686,18 @@ WebGLContext::GetVertexAttrib(JSContext* cx, WebGLuint index, WebGLenum pname,
     switch (pname) {
         case LOCAL_GL_VERTEX_ATTRIB_ARRAY_BUFFER_BINDING:
         {
-            return WebGLObjectAsJSValue(cx, mBoundVertexArray->mAttribBuffers[index].buf.get(), rv);
+            return WebGLObjectAsJSValue(cx, mBoundVertexArray->mAttribs[index].buf.get(), rv);
         }
 
         case LOCAL_GL_VERTEX_ATTRIB_ARRAY_STRIDE:
-            return JS::Int32Value(mBoundVertexArray->mAttribBuffers[index].stride);
+            return JS::Int32Value(mBoundVertexArray->mAttribs[index].stride);
 
         case LOCAL_GL_VERTEX_ATTRIB_ARRAY_SIZE:
         {
             if (!ValidateAttribIndex(index, "enableVertexAttribArray"))
                 return JS::NullValue();
 
-            if (!mBoundVertexArray->mAttribBuffers[index].enabled)
+            if (!mBoundVertexArray->mAttribs[index].enabled)
                 return JS::Int32Value(4);
 
             // Don't break; fall through.
@@ -2725,12 +2732,12 @@ WebGLContext::GetVertexAttrib(JSContext* cx, WebGLuint index, WebGLenum pname,
 
         case LOCAL_GL_VERTEX_ATTRIB_ARRAY_ENABLED:
         {
-            return JS::BooleanValue(mBoundVertexArray->mAttribBuffers[index].enabled);
+            return JS::BooleanValue(mBoundVertexArray->mAttribs[index].enabled);
         }
 
         case LOCAL_GL_VERTEX_ATTRIB_ARRAY_NORMALIZED:
         {
-            return JS::BooleanValue(mBoundVertexArray->mAttribBuffers[index].normalized);
+            return JS::BooleanValue(mBoundVertexArray->mAttribs[index].normalized);
         }
 
         default:
@@ -2754,7 +2761,7 @@ WebGLContext::GetVertexAttribOffset(WebGLuint index, WebGLenum pname)
         return 0;
     }
 
-    return mBoundVertexArray->mAttribBuffers[index].byteOffset;
+    return mBoundVertexArray->mAttribs[index].byteOffset;
 }
 
 void
@@ -3169,7 +3176,7 @@ WebGLContext::ReadPixels(WebGLint x, WebGLint y, WebGLsizei width,
         // now, same computation as above to find the size of the intermediate buffer to allocate for the subrect
         // no need to check again for integer overflow here, since we already know the sizes aren't greater than before
         uint32_t subrect_plainRowSize = subrect_width * bytesPerPixel;
-	// There are checks above to ensure that this doesn't overflow.
+    // There are checks above to ensure that this doesn't overflow.
         uint32_t subrect_alignedRowSize = 
             RoundedToNextMultipleOf(subrect_plainRowSize, mPixelStorePackAlignment).value();
         uint32_t subrect_byteLength = (subrect_height-1)*subrect_alignedRowSize + subrect_plainRowSize;
@@ -4629,7 +4636,7 @@ WebGLContext::VertexAttribPointer(WebGLuint index, WebGLint size, WebGLenum type
     // requiredAlignment should always be a power of two.
     WebGLsizei requiredAlignmentMask = requiredAlignment - 1;
 
-    if ( !mBoundVertexArray->EnsureAttribIndex(index, "vertexAttribPointer") ) {
+    if (!ValidateAttribIndex(index, "vertexAttribPointer")) {
         return;
     }
 
@@ -4660,7 +4667,7 @@ WebGLContext::VertexAttribPointer(WebGLuint index, WebGLint size, WebGLenum type
         return ErrorInvalidOperation("vertexAttribPointer: type must match bound VBO type: %d != %d", type, mBoundArrayBuffer->GLType());
     */
 
-    WebGLVertexAttribData &vd = mBoundVertexArray->mAttribBuffers[index];
+    WebGLVertexAttribData &vd = mBoundVertexArray->mAttribs[index];
 
     vd.buf = mBoundArrayBuffer;
     vd.stride = stride;
