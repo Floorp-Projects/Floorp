@@ -28,9 +28,12 @@ import android.support.v4.app.LoaderManager.LoaderCallbacks;
 import android.support.v4.content.Loader;
 import android.text.TextUtils;
 import android.util.Log;
+import android.util.Pair;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+
+import java.util.List;
 
 /**
  * A page in about:home that displays a ListView of bookmarks.
@@ -49,6 +52,9 @@ public class BookmarksPage extends HomeFragment {
 
     // Adapter for list of bookmarks.
     private BookmarksListAdapter mListAdapter;
+
+    // Adapter's parent stack.
+    private List<Pair<Integer, String>> mSavedParentStack;
 
     // Callback for cursor loaders.
     private CursorLoaderCallbacks mLoaderCallbacks;
@@ -87,7 +93,7 @@ public class BookmarksPage extends HomeFragment {
         final Activity activity = getActivity();
 
         // Setup the list adapter.
-        mListAdapter = new BookmarksListAdapter(activity, null);
+        mListAdapter = new BookmarksListAdapter(activity, null, mSavedParentStack);
         mListAdapter.setOnRefreshFolderListener(new OnRefreshFolderListener() {
             @Override
             public void onRefreshFolder(int folderId) {
@@ -128,6 +134,10 @@ public class BookmarksPage extends HomeFragment {
         // be used between the Activity's onSaveInstanceState() and
         // onResume().
         if (isVisible()) {
+            // The parent stack is saved just so that the folder state can be
+            // restored on rotation.
+            mSavedParentStack = mListAdapter.getParentStack();
+
             getFragmentManager().beginTransaction()
                                 .detach(this)
                                 .attach(this)
