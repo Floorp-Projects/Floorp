@@ -3343,6 +3343,71 @@
     "n_buckets": 50,
     "description": "Time spent to display first page in PDF Viewer (ms)"
   },
+  "SHUMWAY_TIME_TO_VIEW_MS": {
+    "kind": "exponential",
+    "high": "2 * 60 * 1000",
+    "n_buckets": 50,
+    "description": "Time spent to display first frame (ms)"
+  },
+  "SHUMWAY_PARSING_MS": {
+    "kind": "exponential",
+    "high": "2 * 60 * 1000",
+    "n_buckets": 50,
+    "description": "Time spent to parse SWF file (ms)"
+  },
+  "SHUMWAY_SWF_INDEX_ON_PAGE": {
+    "kind": "enumerated",
+    "n_values": 30,
+    "description": "Index of the SWF on the page (0 - full page, 1 - first, 2 - second, etc.)"
+  },
+  "SHUMWAY_SWF_SIZE_KB": {
+    "kind": "exponential",
+    "low": "1",
+    "high": "256 * 1024",
+    "n_buckets": 50,
+    "description": "The SWF file size (KB)"
+  },
+  "SHUMWAY_SWF_VERSION": {
+    "kind": "enumerated",
+    "n_values": 30,
+    "description": "The SWF file version"
+  },
+  "SHUMWAY_SWF_FRAME_RATE": {
+    "kind": "linear",
+    "high": "256",
+    "n_buckets": "50",
+    "description": "The SWF file frame rate"
+  },
+  "SHUMWAY_SWF_AREA": {
+    "kind": "exponential",
+    "low": "256",
+    "high": "16777216",
+    "n_buckets": 50,
+    "description": "The SWF file dimension: amount of pixels (width * height)"
+  },
+  "SHUMWAY_SWF_AVM2": {
+    "kind": "boolean",
+    "description": "The AVM2 is enabled in the SWF file"
+  },
+  "SHUMWAY_SWF_BANNER": {
+    "kind": "enumerated",
+    "n_values": 30,
+    "description": "The well-known banner size"
+  },
+  "SHUMWAY_ERROR": {
+    "kind": "enumerated",
+    "n_values": 3,
+    "description": "The Shumway reported error: 0 - unknown, 1 - AVM1, 2 - AVM2)"
+  },
+  "SHUMWAY_FEATURE_USED": {
+    "kind": "enumerated",
+    "n_values": 700,
+    "description": "The Shumway feature is used during movie execution"
+  },
+  "SHUMWAY_FALLBACK": {
+    "kind": "boolean",
+    "description": "The Shumway was selected to fallback to the Flash (false - by heuristics, true - by user)"
+  },
   "PLUGINS_NOTIFICATION_SHOWN": {
     "kind": "boolean",
     "description": "The number of times the click-to-activate notification was shown: false: shown by in-content activation true: shown by location bar activation"
