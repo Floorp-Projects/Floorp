@@ -12,8 +12,9 @@ const promise = require("sdk/core/promise");
 let {CssLogic} = require("devtools/styleinspector/css-logic");
 let {InplaceEditor, editableField, editableItem} = require("devtools/shared/inplace-editor");
 let {ELEMENT_STYLE, PSEUDO_ELEMENTS} = require("devtools/server/actors/styles");
-let {colorUtils} = require("devtools/css-color");
 let {gDevTools} = Cu.import("resource:///modules/devtools/gDevTools.jsm", {});
+
+const {OutputParser} = require("devtools/output-parser");
 
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
@@ -912,7 +913,7 @@ function TextProperty(aRule, aName, aValue, aPriority)
 {
   this.rule = aRule;
   this.name = aName;
-  this.value = colorUtils.processCSSString(aValue);
+  this.value = aValue;
   this.priority = aPriority;
   this.enabled = true;
   this.updateComputed();
@@ -1047,6 +1048,8 @@ function CssRuleView(aDoc, aStore, aPageStyle)
   this.element.className = "ruleview devtools-monospace";
   this.element.flex = 1;
 
+  this._outputParser = new OutputParser();
+
   this._buildContextMenu = this._buildContextMenu.bind(this);
   this._contextMenuUpdate = this._contextMenuUpdate.bind(this);
   this._onSelectAll = this._onSelectAll.bind(this);
@@ -1168,7 +1171,9 @@ CssRuleView.prototype = {
         text = target.value.substr(start, count);
       } else {
         let win = this.doc.defaultView;
-        text = win.getSelection().toString();
+        let selection = win.getSelection();
+        debugger;
+        text = selection.toString();
 
         // Remove any double newlines.
         text = text.replace(/(\r?\n)\r?\n/g, "$1");
@@ -1213,6 +1218,8 @@ CssRuleView.prototype = {
 
     this.element.removeEventListener("copy", this._onCopy);
     delete this._onCopy;
+
+    delete this._outputParser;
 
     // Remove context menu
     if (this._contextmenu) {
@@ -1939,6 +1946,15 @@ TextPropertyEditor.prototype = {
     if (this.prop.priority) {
       val += " !" + this.prop.priority;
     }
+
+    let store = this.prop.rule.elementStyle.store;
+    let propDirty = store.userProperties.contains(this.prop.rule.style, name);
+    if (propDirty) {
+      this.element.setAttribute("dirty", "");
+    } else {
+      this.element.removeAttribute("dirty");
+    }
+
     // Treat URLs differently than other properties.
     // Allow the user to click a link to the resource and open it.
     let resourceURI = this.getResourceURI();
@@ -1966,15 +1982,13 @@ TextPropertyEditor.prototype = {
 
       appendText(this.valueSpan, val.split(resourceURI)[1]);
     } else {
-      this.valueSpan.textContent = val;
-    }
-
-    let store = this.prop.rule.elementStyle.store;
-    let propDirty = store.userProperties.contains(this.prop.rule.style, name);
-    if (propDirty) {
-      this.element.setAttribute("dirty", "");
-    } else {
-      this.element.removeAttribute("dirty");
+      let outputParser = this.ruleEditor.ruleView._outputParser;
+      let frag = outputParser.parseCssProperty(name, val, {
+        colorSwatchClass: "ruleview-colorswatch",
+        defaultColorType: !propDirty
+      });
+      this.valueSpan.innerHTML = "";
+      this.valueSpan.appendChild(frag);
     }
 
     // Populate the computed styles.
@@ -2021,10 +2035,18 @@ TextPropertyEditor.prototype = {
       });
       appendText(li, ": ");
 
+      let outputParser = this.ruleEditor.ruleView._outputParser;
+      let frag = outputParser.parseCssProperty(
+        computed.name, computed.value, {
+          colorSwatchClass: "ruleview-colorswatch"
+        }
+      );
+
       createChild(li, "span", {
         class: "ruleview-propertyvalue theme-fg-color1",
-        textContent: computed.value
+        child: frag
       });
+
       appendText(li, ";");
     }
 
@@ -2301,6 +2323,8 @@ function createChild(aParent, aTag, aAttributes)
     if (aAttributes.hasOwnProperty(attr)) {
       if (attr === "textContent") {
         elt.textContent = aAttributes[attr];
+      } else if(attr === "child") {
+        elt.appendChild(aAttributes[attr]);
       } else {
         elt.setAttribute(attr, aAttributes[attr]);
       }

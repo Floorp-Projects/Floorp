@@ -10,6 +10,8 @@ _STATIC_FILES = test_sample.xul \
 		test_sanityPluginUtils.html \
 		test_sanityException.xul \
 		test_sanityException2.xul \
+		test_chromeGetTestFile.xul \
+		test-dir/ \
 		$(NULL)
 
 libs:: $(_STATIC_FILES)
