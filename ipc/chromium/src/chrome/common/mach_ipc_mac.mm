@@ -237,12 +237,15 @@ ReceivePort::~ReceivePort() {
 kern_return_t ReceivePort::WaitForMessage(MachReceiveMessage *out_message,
                                           mach_msg_timeout_t timeout) {
   if (!out_message) {
+    printf("WaitForMessage failed because out_message was null\n");
     return KERN_INVALID_ARGUMENT;
   }
 
   // return any error condition encountered in constructor
-  if (init_result_ != KERN_SUCCESS)
+  if (init_result_ != KERN_SUCCESS) {
+    printf("WaitForMessage failed because init_result_ was %d\n", init_result_);
     return init_result_;
+  }
 
   out_message->Head()->msgh_bits = 0;
   out_message->Head()->msgh_local_port = port_;
@@ -258,6 +261,7 @@ kern_return_t ReceivePort::WaitForMessage(MachReceiveMessage *out_message,
                                   timeout,              // timeout in ms
                                   MACH_PORT_NULL);
 
+  printf("WaitForMessage returned %d\n", result);
   return result;
 }
 
