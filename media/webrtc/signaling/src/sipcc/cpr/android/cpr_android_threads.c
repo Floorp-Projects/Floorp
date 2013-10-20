@@ -10,6 +10,7 @@
 #include <unistd.h>
 #include <sys/resource.h>
 #include "thread_monitor.h"
+#include "prtypes.h"
 #include "mozilla/Assertions.h"
 
 #define ANDROID_MIN_THREAD_PRIORITY (-20)	/* tbd: check MV linux: current val from Larry port */

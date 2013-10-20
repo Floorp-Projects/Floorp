@@ -8,6 +8,7 @@
 // This is the .cpp file where the globals live
 #define DHW_IMPLEMENT_GLOBALS
 #include <stdio.h>
+#include "prtypes.h"
 #include "prprf.h"
 #include "prlog.h"
 #include "plstr.h"
