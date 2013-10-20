@@ -53,6 +53,9 @@ XPCOMUtils.defineLazyModuleGetter(this, "Sanitizer",
 XPCOMUtils.defineLazyModuleGetter(this, "Prompt",
                                   "resource://gre/modules/Prompt.jsm");
 
+XPCOMUtils.defineLazyModuleGetter(this, "HelperApps",
+                                  "resource://gre/modules/HelperApps.jsm");
+
 XPCOMUtils.defineLazyModuleGetter(this, "FormHistory",
                                   "resource://gre/modules/FormHistory.jsm");
 
@@ -62,7 +65,6 @@ XPCOMUtils.defineLazyServiceGetter(this, "uuidgen",
 
 // Lazily-loaded browser scripts:
 [
-  ["HelperApps", "chrome://browser/content/HelperApps.js"],
   ["SelectHelper", "chrome://browser/content/SelectHelper.js"],
   ["InputWidgetHelper", "chrome://browser/content/InputWidgetHelper.js"],
   ["AboutReader", "chrome://browser/content/aboutReader.js"],
@@ -2873,7 +2875,7 @@ Tab.prototype = {
       this.browser.focus();
       this.browser.docShellIsActive = true;
       Reader.updatePageAction(this);
-      HelperApps.updatePageAction(this.browser.currentURI);
+      ExternalApps.updatePageAction(this.browser.currentURI);
     } else {
       this.browser.setAttribute("type", "content-targetable");
       this.browser.docShellIsActive = false;
@@ -3582,7 +3584,8 @@ Tab.prototype = {
         }
 
         // Show page actions for helper apps.
-        HelperApps.updatePageAction(this.browser.currentURI);
+        if (BrowserApp.selectedTab == this)
+          ExternalApps.updatePageAction(this.browser.currentURI);
 
         if (!Reader.isEnabledForParseOnLoad)
           return;
@@ -7754,7 +7757,60 @@ var ExternalApps = {
   openExternal: function(aElement) {
     let uri = ExternalApps._getMediaLink(aElement);
     HelperApps.openUriInApp(uri);
-  }
+  },
+
+  updatePageAction: function updatePageAction(uri) {
+    let apps = HelperApps.getAppsForUri(uri);
+
+    if (apps.length > 0)
+      this._setUriForPageAction(uri, apps);
+    else
+      this._removePageAction();
+  },
+
+  _setUriForPageAction: function setUriForPageAction(uri, apps) {
+    this._pageActionUri = uri;
+
+    // If the pageaction is already added, simply update the URI to be launched when 'onclick' is triggered.
+    if (this._pageActionId != undefined)
+      return;
+
+    this._pageActionId = NativeWindow.pageactions.add({
+      title: Strings.browser.GetStringFromName("openInApp.pageAction"),
+      icon: "drawable://icon_openinapp",
+      clickCallback: (function() {
+        let callback = function(app) {
+          app.launch(uri);
+        }
+
+        if (apps.length > 1) {
+          // Use the HelperApps prompt here to filter out any Http handlers
+          HelperApps.prompt(apps, {
+            title: Strings.browser.GetStringFromName("openInApp.pageAction"),
+            buttons: [
+              Strings.browser.GetStringFromName("openInApp.ok"),
+              Strings.browser.GetStringFromName("openInApp.cancel")
+            ]
+          }, function(result) {
+            if (result.button != 0)
+              return;
+
+            callback(apps[result.icongrid0]);
+          });
+        } else {
+          callback(apps[0]);
+        }
+      }).bind(this)
+    });
+  },
+
+  _removePageAction: function removePageAction() {
+    if(!this._pageActionId)
+      return;
+
+    NativeWindow.pageactions.remove(this._pageActionId);
+    delete this._pageActionId;
+  },
 };
 
 var Distribution = {
