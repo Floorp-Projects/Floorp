@@ -8,6 +8,7 @@
 #include "cpr_stdlib.h"
 #include "cpr_debug.h"
 #include "cpr_memory.h"
+#include "prtypes.h"
 #include "mozilla/Assertions.h"
 
 #ifndef WIN32_LEAN_AND_MEAN

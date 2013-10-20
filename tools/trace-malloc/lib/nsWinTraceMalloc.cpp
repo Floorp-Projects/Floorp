@@ -7,6 +7,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+#include "prtypes.h"
 #include "prinrval.h"
 #include "prlock.h"
 #include "nscore.h"
