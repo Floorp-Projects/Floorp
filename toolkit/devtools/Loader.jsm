@@ -60,6 +60,7 @@ var BuiltinProvider = {
         "devtools/app-actor-front": "resource://gre/modules/devtools/app-actor-front.js",
         "devtools/styleinspector/css-logic": "resource://gre/modules/devtools/styleinspector/css-logic",
         "devtools/css-color": "resource://gre/modules/devtools/css-color",
+        "devtools/output-parser": "resource://gre/modules/devtools/output-parser",
         "devtools/touch-events": "resource://gre/modules/devtools/touch-events",
         "devtools/client": "resource://gre/modules/devtools/client",
 
