@@ -23,8 +23,8 @@ var TEST_FILES = [
   compareContents  : "ShouldNotBeReplaced\n",
   originalFile     : null,
   compareFile      : null,
-  originalPerms    : 0767,
-  comparePerms     : 0767
+  originalPerms    : 7 * 64 + 6 * 8 + 7, // 0767
+  comparePerms     : 7 * 64 + 6 * 8 + 7 // 0767
 }, {
   description      : "Added by update.manifest (add)",
   fileName         : "precomplete",
@@ -33,8 +33,8 @@ var TEST_FILES = [
   compareContents  : null,
   originalFile     : "data/partial_precomplete",
   compareFile      : "data/complete_precomplete",
-  originalPerms    : 0666,
-  comparePerms     : 0644
+  originalPerms    : 6 * 64 + 6 * 8 + 6, // 0666
+  comparePerms     : 6 * 64 + 4 * 8 + 4 // 0644
 }, {
   description      : "Added by update.manifest (add)",
   fileName         : "searchpluginstext0",
@@ -43,8 +43,8 @@ var TEST_FILES = [
   compareContents  : "FromComplete\n",
   originalFile     : null,
   compareFile      : null,
-  originalPerms    : 0775,
-  comparePerms     : 0644
+  originalPerms    : 7 * 64 + 7 * 8 + 5, // 0775
+  comparePerms     : 6 * 64 + 4 * 8 + 4 // 0644
 }, {
   description      : "Added by update.manifest (add)",
   fileName         : "searchpluginspng1.png",
@@ -54,7 +54,7 @@ var TEST_FILES = [
   originalFile     : null,
   compareFile      : "data/complete.png",
   originalPerms    : null,
-  comparePerms     : 0644
+  comparePerms     : 6 * 64 + 4 * 8 + 4 // 0644
 }, {
   description      : "Added by update.manifest (add)",
   fileName         : "searchpluginspng0.png",
@@ -63,8 +63,8 @@ var TEST_FILES = [
   compareContents  : null,
   originalFile     : "data/partial.png",
   compareFile      : "data/complete.png",
-  originalPerms    : 0666,
-  comparePerms     : 0644
+  originalPerms    : 6 * 64 + 6 * 8 + 6, // 0666
+  comparePerms     : 6 * 64 + 4 * 8 + 4 // 0644
 }, {
   description      : "Added by update.manifest (add)",
   fileName         : "removed-files",
@@ -73,8 +73,8 @@ var TEST_FILES = [
   compareContents  : null,
   originalFile     : "data/partial_removed-files",
   compareFile      : "data/complete_removed-files",
-  originalPerms    : 0666,
-  comparePerms     : 0644
+  originalPerms    : 6 * 64 + 6 * 8 + 6, // 0666
+  comparePerms     : 6 * 64 + 4 * 8 + 4 // 0644
 }, {
   description      : "Added by update.manifest if the parent directory " +
                      "exists (add-if)",
@@ -85,7 +85,7 @@ var TEST_FILES = [
   originalFile     : null,
   compareFile      : null,
   originalPerms    : null,
-  comparePerms     : 0644
+  comparePerms     : 6 * 64 + 4 * 8 + 4 // 0644
 }, {
   description      : "Added by update.manifest if the parent directory " +
                      "exists (add-if)",
@@ -95,8 +95,8 @@ var TEST_FILES = [
   compareContents  : null,
   originalFile     : "data/partial.png",
   compareFile      : "data/complete.png",
-  originalPerms    : 0666,
-  comparePerms     : 0644
+  originalPerms    : 6 * 64 + 6 * 8 + 6, // 0666
+  comparePerms     : 6 * 64 + 4 * 8 + 4 // 0644
 }, {
   description      : "Added by update.manifest if the parent directory " +
                      "exists (add-if)",
@@ -107,7 +107,7 @@ var TEST_FILES = [
   originalFile     : null,
   compareFile      : "data/complete.png",
   originalPerms    : null,
-  comparePerms     : 0644
+  comparePerms     : 6 * 64 + 4 * 8 + 4 // 0644
 }, {
   description      : "Added by update.manifest if the parent directory " +
                      "exists (add-if)",
@@ -118,7 +118,7 @@ var TEST_FILES = [
   originalFile     : null,
   compareFile      : null,
   originalPerms    : null,
-  comparePerms     : 0644
+  comparePerms     : 6 * 64 + 4 * 8 + 4 // 0644
 }, {
   description      : "Added by update.manifest if the parent directory " +
                      "exists (add-if)",
@@ -129,7 +129,7 @@ var TEST_FILES = [
   originalFile     : null,
   compareFile      : "data/complete.png",
   originalPerms    : null,
-  comparePerms     : 0644
+  comparePerms     : 6 * 64 + 4 * 8 + 4 // 0644
 }, {
   description      : "Added by update.manifest if the parent directory " +
                      "exists (add-if)",
@@ -140,7 +140,7 @@ var TEST_FILES = [
   originalFile     : null,
   compareFile      : "data/complete.png",
   originalPerms    : null,
-  comparePerms     : 0644
+  comparePerms     : 6 * 64 + 4 * 8 + 4 // 0644
 }, {
   description      : "Added by update.manifest (add)",
   fileName         : "exe0.exe",
@@ -149,8 +149,8 @@ var TEST_FILES = [
   compareContents  : null,
   originalFile     : "data/partial.png",
   compareFile      : "data/complete.png",
-  originalPerms    : 0777,
-  comparePerms     : 0755
+  originalPerms    : 7 * 64 + 7 * 8 + 7, // 0777
+  comparePerms     : 7 * 64 + 5 * 8 + 5 // 0755
 }, {
   description      : "Added by update.manifest (add)",
   fileName         : "10text0",
@@ -159,8 +159,8 @@ var TEST_FILES = [
   compareContents  : "FromComplete\n",
   originalFile     : null,
   compareFile      : null,
-  originalPerms    : 0767,
-  comparePerms     : 0644
+  originalPerms    : 7 * 64 + 6 * 8 + 7, // 0767
+  comparePerms     : 6 * 64 + 4 * 8 + 4 // 0644
 }, {
   description      : "Added by update.manifest (add)",
   fileName         : "0exe0.exe",
@@ -169,8 +169,8 @@ var TEST_FILES = [
   compareContents  : null,
   originalFile     : "data/partial.png",
   compareFile      : "data/complete.png",
-  originalPerms    : 0777,
-  comparePerms     : 0755
+  originalPerms    : 7 * 64 + 7 * 8 + 7, // 0777
+  comparePerms     : 7 * 64 + 5 * 8 + 5 // 0755
 }, {
   description      : "Added by update.manifest (add)",
   fileName         : "00text1",
@@ -179,8 +179,8 @@ var TEST_FILES = [
   compareContents  : "FromComplete\n",
   originalFile     : null,
   compareFile      : null,
-  originalPerms    : 0677,
-  comparePerms     : 0644
+  originalPerms    : 6 * 64 + 7 * 8 + 7, // 0677
+  comparePerms     : 6 * 64 + 4 * 8 + 4 // 0644
 }, {
   description      : "Added by update.manifest (add)",
   fileName         : "00text0",
@@ -189,8 +189,8 @@ var TEST_FILES = [
   compareContents  : "FromComplete\n",
   originalFile     : null,
   compareFile      : null,
-  originalPerms    : 0775,
-  comparePerms     : 0644
+  originalPerms    : 7 * 64 + 7 * 8 + 5, // 0775
+  comparePerms     : 6 * 64 + 4 * 8 + 4 // 0644
 }, {
   description      : "Added by update.manifest (add)",
   fileName         : "00png0.png",
@@ -199,8 +199,8 @@ var TEST_FILES = [
   compareContents  : null,
   originalFile     : null,
   compareFile      : "data/complete.png",
-  originalPerms    : 0776,
-  comparePerms     : 0644
+  originalPerms    : 7 * 64 + 7 * 8 + 6, // 0776
+  comparePerms     : 6 * 64 + 4 * 8 + 4 // 0644
 }, {
   description      : "Removed by precomplete (remove)",
   fileName         : "20text0",
@@ -300,8 +300,8 @@ function run_test() {
       compareContents  : "test",
       originalFile     : null,
       compareFile      : null,
-      originalPerms    : 0664,
-      comparePerms     : 0664
+      originalPerms    : 6 * 64 + 6 * 8 + 4, // 0664
+      comparePerms     : 6 * 64 + 6 * 8 + 4 // 0664
     });
   }
 
