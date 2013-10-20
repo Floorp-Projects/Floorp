@@ -96,13 +96,8 @@ XPCOMUtils.defineLazyModuleGetter(this, "devtools",
 XPCOMUtils.defineLazyModuleGetter(this, "DevToolsUtils",
   "resource://gre/modules/devtools/DevToolsUtils.jsm");
 
-Object.defineProperty(this, "DevtoolsHelpers", {
-  get: function() {
-    return devtools.require("devtools/shared/helpers");
-  },
-  configurable: true,
-  enumerable: true
-});
+XPCOMUtils.defineLazyModuleGetter(this, "ShortcutUtils",
+  "resource://gre/modules/ShortcutUtils.jsm");
 
 Object.defineProperty(this, "NetworkHelper", {
   get: function() {
