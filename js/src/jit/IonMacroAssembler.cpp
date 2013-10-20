@@ -860,10 +860,11 @@ MacroAssembler::compareStrings(JSOp op, Register left, Register right, Register 
 
 void
 MacroAssembler::checkInterruptFlagsPar(const Register &tempReg,
-                                       Label *fail)
+                                            Label *fail)
 {
     movePtr(ImmPtr(&GetIonContext()->runtime->interrupt), tempReg);
-    branch32(Assembler::NonZero, Address(tempReg, 0), Imm32(0), fail);
+    load32(Address(tempReg, 0), tempReg);
+    branchTest32(Assembler::NonZero, tempReg, tempReg, fail);
 }
 
 void
