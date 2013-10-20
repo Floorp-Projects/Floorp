@@ -11,6 +11,7 @@
 #include "prio.h"
 #include "plstr.h"
 #include "prlog.h"
+#include "prtypes.h"
 #include "prinrval.h"
 
 #include "mozilla/Mutex.h"
