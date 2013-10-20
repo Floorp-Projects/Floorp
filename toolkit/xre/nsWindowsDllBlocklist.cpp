@@ -19,7 +19,7 @@
 #include "prlog.h"
 
 #include "nsWindowsDllInterceptor.h"
-#include "nsWindowsHelpers.h"
+#include "mozilla/WindowsVersion.h"
 
 using namespace mozilla;
 
@@ -302,16 +302,6 @@ wchar_t* getFullPath (PWCHAR filePath, wchar_t* fname)
   SearchPathW(sanitizedFilePath, fname, L".dll", pathlen + 1, full_fname,
               nullptr);
   return full_fname;
-}
-
-static bool
-IsWin8OrLater()
-{
-  OSVERSIONINFOW osInfo;
-  osInfo.dwOSVersionInfoSize = sizeof(OSVERSIONINFOW);
-  GetVersionExW(&osInfo);
-  return (osInfo.dwMajorVersion > 6) ||
-    (osInfo.dwMajorVersion >= 6 && osInfo.dwMinorVersion >= 2);
 }
 
 static NTSTATUS NTAPI

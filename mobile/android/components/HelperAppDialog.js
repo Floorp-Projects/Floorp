@@ -1,17 +1,17 @@
+// -*- Mode: js2; tab-width: 2; indent-tabs-mode: nil; js2-basic-offset: 2; js2-skip-preprocessor-directives: t; -*-
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-const Cc = Components.classes;
-const Ci = Components.interfaces;
-const Cu = Components.utils;
-const Cr = Components.results;
+const { classes: Cc, interfaces: Ci, utils: Cu, results: Cr } = Components;
 
 const PREF_BD_USEDOWNLOADDIR = "browser.download.useDownloadDir";
 const URI_GENERIC_ICON_DOWNLOAD = "drawable://alert_download";
 
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
+Cu.import("resource://gre/modules/Prompt.jsm");
+Cu.import("resource://gre/modules/HelperApps.jsm");
 
 // -----------------------------------------------------------------------
 // HelperApp Launcher Dialog
@@ -24,9 +24,42 @@ HelperAppLauncherDialog.prototype = {
   QueryInterface: XPCOMUtils.generateQI([Ci.nsIHelperAppLauncherDialog]),
 
   show: function hald_show(aLauncher, aContext, aReason) {
-    // Save everything by default
-    aLauncher.MIMEInfo.preferredAction = Ci.nsIMIMEInfo.useSystemDefault;
-    aLauncher.saveToDisk(null, false);
+    let bundle = Services.strings.createBundle("chrome://browser/locale/browser.properties");
+
+    let defaultHandler = new Object();
+    let apps = HelperApps.getAppsForUri(aLauncher.source, {
+      mimeType: aLauncher.MIMEInfo.MIMEType,
+    });
+
+    // Add a fake intent for save to disk at the top of the list
+    apps.unshift({
+      name: bundle.GetStringFromName("helperapps.saveToDisk"),
+      iconUri: "drawable://icon",
+      launch: function() {
+        // Reset the preferredAction here
+        aLauncher.MIMEInfo.preferredAction = Ci.nsIMIMEInfo.saveToDisk;
+        aLauncher.saveToDisk(null, false);
+        return true;
+      }
+    });
+
+    let app = apps[0];
+    if (apps.length > 1) {
+      app = HelperApps.prompt(apps, {
+        title: bundle.GetStringFromName("helperapps.pick")
+      });
+    }
+
+    if (app) {
+      aLauncher.MIMEInfo.preferredAction = Ci.nsIMIMEInfo.useHelperApp;
+      if (!app.launch(aLauncher.source)) {
+        aLauncher.cancel();
+      }
+    } else {
+      // Something weird happened. Log an error
+      Services.console.logStringMessage("Unexpected selection from grid: " + app);
+    }
+
   },
 
   promptForSaveToFile: function hald_promptForSaveToFile(aLauncher, aContext, aDefaultFile, aSuggestedFileExt, aForcePrompt) {
@@ -63,7 +96,7 @@ HelperAppLauncherDialog.prototype = {
       //   toolkit/content/contentAreaUtils.js.
       // If you are updating this code, update that code too! We can't share code
       // here since this is called in a js component.
-      var collisionCount = 0;
+      let collisionCount = 0;
       while (aLocalFile.exists()) {
         collisionCount++;
         if (collisionCount == 1) {

@@ -283,8 +283,9 @@
          command="removeAllWatchExpressionsCommand"/>
   </keyset>
 
-  <vbox id="body" flex="1">
-    <toolbar class="devtools-toolbar">
+  <vbox id="body" layout="horizontal" flex="1">
+    <toolbar id="debugger-toolbar"
+             class="devtools-toolbar">
       <hbox id="debugger-controls">
         <toolbarbutton id="resume"
                        class="devtools-toolbarbutton"
@@ -315,62 +316,68 @@
                      popup="debuggerPrefsContextMenu"
                      tabindex="0"/>
     </toolbar>
-    <vbox flex="1">
-      <scrollbox id="globalsearch" orient="vertical" hidden="true"/>
-      <splitter class="devtools-horizontal-splitter" hidden="true"/>
-      <hbox flex="1">
-        <vbox id="sources-container">
-          <vbox id="sources-pane" flex="1">
-            <vbox id="sources" flex="1"/>
-          </vbox>
-          <toolbar id="sources-toolbar" class="devtools-toolbar">
-            <toolbarbutton id="pretty-print"
-                           label="{}"
-                           tooltiptext="&debuggerUI.sources.prettyPrint;"
-                           class="devtools-toolbarbutton devtools-monospace"
-                           command="prettyPrintCommand"
-                           hidden="true"/>
-          </toolbar>
+    <scrollbox id="globalsearch" orient="vertical" hidden="true"/>
+    <splitter class="devtools-horizontal-splitter" hidden="true"/>
+    <hbox id="debugger-widgets" flex="1">
+      <vbox id="sources-pane">
+        <vbox id="sources" flex="1"/>
+        <toolbar id="sources-toolbar" class="devtools-toolbar">
+          <toolbarbutton id="pretty-print"
+                         label="{}"
+                         tooltiptext="&debuggerUI.sources.prettyPrint;"
+                         class="devtools-toolbarbutton devtools-monospace"
+                         command="prettyPrintCommand"
+                         hidden="true"/>
+        </toolbar>
+      </vbox>
+      <splitter id="sources-and-editor-splitter"
+                class="devtools-side-splitter"/>
+      <deck id="editor-deck" flex="4">
+        <vbox id="editor"/>
+        <vbox id="black-boxed-message" align="center" pack="center">
+          <label id="black-boxed-message-label">
+            &debuggerUI.blackBoxMessage.label;
+          </label>
+          <button id="black-boxed-message-button"
+                  class="devtools-toolbarbutton"
+                  label="&debuggerUI.blackBoxMessage.unBlackBoxButton;"
+                  image="chrome://browser/skin/devtools/blackBoxMessageEye.png"
+                  command="unBlackBoxCommand"/>
         </vbox>
-        <splitter class="devtools-side-splitter"/>
-        <deck id="editor-deck" flex="1" selectedIndex="0">
-          <vbox id="editor"/>
-          <vbox id="black-boxed-message" align="center">
-            <label id="black-boxed-message-label">
-              &debuggerUI.blackBoxMessage.label;
-            </label>
-            <button id="black-boxed-message-button"
-                    class="devtools-toolbarbutton"
-                    label="&debuggerUI.blackBoxMessage.unBlackBoxButton;"
-                    image="chrome://browser/skin/devtools/blackBoxMessageEye.png"
-                    command="unBlackBoxCommand"/>
-          </vbox>
-          <vbox id="source-progress-container" align="center" pack="center">
-            <progressmeter id="source-progress"
-                           mode="undetermined"/>
-          </vbox>
-        </deck>
-        <splitter class="devtools-side-splitter"/>
-        <tabbox id="instruments-pane"
-                class="devtools-sidebar-tabs"
-                hidden="true">
-          <tabs>
-            <tab id="variables-tab" label="&debuggerUI.tabs.variables;"/>
-            <tab id="events-tab" label="&debuggerUI.tabs.events;"/>
-          </tabs>
-          <tabpanels flex="1">
-            <tabpanel id="variables-tabpanel">
-              <vbox id="expressions"/>
-              <splitter class="devtools-horizontal-splitter"/>
-              <vbox id="variables" flex="1"/>
-            </tabpanel>
-            <tabpanel id="events-tabpanel">
-              <vbox id="event-listeners" flex="1"/>
-            </tabpanel>
-          </tabpanels>
-        </tabbox>
+        <vbox id="source-progress-container" align="center" pack="center">
+          <progressmeter id="source-progress"
+                         mode="undetermined"/>
+        </vbox>
+      </deck>
+      <splitter id="editor-and-instruments-splitter"
+                class="devtools-side-splitter"/>
+      <tabbox id="instruments-pane"
+              class="devtools-sidebar-tabs"
+              hidden="true">
+        <tabs>
+          <tab id="variables-tab" label="&debuggerUI.tabs.variables;"/>
+          <tab id="events-tab" label="&debuggerUI.tabs.events;"/>
+        </tabs>
+        <tabpanels flex="1">
+          <tabpanel id="variables-tabpanel">
+            <vbox id="expressions"/>
+            <splitter class="devtools-horizontal-splitter"/>
+            <vbox id="variables" flex="1"/>
+          </tabpanel>
+          <tabpanel id="events-tabpanel">
+            <vbox id="event-listeners" flex="1"/>
+          </tabpanel>
+        </tabpanels>
+      </tabbox>
+      <splitter id="vertical-layout-splitter"
+                class="devtools-horizontal-splitter"/>
+      <hbox id="vertical-layout-panes-container">
+        <splitter id="sources-and-instruments-splitter"
+                  class="devtools-side-splitter"/>
+        <!-- The sources-pane and instruments-pane will be moved in this
+             container if the toolbox's host requires it. -->
       </hbox>
-    </vbox>
+    </hbox>
   </vbox>
 
   <panel id="searchbox-help-panel"

@@ -1353,6 +1353,9 @@ struct JSRuntime : public JS::shadow::Runtime,
     /* Call this to accumulate telemetry data. */
     JSAccumulateTelemetryDataCallback telemetryCallback;
 
+    /* AsmJSCache callbacks are runtime-wide. */
+    JS::AsmJSCacheOps asmJSCacheOps;
+
     /*
      * The propertyRemovals counter is incremented for every JSObject::clear,
      * and for each JSObject::remove method call that frees a slot in the given

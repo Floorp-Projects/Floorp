@@ -1131,6 +1131,9 @@ LinearScanAllocator::canCoexist(LiveInterval *a, LiveInterval *b)
 void
 LinearScanAllocator::validateIntervals()
 {
+    if (!js_IonOptions.assertGraphConsistency)
+        return;
+
     for (IntervalIterator i(active.begin()); i != active.end(); i++) {
         JS_ASSERT(i->numRanges() > 0);
         JS_ASSERT(i->covers(current->start()));
@@ -1174,6 +1177,9 @@ LinearScanAllocator::validateIntervals()
 void
 LinearScanAllocator::validateAllocations()
 {
+    if (!js_IonOptions.assertGraphConsistency)
+        return;
+
     for (IntervalIterator i(handled.begin()); i != handled.end(); i++) {
         for (IntervalIterator j(handled.begin()); j != i; j++) {
             JS_ASSERT(*i != *j);

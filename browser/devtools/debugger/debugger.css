@@ -26,3 +26,31 @@
 .devtools-toolbarbutton:not([label]) > .toolbarbutton-text {
   display: none;
 }
+
+/* Horizontal vs. vertical layout */
+
+#body[layout=vertical] #debugger-widgets {
+  -moz-box-orient: vertical;
+}
+
+#body[layout=vertical] #sources-pane {
+  -moz-box-flex: 1;
+}
+
+#body[layout=vertical] #instruments-pane {
+  -moz-box-flex: 2;
+}
+
+#body[layout=vertical] #instruments-pane-toggle {
+  display: none;
+}
+
+#body[layout=vertical] #sources-and-editor-splitter,
+#body[layout=vertical] #editor-and-instruments-splitter {
+  display: none;
+}
+
+#body[layout=horizontal] #vertical-layout-splitter,
+#body[layout=horizontal] #vertical-layout-panes-container {
+  display: none;
+}
