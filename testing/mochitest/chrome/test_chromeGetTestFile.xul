@@ -1,0 +1,55 @@
+<?xml version="1.0"?>
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+<?xml-stylesheet href="chrome://mochikit/content/tests/SimpleTest/test.css"
+                 type="text/css"?>
+<window title="Test chrome harness functions"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+  <script type="application/javascript"
+          src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"/>
+  <script type="application/javascript" src="chrome://mochikit/content/chrome-harness.js"></script>
+  <script type="application/javascript">
+  <![CDATA[
+    let {Promise} = Components.utils.import("resource://gre/modules/commonjs/sdk/core/promise.js");
+    Components.utils.import("resource://gre/modules/osfile.jsm");
+    let decoder = new TextDecoder();
+
+    SimpleTest.waitForExplicitFinish();
+
+    SimpleTest.doesThrow(function () {
+      getTestFilePath("/test_chromeGetTestFile.xul")
+    }, "getTestFilePath rejects absolute paths");
+
+    Promise.all([
+      OS.File.exists(getTestFilePath("test_chromeGetTestFile.xul"))
+        .then(function (exists) {
+          ok(exists, "getTestFilePath consider the path as being relative");
+        }),
+
+      OS.File.exists(getTestFilePath("./test_chromeGetTestFile.xul"))
+        .then(function (exists) {
+          ok(exists, "getTestFilePath also accepts explicit relative path");
+        }),
+
+      OS.File.exists(getTestFilePath("./test_chromeGetTestFileTypo.xul"))
+        .then(function (exists) {
+          ok(!exists, "getTestFilePath do not throw if the file doesn't exists");
+        }),
+
+      OS.File.read(getTestFilePath("test-dir/test-file"))
+        .then(function (array) {
+          is(decoder.decode(array), "foo\n", "getTestFilePath can reach sub-folder files 1/2");
+        }),
+
+      OS.File.read(getTestFilePath("./test-dir/test-file"))
+        .then(function (array) {
+          is(decoder.decode(array), "foo\n", "getTestFilePath can reach sub-folder files 2/2");
+        })
+
+    ]).then(function () {
+      SimpleTest.finish();
+    }, console.error);
+  ]]>
+  </script>
+</window>
