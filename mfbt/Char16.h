@@ -22,7 +22,7 @@
     * typedefs char16_t as an unsigned short. We would like to alias char16_t
     * to Windows's 16-bit wchar_t so we can declare UTF-16 literals as constant
     * expressions (and pass char16_t pointers to Windows APIs). We #define
-    * _CHAR16T here in order to prevent yvals.h to override our char16_t
+    * _CHAR16T here in order to prevent yvals.h from overriding our char16_t
     * typedefs, which we set to wchar_t for C++ code and to unsigned short for
     * C code.
     *

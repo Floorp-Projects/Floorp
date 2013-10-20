@@ -156,6 +156,8 @@ private:
   PRTime                                   mLastProgressUpdate;
   nsCOMPtr<nsIAsyncVerifyRedirectCallback> mRedirectCallback;
   nsCOMPtr<nsIChannel>                     mNewRedirectChannel;
+  nsCString                                mPartialValidator;
+  bool                                     mCacheBust;
 };
 
 nsIncrementalDownload::nsIncrementalDownload()
@@ -172,6 +174,7 @@ nsIncrementalDownload::nsIncrementalDownload()
   , mLastProgressUpdate(0)
   , mRedirectCallback(nullptr)
   , mNewRedirectChannel(nullptr)
+  , mCacheBust(false)  
 {
 }
 
@@ -282,6 +285,17 @@ nsIncrementalDownload::ProcessTimeout()
     rv = http->SetRequestHeader(NS_LITERAL_CSTRING("Range"), range, false);
     if (NS_FAILED(rv))
       return rv;
+
+    if (!mPartialValidator.IsEmpty())
+      http->SetRequestHeader(NS_LITERAL_CSTRING("If-Range"),
+                             mPartialValidator, false);
+
+    if (mCacheBust) {
+      http->SetRequestHeader(NS_LITERAL_CSTRING("Cache-Control"),
+                             NS_LITERAL_CSTRING("no-cache"), false);
+      http->SetRequestHeader(NS_LITERAL_CSTRING("Pragma"),
+                             NS_LITERAL_CSTRING("no-cache"), false);
+    }
   }
 
   rv = channel->AsyncOpen(this, nullptr);
@@ -565,6 +579,65 @@ nsIncrementalDownload::OnStartRequest(nsIRequest *request,
     // We got a partial response, so clear this counter in case the next chunk
     // results in a 200 response.
     mNonPartialCount = 0;
+
+    // confirm that the content-range response header is consistent with
+    // expectations on each 206. If it is not then drop this response and
+    // retry with no-cache set.
+    if (!mCacheBust) {
+      nsAutoCString buf;
+      int64_t startByte = 0;
+      bool confirmedOK = false;
+
+      rv = http->GetResponseHeader(NS_LITERAL_CSTRING("Content-Range"), buf);
+      if (NS_FAILED(rv))
+        return rv; // it isn't a useful 206 without a CONTENT-RANGE of some sort
+
+      // Content-Range: bytes 0-299999/25604694
+      int32_t p = buf.Find("bytes ");
+
+      // first look for the starting point of the content-range
+      // to make sure it is what we expect
+      if (p != -1) {
+        char *endptr = nullptr;
+        const char *s = buf.get() + p + 6;
+        while (*s && *s == ' ')
+          s++;
+        startByte = strtol(s, &endptr, 10);
+
+        if (*s && endptr && (endptr != s) &&
+            (mCurrentSize == startByte)) {
+
+          // ok the starting point is confirmed. We still need to check the
+          // total size of the range for consistency if this isn't
+          // the first chunk
+          if (mTotalSize == int64_t(-1)) {
+            // first chunk
+            confirmedOK = true;
+          } else {
+            int32_t slash = buf.FindChar('/');
+            int64_t rangeSize = 0;
+            if (slash != kNotFound &&
+                (PR_sscanf(buf.get() + slash + 1, "%lld", (int64_t *) &rangeSize) == 1) &&
+                rangeSize == mTotalSize) {
+              confirmedOK = true;
+            }
+          }
+        }
+      }
+
+      if (!confirmedOK) {
+        NS_WARNING("unexpected content-range");
+        mCacheBust = true;
+        mChannel = nullptr;
+        if (++mNonPartialCount > MAX_RETRY_COUNT) {
+          NS_WARNING("unable to fetch a byte range; giving up");
+          return NS_ERROR_FAILURE;
+        }
+        // Increase delay with each failure.
+        StartTimer(mInterval * mNonPartialCount);
+        return NS_ERROR_DOWNLOAD_NOT_PARTIAL;
+      }
+    }
   }
 
   // Do special processing after the first response.
@@ -573,6 +646,11 @@ nsIncrementalDownload::OnStartRequest(nsIRequest *request,
     rv = http->GetURI(getter_AddRefs(mFinalURI));
     if (NS_FAILED(rv))
       return rv;
+    http->GetResponseHeader(NS_LITERAL_CSTRING("Etag"), mPartialValidator);
+    if (StringBeginsWith(mPartialValidator, NS_LITERAL_CSTRING("W/")))
+      mPartialValidator.Truncate(); // don't use weak validators
+    if (mPartialValidator.IsEmpty())
+      http->GetResponseHeader(NS_LITERAL_CSTRING("Last-Modified"), mPartialValidator);
 
     if (code == 206) {
       // OK, read the Content-Range header to determine the total size of this
@@ -776,6 +854,16 @@ nsIncrementalDownload::AsyncOnChannelRedirect(nsIChannel *oldChannel,
   if (!rangeVal.IsEmpty()) {
     rv = newHttpChannel->SetRequestHeader(rangeHdr, rangeVal, false);
     NS_ENSURE_SUCCESS(rv, rv);
+  }
+
+  // A redirection changes the validator
+  mPartialValidator.Truncate();
+
+  if (mCacheBust) {
+    newHttpChannel->SetRequestHeader(NS_LITERAL_CSTRING("Cache-Control"),
+                                     NS_LITERAL_CSTRING("no-cache"), false);
+    newHttpChannel->SetRequestHeader(NS_LITERAL_CSTRING("Pragma"),
+                                     NS_LITERAL_CSTRING("no-cache"), false);
   }
 
   // Prepare to receive callback
