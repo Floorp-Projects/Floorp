@@ -500,20 +500,6 @@ HistoryMenu.prototype = {
   },
 
   /**
-    * Re-open a closed tab and put it to the end of the tab strip.
-    * Used for a middle click.
-    * @param aEvent
-    *        The event when the user clicks the menu item
-    */
-  _undoCloseMiddleClick: function PHM__undoCloseMiddleClick(aEvent) {
-    if (aEvent.button != 1)
-      return;
-
-    undoCloseTab(aEvent.originalTarget.value);
-    gBrowser.moveTabToEnd();
-  },
-
-  /**
    * Populate when the history menu is opened
    */
   populateUndoSubmenu: function PHM_populateUndoSubmenu() {
