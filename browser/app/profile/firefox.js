@@ -96,6 +96,14 @@ pref("app.update.log", false);
 // the failure.
 pref("app.update.backgroundMaxErrors", 10);
 
+// The aus update xml certificate checks for application update are disabled on
+// Windows since the mar signature check which is currently only implemented on
+// Windows is sufficient for preventing us from applying a mar that is not
+// valid.
+#ifdef XP_WIN
+pref("app.update.cert.requireBuiltIn", false);
+pref("app.update.cert.checkAttributes", false);
+#else
 // When |app.update.cert.requireBuiltIn| is true or not specified the
 // final certificate and all certificates the connection is redirected to before
 // the final certificate for the url specified in the |app.update.url|
@@ -143,6 +151,7 @@ pref("app.update.certs.1.commonName", "aus3.mozilla.org");
 
 pref("app.update.certs.2.issuerName", "CN=Thawte SSL CA,O=\"Thawte, Inc.\",C=US");
 pref("app.update.certs.2.commonName", "aus3.mozilla.org");
+#endif
 #endif
 
 // Whether or not app updates are enabled
