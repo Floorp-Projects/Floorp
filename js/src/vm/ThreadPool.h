@@ -15,7 +15,6 @@
 #ifdef JS_THREADSAFE
 # include "prcvar.h"
 # include "prlock.h"
-# include "prtypes.h"
 #endif
 
 #include "js/Vector.h"
