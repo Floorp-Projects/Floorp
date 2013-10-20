@@ -1832,6 +1832,13 @@ class MCall
         replaceOperand(NumNonArgumentOperands + index, def);
     }
 
+    static size_t IndexOfThis() {
+        return NumNonArgumentOperands;
+    }
+    static size_t IndexOfArgument(size_t index) {
+        return NumNonArgumentOperands + index + 1; // +1 to skip |this|.
+    }
+
     // For TI-informed monomorphic callsites.
     JSFunction *getSingleTarget() const {
         return target_;
@@ -4481,10 +4488,12 @@ class MRegExp : public MNullaryInstruction
 {
     CompilerRoot<RegExpObject *> source_;
     CompilerRootObject prototype_;
+    bool mustClone_;
 
-    MRegExp(RegExpObject *source, JSObject *prototype)
+    MRegExp(RegExpObject *source, JSObject *prototype, bool mustClone)
       : source_(source),
-        prototype_(prototype)
+        prototype_(prototype),
+        mustClone_(mustClone)
     {
         setResultType(MIRType_Object);
 
@@ -4495,10 +4504,13 @@ class MRegExp : public MNullaryInstruction
   public:
     INSTRUCTION_HEADER(RegExp)
 
-    static MRegExp *New(RegExpObject *source, JSObject *prototype) {
-        return new MRegExp(source, prototype);
+    static MRegExp *New(RegExpObject *source, JSObject *prototype, bool mustClone) {
+        return new MRegExp(source, prototype, mustClone);
     }
 
+    bool mustClone() const {
+        return mustClone_;
+    }
     RegExpObject *source() const {
         return source_;
     }

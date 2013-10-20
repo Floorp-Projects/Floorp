@@ -29,7 +29,6 @@
  **	%f - float
  **	%g - float
  */
-#include "prtypes.h"
 #include "prio.h"
 #include <stdio.h>
 #include <stdarg.h>
