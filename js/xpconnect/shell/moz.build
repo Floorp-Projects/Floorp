@@ -18,3 +18,12 @@ if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'cocoa':
     CMMSRCS += [
         'xpcshellMacUtils.mm',
     ]
+
+DEFINES['JS_THREADSAFE'] = True
+
+if CONFIG['MOZ_SHARK']:
+    DEFINES['MOZ_SHARK'] = True
+if CONFIG['MOZ_CALLGRIND']:
+    DEFINES['MOZ_CALLGRIND'] = True
+if CONFIG['MOZ_VTUNE']:
+    DEFINES['MOZ_VTUNE'] = True

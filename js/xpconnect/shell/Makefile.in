@@ -36,16 +36,7 @@ ifdef _MSC_VER
 WIN32_EXE_LDFLAGS += -ENTRY:wmainCRTStartup
 endif
 
-DEFINES		+= -DJS_THREADSAFE
-
-ifdef MOZ_SHARK
-DEFINES += -DMOZ_SHARK
-endif
-ifdef MOZ_CALLGRIND
-DEFINES += -DMOZ_CALLGRIND
-endif
 ifdef MOZ_VTUNE
-DEFINES += -DMOZ_VTUNE
 CXXFLAGS += -IC:/Program\ Files/Intel/VTune/Analyzer/Include
 LIBS += C:/Program\ Files/Intel/VTune/Analyzer/Lib/VtuneApi.lib
 endif
