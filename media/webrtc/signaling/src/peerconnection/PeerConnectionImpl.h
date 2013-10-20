@@ -12,6 +12,9 @@
 
 #include "prlock.h"
 #include "mozilla/RefPtr.h"
+#include "nsWeakPtr.h"
+#include "nsIWeakReferenceUtils.h" // for the definition of nsWeakPtr
+#include "IPeerConnection.h"
 #include "sigslot.h"
 #include "nricectx.h"
 #include "nricemediastream.h"
@@ -502,29 +505,19 @@ private:
   mozilla::dom::PCImplIceState mIceState;
 
   nsCOMPtr<nsIThread> mThread;
-  // We hold a raw pointer to PeerConnectionObserver (no WeakRefs to concretes!)
-  // which is an invariant guaranteed to exist between Initialize() and Close().
-  // We explicitly clear it in Close(). We wrap it in a helper, to encourage
-  // testing against nullptr before use. Use in Runnables requires wrapping
-  // access in RefPtr<> since they may execute after close. This is only safe
-  // to use on the main thread
+  // WeakConcretePtr to PeerConnectionObserver. TODO: Remove after bug 928535
   //
+  // This is only safe to use on the main thread
   // TODO: Remove if we ever properly wire PeerConnection for cycle-collection.
-  class WeakReminder
+  class WeakConcretePtr
   {
   public:
-    WeakReminder() : mObserver(nullptr) {}
-    void Init(PeerConnectionObserver *aObserver) {
-      mObserver = aObserver;
-    }
-    void Close() {
-      mObserver = nullptr;
-    }
-    PeerConnectionObserver *MayGet() {
-      return mObserver;
-    }
+    WeakConcretePtr() : mObserver(nullptr) {}
+    void Set(PeerConnectionObserver *aObserver);
+    PeerConnectionObserver *MayGet();
   private:
     PeerConnectionObserver *mObserver;
+    nsWeakPtr mWeakPtr;
   } mPCObserver;
   nsCOMPtr<nsPIDOMWindow> mWindow;
 

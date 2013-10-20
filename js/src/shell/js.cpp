@@ -2834,16 +2834,17 @@ IsBefore(int64_t t1, int64_t t2)
 }
 
 static bool
-Sleep_fn(JSContext *cx, unsigned argc, jsval *vp)
+Sleep_fn(JSContext *cx, unsigned argc, Value *vp)
 {
+    CallArgs args = CallArgsFromVp(argc, vp);
     int64_t t_ticks;
 
-    if (argc == 0) {
+    if (args.length() == 0) {
         t_ticks = 0;
     } else {
         double t_secs;
 
-        if (!JS_ValueToNumber(cx, argc == 0 ? UndefinedValue() : vp[2], &t_secs))
+        if (!ToNumber(cx, args[0], &t_secs))
             return false;
 
         /* NB: The next condition also filter out NaNs. */
@@ -3092,24 +3093,26 @@ SetTimeoutValue(JSContext *cx, double t)
 }
 
 static bool
-Timeout(JSContext *cx, unsigned argc, jsval *vp)
+Timeout(JSContext *cx, unsigned argc, Value *vp)
 {
-    if (argc == 0) {
-        JS_SET_RVAL(cx, vp, JS_NumberValue(gTimeoutInterval));
+    CallArgs args = CallArgsFromVp(argc, vp);
+
+    if (args.length() == 0) {
+        args.rval().setNumber(gTimeoutInterval);
         return true;
     }
 
-    if (argc > 2) {
+    if (args.length() > 2) {
         JS_ReportError(cx, "Wrong number of arguments");
         return false;
     }
 
     double t;
-    if (!JS_ValueToNumber(cx, JS_ARGV(cx, vp)[0], &t))
+    if (!ToNumber(cx, args[0], &t))
         return false;
 
-    if (argc > 1) {
-        RootedValue value(cx, JS_ARGV(cx, vp)[1]);
+    if (args.length() > 1) {
+        RootedValue value(cx, args[1]);
         if (!value.isObject() || !value.toObject().is<JSFunction>()) {
             JS_ReportError(cx, "Second argument must be a timeout function");
             return false;
@@ -3117,7 +3120,7 @@ Timeout(JSContext *cx, unsigned argc, jsval *vp)
         gTimeoutFunc = value;
     }
 
-    JS_SET_RVAL(cx, vp, UndefinedValue());
+    args.rval().setUndefined();
     return SetTimeoutValue(cx, t);
 }
 
@@ -4192,10 +4195,6 @@ static const JSFunctionSpecWithHelp shell_functions[] = {
 "dissrc([fun])",
 "  Disassemble functions with source lines."),
 
-    JS_FN_HELP("dumpHeap", DumpHeap, 0, 0,
-"dumpHeap([fileName[, start[, toFind[, maxDepth[, toIgnore]]]]])",
-"  Interface to JS_DumpHeap with output sent to file."),
-
     JS_FN_HELP("dumpObject", DumpObject, 1, 0,
 "dumpObject()",
 "  Dump an internal representation of an object."),
@@ -4402,6 +4401,12 @@ static const JSFunctionSpecWithHelp fuzzing_unsafe_functions[] = {
 "getSelfHostedValue()",
 "  Get a self-hosted value by its name. Note that these values don't get \n"
 "  cached, so repeatedly getting the same value creates multiple distinct clones."),
+
+#ifdef DEBUG
+    JS_FN_HELP("dumpHeap", DumpHeap, 0, 0,
+"dumpHeap([fileName[, start[, toFind[, maxDepth[, toIgnore]]]]])",
+"  Interface to JS_DumpHeap with output sent to file."),
+#endif
 
     JS_FN_HELP("parent", Parent, 1, 0,
 "parent(obj)",

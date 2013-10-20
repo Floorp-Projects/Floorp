@@ -100,7 +100,6 @@ ImageBridgeParent::RecvUpdateNoSwap(const EditArray& aEdits)
   return success;
 }
 
-
 static void
 ConnectImageBridgeInParentProcess(ImageBridgeParent* aBridge,
                                   Transport* aTransport,
@@ -179,8 +178,6 @@ bool ImageBridgeParent::DeallocPCompositableParent(PCompositableParent* aActor)
   return true;
 }
 
-
-
 MessageLoop * ImageBridgeParent::GetMessageLoop() {
   return mMessageLoop;
 }
@@ -198,7 +195,7 @@ ImageBridgeParent::CloneToplevel(const InfallibleTArray<ProtocolFdMapping>& aFds
                                  mozilla::ipc::ProtocolCloneContext* aCtx)
 {
   for (unsigned int i = 0; i < aFds.Length(); i++) {
-    if (aFds[i].protocolId() == (int)GetProtocolId()) {
+    if (aFds[i].protocolId() == unsigned(GetProtocolId())) {
       Transport* transport = OpenDescriptor(aFds[i].fd(),
                                             Transport::MODE_SERVER);
       PImageBridgeParent* bridge = Create(transport, base::GetProcId(aPeerProcess));

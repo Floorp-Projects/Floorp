@@ -1776,9 +1776,87 @@ LIRGenerator::visitToString(MToString *ins)
     }
 }
 
+static bool
+MustCloneRegExpForCall(MPassArg *arg)
+{
+    // |arg| is a regex literal flowing into a call. Return |false| iff
+    // this is a native call that does not let the regex escape.
+
+    JS_ASSERT(arg->getArgument()->isRegExp());
+
+    for (MUseIterator iter(arg->usesBegin()); iter != arg->usesEnd(); iter++) {
+        MNode *node = iter->consumer();
+        if (!node->isDefinition())
+            return true;
+
+        MDefinition *def = node->toDefinition();
+        if (!def->isCall())
+            return true;
+
+        MCall *call = def->toCall();
+        JSFunction *target = call->getSingleTarget();
+        if (!target || !target->isNative())
+            return true;
+
+        if (iter->index() == MCall::IndexOfThis() &&
+            (target->native() == regexp_exec || target->native() == regexp_test))
+        {
+            continue;
+        }
+
+        if (iter->index() == MCall::IndexOfArgument(0) &&
+            (target->native() == str_split ||
+             target->native() == str_replace ||
+             target->native() == str_match ||
+             target->native() == str_search))
+        {
+            continue;
+        }
+
+        return true;
+    }
+
+    return false;
+}
+
+
+static bool
+MustCloneRegExp(MRegExp *regexp)
+{
+    if (regexp->mustClone())
+        return true;
+
+    // If this regex literal only flows into known natives that don't let
+    // it escape, we don't have to clone it.
+
+    for (MUseIterator iter(regexp->usesBegin()); iter != regexp->usesEnd(); iter++) {
+        MNode *node = iter->consumer();
+        if (!node->isDefinition())
+            return true;
+
+        MDefinition *def = node->toDefinition();
+        if (def->isRegExpTest() && iter->index() == 1) {
+            // Optimized RegExp.prototype.test.
+            JS_ASSERT(def->toRegExpTest()->regexp() == regexp);
+            continue;
+        }
+
+        if (def->isPassArg() && !MustCloneRegExpForCall(def->toPassArg()))
+            continue;
+
+        return true;
+    }
+    return false;
+}
+
 bool
 LIRGenerator::visitRegExp(MRegExp *ins)
 {
+    if (!MustCloneRegExp(ins)) {
+        RegExpObject *source = ins->source();
+        return define(new LPointer(source), ins);
+    }
+
     LRegExp *lir = new LRegExp();
     return defineReturn(lir, ins) && assignSafepoint(lir, ins);
 }
