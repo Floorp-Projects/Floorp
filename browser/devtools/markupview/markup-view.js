@@ -18,6 +18,7 @@ const CONTAINER_FLASHING_DURATION = 500;
 const {UndoStack} = require("devtools/shared/undo");
 const {editableField, InplaceEditor} = require("devtools/shared/inplace-editor");
 const {gDevTools} = Cu.import("resource:///modules/devtools/gDevTools.jsm", {});
+const {OutputParser} = require("devtools/output-parser");
 const promise = require("sdk/core/promise");
 
 Cu.import("resource://gre/modules/devtools/LayoutHelpers.jsm");
@@ -55,6 +56,7 @@ function MarkupView(aInspector, aFrame, aControllerWindow) {
   this._frame = aFrame;
   this.doc = this._frame.contentDocument;
   this._elt = this.doc.querySelector("#root");
+  this._outputParser = new OutputParser();
 
   this.layoutHelpers = new LayoutHelpers(this.doc.defaultView);
 
@@ -785,6 +787,8 @@ MarkupView.prototype = {
 
     this._frame.removeEventListener("focus", this._boundFocus, false);
     delete this._boundFocus;
+
+    delete this._outputParser;
 
     if (this._boundUpdatePreview) {
       this._frame.contentWindow.removeEventListener("scroll",
@@ -1537,18 +1541,88 @@ ElementEditor.prototype = {
 
     this.attrs[aAttr.name] = attr;
 
-    let collapsedValue;
-    if (aAttr.value.match(COLLAPSE_DATA_URL_REGEX)) {
-      collapsedValue = truncateString(aAttr.value, COLLAPSE_DATA_URL_LENGTH);
-    }
-    else {
-      collapsedValue = truncateString(aAttr.value, COLLAPSE_ATTRIBUTE_LENGTH);
-    }
-
     name.textContent = aAttr.name;
-    val.textContent = collapsedValue;
+
+    if (typeof aAttr.value !== "undefined") {
+      let outputParser = this.markup._outputParser;
+      let frag = outputParser.parseHTMLAttribute(aAttr.value);
+      frag = this._truncateFrag(frag);
+      val.appendChild(frag);
+    }
 
     return attr;
+  },
+
+  /**
+   * We truncate HTML attributes to a text length defined by
+   * COLLAPSE_DATA_URL_LENGTH and COLLAPSE_ATTRIBUTE_LENGTH. Because we parse
+   * text into document fragments we need to process each fragment and truncate
+   * according to the fragment's textContent length.
+   *
+   * @param  {DocumentFragment} frag
+   *         The fragment to truncate.
+   * @return {[DocumentFragment]}
+   *         Truncated fragment.
+   */
+  _truncateFrag: function(frag) {
+    let chars = 0;
+    let text = frag.textContent;
+    let maxWidth = text.match(COLLAPSE_DATA_URL_REGEX) ?
+                            COLLAPSE_DATA_URL_LENGTH : COLLAPSE_ATTRIBUTE_LENGTH;
+    let overBy = text.length - maxWidth;
+    let children = frag.childNodes;
+    let croppedNode = null;
+
+    if (overBy <= 0) {
+      return frag;
+    }
+
+    // For fragments containing only one single node we just need to truncate
+    // frag.textContent.
+    if (children.length === 1) {
+      let length = text.length;
+      let start = text.substr(0, maxWidth / 2);
+      let end = text.substr(length - maxWidth / 2, length - 1);
+
+      frag.textContent = start + "…" + end;
+      return frag;
+    }
+
+    // First maxWidth / 2 chars plus &hellip;
+    for (let i = 0; i < children.length; i++) {
+      let node = children[i];
+      let text = node.textContent;
+
+      let numChars = text.length;
+      if (chars + numChars > maxWidth / 2) {
+        node.textContent = text.substr(0, chars + numChars - maxWidth / 2) + "…";
+        croppedNode = node;
+        break;
+      } else {
+        chars += numChars;
+      }
+    }
+
+    // Last maxWidth / two chars.
+    chars = 0;
+    for (let i = children.length - 1; i >= 0; i--) {
+      let node = children[i];
+      let text = node.textContent;
+
+      let numChars = text.length;
+      if (chars + numChars > maxWidth / 2) {
+        if (node !== croppedNode) {
+          node.parentNode.removeChild(node);
+          chars += numChars;
+        } else {
+          break;
+        }
+      } else {
+        chars += numChars;
+      }
+    }
+
+    return frag;
   },
 
   /**
