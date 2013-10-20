@@ -8,7 +8,6 @@
 #include "ia2AccessibleRelation.h"
 
 #include "Relation.h"
-#include "IUnknownImpl.h"
 #include "nsIAccessibleRelation.h"
 #include "nsID.h"
 
@@ -16,8 +15,8 @@
 
 using namespace mozilla::a11y;
 
-ia2AccessibleRelation::ia2AccessibleRelation(uint32_t aType, Relation* aRel) :
-  mType(aType), mReferences(0)
+ia2AccessibleRelation::ia2AccessibleRelation(RelationType aType, Relation* aRel) :
+  mType(aType)
 {
   Accessible* target = nullptr;
   while ((target = aRel->Next()))
@@ -26,39 +25,10 @@ ia2AccessibleRelation::ia2AccessibleRelation(uint32_t aType, Relation* aRel) :
 
 // IUnknown
 
-STDMETHODIMP
-ia2AccessibleRelation::QueryInterface(REFIID iid, void** ppv)
-{
-  if (!ppv)
-    return E_INVALIDARG;
-
-  *ppv = nullptr;
-
-  if (IID_IAccessibleRelation == iid || IID_IUnknown == iid) {
-    *ppv = static_cast<IAccessibleRelation*>(this);
-    (reinterpret_cast<IUnknown*>(*ppv))->AddRef();
-    return S_OK;
-  }
-
-  return E_NOINTERFACE;
-}
-
-ULONG STDMETHODCALLTYPE
-ia2AccessibleRelation::AddRef()
-{
-  return mReferences++;
-}
-
-ULONG STDMETHODCALLTYPE 
-ia2AccessibleRelation::Release()
-{
-  mReferences--;
-  ULONG references = mReferences;
-  if (!mReferences)
-    delete this;
-
-  return references;
-}
+IMPL_IUNKNOWN_QUERY_HEAD(ia2AccessibleRelation)
+  IMPL_IUNKNOWN_QUERY_IFACE(IAccessibleRelation)
+  IMPL_IUNKNOWN_QUERY_IFACE(IUnknown)
+IMPL_IUNKNOWN_QUERY_TAIL
 
 // IAccessibleRelation
 
@@ -73,56 +43,54 @@ ia2AccessibleRelation::get_relationType(BSTR *aRelationType)
   *aRelationType = nullptr;
 
   switch (mType) {
-    case nsIAccessibleRelation::RELATION_CONTROLLED_BY:
+    case RelationType::CONTROLLED_BY:
       *aRelationType = ::SysAllocString(IA2_RELATION_CONTROLLED_BY);
       break;
-    case nsIAccessibleRelation::RELATION_CONTROLLER_FOR:
+    case RelationType::CONTROLLER_FOR:
       *aRelationType = ::SysAllocString(IA2_RELATION_CONTROLLER_FOR);
       break;
-    case nsIAccessibleRelation::RELATION_DESCRIBED_BY:
+    case RelationType::DESCRIBED_BY:
       *aRelationType = ::SysAllocString(IA2_RELATION_DESCRIBED_BY);
       break;
-    case nsIAccessibleRelation::RELATION_DESCRIPTION_FOR:
+    case RelationType::DESCRIPTION_FOR:
       *aRelationType = ::SysAllocString(IA2_RELATION_DESCRIPTION_FOR);
       break;
-    case nsIAccessibleRelation::RELATION_EMBEDDED_BY:
+    case RelationType::EMBEDDED_BY:
       *aRelationType = ::SysAllocString(IA2_RELATION_EMBEDDED_BY);
       break;
-    case nsIAccessibleRelation::RELATION_EMBEDS:
+    case RelationType::EMBEDS:
       *aRelationType = ::SysAllocString(IA2_RELATION_EMBEDS);
       break;
-    case nsIAccessibleRelation::RELATION_FLOWS_FROM:
+    case RelationType::FLOWS_FROM:
       *aRelationType = ::SysAllocString(IA2_RELATION_FLOWS_FROM);
       break;
-    case nsIAccessibleRelation::RELATION_FLOWS_TO:
+    case RelationType::FLOWS_TO:
       *aRelationType = ::SysAllocString(IA2_RELATION_FLOWS_TO);
       break;
-    case nsIAccessibleRelation::RELATION_LABEL_FOR:
+    case RelationType::LABEL_FOR:
       *aRelationType = ::SysAllocString(IA2_RELATION_LABEL_FOR);
       break;
-    case nsIAccessibleRelation::RELATION_LABELLED_BY:
+    case RelationType::LABELLED_BY:
       *aRelationType = ::SysAllocString(IA2_RELATION_LABELED_BY);
       break;
-    case nsIAccessibleRelation::RELATION_MEMBER_OF:
+    case RelationType::MEMBER_OF:
       *aRelationType = ::SysAllocString(IA2_RELATION_MEMBER_OF);
       break;
-    case nsIAccessibleRelation::RELATION_NODE_CHILD_OF:
+    case RelationType::NODE_CHILD_OF:
       *aRelationType = ::SysAllocString(IA2_RELATION_NODE_CHILD_OF);
       break;
-    case nsIAccessibleRelation::RELATION_NODE_PARENT_OF:
+    case RelationType::NODE_PARENT_OF:
       *aRelationType = ::SysAllocString(IA2_RELATION_NODE_PARENT_OF);
       break;
-    case nsIAccessibleRelation::RELATION_PARENT_WINDOW_OF:
+    case RelationType::PARENT_WINDOW_OF:
       *aRelationType = ::SysAllocString(IA2_RELATION_PARENT_WINDOW_OF);
       break;
-    case nsIAccessibleRelation::RELATION_POPUP_FOR:
+    case RelationType::POPUP_FOR:
       *aRelationType = ::SysAllocString(IA2_RELATION_POPUP_FOR);
       break;
-    case nsIAccessibleRelation::RELATION_SUBWINDOW_OF:
+    case RelationType::SUBWINDOW_OF:
       *aRelationType = ::SysAllocString(IA2_RELATION_SUBWINDOW_OF);
       break;
-    default:
-      return E_FAIL;
   }
 
   return *aRelationType ? S_OK : E_OUTOFMEMORY;

@@ -4,7 +4,6 @@
 
 #include "nsXPCOMGlue.h"
 #include "nsINIParser.h"
-#include "prtypes.h"
 #include "nsXPCOMPrivate.h" // for XP MAXPATHLEN
 #include "nsMemory.h" // for NS_ARRAY_LENGTH
 #include "nsXULAppAPI.h"
