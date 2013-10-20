@@ -4487,4 +4487,58 @@ extern JS_PUBLIC_API(JSObject *)
 JS_DecodeInterpretedFunction(JSContext *cx, const void *data, uint32_t length,
                              JSPrincipals *principals, JSPrincipals *originPrincipals);
 
+namespace JS {
+
+/*
+ * This callback represents a request by the JS engine to open for reading the
+ * existing cache entry for the given global. If a cache entry exists, the
+ * callback shall return 'true' and return the size, base address and an opaque
+ * file handle as outparams. If the callback returns 'true', the JS engine
+ * guarantees a call to CloseAsmJSCacheEntryForReadOp, passing the same base
+ * address, size and handle.
+ */
+typedef bool
+(* OpenAsmJSCacheEntryForReadOp)(HandleObject global, size_t *size, const uint8_t **memory,
+                                 intptr_t *handle);
+typedef void
+(* CloseAsmJSCacheEntryForReadOp)(HandleObject global, size_t size, const uint8_t *memory,
+                                  intptr_t handle);
+
+/*
+ * This callback represents a request by the JS engine to open for writing a
+ * cache entry of the given size for the given global. If cache entry space is
+ * available, the callback shall return 'true' and return the base address and
+ * an opaque file handle as outparams. If the callback returns 'true', the JS
+ * engine guarantees a call to CloseAsmJSCacheEntryForWriteOp passing the same
+ * base address, size and handle.
+ */
+typedef bool
+(* OpenAsmJSCacheEntryForWriteOp)(HandleObject global, size_t size, uint8_t **memory,
+                                  intptr_t *handle);
+typedef void
+(* CloseAsmJSCacheEntryForWriteOp)(HandleObject global, size_t size, uint8_t *memory,
+                                   intptr_t handle);
+
+// Return the buildId (represented as a sequence of characters) associated with
+// the currently-executing build. If the JS engine is embedded such that a
+// single cache entry can be observed by different compiled versions of the JS
+// engine, it is critical that the buildId shall change for each new build of
+// the JS engine.
+typedef bool
+(* BuildIdOp)(mozilla::Vector<char> *buildId);
+
+struct AsmJSCacheOps
+{
+    OpenAsmJSCacheEntryForReadOp openEntryForRead;
+    CloseAsmJSCacheEntryForReadOp closeEntryForRead;
+    OpenAsmJSCacheEntryForWriteOp openEntryForWrite;
+    CloseAsmJSCacheEntryForWriteOp closeEntryForWrite;
+    BuildIdOp buildId;
+};
+
+extern JS_PUBLIC_API(void)
+SetAsmJSCacheOps(JSRuntime *rt, const AsmJSCacheOps *callbacks);
+
+} /* namespace JS */
+
 #endif /* jsapi_h */

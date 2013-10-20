@@ -8,6 +8,7 @@ the MFBT source directory)
 endif
 
 CPPSRCS += \
+  Compression.cpp \
   HashFunctions.cpp \
   Poison.cpp \
   SHA1.cpp \
