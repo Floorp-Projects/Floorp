@@ -55,6 +55,7 @@ var std_Function_apply = Function.prototype.apply;
 var std_Math_floor = Math.floor;
 var std_Math_max = Math.max;
 var std_Math_min = Math.min;
+var std_Math_imul = Math.imul;
 var std_Number_valueOf = Number.prototype.valueOf;
 var std_Number_POSITIVE_INFINITY = Number.POSITIVE_INFINITY;
 var std_Object_create = Object.create;
