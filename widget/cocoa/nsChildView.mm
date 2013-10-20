@@ -168,7 +168,6 @@ uint32_t nsChildView::sLastInputEventCount = 0;
 - (void)clearCorners;
 
 // Overlay drawing functions for traditional CGContext drawing
-- (void)drawTitleString;
 - (void)drawTitlebarHighlight;
 - (void)maskTopCornersInContext:(CGContextRef)aContext;
 
@@ -2203,11 +2202,6 @@ nsChildView::UpdateTitlebarImageBuffer()
   NSGraphicsContext* context = [NSGraphicsContext graphicsContextWithGraphicsPort:ctx flipped:[frameView isFlipped]];
   [NSGraphicsContext setCurrentContext:context];
 
-  // Draw the title string.
-  if ([frameView respondsToSelector:@selector(_drawTitleBar:)]) {
-    [frameView _drawTitleBar:[frameView bounds]];
-  }
-
   // Draw the titlebar controls into the titlebar image.
   for (id view in [window titlebarControls]) {
     NSRect viewFrame = [view frame];
@@ -3433,7 +3427,6 @@ NSEvent* gLastDragMouseDownEvent = nil;
   }
 
   if ([self isCoveringTitlebar]) {
-    [self drawTitleString];
     [self drawTitlebarHighlight];
     [self maskTopCornersInContext:aContext];
   }
@@ -3601,26 +3594,6 @@ NSEvent* gLastDragMouseDownEvent = nil;
   CGContextDrawImage(aContext, destRect, mTopLeftCornerMask);
 
   CGContextRestoreGState(aContext);
-}
-
-- (void)drawTitleString
-{
-  NSView* frameView = [[[self window] contentView] superview];
-  if (![frameView respondsToSelector:@selector(_drawTitleBar:)]) {
-    return;
-  }
-
-  NSGraphicsContext* oldContext = [NSGraphicsContext currentContext];
-  CGContextRef ctx = (CGContextRef)[oldContext graphicsPort];
-  CGContextSaveGState(ctx);
-  if ([oldContext isFlipped] != [frameView isFlipped]) {
-    CGContextTranslateCTM(ctx, 0, [self bounds].size.height);
-    CGContextScaleCTM(ctx, 1, -1);
-  }
-  [NSGraphicsContext setCurrentContext:[NSGraphicsContext graphicsContextWithGraphicsPort:ctx flipped:[frameView isFlipped]]];
-  [frameView _drawTitleBar:[frameView bounds]];
-  CGContextRestoreGState(ctx);
-  [NSGraphicsContext setCurrentContext:oldContext];
 }
 
 - (void)drawTitlebarHighlight
