@@ -69,6 +69,7 @@ proto._init = function _init(base, options, handler) {
   }
 
   options.NPNProtocols = ['spdy/3', 'spdy/2', 'http/1.1', 'http/1.0'];
+  options.ALPNProtocols = ['spdy/3', 'spdy/2', 'http/1.1', 'http/1.0'];
   state.options = options;
   state.reqHandler = handler;
 
@@ -79,7 +80,7 @@ proto._init = function _init(base, options, handler) {
   }
 
   // Use https if NPN is not supported
-  if (!process.features.tls_npn && !options.debug && !options.plain) {
+  if (!process.features.tls_npn && !process.features.tls_alpn && !options.debug && !options.plain) {
     return;
   }
 };
@@ -226,7 +227,8 @@ proto._onConnection = function _onConnection(socket) {
       state = this._spdyState;
 
   // Fallback to HTTPS if needed
-  if ((!socket.npnProtocol || !socket.npnProtocol.match(/spdy/)) &&
+  var selectedProtocol = socket.npnProtocol || socket.alpnProtocol;
+  if ((!selectedProtocol || !selectedProtocol.match(/spdy/)) &&
       !state.options.debug && !state.options.plain) {
     return state.handler.call(this, socket);
   }
