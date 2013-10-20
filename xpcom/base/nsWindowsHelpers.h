@@ -106,16 +106,6 @@ typedef nsAutoRef<HMODULE> nsModuleHandle;
 namespace
 {
   bool
-  IsVistaOrLater()
-  {
-    OSVERSIONINFO info;
-    ZeroMemory(&info, sizeof(OSVERSIONINFO));
-    info.dwOSVersionInfoSize = sizeof(OSVERSIONINFO);
-    GetVersionEx(&info);
-    return info.dwMajorVersion >= 6;
-  }
-
-  bool
   IsRunningInWindowsMetro()
   {
     static bool alreadyChecked = false;

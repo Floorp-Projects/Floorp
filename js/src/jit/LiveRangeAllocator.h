@@ -569,6 +569,9 @@ class LiveRangeAllocator : public RegisterAllocator
     void validateVirtualRegisters()
     {
 #ifdef DEBUG
+        if (!js_IonOptions.assertGraphConsistency)
+            return;
+
         for (size_t i = 1; i < graph.numVirtualRegisters(); i++) {
             VirtualRegister *reg = &vregs[i];
 
