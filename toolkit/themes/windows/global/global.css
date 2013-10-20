@@ -321,3 +321,38 @@ label[disabled="true"]:-moz-system-metric(windows-classic) {
   background-position: left bottom;
 %endif
 }
+
+/* :::::: Close button icons ::::: */
+
+.close-icon {
+  list-style-image: url("chrome://global/skin/icons/close.png");
+  -moz-image-region: rect(0, 16px, 16px, 0);
+}
+
+.close-icon:hover {
+  -moz-image-region: rect(0, 32px, 16px, 16px);
+}
+
+.close-icon:hover:active {
+  -moz-image-region: rect(0, 48px, 16px, 32px);
+}
+
+%ifdef XP_WIN
+@media (-moz-windows-theme: luna-blue) {
+  .close-icon {
+    list-style-image: url("chrome://global/skin/icons/close-lunaBlue.png");
+  }
+}
+
+@media (-moz-windows-theme: luna-olive) {
+  .close-icon {
+    list-style-image: url("chrome://global/skin/icons/close-lunaOlive.png");
+  }
+}
+
+@media (-moz-windows-theme: luna-silver) {
+  .close-icon {
+    list-style-image: url("chrome://global/skin/icons/close-lunaSilver.png");
+  }
+}
+%endif
