@@ -16,8 +16,10 @@ function DebuggerPanel(iframeWindow, toolbox) {
 
   this._view = this.panelWin.DebuggerView;
   this._controller = this.panelWin.DebuggerController;
+  this._view._hostType = this._toolbox.hostType;
   this._controller._target = this.target;
 
+  this.handleHostChanged = this.handleHostChanged.bind(this);
   this.highlightWhenPaused = this.highlightWhenPaused.bind(this);
   this.unhighlightWhenResumed = this.unhighlightWhenResumed.bind(this);
 
@@ -47,6 +49,7 @@ DebuggerPanel.prototype = {
       .then(() => this._controller.startupDebugger())
       .then(() => this._controller.connect())
       .then(() => {
+        this._toolbox.on("host-changed", this.handleHostChanged);
         this.target.on("thread-paused", this.highlightWhenPaused);
         this.target.on("thread-resumed", this.unhighlightWhenResumed);
         this.isReady = true;
@@ -85,6 +88,10 @@ DebuggerPanel.prototype = {
 
   removeBreakpoint: function(aLocation) {
     return this._controller.Breakpoints.removeBreakpoint(aLocation);
+  },
+
+  handleHostChanged: function() {
+    this._view.handleHostChanged(this._toolbox.hostType);
   },
 
   highlightWhenPaused: function() {

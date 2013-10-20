@@ -1,0 +1,7 @@
+{
+  "name": "valid",
+  "launch_path": "/home.html",
+  "icons": {
+    "128": "/icon.png"
+  }
+}

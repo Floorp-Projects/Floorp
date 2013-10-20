@@ -113,12 +113,15 @@ class B2GMochitest(MochitestUtilsMixin):
         self.startWebSocketServer(options, None)
         self.buildURLOptions(options, {'MOZ_HIDE_RESULTS_TABLE': '1'})
 
-        if options.timeout:
-            timeout = options.timeout + 30
-        elif options.debugger or not options.autorun:
+        if options.debugger or not options.autorun:
             timeout = None
         else:
-            timeout = 330.0 # default JS harness timeout is 300 seconds
+            if not options.timeout:
+                if mozinfo.info['debug']:
+                    options.timeout = 420
+                else:
+                    options.timeout = 300
+            timeout = options.timeout + 30.0
 
         log.info("runtestsb2g.py | Running tests: start.")
         status = 0

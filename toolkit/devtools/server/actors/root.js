@@ -191,6 +191,17 @@ RootActor.prototype = {
   get window() Services.wm.getMostRecentWindow(DebuggerServer.chromeWindowType),
 
   /**
+   * Getter for the best nsIWebProgress for to watching this window.
+   */
+  get webProgress() {
+    return this.window
+      .QueryInterface(Ci.nsIInterfaceRequestor)
+      .getInterface(Ci.nsIDocShell)
+      .QueryInterface(Ci.nsIInterfaceRequestor)
+      .getInterface(Ci.nsIWebProgress);
+  },
+
+  /**
    * Disconnects the actor from the browser window.
    */
   disconnect: function() {
