@@ -18,4 +18,9 @@ checkDoc("foo\t\tbar baz", "foo\t\tbar baz", "foo bar baz")
 checkDoc("foo\n\nbar baz", "foo\n\nbar baz", "foo bar baz")
 checkDoc("foo\f\fbar baz", "foo\f\fbar baz", "foo bar baz")
 checkDoc("foo\r\rbar baz", "foo\r\rbar baz", "foo bar baz")
+
+test(function() {
+  var doc = document.implementation.createHTMLDocument()
+  assert_equals(doc.title, "")
+}, "Missing title argument");
 </script>

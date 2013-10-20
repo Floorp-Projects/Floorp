@@ -8,6 +8,7 @@ MOCHITEST_FILES := \
   test_document.getElementsByClassName-same.html \
   test_document.head-01.html \
   test_document.head-02.html \
+  test_document.images.html \
   test_document.title-01.html \
   test_document.title-02.xhtml \
   test_document.title-03.html \
