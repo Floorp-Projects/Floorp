@@ -97,7 +97,7 @@ public:
   nsTArray<nsRefPtr<nsMimeType> >& MimeTypes();
 
 protected:
-  void EnsureMimeTypes();
+  void EnsurePluginMimeTypes();
 
   nsCOMPtr<nsPIDOMWindow> mWindow;
   nsRefPtr<nsPluginTag> mPluginTag;
