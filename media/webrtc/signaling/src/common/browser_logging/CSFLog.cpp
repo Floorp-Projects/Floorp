@@ -8,7 +8,6 @@
 
 #include "CSFLog.h"
 #include "base/basictypes.h"
-#include "prtypes.h"
 
 #include <map>
 #include "cpr_threads.h"
