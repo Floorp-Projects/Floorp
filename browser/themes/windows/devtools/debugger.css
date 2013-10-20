@@ -13,7 +13,7 @@
   min-width: 50px;
 }
 
-#sources-container + .devtools-side-splitter {
+#sources-and-editor-splitter {
   -moz-border-start-color: transparent;
 }
 
@@ -81,7 +81,6 @@
   background: url(background-noise-toolbar.png) rgb(61,69,76);
   /* Prevent the container deck from aquiring the height from this message. */
   min-height: 1px;
-  padding: 25vh 0;
   color: white;
 }
 
@@ -168,7 +167,7 @@
 /* Instruments pane (watch expressions, variables, event listeners...) */
 
 #instruments-pane > tabs > tab {
-  min-height: 2em !important;
+  min-height: 25px !important;
   padding: 0 !important;
 }
 
@@ -442,4 +441,24 @@
 
 #instruments-pane-toggle:hover:active {
   -moz-image-region: rect(0px,48px,16px,32px);
+}
+
+/* Horizontal vs. vertical layout */
+
+#vertical-layout-panes-container {
+  min-height: 35vh;
+  max-height: 80vh;
+}
+
+#body[layout=vertical] #instruments-pane {
+  margin: 0 !important;
+  /* To prevent all the margin hacks to hide the sidebar. */
+}
+
+#body[layout=vertical] .side-menu-widget-container {
+  box-shadow: none !important;
+}
+
+#body[layout=vertical] .side-menu-widget-item-arrow {
+  background-image: none !important;
 }

@@ -67,7 +67,7 @@ function testTopLeft()
     is
     (
       convertTextPropsToString(elementAfterRule.textProps),
-      "background: none repeat scroll 0% 0% #F00; content: \" \"; position: absolute; " +
+      "background: none repeat scroll 0% 0% red; content: \" \"; position: absolute; " +
       "border-radius: 50%; height: 32px; width: 32px; top: 50%; left: 50%; margin-top: -16px; margin-left: -16px",
       "TopLeft after properties are correct"
     );
@@ -242,7 +242,7 @@ function testParagraph()
     is
     (
       convertTextPropsToString(elementFirstLineRule.textProps),
-      "background: none repeat scroll 0% 0% #00F",
+      "background: none repeat scroll 0% 0% blue",
       "Paragraph first-line properties are correct"
     );
 
@@ -254,7 +254,7 @@ function testParagraph()
     is
     (
       convertTextPropsToString(elementFirstLetterRule.textProps),
-      "color: #F00; font-size: 130%",
+      "color: red; font-size: 130%",
       "Paragraph first-letter properties are correct"
     );
 
@@ -266,7 +266,7 @@ function testParagraph()
     is
     (
       convertTextPropsToString(elementSelectionRule.textProps),
-      "color: #FFF; background: none repeat scroll 0% 0% #000",
+      "color: white; background: none repeat scroll 0% 0% black",
       "Paragraph first-letter properties are correct"
     );
 

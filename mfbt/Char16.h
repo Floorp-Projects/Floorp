@@ -21,12 +21,23 @@
     * C++11 says char16_t is a distinct builtin type, but Windows's yvals.h
     * typedefs char16_t as an unsigned short. We would like to alias char16_t
     * to Windows's 16-bit wchar_t so we can declare UTF-16 literals as constant
-    * expressions (and pass char16_t pointers to Windows APIs). We #define our
-    * char16_t as a macro to override yval.h's typedef of the same name.
+    * expressions (and pass char16_t pointers to Windows APIs). We #define
+    * _CHAR16T here in order to prevent yvals.h to override our char16_t
+    * typedefs, which we set to wchar_t for C++ code and to unsigned short for
+    * C code.
+    *
+    * In addition, #defining _CHAR16T will prevent yvals.h from defining a
+    * char32_t type, so we have to undo that damage here and provide our own,
+    * which is identical to the yvals.h type.
     */
 #  define MOZ_UTF16_HELPER(s) L##s
-#  include <yvals.h>
-#  define char16_t wchar_t
+#  define _CHAR16T
+#  ifdef __cplusplus
+     typedef wchar_t char16_t;
+#  else
+     typedef unsigned short char16_t;
+#  endif
+   typedef unsigned int char32_t;
 #elif defined(__cplusplus) && \
       (__cplusplus >= 201103L || defined(__GXX_EXPERIMENTAL_CXX0X__))
    /* C++11 has a builtin char16_t type. */
