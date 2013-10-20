@@ -970,7 +970,10 @@ FilterView.prototype = {
     else switch (e.keyCode) {
       case e.DOM_VK_RETURN:
       case e.DOM_VK_ENTER:
-        var isReturnKey = true; // Fall through.
+        var isReturnKey = true;
+        // If the shift key is pressed, focus on the previous result
+        actionToPerform = e.shiftKey ? "selectPrev" : "selectNext";
+        break;
       case e.DOM_VK_DOWN:
         actionToPerform = "selectNext";
         break;
