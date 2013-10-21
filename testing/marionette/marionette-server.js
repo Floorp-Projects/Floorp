@@ -2181,7 +2181,7 @@ MarionetteServerConnection.prototype = {
                             Services.wm.getOuterWindowWithId(message.json.value);
 
         //go in here if we're already in a remote frame.
-        if (!listenerWindow || (listenerWindow.location.href != message.json.href) &&
+        if ((!listenerWindow || listenerWindow.location.href != message.json.href) &&
             (this.curBrowser.frameManager.currentRemoteFrame !== null)) {
           // The outerWindowID from an OOP frame will not be meaningful to
           // the parent process here, since each process maintains its own
