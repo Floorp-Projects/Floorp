@@ -3,7 +3,6 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-FAIL_ON_WARNINGS := 1
 SDK_BINARY	= $(PROGRAM)
 
 LOCAL_INCLUDES += \
@@ -27,7 +26,9 @@ NSDISTMODE = copy
 ifeq ($(OS_TEST),ia64)
 LIBS += $(JEMALLOC_LIBS)
 endif
-include $(topsrcdir)/config/config.mk
+
+include $(topsrcdir)/config/rules.mk
+include $(topsrcdir)/ipc/chromium/chromium-config.mk
 
 ifdef _MSC_VER
 # Always enter a Windows program through wmain, whether or not we're
@@ -35,19 +36,7 @@ ifdef _MSC_VER
 WIN32_EXE_LDFLAGS += -ENTRY:wmainCRTStartup
 endif
 
-include $(topsrcdir)/config/rules.mk
-include $(topsrcdir)/ipc/chromium/chromium-config.mk
-
-DEFINES		+= -DJS_THREADSAFE
-
-ifdef MOZ_SHARK
-DEFINES += -DMOZ_SHARK
-endif
-ifdef MOZ_CALLGRIND
-DEFINES += -DMOZ_CALLGRIND
-endif
 ifdef MOZ_VTUNE
-DEFINES += -DMOZ_VTUNE
 CXXFLAGS += -IC:/Program\ Files/Intel/VTune/Analyzer/Include
 LIBS += C:/Program\ Files/Intel/VTune/Analyzer/Lib/VtuneApi.lib
 endif
