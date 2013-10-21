@@ -24,7 +24,8 @@ Cu.import("resource://gre/modules/devtools/SourceMap.jsm", SourceMap);
 let loader = Cu.import("resource://gre/modules/commonjs/toolkit/loader.js", {}).Loader;
 let promise = Cu.import("resource://gre/modules/commonjs/sdk/core/promise.js", {}).Promise;
 
-this.EXPORTED_SYMBOLS = ["DevToolsLoader", "devtools"];
+this.EXPORTED_SYMBOLS = ["DevToolsLoader", "devtools", "BuiltinProvider",
+                         "SrcdirProvider"];
 
 /**
  * Providers are different strategies for loading the devtools.
@@ -104,6 +105,7 @@ var SrcdirProvider = {
     let appActorURI = this.fileURI(OS.Path.join(toolkitDir, "apps", "app-actor-front.js"));
     let cssLogicURI = this.fileURI(OS.Path.join(toolkitDir, "styleinspector", "css-logic"));
     let cssColorURI = this.fileURI(OS.Path.join(toolkitDir, "css-color"));
+    let outputParserURI = this.fileURI(OS.Path.join(toolkitDir, "output-parser"));
     let touchEventsURI = this.fileURI(OS.Path.join(toolkitDir, "touch-events"));
     let clientURI = this.fileURI(OS.Path.join(toolkitDir, "client"));
     let escodegenURI = this.fileURI(OS.Path.join(toolkitDir, "escodegen"));
@@ -122,6 +124,7 @@ var SrcdirProvider = {
         "devtools/app-actor-front": appActorURI,
         "devtools/styleinspector/css-logic": cssLogicURI,
         "devtools/css-color": cssColorURI,
+        "devtools/output-parser": outputParserURI,
         "devtools/touch-events": touchEventsURI,
         "devtools/client": clientURI,
         "escodegen": escodegenURI,
