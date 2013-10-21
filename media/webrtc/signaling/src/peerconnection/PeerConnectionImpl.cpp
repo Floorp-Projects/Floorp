@@ -573,6 +573,12 @@ PeerConnectionImpl::ConvertRTCConfiguration(const RTCConfiguration& aSrc,
   for (uint32_t i = 0; i < aSrc.mIceServers.Value().Length(); i++) {
     const RTCIceServer& server = aSrc.mIceServers.Value()[i];
     NS_ENSURE_TRUE(server.mUrl.WasPassed(), NS_ERROR_UNEXPECTED);
+
+    // Without STUN/TURN handlers, NS_NewURI returns nsSimpleURI rather than
+    // nsStandardURL. To parse STUN/TURN URI's to spec
+    // http://tools.ietf.org/html/draft-nandakumar-rtcweb-stun-uri-02#section-3
+    // http://tools.ietf.org/html/draft-petithuguenin-behave-turn-uri-03#section-3
+    // we parse out the query-string, and use ParseAuthority() on the rest
     nsRefPtr<nsIURI> url;
     nsresult rv = NS_NewURI(getter_AddRefs(url), server.mUrl.Value());
     NS_ENSURE_SUCCESS(rv, rv);
@@ -588,9 +594,10 @@ PeerConnectionImpl::ConvertRTCConfiguration(const RTCConfiguration& aSrc,
     rv = url->GetSpec(spec);
     NS_ENSURE_SUCCESS(rv, rv);
 
-    // TODO(jib@mozilla.com): Revisit once nsURI has STUN host+port (Bug 833509)
+    // TODO(jib@mozilla.com): Revisit once nsURI supports STUN/TURN (Bug 833509)
     int32_t port;
     nsAutoCString host;
+    nsAutoCString transport;
     {
       uint32_t hostPos;
       int32_t hostLen;
@@ -598,9 +605,20 @@ PeerConnectionImpl::ConvertRTCConfiguration(const RTCConfiguration& aSrc,
       rv = url->GetPath(path);
       NS_ENSURE_SUCCESS(rv, rv);
 
-      // Tolerate '?transport=udp' by stripping it.
+      // Tolerate query-string + parse 'transport=[udp|tcp]' by hand.
       int32_t questionmark = path.FindChar('?');
       if (questionmark >= 0) {
+        const nsCString match = NS_LITERAL_CSTRING("transport=");
+
+        for (int32_t i = questionmark, endPos; i >= 0; i = endPos) {
+          endPos = path.FindCharInSet("&", i + 1);
+          const nsDependentCSubstring fieldvaluepair = Substring(path, i + 1,
+                                                                 endPos);
+          if (StringBeginsWith(fieldvaluepair, match)) {
+            transport = Substring(fieldvaluepair, match.Length());
+            ToLowerCase(transport);
+          }
+        }
         path.SetLength(questionmark);
       }
 
@@ -625,7 +643,9 @@ PeerConnectionImpl::ConvertRTCConfiguration(const RTCConfiguration& aSrc,
 
       if (!aDst->addTurnServer(host.get(), port,
                                username.get(),
-                               credential.get())) {
+                               credential.get(),
+                               (transport.IsEmpty() ?
+                                kNrIceTransportUdp : transport.get()))) {
         return NS_ERROR_FAILURE;
       }
     } else {
