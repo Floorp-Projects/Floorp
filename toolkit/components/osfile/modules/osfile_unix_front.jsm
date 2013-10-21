@@ -94,7 +94,7 @@
       * the end of the file has been reached.
       * @throws {OS.File.Error} In case of I/O error.
       */
-     File.prototype._read = function _read(buffer, nbytes, options) {
+     File.prototype._read = function _read(buffer, nbytes, options = {}) {
       // Populate the page cache with data from a file so the subsequent reads
       // from that file will not block on disk I/O.
        if (typeof(UnixFile.posix_fadvise) === 'function' &&
@@ -120,7 +120,7 @@
       * @return {number} The number of bytes effectively written.
       * @throws {OS.File.Error} In case of I/O error.
       */
-     File.prototype._write = function _write(buffer, nbytes, options) {
+     File.prototype._write = function _write(buffer, nbytes, options = {}) {
        return throw_on_negative("write",
          UnixFile.write(this.fd, buffer, nbytes)
        );
@@ -431,6 +431,9 @@
         * @option {number} bufSize A hint regarding the size of the
         * buffer to use for copying. The implementation may decide to
         * ignore this hint.
+        * @option {bool} unixUserland Will force the copy operation to be
+        * caried out in user land, instead of using optimized syscalls such
+        * as splice(2).
         *
         * @throws {OS.File.Error} In case of error.
         */
@@ -550,7 +553,11 @@
            } else {
              dest = File.open(destPath, {trunc:true});
            }
-           result = pump(source, dest, options);
+           if (options.unixUserland) {
+             result = pump_userland(source, dest, options);
+           } else {
+             result = pump(source, dest, options);
+           }
          } catch (x) {
            if (dest) {
              dest.close();
