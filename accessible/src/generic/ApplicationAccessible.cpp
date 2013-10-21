@@ -141,7 +141,7 @@ ApplicationAccessible::FocusedChild()
 }
 
 Relation
-ApplicationAccessible::RelationByType(uint32_t aRelationType)
+ApplicationAccessible::RelationByType(RelationType aRelationType)
 {
   return Relation();
 }

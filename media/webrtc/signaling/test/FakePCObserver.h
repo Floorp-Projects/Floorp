@@ -21,6 +21,7 @@
 #include "nsIDOMMediaStream.h"
 #include "mozilla/dom/PeerConnectionObserverEnumsBinding.h"
 #include "PeerConnectionImpl.h"
+#include "nsWeakReference.h"
 
 namespace sipcc {
 class PeerConnectionImpl;
@@ -32,7 +33,7 @@ class nsIDOMDataChannel;
 namespace test {
 using namespace mozilla::dom;
 
-class AFakePCObserver : public nsISupports
+class AFakePCObserver : public nsSupportsWeakReference
 {
 protected:
   typedef mozilla::ErrorResult ER;

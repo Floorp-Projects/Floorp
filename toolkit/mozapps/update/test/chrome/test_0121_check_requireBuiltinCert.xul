@@ -81,6 +81,9 @@ function testXHRLoad(aEvent) {
                                aCertAttrName, cert[aCertAttrName]);
   });
 
+  Services.prefs.setBoolPref(PREF_APP_UPDATE_CERT_REQUIREBUILTIN, true);
+  Services.prefs.setBoolPref(PREF_APP_UPDATE_CERT_CHECKATTRS, false);
+
   let url = "https://example.com/" + URL_PATH + "/update.sjs?showDetails=1" +
             getVersionParams();
   gAppUpdateURLDefault = gDefaultPrefBranch.getCharPref(PREF_APP_UPDATE_URL);

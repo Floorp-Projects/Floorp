@@ -4,6 +4,8 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+FAIL_ON_WARNINGS = True
+
 MODULE = 'xpcshell'
 
 PROGRAM = 'xpcshell'
@@ -16,3 +18,12 @@ if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'cocoa':
     CMMSRCS += [
         'xpcshellMacUtils.mm',
     ]
+
+DEFINES['JS_THREADSAFE'] = True
+
+if CONFIG['MOZ_SHARK']:
+    DEFINES['MOZ_SHARK'] = True
+if CONFIG['MOZ_CALLGRIND']:
+    DEFINES['MOZ_CALLGRIND'] = True
+if CONFIG['MOZ_VTUNE']:
+    DEFINES['MOZ_VTUNE'] = True

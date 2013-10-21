@@ -5,6 +5,7 @@ DIRS += [
     'html/dom/collections',
     'html/dom/errors',
     'html/dom/events',
+    'html/dom/lists',
     'html/dom/nodes',
     'html/dom/nodes/Document-createElement-namespace-tests',
     'html/dom/ranges',

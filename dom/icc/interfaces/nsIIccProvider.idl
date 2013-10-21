@@ -4,7 +4,6 @@
 
 #include "nsISupports.idl"
 
-interface nsIDOMContact;
 interface nsIDOMDOMRequest;
 interface nsIDOMMozIccInfo;
 interface nsIDOMWindow;
@@ -72,7 +71,7 @@ interface nsIIccProvider : nsISupports
 
   nsIDOMDOMRequest updateContact(in nsIDOMWindow window,
                                  in DOMString contactType,
-                                 in nsISupports contact,
+                                 in jsval contact,
                                  in DOMString pin2);
 
   /**
