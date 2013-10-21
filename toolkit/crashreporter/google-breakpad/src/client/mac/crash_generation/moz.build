@@ -13,3 +13,4 @@ CPP_SOURCES += [
 
 LIBRARY_NAME = 'crash_generation_s'
 
+XPI_NAME = 'crashreporter'

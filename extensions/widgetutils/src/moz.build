@@ -14,3 +14,7 @@ LIBRARY_NAME = 'widgetutils'
 
 IS_COMPONENT = True
 
+XPI_NAME = 'widgetutils'
+
+if CONFIG['TARGET_XPCOM_ABI']:
+    FINAL_TARGET += '/platform/%(OS_TARGET)s_%(TARGET_XPCOM_ABI)s' % CONFIG

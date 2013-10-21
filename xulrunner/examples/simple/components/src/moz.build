@@ -19,3 +19,4 @@ EXTRA_COMPONENTS += [
 
 IS_COMPONENT = True
 
+XPI_NAME = 'simple'

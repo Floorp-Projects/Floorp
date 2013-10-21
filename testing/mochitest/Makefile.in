@@ -10,8 +10,6 @@ DIST_FILES = install.rdf
 # Used in install.rdf
 USE_EXTENSION_MANIFEST = 1
 
-XPI_NAME = mochijar
-
 # we turn this off for UNIVERSAL_BINARY
 CHROME_JAR = 1
 
