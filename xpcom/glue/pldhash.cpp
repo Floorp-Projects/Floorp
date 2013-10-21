@@ -569,12 +569,8 @@ PL_DHashTableOperate(PLDHashTable *table, const void *key, PLDHashOperator op)
                 deltaLog2 = 1;
             }
 
-            /*
-             * Grow or compress table, returning null if ChangeTable fails and
-             * falling through might claim the last free entry.
-             */
-            if (!ChangeTable(table, deltaLog2) &&
-                table->entryCount + table->removedCount == size - 1) {
+            /* Grow or compress table, returning null if ChangeTable fails. */
+            if (!ChangeTable(table, deltaLog2)) {
                 METER(table->stats.addFailures++);
                 entry = nullptr;
                 break;
