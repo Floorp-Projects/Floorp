@@ -223,6 +223,9 @@ var Promise = function PromiseClosure() {
       subject.subpromisesReason = reason;
       var subpromises = subject.subpromises;
       if (!subpromises) {
+        if (!true) {
+          console.warn(reason);
+        }
         return;
       }
       for (var i = 0; i < subpromises.length; i++) {
@@ -441,6 +444,12 @@ var SHAREDOBJECT_FEATURE = 3;
 var VIDEO_FEATURE = 4;
 var SOUND_FEATURE = 5;
 var NETCONNECTION_FEATURE = 6;
+if (!this.performance) {
+  this.performance = {};
+}
+if (!this.performance.now) {
+  this.performance.now = Date.now;
+}
 var create = Object.create;
 var defineProperty = Object.defineProperty;
 var keys = Object.keys;
@@ -915,9 +924,10 @@ function defineFont(tag, dictionary) {
       indices
     ]);
   }
-  var ascent = Math.ceil(tag.ascent / 20) || 1024;
-  var descent = -Math.ceil(tag.descent / 20) || 0;
-  var leading = Math.floor(tag.leading / 20) || 0;
+  var resolution = tag.resolution || 1;
+  var ascent = Math.ceil(tag.ascent / resolution) || 1024;
+  var descent = -Math.ceil(tag.descent / resolution) | 0;
+  var leading = tag.leading / resolution | 0;
   tables['OS/2'] = '\0\x01\0\0' + toString16(tag.bold ? 700 : 400) + '\0\x05' + '\0\0' + '\0\0' + '\0\0' + '\0\0' + '\0\0' + '\0\0' + '\0\0' + '\0\0' + '\0\0' + '\0\0' + '\0\0' + '\0\0' + '\0\0\0\0\0\0\0\0\0\0' + '\0\0\0\0' + '\0\0\0\0' + '\0\0\0\0' + '\0\0\0\0' + 'ALF ' + toString16((tag.italic ? 1 : 0) | (tag.bold ? 32 : 0)) + toString16(codes[0]) + toString16(codes[codes.length - 1]) + toString16(ascent) + toString16(descent) + toString16(leading) + toString16(ascent) + toString16(-descent) + '\0\0\0\0' + '\0\0\0\0';
   ;
   var startCount = '';
@@ -948,7 +958,6 @@ function defineFont(tag, dictionary) {
   ;
   var glyf = '\0\x01\0\0\0\0\0\0\0\0\0\0\0\x001\0';
   var loca = '\0\0';
-  var resolution = tag.resolution || 1;
   var offset = 16;
   var maxPoints = 0;
   var xMins = [];
@@ -1073,10 +1082,9 @@ function defineFont(tag, dictionary) {
   }
   loca += toString16(offset / 2);
   tables['glyf'] = glyf;
-  tables['head'] = '\0\x01\0\0\0\x01\0\0\0\0\0\0_\x0f<\xf5\0\v\x04\0\0\0\0\0' + toString32(+new Date()) + '\0\0\0\0' + toString32(+new Date()) + toString16(min.apply(null, xMins)) + toString16(min.apply(null, yMins)) + toString16(max.apply(null, xMaxs)) + toString16(max.apply(null, yMaxs)) + toString16((tag.italic ? 2 : 0) | (tag.bold ? 1 : 0)) + '\0\b' + '\0\x02' + '\0\0' + '\0\0';
+  tables['head'] = '\0\x01\0\0\0\x01\0\0\0\0\0\0_\x0f<\xf5\0\v\x04\0\0\0\0\0' + toString32(Date.now()) + '\0\0\0\0' + toString32(Date.now()) + toString16(min.apply(null, xMins)) + toString16(min.apply(null, yMins)) + toString16(max.apply(null, xMaxs)) + toString16(max.apply(null, yMaxs)) + toString16((tag.italic ? 2 : 0) | (tag.bold ? 1 : 0)) + '\0\b' + '\0\x02' + '\0\0' + '\0\0';
   ;
   var advance = tag.advance;
-  var resolution = tag.resolution || 1;
   tables['hhea'] = '\0\x01\0\0' + toString16(ascent) + toString16(descent) + toString16(leading) + toString16(advance ? max.apply(null, advance) : 1024) + '\0\0' + '\0\0' + '\x03\xb8' + '\0\x01' + '\0\0' + '\0\0' + '\0\0' + '\0\0' + '\0\0' + '\0\0' + '\0\0' + toString16(glyphCount + 1);
   ;
   var hmtx = '\0\0\0\0';
@@ -1153,7 +1161,7 @@ function defineFont(tag, dictionary) {
   var unitPerEm = 1024;
   var metrics = {
       ascent: ascent / unitPerEm,
-      descent: descent / unitPerEm,
+      descent: -descent / unitPerEm,
       leading: leading / unitPerEm
     };
   return {
@@ -1163,6 +1171,8 @@ function defineFont(tag, dictionary) {
     uniqueName: psName + uniqueId,
     codes: codes,
     metrics: metrics,
+    bold: tag.bold === 1,
+    italic: tag.italic === 1,
     data: otf
   };
 }
@@ -1240,8 +1250,8 @@ function defineLabel(tag, dictionary) {
         m.b,
         m.c,
         m.d,
-        m.tx,
-        m.ty
+        m.tx / 20,
+        m.ty / 20
       ].join(',') + ')',
       'c.scale(0.05, 0.05)'
     ];
@@ -1733,9 +1743,8 @@ var SHAPE_CURVE_TO = 3;
 var SHAPE_WIDE_MOVE_TO = 4;
 var SHAPE_WIDE_LINE_TO = 5;
 var SHAPE_CUBIC_CURVE_TO = 6;
-var SHAPE_ROUND_CORNER = 7;
-var SHAPE_CIRCLE = 8;
-var SHAPE_ELLIPSE = 9;
+var SHAPE_CIRCLE = 7;
+var SHAPE_ELLIPSE = 8;
 function ShapePath(fillStyle, lineStyle, commandsCount, dataLength, isMorph) {
   this.fillStyle = fillStyle;
   this.lineStyle = lineStyle;
@@ -1784,10 +1793,6 @@ ShapePath.prototype = {
     this.commands.push(SHAPE_CIRCLE);
     this.data.push(x, y, radius);
   },
-  drawRoundCorner: function (cornerX, cornerY, curveEndX, curveEndY, radiusX, radiusY) {
-    this.commands.push(SHAPE_ROUND_CORNER);
-    this.data.push(cornerX, cornerY, curveEndX, curveEndY, radiusX, radiusY);
-  },
   ellipse: function (x, y, radiusX, radiusY) {
     this.commands.push(SHAPE_ELLIPSE);
     this.data.push(x, y, radiusX, radiusY);
@@ -1828,9 +1833,6 @@ ShapePath.prototype = {
           break;
         case SHAPE_CUBIC_CURVE_TO:
           ctx.bezierCurveTo(data[k++] / 20, data[k++] / 20, data[k++] / 20, data[k++] / 20, data[k++] / 20, data[k++] / 20);
-          break;
-        case SHAPE_ROUND_CORNER:
-          ctx.arcTo(data[k++] / 20, data[k++] / 20, data[k++] / 20, data[k++] / 20, data[k++] / 20, data[k++] / 20);
           break;
         case SHAPE_CIRCLE:
           if (formOpen) {
@@ -1894,6 +1896,7 @@ ShapePath.prototype = {
       var fillStyle = this.fillStyle;
       if (fillStyle) {
         colorTransform.setFillStyle(ctx, fillStyle.style);
+        ctx.imageSmoothingEnabled = ctx.mozImageSmoothingEnabled = fillStyle.smooth;
         var m = fillStyle.transform;
         ctx.save();
         colorTransform.setAlpha(ctx);
@@ -2021,33 +2024,6 @@ ShapePath.prototype = {
           if (roots[i] >= x) {
             inside = !inside;
           }
-        }
-        break;
-      case SHAPE_ROUND_CORNER:
-        cpX = data[dataIndex++];
-        cpY = data[dataIndex++];
-        toX = data[dataIndex++];
-        toY = data[dataIndex++];
-        rX = data[dataIndex++];
-        rY = data[dataIndex++];
-        if (toY > y === fromY > y || fromX < x && toX < x) {
-          break;
-        }
-        if (fromX >= x && toX >= x) {
-          inside = !inside;
-          break;
-        }
-        if (toX > fromX === toY > fromY) {
-          cp2X = fromX;
-          cp2Y = toY;
-        } else {
-          cp2X = toX;
-          cp2Y = fromY;
-        }
-        localX = x - cp2X;
-        localY = y - cp2Y;
-        if (localX * localX / (rX * rX) + localY * localY / (rY * rY) <= 1 !== localX <= 0) {
-          inside = !inside;
         }
         break;
       case SHAPE_CIRCLE:
@@ -2212,36 +2188,6 @@ ShapePath.prototype = {
           }
         }
         break;
-      case SHAPE_ROUND_CORNER:
-        cpX = data[dataIndex++];
-        cpY = data[dataIndex++];
-        toX = data[dataIndex++];
-        toY = data[dataIndex++];
-        rX = data[dataIndex++];
-        rY = data[dataIndex++];
-        if (maxX < fromX && maxX < toX || minX > fromX && minX > toX || maxY < fromY && maxY < toY || minY > fromY && minY > toY) {
-          break;
-        }
-        if (toX > fromX === toY > fromY) {
-          cp2X = fromX;
-          cp2Y = toY;
-        } else {
-          cp2X = toX;
-          cp2Y = fromY;
-        }
-        localX = Math.abs(x - cp2X);
-        localY = Math.abs(y - cp2Y);
-        localX -= halfWidth;
-        localY -= halfWidth;
-        if (localX * localX / (rX * rX) + localY * localY / (rY * rY) > 1) {
-          break;
-        }
-        localX += width;
-        localY += width;
-        if (localX * localX / (rX * rX) + localY * localY / (rY * rY) > 1) {
-          return true;
-        }
-        break;
       case SHAPE_CIRCLE:
         cpX = data[dataIndex++];
         cpY = data[dataIndex++];
@@ -2303,7 +2249,7 @@ ShapePath.prototype = {
     var data = this.data;
     var length = commands.length;
     var bounds;
-    if (commands[0] === SHAPE_MOVE_TO || commands[0] > SHAPE_ROUND_CORNER) {
+    if (commands[0] === SHAPE_MOVE_TO || commands[0] > SHAPE_CUBIC_CURVE_TO) {
       bounds = {
         xMin: data[0],
         yMin: data[1]
@@ -2373,9 +2319,6 @@ ShapePath.prototype = {
             extendBoundsByY(bounds, extremes[i]);
           }
         }
-        break;
-      case SHAPE_ROUND_CORNER:
-        dataIndex += 6;
         break;
       case SHAPE_CIRCLE:
         toX = data[dataIndex++];
@@ -2654,7 +2597,7 @@ function finishShapePaths(paths, dictionary) {
   }
 }
 var inWorker = typeof window === 'undefined';
-var factoryCtx = !inWorker ? document.createElement('canvas').getContext('kanvas-2d') : null;
+var factoryCtx = !inWorker ? document.createElement('canvas').getContext('2d') : null;
 function buildLinearGradientFactory(colorStops) {
   var defaultGradient = factoryCtx.createLinearGradient(-1, 0, 1, 0);
   for (var i = 0; i < colorStops.length; i++) {
@@ -4032,6 +3975,8 @@ var LoaderDefinition = function () {
             props.name = symbol.name;
             props.uniqueName = symbol.uniqueName;
             props.charset = symbol.charset;
+            props.bold = symbol.bold;
+            props.italic = symbol.italic;
             props.metrics = symbol.metrics;
             this._registerFont(className, props);
             break;
@@ -4204,6 +4149,9 @@ var LoaderDefinition = function () {
           this._setup();
         },
         _load: function (request, checkPolicyFile, applicationDomain, securityDomain, deblockingFilter) {
+          if (!isWorker && flash.net.URLRequest.class.isInstanceOf(request)) {
+            this._contentLoaderInfo._url = request._url;
+          }
           if (!isWorker && WORKERS_ENABLED) {
             var loader = this;
             var worker = loader._worker = new Worker(SHUMWAY_ROOT + LOADER_PATH);
@@ -4291,7 +4239,7 @@ var LoaderDefinition = function () {
             def._load(bytes.a);
           },
           _unload: function _unload(halt, gc) {
-            notImplemented('Loader._unload');
+            somewhatImplemented('Loader._unload, do we even need to do anything here?');
           },
           _close: function _close() {
             somewhatImplemented('Loader._close');
@@ -4951,177 +4899,13 @@ var tagHandler = function (global) {
               cxform($bytes, $stream, $31, swfVersion, tagCode);
             }
             if (hasFilters) {
-              $29.filterCount = readUi8($bytes, $stream);
-              var $32 = $29.filters = {};
-              var type = $32.type = readUi8($bytes, $stream);
-              switch (type) {
-              case 0:
-                if (type === 4 || type === 7) {
-                  count = readUi8($bytes, $stream);
-                } else {
-                  count = 1;
-                }
-                var $33 = $32.colors = [];
-                var $34 = count;
-                while ($34--) {
-                  var $35 = {};
-                  rgba($bytes, $stream, $35, swfVersion, tagCode);
-                  $33.push($35);
-                }
-                if (type === 3) {
-                  var $36 = $32.higlightColor = {};
-                  rgba($bytes, $stream, $36, swfVersion, tagCode);
-                }
-                if (type === 4 || type === 7) {
-                  var $37 = $32.ratios = [];
-                  var $38 = count;
-                  while ($38--) {
-                    $37.push(readUi8($bytes, $stream));
-                  }
-                }
-                $32.blurX = readFixed($bytes, $stream);
-                $32.blurY = readFixed($bytes, $stream);
-                if (type !== 2) {
-                  $32.angle = readFixed($bytes, $stream);
-                  $32.distance = readFixed($bytes, $stream);
-                }
-                $32.strength = readFixed8($bytes, $stream);
-                $32.innerShadow = readUb($bytes, $stream, 1);
-                $32.knockout = readUb($bytes, $stream, 1);
-                $32.compositeSource = readUb($bytes, $stream, 1);
-                if (type === 3) {
-                  $32.onTop = readUb($bytes, $stream, 1);
-                } else {
-                  var reserved = readUb($bytes, $stream, 1);
-                }
-                if (type === 4 || type === 7) {
-                  $32.passes = readUb($bytes, $stream, 4);
-                } else {
-                  var reserved = readUb($bytes, $stream, 4);
-                }
-                break;
-              case 1:
-                $32.blurX = readFixed($bytes, $stream);
-                $32.blurY = readFixed($bytes, $stream);
-                $32.passes = readUb($bytes, $stream, 5);
-                var reserved = readUb($bytes, $stream, 3);
-                break;
-              case 2:
-              case 3:
-              case 4:
-                if (type === 4 || type === 7) {
-                  count = readUi8($bytes, $stream);
-                } else {
-                  count = 1;
-                }
-                var $39 = $32.colors = [];
-                var $40 = count;
-                while ($40--) {
-                  var $41 = {};
-                  rgba($bytes, $stream, $41, swfVersion, tagCode);
-                  $39.push($41);
-                }
-                if (type === 3) {
-                  var $42 = $32.higlightColor = {};
-                  rgba($bytes, $stream, $42, swfVersion, tagCode);
-                }
-                if (type === 4 || type === 7) {
-                  var $43 = $32.ratios = [];
-                  var $44 = count;
-                  while ($44--) {
-                    $43.push(readUi8($bytes, $stream));
-                  }
-                }
-                $32.blurX = readFixed($bytes, $stream);
-                $32.blurY = readFixed($bytes, $stream);
-                if (type !== 2) {
-                  $32.angle = readFixed($bytes, $stream);
-                  $32.distance = readFixed($bytes, $stream);
-                }
-                $32.strength = readFixed8($bytes, $stream);
-                $32.innerShadow = readUb($bytes, $stream, 1);
-                $32.knockout = readUb($bytes, $stream, 1);
-                $32.compositeSource = readUb($bytes, $stream, 1);
-                if (type === 3) {
-                  $32.onTop = readUb($bytes, $stream, 1);
-                } else {
-                  var reserved = readUb($bytes, $stream, 1);
-                }
-                if (type === 4 || type === 7) {
-                  $32.passes = readUb($bytes, $stream, 4);
-                } else {
-                  var reserved = readUb($bytes, $stream, 4);
-                }
-                break;
-              case 5:
-                var columns = $32.columns = readUi8($bytes, $stream);
-                var rows = $32.rows = readUi8($bytes, $stream);
-                $32.divisor = readFloat($bytes, $stream);
-                $32.bias = readFloat($bytes, $stream);
-                var $45 = $32.weights = [];
-                var $46 = columns * rows;
-                while ($46--) {
-                  $45.push(readFloat($bytes, $stream));
-                }
-                var $47 = $32.defaultColor = {};
-                rgba($bytes, $stream, $47, swfVersion, tagCode);
-                var reserved = readUb($bytes, $stream, 6);
-                $32.clamp = readUb($bytes, $stream, 1);
-                $32.preserveAlpha = readUb($bytes, $stream, 1);
-                break;
-              case 6:
-                var $48 = $32.matrix = [];
-                var $49 = 20;
-                while ($49--) {
-                  $48.push(readFloat($bytes, $stream));
-                }
-                break;
-              case 7:
-                if (type === 4 || type === 7) {
-                  count = readUi8($bytes, $stream);
-                } else {
-                  count = 1;
-                }
-                var $50 = $32.colors = [];
-                var $51 = count;
-                while ($51--) {
-                  var $52 = {};
-                  rgba($bytes, $stream, $52, swfVersion, tagCode);
-                  $50.push($52);
-                }
-                if (type === 3) {
-                  var $53 = $32.higlightColor = {};
-                  rgba($bytes, $stream, $53, swfVersion, tagCode);
-                }
-                if (type === 4 || type === 7) {
-                  var $54 = $32.ratios = [];
-                  var $55 = count;
-                  while ($55--) {
-                    $54.push(readUi8($bytes, $stream));
-                  }
-                }
-                $32.blurX = readFixed($bytes, $stream);
-                $32.blurY = readFixed($bytes, $stream);
-                if (type !== 2) {
-                  $32.angle = readFixed($bytes, $stream);
-                  $32.distance = readFixed($bytes, $stream);
-                }
-                $32.strength = readFixed8($bytes, $stream);
-                $32.innerShadow = readUb($bytes, $stream, 1);
-                $32.knockout = readUb($bytes, $stream, 1);
-                $32.compositeSource = readUb($bytes, $stream, 1);
-                if (type === 3) {
-                  $32.onTop = readUb($bytes, $stream, 1);
-                } else {
-                  var reserved = readUb($bytes, $stream, 1);
-                }
-                if (type === 4 || type === 7) {
-                  $32.passes = readUb($bytes, $stream, 4);
-                } else {
-                  var reserved = readUb($bytes, $stream, 4);
-                }
-                break;
-              default:
+              var count = readUi8($bytes, $stream);
+              var $2 = $.filters = [];
+              var $3 = count;
+              while ($3--) {
+                var $4 = {};
+                anyFilter($bytes, $stream, $4, swfVersion, tagCode);
+                $2.push($4);
               }
             }
             if (blend) {
@@ -6515,9 +6299,9 @@ BodyParser.prototype = {
       swf.bytesLoaded = progressInfo.bytesLoaded;
       swf.bytesTotal = progressInfo.bytesTotal;
     }
-    var readStartTime = Date.now();
+    var readStartTime = performance.now();
     readTags(swf, stream, swfVersion, options.onprogress);
-    swf.parseTime += Date.now() - readStartTime;
+    swf.parseTime += performance.now() - readStartTime;
     var read = stream.pos;
     buffer.removeHead(read);
     this.totalRead += read;
