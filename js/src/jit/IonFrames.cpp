@@ -1249,6 +1249,11 @@ SnapshotIterator::slotReadable(const Slot &slot)
     }
 }
 
+typedef union {
+    double d;
+    float f;
+} PunDoubleFloat;
+
 Value
 SnapshotIterator::slotValue(const Slot &slot)
 {
@@ -1258,17 +1263,19 @@ SnapshotIterator::slotValue(const Slot &slot)
 
       case SnapshotReader::FLOAT32_REG:
       {
-        double asDouble = machine_.read(slot.floatReg());
+        PunDoubleFloat pdf;
+        pdf.d = machine_.read(slot.floatReg());
         // The register contains the encoding of a float32. We just read
         // the bits without making any conversion.
-        float asFloat = *(float*) &asDouble;
+        float asFloat = pdf.f;
         return DoubleValue(asFloat);
       }
 
       case SnapshotReader::FLOAT32_STACK:
       {
-        double asDouble = ReadFrameDoubleSlot(fp_, slot.stackSlot());
-        float asFloat = *(float*) &asDouble; // no conversion, see comment above.
+        PunDoubleFloat pdf;
+        pdf.d = ReadFrameDoubleSlot(fp_, slot.stackSlot());
+        float asFloat = pdf.f; // no conversion, see comment above.
         return DoubleValue(asFloat);
       }
 
