@@ -428,12 +428,12 @@ CameraControlImpl::TakePicture(CameraSize aSize, int32_t aRotation, const nsAStr
 }
 
 nsresult
-CameraControlImpl::StartRecording(const CameraStartRecordingOptions* aOptions, nsIFile* aFolder, const nsAString& aFilename, nsICameraStartRecordingCallback* onSuccess, nsICameraErrorCallback* onError)
+CameraControlImpl::StartRecording(CameraStartRecordingOptions* aOptions, nsIFile* aFolder, const nsAString& aFilename, nsICameraStartRecordingCallback* onSuccess, nsICameraErrorCallback* onError)
 {
   nsCOMPtr<nsIFile> clone;
   aFolder->Clone(getter_AddRefs(clone));
 
-  nsCOMPtr<nsIRunnable> startRecordingTask = new StartRecordingTask(this, aOptions, clone, aFilename, onSuccess, onError, mWindowId);
+  nsCOMPtr<nsIRunnable> startRecordingTask = new StartRecordingTask(this, *aOptions, clone, aFilename, onSuccess, onError, mWindowId);
   return mCameraThread->Dispatch(startRecordingTask, NS_DISPATCH_NORMAL);
 }
 
@@ -459,9 +459,9 @@ CameraControlImpl::StopPreview()
 }
 
 nsresult
-CameraControlImpl::GetPreviewStreamVideoMode(const CameraRecorderOptions& aOptions, nsICameraPreviewStreamCallback* onSuccess, nsICameraErrorCallback* onError)
+CameraControlImpl::GetPreviewStreamVideoMode(CameraRecorderOptions* aOptions, nsICameraPreviewStreamCallback* onSuccess, nsICameraErrorCallback* onError)
 {
-  nsCOMPtr<nsIRunnable> getPreviewStreamVideoModeTask = new GetPreviewStreamVideoModeTask(this, aOptions, onSuccess, onError);
+  nsCOMPtr<nsIRunnable> getPreviewStreamVideoModeTask = new GetPreviewStreamVideoModeTask(this, *aOptions, onSuccess, onError);
   return mCameraThread->Dispatch(getPreviewStreamVideoModeTask, NS_DISPATCH_NORMAL);
 }
 

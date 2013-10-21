@@ -53,6 +53,3 @@ LIBXUL_LIBRARY = True
 
 LIBRARY_NAME = 'domcamera_s'
 
-LOCAL_INCLUDES += [
-    '../base',
-]

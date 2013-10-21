@@ -251,7 +251,8 @@ nsDOMCameraControl::SetOnRecorderStateChange(nsICameraRecorderStateChange* aOnRe
 }
 
 void
-nsDOMCameraControl::StartRecording(const CameraStartRecordingOptions& aOptions,
+nsDOMCameraControl::StartRecording(JSContext* aCx,
+                                   JS::Handle<JS::Value> aOptions,
                                    nsDOMDeviceStorage& storageArea,
                                    const nsAString& filename,
                                    nsICameraStartRecordingCallback* onSuccess,
@@ -259,6 +260,17 @@ nsDOMCameraControl::StartRecording(const CameraStartRecordingOptions& aOptions,
                                    ErrorResult& aRv)
 {
   MOZ_ASSERT(onSuccess, "no onSuccess handler passed");
+  mozilla::idl::CameraStartRecordingOptions options;
+
+  // Default values, until the dictionary parser can handle them.
+  options.rotation = 0;
+  options.maxFileSizeBytes = 0;
+  options.maxVideoLengthMs = 0;
+  aRv = options.Init(aCx, aOptions.address());
+  if (aRv.Failed()) {
+    return;
+  }
+
   nsCOMPtr<nsIObserverService> obs = services::GetObserverService();
   if (!obs) {
     NS_WARNING("Could not get the Observer service for CameraControl::StartRecording.");
@@ -293,7 +305,7 @@ nsDOMCameraControl::StartRecording(const CameraStartRecordingOptions& aOptions,
   if (aRv.Failed()) {
     return;
   }
-  aRv = mCameraControl->StartRecording(&aOptions, folder, filename, onSuccess,
+  aRv = mCameraControl->StartRecording(&options, folder, filename, onSuccess,
                                        onError.WasPassed() ? onError.Value() : nullptr);
 }
 
@@ -408,12 +420,19 @@ nsDOMCameraControl::TakePicture(JSContext* aCx,
 }
 
 void
-nsDOMCameraControl::GetPreviewStreamVideoMode(const CameraRecorderOptions& aOptions,
+nsDOMCameraControl::GetPreviewStreamVideoMode(JSContext* aCx,
+                                              JS::Handle<JS::Value> aOptions,
                                               nsICameraPreviewStreamCallback* onSuccess,
                                               const Optional<nsICameraErrorCallback*>& onError,
                                               ErrorResult& aRv)
 {
-  aRv = mCameraControl->GetPreviewStreamVideoMode(aOptions, onSuccess,
+  mozilla::idl::CameraRecorderOptions options;
+  aRv = options.Init(aCx, aOptions.address());
+  if (aRv.Failed()) {
+    return;
+  }
+
+  aRv = mCameraControl->GetPreviewStreamVideoMode(&options, onSuccess,
                                                   onError.WasPassed()
                                                   ? onError.Value() : nullptr);
 }
