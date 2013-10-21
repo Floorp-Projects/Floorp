@@ -75,6 +75,7 @@
 
 #include "nsCSSParser.h"
 #include "nsIMediaList.h"
+#include "nsIDOMWakeLock.h"
 
 #include "ImageContainer.h"
 #include "nsIPowerManagerService.h"
