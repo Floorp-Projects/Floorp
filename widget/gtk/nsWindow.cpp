@@ -1980,10 +1980,17 @@ nsWindow::OnExposeEvent(cairo_t *cr)
     if (!listener)
         return FALSE;
 
-    // Do an early async composite so that we at least have something on screen
-    // in the right place, even if the content is out of date.
-    if (GetLayerManager()->GetBackendType() == LAYERS_CLIENT && mCompositorParent) {
-        mCompositorParent->ScheduleRenderOnCompositorThread();
+    ClientLayerManager *clientLayers =
+        (GetLayerManager()->GetBackendType() == LAYERS_CLIENT)
+        ? static_cast<ClientLayerManager*>(GetLayerManager())
+        : nullptr;
+
+    if (clientLayers && mCompositorParent &&
+        !gdk_screen_is_composited(gdk_window_get_screen(mGdkWindow)))
+    {
+        // We need to paint to the screen even if nothing changed, since if we
+        // don't have a compositing window manager, our pixels could be stale.
+        clientLayers->SetNeedsComposite(true);
     }
 
     // Dispatch WillPaintWindow notification to allow scripts etc. to run
@@ -2002,6 +2009,11 @@ nsWindow::OnExposeEvent(cairo_t *cr)
             mAttachedWidgetListener ? mAttachedWidgetListener : mWidgetListener;
         if (!listener)
             return FALSE;
+    }
+
+    if (clientLayers && mCompositorParent && clientLayers->NeedsComposite()) {
+        mCompositorParent->ScheduleRenderOnCompositorThread();
+        clientLayers->SetNeedsComposite(false);
     }
 
 #if (MOZ_WIDGET_GTK == 2)
