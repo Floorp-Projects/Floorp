@@ -90,7 +90,8 @@ class IonAllocPolicy
     }
     void *calloc_(size_t bytes) {
         void *p = GetIonContext()->temp->allocate(bytes);
-        memset(p, 0, bytes);
+        if (p)
+            memset(p, 0, bytes);
         return p;
     }
     void *realloc_(void *p, size_t oldBytes, size_t bytes) {
