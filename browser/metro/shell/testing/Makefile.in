@@ -13,9 +13,6 @@ NO_PROFILE_GUIDED_OPTIMIZE = 1
 
 include $(topsrcdir)/config/config.mk
 
-# We want this exe in dist/bin
-DIST_SUBDIR =
-
 OS_LIBS = \
 	kernel32.lib \
 	user32.lib \

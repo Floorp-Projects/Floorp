@@ -32,3 +32,6 @@ EXTRA_JS_MODULES += [
 MOCHITEST_WEBAPPRT_CHROME_MANIFESTS += ['test/chrome/webapprt.ini']
 MOCHITEST_MANIFESTS += ['test/content/mochitest.ini']
 
+# Place webapprt resources in a separate app dir
+DIST_SUBDIR = 'webapprt'
+export('DIST_SUBDIR')

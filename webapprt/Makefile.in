@@ -5,9 +5,6 @@
 # Include config.mk explicitly so we can override FINAL_TARGET.
 include $(topsrcdir)/config/config.mk
 
-# Place webapprt resources in a separate app dir
-DIST_SUBDIR = webapprt
-
 PREF_JS_EXPORTS = $(srcdir)/prefs.js \
                   $(NULL)
 
