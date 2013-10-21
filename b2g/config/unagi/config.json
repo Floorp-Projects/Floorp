@@ -11,6 +11,7 @@
         "{workdir}/sources.xml"
     ],
     "b2g_manifest": "unagi.xml",
+    "b2g_manifest_branch": "v1.2",
     "additional_source_tarballs": ["backup-unagi.tar.bz2"],
     "zip_files": [
         ["{workdir}/out/target/product/unagi/*.img", "out/target/product/unagi/"],
