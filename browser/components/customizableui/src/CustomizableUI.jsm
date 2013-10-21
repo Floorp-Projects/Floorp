@@ -401,10 +401,7 @@ let CustomizableUIInternal = {
         }
       }
 
-      this.notifyListeners("onWidgetBeforeDOMChange", node, currentNode, container);
       this.insertWidgetBefore(node, currentNode, container, aArea);
-      this._addParentFlex(node);
-      this.notifyListeners("onWidgetAfterDOMChange", node, currentNode, container);
       if (gResetting) {
         this.notifyListeners("onWidgetReset", id);
       }
@@ -599,7 +596,6 @@ let CustomizableUIInternal = {
       }
 
       this.notifyListeners("onWidgetBeforeDOMChange", widgetNode, null, container, true);
-      this._removeParentFlex(widgetNode);
 
       if (gPalette.has(aWidgetId) || this.isSpecialWidget(aWidgetId)) {
         container.removeChild(widgetNode);
@@ -749,12 +745,7 @@ let CustomizableUIInternal = {
 
       let container = areaNode.customizationTarget;
       let [insertionContainer, nextNode] = this.findInsertionPoints(widgetNode, nextNodeId, areaNode, aArea);
-      this.notifyListeners("onWidgetBeforeDOMChange", widgetNode, nextNode, container);
       this.insertWidgetBefore(widgetNode, nextNode, insertionContainer, aArea);
-      if (isNew) {
-        this._addParentFlex(widgetNode);
-      }
-      this.notifyListeners("onWidgetAfterDOMChange", widgetNode, nextNode, container);
 
       if (gAreas.get(aArea).get("type") == CustomizableUI.TYPE_TOOLBAR) {
         areaNode.setAttribute("currentset", areaNode.currentSet);
@@ -776,8 +767,10 @@ let CustomizableUIInternal = {
   },
 
   insertWidgetBefore: function(aNode, aNextNode, aContainer, aArea) {
+    this.notifyListeners("onWidgetBeforeDOMChange", aNode, aNextNode, aContainer);
     this.setLocationAttributes(aNode, aArea);
     aContainer.insertBefore(aNode, aNextNode);
+    this.notifyListeners("onWidgetAfterDOMChange", aNode, aNextNode, aContainer);
   },
 
   handleEvent: function(aEvent) {
@@ -1841,26 +1834,6 @@ let CustomizableUIInternal = {
       }
     }
     gResetting = false;
-  },
-
-  _addParentFlex: function(aElement) {
-    // If necessary, add flex to accomodate new child.
-    let elementFlex = aElement.getAttribute("flex");
-    if (elementFlex) {
-      let parent = aElement.parentNode;
-      let parentFlex = +parent.getAttribute("flex") || 0;
-      elementFlex = +elementFlex || 0;
-      parent.setAttribute("flex", parentFlex + elementFlex);
-    }
-  },
-
-  _removeParentFlex: function(aElement) {
-    if (aElement.parentNode.hasAttribute("flex") && aElement.hasAttribute("flex")) {
-      let parent = aElement.parentNode;
-      let parentFlex = parseInt(parent.getAttribute("flex"), 10);
-      let elementFlex = parseInt(aElement.getAttribute("flex"), 10);
-      parent.setAttribute("flex", Math.max(0, parentFlex - elementFlex));
-    }
   },
 
   /**
