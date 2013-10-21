@@ -633,13 +633,13 @@ class MarionetteTestRunner(object):
 
     def generate_xml(self, results_list):
 
-        def _extract_xml(test, text='', result='passed'):
-            cls_name = test.__class__.__name__
-
+        def _extract_xml(test, class_name, text='', result='passed'):
             testcase = doc.createElement('testcase')
-            testcase.setAttribute('classname', cls_name)
+            testcase.setAttribute('classname', class_name)
             testcase.setAttribute('name', unicode(test).split()[0])
-            testcase.setAttribute('time', str(test.duration))
+            # XXX - Bug 927606
+            # testcase.setAttribute('time', str(test.duration))
+            testcase.setAttribute('time', '0')
             testsuite.appendChild(testcase)
 
             if result in ['failure', 'error', 'skipped']:
@@ -673,27 +673,27 @@ class MarionetteTestRunner(object):
 
         for results in results_list:
 
-            for tup in results.errors:
-                _extract_xml(tup[0], text=tup[1], result='error')
+            for result in results.errors:
+                _extract_xml(result.name, result.test_class, text=result.reason, result='error')
 
-            for tup in results.failures:
-                _extract_xml(tup[0], text=tup[1], result='failure')
+            for result in results.failures:
+                _extract_xml(result.name, result.test_class, text=result.reason, result='failure')
 
             if hasattr(results, 'unexpectedSuccesses'):
                 for test in results.unexpectedSuccesses:
                     # unexpectedSuccesses is a list of Testcases only, no tuples
-                    _extract_xml(test, text='TEST-UNEXPECTED-PASS', result='failure')
+                    _extract_xml(test, result.test_class, text='TEST-UNEXPECTED-PASS', result='failure')
 
             if hasattr(results, 'skipped'):
-                for tup in results.skipped:
-                    _extract_xml(tup[0], text=tup[1], result='skipped')
+                for result in results.skipped:
+                    _extract_xml(result.name, result.test_class, text=result.reason, result='skipped')
 
             if hasattr(results, 'expectedFailures'):
-                for tup in results.expectedFailures:
-                    _extract_xml(tup[0], text=tup[1], result='skipped')
+                for result in results.expectedFailures:
+                    _extract_xml(result.name, result.test_class, text=result.reason, result='skipped')
 
-            for test in results.tests_passed:
-                _extract_xml(test)
+            for result in results.tests_passed:
+                _extract_xml(result.name, result.test_class)
 
         doc.appendChild(testsuite)
         return doc.toprettyxml(encoding='utf-8')
