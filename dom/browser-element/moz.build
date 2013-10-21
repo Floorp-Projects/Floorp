@@ -34,7 +34,3 @@ LIBXUL_LIBRARY = True
 
 LIBRARY_NAME = 'dom_browserelement_s'
 
-LOCAL_INCLUDES += [
-    '../bluetooth',
-    '/content/html/content/src',
-]

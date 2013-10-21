@@ -12,6 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+include $(topsrcdir)/dom/dom-config.mk
+
 VPATH += $(srcdir)/ipc
 
 ifneq (,$(MOZ_B2G_BT))
