@@ -413,6 +413,12 @@ public:
 protected:
   ShadowLayerForwarder();
 
+#ifdef DEBUG
+  void CheckSurfaceDescriptor(const SurfaceDescriptor* aDescriptor) const;
+#else
+  void CheckSurfaceDescriptor(const SurfaceDescriptor* aDescriptor) const {}
+#endif
+
   PLayerTransactionChild* mShadowManager;
 
 #ifdef MOZ_HAVE_SURFACEDESCRIPTORGRALLOC

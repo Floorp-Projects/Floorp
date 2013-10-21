@@ -307,6 +307,23 @@ ShadowLayerForwarder::RepositionChild(ShadowableLayer* aContainer,
   }
 }
 
+
+#ifdef DEBUG
+void
+ShadowLayerForwarder::CheckSurfaceDescriptor(const SurfaceDescriptor* aDescriptor) const
+{
+  if (!aDescriptor) {
+    return;
+  }
+
+  if (aDescriptor->type() == SurfaceDescriptor::TShmem) {
+    const mozilla::ipc::Shmem& shmem = aDescriptor->get_Shmem();
+    shmem.AssertInvariants();
+    MOZ_ASSERT(mShadowManager->IsTrackingSharedMemory(shmem.mSegment));
+  }
+}
+#endif
+
 void
 ShadowLayerForwarder::PaintedTiledLayerBuffer(CompositableClient* aCompositable,
                                               const SurfaceDescriptorTiles& aTileLayerDescriptor)
@@ -322,6 +339,7 @@ ShadowLayerForwarder::UpdateTexture(CompositableClient* aCompositable,
 {
   if (aDescriptor->type() != SurfaceDescriptor::T__None &&
       aDescriptor->type() != SurfaceDescriptor::Tnull_t) {
+    CheckSurfaceDescriptor(aDescriptor);
     MOZ_ASSERT(aCompositable);
     MOZ_ASSERT(aCompositable->GetIPDLActor());
     mTxn->AddPaint(OpPaintTexture(nullptr, aCompositable->GetIPDLActor(), 1,
@@ -339,6 +357,7 @@ ShadowLayerForwarder::UpdateTextureNoSwap(CompositableClient* aCompositable,
 {
   if (aDescriptor->type() != SurfaceDescriptor::T__None &&
       aDescriptor->type() != SurfaceDescriptor::Tnull_t) {
+    CheckSurfaceDescriptor(aDescriptor);
     MOZ_ASSERT(aCompositable);
     MOZ_ASSERT(aCompositable->GetIPDLActor());
     mTxn->AddNoSwapPaint(OpPaintTexture(nullptr, aCompositable->GetIPDLActor(), 1,
@@ -369,6 +388,7 @@ ShadowLayerForwarder::UpdateTextureIncremental(CompositableClient* aCompositable
                                                const nsIntRect& aBufferRect,
                                                const nsIntPoint& aBufferRotation)
 {
+  CheckSurfaceDescriptor(&aDescriptor);
   MOZ_ASSERT(aCompositable);
   MOZ_ASSERT(aCompositable->GetIPDLActor());
   mTxn->AddNoSwapPaint(OpPaintTextureIncremental(nullptr, aCompositable->GetIPDLActor(),
@@ -396,6 +416,9 @@ ShadowLayerForwarder::AddTexture(CompositableClient* aCompositable,
     NS_WARNING("Failed to serialize a TextureClient");
     return false;
   }
+  CheckSurfaceDescriptor(&descriptor);
+  MOZ_ASSERT(aCompositable);
+  MOZ_ASSERT(aCompositable->GetIPDLActor());
   MOZ_ASSERT(aTexture->GetFlags() != 0);
   mTxn->AddEdit(OpAddTexture(nullptr, aCompositable->GetIPDLActor(),
                              aTexture->GetID(),
@@ -852,6 +875,9 @@ ShadowLayerForwarder::CreatedSingleBuffer(CompositableClient* aCompositable,
                                           const TextureInfo& aTextureInfo,
                                           const SurfaceDescriptor* aDescriptorOnWhite)
 {
+  CheckSurfaceDescriptor(&aDescriptor);
+  CheckSurfaceDescriptor(aDescriptorOnWhite);
+
   MOZ_ASSERT(aDescriptor.type() != SurfaceDescriptor::T__None &&
              aDescriptor.type() != SurfaceDescriptor::Tnull_t);
   mTxn->AddEdit(OpCreatedTexture(nullptr, aCompositable->GetIPDLActor(),
@@ -883,6 +909,10 @@ ShadowLayerForwarder::CreatedDoubleBuffer(CompositableClient* aCompositable,
                                           const SurfaceDescriptor* aFrontDescriptorOnWhite,
                                           const SurfaceDescriptor* aBackDescriptorOnWhite)
 {
+  CheckSurfaceDescriptor(&aFrontDescriptor);
+  CheckSurfaceDescriptor(&aBackDescriptor);
+  CheckSurfaceDescriptor(aFrontDescriptorOnWhite);
+  CheckSurfaceDescriptor(aBackDescriptorOnWhite);
   MOZ_ASSERT(aFrontDescriptor.type() != SurfaceDescriptor::T__None &&
              aBackDescriptor.type() != SurfaceDescriptor::T__None &&
              aFrontDescriptor.type() != SurfaceDescriptor::Tnull_t &&
