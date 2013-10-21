@@ -14,8 +14,9 @@
 
   /* This is the case where the downloads indicator has been moved next to the menubar as well as
      the case where the downloads indicator is in the tabstrip toolbar. */
-  :-moz-any(#toolbar-menubar #downloads-button:not([counter]), #TabsToolbar #downloads-button:not(:-moz-lwtheme):not([counter])) > #downloads-indicator-anchor > #downloads-indicator-progress-area > #downloads-indicator-counter {
-    background-image: -moz-image-rect(url("chrome://browser/skin/Toolbar-inverted.png"), 0, 108, 18, 90);
+  #toolbar-menubar #downloads-button:not([counter]) > #downloads-indicator-anchor > #downloads-indicator-progress-area > #downloads-indicator-counter,
+  #TabsToolbar #downloads-button:not(:-moz-lwtheme):not([counter]) > #downloads-indicator-anchor > #downloads-indicator-progress-area > #downloads-indicator-counter {
+    background-image: -moz-image-rect(url("chrome://browser/skin/Toolbar-inverted.png"), 0, 198, 18, 180);
   }
 
   :-moz-any(#toolbar-menubar, #TabsToolbar) #downloads-indicator-counter:not(:-moz-lwtheme) {
