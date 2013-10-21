@@ -699,9 +699,8 @@ let SessionStoreInternal = {
     if (aWindow && aWindow.__SSi && this._windows[aWindow.__SSi])
       return;
 
-    // ignore non-browser windows and windows opened while shutting down
-    if (aWindow.document.documentElement.getAttribute("windowtype") != "navigator:browser" ||
-        this._loadState == STATE_QUITTING)
+    // ignore windows opened while shutting down
+    if (this._loadState == STATE_QUITTING)
       return;
 
     // Assign the window a unique identifier we can use to reference
@@ -865,6 +864,13 @@ let SessionStoreInternal = {
   onOpen: function ssi_onOpen(aWindow) {
     let onload = () => {
       aWindow.removeEventListener("load", onload);
+
+      let windowType = aWindow.document.documentElement.getAttribute("windowtype");
+
+      // Ignore non-browser windows.
+      if (windowType != "navigator:browser") {
+        return;
+      }
 
       if (this._sessionInitialized) {
         this.onLoad(aWindow);
