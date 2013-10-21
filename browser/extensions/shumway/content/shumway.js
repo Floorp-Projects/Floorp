@@ -7668,7 +7668,8 @@ CompressedPipe.prototype = {
 };
 function BodyParser(swfVersion, length, options) {
   this.swf = {
-    swfVersion: swfVersion
+    swfVersion: swfVersion,
+    parseTime: 0
   };
   this.buffer = new HeadTailBuffer(32768);
   this.initialize = true;
@@ -7719,7 +7720,9 @@ BodyParser.prototype = {
       swf.bytesLoaded = progressInfo.bytesLoaded;
       swf.bytesTotal = progressInfo.bytesTotal;
     }
+    var readStartTime = Date.now();
     readTags(swf, stream, swfVersion, options.onprogress);
+    swf.parseTime += Date.now() - readStartTime;
     var read = stream.pos;
     buffer.removeHead(read);
     this.totalRead += read;
@@ -9272,6 +9275,11 @@ function interpretActions(actionsData, scopeContainer, constantPool, registers) 
       if (e instanceof AS2Error) {
         throw e;
       }
+      var AVM1_ERROR_TYPE = 1;
+      TelemetryService.reportTelemetry({
+        topic: 'error',
+        error: AVM1_ERROR_TYPE
+      });
       stream.position = nextPosition;
       if (stackItemsExpected > 0) {
         while (stackItemsExpected--) {
@@ -39173,6 +39181,12 @@ QuadTree.prototype._subdivide = function () {
   this.nodes[2] = new QuadTree(this.x, midY, halfWidth, halfHeight, level);
   this.nodes[3] = new QuadTree(midX, midY, halfWidth, halfHeight, level);
 };
+var EXTERNAL_INTERFACE_FEATURE = 1;
+var CLIPBOARD_FEATURE = 2;
+var SHAREDOBJECT_FEATURE = 3;
+var VIDEO_FEATURE = 4;
+var SOUND_FEATURE = 5;
+var NETCONNECTION_FEATURE = 6;
 {
   var BitmapDefinition = function () {
       function setBitmapData(value) {
@@ -41341,8 +41355,23 @@ var LoaderDefinition = function () {
           },
           oncomplete: function (result) {
             commitData(result);
+            var stats;
+            if (typeof result.swfVersion === 'number') {
+              var bbox = result.bbox;
+              stats = {
+                topic: 'parseInfo',
+                parseTime: result.parseTime,
+                bytesTotal: result.bytesTotal,
+                swfVersion: result.swfVersion,
+                frameRate: result.frameRate,
+                width: (bbox.xMax - bbox.xMin) / 20,
+                height: (bbox.yMax - bbox.yMin) / 20,
+                isAvm2: !(!result.fileAttributes.doAbc)
+              };
+            }
             commitData({
-              command: 'complete'
+              command: 'complete',
+              stats: stats
             });
           }
         };
@@ -41457,6 +41486,10 @@ var LoaderDefinition = function () {
             Promise.when(frameConstructed, this._lastPromise).then(function () {
               this.contentLoaderInfo._dispatchEvent('complete');
             }.bind(this));
+            var stats = data.stats;
+            if (stats) {
+              TelemetryService.reportTelemetry(stats);
+            }
             this._worker && this._worker.terminate();
             break;
           case 'empty':
@@ -42567,6 +42600,11 @@ var MovieClipDefinition = function () {
                 scripts[i].call(this);
               }
             } catch (e) {
+              var AVM2_ERROR_TYPE = 2;
+              TelemetryService.reportTelemetry({
+                topic: 'error',
+                error: AVM2_ERROR_TYPE
+              });
               if (false) {
                 console.error('error ' + e + ', stack: \n' + e.stack);
               }
@@ -44459,6 +44497,10 @@ var TimerEventDefinition = function () {
               _initJS: function _initJS() {
                 if (initialized)
                   return;
+                TelemetryService.reportTelemetry({
+                  topic: 'feature',
+                  feature: EXTERNAL_INTERFACE_FEATURE
+                });
                 initialized = true;
                 FirefoxCom.initJS(callIn);
               },
@@ -45453,6 +45495,10 @@ var SoundDefinition = function () {
             });
             this._soundData = soundData;
           }
+          TelemetryService.reportTelemetry({
+            topic: 'feature',
+            feature: SOUND_FEATURE
+          });
         },
         close: function close() {
           somewhatImplemented('Sound.close');
@@ -46208,6 +46254,10 @@ var StageVideoDefinition = function () {
 var VideoDefinition = function () {
     var def = {
         initialize: function initialize() {
+          TelemetryService.reportTelemetry({
+            topic: 'feature',
+            feature: VIDEO_FEATURE
+          });
         },
         attachNetStream: function (netStream) {
           this._netStream = netStream;
@@ -46365,6 +46415,10 @@ var NetConnectionDefinition = function () {
     return {
       __class__: 'flash.net.NetConnection',
       initialize: function () {
+        TelemetryService.reportTelemetry({
+          topic: 'feature',
+          feature: NETCONNECTION_FEATURE
+        });
       },
       _invoke: function (index, args) {
         var simulated = false, result;
@@ -46981,6 +47035,10 @@ var SharedObjectDefinition = function () {
         this._objectEncoding = _defaultObjectEncoding;
         this._data[Multiname.getPublicQualifiedName('levelCompleted')] = 32;
         this._data[Multiname.getPublicQualifiedName('completeLevels')] = 32;
+        TelemetryService.reportTelemetry({
+          topic: 'feature',
+          feature: SHAREDOBJECT_FEATURE
+        });
       },
       __glue__: {
         native: {
@@ -47622,6 +47680,10 @@ var SystemDefinition = function () {
           static: {
             setClipboard: function setClipboard(string) {
               FirefoxCom.request('setClipboard', string);
+              TelemetryService.reportTelemetry({
+                topic: 'feature',
+                feature: CLIPBOARD_FEATURE
+              });
             },
             pause: function pause() {
               notImplemented('System.pause');

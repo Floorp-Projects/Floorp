@@ -159,6 +159,12 @@ window.addEventListener("message", function handlerMessage(e) {
   }
 }, true);
 
+var TelemetryService = {
+  reportTelemetry: function (data) {
+    FirefoxCom.request('reportTelemetry', data, null);
+  }
+};
+
 var FileLoadingService = {
   get baseUrl() { return movieUrl; },
   nextSessionId: 1, // 0 - is reserved
@@ -246,6 +252,8 @@ function frame(e) {
   if (initializeFrameControl) {
     // marking that movie is started
     document.body.classList.add("started");
+
+    TelemetryService.reportTelemetry({topic: "firstFrame"});
 
     // skipping frame 0
     initializeFrameControl = false;
