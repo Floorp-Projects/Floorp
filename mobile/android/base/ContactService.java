@@ -214,10 +214,10 @@ public class ContactService implements GeckoEventListener {
             sortBy = findOptions.optString("sortBy").toLowerCase();
             sortOrder = findOptions.optString("sortOrder").toLowerCase();
 
-            if ("undefined".equals(sortBy)) {
+            if ("".equals(sortBy)) {
                 sortBy = null;
             }
-            if ("undefined".equals(sortOrder)) {
+            if ("".equals(sortOrder)) {
                 sortOrder = "ascending";
             }
 
@@ -240,15 +240,15 @@ public class ContactService implements GeckoEventListener {
 
         try {
             final JSONObject findOptions = contactOptions.getJSONObject("findOptions");
-            String filterValue = findOptions.getString("filterValue");
+            String filterValue = findOptions.optString("filterValue");
             JSONArray filterBy = findOptions.optJSONArray("filterBy");
-            final String filterOp = findOptions.getString("filterOp");
+            final String filterOp = findOptions.optString("filterOp");
             final int filterLimit = findOptions.getInt("filterLimit");
             final int substringMatching = findOptions.getInt("substringMatching");
 
             // If filter value is undefined, avoid all the logic below and just return
             // all available raw contact IDs
-            if ("undefined".equals(filterValue)) {
+            if ("".equals(filterValue) || "".equals(filterOp)) {
                 long[] allRawContactIds = getAllRawContactIds();
 
                 // Truncate the raw contacts IDs array if necessary
@@ -513,7 +513,7 @@ public class ContactService implements GeckoEventListener {
         String anniversary = null;
         String sex = null;
         String genderIdentity = null;
-        String key = null;
+        JSONArray key = new JSONArray();
 
         // Get all the data columns
         final String[] columnsToGet = getAllColumns();
@@ -614,7 +614,7 @@ public class ContactService implements GeckoEventListener {
                     genderIdentity = cursor.getString(cursor.getColumnIndex(CUSTOM_DATA_COLUMN));
 
                 } else if (MIMETYPE_KEY.equals(mimeType)) {
-                    key = cursor.getString(cursor.getColumnIndex(CUSTOM_DATA_COLUMN));
+                    key.put(cursor.getString(cursor.getColumnIndex(CUSTOM_DATA_COLUMN)));
                 }
             } catch (JSONException e) {
                 throw new IllegalArgumentException(e);
@@ -640,17 +640,17 @@ public class ContactService implements GeckoEventListener {
             contactProperties.put("url", urls);
             contactProperties.put("impp", impps);
             contactProperties.put("category", categories);
+            contactProperties.put("key", key);
 
             putPossibleNullValueInJSONObject("bday", bday, contactProperties);
             putPossibleNullValueInJSONObject("anniversary", anniversary, contactProperties);
             putPossibleNullValueInJSONObject("sex", sex, contactProperties);
             putPossibleNullValueInJSONObject("genderIdentity", genderIdentity, contactProperties);
-            putPossibleNullValueInJSONObject("key", key, contactProperties);
 
             // Add the raw contact ID and the properties to the contact
             contact.put("id", String.valueOf(rawContactId));
-            contact.put("updated", "0000T00:00:00.000Z");
-            contact.put("published", "0000T00:00:00.000Z");
+            contact.put("updated", null);
+            contact.put("published", null);
             contact.put("properties", contactProperties);
         } catch (JSONException e) {
             throw new IllegalArgumentException(e);
@@ -663,6 +663,10 @@ public class ContactService implements GeckoEventListener {
         }
 
         return contact;
+    }
+
+    private boolean bool(int integer) {
+        return integer != 0 ? true : false;
     }
 
     private void getGenericDataAsJSONObject(Cursor cursor, JSONArray array, final String dataColumn,
@@ -702,7 +706,7 @@ public class ContactService implements GeckoEventListener {
             object.put("value", value);
             types.put(type);
             object.put("type", types);
-            object.put("pref", cursor.getInt(cursor.getColumnIndex(Data.IS_SUPER_PRIMARY)));
+            object.put("pref", bool(cursor.getInt(cursor.getColumnIndex(Data.IS_SUPER_PRIMARY))));
 
             array.put(object);
         }
@@ -745,7 +749,7 @@ public class ContactService implements GeckoEventListener {
             types.put(type);
             phone.put("type", types);
             phone.put("carrier", cursor.getString(cursor.getColumnIndex(CARRIER_COLUMN)));
-            phone.put("pref", cursor.getInt(cursor.getColumnIndex(Phone.IS_SUPER_PRIMARY)));
+            phone.put("pref", bool(cursor.getInt(cursor.getColumnIndex(Phone.IS_SUPER_PRIMARY))));
 
             phones.put(phone);
         }
@@ -798,7 +802,7 @@ public class ContactService implements GeckoEventListener {
             address.put("postalCode", postalCode);
             types.put(type);
             address.put("type", types);
-            address.put("pref", cursor.getInt(cursor.getColumnIndex(StructuredPostal.IS_SUPER_PRIMARY)));
+            address.put("pref", bool(cursor.getInt(cursor.getColumnIndex(StructuredPostal.IS_SUPER_PRIMARY))));
 
             addresses.put(address);
         }
@@ -968,7 +972,7 @@ public class ContactService implements GeckoEventListener {
         }
     }
 
-    private void insertContact(final JSONObject contactProperties, final String requestID) {
+    private void insertContact(final JSONObject contactProperties, final String requestID) throws JSONException {
         ArrayList<ContentProviderOperation> newContactOptions = new ArrayList<ContentProviderOperation>();
 
         // Account to save the contact under
@@ -1014,7 +1018,7 @@ public class ContactService implements GeckoEventListener {
                                  new Object[] {newRawContactId, "create"});
     }
 
-    private void updateContact(final JSONObject contactProperties, final long rawContactId, final String requestID) {
+    private void updateContact(final JSONObject contactProperties, final long rawContactId, final String requestID) throws JSONException {
         // Why is updating a contact so weird and horribly inefficient? Because Android doesn't
         // like multiple values for contact fields, but the Mozilla contacts API calls for this.
         // This means the Android update function is essentially completely useless. Why not just
@@ -1065,65 +1069,61 @@ public class ContactService implements GeckoEventListener {
                                  new Object[] {rawContactId, "update"});
     }
 
-    private List<ContentValues> getContactValues(final JSONObject contactProperties) {
+    private List<ContentValues> getContactValues(final JSONObject contactProperties) throws JSONException {
         List<ContentValues> contactValues = new ArrayList<ContentValues>();
 
-        try {
-            // Add the contact to the default group so it is shown in other apps
-            // like the Contacts or People app
-            ContentValues defaultGroupValues = new ContentValues();
-            defaultGroupValues.put(Data.MIMETYPE, GroupMembership.CONTENT_ITEM_TYPE);
-            defaultGroupValues.put(GroupMembership.GROUP_ROW_ID, mGroupId);
-            contactValues.add(defaultGroupValues);
+        // Add the contact to the default group so it is shown in other apps
+        // like the Contacts or People app
+        ContentValues defaultGroupValues = new ContentValues();
+        defaultGroupValues.put(Data.MIMETYPE, GroupMembership.CONTENT_ITEM_TYPE);
+        defaultGroupValues.put(GroupMembership.GROUP_ROW_ID, mGroupId);
+        contactValues.add(defaultGroupValues);
 
-            // Create all the values that will be inserted into the new contact
-            getNameValues(contactProperties.optJSONArray("name"),
-                          contactProperties.optJSONArray("givenName"),
-                          contactProperties.optJSONArray("familyName"),
-                          contactProperties.optJSONArray("honorificPrefix"),
-                          contactProperties.optJSONArray("honorificSuffix"),
-                          contactValues);
+        // Create all the values that will be inserted into the new contact
+        getNameValues(contactProperties.optJSONArray("name"),
+                      contactProperties.optJSONArray("givenName"),
+                      contactProperties.optJSONArray("familyName"),
+                      contactProperties.optJSONArray("honorificPrefix"),
+                      contactProperties.optJSONArray("honorificSuffix"),
+                      contactValues);
 
-            getGenericValues(MIMETYPE_ADDITIONAL_NAME, CUSTOM_DATA_COLUMN,
-                             contactProperties.optJSONArray("additionalName"), contactValues);
+        getGenericValues(MIMETYPE_ADDITIONAL_NAME, CUSTOM_DATA_COLUMN,
+                         contactProperties.optJSONArray("additionalName"), contactValues);
 
-            getNicknamesValues(contactProperties.optJSONArray("nickname"), contactValues);
+        getNicknamesValues(contactProperties.optJSONArray("nickname"), contactValues);
 
-            getAddressesValues(contactProperties.optJSONArray("adr"), contactValues);
+        getAddressesValues(contactProperties.optJSONArray("adr"), contactValues);
 
-            getPhonesValues(contactProperties.optJSONArray("tel"), contactValues);
+        getPhonesValues(contactProperties.optJSONArray("tel"), contactValues);
 
-            getEmailsValues(contactProperties.optJSONArray("email"), contactValues);
+        getEmailsValues(contactProperties.optJSONArray("email"), contactValues);
 
-            //getPhotosValues(contactProperties.optJSONArray("photo"), contactValues);
+        //getPhotosValues(contactProperties.optJSONArray("photo"), contactValues);
 
-            getGenericValues(Organization.CONTENT_ITEM_TYPE, Organization.COMPANY,
-                             contactProperties.optJSONArray("org"), contactValues);
+        getGenericValues(Organization.CONTENT_ITEM_TYPE, Organization.COMPANY,
+                         contactProperties.optJSONArray("org"), contactValues);
 
-            getGenericValues(Organization.CONTENT_ITEM_TYPE, Organization.TITLE,
-                             contactProperties.optJSONArray("jobTitle"), contactValues);
+        getGenericValues(Organization.CONTENT_ITEM_TYPE, Organization.TITLE,
+                         contactProperties.optJSONArray("jobTitle"), contactValues);
 
-            getNotesValues(contactProperties.optJSONArray("note"), contactValues);
+        getNotesValues(contactProperties.optJSONArray("note"), contactValues);
 
-            getWebsitesValues(contactProperties.optJSONArray("url"), contactValues);
+        getWebsitesValues(contactProperties.optJSONArray("url"), contactValues);
 
-            getImsValues(contactProperties.optJSONArray("impp"), contactValues);
+        getImsValues(contactProperties.optJSONArray("impp"), contactValues);
 
-            getCategoriesValues(contactProperties.optJSONArray("category"), contactValues);
+        getCategoriesValues(contactProperties.optJSONArray("category"), contactValues);
 
-            getEventValues(contactProperties.optString("bday"), Event.TYPE_BIRTHDAY, contactValues);
+        getEventValues(contactProperties.optString("bday"), Event.TYPE_BIRTHDAY, contactValues);
 
-            getEventValues(contactProperties.optString("anniversary"), Event.TYPE_ANNIVERSARY, contactValues);
+        getEventValues(contactProperties.optString("anniversary"), Event.TYPE_ANNIVERSARY, contactValues);
 
-            getCustomMimetypeValues(contactProperties.optString("sex"), MIMETYPE_SEX, contactValues);
+        getCustomMimetypeValues(contactProperties.optString("sex"), MIMETYPE_SEX, contactValues);
 
-            getCustomMimetypeValues(contactProperties.optString("genderIdentity"), MIMETYPE_GENDER_IDENTITY, contactValues);
+        getCustomMimetypeValues(contactProperties.optString("genderIdentity"), MIMETYPE_GENDER_IDENTITY, contactValues);
 
-            getGenericValues(MIMETYPE_KEY, CUSTOM_DATA_COLUMN, contactProperties.optJSONArray("key"),
-                             contactValues);
-        } catch (JSONException e) {
-            throw new IllegalArgumentException("Unexpected or missing JSON data: " + e);
-        }
+        getGenericValues(MIMETYPE_KEY, CUSTOM_DATA_COLUMN, contactProperties.optJSONArray("key"),
+                         contactValues);
 
         return contactValues;
     }
@@ -1239,7 +1239,7 @@ public class ContactService implements GeckoEventListener {
         }
 
         if (address.has("pref")) {
-            contentValues.put(Data.IS_SUPER_PRIMARY, address.getInt("pref"));
+            contentValues.put(Data.IS_SUPER_PRIMARY, address.getBoolean("pref") ? 1 : 0);
         }
 
         return contentValues;
@@ -1263,7 +1263,7 @@ public class ContactService implements GeckoEventListener {
                     final int typeConstant = getPhoneType(type);
 
                     contentValues = createContentValues(Phone.CONTENT_ITEM_TYPE, phone.optString("value"),
-                                                        typeConstant, type, phone.optInt("pref"));
+                                                        typeConstant, type, phone.optBoolean("pref"));
                     if (phone.has("carrier")) {
                         contentValues.put(CARRIER_COLUMN, phone.optString("carrier"));
                     }
@@ -1271,7 +1271,7 @@ public class ContactService implements GeckoEventListener {
                 }
             } else {
                 contentValues = createContentValues(Phone.CONTENT_ITEM_TYPE, phone.optString("value"),
-                                                    -1, null, phone.optInt("pref"));
+                                                    -1, null, phone.optBoolean("pref"));
                 if (phone.has("carrier")) {
                     contentValues.put(CARRIER_COLUMN, phone.optString("carrier"));
                 }
@@ -1299,12 +1299,12 @@ public class ContactService implements GeckoEventListener {
                     newContactValues.add(createContentValues(Email.CONTENT_ITEM_TYPE,
                                                              email.optString("value"),
                                                              typeConstant, type,
-                                                             email.optInt("pref")));
+                                                             email.optBoolean("pref")));
                 }
             } else {
                 newContactValues.add(createContentValues(Email.CONTENT_ITEM_TYPE,
                                                          email.optString("value"),
-                                                         -1, null, email.optInt("pref")));
+                                                         -1, null, email.optBoolean("pref")));
             }
         }
     }
@@ -1349,12 +1349,12 @@ public class ContactService implements GeckoEventListener {
                     newContactValues.add(createContentValues(Website.CONTENT_ITEM_TYPE,
                                                              website.optString("value"),
                                                              typeConstant, type,
-                                                             website.optInt("pref")));
+                                                             website.optBoolean("pref")));
                 }
             } else {
                 newContactValues.add(createContentValues(Website.CONTENT_ITEM_TYPE,
                                                          website.optString("value"),
-                                                         -1, null, website.optInt("pref")));
+                                                         -1, null, website.optBoolean("pref")));
             }
         }
     }
@@ -1378,12 +1378,12 @@ public class ContactService implements GeckoEventListener {
                     newContactValues.add(createContentValues(Im.CONTENT_ITEM_TYPE,
                                                              im.optString("value"),
                                                              typeConstant, type,
-                                                             im.optInt("pref")));
+                                                             im.optBoolean("pref")));
                 }
             } else {
                 newContactValues.add(createContentValues(Im.CONTENT_ITEM_TYPE,
                                                          im.optString("value"),
-                                                         -1, null, im.optInt("pref")));
+                                                         -1, null, im.optBoolean("pref")));
             }
         }
     }
@@ -1463,11 +1463,11 @@ public class ContactService implements GeckoEventListener {
     }
 
     private ContentValues createContentValues(final String mimeType, final String value, final int typeConstant,
-                                              final String type, final int preferredValue) {
+                                              final String type, final boolean preferredValue) {
         ContentValues contentValues = new ContentValues();
         contentValues.put(Data.MIMETYPE, mimeType);
         contentValues.put(Data.DATA1, value);
-        contentValues.put(Data.IS_SUPER_PRIMARY, preferredValue);
+        contentValues.put(Data.IS_SUPER_PRIMARY, preferredValue ? 1 : 0);
 
         if (type != null) {
             contentValues.put(Data.DATA2, typeConstant);

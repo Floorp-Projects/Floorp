@@ -31,16 +31,8 @@ nsDOMCompositionEvent::nsDOMCompositionEvent(mozilla::dom::EventTarget* aOwner,
     mEvent->mFlags.mCancelable = false;
   }
 
-  mData = static_cast<WidgetCompositionEvent*>(mEvent)->data;
+  mData = mEvent->AsCompositionEvent()->data;
   // TODO: Native event should have locale information.
-}
-
-nsDOMCompositionEvent::~nsDOMCompositionEvent()
-{
-  if (mEventIsInternal) {
-    delete static_cast<WidgetCompositionEvent*>(mEvent);
-    mEvent = nullptr;
-  }
 }
 
 NS_IMPL_ADDREF_INHERITED(nsDOMCompositionEvent, nsDOMUIEvent)

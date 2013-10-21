@@ -46,7 +46,7 @@ private:
   friend class dom::PBrowserParent;
   friend class dom::PBrowserChild;
 
-public:
+protected:
   WidgetMouseEventBase()
   {
   }
@@ -58,6 +58,9 @@ public:
     inputSource(nsIDOMMouseEvent::MOZ_SOURCE_MOUSE)
  {
  }
+
+public:
+  virtual WidgetMouseEventBase* AsMouseEventBase() MOZ_OVERRIDE { return this; }
 
   /// The possible related target
   nsCOMPtr<nsISupports> relatedTarget;
@@ -136,11 +139,11 @@ public:
     eTopLevel
   };
 
+protected:
   WidgetMouseEvent()
   {
   }
 
-protected:
   WidgetMouseEvent(bool aIsTrusted, uint32_t aMessage, nsIWidget* aWidget,
                    nsEventStructType aStructType, reasonType aReason) :
     WidgetMouseEventBase(aIsTrusted, aMessage, aWidget, aStructType),
@@ -162,6 +165,7 @@ protected:
   }
 
 public:
+  virtual WidgetMouseEvent* AsMouseEvent() MOZ_OVERRIDE { return this; }
 
   WidgetMouseEvent(bool aIsTrusted, uint32_t aMessage, nsIWidget* aWidget,
                    reasonType aReason, contextType aContext = eNormal) :
@@ -187,7 +191,8 @@ public:
   }
 
 #ifdef DEBUG
-  ~WidgetMouseEvent() {
+  virtual ~WidgetMouseEvent()
+  {
     NS_WARN_IF_FALSE(message != NS_CONTEXTMENU ||
                      button ==
                        ((context == eNormal) ? eRightButton : eLeftButton),
@@ -225,6 +230,8 @@ public:
 class WidgetDragEvent : public WidgetMouseEvent
 {
 public:
+  virtual WidgetDragEvent* AsDragEvent() MOZ_OVERRIDE { return this; }
+
   WidgetDragEvent(bool aIsTrusted, uint32_t aMessage, nsIWidget* aWidget) :
     WidgetMouseEvent(aIsTrusted, aMessage, aWidget, NS_DRAG_EVENT, eReal),
     userCancelled(false)
@@ -268,6 +275,11 @@ private:
   }
 
 public:
+  virtual WidgetMouseScrollEvent* AsMouseScrollEvent() MOZ_OVERRIDE
+  {
+    return this;
+  }
+
   WidgetMouseScrollEvent(bool aIsTrusted, uint32_t aMessage,
                          nsIWidget* aWidget) :
     WidgetMouseEventBase(aIsTrusted, aMessage, aWidget, NS_MOUSE_SCROLL_EVENT),
@@ -312,6 +324,8 @@ private:
   }
 
 public:
+  virtual WidgetWheelEvent* AsWheelEvent() MOZ_OVERRIDE { return this; }
+
   WidgetWheelEvent(bool aIsTrusted, uint32_t aMessage, nsIWidget* aWidget) :
     WidgetMouseEventBase(aIsTrusted, aMessage, aWidget, NS_WHEEL_EVENT),
     deltaX(0.0), deltaY(0.0), deltaZ(0.0),

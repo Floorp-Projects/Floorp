@@ -2168,9 +2168,9 @@ Element::PreHandleEventForLinks(nsEventChainPreVisitor& aVisitor)
   case NS_MOUSE_ENTER_SYNTH:
     aVisitor.mEventStatus = nsEventStatus_eConsumeNoDefault;
     // FALL THROUGH
-  case NS_FOCUS_CONTENT:
-    if (aVisitor.mEvent->eventStructType != NS_FOCUS_EVENT ||
-        !static_cast<InternalFocusEvent*>(aVisitor.mEvent)->isRefocus) {
+  case NS_FOCUS_CONTENT: {
+    InternalFocusEvent* focusEvent = aVisitor.mEvent->AsFocusEvent();
+    if (!focusEvent || !focusEvent->isRefocus) {
       nsAutoString target;
       GetLinkTarget(target);
       nsContentUtils::TriggerLink(this, aVisitor.mPresContext, absURI, target,
@@ -2179,7 +2179,7 @@ Element::PreHandleEventForLinks(nsEventChainPreVisitor& aVisitor)
       aVisitor.mEvent->mFlags.mMultipleActionsPrevented = true;
     }
     break;
-
+  }
   case NS_MOUSE_EXIT_SYNTH:
     aVisitor.mEventStatus = nsEventStatus_eConsumeNoDefault;
     // FALL THROUGH
@@ -2249,8 +2249,7 @@ Element::PostHandleEventForLinks(nsEventChainPostVisitor& aVisitor)
 
   case NS_MOUSE_CLICK:
     if (aVisitor.mEvent->IsLeftClickEvent()) {
-      WidgetInputEvent* inputEvent =
-        static_cast<WidgetInputEvent*>(aVisitor.mEvent);
+      WidgetInputEvent* inputEvent = aVisitor.mEvent->AsInputEvent();
       if (inputEvent->IsControl() || inputEvent->IsMeta() ||
           inputEvent->IsAlt() ||inputEvent->IsShift()) {
         break;
@@ -2287,16 +2286,13 @@ Element::PostHandleEventForLinks(nsEventChainPostVisitor& aVisitor)
 
   case NS_KEY_PRESS:
     {
-      if (aVisitor.mEvent->eventStructType == NS_KEY_EVENT) {
-        WidgetKeyboardEvent* keyEvent =
-          static_cast<WidgetKeyboardEvent*>(aVisitor.mEvent);
-        if (keyEvent->keyCode == NS_VK_RETURN) {
-          nsEventStatus status = nsEventStatus_eIgnore;
-          rv = DispatchClickEvent(aVisitor.mPresContext, keyEvent, this,
-                                  false, nullptr, &status);
-          if (NS_SUCCEEDED(rv)) {
-            aVisitor.mEventStatus = nsEventStatus_eConsumeNoDefault;
-          }
+      WidgetKeyboardEvent* keyEvent = aVisitor.mEvent->AsKeyboardEvent();
+      if (keyEvent && keyEvent->keyCode == NS_VK_RETURN) {
+        nsEventStatus status = nsEventStatus_eIgnore;
+        rv = DispatchClickEvent(aVisitor.mPresContext, keyEvent, this,
+                                false, nullptr, &status);
+        if (NS_SUCCEEDED(rv)) {
+          aVisitor.mEventStatus = nsEventStatus_eConsumeNoDefault;
         }
       }
     }

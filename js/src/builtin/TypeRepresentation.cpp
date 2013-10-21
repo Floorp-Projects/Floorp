@@ -28,7 +28,8 @@ using namespace mozilla;
 const Class TypeRepresentation::class_ = {
     "TypeRepresentation",
     JSCLASS_IMPLEMENTS_BARRIERS |
-    JSCLASS_HAS_PRIVATE,
+    JSCLASS_HAS_PRIVATE |
+    JSCLASS_HAS_RESERVED_SLOTS(JS_TYPEREPR_SLOTS),
     JS_PropertyStub,         /* addProperty */
     JS_DeletePropertyStub,   /* delProperty */
     JS_PropertyStub,         /* getProperty */
@@ -285,7 +286,29 @@ TypeRepresentation::addToTableOrFree(JSContext *cx,
         js_free(this);
         return nullptr;
     }
+
     ownerObject->setPrivate(this);
+
+    // Assign the various reserved slots:
+    ownerObject->initReservedSlot(JS_TYPEREPR_SLOT_KIND, Int32Value(kind()));
+    ownerObject->initReservedSlot(JS_TYPEREPR_SLOT_SIZE, Int32Value(size()));
+    ownerObject->initReservedSlot(JS_TYPEREPR_SLOT_ALIGNMENT, Int32Value(alignment()));
+
+    switch (kind()) {
+      case Array:
+        ownerObject->initReservedSlot(JS_TYPEREPR_SLOT_LENGTH,
+                                      Int32Value(asArray()->length()));
+        break;
+
+      case Scalar:
+        ownerObject->initReservedSlot(JS_TYPEREPR_SLOT_TYPE,
+                                      Int32Value(asScalar()->type()));
+        break;
+
+      case Struct:
+        break;
+    }
+
     ownerObject_.init(ownerObject);
     return &*ownerObject;
 }

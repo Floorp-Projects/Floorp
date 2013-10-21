@@ -24,32 +24,32 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=926890
   var url = new URL('http://www.example.com');
   ok(url, "URL created");
 
-  var status = false;
   try {
     url.href = '42';
+    ok(false, "url.href = 42 should throw");
   } catch(e) {
-    status = true;
+    ok(true, "url.href = 42 should throw");
+    ok(e instanceof TypeError, "error type typeError");
   }
-  ok(status, "url.href = 42 should throw");
 
   url.href = 'http://www.example.org';
   ok(true, "url.href should not throw");
 
-  status = false
   try {
     new URL('42');
+    ok(false, "new URL(42) should throw");
   } catch(e) {
-    status = true;
+    ok(true, "new URL(42) should throw");
+    ok(e instanceof TypeError, "error type typeError");
   }
-  ok(status, "new URL(42) should throw");
 
-  status = false
   try {
     new URL('http://www.example.com', '42');
+    ok(false, "new URL(something, 42) should throw");
   } catch(e) {
-    status = true;
+    ok(true, "new URL(something, 42) should throw");
+    ok(e instanceof TypeError, "error type typeError");
   }
-  ok(status, "new URL(something, 42) should throw");
 
   </script>
 </body>

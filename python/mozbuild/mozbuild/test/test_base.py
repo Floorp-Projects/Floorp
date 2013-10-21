@@ -18,6 +18,7 @@ from mozunit import main
 from mach.logging import LoggingManager
 
 from mozbuild.base import (
+    BadEnvironmentException,
     MachCommandBase,
     MozbuildObject,
     PathArgument,
@@ -208,6 +209,26 @@ class TestMozbuildObject(unittest.TestCase):
 
             self.assertEqual(o.topobjdir, topobjdir)
             self.assertEqual(o.topsrcdir, topsrcdir)
+
+        finally:
+            shutil.rmtree(d)
+
+    @unittest.skip('Failing on buildbot.')
+    def test_objdir_is_srcdir_rejected(self):
+        """Ensure the srcdir configurations are rejected."""
+        d = os.path.realpath(tempfile.mkdtemp())
+
+        try:
+            # The easiest way to do this is to create a mozinfo.json with data
+            # that will never happen.
+            mozinfo = os.path.join(d, 'mozinfo.json')
+            with open(mozinfo, 'wt') as fh:
+                json.dump({'topsrcdir': d}, fh)
+
+            os.chdir(d)
+
+            with self.assertRaises(BadEnvironmentException):
+                MozbuildObject.from_environment(detect_virtualenv_mozinfo=False)
 
         finally:
             shutil.rmtree(d)

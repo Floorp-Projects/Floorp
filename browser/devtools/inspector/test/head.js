@@ -110,6 +110,11 @@ function ruleView()
   return iframe.contentWindow.ruleView;
 }
 
+function getComputedView() {
+  let inspector = getActiveInspector();
+  return inspector.sidebar.getWindowForTab("computedview").computedview.view;
+}
+
 function synthesizeKeyFromKeyTag(aKeyId) {
   let key = document.getElementById(aKeyId);
   isnot(key, null, "Successfully retrieved the <key> node");
@@ -169,3 +174,17 @@ function focusSearchBoxUsingShortcut(panelWin, callback) {
   EventUtils.synthesizeKey(name, modifiers);
 }
 
+function getComputedPropertyValue(aName)
+{
+  let computedview = getComputedView();
+  let props = computedview.styleDocument.querySelectorAll(".property-view");
+
+  for (let prop of props) {
+    let name = prop.querySelector(".property-name");
+
+    if (name.textContent === aName) {
+      let value = prop.querySelector(".property-value");
+      return value.textContent;
+    }
+  }
+}

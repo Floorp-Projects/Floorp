@@ -52,7 +52,8 @@ DOMRequestIpcHelper.prototype = {
    * queryInterface method and adds at least one weak listener to the Message
    * Manager MUST implement Ci.nsISupportsWeakReference.
    */
-  QueryInterface: XPCOMUtils.generateQI([Ci.nsISupportsWeakReference]),
+  QueryInterface: XPCOMUtils.generateQI([Ci.nsISupportsWeakReference,
+                                         Ci.nsIObserver]),
 
    /**
    *  'aMessages' is expected to be an array of either:
@@ -154,10 +155,18 @@ DOMRequestIpcHelper.prototype = {
       this.innerWindowID = util.currentInnerWindowID;
     }
 
+    this._destroyed = false;
+
     Services.obs.addObserver(this, "inner-window-destroyed", false);
   },
 
   destroyDOMRequestHelper: function() {
+    if (this._destroyed) {
+      return;
+    }
+
+    this._destroyed = true;
+
     Services.obs.removeObserver(this, "inner-window-destroyed");
 
     if (this._listeners) {
@@ -171,6 +180,11 @@ DOMRequestIpcHelper.prototype = {
     this._listeners = null;
     this._requests = null;
     this._window = null;
+
+    // Objects inheriting from DOMRequestIPCHelper may have an uninit function.
+    if (this.uninit) {
+      this.uninit();
+    }
   },
 
   observe: function(aSubject, aTopic, aData) {

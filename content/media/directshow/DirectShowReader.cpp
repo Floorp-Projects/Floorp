@@ -331,20 +331,6 @@ DirectShowReader::Seek(int64_t aTargetUs,
   return DecodeToTarget(aTargetUs);
 }
 
-nsresult
-DirectShowReader::GetBuffered(mozilla::dom::TimeRanges* aBuffered,
-                              int64_t aStartTime)
-{
-  MediaResource* stream = mDecoder->GetResource();
-  int64_t durationUs = 0;
-  {
-    ReentrantMonitorAutoEnter mon(mDecoder->GetReentrantMonitor());
-    durationUs = mDecoder->GetMediaDuration();
-  }
-  GetEstimatedBufferedTimeRanges(stream, durationUs, aBuffered);
-  return NS_OK;
-}
-
 void
 DirectShowReader::OnDecodeThreadStart()
 {

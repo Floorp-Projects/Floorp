@@ -60,6 +60,10 @@ public:
   virtual TemporaryRef<SourceSurface> Snapshot();
   virtual IntSize GetSize();
 
+  virtual bool LockBits(uint8_t** aData, IntSize* aSize,
+                        int32_t* aStride, SurfaceFormat* aFormat);
+  virtual void ReleaseBits(uint8_t* aData);
+
   virtual void Flush();
   virtual void DrawSurface(SourceSurface *aSurface,
                            const Rect &aDest,
@@ -161,7 +165,8 @@ private: // methods
   void DrawPattern(const Pattern& aPattern,
                    const StrokeOptions& aStrokeOptions,
                    const DrawOptions& aOptions,
-                   DrawPatternType aDrawType);
+                   DrawPatternType aDrawType,
+                   bool aPathBoundsClip = false);
 
   void CopySurfaceInternal(cairo_surface_t* aSurface,
                            const IntRect& aSource,
@@ -183,6 +188,8 @@ private: // data
   cairo_t* mContext;
   cairo_surface_t* mSurface;
   IntSize mSize;
+
+  uint8_t* mLockedBits;
 
   // The latest snapshot of this surface. This needs to be told when this
   // target is modified. We keep it alive as a cache.

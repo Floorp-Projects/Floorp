@@ -6,6 +6,18 @@ dnl Add compiler specific options
 
 AC_DEFUN([MOZ_DEFAULT_COMPILER],
 [
+dnl set DEVELOPER_OPTIONS early; MOZ_DEFAULT_COMPILER is usually the first non-setup directive
+  if test -z "$MOZILLA_OFFICIAL"; then
+    DEVELOPER_OPTIONS=1
+  fi
+  MOZ_ARG_ENABLE_BOOL(release,
+  [  --enable-release        Build with more conservative, release engineering-oriented options.
+                          This may slow down builds.],
+      DEVELOPER_OPTIONS=,
+      DEVELOPER_OPTIONS=1)
+
+  AC_SUBST(DEVELOPER_OPTIONS)
+
 dnl Default to MSVC for win32 and gcc-4.2 for darwin
 dnl ==============================================================
 if test -z "$CROSS_COMPILE"; then
@@ -160,17 +172,6 @@ fi
 dnl A high level macro for selecting compiler options.
 AC_DEFUN([MOZ_COMPILER_OPTS],
 [
-  if test -z "$MOZILLA_OFFICIAL"; then
-    DEVELOPER_OPTIONS=1
-  fi
-  MOZ_ARG_ENABLE_BOOL(release,
-  [  --enable-release        Build with more conservative, release engineering-oriented options.
-                          This may slow down builds.],
-      DEVELOPER_OPTIONS=,
-      DEVELOPER_OPTIONS=1)
-
-  AC_SUBST(DEVELOPER_OPTIONS)
-
   if test "${MOZ_PSEUDO_DERECURSE-unset}" = unset; then
     dnl Don't enable on pymake, because of bug 918652. Bug 912979 is an annoyance
     dnl with pymake, too.
