@@ -157,6 +157,12 @@ CertVerifier::VerifyCert(CERTCertificate * cert,
       if (!trustAnchors) {
         return SECFailure;
       }
+      // pkix ignores an empty trustanchors list and
+      // decides then to use the whole set of trust in the DB
+      // so we set the evPolicy to unkown in this case
+      if (CERT_LIST_EMPTY(trustAnchors)) {
+        evPolicy = SEC_OID_UNKNOWN;
+      }
     } else {
       // Do not setup EV verification params
       evPolicy = SEC_OID_UNKNOWN;
