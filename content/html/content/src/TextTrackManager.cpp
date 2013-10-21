@@ -49,7 +49,7 @@ TextTrackManager::AddTextTrack(TextTrack* aTextTrack)
 void
 TextTrackManager::RemoveTextTrack(TextTrack* aTextTrack)
 {
-  mTextTracks->RemoveTextTrack(*aTextTrack);
+  mTextTracks->RemoveTextTrack(aTextTrack);
 }
 
 void
