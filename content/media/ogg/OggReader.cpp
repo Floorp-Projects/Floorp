@@ -1755,15 +1755,7 @@ nsresult OggReader::GetBuffered(TimeRanges* aBuffered, int64_t aStartTime)
       return NS_ERROR_FAILURE;
   }
 #ifdef OGG_ESTIMATE_BUFFERED
-  MediaResource* stream = mDecoder->GetResource();
-  int64_t durationUs = 0;
-  {
-    ReentrantMonitorAutoEnter mon(mDecoder->GetReentrantMonitor());
-    durationUs = mDecoder->GetMediaDuration();
-  }
-  GetEstimatedBufferedTimeRanges(stream, durationUs, aBuffered);
-
-  return NS_OK;
+  return MediaDecoderReader::GetBuffered(aBuffered, aStartTime);
 #else
   // HasAudio and HasVideo are not used here as they take a lock and cause
   // a deadlock. Accessing mInfo doesn't require a lock - it doesn't change
