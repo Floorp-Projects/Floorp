@@ -389,8 +389,17 @@ Range::intersect(const Range *lhs, const Range *rhs, bool *emptyRange)
     // of 1.5, it may have a range like [0,2] and the max_exponent may be zero.
     // When intersecting such a range with an integer range, the fractional part
     // of the range is dropped, but the max exponent of 0 remains valid.
-    if (lhs->canHaveFractionalPart_ != rhs->canHaveFractionalPart_)
+    if (lhs->canHaveFractionalPart_ != rhs->canHaveFractionalPart_) {
         refineInt32BoundsByExponent(newExponent, &newLower, &newUpper);
+
+        // If we're intersecting two ranges that don't overlap, this could also
+        // push the bounds past each other, since the actual intersection is
+        // the empty set.
+        if (newLower > newUpper) {
+            *emptyRange = true;
+            return nullptr;
+        }
+    }
 
     return new Range(newLower, newHasInt32LowerBound, newUpper, newHasInt32UpperBound,
                      newFractional, newExponent);
