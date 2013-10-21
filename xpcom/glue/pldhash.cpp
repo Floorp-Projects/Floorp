@@ -169,6 +169,14 @@ PL_DHashGetStubOps(void)
     return &stub_ops;
 }
 
+static bool
+SizeOfEntryStore(uint32_t capacity, uint32_t entrySize, uint32_t *nbytes)
+{
+    uint64_t nbytes64 = uint64_t(capacity) * uint64_t(entrySize);
+    *nbytes = capacity * entrySize;
+    return uint64_t(*nbytes) == nbytes64;   // returns false on overflow
+}
+
 PLDHashTable *
 PL_NewDHashTable(const PLDHashTableOps *ops, void *data, uint32_t entrySize,
                  uint32_t capacity)
@@ -217,13 +225,14 @@ PL_DHashTableInit(PLDHashTable *table, const PLDHashTableOps *ops, void *data,
     PR_CEILING_LOG2(log2, capacity);
 
     capacity = 1u << log2;
-    if (capacity >= PL_DHASH_SIZE_LIMIT)
+    if (capacity > PL_DHASH_MAX_SIZE)
         return false;
     table->hashShift = PL_DHASH_BITS - log2;
     table->entrySize = entrySize;
     table->entryCount = table->removedCount = 0;
     table->generation = 0;
-    nbytes = capacity * entrySize;
+    if (!SizeOfEntryStore(capacity, entrySize, &nbytes))
+        return false;   // overflowed
 
     table->entryStore = (char *) ops->allocTable(table,
                                                  nbytes + ENTRY_STORE_EXTRA);
@@ -473,10 +482,11 @@ ChangeTable(PLDHashTable *table, int deltaLog2)
     newLog2 = oldLog2 + deltaLog2;
     oldCapacity = 1u << oldLog2;
     newCapacity = 1u << newLog2;
-    if (newCapacity >= PL_DHASH_SIZE_LIMIT)
+    if (newCapacity > PL_DHASH_MAX_SIZE)
         return false;
     entrySize = table->entrySize;
-    nbytes = newCapacity * entrySize;
+    if (!SizeOfEntryStore(newCapacity, entrySize, &nbytes))
+        return false;   // overflowed
 
     newEntryStore = (char *) table->ops->allocTable(table,
                                                     nbytes + ENTRY_STORE_EXTRA);
