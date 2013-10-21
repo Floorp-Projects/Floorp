@@ -158,7 +158,6 @@ let test = maketest("Main", function main(test) {
     yield test_read_write();
     yield test_read_write_all();
     yield test_position();
-    yield test_copy();
     yield test_mkdir();
     yield test_iter();
     yield test_exists();
@@ -472,40 +471,6 @@ let test_position = maketest("position", function position(test) {
       }
     } finally {
       yield file.close();
-    }
-  });
-});
-
-/**
- * Test OS.File.prototype.{copy, move}
- */
-let test_copy = maketest("copy", function copy(test) {
-  return Task.spawn(function() {
-    let currentDir = yield OS.File.getCurrentDirectory();
-    let pathSource = OS.Path.join(currentDir, EXISTING_FILE);
-    let pathDest = OS.Path.join(OS.Constants.Path.tmpDir,
-      "osfile async test 2.tmp");
-    yield OS.File.copy(pathSource, pathDest);
-    test.info("Copy complete");
-    yield reference_compare_files(pathSource, pathDest, test);
-    test.info("First compare complete");
-
-    let pathDest2 = OS.Path.join(OS.Constants.Path.tmpDir,
-      "osfile async test 3.tmp");
-    yield OS.File.move(pathDest, pathDest2);
-    test.info("Move complete");
-    yield reference_compare_files(pathSource, pathDest2, test);
-    test.info("Second compare complete");
-    OS.File.remove(pathDest2);
-
-    try {
-      let field = yield OS.File.open(pathDest);
-      test.fail("I should not have been able to open " + pathDest);
-      file.close();
-    } catch (err) {
-      test.ok(err, "Could not open a file after it has been moved away " + err);
-      test.ok(err instanceof OS.File.Error, "Error is an OS.File.Error");
-      test.ok(err.becauseNoSuchFile, "Error mentions that the file does not exist");
     }
   });
 });
