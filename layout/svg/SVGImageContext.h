@@ -16,6 +16,8 @@ namespace mozilla {
 class SVGImageContext
 {
 public:
+  SVGImageContext() { }
+
   SVGImageContext(SVGPreserveAspectRatio aPreserveAspectRatio)
     : mPreserveAspectRatio(aPreserveAspectRatio)
   { }
@@ -32,8 +34,12 @@ public:
     return !(*this == aOther);
   }
 
+  uint32_t Hash() const {
+    return mPreserveAspectRatio.Hash();
+  }
+
 private:
-  const SVGPreserveAspectRatio mPreserveAspectRatio;
+  SVGPreserveAspectRatio mPreserveAspectRatio;
 };
 
 } // namespace mozilla
