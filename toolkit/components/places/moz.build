@@ -11,8 +11,11 @@ XPIDL_SOURCES += [
     'nsINavHistoryService.idl',
 ]
 
+MODULE = 'places'
+
 if CONFIG['MOZ_PLACES']:
     LIBXUL_LIBRARY = True
+    EXPORT_LIBRARY = True
     MSVC_ENABLE_PGO = True
     LIBRARY_NAME = 'places'
 
@@ -55,6 +58,10 @@ if CONFIG['MOZ_PLACES']:
         'Database.cpp',
     ]
 
+    LOCAL_INCLUDES += [
+        '../build',
+    ]
+
     EXTRA_JS_MODULES = [
         'BookmarkJSONUtils.jsm',
         'ClusterLib.js',
@@ -69,10 +76,6 @@ if CONFIG['MOZ_PLACES']:
         'PlacesUtils.jsm',
     ]
 
-MODULE = 'places'
-
-
-if CONFIG['MOZ_PLACES']:
     EXTRA_COMPONENTS += [
         'ColorAnalyzer.js',
         'PlacesCategoriesStarter.js',

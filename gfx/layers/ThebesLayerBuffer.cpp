@@ -8,6 +8,7 @@
 #include <algorithm>                    // for max
 #include "BasicImplData.h"              // for BasicImplData
 #include "BasicLayersImpl.h"            // for ToData
+#include "BufferUnrotate.h"             // for BufferUnrotate
 #include "GeckoProfiler.h"              // for PROFILER_LABEL
 #include "Layers.h"                     // for ThebesLayer, Layer, etc
 #include "gfxColor.h"                   // for gfxRGBA
@@ -675,18 +676,54 @@ ThebesLayerBuffer::BeginPaint(ThebesLayer* aLayer, ContentType aContentType,
             }
           }
           result.mDidSelfCopy = true;
+          mDidSelfCopy = true;
           // Don't set destBuffer; we special-case self-copies, and
           // just did the necessary work above.
           mBufferRect = destBufferRect;
         } else {
-          // We can't do a real self-copy because the buffer is rotated.
-          // So allocate a new buffer for the destination.
-          destBufferRect = ComputeBufferRect(neededRegion.GetBounds());
-          CreateBuffer(contentType, destBufferRect, bufferFlags,
-                       getter_AddRefs(destBuffer), getter_AddRefs(destBufferOnWhite),
-                       &destDTBuffer, &destDTBufferOnWhite);
-          if (!destBuffer && !destDTBuffer)
-            return result;
+          // With azure and a data surface perform an buffer unrotate
+          // (SelfCopy).
+          if (IsAzureBuffer()) {
+            unsigned char* data;
+            IntSize size;
+            int32_t stride;
+            SurfaceFormat format;
+
+            if (mDTBuffer->LockBits(&data, &size, &stride, &format)) {
+              uint8_t bytesPerPixel = BytesPerPixel(format);
+              BufferUnrotate(data,
+                             size.width * bytesPerPixel,
+                             size.height, stride,
+                             newRotation.x * bytesPerPixel, newRotation.y);
+              mDTBuffer->ReleaseBits(data);
+
+              if (mode == Layer::SURFACE_COMPONENT_ALPHA) {
+                mDTBufferOnWhite->LockBits(&data, &size, &stride, &format);
+                uint8_t bytesPerPixel = BytesPerPixel(format);
+                BufferUnrotate(data,
+                               size.width * bytesPerPixel,
+                               size.height, stride,
+                               newRotation.x * bytesPerPixel, newRotation.y);
+                mDTBufferOnWhite->ReleaseBits(data);
+              }
+
+              // Buffer unrotate moves all the pixels, note that
+              // we self copied for SyncBackToFrontBuffer
+              result.mDidSelfCopy = true;
+              mDidSelfCopy = true;
+              mBufferRect = destBufferRect;
+              mBufferRotation = nsIntPoint(0, 0);
+            }
+          }
+
+          if (!result.mDidSelfCopy) {
+            destBufferRect = ComputeBufferRect(neededRegion.GetBounds());
+            CreateBuffer(contentType, destBufferRect, bufferFlags,
+                         getter_AddRefs(destBuffer), getter_AddRefs(destBufferOnWhite),
+                         &destDTBuffer, &destDTBufferOnWhite);
+            if (!destBuffer && !destDTBuffer)
+              return result;
+          }
         }
       } else {
         mBufferRect = destBufferRect;

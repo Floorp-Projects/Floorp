@@ -6,6 +6,8 @@
 
 TEST_TOOL_DIRS += ['httpserver', 'browser', 'mochitests']
 
+FAIL_ON_WARNINGS = True
+
 MODULE = 'test_necko'
 
 XPCSHELL_TESTS_MANIFESTS += ['unit/xpcshell.ini']

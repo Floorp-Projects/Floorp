@@ -115,7 +115,7 @@ public:
 
   // Accessible
   virtual mozilla::a11y::role NativeRole();
-  virtual Relation RelationByType(uint32_t aRelationType);
+  virtual Relation RelationByType(RelationType aType) MOZ_OVERRIDE;
 
 protected:
   // Accessible

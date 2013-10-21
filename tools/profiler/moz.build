@@ -8,6 +8,7 @@ if CONFIG['MOZ_ENABLE_PROFILER_SPS']:
     FAIL_ON_WARNINGS = not CONFIG['_MSC_VER']
 
     LIBXUL_LIBRARY = True
+    EXPORT_LIBRARY = True
 
     MODULE = 'profiler'
     LIBRARY_NAME = 'profiler'
@@ -67,6 +68,21 @@ if CONFIG['MOZ_ENABLE_PROFILER_SPS']:
             'shared-libraries-win32.cc',
             'platform-win32.cc',
         ]
+
+    LOCAL_INCLUDES += [
+        '/ipc/chromium/src',
+        '/mozglue/linker',
+        '/toolkit/crashreporter/google-breakpad/src',
+    ]
+
+    # We need access to Breakpad's getcontext(3) which is suitable for Android
+    if CONFIG['OS_TARGET'] == 'Android':
+        LOCAL_INCLUDES += [
+            '/toolkit/crashreporter/google-breakpad/src/common/android/include',
+        ]
+
+    if CONFIG['ANDROID_CPU_ARCH'] == 'armeabi':
+        DEFINES['ARCH_ARMV6'] = True
 
 EXPORTS += [
     'GeckoProfiler.h',
