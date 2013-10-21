@@ -899,9 +899,11 @@ class Mochitest(MochitestUtilsMixin):
       self.handleTimeout(timeout, proc, utilityPath, debuggerInfo, browserProcessId)
 
     # record post-test information
-    if not status:
+    if status:
+      log.info("TEST-UNEXPECTED-FAIL | %s | application terminated with exit code %s", self.lastTestSeen, status)
+    else:
       self.lastTestSeen = 'Main app process exited normally'
-    log.info("INFO | runtests.py | exit %s", status)
+
     log.info("INFO | runtests.py | Application ran for: %s", str(datetime.now() - startTime))
 
     # Do a final check for zombie child processes.
