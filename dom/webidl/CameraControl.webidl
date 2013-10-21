@@ -154,12 +154,12 @@ interface CameraControl {
     /* get a media stream to be used as a camera viewfinder in video mode;
        'aOptions' is an CameraRecorderOptions object. */
     [Throws]
-    void getPreviewStreamVideoMode(CameraRecorderOptions aOptions, CameraPreviewStreamCallback onSuccess, optional CameraErrorCallback onError);
+    void getPreviewStreamVideoMode(any aOptions, CameraPreviewStreamCallback onSuccess, optional CameraErrorCallback onError);
 
     /* start recording video; 'aOptions' is a
        CameraStartRecordingOptions object. */
     [Throws]
-    void startRecording(CameraStartRecordingOptions aOptions, DeviceStorage storageArea, DOMString filename, CameraStartRecordingCallback onSuccess, optional CameraErrorCallback onError);
+    void startRecording(any aOptions, DeviceStorage storageArea, DOMString filename, CameraStartRecordingCallback onSuccess, optional CameraErrorCallback onError);
 
     /* stop precording video. */
     [Throws]
@@ -192,50 +192,4 @@ interface CameraControl {
        defunct; a new instance will need to be created to access the camera. */
     [Throws]
     void release(optional CameraReleaseCallback onSuccess, optional CameraErrorCallback onError);
-};
-/* These properties affect the actual video recording, e.g.
-      {
-         rotation: 0,
-         maxFileSizeBytes: 1024 * 1024,
-         maxVideoLengthMs: 0
-      }
-
-   'rotation' is the degrees clockwise to rotate the recorded video; if
-   this options is not supported, it will be ignored; if this option is
-   missing, the default is 0.
-
-   'maxFileSizeBytes' is the maximum size in bytes to which the recorded
-   video file will be allowed to grow.
-
-   'maxVideoLengthMs' is the maximum length in milliseconds to which the
-   recorded video will be allowed to grow.
-
-   if either 'maxFileSizeBytes' or 'maxVideoLengthMs' is missing, zero,
-   or negative, that limit will be disabled.
-*/
-dictionary CameraStartRecordingOptions
-{
-    long      rotation = 0;
-    long long maxFileSizeBytes = 0;
-    long long maxVideoLengthMs = 0;
-};
-
-/* These properties affect the video recording preview, e.g.
-      {
-         profile: "1080p",
-         rotation: 0
-      }
-
-   'profile' is one of the profiles returned by
-   nsICameraCapabilities.recorderProfiles'; if this profile is missing,
-   an arbitrary profile will be chosen.
-
-   'rotation' is the degrees clockwise to rotate the preview; if
-   this option is not supported, it will be ignored; if this option
-   is missing, the default is 0.
-*/
-dictionary CameraRecorderOptions
-{
-    DOMString profile = "";
-    long      rotation = 0;
 };
