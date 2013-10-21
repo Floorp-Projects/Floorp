@@ -38,7 +38,7 @@ MOZ_MEMORY_API size_t malloc_good_size_impl(size_t size);
  * the protective if into errors. MOZ_GLUE_IN_PROGRAM is what triggers MFBT_API
  * to use weak imports. */
 
-static MOZ_INLINE size_t _malloc_good_size(size_t size) {
+static inline size_t _malloc_good_size(size_t size) {
 #  if defined(MOZ_GLUE_IN_PROGRAM) && !defined(IMPL_MFBT)
   if (!malloc_good_size)
     return size;
