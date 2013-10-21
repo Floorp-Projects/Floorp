@@ -220,8 +220,6 @@ PL_DHashTableInit(PLDHashTable *table, const PLDHashTableOps *ops, void *data,
     if (capacity >= PL_DHASH_SIZE_LIMIT)
         return false;
     table->hashShift = PL_DHASH_BITS - log2;
-    table->maxAlphaFrac = (uint8_t)(0x100 * PL_DHASH_DEFAULT_MAX_ALPHA);
-    table->minAlphaFrac = (uint8_t)(0x100 * PL_DHASH_DEFAULT_MIN_ALPHA);
     table->entrySize = entrySize;
     table->entryCount = table->removedCount = 0;
     table->generation = 0;
@@ -242,54 +240,13 @@ PL_DHashTableInit(PLDHashTable *table, const PLDHashTableOps *ops, void *data,
 }
 
 /*
- * Compute max and min load numbers (entry counts) from table params.
+ * Compute max and min load numbers (entry counts).
  */
-#define MAX_LOAD(table, size)   (((table)->maxAlphaFrac * (size)) >> 8)
-#define MIN_LOAD(table, size)   (((table)->minAlphaFrac * (size)) >> 8)
-
-void
-PL_DHashTableSetAlphaBounds(PLDHashTable *table,
-                            float maxAlpha,
-                            float minAlpha)
-{
-    uint32_t size;
-
-    /*
-     * Reject obviously insane bounds, rather than trying to guess what the
-     * buggy caller intended.
-     */
-    NS_ASSERTION(0.5 <= maxAlpha && maxAlpha < 1 && 0 <= minAlpha,
-                 "0.5 <= maxAlpha && maxAlpha < 1 && 0 <= minAlpha");
-    if (maxAlpha < 0.5 || 1 <= maxAlpha || minAlpha < 0)
-        return;
-
-    /*
-     * Ensure that at least one entry will always be free.  If maxAlpha at
-     * minimum size leaves no entries free, reduce maxAlpha based on minimum
-     * size and the precision limit of maxAlphaFrac's fixed point format.
-     */
-    NS_ASSERTION(PL_DHASH_MIN_SIZE - (maxAlpha * PL_DHASH_MIN_SIZE) >= 1,
-                 "PL_DHASH_MIN_SIZE - (maxAlpha * PL_DHASH_MIN_SIZE) >= 1");
-    if (PL_DHASH_MIN_SIZE - (maxAlpha * PL_DHASH_MIN_SIZE) < 1) {
-        maxAlpha = (float)
-                   (PL_DHASH_MIN_SIZE - XPCOM_MAX(PL_DHASH_MIN_SIZE / 256, 1))
-                   / PL_DHASH_MIN_SIZE;
-    }
-
-    /*
-     * Ensure that minAlpha is strictly less than half maxAlpha.  Take care
-     * not to truncate an entry's worth of alpha when storing in minAlphaFrac
-     * (8-bit fixed point format).
-     */
-    NS_ASSERTION(minAlpha < maxAlpha / 2,
-                 "minAlpha < maxAlpha / 2");
-    if (minAlpha >= maxAlpha / 2) {
-        size = PL_DHASH_TABLE_SIZE(table);
-        minAlpha = (size * maxAlpha - XPCOM_MAX(size / 256, 1u)) / (2 * size);
-    }
-
-    table->maxAlphaFrac = (uint8_t)(maxAlpha * 256);
-    table->minAlphaFrac = (uint8_t)(minAlpha * 256);
+static inline uint32_t MaxLoad(uint32_t size) {
+    return size - (size >> 2);  // == size * 0.75
+}
+static inline uint32_t MinLoad(uint32_t size) {
+    return size >> 2;           // == size * 0.25
 }
 
 /*
@@ -592,7 +549,7 @@ PL_DHashTableOperate(PLDHashTable *table, const void *key, PLDHashOperator op)
          * are on the edge of being overloaded.
          */
         size = PL_DHASH_TABLE_SIZE(table);
-        if (table->entryCount + table->removedCount >= MAX_LOAD(table, size)) {
+        if (table->entryCount + table->removedCount >= MaxLoad(size)) {
             /* Compress if a quarter or more of all entries are removed. */
             if (table->removedCount >= size >> 2) {
                 METER(table->stats.compresses++);
@@ -650,7 +607,7 @@ PL_DHashTableOperate(PLDHashTable *table, const void *key, PLDHashOperator op)
             /* Shrink if alpha is <= .25 and table isn't too small already. */
             size = PL_DHASH_TABLE_SIZE(table);
             if (size > PL_DHASH_MIN_SIZE &&
-                table->entryCount <= MIN_LOAD(table, size)) {
+                table->entryCount <= MinLoad(size)) {
                 METER(table->stats.shrinks++);
                 (void) ChangeTable(table, -1);
             }
@@ -726,15 +683,15 @@ PL_DHashTableEnumerate(PLDHashTable *table, PLDHashEnumerator etor, void *arg)
 
     /*
      * Shrink or compress if a quarter or more of all entries are removed, or
-     * if the table is underloaded according to the configured minimum alpha,
-     * and is not minimal-size already.  Do this only if we removed above, so
-     * non-removing enumerations can count on stable table->entryStore until
-     * the next non-lookup-Operate or removing-Enumerate.
+     * if the table is underloaded according to the minimum alpha, and is not
+     * minimal-size already.  Do this only if we removed above, so non-removing
+     * enumerations can count on stable table->entryStore until the next
+     * non-lookup-Operate or removing-Enumerate.
      */
     if (didRemove &&
         (table->removedCount >= capacity >> 2 ||
          (capacity > PL_DHASH_MIN_SIZE &&
-          table->entryCount <= MIN_LOAD(table, capacity)))) {
+          table->entryCount <= MinLoad(capacity)))) {
         METER(table->stats.enumShrinks++);
         capacity = table->entryCount;
         capacity += capacity >> 1;
