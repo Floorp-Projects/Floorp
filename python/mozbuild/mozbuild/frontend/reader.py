@@ -710,7 +710,7 @@ class BuildReader(object):
                                    'var': var}
                 if 'exports' in sandbox.metadata:
                     sandbox.recompute_exports()
-                    recurse_info[d]['exports'] = sandbox.metadata['exports']
+                    recurse_info[d]['exports'] = dict(sandbox.metadata['exports'])
 
         # We also have tiers whose members are directories.
         if 'TIERS' in sandbox:

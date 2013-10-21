@@ -9,3 +9,6 @@ PROGRAM = 'metrotestharness'
 CPP_SOURCES += [
     'metrotestharness.cpp',
 ]
+
+# We want this exe in dist/bin
+DIST_SUBDIR = ''
