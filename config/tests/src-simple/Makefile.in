@@ -5,9 +5,9 @@
 
 LOCALE_SRCDIR = $(srcdir)/l10n
 
-include $(topsrcdir)/config/config.mk
-
 STANDALONE_MAKEFILE := 1
+
+include $(topsrcdir)/config/config.mk
 
 XPI_NAME = test_jar_mn
 
