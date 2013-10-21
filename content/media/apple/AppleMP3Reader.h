@@ -38,9 +38,6 @@ public:
                         int64_t aEndTime,
                         int64_t aCurrentTime) MOZ_OVERRIDE;
 
-  virtual nsresult GetBuffered(dom::TimeRanges* aBuffered,
-                               int64_t aStartTime) MOZ_OVERRIDE;
-
   void AudioSampleCallback(UInt32 aNumBytes,
                            UInt32 aNumPackets,
                            const void *aData,

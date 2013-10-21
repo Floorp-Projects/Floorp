@@ -633,7 +633,7 @@ bool
 MetroWidget::DispatchKeyboardEvent(WidgetGUIEvent* aEvent)
 {
   MOZ_ASSERT(aEvent);
-  WidgetKeyboardEvent* oldKeyEvent = static_cast<WidgetKeyboardEvent*>(aEvent);
+  WidgetKeyboardEvent* oldKeyEvent = aEvent->AsKeyboardEvent();
   WidgetKeyboardEvent* keyEvent =
     new WidgetKeyboardEvent(oldKeyEvent->mFlags.mIsTrusted,
                             oldKeyEvent->message, oldKeyEvent->widget);
@@ -1020,8 +1020,7 @@ MetroWidget::ApzReceiveInputEvent(WidgetInputEvent* aEvent)
   if (!MetroWidget::sAPZC) {
     return nsEventStatus_eIgnore;
   }
-  WidgetInputEvent& event = static_cast<WidgetInputEvent&>(*aEvent);
-  return MetroWidget::sAPZC->ReceiveInputEvent(event);
+  return MetroWidget::sAPZC->ReceiveInputEvent(*aEvent->AsInputEvent());
 }
 
 nsEventStatus
@@ -1034,8 +1033,8 @@ MetroWidget::ApzReceiveInputEvent(WidgetInputEvent* aInEvent,
   if (!MetroWidget::sAPZC) {
     return nsEventStatus_eIgnore;
   }
-  WidgetInputEvent& event = static_cast<WidgetInputEvent&>(*aInEvent);
-  return MetroWidget::sAPZC->ReceiveInputEvent(event, aOutEvent);
+  return MetroWidget::sAPZC->ReceiveInputEvent(*aInEvent->AsInputEvent(),
+                                               aOutEvent);
 }
 
 LayerManager*

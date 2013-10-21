@@ -7,7 +7,6 @@
 interfaces = [
     'base',
     'canvas',
-    'contacts',
     'core',
     'html',
     'events',

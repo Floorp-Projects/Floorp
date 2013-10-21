@@ -184,6 +184,11 @@ class MozbuildObject(ProcessExecutionMixin):
         if topobjdir:
             topobjdir = os.path.normpath(topobjdir)
 
+            if topsrcdir == topobjdir:
+                raise BadEnvironmentException('The object directory appears '
+                    'to be the same as your source directory (%s). This build '
+                    'configuration is not supported.' % topsrcdir)
+
         # If we can't resolve topobjdir, oh well. The constructor will figure
         # it out via config.guess.
         return cls(topsrcdir, None, None, topobjdir=topobjdir)

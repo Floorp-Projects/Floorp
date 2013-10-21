@@ -33,7 +33,7 @@ function openComputedView(aInspector)
 function runTests()
 {
   Services.obs.removeObserver(runTests, "StyleInspector-populated");
-  computedView = getComputedView(inspector);
+  computedView = getComputedView();
 
   var span = doc.querySelector(".matches");
   ok(span, "captain, we have the matches span");

@@ -329,21 +329,6 @@ nsresult MediaPluginReader::Seek(int64_t aTarget, int64_t aStartTime, int64_t aE
   return DecodeToTarget(aTarget);
 }
 
-nsresult MediaPluginReader::GetBuffered(mozilla::dom::TimeRanges* aBuffered, int64_t aStartTime)
-{
-  if (!mPlugin)
-    return NS_OK;
-
-  MediaResource* stream = mDecoder->GetResource();
-
-  int64_t durationUs = 0;
-  mPlugin->GetDuration(mPlugin, &durationUs);
-
-  GetEstimatedBufferedTimeRanges(stream, durationUs, aBuffered);
-  
-  return NS_OK;
-}
-
 MediaPluginReader::ImageBufferCallback::ImageBufferCallback(mozilla::layers::ImageContainer *aImageContainer) :
   mImageContainer(aImageContainer)
 {

@@ -2352,8 +2352,13 @@ nsGfxScrollFrameInner::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
       (scrollRange.width > 0 || scrollRange.height > 0) &&
       ((styles.mHorizontal != NS_STYLE_OVERFLOW_HIDDEN && mHScrollbarBox) ||
        (styles.mVertical   != NS_STYLE_OVERFLOW_HIDDEN && mVScrollbarBox));
-    // TODO Turn this on for inprocess OMTC
+    // TODO Turn this on for inprocess OMTC on all platforms
     bool wantSubAPZC = (XRE_GetProcessType() == GeckoProcessType_Content);
+#ifdef XP_WIN
+    if (XRE_GetWindowsEnvironment() == WindowsEnvironmentType_Metro) {
+      wantSubAPZC = true;
+    }
+#endif
     mShouldBuildLayer =
       wantSubAPZC &&
       hasScrollableOverflow &&

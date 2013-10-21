@@ -82,6 +82,11 @@ EXPORTS.mozilla += [
     'nsMemoryInfoDumper.h',
 ]
 
+if CONFIG['OS_ARCH'] == 'WINNT':
+    EXPORTS.mozilla += [
+        'WindowsVersion.h',
+    ]
+
 CPP_SOURCES += [
     'AvailableMemoryTracker.cpp',
     'ClearOnShutdown.cpp',

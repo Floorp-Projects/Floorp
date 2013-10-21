@@ -71,14 +71,6 @@ nsDOMTouchEvent::nsDOMTouchEvent(mozilla::dom::EventTarget* aOwner,
   }
 }
 
-nsDOMTouchEvent::~nsDOMTouchEvent()
-{
-  if (mEventIsInternal && mEvent) {
-    delete static_cast<WidgetTouchEvent*>(mEvent);
-    mEvent = nullptr;
-  }
-}
-
 NS_IMPL_CYCLE_COLLECTION_INHERITED_3(nsDOMTouchEvent, nsDOMUIEvent,
                                      mTouches,
                                      mTargetTouches,
@@ -115,8 +107,8 @@ nsDOMTouchEvent::InitTouchEvent(const nsAString& aType,
     return;
   }
 
-  static_cast<WidgetInputEvent*>(mEvent)->
-    InitBasicModifiers(aCtrlKey, aAltKey, aShiftKey, aMetaKey);
+  mEvent->AsInputEvent()->InitBasicModifiers(aCtrlKey, aAltKey,
+                                             aShiftKey, aMetaKey);
   mTouches = aTouches;
   mTargetTouches = aTargetTouches;
   mChangedTouches = aChangedTouches;
@@ -126,7 +118,7 @@ nsDOMTouchList*
 nsDOMTouchEvent::Touches()
 {
   if (!mTouches) {
-    WidgetTouchEvent* touchEvent = static_cast<WidgetTouchEvent*>(mEvent);
+    WidgetTouchEvent* touchEvent = mEvent->AsTouchEvent();
     if (mEvent->message == NS_TOUCH_END || mEvent->message == NS_TOUCH_CANCEL) {
       // for touchend events, remove any changed touches from the touches array
       nsTArray< nsRefPtr<Touch> > unchangedTouches;
@@ -149,7 +141,7 @@ nsDOMTouchEvent::TargetTouches()
 {
   if (!mTargetTouches) {
     nsTArray< nsRefPtr<Touch> > targetTouches;
-    WidgetTouchEvent* touchEvent = static_cast<WidgetTouchEvent*>(mEvent);
+    WidgetTouchEvent* touchEvent = mEvent->AsTouchEvent();
     const nsTArray< nsRefPtr<Touch> >& touches = touchEvent->touches;
     for (uint32_t i = 0; i < touches.Length(); ++i) {
       // for touchend/cancel events, don't append to the target list if this is a
@@ -171,7 +163,7 @@ nsDOMTouchEvent::ChangedTouches()
 {
   if (!mChangedTouches) {
     nsTArray< nsRefPtr<Touch> > changedTouches;
-    WidgetTouchEvent* touchEvent = static_cast<WidgetTouchEvent*>(mEvent);
+    WidgetTouchEvent* touchEvent = mEvent->AsTouchEvent();
     const nsTArray< nsRefPtr<Touch> >& touches = touchEvent->touches;
     for (uint32_t i = 0; i < touches.Length(); ++i) {
       if (touches[i]->mChanged) {
@@ -219,6 +211,30 @@ nsDOMTouchEvent::PrefEnabled()
     nsContentUtils::InitializeTouchEventTable();
   }
   return prefValue;
+}
+
+bool
+nsDOMTouchEvent::AltKey()
+{
+  return mEvent->AsTouchEvent()->IsAlt();
+}
+
+bool
+nsDOMTouchEvent::MetaKey()
+{
+  return mEvent->AsTouchEvent()->IsMeta();
+}
+
+bool
+nsDOMTouchEvent::CtrlKey()
+{
+  return mEvent->AsTouchEvent()->IsControl();
+}
+
+bool
+nsDOMTouchEvent::ShiftKey()
+{
+  return mEvent->AsTouchEvent()->IsShift();
 }
 
 nsresult

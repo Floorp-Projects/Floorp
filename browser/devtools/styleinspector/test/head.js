@@ -48,6 +48,12 @@ function openInspector(callback)
   });
 }
 
+function getActiveInspector()
+{
+  let target = TargetFactory.forTab(gBrowser.selectedTab);
+  return gDevTools.getToolbox(target).getPanel("inspector");
+}
+
 function openRuleView(callback)
 {
   openInspector(inspector => {
@@ -99,12 +105,14 @@ function tearDown()
   browser = hudId = hud = filterBox = outputNode = cs = null;
 }
 
-function getComputedView(inspector) {
+function getComputedView() {
+  let inspector = getActiveInspector();
   return inspector.sidebar.getWindowForTab("computedview").computedview.view;
 }
 
 function ruleView()
 {
+  let inspector = getActiveInspector();
   return inspector.sidebar.getWindowForTab("ruleview").ruleview.view;
 }
 
@@ -164,6 +172,20 @@ function promiseDone(promise) {
   });
 }
 
+function getComputedPropertyValue(aName)
+{
+  let computedview = getComputedView();
+  let props = computedview.styleDocument.querySelectorAll(".property-view");
+
+  for (let prop of props) {
+    let name = prop.querySelector(".property-name");
+
+    if (name.textContent === aName) {
+      let value = prop.querySelector(".property-value");
+      return value.textContent;
+    }
+  }
+}
 
 registerCleanupFunction(tearDown);
 

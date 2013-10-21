@@ -58,3 +58,7 @@
 .ruleview-header.ruleview-expandable-header {
   cursor: pointer;
 }
+
+.ruleview-colorswatch {
+  display: inline-block;
+}

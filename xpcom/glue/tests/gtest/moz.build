@@ -10,6 +10,10 @@ CPP_SOURCES += [
     'TestFileUtils.cpp',
 ]
 
+LOCAL_INCLUDES = [
+    '../..',
+]
+
 LIBRARY_NAME = 'xpcom_glue_gtest'
 
 LIBXUL_LIBRARY = True

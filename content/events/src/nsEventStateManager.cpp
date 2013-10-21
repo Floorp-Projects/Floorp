@@ -1145,8 +1145,7 @@ nsEventStateManager::PreHandleEvent(nsPresContext* aPresContext,
 
   case NS_KEY_PRESS:
     {
-
-      WidgetKeyboardEvent* keyEvent = static_cast<WidgetKeyboardEvent*>(aEvent);
+      WidgetKeyboardEvent* keyEvent = aEvent->AsKeyboardEvent();
 
       int32_t modifierMask = 0;
       if (keyEvent->IsShift())
@@ -1210,72 +1209,68 @@ nsEventStateManager::PreHandleEvent(nsPresContext* aPresContext,
     }
     break;
   case NS_QUERY_SELECTED_TEXT:
-    DoQuerySelectedText(static_cast<WidgetQueryContentEvent*>(aEvent));
+    DoQuerySelectedText(aEvent->AsQueryContentEvent());
     break;
   case NS_QUERY_TEXT_CONTENT:
     {
       if (RemoteQueryContentEvent(aEvent))
         break;
       nsContentEventHandler handler(mPresContext);
-      handler.OnQueryTextContent(static_cast<WidgetQueryContentEvent*>(aEvent));
+      handler.OnQueryTextContent(aEvent->AsQueryContentEvent());
     }
     break;
   case NS_QUERY_CARET_RECT:
     {
       // XXX remote event
       nsContentEventHandler handler(mPresContext);
-      handler.OnQueryCaretRect(static_cast<WidgetQueryContentEvent*>(aEvent));
+      handler.OnQueryCaretRect(aEvent->AsQueryContentEvent());
     }
     break;
   case NS_QUERY_TEXT_RECT:
     {
       // XXX remote event
       nsContentEventHandler handler(mPresContext);
-      handler.OnQueryTextRect(static_cast<WidgetQueryContentEvent*>(aEvent));
+      handler.OnQueryTextRect(aEvent->AsQueryContentEvent());
     }
     break;
   case NS_QUERY_EDITOR_RECT:
     {
       // XXX remote event
       nsContentEventHandler handler(mPresContext);
-      handler.OnQueryEditorRect(static_cast<WidgetQueryContentEvent*>(aEvent));
+      handler.OnQueryEditorRect(aEvent->AsQueryContentEvent());
     }
     break;
   case NS_QUERY_CONTENT_STATE:
     {
       // XXX remote event
       nsContentEventHandler handler(mPresContext);
-      handler.OnQueryContentState(static_cast<WidgetQueryContentEvent*>(aEvent));
+      handler.OnQueryContentState(aEvent->AsQueryContentEvent());
     }
     break;
   case NS_QUERY_SELECTION_AS_TRANSFERABLE:
     {
       // XXX remote event
       nsContentEventHandler handler(mPresContext);
-      handler.OnQuerySelectionAsTransferable(
-        static_cast<WidgetQueryContentEvent*>(aEvent));
+      handler.OnQuerySelectionAsTransferable(aEvent->AsQueryContentEvent());
     }
     break;
   case NS_QUERY_CHARACTER_AT_POINT:
     {
       // XXX remote event
       nsContentEventHandler handler(mPresContext);
-      handler.OnQueryCharacterAtPoint(
-        static_cast<WidgetQueryContentEvent*>(aEvent));
+      handler.OnQueryCharacterAtPoint(aEvent->AsQueryContentEvent());
     }
     break;
   case NS_QUERY_DOM_WIDGET_HITTEST:
     {
       // XXX remote event
       nsContentEventHandler handler(mPresContext);
-      handler.OnQueryDOMWidgetHittest(
-        static_cast<WidgetQueryContentEvent*>(aEvent));
+      handler.OnQueryDOMWidgetHittest(aEvent->AsQueryContentEvent());
     }
     break;
   case NS_SELECTION_SET:
     {
-      WidgetSelectionEvent *selectionEvent =
-          static_cast<WidgetSelectionEvent*>(aEvent);
+      WidgetSelectionEvent* selectionEvent = aEvent->AsSelectionEvent();
       if (IsTargetCrossProcess(selectionEvent)) {
         // Will not be handled locally, remote the event
         if (GetCrossProcessTarget()->SendSelectionEvent(*selectionEvent))
@@ -1283,7 +1278,7 @@ nsEventStateManager::PreHandleEvent(nsPresContext* aPresContext,
         break;
       }
       nsContentEventHandler handler(mPresContext);
-      handler.OnSelectionEvent(static_cast<WidgetSelectionEvent*>(aEvent));
+      handler.OnSelectionEvent(selectionEvent);
     }
     break;
   case NS_CONTENT_COMMAND_CUT:
@@ -1294,18 +1289,17 @@ nsEventStateManager::PreHandleEvent(nsPresContext* aPresContext,
   case NS_CONTENT_COMMAND_REDO:
   case NS_CONTENT_COMMAND_PASTE_TRANSFERABLE:
     {
-      DoContentCommandEvent(static_cast<WidgetContentCommandEvent*>(aEvent));
+      DoContentCommandEvent(aEvent->AsContentCommandEvent());
     }
     break;
   case NS_CONTENT_COMMAND_SCROLL:
     {
-      DoContentCommandScrollEvent(
-        static_cast<WidgetContentCommandEvent*>(aEvent));
+      DoContentCommandScrollEvent(aEvent->AsContentCommandEvent());
     }
     break;
   case NS_TEXT_TEXT:
     {
-      WidgetTextEvent *textEvent = static_cast<WidgetTextEvent*>(aEvent);
+      WidgetTextEvent *textEvent = aEvent->AsTextEvent();
       if (IsTargetCrossProcess(textEvent)) {
         // Will not be handled locally, remote the event
         if (GetCrossProcessTarget()->SendTextEvent(*textEvent)) {
@@ -1319,8 +1313,7 @@ nsEventStateManager::PreHandleEvent(nsPresContext* aPresContext,
     if (aEvent->mFlags.mIsTrusted) {
       // If the event is trusted event, set the selected text to data of
       // composition event.
-      WidgetCompositionEvent *compositionEvent =
-        static_cast<WidgetCompositionEvent*>(aEvent);
+      WidgetCompositionEvent* compositionEvent = aEvent->AsCompositionEvent();
       WidgetQueryContentEvent selectedText(true, NS_QUERY_SELECTED_TEXT,
                                            compositionEvent->widget);
       DoQuerySelectedText(&selectedText);
@@ -1331,8 +1324,7 @@ nsEventStateManager::PreHandleEvent(nsPresContext* aPresContext,
   case NS_COMPOSITION_UPDATE:
   case NS_COMPOSITION_END:
     {
-      WidgetCompositionEvent *compositionEvent =
-          static_cast<WidgetCompositionEvent*>(aEvent);
+      WidgetCompositionEvent* compositionEvent = aEvent->AsCompositionEvent();
       if (IsTargetCrossProcess(compositionEvent)) {
         // Will not be handled locally, remote the event
         if (GetCrossProcessTarget()->SendCompositionEvent(*compositionEvent)) {
@@ -1609,8 +1601,7 @@ nsEventStateManager::DispatchCrossProcessEvent(WidgetEvent* aEvent,
     return remote->SendRealMouseEvent(*mouseEvent);
   }
   case NS_KEY_EVENT: {
-    WidgetKeyboardEvent* keyEvent = static_cast<WidgetKeyboardEvent*>(aEvent);
-    return remote->SendRealKeyEvent(*keyEvent);
+    return remote->SendRealKeyEvent(*aEvent->AsKeyboardEvent());
   }
   case NS_WHEEL_EVENT: {
     WidgetWheelEvent* wheelEvent = static_cast<WidgetWheelEvent*>(aEvent);
@@ -1620,8 +1611,7 @@ nsEventStateManager::DispatchCrossProcessEvent(WidgetEvent* aEvent,
     // Let the child process synthesize a mouse event if needed, and
     // ensure we don't synthesize one in this process.
     *aStatus = nsEventStatus_eConsumeNoDefault;
-    WidgetTouchEvent* touchEvent = static_cast<WidgetTouchEvent*>(aEvent);
-    return remote->SendRealTouchEvent(*touchEvent);
+    return remote->SendRealTouchEvent(*aEvent->AsTouchEvent());
   }
   default: {
     MOZ_CRASH("Attempt to send non-whitelisted event?");
@@ -1737,8 +1727,8 @@ nsEventStateManager::HandleCrossProcessEvent(WidgetEvent* aEvent,
     //
     // This loop is similar to the one used in
     // PresShell::DispatchTouchEvent().
-    WidgetTouchEvent* touchEvent = static_cast<WidgetTouchEvent*>(aEvent);
-    const nsTArray< nsRefPtr<Touch> >& touches = touchEvent->touches;
+    const nsTArray< nsRefPtr<Touch> >& touches =
+      aEvent->AsTouchEvent()->touches;
     for (uint32_t i = 0; i < touches.Length(); ++i) {
       Touch* touch = touches[i];
       // NB: the |mChanged| check is an optimization, subprocesses can
@@ -3483,9 +3473,9 @@ nsEventStateManager::PostHandleEvent(nsPresContext* aPresContext,
 
   case NS_GESTURENOTIFY_EVENT_START:
     {
-      if (nsEventStatus_eConsumeNoDefault != *aStatus)
-        DecideGestureEvent(static_cast<WidgetGestureNotifyEvent*>(aEvent),
-                           mCurrentTarget);
+      if (nsEventStatus_eConsumeNoDefault != *aStatus) {
+        DecideGestureEvent(aEvent->AsGestureNotifyEvent(), mCurrentTarget);
+      }
     }
     break;
 
@@ -3511,7 +3501,7 @@ nsEventStateManager::PostHandleEvent(nsPresContext* aPresContext,
       nsCOMPtr<nsIDOMDataTransfer> initialDataTransfer;
       dragSession->GetDataTransfer(getter_AddRefs(initialDataTransfer));
 
-      WidgetDragEvent *dragEvent = static_cast<WidgetDragEvent*>(aEvent);
+      WidgetDragEvent *dragEvent = aEvent->AsDragEvent();
 
       // collect any changes to moz cursor settings stored in the event's
       // data transfer.
@@ -3642,7 +3632,7 @@ nsEventStateManager::PostHandleEvent(nsPresContext* aPresContext,
 
   case NS_KEY_PRESS:
     if (nsEventStatus_eConsumeNoDefault != *aStatus) {
-      WidgetKeyboardEvent* keyEvent = static_cast<WidgetKeyboardEvent*>(aEvent);
+      WidgetKeyboardEvent* keyEvent = aEvent->AsKeyboardEvent();
       //This is to prevent keyboard scrolling while alt modifier in use.
       if (!keyEvent->IsAlt()) {
         switch(keyEvent->keyCode) {
@@ -3709,8 +3699,7 @@ nsEventStateManager::PostHandleEvent(nsPresContext* aPresContext,
 bool
 nsEventStateManager::RemoteQueryContentEvent(WidgetEvent* aEvent)
 {
-  WidgetQueryContentEvent *queryEvent =
-      static_cast<WidgetQueryContentEvent*>(aEvent);
+  WidgetQueryContentEvent* queryEvent = aEvent->AsQueryContentEvent();
   if (!IsTargetCrossProcess(queryEvent)) {
     return false;
   }

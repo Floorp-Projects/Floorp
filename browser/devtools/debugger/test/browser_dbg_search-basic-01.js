@@ -26,6 +26,26 @@ function test() {
 }
 
 function performTest() {
+  setText(gSearchBox, "#html");
+  
+  EventUtils.synthesizeKey("VK_RETURN", { shiftKey: true }, gDebugger);
+  is(gFiltering.searchData.toSource(), '["#", ["", "html"]]',
+    "The searchbox data wasn't parsed correctly.");
+  ok(isCaretPos(gPanel, 35, 7),
+    "The editor didn't jump to the correct line.");
+
+  EventUtils.synthesizeKey("VK_RETURN", { shiftKey: true }, gDebugger);
+  is(gFiltering.searchData.toSource(), '["#", ["", "html"]]',
+    "The searchbox data wasn't parsed correctly.");
+  ok(isCaretPos(gPanel, 5, 6),
+    "The editor didn't jump to the correct line.");
+
+  EventUtils.synthesizeKey("VK_RETURN", { shiftKey: true }, gDebugger);
+  is(gFiltering.searchData.toSource(), '["#", ["", "html"]]',
+    "The searchbox data wasn't parsed correctly.");
+  ok(isCaretPos(gPanel, 3, 15),
+    "The editor didn't jump to the correct line.");
+  
   setText(gSearchBox, ":12");
   is(gFiltering.searchData.toSource(), '[":", ["", 12]]',
     "The searchbox data wasn't parsed correctly.");

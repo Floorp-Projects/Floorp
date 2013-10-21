@@ -20,24 +20,28 @@ Cu.import("resource://gre/modules/IndexedDBHelper.jsm");
 Cu.import("resource://gre/modules/PhoneNumberUtils.jsm");
 
 const DB_NAME = "contacts";
-const DB_VERSION = 14;
+const DB_VERSION = 16;
 const STORE_NAME = "contacts";
 const SAVED_GETALL_STORE_NAME = "getallcache";
 const CHUNK_SIZE = 20;
 const REVISION_STORE = "revision";
 const REVISION_KEY = "revision";
 
+function optionalDate(aValue) {
+  if (aValue) {
+    if (!(aValue instanceof Date)) {
+      return new Date(aValue);
+    }
+    return aValue;
+  }
+  return undefined;
+}
+
 function exportContact(aRecord) {
-  let contact = {};
-  contact.properties = aRecord.properties;
-
-  for (let field in aRecord.properties)
-    contact.properties[field] = aRecord.properties[field];
-
-  contact.updated = aRecord.updated;
-  contact.published = aRecord.published;
-  contact.id = aRecord.id;
-  return contact;
+  if (aRecord) {
+    delete aRecord.search;
+  }
+  return aRecord;
 }
 
 function ContactDispatcher(aContacts, aFullContacts, aCallback, aNewTxn, aClearDispatcher, aFailureCb) {
@@ -150,9 +154,7 @@ ContactDB.prototype = {
       for (let i = 0; i < contacts.length; i++) {
         let contact = {};
         contact.properties = contacts[i];
-        contact.id = idService.generateUUID().toString().replace('-', '', 'g')
-                                                        .replace('{', '')
-                                                        .replace('}', '');
+        contact.id = idService.generateUUID().toString().replace(/[{}-]/g, "");
         contact = this.makeImport(contact);
         this.updateRecordMetadata(contact);
         if (DEBUG) debug("import: " + JSON.stringify(contact));
@@ -544,8 +546,77 @@ ContactDB.prototype = {
             if (modified || modified2) {
               cursor.update(cursor.value);
             }
+            cursor.continue();
           } else {
             next();
+          }
+        };
+      },
+      function upgrade14to15() {
+        if (DEBUG) debug("Fix array properties saved as scalars");
+        if (!objectStore) {
+         objectStore = aTransaction.objectStore(STORE_NAME);
+        }
+        const ARRAY_PROPERTIES = ["photo", "adr", "email", "url", "impp", "tel",
+                                 "name", "honorificPrefix", "givenName",
+                                 "additionalName", "familyName", "honorificSuffix",
+                                 "nickname", "category", "org", "jobTitle",
+                                 "note", "key"];
+        const PROPERTIES_WITH_TYPE = ["adr", "email", "url", "impp", "tel"];
+        objectStore.openCursor().onsuccess = function(event) {
+          let cursor = event.target.result;
+          let changed = false;
+          if (cursor) {
+            let props = cursor.value.properties;
+            for (let prop of ARRAY_PROPERTIES) {
+              if (props[prop]) {
+                if (!Array.isArray(props[prop])) {
+                  cursor.value.properties[prop] = [props[prop]];
+                  changed = true;
+                }
+                if (PROPERTIES_WITH_TYPE.indexOf(prop) !== -1) {
+                  let subprop = cursor.value.properties[prop];
+                  for (let i = 0; i < subprop.length; ++i) {
+                    if (!Array.isArray(subprop[i].type)) {
+                      cursor.value.properties[prop][i].type = [subprop[i].type];
+                      changed = true;
+                    }
+                  }
+                }
+              }
+            }
+            if (changed) {
+              cursor.update(cursor.value);
+            }
+            cursor.continue();
+          } else {
+           next();
+          }
+        };
+      },
+      function upgrade15to16() {
+        if (DEBUG) debug("Fix Date properties");
+        if (!objectStore) {
+         objectStore = aTransaction.objectStore(STORE_NAME);
+        }
+        const DATE_PROPERTIES = ["bday", "anniversary"];
+        objectStore.openCursor().onsuccess = function(event) {
+          let cursor = event.target.result;
+          let changed = false;
+          if (cursor) {
+            let props = cursor.value.properties;
+            for (let prop of DATE_PROPERTIES) {
+              if (props[prop] && !(props[prop] instanceof Date)) {
+                cursor.value.properties[prop] = new Date(props[prop]);
+                changed = true;
+              }
+            }
+            if (changed) {
+              cursor.update(cursor.value);
+            }
+            cursor.continue();
+          } else {
+           next();
           }
         };
       },
@@ -576,31 +647,7 @@ ContactDB.prototype = {
   },
 
   makeImport: function makeImport(aContact) {
-    let contact = {};
-    contact.properties = {
-      name:            [],
-      honorificPrefix: [],
-      givenName:       [],
-      additionalName:  [],
-      familyName:      [],
-      honorificSuffix: [],
-      nickname:        [],
-      email:           [],
-      photo:           [],
-      url:             [],
-      category:        [],
-      adr:             [],
-      tel:             [],
-      org:             [],
-      jobTitle:        [],
-      bday:            null,
-      note:            [],
-      impp:            [],
-      anniversary:     null,
-      sex:             null,
-      genderIdentity:  null,
-      key:             [],
-    };
+    let contact = {properties: {}};
 
     contact.search = {
       givenName:       [],
@@ -687,7 +734,6 @@ ContactDB.prototype = {
         }
       }
     }
-    if (DEBUG) debug("contact:" + JSON.stringify(contact));
 
     contact.updated = aContact.updated;
     contact.published = aContact.published;
