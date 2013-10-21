@@ -575,6 +575,34 @@ FUNCTIONS = {
            add_tier_dir('base', 'bar', external=True)
         """),
 
+    'export': ('_export', (str,),
+        """Make the specified variable available to all child directories.
+
+        The variable specified by the argument string is added to the
+        environment of all directories specified in the DIRS, PARALLEL_DIRS,
+        TOOL_DIRS, TEST_DIRS, and TEST_TOOL_DIRS variables. If those directories
+        themselves have child directories, the variable will be exported to all
+        of them.
+
+        The value used for the variable is the final value at the end of the
+        moz.build file, so it is possible (but not recommended style) to place
+        the export before the definition of the variable.
+
+        This function is limited to the upper-case variables that have special
+        meaning in moz.build files.
+
+        NOTE: Please consult with a build peer before adding a new use of this
+        function.
+
+        Example usage
+        ^^^^^^^^^^^^^
+
+        To make all children directories install as the given extension::
+
+          XPI_NAME = 'cool-extension'
+          export('XPI_NAME')
+        """),
+
     'warning': ('_warning', (str,),
         """Issue a warning.
 

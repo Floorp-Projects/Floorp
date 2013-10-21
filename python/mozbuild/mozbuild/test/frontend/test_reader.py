@@ -253,5 +253,16 @@ class TestBuildReader(unittest.TestCase):
         e = bre.exception
         self.assertIn('The DIRS variable is not allowed in such directories.', str(e))
 
+    def test_inheriting_variables(self):
+        reader = self.reader('inheriting-variables')
+
+        sandboxes = list(reader.read_topsrcdir())
+
+        self.assertEqual(len(sandboxes), 4)
+        self.assertEqual([sandbox['RELATIVEDIR'] for sandbox in sandboxes],
+            ['', 'foo', 'foo/baz', 'bar'])
+        self.assertEqual([sandbox['XPIDL_MODULE'] for sandbox in sandboxes],
+            ['foobar', 'foobar', 'foobar', 'bazbar'])
+
 if __name__ == '__main__':
     main()
