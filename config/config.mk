@@ -29,6 +29,81 @@ endif
 
 -include $(DEPTH)/.mozconfig.mk
 
+# Integrate with mozbuild-generated make files. We first verify that no
+# variables provided by the automatically generated .mk files are
+# present. If they are, this is a violation of the separation of
+# responsibility between Makefile.in and mozbuild files.
+_MOZBUILD_EXTERNAL_VARIABLES := \
+  ANDROID_GENERATED_RESFILES \
+  ANDROID_RESFILES \
+  CMMSRCS \
+  CPP_UNIT_TESTS \
+  DIRS \
+  EXTRA_PP_COMPONENTS \
+  EXTRA_PP_JS_MODULES \
+  GTEST_CMMSRCS \
+  GTEST_CPPSRCS \
+  GTEST_CSRCS \
+  HOST_CSRCS \
+  HOST_LIBRARY_NAME \
+  IS_COMPONENT \
+  JS_MODULES_PATH \
+  LIBRARY_NAME \
+  LIBXUL_LIBRARY \
+  MODULE \
+  MSVC_ENABLE_PGO \
+  NO_DIST_INSTALL \
+  PARALLEL_DIRS \
+  SDK_HEADERS \
+  SIMPLE_PROGRAMS \
+  TEST_DIRS \
+  TIERS \
+  TOOL_DIRS \
+  XPCSHELL_TESTS \
+  XPIDL_MODULE \
+  $(NULL)
+
+_DEPRECATED_VARIABLES := \
+  MOCHITEST_FILES_PARTS \
+  MOCHITEST_BROWSER_FILES_PARTS \
+  $(NULL)
+
+ifndef EXTERNALLY_MANAGED_MAKE_FILE
+# Using $(firstword) may not be perfect. But it should be good enough for most
+# scenarios.
+_current_makefile = $(CURDIR)/$(firstword $(MAKEFILE_LIST))
+
+$(foreach var,$(_MOZBUILD_EXTERNAL_VARIABLES),$(if $(filter file override,$(subst $(NULL) ,_,$(origin $(var)))),\
+    $(error Variable $(var) is defined in $(_current_makefile). It should only be defined in moz.build files),\
+    ))
+
+$(foreach var,$(_DEPRECATED_VARIABLES),$(if $(filter file override,$(subst $(NULL) ,_,$(origin $(var)))),\
+    $(error Variable $(var) is defined in $(_current_makefile). This variable has been deprecated. It does nothing. It must be removed in order to build)\
+    ))
+
+# Import the automatically generated backend file. If this file doesn't exist,
+# the backend hasn't been properly configured. We want this to be a fatal
+# error, hence not using "-include".
+ifndef STANDALONE_MAKEFILE
+GLOBAL_DEPS += backend.mk
+include backend.mk
+endif
+
+# Freeze the values specified by moz.build to catch them if they fail.
+
+$(foreach var,$(_MOZBUILD_EXTERNAL_VARIABLES),$(eval $(var)_FROZEN := '$($(var))'))
+$(foreach var,$(_DEPRECATED_VARIABLES),$(eval $(var)_FROZEN := '$($(var))'))
+
+CHECK_MOZBUILD_VARIABLES = $(foreach var,$(_MOZBUILD_EXTERNAL_VARIABLES), \
+  $(if $(subst $($(var)_FROZEN),,'$($(var))'), \
+	  $(error Variable $(var) is defined in $(_current_makefile). It should only be defined in moz.build files),\
+  )) $(foreach var,$(_DEPRECATED_VARIABLES), \
+	$(if $(subst $($(var)_FROZEN),,'$($(var))'), \
+    $(error Variable $(var) is defined in $(_current_makefile). This variable has been deprecated. It does nothing. It must be removed in order to build),\
+    ))
+
+endif
+
 space = $(NULL) $(NULL)
 
 # Include defs.mk files that can be found in $(srcdir)/$(DEPTH),
