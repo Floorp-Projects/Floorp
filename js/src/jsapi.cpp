@@ -4466,7 +4466,7 @@ JS::Compile(JSContext *cx, HandleObject obj, CompileOptions options, const char 
     AutoFile file;
     if (!file.open(cx, filename))
         return nullptr;
-    options = options.setFileAndLine(filename, 1);
+    options.setFileAndLine(filename, 1);
     JSScript *script = Compile(cx, obj, options, file.fp());
     return script;
 }
