@@ -11,6 +11,7 @@
 #include "nsISVGChildFrame.h"
 #include "nsISVGGlyphFragmentNode.h"
 #include "nsSVGGeometryFrame.h"
+#include "nsSVGTextFrame2.h" // for SVGTextContextPaint
 #include "nsSVGUtils.h"
 #include "nsTextFragment.h"
 #include "nsIContent.h"
@@ -28,77 +29,10 @@ class gfxTextContextPaint;
 struct CharacterPosition;
 
 namespace mozilla {
-
 namespace dom {
 class SVGIRect;
 }
-
-// Slightly horrible callback for deferring application of opacity
-struct SVGTextContextPaint : public gfxTextContextPaint {
-  already_AddRefed<gfxPattern> GetFillPattern(float aOpacity,
-                                              const gfxMatrix& aCTM) MOZ_OVERRIDE;
-  already_AddRefed<gfxPattern> GetStrokePattern(float aOpacity,
-                                                const gfxMatrix& aCTM) MOZ_OVERRIDE;
-
-  void SetFillOpacity(float aOpacity) { mFillOpacity = aOpacity; }
-  float GetFillOpacity() MOZ_OVERRIDE { return mFillOpacity; }
-
-  void SetStrokeOpacity(float aOpacity) { mStrokeOpacity = aOpacity; }
-  float GetStrokeOpacity() MOZ_OVERRIDE { return mStrokeOpacity; }
-
-  struct Paint {
-    Paint() : mPaintType(eStyleSVGPaintType_None) {}
-
-    void SetPaintServer(nsIFrame *aFrame, const gfxMatrix& aContextMatrix,
-                        nsSVGPaintServerFrame *aPaintServerFrame) {
-      mPaintType = eStyleSVGPaintType_Server;
-      mPaintDefinition.mPaintServerFrame = aPaintServerFrame;
-      mFrame = aFrame;
-      mContextMatrix = aContextMatrix;
-    }
-
-    void SetColor(const nscolor &aColor) {
-      mPaintType = eStyleSVGPaintType_Color;
-      mPaintDefinition.mColor = aColor;
-    }
-
-    void SetContextPaint(gfxTextContextPaint *aContextPaint,
-                         nsStyleSVGPaintType aPaintType) {
-      NS_ASSERTION(aPaintType == eStyleSVGPaintType_ContextFill ||
-                   aPaintType == eStyleSVGPaintType_ContextStroke,
-                   "Invalid context paint type");
-      mPaintType = aPaintType;
-      mPaintDefinition.mContextPaint = aContextPaint;
-    }
-
-    union {
-      nsSVGPaintServerFrame *mPaintServerFrame;
-      gfxTextContextPaint *mContextPaint;
-      nscolor mColor;
-    } mPaintDefinition;
-
-    nsIFrame *mFrame;
-    // CTM defining the user space for the pattern we will use.
-    gfxMatrix mContextMatrix;
-    nsStyleSVGPaintType mPaintType;
-
-    // Device-space-to-pattern-space
-    gfxMatrix mPatternMatrix;
-    nsRefPtrHashtable<nsFloatHashKey, gfxPattern> mPatternCache;
-
-    already_AddRefed<gfxPattern> GetPattern(float aOpacity,
-                                            nsStyleSVGPaint nsStyleSVG::*aFillOrStroke,
-                                            const gfxMatrix& aCTM);
-  };
-
-  Paint mFillPaint;
-  Paint mStrokePaint;
-
-  float mFillOpacity;
-  float mStrokeOpacity;
-};
-
-} // namespace mozilla
+}
 
 using namespace mozilla;
 
