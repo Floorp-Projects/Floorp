@@ -11,10 +11,6 @@
 #include "CameraCommon.h"
 
 namespace mozilla {
-namespace dom {
-class CameraStartRecordingOptions;
-class CameraRecorderOptions;
-}
 
 
 class DOMCameraPreview;
@@ -30,9 +26,9 @@ public:
   virtual void StopPreview() = 0;
   virtual nsresult AutoFocus(nsICameraAutoFocusCallback* onSuccess, nsICameraErrorCallback* onError) = 0;
   virtual nsresult TakePicture(idl::CameraSize aSize, int32_t aRotation, const nsAString& aFileFormat, idl::CameraPosition aPosition, uint64_t aDateTime, nsICameraTakePictureCallback* onSuccess, nsICameraErrorCallback* onError) = 0;
-  virtual nsresult StartRecording(const dom::CameraStartRecordingOptions* aOptions, nsIFile* aFolder, const nsAString& aFilename, nsICameraStartRecordingCallback* onSuccess, nsICameraErrorCallback* onError) = 0;
+  virtual nsresult StartRecording(idl::CameraStartRecordingOptions* aOptions, nsIFile* aFolder, const nsAString& aFilename, nsICameraStartRecordingCallback* onSuccess, nsICameraErrorCallback* onError) = 0;
   virtual nsresult StopRecording() = 0;
-  virtual nsresult GetPreviewStreamVideoMode(const dom::CameraRecorderOptions& aOptions, nsICameraPreviewStreamCallback* onSuccess, nsICameraErrorCallback* onError) = 0;
+  virtual nsresult GetPreviewStreamVideoMode(idl::CameraRecorderOptions* aOptions, nsICameraPreviewStreamCallback* onSuccess, nsICameraErrorCallback* onError) = 0;
   virtual nsresult ReleaseHardware(nsICameraReleaseCallback* onSuccess, nsICameraErrorCallback* onError) = 0;
 
   virtual nsresult Set(uint32_t aKey, const nsAString& aValue) = 0;
