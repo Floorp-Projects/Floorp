@@ -24,6 +24,18 @@ from mozbuild.util import (
 )
 
 
+def compute_final_target(variables):
+    """Convert the default value for FINAL_TARGET"""
+    basedir = 'dist/'
+    if variables['XPI_NAME']:
+        basedir += 'xpi-stage/' + variables['XPI_NAME']
+    else:
+        basedir += 'bin'
+    if variables['DIST_SUBDIR']:
+        basedir += '/' + variables['DIST_SUBDIR']
+    return basedir
+ 
+ 
 # This defines the set of mutable global variables.
 #
 # Each variable is a tuple of:
@@ -498,6 +510,32 @@ VARIABLES = {
     'XPCSHELL_TESTS_MANIFESTS': (StrictOrderingOnAppendList, list, [],
         """List of manifest files defining xpcshell tests.
         """, None),
+
+    # The following variables are used to control the target of installed files.
+    'XPI_NAME': (unicode, unicode, "",
+        """The name of an extension XPI to generate.
+
+        When this variable is present, the results of this directory will end up
+        being packaged into an extension instead of the main dist/bin results.
+        """, 'libs'),
+
+    'DIST_SUBDIR': (unicode, unicode, "",
+        """The name of an alternate directory to install files to.
+
+        When this variable is present, the results of this directory will end up
+        being placed in the $(DIST_SUBDIR) subdirectory of where it would
+        otherwise be placed.
+        """, 'libs'),
+
+    'FINAL_TARGET': (unicode, unicode, compute_final_target,
+        """The name of the directory to install targets to.
+
+        The directory is relative to the top of the object directory. The
+        default value is dependent on the values of XPI_NAME and DIST_SUBDIR. If
+        neither are present, the result is dist/bin. If XPI_NAME is present, the
+        result is dist/xpi-stage/$(XPI_NAME). If DIST_SUBDIR is present, then
+        the $(DIST_SUBDIR) directory of the otherwise default value is used.
+        """, 'libs'),
 }
 
 # The set of functions exposed to the sandbox.

@@ -114,7 +114,14 @@ class GlobalNamespace(dict):
             self.last_name_error = KeyError('global_ns', 'get_unknown', name)
             raise self.last_name_error
 
-        dict.__setitem__(self, name, copy.deepcopy(default[2]))
+        # If the default is specifically a lambda (or, rather, any function--but
+        # not a class that can be called), then it is actually a rule to
+        # generate the default that should be used.
+        default_rule = default[2]
+        if isinstance(default_rule, type(lambda: None)):
+            default_rule = default_rule(self)
+
+        dict.__setitem__(self, name, copy.deepcopy(default_rule))
         return dict.__getitem__(self, name)
 
     def __setitem__(self, name, value):

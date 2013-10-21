@@ -149,12 +149,16 @@ RM = rm -f
 LIBXUL_DIST ?= $(DIST)
 
 # FINAL_TARGET specifies the location into which we copy end-user-shipped
-# build products (typelibs, components, chrome).
+# build products (typelibs, components, chrome). It may already be specified by
+# a moz.build file.
 #
 # If XPI_NAME is set, the files will be shipped to $(DIST)/xpi-stage/$(XPI_NAME)
 # instead of $(DIST)/bin. In both cases, if DIST_SUBDIR is set, the files will be
 # shipped to a $(DIST_SUBDIR) subdirectory.
-FINAL_TARGET = $(if $(XPI_NAME),$(DIST)/xpi-stage/$(XPI_NAME),$(DIST)/bin)$(DIST_SUBDIR:%=/%)
+FINAL_TARGET ?= $(if $(XPI_NAME),$(DIST)/xpi-stage/$(XPI_NAME),$(DIST)/bin)$(DIST_SUBDIR:%=/%)
+# Override the stored value for the check to make sure that the variable is not
+# redefined in the Makefile.in value.
+FINAL_TARGET_FROZEN := '$(FINAL_TARGET)'
 
 ifdef XPI_NAME
 DEFINES += -DXPI_NAME=$(XPI_NAME)
