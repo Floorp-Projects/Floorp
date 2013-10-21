@@ -529,23 +529,19 @@ winmm_get_min_latency(cubeb * ctx, cubeb_stream_params params, uint32_t * latenc
 }
 
 static int
-winmm_get_preferred_sample_rate(cubeb * ctx, cubeb_stream_params params, uint32_t * rate)
+winmm_get_preferred_sample_rate(cubeb * ctx, uint32_t * rate)
 {
-  LPWAVEOUTCAPS pwoc;
-  UINT cbwoc;
+  WAVEOUTCAPS woc;
   MMRESULT r;
 
-  cbwoc = sizeof(WAVEOUTCAPS);
-
-  r = waveOutGetDevCaps(WAVE_MAPPER, pwoc, cbwoc);
-
+  r = waveOutGetDevCaps(WAVE_MAPPER, &woc, sizeof(WAVEOUTCAPS));
   if (r != MMSYSERR_NOERROR) {
     return CUBEB_ERROR;
   }
 
   /* Check if we support 48kHz, but not 44.1kHz. */
-  if (!(pwoc->dwFormats & WAVE_FORMAT_4S16) &&
-      pwoc->dwFormats & WAVE_FORMAT_48S16) {
+  if (!(woc.dwFormats & WAVE_FORMAT_4S16) &&
+      woc.dwFormats & WAVE_FORMAT_48S16) {
     *rate = 48000;
     return CUBEB_OK;
   }
