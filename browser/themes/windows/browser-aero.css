@@ -221,6 +221,18 @@
     background-color: #556;
   }
 
+  /* Use inverted icons for glassed toolbars */
+  #TabsToolbar > toolbarpaletteitem > #bookmarks-menu-button > .toolbarbutton-menubutton-dropmarker > .dropmarker-icon:not(:-moz-lwtheme),
+  #TabsToolbar > #bookmarks-menu-button > .toolbarbutton-menubutton-dropmarker > .dropmarker-icon:not(:-moz-lwtheme),
+  #toolbar-menubar > toolbarpaletteitem > #bookmarks-menu-button > .toolbarbutton-menubutton-dropmarker > .dropmarker-icon:not(:-moz-lwtheme),
+  #toolbar-menubar > #bookmarks-menu-button > .toolbarbutton-menubutton-dropmarker > .dropmarker-icon:not(:-moz-lwtheme),
+  #toolbar-menubar > toolbarpaletteitem > :-moz-any(@primaryToolbarButtons@):not(:-moz-lwtheme),
+  #toolbar-menubar > :-moz-any(@primaryToolbarButtons@):not(:-moz-lwtheme),
+  #TabsToolbar > toolbarpaletteitem > :-moz-any(@primaryToolbarButtons@):not(:-moz-lwtheme),
+  #TabsToolbar > :-moz-any(@primaryToolbarButtons@):not(:-moz-lwtheme) {
+    list-style-image: url("chrome://browser/skin/Toolbar-inverted.png");
+  }
+
   /* Glass Fog */
 
   #TabsToolbar:not(:-moz-lwtheme) {
