@@ -7,6 +7,7 @@
 
 #include "gfxContext.h"
 #include "gfxDrawable.h"
+#include "gfxPlatform.h"
 #include "gfxUtils.h"
 #include "imgDecoderObserver.h"
 #include "mozilla/AutoRestore.h"
@@ -23,6 +24,7 @@
 #include "Orientation.h"
 #include "SVGDocumentWrapper.h"
 #include "nsIDOMEventListener.h"
+#include "SurfaceCache.h"
 
 namespace mozilla {
 
@@ -316,6 +318,7 @@ VectorImage::VectorImage(imgStatusTracker* aStatusTracker,
 VectorImage::~VectorImage()
 {
   CancelAllListeners();
+  SurfaceCache::Discard(this);
 }
 
 //------------------------------------------------------------------------------
@@ -487,6 +490,9 @@ VectorImage::RequestRefresh(const mozilla::TimeStamp& aTime)
     // under WillRefresh() (which would be called by our own refresh driver) so
     // that we only send these notifications if we actually have a document
     // that is observing us.
+    // XXX(seth): We may need to duplicate this code so that non-animated images
+    // get handled correctly. See bug 922899.
+    SurfaceCache::Discard(this);
     mStatusTracker->FrameChanged(&nsIntRect::GetMaxSizedIntRect());
     mStatusTracker->OnStopFrame();
   }
@@ -676,6 +682,65 @@ VectorImage::GetImageContainer(LayerManager* aManager,
   return NS_OK;
 }
 
+struct SVGDrawingParameters
+{
+  SVGDrawingParameters(gfxContext* aContext,
+                       GraphicsFilter aFilter,
+                       const gfxMatrix& aUserSpaceToImageSpace,
+                       const gfxRect& aFill,
+                       const nsIntRect& aSubimage,
+                       const nsIntSize& aViewportSize,
+                       const SVGImageContext* aSVGContext,
+                       float aAnimationTime,
+                       uint32_t aFlags)
+    : context(aContext)
+    , filter(aFilter)
+    , fill(aFill)
+    , viewportSize(aViewportSize)
+    , animationTime(aAnimationTime)
+    , svgContext(aSVGContext)
+    , flags(aFlags)
+  {
+    // gfxUtils::DrawPixelSnapped may rasterize this image to a temporary surface
+    // if we hit the tiling path. Unfortunately, the temporary surface isn't
+    // created at the size at which we'll ultimately draw, causing fuzzy output.
+    // To fix this we pre-apply the transform's scaling to the drawing parameters
+    // and remove the scaling from the transform, so the fact that temporary
+    // surfaces won't take the scaling into account doesn't matter. (Bug 600207.)
+    scale = aUserSpaceToImageSpace.ScaleFactors(true);
+    gfxPoint translation(aUserSpaceToImageSpace.GetTranslation());
+
+    // Remove the scaling from the transform.
+    gfxMatrix unscale;
+    unscale.Translate(gfxPoint(translation.x / scale.width,
+                               translation.y / scale.height));
+    unscale.Scale(1.0 / scale.width, 1.0 / scale.height);
+    unscale.Translate(-translation);
+    userSpaceToImageSpace = aUserSpaceToImageSpace * unscale;
+
+    // Rescale drawing parameters.
+    gfxIntSize drawableSize(aViewportSize.width / scale.width,
+                            aViewportSize.height / scale.height);
+    sourceRect = userSpaceToImageSpace.Transform(aFill);
+    imageRect = nsIntRect(0, 0, drawableSize.width, drawableSize.height);
+    subimage = gfxRect(aSubimage.x, aSubimage.y, aSubimage.width, aSubimage.height);
+    subimage.ScaleRoundOut(1.0 / scale.width, 1.0 / scale.height);
+  }
+
+  gfxContext* context;
+  GraphicsFilter filter;
+  gfxMatrix userSpaceToImageSpace;
+  gfxRect fill;
+  gfxRect subimage;
+  gfxRect sourceRect;
+  nsIntRect imageRect;
+  nsIntSize viewportSize;
+  gfxSize scale;
+  float animationTime;
+  const SVGImageContext* svgContext;
+  uint32_t flags;
+};
+
 //******************************************************************************
 /* [noscript] void draw(in gfxContext aContext,
  *                      in gfxGraphicsFilter aFilter,
@@ -716,58 +781,130 @@ VectorImage::Draw(gfxContext* aContext,
   AutoRestore<bool> autoRestoreIsDrawing(mIsDrawing);
   mIsDrawing = true;
 
-  float time = aWhichFrame == FRAME_FIRST ? 0.0f
-                                          : mSVGDocumentWrapper->GetCurrentTime();
-  AutoSVGRenderingState autoSVGState(aSVGContext,
-                                     time,
+  float animTime = (aWhichFrame == FRAME_FIRST) ? 0.0f
+                                                : mSVGDocumentWrapper->GetCurrentTime();
+  AutoSVGRenderingState autoSVGState(aSVGContext, animTime,
                                      mSVGDocumentWrapper->GetRootSVGElem());
 
-  // gfxUtils::DrawPixelSnapped may rasterize this image to a temporary surface
-  // if we hit the tiling path. Unfortunately, the temporary surface isn't
-  // created at the size at which we'll ultimately draw, causing fuzzy output.
-  // To fix this we pre-apply the transform's scaling to the drawing parameters
-  // and remove the scaling from the transform, so the fact that temporary
-  // surfaces won't take the scaling into account doesn't matter. (Bug 600207.)
-  gfxSize scale(aUserSpaceToImageSpace.ScaleFactors(true));
-  gfxPoint translation(aUserSpaceToImageSpace.GetTranslation());
+  // Pack up the drawing parameters.
+  SVGDrawingParameters params(aContext, aFilter, aUserSpaceToImageSpace, aFill,
+                              aSubimage, aViewportSize, aSVGContext, animTime, aFlags);
 
-  // Remove the scaling from the transform.
-  gfxMatrix unscale;
-  unscale.Translate(gfxPoint(translation.x / scale.width,
-                             translation.y / scale.height));
-  unscale.Scale(1.0 / scale.width, 1.0 / scale.height);
-  unscale.Translate(-translation);
-  gfxMatrix unscaledTransform(aUserSpaceToImageSpace * unscale);
+  // Check the cache.
+  nsRefPtr<gfxDrawable> drawable =
+    SurfaceCache::Lookup(ImageKey(this),
+                         SurfaceKey(params.imageRect.Size(), params.scale,
+                                    aSVGContext, animTime, aFlags));
 
-  mSVGDocumentWrapper->UpdateViewportBounds(aViewportSize);
+  // Draw.
+  if (drawable) {
+    Show(drawable, params);
+  } else {
+    CreateDrawableAndShow(params);
+  }
+
+  return NS_OK;
+}
+
+void
+VectorImage::CreateDrawableAndShow(const SVGDrawingParameters& aParams)
+{
+  mSVGDocumentWrapper->UpdateViewportBounds(aParams.viewportSize);
   mSVGDocumentWrapper->FlushImageTransformInvalidation();
-
-  // Rescale drawing parameters.
-  gfxIntSize drawableSize(aViewportSize.width / scale.width,
-                          aViewportSize.height / scale.height);
-  gfxRect drawableSourceRect = unscaledTransform.Transform(aFill);
-  gfxRect drawableImageRect(0, 0, drawableSize.width, drawableSize.height);
-  gfxRect drawableSubimage(aSubimage.x, aSubimage.y,
-                           aSubimage.width, aSubimage.height);
-  drawableSubimage.ScaleRoundOut(1.0 / scale.width, 1.0 / scale.height);
 
   nsRefPtr<gfxDrawingCallback> cb =
     new SVGDrawingCallback(mSVGDocumentWrapper,
-                           nsIntRect(nsIntPoint(0, 0), aViewportSize),
-                           scale,
-                           aFlags);
+                           nsIntRect(nsIntPoint(0, 0), aParams.viewportSize),
+                           aParams.scale,
+                           aParams.flags);
 
-  nsRefPtr<gfxDrawable> drawable = new gfxCallbackDrawable(cb, drawableSize);
+  nsRefPtr<gfxDrawable> svgDrawable = new gfxCallbackDrawable(cb, aParams.imageRect.Size());
 
-  gfxUtils::DrawPixelSnapped(aContext, drawable, unscaledTransform,
-                             drawableSubimage, drawableSourceRect,
-                             drawableImageRect, aFill,
-                             gfxImageFormatARGB32, aFilter, aFlags);
+  // Refuse to cache animated images.
+  // XXX(seth): We may remove this restriction in bug 922893.
+  if (mHaveAnimations)
+    return Show(svgDrawable, aParams);
+
+  // If the image is too big to fit in the cache, don't go any further.
+  if (!SurfaceCache::CanHold(aParams.imageRect.Size()))
+    return Show(svgDrawable, aParams);
+
+  // Try to create an offscreen surface.
+  mozilla::RefPtr<mozilla::gfx::DrawTarget> target;
+  nsRefPtr<gfxContext> ctx;
+  nsRefPtr<gfxASurface> surface;
+
+  if (gfxPlatform::GetPlatform()->SupportsAzureContent()) {
+    target = gfxPlatform::GetPlatform()->
+      CreateOffscreenContentDrawTarget(aParams.imageRect.Size(), gfx::FORMAT_B8G8R8A8);
+
+    // XXX(seth): All of this ugliness (the backend check, |surface|, the
+    // GetThebesSurfaceForDrawTarget call) is needed because we can't use Moz2D
+    // for drawing in all cases yet. See bug 923341.
+    if (target) {
+      switch (target->GetType()) {
+        case mozilla::gfx::BACKEND_DIRECT2D:
+        case mozilla::gfx::BACKEND_DIRECT2D1_1:
+        case mozilla::gfx::BACKEND_SKIA:
+          // Can't cache on this backend.
+          return Show(svgDrawable, aParams);
+
+        default:
+          surface = gfxPlatform::GetPlatform()->GetThebesSurfaceForDrawTarget(target);
+          ctx = new gfxContext(target);
+      }
+    }
+  } else {
+    target = gfxPlatform::GetPlatform()->
+      CreateOffscreenCanvasDrawTarget(aParams.imageRect.Size(), gfx::FORMAT_B8G8R8A8);
+    surface = target ? gfxPlatform::GetPlatform()->GetThebesSurfaceForDrawTarget(target)
+                     : nullptr;
+    ctx = surface ? new gfxContext(surface) : nullptr;
+  }
+
+  // If we couldn't create the draw target, it was probably because it would end
+  // up way too big. Generally it also wouldn't fit in the cache, but the prefs
+  // could be set such that the cache isn't the limiting factor. If we couldn't
+  // create the surface, we are on a platform that does not support
+  // GetThebesSurfaceForDrawTarget. This will be fixed in bug 923341.
+  if (!target || !surface)
+    return Show(svgDrawable, aParams);
+
+  // Actually draw. (We use FILTER_NEAREST since we never scale here.)
+  gfxUtils::DrawPixelSnapped(ctx, svgDrawable, gfxMatrix(),
+                             aParams.imageRect, aParams.imageRect,
+                             aParams.imageRect, aParams.imageRect,
+                             gfxImageFormatARGB32,
+                             GraphicsFilter::FILTER_NEAREST, aParams.flags);
+
+  // Attempt to cache the resulting surface.
+  SurfaceCache::Insert(target,
+                       ImageKey(this),
+                       SurfaceKey(aParams.imageRect.Size(), aParams.scale,
+                                  aParams.svgContext, aParams.animationTime,
+                                  aParams.flags));
+
+  // Draw. Note that if SurfaceCache::Insert failed for whatever reason,
+  // then |target| is all that is keeping the pixel data alive, so we have
+  // to draw before returning from this function.
+  nsRefPtr<gfxDrawable> drawable = new gfxSurfaceDrawable(surface, aParams.imageRect.Size());
+  Show(drawable, aParams);
+}
+
+
+void
+VectorImage::Show(gfxDrawable* aDrawable, const SVGDrawingParameters& aParams)
+{
+  MOZ_ASSERT(aDrawable, "Should have a gfxDrawable by now");
+  gfxUtils::DrawPixelSnapped(aParams.context, aDrawable,
+                             aParams.userSpaceToImageSpace,
+                             aParams.subimage, aParams.sourceRect,
+                             aParams.imageRect, aParams.fill,
+                             gfxImageFormatARGB32,
+                             aParams.filter, aParams.flags);
 
   MOZ_ASSERT(mRenderingObserver, "Should have a rendering observer by now");
   mRenderingObserver->ResumeHonoringInvalidations();
-
-  return NS_OK;
 }
 
 //******************************************************************************
@@ -815,7 +952,7 @@ VectorImage::UnlockImage()
 NS_IMETHODIMP
 VectorImage::RequestDiscard()
 {
-  // This method is for image-discarding, which only applies to RasterImages.
+  SurfaceCache::Discard(this);
   return NS_OK;
 }
 
