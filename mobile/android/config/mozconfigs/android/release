@@ -2,7 +2,7 @@
 
 ac_add_options --enable-updater
 
-ac_add_options --with-branding=mobile/android/branding/beta
+ac_add_options --with-branding=mobile/android/branding/official
 
 export JAVA_HOME=/tools/jdk6
 export MOZILLA_OFFICIAL=1
