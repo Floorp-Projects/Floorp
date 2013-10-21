@@ -9,3 +9,5 @@ PROGRAM = 'linktool'
 CPP_SOURCES += [
     'linktool.cpp',
 ]
+
+DIST_SUBDIR = 'metro/install'
