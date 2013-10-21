@@ -15,17 +15,17 @@
 #define __nsContentPolicyUtils_h__
 
 #include "nsIContentPolicy.h"
-#include "nsIServiceManager.h"
 #include "nsIContent.h"
 #include "nsIScriptSecurityManager.h"
-#include "nsIPrincipal.h"
 #include "nsIURI.h"
+#include "nsServiceManagerUtils.h"
 
 //XXXtw sadly, this makes consumers of nsContentPolicyUtils depend on widget
 #include "nsIDocument.h"
 #include "nsPIDOMWindow.h"
 
 class nsACString;
+class nsIPrincipal;
 
 #define NS_CONTENTPOLICY_CONTRACTID   "@mozilla.org/layout/content-policy;1"
 #define NS_CONTENTPOLICY_CATEGORY "content-policy"
