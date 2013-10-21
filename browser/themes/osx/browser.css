@@ -2827,44 +2827,44 @@ toolbarbutton.chevron > .toolbarbutton-menu-dropmarker {
   }
 }
 
-#TabsToolbar #alltabs-button {
+#alltabs-button {
   list-style-image: url(chrome://browser/skin/tabbrowser/alltabs-box-bkgnd-icon.png);
   -moz-image-region: rect(0, 17px, 20px, 0);
 }
 
-#TabsToolbar #alltabs-button:-moz-lwtheme-brighttext {
+#alltabs-button:-moz-lwtheme-brighttext {
   list-style-image: url(chrome://browser/skin/tabbrowser/alltabs-box-bkgnd-icon-inverted.png);
 }
 
-#TabsToolbar > #alltabs-button:not([disabled="true"]):hover {
+#alltabs-button:not([disabled="true"]):hover {
   -moz-image-region: rect(0, 34px, 20px, 17px);
 }
 
-#TabsToolbar > #alltabs-button[open="true"]:not([disabled="true"]),
-#TabsToolbar > #alltabs-button:not([disabled="true"]):hover:active {
+#alltabs-button[open="true"]:not([disabled="true"]),
+#alltabs-button:not([disabled="true"]):hover:active {
   -moz-image-region: rect(0, 51px, 20px, 34px);
 }
 
 @media (min-resolution: 2dppx) {
-  #TabsToolbar #alltabs-button {
+  #alltabs-button {
     list-style-image: url(chrome://browser/skin/tabbrowser/alltabs-box-bkgnd-icon@2x.png);
     -moz-image-region: rect(0, 34px, 40px, 0);
   }
 
-  #TabsToolbar #alltabs-button:-moz-lwtheme-brighttext {
+  #alltabs-button:-moz-lwtheme-brighttext {
     list-style-image: url(chrome://browser/skin/tabbrowser/alltabs-box-bkgnd-icon-inverted@2x.png);
   }
 
-  #TabsToolbar > #alltabs-button:not([disabled="true"]):hover {
+  #alltabs-button:not([disabled="true"]):hover {
     -moz-image-region: rect(0, 68px, 40px, 34px);
   }
 
-  #TabsToolbar > #alltabs-button[open="true"]:not([disabled="true"]),
-  #TabsToolbar > #alltabs-button:not([disabled="true"]):hover:active {
+  #alltabs-button[open="true"]:not([disabled="true"]),
+  #alltabs-button:not([disabled="true"]):hover:active {
     -moz-image-region: rect(0, 102px, 40px, 68px);
   }
 
-  #TabsToolbar #alltabs-button > .toolbarbutton-icon {
+  #alltabs-button > .toolbarbutton-icon {
     width: 17px;
   }
 }
