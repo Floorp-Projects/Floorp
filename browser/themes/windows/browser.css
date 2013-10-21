@@ -1495,7 +1495,7 @@ richlistitem[type~="action"][actiontype="switchtab"] > .ac-url-box > .ac-action-
     list-style-image: url(chrome://browser/skin/tabbrowser/newtab-inverted.png);
   }
 
-  #main-window[tabsintitlebar]:not([inFullscreen]) #TabsToolbar > #alltabs-button {
+  #main-window[tabsintitlebar]:not([inFullscreen]) #alltabs-button {
     list-style-image: url("chrome://browser/skin/toolbarbutton-dropdown-arrow-inverted.png");
   }
 
