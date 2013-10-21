@@ -16,7 +16,7 @@ VISIBILITY_FLAGS =
 endif
 
 ifeq ($(OS_TARGET),WINNT)
-DEFINES         += -DUSE_WINMM -DUSE_WASAPI
+DEFINES         += -DUSE_WINMM
 endif
 
 ifeq ($(OS_TARGET),Android)
