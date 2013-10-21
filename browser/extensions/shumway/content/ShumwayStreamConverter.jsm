@@ -244,29 +244,36 @@ ChromeActions.prototype = {
     }
 
     // allows downloading from the same origin
-    var urlPrefix = /^(https?):\/\/([A-Za-z0-9\-_\.\[\]]+)/i.exec(url);
-    var basePrefix = /^(https?):\/\/([A-Za-z0-9\-_\.\[\]]+)/i.exec(this.url);
-    if (basePrefix && urlPrefix && basePrefix[0] === urlPrefix[0]) {
+    var parsedUrl, parsedBaseUrl;
+    try {
+      parsedUrl = NetUtil.newURI(url);
+    } catch (ex) { /* skipping invalid urls */ }
+    try {
+      parsedBaseUrl = NetUtil.newURI(this.url);
+    } catch (ex) { /* skipping invalid urls */ }
+
+    if (parsedUrl && parsedBaseUrl &&
+        parsedUrl.prePath === parsedBaseUrl.prePath) {
       return callback({success: true});
     }
 
     // additionally using internal whitelist
     var whitelist = getStringPref('shumway.whitelist', '');
-    if (whitelist && urlPrefix) {
+    if (whitelist && parsedUrl) {
       var whitelisted = whitelist.split(',').some(function (i) {
-        return domainMatches(urlPrefix[2], i);
+        return domainMatches(parsedUrl.host, i);
       });
       if (whitelisted) {
         return callback({success: true});
       }
     }
 
-    if (!checkPolicyFile || !urlPrefix || !basePrefix) {
+    if (!checkPolicyFile || !parsedUrl || !parsedBaseUrl) {
       return callback({success: false});
     }
 
     // we can request crossdomain.xml
-    fetchPolicyFile(urlPrefix[0] + '/crossdomain.xml', this.crossdomainRequestsCache,
+    fetchPolicyFile(parsedUrl.prePath + '/crossdomain.xml', this.crossdomainRequestsCache,
       function (policy, error) {
 
       if (!policy || policy.siteControl === 'none') {
@@ -275,8 +282,8 @@ ChromeActions.prototype = {
       // TODO assuming master-only, there are also 'by-content-type', 'all', etc.
 
       var allowed = policy.allowAccessFrom.some(function (i) {
-        return domainMatches(basePrefix[2], i.domain) &&
-          (!i.secure || basePrefix[1].toLowerCase() === 'https');
+        return domainMatches(parsedBaseUrl.host, i.domain) &&
+          (!i.secure || parsedBaseUrl.scheme.toLowerCase() === 'https');
       });
       return callback({success: allowed});
     }.bind(this));
