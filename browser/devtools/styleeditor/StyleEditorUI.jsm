@@ -387,6 +387,11 @@ StyleEditorUI.prototype = {
   selectStyleSheet: function(href, line, col)
   {
     let alreadyCalled = !!this._styleSheetToSelect;
+    let originalHref;
+
+    if (alreadyCalled) {
+      originalHref = this._styleSheetToSelect.href;
+    }
 
     this._styleSheetToSelect = {
       href: href,
@@ -395,6 +400,14 @@ StyleEditorUI.prototype = {
     };
 
     if (alreadyCalled) {
+      // Just switch to the correct line and columns if the editor is already
+      // selected for the requested stylesheet.
+      for each (let editor in this.editors) {
+        if (editor.styleSheet.href == originalHref) {
+          editor.sourceEditor.setCursor({line: line, ch: col})
+          break;
+        }
+      }
       return;
     }
 
