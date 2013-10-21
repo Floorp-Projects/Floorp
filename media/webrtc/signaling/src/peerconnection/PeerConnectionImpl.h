@@ -126,13 +126,15 @@ public:
   }
   bool addTurnServer(const std::string& addr, uint16_t port,
                      const std::string& username,
-                     const std::string& pwd)
+                     const std::string& pwd,
+                     const std::string& transport)
   {
     // TODO(ekr@rtfm.com): Need support for SASLprep for
     // username and password. Bug # ???
     std::vector<unsigned char> password(pwd.begin(), pwd.end());
 
-    NrIceTurnServer* server(NrIceTurnServer::Create(addr, port, username, password));
+    NrIceTurnServer* server(NrIceTurnServer::Create(addr, port, username, password,
+                                                    transport));
     if (!server) {
       return false;
     }
