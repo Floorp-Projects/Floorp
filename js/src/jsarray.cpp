@@ -3125,7 +3125,7 @@ NewArray(ExclusiveContext *cxArg, uint32_t length,
     if (JSContext *cx = cxArg->maybeJSContext()) {
         NewObjectCache &cache = cx->runtime()->newObjectCache;
         if (newKind == GenericObject &&
-            !cx->compartment()->objectMetadataCallback &&
+            !cx->compartment()->hasObjectMetadataCallback() &&
             cache.lookupGlobal(&ArrayObject::class_, cx->global(), allocKind, &entry))
         {
             RootedObject obj(cx, cache.newObjectFromHit(cx, entry,
