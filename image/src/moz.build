@@ -31,7 +31,6 @@ CPP_SOURCES += [
     'RasterImage.cpp',
     'SVGDocumentWrapper.cpp',
     'ScriptedNotificationObserver.cpp',
-    'SurfaceCache.cpp',
     'VectorImage.cpp',
     'imgFrame.cpp',
     'imgLoader.cpp',

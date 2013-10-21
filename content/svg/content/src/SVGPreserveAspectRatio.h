@@ -3,10 +3,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef MOZILLA_CONTENT_SVGPRESERVEASPECTRATIO_H_
-#define MOZILLA_CONTENT_SVGPRESERVEASPECTRATIO_H_
+#pragma once
 
-#include "mozilla/HashFunctions.h"  // for HashGeneric
 #include "mozilla/TypedEnum.h"
 
 #include "nsWrapperCache.h"
@@ -100,10 +98,6 @@ public:
     return mDefer;
   }
 
-  uint32_t Hash() const {
-    return HashGeneric(mAlign, mMeetOrSlice, mDefer);
-  }
-
 private:
   // We can't use enum types here because some compilers fail to pack them.
   uint8_t mAlign;
@@ -147,5 +141,3 @@ protected:
 
 } //namespace dom
 } //namespace mozilla
-
-#endif // MOZILLA_CONTENT_SVGPRESERVEASPECTRATIO_H_
