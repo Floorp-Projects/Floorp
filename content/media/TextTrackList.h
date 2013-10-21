@@ -53,7 +53,7 @@ public:
     mTextTracks.AppendElement(aTextTrack);
   }
 
-  void RemoveTextTrack(TextTrack& aTrack);
+  void RemoveTextTrack(TextTrack* aTrack);
   void DidSeek();
 
   nsresult DispatchTrackEvent(TrackEvent* aEvent);
