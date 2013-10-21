@@ -4,8 +4,8 @@
 
 XPCOMUtils.defineLazyModuleGetter(this, "CustomizableUI",
                                   "resource:///modules/CustomizableUI.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "Promise",
-                                  "resource://gre/modules/Promise.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "ScrollbarSampler",
+                                  "resource:///modules/ScrollbarSampler.jsm");
 /**
  * Maintains the state and dispatches events for the main menu panel.
  */
@@ -196,9 +196,10 @@ const PanelUI = {
       if (!this._scrollWidth) {
         // In order to properly center the contents of the panel, while ensuring
         // that we have enough space on either side to show a scrollbar, we have to
-        // do a bit of hackery. In particular, we sample the system scrollbar width,
-        // and then use that to calculate a new width for the scroller.
-        this._scrollWidth = (yield this._sampleScrollbarWidth()) + "px";
+        // do a bit of hackery. In particular, we calculate a new width for the
+        // scroller, based on the system scrollbar width.
+        this._scrollWidth =
+          (yield ScrollbarSampler.getSystemScrollbarWidth()) + "px";
         let cstyle = window.getComputedStyle(this.scroller);
         let widthStr = cstyle.width;
         // Get the calculated padding on the left and right sides of
@@ -389,37 +390,5 @@ const PanelUI = {
 
   _onHelpViewHide: function(aEvent) {
     this.removeEventListener("command", PanelUI.onCommandHandler);
-  },
-
-  _sampleScrollbarWidth: function() {
-    let deferred = Promise.defer();
-    let hwin = Services.appShell.hiddenDOMWindow;
-    let hdoc = hwin.document.documentElement;
-    let iframe = hwin.document.createElementNS("http://www.w3.org/1999/xhtml",
-                                               "html:iframe");
-    iframe.setAttribute("srcdoc", '<body style="overflow-y: scroll"></body>');
-    hdoc.appendChild(iframe);
-
-    let cwindow = iframe.contentWindow;
-    let utils = cwindow.QueryInterface(Ci.nsIInterfaceRequestor)
-                       .getInterface(Ci.nsIDOMWindowUtils);
-
-    cwindow.addEventListener("load", function onLoad(aEvent) {
-      cwindow.removeEventListener("load", onLoad);
-      let sbWidth = {};
-      try {
-        utils.getScrollbarSize(true, sbWidth, {});
-      } catch(e) {
-        Components.utils.reportError("Could not sample scrollbar size: " + e +
-                                     " -- " + e.stack);
-        sbWidth.value = 0;
-      }
-      // Minimum width of 10 so that we have enough padding:
-      sbWidth.value = Math.max(sbWidth.value, 10);
-      deferred.resolve(sbWidth.value);
-      iframe.remove();
-    });
-
-    return deferred.promise;
   }
 };
