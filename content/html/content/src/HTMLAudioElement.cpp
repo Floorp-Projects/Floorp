@@ -19,6 +19,9 @@
 #include <algorithm>
 #include "mozilla/Preferences.h"
 #include "nsComponentManagerUtils.h"
+#include "nsIHttpChannel.h"
+#include "mozilla/dom/TimeRanges.h"
+#include "AudioStream.h"
 
 static bool
 IsAudioAPIEnabled()

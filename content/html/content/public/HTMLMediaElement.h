@@ -9,37 +9,36 @@
 #include "nsIDOMHTMLMediaElement.h"
 #include "nsGenericHTMLElement.h"
 #include "MediaDecoderOwner.h"
-#include "nsIChannel.h"
-#include "nsIHttpChannel.h"
-#include "nsIDOMRange.h"
 #include "nsCycleCollectionParticipant.h"
-#include "nsILoadGroup.h"
 #include "nsIObserver.h"
-#include "AudioStream.h"
-#include "VideoFrameContainer.h"
 #include "mozilla/CORSMode.h"
 #include "DOMMediaStream.h"
-#include "mozilla/Mutex.h"
-#include "mozilla/dom/TimeRanges.h"
-#include "nsIDOMWakeLock.h"
 #include "AudioChannelCommon.h"
 #include "DecoderTraits.h"
-#include "MediaMetadataManager.h"
-#include "AudioChannelAgent.h"
+#include "nsIAudioChannelAgent.h"
 #include "mozilla/Attributes.h"
-#include "mozilla/dom/TextTrack.h"
 #include "mozilla/dom/TextTrackList.h"
-#include "mozilla/ErrorResult.h"
 
 // Define to output information on decoding and painting framerate
 /* #define DEBUG_FRAME_RATE 1 */
+
+class nsIChannel;
+class nsIHttpChannel;
+class nsILoadGroup;
 
 typedef uint16_t nsMediaNetworkState;
 typedef uint16_t nsMediaReadyState;
 
 namespace mozilla {
+class AudioStream;
+class ErrorResult;
 class MediaResource;
 class MediaDecoder;
+class VideoFrameContainer;
+namespace dom {
+class TextTrack;
+class TimeRanges;
+}
 }
 
 class nsITimer;
