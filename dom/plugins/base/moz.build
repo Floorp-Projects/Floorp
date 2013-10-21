@@ -103,9 +103,3 @@ LIBRARY_NAME = 'gkplugin'
 
 EXPORT_LIBRARY = True
 
-LOCAL_INCLUDES += [
-    '/content/base/src',
-    '/dom/base',
-    '/layout/generic',
-    '/layout/xul/base/src',
-]
