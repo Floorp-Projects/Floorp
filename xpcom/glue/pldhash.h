@@ -28,9 +28,15 @@ extern "C" {
 #define PL_DHASHMETER 1
 #endif
 
-/* Table size limit, do not equal or exceed. */
-#undef PL_DHASH_SIZE_LIMIT
-#define PL_DHASH_SIZE_LIMIT     ((uint32_t)1 << 24)
+/*
+ * Table size limit; do not exceed.  The max capacity used to be 1<<23 but that
+ * occasionally that wasn't enough.  Making it much bigger than 1<<26 probably
+ * isn't worthwhile -- tables that big are kind of ridiculous.  Also, the
+ * growth operation will (deliberately) fail if |capacity * entrySize|
+ * overflows a uint32_t, and entrySize is always at least 8 bytes.
+ */
+#undef PL_DHASH_MAX_SIZE
+#define PL_DHASH_MAX_SIZE     ((uint32_t)1 << 26)
 
 /* Minimum table size, or gross entry count (net is at most .75 loaded). */
 #ifndef PL_DHASH_MIN_SIZE
