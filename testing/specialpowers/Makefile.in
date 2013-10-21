@@ -9,8 +9,6 @@ DIST_FILES = \
   install.rdf \
   $(NULL)
 
-XPI_NAME=specialpowers
-
 # Used in install.rdf
 USE_EXTENSION_MANIFEST=1
 

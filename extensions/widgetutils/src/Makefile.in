@@ -3,7 +3,6 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-XPI_NAME	= widgetutils
 SHORT_LIBNAME = widgetutils
 FORCE_SHARED_LIB = 1
 
@@ -12,7 +11,3 @@ EXTRA_DSO_LDOPTS = \
   $(NSPR_LIBS) \
   $(MOZ_COMPONENT_LIBS) \
   $(NULL)
-
-ifdef TARGET_XPCOM_ABI
-FINAL_TARGET=$(DIST)/xpi-stage/$(XPI_NAME)/platform/$(OS_TARGET)_$(TARGET_XPCOM_ABI)
-endif

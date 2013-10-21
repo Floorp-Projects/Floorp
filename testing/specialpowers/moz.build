@@ -7,3 +7,5 @@
 EXTRA_COMPONENTS += [
     'components/SpecialPowersObserver.js',
 ]
+
+XPI_NAME = 'specialpowers'

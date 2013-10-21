@@ -15,3 +15,6 @@ PROGRAM = CONFIG['XULRUNNER_STUB_NAME']
 CPP_SOURCES += [
     'nsXULStub.cpp',
 ]
+
+if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'cocoa':
+    FINAL_TARGET = 'dist/XUL.framework/Versions/%(MOZILLA_VERSION)s' % CONFIG

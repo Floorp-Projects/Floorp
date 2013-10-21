@@ -13,3 +13,5 @@ CPP_SOURCES += [
     'WindowCreator.cpp',
     'winEmbed.cpp',
 ]
+
+XPI_NAME = 'winembed'
