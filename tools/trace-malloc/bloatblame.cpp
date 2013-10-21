@@ -22,7 +22,6 @@ extern int  optind;
 #include <math.h>
 #include <time.h>
 #include <sys/stat.h>
-#include "prtypes.h"
 #include "prlog.h"
 #include "prprf.h"
 #include "plhash.h"

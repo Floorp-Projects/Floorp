@@ -602,5 +602,19 @@ nsresult MediaDecoderReader::DecodeToTarget(int64_t aTarget)
   return NS_OK;
 }
 
+nsresult
+MediaDecoderReader::GetBuffered(mozilla::dom::TimeRanges* aBuffered,
+                                int64_t aStartTime)
+{
+  MediaResource* stream = mDecoder->GetResource();
+  int64_t durationUs = 0;
+  {
+    ReentrantMonitorAutoEnter mon(mDecoder->GetReentrantMonitor());
+    durationUs = mDecoder->GetMediaDuration();
+  }
+  GetEstimatedBufferedTimeRanges(stream, durationUs, aBuffered);
+  return NS_OK;
+}
+
 } // namespace mozilla
 
