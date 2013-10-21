@@ -8,6 +8,7 @@ MODULE = 'content'
 
 EXPORTS += [
     'SVGAttrValueWrapper.h',
+    'SVGPreserveAspectRatio.h',
     'SVGStringList.h',
     'nsSVGClass.h',
     'nsSVGElement.h',
