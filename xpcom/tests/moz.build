@@ -76,6 +76,7 @@ CPP_UNIT_TESTS += [
     'TestID.cpp',
     'TestObserverArray.cpp',
     'TestObserverService.cpp',
+    'TestPLDHash.cpp',
     'TestPipe.cpp',
     'TestRefPtr.cpp',
     'TestTArray.cpp',
