@@ -17,6 +17,12 @@
 #include <CoreLocation/CLLocationManager.h>
 #include <CoreLocation/CLLocationManagerDelegate.h>
 
+#include <objc/objc.h>
+#include <objc/objc-runtime.h>
+
+#include "nsObjCExceptions.h"
+#import <CoreWLAN/CoreWLAN.h>
+
 using namespace mozilla;
 
 static const CLLocationAccuracy kHIGH_ACCURACY = kCLLocationAccuracyBest;
@@ -123,6 +129,35 @@ NS_IMPL_ISUPPORTS1(CoreLocationLocationProvider, nsIGeolocationProvider)
 CoreLocationLocationProvider::CoreLocationLocationProvider()
   : mCLObjects(nullptr)
 {
+}
+
+bool
+CoreLocationLocationProvider::IsCoreLocationAvailable()
+{
+  NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];
+
+  @try {
+    NSBundle * bundle = [[[NSBundle alloc] initWithPath:@"/System/Library/Frameworks/CoreWLAN.framework"] autorelease];
+    if (!bundle) {
+      [pool release];
+      return false;
+    }
+
+    Class CWI_class = [bundle classNamed:@"CWInterface"];
+    if (!CWI_class) {
+      [pool release];
+      return false;
+    }
+
+    if ([[[CWI_class interface] interfaceState] intValue] == kCWInterfaceStateRunning) {
+      [pool release];
+      return true;
+    }
+  }
+  @catch(NSException *e) {
+  }
+  [pool release];
+  return false;
 }
 
 NS_IMETHODIMP
