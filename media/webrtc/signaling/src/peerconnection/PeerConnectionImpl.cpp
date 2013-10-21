@@ -573,6 +573,12 @@ PeerConnectionImpl::ConvertRTCConfiguration(const RTCConfiguration& aSrc,
   for (uint32_t i = 0; i < aSrc.mIceServers.Value().Length(); i++) {
     const RTCIceServer& server = aSrc.mIceServers.Value()[i];
     NS_ENSURE_TRUE(server.mUrl.WasPassed(), NS_ERROR_UNEXPECTED);
+
+    // Without STUN/TURN handlers, NS_NewURI returns nsSimpleURI rather than
+    // nsStandardURL. To parse STUN/TURN URI's to spec
+    // http://tools.ietf.org/html/draft-nandakumar-rtcweb-stun-uri-02#section-3
+    // http://tools.ietf.org/html/draft-petithuguenin-behave-turn-uri-03#section-3
+    // we parse out the query-string, and use ParseAuthority() on the rest
     nsRefPtr<nsIURI> url;
     nsresult rv = NS_NewURI(getter_AddRefs(url), server.mUrl.Value());
     NS_ENSURE_SUCCESS(rv, rv);
@@ -588,9 +594,10 @@ PeerConnectionImpl::ConvertRTCConfiguration(const RTCConfiguration& aSrc,
     rv = url->GetSpec(spec);
     NS_ENSURE_SUCCESS(rv, rv);
 
-    // TODO(jib@mozilla.com): Revisit once nsURI has STUN host+port (Bug 833509)
+    // TODO(jib@mozilla.com): Revisit once nsURI supports STUN/TURN (Bug 833509)
     int32_t port;
     nsAutoCString host;
+    nsAutoCString transport;
     {
       uint32_t hostPos;
       int32_t hostLen;
@@ -598,9 +605,20 @@ PeerConnectionImpl::ConvertRTCConfiguration(const RTCConfiguration& aSrc,
       rv = url->GetPath(path);
       NS_ENSURE_SUCCESS(rv, rv);
 
-      // Tolerate '?transport=udp' by stripping it.
+      // Tolerate query-string + parse 'transport=[udp|tcp]' by hand.
       int32_t questionmark = path.FindChar('?');
       if (questionmark >= 0) {
+        const nsCString match = NS_LITERAL_CSTRING("transport=");
+
+        for (int32_t i = questionmark, endPos; i >= 0; i = endPos) {
+          endPos = path.FindCharInSet("&", i + 1);
+          const nsDependentCSubstring fieldvaluepair = Substring(path, i + 1,
+                                                                 endPos);
+          if (StringBeginsWith(fieldvaluepair, match)) {
+            transport = Substring(fieldvaluepair, match.Length());
+            ToLowerCase(transport);
+          }
+        }
         path.SetLength(questionmark);
       }
 
@@ -625,7 +643,9 @@ PeerConnectionImpl::ConvertRTCConfiguration(const RTCConfiguration& aSrc,
 
       if (!aDst->addTurnServer(host.get(), port,
                                username.get(),
-                               credential.get())) {
+                               credential.get(),
+                               (transport.IsEmpty() ?
+                                kNrIceTransportUdp : transport.get()))) {
         return NS_ERROR_FAILURE;
       }
     } else {
@@ -655,7 +675,7 @@ PeerConnectionImpl::Initialize(PeerConnectionObserver& aObserver,
   MOZ_ASSERT(aThread);
   mThread = do_QueryInterface(aThread);
 
-  mPCObserver.Init(&aObserver);
+  mPCObserver.Set(&aObserver);
 
   // Find the STS thread
 
@@ -1383,12 +1403,6 @@ PeerConnectionImpl::CloseInt()
 {
   PC_AUTO_ENTER_API_CALL_NO_CHECK();
 
-  // Clear raw pointer to observer since PeerConnection.js does not guarantee
-  // the observer's existence past Close().
-  //
-  // Any outstanding runnables hold RefPtr<> references to observer.
-  mPCObserver.Close();
-
   if (mInternal->mCall) {
     CSFLogInfo(logTag, "%s: Closing PeerConnectionImpl %s; "
                "ending call", __FUNCTION__, mHandle.c_str());
@@ -1762,5 +1776,30 @@ PeerConnectionImpl::GetRemoteStreams(nsTArray<nsRefPtr<mozilla::DOMMediaStream >
 #endif
 }
 
+// WeakConcretePtr gets around WeakPtr not working on concrete types by using
+// the attribute getWeakReferent, a member that supports weak refs, as a guard.
+
+void
+PeerConnectionImpl::WeakConcretePtr::Set(PeerConnectionObserver *aObserver) {
+  mObserver = aObserver;
+#ifdef MOZILLA_INTERNAL_API
+  MOZ_ASSERT(NS_IsMainThread());
+  JSErrorResult rv;
+  nsCOMPtr<nsISupports> tmp = aObserver->GetWeakReferent(rv);
+  MOZ_ASSERT(!rv.Failed());
+  mWeakPtr = do_GetWeakReference(tmp);
+#else
+  mWeakPtr = do_GetWeakReference(aObserver);
+#endif
+}
+
+PeerConnectionObserver *
+PeerConnectionImpl::WeakConcretePtr::MayGet() {
+#ifdef MOZILLA_INTERNAL_API
+  MOZ_ASSERT(NS_IsMainThread());
+#endif
+  nsCOMPtr<nsISupports> guard = do_QueryReferent(mWeakPtr);
+  return (!guard) ? nullptr : mObserver;
+}
 
 }  // end sipcc namespace

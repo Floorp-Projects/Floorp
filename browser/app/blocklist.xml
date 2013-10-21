@@ -1,5 +1,5 @@
 <?xml version="1.0"?>
-<blocklist xmlns="http://www.mozilla.org/2006/addons-blocklist" lastupdate="1380576907000">
+<blocklist xmlns="http://www.mozilla.org/2006/addons-blocklist" lastupdate="1382113575000">
   <emItems>
       <emItem  blockID="i454" id="sqlmoz@facebook.com">
                         <versionRange  minVersion="0" maxVersion="*" severity="3">
@@ -435,6 +435,10 @@
                         <versionRange  minVersion="0" maxVersion="*" severity="1">
                     </versionRange>
                   </emItem>
+      <emItem  blockID="i461" id="{8E9E3331-D360-4f87-8803-52DE43566502}">
+                        <versionRange  minVersion="0" maxVersion="*" severity="1">
+                    </versionRange>
+                  </emItem>
       <emItem  blockID="i426" id="addlyrics@addlyrics.net">
                         <versionRange  minVersion="0" maxVersion="*" severity="1">
                     </versionRange>
@@ -471,6 +475,10 @@
                   </emItem>
       <emItem  blockID="i67" id="youtube2@youtube2.com">
                         <versionRange  minVersion="0" maxVersion="*">
+                    </versionRange>
+                  </emItem>
+      <emItem  blockID="i460" id="{845cab51-d8d2-472f-8bd9-2b44642d97c2}">
+                        <versionRange  minVersion="0" maxVersion="*" severity="1">
                     </versionRange>
                   </emItem>
       <emItem  blockID="i6" id="{3f963a5b-e555-4543-90e2-c3908898db71}">
@@ -1161,6 +1169,48 @@
                   </pluginItem>
       <pluginItem  blockID="p456">
                   <match name="filename" exp="npvlc\.dll" />                      <versionRange  minVersion="0" maxVersion="2.0.5" severity="0" vulnerabilitystatus="1"></versionRange>
+                  </pluginItem>
+      <pluginItem  blockID="p457">
+      <match name="name" exp="Java(\(TM\))? Plug-in ((1\.7\.0_(2[5-9]|3\d|4[0-4]))|(10\.4[0-4](\.[0-9]+)?))([^\d\._]|$)" />            <match name="filename" exp="libnpjp2\.so" />                                    <versionRange  severity="0" vulnerabilitystatus="1">
+                                <targetApplication  id="{ec8030f7-c20a-464f-9b0e-13a3a9e97384}">
+                              <versionRange  minVersion="17.0" maxVersion="*" />
+                          </targetApplication>
+                  </versionRange>
+                  </pluginItem>
+      <pluginItem  blockID="p458">
+      <match name="name" exp="Java\(TM\) Platform SE 7 U(2[5-9]|3\d|4[0-4])(\s[^\d\._U]|$)" />            <match name="filename" exp="npjp2\.dll" />                                    <versionRange  severity="0" vulnerabilitystatus="1">
+                                <targetApplication  id="{ec8030f7-c20a-464f-9b0e-13a3a9e97384}">
+                              <versionRange  minVersion="17.0" maxVersion="*" />
+                          </targetApplication>
+                  </versionRange>
+                  </pluginItem>
+      <pluginItem  blockID="p459">
+                  <match name="filename" exp="JavaAppletPlugin\.plugin" />                                    <versionRange  minVersion="Java 7 Update 25" maxVersion="Java 7 Update 44" severity="0" vulnerabilitystatus="1">
+                                <targetApplication  id="{ec8030f7-c20a-464f-9b0e-13a3a9e97384}">
+                              <versionRange  minVersion="17.0" maxVersion="*" />
+                          </targetApplication>
+                  </versionRange>
+                  </pluginItem>
+      <pluginItem  blockID="p462">
+                  <match name="filename" exp="JavaAppletPlugin\.plugin" />                                    <versionRange  minVersion="Java 7 Update 45" maxVersion="Java 7 Update 45" severity="0" vulnerabilitystatus="2">
+                                <targetApplication  id="{ec8030f7-c20a-464f-9b0e-13a3a9e97384}">
+                              <versionRange  minVersion="24.0" maxVersion="*" />
+                          </targetApplication>
+                  </versionRange>
+                  </pluginItem>
+      <pluginItem  blockID="p463">
+      <match name="name" exp="Java\(TM\) Platform SE 7 U45(\s[^\d\._U]|$)" />            <match name="filename" exp="npjp2\.dll" />                                    <versionRange  severity="0" vulnerabilitystatus="2">
+                                <targetApplication  id="{ec8030f7-c20a-464f-9b0e-13a3a9e97384}">
+                              <versionRange  minVersion="24.0" maxVersion="*" />
+                          </targetApplication>
+                  </versionRange>
+                  </pluginItem>
+      <pluginItem  blockID="p464">
+      <match name="name" exp="Java(\(TM\))? Plug-in 10\.45(\.[0-9]+)?([^\d\._]|$)" />            <match name="filename" exp="libnpjp2\.so" />                                    <versionRange  severity="0" vulnerabilitystatus="2">
+                                <targetApplication  id="{ec8030f7-c20a-464f-9b0e-13a3a9e97384}">
+                              <versionRange  minVersion="24.0" maxVersion="*" />
+                          </targetApplication>
+                  </versionRange>
                   </pluginItem>
     </pluginItems>
 

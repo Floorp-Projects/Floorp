@@ -61,7 +61,7 @@ interface Event {
   readonly attribute boolean defaultPrevented;
 
   [Unforgeable] readonly attribute boolean isTrusted;
-  readonly attribute DOMTimeStamp timeStamp;
+  readonly attribute /* DOMTimeStamp */ unsigned long long timeStamp;
 
   void initEvent(DOMString type, boolean bubbles, boolean cancelable);
 };
@@ -245,7 +245,7 @@ interface XMLDocument : Document {};
 
 interface DOMImplementation {
   DocumentType createDocumentType(DOMString qualifiedName, DOMString publicId, DOMString systemId);
-  XMLDocument createDocument(DOMString? namespace, [TreatNullAs=EmptyString] DOMString qualifiedName, DocumentType? doctype);
+  XMLDocument createDocument(DOMString? namespace, [TreatNullAs=EmptyString] DOMString qualifiedName, optional DocumentType? doctype = null);
   Document createHTMLDocument(optional DOMString title);
 
   boolean hasFeature(DOMString feature, [TreatNullAs=EmptyString] DOMString version);

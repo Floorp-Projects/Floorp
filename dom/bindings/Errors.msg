@@ -47,3 +47,4 @@ MSG_DEF(MSG_INVALID_BYTESTRING, 2, "Cannot convert string to ByteString because 
 MSG_DEF(MSG_NOT_DATE, 1, "{0} is not a date.")
 MSG_DEF(MSG_INVALID_ADVANCE_COUNT, 0, "0 (Zero) is not a valid advance count.")
 MSG_DEF(MSG_DEFINEPROPERTY_ON_GSP, 0, "Not allowed to define a property on the named properties object.")
+MSG_DEF(MSG_INVALID_URL, 1, "{0} is not a valid URL.")

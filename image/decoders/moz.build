@@ -45,3 +45,7 @@ CSRCS += [
     'iccjpeg.c',
 ]
 
+# Decoders need RasterImage.h
+LOCAL_INCLUDES += [
+    '/image/src',
+]

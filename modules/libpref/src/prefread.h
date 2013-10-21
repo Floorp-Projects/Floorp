@@ -5,7 +5,6 @@
 #ifndef prefread_h__
 #define prefread_h__
 
-#include "prtypes.h"
 #include "prefapi.h"
 
 #ifdef __cplusplus

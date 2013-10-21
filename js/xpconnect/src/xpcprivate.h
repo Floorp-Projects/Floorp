@@ -277,6 +277,18 @@ extern const char XPC_XPCONNECT_CONTRACTID[];
 // JS engine never uses that slot. This still needs fixing though. See bug 760095.
 #define WN_XRAYEXPANDOCHAIN_SLOT 0
 
+// If IS_WN_CLASS for the JSClass of an object is true, the object is a
+// wrappednative wrapper, holding the XPCWrappedNative in its private slot.
+static inline bool IS_WN_CLASS(const js::Class* clazz)
+{
+    return clazz->ext.isWrappedNative;
+}
+
+static inline bool IS_WN_REFLECTOR(JSObject *obj)
+{
+    return IS_WN_CLASS(js::GetObjectClass(obj));
+}
+
 inline void SetWNExpandoChain(JSObject *obj, JSObject *chain)
 {
     MOZ_ASSERT(IS_WN_REFLECTOR(obj));
@@ -2169,6 +2181,9 @@ private:
 
 void *xpc_GetJSPrivate(JSObject *obj);
 
+void
+TraceXPCGlobal(JSTracer *trc, JSObject *obj);
+
 /***************************************************************************/
 // XPCWrappedNative the wrapper around one instance of a native xpcom object
 // to be used from JavaScript.
@@ -2326,12 +2341,6 @@ public:
                  XPCWrappedNativeScope* Scope,
                  XPCNativeInterface* Interface,
                  XPCWrappedNative** wrapper);
-
-    static nsresult
-    Morph(JS::HandleObject existingJSObject,
-          XPCNativeInterface* Interface,
-          nsWrapperCache *cache,
-          XPCWrappedNative** resultWrapper);
 
 public:
     static nsresult
@@ -3820,7 +3829,42 @@ bool IsOutObject(JSContext* cx, JSObject* obj);
 
 nsresult HasInstance(JSContext *cx, JS::HandleObject objArg, const nsID *iid, bool *bp);
 
+/**
+ * Define quick stubs on the given object, @a proto.
+ *
+ * @param cx
+ *     A context.  Requires request.
+ * @param proto
+ *     The (newly created) prototype object for a DOM class.  The JS half
+ *     of an XPCWrappedNativeProto.
+ * @param flags
+ *     Property flags for the quick stub properties--should be either
+ *     JSPROP_ENUMERATE or 0.
+ * @param interfaceCount
+ *     The number of interfaces the class implements.
+ * @param interfaceArray
+ *     The interfaces the class implements; interfaceArray and
+ *     interfaceCount are like what nsIClassInfo.getInterfaces returns.
+ */
+bool
+DOM_DefineQuickStubs(JSContext *cx, JSObject *proto, uint32_t flags,
+                     uint32_t interfaceCount, const nsIID **interfaceArray);
+
+nsIPrincipal *GetObjectPrincipal(JSObject *obj);
+
 } // namespace xpc
+
+namespace mozilla {
+namespace dom {
+extern bool
+DefineStaticJSVals(JSContext *cx);
+} // namespace dom
+} // namespace mozilla
+
+NS_EXPORT_(bool)
+xpc_LocalizeRuntime(JSRuntime *rt);
+NS_EXPORT_(void)
+xpc_DelocalizeRuntime(JSRuntime *rt);
 
 /***************************************************************************/
 // Inlines use the above - include last.

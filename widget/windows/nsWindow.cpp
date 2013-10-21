@@ -6647,6 +6647,9 @@ nsWindow::GetPreferredCompositorBackends(nsTArray<LayersBackend>& aHints)
   GetLayerManagerPrefs(&prefs);
 
   if (!prefs.mDisableAcceleration) {
+    if (prefs.mPreferOpenGL) {
+      aHints.AppendElement(LAYERS_OPENGL);
+    }
     if (!prefs.mPreferD3D9) {
       aHints.AppendElement(LAYERS_D3D11);
     }

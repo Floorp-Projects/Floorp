@@ -35,6 +35,8 @@ function runTest() {
   Services.prefs.setCharPref(PREF_APP_UPDATE_CERT_INVALID_ATTR_NAME,
                              "Invalid Attribute Name");
   Services.prefs.setIntPref(PREF_APP_UPDATE_CERT_ERRORS, 1);
+  Services.prefs.setBoolPref(PREF_APP_UPDATE_CERT_REQUIREBUILTIN, false);
+  Services.prefs.setBoolPref(PREF_APP_UPDATE_CERT_CHECKATTRS, true);
 
   let url = "https://example.com/" + URL_PATH + "/update.sjs?showDetails=1" +
             getVersionParams();

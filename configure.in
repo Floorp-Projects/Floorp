@@ -228,7 +228,7 @@ if test -n "$gonkdir" ; then
         AC_SUBST(MOZ_OMX_DECODER)
         MOZ_RTSP=1
         ;;
-    18)
+    17|18)
         GONK_INCLUDES="-I$gonkdir/frameworks/native/include -I$gonkdir/frameworks/av/include -I$gonkdir/frameworks/av/include/media -I$gonkdir/frameworks/av/include/camera -I$gonkdir/frameworks/native/include/media/openmax -I$gonkdir/frameworks/av/media/libstagefright/include"
         if test -d "$gonkdir/external/bluetooth/bluez"; then
             GONK_INCLUDES="$GONK_INCLUDES -I$gonkdir/external/dbus -I$gonkdir/external/bluetooth/bluez/lib"

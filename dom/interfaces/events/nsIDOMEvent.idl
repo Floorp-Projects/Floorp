@@ -242,7 +242,7 @@ nsresult
 NS_NewDOMMouseEvent(nsIDOMEvent** aInstancePtrResult,
                     mozilla::dom::EventTarget* aOwner,
                     nsPresContext* aPresContext,
-                    mozilla::WidgetInputEvent* aEvent);
+                    mozilla::WidgetMouseEvent* aEvent);
 nsresult
 NS_NewDOMFocusEvent(nsIDOMEvent** aInstancePtrResult,
                     mozilla::dom::EventTarget* aOwner,
@@ -252,7 +252,7 @@ nsresult
 NS_NewDOMMouseScrollEvent(nsIDOMEvent** aInstancePtrResult,
                           mozilla::dom::EventTarget* aOwner,
                           nsPresContext* aPresContext,
-                          mozilla::WidgetInputEvent* aEvent);
+                          mozilla::WidgetMouseScrollEvent* aEvent);
 nsresult
 NS_NewDOMWheelEvent(nsIDOMEvent** aInstancePtrResult,
                     mozilla::dom::EventTarget* aOwner,

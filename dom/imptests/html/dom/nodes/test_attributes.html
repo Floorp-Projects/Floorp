@@ -24,7 +24,8 @@ test(function() {
   assert_throws(new TypeError(), function() { attr.appendChild(document.createTextNode("fail")) })
   assert_throws(new TypeError(), function() { attr.appendChild(null) })
   assert_equals(attr.value, "pass")
-  assert_false("childNodes" in attr)
+  assert_false("childNodes" in attr, "Should not have childNodes")
+  assert_false("textContent" in attr, "Should not have textContent")
 }, "AttrExodus")
 
 // setAttribute exhaustive tests

@@ -23,6 +23,10 @@ if CONFIG['MOZ_ANDROID_HISTORY']:
     CPP_SOURCES += [
         'nsAndroidHistory.cpp',
     ]
+    LOCAL_INCLUDES += [
+        '/content/base/src',
+        '/docshell/base',
+    ]
 
 LIBRARY_NAME = 'browsercomps'
 

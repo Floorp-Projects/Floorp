@@ -31,6 +31,11 @@ CPP_SOURCES += [
     'jshash.cpp',
 ]
 
+DEFINES['EXPORT_JSD_API'] = True
+
+if CONFIG['JS_THREADSAFE']:
+    DEFINES['JS_THREADSAFE'] = True
+
 LIBRARY_NAME = 'jsd'
 
 LIBXUL_LIBRARY = True

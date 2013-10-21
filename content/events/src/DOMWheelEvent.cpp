@@ -29,16 +29,6 @@ DOMWheelEvent::DOMWheelEvent(EventTarget* aOwner,
   }
 }
 
-DOMWheelEvent::~DOMWheelEvent()
-{
-  if (mEventIsInternal && mEvent) {
-    MOZ_ASSERT(mEvent->eventStructType == NS_WHEEL_EVENT,
-               "The mEvent must be WidgetWheelEvent");
-    delete static_cast<WidgetWheelEvent*>(mEvent);
-    mEvent = nullptr;
-  }
-}
-
 NS_IMPL_ADDREF_INHERITED(DOMWheelEvent, nsDOMMouseEvent)
 NS_IMPL_RELEASE_INHERITED(DOMWheelEvent, nsDOMMouseEvent)
 
