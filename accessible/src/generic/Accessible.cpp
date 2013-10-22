@@ -30,7 +30,6 @@
 #include "nsIDOMDocument.h"
 #include "nsIDOMNodeFilter.h"
 #include "nsIDOMHTMLElement.h"
-#include "nsIDOMKeyEvent.h"
 #include "nsIDOMTreeWalker.h"
 #include "nsIDOMXULButtonElement.h"
 #include "nsIDOMXULDocument.h"

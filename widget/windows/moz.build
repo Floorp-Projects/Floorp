@@ -61,7 +61,6 @@ CPP_SOURCES += [
     'nsWidgetFactory.cpp',
     'nsWinGesture.cpp',
     'nsWindow.cpp',
-    'nsWindowBase.cpp',
     'nsWindowDbg.cpp',
     'nsWindowGfx.cpp',
 ]

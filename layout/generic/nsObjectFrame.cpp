@@ -145,6 +145,7 @@ extern "C" {
 #endif /* #if defined(XP_MACOSX) && !defined(__LP64__) */
 
 using namespace mozilla;
+using namespace mozilla::plugins;
 using namespace mozilla::layers;
 
 class PluginBackgroundSink : public ReadbackSink {
@@ -1790,7 +1791,7 @@ nsObjectFrame::PaintPlugin(nsDisplayListBuilder* aBuilder,
         // double pass render. If this plugin isn't oop, the register window message
         // will be ignored.
         NPEvent pluginEvent;
-        pluginEvent.event = plugins::DoublePassRenderingEvent();
+        pluginEvent.event = DoublePassRenderingEvent();
         pluginEvent.wParam = 0;
         pluginEvent.lParam = 0;
         if (pluginEvent.event)

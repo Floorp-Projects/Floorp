@@ -34,7 +34,6 @@
 #include "nsDocShellCID.h"
 #include "nsIExternalURLHandlerService.h"
 #include "nsIMIMEInfo.h"
-#include "nsIWidget.h"
 #include "mozilla/BrowserElementParent.h"
 
 #include "nsIDOMDocument.h"

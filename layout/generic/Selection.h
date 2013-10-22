@@ -14,7 +14,7 @@
 #include "nsISelectionPrivate.h"
 #include "nsRange.h"
 #include "nsThreadUtils.h"
-#include "mozilla/TextRange.h"
+#include "mozilla/TextEvents.h"
 
 struct CachedOffsetForFrame;
 class nsAutoScrollTimer;

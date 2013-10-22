@@ -2808,14 +2808,6 @@ nsWindow::GetDPI()
     return float(rootWindow->height()/heightInches);
 }
 
-nsEventStatus
-nsWindow::DispatchEvent(WidgetGUIEvent* aEvent)
-{
-    nsEventStatus status;
-    DispatchEvent(aEvent, status);
-    return status;
-}
-
 void
 nsWindow::DispatchActivateEvent(void)
 {
@@ -3176,39 +3168,5 @@ nsWindow::GetGLFrameBufferFormat()
         return MozQGLWidgetWrapper::isRGBAContext() ? LOCAL_GL_RGBA : LOCAL_GL_RGB;
     }
     return LOCAL_GL_NONE;
-}
-
-void
-nsWindow::ProcessMotionEvent()
-{
-    if (mPinchEvent.needDispatch) {
-        double distance = DistanceBetweenPoints(mPinchEvent.centerPoint,
-                                                mPinchEvent.touchPoint);
-        distance *= 2;
-        mPinchEvent.delta = distance - mPinchEvent.prevDistance;
-        nsIntPoint centerPoint(mPinchEvent.centerPoint.x(),
-                               mPinchEvent.centerPoint.y());
-        DispatchGestureEvent(NS_SIMPLE_GESTURE_MAGNIFY_UPDATE,
-                             0, mPinchEvent.delta, centerPoint);
-        mPinchEvent.prevDistance = distance;
-    }
-    if (mMoveEvent.needDispatch) {
-        WidgetMouseEvent event(true, NS_MOUSE_MOVE, this,
-                               WidgetMouseEvent::eReal);
-
-        event.refPoint.x = nscoord(mMoveEvent.pos.x());
-        event.refPoint.y = nscoord(mMoveEvent.pos.y());
-
-        event.InitBasicModifiers(mMoveEvent.modifiers & Qt::ControlModifier,
-                                 mMoveEvent.modifiers & Qt::AltModifier,
-                                 mMoveEvent.modifiers & Qt::ShiftModifier,
-                                 mMoveEvent.modifiers & Qt::MetaModifier);
-        event.clickCount      = 0;
-
-        DispatchEvent(&event);
-        mMoveEvent.needDispatch = false;
-    }
-
-    mTimerStarted = false;
 }
 
