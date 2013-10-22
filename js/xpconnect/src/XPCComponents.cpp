@@ -3012,7 +3012,7 @@ nsXPCComponents_Utils::GetGlobalForObject(const Value& object,
 
 /* jsval createObjectIn(in jsval vobj); */
 bool
-xpc::CreateObjectIn(JSContext *cx, HandleValue vobj, CreateObjectOptions &options,
+xpc::CreateObjectIn(JSContext *cx, HandleValue vobj, CreateObjectInOptions &options,
                     MutableHandleValue rval)
 {
     if (!vobj.isObject()) {
@@ -3050,7 +3050,7 @@ xpc::CreateObjectIn(JSContext *cx, HandleValue vobj, CreateObjectOptions &option
 NS_IMETHODIMP
 nsXPCComponents_Utils::CreateObjectIn(const Value &vobj, JSContext *cx, Value *rval)
 {
-    CreateObjectOptions options;
+    CreateObjectInOptions options;
     RootedValue rvobj(cx, vobj);
     RootedValue res(cx);
     if (!xpc::CreateObjectIn(cx, rvobj, options, &res))

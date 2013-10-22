@@ -3665,10 +3665,10 @@ protected:
     bool ParseGlobalProperties();
 };
 
-class MOZ_STACK_CLASS CreateObjectOptions : public OptionsBase {
+class MOZ_STACK_CLASS CreateObjectInOptions : public OptionsBase {
 public:
-    CreateObjectOptions(JSContext *cx = xpc_GetSafeJSContext(),
-                        JS::HandleObject options = JS::NullPtr())
+    CreateObjectInOptions(JSContext *cx = xpc_GetSafeJSContext(),
+                          JS::HandleObject options = JS::NullPtr())
         : OptionsBase(cx, options)
         , defineAs(cx, JSID_VOID)
     { }
@@ -3721,7 +3721,7 @@ SetSandboxMetadata(JSContext *cx, JS::HandleObject sandboxArg,
                    JS::HandleValue metadata);
 
 bool
-CreateObjectIn(JSContext *cx, JS::HandleValue vobj, CreateObjectOptions &options,
+CreateObjectIn(JSContext *cx, JS::HandleValue vobj, CreateObjectInOptions &options,
                JS::MutableHandleValue rval);
 
 } /* namespace xpc */
