@@ -475,7 +475,7 @@ public:
       }
       if (frame) {
         frame->HandleEvent(aVisitor.mPresContext,
-                           static_cast<WidgetGUIEvent*>(aVisitor.mEvent),
+                           aVisitor.mEvent->AsGUIEvent(),
                            &aVisitor.mEventStatus);
       }
     }
