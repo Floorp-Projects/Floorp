@@ -10,8 +10,6 @@ DIST_FILES = install.rdf
 # Used in install.rdf
 USE_EXTENSION_MANIFEST = 1
 
-XPI_NAME = mochijar
-
 # we turn this off for UNIVERSAL_BINARY
 CHROME_JAR = 1
 
@@ -57,6 +55,7 @@ _SERV_FILES = 	\
 		androidx86.json \
 		b2g.json \
 		b2g-desktop.json \
+		b2g-debug.json \
 		b2g_start_script.js \
 		root-ev-tester.crl \
 		intermediate-ev-tester.crl \

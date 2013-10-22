@@ -1324,7 +1324,7 @@ class MOZ_STACK_CLASS ModuleCompiler
     }
 
     bool fail(ParseNode *pn, const char *str) {
-        return failOffset(pn ? pn->pn_pos.begin : parser_.tokenStream.currentToken().pos.end, str);
+        return failOffset(pn ? pn->pn_pos.begin : parser_.tokenStream.peekTokenPos().begin, str);
     }
 
     bool failfVA(ParseNode *pn, const char *fmt, va_list ap) {

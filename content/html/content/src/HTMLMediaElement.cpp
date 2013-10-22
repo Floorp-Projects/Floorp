@@ -75,6 +75,7 @@
 
 #include "nsCSSParser.h"
 #include "nsIMediaList.h"
+#include "nsIDOMWakeLock.h"
 
 #include "ImageContainer.h"
 #include "nsIPowerManagerService.h"
@@ -1136,14 +1137,14 @@ nsresult HTMLMediaElement::LoadResource()
       ReportLoadError("MediaLoadInvalidURI", params, ArrayLength(params));
       return rv;
     }
-    mMediaSource = source.forget();
     nsRefPtr<MediaSourceDecoder> decoder = new MediaSourceDecoder(this);
-    if (!mMediaSource->Attach(decoder)) {
+    if (!source->Attach(decoder)) {
       // TODO: Handle failure: run "If the media data cannot be fetched at
       // all, due to network errors, causing the user agent to give up
       // trying to fetch the resource" section of resource fetch algorithm.
       return NS_ERROR_FAILURE;
     }
+    mMediaSource = source.forget();
     nsRefPtr<MediaResource> resource = new MediaSourceResource();
     return FinishDecoderSetup(decoder, resource, nullptr, nullptr);
   }

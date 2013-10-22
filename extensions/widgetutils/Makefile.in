@@ -3,8 +3,6 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 
-XPI_NAME = widgetutils
-
 INSTALL_EXTENSION_ID = widgetutils@extensions.mozilla.org
 DIST_FILES = install.rdf
 NO_JAR_AUTO_REG        = 1
