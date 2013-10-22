@@ -194,8 +194,14 @@
       <handler event="click" phase="capturing">
         <![CDATA[
         if (event.mozInputSource == Ci.nsIDOMMouseEvent.MOZ_SOURCE_TOUCH) {
-          SelectionHelperUI.attachEditSession(ChromeSelectionHandler,
-                                              event.clientX, event.clientY);
+          if (typeof SelectionHelperUI != 'undefined') {
+            SelectionHelperUI.attachEditSession(ChromeSelectionHandler,
+                                                event.clientX, event.clientY);
+          } else {
+            // If we don't have access to SelectionHelperUI then we are using this
+            // binding for browser content (e.g. about:config)
+            Services.obs.notifyObservers(event, "attach_edit_session_to_content", "");
+          }
         }
       ]]>
       </handler>
@@ -287,8 +293,14 @@
       <handler event="click" phase="capturing">
         <![CDATA[
           if (event.mozInputSource == Ci.nsIDOMMouseEvent.MOZ_SOURCE_TOUCH) {
-            SelectionHelperUI.attachEditSession(ChromeSelectionHandler,
-                                                event.clientX, event.clientY);
+            if (typeof SelectionHelperUI != 'undefined') {
+              SelectionHelperUI.attachEditSession(ChromeSelectionHandler,
+                                                  event.clientX, event.clientY);
+            } else {
+              // If we don't have access to SelectionHelperUI then we are using this
+              // binding for browser content (e.g. about:config)
+              Services.obs.notifyObservers(event, "attach_edit_session_to_content", "");
+            }
           }
         ]]>
       </handler>
