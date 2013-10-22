@@ -1215,9 +1215,7 @@ var gBrowserInit = {
 
     SessionStore.promiseInitialized.then(() => {
       // Enable the Restore Last Session command if needed
-      if (SessionStore.canRestoreLastSession &&
-          !PrivateBrowsingUtils.isWindowPrivate(window))
-        goSetCommandEnabled("Browser:RestoreLastSession", true);
+      RestoreLastSessionObserver.init();
 
       TabView.init();
 
@@ -7000,6 +6998,26 @@ function switchToTabHavingURI(aURI, aOpenNew) {
 
   return false;
 }
+
+let RestoreLastSessionObserver = {
+  init: function () {
+    if (SessionStore.canRestoreLastSession &&
+        !PrivateBrowsingUtils.isWindowPrivate(window)) {
+      Services.obs.addObserver(this, "sessionstore-last-session-cleared", true);
+      goSetCommandEnabled("Browser:RestoreLastSession", true);
+    }
+  },
+
+  observe: function () {
+    // The last session can only be restored once so there's
+    // no way we need to re-enable our menu item.
+    Services.obs.removeObserver(this, "sessionstore-last-session-cleared");
+    goSetCommandEnabled("Browser:RestoreLastSession", false);
+  },
+
+  QueryInterface: XPCOMUtils.generateQI([Ci.nsIObserver,
+                                         Ci.nsISupportsWeakReference])
+};
 
 function restoreLastSession() {
   SessionStore.restoreLastSession();
