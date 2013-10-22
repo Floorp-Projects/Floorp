@@ -10,7 +10,7 @@ endif
 
 # This code is only compiled for build-time tools,
 # so enabling RTTI should be fine.
-HOST_CXXFLAGS := -funsigned-char $(filter-out -fno-rtti,$(HOST_CXXFLAGS))
+HOST_CXXFLAGS += -funsigned-char -frtti
 
 # need static lib
 FORCE_STATIC_LIB = 1

@@ -56,4 +56,3 @@ GARBAGE += dummy
 endif
 
 test.$(OBJ_SUFFIX): CFLAGS := -O0
-host_elf.$(OBJ_SUFFIX) host_elfhack.$(OBJ_SUFFIX): elfxx.h

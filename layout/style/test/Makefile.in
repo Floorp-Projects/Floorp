@@ -237,10 +237,6 @@ include $(topsrcdir)/config/rules.mk
 
 DEFINES += -DMOZILLA_INTERNAL_API
 
-# FIXME: We don't seem to do auto-generated dependencies here.
-host_ListCSSProperties.$(OBJ_SUFFIX): $(srcdir)/../nsCSSPropList.h
-TestCSSPropertyLookup.$(OBJ_SUFFIX): $(srcdir)/../nsCSSProps.h $(srcdir)/../nsCSSKeywords.h
-
 css_properties.js: host_ListCSSProperties$(HOST_BIN_SUFFIX) css_properties_like_longhand.js Makefile
 	$(RM) $@
 	./host_ListCSSProperties$(HOST_BIN_SUFFIX) > $@
