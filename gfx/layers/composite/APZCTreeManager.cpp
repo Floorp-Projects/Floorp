@@ -372,8 +372,7 @@ APZCTreeManager::ProcessMouseEvent(const WidgetMouseEvent& aEvent,
   MultiTouchInput inputForApzc(aEvent);
   ApplyTransform(&(inputForApzc.mTouches[0].mScreenPoint), transformToApzc);
   gfx3DMatrix outTransform = transformToApzc * transformToScreen;
-  ApplyTransform(&(static_cast<WidgetMouseEvent*>(aOutEvent)->refPoint),
-                 outTransform);
+  ApplyTransform(&aOutEvent->refPoint, outTransform);
   return apzc->ReceiveInputEvent(inputForApzc);
 }
 
@@ -418,10 +417,9 @@ APZCTreeManager::ReceiveInputEvent(const WidgetInputEvent& aEvent,
     }
     case NS_MOUSE_EVENT: {
       // For b2g emulation
-      const WidgetMouseEvent& mouseEvent =
-        static_cast<const WidgetMouseEvent&>(aEvent);
-      WidgetMouseEvent* outEvent = static_cast<WidgetMouseEvent*>(aOutEvent);
-      return ProcessMouseEvent(mouseEvent, outEvent);
+      const WidgetMouseEvent& mouseEvent = *aEvent.AsMouseEvent();
+      WidgetMouseEvent* outMouseEvent = aOutEvent->AsMouseEvent();
+      return ProcessMouseEvent(mouseEvent, outMouseEvent);
     }
     default: {
       return ProcessEvent(aEvent, aOutEvent);

@@ -2747,9 +2747,7 @@ nsWindow::BeginResizeDrag(WidgetGUIEvent* aEvent,
         return NS_ERROR_INVALID_ARG;
     }
 
-    WidgetMouseEvent* mouse_event = static_cast<WidgetMouseEvent*>(aEvent);
-
-    if (mouse_event->button != WidgetMouseEvent::eLeftButton) {
+    if (aEvent->AsMouseEvent()->button != WidgetMouseEvent::eLeftButton) {
         // you can only begin a resize drag with the left mouse button
         return NS_ERROR_INVALID_ARG;
     }

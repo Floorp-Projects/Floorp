@@ -1451,10 +1451,11 @@ Element::DispatchClickEvent(nsPresContext* aPresContext,
   uint32_t clickCount = 1;
   float pressure = 0;
   uint16_t inputSource = 0;
-  if (aSourceEvent->eventStructType == NS_MOUSE_EVENT) {
-    clickCount = static_cast<WidgetMouseEvent*>(aSourceEvent)->clickCount;
-    pressure = static_cast<WidgetMouseEvent*>(aSourceEvent)->pressure;
-    inputSource = static_cast<WidgetMouseEvent*>(aSourceEvent)->inputSource;
+  WidgetMouseEvent* sourceMouseEvent = aSourceEvent->AsMouseEvent();
+  if (sourceMouseEvent) {
+    clickCount = sourceMouseEvent->clickCount;
+    pressure = sourceMouseEvent->pressure;
+    inputSource = sourceMouseEvent->inputSource;
   } else if (aSourceEvent->eventStructType == NS_KEY_EVENT) {
     inputSource = nsIDOMMouseEvent::MOZ_SOURCE_KEYBOARD;
   }
@@ -2225,8 +2226,7 @@ Element::PostHandleEventForLinks(nsEventChainPostVisitor& aVisitor)
   switch (aVisitor.mEvent->message) {
   case NS_MOUSE_BUTTON_DOWN:
     {
-      if (aVisitor.mEvent->eventStructType == NS_MOUSE_EVENT &&
-          static_cast<WidgetMouseEvent*>(aVisitor.mEvent)->button ==
+      if (aVisitor.mEvent->AsMouseEvent()->button ==
             WidgetMouseEvent::eLeftButton) {
         // don't make the link grab the focus if there is no link handler
         nsILinkHandler *handler = aVisitor.mPresContext->GetLinkHandler();
