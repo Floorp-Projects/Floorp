@@ -61,12 +61,20 @@ private:
 namespace mozilla {
 namespace image {
 
+class CachedSurface;
+class SurfaceCacheImpl;
+
+///////////////////////////////////////////////////////////////////////////////
+// Static Data
+///////////////////////////////////////////////////////////////////////////////
+
+// The single surface cache instance.
+static SurfaceCacheImpl* sInstance = nullptr;
+
+
 ///////////////////////////////////////////////////////////////////////////////
 // SurfaceCache Implementation
 ///////////////////////////////////////////////////////////////////////////////
-
-class CachedSurface;
-class SurfaceCacheImpl;
 
 /*
  * Cost models the cost of storing a surface in the cache. Right now, this is
@@ -224,9 +232,26 @@ public:
                    uint32_t aSurfaceCacheSize)
     : mExpirationTracker(MOZ_THIS_IN_INITIALIZER_LIST(),
                          aSurfaceCacheExpirationTimeMS)
+    , mReporter(new SurfaceCacheReporter)
+    , mMemoryPressureObserver(new MemoryPressureObserver)
     , mMaxCost(aSurfaceCacheSize)
     , mAvailableCost(aSurfaceCacheSize)
-  { }
+  {
+    NS_RegisterMemoryReporter(mReporter);
+
+    nsCOMPtr<nsIObserverService> os = mozilla::services::GetObserverService();
+    if (os)
+      os->AddObserver(mMemoryPressureObserver, "memory-pressure", false);
+  }
+
+  ~SurfaceCacheImpl()
+  {
+    nsCOMPtr<nsIObserverService> os = mozilla::services::GetObserverService();
+    if (os)
+      os->RemoveObserver(mMemoryPressureObserver, "memory-pressure");
+
+    NS_UnregisterMemoryReporter(mReporter);
+  }
 
   void Insert(DrawTarget*       aTarget,
               nsIntSize         aTargetSize,
@@ -342,12 +367,26 @@ public:
     mImageCaches.Remove(aImageKey);
   }
 
+  void DiscardAll()
+  {
+    // Remove in order of cost because mCosts is an array and the other data
+    // structures are all hash tables.
+    while (!mCosts.IsEmpty()) {
+      Remove(mCosts.LastElement().GetSurface());
+    }
+  }
+
   static PLDHashOperator DoStopTracking(const SurfaceKey&,
                                         CachedSurface*    aSurface,
                                         void*             aCache)
   {
     static_cast<SurfaceCacheImpl*>(aCache)->StopTracking(aSurface);
     return PL_DHASH_NEXT;
+  }
+
+  int64_t SizeOfSurfacesEstimate() const
+  {
+    return int64_t(mMaxCost - mAvailableCost);
   }
 
 private:
@@ -377,21 +416,51 @@ private:
     SurfaceCacheImpl* const mCache;  // Weak pointer to owner.
   };
 
+  // XXX(seth): This is currently only an estimate and, since we don't know which
+  // surfaces are in GPU memory and which aren't, it's reported as KIND_OTHER and
+  // will also show up in heap-unclassified. Bug 923302 will make this nicer.
+  struct SurfaceCacheReporter : public MemoryUniReporter
+  {
+    SurfaceCacheReporter()
+      : MemoryUniReporter("imagelib-surface-cache",
+                          KIND_OTHER,
+                          UNITS_BYTES,
+                          "Memory used by the imagelib temporary surface cache.")
+    { }
+
+  protected:
+    int64_t Amount() MOZ_OVERRIDE
+    {
+      return sInstance ? sInstance->SizeOfSurfacesEstimate() : 0;
+    }
+  };
+
+  struct MemoryPressureObserver : public nsIObserver
+  {
+    NS_DECL_ISUPPORTS
+
+    virtual ~MemoryPressureObserver() { }
+
+    NS_IMETHOD Observe(nsISupports*, const char* aTopic, const PRUnichar*)
+    {
+      if (sInstance && strcmp(aTopic, "memory-pressure") == 0) {
+        sInstance->DiscardAll();
+      }
+      return NS_OK;
+    }
+  };
+
+
   nsTArray<CostEntry>                                       mCosts;
   nsRefPtrHashtable<nsPtrHashKey<Image>, ImageSurfaceCache> mImageCaches;
   SurfaceTracker                                            mExpirationTracker;
+  nsRefPtr<SurfaceCacheReporter>                            mReporter;
+  nsRefPtr<MemoryPressureObserver>                          mMemoryPressureObserver;
   const Cost                                                mMaxCost;
   Cost                                                      mAvailableCost;
 };
 
-
-///////////////////////////////////////////////////////////////////////////////
-// Static Data
-///////////////////////////////////////////////////////////////////////////////
-
-// The single surface cache instance.
-static SurfaceCacheImpl* sInstance = nullptr;
-
+NS_IMPL_ISUPPORTS1(SurfaceCacheImpl::MemoryPressureObserver, nsIObserver)
 
 ///////////////////////////////////////////////////////////////////////////////
 // Public API
