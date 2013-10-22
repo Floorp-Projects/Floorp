@@ -30,7 +30,7 @@ public:
   MmsMessage(int32_t                                        aId,
              const uint64_t                                 aThreadId,
              mobilemessage::DeliveryState                   aDelivery,
-             const nsTArray<mobilemessage::DeliveryStatus>& aDeliveryStatus,
+             const nsTArray<idl::MmsDeliveryInfo>&          aDeliveryInfo,
              const nsAString&                               aSender,
              const nsTArray<nsString>&                      aReceivers,
              uint64_t                                       aTimestamp,
@@ -45,7 +45,7 @@ public:
   static nsresult Create(int32_t               aId,
                          const uint64_t        aThreadId,
                          const nsAString&      aDelivery,
-                         const JS::Value&      aDeliveryStatus,
+                         const JS::Value&      aDeliveryInfo,
                          const nsAString&      aSender,
                          const JS::Value&      aReceivers,
                          const JS::Value&      aTimestamp,
@@ -65,7 +65,7 @@ private:
   int32_t                                 mId;
   uint64_t                                mThreadId;
   mobilemessage::DeliveryState            mDelivery;
-  nsTArray<mobilemessage::DeliveryStatus> mDeliveryStatus;
+  nsTArray<idl::MmsDeliveryInfo>          mDeliveryInfo;
   nsString                                mSender;
   nsTArray<nsString>                      mReceivers;
   uint64_t                                mTimestamp;
