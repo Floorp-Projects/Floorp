@@ -1846,7 +1846,8 @@ nsXULPopupManager::HandleKeyboardNavigation(uint32_t aKeyCode)
     return false;
 
   nsNavigationDirection theDirection;
-  NS_ASSERTION(aKeyCode >= NS_VK_END && aKeyCode <= NS_VK_DOWN, "Illegal key code");
+  NS_ASSERTION(aKeyCode >= nsIDOMKeyEvent::DOM_VK_END &&
+                 aKeyCode <= nsIDOMKeyEvent::DOM_VK_DOWN, "Illegal key code");
   theDirection = NS_DIRECTION_FROM_KEY_CODE(itemFrame, aKeyCode);
 
   // if a popup is open, first check for navigation within the popup

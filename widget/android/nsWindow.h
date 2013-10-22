@@ -11,8 +11,9 @@
 #include "nsIIdleServiceInternal.h"
 #include "nsTArray.h"
 #include "AndroidJavaWrappers.h"
+#include "mozilla/EventForwards.h"
 #include "mozilla/StaticPtr.h"
-#include "mozilla/TextEvents.h"
+#include "mozilla/TextRange.h"
 
 class gfxASurface;
 
