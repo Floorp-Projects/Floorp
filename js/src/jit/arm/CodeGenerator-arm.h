@@ -104,6 +104,7 @@ class CodeGeneratorARM : public CodeGeneratorShared
     virtual bool visitUInt32ToDouble(LUInt32ToDouble *lir);
     virtual bool visitNotI(LNotI *ins);
     virtual bool visitNotD(LNotD *ins);
+    virtual bool visitNotF(LNotF *ins);
 
     virtual bool visitMathD(LMathD *math);
     virtual bool visitMathF(LMathF *math);

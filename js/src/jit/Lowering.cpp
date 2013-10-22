@@ -2259,6 +2259,8 @@ LIRGenerator::visitNot(MNot *ins)
       }
       case MIRType_Double:
         return define(new LNotD(useRegister(op)), ins);
+      case MIRType_Float32:
+        return define(new LNotF(useRegister(op)), ins);
       case MIRType_Undefined:
       case MIRType_Null:
         return define(new LInteger(1), ins);
