@@ -81,6 +81,12 @@ js::intrinsic_ThrowError(JSContext *cx, unsigned argc, Value *vp)
     JS_ASSERT(args.length() >= 1);
     uint32_t errorNumber = args[0].toInt32();
 
+#ifdef DEBUG
+    const JSErrorFormatString *efs =
+        js_GetLocalizedErrorMessage(cx, NULL, NULL, errorNumber);
+    JS_ASSERT(efs->argCount == args.length() - 1);
+#endif
+
     char *errorArgs[3] = {nullptr, nullptr, nullptr};
     for (unsigned i = 1; i < 4 && i < args.length(); i++) {
         RootedValue val(cx, args[i]);
