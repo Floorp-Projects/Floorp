@@ -1775,3 +1775,4 @@ test-pref(layout.css.flexbox.enabled,true) == 849407-1.html 849407-1-ref.html
 fuzzy(1,10000) fuzzy-if(Android&&AndroidVersion>=15,5,10000) == 902330-1.html 902330-1-ref.html
 fuzzy-if(Android,8,400) == 906199-1.html 906199-1-ref.html
 == 921716-1.html 921716-1-ref.html
+fuzzy-if(cocoaWidget,1,40) == 928607-1.html 928607-1-ref.html
