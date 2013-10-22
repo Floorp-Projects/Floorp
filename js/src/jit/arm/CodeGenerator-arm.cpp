@@ -340,6 +340,15 @@ CodeGeneratorARM::visitAbsD(LAbsD *ins)
 }
 
 bool
+CodeGeneratorARM::visitAbsF(LAbsF *ins)
+{
+    FloatRegister input = ToFloatRegister(ins->input());
+    JS_ASSERT(input == ToFloatRegister(ins->output()));
+    masm.ma_vabs_f32(input, input);
+    return true;
+}
+
+bool
 CodeGeneratorARM::visitSqrtD(LSqrtD *ins)
 {
     FloatRegister input = ToFloatRegister(ins->input());

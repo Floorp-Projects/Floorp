@@ -101,6 +101,7 @@
     _(NegF)                         \
     _(AbsI)                         \
     _(AbsD)                         \
+    _(AbsF)                         \
     _(SqrtD)                        \
     _(SqrtF)                        \
     _(Atan2D)                       \

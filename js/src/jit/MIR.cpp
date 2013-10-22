@@ -1279,6 +1279,19 @@ MAbs::fallible() const
     return !implicitTruncate_ && (!range() || !range()->hasInt32Bounds());
 }
 
+void
+MAbs::trySpecializeFloat32()
+{
+    if (!input()->canProduceFloat32() || !CheckUsesAreFloat32Consumers(this)) {
+        if (input()->type() == MIRType_Float32)
+            ConvertDefinitionToDouble<0>(input(), this);
+        return;
+    }
+
+    setResultType(MIRType_Float32);
+    specialization_ = MIRType_Float32;
+}
+
 MDefinition *
 MDiv::foldsTo(bool useValueNumbers)
 {

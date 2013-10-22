@@ -1448,6 +1448,10 @@ class AssemblerX86Shared
         JS_ASSERT(HasSSE2());
         masm.andpd_rr(src.code(), dest.code());
     }
+    void andps(const FloatRegister &src, const FloatRegister &dest) {
+        JS_ASSERT(HasSSE2());
+        masm.andps_rr(src.code(), dest.code());
+    }
     void sqrtsd(const FloatRegister &src, const FloatRegister &dest) {
         JS_ASSERT(HasSSE2());
         masm.sqrtsd_rr(src.code(), dest.code());

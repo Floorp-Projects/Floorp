@@ -1426,6 +1426,12 @@ MacroAssemblerARM::ma_vabs(FloatRegister src, FloatRegister dest, Condition cc)
 }
 
 void
+MacroAssemblerARM::ma_vabs_f32(FloatRegister src, FloatRegister dest, Condition cc)
+{
+    as_vabs(VFPRegister(dest).singleOverlay(), VFPRegister(src).singleOverlay(), cc);
+}
+
+void
 MacroAssemblerARM::ma_vsqrt(FloatRegister src, FloatRegister dest, Condition cc)
 {
     as_vsqrt(dest, src, cc);

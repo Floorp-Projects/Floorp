@@ -2293,6 +2293,16 @@ class LAbsD : public LInstructionHelper<1, 1, 0>
     }
 };
 
+// Absolute value of a float32.
+class LAbsF : public LInstructionHelper<1, 1, 0>
+{
+  public:
+    LIR_HEADER(AbsF)
+    LAbsF(const LAllocation &num) {
+        setOperand(0, num);
+    }
+};
+
 // Square root of a double.
 class LSqrtD : public LInstructionHelper<1, 1, 0>
 {

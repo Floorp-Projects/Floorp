@@ -241,6 +241,34 @@ DoublesAreIdentical(double d1, double d2)
   return BitwiseCast<uint64_t>(d1) == BitwiseCast<uint64_t>(d2);
 }
 
+/** Determines whether a float is NaN. */
+static MOZ_ALWAYS_INLINE bool
+IsFloatNaN(float f)
+{
+  /*
+   * A float is NaN if all exponent bits are 1 and the significand contains at
+   * least one non-zero bit.
+   */
+  uint32_t bits = BitwiseCast<uint32_t>(f);
+  return (bits & FloatExponentBits) == FloatExponentBits &&
+         (bits & FloatSignificandBits) != 0;
+}
+
+/** Constructs a NaN value with the specified sign bit and significand bits. */
+static MOZ_ALWAYS_INLINE float
+SpecificFloatNaN(int signbit, uint32_t significand)
+{
+  MOZ_ASSERT(signbit == 0 || signbit == 1);
+  MOZ_ASSERT((significand & ~FloatSignificandBits) == 0);
+  MOZ_ASSERT(significand & FloatSignificandBits);
+
+  float f = BitwiseCast<float>((signbit ? FloatSignBit : 0) |
+                                 FloatExponentBits |
+                                 significand);
+  MOZ_ASSERT(IsFloatNaN(f));
+  return f;
+}
+
 } /* namespace mozilla */
 
 #endif /* mozilla_FloatingPoint_h */
