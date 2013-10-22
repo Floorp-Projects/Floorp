@@ -216,8 +216,8 @@ MOZ_UNICHARUTIL_LIBS = $(LIBXUL_DIST)/lib/$(LIB_PREFIX)unicharutil_s.$(LIB_SUFFI
 MOZ_WIDGET_SUPPORT_LIBS    = $(DIST)/lib/$(LIB_PREFIX)widgetsupport_s.$(LIB_SUFFIX)
 
 ifdef _MSC_VER
-CC_WRAPPER ?= $(PYTHON) -O $(topsrcdir)/build/cl.py
-CXX_WRAPPER ?= $(PYTHON) -O $(topsrcdir)/build/cl.py
+CC_WRAPPER = $(call py_action,cl)
+CXX_WRAPPER = $(call py_action,cl)
 endif # _MSC_VER
 
 CC := $(CC_WRAPPER) $(CC)
@@ -896,15 +896,3 @@ MOZ_GTK2_CFLAGS := -I$(topsrcdir)/widget/gtk/compat $(MOZ_GTK2_CFLAGS)
 endif
 
 DEFINES += -DNO_NSPR_10_SUPPORT
-
-# Run a named Python build action. The first argument is the name of the build
-# action. The second argument are the arguments to pass to the action (space
-# delimited arguments). e.g.
-#
-#   libs::
-#       $(call py_action,purge_manifests,_build_manifests/purge/foo.manifest)
-ifdef .PYMAKE
-py_action = %mozbuild.action.$(1) main $(2)
-else
-py_action = $(PYTHON) -m mozbuild.action.$(1) $(2)
-endif
