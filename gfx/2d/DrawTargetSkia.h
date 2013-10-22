@@ -105,7 +105,9 @@ public:
                                          const IntSize &aSize,
                                          SurfaceFormat aFormat) MOZ_OVERRIDE;
 
-  void SetCacheLimits(int number, int sizeInBytes);
+  void SetCacheLimits(int aCount, int aSizeInBytes);
+  static void SetGlobalCacheLimits(int aCount, int aSizeInBytes);
+  static void RebalanceCacheLimits();
 #endif
 
   operator std::string() const {
@@ -130,6 +132,9 @@ private:
   RefPtr<GenericRefCountedBase> mGLContext;
   SkRefPtr<GrGLInterface> mGrGLInterface;
   SkRefPtr<GrContext> mGrContext;
+
+  static int sTextureCacheCount;
+  static int sTextureCacheSizeInBytes;
 #endif
 
   IntSize mSize;
