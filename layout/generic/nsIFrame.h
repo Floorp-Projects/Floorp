@@ -994,6 +994,8 @@ public:
 
   NS_DECLARE_FRAME_PROPERTY(InvalidationRect, DestroyRect)
 
+  NS_DECLARE_FRAME_PROPERTY(RefusedAsyncAnimation, nullptr)
+
   /**
    * Return the distance between the border edge of the frame and the
    * margin edge of the frame.  Like GetRect(), returns the dimensions
