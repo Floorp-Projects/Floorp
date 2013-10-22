@@ -6004,20 +6004,6 @@ nsIFrame* GetNearestFrameContainingPresShell(nsIPresShell* aPresShell)
 
   return frame;
 }
- 
-static bool
-FlushThrottledStyles(nsIDocument *aDocument, void *aData)
-{
-  nsIPresShell* shell = aDocument->GetShell();
-  if (shell && shell->IsVisible()) {
-    nsPresContext* presContext = shell->GetPresContext();
-    if (presContext) {
-      presContext->TransitionManager()->UpdateAllThrottledStyles();
-    }
-  }
-
-  return true;
-}
 
 nsresult
 PresShell::HandleEvent(nsIFrame* aFrame,
@@ -6116,21 +6102,14 @@ PresShell::HandleEvent(nsIFrame* aFrame,
 
   nsIFrame* frame = aFrame;
 
+  if (aEvent->eventStructType == NS_TOUCH_EVENT) {
+    nsIDocument::UnlockPointer();
+    FlushPendingNotifications(Flush_Layout);
+    frame = GetNearestFrameContainingPresShell(this);
+  }
+
   bool dispatchUsingCoordinates = aEvent->IsUsingCoordinates();
   if (dispatchUsingCoordinates) {
-    if (nsLayoutUtils::AreAsyncAnimationsEnabled() && mDocument) {
-      if (aEvent->eventStructType == NS_TOUCH_EVENT) {
-        nsIDocument::UnlockPointer();
-      }
-      
-      {  // scope for scriptBlocker.
-        nsAutoScriptBlocker scriptBlocker;
-        GetRootPresShell()->GetDocument()->
-          EnumerateSubDocuments(FlushThrottledStyles, nullptr);
-      }
-      frame = GetNearestFrameContainingPresShell(this);
-    }
-
     NS_WARN_IF_FALSE(frame, "Nothing to handle this event!");
     if (!frame)
       return NS_OK;
